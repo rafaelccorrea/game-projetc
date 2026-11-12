@@ -1,0 +1,351 @@
+# Agente B: painéis iguais aos protótipos
+
+Arquivos meus: `js/screens.js`, `js/screens2.js`, `js/equipfx.js` (novo), `test/paineis/*` (novo, teste sem navegador).
+Não toquei em `index.html`, `js/fullbattle.js`, `js/battle.js`, `js/sys/*`, `assets/**` nem na versão.
+
+## Estado em uma linha
+
+Itens 1 e 2 **escritos e NÃO vistos rodando**: nenhum navegador foi aberto. O que existe de conferência é leitura do protótipo contra o código,
+`node --check` nos três arquivos e um teste de fumaça em Node (DOM falso) que executa as telas de verdade e não acha erro de execução.
+Posição, cor, tamanho na tela, animação e toque no celular **não foram conferidos**.
+
+## Como voltar atrás (chave por parte)
+
+`PANEL_V2` (topo de `js/screens.js`; também dá para definir `window.PANEL_V2 = {...}` antes dos scripts):
+
+| Chave | O que liga | Desligada |
+|---|---|---|
+| `fit` | encolher a tela até caber o arranjo completo do protótipo e ocupar a largura toda | volta ao corte de linhas e à base fixa de 390 px |
+| `equipFly` | itens voando no "Equipar melhor" | troca direta, só a FC contando |
+| `equipDrag` | arrastar da mochila ao espaço | só toque |
+| `shopCol` (desligada) | aba "Coleção" da Loja | 4 abas, como no protótipo |
+| `ptNum` (desligada) | sufixos mil, mi, bi, tri no formatador `kf` | K, M, B, T (como está hoje no jogo todo) |
+
+Cópia dos dois arquivos antes das mudanças: pasta temporária da sessão (não há git no projeto). Se precisar, peço e devolvo.
+
+---
+
+## Bloco 1: conferência das telas 05, 06, 07, 08 e 16 contra o protótipo
+
+### Mudança que vale para as cinco: altura e largura
+
+O protótipo tem 704 px de conteúdo; a folha da batalha em tela cheia dá 656 px. Antes, a tela cortava linhas (mochila com 1 fileira, loja com
+1 fileira de skins, passe com 4 níveis). Agora (`xFit`) a tela encolhe uns 3 a 4% e mostra o arranjo completo do protótipo; a largura da base
+cresce junto, então o conteúdo ocupa a tela de ponta a ponta (sem faixa escura dos lados). Só cai no arranjo curto se precisar encolher mais de
+14% ou se o espaço de equipamento ficar com menos de 44 px. Em tela alta sobram linhas a mais (até 4 fileiras de mochila, 3 de skins, 7 níveis).
+Peças em coordenada fixa (vitrine do Kael, palco do baú) ficam numa caixa de 390 px centrada.
+
+Contas (sem navegador): 390x844 na folha → escala 0,96, 2 fileiras; 360x640 → 0,86, 2 fileiras; 320x500 → arranjo curto, espaço de 47 px;
+tablet 768x1024 → o `#app` já vira uma moldura de celular de 430 px (regra do index.html), escala 1,10.
+
+### 05 Equipamento
+
+| Diferença achada | Protótipo | Estava | Agora |
+|---|---|---|---|
+| Mochila na folha | 2 fileiras (124 px) | 1 fileira | 2 fileiras |
+| Título da mochila | "Todos os itens" / "Itens: Colar" | "Itens" / "Colar" | igual ao protótipo |
+| Cartão da skin | "Skin Épica +5% ATK/HP" 11 px + "Coleção de skins +3,5%" 10 px | número grande 16 px + linha de 9 px | igual ao protótipo (valores do `Sys.skin`) |
+| Aura de fortalecimento atrás do Kael | aura +13 em 111,64 (168x210) | não existia | aparece conforme o +N da arma (`Sys.forge.aura`): azul, roxa, chamas, dourada |
+| Aviso (toast) | 14 px | 13 px | 14 px |
+| Botão "Progresso" | não existe no protótipo | botão com texto, apertava a linha | botão só com a medalha (44 px), com rótulo para leitor de tela |
+
+Diferenças que ficam, de propósito:
+- Camada "mid" do cenário e a faixa de nuvens (6 px, 80 de altura): o jogo não tem a mesma imagem do protótipo; ficou sky, nuvem, far e chão.
+- Botão "Equipar e upar até o meu nível" e a confirmação de custo: não estão no protótipo, são decisão do PO.
+- "Mochila 18/60 · ícones provisórios (SVG)": tirei o "provisórios", os 49 ícones aprovados já estão no jogo.
+- Fim da animação `stUp`/`stDn` em `#0e0a07` (o protótipo termina em `#1d1611`, que é a cor errada da célula: daria um salto de cor).
+
+### 06 Invocar
+
+| Diferença achada | Protótipo | Estava | Agora |
+|---|---|---|---|
+| Selo "FALTAM" | roxo (`#c9a3ff→#7a45d6`), número 18 px em cima, "FALTAM" 9 px embaixo | dourado, ordem invertida, 22 px | igual |
+| Título da garantia | "Garantia da melhor raridade liberada a cada 10" | "Baú de Equipamento" + "Garantia 3 / 10" | igual |
+| Progresso da garantia | 10 gomos roxos (8 px, raio 4, vão 3) | barra dourada contínua | igual |
+| Rótulo das chances | "Chances neste nível" | "Chances no seu nível" + frase extra à direita | igual |
+| Selo do x10 | "1 de brinde" verde no canto | não existia | aparece quando o x10 custa menos que 10 x1 (regra do `Sys.loot`: 9x) |
+| Rodapé | não existe | bloco de 44 px com duas frases | removido (o palco do baú volta a ter 262 px na folha) |
+| Faíscas | 5, sobem 150 px em 3 s | 4, 110 px em 3,2 s | igual |
+| Aviso do palco | entra descendo, 2,2 s | 2 s, parado | igual |
+| Grade do resultado | vão 10 px | 14 px | igual |
+| Brilho das cartas | branco 0,55, ciclo 2,2 s | 0,40, 3 s | igual |
+
+Ficam, de propósito: chip de raridade trancada (cadeado + nível/era), preço do x10 em valor cheio (o protótipo mostra "9 × [OURO]", que é
+marcador), botões apagados sem ouro, etiqueta "GARANTIA", selo de equipado e "Desmontado" nas cartas (estados reais que o protótipo não modela),
+porcentagem com vírgula quando a chance é quebrada. Camada "mid" e nuvem alta do cenário: mesma razão do Equipamento.
+
+### 07 Loja
+
+| Diferença achada | Protótipo | Estava | Agora |
+|---|---|---|---|
+| Regra de ouro | 44 px, 11 px, à esquerda: "Skins dão bônus: +2% a +10% de ATK e HP pela raridade, e cada skin da coleção soma +0,5%" | 34 px, centrada, outra frase | igual (números lidos do `Sys.skin`) |
+| Botão VIP dourado (64 px, coroa) ao lado da regra | existe | não existia | existe; abre a tela 18 quando ela existir, por enquanto avisa "Clube VIP: em breve" |
+| Abas | 4: Skins herói, Skins arma, Itens (ouro), Gemas; 2 linhas, 13 px, moeda e gema de 20 px | 5 (com "Coleção"), 1 linha, 12 px, outra ordem | igual; "Coleção" fica atrás de `PANEL_V2.shopCol` |
+| Grade de skins na folha | 2 fileiras | 1 fileira | 2 fileiras |
+| Selo do destaque | "OFERTA" vermelho + "Termina em" | "DESTAQUE" + "Troca em" | "OFERTA / Termina em" quando é a skin do dia; "DESTAQUE / Troca em" quando o destaque é só a melhor à venda |
+| Etiqueta do destaque | "Lendário · Medieval" | com "+X%" | igual |
+| Skins Míticas/Lendárias | entram animando e brilham | o brilho anulava a entrada | as duas animações |
+| Aba Itens | "Estoque do dia" + "Repõe em", cartões de 196 px com raridade, ícone 44, nome, "Espaço · Era", todos os atributos, preço de 24 px, "Comprado" verde | cartão de 60 px no topo, cartões de 150 px com 1 atributo, "Esgotado" cinza | igual |
+| Confirmação em ouro | atributos dentro da caixa + "Vai direto para a mochila. Sem sorteio." | atributos fora, sem a frase | igual (mantive "Seu ouro X → Y") |
+| Avisos da aba Itens | "Já comprado hoje. Repõe à meia-noite" / "Comprado: X (na mochila)" | "Esgotado: volta amanhã" / "Comprou: X" | igual |
+| Aba Gemas | nota "Só pacotes de gemas, compra direta..." antes do VIP; bloco "Clube VIP" com coroa e seta | nota diferente depois; cartão "VIP n" com botão "Comprar VIP" | igual (benefícios lidos do `Sys.vip`) |
+| Comprar sem gemas | botão dourado abre a confirmação com "Faltam N gemas" e "Ver gemas" | botão cinza + aviso | igual |
+| Quadro da arma na prévia | 188, −22, parado | 176, −10, balançando | igual |
+
+Ficam, de propósito:
+- Marcadores do protótipo que não são tela de verdade: "[QTD] gemas", "[PREÇO]", selos "prévia, animação em produção", "arte pendente".
+  Os pacotes de gemas continuam com "Em breve" e o toque avisa "Pagamento em breve: nada é cobrado agora" (o protótipo abre um diálogo com
+  quantidade e preço, que ainda não existem).
+- Preço do item em vermelho quando falta ouro; paginação da aba Itens só se o estoque passar de 6.
+- Nome da era por extenso no selo de skin bloqueada (o protótipo abrevia "Pré-Hist."); não medi se cabe.
+
+### 08 Passe
+
+| Diferença achada | Protótipo | Estava | Agora |
+|---|---|---|---|
+| Níveis por página na folha | 5 | 4 | 5 |
+| Cartão Grátis resgatado | o cartão inteiro apaga | só ícone e texto | igual |
+| Cabeçalho | respiro 12 px, linha alinhada pela base | 8 px, pelo centro | igual |
+| Missões | todas na tela, sem paginar | paginava (4 + 1) | sem paginação quando cabem com linha de 74 a 86 px; só pagina se não couber |
+| Ícone que voa | 40 px | 36 px | 40 px |
+| Voo de moeda/gema na batalha em tela cheia | — | ia para o canto (o HUD antigo está escondido) e passava por trás da folha | vai para as pílulas novas (`fbTarget`) e passa por cima |
+
+Ficam, de propósito: "Ativar Premium" sem "[PREÇO]" e sem o botão "Testar (protótipo)"; textos do diálogo Premium com a regra real (Itens da
+Temporada nos níveis 27 e 30); linha bônus "Complete as diárias" e missão de instância com "Em breve" (dados reais do `Sys.pass`);
+"itens da sua era" na paginação (regra real); selos "prévia"; ícone de equipamento aprovado (imagem) no lugar do traço SVG.
+
+### 16 Práticas e Títulos
+
+A conferência achou a tela igual em medidas, cores, estados e animações. Mudou:
+- Texto do total das práticas: 13 px (estava 12).
+- Na batalha em tela cheia, o título "Progresso" do cabeçalho some (a folha já mostra o título); o botão de voltar e as abas ficam.
+
+Ficam, de propósito ou fora do meu alcance:
+- Textos de condição e de bônus dos títulos vêm de `js/sys/titles.js` (não é meu): "Chegar ao andar N" x "Vencer o andar N", "% crítico" x
+  "pt crít.", "% defesa" x "% def.", "Fênix com 5★" x "Fênix em 5 estrelas", "Ter os 5 cabelos" x "Todos os cabelos (5)". Pedido registrado.
+- Estado "práticas bloqueadas até o nível N" e lista vazia: reais, não existem no protótipo.
+- Cadeado dos títulos balança (o do protótipo é parado) e a medalha do aviso balança: não mexi.
+- Pulso dourado no contador de abates do título ("tick"): não fiz.
+
+---
+
+## Bloco 2: Equipamento, pedido novo do dono
+
+### Botão "Equipar melhor"
+
+- Quem decide o melhor é o `gBest` que já existia: para cada um dos 7 espaços testa cada item da mochila com `Sys.fc.compute(S, host, {item})`
+  e fica com o de maior FC. Respeita `Sys.stats.slotOpen` (asa só no nível 50), `Sys.stats.canEquip` (asa só Épica ou acima) e o item
+  adormecido (o `Sys.fc` já calcula o adormecido rendendo menos, então ele só entra se ainda assim for melhor).
+- Toque: cada item que vai trocar sai da célula da mochila (ou do próprio botão, se estiver em outra página), sobe, faz um arco e pousa no
+  espaço dele, um a cada 0,11 s, 0,52 s de voo. No pouso: anel claro no espaço, som e vibração curta.
+- Quando o último pousa, a troca é aplicada de uma vez: os espaços que receberam item dão um pulo com brilho, a FC conta do valor antigo ao novo
+  em 0,9 s, o número cresce e fica verde, a caixa da FC acende e aparece "+N" verde; aviso "Equipou N itens melhores".
+- Nada a melhorar: botão apagado com "Já está com / o melhor" (duas linhas, para caber na barra); o toque repete o aviso.
+- Durante o voo o toque na tela não vale e a tela não é redesenhada por fora. Se a animação não terminar (aba em segundo plano), um relógio de
+  segurança aplica a troca. Com "reduzir movimento" ligado no aparelho, a troca é direta.
+
+### Arrastar da mochila ao espaço
+
+- Pointer events (dedo, caneta, mouse), em `js/equipfx.js`. O arrasto só começa depois de 10 px de movimento: o toque simples continua abrindo
+  a comparação como hoje.
+- Ao arrastar: o item vira um "fantasma" que segue o dedo (no toque ele sobe meio item acima do dedo, para dar para ver), a célula de origem
+  apaga, o espaço certo pulsa em verde e os outros apagam; passando por cima do espaço certo ele cresce e fica claro.
+- Soltar no espaço certo: o fantasma encaixa e o item equipa (mesma contagem de atributos do toque). Soltar em outro espaço: aviso "Este item vai
+  no espaço X" e o item volta. Soltar fora, ou gesto cancelado pelo sistema: o item volta com animação. Asa bloqueada: aviso do nível.
+- Área de soltar: o espaço mais 20% de folga em volta. Espaço de 58 px na base; a escala mínima do arranjo completo garante 44 px.
+- Sem rolagem e sem seleção: `touch-action:none` nas células, `user-select:none` e sem menu de toque longo dentro das telas cheias, e o arrasto
+  nativo de imagem é barrado.
+- Botão direito do mouse e segundo dedo são ignorados. Logo depois de soltar, o clique fantasma é ignorado por 0,45 s.
+
+---
+
+## O que NÃO pôde ser conferido sem navegador
+
+Tudo o que é visual. Em particular:
+1. Se a escala de 0,96 na folha deixa as cinco telas sem corte e sem sobra feia; se os textos em 2 linhas (abas da Loja, "Já está com o melhor",
+   regra de ouro) cabem.
+2. O voo dos itens: trajetória, tamanho do fantasma, pouso em cima do espaço certo (as contas usam `getBoundingClientRect`, não vi).
+3. O arrastar no celular: se o Android não rouba o gesto, se o dedo não cobre o item, se o toque simples continua limpo.
+4. A aura atrás do Kael (uso `mix-blend-mode: screen`; a batalha usa mistura aditiva no canvas): pode ficar forte ou fraca demais.
+5. Aba Itens da Loja com item de 4 atributos: se as linhas cabem nos 196 px.
+6. Missões do Passe com 5 linhas de 78 px na folha: se o texto de 2 linhas cabe.
+7. Voo de moedas/gemas do Passe até as pílulas novas do HUD.
+8. Lado a lado com o protótipo e prints: nenhum foi feito.
+
+O que foi verificado sem navegador: `node --check` em `screens.js`, `screens2.js`, `equipfx.js`; teste de fumaça `test/paineis`
+(`node test/paineis/smoke2.js && node test/paineis/smoke_all.js . 390 656`): carrega o index, os módulos e os scripts reais num DOM falso e
+desenha Equipamento (com filtro e comparação), Invocar, Loja (5 abas, prévia, confirmações), Passe (3 abas) e Progresso (2 abas) em 390x656,
+360x583, 320x500, 390x704, 390x780 e 430x866; simula "Equipar melhor" (3 itens, FC 764 → 1.313, botão apagado depois), arrastar ao espaço certo
+(equipa), ao errado (volta, com aviso), soltar fora (volta), toque simples (abre a comparação), botão direito e segundo dedo (ignorados).
+32 passos, 0 falhas, nenhum "undefined"/"NaN" no HTML. Isso prova que o código roda, não que a tela está certa.
+
+## Pedidos pendentes ao agente A
+
+Em `reports/pedidos-entre-agentes.md`. Nenhum trava os itens 1 e 2: o `js/equipfx.js` é carregado pelo próprio `screens.js`.
+
+---
+
+## Bloco 3: contorno comum (cabeçalho + VOLTAR), sem barra de baixo. Escrito, DESLIGADO, não visto
+
+Pedido do PO: nenhum painel com barra de navegação de baixo; cabeçalho da V2 + botão VOLTAR, tela cheia; um componente só.
+
+- O contorno mora em UM lugar: `xHead()` / `X_HEAD` / `xWrap()` em `js/screens.js`. As cinco telas e todas as novas passam pelo `xWrap`, então
+  trocar o cabeçalho quando os protótipos convertidos chegarem é mexer só ali.
+- Hoje o `xHead` é um palpite meu (não há protótipo convertido ainda): 64 px, botão redondo de vidro com a seta de voltar (44 px), título em
+  Lilita 24, pílulas de moedas e de gemas (atualizadas 4x por segundo). VOLTAR chama `Screens.close()`.
+- Chave `PANEL_V2.frame`, **desligada**. Ligada: o painel ocupa a tela inteira (`#view` de cima a baixo), e somem a folha da batalha
+  (`#fbsheet`, `#fbdim`) e a barra de abas (`#tabs`), por CSS meu com a classe `xframe` no `body`. O Passe esconde o X dele e o Progresso
+  esconde o voltar e o título próprios (ficam as abas internas).
+- **Altura (conta, não visto):** com o contorno, em 390x844 sobram 780 px de conteúdo (o protótipo tinha 704; a folha de hoje dá 656).
+  A tela deixa de encolher (escala 1,00) e ainda ganha linhas: mochila com 3 fileiras, passe com 6 níveis. Em 360x640 ainda encolhe para 0,86
+  (a tela é baixa demais para o arranjo completo de qualquer jeito).
+- **Depende do agente A?** Para funcionar, não: o CSS que tira a folha é meu. Mas a folha é dele, e eu passar por cima dela é contorno;
+  registrei o pedido B-8 para ele decidir se a folha sai de vez (aí eu tiro o meu CSS) e para tratar a área segura de cima (entalhe do
+  aparelho), que o meu cabeçalho ainda não respeita.
+
+### Varredura: restos do layout antigo nos meus arquivos
+
+| Onde | O que assumia o layout antigo | Situação |
+|---|---|---|
+| `screens.js`, CSS `body.full #view{top:var(--hudh);bottom:var(--navh)}` | painel entre o HUD de 64 px e a barra de abas de 76 px | fica só para o modo antigo (chave da batalha em tela cheia desligada); na folha o A já sobrepõe; com `frame` ligado eu sobreponho |
+| `screens.js`, alturas `rows = H>=680`, `H>=674`, `PER = H>=682` | 704 px de conteúdo (844 − 64 − 76) | corrigido no bloco 1 (`xFit`) |
+| `screens2.js`, `yFly` voando para `#gold`, `#gems`, `#lvb` | HUD antigo | corrigido: pílulas do HUD novo, ou as do cabeçalho do painel com `frame` |
+| `screens2.js`, `rAfter` pulsando `#fcv` | HUD antigo | corrigido: pulsa a FC do HUD novo quando a batalha é em tela cheia |
+| `screens2.js`, Passe com botão "Fechar o Passe" e Progresso com "Voltar" e título próprios | cada tela com a sua saída | escondidos quando o contorno comum está ligado |
+| `screens2.js`, avisos do Passe (`bottom:112px`) e da Loja (`bottom:16px`) | relativos ao painel, não à barra | sem mudança |
+| `screens.js`, aba "Coleção" da Loja (tela antiga de Skins, visual antigo) | conteúdo da era das abas | fora da barra (bloco 1) |
+| `screens.js`, texto "Mochila cheia: desmonte itens em Equip." | nome da aba antiga | fica (o ícone da V2 também se chama "Equip.") |
+| `screens2.js`, tela 10 antiga (`resOpen`, classe `resui` que esconde `#hud` e `#tabs`) | HUD e abas antigos | continua desligada; será substituída pela 10 nova |
+| `screens2.js`, botão "Ir" das missões → `setView('battle')` | — | funciona nos dois layouts |
+
+Fora dos meus arquivos (não mexi; pedido B-9): `index.html` ainda tem regras de aviso pensadas para a barra (`body.full[data-v=pass] #toast`
+com `bottom: calc(var(--navh) + ...)`), o tutorial aponta para `#tabs [data-t=gear]`, e `openSettings` ainda é o modal antigo.
+
+### Modo MANUAL removido (ordem do dono): varredura por "manual" / "AUTO" nos meus arquivos
+
+- `js/screens.js`, `js/equipfx.js`, `js/panels.js`: nenhuma ocorrência (nenhuma tela mostrava a opção nem falava em "manual").
+- `js/screens2.js`: só a tela 10 antiga (desligada) lia `S.set.auto` para decidir se a contagem de fechar sozinha rodava, e o comentário
+  falava em MANUAL. Agora a contagem sempre roda (`RES.autoOn = true`; tocar na tela ainda a cancela) e o comentário foi corrigido.
+  Não havia texto de interface com "AUTO" ou "MANUAL".
+- A tela 09 Configurações atual não é minha (`openSettings`, no index.html, tem a linha "Combate automático": é do agente A). A 09 nova,
+  quando eu a escrever, sai SEM a chave AUTO/MANUAL, mesmo que o protótipo a desenhe.
+- Os subagentes da Forja e da Pets V2 não têm essa opção nas telas deles; confiro por busca quando entregarem.
+
+## Bloco 4: registro das telas novas. Escrito, desligado
+
+`js/panels.js`: `Panels.add(nome, {title, render, click, tick, busy, onOpen, onClose})`. Cada tela nova mora em `js/p_<nome>.js` e nasce
+desligada (`PANEL_ON.<nome> = false`). Com tudo desligado o arquivo não envolve nada do jogo. Para conferir: `?debug=1&painel=forge`.
+Quando o `Screens.register` do agente A existir, o `Panels.enable` entrega a tela a ele; até lá, estende por fora (pedido B-3).
+
+## Bloco 5: tela 15 Forja. Escrita, DESLIGADA (`PANEL_ON.forge`), não vista rodando
+
+Arquivo `js/p_forge.js` (escrito por subagente, conferido por mim com `node --check`, teste de fumaça e busca por "manual"). Já está na lista de
+carga do `screens.js`; desligada, só se registra. Conferir: `?debug=1&painel=forge` e `Screens.open('forge')`.
+
+O que faz (todo número do `Sys.forge` / `Sys.stats`):
+- Portão: antes do nível de `Sys.level.unlockLevel('forge')` mostra cadeado, as pedras guardadas e voltar.
+- Modos "Fortalecer +N" e "Nível"; pedras de `Sys.forge.ensure(S).stones`.
+- Palco: Kael no pedestal com a aura real do +N da arma (folhas `aura4/7/10/13`), pastilhas de prévia +0, +4, +7, +10, +13, espaço escolhido
+  em destaque com o martelo.
+- 7 espaços (asa com cadeado até o nível 50), trilha +1 a +15 com o teto da era (`Sys.forge.capOf`).
+- Fortalecer: bônus, chance (a do módulo, sem dobro), pedras, ouro e garantia de `Sys.forge.canTry` / `attempt`; estados Fortalecer, Forjando,
+  Faltam pedras, Falta ouro, Teto da era, Máximo +15. Sucesso chama `statsChanged()`.
+- Nível: nível do item equipado, mesmas chamadas do Equipamento (`Sys.stats.canUpgrade` / `upgrade`).
+- Missão "colete pedras de forja": a tela não conta nada (o `passSync` do index já conta).
+
+Diferenças conscientes em relação ao protótipo (o PO precisa ver):
+1. **7 espaços em vez de 2**: o protótipo só tem arma e armadura no palco; a regra do dono são 7. Ficou uma faixa de 7 botões abaixo do palco.
+2. **Modo "Transformar" ficou de fora**: no protótipo ele só tem marcadores (`[OURO]`, `[N]`). Decisão do PO: entra ou não.
+3. **Cartão "Nível" segue o jogo** (nível do ITEM, 1 a 100, teto no nível do jogador), não o texto do protótipo (nível do espaço 1 a 60).
+4. Custo em ouro mostrado de verdade (o protótipo diz "a confirmar"); pedras de forja na linha dos modos (o cabeçalho é o comum).
+5. Cores das faixas de aura do protótipo, não as de `Sys.forge.DATA.auras[].col`.
+
+Para o PO / fps-e2: o "+X% do espaço" mostrado é o valor bruto de `DATA.bonus`; em botas, colar e asa o `Sys.stats` aplica metade
+(`pctForgeShare`) e a tela não mostra isso. "N falhas" da garantia é conta da tela (garantia ÷ `pityPerFail`).
+
+Não conferido: tudo o que é visual; toque real. Em 320 px de largura os botões de 48 px ficam com ~39 px e as pastilhas de aura com ~36 px
+(abaixo de 44): a corrigir quando eu vir a tela. Fechar de verdade (`Screens.close`) não roda no DOM falso.
+Teste: fumaça 46 passos, 0 falhas, em 390x656, 390x844, 360x583; teste de cliques do subagente (17 passos: portão, sem pedra, sucesso, falha,
+sem ouro, teto da era, máximo, asa, nível) sem falha.
+
+## Bloco 6: tela 17b Pets V2. Escrita, DESLIGADA (`PANEL_ON.pets`), NÃO carregada, não vista rodando
+
+Arquivo `js/p_pets.js` (subagente; conferi `node --check`, teste de fumaça 50 passos / 0 falhas em 390x788, 360x583, 320x500, e busca por
+"manual", fênix e tipos: só dois comentários dizendo que a fênix saiu). Relatório detalhado do subagente ainda por chegar; o que já é certo:
+- Só a TELA. Não liga ovo, chocar nem pet na batalha. Não mexe em chave do `Sys.pet`: lê o estado; sem o módulo carregado ou com a chave da
+  17b desligada (`Sys.pet.setV17`), mostra "Pets: em breve" (é o que o teste de fumaça desenha, porque o index não carrega `pet.js`).
+- Os 10 pontos do PO estão na tela, segundo o subagente, com teste de cliques dele (116 passos, 4 tamanhos, módulo carregado e `setV17(true)`
+  só dentro do teste): fênix fora; ovo da era sem sorteio; ovo à escolha por `chooseEgg`; "guardado até o nível X"; repetido "+10 fragmentos";
+  travas `evolve` / `cap` do `canFeed`; bônus por `fcShare` (% da FC total); sem tipos; andar 100 = "ovo Épico à escolha (Dragão ou Papagaio)".
+- **Defeito achado no módulo** (`Sys.pet.feedTap` gasta a ração e não grava o nível): pedido B-14 à fps-e2; a tela tem um contorno isolado.
+- Funções que faltam exportar: pedido B-15.
+- O arquivo NÃO está na lista de carga (o `screens.js` está congelado): pedido B-16.
+
+## Congelamento para o APK da v0.12.1 (aviso da coordenação recebido ~16:13)
+
+- Não gravo mais em `js/screens.js` nem `js/screens2.js` até o aviso "APK da v0.12.1 gerado". Só arquivos novos atrás de chave.
+- **Atenção, para a coordenação decidir:** as minhas últimas gravações nesses dois arquivos foram ANTES do aviso, mas depois do começo da
+  v0.12.1: `screens.js` às 16:05:59 (entrada do `p_forge` na lista de carga; antes disso o contorno `frame` desligado e os ganchos das telas
+  novas) e `screens2.js` às 16:01:43 (`RES.autoOn = true` na tela 10 desligada; antes disso o destino do voo e o pulso da FC). Tudo inerte
+  com as chaves como estão, mas não é byte a byte o que o agente A viu ao fechar a versão. Pedido B-13 registrado.
+- `js/panels.js` (16:12, arquivo novo, inerte): com o `Screens.register` do A, deixou de envolver o `setView` (o index já chama onOpen/onClose).
+
+### Rascunho: ajustes a aplicar em `screens.js` / `screens2.js` assim que liberar (NÃO aplicados)
+
+1. Progresso: tirar a seta de voltar e o título internos (o cabeçalho do A já tem Voltar e título; `Screens.close()` já volta ao Equipamento).
+2. Equipamento: entrada para a Forja como subtela (posição e desenho conforme o protótipo convertido; auditoria em curso).
+3. Apagar o meu cabeçalho `xHead` / `PANEL_V2.frame` (o cabeçalho de 56 px do A é o contorno comum; pedido B-12) e o CSS `xframe`.
+4. Altura útil nova (tela − 56 px = 788 em 390x844): o `xFit` já se adapta sozinho (lê a altura do `#view`); conferir as fileiras a mais.
+5. Loja, Passe e Progresso contra os protótipos convertidos: auditoria em curso; entra aqui quando voltar.
+
+#### 05 Equipamento contra o protótipo CONVERTIDO (auditoria por leitura; nada aplicado)
+
+Mudança de fundo: o protótipo novo não encolhe nem corta. O conteúdo ROLA, a vitrine tem altura `clamp(236px, 34vh, 292px)` com os espaços
+presos às bordas e o Kael preso ao centro, a mochila tem sempre 2 fileiras (10 por página) e o "EQUIPAR MELHOR" mora numa barra fixa embaixo.
+
+Altos:
+- Botão numa **barra fixa embaixo** (padding 8/12/10, fundo `#1d1611`, borda de cima), não no cabeçalho da mochila.
+- Com melhoria: 56 px de altura, raio 16, Lilita 21, texto **"EQUIPAR MELHOR"** em maiúsculas, seta de 20 px e **selo com a contagem** de
+  itens (24 px, fundo `#2a1403`, texto `#ffe07a`). Hoje: 40 px, 14 px, sem selo.
+- Sem melhoria: mesmo botão apagado, duas linhas: "EQUIPAR MELHOR" (19 px) e **"Você já usa o melhor de cada espaço"** (11 px). O aviso do
+  toque é "Você já usa o melhor". Hoje: "Já está com o melhor" (texto do pedido original do dono; o protótipo aprovado manda o outro).
+- Mochila: 2 fileiras fixas; tirar as fileiras extras e o corte para 1 fileira; trocar o encolhimento por rolagem.
+- Vitrine com altura responsiva e peças presas a borda/centro/fundo (hoje caixa de 390 px com posições fixas).
+- **Selo "FC +N"** grande no meio da vitrine (pílula verde, Lilita 22, 1,6 s, sobe e some), no "Equipar melhor" E ao soltar o item certo
+  no arrasto. Hoje: "+N" pequeno dentro da caixa da FC, e nada no arrasto.
+- Arrasto: o espaço certo ganha o **anel dourado** (o mesmo do filtro) e cresce 1,14 com o dedo em cima; os outros espaços NÃO apagam.
+  Hoje: verde pulsando e os outros apagados.
+
+Médios:
+- Voo: 0,64 s (hoje 0,52), começa em escala 0,9, sobe 46 px fixos no meio em 1,25, termina em 0,85; fantasma de 48 px, raio 12, fundo
+  `#4a3a2b→#1d1611`, brilho dourado; item de outra página sai do centro da grade (hoje sai do botão).
+- Pouso: nada por item; quando a troca aplica, TODOS os espaços trocados fazem `land` juntos (escala 1→1,22→1, anel `#ffe07a` com brilho,
+  0,55 s). Hoje: anel branco, som e vibração a cada pouso.
+- FC: a mesma contagem de 650 ms e o mesmo realce de qualquer troca (hoje 900 ms e realce maior).
+- Arrasto: fantasma centrado no dedo, girado −4°, escala 1,1, só sombra preta (hoje sobe acima do dedo, sem giro, com brilho); ao soltar
+  fora ou errado o fantasma só some (hoje volta animado à célula); textos "Esse item vai no espaço X" e "Já está equipado".
+- Botão Progresso (medalha) não existe no cabeçalho da mochila do protótipo: com Forja e Progresso como subtelas, preciso saber ONDE ficam
+  as entradas delas (pergunta ao PO: o protótipo convertido não desenha nenhuma das duas no Equipamento).
+- Subtítulo "Mochila N/60 · arraste o item até o espaço".
+- Camada "mid" do cenário e nuvens: continua sem a imagem.
+
+Baixos: cabeçalho da mochila, "Ver todos" e paginação com 44 px (hoje 40); arrasto começa com 8 px (hoje 10) e acerta só em cima do espaço
+(hoje com folga de 20%); linha da comparação 27 px; folha de comparação com rolagem; aviso 1,9 s.
+
+Dois pontos em que eu NÃO seguiria o protótipo sem ordem expressa (decisão do PO):
+- "ao soltar fora, o item só some": o pedido do dono dizia "o item volta com animação". Mantenho a volta animada até decidirem.
+- "sem folga na área de soltar": no dedo, acertar 58 px exatos é mais difícil; manteria a folga.
+
+#### 06 Invocar contra o protótipo CONVERTIDO (nada aplicado)
+
+- Alto: o palco do baú ESTICA (`flex: 1 1 262px`) com o baú centrado, e garantia, chances, grátis e botões ficam colados EMBAIXO. Hoje o
+  palco para em 262 px e, nos 788 px, sobram ~210 px vazios abaixo dos botões.
+- Alto: em tela baixa o conteúdo do palco REDUZ (escala 0,72 até 700 px de altura, 0,6 até 600); hoje ele sobe e corta os raios.
+- Médio: palco com 100% da largura (hoje 366 px fixos); camada "mid" e nuvens.
+- Baixos: grade do x10 encolhível; etiqueta "LENDÁRIO!" sempre 10 px; linha "Melhor" sem cor; aviso com escala 0,9 na entrada.
+- Ficam por decisão anterior: selo "GARANTIA", som por carta.
+
+## Fila (ordem nova do PO)
+
+15 Forja e 17b Pets V2: sendo escritas agora por dois subagentes, um arquivo cada (`js/p_forge.js`, `js/p_pets.js`), atrás de chave.
+Depois: 18 VIP, 11 Troca de era, 12 Ranking, 13 Instâncias, 14 Torre, 10 Vitória/Derrota, 09 Configurações, 21 Perfil. 20 Mapa das Eras: não.

@@ -1,0 +1,39 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inimigo parado</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.row{padding:8px 16px}.row h2{font-size:14px;margin:6px 0}.pair{display:flex;gap:10px;flex-wrap:wrap}.cell{background:#000;border-radius:8px;overflow:hidden;max-width:100%}
+.cell b{display:block;padding:5px 8px;background:#222;font-size:12px}canvas{display:block;max-width:100%}</style></head><body>
+<h1>Inimigo parado entre golpes: opção A × opção B</h1>
+<p><b>A</b>: golpe e, até o próximo golpe (1,3 s), os quadros de preparo do próprio ataque em vai-e-volta lento. <b>B</b>: golpe a cada ~1,3 s; entre um e outro, no máximo 0,3 s parado no último quadro da corrida, com balanço leve do corpo a partir dos pés. Os dois valem em qualquer escala: os pés ficam na linha do chão.</p>
+<div id="L"></div>
+<script>
+const A='../../../assets/';
+const LIST=[['Goblin (era 2)','era2_e0',2,6,'anim/era2_e0_run'],['Pirata (era 3)','era3_e0',3,2],['Drone (era 5)','era5_e0',5,3],['Rex Furioso, chefe (era 0)','era0_boss',0,5]];
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const J=async u=>(await fetch(u)).json();
+(async()=>{
+ const bgm=await J(A+'bg/meta.json');
+ for(const [name,key,era,hit,runP] of LIST){
+  const atk={img:await L(A+'anim/hyb/enemy/'+key+'_attack.png'),m:await J(A+'anim/hyb/enemy/'+key+'_attack.json')};
+  const rp=runP||('anim/hyb/enemy/'+key+'_run');const run={img:await L(A+rp+'.png'),m:await J(A+rp+'.json')};
+  const bg=await L(A+'bg/era'+era+'.png'),gyF=(bgm['era'+era]||{}).groundY||0.75;
+  const K=Math.max(1,Math.min(3,hit-2));
+  const row=document.createElement('div');row.className='row';row.innerHTML='<h2>'+name+'</h2><div class="pair"></div>';document.getElementById('L').appendChild(row);
+  for(const opt of ['A','B']){const c=document.createElement('div');c.className='cell';
+   c.innerHTML='<b>'+(opt==='A'?'A: preparo do ataque, quadros 0–'+K+' em vai-e-volta (6 fps)':'B: pausa ≤0,3 s no último quadro da corrida + balanço')+'</b>';
+   const cv=document.createElement('canvas');cv.width=360;cv.height=260;c.appendChild(cv);row.querySelector('.pair').appendChild(c);
+   const g=cv.getContext('2d');const t0=performance.now();
+   const draw=(sh,i,sx,sy2)=>{const m=sh.m,fw=m.w,fh=m.h||256,pl=m.padLeft||0,fy=m.feetY||243,sc=150/256;   // núcleo 256 = 150 px na tela, igual nas duas folhas
+     const X=cv.width*0.55,Y=cv.height*0.84;g.save();g.translate(X,Y);if(sx)g.transform(1,0,sx,1,0,0);g.scale(1,sy2||1);
+     g.drawImage(sh.img,i*fw,0,fw,fh,-(pl+128)*sc,-fy*sc,fw*sc,fh*sc);g.restore();};
+   const D=atk.m.frames/(atk.m.fps||12);
+   (function loop(now){const t=(now-t0)/1000;g.clearRect(0,0,cv.width,cv.height);
+     if(bg){const s=Math.max(cv.height/(bg.height*(0.84/gyF)),cv.width/bg.width),bw=bg.width*s,bh=bg.height*s;g.drawImage(bg,(cv.width-bw)/2,cv.height*0.84-gyF*bh,bw,bh);}
+     const P=opt==='A'?D+1.3:Math.max(1.3,D+0.3),u=t%P;
+     if(u<D)draw(atk,Math.min(atk.m.frames-1,Math.floor(u*(atk.m.fps||12))));
+     else if(opt==='A'){const seq=[];for(let k=0;k<=K;k++)seq.push(k);for(let k=K-1;k>0;k--)seq.push(k);draw(atk,seq[Math.floor((u-D)*6)%seq.length]);}
+     else{const w=u-D,b=Math.sin(w*Math.PI/0.3);draw(run,run.m.frames-1,-0.03*b,1+0.015*b);}
+     requestAnimationFrame(loop);})(t0);
+  }
+ }
+})();
+</script></body></html>

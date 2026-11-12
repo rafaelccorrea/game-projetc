@@ -1,0 +1,68 @@
+{
+ "note": "centro de cada pedaço relativo ao centro do relógio vazio, px da arte original; ordem horária a partir do topo",
+ "shards": [
+  {
+   "file": "shard_0.png",
+   "angDeg": 0,
+   "dx": 3,
+   "dy": -754,
+   "era": "era0 vulcão"
+  },
+  {
+   "file": "shard_1.png",
+   "angDeg": 34,
+   "dx": 423,
+   "dy": -620,
+   "era": "era1 pirâmide"
+  },
+  {
+   "file": "shard_2.png",
+   "angDeg": 71,
+   "dx": 688,
+   "dy": -241,
+   "era": "era2 castelo"
+  },
+  {
+   "file": "shard_3.png",
+   "angDeg": 109,
+   "dx": 689,
+   "dy": 234,
+   "era": "era3 navio"
+  },
+  {
+   "file": "shard_4.png",
+   "angDeg": 145,
+   "dx": 417,
+   "dy": 603,
+   "era": "era4 engrenagem"
+  },
+  {
+   "file": "shard_5.png",
+   "angDeg": 180,
+   "dx": 2,
+   "dy": 737,
+   "era": "era5 prédio"
+  },
+  {
+   "file": "shard_6.png",
+   "angDeg": 215,
+   "dx": -416,
+   "dy": 603,
+   "era": "era6 chip"
+  },
+  {
+   "file": "shard_7.png",
+   "angDeg": 251,
+   "dx": -687,
+   "dy": 237,
+   "era": "era7 caveira em chama"
+  },
+  {
+   "file": "shard_8.png",
+   "angDeg": 289,
+   "dx": -687,
+   "dy": -241,
+   "era": "era8 sol alado"
+  }
+ ]
+}

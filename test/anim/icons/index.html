@@ -1,0 +1,14 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ícones antes e depois</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:13px system-ui}h1{font-size:16px;margin:12px 16px}p{margin:4px 16px;color:#aab}
+.r{display:flex;gap:10px;align-items:center;padding:6px 16px;border-bottom:1px solid #222;flex-wrap:wrap}.r b{width:120px}
+.c{display:flex;flex-direction:column;align-items:center;gap:2px;color:#889;font-size:11px}
+.bg{background:radial-gradient(circle,#4a3a2a,#120d0a 75%);border-radius:10px}</style></head><body>
+<h1>Ícones dos espaços: aprovado (256 px) × leve (240 px, sem perda)</h1>
+<p>Maior tamanho mostrado no jogo: 120 px (carta da invocação). Leve = 2× esse tamanho, PNG sem paleta, transparência original. Peso: 3,68 MB → 1,02 MB.</p>
+<div id="L"></div>
+<script>
+const S=['weapon','vest','helmet','gloves','boots','necklace','wings'];let h='';
+for(let e=0;e<7;e++)for(const s of S){const f='era'+e+'_'+s+'.png',A='../../../assets/icons/_aprovado_original/slots/'+f,B='../../../assets/icons/slots/'+f;
+h+=`<div class="r"><b>${f}</b>${[[A,'antes'],[B,'depois']].map(([u,l])=>`<div class="c"><img class="bg" src="${u}" width=120 height=120>${l} 120</div>`).join('')}${[[A,'antes'],[B,'depois']].map(([u,l])=>`<div class="c"><img class="bg" src="${u}" width=240 height=240>${l} 240</div>`).join('')}</div>`;}
+document.getElementById('L').innerHTML=h;
+</script></body></html>

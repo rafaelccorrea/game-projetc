@@ -1,0 +1,145 @@
+// Gera assets/bg/v2/era1/meta.json a partir de work/info.json (saida do build1.js).
+// uso: node mkmeta1.js <pastaTrabalho> <pastaSaida>     (ou: node mkmeta1.js --info tools/info.era1.json <pastaSaida>)
+// A era 1 usa so tipos que o scene.js ja tinha: nada de codigo novo.
+const fs = require('fs');
+const infoFile = process.argv[2] === '--info' ? process.argv[3] : process.argv[2] + '/work/info.json';
+const info = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
+const OUT = process.argv[process.argv[2] === '--info' ? 4 : 3];
+const r3 = v => Math.round(v * 1000) / 1000, r4 = v => Math.round(v * 10000) / 10000;
+const L = (id, o, px, height) => Object.assign({ id }, o, { px, height, repeatWidth: r3(height * px[0] / px[1] * (o.tile === 'repeat' ? 1 : 2)) });
+const G = { top: 0.62, height: 0.40 }, SKYH = 0.62, FARH = 0.34, MID = { bottom: 0.645, height: 0.50 };
+const road = [r3(G.top + info.road[0] * G.height), r3(G.top + info.road[1] * G.height)], curb = [r3(G.top + info.curb[0] * G.height), r3(G.top + info.curb[1] * G.height)];
+const horizon = r4(SKYH * info.horizon), farBottom = r3(horizon + 0.012);
+const midW = MID.height * info.midA[0] / info.midA[1];                      // largura de um trecho do mid em SH
+const fall = info.fall.map(r4), fount = info.fount.map(r4);
+// ancoras medidas nas imagens (fracao x,y de cada trecho do mid)
+const BRAZ = [{ x: 0.1566, y: 0.640 }, { x: 0.4104, y: 0.640 }];           // carvao dos dois braseiros do templo (mid A)
+const up = (a, dy) => a.map(p => ({ x: p.x, y: r4(p.y - dy) }));
+const FW = 0.074;                                                            // largura de cada pano (flamula da arena / meia barra de toldo)
+const fwx = FW / midW;                                                       // a mesma largura em fracao do trecho
+const AWN = [{ x: 0.7975, y: 0.622, flag: 'awnR2' }, { x: r4(0.7975 - fwx), y: 0.622, flag: 'awnR1' }, { x: 0.9265, y: 0.636, flag: 'awnB2' }, { x: r4(0.9265 - fwx), y: 0.636, flag: 'awnB1' }];
+const ARENA = [{ x: 0.7771, y: 0.221, flag: 'flag1' }, { x: 0.8466, y: 0.218, flag: 'flag2' }, { x: 0.8990, y: 0.209, flag: 'flag1' }];
+const SPOUT = { x: 0.4324, y: 0.612 }, BASIN = { x: 0.4324, y: 0.79 }, FOOT = { x: r4(info.fall[0] + info.fall[2] * 0.5), y: r4(info.fall[1] + info.fall[3] - 0.02) };
+const water = { rgb: '236,248,255', glowRgb: '120,190,255' };
+const m = {
+  version: 2, era: 1, nome: 'Antiguidade - cidade greco-romana a beira do Mediterraneo, acropole e trirremes',
+  unidades: 'Tudo em FRACAO DA ALTURA DA CENA (SH), inclusive medidas horizontais, salvo quando dito. px = valor * SH. Velocidades em SH por segundo. x do heroi em fracao da LARGURA. Cena de referencia: 390 x 692 px CSS (campo de batalha no topo de uma tela 390x844; linha do chao = 0.78*692 = 540 px = 64% da tela, igual ao jogo).',
+  scene: { refWidth: 390, refHeight: 692 },
+  groundY: 0.78, runSpeed: 0.275,
+  hero: {
+    file: 'hero_run.png', frames: 8, fps: 12, frameW: 256, frameH: 256, x: 0.30, size: 0.2643, footY: 0.947, figureHeight: 0.231,
+    nota: 'Folha de corrida do Kael (a mesma das eras 0 e 2; a roupa da era 1 ainda nao existe animada). size = lado do quadro 256 em SH (183 px na cena de 692; o boneco fica com 160 px). footY = fracao do quadro onde ficam os pes. Desenhar em (x*W - size/2, groundY - size*footY).',
+    shadow: { rx: 0.21, ry: 0.05, alpha: 0.30, nota: 'elipse sob os pes; rx/ry em fracao de size' },
+    stepDust: { color: '#f6e2b4', perStep: 3, life: [0.45, 0.65], radius: [0.004, 0.012] }
+  },
+  layers: [
+    Object.assign(L('sky', { file: 'sky.webp', tile: 'repeat', parallax: 0.015, drift: 0.004, top: 0 }, info.sky, SKYH), { horizonY: horizon, nota: 'ceu + MAR na mesma imagem (o mar vai do horizonte ate o topo do chao e aparece nos vaos da cidade); repete em si mesmo, sem espelho' }),
+    Object.assign(L('far', { file: 'far.webp', tile: 'mirror', parallax: 0.06, drift: 0, offset: 0.1, bottom: farBottom }, info.far, FARH), { nota: 'costa distante: colina da acropole no centro do ladrilho + montanhas; a base e a linha d agua, logo abaixo do horizonte. Ladrilho estreito (0.76 SH) de proposito: a acropole nunca sai de cena' }),
+    L('mid', { files: ['midA.webp', 'midB.webp'], filesLow: ['midA_lo.webp', 'midB_lo.webp'], tile: 'sequence', parallax: 0.38, drift: 0, bottom: MID.bottom }, info.midA, MID.height),
+    Object.assign(L('ground', { file: 'ground.webp', tile: 'repeat', parallax: 1, drift: 0, top: G.top }, info.ground, G.height), { roadY: road, curbY: curb, nota: 'roadY = faixa das lajes da calcada romana (topo, base) em SH; os pes (groundY) caem dentro dela. curbY = guias de pedra; fora delas, areia' })
+  ],
+  tileNota: 'repeat: emenda nela mesma. mirror: alternar normal/espelhada. sequence: arquivos de files em ordem (A,B,A,B...). repeatWidth = largura do ciclo completo em SH. off(camada) = scroll*parallax + t*drift + offset.',
+  drawOrder: ['sky (ceu + mar)', 'clouds: sol, nuvens em 2 velocidades, trirremes', 'birds (pombas)', 'far', 'farFill (transparente)', 'fx(far): brilho do mar', 'haze', 'fog[0]', 'sunRays', 'mid', 'towerFlags (flamulas da arena e barras dos toldos)', 'fx(mid): fogo, brilho, faiscas e incenso dos braseiros; queda do aqueduto; fonte', 'fog[1]', 'ground', 'decals', 'roadside', 'hero', 'motes', 'fg', 'bottomShade'],
+  placeholder: { sky: ['#1a8de6', '#55b2f3', '#a6dcfb', '#1b78b6'], ground: [[curb[0], '#fed985'], [road[0], '#e6d2ad'], [road[1], '#ecdcb9'], [curb[1], '#d9c29a'], [1.001, '#fed97f']], nota: 'fundo desenhado no primeiro quadro, antes de qualquer imagem: degrade do ceu ate o topo do chao e faixas [ate y, cor] do chao. filesLow = versoes leves (880 px) carregadas primeiro e trocadas pelas definitivas.' },
+  spacing: 'Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.',
+  farFill: { color: 'rgba(0,0,0,0)', nota: 'transparente nesta era: atras da cidade fica o mar da camada sky' },
+  fx: [
+    { id: 'brilho_mar', type: 'flow', layer: 'far', tile: 0, mask: 'glint', rect: [0, 1.0, 1, r4((G.top - 0.05 - farBottom) / FARH)], rgb: '255,255,255', blend: 'lighter', base: 0, loop: 2.6, frames: 26, maxScale: 1,
+      bands: [{ len: 0.052, cycles: 1, alpha: 0.95 }, { len: 0.031, cycles: 2, alpha: 0.5, peak: 0.3 }], nota: 'retangulo ABAIXO do ladrilho far (y de 1.0 em diante = mar): tracos de luz acendendo em ondas' },
+    { id: 'braseiro_brilho', type: 'glow', layer: 'mid', anchors: [up(BRAZ, 0.03), []], radius: 0.075, alpha: 0.36, pulse: 6.5, rgb: ['255,205,110', '255,150,50', '255,110,30'] },
+    { id: 'braseiro_chama', type: 'plume', layer: 'mid', anchors: [BRAZ, []], n: 18, life: 0.72, rise: 0.086, wind: -0.014, spread: 0.02, wobble: 0.011, r0: 0.0125, grow: -0.0112, alpha: 0.97, fade: 0.72, fadeIn: 0.03,
+      light: '#ffd044', dark: '#f4731c', hot: '#fff4b8', hotDark: '#ffac2a', hotUntil: 0.4, seed: 81, nota: 'chama feita de bolhas em 2 tons que nascem no carvao, sobem e encolhem (grow negativo): a forma muda o tempo todo' },
+    { id: 'braseiro_faiscas', type: 'embers', layer: 'mid', anchors: [up(BRAZ, 0.05), []], n: 7, life: 1.7, angle: 0.9, speed: 0.06, gravity: -0.012, wind: -0.012, wobble: 0.006, radius: [0.0013, 0.0026], rgb: '255,226,130', glowRgb: '255,120,40', seed: 93 },
+    { id: 'incenso', type: 'plume', layer: 'mid', anchors: [up(BRAZ, 0.13), []], n: 20, life: 6.5, rise: 0.2, wind: -0.075, spread: 0.014, wobble: 0.009, r0: 0.0045, grow: 0.017, alpha: 0.4, fade: 0.35, fadeIn: 0.1, light: '#f4eef2', dark: '#c9bfd3', seed: 76 },
+    { id: 'queda_fios_a', type: 'flow', layer: 'mid', tile: 1, mask: 'fallA', rect: fall, rgb: '255,255,255', blend: 'source-over', base: 0, loop: 0.34, frames: 17, bands: [{ len: 0.07, cycles: 1, alpha: 0.8, peak: 0.35 }] },
+    { id: 'queda_fios_b', type: 'flow', layer: 'mid', tile: 1, mask: 'fallB', rect: fall, rgb: '255,255,255', blend: 'source-over', base: 0, loop: 0.46, frames: 23, bands: [{ len: 0.095, cycles: 1, alpha: 0.75, peak: 0.3 }] },
+    { id: 'queda_brilho', type: 'flow', layer: 'mid', tile: 1, mask: 'fallMask', rect: fall, rgb: '190,232,255', blend: 'source-over', base: 0, loop: 0.6, frames: 20, bands: [{ len: 0.045, cycles: 2, alpha: 0.4 }] },
+    { id: 'queda_respingo', type: 'plume', layer: 'mid', anchors: [[], [FOOT]], n: 11, life: 1.5, rise: 0.03, wind: 0, spread: 0.085, wobble: 0.003, r0: 0.006, grow: 0.019, alpha: 0.7, fade: 0.3, light: '#ffffff', dark: '#cfeafa', seed: 73 },
+    Object.assign({ id: 'queda_gotas', type: 'embers', layer: 'mid', anchors: [[], [FOOT]], n: 12, life: 0.75, angle: 2.2, speed: 0.11, gravity: 0.42, radius: [0.0016, 0.003], seed: 97 }, water),
+    { id: 'fonte_agua', type: 'flow', layer: 'mid', tile: 1, mask: 'fountMask', rect: fount, rgb: '255,255,255', blend: 'source-over', base: 0, loop: 0.5, frames: 20, bands: [{ len: 0.03, cycles: 1, alpha: 0.75, peak: 0.35 }, { len: 0.019, cycles: 2, alpha: 0.4 }] },
+    Object.assign({ id: 'fonte_jato', type: 'embers', layer: 'mid', anchors: [[], [SPOUT]], n: 26, life: 0.95, angle: 1.5, speed: 0.105, gravity: 0.34, radius: [0.002, 0.0038], seed: 99 }, water),
+    { id: 'fonte_respingo', type: 'plume', layer: 'mid', anchors: [[], [BASIN]], n: 8, life: 1.3, rise: 0.016, wind: 0, spread: 0.1, wobble: 0.002, r0: 0.004, grow: 0.011, alpha: 0.6, fade: 0.3, light: '#ffffff', dark: '#cfeafa', seed: 79 }
+  ],
+  fxNota: 'Efeitos presos a uma camada. anchors/rect: fracoes (x,y[,w,h]) dentro do arquivo da camada (indice = posicao em files; em ladrilho espelhado x vira 1-x). flow: laco de loop segundos em frames quadros; cada quadro = mascara (sprite branco com alfa) preenchida por faixas de brilho que descem (len = periodo em SH, cycles = quantos periodos a faixa anda por laco, alpha no pico); os quadros sao montados uma vez e guardados. A queda do aqueduto usa 2 mascaras de fios alternados (fallA/fallB) com ritmos diferentes: os fios vizinhos descem fora de fase. glow: brilho radial aditivo pulsando. plume: n bolhas sem estado; fase p = frac(t/life + k/n); x = ax + wind*p^1.5 + espalhamento; y = ay - rise*p^0.85; raio = r0 + grow*p (grow negativo = chama que afina); cor quente perto da base (hot) ate hotUntil. embers: particulas aditivas em arco (angle = abertura em rad, gravity em SH/s2; negativo sobe = faiscas, positivo cai = gotas d agua).',
+  haze: { y: [0.27, farBottom], rgb: '255,246,226', alpha: 0.36 },
+  fog: [{ y: r3(horizon - 0.02), height: 0.075, parallax: 0.1, drift: 0.014, alpha: 0.55 }, { y: 0.585, height: 0.07, parallax: 0.5, drift: 0.02, alpha: 0.3 }],
+  fogTexture: { w: 768, h: 160, blobs: 22, rgb: '255,248,232', alpha: 0.30, nota: 'textura procedural: elipses radiais com posicoes de hash, repetida na horizontal. fog[0] = bruma do mar no horizonte; fog[1] = poeira baixa da cidade' },
+  sunRays: { origin: [0.092, 0.107], length: 1.0, count: 5, angle0: 0.34, angleStep: 0.2, halfWidth: [0.04, 0.06], alpha: [0.012, 0.07], rgb: '255,236,170', pulse: 0.45, blend: 'lighter', nota: 'saem do centro do sol (clouds.groups[0])' },
+  clouds: {
+    nota: 'x inicial, y, largura em SH; deslocamento = scroll*parallax + t*drift; cada grupo da a volta a cada period. Grupo 0 = sol (fixo no ceu, parallax 0). Grupos 1 e 2 = nuvens em 2 velocidades. Grupo 3 = trirremes no mar: drift negativo (navegam para a direita), ficam atras da camada far e abaixo da linha d agua, balancam com o seno vertical das nuvens.',
+    groups: [
+      { parallax: 0, drift: 0, alpha: 1, period: 50, items: [{ s: 'sun', x: 0.037, y: 0.052, w: 0.11 }] },
+      { parallax: 0.03, drift: 0.010, alpha: 0.95, period: 2.2, items: [{ s: 'cloud1', x: 0.10, y: 0.135, w: 0.17 }, { s: 'cloud3', x: 1.25, y: 0.10, w: 0.2 }] },
+      { parallax: 0.06, drift: 0.024, alpha: 1, period: 2.6, items: [{ s: 'cloud2', x: 0.5, y: 0.012, w: 0.30 }, { s: 'cloud1', x: 1.7, y: 0.04, w: 0.25 }] },
+      { parallax: 0.022, drift: -0.021, alpha: 1, period: 1.5, items: [{ s: 'ship1', x: 0.3, y: r3(farBottom + 0.014), w: 0.088 }, { s: 'ship2', x: 1.05, y: r3(farBottom + 0.006), w: 0.056 }] }]
+  },
+  birds: { sprite: 'dove', flocks: [{ period: 15, duration: 10, y: 0.06, size: 0.125, n: 2, phase: 2, alpha: 1 }, { period: 24, duration: 16, y: 0.02, size: 0.075, n: 3, phase: 11, alpha: 0.92 }], nota: 'pombas brancas (4 quadros): cruzam da esquerda para a direita; size = lado do quadro em SH' },
+  flagWave: { k1: 6.2, w1: 7, k2: 2.4, w2: 2.6, droop: 0.1, sliceCss: 1.5, nota: 'dy(u) = sin(u*k1 - t*w1 + ph)*amp*h*(0.15+u) + sin(u*k2 - t*w2 + ph*1.7)*amp*h*0.7*u + u*u*h*droop ; u = 0 na ponta presa, 1 na ponta solta' },
+  towerFlags: { pole: 0, width: FW, amp: 0.2, nota: 'panos presos pela direita, ondulando por fatias. pole 0: prendem direto na ancora (mastros da arena ja estao pintados; nos toldos a ancora e a beirada)' },
+  midAnchors: { nota: 'fracoes (x,y) dentro de cada arquivo da camada mid (indice = posicao em files). mid A: 2 meias barras por toldo (vermelho/branco e azul). mid B: flamulas nos 3 mastros da arena.', towerFlags: [AWN, ARENA] },
+  roadside: {
+    parallax: 1, cell: 0.5, prob: 0.92, seed: 11, minGap: 0.085, reach: 0.6, baseY: [0.69, 0.704], nota: 'objetos na beira de tras da calcada (areia/guia), atras do heroi; sorteio por celula igual ao dos decalques. type: fire (braseiro: 3 chamas em quadros + brilho + faiscas), torch (tocheiro de bronze + chama), banner (haste + estandarte ondulando), critter (gato/cabra: cauda e cabeca mexem por fatias), sprite com sway (oliveira e cipreste balancando) ou parado (anfora, herma, escudo)',
+    pool: [
+      { type: 'fire', sprite: 'brazier', h: [0.092, 0.1], weight: 4, fire: { y: 0.84, size: 0.82, glow: 2.1, glowAlpha: 0.14, sparks: { n: 8, life: 1.5, spread: 0.5, wobble: 0.3, wind: 0.55, rise: 2.6, radius: 0.036 } } },
+      { type: 'torch', h: [0.19, 0.2], weight: 2 },
+      { type: 'banner', flag: 'flag1', h: [0.3, 0.32], flagW: 0.15, amp: 0.11, weight: 2 },
+      { type: 'banner', flag: 'flag2', h: [0.28, 0.3], flagW: 0.14, amp: 0.12, weight: 2 },
+      { type: 'critter', sprite: 'cat', h: [0.074, 0.082], weight: 2, tail: { x: 0.4, amp: 0.2, f: 2.4, k: 2.2 }, head: { x: 0.66, amp: 0.045, f: 1.1 } },
+      { type: 'critter', sprite: 'goat', h: [0.105, 0.115], weight: 2, tail: { x: 0.13, amp: 0.1, f: 5, k: 1 }, head: { x: 0.7, amp: 0.085, f: 0.95 } },
+      { type: 'sprite', sprite: 'olive', h: [0.2, 0.23], sway: true, swayAmp: 0.32, weight: 2 },
+      { type: 'sprite', sprite: 'cypress', h: [0.25, 0.28], sway: true, swayAmp: 0.3, weight: 2 },
+      { type: 'sprite', sprite: 'amphora', h: [0.115, 0.125], weight: 1 },
+      { type: 'sprite', sprite: 'herm', h: [0.15, 0.16], weight: 1 },
+      { type: 'sprite', sprite: 'shield', h: [0.105, 0.115], weight: 1 }]
+  },
+  torch: { flameY: 0.92, flameSize: 0.38, glowRadius: 1.7, glowAlpha: 0.2, nota: 'fracoes da altura do tocheiro; chama = folha flame (4 quadros, 10 fps). Vale tambem para as chamas do braseiro da beira da estrada.' },
+  decals: {
+    file: 'decals.webp', atlas: info.decals.rects, pxScale: 0.00046, minGap: 0.012, reach: 0.62, sameTypeGap: 0.564, footClear: [0.765, 0.8],
+    regras: 'sameTypeGap (SH; 0.564 = 390 px = 1 tela): o MESMO decalque (mesmo nome no atlas) nunca aparece duas vezes a menos dessa distancia horizontal; entre dois candidatos iguais vence o de maior prioridade rnd(i,seed,6) (deterministico, vale entre todos os grupos; reach >= sameTypeGap). footClear = faixa vertical em torno da linha dos pes (groundY 0.78) livre de pecas com volume: anforas, cacos grandes, pratos, coroa, moedas empilhadas, bolsa, lajes e seixos so entram em roadBigBack (base acima da faixa) e roadBigFront (topo abaixo da faixa); rachaduras, folhas, ramos, moeda solta e caquinhos (roadFlat) podem passar sob os pes.',
+    nota: 'atlas: nome -> [x,y,w,h] em px. tamanho na cena = px * pxScale * escala (em SH). Espalhamento pseudoaleatorio infinito: para cada celula i (largura cell), se rnd(i,seed,0) < prob, sorteia item do pool por peso (rnd 1), x = (i + 0.15 + 0.7*rnd 2)*cell, base y em yRange (rnd 3), escala em scale (rnd 4), espelha se rnd 5 < 0.5. Nunca repete.',
+    groups: [
+      { id: 'edgeTop', parallax: 1, cell: 0.21, prob: 0.55, seed: 5, yRange: [r3(G.top + 0.036), r3(curb[0] - 0.004)], scale: [0.6, 0.9], flip: true, nota: 'areia de tras', pool: [['tuft1', 3], ['tuft2', 3], ['pebbles', 2], ['dry', 1]] },
+      { id: 'roadFlat', parallax: 1, cell: 0.17, prob: 0.85, seed: 3, yRange: [r3(road[0] + 0.034), r3(road[1] - 0.004)], scale: [0.75, 1.05], flip: true, nota: 'marcas rasas: podem ficar sob os pes',
+        pool: [['cracks', 4], ['leaves', 3], ['dry', 2], ['coin', 2], ['bits', 2], ['twig', 2], ['branch', 2], ['coins3', 1]] },
+      { id: 'roadBigBack', parallax: 1, cell: 0.42, prob: 0.75, seed: 13, yRange: [r3(road[0] + 0.026), r3(road[0] + 0.044)], scale: [0.7, 0.92], flip: true, nota: 'pecas com volume na borda de tras da calcada (base acima da faixa dos pes)',
+        pool: [['amph', 2], ['shards', 2], ['amphHalf', 2], ['plate', 1], ['wreath', 2], ['coinpile', 1], ['pouch', 1], ['slab1', 2], ['slab2', 2], ['pebbles', 1]] },
+      { id: 'roadBigFront', parallax: 1, cell: 0.27, prob: 0.85, seed: 17, yRange: [0.872, r3(road[1] - 0.004)], scale: [0.8, 1.08], flip: true, nota: 'pecas com volume na metade da frente da calcada (topo abaixo da faixa dos pes)',
+        pool: [['amph', 2], ['shards', 2], ['amphHalf', 2], ['plate', 1], ['wreath', 2], ['coinpile', 1], ['pouch', 1], ['slab1', 2], ['slab2', 2], ['pebbles', 1]] },
+      { id: 'edgeBottom', parallax: 1, cell: 0.22, prob: 0.5, seed: 8, yRange: [r3(curb[1] + 0.03), r3(curb[1] + 0.05)], scale: [0.8, 1.15], flip: true, nota: 'areia da frente', pool: [['tuft1', 3], ['tuft2', 3], ['pebbles', 2], ['dry', 1]] }]
+  },
+  fg: {
+    parallax: 1.3, cell: 0.4, prob: 0.8, seed: 21, minGap: 0.03, reach: 0.6, baseY: [1.02, 1.05], nota: 'primeiro plano, na frente do heroi; plantas balancam (skew), ruinas de marmore ficam paradas',
+    pool: [
+      { sprite: 'laurel', h: [0.12, 0.15], sway: true, weight: 2 }, { sprite: 'drygrass', h: [0.14, 0.17], sway: true, weight: 2 }, { sprite: 'poppy', h: [0.13, 0.155], sway: true, weight: 2 }, { sprite: 'acanthus', h: [0.12, 0.15], sway: true, weight: 2 },
+      { sprite: 'drum', h: [0.085, 0.1], weight: 1 }, { sprite: 'capital', h: [0.095, 0.11], weight: 1 }]
+  },
+  sway: { a1: 0.10, f1: 1.9, a2: 0.04, f2: 3.1, bias: -0.05 },
+  motes: { count: 30, yRange: [0.42, 0.96], rgb: '255,226,140', glowRgb: '255,196,90', radius: [0.0012, 0.003], parallax: 0.55, drift: 0.013, blend: 'lighter', nota: 'poeira dourada flutuando' },
+  bottomShade: { from: 0.94, alpha: 0.26, rgb: '80,50,12' },
+  rnd: 'rnd(i,seed,k): x=imul(i|0,0x9E3779B1)^imul(seed*31+k+1,0x85EBCA6B); x^=x>>>15; x=imul(x,0x2C1B3C6D); x^=x>>>12; x=imul(x,0x297A2D39); x^=x>>>15; return (x>>>0)/2^32',
+  sprites: {
+    sun: 'sun.webp', cloud1: 'cloud1.webp', cloud2: 'cloud2.webp', cloud3: 'cloud3.webp', ship1: 'ship1.webp', ship2: 'ship2.webp',
+    dove: { file: 'dove.webp', frames: 4, fps: 9 }, flame: { file: 'flame.webp', frames: 4, fps: 10 },
+    glint: 'glint.webp', fallMask: 'fall.webp', fallA: 'fallA.webp', fallB: 'fallB.webp', fountMask: 'fount.webp',
+    flag1: 'flag1.webp', flag2: 'flag2.webp', awnR1: 'awnR1.webp', awnR2: 'awnR2.webp', awnB1: 'awnB1.webp', awnB2: 'awnB2.webp', pole: 'pole.webp',
+    brazier: 'brazier.webp', torch: 'torch.webp', cat: 'cat.webp', goat: 'goat.webp', olive: 'olive.webp', cypress: 'cypress.webp', amphora: 'amphora.webp', herm: 'herm.webp', shield: 'shield.webp',
+    laurel: 'laurel.webp', drygrass: 'drygrass.webp', poppy: 'poppy.webp', acanthus: 'acanthus.webp', drum: 'drum.webp', capital: 'capital.webp'
+  },
+  animated: [
+    { id: 'ceu_e_mar_deriva', tipo: 'ceu e mar pintados derivando devagar, independem da corrida' }, { id: 'nuvens_2_vel', tipo: 'nuvens soltas em 2 velocidades, passando na frente do sol' },
+    { id: 'raios_de_sol', tipo: 'feixes dourados saindo do sol e pulsando' }, { id: 'pombas', tipo: '2 grupos de pombas brancas batendo asas (4 quadros)' },
+    { id: 'trirremes', tipo: '2 trirremes navegando no mar ao fundo, subindo e descendo de leve' }, { id: 'brilho_do_mar', tipo: 'tracos de sol acendendo em ondas na agua' },
+    { id: 'bruma', tipo: 'bruma do mar no horizonte e poeira baixa da cidade, deslizando' },
+    { id: 'braseiros_templo', tipo: 'fogo dos 2 braseiros do templo: chama que muda de forma, brilho pulsando e faiscas subindo' }, { id: 'incenso', tipo: 'fumaca fina de incenso subindo dos braseiros do templo' },
+    { id: 'toldos', tipo: 'barras dos toldos do mercado tremulando (4 panos)' }, { id: 'flamulas_arena', tipo: '3 flamulas nos mastros da arena ondulando' },
+    { id: 'cascata_aqueduto', tipo: 'agua caindo do aqueduto: fios em 2 ritmos + brilho, respingo e gotas na bacia' }, { id: 'fonte', tipo: 'fonte: jato de gotas em arco, agua correndo nas bacias e respingo' },
+    { id: 'braseiro_estrada', tipo: 'braseiro de bronze na beira da estrada: 3 chamas em quadros, brilho e faiscas' }, { id: 'tocheiros', tipo: 'tocheiros de bronze com chama em quadros e brilho' },
+    { id: 'estandartes', tipo: 'estandartes vermelho e roxo ondulando nas hastes' }, { id: 'gato_e_cabra', tipo: 'gato abanando a cauda e cabra balancando a cabeca na beira da estrada' },
+    { id: 'oliveiras_ciprestes', tipo: 'oliveiras e ciprestes da beira da estrada balancando ao vento' }, { id: 'poeira_dourada', tipo: 'poeira dourada flutuando e piscando' },
+    { id: 'plantas_frente', tipo: 'louro, capim seco, papoulas e acanto do primeiro plano balancando' }, { id: 'poeira_passos', tipo: 'poeirinha nos pes do heroi' }]
+};
+let s = JSON.stringify(m, null, 1);
+for (let k = 0; k < 6; k++) s = s.replace(/([\[{])\n\s+([^\[\]{}]*?)\n\s+([\]}])/g, (a, o, b, c) => o + b.replace(/\n\s+/g, ' ') + c);
+JSON.parse(s);
+fs.writeFileSync(OUT + '/meta.json', s);
+console.log('meta.json', s.length, 'bytes', 'horizonte', horizon, 'far.bottom', farBottom, 'calcada', road, 'guias', curb, 'midW', r3(midW));

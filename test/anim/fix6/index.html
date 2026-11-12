@@ -1,0 +1,14 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Limpeza Devorador</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}
+.c b{display:block;padding:5px 8px;background:#222;font-size:12px}canvas{display:block;max-width:100%;border-radius:0 0 8px 8px}</style></head><body>
+<h1>Devorador (era 6), golpe: antes × depois da limpeza</h1>
+<p>Correção técnica proposta: nos quadros 6 e 7, apagar a mancha cinza translúcida (resto do recorte do fundo) que ficava até 10 px abaixo da linha dos pés (amarela). O desenho é o mesmo: só saem 275 pixels translúcidos (alfa < 128) abaixo da linha dos pés, à esquerda e abaixo da língua (regra autorizada pelo PO). Fundo rosa para a mancha aparecer. Em cima: tamanho real ×2, quadros 6 e 7. Embaixo: a folha tocando.</p>
+<div class="g" id="g"></div>
+<script>
+const E='../../../assets/anim/';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=s;});
+(async()=>{const j=await (await fetch(E+'hyb/enemy/era6_boss_attack.json')).json();const A=await L(E+'hyb/enemy/era6_boss_attack.png'),B=await L(E+'_staging/era6_boss_attack.png');
+ const mk=(lab)=>{const d=document.createElement('div');d.className='c';d.innerHTML='<b>'+lab+'</b>';const c=document.createElement('canvas');d.appendChild(c);document.getElementById('g').appendChild(d);return c;};
+ for(const [img,lab] of [[A,'ANTES (aprovado)'],[B,'DEPOIS (limpo)']])for(const f of [6,7]){const c=mk(lab+' quadro '+f);c.width=360;c.height=200;const g=c.getContext('2d');g.fillStyle='#c04080';g.fillRect(0,0,360,200);g.imageSmoothingEnabled=false;g.drawImage(img,f*j.w+120,j.feetY-80,180,100,0,0,360,200);g.strokeStyle='#ff0';g.beginPath();g.moveTo(0,160.5);g.lineTo(360,160.5);g.stroke();}
+ const live=[[A,mk('ANTES tocando')],[B,mk('DEPOIS tocando')]];for(const [,c] of live){c.width=j.w;c.height=j.h;}
+ const t0=performance.now();(function loop(n){const i=Math.floor((n-t0)/1000*j.fps)%j.frames;for(const [img,c] of live){const g=c.getContext('2d');g.fillStyle='#c04080';g.fillRect(0,0,c.width,c.height);g.drawImage(img,i*j.w,0,j.w,j.h,0,0,j.w,j.h);g.strokeStyle='#ff0';g.beginPath();g.moveTo(0,j.feetY+.5);g.lineTo(j.w,j.feetY+.5);g.stroke();}requestAnimationFrame(loop);})(t0);})();
+</script></body></html>

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Batalha</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+/* cenário novo era 2 em camadas (campo H=704): em combate só as nuvens derivam */
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{top:0;height:422px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 422px}
+.cld2{top:18px;height:190px;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 190px;animation:drift 140s linear infinite}
+.far2{top:155px;height:296px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 296px}
+.mid2{top:123px;height:352px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 352px}
+.gnd2{top:461px;height:268px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 268px}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-2400px}}
+.kaelatk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:katk 1.42s steps(17, jump-none) infinite}
+@keyframes katk{from{background-position:0 0}to{background-position:100% 0}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:katk 1s steps(12, jump-none) infinite}
+.aura13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:katk 1.333s steps(16, jump-none) infinite}
+.gobwalk{background-image:url(/_blob/c8453e22dba8128e4082e4ff1a3dc9f4);background-size:800% 100%;background-repeat:no-repeat;animation:katk .667s steps(8, jump-none) infinite}
+.skwalk{background-image:url(/_blob/e47762ff339d26264248689b755822f6);background-size:800% 100%;background-repeat:no-repeat;animation:katk .667s steps(8, jump-none) infinite}
+.kaelspin{background-image:url(/_blob/e0439bba0b87e691e027578c2aacacfb);background-size:1700% 100%;background-repeat:no-repeat;animation:katk 1.417s steps(17, jump-none) both}
+/* inimigos: folhas reais, quadro 480x256 (pés no centro, y 243); andar 256x256 */
+.gAtk{background-image:url(/_blob/0024a72ae893244dd7cc9b50d5f6bf13);background-size:1200% 100%;background-repeat:no-repeat;animation:katk 1s steps(12, jump-none) both}
+.gHit{background-image:url(/_blob/c4068abbe1f9042cf9ee6d2f844bdc99);background-size:1200% 100%;background-repeat:no-repeat;animation:katk 1s steps(12, jump-none) both}
+.gDie{background-image:url(/_blob/a4785dce31f4698625d79cd350c98aa4);background-size:1300% 100%;background-repeat:no-repeat;animation:katk 1.083s steps(13, jump-none) both}
+.gIdle{background-image:url(/_blob/0024a72ae893244dd7cc9b50d5f6bf13);background-size:1200% 100%;background-repeat:no-repeat;background-position:0 0;animation:ei 1.4s ease-in-out infinite;transform-origin:50% 95%}
+.sAtk{background-image:url(/_blob/ca69f41bfb4a37a1fcb54bc06614f1ae);background-size:1200% 100%;background-repeat:no-repeat;animation:katk 1s steps(12, jump-none) both}
+.sHit{background-image:url(/_blob/91770ba35c3ab8a14f4f3e6800007546);background-size:1200% 100%;background-repeat:no-repeat;animation:katk 1s steps(12, jump-none) both}
+.sDie{background-image:url(/_blob/401d7f5a2c2751ae2d0e6ee0517f7746);background-size:1300% 100%;background-repeat:no-repeat;animation:katk 1.083s steps(13, jump-none) both}
+.sIdle{background-image:url(/_blob/ca69f41bfb4a37a1fcb54bc06614f1ae);background-size:1200% 100%;background-repeat:no-repeat;background-position:0 0;animation:ei 1.6s ease-in-out infinite;transform-origin:50% 95%}
+.walk3{animation:walk3 2.4s linear both}
+@keyframes walk3{from{transform:translateX(260px)}to{transform:translateX(0)}}
+.zap{animation:zap .3s linear both}
+@keyframes zap{0%,100%{filter:none}40%{filter:brightness(2.6) saturate(0)}}
+/* ultimate: folha 49 quadros em grade 8x7; linhas e colunas animadas em camadas */
+.ultRows{animation:ultY 4.667s steps(7, jump-end) both}
+@keyframes ultY{from{transform:translateY(0)}to{transform:translateY(-100%)}}
+.ultCols{background-image:url(/_blob/fb846159b3bd0fe1a081e64cf4a5c93e);background-size:100% 100%;background-repeat:no-repeat;animation:ultX .667s steps(8, jump-end) infinite}
+@keyframes ultX{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.khit{animation:khit .45s linear both}
+@keyframes khit{0%,100%{filter:none}15%{filter:brightness(2.6) saturate(0)}35%{filter:none}55%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}75%{filter:none}}
+.hitfx{animation:hitfx .35s ease-out both;pointer-events:none}
+@keyframes hitfx{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.5)}}
+.dmgo{animation:dmg 1s ease-out both}
+.uhitE{animation:uhit .9s steps(2) 3 both}
+@keyframes uhit{0%,100%{filter:none}50%{filter:brightness(3) saturate(0)}}
+/* drops: moeda girando e orbe de XP; caem no chão (y tela 613) e voam em arco até o contador */
+.drop{position:absolute;pointer-events:none}
+.cspin{display:block;animation:cspin .5s linear infinite}
+@keyframes cspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.15)}}
+.orb{display:block;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#eafff8 0%,#5ff0cf 40%,#16a98d 100%);animation:orbp .6s ease-in-out infinite}
+@keyframes orbp{0%,100%{transform:scale(.85);box-shadow:0 0 6px 2px rgba(95,240,207,.6)}50%{transform:scale(1.15);box-shadow:0 0 14px 5px rgba(95,240,207,1)}}
+.gainp{animation:dmg 1s ease-out both}
+.cbump{animation:cbump .35s ease-out}
+@keyframes cbump{0%{transform:scale(1)}40%{transform:scale(1.18);box-shadow:0 0 12px rgba(255,201,74,.9)}100%{transform:scale(1)}}
+.lvlup{animation:lvlup 2.2s ease-out both}
+@keyframes lvlup{0%{opacity:0;transform:scale(.4)}12%{opacity:1;transform:scale(1.15)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.lvlglow{animation:lvlglow .5s ease-in-out 4 both}
+@keyframes lvlglow{0%,100%{box-shadow:0 0 0 rgba(95,240,207,0)}50%{box-shadow:0 0 18px 6px rgba(95,240,207,1)}}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+@keyframes ei{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}
+.dmg{animation:dmg 1.6s ease-out infinite;opacity:0}
+@keyframes dmg{0%{opacity:0;transform:translateY(10px) scale(.7)}15%{opacity:1;transform:translateY(0) scale(1.15)}30%{transform:scale(1)}100%{opacity:0;transform:translateY(-46px)}}
+.glow{animation:gl 1.4s ease-in-out infinite}
+@keyframes gl{0%,100%{box-shadow:0 0 8px rgba(255,201,74,.4)}50%{box-shadow:0 0 22px rgba(255,201,74,1)}}
+.ultr{animation:ur 1.2s ease-in-out infinite}
+@keyframes ur{0%,100%{box-shadow:0 0 10px rgba(208,123,255,.6)}50%{box-shadow:0 0 30px rgba(208,123,255,1)}}
+.finger{animation:tap 1s ease-in-out infinite}
+@keyframes tap{0%,100%{transform:translate(0,0)}50%{transform:translate(-6px,-8px) scale(.92)}}
+.flash{animation:flash .6s ease-out both}
+@keyframes flash{0%{opacity:.9}100%{opacity:0}}
+.banner{animation:ban 1.8s ease-out both}
+@keyframes ban{0%{transform:scale(2);opacity:0}15%{transform:scale(1);opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+.quake{animation:quake .9s}
+@keyframes quake{10%{transform:translate(-8px,4px)}20%{transform:translate(8px,-4px)}30%{transform:translate(-7px,3px)}40%{transform:translate(6px,-3px)}55%{transform:translate(-5px,2px)}70%{transform:translate(4px,-2px)}85%{transform:translate(-2px,1px)}}
+.eq{display:flex;gap:2px;align-items:flex-end;height:14px}
+.eq i{width:3px;background:#2a1403;border-radius:1px;animation:eqa .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}
+@keyframes eqa{0%,100%{height:4px}50%{height:14px}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf; display: flex; flex-direction: column">
+
+  <!-- Topo: uma linha -->
+  <div style="height: 64px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #1d1611; border-bottom: 2px solid #4a3a2b; box-sizing: border-box">
+    <div class="{{lvlGlowCls}}" role="img" aria-label="{{avatarAria}}" style="position: relative; width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #ffc94a; background: #33271d; overflow: hidden">
+      <div class="kidle" style="position: absolute; left: -18px; top: -6px; width: 80px; height: 80px"></div>
+      <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: rgba(0,0,0,0.75)"><span class="xpf" style="display: block; width: {{xpPct}}; height: 100%; background: linear-gradient(90deg, #2fc9a8, #8ff5dc); transition: width .45s ease-out"></span></span>
+    </div>
+    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 16px; line-height: 1.1">Kael <span style="font-family: Nunito, sans-serif; font-size: 12px; font-weight: 800; color: #ffc94a">{{lvlTxt}}</span></span>
+      <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">FC 12.480</span>
+    </div>
+    <div class="{{coinBumpCls}}" style="display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 4px 0 2px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b">
+      <img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="Moedas" style="width: 26px; height: 26px; object-fit: contain">
+      <span style="font-size: 14px; font-weight: 900; padding-right: 6px">{{goldTxt}}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 2px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b">
+      <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="Gemas" style="width: 24px; height: 24px; object-fit: contain">
+      <span style="font-size: 14px; font-weight: 900">320</span>
+      <button aria-label="Comprar gemas" style="width: 26px; height: 26px; border-radius: 50%; border: 0; background: #5fd068; color: #0d2410; font-weight: 900; font-size: 18px; line-height: 1; padding: 0">+</button>
+    </div>
+    <a href="Configuracoes.dc.html" aria-label="Configurações" style="width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; display: flex; align-items: center; justify-content: center; box-sizing: border-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+    </a>
+  </div>
+
+  <!-- Campo de batalha -->
+  <div class="{{quakeClass}}" style="position: relative; flex: 1; overflow: hidden; background: #7fb3d9">
+    <!-- cenário novo era 2: sky → nuvens → far → mid → ground; linha dos pés = 0,78 × 704 = 549px -->
+    <div class="ly sky2"></div>
+    <div class="ly cld2"></div>
+    <div class="ly far2"></div>
+    <div class="ly mid2"></div>
+    <div class="ly gnd2"></div>
+    <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,7,5,0.55) 0%, rgba(10,7,5,0) 22%, rgba(10,7,5,0) 62%, rgba(10,7,5,0.85) 100%)"></div>
+
+    <!-- Fase + horda -->
+    <div style="position: absolute; top: 10px; left: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+        <div style="display: flex; flex-direction: column">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 20px; text-shadow: 0 2px 0 #000">Medieval · 2-7</span>
+          <div style="display: flex; gap: 4px; align-items: center; margin-top: 2px">
+            <span style="width: 22px; height: 6px; border-radius: 3px; background: #ffc94a"></span>
+            <span style="width: 22px; height: 6px; border-radius: 3px; background: #ffc94a"></span>
+            <span style="width: 22px; height: 6px; border-radius: 3px; background: #ffc94a"></span>
+            <span style="width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.3)"></span>
+            <span style="width: 22px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.3)"></span>
+            <span style="font-size: 11px; font-weight: 900; color: #ffb3a8; margin-left: 2px">CHEFE</span>
+          </div>
+        </div>
+        <a href="ResultadoChefe.dc.html" style="height: 44px; padding: 0 12px 0 6px; border-radius: 14px; border: 2px solid #7a1f17; background: linear-gradient(180deg, #ff6a50, #c0301f); color: #fff; font-family: 'Lilita One', sans-serif; font-size: 16px; display: flex; align-items: center; gap: 6px; box-shadow: 0 3px 0 #5a140d; text-decoration: none; box-sizing: border-box">
+          <img src="/_blob/6ab9e2e6c54dbef8618daf37fd11342f" alt="" style="width: 34px; height: 34px; object-fit: contain">Desafiar
+        </a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="font-size: 11px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000">Horda 3/5</span>
+        <div style="flex: 1; height: 10px; border-radius: 6px; background: rgba(0,0,0,0.55); border: 1px solid rgba(0,0,0,0.6); overflow: hidden">
+          <div style="width: 58%; height: 100%; background: linear-gradient(180deg, #ff7a5c, #d63b26)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Borda esquerda: missões + baú de toque -->
+    <div style="position: absolute; top: 110px; left: 10px; display: flex; flex-direction: column; gap: 10px">
+      <button aria-label="Missões, 2 para resgatar" style="position: relative; width: 52px; height: 52px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #ffc94a; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.5"></circle></svg>
+        <span style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: #ff4d3d; color: #fff; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #16110d">2</span>
+      </button>
+      <button aria-label="Baú de toque: 2 de 3 prontos" class="glow" style="position: relative; width: 52px; height: 64px; border-radius: 14px; border: 2px solid #ffc94a; background: rgba(29,22,17,0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px 0 6px; box-shadow: 0 0 14px rgba(255,201,74,0.55)">
+        <img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="width: 38px; height: 34px; object-fit: contain">
+        <div style="width: 38px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.6); overflow: hidden"><div style="width: 70%; height: 100%; background: #ffc94a"></div></div>
+        <span style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: #ffc94a; color: #2a1403; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #16110d; padding: 0 3px">x2</span>
+      </button>
+    </div>
+
+    <a href="Ranking.dc.html" aria-label="Ranking" style="position: absolute; top: 254px; left: 10px; width: 52px; height: 52px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #ffc94a; display: flex; align-items: center; justify-content: center">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg>
+    </a>
+
+    <!-- Borda direita: auto / velocidade / esconder -->
+    <div style="position: absolute; top: 110px; right: 10px; display: flex; flex-direction: column; gap: 10px">
+      <button role="switch" aria-checked="{{autoAria}}" onClick="{{toggleAuto}}" aria-label="Modo de combate: automático ou manual" style="width: 52px; height: 44px; border-radius: 14px; border: 2px solid {{autoBorder}}; background: {{autoBg}}; color: {{autoColor}}; font-family: 'Lilita One', sans-serif; font-size: {{autoFs}}; padding: 0; transition: background .2s">{{autoLabel}}</button>
+      <button onClick="{{toggleSpeed}}" aria-label="Velocidade" style="width: 52px; height: 44px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">{{speedLabel}}</button>
+      <button onClick="{{toggleMusic}}" aria-label="Música da era" style="width: 52px; height: 44px; border-radius: 14px; border: 2px solid {{musicBorder}}; background: {{musicBg}}; color: {{musicColor}}; display: flex; align-items: center; justify-content: center; padding: 0">
+        <sc-if value="{{musicOn}}" hint-placeholder-val="{{false}}"><span class="eq"><i></i><i></i><i></i></span></sc-if>
+        <sc-if value="{{musicOff}}" hint-placeholder-val="{{true}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></sc-if>
+      </button>
+      <button aria-label="Esconder interface" style="width: 52px; height: 44px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #f6ecdf; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
+    </div>
+
+    <!-- Herói (posição fixa) -->
+    <!-- linha do chão da era 2 = 78% de 704px = 549px; pés de todos nela -->
+    <div style="position: absolute; left: 40px; top: 540px; width: 140px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.4)"></div>
+    <sc-for list="{{shadows}}" as="sh" hint-placeholder-count="3">
+      <div style="position: absolute; left: {{sh.x}}; top: 542px; width: 64px; height: 13px; border-radius: 50%; background: rgba(0,0,0,0.4); opacity: {{sh.op}}; transition: opacity .3s"></div>
+    </sc-for>
+    <!-- Aura +13 aprovada (16 quadros 256x320): atrás do Kael, base-centro no chão (y 553) -->
+    <div class="aura13" aria-hidden="true" style="position: absolute; left: 20px; top: 333px; width: 176px; height: 220px; pointer-events: none"></div>
+    <!-- Kael: golpe básico (17 q. 256x256, pés x=128) alternando com o CORTE GIRATÓRIO quando recarrega (17 q. 448x256, pés x=224); pés em y 549 -->
+    <div class="{{kaelHitCls}}" style="position: absolute; left: {{kaelX}}; top: 382px; width: {{kaelW}}; height: 176px; z-index: 4">
+      <div class="{{kaelCls}}" role="img" aria-label="{{kaelAria}}" style="width: 100%; height: 100%; animation-duration: {{kaelDur}}"></div>
+    </div>
+    <sc-if value="{{kaelHit}}" hint-placeholder-val="{{false}}">
+      <div class="hitfx" aria-hidden="true" style="position: absolute; left: 112px; top: 430px; width: 86px; height: 86px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,120,80,0.75) 35%, rgba(255,90,78,0) 70%); z-index: 5"></div>
+      <span class="dmgo" style="position: absolute; left: 66px; top: 374px; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ff8a7a; text-shadow: 0 2px 0 #000; z-index: 6">{{hitDmg}}</span>
+    </sc-if>
+
+    <!-- Inimigos com as FOLHAS reais (12 fps). Quadro 480x256 desenhado a 50% (240x128): pés no centro (x) e em y 243 → 549 na tela.
+         Ciclo: entra andando → parado no slot → ataca (revezando, ~1,2 s) → apanha quando o Kael acerta → o da frente morre, fica caído e some -->
+    <sc-for list="{{foes}}" as="f" hint-placeholder-count="3">
+      <div>
+      <div style="position: absolute; left: {{f.barX}}; top: 432px; width: 50px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.6); overflow: hidden; opacity: {{f.barOp}}; z-index: {{f.z}}"><div style="width: {{f.hp}}; height: 100%; background: #ff5a4e; transition: width .3s"></div></div>
+      <div style="position: absolute; left: {{f.x}}; top: 428px; width: {{f.w}}; height: 128px; z-index: {{f.z}}; pointer-events: none">
+        <div class="{{f.wrap}}" style="width: 100%; height: 100%; animation-duration: {{f.wd}}">
+          <div class="{{f.fx}}" style="width: 100%; height: 100%">
+            <div class="{{f.cls}}" role="img" aria-label="{{f.aria}}" style="width: 100%; height: 100%; opacity: {{f.op}}; animation-duration: {{f.d}}"></div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </sc-for>
+    <!-- clarão do golpe inimigo no Kael -->
+    <sc-if value="{{eFlash}}" hint-placeholder-val="{{false}}">
+      <div class="hitfx" aria-hidden="true" style="position: absolute; left: {{eFlashX}}; top: 448px; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, rgba(255,250,220,0.95) 0%, rgba(255,201,74,0.6) 40%, rgba(255,201,74,0) 70%); z-index: 6"></div>
+    </sc-if>
+
+    <!-- Fila fora da tela: selo +N -->
+    <sc-if value="{{hasQueue}}" hint-placeholder-val="{{true}}">
+      <span aria-label="{{queueAria}}" style="position: absolute; right: 6px; top: 400px; min-width: 34px; height: 26px; padding: 0 6px; border-radius: 13px; background: #ff5a4e; border: 2px solid #16110d; color: #fff; font-family: 'Lilita One', sans-serif; font-size: 15px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; z-index: 6">{{queueTxt}}</span>
+    </sc-if>
+
+    <!-- Números de dano do Kael (aparecem no acerto) -->
+    <sc-if value="{{dmgOn}}" hint-placeholder-val="{{false}}">
+      <span class="dmgo" style="position: absolute; left: {{dmgX}}; top: 404px; font-family: 'Lilita One', sans-serif; font-size: {{dmgFs}}; color: {{dmgColor}}; text-shadow: 0 2px 0 #000, 0 0 6px #000; z-index: 6; white-space: nowrap">{{dmgTxt}}</span>
+    </sc-if>
+
+    <!-- ULTIMATE: folha real (49 quadros 384x216, grade 8 colunas, 12 fps), tela cheia do campo, blend screen, toca uma vez -->
+    <sc-if value="{{ultFired}}" hint-placeholder-val="{{false}}">
+      <div class="flash" aria-hidden="true" style="position: absolute; inset: 0; background: radial-gradient(circle at 70% 66%, rgba(255,255,255,0.95), rgba(208,123,255,0.55) 40%, rgba(208,123,255,0) 75%); pointer-events: none; z-index: 7"></div>
+      <div aria-hidden="true" style="position: absolute; left: 0; top: 360px; width: 390px; height: 219px; overflow: hidden; mix-blend-mode: screen; pointer-events: none; z-index: 7">
+        <div class="ultRows" style="width: 100%; height: 700%">
+          <div class="ultCols" style="width: 800%; height: 100%"></div>
+        </div>
+      </div>
+      <div class="banner" style="position: absolute; left: 0; right: 0; top: 250px; display: flex; justify-content: center; z-index: 8">
+        <span style="padding: 8px 18px; border-radius: 12px; background: rgba(120,40,200,0.85); border: 2px solid #d9b3ff; font-family: 'Lilita One', sans-serif; font-size: 26px; color: #fff; text-shadow: 0 2px 0 #3a0d6a">Lâmina do Dragão!</span>
+      </div>
+      <sc-if value="{{ultDmg}}" hint-placeholder-val="{{false}}">
+        <span class="dmg" style="position: absolute; left: 200px; top: 396px; font-family: 'Lilita One', sans-serif; font-size: 40px; color: #e9c4ff; text-shadow: 0 3px 0 #3a0d6a, 0 0 14px #000; animation-iteration-count: 1; animation-duration: 1.8s; z-index: 8">32.400</span>
+      </sc-if>
+    </sc-if>
+
+    <!-- Tutorial: 1ª vez que a Ultimate enche -->
+    <sc-if value="{{showTut}}" hint-placeholder-val="{{true}}">
+      <div style="position: absolute; right: 104px; bottom: 120px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: none">
+        <span style="padding: 8px 12px; border-radius: 12px; background: #f6ecdf; color: #2a1403; font-size: 13px; font-weight: 900; box-shadow: 0 4px 0 rgba(0,0,0,0.4)">Ultimate pronta! Toque aqui</span>
+        <svg class="finger" width="40" height="40" viewBox="0 0 24 24" fill="#f6ecdf" stroke="#2a1403" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true" style="margin-right: 20px"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V10l5.2 1.1a2 2 0 0 1 1.6 2.3l-.8 5A3 3 0 0 1 15 21h-4.2a3 3 0 0 1-2.4-1.2L5 15.4a1.5 1.5 0 0 1 2.2-2L9 15z"></path></svg>
+      </div>
+    </sc-if>
+
+    <!-- Vida + energia do herói (canto inferior esquerdo) -->
+    <div style="position: absolute; left: 12px; bottom: 16px; width: 168px; display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 900"><span>Vida</span><span>8.420 / 10.000</span></div>
+        <div style="height: 12px; border-radius: 6px; background: rgba(0,0,0,0.6); border: 1px solid #000; overflow: hidden"><div style="width: 84%; height: 100%; background: linear-gradient(180deg, #7ee27a, #3fae3c)"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: 900"><span>Energia</span><span style="color: #d9b3ff">{{energyLabel}}</span></div>
+        <div style="height: 8px; border-radius: 5px; background: rgba(0,0,0,0.6); border: 1px solid #000; overflow: hidden"><div style="width: {{energyPct}}; height: 100%; background: linear-gradient(90deg, #8a4dff, #d07bff)"></div></div>
+      </div>
+    </div>
+
+    <!-- Habilidades (zona do polegar, canto inferior direito) -->
+    <div style="position: absolute; right: 12px; bottom: 14px; display: flex; align-items: flex-end; gap: 10px">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+        <div aria-label="Ataque básico, automático" style="position: relative; width: 48px; height: 48px; border-radius: 14px; border: 2px solid #4a3a2b; background: #1d1611; overflow: hidden">
+          <img src="/_blob/edac5b395ae6a0d626bbf8d11a645219" alt="" style="width: 100%; height: 100%; object-fit: cover">
+        </div>
+        <span style="font-size: 10px; font-weight: 900; color: #e8dccb">Auto</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+        <button onClick="{{fireS2}}" aria-label="Corte Giratório" style="position: relative; width: 62px; height: 62px; border-radius: 16px; border: 2px solid #4aa3ff; background: #1d1611; overflow: hidden; padding: 0">
+          <img src="/_blob/0070881dadf5910749b07746fdb65308" alt="" style="width: 100%; height: 100%; object-fit: cover">
+          <span style="position: absolute; left: 0; right: 0; bottom: 0; height: {{cdH}}; background: rgba(0,0,0,0.65); transition: height 1s linear"></span>
+          <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Lilita One', sans-serif; font-size: 22px; color: #fff; text-shadow: 0 2px 0 #000">{{cdLabel}}</span>
+        </button>
+        <span style="font-size: 10px; font-weight: 900; color: #e8dccb">Corte Giratório</span>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+        <button class="{{ultClass}}" onClick="{{fireUlt}}" aria-label="Ultimate: Lâmina do Dragão" style="position: relative; width: 80px; height: 80px; border-radius: 50%; border: 3px solid {{ultBorder}}; background: #1d1611; overflow: hidden; padding: 0; box-shadow: {{ultGlow}}">
+          <img src="/_blob/5a7a0d33711b8815298bd820d8bec82e" alt="" style="width: 100%; height: 100%; object-fit: cover">
+          <span style="position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-family: 'Lilita One', sans-serif; font-size: 14px; color: #fff; text-shadow: 0 2px 0 #000">{{ultLabel}}</span>
+        </button>
+        <span style="font-size: 10px; font-weight: 900; color: #e8dccb">Ultimate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Abas (fixas, zona do polegar) -->
+  <nav aria-label="Abas" style="height: 76px; flex: none; display: flex; background: #1d1611; border-top: 2px solid #4a3a2b; padding: 6px 6px 8px; gap: 4px; box-sizing: border-box">
+    <a href="Batalha.dc.html" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; background: #3a2c1f; color: #ffc94a; text-decoration: none; font-size: 11px; font-weight: 900">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line><line x1="19" y1="21" x2="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" y1="14" x2="9" y2="18"></line><line x1="7" y1="17" x2="4" y2="20"></line><line x1="3" y1="19" x2="5" y2="21"></line></svg>Batalha</a>
+    <a href="Equipamento.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; color: #c9b9a2; text-decoration: none; font-size: 11px; font-weight: 900">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Equip.</a>
+    <a href="Invocar.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; color: #c9b9a2; text-decoration: none; font-size: 11px; font-weight: 900">
+      <img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="width: 30px; height: 28px; object-fit: contain">Invocar</a>
+    <a href="Loja.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; color: #c9b9a2; text-decoration: none; font-size: 11px; font-weight: 900">
+      <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 28px; height: 28px; object-fit: contain">Loja</a>
+    <a href="Passe.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; color: #c9b9a2; text-decoration: none; font-size: 11px; font-weight: 900">
+      <img src="/_blob/b079b3754d6b4f41b2413efb3f2259b0" alt="" style="width: 28px; height: 28px; object-fit: contain">Passe</a>
+  </nav>
+
+  <!-- Recompensa de abate (camada da tela toda): moedas e orbes caem no chão (pés = y 613) e voam em arco até o contador / barra de XP -->
+  <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; z-index: 20">
+    <sc-for list="{{drops}}" as="d" hint-placeholder-count="5">
+      <span class="drop" style="left: {{d.x}}; top: {{d.y}}; opacity: {{d.op}}; transition: {{d.tr}}">
+        <sc-if value="{{d.coin}}" hint-placeholder-val="{{true}}"><img class="cspin" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 18px; height: 18px; object-fit: contain; animation-delay: {{d.dl}}"></sc-if>
+        <sc-if value="{{d.orb}}" hint-placeholder-val="{{false}}"><span class="orb" style="animation-delay: {{d.dl}}"></span></sc-if>
+      </span>
+    </sc-for>
+    <sc-if value="{{gainCoin}}" hint-placeholder-val="{{false}}">
+      <span class="gainp" style="position: absolute; left: 170px; top: 50px; font-family: 'Lilita One', sans-serif; font-size: 14px; color: #ffe07a; text-shadow: 0 2px 0 #000">{{gainCoinTxt}}</span>
+    </sc-if>
+    <sc-if value="{{gainXp}}" hint-placeholder-val="{{false}}">
+      <span class="gainp" style="position: absolute; left: 30px; top: 56px; font-family: 'Lilita One', sans-serif; font-size: 13px; color: #8ff5dc; text-shadow: 0 2px 0 #000">{{gainXpTxt}}</span>
+    </sc-if>
+    <sc-if value="{{lvlUp}}" hint-placeholder-val="{{false}}">
+      <div class="lvlup" style="position: absolute; left: 12px; top: 66px; padding: 6px 14px; border-radius: 12px; background: linear-gradient(180deg, #2fc9a8, #137a66); border: 2px solid #b8fff0; box-shadow: 0 0 20px rgba(95,240,207,0.9); font-family: 'Lilita One', sans-serif; font-size: 20px; color: #fff; text-shadow: 0 2px 0 #0a3d33">{{lvlUpTxt}}</div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', s2: '/_blob/bb53155419d7c9377e23d14b92c2a485', ult: '/_blob/5d4b1eda7d276cb9adda5ac1a6aa0543',
+  music: '/_blob/17568a4c7b50f461887d7b9602ea9b91', coin: '/_blob/84ab4c639b3c7f8af848b41172359878',
+  swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d', hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05',
+  hurt: '/_blob/8ebbcd838ede94b3a5b1ecc55e95d1db', ultReady: '/_blob/8863b3ab71afe08aef6c7aa26d104efc',
+  upgrade: '/_blob/ca8bcec3fced3c13b36555744659895a'
+};
+var FEET = 613; // linha dos pés na tela (64 do topo + 549 do campo)
+var XP_NEED = 100, KILL_GOLD = 12, KILL_XP = 8;
+var ATK_MS = 1420, SPIN_MS = 1417, FOE_ATK_MS = 1000, FOE_HIT_MS = 1000, FOE_DIE_MS = 1083, WALK_MS = 2400, CADENCE = 1200, ULT_MS = 4083;
+// slots: centros x 222 / 282 / 338, o da frente (a) por cima
+var FOES = [
+  { k: 'a', type: 'g', name: 'Goblin', cx: 222, z: 3 },
+  { k: 'b', type: 's', name: 'Esqueleto Guerreiro', cx: 282, z: 2 },
+  { k: 'c', type: 'g', name: 'Goblin', cx: 338, z: 1 }
+];
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.tm = [];
+    this.state = {
+      auto: true, speed: 2, ult: false, ultFx: false, ultDmg: false, cd: 3, music: false, tut: true, quake: false, ultHit: false,
+      foes: FOES.map(function (f) { return Object.assign({}, f, { st: 'gone', hp: 100, zap: false }); }),
+      kael: 'atk', spinQ: false, kHit: false, eFx: '', q: 6, rr: 0, nHit: 0,
+      dmgOn: false, dmgTxt: '', dmgX: '216px', dmgBig: false,
+      drops: [], gold: 48200, lvl: 24, xp: 84, gainC: false, gainX: false, lvlUp: false, bump: false
+    };
+  }
+  later(fn, ms) { var t = setTimeout(fn, ms); this.tm.push(t); if (this.tm.length > 200) this.tm = this.tm.slice(-100); return t; }
+  ms(v) { return v / this.state.speed; }
+  foe(k) { return this.state.foes.find(function (f) { return f.k === k; }); }
+  setFoe(k, patch) { this.setState({ foes: this.state.foes.map(function (f) { return f.k === k ? Object.assign({}, f, patch) : f; }) }); }
+  walkIn(k) {
+    var self = this;
+    this.setFoe(k, { st: 'walk', hp: 100, zap: false });
+    this.later(function () { if (self.foe(k).st === 'walk') self.setFoe(k, { st: 'idle' }); }, this.ms(WALK_MS));
+  }
+  componentDidMount() {
+    var self = this;
+    this.walkIn('a');
+    this.later(function () { self.walkIn('b'); }, 400);
+    this.later(function () { self.walkIn('c'); }, 800);
+    this.t = setInterval(function () { if (self.state.cd > 0) self.setState({ cd: self.state.cd - 1 }); }, 1000);
+    // Kael: golpe básico em loop; quando o especial recarrega (AUTO, ou toque no botão em MANUAL) entra o Corte Giratório
+    this.kloop = function () {
+      var s = self.state;
+      if (s.cd === 0 && (s.auto || s.spinQ)) {
+        var dur = self.ms(SPIN_MS);
+        self.sfx(SND.s2, 0.5);
+        self.setState({ kael: 'spin', cd: 6, spinQ: false });
+        self.later(function () { self.sfx(SND.hit, 0.35); ['a', 'b', 'c'].forEach(function (k) { self.hitFoe(k, 40, true); }); self.showDmg('Corte Giratório 3.100', '196px', true); }, dur * 0.55);
+        self.kt = setTimeout(self.kloop, dur);
+      } else {
+        var d2 = self.ms(ATK_MS);
+        if (s.kael !== 'atk') self.setState({ kael: 'atk' });
+        self.sfx(SND.swing, 0.22);
+        self.later(function () {
+          if (!self.hitFoe('a', 34, false)) return;
+          self.sfx(SND.hit, 0.3);
+          var n = self.state.nHit + 1; self.setState({ nHit: n });
+          if (n % 3 === 0) self.showDmg('CRÍTICO 4.980', '196px', true); else self.showDmg('1.240', '216px', false);
+        }, d2 * 0.55);
+        self.kt = setTimeout(self.kloop, d2);
+      }
+    };
+    this.kt = setTimeout(this.kloop, 300);
+    // inimigos: todos atacam, revezando a cada ~1,2 s (defasados); golpe com a folha de ataque e acerto no meio dela
+    this.eloop = function () {
+      var s = self.state, order = ['a', 'b', 'c'];
+      for (var i = 0; i < 3; i++) {
+        var k = order[(s.rr + i) % 3], f = self.foe(k);
+        if (f.st === 'idle') {
+          self.setState({ rr: (s.rr + i + 1) % 3 });
+          self.setFoe(k, { st: 'atk' });
+          (function (kk) {
+            self.later(function () { if (self.foe(kk).st === 'atk') self.hurtKael(kk); }, self.ms(FOE_ATK_MS) * 0.55);
+            self.later(function () { if (self.foe(kk).st === 'atk') self.setFoe(kk, { st: 'idle' }); }, self.ms(FOE_ATK_MS));
+          })(k);
+          break;
+        }
+      }
+      self.et = setTimeout(self.eloop, self.ms(CADENCE));
+    };
+    this.et = setTimeout(this.eloop, 3200);
+  }
+  componentWillUnmount() {
+    clearInterval(this.t); clearTimeout(this.kt); clearTimeout(this.et);
+    this.tm.forEach(function (t) { clearTimeout(t); });
+    if (this.m) { this.m.pause(); }
+  }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} }
+  showDmg(txt, x, big) {
+    var self = this;
+    this.setState({ dmgOn: false });
+    this.later(function () { self.setState({ dmgOn: true, dmgTxt: txt, dmgX: x, dmgBig: big }); }, 20);
+    this.later(function () { if (self.state.dmgTxt === txt) self.setState({ dmgOn: false }); }, 1050);
+  }
+  hurtKael(k) {
+    var self = this;
+    this.sfx(SND.hurt, 0.4);
+    this.setState({ kHit: true, eFx: k === 'a' ? '168px' : (k === 'b' ? '182px' : '196px') });
+    this.later(function () { self.setState({ kHit: false, eFx: '' }); }, 450);
+  }
+  // Kael acerta: o inimigo toca a folha "apanhar" (se estiver atacando, só pisca); o da frente morre ao zerar
+  hitFoe(k, dmg, spin) {
+    var self = this, f = this.foe(k);
+    if (['idle', 'atk', 'hit'].indexOf(f.st) < 0) return false;
+    var hp = f.hp - dmg;
+    if (k === 'a' && hp <= 0) { this.kill(); return true; }
+    if (k !== 'a') hp = Math.max(15, hp);
+    if (f.st === 'idle') {
+      this.setFoe(k, { st: 'hit', hp: hp });
+      this.later(function () { if (self.foe(k).st === 'hit') self.setFoe(k, { st: 'idle' }); }, this.ms(FOE_HIT_MS));
+    } else {
+      this.setFoe(k, { zap: true, hp: hp });
+      this.later(function () { self.setFoe(k, { zap: false }); }, 300);
+    }
+    return true;
+  }
+  kill() {
+    var self = this;
+    if (['idle', 'atk', 'hit'].indexOf(this.foe('a').st) < 0) return;
+    this.setFoe('a', { st: 'die', hp: 0, zap: false });
+    this.spawnDrops();
+    this.setState({ q: this.state.q > 1 ? this.state.q - 1 : 6 });
+    // folha de morrer (13 q.), fica caído ~0,5 s, some, e o próximo entra andando
+    this.later(function () { self.setFoe('a', { st: 'gone' }); }, this.ms(FOE_DIE_MS) + 500);
+    this.later(function () { self.walkIn('a'); }, this.ms(FOE_DIE_MS) + 800);
+  }
+  spawnDrops() {
+    var self = this;
+    var nC = 2 + Math.floor(Math.random() * 3), nX = 1 + Math.floor(Math.random() * 2), ds = [];
+    for (var i = 0; i < nC + nX; i++) {
+      var coin = i < nC, sz = coin ? 18 : 14;
+      ds.push({ coin: coin, sz: sz, x: 232, y: FEET - 60, op: 1, tr: 'none', lx: 204 + Math.round(Math.random() * 96), dl: (i * 0.07) + 's' });
+    }
+    this.setState({ drops: ds });
+    this.later(function () {
+      self.setState({ drops: self.state.drops.map(function (d) {
+        return Object.assign({}, d, { x: d.lx, y: FEET - d.sz, tr: 'left .4s ease-out, top .4s cubic-bezier(.3,-1.6,.7,1)' });
+      }) });
+    }, 40);
+    this.later(function () {
+      self.setState({ drops: self.state.drops.map(function (d, i) {
+        var dl = (i * 60) + 'ms', fade = (620 + i * 60) + 'ms';
+        return Object.assign({}, d, {
+          x: d.coin ? 144 : 27, y: d.coin ? 23 : 43,
+          tr: 'left .7s cubic-bezier(.15,.5,.35,1) ' + dl + ', top .7s cubic-bezier(.65,0,.9,.6) ' + dl + ', opacity .15s linear ' + fade,
+          op: 0
+        });
+      }) });
+    }, 1040);
+    this.later(function () {
+      var s = self.state;
+      self.sfx(SND.coin, 0.45);
+      var xp = s.xp + KILL_XP;
+      self.setState({ drops: [], gold: s.gold + KILL_GOLD, xp: Math.min(xp, XP_NEED), gainC: true, gainX: true, bump: true });
+      self.later(function () { self.setState({ gainC: false, gainX: false, bump: false }); }, 950);
+      if (xp >= XP_NEED) {
+        self.later(function () {
+          self.sfx(SND.upgrade, 0.8);
+          self.setState({ lvl: self.state.lvl + 1, xp: xp - XP_NEED, lvlUp: true });
+          self.later(function () { self.setState({ lvlUp: false }); }, 2200);
+        }, 500);
+      }
+    }, 1040 + 700 + 400);
+  }
+  renderVals() {
+    var s = this.state, self = this, spd = s.speed;
+    var spin = s.kael === 'spin';
+    var foes = s.foes.map(function (f) {
+      var w = f.st === 'walk' ? 128 : 240, T = f.type;
+      var cls = { walk: T === 'g' ? 'gobwalk' : 'skwalk', idle: T + 'Idle', atk: T + 'Atk', hit: T + 'Hit', die: T + 'Die', gone: T + 'Die' }[f.st];
+      var d = { walk: 667, idle: T === 'g' ? 1400 : 1600, atk: FOE_ATK_MS, hit: FOE_HIT_MS, die: FOE_DIE_MS, gone: FOE_DIE_MS }[f.st];
+      if (f.st !== 'idle') d = d / spd;
+      var alive = f.st === 'idle' || f.st === 'atk' || f.st === 'hit';
+      var act = { walk: 'chegando', idle: 'parado', atk: 'atacando', hit: 'apanhando', die: 'caindo', gone: '' }[f.st];
+      return {
+        x: (f.cx - w / 2) + 'px', w: w + 'px', z: f.z, cls: cls, d: (d / 1000).toFixed(3) + 's',
+        wrap: f.st === 'walk' ? 'walk3' : '', wd: (WALK_MS / spd / 1000).toFixed(2) + 's',
+        fx: s.ultHit && alive ? 'uhitE' : (f.zap ? 'zap' : ''),
+        op: f.st === 'gone' ? 0 : 1, barOp: alive ? 1 : 0, barX: (f.cx - 25) + 'px', hp: f.hp + '%',
+        aria: f.name + (act ? ' ' + act : '')
+      };
+    });
+    return {
+      foes: foes,
+      shadows: s.foes.map(function (f) { return { x: (f.cx - 32) + 'px', op: f.st === 'gone' ? 0 : 1 }; }),
+      kaelCls: spin ? 'kaelspin' : 'kaelatk', kaelX: spin ? '-46px' : '20px', kaelW: spin ? '308px' : '176px',
+      kaelDur: ((spin ? SPIN_MS : ATK_MS) / spd / 1000).toFixed(3) + 's',
+      kaelAria: spin ? 'Kael usando Corte Giratório' : 'Kael golpeando',
+      toggleAuto: function () { self.sfx(SND.tap); self.setState({ auto: !s.auto }); },
+      autoAria: s.auto ? 'true' : 'false',
+      autoLabel: s.auto ? 'AUTO' : 'MANUAL', autoFs: s.auto ? '15px' : '11px',
+      toggleSpeed: function () { self.sfx(SND.tap); self.setState({ speed: s.speed === 1 ? 2 : 1 }); },
+      toggleMusic: function () {
+        if (!self.m) { self.m = new Audio(SND.music); self.m.loop = true; self.m.volume = 0.45; }
+        if (s.music) { self.m.pause(); } else { self.m.play().catch(function () {}); }
+        self.setState({ music: !s.music });
+      },
+      musicOn: s.music, musicOff: !s.music,
+      musicBorder: s.music ? '#ffc94a' : '#4a3a2b',
+      musicBg: s.music ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'rgba(29,22,17,0.88)',
+      musicColor: s.music ? '#2a1403' : '#f6ecdf',
+      fireS2: function () { if (s.cd === 0 && !s.spinQ) { self.sfx(SND.tap); self.setState({ spinQ: true }); } },
+      cdH: (Math.round((s.cd / 6) * 100)) + '%',
+      cdLabel: s.cd > 0 ? s.cd + 's' : '',
+      fireUlt: function () {
+        if (s.ult) return;
+        self.sfx(SND.ult, 0.85);
+        self.setState({ ult: true, ultFx: true, ultDmg: false, tut: false, quake: true, ultHit: true });
+        self.later(function () { self.setState({ quake: false }); }, 920);
+        self.later(function () { self.setState({ ultHit: false }); }, 2700);
+        self.later(function () { self.setState({ ultDmg: true }); self.kill(); }, 1800);
+        self.later(function () { self.setState({ ultFx: false, ultDmg: false }); }, ULT_MS);
+        self.later(function () { self.setState({ ult: false }); self.sfx(SND.ultReady, 0.6); }, 9000);
+      },
+      showTut: s.tut && !s.ult,
+      kaelHit: s.kHit, kaelHitCls: s.kHit ? 'khit' : '', hitDmg: '-320',
+      eFlash: !!s.eFx, eFlashX: s.eFx || '0px',
+      dmgOn: s.dmgOn, dmgTxt: s.dmgTxt, dmgX: s.dmgX, dmgFs: s.dmgBig ? '26px' : '22px', dmgColor: s.dmgBig ? '#ffcf3a' : '#fff',
+      hasQueue: s.q > 0, queueTxt: '+' + s.q, queueAria: 'Mais ' + s.q + ' inimigos na fila',
+      ultFired: s.ultFx, ultDmg: s.ultDmg,
+      quakeClass: s.quake ? 'quake' : '',
+      ultClass: s.ult ? '' : 'ultr',
+      autoBorder: s.auto ? '#ffc94a' : '#4a3a2b',
+      autoBg: s.auto ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'rgba(29,22,17,0.88)',
+      autoColor: s.auto ? '#2a1403' : '#f6ecdf',
+      speedLabel: 'x' + s.speed,
+      ultLabel: s.ult ? '' : 'PRONTO',
+      ultBorder: s.ult ? '#4a3a2b' : '#d07bff',
+      ultGlow: s.ult ? 'none' : '0 0 18px rgba(208,123,255,0.9)',
+      energyPct: s.ult ? '6%' : '100%',
+      energyLabel: s.ult ? '6%' : 'Cheia',
+      drops: s.drops.map(function (d) { return { x: d.x + 'px', y: d.y + 'px', op: d.op, tr: d.tr, coin: d.coin, orb: !d.coin, dl: d.dl }; }),
+      goldTxt: s.gold.toLocaleString('pt-BR'), coinBumpCls: s.bump ? 'cbump' : '',
+      gainCoin: s.gainC, gainCoinTxt: '+' + KILL_GOLD, gainXp: s.gainX, gainXpTxt: '+' + KILL_XP + ' XP',
+      xpPct: Math.round(s.xp / XP_NEED * 100) + '%', lvlTxt: 'Nv. ' + s.lvl,
+      avatarAria: 'Kael, nível ' + s.lvl + ', ' + Math.round(s.xp / XP_NEED * 100) + '% do XP para o nível ' + (s.lvl + 1),
+      lvlUp: s.lvlUp, lvlUpTxt: 'Nível ' + s.lvl + '!', lvlGlowCls: s.lvlUp ? 'lvlglow' : ''
+    };
+  }
+}
+</script>
+</body>
+</html>

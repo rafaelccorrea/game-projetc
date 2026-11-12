@@ -1,0 +1,1035 @@
+'use strict';
+/* ================= BATALHA V2 (3 ataques, efeitos, mão na arma) =================
+   Depende de: dados/estado do index.html (S, RAR, ERAS, SKIN, track, toast, snd, vib...). */
+const cv=document.getElementById('cv'); let ctx=cv.getContext('2d'); const mainCtx=ctx;
+const LW=330, PX=LW/390, HX=108*PX;   // PX: px do protótipo (tela de 390) → px lógicos. Herói: caixa de 176 px em x=20..196 (centro 108)          // mundo lógico: largura fixa, altura variável (retrato)
+/* GEOMETRIA DO PROTÓTIPO (PO, rodada 7): tela 390x844 = HUD y 0..64 · CAMPO y 64..768 (704) · abas y 768..844. O canvas (#cv) ocupa SÓ o campo
+   (#stage). LINHA DOS PÉS = 0,78 do campo (549 de 704 = y 613 da tela). Em outra proporção de tela vale a mesma fração do campo. */
+/* TELA 04b (chave SCREENS_ON.fullBattle, desligada): a cena ocupa a tela inteira, pés em y=640 de 844 e quadro do Kael de 176 px, como no protótipo.
+   Com a chave desligada os números são os de sempre (0,78 e 0,2643). */
+const FB_GEO=typeof SCREENS_ON!=='undefined'&&!!SCREENS_ON.fullBattle;
+/* 04b: LIMITE DIREITO DOS SLOTS dos comuns, em px da tela de 390. A coluna direita de ícones do protótipo atual começa em x=325 e vai de y=150 a 522;
+   os comuns (até 122 px, pés em 640) ficam abaixo dela, por isso hoje o limite é a borda de sempre (382). Se a V2 dos ícones descer a coluna, baixe aqui. */
+const FB_SLOT_XMAX=382;
+const FIELD_FEET=FB_GEO?640/844:0.78, HERO_FRAME=FB_GEO?176/844:0.2643;   // HERO_FRAME: lado do quadro do herói em fração da altura do campo (186 px em 704; boneco ~160 px), como no cenário v2
+let LH=600, GY=LH*FIELD_FEET;        // GY = linha do chão (interpolada na troca de aba)
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return;
+  cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr);
+  const first=!cv.dataset.ok; cv.dataset.ok=1; LH=ch/(cw/LW); if(first) GY=LH*FIELD_FEET;
+  HS=Math.max(124,Math.min(168,LH*HERO_FRAME));   // herói ~160 px de altura numa tela de 390x844 (quadro de 183 px), como no cenário v2
+  mainCtx.setTransform(cv.width/LW,0,0,cv.width/LW,0,0);
+  { const app=document.getElementById('app'); if(app) app.style.setProperty('--apph',app.clientHeight+'px'); }
+}
+addEventListener('resize',resize);
+
+/* ---------- balanceamento (docs/balance.json sobrescreve o que existir com o mesmo nome) ---------- */
+/* balance v7.3 (docs/balance.json, bloco "BAL", autorizado pelo PO): eraBossHpMult 1,1 · eraBossDmgMult 0,9 · eraMult 0,944 · 0,777 · 1,44 · 4,2 · 16,1 · 53,2 · 161; o resto vem da v6; o arquivo sobrescreve as chaves de mesmo nome.
+   NÃO usados da v6 (regra do dono mudou: nível é do ITEM, teto = nível do jogador): lvlMult, maxLvl, upCostBase, upCostGrowth, upCostRarity. */
+const BAL={ commonHpMult:0.42, commonDmgMult:0.33, commonGoldMult:0.32, commonAtkInterval:1.2, commonDrop:0.035, enemyHpBase:22, enemyHpGrowth:1.282, enemyDmgBase:3.5, enemyDmgGrowth:1.282, bossHpMult:6, eraBossHpMult:1.1,
+  eraMult:[0.944,0.777,1.44,4.2,16.1,53.2,161], itemEraFactor:12, priceEraFactor:4, sellBase:8, pullPity:10,
+  bossDmgMult:1.8, eraBossDmgMult:0.9, earlyEase:[0.5,0.65,0.8], s1Interval:0.8, s2Cooldown:6, s2Mult:3, s3Mult:10,
+  energyPerHit:4, energyPerSkillHit:2, energyPerHurt:3, critChance:0.12, critMult:2, goldBase:4, goldGrowth:1.15, bossGoldMult:5,
+  offlineCapHours:8, offlineKillsPerMin:6, offlineRate:0.5 };
+function loadBalance(){
+  fetch('docs/balance.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(!j) return;
+    const src=Object.assign({},j,j.BAL||{},j.combat||{},j.combate||{},j.offline||{});
+    /* as tabelas de XP do Sys.level NÃO são mais sobrescritas aqui: o js/sys/level.js já traz os números do balance.json (remendo da rodada 6 retirado) */
+    try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&t.length===REC_FC.length&&t.every(v=>typeof v==='number'&&v>0)) REC_FC=t.slice(); }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
+    for(const k in BAL){ const v=src[k]; if(Array.isArray(BAL[k])?Array.isArray(v):(typeof v==='number'&&isFinite(v)&&v>0)) BAL[k]=v; }
+  }).catch(()=>{});
+}
+
+const SKN=[['Golpe Sísmico','Fúria do Mamute'],['Estocada Tripla','Ira do Olimpo'],['Corte Giratório','Lâmina do Dragão'],
+  ['Tiro Duplo','Salva de Canhões'],['Rajada a Vapor','Tempestade Tesla'],['Rajada Tática','Ataque Aéreo'],['Corte de Plasma','Colapso do Vazio']];
+const S2HITS=[[[.55,1]],[[.2,1],[.45,1],[.7,1]],[[.3,1],[.55,1],[.8,1]],[[.15,1],[.5,1]],
+  [[.15,1],[.31,1],[.47,1],[.63,1],[.79,1]],[[.1,1],[.24,1],[.38,1],[.52,1],[.66,1],[.8,1]],[[.4,1],[.6,1]]];
+const S2DUR=[.95,.95,1.05,.8,1,1,.95];
+const ULT_HITS=[[.8,.125],[1.05,.125],[1.3,.125],[1.55,.125],[1.9,.5]], ULT_DUR=2.4;
+
+const BOSS_FALL_DUR=1.4;   // chefe tombando (sem folha de morte ligada)
+const B={hero:null,enemy:null,fx:[],t:0,speed:1,deadT:0,swing:0,hurt:0,parts:[],rings:[],corpses:[],wfx:[],shake:0,cam:0,tr:null,
+  dispEra:eraOf(S.stage),paused:true,tipW:null,cd2:0,energy:0,act:null,slow:0,dim:0,banner:null,step:0,
+  en:[],toSpawn:[],spawnT:0,spawnN:0,waveT:0,running:true,holdT:0,reach:HX+74,at:0,eshots:[],eAtkT:-9};   // reach = borda direita do herói + arma em repouso
+const wSkin = () => SKIN(S.skinEq.weapon);
+const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
+const wIsGun = ws => { const m=J('assets/weapons/meta.json')[heroKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
+
+/* ---------- horda: fábrica de inimigos, ondas e saque (pontos de extensão: mkEnemy, waveSpec, lootFor) ---------- */
+function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
+  const era=eraOf(stage), boss=kind==='boss', eraBoss=boss&&stage%STAGES_PER_ERA===0, ease=BAL.earlyEase[stage-1]||1;
+  const kinds=ERAS[era].en, k=kinds[(kind==='e1'?1:kind==='boss'?kinds.length-1:0)%kinds.length], key=`era${era}_${kind}`;
+  const em=BAL.eraMult[era]||1;   // dificuldade por era (v6): multiplica vida E dano
+  const hp=em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult);
+  const dmg=em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult);
+  const gold=Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,stage-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
+  return {kind,key,boss,eraBoss,maxhp:hp,hp,dmg,gold,atkEvery:boss?1.15:BAL.commonAtkInterval,atkT:0.5+Math.random()*0.7,
+    id:B.spawnN++,x:WAITX,slot:WAITX,lane:0,idx:9,sc:1,wt:Math.random()*2,parked:false,dead:false,hit:0,sw:0,seed:Math.random()*6,spd:EN_WALK,
+    name:eraBoss?'🔥 Senhor da Era '+k.n:boss?'👑 Chefe '+k.n:k.n,col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
+}
+function waveSpec(stage,wave){
+  if(wave===5) return ['e0','e1','boss'];
+  const inEra=((stage-1)%STAGES_PER_ERA)+1, n=Math.min(7,3+Math.floor(inEra/3)+(wave>=3?1:0)), a=[];
+  for(let i=0;i<n;i++) a.push((i+stage+wave)%2?'e1':'e0');
+  return a;
+}
+function lootFor(e){ return {gold:e.gold, dropChance:e.boss?1:BAL.commonDrop}; }
+function startWave(delay){
+  B.en=[]; B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=delay==null?0.4:delay; B.enemy=null; B.waveT=0; preloadAssets();
+}
+/* ATRIBUTOS NA BATALHA (ponto único): tudo vem de heroStats() = Sys.fc.stats. Golpe = ATK × mult × (1 + dano crítico, se critar) × (1 − redução
+   da DEF do alvo), pelo Sys.stats.hit; a DEF do herói reduz o dano recebido pela mesma fórmula; a velocidade de ataque encurta o básico. */
+function heroApply(h,st){ h.maxhp=st.hp; h.atk=st.atk; h.def=st.def||0; h.critRate=st.critRate||0; h.critDmg=st.critDmg==null?100:st.critDmg; h.aspd=st.aspd||0;
+  h.ivl=(window.Sys&&Sys.stats)?Sys.stats.interval(st):BAL.s1Interval; }
+function startBattle(){
+  const st=heroStats();
+  B.hero={hp:st.hp,atkT:0.3}; heroApply(B.hero,st);
+  B.deadT=0; B.act=null; startWave();
+}
+function refreshHero(){
+  const st=heroStats(); if(!B.hero) return;
+  const pct=B.hero.hp/B.hero.maxhp; heroApply(B.hero,st); B.hero.hp=Math.max(1,st.hp*pct);
+}
+function floatText(x,y,txt,col,big){ B.fx.push({x:x+(Math.random()-.5)*14,y,txt,col,t:0,big}); }
+function burst(x,y,col,n,sp){ sp=sp||1; for(let i=0;i<n;i++) B.parts.push({x,y,vx:(Math.random()-.5)*150*sp,vy:(-Math.random()*120-20)*sp,g:320,t:0,life:.5+Math.random()*.35,col:Math.random()<.35?'#ffffff':col,sz:2+Math.random()*3,glow:Math.random()<.4}); }
+function dust(x,y,n,col){ for(let i=0;i<n;i++) B.parts.push({x:x+(Math.random()-.5)*10,y,vx:(Math.random()-.5)*40-(B.running?RUNV()*0.85:0),vy:-10-Math.random()*26,g:30,t:0,life:.45+Math.random()*.3,col:col||'#d8c8a8',sz:3+Math.random()*3,glow:false}); }
+function ring(x,y,col,max){ B.rings.push({x,y,t:0,col,max:max||26}); }
+function wfx(fn,dur,o){ o=o||{}; o.fn=fn; o.dur=dur; o.t=-(o.delay||0); B.wfx.push(o); return o; }
+
+/* drops, ouro e XP do abate: js/farm.js (Sys.loot.onKill) */
+
+/* ---------- fila, alcance e alvo ---------- */
+const LANEY=[0,0,0];                                  // sem faixas de profundidade: todos na mesma linha do chão
+/* LAYOUT DO PROTÓTIPO DA BATALHA (PO, campo 390 de largura): 3 comuns em profundidade com sobreposição parcial, z-order frente > meio > fundo.
+   frente x=194 (~98 px de altura) · meio x=246 (~116 px) · fundo x=298 (~92 px); todos com os pés na mesma linha. */
+/* DECISÃO FINAL DO PO (rodada 7): centros em 222 / 282 / 338; sobreposição máx. 40% (frente×meio) e 50% (meio×fundo), medida sobre a largura
+   do mais estreito do par; altura mínima 95 / 95 / 85 (o do fundo encolhe até 85 antes de sobrepor mais); nada passa de x=382; pés na mesma linha. */
+const SLOTX=[222,282,338].map(v=>v*PX),   /* 04b (PO): a V2 dos ícones deixa livre a faixa direita x 300-390, y 400-650; os centros são os mesmos do jogo */
+   SLOTMIN=[95,95,85].map(v=>v*PX), SLOT_OVL=[0.45,0.5], MAXVIS_ALL=3;
+let MAXVIS=MAXVIS_ALL;   // 3 visíveis; cai para 1 na onda em que uma espécie larga demais não cabe (ver SOLO_WIDE)
+/* ESPÉCIE LARGA (PO): mínimo de altura próprio; se mesmo no mínimo não couber nas sobreposições, entra SOZINHA (1 visível, o resto no "+N").
+   Hoje só o Drone da era 5 (a arte será refeita mais estreita; quando chegar, tirar a entrada). */
+const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX;
+function waveVis(){ const keys=new Set(B.toSpawn.concat(B.en.map(e=>e.kind)).map(k=>`era${eraOf(S.stage)}_${k}`));
+  for(const k of keys){ const W=SOLO_WIDE[k]; if(!W) continue; const sp=SPR(`assets/enemies/${k}.png`,'enemy'), w=W.minH*(sp?sp.w/sp.h:2);
+    if((w+60*PX)/2-(SLOTX[1]-SLOTX[0])>SLOT_OVL[0]*Math.min(w,60*PX)) return 1; } return MAXVIS_ALL; }
+/* ALTURA POR ESPÉCIE (e0 98 px, e1 106 px), fixa durante a vida do inimigo; o slot do fundo desenha a 0,9 (profundidade). Antes a altura era
+   do SLOT (100/116/95): a cada passo na fila o inimigo crescia e encolhia ~20%, com a cabeça subindo e descendo: era o "pulo de pato". */
+const KINDH={e0:98*PX,e1:106*PX}, BACK_SC=0.9, SLOTH=[KINDH.e0,KINDH.e1,KINDH.e0*BACK_SC];
+/* ESCALA POR INIMIGO (pedido do dono via PO, v0.11.3): só por código, a arte aprovada não muda. Multiplica a ALTURA-alvo; como tudo é desenhado a partir
+   do pé (linha do chão) e a largura, a sombra, a barra de vida, o nome, o ponto de impacto, os efeitos e a passada da corrida saem de e.dh / e.dw,
+   tudo acompanha. Limites que continuam valendo DEPOIS da escala: comum nunca mais alto que o Kael (heroBodyH), nada passa de x=382, sobreposição
+   máxima 45% / 50% (o hordeFit encolhe quem tem mais folga) e chefe dentro da caixa 190..382. Para ajustar: mude o número aqui.
+   Debug: window.__noScale = true ignora a tabela (prints de antes/depois). */
+/* v0.11.4 (PO): TAMANHO PADRONIZADO NAS 7 ERAS. Comuns: alvo 118 px (e0) e 122 px (e1) de altura opaca (~75% do Kael, 158 px; nunca acima dele).
+   Chefes: alvo >= 165 px. O que não cabe nas caixas do contrato é reduzido pelo hordeFit (comuns) ou pela largura da caixa (chefes). */
+const EN_SCALE={ era0_e0:1.20, era0_e1:1.15, era0_boss:1.00, era1_e0:1.20, era1_e1:1.15, era1_boss:1.10, era2_e0:1.20, era2_e1:1.15, era2_boss:1.10,
+  era3_e0:1.20, era3_e1:1.15, era3_boss:1.10, era4_e0:1.20, era4_e1:1.15, era4_boss:1.10, era5_e0:1.20, era5_e1:1.15, era5_boss:1.10, era6_e0:1.20, era6_e1:1.15, era6_boss:1.10 };
+/* chefes que podem usar a caixa LARGA do contrato (170..382): Dragão (era 2, decisão do PO), Tanque (era 5) e Devorador (era 6), para chegar a 165 px ou mais */
+const BOSS_WIDE={ era1_boss:1, era2_boss:1, era5_boss:1, era6_boss:1 };   // v0.11.5: Minotauro também (PO)
+/* ERA 4 (PO): sobreposição aceita até 55% só nessa era; a Aranha é larga: em vez de baixar a altura, o slot dela sobrepõe mais (altura mínima própria) */
+const ERA_OVL={ 0:[0.55,0.55], 1:[0.55,0.55], 4:[0.55,0.55], 5:[0.55,0.55] },   /* v0.11.5 (PO): eras 0, 1 e 5 na mesma regra da 4 */
+   EN_MINH={ era4_e0:115*PX, era4_e1:115*PX };
+const enScale=e=>(DEBUG&&window.__noScale)?1:(EN_SCALE[e.key]||1);
+const HERO_BODY_FRAC=0.848;   // altura opaca do Kael parado ÷ lado do quadro (medida na folha kael_idle_body: topo do cabelo até os pés)
+const heroBodyH=()=>HS*HERO_BODY_FRAC;
+const slotMin=(e,i)=>SOLO_WIDE[e.key]?SOLO_WIDE[e.key].minH:(!(DEBUG&&window.__noScale)&&EN_MINH[e.key])?EN_MINH[e.key]*(i===MAXVIS_ALL-1?BACK_SC:1):SLOTMIN[i];
+const slotH=(e,i)=>Math.max(slotMin(e,i),Math.min(heroBodyH(),(KINDH[e.kind]||KINDH.e0)*(i===MAXVIS_ALL-1?BACK_SC:1)*enScale(e)));
+/* ajuste dos comuns visíveis: centro (slot) e altura-alvo (dhT) de cada um, nesta ordem de prioridade:
+   1) nada cortado (borda direita <= 382) · 2) altura mínima · 3) sobreposição máxima (encolhe quem tem mais folga, até o mínimo). */
+function hordeFit(vis){
+  const n=vis.length, H=[], A=[], X=[];
+  for(let i=0;i<n;i++){ const sp=SPR(vis[i].spr,'enemy'); A[i]=sp?sp.w/sp.h:0.9; H[i]=slotH(vis[i],i); X[i]=SLOTX[i]; }
+  const W=i=>H[i]*A[i];
+  const XR=FB_GEO?FB_SLOT_XMAX*PX:BOSS_X1;   // limite direito dos slots dos comuns (04b: constante própria)
+  for(let i=0;i<n;i++){ const mw=2*(XR-X[i]); if(W(i)>mw){ H[i]=Math.max(slotMin(vis[i],i),mw/A[i]); if(W(i)>mw) X[i]=XR-W(i)/2; } }
+  if(n===1&&SOLO_WIDE[vis[0].key]){ const Wm=BOSS_X1-HERO_EDGE; if(W(0)>Wm) H[0]=Math.max(slotMin(vis[0],0),Wm/A[0]); X[0]=Math.min(BOSS_X1-W(0)/2,Math.max(X[0],HERO_EDGE+W(0)/2)); }   /* sozinho: usa a largura inteira entre o herói e x=382 (o centro vai para a direita) antes de encolher */
+  /* COMUNS: golpe, dano e morte também ficam dentro de x<=382 pela POSIÇÃO DO SLOT (PO): se um quadro dessas folhas passa da borda, o centro do slot recua;
+     o corpo não desliza por quadro. enExt = quanto a parte opaca dessas folhas passa à direita da âncora, por px de altura. */
+  const XB=X.slice(), EX=[]; for(let i=0;i<n;i++){ const ex=(EN_EXT_ON&&!(DEBUG&&window.__noExt))?enExt(vis[i],SPR(vis[i].spr,'enemy')):null; EX[i]=ex?ex.r:0; }
+  const fitX=i=>{ X[i]=Math.min(XB[i],BOSS_X1-H[i]*EX[i]); };   // o centro recua só o que a folha mais larga pede NA ALTURA ATUAL (se a altura cai, o centro volta)
+  for(let i=0;i<n;i++) fitX(i);
+  for(let i=0;i<n-1;i++) for(let it=0;it<160;it++){ fitX(i); fitX(i+1);
+    const o=((W(i)+W(i+1))/2-(X[i+1]-X[i]))/Math.min(W(i),W(i+1)); if(o<=(ERA_OVL[eraOf(S.stage)]||SLOT_OVL)[i]) break;
+    const ma=slotMin(vis[i],i), mb=slotMin(vis[i+1],i+1), a=H[i]/ma, b=H[i+1]/mb, j=b>=a?i+1:i, mj=j===i?ma:mb; if(H[j]<=mj+0.01) break;
+    H[j]=Math.max(mj,H[j]*0.985); }
+  for(let i=0;i<n;i++){ vis[i].slot=X[i]; vis[i].dhT=H[i]; }
+}
+const WAITX=LW+110;
+const EN_WALK=62, EN_STEP=120;   // px lógicos/s: entrada pela direita (constante, igual para todos) e passo de um slot para o outro (rápido, para ficar a maior parte do tempo parado e atacando)
+/* ATAQUE DOS INIMIGOS (regra do PO): todo inimigo parado no slot ataca, com cadência própria (atkEvery) e defasado dos outros.
+   Corpo a corpo: avanço rápido NO CHÃO até o herói, golpe e volta ao slot. De longe (tabela abaixo): projétil que voa até o herói
+   e causa o dano ao chegar. EATK = duração da animação; EHIT = instante do golpe/disparo; EGAP = intervalo mínimo entre dois inimigos. */
+const EATK=0.5, EHIT=0.2, EGAP=0.22;
+const ENEMY_RANGED={ era2_boss:'fire', era3_e1:'bullet', era5_e0:'bullet', era5_e1:'bullet', era5_boss:'shell', era6_e0:'plasma', era6_e1:'plasma' };
+const ESHOT_COL={fire:'#ff8a2a',bullet:'#ffe27a',shell:'#ffb040',plasma:'#b45cff'};
+/* sprites que vieram virados para a DIREITA no arquivo: espelhados por código (inimigo sempre olha para a esquerda, para o herói) */
+/* FLAG POR ARQUIVO (conferida abrindo cada imagem em 2026-11-12, rodada 7). EN_FLIP = sprite ESTÁTICO de assets/enemies/<chave>.png;
+   EN_FLIP_SHEET = folha animada (caminho sem extensão). O Rex (era0_boss.png) hoje olha para a ESQUERDA no arquivo: sem flag.
+   O Pirata (era3_e0.png) e o Tanque (era5_boss.png) continuam olhando para a DIREITA no arquivo: seguem espelhados por código.
+   As folhas da era 0 (Dente-de-Sabre, Brutamontes, Rex) e da era 2 olham para a esquerda: nenhuma flag. */
+const EN_FLIP={};   // reaberto em 2026-11-12 (parte 2): Rex, Pirata e Tanque JÁ olham para a esquerda no arquivo (a arte virou na fonte): nenhuma flag
+const EN_FLIP_SHEET={};
+function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no golpe. Devolve true se o herói caiu.
+  const h=B.hero; if(!h||B.deadT>0) return false;
+  if(window.Sys&&Sys.stats) d=Sys.stats.hit({atk:d,critRate:0,critDmg:0},1,h.def,false).dmg;   // DEF do herói reduz o dano recebido (mesma fórmula do golpe, sem crítico)
+  if(!window.__stay) h.hp-=d; B.hurt=0.15; if(src&&src.boss) B.shake=Math.max(B.shake,.3); snd('hero_hurt');   // golpe comum: SEM tremor de câmera (clarão + número + herói piscando); só o chefe treme, curto
+  floatText(HX,GY-HS*0.9,'-'+fmt(Math.max(1,d)),'#ff6b6b'); burst(HX,GY-HS*0.45,'#ff4d4d',4); addEnergy(BAL.energyPerHurt);
+  wfx(fnHit,0.22,{x:HX+HS*0.1,y:GY-HS*0.45,r:src&&src.boss?36:24,n:8,col:ULTCOL[B.dispEra]||'#ff6b5a',rot:Math.random()*6.28,layer:1,hero:1});   // impacto NO HERÓI, na cor da era (o golpe não viaja pela tela)
+  if(DEBUG) window.__dmgIn=(window.__dmgIn||0)+d;
+  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5; snd('defeat'); if(!B.deadBoss) toast('Derrotado... recomeçando a fase'); return true; }
+  return false;
+}                                   // fila de espera, fora da tela (selo "+N" na borda direita)
+const contact = e => e.boss?bossSlot(e):SLOTX[0];   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
+const eY = e => GY+LANEY[e.lane]-(e.dh||80)*0.5;
+const heroGun = () => wIsGun(wSkin());
+/* REGRA DO CHEFE (decisão do PO; ponto único para trocar): as escoltas vêm primeiro e o chefe conta no selo "+N"; quando elas morrem,
+   o chefe entra andando pela direita e para num slot PRÓPRIO, centralizado na metade direita do campo, inteiro na tela (margem EDGE). */
+const BOSS_AFTER_ESCORTS=true, EDGE=8*PX, BOSS_X0=190*PX, BOSS_X0MIN=170*PX, BOSS_X1=382*PX;   // caixa do chefe no protótipo: x=190..382 (8 px da borda)
+const BOSS_FIT = () => BOSS_X1-BOSS_X0;
+function bossSlot(e){ const w=Math.min(e.dw||BOSS_FIT(),BOSS_X1-BOSS_X0MIN); return w>BOSS_FIT()?BOSS_X1-w/2:(BOSS_X0+BOSS_X1)/2; }   // mais largo que a caixa (altura mínima): cresce para a esquerda, a borda direita não passa
+function layoutHorde(){
+  MAXVIS=waveVis();
+  const L=B.en;   /* ordem da fila = ordem de chegada (B.en); NÃO reordenar por x: com velocidades diferentes os inimigos trocavam de slot andando, aos trancos */
+  const nv=Math.min(MAXVIS,L.length);
+  for(let i=0;i<L.length;i++){ const e=L[i]; e.idx=i;
+    if(i>=MAXVIS){ e.slot=WAITX; if(e.x<WAITX) e.x=WAITX; continue; }                 // o resto espera fora da tela
+    { const edge=LW+(e.dw||70)*0.5+14; if(e.x>edge) e.x=edge; }                          // promovido: entra andando a partir da borda direita
+    if(e.boss&&nv===1){ e.slot=bossSlot(e); continue; }
+    e.slot=Math.min(SLOTX[i],BOSS_X1-(e.dw||70)*0.5); }
+  const vis=L.slice(0,nv).filter(e=>!e.boss); if(vis.length===nv) hordeFit(vis);   /* nada cortado: sprite largo recua para caber em x<=382 (prioridade sobre os 40% de sobreposição) */                                                                  // comuns: posições fixas do protótipo
+}
+/* posição DESENHADA do inimigo (slot menos o avanço do ataque): sombra, barra, nome, números e efeitos usam esta, não o slot */
+function eAdvK(e){ if(!(e.sw>0)) return 0; const D=e.swD||EATK, u=1-e.sw/D, hu=(e.swH||EHIT)/D; return u<hu?easeOut(u/hu):1-smooth((u-hu)/(1-hu)); }
+/* corpo a corpo: avança NO CHÃO até a borda esquerda do sprite encostar na frente do corpo do herói (HX + 0,18·HS) e volta */
+const EN_LUNGE=[12,12,12].map(v=>v*PX), EN_LUNGE_BOSS=10;   // AVANÇO MÁXIMO do golpe por slot (frente, meio, fundo), em px de tela: constante única (número a confirmar pelo PO)
+function eAdv(e){ const k=eAdvK(e); return k?(ENEMY_RANGED[e.key]?-4*k:(e.boss?EN_LUNGE_BOSS:EN_LUNGE[Math.min(e.idx,MAXVIS-1)])*k):0; }
+/* herói: no golpe corpo a corpo avança até 12 px (de tela) no chão e volta; com arma de fogo e na ultimate fica no lugar */
+const HERO_LUNGE=12*PX;
+function heroLunge(){ const a=B.act; if(!a||a.gun||a.type==='s3'||B.deadT>0) return 0; return HERO_LUNGE*Math.sin(Math.PI*Math.min(1,a.t/a.dur)); }
+const eX = e => e.x-eAdv(e);
+const inRange = (e,gun) => e.x<=Math.max(gun?HX+230:0,contact(e)+8);
+const inEngage = (e,gun) => e.x<=Math.max(gun?HX+210:0,contact(e)+6);
+function target(){ const gun=heroGun(); for(const e of B.en) if(!e.dead&&inRange(e,gun)) return e; return null; }
+function nearest(n){ const out=[], t=target(); if(!t) return out; for(const e of B.en){ if(!e.dead&&e.x<=t.x+110&&e.x<=LW+10){ out.push(e); if(out.length>=n) break; } } return out; }
+function placeNow(){ layoutHorde(); for(const e of B.en){ e.x=e.slot; e.parked=true; e.hc=e.dhT||0; } }
+const waitingN = () => B.toSpawn.length+Math.max(0,B.en.length-MAXVIS);
+
+/* ---------- habilidades ---------- */
+const engaged = () => !!(B.hero&&B.deadT<=0&&target());
+function addEnergy(n){ const b=B.energy; B.energy=Math.min(100,b+n); if(b<100&&B.energy>=100){ snd('ult_ready'); vib(30); } }
+function startAct(type){
+  const ws=wSkin(), E=ws.e, gun=wIsGun(ws), a={type,t:0,era:E,gun,col:fxCol(),hits:[],ev:[],dur:SWT}, lag=gun?0.09:0;
+  if(type==='s1'){ { const tr=typeof heroTrailSheet==='function'?heroTrailSheet(ws):null; if(tr) a.trail=tr; }   /* golpe básico da era 2: folha composta com o rastro (s1-era2_t<tier>, aprovada) */
+    a.hits.push({s:gun?0.03:0.19,t:(gun?0.03:0.19)+lag,m:1,i:0}); a.rate=B.hero&&B.hero.ivl>0?BAL.s1Interval/B.hero.ivl:1; }   // velocidade de ataque: o golpe básico inteiro toca mais rápido
+  else if(type==='s2'){ const hs=S2HITS[E], sp=typeof heroSpinSheet==='function'?heroSpinSheet(ws):null, kd=sp?(sp.meta.frames/(sp.meta.fps||12))/S2DUR[E]:1; a.dur=S2DUR[E]*kd; if(sp) a.spin=sp;   /* Corte Giratório: a folha toca inteira (17 quadros a 12 fps) e os acertos acompanham */
+    hs.forEach((h,i)=>a.hits.push({s:h[0]*kd,t:h[0]*kd+lag,m:BAL.s2Mult/hs.length,i,n:hs.length})); B.cd2=BAL.s2Cooldown;
+    B.banner={txt:SKN[E][0],sub:'',t:0,dur:.9,col:a.col,small:true}; }
+  else { a.dur=ULT_DUR; ULT_HITS.forEach((h,i)=>{ a.hits.push({s:h[0],t:h[0],m:BAL.s3Mult*h[1],i,fin:i===4}); a.ev.push({t:h[0]-0.3,i,fin:i===4,pre:true}); });
+    ptrack('ult'); B.energy=0; B.slow=0.5; B.banner={txt:SKN[E][1]+'!',pill:true,t:0,dur:1.8,col:a.col}; S.ultTip=1; B.shake=Math.max(B.shake,.6); vib(40); ultStart(a); }
+  if(gun&&type!=='s3') a.hits.forEach(h=>a.ev.push({t:h.s,h}));
+  B.act=a; snd(`era${E}_${type}`);
+  if(typeof tutEvent==='function') tutEvent(type);
+  return a;
+}
+function flushAct(){ const a=B.act; if(a) for(const hh of a.hits) if(!hh.done){ hh.done=true; skillHit(a,hh); } }
+function useSkill(n){
+  if(B.paused||!engaged()) return false;
+  if(n===2){ if(B.cd2>0||(B.act&&B.act.type!=='s1')) return false; flushAct(); if(!engaged()) return false; startAct('s2'); return true; }
+  if(n===3){ if(B.energy<100||(B.act&&B.act.type!=='s1')) return false; flushAct(); startAct('s3'); return true; }
+  return false;
+}
+function killEnemy(e){
+  e.dead=true; const i=B.en.indexOf(e); if(i>=0) B.en.splice(i,1);
+  const lt=lootFor(e), y=eY(e); e.x=eX(e); e.sw=0;   // morre onde está desenhado
+  S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y);   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
+  burst(e.x,y,e.col,e.boss?22:10); ring(e.x,y,'#ffffff',e.boss?40:26); B.corpses.push({e,x:e.x,t:0,life:enSheet(e,'die')?shDur(enSheet(e,'die'),EN_DIE_DUR):(e.boss&&SCREENS_ON.bossResult)?BOSS_FALL_DUR:0.6}); if(e.boss&&SCREENS_ON.bossResult) for(let i=0;i<3;i++) dust(e.x-30+i*30,GY-2,3,'#c8b496'); snd('enemy_die'); if(e.boss) snd('coin');
+}
+function waveClear(){
+  const h=B.hero;
+  try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
+  if(S.wave===5){
+    const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
+    S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem');
+    const ne=eraOf(S.stage), newEra=ne>oldEra&&ne>S.eraMax;
+    if(newEra){ S.eraMax=ne; S.gems+=30; }
+    /* TELA 10 (vitória): abre por cima da batalha; se não puder abrir (outra tela aberta, tutorial), vale o aviso curto de antes */
+    const shown=typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1});
+    if(!shown) toast(newEra?`🌟 NOVA ERA: ${ERAS[ne].icon} ${ERAS[ne].n}! +40💎`:`Fase ${S.stage-1} vencida! +10💎`);
+  } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
+    if(S.set.autoBoss&&heroFC()>=recFC(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
+  else S.wave++;
+  h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08);
+  B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=1.2; B.waveT=1.2; preloadAssets(); save();
+  if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); }
+}
+/* "Desafiar chefe": chama a onda do chefe da fase atual (com a vida cheia), no farm ou fora dele (fora do farm só antecipa a onda 5). Também é o "Tentar de novo" da derrota. */
+function challengeBoss(){ if(S.wave===5||B.deadT>0||B.res) return false; S.farm=false; S.wave=5; const h=B.hero; if(h) h.hp=h.maxhp; B.act=null; B.eshots=[]; startWave(0.4); save(); hud(); return true; }
+/* kind: 0 normal · 2 = s2 (laranja maior) · 3 = s3 (dourado enorme) */
+function hitEnemy(e,mult,a,h){
+  const hero=B.hero; if(!e||e.dead){ e=target(); if(!e) return; }
+  let crit, d; if(window.Sys&&Sys.stats){ const r=Sys.stats.hit(hero,mult,e.def||0); crit=r.crit; d=r.dmg*(0.9+Math.random()*0.2); }   // inimigos ainda não têm DEF (e.def ausente = 0): a tabela vem do balanceamento
+  else { crit=Math.random()<BAL.critChance; d=hero.atk*mult*(crit?BAL.critMult:1)*(0.9+Math.random()*0.2); }
+  const ex=eX(e), ey=eY(e), fin=h&&h.fin, k=a.type==='s3'?(fin?3:2):a.type==='s2'?2:crit?1:0;
+  e.hp-=d; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }   // a folha de dano toca inteira, no fps do .json
+  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2||crit?1:0);
+  burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,crit||fin?8:3);
+  const hs=fxSpr(crit?'crit':'hit',a.col); if(hs) wfx(fnSpr,crit?0.25:0.16,{spr:hs,x:ex-6,y:ey,size:HS*(crit?0.8:0.5),rot:Math.random()*6.28,layer:1});
+  else wfx(fnHit,crit?0.3:0.2,{x:ex-6,y:ey,r:crit?40:24,n:crit?11:7,col:a.col==='#ffffff'?(crit?'#ffd23f':'#ffe9c8'):a.col,rot:Math.random()*6.28,layer:1});
+  if(crit){ ring(ex-10,ey,'#ffd23f'); }
+  if(window.__stay&&e.hp<=0) e.hp=e.maxhp;
+  if(e.hp<=0) killEnemy(e);
+  return crit;
+}
+function hitMany(list,mult,a,h){
+  let crit=false; for(const e of list.slice()) crit=hitEnemy(e,mult,a,h)||crit;
+  if(list.length){ if(crit){ snd('crit'); vib(25); } else snd('hit'); addEnergy(a.type==='s1'?energyPerBasic():a.type==='s2'?BAL.energyPerSkillHit:0); }
+}
+/* ENERGIA DA ULTIMATE NORMALIZADA POR TEMPO (PO): energia por golpe básico = base (BAL.energyPerHit) × intervalo atual ÷ intervalo de referência
+   (BAL.s1Interval). Com mais velocidade de ataque há mais golpes, cada um carregando menos: a ultimate enche no mesmo ritmo por segundo.
+   O especial (recarga fixa, não acelera) e a energia ao apanhar não mudam. */
+function energyPerBasic(){ const h=B.hero; return BAL.energyPerHit*((h&&h.ivl>0?h.ivl:BAL.s1Interval)/BAL.s1Interval); }
+function tipPos(){ return B.tipW||{x:HX+62,y:GY-44}; }
+function shotFx(a,strong,list){
+  const tp=tipPos();
+  for(const e of list) wfx(fnTracer,0.1,{x0:tp.x,y0:tp.y,x1:e.x-10,y1:eY(e)+(Math.random()-.5)*10,col:a.col==='#ffffff'?'#ffe27a':a.col,w:strong?3.4:2.4,layer:1});
+  B.parts.push({x:tp.x-30,y:tp.y-4,vx:-40-Math.random()*40,vy:-80-Math.random()*40,g:420,t:0,life:.6,col:'#d8b040',sz:3,glow:false}); // cápsula
+  if(a.era===4) for(let i=0;i<3;i++) B.parts.push({x:tp.x,y:tp.y,vx:20+Math.random()*30,vy:-20-Math.random()*20,g:-20,t:0,life:.6,col:'#f0f0f0',sz:5+Math.random()*4,glow:false});
+}
+function actEvent(a,v){
+  if(v.pre){ ultPre(a,v); return; }
+  const list=a.type==='s2'?nearest(3):nearest(1); v.h.tg=list; shotFx(a,a.type==='s2',list);
+  if(a.type==='s2'&&a.era===6&&list[0]) wfx(fnWave,0.2,{x0:HX+50,x1:list[0].x,y:eY(list[0]),r:26,col:a.col,layer:1});
+}
+function skillHit(a,h){
+  if(a.type==='s3'){ const all=B.en.filter(e=>!e.dead&&e.x<=LW+20); const c=hordeCenter(all); ultHit(a,h,c.x,c.y); hitMany(all,h.m,a,h); return; }
+  const list=(h.tg&&h.tg.filter(e=>!e.dead).length?h.tg.filter(e=>!e.dead):null)||(a.type==='s2'?nearest(3):nearest(1));
+  if(!list.length) return;
+  const e0=list[0], ex=e0.x, ey=eY(e0), col=a.col;
+  if(fxArt(a.type,a.era,ex,ey,1)){ hitMany(list,h.m,a,h); return; }      // folha animada aprovada (quando existir)
+  if(!a.gun){
+    const sl=fxSpr('slash',col);
+    if(a.type==='s1'){ wfx(fnArc,0.18,{x:ex-14,y:ey,ang:0.35,r:26,col,layer:1,flip:(B.spawnN+S.kills)%2}); }
+    else if(a.era===0){ wfx(fnShock,0.5,{x:HX+50,r:130,col,layer:0}); wfx(fnShock,0.6,{x:HX+50,r:90,col:'#ffffff',layer:0,delay:.08}); dust(HX+46,GY,14); dust(ex,GY,8); vib(30); }
+    else if(a.era===1){ wfx(fnTracer,0.14,{x0:HX+30,y0:ey+4,x1:list[list.length-1].x+10,y1:ey+(h.i-1)*10,col,w:4.5,layer:1}); }
+    else if(a.era===2){ wfx(fnArc,0.25,{x:ex+6,y:ey,ang:-0.6+h.i*0.9,r:46,col,layer:1}); }
+    else { wfx(fnWave,0.28,{x0:HX+40,x1:list[list.length-1].x+14,y:ey,r:32,col,layer:1}); }
+    if(a.type==='s2'){ if(a.era!==0) wfx(fnShock,0.35,{x:ex,r:46,col,layer:0}); }
+  } else if(a.type==='s2') wfx(fnShock,0.3,{x:ex,r:34,col,layer:0});
+  hitMany(list,h.m,a,h);
+}
+function hordeCenter(all){ if(!all.length) return {x:HX+120,y:GY-45}; let x=0; for(const e of all) x+=Math.min(e.x,LW-30); return {x:x/all.length,y:GY-45}; }
+/* ===== PONTO ÚNICO DE TROCA DOS EFEITOS =====
+   O dono reprovou efeito em PNG parado: nenhuma imagem de assets/fx é desenhada. Tudo abaixo é PROVISÓRIO EM CÓDIGO.
+   null = provisório em código. Quando a folha ANIMADA aprovada chegar (fps-ff; ordem era 2, 0, 5), ponha no lugar do null:
+     {sheet:'assets/fx/anim/era2_ult.png', frames:16, fps:12, scale:2.4, anchor:[0.5,0.9], blend:'lighter'}
+   (folha horizontal; scale = altura em relação a 124 px lógicos; anchor = ponto que cai no alvo).
+   s1/s2/ult: uma entrada por era. slash/hit/crit/muzzle/aura: null = código; 'sprite' reativa o PNG antigo de assets/fx (só para comparação). */
+const FX_ART={
+  /* ultimates ANIMADAS entregues pela fps-ff (assets/anim/ult/era<N>_ult.png + .json: grade de quadros 384x216, 49 quadros, "screen":"full"):
+     eras 0, 2 e 5. meta:true = lê quadros/colunas/blend do .json ao lado; dur = segundos em que a folha inteira toca. */
+  ult:[0,1,2,3,4,5,6].map(e=>({sheet:'assets/anim/ult/era'+e+'_ult',meta:true,dur:2.5})),   // as 7 aprovadas; blend lido do .json (eras 0, 3 e 5 source-over; as outras lighter)
+  s2: [null,null,null,null,null,null,null],
+  s1: [null,null,null,null,null,null,null],
+  slash:null, hit:null, crit:null, muzzle:null, aura:null,
+};
+const ULTCOL=['#d8a868','#9ad8ff','#ff8a2a','#ffb040','#7ad8ff','#ff9a3a','#b45cff'];
+const PART_MAX=260;                                   // teto de partículas (desempenho em celular)
+function emit(p){ if(B.parts.length<PART_MAX) B.parts.push(p); }
+const fxPng = A => A.meta?A.sheet+'.png':A.sheet;
+function fnSheet(o,k){ const A=o.art, im=o.img, M=o.m||A, fr=M.frames||1, fi=Math.min(fr-1,Math.floor(k*fr));
+  if((M.blend||A.blend)==='lighter') ctx.globalCompositeOperation='lighter';
+  if(M.cols){ const fw=M.w, fh=M.h, sx=(fi%M.cols)*fw, sy=Math.floor(fi/M.cols)*fh;                 // grade de quadros
+    if(M.screen==='full'){ const ww=LW+24, hh=ww*fh/fw; ctx.drawImage(im,sx,sy,fw,fh,-12,GY+LW*0.09-hh,ww,hh); return; }   // faixa da largura do campo, apoiada logo abaixo da linha dos pés
+    const hh=124*(A.scale||2.4), ww=hh*fw/fh, an=A.anchor||[0.5,0.5]; ctx.drawImage(im,sx,sy,fw,fh,o.x-ww*an[0],o.y-hh*an[1],ww,hh); return; }
+  const fw=im.naturalWidth/fr, hh=124*(A.scale||2.4), ww=hh*fw/im.naturalHeight, an=A.anchor||[0.5,0.5];
+  ctx.drawImage(im,fi*fw,0,fw,im.naturalHeight,o.x-ww*an[0],o.y-hh*an[1],ww,hh); }
+function fxArt(kind,era,x,y,layer){ const A=FX_ART[kind]&&FX_ART[kind][era]; if(!A||(kind==='ult'&&!ART_ON['ult_era'+era])) return false; const im=IMG(fxPng(A)); if(!im) return false;
+  let m=null; if(A.meta){ m=J(A.sheet+'.json'); if(!m||!m.frames) return false; }
+  wfx(fnSheet,A.dur||((m||A).frames||1)/((m||A).fps||12),{img:im,art:A,m,x,y,layer:layer==null?1:layer,delay:A.delay||0}); return true; }
+/* ----- ultimates por era ----- */
+function ultStart(a){
+  const c=hordeCenter(B.en), col=a.col==='#ffffff'?ULTCOL[a.era]:a.col;
+  if(fxArt('ult',a.era,LW*0.7,GY+4,2)){ a.img=true; return; }   // camada 2: entre os inimigos e o herói (o herói fica por cima)          // folha animada aprovada (quando existir)
+  a.img=false;
+  wfx(fnUltAmb,ULT_DUR-0.3,{era:a.era,col,delay:.2,layer:a.era===6?0:1,cx:Math.max(c.x,HX+110),cy:c.y});
+  if(a.era===6) wfx(fnHole,1.75,{x:Math.max(c.x,HX+110),y:c.y-10,r:30,col,delay:.35,layer:0});
+}
+/* ambiente da ultimate, todo em código, com identidade por era (cores e tipo de partícula). k = 0..1 ao longo da ultimate */
+function fnUltAmb(o,k){
+  const E=o.era, col=o.col, t=B.at, env=Math.sin(Math.min(1,k)*Math.PI), x0=HX+50, x1=LW+10;
+  const all=B.en.filter(e=>!e.dead&&e.x<=LW+20), rx=()=>x0+Math.random()*(x1-x0);
+  if(E===0){        // pedras e poeira caindo, ondas no chão
+    for(let i=0;i<2;i++) emit({x:rx(),y:GY-270-Math.random()*60,vx:-20+Math.random()*40,vy:240+Math.random()*160,g:300,t:0,life:.8,col:Math.random()<.5?'#8a6a45':col,sz:2+Math.random()*4,glow:false});
+    if(Math.random()<.5) emit({x:rx(),y:GY+1,vx:(Math.random()-.5)*50,vy:-20-Math.random()*40,g:40,t:0,life:.6,col:'#d8c8a8',sz:4+Math.random()*4,glow:false});
+    for(let i=0;i<3;i++){ const ph=(k*3+i/3)%1, r=150*ph+10; ctx.globalAlpha=(1-ph)*env*.8; ctx.strokeStyle=i%2?'#ffffff':col; ctx.lineWidth=3*(1-ph)+1; ctx.beginPath(); ctx.ellipse(o.cx,GY+3,r,r*.2,0,0,7); ctx.stroke(); } }
+  else if(E===1){   // colunas de luz descendo sobre os inimigos
+    ctx.globalCompositeOperation='lighter'; const nC=Math.max(2,Math.min(4,all.length+1));
+    for(let i=0;i<nC;i++){ const e=all.length?all[i%all.length]:null, cx=(e?Math.min(e.x,LW-12):o.cx)+(i>=all.length?34:0)+Math.sin(t*5+i*2)*4, w=(8+6*Math.sin(t*17+i*3))*env+2, top=GY*(1-Math.min(1,k*6));
+      const g=ctx.createLinearGradient(cx-w*2,0,cx+w*2,0); g.addColorStop(0,col+'00'); g.addColorStop(.5,'#ffffff'); g.addColorStop(1,col+'00'); ctx.globalAlpha=env*.7; ctx.fillStyle=g; ctx.fillRect(cx-w*2,-10,w*4,GY+14-top);
+      if(Math.random()<.7) emit({x:cx+(Math.random()-.5)*w*3,y:GY-Math.random()*20,vx:(Math.random()-.5)*20,vy:-90-Math.random()*120,g:0,t:0,life:.6,col,sz:2+Math.random()*2,glow:true}); } }
+  else if(E===2){   // varredura de fogo em arco, com brasas
+    ctx.globalCompositeOperation='lighter'; const sw=(k*2.6)%1, th=-1.95+sw*2.3, R=LW*0.5, cx=x0-10, cy=GY-36;
+    for(let j=0;j<14;j++){ const tj=th-j*0.085; if(tj<-1.95) break; const r=R*(0.8+0.2*Math.sin(j*1.7+t*9)), x=cx+Math.cos(tj)*r, y=cy+Math.sin(tj)*r*0.8, sz=26*(1-j/15);
+      drawGlow(j<3?'#ffe9a8':j<8?col:'#c8321e',x,y,sz,env*(1-j/15)); drawGlow(col,cx+Math.cos(tj)*r*.6,cy+Math.sin(tj)*r*.48,sz*.7,env*(1-j/15)*.6); }
+    const hx=cx+Math.cos(th)*R, hy=cy+Math.sin(th)*R*0.8;
+    for(let i=0;i<3;i++) emit({x:hx+(Math.random()-.5)*20,y:hy+(Math.random()-.5)*20,vx:(Math.random()-.5)*70,vy:-50-Math.random()*90,g:-30,t:0,life:.6+Math.random()*.4,col:Math.random()<.5?col:'#ffd45a',sz:2+Math.random()*3,glow:true}); }
+  else if(E===3){   // fumaça das explosões e estilhaços
+    for(let i=0;i<2;i++) emit({x:o.cx+(Math.random()-.5)*150,y:GY-8-Math.random()*40,vx:(Math.random()-.5)*20,vy:-30-Math.random()*30,g:-15,t:0,life:.9,col:Math.random()<.5?'#5a5a5a':'#8a8a8a',sz:6+Math.random()*7,glow:false});
+    if(Math.random()<.6) emit({x:o.cx+(Math.random()-.5)*120,y:GY-20,vx:(Math.random()-.5)*220,vy:-120-Math.random()*120,g:420,t:0,life:.6,col,sz:2+Math.random()*2,glow:true}); }
+  else if(E===4){   // arcos elétricos pulando entre os inimigos e faíscas
+    if(all.length&&Math.random()<.4){ const e1=all[Math.floor(Math.random()*all.length)], e2=all[Math.floor(Math.random()*all.length)], y1=eY(e1)-20+Math.random()*40;
+      wfx(fnBolt,.16,{pts:e1===e2?mkBolt(Math.min(e1.x,LW-8)+(Math.random()-.5)*70,-10,Math.min(e1.x,LW-8),y1,7,12):mkBolt(Math.min(e1.x,LW-8),y1,Math.min(e2.x,LW-8),eY(e2),5,10),col,w:2.5,layer:1}); }
+    for(let i=0;i<2;i++){ const e=all.length?all[Math.floor(Math.random()*all.length)]:null; emit({x:(e?Math.min(e.x,LW-8):o.cx)+(Math.random()-.5)*30,y:(e?eY(e):o.cy)+(Math.random()-.5)*40,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,g:200,t:0,life:.3,col:Math.random()<.5?'#ffffff':col,sz:2,glow:true}); } }
+  else if(E===5){   // traços de mísseis descendo e fumaça no chão
+    ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
+    for(let i=0;i<6;i++){ const ph=(k*4.5+i*0.19)%1, x=o.cx-150+i*42+ph*110, y=GY-340+ph*335; ctx.globalAlpha=env*(1-ph*.6); ctx.strokeStyle=i%2?col:'#ffffff'; ctx.lineWidth=2.2; ctx.beginPath(); ctx.moveTo(x-18,y-56); ctx.lineTo(x,y); ctx.stroke(); drawGlow(col,x,y,7,env); }
+    for(let i=0;i<2;i++) emit({x:o.cx+(Math.random()-.5)*170,y:GY-4-Math.random()*20,vx:(Math.random()-.5)*30,vy:-25-Math.random()*30,g:-10,t:0,life:.9,col:Math.random()<.5?'#6a6a6a':'#9a9a9a',sz:6+Math.random()*6,glow:false}); }
+  else {            // vórtice de partículas caindo para o centro
+    ctx.globalCompositeOperation='lighter';
+    for(let i=0;i<46;i++){ const ph=(t*0.9+i*0.137)%1, rad=(1-ph)*150+8, an=i*2.4+t*4+ph*5, x=o.cx+Math.cos(an)*rad, y=o.cy-10+Math.sin(an)*rad*.55, sz=1.5+3*ph; ctx.globalAlpha=env*ph; ctx.fillStyle=i%3?col:'#ffffff'; ctx.fillRect(x-sz/2,y-sz/2,sz,sz); } }
+}
+function ultPre(a,v){
+  const all=B.en.filter(e=>!e.dead&&e.x<=LW+20); if(!all.length) return; const n=v.fin?4:2, E=a.era;
+  for(let i=0;i<n;i++){ const e=all[(i+v.i)%all.length], ex=Math.min(e.x,LW-10)+(Math.random()-.5)*20, ey=eY(e);
+    if(E===0) wfx(fnProj,0.3,{x0:ex+30,y0:GY-330,x1:ex,y1:GY-6,arc:0,kind:'rock',r:v.fin?13:9,layer:1});
+    else if(E===3) wfx(fnProj,0.3,{x0:-12,y0:GY-90,x1:ex,y1:ey+10,arc:50,kind:'ball',r:v.fin?7:5,layer:1});
+    else if(E===5) wfx(fnProj,0.3,{x0:ex-120,y0:GY-330,x1:ex,y1:GY-6,arc:0,kind:'missile',r:6,col:a.col,layer:1});
+  }
+}
+function ultHit(a,h,ex,ey){
+  const E=a.era, col=a.col, c2=col==='#ffffff'?['#d8a868','#9ad8ff','#ff8a2a','#ffb040','#7ad8ff','#ff9a3a','#b45cff'][E]:col, fin=h.fin;
+  const all=B.en.filter(e=>!e.dead&&e.x<=LW+20), pick=i=>all.length?all[i%all.length]:{x:ex,lane:1,dh:80};
+  B.shake=Math.max(B.shake,fin?1.3:.55);
+  if(E===0){ wfx(fnShock,0.55,{x:ex,r:fin?190:90,col:c2,layer:0}); dust(ex,GY,fin?26:10); if(fin){ wfx(fnShock,0.7,{x:ex,r:130,col:'#ffffff',layer:0,delay:.1}); burst(ex,GY-10,'#8a6a45',24,1.5); } }
+  else if(E===1){ const n=fin?4:2; for(let i=0;i<n;i++){ const e=pick(i+h.i); wfx(fnBolt,0.3,{pts:mkBolt(e.x+(Math.random()-.5)*70,GY-340,Math.min(e.x,LW-8),GY-4,9,16),col:c2,w:fin?6:4,layer:1,delay:i*.05}); } wfx(fnFlash,0.25,{a:fin?.7:.25,col:'#ffffff',layer:1}); burst(ex,GY-12,c2,fin?20:8); }
+  else if(E===2){ if(fin){ wfx(fnWave,0.45,{x0:HX+30,x1:LW+40,y:ey,r:70,col:c2,layer:1}); for(let i=0;i<26;i++) B.parts.push({x:HX+60+Math.random()*(LW-HX-60),y:GY-Math.random()*20,vx:(Math.random()-.5)*30,vy:-60-Math.random()*90,g:-30,t:0,life:.7+Math.random()*.4,col:Math.random()<.5?c2:'#ffd45a',sz:3+Math.random()*4,glow:true}); }
+    else { const e=pick(h.i); wfx(fnArc,0.28,{x:Math.min(e.x,LW-20),y:eY(e),ang:-1+h.i*1.3,r:54,col:c2,layer:1}); } }
+  else if(E===3||E===5){ const n=fin?4:2; for(let i=0;i<n;i++){ const e=pick(i+h.i); wfx(fnExpl,0.4,{x:Math.min(e.x,LW-10),y:E===5?GY-14:eY(e)+8,r:fin?50:32,col:c2,layer:1,delay:i*.05}); } burst(ex,ey+10,c2,fin?26:10,1.4); if(E===5) dust(ex,GY,fin?16:6,'#888888'); }
+  else if(E===4){ const tp=tipPos(); let px=tp.x, py=tp.y; const n=Math.max(1,Math.min(all.length,fin?7:4));   // relâmpago em cadeia
+    for(let i=0;i<n;i++){ const e=pick(i), x=Math.min(e.x,LW-8), y=eY(e); wfx(fnBolt,0.28,{pts:mkBolt(px,py,x,y,5,12),col:c2,w:fin?5:3.5,layer:1,delay:i*.03}); px=x; py=y; }
+    if(fin) wfx(fnFlash,0.25,{a:.55,col:c2,layer:1}); burst(ex,ey,c2,fin?22:8); }
+  else { ring(ex,ey,c2,fin?110:40); burst(ex,ey,c2,fin?30:8,fin?2:1); if(fin){ wfx(fnFlash,0.3,{a:.75,col:'#ffffff',layer:1}); wfx(fnExpl,0.5,{x:ex,y:ey,r:90,col:c2,layer:1}); } }
+  if(fin){ B.slow=0.22; vib(80); }
+}
+
+function step(dt){
+  if(B.res) return;   // tela 10 (resultado do chefe) aberta: a batalha espera
+  B.t+=dt;
+  const h=B.hero; if(!h) return;
+  if(window.__stay){ B.hurt=0; h.hp=h.maxhp; } if(B.hurt>0) B.hurt-=dt;
+  if(B.cd2>0) B.cd2-=dt;
+  if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
+      /* TELA 10 (derrota): o chefe fica de pé e o herói volta a ficar parado até o jogador escolher; sem a tela, entra direto no farm */
+      if(typeof resOpen==='function'&&resOpen('lose',{stage:S.stage})){ h.hp=h.maxhp; return; }
+      toast('Derrotado pelo chefe: farmando a fase. Toque em Desafiar para tentar de novo'); }
+    S.wave=1; startBattle(); if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); } } return; }
+  // surgimento "aos poucos"
+  if(B.waveT>0) B.waveT-=dt;
+  if(B.toSpawn.length&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=mkEnemy(S.stage,k); B.en.push(e);
+      B.spawnT=(B.toSpawn[0]==='boss'?1:0)+0.55+Math.random()*0.4;
+      if(e.boss){ snd('boss_appear'); vib(60); B.banner={txt:e.eraBoss?'SENHOR DA ERA':'CHEFE',sub:'',t:0,dur:1.4,col:'#ff5252'}; } } }
+  layoutHorde();
+  const gun=heroGun(), ult=B.act&&B.act.type==='s3';
+  let eng=false; for(const e of B.en) if(inEngage(e,gun)){ eng=true; break; }
+  if(eng) B.holdT=0.6; else if(B.holdT>0) B.holdT-=dt;
+  B.running=!eng&&!B.act&&B.holdT<=0&&!B.en.some(e=>e.x<=LW-10);   // não corre com horda visível na tela
+  // ação em curso
+  const a=B.act;
+  if(a){ a.t+=dt*(a.rate||1);
+    for(const v of a.ev) if(!v.done&&a.t>=v.t){ v.done=true; actEvent(a,v); }
+    for(const hh of a.hits) if(!hh.done&&a.t>=hh.t){ hh.done=true; skillHit(a,hh); }
+    if(a.t>=a.dur&&B.act===a) B.act=null;
+  }
+  B.swing=(B.act&&B.act.type==='s1')?SWT*(1-B.act.t/B.act.dur):0;
+  // inimigos: andam até o slot; só os 2 da frente atacam
+  for(const e of B.en){
+    if(e.hit>0) e.hit-=dt; if(e.hurtT>0) e.hurtT-=dt; if(e.sw>0) e.sw-=dt; e.wt+=dt; if(e.dhT) e.hc=e.hc?e.hc+(e.dhT-e.hc)*Math.min(1,dt*5):e.dhT;
+    if(e.x>e.slot+0.5){ const v=(e.wasParked&&!enOn(e.key,'run'))?Math.max(e.spd,EN_STEP):e.spd;   /* já esteve num slot: anda rápido até o próximo */
+      e.x-=Math.min(e.x-e.slot,((B.running?RUNV():0)+v)*dt*(ult?0.25:1)); e.parked=false; }
+    else { if(e.x<e.slot-0.5) e.x+=Math.min(e.slot-e.x,30*dt); const was=e.parked; e.parked=e.idx<MAXVIS; if(e.parked) e.wasParked=true; if(e.parked&&!was) e.atkT=Math.min(e.atkT,0.15+0.12*e.idx); }   // chegou ao slot: ataca logo
+    if(e.idx<(window.__atk2?2:MAXVIS)&&e.x<=LW){ e.atkT-=dt;   /* a cadência conta também enquanto ele troca de slot: ao parar, ataca logo (nenhum visível fica 2 s sem atacar) */
+      if((e.parked||(e.wasParked&&e.x-e.slot<70))&&e.atkT<=0&&e.sw<=0&&B.t-B.eAtkT>=EGAP){   /* quem já esteve num slot e só está fechando a fila (até 70 px do slot novo) golpeia sem esperar chegar: nenhum visível fica mais de 2 s sem golpear */ e.atkT=e.atkEvery; B.eAtkT=B.t; { const sh=enSheet(e,'attack'); e.swD=sh?shDur(sh,EN_ATK_DUR):EATK; e.swH=sh?(EN_HIT_FRAME[e.key]!=null?EN_HIT_FRAME[e.key]/(sh.meta.fps||12):e.swD*0.5):EHIT; } e.sw=e.swD; e.struck=false; if(DEBUG) (window.__atk=window.__atk||[]).push([e.id,e.idx,+B.t.toFixed(2)]); } }
+    if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.dmg*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
+      if(kind){ const x0=e.x-(e.dw||60)*0.35, y0=GY-(e.dh||80)*0.55, x1=HX+HS*0.1, y1=GY-HS*0.45;
+        B.eshots.push({x0,y0,x1,y1,t:0,dur:Math.max(0.16,Math.hypot(x1-x0,y1-y0)/380),d,boss:e.boss,kind});
+        wfx(fnHit,0.14,{x:x0-4,y:y0,r:e.boss?20:12,n:6,col:ESHOT_COL[kind],rot:Math.random()*6.28,layer:1}); }
+      else if(heroHit(d,e)) return; }
+  }
+  for(let i=1;i<B.en.length&&i<MAXVIS;i++){ const a=B.en[i-1], b=B.en[i]; if(!b.parked&&b.x<a.x+16) b.x=a.x+16; }   // ninguém ultrapassa quem está na frente na fila
+  for(const p of B.eshots){ p.t+=dt; if(p.t>=p.dur&&!p.done){ p.done=true; if(heroHit(p.d,p)) return; } }
+  if(B.eshots.length) B.eshots=B.eshots.filter(p=>!p.done);
+  B.enemy=target();
+  // herói: corre até entrar em alcance; parado, ataca
+  if(B.running){ const dx=RUNV()*dt; B.cam+=dx; for(const r of B.rings) r.x-=dx; for(const f of B.fx) f.x-=dx; }
+  else if(!B.act&&B.enemy){
+    const tut=typeof tutHold==='function'&&tutHold();
+    if(B.energy>=100) startAct('s3');          
+    else if(B.cd2<=0) startAct('s2');   /* v0.12.1 (ordem do dono): o jogo é SÓ AUTOMÁTICO; especial e ultimate disparam sozinhos sempre, sem modo manual e sem esperar o tutorial */
+    else { h.atkT-=dt; if(h.atkT<=0){ h.atkT=h.ivl||BAL.s1Interval; startAct('s1'); } }   // intervalo do básico = Sys.stats.interval (0,8 s ÷ (1 + velocidade de ataque))
+  }
+  if(!B.en.length&&!B.toSpawn.length&&B.waveT<=0) waveClear();
+}
+
+/* ---------- assets (sprites com cache + fallback) ---------- */
+const IMGS={};
+function IMG(path){
+  let o=IMGS[path];
+  if(!o){ o=IMGS[path]={img:new Image(),ok:false,fail:false}; o.img.onload=()=>{o.ok=true;}; o.img.onerror=()=>{o.fail=true;}; o.img.src=path; }
+  return o.ok?o.img:null;
+}
+const JSONS={};
+function J(path){
+  if(!(path in JSONS)){ JSONS[path]=null; fetch(path,{cache:'no-cache'}).then(r=>r.ok?r.json():{}).then(j=>{JSONS[path]=j||{};}).catch(()=>{JSONS[path]={};}); }
+  return JSONS[path]||{};
+}
+const tierOf = r => r<=1?0:r<=3?1:2;           // r0,r1->T0 · r2,r3->T1 · r4->T2
+const heroKey = sk => `era${sk.e}_t${tierOf(sk.r)}`;
+const SWT=0.4;                                  // duração do ataque básico
+let HS=155;                                     // lado do quadro do herói em px lógicos (recalculado no resize)
+const tc=document.createElement('canvas'); tc.width=tc.height=400; const tx=tc.getContext('2d');
+/* Sprites pré-renderizados (offscreen, na escala usada). s={c,w,h,pad,fx,fy,fw,fh,bot} */
+const SPRC={};
+function bbox(im){
+  /* CAIXA OPACA (bbox do alfa), medida uma vez por sprite numa grade de 256, SEM folga: altura, largura, margens e sobreposição do jogo usam
+     esta caixa (as medidas do PO valem para os pixels opacos, não para o retângulo da imagem). Limiar: alfa > 40 de 255. */
+  try{ const n=256, c=document.createElement('canvas'); c.width=c.height=n; const x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(im,0,0,n,n);
+    const d=x.getImageData(0,0,n,n).data; let x0=n,y0=n,x1=-1,y1=-1;
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++) if(d[(j*n+i)*4+3]>40){ if(i<x0)x0=i; if(i>x1)x1=i; if(j<y0)y0=j; if(j>y1)y1=j; }
+    if(x1<0) return [0,0,1,1];
+    return [x0/n,y0/n,(x1+1)/n,(y1+1)/n];
+  }catch(e){ return [0,0,1,1]; }
+}
+function SPR(path,kind){
+  let s=SPRC[path]; if(s) return s;
+  const im=IMG(path); if(!im) return null;
+  const bb=bbox(im); let f=kind==='hero'?[0,0,1,1]:bb;
+  const sw=(f[2]-f[0])*im.naturalWidth, sh=(f[3]-f[1])*im.naturalHeight, mx=kind==='hero'?288:kind==='weapon'?300:320, k=mx/Math.max(sw,sh);
+  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(sw*k)); c.height=Math.max(1,Math.round(sh*k));
+  c.getContext('2d').drawImage(im,f[0]*im.naturalWidth,f[1]*im.naturalHeight,sw,sh,0,0,c.width,c.height);
+  s=SPRC[path]={c,w:c.width,h:c.height,pad:0,fx:f[0],fy:f[1],fw:f[2]-f[0],fh:f[3]-f[1],bot:bb[3]};
+  delete IMGS[path];
+  return s;
+}
+/* variante com tingimento leve + brilho por raridade, pré-renderizada */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2];
+function skinSpr(s,r){
+  if(!s||r<1) return s;
+  if(!s.v) s.v={};
+  if(s.v[r]) return s.v[r];
+  const col=RAR[r].c, pad=Math.round(GLOWB[r]*2.2), c=document.createElement('canvas'); c.width=s.w+pad*2; c.height=s.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[r]*2; x.drawImage(s.c,pad,pad); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=s.w; t.height=s.h; const y=t.getContext('2d'); y.drawImage(s.c,0,0); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[r]; y.fillStyle=col; y.fillRect(0,0,s.w,s.h);
+  x.drawImage(t,pad,pad);
+  return s.v[r]={...s,c,pad,v:null,fist:null};
+}
+function dspr(s,x,y,dw,dh,flashCol,flashA){
+  const kx=dw/s.w, ky=dh/s.h, X=x-s.pad*kx, Y=y-s.pad*ky, W=s.c.width*kx, H=s.c.height*ky;
+  ctx.drawImage(s.c,X,Y,W,H);
+  if(flashA>0){
+    tc.width=s.c.width; tc.height=s.c.height; tx.drawImage(s.c,0,0);
+    tx.globalCompositeOperation='source-atop'; tx.fillStyle=flashCol; tx.fillRect(0,0,tc.width,tc.height); tx.globalCompositeOperation='source-over';
+    ctx.save(); ctx.globalAlpha*=Math.min(1,flashA); ctx.drawImage(tc,X,Y,W,H); ctx.restore();
+  }
+}
+/* recorte circular do punho (redesenhado por cima da arma: mão "segurando") */
+function fistSpr(s,ax,ay,r){
+  const k=ax+'|'+ay+'|'+r; if(s.fist&&s.fist.k===k) return s.fist;
+  const d=Math.max(4,Math.round(r*2*s.w)), c=document.createElement('canvas'); c.width=c.height=d; const x=c.getContext('2d');
+  x.beginPath(); x.arc(d/2,d/2,d/2,0,7); x.clip(); x.drawImage(s.c,-(ax*s.w+s.pad-d/2),-(ay*s.h+s.pad-d/2));
+  return s.fist={k,c};
+}
+/* brilho radial pré-renderizado por cor (evita criar gradiente por quadro) */
+const GLOWS={};
+function glowC(col){ let c=GLOWS[col]; if(c) return c; c=GLOWS[col]=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
+  /* cor curta (#fff) vira #ffffff: '#fff'+'00' é cor inválida e o addColorStop lançava exceção (era o que acontecia com o pickup de Essência do Senhor da Era) */
+  const c6=/^#[0-9a-f]{3}$/i.test(col)?'#'+col[1]+col[1]+col[2]+col[2]+col[3]+col[3]:col;
+  try{ const g=x.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'#ffffff'); g.addColorStop(.3,c6); g.addColorStop(1,c6+'00'); x.fillStyle=g; x.fillRect(0,0,64,64); }catch(er){ x.fillStyle='rgba(255,255,255,.35)'; x.beginPath(); x.arc(32,32,24,0,7); x.fill(); }
+  return c; }
+function drawGlow(col,x,y,r,a,add){ if(a<=0) return; const ga=ctx.globalAlpha, op=ctx.globalCompositeOperation; ctx.globalAlpha=ga*Math.min(1,a); if(add!==false) ctx.globalCompositeOperation='lighter'; ctx.drawImage(glowC(col),x-r,y-r,r*2,r*2); ctx.globalAlpha=ga; ctx.globalCompositeOperation=op; }
+/* sprites de efeito genéricos (brancos) tingidos pela cor da raridade */
+const FXS={};
+function fxSpr(name,col){
+  if(FX_ART[name]!=='sprite') return null;      // PNG parado reprovado: provisório em código
+  const k=name+col; if(k in FXS) return FXS[k];
+  const im=IMG(`assets/fx/${name}.png`); if(!im) return null;
+  const c=document.createElement('canvas'); c.width=c.height=160; const x=c.getContext('2d'); x.drawImage(im,0,0,160,160);
+  if(col!=='#ffffff'){ x.globalCompositeOperation='multiply'; x.fillStyle=col; x.fillRect(0,0,160,160); x.globalCompositeOperation='destination-in'; x.drawImage(im,0,0,160,160);
+    x.globalCompositeOperation='lighter'; x.globalAlpha=.35; x.drawImage(im,0,0,160,160); }
+  return FXS[k]=c;
+}
+/* correções finas por arma (dx,dy em px lógicos; s = escala; rot = rad) */
+const WFIX={};
+const hp = (kind,e,t) => `assets/${kind}/era${e}_t${t}.png`;
+const EN_IDS = era => [`era${era}_e0`,`era${era}_e1`,`era${era}_boss`];
+function preloadEra(era){
+  if(era<0||era>=ERAS.length) return;
+  if(sceneOn(era)) sceneGet(era); else if(!BGS['assets/bg/era'+era+'.png']) IMG(`assets/bg/era${era}.png`); EN_IDS(era).forEach(k=>{ SPR(`assets/enemies/${k}.png`,'enemy'); enPreload(k); });
+}
+function preloadAssets(){
+  J('assets/hero/anchors.json'); J('assets/weapons/meta.json'); J('assets/enemies/meta.json'); J('assets/bg/meta.json'); J('assets/fx/meta.json');
+  const ae=SKIN(S.skinEq.armor), we=SKIN(S.skinEq.weapon);
+  SPR(hp('hero',ae.e,tierOf(ae.r)),'hero'); SPR(hp('weapons',we.e,tierOf(we.r)),'weapon'); heroPreload(ae.e);
+  ['hit','crit','muzzle','slash','aura'].forEach(n=>{ if(FX_ART[n]==='sprite') IMG(`assets/fx/${n}.png`); });
+  ['ult','s2','s1'].forEach(kd=>{ const A=FX_ART[kd][we.e]; if(A&&!(kd==='ult'&&!ART_ON['ult_era'+we.e])){ IMG(fxPng(A)); if(A.meta) J(A.sheet+'.json'); } });
+  const era=eraOf(S.stage); preloadEra(era);
+  if(((S.stage-1)%STAGES_PER_ERA)+1>=8) preloadEra(era+1);
+}
+const easeOut = t => 1-Math.pow(1-t,3);
+const smooth = t => t*t*(3-2*t);
+const pulse = x => x<=0||x>=1?0:Math.sin(x*Math.PI);
+function swingEnv(sw){ return sw<0?0:(sw<.5?Math.sin(sw/.5*Math.PI/2):Math.cos((sw-.5)/.5*Math.PI/2)); }
+
+/* ---------- efeitos de mundo (wfx) ---------- */
+function mkBolt(x0,y0,x1,y1,n,j){ const p=[x0,y0]; for(let i=1;i<n;i++){ const k=i/n; p.push(x0+(x1-x0)*k+(Math.random()-.5)*j*2, y0+(y1-y0)*k+(Math.random()-.5)*j); } p.push(x1,y1); return p; }
+function fnShock(o,k){ const q=easeOut(k); ctx.globalAlpha=1-k; ctx.strokeStyle=o.col; ctx.lineWidth=5*(1-k)+1; ctx.beginPath(); ctx.ellipse(o.x,GY+3,o.r*q,o.r*q*0.2,0,0,7); ctx.stroke(); }
+function fnBolt(o,k){ const p0=o.pts, n0=p0.length/2, rev=Math.min(1,k/0.3), p=[];   // raio: desce em 30% do tempo e fica tremendo até sumir
+  for(let i=0;i<n0;i++){ if(i/(n0-1)>rev+0.001) break; const edge=i===0||i===n0-1?0:1, ph=o.pts[2]*0.7+i*2.3; p.push(p0[i*2]+edge*Math.sin(B.at*70+ph)*o.w*0.9, p0[i*2+1]+edge*Math.cos(B.at*55+ph)*o.w*0.6); }
+  if(p.length<4) return; ctx.globalAlpha=1-k*k; ctx.lineJoin='round'; ctx.globalCompositeOperation='lighter';
+  for(let pass=0;pass<2;pass++){ ctx.strokeStyle=pass?'#ffffff':o.col; ctx.lineWidth=pass?o.w*0.4:o.w; ctx.beginPath(); ctx.moveTo(p[0],p[1]); for(let i=2;i<p.length;i+=2) ctx.lineTo(p[i],p[i+1]); ctx.stroke(); }
+  drawGlow(o.col,p[p.length-2],p[p.length-1],o.w*5,1-k); }
+function fnTracer(o,k){ ctx.globalAlpha=(1-k)*.95; ctx.globalCompositeOperation='lighter'; ctx.lineCap='round'; ctx.strokeStyle=o.col; ctx.lineWidth=o.w; ctx.beginPath(); ctx.moveTo(o.x0+(o.x1-o.x0)*k*.6,o.y0+(o.y1-o.y0)*k*.6); ctx.lineTo(o.x1,o.y1); ctx.stroke();
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=o.w*.4; ctx.stroke(); }
+function crescent(r){ ctx.beginPath(); ctx.arc(0,0,r,-1.25,1.25); ctx.quadraticCurveTo(r*0.62,0,r*Math.cos(-1.25),r*Math.sin(-1.25)); ctx.fill(); }
+function fnWave(o,k){ const x=o.x0+(o.x1-o.x0)*easeOut(k), a=k<.7?1:1-(k-.7)/.3; ctx.translate(x,o.y); drawGlow(o.col,0,0,o.r*1.5,a*.7);
+  ctx.globalAlpha=a; ctx.globalCompositeOperation='lighter'; ctx.fillStyle=o.col; crescent(o.r); ctx.fillStyle='#ffffff'; ctx.globalAlpha=a*.8; ctx.scale(.86,.86); crescent(o.r); }
+function fnArc(o,k){ const sl=fxSpr('slash',o.col), q=easeOut(k); ctx.translate(o.x+18*q,o.y); ctx.rotate(o.ang+(o.flip?-1:1)*(q-0.5)*1.1); const s=0.55+0.8*q; /* corte: varre girando, cresce e avança na direção do golpe */ ctx.scale(s,s); ctx.globalAlpha=1-k*k; ctx.globalCompositeOperation='lighter';
+  if(sl){ if(o.flip) ctx.scale(1,-1); const W=o.r*2.6; ctx.drawImage(sl,-W*0.35,-W/2,W,W); return; }
+  ctx.translate(-o.r*.6,0); ctx.fillStyle=o.col; crescent(o.r); ctx.fillStyle='#ffffff'; ctx.scale(.84,.84); crescent(o.r); }
+/* impacto: estrela de riscos que cresce, gira, segue o golpe e some */
+function fnHit(o,k){ const q=easeOut(k); ctx.translate(o.x+10*q,o.y-3*q); ctx.rotate(o.rot+k*1.2); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=1-k*k; ctx.lineCap='round';
+  drawGlow(o.col,0,0,o.r*(0.5+0.5*q),(1-k)*.9);
+  for(let i=0;i<o.n;i++){ const an=i*6.283/o.n, r0=o.r*(0.15+0.45*q), r1=o.r*(0.45+0.75*q)*(i%2?0.7:1); ctx.strokeStyle=i%2?o.col:'#ffffff'; ctx.lineWidth=(1-k)*(i%2?2:3.2)+.4; ctx.beginPath(); ctx.moveTo(Math.cos(an)*r0,Math.sin(an)*r0); ctx.lineTo(Math.cos(an)*r1,Math.sin(an)*r1); ctx.stroke(); } }
+function fnExpl(o,k){ const q=easeOut(k), r=o.r*(0.35+0.9*q); drawGlow(o.col,o.x,o.y,r*1.5,1-k); drawGlow('#ffffff',o.x,o.y,r*.7,(1-k)*.9);
+  ctx.globalAlpha=1-k; ctx.strokeStyle='#ffffff'; ctx.lineWidth=3*(1-k)+.5; ctx.beginPath(); ctx.arc(o.x,o.y,r,0,7); ctx.stroke(); }
+function fnFlash(o,k){ ctx.globalAlpha=o.a*(1-k); ctx.fillStyle=o.col; ctx.fillRect(-10,-10,LW+20,LH+20); }
+function fnSpr(o,k){ const q=easeOut(k), s=o.size*(0.45+0.75*q); ctx.globalAlpha=1-k*k; ctx.globalCompositeOperation='lighter'; ctx.translate(o.x+10*q,o.y-4*q); ctx.rotate((o.rot||0)+k*1.4); /* impacto: cresce, gira e segue o golpe */ ctx.drawImage(o.spr,-s/2,-s/2,s,s); }
+function fnImg(o,k){ let a=k<.1?k/.1:k>.8?(1-k)/.2:1, s=1, x=o.x, y=o.y, r=0; const m=o.mode, q=easeOut(Math.min(1,k*2.2));
+  if(m==='slide'){ x=o.x-(1-q)*LW*0.9; y+=Math.sin(k*30)*2*(1-q); }
+  else if(m==='diag'){ x=o.x-(1-q)*120; y=o.y-(1-q)*160; }
+  else if(m==='spin'){ r=B.t*1.6; s=k<.85?0.2+0.8*q:Math.max(0.05,(1-k)/.15); a=Math.min(1,k*8); }
+  else if(m==='flick'){ r=Math.sin(B.t*9)*0.14; a*=0.75+0.25*Math.sin(B.t*47); s=0.8+0.2*q; }
+  else if(m==='top'){ a*=0.7+0.3*Math.sin(B.t*60); }
+  else s=0.5+0.5*q;
+  const out=k>.78?(k-.78)/.22:0, pk=Math.sin(B.at*13)*0.035;                    // pico: pulsa; saída: cresce, avança e some
+  if(m!=='spin'){ s*=1+pk+0.28*out*out; if(m!=='top'){ x+=26*k+40*out*out; y+=Math.sin(B.at*9)*2.5; } else x+=Math.sin(B.at*48)*3; }
+  ctx.globalAlpha=Math.max(0,a)*(o.add?1:0.94); if(o.add) ctx.globalCompositeOperation='lighter';
+  if(m==='top'){ const hh=Math.max(o.h,o.y/o.ay), ww=hh*o.w/o.h*s, top=o.y-hh*o.ay; ctx.beginPath(); ctx.rect(-20,top-2,LW+40,hh*Math.min(1,k*5)+2); ctx.clip(); ctx.drawImage(o.img,x-ww*o.ax,top,ww,hh); return; }   // raio: cai do topo (entrada), treme e pulsa   // raio: topo no topo da tela
+  if(m==='spin'||m==='flick'){ const cx=x+(0.5-o.ax)*o.w, cy=y+(0.5-o.ay)*o.h; ctx.translate(cx,cy); ctx.rotate(r); ctx.scale(s,s); ctx.drawImage(o.img,-o.w/2,-o.h/2,o.w,o.h); return; }
+  ctx.translate(x,y); ctx.scale(s,s); ctx.drawImage(o.img,-o.w*o.ax,-o.h*o.ay,o.w,o.h); }
+function fnProj(o,k){ const x=o.x0+(o.x1-o.x0)*k, y=o.y0+(o.y1-o.y0)*k-o.arc*4*k*(1-k);
+  if(o.kind==='rock'){ ctx.fillStyle='#6b5a48'; ctx.beginPath(); ctx.arc(x,y,o.r,0,7); ctx.fill(); ctx.fillStyle='#8a7a66'; ctx.beginPath(); ctx.arc(x-o.r*.25,y-o.r*.25,o.r*.55,0,7); ctx.fill(); }
+  else if(o.kind==='ball'){ drawGlow('#ff9a3a',x-6,y,o.r*2.4,.7); ctx.fillStyle='#1c1c20'; ctx.beginPath(); ctx.arc(x,y,o.r,0,7); ctx.fill(); }
+  else { ctx.translate(x,y); ctx.rotate(Math.atan2(o.y1-o.y0,o.x1-o.x0)); drawGlow('#ffb040',-12,0,10,.9); ctx.fillStyle='#d8dde4'; ctx.fillRect(-9,-2.5,16,5); ctx.fillStyle='#c0392b'; ctx.beginPath(); ctx.moveTo(7,-2.5); ctx.lineTo(13,0); ctx.lineTo(7,2.5); ctx.fill(); } }
+function fnHole(o,k){ const R=o.r*Math.min(1,k*5)*(k>.9?(1-k)/.1:1)*(1+0.5*k); if(R<=0) return;
+  drawGlow(o.col,o.x,o.y,R*2.6,.85); ctx.fillStyle='#05020c'; ctx.beginPath(); ctx.arc(o.x,o.y,R,0,7); ctx.fill();
+  ctx.globalCompositeOperation='lighter'; ctx.strokeStyle=o.col; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(o.x,o.y,R*1.75,R*0.5,B.t*2.2,0,7); ctx.stroke();
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.ellipse(o.x,o.y,R*1.4,R*0.36,-B.t*3,0,7); ctx.stroke();
+  ctx.fillStyle='#ffffff'; for(let i=0;i<12;i++){ const ph=(B.t*1.4+i*0.37)%1, rad=R*(3.4-ph*2.6), an=i*1.9+B.t*5+ph*4; ctx.globalAlpha=ph; ctx.fillRect(o.x+Math.cos(an)*rad-1.5,o.y+Math.sin(an)*rad*.7-1.5,3,3); } }
+function drawWfx(layer){
+  for(const o of B.wfx){ if(o.t<0||(o.layer||0)!==layer) continue; ctx.save(); o.fn(o,Math.min(1,o.t/o.dur)); ctx.restore(); }
+}
+
+/* ---------- desenho ---------- */
+const BGS={};
+function bgImg(era){
+  const k='assets/bg/era'+era+'.png'; if(BGS[k]) return BGS[k];
+  const im=IMG(k); if(!im) return null;
+  const w=Math.min(1280,im.naturalWidth), h=Math.round(w*im.naturalHeight/im.naturalWidth);
+  const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h);
+  BGS[k]=c; delete IMGS[k]; return c;
+}
+/* pose do herói conforme a ação (antecipação -> golpe -> retorno) */
+const PZ={dx:0,dy:0,rot:0,sx:1,sy:1,wang:0,rec:0,flash:0,trail:0};
+function shotEnv(a,dec){ let m=0; for(const h of a.hits){ const d=a.t-h.t; if(d>=0&&d<dec) m=Math.max(m,1-d/dec); } return m; }
+function heroPose(a,gun,t){
+  const P=PZ; P.dx=P.dy=P.rot=P.rec=P.flash=P.trail=0; P.sx=P.sy=1; P.wang=gun?Math.sin(t*2.6)*0.03:0.35+Math.sin(t*2.6)*0.05;
+  if(!a) return P;
+  const u=Math.min(1,a.t/a.dur), E=a.era;
+  if(gun){
+    const s=shotEnv(a,a.type==='s1'?0.22:0.13); P.rec=s*(a.type==='s1'?7:9); P.flash=shotEnv(a,0.09); P.rot=-s*0.06; P.sx=1-s*0.03;
+    if(a.type==='s3'){ const k=Math.min(1,a.t/0.5)*(a.t<1.95?1:Math.max(0,1-(a.t-1.95)/0.3)); P.wang=(E===3||E===5)?-1.0*k:0; P.dy=-6*k; P.rot-=0.1*k; }
+    return P;
+  }
+  if(a.type==='s1'){
+    if(u<.25){ const k=easeOut(u/.25); P.wang=0.35-0.95*k; P.rot=-0.09*k; P.dx=-4*k; P.sy=1-0.03*k; }
+    else if(u<.55){ const k=easeOut((u-.25)/.3); P.wang=-0.6+2.55*k; P.rot=-0.09+0.27*k; P.dx=-4+18*k; P.sx=1+0.06*k; P.sy=0.97-0.02*k; P.trail=1; }
+    else { const q=smooth((u-.55)/.45); P.wang=1.95-1.6*q; P.rot=0.18*(1-q); P.dx=14*(1-q); P.sx=1+0.06*(1-q); P.sy=1-0.05*(1-q); P.trail=q<.3?1:0; }
+    return P;
+  }
+  if(a.type==='s2'){
+    if(E===0){ const th=a.hits[0].t; if(a.t<th){ const k=a.t/th; P.dy=-56*Math.sin(k*Math.PI); P.dx=16*k; P.wang=-1.0+3.0*easeOut(Math.max(0,(k-.7)/.3)); P.rot=-0.15+0.4*k; P.trail=k>.7?1:0; }
+      else { const k=Math.min(1,(a.t-th)/(a.dur-th)), q=smooth(k); P.sy=1-0.2*(1-q); P.sx=1+0.14*(1-q); P.wang=2.0-1.65*q; P.dx=16*(1-q); P.rot=0.25*(1-q); } }
+    else if(E===1){ let m=0; for(const h of a.hits) m=Math.max(m,pulse((a.t-h.t+0.1)/0.2)); const k=Math.min(1,u*8)*Math.min(1,(1-u)*6); P.dx=28*m-4*k; P.wang=0.35+(1.2+0.1*m)*k; P.rot=0.12*m; P.sx=1+0.1*m; P.sy=1-0.05*m; P.trail=m>.6?1:0; }
+    else if(E===2){ P.wang=0.35+Math.PI*4*smooth(u); P.dx=22*pulse(u); P.rot=0.14*pulse(u); P.dy=-6*pulse(u); P.trail=1; }
+    else { const th=a.hits[0].t; if(a.t<th){ const k=easeOut(a.t/th); P.wang=0.35-1.3*k; P.rot=-0.12*k; P.dx=-6*k; } else { const k=Math.min(1,(a.t-th)/(a.dur-th)); P.wang=k<.3?-0.95+3.1*easeOut(k/.3):2.15-1.8*smooth((k-.3)/.7); P.dx=36*pulse(Math.min(1,k*1.2)); P.rot=0.2*(1-k); P.trail=k<.45?1:0; } }
+    return P;
+  }
+  const k=Math.min(1,a.t/0.5);
+  if(a.t<1.78){ P.wang=-0.75*k+Math.sin(t*40)*0.03; P.dy=-12*k+Math.sin(t*6)*1.5; P.rot=-0.13*k; }
+  else if(a.t<1.95){ const q=easeOut((a.t-1.78)/0.17); P.wang=-0.75+2.8*q; P.dx=20*q; P.dy=-12*(1-q); P.rot=-0.13+0.35*q; P.trail=1; P.sx=1+0.08*q; P.sy=1-0.06*q; }
+  else { const q=smooth(Math.min(1,(a.t-1.95)/0.4)); P.wang=2.05-1.7*q; P.dx=20*(1-q); P.rot=0.22*(1-q); }
+  return P;
+}
+/* H: {x,gy,t,sk,ws,walking,hurt,deadP,act,main}
+   Rig: anchors.json {hand,handR,angle} · weapons/meta.json {type,grip,angle(graus, 0=direita, 90=cima),len,muzzle,layer:"back"} */
+function drawHero(H){
+  if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
+  const sk=H.sk, ws=H.ws, key=heroKey(sk), t=H.t;
+  const body0=SPR(hp('hero',sk.e,tierOf(sk.r)),'hero');
+  if(!body0){ if(H.main) drawHeroOld(); return; }
+  const body=skinSpr(body0,sk.r), top0=body0.bot||0.95, gy=H.gy;
+  const wk=heroKey(ws), wm=J('assets/weapons/meta.json')[wk]||{}, gun=wIsGun(ws);
+  const P=heroPose(H.act,gun,t);
+  let bob,sx,sy,rot;
+  if(H.walking){ bob=-Math.abs(Math.sin(t*14))*5; const s=Math.sin(t*28); sy=1+s*0.035; sx=1-s*0.035; rot=0.08+Math.sin(t*14)*0.03; }   // corrida
+  else { const b=Math.sin(t*2.6); bob=b*-1.3; sy=1+b*0.022; sx=1-b*0.016; rot=0; }
+  rot+=P.rot; sx*=P.sx; sy*=P.sy; bob+=P.dy;
+  let ox=H.x+P.dx, alpha=1;
+  if(H.hurt>0) ox+=(Math.random()-.5)*5;
+  if(H.deadP>=0){ const p=H.deadP; rot=-1.45*Math.min(1,p*3.2); ox-=Math.min(1,p*3)*14; alpha=p>.55?Math.max(0.1,1-(p-.55)/.45):1; bob=0; }
+  const sh=Math.max(.4,1+bob*0.012);
+  ctx.save(); ctx.globalAlpha=0.35*alpha; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(ox,gy+2,28*sh,7*sh,0,0,7); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(ox,gy+bob); ctx.rotate(rot); ctx.scale(sx,sy); ctx.globalAlpha=alpha;
+  const T=tierOf(sk.r);
+  if(T===2){ const au=fxSpr('aura',RAR[sk.r].c), a=0.45+0.15*Math.sin(t*3); if(au){ ctx.save(); ctx.globalAlpha=alpha*(a+.2); ctx.globalCompositeOperation='lighter'; ctx.translate(0,-HS*.45); ctx.rotate(t*0.5); ctx.drawImage(au,-HS*.7,-HS*.7,HS*1.4,HS*1.4); ctx.restore(); } else drawGlow(RAR[sk.r].c,0,-HS*.5,HS*.8,alpha*a); }
+  if(H.act&&H.act.type==='s3'&&H.act.t<1.95) drawGlow(H.act.col,0,-HS*.45,HS*(0.6+0.25*Math.min(1,H.act.t)),0.5+0.2*Math.sin(t*20));
+  const an=J('assets/hero/anchors.json')[key]||{}, anc=an.hand||[0.82,0.68], hr=(an.handR||0.05)*1.15;
+  const hx=-HS/2+anc[0]*HS, hy=-HS*top0+anc[1]*HS;
+  const grip=wm.grip||(gun?[0.26,0.6]:[0.5,0.78]);
+  const w0=SPR(hp('weapons',ws.e,tierOf(ws.r)),'weapon'), wimg=skinSpr(w0,ws.r), fx=WFIX[wk]||{}, back=wm.layer==='back';
+  if(H.main) B.tipW=null;
+  const drawW=()=>{
+    const L=HS*(gun?0.72:0.82)*(fx.s||1), k=Math.min(L/Math.max(w0.w,w0.h),gun?HS*0.36*(fx.s||1)/w0.h:1e9), dw=w0.w*k, dh=w0.h*k;
+    const gx=((grip[0]-w0.fx)/w0.fw)*dw, gy2=((grip[1]-w0.fy)/w0.fh)*dh;
+    const ang=(typeof wm.angle==='number'?(wm.angle-(gun?0:90))*Math.PI/180:0)+(fx.rot||0)+P.wang-(gun?P.rec*0.03:0);
+    let tx0,ty0;   // ponta (boca do cano / ponta da lâmina) no espaço da arma
+    if(gun){ const mz=wm.muzzle; tx0=mz?((mz[0]-w0.fx)/w0.fw)*dw-gx:dw-gx; ty0=mz?((mz[1]-w0.fy)/w0.fh)*dh-gy2:dh*0.42-gy2; }
+    else { const ln=typeof wm.len==='number'?wm.len*(dw/w0.fw):gy2, wa=typeof wm.angle==='number'?wm.angle*Math.PI/180:Math.PI/2; tx0=Math.cos(wa)*ln; ty0=-Math.sin(wa)*ln; }
+    ctx.save(); ctx.translate(hx+(fx.dx||0),hy+(fx.dy||0)); ctx.rotate(ang); if(gun) ctx.translate(-P.rec,0);
+    dspr(wimg,-gx,-gy2,dw,dh);
+    if(gun){
+      if(P.flash>0){ const mz=fxSpr('muzzle',H.act?H.act.col:'#ffffff'), r=16+10*P.flash;
+        if(mz){ ctx.globalAlpha=alpha*P.flash; ctx.globalCompositeOperation='lighter'; ctx.drawImage(mz,tx0-2,ty0-r,r*2,r*2); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=alpha; }
+        else drawGlow('#ffd45a',tx0+3,ty0,r,P.flash); }
+    }else if(P.trail){ const col=H.act?H.act.col:'#ffffff', sl=fxSpr('slash',col), R=Math.hypot(tx0,ty0), ta=Math.atan2(ty0,tx0);
+      ctx.globalAlpha=alpha*0.6; ctx.globalCompositeOperation='lighter';
+      if(sl){ const W=R*1.5; ctx.translate(tx0*.5,ty0*.5); ctx.rotate(ta+Math.PI/2); ctx.drawImage(sl,-W*0.35,-W/2,W,W); }
+      else { ctx.strokeStyle=col; ctx.lineWidth=7; ctx.lineCap='round'; ctx.beginPath(); ctx.arc(0,0,R*0.9,ta-1.0,ta-0.06); ctx.stroke(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.5; ctx.stroke(); } }
+    ctx.restore();
+    if(H.main){ const c=Math.cos(ang), s=Math.sin(ang), lx=hx+(tx0-(gun?P.rec:0))*c-ty0*s, ly=hy+(tx0-(gun?P.rec:0))*s+ty0*c, cr=Math.cos(rot), sr=Math.sin(rot);
+      B.tipW={x:ox+(lx*sx)*cr-(ly*sy)*sr,y:gy+bob+(lx*sx)*sr+(ly*sy)*cr};
+      if(!H.act&&H.deadP<0){ const rc=Math.max(HX+HS*0.4,Math.min(HX+HS*1.05,B.tipW.x+(gun?3:9))); B.reach+=(rc-B.reach)*0.2; } }
+  };
+  if(w0&&back) drawW();
+  dspr(body,-HS/2,-HS*top0,HS,HS,'#ff3030',H.hurt>0?H.hurt/0.15*0.65:0);
+  if(w0&&!back){ drawW(); const f=fistSpr(body,anc[0],anc[1],hr), fr=hr*HS; ctx.drawImage(f.c,hx-fr,hy-fr,fr*2,fr*2); }   // punho por cima: mão segurando
+  else if(!w0&&H.main){ ctx.save(); ctx.translate(hx-14,hy+50); drawWeapon(ws); ctx.restore(); }
+  ctx.restore();
+}
+/* ALTURAS (decisão do PO, pelo protótipo; px numa tela de 390 → px lógicos = px·330/390): herói ~160; comum 110–120 com variação por
+   espécie (nunca abaixo de 100); chefe 180–200; Senhor da Era no topo da faixa. Se o chefe não couber inteiro, a largura manda (BOSS_FIT). */
+const EN_SIZE={ common:SLOTH[1], boss:180*PX, eraBoss:192*PX, bossMin:150*PX, minH:SLOTMIN[0] };   // comum: altura do slot do meio; os outros slots escalam (SLOTSC). Chefe: alvo 180 px, mínimo 150 nos largos
+function enemyH(e){ return (e.eraBoss?EN_SIZE.eraBoss:e.boss?EN_SIZE.boss:EN_SIZE.common)*enScale(e); }
+/* folhas de corrida aprovadas (8 quadros de 256x256, 12 fps): assets/anim/<chave>_run.png. Só existem Goblin e Esqueleto da era 2;
+   quem não tem folha desliza no chão com os pés fixos. Para ligar outra, basta acrescentar a chave. */
+const EN_RUN={era2_e0:1,era2_e1:1};
+/* FOLHAS POR ESPÉCIE (fps-ff): corrida, ATAQUE, DANO e MORTE. Formato: folha horizontal, quadro w x 256 (12 fps), com padLeft/padRight no .json
+   (a célula original de 256 começa em x=padLeft; pés em y≈243). Hoje só a era 2 (Goblin, Esqueleto, Dragão Real). Quem não está na tabela usa o
+   comportamento por código (desliza, avanço com inclinação, tomba ao morrer). O .json não marca o quadro de impacto: o dano sai no MEIO da animação. */
+const EN_DIR='assets/anim/hyb/enemy/';
+/* PARA LIGAR UMA ERA NOVA: acrescente o número em EN_ANIM_ERAS (os 12 arquivos <chave>_<run|attack|hurt|die>.png/.json em EN_DIR). Exceção de caminho
+   em EN_ANIM_PATH. Se um arquivo faltar ou falhar, aquele estado cai no comportamento sem folha (desliza / avanço curto com inclinação / tomba). */
+const EN_ANIM_ERAS=[0,1,2,3,4,5,6];   // as 7 eras aprovadas (docs/ARTE_APROVADA.md)
+/* ===== CHAVES DE ARTE (ordem do dono): só fica LIGADO o que ele aprovou. Para ligar um conjunto depois do voto, troque false por true AQUI.
+   enemy_<estado>_era<N>: folhas dos inimigos (comuns e chefe da era; o chefe da era 2 tem chave própria na corrida).
+   ult_era<N>: ultimate animada (assets/anim/ult). Desligado = provisório aprovado em código (desliza sem quique, ataque no lugar com até 12 px
+   + inclinação + impacto no herói; ultimate por partículas). O cenário vivo por era é a chave sceneV2 da tabela ERAS (index.html): era 1 desligada. ===== */
+/* GRANULAR: uma chave por INIMIGO e por ESTADO, com o nome do arquivo (<chave>_<run|attack|hurt|die>), e uma por ultimate (ult_era<N>).
+   Estado inicial = banco de aprovações do dono lido pelo QA em 2026-11-12. true = aprovado e ligado; false = sem voto, desligado. */
+const ART_ON={
+  /* LISTA OFICIAL: docs/ARTE_APROVADA.md (220 aprovados) + reports/arte_aprovada_vs_jogo.md (arquivo, quadros, fps, pés e quadro do golpe).
+     Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
+     as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
+  ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
+  kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
+  s1_era2_t0:true, s1_era2_t1:true, s1_era2_t2:true,                                       // golpe básico com rastro (kael_attack_trail_era2_t<tier>)
+  s2_era2_t0:true, s2_era2_t1:true, s2_era2_t2:true,                                       // Corte Giratório (kael_spin_era2_t<tier>)
+  aura4:true, aura7:true, aura10:true, aura13:true,                                        // auras de fortalecimento (assets/anim/aura): só aparecem com o +N da ARMA no Sys.forge
+};
+for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']) for(const st of ['run','attack','hurt','die']){ const k='era'+E+'_'+kd+'_'+st; if(ART_ON[k]===undefined) ART_ON[k]=true; }
+/* QUADRO DO GOLPE/TIRO de cada folha de ataque (contando do 0; medido pela dona da arte: a arma ou o tiro chega mais longe para a esquerda).
+   O dano e o projétil saem nesse quadro; a folha toca no fps do .json (12), dentro do intervalo de ataque do balanceamento (que não muda). */
+const EN_HIT_FRAME={ era0_e0:6, era0_e1:6, era0_boss:5, era1_e0:4, era1_e1:6, era1_boss:8, era2_e0:6, era2_e1:8, era2_boss:8, era3_e0:2, era3_e1:1, era3_boss:4,
+  era4_e0:8, era4_e1:5, era4_boss:9, era5_e0:3, era5_e1:3, era5_boss:4, era6_e0:5, era6_e1:5, era6_boss:5 };
+const shDur=(sh,def)=>sh&&sh.meta&&sh.meta.frames?sh.meta.frames/(sh.meta.fps||12):def;   // duração real da folha (quadros ÷ fps do .json)
+const enOn=(key,st)=>ART_ON[key+'_'+st]===true;
+const EN_ANIM_PATH={ era2_e0:{run:'assets/anim/era2_e0_run'}, era2_e1:{run:'assets/anim/era2_e1_run'} };
+const ENEMY_SETS={};
+for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']){ const key=`era${E}_${kd}`, o={}; for(const st of ['run','attack','hurt','die']) o[st]=(EN_ANIM_PATH[key]&&EN_ANIM_PATH[key][st])||EN_DIR+key+'_'+st; ENEMY_SETS[key]=o; }
+const EN_FEET_DEFAULT=243;   // linha dos pés na célula de 256 quando o .json não traz feetY
+const EN_ATK_DUR=1.0, EN_HURT_DUR=0.4, EN_DIE_DUR=1.0;     // reservas (sem .json): cada folha toca no fps do próprio .json (shDur)
+function enSheet(e,st){ const T=ENEMY_SETS[e.key]; if(!T||!T[st]||!enOn(e.key,st)) return null; const sh=sheetLoad(T[st],true); return sh.ok?sh:null; }
+function enPreload(key){ const T=ENEMY_SETS[key], out=[]; if(T) for(const k in T) if(enOn(key,k)) out.push(sheetLoad(T[k],true).p.then(s=>{ if(s){ try{ enBounds(s); }catch(e){} } return s; })); return out; }   /* os limites opacos de cada folha são medidos AQUI, no carregamento da era (tela de loading), não na 1ª onda */
+/* LIMITES OPACOS POR QUADRO de cada folha (medidos uma vez, na 1ª vez que a folha é desenhada): l, r, t, b em px do quadro (alfa > 40).
+   Usados para cumprir o contrato SEM mexer na arte: (1) em combate, golpe, dano e morte nada opaco passa de x=382 nem fica abaixo de x=8: o quadro que
+   passaria é deslocado só o que falta (na ENTRADA andando pode vir de fora); (2) a sola nunca fica abaixo da linha do chão: o quadro cuja parte opaca
+   desce além do feetY é levantado só o que falta (chefes das eras 3 e 4 ao cair). */
+const EN_BB_C=document.createElement('canvas'), EN_CTX={e:null,ox:0,walk:false,st:''};
+function enBounds(sh){ if(sh.bb) return sh.bb; const M=sh.meta, n=M.frames, W=M.w, H=M.h, out=[];
+  try{ EN_BB_C.width=W; EN_BB_C.height=H; const g=EN_BB_C.getContext('2d',{willReadFrequently:true});
+    for(let i=0;i<n;i++){ g.clearRect(0,0,W,H); g.drawImage(sh.img,i*W,0,W,H,0,0,W,H); const d=g.getImageData(0,0,W,H).data; let l=W,r=-1,t=H,b=-1;
+      for(let y=0;y<H;y++){ const row=y*W*4+3; for(let x=y&1;x<W;x+=2) if(d[row+x*4]>40){ if(x<l) l=x; if(x>r) r=x; if(y<t) t=y; if(y>b) b=y; } }
+      out.push(r<0?null:{l:Math.max(0,l-1),r:Math.min(W,r+2),t,b:b+1}); } }catch(er){ for(let i=out.length;i<n;i++) out.push(null); }
+  /* sola: se a folha INTEIRA assenta abaixo do feetY (todo quadro desce), o erro é da âncora da folha: sobe um valor FIXO (o menor excesso entre os
+     quadros), sem tremer entre quadros. Na morte o corpo deita e o excesso cresce quadro a quadro: lá a correção é por quadro (assenta no chão). */
+  { const fy=typeof M.feetY==='number'?M.feetY:(M.padTop||0)+EN_FEET_DEFAULT; let mn=1e9; for(const b of out) if(b) mn=Math.min(mn,b.b-1-fy); sh.lift=mn<1e9&&mn>1?mn:0; }
+  return sh.bb=out; }
+/* CHAVE: true = o slot do comum recua para o golpe/dano/morte caberem em x<=382 (pedido do PO na v0.11.5; custo: o do fundo fica menor nas eras em que a
+   folha de golpe é bem mais larga que o sprite parado). false = centros fixos 222/282/338 e a arma do comum pode passar de 382 em alguns quadros. */
+const EN_EXT_ON=false;   // DESLIGADA: medido na v0.11.5, ligar isto leva o slot do fundo ~27-37 px para a esquerda e a sobreposição meio×fundo vai a 64-109% com o meio e o fundo no mínimo (95/85 px). Ver reports/agente5-engenheiro.md
+const EN_EXT={};
+function enExt(e,spr){ const c=EN_EXT[e.key]; if(c) return c; const T=ENEMY_SETS[e.key]; if(!T||!spr) return null; let rr=0;
+  for(const st of ['attack','hurt','die']){ if(!enOn(e.key,st)) continue; const sh=sheetLoad(T[st],true); if(!sh.ok) return null; const M=sh.meta;
+    for(const b of enBounds(sh)) if(b){ const v=((b.r-(M.padLeft||0))/256-(spr.fx+spr.fw/2))/spr.fh; if(v>rr) rr=v; } }
+  return EN_EXT[e.key]={r:rr}; }
+function enFrame(sh,u,spr,F,loopT){ const M=sh.meta, n=M.frames, fi=loopT!=null?Math.floor(loopT*(M.fps||12))%n:Math.min(n-1,Math.max(0,Math.floor(u*n))), k=F/256;
+  /* ÂNCORA PELO .json DE CADA FOLHA: largura e altura do quadro (M.w, M.h), nº de quadros e feetY (linha dos pés dentro do quadro) vêm do arquivo.
+     O quadro é desenhado com a linha feetY em cima da linha dos pés do campo. Folha sem feetY (as corridas antigas era2_e0_run / era2_e1_run, 256x256):
+     vale padTop + 243 (pés em 243 de 256 na célula original). Nada supõe quadro de 256 de altura nem a base do quadro como chão. */
+  const fy=typeof M.feetY==='number'?M.feetY:(M.padTop||0)+EN_FEET_DEFAULT;
+  /* v0.11.5 (PO): o CORPO NÃO DESLIZA por quadro. A âncora do pé fica parada; nos quadros de golpe/disparo do chefe a arte (cano, clarão, arma) pode
+     passar de x=382. Só a sola é corrigida (ver enBounds). */
+  const x0=-(spr.fx+spr.fw/2)*F-(M.padLeft||0)*k, C=EN_CTX, b=enBounds(sh)[fi]; let dy=0;
+  /* PRÓXIMA VERSÃO (hoje só com a chave da 04b, para não mexer no caminho padrão que o QA está medindo): a referência da sola é o feetY do .json;
+     o corpo NÃO sobe por causa de poeira, fumaça ou arma abaixo da linha (aceito pelo PO). Só a folha que traz o campo opcional "feetDy" no .json
+     ({"<quadro>": px da célula, negativo = subir}) tem o quadro deslocado, escalado. Hoje: era3_boss_attack (cauda do Capitão Fantasma). */
+  /* v0.11.6: a referência da sola é SEMPRE o feetY do .json. O corpo não sobe por causa de poeira, fumaça ou arma abaixo da linha (aceito pelo PO), nem na
+     morte. Só o quadro listado no campo opcional "feetDy" do .json da folha ({"<quadro>": px da célula; negativo = sobe, positivo = desce}) é deslocado,
+     na escala do inimigo. Hoje: era3_boss_attack e era3_boss_hurt (cauda do Capitão Fantasma). */
+  { const fd=M.feetDy&&M.feetDy[fi]; dy=typeof fd==='number'?fd*k:0; if(b&&window.__probe2&&C.e) window.__probe2(C.e,C.st,C.ox+x0+b.l*k,C.ox+x0+b.r*k,(fy-b.t)*k-dy,(b.b-1-fy)*k+dy,C.ox,dy); }
+  ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,x0,-fy*k+dy,M.w*k,M.h*k); }
+const EN_STRIDE={era0_e0:0.42,era0_e1:0.73,era0_boss:1.01, era1_e0:0.55,era1_e1:0.45,era1_boss:0.56, era2_e0:0.89,era2_e1:0.94,era2_boss:0.40,
+  era3_e0:0.54,era3_e1:0.66,era3_boss:0.35, era4_e0:0.38,era4_e1:0.45,era4_boss:0.35, era5_e0:0.5,era5_e1:0.40,era5_boss:0.5, era6_e0:0.21,era6_e1:0.68,era6_boss:0.35};   // medidas da fps-ff (2026-11-12) pelo contato da sola; era1_e0/e1, era3_boss e era5_boss são estimativa; era5_e0 (drone) paira, valor livre   // lado-do-quadro por segundo, medido na folha: o pé de apoio recua ~19 px (Goblin) e ~20 px (Esqueleto) por quadro de 256 a 12 fps
+function drawEnemyAt(e,x,deadP){
+  const spr=SPR(e.spr,'enemy'), t=B.at, gy=GY+LANEY[e.lane];
+  const dying=deadP>0;
+  const walking=!dying&&!e.parked&&e.x<WAITX-1;
+  // NADA de quique: os pés ficam na linha do chão o tempo todo. Parado = respiração (scaleY a partir da base). Ataque = inclinação/avanço curto pela base.
+  let adv=0, rot=0, alpha=1, sy=1, lean=0;   // rot só na MORTE por código (tomba); em vida a inclinação é 'lean' (cisalhamento ancorado na base: os dois pés ficam na linha)
+  if(e.sw>0&&!dying){ const k=eAdvK(e); adv=eAdv(e); lean=ENEMY_RANGED[e.key]?-0.07*k:0.22*k; }   // lean > 0 = topo para a ESQUERDA (para o herói); cisalhamento, a base não sai do chão   // corpo a corpo: avanço NO CHÃO até o herói e volta; de longe: recuo curto
+  let ox=x-adv;
+  if(!walking&&!dying&&!(e.sw>0)) sy=1+Math.sin(t*3+e.seed)*0.02;   // respiração: só scaleY (±2%) ancorado na base, só parado
+  else if(walking&&!enOn(e.key,'run')) lean=0.06;                    // andando sem folha: desliza reto, com inclinação FIXA para a frente
+  if(!dying&&e.hit>0){ const room=BOSS_X1-(x+(e.dw||0)*0.5), k=e.hit/0.12;   // levou golpe: recuo curto e inclinação para trás, SÓ até a margem de 382 (nada desenhado passa dela)
+    const lb=Math.min(0.05,Math.max(0,room-0.5)/Math.max(1,e.dh||90)); lean-=lb; ox+=Math.max(0,Math.min(3*k,room-0.5-lb*(e.dh||90))); }
+  const shDie=dying?enSheet(e,'die'):null, shAtk=!dying&&e.sw>0?enSheet(e,'attack'):null, shHurt=!dying&&!shAtk&&e.hurtT>0?enSheet(e,'hurt'):null, shRun=walking?enSheet(e,'run'):null;
+  if(shAtk||shRun||shHurt) lean=0;                              // com folha o corpo não inclina (a folha já tem o movimento)
+  let dark=0;
+  if(dying){ if(shDie){ rot=0; alpha=deadP>0.8?Math.max(0,1-(deadP-0.8)/0.2):1; }
+    else if(e.boss&&SCREENS_ON.bossResult){ const k=Math.min(1,deadP/0.6), q=k*k*(3-2*k); rot=0.21*q; sy=1-0.14*q; dark=0.62*q; alpha=deadP>0.8?Math.max(0,1-(deadP-0.8)/0.2):1; }   /* chefe sem folha de morte ligada: TOMBA girando pelos pés (os pés não saem da linha do chão), encolhe e escurece, como no canvas da tela 10 */
+    else { alpha=Math.max(0,1-deadP*1.25); } }   // morte sem folha aprovada: some com fade no chão, no lugar (sem tombar nem girar)
+  let dw=0,dh=0; if(spr){ dh=e.boss?enemyH(e):(e.hc||e.dhT||SLOTH[Math.min(e.idx,MAXVIS-1)]); dw=dh*spr.w/spr.h; if(e.boss){ const mw=(BOSS_WIDE[e.key]&&!(DEBUG&&window.__noScale))?BOSS_X1-BOSS_X0MIN:BOSS_FIT(); if(dw>mw){ let k=Math.max(mw/dw,Math.min(1,EN_SIZE.bossMin/dh)); k=Math.min(k,(BOSS_X1-BOSS_X0MIN)/dw); dh*=k; dw*=k; } }   // chefe: cabe pela LARGURA da caixa, sem cair abaixo da altura mínima
+    /* comum: a altura vem do hordeFit (e.hc acompanha o alvo e.dhT com suavização) */ e.dw=dw; e.dh=dh; }
+  ctx.save(); ctx.globalAlpha=0.35*alpha; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(x-adv,gy+2,(spr?Math.max(20,dw*.42):22*e.size),5,0,0,7); ctx.fill(); ctx.restore();
+  if(window.__probe) window.__probe(e,{x:ox,feet:gy,top:gy-dh*sy,dh,dw,sy,sx:1,rot,lean,adv,walking,atk:e.sw>0,dying,sheet:!!(shDie||shAtk||shHurt||shRun)});   // medição (QA): o que o desenho usa de fato
+  ctx.save(); ctx.translate(ox,gy); ctx.rotate(rot); if(lean) ctx.transform(1,0,lean,1,0,0); ctx.globalAlpha=alpha;
+  { const shU=shDie||shAtk||shHurt||shRun; if(shU?EN_FLIP_SHEET[shU.base]:EN_FLIP[e.key]) ctx.scale(-1,1); }   // arquivo virado para a direita: espelha só o corpo (sombra, barra e nome ficam de fora); flag por ARQUIVO (estático x folha)
+  EN_CTX.e=e; EN_CTX.ox=ox; EN_CTX.walk=walking&&!e.wasParked; EN_CTX.st=shDie?'die':shAtk?'attack':shHurt?'hurt':shRun?'run':'idle';
+  if(spr){
+    const F=dh/spr.fh;                       // F = lado do quadro inteiro (512 da arte) na tela
+    e.spd=enOn(e.key,'run')?(EN_STRIDE[e.key]||0.9)*F:EN_WALK;
+    if(e.boss&&!(dying&&SCREENS_ON.bossResult)) drawGlow(e.eraBoss?'#ff2a2a':'#ff7a30',0,-dh*.5,dh*.8,alpha*(e.eraBoss?0.4:0.28),false);
+    if(shDie) enFrame(shDie,deadP,spr,F);                                              // morte: toca a folha e some no fim
+    else if(shAtk) enFrame(shAtk,1-e.sw/(e.swD||EATK),spr,F);                          // ataque
+    else if(shHurt) enFrame(shHurt,1-e.hurtT/(e.hurtD||EN_HURT_DUR),spr,F);                       // levando dano
+    else if(shRun) enFrame(shRun,0,spr,F,e.wt);                                        // corrida (pés do quadro na linha do chão)
+    else { ctx.scale(1,sy); if(dark>0) dspr(spr,-dw/2,-dh,dw,dh,'#0a0705',dark); else dspr(spr,-dw/2,-dh,dw,dh,'#fff',(!dying&&e.hit>0)?e.hit/0.12*0.85:0); }
+  }else drawEnemyOld(e,1,sy,dying);
+  ctx.restore();
+}
+function bar(x,y,w,pct,col,hh){ hh=hh||7; ctx.fillStyle='#0008'; ctx.fillRect(x,y,w,hh); ctx.fillStyle=col; ctx.fillRect(x,y,w*Math.max(0,pct),hh); ctx.strokeStyle='#000a'; ctx.lineWidth=1; ctx.strokeRect(x,y,w,hh); }
+function enemyLabel(e){
+  const mn=(J('assets/enemies/meta.json')[e.key]||{}).name;
+  if(!mn) return e.name;
+  return e.eraBoss?'🔥 Senhor da Era '+mn:e.boss?'👑 Chefe '+mn:mn;
+}
+/* cenário rolando: imagem | cópia espelhada | imagem ... (sem costura) */
+const BGM={}; let bgFade=null;
+function bgMirror(img,k){ let m=BGM[k]; if(m) return m; m=BGM[k]=document.createElement('canvas'); m.width=img.width; m.height=img.height; const x=m.getContext('2d'); x.translate(img.width,0); x.scale(-1,1); x.drawImage(img,0,0); return m; }
+let bgSeam=null, bgSeamK='';
+function drawBG(){
+  const era=B.dispEra, sc=sceneFrame(era);
+  if(sc){   // cenário vivo (canvas próprio atrás deste): aqui só a faixa abaixo da cena
+    ctx.clearRect(-12,-12,LW+24,LH+24); const yb=GY/sc.gy;
+    if(yb<LH+12){ if(bgSeamK!==sc.shade){ bgSeamK=sc.shade; bgSeam=document.createElement('canvas'); bgSeam.width=1; bgSeam.height=32; const x=bgSeam.getContext('2d'), g=x.createLinearGradient(0,0,0,32); g.addColorStop(0,`rgba(${sc.shade},0)`); g.addColorStop(1,`rgba(${sc.shade},1)`); x.fillStyle=g; x.fillRect(0,0,1,32); }
+      ctx.fillStyle=`rgb(${sc.shade})`; ctx.fillRect(-12,yb-1,LW+24,LH-yb+14); ctx.drawImage(bgSeam,-12,yb-26,LW+24,26); }
+    return; }
+  const img=bgImg(era);
+  ctx.fillStyle='#14110f'; ctx.fillRect(0,0,LW,LH);
+  if(!img){ drawBGOld(); return; }
+  for(const k in BGM) if(k!==String(era)){ delete BGM[k]; delete BGS['assets/bg/era'+k+'.png']; }   // libera a era anterior
+  const gm=(J('assets/bg/meta.json')['era'+era]||{}).groundY||0.72, g0=gm+0.05, ar=img.width/img.height;
+  const h=GY/g0, w=Math.round(h*ar), m=bgMirror(img,era), off=B.cam%(2*w);
+  for(let i=0,x=-off;x<LW;i++,x+=w) ctx.drawImage(i%2?m:img,x,0,w+1,h);
+  if(h<LH){ if(!bgFade){ bgFade=document.createElement('canvas'); bgFade.width=1; bgFade.height=64; const x=bgFade.getContext('2d'), g=x.createLinearGradient(0,0,0,64); g.addColorStop(0,'rgba(20,17,15,0)'); g.addColorStop(1,'rgba(20,17,15,1)'); x.fillStyle=g; x.fillRect(0,0,1,64); }
+    ctx.drawImage(bgFade,0,h-46,LW,48); }
+}
+const HM={x:HX,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:true};
+function draw(){
+  ctx=mainCtx;
+  ctx.save();
+  B.shx=B.shake>0?(Math.random()-.5)*B.shake*8:0;   // tremor (só ultimate e golpe de chefe): SÓ HORIZONTAL e o MESMO deslocamento para o cenário (js/stage.js) e os personagens: ninguém sai da linha do chão
+  if(B.shx) ctx.translate(B.shx,0);
+  drawBG();
+  if(B.dim>0.01){ ctx.fillStyle=`rgba(4,2,14,${B.dim*0.68})`; ctx.fillRect(-10,-10,LW+20,LH+20); }
+  drawWfx(0);
+  for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
+  const h=B.hero, L=B.en;
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); HM.ws=wSkin(); HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+  const ultOn=!!(B.act&&B.act.type==='s3');
+  if(!ultOn) drawHero(HM);
+  for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
+  for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
+  for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
+    for(let j=5;j>=0;j--){ const kj=Math.max(0,k-j*0.035), x=p.x0+(p.x1-p.x0)*kj, y=p.y0+(p.y1-p.y0)*kj-(p.kind==='shell'?26*4*kj*(1-kj):0); drawGlow(col,x,y,(big?11:6)*(1-j/7)*(p.kind==='fire'?1.5+0.3*Math.sin(B.at*40+j):1),j?0.6*(1-j/6):1,false);
+      if(!j){ ctx.fillStyle=p.kind==='shell'?'#2a2a30':'#ffffff'; ctx.strokeStyle='#3a1a08'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,y,big?4.5:2.6,0,7); ctx.fill(); ctx.stroke(); } } }   /* núcleo sólido: aparece também sobre fundo claro */
+  if(ultOn){ drawWfx(2); drawHero(HM); }   // herói sempre por cima do efeito da ultimate
+  drawWfx(1);
+  // barras de vida depois dos efeitos (nunca cobertas)
+  ctx.textAlign='center'; ctx.lineJoin='round';
+  if(!B.res) for(const e of L){ if(e.x>LW+40) continue;
+    const top=e.dh||(e.boss?150:95), gy=GY+LANEY[e.lane], vx=eX(e);
+    if(e.boss){ const bw=Math.max(80,Math.min((e.dw||90)*.8,110)), bx=Math.max(bw/2+4,Math.min(LW-bw/2-4,vx)); bar(bx-bw/2,gy-top-12,bw,e.hp/e.maxhp,'#ff5252');
+      ctx.font='800 11px system-ui'; ctx.fillStyle=e.eraBoss?'#ffd75e':'#fff'; ctx.strokeStyle='#000'; ctx.lineWidth=3;
+      const lb=enemyLabel(e), tw=ctx.measureText(lb).width, lx=Math.max(tw/2+4,Math.min(LW-tw/2-4,vx)); ctx.strokeText(lb,lx,gy-top-16); ctx.fillText(lb,lx,gy-top-16); }
+    else if(e.hp<e.maxhp||e===B.enemy) bar(vx-21,gy-top-9,42,e.hp/e.maxhp,'#ff5a4e',5);
+  }
+  { const nw=waitingN(); if(nw>0&&B.deadT<=0&&!B.res){ const tx='+'+nw, pop=1+0.06*Math.sin(B.at*5);   // fila de espera: selo na borda direita, na altura do chão
+      ctx.save(); ctx.font=`${LILITA()?'400':'900'} 15px ${LILITA()?'"Lilita One",':''}system-ui`; const tw=Math.max(29,ctx.measureText(tx).width+12), bx=LW-tw/2-6*PX, by2=GY-(FB_GEO?86:136)*PX;
+      ctx.translate(bx,by2); ctx.scale(pop,pop); ctx.fillStyle='#ff5a4e'; ctx.strokeStyle='#7a1a14'; ctx.lineWidth=1.5; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(-tw/2,-11,tw,22,11); else ctx.rect(-tw/2,-11,tw,22); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tx,0,1); ctx.restore(); } }
+  drawPicks();
+  for(const p of B.parts){ const a=Math.max(0,1-p.t/p.life); ctx.globalAlpha=a; ctx.fillStyle=p.col;
+    if(p.glow) ctx.globalCompositeOperation='lighter'; const s=p.sz*(p.glow?a+.4:1); ctx.fillRect(p.x-s/2,p.y-s/2,s,s); if(p.glow) ctx.globalCompositeOperation='source-over'; }
+  ctx.globalAlpha=1;
+  for(const r of B.rings){ const k=r.t/0.45; ctx.globalAlpha=Math.max(0,1-k); ctx.strokeStyle=r.col; ctx.lineWidth=3*(1-k)+1; ctx.beginPath(); ctx.arc(r.x,r.y,6+r.max*easeOut(Math.min(1,k)),0,7); ctx.stroke(); }
+  ctx.globalAlpha=1; ctx.textAlign='center';
+  for(const f of B.fx){ const k=f.t, pop=1+0.6*Math.max(0,1-k*7); ctx.globalAlpha=Math.max(0,1-k*k);
+    ctx.font=`${LILITA()?'400':'900'} ${Math.round((f.big===2?34:f.big?21:15)*pop)}px ${LILITA()?'"Lilita One",':''}system-ui`; const yy=f.y-easeOut(k)*(f.big===2?54:40), xx=Math.max(24,Math.min(LW-24,f.x));
+    ctx.lineWidth=f.big===2?6:4; ctx.lineJoin='round'; ctx.strokeStyle='#000'; ctx.strokeText(f.txt,xx,yy); ctx.fillStyle=f.col; ctx.fillText(f.txt,xx,yy); }
+  ctx.globalAlpha=1;
+  ctx.restore();
+  if(B.dim>0.01){ if(!vigC){ vigC=document.createElement('canvas'); vigC.width=vigC.height=128; const x=vigC.getContext('2d'), g=x.createRadialGradient(64,64,30,64,64,90); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.85)'); x.fillStyle=g; x.fillRect(0,0,128,128); }
+    ctx.globalAlpha=B.dim; ctx.drawImage(vigC,0,0,LW,LH); ctx.globalAlpha=1; }
+  const bn=B.banner, by=Math.max(96,GY-HS-110);
+  if(bn){ const k=bn.t, al=Math.min(1,k/0.12)*Math.min(1,(bn.dur-k)/0.3), sc=1+0.5*Math.max(0,1-k*6)+0.03*Math.sin(B.at*7), y=bn.small?by+34:by;
+    ctx.save(); ctx.globalAlpha=Math.max(0,al); ctx.textAlign='center'; ctx.translate(LW/2,y); ctx.scale(sc,sc); ctx.lineJoin='round';
+    if(bn.pill){ const L=LILITA(); ctx.font=`${L?'400':'900'} 22px ${L?'"Lilita One",':''}system-ui`; const pw=ctx.measureText(bn.txt).width+32; ctx.fillStyle=bn.bg||'rgba(120,40,200,.85)'; ctx.strokeStyle=bn.bd||'#d9b3ff'; ctx.lineWidth=2; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(-pw/2,-20,pw,38,11); else ctx.rect(-pw/2,-20,pw,38); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.strokeStyle=bn.sh||'#3a0d6a'; ctx.lineWidth=3; ctx.strokeText(bn.txt,0,7); ctx.fillText(bn.txt,0,7); ctx.restore(); }
+    else {
+    if(!bn.small){ ctx.fillStyle='#000a'; ctx.fillRect(-LW,-22,LW*2,bn.sub?44:34); }
+    if(bn.sub){ ctx.font='800 10px system-ui'; ctx.fillStyle='#fff'; ctx.fillText(bn.sub,0,-10); }
+    ctx.font=`900 ${bn.small?14:22}px system-ui`; ctx.lineWidth=bn.small?4:5; ctx.strokeStyle='#000'; ctx.fillStyle=bn.col==='#ffffff'&&!bn.small?'#ffd75e':bn.col; ctx.strokeText(bn.txt,0,bn.sub?12:6); ctx.fillText(bn.txt,0,bn.sub?12:6);
+    ctx.restore(); } }
+  if(B.deadT>0){ { const quiet=B.deadBoss&&SCREENS_ON.bossResult; ctx.fillStyle=quiet?`rgba(0,0,0,${Math.min(.6,(1.6-B.deadT)*.6)})`:'#000a'; ctx.fillRect(0,0,LW,LH); if(!quiet){ ctx.fillStyle='#ff6b6b'; ctx.font='800 26px system-ui'; ctx.textAlign='center'; ctx.fillText('DERROTADO',LW/2,GY-90); } } }   /* tela 10 ligada: chefe sem o letreiro (a tela 10 de derrota abre em seguida) */
+  const tr=B.tr;
+  if(tr){
+    const a=tr.t<0.45?tr.t/0.45:Math.max(0,1-(tr.t-0.45)/0.55);
+    ctx.fillStyle=`rgba(255,240,200,${a*0.9})`; ctx.fillRect(0,0,LW,LH);
+    if(tr.t>0.5&&tr.t<2.8){
+      const k=tr.t-0.5, al=Math.min(1,k/0.3)*Math.min(1,(2.8-tr.t)/0.5), sc=1+0.25*Math.max(0,1-k*4);
+      ctx.save(); ctx.globalAlpha=al; ctx.fillStyle='#0009'; ctx.fillRect(0,by-28,LW,70); ctx.textAlign='center';
+      ctx.translate(LW/2,by); ctx.scale(sc,sc);
+      ctx.font='900 24px system-ui'; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.strokeStyle='#5a2a05'; ctx.fillStyle='#ffd75e'; ctx.strokeText('NOVA ERA',0,0); ctx.fillText('NOVA ERA',0,0);
+      ctx.font='800 16px system-ui'; ctx.lineWidth=4; ctx.strokeStyle='#000'; ctx.fillStyle='#fff'; const nm=ERAS[tr.to].icon+' '+ERAS[tr.to].n; ctx.strokeText(nm,0,28); ctx.fillText(nm,0,28);
+      ctx.restore();
+    }
+  }
+}
+let vigC=null, lilitaOk=false, lilitaT=0;
+function LILITA(){ if(lilitaOk) return true; const now=performance.now(); if(now-lilitaT>1000){ lilitaT=now; try{ lilitaOk=!!(document.fonts&&document.fonts.check('15px "Lilita One"')&&[...document.fonts].some(f=>/Lilita/.test(f.family)&&f.status==='loaded')); }catch(e){} } return lilitaOk; }
+function tickFx(dt){
+  B.at+=dt*(B.paused?1:B.speed);   // relógio da animação do herói (não para na pausa: nada estático)
+  if(B.running&&B.deadT<=0&&!B.paused){ const st=Math.floor(B.at*3); if(st!==B.step){ B.step=st; dust(HX-HS*0.1,GY-1,2); } }   // poeira a cada passada (2 por ciclo de 8 quadros a 12 fps)
+  const gt=document.body.classList.contains('sheet')?sheetGY():LH*FIELD_FEET; GY=Math.abs(gt-GY)<0.5?gt:GY+(gt-GY)*Math.min(1,dt*9);
+  tickPicks(dt);
+  for(const f of B.fx) f.t+=dt*1.1; B.fx=B.fx.filter(f=>f.t<1);
+  for(const p of B.parts){ p.t+=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=p.g*dt; } if(B.parts.length){ B.parts=B.parts.filter(p=>p.t<p.life); if(B.parts.length>PART_MAX) B.parts.splice(0,B.parts.length-PART_MAX); }
+  for(const r of B.rings) r.t+=dt; B.rings=B.rings.filter(r=>r.t<0.45);
+  for(const c of B.corpses){ if(c.e.holdC) c.t=Math.min(c.t+dt,(c.life||0.6)*0.79); else c.t+=dt; if(B.running&&!B.res) c.x-=RUNV()*dt; }   /* holdC: o chefe caído fica no chão enquanto a tela de vitória está aberta */ B.corpses=B.corpses.filter(c=>c.t<(c.life||0.6));
+  if(B.wfx.length){ for(const o of B.wfx) o.t+=dt; B.wfx=B.wfx.filter(o=>o.t<o.dur); }
+  if(B.banner){ B.banner.t+=dt; if(B.banner.t>=B.banner.dur) B.banner=null; }
+  if(B.shake>0) B.shake=Math.max(0,B.shake-dt*3);
+  const ult=B.act&&B.act.type==='s3'&&B.act.t<2.05; B.dim+=((ult?1:0)-B.dim)*Math.min(1,dt*9);
+  const cur=B.res?B.dispEra:eraOf(S.stage);   // a troca de cenário espera a tela de resultado fechar
+  if(cur!==B.dispEra&&!B.tr){ B.tr={t:0,to:cur}; if(!B.paused){ snd('era_change'); music('era'+cur); } }
+  if(B.tr){ B.tr.to=cur; B.tr.t+=dt; if(B.tr.t>0.45&&B.dispEra!==B.tr.to) B.dispEra=B.tr.to; if(B.tr.t>2.9) B.tr=null; }
+  const sk=SKIN(S.skinEq.armor);
+  if(tierOf(sk.r)===2&&B.deadT<=0&&Math.random()<dt*10)
+    B.parts.push({x:HX+(Math.random()-.5)*44,y:GY-Math.random()*HS*.75,vx:(Math.random()-.5)*8,vy:-18-Math.random()*20,g:0,t:0,life:1,col:RAR[sk.r].c,sz:3,glow:true});
+  // faíscas saindo da ponta da arma durante o golpe
+  const a=B.act; if(a&&B.tipW&&!a.gun&&PZ.trail&&Math.random()<dt*60)
+    B.parts.push({x:B.tipW.x,y:B.tipW.y,vx:(Math.random()-.5)*50,vy:(Math.random()-.5)*50,g:120,t:0,life:.3,col:a.col==='#ffffff'?'#ffe9a8':a.col,sz:2.5,glow:true});
+}
+
+/* linha dos pés com painel aberto (Skins, Missões, Passe): o painel começa em 40% da tela; os pés ficam 46 px de tela acima dele (faixa das habilidades) */
+function sheetGY(){ const app=document.getElementById('app'), st=cv.parentNode, k=cv.clientWidth/LW||1; return Math.max(HS+30,(app.clientHeight*0.40-st.offsetTop-46)/k); }
+/* ---------- prévia animada (aba Skins) ---------- */
+const PV={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false}; let pvT=0, pvN=0;
+function drawPreview(dt){
+  const c=document.getElementById('pvc'); if(!c) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, hgt=c.clientHeight; if(!w) return;
+  if(c.width!==Math.round(w*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(hgt*dpr); }
+  const x=c.getContext('2d'), k=c.height/190; x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,w*dpr/k+2,192);
+  pvT+=dt; PV.t=pvT; PV.sk=SKIN(pvSkin.armor||S.skinEq.armor); PV.ws=SKIN(pvSkin.weapon||S.skinEq.weapon); PV.x=(c.width/k)/2-8; PV.gy=176;
+  if(PV.act){ PV.act.t+=dt; if(PV.act.t>=PV.act.dur) PV.act=null; }
+  else if(pvT>pvN){ const ws=PV.ws, gun=wIsGun(ws), ty=(Math.floor(pvT/1.7)%3===2)?'s2':'s1'; pvN=pvT+1.7;
+    const a={type:ty,t:0,era:ws.e,gun,col:ws.r>0?RAR[ws.r].c:'#ffffff',hits:[],dur:ty==='s1'?SWT:S2DUR[ws.e]};
+    if(ty==='s1') a.hits.push({t:gun?0.03:0.19}); else S2HITS[ws.e].forEach(h=>a.hits.push({t:h[0]})); PV.act=a; }
+  ctx=x; try{ drawHero(PV); }finally{ ctx=mainCtx; }
+}
+
+/* ---------- laço ---------- */
+let last=performance.now(), hudT=0, saveT=0, fpsA=16;
+function loop(now){
+  const rdt=(DEBUG&&window.__frz)?0:Math.min(0.1,(now-last)/1000); last=now; if(rdt>0){ fpsA+=(rdt*1000-fpsA)*0.05; window.__fps=Math.round(1000/fpsA); }
+  let dt=rdt; if(B.slow>0){ B.slow-=rdt; dt=rdt*0.3; }
+  /* um erro num quadro NUNCA pode matar o laço do jogo (antes, uma exceção no desenho parava tudo para sempre: o requestAnimationFrame ficava no fim) */
+  try{
+  if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++) step(dt); }
+  if(typeof resTick==='function') resTick(rdt);
+  tickFx(dt); draw();
+  }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
+  drawPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
+  updSkills();
+  hudT+=rdt; if(hudT>0.25){ hudT=0; hud(); }
+  saveT+=rdt; if(saveT>5){ saveT=0; save(); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- barra de habilidades (DOM) ---------- */
+const SKB={e:-1,p2:-1,p3:-1,rdy:null,p1:-1,auto:''};
+function updSkills(){
+  const el2=document.getElementById('sk2'); if(!el2) return;
+  const E=wSkin().e;
+  if(E!==SKB.e){ SKB.e=E; for(let n=1;n<=3;n++){ const im=document.querySelector('#sk'+n+' img'); im.style.display=''; im.src=`assets/icons/era${E}_s${n}.png`; }
+    document.getElementById('sk2n').textContent=SKN[E][0]; document.getElementById('sk2').setAttribute('aria-label',SKN[E][0]); document.getElementById('sk3').setAttribute('aria-label','Ultimate: '+SKN[E][1]); }
+  const p2=Math.max(0,Math.ceil(B.cd2/BAL.s2Cooldown*50)), p3=Math.floor(B.energy/2), rdy=B.energy>=100;
+  if(p2!==SKB.p2){ SKB.p2=p2; el2.style.setProperty('--p',p2*2); el2.classList.toggle('cd',p2>0); el2.querySelector('.skt').textContent=p2>0?Math.ceil(B.cd2):''; }
+  const el3=document.getElementById('sk3');
+  if(p3!==SKB.p3){ SKB.p3=p3; el3.querySelector('.skt').textContent=rdy?'PRONTA':p3*2+'%'; }
+  { const h=B.hero; if(h){ const hp=Math.max(0,Math.ceil(h.hp)), k=hp+'|'+Math.ceil(h.maxhp)+'|'+p3; if(k!==SKB.hk){ SKB.hk=k; const f=typeof gNum==='function'?gNum:fmt;
+      document.getElementById('hpt').textContent=f(hp)+' / '+f(Math.ceil(h.maxhp)); document.getElementById('hpb').style.width=Math.max(0,Math.min(100,100*h.hp/h.maxhp))+'%';
+      document.getElementById('ent').textContent=rdy?'PRONTA':p3*2+'%'; document.getElementById('enb').style.width=Math.min(100,p3*2)+'%'; } }
+  }
+  if(rdy!==SKB.rdy){ SKB.rdy=rdy; el3.classList.toggle('rdy',rdy); el3.classList.toggle('cd',!rdy); }
+  const p1=B.act&&B.act.type==='s1'?1:0; if(p1!==SKB.p1){ SKB.p1=p1; document.getElementById('sk1').classList.toggle('hit',!!p1); }
+}
+function initSkills(){
+  /* SÓ AUTOMÁTICO: os botões de habilidade são INDICADORES de recarga e de energia. Tocar neles não dispara nada: só lembra que saem sozinhos. */
+  const tap=(id,fn)=>{ const el=document.getElementById(id); if(el) el.addEventListener('pointerdown',ev=>{ ev.preventDefault(); fn(el); }); };
+  tap('sk2',()=>toast('O especial dispara sozinho quando recarrega'));
+  tap('sk3',()=>toast('A ultimate dispara sozinha quando a energia enche'));
+}

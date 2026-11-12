@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prova de cenário em camadas</title>
+<style>
+  html,body{margin:0;background:#0e1014;color:#e8e8ea;font:13px/1.35 system-ui,Arial,sans-serif}
+  body{display:flex;justify-content:center;align-items:flex-start}
+  .phone{position:relative;width:390px;height:844px;margin:12px 0;background:#171a21;overflow:hidden;
+         border-radius:18px;box-shadow:0 0 0 2px #2c313c,0 12px 40px rgba(0,0,0,.6)}
+  .stage{position:relative;width:390px;height:692px;background:#000}
+  .stage canvas{position:absolute;left:0;top:0;width:390px;height:692px;display:block}
+  #old{display:none}
+  .tag{position:absolute;left:8px;top:8px;padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.55);
+       font-weight:700;font-size:11px;letter-spacing:.3px;pointer-events:none}
+  .tag.novo{color:#8dffb0}.tag.velho{color:#ffb38d}
+  .panel{padding:12px 12px 0}
+  .bar{display:flex;gap:8px}
+  button{flex:1;background:#2b3040;color:#fff;border:1px solid #4a5166;border-radius:10px;padding:12px 6px;
+         font-size:14px;font-weight:600;cursor:pointer}
+  button:active{background:#3a4158}
+  #bMode.on{background:#6a3a1e;border-color:#b0663a}
+  .info{margin-top:8px;color:#9aa0ad;font-size:12px}
+  .info b{color:#ffd35a;font-weight:600}
+  #err{color:#ff7a7a;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <canvas id="old"></canvas>
+    <div class="tag novo" id="tag">DEPOIS · camadas animadas</div>
+  </div>
+  <div class="panel">
+    <div class="bar">
+      <button id="bPause">Pausar corrida</button>
+      <button id="bMode">Ver ANTES</button>
+    </div>
+    <div class="info"><span id="fps">-- fps</span> · rolagem <b id="sc">0</b> px · <span id="st">carregando…</span></div>
+    <div class="info">URL: <code>?era=0</code>, <code>1</code>, <code>2</code>, <code>3</code> ou <code>4</code> · <code>?t=12</code> congela · <code>?mode=antes</code> · <code>?line=1</code> linha dos pés<span id="err"></span></div>
+  </div>
+</div>
+<script src="scene.js"></script>
+<script>
+(async function(){
+  'use strict';
+  const q=new URLSearchParams(location.search), A='../../assets/', W=390, SH=692, ERA=q.has('era')?(parseInt(q.get('era'),10)||0):2, B=A+'bg/v2/era'+ERA+'/';
+  const scene=await EonScene.create(document.getElementById('cv'),{base:B,resolve:q.has('nocache')?(f=>B+f+'?v='+Date.now()):undefined,width:W,height:SH,line:q.has('line'),running:!q.has('stop')});
+  const M=scene.meta; document.title='Prova de cenário em camadas — era '+ERA+' ('+M.nome.split(' - ')[0]+')';
+  if(q.has('t')) scene.set(+q.get('t'),true);
+  const st=document.getElementById('st'); st.textContent='carregando imagens…'; scene.ready.then(()=>{st.textContent=M.layers.length+' camadas + '+M.animated.length+' animados · 1º quadro '+scene.firstPaintMs+' ms · completo '+scene.readyMs+' ms';});
+
+  /* "antes": imagem única parada, com o mesmo herói na mesma escala */
+  const I=u=>new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>er(new Error('falhou '+u));i.src=u;});
+  const [oldBg,hero,oldMeta]=await Promise.all([I(A+'bg/era'+ERA+'.png'),I(B+M.hero.file),fetch(A+'bg/meta.json').then(r=>r.json())]);
+  const oc=document.getElementById('old'), dpr=Math.min(3,window.devicePixelRatio||1); oc.width=W*dpr; oc.height=SH*dpr; const og=oc.getContext('2d');
+  function drawOld(t){ og.setTransform(dpr,0,0,dpr,0,0); og.imageSmoothingQuality='high';
+    const gyOld=((oldMeta['era'+ERA]||{}).groundY||0.78), gy=M.groundY*SH, h=gy/gyOld, w=oldBg.width*h/oldBg.height;     // mesma linha do chão
+    og.fillStyle='#14110f'; og.fillRect(0,0,W,SH); og.drawImage(oldBg,(W-w)/2,0,w,h);
+    const H=M.hero, sz=H.size*SH, f=Math.floor(t*H.fps)%H.frames;
+    og.fillStyle='rgba(30,18,8,.3)'; og.beginPath(); og.ellipse(W*H.x,gy+2,sz*0.22,sz*0.05,0,0,7); og.fill();
+    og.drawImage(hero,f*H.frameW,0,H.frameW,H.frameH,Math.round(W*H.x-sz/2),Math.round(gy-sz*H.footY),sz,sz); }
+
+  let mode=q.get('mode')==='antes'?'antes':'depois', running=!q.has('stop');
+  const bP=document.getElementById('bPause'), bM=document.getElementById('bMode'), tag=document.getElementById('tag');
+  function ui(){ bP.textContent=running?'Pausar corrida':'Rolar'; bM.textContent=mode==='antes'?'Ver DEPOIS':'Ver ANTES'; bM.classList.toggle('on',mode==='antes');
+    oc.style.display=mode==='antes'?'block':'none';
+    tag.textContent=mode==='antes'?'ANTES · imagem única parada':'DEPOIS · camadas animadas'; tag.className='tag '+(mode==='antes'?'velho':'novo'); }
+  bP.onclick=()=>{running=!running;scene.setRunning(running);ui();}; bM.onclick=()=>{mode=mode==='antes'?'depois':'antes';ui();};
+  ui();
+  const fpsEl=document.getElementById('fps'), scEl=document.getElementById('sc'); let acc=0,n=0,last=performance.now();
+  (function tick(now){ const dt=(now-last)/1000; last=now; acc+=dt; n++; if(acc>=0.5){fpsEl.textContent=Math.round(n/acc)+' fps'; scEl.textContent=Math.round(scene.state.scrollPx); acc=0;n=0;}
+    if(mode==='antes') drawOld(running?scene.state.t:0); requestAnimationFrame(tick); })(last);
+  window.__bg=scene;
+})().catch(e=>{document.getElementById('err').textContent='\nERRO: '+e.message;console.error(e);});
+</script>
+</body>
+</html>

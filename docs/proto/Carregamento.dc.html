@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Carregamento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+.lbg{background-size:auto 1100px;background-repeat:repeat-x;filter:brightness(.62) saturate(1.1);animation:panx 6.8s linear infinite;transition:opacity .7s ease}
+@keyframes panx{from{background-position-x:0}to{background-position-x:-1641px}}
+.e1{background-image:url(/_blob/bf25a12621973bb2596bd4f71205b3e2);background-position-y:-46px}
+.e3{background-image:url(/_blob/44a66736394be1d02e742e672aa88b72);background-position-y:-112px}
+.e4{background-image:url(/_blob/93c8e8e92cebbc854b4cbabe53ed347b);background-position-y:-178px}
+.e5{background-image:url(/_blob/ed0b2ce1e2637c46d0fdf29fd71fee67);background-position-y:-90px}
+.e6{background-image:url(/_blob/ff26baa5a317d3f36a548848c37e2aa7);background-position-y:-79px}
+/* cenário novo em camadas (eras 0 e 2), tela H=844: parallax sky 0,02 · nuvem 0,04 + deriva · far 0,07 · mid 0,38 · ground 1,0 (241 px/s, passo do Kael) */
+.scn{position:absolute;inset:0;transition:opacity .7s ease}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;animation-timing-function:linear;animation-iteration-count:infinite;animation-duration:300s}
+.Lsky{top:0;height:506px;background-size:auto 506px;animation-name:pSky}
+.Lcld{top:40px;height:220px;background-size:auto 220px;animation-name:pCld}
+.Lfar{top:186px;height:354px;background-size:auto 354px;animation-name:pFar}
+.Lmid{top:148px;height:422px;background-size:auto 422px;animation-name:pMid}
+.Lgnd{top:553px;height:321px;background-size:auto 321px;animation-name:pGnd}
+@keyframes pSky{from{background-position-x:0}to{background-position-x:-1446px}}
+@keyframes pCld{from{background-position-x:0}to{background-position-x:-4200px}}
+@keyframes pFar{from{background-position-x:0}to{background-position-x:-5061px}}
+@keyframes pMid{from{background-position-x:0}to{background-position-x:-27474px}}
+@keyframes pGnd{from{background-position-x:0}to{background-position-x:-72300px}}
+.s0sky{background-image:url(/_blob/fcb19c47e6bcf95a909b7a4a8410c8a6)}.s0cld{background-image:url(/_blob/665cc1b081c457c24fdbb9a04f90fc98)}.s0far{background-image:url(/_blob/8350a49ec21741bad84abfa8a477fae9)}.s0mid{background-image:url(/_blob/2a828af40defb3a91b3ad05fd9fe48b9)}.s0gnd{background-image:url(/_blob/2239f5d7b483d0d30e06ead641b7339a)}
+.s2sky{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}.s2cld{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041)}.s2far{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}.s2mid{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}.s2gnd{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.erapill{animation:pin .5s both}
+@keyframes pin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.run{background-image:url(/_blob/6201ba42965a432285eaa3046d71be4a);background-size:1280px 160px;background-repeat:no-repeat;animation:runc .667s steps(8) infinite}
+@keyframes runc{from{background-position:0 0}to{background-position:-1280px 0}}
+.breathe{animation:br 2.4s ease-in-out infinite;transform-origin:50% 95%}
+@keyframes br{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.02)}}
+.cape{animation:cape 1.8s ease-in-out infinite;transform-origin:50% 95%}
+@keyframes cape{0%,100%{filter:drop-shadow(0 0 0 rgba(255,201,74,0))}50%{filter:drop-shadow(0 0 10px rgba(255,201,74,.55))}}
+.bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#f2a826,#ffe07a);box-shadow:0 0 12px rgba(255,201,74,.8);transition:width .25s linear}
+.tip{animation:tipin .5s both}
+@keyframes tipin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.blink{animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+  <!-- o herói atravessa as 7 eras enquanto carrega; cenário novo (eras 0 e 2) em camadas; os provisórios alinhados para o chão ficar em y=658 -->
+  <!-- eras 1, 3, 4, 5, 6: fundo antigo (cenário provisório) -->
+  <sc-for list="{{eras}}" as="er" hint-placeholder-count="5">
+    <div class="lbg {{er.cls}}" style="position: absolute; inset: 0; opacity: {{er.op}}"></div>
+  </sc-for>
+  <!-- eras 0 e 2: cenário novo aprovado em camadas, com parallax; pés na estrada em 0,78 × 844 = 658 -->
+  <div class="scn" style="opacity: {{op0}}; background: #9cc6e0">
+    <div class="ly Lsky s0sky"></div><div class="ly Lcld s0cld"></div><div class="ly Lfar s0far"></div><div class="ly Lmid s0mid"></div><div class="ly Lgnd s0gnd"></div>
+  </div>
+  <div class="scn" style="opacity: {{op2}}; background: #7fb3d9">
+    <div class="ly Lsky s2sky"></div><div class="ly Lcld s2cld"></div><div class="ly Lfar s2far"></div><div class="ly Lmid s2mid"></div><div class="ly Lgnd s2gnd"></div>
+  </div>
+  <sc-if value="{{prov}}" hint-placeholder-val="{{false}}">
+    <span style="position: absolute; top: 14px; right: 14px; z-index: 3; padding: 4px 10px; border-radius: 999px; background: rgba(22,17,13,0.85); border: 1px dashed #c9b9a2; font-size: 11px; font-weight: 900; color: #e8dccb">Cenário provisório</span>
+  </sc-if>
+  <div style="position: absolute; top: 300px; left: 0; right: 0; display: flex; justify-content: center; z-index: 2">
+    <sc-for list="{{curEra}}" as="c" hint-placeholder-count="1">
+      <span class="erapill" style="padding: 8px 16px; border-radius: 999px; background: rgba(22,17,13,0.82); border: 2px solid #ffc94a; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ffc94a">{{c.label}}</span>
+    </sc-for>
+  </div>
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,7,5,0.7) 0%, rgba(10,7,5,0.2) 45%, rgba(10,7,5,0.95) 100%)"></div>
+
+  <div style="position: absolute; top: 120px; left: 0; right: 0; display: flex; justify-content: center">
+    <img src="/_blob/052d275b2b1e255da9ebad63896dce0c" alt="Eonbound" style="width: 260px; height: 160px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6))">
+  </div>
+
+  <!-- herói correndo (8 quadros, 12 fps) com os pés na linha do chão (78% = 658px); chão rola na velocidade do passo -->
+  <div style="position: absolute; left: 115px; top: 650px; width: 160px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+  <div class="run" role="img" aria-label="Kael correndo" style="position: absolute; left: 115px; top: 507px; width: 160px; height: 160px"></div>
+
+  <div style="position: absolute; left: 24px; right: 24px; bottom: 120px; display: flex; flex-direction: column; gap: 8px">
+    <div class="bar" role="progressbar" aria-label="Carregando" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100" style="height: 18px; border-radius: 10px; background: rgba(0,0,0,0.6); border: 2px solid #4a3a2b; padding: 2px; box-sizing: border-box">
+      <i style="width: {{barW}}"></i>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #e8dccb">
+      <span>{{stepLabel}}</span><span>{{pctLabel}}</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 24px; right: 24px; bottom: 36px; min-height: 70px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+    <sc-if value="{{loading}}" hint-placeholder-val="{{true}}">
+      <p class="tip" style="margin: 0; padding: 10px 14px; border-radius: 14px; background: rgba(29,22,17,0.85); border: 1px solid #4a3a2b; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.35"><b style="color: #ffc94a">Dica:</b> {{tip}}</p>
+    </sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{false}}">
+      <a class="blink" href="Main.dc.html" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 56px; font-family: 'Lilita One', sans-serif; font-size: 24px; color: #ffc94a; text-decoration: none; text-shadow: 0 2px 0 #000">Toque para continuar</a>
+    </sc-if>
+  </div>
+  <p style="position: absolute; left: 0; right: 0; bottom: 10px; margin: 0; text-align: center; font-size: 11px; font-weight: 700; color: #b9a993">Versão [X.Y]</p>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { pct: 0 }; }
+  componentDidMount() {
+    this.t = setInterval(() => {
+      const p = Math.min(100, this.state.pct + 2);
+      this.setState({ pct: p });
+      if (p >= 100) { clearInterval(this.t); }
+    }, 160);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const p = this.state.pct;
+    const tips = [
+      'Skins só mudam o visual. Seu poder vem dos itens e da evolução.',
+      'A Ultimate enche ao bater e ao apanhar. Guarde para o chefe!',
+      'Mesmo offline, Kael continua lutando e juntando moedas.',
+      'Cada era tem uma arma nova com 3 ataques diferentes.',
+    ];
+    const names = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Industrial', 'Moderna', 'Futurista'];
+    const ei = Math.min(6, Math.floor(p / 100 * 7));
+    const step = p < 100 ? 'Atravessando a ' + names[ei] + '…' : 'Pronto!';
+    return {
+      eras: [1, 3, 4, 5, 6].map((i) => ({ cls: 'e' + i, op: i === ei ? 1 : 0 })),
+      op0: ei === 0 ? 1 : 0, op2: ei === 2 ? 1 : 0, prov: ei !== 0 && ei !== 2,
+      curEra: [{ label: 'Era ' + (ei + 1) + ' de 7 · ' + names[ei], k: ei }],
+      pct: p, pctLabel: p + '%', barW: p + '%',
+      stepLabel: step, tip: tips[Math.floor(p / 26) % tips.length],
+      loading: p < 100, done: p >= 100,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Passe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+/* Kael aprovado: folha parado 12 quadros, 12 fps */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kidl 1s steps(12, jump-none) infinite}
+@keyframes kidl{from{background-position:0 0}to{background-position:100% 0}}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.hdr{animation:panelIn .5s ease-out both}
+@keyframes panelIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.aura{position:absolute;left:50%;top:50%;width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.32) 0deg 10deg,transparent 10deg 30deg);-webkit-mask-image:radial-gradient(circle,#000 18%,transparent 68%);mask-image:radial-gradient(circle,#000 18%,transparent 68%);animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.breathe{transform-origin:50% 100%;animation:breathe 2.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.02)}}
+.glowimg{animation:glowImg 2.4s ease-in-out infinite}
+@keyframes glowImg{0%,100%{filter:drop-shadow(0 0 4px rgba(255,201,74,.45))}50%{filter:drop-shadow(0 0 14px rgba(255,201,74,1))}}
+.ped{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#6b5236 0%,#3a2c1f 60%,#1d1611 100%);border:2px solid #ffc94a;box-shadow:0 0 12px rgba(255,201,74,.5),inset 0 -3px 0 rgba(0,0,0,.4)}
+.xpfill{animation:fillIn 1.4s .2s cubic-bezier(.2,.8,.2,1) both;position:relative;overflow:hidden}
+@keyframes fillIn{from{width:0}}
+.xpfill::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:220% 100%;animation:shine 2.2s linear infinite}
+@keyframes shine{from{background-position:160% 0}to{background-position:-60% 0}}
+.row{animation:rowIn .35s ease-out both}
+.row:nth-child(2){animation-delay:.05s}.row:nth-child(3){animation-delay:.1s}.row:nth-child(4){animation-delay:.15s}.row:nth-child(5){animation-delay:.2s}
+@keyframes rowIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.can{animation:canGlow 1.3s ease-in-out infinite}
+@keyframes canGlow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 16px rgba(255,201,74,.85)}}
+.pill{animation:pill 1.3s ease-in-out infinite}
+@keyframes pill{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.card{transition:transform .12s}.card:active{transform:scale(.96)}
+.cur{position:absolute;inset:-6px;border-radius:50%;border:3px solid #ffc94a;animation:ring 1.6s ease-out infinite;pointer-events:none}
+@keyframes ring{from{transform:scale(.8);opacity:1}to{transform:scale(1.35);opacity:0}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.cta{animation:cta 1.6s ease-in-out infinite}
+@keyframes cta{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 8px rgba(255,201,74,.3)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 24px rgba(255,201,74,.9)}}
+.prem{background:linear-gradient(180deg,#d6b3ff,#8a4dff);color:#1a0b33;box-shadow:0 6px 0 #4a1f9a;border:0}
+.prem:active{transform:translateY(4px);box-shadow:0 2px 0 #4a1f9a}
+.premShine{position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);background-size:260% 100%;animation:shine 2.8s ease-in-out infinite;pointer-events:none}
+.fly{position:absolute;width:40px;height:40px;z-index:60;pointer-events:none;animation:fly 1s cubic-bezier(.5,0,.6,1) both}
+@keyframes fly{0%{transform:translate(0,0) scale(.6);opacity:0}15%{transform:translate(0,-30px) scale(1.4);opacity:1}85%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.45);opacity:0}}
+.bump{animation:bump .45s ease-out}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+.unlock{animation:unlock .6s ease-out both}
+@keyframes unlock{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.8)}}
+.veil{animation:fade .2s ease-out both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.pop{animation:pop .32s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+/* XP do PASSE (roxo/ciano), diferente da XP do jogador (verde) */
+.pxp{background:linear-gradient(90deg,#6a3cff,#b07cff 60%,#7fe3ff)}
+.slotic{position:relative;width:40px;height:40px;flex:none;border-radius:10px;border:2px solid;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
+.rglow{animation:rglow 1.8s ease-in-out infinite}
+@keyframes rglow{0%,100%{box-shadow:0 0 3px var(--rc)}50%{box-shadow:0 0 12px var(--rc)}}
+.mrow{animation:rowIn .35s ease-out both}
+.mrow:nth-child(2){animation-delay:.05s}.mrow:nth-child(3){animation-delay:.1s}.mrow:nth-child(4){animation-delay:.15s}
+.mbar{transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.lvup{animation:lvup .7s cubic-bezier(.2,1.5,.4,1)}
+@keyframes lvup{0%{transform:scale(1)}35%{transform:scale(1.35);filter:brightness(1.6)}100%{transform:scale(1)}}
+.toast{animation:toast 2.2s ease-in-out both}
+@keyframes toast{0%{opacity:0;transform:translateY(16px)}12%,82%{opacity:1;transform:none}100%{opacity:0}}
+/* ===== PADRÃO V2: header novo (igual BatalhaTelaCheiaV2) + tela cheia sobre a batalha, sem barra de abas embaixo ===== */
+html,body{height:100%}
+.scr{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;display:flex;flex-direction:column}
+.bbg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#7fb3d9}
+.bbg i{position:absolute;left:-24px;right:-24px;background-repeat:repeat-x;filter:blur(5px) saturate(.9)}
+.bbg .s{top:0;height:492px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 492px}
+.bbg .f{top:181px;height:344px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 344px}
+.bbg .m{top:144px;height:410px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 410px}
+.bbg .g{top:537px;height:312px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 312px}
+.bbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.38),rgba(10,7,5,.72) 120px,rgba(10,7,5,.92))}
+.hgl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hd{position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:8px;padding:10px 10px 8px;padding-top:max(10px,env(safe-area-inset-top));box-sizing:border-box}
+.hrb{width:44px;height:44px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box;text-decoration:none;transition:transform .12s}
+.hrb:active{transform:scale(.9)}
+.ht{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(17px,5.2vw,22px);line-height:1.1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hps{flex:none;display:flex;align-items:center;gap:6px}
+.hpill{height:44px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;text-decoration:none;font:inherit;transition:transform .12s}
+.hpill:active{transform:scale(.95)}
+.hpill img{object-fit:contain;flex:none}
+.hpill b{font-size:13.5px;font-weight:900;padding-right:2px}
+.hplus{width:24px;height:24px;flex:none;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+.pnl{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;background:#16110d;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,236,200,.18);box-shadow:0 -10px 30px rgba(0,0,0,.5);overflow:hidden;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
+.pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
+@keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
+</style>
+</helmet>
+<div class="scr" data-passroot="1">
+
+  <div class="bbg" aria-hidden="true"><i class="s"></i><i class="f"></i><i class="m"></i><i class="g"></i></div>
+
+  <!-- Header novo (padrão Batalha V2): voltar · título · moedas/gemas. Sem engrenagem: Configurações ficam no MENU da batalha -->
+  <header class="hd">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" aria-label="Voltar para a batalha" data-flydst="item" class="hgl hrb {{bumpAva}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 class="ht">Passe</h1>
+    <div class="hps">
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Moedas: {{coinsTxt}}. Abrir loja" data-flydst="gold" class="hgl hpill {{bumpCoin}}"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px"><b>{{coinsTxt}}</b><span class="hplus opt" aria-hidden="true">+</span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Gemas: {{gems}}. Comprar na loja" data-flydst="gem" class="hgl hpill {{bumpGem}}"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gems}}</b><span class="hplus" aria-hidden="true">+</span></a>
+    </div>
+  </header>
+
+  <!-- Painel em tela cheia por cima da batalha (sem barra de abas embaixo) -->
+  <div class="pnl pnlIn">
+
+  <!-- Corpo do Passe (tela cheia; rola só em telas baixas; ações encostadas embaixo) -->
+  <div style="flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; gap: 6px; padding: 8px 12px 10px; box-sizing: border-box; overflow-y: auto; overflow-x: hidden; background: radial-gradient(120% 50% at 50% 0%, #2c2140 0%, #16110d 70%)">
+
+    <!-- Cabeçalho: NÍVEL DO PASSE (separado do nível do jogador) -->
+    <div class="hdr" style="height: 92px; flex: none; position: relative; display: flex; border-radius: 16px; border: 2px solid #8a4dff; background: linear-gradient(120deg, #2e1f4a 0%, #1d1611 70%); overflow: hidden">
+      <div style="position: relative; width: 92px; flex: none; overflow: hidden">
+        <div class="aura" style="width: 150px; height: 150px; margin: -75px 0 0 -75px"></div>
+        <!-- pedestal: pés do sprite em 6 + 0.95 x 80 = 82 -->
+        <div class="ped" style="left: 18px; top: 76px; width: 56px; height: 12px"></div>
+        <div class="kidle glowimg" role="img" aria-label="Skin da temporada, prêmio Premium do nível 25 (prévia, animação em produção)" style="position: absolute; left: 6px; top: 6px; width: 80px; height: 80px"></div>
+        <span style="position: absolute; left: 4px; top: 4px; padding: 1px 5px; border-radius: 6px; background: #0e0a07; border: 1px solid #b07cff; color: #e6d6ff; font-size: 9px; font-weight: 900">prévia</span>
+      </div>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px 12px 6px 4px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 6px">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 18px; line-height: 1.05">Temporada Solar</span>
+          <span style="flex: none; display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; color: #e8dccb">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 15 15"></polyline></svg>18 dias</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span class="{{lvCls}}" style="flex: none; padding: 2px 8px; border-radius: 9px; background: linear-gradient(180deg, #b07cff, #6a3cff); color: #fff; font-family: 'Lilita One', sans-serif; font-size: 15px; white-space: nowrap">Nível do passe {{plv}}</span>
+          <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; white-space: nowrap">jogador: Nv. 24</span>
+        </div>
+        <div role="progressbar" aria-label="XP do passe" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pxp}}" style="height: 12px; border-radius: 6px; background: #0e0a07; border: 1px solid #5a3f8a; overflow: hidden">
+          <div class="xpfill pxp mbar" style="width: {{pxpPct}}; height: 100%"></div>
+        </div>
+        <span style="font-size: 11px; font-weight: 800; color: #d9c8ff">{{pxp}}/100 XP do passe · ganhe nas Missões</span>
+      </div>
+    </div>
+
+    <!-- Sub-abas -->
+    <div role="tablist" aria-label="Passe" style="height: 52px; flex: none; display: flex; gap: 6px; padding: 3px; border-radius: 13px; background: #0e0a07; border: 1px solid #4a3a2b; box-sizing: border-box">
+      <button role="tab" aria-selected="{{tabRwSel}}" onClick="{{tabRw}}" style="flex: 1; border-radius: 10px; border: 0; background: {{tabRwBg}}; color: {{tabRwFg}}; font-family: 'Lilita One', sans-serif; font-size: 16px; padding: 0">Recompensas</button>
+      <button role="tab" aria-selected="{{tabMsSel}}" onClick="{{tabMs}}" style="position: relative; flex: 1; border-radius: 10px; border: 0; background: {{tabMsBg}}; color: {{tabMsFg}}; font-family: 'Lilita One', sans-serif; font-size: 16px; padding: 0">Missões
+        <sc-if value="{{msDot}}" hint-placeholder-val="{{true}}"><span class="pill" style="position: absolute; top: 4px; right: 10px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #ff5a4e; color: #fff; font-family: Nunito, sans-serif; font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-sizing: border-box">{{msReady}}</span></sc-if>
+      </button>
+    </div>
+
+    <!-- ===== RECOMPENSAS ===== -->
+    <sc-if value="{{isRw}}" hint-placeholder-val="{{true}}">
+      <!-- O que cada trilha dá -->
+      <div style="height: 38px; flex: none; display: grid; grid-template-columns: 1fr 44px 1fr; gap: 6px; align-items: center">
+        <span style="display: flex; flex-direction: column; align-items: center; line-height: 1.1"><span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #e8dccb">Grátis</span><span style="font-size: 9px; font-weight: 800; color: #c9b9a2; text-align: center">diamantes, moedas, Básico · Épico no 30</span></span>
+        <span style="text-align: center; font-size: 9px; font-weight: 900; color: #c9b9a2">NÍVEL DO PASSE</span>
+        <span style="display: flex; flex-direction: column; align-items: center; line-height: 1.1"><span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 15px; color: #d9b3ff"><sc-if value="{{premOff}}" hint-placeholder-val="{{true}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e6d4ff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>Premium</span><span style="font-size: 9px; font-weight: 800; color: #d9c8ff; text-align: center">Raro → Épico → Lendário, + diamantes, skin</span></span>
+      </div>
+
+      <!-- Trilhas: 5 níveis por página -->
+      <div data-flyrows="1" style="height: 370px; flex: none; display: flex; flex-direction: column; gap: 5px">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+          <div class="row" style="height: 70px; flex: none; display: grid; grid-template-columns: 1fr 44px 1fr; gap: 6px">
+            <!-- Grátis -->
+            <button class="card {{r.fCls}}" data-flysrc="f{{r.lv}}" onClick="{{r.claimF}}" aria-label="{{r.fAria}}" style="position: relative; border-radius: 14px; border: 2px solid {{r.fBd}}; background: {{r.fBg}}; color: #f6ecdf; padding: 4px 6px; display: flex; align-items: center; gap: 6px; opacity: {{r.fOp}}; text-align: left">
+              <sc-if value="{{r.fCoin}}" hint-placeholder-val="{{true}}"><img src="{{r.fImg}}" alt="" style="width: 38px; height: 38px; object-fit: contain"></sc-if>
+              <sc-if value="{{r.fEq}}" hint-placeholder-val="{{false}}"><span class="slotic rglow" style="border-color: {{r.fRc}}; --rc: {{r.fRc}}; background: radial-gradient(circle, {{r.fRc}}33, #120d0a 75%)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{r.fRc}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.fIcon}}"></path></svg></span></sc-if>
+              <sc-if value="{{r.fSkin}}" hint-placeholder-val="{{false}}"><span class="slotic" style="border-color: {{r.fRc}}; overflow: hidden; background: #241a38"><span class="kidle" role="img" aria-label="Skin da temporada, prévia: animação em produção" style="position: absolute; left: -6px; top: -8px; width: 48px; height: 48px"></span><span style="position: absolute; left: 0; right: 0; bottom: 0; background: rgba(14,10,7,0.9); color: #e6d6ff; font-size: 7px; font-weight: 900; text-align: center">prévia</span></span></sc-if>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <sc-if value="{{r.fEq}}" hint-placeholder-val="{{false}}"><span style="font-size: 9px; font-weight: 900; color: {{r.fRc}}">{{r.fRar}} · {{r.fSlot}}</span></sc-if>
+                <span style="font-size: 12px; font-weight: 900; line-height: 1.1">{{r.fTxt}}</span>
+              <sc-if value="{{r.fCan}}" hint-placeholder-val="{{false}}"><span class="pill gold" style="align-self: flex-start; height: 22px; padding: 0 9px; border-radius: 8px; font-family: 'Lilita One', sans-serif; font-size: 12px; display: flex; align-items: center; box-shadow: 0 3px 0 #8a4f0c">Resgatar</span></sc-if>
+              <sc-if value="{{r.fDone}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 900; color: #8fe596"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Resgatado</span></sc-if>
+              <sc-if value="{{r.fFut}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 800; color: #c9b9a2">No nível {{r.lv}}</span></sc-if>
+              </span>
+            </button>
+            <!-- Nível do passe -->
+            <div style="position: relative; display: flex; align-items: center; justify-content: center">
+              <span style="position: absolute; left: 20px; top: -3px; width: 4px; height: 38px; background: {{r.lineTop}}"></span>
+              <span style="position: absolute; left: 20px; top: 35px; width: 4px; height: 38px; background: {{r.lineBot}}"></span>
+              <span style="position: relative; width: 40px; height: 40px; border-radius: 50%; border: 3px solid {{r.nodeBd}}; background: {{r.nodeBg}}; color: {{r.nodeFg}}; font-family: 'Lilita One', sans-serif; font-size: 17px; display: flex; align-items: center; justify-content: center; box-sizing: border-box">{{r.lv}}
+                <sc-if value="{{r.isCur}}" hint-placeholder-val="{{false}}"><span class="cur"></span></sc-if>
+              </span>
+            </div>
+            <!-- Premium -->
+            <button class="card {{r.pCls}}" data-flysrc="p{{r.lv}}" onClick="{{r.claimP}}" aria-label="{{r.pAria}}" style="position: relative; overflow: hidden; border-radius: 14px; border: 2px solid {{r.pBd}}; background: {{r.pBg}}; color: #f6ecdf; padding: 4px 6px; display: flex; align-items: center; gap: 6px; text-align: left">
+              <span style="display: flex; opacity: {{r.pOp}}">
+              <sc-if value="{{r.pCoin}}" hint-placeholder-val="{{true}}"><img src="{{r.pImg}}" alt="" style="width: 38px; height: 38px; object-fit: contain"></sc-if>
+              <sc-if value="{{r.pEq}}" hint-placeholder-val="{{false}}"><span class="slotic rglow" style="border-color: {{r.pRc}}; --rc: {{r.pRc}}; background: radial-gradient(circle, {{r.pRc}}33, #120d0a 75%)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{r.pRc}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{r.pIcon}}"></path></svg></span></sc-if>
+              <sc-if value="{{r.pSkin}}" hint-placeholder-val="{{false}}"><span class="slotic" style="border-color: {{r.pRc}}; overflow: hidden; background: #241a38"><span class="kidle" role="img" aria-label="Skin da temporada, prévia: animação em produção" style="position: absolute; left: -6px; top: -8px; width: 48px; height: 48px"></span><span style="position: absolute; left: 0; right: 0; bottom: 0; background: rgba(14,10,7,0.9); color: #e6d6ff; font-size: 7px; font-weight: 900; text-align: center">prévia</span></span></sc-if>
+              </span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; opacity: {{r.pOp}}">
+                <sc-if value="{{r.pTag}}" hint-placeholder-val="{{false}}"><span style="font-size: 9px; font-weight: 900; color: {{r.pRc}}">{{r.pRar}} · {{r.pSlot}}</span></sc-if>
+                <span style="font-size: 12px; font-weight: 900; line-height: 1.1">{{r.pTxt}}</span>
+              <sc-if value="{{r.pCan}}" hint-placeholder-val="{{false}}"><span class="pill gold" style="align-self: flex-start; height: 22px; padding: 0 9px; border-radius: 8px; font-family: 'Lilita One', sans-serif; font-size: 12px; display: flex; align-items: center; box-shadow: 0 3px 0 #8a4f0c">Resgatar</span></sc-if>
+              <sc-if value="{{r.pDone}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 900; color: #8fe596"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Resgatado</span></sc-if>
+              <sc-if value="{{r.pFut}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 800; color: #c9b9a2">No nível {{r.lv}}</span></sc-if>
+              </span>
+              <sc-if value="{{r.pLocked}}" hint-placeholder-val="{{true}}">
+                <span style="position: absolute; right: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: #0e0a07; border: 2px solid #8a4dff; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e6d4ff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+              </sc-if>
+              <sc-if value="{{r.pUnlockFx}}" hint-placeholder-val="{{false}}">
+                <span class="unlock" style="position: absolute; right: 4px; top: 4px; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #d9b3ff"></span>
+              </sc-if>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Ações (zona do polegar) -->
+      <div style="height: 52px; flex: none; margin-top: auto; display: flex; gap: 8px">
+        <button class="{{allCls}}" onClick="{{claimAll}}" style="flex: 1; height: 50px; border-radius: 14px; border: {{allBorder}}; background: {{allBg}}; color: {{allFg}}; font-family: 'Lilita One', sans-serif; font-size: 16px; padding: 0">{{allTxt}}</button>
+        <sc-if value="{{premOff}}" hint-placeholder-val="{{true}}">
+          <button class="prem" onClick="{{askPrem}}" style="position: relative; overflow: hidden; flex: 1.3; height: 50px; border-radius: 14px; padding: 0 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05"><span class="premShine"></span><span style="font-family: 'Lilita One', sans-serif; font-size: 16px">Ativar Premium [PREÇO]</span><span style="font-size: 10px; font-weight: 900; color: #2a1250">Pagamento em breve</span></button>
+        </sc-if>
+        <sc-if value="{{premOn}}" hint-placeholder-val="{{false}}">
+          <div style="flex: 1.3; height: 50px; border-radius: 14px; border: 2px solid #8a4dff; background: #241a38; color: #e6d4ff; font-family: 'Lilita One', sans-serif; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box"><img src="/_blob/b079b3754d6b4f41b2413efb3f2259b0" alt="" style="width: 26px; height: 26px; object-fit: contain">Premium (teste)</div>
+        </sc-if>
+      </div>
+
+      <!-- Paginação -->
+      <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px">
+        <button onClick="{{prevPage}}" aria-label="Níveis anteriores" style="width: 52px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{prevFg}}; font-family: 'Lilita One', sans-serif; font-size: 24px; padding: 0">‹</button>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+          <div style="display: flex; gap: 5px">
+            <sc-for list="{{dots}}" as="d" hint-placeholder-count="6"><span style="width: {{d.w}}; height: 8px; border-radius: 4px; background: {{d.c}}; transition: width .25s"></span></sc-for>
+          </div>
+          <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Níveis {{rangeTxt}} de 30 · itens no seu nível (Nv. 24)</span>
+        </div>
+        <button onClick="{{nextPage}}" aria-label="Próximos níveis" style="width: 52px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{nextFg}}; font-family: 'Lilita One', sans-serif; font-size: 24px; padding: 0">›</button>
+      </div>
+    </sc-if>
+
+    <!-- ===== MISSÕES ===== -->
+    <sc-if value="{{isMs}}" hint-placeholder-val="{{false}}">
+      <div style="height: 52px; flex: none; display: flex; align-items: center; gap: 8px">
+        <div role="radiogroup" aria-label="Tipo de missão" style="flex: 1; display: flex; height: 52px; padding: 3px; gap: 3px; border-radius: 12px; background: #0e0a07; border: 1px solid #4a3a2b; box-sizing: border-box">
+          <button role="radio" aria-checked="{{dSel}}" onClick="{{pickD}}" style="flex: 1; border-radius: 9px; border: 0; background: {{dBg}}; color: {{dFg}}; font-size: 14px; font-weight: 900; padding: 0">Diárias</button>
+          <button role="radio" aria-checked="{{wSel}}" onClick="{{pickW}}" style="flex: 1; border-radius: 9px; border: 0; background: {{wBg}}; color: {{wFg}}; font-size: 14px; font-weight: 900; padding: 0">Semanais</button>
+        </div>
+        <span style="flex: none; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 900; color: #c9b9a2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 15 15"></polyline></svg>{{renewTxt}}</span>
+      </div>
+      <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{missions}}" as="m" hint-placeholder-count="4">
+          <div class="mrow" style="height: 86px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 16px; border: 2px solid {{m.bd}}; background: {{m.bg}}; box-sizing: border-box; opacity: {{m.op}}">
+            <span style="width: 46px; height: 46px; flex: none; border-radius: 12px; background: #16110d; border: 2px solid #5a3f8a; color: #d9b3ff; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{m.icon}}"></path></svg></span>
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+              <span style="font-size: 14px; font-weight: 900; line-height: 1.15">{{m.t}}</span>
+              <span style="font-size: 12px; font-weight: 900; color: #d9c8ff">+{{m.xp}} XP do passe</span>
+              <span style="display: flex; align-items: center; gap: 6px">
+                <span style="flex: 1; height: 8px; border-radius: 4px; background: #0e0a07; border: 1px solid #4a3a2b; overflow: hidden"><span class="pxp mbar" style="display: block; width: {{m.pct}}; height: 100%"></span></span>
+                <span style="flex: none; font-size: 11px; font-weight: 900; color: #e8dccb">{{m.prog}}</span>
+              </span>
+            </div>
+            <sc-if value="{{m.can}}" hint-placeholder-val="{{true}}"><button class="gold cta" onClick="{{m.claim}}" aria-label="{{m.aria}}" style="width: 92px; height: 46px; flex: none; border-radius: 12px; font-family: 'Lilita One', sans-serif; font-size: 16px; padding: 0">Resgatar</button></sc-if>
+            <sc-if value="{{m.doing}}" hint-placeholder-val="{{false}}"><a href="BatalhaTelaCheiaV2.dc.html" aria-label="{{m.aria}}" style="width: 92px; height: 46px; flex: none; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; font-size: 13px; font-weight: 900; text-decoration: none; display: flex; align-items: center; justify-content: center">Ir</a></sc-if>
+            <sc-if value="{{m.done}}" hint-placeholder-val="{{false}}"><span style="width: 92px; flex: none; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 13px; font-weight: 900; color: #8fe596"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Feito</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #1d1611; border: 1px dashed #5a3f8a; font-size: 12px; font-weight: 800; color: #d9c8ff; text-align: center; padding: 0 10px">XP do passe sobe o NÍVEL DO PASSE (100 XP por nível). Não muda o nível do jogador.</div>
+    </sc-if>
+
+  </div>
+    <sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+      <div style="position: absolute; left: 24px; right: 24px; bottom: 112px; z-index: 40; display: flex; justify-content: center; pointer-events: none">
+        <span class="toast" role="status" style="padding: 10px 16px; border-radius: 12px; background: #12261a; border: 2px solid #5fd068; color: #e6fbe7; font-size: 14px; font-weight: 900; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.6)">{{toastTxt}}</span>
+      </div>
+    </sc-if>
+  </div>
+
+
+  <!-- Itens voando para o topo -->
+  <sc-for list="{{flies}}" as="f" hint-placeholder-count="0">
+    <img class="fly" src="{{f.src}}" alt="" style="left: {{f.x}}px; top: {{f.y}}px; --dx: {{f.dx}}px; --dy: {{f.dy}}px; animation-delay: {{f.delay}}ms; object-fit: contain">
+  </sc-for>
+
+  <!-- Confirmação antes de cobrar o Premium -->
+  <sc-if value="{{cfOpen}}" hint-placeholder-val="{{false}}">
+    <div class="veil" style="position: absolute; inset: 0; z-index: 30; background: rgba(8,6,4,0.78); display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box">
+      <div class="pop" role="alertdialog" aria-label="Ativar Premium" style="width: 100%; max-width: 330px; border-radius: 18px; border: 3px solid #8a4dff; background: #221a30; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 0 30px rgba(138,77,255,0.5)">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; text-align: center">Ativar Passe Premium</span>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: #16110d; border: 1px solid #4a3a2b; font-size: 13px; font-weight: 800">
+          <span>Equipamentos melhores: Raro (níveis 5 e 10), Épico (15 e 20) e Lendário no 30, sempre no seu nível</span>
+          <span>Skin da temporada no nível 25 (só visual, não muda atributos)</span>
+          <span>Mais diamantes e moedas nos outros níveis</span>
+          <div style="display: flex; justify-content: space-between; margin-top: 4px"><span style="color: #c9b9a2">Valor</span><span style="font-weight: 900">[PREÇO]</span></div>
+          <span style="font-size: 12px; color: #c9b9a2">Cobrado pela loja do aparelho (Google Play / App Store). Níveis já alcançados ficam prontos para resgatar.</span>
+          <span role="note" style="padding: 6px 8px; border-radius: 8px; background: #3a2c1f; border: 1px solid #ffc94a; color: #ffe07a; font-size: 12px; font-weight: 900; text-align: center">Pagamento em breve: a compra ainda não está disponível.</span>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{cancelPrem}}" style="flex: 1; height: 50px; border-radius: 14px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">Fechar</button>
+          <button class="prem" onClick="{{confirmPrem}}" style="flex: 1.3; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 16px; padding: 0">Testar (protótipo)</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878', up: '/_blob/ca8bcec3fced3c13b36555744659895a' };
+var GEM = '/_blob/1c420bdcae24bd962967021584f5bd64', COIN = '/_blob/3f2502c864add38c4b3faf5853f0dd9a', PASS = '/_blob/b079b3754d6b4f41b2413efb3f2259b0';
+/* nível do PASSE (1-30, 100 XP por nível) é separado do nível do jogador (Nv. 24) */
+var TIERS = 30, PER = 5, PXP_LV = 100, PLAYER_LV = 24;
+var GOLDK = Math.ceil(4 * Math.pow(1.15, 27 - 1)); /* fase 27 = Medieval 2-7 */
+var RAR = [{ n: 'Básico', c: '#e8e2d8' }, { n: 'Raro', c: '#4aa3ff' }, { n: 'Épico', c: '#b07cff' }, { n: 'Mítico', c: '#ff5a5a' }, { n: 'Lendário', c: '#ffc94a' }];
+/* 7 espaços (CONTRATO_V2 B): a Asa abre no nível 50, por isso não sai no passe enquanto o jogador está no 24 */
+var SLOT = {
+  weapon: { n: 'Arma', icon: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2' },
+  vest: { n: 'Colete', icon: 'M8 3l4 3 4-3 4 4-2 4v10H6V11L4 7z' },
+  helm: { n: 'Chapéu/Elmo', icon: 'M4 16a8 8 0 0 1 16 0v3H4zM12 8v5M8 19v2M16 19v2' },
+  gloves: { n: 'Luvas', icon: 'M7 21v-7L5 10a1.5 1.5 0 0 1 3-1l1 2V5a1.5 1.5 0 0 1 3 0v5V4a1.5 1.5 0 0 1 3 0v6V6a1.5 1.5 0 0 1 3 0v8l-2 7z' },
+  boots: { n: 'Botas', icon: 'M7 3h5v10l7 3v5H5v-4l2-1z' },
+  neck: { n: 'Colar', icon: 'M5 4c0 6 3 9 7 9s7-3 7-9M12 13v2M12 15a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z' },
+  wing: { n: 'Asa', icon: 'M12 8c-3-4-7-5-10-4 1 3 3 5 6 6-2 0-4 1-5 3 3 1 6 1 9-1M12 8c3-4 7-5 10-4-1 3-3 5-6 6 2 0 4 1 5 3-3 1-6 1-9-1M12 8v12' }
+};
+var NAMES = {
+  weapon: ['Espada Enferrujada', 'Espada de Aço', 'Lâmina Rúnica', 'Espada do Dragão', 'Excalibur'],
+  vest: ['Túnica de Couro', 'Cota de Malha', 'Armadura de Placas', 'Armadura Infernal', 'Égide Sagrada'],
+  helm: ['Capuz de Couro', 'Elmo de Ferro', 'Elmo Rúnico', 'Elmo do Dragão', 'Coroa Sagrada'],
+  gloves: ['Luvas de Couro', 'Manoplas de Aço', 'Manoplas Rúnicas', 'Garras do Dragão', 'Mãos Sagradas'],
+  boots: ['Botas de Couro', 'Grevas de Aço', 'Botas Rúnicas', 'Botas do Dragão', 'Passos Sagrados'],
+  neck: ['Cordão de Osso', 'Colar de Prata', 'Amuleto Rúnico', 'Presa do Dragão', 'Relicário Sagrado']
+};
+var FREE_EQ = { 5: 'helm', 10: 'boots', 15: 'gloves', 20: 'vest', 25: 'neck' };
+var PREM_EQ = { 5: ['vest', 1], 10: ['gloves', 1], 15: ['helm', 2], 20: ['weapon', 2], 30: ['weapon', 4] };
+var SKIN_AT = 25;
+function fmtK(n) { return n >= 1000 ? (Math.round(n / 100) / 10).toFixed(1).replace('.', ',') + 'K' : String(n); }
+/* GRÁTIS: recompensas pequenas; equipamento Básico a cada 5 níveis; ÉPICO no último */
+function free(t) {
+  if (t === TIERS) return { eq: 'weapon', r: 2 };
+  if (FREE_EQ[t]) return { eq: FREE_EQ[t], r: 0 };
+  return t % 2 ? { gold: 10 * GOLDK } : { gem: 3 };
+}
+/* PREMIUM: Raro -> Épico -> Lendário no fim (no nível do jogador), mais diamantes e a skin da temporada */
+function prem(t) {
+  if (t === SKIN_AT) return { skin: true, r: 3 };
+  if (PREM_EQ[t]) return { eq: PREM_EQ[t][0], r: PREM_EQ[t][1] };
+  return t % 2 ? { gem: 10, gold: 30 * GOLDK } : { gem: 15 };
+}
+function info(rw) {
+  if (rw.skin) return { coin: false, eq: false, skin: true, rc: RAR[rw.r].c, rar: RAR[rw.r].n, slot: 'Skin', txt: 'Casaca da Temporada', icon: '', img: '' };
+  if (rw.eq) return { coin: false, eq: true, skin: false, rc: RAR[rw.r].c, rar: RAR[rw.r].n, slot: SLOT[rw.eq].n, txt: NAMES[rw.eq][rw.r] + ' · Nv. ' + PLAYER_LV, icon: SLOT[rw.eq].icon, img: '' };
+  var txt = rw.gem && rw.gold ? rw.gem + ' diam. + ' + fmtK(rw.gold) : rw.gem ? rw.gem + ' diamantes' : fmtK(rw.gold) + ' moedas';
+  return { coin: true, eq: false, skin: false, rc: '#f6ecdf', rar: '', slot: '', txt: txt, icon: '', img: rw.gem ? GEM : COIN };
+}
+var MS = {
+  d: [
+    { id: 'd1', t: 'Derrote 200 inimigos', n: 200, xp: 50, icon: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4' },
+    { id: 'd2', t: 'Use a ultimate 5 vezes', n: 5, xp: 30, icon: 'M13 2 4 14h7l-1 8 9-12h-7z' },
+    { id: 'd3', t: 'Abra 1 baú', n: 1, xp: 20, icon: 'M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4' },
+    { id: 'd4', t: 'Complete 1 instância', n: 1, xp: 40, icon: 'M4 21V9l8-6 8 6v12M9 21v-6h6v6' }
+  ],
+  w: [
+    { id: 'w1', t: 'Derrote 2.000 inimigos', n: 2000, xp: 200, icon: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4' },
+    { id: 'w2', t: 'Derrote 5 chefes', n: 5, xp: 150, icon: 'M12 2l3 7h7l-6 4 2 8-6-5-6 5 2-8-6-4h7z' },
+    { id: 'w3', t: 'Complete 5 instâncias', n: 5, xp: 250, icon: 'M4 21V9l8-6 8 6v12M9 21v-6h6v6' },
+    { id: 'w4', t: 'Suba 3 andares da Torre', n: 3, xp: 180, icon: 'M6 21V7l6-4 6 4v14M10 21v-4h4v4M10 10h4' }
+  ]
+};
+/* posições (px no celular) para o voo: reserva, se não der para medir na tela (V2 mede origem e destino de verdade) */
+var ROW_Y0 = 64 + 8 + 92 + 6 + 40 + 6 + 38 + 6 + 35, ROW_STEP = 75;
+var X_FREE = 12 + 72, X_PREM = 390 - 12 - 72;
+var DEST = { gem: [340, 32], gold: [240, 32], item: [32, 32] };
+function flyPt(sel) {
+  try {
+    var root = document.querySelector('[data-passroot]'), el = document.querySelector(sel);
+    if (!root || !el) return null;
+    var a = root.getBoundingClientRect(), b = el.getBoundingClientRect();
+    if (!b.width) return null;
+    return [b.left + b.width / 2 - a.left, b.top + b.height / 2 - a.top];
+  } catch (e) { return null; }
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    var f = {}; for (var i = 1; i <= 8; i++) f[i] = true;
+    this.state = { tab: 'rw', mt: 'd', plv: 12, pxp: 60, lvFx: false, page: 2, free: f, prem: {}, on: false, gems: 320, gold: 48200, flies: [], cf: false, toast: '', bG: false, bC: false, bA: false, fx: false,
+      mp: { d1: 200, d2: 3, d3: 1, d4: 0, w1: 1240, w2: 5, w3: 2, w4: 1 }, mc: {} };
+    this.fid = 0;
+  }
+  componentWillUnmount() { (this.timers || []).forEach(function (t) { clearTimeout(t); }); }
+  later(fn, ms) { this.timers = this.timers || []; this.timers.push(setTimeout(fn, ms)); }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.7; a.play().catch(function () {}); } catch (e) {} }
+  showToast(txt) {
+    var self = this; this.setState({ toast: '' });
+    this.later(function () { self.setState({ toast: txt }); }, 20);
+    this.later(function () { if (self.state.toast === txt) self.setState({ toast: '' }); }, 2300);
+  }
+  claimMission(m) {
+    var s = this.state, self = this, mc = Object.assign({}, s.mc); mc[m.id] = true;
+    var xp = s.pxp + m.xp, lv = s.plv, ups = 0;
+    while (xp >= PXP_LV && lv < TIERS) { xp -= PXP_LV; lv++; ups++; }
+    if (lv >= TIERS) xp = Math.min(xp, PXP_LV);
+    this.sfx(SND.claim);
+    this.setState({ mc: mc, pxp: xp, plv: lv, lvFx: ups > 0 });
+    if (ups) { this.later(function () { self.sfx(SND.up); }, 250); this.later(function () { self.setState({ lvFx: false }); }, 800); }
+    this.showToast('+' + m.xp + ' XP do passe' + (ups ? ' · Nível do passe ' + lv + '!' : ''));
+  }
+  /* claims: [{lv, track}] */
+  claim(list) {
+    var s = this.state, self = this;
+    if (!list.length) { this.showToast('Nada novo para resgatar'); return; }
+    var f = Object.assign({}, s.free), pr = Object.assign({}, s.prem), gems = s.gems, gold = s.gold, items = [], flies = s.flies.slice();
+    var bump = { bG: false, bC: false, bA: false };
+    list.forEach(function (c, k) {
+      var rw = c.track === 'f' ? free(c.lv) : prem(c.lv);
+      if (c.track === 'f') f[c.lv] = true; else pr[c.lv] = true;
+      if (rw.gem) { gems += rw.gem; bump.bG = true; }
+      if (rw.gold) { gold += rw.gold; bump.bC = true; }
+      if (rw.eq || rw.skin) { items.push(info(rw).txt); bump.bA = true; }
+      if (k < 8) {
+        var j = c.lv - 1 - s.page * PER, onPage = j >= 0 && j < PER;
+        var sp = onPage ? flyPt('[data-flysrc="' + c.track + c.lv + '"]') : flyPt('[data-flyrows]');
+        var x = sp ? sp[0] : (c.track === 'f' ? X_FREE : X_PREM), y = sp ? sp[1] : (onPage ? ROW_Y0 + j * ROW_STEP : ROW_Y0 + 2 * ROW_STEP);
+        var kinds = (rw.eq || rw.skin) ? ['item'] : (rw.gem && rw.gold ? ['gem', 'gold'] : [rw.gem ? 'gem' : 'gold']);
+        kinds.forEach(function (kd, q) {
+          var d = flyPt('[data-flydst="' + kd + '"]') || DEST[kd], id = ++self.fid;
+          var src = kd === 'gem' ? GEM : kd === 'gold' ? COIN : PASS;
+          flies.push({ id: id, src: src, x: x - 20 + q * 14, y: y - 20, dx: d[0] - x - q * 14, dy: d[1] - y, delay: k * 90 + q * 60 });
+          self.later(function () { self.setState({ flies: self.state.flies.filter(function (z) { return z.id !== id; }) }); }, 1200 + k * 90 + q * 60);
+        });
+      }
+    });
+    this.sfx(SND.claim);
+    this.setState({ free: f, prem: pr, flies: flies, bG: false, bC: false, bA: false });
+    this.later(function () { self.setState({ gems: gems, gold: gold, bG: bump.bG, bC: bump.bC, bA: bump.bA }); }, 850);
+    this.later(function () { self.setState({ bG: false, bC: false, bA: false }); }, 1400);
+    this.showToast(list.length === 1 ? (items.length ? items[0] + ' (veja em Equip.)' : 'Recompensa resgatada') : 'Resgatou ' + list.length + ' recompensas' + (items.length ? ' · ' + items.length + ' itens' : ''));
+  }
+  pending() {
+    var s = this.state, out = [];
+    for (var i = 1; i <= s.plv; i++) { if (!s.free[i]) out.push({ lv: i, track: 'f' }); if (s.on && !s.prem[i]) out.push({ lv: i, track: 'p' }); }
+    return out;
+  }
+  renderVals() {
+    var s = this.state, self = this, pages = Math.ceil(TIERS / PER), pg = s.page, CUR = s.plv;
+    var rows = [];
+    for (var lv = pg * PER + 1; lv <= Math.min(TIERS, pg * PER + PER); lv++) {
+      (function (lv) {
+        var fi = info(free(lv)), pi = info(prem(lv)), reached = lv <= CUR;
+        var fDone = !!s.free[lv], fCan = reached && !fDone, fFut = !reached;
+        var pDone = !!s.prem[lv], pCan = s.on && reached && !pDone, pFut = s.on && !reached, pLocked = !s.on;
+        rows.push({
+          lv: lv,
+          fCoin: fi.coin, fEq: fi.eq, fSkin: false, fImg: fi.img, fIcon: fi.icon, fRc: fi.rc, fRar: fi.rar, fSlot: fi.slot,
+          fTxt: fi.txt, fCan: fCan, fDone: fDone, fFut: fFut,
+          fCls: fCan ? 'can' : '', fOp: fDone ? 0.6 : (fFut ? 0.85 : 1),
+          fBd: fCan ? '#ffc94a' : (fi.eq ? fi.rc + '99' : '#4a3a2b'), fBg: fCan ? 'linear-gradient(180deg,#4a361f,#241b14)' : '#1d1611',
+          fAria: 'Nível do passe ' + lv + ', grátis: ' + (fi.eq ? fi.rar + ' ' + fi.slot + ', ' : '') + fi.txt + (fCan ? ', resgatar' : fDone ? ', resgatado' : ', libera no nível do passe ' + lv),
+          claimF: function () { if (fCan) self.claim([{ lv: lv, track: 'f' }]); else self.sfx(SND.tap); },
+          pCoin: pi.coin, pEq: pi.eq, pSkin: pi.skin, pImg: pi.img, pIcon: pi.icon, pRc: pi.rc, pRar: pi.rar, pSlot: pi.slot, pTag: pi.eq || pi.skin,
+          pTxt: pi.txt, pCan: pCan, pDone: pDone, pFut: pFut, pLocked: pLocked, pUnlockFx: s.fx && reached,
+          pCls: pCan ? 'can' : '', pOp: pLocked ? 0.6 : (pDone ? 0.6 : 1),
+          pBd: pCan ? '#ffc94a' : (pi.coin ? '#5a3f8a' : pi.rc),
+          pBg: pi.coin ? 'linear-gradient(180deg,#2a2038,#1d1611)' : 'linear-gradient(180deg,#3a2a55,#1d1611)',
+          pAria: 'Nível do passe ' + lv + ', premium: ' + (pi.coin ? '' : pi.rar + ' ' + pi.slot + ', ') + pi.txt + (pLocked ? ', exige Premium' : pCan ? ', resgatar' : pDone ? ', resgatado' : ', libera no nível do passe ' + lv),
+          claimP: function () {
+            if (pLocked) { self.sfx(SND.tap); self.setState({ cf: true }); return; }
+            if (pCan) self.claim([{ lv: lv, track: 'p' }]); else self.sfx(SND.tap);
+          },
+          isCur: lv === CUR,
+          nodeBg: lv === CUR ? 'linear-gradient(180deg,#b07cff,#6a3cff)' : (reached ? '#2e1f4a' : '#1d1611'),
+          nodeBd: reached ? '#b07cff' : '#4a3a2b', nodeFg: lv === CUR ? '#fff' : (reached ? '#d9b3ff' : '#c9b9a2'),
+          lineTop: lv === 1 ? 'transparent' : (reached ? '#b07cff' : '#4a3a2b'),
+          lineBot: lv === TIERS ? 'transparent' : (lv + 1 <= CUR ? '#b07cff' : '#4a3a2b')
+        });
+      })(lv);
+    }
+    var dots = [];
+    for (var i = 0; i < pages; i++) dots.push({ w: i === pg ? '22px' : '8px', c: i === pg ? '#b07cff' : (i * PER + 1 <= CUR ? '#6a4a9a' : '#4a3a2b') });
+    var pend = this.pending();
+    var ready = 0;
+    ['d', 'w'].forEach(function (k) { MS[k].forEach(function (m) { if (s.mp[m.id] >= m.n && !s.mc[m.id]) ready++; }); });
+    var missions = MS[s.mt].map(function (m) {
+      var p = Math.min(s.mp[m.id], m.n), done = !!s.mc[m.id], can = p >= m.n && !done;
+      return {
+        t: m.t, xp: m.xp, icon: m.icon, pct: Math.round(p / m.n * 100) + '%', prog: p.toLocaleString('pt-BR') + '/' + m.n.toLocaleString('pt-BR'),
+        can: can, done: done, doing: !can && !done,
+        bd: can ? '#ffc94a' : '#4a3a2b', bg: can ? 'linear-gradient(90deg,#3a2c1f,#1d1611)' : '#1d1611', op: done ? 0.6 : 1,
+        aria: m.t + ', ' + p + ' de ' + m.n + ', +' + m.xp + ' XP do passe' + (can ? ', resgatar' : done ? ', feito' : ', ir jogar'),
+        claim: function () { if (can) self.claimMission(m); }
+      };
+    });
+    var seg = function (on) { return on ? { bg: 'linear-gradient(180deg,#b07cff,#6a3cff)', fg: '#fff', sel: 'true' } : { bg: 'transparent', fg: '#c9b9a2', sel: 'false' }; };
+    var tR = seg(s.tab === 'rw'), tM = seg(s.tab === 'ms'), sD = seg(s.mt === 'd'), sW = seg(s.mt === 'w');
+    return {
+      gems: s.gems, coinsTxt: fmtK(s.gold),
+      bumpGem: s.bG ? 'bump' : '', bumpCoin: s.bC ? 'bump' : '', bumpAva: s.bA ? 'bump' : '',
+      plv: s.plv, pxp: s.pxp, pxpPct: s.pxp + '%', lvCls: s.lvFx ? 'lvup' : '',
+      isRw: s.tab === 'rw', isMs: s.tab === 'ms',
+      tabRwSel: tR.sel, tabRwBg: tR.bg, tabRwFg: tR.fg, tabMsSel: tM.sel, tabMsBg: tM.bg, tabMsFg: tM.fg,
+      tap: function () { self.sfx(SND.tap); },
+      tabRw: function () { self.sfx(SND.tap); self.setState({ tab: 'rw' }); },
+      tabMs: function () { self.sfx(SND.tap); self.setState({ tab: 'ms' }); },
+      msDot: ready > 0, msReady: ready,
+      dSel: sD.sel, dBg: sD.bg, dFg: sD.fg, wSel: sW.sel, wBg: sW.bg, wFg: sW.fg,
+      pickD: function () { self.sfx(SND.tap); self.setState({ mt: 'd' }); },
+      pickW: function () { self.sfx(SND.tap); self.setState({ mt: 'w' }); },
+      renewTxt: s.mt === 'd' ? 'Renova em [H]h' : 'Renova em [D]d',
+      missions: missions,
+      premOn: s.on, premOff: !s.on,
+      rows: rows, dots: dots, rangeTxt: (pg * PER + 1) + '–' + Math.min(TIERS, pg * PER + PER),
+      prevFg: pg > 0 ? '#f6ecdf' : '#6b5843', nextFg: pg < pages - 1 ? '#f6ecdf' : '#6b5843',
+      prevPage: function () { if (pg > 0) { self.sfx(SND.tap); self.setState({ page: pg - 1 }); } },
+      nextPage: function () { if (pg < pages - 1) { self.sfx(SND.tap); self.setState({ page: pg + 1 }); } },
+      allTxt: pend.length ? 'Resgatar tudo (' + pend.length + ')' : 'Tudo resgatado',
+      allCls: pend.length ? 'gold cta' : '',
+      allBg: pend.length ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#241b14',
+      allFg: pend.length ? '#2a1403' : '#c9b9a2', allBorder: pend.length ? '0' : '2px solid #4a3a2b',
+      claimAll: function () { self.claim(self.pending()); },
+      flies: s.flies,
+      askPrem: function () { self.sfx(SND.tap); self.setState({ cf: true }); },
+      cfOpen: s.cf,
+      cancelPrem: function () { self.sfx(SND.tap); self.setState({ cf: false }); },
+      confirmPrem: function () {
+        self.sfx(SND.coin);
+        self.setState({ on: true, cf: false, fx: true });
+        self.later(function () { self.setState({ fx: false }); }, 700);
+        self.showToast('Premium em teste (pagamento em breve)');
+      },
+      toastOn: !!s.toast, toastTxt: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

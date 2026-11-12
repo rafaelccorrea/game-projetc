@@ -1,0 +1,332 @@
+/* Eonbound — Sys.stats: ATRIBUTOS do herói com os 7 espaços (regras novas do dono, docs/CONTRATO_V2.md "REGRAS NOVAS DO DONO via PO").
+   Atributos: atk, hp, def (planos, escalam com a era) · critRate, critDmg, aspd (em %, não escalam com a era).
+   ATK_total = (ATK do nível + ATK fixo dos itens) × (1 + soma dos %: skin, coleção, práticas, títulos, pet, montaria, VIP, nível, itens).
+   Golpe = ATK_total × mult. da habilidade × (1 + Dano Crítico, se critar) × (1 − redução da DEF do alvo).
+   Formato do item (fechado com a fps-30): {slot, e, r, lvl, gold, look, subs:[{k,q}]}; look = era da APARÊNCIA (ausente = e; não muda na transformação); o principal sai daqui por (slot, e, r, lvl).
+   lvl 1-100 é do ITEM (teto = nível do jogador; regra "MELHORIA DE ITEM"); gold = ouro investido; a FORJA continua no espaço.
+   Save antigo: chamar migrateSave(S) uma vez na carga (estima o ouro investido e gera os secundários).
+   Sem cache: cada chamada recalcula (tirar/colocar item ou skin muda na hora).
+   TODOS os números de DATA são PONTO DE PARTIDA para a simulação v7 (fps-c9) calibrar. Relatório: reports/sys-e2-api.md */
+(function(root){
+'use strict';
+
+/* ---------------- dados (provisórios até a v7) ---------------- */
+const DATA={
+  slots:['weapon','armor','hat','gloves','boots','necklace','wing'],
+  slotName:{weapon:'Arma',armor:'Colete',hat:'Chapéu/Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asa'},
+  wing:{minLevel:50, minR:2},                       // a asa abre no nível 50 e só existe Épica ou acima
+  eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
+  maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
+  rarFlat:[1,1.7,3,5.5,10,18],                      // planos × raridade (mesmo RAR.m do jogo); [5] = DIVINO (×1,8, só com era9.on)
+  rarPct:[1,1.25,1.5,1.8,2.2,2.7],                  // % × raridade (principais e secundários em %); [5] = Divino
+  // CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA): eras 7 (Submundo) e 8 (Celestial), item até o Nv 120 e a raridade DIVINO (Nv 105,
+  // só eras 7-8; o portão é da fps-30). setEra9(true) troca maxEra 6→8, maxItemLevel 100→120 e libera a raridade 5. Spec: reports/curva-9-eras-e2.md
+  era9:{on:false, maxEra:8, maxItemLevel:120, off:{maxEra:6, maxItemLevel:100}},
+  // QUALIDADE DO ITEM (regra nova do dono; PROPOSTA ao PO, DESLIGADA: on=false). Cada item sorteia qp 0..10.000 → multiplicador linear
+  // ×0,80 (0) a ×1,20 (10.000) em TODOS os atributos do item (principal e secundários). Estrelas por faixa: 1★ 0-1.999 … 5★ 8.000-10.000.
+  // Sorteio puxado para baixo: P(≥6.000)=10%, P(≥8.000)=2%, P(≥9.500)=0,1%, P(=10.000)=1 em 1 milhão (interpolação do log da chance).
+  // REGRA DE OURO (raridade manda): com a qualidade ligada, os % usam rarPctQ (degraus ×1,55 > 1,20/0,80 = 1,5); os planos já têm
+  // degraus > 1,5 (1,70/1,76/1,83/1,82). Item SEM qp (save antigo) = 5.000 (×1,00): ninguém perde força. A transformação mantém a qp.
+  // PO: ×0,90 (qp 0) a ×1,30 (qp 10.000): a média dos sorteados (qp ~2.456) dá ≈ ×1,00, e a razão 1,30/0,90 = 1,44 fica abaixo dos degraus.
+  // Item SEM qp (antigo) = a MÉDIA: qp 2.500 = ×1,00.
+  quality:{on:false, min:0.90, max:1.30, top:10000, jackpot:1e-6, neutral:2500,
+    anchors:[[0,1],[6000,0.10],[8000,0.02],[9500,0.001],[9999,2e-6]],   // [qp, chance de sair pelo menos esse qp]
+    stars:[0,2000,4000,6000,8000], rarPctQ:[1,1.55,2.4,3.72,5.77,8.94],
+    // PO: degrau ×1,5 EXATO só em velocidade de ataque e dano crítico (os tetos atuais seguram; 1,5 > 1,44 mantém a regra de ouro)
+    rarPct15:[1,1.5,2.25,3.375,5.0625,7.59], keys15:['aspd','critDmg'],
+    // FUSÃO (dono; no lugar de re-sorteio): 3 itens IGUAIS (era de poder, espaço, raridade e estrela) → 1 com +1 estrela; 5★ não funde.
+    // qp do resultado = mesma posição relativa da MÉDIA dos 3 na faixa da estrela nova (sem sorte); o 10.000 perfeito só por drop (teto 9.999).
+    // Nível = o MAIOR dos 3; ouro investido = a SOMA (o desmontar não perde nada); secundários e visual = do de maior qp. Custo: só ouro.
+    fusion:{count:3, goldPerLevel1:3, maxFusedQp:9999}},
+  // ITEM DE ERA FUTURA (regra do dono: qualquer item serve em qualquer era; drop raro de era futura). PROPOSTA ao PO, DESLIGADA (on=false).
+  // Sem trava, uma arma da era 4 que cai na era 2 faz o jogador pular 7 a 11 fases (simulado): quebra a meta de "no máximo 1 chefe".
+  // "ADORMECIDO": enquanto a era do item for MAIOR que a era liberada do jogador, ele rende como no máximo maxAhead era à frente e fica no
+  // nível 1 (não sobe); quando o jogador chega na era do item, ele ACORDA com os atributos da era dele e pode subir. Simulado: +1 fase.
+  futureEra:{on:false, maxAhead:1, dormantLevel:1},
+  // PRINCIPAL por espaço, valor-base na era 0, raridade Básica, nível do espaço 1, sem forja
+  main:{
+    weapon:  {atk:8},
+    armor:   {hp:40, def:8},       // v7.1: DEF-base do colete 8 (era 4)
+    hat:  {hp:24},
+    gloves:  {atk:3, critRate:2},
+    boots:   {aspd:4},
+    necklace:{critDmg:10},
+    wing:    {atkPct:3, hpPct:3},
+  },
+  // NÍVEL DO ITEM 1-100 (regra "MELHORIA DE ITEM"; teto = nível do jogador) e FORJA do espaço:
+  // planos × lvlFactor(nível) × (1 + forja) — curva em lvlCurve abaixo; % × (1 + pctLvlStep·(nível−1)) × (1 + forja·pctForgeShare).
+  // lvlMult = expoente da curva v7 (mantido só para comparar).
+  lvlMult:1.04, pctLvlStep:0.01, pctForgeShare:0.5, maxItemLevel:100,
+  // CURVA DO NÍVEL DO ITEM (planos): lvlCurve escolhe. 'v8' (PO, PARA TESTE): (1 + lin·(N−1)) × exp^(N−1) → Nv 12 = ×2,96, Nv 100 = ×42,5
+  // (melhorar vale a pena no começo, como no jogo antigo). 'v7': lvlMult^(N−1) = 1,04 (Nv 12 = ×1,54; ficava fraco no começo: trava na era 0).
+  lvlCurve:'v8', lvlCurves:{v7:{exp:1.04, lin:0}, v8:{exp:1.01, lin:0.15}},
+  // v7 (PO): botas, colar e asa passam a ESCALAR COM A ERA, como arma e colete. Os atributos deles são %, então o 12^era dos planos
+  // explodiria (velocidade da bota na era 6 = +10.000%). Passo ADITIVO por era: % × (1 + pctEraStep·era) → era 6 = ×2,5. PROVISÓRIO.
+  pctEraStep:0.25, pctEraSlots:['boots','necklace','wing'],
+  // custo de melhoria do nível N ao N+1 (v7): ouro = piso(goldBase·goldGrowth^(N−1)·(1+r·rarityCost)·priceEra^era) — priceEra 3,5 (PO, era 4);
+  // diamante (compra direta, permitida) = teto(gemBase·gemGrowth^(N−1)·(1+r·rarityCost)). Desmontar devolve dismantleGold do ouro investido.
+  upgrade:{goldBase:20, goldGrowth:1.06, rarityCost:0.6, priceEra:3.5, gemBase:2, gemGrowth:1.04, dismantleGold:0.5,
+    // costCurve 'v8': ouro do nível N ao N+1 PROPORCIONAL ao ganho real desse nível: goldBaseV8 × (f(N+1) − f(N)) / (f(2) − f(1)) × raridade × era
+    // (ouro por ponto de atributo constante na era). goldBaseV8 25: do Nv 1 ao 12 custa o mesmo ouro que a tabela v7 (≈ 300 × raridade × era).
+    // 'v7': goldBase × goldGrowth^(N−1) (custo subia 6%/nível; com a curva v8, os níveis altos ficariam um mau negócio). Diamante não muda.
+    // costGrowthV8: crescimento EXTRA por nível em cima do proporcional (1 = só proporcional). Ajuste da calibração no jogo real:
+    // com 1, chegar ao Nv 100 custa ~17x menos que a v7 (6.370 contra 106.315 por item Básico da era 0) e pode sobrar ouro no fim.
+    costCurve:'v8', goldBaseV8:25, costGrowthV8:1},
+  // TRANSFORMAÇÃO: custo RESERVA só para quando o Sys.loot (fps-30, dona do custo e da Essência) não estiver carregado
+  transform:{goldLevels:10},
+  // SECUNDÁRIOS: Raro 1, Épico+ 2; faixa [min,max] na raridade Rara (× rarPct; def × rarFlat × 12^era); valor = min + q·(max−min)
+  subCount:[0,1,2,2,2,2],
+  subs:{critRate:[1,3], critDmg:[4,12], aspd:[2,6], atkPct:[2,6], hpPct:[2,6], defPct:[2,6]},
+  // secundário proibido por espaço (igual/redundante ao principal; mesma lista da reserva da fps-30)
+  subExclude:{weapon:[], armor:['defPct'], hat:['hpPct'], gloves:['critRate'], boots:['aspd'], necklace:['critDmg'], wing:['atkPct','hpPct']},
+  flatKeys:['atk','hp','def'],
+  // atributos do NÍVEL do jogador (ATK do nível), somados aos fixos dos itens antes dos %
+  levelBase:{atk:5, atkPer:2, hp:100, hpPer:40, def:0, defPer:1},
+  // base do próprio herói
+  base:{critRate:12, critDmg:100, aspd:0},     // crítico 12% (BAL.critRate) e dano crítico +100% (= ×2 do BAL.critMult)
+  caps:{critRate:75, aspd:100, critDmg:400, defRed:75},
+  // REGRA DE COERÊNCIA DE DANO (dono: "2.000 de FC nunca dá 1 milhão"; reports/coerencia-dano.md). Todo número de dano = ATK × golpe × crítico ×
+  // (1 − DEF do alvo) × variação. Teto de UM número, em ATK do herói, SEM crítico (o crítico multiplica por 1 + dano crítico, teto 400% = ×5).
+  // s1 básico 1 · s2 especial 3 no total (repartido nos golpes) · s3 ultimate 10 no total, o golpe final 5 · pet 0,94 (Lendário no máximo; ×3,2 no crítico
+  // da v3). spread = a variação visual de ±10% do battle.js. Usado só por checkHit (QA) e pelos testes: não muda o jogo.
+  offer:{followUntil:25},   // arma da oferta de 1ª compra: acompanha nível e era até o Nv 25 (offerSync)
+  dmgRule:{perHit:{s1:1, s2:3, s3:5, s3total:10, pet:0.94, petCrit:3.2}, spread:1.1},   // v7.1: velocidade até +100% (era 150); dano crítico até 400% (trava)
+  defK:2,                                           // v7.1 (era 3): redução = DEF / (DEF + defK × ATK do atacante), teto caps.defRed
+  baseInterval:0.8,                                 // s1 a cada 0,8 s; com Vel. de Ataque: 0,8 / (1 + aspd/100)
+};
+const SUB_KEYS=Object.keys(DATA.subs);
+const STAT_KEYS=['atk','hp','def','critRate','critDmg','aspd','atkPct','hpPct','defPct'];
+
+/* ---------------- utilidades ---------------- */
+const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const int0=v=>Math.max(0,Math.floor(num(v,0)));
+const zero=()=>{ const o={}; for(const k of STAT_KEYS) o[k]=0; return o; };
+const isSlot=s=>DATA.slots.includes(s);
+const excluded=slot=>(DATA.subExclude[slot]||[]).slice();
+function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function hash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+const isFlat=k=>DATA.flatKeys.includes(k);
+/* ---------------- qualidade (chave DATA.quality.on) ---------------- */
+const Q=()=>DATA.quality, qOn=()=>Q().on===true;
+const MAXR=()=>DATA.era9&&DATA.era9.on===true?5:4;
+const rarPctOf=(r,k)=>(qOn()?(Q().keys15.includes(k)?Q().rarPct15:Q().rarPctQ):DATA.rarPct)[clamp(int0(r),0,MAXR())];
+/* sorteia a qualidade de um item novo (0..10.000) */
+function rollQuality(rng){ rng=rng||Math.random; const q=Q(), u=rng(); if(u<q.jackpot) return q.top; const v=(u-q.jackpot)/(1-q.jackpot), A=q.anchors;
+  for(let i=1;i<A.length;i++){ const [x0,s0]=A[i-1],[x1,s1]=A[i]; if(v>=s1){ const t=(Math.log(v)-Math.log(s0))/(Math.log(s1)-Math.log(s0)); return Math.floor(x0+t*(x1-x0)); } }
+  return q.top-1; }
+const qpOf=it=>{ const v=it&&it.qp; return (typeof v==='number'&&isFinite(v))?clamp(Math.round(v),0,Q().top):Q().neutral; };
+/* multiplicador da qualidade (com a chave desligada: 1) */
+const qualityMult=it=>{ if(!qOn()) return 1; const q=Q(); return q.min+(q.max-q.min)*qpOf(it)/q.top; };
+const qualityStars=qp=>{ let s=1; Q().stars.forEach((x,i)=>{ if(clamp(num(qp,0),0,Q().top)>=x) s=i+1; }); return s; };
+
+/* ---------------- itens ---------------- */
+/* multiplicador do NÍVEL do item nos atributos planos (DATA.lvlCurve) */
+function lvlFactor(L){ const c=DATA.lvlCurves[DATA.lvlCurve]||{exp:DATA.lvlMult,lin:0}; L=clamp(int0(L)||1,1,DATA.maxItemLevel);
+  return (1+num(c.lin,0)*(L-1))*Math.pow(num(c.exp,1),L-1); }
+const subCount=r=>int0(DATA.subCount[clamp(int0(r),0,MAXR())]);
+/* liga/desliga a curva das 9 eras (só troca números de DATA; o save não muda) */
+function setEra9(on){ const E=DATA.era9, src=on?E:E.off; E.on=!!on; DATA.maxEra=src.maxEra; DATA.maxItemLevel=src.maxItemLevel; return E.on; }
+/* sorteia subs distintos e diferentes do principal do espaço (a fps-30 pode usar, ou gerar {k,q} do jeito dela) */
+function rollSubs(slot,r,rng){ rng=rng||Math.random; const pool=SUB_KEYS.filter(k=>!excluded(slot).includes(k)), out=[];
+  for(let i=0;i<subCount(r)&&pool.length;i++){ const j=Math.floor(rng()*pool.length)%pool.length; out.push({k:pool.splice(j,1)[0],q:Math.round(rng()*1000)/1000}); }
+  return out; }
+/* item antigo sem subs (Raro+): gera com semente pelo id (sempre o mesmo resultado). Não mexe em item que já tem subs. */
+function ensureSubs(item){ if(!item||Array.isArray(item.subs)&&item.subs.length>=subCount(item.r)) return item;
+  if(!Array.isArray(item.subs)) item.subs=[]; if(item.subs.length<subCount(item.r)) item.subs=rollSubs(item.slot,item.r,mulberry(hash('subs|'+(item.id!=null?item.id:JSON.stringify([item.slot,item.e,item.r])))));
+  return item; }
+/* valor de um secundário */
+function subValue(sub,item){ const f=DATA.subs[sub&&sub.k]; if(!f) return 0; const q=clamp(num(sub.q,0),0,1), r=clamp(int0(item&&item.r),0,MAXR()), e=clamp(int0(item&&item.e),0,DATA.maxEra);
+  const v=f[0]+q*(f[1]-f[0]); return (isFlat(sub.k)?v*DATA.rarFlat[r]*Math.pow(DATA.eraFactor,e):v*rarPctOf(r,sub.k))*qualityMult(item); }
+/* principal do item no espaço (com nível do espaço e multiplicador de forja) */
+function mainOf(item,slotLvl,forge){ const o=zero(); if(!item||!isSlot(item.slot)) return o;
+  const r=clamp(int0(item.r),0,MAXR()), e=clamp(int0(item.e),0,DATA.maxEra), L=clamp(int0(slotLvl)||1,1,DATA.maxItemLevel), fm=Math.max(0,num(forge,0));
+  for(const [k,b] of Object.entries(DATA.main[item.slot])){
+    o[k]=isFlat(k)?b*DATA.rarFlat[r]*Math.pow(DATA.eraFactor,e)*lvlFactor(L)*(1+fm)
+                   :b*rarPctOf(r,k)*(DATA.pctEraSlots.includes(item.slot)?1+DATA.pctEraStep*e:1)*(1+DATA.pctLvlStep*(L-1))*(1+fm*DATA.pctForgeShare);
+    o[k]*=qualityMult(item); }
+  return o; }
+/* principal + secundários de um item equipado. Secundário igual ao principal do espaço é ignorado (regra do formato). */
+function itemStats(item,slotLvl,forge){ const o=mainOf(item,slotLvl,forge); if(!item) return o; ensureSubs(item); const seen=new Set(excluded(item.slot));
+  for(const s of item.subs||[]){ if(!DATA.subs[s.k]||seen.has(s.k)) continue; seen.add(s.k); o[s.k]+=subValue(s,item); }
+  return o; }
+const slotOpen=(slot,playerLevel)=>slot!=='wing'||int0(playerLevel)>=DATA.wing.minLevel;
+/* o item pode ir para este espaço? (asa: nível 50 e Épico+) */
+function canEquip(item,playerLevel){ if(!item||!isSlot(item.slot)) return false; if(item.slot==='wing') return slotOpen('wing',playerLevel)&&int0(item.r)>=DATA.wing.minR; return true; }
+
+/* ---------------- atributos finais ---------------- */
+/* nível do jogador; null = desconhecido (sem Sys.level e sem host.level): aí o nível do item não tem teto */
+const playerLevelOf=(S,host)=>{ const L=root.Sys&&root.Sys.level; if(L&&L.level) return L.level(S); if(host&&typeof host.level==='function') return int0(host.level())||1; return null; };
+/* host.equipped() → {slot: item} ou lista de itens; host.slotLevel(slot) → nível do espaço (padrão: S.lvl[slot] ou 1); forja: Sys.forge.mult */
+function equippedOf(S,host){ let eq=host&&typeof host.equipped==='function'?host.equipped():null; const out={};
+  if(Array.isArray(eq)) for(const it of eq){ if(it&&isSlot(it.slot)) out[it.slot]=it; }
+  else if(eq&&typeof eq==='object') for(const s in eq) if(eq[s]&&isSlot(s)) out[s]=eq[s];
+  for(const s in out) offerSync(out[s],S,host);
+  return out; }
+/* ARMA DA OFERTA DE 1ª COMPRA (PO): item com offer:true ACOMPANHA o jogador (nível = o do jogador; era = a liberada) enquanto ele está até o
+   Nv DATA.offer.followUntil (25), para nunca ficar pior que a arma normal (Épica no nível dele: ×1,76 no principal sobre a Rara). Depois do 25 para de
+   acompanhar e vira um item comum (sobe com ouro, transforma com Essência). Só aumenta (nunca tira nível/era). Chamada sozinha ao calcular. */
+function offerSync(it,S,host){ if(!it||it.offer!==true) return it; const L=playerLevelOf(S,host); if(L==null||L>DATA.offer.followUntil) return it;
+  it.lvl=Math.max(int0(it.lvl)||1,clamp(L,1,DATA.maxItemLevel)); const E=clamp(int0(host&&host.eraMax&&host.eraMax()),0,DATA.maxEra);
+  if(E>int0(it.e)){ if(it.look==null) it.look=int0(it.e); it.e=E; } return it; }
+/* nível do ITEM (1-100), limitado pelo nível do jogador; item sem lvl = 1 */
+/* nível EFETIVO na força = o nível que o item tem (1-100). Decisão do PO: o teto "≤ nível do jogador" vale só para SUBIR (canUpgrade/planUpgrade);
+   o nível já conquistado conta inteiro, para ninguém perder força com a mudança de regra. (playerLevel fica na assinatura por compatibilidade.) */
+const itemLevel=(it,playerLevel)=>clamp(int0(it&&it.lvl)||1,1,DATA.maxItemLevel);
+/* teto para SUBIR o nível do item */
+const upgradeCap=pl=>pl==null?DATA.maxItemLevel:Math.min(DATA.maxItemLevel,Math.max(1,int0(pl)));
+/* ADORMECIDO (chave DATA.futureEra.on): item de era MAIOR que a era liberada do jogador rende como eraMax + maxAhead e no nível 1 */
+const eraNowOf=host=>clamp(int0(host&&host.eraMax&&host.eraMax()),0,99);
+function isDormant(it,host){ return DATA.futureEra.on===true&&!!it&&!!host&&typeof host.eraMax==='function'&&int0(it.e)>eraNowOf(host); }
+/* para a tela: "Adormecido · acorda na era X" */
+function dormantInfo(it,host){ if(!isDormant(it,host)) return {dormant:false}; const e=int0(it.e); return {dormant:true,wakeEra:e,label:'Adormecido · acorda na era '+e}; }
+function dormantView(it,host){ if(!isDormant(it,host)) return it; const F=DATA.futureEra;
+  return Object.assign({},it,{e:Math.min(int0(it.e),eraNowOf(host)+F.maxAhead),lvl:F.dormantLevel,look:Number.isInteger(it.look)?it.look:int0(it.e)}); }
+/* soma dos atributos dos itens equipados (só espaços abertos e itens válidos para o espaço) */
+function itemsTotal(S,host,ov){ const o=zero(), lv=playerLevelOf(S,host), F=root.Sys&&root.Sys.forge, eq=equippedOf(S,host);
+  if(ov&&ov.item&&isSlot(ov.item.slot)){ if(ov.remove) delete eq[ov.item.slot]; else eq[ov.item.slot]=ov.atLevel!=null?Object.assign({},ov.item,{lvl:ov.atLevel}):ov.item; }
+  for(const slot of DATA.slots){ const it=eq[slot]; if(!it||!canEquip(it,lv)) continue;
+    const v=dormantView(it,host), st=itemStats(v,itemLevel(v,lv),F&&F.mult?F.mult(S,slot):0); for(const k of STAT_KEYS) o[k]+=st[k]; }
+  return o; }
+function levelBase(lv){ const B=DATA.levelBase; lv=Math.max(1,int0(lv)); return {atk:B.atk+B.atkPer*(lv-1),hp:B.hp+B.hpPer*(lv-1),def:B.def+B.defPer*(lv-1)}; }
+/* atributos finais. pct = bônus % dos módulos Sys (fc.total), já somados; o fc.js passa. Sem host.equipped, usa host.atk/hp (modo antigo). */
+/* ov (opcional): {item, atLevel?, remove?} → calcula como se esse item estivesse no espaço dele (para "FC deste item"), sem mexer no save */
+function compute(S,host,pct,ov){
+  pct=pct||{}; const lv=playerLevelOf(S,host), modern=!!(host&&typeof host.equipped==='function'), it=modern?itemsTotal(S,host,ov):zero();
+  let fa,fh,fd;
+  if(modern){ const b=levelBase(lv==null?1:lv); fa=b.atk+it.atk; fh=b.hp+it.hp; fd=b.def+it.def; }
+  else { fa=Math.max(0,num(host&&host.atk&&host.atk(),0)); fh=Math.max(0,num(host&&host.hp&&host.hp(),0)); fd=0; }
+  fa+=num(pct.atk,0); fh+=num(pct.hp,0);                       // planos extras (dicas do "como ficar mais forte")
+  const aP=num(pct.atkPct,0)+it.atkPct, hP=num(pct.hpPct,0)+it.hpPct, dP=num(pct.defPct,0)+it.defPct;
+  return {
+    atk:fa*Math.max(0,1+aP/100), hp:fh*Math.max(0,1+(hP+num(pct.petBond,0))/100), hpNoPet:fh*Math.max(0,1+hP/100), def:fd*Math.max(0,1+dP/100),
+    critRate:clamp(DATA.base.critRate+num(pct.critPct,0)+it.critRate,0,DATA.caps.critRate),
+    critDmg:clamp(DATA.base.critDmg+it.critDmg+num(pct.critDmgPct,0),0,DATA.caps.critDmg),
+    aspd:clamp(DATA.base.aspd+it.aspd+num(pct.aspdPct,0),0,DATA.caps.aspd),
+    flatBase:{atk:fa,hp:fh,def:fd}, pctSum:{atk:aP,hp:hP,def:dP}, items:it, level:lv, modern };
+}
+/* redução de dano pela DEF do alvo, relativa ao ATK de quem bate (sem curva por era) */
+const defReduction=(def,attackerAtk)=>{ def=Math.max(0,num(def,0)); const a=Math.max(1e-9,num(attackerAtk,0)); return Math.min(DATA.caps.defRed/100,def/(def+DATA.defK*a)); };
+/* um golpe: {atk, critRate, critDmg} × mult; crit = true/false (ou sorteia com rng); targetDef = DEF do alvo */
+function hit(att,mult,targetDef,crit,rng){ const c=typeof crit==='boolean'?crit:((rng||Math.random)()*100<num(att.critRate,0));
+  const d=Math.max(0,num(att.atk,0))*Math.max(0,num(mult,1))*(c?1+num(att.critDmg,100)/100:1)*(1-defReduction(targetDef,att.atk));
+  return {dmg:d,crit:c}; }
+/* teto de UM número de dano para o golpe `type` (s1|s2|s3|pet|petCrit), em unidades absolutas, para os atributos `att` do herói (com crítico no
+   dano crítico DELE, travado no teto, e a variação). checkHit(att, dmg, type) → {ok, ratio (dano ÷ ATK), max (teto ÷ ATK)} para o QA. */
+function maxHit(att,type){ const R=DATA.dmgRule, m=num(R.perHit[type],R.perHit.s3), cd=Math.min(num(att&&att.critDmg,100),DATA.caps.critDmg);
+  return Math.max(0,num(att&&att.atk,0))*m*(type==='petCrit'?1:1+cd/100)*R.spread; }
+function checkHit(att,dmg,type){ const a=Math.max(1e-9,num(att&&att.atk,0)), mx=maxHit(att,type); return {ok:num(dmg,0)<=mx*(1+1e-9),ratio:num(dmg,0)/a,max:mx/a}; }
+const interval=st=>DATA.baseInterval/(1+Math.max(0,num(st&&st.aspd,0))/100);
+
+
+/* ---------------- melhoria do item (nível 1-100; teto = nível do jogador) ---------------- */
+function upgradeCost(item){ const U=DATA.upgrade, n=Math.max(1,int0(item&&item.lvl)||1), r=clamp(int0(item&&item.r),0,MAXR()), e=clamp(int0(item&&item.e),0,DATA.maxEra), rc=1+r*U.rarityCost;
+  const step=U.costCurve==='v8'?U.goldBaseV8*(lvlFactor(n+1)-lvlFactor(n))/(lvlFactor(2)-lvlFactor(1))*Math.pow(num(U.costGrowthV8,1),n-1):U.goldBase*Math.pow(U.goldGrowth,n-1);
+  return {gold:Math.floor(step*rc*Math.pow(U.priceEra,e)), gems:Math.ceil(U.gemBase*Math.pow(U.gemGrowth,n-1)*rc)}; }
+/* {ok, reason:'max'|'level'|'money', gold, gems}. host.canSpendGold/spendGold e host.canSpendGems/spendGems vêm do jogo. */
+/* reason 'level' traz playerLevel, needLevel (nível do jogador para a PRÓXIMA melhoria) e aboveCap (o item já está ACIMA do nível do jogador),
+   para a tela: "Nv 25 (acima do seu nível: não pode subir até você chegar ao 25)" */
+function canUpgrade(S,host,item,currency){ const n=int0(item&&item.lvl)||1, pl=playerLevelOf(S,host), lv=upgradeCap(pl), c=upgradeCost(item),
+    r={ok:false,reason:'',gold:c.gold,gems:c.gems,itemLevel:n,playerLevel:pl,needLevel:Math.min(DATA.maxItemLevel,n+1),aboveCap:pl!=null&&n>pl};
+  if(isDormant(item,host)){ r.reason='dormant'; r.wakeEra=clamp(int0(item.e),0,99); return r; }   // adormecido: só sobe quando o jogador chega na era dele
+  if(n>=DATA.maxItemLevel){ r.reason='max'; return r; } if(n>=lv){ r.reason='level'; return r; }
+  const fn=currency==='gems'?'canSpendGems':'canSpendGold', amt=currency==='gems'?c.gems:c.gold;
+  if(host&&typeof host[fn]==='function'&&!host[fn](amt)){ r.reason='money'; return r; } r.ok=true; return r; }
+/* sobe 1 nível pagando em 'gold' (padrão) ou 'gems'. Guarda o ouro investido em item.gold (só ouro volta no desmontar). */
+function upgrade(S,host,item,currency){ const c=canUpgrade(S,host,item,currency); if(!c.ok) return {ok:false,reason:c.reason};
+  const gems=currency==='gems', fn=gems?'spendGems':'spendGold', amt=gems?c.gems:c.gold;
+  if(host&&typeof host[fn]==='function'&&host[fn](amt)===false) return {ok:false,reason:'money'};
+  item.lvl=(int0(item.lvl)||1)+1; if(!gems) item.gold=int0(item.gold)+amt;
+  return {ok:true,lvl:item.lvl,paid:amt,currency:gems?'gems':'gold'}; }
+/* MIGRAÇÃO de save (PO: "nenhum jogador pode perder ouro por causa da mudança de regra"): item antigo sem `gold` recebe o ouro investido
+   ESTIMADO pelo nível, com a tabela que o jogador DE FATO pagou (upCost antigo do index.html: 20·1,38^(N−1)·(1+0,6·r)·4^era).
+   A tabela nova (provisória) é mais barata e faria o jogador perder ouro no desmontar. Marca item.goldEstimated = true. */
+const LEGACY_UP={base:20, growth:1.38, rarity:0.6, era:4};
+function legacyGold(item){ const n=Math.max(1,int0(item&&item.lvl)||1), r=clamp(int0(item&&item.r),0,MAXR()), e=clamp(int0(item&&item.e),0,DATA.maxEra), L=LEGACY_UP; let g=0;
+  for(let k=1;k<n;k++) g+=Math.floor(L.base*Math.pow(L.growth,k-1)*(1+r*L.rarity)*Math.pow(L.era,e)); return g; }
+function migrateItem(item){ if(!item||typeof item!=='object') return item;
+  if(!(typeof item.gold==='number'&&isFinite(item.gold)&&item.gold>=0)){ item.gold=legacyGold(item); item.goldEstimated=true; }
+  if(!(int0(item.lvl)>=1)) item.lvl=1; if(!Number.isInteger(item.look)) item.look=visualEra(item);
+  if(qOn()&&!(typeof item.qp==='number'&&isFinite(item.qp))) item.qp=Q().neutral;   // qualidade: item antigo = 5.000 (×1,00)
+  ensureSubs(item); return item; }
+/* migra todos os itens do save (S.inv). Chamar UMA vez na carga, antes de qualquer cálculo. Devolve quantos itens foram ajustados. */
+function migrateSave(S){ let n=0; if(S&&Array.isArray(S.inv)) for(const it of S.inv){ const had=typeof it.gold==='number'; migrateItem(it); if(!had) n++; } return n; }
+/* FUSÃO (chave DATA.quality.on). items = 3 itens IGUAIS. {ok, reason, result, consumed:[ids], gold}. NÃO mexe no save: o jogo tira os 3
+   da mochila, põe o resultado (com id novo) e mantém equipado se um deles estava. */
+const bandOf=st=>{ const B=Q().stars, lo=B[st-1], hi=st<B.length?B[st]-1:Q().top; return [lo,hi]; };
+function canFuse(S,host,items){ const F=Q().fusion;
+  if(!qOn()) return {ok:false,reason:'off'};
+  if(!Array.isArray(items)||items.length!==F.count||new Set(items.map(x=>x&&x.id)).size!==F.count) return {ok:false,reason:'count'};
+  const a=items[0], st=qualityStars(qpOf(a));
+  for(const x of items) if(!x||x.slot!==a.slot||int0(x.e)!==int0(a.e)||int0(x.r)!==int0(a.r)||qualityStars(qpOf(x))!==st) return {ok:false,reason:'different'};
+  if(st>=Q().stars.length) return {ok:false,reason:'max'};
+  const gold=F.goldPerLevel1*upgradeCost({lvl:1,r:a.r,e:a.e}).gold;
+  if(host&&typeof host.canSpendGold==='function'&&!host.canSpendGold(gold)) return {ok:false,reason:'money',gold};
+  const m=items.reduce((t,x)=>t+qpOf(x),0)/F.count, [lo,hi]=bandOf(st), [nlo,nhi]=bandOf(st+1), rel=hi>lo?clamp((m-lo)/(hi-lo),0,1):0;
+  const qp=Math.min(F.maxFusedQp,Math.round(nlo+rel*(Math.min(nhi,F.maxFusedQp)-nlo)));
+  const best=items.slice().sort((x,y)=>qpOf(y)-qpOf(x))[0];
+  const result={slot:a.slot,e:int0(a.e),r:int0(a.r),lvl:Math.max(...items.map(x=>int0(x.lvl)||1)),gold:items.reduce((t,x)=>t+int0(x.gold),0),
+    look:visualEra(best),qp,subs:(best.subs||[]).map(x=>({k:x.k,q:x.q}))};
+  return {ok:true,reason:'',gold,result,fromStars:st,toStars:st+1,consumed:items.map(x=>x.id)}; }
+function fuse(S,host,items){ const c=canFuse(S,host,items); if(!c.ok) return c;
+  if(host&&typeof host.spendGold==='function'&&host.spendGold(c.gold)===false) return {ok:false,reason:'money',gold:c.gold};
+  return c; }
+/* ouro devolvido ao desmontar (50% do OURO investido; diamante não volta). A fps-30 usa no desmontar. */
+const dismantleGold=item=>Math.floor(int0(item&&item.gold)*DATA.upgrade.dismantleGold);
+/* TRANSFORMAÇÃO (regra do dono via PO): o item vai para a ERA ATUAL do jogador (eraMax) com a mesma raridade, os mesmos secundários e o
+   mesmo VISUAL. A aparência fica em item.look (era do visual), separada de item.e (era de PODER, que todos os módulos leem). Nível volta a 1
+   e o ouro investido zera (não volta, regra do contrato); o +N da forja continua no espaço. Só para a era atual: nem para trás, nem à frente.
+   Secundários: MANTIDOS (são %, não dependem da era). Custo e cobrança: fps-30 (Sys.loot.transformCost / payTransform, tudo ou nada).
+   Fluxo: planTransform (mostra custo e perdas) → transform (cobra pelo Sys.loot e, só se pagou, altera o item). */
+const visualEra=it=>Number.isInteger(it&&it.look)?it.look:Number.isInteger(it&&it.ve)?it.ve:clamp(int0(it&&it.e),0,DATA.maxEra);
+/* custo: Sys.loot.transformCost(S, host, item) da fps-30 → {ok, jump, toEra, essence, gold}. Sem o Sys.loot, só ouro (DATA.transform), sem essência. */
+function transformCost(S,host,item,to){
+  const LO=root.Sys&&root.Sys.loot; if(LO&&typeof LO.transformCost==='function'){ let c=null; try{ c=LO.transformCost(S,host,item); }catch(e){ c=null; }
+    if(c&&typeof c==='object') return {gold:int0(c.gold),essence:int0(c.essence),ok:c.ok!==false,source:'loot'}; }
+  const T=DATA.transform, r=clamp(int0(item&&item.r),0,MAXR()); let gold=0;
+  for(let n=1;n<=T.goldLevels;n++) gold+=upgradeCost({lvl:n,r,e:to}).gold;
+  return {gold,essence:0,ok:!(host&&typeof host.canSpendGold==='function')||host.canSpendGold(gold),source:'reserva'};
+}
+function canTransform(S,host,item){
+  if(!item||!isSlot(item.slot)) return {ok:false,reason:'item'};
+  const to=clamp(int0(host&&host.eraMax&&host.eraMax()),0,DATA.maxEra), from=clamp(int0(item.e),0,DATA.maxEra);
+  if(from>to) return {ok:false,reason:'ahead',from,to};          // item de era à frente do jogador (não deveria existir)
+  if(from===to) return {ok:false,reason:'same',from,to};         // já está na era atual
+  // aviso para a tela: o ouro investido zera (o desmontar devolveria dismantleGold)
+  const cost=transformCost(S,host,item,to);
+  return {ok:cost.ok,reason:cost.ok?'':'money',from,to,gold:cost.gold,essence:cost.essence,
+    lostGold:int0(item.gold),lostDismantle:dismantleGold(item),lostLevels:Math.max(0,(int0(item.lvl)||1)-1)};
+}
+const planTransform=canTransform;   // nome pedido pela fps-c9 (mesma função)
+function transform(S,host,item){
+  const c=canTransform(S,host,item); if(!c.ok) return Object.assign({ok:false},c);
+  // cobra ANTES de mexer no item: Sys.loot.payTransform (essência + ouro, tudo ou nada); sem o Sys.loot, só o ouro pelo host
+  const LO=root.Sys&&root.Sys.loot; let paid;
+  if(LO&&typeof LO.payTransform==='function'){ let r=null; try{ r=LO.payTransform(S,host,item); }catch(e){ r=null; } paid=!!(r===true||(r&&r.ok)); }
+  else paid=!(host&&typeof host.spendGold==='function')||host.spendGold(c.gold)!==false;
+  if(!paid) return Object.assign({},c,{ok:false,reason:'money'});
+  ensureSubs(item); item.look=visualEra(item); delete item.ve; item.e=c.to; item.lvl=1; item.gold=0; delete item.goldEstimated;
+  return Object.assign({ok:true,item},c);
+}
+/* "EQUIPAR E UPAR ATÉ O NÍVEL DO JOGADOR" num toque (PO, v7). planUpgrade devolve o custo TOTAL antes de confirmar; upgradeTo cobra tudo de
+   uma vez (uma moeda só) e sobe o item. Quem equipa é o jogo (depois do upgradeTo, ou antes; a FC é a mesma). */
+function planUpgrade(S,host,item,currency,toLvl){
+  if(isDormant(item,host)){ const from=int0(item&&item.lvl)||1; return {from,to:from,levels:0,gold:0,gems:0,currency:currency==='gems'?'gems':'gold',cost:0,ok:false,reason:'dormant',wakeEra:int0(item.e)}; }
+  const pl=playerLevelOf(S,host), cap=upgradeCap(pl), from=int0(item&&item.lvl)||1;
+  const to=clamp(int0(toLvl)||cap,from,cap), gems=currency==='gems'; let gold=0,gem=0;
+  for(let n=from;n<to;n++){ const c=upgradeCost(Object.assign({},item,{lvl:n})); gold+=c.gold; gem+=c.gems; }
+  const amt=gems?gem:gold, fn=gems?'canSpendGems':'canSpendGold', can=to>from&&(!(host&&typeof host[fn]==='function')||host[fn](amt));
+  return {from,to,levels:to-from,gold,gems:gem,currency:gems?'gems':'gold',cost:amt,ok:can,reason:from>=DATA.maxItemLevel?'max':to<=from?'level':can?'':'money',
+    playerLevel:pl,needLevel:Math.min(DATA.maxItemLevel,from+1),aboveCap:pl!=null&&from>pl};
+}
+function upgradeTo(S,host,item,currency,toLvl){
+  const p=planUpgrade(S,host,item,currency,toLvl); if(!p.ok) return {ok:false,reason:p.reason,plan:p};
+  const fn=p.currency==='gems'?'spendGems':'spendGold'; if(host&&typeof host[fn]==='function'&&host[fn](p.cost)===false) return {ok:false,reason:'money',plan:p};
+  item.lvl=p.to; if(p.currency==='gold') item.gold=int0(item.gold)+p.gold; return {ok:true,lvl:item.lvl,paid:p.cost,currency:p.currency,plan:p};
+}
+
+const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // atributos não são módulo de bônus (o fc.js chama compute)
+const API={DATA,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+root.Sys=root.Sys||{}; root.Sys.stats=API;
+if(typeof module!=='undefined'&&module.exports) module.exports=API;
+})(typeof window!=='undefined'?window:globalThis);

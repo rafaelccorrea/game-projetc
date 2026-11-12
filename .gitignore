@@ -1,0 +1,19 @@
+# Repositório LOCAL só do código (decisão do PO, 2026-11-12). Imagens, áudio e vídeo ficam fora (disco curto).
+node_modules/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp3
+*.ogg
+*.wav
+*.mp4
+*.webm
+*.woff2
+*.apk
+*.zip
+assets/**/src/
+assets/anim/rig/
+assets/anim/_staging/
+_fontes_arte/

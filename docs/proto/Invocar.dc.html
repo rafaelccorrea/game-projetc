@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Invocar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+/* cenário novo era 2 em camadas (área H=704): parado, só nuvens derivando */
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{top:0;height:422px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 422px}
+.cld2{top:18px;height:190px;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 190px;animation:drift 140s linear infinite}
+.far2{top:155px;height:296px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 296px}
+.mid2{top:123px;height:352px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 352px}
+.gnd2{top:461px;height:268px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 268px}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-2400px}}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.xpf2{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,201,74,.42) 0deg 8deg,rgba(255,201,74,0) 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 70%);mask:radial-gradient(circle,#000 22%,transparent 70%);animation:spin 14s linear infinite}
+.rays2{animation-duration:22s;animation-direction:reverse;opacity:.6}
+@keyframes spin{to{transform:rotate(360deg)}}
+.glow{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,214,110,.7) 0%,rgba(255,150,40,.22) 45%,rgba(255,150,40,0) 70%);animation:glowP 2.4s ease-in-out infinite}
+@keyframes glowP{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+.chestF{animation:chestF 3s ease-in-out infinite;transform-origin:50% 92%}
+@keyframes chestF{0%,100%{transform:rotate(-2deg) scale(1)}50%{transform:rotate(2deg) scale(1.03)}}
+.shadowF{animation:shadowF 3s ease-in-out infinite}
+@keyframes shadowF{0%,100%{opacity:.55}50%{opacity:.4}}
+.chestS{animation:shake .12s linear infinite}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-6px,2px) rotate(-5deg)}50%{transform:translate(5px,-2px) rotate(4deg)}75%{transform:translate(-4px,-1px) rotate(-3deg)}100%{transform:translate(6px,1px) rotate(5deg)}}
+.charge{animation:charge .9s ease-in forwards}
+@keyframes charge{from{transform:scale(.6);opacity:.3}to{transform:scale(1.5);opacity:1}}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe07a;box-shadow:0 0 8px 2px rgba(255,201,74,.85);opacity:0;animation:rise 3s ease-out infinite}
+@keyframes rise{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:1}100%{transform:translateY(-150px) scale(.3);opacity:0}}
+.flash{animation:flash .45s ease-out both;pointer-events:none}
+@keyframes flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+.legflash{animation:legflash .9s ease-out both;pointer-events:none}
+@keyframes legflash{0%{opacity:0;transform:scale(.6)}20%{opacity:1}100%{opacity:0;transform:scale(1.6)}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c}
+.gold:active,.brown:active{transform:translateY(4px)}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 24px rgba(255,201,74,.9)}}
+.gpulse{animation:gpulse 1.4s ease-in-out infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 5px 0 #1f6a27,0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 5px 0 #1f6a27,0 0 22px rgba(95,208,104,.85)}}
+.chip{animation:chipIn .4s ease both}
+@keyframes chipIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.overlay{animation:fade .25s both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.cardin{animation:flip .42s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes flip{0%{transform:perspective(500px) rotateY(90deg) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.back{animation:backP 1.2s ease-in-out infinite}
+@keyframes backP{0%,100%{opacity:.75}50%{opacity:1}}
+.lrays{position:absolute;left:50%;top:50%;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,201,74,.9) 0deg 10deg,rgba(255,201,74,0) 10deg 30deg);-webkit-mask:radial-gradient(circle,#000 25%,transparent 70%);mask:radial-gradient(circle,#000 25%,transparent 70%);animation:lspin 4s linear infinite;pointer-events:none}
+@keyframes lspin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.legcard{animation:flip .42s cubic-bezier(.2,1.4,.4,1) both,legP 1.2s .45s ease-in-out infinite}
+@keyframes legP{0%,100%{box-shadow:0 0 12px 2px rgba(255,201,74,.6)}50%{box-shadow:0 0 30px 8px rgba(255,201,74,1)}}
+.sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 62%);background-size:280% 100%;animation:shine 2.2s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,40%{background-position:160% 0}100%{background-position:-60% 0}}
+.legtag{animation:legtag 1s ease-in-out infinite}
+@keyframes legtag{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.12)}}
+.toast{animation:toastIn 2.2s ease both}
+@keyframes toastIn{0%{transform:translateY(-14px) scale(.9);opacity:0}12%{transform:none;opacity:1}80%{opacity:1}100%{opacity:0}}
+/* V2: palco do baú ocupa o espaço que era da barra de abas; centrado e reduzido em telas baixas */
+.stg{position:relative;flex:1 1 262px;min-height:170px;display:flex;align-items:center;justify-content:center}
+.stgIn{position:relative;width:100%;height:262px;flex:none}
+@media (max-height:700px){.stgIn{transform:scale(.72)}}
+@media (max-height:600px){.stgIn{transform:scale(.6)}}
+/* ===== PADRÃO V2: header novo (igual BatalhaTelaCheiaV2) + tela cheia sobre a batalha, sem barra de abas embaixo ===== */
+html,body{height:100%}
+.scr{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;display:flex;flex-direction:column}
+.bbg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#7fb3d9}
+.bbg i{position:absolute;left:-24px;right:-24px;background-repeat:repeat-x;filter:blur(5px) saturate(.9)}
+.bbg .s{top:0;height:492px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 492px}
+.bbg .f{top:181px;height:344px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 344px}
+.bbg .m{top:144px;height:410px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 410px}
+.bbg .g{top:537px;height:312px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 312px}
+.bbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.38),rgba(10,7,5,.72) 120px,rgba(10,7,5,.92))}
+.hgl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hd{position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:8px;padding:10px 10px 8px;padding-top:max(10px,env(safe-area-inset-top));box-sizing:border-box}
+.hrb{width:44px;height:44px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box;text-decoration:none;transition:transform .12s}
+.hrb:active{transform:scale(.9)}
+.ht{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(17px,5.2vw,22px);line-height:1.1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hps{flex:none;display:flex;align-items:center;gap:6px}
+.hpill{height:44px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;text-decoration:none;font:inherit;transition:transform .12s}
+.hpill:active{transform:scale(.95)}
+.hpill img{object-fit:contain;flex:none}
+.hpill b{font-size:13.5px;font-weight:900;padding-right:2px}
+.hplus{width:24px;height:24px;flex:none;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+.pnl{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;background:#16110d;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,236,200,.18);box-shadow:0 -10px 30px rgba(0,0,0,.5);overflow:hidden;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
+.pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
+@keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
+</style>
+</helmet>
+<div class="scr">
+
+  <div class="bbg" aria-hidden="true"><i class="s"></i><i class="f"></i><i class="m"></i><i class="g"></i></div>
+
+  <!-- Header novo (padrão Batalha V2): voltar · título · moedas/gemas. Sem engrenagem: Configurações ficam no MENU da batalha -->
+  <header class="hd">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" aria-label="Voltar para a batalha" class="hgl hrb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 class="ht">Invocar</h1>
+    <div class="hps">
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Moedas: 48,2K. Abrir loja" class="hgl hpill"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px"><b>48,2K</b><span class="hplus opt" aria-hidden="true">+</span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Gemas: {{gemsTxt}}. Comprar na loja" class="hgl hpill"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gemsTxt}}</b><span class="hplus" aria-hidden="true">+</span></a>
+    </div>
+  </header>
+
+  <!-- Painel em tela cheia por cima da batalha (sem barra de abas embaixo) -->
+  <div class="pnl pnlIn">
+
+  <!-- Conteúdo (tela cheia; Abrir x1/x10 continua embaixo, na zona do polegar) -->
+  <div style="position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 10px 12px 12px; gap: 10px; box-sizing: border-box">
+    <div style="position: absolute; inset: 0; overflow: hidden; background: #7fb3d9">
+      <div class="ly sky2"></div><div class="ly cld2"></div><div class="ly far2"></div><div class="ly mid2"></div><div class="ly gnd2"></div>
+    </div>
+    <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 34%, rgba(40,26,14,0.55) 0%, rgba(22,17,13,0.9) 55%, #16110d 100%)"></div>
+
+    <!-- Garantia a cada 10 (substitui o nível do baú) -->
+    <div style="position: relative; height: 58px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 16px; background: rgba(29,22,17,0.92); border: 2px solid #4a3a2b; box-sizing: border-box">
+      <div style="width: 44px; height: 44px; flex: none; border-radius: 12px; background: linear-gradient(180deg, #c9a3ff, #7a45d6); color: #1a0a33; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 18px">{{pityLeft}}</span>
+        <span style="font-size: 9px; font-weight: 900">FALTAM</span>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0">
+        <span style="font-size: 13px; font-weight: 900; line-height: 1.15">Garantia da melhor raridade liberada a cada 10</span>
+        <div style="display: flex; gap: 3px">
+          <sc-for list="{{pityDots}}" as="d" hint-placeholder-count="10">
+            <span style="flex: 1; height: 8px; border-radius: 4px; background: {{d.bg}}; transition: background .3s"></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- Palco do baú -->
+    <div class="stg"><div class="stgIn">
+      <div class="rays" style="left: calc(50% - 150px); top: -4px; width: 300px; height: 300px"></div>
+      <div class="rays rays2" style="left: calc(50% - 120px); top: 26px; width: 240px; height: 240px"></div>
+      <div class="glow" style="left: calc(50% - 95px); top: 50px; width: 190px; height: 190px"></div>
+      <span class="spark" style="left: calc(50% - 73px); top: 210px; animation-delay: 0s"></span>
+      <span class="spark" style="left: calc(50% - 33px); top: 228px; animation-delay: .8s; width: 4px; height: 4px"></span>
+      <span class="spark" style="left: calc(50% + 22px); top: 222px; animation-delay: 1.7s"></span>
+      <span class="spark" style="left: calc(50% + 67px); top: 212px; animation-delay: 2.3s; width: 3px; height: 3px"></span>
+      <span class="spark" style="left: calc(50% - 1px); top: 236px; animation-delay: 1.2s; width: 3px; height: 3px"></span>
+      <sc-if value="{{chestIdle}}" hint-placeholder-val="{{true}}">
+        <div class="shadowF" style="position: absolute; left: calc(50% - 65px); top: 232px; width: 130px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.55)"></div>
+        <img class="chestF" src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="Baú de equipamento" style="position: absolute; left: calc(50% - 100px); top: 30px; width: 200px; height: 200px; object-fit: contain; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.6))">
+      </sc-if>
+      <sc-if value="{{chestShake}}" hint-placeholder-val="{{false}}">
+        <div class="charge" style="position: absolute; left: calc(50% - 100px); top: 30px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,240,190,0.95) 0%, rgba(255,201,74,0.5) 40%, rgba(255,201,74,0) 70%)"></div>
+        <img class="chestS" src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="Baú abrindo" style="position: absolute; left: calc(50% - 100px); top: 30px; width: 200px; height: 200px; object-fit: contain">
+      </sc-if>
+      <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+        <div class="toast" style="position: absolute; left: 0; right: 0; top: 6px; display: flex; justify-content: center; pointer-events: none">
+          <span style="padding: 8px 16px; border-radius: 12px; background: rgba(14,10,7,0.92); border: 2px solid #ffc94a; font-size: 14px; font-weight: 900; box-shadow: 0 0 16px rgba(255,201,74,0.5)">{{toastMsg}}</span>
+        </div>
+      </sc-if>
+    </div></div>
+
+    <!-- Chances por raridade -->
+    <div style="position: relative; flex: none; display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 12px; font-weight: 900; color: #c9b9a2">Chances neste nível</span>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px">
+        <sc-for list="{{chances}}" as="c" hint-placeholder-count="5">
+          <div class="chip" style="height: 46px; border-radius: 12px; background: #1d1611; border: 2px solid {{c.c}}; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; animation-delay: {{c.delay}}; box-sizing: border-box">
+            <span style="font-size: 11px; font-weight: 900; color: {{c.c}}">{{c.n}}</span>
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 16px">{{c.p}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- Grátis diário -->
+    <div style="position: relative; flex: none">
+      <sc-if value="{{freeReady}}" hint-placeholder-val="{{true}}">
+        <button class="gpulse" onClick="{{openFree}}" style="width: 100%; height: 54px; border-radius: 16px; border: 0; background: linear-gradient(180deg, #7ee27a, #3fae3c); color: #0d2410; font-family: 'Lilita One', sans-serif; font-size: 19px; display: flex; align-items: center; justify-content: center; gap: 8px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"></path></svg>
+          Abrir grátis <span style="font-family: Nunito, sans-serif; font-size: 13px; font-weight: 900">· 1 por dia</span></button>
+      </sc-if>
+      <sc-if value="{{freeWait}}" hint-placeholder-val="{{false}}">
+        <div role="status" style="width: 100%; height: 54px; border-radius: 16px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.92); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 800; color: #c9b9a2; box-sizing: border-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 15 15"></polyline></svg>
+          Grátis de novo em <span style="font-family: 'Lilita One', sans-serif; font-size: 18px; color: #f6ecdf">{{freeTxt}}</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- Abrir x1 / x10: só OURO (x10 = 9x o preço do x1) -->
+    <div style="position: relative; flex: none; display: flex; gap: 10px">
+      <button class="brown" onClick="{{open1}}" style="flex: 1; height: 74px; border-radius: 18px; border: 2px solid #ffc94a; background: linear-gradient(180deg, #4a3a2b, #2a1f16); color: #f6ecdf; box-shadow: 0 6px 0 #0a0705; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 21px">Abrir x1</span>
+        <span style="display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 900; color: #ffc94a"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="ouro" style="width: 22px; height: 22px; object-fit: contain">[OURO]</span>
+      </button>
+      <button class="gold pulse" onClick="{{open10}}" style="position: relative; flex: 1.2; height: 74px; border-radius: 18px; border: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 23px">Abrir x10</span>
+        <span style="display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 900"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="ouro" style="width: 20px; height: 20px; object-fit: contain">9 × [OURO]</span>
+        <span style="position: absolute; top: -9px; right: 8px; padding: 1px 7px; border-radius: 8px; background: #5fd068; color: #0d2410; font-size: 11px; font-weight: 900">1 de brinde</span>
+      </button>
+    </div>
+
+    <!-- Flash de abertura -->
+    <sc-if value="{{flashOn}}" hint-placeholder-val="{{false}}">
+      <div class="flash" style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 30%, #fffbe8 0%, #ffe9a8 40%, rgba(255,233,168,0.85) 100%); z-index: 5"></div>
+    </sc-if>
+
+    <!-- Resultado -->
+    <sc-if value="{{showResult}}" hint-placeholder-val="{{false}}">
+      <div class="overlay" style="position: absolute; inset: 0; z-index: 4; background: radial-gradient(ellipse at 50% 40%, rgba(58,40,20,0.96) 0%, rgba(14,10,7,0.98) 70%); display: flex; flex-direction: column; align-items: center; padding: 18px 12px 16px; box-sizing: border-box; gap: 12px">
+        <div class="rays" style="left: calc(50% - 150px); top: 120px; width: 300px; height: 300px; opacity: .35"></div>
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #ffc94a; text-shadow: 0 3px 0 #6a3a08">Resultado</span>
+          <span style="font-size: 13px; font-weight: 800; color: #c9b9a2">{{resultSub}}</span>
+        </div>
+        <div style="position: relative; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center">
+          <div style="display: grid; grid-template-columns: {{gridCols}}; gap: 10px 8px; justify-content: center">
+            <sc-for list="{{cards}}" as="k" hint-placeholder-count="10">
+              <div style="position: relative; width: {{k.w}}; height: {{k.h}}">
+                <sc-if value="{{k.back}}" hint-placeholder-val="{{false}}">
+                  <div class="back" style="position: absolute; inset: 0; border-radius: 12px; border: 2px solid #6a5440; background: repeating-linear-gradient(45deg, #33271d 0 6px, #2a1f16 6px 12px); display: flex; align-items: center; justify-content: center">
+                    <img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="width: 34px; height: 34px; object-fit: contain; opacity: .7">
+                  </div>
+                </sc-if>
+                <sc-if value="{{k.legend}}" hint-placeholder-val="{{false}}">
+                  <span class="lrays" style="width: {{k.raySize}}; height: {{k.raySize}}"></span>
+                  <div class="legcard" style="position: absolute; inset: 0; border-radius: 12px; border: 3px solid #ffc94a; background: radial-gradient(circle at 50% 35%, #8a5a12 0%, #3a2408 70%); overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-sizing: border-box">
+                    <img src="{{k.img}}" alt="" style="width: {{k.imgS}}; height: {{k.imgS}}; object-fit: contain; filter: drop-shadow(0 0 8px #ffc94a)">
+                    <span style="font-size: {{k.fs}}; font-weight: 900; text-align: center; line-height: 1.05; padding: 0 3px; color: #fff">{{k.name}}</span>
+                    <span class="sheen"></span>
+                  </div>
+                  <span class="legtag" style="position: absolute; left: 50%; top: -10px; padding: 1px 6px; border-radius: 6px; background: #ffc94a; color: #2a1403; font-size: 10px; font-weight: 900; white-space: nowrap; box-shadow: 0 0 10px #ffc94a">LENDÁRIO!</span>
+                </sc-if>
+                <sc-if value="{{k.normal}}" hint-placeholder-val="{{true}}">
+                  <div class="cardin" style="position: absolute; inset: 0; border-radius: 12px; border: 3px solid {{k.c}}; background: {{k.bg}}; box-shadow: {{k.glow}}; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-sizing: border-box">
+                    <img src="{{k.img}}" alt="" style="width: {{k.imgS}}; height: {{k.imgS}}; object-fit: contain">
+                    <span style="font-size: {{k.fs}}; font-weight: 900; text-align: center; line-height: 1.05; padding: 0 3px">{{k.name}}</span>
+                    <span style="font-size: 9px; font-weight: 900; color: {{k.c}}">{{k.rn}}</span>
+                    <sc-if value="{{k.shiny}}" hint-placeholder-val="{{false}}"><span class="sheen"></span></sc-if>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="position: relative; height: 22px; font-size: 14px; font-weight: 800">{{bestTxt}}</div>
+        <sc-if value="{{allShown}}" hint-placeholder-val="{{true}}">
+          <button class="gold pulse" onClick="{{collect}}" style="position: relative; width: 240px; height: 58px; border-radius: 18px; border: 0; font-family: 'Lilita One', sans-serif; font-size: 24px">{{collectTxt}}</button>
+        </sc-if>
+        <sc-if value="{{revealing}}" hint-placeholder-val="{{false}}">
+          <button onClick="{{skip}}" style="position: relative; width: 240px; height: 58px; border-radius: 18px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 20px">Revelar tudo</button>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- Brilho lendário -->
+    <sc-if value="{{legFlash}}" hint-placeholder-val="{{false}}">
+      <div class="legflash" style="position: absolute; inset: 0; z-index: 6; background: radial-gradient(circle at 50% 45%, rgba(255,230,140,0.95) 0%, rgba(255,201,74,0.55) 30%, rgba(255,201,74,0) 65%)"></div>
+    </sc-if>
+  </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var RN = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'];
+var RC = ['#e8e2d8', '#4aa3ff', '#b07cff', '#ff5a5a', '#ffc94a'];
+var PULL = [50, 28, 14, 6, 2]; // chances reais de invocação (RAR.pull no index.html)
+var BEST_R = 2; // melhor raridade liberada na era atual (protótipo: Épico, "Épico garantido a cada 10" do balance.json)
+var PITY = 10;
+var WN = ['Espada Enferrujada', 'Espada de Aço', 'Lâmina Rúnica', 'Espada do Dragão', 'Excalibur'];
+var AN = ['Túnica de Couro', 'Cota de Malha', 'Armadura de Placas', 'Armadura Infernal', 'Égide Sagrada'];
+var IMG = {
+  w1: '/_blob/622897d7b70128406147c8aa8f2feb0b', w2: '/_blob/ba4ff0fd6689b997202345bfaa47ab6c',
+  // armadura: ícone provisório em SVG (o PNG parado do Kael era usado como ícone e está proibido)
+  h1: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M20 8 L32 14 L44 8 L56 18 L50 28 L48 56 L16 56 L14 28 L8 18 Z' fill='%23a7a9b4' stroke='%232a1f16' stroke-width='3' stroke-linejoin='round'/><path d='M32 14 V54' stroke='%232a1f16' stroke-width='2'/><path d='M22 30 h20 M22 40 h20' stroke='%23e8e2d8' stroke-width='2' opacity='.6'/></svg>",
+  h2: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M20 8 L32 14 L44 8 L56 18 L50 28 L48 56 L16 56 L14 28 L8 18 Z' fill='%23ffc94a' stroke='%236a3a08' stroke-width='3' stroke-linejoin='round'/><path d='M32 14 V54' stroke='%236a3a08' stroke-width='2'/><path d='M22 30 h20 M22 40 h20' stroke='%23fff6cf' stroke-width='2' opacity='.8'/><circle cx='32' cy='24' r='4' fill='%23ff5a5a' stroke='%236a3a08' stroke-width='1.5'/></svg>"
+};
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', summon: '/_blob/07a146ee324bece467fc05bedf4435b0',
+  legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487'
+};
+function roll() {
+  var x = Math.random() * 100;
+  for (var i = 0; i < PULL.length; i++) { x -= PULL[i]; if (x <= 0) return i; }
+  return 0;
+}
+function mkItem(r) {
+  var w = Math.random() < 0.5;
+  return { r: r, w: w, name: (w ? WN : AN)[r], img: w ? (r === 4 ? IMG.w2 : IMG.w1) : (r === 4 ? IMG.h2 : IMG.h1) };
+}
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function midnight() { var d = new Date(); d.setHours(24, 0, 0, 0); return d.getTime(); }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.timers = [];
+    this.state = { phase: 'idle', results: [], shown: 0, flash: false, legFlash: false, mode: 1, pity: 7, freeReady: true, now: Date.now(), toast: null };
+    var self = this;
+    this.clock = setInterval(function () { if (!self.state.freeReady) self.setState({ now: Date.now() }); }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.clock); this.clearT(); }
+  clearT() { this.timers.forEach(function (t) { clearTimeout(t); }); this.timers = []; }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.75; a.play().catch(function () {}); } catch (e) {} }
+  flashMsg(m) { var self = this; this.setState({ toast: m }); this.later(function () { self.setState({ toast: null }); }, 2200); }
+
+  start(n, kind) {
+    var s = this.state, self = this;
+    if (s.phase !== 'idle') return;
+    // protótipo: o preço em ouro é [OURO] (ainda sem valor), então não desconta
+    var res = [], pity = s.pity;
+    for (var i = 0; i < n; i++) {
+      pity++;
+      var r = roll();
+      if (pity >= PITY) { r = Math.max(r, BEST_R); pity = 0; } else if (r >= BEST_R) { pity = 0; }
+      res.push(mkItem(r));
+    }
+    var up = { phase: 'shake', results: res, shown: 0, mode: n, pity: pity };
+    if (kind === 'free') { up.freeReady = false; up.now = Date.now(); }
+    this.sfx(SND.summon);
+    this.setState(up);
+    this.later(function () { self.setState({ flash: true }); }, 850);
+    this.later(function () { self.setState({ phase: 'reveal', flash: false }); self.revealNext(); }, 1250);
+  }
+  revealNext() {
+    var self = this, s = this.state;
+    if (s.phase !== 'reveal' || s.shown >= s.results.length) return;
+    var it = s.results[s.shown];
+    this.setState({ shown: s.shown + 1 });
+    if (it.r === 4) {
+      this.sfx(SND.legendary);
+      this.setState({ legFlash: true });
+      this.later(function () { self.setState({ legFlash: false }); }, 900);
+    }
+    var gap = it.r === 4 ? 700 : 260;
+    if (s.shown + 1 < s.results.length) this.later(function () { self.revealNext(); }, gap);
+  }
+  collect() {
+    this.clearT();
+    this.sfx(SND.claim);
+    this.setState({ phase: 'idle', results: [], shown: 0, legFlash: false, flash: false });
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    var x10 = s.mode === 10, total = s.results.length;
+    var cards = s.results.map(function (it, i) {
+      var shown = i < s.shown;
+      return {
+        back: !shown, legend: shown && it.r === 4, normal: shown && it.r < 4, shiny: it.r >= 2,
+        w: x10 ? '100%' : '150px', h: x10 ? '92px' : '210px', imgS: x10 ? '48px' : '120px', fs: x10 ? '9px' : '15px',
+        raySize: x10 ? '150px' : '340px',
+        c: RC[it.r], rn: RN[it.r], name: it.name, img: it.img,
+        bg: 'radial-gradient(circle at 50% 35%, ' + RC[it.r] + '44 0%, #1d1611 70%)',
+        glow: it.r >= 1 ? '0 0 ' + (6 + it.r * 4) + 'px ' + RC[it.r] : 'none'
+      };
+    });
+    var best = null;
+    s.results.slice(0, s.shown).forEach(function (x) { if (!best || x.r > best.r) best = x; });
+    var left = Math.max(0, midnight() - s.now), h = Math.floor(left / 3600000), m = Math.floor(left % 3600000 / 60000), sec = Math.floor(left % 60000 / 1000);
+    var chances = PULL.map(function (p, i) { return { n: RN[i], c: RC[i], p: p + '%', delay: (i * 0.06) + 's' }; });
+    var dots = [];
+    for (var d = 0; d < PITY; d++) dots.push({ bg: d < s.pity ? '#b07cff' : '#33271d' });
+    return {
+      gemsTxt: '320',
+      pityLeft: String(PITY - s.pity), pityDots: dots,
+      chances: chances,
+      chestIdle: s.phase !== 'shake', chestShake: s.phase === 'shake', flashOn: s.flash,
+      hasToast: !!s.toast, toastMsg: s.toast || '',
+      freeReady: s.freeReady, freeWait: !s.freeReady, freeTxt: pad(h) + ':' + pad(m) + ':' + pad(sec),
+      openFree: function () { if (s.freeReady) self.start(1, 'free'); },
+      open1: function () { self.start(1, 'gold'); },
+      open10: function () { self.start(10, 'gold'); },
+      showResult: s.phase === 'reveal', legFlash: s.legFlash, cards: cards,
+      gridCols: x10 ? 'repeat(5, minmax(0, 62px))' : '150px',
+      resultSub: x10 ? 'Abertura x10 · ' + s.shown + ' / ' + total : 'Abertura x1',
+      bestTxt: best ? 'Melhor: ' + best.name + ' (' + RN[best.r] + ')' : '',
+      allShown: s.phase === 'reveal' && s.shown >= total, revealing: s.phase === 'reveal' && s.shown < total,
+      collectTxt: 'Coletar',
+      collect: function () { self.collect(); },
+      skip: function () { self.clearT(); self.sfx(SND.tap); var hasL = s.results.slice(s.shown).some(function (x) { return x.r === 4; }); if (hasL) self.sfx(SND.legendary); self.setState({ shown: total }); },
+      tap: function () { self.sfx(SND.tap); }
+    };
+  }
+}
+</script>
+</body>
+</html>

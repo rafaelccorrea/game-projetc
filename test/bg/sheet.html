@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Folha de instantes do cenário</title>
+<style>
+  html,body{margin:0;background:#0e1014;color:#e8e8ea;font:12px/1.3 system-ui,Arial,sans-serif}
+  .row{display:flex;gap:6px;padding:6px;align-items:flex-start;flex-wrap:wrap}
+  canvas{display:block;border:1px solid #333}
+  .c{font-size:11px;color:#9aa0ad}
+  #out{padding:2px 8px;font:12px Consolas,monospace;color:#8dffb0}
+</style>
+</head>
+<body>
+<div id="out">carregando…</div>
+<div class="row" id="rows"></div>
+<!-- Vários instantes congelados da mesma era lado a lado, com o módulo de produção (scene.js).
+     ?era=3&t=1,4,8.2,8.4&w=250&line=1&nocache=1&hero=0   (w = largura de cada quadro em px CSS) -->
+<script src="scene.js"></script>
+<script>
+(async function () {
+  const q = new URLSearchParams(location.search), era = q.get('era') || '3', ts = (q.get('t') || '1,5,9,13,17').split(',').map(Number), cw = +(q.get('w') || 250);
+  const base = '../../assets/bg/v2/era' + era + '/', W = 390, SH = 692, out = document.getElementById('out'), rows = document.getElementById('rows');
+  const v = q.has('nocache') ? '?v=' + Date.now() : '';
+  const meta = await fetch(base + 'meta.json' + v).then(r => r.json());
+  const res = [];
+  for (const t of ts) {
+    const cv = document.createElement('canvas'), box = document.createElement('div'); box.innerHTML = '<div class="c">era ' + era + ' · t=' + t + '</div>'; box.appendChild(cv); rows.appendChild(box);
+    cv.style.width = cw + 'px'; cv.style.height = Math.round(cw * SH / W) + 'px';
+    const sc = await EonScene.create(cv, { base: base, meta: JSON.parse(JSON.stringify(meta)), resolve: f => base + f + v, width: W, height: SH, dpr: 2, autoStart: false, line: q.has('line'), hero: q.get('hero') !== '0' });
+    await sc.ready; sc.set(t, true); sc.draw(); res.push(sc.readyMs);
+  }
+  out.textContent = 'era ' + era + ' · ' + ts.length + ' instantes · carregamento (ms): ' + res.join(', ');
+  window.__done = true;
+})().catch(e => { document.getElementById('out').textContent = 'ERRO: ' + e.message; console.error(e); });
+</script>
+</body>
+</html>

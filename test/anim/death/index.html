@@ -1,0 +1,43 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morte do Kael</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.ctl{padding:6px 16px;display:flex;gap:6px;flex-wrap:wrap}button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600}button.on{background:#2d6cdf}
+canvas{display:block;max-width:calc(100% - 32px);margin:10px 16px;border-radius:8px}</style></head><body>
+<h1>Morte do Kael (prévia, não ligada no jogo)</h1>
+<p>Ele cambaleia, cai de joelho e depois de corpo no chão, e fica deitado. O corpo encosta no chão o tempo todo: nada flutua, gira ou pisca. A espada escapa da mão e cai deitada no chão, desenhada por código, então serve para qualquer arma. Poeira no joelho e no corpo, depois a tela escurece.</p>
+<div class="ctl" id="ctl"></div>
+<canvas id="c" width="560" height="340"></canvas>
+<script>
+const A='../../../assets/';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+let WK='era2_t1';
+(async()=>{
+ const die={img:await L(A+'anim/hyb/R/kael_die_body.png'),m:await (await fetch(A+'anim/hyb/R/kael_die_body.json')).json()};
+ const WM=await (await fetch(A+'weapons/meta.json')).json();const W={},IDLE={};
+ for(const k of ['era2_t0','era2_t1','era2_t2']){W[k]=await L(A+'weapons/'+k+'.png');IDLE[k]=await L(A+'anim/hyb/R/kael_idle_'+k+'.png');}
+ const im=await (await fetch(A+'anim/hyb/R/kael_idle_body.json')).json(),G=im.grip[0];
+ const bg=await L(A+'bg/era2.png'),gyF=(await (await fetch(A+'bg/meta.json')).json()).era2.groundY;
+ const ctl=document.getElementById('ctl');const names={era2_t0:'Espada de ferro',era2_t1:'Espada rúnica',era2_t2:'Espada lendária'};
+ const ui=()=>{ctl.innerHTML='';for(const k in names){const b=document.createElement('button');b.textContent=names[k];if(k===WK)b.className='on';b.onclick=()=>{WK=k;ui();};ctl.appendChild(b);} };ui();
+ function bbox(img){if(bbox[img.src])return bbox[img.src];const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const g=c.getContext('2d');g.drawImage(img,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=1e9,y0=1e9,x1=0,y1=0;for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2)if(d[(y*c.width+x)*4+3]>20){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}return bbox[img.src]={w:x1-x0,h:y1-y0};}
+ function sword(g,x,y,ang){const w=W[WK],m=WM[WK],b=bbox(w),k=128/Math.max(b.w,b.h);g.save();g.translate(x,y);g.rotate(-(ang-(m.angle??90))*Math.PI/180);g.scale(k,k);g.drawImage(w,-m.grip[0]*w.width,-m.grip[1]*w.height);g.restore();}
+ const cv=document.getElementById('c'),g=cv.getContext('2d'),t0=performance.now();
+ const DM=die.m,PL=DM.padLeft,FY=DM.feetY,N=DM.frames,FPS=DM.fps,TI=1.2,TD=N/FPS,TH=0.5,TK=1.0,TOT=TI+TD+TH+TK+0.6;
+ const imp=[{f:DM.impact.knee,w:40},{f:DM.impact.body,w:120}];
+ // espada: sai da mão no começo da queda e deita no chão à esquerda (mão direita = lado esquerdo da tela)
+ const S0={x:G.x+PL,y:G.y,a:G.ang},S1={x:G.x+PL+18,y:FY-3,a:180},TS=0.42;
+ const puffs=(g,ix,cx,t)=>{if(t<0||t>0.7)return;const p=t/0.7;for(let i=0;i<9;i++){const s=(i/8-0.5)*2,x=cx+s*(ix.w*0.5+26*p),y=FY-2-6*p*(1-Math.abs(s)*0.5),r=5+9*p;g.fillStyle='rgba(170,150,120,'+(0.55*(1-p))+')';g.beginPath();g.ellipse(x,y,r*1.4,r*0.7,0,0,7);g.fill();}};
+ (function loop(now){const t=window.__T!=null?window.__T:((now-t0)/1000)%TOT,Wd=cv.width,H=cv.height,gy=H*0.86,S=0.95;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,Wd,H);
+  if(bg){const s=Math.max(H/(bg.height*(0.86/gyF)),Wd/bg.width),bw=bg.width*s,bh=bg.height*s;g.drawImage(bg,(Wd-bw)/2,gy-gyF*bh,bw,bh);}
+  g.save();g.translate(Wd*0.5-(PL+128)*S,gy-FY*S);g.scale(S,S);
+  if(t<TI){const i=Math.floor(t*12)%12,img=IDLE[WK];if(img)g.drawImage(img,i*256,0,256,256,PL,0,256,256);}
+  else{const td=t-TI,fi=Math.min(N-1,Math.floor(td*FPS));
+   // sombra no chão acompanha a largura do corpo
+   const mm=DM.meta[fi];g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(mm.cx,FY+2,mm.w*0.45,6,0,0,7);g.fill();
+   const p=Math.min(1,td/TS),e=p*p;sword(g,S0.x+(S1.x-S0.x)*p,S0.y+(S1.y-S0.y)*e,S0.a+(S1.a-S0.a)*Math.min(1,p*1.2));
+   if(p>=1)puffs(g,{w:30},S1.x-50,td-TS);
+   g.drawImage(die.img,fi*DM.w,0,DM.w,DM.h,0,0,DM.w,DM.h);
+   for(const ix of imp)puffs(g,ix,DM.meta[ix.f].cx,td-ix.f/FPS);}
+  g.restore();
+  const tk=t-(TI+TD+TH);if(tk>0){g.fillStyle='rgba(0,0,0,'+Math.min(0.72,tk/TK*0.72)+')';g.fillRect(0,0,Wd,H);}
+  requestAnimationFrame(loop);})(t0);
+})();
+</script></body></html>

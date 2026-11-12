@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ultimates</title>
+<style>
+ body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:#aab}
+ .wrap{padding:12px 16px} canvas{display:block;max-width:100%;border-radius:8px;background:#000}
+ button{background:#2d6cdf;color:#fff;border:0;border-radius:6px;padding:8px 14px;font-weight:600;margin:0 16px}
+</style></head><body>
+<h1 id="tt">Ultimate</h1>
+<p>Kael golpeia, o dragão de energia voa da esquerda, faz o rasante cuspindo fogo na horda, que pisca de dano, com tremor de tela e clarão. Repete a cada 6 s.</p>
+<button id="b">Disparar agora</button>
+<div class="wrap"><canvas id="c" width="960" height="540"></canvas></div>
+<script>
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src+'?v='+Date.now();});
+(async()=>{
+ const E=new URLSearchParams(location.search).get('era')||'2';document.getElementById('tt').textContent='Ultimate da era '+E+': '+({0:'Fúria do Mamute',1:'Ira do Olimpo',2:'Lâmina do Dragão',3:'Salva de Canhões',4:'Tempestade Tesla',5:'Ataque Aéreo',6:'Colapso do Vazio'}[E]||'');
+ const bg=await L('../../../assets/bg/era'+E+'.png'),gyF=(await (await fetch('../../../assets/bg/meta.json')).json())['era'+E].groundY;
+ const ult=await L('../../../assets/anim/ult/era'+E+'_ult.png'),U=await (await fetch('../../../assets/anim/ult/era'+E+'_ult.json?v='+Date.now())).json();
+ const kI=await L('../../../assets/anim/hyb/R/kael_idle_era2_t1.png'),kA=await L('../../../assets/anim/hyb/R/kael_attack_era2_t1.png'),kAM=await (await fetch('../../../assets/anim/hyb/R/kael_attack_body.json')).json();
+ const ens=[await L('../../../assets/enemies/era2_e0.png'),await L('../../../assets/enemies/era2_e1.png'),await L('../../../assets/enemies/era2_e0.png')];
+ const c=document.getElementById('c'),g=c.getContext('2d'),W=c.width,H=c.height,gy=H*0.82;
+ let t0=performance.now();document.getElementById('b').onclick=()=>t0=performance.now();
+ function loop(now){const t=((now-t0)/1000)%6;
+  const shake=(t>1.4&&t<2.9)?(Math.random()-.5)*8:0;g.setTransform(1,0,0,1,shake,shake*0.6);g.clearRect(-20,-20,W+40,H+40);
+  if(bg){const s=H/(bg.height*(0.82/gyF)),bw=bg.width*s,bh=bg.height*s;for(let x=0;x<W;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+  // inimigos (piscam e recuam durante o fogo)
+  const hitting=t>1.6&&t<3.0;
+  ens.forEach((e,i)=>{if(!e)return;const S=150,x=W*0.55+i*120,dead=t>3.0&&t<5.5;g.save();if(dead){g.globalAlpha=Math.max(0,1-(t-3.0)*1.5);}
+   const kb=hitting?Math.sin(t*40)*3+(t-1.6)*14:0;g.drawImage(e,x+kb,gy-S*0.95,S,S);
+   if(hitting&&Math.floor(t*14)%2===0){if(!e.w){const c=document.createElement('canvas');c.width=e.width;c.height=e.height;const x2=c.getContext('2d');x2.drawImage(e,0,0);x2.globalCompositeOperation='source-atop';x2.fillStyle='rgba(255,255,255,0.75)';x2.fillRect(0,0,c.width,c.height);e.w=c;}g.drawImage(e.w,x+kb,gy-S*0.95,S,S);}g.restore();});
+  // Kael: golpe no começo, depois parado
+  const KS=1.0;if(t<1.4&&kA){const n=kAM.frames,i=Math.min(n-1,Math.floor(t/1.4*n));g.drawImage(kA,i*256,0,256,256,W*0.18-128*KS,gy-243*KS,256*KS,256*KS);}
+  else if(kI){const i=Math.floor(t*12)%12;g.drawImage(kI,i*256,0,256,256,W*0.18-128*KS,gy-243*KS,256*KS,256*KS);}
+  // ultimate em tela cheia, começa em 0,5 s
+  const ut=t-0.5;if(ult&&ut>=0){const i=Math.floor(ut*U.fps);if(i<U.frames){const sx=(i%U.cols)*U.w,sy=Math.floor(i/U.cols)*U.h;g.save();g.globalCompositeOperation=U.blend||'lighter';g.drawImage(ult,sx,sy,U.w,U.h,0,0,W,H);g.restore();}}
+  // clarão no impacto
+  if(t>1.55&&t<1.75){g.fillStyle='rgba(255,240,200,'+(0.5*(1-(t-1.55)/0.2))+')';g.fillRect(0,0,W,H);}
+  requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+})();
+</script></body></html>

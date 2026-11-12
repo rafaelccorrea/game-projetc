@@ -1,0 +1,253 @@
+# Arte aprovada pelo dono (banco da página, 12/11/2026)
+Use SÓ estes itens no jogo. Id = item da página de aprovação.
+
+## APROVADOS (220)
+- anim-esqueleto-run-quadros
+- anim-goblin-run-quadros
+- anim-kael-run-quadros
+- atk-era2_boss
+- atk-era2_e0
+- atk-era2_e1
+- aura10-idle
+- aura13-attack
+- aura13-idle
+- aura13-run
+- aura4-idle
+- aura7-idle
+- cena-era0-v2
+- cena-era1-v2
+- cena-era2-v2
+- cena-era3-v2
+- die-era2_boss
+- die-era2_e0
+- die-era2_e1
+- foe-era0_boss-attack
+- foe-era0_boss-die
+- foe-era0_boss-hurt
+- foe-era0_boss-run
+- foe-era0_e0-attack
+- foe-era0_e0-die
+- foe-era0_e0-hurt
+- foe-era0_e0-run
+- foe-era0_e1-attack
+- foe-era0_e1-die
+- foe-era0_e1-hurt
+- foe-era0_e1-run
+- foe-era1_boss-attack
+- foe-era1_boss-die
+- foe-era1_boss-hurt
+- foe-era1_boss-run
+- foe-era1_e0-attack
+- foe-era1_e0-die
+- foe-era1_e0-hurt
+- foe-era1_e0-run
+- foe-era1_e1-attack
+- foe-era1_e1-die
+- foe-era1_e1-hurt
+- foe-era1_e1-run
+- foe-era3_boss-attack
+- foe-era3_boss-die
+- foe-era3_boss-hurt
+- foe-era3_boss-run
+- foe-era3_e0-attack
+- foe-era3_e0-die
+- foe-era3_e0-hurt
+- foe-era3_e0-run
+- foe-era3_e1-attack
+- foe-era3_e1-die
+- foe-era3_e1-hurt
+- foe-era3_e1-run
+- foe-era4_boss-attack
+- foe-era4_boss-die
+- foe-era4_boss-hurt
+- foe-era4_boss-run
+- foe-era4_e0-attack
+- foe-era4_e0-die
+- foe-era4_e0-hurt
+- foe-era4_e0-run
+- foe-era4_e1-attack
+- foe-era4_e1-die
+- foe-era4_e1-hurt
+- foe-era4_e1-run
+- foe-era5_boss-attack
+- foe-era5_boss-die
+- foe-era5_boss-hurt
+- foe-era5_boss-run
+- foe-era5_e0-attack
+- foe-era5_e0-die
+- foe-era5_e0-hurt
+- foe-era5_e0-run
+- foe-era5_e1-attack
+- foe-era5_e1-die
+- foe-era5_e1-hurt
+- foe-era5_e1-run
+- foe-era6_boss-attack
+- foe-era6_boss-die
+- foe-era6_boss-hurt
+- foe-era6_boss-run
+- foe-era6_e0-attack
+- foe-era6_e0-die
+- foe-era6_e0-hurt
+- foe-era6_e0-run
+- foe-era6_e1-attack
+- foe-era6_e1-die
+- foe-era6_e1-hurt
+- foe-era6_e1-run
+- head-hair_bun
+- head-hair_spiky
+- head-hat
+- hurt-era2_boss
+- hurt-era2_e0
+- hurt-era2_e1
+- hyb-idle-era2_t0
+- hyb-idle-era2_t1
+- hyb-idle-era2_t2
+- hyb-run-body — Dono (direto à fps-ff): aprovado corrida.
+- hyb-run-era2_t0 — Dono (direto à fps-ff): aprovado corrida.
+- hyb-run-era2_t1 — Dono (direto à fps-ff): aprovado corrida.
+- hyb-run-era2_t2 — Dono (direto à fps-ff): aprovado corrida.
+- hybR-attack-era2_t0 — Dono (direto à fps-ff): aprovado golpe.
+- hybR-attack-era2_t1 — Dono (direto à fps-ff): aprovado golpe.
+- hybR-attack-era2_t2 — Dono (direto à fps-ff): aprovado golpe.
+- hybR-idle-era2_t0
+- hybR-idle-era2_t1
+- hybR-idle-era2_t2
+- hybR-run-era2_t0
+- hybR-run-era2_t1
+- hybR-run-era2_t2
+- icon-era0_boots
+- icon-era0_gloves
+- icon-era0_helmet
+- icon-era0_necklace
+- icon-era0_vest
+- icon-era0_weapon
+- icon-era0_wings
+- icon-era1_boots
+- icon-era1_gloves
+- icon-era1_helmet
+- icon-era1_necklace
+- icon-era1_vest
+- icon-era1_weapon
+- icon-era1_wings
+- icon-era2_boots
+- icon-era2_gloves
+- icon-era2_helmet
+- icon-era2_necklace
+- icon-era2_vest
+- icon-era2_weapon
+- icon-era2_wings
+- icon-era3_boots
+- icon-era3_gloves
+- icon-era3_helmet
+- icon-era3_necklace
+- icon-era3_vest
+- icon-era3_weapon
+- icon-era3_wings
+- icon-era4_boots
+- icon-era4_gloves
+- icon-era4_helmet
+- icon-era4_necklace
+- icon-era4_vest
+- icon-era4_weapon
+- icon-era4_wings
+- icon-era5_boots
+- icon-era5_gloves
+- icon-era5_helmet
+- icon-era5_necklace
+- icon-era5_vest
+- icon-era5_weapon
+- icon-era5_wings
+- icon-era6_boots
+- icon-era6_gloves
+- icon-era6_helmet
+- icon-era6_necklace
+- icon-era6_vest
+- icon-era6_weapon
+- icon-era6_wings
+- music-era0
+- music-era1
+- music-era2
+- music-era3
+- music-era4
+- music-era5
+- music-era6
+- music-title
+- run-era2_boss
+- s1-era2_t0
+- s1-era2_t1
+- s1-era2_t2
+- s2-era2_t0
+- s2-era2_t1
+- s2-era2_t2
+- sfx-boss_appear
+- sfx-coin
+- sfx-crit
+- sfx-enemy_die
+- sfx-era1_s1
+- sfx-era1_s2
+- sfx-era2_s1
+- sfx-era2_s2
+- sfx-era2_s3
+- sfx-era3_s1
+- sfx-era3_s2
+- sfx-era3_s3
+- sfx-era4_s1
+- sfx-era5_s1
+- sfx-era5_s2
+- sfx-era5_s3
+- sfx-era6_s1
+- sfx-era6_s2
+- sfx-era_change
+- sfx-gem
+- sfx-legendary
+- sfx-summon
+- sfx-ui_tap
+- sfx2-claim
+- sfx2-defeat
+- sfx2-era0_s1
+- sfx2-era0_s2
+- sfx2-era0_s3
+- sfx2-era1_s3
+- sfx2-era4_s2
+- sfx2-era4_s3
+- sfx2-era6_s3
+- sfx2-hero_hurt
+- sfx2-hit
+- sfx2-ult_ready
+- sfx2-upgrade
+- ult-era0-anim
+- ult-era1-anim
+- ult-era2-anim
+- ult-era3-anim
+- ult-era4-anim
+- ult-era5-anim
+- ult-era6-anim
+
+## REPROVADOS — não usar (27)
+- anim-kael-idle-ossos — ESPADA NAO ENCAIXA NA MAO PERSONAGEM DESCONFIGURADO
+- anim-kael-run-ossos — PERSONAGEM DESCONFIGURADO
+- hyb-attack-era2_t0
+- hyb-attack-era2_t1
+- hyb-attack-era2_t2
+- kaia-ref — fundo verde!
+- mod-a-attack — Dono: no golpe as pernas ficam duras e o corpo é jogado para a frente. Arma no braço errado.
+- mod-a-idle — Dono: arma no braço errado; tem que estar no outro braço.
+- mod-a-run — Dono: passo de lado, tipo siri; não é passo natural. Arma no braço errado (tem que estar no outro).
+- mod-b-idle — Dono: arma no braço errado.
+- mod-b-run — Dono: passo de lado, tipo siri. Arma no braço errado.
+- mod-c-attack — Dono: no golpe as pernas ficam duras e o corpo é jogado para a frente. Arma no braço errado.
+- mod-c-idle — Dono: arma no braço errado.
+- mod-c-run — Dono: passo de lado, tipo siri. Arma no braço errado.
+- sfx-claim
+- sfx-defeat
+- sfx-era0_s1
+- sfx-era0_s2
+- sfx-era0_s3
+- sfx-era1_s3
+- sfx-era4_s2
+- sfx-era4_s3
+- sfx-era6_s3
+- sfx-hero_hurt
+- sfx-hit
+- sfx-ult_ready
+- sfx-upgrade

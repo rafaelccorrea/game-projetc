@@ -1,0 +1,44 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Subir de nível</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.ctl{padding:6px 16px;display:flex;gap:6px;flex-wrap:wrap}button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600}button.on{background:#2d6cdf}
+canvas{display:block;max-width:calc(100% - 32px);margin:10px 16px;border-radius:8px}</style></head><body>
+<h1>Subir de nível e evolução de fase (tudo por código)</h1>
+<p><b>Subir de nível</b> (1,6 s): anel dourado abre no chão, coluna de luz sobe pelos pés, faíscas sobem, o herói brilha um instante e aparece o número do nível novo. Os pés não saem do chão. <b>Evolução de fase</b> (3,2 s): partículas são sugadas para o herói, um casulo de luz fecha sobre ele e pulsa cada vez mais rápido, explode num clarão branco com raios e revela o Kael da fase seguinte em pose, com o nome da fase.</p>
+<div class="ctl" id="ctl"></div><canvas id="c" width="560" height="360"></canvas>
+<script>
+const A='../../../assets/';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const PH=[['kael_phase0','Garoto',1.0],['kael_phase1','Adolescente',1.06],['kael_phase2','Adulto',1.12],['kael_phase3','Guerreiro Lendário',1.16]];
+let MODE='lvl',P=0,T0=performance.now();
+const ctl=document.getElementById('ctl');const ui=()=>{ctl.innerHTML='';const add=(t,on,f)=>{const b=document.createElement('button');b.textContent=t;if(on)b.className='on';b.onclick=()=>{f();T0=performance.now();ui();};ctl.appendChild(b);};
+ add('Subir de nível',MODE==='lvl',()=>MODE='lvl');for(let i=0;i<3;i++)add('Evoluir: '+PH[i][1]+' → '+PH[i+1][1],MODE==='evo'&&P===i,()=>{MODE='evo';P=i;});};ui();
+(async()=>{const IM=[];for(const [f] of PH)IM.push(await L(A+'hero/phases/'+f+'.png'));const bg=await L(A+'bg/era2.png'),gyF=(await (await fetch(A+'bg/meta.json')).json()).era2.groundY;
+ const cv=document.getElementById('c'),g=cv.getContext('2d');const ease=t=>t<0?0:t>1?1:1-Math.pow(1-t,3);
+ const hero=(im,sc,x,gy,glow)=>{if(!im)return;const H=210*sc,w=H*im.width/im.height;g.save();g.drawImage(im,x-w/2,gy-H,w,H);if(glow>0){g.globalCompositeOperation='lighter';g.globalAlpha=glow;g.drawImage(im,x-w/2,gy-H,w,H);}g.restore();return H;};
+ (function loop(now){const t=(now-T0)/1000,Wd=cv.width,H=cv.height,gy=H*0.86,cx=Wd*0.5;g.setTransform(1,0,0,1,0,0);g.globalAlpha=1;g.globalCompositeOperation='source-over';
+  if(bg){const s=Math.max(H/(bg.height*(0.86/gyF)),Wd/bg.width),bw=bg.width*s,bh=bg.height*s;g.drawImage(bg,(Wd-bw)/2,gy-gyF*bh,bw,bh);}
+  g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(cx,gy+2,60,8,0,0,7);g.fill();
+  if(MODE==='lvl'){const T=t%2.6;
+   // anel no chão
+   const r=ease(T/0.5)*90;g.save();g.globalCompositeOperation='lighter';g.strokeStyle='rgba(255,210,80,'+Math.max(0,1-T/1.4)+')';g.lineWidth=5;g.beginPath();g.ellipse(cx,gy,r,r*0.28,0,0,7);g.stroke();g.restore();
+   // coluna de luz (atrás)
+   const ca=T<0.2?T/0.2:Math.max(0,1-(T-0.2)/1.1);if(ca>0){g.save();g.globalCompositeOperation='lighter';const gr=g.createLinearGradient(0,gy,0,gy-300);gr.addColorStop(0,'rgba(255,220,120,'+0.7*ca+')');gr.addColorStop(1,'rgba(255,220,120,0)');g.fillStyle=gr;for(const [w,a] of [[96,0.25],[66,0.35],[36,0.5],[14,0.8]]){g.globalAlpha=a;g.fillRect(cx-w/2,gy-300,w,300);}g.restore();}
+   hero(IM[0],PH[0][2],cx,gy,T>0.25&&T<0.7?0.5*(1-Math.abs((T-0.47)/0.22)):0);
+   // faíscas
+   g.save();g.globalCompositeOperation='lighter';for(let i=0;i<26;i++){const st=0.1+i*0.03,p=(T-st)/1.0;if(p<0||p>1)continue;const x=cx+Math.sin(i*2.7)*55*(0.4+p),y=gy-10-p*230;g.fillStyle='rgba(255,'+(200+i%3*20)+',90,'+(1-p)+')';g.beginPath();g.arc(x,y,2.5*(1-p)+1,0,7);g.fill();}
+   // anel subindo
+   if(T>0.3&&T<1.3){const p=(T-0.3);g.strokeStyle='rgba(255,240,170,'+(1-p)+')';g.lineWidth=3;g.beginPath();g.ellipse(cx,gy-p*200,50+20*p,14,0,0,7);g.stroke();}g.restore();
+   // número
+   if(T>0.45&&T<2.2){const p=ease((T-0.45)/0.3),a=T>1.8?1-(T-1.8)/0.4:1;g.save();g.globalAlpha=a;g.translate(cx,gy-250-10*p);g.scale(0.6+0.4*p,0.6+0.4*p);g.font='900 34px system-ui';g.textAlign='center';g.lineWidth=6;g.strokeStyle='#5a3300';g.strokeText('NÍVEL 21',0,0);g.fillStyle='#ffd23a';g.fillText('NÍVEL 21',0,0);g.font='800 15px system-ui';g.lineWidth=4;g.strokeText('Força +12   Vida +80',0,24);g.fillStyle='#fff';g.fillText('Força +12   Vida +80',0,24);g.restore();}
+  } else {const T=t%4.6,A0=PH[P],A1=PH[P+1];
+   // 0-1.2 sucção de partículas; 0.8-2.2 casulo pulsando; 2.2 explosão; 2.2-3.2 revelação
+   if(T<2.25)hero(IM[P],A0[2],cx,gy,T>0.6?Math.min(1,(T-0.6)/1.2):0);
+   g.save();g.globalCompositeOperation='lighter';
+   if(T<1.6)for(let i=0;i<40;i++){const p=((T*1.2+i/40)%1),a=i*2.4,rr=170*(1-p);g.fillStyle='rgba(180,220,255,'+p+')';g.beginPath();g.arc(cx+Math.cos(a)*rr,gy-100+Math.sin(a)*rr*0.7,2+2*p,0,7);g.fill();}
+   if(T>0.8&&T<2.25){const k=Math.min(1,(T-0.8)/0.6),f=4+10*(T-0.8),pu=1+0.05*Math.sin(T*f*2*Math.PI)*k;const gr=g.createRadialGradient(cx,gy-100,10,cx,gy-100,120*pu);gr.addColorStop(0,'rgba(255,255,255,'+0.95*k+')');gr.addColorStop(0.6,'rgba(170,220,255,'+0.6*k+')');gr.addColorStop(1,'rgba(120,180,255,0)');g.fillStyle=gr;g.beginPath();g.ellipse(cx,gy-100,85*pu,125*pu,0,0,7);g.fill();}
+   if(T>2.2&&T<2.9){const p=(T-2.2)/0.7;g.fillStyle='rgba(255,255,255,'+(1-p)+')';g.fillRect(0,0,Wd,H);for(let i=0;i<14;i++){const a=i/14*Math.PI*2+T;g.strokeStyle='rgba(255,240,200,'+(1-p)+')';g.lineWidth=6*(1-p);g.beginPath();g.moveTo(cx,gy-100);g.lineTo(cx+Math.cos(a)*400*p+Math.cos(a)*40,gy-100+Math.sin(a)*400*p);g.stroke();}}
+   g.restore();
+   if(T>=2.25){const p=ease((T-2.25)/0.5);hero(IM[P+1],A1[2],cx,gy,T<3.0?0.8*(1-(T-2.25)/0.75):0);
+    g.save();g.globalAlpha=Math.min(1,(T-2.4)/0.3);g.font='900 26px system-ui';g.textAlign='center';g.lineWidth=6;g.strokeStyle='#14306b';const y=gy-260;g.strokeText(A1[1].toUpperCase(),cx,y);g.fillStyle='#bfe3ff';g.fillText(A1[1].toUpperCase(),cx,y);g.restore();}
+  }
+  requestAnimationFrame(loop);})(T0);})();
+</script></body></html>

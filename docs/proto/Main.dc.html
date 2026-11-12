@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Tela inicial</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+.tbg{background-image:url(/_blob/e6ec9d934350edc6c4e525cb4b71f699);background-size:cover;background-position:center;animation:kb 18s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1) translateY(0)}to{transform:scale(1.04) translateY(-6px)}}
+.puff{position:absolute;width:18px;height:18px;border-radius:50%;background:rgba(150,150,150,.75);filter:blur(2px);animation:puff 4s ease-out infinite;opacity:0}
+@keyframes puff{0%{transform:translate(0,0) scale(.4);opacity:0}15%{opacity:.85}100%{transform:translate(26px,-60px) scale(2.4);opacity:0}}
+.lava{position:absolute;width:5px;height:5px;border-radius:50%;background:#ff7a2a;box-shadow:0 0 6px #ff5a00;animation:lava 2.2s ease-out infinite;opacity:0}
+@keyframes lava{0%{transform:translate(0,0);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),18px);opacity:0}}
+.star{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px #b9f;animation:tw 1.8s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.2}50%{opacity:1}}
+.neon{position:absolute;border-radius:2px;mix-blend-mode:screen;animation:neon 1.3s steps(2) infinite}
+@keyframes neon{0%,100%{opacity:.25}50%{opacity:.9}}
+.ufo{position:absolute;width:22px;height:7px;border-radius:50%;background:linear-gradient(#d9e8ff,#7aa0ff);box-shadow:0 0 10px #7af;animation:ufo 9s linear infinite}
+@keyframes ufo{0%{transform:translateX(-60px);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateX(200px);opacity:0}}
+.cloudband{position:absolute;height:40px;border-radius:40px;background:rgba(255,248,235,.55);filter:blur(6px);animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(-160px)}to{transform:translateX(460px)}}
+.wave{position:absolute;height:3px;border-radius:2px;background:rgba(255,255,255,.8);animation:wave 2.4s ease-in-out infinite}
+@keyframes wave{0%,100%{transform:translateX(0);opacity:.3}50%{transform:translateX(8px);opacity:.9}}
+.logo{animation:float 3.6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-10px) rotate(1deg)}}
+.shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);background-size:250% 100%;animation:shine 4.5s ease-in-out infinite;mix-blend-mode:overlay;pointer-events:none}
+@keyframes shine{0%,60%{background-position:150% 0}100%{background-position:-60% 0}}
+.play{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 6px 0 #8a4f0c,0 0 22px rgba(255,184,74,.45)}50%{transform:scale(1.06);box-shadow:0 6px 0 #8a4f0c,0 0 44px rgba(255,184,74,.9)}}
+.play:active{transform:translateY(4px) scale(.98)}
+.ember{position:absolute;bottom:-10px;width:6px;height:6px;border-radius:50%;background:#ffb347;box-shadow:0 0 8px 2px rgba(255,140,40,.8);animation:rise linear infinite;opacity:0}
+@keyframes rise{0%{transform:translate(0,0) scale(1);opacity:0}10%{opacity:1}100%{transform:translate(30px,-760px) scale(.3);opacity:0}}
+.tag{animation:fadein 1.2s .4s both}
+@keyframes fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.eq{display:flex;gap:2px;align-items:flex-end;height:16px}
+.eq i{width:3px;background:#ffc94a;border-radius:1px;animation:eq .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.2s}.eq i:nth-child(3){animation-delay:.4s}
+@keyframes eq{0%,100%{height:4px}50%{height:16px}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background-color: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+  <!-- arte + vida na cena (mesmo container, então tudo acompanha o leve zoom). Arte 1080x1920 em cover: escala 0,44, x -42 -->
+  <div class="tbg" style="position: absolute; inset: 0">
+    <span class="cloudband" style="top: 250px; width: 160px; animation-duration: 26s"></span>
+    <span class="cloudband" style="top: 470px; width: 220px; animation-duration: 34s; animation-delay: -12s"></span>
+    <span class="cloudband" style="top: 610px; width: 140px; animation-duration: 22s; animation-delay: -6s"></span>
+    <!-- vulcão -->
+    <span class="puff" style="left: 30px; top: 150px"></span>
+    <span class="puff" style="left: 32px; top: 150px; animation-delay: 1.3s"></span>
+    <span class="puff" style="left: 28px; top: 150px; animation-delay: 2.6s"></span>
+    <span class="lava" style="left: 32px; top: 162px; --dx: -10px"></span>
+    <span class="lava" style="left: 34px; top: 162px; --dx: 12px; animation-delay: 1.1s"></span>
+    <!-- chaminés da era industrial -->
+    <span class="puff" style="left: 270px; top: 382px; width: 14px; height: 14px"></span>
+    <span class="puff" style="left: 272px; top: 382px; width: 14px; height: 14px; animation-delay: 2s"></span>
+    <span class="puff" style="left: 365px; top: 392px; width: 14px; height: 14px; animation-delay: 1s"></span>
+    <span class="puff" style="left: 290px; top: 388px; width: 12px; height: 12px; animation-delay: 3s"></span>
+    <!-- mar do navio -->
+    <span class="wave" style="left: 20px; top: 398px; width: 22px"></span>
+    <span class="wave" style="left: 95px; top: 406px; width: 18px; animation-delay: .8s"></span>
+    <span class="wave" style="left: 150px; top: 398px; width: 20px; animation-delay: 1.5s"></span>
+    <!-- cidade futurista -->
+    <span class="star" style="left: 250px; top: 620px"></span>
+    <span class="star" style="left: 300px; top: 600px; animation-delay: .6s"></span>
+    <span class="star" style="left: 352px; top: 628px; animation-delay: 1.1s"></span>
+    <span class="star" style="left: 275px; top: 645px; animation-delay: 1.5s"></span>
+    <span class="neon" style="left: 322px; top: 680px; width: 10px; height: 26px; background: #ff4fd8"></span>
+    <span class="neon" style="left: 345px; top: 700px; width: 8px; height: 22px; background: #4ff3ff; animation-delay: .4s"></span>
+    <span class="neon" style="left: 300px; top: 712px; width: 9px; height: 18px; background: #b56cff; animation-delay: .8s"></span>
+    <span class="ufo" style="left: 230px; top: 655px"></span>
+  </div>
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,7,5,0.35) 0%, rgba(10,7,5,0) 35%, rgba(10,7,5,0.15) 60%, rgba(10,7,5,0.92) 100%)"></div>
+
+  <!-- brasas -->
+  <span class="ember" style="left: 30px; animation-duration: 7s; animation-delay: 0s"></span>
+  <span class="ember" style="left: 70px; animation-duration: 9s; animation-delay: 2.1s; width: 4px; height: 4px"></span>
+  <span class="ember" style="left: 110px; animation-duration: 6.5s; animation-delay: 4s"></span>
+  <span class="ember" style="left: 150px; animation-duration: 8s; animation-delay: 1.2s; width: 5px; height: 5px"></span>
+  <span class="ember" style="left: 190px; animation-duration: 10s; animation-delay: 3.3s; width: 3px; height: 3px"></span>
+  <span class="ember" style="left: 230px; animation-duration: 7.5s; animation-delay: 5.2s"></span>
+  <span class="ember" style="left: 270px; animation-duration: 8.5s; animation-delay: 0.7s; width: 4px; height: 4px"></span>
+  <span class="ember" style="left: 310px; animation-duration: 6.8s; animation-delay: 2.8s"></span>
+  <span class="ember" style="left: 345px; animation-duration: 9.5s; animation-delay: 4.6s; width: 5px; height: 5px"></span>
+  <span class="ember" style="left: 375px; animation-duration: 7.2s; animation-delay: 1.8s; width: 3px; height: 3px"></span>
+
+  <div style="position: absolute; top: 20px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center">
+    <sc-if value="{{musicOn}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 999px; background: rgba(22,17,13,0.75); border: 1px solid #4a3a2b; font-size: 12px; font-weight: 800">
+        <span class="eq"><i></i><i></i><i></i></span>Tema de Eonbound
+      </div>
+    </sc-if>
+    <sc-if value="{{musicOff}}" hint-placeholder-val="{{true}}">
+      <span style="font-size: 12px; font-weight: 800; color: #e8dccb; text-shadow: 0 1px 3px #000">Toque no alto-falante para ouvir</span>
+    </sc-if>
+    <div style="display: flex; gap: 10px">
+      <button onClick="{{toggleMusic}}" aria-label="Música" style="width: 44px; height: 44px; border-radius: 14px; border: 2px solid {{soundBorder}}; background: rgba(36,27,20,0.85); color: #f6ecdf; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 5a10 10 0 0 1 0 14"></path></svg>
+      </button>
+      <button aria-label="Configurações" style="width: 44px; height: 44px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(36,27,20,0.85); color: #f6ecdf; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <div style="position: absolute; top: 96px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 24px">
+    <div class="logo" style="position: relative; width: 320px; height: 200px">
+      <img src="/_blob/052d275b2b1e255da9ebad63896dce0c" alt="Eonbound" style="width: 320px; height: 200px; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6))">
+    </div>
+    <p class="tag" style="margin: 0; font-size: 17px; font-weight: 800; text-align: center; text-shadow: 0 2px 6px #000">Atravesse as eras. Forje sua lenda.</p>
+  </div>
+
+  <div style="position: absolute; left: 24px; right: 24px; bottom: 40px; display: flex; flex-direction: column; align-items: center; gap: 14px">
+    <a class="play" href="Login.dc.html" onClick="{{tap}}" style="display: flex; align-items: center; justify-content: center; width: 260px; height: 68px; border-radius: 20px; background: linear-gradient(180deg, #ffe07a 0%, #f2a826 100%); color: #2a1403; font-family: 'Lilita One', Nunito, sans-serif; font-size: 34px; letter-spacing: 2px; text-decoration: none">JOGAR</a>
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" style="display: flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(36,27,20,0.85); color: #f6ecdf; font-weight: 800; font-size: 14px; text-decoration: none">Jogador que volta: Continuar como Kael_BR</a>
+    <p style="margin: 0; font-size: 12px; font-weight: 700; color: #d8cbb8">Versão [X.Y]</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { music: false }; }
+  componentWillUnmount() { if (this.m) { this.m.pause(); } }
+  sfx(u) { try { const a = new Audio(u); a.volume = 0.7; a.play(); } catch (e) {} }
+  renderVals() {
+    const on = this.state.music;
+    return {
+      musicOn: on, musicOff: !on,
+      soundBorder: on ? '#ffc94a' : '#4a3a2b',
+      toggleMusic: () => {
+        if (!this.m) { this.m = new Audio('/_blob/c145b95db4c077b8db75bdb8329e5fe7'); this.m.loop = true; this.m.volume = 0.55; }
+        if (on) { this.m.pause(); } else { this.m.play().catch(() => {}); }
+        this.setState({ music: !on });
+      },
+      tap: () => this.sfx('/_blob/e3753a41131f84e23546318c17022b13'),
+    };
+  }
+}
+</script>
+</body>
+</html>

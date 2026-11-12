@@ -1,0 +1,18 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Golpe célula larga</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}.c{background:#2a3a2a;border-radius:8px;overflow:hidden}.c b{display:block;padding:5px 8px;background:#222;font-size:12px}canvas{display:block;max-width:100%}
+button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;margin:0 16px}</style></head><body>
+<h1>Golpe do Kael (era 2): aprovado 256 px × célula larga 448 px</h1>
+<p>Mesmo desenho, mesma âncora dos pés (x = padLeft + 128, pés em 243). A aprovada corta a ponta da lâmina na borda nos quadros 5 a 13 (linha vermelha = borda da célula de 256). A larga não encosta em borda nenhuma.</p>
+<button id="b">Pausar / quadro a quadro</button> <span id="f"></span>
+<div class="g" id="g"></div>
+<script>
+const R='../../../assets/anim/hyb/R/';let paused=false,fr=0;const cs=[];
+document.getElementById('b').onclick=()=>{if(!paused)paused=true;else fr=(fr+1)%17;};
+for(const t of [0,1,2])for(const [lab,f,w,pl] of [['aprovada t'+t,'kael_attack_era2_t'+t,256,0],['larga t'+t,'kael_attack_wide_era2_t'+t,448,96]]){
+ const d=document.createElement('div');d.className='c';d.innerHTML='<b>'+lab+'</b>';const cv=document.createElement('canvas');cv.width=448;cv.height=256;d.appendChild(cv);document.getElementById('g').appendChild(d);
+ const i=new Image();i.src=R+f+'.png';cs.push({cv,i,w,pl});}
+let t0=performance.now();(function L(n){if(!paused)fr=Math.floor((n-t0)/1000*12)%17;document.getElementById('f').textContent='quadro '+fr;
+ for(const {cv,i,w,pl} of cs){const g=cv.getContext('2d');g.clearRect(0,0,448,256);const x=96-pl;if(i.complete)g.drawImage(i,fr*w,0,w,256,x,0,w,256);g.strokeStyle='#f33';g.strokeRect(96.5,0.5,255,255);}
+ requestAnimationFrame(L);})(t0);
+</script></body></html>

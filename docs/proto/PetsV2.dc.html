@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Pets V2</title>
+<!-- 17 Pets V2: arte APROVADA (8 pets x 3 estágios + ovo). Responsivo: coluna flex, alturas em %, sem rolagem.
+     Regras do dono: libera no Nv 20 com ovo (79% Básico / 21% Raro), estrelas 1-5, nível até 90, estágios Nv 30 / Nv 60,
+     3 ataques automáticos, 1 equipado (atrás do Kael na batalha), ração, redefinir (80%), coleção, fragmentos do Prismático. -->
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+html,body{height:100%}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#0e0a07}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+.app{position:relative;width:100%;max-width:640px;height:100vh;height:100dvh;min-height:560px;margin:0 auto;overflow:hidden;display:flex;flex-direction:column;background:#16110d}
+.ol{text-shadow:-1px -1px 0 #120c08,1px -1px 0 #120c08,-1px 1px 0 #120c08,1px 1px 0 #120c08,0 2px 0 #120c08}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+/* cenário em camadas (eras 0 e 2), proporções do kit: em % da altura do palco */
+.L{position:absolute;left:0;right:0;background-repeat:repeat-x;background-size:auto 100%;pointer-events:none}
+.Lsky{top:0;height:60%}.Lfar{top:22%;height:42%}.Lmid{top:17.5%;height:50%}.Lgnd{top:65.5%;height:40%}.Lcld{top:2.5%;height:27%;animation:drift 120s linear infinite}
+.sky0{background-image:url(/_blob/fcb19c47e6bcf95a909b7a4a8410c8a6)}.far0{background-image:url(/_blob/8350a49ec21741bad84abfa8a477fae9)}.mid0{background-image:url(/_blob/2a828af40defb3a91b3ad05fd9fe48b9)}.gnd0{background-image:url(/_blob/2239f5d7b483d0d30e06ead641b7339a)}.cld0{background-image:url(/_blob/665cc1b081c457c24fdbb9a04f90fc98)}
+.sky2{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}.far2{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}.mid2{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}.gnd2{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}.cld2{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041)}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-2400px}}
+/* temas das eras sem cenário aprovado (provisório, em código) */
+.th{position:absolute;inset:0}
+.th1{background:linear-gradient(180deg,#f9dc9a 0%,#eeb066 46%,#c98a4a 64%,#8f5a2c 100%)}
+.th3{background:linear-gradient(180deg,#ffbe7a 0%,#f08a55 38%,#8a5a6a 56%,#2d6f86 62%,#1f4a5c 100%)}
+.th4{background:linear-gradient(180deg,#a7a9a3 0%,#857a6c 45%,#5b4f43 64%,#3a3129 100%)}
+.th7{background:radial-gradient(ellipse at 50% 100%,#a2261a 0%,rgba(162,38,26,0) 55%),linear-gradient(180deg,#24071a 0%,#3a0d1a 50%,#1a0608 100%)}
+.th8{background:linear-gradient(180deg,#a9d8ff 0%,#dbefff 46%,#fff1cf 66%,#f3d99a 100%)}
+.th9{background:radial-gradient(ellipse at 50% 70%,rgba(143,245,255,.35),rgba(143,245,255,0) 60%),linear-gradient(180deg,#24164a 0%,#3b2470 45%,#12304a 70%,#0b1c2c 100%)}
+.floor{position:absolute;left:0;right:0;bottom:0;height:30%}
+.fl1{background:linear-gradient(180deg,#d39a5a,#9a6234)}.fl3{background:linear-gradient(180deg,#b88a5a,#7a5434)}.fl4{background:linear-gradient(180deg,#4a4038,#2a231e)}
+.fl7{background:linear-gradient(180deg,#3a1410,#140606)}.fl8{background:linear-gradient(180deg,#fff6e0,#e8cf96)}.fl9{background:linear-gradient(180deg,#2a2a5a,#141432)}
+.pyr{position:absolute;aspect-ratio:2/1;background:linear-gradient(90deg,#d6995a 50%,#b07440 50%);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.chim{position:absolute;background:#3a3029;border-radius:3px 3px 0 0}
+.smoke{position:absolute;width:26px;height:26px;border-radius:50%;background:rgba(220,214,204,.55);animation:smoke 4s ease-out infinite}
+@keyframes smoke{0%{transform:translate(0,0) scale(.4);opacity:0}20%{opacity:.8}100%{transform:translate(30px,-60px) scale(1.8);opacity:0}}
+.mast{position:absolute;background:#4a2a1a;width:4px}
+.sail{position:absolute;background:#f6ecdf;clip-path:polygon(0 0,100% 20%,100% 80%,0 100%);animation:sail 3s ease-in-out infinite;transform-origin:0 50%}
+@keyframes sail{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.86)}}
+.wave{position:absolute;left:0;right:0;height:6%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 18px,transparent 18px 40px);animation:wave 3s linear infinite}
+@keyframes wave{to{background-position-x:-80px}}
+.ember{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffb04a;box-shadow:0 0 8px 2px rgba(255,120,40,.9);animation:ember 3.2s linear infinite}
+@keyframes ember{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-120px);opacity:0}}
+.cloudc{position:absolute;height:14%;aspect-ratio:3/1;border-radius:999px;background:#fff;opacity:.85;animation:cl 26s linear infinite;box-shadow:24px -10px 0 4px #fff,-20px -6px 0 2px #fff}
+@keyframes cl{from{transform:translateX(-40px)}to{transform:translateX(60px)}}
+.shard{position:absolute;aspect-ratio:1/3;clip-path:polygon(50% 0,100% 30%,80% 100%,20% 100%,0 30%);background:linear-gradient(180deg,#d8fbff,#7ad7ff 45%,#b07cff);animation:shardG 2.6s ease-in-out infinite}
+@keyframes shardG{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5) hue-rotate(40deg)}}
+/* pedestal e pet */
+.ped{position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#8a7a68 0%,#5a4c3e 55%,#3a3028 100%);box-shadow:0 7px 0 #2a2019,0 10px 14px rgba(0,0,0,.45)}
+.pedRim{position:absolute;inset:-3px;border-radius:50%;border:3px solid;animation:rim 2.2s ease-in-out infinite}
+@keyframes rim{0%,100%{opacity:.55}50%{opacity:1}}
+.breathe{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.018,1.04)}}
+.fly{animation:fly 2.2s ease-in-out infinite}
+@keyframes fly{0%,100%{transform:translateY(0)}50%{transform:translateY(-4%)}}
+.shd{position:absolute;left:50%;border-radius:50%;background:rgba(0,0,0,.42);transform:translateX(-50%)}
+.shdFly{animation:shdFly 2.2s ease-in-out infinite}
+@keyframes shdFly{0%,100%{transform:translateX(-50%) scale(1);opacity:1}50%{transform:translateX(-50%) scale(.82);opacity:.7}}
+.lunge{animation:lunge .5s ease-out both}
+@keyframes lunge{0%,100%{transform:translateX(0)}35%{transform:translateX(9%)}}
+.recoil{animation:recoil .45s ease-out both}
+@keyframes recoil{0%,100%{transform:translateX(0)}25%{transform:translateX(-5%)}}
+.stomp{animation:stomp .5s ease-out both}
+@keyframes stomp{0%,100%{transform:scale(1,1)}30%{transform:scale(1.06,.94)}}
+/* auras por estágio (ancoradas no chão) */
+.aura{position:absolute;left:50%;bottom:0;transform:translateX(-50%);border-radius:50%;pointer-events:none}
+.a0{width:82%;height:34%;animation:auraP 2.8s ease-in-out infinite}
+.a1{width:104%;height:62%;animation:auraP 2.2s ease-in-out infinite}
+.a2{width:120%;height:92%;animation:auraP 1.6s ease-in-out infinite}
+@keyframes auraP{0%,100%{opacity:.6;transform:translateX(-50%) scale(.96)}50%{opacity:1;transform:translateX(-50%) scale(1.04)}}
+.ring{position:absolute;left:50%;bottom:-4%;width:86%;height:16%;border-radius:50%;border:3px solid;transform:translateX(-50%);animation:ringP 1.8s ease-out infinite}
+@keyframes ringP{0%{opacity:.9;transform:translateX(-50%) scale(.6)}100%{opacity:0;transform:translateX(-50%) scale(1.25)}}
+.rays{position:absolute;left:50%;bottom:-6%;width:116%;aspect-ratio:1;margin-left:-58%;border-radius:50%;-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pt{position:absolute;width:6px;height:6px;border-radius:50%;animation:rise 2.4s linear infinite}
+@keyframes rise{0%{top:88%;opacity:0;transform:scale(.6)}15%{opacity:1}100%{top:12%;opacity:0;transform:scale(1.2)}}
+.rainbow{animation:hue 4s linear infinite}
+@keyframes hue{from{filter:hue-rotate(0)}to{filter:hue-rotate(360deg)}}
+/* efeitos dos ataques (curtos, sem tremer a tela) */
+.shot{position:absolute;width:5%;aspect-ratio:1;border-radius:50%;animation:shot .55s ease-in both}
+@keyframes shot{0%{left:56%;opacity:1;transform:scale(.6)}85%{opacity:1}100%{left:96%;opacity:0;transform:scale(1.2)}}
+.boom{position:absolute;right:2%;width:18%;aspect-ratio:1;border-radius:50%;animation:boom .5s ease-out .45s both}
+@keyframes boom{0%{transform:scale(.2);opacity:0}30%{opacity:1}100%{transform:scale(1.4);opacity:0}}
+.slash{position:absolute;width:20%;aspect-ratio:1;border-radius:50%;border-right:5px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;animation:slash .45s ease-out .1s both}
+@keyframes slash{0%{transform:rotate(-50deg) scale(.6);opacity:0}40%{opacity:1}100%{transform:rotate(40deg) scale(1.1);opacity:0}}
+.shock{position:absolute;left:50%;width:70%;height:12%;border-radius:50%;border:4px solid;transform:translateX(-50%);animation:shock .6s ease-out both}
+@keyframes shock{0%{transform:translateX(-50%) scale(.3);opacity:1}100%{transform:translateX(-50%) scale(1.5);opacity:0}}
+.atkTag{animation:tag .9s ease-out both}
+@keyframes tag{0%{transform:scale(.6);opacity:0}20%{transform:scale(1.1);opacity:1}80%{opacity:1}100%{transform:scale(1);opacity:0}}
+/* botões e barras */
+.gold{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 5px 0 #8a4f0c}
+.gold:active{transform:translateY(3px);box-shadow:0 2px 0 #8a4f0c}
+.sec{border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf}
+.off{border:2px solid #4a3a2b;background:#2a211a;color:#8f8070;box-shadow:none}
+.eqd{border:2px solid #5fd068;background:#1f3a22;color:#9ff0a6}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 5px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 5px 0 #8a4f0c,0 0 18px rgba(255,201,74,.9)}}
+.bar{position:relative;height:10px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden}
+.barF{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .35s ease-out}
+.shine{position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:300% 100%;animation:shine 2.4s ease-in-out infinite}
+@keyframes shine{0%,50%{background-position:160% 0}100%{background-position:-60% 0}}
+.star{animation:star 2.4s ease-in-out infinite}
+@keyframes star{0%,100%{filter:drop-shadow(0 0 1px rgba(255,201,74,.4))}50%{filter:drop-shadow(0 0 5px rgba(255,201,74,1))}}
+.dotCur{animation:dotP 1.4s ease-in-out infinite}
+@keyframes dotP{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 10px rgba(255,201,74,1)}}
+.panelIn{animation:pin .28s ease-out both}
+@keyframes pin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tile{transition:transform .15s}
+.tile:active{transform:scale(.95)}
+.tileSel{animation:tileSel 1.6s ease-in-out infinite}
+@keyframes tileSel{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 12px rgba(255,201,74,.85)}}
+.sil{filter:brightness(0);opacity:.5}
+.wsil{filter:brightness(0) invert(1) drop-shadow(0 0 10px #fff3c4)}
+.ring.rainbow{animation:ringP 1.8s ease-out infinite,hue 4s linear infinite}
+.rays.rainbow{animation:spin 9s linear infinite,hue 4s linear infinite}
+.pt.rainbow{animation:rise 2.4s linear infinite,hue 4s linear infinite}
+.a0.rainbow{animation:auraP 2.8s ease-in-out infinite,hue 4s linear infinite}
+.a1.rainbow{animation:auraP 2.2s ease-in-out infinite,hue 4s linear infinite}
+.a2.rainbow{animation:auraP 1.6s ease-in-out infinite,hue 4s linear infinite}
+.rare{position:relative;overflow:hidden}
+.rare::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.7) 50%,transparent 70%);background-size:300% 100%;animation:shine 2.4s ease-in-out infinite;pointer-events:none}
+.rbw{background:linear-gradient(90deg,#ff5a5a,#ffc94a,#5fd068,#4aa3ff,#b07cff,#ff5a5a);background-size:200% 100%;animation:rbw 3s linear infinite}
+@keyframes rbw{to{background-position:-200% 0}}
+.toast{animation:toast 2.2s ease-out both}
+@keyframes toast{0%{opacity:0;transform:translateY(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
+.lvPop{animation:lvPop .6s ease-out both}
+@keyframes lvPop{0%{transform:scale(1)}40%{transform:scale(1.25);color:#fff}100%{transform:scale(1)}}
+.eggBtn{animation:eggW 2.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes eggW{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-10deg)}90%{transform:rotate(9deg)}95%{transform:rotate(-5deg)}}
+/* chocar / evoluir (tela cheia) */
+.ovl{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:radial-gradient(circle at 50% 45%,rgba(48,34,20,.96),rgba(6,4,3,.98) 70%)}
+.scene{position:relative;width:min(84%,340px);aspect-ratio:1/1;flex:none}
+.eggShake{animation:shake .5s ease-in-out infinite;transform-origin:50% 92%}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-7deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(3deg)}}
+.eggCrack{animation:shake .22s linear infinite,eggGlow .9s ease-in infinite;transform-origin:50% 92%}
+@keyframes eggGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6) drop-shadow(0 0 14px #fff3c4)}}
+.crk{stroke-dasharray:120;stroke-dashoffset:120;animation:crk 1s ease-out forwards}
+@keyframes crk{to{stroke-dashoffset:0}}
+.beam{position:absolute;left:50%;bottom:30%;width:6%;height:70%;margin-left:-3%;transform-origin:50% 100%;background:linear-gradient(0deg,rgba(255,243,196,.9),rgba(255,243,196,0));animation:beam 1s ease-in both}
+@keyframes beam{from{opacity:0;height:10%}to{opacity:1;height:70%}}
+.flash{position:absolute;inset:0;z-index:5;pointer-events:none;background:radial-gradient(circle at 50% 50%,#fff 0%,rgba(255,255,255,.9) 30%,rgba(255,224,122,.4) 60%,rgba(255,224,122,0) 85%);animation:flash .7s ease-out both}
+@keyframes flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+.burstRing{position:absolute;left:50%;top:55%;width:30%;aspect-ratio:1;margin:-15% 0 0 -15%;border-radius:50%;border:6px solid #fff3c4;animation:bring .7s ease-out both}
+@keyframes bring{0%{transform:scale(.2);opacity:1}100%{transform:scale(3.4);opacity:0}}
+.spoke{position:absolute;inset:0;pointer-events:none}
+.spk{position:absolute;left:50%;top:55%;width:4%;aspect-ratio:1;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:spk .8s ease-out both}
+@keyframes spk{0%{left:50%;opacity:1}100%{left:96%;opacity:0}}
+.reveal{animation:reveal .7s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes reveal{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.cardIn{animation:pin .4s ease-out .3s both}
+.coc{position:absolute;left:50%;bottom:12%;width:66%;height:80%;margin-left:-33%;border-radius:50% 50% 46% 46%;background:radial-gradient(ellipse at 50% 55%,#fff 0%,#fff3c4 40%,rgba(255,224,122,.6) 70%,rgba(255,224,122,0) 100%);animation:coc .5s ease-in-out infinite}
+@keyframes coc{0%,100%{transform:scale(1,1);filter:brightness(1)}50%{transform:scale(1.05,.97);filter:brightness(1.3)}}
+.spiral{position:absolute;left:50%;bottom:12%;width:80%;height:84%;margin-left:-40%;border-radius:50%;border:4px dashed rgba(255,243,196,.8);animation:spin 1.2s linear infinite}
+.glowUp{animation:glowUp 1.2s ease-in both}
+@keyframes glowUp{from{filter:brightness(1)}to{filter:brightness(3) saturate(0)}}
+.hrays{position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;margin:-75% 0 0 -75%;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.3) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 66%);mask:radial-gradient(circle,#000 20%,transparent 66%);animation:spin 14s linear infinite}
+/* telas baixas (360x640): compacta o painel */
+.panel{height:252px}
+.prev{min-height:72px}
+@media (max-height:720px){.panel{height:232px}.prev{min-height:56px}.sub{display:none}.cardImg{height:44px!important}}
+</style>
+</helmet>
+<div class="app">
+
+  <!-- Topo: uma linha (igual Batalha / Ranking) -->
+  <div style="height: 64px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: #1d1611; border-bottom: 2px solid #4a3a2b">
+    <div role="img" aria-label="Kael, nível 24, 62% do XP para o nível 25" style="position: relative; width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #ffc94a; background: #33271d; overflow: hidden">
+      <div class="kidle" style="position: absolute; left: -18px; top: -6px; width: 80px; height: 80px"></div>
+      <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 7px; background: rgba(0,0,0,0.75)"><span class="xpf" style="display: block; width: 62%; height: 100%; background: linear-gradient(90deg, #2fc9a8, #8ff5dc)"></span></span>
+    </div>
+    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1">
+      <span class="lil" style="font-size: 16px; line-height: 1.1; white-space: nowrap">Kael <span style="font-family: Nunito, sans-serif; font-size: 12px; font-weight: 800; color: #ffc94a">Nv. 24</span></span>
+      <span style="font-size: 12px; font-weight: 800; color: #c9b9a2; white-space: nowrap">FC {{fcTxt}}</span>
+    </div>
+    <div role="img" aria-label="{{racaoAria}}" style="display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px 0 4px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 H21 L19 19 A2 2 0 0 1 17 20.5 H7 A2 2 0 0 1 5 19 Z" fill="#c77a3a" stroke="#5a2d10" stroke-width="1.3"></path><circle cx="8" cy="10.5" r="2.2" fill="#e8b070" stroke="#5a2d10" stroke-width="1"></circle><circle cx="12" cy="9" r="2.4" fill="#d89a5a" stroke="#5a2d10" stroke-width="1"></circle><circle cx="16" cy="10.5" r="2.2" fill="#e8b070" stroke="#5a2d10" stroke-width="1"></circle></svg>
+      <span style="font-size: 14px; font-weight: 900">{{racaoTxt}}</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 2px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b">
+      <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="Gemas" style="width: 24px; height: 24px; object-fit: contain">
+      <span style="font-size: 14px; font-weight: 900">320</span>
+      <button aria-label="Comprar gemas" onClick="{{tap}}" style="width: 26px; height: 26px; border-radius: 50%; border: 0; background: #5fd068; color: #0d2410; font-weight: 900; font-size: 18px; line-height: 1; padding: 0">+</button>
+    </div>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding: 6px 10px 10px">
+
+    <!-- PALCO: pet grande no pedestal, cenário da era -->
+    <div style="position: relative; flex: 1 1 auto; min-height: 140px; border-radius: 18px; overflow: hidden; border: 2px solid {{rarC}}; display: flex; flex-direction: column; background: #1d1611">
+      <div class="th {{thCls}}"></div>
+      <sc-if value="{{isE0}}" hint-placeholder-val="{{true}}">
+        <div class="L Lsky sky0"></div><div class="L Lcld cld0"></div><div class="L Lfar far0"></div><div class="L Lmid mid0"></div><div class="L Lgnd gnd0"></div>
+      </sc-if>
+      <sc-if value="{{isE2}}" hint-placeholder-val="{{false}}">
+        <div class="L Lsky sky2"></div><div class="L Lcld cld2"></div><div class="L Lfar far2"></div><div class="L Lmid mid2"></div><div class="L Lgnd gnd2"></div>
+      </sc-if>
+      <sc-if value="{{hasFloor}}" hint-placeholder-val="{{false}}">
+        <div class="floor {{flCls}}"></div>
+      </sc-if>
+      <sc-for list="{{deco}}" as="d" hint-placeholder-count="0">
+        <span class="{{d.cls}}" aria-hidden="true" style="left: {{d.l}}; bottom: {{d.b}}; width: {{d.w}}; height: {{d.h}}; animation-delay: {{d.dl}}"></span>
+      </sc-for>
+      <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(10,7,5,0.6) 0%, rgba(10,7,5,0) 26%, rgba(10,7,5,0) 80%, rgba(10,7,5,0.45) 100%)"></div>
+
+      <!-- cabeçalho -->
+      <div style="position: relative; z-index: 3; height: 48px; flex: none; display: flex; align-items: center; gap: 8px; padding: 4px 6px">
+        <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" aria-label="Voltar para a Batalha" style="width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #4a3a2b; background: rgba(51,39,29,0.92); color: #f6ecdf; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.1">
+          <span class="lil ol" style="font-size: 22px">Pets</span>
+          <span class="ol sub" style="font-size: 11px; font-weight: 900; color: #f0e2cc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">1 ativo · {{eraTxt}}</span>
+        </span>
+        <button onClick="{{startHatch}}" aria-label="Simular ovo do nível 20" style="height: 44px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 10px 0 4px; border-radius: 12px; border: 2px solid #ffc94a; background: rgba(51,39,29,0.92); color: #ffe07a; font-size: 12px; font-weight: 900; line-height: 1.05; text-align: left">
+          <img class="eggBtn" src="/_blob/f544fd53e8b81a4ea50e381786644253" alt="" style="width: 34px; height: 34px; object-fit: contain">
+          <span>Simular ovo<br><span style="color: #f6ecdf">(nível 20)</span></span>
+        </button>
+      </div>
+
+      <!-- área do pet -->
+      <div style="position: relative; z-index: 2; flex: 1; min-height: 0">
+        <div class="ped" style="bottom: 4%; width: min(62%, 300px); height: 15%">
+          <span class="pedRim" style="border-color: {{rarC}}"></span>
+        </div>
+        <div style="position: absolute; left: 50%; bottom: 11.5%; height: min(84%, 58vw, 380px); aspect-ratio: 1 / 1; transform: translateX(-50%)">
+          <div class="{{actCls}}" style="position: absolute; inset: 0">
+            <div class="aura {{auraCls}}" aria-hidden="true" style="background: {{auraBg}}"></div>
+            <sc-if value="{{auraRing}}" hint-placeholder-val="{{true}}">
+              <span class="ring {{rbwCls}}" aria-hidden="true" style="border-color: {{rarC}}"></span>
+            </sc-if>
+            <sc-if value="{{auraStrong}}" hint-placeholder-val="{{false}}">
+              <span class="rays {{rbwCls}}" aria-hidden="true" style="background: {{raysBg}}"></span>
+              <sc-for list="{{parts}}" as="q" hint-placeholder-count="6">
+                <span class="pt {{rbwCls}}" aria-hidden="true" style="left: {{q.l}}; background: {{q.c}}; box-shadow: 0 0 8px 2px {{q.c}}; animation-delay: {{q.d}}"></span>
+              </sc-for>
+            </sc-if>
+            <span class="shd {{shdCls}}" aria-hidden="true" style="bottom: -3%; width: 54%; height: 8%"></span>
+            <div class="{{motionCls}}" style="position: absolute; inset: 0">
+              <div class="breathe" style="position: absolute; inset: 0; transform-origin: 50% {{footPct}}">
+                <img src="{{petImg}}" alt="{{petAlt}}" class="{{petImgCls}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; transform: translateY({{footShift}})">
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- efeito do ataque (automático a cada ~2,4 s ou ao tocar no ataque) -->
+        <sc-if value="{{fxShot}}" hint-placeholder-val="{{false}}">
+          <span class="shot" aria-hidden="true" style="top: 52%; background: radial-gradient(circle, #fff 0 25%, {{fxC}} 60%); box-shadow: 0 0 14px 4px {{fxC}}"></span>
+          <span class="boom" aria-hidden="true" style="top: 42%; background: radial-gradient(circle, #fff 0 18%, {{fxC}} 50%, transparent 72%)"></span>
+        </sc-if>
+        <sc-if value="{{fxSlash}}" hint-placeholder-val="{{false}}">
+          <span class="slash" aria-hidden="true" style="right: 8%; top: 40%"></span>
+        </sc-if>
+        <sc-if value="{{fxShock}}" hint-placeholder-val="{{false}}">
+          <span class="shock" aria-hidden="true" style="bottom: 6%; border-color: {{fxC}}"></span>
+        </sc-if>
+        <sc-if value="{{fxOn}}" hint-placeholder-val="{{false}}">
+          <span class="atkTag lil ol" role="status" style="position: absolute; right: 8px; top: 4px; font-size: 16px; color: {{fxTagC}}">{{fxTag}}</span>
+        </sc-if>
+        <!-- trocar de pet -->
+        <button onClick="{{prevPet}}" aria-label="Pet anterior" style="position: absolute; left: 6px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.85); color: #f6ecdf; padding: 0; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button onClick="{{nextPet}}" aria-label="Próximo pet" style="position: absolute; right: 6px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.85); color: #f6ecdf; padding: 0; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+        <sc-if value="{{isPreview}}" hint-placeholder-val="{{false}}">
+          <span class="ol" style="position: absolute; left: 8px; bottom: 6px; padding: 2px 8px; border-radius: 8px; background: rgba(14,10,7,0.8); border: 1px dashed #c9b9a2; font-size: 11px; font-weight: 900; color: #f6ecdf">{{previewTxt}}</span>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- nome, raridade, estrelas, nível, estágio -->
+    <div style="flex: none; display: flex; align-items: center; gap: 6px; min-height: 54px">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span style="display: flex; align-items: center; gap: 6px; min-width: 0">
+          <span class="lil ol" style="font-size: 21px; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{petName}}</span>
+          <sc-if value="{{isEq}}" hint-placeholder-val="{{true}}">
+            <span role="img" aria-label="Equipado" style="flex: none; width: 20px; height: 20px; border-radius: 50%; background: #5fd068; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 12 10 18 20 6"></polyline></svg></span>
+          </sc-if>
+        </span>
+        <span style="display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; min-width: 0; overflow: hidden">
+          <span class="{{rarPillCls}}" style="flex: none; padding: 1px 7px; border-radius: 7px; font-size: 11px; font-weight: 900; color: #16110d; background: {{rarC}}">{{rarName}}</span>
+          <span role="img" aria-label="{{starsAria}}" style="display: flex; gap: 1px; flex: none">
+            <sc-for list="{{stars}}" as="st" hint-placeholder-count="5">
+              <svg class="{{st.cls}}" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay: {{st.d}}"><path d="M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z" fill="{{st.f}}" stroke="#6a3a08" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+            </sc-for>
+          </span>
+          <span class="{{lvCls}}" style="font-size: 13px; font-weight: 900; color: #ffe07a; white-space: nowrap">{{lvTxt}}</span>
+        </span>
+      </div>
+      <div role="group" aria-label="Estágios do pet (toque para ver)" style="flex: none; position: relative; display: flex; gap: 2px">
+        <span aria-hidden="true" style="position: absolute; left: 22px; right: 22px; top: 13px; height: 3px; background: #4a3a2b; border-radius: 2px"></span>
+        <sc-for list="{{stages}}" as="g" hint-placeholder-count="3">
+          <button onClick="{{g.pick}}" aria-label="{{g.aria}}" aria-pressed="{{g.on}}" style="position: relative; width: 44px; height: 48px; border: 0; border-radius: 10px; background: {{g.bg}}; padding: 4px 0 0; display: flex; flex-direction: column; align-items: center; gap: 3px; color: {{g.fg}}">
+            <span class="{{g.dotCls}}" style="width: 16px; height: 16px; border-radius: 50%; border: 3px solid {{g.ring}}; background: {{g.fill}}"></span>
+            <span style="font-size: 10px; font-weight: 900; line-height: 1">{{g.lbl}}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- abas -->
+    <div role="tablist" aria-label="Seções do pet" style="height: 44px; flex: none; display: flex; gap: 4px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+        <button role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" class="lil" style="flex: 1; min-width: 0; border-radius: 12px; border: 2px solid {{t.bd}}; background: {{t.bg}}; color: {{t.fg}}; font-size: 15px; padding: 0">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- painel (1 aba por vez, sem rolagem) -->
+    <div class="panel" style="flex: none; position: relative; border-radius: 16px; background: #1d1611; border: 2px solid #4a3a2b; padding: 8px; display: flex; flex-direction: column">
+
+      <!-- DETALHES -->
+      <sc-if value="{{tDet}}" hint-placeholder-val="{{true}}">
+        <div class="panelIn" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px">
+          <div style="height: 34px; flex: none; display: flex; gap: 4px">
+            <div style="flex: 1.3; min-width: 0; border-radius: 10px; background: #33271d; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; line-height: 1.1">
+              <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Bônus na FC</span>
+              <span style="font-size: 13px; font-weight: 900; white-space: nowrap"><span style="color: #7ef08a">{{bonusTxt}}</span> <span style="font-size: 10px; color: #c9b9a2">máx {{bonusMax}}</span></span>
+            </div>
+            <div style="flex: 1; min-width: 0; border-radius: 10px; background: #33271d; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; line-height: 1.1">
+              <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Soma à FC</span>
+              <span style="font-size: 13px; font-weight: 900; color: #ffe07a; white-space: nowrap">{{bonusFc}}</span>
+            </div>
+            <div style="flex: 1; min-width: 0; border-radius: 10px; background: #33271d; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; line-height: 1.1">
+              <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">{{eraShort}}</span>
+              <span style="font-size: 13px; font-weight: 900; white-space: nowrap">{{moveTxt}}</span>
+            </div>
+          </div>
+
+          <!-- prévia NA BATALHA: Kael (folha de parado) + pet atrás dele, no chão -->
+          <div class="prev" role="img" aria-label="{{prevAria}}" style="position: relative; flex: 1; border-radius: 12px; overflow: hidden; border: 1px solid #4a3a2b; background: #7fb3d9">
+            <div class="L Lsky sky2"></div><div class="L Lcld cld2"></div><div class="L Lfar far2"></div><div class="L Lmid mid2"></div><div class="L Lgnd gnd2"></div>
+            <div style="position: absolute; left: 4%; top: {{bpTop}}; height: {{bpH}}; aspect-ratio: 1 / 1">
+              <span class="shd {{shdCls}}" aria-hidden="true" style="bottom: -5%; width: 60%; height: 12%"></span>
+              <div class="{{motionCls}}" style="position: absolute; inset: 0">
+                <div class="breathe" style="position: absolute; inset: 0; transform-origin: 50% {{footPct}}">
+                  <img src="{{petImg}}" alt="" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; transform: translateY({{footShift}})">
+                </div>
+              </div>
+            </div>
+            <div style="position: absolute; left: 26%; top: 9.7%; height: 74%; aspect-ratio: 1 / 1">
+              <span class="shd" aria-hidden="true" style="bottom: 1%; width: 46%; height: 9%"></span>
+              <div class="kidle" style="position: absolute; inset: 0"></div>
+            </div>
+            <span class="ol" style="position: absolute; left: 6px; top: 4px; padding: 1px 7px; border-radius: 7px; background: rgba(14,10,7,0.75); font-size: 11px; font-weight: 900; color: {{prevTagC}}">{{prevTag}}</span>
+          </div>
+
+          <sc-if value="{{owned}}" hint-placeholder-val="{{true}}">
+            <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px">
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="display: flex; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 900; white-space: nowrap">
+                  <span>Ração <span style="color: #ffe07a">{{feedTxt}}</span></span>
+                  <span style="color: #c9b9a2; overflow: hidden; text-overflow: ellipsis">{{feedNote}}</span>
+                </span>
+                <span class="bar"><span class="barF" style="width: {{feedPct}}; background: linear-gradient(90deg, #c77a3a, #ffc94a)"><span class="shine"></span></span></span>
+              </div>
+              <button onClick="{{askReset}}" class="sec" aria-label="{{resetAria}}" style="flex: none; height: 44px; padding: 0 10px; border-radius: 12px; font-size: 11px; font-weight: 900; line-height: 1.05">Redefinir<br>nível</button>
+            </div>
+            <div style="height: 52px; flex: none; display: flex; gap: 8px; padding-bottom: 4px">
+              <button onClick="{{equip}}" class="{{eqCls}}" aria-pressed="{{isEqS}}" style="flex: 1; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px">{{eqTxt}}</button>
+              <button onClick="{{feed}}" class="{{feedCls}}" aria-disabled="{{feedDis}}" style="flex: 1.25; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; line-height: 1.05">{{feedBtn}}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{notOwned}}" hint-placeholder-val="{{false}}">
+            <div style="flex: none; display: flex; flex-direction: column; gap: 6px">
+              <span style="font-size: 12px; font-weight: 900; line-height: 1.25"><span style="color: #ff8a7a">Não obtido.</span> Como conseguir: <span style="color: #ffe07a">{{howTxt}}</span></span>
+              <button onClick="{{goColl}}" class="sec" style="height: 48px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px">Ver coleção</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ATAQUES -->
+      <sc-if value="{{tAtk}}" hint-placeholder-val="{{false}}">
+        <div class="panelIn" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px">
+          <span style="flex: none; font-size: 12px; font-weight: 800; color: #c9b9a2; line-height: 1.2">Ataca <b style="color: #f6ecdf">sozinho</b> a cada ~2 s. A chance sobe com <b style="color: #ffc94a">estrelas</b> e <b style="color: #ffc94a">nível</b>. Toque para ver.</span>
+          <sc-for list="{{atks}}" as="k" hint-placeholder-count="3">
+            <button onClick="{{k.play}}" aria-label="{{k.aria}}" style="flex: 1; min-height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 12px; border: 2px solid {{k.bd}}; background: #33271d; color: #f6ecdf; text-align: left">
+              <span style="flex: none; width: 36px; height: 36px; border-radius: 10px; background: {{k.ibg}}; display: flex; align-items: center; justify-content: center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16110d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{k.icon}}"></path></svg>
+              </span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+                <span style="font-size: 14px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{k.name}}</span>
+                <span style="font-size: 11px; font-weight: 800; color: {{k.c}}; white-space: nowrap">{{k.kind}} · dano {{k.mult}}</span>
+              </span>
+              <span style="flex: none; width: 32%; display: flex; flex-direction: column; gap: 2px; line-height: 1.1">
+                <span style="display: flex; justify-content: space-between; align-items: baseline; gap: 4px; white-space: nowrap">
+                  <span class="lil" style="font-size: 17px; color: {{k.c}}">{{k.now}}</span>
+                  <span style="font-size: 10px; font-weight: 900; color: #c9b9a2">máx {{k.max}}</span>
+                </span>
+                <span class="bar" style="height: 8px"><span class="barF" style="width: {{k.w}}; background: {{k.c}}"></span><span aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: {{k.mw}}; width: 2px; background: #f6ecdf"></span></span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- EVOLUIR -->
+      <sc-if value="{{tEvo}}" hint-placeholder-val="{{false}}">
+        <div class="panelIn" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px">
+          <div style="flex: 1; min-height: 0; display: flex; gap: 5px">
+            <sc-for list="{{evoCards}}" as="c" hint-placeholder-count="3">
+              <button onClick="{{c.pick}}" aria-label="{{c.aria}}" style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px; border-radius: 12px; border: 2px solid {{c.bd}}; background: {{c.bg}}; color: #f6ecdf">
+                <span class="cardImg" style="position: relative; width: 100%; height: 64px; flex: none">
+                  <span style="position: absolute; left: 18%; right: 18%; bottom: 2px; height: 10px; border-radius: 50%; background: rgba(0,0,0,0.45)"></span>
+                  <span class="aura {{c.aCls}}" aria-hidden="true" style="background: {{c.aBg}}; height: 70%"></span>
+                  <img class="{{c.imgCls}}" src="{{c.img}}" alt="" style="position: absolute; left: 50%; bottom: 0; height: 100%; aspect-ratio: 1 / 1; transform: translate(-50%, {{c.shift}}); object-fit: contain">
+                </span>
+                <span class="lil" style="font-size: 14px; line-height: 1">{{c.name}}</span>
+                <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; line-height: 1">{{c.req}}</span>
+                <span style="padding: 1px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; background: {{c.sbg}}; color: {{c.sfg}}; white-space: nowrap">{{c.status}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <span style="flex: none; font-size: 11px; font-weight: 800; color: #c9b9a2; line-height: 1.25">Aura: <b style="color: #f6ecdf">leve</b> · <b style="color: {{rarC}}">cor da raridade</b> · <b style="color: #ffe07a">forte com partículas</b>{{auraExtra}}. Estrelas: cópia repetida = +10 fragmentos (10/20/30/40 para cada estrela).</span>
+          <button onClick="{{evolve}}" class="{{evoCls}}" aria-disabled="{{evoDis}}" style="height: 52px; flex: none; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; margin-bottom: 4px">{{evoTxt}}</button>
+        </div>
+      </sc-if>
+
+      <!-- COLEÇÃO -->
+      <sc-if value="{{tCol}}" hint-placeholder-val="{{false}}">
+        <div class="panelIn" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px">
+          <div style="flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px">
+            <sc-for list="{{coll}}" as="o" hint-placeholder-count="8">
+              <button onClick="{{o.pick}}" aria-label="{{o.aria}}" aria-pressed="{{o.on}}" class="tile {{o.cls}}" style="position: relative; height: 50px; min-width: 0; border-radius: 11px; border: 2px solid {{o.bd}}; background: {{o.bg}}; padding: 0; overflow: hidden; color: #f6ecdf">
+                <img class="{{o.imgCls}}" src="{{o.img}}" alt="" style="position: absolute; left: 50%; top: 1px; height: 36px; width: 36px; margin-left: -18px; object-fit: contain">
+                <span class="ol" style="position: absolute; left: 0; right: 0; bottom: 1px; font-size: 10px; font-weight: 900; line-height: 1.1; color: {{o.lc}}">{{o.lbl}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{colPrism}}" hint-placeholder-val="{{true}}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border-radius: 12px; background: #2a1f3a; border: 2px solid #b07cff">
+              <span style="display: flex; align-items: center; gap: 6px; white-space: nowrap">
+                <span class="lil" style="font-size: 14px">Raposa de cristal</span>
+                <span class="rbw rare" style="padding: 1px 7px; border-radius: 7px; font-size: 10px; font-weight: 900; color: #16110d">O MAIS RARO</span>
+                <span style="margin-left: auto; font-size: 12px; font-weight: 900; color: #e6d8ff">{{fragTxt}}</span>
+              </span>
+              <span class="bar" style="flex: none"><span class="barF rbw" style="width: {{fragPct}}"></span></span>
+              <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px">
+                <sc-for list="{{fragSrc}}" as="f" hint-placeholder-count="5">
+                  <span style="min-width: 0; border-radius: 7px; background: #1d1611; padding: 2px 4px; display: flex; flex-direction: column; justify-content: center; line-height: 1.1">
+                    <span style="font-size: 10px; font-weight: 800; line-height: 1.05; color: #c9b9a2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.n}}</span>
+                    <span style="font-size: 10px; font-weight: 900; line-height: 1.05; color: #e6d8ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.v}}</span>
+                  </span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{colOther}}" hint-placeholder-val="{{false}}">
+            <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: #33271d; border: 2px solid {{rarC}}">
+              <span style="display: flex; align-items: center; gap: 6px; white-space: nowrap">
+                <span class="lil" style="font-size: 16px">{{petName}}</span>
+                <span style="font-size: 11px; font-weight: 900; color: #c9b9a2">{{eraLong}}</span>
+              </span>
+              <span style="font-size: 12px; font-weight: 900; line-height: 1.25">{{colLine}}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{colCount}}</span>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+        <span class="toast" role="status" style="position: absolute; left: 50%; top: -42px; transform: translateX(-50%); z-index: 6; padding: 6px 12px; border-radius: 10px; background: #0e0a07; border: 2px solid #ffc94a; font-size: 12px; font-weight: 900; white-space: nowrap">{{toastTxt}}</span>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- CONFIRMAR REDEFINIR -->
+  <sc-if value="{{confirmOn}}" hint-placeholder-val="{{false}}">
+    <div role="dialog" aria-label="Confirmar redefinir nível" style="position: absolute; inset: 0; z-index: 45; background: rgba(8,6,4,0.85); display: flex; align-items: center; justify-content: center; padding: 20px">
+      <div class="panelIn" style="width: 100%; max-width: 340px; border-radius: 18px; background: #1d1611; border: 2px solid #ffc94a; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <span class="lil" style="font-size: 22px">Redefinir nível?</span>
+        <span style="font-size: 13px; font-weight: 800; line-height: 1.35">{{petName}} volta para o <b>Nv 1</b>. Você recebe de volta <b style="color: #ffe07a">{{refundTxt}}</b> de ração (80% de {{spentTxt}}). Estrelas e estágio ficam.</span>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{cancelReset}}" class="sec" style="flex: 1; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px">Cancelar</button>
+          <button onClick="{{doReset}}" class="gold" style="flex: 1; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px">Redefinir</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- CHOCAR O OVO: treme, racha com luz, explode em brilho, o pet aparece no chão -->
+  <sc-if value="{{hatchOn}}" hint-placeholder-val="{{false}}">
+    <div class="ovl" role="dialog" aria-label="Chocando o ovo do nível 20">
+      <span class="lil ol" style="font-size: 26px; text-align: center">{{hTitle}}</span>
+      <div class="scene">
+        <span class="hrays" aria-hidden="true" style="opacity: {{hRaysOp}}"></span>
+        <span aria-hidden="true" style="position: absolute; left: 22%; right: 22%; bottom: 8%; height: 9%; border-radius: 50%; background: rgba(0,0,0,0.5)"></span>
+        <sc-if value="{{hEgg}}" hint-placeholder-val="{{true}}">
+          <div class="{{hEggCls}}" style="position: absolute; left: 22%; bottom: 12%; width: 56%; aspect-ratio: 1 / 1">
+            <img src="/_blob/f544fd53e8b81a4ea50e381786644253" alt="Ovo de pet" style="width: 100%; height: 100%; object-fit: contain; display: block">
+            <sc-if value="{{hCrack}}" hint-placeholder-val="{{false}}">
+              <span class="beam" aria-hidden="true" style="transform: rotate(-28deg)"></span>
+              <span class="beam" aria-hidden="true" style="transform: rotate(4deg); animation-delay: .25s"></span>
+              <span class="beam" aria-hidden="true" style="transform: rotate(32deg); animation-delay: .5s"></span>
+              <svg viewBox="0 0 100 100" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">
+                <polyline class="crk" points="30,44 40,52 36,60 48,66 46,76 56,82" fill="none" stroke="#fff7d0" stroke-width="3.2" stroke-linejoin="round" style="filter: drop-shadow(0 0 4px #ffe07a)"></polyline>
+                <polyline class="crk" points="62,36 56,46 64,54 58,62" fill="none" stroke="#fff7d0" stroke-width="2.6" stroke-linejoin="round" style="animation-delay: .35s; filter: drop-shadow(0 0 4px #ffe07a)"></polyline>
+                <polyline class="crk" points="48,30 52,38 46,44" fill="none" stroke="#fff7d0" stroke-width="2.2" stroke-linejoin="round" style="animation-delay: .6s; filter: drop-shadow(0 0 4px #ffe07a)"></polyline>
+              </svg>
+            </sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{hBurst}}" hint-placeholder-val="{{false}}">
+          <span class="burstRing" aria-hidden="true"></span>
+          <sc-for list="{{spokes}}" as="sp" hint-placeholder-count="12">
+            <span class="spoke" aria-hidden="true" style="transform: rotate({{sp.r}})"><span class="spk" style="animation-delay: {{sp.d}}"></span></span>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{hReveal}}" hint-placeholder-val="{{false}}">
+          <div style="position: absolute; left: 12%; bottom: 10%; width: 76%; aspect-ratio: 1 / 1">
+            <span class="aura a1" aria-hidden="true" style="background: {{hAuraBg}}"></span>
+            <div class="reveal" style="position: absolute; inset: 0; transform-origin: 50% 100%">
+              <div class="breathe" style="position: absolute; inset: 0; transform-origin: 50% {{hFootPct}}">
+                <img src="{{hImg}}" alt="{{hAlt}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; transform: translateY({{hShift}})">
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{hBurst}}" hint-placeholder-val="{{false}}">
+          <span class="flash" aria-hidden="true"></span>
+        </sc-if>
+      </div>
+      <sc-if value="{{hRevealCard}}" hint-placeholder-val="{{false}}">
+        <div class="cardIn" style="width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 18px; background: #1d1611; border: 2px solid {{hRarC}}">
+          <span style="font-size: 14px; font-weight: 900; text-align: center">{{hLine}}</span>
+          <button onClick="{{closeHatch}}" class="gold pulse" style="width: 100%; max-width: 240px; height: 52px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 20px">Pegar pet</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{hWaiting}}" hint-placeholder-val="{{true}}">
+        <span style="font-size: 13px; font-weight: 900; color: #e8dccb; text-align: center; line-height: 1.35">Sorteio grátis: <span style="color: #e8e2d8">79% Básico</span> · <span style="color: #4aa3ff">21% Raro</span><br>nunca Lendário</span>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- EVOLUÇÃO: casulo de luz, explosão, revela a forma nova com a aura do estágio -->
+  <sc-if value="{{evoOn}}" hint-placeholder-val="{{false}}">
+    <div class="ovl" role="dialog" aria-label="Evolução do pet">
+      <span class="lil ol" style="font-size: 26px; text-align: center">{{eTitle}}</span>
+      <div class="scene">
+        <span class="hrays" aria-hidden="true" style="opacity: {{eRaysOp}}"></span>
+        <span aria-hidden="true" style="position: absolute; left: 20%; right: 20%; bottom: 8%; height: 9%; border-radius: 50%; background: rgba(0,0,0,0.5)"></span>
+        <div style="position: absolute; left: 12%; bottom: 10%; width: 76%; aspect-ratio: 1 / 1">
+          <sc-if value="{{eNew}}" hint-placeholder-val="{{false}}">
+            <span class="aura {{eAuraCls}}" aria-hidden="true" style="background: {{eAuraBg}}"></span>
+            <sc-if value="{{eStrong}}" hint-placeholder-val="{{false}}">
+              <span class="rays {{rbwCls}}" aria-hidden="true" style="background: {{raysBg}}"></span>
+              <sc-for list="{{parts}}" as="q" hint-placeholder-count="6">
+                <span class="pt {{rbwCls}}" aria-hidden="true" style="left: {{q.l}}; background: {{q.c}}; box-shadow: 0 0 8px 2px {{q.c}}; animation-delay: {{q.d}}"></span>
+              </sc-for>
+            </sc-if>
+          </sc-if>
+          <div class="{{eWrapCls}}" style="position: absolute; inset: 0; transform-origin: 50% 100%">
+            <div class="breathe" style="position: absolute; inset: 0; transform-origin: 50% {{eFootPct}}">
+              <img class="{{eImgCls}}" src="{{eImg}}" alt="{{eAlt}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: contain; transform: translateY({{eShift}})">
+            </div>
+          </div>
+        </div>
+        <sc-if value="{{eCoc}}" hint-placeholder-val="{{false}}">
+          <span class="spiral" aria-hidden="true"></span>
+          <span class="coc" aria-hidden="true"></span>
+        </sc-if>
+        <sc-if value="{{eBurst}}" hint-placeholder-val="{{false}}">
+          <span class="burstRing" aria-hidden="true"></span>
+          <sc-for list="{{spokes}}" as="sp" hint-placeholder-count="12">
+            <span class="spoke" aria-hidden="true" style="transform: rotate({{sp.r}})"><span class="spk" style="animation-delay: {{sp.d}}"></span></span>
+          </sc-for>
+          <span class="flash" aria-hidden="true"></span>
+        </sc-if>
+      </div>
+      <sc-if value="{{eNew}}" hint-placeholder-val="{{false}}">
+        <div class="cardIn" style="width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 18px; background: #1d1611; border: 2px solid {{rarC}}">
+          <span style="font-size: 14px; font-weight: 900; text-align: center">{{eLine}}</span>
+          <button onClick="{{closeEvo}}" class="gold pulse" style="width: 100%; max-width: 240px; height: 52px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 20px">Continuar</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Pets V2. Regras do dono (2026-11-12): libera no Nv 20 com 1 ovo (79% Básico / 21% Raro, nunca Lendário); estrelas 1-5;
+// nível 1-90; estágios filhote → médio (Nv 30) → evoluído (Nv 60); 3 ataques automáticos (~90/7/3 no 1★ Nv 1);
+// 1 equipado; bônus na FC até 20% (Prismático 25%); Prismático por 1000 fragmentos.
+// Custo da ração, raridade de cada espécie e "como conseguir" = PROPOSTA de protótipo (confirmar com PO / fps-e2).
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', up: '/_blob/ca8bcec3fced3c13b36555744659895a', summon: '/_blob/07a146ee324bece467fc05bedf4435b0', legendary: '/_blob/266edcaffe0fe5d99485bbe84d2d6c05', hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var RAR = [
+  { n: 'Básico', c: '#e8e2d8', rgb: '232,226,216', max: 8 },
+  { n: 'Raro', c: '#4aa3ff', rgb: '74,163,255', max: 11 },
+  { n: 'Épico', c: '#b07cff', rgb: '176,124,255', max: 14 },
+  { n: 'Mítico', c: '#ff5a5a', rgb: '255,90,90', max: 17 },
+  { n: 'Lendário', c: '#ffc94a', rgb: '255,201,74', max: 20 },
+  { n: 'Prismático', c: '#8ff5ff', rgb: '143,245,255', max: 25 }
+];
+var STG = ['Filhote', 'Médio', 'Evoluído'], STG_REQ = [1, 30, 60], STG_CAP = [30, 60, 90];
+// pés: última linha opaca de cada PNG / 512 (medido nos arquivos de assets/pets)
+var PETS = [
+  { id: 'mamute', n: 'Mamute', era: 0, eraN: 'Pré-História', r: 0, fly: false, fx: '#bfe6ff',
+    img: ['/_blob/a395abb2b61c877d72952084dedf26f9', '/_blob/f8b78b358e1c17ac2cddf616380f1954', '/_blob/1db13b539820b25a4c1d668c7c699396'], foot: [0.949, 0.953, 0.981],
+    atk: ['Chifrada', 'Jato de tromba', 'Tremor'], how: 'ovo do Nv 20 (79%) ou ovo da Pré-História' },
+  { id: 'esfinge', n: 'Esfinge', era: 1, eraN: 'Antiguidade', r: 1, fly: false, fx: '#ffd36a',
+    img: ['/_blob/fa413530233d0a00733dd91e5f209163', '/_blob/968b22b78282e798cf505461467d511a', '/_blob/f3cf376df05d882f29a48f7088cf3b21'], foot: [0.936, 0.988, 1],
+    atk: ['Garra', 'Raio do sol', 'Tempestade de areia'], how: 'ovo do Nv 20 (21%) ou ovo da Antiguidade' },
+  { id: 'dragao', n: 'Dragão', era: 2, eraN: 'Medieval', r: 2, fly: false, fx: '#ff8a3a',
+    img: ['/_blob/214bbe0911a92842eb7bc3418f0d7fe3', '/_blob/ff7f571bd90ca393e4f569fd0c30203b', '/_blob/35a1caf5a506ee22de74a59a3a2b0e35'], foot: [0.949, 0.984, 0.949],
+    atk: ['Mordida', 'Bola de fogo', 'Rabada'], how: 'ovo do chefe da era Medieval' },
+  { id: 'papagaio', n: 'Papagaio-fênix', era: 3, eraN: 'Pólvora', r: 2, fly: true, fx: '#ff6a3a',
+    img: ['/_blob/512f66d72ab75b464e6aadd17f8da816', '/_blob/374deab8d1dab02b31e90134f8f7c0cd', '/_blob/7b1cec387f5210eb5e43384622737832'], foot: [0.949, 1, 1],
+    atk: ['Bicada', 'Pena de fogo', 'Rasante'], how: 'ovo do chefe da era da Pólvora' },
+  { id: 'cao', n: 'Cão mecânico', era: 4, eraN: 'Industrial', r: 3, fly: false, fx: '#ffd36a',
+    img: ['/_blob/0d399cd624e83fdd506e5e9888ec5894', '/_blob/8438d7548cd54946f46707e602062c39', '/_blob/5acafd676f8733d0217345bac56193eb'], foot: [0.949, 1, 1],
+    atk: ['Mordida de aço', 'Parafuso disparado', 'Jato de vapor'], how: 'ovo do chefe da era Industrial' },
+  { id: 'cerbero', n: 'Cérbero', era: 7, eraN: 'Submundo', r: 3, fly: false, fx: '#ff4a2a',
+    img: ['/_blob/a026d7ff4f58cb5e38f8a9bcb9fc00ff', '/_blob/b02b2ce80822fc8b8d12780cf0097435', '/_blob/0c63a6ee42b92025d1c77cc04b45113f'], foot: [0.938, 0.951, 0.949],
+    atk: ['Mordida tripla', 'Chama do submundo', 'Uivo'], how: 'ovo do chefe do Submundo' },
+  { id: 'pegaso', n: 'Pégaso', era: 8, eraN: 'Celestial', r: 4, fly: true, fx: '#fff3c4',
+    img: ['/_blob/66bc8414263e975002b576b0ab1f157d', '/_blob/d17e921de171fd8cc2b225a3b4aab545', '/_blob/e9a451c3c5508168cc3dc6dbd99ad74a'], foot: [1, 0.986, 1],
+    atk: ['Coice', 'Estrela cadente', 'Vendaval'], how: 'ovo do chefe Celestial' },
+  { id: 'prisma', n: 'Raposa de cristal', era: 9, eraN: 'Prismático', r: 5, fly: false, fx: '#8ff5ff',
+    img: ['/_blob/e753821b8a7c7e196fc83974078f5131', '/_blob/2e37c32c38e935c0a151be2f8aab46fd', '/_blob/4fd3b7ac0b32c806fb7583ce6059e114'], foot: [0.998, 0.973, 0.957],
+    atk: ['Patada de cristal', 'Lança de cristal', 'Prisma'], how: '1000 fragmentos prismáticos' }
+];
+var FRAG_MAX = 1000;
+var FRAG_SRC = [
+  { n: 'Evento mensal', v: '+100' }, { n: 'VIP 10 (1 vez)', v: '+500' }, { n: 'Arena semanal', v: '+[QTD]' },
+  { n: 'Chefe da era', v: '+8' }, { n: 'Torre', v: '+[QTD]' }
+];
+var ICON = {
+  b: 'M5 19 L19 5 M14 5 H19 V10 M5 14 L10 19',
+  c: 'M12 3 V7 M12 17 V21 M3 12 H7 M17 12 H21 M12 9 A3 3 0 1 0 12.01 9',
+  m: 'M3 17 C7 11 17 11 21 17 M6 13 L4 9 M12 11 V6 M18 13 L20 9'
+};
+var FC_BASE = 12480;
+var DECO = {
+  1: [{ cls: 'pyr', l: '6%', b: '30%', w: '30%', h: 'auto', dl: '0s' }, { cls: 'pyr', l: '64%', b: '30%', w: '22%', h: 'auto', dl: '0s' }, { cls: 'cloudc', l: '30%', b: '78%', w: 'auto', h: '14%', dl: '-8s' }],
+  3: [{ cls: 'wave', l: '0', b: '30%', w: '100%', h: '6%', dl: '0s' }, { cls: 'mast', l: '78%', b: '36%', w: '4px', h: '30%', dl: '0s' }, { cls: 'sail', l: '79%', b: '42%', w: '12%', h: '20%', dl: '0s' }, { cls: 'mast', l: '12%', b: '36%', w: '3px', h: '20%', dl: '0s' }, { cls: 'sail', l: '13%', b: '40%', w: '8%', h: '13%', dl: '-1.4s' }],
+  4: [{ cls: 'chim', l: '8%', b: '30%', w: '7%', h: '42%', dl: '0s' }, { cls: 'chim', l: '20%', b: '30%', w: '5%', h: '30%', dl: '0s' }, { cls: 'chim', l: '82%', b: '30%', w: '8%', h: '38%', dl: '0s' }, { cls: 'smoke', l: '9%', b: '72%', w: '26px', h: '26px', dl: '0s' }, { cls: 'smoke', l: '83%', b: '68%', w: '26px', h: '26px', dl: '-2s' }, { cls: 'smoke', l: '20%', b: '60%', w: '26px', h: '26px', dl: '-1s' }],
+  7: [{ cls: 'ember', l: '12%', b: '20%', w: '5px', h: '5px', dl: '0s' }, { cls: 'ember', l: '28%', b: '14%', w: '5px', h: '5px', dl: '-1.2s' }, { cls: 'ember', l: '72%', b: '18%', w: '5px', h: '5px', dl: '-0.6s' }, { cls: 'ember', l: '86%', b: '24%', w: '5px', h: '5px', dl: '-2.1s' }, { cls: 'ember', l: '50%', b: '10%', w: '5px', h: '5px', dl: '-1.7s' }],
+  8: [{ cls: 'cloudc', l: '6%', b: '64%', w: 'auto', h: '14%', dl: '0s' }, { cls: 'cloudc', l: '62%', b: '74%', w: 'auto', h: '14%', dl: '-13s' }, { cls: 'cloudc', l: '40%', b: '36%', w: 'auto', h: '14%', dl: '-6s' }],
+  9: [{ cls: 'shard', l: '8%', b: '28%', w: '7%', h: 'auto', dl: '0s' }, { cls: 'shard', l: '16%', b: '28%', w: '4%', h: 'auto', dl: '-.8s' }, { cls: 'shard', l: '80%', b: '28%', w: '8%', h: 'auto', dl: '-1.4s' }, { cls: 'shard', l: '90%', b: '28%', w: '4%', h: 'auto', dl: '-.4s' }]
+};
+function need(n) { return Math.round(20 * Math.pow(1.045, n - 1)); } // PROPOSTA de custo (fps-e2 fecha a curva)
+function spentTo(lv) { var t = 0; for (var i = 1; i < lv; i++) t += need(i); return t; }
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function p1(v) { return v.toFixed(1).replace('.', ',') + '%'; }
+function chances(st, lv) { var q = 0.5 * (st - 1) / 4 + 0.5 * (lv - 1) / 89; var c = 7 + 5 * q, m = 3 + 3 * q; return { b: 100 - c - m, c: c, m: m }; }
+function bonus(P, o) { if (!o) return 0; return RAR[P.r].max * (0.4 + 0.6 * (o.lv - 1) / 89) * (0.75 + 0.05 * o.st); }
+function idxOf(id) { for (var i = 0; i < PETS.length; i++) if (PETS[i].id === id) return i; return 0; }
+function auraBg(r, stg, strong) {
+  var c = RAR[r].rgb;
+  if (r === 5) return stg === 0 ? 'radial-gradient(ellipse at 50% 100%, rgba(220,255,255,0.55), rgba(143,245,255,0) 68%)'
+    : 'radial-gradient(ellipse at 50% 100%, rgba(255,120,200,' + (strong ? 0.75 : 0.55) + '), rgba(120,200,255,0.35) 40%, rgba(143,245,255,0) 70%)';
+  if (stg === 0) return 'radial-gradient(ellipse at 50% 100%, rgba(255,250,235,0.5), rgba(255,250,235,0) 68%)';
+  if (stg === 1) return 'radial-gradient(ellipse at 50% 100%, rgba(' + c + ',0.6), rgba(' + c + ',0) 68%)';
+  return 'radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.55), rgba(' + c + ',0.75) 28%, rgba(' + c + ',0) 70%)';
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      sel: 'mamute', view: null, tab: 'det', eq: 'mamute', racao: 1240, frag: 340,
+      own: { mamute: { st: 2, lv: 30, xp: 0, stage: 0, spent: spentTo(30) }, dragao: { st: 3, lv: 61, xp: 12, stage: 2, spent: spentTo(61) + 12 } },
+      fx: null, fxN: 0, toast: null, toastN: 0, lvPop: false, confirm: false,
+      hatch: null, hRes: null, evo: null, evoFrom: 0
+    };
+    this.tm = [];
+  }
+  componentDidMount() {
+    var self = this;
+    this.iv = setInterval(function () { var s = self.state; if (!s.hatch && !s.evo && !s.confirm && !s.fx) self.autoAtk(); }, 2400);
+  }
+  componentWillUnmount() { clearInterval(this.iv); this.tm.forEach(clearTimeout); }
+  later(fn, ms) { var t = setTimeout(fn, ms); this.tm.push(t); return t; }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.7; a.play().catch(function () {}); } catch (e) {} }
+  toast(t) { var self = this, n = this.state.toastN + 1; this.setState({ toast: t, toastN: n }); this.later(function () { if (self.state.toastN === n) self.setState({ toast: null }); }, 2200); }
+  playAtk(k, loud) {
+    var self = this, n = this.state.fxN + 1;
+    if (loud) this.sfx(k === 'c' ? SND.hit : SND.tap);
+    this.setState({ fx: k, fxN: n });
+    this.later(function () { if (self.state.fxN === n) self.setState({ fx: null }); }, 950);
+  }
+  autoAtk() {
+    var P = PETS[idxOf(this.state.sel)], o = this.state.own[P.id];
+    var ch = o ? chances(o.st, o.lv) : chances(1, 1), r = Math.random() * 100;
+    this.playAtk(r < ch.c ? 'c' : r < ch.c + ch.m ? 'm' : 'b', false);
+  }
+  setOwn(id, patch) { var own = Object.assign({}, this.state.own); own[id] = Object.assign({}, own[id], patch); return own; }
+  feed() {
+    var s = this.state, P = PETS[idxOf(s.sel)], o = s.own[P.id];
+    if (!o) return;
+    var cap = STG_CAP[o.stage];
+    if (o.lv >= 90) { this.toast('Nível máximo (90)'); return; }
+    if (o.lv >= cap) { this.sfx(SND.tap); this.toast('Evolua para passar do Nv ' + cap); this.setState({ tab: 'evo' }); return; }
+    var nd = need(o.lv), give = Math.min(25, nd - o.xp, s.racao);
+    if (give <= 0) { this.toast('Sem ração: vem dos baús e do offline'); return; }
+    var xp = o.xp + give, lv = o.lv, up = false;
+    if (xp >= nd) { lv++; xp = 0; up = true; }
+    this.sfx(up ? SND.up : SND.tap);
+    this.setState({ racao: s.racao - give, own: this.setOwn(P.id, { lv: lv, xp: xp, spent: o.spent + give }), lvPop: up });
+    var self = this; if (up) this.later(function () { self.setState({ lvPop: false }); }, 650);
+  }
+  startHatch() {
+    var self = this;
+    this.sfx(SND.summon);
+    var res = Math.random() < 0.79 ? 'mamute' : 'esfinge';
+    this.setState({ hatch: 'shake', hRes: res, fx: null });
+    this.later(function () { self.setState({ hatch: 'crack' }); self.sfx(SND.hit); }, 1600);
+    this.later(function () { self.setState({ hatch: 'burst' }); self.sfx(SND.legendary); }, 2900);
+    this.later(function () { self.setState({ hatch: 'reveal' }); }, 3400);
+    this.later(function () { if (self.state.hatch === 'reveal') self.setState({ hatch: 'card' }); }, 4000);
+  }
+  closeHatch() {
+    var s = this.state, id = s.hRes, o = s.own[id], own;
+    this.sfx(SND.claim);
+    if (o) own = this.setOwn(id, { st: Math.min(5, o.st + 1) });
+    else { own = Object.assign({}, s.own); own[id] = { st: 1, lv: 1, xp: 0, stage: 0, spent: 0 }; }
+    this.setState({ hatch: null, own: own, sel: id, view: null, tab: 'det' });
+    this.toast(o ? 'Cópia repetida: +10 fragmentos de estrela' : 'Novo pet na coleção!');
+  }
+  evolve() {
+    var s = this.state, P = PETS[idxOf(s.sel)], o = s.own[P.id], self = this;
+    if (!o) { this.toast('Pet não obtido'); return; }
+    if (o.stage >= 2) { this.toast('Já está no último estágio'); return; }
+    var req = STG_REQ[o.stage + 1];
+    if (o.lv < req) { this.sfx(SND.tap); this.toast('Precisa do Nv ' + req + ': alimente o pet'); return; }
+    this.sfx(SND.summon);
+    this.setState({ evo: 'glow', evoFrom: o.stage, view: null, fx: null });
+    this.later(function () { self.setState({ evo: 'coc' }); }, 1200);
+    this.later(function () { self.setState({ evo: 'burst', own: self.setOwn(P.id, { stage: o.stage + 1 }) }); self.sfx(SND.legendary); }, 2500);
+    this.later(function () { self.setState({ evo: 'new' }); }, 3000);
+  }
+  renderVals() {
+    var s = this.state, self = this, I = idxOf(s.sel), P = PETS[I], o = s.own[P.id], owned = !!o, R = RAR[P.r];
+    var stage = owned ? o.stage : 0;
+    var view = s.view !== null ? s.view : stage;
+    if (s.evo === 'glow' || s.evo === 'coc') view = s.evoFrom;
+    var isPreview = !owned || view !== stage;
+    var foot = P.foot[view], prism = P.r === 5;
+    var strong = view === 2;
+    var ch = owned ? chances(o.st, o.lv) : chances(1, 1), chMax = chances(5, 90);
+    var b = bonus(P, o);
+    var eqP = s.eq ? PETS[idxOf(s.eq)] : null, eqO = eqP ? s.own[eqP.id] : null;
+    var fcTotal = FC_BASE + (eqP ? Math.round(FC_BASE * bonus(eqP, eqO) / 100) : 0);
+    var parts = [12, 30, 48, 64, 80, 22].map(function (l, i) { return { l: l + '%', c: prism ? ['#ff8ad8', '#8ff5ff', '#ffe07a', '#9ff0a6', '#b07cff', '#fff'][i] : (i % 2 ? '#fff3c4' : R.c), d: (-i * 0.4) + 's' }; });
+    var raysBg = prism ? 'repeating-conic-gradient(rgba(255,138,216,0.35) 0deg 8deg, transparent 8deg 20deg, rgba(143,245,255,0.35) 20deg 28deg, transparent 28deg 40deg)'
+      : 'repeating-conic-gradient(rgba(' + R.rgb + ',0.32) 0deg 8deg, transparent 8deg 24deg)';
+    var fxK = s.fx;
+    var atkKinds = { b: { kind: 'Básico', mult: '1x', c: '#e8e2d8', ibg: '#e8e2d8', i: 0 }, c: { kind: 'Crítico (tiro)', mult: '~5x', c: '#ffc94a', ibg: '#ffc94a', i: 1 }, m: { kind: 'Mediano', mult: '~2,5x', c: '#7fc8ff', ibg: '#7fc8ff', i: 2 } };
+    var cap = owned ? STG_CAP[o.stage] : 30, atCap = owned && o.lv >= cap;
+    var nd = owned ? need(o.lv) : 1;
+    var eraTxt = 'libera no Nv 20 · bônus na FC até 20% (Prismático 25%)';
+    var ownedCount = PETS.filter(function (p) { return s.own[p.id]; }).length;
+    var tabs = [['det', 'Detalhes'], ['atk', 'Ataques'], ['evo', 'Evoluir'], ['col', 'Coleção']].map(function (t) {
+      var on = s.tab === t[0];
+      return { label: t[1], sel: on ? 'true' : 'false', bd: on ? '#ffc94a' : '#4a3a2b', bg: on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d', fg: on ? '#2a1403' : '#c9b9a2',
+        pick: function () { self.sfx(SND.tap); self.setState({ tab: t[0] }); } };
+    });
+    var stages = STG.map(function (n, i) {
+      var reached = owned && i <= stage, cur = i === view;
+      return { lbl: n, on: cur ? 'true' : 'false', bg: cur ? '#3a2c1f' : 'transparent', fg: cur ? '#ffc94a' : '#c9b9a2',
+        ring: reached ? R.c : '#6a5a48', fill: reached ? R.c : '#16110d', dotCls: (owned && i === stage) ? 'dotCur' : '',
+        aria: n + (i === 0 ? '' : ' (Nv ' + STG_REQ[i] + ')') + (reached ? ', alcançado' : ', ainda não') + '. Toque para ver',
+        pick: function () { self.sfx(SND.tap); self.setState({ view: i === stage && owned ? null : i }); } };
+    });
+    var stars = [0, 1, 2, 3, 4].map(function (i) { var on = owned && i < o.st; return { f: on ? '#ffc94a' : '#3a2c1f', cls: on ? 'star' : '', d: (i * 0.2) + 's' }; });
+    var atks = ['b', 'c', 'm'].map(function (k) {
+      var A = atkKinds[k], now = ch[k], mx = chMax[k], scale = k === 'b' ? 100 : 15;
+      return { name: P.atk[A.i], kind: A.kind, mult: A.mult, c: A.c, ibg: A.ibg, icon: ICON[k], bd: fxK === k ? A.c : '#4a3a2b',
+        now: p1(now), max: p1(mx), w: Math.min(100, now / scale * 100).toFixed(1) + '%', mw: Math.min(99, mx / scale * 100).toFixed(1) + '%',
+        aria: P.atk[A.i] + ', ' + A.kind + ', dano ' + A.mult + ', chance atual ' + p1(now) + ', no máximo ' + p1(mx) + '. Toque para ver',
+        play: function () { self.playAtk(k, true); } };
+    });
+    var evoCards = STG.map(function (n, i) {
+      var reached = owned && i <= stage, next = owned && i === stage + 1, can = next && o.lv >= STG_REQ[i];
+      return { name: n, req: i === 0 ? 'ao chocar' : 'Nv ' + STG_REQ[i], img: P.img[i], shift: ((1 - P.foot[i]) * 100).toFixed(1) + '%',
+        imgCls: reached ? '' : (owned ? '' : ''), aCls: 'a' + i + (prism ? ' rainbow' : ''), aBg: auraBg(P.r, i, i === 2),
+        bd: i === view ? '#ffc94a' : (reached ? R.c : '#4a3a2b'), bg: reached ? '#33271d' : '#241b14',
+        status: reached ? (i === stage ? 'atual' : 'feito') : (can ? 'pronto!' : (owned ? 'faltam ' + Math.max(0, STG_REQ[i] - o.lv) + ' Nv' : 'bloqueado')),
+        sbg: reached ? '#1f3a22' : (can ? '#ffc94a' : '#16110d'), sfg: reached ? '#9ff0a6' : (can ? '#2a1403' : '#c9b9a2'),
+        aria: n + ', ' + (i === 0 ? 'ao chocar' : 'nível ' + STG_REQ[i]) + '. Toque para ver',
+        pick: function () { self.sfx(SND.tap); self.setState({ view: i }); } };
+    });
+    var evoReady = owned && stage < 2 && o.lv >= STG_REQ[stage + 1];
+    var evoTxt = !owned ? 'Pet não obtido' : stage >= 2 ? 'Forma final alcançada' : evoReady ? 'Evoluir para ' + STG[stage + 1] : 'Evoluir no Nv ' + STG_REQ[stage + 1] + ' (está no ' + o.lv + ')';
+    var coll = PETS.map(function (p) {
+      var po = s.own[p.id], on = p.id === P.id, isP = p.r === 5;
+      return { img: p.img[po ? po.stage : 0], imgCls: po ? '' : 'sil', bd: on ? '#ffc94a' : (po ? RAR[p.r].c : '#4a3a2b'), bg: on ? '#3a2c1f' : (isP ? '#2a1f3a' : '#241b14'),
+        cls: (on ? 'tileSel' : '') + (isP ? ' rare' : ''), on: on ? 'true' : 'false',
+        lbl: po ? 'Nv ' + po.lv : (isP ? Math.floor(s.frag / 10) + '%' : '?'), lc: po ? '#ffe07a' : (isP ? '#e6d8ff' : '#c9b9a2'),
+        aria: p.n + ' (' + p.eraN + ', ' + RAR[p.r].n + ')' + (po ? ', obtido, nível ' + po.lv : ', não obtido: ' + p.how),
+        pick: function () { self.sfx(SND.tap); self.setState({ sel: p.id, view: null }); } };
+    });
+    var deco = (DECO[P.era] || []).map(function (d) { return { cls: d.cls, l: d.l, b: d.b, w: d.w, h: d.h, dl: d.dl }; });
+    var fxTag = '', fxTagC = '#fff';
+    if (fxK) { var A = atkKinds[fxK]; fxTag = P.atk[A.i] + ' ' + A.mult; fxTagC = A.c; }
+    var actCls = fxK === 'b' ? 'lunge' : fxK === 'c' ? 'recoil' : fxK === 'm' ? 'stomp' : '';
+    var bpH = [44, 54, 62][view];
+    // evolução
+    var eFrom = s.evoFrom, eTo = Math.min(2, eFrom + 1), eShowNew = s.evo === 'burst' || s.evo === 'new';
+    var eStg = eShowNew ? eTo : eFrom;
+    // ovo
+    var HP = s.hRes ? PETS[idxOf(s.hRes)] : PETS[0], hR = RAR[HP.r], hDup = s.hRes && s.own[s.hRes];
+    return {
+      fcTxt: n0(fcTotal), racaoTxt: n0(s.racao), racaoAria: 'Ração: ' + n0(s.racao),
+      tap: function () { self.sfx(SND.tap); },
+      thCls: P.era === 0 || P.era === 2 ? '' : 'th' + P.era, isE0: P.era === 0, isE2: P.era === 2,
+      hasFloor: P.era !== 0 && P.era !== 2, flCls: 'fl' + P.era, deco: deco,
+      eraTxt: eraTxt, rarC: R.c, rarName: R.n, rarPillCls: prism ? 'rbw rare' : (P.r >= 3 ? 'rare' : ''),
+      petName: P.n, petImg: P.img[view], petAlt: P.n + ', ' + STG[view] + ', ' + R.n, petImgCls: '',
+      footPct: '100%', footShift: ((1 - foot) * 100).toFixed(1) + '%',
+      motionCls: P.fly ? 'fly' : '', shdCls: P.fly ? 'shdFly' : '',
+      auraCls: 'a' + view + (prism ? ' rainbow' : ''), auraBg: auraBg(P.r, view, strong), auraRing: view >= 1, auraStrong: strong,
+      rbwCls: prism ? 'rainbow' : '', raysBg: raysBg, parts: parts, actCls: actCls,
+      fxOn: !!fxK, fxShot: fxK === 'c', fxSlash: fxK === 'b', fxShock: fxK === 'm', fxC: P.fx, fxTag: fxTag, fxTagC: fxTagC,
+      prevPet: function () { self.sfx(SND.tap); self.setState({ sel: PETS[(I + PETS.length - 1) % PETS.length].id, view: null }); },
+      nextPet: function () { self.sfx(SND.tap); self.setState({ sel: PETS[(I + 1) % PETS.length].id, view: null }); },
+      isPreview: isPreview, previewTxt: !owned ? 'não obtido · prévia' : 'prévia: ' + STG[view],
+      isEq: s.eq === P.id, isEqS: s.eq === P.id ? 'true' : 'false',
+      starsAria: owned ? o.st + ' de 5 estrelas' : 'não obtido', stars: stars,
+      lvTxt: owned ? 'Nv ' + o.lv + '/90' : 'Nv —', lvCls: s.lvPop ? 'lvPop' : '',
+      stages: stages, tabs: tabs,
+      tDet: s.tab === 'det', tAtk: s.tab === 'atk', tEvo: s.tab === 'evo', tCol: s.tab === 'col',
+      bonusTxt: '+' + p1(b), bonusMax: R.max + '%', bonusFc: owned ? '+' + n0(FC_BASE * b / 100) + ' FC' : '—',
+      eraShort: P.eraN, moveTxt: P.fly ? 'Voa' : 'Terrestre',
+      bpH: bpH + '%', bpTop: (80 - bpH) + '%',
+      prevTag: s.eq === P.id ? 'Na batalha: atrás do Kael' : 'Prévia na batalha', prevTagC: s.eq === P.id ? '#9ff0a6' : '#f6ecdf',
+      prevAria: 'Prévia na batalha: Kael parado e ' + P.n + ' atrás dele, no chão',
+      owned: owned, notOwned: !owned, howTxt: P.how,
+      feedTxt: owned ? (o.lv >= 90 ? 'máximo' : atCap ? 'teto do estágio' : o.xp + '/' + nd) : '',
+      feedNote: owned ? (o.lv >= 90 ? 'Nv 90' : atCap ? 'evolua para passar do Nv ' + cap : 'Nv ' + (o.lv + 1) + ' custa ' + nd) : '',
+      feedPct: owned ? (atCap || o.lv >= 90 ? '100%' : (o.xp / nd * 100).toFixed(1) + '%') : '0%',
+      feedBtn: owned && atCap && o.lv < 90 ? 'Evoluir primeiro' : 'Alimentar +25',
+      feedCls: owned && (atCap || s.racao <= 0) ? 'off' : 'gold', feedDis: owned && (atCap || s.racao <= 0) ? 'true' : 'false',
+      feed: function () { self.feed(); },
+      eqTxt: s.eq === P.id ? 'Equipado' : 'Equipar', eqCls: s.eq === P.id ? 'eqd' : 'sec',
+      equip: function () { if (s.eq !== P.id) { self.sfx(SND.claim); self.setState({ eq: P.id }); self.toast(P.n + ' vai lutar atrás do Kael'); } else { self.sfx(SND.tap); self.toast('Já está na batalha (1 ativo)'); } },
+      resetAria: 'Redefinir nível de ' + P.n + ': devolve 80% da ração',
+      askReset: function () { if (!owned) return; self.sfx(SND.tap); if (o.lv <= 1 && o.xp === 0) { self.toast('Já está no Nv 1'); return; } self.setState({ confirm: true }); },
+      confirmOn: s.confirm, refundTxt: owned ? n0(Math.floor(o.spent * 0.8)) : '0', spentTxt: owned ? n0(o.spent) : '0',
+      cancelReset: function () { self.sfx(SND.tap); self.setState({ confirm: false }); },
+      doReset: function () { var back = Math.floor(o.spent * 0.8); self.sfx(SND.coin); self.setState({ confirm: false, racao: s.racao + back, own: self.setOwn(P.id, { lv: 1, xp: 0, spent: 0 }) }); self.toast('+' + n0(back) + ' de ração devolvida'); },
+      goColl: function () { self.sfx(SND.tap); self.setState({ tab: 'col' }); },
+      atks: atks,
+      evoCards: evoCards, evoTxt: evoTxt, evoCls: evoReady ? 'gold pulse' : 'off', evoDis: evoReady ? 'false' : 'true',
+      evolve: function () { self.evolve(); }, auraExtra: prism ? ' (arco-íris mudando de cor)' : '',
+      coll: coll, colPrism: P.r === 5, colOther: P.r !== 5,
+      fragTxt: n0(s.frag) + '/' + n0(FRAG_MAX), fragPct: Math.min(100, s.frag / FRAG_MAX * 100).toFixed(1) + '%', fragSrc: FRAG_SRC,
+      eraLong: P.eraN + ' · ' + R.n,
+      colLine: owned ? 'Obtido · ' + o.st + '★ · ' + STG[o.stage] + ' · Nv ' + o.lv : 'Como conseguir: ' + P.how,
+      colCount: 'Coleção: ' + ownedCount + ' de ' + PETS.length + ' pets',
+      toastOn: !!s.toast, toastTxt: s.toast || '',
+      // ovo
+      startHatch: function () { self.startHatch(); },
+      hatchOn: !!s.hatch, hEgg: s.hatch === 'shake' || s.hatch === 'crack', hEggCls: s.hatch === 'crack' ? 'eggCrack' : 'eggShake',
+      hCrack: s.hatch === 'crack', hBurst: s.hatch === 'burst', hReveal: s.hatch === 'reveal' || s.hatch === 'card' || s.hatch === 'burst',
+      hRevealCard: s.hatch === 'card', hWaiting: s.hatch !== 'card',
+      hRaysOp: s.hatch === 'shake' ? '0.25' : s.hatch === 'crack' ? '0.6' : '1',
+      hTitle: s.hatch === 'card' || s.hatch === 'reveal' ? HP.n + '!' : 'Ovo do nível 20',
+      hImg: HP.img[0], hAlt: HP.n + ' filhote', hFootPct: '100%', hShift: ((1 - HP.foot[0]) * 100).toFixed(1) + '%',
+      hAuraBg: auraBg(HP.r, 1, false), hRarC: hR.c,
+      hLine: hR.n + ' (' + (HP.r === 0 ? '79%' : '21%') + ') · ' + (hDup ? 'repetido: +10 fragmentos de estrela' : 'novo na coleção, ' + STG[0]),
+      closeHatch: function () { self.closeHatch(); },
+      spokes: [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(function (r, i) { return { r: r + 'deg', d: (i % 3 * 0.05) + 's' }; }),
+      // evolução
+      evoOn: !!s.evo, eTitle: s.evo === 'new' ? 'Evoluiu: ' + STG[eTo] + '!' : 'Evoluindo…',
+      eNew: s.evo === 'new', eCoc: s.evo === 'coc', eBurst: s.evo === 'burst', eStrong: eTo === 2,
+      eRaysOp: s.evo === 'glow' ? '0.3' : s.evo === 'coc' ? '0.7' : '1',
+      eWrapCls: s.evo === 'glow' ? 'glowUp' : s.evo === 'new' ? 'reveal' : '', eImgCls: s.evo === 'coc' ? 'wsil' : '',
+      eImg: P.img[eStg], eAlt: P.n + ' ' + STG[eStg], eFootPct: '100%', eShift: ((1 - P.foot[eStg]) * 100).toFixed(1) + '%',
+      eAuraCls: 'a' + eTo + (prism ? ' rainbow' : ''), eAuraBg: auraBg(P.r, eTo, eTo === 2),
+      eLine: P.n + ' agora é ' + STG[eTo] + ' · aura ' + (eTo === 1 ? 'na cor da raridade' : 'forte com partículas') + ' · teto Nv ' + STG_CAP[eTo],
+      closeEvo: function () { self.sfx(SND.claim); self.setState({ evo: null, tab: 'det' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

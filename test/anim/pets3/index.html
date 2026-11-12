@@ -1,0 +1,28 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pets em 3 estágios</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.row{padding:6px 16px}.row h2{font-size:14px;margin:8px 0 4px}canvas{display:block;max-width:100%;border-radius:8px;background:#232a33}
+.ctl{padding:6px 16px;display:flex;gap:6px;flex-wrap:wrap}button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600}button.on{background:#2d6cdf}</style></head><body>
+<h1>Pets: filhote → médio → evoluído</h1>
+<p>Referências para o voto, com a aura de cada estágio feita por código: filhote com brilho leve, médio com aura média na cor da raridade, evoluído com aura forte e partículas. Pés no chão. Tamanho relativo: filhote 70%, médio 85%, evoluído 100% (ainda menor que o Kael).</p>
+<div class="ctl" id="ctl"></div><div id="L"></div>
+<script>
+const A='../../../assets/pets/';const P=[['era0_mammoth','Mamute'],['era1_sphinx','Esfinge'],['era2_dragon','Dragão'],['era3_parrot','Papagaio → Fênix'],['era4_mechdog','Cão mecânico'],['era7_cerberus','Cérbero (Submundo)'],['era8_pegasus','Pégaso (Celestial)'],['prism_fox','Raposa Prismática (o mais raro)']];
+const RAR={Comum:'#b0b8c0',Raro:'#3d8bff',Épico:'#b04dff',Lendário:'#ffb020'};let RC='Épico';
+const ctl=document.getElementById('ctl');const ui=()=>{ctl.innerHTML='<span style="color:#aab;align-self:center">Raridade:</span>';for(const k in RAR){const b=document.createElement('button');b.textContent=k;if(k===RC)b.className='on';b.onclick=()=>{RC=k;ui();};ctl.appendChild(b);}};ui();
+const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=i.width;c.height=i.height;const g=c.getContext('2d');g.drawImage(i,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=1e9,y0=1e9,x1=0,y1=0;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>40){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}const o=document.createElement('canvas');o.width=x1-x0+1;o.height=y1-y0+1;o.getContext('2d').drawImage(c,-x0,-y0);r(o);};i.onerror=()=>r(null);i.src=s;});   // recorta a margem: os pés ficam na base
+(async()=>{const cs=[];for(const [k,n] of P){const imgs=[];for(const s of ['ref','mid','evo'])imgs.push(await L(A+k+'_'+s+'.png'));
+ const d=document.createElement('div');d.className='row';d.innerHTML='<h2>'+n+'</h2>';const cv=document.createElement('canvas');cv.width=720;cv.height=240;d.appendChild(cv);document.getElementById('L').appendChild(d);cs.push({cv,imgs});}
+ const t0=performance.now();(function loop(now){const t=(now-t0)/1000,col=RAR[RC];
+  for(const {cv,imgs} of cs){const g=cv.getContext('2d');g.clearRect(0,0,720,240);const gy=222;
+   g.fillStyle='#2e3a2a';g.fillRect(0,gy,720,18);
+   imgs.forEach((im,s)=>{if(!im)return;const cx=120+s*240,H=[140,170,200][s],sy=1+Math.sin(t*2.4+s)*0.015;
+    // aura
+    g.save();g.globalCompositeOperation='lighter';const c=s===0?'#ffffff':col,a=[0.18,0.32,0.5][s]*(0.85+0.15*Math.sin(t*3));
+    const gr=g.createRadialGradient(cx,gy-H*0.45,H*0.1,cx,gy-H*0.45,H*0.75);gr.addColorStop(0,c+'00');gr.addColorStop(0.55,c+Math.round(a*255).toString(16).padStart(2,'0'));gr.addColorStop(1,c+'00');g.fillStyle=gr;g.beginPath();g.ellipse(cx,gy-H*0.45,H*0.75,H*0.62,0,0,7);g.fill();
+    if(s===2)for(let i=0;i<14;i++){const ph=(t*0.6+i/14)%1,x=cx+Math.sin(i*2.3+t)*H*0.45,y=gy-ph*H*1.05;g.fillStyle=col;g.globalAlpha=(1-ph)*0.9;g.beginPath();g.arc(x,y,2+2*(1-ph),0,7);g.fill();}
+    g.restore();
+    g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(cx,gy+1,H*0.38,6,0,0,7);g.fill();
+    let w=H*im.width/im.height,HH=H;if(w>225){HH=H*225/w;w=225;}g.save();g.translate(cx,gy);g.scale(1,sy);g.drawImage(im,-w/2,-HH,w,HH);g.restore();
+    g.fillStyle='#aab';g.font='12px system-ui';g.textAlign='center';g.fillText(['filhote','médio','evoluído'][s],cx,14);});}
+  requestAnimationFrame(loop);})(t0);})();
+</script></body></html>

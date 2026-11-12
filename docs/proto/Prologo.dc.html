@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Prólogo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.lil{font-family:'Lilita One',sans-serif;letter-spacing:.2px}
+.tOutS{text-shadow:0 1px 0 #000,1px 0 0 #000,-1px 0 0 #000,0 -1px 0 #000,0 0 3px #000}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+/* ===== ARTE: Relógio das Eras, pedaços, mapa ===== */
+.imgWhole{background-image:url(/_blob/b0b93955fa1bfd4f947a906a35e9cecb);background-size:contain;background-repeat:no-repeat;background-position:center}
+.imgEmpty{background-image:url(/_blob/08ed4e4b1651d79ec95dd597c093353a);background-size:100% 100%;border-radius:50%}
+.bgWorld{background-image:url(/_blob/7ed135dbfe0ec47afa32938b1ad0e00d);background-size:100% 100%;background-repeat:no-repeat}
+.sh{background-size:contain;background-repeat:no-repeat;background-position:center}
+.sh0{background-image:url(/_blob/0c6810bd9282d0db4d57f76e3b3229be)}
+.sh1{background-image:url(/_blob/e79e5d21067e1a849a3842755e948924)}
+.sh2{background-image:url(/_blob/8c4986b95e32fc1d4e7188545bd5d68b)}
+.sh3{background-image:url(/_blob/a08335cc1e169faac8b8033abff4e89a)}
+.sh4{background-image:url(/_blob/3977c9828fa5ef9e50d15600b2fb439b)}
+.sh5{background-image:url(/_blob/e5627d17b0156a2a5a1b925c02407798)}
+.sh6{background-image:url(/_blob/5ef4b06ee45325247a9b66632033a99d)}
+.sh7{background-image:url(/_blob/bc83a4e7189935a1eb93c85bfcb4d983)}
+.sh8{background-image:url(/_blob/1d714680fd4ff7239ba17d05a4a06ce8)}
+.cloudA{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 100%;background-repeat:repeat-x}
+/* ===== vila do vale (kit aprovado, era 2), tela H=844, pés em 658 ===== */
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.Lcld{top:40px;height:220px;background-size:auto 220px}
+.Lfar{top:186px;height:354px;background-size:auto 354px}
+.Lmid{top:148px;height:422px;background-size:auto 422px}
+.Lgnd{top:553px;height:321px;background-size:auto 321px}
+.e2cld{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041)}.e2far{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}.e2mid{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}.e2gnd{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.cldDrift{animation:pCld 300s linear infinite}
+.run .Lcld{animation:pCld 200s linear infinite}.run .Lfar{animation:pFar 300s linear infinite}.run .Lmid{animation:pMid 300s linear infinite}.run .Lgnd{animation:pGnd 300s linear infinite}
+.paused .ly{animation-play-state:paused}
+@keyframes pCld{to{background-position-x:-4200px}}
+@keyframes pFar{to{background-position-x:-5061px}}
+@keyframes pMid{to{background-position-x:-27474px}}
+@keyframes pGnd{to{background-position-x:-72300px}}
+/* ===== Kael aprovado (folhas; pés em 95% do quadro) ===== */
+.kIdle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.kRun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .667s steps(8, jump-none) infinite}
+.kAtk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet 1.417s steps(17, jump-none) infinite}
+.kRim{filter:drop-shadow(0 0 5px rgba(150,200,255,.55))}
+.kGlow{animation:kGlow 1.6s ease-out both}
+@keyframes kGlow{0%{filter:none}30%{filter:drop-shadow(0 0 18px rgba(255,90,78,1)) brightness(1.35)}100%{filter:drop-shadow(0 0 5px rgba(255,201,74,.7))}}
+.kEnter{transform-origin:50% 95%;animation:kEnter .5s ease-in both}
+@keyframes kEnter{0%{transform:none;opacity:1;filter:brightness(1)}100%{transform:translateX(40px) scale(.35,.8);opacity:0;filter:brightness(3)}}
+/* silhuetas das eras misturadas no horizonte (arte aprovada escurecida), respiram pelos pés */
+.mon{background-size:contain;background-repeat:no-repeat;background-position:50% 100%;filter:brightness(0) drop-shadow(0 0 8px rgba(176,124,255,.95));transform-origin:50% 100%;animation:monIn 1.2s ease-out both,breathe 1.8s 1.2s ease-in-out infinite}
+.mDrag{background-image:url(/_blob/6ab9e2e6c54dbef8618daf37fd11342f)}
+.mMino{background-image:url(/_blob/2f5945188cf88834a2dd2ac72fc890bc)}
+.mDevo{background-image:url(/_blob/66f81c3b14550f0bf1b2fa94f79ceef8)}
+@keyframes monIn{from{opacity:0}to{opacity:.95}}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.03)}}
+/* ===== céu noturno ===== */
+.star{position:absolute;border-radius:50%;background:#fff;animation:twk 2.6s ease-in-out infinite;pointer-events:none}
+@keyframes twk{0%,100%{opacity:.25;transform:scale(.6)}50%{opacity:1;transform:scale(1.3)}}
+.shoot{position:absolute;left:300px;top:60px;width:120px;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,0),#fff);transform:rotate(-24deg);animation:shoot 5.5s 1.8s ease-in infinite;opacity:0;pointer-events:none}
+@keyframes shoot{0%{transform:translate(0,0) rotate(-24deg);opacity:0}4%{opacity:1}12%{transform:translate(-260px,116px) rotate(-24deg);opacity:0}100%{opacity:0;transform:translate(-260px,116px) rotate(-24deg)}}
+.tint{position:absolute;inset:0;pointer-events:none;transition:opacity 1.2s ease}
+/* ===== relógio: brilho, raios, giro ===== */
+.cam{position:absolute;inset:0;pointer-events:none}
+.clkSpin{animation:spin 90s linear infinite}
+.clkSpinE{animation:spin 140s linear infinite reverse}
+.rays{position:absolute;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,rgba(255,240,180,.42) 0deg 6deg,transparent 6deg 20deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 70%);mask:radial-gradient(circle,#000 22%,transparent 70%);animation:spin 50s linear infinite}
+.raysB{position:absolute;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 10deg,rgba(140,220,255,.32) 0deg 3deg,transparent 3deg 15deg);-webkit-mask:radial-gradient(circle,#000 25%,transparent 68%);mask:radial-gradient(circle,#000 25%,transparent 68%);animation:spin 80s linear infinite reverse}
+.raysP{position:absolute;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(from 0deg,rgba(200,150,255,.3) 0deg 5deg,transparent 5deg 22deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 66%);mask:radial-gradient(circle,#000 22%,transparent 66%);animation:spin 70s linear infinite}
+.cGlow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(150,225,255,.75),rgba(80,150,255,.25) 50%,transparent 70%);animation:cg 2.8s ease-in-out infinite}
+.cGlowP{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(176,124,255,.6),rgba(90,40,140,.2) 50%,transparent 70%);animation:cg 3.4s ease-in-out infinite}
+@keyframes cg{0%,100%{transform:scale(.92);opacity:.65}50%{transform:scale(1.1);opacity:1}}
+.clkPulse{animation:clkPulse 2.8s ease-in-out infinite}
+@keyframes clkPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(140,220,255,.6)) brightness(1)}50%{filter:drop-shadow(0 0 26px rgba(140,220,255,1)) brightness(1.15)}}
+.clkShake{animation:clkShake .1s linear infinite}
+@keyframes clkShake{0%{transform:translate(0,0)}25%{transform:translate(-4px,3px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-3px,-3px)}100%{transform:translate(0,0)}}
+.emptyIn{animation:emptyIn 1.2s ease-out both,flick 2.4s 1.2s ease-in-out infinite}
+@keyframes emptyIn{from{transform:scale(1.18);filter:brightness(2.6)}to{transform:none;filter:brightness(.9)}}
+@keyframes flick{0%,100%{filter:brightness(.8) saturate(.7)}50%{filter:brightness(1) saturate(.9) drop-shadow(0 0 10px rgba(176,124,255,.8))}}
+.orbS{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,220,140,.9);pointer-events:none}
+.orbit{position:absolute;animation:spin 14s linear infinite;pointer-events:none}
+.beam{position:absolute;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(180deg,rgba(150,215,255,.55),rgba(150,215,255,.12) 60%,rgba(150,215,255,0));-webkit-mask:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent);mask:linear-gradient(90deg,transparent,#000 30%,#000 70%,transparent);transform-origin:50% 0;animation:beam 2.8s ease-in-out infinite}
+@keyframes beam{0%,100%{opacity:.45}50%{opacity:.9}}
+.fly{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff6c8;box-shadow:0 0 8px 3px rgba(255,224,122,.8);animation:fly 5s ease-in-out infinite;pointer-events:none}
+@keyframes fly{0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(18px,-22px);opacity:1}}
+/* ===== Devorador de Eras: sombra viva com olhos e partículas ===== */
+.devoIn{animation:devoIn 1.8s cubic-bezier(.2,.8,.3,1) both}
+@keyframes devoIn{from{transform:translate(260px,-160px) scale(.5);opacity:0}to{transform:none;opacity:1}}
+.devoBite{animation:devoBite .7s ease-in-out both}
+@keyframes devoBite{0%{transform:none}45%{transform:translate(-70px,48px) scale(1.15)}100%{transform:translate(-26px,14px) scale(1.05)}}
+.devoGone{animation:devoGone 1.6s ease-in both}
+@keyframes devoGone{from{transform:translate(-26px,14px) scale(1.05);opacity:1}to{transform:translate(240px,-240px) scale(.4);opacity:0}}
+.devoDrift{position:absolute;inset:0;animation:devoDrift 3s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(150,70,230,.9))}
+@keyframes devoDrift{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-8px,6px) rotate(-3deg)}}
+.blob{position:absolute;border-radius:50%;background:radial-gradient(circle,#05020a 52%,rgba(20,6,34,.85) 64%,rgba(20,6,34,0) 72%);animation:blob 2.2s ease-in-out infinite}
+@keyframes blob{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.tendr{position:absolute;height:16px;border-radius:0 50% 50% 0;background:linear-gradient(90deg,#05020a,rgba(5,2,10,0));transform-origin:0 50%;animation:2.4s ease-in-out infinite}
+.td1{animation-name:td1}.td2{animation-name:td2}.td3{animation-name:td3}
+@keyframes td1{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(12deg)}}
+@keyframes td2{0%,100%{transform:rotate(20deg)}50%{transform:rotate(44deg)}}
+@keyframes td3{0%,100%{transform:rotate(-70deg)}50%{transform:rotate(-40deg)}}
+.dEye{position:absolute;border-radius:50%;animation:dEye 3.2s ease-in-out infinite}
+@keyframes dEye{0%,44%,52%,100%{transform:scaleY(1)}48%{transform:scaleY(.1)}}
+.dPart{position:absolute;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle,#c79bff,rgba(90,30,150,.6) 50%,transparent 72%);animation:2.6s ease-out infinite;pointer-events:none}
+.dp0{animation-name:dp0}.dp1{animation-name:dp1}.dp2{animation-name:dp2}.dp3{animation-name:dp3}
+@keyframes dp0{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:1}100%{transform:translate(40px,-40px) scale(1.6);opacity:0}}
+@keyframes dp1{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:1}100%{transform:translate(50px,30px) scale(1.6);opacity:0}}
+@keyframes dp2{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:1}100%{transform:translate(-36px,36px) scale(1.6);opacity:0}}
+@keyframes dp3{0%{transform:translate(0,0) scale(.5);opacity:0}20%{opacity:1}100%{transform:translate(-30px,-44px) scale(1.6);opacity:0}}
+.dSmoke{position:absolute;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,rgba(10,4,18,.9),rgba(10,4,18,0) 70%);animation:dSmoke 3s ease-out infinite;pointer-events:none}
+@keyframes dSmoke{0%{transform:translate(0,0) scale(.6);opacity:0}25%{opacity:.9}100%{transform:translate(50px,30px) scale(2.4);opacity:0}}
+/* céu rachado */
+.crack{stroke-dasharray:700;stroke-dashoffset:700;animation:crack .9s ease-out forwards,crackG 1.6s .9s ease-in-out infinite}
+@keyframes crack{to{stroke-dashoffset:0}}
+@keyframes crackG{0%,100%{opacity:.65}50%{opacity:1}}
+/* ===== 9 pedaços voando (arte), rastro colorido, portais de luz ===== */
+.shF{position:absolute;width:40px;height:50px;pointer-events:none;animation-duration:2.6s;animation-fill-mode:both;animation-timing-function:linear}
+.trF{position:absolute;width:16px;height:16px;border-radius:50%;pointer-events:none;animation-duration:2.6s;animation-fill-mode:both}
+.fl0{animation-name:fl0}.fl1{animation-name:fl1}.fl2{animation-name:fl2}.fl3{animation-name:fl3}.fl4{animation-name:fl4}.fl5{animation-name:fl5}.fl6{animation-name:fl6}.fl7{animation-name:fl7}.fl8{animation-name:fl8}
+@keyframes fl0{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(0px,-33px) rotate(280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(-20px,367px) rotate(600deg) scale(.85);opacity:1}100%{transform:translate(-20px,373px) rotate(700deg) scale(0);opacity:0}}
+@keyframes fl1{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(41px,-49px) rotate(-280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(43px,341px) rotate(-600deg) scale(.85);opacity:1}100%{transform:translate(43px,347px) rotate(-700deg) scale(0);opacity:0}}
+@keyframes fl2{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(69px,-24px) rotate(280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(73px,345px) rotate(600deg) scale(.85);opacity:1}100%{transform:translate(73px,351px) rotate(700deg) scale(0);opacity:0}}
+@keyframes fl3{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(69px,24px) rotate(-280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(48px,395px) rotate(-600deg) scale(.85);opacity:1}100%{transform:translate(48px,401px) rotate(-700deg) scale(0);opacity:0}}
+@keyframes fl4{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(42px,60px) rotate(280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(7px,380px) rotate(600deg) scale(.85);opacity:1}100%{transform:translate(7px,386px) rotate(700deg) scale(0);opacity:0}}
+@keyframes fl5{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(0px,73px) rotate(-280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(0px,293px) rotate(-600deg) scale(.85);opacity:1}100%{transform:translate(0px,299px) rotate(-700deg) scale(0);opacity:0}}
+@keyframes fl6{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(-42px,60px) rotate(280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(-22px,380px) rotate(600deg) scale(.85);opacity:1}100%{transform:translate(-22px,386px) rotate(700deg) scale(0);opacity:0}}
+@keyframes fl7{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(-69px,24px) rotate(-280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(-63px,385px) rotate(-600deg) scale(.85);opacity:1}100%{transform:translate(-63px,391px) rotate(-700deg) scale(0);opacity:0}}
+@keyframes fl8{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1;animation-timing-function:cubic-bezier(.15,.75,.35,1)}32%{transform:translate(-69px,-24px) rotate(280deg) scale(1.5);animation-timing-function:cubic-bezier(.5,0,.85,.55)}80%{transform:translate(-48px,335px) rotate(600deg) scale(.85);opacity:1}100%{transform:translate(-48px,341px) rotate(700deg) scale(0);opacity:0}}
+.shGlow{position:absolute;inset:0;animation:shGlow .5s ease-in-out infinite alternate}
+@keyframes shGlow{from{filter:drop-shadow(0 0 4px rgba(255,240,200,.9)) brightness(1.1)}to{filter:drop-shadow(0 0 14px rgba(255,240,200,1)) brightness(1.4)}}
+.mp{position:absolute;width:40px;height:62px;border-radius:50%;box-sizing:border-box;pointer-events:none;animation:mpLife 2.3s ease-in-out both}
+@keyframes mpLife{0%{transform:scale(0,.2);opacity:0}18%{transform:none;opacity:1}72%{transform:none;opacity:1;filter:brightness(1)}82%{transform:scale(1.3);filter:brightness(2.2)}100%{transform:scale(0,.2);opacity:0}}
+.pSwirl{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#fff6c8,#ffc94a,#b07cff,#4aa3ff,#fff6c8,#ffc94a,#b07cff,#4aa3ff,#fff6c8);-webkit-mask:radial-gradient(ellipse,transparent 18%,#000 38%,#000 62%,transparent 72%);mask:radial-gradient(ellipse,transparent 18%,#000 38%,#000 62%,transparent 72%);animation:spin 1.6s linear infinite}
+.pCore{position:absolute;inset:16%;border-radius:50%;background:radial-gradient(ellipse,#ffffff 0%,#fff1b8 30%,rgba(176,124,255,.7) 60%,rgba(74,163,255,0) 75%);animation:core 1.2s ease-in-out infinite}
+@keyframes core{0%,100%{transform:scale(.92);opacity:.85}50%{transform:scale(1.06);opacity:1}}
+/* ===== mapa: pan vertical, pedaços pousando ===== */
+.mapIn{animation:mapIn 1s cubic-bezier(.2,.8,.3,1) both}
+@keyframes mapIn{from{transform:scale(1.35);opacity:0;filter:brightness(2.2) blur(3px)}to{transform:none;opacity:1;filter:none}}
+.drift{animation:drift 60s linear infinite}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-1600px}}
+.mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff8dc;box-shadow:0 0 8px 3px rgba(255,224,122,.9);pointer-events:none;animation:mote 4.5s ease-in-out infinite}
+@keyframes mote{0%{transform:translate(0,0);opacity:0}25%{opacity:1}100%{transform:translate(-10px,-60px);opacity:0}}
+.land{position:absolute;animation:land .9s cubic-bezier(.55,0,.75,.5) both}
+@keyframes land{0%{transform:translate(-70px,-440px) rotate(-420deg) scale(1.9);opacity:0}12%{opacity:1}88%{transform:translate(0,0) rotate(0) scale(1.2);opacity:1}100%{transform:none;opacity:1}}
+.landT{position:absolute;border-radius:50%;animation:landT .9s cubic-bezier(.55,0,.75,.5) both}
+@keyframes landT{0%{transform:translate(-70px,-440px) scale(1.6);opacity:0}12%{opacity:.95}88%{transform:translate(0,0) scale(1);opacity:.9}100%{transform:none;opacity:0}}
+.shOn{position:absolute;inset:0;animation:shOn 2.2s ease-in-out infinite}
+@keyframes shOn{0%,100%{filter:drop-shadow(0 0 3px rgba(255,220,140,.8)) brightness(1)}50%{filter:drop-shadow(0 0 12px rgba(255,220,140,1)) brightness(1.2)}}
+.lBeam{position:absolute;width:44px;height:220px;border-radius:22px;pointer-events:none;mix-blend-mode:screen;transform-origin:50% 100%;animation:lBeam 1.4s ease-out both}
+@keyframes lBeam{0%{transform:scaleX(.2) scaleY(0);opacity:0}15%{transform:scaleX(1) scaleY(1);opacity:1}100%{transform:scaleX(.3) scaleY(1);opacity:0}}
+.lGlow{position:absolute;border-radius:50%;pointer-events:none;animation:lGlowIn .4s ease-out both,lGlow 2.4s ease-in-out infinite}
+@keyframes lGlowIn{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}
+@keyframes lGlow{0%,100%{filter:brightness(.85)}50%{filter:brightness(1.3)}}
+.ringP{position:absolute;border-radius:50%;box-sizing:border-box;pointer-events:none;animation:ringP 1.5s ease-out infinite}
+@keyframes ringP{0%{transform:scale(.45);opacity:1}100%{transform:scale(1.7);opacity:0}}
+.plate{background:linear-gradient(180deg,#3b2a1a,#22180f);border:2px solid #d9a441;box-shadow:inset 0 0 0 1px #5a3a12,0 3px 0 rgba(0,0,0,.55);box-sizing:border-box}
+.plateIn{animation:plateIn .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes plateIn{from{transform:scale(.4) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.cntPop{animation:cntPop .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes cntPop{from{transform:scale(1.3)}to{transform:none}}
+/* ===== avô (silhueta com capa, provisória), pés no chão ===== */
+.gpa{position:absolute;inset:0;transform-origin:50% 100%;animation:breathe 2.4s ease-in-out infinite}
+.gScroll{animation:gScroll 1.75s linear forwards}
+@keyframes gScroll{to{transform:translateX(-422px)}}
+.cape{transform-box:fill-box;transform-origin:50% 0;animation:cape 1.6s ease-in-out infinite}
+@keyframes cape{0%,100%{transform:skewX(0) scaleX(1)}50%{transform:skewX(-7deg) scaleX(1.05)}}
+.armGive{transform-box:view-box;transform-origin:72px 80px;animation:armGive 1.6s ease-in-out both}
+@keyframes armGive{0%{transform:rotate(0)}30%,70%{transform:rotate(-32deg)}100%{transform:rotate(0)}}
+.orbG{animation:orbG 1.8s ease-in-out infinite}
+@keyframes orbG{0%,100%{opacity:.7}50%{opacity:1}}
+.scarf{position:absolute;animation:scarf 1.2s ease-in-out both;pointer-events:none}
+@keyframes scarf{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}50%{transform:translate(62px,-54px) rotate(18deg)}90%{opacity:1}100%{transform:translate(124px,-14px) scale(.5) rotate(6deg);opacity:0}}
+.scarfWave{transform-box:fill-box;transform-origin:0 50%;animation:waveF .4s ease-in-out infinite}
+@keyframes waveF{0%,100%{transform:skewY(0)}50%{transform:skewY(10deg)}}
+/* portal do chamado */
+.pSlide{animation:pSlide .9s linear both}
+@keyframes pSlide{from{transform:translateX(217px)}to{transform:none}}
+.pBig{transform-origin:50% 100%;animation:pBig 1.4s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes pBig{from{transform:none}to{transform:scale(1.45)}}
+.portal{position:absolute;inset:0;border-radius:50%;animation:pOpen .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pOpen{from{transform:scale(0,.2);opacity:0}to{transform:none;opacity:1}}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:twinkle 1.4s ease-in-out infinite;pointer-events:none}
+@keyframes twinkle{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.2);opacity:1}}
+/* ===== câmera, cortes, clarões, tremor ===== */
+.flash{animation:flash .9s ease-out both;pointer-events:none}
+@keyframes flash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.cut{animation:cut .9s ease-out both;pointer-events:none}
+@keyframes cut{0%{opacity:1}100%{opacity:0}}
+.quake{animation:quake .5s}
+@keyframes quake{20%{transform:translate(-7px,3px)}40%{transform:translate(7px,-3px)}60%{transform:translate(-5px,2px)}80%{transform:translate(3px,-1px)}}
+.quakeB{animation:quakeB .8s}
+@keyframes quakeB{10%{transform:translate(-12px,6px) rotate(-.6deg)}25%{transform:translate(11px,-6px) rotate(.6deg)}40%{transform:translate(-9px,4px)}55%{transform:translate(8px,-3px)}70%{transform:translate(-5px,2px)}85%{transform:translate(3px,-1px)}}
+/* ===== legenda, título, botões ===== */
+.capIn{animation:capIn .4s ease-out both}
+@keyframes capIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.caret{display:inline-block;width:2px;height:16px;margin-left:2px;vertical-align:-2px;background:#ffc94a;animation:caret .7s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+.dot{transition:width .3s,background .3s}
+.title{display:inline-block;animation:title .9s cubic-bezier(.2,1.5,.4,1) both,glowT 2.2s .9s ease-in-out infinite}
+@keyframes title{0%{transform:scale(2.6);opacity:0;letter-spacing:14px}100%{transform:none;opacity:1;letter-spacing:2px}}
+@keyframes glowT{0%,100%{filter:drop-shadow(0 4px 0 #6a3a08) drop-shadow(0 0 8px rgba(255,201,74,.45))}50%{filter:drop-shadow(0 4px 0 #6a3a08) drop-shadow(0 0 26px rgba(255,201,74,1))}}
+.titleFill{background:linear-gradient(100deg,#ffd35a 0%,#ffe9a6 40%,#ffffff 48%,#ffe9a6 56%,#f2a826 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tShine 3s ease-in-out infinite}
+@keyframes tShine{0%,30%{background-position:100% 0}100%{background-position:-60% 0}}
+.fadeUp{animation:fadeUp .6s ease-out both}
+@keyframes fadeUp{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:2px solid #fff0b0}
+.gold:active{transform:translateY(3px);box-shadow:0 3px 0 #8a4f0c}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 28px rgba(255,201,74,.95)}}
+.shineBtn{position:relative;overflow:hidden}
+.shineBtn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);background-size:300% 100%;animation:shine 2.6s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,40%{background-position:160% 0}100%{background-position:-60% 0}}
+.ghostBtn{background:#33271d;color:#f6ecdf;border:2px solid #6a5a4a;box-shadow:0 4px 0 #120d09}
+</style>
+</helmet>
+<div class="{{quakeCls}}" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #050818; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+
+  <!-- ===== CÉU NOTURNO ===== -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #03050f 0%, #0a1030 30%, #1a2058 58%, #3a3570 78%, #4a3a68 100%)"></div>
+  <div class="tint" style="opacity: {{tStorm}}; background: linear-gradient(180deg, #12031c 0%, #3a0b3e 45%, #6a1a3a 75%, #3a1028 100%)"></div>
+  <div class="cam" style="transform: {{starT}}; transition: transform {{camD}} cubic-bezier(.5,0,.2,1)">
+    <sc-for list="{{stars}}" as="t" hint-placeholder-count="12">
+      <span class="star" style="left: {{t.x}}; top: {{t.y}}; width: {{t.s}}; height: {{t.s}}; animation-delay: {{t.d}}"></span>
+    </sc-for>
+    <sc-if value="{{showShoot}}" hint-placeholder-val="{{true}}">
+      <span class="shoot"></span>
+    </sc-if>
+  </div>
+
+  <!-- ===== RELÓGIO DAS ERAS (arte) — câmera própria ===== -->
+  <div class="cam" style="transform: {{clkT}}; transform-origin: 195px 250px; transition: transform {{camD}} cubic-bezier(.5,0,.2,1)">
+    <sc-if value="{{showWhole}}" hint-placeholder-val="{{true}}">
+      <div class="rays" style="left: -55px; top: -50px; width: 500px; height: 500px"></div>
+      <div class="raysB" style="left: 5px; top: 10px; width: 380px; height: 380px"></div>
+      <div class="cGlow" style="left: 25px; top: 80px; width: 340px; height: 340px"></div>
+      <div class="{{shakeCls}}" style="position: absolute; left: 45px; top: 100px; width: 300px; height: 300px">
+        <div class="clkPulse" style="position: absolute; inset: 0">
+          <div class="imgWhole clkSpin" role="img" aria-label="O Relógio das Eras inteiro, girando devagar no céu" style="position: absolute; inset: 0"></div>
+        </div>
+      </div>
+      <div class="orbit" style="left: 15px; top: 70px; width: 360px; height: 360px">
+        <span class="orbS" style="left: 177px; top: -3px"></span><span class="orbS" style="left: 357px; top: 177px"></span>
+        <span class="orbS" style="left: 177px; top: 357px"></span><span class="orbS" style="left: -3px; top: 177px"></span>
+      </div>
+    </sc-if>
+    <sc-if value="{{showEmpty}}" hint-placeholder-val="{{false}}">
+      <div class="raysP" style="left: -35px; top: -30px; width: 460px; height: 460px"></div>
+      <div class="cGlowP" style="left: 35px; top: 90px; width: 320px; height: 320px"></div>
+      <div class="emptyIn" style="position: absolute; left: 55px; top: 110px; width: 280px; height: 280px">
+        <div class="imgEmpty clkSpinE" role="img" aria-label="O Relógio das Eras rachado, com os nove encaixes vazios" style="position: absolute; inset: 0"></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- céu rachado -->
+  <sc-if value="{{showCrack}}" hint-placeholder-val="{{false}}">
+    <svg width="390" height="320" viewBox="0 0 390 320" aria-hidden="true" style="position: absolute; left: 0; top: 30px; pointer-events: none">
+      <path class="crack" d="M0 70 L40 92 L72 74 L110 118 L150 98 L196 150 L232 126 L262 170 L300 140 L340 186 L390 160" fill="none" stroke="#e8d4ff" stroke-width="4" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #b07cff)"></path>
+      <path class="crack" d="M150 98 L160 50 L186 30 M262 170 L282 230 L270 280" fill="none" stroke="#d9b3ff" stroke-width="2.5" stroke-linejoin="round" style="filter: drop-shadow(0 0 6px #b07cff); animation-delay: .3s, 1.2s"></path>
+    </svg>
+  </sc-if>
+
+  <!-- ===== DEVORADOR DE ERAS (sombra viva) ===== -->
+  <sc-if value="{{showDevo}}" hint-placeholder-val="{{false}}">
+    <div class="{{devoCls}}" role="img" aria-label="O Devorador de Eras, uma sombra com muitos olhos, avança sobre o Relógio" style="position: absolute; left: 196px; top: 26px; width: 210px; height: 180px">
+      <div class="devoDrift">
+        <span class="tendr td1" style="left: 150px; top: 40px; width: 90px"></span>
+        <span class="tendr td2" style="left: 150px; top: 120px; width: 80px; animation-delay: .7s"></span>
+        <span class="tendr td3" style="left: 100px; top: 10px; width: 70px; animation-delay: 1.2s"></span>
+        <span class="blob" style="left: 20px; top: 30px; width: 150px; height: 140px"></span>
+        <span class="blob" style="left: 70px; top: 0; width: 120px; height: 120px; animation-delay: .5s"></span>
+        <span class="blob" style="left: 0; top: 80px; width: 110px; height: 100px; animation-delay: 1s"></span>
+        <span class="blob" style="left: 110px; top: 70px; width: 100px; height: 100px; animation-delay: 1.5s"></span>
+        <span class="dEye" style="left: 62px; top: 66px; width: 18px; height: 12px; background: #ff3a2e; box-shadow: 0 0 12px 4px rgba(255,60,40,.9)"></span>
+        <span class="dEye" style="left: 96px; top: 56px; width: 22px; height: 14px; background: #ff5a4e; box-shadow: 0 0 14px 5px rgba(255,60,40,.95); animation-delay: .3s"></span>
+        <span class="dEye" style="left: 130px; top: 70px; width: 14px; height: 10px; background: #ffc94a; box-shadow: 0 0 10px 4px rgba(255,180,40,.9); animation-delay: .9s"></span>
+        <span class="dEye" style="left: 82px; top: 92px; width: 12px; height: 8px; background: #ffc94a; box-shadow: 0 0 10px 3px rgba(255,180,40,.9); animation-delay: 1.4s"></span>
+        <span class="dEye" style="left: 118px; top: 100px; width: 16px; height: 10px; background: #ff3a2e; box-shadow: 0 0 12px 4px rgba(255,60,40,.9); animation-delay: 2s"></span>
+        <span class="dEye" style="left: 44px; top: 104px; width: 10px; height: 7px; background: #ff8a7a; box-shadow: 0 0 8px 3px rgba(255,90,70,.9); animation-delay: 2.4s"></span>
+        <sc-for list="{{dParts}}" as="p" hint-placeholder-count="6">
+          <span class="dPart {{p.cls}}" style="left: {{p.x}}; top: {{p.y}}; animation-delay: {{p.d}}"></span>
+        </sc-for>
+        <span class="dSmoke" style="left: 140px; top: 120px"></span>
+        <span class="dSmoke" style="left: 30px; top: 140px; animation-delay: 1s"></span>
+        <span class="dSmoke" style="left: 160px; top: 30px; animation-delay: 2s"></span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== VILA DO VALE (cenário aprovado) — câmera ===== -->
+  <div class="cam {{runCls}}" style="transform: {{vilT}}; transform-origin: 42% 78%; transition: transform {{camD}} cubic-bezier(.5,0,.2,1), filter 1.2s ease; filter: {{vilF}}">
+    <div class="ly Lcld e2cld cldDrift" style="opacity: .55"></div>
+    <div class="ly Lfar e2far"></div>
+    <sc-if value="{{showMon}}" hint-placeholder-val="{{false}}">
+      <div class="mon mDrag" role="img" aria-label="Silhueta de dragão no horizonte" style="position: absolute; left: 14px; top: 440px; width: 120px; height: 116px"></div>
+      <div class="mon mMino" role="img" aria-label="Silhueta de minotauro no horizonte" style="position: absolute; left: 150px; top: 452px; width: 96px; height: 104px; animation-delay: .3s, 1.5s"></div>
+      <div class="mon mDevo" role="img" aria-label="Silhueta de robô no horizonte" style="position: absolute; left: 266px; top: 446px; width: 108px; height: 110px; animation-delay: .6s, 1.8s"></div>
+    </sc-if>
+    <div class="ly Lmid e2mid"></div><div class="ly Lgnd e2gnd"></div>
+  </div>
+
+  <!-- ===== PERSONAGENS (mesma câmera da vila, sem escurecer tanto) ===== -->
+  <div class="cam" style="transform: {{vilT}}; transform-origin: 42% 78%; transition: transform {{camD}} cubic-bezier(.5,0,.2,1)">
+    <!-- raio de luz do relógio sobre a vila -->
+    <sc-if value="{{showBeam}}" hint-placeholder-val="{{true}}">
+      <div class="beam" style="left: 110px; top: 160px; width: 170px; height: 520px"></div>
+    </sc-if>
+    <sc-if value="{{showFly}}" hint-placeholder-val="{{true}}">
+      <span class="fly" style="left: 40px; top: 470px"></span><span class="fly" style="left: 300px; top: 430px; animation-delay: 1.2s"></span>
+      <span class="fly" style="left: 200px; top: 500px; animation-delay: 2.4s"></span><span class="fly" style="left: 350px; top: 520px; animation-delay: 3.3s"></span>
+      <span class="fly" style="left: 90px; top: 560px; animation-delay: 1.8s"></span><span class="fly" style="left: 260px; top: 590px; animation-delay: .6s"></span>
+    </sc-if>
+
+    <!-- portal do chamado (pés na linha do chão, y 660) -->
+    <sc-if value="{{showPortal}}" hint-placeholder-val="{{false}}">
+      <div class="{{pWrapCls}}" style="position: absolute; left: {{pX}}; top: 424px; width: 110px; height: 236px">
+        <div class="portal" aria-hidden="true" style="box-shadow: 0 0 60px 20px rgba(255,201,74,0.55)">
+          <div class="pSwirl"></div><div class="pCore"></div>
+        </div>
+        <span class="spark" style="left: 6px; top: 20px"></span>
+        <span class="spark" style="left: 98px; top: 80px; animation-delay: .4s"></span>
+        <span class="spark" style="left: 14px; top: 190px; animation-delay: .8s"></span>
+        <span class="spark" style="left: 90px; top: 200px; animation-delay: 1.1s"></span>
+      </div>
+    </sc-if>
+
+    <!-- avô (silhueta com capa, provisória) — pés em y 658 -->
+    <sc-if value="{{showGpa}}" hint-placeholder-val="{{false}}">
+      <div class="{{gWrapCls}}" style="position: absolute; left: 14px; top: 468px; width: 120px; height: 200px">
+        <div style="position: absolute; left: 14px; top: 182px; width: 96px; height: 14px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+        <div class="gpa" style="width: 120px; height: 190px">
+          <svg width="120" height="190" viewBox="0 0 120 190" role="img" aria-label="O avô, o antigo Guardião, de capa e cajado (silhueta provisória)" style="filter: drop-shadow(0 0 5px rgba(255,201,74,0.5))">
+            <line x1="20" y1="36" x2="18" y2="190" stroke="#2a1a10" stroke-width="6" stroke-linecap="round"></line>
+            <circle class="orbG" cx="20" cy="32" r="8" fill="#ffd36a" style="filter: drop-shadow(0 0 8px #ffc94a)"></circle>
+            <path class="cape" d="M44 62 Q30 110 14 186 L66 188 Q58 120 60 66 Z" fill="#1c0d18" stroke="#6a2a3a" stroke-width="2"></path>
+            <path d="M42 70 Q60 54 82 70 L94 188 L34 188 Z" fill="#141019" stroke="#5a4a6a" stroke-width="2" stroke-linejoin="round"></path>
+            <path d="M44 66 Q46 30 64 28 Q82 30 84 66 Q74 56 64 56 Q54 56 44 66 Z" fill="#1c0d18" stroke="#6a2a3a" stroke-width="2"></path>
+            <circle cx="66" cy="48" r="12" fill="#2a2030"></circle>
+            <path d="M56 54 Q58 80 66 86 Q74 80 78 54 Q68 60 56 54 Z" fill="#d8d0c4"></path>
+            <circle cx="72" cy="45" r="1.8" fill="#ffd36a"></circle>
+            <path d="M44 78 L24 98" stroke="#141019" stroke-width="11" stroke-linecap="round"></path>
+            <g class="{{armCls}}"><path d="M72 80 L98 100" stroke="#141019" stroke-width="11" stroke-linecap="round"></path><circle cx="100" cy="101" r="5.5" fill="#c9a88a"></circle></g>
+            <ellipse cx="50" cy="189" rx="9" ry="3" fill="#0a070c"></ellipse><ellipse cx="78" cy="189" rx="9" ry="3" fill="#0a070c"></ellipse>
+          </svg>
+        </div>
+      </div>
+    </sc-if>
+    <!-- cachecol voando da mão do avô até o Kael -->
+    <sc-if value="{{showScarf}}" hint-placeholder-val="{{false}}">
+      <div class="scarf" style="left: 100px; top: 556px; width: 56px; height: 26px">
+        <svg width="56" height="26" viewBox="0 0 56 26" role="img" aria-label="O cachecol vermelho do Guardião" style="filter: drop-shadow(0 0 8px rgba(255,90,78,0.95))"><path class="scarfWave" d="M2 8 Q14 2 28 8 Q42 14 54 6 L54 16 Q42 24 28 18 Q14 12 2 18 Z" fill="#e0342a" stroke="#7a1410" stroke-width="1.5"></path></svg>
+      </div>
+    </sc-if>
+
+    <!-- Kael (pés em 95% do quadro = y 658) -->
+    <sc-if value="{{showKael}}" hint-placeholder-val="{{true}}">
+      <div style="position: absolute; left: {{kShX}}; top: 650px; width: 110px; height: 14px; border-radius: 50%; background: rgba(0,0,0,0.45); opacity: {{kShOp}}; transition: opacity .3s"></div>
+      <div class="{{kWrapCls}}" style="position: absolute; left: {{kX}}; top: 491px; width: 176px; height: 176px">
+        <div class="{{kCls}} kRim" role="img" aria-label="{{kAria}}" style="width: 176px; height: 176px"></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- ===== A QUEBRA: 9 pedaços (arte) voam girando e caem em portais ===== -->
+  <sc-if value="{{showShards}}" hint-placeholder-val="{{false}}">
+    <sc-for list="{{mPortals}}" as="m" hint-placeholder-count="9">
+      <span class="mp" style="left: {{m.x}}; top: {{m.y}}; border: 3px solid {{m.c}}; box-shadow: 0 0 20px 6px {{m.c}}; animation-delay: {{m.d}}"><span class="pSwirl"></span><span class="pCore"></span></span>
+    </sc-for>
+    <sc-for list="{{trails}}" as="r" hint-placeholder-count="9">
+      <span class="trF {{r.fl}}" style="left: {{r.x}}; top: {{r.y}}; width: {{r.s}}; height: {{r.s}}; background: radial-gradient(circle, #ffffff 0%, {{r.c}} 45%, transparent 72%); opacity: {{r.o}}; animation-delay: {{r.d}}"></span>
+    </sc-for>
+    <sc-for list="{{flyers}}" as="f" hint-placeholder-count="9">
+      <span class="shF {{f.fl}}" role="img" aria-label="{{f.aria}}" style="left: {{f.x}}; top: {{f.y}}; animation-delay: {{f.d}}"><span class="sh {{f.cls}} shGlow"></span></span>
+    </sc-for>
+  </sc-if>
+
+  <!-- ===== O MAPA: pan de baixo para cima pela arte ===== -->
+  <sc-if value="{{showMap}}" hint-placeholder-val="{{false}}">
+    <div class="mapIn" style="position: absolute; inset: 0; background: #0d0a08; overflow: hidden; z-index: 5">
+      <div style="position: absolute; left: -78px; top: 0; width: 600px; height: 1075px; transform: {{mapT}}; transition: transform 9.5s cubic-bezier(.45,.05,.4,1)">
+        <div style="position: absolute; left: 0; top: 1060px; width: 600px; height: 460px; background: linear-gradient(180deg, #3a2a18, #120c07 60%)"></div>
+        <div class="bgWorld" role="img" aria-label="Mapa-múndi ilustrado com as nove eras" style="position: absolute; left: 0; top: 0; width: 600px; height: 1075px"></div>
+        <div class="cloudA drift" style="position: absolute; left: 0; width: 600px; top: 860px; height: 80px; opacity: .45; pointer-events: none"></div>
+        <div class="cloudA drift" style="position: absolute; left: 0; width: 600px; top: 520px; height: 70px; opacity: .4; pointer-events: none; animation-duration: 80s; animation-direction: reverse"></div>
+        <div class="cloudA drift" style="position: absolute; left: 0; width: 600px; top: 170px; height: 70px; opacity: .4; pointer-events: none; animation-duration: 45s"></div>
+        <sc-for list="{{motes}}" as="o" hint-placeholder-count="6">
+          <span class="mote" style="left: {{o.x}}; top: {{o.y}}; animation-delay: {{o.d}}"></span>
+        </sc-for>
+        <sc-for list="{{pts}}" as="k" hint-placeholder-count="9">
+          <div style="position: absolute; left: {{k.x}}; top: {{k.y}}; width: 0; height: 0">
+            <span class="lBeam" style="left: -22px; top: -210px; background: linear-gradient(0deg, {{k.c}}, rgba(255,255,255,0)); animation-delay: {{k.t}}"></span>
+            <span class="lGlow" style="left: -34px; top: -14px; width: 68px; height: 28px; background: radial-gradient(ellipse, {{k.c}} 0%, rgba(255,220,140,0.35) 45%, transparent 72%); animation-delay: {{k.t}}, {{k.t}}"></span>
+            <span class="ringP" style="left: -30px; top: -11px; width: 60px; height: 22px; border: 3px solid {{k.c}}; animation-delay: {{k.t}}"></span>
+            <span class="ringP" style="left: -30px; top: -11px; width: 60px; height: 22px; border: 3px solid {{k.c}}; animation-delay: {{k.t2}}"></span>
+            <span class="landT" style="left: -9px; top: -30px; width: 18px; height: 18px; background: radial-gradient(circle, #fff, {{k.c}} 45%, transparent 72%); animation-delay: {{k.tr1}}"></span>
+            <span class="landT" style="left: -7px; top: -28px; width: 14px; height: 14px; background: radial-gradient(circle, #fff, {{k.c}} 45%, transparent 72%); animation-delay: {{k.tr2}}"></span>
+            <span class="land" role="img" aria-label="{{k.aria}}" style="left: -17px; top: -44px; width: 34px; height: 42px; animation-delay: {{k.tf}}"><span class="sh {{k.cls}} shOn"></span></span>
+          </div>
+          <div class="plate plateIn" style="position: absolute; left: {{k.lx}}; top: {{k.ly}}; width: 124px; height: 36px; border-radius: 10px; border-color: {{k.c}}; padding: 2px 8px; display: flex; flex-direction: column; justify-content: center; line-height: 1.05; pointer-events: none; animation-delay: {{k.t}}">
+            <span style="font-size: 10px; font-weight: 900; color: {{k.c}}; letter-spacing: .6px" class="tOutS">ERA {{k.n}}</span>
+            <span class="lil tOutS" style="font-size: 15px; color: #fff; white-space: nowrap">{{k.name}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 110px; background: linear-gradient(180deg, rgba(8,6,4,.85), rgba(8,6,4,0)); pointer-events: none"></div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 230px; background: linear-gradient(180deg, rgba(8,6,4,0), rgba(8,6,4,.92) 50%); pointer-events: none"></div>
+      <div class="plate" role="status" aria-label="{{litAria}}" style="position: absolute; left: 50%; top: 64px; margin-left: -112px; width: 224px; height: 34px; border-radius: 17px; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <span class="sh sh0" aria-hidden="true" style="width: 20px; height: 24px"></span>
+        <span class="lil tOutS" style="font-size: 15px; color: #fff">Pedaços nas eras: <span class="{{litCls}}" style="display: inline-block; color: #ffd84a">{{litN}}/9</span></span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- vinhetas de cinema -->
+  <div style="position: absolute; left: 0; right: 0; top: 0; height: 110px; background: linear-gradient(180deg, rgba(3,3,8,0.7), rgba(3,3,8,0)); pointer-events: none"></div>
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 230px; background: linear-gradient(180deg, rgba(8,6,4,0), rgba(8,6,4,0.92) 55%); pointer-events: none"></div>
+
+  <!-- ===== FINAL: título EONBOUND + Começar jornada ===== -->
+  <sc-if value="{{showFinal}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; left: 0; right: 0; top: 236px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 6">
+      <span class="title lil titleFill" style="font-size: 60px; line-height: 1">EONBOUND</span>
+      <span class="fadeUp" style="font-size: 15px; font-weight: 900; color: #f6ecdf; text-shadow: 0 2px 4px #000, 0 0 8px #000; animation-delay: .6s">Preso às eras até remontar o tempo</span>
+    </div>
+    <div class="fadeUp" style="position: absolute; left: 24px; right: 24px; top: 680px; padding: 10px 12px; border-radius: 14px; background: rgba(14,10,7,0.88); border: 2px solid #4a3a2b; text-align: center; font-size: 15px; font-weight: 800; color: #e8dccb; line-height: 1.3; z-index: 6; animation-delay: .9s">Nove eras. Nove pedaços. A primeira parada é a Pré-História.</div>
+    <a class="gold pulse shineBtn fadeUp lil" href="BatalhaTelaCheiaV2.dc.html" onClick="{{start}}" style="position: absolute; left: 40px; right: 40px; bottom: 30px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 26px; text-decoration: none; z-index: 6; box-sizing: border-box; animation-delay: 1.1s">Começar jornada</a>
+  </sc-if>
+
+  <!-- clarões e cortes -->
+  <sc-if value="{{flashOn}}" hint-placeholder-val="{{false}}">
+    <div class="flash" style="position: absolute; inset: 0; background: radial-gradient(circle at {{flashAt}}, #ffffff 0%, #fff4c8 45%, rgba(255,233,168,0.9) 100%); z-index: 8"></div>
+  </sc-if>
+  <sc-if value="{{cutOn}}" hint-placeholder-val="{{false}}">
+    <div class="cut" style="position: absolute; inset: 0; background: #000; z-index: 8"></div>
+  </sc-if>
+
+  <!-- ===== LEGENDA letra a letra + Continuar ===== -->
+  <sc-if value="{{showCap}}" hint-placeholder-val="{{true}}">
+    <button class="capIn" onClick="{{finishType}}" aria-label="{{capFull}}" style="position: absolute; left: 14px; right: 14px; top: 676px; height: 96px; padding: 10px 14px; border-radius: 16px; border: 2px solid {{capBd}}; background: rgba(14,10,7,0.9); color: #f6ecdf; text-align: left; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; gap: 4px; z-index: 7">
+      <sc-if value="{{hasSpeaker}}" hint-placeholder-val="{{false}}">
+        <span class="lil" style="font-size: 14px; color: #ffc94a; line-height: 1">Avô</span>
+      </sc-if>
+      <span aria-hidden="true" style="font-size: 16px; font-weight: 800; line-height: 1.32">{{capShown}}<span class="caret" style="opacity: {{caretOp}}"></span><span style="opacity: 0">{{capRest}}</span></span>
+    </button>
+    <button class="{{contCls}} lil" onClick="{{next}}" style="position: absolute; left: 70px; right: 70px; top: 782px; height: 52px; border-radius: 16px; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 7; box-sizing: border-box">{{contTxt}}
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4 L19 12 L7 20 Z"></path></svg></button>
+  </sc-if>
+
+  <!-- progresso das cenas + Pular (sempre visível até o final) -->
+  <sc-if value="{{showSkip}}" hint-placeholder-val="{{true}}">
+    <div role="img" aria-label="{{dotsAria}}" style="position: absolute; left: 16px; top: 28px; height: 10px; display: flex; gap: 6px; z-index: 9">
+      <sc-for list="{{dots}}" as="d" hint-placeholder-count="4">
+        <span class="dot" style="width: {{d.w}}; height: 10px; border-radius: 5px; background: {{d.bg}}; box-shadow: 0 1px 3px rgba(0,0,0,0.8)"></span>
+      </sc-for>
+    </div>
+    <button onClick="{{skip}}" style="position: absolute; right: 14px; top: 14px; height: 44px; padding: 0 16px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 17px; display: flex; align-items: center; gap: 6px; z-index: 9">Pular
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M13 5 L22 12 L13 19 Z"></path></svg></button>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', portal: '/_blob/af2eace71811af794b916b2e691a9489',
+  bite: '/_blob/5d4b1eda7d276cb9adda5ac1a6aa0543', crash: '/_blob/fa0a62b02a3086bcbce94142b3441c05',
+  legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487',
+  swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d', summon: '/_blob/07a146ee324bece467fc05bedf4435b0',
+  coin: '/_blob/84ab4c639b3c7f8af848b41172359878', ready: '/_blob/8863b3ab71afe08aef6c7aa26d104efc',
+  music: '/_blob/c145b95db4c077b8db75bdb8329e5fe7'
+};
+// Texto: docs/HISTORIA.md. Mesmas falas para Kael ou Kaia.
+var CAPS = [
+  { t: 'No céu, o Relógio das Eras mantém o tempo em ordem. No vale, Kael treina com a espada do avô.', sp: false },
+  { t: 'Até que o Devorador de Eras mordeu o Relógio. Nove pedaços se soltaram e caíram por portais de luz.', sp: false },
+  { t: 'Cada pedaço caiu numa era. Lá, um Senhor da Era o guarda e prende o tempo num ciclo sem fim.', sp: false },
+  { t: '"O tempo escolheu você. Junte os pedaços, um por era. Fique forte, ou fique preso."', sp: true }
+];
+var ERAS = [
+  { n: 'Pré-História', c: '#ff7a2a', o: [670, 2610], side: 'r' },
+  { n: 'Antiguidade', c: '#ffd24a', o: [522, 2090], side: 'r' },
+  { n: 'Medieval', c: '#ff5a4e', o: [860, 1790], side: 'l' },
+  { n: 'Pólvora', c: '#4aa3ff', o: [585, 1590], side: 'r' },
+  { n: 'Industrial', c: '#ff9a4a', o: [720, 1420], side: 'r' },
+  { n: 'Moderna', c: '#c9d36a', o: [730, 1160], side: 'r' },
+  { n: 'Futurista', c: '#5ad8e6', o: [790, 790], side: 'l' },
+  { n: 'Submundo', c: '#b07cff', o: [915, 590], side: 'l' },
+  { n: 'Celestial', c: '#ffe07a', o: [770, 330], side: 'r' }
+];
+// encaixes do relógio na tela da cena 2 (centro 195,155; arte 240px) e portais onde cada pedaço cai
+var SLOT = [[195, 63], [247, 79], [282, 125], [282, 185], [248, 230], [195, 247], [142, 230], [108, 185], [108, 125]];
+var PORT = [[175, 430], [290, 420], [355, 470], [330, 580], [255, 610], [195, 540], [120, 610], [45, 570], [60, 460]];
+var WS = 600 / 1536; // mapa 1536x2752 desenhado com 600px de largura (igual ao Mapa das Eras aprovado)
+var LAND = [0.9, 1.8, 2.8, 3.8, 4.8, 5.9, 7.0, 8.0, 9.0]; // segundos em que cada pedaço pousa no mapa
+var SHARD_T0 = 0; // atraso do voo após a quebra
+// fases (ms desde o início da cena)
+// c0: 1 câmera desce até a vila · c1: 1 Devorador chega · 2 mordida · 3 quebra · 4 Devorador foge (6,7s)
+// c2: 1 pan do mapa · c3: 1 cachecol · 2 Kael brilha · 3 corre · 4 portal chega · 5 entra · 6 título
+var PH = [
+  [[1300, 1]],
+  [[300, 1], [2300, 2], [3000, 3], [6700, 4]],
+  [[120, 1]],
+  [[900, 1], [2100, 2], [3300, 3], [4300, 4], [5200, 5], [5900, 6]]
+];
+var FINAL = 4, TYPE_MS = 36;
+function px(v) { return Math.round(v) + 'px'; }
+var STARS = (function () {
+  var out = [], seed = 7;
+  function r() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var i = 0; i < 46; i++) out.push({ x: px(r() * 386), y: px(r() * 640), s: px(1.5 + r() * 2.5), d: (r() * 2.6).toFixed(2) + 's' });
+  return out;
+})();
+var DPARTS = [[60, 60, 40, -40], [120, 40, 50, -20], [40, 120, -30, 40], [150, 110, 50, 40], [90, 140, 10, 50], [20, 60, -40, -20], [170, 70, 60, 0], [100, 20, 0, -50]].map(function (p, i) {
+  return { x: px(p[0]), y: px(p[1]), cls: 'dp' + (p[2] >= 0 ? (p[3] < 0 ? 0 : 1) : (p[3] > 0 ? 2 : 3)), d: (i * 0.33).toFixed(2) + 's' };
+});
+var MOTES = [[300, 980], [420, 900], [250, 760], [360, 640], [280, 470], [400, 350], [330, 220], [260, 120]].map(function (p, i) {
+  return { x: px(p[0]), y: px(p[1]), d: (i * 0.55).toFixed(2) + 's' };
+});
+
+class Component extends DCLogic {
+  constructor(p) { super(p); this.tm = []; this.iv = null; this.mus = null; this.state = { sc: 0, ph: 0, n: 0, flash: false, flashAt: '50% 30%', quake: '', cut: false, lit: 0 }; }
+  later(fn, ms) { this.tm.push(setTimeout(fn, ms)); }
+  clearAll() { this.tm.forEach(function (t) { clearTimeout(t); }); this.tm = []; if (this.iv) { clearInterval(this.iv); this.iv = null; } }
+  componentDidMount() { this.music(); this.go(0); }
+  componentWillUnmount() { this.clearAll(); if (this.mus) { try { this.mus.pause(); } catch (e) {} } }
+  music() {
+    try {
+      if (!this.mus) { this.mus = new Audio(SND.music); this.mus.loop = true; this.mus.volume = 0.32; }
+      if (this.mus.paused) this.mus.play().catch(function () {});
+    } catch (e) {}
+  }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  flash(at) { var self = this; this.setState({ flash: true, flashAt: at }); this.later(function () { self.setState({ flash: false }); }, 900); }
+  cut() { var self = this; this.setState({ cut: true }); this.later(function () { self.setState({ cut: false }); }, 900); }
+  quake(big) { var self = this; this.setState({ quake: big ? 'quakeB' : 'quake' }); this.later(function () { self.setState({ quake: '' }); }, big ? 820 : 520); }
+  type(len) {
+    var self = this;
+    if (this.iv) clearInterval(this.iv);
+    this.iv = setInterval(function () {
+      var n = self.state.n + 1;
+      if (n >= len) { n = len; clearInterval(self.iv); self.iv = null; }
+      self.setState({ n: n });
+    }, TYPE_MS);
+  }
+  go(sc) {
+    var self = this;
+    this.clearAll();
+    this.setState({ sc: sc, ph: 0, n: 0, flash: false, quake: '', lit: 0 });
+    if (sc === FINAL) { this.flash('50% 64%'); this.sfx(SND.ready, 0.8); return; }
+    if (sc === 2) { this.sfx(SND.summon, 0.6); LAND.forEach(function (t, i) { self.later(function () { self.setState({ lit: i + 1 }); self.sfx(SND.coin, 0.45); }, t * 1000); }); }
+    if (sc === 3) this.cut();
+    if (sc === 0) { [1700, 3117, 4534, 5951].forEach(function (t) { self.later(function () { self.sfx(SND.swing, 0.35); }, t); }); }
+    (PH[sc] || []).forEach(function (e) { self.later(function () { self.phase(sc, e[1]); }, e[0]); });
+    this.later(function () { self.type(CAPS[sc].t.length); }, sc === 0 ? 900 : 500);
+  }
+  phase(sc, ph) {
+    var self = this;
+    if (sc === 3 && ph === 6) { this.go(FINAL); return; }
+    this.setState({ ph: ph });
+    if (sc === 1 && ph === 1) this.sfx(SND.summon, 0.4);
+    if (sc === 1 && ph === 2) { this.sfx(SND.bite, 0.7); this.quake(false); }
+    if (sc === 1 && ph === 3) { this.sfx(SND.crash, 0.85); this.flash('50% 18%'); this.quake(true); this.later(function () { self.sfx(SND.portal, 0.6); }, 1500); }
+    if (sc === 3 && ph === 1) this.sfx(SND.legendary, 0.7);
+    if (sc === 3 && ph === 4) this.sfx(SND.portal, 0.8);
+    if (sc === 3 && ph === 5) { this.flash('60% 64%'); this.sfx(SND.claim, 0.7); }
+  }
+  renderVals() {
+    var s = this.state, self = this, sc = s.sc, ph = s.ph;
+    var fin = sc === FINAL;
+    var cap = CAPS[Math.min(sc, 3)], full = cap.t, n = Math.min(s.n, full.length), typed = n >= full.length;
+    var broken = (sc === 1 && ph >= 3) || sc >= 2;
+    var running = sc === 3 && ph >= 3;
+
+    // câmeras
+    var clkT, vilT, starT, camD, vilF;
+    if (sc === 0) {
+      clkT = ph >= 1 ? 'translateY(-150px) scale(.62)' : 'translateY(40px) scale(1.12)';
+      vilT = ph >= 1 ? 'translateY(0px) scale(1)' : 'translateY(560px) scale(1)';
+      starT = ph >= 1 ? 'translateY(-60px)' : 'translateY(0px)';
+      camD = '3.8s'; vilF = 'brightness(.62) saturate(.8) hue-rotate(-10deg)';
+    } else if (sc === 1) {
+      clkT = 'translateY(-95px) scale(.8)'; vilT = 'translateY(0px) scale(1.05)'; starT = 'translateY(-40px)';
+      camD = '2.6s'; vilF = ph >= 1 ? 'brightness(.42) saturate(.7) hue-rotate(-28deg)' : 'brightness(.62) saturate(.8) hue-rotate(-10deg)';
+    } else if (sc === 2) {
+      clkT = 'translateY(-150px) scale(.62)'; vilT = 'translateY(0px) scale(1.16)'; starT = 'translateY(-60px)';
+      camD = '0s'; vilF = 'brightness(.58) saturate(.85) hue-rotate(-20deg)';
+    } else if (sc === 3) {
+      clkT = 'translateY(-150px) scale(.62)'; vilT = running ? 'translateY(0px) scale(1)' : 'translateY(0px) scale(1.16)'; starT = 'translateY(-60px)';
+      camD = '1.6s'; vilF = 'brightness(.58) saturate(.85) hue-rotate(-20deg)';
+    } else {
+      clkT = 'translateY(-118px) scale(.6)'; vilT = 'translateY(0px) scale(1)'; starT = 'translateY(-60px)';
+      camD = '1.2s'; vilF = 'brightness(.5) saturate(.85) hue-rotate(-20deg)';
+    }
+
+    // pedaços voando (cena 2)
+    var flyers = SLOT.map(function (p, i) {
+      return { fl: 'fl' + i, cls: 'sh' + i, x: px(p[0] - 20), y: px(p[1] - 25), d: (SHARD_T0 + i * 0.07).toFixed(2) + 's', aria: 'Pedaço da era ' + ERAS[i].n + ' voando' };
+    });
+    var trails = [];
+    SLOT.forEach(function (p, i) {
+      [[0.05, 18, 0.95], [0.1, 14, 0.75], [0.16, 11, 0.55], [0.22, 8, 0.4]].forEach(function (t) {
+        trails.push({ fl: 'fl' + i, x: px(p[0] - t[1] / 2), y: px(p[1] - t[1] / 2), s: px(t[1]), o: t[2], c: ERAS[i].c, d: (SHARD_T0 + i * 0.07 + t[0]).toFixed(2) + 's' });
+      });
+    });
+    var mPortals = PORT.map(function (p, i) { return { x: px(p[0] - 20), y: px(p[1] - 31), c: ERAS[i].c, d: (SHARD_T0 + i * 0.07 + 0.75).toFixed(2) + 's' }; });
+
+    // mapa (cena 3)
+    var pts = ERAS.map(function (E, i) {
+      var x = E.o[0] * WS, y = E.o[1] * WS, t = LAND[i];
+      return {
+        n: i, name: E.n, c: E.c, cls: 'sh' + i, x: px(x), y: px(y),
+        lx: px(E.side === 'r' ? x + 22 : x - 22 - 124), ly: px(y - 46),
+        t: t.toFixed(2) + 's', t2: (t + 0.75).toFixed(2) + 's', tf: (t - 0.9).toFixed(2) + 's',
+        tr1: (t - 0.84).toFixed(2) + 's', tr2: (t - 0.78).toFixed(2) + 's',
+        aria: 'Pedaço pousa na era ' + i + ', ' + E.n
+      };
+    });
+
+    var kX = sc === 3 ? 150 : 107;
+    return {
+      quakeCls: s.quake,
+      stars: STARS, showShoot: sc === 0, dParts: DPARTS, motes: MOTES,
+      clkT: clkT, vilT: vilT, starT: starT, camD: camD, vilF: vilF,
+      tStorm: (sc === 1 && ph >= 1) ? 1 : (sc >= 2 ? 0.55 : 0),
+      showWhole: !broken, showEmpty: broken,
+      shakeCls: sc === 1 && ph === 2 ? 'clkShake' : '',
+      showCrack: broken,
+      showDevo: sc === 1 && ph >= 1,
+      devoCls: ph >= 4 ? 'devoGone' : (ph >= 2 ? 'devoBite' : 'devoIn'),
+      runCls: (running || fin) ? ('run' + ((sc === 3 && ph >= 5) || fin ? ' paused' : '')) : '',
+      showMon: broken,
+      showBeam: sc === 0 && ph >= 1,
+      showFly: sc === 0,
+      showShards: sc === 1 && ph === 3,
+      flyers: flyers, trails: trails, mPortals: mPortals,
+      showMap: sc === 2,
+      mapT: ph >= 1 ? 'translateY(0px)' : 'translateY(-415px)',
+      pts: pts, litN: s.lit, litCls: s.lit ? 'cntPop' : '', litAria: s.lit + ' de 9 pedaços localizados nas eras',
+      showPortal: (sc === 3 && ph >= 4) || fin,
+      pWrapCls: fin ? 'pBig' : 'pSlide', pX: fin ? '140px' : '183px',
+      showGpa: sc === 3,
+      gWrapCls: running ? 'gScroll' : '',
+      armCls: ph >= 1 && ph < 3 ? 'armGive' : '',
+      showScarf: sc === 3 && ph === 1,
+      showKael: sc !== 2 && !fin,
+      kX: px(kX), kShX: px(kX + 33),
+      kShOp: sc === 3 && ph >= 5 ? 0 : 1,
+      kWrapCls: sc === 3 && ph >= 5 ? 'kEnter' : (sc === 3 && ph === 2 ? 'kGlow' : ''),
+      kCls: running ? 'kRun' : (sc === 0 ? 'kAtk' : 'kIdle'),
+      kAria: running ? 'Kael corre para o portal' : (sc === 0 ? 'Kael treinando com a espada do avô' : (sc === 1 ? 'Kael olha o céu' : 'Kael recebe o cachecol do avô')),
+      flashOn: s.flash, flashAt: s.flashAt, cutOn: s.cut,
+      showFinal: fin,
+      showCap: !fin, hasSpeaker: cap.sp, capBd: cap.sp ? '#ffc94a' : '#4a3a2b',
+      capFull: full, capShown: full.slice(0, n), capRest: full.slice(n), caretOp: typed ? 0 : 1,
+      contTxt: typed ? 'Continuar' : 'Mostrar tudo',
+      contCls: typed ? 'gold pulse' : 'ghostBtn',
+      showSkip: !fin,
+      dotsAria: 'Cena ' + (Math.min(sc, 3) + 1) + ' de 4',
+      dots: [0, 1, 2, 3].map(function (i) { return { w: i === sc ? '28px' : '10px', bg: i <= sc ? '#ffc94a' : 'rgba(246,236,223,0.4)' }; }),
+      finishType: function () {
+        self.music();
+        if (self.state.n < full.length) { if (self.iv) { clearInterval(self.iv); self.iv = null; } self.setState({ n: full.length }); }
+      },
+      next: function () {
+        self.music(); self.sfx(SND.tap);
+        if (self.state.n < full.length) { if (self.iv) { clearInterval(self.iv); self.iv = null; } self.setState({ n: full.length }); return; }
+        self.go(sc + 1);
+      },
+      skip: function () { self.music(); self.sfx(SND.tap); self.go(FINAL); },
+      start: function () { self.sfx(SND.claim); }
+    };
+  }
+}
+</script>
+</body>
+</html>

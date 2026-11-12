@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Folhas animadas</title>
+<style>
+ body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:#aab}
+ .grid{display:flex;flex-wrap:wrap;gap:12px;padding:12px 16px}
+ .cell{background:#000;border-radius:8px;overflow:hidden;max-width:100%}
+ .cell b{display:block;padding:6px 10px;background:#222;font-size:13px}
+ canvas{display:block;max-width:100%}
+</style></head><body>
+<h1>Folhas animadas (12 fps) sobre o cenário da era 2</h1>
+<p>Inimigos atacando para a esquerda, auras atrás do Kael. Tudo em loop.</p>
+<div class="grid" id="g"></div>
+<script>
+const ERA=new URLSearchParams(location.search).get('era');
+const NAMES={0:['Dente-de-Sabre','Brutamontes','Rex Furioso'],1:['Legionário','Escorpião','Minotauro'],2:['Goblin','Esqueleto','Dragão Real'],3:['Pirata','Mosqueteiro','Capitão Fantasma'],4:['Golem','Aranha Mecânica','Caldeira'],5:['Drone','Soldado','Tanque'],6:['Alien','Ciborgue','Tentáculo']};
+const ITEMS0=[
+ ['Goblin: ataque','../../../assets/anim/hyb/enemy/era2_e0_attack','enemy'],
+ ['Esqueleto: ataque','../../../assets/anim/hyb/enemy/era2_e1_attack','enemy'],
+ ['Dragão Real: ataque (fogo)','../../../assets/anim/hyb/enemy/era2_boss_attack','boss'],
+ ['Goblin: correndo','../../../assets/anim/era2_e0_run','enemyRun'],
+ ['Esqueleto: correndo','../../../assets/anim/era2_e1_run','enemyRun'],
+ ['Dragão Real: andando','../../../assets/anim/hyb/enemy/era2_boss_run','bossRun'],
+ ['Goblin: apanhando','../../../assets/anim/hyb/enemy/era2_e0_hurt','enemy'],
+ ['Esqueleto: apanhando','../../../assets/anim/hyb/enemy/era2_e1_hurt','enemy'],
+ ['Dragão Real: apanhando','../../../assets/anim/hyb/enemy/era2_boss_hurt','boss'],
+ ['Goblin: morrendo','../../../assets/anim/hyb/enemy/era2_e0_die','enemy'],
+ ['Esqueleto: morrendo','../../../assets/anim/hyb/enemy/era2_e1_die','enemy'],
+ ['Dragão Real: morrendo','../../../assets/anim/hyb/enemy/era2_boss_die','boss'],
+ ['Aura +4 (azul)','../../../assets/anim/aura/aura4','aura'],
+ ['Aura +7 (roxa)','../../../assets/anim/aura/aura7','aura'],
+ ['Aura +10 (fogo)','../../../assets/anim/aura/aura10','aura'],
+ ['Aura +13 (dourada)','../../../assets/anim/aura/aura13','aura'],
+ ['Kael com elmo','../../../assets/anim/hyb/R/kael_run_body_hat','hero'],
+ ['Kael loiro','../../../assets/anim/hyb/R/kael_run_body_hair_spiky','hero'],
+ ['Kael coque preto','../../../assets/anim/hyb/R/kael_run_body_hair_bun','hero'],
+];
+const ITEMS=ERA==null?ITEMS0:(()=>{const n=NAMES[ERA],r=[];['run','attack','hurt','die'].forEach(s=>['e0','e1','boss'].forEach((k,i)=>r.push([n[i]+': '+({run:'andando',attack:'ataque',hurt:'apanhando',die:'morrendo'}[s]),'../../../assets/anim/hyb/enemy/era'+ERA+'_'+k+'_'+s,(k==='boss'?'boss':'enemy')+(s==='run'?'Run':'')])));return r;})();
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src+'?v='+Date.now();});
+(async()=>{
+ const EB=ERA==null?'2':ERA;const bg=await L('../../../assets/bg/era'+EB+'.png'),gyF=(await (await fetch('../../../assets/bg/meta.json')).json())['era'+EB].groundY;
+ const kael=await L('../../../assets/anim/hyb/R/kael_idle_era2_t1.png');
+ const cells=[];
+ for(const [name,base,kind] of ITEMS){const img=await L(base+'.png');let m=null;try{m=await (await fetch(base+'.json?v='+Date.now())).json();}catch(e){}
+  if(m&&!m.frames){const k=base.split('/').pop();m=m[k];}
+  if(!img||!m)continue;const d=document.createElement('div');d.className='cell';d.innerHTML='<b>'+name+'</b>';const c=document.createElement('canvas');c.width=360;c.height=270;d.appendChild(c);$=document.getElementById('g');$.appendChild(d);cells.push({c,img,m,kind});}
+ const t0=performance.now();
+ function loop(now){const t=(now-t0)/1000;
+  for(const {c,img,m,kind} of cells){const g=c.getContext('2d'),W=c.width,H=c.height,gy=H*0.85;g.clearRect(0,0,W,H);
+   if(bg){const s=H/(bg.height*(0.85/gyF)),bw=bg.width*s,bh=bg.height*s,off=((kind==='hero'||kind==='enemyRun'||kind==='bossRun')?t*90:0)%bw;for(let x=-off;x<W;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+   const n=m.frames,i=Math.floor(t*(m.fps||12))%n,cw=m.w,ch=m.h||256;
+   if(kind==='aura'){const S=0.95,aw=cw*S,ah=ch*S;g.drawImage(img,i*cw,0,cw,ch,W/2-aw/2,gy-ah+10,aw,ah);g.save();g.globalCompositeOperation='lighter';g.globalAlpha=0.35;g.drawImage(img,i*cw,0,cw,ch,W/2-aw/2,gy-ah+10,aw,ah);g.restore();
+     if(kael){const k=Math.floor(t*12)%12,S2=0.8;g.drawImage(kael,k*256,0,256,256,W/2-128*S2,gy-243*S2,256*S2,256*S2);}}
+   else{const S=(kind==='boss'||kind==='bossRun')?0.85:0.8,pad=m.padLeft||0,pt=m.padTop||0;g.drawImage(img,i*cw,0,cw,ch,W*0.62-(pad+128)*S,gy-(m.feetY||243+pt)*S,cw*S,ch*S);}
+  }
+  requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+})();
+</script></body></html>

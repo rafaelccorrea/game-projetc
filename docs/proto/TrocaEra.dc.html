@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Troca de era</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+/* cenários em camadas, tela H=844: sky topo 0 (0,60H) · far base 0,64H (0,42H) · mid base 0,675H (0,50H) · ground topo 0,655H (0,38H); pés em 0,78H = 658 */
+.scn{position:absolute;inset:0;transition:opacity .5s ease}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.Lsky{top:0;height:506px;background-size:auto 506px}
+.Lcld{top:40px;height:220px;background-size:auto 220px}
+.Lfar{top:186px;height:354px;background-size:auto 354px}
+.Lmid{top:148px;height:422px;background-size:auto 422px}
+.Lgnd{top:553px;height:321px;background-size:auto 321px}
+.e1sky{background-image:url(/_blob/8f9063538a20f7bd77cf0ddf7d957336)}.e1far{background-image:url(/_blob/6c30271e1308c4ceeb9cf353bbae459e)}.e1mid{background-image:url(/_blob/e7dbc843b56300a4e05e9a9f80d57301)}.e1gnd{background-image:url(/_blob/a8e90807b56447d610d33e16a51c930e)}
+.e2sky{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}.e2cld{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041)}.e2far{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}.e2mid{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}.e2gnd{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+/* parallax quando o Kael corre no Medieval */
+.run .Lsky{animation:pSky 300s linear infinite}.run .Lcld{animation:pCld 300s linear infinite}.run .Lfar{animation:pFar 300s linear infinite}.run .Lmid{animation:pMid 300s linear infinite}.run .Lgnd{animation:pGnd 300s linear infinite}
+@keyframes pSky{to{background-position-x:-1446px}}
+@keyframes pCld{to{background-position-x:-4200px}}
+@keyframes pFar{to{background-position-x:-5061px}}
+@keyframes pMid{to{background-position-x:-27474px}}
+@keyframes pGnd{to{background-position-x:-72300px}}
+.cldDrift{animation:pCld 300s linear infinite}
+/* Minotauro: folha "morrer" 13 quadros 544x352 a 75% (408x264); pés x 272 → 204, y 307 → 230 */
+.mIdle{background-image:url(/_blob/99d015dcdc7ed696727f9baf015fcf7b);background-size:1300% 100%;background-repeat:no-repeat;background-position:0 0;animation:breathe 1.6s ease-in-out infinite;transform-origin:50% 87%}
+.mDie{background-image:url(/_blob/99d015dcdc7ed696727f9baf015fcf7b);background-size:1300% 100%;background-repeat:no-repeat;animation:sheet 1.083s steps(13, jump-none) both}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}
+/* Kael correndo aprovado (8 quadros 256x256) */
+.kRun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .667s steps(8, jump-none) infinite}
+.toPortal{animation:toPortal 1.4s ease-in both}
+@keyframes toPortal{0%{transform:translateX(-200px)}85%{transform:translateX(192px);opacity:1}100%{transform:translateX(212px) scale(.6);opacity:0}}
+.runIn{animation:runIn .7s ease-out both}
+@keyframes runIn{from{transform:translateX(-160px)}to{transform:none}}
+/* portal em código */
+.portal{position:absolute;border-radius:50%;animation:pOpen .9s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pOpen{from{transform:scale(0,.2);opacity:0}to{transform:none;opacity:1}}
+.pSwirl{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#fff6c8,#ffc94a,#b07cff,#4aa3ff,#fff6c8,#ffc94a,#b07cff,#4aa3ff,#fff6c8);-webkit-mask:radial-gradient(ellipse,transparent 18%,#000 38%,#000 62%,transparent 72%);mask:radial-gradient(ellipse,transparent 18%,#000 38%,#000 62%,transparent 72%);animation:spin 1.6s linear infinite}
+.pCore{position:absolute;inset:16%;border-radius:50%;background:radial-gradient(ellipse,#ffffff 0%,#fff1b8 30%,rgba(176,124,255,.7) 60%,rgba(74,163,255,0) 75%);animation:core 1.2s ease-in-out infinite}
+@keyframes core{0%,100%{transform:scale(.92);opacity:.85}50%{transform:scale(1.06);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:twinkle 1.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.2);opacity:1}}
+.flash{animation:flash .9s ease-out both;pointer-events:none}
+@keyframes flash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.quake{animation:quake .5s}
+@keyframes quake{20%{transform:translate(-7px,3px)}40%{transform:translate(7px,-3px)}60%{transform:translate(-5px,2px)}80%{transform:translate(3px,-1px)}}
+.banner{animation:banner .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes banner{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.title{animation:title .8s cubic-bezier(.2,1.5,.4,1) both,glowT 2s .8s ease-in-out infinite}
+@keyframes title{0%{transform:scale(2.4);opacity:0;letter-spacing:12px}100%{transform:none;opacity:1;letter-spacing:1px}}
+@keyframes glowT{0%,100%{text-shadow:0 4px 0 #6a3a08,0 0 10px rgba(255,201,74,.5)}50%{text-shadow:0 4px 0 #6a3a08,0 0 30px rgba(255,201,74,1),0 0 60px rgba(255,140,40,.7)}}
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.35) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 14s linear infinite}
+.card{animation:cardIn .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes cardIn{0%{transform:translateX(60px) scale(.9);opacity:0}100%{transform:none;opacity:1}}
+.row{animation:rowIn .4s ease-out both}
+@keyframes rowIn{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+/* ultimate: folha 49 quadros, grade 8x7 */
+.ultRows{animation:ultY 4.667s steps(7, jump-end) infinite}
+@keyframes ultY{from{transform:translateY(0)}to{transform:translateY(-100%)}}
+.ultCols{background-image:url(/_blob/fb846159b3bd0fe1a081e64cf4a5c93e);background-size:100% 100%;background-repeat:no-repeat;animation:ultX .667s steps(8, jump-end) infinite}
+@keyframes ultX{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.gobwalk{background-image:url(/_blob/c8453e22dba8128e4082e4ff1a3dc9f4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .667s steps(8, jump-none) infinite}
+.walkAcross{animation:walkAcross 4s linear infinite}
+@keyframes walkAcross{from{transform:translateX(150px)}to{transform:translateX(-150px)}}
+.reward img{animation:gemPop 1.2s ease-in-out infinite}
+@keyframes gemPop{0%,100%{transform:scale(1) rotate(-6deg)}50%{transform:scale(1.18) rotate(6deg)}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c}
+.gold:active{transform:scale(.97)}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 28px rgba(255,201,74,.95)}}
+.prog i{display:block;height:100%;border-radius:3px;background:#ffc94a;transition:width .4s}
+</style>
+</helmet>
+<div class="{{quakeCls}}" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+
+  <!-- a) Antiguidade (camadas) -->
+  <div class="scn" style="opacity: {{opAnt}}; background: #c9a77a">
+    <div class="ly Lsky e1sky"></div><div class="ly Lfar e1far"></div><div class="ly Lmid e1mid"></div><div class="ly Lgnd e1gnd"></div>
+  </div>
+  <!-- c) Medieval (camadas do kit), rolando enquanto o Kael corre -->
+  <div class="scn {{medRun}}" style="opacity: {{opMed}}; background: #7fb3d9">
+    <div class="ly Lsky e2sky"></div><div class="ly Lcld e2cld cldDrift"></div><div class="ly Lfar e2far"></div><div class="ly Lmid e2mid"></div><div class="ly Lgnd e2gnd"></div>
+  </div>
+  <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,7,5,0.55) 0%, rgba(10,7,5,0.05) 30%, rgba(10,7,5,0.05) 72%, rgba(10,7,5,0.92) 100%); pointer-events: none"></div>
+
+  <!-- Minotauro (Senhor da Antiguidade) caindo; pés em y 658 -->
+  <sc-if value="{{showBoss}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; left: 70px; top: 650px; width: 230px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+    <div class="{{bossCls}}" role="img" aria-label="{{bossAria}}" style="position: absolute; left: 46px; top: 428px; width: 408px; height: 264px"></div>
+  </sc-if>
+  <sc-if value="{{showDefeat}}" hint-placeholder-val="{{true}}">
+    <div class="banner" style="position: absolute; left: 0; right: 0; top: 150px; display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <span style="padding: 8px 18px; border-radius: 14px; background: rgba(120,20,12,0.88); border: 2px solid #ff8a7a; font-family: 'Lilita One', sans-serif; font-size: 24px; color: #fff; text-shadow: 0 2px 0 #3a0a06">Senhor da Era derrotado!</span>
+      <span style="font-size: 14px; font-weight: 900; color: #f6ecdf; text-shadow: 0 2px 4px #000">Minotauro · Antiguidade</span>
+    </div>
+  </sc-if>
+
+  <!-- b) portal -->
+  <sc-if value="{{showPortal}}" hint-placeholder-val="{{false}}">
+    <div class="portal" aria-hidden="true" style="left: 220px; top: 420px; width: 160px; height: 250px; box-shadow: 0 0 60px 20px rgba(255,201,74,0.55)">
+      <div class="pSwirl"></div><div class="pCore"></div>
+    </div>
+    <span class="spark" style="left: 236px; top: 440px"></span>
+    <span class="spark" style="left: 350px; top: 500px; animation-delay: .4s"></span>
+    <span class="spark" style="left: 250px; top: 620px; animation-delay: .8s"></span>
+    <span class="spark" style="left: 340px; top: 640px; animation-delay: 1.1s"></span>
+  </sc-if>
+
+  <!-- Kael correndo (pés em 95% = y 658) -->
+  <sc-if value="{{kaelToPortal}}" hint-placeholder-val="{{false}}">
+    <div class="toPortal" style="position: absolute; left: 20px; top: 491px; width: 176px; height: 176px">
+      <div class="kRun" role="img" aria-label="Kael correndo para o portal" style="width: 176px; height: 176px"></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{kaelMed}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; left: 70px; top: 650px; width: 140px; height: 14px; border-radius: 50%; background: rgba(0,0,0,0.4)"></div>
+    <div class="runIn" style="position: absolute; left: 52px; top: 491px; width: 176px; height: 176px">
+      <div class="kRun" role="img" aria-label="Kael correndo no Medieval" style="width: 176px; height: 176px"></div>
+    </div>
+  </sc-if>
+
+  <!-- clarão da travessia -->
+  <sc-if value="{{flashOn}}" hint-placeholder-val="{{false}}">
+    <div class="flash" style="position: absolute; inset: 0; background: radial-gradient(circle at 75% 65%, #ffffff 0%, #fff4c8 45%, rgba(255,233,168,0.9) 100%); z-index: 8"></div>
+  </sc-if>
+
+  <!-- d) letreiro -->
+  <sc-if value="{{showTitle}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; left: 0; right: 0; top: 70px; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center">
+      <div class="rays" style="left: 45px; top: -75px; width: 300px; height: 300px"></div>
+      <span style="position: relative; font-size: 14px; font-weight: 900; letter-spacing: 3px; color: #f6ecdf; text-shadow: 0 2px 4px #000">NOVA ERA LIBERADA</span>
+      <span class="title" style="position: relative; font-family: 'Lilita One', sans-serif; font-size: 42px; color: #ffc94a; white-space: nowrap">ERA 3 · MEDIEVAL</span>
+    </div>
+  </sc-if>
+
+  <!-- e) cartões, um de cada vez -->
+  <sc-if value="{{cardUlt}}" hint-placeholder-val="{{false}}">
+    <div class="card" style="position: absolute; left: 20px; right: 20px; top: 236px; height: 240px; padding: 10px; border-radius: 18px; background: rgba(29,22,17,0.94); border: 2px solid #b07cff; box-shadow: 0 0 24px rgba(176,124,255,0.6); box-sizing: border-box; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 20px; text-align: center">Nova ultimate: <span style="color: #d9b3ff">Lâmina do Dragão</span></span>
+      <div aria-label="Prévia animada da ultimate" role="img" style="position: relative; align-self: center; width: 320px; height: 180px; border-radius: 12px; overflow: hidden; background: #0e0a07">
+        <div class="ultRows" style="width: 100%; height: 700%"><div class="ultCols" style="width: 800%; height: 100%"></div></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{cardFoe}}" hint-placeholder-val="{{false}}">
+    <div class="card" style="position: absolute; left: 20px; right: 20px; top: 266px; height: 190px; padding: 12px; border-radius: 18px; background: rgba(29,22,17,0.94); border: 2px solid #ff5a4e; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 20px; text-align: center">Novos inimigos</span>
+      <span style="font-size: 13px; font-weight: 800; color: #c9b9a2; text-align: center">Goblins, esqueletos e o Senhor da Era Medieval</span>
+      <div style="position: relative; flex: 1; overflow: hidden; border-radius: 12px; background: linear-gradient(180deg, #2a1f16 0%, #3a2c1f 78%, #5a4430 78%, #4a3826 100%)">
+        <div class="walkAcross" style="position: absolute; left: 111px; top: 0; width: 106px; height: 106px">
+          <div class="gobwalk" role="img" aria-label="Goblin andando" style="width: 106px; height: 106px"></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{cardWeap}}" hint-placeholder-val="{{false}}">
+    <div class="card" style="position: absolute; left: 20px; right: 20px; top: 296px; padding: 16px; border-radius: 18px; background: rgba(29,22,17,0.94); border: 2px solid #4aa3ff; box-sizing: border-box; display: flex; align-items: center; gap: 12px">
+      <svg width="54" height="54" viewBox="0 0 64 64" aria-hidden="true" style="flex: none"><path d="M44 6 L58 6 L58 20 L26 48 L16 38 Z" fill="#c9ccd6" stroke="#2a1f16" stroke-width="3" stroke-linejoin="round"></path><path d="M12 36 L28 52" stroke="#8a5a2a" stroke-width="5" stroke-linecap="round"></path><path d="M14 46 L6 54" stroke="#5a3a1a" stroke-width="6" stroke-linecap="round"></path></svg>
+      <span style="display: flex; flex-direction: column; gap: 4px; line-height: 1.25">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 19px">Sua arma continua a mesma</span>
+        <span style="font-size: 14px; font-weight: 800; color: #e8dccb">Transforme ou conquiste uma nova nesta era.</span>
+      </span>
+    </div>
+  </sc-if>
+  <sc-if value="{{cardReward}}" hint-placeholder-val="{{false}}">
+    <div class="card reward" style="position: absolute; left: 20px; right: 20px; top: 286px; padding: 16px; border-radius: 18px; background: rgba(29,22,17,0.94); border: 3px solid #ffc94a; box-shadow: 0 0 30px rgba(255,201,74,0.6); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 10px">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; color: #ffc94a">Recompensa</span>
+      <div style="display: flex; gap: 24px">
+        <span style="display: flex; align-items: center; gap: 6px; font-family: 'Lilita One', sans-serif; font-size: 22px"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 40px; height: 40px">+30 gemas</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-family: 'Lilita One', sans-serif; font-size: 20px"><svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L19 9 L12 22 L5 9 Z" fill="#b07cff" stroke="#3a1a6a" stroke-width="1.5"></path><path d="M5 9 H19 M12 2 V22" stroke="#e8d4ff" stroke-width="1"></path></svg>Essência x2</span>
+      </div>
+      <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Essência da Era: ícone provisório</span>
+    </div>
+  </sc-if>
+
+  <!-- final: resumo curto + começar -->
+  <sc-if value="{{showFinal}}" hint-placeholder-val="{{false}}">
+    <div style="position: absolute; left: 20px; right: 20px; top: 232px; display: flex; flex-direction: column; gap: 8px">
+      <div class="row" style="height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 14px; background: rgba(29,22,17,0.94); border: 2px solid #b07cff">
+        <span style="position: relative; width: 72px; height: 41px; flex: none; border-radius: 8px; overflow: hidden; background: #0e0a07"><span class="ultRows" style="display: block; width: 100%; height: 700%"><span class="ultCols" style="display: block; width: 800%; height: 100%"></span></span></span>
+        <span style="font-size: 15px; font-weight: 900">Nova ultimate: <span style="color: #d9b3ff">Lâmina do Dragão</span></span>
+      </div>
+      <div class="row" style="height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 14px; background: rgba(29,22,17,0.94); border: 2px solid #ff5a4e; animation-delay: .08s">
+        <span style="width: 72px; height: 50px; flex: none; display: flex; justify-content: center; overflow: hidden"><span class="gobwalk" style="display: block; width: 52px; height: 52px"></span></span>
+        <span style="font-size: 15px; font-weight: 900">Novos inimigos</span>
+      </div>
+      <div class="row" style="height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 14px; background: rgba(29,22,17,0.94); border: 2px solid #4aa3ff; animation-delay: .16s">
+        <span style="width: 72px; flex: none; display: flex; justify-content: center"><svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><path d="M44 6 L58 6 L58 20 L26 48 L16 38 Z" fill="#c9ccd6" stroke="#2a1f16" stroke-width="3" stroke-linejoin="round"></path><path d="M12 36 L28 52" stroke="#8a5a2a" stroke-width="5" stroke-linecap="round"></path></svg></span>
+        <span style="font-size: 14px; font-weight: 900; line-height: 1.2">Arma continua a mesma: transforme ou conquiste uma nova</span>
+      </div>
+      <div class="row reward" style="height: 58px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 14px; background: rgba(29,22,17,0.94); border: 2px solid #ffc94a; animation-delay: .24s">
+        <span style="width: 72px; flex: none; display: flex; justify-content: center"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 34px; height: 34px"></span>
+        <span style="font-size: 15px; font-weight: 900">Recompensa: +30 gemas, Essência da Era x2</span>
+      </div>
+    </div>
+    <a class="gold pulse" href="BatalhaTelaCheiaV2.dc.html" onClick="{{start}}" style="position: absolute; left: 40px; right: 40px; bottom: 54px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-family: 'Lilita One', sans-serif; font-size: 26px; text-decoration: none">Começar a era</a>
+  </sc-if>
+
+  <!-- progresso das etapas + Pular -->
+  <sc-if value="{{showSkip}}" hint-placeholder-val="{{true}}">
+    <div class="prog" aria-hidden="true" style="position: absolute; left: 16px; right: 120px; top: 30px; height: 6px; border-radius: 3px; background: rgba(0,0,0,0.5)"><i style="width: {{progW}}"></i></div>
+    <button onClick="{{skip}}" style="position: absolute; right: 14px; top: 14px; height: 44px; padding: 0 16px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 17px; display: flex; align-items: center; gap: 6px; z-index: 9">Pular
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M13 5 L22 12 L13 19 Z"></path></svg></button>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', portal: '/_blob/af2eace71811af794b916b2e691a9489',
+  legendary: '/_blob/266edcaffe0fe5d99485bbe84d2d6c05', thud: '/_blob/fa0a62b02a3086bcbce94142b3441c05',
+  claim: '/_blob/c51c552050293b88cfe558b9b3b3e487'
+};
+// etapas: 0 chefe parado · 1 chefe morrendo · 2 portal · 3 Kael corre para o portal · 4 Medieval · 5 letreiro
+// 6 ultimate · 7 inimigos · 8 arma · 9 recompensa · 10 final
+var TL = [[300, 1], [2400, 2], [3600, 3], [5000, 4], [5600, 5], [7200, 6], [11600, 7], [14200, 8], [16800, 9], [19400, 10]];
+var LAST = 10;
+class Component extends DCLogic {
+  constructor(p) { super(p); this.tm = []; this.state = { st: 0, flash: false, quake: false }; }
+  later(fn, ms) { this.tm.push(setTimeout(fn, ms)); }
+  componentDidMount() {
+    var self = this;
+    TL.forEach(function (e) { self.later(function () { self.go(e[1]); }, e[0]); });
+  }
+  componentWillUnmount() { this.tm.forEach(function (t) { clearTimeout(t); }); this.tm = []; }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  go(st) {
+    var self = this;
+    this.setState({ st: st });
+    if (st === 1) { this.later(function () { self.sfx(SND.thud, 0.6); self.setState({ quake: true }); }, 800); this.later(function () { self.setState({ quake: false }); }, 1320); }
+    if (st === 2) { this.sfx(SND.portal, 0.8); this.setState({ flash: true }); this.later(function () { self.setState({ flash: false }); }, 900); }
+    if (st === 4) { this.setState({ flash: true }); this.later(function () { self.setState({ flash: false }); }, 900); }
+    if (st === 9) this.sfx(SND.legendary, 0.8);
+  }
+  renderVals() {
+    var s = this.state, self = this, st = s.st;
+    return {
+      quakeCls: s.quake ? 'quake' : '',
+      opAnt: st < 4 ? 1 : 0, opMed: st >= 4 ? 1 : 0, medRun: st >= 4 ? 'run' : '',
+      showBoss: st < 4, bossCls: st === 0 ? 'mIdle' : 'mDie', bossAria: st === 0 ? 'Minotauro' : 'Minotauro caindo derrotado',
+      showDefeat: st >= 1 && st < 4,
+      showPortal: st >= 2 && st < 4,
+      kaelToPortal: st === 3, kaelMed: st >= 4,
+      flashOn: s.flash,
+      showTitle: st >= 5,
+      cardUlt: st === 6, cardFoe: st === 7, cardWeap: st === 8, cardReward: st === 9,
+      showFinal: st >= LAST, showSkip: st < LAST,
+      progW: Math.round(st / LAST * 100) + '%',
+      skip: function () {
+        self.componentWillUnmount();
+        self.sfx(SND.tap);
+        self.setState({ st: LAST, flash: false, quake: false });
+      },
+      start: function () { self.sfx(SND.claim); }
+    };
+  }
+}
+</script>
+</body>
+</html>

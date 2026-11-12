@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Forja</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+/* portão de nível: cadeado em SVG + "Libera no nível X" (valores provisórios: pet 1, práticas 5, forja 12, torre 15, instâncias 20, arena 30) */
+.gatelk{animation:gatelk 2.2s ease-in-out infinite;transform-origin:50% 60%}
+@keyframes gatelk{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-8deg)}90%{transform:rotate(7deg)}95%{transform:rotate(-3deg)}}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+button:disabled{cursor:default}
+/* cenário novo era 2 em camadas, cena H=285 alinhada no topo: pés do Kael em 0.78H=222 */
+.fieldbg{background:#8fc6dc}
+.s2j{position:absolute;inset:0;overflow:hidden;background:#8fc6dc}
+.s2j .ly{position:absolute;left:0;right:0;background-repeat:repeat-x;background-position:0 0}
+.s2j .fl{position:absolute;left:0;right:0;top:171px;height:28px;background:#6b93a6}
+.s2j .sky{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);top:0px;height:171px;background-size:auto 171px;animation:s2jsky 695s linear infinite}
+@keyframes s2jsky{from{background-position:0 0}to{background-position:-397px 0}}
+.s2j .far{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);top:63px;height:120px;background-size:auto 120px;animation:s2jfar 210s linear infinite}
+@keyframes s2jfar{from{background-position:0 0}to{background-position:-419px 0}}
+.s2j .mid{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);top:50px;height:143px;background-size:auto 143px;animation:s2jmid 40s linear infinite}
+@keyframes s2jmid{from{background-position:0 0}to{background-position:-434px 0}}
+.s2j .ground{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);top:187px;height:108px;background-size:auto 108px}
+.s2j .cl{position:absolute;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:contain;background-repeat:no-repeat;background-position:center;animation:s2jcl linear infinite}
+@keyframes s2jcl{from{transform:translateX(0)}to{transform:translateX(-560px)}}
+/* Kael aprovado: parado, 12 quadros 256x256, 12 fps; pés em 95% do quadro */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kid 1s steps(12, jump-none) infinite}
+@keyframes kid{from{background-position:0 0}to{background-position:100% 0}}
+/* Aura +13 aprovada: 16 quadros 256x320, 12 fps; âncora no chão, centro embaixo */
+.aura13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:au13 1.333s steps(16, jump-none) infinite}
+@keyframes au13{from{background-position:0 0}to{background-position:100% 0}}
+/* Prévias PROVISÓRIAS em código (+4 azul, +7 roxa, +10 chamas) */
+.aglow{position:absolute;inset:0;transform-origin:50% 100%;animation:agl 1.8s ease-in-out infinite}
+@keyframes agl{0%,100%{transform:scale(.94);opacity:.7}50%{transform:scale(1.04);opacity:1}}
+.pspark{position:absolute;width:5px;height:5px;border-radius:50%;opacity:0;animation:prise 2.4s ease-out infinite}
+@keyframes prise{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:1}100%{transform:translateY(-150px) scale(.3);opacity:0}}
+.flame{position:absolute;bottom:0;width:38px;border-radius:50% 50% 42% 42% / 72% 72% 28% 28%;background:linear-gradient(0deg,rgba(255,60,30,.95),rgba(255,140,40,.8) 50%,rgba(255,220,120,0));transform-origin:50% 100%;animation:flick .42s ease-in-out infinite alternate;filter:blur(1.5px);mix-blend-mode:screen}
+@keyframes flick{0%{transform:scaleY(.82) skewX(-5deg)}100%{transform:scaleY(1.12) skewX(6deg)}}
+.footglow{position:absolute;border-radius:50%;animation:fglow 1.6s ease-in-out infinite}
+@keyframes fglow{0%,100%{opacity:.55;transform:scaleX(.9)}50%{opacity:1;transform:scaleX(1.08)}}
+.ped{animation:pedP 2.6s ease-in-out infinite}
+@keyframes pedP{0%,100%{box-shadow:0 0 12px 2px rgba(255,201,74,.3),inset 0 -6px 0 rgba(0,0,0,.35)}50%{box-shadow:0 0 26px 6px rgba(255,201,74,.6),inset 0 -6px 0 rgba(0,0,0,.35)}}
+.halo{position:absolute;inset:-3px;border-radius:17px;filter:blur(7px);animation:halo 1.9s ease-in-out infinite;pointer-events:none}
+@keyframes halo{0%,100%{opacity:.35}50%{opacity:.9}}
+.sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.4) 48%,transparent 62%);background-size:280% 100%;animation:shine 3s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 22px rgba(255,201,74,.85)}}
+.hammer{transform-origin:85% 85%;animation:hit .32s ease-in infinite alternate}
+@keyframes hit{0%{transform:rotate(-38deg)}100%{transform:rotate(12deg)}}
+.flashw{animation:flashw .7s ease-out both;pointer-events:none}
+@keyframes flashw{0%{opacity:.95}100%{opacity:0}}
+.banner{animation:ban 1.5s ease-out both;pointer-events:none}
+@keyframes ban{0%{transform:scale(2.2);opacity:0}14%{transform:scale(1);opacity:1}78%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+.burst{position:absolute;width:7px;height:7px;border-radius:50%;background:#ffe07a;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:burst .9s ease-out both}
+@keyframes burst{0%{transform:translate(0,0) scale(1.2);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.bright{animation:bright .8s ease-out both}
+@keyframes bright{0%{filter:brightness(2.4) drop-shadow(0 0 18px #ffe07a)}100%{filter:none}}
+.shake{animation:shake .5s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.pitybar{transition:width .7s cubic-bezier(.2,1.4,.4,1)}
+.pityglow{animation:pityg .9s ease-out both}
+@keyframes pityg{0%{box-shadow:0 0 0 rgba(255,138,92,0)}35%{box-shadow:0 0 18px rgba(255,138,92,1)}100%{box-shadow:0 0 0 rgba(255,138,92,0)}}
+.popn{animation:popn .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes popn{from{transform:scale(1.6)}to{transform:none}}
+.chip:active,.slot:active{transform:scale(.94)}
+.cardin{animation:cardin .35s ease both}
+@keyframes cardin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* TRANSFORMAR */
+.trow{animation:cardin .3s ease-out both}
+.tring{position:absolute;inset:-14px;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,224,122,0),#ffe07a,rgba(127,227,255,.9),rgba(255,224,122,0) 60%,#ffc94a,rgba(255,224,122,0));-webkit-mask:radial-gradient(circle,transparent 52%,#000 56%,#000 68%,transparent 72%);mask:radial-gradient(circle,transparent 52%,#000 56%,#000 68%,transparent 72%);animation:tspin .5s linear infinite;pointer-events:none}
+@keyframes tspin{to{transform:rotate(360deg)}}
+.tidle{animation:tidle 2.6s ease-in-out infinite}
+@keyframes tidle{0%,100%{filter:drop-shadow(0 0 3px var(--rc))}50%{filter:drop-shadow(0 0 12px var(--rc))}}
+.tgo{animation:tgo 1.3s ease-in both}
+@keyframes tgo{0%{filter:brightness(1)}70%{filter:brightness(2.2) saturate(.4)}100%{filter:brightness(3.2) saturate(0)}}
+.tnew{animation:tnew .7s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes tnew{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:none}}
+.tarrow{animation:tarrow 1.2s ease-in-out infinite}
+@keyframes tarrow{0%,100%{opacity:.55}50%{opacity:1}}
+.ess{animation:ess 2s ease-in-out infinite}
+@keyframes ess{0%,100%{filter:drop-shadow(0 0 2px rgba(127,227,255,.5))}50%{filter:drop-shadow(0 0 8px rgba(127,227,255,1))}}
+/* ===== PADRÃO V2: header novo (igual BatalhaTelaCheiaV2) + tela cheia sobre a batalha, sem barra de abas embaixo ===== */
+html,body{height:100%}
+.scr{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;display:flex;flex-direction:column}
+.bbg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#7fb3d9}
+.bbg i{position:absolute;left:-24px;right:-24px;background-repeat:repeat-x;filter:blur(5px) saturate(.9)}
+.bbg .s{top:0;height:492px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 492px}
+.bbg .f{top:181px;height:344px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 344px}
+.bbg .m{top:144px;height:410px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 410px}
+.bbg .g{top:537px;height:312px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 312px}
+.bbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.38),rgba(10,7,5,.72) 120px,rgba(10,7,5,.92))}
+.hgl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hd{position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:8px;padding:10px 10px 8px;padding-top:max(10px,env(safe-area-inset-top));box-sizing:border-box}
+.hrb{width:44px;height:44px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box;text-decoration:none;transition:transform .12s}
+.hrb:active{transform:scale(.9)}
+.ht{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(17px,5.2vw,22px);line-height:1.1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hps{flex:none;display:flex;align-items:center;gap:6px}
+.hpill{height:44px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;text-decoration:none;font:inherit;transition:transform .12s}
+.hpill:active{transform:scale(.95)}
+.hpill img{object-fit:contain;flex:none}
+.hpill b{font-size:13.5px;font-weight:900;padding-right:2px}
+.hplus{width:24px;height:24px;flex:none;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+.pnl{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;background:#16110d;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,236,200,.18);box-shadow:0 -10px 30px rgba(0,0,0,.5);overflow:hidden;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
+.pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
+@keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
+</style>
+</helmet>
+<div class="scr">
+
+  <div class="bbg" aria-hidden="true"><i class="s"></i><i class="f"></i><i class="m"></i><i class="g"></i></div>
+
+  <!-- Header novo (padrão Batalha V2): voltar · título · moedas/gemas. Sem engrenagem: Configurações ficam no MENU da batalha -->
+  <header class="hd">
+    <a href="Equipamento.dc.html" onClick="{{tap}}" aria-label="Voltar para Equipamento" class="hgl hrb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 class="ht">Forja</h1>
+    <div class="hps">
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Moedas: {{goldTxt}}. Abrir loja" class="hgl hpill"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px"><b>{{goldTxt}}</b><span class="hplus opt" aria-hidden="true">+</span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Gemas: 320. Comprar na loja" class="hgl hpill"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="hplus" aria-hidden="true">+</span></a>
+    </div>
+  </header>
+
+  <!-- Painel em tela cheia por cima da batalha (sem barra de abas embaixo) -->
+  <div class="pnl pnlIn">
+
+  <!-- Conteúdo (tela cheia; rola só em telas baixas; botão da ação fica no fim do cartão, zona do polegar) -->
+  <div style="position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overflow-x: hidden; padding: 8px 0 10px; box-sizing: border-box">
+
+    <!-- Saldo de Pedras de Forja (voltar e título agora ficam no header novo) -->
+    <div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 12px; box-sizing: border-box">
+      <div aria-label="{{stonesAria}}" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8a5c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 3.5l6 6-2.5 2.5-6-6z"></path><path d="M12.5 7.5 3.5 16.5l4 4 9-9"></path></svg>
+        <span style="font-size: 15px; font-weight: 900">{{stonesTxt}}</span>
+        <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Pedras de Forja</span>
+      </div>
+    </div>
+
+    <!-- Modo: fortalecer +N ou nível do espaço -->
+    <div role="group" aria-label="Modo" style="height: 52px; flex: none; margin: 0 12px; display: flex; padding: 3px; gap: 3px; border-radius: 14px; background: #0e0a07; border: 1px solid #4a3a2b; box-sizing: border-box">
+      <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+        <button onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="flex: 1; height: 44px; border-radius: 11px; border: 0; background: {{m.bg}}; color: {{m.color}}; font-size: 14px; font-weight: 900">{{m.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{notTrans}}" hint-placeholder-val="{{true}}">
+    <!-- Palco: Kael parado + aura -->
+    <div class="fieldbg {{stageFx}}" style="position: relative; height: 258px; flex: none; overflow: hidden">
+      <div class="s2j" aria-hidden="true"><div class="ly sky"></div><div class="cl" style="left: 400px; top: 14px; width: 120px; height: 48px; animation-duration: 70s; animation-delay: -25s"></div><div class="cl" style="left: 400px; top: 56px; width: 90px; height: 36px; animation-duration: 95s; animation-delay: -70s; opacity: 0.85"></div><div class="fl"></div><div class="ly far"></div><div class="ly mid"></div><div class="ly ground"></div></div>
+      <div style="position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 60%, rgba(22,17,13,0.25) 0%, rgba(22,17,13,0.8) 64%, rgba(22,17,13,0.97) 100%)"></div>
+
+      <!-- Aura atrás do herói (caixa 176x220, base no chão y=222) -->
+      <div style="position: absolute; left: calc(50% - 88px); top: 2px; width: 176px; height: 220px">
+        <sc-if value="{{showGold}}" hint-placeholder-val="{{true}}">
+          <div class="aura13" role="img" aria-label="Aura dourada com raios" style="position: absolute; inset: 0"></div>
+        </sc-if>
+        <sc-if value="{{showGlow}}" hint-placeholder-val="{{false}}">
+          <div class="aglow" style="background: {{glowBg}}"></div>
+          <span class="pspark" style="left: 40px; bottom: 10px; background: {{tierCol}}; box-shadow: 0 0 8px 2px {{tierCol}}; animation-delay: 0s"></span>
+          <span class="pspark" style="left: 86px; bottom: 4px; background: {{tierCol}}; box-shadow: 0 0 8px 2px {{tierCol}}; animation-delay: .8s"></span>
+          <span class="pspark" style="left: 128px; bottom: 12px; background: {{tierCol}}; box-shadow: 0 0 8px 2px {{tierCol}}; animation-delay: 1.5s"></span>
+          <span class="pspark" style="left: 62px; bottom: 16px; width: 3px; height: 3px; background: {{tierCol}}; box-shadow: 0 0 6px 2px {{tierCol}}; animation-delay: 2s"></span>
+        </sc-if>
+        <sc-if value="{{showFlame}}" hint-placeholder-val="{{false}}">
+          <span class="flame" style="left: 18px; height: 118px; animation-delay: .1s"></span>
+          <span class="flame" style="left: 46px; height: 160px; animation-delay: .25s"></span>
+          <span class="flame" style="left: 70px; height: 190px; width: 40px; animation-delay: 0s"></span>
+          <span class="flame" style="left: 96px; height: 170px; animation-delay: .3s"></span>
+          <span class="flame" style="left: 122px; height: 128px; animation-delay: .15s"></span>
+        </sc-if>
+      </div>
+
+      <!-- Pedestal no chão -->
+      <div class="ped" style="position: absolute; left: calc(50% - 73px); top: 208px; width: 146px; height: 28px; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #6a5440 0%, #3a2c1f 60%, #241a12 100%); border: 2px solid #ffc94a"></div>
+      <sc-if value="{{showFoot}}" hint-placeholder-val="{{false}}">
+        <div class="footglow" style="left: calc(50% - 63px); top: 210px; width: 126px; height: 22px; background: {{footBg}}"></div>
+      </sc-if>
+
+      <!-- Kael: caixa 180x180, pés em 95% = y 222 -->
+      <div class="kidle {{kaelFx}}" role="img" aria-label="Kael parado" style="position: absolute; left: calc(50% - 90px); top: 51px; width: 180px; height: 180px"></div>
+
+      <!-- Espaços (esquerda) -->
+      <div style="position: absolute; left: 12px; top: 18px; display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{slots}}" as="sl" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+            <div class="{{sl.fx}}" style="position: relative; width: 72px; height: 72px">
+              <sc-if value="{{sl.on}}" hint-placeholder-val="{{true}}"><span class="halo" style="background: #ffc94a"></span></sc-if>
+              <button class="slot" onClick="{{sl.pick}}" aria-pressed="{{sl.pressed}}" aria-label="{{sl.aria}}" style="position: absolute; inset: 0; border-radius: 16px; border: 3px solid {{sl.border}}; background: radial-gradient(circle at 50% 40%, #4a3a2b, #1d1611); padding: 0; overflow: hidden">
+                <sc-if value="{{sl.isImg}}" hint-placeholder-val="{{true}}"><img src="{{sl.img}}" alt="" style="width: 58px; height: 58px; object-fit: contain; margin-top: 2px"></sc-if>
+                <sc-if value="{{sl.isSheet}}" hint-placeholder-val="{{false}}"><span class="kidle" aria-hidden="true" style="display: block; width: 62px; height: 62px; margin-top: 0"></span></sc-if>
+                <span class="sheen"></span>
+                <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: rgba(0,0,0,0.72); font-size: 11px; font-weight: 900; color: #fff; line-height: 18px">Nv.{{sl.lv}}</span>
+              </button>
+              <span style="position: absolute; top: -7px; right: -9px; min-width: 30px; height: 22px; padding: 0 5px; border-radius: 11px; background: {{sl.plusBg}}; border: 2px solid #16110d; color: {{sl.plusColor}}; font-family: 'Lilita One', sans-serif; font-size: 14px; display: flex; align-items: center; justify-content: center; box-sizing: border-box">+{{sl.p}}</span>
+              <sc-if value="{{sl.busy}}" hint-placeholder-val="{{false}}">
+                <svg class="hammer" width="44" height="44" viewBox="0 0 24 24" fill="#c9b9a2" stroke="#16110d" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true" style="position: absolute; right: -28px; top: -18px"><path d="M14.5 3.5l6 6-2.5 2.5-6-6z"></path><path d="M12.5 7.5 3.5 16.5l4 4 9-9z" fill="#8a5a33"></path></svg>
+              </sc-if>
+            </div>
+            <span style="font-size: 11px; font-weight: 900; color: {{sl.labelColor}}; text-shadow: 0 1px 2px #000">{{sl.name}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Prévia das auras (direita) -->
+      <div role="group" aria-label="Prévia das auras da arma" style="position: absolute; right: 10px; top: 8px; display: flex; flex-direction: column; gap: 2px; align-items: center">
+        <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; text-shadow: 0 1px 2px #000; letter-spacing: .5px">AURA</span>
+        <sc-for list="{{chips}}" as="c" hint-placeholder-count="5">
+          <button class="chip" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" aria-label="{{c.aria}}" style="width: 52px; height: 44px; border-radius: 12px; border: 2px solid {{c.border}}; background: {{c.bg}}; color: #f6ecdf; padding: 0; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 14px">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: {{c.col}}; box-shadow: 0 0 6px {{c.col}}"></span>{{c.label}}</button>
+        </sc-for>
+      </div>
+
+      <!-- Rótulo da aura -->
+      <div style="position: absolute; left: 0; right: 0; bottom: 4px; display: flex; justify-content: center; pointer-events: none">
+        <span style="padding: 3px 10px; border-radius: 9px; background: rgba(14,10,7,0.86); border: 1px solid {{tierCol}}; font-size: 11px; font-weight: 900; color: #f6ecdf">{{auraLabel}} <span style="color: {{auraTagColor}}">{{auraTag}}</span></span>
+      </div>
+
+      <!-- Efeitos do resultado -->
+      <sc-if value="{{fxOk}}" hint-placeholder-val="{{false}}">
+        <div class="flashw" style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 55%, rgba(255,255,255,0.95), rgba(255,201,74,0.55) 35%, rgba(255,201,74,0) 70%)"></div>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: -90px; --dy: -70px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: 90px; --dy: -64px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: -70px; --dy: 40px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: 80px; --dy: 46px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: 0px; --dy: -100px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: -110px; --dy: -10px"></span>
+        <span class="burst" style="left: calc(50% - 3px); top: 130px; --dx: 110px; --dy: -6px"></span>
+        <div class="banner" style="position: absolute; left: 0; right: 0; top: 64px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 58px; line-height: 1; color: #ffc94a; text-shadow: 0 4px 0 #6a3a08, 0 0 18px rgba(255,201,74,0.9)">{{bannerBig}}</span>
+          <span style="padding: 4px 12px; border-radius: 10px; background: rgba(14,10,7,0.88); border: 2px solid #5fd068; font-size: 14px; font-weight: 900; color: #f6ecdf">{{bannerSmall}}</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{fxFail}}" hint-placeholder-val="{{false}}">
+        <div class="flashw" style="position: absolute; inset: 0; background: radial-gradient(circle at 50% 55%, rgba(255,90,78,0.45), rgba(255,90,78,0) 65%)"></div>
+        <div class="banner" style="position: absolute; left: 0; right: 0; top: 78px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 36px; color: #ffb3a8; text-shadow: 0 3px 0 #4a120d">Falhou</span>
+          <span style="padding: 4px 12px; border-radius: 10px; background: rgba(14,10,7,0.9); border: 2px solid #ff8a5c; font-size: 13px; font-weight: 900; color: #f6ecdf">Nível mantido · garantia +5</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- Trilha +1..+15 com teto da era -->
+    <div style="height: 30px; flex: none; margin: 0 12px; display: flex; align-items: center; gap: 8px">
+      <div aria-label="{{trackAria}}" style="flex: 1; display: flex; gap: 3px; align-items: center">
+        <sc-for list="{{pips}}" as="pp" hint-placeholder-count="15">
+          <span style="flex: 1; height: {{pp.h}}; border-radius: 4px; background: {{pp.bg}}; border: 1px solid {{pp.border}}; opacity: {{pp.op}}; box-shadow: {{pp.glow}}; box-sizing: border-box; transition: background .4s"></span>
+        </sc-for>
+      </div>
+      <span style="display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; color: #c9b9a2; white-space: nowrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Teto +{{cap}}</span>
+    </div>
+
+    </sc-if>
+
+    <!-- Cartão: fortalecer -->
+    <sc-if value="{{isForge}}" hint-placeholder-val="{{true}}">
+      <div class="cardin {{cardFx}}" style="flex: 1 0 auto; margin: 0 12px; padding: 10px 12px; border-radius: 16px; background: #1d1611; border: 2px solid #4a3a2b; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 30px; color: {{curCol}}; text-shadow: 0 2px 0 #000">+{{curP}}</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+          <span class="popn" style="font-family: 'Lilita One', sans-serif; font-size: 30px; color: {{nextCol}}; text-shadow: 0 2px 0 #000">{{nextTxt}}</span>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15">
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{statName}} do espaço</span>
+            <span style="font-size: 15px; font-weight: 900">+{{bonNow}}% <span style="color: #c9b9a2">→</span> <span style="color: #5fd068">{{bonNextTxt}}</span></span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="width: 84px; height: 58px; flex: none; border-radius: 12px; background: #0e0a07; border: 2px solid {{chanceBorder}}; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1">
+            <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; letter-spacing: .5px">CHANCE</span>
+            <span class="popn" style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: {{chanceColor}}">{{chanceTxt}}</span>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900"><span>Garantia acumulada</span><span style="color: #ff8a5c">{{pityTxt}}</span></div>
+            <div class="{{pityFx}}" style="height: 14px; border-radius: 7px; background: #0e0a07; border: 1px solid #4a3a2b; overflow: hidden">
+              <div class="pitybar" style="width: {{pityPct}}; height: 100%; background: linear-gradient(90deg, #ff8a5c, #ffc94a)"></div>
+            </div>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{pityHint}}</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: #0e0a07; border: 1px solid #4a3a2b">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+          <span style="font-size: 12px; font-weight: 800; color: #e8dccb; line-height: 1.2">Falhar não perde nível: só gasta as pedras da tentativa. {{capHint}}</span>
+        </div>
+
+        <div style="flex: 1"></div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="display: flex; flex-direction: column; line-height: 1.15; width: 112px">
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Custo por tentativa</span>
+            <span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 20px; color: {{costColor}}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff8a5c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 3.5l6 6-2.5 2.5-6-6z"></path><path d="M12.5 7.5 3.5 16.5l4 4 9-9"></path></svg>{{costTxt}}</span>
+            <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">+ ouro 30× abate (a confirmar)</span>
+          </div>
+          <button class="{{forgeClass}}" onClick="{{forge}}" aria-disabled="{{forgeDis}}" style="flex: 1; height: 56px; border-radius: 16px; border: {{forgeBorder}}; background: {{forgeBg}}; color: {{forgeColor}}; font-family: 'Lilita One', sans-serif; font-size: 21px">{{forgeLabel}}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Cartão: nível do espaço 1-60 -->
+    <sc-if value="{{isLevel}}" hint-placeholder-val="{{false}}">
+      <div class="cardin {{cardFx}}" style="flex: 1 0 auto; margin: 0 12px; padding: 10px 12px; border-radius: 16px; background: #1d1611; border: 2px solid #4a3a2b; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 28px; text-shadow: 0 2px 0 #000">Nv. {{lvNow}}</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+          <span class="popn" style="font-family: 'Lilita One', sans-serif; font-size: 28px; color: #5fd068; text-shadow: 0 2px 0 #000">{{lvNextTxt}}</span>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15">
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{statName}} do espaço</span>
+            <span style="font-size: 15px; font-weight: 900">{{lvMulNow}} <span style="color: #c9b9a2">→</span> <span style="color: #5fd068">{{lvMulNext}}</span></span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900"><span>Nível do espaço</span><span style="color: #ffc94a">{{lvNow}} / 60</span></div>
+          <div style="height: 14px; border-radius: 7px; background: #0e0a07; border: 1px solid #4a3a2b; overflow: hidden">
+            <div class="pitybar" style="width: {{lvPct}}; height: 100%; background: linear-gradient(90deg, #5fd068, #b6f07a)"></div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: #0e0a07; border: 1px solid #4a3a2b">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+          <span style="font-size: 12px; font-weight: 800; color: #e8dccb; line-height: 1.2">+8% por nível. O nível fica no espaço: trocar de {{slotLower}} não perde nada.</span>
+        </div>
+        <div style="flex: 1"></div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div style="display: flex; flex-direction: column; line-height: 1.15; width: 112px">
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Custo</span>
+            <span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 20px; color: {{lvCostColor}}">
+              <img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="moedas" style="width: 22px; height: 22px; object-fit: contain">{{lvCostTxt}}</span>
+          </div>
+          <button class="{{lvClass}}" onClick="{{levelUp}}" aria-disabled="{{lvDis}}" style="flex: 1; height: 56px; border-radius: 16px; border: {{lvBorder}}; background: {{lvBg}}; color: {{lvColor}}; font-family: 'Lilita One', sans-serif; font-size: 21px">{{lvLabel}}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Cartão: TRANSFORMAR (item antigo vira da era atual, mesma raridade e mesmo visual) -->
+    <sc-if value="{{isTrans}}" hint-placeholder-val="{{false}}">
+      <div class="cardin" style="flex: 1 0 auto; margin: 0 12px; display: flex; flex-direction: column; gap: 8px">
+        <!-- escolha do item antigo -->
+        <div role="radiogroup" aria-label="Item antigo para transformar" style="height: 76px; flex: none; display: flex; gap: 6px">
+          <sc-for list="{{tItems}}" as="t" hint-placeholder-count="3">
+            <button role="radio" aria-checked="{{t.sel}}" onClick="{{t.pick}}" aria-label="{{t.aria}}" style="flex: 1; min-width: 0; border-radius: 14px; border: 2px solid {{t.bd}}; background: {{t.bg}}; color: #f6ecdf; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px">
+              <span style="width: 34px; height: 34px; border-radius: 9px; border: 2px solid {{t.rc}}; background: #120d0a; display: flex; align-items: center; justify-content: center; box-sizing: border-box"><sc-if value="{{t.isImg}}" hint-placeholder-val="{{true}}"><img src="{{t.img}}" alt="" style="width: 30px; height: 30px; object-fit: contain"></sc-if><sc-if value="{{t.isSvg}}" hint-placeholder-val="{{false}}"><svg  viewBox="0 0 24 24" fill="none" stroke="{{t.rc}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.icon}}"></path></svg></sc-if></span>
+              <span style="font-size: 11px; font-weight: 900; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%">{{t.n}}</span>
+              <span style="font-size: 9px; font-weight: 800; color: {{t.subCol}}; white-space: nowrap">{{t.sub}}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <!-- ANTES -> DEPOIS -->
+        <div style="height: 232px; flex: none; position: relative; display: flex; gap: 6px; align-items: stretch">
+          <sc-if value="{{tPending}}" hint-placeholder-val="{{true}}">
+            <div style="flex: 1; min-width: 0; border-radius: 16px; border: 2px solid {{tc.rc}}; background: linear-gradient(180deg, #2a2018, #16110d); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; box-sizing: border-box">
+              <span style="font-size: 11px; font-weight: 900; color: #c9b9a2; letter-spacing: 1px">ANTES</span>
+              <div class="{{tGoCls}}" style="position: relative; width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, {{tc.rc}}44, rgba(0,0,0,0) 70%); --rc: {{tc.rc}}">
+                <sc-if value="{{tSpin}}" hint-placeholder-val="{{false}}"><span class="tring"></span></sc-if>
+                <span class="tidle" style="display: flex; --rc: {{tc.rc}}"><sc-if value="{{tc.isImg}}" hint-placeholder-val="{{true}}"><img src="{{tc.img}}" alt="" style="width: 84px; height: 84px; object-fit: contain"></sc-if><sc-if value="{{tc.isSvg}}" hint-placeholder-val="{{false}}"><svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="{{tc.rc}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{tc.icon}}"></path></svg></sc-if></span>
+              </div>
+              <span style="padding: 2px 8px; border-radius: 7px; background: #33271d; border: 1px solid #6b5843; font-size: 11px; font-weight: 900">{{tc.eraOld}}</span>
+              <span style="font-size: 11px; font-weight: 900; color: {{tc.rc}}">{{tc.rar}} · Nv {{tc.lv}}</span>
+              <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">{{tc.stat}}</span>
+              <span style="font-family: 'Lilita One', sans-serif; font-size: 22px">{{tc.oldVal}}</span>
+            </div>
+            <span class="tarrow" aria-hidden="true" style="position: absolute; left: 50%; top: 92px; width: 30px; height: 30px; margin-left: -15px; z-index: 2; border-radius: 50%; background: linear-gradient(180deg, #ffe07a, #f2a826); color: #2a1403; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(255,201,74,0.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+            <div style="flex: 1; min-width: 0; border-radius: 16px; border: 2px solid {{tc.rc}}; background: linear-gradient(180deg, #1f2a2e, #16110d); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; box-sizing: border-box">
+              <span style="font-size: 11px; font-weight: 900; color: #7fe3ff; letter-spacing: 1px">DEPOIS</span>
+              <div style="position: relative; width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, {{tc.rc}}44, rgba(0,0,0,0) 70%)">
+                <span class="tidle" style="display: flex; --rc: #7fe3ff"><sc-if value="{{tc.isImg}}" hint-placeholder-val="{{true}}"><img src="{{tc.img}}" alt="" style="width: 84px; height: 84px; object-fit: contain"></sc-if><sc-if value="{{tc.isSvg}}" hint-placeholder-val="{{false}}"><svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="{{tc.rc}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{tc.icon}}"></path></svg></sc-if></span>
+              </div>
+              <span style="padding: 2px 8px; border-radius: 7px; background: #16343e; border: 1px solid #7fe3ff; color: #c8f4ff; font-size: 11px; font-weight: 900">{{eraNow}}</span>
+              <span style="font-size: 11px; font-weight: 900; color: {{tc.rc}}">{{tc.rar}} · Nv 1 · mesmo visual</span>
+              <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">{{tc.stat}} no Nv 1: <span style="color: #f6ecdf; font-weight: 900">{{tc.newVal}}</span></span>
+              <span style="padding: 3px 6px; border-radius: 8px; background: #12261a; border: 1px solid #5fd068; font-size: 11px; font-weight: 900; color: #9be89f; text-align: center; line-height: 1.15">FC no seu nível (Nv {{tc.lv}}): {{tc.atLvVal}} · {{tc.gain}}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{tDone}}" hint-placeholder-val="{{false}}">
+            <div class="tnew" style="flex: 1; border-radius: 16px; border: 2px solid {{tc.rc}}; background: radial-gradient(circle at 50% 40%, {{tc.rc}}33, #16110d 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+              <span style="font-family: 'Lilita One', sans-serif; font-size: 26px; color: #7fe3ff; text-shadow: 0 2px 0 #000">Transformado!</span>
+              <span class="tidle" style="display: flex; --rc: {{tc.rc}}"><sc-if value="{{tc.isImg}}" hint-placeholder-val="{{true}}"><img src="{{tc.img}}" alt="" style="width: 96px; height: 96px; object-fit: contain"></sc-if><sc-if value="{{tc.isSvg}}" hint-placeholder-val="{{false}}"><svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="{{tc.rc}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{tc.icon}}"></path></svg></sc-if></span>
+              <span style="font-family: 'Lilita One', sans-serif; font-size: 18px">{{tc.n}}</span>
+              <span style="padding: 2px 10px; border-radius: 7px; background: #16343e; border: 1px solid #7fe3ff; color: #c8f4ff; font-size: 12px; font-weight: 900">{{eraNow}} · {{tc.rar}} · Nv 1</span>
+              <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Suba o nível na aba Nível do espaço.</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{tFlash}}" hint-placeholder-val="{{false}}">
+            <div class="flashw" style="position: absolute; inset: -6px; border-radius: 18px; z-index: 3; background: radial-gradient(circle at 30% 45%, rgba(255,255,255,0.98), rgba(127,227,255,0.6) 40%, rgba(127,227,255,0) 75%)"></div>
+          </sc-if>
+        </div>
+
+        <!-- custo + saldo -->
+        <div style="height: 50px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 14px; background: #1d1611; border: 1px solid #4a3a2b">
+          <span style="font-size: 12px; font-weight: 900; color: #c9b9a2">Custo</span>
+          <span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 17px"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="ouro" style="width: 22px; height: 22px; object-fit: contain">[OURO]</span>
+          <span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 17px; color: #c8f4ff"><svg class="ess" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l6 6-6 14-6-14z" fill="#2a5a7a" stroke="#7fe3ff" stroke-width="1.6" stroke-linejoin="round"></path><path d="M6 8h12M12 2v20" stroke="#7fe3ff" stroke-width="1" opacity=".7"></path><circle cx="12" cy="9" r="1.6" fill="#ffe07a"></circle></svg>[N]</span>
+          <span style="flex: 1"></span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1"><span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Essência da Era (você tem)</span><span style="display: flex; align-items: center; gap: 3px; font-size: 14px; font-weight: 900; color: #c8f4ff"><svg class="ess" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l6 6-6 14-6-14z" fill="#2a5a7a" stroke="#7fe3ff" stroke-width="1.6" stroke-linejoin="round"></path><path d="M6 8h12M12 2v20" stroke="#7fe3ff" stroke-width="1" opacity=".7"></path><circle cx="12" cy="9" r="1.6" fill="#ffe07a"></circle></svg>[N]</span></span>
+        </div>
+
+        <!-- aviso -->
+        <div role="note" style="height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 12px; background: #2a1f12; border: 1px solid #ffc94a">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M12 3l10 18H2z"></path><line x1="12" y1="10" x2="12" y2="14"></line><circle cx="12" cy="17.5" r=".8" fill="#ffc94a"></circle></svg>
+          <span style="font-size: 12px; font-weight: 800; color: #f6ecdf; line-height: 1.2">O nível volta ao 1. O visual e a raridade são mantidos. O +N continua no espaço.</span>
+        </div>
+
+        <div style="flex: 1"></div>
+        <button class="{{tBtnCls}}" onClick="{{transform}}" aria-disabled="{{tDis}}" style="height: 56px; flex: none; border-radius: 16px; border: {{tBtnBd}}; background: {{tBtnBg}}; color: {{tBtnFg}}; font-family: 'Lilita One', sans-serif; font-size: 21px">{{tBtnTxt}}</button>
+      </div>
+    </sc-if>
+  </div>
+  </div>
+
+  <!-- Portão de nível: Forja libera no nível 12. Com o jogador no Nv. 24 fica liberado (overlay oculto). -->
+  <sc-if value="{{gateLocked}}" hint-placeholder-val="{{false}}">
+    <div role="dialog" aria-label="Forja bloqueado: libera no nível 12" style="position: absolute; left: 0; right: 0; top: 64px; bottom: 0; z-index: 20; background: rgba(12,9,6,0.93); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 0 32px; text-align: center">
+      <svg class="gatelk" width="72" height="80" viewBox="0 0 24 26" fill="none" stroke="#ffc94a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="13" rx="3" fill="#33271d"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path><circle cx="12" cy="17" r="1.8" fill="#ffc94a"></circle><line x1="12" y1="18.5" x2="12" y2="21"></line></svg>
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 26px">Forja</span>
+      <span style="padding: 6px 14px; border-radius: 999px; background: #33271d; border: 2px solid #ffc94a; color: #ffc94a; font-size: 15px; font-weight: 900">Libera no nível 12</span>
+      <span style="font-size: 13px; font-weight: 800; color: #c9b9a2">Você está no nível {{gateLv}}. Continue lutando para liberar.</span>
+      <a href="BatalhaTelaCheiaV2.dc.html" style="margin-top: 6px; height: 52px; padding: 0 28px; border-radius: 16px; background: linear-gradient(180deg, #ffe07a, #f2a826); box-shadow: 0 6px 0 #8a4f0c; color: #2a1403; font-family: 'Lilita One', sans-serif; font-size: 20px; text-decoration: none; display: flex; align-items: center">Voltar para a batalha</a>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Números: reports/spec-fortalecimento.md (tabela única) e js/sys/forge.js (DATA); nível do espaço: docs/balance.json (lvlMult 1,08, upCost 20 x 1,19^(N-1) x (1+0,6r) x 4^era, teto 60)
+var CH = [100, 100, 100, 90, 80, 70, 60, 50, 40, 30, 25, 20, 15, 10, 5];
+var ST = [2, 3, 4, 5, 6, 6, 8, 9, 10, 11, 13, 16, 19, 22, 25];
+var BON = [0, 3, 6, 9, 12, 15, 18, 23, 28, 33, 41, 49, 57, 69, 81, 93];
+var CAP = [6, 6, 9, 9, 12, 12, 15];
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista'];
+var ERA = 2, PITY = 5, LVMAX = 60;
+var TIER = [
+  { n: 'Sem aura', c: '#c9b9a2', from: 0 },
+  { n: 'Aura azul', c: '#4aa3ff', from: 4 },
+  { n: 'Aura roxa', c: '#b07cff', from: 7 },
+  { n: 'Chamas vermelhas', c: '#ff5a4e', from: 10 },
+  { n: 'Dourada com raios', c: '#ffc94a', from: 13 }
+];
+var GLOW = ['', 'rgba(74,163,255,', 'rgba(176,124,255,', 'rgba(255,90,60,', ''];
+var SND = { up: '/_blob/ca8bcec3fced3c13b36555744659895a', tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var SLOT = {
+  weapon: { name: 'Arma', item: 'Lâmina Rúnica', r: 2, img: '/_blob/622897d7b70128406147c8aa8f2feb0b', stat: 'Ataque', lower: 'arma' },
+  armor: { name: 'Armadura', item: 'Armadura de Placas', r: 2, img: '', sheet: true, stat: 'Vida', lower: 'armadura' }
+};
+/* TRANSFORMAR: só vira da era em que o jogador está (exemplo do dono: Era Industrial). Valores de atributo ILUSTRATIVOS (fórmula com fps-e2) */
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista'];
+var T_ERA = 4;
+var TRAR = [{ n: 'Básica', c: '#e8e2d8', m: 1 }, { n: 'Rara', c: '#4aa3ff', m: 1.7 }, { n: 'Épica', c: '#b07cff', m: 3 }, { n: 'Mítica', c: '#ff5a5a', m: 5.5 }, { n: 'Lendária', c: '#ffc94a', m: 10 }];
+var TITEMS = [
+  { id: 'i1', n: 'Espada Rúnica', era: 2, r: 2, lv: 45, base: 8, stat: 'Ataque', img: '/_blob/622897d7b70128406147c8aa8f2feb0b' },
+  { id: 'i2', n: 'Elmo do Dragão', era: 2, r: 3, lv: 38, base: 40, stat: 'Vida', icon: 'M4 16a8 8 0 0 1 16 0v3H4zM12 8v5M8 19v2M16 19v2' },
+  { id: 'i3', n: 'Botas Rúnicas', era: 1, r: 2, lv: 30, base: 40, stat: 'Vida', icon: 'M7 3h5v10l7 3v5H5v-4l2-1z' }
+];
+function tval(it, era, lv) { return it.base * TRAR[it.r].m * Math.pow(2.2, era) * (1 + 0.08 * (lv - 1)); }
+function tierOf(p) { return p >= 13 ? 4 : p >= 10 ? 3 : p >= 7 ? 2 : p >= 4 ? 1 : 0; }
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function kfmt(v) { return v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + 'M' : v >= 1000 ? (v / 1000).toFixed(1).replace('.', ',') + 'K' : String(Math.floor(v)); }
+function lvCost(n, r) { return Math.floor(20 * Math.pow(1.19, n - 1) * (1 + 0.6 * r) * Math.pow(4, ERA)); }
+function mul(n) { return 'x' + Math.pow(1.08, n - 1).toFixed(2).replace('.', ','); }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      mode: 'forge', slot: 'weapon',
+      f: { weapon: { p: 8, pity: 10, fails: 2 }, armor: { p: 4, pity: 0, fails: 0 } },
+      lv: { weapon: 24, armor: 22 },
+      stones: 46, gold: 48200, prev: 13, busy: false, fx: null, big: '', small: '',
+      tSel: 'i1', tEra: {}, tPh: ''
+    };
+  }
+  componentWillUnmount() { clearTimeout(this.t1); clearTimeout(this.t2); clearTimeout(this.t3); clearTimeout(this.t4); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  fire(fx, extra) {
+    var self = this; clearTimeout(this.t2);
+    this.setState(Object.assign({ fx: null }, extra || {}));
+    setTimeout(function () { self.setState({ fx: fx }); }, 20);
+    this.t2 = setTimeout(function () { self.setState({ fx: null }); }, 1600);
+  }
+  renderVals() {
+    var self = this, s = this.state, sl = s.slot, cf = s.f[sl];
+    var cap = CAP[ERA], atCap = cf.p >= cap;
+    var base = atCap ? 0 : CH[cf.p], chance = Math.min(100, base + cf.pity);
+    var cost = atCap ? 0 : ST[cf.p], canForge = !atCap && s.stones >= cost && !s.busy;
+    var wP = s.f.weapon.p;
+    var shownTier = s.prev != null ? tierOf(s.prev) : tierOf(wP);
+    var shownP = s.prev != null ? s.prev : wP;
+    var tc = TIER[shownTier].c;
+    var fc = 12480 + Math.round((BON[s.f.weapon.p] + BON[s.f.armor.p]) * 40 + (s.lv.weapon + s.lv.armor - 46) * 310);
+
+    var modes = [['forge', 'Fortalecer +N'], ['level', 'Nível'], ['trans', 'Transformar']].map(function (m) {
+      var on = s.mode === m[0];
+      return { label: m[1], pressed: on ? 'true' : 'false', bg: on ? '#3a2c1f' : 'transparent', color: on ? '#ffc94a' : '#c9b9a2',
+        pick: function () { self.sfx(SND.tap); self.setState({ mode: m[0] }); } };
+    });
+    var slots = ['weapon', 'armor'].map(function (k) {
+      var on = sl === k, d = SLOT[k], t = tierOf(s.f[k].p);
+      return {
+        name: d.name, img: d.img, isImg: !!d.img, isSheet: !!d.sheet, lv: s.lv[k], p: s.f[k].p, on: on, pressed: on ? 'true' : 'false',
+        border: on ? '#ffc94a' : '#b07cff', labelColor: on ? '#ffc94a' : '#f6ecdf',
+        plusBg: t === 0 ? '#33271d' : TIER[t].c, plusColor: t === 0 || t === 4 ? (t === 4 ? '#2a1403' : '#f6ecdf') : '#0e0a07',
+        busy: s.busy && on, fx: on && s.fx === 'fail' ? 'shake' : (on && (s.fx === 'ok' || s.fx === 'lv') ? 'bright' : ''),
+        aria: d.name + ': ' + d.item + ', Épico, nível ' + s.lv[k] + ', mais ' + s.f[k].p + (on ? ', selecionado' : ''),
+        pick: function () { self.sfx(SND.tap); self.setState({ slot: k }); }
+      };
+    });
+    var chips = [0, 4, 7, 10, 13].map(function (v, i) {
+      var on = shownTier === i;
+      return {
+        label: '+' + v, col: TIER[i].c, pressed: on ? 'true' : 'false',
+        border: on ? TIER[i].c : '#4a3a2b', bg: on ? '#3a2c1f' : 'rgba(29,22,17,0.88)',
+        aria: 'Ver ' + TIER[i].n + ' (a partir de +' + v + ')',
+        pick: function () { self.sfx(SND.tap); self.setState({ prev: i === tierOf(wP) ? null : v }); }
+      };
+    });
+    var pips = [];
+    for (var i = 1; i <= 15; i++) {
+      var t = tierOf(i), got = i <= cf.p, lock = i > cap;
+      pips.push({
+        h: got ? '12px' : '10px', bg: got ? (t === 0 ? '#e8e2d8' : TIER[t].c) : '#241a12',
+        border: lock ? '#33271d' : (got ? 'transparent' : '#4a3a2b'), op: lock ? '0.35' : '1',
+        glow: got && t > 0 ? '0 0 6px ' + TIER[t].c : 'none'
+      });
+    }
+    var nextCap = null;
+    for (var e = ERA + 1; e < CAP.length; e++) { if (CAP[e] > cap) { nextCap = { p: CAP[e], era: ERAN[e] }; break; } }
+    var pityRoom = Math.max(1, 100 - base);
+    var pityPct = atCap ? '0%' : Math.min(100, Math.round(cf.pity / pityRoom * 100)) + '%';
+
+    var tag = '', tagCol = '#c9b9a2';
+    if (shownTier === 4) { tag = '· arte aprovada'; tagCol = '#5fd068'; }
+    else if (shownTier > 0) { tag = '· prévia provisória (código)'; tagCol = '#ffb3a8'; }
+    var auraLabel = (s.prev != null ? 'Prévia +' + shownP + ': ' : 'Arma +' + wP + ': ') + TIER[shownTier].n;
+
+    var glowBg = shownTier > 0 && shownTier < 4 ? 'radial-gradient(ellipse 48% 62% at 50% 92%, ' + GLOW[shownTier] + '0.75) 0%, ' + GLOW[shownTier] + '0.25) 45%, ' + GLOW[shownTier] + '0) 72%)' : 'none';
+
+    var aT = tierOf(s.f.armor.p);
+    var lvN = s.lv[sl], lvAtMax = lvN >= LVMAX, lc = lvCost(lvN, SLOT[sl].r), canLv = !lvAtMax && s.gold >= lc;
+
+    var PLAYER_LV = 24, GATE_LV = 12;
+    var tMk = function (it) {
+      var era = s.tEra[it.id] != null ? s.tEra[it.id] : it.era, R = TRAR[it.r], cur = era === T_ERA;
+      var o = tval(it, it.era, it.lv), nw = tval(it, T_ERA, 1), at = tval(it, T_ERA, it.lv);
+      return { n: it.n, rc: R.c, rar: R.n, lv: cur ? 1 : it.lv, stat: it.stat, isImg: !!it.img, isSvg: !it.img, img: it.img || '', icon: it.icon || '',
+        eraOld: ERAN[it.era], oldVal: n0(o), newVal: n0(nw), atLvVal: n0(at), gain: '+' + Math.round((at / o - 1) * 100) + '%', cur: cur,
+        sub: ERAN[era].replace('Era ', '') + ' · ' + R.n + ' · Nv ' + (cur ? 1 : it.lv) };
+    };
+    var tItems = TITEMS.map(function (it) {
+      var v = tMk(it), on = s.tSel === it.id;
+      return Object.assign(v, { sel: on ? 'true' : 'false', bd: on ? '#ffc94a' : v.rc + '88', bg: on ? '#3a2c1f' : '#1d1611', subCol: v.cur ? '#7fe3ff' : '#c9b9a2',
+        aria: it.n + ', ' + v.sub + (v.cur ? ', já na era atual' : ''),
+        pick: function () { if (s.tPh === 'spin') return; self.sfx(SND.tap); self.setState({ tSel: it.id, tPh: '' }); } });
+    });
+    var tIt = TITEMS.filter(function (x) { return x.id === s.tSel; })[0], tc = tMk(tIt);
+    var tBusy = s.tPh === 'spin', tCan = !tc.cur && !tBusy;
+    var tv = {
+      isTrans: s.mode === 'trans', notTrans: s.mode !== 'trans', tItems: tItems, tc: tc, eraNow: ERAN[T_ERA],
+      tPending: !tc.cur, tDone: tc.cur, tSpin: tBusy, tGoCls: tBusy ? 'tgo' : '', tFlash: s.tPh === 'flash',
+      tBtnTxt: tc.cur ? 'Já na ' + ERAN[T_ERA] : (tBusy ? 'Transformando...' : 'Transformar'),
+      tBtnCls: tCan ? 'gold cta' : '', tDis: tCan ? 'false' : 'true',
+      tBtnBg: tCan ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d', tBtnFg: tCan ? '#2a1403' : '#9c8d7a', tBtnBd: tCan ? '0' : '2px solid #4a3a2b',
+      transform: function () {
+        if (!tCan) { self.sfx(SND.tap); return; }
+        self.sfx(SND.tap); self.setState({ tPh: 'spin' });
+        self.t3 = setTimeout(function () {
+          self.sfx(SND.up); try { if (navigator.vibrate) { navigator.vibrate(40); } } catch (e) {}
+          var te = Object.assign({}, self.state.tEra); te[tIt.id] = T_ERA;
+          self.setState({ tPh: 'flash', tEra: te });
+          self.t4 = setTimeout(function () { self.setState({ tPh: '' }); }, 800);
+        }, 1300);
+      }
+    };
+    return Object.assign(tv, {
+      gateLocked: PLAYER_LV < GATE_LV, gateLv: PLAYER_LV,
+      fcTxt: n0(fc), goldTxt: kfmt(s.gold), stonesTxt: String(s.stones), stonesAria: s.stones + ' Pedras de Forja',
+      tap: function () { self.sfx(SND.tap); },
+      modes: modes, slots: slots, chips: chips, pips: pips, cap: cap,
+      trackAria: 'Fortalecimento +' + cf.p + ' de 15; teto da era ' + ERAN[ERA] + ': +' + cap,
+      isForge: s.mode === 'forge', isLevel: s.mode === 'level',
+      stageFx: s.fx === 'fail' ? 'shake' : '', kaelFx: s.fx === 'ok' ? 'bright' : '',
+      showGold: shownTier === 4, showGlow: shownTier > 0 && shownTier < 4, showFlame: shownTier === 3,
+      glowBg: glowBg, tierCol: tc,
+      showFoot: sl === 'armor' && aT > 0, footBg: aT > 0 ? 'radial-gradient(ellipse, ' + TIER[aT].c + ' 0%, rgba(0,0,0,0) 70%)' : 'none',
+      auraLabel: auraLabel, auraTag: tag, auraTagColor: tagCol,
+      fxOk: s.fx === 'ok' || s.fx === 'lv', fxFail: s.fx === 'fail', bannerBig: s.big, bannerSmall: s.small,
+      cardFx: s.fx === 'fail' ? 'shake' : '',
+      statName: SLOT[sl].stat, slotLower: SLOT[sl].lower,
+      curP: cf.p, curCol: TIER[tierOf(cf.p)].c === '#c9b9a2' ? '#f6ecdf' : TIER[tierOf(cf.p)].c,
+      nextTxt: atCap ? 'Teto' : '+' + (cf.p + 1), nextCol: atCap ? '#c9b9a2' : (tierOf(cf.p + 1) === 0 ? '#f6ecdf' : TIER[tierOf(cf.p + 1)].c),
+      bonNow: BON[cf.p], bonNextTxt: atCap ? 'máx. da era' : '+' + BON[cf.p + 1] + '%',
+      chanceTxt: atCap ? '—' : chance + '%', chanceColor: chance >= 100 ? '#5fd068' : (chance >= 50 ? '#ffc94a' : '#ff8a5c'),
+      chanceBorder: cf.pity > 0 ? '#ff8a5c' : '#4a3a2b',
+      pityTxt: '+' + cf.pity + ' pts', pityPct: pityPct, pityFx: s.fx === 'fail' ? 'pityglow' : '',
+      pityHint: atCap ? 'Sem tentativa: espaço no teto da era' : 'Base ' + base + '% · ' + cf.fails + (cf.fails === 1 ? ' falha' : ' falhas') + ' · cada falha +5 · zera ao acertar',
+      capHint: nextCap ? 'Teto ' + ERAN[ERA] + ' +' + cap + '; +' + nextCap.p + ' na ' + nextCap.era + '.' : '',
+      costTxt: atCap ? '—' : cost + ' / ' + s.stones, costColor: !atCap && s.stones < cost ? '#ff5a4e' : '#f6ecdf',
+      forgeLabel: s.busy ? 'Forjando...' : (atCap ? 'Teto da era' : (s.stones < cost ? 'Faltam pedras' : 'Fortalecer')),
+      forgeClass: canForge ? 'gold pulse' : '', forgeDis: canForge ? 'false' : 'true',
+      forgeBg: canForge ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d', forgeColor: canForge ? '#2a1403' : '#c9b9a2',
+      forgeBorder: canForge ? '0' : '2px solid #4a3a2b',
+      forge: function () {
+        if (!canForge) { self.sfx(SND.tap); return; }
+        self.sfx(SND.tap);
+        self.setState({ busy: true, prev: null, fx: null });
+        clearTimeout(self.t1);
+        self.t1 = setTimeout(function () {
+          var st = self.state, c = st.f[sl], b = CH[c.p], ch = Math.min(100, b + c.pity);
+          var f = Object.assign({}, st.f), stones = st.stones - ST[c.p];
+          if (Math.random() * 100 < ch) {
+            var np = c.p + 1, newTier = tierOf(np) !== tierOf(c.p);
+            f[sl] = { p: np, pity: 0, fails: 0 };
+            self.sfx(SND.claim);
+            self.fire('ok', { f: f, stones: stones, busy: false, big: '+' + np + '!',
+              small: newTier && sl === 'weapon' ? 'Nova aura: ' + TIER[tierOf(np)].n : SLOT[sl].stat + ' do espaço +' + BON[np] + '%' });
+          } else {
+            f[sl] = { p: c.p, pity: c.pity + PITY, fails: c.fails + 1 };
+            self.sfx(SND.tap, 0.4);
+            self.fire('fail', { f: f, stones: stones, busy: false });
+          }
+        }, 700);
+      },
+      lvNow: lvN, lvNextTxt: lvAtMax ? 'Máx' : 'Nv. ' + (lvN + 1),
+      lvMulNow: mul(lvN), lvMulNext: lvAtMax ? '—' : mul(lvN + 1), lvPct: Math.round(lvN / LVMAX * 100) + '%',
+      lvCostTxt: lvAtMax ? '—' : kfmt(lc), lvCostColor: !lvAtMax && s.gold < lc ? '#ff5a4e' : '#f6ecdf',
+      lvLabel: lvAtMax ? 'Nível máximo' : (s.gold < lc ? 'Falta ouro' : 'Melhorar'),
+      lvClass: canLv ? 'gold pulse' : '', lvDis: canLv ? 'false' : 'true',
+      lvBg: canLv ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d', lvColor: canLv ? '#2a1403' : '#c9b9a2',
+      lvBorder: canLv ? '0' : '2px solid #4a3a2b',
+      levelUp: function () {
+        if (!canLv) { self.sfx(SND.tap); return; }
+        var lv = Object.assign({}, s.lv); lv[sl] = lvN + 1;
+        self.sfx(SND.coin); self.sfx(SND.claim, 0.5);
+        self.fire('lv', { lv: lv, gold: s.gold - lc, big: 'Nv. ' + (lvN + 1) + '!', small: SLOT[sl].stat + ' ' + mul(lvN + 1) });
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>

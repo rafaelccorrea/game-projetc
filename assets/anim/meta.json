@@ -1,0 +1,56 @@
+{
+ "era2_hero_t0_run": {
+  "frames": 8,
+  "fps": 12,
+  "w": 256,
+  "h": 256,
+  "hand": [
+   [
+    200.7,
+    179.2
+   ],
+   [
+    198.7,
+    181.8
+   ],
+   [
+    202.2,
+    184.3
+   ],
+   [
+    214,
+    171.5
+   ],
+   [
+    220.2,
+    159.7
+   ],
+   [
+    217.6,
+    152.6
+   ],
+   [
+    215,
+    159.7
+   ],
+   [
+    207.4,
+    176.6
+   ]
+  ],
+  "handR": 12,
+  "handNote": "centro do punho da mão da arma (direita da tela) em px do quadro 256, medido na grade; handR = raio do redesenho do punho"
+ },
+ "era2_e0_run": {
+  "frames": 8,
+  "fps": 12,
+  "w": 256,
+  "h": 256
+ },
+ "era2_e1_run": {
+  "frames": 8,
+  "fps": 12,
+  "w": 256,
+  "h": 256
+ }
+}

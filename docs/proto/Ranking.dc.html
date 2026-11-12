@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Ranking</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.au13,.au10,.au7{background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77)}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4)}
+.au7{background-image:url(/_blob/77c79b0f46d2e8ae8b53d9f6308c3206)}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.28) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 18s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.step{animation:stepUp .6s cubic-bezier(.2,1.3,.4,1) both;transform-origin:50% 100%}
+@keyframes stepUp{from{transform:scaleY(0)}to{transform:none}}
+.onstep{animation:fadeIn .4s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.crown{animation:crown 1.8s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes crown{0%,100%{transform:rotate(-6deg) scale(1);filter:drop-shadow(0 0 4px rgba(255,201,74,.6))}50%{transform:rotate(6deg) scale(1.12);filter:drop-shadow(0 0 14px rgba(255,201,74,1))}}
+.trophy{animation:trophy 2.2s ease-in-out infinite}
+@keyframes trophy{0%,100%{filter:drop-shadow(0 0 2px rgba(255,201,74,.5))}50%{filter:drop-shadow(0 0 12px rgba(255,201,74,1)) brightness(1.2)}}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff3c4;box-shadow:0 0 8px 3px rgba(255,201,74,.9);animation:twinkle 1.8s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.2);opacity:1}}
+.row{animation:rowIn .35s ease-out both}
+@keyframes rowIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.me{animation:meGlow 1.8s ease-in-out infinite}
+@keyframes meGlow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 16px rgba(255,201,74,.7)}}
+.band{animation:bandG 1.6s ease-in-out infinite}
+@keyframes bandG{0%,100%{box-shadow:0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 0 12px rgba(95,208,104,.8)}}
+.vip{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-radius:5px;padding:0 4px;font-size:9px;font-weight:900;line-height:14px;position:relative;overflow:hidden}
+.vip::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.8) 50%,transparent 70%);background-size:300% 100%;animation:shine 2.4s ease-in-out infinite}
+@keyframes shine{0%,50%{background-position:160% 0}100%{background-position:-60% 0}}
+.tick{animation:tick 1s steps(1) infinite}
+@keyframes tick{0%{color:#ffe07a}50%{color:#fff}}
+/* contagem viva */
+.clock{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;line-height:1.1}
+.clock.urgent{border-color:#ff7a4a;animation:urg 1s ease-in-out infinite}
+@keyframes urg{0%,100%{transform:scale(1);box-shadow:0 0 0 rgba(255,122,74,0)}50%{transform:scale(1.06);box-shadow:0 0 14px rgba(255,122,74,.85)}}
+.hg{animation:hgFlip 3s cubic-bezier(.6,0,.3,1) infinite;transform-origin:50% 50%}
+@keyframes hgFlip{0%,80%{transform:rotate(0)}100%{transform:rotate(180deg)}}
+.sandT{animation:sandT 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandT{0%{transform:scaleY(1)}80%,100%{transform:scaleY(0)}}
+.sandB{animation:sandB 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandB{0%{transform:scaleY(0)}80%,100%{transform:scaleY(1)}}
+.sandS{animation:sandS .3s linear infinite;stroke-dasharray:1.2 1.2}
+@keyframes sandS{to{stroke-dashoffset:-2.4}}
+.secA,.secB{display:inline-block}
+.secA{animation:secA .6s ease-out both}.secB{animation:secB .6s ease-out both}
+@keyframes secA{0%{transform:translateY(-4px) scale(1.2);color:#fff}100%{transform:none;color:#ffe07a}}
+@keyframes secB{0%{transform:translateY(-4px) scale(1.2);color:#fff}100%{transform:none;color:#ffe07a}}
+/* pódio vivo: entrada no wrapper, folha no filho (senão a entrada anula a folha) */
+.breathe{animation:breathe 2.6s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.025,1.035)}}
+.medal{animation:medal 2.2s ease-in-out infinite;transform-origin:50% 0}
+@keyframes medal{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+.conf{position:absolute;top:-10px;width:5px;height:8px;border-radius:1px;animation:conf 2.8s linear infinite;opacity:0}
+@keyframes conf{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translateY(118px) rotate(540deg);opacity:0}}
+.glint{position:absolute;width:14px;height:14px;background:radial-gradient(circle,#fff 0 18%,rgba(255,240,170,.9) 22%,transparent 60%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twinkle 1.6s ease-in-out infinite}
+/* avatares das linhas: anel girando na moldura */
+.ava{position:relative;width:36px;height:36px;flex:none;border-radius:10px;overflow:hidden;display:block}
+.ava .ring{position:absolute;left:-50%;top:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,#4a3a2b 0 55%,#ffc94a 75%,#fff3c4 80%,#4a3a2b 95%);animation:spin 2.4s linear infinite;display:block}
+.ava.mine .ring{background:conic-gradient(from 0deg,#ffc94a,#fff3c4,#f2a826,#ffc94a);animation-duration:1.4s}
+.ava .in{position:absolute;inset:2px;border-radius:8px;background:#33271d;overflow:hidden;display:block}
+.row.me{animation:rowIn .35s ease-out both,meRow 1.4s ease-in-out .35s infinite}
+@keyframes meRow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0);background:#3a2c1f}50%{box-shadow:0 0 16px rgba(255,201,74,.8);background:#5a4020}}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2): voltar à batalha, título no centro, pílulas de moedas e gemas, sem engrenagem ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-sizing:border-box;background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhT .gtext{text-shadow:none}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+/* painel em tela cheia por cima da batalha: o miolo rola em tela baixa, a ação principal fica fixa embaixo (polegar) */
+.nhBody{position:relative;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
+.nhFoot{position:relative;z-index:10;flex:none;width:100%;max-width:640px;margin:0 auto;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box}
+/* pódio: coordenadas do desenho aprovado (366 px) centradas; em tela estreita encolhe um pouco, sem cortar */
+.podIn{position:absolute;left:50%;top:0;width:366px;height:212px;margin-left:-183px;transform-origin:50% 0}
+@media (max-width:389px){.podIn{transform:scale(.92)}}
+</style>
+</helmet>
+<div class="nhApp" style="background: #16110d">
+
+  <!-- HEADER NOVO (igual Batalha tela cheia V2): voltar à batalha · título · moedas e gemas (sem engrenagem; Configurações fica no MENU da batalha) -->
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Ranking semanal</span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Moedas: 48.200. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>48.200</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Gemas: 320. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+    </div>
+  </div>
+
+  <!-- painel em tela cheia (ocupa também o espaço da antiga barra); rola só em tela baixa -->
+  <div class="nhBody" style="background: radial-gradient(ellipse at 50% 22%, #3a2810 0%, #1d1611 45%, #16110d 80%)"><div class="nhWrap" style="min-height: 100%; display: flex; flex-direction: column; gap: 6px; padding: 8px 12px 6px">
+
+    <!-- dica da aba + fechamento da semana (relógio aprovado) -->
+    <div style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px">
+      <span style="flex: 1; min-width: 0; font-size: 12px; font-weight: 800; color: #c9b9a2; line-height: 1.15">{{tabHint}}</span>
+      <span class="{{clockCls}}" role="timer" aria-label="{{closeAria}}">
+        <svg class="hg" width="18" height="24" viewBox="0 0 12 16" aria-hidden="true">
+          <path d="M1 1 H11 M1 15 H11" stroke="#c77a12" stroke-width="1.6" stroke-linecap="round"></path>
+          <path d="M2.2 1.5 C2.2 5.5 5.2 6.6 5.6 8 C5.2 9.4 2.2 10.5 2.2 14.5 H9.8 C9.8 10.5 6.8 9.4 6.4 8 C6.8 6.6 9.8 5.5 9.8 1.5 Z" fill="rgba(255,240,200,0.12)" stroke="#ffe07a" stroke-width="0.9"></path>
+          <path class="sandT" d="M3.4 3.2 H8.6 C8 5.6 6.4 6.6 6 7.4 C5.6 6.6 4 5.6 3.4 3.2 Z" fill="#ffc94a"></path>
+          <path class="sandB" d="M3 14 C3.4 11.6 5.2 10.6 6 10.4 C6.8 10.6 8.6 11.6 9 14 Z" fill="#ffc94a"></path>
+          <line class="sandS" x1="6" y1="7.6" x2="6" y2="13.6" stroke="#ffe07a" stroke-width="0.6"></line>
+        </svg>
+        <span style="display: flex; flex-direction: column; align-items: flex-end">
+          <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Fecha em</span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #ffe07a; font-variant-numeric: tabular-nums; white-space: nowrap">{{closeHead}}<span class="{{secCls}}">{{closeSec}}</span></span>
+        </span>
+      </span>
+    </div>
+
+    <!-- tipos de ranking -->
+    <div role="tablist" aria-label="Tipos de ranking" style="height: 44px; flex: none; display: flex; gap: 4px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <button role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" style="flex: 1; border-radius: 11px; border: 2px solid {{t.bd}}; background: {{t.bg}}; color: {{t.fg}}; font-family: 'Lilita One', sans-serif; font-size: 14px; padding: 0">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- pódio animado -->
+    <div style="position: relative; height: 212px; flex: none; overflow: hidden; border-radius: 16px; background: linear-gradient(180deg, rgba(58,40,16,0.6), rgba(22,17,13,0.2))">
+      <div class="podIn">
+      <div class="rays" style="left: 65px; top: -60px; width: 240px; height: 240px"></div>
+      <span class="spark" style="left: 40px; top: 30px"></span>
+      <span class="spark" style="left: 340px; top: 46px; animation-delay: .6s"></span>
+      <span class="spark" style="left: 190px; top: 12px; animation-delay: 1.1s"></span>
+      <sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+        <div>
+          <!-- aura atrás (256x320 → 88x110, base no degrau) e Kael parado com os pés no degrau (95% de 88 = 84) -->
+          <div class="onstep" aria-hidden="true" style="position: absolute; left: {{p.ax}}; top: {{p.auraY}}; width: 88px; height: 110px; animation-delay: {{p.d}}">
+            <div class="{{p.aura}}" style="position: absolute; inset: 0; animation-delay: {{p.auraD}}"></div>
+          </div>
+          <div class="onstep" role="img" aria-label="{{p.aria}}" style="position: absolute; left: {{p.ax}}; top: {{p.heroY}}; width: 88px; height: 88px; animation-delay: {{p.d}}">
+            <div class="breathe" style="position: absolute; inset: 0; animation-delay: {{p.brD}}">
+              <div class="kidle" style="position: absolute; inset: 0; animation-delay: {{p.kD}}"></div>
+            </div>
+          </div>
+          <div class="step" style="position: absolute; left: {{p.x}}; top: {{p.stepY}}; width: 112px; height: {{p.stepH}}; border-radius: 10px 10px 0 0; background: {{p.stepBg}}; border: 2px solid {{p.stepBd}}; border-bottom: 0; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; padding-top: 4px; animation-delay: {{p.d}}">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 20px; line-height: 1; color: {{p.numC}}; text-shadow: 0 2px 0 rgba(0,0,0,0.5)">{{p.rank}}</span>
+            <span style="display: flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 900; max-width: 106px; white-space: nowrap; overflow: hidden">{{p.name}}<sc-if value="{{p.vip}}" hint-placeholder-val="{{true}}"><span class="vip">VIP</span></sc-if></span>
+            <span style="font-size: 10px; font-weight: 800; color: #e8dccb">Nv. {{p.lvl}} · {{p.era}}</span>
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 14px; color: #ffe07a">{{p.val}}</span>
+          </div>
+          <sc-if value="{{p.hasMedal}}" hint-placeholder-val="{{true}}">
+            <svg class="medal" width="22" height="30" viewBox="0 0 22 30" aria-hidden="true" style="position: absolute; left: {{p.mx}}; top: {{p.stepY}}; animation-delay: {{p.mD}}"><path d="M6 0 L11 12 L16 0" fill="none" stroke="#c0392b" stroke-width="3"></path><circle cx="11" cy="19" r="8" fill="{{p.medC}}" stroke="#3a2510" stroke-width="1.4"></circle><text x="11" y="23" text-anchor="middle" font-family="Lilita One, sans-serif" font-size="11" fill="#3a2510">{{p.rank}}</text></svg>
+          </sc-if>
+        </div>
+      </sc-for>
+      <!-- confete e brilho no 1º -->
+      <span class="conf" style="left: 150px; background: #ffc94a; animation-delay: 0s"></span>
+      <span class="conf" style="left: 166px; background: #ff5a5a; animation-delay: .7s"></span>
+      <span class="conf" style="left: 181px; background: #5fd068; animation-delay: 1.5s"></span>
+      <span class="conf" style="left: 197px; background: #4aa3ff; animation-delay: .35s"></span>
+      <span class="conf" style="left: 212px; background: #fff3c4; animation-delay: 2.1s"></span>
+      <span class="conf" style="left: 226px; background: #b07cff; animation-delay: 1.1s"></span>
+      <span class="conf" style="left: 240px; background: #ffc94a; animation-delay: 1.8s"></span>
+      <span class="glint" style="left: 158px; top: 60px; animation-delay: .2s"></span>
+      <span class="glint" style="left: 226px; top: 48px; animation-delay: 1s"></span>
+      <!-- coroa no 1º e troféu -->
+      <svg class="crown" width="34" height="24" viewBox="0 0 24 17" aria-hidden="true" style="position: absolute; left: 178px; top: 28px"><path d="M2 15 L3.5 4 L8.5 9 L12 1 L15.5 9 L20.5 4 L22 15 Z" fill="#ffc94a" stroke="#6a3a08" stroke-width="1.3" stroke-linejoin="round"></path><circle cx="12" cy="10" r="1.6" fill="#ff5a5a"></circle></svg>
+      <svg class="trophy" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" style="position: absolute; left: 300px; top: 14px"><path d="M7 3 H17 V8 A5 5 0 0 1 7 8 Z" fill="#ffc94a" stroke="#6a3a08" stroke-width="1.3"></path><path d="M7 4 H4 V6 A3 3 0 0 0 7 9 M17 4 H20 V6 A3 3 0 0 1 17 9" fill="none" stroke="#ffc94a" stroke-width="1.6"></path><path d="M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z" fill="#c77a12" stroke="#6a3a08" stroke-width="1.2"></path></svg>
+      </div>
+      <span style="position: absolute; left: 8px; right: 8px; bottom: 4px; font-size: 9px; font-weight: 800; color: #c9b9a2">prévia: todos com a skin padrão · prêmios valem quando o ranking online abrir</span>
+    </div>
+
+    <!-- prêmios por posição -->
+    <div style="height: 50px; flex: none; display: flex; gap: 4px">
+      <sc-for list="{{prizes}}" as="z" hint-placeholder-count="5">
+        <div class="{{z.cls}}" style="flex: 1; border-radius: 10px; background: #1d1611; border: 2px solid {{z.bd}}; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; min-width: 0">
+          <span style="font-size: 10px; font-weight: 900; color: {{z.c}}">{{z.label}}</span>
+          <span style="display: flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 900"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 14px; height: 14px">[QTD]</span>
+          <span style="font-size: 9px; font-weight: 800; color: #c9b9a2; white-space: nowrap">{{z.extra}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- lista 4 a 50 paginada -->
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <div class="row {{r.cls}}" style="height: 44px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 12px; background: {{r.bg}}; border: 1px solid {{r.bd}}; animation-delay: {{r.d}}">
+          <span style="width: 28px; font-family: 'Lilita One', sans-serif; font-size: 16px; color: #c9b9a2; text-align: center">{{r.rank}}</span>
+          <span class="{{r.avaCls}}"><span class="ring" style="animation-delay: {{r.ringD}}"></span><span class="in"><span class="kidle" style="position: absolute; left: -13px; top: -3px; width: 58px; height: 58px; display: block; animation-delay: {{r.kD}}"></span></span></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden">{{r.name}}<sc-if value="{{r.vip}}" hint-placeholder-val="{{false}}"><span class="vip">VIP</span></sc-if></span>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; white-space: nowrap">Nv. {{r.lvl}} · {{r.era}} · FC {{r.fc}}</span>
+          </span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #ffe07a; white-space: nowrap">{{r.val}}</span>
+        </div>
+      </sc-for>
+      <div style="flex: 1"></div>
+      <div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+        <button onClick="{{prevPage}}" aria-label="Página anterior" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{prevC}}; padding: 0; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <span style="min-width: 120px; text-align: center; font-size: 12px; font-weight: 900; color: #c9b9a2">{{pageTxt}}</span>
+        <button onClick="{{nextPage}}" aria-label="Próxima página" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{nextC}}; padding: 0; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+  </div></div>
+
+  <!-- sua posição: ação fixa embaixo, ao alcance do polegar -->
+  <div class="nhFoot" style="padding-top: 6px">
+    <button class="me" onClick="{{goMe}}" aria-label="{{meAria}}" style="width: 100%; height: 58px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 14px; background: linear-gradient(90deg, #4a3214, #2a1f16); border: 2px solid #ffc94a; color: #f6ecdf; text-align: left">
+      <span style="width: 40px; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ffc94a; text-align: center">{{meRank}}</span>
+      <span class="ava mine" style="width: 40px; height: 40px"><span class="ring"></span><span class="in"><span class="kidle" style="position: absolute; left: -14px; top: -4px; width: 64px; height: 64px; display: block; animation-delay: -.42s"></span></span></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+        <span style="font-size: 14px; font-weight: 900">Você · Kael <span style="font-size: 11px; color: #c9b9a2">Nv. 24 · Medieval</span></span>
+        <span style="font-size: 12px; font-weight: 900; color: #7ef08a">{{meGap}}</span>
+      </span>
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 16px; color: #ffe07a">{{meVal}}</span>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13' };
+var ERAS = ['Pré-História', 'Antiguidade', 'Medieval', 'Pólvora', 'Industrial', 'Moderna', 'Futurista'];
+var NAMES = ['LunaFerro', 'Tavinho', 'Rex_Brasa', 'Mari Lâmina', 'Caio Trovão', 'Bia Arcana', 'Dudu77', 'Nina Sol', 'Theo Rúnico', 'Gabi Fênix', 'Leo Bravo', 'Iara Lua', 'Pedrão', 'Duda Gelo', 'Rafa Corte', 'Lia Vento', 'Joca', 'Mel Dragão', 'Enzo Aço', 'Clara Rubi', 'Bento', 'Yasmin Z', 'Davi Rocha', 'Sofi Raio', 'Hugo Elmo', 'Lara Brisa', 'Vini Mago', 'Alice Fogo', 'Otto', 'Malu Escudo', 'Igor Lobo', 'Helô', 'Fred Gume', 'Bel Estrela', 'Nico Tora', 'Ana Flecha', 'Tito', 'Rosa Bruma', 'Kiko', 'Lívia Mar', 'Beto Fúria', 'Zoe', 'Guto Pedra', 'Cecí', 'Ravi', 'Isa Prata', 'Juca', 'Lelê', 'Max Brado', 'Tati Onda'];
+// valores fictícios de protótipo (bots); o jogo real usa a MAIOR FC registrada na semana (CONTRATO_V2 F)
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var R = rng(42);
+var ME = { name: 'Kael', me: true, vip: false, lvl: 24, era: 2, fc: 12480, tower: 31, arena: 1240, pass: 18 };
+var PLAYERS = NAMES.map(function (n, i) {
+  var d = 36 - i;
+  var lvl = Math.max(5, Math.round(24 + d * 0.6 + R() * 3 - 1.5));
+  return {
+    name: n, vip: i % 4 === 0 || i === 1, lvl: lvl, era: Math.min(6, Math.floor(lvl / 11)),
+    fc: Math.round(12480 * Math.pow(1.065, d) * (0.96 + R() * 0.08)),
+    tower: Math.max(1, Math.round(31 + d * 1.4 + R() * 4 - 2)),
+    arena: Math.max(100, Math.round(1240 + d * 55 + R() * 60 - 30)),
+    pass: Math.min(50, Math.max(1, Math.round(18 + d * 0.5 + R() * 3 - 1.5)))
+  };
+});
+var TABS = [
+  { k: 'fc', label: 'Força', hint: 'Maior FC da semana', fmt: function (v) { return 'FC ' + kf(v); }, unit: 'de FC' },
+  { k: 'lvl', label: 'Nível', hint: 'Nível do jogador', fmt: function (v) { return 'Nv. ' + v; }, unit: 'níveis' },
+  { k: 'tower', label: 'Torre', hint: 'Andar mais alto vencido', fmt: function (v) { return 'Andar ' + v; }, unit: 'andares' },
+  { k: 'arena', label: 'Arena', hint: 'Pontos de arena da semana', fmt: function (v) { return n0(v) + ' pts'; }, unit: 'pontos' },
+  { k: 'pass', label: 'Passe', hint: 'Nível do Passe da temporada', fmt: function (v) { return 'Passe ' + v; }, unit: 'níveis do passe' }
+];
+var PRIZES = [
+  { label: 'Top 1', extra: '+ título', c: '#ffc94a', lo: 1, hi: 1 },
+  { label: '2 – 3', extra: '+ moldura', c: '#e8e2d8', lo: 2, hi: 3 },
+  { label: '4 – 10', extra: '+ baú', c: '#b07cff', lo: 4, hi: 10 },
+  { label: '11 – 50', extra: '+ pedras', c: '#4aa3ff', lo: 11, hi: 50 },
+  { label: '51 – 100', extra: '+ ouro', c: '#c9b9a2', lo: 51, hi: 100 }
+];
+var PER = 5;
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function kf(v) { return v >= 1000 ? (v / 1000).toFixed(1).replace('.', ',') + 'K' : String(v); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function weekLeft() { var d = new Date(), m = new Date(d); var add = (8 - d.getDay()) % 7 || 7; m.setDate(d.getDate() + add); m.setHours(0, 0, 0, 0); return Math.floor((m - d) / 1000); }
+
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0, page: 0, left: weekLeft() }; }
+  componentDidMount() { var self = this; this.iv = setInterval(function () { self.setState({ left: weekLeft() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.iv); }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.7; a.play().catch(function () {}); } catch (e) {} }
+  renderVals() {
+    var s = this.state, self = this, T = TABS[s.tab], k = T.k;
+    var all = PLAYERS.concat([ME]).slice().sort(function (a, b) { return b[k] - a[k]; });
+    var meIdx = all.indexOf(ME), meRank = meIdx + 1;
+    var top = all.filter(function (p) { return !p.me; });
+    // lista: posições 4 a 50 (com você no meio, se estiver)
+    var list = all.slice(3, 50);
+    var pages = Math.ceil(list.length / PER), page = Math.min(s.page, pages - 1);
+    var rows = list.slice(page * PER, page * PER + PER).map(function (p, i) {
+      var rank = all.indexOf(p) + 1;
+      return {
+        rank: rank, name: p.me ? 'Você · Kael' : p.name, vip: !!p.vip, lvl: p.lvl, era: ERAS[p.era], fc: kf(p.fc), val: T.fmt(p[k]),
+        cls: p.me ? 'me' : '', bg: p.me ? '#3a2c1f' : '#1d1611', bd: p.me ? '#ffc94a' : '#4a3a2b', d: (i * 0.04) + 's',
+        avaCls: p.me ? 'ava mine' : 'ava', ringD: (-(rank * 0.37) % 2.4).toFixed(2) + 's', kD: (-(rank * 0.29) % 1).toFixed(2) + 's'
+      };
+    });
+    var P3 = [
+      { p: all[1], rank: 2, x: 10, ax: 22, stepH: 82, aura: 'au10', stepBg: 'linear-gradient(180deg,#d8dbe3,#8a8f9c)', stepBd: '#f6f7fa', numC: '#2a2f3a', d: '.15s', kD: '-.33s', auraD: '-.5s', brD: '-.9s', medC: '#e3e6ee', mD: '-.6s' },
+      { p: all[0], rank: 1, x: 139, ax: 151, stepH: 100, aura: 'au13', stepBg: 'linear-gradient(180deg,#ffe07a,#c77a12)', stepBd: '#fff0a8', numC: '#5a2d04', d: '0s', kD: '0s', auraD: '0s', brD: '0s', medC: '', mD: '0s' },
+      { p: all[2], rank: 3, x: 268, ax: 280, stepH: 70, aura: 'au7', stepBg: 'linear-gradient(180deg,#e0a46a,#8a4f22)', stepBd: '#ffd2a3', numC: '#3a1a06', d: '.3s', kD: '-.67s', auraD: '-.95s', brD: '-1.7s', medC: '#e09a5a', mD: '-1.4s' }
+    ];
+    var podium = P3.map(function (q) {
+      var stepY = 212 - q.stepH, p = q.p;
+      return {
+        x: q.x + 'px', ax: q.ax + 'px', stepY: stepY + 'px', stepH: q.stepH + 'px', heroY: (stepY + 2 - 84) + 'px', auraY: (stepY + 6 - 110) + 'px',
+        aura: q.aura, stepBg: q.stepBg, stepBd: q.stepBd, numC: q.numC, d: q.d, rank: q.rank,
+        kD: q.kD, auraD: q.auraD, brD: q.brD, hasMedal: q.rank !== 1, medC: q.medC, mD: q.mD, mx: (q.x + 6) + 'px',
+        name: p.me ? 'Você' : p.name, vip: !!p.vip, lvl: p.lvl, era: ERAS[p.era], val: T.fmt(p[k]),
+        aria: q.rank + 'º lugar: ' + (p.me ? 'você' : p.name) + ', nível ' + p.lvl + ', ' + T.fmt(p[k])
+      };
+    });
+    var above = meIdx > 0 ? all[meIdx - 1] : null;
+    var gap = above ? above[k] - ME[k] + 1 : 0; // precisa passar quem está acima (empate não sobe)
+    var gapTxt = !above ? 'Você é o 1º!' : 'Faltam ' + n0(gap) + ' ' + T.unit + ' para subir para ' + meIdx + 'º';
+    var prizes = PRIZES.map(function (z) {
+      var mine = meRank >= z.lo && meRank <= z.hi;
+      return { label: z.label, extra: z.extra, c: z.c, bd: mine ? '#5fd068' : '#4a3a2b', cls: mine ? 'band' : '' };
+    });
+    var L = s.left, d = Math.floor(L / 86400);
+    var hh = Math.floor(L % 86400 / 3600), mm = Math.floor(L % 3600 / 60), ss = L % 60;
+    var closeHead = (d > 0 ? d + 'd ' : '') + pad(hh) + ':' + pad(mm) + ':', closeSec = pad(ss);
+    var closeAria = 'Fecha em ' + (d > 0 ? d + ' dias, ' : '') + hh + ' horas, ' + mm + ' minutos';
+    var clockCls = L <= 6 * 3600 ? 'clock urgent' : 'clock'; // pulsa quando falta pouco (≤ 6 h)
+    return {
+      tabs: TABS.map(function (t, i) {
+        var on = i === s.tab;
+        return { label: t.label, sel: on ? 'true' : 'false', bd: on ? '#ffc94a' : '#4a3a2b', bg: on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d', fg: on ? '#2a1403' : '#c9b9a2',
+          pick: function () { self.sfx(SND.tap); self.setState({ tab: i, page: 0 }); } };
+      }),
+      tabHint: T.hint + ' · prêmios ao fechar', closeHead: closeHead, closeSec: closeSec, closeAria: closeAria, clockCls: clockCls, secCls: ss % 2 ? 'secA' : 'secB',
+      podium: podium, prizes: prizes, rows: rows,
+      pageTxt: 'Posições ' + (4 + page * PER) + '–' + Math.min(50, 3 + (page + 1) * PER) + ' · ' + (page + 1) + '/' + pages,
+      prevC: page > 0 ? '#f6ecdf' : '#6a5a48', nextC: page < pages - 1 ? '#f6ecdf' : '#6a5a48',
+      prevPage: function () { if (page > 0) { self.sfx(SND.tap); self.setState({ page: page - 1 }); } },
+      nextPage: function () { if (page < pages - 1) { self.sfx(SND.tap); self.setState({ page: page + 1 }); } },
+      meRank: '#' + meRank, meVal: T.fmt(ME[k]), meGap: gapTxt,
+      meAria: 'Sua posição: ' + meRank + 'º, ' + T.fmt(ME[k]) + '. ' + gapTxt + '. Toque para ir até sua página',
+      goMe: function () { self.sfx(SND.tap); if (meIdx >= 3 && meIdx < 50) self.setState({ page: Math.floor((meIdx - 3) / PER) }); },
+      tap: function () { self.sfx(SND.tap); }
+    };
+  }
+}
+</script>
+</body>
+</html>

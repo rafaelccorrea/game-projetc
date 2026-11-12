@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Loja</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+/* Kael aprovado: folha parado 12 quadros, 12 fps */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kidl 1s steps(12, jump-none) infinite}
+@keyframes kidl{from{background-position:0 0}to{background-position:100% 0}}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.rule{animation:ruleIn .6s ease-out both}
+@keyframes ruleIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.rule svg{animation:shieldPulse 2.4s ease-in-out infinite}
+@keyframes shieldPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.feat{animation:panelIn .5s .1s ease-out both}
+@keyframes panelIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.rays{position:absolute;left:50%;top:50%;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.30) 0deg 10deg,transparent 10deg 30deg);-webkit-mask-image:radial-gradient(circle,#000 20%,transparent 68%);mask-image:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.turn{animation:turn 6s ease-in-out infinite;transform-style:preserve-3d}
+@keyframes turn{0%,35%{transform:perspective(500px) rotateY(0deg)}50%{transform:perspective(500px) rotateY(180deg)}65%,100%{transform:perspective(500px) rotateY(360deg)}}
+.breathe{transform-origin:50% 100%;animation:breathe 2.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.02)}}
+.prev{position:absolute;left:0;right:0;bottom:0;border-radius:5px;background:rgba(14,10,7,.9);border:1px solid #6b5843;color:#e8dccb;font-size:8px;font-weight:900;text-align:center;line-height:1.2;padding:1px 2px}
+.ped{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#6b5236 0%,#3a2c1f 60%,#1d1611 100%);border:2px solid #ffc94a;box-shadow:0 0 14px rgba(255,201,74,.55),inset 0 -4px 0 rgba(0,0,0,.4)}
+.bob{animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:twinkle 2.2s ease-in-out infinite;opacity:0}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.1)}}
+.offer{animation:offerPulse 1.4s ease-in-out infinite}
+@keyframes offerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.cta{animation:ctaGlow 1.8s ease-in-out infinite}
+@keyframes ctaGlow{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 10px rgba(255,201,74,.35)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 26px rgba(255,201,74,.85)}}
+.green{background:linear-gradient(180deg,#86e88d,#3fae3c);color:#0d2410;box-shadow:0 6px 0 #1f6a22;border:0}
+.green:active{transform:translateY(4px);box-shadow:0 2px 0 #1f6a22}
+.tile{position:relative;overflow:hidden;animation:tileIn .35s ease-out both;transition:transform .12s}
+.tile:active{transform:scale(.95)}
+.tile:nth-child(2){animation-delay:.05s}.tile:nth-child(3){animation-delay:.1s}.tile:nth-child(4){animation-delay:.15s}.tile:nth-child(5){animation-delay:.2s}.tile:nth-child(6){animation-delay:.25s}
+@keyframes tileIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.tshine{position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);background-size:260% 100%;animation:shine 3.4s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+.r4{animation:tileIn .35s ease-out both,glow4 2s ease-in-out infinite}
+@keyframes glow4{0%,100%{box-shadow:0 0 6px rgba(255,201,74,.35)}50%{box-shadow:0 0 18px rgba(255,201,74,.9)}}
+.r3{animation:tileIn .35s ease-out both,glow3 2.4s ease-in-out infinite}
+@keyframes glow3{0%,100%{box-shadow:0 0 4px rgba(255,90,90,.3)}50%{box-shadow:0 0 14px rgba(255,90,90,.75)}}
+.veil{animation:fade .2s ease-out both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.pop{animation:pop .32s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.burst{position:absolute;left:50%;top:50%;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;border:6px solid #ffc94a;animation:burst .9s ease-out both;pointer-events:none}
+@keyframes burst{from{transform:scale(.3);opacity:1}to{transform:scale(4);opacity:0}}
+.toast{animation:toast 2.2s ease-in-out both}
+@keyframes toast{0%{opacity:0;transform:translateY(16px)}12%,82%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-10px)}}
+.tick{animation:tick 1s steps(1) infinite}
+@keyframes tick{0%{color:#ffe07a}50%{color:#ffffff}}
+.gemfloat{animation:bob 2.6s ease-in-out infinite}
+/* ===== PADRÃO V2: header novo (igual BatalhaTelaCheiaV2) + tela cheia sobre a batalha, sem barra de abas embaixo ===== */
+html,body{height:100%}
+.scr{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;display:flex;flex-direction:column}
+.bbg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#7fb3d9}
+.bbg i{position:absolute;left:-24px;right:-24px;background-repeat:repeat-x;filter:blur(5px) saturate(.9)}
+.bbg .s{top:0;height:492px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 492px}
+.bbg .f{top:181px;height:344px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 344px}
+.bbg .m{top:144px;height:410px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 410px}
+.bbg .g{top:537px;height:312px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 312px}
+.bbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.38),rgba(10,7,5,.72) 120px,rgba(10,7,5,.92))}
+.hgl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hd{position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:8px;padding:10px 10px 8px;padding-top:max(10px,env(safe-area-inset-top));box-sizing:border-box}
+.hrb{width:44px;height:44px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box;text-decoration:none;transition:transform .12s}
+.hrb:active{transform:scale(.9)}
+.ht{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(17px,5.2vw,22px);line-height:1.1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hps{flex:none;display:flex;align-items:center;gap:6px}
+.hpill{height:44px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;text-decoration:none;font:inherit;transition:transform .12s}
+.hpill:active{transform:scale(.95)}
+.hpill img{object-fit:contain;flex:none}
+.hpill b{font-size:13.5px;font-weight:900;padding-right:2px}
+.hplus{width:24px;height:24px;flex:none;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+.pnl{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;background:#16110d;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,236,200,.18);box-shadow:0 -10px 30px rgba(0,0,0,.5);overflow:hidden;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
+.pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
+@keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
+</style>
+</helmet>
+<div class="scr">
+
+  <div class="bbg" aria-hidden="true"><i class="s"></i><i class="f"></i><i class="m"></i><i class="g"></i></div>
+
+  <!-- Header novo (padrão Batalha V2): voltar · título · moedas/gemas. Sem engrenagem: Configurações ficam no MENU da batalha -->
+  <header class="hd">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" aria-label="Voltar para a batalha" class="hgl hrb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 class="ht">Loja</h1>
+    <div class="hps">
+      <span class="hgl hpill" role="img" aria-label="Moedas: 48,2K"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px"><b style="padding-right: 6px">48,2K</b></span>
+      <button onClick="{{goGems}}" aria-label="Gemas: {{gems}}. Comprar gemas" class="hgl hpill"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gems}}</b><span class="hplus" aria-hidden="true">+</span></button>
+    </div>
+  </header>
+
+  <!-- Painel em tela cheia por cima da batalha (sem barra de abas embaixo) -->
+  <div class="pnl pnlIn">
+
+  <!-- Corpo da Loja (tela cheia; rola em telas baixas; seções = abas internas no topo) -->
+  <div style="flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 10px; box-sizing: border-box; overflow-y: auto; overflow-x: hidden; background: radial-gradient(120% 60% at 50% 0%, #2a1f16 0%, #16110d 70%)">
+
+    <!-- Regra de ouro -->
+    <div style="height: 44px; flex: none; display: flex; gap: 6px">
+      <div class="rule" role="note" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 10px; background: #12261a; border: 1px solid #2f6b36; color: #c8f5cb; font-size: 11px; font-weight: 900; line-height: 1.2">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="8.5 12 11 14.5 15.5 9.5"></polyline></svg>
+        <span>Skins dão bônus: +2% a +10% de ATK e HP pela raridade, e cada skin da coleção soma +0,5%</span>
+      </div>
+      <a href="VIP.dc.html" onClick="{{tap}}" class="gold cta" aria-label="Clube VIP" style="width: 64px; flex: none; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; line-height: 1">
+        <svg width="20" height="16" viewBox="0 0 24 18" fill="currentColor" aria-hidden="true"><path d="M2 16 L4 4 L9 9 L12 1 L15 9 L20 4 L22 16 Z"></path></svg>
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 16px">VIP</span>
+      </a>
+    </div>
+
+    <!-- Sub-abas -->
+    <div role="tablist" aria-label="Seções da loja" style="height: 44px; flex: none; display: flex; gap: 4px">
+      <button role="tab" aria-selected="{{heroSel}}" onClick="{{tabHero}}" style="flex: 1; border-radius: 12px; border: 2px solid {{heroBd}}; background: {{heroBg}}; color: {{heroFg}}; font-family: 'Lilita One', sans-serif; font-size: 13px; padding: 0; line-height: 1.05">Skins<br>herói</button>
+      <button role="tab" aria-selected="{{weapSel}}" onClick="{{tabWeap}}" style="flex: 1; border-radius: 12px; border: 2px solid {{weapBd}}; background: {{weapBg}}; color: {{weapFg}}; font-family: 'Lilita One', sans-serif; font-size: 13px; padding: 0; line-height: 1.05">Skins<br>arma</button>
+      <button role="tab" aria-selected="{{itemSel}}" onClick="{{tabItem}}" style="flex: 1.1; border-radius: 12px; border: 2px solid {{itemBd}}; background: {{itemBg}}; color: {{itemFg}}; font-family: 'Lilita One', sans-serif; font-size: 13px; padding: 0; line-height: 1.05; display: flex; align-items: center; justify-content: center; gap: 3px"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 20px; height: 20px; object-fit: contain"><span>Itens<br>(ouro)</span></button>
+      <button role="tab" aria-selected="{{gemSel}}" onClick="{{tabGem}}" style="flex: 0.9; border-radius: 12px; border: 2px solid {{gemBd}}; background: {{gemBg}}; color: {{gemFg}}; font-family: 'Lilita One', sans-serif; font-size: 13px; padding: 0; display: flex; align-items: center; justify-content: center; gap: 3px"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 20px; height: 20px; object-fit: contain">Gemas</button>
+    </div>
+
+    <!-- ===== Abas de skins ===== -->
+    <sc-if value="{{isSkinTab}}" hint-placeholder-val="{{true}}">
+      <!-- Destaque: skin em oferta -->
+      <div class="feat" style="height: 196px; flex: none; position: relative; display: flex; border-radius: 16px; border: 2px solid #ffc94a; background: linear-gradient(135deg, #4a361f 0%, #2a1f16 45%, #1d1611 100%); overflow: hidden; box-shadow: 0 0 18px rgba(255,201,74,0.35)">
+        <div style="position: relative; width: 168px; flex: none; overflow: hidden">
+          <div class="rays"></div>
+          <!-- pedestal: pés do sprite (95% da altura) no centro dele -->
+          <div class="ped" style="left: 24px; top: 152px; width: 120px; height: 20px"></div>
+          <div class="{{featWrap}}" style="position: absolute; left: 4px; top: 10px; width: 160px; height: 160px">
+            <sc-if value="{{featIsImg}}" hint-placeholder-val="{{false}}"><img class="turn" src="{{featImg}}" alt="{{featName}}" style="width: 160px; height: 160px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,201,74,0.6))"></sc-if>
+            <sc-if value="{{featIsSheet}}" hint-placeholder-val="{{true}}"><div class="kidle" role="img" aria-label="{{featName}}, prévia: animação em produção" style="width: 160px; height: 160px; filter: drop-shadow(0 0 10px rgba(255,201,74,0.6))"></div></sc-if>
+          </div>
+          <sc-if value="{{featIsSheet}}" hint-placeholder-val="{{true}}"><span class="prev" style="left: 8px; right: 8px; bottom: 6px; font-size: 10px">prévia, animação em produção</span></sc-if>
+          <span class="spark" style="left: 22px; top: 30px; animation-delay: 0s"></span>
+          <span class="spark" style="left: 136px; top: 52px; animation-delay: .7s"></span>
+          <span class="spark" style="left: 40px; top: 140px; animation-delay: 1.3s; width: 4px; height: 4px"></span>
+          <span class="spark" style="left: 128px; top: 150px; animation-delay: 1.8s; width: 5px; height: 5px"></span>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12px 12px 12px 2px; gap: 4px">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <span class="offer" style="padding: 3px 8px; border-radius: 999px; background: #c0301f; color: #fff; font-size: 11px; font-weight: 900; letter-spacing: 1px">OFERTA</span>
+            <span style="font-size: 11px; font-weight: 900; color: #c9b9a2">{{featKind}}</span>
+          </div>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 23px; line-height: 1.05; text-shadow: 0 2px 0 #000">{{featName}}</span>
+          <span style="align-self: flex-start; padding: 2px 8px; border-radius: 6px; border: 1px solid #ffc94a; color: #ffc94a; font-size: 12px; font-weight: 900">Lendário · Medieval</span>
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px; color: #c9b9a2; font-size: 12px; font-weight: 800">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 15 15"></polyline><line x1="9" y1="2" x2="15" y2="2"></line></svg>
+            Termina em <span class="tick" aria-live="off" style="font-family: 'Lilita One', sans-serif; font-size: 18px">{{countdown}}</span>
+          </div>
+          <div style="flex: 1"></div>
+          <sc-if value="{{featBuyable}}" hint-placeholder-val="{{true}}">
+            <button class="gold cta" onClick="{{openFeat}}" style="height: 46px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0">Ver <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 24px; height: 24px; object-fit: contain">{{featPrice}}</button>
+          </sc-if>
+          <sc-if value="{{featOwned}}" hint-placeholder-val="{{false}}">
+            <button onClick="{{openFeat}}" style="height: 46px; border-radius: 14px; border: 2px solid #5fd068; background: #12261a; color: #c8f5cb; font-family: 'Lilita One', sans-serif; font-size: 17px; padding: 0">Na coleção · ver</button>
+          </sc-if>
+        </div>
+      </div>
+
+      <!-- Grade paginada -->
+      <div style="height: 308px; flex: none; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 150px); gap: 8px">
+        <sc-for list="{{tiles}}" as="t" hint-placeholder-count="6">
+          <button class="tile {{t.cls}}" onClick="{{t.open}}" aria-label="{{t.aria}}" style="border-radius: 14px; border: 2px solid {{t.rc}}; background: linear-gradient(180deg, {{t.tint}} 0%, #1d1611 60%); color: #f6ecdf; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+            <sc-if value="{{t.shiny}}" hint-placeholder-val="{{true}}"><span class="tshine"></span></sc-if>
+            <span style="font-size: 11px; font-weight: 900; color: {{t.rc}}">{{t.rar}}</span>
+            <div style="position: relative; width: 70px; height: 66px; display: flex; align-items: center; justify-content: center">
+              <sc-if value="{{t.ped}}" hint-placeholder-val="{{true}}">
+                <span class="ped" style="left: 13px; top: 58px; width: 44px; height: 9px; border-width: 1px"></span>
+              </sc-if>
+              <sc-if value="{{t.hasImg}}" hint-placeholder-val="{{true}}">
+                <img src="{{t.img}}" alt="" style="position: relative; width: 70px; height: 66px; object-fit: contain; opacity: {{t.op}}">
+              </sc-if>
+              <sc-if value="{{t.isSheet}}" hint-placeholder-val="{{false}}">
+                <span class="kidle" aria-hidden="true" style="position: relative; width: 70px; height: 70px; margin-top: -4px; opacity: {{t.op}}"></span>
+                <span class="prev">prévia, animação em produção</span>
+              </sc-if>
+              <sc-if value="{{t.noImg}}" hint-placeholder-val="{{false}}">
+                <span style="width: 64px; height: 60px; border-radius: 10px; border: 2px dashed #6b5843; color: #c9b9a2; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.15; padding: 2px; box-sizing: border-box">arte pendente {{t.ph}}</span>
+              </sc-if>
+              <sc-if value="{{t.locked}}" hint-placeholder-val="{{false}}">
+                <span style="position: absolute; right: -6px; top: -4px; width: 26px; height: 26px; border-radius: 50%; background: #0e0a07; border: 2px solid #6b5843; display: flex; align-items: center; justify-content: center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f6ecdf" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                </span>
+              </sc-if>
+            </div>
+            <span style="height: 28px; font-size: 12px; font-weight: 900; line-height: 1.15; text-align: center; display: flex; align-items: center">{{t.n}}</span>
+            <sc-if value="{{t.isEq}}" hint-placeholder-val="{{false}}">
+              <span style="height: 22px; padding: 0 8px; border-radius: 999px; background: #5fd068; color: #0d2410; font-size: 11px; font-weight: 900; display: flex; align-items: center">Equipada</span>
+            </sc-if>
+            <sc-if value="{{t.isOwned}}" hint-placeholder-val="{{false}}">
+              <span style="height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid #5fd068; color: #c8f5cb; font-size: 11px; font-weight: 900; display: flex; align-items: center">Na coleção</span>
+            </sc-if>
+            <sc-if value="{{t.isPass}}" hint-placeholder-val="{{false}}">
+              <span style="height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid #ffc94a; color: #ffc94a; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 3px"><img src="/_blob/b079b3754d6b4f41b2413efb3f2259b0" alt="" style="width: 16px; height: 16px; object-fit: contain">Só no Passe</span>
+            </sc-if>
+            <sc-if value="{{t.isLocked}}" hint-placeholder-val="{{false}}">
+              <span style="height: 22px; padding: 0 8px; border-radius: 999px; background: #2a211a; color: #c9b9a2; font-size: 11px; font-weight: 900; display: flex; align-items: center">{{t.lockTxt}}</span>
+            </sc-if>
+            <sc-if value="{{t.isBuy}}" hint-placeholder-val="{{true}}">
+              <span style="height: 22px; padding: 0 8px 0 4px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b; color: #f6ecdf; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 3px"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 16px; height: 16px; object-fit: contain">{{t.price}}</span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+
+      <!-- Paginação (encostada embaixo, zona do polegar) -->
+      <div style="height: 44px; flex: none; margin-top: auto; display: flex; align-items: center; gap: 8px">
+        <button onClick="{{prevPage}}" aria-label="Página anterior" style="width: 52px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{prevFg}}; font-family: 'Lilita One', sans-serif; font-size: 24px; padding: 0">‹</button>
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center">
+          <div style="display: flex; gap: 6px">
+            <sc-for list="{{dots}}" as="d" hint-placeholder-count="2"><span style="width: {{d.w}}; height: 8px; border-radius: 4px; background: {{d.c}}; transition: width .25s"></span></sc-for>
+          </div>
+          <span style="font-size: 12px; font-weight: 800; color: #c9b9a2; margin-top: 4px">Página {{pageNum}} de {{pageCount}} · {{ownedCount}} na coleção</span>
+        </div>
+        <button onClick="{{nextPage}}" aria-label="Próxima página" style="width: 52px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{nextFg}}; font-family: 'Lilita One', sans-serif; font-size: 24px; padding: 0">›</button>
+      </div>
+    </sc-if>
+
+    <!-- ===== Aba Gemas ===== -->
+    <sc-if value="{{isGemTab}}" hint-placeholder-val="{{false}}">
+      <div class="feat" style="flex: none; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 17px">Comprar gemas</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(2, 132px); gap: 8px">
+          <sc-for list="{{bundles}}" as="b" hint-placeholder-count="4">
+            <button class="tile" onClick="{{b.buy}}" aria-label="{{b.aria}}" style="border-radius: 14px; border: 2px solid {{b.bd}}; background: linear-gradient(180deg, #2b3a52 0%, #1d1611 70%); color: #f6ecdf; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+              <sc-if value="{{b.best}}" hint-placeholder-val="{{false}}"><span class="tshine"></span></sc-if>
+              <div class="gemfloat" style="height: 46px; display: flex; align-items: flex-end; justify-content: center">
+                <sc-for list="{{b.stack}}" as="g" hint-placeholder-count="2"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: {{g.s}}; height: {{g.s}}; object-fit: contain; margin: 0 -6px"></sc-for>
+              </div>
+              <span style="font-size: 13px; font-weight: 900">{{b.n}}</span>
+              <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">[QTD] gemas</span>
+              <span class="gold" style="height: 28px; min-width: 96px; border-radius: 10px; font-family: 'Lilita One', sans-serif; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 0 #8a4f0c">[PREÇO]</span>
+            </button>
+          </sc-for>
+        </div>
+        <span style="font-size: 12px; font-weight: 800; color: #c9b9a2; text-align: center; margin-top: 6px; line-height: 1.35">Só pacotes de gemas, compra direta: você vê quanto recebe antes de pagar. Nada de sorteio pago. Pagamento em breve.</span>
+        <a href="VIP.dc.html" onClick="{{tap}}" style="height: 60px; border-radius: 14px; border: 2px solid #ffc94a; background: linear-gradient(90deg, #4a3214, #241a12); color: #f6ecdf; padding: 0 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; box-sizing: border-box">
+          <svg width="30" height="24" viewBox="0 0 24 18" fill="#ffc94a" aria-hidden="true"><path d="M2 16 L4 4 L9 9 L12 1 L15 9 L20 4 L22 16 Z"></path></svg>
+          <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.2"><span style="font-family: 'Lilita One', sans-serif; font-size: 17px; color: #ffc94a">Clube VIP</span><span style="font-size: 12px; font-weight: 800; color: #c9b9a2">+10% ATK e HP, +50% XP e ouro, velocidade x3</span></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+      </div>
+    </sc-if>
+
+    <!-- ===== Aba Itens (ouro): estoque do dia, compra direta, sem sorteio ===== -->
+    <sc-if value="{{isItemTab}}" hint-placeholder-val="{{false}}">
+      <div class="feat" style="flex: none; display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 40px; display: flex; align-items: center; gap: 8px">
+          <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.15">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 17px">Estoque do dia</span>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Compra direta: você vê o item inteiro. Ícones provisórios.</span>
+          </span>
+          <span style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 10px; background: #0e0a07; border: 1px solid #4a3a2b; font-size: 11px; font-weight: 800; color: #c9b9a2">Repõe em <span class="tick" style="font-family: 'Lilita One', sans-serif; font-size: 15px">{{restockTxt}}</span></span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 196px); gap: 8px">
+          <sc-for list="{{stock}}" as="it" hint-placeholder-count="6">
+            <button class="tile {{it.cls}}" onClick="{{it.buy}}" aria-label="{{it.aria}}" style="border-radius: 14px; border: 2px solid {{it.rc}}; background: linear-gradient(180deg, {{it.tint}} 0%, #1d1611 60%); color: #f6ecdf; padding: 6px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: {{it.op}}">
+              <sc-if value="{{it.shiny}}" hint-placeholder-val="{{false}}"><span class="tshine"></span></sc-if>
+              <span style="font-size: 11px; font-weight: 900; color: {{it.rc}}">{{it.rar}}</span>
+              <img src="{{it.icon}}" alt="" style="width: 44px; height: 44px; object-fit: contain">
+              <span style="font-size: 11px; font-weight: 900; line-height: 1.1; text-align: center; height: 24px; display: flex; align-items: center">{{it.n}}</span>
+              <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">{{it.sub}}</span>
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 1px; flex: 1">
+                <sc-for list="{{it.lines}}" as="ln" hint-placeholder-count="2"><span style="font-size: 10px; font-weight: 800; color: #e8dccb; line-height: 1.15">{{ln.t}}</span></sc-for>
+              </span>
+              <sc-if value="{{it.forSale}}" hint-placeholder-val="{{true}}">
+                <span style="height: 24px; padding: 0 8px 0 4px; border-radius: 999px; background: #0e0a07; border: 1px solid #4a3a2b; font-size: 12px; font-weight: 900; display: flex; align-items: center; gap: 3px"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="ouro" style="width: 16px; height: 16px; object-fit: contain">[OURO]</span>
+              </sc-if>
+              <sc-if value="{{it.sold}}" hint-placeholder-val="{{false}}">
+                <span style="height: 24px; padding: 0 8px; border-radius: 999px; background: #5fd068; color: #0d2410; font-size: 11px; font-weight: 900; display: flex; align-items: center">Comprado</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+    <!-- Toast -->
+    <sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
+      <div style="position: absolute; left: 24px; right: 24px; bottom: 16px; z-index: 40; display: flex; justify-content: center; pointer-events: none">
+        <span class="toast" role="status" style="padding: 10px 16px; border-radius: 12px; background: #12261a; border: 2px solid #5fd068; color: #e6fbe7; font-size: 14px; font-weight: 900; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.6)">{{toastTxt}}</span>
+      </div>
+    </sc-if>
+  </div>
+
+
+  <!-- ===== Prévia grande da skin ===== -->
+  <sc-if value="{{pvOpen}}" hint-placeholder-val="{{false}}">
+    <div class="veil" style="position: absolute; inset: 0; z-index: 20; background: rgba(8,6,4,0.82); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box">
+      <div class="pop" role="dialog" aria-label="{{pvAria}}" style="width: 100%; max-width: 358px; max-height: 100%; overflow-y: auto; border-radius: 20px; border: 3px solid {{pvRc}}; background: #1d1611; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 30px {{pvGlow}}">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 10px 6px 16px">
+          <div style="flex: 1; display: flex; flex-direction: column; min-width: 0">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 24px; line-height: 1.1">{{pvName}}</span>
+            <span style="font-size: 13px; font-weight: 900; color: {{pvRc}}">{{pvRar}} · <span style="color: #c9b9a2">{{pvSub}}</span></span>
+          </div>
+          <button onClick="{{closePv}}" aria-label="Fechar prévia" style="width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; display: flex; align-items: center; justify-content: center; padding: 0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+          </button>
+        </div>
+        <!-- palco: herói vestindo -->
+        <div style="position: relative; height: 300px; margin: 0 10px; border-radius: 14px; overflow: hidden; background: radial-gradient(circle at 50% 55%, {{pvTint}} 0%, #120d0a 70%)">
+          <div class="rays" style="width: 420px; height: 420px; margin: -210px 0 0 -210px"></div>
+          <!-- pedestal sob os pés (95% da imagem de 240px = y 262) -->
+          <div class="ped" style="left: calc(50% - 80px); top: 251px; width: 160px; height: 24px"></div>
+          <div style="position: absolute; left: calc(50% - 120px); top: 34px; width: 240px; height: 250px">
+            <sc-if value="{{pvHeroSheet}}" hint-placeholder-val="{{true}}">
+              <div class="kidle" role="img" aria-label="Kael, prévia da skin: animação em produção" style="position: absolute; left: 0; top: 0; width: 240px; height: 240px"></div>
+            </sc-if>
+            <sc-if value="{{pvHeroPh}}" hint-placeholder-val="{{false}}">
+              <span style="position: absolute; left: 30px; top: 20px; width: 180px; height: 200px; border-radius: 16px; border: 3px dashed #6b5843; color: #c9b9a2; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; padding: 10px; box-sizing: border-box">Arte pendente: {{pvPh}}</span>
+            </sc-if>
+            <sc-if value="{{pvWeapImg}}" hint-placeholder-val="{{false}}">
+              <span style="position: absolute; left: 188px; top: -22px; width: 76px; height: 76px; border-radius: 14px; border: 2px solid {{pvRc}}; background: rgba(18,13,10,0.88); box-shadow: 0 0 14px {{pvGlow}}; display: flex; align-items: center; justify-content: center" title="Skin de arma: aparece na mão quando a folha animada dela chegar"><img src="{{pvWeap}}" alt="Arma da skin" style="width: 62px; height: 62px; object-fit: contain"></span>
+            </sc-if>
+            <sc-if value="{{pvWeapPh}}" hint-placeholder-val="{{false}}">
+              <span style="position: absolute; left: 150px; top: -10px; width: 96px; height: 96px; border-radius: 14px; border: 3px dashed #6b5843; background: rgba(18,13,10,0.8); color: #c9b9a2; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px; box-sizing: border-box">Arte pendente: {{pvPh}}</span>
+            </sc-if>
+          </div>
+          <sc-if value="{{pvHeroPrev}}" hint-placeholder-val="{{true}}"><span class="prev" style="left: 90px; right: 90px; bottom: 8px; font-size: 11px; padding: 2px 6px">prévia, animação em produção</span></sc-if>
+          <span class="spark" style="left: 40px; top: 60px"></span>
+          <span class="spark" style="left: calc(50% + 121px); top: 90px; animation-delay: .8s"></span>
+          <span class="spark" style="left: 70px; top: 230px; animation-delay: 1.4s"></span>
+          <sc-if value="{{burstOn}}" hint-placeholder-val="{{false}}"><span class="burst"></span></sc-if>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin: 10px 12px 0; padding: 8px 10px; border-radius: 10px; background: #12261a; border: 1px solid #2f6b36; color: #c8f5cb; font-size: 12px; font-weight: 800">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          {{pvNote}}
+        </div>
+        <div style="display: flex; gap: 8px; padding: 12px 12px 18px">
+          <sc-if value="{{pvCanBuy}}" hint-placeholder-val="{{true}}">
+            <button class="gold cta" onClick="{{askBuy}}" style="flex: 1; height: 54px; border-radius: 16px; font-family: 'Lilita One', sans-serif; font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0">Comprar <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 28px; height: 28px; object-fit: contain">{{pvPrice}}</button>
+          </sc-if>
+          <sc-if value="{{pvCanEquip}}" hint-placeholder-val="{{false}}">
+            <button class="green" onClick="{{equip}}" style="flex: 1; height: 54px; border-radius: 16px; font-family: 'Lilita One', sans-serif; font-size: 22px; padding: 0">Equipar</button>
+          </sc-if>
+          <sc-if value="{{pvIsEq}}" hint-placeholder-val="{{false}}">
+            <div style="flex: 1; height: 54px; border-radius: 16px; border: 2px solid #5fd068; background: #12261a; color: #c8f5cb; font-family: 'Lilita One', sans-serif; font-size: 20px; display: flex; align-items: center; justify-content: center; gap: 6px">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Equipada</div>
+          </sc-if>
+          <sc-if value="{{pvLocked}}" hint-placeholder-val="{{false}}">
+            <div style="flex: 1; height: 54px; border-radius: 16px; border: 2px solid #4a3a2b; background: #2a211a; color: #e8dccb; font-size: 15px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>{{pvLockTxt}}</div>
+          </sc-if>
+          <sc-if value="{{pvPass}}" hint-placeholder-val="{{false}}">
+            <a href="Passe.dc.html" onClick="{{tap}}" class="gold" style="flex: 1; height: 54px; border-radius: 16px; font-family: 'Lilita One', sans-serif; font-size: 19px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none"><img src="/_blob/b079b3754d6b4f41b2413efb3f2259b0" alt="" style="width: 30px; height: 30px; object-fit: contain">Ganhe no Passe · Nv. 5</a>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== Confirmação antes de cobrar ===== -->
+  <sc-if value="{{cfOpen}}" hint-placeholder-val="{{false}}">
+    <div class="veil" style="position: absolute; inset: 0; z-index: 30; background: rgba(8,6,4,0.7); display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box">
+      <div class="pop" role="alertdialog" aria-label="Confirmar compra" style="width: 100%; max-width: 320px; border-radius: 18px; border: 3px solid #ffc94a; background: #241b14; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.7)">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; text-align: center">Confirmar compra</span>
+        <span style="font-size: 15px; font-weight: 900; text-align: center">{{cfItem}}</span>
+        <sc-if value="{{cfGem}}" hint-placeholder-val="{{true}}">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: #16110d; border: 1px solid #4a3a2b; font-size: 14px; font-weight: 800">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="color: #c9b9a2">Preço</span><span style="display: flex; align-items: center; gap: 4px; font-weight: 900"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 20px; height: 20px; object-fit: contain">{{cfCost}}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="color: #c9b9a2">Suas gemas</span><span style="font-weight: 900">{{gems}} → <span style="color: {{cfAfterColor}}">{{cfAfter}}</span></span></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{cfIap}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: #16110d; border: 1px solid #4a3a2b; font-size: 14px; font-weight: 800">
+            <div style="display: flex; justify-content: space-between"><span style="color: #c9b9a2">Você recebe</span><span style="font-weight: 900">[QTD] gemas</span></div>
+            <div style="display: flex; justify-content: space-between"><span style="color: #c9b9a2">Valor</span><span style="font-weight: 900">[PREÇO]</span></div>
+            <span style="font-size: 13px; font-weight: 900; color: #ffc94a">Pagamento em breve: nada é cobrado agora.</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{cfGold}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: #16110d; border: 1px solid #4a3a2b; font-size: 14px; font-weight: 800">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="color: #c9b9a2">Preço</span><span style="display: flex; align-items: center; gap: 4px; font-weight: 900"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="ouro" style="width: 20px; height: 20px; object-fit: contain">[OURO]</span></div>
+            <span style="font-size: 12px; color: #c9b9a2">{{cfLines}}</span>
+            <span style="font-size: 12px; color: #c9b9a2">Vai direto para a mochila. Sem sorteio.</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{cfShort}}" hint-placeholder-val="{{false}}">
+          <span role="alert" style="font-size: 14px; font-weight: 900; color: #ff8a7a; text-align: center">Faltam {{cfMissing}} gemas</span>
+        </sc-if>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{cancelBuy}}" style="flex: 1; height: 50px; border-radius: 14px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">Cancelar</button>
+          <sc-if value="{{cfCanPay}}" hint-placeholder-val="{{true}}">
+            <button class="gold" onClick="{{confirmBuy}}" style="flex: 1.3; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">Confirmar</button>
+          </sc-if>
+          <sc-if value="{{cfIap}}" hint-placeholder-val="{{false}}">
+            <button class="gold" onClick="{{cancelBuy}}" style="flex: 1.3; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">Entendi</button>
+          </sc-if>
+          <sc-if value="{{cfShort}}" hint-placeholder-val="{{false}}">
+            <button class="green" onClick="{{goGems}}" style="flex: 1.3; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 18px; padding: 0">Ver gemas</button>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var IMG = {
+  w21: '/_blob/622897d7b70128406147c8aa8f2feb0b', w22: '/_blob/ba4ff0fd6689b997202345bfaa47ab6c'
+};
+/* nomes e raridades iguais ao index.html (RAR, ERAS.as/ws, SKINS do passe); preço em gemas = SKIN_PRICE */
+var RAR = [
+  { n: 'Básico', c: '#e8e2d8', t: '#3a352e' }, { n: 'Raro', c: '#4aa3ff', t: '#1c3550' },
+  { n: 'Épico', c: '#b07cff', t: '#35234f' }, { n: 'Mítico', c: '#ff5a5a', t: '#4f1f1f' },
+  { n: 'Lendário', c: '#ffc94a', t: '#4f3a12' }
+];
+var PRICE = [30, 60, 120, 250, 500];
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista'];
+var ERAS = ['Pré-Hist.', 'Antiguid.', 'Medieval', 'Pólvora', 'Industrial', 'Moderna', 'Futurista'];
+var ERA_MAX = 2;
+var LIST = {
+  hero: [
+    { id: 'a22', n: 'Manto Arcano', e: 2, r: 2, sheet: true },
+    { id: 'a23', n: 'Cavaleiro Rubro', e: 2, r: 3, sheet: true },
+    { id: 'a24', n: 'Paladino Solar', e: 2, r: 4, sheet: true },
+    { id: 'a32', n: 'Oficial Roxo', e: 3, r: 2, sheet: true },
+    { id: 'a33', n: 'Casaca Carmesim', e: 3, r: 3, sheet: true },
+    { id: 'a64', n: 'Cósmico Dourado', e: 6, r: 4, sheet: true },
+    { id: 'a20', n: 'Ferro Cinza', e: 2, r: 0, ph: 'hero/era2_t0' },
+    { id: 'a21', n: 'Guarda Azul', e: 2, r: 1, ph: 'hero/era2_t0' },
+    { id: 'a12', n: 'Bronze Grego', e: 1, r: 2, ph: 'hero/era1_t1' },
+    { id: 'a04', n: 'Manto do Chefe', e: 0, r: 4, ph: 'hero/era0_t2' },
+    { id: 'p10', n: 'Casaca da Temporada', e: 3, r: 3, sheet: true, pass: true },
+    { id: 'a63', n: 'Quântica Rubra', e: 6, r: 3, ph: 'hero/era6_t1' }
+  ],
+  weapon: [
+    { id: 'w22', n: 'Espada Arcana', e: 2, r: 2, img: IMG.w21 },
+    { id: 'w23', n: 'Lâmina Carmesim', e: 2, r: 3, img: IMG.w21 },
+    { id: 'w24', n: 'Sol Dourado', e: 2, r: 4, img: IMG.w22 },
+    { id: 'p5', n: 'Lâmina da Temporada', e: 2, r: 3, img: IMG.w21, pass: true },
+    { id: 'w32', n: 'Arcabuz Arcano', e: 3, r: 2, ph: 'weapons/era3_t1' },
+    { id: 'w64', n: 'Vazio Dourado', e: 6, r: 4, ph: 'weapons/era6_t2' },
+    { id: 'w20', n: 'Aço Comum', e: 2, r: 0, ph: 'weapons/era2_t0' },
+    { id: 'w21', n: 'Lâmina Azul', e: 2, r: 1, ph: 'weapons/era2_t0' },
+    { id: 'w12', n: 'Aço de Esparta', e: 1, r: 2, ph: 'weapons/era1_t1' },
+    { id: 'w03', n: 'Pedra Vulcânica', e: 0, r: 3, ph: 'weapons/era0_t1' },
+    { id: 'w33', n: 'Bacamarte Rubro', e: 3, r: 3, ph: 'weapons/era3_t1' },
+    { id: 'w63', n: 'Antimatéria', e: 6, r: 3, ph: 'weapons/era6_t1' }
+  ]
+};
+var FEAT = { hero: 'a24', weapon: 'w24' };
+var PER = 6;
+var BUNDLES = ['Punhado de gemas', 'Saco de gemas', 'Baú de gemas', 'Tesouro de gemas'];
+// skin dá poder (CONTRATO_V2 D): equipada +2/+3/+5/+7/+10% de ATK e HP pela raridade; cada skin possuída +0,5% de coleção (teto +10%)
+var SKIN_BONUS = [2, 3, 5, 7, 10];
+// aba Itens (ouro): estoque do dia, item inteiro visível, compra direta, repõe à meia-noite. Ícones SVG provisórios.
+function svg(body) { return "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='%23c9ccd6' stroke='%232a1f16' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'>" + body + "</svg>"; }
+var ICON = {
+  weapon: svg("<path d='M44 6 L58 6 L58 20 L26 48 L16 38 Z'/><path d='M12 36 L28 52' stroke-width='5' stroke='%238a5a2a'/><path d='M14 46 L6 54' stroke-width='6' stroke='%235a3a1a'/>"),
+  vest: svg("<path d='M20 8 L32 14 L44 8 L56 18 L50 28 L48 56 L16 56 L14 28 L8 18 Z'/><path d='M32 14 V54' stroke-width='2'/>"),
+  helm: svg("<path d='M10 40 C10 18 54 18 54 40 L54 50 L40 50 L38 40 L26 40 L24 50 L10 50 Z'/><path d='M32 14 V40' stroke-width='2'/>"),
+  gloves: svg("<path d='M18 58 L18 30 L18 14 a4 4 0 0 1 8 0 L26 28 L26 10 a4 4 0 0 1 8 0 L34 28 L34 12 a4 4 0 0 1 8 0 L42 32 L48 24 a4 4 0 0 1 7 4 L44 50 L44 58 Z'/>"),
+  boots: svg("<path d='M20 6 L38 6 L38 38 L56 44 L56 56 L14 56 L14 44 L20 40 Z'/>"),
+  neck: svg("<path d='M14 10 C14 34 50 34 50 10' fill='none' stroke='%23c9ccd6' stroke-width='4'/><path d='M32 30 L42 42 L32 58 L22 42 Z' fill='%23ff5a5a'/>")
+};
+var SLOTN = { weapon: 'Arma', vest: 'Colete', helm: 'Chapéu/Elmo', gloves: 'Luvas', boots: 'Botas', neck: 'Colar' };
+var RM = [1, 1.7, 3, 5.5, 10];
+var STOCK = [
+  { id: 's1', slot: 'weapon', r: 2, n: 'Lâmina Rúnica', lines: function () { return ['ATK +' + Math.round(1 * RM[2] * 144), 'Chance Crít. +1,5%', 'Dano Crít. +8%']; } },
+  { id: 's2', slot: 'vest', r: 1, n: 'Cota de Malha', lines: function () { return ['HP +' + Math.round(4 * RM[1] * 144), 'DEF +3%', 'Vel. Ataque +2%']; } },
+  { id: 's3', slot: 'helm', r: 3, n: 'Elmo do Dragão', lines: function () { return ['HP +' + Math.round(3 * RM[3] * 144), 'HP +4%', 'Chance Crít. +2%']; } },
+  { id: 's4', slot: 'gloves', r: 1, n: 'Manoplas de Aço', lines: function () { return ['ATK +' + Math.round(0.4 * RM[1] * 144), 'Chance Crít. +1,5%', 'Dano Crít. +5%']; } },
+  { id: 's5', slot: 'boots', r: 2, n: 'Botas Rúnicas', lines: function () { return ['Vel. Ataque +8%', 'DEF +1,5%', 'ATK +3%']; } },
+  { id: 's6', slot: 'neck', r: 0, n: 'Cordão de Osso', lines: function () { return ['Dano Crít. +10%']; } }
+];
+function midnightLeft() { var d = new Date(), m = new Date(d); m.setHours(24, 0, 0, 0); return Math.floor((m - d) / 1000); }
+function find(id) { var all = LIST.hero.concat(LIST.weapon); for (var i = 0; i < all.length; i++) { if (all[i].id === id) return all[i]; } return null; }
+function slotOf(id) { for (var i = 0; i < LIST.hero.length; i++) { if (LIST.hero[i].id === id) return 'hero'; } return 'weapon'; }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      tab: 'hero', page: { hero: 0, weapon: 0 }, gems: 320,
+      owned: { a22: true, a20: true, w22: true, w20: true },
+      eq: { hero: 'a22', weapon: 'w22' },
+      sel: null, cf: null, left: 5 * 3600 + 42 * 60 + 18, toast: '', burst: false, sold: {}, restock: midnightLeft()
+    };
+  }
+  componentDidMount() {
+    var self = this;
+    this.iv = setInterval(function () { self.setState({ left: self.state.left > 0 ? self.state.left - 1 : 0, restock: midnightLeft() }); }, 1000);
+  }
+  componentWillUnmount() { if (this.iv) clearInterval(this.iv); if (this.tt) clearTimeout(this.tt); }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.7; a.play().catch(function () {}); } catch (e) {} }
+  tapS() { this.sfx(SND.tap); }
+  showToast(txt) {
+    var self = this; if (this.tt) clearTimeout(this.tt);
+    this.setState({ toast: '' });
+    setTimeout(function () { self.setState({ toast: txt }); }, 20);
+    this.tt = setTimeout(function () { self.setState({ toast: '' }); }, 2300);
+  }
+  status(it) {
+    var s = this.state, slot = slotOf(it.id);
+    var eq = s.eq[slot] === it.id, own = !!s.owned[it.id];
+    var locked = !own && !it.pass && it.e > ERA_MAX;
+    return { eq: eq, own: own && !eq, pass: !own && !!it.pass, locked: locked, buy: !own && !it.pass && !locked };
+  }
+  open(id) { this.tapS(); this.setState({ sel: id, cf: null, burst: false }); }
+  renderVals() {
+    var s = this.state, self = this;
+    var tab = s.tab, isSkin = tab === 'hero' || tab === 'weapon';
+    var list = isSkin ? LIST[tab] : [];
+    var pages = Math.ceil(list.length / PER) || 1;
+    var pg = isSkin ? s.page[tab] : 0;
+    var tiles = list.slice(pg * PER, pg * PER + PER).map(function (it) {
+      var st = self.status(it), R = RAR[it.r];
+      return {
+        n: it.n, rar: R.n, rc: R.c, tint: R.t,
+        cls: it.r >= 3 ? 'r' + it.r : '',
+        shiny: it.r >= 2 && !st.locked,
+        ped: tab === 'hero' && !!(it.img || it.sheet), hasImg: !!it.img, isSheet: !!it.sheet, noImg: !it.img && !it.sheet, img: it.img || '', ph: it.ph || '',
+        op: st.locked ? 0.45 : 1,
+        locked: st.locked, isEq: st.eq, isOwned: st.own, isPass: st.pass, isLocked: st.locked, isBuy: st.buy,
+        price: PRICE[it.r], lockTxt: ERAS[it.e],
+        aria: it.n + ', ' + R.n + (st.eq ? ', equipada' : st.own ? ', na coleção' : st.pass ? ', só no passe' : st.locked ? ', bloqueada até a ' + ERAN[it.e] : ', ' + PRICE[it.r] + ' gemas'),
+        open: function () { self.open(it.id); }
+      };
+    });
+    var dots = [];
+    for (var i = 0; i < pages; i++) dots.push({ w: i === pg ? '22px' : '8px', c: i === pg ? '#ffc94a' : '#4a3a2b' });
+    var ownedCount = list.filter(function (it) { return s.owned[it.id]; }).length;
+
+    var feat = find(FEAT[tab === 'weapon' ? 'weapon' : 'hero']);
+    var featOwned = !!s.owned[feat.id];
+    var L = s.left;
+    var countdown = pad(Math.floor(L / 3600)) + ':' + pad(Math.floor(L % 3600 / 60)) + ':' + pad(L % 60);
+
+    var tabStyle = function (on) { return on ? { bd: '#ffc94a', bg: 'linear-gradient(180deg,#ffe07a,#f2a826)', fg: '#2a1403' } : { bd: '#4a3a2b', bg: '#33271d', fg: '#c9b9a2' }; };
+    var th = tabStyle(tab === 'hero'), tw = tabStyle(tab === 'weapon'), tg = tabStyle(tab === 'gem'), ti = tabStyle(tab === 'item');
+    var R2 = s.restock, restockTxt = pad(Math.floor(R2 / 3600)) + ':' + pad(Math.floor(R2 % 3600 / 60)) + ':' + pad(R2 % 60);
+    var stock = STOCK.map(function (x) {
+      var R = RAR[x.r], sold = !!s.sold[x.id], ls = x.lines();
+      return {
+        n: x.n, rar: R.n, rc: R.c, tint: R.t, cls: x.r >= 3 ? 'r' + x.r : '', shiny: x.r >= 2, icon: ICON[x.slot],
+        sub: SLOTN[x.slot] + ' · Medieval', lines: ls.map(function (t) { return { t: t }; }), forSale: !sold, sold: sold, op: sold ? 0.6 : 1,
+        aria: x.n + ', ' + R.n + ', ' + SLOTN[x.slot] + ', Medieval: ' + ls.join(', ') + (sold ? ', comprado' : ', preço [OURO]'),
+        buy: function () { self.tapS(); if (sold) { self.showToast('Já comprado hoje. Repõe à meia-noite'); return; } self.setState({ cf: { kind: 'item', id: x.id } }); }
+      };
+    });
+    var setTab = function (t) { return function () { self.tapS(); self.setState({ tab: t }); }; };
+
+    var heroEq = find(s.eq.hero);
+    var avatarImg = '';
+
+    // prévia
+    var it = s.sel ? find(s.sel) : null, pv = {};
+    if (it) {
+      var st = this.status(it), slot = slotOf(it.id), R = RAR[it.r];
+      var heroOnStage = slot === 'hero' ? it : heroEq;
+      var weapOnStage = slot === 'weapon' ? it : find(s.eq.weapon);
+      pv = {
+        pvAria: 'Prévia: ' + it.n, pvName: it.n, pvRar: R.n, pvRc: R.c, pvGlow: R.c + '88', pvTint: R.t,
+        pvSub: (slot === 'hero' ? 'Skin de herói' : 'Skin de arma') + ' · ' + ERAN[it.e],
+        pvHeroSheet: true, pvHeroPh: false, pvHeroPrev: !!(heroOnStage && heroOnStage.sheet),
+        pvWeapImg: !!(weapOnStage && weapOnStage.img), pvWeapPh: !(weapOnStage && weapOnStage.img),
+        pvWeap: (weapOnStage && weapOnStage.img) || '',
+        pvPh: it.ph ? it.ph + '.png' : '',
+        pvNote: 'Equipada: +' + SKIN_BONUS[it.r] + '% de ATK e HP (' + R.n + '). Na coleção: +0,5% para sempre.',
+        pvCanBuy: st.buy, pvCanEquip: st.own, pvIsEq: st.eq, pvLocked: st.locked, pvPass: st.pass,
+        pvPrice: PRICE[it.r], pvLockTxt: 'Libera na ' + ERAN[it.e]
+      };
+    }
+
+    // confirmação
+    var cf = s.cf, c = {};
+    if (cf) {
+      var cost = 0, name = '';
+      if (cf.kind === 'skin') { var si = find(cf.id); cost = PRICE[si.r]; name = si.n + ' (' + RAR[si.r].n + ')'; }
+      var lns = '';
+      if (cf.kind === 'iap') { name = BUNDLES[cf.i]; }
+      if (cf.kind === 'item') { var sx = STOCK.find(function (x) { return x.id === cf.id; }); name = sx.n + ' (' + RAR[sx.r].n + ' · ' + SLOTN[sx.slot] + ')'; lns = sx.lines().join(' · '); }
+      var gemKind = cf.kind === 'skin', enough = !gemKind || s.gems >= cost;
+      c = {
+        cfItem: name, cfGem: gemKind, cfIap: cf.kind === 'iap', cfGold: cf.kind === 'item', cfLines: lns, cfCost: cost,
+        cfAfter: s.gems - cost, cfAfterColor: enough ? '#c8f5cb' : '#ff8a7a',
+        cfShort: !enough, cfCanPay: enough && cf.kind !== 'iap', cfMissing: cost - s.gems
+      };
+    }
+
+    var bundles = BUNDLES.map(function (n, i) {
+      var stack = []; for (var k = 0; k <= i; k++) stack.push({ s: (30 + i * 4) + 'px' });
+      return { n: n, best: i === 3, bd: i === 3 ? '#ffc94a' : '#4aa3ff', stack: stack, aria: n + ', [QTD] gemas por [PREÇO]',
+        buy: function () { self.tapS(); self.setState({ cf: { kind: 'iap', i: i } }); } };
+    });
+
+    return Object.assign({
+      gems: s.gems, avatarImg: avatarImg,
+      heroSel: tab === 'hero' ? 'true' : 'false', weapSel: tab === 'weapon' ? 'true' : 'false', gemSel: tab === 'gem' ? 'true' : 'false',
+      heroBd: th.bd, heroBg: th.bg, heroFg: th.fg, weapBd: tw.bd, weapBg: tw.bg, weapFg: tw.fg, gemBd: tg.bd, gemBg: tg.bg, gemFg: tg.fg,
+      itemSel: tab === 'item' ? 'true' : 'false', itemBd: ti.bd, itemBg: ti.bg, itemFg: ti.fg, tabItem: setTab('item'),
+      stock: stock, restockTxt: restockTxt,
+      tabHero: setTab('hero'), tabWeap: setTab('weapon'), tabGem: setTab('gem'),
+      isSkinTab: isSkin, isGemTab: tab === 'gem', isItemTab: tab === 'item',
+      featImg: feat.img || '', featIsImg: !!feat.img, featIsSheet: !!feat.sheet, featName: feat.n, featWrap: tab === 'weapon' ? 'bob' : '', featKind: tab === 'weapon' ? 'Skin de arma' : 'Skin de herói',
+      featPrice: PRICE[feat.r], featBuyable: !featOwned, featOwned: featOwned, countdown: countdown,
+      openFeat: function () { self.open(feat.id); },
+      tiles: tiles, dots: dots, pageNum: pg + 1, pageCount: pages, ownedCount: ownedCount,
+      prevFg: pg > 0 ? '#f6ecdf' : '#6b5843', nextFg: pg < pages - 1 ? '#f6ecdf' : '#6b5843',
+      prevPage: function () { if (pg > 0) { self.tapS(); var p = Object.assign({}, s.page); p[tab] = pg - 1; self.setState({ page: p }); } },
+      nextPage: function () { if (pg < pages - 1) { self.tapS(); var p = Object.assign({}, s.page); p[tab] = pg + 1; self.setState({ page: p }); } },
+      bundles: bundles,
+      goGems: function () { self.tapS(); self.setState({ tab: 'gem', sel: null, cf: null }); },
+      tap: function () { self.tapS(); },
+      pvOpen: !!it, closePv: function () { self.tapS(); self.setState({ sel: null, cf: null }); },
+      burstOn: s.burst,
+      askBuy: function () { self.tapS(); self.setState({ cf: { kind: 'skin', id: s.sel } }); },
+      equip: function () {
+        self.tapS(); var e = Object.assign({}, s.eq); e[slotOf(s.sel)] = s.sel;
+        self.setState({ eq: e }); self.showToast('Equipada: ' + find(s.sel).n);
+      },
+      cfOpen: !!cf,
+      cancelBuy: function () { self.tapS(); self.setState({ cf: null }); },
+      confirmBuy: function () {
+        var k = s.cf; if (!k) return;
+        self.sfx(SND.coin);
+        if (k.kind === 'skin') {
+          var item = find(k.id), cost = PRICE[item.r];
+          if (s.gems < cost) return;
+          var o = Object.assign({}, s.owned); o[k.id] = true;
+          self.setState({ gems: s.gems - cost, owned: o, cf: null, burst: true });
+          setTimeout(function () { self.setState({ burst: false }); }, 950);
+          self.showToast('Skin desbloqueada: ' + item.n);
+        } else if (k.kind === 'item') {
+          var sold = Object.assign({}, s.sold); sold[k.id] = true;
+          var sx = STOCK.find(function (x) { return x.id === k.id; });
+          self.setState({ sold: sold, cf: null });
+          self.showToast('Comprado: ' + sx.n + ' (na mochila)');
+        } else {
+          self.setState({ cf: null });
+          self.showToast('Pagamento em breve: nada foi cobrado');
+        }
+      },
+      toastOn: !!s.toast, toastTxt: s.toast
+    }, pv, c);
+  }
+}
+</script>
+</body>
+</html>

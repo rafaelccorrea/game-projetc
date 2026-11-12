@@ -1,0 +1,1305 @@
+{
+  "_notas": [
+    "balance-v7.3 (2026-11-12). Correção da TRAVA NO SENHOR DA ERA 0, validada no JOGO REAL (build v0.8.1 acelerada com step(0,05), valores sobrescritos em memória): eraBossHpMult 2 -> 1.1 e eraBossDmgMult 1.4 -> 0.9. Também: eraMult das eras 2 a 6 reduzido (a era 2 conferida no jogo real; as eras 3 a 6 vêm só do simulador). O resto é a v7.2. ATENÇÃO: as metas de calendário (grátis ~59 dias, VIP B ~43) NÃO foram revalidadas nesta rodada; a v7.1 foi calibrada com um ritmo errado (ver 'validacao_no_jogo_real').",
+    "ATENÇÃO, NÃO ESTÁ ATIVO: os valores ficam dentro de \"BAL\" de propósito. O loader atual (js/battle.js:21-26) só lê chaves no topo do arquivo ou em 'combat'/'combate'/'offline'. No topo, o jogo congelado carregaria inimigos de 1,282 por fase com itens ainda em 6^era. Para ativar: fazer as 'mudancas_de_codigo' e trocar a linha 23 do loader para `Object.assign({},j,j.BAL||{},...)`.",
+    "NOMES: as chaves de \"BAL\" usam exatamente os nomes do objeto BAL do código (js/battle.js:17-20). As que ainda não existem estão em 'chaves_novas'. Os blocos 'practice', 'titles', 'tower', 'chest' e 'pet' usam os nomes do DATA de cada módulo em js/sys/ (DATA.tracks[].per, DATA.drop.commonChance, DATA.cap, DATA.featuredMult, DATA.perFloor, DATA.killsPerChest...).",
+    "MAPA chave -> onde o código lê (conferido em 2026-11-12): commonHpMult, bossHpMult, eraBossHpMult, enemyHpBase, enemyHpGrowth, earlyEase -> js/battle.js:46 (mkEnemy, vida) | commonDmgMult, bossDmgMult, eraBossDmgMult, enemyDmgBase, enemyDmgGrowth -> js/battle.js:47 (mkEnemy, dano) | goldBase, goldGrowth, bossGoldMult, commonGoldMult -> js/battle.js:48 (ouro por abate) e js/meta.js:45 (offline) | commonAtkInterval -> js/battle.js:49 | commonDrop -> js/battle.js:59 (lootFor) | s2Mult, s2Cooldown -> js/battle.js:114 e :677 | s3Mult -> js/battle.js:116 | critChance, critMult -> js/battle.js:154 (hitEnemy) | energyPerHit, energyPerSkillHit -> js/battle.js:167 (hitMany) | energyPerHurt -> js/battle.js:262 | s1Interval -> js/battle.js:272 | offlineCapHours, offlineKillsPerMin, offlineRate -> js/meta.js:44-46 (showOffline).",
+    "LITERAIS que hoje NÃO passam pelo BAL (por isso o balance.json não consegue mudá-los): poder do item index.html:383 (6^era e 0,2 por nível) | custo de melhoria index.html:385 (20, 1.38, 0.6, 4^era) | venda index.html:386 (8, 4^era) | ATK/HP base do herói index.html:389 (5 e 100) | teto de nível 50 em index.html:448 e js/ui.js:43 | custo de invocação COSTS index.html:328 | era do drop index.html:396 (30% da era anterior) | botão de velocidade x1/x2/x4 index.html:470 | missões index.html:474-479 | passe index.html:494-495 | loja de moedas index.html:536-537 | 10 e 30 diamantes por fase/era js/battle.js:142 e :144 | cura de 8% por onda js/battle.js:147 | intervalo de surgimento js/battle.js:240 | 1,6 s de derrota js/battle.js:263 | ataque do chefe a cada 1,15 s js/battle.js:49.",
+    "MAPA dos módulos (js/sys, ainda não ligados ao jogo): practice.js:11-17 (tracks e 'per'), :18 (cost), :19 (cap), :21 (drop), :22 (offline) | titles.js:14 (featuredMult), :16-38 (tabela de bônus) | tower.js:11 (fc), :14 (perFloor), :15 (reward) | chest.js:9 (killsPerChest), :16-17 (gemas e pedras) | fc.js:59-62 (como os bônus % entram em ATK, HP, crítico, defesa e ouro).",
+    "eraMult É DO PACOTE INTEIRO. Ele foi calibrado com práticas, títulos, torre e pet ligados. Se um desses sistemas não entrar no lançamento, usar a tabela correspondente em 'eraMult_alternativos'; com o eraMult do pacote e sem os sistemas, o jogador trava na era 5.",
+    "Os tempos são medianas de simulação (41 a 61 partidas por cenário), não medição com jogadores. Simulador: scratchpad sim/sim3.js (caminho em reports/ux.md).",
+    "MAPA v6 (conferido de novo em 2026-11-12; o js/battle.js mudou e as linhas citadas nas notas anteriores subiram 1): 'loot.xp' = Sys.loot.DATA.xp (js/sys/loot.js) | 'loot.gates' = Sys.loot.DATA.gates | 'level.xpToNext', 'level.xp', 'level.unlock' = DATA de js/sys/level.js | commonDmgMult e commonAtkInterval = BAL em js/battle.js:18 (usados em :48 e :50) | os 3 atacantes já estão no código (js/battle.js:351, e.idx < MAXVIS), mas o BAL ainda traz commonDmgMult 0.5 e commonAtkInterval 1.3.",
+    "MAPA v7: 'stats' = Sys.stats.DATA (js/sys/stats.js) | 'fc' = Sys.fc.DATA | 'skin' = Sys.skin.DATA | 'vip' = Sys.vip.DATA | 'summon' e 'dismantle' = Sys.loot.DATA.summon / .dismantle (js/sys/loot.js) | 'level.unlock' = js/sys/level.js. As chaves 'lvlMult', 'maxLvl', 'upCost*', 'priceEraFactor', 'pullPity' e 'sellBase' do BAL são da regra antiga (nível no espaço) e saem: valem as do bloco 'stats'.",
+    "APROVADO SEM SIMULAÇÃO (a próxima calibração precisa remedir; os tempos e as FCs deste arquivo são da v7.1, com os valores antigos): (1) DEF-base do colete 8 (era 4) e defK 2 (era 3): o herói apanha menos, a curva encurta e a FC sobe um pouco; (2) drop de pedra de forja do inimigo comum 1% (era 0,7%); (3) golem repetido vale 7 fragmentos de fênix (era 5): as estrelas da fênix deste arquivo estão subestimadas; (4) energia da ultimate normalizada por tempo (energia por golpe = base x intervalo atual do básico / 0,8 s): é do código da batalha, não está no simulador; (5) tetos de velocidade de ataque 100 e de dano crítico 400: testados na v7.1 um de cada vez, sem efeito na curva do grátis.",
+    "DIFERENÇAS entre este arquivo e os módulos, conferidas em 2026-11-12 (não alterei os módulos): (a) js/sys/stats.js calcula a base do nível com (nível - 1) (ATK 5 + 2 x (nível - 1)); o simulador usou 5 + 2 x nível, diferença de 2 de ATK e 40 de HP, desprezível; (b) js/sys/pet.js guarda a cura da fênix como 0,6·p por onda (types.heal.heal), e este arquivo descreve como 0,11·p por golpe: é a mesma conta (5,5 golpes por onda de ~11 s); (c) js/battle.js ainda traz commonDmgMult 0.5 e commonAtkInterval 1.3 no BAL com 3 atacantes, contra 0.33 e 1.2 daqui; (d) o custo de melhoria na build v0.7 ainda era 20 x 1,38^(N-1), contra 1,06 de Sys.stats; (e) nenhuma outra diferença em stats.js, pet.js, loot.js, vip.js e tower.js: eraFactor, rarFlat, rarPct, lvlMult, upgrade (priceEra 3,5), pctEraStep 0,25, levelBase, xp de abate 2,2/33/264, portões, invocação (base 1.000), desmonte 0/1/2/4/10, tabelas de ovo, VIP opção B e as 7 âncoras da torre batem."
+  ],
+  "versao": "balance-v8",
+  "ativo": false,
+  "BAL": {
+    "enemyHpBase": 22,
+    "enemyHpGrowth": 1.4,
+    "enemyDmgBase": 3.5,
+    "enemyDmgGrowth": 1.4,
+    "commonHpMult": 0.42,
+    "commonDmgMult": 0.33,
+    "commonGoldMult": 0.32,
+    "commonAtkInterval": 1.2,
+    "commonDrop": 0.035,
+    "bossHpMult": 6,
+    "eraBossHpMult": 1.1,
+    "bossDmgMult": 1.8,
+    "eraBossDmgMult": 0.9,
+    "earlyEase": [
+      5,
+      6,
+      7,
+      8,
+      8,
+      7.5,
+      7,
+      6.5,
+      6,
+      6,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5,
+      1.5
+    ],
+    "s1Interval": 0.8,
+    "s2Cooldown": 6,
+    "s2Mult": 3,
+    "s3Mult": 10,
+    "energyPerHit": 4,
+    "energyPerSkillHit": 2,
+    "energyPerHurt": 3,
+    "critChance": 0.12,
+    "critMult": 2,
+    "goldBase": 4,
+    "goldGrowth": 1.15,
+    "bossGoldMult": 5,
+    "offlineCapHours": 8,
+    "offlineKillsPerMin": 6,
+    "offlineRate": 0.5,
+    "eraMult": [
+      0.245,
+      0.26,
+      0.17,
+      0.17,
+      0.17,
+      0.17,
+      0.17
+    ],
+    "maxVisible": 3,
+    "speedMax": 2,
+    "chestKills": 250,
+    "chestDailyCap": 8,
+    "maxAttackers": 3
+  },
+  "o_que_mudou_em_relacao_ao_codigo": {
+    "enemyHpGrowth": "1.22 -> 1.282 (spec)",
+    "enemyDmgGrowth": "1.17 -> 1.282 (spec)",
+    "itemEraFactor": "6 -> 12 (spec)",
+    "eraMult": "novo: multiplica vida E dano de todos os inimigos da era. É o botão de dificuldade; +5% em todos alonga o jogo ~13% (42 h -> 48 h ativas).",
+    "lvlMult + nível no espaço": "hoje 1+0,2*(nível-1) por item; proposto 1,08^(nível-1) no espaço (S.lvl.weapon / S.lvl.armor). Nível 50 = x43.",
+    "upCostGrowth": "1.38 -> 1.19",
+    "pullPity": "novo: invocação de equipamento sem Épico ou melhor por 10 vezes seguidas garante Épico na 10ª.",
+    "maxVisible": "novo: decisão do PO (no máximo 3 inimigos na tela, o resto em fila).",
+    "speedMax": "4 -> 2 (x4 livre encurta o jogo de 42 h para 32 h ativas e de 64 para 48 dias).",
+    "todo_o_resto": "igual ao código de hoje"
+  },
+  "chaves_novas": {
+    "eraMult": "acrescentar ao BAL como [1,1,1,1,1,1,1]; em js/battle.js:46 e :47 multiplicar hp e dmg por BAL.eraMult[era] (a variável 'era' já existe na linha 44).",
+    "itemEraFactor": "BAL: 6. index.html:383, trocar Math.pow(6,it.e) por Math.pow(BAL.itemEraFactor,it.e).",
+    "lvlMult": "BAL: sem equivalente hoje. index.html:383, trocar (1+0.2*(it.lvl-1)) por Math.pow(BAL.lvlMult, nivelDoEspaco-1).",
+    "maxLvl": "BAL: 50 hoje, 60 na v4. index.html:448 e js/ui.js:43, trocar it.lvl<50.",
+    "upCostBase, upCostGrowth, upCostRarity, priceEraFactor": "BAL: 20, 1.38, 0.6, 4. index.html:385 (upCost). priceEraFactor também em :386 (sellVal) e :537 (itemPrice).",
+    "sellBase": "BAL: 8. index.html:386.",
+    "pullPity": "contador no save (S.pity); em doPull, index.html:426, depois de roll('pull').",
+    "maxVisible": "js/battle.js:238, só tirar da fila B.toSpawn se B.en.length < BAL.maxVisible.",
+    "speedMax": "index.html:470 (ciclo x1 -> x2 -> x1).",
+    "chestKills": "equivale a DATA.killsPerChest em js/sys/chest.js:9 (hoje 40).",
+    "chestDailyCap": "novo em js/sys/chest.js: contador de baús abertos no dia (zera na virada do dia); com o teto atingido os abates param de encher o baú.",
+    "maxAttackers": "Já existe no código como MAXVIS (js/battle.js:351). Falta só trocar no BAL: commonAtkInterval 1.2 e commonDmgMult 0.33, para o dano recebido não subir ~50%."
+  },
+  "mudancas_de_codigo": [
+    "1. Regra do dono: fator 12 em power() (index.html:383).",
+    "2. Nível de melhoria no espaço: S.lvl = {weapon, armor}; power(it) usa S.lvl[it.slot]; migração de save: S.lvl[slot] = nível do item equipado. Os botões Melhorar (index.html:448, js/ui.js:43) sobem S.lvl[slot]. upCost continua usando a raridade e a era do item equipado.",
+    "3. eraMult em mkEnemy (js/battle.js:46-47).",
+    "4. Fortalecimento em heroStats (index.html:387-390), nos DOIS espaços, conforme reports/spec-fortalecimento.md.",
+    "5. Garantia de Épico na invocação de equipamento (index.html:426).",
+    "6. Limite de 3 inimigos visíveis (js/battle.js:238).",
+    "7. Velocidade máxima x2 (index.html:470).",
+    "8. Loader lendo j.BAL (js/battle.js:23).",
+    "9. Arma Mítica vira Épica em todas as fontes (drop, chefe, baú, instância, invocação).",
+    "10. Ligar js/sys (fc, practice, titles, tower, chest, instances, pet) com os valores dos blocos abaixo; heroStats passa por Sys.fc.stats()."
+  ],
+  "forge": {
+    "_uso": "Spec (reports/spec-fortalecimento.md), nos dois espaços. Estado: S.forge = {weapon, armor, pity:{weapon, armor}}.",
+    "chance_pct": [
+      100,
+      100,
+      100,
+      90,
+      80,
+      70,
+      60,
+      50,
+      40,
+      30,
+      25,
+      20,
+      15,
+      10,
+      5
+    ],
+    "pedras_por_tentativa": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      6,
+      8,
+      9,
+      10,
+      11,
+      13,
+      16,
+      19,
+      22,
+      25
+    ],
+    "garantia_por_falha_pontos": 5,
+    "bonus_acumulado": [
+      0,
+      0.03,
+      0.06,
+      0.09,
+      0.12,
+      0.15,
+      0.18,
+      0.23,
+      0.28,
+      0.33,
+      0.41,
+      0.49,
+      0.57,
+      0.69,
+      0.81,
+      0.93
+    ],
+    "teto_por_era": [
+      6,
+      6,
+      9,
+      9,
+      12,
+      12,
+      15
+    ],
+    "ouro_por_tentativa_em_abates": 30,
+    "fontes_simuladas": {
+      "inimigo_comum_chance": 0.01,
+      "chefe_de_fase": "1-2",
+      "senhor_da_era": "3-5",
+      "bau_de_toque": "60% de 1-3 (agora no máximo 8 baús por dia)",
+      "instancia_arsenal_normal": 5,
+      "torre": "2 por andar de chefe a partir do 20",
+      "missao_diaria": 5,
+      "nota": "a v7.1 foi simulada com 0,7%; com 1% a forja deve chegar mais perto do teto (não medido)."
+    },
+    "fontes_nao_simuladas": "desmontar item",
+    "pedras_necessarias_nos_2_espacos": {
+      "+6": 60,
+      "+9": 164,
+      "+12": 412,
+      "+15": 1024
+    },
+    "teto_por_era_alternativa_degrau": [
+      6,
+      7,
+      9,
+      10,
+      12,
+      13,
+      15
+    ],
+    "teto_degrau_efeito": "Fim do jogo igual (dia 61). Só redistribui: era 3 de 3,8 h para 3,6 h, era 5 de 10,5 h para 8,1 h, era 6 de 16,1 h para 19,8 h.",
+    "missao": {
+      "texto": "Colete 15 pedras de forja",
+      "recompensa": 5,
+      "alcancavel": "100% dos dias (47 a 73 pedras por dia)."
+    },
+    "com_os_portoes": "A forja fecha as eras em +0, +4, +7, +9, +11, +12 e +14, contra tetos de +6, +6, +9, +9, +12, +12 e +15: agora faltam poucas pedras.",
+    "espacos": "7 (um +N por espaço); 3.584 pedras para levar todos a +15"
+  },
+  "practice": {
+    "_uso": "Proposta da fps-e2 (reports/sys-estado.md), confirmada na simulação. Nomes de js/sys/practice.js (DATA).",
+    "tracks_per": {
+      "str": 0.5,
+      "vit": 0.5,
+      "crit": 0.1,
+      "def": 0.15,
+      "gold": 0.5
+    },
+    "tracks_per_no_codigo": {
+      "str": 2,
+      "vit": 2,
+      "crit": 0.25,
+      "def": 0.3,
+      "gold": 1.5
+    },
+    "cap": {
+      "base": 10,
+      "perEra": 10
+    },
+    "teto_proposto_por_era": {
+      "nivel": [
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "atk_e_hp_pct": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35
+      ],
+      "crit_pontos": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "def_pct": [
+        1.5,
+        3,
+        4.5,
+        6,
+        7.5,
+        9,
+        10.5
+      ],
+      "gold_pct": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30,
+        35
+      ]
+    },
+    "cost": {
+      "base": 4,
+      "growth": 1.06
+    },
+    "drop": {
+      "commonChance": 0.08,
+      "common": 1,
+      "boss": 2,
+      "bossPerEra": 1,
+      "eraBoss": 5,
+      "eraBossPerEra": 2
+    },
+    "drop_nota": "8% mantido (decisão do PO). Com o teto de baús o grátis chega ao teto da era só no fim: Nv 6, 17, 26 nas eras 0-2 (abaixo do teto), 40, 50 e 60 nas eras 3-5 (teto alcançado em 97-100% do tempo da era) e Nv 67 de 70 na era 6.",
+    "offline": {
+      "perHour": 6,
+      "capHours": 8
+    },
+    "outras_fontes_simuladas": "baú 50% de 1-2; torre 1 + andar/5 por andar",
+    "ordem_de_treino_simulada": "Força e Vitalidade primeiro; Defesa, Crítico e Coleta 3 níveis atrás."
+  },
+  "titles": {
+    "_uso": "js/sys/titles.js. Cada bônus da tabela x 0,5; destaque continua x2. Títulos de arena não simulados (grátis fora do top 10). Títulos de skin, montaria e pet: bônus 0 na simulação.",
+    "bonusMult": 0.5,
+    "featuredMult": 2,
+    "total_medio_no_fim_do_jogo": "cerca de +8% de ATK e HP, +10% de ouro"
+  },
+  "tower": {
+    "_uso": "js/sys/tower.js. Hipótese pedida pela fps-e2: o andar 15*(k+1) é vencido no fim da era k (1,5 andar por fase). A curva de FC do andar deve ser ancorada na tabela abaixo.",
+    "perFloor": {
+      "atkPct": 0.2,
+      "hpPct": 0.2
+    },
+    "andar_no_fim_de_cada_era": [
+      15,
+      30,
+      45,
+      60,
+      75,
+      90,
+      105
+    ],
+    "fc_mediana_do_gratis_no_fim_de_cada_era": [
+      1650,
+      19300,
+      433000,
+      12500000,
+      362000000,
+      10500000000,
+      302000000000
+    ],
+    "fc_como_foi_calculada": "v8: FC RECOMENDADA medida no JOGO REAL (reports/calibracao.md) para as eras 0, 1 e 2: FC com que o chefe cai no desafio feito quando o botao brilha (90%). Eras 3 a 6: EXTRAPOLACAO (x28,9 por era = 1,4^10), NAO medida.",
+    "fc_mudanca_em_relacao_ao_v7": "+16%, 0%, -15%, -1%, +2%, +32%, +58%: trocar as âncoras das eras 0, 2, 5 e 6."
+  },
+  "chest": {
+    "_uso": "js/sys/chest.js com as decisões do PO.",
+    "killsPerChest": 250,
+    "dailyCap": 8,
+    "itens": [
+      3,
+      5
+    ],
+    "goldUnits": [
+      15,
+      30
+    ],
+    "gemChance": 0.25,
+    "pedras_de_pratica": "50% de 1-2",
+    "pedras_de_forja": "60% de 1-3",
+    "racao": "10% de 1"
+  },
+  "instances": {
+    "_uso": "Hipótese de uso diário das 3 chaves pelo grátis: Arsenal Normal, Chefe de Era Normal, Mina de Ouro.",
+    "por_dia": {
+      "pedras_de_forja": 5,
+      "itens_raro_ou_melhor": 3,
+      "item_epico_ou_melhor": 1,
+      "ouro_em_abates_comuns": 290,
+      "racao": 7,
+      "ovo": "25% (Chefe de Era Normal, tabela 34/35/18/13/0)"
+    },
+    "nao_simulado": "Caverna de Cristal (diamantes) e ovos",
+    "eggDailyCap": 1,
+    "chefe_de_era_upChance": [
+      0.3,
+      0.3,
+      0.1
+    ]
+  },
+  "mount": {
+    "_uso": "% de ATK e HP somado aos outros bônus, a partir da era 1. Efeito na v7: +10% tira 2 dias, +20% tira 4. O eraMult não foi recalibrado para a montaria.",
+    "mountPct": 0,
+    "mountFromEra": 1
+  },
+  "pet": {
+    "_uso": "reports/spec-pet-fc.md e seção 5 de reports/spec-loot-bau-instancias.md, com o fechamento do PO. Nível no espaço do pet; ovos e fragmentos sorteados; o jogador equipa o pet de maior FC.",
+    "food": {
+      "commonChance": 0.004,
+      "boss": [
+        3,
+        5
+      ],
+      "eraBoss": [
+        15,
+        20
+      ],
+      "chest": "10% de 1",
+      "instancia_chefe_de_era": [
+        5,
+        7,
+        10
+      ],
+      "offline_por_8h": 5,
+      "custo_por_nivel": "teto(3 x 1,08^(N-1))",
+      "teto_de_nivel_por_era": [
+        8,
+        15,
+        22,
+        29,
+        36,
+        43,
+        50
+      ]
+    },
+    "eggs": {
+      "primeiro_chefe": "Básico garantido",
+      "chefe_de_fase": {
+        "chance": 0.1,
+        "garantia": 10,
+        "pesos": [
+          50,
+          32,
+          13,
+          5,
+          0
+        ]
+      },
+      "senhor_da_era_primeira_vitoria": "100%, raridade mínima Básico / Raro (eras 1-2) / Épico (3-4) / Mítico (5-6)",
+      "instancia_chefe_de_era": {
+        "chance": [
+          0.15,
+          0.25,
+          0.4
+        ],
+        "pesos_normal": [
+          34,
+          35,
+          18,
+          13,
+          0
+        ],
+        "pesos_dificil": [
+          34,
+          35,
+          18,
+          12,
+          1
+        ],
+        "eggDailyCap": 1
+      },
+      "torre": "1 ovo a cada 10 andares até o 100 (mínimo Raro até o 40, Épico de 50 a 90); fênix garantida no 100"
+    },
+    "fragments": {
+      "repetido": 10,
+      "estrelas_custo": [
+        10,
+        20,
+        30,
+        40
+      ],
+      "repetido_em_5_estrelas": "vira ovo da raridade acima (até o Mítico)",
+      "golem_repetido_escolha": {
+        "golem": 10,
+        "fenix": 7,
+        "automatico_para_fenix_em": 5,
+        "preferencia_salva": "auto / golem / fênix"
+      },
+      "torre_depois_do_100": "1 fragmento de fênix por andar do 101 ao 110, depois 1 a cada 10",
+      "fragmentos_de_fenix_antes_do_andar_100": "ficam guardados (confirmado pelo PO)",
+      "fenix_repetida_em_5_estrelas": "10 fragmentos de golem (guardados se o golem ainda não nasceu)"
+    },
+    "resultado_no_fim_do_gratis": {
+      "_uso": "v7.1, política 'fênix depois do golem 3★'. Estrelas médias [lobo, coruja, dragãozinho, golem, fênix].",
+      "jogador_normal": {
+        "estrelas": [
+          4.6,
+          4.9,
+          4.8,
+          2.7,
+          1.5
+        ],
+        "ovos_de_golem": 4.6,
+        "primeiro_golem_dia": 28,
+        "fenix_dia": 47
+      },
+      "otimizador": {
+        "estrelas": [
+          5,
+          5,
+          5,
+          3,
+          2.9
+        ],
+        "ovos_de_golem": 10.3,
+        "primeiro_golem_dia": 20,
+        "fenix_dia": 46
+      },
+      "leitura": "Com o ovo de instância sem subir em cadeia, o jogador normal fica em golem 2,7★ e fênix 1,5★, um pouco abaixo da meta da fênix (~2★); o otimizador bate as duas.",
+      "aviso": "medido com 5 fragmentos de fênix por golem repetido; com 7 a fênix termina um pouco acima."
+    },
+    "fenix_aparece": "dia 46 (andar 100)",
+    "torre": {
+      "andar_final_do_gratis": 105,
+      "fragmentos_de_fenix_da_torre": 5
+    },
+    "racao": {
+      "custo_ate_o_teto_acumulado": [
+        30,
+        79,
+        160,
+        299,
+        534,
+        933,
+        1615
+      ],
+      "ganha_ate_o_fim_de_cada_era_mediana": [
+        56,
+        126,
+        241,
+        419,
+        692,
+        1040,
+        1603
+      ],
+      "leitura": "Fecha: 1.603 ganhas contra 1.615 de custo."
+    },
+    "hipoteses": "Sem evento; ovo do Chefe de Era no Normal.",
+    "otimizador_correcao": "O simulador da v7 não aplicava a regra 'ovo de instância repetido em 5★ vira ração' (o teto de 1 ovo de instância por dia ele já aplicava). Os ~36 ovos de golem e a fênix em 5★ eram erro do simulador, não do jogo."
+  },
+  "tempos": {
+    "_uso": "NÃO revalidado como calendário. O que foi medido no jogo real (perfil C, minutos de jogo; em x2, 1 min real = ~1,9 min de jogo):",
+    "era_0": "8,6 a 11,1 min de jogo (~5 a 6 min reais em x2), dia 1",
+    "era_1": "35 a 103 min de jogo na era (~19 a 54 min reais), dia 1-2",
+    "era_2": "~200 min de jogo (~1,8 h reais), dia ~4-5",
+    "eras_3_a_6": "só simulador: alvos de 4 h, 7 h, 11 h e 16 h reais com o eraMult desta versão; dias ~11, 21, 37 e 59 se confirmados.",
+    "vip_opcao_B": "não refeito; na v7.1 ficava em ~73% do tempo do grátis.",
+    "v7_1_substituida": "os dias da v7.1 foram calculados com ritmo errado e não valem."
+  },
+  "alertas": [
+    "Metas de calendário (grátis ~59, VIP B ~43) não revalidadas; só a era 0 foi validada no jogo real, e as eras 1 e 2 conferidas em 1-2 partidas.",
+    "Eras 1 e 2 avançam por derrota repetida (26 a 100 derrotas na era 1, ~190 na era 2): falta o modo farm.",
+    "Mochila cheia destrói o item novo: jogador que não limpa a mochila trava na troca de era.",
+    "Jogador em MANUAL que não usa especial nem ultimate continua preso no Senhor da Era 0.",
+    "XP de abate 2,2: nível 34 no fim da era 2 (meta 26-27).",
+    "Curva de nível do item da fps-e2 não testada; itens pesam pouco no começo (ATK 51 -> 63 com tudo no teto).",
+    "eraMult das eras 3 a 6 vem só do simulador."
+  ],
+  "hipoteses": [
+    "Inimigos sem DEF; DEF do herói reduz o dano por DEF / (DEF + 3 x dano do golpe), teto 75%.",
+    "'Equipar e upar até o meu nível': o jogador compara itens no mesmo nível e troca quando o ouro (com os 50% do desmonte) leva o novo acima do antigo; desmonta todo item que não equipa e guarda um reserva por espaço.",
+    "Ordem de melhoria: arma, colete, chapéu e luvas primeiro (o mais barato da vez); botas, colar e asa depois. Invoca x10 quando os quatro primeiros estão no teto ou falta item em algum espaço.",
+    "Diamante grátis compra nível quando falta ouro.",
+    "Skins do grátis: 2 Básicas por era. Pagante: 2 Lendárias e coleção cheia desde o dia 1.",
+    "VIP opção B: a chave extra vira mais um Chefe de Era por dia.",
+    "Montaria: % de ATK e HP a partir da era 1.",
+    "Otimizador: chaves do dia no Chefe de Era Difícil a partir da fase 9 da era 0; no máximo 1 ovo de instância por dia.",
+    "Como na v6: pets, torre a 1,5 andar por fase, títulos sem arena, baú aberto assim que enche, XP de instância no Normal, herói corpo a corpo, Ultimate usada assim que enche.",
+    "Fora da conta: loja de moedas, arena, Caverna de Cristal, evento.",
+    "Ritmo: chegada e avanço dos inimigos x 3,5 e 3 s entre ondas, ajustados à medida da build v0.7."
+  ],
+  "conflitos": [
+    "1. v7.1 calibrada com ritmo errado: dias por era precisam ser refeitos.",
+    "2. Ganho por nível do item (1,04) fraco no começo x proposta da fps-e2.",
+    "3. Build sem pets, práticas, torre, forja e instâncias x curva que contava com eles.",
+    "4. Mochila cheia desmonta o item novo.",
+    "5. Missão 'Avance 2 fases' continua impossível nos dias de parede."
+  ],
+  "loot": {
+    "_uso": "js/sys/loot.js. XP de abate = base x (1 + eraScale x era) x (1 + stageScale x (faseNaEra - 1)).",
+    "xp": {
+      "kill": 2.2,
+      "boss": 33,
+      "eraBoss": 264,
+      "eraScale": [1, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15],
+      "_eraScale": "vetor por era (2026-11-12, decisão do PO): multiplicador da era e = 1 + eraScale[e] x e. ESTIMATIVA do calibrador, ainda NÃO medida no jogo; metas: era 1 em 40-50 min, era 2 em 90-120 min.",
+      "stageScale": 0.05
+    },
+    "gates": {
+      "raro": {
+        "nivel": 10
+      },
+      "epico": {
+        "nivel": 25
+      },
+      "mitico": {
+        "nivel": 70,
+        "era": 4
+      },
+      "lendario": {
+        "nivel": 85,
+        "era": 5
+      },
+      "abaixo_do_portao": "vira a raridade permitida mais alta",
+      "ovo_de_marco": "fica guardado e choca na raridade original quando o portão abrir",
+      "fenix_do_andar_100": "marco, sem portão",
+      "subida_em_cadeia_para_mitico": "bloqueada pelo portão vira ração"
+    },
+    "moedas_por_abate": "sem mudança: goldBase 4 x goldGrowth 1,15^(fase-1) x commonGoldMult 0,32 (chefe x5)",
+    "xp_nota": "x2,2 sobre a v6/v7 porque o jogo real mata ~24 inimigos por minuto em x2, não 54. Instância, missão e offline não mudam."
+  },
+  "level": {
+    "_uso": "js/sys/level.js. xpToNext tem 99 valores (nível 1->2 até 99->100). As fontes abaixo são multiplicadas por (1 + era); a instância ainda por 1 / 1,6 / 2,5 conforme a dificuldade.",
+    "xpToNext": [
+      20,
+      33,
+      46,
+      59,
+      72,
+      85,
+      98,
+      112,
+      125,
+      322,
+      579,
+      836,
+      1094,
+      1351,
+      1609,
+      1866,
+      2123,
+      2381,
+      2638,
+      2895,
+      3153,
+      3410,
+      3668,
+      3925,
+      4217,
+      4259,
+      4301,
+      4343,
+      4385,
+      4427,
+      4470,
+      4512,
+      4554,
+      4596,
+      4638,
+      4681,
+      4723,
+      4765,
+      4807,
+      4849,
+      4891,
+      4934,
+      4976,
+      5018,
+      5060,
+      5102,
+      5144,
+      5187,
+      5229,
+      5271,
+      5313,
+      5355,
+      5398,
+      5440,
+      5482,
+      5524,
+      5566,
+      5608,
+      5651,
+      5693,
+      5735,
+      5777,
+      5819,
+      5861,
+      5904,
+      5946,
+      5988,
+      6030,
+      6072,
+      6708,
+      7846,
+      8983,
+      10120,
+      11258,
+      12395,
+      13532,
+      14670,
+      15807,
+      16945,
+      18082,
+      19219,
+      20357,
+      21494,
+      22631,
+      23769,
+      24906,
+      26043,
+      27181,
+      28318,
+      29455,
+      30593,
+      31730,
+      32868,
+      34005,
+      35142,
+      36280,
+      37417,
+      38554,
+      39692
+    ],
+    "xp_acumulada": {
+      "nivel_10": 650,
+      "nivel_25": 32500,
+      "nivel_70": 264001,
+      "nivel_85": 484048,
+      "nivel_100": 960001
+    },
+    "xp": {
+      "instance": 25,
+      "mission": 30,
+      "dailyBonus": 50,
+      "offlinePerHour": 20
+    },
+    "bonusPorNivel": {
+      "atkPct": 0.3,
+      "hpPct": 0.3
+    },
+    "unlock": {
+      "pet": 1,
+      "practice": 5,
+      "forge": 12,
+      "tower": 15,
+      "instances": 14,
+      "arena": 30
+    },
+    "unlock_quando": {
+      "pet": "1º chefe",
+      "practice": "~6 min",
+      "forge": "começo da era 1 (fim do dia 1)",
+      "tower": "dia 2",
+      "instances": "dia 1-2",
+      "arena": "dia ~6, não simulada"
+    },
+    "nivel_no_fim_de_cada_era_p10_mediana_p90": [
+      [
+        12,
+        12,
+        12
+      ],
+      [
+        16,
+        18,
+        20
+      ],
+      [
+        25,
+        27,
+        29
+      ],
+      [
+        42,
+        45,
+        47
+      ],
+      [
+        71,
+        72,
+        74
+      ],
+      [
+        86,
+        88,
+        90
+      ],
+      [
+        100,
+        100,
+        100
+      ]
+    ],
+    "participacao_das_fontes_pct": {
+      "abates": 87,
+      "offline": 5.1,
+      "instancias": 3.8,
+      "missoes": 2.1,
+      "chefes": 1.9
+    },
+    "farm": "As tabelas de minutos de farm por nível da v6 não valem mais (ritmo e XP mudaram); não foram refeitas."
+  },
+  "stats": {
+    "_uso": "Sys.stats.DATA. Valores provisórios da fps-e2, mantidos: a simulação fecha com eles.",
+    "eraFactor": 12,
+    "rarFlat": [
+      1,
+      1.7,
+      3,
+      5.5,
+      10
+    ],
+    "rarPct": [
+      1,
+      1.25,
+      1.5,
+      1.8,
+      2.2
+    ],
+    "main": {
+      "weapon": {
+        "atk": 8
+      },
+      "armor": {
+        "hp": 40,
+        "def": 8
+      },
+      "hat": {
+        "hp": 24
+      },
+      "gloves": {
+        "atk": 3,
+        "critRate": 2
+      },
+      "boots": {
+        "aspd": 4
+      },
+      "necklace": {
+        "critDmg": 10
+      },
+      "wing": {
+        "atkPct": 3,
+        "hpPct": 3
+      }
+    },
+    "lvlMult": 1.04,
+    "pctLvlStep": 0.01,
+    "pctForgeShare": 0.5,
+    "maxItemLevel": 100,
+    "teto_do_nivel_do_item": "nível do jogador",
+    "upgrade": {
+      "goldBase": 20,
+      "goldGrowth": 1.06,
+      "rarityCost": 0.6,
+      "priceEra": 3.5,
+      "gemBase": 2,
+      "gemGrowth": 1.04,
+      "dismantleGold": 0.5
+    },
+    "upgrade_formulas": {
+      "ouro": "piso(20 x 1,06^(N-1) x (1 + 0,6 x raridade) x 3,5^era do item)",
+      "diamante": "teto(2 x 1,04^(N-1) x (1 + 0,6 x raridade))"
+    },
+    "diamante_exemplos_item_basico": {
+      "nivel_1": 2,
+      "nivel_25": 6,
+      "nivel_50": 14,
+      "nivel_75": 37,
+      "nivel_99": 94,
+      "do_1_ao_100": 2400,
+      "lendario_do_1_ao_100": 8160
+    },
+    "subCount": [
+      0,
+      1,
+      2,
+      2,
+      2
+    ],
+    "subs": {
+      "critRate": [
+        1,
+        3
+      ],
+      "critDmg": [
+        4,
+        12
+      ],
+      "aspd": [
+        2,
+        6
+      ],
+      "atkPct": [
+        2,
+        6
+      ],
+      "hpPct": [
+        2,
+        6
+      ],
+      "defPct": [
+        2,
+        6
+      ]
+    },
+    "levelBase": {
+      "atk": 5,
+      "atkPer": 2,
+      "hp": 100,
+      "hpPer": 40,
+      "def": 0,
+      "defPer": 1
+    },
+    "base": {
+      "critRate": 12,
+      "critDmg": 100,
+      "aspd": 0
+    },
+    "caps": {
+      "critRate": 75,
+      "aspd": 100,
+      "critDmg": 400,
+      "defRed": 75
+    },
+    "defK": 2,
+    "wing": {
+      "minLevel": 50,
+      "minR": 2
+    },
+    "nivel_dos_itens_no_fim_de_cada_era_gratis": [
+      "12 em todos",
+      "18 em todos",
+      "27 em todos",
+      "45 em todos",
+      "72/72/72/71/70/70/70",
+      "88/87/87/87/73/74/72",
+      "94/96/96/95/71/73/71"
+    ],
+    "leitura": "Até a era 3 o item fica no teto (nível do jogador). Com 3,5^era, os quatro espaços de atributo plano terminam no nível 94-96; botas, colar e asa ficam em 71-73.",
+    "pctEraStep": 0.25,
+    "pctEraSlots": [
+      "boots",
+      "necklace",
+      "wing"
+    ],
+    "def": {
+      "main_armor_def": 8,
+      "defK": 2,
+      "formula": "redução = DEF / (DEF + 2 x ATK do atacante), teto 75%",
+      "medido_na_v7_1_com_os_valores_antigos_4_e_3": {
+        "inimigo_comum_por_era_pct": [
+          42,
+          41,
+          38,
+          31,
+          28,
+          28,
+          21
+        ],
+        "senhor_da_era_por_era_pct": [
+          9,
+          8,
+          8,
+          6,
+          5,
+          5,
+          3
+        ]
+      },
+      "estimativa_com_os_valores_novos": "~54% contra o comum e ~14% contra o Senhor da Era (conta, não simulação)"
+    },
+    "caps_nota": "Aplicados nos módulos. Na v7.1 o grátis terminava com +76% de velocidade e ~240% de dano crítico (base incluída), então os tetos não mudam a curva dele."
+  },
+  "fc": {
+    "_uso": "Sys.fc.DATA. FC = ATK x 5 x (1 + crítico x dano crítico) x (1 + vel. de ataque) + HP + DEF x 5 + pet.",
+    "wAtk": 5,
+    "wHp": 1,
+    "wDef": 5,
+    "contribuicao_no_fim_do_jogo_gratis": {
+      "por_atributo_pct": {
+        "atk": 67,
+        "hp": 29,
+        "def": 3
+      },
+      "critico_pct_da_fc": 32,
+      "vel_de_ataque_pct_da_fc": 29,
+      "por_espaco_queda_sem_o_item_pct": {
+        "weapon": 50,
+        "gloves": 28,
+        "armor": 26,
+        "boots": 20,
+        "necklace": 18,
+        "wing": 17,
+        "hat": 15
+      },
+      "valores_finais": {
+        "critRate": 38,
+        "critDmg_com_base": 240,
+        "aspd": 76
+      }
+    }
+  },
+  "skin": {
+    "_uso": "Sys.skin.DATA.",
+    "equippedPct": [
+      2,
+      3,
+      5,
+      7,
+      10
+    ],
+    "perSlot": true,
+    "collectionPer": 0.5,
+    "collectionCap": 10,
+    "hipotese_gratis": "2 skins Básicas por era liberada: +4% equipadas e +1% de coleção por era (+7% no fim).",
+    "hipotese_pagante": "2 Lendárias equipadas (+20%) e coleção no teto (+10%) desde o dia 1."
+  },
+  "vip": {
+    "_uso": "Sys.vip.DATA. Opção B, decidida pelo PO.",
+    "bonus": {
+      "atkPct": 10,
+      "hpPct": 10
+    },
+    "perks": {
+      "xpPct": 25,
+      "goldPct": 25,
+      "offlineMult": 2,
+      "chestCapAdd": 4,
+      "instanceKeysAdd": 1,
+      "speedMax": 2
+    },
+    "fim_no_dia": 43,
+    "faixa": "39-50"
+  },
+  "summon": {
+    "_uso": "Sys.loot.DATA.summon. Só itens, em ouro.",
+    "rarWeights": [
+      50,
+      28,
+      14,
+      6,
+      2
+    ],
+    "cost": {
+      "base": 500,
+      "eraGrowth": 4,
+      "x10Mult": 9
+    },
+    "freePerDay": 1,
+    "garantia": "melhor raridade liberada a cada 10",
+    "medido": "com a base 500 e o jogo real acelerado: o x10 custa 4.500 na era 0, 18.000 na era 1 e 72.000 na era 2; o jogador AUTO fez só a invocação grátis na era 0, nenhuma paga na era 1 e 27 até o fim da era 2.",
+    "avaliacao": "Não medido contra a curva longa.",
+    "pity": {
+      "a_cada": 10,
+      "raridade": "melhor liberada"
+    }
+  },
+  "dismantle": {
+    "_uso": "Sys.loot.DATA.dismantle.",
+    "goldRefund": 0.5,
+    "forge": [
+      0,
+      1,
+      2,
+      4,
+      10
+    ],
+    "medido": "~1.920 pedras de desmonte no jogo; ~18 paradas no fim. Não sobram mais."
+  },
+  "diamantes_gratis": "Sem invocação por diamante, o grátis usa diamante em nível de item: ~1.970 no jogo inteiro, efeito irrelevante. O uso que pesa é comprar skin (que agora dá poder).",
+  "pass": {
+    "_uso": "js/sys/pass.js (fps-30). 30 níveis x 100 XP de passe, só de missões: diárias 90 por dia (70 + bônus 20), semanais 190 por semana; premium +25%; temporada de 30 dias.",
+    "datas_conferidas": {
+      "gratis_todo_dia": "nível 30 entre o dia 25 (semanais fechadas no 4º dia da semana) e o dia 27 (no 7º dia)",
+      "gratis_perdendo_1_dia_por_semana": "dia 29",
+      "premium_todo_dia": "dia 21",
+      "premium_perdendo_1_dia_por_semana": "dia 24"
+    },
+    "temporadas_em_61_dias": "2 completas (ciclos de 30 dias: dias 1-30 e 31-60); na virada zeram o XP, os resgates e o premium.",
+    "recompensas_no_poder": {
+      "trilha_gratis": "9 itens Básicos, 1 arma Épica no nível 30 e 80 diamantes por temporada: efeito nulo na curva (o grátis já está no portão de raridade pela invocação).",
+      "premium_skin_da_temporada": "hipótese: skin Mítica (+7% equipada no lugar de uma Básica) a partir do dia ~17 e +0,5% de coleção: fim no dia 59 (igual ao grátis, dentro do ruído).",
+      "premium_item_da_temporada_sem_subir_de_era": "colete e arma da temporada (dias 19 e 21; de novo nos dias 49 e 51): fim no dia 56 (53-59).",
+      "premium_item_da_temporada_subindo_de_era": "o item sobe para a era atual mantendo o nível: fim no dia 46 (42-53). Pesa quase como o VIP.",
+      "decisao_do_PO": "Item da Temporada não sobe de era (só a raridade evolui): pelo resultado da v7, o premium fica ~3 dias à frente do grátis. Não refeito na v7.1."
+    }
+  },
+  "combate": {
+    "energia_da_ultimate": "normalizada por tempo no código da batalha: energia por golpe = base x intervalo atual do básico / 0,8 s. Com isso a velocidade de ataque deixa de acelerar a ultimate. Não está no simulador."
+  },
+  "o_que_mudou_em_relacao_ao_v7_2": {
+    "eraBossHpMult": "2 -> 1.1 (validado no jogo real)",
+    "eraBossDmgMult": "1.4 -> 0.9 (validado no jogo real)",
+    "eraMult": "0,944 · 0,777 · 2,19 · 6,72 · 32 · 112 · 412 -> 0,944 · 0,777 · 1,44 · 4,2 · 16,1 · 53,2 · 161 (eras 0 e 1 iguais; era 2 conferida no jogo real em 1 partida; eras 3 a 6 só do simulador)",
+    "summon_base": "500 (já está no js/sys/loot.js)",
+    "missao_melhore_5_vezes": "só aparece a partir do nível 5 do jogador (engenheiro)"
+  },
+  "mudancas_por_dono": {
+    "engenheiro_BAL_e_codigo_do_jogo": [
+      {
+        "chave": "BAL.eraBossHpMult (js/battle.js:24)",
+        "antigo": 2,
+        "novo": 1.1
+      },
+      {
+        "chave": "BAL.eraBossDmgMult (js/battle.js)",
+        "antigo": 1.4,
+        "novo": 0.9
+      },
+      {
+        "chave": "BAL.eraMult (js/battle.js:25)",
+        "antigo": [
+          0.944,
+          0.777,
+          2.19,
+          6.72,
+          32,
+          112,
+          412
+        ],
+        "novo": [
+          0.944,
+          0.777,
+          1.44,
+          4.2,
+          16.1,
+          53.2,
+          161
+        ]
+      },
+      {
+        "chave": "missão 'Melhore equipamentos 5 vezes'",
+        "antigo": "sempre",
+        "novo": "só a partir do nível 5 do jogador"
+      },
+      {
+        "chave": "mochila cheia (js/farm.js:17)",
+        "antigo": "o item NOVO é desmontado",
+        "novo": "RECOMENDADO: desmontar o item mais fraco fora de uso, não o novo. No teste acelerado, com a mochila cheia de sobras o jogador parou de receber itens da era 2 e morreu 904 vezes na fase 21."
+      }
+    ],
+    "fps_30_loot_js": [
+      {
+        "chave": "Sys.loot.DATA.summon.cost.base",
+        "antigo": 1000,
+        "novo": 500,
+        "estado": "já aplicado no módulo"
+      },
+      {
+        "chave": "Sys.loot.DATA.xp",
+        "antigo": "2,2 / 33 / 264",
+        "novo": "sem mudança na v7.3",
+        "alerta": "com essa XP e o ritmo real o nível passa das metas da era 2 em diante (34 no fim da era 2; meta 26-27). Rever na próxima calibração."
+      }
+    ],
+    "fps_e2_stats_js_e_outros": [
+      {
+        "chave": "nenhuma na v7.3",
+        "nota": "a curva de ganho por nível do item que ela propôs, (1 + 0,15 x (N-1)) x 1,01^(N-1), não foi testada: é mudança de fórmula no módulo e pede recalibrar tudo. O diagnóstico dela confere com o jogo real (ver validacao_no_jogo_real.heroi_na_trava)."
+      }
+    ]
+  },
+  "validacao_no_jogo_real": {
+    "_uso": "Build v0.8.1 em http://localhost:8080/?debug=1&fresh=1, jogo novo, batalha acelerada chamando step(0,05) na página; valores do BAL sobrescritos em memória (nenhum arquivo do jogo alterado). Minutos = minutos de JOGO (em x2 o relógio anda ~1,9x o real).",
+    "perfis": {
+      "A": "sem melhorar item, MANUAL (não usa especial nem ultimate)",
+      "B": "melhora com todo o ouro a cada 30 s, MANUAL",
+      "C": "melhora a cada 10 s, AUTO (especial e ultimate saem sozinhos)"
+    },
+    "antes_v0_8_1": {
+      "A": "não passa da fase 10 em 40 min; 19 derrotas; fase 10 aos ~40 min",
+      "B": "não passa em 40 min; 20 derrotas",
+      "C": "1 partida passou aos 29,6 min com 19 derrotas; as outras não passaram em 40 min (28-29 derrotas); fase 10 aos 7,5-8,6 min"
+    },
+    "depois_v7_3": {
+      "A": "não passa em 40 min; 19 derrotas (chega à fase 10 aos ~31 min)",
+      "B": "não passa em 40 min; 19 derrotas (2 partidas)",
+      "C": "passa em 8,6 a 11,1 min com 1 ou 2 derrotas (13 de 13 partidas)"
+    },
+    "criterio_do_PO": "perfil 'melhorando sempre, AUTO' passa o Senhor da Era 0 em até ~20 min com no máximo 3 derrotas: ATENDIDO (pior caso medido: 11,1 min e 2 derrotas). Fica mais rápido que os 17-19 min pedidos como folga.",
+    "quem_nao_usa_habilidade": "os perfis A e B (MANUAL sem tocar no especial e na ultimate) continuam presos na era 0 depois da correção.",
+    "heroi_na_trava": {
+      "momento": "perfil C, 15 min de jogo, fase 10, 7 derrotas",
+      "nivel_do_jogador": 11,
+      "nivel_dos_itens": "11 em todos (no teto)",
+      "ouro_parado": 66,
+      "atk": 54,
+      "hp": 671,
+      "def": 22,
+      "critRate": 15.8,
+      "critDmg": 100,
+      "aspd": 8,
+      "fc": 1116,
+      "senhor_da_era_0": {
+        "hp": 2331,
+        "golpe": 78,
+        "golpe_depois_da_DEF": 68,
+        "reducao_pct": 12,
+        "intervalo_s": 1.15
+      },
+      "escolta_x2": {
+        "hp": 82,
+        "golpe": 10.2,
+        "golpe_depois_da_DEF": 4.9,
+        "reducao_pct": 52,
+        "intervalo_s": 1.2
+      },
+      "tempo_para_o_heroi_matar_o_chefe_s": "~26 (básico + especial, ~90 de dano por segundo)",
+      "tempo_para_o_chefe_matar_o_heroi_s": "~10 (67 de dano por segundo recebidos)",
+      "leitura": "Faltava ~2,6x de força. O teto de nível do item NÃO é a causa principal: os itens estavam no teto com ouro zerado, e melhorar tudo leva o ATK de 51 para 63 e o HP de 793 para 823, porque a base do nível do jogador pesa mais que os itens. A DEF funciona como a fórmula manda (12% contra o chefe, 52% contra a escolta) e não é a causa. A causa são os multiplicadores do Senhor da Era (vida x12, dano x2,52 sobre o inimigo base) calibrados na v7.1 com um ritmo errado e contando com sistemas que a build ainda não tem (pets, práticas, torre, forja, instâncias)."
+    },
+    "eras_1_e_2_com_a_v7_3": {
+      "era_1": "passa. 2 partidas: 35 min na era com 26 derrotas (12 no Senhor) e 103 min com 100 derrotas (65 no Senhor). Sorte pesa muito.",
+      "era_2_com_eraMult_antigo_2_19": "parede: 20 derrotas na fase 21 até cair o primeiro item da era 2; fase 27 em 60 min (61 derrotas), fase 28 em 96 min (98 derrotas); aos 323 min ainda na fase 29.",
+      "era_2_com_eraMult_1_44": "passa em 202 min de jogo (~1,8 h reais em x2), com 194 derrotas (66 na fase 29, 88 no Senhor). 1 partida.",
+      "leitura": "Não há parede impossível nas eras 1 e 2 com a v7.3, mas o avanço é por derrota repetida. Sem modo farm ('Desafiar chefe'), o jogador vê centenas de telas de derrota."
+    },
+    "simulador_contra_o_jogo": {
+      "ritmo": "27,0 abates por minuto de jogo no simulador com os tempos originais (medido 27,7); a 'calibração' da v7.1 (chegada x3,5) estava ERRADA, feita sobre uma medida da v0.7 que não se repetiu na v0.8.1.",
+      "trava": "o simulador reproduz: fase 10 aos 7,7 min, 15 derrotas no Senhor (medido 13 no jogo), 27 de 31 partidas só passam depois de ~30 min.",
+      "estado": "sim7.js voltou aos tempos originais; eraMult das eras 3 a 6 desta versão sai dele (build como está, sem pets, práticas, torre, forja e instâncias) e não foi conferido no jogo real."
+    }
+  },
+  "calibracao_v8": {
+    "_uso": "Calibracao feita no JOGO REAL (build v0.9, laço acelerado chamando o step do jogo, relogio do jogador = tempo de jogo / velocidade; gratis x1 ate o nivel 15, x2 depois). Detalhes e tabelas: reports/calibracao.md.",
+    "antigo": {
+      "enemyHpGrowth": 1.282,
+      "enemyDmgGrowth": 1.282,
+      "eraMult": [
+        0.944,
+        0.777,
+        1.44,
+        4.2,
+        16.1,
+        53.2,
+        161
+      ],
+      "earlyEase": [
+        0.5,
+        0.65,
+        0.8
+      ],
+      "rec": [
+        1440,
+        12300,
+        395000,
+        13900000,
+        829000000,
+        34300000000,
+        1540000000000
+      ]
+    },
+    "novo": {
+      "enemyHpGrowth": 1.4,
+      "enemyDmgGrowth": 1.4,
+      "eraMult": [
+        0.245,
+        0.26,
+        0.17,
+        0.17,
+        0.17,
+        0.17,
+        0.17
+      ],
+      "earlyEase": "70 valores: fases 1-10 = 5,6,7,8,8,7.5,7,6.5,6,6; fases 11-20 = 1; fases 21-70 = 1,5 (multiplicador de VIDA por fase; o dano nao muda)",
+      "rec": [
+        1650,
+        19300,
+        433000,
+        12500000,
+        362000000,
+        10500000000,
+        302000000000
+      ]
+    },
+    "nao_medido": "eras 3 a 6 (eraMult 0,17 e FC recomendada extrapolados), VIP, prazos em dias"
+  }
+}

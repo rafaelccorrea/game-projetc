@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Perfil e Coleção</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+*{box-sizing:border-box}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes gsh{from{background-position:120% 0}to{background-position:-130% 0}}
+/* Kael aprovado (parado, 12 quadros) e auras aprovadas (16 quadros 256x320) */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.au13,.au10,.au7{background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77)}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4)}
+.au7{background-image:url(/_blob/77c79b0f46d2e8ae8b53d9f6308c3206)}
+
+/* ===== APARELHO: o tamanho vem do seletor; tudo dentro responde ao contêiner (no jogo = viewport) ===== */
+.dev{position:absolute;left:0;top:0;transform-origin:0 0;container:dev / size;overflow:hidden;border-radius:22px;outline:2px solid #4a3a2b;background:radial-gradient(120% 45% at 50% 0%,#3a2810 0%,#16110d 62%);display:flex;flex-direction:column;transition:width .35s ease,height .35s ease}
+.pad{padding-left:clamp(8px,3cqw,20px);padding-right:clamp(8px,3cqw,20px)}
+
+/* barra do topo */
+.tb{height:52px;flex:none;display:flex;align-items:center;gap:8px}
+.ib{width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;justify-content:center;padding:0}
+.ib:active,.tab:active,.btn:active,.thumb:active{transform:scale(.95)}
+.h1{font-family:'Lilita One',sans-serif;font-size:clamp(19px,5.8cqw,28px);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 #000}
+.colchip{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;font-size:clamp(11px,3.2cqw,14px);font-weight:900;white-space:nowrap}
+
+/* cartão do jogador */
+.pc{flex:none;display:grid;grid-template-columns:minmax(92px,min(31%,220px)) minmax(0,1fr);grid-template-areas:"stg info";gap:clamp(8px,2.6cqw,18px);align-items:end;padding:10px;border-radius:18px;background:linear-gradient(180deg,#2c2017,#19120d);border:2px solid #4a3a2b;margin-top:2px;animation:cardIn .45s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(-10px) scale(.98)}to{opacity:1;transform:none}}
+.stgW{grid-area:stg;min-width:0}
+.info{grid-area:info;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.6cqw,10px)}
+.who{display:flex;align-items:center;gap:clamp(8px,2.4cqw,14px);min-width:0}
+.avaW{flex:none;padding:3px 14px}
+.ava{width:clamp(58px,17cqw,96px)}
+.nmB{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.nm{font-family:'Lilita One',sans-serif;font-size:clamp(19px,5.6cqw,30px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl{font-size:clamp(13px,3.9cqw,20px);line-height:1.15;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:30px;display:inline-flex;align-items:center;gap:5px;padding:0 10px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;font-size:clamp(11px,3.1cqw,14px);font-weight:900;white-space:nowrap}
+.chip .k{color:#c9b9a2;font-weight:800}
+.xp{display:block;width:34px;height:6px;border-radius:3px;background:#2a2018;overflow:hidden}
+.xp i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#5fd068,#c4f27a);animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.4)}}
+.vip{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border:0;position:relative;overflow:hidden}
+.vip::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.8) 50%,transparent 70%);background-size:300% 100%;animation:gsh 2.4s ease-in-out infinite}
+.idrow{display:flex;align-items:center;gap:8px;font-size:clamp(11px,3.1cqw,14px);font-weight:800;color:#c9b9a2}
+.idrow b{color:#f6ecdf;font-weight:900;letter-spacing:.5px}
+.cpy{width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;justify-content:center;padding:0}
+.cpy.ok{border-color:#5fd068;color:#5fd068;animation:popn .4s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes popn{from{transform:scale(1.4)}to{transform:none}}
+.mini{display:none;font-size:12px;font-weight:900;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini b{color:#ffc94a}
+.cpMini{display:none}
+
+/* tela baixa: o cartão vira uma linha */
+@container dev (max-height: 700px){
+  .pc{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"info stg";align-items:center;padding:6px 8px;gap:8px}
+  .stgW{width:clamp(54px,16cqw,70px)}
+  .ava{width:52px}
+  .info{gap:0}
+  .chips,.idrow{display:none}
+  .mini{display:block}
+  .cpMini{display:flex}
+  .nm{font-size:18px}
+  .ttl{font-size:13px}
+}
+/* tela larga (tablet) */
+@container dev (min-width: 600px){
+  .tab{flex-direction:row;gap:8px}
+  .tab svg{width:26px;height:26px}
+}
+
+/* palco do Kael: pés no pedestal (y 88% do palco) */
+.stg{position:relative;display:block;width:100%;aspect-ratio:4/5}
+.stg .kael{position:absolute;left:5%;top:19.6%;width:90%;aspect-ratio:1;display:block}
+.stg .ped{position:absolute;left:14%;width:72%;top:84%;height:8%;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#8a6a3a 0%,#4a3420 60%,#22180f 100%);border:2px solid #c9973a;box-shadow:0 0 12px rgba(255,201,74,.45);display:block;animation:pedG 2.6s ease-in-out infinite}
+@keyframes pedG{0%,100%{box-shadow:0 0 6px rgba(255,201,74,.3)}50%{box-shadow:0 0 16px rgba(255,201,74,.75)}}
+.stg .ped2{position:absolute;left:14%;width:72%;top:88%;height:11%;border-radius:0 0 46% 46%/0 0 60% 60%;background:linear-gradient(180deg,#3a2a1a,#160f0a);border:2px solid #4a3a2b;border-top:0;display:block}
+.stg .aur{position:absolute;left:5%;top:-2%;width:90%;height:90%;display:block;pointer-events:none}
+.stgFx{animation:stgFx .8s ease-out both}
+@keyframes stgFx{0%{filter:brightness(2.2)}100%{filter:none}}
+/* auras desenhadas em código (+4 azul, maligna, celestial) até a folha chegar */
+.acB,.acM,.acC{border-radius:50% 50% 46% 46%/60% 60% 40% 40%;transform-origin:50% 100%;animation:auraP 1.6s ease-in-out infinite;overflow:hidden}
+.acB{background:radial-gradient(ellipse 46% 62% at 50% 100%,rgba(74,163,255,.85),rgba(74,163,255,.3) 52%,transparent 74%)}
+.acM{background:radial-gradient(ellipse 48% 66% at 50% 100%,rgba(122,44,255,.9),rgba(60,10,60,.55) 50%,transparent 76%)}
+.acC{background:radial-gradient(ellipse 48% 66% at 50% 100%,rgba(255,248,222,.95),rgba(255,201,74,.45) 48%,transparent 76%)}
+.acB::before,.acM::before,.acC::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,#cfe7ff 0 1.5px,transparent 2.5px);background-size:17px 23px;-webkit-mask:linear-gradient(0deg,#000 30%,transparent 95%);mask:linear-gradient(0deg,#000 30%,transparent 95%);animation:rise 1.4s linear infinite}
+.acM::before{background-image:radial-gradient(circle,#ff6a3a 0 1.6px,transparent 2.6px)}
+.acC::before{background-image:radial-gradient(circle,#fff 0 1.6px,transparent 2.6px)}
+.acM::after{content:"";position:absolute;left:10%;right:10%;bottom:0;height:70%;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(20,0,20,.7),transparent,rgba(255,40,80,.35),transparent);animation:spin 3s linear infinite;filter:blur(3px)}
+.acC::after{content:"";position:absolute;left:-10%;top:5%;width:120%;aspect-ratio:1;border-radius:50%;background:repeating-conic-gradient(rgba(255,240,180,.5) 0deg 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 15%,transparent 62%);mask:radial-gradient(circle,#000 15%,transparent 62%);animation:spin 9s linear infinite}
+@keyframes auraP{0%,100%{transform:scale(1,1);opacity:.9}50%{transform:scale(1.06,1.1);opacity:1}}
+@keyframes rise{from{background-position:0 0}to{background-position:0 -23px}}
+/* asas por código: batendo, presas às costas (atrás do Kael) */
+.wg{position:absolute;left:3%;right:3%;top:27%;height:36%;display:flex;justify-content:space-between;pointer-events:none}
+.wg svg{width:47%;height:100%;overflow:visible}
+.wg .wl{transform-origin:96% 55%;animation:flapL .9s ease-in-out infinite}
+.wg .wr{transform-origin:4% 55%;animation:flapR .9s ease-in-out infinite}
+@keyframes flapL{0%,100%{transform:rotate(10deg)}50%{transform:rotate(-16deg)}}
+@keyframes flapR{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(16deg)}}
+.wg.none{display:none}
+.wg.dem .wa,.wg.ang .wd{display:none}
+.wg.ang svg{filter:drop-shadow(0 0 6px rgba(255,230,160,.9))}
+.wg.dem svg{filter:drop-shadow(0 0 5px rgba(255,77,109,.7))}
+.sil .aur,.sil .wg{filter:brightness(0) invert(.32)!important;opacity:.85}
+
+/* ===== MOLDURAS DE AVATAR (todas em código) ===== */
+.fr{position:relative;display:block;aspect-ratio:1;flex:none}
+.fr .rg{position:absolute;inset:0;border-radius:50%;display:block;-webkit-mask:radial-gradient(circle closest-side,transparent 79%,#000 80%);mask:radial-gradient(circle closest-side,transparent 79%,#000 80%)}
+.fr .fc{position:absolute;inset:9%;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);display:block}
+.fr .fc .kidle{position:absolute;width:182%;height:182%;left:-41%;top:-10%;display:block}
+.fr .p,.fr .ob,.fr .wL,.fr .wR,.fr .cr{display:none}
+.fr .p{position:absolute;border-radius:50%}
+.fk-wood .rg{background:conic-gradient(#8a6a48,#d9b98a,#6a4e33,#c9a57a,#8a6a48);animation:brt 3s ease-in-out infinite}
+@keyframes brt{0%,100%{filter:none}50%{filter:brightness(1.3)}}
+.fk-rune .rg{background:repeating-conic-gradient(#4aa3ff 0 9deg,#13314f 9deg 20deg);animation:spin 7s linear infinite}
+.fk-rune{filter:drop-shadow(0 0 5px rgba(74,163,255,.7))}
+.fk-hunt .rg{background:conic-gradient(from 0deg,#1b3a5c 0 55%,#4aa3ff 75%,#e6f3ff 80%,#1b3a5c 95%);animation:spin 2.2s linear infinite}
+.fk-crys .rg{background:conic-gradient(#e9d6ff 0 8%,#8a4dff 8% 20%,#c58bff 20% 31%,#4a1f8a 31% 44%,#f3e8ff 44% 52%,#8a4dff 52% 66%,#c58bff 66% 78%,#4a1f8a 78% 90%,#e9d6ff 90%);animation:spin 9s linear infinite}
+.fk-crys{animation:crysG 2.4s ease-in-out infinite}
+@keyframes crysG{0%,100%{filter:drop-shadow(0 0 3px rgba(197,139,255,.5))}50%{filter:drop-shadow(0 0 12px rgba(197,139,255,1))}}
+.fk-crys .p{display:block;width:12%;height:12%;background:radial-gradient(circle,#fff 0 22%,rgba(230,210,255,.9) 30%,transparent 65%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twk 1.8s ease-in-out infinite}
+.fk-fire .rg{background:conic-gradient(#ff2a00,#ffb21e,#ff5a00,#ffe07a,#ff3a00,#ffb21e,#ff2a00);animation:spin 1.4s linear infinite}
+.fk-fire{animation:fireG .5s ease-in-out infinite alternate}
+@keyframes fireG{from{filter:drop-shadow(0 0 4px rgba(255,110,20,.7))}to{filter:drop-shadow(0 -3px 12px rgba(255,150,30,1))}}
+.fk-fire .p{display:block;width:10%;height:10%;bottom:6%;background:#ffd27a;box-shadow:0 0 6px 2px #ff7a1a;animation:ember 1.5s ease-out infinite}
+@keyframes ember{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:1}100%{transform:translateY(-110%) translateY(-40px) scale(.2);opacity:0}}
+.fk-wing .rg,.fk-crown .rg{background:conic-gradient(from 0deg,#8a4f0c,#ffe07a,#fff6d0,#f2a826,#8a4f0c,#ffe07a,#8a4f0c);animation:spin 3s linear infinite}
+.fk-wing{filter:drop-shadow(0 0 6px rgba(255,201,74,.7))}
+.fk-wing .wL,.fk-wing .wR{display:block;position:absolute;top:12%;width:40%;height:62%;overflow:visible}
+.fk-wing .wL{left:-28%;transform-origin:95% 60%;animation:flapL 1s ease-in-out infinite}
+.fk-wing .wR{right:-28%;transform-origin:5% 60%;animation:flapR 1s ease-in-out infinite}
+.fk-crown{animation:crownG 1.8s ease-in-out infinite}
+@keyframes crownG{0%,100%{filter:drop-shadow(0 0 4px rgba(255,201,74,.6))}50%{filter:drop-shadow(0 0 14px rgba(255,201,74,1))}}
+.fk-crown .cr{display:block;position:absolute;left:28%;top:-22%;width:44%;height:32%;overflow:visible;transform-origin:50% 100%;animation:crownS 1.8s ease-in-out infinite}
+@keyframes crownS{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg) scale(1.08)}}
+.fk-crown .p{display:block;width:11%;height:11%;background:radial-gradient(circle,#fff 0 22%,rgba(255,240,170,.95) 30%,transparent 65%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twk 1.6s ease-in-out infinite}
+.fk-rain .rg{background:conic-gradient(#ff4d6d,#ffb21e,#ffe07a,#5fd068,#4aa3ff,#b45cff,#ff4d6d);animation:spin 2s linear infinite,hue 4s linear infinite}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+.fk-rain{animation:rainG 2s ease-in-out infinite}
+@keyframes rainG{0%,100%{filter:drop-shadow(0 0 6px rgba(255,120,200,.8))}33%{filter:drop-shadow(0 0 10px rgba(120,200,255,.95))}66%{filter:drop-shadow(0 0 10px rgba(255,230,120,.95))}}
+.fk-rain .ob{display:block;position:absolute;inset:-7%;border-radius:50%;animation:spin 2.6s linear infinite reverse}
+.fk-rain .ob::before,.fk-rain .ob::after{content:"";position:absolute;left:46%;width:9%;height:9%;border-radius:50%;background:#fff;box-shadow:0 0 8px 3px rgba(255,255,255,.9)}
+.fk-rain .ob::before{top:-2%}.fk-rain .ob::after{bottom:-2%;background:#ffe07a}
+.fk-rain .p{display:block;width:12%;height:12%;background:radial-gradient(circle,#fff 0 22%,rgba(200,240,255,.95) 30%,transparent 65%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twk 1.4s ease-in-out infinite}
+.fr .p1{left:4%;top:12%}
+.fr .p2{right:2%;top:30%;animation-delay:.4s}
+.fr .p3{left:12%;bottom:4%;animation-delay:.8s}
+.fr .p4{right:12%;bottom:8%;animation-delay:1.2s}
+.fk-fire .p1{left:14%;top:auto}
+.fk-fire .p2{left:38%;right:auto;top:auto}
+.fk-fire .p3{left:60%;bottom:6%}
+.fk-fire .p4{left:82%;right:auto;bottom:10%}
+@keyframes twk{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.25);opacity:1}}
+.frIn{animation:frIn .7s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes frIn{0%{transform:scale(.4) rotate(-40deg);opacity:0}60%{transform:scale(1.12)}100%{transform:none;opacity:1}}
+.lockd{filter:grayscale(.85) brightness(.62)!important}
+
+/* ===== TÍTULOS: texto por raridade ===== */
+.tt{font-family:'Lilita One',sans-serif;letter-spacing:.3px;display:inline-block}
+.tt0{color:#c7ccd1}
+.tt1{color:#8cc8ff;animation:glo1 2.4s ease-in-out infinite}
+@keyframes glo1{0%,100%{text-shadow:0 0 2px rgba(74,163,255,.4)}50%{text-shadow:0 0 10px rgba(74,163,255,.95)}}
+.tt2,.tt3,.tt4{background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 3s linear infinite,gpul 2s ease-in-out infinite}
+.tt2{background-image:linear-gradient(100deg,#c890ff 20%,#f4e6ff 45%,#a35cff 60%,#c890ff 80%);--g:rgba(180,92,255,.85)}
+.tt3{background-image:linear-gradient(100deg,#ff6f88 20%,#ffe0e6 45%,#ff2a55 60%,#ff6f88 80%);--g:rgba(255,60,100,.9)}
+.tt4{background-image:linear-gradient(100deg,#ffe07a 20%,#fffaf0 45%,#f2a826 60%,#ffe07a 80%);--g:rgba(255,201,74,1);animation-duration:2.2s,1.6s}
+@keyframes gpul{0%,100%{filter:drop-shadow(0 0 1px var(--g))}50%{filter:drop-shadow(0 0 8px var(--g))}}
+.ttIn{animation:gsh 3s linear infinite,gpul 2s ease-in-out infinite,ttIn .8s cubic-bezier(.2,1.5,.4,1) both}
+.tt0.ttIn,.tt1.ttIn{animation:ttIn .8s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes ttIn{0%{transform:translateY(-14px) scale(1.5);opacity:0}55%{transform:translateY(2px) scale(.96);opacity:1}100%{transform:none}}
+
+/* abas */
+.tabs{flex:none;display:flex;gap:4px;padding:4px;margin-top:8px;border-radius:16px;background:#0e0a07;border:1px solid #4a3a2b}
+.tab{position:relative;flex:1 1 0;min-width:0;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;border-radius:12px;background:transparent;color:#c9b9a2;padding:2px;line-height:1.05}
+.tab[aria-pressed="true"]{background:#3a2c1f;color:#ffc94a;box-shadow:inset 0 -3px 0 #ffc94a}
+.tab svg{width:22px;height:22px;flex:none}
+.tab .tl{font-size:clamp(10px,2.9cqw,14px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tab .tc{font-size:clamp(9px,2.6cqw,12px);font-weight:800;color:#c9b9a2;white-space:nowrap}
+.tab[aria-pressed="true"] .tc{color:#ffe7a8}
+.tab .tx{display:flex;flex-direction:column;align-items:center;min-width:0;max-width:100%}
+.dot{position:absolute;top:4px;right:6px;width:11px;height:11px;border-radius:50%;background:#ff3b30;border:2px solid #0e0a07;animation:dotP 1.2s ease-in-out infinite}
+@keyframes dotP{0%,100%{transform:scale(1)}50%{transform:scale(1.3);box-shadow:0 0 8px #ff3b30}}
+
+/* conteúdo rolável interno */
+.pane{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-top:8px;padding-bottom:14px;scrollbar-width:thin;scrollbar-color:#4a3a2b transparent}
+.paneIn{animation:paneIn .35s ease both}
+@keyframes paneIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.rowin{animation:rowin .4s ease both}
+@keyframes rowin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.seg{display:flex;padding:3px;gap:3px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;margin-bottom:8px}
+.seg button{flex:1;min-height:44px;border-radius:9px;border:0;background:transparent;color:#c9b9a2;font-size:clamp(12px,3.4cqw,15px);font-weight:900;padding:0 4px}
+.seg button[aria-pressed="true"]{background:#3a2c1f;color:#ffc94a}
+.note{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;font-size:clamp(12px,3.3cqw,14px);font-weight:800;color:#c9b9a2;margin-bottom:8px;line-height:1.25}
+.note b{color:#f6ecdf}
+.grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,158px),1fr))}
+.gridS{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,104px),1fr))}
+
+/* cartão de título */
+.tc2{position:relative;display:flex;flex-direction:column;gap:4px;padding:9px 10px 10px;border-radius:14px;background:#1a140f;border-width:2px;border-style:solid;min-width:0}
+.tc2.own{background:linear-gradient(180deg,#3a2c1f,#221911)}
+.tc2.isEq{box-shadow:0 0 0 2px #5fd068 inset}
+.tc2 .tn{font-size:clamp(14px,3.9cqw,18px);line-height:1.15;overflow-wrap:anywhere}
+.rar{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.rar i{width:8px;height:8px;border-radius:2px;transform:rotate(45deg);display:block}
+.bon{font-size:12px;font-weight:900;color:#5fd068}
+.bon.cos{color:#d4b8ff}
+.how{display:flex;gap:5px;align-items:flex-start;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.2}
+.how svg{flex:none;margin-top:1px}
+.btn{min-height:44px;width:100%;border-radius:12px;border:0;font-family:'Lilita One',sans-serif;font-size:clamp(14px,3.8cqw,17px);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;margin-top:auto}
+.btn.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 4px 0 #8a4f0c;animation:pulse 1.6s ease-in-out infinite}
+.btn.gold:active{transform:translateY(3px);box-shadow:0 1px 0 #8a4f0c}
+@keyframes pulse{0%,100%{box-shadow:0 4px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 4px 0 #8a4f0c,0 0 16px rgba(255,201,74,.85)}}
+.btn.on{background:#1f3a22;color:#a8f0ae;border:2px solid #5fd068}
+.btn.ghost{background:#33271d;color:#f6ecdf;border:2px solid #4a3a2b}
+.new{position:absolute;top:-7px;right:8px;padding:1px 7px;border-radius:7px;background:#ff3b30;color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;animation:newtag 1.2s ease-in-out infinite}
+@keyframes newtag{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.eqFx{animation:eqFx .8s ease-out both}
+@keyframes eqFx{0%{transform:scale(.94);box-shadow:0 0 0 2px #5fd068 inset,0 0 0 rgba(95,208,104,0)}35%{transform:scale(1.04);box-shadow:0 0 0 2px #5fd068 inset,0 0 26px rgba(95,208,104,.9)}100%{transform:none}}
+.shine{position:relative;overflow:hidden}
+.shine::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.2) 48%,transparent 62%);background-size:280% 100%;animation:shn 3.4s ease-in-out infinite;pointer-events:none}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+
+/* células de moldura / aura / asa */
+.cell{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:8px;border-radius:14px;background:#1a140f;border-width:2px;border-style:solid;min-width:0}
+.cell.own{background:linear-gradient(180deg,#3a2c1f,#221911)}
+.cell.isEq{box-shadow:0 0 0 2px #5fd068 inset}
+.cell.isPv{outline:2px dashed #ffc94a;outline-offset:2px}
+.thumb{min-height:44px;border:0;background:transparent;padding:6px 0 2px;display:flex;justify-content:center;align-items:flex-end;border-radius:10px}
+.thumb .fr{width:min(64px,62%)}
+.thumb .stg{width:72%}
+.cn{font-family:'Lilita One',sans-serif;font-size:clamp(13px,3.6cqw,16px);line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.org{align-self:center;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;border:1px solid}
+.cell .how{justify-content:center;text-align:center;font-size:11px}
+.cell .btn{font-size:14px}
+
+/* pré-visualização */
+.pv{flex:none;display:flex;align-items:center;gap:8px;margin-top:6px;padding:4px 4px 4px 10px;border-radius:14px;background:#2a2014;border:2px dashed #ffc94a;animation:rowin .3s ease both}
+.pv .t{flex:1;min-width:0;font-size:clamp(11px,3.2cqw,14px);font-weight:800;color:#c9b9a2;line-height:1.2}
+.pv .t b{color:#ffc94a;font-weight:900}
+.pv .btn{width:auto;min-width:92px;margin:0}
+
+/* estatísticas */
+.st{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b;min-height:62px}
+.st .ic{width:40px;height:40px;flex:none;border-radius:12px;background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);display:flex;align-items:center;justify-content:center;border:2px solid}
+.st .bd{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.st .l1{display:flex;align-items:baseline;gap:6px;justify-content:space-between}
+.st .lb{font-size:clamp(12px,3.4cqw,15px);font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st .v{font-family:'Lilita One',sans-serif;font-size:clamp(16px,4.6cqw,22px);white-space:nowrap}
+.st .sub{font-size:11px;font-weight:800;color:#c9b9a2}
+.sbar{height:9px;border-radius:5px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden}
+.sbar i{display:block;height:100%;transform-origin:0 50%;animation:grow 1s cubic-bezier(.2,1,.3,1) both;position:relative;overflow:hidden;transition:width .5s}
+.sbar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:run 2.2s linear infinite}
+@keyframes grow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes run{from{background-position:-60% 0}to{background-position:160% 0}}
+.tick{animation:tick .35s ease both}
+@keyframes tick{from{color:#ffe07a;transform:scale(1.12)}to{transform:none}}
+.sh{font-family:'Lilita One',sans-serif;font-size:clamp(15px,4.2cqw,19px);margin:12px 2px 6px;color:#ffc94a}
+.stg2{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
+
+/* aviso */
+.toast{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;pointer-events:none;z-index:9}
+.toast span{padding:8px 16px;border-radius:12px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;font-family:'Lilita One',sans-serif;font-size:16px;color:#ffc94a;box-shadow:0 0 18px rgba(255,201,74,.5);animation:ban 2.2s ease-out both;max-width:90%;text-align:center}
+@keyframes ban{0%{transform:scale(1.5);opacity:0}12%{transform:scale(1);opacity:1}82%{opacity:1}100%{opacity:0;transform:translateY(-12px)}}
+
+/* seletor de tamanho (só do protótipo) */
+.sz{flex:1;min-height:44px;border-radius:10px;border:1px solid #4a3a2b;background:#1d1611;color:#c9b9a2;font-size:11px;font-weight:900;line-height:1.1;padding:0 2px}
+.sz[aria-pressed="true"]{background:#3a2c1f;color:#ffc94a;border-color:#ffc94a}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0b0806; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf; display: flex; flex-direction: column">
+
+  <!-- Seletor de tamanho de tela (só no protótipo, fora do aparelho) -->
+  <div role="group" aria-label="Tamanho de tela do protótipo" style="height: 60px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid #2a2018">
+    <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; line-height: 1.1; width: 40px; flex: none">TELA<br>{{scaleTxt}}</span>
+    <sc-for list="{{sizes}}" as="z" hint-placeholder-count="4">
+      <button class="sz" onClick="{{z.pick}}" aria-pressed="{{z.pressed}}" aria-label="{{z.aria}}">{{z.l1}}<br>{{z.l2}}</button>
+    </sc-for>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center">
+    <div style="position: relative; width: {{holdW}}; height: {{holdH}}; transition: width .35s ease, height .35s ease">
+      <div class="dev" style="width: {{devW}}; height: {{devH}}; transform: scale({{devS}})">
+
+        <!-- Barra do topo -->
+        <div class="tb pad">
+          <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="ib" aria-label="Voltar para a batalha">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </a>
+          <span class="h1">Perfil e Coleção</span>
+          <span class="colchip" aria-label="{{colAria}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffc94a" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg>{{colPct}}
+          </span>
+        </div>
+
+        <!-- Cartão do jogador -->
+        <div class="pad" style="flex: none">
+          <div class="pc">
+            <div class="stgW">
+              <span class="{{stgCls}}" role="img" aria-label="{{stageAria}}">
+                <span class="{{stAu}}"></span>
+                <span class="{{stWg}}">
+                  <svg class="wl" viewBox="0 0 60 60" aria-hidden="true"><g class="wd"><path d="M58 26 C48 8 30 2 3 4 C10 10 12 16 7 22 C16 20 20 25 15 32 C24 28 30 32 27 41 C38 34 48 34 58 37 Z" fill="#3a0c1c" stroke="#ff4d6d" stroke-width="1.8" stroke-linejoin="round"></path><path d="M57 29 L9 9 M57 31 L17 24 M57 33 L26 38" stroke="#ff4d6d" stroke-width="1.2" fill="none"></path></g><g class="wa"><path d="M58 26 C46 6 24 0 2 10 C10 12 12 15 6 20 C14 20 16 23 10 28 C18 28 21 31 16 36 C26 34 30 38 28 45 C40 38 50 36 58 37 Z" fill="#fff8e6" stroke="#ffc94a" stroke-width="1.8" stroke-linejoin="round"></path><path d="M56 30 C44 22 30 18 14 18 M56 33 C46 30 36 30 24 32" stroke="#e8c86a" stroke-width="1.2" fill="none"></path></g></svg>
+                  <svg class="wr" viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60,0) scale(-1,1)"><g class="wd"><path d="M58 26 C48 8 30 2 3 4 C10 10 12 16 7 22 C16 20 20 25 15 32 C24 28 30 32 27 41 C38 34 48 34 58 37 Z" fill="#3a0c1c" stroke="#ff4d6d" stroke-width="1.8" stroke-linejoin="round"></path><path d="M57 29 L9 9 M57 31 L17 24 M57 33 L26 38" stroke="#ff4d6d" stroke-width="1.2" fill="none"></path></g><g class="wa"><path d="M58 26 C46 6 24 0 2 10 C10 12 12 15 6 20 C14 20 16 23 10 28 C18 28 21 31 16 36 C26 34 30 38 28 45 C40 38 50 36 58 37 Z" fill="#fff8e6" stroke="#ffc94a" stroke-width="1.8" stroke-linejoin="round"></path><path d="M56 30 C44 22 30 18 14 18 M56 33 C46 30 36 30 24 32" stroke="#e8c86a" stroke-width="1.2" fill="none"></path></g></g></svg>
+                </span>
+                <span class="ped2"></span>
+                <span class="ped"></span>
+                <span class="kidle kael"></span>
+              </span>
+            </div>
+            <div class="info">
+              <div class="who">
+                <span class="avaW">
+                  <span class="{{cardFr}} ava" role="img" aria-label="{{frameAria}}">
+                    <span class="rg"></span><span class="ob"></span>
+                    <span class="fc"><span class="kidle"></span></span>
+                    <span class="p p1"></span><span class="p p2"></span><span class="p p3"></span><span class="p p4"></span>
+                    <svg class="wL" viewBox="0 0 40 50" aria-hidden="true"><path d="M40 22 C30 6 14 2 2 6 C8 10 10 14 7 18 C14 18 16 22 11 26 C18 26 20 30 15 34 C24 34 32 31 40 30 Z" fill="#ffd873" stroke="#8a4f0c" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                    <svg class="wR" viewBox="0 0 40 50" aria-hidden="true"><path d="M0 22 C10 6 26 2 38 6 C32 10 30 14 33 18 C26 18 24 22 29 26 C22 26 20 30 25 34 C16 34 8 31 0 30 Z" fill="#ffd873" stroke="#8a4f0c" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                    <svg class="cr" viewBox="0 0 24 16" aria-hidden="true"><path d="M2 14 L3.5 4 L8.5 9 L12 1.5 L15.5 9 L20.5 4 L22 14 Z" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.4" stroke-linejoin="round"></path><circle cx="12" cy="10" r="1.6" fill="#ff4d6d"></circle></svg>
+                  </span>
+                </span>
+                <div class="nmB">
+                  <span class="nm">Kael</span>
+                  <span class="ttl"><span class="{{cardTt}}">{{cardTitle}}</span></span>
+                  <span class="mini">Nv. <b>24</b> · FC <b>{{fcTxt}}</b> · {{eraName}} · VIP 3</span>
+                </div>
+                <button class="cpy cpMini {{cpCls}}" onClick="{{copyId}}" aria-label="{{cpAria}}">
+                  <sc-if value="{{copied}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 13 10 18 19 7"></polyline></svg></sc-if>
+                  <sc-if value="{{notCopied}}" hint-placeholder-val="{{true}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h8"></path></svg></sc-if>
+                </button>
+              </div>
+              <div class="chips">
+                <span class="chip"><span class="k">Nv.</span>24<span class="xp" aria-label="62% do XP"><i></i></span></span>
+                <span class="chip"><span class="k">FC</span>{{fcTxt}}</span>
+                <span class="chip"><span class="k">Era</span>{{eraName}}</span>
+                <span class="chip vip">VIP 3</span>
+              </div>
+              <div class="idrow">
+                <span>ID <b>4821-7730</b></span>
+                <button class="cpy {{cpCls}}" onClick="{{copyId}}" aria-label="{{cpAria}}">
+                  <sc-if value="{{copied}}" hint-placeholder-val="{{false}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 13 10 18 19 7"></polyline></svg></sc-if>
+                  <sc-if value="{{notCopied}}" hint-placeholder-val="{{true}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h8"></path></svg></sc-if>
+                </button>
+                <span style="color: #5fd068">{{cpTxt}}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Faixa de pré-visualização -->
+          <sc-if value="{{hasPv}}" hint-placeholder-val="{{false}}">
+            <div class="pv">
+              <span class="t">Prévia: <b>{{pvName}}</b><br>{{pvSub}}</span>
+              <button class="btn ghost" onClick="{{pvUndo}}">Voltar</button>
+              <sc-if value="{{pvCan}}" hint-placeholder-val="{{true}}"><button class="btn gold" onClick="{{pvEquip}}">Equipar</button></sc-if>
+            </div>
+          </sc-if>
+
+          <!-- Abas -->
+          <nav class="tabs" aria-label="Coleção">
+            <button class="tab" onClick="{{oTit}}" aria-pressed="{{pTit}}" aria-label="{{aTit}}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 2h10l-3 7h-4z"></path><circle cx="12" cy="15" r="6.5"></circle><path d="M12 11.6l1.1 2.2 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z"></path></svg>
+              <span class="tx"><span class="tl">Títulos</span><span class="tc">{{cTit}}</span></span>
+              <sc-if value="{{dTit}}" hint-placeholder-val="{{true}}"><span class="dot" aria-hidden="true"></span></sc-if>
+            </button>
+            <button class="tab" onClick="{{oFrm}}" aria-pressed="{{pFrm}}" aria-label="{{aFrm}}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"></circle><circle cx="12" cy="10" r="3"></circle><path d="M6.5 18.5c1.2-2.4 3.2-3.5 5.5-3.5s4.3 1.1 5.5 3.5"></path></svg>
+              <span class="tx"><span class="tl">Molduras</span><span class="tc">{{cFrm}}</span></span>
+              <sc-if value="{{dFrm}}" hint-placeholder-val="{{true}}"><span class="dot" aria-hidden="true"></span></sc-if>
+            </button>
+            <button class="tab" onClick="{{oAur}}" aria-pressed="{{pAur}}" aria-label="{{aAur}}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c-4.5 0-7-3-7-6.5 0-4 3.5-5.5 4-10 2 1.5 3 3.5 3 5.5 1-1 1.6-2.4 1.6-4 2.6 2 5.4 5 5.4 8.5 0 3.5-2.5 6.5-7 6.5z"></path><path d="M12 22c-1.8 0-3-1.3-3-3 0-2 1.6-2.8 3-5 1.4 2.2 3 3 3 5 0 1.7-1.2 3-3 3z"></path></svg>
+              <span class="tx"><span class="tl">Auras</span><span class="tc">{{cAur}}</span></span>
+              <sc-if value="{{dAur}}" hint-placeholder-val="{{false}}"><span class="dot" aria-hidden="true"></span></sc-if>
+            </button>
+            <button class="tab" onClick="{{oWng}}" aria-pressed="{{pWng}}" aria-label="{{aWng}}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20C9 15 3 14 2 5c3 2 5 2 6 0 .5 3 2 5 3 7"></path><path d="M13 20c2-5 8-6 9-15-3 2-5 2-6 0-.5 3-2 5-3 7"></path><path d="M5 10c1.5 1 3 1 4 0M19 10c-1.5 1-3 1-4 0"></path></svg>
+              <span class="tx"><span class="tl">Asas</span><span class="tc">{{cWng}}</span></span>
+              <sc-if value="{{dWng}}" hint-placeholder-val="{{false}}"><span class="dot" aria-hidden="true"></span></sc-if>
+            </button>
+            <button class="tab" onClick="{{oSta}}" aria-pressed="{{pSta}}" aria-label="{{aSta}}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="21" x2="21" y2="21"></line><rect x="5" y="12" width="3" height="6"></rect><rect x="10.5" y="7" width="3" height="11"></rect><rect x="16" y="3" width="3" height="15"></rect></svg>
+              <span class="tx"><span class="tl">Estatíst.</span><span class="tc">{{cSta}}</span></span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Conteúdo da aba (rolagem interna) -->
+        <div class="pane pad">
+
+          <!-- ===== TÍTULOS ===== -->
+          <sc-if value="{{isTit}}" hint-placeholder-val="{{true}}">
+            <div class="paneIn">
+              <div class="seg" role="group" aria-label="Filtro de títulos">
+                <sc-for list="{{tFilters}}" as="f" hint-placeholder-count="3">
+                  <button onClick="{{f.pick}}" aria-pressed="{{f.pressed}}">{{f.label}}</button>
+                </sc-for>
+              </div>
+              <div class="grid">
+                <sc-for list="{{titles}}" as="t" hint-placeholder-count="6">
+                  <div class="tc2 rowin {{t.cls}}" style="border-color: {{t.bd}}; border-style: {{t.bs}}; animation-delay: {{t.delay}}">
+                    <sc-if value="{{t.isNew}}" hint-placeholder-val="{{false}}"><span class="new">NOVO</span></sc-if>
+                    <span class="rar" style="color: {{t.rc}}"><i style="background: {{t.rc}}"></i>{{t.rar}}</span>
+                    <span class="tn"><span class="{{t.tt}}">{{t.name}}</span></span>
+                    <sc-if value="{{t.hasBon}}" hint-placeholder-val="{{true}}"><span class="{{t.bonCls}}">{{t.bonus}}</span></sc-if>
+                    <span class="how">
+                      <sc-if value="{{t.lock}}" hint-placeholder-val="{{true}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+                      <sc-if value="{{t.own}}" hint-placeholder-val="{{false}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 13 10 18 19 7"></polyline></svg></sc-if>
+                      <span>{{t.cond}}</span>
+                    </span>
+                    <button class="btn {{t.btnCls}}" onClick="{{t.act}}" aria-label="{{t.aria}}">{{t.btn}}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ===== MOLDURAS ===== -->
+          <sc-if value="{{isFrm}}" hint-placeholder-val="{{false}}">
+            <div class="paneIn">
+              <div class="note">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12" y2="16.6"></line></svg>
+                <span>Toque na moldura para ver no seu avatar. <b>Só aparência</b>: moldura não dá atributo.</span>
+              </div>
+              <div class="gridS">
+                <sc-for list="{{frames}}" as="m" hint-placeholder-count="8">
+                  <div class="cell rowin {{m.cls}}" style="border-color: {{m.bd}}; border-style: {{m.bs}}; animation-delay: {{m.delay}}">
+                    <sc-if value="{{m.isNew}}" hint-placeholder-val="{{false}}"><span class="new">NOVO</span></sc-if>
+                    <button class="thumb" onClick="{{m.pick}}" aria-label="{{m.aria}}">
+                      <span class="{{m.fk}}">
+                        <span class="rg"></span><span class="ob"></span>
+                        <span class="fc"><span class="kidle"></span></span>
+                        <span class="p p1"></span><span class="p p2"></span><span class="p p3"></span><span class="p p4"></span>
+                        <svg class="wL" viewBox="0 0 40 50" aria-hidden="true"><path d="M40 22 C30 6 14 2 2 6 C8 10 10 14 7 18 C14 18 16 22 11 26 C18 26 20 30 15 34 C24 34 32 31 40 30 Z" fill="#ffd873" stroke="#8a4f0c" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                        <svg class="wR" viewBox="0 0 40 50" aria-hidden="true"><path d="M0 22 C10 6 26 2 38 6 C32 10 30 14 33 18 C26 18 24 22 29 26 C22 26 20 30 25 34 C16 34 8 31 0 30 Z" fill="#ffd873" stroke="#8a4f0c" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                        <svg class="cr" viewBox="0 0 24 16" aria-hidden="true"><path d="M2 14 L3.5 4 L8.5 9 L12 1.5 L15.5 9 L20.5 4 L22 14 Z" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.4" stroke-linejoin="round"></path><circle cx="12" cy="10" r="1.6" fill="#ff4d6d"></circle></svg>
+                      </span>
+                    </button>
+                    <span class="cn" style="color: {{m.rc}}">{{m.name}}</span>
+                    <span class="org" style="color: {{m.oc}}; border-color: {{m.oc}}">{{m.org}}</span>
+                    <sc-if value="{{m.lock}}" hint-placeholder-val="{{false}}"><span class="how"><span>{{m.how}}</span></span></sc-if>
+                    <sc-if value="{{m.own}}" hint-placeholder-val="{{true}}"><button class="btn {{m.btnCls}}" onClick="{{m.act}}" aria-label="{{m.btnAria}}">{{m.btn}}</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ===== AURAS e ASAS (mesma grade, Kael no pedestal) ===== -->
+          <sc-if value="{{isLook}}" hint-placeholder-val="{{false}}">
+            <div class="paneIn">
+              <div class="note">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12" y2="16.6"></line></svg>
+                <span>{{lookNote}}</span>
+              </div>
+              <div class="gridS">
+                <sc-for list="{{looks}}" as="a" hint-placeholder-count="6">
+                  <div class="cell rowin {{a.cls}}" style="border-color: {{a.bd}}; border-style: {{a.bs}}; animation-delay: {{a.delay}}">
+                    <button class="thumb" onClick="{{a.pick}}" aria-label="{{a.aria}}">
+                      <span class="stg {{a.sil}}">
+                        <span class="aur {{a.au}}"></span>
+                        <span class="wg {{a.wg}}">
+                          <svg class="wl" viewBox="0 0 60 60" aria-hidden="true"><g class="wd"><path d="M58 26 C48 8 30 2 3 4 C10 10 12 16 7 22 C16 20 20 25 15 32 C24 28 30 32 27 41 C38 34 48 34 58 37 Z" fill="#3a0c1c" stroke="#ff4d6d" stroke-width="1.8" stroke-linejoin="round"></path></g><g class="wa"><path d="M58 26 C46 6 24 0 2 10 C10 12 12 15 6 20 C14 20 16 23 10 28 C18 28 21 31 16 36 C26 34 30 38 28 45 C40 38 50 36 58 37 Z" fill="#fff8e6" stroke="#ffc94a" stroke-width="1.8" stroke-linejoin="round"></path></g></svg>
+                          <svg class="wr" viewBox="0 0 60 60" aria-hidden="true"><g transform="translate(60,0) scale(-1,1)"><g class="wd"><path d="M58 26 C48 8 30 2 3 4 C10 10 12 16 7 22 C16 20 20 25 15 32 C24 28 30 32 27 41 C38 34 48 34 58 37 Z" fill="#3a0c1c" stroke="#ff4d6d" stroke-width="1.8" stroke-linejoin="round"></path></g><g class="wa"><path d="M58 26 C46 6 24 0 2 10 C10 12 12 15 6 20 C14 20 16 23 10 28 C18 28 21 31 16 36 C26 34 30 38 28 45 C40 38 50 36 58 37 Z" fill="#fff8e6" stroke="#ffc94a" stroke-width="1.8" stroke-linejoin="round"></path></g></g></svg>
+                        </span>
+                        <span class="ped2"></span>
+                        <span class="ped"></span>
+                        <span class="kidle kael" style="animation-delay: {{a.kd}}"></span>
+                      </span>
+                    </button>
+                    <span class="cn" style="color: {{a.rc}}">{{a.name}}</span>
+                    <span class="org" style="color: {{a.rc}}; border-color: {{a.rc}}">{{a.rar}}</span>
+                    <sc-if value="{{a.lock}}" hint-placeholder-val="{{false}}"><span class="how"><span>{{a.how}}</span></span></sc-if>
+                    <sc-if value="{{a.own}}" hint-placeholder-val="{{true}}"><button class="btn {{a.btnCls}}" onClick="{{a.act}}" aria-label="{{a.btnAria}}">{{a.btn}}</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- ===== ESTATÍSTICAS ===== -->
+          <sc-if value="{{isSta}}" hint-placeholder-val="{{false}}">
+            <div class="paneIn">
+              <div class="stg2">
+                <sc-for list="{{stats}}" as="x" hint-placeholder-count="7">
+                  <div class="st rowin" style="animation-delay: {{x.delay}}">
+                    <span class="ic" style="border-color: {{x.col}}; color: {{x.col}}">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{x.icon}}"></path></svg>
+                    </span>
+                    <span class="bd">
+                      <span class="l1"><span class="lb">{{x.label}}</span><span class="v {{x.fx}}">{{x.val}}</span></span>
+                      <sc-if value="{{x.hasBar}}" hint-placeholder-val="{{true}}"><span class="sbar"><i style="width: {{x.pct}}; background: {{x.bar}}"></i></span></sc-if>
+                      <span class="sub">{{x.sub}}</span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+              <div class="sh">Coleção</div>
+              <div class="stg2">
+                <sc-for list="{{coll}}" as="x" hint-placeholder-count="4">
+                  <div class="st rowin" style="animation-delay: {{x.delay}}">
+                    <span class="ic" style="border-color: {{x.col}}; color: {{x.col}}">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{x.icon}}"></path></svg>
+                    </span>
+                    <span class="bd">
+                      <span class="l1"><span class="lb">{{x.label}}</span><span class="v">{{x.val}}</span></span>
+                      <span class="sbar"><i style="width: {{x.pct}}; background: {{x.bar}}"></i></span>
+                      <span class="sub">{{x.sub}}</span>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+          <div class="toast"><span>{{toastTxt}}</span></div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Títulos: mesma lista e bônus da tela 16 (js/sys/titles.js, bônus x0,5) + 6 títulos especiais (chefe, ranking, VIP, evento).
+// Raridades com os nomes do index.html (RAR): Básico, Raro, Épico, Mítico, Lendário.
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista', 'Submundo', 'Celestial'];
+var ERA = 2;
+var RN = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'];
+var RC = ['#b8bec4', '#4aa3ff', '#c58bff', '#ff6f88', '#ffc94a'];
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var SIZES = [[360, 640, '360×640', 'baixo'], [390, 844, '390×844', 'padrão'], [430, 932, '430×932', 'grande'], [768, 1024, '768×1024', 'tablet']];
+var AREA_W = 378, AREA_H = 772;
+var BUNIT = { atkPct: '% ATK', hpPct: '% HP', critPct: ' pt crít.', defPct: '% def.', goldPct: '% ouro' };
+var TITLES = [
+  { id: 'stage10', name: 'Desbravador', r: 0, t: 'stage', n: 10, b: { atkPct: 1 } },
+  { id: 'stage30', name: 'Veterano das Eras', r: 1, t: 'stage', n: 30, b: { atkPct: 2, hpPct: 2 } },
+  { id: 'stage50', name: 'Conquistador', r: 2, t: 'stage', n: 50, b: { atkPct: 3, hpPct: 3 } },
+  { id: 'stage70', name: 'Senhor das Eras', r: 3, t: 'stage', n: 70, b: { atkPct: 5, hpPct: 5 } },
+  { id: 'era2', name: 'Cavaleiro do Tempo', r: 1, t: 'era', n: 2, b: { hpPct: 2 } },
+  { id: 'era4', name: 'Mente Inventiva', r: 2, t: 'era', n: 4, b: { goldPct: 4 } },
+  { id: 'era6', name: 'Viajante do Futuro', r: 3, t: 'era', n: 6, b: { critPct: 1, goldPct: 5 } },
+  { id: 'boss10', name: 'Caçador de Chefes', r: 1, t: 'boss', n: 10, b: { critPct: 0.5 } },
+  { id: 'boss50', name: 'Matador de Titãs', r: 3, t: 'boss', n: 50, b: { critPct: 1.5 } },
+  { id: 'kill1k', name: 'Implacável', r: 1, t: 'kills', n: 1000, b: { goldPct: 3 } },
+  { id: 'kill10k', name: 'Lenda da Horda', r: 3, t: 'kills', n: 10000, b: { goldPct: 8 } },
+  { id: 'tow10', name: 'Escalador', r: 0, t: 'tower', n: 10, b: { defPct: 1 } },
+  { id: 'tow25', name: 'Guardião da Torre', r: 2, t: 'tower', n: 25, b: { defPct: 2, hpPct: 2 } },
+  { id: 'tow50', name: 'Senhor da Torre', r: 3, t: 'tower', n: 50, b: { defPct: 3, atkPct: 3 } },
+  { id: 'tow100', name: 'Imortal', r: 4, t: 'tower', n: 100, b: { defPct: 5, atkPct: 5, hpPct: 5 } },
+  { id: 'arena10', name: 'Gladiador', r: 2, t: 'arena', n: 10, b: { atkPct: 2 } },
+  { id: 'arena3', name: 'Campeão da Arena', r: 3, t: 'arena', n: 3, b: { atkPct: 4, critPct: 1 } },
+  { id: 'arena1', name: 'Rei da Arena', r: 4, t: 'arena', n: 1, b: { atkPct: 6, critPct: 2 } },
+  { id: 'prac50', name: 'Disciplinado', r: 0, t: 'practice', n: 50, b: { hpPct: 3 } },
+  { id: 'prac200', name: 'Mestre do Treino', r: 2, t: 'practice', n: 200, b: { hpPct: 4, defPct: 1 } },
+  { id: 'weap7', name: 'Armeiro', r: 1, t: 'weaponEras', n: 7, b: { atkPct: 2 } },
+  { id: 'weapAll', name: 'Arsenal Completo', r: 3, t: 'weapons', n: 28, b: { atkPct: 5 } },
+  { id: 'mount1', name: 'Cavaleiro', r: 1, t: 'mounts', n: 1, b: { hpPct: 2 } },
+  { id: 'mountAll', name: 'Senhor das Montarias', r: 2, t: 'mounts', n: 2, b: { hpPct: 4, critPct: 1 } },
+  { id: 'pet1', name: 'Amigo dos Bichos', r: 0, t: 'pets', n: 1, b: { hpPct: 1 } },
+  { id: 'pet3', name: 'Domador', r: 1, t: 'pets', n: 3, b: { hpPct: 2 } },
+  { id: 'petAll', name: 'Arca das Eras', r: 3, t: 'pets', n: 5, b: { atkPct: 2, hpPct: 2 } },
+  { id: 'phoenix5', name: 'Laço Lendário', r: 3, t: 'petStar', n: 5, b: { critPct: 2 } },
+  { id: 'skin10', name: 'Colecionador', r: 1, t: 'skins', n: 10, cos: true },
+  { id: 'skin25', name: 'Estilista das Eras', r: 2, t: 'skins', n: 25, cos: true },
+  { id: 'skinAll', name: 'Guarda-Roupa Lendário', r: 4, t: 'skins', n: 38, cos: true },
+  { id: 'hairAll', name: 'Estilo Próprio', r: 1, t: 'hair', n: 5, cos: true },
+  { id: 'eyesAll', name: 'Olhar Marcante', r: 1, t: 'eyes', n: 5, cos: true },
+  { id: 'hatsAll', name: 'Chapeleiro', r: 1, t: 'hats', n: 4, cos: true },
+  // especiais (novos nesta tela; cosméticos até o dono decidir bônus)
+  { id: 'medLord', name: 'Algoz do Rei Medieval', r: 2, t: 'special', how: 'Vença o Senhor da Era Medieval', cos: true },
+  { id: 'fest', name: 'Folião das Eras', r: 2, t: 'special', how: 'Evento Festival das Eras', cos: true, own: true },
+  { id: 'top10', name: 'Elite do Ranking', r: 3, t: 'special', how: 'Top 10 do Ranking semanal', cos: true },
+  { id: 'vip5', name: 'Patrono das Eras', r: 3, t: 'special', how: 'Chegue ao VIP 5', cos: true },
+  { id: 'demon', name: 'Caçador de Demônios', r: 3, t: 'special', how: 'Vença o Senhor Demônio (Submundo)', cos: true },
+  { id: 'top1', name: 'Lenda Viva', r: 4, t: 'special', how: 'Top 1 do Ranking semanal', cos: true }
+];
+var COND = {
+  stage: function (n) { return 'Vencer a fase ' + n; },
+  era: function (n) { return 'Liberar a ' + ERAN[n]; },
+  boss: function (n) { return 'Derrotar ' + n + ' chefes'; },
+  kills: function (n) { return 'Derrotar ' + n.toLocaleString('pt-BR') + ' inimigos'; },
+  tower: function (n) { return 'Vencer o andar ' + n + ' da torre'; },
+  arena: function (n) { return n === 1 ? 'Terminar a semana em 1º na arena' : 'Terminar no top ' + n + ' da arena'; },
+  practice: function (n) { return 'Somar ' + n + ' níveis de prática'; },
+  weaponEras: function () { return 'Armas de 7 eras, só ITEM'; },
+  weapons: function (n) { return 'As ' + n + ' armas como ITEM'; },
+  mounts: function (n) { return n === 1 ? 'Ter 1 montaria' : 'Ter as ' + n + ' montarias'; },
+  pets: function (n) { return n === 5 ? 'Ter os 5 pets' : 'Ter ' + n + (n === 1 ? ' pet' : ' pets'); },
+  petStar: function () { return 'Fênix em 5 estrelas'; },
+  skins: function (n) { return n + ' skins de arma ou roupa'; },
+  hair: function (n) { return 'Todos os cabelos (' + n + ')'; },
+  eyes: function (n) { return 'Todos os olhos (' + n + ')'; },
+  hats: function (n) { return 'Todos os chapéus (' + n + ')'; }
+};
+var ORG = { ini: ['Inicial', '#c9b9a2'], conq: ['Conquista', '#5fd068'], evt: ['Evento', '#ff8ad0'], vip: ['VIP', '#ffc94a'], rank: ['Ranking', '#7cc0ff'] };
+var FRAMES = [
+  { id: 'wood', name: 'Madeira', r: 0, o: 'ini', how: 'Começa com ela', own: true },
+  { id: 'rune', name: 'Runas Antigas', r: 1, o: 'conq', how: 'Liberar a Antiguidade', own: true },
+  { id: 'hunt', name: 'Anel do Caçador', r: 1, o: 'conq', how: 'Derrotar 10 chefes', own: true },
+  { id: 'crys', name: 'Cristal da Torre', r: 2, o: 'conq', how: 'Vencer o andar 25 da torre' },
+  { id: 'fire', name: 'Chamas do Festival', r: 3, o: 'evt', how: 'Evento Festival das Eras', own: true },
+  { id: 'wing', name: 'Asas Douradas', r: 3, o: 'vip', how: 'Chegue ao VIP 7' },
+  { id: 'crown', name: 'Coroa da Elite', r: 4, o: 'rank', how: 'Top 10 do Ranking semanal' },
+  { id: 'rain', name: 'Prisma das Eras', r: 4, o: 'rank', how: 'Top 1 do Ranking semanal (a mais rara)' }
+];
+var AURAS = [
+  { id: 'none', name: 'Sem aura', r: 0, cls: '', own: true, how: '' },
+  { id: 'a4', name: 'Aura +4', r: 1, cls: 'acB', own: true, how: 'Forja da arma +4' },
+  { id: 'a7', name: 'Aura +7', r: 2, cls: 'au7', how: 'Forje a arma até +7' },
+  { id: 'a10', name: 'Aura +10', r: 3, cls: 'au10', how: 'Forje a arma até +10' },
+  { id: 'a13', name: 'Aura +13', r: 4, cls: 'au13', how: 'Forje a arma até +13' },
+  { id: 'mal', name: 'Aura Maligna', r: 3, cls: 'acM', how: 'Chegue à era 7 (Submundo)' },
+  { id: 'cel', name: 'Aura Celestial', r: 4, cls: 'acC', how: 'Chegue à era 8 (Celestial)' }
+];
+var WINGS = [
+  { id: 'none', name: 'Sem asas', r: 0, cls: 'none', own: true, how: '' },
+  { id: 'dem', name: 'Asas Demoníacas', r: 3, cls: 'dem', how: 'Asa Épica+ no espaço de asa (Nv. 50)' },
+  { id: 'ang', name: 'Asas de Anjo', r: 4, cls: 'ang', how: 'Asa Épica+ no espaço de asa (Nv. 50)' }
+];
+var KINDN = { title: 'título', frame: 'moldura', aura: 'aura', wing: 'asas' };
+function f1(v) { return (Math.round(v * 100) / 100).toString().replace('.', ','); }
+function abbr(v) { return v >= 1e6 ? f1(Math.floor(v / 1e5) / 10) + 'M' : v >= 1e3 ? f1(Math.floor(v / 100) / 10) + 'K' : String(v); }
+function nf(v) { return v.toLocaleString('pt-BR'); }
+function bonusTxt(t) {
+  if (t.cos) return 'Cosmético';
+  var out = [];
+  for (var k in t.b) out.push('+' + f1(t.b[k] * 0.5) + BUNIT[k]);
+  return out.join(' · ');
+}
+function byId(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return list[0]; }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      size: 1, tab: 'tit', tf: 'all',
+      eq: { title: 'fest', frame: 'fire', aura: 'a4', wing: 'none' },
+      pv: null, fx: null, fxItem: null,
+      kills: 9986, secs: 41 * 3600 + 12 * 60 + 5,
+      seen: { tit: false, frm: false, aur: true, wng: true, sta: true },
+      fresh: { fest: true, hunt: true },
+      toast: null, copied: false
+    };
+  }
+  componentDidMount() {
+    var self = this;
+    // a batalha segue em segundo plano: abates sobem; em 10.000 cai o título Lenda da Horda
+    this.iv = setInterval(function () {
+      var s = self.state, up = { kills: Math.min(10000, s.kills + 1), secs: s.secs + 1 };
+      if (s.kills < 10000 && up.kills >= 10000) {
+        up.fresh = Object.assign({}, s.fresh, { kill10k: true });
+        up.seen = Object.assign({}, s.seen, { tit: s.tab === 'tit' });
+        self.sfx(SND.legendary, 0.6);
+        self.toast('Novo título: Lenda da Horda!');
+      }
+      self.setState(up);
+    }, 700);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearTimeout(this.tt); clearTimeout(this.tf); clearTimeout(this.tc); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  toast(txt) {
+    var self = this; clearTimeout(this.tt);
+    this.setState({ toast: null });
+    setTimeout(function () { self.setState({ toast: txt }); }, 20);
+    this.tt = setTimeout(function () { self.setState({ toast: null }); }, 2300);
+  }
+  playFx(kind, itemId) {
+    var self = this; clearTimeout(this.tf);
+    this.setState({ fx: null, fxItem: null });
+    setTimeout(function () { self.setState({ fx: kind, fxItem: itemId }); }, 20);
+    this.tf = setTimeout(function () { self.setState({ fx: null, fxItem: null }); }, 1000);
+  }
+  equip(kind, item) {
+    var s = this.state, eq = Object.assign({}, s.eq), fr = Object.assign({}, s.fresh);
+    eq[kind] = item.id; delete fr[item.id];
+    this.sfx(item.r >= 4 ? SND.legendary : SND.claim, 0.7);
+    this.setState({ eq: eq, pv: null, fresh: fr });
+    this.playFx(kind, item.id);
+    this.toast(kind === 'title' ? 'Título equipado: ' + item.name : (item.id === 'none' ? 'Removido' : item.name + ' equipada'));
+  }
+  preview(kind, item) {
+    var fr = Object.assign({}, this.state.fresh); delete fr[item.id];
+    this.sfx(SND.tap);
+    this.setState({ pv: { kind: kind, id: item.id }, fresh: fr });
+    this.playFx(kind, null);
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var cur = { stage: 27, era: 2, boss: 26, kills: s.kills, tower: 12, arena: 0, practice: 88, weaponEras: 3, weapons: 9, mounts: 0, pets: 4, petStar: 0, skins: 6, hair: 2, eyes: 1, hats: 0 };
+    function titOwn(t) { return t.t === 'special' ? !!t.own : t.t === 'arena' ? false : cur[t.t] >= t.n; }
+
+    // aparelho
+    var Z = SIZES[s.size], sc = Math.min(1, AREA_W / Z[0], AREA_H / Z[1]);
+    var sizes = SIZES.map(function (z, i) {
+      return { l1: z[2], l2: z[3], pressed: i === s.size ? 'true' : 'false', aria: 'Ver em ' + z[2] + ' (' + z[3] + ')',
+        pick: function () { self.sfx(SND.tap); self.setState({ size: i }); } };
+    });
+
+    // o que aparece no cartão (equipado ou em prévia)
+    var pv = s.pv, show = Object.assign({}, s.eq);
+    if (pv) show[pv.kind] = pv.id;
+    var tShow = byId(TITLES, show.title), fShow = byId(FRAMES, show.frame), aShow = byId(AURAS, show.aura), wShow = byId(WINGS, show.wing);
+
+    // contadores
+    var titOwnN = TITLES.filter(titOwn).length;
+    var frOwnN = FRAMES.filter(function (f) { return f.own; }).length;
+    var auOwnN = AURAS.filter(function (a) { return a.own && a.id !== 'none'; }).length;
+    var wgOwnN = WINGS.filter(function (w) { return w.own && w.id !== 'none'; }).length;
+    var allOwn = titOwnN + frOwnN + auOwnN + wgOwnN, allTot = TITLES.length + FRAMES.length + (AURAS.length - 1) + (WINGS.length - 1);
+    var colPct = Math.round(allOwn / allTot * 100) + '%';
+
+    function tabBtn(id) {
+      return function () { self.sfx(SND.tap); var sn = Object.assign({}, self.state.seen); sn[id] = true; self.setState({ tab: id, seen: sn }); };
+    }
+
+    // títulos
+    var tl = TITLES.map(function (t) { return Object.assign({}, t, { own: titOwn(t) }); });
+    tl.sort(function (a, b) { return (b.id === s.eq.title) - (a.id === s.eq.title) || (b.own ? 1 : 0) - (a.own ? 1 : 0) || b.r - a.r; });
+    var titles = tl.filter(function (t) { return s.tf === 'all' || (s.tf === 'own' ? t.own : !t.own); }).map(function (t, i) {
+      var isEq = s.eq.title === t.id, isPv = pv && pv.kind === 'title' && pv.id === t.id;
+      var cond = t.t === 'special' ? t.how : COND[t.t](t.n);
+      if (!t.own && t.t !== 'special' && t.t !== 'arena') cond += ' (' + nf(Math.min(cur[t.t], t.n)) + '/' + nf(t.n) + ')';
+      if (t.t === 'arena') cond += ' · arena libera no Nv. 30';
+      return {
+        name: t.name, tt: 'tt tt' + t.r, rar: RN[t.r], rc: RC[t.r],
+        bd: t.own ? RC[t.r] : '#4a3a2b', bs: t.own ? 'solid' : 'dashed',
+        cls: (t.own ? 'own ' : '') + (t.own && t.r >= 3 ? 'shine ' : '') + (isEq ? 'isEq ' : '') + (s.fxItem === t.id ? 'eqFx' : ''),
+        delay: Math.min(i, 12) * 0.035 + 's',
+        hasBon: true, bonus: bonusTxt(t), bonCls: t.cos ? 'bon cos' : 'bon',
+        cond: t.own ? 'Conquistado: ' + cond : cond, own: t.own, lock: !t.own, isNew: !!s.fresh[t.id],
+        btn: isEq ? 'Equipado' : t.own ? 'Equipar' : (isPv ? 'Em prévia' : 'Prévia'),
+        btnCls: isEq ? 'on' : t.own ? 'gold' : 'ghost',
+        aria: t.name + ', ' + RN[t.r] + ', ' + (isEq ? 'equipado' : t.own ? 'possuído, equipar' : 'bloqueado, ' + cond + ', ver prévia no cartão'),
+        act: function () {
+          if (isEq) { self.sfx(SND.tap); return; }
+          if (t.own) self.equip('title', t); else self.preview('title', t);
+        }
+      };
+    });
+    var tFilters = [['all', 'Todos'], ['own', 'Possuídos'], ['lock', 'Bloqueados']].map(function (f) {
+      return { label: f[1], pressed: s.tf === f[0] ? 'true' : 'false', pick: function () { self.sfx(SND.tap); self.setState({ tf: f[0] }); } };
+    });
+
+    // molduras
+    var frames = FRAMES.map(function (f, i) {
+      var isEq = s.eq.frame === f.id, isPv = pv && pv.kind === 'frame' && pv.id === f.id;
+      return {
+        name: f.name, rc: RC[f.r], org: ORG[f.o][0], oc: ORG[f.o][1], how: f.how,
+        fk: 'fr fk-' + f.id + (f.own ? '' : ' lockd'),
+        bd: f.own ? RC[f.r] : '#4a3a2b', bs: f.own ? 'solid' : 'dashed', delay: i * 0.04 + 's',
+        cls: (f.own ? 'own ' : '') + (isEq ? 'isEq ' : '') + (isPv ? 'isPv ' : '') + (s.fxItem === f.id ? 'eqFx' : ''),
+        own: !!f.own, lock: !f.own, isNew: !!s.fresh[f.id],
+        btn: isEq ? 'Equipada' : 'Equipar', btnCls: isEq ? 'on' : 'gold', btnAria: (isEq ? 'Equipada: ' : 'Equipar ') + f.name,
+        aria: 'Ver ' + f.name + ' no avatar, ' + RN[f.r] + ', origem ' + ORG[f.o][0] + (f.own ? '' : ', bloqueada: ' + f.how),
+        pick: function () { self.preview('frame', f); },
+        act: function () { if (isEq) { self.sfx(SND.tap); return; } self.equip('frame', f); }
+      };
+    });
+
+    // auras / asas
+    var isAur = s.tab === 'aur', LIST = isAur ? AURAS : WINGS, kind = isAur ? 'aura' : 'wing';
+    var looks = LIST.map(function (x, i) {
+      var isEq = s.eq[kind] === x.id, isPv = pv && pv.kind === kind && pv.id === x.id;
+      return {
+        name: x.name, rar: x.id === 'none' ? 'Nenhuma' : RN[x.r], rc: RC[x.r], how: x.how,
+        au: isAur ? x.cls : '', wg: isAur ? 'none' : x.cls, sil: x.own ? '' : 'sil', kd: (-i * 0.17) + 's',
+        bd: x.own ? RC[x.r] : '#4a3a2b', bs: x.own ? 'solid' : 'dashed', delay: i * 0.05 + 's',
+        cls: (x.own ? 'own ' : '') + (isEq ? 'isEq ' : '') + (isPv ? 'isPv ' : '') + (s.fxItem === x.id ? 'eqFx' : ''),
+        own: !!x.own, lock: !x.own,
+        btn: isEq ? 'Em uso' : 'Usar', btnCls: isEq ? 'on' : 'gold', btnAria: (isEq ? 'Em uso: ' : 'Usar ') + x.name,
+        aria: 'Ver ' + x.name + ' no Kael' + (x.own ? '' : ', bloqueada: ' + x.how),
+        pick: function () { self.preview(kind, x); },
+        act: function () { if (isEq) { self.sfx(SND.tap); return; } self.equip(kind, x); }
+      };
+    });
+    var lookNote = isAur
+      ? 'Auras +4/+7/+10/+13 vêm da forja da arma (a sua está em +6). Maligna e Celestial são das eras 7 e 8. Toque para ver no Kael.'
+      : 'O espaço de asa abre no nível 50 (você está no 24). Toque nas silhuetas para ver as asas no Kael.';
+
+    // prévia
+    var pvItem = null, pvOwn = false, pvHow = '';
+    if (pv) {
+      if (pv.kind === 'title') { pvItem = tShow; pvOwn = titOwn(tShow); pvHow = tShow.t === 'special' ? tShow.how : COND[tShow.t](tShow.n); }
+      if (pv.kind === 'frame') { pvItem = fShow; pvOwn = !!fShow.own; pvHow = fShow.how; }
+      if (pv.kind === 'aura') { pvItem = aShow; pvOwn = !!aShow.own; pvHow = aShow.how; }
+      if (pv.kind === 'wing') { pvItem = wShow; pvOwn = !!wShow.own; pvHow = wShow.how; }
+    }
+
+    // estatísticas
+    var sec = s.secs, hh = Math.floor(sec / 3600), mm = Math.floor(sec % 3600 / 60), ss = sec % 60;
+    var IC = {
+      kill: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4',
+      boss: 'M3 18h18l-2-10-4 4-3-7-3 7-4-4z',
+      era: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
+      dmg: 'M13 2 4 14h7l-1 8 9-12h-7z',
+      time: 'M7 3h10M7 21h10M8 3c0 5 8 6 8 9s-8 4-8 9M16 3c0 5-8 6-8 9',
+      pet: 'M5 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM19 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM9 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM15 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM12 11c-3 0-5 3-5 6 0 2 2 3 5 3s5-1 5-3c0-3-2-6-5-6z',
+      tower: 'M6 21V8l2-2V3h2v2h4V3h2v3l2 2v13zM10 21v-4h4v4',
+      tit: 'M7 2h10l-3 7h-4zM12 9a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z',
+      frm: 'M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+      aur: 'M12 22c-4.5 0-7-3-7-6.5 0-4 3.5-5.5 4-10 2 1.5 3 3.5 3 5.5 1-1 1.6-2.4 1.6-4 2.6 2 5.4 5 5.4 8.5 0 3.5-2.5 6.5-7 6.5z',
+      wng: 'M11 20C9 15 3 14 2 5c3 2 5 2 6 0 .5 3 2 5 3 7M13 20c2-5 8-6 9-15-3 2-5 2-6 0-.5 3-2 5-3 7'
+    };
+    var GB = 'linear-gradient(90deg,#c9973a,#ffe07a)';
+    var stats = [
+      { label: 'Inimigos derrotados', val: nf(s.kills), icon: IC.kill, col: '#ff8a5c', hasBar: true, pct: Math.round(s.kills / 10000 * 100) + '%', bar: 'linear-gradient(90deg,#ff8a5c,#ffe07a)', sub: s.kills >= 10000 ? 'Título Lenda da Horda conquistado!' : 'Faltam ' + nf(10000 - s.kills) + ' para Lenda da Horda', fx: s.kills < 10000 ? 'tick' : '' },
+      { label: 'Chefes derrotados', val: '26', icon: IC.boss, col: '#ff6f88', hasBar: true, pct: '52%', bar: 'linear-gradient(90deg,#ff4d6d,#ffb0c0)', sub: '24 para Matador de Titãs (50)', fx: '' },
+      { label: 'Eras completas', val: '2/9', icon: IC.era, col: '#ffc94a', hasBar: true, pct: '22%', bar: GB, sub: 'Agora na ' + ERAN[ERA], fx: '' },
+      { label: 'Maior dano num golpe', val: '184.230', icon: IC.dmg, col: '#ffe07a', hasBar: false, pct: '0%', bar: GB, sub: 'Ultimate crítica · Medieval', fx: '' },
+      { label: 'Tempo jogado', val: hh + ' h ' + pad2(mm) + ' min', icon: IC.time, col: '#4aa3ff', hasBar: false, pct: '0%', bar: GB, sub: 'Contando agora · ' + hh + ':' + pad2(mm) + ':' + pad2(ss), fx: '' },
+      { label: 'Pets', val: '4/8', icon: IC.pet, col: '#5fd068', hasBar: true, pct: '50%', bar: 'linear-gradient(90deg,#5fd068,#c4f27a)', sub: 'Fênix em 3 estrelas', fx: '' },
+      { label: 'Andar da torre', val: '12', icon: IC.tower, col: '#c58bff', hasBar: true, pct: '12%', bar: 'linear-gradient(90deg,#8a4dff,#d9b8ff)', sub: 'Recorde · próximo título no 25', fx: '' }
+    ].map(function (x, i) { x.delay = i * 0.05 + 's'; return x; });
+    function cl(label, a, b, icon, col) { return { label: label, val: a + '/' + b, pct: Math.round(a / b * 100) + '%', icon: icon, col: col, bar: 'linear-gradient(90deg,' + col + ',#fff3c4)', sub: Math.round(a / b * 100) + '% da categoria' }; }
+    var coll = [
+      cl('Títulos', titOwnN, TITLES.length, IC.tit, '#ffc94a'),
+      cl('Molduras', frOwnN, FRAMES.length, IC.frm, '#4aa3ff'),
+      cl('Auras', auOwnN, AURAS.length - 1, IC.aur, '#ff8a5c'),
+      cl('Asas', wgOwnN, WINGS.length - 1, IC.wng, '#c58bff')
+    ].map(function (x, i) { x.delay = (0.35 + i * 0.05) + 's'; return x; });
+
+    var fc = 13915;
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      sizes: sizes, scaleTxt: Math.round(sc * 100) + '%',
+      devW: Z[0] + 'px', devH: Z[1] + 'px', devS: String(Math.round(sc * 1000) / 1000),
+      holdW: Math.round(Z[0] * sc) + 'px', holdH: Math.round(Z[1] * sc) + 'px',
+      colPct: colPct, colAria: 'Coleção ' + colPct + ' completa',
+
+      stAu: 'aur ' + aShow.cls, stgCls: 'stg' + (s.fx === 'aura' || s.fx === 'wing' ? ' stgFx' : ''),
+      stWg: 'wg ' + wShow.cls,
+      stageAria: 'Kael no pedestal' + (aShow.id !== 'none' ? ', ' + aShow.name : '') + (wShow.id !== 'none' ? ', ' + wShow.name : ''),
+      cardFr: 'fr fk-' + fShow.id + (s.fx === 'frame' ? ' frIn' : ''),
+      frameAria: 'Avatar com a moldura ' + fShow.name,
+      cardTt: 'tt tt' + tShow.r + (s.fx === 'title' ? ' ttIn' : ''), cardTitle: tShow.name,
+      fcTxt: abbr(fc), eraName: ERAN[ERA],
+      copied: s.copied, notCopied: !s.copied, cpCls: s.copied ? 'ok' : '', cpTxt: s.copied ? 'Copiado!' : '',
+      cpAria: s.copied ? 'ID copiado' : 'Copiar ID 4821-7730',
+      copyId: function () {
+        try { if (navigator.clipboard) navigator.clipboard.writeText('4821-7730').catch(function () {}); } catch (e) {}
+        self.sfx(SND.coin, 0.5); clearTimeout(self.tc);
+        self.setState({ copied: true });
+        self.tc = setTimeout(function () { self.setState({ copied: false }); }, 1600);
+      },
+
+      hasPv: !!pvItem, pvName: pvItem ? pvItem.name + ' (' + KINDN[pv.kind] + ')' : '',
+      pvSub: pvItem ? (pvOwn ? 'Você já tem. Quer usar?' : 'Bloqueado · ' + pvHow) : '',
+      pvCan: pvOwn && pvItem && s.eq[pv.kind] !== pv.id,
+      pvUndo: function () { self.sfx(SND.tap); self.setState({ pv: null }); self.playFx(pv ? pv.kind : null, null); },
+      pvEquip: function () { if (pvItem) self.equip(pv.kind, pvItem); },
+
+      oTit: tabBtn('tit'), oFrm: tabBtn('frm'), oAur: tabBtn('aur'), oWng: tabBtn('wng'), oSta: tabBtn('sta'),
+      pTit: s.tab === 'tit' ? 'true' : 'false', pFrm: s.tab === 'frm' ? 'true' : 'false', pAur: s.tab === 'aur' ? 'true' : 'false', pWng: s.tab === 'wng' ? 'true' : 'false', pSta: s.tab === 'sta' ? 'true' : 'false',
+      cTit: titOwnN + '/' + TITLES.length, cFrm: frOwnN + '/' + FRAMES.length, cAur: auOwnN + '/' + (AURAS.length - 1), cWng: wgOwnN + '/' + (WINGS.length - 1), cSta: colPct,
+      dTit: !s.seen.tit, dFrm: !s.seen.frm, dAur: !s.seen.aur, dWng: !s.seen.wng,
+      aTit: 'Títulos, ' + titOwnN + ' de ' + TITLES.length + (s.seen.tit ? '' : ', novidade'),
+      aFrm: 'Molduras, ' + frOwnN + ' de ' + FRAMES.length + (s.seen.frm ? '' : ', novidade'),
+      aAur: 'Auras, ' + auOwnN + ' de ' + (AURAS.length - 1),
+      aWng: 'Asas, ' + wgOwnN + ' de ' + (WINGS.length - 1),
+      aSta: 'Estatísticas, coleção ' + colPct,
+
+      isTit: s.tab === 'tit', isFrm: s.tab === 'frm', isLook: s.tab === 'aur' || s.tab === 'wng', isSta: s.tab === 'sta',
+      tFilters: tFilters, titles: titles, frames: frames, looks: looks, lookNote: lookNote,
+      stats: stats, coll: coll,
+      hasToast: !!s.toast, toastTxt: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

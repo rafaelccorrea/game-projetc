@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pickups do farm</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}canvas{display:block;max-width:100%;margin:12px 16px;border-radius:8px}</style>
+</head><body>
+<h1>Pickups: moeda girando e orbe de experiência</h1>
+<p>Um inimigo "morre" a cada 1,2 s: as moedas e os orbes saltam, quicam no chão, giram ou pulsam e voam até o HUD (canto superior). Tudo por código, sem imagem.</p>
+<canvas id="c" width="720" height="400"></canvas>
+<script src="../../../js/pickups.js"></script>
+<script>
+(async()=>{
+ const c=document.getElementById('c'),g=c.getContext('2d'),W=c.width,H=c.height,gy=H*0.82;
+ const bg=new Image();bg.src='../../../assets/bg/era2.png';const gyF=(await (await fetch('../../../assets/bg/meta.json')).json()).era2.groundY;
+ const coinHud={x:40,y:30},xpHud={x:150,y:30};let coins=0,xp=0,flashC=0,flashX=0;
+ Pickups.setGround(gy);Pickups.onArrive=k=>{if(k==='coin'){coins++;flashC=0.2;}else{xp+=5;flashX=0.2;}};
+ let last=performance.now(),acc=0;
+ function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;acc+=dt;
+  if(acc>1.2){acc=0;const x=W*0.55+Math.random()*W*0.3;for(let i=0;i<3;i++)Pickups.spawn('coin',x,gy-40,coinHud);for(let i=0;i<2;i++)Pickups.spawn('xp',x,gy-40,xpHud);}
+  Pickups.update(dt);flashC=Math.max(0,flashC-dt);flashX=Math.max(0,flashX-dt);
+  g.clearRect(0,0,W,H);if(bg.complete){const s=H/(bg.height*(0.82/gyF)),bw=bg.width*s,bh=bg.height*s;for(let x=0;x<W;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+  g.fillStyle='rgba(0,0,0,.55)';g.fillRect(16,12,230,36);g.font='bold 16px system-ui';
+  g.save();g.translate(coinHud.x,coinHud.y);g.scale(1+flashC*1.5,1+flashC*1.5);g.fillStyle='#f6c33a';g.beginPath();g.arc(0,0,9,0,7);g.fill();g.restore();g.fillStyle='#fff';g.fillText(coins,56,36);
+  g.save();g.translate(xpHud.x,xpHud.y);g.scale(1+flashX*1.5,1+flashX*1.5);g.fillStyle='#5ff59a';g.beginPath();g.arc(0,0,8,0,7);g.fill();g.restore();g.fillStyle='#fff';g.fillText(xp+' XP',166,36);
+  Pickups.draw(g);requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+})();
+</script></body></html>

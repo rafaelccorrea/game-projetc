@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prova de corrida — quadros x ossos</title>
+<style>
+ body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:#aab}
+ .row{display:flex;flex-wrap:wrap;gap:12px;padding:12px 16px}
+ .cell{background:#000;border-radius:8px;overflow:hidden}
+ .cell b{display:block;padding:6px 10px;background:#222}
+ canvas{display:block}
+ .ctl{padding:0 16px 12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+ button{background:#2d6cdf;color:#fff;border:0;border-radius:6px;padding:7px 12px;font-weight:600}
+</style></head><body>
+<h1>Kael era 2 (t0) correndo — quadros (esquerda) x recorte com ossos (direita)</h1>
+<p>Critério do PO: personagem não muda entre quadros; pés tocam o chão em todo passo, sem patinar nem flutuar; loop limpo a 10–12 fps. Linha amarela = chão (assets/bg/meta.json).</p>
+<div class="ctl">
+ <label><input type="checkbox" id="lines" checked> linha do chão e marcas dos pés</label>
+ <label><input type="checkbox" id="slow"> câmera lenta (¼)</label>
+ <label>estado <select id="st"><option>run</option><option>idle</option></select></label>
+ <button id="exp">Exportar folha 256x256 (ossos)</button> <span id="msg"></span>
+</div>
+<div class="row">
+ <div class="cell"><b>Quadros (agente da fps-c9): <span id="fi">aguardando arquivo</span></b><canvas id="cf" width="420" height="300"></canvas></div>
+ <div class="cell"><b>Ossos (fps-ff)</b><canvas id="cb" width="420" height="300"></canvas></div>
+</div>
+<div class="row"><div class="cell"><b>8 quadros da corrida (ossos), lado a lado</b><canvas id="strip" width="1024" height="128"></canvas></div></div>
+<script src="../../../js/anim.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src+'?v='+Date.now();});
+(async()=>{
+ const bgMeta=await (await fetch('../../../assets/bg/meta.json')).json();
+ const gyF=bgMeta.era2.groundY;
+ const bg=await L('../../../assets/bg/era2.png');
+ const sword=await L('../../../assets/weapons/era2_t0.png');
+ const wmeta=(await (await fetch('../../../assets/weapons/meta.json')).json()).era2_t0;
+ await Anim.load('k','../../../assets/anim/rig/era2_hero_t0/');
+ const weapon={img:sword,grip:wmeta.grip,angle:wmeta.angle};
+ // prova por quadros (pode ainda não existir)
+ let fr=await L('../../../assets/anim/era2_hero_t0_run.png'), fmeta=null;
+ try{ fmeta=await (await fetch('../../../assets/anim/meta.json?v='+Date.now())).json(); }catch(e){}
+ let nF=0,fw=0,fh=0,ffps=12;
+ if(fr){ const m=fmeta&&(fmeta.era2_hero_t0_run||fmeta['era2_hero_t0_run.png']||{}); fh=fr.height; nF=(m&&m.frames)||Math.round(fr.width/fr.height); fw=fr.width/nF; ffps=(m&&m.fps)||12; $('fi').textContent=nF+' quadros a '+ffps+' fps'; }
+ const SIZE=230;
+ function scene(c,t,drawChar,speed){
+   const g=c.getContext('2d'), W=c.width, H=c.height, gy=H*0.80;
+   g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W,H);
+   if(bg){ const s=H/(bg.height*(0.80/gyF)), bw=bg.width*s, bh=bg.height*s, off=(t*speed)%bw;   // alinha groundY do cenário com gy
+     for(let x=-off;x<W;x+=bw) g.drawImage(bg,x,gy-gyF*bh,bw,bh); }
+   drawChar(g,W*0.45,gy);
+   if($('lines').checked){ g.strokeStyle='#ffd400'; g.lineWidth=1; g.beginPath(); g.moveTo(0,gy+.5); g.lineTo(W,gy+.5); g.stroke();
+     g.fillStyle='rgba(255,212,0,.8)'; const step=40, o=(t*speed)%step; for(let x=-o;x<W;x+=step) g.fillRect(x,gy+3,2,6); }
+ }
+ let t0=performance.now();
+ function loop(now){
+   const slow=$('slow').checked?0.25:1, t=(now-t0)/1000*slow, st=$('st').value;
+   const spd=st==='run'?Anim.groundSpeed('k',SIZE):0;
+   scene($('cb'),t,(g,x,gy)=>Anim.draw(g,'k',st,t,x,gy,SIZE,{weapon}),spd);
+   scene($('cf'),t,(g,x,gy)=>{ if(!fr){ g.fillStyle='#889'; g.font='14px system-ui'; g.fillText('assets/anim/era2_hero_t0_run.png ainda não existe',20,40); return; }
+     const i=Math.floor(t*ffps)%nF, k=SIZE/fh; g.drawImage(fr,i*fw,0,fw,fh,x-fw*k/2,gy-fh*k*0.95,fw*k,fh*k); }, st==='run'?Anim.groundSpeed('k',SIZE):0);
+   requestAnimationFrame(loop);
+ }
+ requestAnimationFrame(loop);
+ // tira com os 8 quadros
+ const sc=$('strip').getContext('2d');
+ for(let i=0;i<8;i++){ sc.strokeStyle='#333'; sc.strokeRect(i*128+.5,.5,127,127); Anim.draw(sc,'k','run',i/Anim.FPS+1e-4,i*128+64,128*0.95,128,{weapon}); }
+ sc.setTransform(1,0,0,1,0,0); sc.strokeStyle='#ffd400'; sc.beginPath(); sc.moveTo(0,128*0.95+.5); sc.lineTo(1024,128*0.95+.5); sc.stroke();
+ // exportação: folha horizontal 256x256 por quadro, pés em y=0,95
+ window.exportSheet=async(state,n,file)=>{
+   const c=document.createElement('canvas'); c.width=256*n; c.height=256; const g=c.getContext('2d');
+   for(let i=0;i<n;i++) Anim.draw(g,'k',state,i/Anim.FPS+1e-4,i*256+128,256*0.95,256,{weapon});
+   const r=await fetch('/save?path='+encodeURIComponent(file),{method:'POST',body:await new Promise(ok=>c.toBlob(ok,'image/png'))});
+   return r.status+' '+await r.text();
+ };
+ $('exp').onclick=async()=>{ $('msg').textContent=await exportSheet('run',8,'assets/anim/rig/era2_hero_t0_run_bones.png')+' / '+await exportSheet('idle',24,'assets/anim/rig/era2_hero_t0_idle_bones.png'); };
+})();
+</script></body></html>

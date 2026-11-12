@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Intro e nome do jogador</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+/* cenário novo em camadas (era 0 e era 2), cena H=520, pés em 0.78H=406; Kael CORRENDO: chão rola a 1.0 na velocidade do passo (143 px/s), far 0.07, mid 0.38, sky 0.02 */
+.sc0{position:absolute;inset:0;overflow:hidden;background:#9cc9c0}
+.sc0 .ly{position:absolute;left:0;right:0;background-repeat:repeat-x;background-position:0 0}
+.sc0 .fl{position:absolute;left:0;right:0;top:312px;height:52px;background:#5b8377}
+.sc0 .sky{background-image:url(/_blob/fcb19c47e6bcf95a909b7a4a8410c8a6);top:0px;height:312px;background-size:auto 312px;animation:sc0sky 253s linear infinite}
+@keyframes sc0sky{from{background-position:0 0}to{background-position:-724px 0}}
+.sc0 .far{background-image:url(/_blob/8350a49ec21741bad84abfa8a477fae9);top:114px;height:218px;background-size:auto 218px;animation:sc0far 85s linear infinite}
+@keyframes sc0far{from{background-position:0 0}to{background-position:-855px 0}}
+.sc0 .mid{background-image:url(/_blob/2a828af40defb3a91b3ad05fd9fe48b9);top:91px;height:260px;background-size:auto 260px;animation:sc0mid 13s linear infinite}
+@keyframes sc0mid{from{background-position:0 0}to{background-position:-683px 0}}
+.sc0 .ground{background-image:url(/_blob/2239f5d7b483d0d30e06ead641b7339a);top:341px;height:198px;background-size:auto 198px;animation:sc0ground 5s linear infinite}
+@keyframes sc0ground{from{background-position:0 0}to{background-position:-704px 0}}
+.sc0 .cl{position:absolute;background-image:url(/_blob/665cc1b081c457c24fdbb9a04f90fc98);background-size:contain;background-repeat:no-repeat;background-position:center;animation:sc0cl linear infinite}
+@keyframes sc0cl{from{transform:translateX(0)}to{transform:translateX(-560px)}}
+
+.sc2{position:absolute;inset:0;overflow:hidden;background:#8fc6dc}
+.sc2 .ly{position:absolute;left:0;right:0;background-repeat:repeat-x;background-position:0 0}
+.sc2 .fl{position:absolute;left:0;right:0;top:312px;height:52px;background:#6b93a6}
+.sc2 .sky{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);top:0px;height:312px;background-size:auto 312px;animation:sc2sky 253s linear infinite}
+@keyframes sc2sky{from{background-position:0 0}to{background-position:-724px 0}}
+.sc2 .far{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);top:114px;height:218px;background-size:auto 218px;animation:sc2far 76s linear infinite}
+@keyframes sc2far{from{background-position:0 0}to{background-position:-762px 0}}
+.sc2 .mid{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);top:91px;height:260px;background-size:auto 260px;animation:sc2mid 15s linear infinite}
+@keyframes sc2mid{from{background-position:0 0}to{background-position:-788px 0}}
+.sc2 .ground{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);top:341px;height:198px;background-size:auto 198px;animation:sc2ground 5s linear infinite}
+@keyframes sc2ground{from{background-position:0 0}to{background-position:-786px 0}}
+.sc2 .cl{position:absolute;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:contain;background-repeat:no-repeat;background-position:center;animation:sc2cl linear infinite}
+@keyframes sc2cl{from{transform:translateX(0)}to{transform:translateX(-560px)}}
+
+.bg2{background-image:url(/_blob/ff26baa5a317d3f36a548848c37e2aa7)}
+.scene{background-size:cover;background-position:center}
+.card{animation:cin .5s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes cin{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+/* Kael aprovado: folha correndo 8 quadros (cenário rolando) e parado 12 quadros (cenário parado), 12 fps, pés em 95% do quadro */
+.krun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:krn .667s steps(8, jump-none) infinite}
+@keyframes krn{from{background-position:0 0}to{background-position:100% 0}}
+.shad{position:absolute;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,rgba(0,0,0,.3) 55%,rgba(0,0,0,0) 72%)}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kid 1s steps(12, jump-none) infinite}
+@keyframes kid{from{background-position:0 0}to{background-position:100% 0}}
+.boss{animation:loom 3s ease-in-out infinite;transform-origin:50% 95%}
+@keyframes loom{0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px rgba(180,80,255,.6))}50%{transform:scale(1.05);filter:drop-shadow(0 0 26px rgba(180,80,255,.95))}}
+.portal{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* escolha do herói */
+.hcard{transition:transform .15s}
+.hcard:active{transform:scale(.97)}
+.hsel{animation:hsel 1.4s ease-in-out infinite}
+@keyframes hsel{0%,100%{box-shadow:0 0 10px rgba(255,201,74,.45),inset 0 0 14px rgba(255,201,74,.18)}50%{box-shadow:0 0 30px rgba(255,201,74,1),inset 0 0 24px rgba(255,201,74,.35)}}
+.sil{transform-origin:50% 100%;animation:silb 2.4s ease-in-out infinite}
+@keyframes silb{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}
+.wip{animation:wip 2s ease-in-out infinite}
+@keyframes wip{0%,100%{opacity:.8}50%{opacity:1}}
+.cta{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.04)}}
+input:focus{outline:3px solid #ffc94a;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+
+  <!-- INTRO: 3 cartões -->
+  <sc-if value="{{inIntro}}" hint-placeholder-val="{{true}}">
+    <div style="position: absolute; inset: 0">
+      <div style="position: absolute; left: 0; right: 0; top: 0; height: 520px; overflow: hidden">
+        <sc-if value="{{c0}}" hint-placeholder-val="{{true}}"><div class="sc0"><div class="ly sky"></div><div class="cl" style="left: 400px; top: 40px; width: 150px; height: 60px; animation-duration: 70s; animation-delay: -20s"></div><div class="cl" style="left: 400px; top: 96px; width: 110px; height: 44px; animation-duration: 95s; animation-delay: -62s; opacity: 0.85"></div><div class="fl"></div><div class="ly far"></div><div class="ly mid"></div><div class="ly ground"></div></div></sc-if>
+        <sc-if value="{{c1}}" hint-placeholder-val="{{false}}"><div class="sc2"><div class="ly sky"></div><div class="cl" style="left: 400px; top: 40px; width: 150px; height: 60px; animation-duration: 70s; animation-delay: -20s"></div><div class="cl" style="left: 400px; top: 96px; width: 110px; height: 44px; animation-duration: 95s; animation-delay: -62s; opacity: 0.85"></div><div class="fl"></div><div class="ly far"></div><div class="ly mid"></div><div class="ly ground"></div></div></sc-if>
+        <sc-if value="{{c2}}" hint-placeholder-val="{{false}}"><div class="scene bg2" style="position: absolute; inset: 0"></div></sc-if>
+        <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(22,17,13,0.2) 0%, rgba(22,17,13,0) 50%, #16110d 100%)"></div>
+
+        <sc-if value="{{c0}}" hint-placeholder-val="{{true}}">
+          <!-- pés em 0.78 x 520 = 406: top 406 - 0.95 x 200 = 216 -->
+          <div class="shad" style="left: 140px; top: 398px; width: 110px; height: 16px"></div>
+          <div class="krun" role="img" aria-label="Kael correndo na Pré-História" style="position: absolute; left: 95px; top: 216px; width: 200px; height: 200px"></div>
+        </sc-if>
+        <sc-if value="{{c1}}" hint-placeholder-val="{{false}}">
+          <!-- pés em 406: top 216 -->
+          <div class="shad" style="left: 140px; top: 398px; width: 110px; height: 16px"></div>
+          <div style="position: absolute; left: 95px; top: 216px; width: 200px; height: 200px">
+            <div class="portal" style="position: absolute; inset: -20px; border-radius: 50%; border: 6px dashed rgba(111,211,255,0.7); box-shadow: 0 0 30px rgba(111,211,255,0.6), inset 0 0 30px rgba(111,211,255,0.4)"></div>
+            <div class="krun" role="img" aria-label="Kael correndo na Era Medieval" style="position: absolute; left: 0; top: 0; width: 200px; height: 200px"></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{c2}}" hint-placeholder-val="{{false}}">
+          <img class="boss" src="/_blob/6badc462b7e21d407ed1ebef3d3c90b2" alt="Devorador Cósmico" style="position: absolute; left: 160px; top: 130px; width: 230px; height: 230px; object-fit: contain">
+          <!-- cenário parado: Kael parado sobre pedestal, pés em 187 + 0.95 x 170 = 348 (topo do pedestal) -->
+          <div style="position: absolute; left: 30px; top: 341px; width: 130px; height: 22px; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #4a5a78 0%, #263048 60%, #121826 100%); border: 2px solid #6fd3ff; box-shadow: 0 0 16px rgba(111,211,255,0.55)"></div>
+          <div style="position: absolute; left: 30px; top: 361px; width: 130px; height: 10px; border-radius: 0 0 50% 50%; background: #121826"></div>
+          <div class="shad" style="left: 50px; top: 342px; width: 90px; height: 12px"></div>
+          <div class="kidle" role="img" aria-label="Kael (skin da Era Futurista em produção)" style="position: absolute; left: 10px; top: 187px; width: 170px; height: 170px"></div>
+        </sc-if>
+      </div>
+
+      <button onClick="{{skip}}" style="position: absolute; top: 20px; right: 16px; height: 44px; padding: 0 16px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.85); color: #f6ecdf; font-family: Nunito, sans-serif; font-weight: 800; font-size: 14px">Pular</button>
+
+      <div class="card" style="position: absolute; left: 24px; right: 24px; top: 520px; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 13px; font-weight: 900; color: #ffc94a; letter-spacing: 1px">{{kicker}}</span>
+        <h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-size: 30px; font-weight: 400; line-height: 1.1">{{headline}}</h1>
+        <p style="margin: 0; font-size: 15px; font-weight: 700; color: #e8dccb; line-height: 1.45">{{body}}</p>
+      </div>
+
+      <div style="position: absolute; left: 24px; right: 24px; bottom: 34px; display: flex; align-items: center; justify-content: space-between">
+        <div style="display: flex; gap: 8px">
+          <span style="width: {{d0w}}; height: 10px; border-radius: 5px; background: {{d0c}}"></span>
+          <span style="width: {{d1w}}; height: 10px; border-radius: 5px; background: {{d1c}}"></span>
+          <span style="width: {{d2w}}; height: 10px; border-radius: 5px; background: {{d2c}}"></span>
+        </div>
+        <button onClick="{{next}}" style="height: 56px; padding: 0 28px; border-radius: 16px; border: 0; background: linear-gradient(180deg, #ffe07a, #f2a826); box-shadow: 0 5px 0 #8a4f0c; color: #2a1403; font-family: 'Lilita One', sans-serif; font-size: 20px">{{nextLabel}}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ESCOLHA DO HERÓI -->
+  <sc-if value="{{inPick}}" hint-placeholder-val="{{false}}">
+    <div class="card" style="position: absolute; inset: 0; display: flex; flex-direction: column; padding: 56px 16px 34px; box-sizing: border-box; gap: 14px; background: radial-gradient(circle at 50% 35%, #3a2c1f 0%, #16110d 70%)">
+      <h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-size: 30px; font-weight: 400; text-align: center">Escolha seu herói</h1>
+      <p style="margin: 0; font-size: 14px; font-weight: 700; color: #c9b9a2; text-align: center">Os dois usam o cachecol vermelho. A força vem da jornada, não do herói.</p>
+      <div role="group" aria-label="Heróis" style="display: flex; gap: 12px">
+        <button class="hcard {{kaelCls}}" onClick="{{pick_kael}}" aria-pressed="{{kaelAria}}" aria-label="KAEL" style="position: relative; flex: 1; min-width: 0; height: 430px; border-radius: 22px; border: 3px solid {{kaelBd}}; background: radial-gradient(circle at 50% 42%, {{kaelTint}} 0%, #1d1611 70%); color: #f6ecdf; padding: 0; overflow: hidden; display: block">
+          <span class="shad" style="left: 52px; right: 52px; top: 304px; height: 12px; z-index: 1"></span>
+          <span style="position: absolute; left: 22px; right: 22px; top: 300px; height: 26px; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #6b5236 0%, #3a2c1f 60%, #1d1611 100%); border: 2px solid {{kaelBd}}"></span>
+          <span class="kidle" aria-hidden="true" style="position: absolute; left: 50%; top: 150px; width: 168px; height: 168px; margin-left: -84px"></span>
+          <span style="position: absolute; left: 0; right: 0; top: 344px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 30px; letter-spacing: 1px">KAEL</span>
+            <span style="font-size: 13px; font-weight: 800; color: #c9b9a2">O viajante do tempo</span>
+          </span>
+          <sc-if value="{{kaelOn}}" hint-placeholder-val="{{false}}">
+            <span style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: #ffc94a; color: #2a1403; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>
+          </sc-if>
+        </button>
+        <button class="hcard {{kaiaCls}}" onClick="{{pick_kaia}}" aria-pressed="{{kaiaAria}}" aria-label="KAIA, arte em produção" style="position: relative; flex: 1; min-width: 0; height: 430px; border-radius: 22px; border: 3px solid {{kaiaBd}}; background: radial-gradient(circle at 50% 42%, {{kaiaTint}} 0%, #1d1611 70%); color: #f6ecdf; padding: 0; overflow: hidden; display: block">
+          <span class="shad" style="left: 52px; right: 52px; top: 304px; height: 12px; z-index: 1"></span>
+          <span style="position: absolute; left: 22px; right: 22px; top: 300px; height: 26px; border-radius: 50%; background: radial-gradient(ellipse at 50% 40%, #6b5236 0%, #3a2c1f 60%, #1d1611 100%); border: 2px solid {{kaiaBd}}"></span>
+          <span class="sil" style="position: absolute; left: 50%; top: 166px; width: 120px; height: 144px; margin-left: -60px; display: block; filter: drop-shadow(0 0 10px rgba(255,201,74,0.25))"><svg width="120" height="144" viewBox="0 0 100 120" aria-hidden="true"><path d="M50 8c9 0 15 7 15 16s-6 17-15 17-15-8-15-17 6-16 15-16z" fill="#0d0a08"></path><path d="M38 20c4-10 20-12 26-2 3 6 4 14 10 20-8 0-14-4-17-9-2 6-10 9-19 9 3-5 0-12 0-18z" fill="#0d0a08"></path><path d="M33 44h34l6 34H27z" fill="#0d0a08"></path><path d="M34 42c10 6 22 6 32 0l2 7c-12 7-24 7-36 0z" fill="#b8231c"></path><path d="M62 46l12 16-6 3-10-14z" fill="#b8231c"></path><path d="M30 50l-10 26 6 2 10-22zM70 50l10 26-6 2-10-22z" fill="#0d0a08"></path><path d="M36 78h11l-2 36h-9zM53 78h11l1 36h-9z" fill="#0d0a08"></path></svg></span>
+          <span class="wip" style="position: absolute; left: 12px; top: 12px; padding: 4px 8px; border-radius: 8px; background: rgba(14,10,7,0.92); border: 1px dashed #ffb3a8; color: #ffb3a8; font-size: 11px; font-weight: 900">arte em produção</span>
+          <span style="position: absolute; left: 0; right: 0; top: 344px; display: flex; flex-direction: column; align-items: center; gap: 4px">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 30px; letter-spacing: 1px">KAIA</span>
+            <span style="font-size: 13px; font-weight: 800; color: #c9b9a2">A heroína do cachecol</span>
+          </span>
+          <sc-if value="{{kaiaOn}}" hint-placeholder-val="{{false}}">
+            <span style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; background: #ffc94a; color: #2a1403; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>
+          </sc-if>
+        </button>
+      </div>
+      <div style="flex: 1"></div>
+      <sc-if value="{{picked}}" hint-placeholder-val="{{false}}">
+        <button class="cta" onClick="{{choose}}" style="width: 100%; height: 62px; border-radius: 18px; border: 0; background: linear-gradient(180deg, #ffe07a, #f2a826); box-shadow: 0 6px 0 #8a4f0c; color: #2a1403; font-family: 'Lilita One', sans-serif; font-size: 24px">Escolher</button>
+      </sc-if>
+      <sc-if value="{{notPicked}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 62px; border-radius: 18px; background: #33271d; color: #9c8d7a; font-family: 'Lilita One', sans-serif; font-size: 24px">Escolher</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- NOME DO JOGADOR -->
+  <sc-if value="{{inName}}" hint-placeholder-val="{{false}}">
+    <div class="card" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 70px 24px 34px; box-sizing: border-box; gap: 14px; background: radial-gradient(circle at 50% 30%, #3a2c1f 0%, #16110d 70%)">
+      <div style="position: relative; width: 200px; height: 200px">
+        <div style="position: absolute; left: 30px; right: 30px; bottom: 6px; height: 22px; border-radius: 50%; background: rgba(255,201,74,0.25); box-shadow: 0 0 30px rgba(255,201,74,0.5)"></div>
+        <div class="shad" style="left: 55px; right: 55px; top: 179px; height: 12px"></div>
+        <sc-if value="{{isKael}}" hint-placeholder-val="{{true}}"><div class="kidle" role="img" aria-label="Kael" style="position: absolute; left: 0; top: -4px; width: 200px; height: 200px"></div></sc-if>
+        <sc-if value="{{isKaia}}" hint-placeholder-val="{{false}}"><span class="sil" role="img" aria-label="Kaia, arte em produção" style="position: absolute; left: 40px; top: 42px; width: 120px; height: 144px; display: block"><svg width="120" height="144" viewBox="0 0 100 120" aria-hidden="true"><path d="M50 8c9 0 15 7 15 16s-6 17-15 17-15-8-15-17 6-16 15-16z" fill="#0d0a08"></path><path d="M38 20c4-10 20-12 26-2 3 6 4 14 10 20-8 0-14-4-17-9-2 6-10 9-19 9 3-5 0-12 0-18z" fill="#0d0a08"></path><path d="M33 44h34l6 34H27z" fill="#0d0a08"></path><path d="M34 42c10 6 22 6 32 0l2 7c-12 7-24 7-36 0z" fill="#b8231c"></path><path d="M62 46l12 16-6 3-10-14z" fill="#b8231c"></path><path d="M30 50l-10 26 6 2 10-22zM70 50l10 26-6 2-10-22z" fill="#0d0a08"></path><path d="M36 78h11l-2 36h-9zM53 78h11l1 36h-9z" fill="#0d0a08"></path></svg></span></sc-if>
+      </div>
+      <h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-size: 28px; font-weight: 400; text-align: center">Como vão te chamar, lenda?</h1>
+      <p style="margin: 0; font-size: 14px; font-weight: 700; color: #c9b9a2; text-align: center">Esse nome aparece no ranking e na arena. O herói continua sendo o personagem escolhido.</p>
+
+      <div style="width: 100%; display: flex; flex-direction: column; gap: 6px; margin-top: 6px">
+        <label for="nick" style="font-size: 13px; font-weight: 900">Nome do jogador</label>
+        <div class="{{fieldClass}}" style="display: flex; gap: 8px">
+          <input id="nick" value="{{nick}}" onInput="{{typeNick}}" maxlength="14" autocomplete="off" style="flex: 1; min-width: 0; height: 54px; border-radius: 14px; border: 2px solid {{fieldBorder}}; background: #0e0a07; color: #f6ecdf; font-family: Nunito, sans-serif; font-size: 18px; font-weight: 800; padding: 0 14px; box-sizing: border-box">
+          <button onClick="{{dice}}" aria-label="Sortear nome" style="width: 54px; height: 54px; flex: none; border-radius: 14px; border: 2px solid #4a3a2b; background: #33271d; color: #ffc94a; display: flex; align-items: center; justify-content: center; padding: 0">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"></circle><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"></circle><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor"></circle><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor"></circle><circle cx="12" cy="12" r="1.3" fill="currentColor"></circle></svg>
+          </button>
+        </div>
+        <span style="font-size: 12px; font-weight: 800; color: {{hintColor}}">{{hint}}</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center">
+        <sc-for list="{{sugs}}" as="s" hint-placeholder-count="3">
+          <button onClick="{{s.pick}}" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #4a3a2b; background: #241b14; color: #f6ecdf; font-family: Nunito, sans-serif; font-weight: 800; font-size: 14px">{{s.label}}</button>
+        </sc-for>
+      </div>
+
+      <div style="flex: 1"></div>
+      <sc-if value="{{valid}}" hint-placeholder-val="{{true}}">
+        <a class="cta" href="BatalhaTelaCheiaV2.dc.html" onClick="{{go}}" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 62px; border-radius: 18px; background: linear-gradient(180deg, #ffe07a, #f2a826); box-shadow: 0 6px 0 #8a4f0c; color: #2a1403; font-family: 'Lilita One', sans-serif; font-size: 24px; text-decoration: none">Começar a aventura</a>
+      </sc-if>
+      <sc-if value="{{invalid}}" hint-placeholder-val="{{false}}">
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 62px; border-radius: 18px; background: #33271d; color: #9c8d7a; font-family: 'Lilita One', sans-serif; font-size: 24px">Começar a aventura</div>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { step: 0, nick: 'Kael_BR', shake: false, hero: '' }; }
+  sfx(u) { try { const a = new Audio(u); a.volume = 0.7; a.play(); } catch (e) {} }
+  check(n) {
+    if (n.length < 3) return { ok: false, msg: 'Mínimo de 3 caracteres.' };
+    if (!/^[A-Za-z0-9_À-ú]+$/.test(n)) return { ok: false, msg: 'Use só letras, números e _.' };
+    if (n.toLowerCase() === 'kael') return { ok: false, msg: 'Esse nome já existe. Tente uma sugestão abaixo.' };
+    return { ok: true, msg: 'Nome disponível!' };
+  }
+  renderVals() {
+    const s = this.state;
+    const cards = [
+      { k: 'ERA 0 · PRÉ-HISTÓRIA', h: 'Tudo começa com um osso e coragem.', b: 'Kael acorda sem nada. Lute, junte moedas e forje armas melhores — tudo automático, até offline.' },
+      { k: 'ATRAVESSE AS ERAS', h: 'Derrote o chefe e abra o portal.', b: 'Cada era traz uma arma nova com 3 ataques: o básico, o especial e uma Ultimate de arrasar.' },
+      { k: 'ERA 6 · FUTURISTA', h: 'Até o fim do tempo.', b: 'Lá no fim espera o Devorador Cósmico. Skins mudam só o visual: sua força vem da jornada.' },
+    ];
+    const c = cards[Math.min(s.step, 2)];
+    const dot = (i) => (s.step === i ? '28px' : '10px');
+    const dc = (i) => (s.step === i ? '#ffc94a' : '#4a3a2b');
+    const chk = this.check(s.nick);
+    const pool = ['Lenda_' + (10 + Math.floor(Math.random() * 89)), 'MataGoblin', 'CachecolRubro', 'ViajanteDoTempo', 'OssoDeFerro', 'EraDeOuro'];
+    if (!this.sugs) { this.sugs = pool.slice(0, 3); }
+    return {
+      inIntro: s.step < 3, inPick: s.step === 3, inName: s.step >= 4,
+      picked: !!s.hero, notPicked: !s.hero, isKael: s.hero !== 'kaia', isKaia: s.hero === 'kaia',
+      kaelOn: s.hero === 'kael', kaiaOn: s.hero === 'kaia',
+      kaelCls: s.hero === 'kael' ? 'hsel' : '', kaiaCls: s.hero === 'kaia' ? 'hsel' : '',
+      kaelAria: s.hero === 'kael' ? 'true' : 'false', kaiaAria: s.hero === 'kaia' ? 'true' : 'false',
+      kaelBd: s.hero === 'kael' ? '#ffc94a' : '#4a3a2b', kaiaBd: s.hero === 'kaia' ? '#ffc94a' : '#4a3a2b',
+      kaelTint: s.hero === 'kael' ? 'rgba(255,201,74,0.38)' : '#33271d', kaiaTint: s.hero === 'kaia' ? 'rgba(255,201,74,0.38)' : '#33271d',
+      pick_kael: () => { this.sfx('/_blob/c51c552050293b88cfe558b9b3b3e487'); this.setState({ hero: 'kael' }); },
+      pick_kaia: () => { this.sfx('/_blob/c51c552050293b88cfe558b9b3b3e487'); this.setState({ hero: 'kaia' }); },
+      choose: () => { this.sfx('/_blob/e3753a41131f84e23546318c17022b13'); this.setState({ step: 4, nick: s.hero === 'kaia' && s.nick === 'Kael_BR' ? 'Kaia_BR' : s.nick }); },
+      c0: s.step === 0, c1: s.step === 1, c2: s.step === 2,
+      kicker: c.k, headline: c.h, body: c.b,
+      d0w: dot(0), d1w: dot(1), d2w: dot(2), d0c: dc(0), d1c: dc(1), d2c: dc(2),
+      nextLabel: s.step === 2 ? 'Vamos!' : 'Próximo',
+      next: () => { this.sfx('/_blob/e3753a41131f84e23546318c17022b13'); this.setState({ step: s.step + 1 }); },
+      skip: () => this.setState({ step: 3 }),
+      nick: s.nick,
+      typeNick: (e) => this.setState({ nick: (e.target.value || '').slice(0, 14) }),
+      dice: () => { this.sfx('/_blob/e3753a41131f84e23546318c17022b13'); this.sugs = null; this.setState({ nick: pool[Math.floor(Math.random() * pool.length)] }); },
+      sugs: this.sugs.map((l) => ({ label: l, pick: () => this.setState({ nick: l }) })),
+      valid: chk.ok, invalid: !chk.ok,
+      hint: chk.msg, hintColor: chk.ok ? '#7ee27a' : '#ff8a7a',
+      fieldBorder: chk.ok ? '#5fd068' : '#ff5a4e',
+      fieldClass: chk.ok ? '' : 'shake',
+      go: () => this.sfx('/_blob/c51c552050293b88cfe558b9b3b3e487'),
+    };
+  }
+}
+</script>
+</body>
+</html>

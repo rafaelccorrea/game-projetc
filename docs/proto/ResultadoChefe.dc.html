@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Resultado do chefe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+/* cenário Antiguidade em camadas (aprovado na Troca de Era), H=844; pés em 0,78H = 658 */
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.Lsky{top:0;height:506px;background-size:auto 506px;animation:pSky 420s linear infinite}
+.Lfar{top:186px;height:354px;background-size:auto 354px;animation:pFar 900s linear infinite}
+.Lmid{top:148px;height:422px;background-size:auto 422px}
+.Lgnd{top:553px;height:321px;background-size:auto 321px}
+@keyframes pSky{to{background-position-x:-1446px}}
+@keyframes pFar{to{background-position-x:-1687px}}
+.e1sky{background-image:url(/_blob/8f9063538a20f7bd77cf0ddf7d957336)}.e1far{background-image:url(/_blob/6c30271e1308c4ceeb9cf353bbae459e)}.e1mid{background-image:url(/_blob/e7dbc843b56300a4e05e9a9f80d57301)}.e1gnd{background-image:url(/_blob/a8e90807b56447d610d33e16a51c930e)}
+/* Kael aprovado: folhas 256x256, 12 fps, pés em 95% */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.kko{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;background-position:0 0}
+/* golpe final em duas partes: quadros 0-7 em velocidade normal, 8-16 em câmera lenta */
+.kgA{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:kgA .62s steps(8, jump-none) both}
+@keyframes kgA{from{background-position:0 0}to{background-position:43.75% 0}}
+.kgB{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:kgB 1.5s steps(9, jump-none) both}
+@keyframes kgB{from{background-position:50% 0}to{background-position:100% 0}}
+.auraG{animation:ag 1.8s ease-in-out infinite}
+@keyframes ag{0%,100%{filter:drop-shadow(0 0 6px rgba(255,201,74,.45))}50%{filter:drop-shadow(0 0 18px rgba(255,201,74,.95))}}
+/* Minotauro: folha "morrer" aprovada, 13 quadros 544x352 a 75% (408x264); pés x 204, y 230 */
+.mIdle{background-image:url(/_blob/99d015dcdc7ed696727f9baf015fcf7b);background-size:1300% 100%;background-repeat:no-repeat;background-position:0 0;animation:breathe 1.6s ease-in-out infinite;transform-origin:50% 87%}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025)}}
+.mDieS{background-image:url(/_blob/99d015dcdc7ed696727f9baf015fcf7b);background-size:1300% 100%;background-repeat:no-repeat;animation:sheet 1.7s steps(13, jump-none) both}
+.auraR{animation:ar 1.6s ease-in-out infinite}
+@keyframes ar{0%,100%{filter:drop-shadow(0 0 6px rgba(255,90,78,.4))}50%{filter:drop-shadow(0 0 22px rgba(255,90,78,1))}}
+/* golpe no chefe: clarão branco e recuo no chão (só eixo X) */
+.bHit{animation:bHit .5s ease-out both}
+@keyframes bHit{0%{filter:brightness(3) saturate(0);transform:translateX(0)}30%{filter:brightness(2.2) saturate(.3);transform:translateX(14px)}100%{filter:none;transform:translateX(6px)}}
+.bGone{animation:bGone .9s ease-in both}
+@keyframes bGone{0%{opacity:1;filter:none;transform:translateX(6px)}100%{opacity:0;filter:brightness(.3) grayscale(1);transform:translateX(6px)}}
+.lunge{animation:lunge .7s cubic-bezier(.5,0,.3,1) both}
+@keyframes lunge{0%{transform:translateX(0)}35%{transform:translateX(18px)}55%{transform:translateX(-48px)}100%{transform:translateX(0)}}
+/* Kael apanha e cai girando em torno dos pés (pés fixos no chão) */
+.kHurt{transform-origin:50% 95%;animation:kHurt .36s ease-out both}
+@keyframes kHurt{0%{filter:brightness(2.4) sepia(1) hue-rotate(-40deg) saturate(4)}50%{transform:rotate(-7deg);filter:brightness(1.4) sepia(1) hue-rotate(-40deg) saturate(3)}100%{transform:rotate(-4deg);filter:none}}
+.kFall{transform-origin:50% 95%;animation:kFall .7s cubic-bezier(.55,0,.9,.6) both}
+@keyframes kFall{0%{transform:rotate(-4deg);filter:none}80%{transform:rotate(-88deg);filter:brightness(.85) saturate(.7)}90%{transform:rotate(-83deg)}100%{transform:rotate(-85deg);filter:brightness(.8) saturate(.6)}}
+/* câmera lenta: zoom no impacto, dessatura e volta */
+.slow{transform-origin:232px 560px;animation:slow 1.7s cubic-bezier(.2,.8,.3,1) both}
+@keyframes slow{0%{transform:scale(1);filter:none}12%{transform:scale(1.16);filter:saturate(.45) contrast(1.15)}78%{transform:scale(1.13);filter:saturate(.5) contrast(1.12)}100%{transform:scale(1);filter:none}}
+.quake{animation:quake .45s}
+@keyframes quake{20%{transform:translate(-3px,2px)}40%{transform:translate(3px,-2px)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,-1px)}}
+.lbox{position:absolute;left:0;right:0;height:46px;background:#000;pointer-events:none;animation:lbox 1.7s ease-in-out both}
+@keyframes lbox{0%{transform:scaleY(0)}12%,80%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+.vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 60% 62%,transparent 30%,rgba(0,0,0,.75) 100%);animation:vign 1.7s ease-in-out both}
+@keyframes vign{0%{opacity:0}12%,80%{opacity:1}100%{opacity:0}}
+.impact{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff 0%,rgba(255,244,200,.9) 18%,rgba(255,201,74,.5) 40%,transparent 68%);animation:impact .7s ease-out both}
+@keyframes impact{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.7);opacity:0}}
+.irays{position:absolute;border-radius:50%;pointer-events:none;background:repeating-conic-gradient(rgba(255,255,255,.95) 0deg 4deg,transparent 4deg 22deg);-webkit-mask:radial-gradient(circle,transparent 18%,#000 30%,transparent 70%);mask:radial-gradient(circle,transparent 18%,#000 30%,transparent 70%);animation:irays 1.1s ease-out both}
+@keyframes irays{0%{transform:scale(.3) rotate(0);opacity:1}100%{transform:scale(1.5) rotate(25deg);opacity:0}}
+.dmg{animation:dmg 1.6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes dmg{0%{transform:scale(.3);opacity:0}15%{transform:scale(1.25);opacity:1}30%{transform:scale(1)}80%{opacity:1}100%{transform:translateY(-40px);opacity:0}}
+.dust{position:absolute;width:30px;height:30px;border-radius:50%;background:rgba(214,190,150,.6);animation:du 1.3s ease-out both;pointer-events:none}
+@keyframes du{0%{opacity:0;transform:scale(.3)}25%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),-26px) scale(2.4)}}
+.flash{animation:flash .9s ease-out both;pointer-events:none}
+@keyframes flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+/* baú: surge no chão, treme e explode */
+.chestIn{transform-origin:50% 100%;animation:chestIn .5s cubic-bezier(.2,1.6,.4,1) both,wig .18s .55s ease-in-out infinite alternate}
+@keyframes chestIn{0%{transform:scale(0,.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes wig{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.chestBoom{transform-origin:50% 100%;animation:chestBoom .5s ease-out both}
+@keyframes chestBoom{0%{transform:scale(1);opacity:1;filter:brightness(1)}35%{transform:scale(1.35,1.2);filter:brightness(2.6)}100%{transform:scale(1.7);opacity:0;filter:brightness(3)}}
+.ring{position:absolute;border-radius:50%;border:6px solid #ffe07a;box-shadow:0 0 30px #ffc94a,inset 0 0 20px #ffc94a;pointer-events:none;animation:ring .7s ease-out both}
+@keyframes ring{0%{transform:scale(.1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+.glow{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,224,122,.85),rgba(255,201,74,0) 65%);animation:glw 1s ease-in-out infinite}
+@keyframes glw{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.15);opacity:1}}
+/* moedas: explodem em arco, quicam no chão e voam para o contador */
+.coin{position:absolute;width:24px;height:24px}
+.cB{animation:cB .8s cubic-bezier(.3,.6,.5,1) both}
+@keyframes cB{0%{transform:translate(calc(var(--dx) * -1),-26px) scale(.3);opacity:0}10%{opacity:1}45%{transform:translate(calc(var(--dx) * -.45),var(--h)) scale(1.1)}80%{transform:translate(0,0) scale(1)}89%{transform:translate(0,-10px)}100%{transform:translate(0,0)}}
+.cF{animation:cF .65s cubic-bezier(.55,0,.8,.4) both}
+@keyframes cF{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(.75);opacity:.3}}
+.cspin{animation:cspin .7s linear infinite}
+@keyframes cspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.25)}}
+.bmA{animation:bmA .25s ease-out}
+.bmB{animation:bmB .25s ease-out}
+@keyframes bmA{50%{transform:scale(1.18);box-shadow:0 0 18px rgba(255,201,74,.9)}}
+@keyframes bmB{50%{transform:scale(1.18);box-shadow:0 0 18px rgba(255,201,74,.9)}}
+/* letreiro */
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.35) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.title{animation:title .8s cubic-bezier(.2,1.5,.4,1) both,glowT 2s .8s ease-in-out infinite}
+@keyframes title{0%{transform:scale(2.6);opacity:0;letter-spacing:14px}100%{transform:none;opacity:1;letter-spacing:2px}}
+@keyframes glowT{0%,100%{text-shadow:0 5px 0 #6a3a08,0 0 10px rgba(255,201,74,.5)}50%{text-shadow:0 5px 0 #6a3a08,0 0 30px rgba(255,201,74,1),0 0 60px rgba(255,140,40,.7)}}
+.sub{animation:rise .5s .5s ease-out both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.conf{position:absolute;top:-16px;width:8px;height:14px;border-radius:2px;animation:cf linear infinite;pointer-events:none}
+@keyframes cf{0%{opacity:0;transform:translateY(0) rotate(0)}8%{opacity:1}100%{opacity:0;transform:translateY(700px) rotate(620deg)}}
+/* cartões */
+.card{animation:cardIn .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes cardIn{0%{transform:translateX(70px) scale(.9);opacity:0}100%{transform:none;opacity:1}}
+.cardUp{animation:cardUp .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes cardUp{0%{transform:translateY(40px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
+.myth{animation:my 1.4s ease-in-out infinite}
+@keyframes my{0%,100%{box-shadow:0 0 10px rgba(255,77,109,.45),inset 0 0 10px rgba(255,77,109,.25)}50%{box-shadow:0 0 30px rgba(255,77,109,1),inset 0 0 18px rgba(255,77,109,.5)}}
+.shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:sh 2.6s ease-in-out infinite;pointer-events:none}
+@keyframes sh{0%,40%{background-position:150% 0}100%{background-position:-60% 0}}
+.wob{animation:wob 1.6s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.1)}}
+.newtag{animation:newtag 1.1s ease-in-out infinite}
+@keyframes newtag{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.xpfill{transition:width 1.1s cubic-bezier(.2,.8,.2,1) .25s}
+.fcfill{animation:fcfill 1s cubic-bezier(.2,.8,.2,1) both;transform-origin:0 50%}
+@keyframes fcfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 30px rgba(255,201,74,.95)}}
+.popin{animation:popin .45s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes popin{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:none}}
+/* derrota */
+.darkIn{animation:darkIn .8s ease-out both}
+@keyframes darkIn{from{opacity:0}to{opacity:1}}
+.redflash{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff 0%,rgba(255,140,120,.9) 22%,rgba(255,60,40,.45) 45%,transparent 70%);animation:impact .5s ease-out both}
+.lose{animation:lose .6s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes lose{0%{opacity:0;transform:scale(1.4)}60%{opacity:1;transform:scale(.97)}100%{transform:none}}
+.orbs{position:absolute;width:44px;height:44px;transform:scaleY(.38);pointer-events:none;animation:darkIn .4s ease-out both}
+.orb{position:absolute;left:16px;top:16px;width:12px;height:12px;animation:orb 1.1s linear infinite}
+@keyframes orb{from{transform:rotate(0deg) translateX(18px) rotate(0deg)}to{transform:rotate(360deg) translateX(18px) rotate(-360deg)}}
+.path{animation:cardUp .5s cubic-bezier(.2,1.3,.4,1) both}
+.path:active{transform:scale(.96)}
+.picon{animation:picon 2.4s ease-in-out infinite}
+@keyframes picon{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-4deg)}}
+.farmspin{animation:spin 2.2s linear infinite}
+.pfx{animation:pfx 2s ease-in-out infinite}
+@keyframes pfx{0%,100%{opacity:.75}50%{opacity:1}}
+.redbtn{animation:redb 2s ease-in-out infinite}
+@keyframes redb{0%,100%{border-color:#7a2a20}50%{border-color:#ff7a6e}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background-color: #16110d; font-family: Nunito, system-ui, sans-serif; color: #f6ecdf">
+
+  <!-- ===== Câmera: cenário + personagens (zoom/tremor só aqui) ===== -->
+  <div class="{{camCls}}" style="position: absolute; inset: 0">
+    <div style="position: absolute; inset: 0; overflow: hidden; background: #c9a77a" aria-hidden="true">
+      <div class="ly Lsky e1sky"></div><div class="ly Lfar e1far"></div><div class="ly Lmid e1mid"></div><div class="ly Lgnd e1gnd"></div>
+    </div>
+    <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,7,5,0.78) 0%, rgba(10,7,5,0.45) 40%, rgba(10,7,5,0.05) 62%, rgba(10,7,5,0.1) 80%, rgba(10,7,5,0.9) 100%); pointer-events: none"></div>
+
+    <!-- ============ VITÓRIA: cena ============ -->
+    <sc-if value="{{isWin}}" hint-placeholder-val="{{true}}">
+      <!-- Minotauro: pés em x 300, y 658 (caixa 408x264, pés em 204,230) -->
+      <sc-if value="{{bossOn}}" hint-placeholder-val="{{true}}">
+        <div class="{{bossMove}}" style="position: absolute; left: 96px; top: 428px; width: 408px; height: 264px">
+          <div style="position: absolute; left: 94px; top: 221px; width: 220px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+          <div class="{{bossSheet}}" role="img" aria-label="{{bossAria}}" style="position: absolute; inset: 0"></div>
+        </div>
+      </sc-if>
+      <!-- Kael 170 px: pés em 95% = 161,5 -> top 658 - 161,5 = 497; pés em x 125 -->
+      <div style="position: absolute; left: 55px; top: 650px; width: 140px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+      <div class="{{kOuter}}" style="position: absolute; left: 40px; top: 497px; width: 170px; height: 170px">
+        <div class="{{kSheet}}" role="img" aria-label="Kael dá o golpe final" style="position: absolute; inset: 0"></div>
+      </div>
+      <sc-if value="{{dustOn}}" hint-placeholder-val="{{false}}">
+        <span class="dust" style="left: 214px; top: 634px; --dx: -34px"></span>
+        <span class="dust" style="left: 262px; top: 640px; --dx: -8px; animation-delay: .08s"></span>
+        <span class="dust" style="left: 312px; top: 638px; --dx: 18px; animation-delay: .04s"></span>
+        <span class="dust" style="left: 356px; top: 634px; --dx: 38px; animation-delay: .12s"></span>
+      </sc-if>
+    </sc-if>
+
+    <!-- ============ DERROTA: cena ============ -->
+    <sc-if value="{{isLose}}" hint-placeholder-val="{{false}}">
+      <!-- Minotauro: pés em x 320 -->
+      <div class="{{bossMove}}" style="position: absolute; left: 116px; top: 428px; width: 408px; height: 264px">
+        <div style="position: absolute; left: 94px; top: 221px; width: 220px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+        <div class="auraR" style="position: absolute; inset: 0">
+          <div class="mIdle" role="img" aria-label="Minotauro de pé, vencedor" style="position: absolute; inset: 0"></div>
+        </div>
+      </div>
+      <!-- tela escurece por cima do chefe; o Kael caído continua visível -->
+      <sc-if value="{{darkOn}}" hint-placeholder-val="{{false}}">
+        <div class="darkIn" style="position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 76%, rgba(20,6,4,0.55) 0%, rgba(12,5,4,0.86) 45%, rgba(6,3,2,0.94) 100%); pointer-events: none"></div>
+      </sc-if>
+      <!-- Kael: pés em x 185, y 658; cai para trás girando nos pés -->
+      <div style="position: absolute; left: 115px; top: 650px; width: 140px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.5)"></div>
+      <div class="{{kOuter}}" style="position: absolute; left: 100px; top: 497px; width: 170px; height: 170px">
+        <div class="{{kSheet}}" role="img" aria-label="{{kAria}}" style="position: absolute; inset: 0"></div>
+      </div>
+      <sc-if value="{{hitOn}}" hint-placeholder-val="{{false}}">
+        <div class="redflash" style="left: 130px; top: 500px; width: 150px; height: 150px"></div>
+      </sc-if>
+      <sc-if value="{{downOn}}" hint-placeholder-val="{{false}}">
+        <span class="dust" style="left: 34px; top: 634px; --dx: -26px"></span>
+        <span class="dust" style="left: 84px; top: 640px; --dx: 4px; animation-delay: .06s"></span>
+        <span class="dust" style="left: 132px; top: 638px; --dx: 26px; animation-delay: .1s"></span>
+        <div class="orbs" aria-hidden="true" style="left: 40px; top: 594px">
+          <svg class="orb" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z" fill="#ffe07a"></path></svg>
+          <svg class="orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay: -.37s"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z" fill="#ffe07a"></path></svg>
+          <svg class="orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay: -.74s"><path d="M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z" fill="#ffe07a"></path></svg>
+        </div>
+      </sc-if>
+    </sc-if>
+  </div>
+
+  <!-- ============ VITÓRIA: efeitos fora da câmera ============ -->
+  <sc-if value="{{isWin}}" hint-placeholder-val="{{true}}">
+    <sc-if value="{{slowOn}}" hint-placeholder-val="{{false}}">
+      <div class="vign"></div>
+      <div class="lbox" style="top: 0; transform-origin: 50% 0"></div>
+      <div class="lbox" style="bottom: 0; transform-origin: 50% 100%"></div>
+    </sc-if>
+    <sc-if value="{{impactOn}}" hint-placeholder-val="{{false}}">
+      <div class="impact" style="left: 152px; top: 480px; width: 160px; height: 160px"></div>
+      <div class="irays" style="left: 112px; top: 440px; width: 240px; height: 240px"></div>
+    </sc-if>
+    <sc-if value="{{dmgOn}}" hint-placeholder-val="{{false}}">
+      <div class="dmg" aria-hidden="true" style="position: absolute; left: 150px; top: 414px; width: 200px; display: flex; flex-direction: column; align-items: center">
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 15px; color: #fff; letter-spacing: 2px; text-shadow: 0 2px 0 #7a1f17">CRÍTICO!</span>
+        <span style="font-family: 'Lilita One', sans-serif; font-size: 40px; line-height: 1; color: #ffe07a; text-shadow: 0 4px 0 #8a4f0c, 0 0 18px rgba(255,160,40,0.9)">-48.210</span>
+      </div>
+    </sc-if>
+
+    <!-- baú do chefe no chão (base em y 660) -->
+    <sc-if value="{{chestOn}}" hint-placeholder-val="{{false}}">
+      <div class="glow" style="left: 220px; top: 540px; width: 160px; height: 140px"></div>
+      <img class="{{chestCls}}" src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="Baú do chefe" style="position: absolute; left: 245px; top: 562px; width: 110px; height: 98px; object-fit: contain; filter: drop-shadow(0 0 16px rgba(255,201,74,0.7))">
+    </sc-if>
+    <sc-if value="{{boomOn}}" hint-placeholder-val="{{false}}">
+      <div class="ring" style="left: 260px; top: 575px; width: 80px; height: 80px"></div>
+    </sc-if>
+    <sc-if value="{{coinsOn}}" hint-placeholder-val="{{false}}">
+      <sc-for list="{{coins}}" as="c" hint-placeholder-count="12">
+        <div class="coin {{c.cls}}" style="left: {{c.x}}; top: {{c.y}}; --dx: {{c.dx}}; --h: {{c.h}}; --tx: {{c.tx}}; --ty: {{c.ty}}; animation-delay: {{c.dl}}">
+          <img class="cspin" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px; object-fit: contain; display: block; animation-delay: {{c.sd}}">
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <!-- contador de moedas (destino das moedas) -->
+    <div class="{{bumpCls}}" role="status" aria-label="{{coinAria}}" style="position: absolute; left: 12px; top: 68px; height: 36px; padding: 0 12px 0 4px; border-radius: 999px; background: rgba(14,10,7,0.88); border: 2px solid #6a4a1a; display: flex; align-items: center; gap: 6px; z-index: 6">
+      <img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 28px; height: 28px; object-fit: contain">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ffe07a">{{coinTxt}}</span>
+    </div>
+
+    <sc-if value="{{confOn}}" hint-placeholder-val="{{false}}">
+      <span class="conf" style="left: 22px; background: #ffc94a; animation-duration: 3.2s"></span>
+      <span class="conf" style="left: 64px; background: #4aa3ff; animation-duration: 3.8s; animation-delay: .5s"></span>
+      <span class="conf" style="left: 108px; background: #ff4d6d; animation-duration: 3s; animation-delay: .2s"></span>
+      <span class="conf" style="left: 150px; background: #5fd068; animation-duration: 3.6s; animation-delay: 1.1s"></span>
+      <span class="conf" style="left: 196px; background: #ffe07a; animation-duration: 3.3s; animation-delay: .7s"></span>
+      <span class="conf" style="left: 238px; background: #b45cff; animation-duration: 3.9s; animation-delay: .3s"></span>
+      <span class="conf" style="left: 282px; background: #ffc94a; animation-duration: 3.1s; animation-delay: 1.4s"></span>
+      <span class="conf" style="left: 322px; background: #4aa3ff; animation-duration: 3.5s; animation-delay: .9s"></span>
+      <span class="conf" style="left: 362px; background: #ff4d6d; animation-duration: 3.4s; animation-delay: .1s"></span>
+    </sc-if>
+
+    <sc-if value="{{flashOn}}" hint-placeholder-val="{{false}}">
+      <div class="flash" style="position: absolute; inset: 0; background: radial-gradient(circle at 75% 70%, #ffffff 0%, #fff4c8 45%, rgba(255,233,168,0.9) 100%); z-index: 8"></div>
+    </sc-if>
+
+    <!-- letreiro VITÓRIA -->
+    <sc-if value="{{titleOn}}" hint-placeholder-val="{{false}}">
+      <div style="position: absolute; left: 0; right: 0; top: 108px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <div class="rays" aria-hidden="true" style="left: 35px; top: -105px; width: 320px; height: 320px"></div>
+        <h1 class="title" style="position: relative; margin: 0; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 60px; line-height: 1; color: #ffc94a">VITÓRIA!</h1>
+        <span class="sub" style="position: relative; margin-top: 8px; font-size: 14px; font-weight: 900; text-shadow: 0 2px 4px #000">Minotauro derrotado · Fase 1-6 liberada</span>
+      </div>
+    </sc-if>
+
+    <!-- cartões de recompensa, um por um -->
+    <sc-if value="{{card1}}" hint-placeholder-val="{{false}}">
+      <div class="card" style="position: absolute; left: 16px; right: 16px; top: 232px; height: 62px; border-radius: 16px; background: rgba(29,22,17,0.95); border: 2px solid #ffc94a; box-shadow: 0 0 18px rgba(255,201,74,0.35); display: flex; align-items: center; gap: 12px; padding: 0 14px; box-sizing: border-box">
+        <img class="cspin" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 40px; height: 40px; object-fit: contain">
+        <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.1">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 24px; color: #ffe07a">+1.860</span>
+          <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Moedas de ouro</span>
+        </span>
+        <span style="font-size: 12px; font-weight: 900; color: #c9b9a2; text-align: right">Total<br><span style="color: #f6ecdf; font-size: 14px">14.200</span></span>
+      </div>
+    </sc-if>
+    <sc-if value="{{card2}}" hint-placeholder-val="{{false}}">
+      <div class="card" style="position: absolute; left: 16px; right: 16px; top: 302px; height: 62px; border-radius: 16px; background: rgba(29,22,17,0.95); border: 2px solid #5fd068; display: flex; align-items: center; gap: 12px; padding: 0 14px; box-sizing: border-box">
+        <svg class="wob" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#1f4a22" stroke="#5fd068" stroke-width="3"></circle><path d="M20 8l3.4 7.6 8.1.7-6.2 5.3 1.9 8-7.2-4.4-7.2 4.4 1.9-8-6.2-5.3 8.1-.7z" fill="#c4f27a"></path></svg>
+        <span style="width: 78px; flex: none; display: flex; flex-direction: column; line-height: 1.1">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 24px; color: #9be89f">+33 XP</span>
+          <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Kael</span>
+        </span>
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+          <span style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900"><span>Nv. 24</span><span style="color: #9be89f">{{xpPct}}</span></span>
+          <span role="progressbar" aria-label="XP até o nível 25" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{xpNum}}" style="height: 10px; border-radius: 5px; background: #0e0a07; border: 1px solid #2f5a32; overflow: hidden; display: block"><span class="xpfill" style="display: block; height: 100%; width: {{xpPct}}; background: linear-gradient(90deg, #5fd068, #c4f27a)"></span></span>
+        </span>
+      </div>
+    </sc-if>
+    <sc-if value="{{card3}}" hint-placeholder-val="{{false}}">
+      <div class="card" style="position: absolute; left: 16px; right: 16px; top: 372px; height: 100px; border-radius: 16px; overflow: hidden">
+        <div class="myth" style="position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(90deg, rgba(255,77,109,0.32), rgba(29,22,17,0.96) 62%); border: 3px solid #ff4d6d; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 12px">
+          <div style="width: 72px; height: 72px; flex: none; border-radius: 14px; background: radial-gradient(circle, rgba(255,77,109,0.6), #16110d 72%); border: 3px solid #ff4d6d; display: flex; align-items: center; justify-content: center; box-sizing: border-box">
+            <svg class="wob" width="54" height="54" viewBox="0 0 64 64" aria-hidden="true"><path d="M44 6 L58 6 L58 20 L26 48 L16 38 Z" fill="#e3e6ee" stroke="#2a1f16" stroke-width="3" stroke-linejoin="round"></path><path d="M12 36 L28 52" stroke="#d4a017" stroke-width="5" stroke-linecap="round"></path><path d="M14 46 L6 54" stroke="#5a3a1a" stroke-width="6" stroke-linecap="round"></path></svg>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 12px; font-weight: 900; color: #ff9fb0; letter-spacing: 1px">ITEM · MÍTICO</span>
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 22px; line-height: 1.1">Xifos Espartano</span>
+            <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">Arma · Antiguidade</span>
+          </div>
+          <span class="newtag" style="align-self: flex-start; margin-top: 10px; padding: 3px 8px; border-radius: 8px; background: #ff4d6d; color: #fff; font-size: 11px; font-weight: 900">NOVO</span>
+        </div>
+        <span class="shine"></span>
+      </div>
+    </sc-if>
+
+    <!-- ações -->
+    <sc-if value="{{endOn}}" hint-placeholder-val="{{false}}">
+      <a class="gold pulse popin" href="BatalhaTelaCheiaV2.dc.html" onClick="{{cont}}" style="position: absolute; left: 24px; right: 24px; bottom: 24px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Lilita One', sans-serif; font-size: 28px; text-decoration: none">Continuar<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg></a>
+    </sc-if>
+    <sc-if value="{{skipOn}}" hint-placeholder-val="{{true}}">
+      <button onClick="{{skip}}" style="position: absolute; right: 16px; bottom: 30px; height: 44px; padding: 0 16px; border-radius: 14px; border: 2px solid #4a3a2b; background: rgba(29,22,17,0.88); color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 17px; display: flex; align-items: center; gap: 6px; z-index: 9">Pular<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M13 5 L22 12 L13 19 Z"></path></svg></button>
+    </sc-if>
+  </sc-if>
+
+  <!-- ============ DERROTA: interface ============ -->
+  <sc-if value="{{isLose}}" hint-placeholder-val="{{false}}">
+    <sc-if value="{{loseTitle}}" hint-placeholder-val="{{false}}">
+      <div class="lose" style="position: absolute; left: 16px; right: 16px; top: 74px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center">
+        <h1 style="margin: 0; font-family: 'Lilita One', sans-serif; font-weight: 400; font-size: 34px; line-height: 1.05; color: #ff8a7e; text-shadow: 0 4px 0 #4a0d08, 0 0 22px rgba(255,90,78,0.55)">O chefe foi mais forte</h1>
+        <span style="font-size: 15px; font-weight: 800; color: #e8dccb">Fique mais forte e volte para vencer o Minotauro.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{fcOn}}" hint-placeholder-val="{{false}}">
+      <div class="cardUp" style="position: absolute; left: 16px; right: 16px; top: 156px; padding: 12px 14px; border-radius: 18px; background: rgba(29,22,17,0.96); border: 2px solid #4a3a2b; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end">
+          <span style="display: flex; flex-direction: column; line-height: 1.1"><span style="font-size: 12px; font-weight: 900; color: #c9b9a2">SUA FC</span><span style="font-family: 'Lilita One', sans-serif; font-size: 26px; color: #ffc94a">{{fcTxt}}</span></span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1"><span style="font-size: 12px; font-weight: 900; color: #c9b9a2">RECOMENDADA</span><span style="font-family: 'Lilita One', sans-serif; font-size: 26px; color: #f6ecdf">15.600</span></span>
+        </div>
+        <div role="progressbar" aria-label="Sua FC é 80% da recomendada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" style="position: relative; height: 18px; border-radius: 9px; background: #0e0a07; border: 1px solid #6a4a1a; overflow: hidden">
+          <div class="fcfill" style="width: 80%; height: 100%; border-radius: 9px; background: linear-gradient(90deg, #c0301f, #f2a826 70%, #ffe07a)"></div>
+          <span class="shine" style="width: 80%"></span>
+        </div>
+        <span style="font-size: 13px; font-weight: 800; color: #ffb3a8">Faltam <span style="color: #fff; font-weight: 900">3.120 de FC</span> para a recomendada</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{pathsOn}}" hint-placeholder-val="{{false}}">
+      <span class="cardUp" style="position: absolute; left: 18px; top: 270px; font-family: 'Lilita One', sans-serif; font-size: 20px; color: #ffc94a; text-shadow: 0 2px 0 #000">Fique mais forte</span>
+      <div style="position: absolute; left: 16px; right: 16px; top: 302px; height: 150px; display: flex; gap: 8px">
+        <a class="path" href="Forja.dc.html" onClick="{{tap}}" style="flex: 1; border-radius: 16px; border: 2px solid #ff9a3c; background: linear-gradient(180deg, #3a2c1f, #241a12); color: #f6ecdf; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; box-sizing: border-box">
+          <span style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle, rgba(255,154,60,0.45), rgba(22,17,13,0.9) 70%); display: flex; align-items: center; justify-content: center"><img class="picon" src="/_blob/c2f9c06afae6a5991ad4eccc6db469a4" alt="" style="width: 54px; height: 54px; object-fit: contain"></span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 18px">Forja</span>
+          <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; text-align: center; line-height: 1.15">Melhore a arma</span>
+          <span class="pfx" style="font-size: 12px; font-weight: 900; color: #5fd068">+FC</span>
+        </a>
+        <a class="path" href="Equipamento.dc.html" onClick="{{tap}}" style="flex: 1; border-radius: 16px; border: 2px solid #4aa3ff; background: linear-gradient(180deg, #3a2c1f, #241a12); color: #f6ecdf; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; box-sizing: border-box; animation-delay: .15s">
+          <span style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle, rgba(74,163,255,0.45), rgba(22,17,13,0.9) 70%); display: flex; align-items: center; justify-content: center"><img class="picon" src="/_blob/49247795ea153894651459c68f2384f8" alt="" style="width: 54px; height: 54px; object-fit: contain; animation-delay: .5s"></span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 18px">Equipamento</span>
+          <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; text-align: center; line-height: 1.15">Use o melhor</span>
+          <span class="pfx" style="font-size: 12px; font-weight: 900; color: #5fd068; animation-delay: .5s">+FC</span>
+        </a>
+        <a class="path" href="Invocar.dc.html" onClick="{{tap}}" style="flex: 1; border-radius: 16px; border: 2px solid #b45cff; background: linear-gradient(180deg, #3a2c1f, #241a12); color: #f6ecdf; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; box-sizing: border-box; animation-delay: .3s">
+          <span style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle, rgba(180,92,255,0.45), rgba(22,17,13,0.9) 70%); display: flex; align-items: center; justify-content: center"><img class="picon" src="/_blob/c8fb4bc36407cf843b9fbeead9237b1d" alt="" style="width: 54px; height: 54px; object-fit: contain; animation-delay: 1s"></span>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 18px">Invocar</span>
+          <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; text-align: center; line-height: 1.15">Novos itens</span>
+          <span class="pfx" style="font-size: 12px; font-weight: 900; color: #5fd068; animation-delay: 1s">+FC</span>
+        </a>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{btnsOn}}" hint-placeholder-val="{{false}}">
+      <a class="gold pulse cardUp" href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" style="position: absolute; left: 20px; right: 20px; bottom: 90px; height: 66px; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 0 16px; text-decoration: none; box-sizing: border-box">
+        <svg class="farmspin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2"></path><polyline points="3 20 5.5 18.2 7 21"></polyline><path d="M3 12a9 9 0 0 1 15.5-6.2"></path><polyline points="21 4 18.5 5.8 17 3"></polyline></svg>
+        <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.1">
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 25px">Modo farm</span>
+          <span style="font-size: 12px; font-weight: 900">Continua farmando automático</span>
+        </span>
+        <span aria-live="polite" style="min-width: 44px; height: 36px; padding: 0 8px; border-radius: 12px; background: rgba(42,20,3,0.85); color: #ffe07a; font-family: 'Lilita One', sans-serif; font-size: 17px; display: flex; align-items: center; justify-content: center; box-sizing: border-box">{{cdTxt}}</span>
+      </a>
+      <a class="redbtn cardUp" href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" style="position: absolute; left: 20px; right: 20px; bottom: 22px; height: 56px; border-radius: 16px; border: 2px solid #7a2a20; background: rgba(29,22,17,0.95); color: #f6ecdf; font-family: 'Lilita One', sans-serif; font-size: 21px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; animation-delay: .12s">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8a7e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>Tentar de novo</a>
+    </sc-if>
+  </sc-if>
+
+  <!-- ===== Topo: fase + controles do protótipo ===== -->
+  <div style="position: absolute; top: 10px; left: 14px; right: 10px; height: 50px; display: flex; align-items: center; justify-content: space-between; z-index: 10">
+    <div style="display: flex; flex-direction: column; min-width: 0">
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 18px; text-shadow: 0 2px 0 #000; white-space: nowrap">Antiguidade 1-5</span>
+      <span style="font-size: 11px; font-weight: 900; color: #ffb3a8; white-space: nowrap">CHEFE · Minotauro</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px">
+      <div role="group" aria-label="Prévia do resultado" style="display: flex; gap: 3px; padding: 3px; border-radius: 14px; background: rgba(14,10,7,0.88); border: 1px solid #4a3a2b">
+        <button onClick="{{showWin}}" aria-pressed="{{winAria}}" style="height: 44px; padding: 0 10px; border-radius: 11px; border: 0; background: {{winBg}}; color: {{winColor}}; font-size: 13px; font-weight: 900">Vitória</button>
+        <button onClick="{{showLose}}" aria-pressed="{{loseAria}}" style="height: 44px; padding: 0 10px; border-radius: 11px; border: 0; background: {{loseBg}}; color: {{loseColor}}; font-size: 13px; font-weight: 900">Derrota</button>
+      </div>
+      <button onClick="{{replay}}" aria-label="Repetir a animação" style="width: 48px; height: 48px; border-radius: 14px; border: 1px solid #4a3a2b; background: rgba(14,10,7,0.88); color: #ffc94a; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d',
+  hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05', hurt: '/_blob/8ebbcd838ede94b3a5b1ecc55e95d1db',
+  coin: '/_blob/84ab4c639b3c7f8af848b41172359878', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487',
+  legendary: '/_blob/266edcaffe0fe5d99485bbe84d2d6c05', upgrade: '/_blob/ca8bcec3fced3c13b36555744659895a',
+  summon: '/_blob/07a146ee324bece467fc05bedf4435b0'
+};
+var COIN0 = 12340, COIN_GAIN = 1860;
+// moedas: saem do baú (centro x 300, y 616) e caem no chão (y ~640)
+var COINS = [[-150, -150, 642], [-122, -190, 638], [-96, -130, 646], [-70, -210, 640], [-44, -160, 644], [-18, -230, 638],
+  [14, -180, 646], [40, -140, 640], [62, -200, 644], [80, -120, 638], [-134, -110, 648], [-58, -240, 642]];
+var WIN_TL = [[620, 1], [2100, 2], [2350, 3], [2700, 4], [2850, 5], [3400, 6], [3600, 7], [4400, 8], [5900, 9], [6000, 10], [6600, 11], [7300, 12], [8100, 13]];
+var WIN_END = 13;
+var LOSE_TL = [[500, 1], [780, 2], [1150, 3], [1850, 4], [2000, 5], [2200, 6], [2600, 7], [3100, 8], [3700, 9]];
+var LOSE_END = 9;
+function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.tm = []; this.iv = [];
+    this.state = { mode: 'win', st: 0, coins: COIN0, bump: 0, fc: 0, cd: 10, xpUp: false };
+  }
+  componentDidMount() { this.begin('win'); }
+  componentWillUnmount() { this.clear(); }
+  clear() {
+    this.tm.forEach(function (t) { clearTimeout(t); }); this.tm = [];
+    this.iv.forEach(function (t) { clearInterval(t); }); this.iv = [];
+  }
+  later(ms, fn) { this.tm.push(setTimeout(fn, ms)); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  vib(ms) { try { if (navigator.vibrate) { navigator.vibrate(ms); } } catch (e) {} }
+  restart(m) {
+    var self = this;
+    this.clear();
+    this.setState({ mode: 'none', st: 0, coins: COIN0, fc: 0, cd: 10, xpUp: false });
+    this.later(40, function () { self.begin(m); });
+  }
+  begin(m) {
+    var self = this;
+    this.setState({ mode: m, st: 0, coins: COIN0, fc: 0, cd: 10, xpUp: false });
+    var tl = m === 'win' ? WIN_TL : LOSE_TL;
+    tl.forEach(function (e) { self.later(e[0], function () { self.go(e[1]); }); });
+    if (m === 'win') { this.later(120, function () { self.sfx(SND.swing, 0.7); }); }
+  }
+  tickCoins() {
+    var self = this, t0 = Date.now(), dur = 800;
+    var id = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / dur);
+      self.setState({ coins: COIN0 + COIN_GAIN * k, bump: self.state.bump + 1 });
+      if (k >= 1) { clearInterval(id); }
+    }, 70);
+    this.iv.push(id);
+  }
+  go(st) {
+    var self = this, m = this.state.mode;
+    this.setState({ st: st });
+    if (m === 'win') {
+      if (st === 1) { this.sfx(SND.hit, 0.9); this.vib(40); }
+      if (st === 3) { this.sfx(SND.hit, 0.5); this.vib(25); }
+      if (st === 4) { this.sfx(SND.summon, 0.6); }
+      if (st === 6) { this.sfx(SND.claim, 0.8); this.sfx(SND.coin, 0.6); this.vib(30); }
+      if (st === 7) { this.sfx(SND.legendary, 0.5); }
+      if (st === 8) {
+        this.later(650, function () { self.sfx(SND.coin, 0.6); self.tickCoins(); });
+        this.later(1000, function () { self.sfx(SND.coin, 0.5); });
+        this.later(1350, function () { self.sfx(SND.coin, 0.5); });
+      }
+      if (st === 10) { this.sfx(SND.coin, 0.6); }
+      if (st === 11) { this.sfx(SND.upgrade, 0.6); this.later(300, function () { self.setState({ xpUp: true }); }); }
+      if (st === 12) { this.sfx(SND.legendary, 0.85); this.vib(50); }
+      if (st === 13) { this.sfx(SND.tap, 0.5); }
+    } else {
+      if (st === 2) { this.sfx(SND.hurt, 0.9); this.vib(60); }
+      if (st === 4) { this.sfx(SND.hit, 0.45); }
+      if (st === 7) {
+        var t0 = Date.now();
+        var id = setInterval(function () {
+          var k = Math.min(1, (Date.now() - t0) / 900);
+          self.setState({ fc: 12480 * k });
+          if (k >= 1) { clearInterval(id); }
+        }, 50);
+        this.iv.push(id);
+      }
+      if (st === 8) { this.sfx(SND.tap, 0.5); }
+      if (st === 9) {
+        var cd = setInterval(function () {
+          var n = self.state.cd - 1;
+          self.setState({ cd: Math.max(0, n) });
+          if (n <= 0) { clearInterval(cd); }
+        }, 1000);
+        this.iv.push(cd);
+      }
+    }
+  }
+  renderVals() {
+    var s = this.state, self = this, st = s.st;
+    var win = s.mode === 'win', lose = s.mode === 'lose';
+    var coins = COINS.map(function (c, i) {
+      var left = 300 + c[0] - 12, top = c[2];
+      return {
+        x: left + 'px', y: top + 'px', dx: c[0] + 'px', h: c[1] + 'px',
+        tx: (18 - left) + 'px', ty: (74 - top) + 'px',
+        cls: st >= 8 ? 'cF' : 'cB',
+        dl: st >= 8 ? (i * 0.06) + 's' : (i * 0.025) + 's',
+        sd: (-i * 0.09) + 's'
+      };
+    });
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      isWin: win, isLose: lose,
+      showWin: function () { self.sfx(SND.tap); self.restart('win'); },
+      showLose: function () { self.sfx(SND.tap); self.restart('lose'); },
+      replay: function () { self.sfx(SND.tap); self.restart(s.mode === 'lose' ? 'lose' : 'win'); },
+      winAria: win ? 'true' : 'false', loseAria: lose ? 'true' : 'false',
+      winBg: win ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'transparent', winColor: win ? '#2a1403' : '#c9b9a2',
+      loseBg: lose ? '#c0301f' : 'transparent', loseColor: lose ? '#fff' : '#c9b9a2',
+
+      camCls: win ? (st === 1 || st === 2 ? 'slow' : (st === 3 ? 'quake' : '')) : (lose && st === 2 ? 'quake' : ''),
+      // Kael
+      kOuter: win ? (st >= 2 ? 'auraG' : '') : (st >= 3 ? 'kFall' : (st === 2 ? 'kHurt' : '')),
+      kSheet: win ? (st === 0 ? 'kgA' : (st === 1 ? 'kgB' : 'kidle')) : (st >= 3 ? 'kko' : 'kidle'),
+      kAria: st >= 3 ? 'Kael caído no chão' : 'Kael',
+      // chefe
+      bossOn: st < 6,
+      bossMove: win ? (st >= 4 ? 'bGone' : (st >= 1 ? 'bHit' : '')) : (st === 1 || st === 2 ? 'lunge' : ''),
+      bossSheet: st === 0 ? 'mIdle' : 'mDieS',
+      bossAria: st === 0 ? 'Minotauro' : 'Minotauro caindo derrotado',
+      slowOn: st >= 1 && st <= 2, impactOn: win && st >= 1 && st <= 3, dmgOn: st >= 1 && st <= 4,
+      dustOn: st >= 3 && st <= 5, flashOn: st >= 4 && st <= 5,
+      chestOn: st >= 5 && st <= 7, chestCls: st >= 6 ? 'chestBoom' : 'chestIn', boomOn: st >= 6 && st <= 7,
+      coinsOn: st >= 6 && st <= 8, coins: coins,
+      bumpCls: s.bump % 2 ? 'bmA' : 'bmB',
+      coinTxt: fmt(s.coins), coinAria: 'Moedas: ' + fmt(s.coins),
+      confOn: st >= 6, titleOn: st >= 7,
+      card1: st >= 10, card2: st >= 11, card3: st >= 12,
+      xpPct: s.xpUp ? '68%' : '62%', xpNum: s.xpUp ? '68' : '62',
+      endOn: st >= WIN_END, skipOn: win && st < WIN_END,
+      skip: function () {
+        self.clear(); self.sfx(SND.tap);
+        self.setState({ st: WIN_END, coins: COIN0 + COIN_GAIN, xpUp: true });
+      },
+      cont: function () { self.sfx(SND.claim, 0.8); },
+      // derrota
+      hitOn: lose && st === 2, downOn: lose && st >= 4, darkOn: lose && st >= 5,
+      loseTitle: lose && st >= 6, fcOn: lose && st >= 7, pathsOn: lose && st >= 8, btnsOn: lose && st >= 9,
+      fcTxt: fmt(s.fc),
+      cdTxt: s.cd > 0 ? s.cd + 's' : 'já'
+    };
+  }
+}
+</script>
+</body>
+</html>

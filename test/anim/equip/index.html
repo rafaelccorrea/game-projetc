@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kael customizável</title>
+<style>
+ body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:#aab}
+ .ctl{padding:6px 16px;display:flex;flex-direction:column;gap:6px}
+ .grp{display:flex;gap:6px;flex-wrap:wrap;align-items:center} .grp span{color:#aab;width:64px}
+ button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600} button.on{background:#2d6cdf}
+ canvas{display:block;max-width:100%;margin:10px 16px;border-radius:8px}
+</style></head><body>
+<h1>Kael customizável: chapéu, arma, asa, colar e cor de luva e bota</h1>
+<p>Corrida aprovada (mão direita). O chapéu é a cabeça rastreada quadro a quadro; a arma, a mão rastreada; a asa e o colar ficam presos ao pescoço rastreado; luvas e botas mudam de cor e brilho por código.</p>
+<div class="ctl" id="ctl"></div>
+<canvas id="c" width="480" height="340"></canvas>
+<script>
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const OPT={hat:[['','Sem chapéu'],['hat','Elmo'],['hat_skull','Crânio'],['hat_tricorn','Tricórnio'],['hat_tophat','Cartola'],['hat_scifi','Sci-fi'],['hair_spiky','Loiro'],['hair_bun','Coque']],
+ weapon:[['era2_t0','Espada de ferro'],['era2_t1','Espada rúnica'],['era2_t2','Espada lendária'],['none','Sem arma']],
+ wing:[['','Sem asa'],['angel','Anjo'],['dragon','Dragão'],['energy','Energia']],
+ neck:[['','Sem colar'],['gold','Medalhão de ouro'],['gem','Amuleto azul'],['tooth','Colar de dentes']],
+ glove:[['','Original'],['steel','Aço'],['fur','Pele'],['gold','Ouro'],['neon','Neon']],
+ boot:[['','Original'],['steel','Aço'],['fur','Pele'],['gold','Ouro'],['neon','Neon']]};
+const NAMES={hat:'Chapéu',weapon:'Arma',wing:'Asa',neck:'Colar',glove:'Luvas',boot:'Botas'};
+const S={hat:'',weapon:'era2_t1',wing:'',neck:'',glove:'',boot:''};
+const TINT={steel:[190,200,215,1.25],fur:[150,105,70,0.95],gold:[235,190,70,1.3],neon:[90,230,255,1.4]};
+(async()=>{
+ const base='../../../assets/anim/hyb/R/';const meta=await (await fetch(base+'kael_run_body.json')).json();
+ const bodies={};for(const [k] of OPT.hat){bodies[k]=await L(base+'kael_run_body'+(k?'_'+k:'')+'.png');}
+ const WM=await (await fetch('../../../assets/weapons/meta.json')).json(),W={};for(const [k] of OPT.weapon)if(k!=='none'){W[k]={img:await L('../../../assets/weapons/'+k+'.png'),...WM[k]};}
+ const wings={};for(const [k] of OPT.wing)if(k)wings[k]=await L('../../../assets/anim/equip/wing_'+k+'.png');
+ const bg=await L('../../../assets/bg/era2.png'),gyF=(await (await fetch('../../../assets/bg/meta.json')).json()).era2.groundY;
+ // pescoço por quadro (topo do cachecol vermelho e x médio dessa linha)
+ const NECK=[];{const b=bodies[''],c=document.createElement('canvas');c.width=b.width;c.height=256;const g=c.getContext('2d');g.drawImage(b,0,0);const d=g.getImageData(0,0,c.width,256).data;
+  for(let i=0;i<8;i++){let top=-1,xs=[];for(let y=0;y<256&&top<0;y++){for(let x=i*256;x<i*256+256;x++){const k=(y*c.width+x)*4;if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){top=y;xs.push(x-i*256);}}}NECK.push({y:top,x:xs.reduce((a,v)=>a+v,0)/xs.length});}}
+ // máscaras de luva (marrom perto das mãos) e bota (marrom no terço de baixo) por quadro, para tingir
+ function tinted(body,i,glove,boot){const key=[body.src,i,glove,boot].join('|');tinted.c=tinted.c||{};if(tinted.c[key])return tinted.c[key];
+  const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d');g.drawImage(body,i*256,0,256,256,0,0,256,256);if(!glove&&!boot)return tinted.c[key]=c;
+  const im=g.getImageData(0,0,256,256),d=im.data;let yb=0;for(let p=0;p<256*256;p++)if(d[p*4+3]>128)yb=Math.max(yb,(p/256)|0);
+  const G=meta.grip[i];
+  for(let p=0;p<256*256;p++){const k=p*4;if(d[k+3]<60)continue;const x=p%256,y=(p/256)|0,r=d[k],gg=d[k+1],b=d[k+2],mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);
+   const brown=r>gg&&gg>=b-6&&r-b>18&&mx<190&&mx>40&&(mx-mn)<120;if(!brown)continue;
+   let t=null;if(boot&&y>yb-30)t=TINT[boot];else if(glove){const nearGrip=Math.hypot(x-G.x,y-G.y)<20;const nearFree=x>G.x+20&&y>G.y-30&&y<G.y+25;if(nearGrip||nearFree)t=TINT[glove];}
+   if(!t)continue;const l=(r*0.3+gg*0.59+b*0.11)/140*t[3];d[k]=Math.min(255,t[0]*l);d[k+1]=Math.min(255,t[1]*l);d[k+2]=Math.min(255,t[2]*l);}
+  g.putImageData(im,0,0);return tinted.c[key]=c;}
+ function trim(img){trim.c=trim.c||new Map();if(trim.c.has(img))return trim.c.get(img);const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const g=c.getContext('2d');g.drawImage(img,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=1e9,y0=1e9,x1=0,y1=0;for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2)if(d[(y*c.width+x)*4+3]>20){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}const r={w:x1-x0,h:y1-y0};trim.c.set(img,r);return r;}
+ function frame(g,i,dx,dy,s,t){const G=meta.grip[i],N=NECK[i];g.save();g.translate(dx,dy);g.scale(s,s);
+  // asa atrás de tudo, presa abaixo do pescoço (costas), batendo devagar
+  if(S.wing&&wings[S.wing]){const wi=wings[S.wing],a=Math.sin(t*3)*0.12;g.save();g.translate(N.x-14,N.y+14);g.rotate(-0.15+a);g.drawImage(wi,-wi.width*0.42*0.55,-wi.height*0.55*0.55,wi.width*0.55*0.42/0.42*0.42*2.2,wi.height*0.55*0.42/0.42*0.42*2.2*wi.height/wi.height);g.restore();}
+  const body=bodies[S.hat]||bodies[''],cell=tinted(body,i,S.glove,S.boot);g.drawImage(cell,0,0);
+  const w=W[S.weapon];if(w){const tr=trim(w.img),k=(256*0.5)/Math.max(tr.w,tr.h);g.save();g.translate(G.x,G.y);g.rotate(-(G.ang-(w.angle??90))*Math.PI/180);g.scale(k,k);g.drawImage(w.img,-w.grip[0]*w.img.width,-w.grip[1]*w.img.height);g.restore();
+   const ux=G.ux,uy=G.uy,px=-uy,py=ux,a=G.f0-1.5,b=G.f1+1.5,h=G.hw+5;g.save();g.beginPath();const P=(tt,s2)=>[G.x+ux*tt+px*s2,G.y+uy*tt+py*s2];const q=[P(a,-h),P(b,-h),P(b,h),P(a,h)];g.moveTo(...q[0]);for(const v of q.slice(1))g.lineTo(...v);g.closePath();g.clip();g.drawImage(cell,0,0);g.restore();
+   g.save();g.beginPath();g.rect(0,0,256,N.y+2);g.clip();g.drawImage(cell,0,0);g.restore();}
+  // colar por código, sobre o cachecol
+  if(S.neck){const cx=N.x+6,cy=N.y+13;g.save();g.strokeStyle=S.neck==='tooth'?'#5b3a1e':'#c9a227';g.lineWidth=1.6;g.beginPath();g.arc(cx,cy-6,9,0.25*Math.PI,0.75*Math.PI);g.stroke();
+   if(S.neck==='gold'){g.fillStyle='#f2c230';g.strokeStyle='#6b4a08';g.beginPath();g.arc(cx,cy+3,4.5,0,7);g.fill();g.stroke();g.fillStyle='#fff6b0';g.fillRect(cx-1.5,cy+1,1.5,1.5);}
+   if(S.neck==='gem'){g.fillStyle='#2f7dff';g.strokeStyle='#0b2a66';g.beginPath();g.moveTo(cx,cy-1);g.lineTo(cx+4,cy+3);g.lineTo(cx,cy+8);g.lineTo(cx-4,cy+3);g.closePath();g.fill();g.stroke();const gl=0.5+0.5*Math.sin(t*5);g.globalCompositeOperation='lighter';g.fillStyle='rgba(120,180,255,'+gl*0.6+')';g.beginPath();g.arc(cx,cy+3,6,0,7);g.fill();}
+   if(S.neck==='tooth'){g.fillStyle='#f4ecd8';g.strokeStyle='#4a3a2a';for(const o of [-5,0,5]){g.beginPath();g.moveTo(cx+o-1.6,cy);g.lineTo(cx+o+1.6,cy);g.lineTo(cx+o,cy+5);g.closePath();g.fill();g.stroke();}}
+   g.restore();}
+  g.restore();}
+ function ui(){const c=document.getElementById('ctl');c.innerHTML='';for(const [k,list] of Object.entries(OPT)){const d=document.createElement('div');d.className='grp';d.innerHTML='<span>'+NAMES[k]+'</span>';for(const [v,l] of list){const b=document.createElement('button');b.textContent=l;if(S[k]===v)b.className='on';b.onclick=()=>{S[k]=v;ui();};d.appendChild(b);}c.appendChild(d);}}
+ ui();
+ const cv=document.getElementById('c'),g=cv.getContext('2d'),t0=performance.now();
+ function loop(now){const t=(now-t0)/1000,i=Math.floor(t*12)%8,Wd=cv.width,H=cv.height,gy=H*0.82,S2=1.1;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,Wd,H);
+  if(bg){const s=H/(bg.height*(0.82/gyF)),bw=bg.width*s,bh=bg.height*s,off=(t*95)%bw;for(let x=-off;x<Wd;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+  frame(g,i,Wd*0.42-128*S2,gy-243*S2,S2,t);requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+ window.exportCombo=async(cfg,file)=>{Object.assign(S,cfg);const c=document.createElement('canvas');c.width=2048;c.height=256;const x=c.getContext('2d');for(let i=0;i<8;i++)frame(x,i,i*256,0,1,i/12);return c.toDataURL('image/png').length;};
+})();
+</script></body></html>

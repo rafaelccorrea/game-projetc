@@ -1,0 +1,357 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Batalha.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "04 Batalha (layout antigo, substituído pela 04c V2)",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "Carregamento.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "00 Carregamento · APROVADA",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "Configuracoes.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "09 Configurações · APROVADA",
+      "w": 390,
+      "x": 0,
+      "y": 1800
+    },
+    "CriarJogador.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "03 Intro, escolha Kael/Kaia e nome · APROVADA",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Equipamento.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "05 Equipamento · APROVADA",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "Forja.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "15 Forja (fortalecer e nível) · APROVADA",
+      "w": 390,
+      "x": 940,
+      "y": 3000
+    },
+    "Instancias.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "13 Instâncias diárias · APROVADA",
+      "w": 390,
+      "x": 0,
+      "y": 3000
+    },
+    "Invocar.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "06 Invocar · APROVADA",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "Login.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "02 Login · APROVADA",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "Loja.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "07 Loja · APROVADA",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "01 Título · APROVADA (melhorar depois)",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "Passe.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "08 Passe · APROVADA",
+      "w": 390,
+      "x": 3760,
+      "y": 0
+    },
+    "Pets.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "17 Pets (antiga) · REPROVADA — substituída pela 17b",
+      "w": 390,
+      "x": 1880,
+      "y": 3000
+    },
+    "Progresso.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "16 Práticas e Títulos · APROVADA",
+      "w": 390,
+      "x": 1410,
+      "y": 3000
+    },
+    "Ranking.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "12 Ranking · APROVADA (v2 animada: relógio contando, pódio animado)",
+      "w": 390,
+      "x": 1410,
+      "y": 1800
+    },
+    "ResultadoChefe.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "10 Vitória / Derrota do chefe · APROVADA",
+      "w": 390,
+      "x": 470,
+      "y": 1800
+    },
+    "Torre.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "14 Torre · APROVADA",
+      "w": 390,
+      "x": 470,
+      "y": 3000
+    },
+    "TrocaEra.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "11 Troca de era · APROVADA",
+      "w": 390,
+      "x": 940,
+      "y": 1800
+    },
+    "VIP.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "18 VIP · APROVADA",
+      "w": 390,
+      "x": 2350,
+      "y": 3000
+    },
+    "BatalhaTelaCheia.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "04b Batalha em tela cheia (sem barra de baixo, header novo, ícones novos) · APROVADA",
+      "w": 390,
+      "x": 1880,
+      "y": -1250
+    },
+    "BatalhaTelaCheiaV2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "04c Batalha V2 (menu agrupado) · APROVADA  +  ★ VOTAR: missão guia na tela (cartão sob a barra de fase)",
+      "w": 390,
+      "x": 2350,
+      "y": -1250
+    },
+    "Prologo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "★ VOTAR · 19 Prólogo V2 (relógio com arte, 4 cenas, mapa ilustrado)",
+      "w": 390,
+      "x": 2820,
+      "y": -1250
+    },
+    "MapaEras.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "20 Mapa das Eras V2 · APROVADA",
+      "w": 390,
+      "x": 3290,
+      "y": -1250
+    },
+    "Perfil.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "21 Perfil e Coleção · APROVADA",
+      "w": 390,
+      "x": 3760,
+      "y": -1250
+    },
+    "PetsV2.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "17b Pets V2 · APROVADA",
+      "w": 390,
+      "x": 4230,
+      "y": -1250
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-12T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "t3",
+    "t2",
+    "anim",
+    "t1",
+    "s1",
+    "po0",
+    "po1",
+    "po2",
+    "po3",
+    "po4"
+  ],
+  "notes": {
+    "anim": {
+      "fill": "red",
+      "size": 24,
+      "text": "REGRA DO DONO: nenhum personagem flutua, quica ou voa. Pés sempre na linha do chão da era (assets/bg/meta.json). Andar de verdade = ciclo de corrida com pernas e braços (a arte está sendo gerada pela fps-c9). Até lá, todos ficam parados no chão, só respirando.",
+      "w": 340,
+      "x": 4230,
+      "y": 520
+    },
+    "po0": {
+      "fill": "blue",
+      "text": "PO · Carregamento\n- Baixa os assets da era atual primeiro (o resto em segundo plano).\n- Dica rotativa ensina 1 regra por vez.\n- Mostra versão; se houver atualização obrigatória, bloqueia com botão Atualizar.\nPronto quando: carrega em < 5 s no 4G e nunca trava sem mensagem.",
+      "w": 390,
+      "x": 0,
+      "y": 924
+    },
+    "po1": {
+      "fill": "blue",
+      "text": "PO · Título\n- Música de título começa no 1º toque (regra dos navegadores no celular).\n- Animações: fundo respirando, logo flutuando, brasas subindo, botão pulsando.\n- Jogador novo: JOGAR leva ao Login. Jogador que volta: mostra 'Continuar como <nome>' e vai direto à Batalha com o resumo offline.\nPronto quando: som liga/desliga e lembra a escolha.",
+      "w": 390,
+      "x": 470,
+      "y": 924
+    },
+    "po2": {
+      "fill": "blue",
+      "text": "PO · Login\n- Google e Apple (obrigatório na App Store se houver login social).\n- Convidado: joga na hora, progresso só no aparelho; aviso claro e lembrete para vincular depois (Config > Conta).\n- Vincular conta dá um prêmio pequeno (ex.: 50 gemas) para incentivar.\n- Sem e-mail/senha no início (menos atrito).\nPronto quando: trocar de celular e entrar com a mesma conta recupera tudo.",
+      "w": 390,
+      "x": 940,
+      "y": 924
+    },
+    "po3": {
+      "fill": "blue",
+      "text": "PO · Nome do jogador\n- O herói é sempre o Kael; o jogador escolhe só o apelido (aparece em ranking/arena).\n- 3 a 14 caracteres, filtro de palavrão, nome único (sugestões se já existir).\n- Botão sortear nome.\n- Intro de 3 cartões, pulável, explica as eras.\nPronto quando: do 1º toque no JOGAR até a 1ª batalha < 60 s.",
+      "w": 390,
+      "x": 1410,
+      "y": 924
+    },
+    "po4": {
+      "fill": "blue",
+      "text": "PO · Batalha (04c V2)\n- Tela cheia, sem barra de baixo; ícones fixos à esquerda (Equipamento, Invocar, Loja, Passe), Baú/Evento à direita, MENU no topo.\n- Só automático: especial e ultimate disparam sozinhos.\n- Faixa do chefe livre de ícones; pés numa linha só.\nPronto quando: nada rola e todo alvo de toque tem ≥ 44 px.",
+      "w": 390,
+      "x": 1880,
+      "y": 924
+    },
+    "s1": {
+      "fill": "orange",
+      "size": 24,
+      "text": "Como usar: aperte Play em 00 Carregamento e siga o fluxo (som ligado). Layout novo aprovado: batalha em tela cheia (04c V2) com ícones à esquerda e botão MENU; todas as telas abrem em tela cheia com header e VOLTAR, sem barra de baixo. Comente em qualquer elemento para pedir ajuste.",
+      "w": 340,
+      "x": 4230,
+      "y": 0
+    },
+    "t1": {
+      "kind": "title1",
+      "maxW": 4150,
+      "text": "Eonbound — fluxo do jogador (celular, retrato 390×844)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t2": {
+      "kind": "title1",
+      "maxW": 1800,
+      "text": "Modais e telas de apoio",
+      "w": 240,
+      "x": 0,
+      "y": 1500
+    },
+    "t3": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "Sistemas: instâncias, torre, forja, progresso, pets",
+      "w": 240,
+      "x": 0,
+      "y": 2700
+    }
+  },
+  "order": [
+    "Carregamento.dc.html",
+    "Main.dc.html",
+    "Login.dc.html",
+    "CriarJogador.dc.html",
+    "Batalha.dc.html",
+    "BatalhaTelaCheia.dc.html",
+    "BatalhaTelaCheiaV2.dc.html",
+    "Equipamento.dc.html",
+    "Invocar.dc.html",
+    "Loja.dc.html",
+    "Passe.dc.html",
+    "Configuracoes.dc.html",
+    "ResultadoChefe.dc.html",
+    "TrocaEra.dc.html",
+    "Ranking.dc.html",
+    "Instancias.dc.html",
+    "Torre.dc.html",
+    "Forja.dc.html",
+    "Progresso.dc.html",
+    "Pets.dc.html",
+    "PetsV2.dc.html",
+    "VIP.dc.html",
+    "Prologo.dc.html",
+    "MapaEras.dc.html",
+    "Perfil.dc.html"
+  ],
+  "pages": [],
+  "title": "Eonbound Telas"
+}

@@ -1,0 +1,104 @@
+// Gera assets/bg/v2/era2/meta.json a partir de work/info.json (saida do build2.js).
+// uso: node mkmeta.js <pastaTrabalho> <pastaSaida>
+const fs = require('fs');
+const info = JSON.parse(fs.readFileSync(process.argv[2] + '/work/info.json', 'utf8'));
+const OUT = process.argv[3];
+const r3 = v => Math.round(v * 1000) / 1000, r4 = v => Math.round(v * 10000) / 10000;
+const L = (id, o, px, height) => Object.assign({ id }, o, { px, height, repeatWidth: r3(height * px[0] / px[1] * (o.tile === 'repeat' ? 1 : 2)) });
+const G = { top: 0.655, height: 0.38 };
+const road = [r3(G.top + info.road[0] * G.height), r3(G.top + info.road[1] * G.height)];
+const m = {
+  version: 2, era: 2, nome: 'Medieval - vila e muralha ao entardecer',
+  unidades: 'Tudo em FRACAO DA ALTURA DA CENA (SH), inclusive medidas horizontais, salvo quando dito. px = valor * SH. Velocidades em SH por segundo. x do heroi em fracao da LARGURA. Cena de referencia: 390 x 692 px CSS (campo de batalha no topo de uma tela 390x844; linha do chao = 0.78*692 = 540 px = 64% da tela, igual ao jogo).',
+  scene: { refWidth: 390, refHeight: 692 },
+  groundY: 0.78, runSpeed: 0.275,
+  hero: {
+    file: 'hero_run.png', frames: 8, fps: 12, frameW: 256, frameH: 256, x: 0.30, size: 0.2643, footY: 0.947, figureHeight: 0.231,
+    nota: 'size = lado do quadro 256 em SH (183 px na cena de 692; o boneco fica com 160 px). footY = fracao do quadro onde ficam os pes. Desenhar em (x*W - size/2, groundY - size*footY).',
+    shadow: { rx: 0.21, ry: 0.05, alpha: 0.30, nota: 'elipse sob os pes; rx/ry em fracao de size' },
+    stepDust: { color: '#e2c79c', perStep: 3, life: [0.45, 0.65], radius: [0.004, 0.012] }
+  },
+  layers: [
+    L('sky', { file: 'sky.webp', tile: 'repeat', parallax: 0.015, drift: 0.004, top: 0 }, info.sky, 0.60),
+    L('far', { file: 'far.webp', tile: 'mirror', parallax: 0.07, drift: 0, bottom: 0.64 }, info.far, 0.42),
+    L('mid', { files: ['midA.webp', 'midB.webp'], filesLow: ['midA_lo.webp', 'midB_lo.webp'], tile: 'sequence', parallax: 0.38, drift: 0, bottom: 0.675 }, info.midA, 0.50),
+    Object.assign(L('ground', { file: 'ground.webp', tile: 'repeat', parallax: 1, drift: 0, top: G.top }, info.ground, G.height), { roadY: road, nota: 'roadY = faixa de terra (topo, base) em SH; os pes (groundY) caem dentro dela' })
+  ],
+  tileNota: 'repeat: emenda nela mesma. mirror: alternar normal/espelhada. sequence: arquivos de files em ordem (A,B,A,B...). repeatWidth = largura do ciclo completo em SH. off(camada) = scroll*parallax + t*drift.',
+  drawOrder: ['sky', 'clouds', 'birds', 'far', 'farFill', 'haze', 'fog[0]', 'sunRays', 'mill', 'mid', 'towerFlags', 'forgeGlow', 'smoke', 'fog[1]', 'ground', 'decals', 'roadside', 'hero', 'motes', 'fg', 'bottomShade'],
+  placeholder: { sky: ['#0c63b4', '#2ea2ea', '#8fc6dc', '#ffc79c'], ground: [[road[0], '#7cc63c'], [road[1], '#b5713c'], [1.001, '#2f6b2c']], nota: 'fundo desenhado no primeiro quadro, antes de qualquer imagem: degrade do ceu ate o topo do chao e faixas [ate y, cor] do chao. filesLow = versoes leves (1056 px) carregadas primeiro e trocadas pelas definitivas.' },
+  spacing: 'Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal (o estandarte conta a bandeira). Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.',
+  farFill: { color: '#6b93a6', nota: 'retangulo do pe da camada far ate o topo do chao (aparece nos vaos da vila)' },
+  haze: { y: [0.36, 0.66], rgb: '255,226,196', alpha: 0.6 },
+  fog: [{ y: 0.47, height: 0.17, parallax: 0.14, drift: 0.012, alpha: 0.9 }, { y: 0.625, height: 0.06, parallax: 0.5, drift: 0.02, alpha: 0.35 }],
+  fogTexture: { w: 768, h: 160, blobs: 22, rgb: '255,240,222', alpha: 0.30, nota: 'textura procedural: elipses radiais com posicoes de hash, repetida na horizontal' },
+  sunRays: { origin: [-0.06, -0.14], length: 1.05, count: 5, angle0: 0.50, angleStep: 0.17, halfWidth: [0.045, 0.065], alpha: [0.008, 0.068], rgb: '255,232,165', pulse: 0.45, blend: 'lighter' },
+  clouds: {
+    nota: 'x inicial, y, largura em SH; deslocamento = scroll*parallax + t*drift; cada grupo da a volta a cada period',
+    groups: [
+      { parallax: 0.03, drift: 0.010, alpha: 0.80, period: 2.2, items: [{ s: 'cloud1', x: 0.15, y: 0.165, w: 0.11 }, { s: 'cloud2', x: 0.95, y: 0.125, w: 0.13 }, { s: 'cloud3', x: 1.65, y: 0.19, w: 0.10 }] },
+      { parallax: 0.06, drift: 0.024, alpha: 0.95, period: 2.6, items: [{ s: 'cloud2', x: 0.30, y: 0.03, w: 0.24 }, { s: 'cloud3', x: 1.55, y: 0.075, w: 0.21 }] }]
+  },
+  birds: { sprite: 'bird', flocks: [{ period: 13, duration: 9.5, y: 0.085, size: 0.05, n: 3, phase: 0, alpha: 1 }, { period: 21, duration: 15, y: 0.04, size: 0.026, n: 4, phase: 6, alpha: 0.75 }], nota: 'cruzam da esquerda para a direita; size = lado do quadro em SH' },
+  midAnchors: {
+    nota: 'fracoes (x,y) dentro de cada arquivo da camada mid (indice = posicao em files)',
+    towerFlags: [[{ x: 0.379, y: 0.214, flag: 'flag3' }, { x: 0.612, y: 0.214, flag: 'flag2' }], [{ x: 0.5375, y: 0.141, flag: 'flag3' }]],
+    chimneys: [[{ x: 0.227, y: 0.422 }, { x: 0.717, y: 0.441 }], [{ x: 0.166, y: 0.419 }, { x: 0.747, y: 0.443 }]],
+    forgeGlow: [[], [{ x: 0.249, y: 0.813 }]]
+  },
+  towerFlags: { pole: 0.035, width: 0.11, amp: 0.16, nota: 'bandeira presa pela direita, voa para a esquerda; ondulacao por fatias verticais' },
+  flagWave: { k1: 6.2, w1: 7, k2: 2.4, w2: 2.6, droop: 0.10, sliceCss: 1.5, nota: 'dy(u) = sin(u*k1 - t*w1 + ph)*amp*h*(0.15+u) + sin(u*k2 - t*w2 + ph*1.7)*amp*h*0.7*u + u*u*h*droop ; u = 0 no mastro, 1 na ponta' },
+  smoke: { interval: 0.30, life: [4.2, 5.4], rise: 0.045, wind: 0.016, r0: 0.009, grow: 0.03, alpha: 0.78, light: '#f4efe8', dark: '#b9bfd0' },
+  forgeGlow: { radius: 0.035, alpha: 0.55 },
+  mill: {
+    tile: 1, body: { file: 'mill_body.webp', rect: info.mill.body.map(r4) }, hub: info.mill.hub.map(r4),
+    blade: { file: 'mill_blade.webp', pivotPx: info.mill.bladePivot, widthFrac: r4(info.mill.bladeW), count: 4, axis: [0.640, -0.769], sparLenPx: 112 },
+    secondsPerTurn: 14,
+    nota: 'tile = indice em mid.files. body.rect = x,y,w,h em fracao do ladrilho mid. hub idem. A pa (sprite) e desenhada 4x girando em torno do hub: translate(hub); rotate(ang+k*90graus); drawImage(blade,-pivotPx*s,...), s = widthFrac*larguraDoLadrilho/larguraDoSprite. Desenhar ANTES da camada mid (a casa e a macieira cobrem a base).'
+  },
+  roadside: {
+    parallax: 1, cell: 0.7, prob: 0.9, seed: 11, minGap: 0.12, reach: 0.6, baseY: [0.692, 0.692], nota: 'objetos na beira de tras da estrada, atras do heroi; sorteio por celula igual ao dos decalques',
+    pool: [
+      { type: 'banner', flag: 'flag1', h: [0.33, 0.35], flagW: 0.24, amp: 0.11, weight: 2 }, { type: 'banner', flag: 'flag2', h: [0.30, 0.32], flagW: 0.16, amp: 0.13, weight: 2 },
+      { type: 'torch', h: [0.235, 0.245], weight: 3 }, { type: 'lantern', h: [0.165, 0.175], weight: 2 }, { type: 'sprite', sprite: 'fence', h: [0.095, 0.105], weight: 2 }]
+  },
+  torch: { flameY: 0.80, flameSize: 0.42, glowRadius: 1.9, glowAlpha: 0.42, nota: 'fracoes da altura do poste; chama = folha flame (4 quadros, 10 fps)' },
+  lantern: { glowY: 0.66, glowRadius: 0.55, glowAlpha: 0.5 },
+  decals: {
+    file: 'decals.webp', atlas: info.decals.rects, pxScale: 0.00044, minGap: 0.012, reach: 0.45,
+    nota: 'atlas: nome -> [x,y,w,h] em px. tamanho na cena = px * pxScale * escala (em SH). Espalhamento pseudoaleatorio infinito: para cada celula i (largura cell), se rnd(i,seed,0) < prob, sorteia item do pool por peso (rnd 1), x = (i + rnd 2)*cell, base y em yRange (rnd 3), escala em scale (rnd 4), espelha se rnd 5 < 0.5. Nunca repete.',
+    groups: [
+      { id: 'edgeTop', parallax: 1, cell: 0.17, prob: 0.6, seed: 5, yRange: [r3(G.top + 0.022), r3(road[0] - 0.012)], scale: [0.7, 1.0], flip: true, pool: [['tuft1', 3], ['tuft2', 3], ['tuft3', 3], ['flowers', 2]] },
+      { id: 'road', parallax: 1, cell: 0.11, prob: 0.9, seed: 3, yRange: [r3(road[0] + 0.03), r3(road[1] - 0.005)], scale: [0.8, 1.2], flip: true,
+        pool: [['peb1', 3], ['peb2', 3], ['peb3', 3], ['peb4', 2], ['peb5', 2], ['stone1', 3], ['stone2', 2], ['stone3', 2], ['slab', 1], ['pile', 1], ['crack1', 2], ['crack2', 2], ['rut', 2], ['puddle', 1], ['leaves', 1]] },
+      { id: 'edgeBottom', parallax: 1, cell: 0.21, prob: 0.55, seed: 8, yRange: [r3(road[1] + 0.004), r3(road[1] + 0.02)], scale: [0.9, 1.3], flip: true, pool: [['tuft1', 3], ['tuft2', 3], ['tuft3', 3], ['flowers', 2], ['leaves', 1]] }]
+  },
+  fg: {
+    parallax: 1.3, cell: 0.4, prob: 0.8, seed: 21, minGap: 0.03, reach: 0.6, baseY: [1.02, 1.05], nota: 'primeiro plano, na frente do heroi; capim balanca (skew)',
+    pool: [
+      { sprite: 'grass1', h: [0.13, 0.17], sway: true, weight: 2 }, { sprite: 'grass2', h: [0.13, 0.17], sway: true, weight: 2 }, { sprite: 'grass3', h: [0.14, 0.18], sway: true, weight: 2 }, { sprite: 'grass4', h: [0.13, 0.17], sway: true, weight: 2 },
+      { sprite: 'rock1', h: [0.08, 0.11], weight: 1 }, { sprite: 'rock2', h: [0.07, 0.10], weight: 1 }, { sprite: 'bush', h: [0.11, 0.14], weight: 1 }]
+  },
+  sway: { a1: 0.10, f1: 1.9, a2: 0.04, f2: 3.1, bias: -0.05 },
+  motes: { count: 30, yRange: [0.42, 0.96], rgb: '255,214,130', glowRgb: '255,190,90', radius: [0.0012, 0.003], parallax: 0.55, drift: 0.013, blend: 'lighter' },
+  bottomShade: { from: 0.94, alpha: 0.35, rgb: '10,20,10' },
+  rnd: 'rnd(i,seed,k): x=imul(i|0,0x9E3779B1)^imul(seed*31+k+1,0x85EBCA6B); x^=x>>>15; x=imul(x,0x2C1B3C6D); x^=x>>>12; x=imul(x,0x297A2D39); x^=x>>>15; return (x>>>0)/2^32',
+  sprites: {
+    cloud1: 'cloud1.webp', cloud2: 'cloud2.webp', cloud3: 'cloud3.webp', flag1: 'flag1.webp', flag2: 'flag2.webp', flag3: 'flag3.webp', pole: 'pole.webp',
+    bird: { file: 'bird.webp', frames: 4, fps: 10 }, flame: { file: 'flame.webp', frames: 4, fps: 10 },
+    torch: 'torch.webp', lantern: 'lantern.webp', fence: 'fence.webp', grass1: 'grass1.webp', grass2: 'grass2.webp', grass3: 'grass3.webp', grass4: 'grass4.webp', rock1: 'rock1.webp', rock2: 'rock2.webp', bush: 'bush.webp'
+  },
+  animated: [
+    { id: 'ceu_deriva', tipo: 'ceu pintado derivando devagar, independe da corrida' }, { id: 'nuvens_2_vel', tipo: 'nuvens soltas em 2 velocidades' },
+    { id: 'raios_de_sol', tipo: 'feixes de luz pulsando' }, { id: 'passaros', tipo: '2 bandos de andorinhas, 4 quadros de asa' },
+    { id: 'nevoa', tipo: 'nevoa deslizando entre montanhas e vila' }, { id: 'moinho', tipo: 'pas do moinho girando' },
+    { id: 'bandeiras_torre', tipo: 'flamulas nas torres tremulando' }, { id: 'forja', tipo: 'brasa da forja pulsando' },
+    { id: 'fumaca_chamine', tipo: 'fumaca das chamines levada pelo vento' }, { id: 'estandartes', tipo: 'estandartes em mastros na beira da estrada' },
+    { id: 'tochas', tipo: 'tochas e lampiao com chama animada e brilho' }, { id: 'poeira_dourada', tipo: 'particulas douradas flutuando' },
+    { id: 'capim', tipo: 'capim do primeiro plano balancando' }, { id: 'poeira_passos', tipo: 'poeirinha nos pes do heroi' }]
+};
+let s = JSON.stringify(m, null, 1);
+for (let k = 0; k < 6; k++) s = s.replace(/([\[{])\n\s+([^\[\]{}]*?)\n\s+([\]}])/g, (a, o, b, c) => o + b.replace(/\n\s+/g, ' ') + c);
+JSON.parse(s);
+fs.writeFileSync(OUT + '/meta.json', s);
+console.log('meta.json', s.length, 'bytes');

@@ -1,0 +1,25 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pistola uma mão</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.ctl{padding:6px 16px;display:flex;gap:6px;flex-wrap:wrap}button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600}button.on{background:#2d6cdf}
+.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}canvas{display:block;max-width:100%;border-radius:8px}</style></head><body>
+<h1>Kael com pistola numa mão: parado, correndo e atirando</h1>
+<p>A pistola foi desenhada no próprio vídeo (na mão direita) e trocada por código pela pistola de cada era, no mesmo lugar e tamanho, com os dedos redesenhados por cima. O braço da arma fica estendido, a outra mão balança na corrida, o recuo é suave (punho e cotovelo) e os pés ficam no chão. O clarão sai da boca do cano no quadro do disparo, e a bala também é desenhada por código.</p>
+<div class="ctl" id="ctl"></div><div class="g" id="g"></div>
+<script>
+const A='../../../assets/';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const GUN={era3_t0:'Pistola de pederneira (era 3)',era4_t0:'Revólver (era 4)',era5_t0:'Pistola (era 5)',era6_t0:'Blaster (era 6)'};let WK='era5_t0';
+const ctl=document.getElementById('ctl');const ui=()=>{ctl.innerHTML='';for(const k in GUN){const b=document.createElement('button');b.textContent=GUN[k];if(k===WK)b.className='on';b.onclick=()=>{WK=k;ui();};ctl.appendChild(b);}};ui();
+(async()=>{const S={};for(const s of ['idle','run','shoot'])for(const k in GUN){S[s+k]={img:await L(A+'anim/hyb/R/pistol/kael_pistol_'+s+'_'+k+'.png'),m:await (await fetch(A+'anim/hyb/R/pistol/kael_pistol_'+s+'_'+k+'.json')).json()};}
+ const bg=await L(A+'bg/era5.png'),gyF=(await (await fetch(A+'bg/meta.json')).json()).era5.groundY;
+ const cvs=['idle','run','shoot'].map(s=>{const c=document.createElement('canvas');c.width=400;c.height=280;document.getElementById('g').appendChild(c);return [s,c];});
+ const t0=performance.now();let bullets=[],lastShot=-1;
+ (function loop(now){const t=(now-t0)/1000;
+  for(const [s,cv] of cvs){const g=cv.getContext('2d'),Wd=cv.width,H=cv.height,gy=H*0.86,sc=1.0,X0=Wd*0.32-(96+128)*sc;g.clearRect(0,0,Wd,H);
+   if(bg){const k=Math.max(H/(bg.height*(0.86/gyF)),Wd/bg.width),bw=bg.width*k,bh=bg.height*k,off=s==='run'?(t*95)%bw:0;for(let x=-off-bw;x<Wd+bw;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+   const sh=S[s+WK];if(!sh.img)continue;const m=sh.m,i=Math.floor(t*m.fps)%m.frames;
+   g.drawImage(sh.img,i*m.w,0,m.w,m.h,X0,gy-m.feetY*sc,m.w*sc,m.h*sc);
+   if(s==='shoot'){const G=m.grip[i];if(G.shot&&lastShot!==Math.floor(t*m.fps)){lastShot=Math.floor(t*m.fps);bullets.push({x:X0+G.muzzle.x*sc,y:gy-m.feetY*sc+G.muzzle.y*sc,t});}
+    bullets=bullets.filter(b=>t-b.t<0.5);for(const b of bullets){const x=b.x+(t-b.t)*700;g.strokeStyle='#ffe27a';g.lineWidth=3;g.beginPath();g.moveTo(x-14,b.y);g.lineTo(x,b.y);g.stroke();}}
+   g.fillStyle='#fff';g.font='12px system-ui';g.fillText({idle:'parado',run:'correndo',shoot:'atirando'}[s],8,16);}
+  requestAnimationFrame(loop);})(t0);})();
+</script></body></html>

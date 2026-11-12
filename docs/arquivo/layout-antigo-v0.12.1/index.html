@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#14110f">
+<title>Eonbound</title>
+<style>/* FONTES EMBUTIDAS (app Android): Lilita One e Nunito locais em assets/fonts, sem Google Fonts */
+@font-face{font-family:'Lilita One';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/lilita-one-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Lilita One';font-style:normal;font-weight:400;font-display:swap;src:url(assets/fonts/lilita-one-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:600 900;font-display:swap;src:url(assets/fonts/nunito-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:600 900;font-display:swap;src:url(assets/fonts/nunito-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+</style>
+<style>
+:root{--bg:#14110f;--panel:#1f1a16;--panel2:#2a231d;--line:#3b3129;--txt:#f1e8dc;--mut:#a89a88;--gold:#ffc94a;--gem:#6fd3ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:manipulation}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:560px;margin:0 auto}
+#hud{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);font-weight:700;font-size:15px;gap:8px}
+#hud .res{display:flex;gap:12px}
+#hud button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:700}
+#cv{width:100%;height:36dvh;display:block;background:#222}
+#tabs{display:flex;background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+#tabs button{background:none;border:0;color:var(--mut);font-weight:700;border-bottom:3px solid transparent}
+.trow{display:flex;gap:8px;align-items:stretch;margin-bottom:6px}
+.tnum{width:34px;display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:8px;background:var(--panel2);border:1px solid var(--line)}
+.tnum.ok{background:var(--gold);color:#1a1205}
+.tcell{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.tcell.prem{border-color:#7a5ad0}
+.tcell.can{border-color:var(--gold);box-shadow:0 0 8px #ffc94a55}
+.tcell.done{opacity:.45}
+#tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+#view{flex:1;overflow-y:auto;padding:10px 12px 24px;-webkit-overflow-scrolling:touch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.btn{background:linear-gradient(#e0a52a,#b27a14);color:#1a1205;border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-size:14px}
+.btn.alt{background:linear-gradient(#4aa9d8,#2e7ea8);color:#06151d}
+.btn.dim{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.sm{font-size:12px;color:var(--mut)}
+h3{margin:4px 0 8px;font-size:15px}
+.badge{display:inline-block;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:800;color:#111}
+.ico{width:46px;height:46px;border-radius:10px;background:var(--panel2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+.bar{height:8px;background:#0006;border-radius:5px;overflow:hidden}
+.bar>i{display:block;height:100%;background:#4cd964}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#000c;border:1px solid var(--line);padding:8px 14px;border-radius:10px;font-weight:700;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+#toast.on{opacity:1}
+.pull{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.pull .c{flex:1 1 30%;min-width:90px;background:var(--panel2);border:2px solid;border-radius:10px;padding:8px 4px;text-align:center;font-size:12px;font-weight:700}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.chip{flex:none;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:20px;padding:7px 12px;font-weight:700;font-size:12px}
+.chip.on{background:var(--gold);color:#1a1205;border-color:var(--gold)}
+.chip.lock{opacity:.4}
+#tabs{overflow-x:auto}
+#tabs button{flex:1 0 auto;min-width:50px;padding:6px 2px 5px;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+#tabs button .ti{font-size:17px;height:20px;display:flex;align-items:center}
+#tabs button .ti img{width:20px;height:20px;object-fit:contain}
+.hi{width:20px;height:20px;object-fit:contain;vertical-align:-4px}
+.hb{display:flex;gap:6px}
+#hud .rs{display:inline-flex;align-items:center;gap:4px}
+.ico{position:relative;overflow:hidden}
+.ico img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--panel2)}
+.ico img.th{background:none;padding:2px}.ico img.th.weapon{transform:scale(1.3)}
+.ico{background:radial-gradient(circle at 50% 40%,#4a3d30,#241d17)}
+#title{position:fixed;inset:0;z-index:50;background:#14110f radial-gradient(circle at 50% 30%,#3a2a52,#14110f 70%) center/cover no-repeat;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 8vh) 20px calc(env(safe-area-inset-bottom) + 24px);transition:opacity .5s}
+#title.out{opacity:0;pointer-events:none}
+#title .tshade{position:absolute;inset:0;background:linear-gradient(#0000 40%,#000a);pointer-events:none}
+#title>*{position:relative}
+#title>.tshade{position:absolute}
+.tmid{text-align:center;max-width:420px;width:100%}
+#tlogo{width:min(78vw,380px);max-height:34vh;object-fit:contain;filter:drop-shadow(0 6px 14px #000a)}
+.tname{font-size:clamp(34px,10vw,54px);font-weight:900;color:#ffd75e;text-shadow:0 3px 0 #7a3a0a,0 0 22px #ff9a2a88,0 6px 14px #000;letter-spacing:1px;line-height:1.05}
+.ttag{margin-top:8px;color:#f6ecdf;font-size:17px;text-shadow:0 2px 6px #000;font-weight:800}
+.tbot{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.play{font-size:26px;font-weight:900;letter-spacing:2px;color:#2a1403;border:0;border-radius:18px;padding:16px 64px;background:linear-gradient(#ffd75e,#e0901a);box-shadow:0 5px 0 #8a4f0c,0 0 24px #ffb84a99;animation:pulse 1.6s infinite}
+.play:active{transform:translateY(3px);box-shadow:0 2px 0 #8a4f0c}
+@keyframes pulse{50%{transform:scale(1.05)}}
+.ver{color:#fff9;font-size:11px;text-shadow:0 1px 3px #000}
+#modal{position:fixed;inset:0;background:#000b;z-index:80;align-items:center;justify-content:center;padding:20px}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;width:100%;max-width:360px}
+.mbox .row{margin-top:10px}
+.shopg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.shopg .card{margin:0;text-align:center;padding:8px}
+.shopg .ico{margin:0 auto 6px;width:56px;height:56px}
+.shopg .btn{width:100%;padding:8px 4px;font-size:13px}
+.soon{border-style:dashed;text-align:center;color:var(--mut)}
+.dbg{position:fixed;left:6px;bottom:6px;z-index:70;background:#000a;color:#9f9;font:11px monospace;padding:4px 6px;border-radius:6px;pointer-events:none}
+.chips,#tabs{scrollbar-width:none}.chips::-webkit-scrollbar,#tabs::-webkit-scrollbar{display:none}
+.card>.row>.ico{width:58px;height:58px}
+.ti{position:relative}.ti small{position:absolute;top:-2px;right:-9px;font-size:8px}
+
+/* ===== V3 mobile-first ===== */
+*{-webkit-touch-callout:none}
+html,body{overscroll-behavior:none;position:fixed;inset:0;width:100%}
+body{font-size:15px}
+img{-webkit-user-drag:none}
+#app{height:100dvh;max-width:480px;position:relative;overflow:hidden;background:var(--bg);box-shadow:0 0 40px #000}
+#hud{padding:calc(env(safe-area-inset-top) + 6px) calc(env(safe-area-inset-right) + 12px) 6px calc(env(safe-area-inset-left) + 12px);font-size:15px;flex:none}
+#hud button{min-width:44px;min-height:40px;font-size:14px}
+#stage{position:relative;height:45dvh;flex:none;background:#222;overflow:hidden}
+body.sheet #stage{height:30dvh}
+#cv{width:100%;height:100%}
+#view{border-top:1px solid var(--line);border-radius:16px 16px 0 0;margin-top:-12px;background:var(--bg);position:relative;z-index:2;padding:14px 12px 20px;box-shadow:0 -6px 16px #0008;overflow-x:hidden}
+#view.up{animation:sheetup .28s cubic-bezier(.2,.9,.3,1)}
+#view::before{content:"";display:block;width:44px;height:4px;border-radius:3px;background:var(--line);margin:-6px auto 8px}
+@keyframes sheetup{from{transform:translateY(40%);opacity:.3}to{transform:none;opacity:1}}
+#tabs{flex:none;overflow:hidden;border-bottom:0;padding:0 calc(env(safe-area-inset-right) + 2px) env(safe-area-inset-bottom) calc(env(safe-area-inset-left) + 2px);z-index:3}
+#tabs button{flex:1 1 0;min-width:0;min-height:56px;padding:7px 0 6px;font-size:11px;border-bottom:0;border-top:3px solid transparent;gap:2px}
+#tabs button.on{border-top-color:var(--gold);border-bottom-color:transparent;background:linear-gradient(#ffc94a22,#0000)}
+#tabs button .ti{font-size:23px;height:26px}
+#tabs button .ti img{width:26px;height:26px}
+.sm{font-size:13px}.badge{font-size:12px}.tcell{font-size:13px}.chip{font-size:13px;min-height:40px}.pull .c{font-size:13px}
+.btn{min-height:46px;font-size:15px}
+.shopg .btn{font-size:14px}.shopg b{font-size:13px!important}
+.chips{flex-wrap:wrap;overflow:visible}
+h3{font-size:16px}
+#skills{position:absolute;left:8px;right:8px;bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none;z-index:1}
+#skills>*{pointer-events:auto}
+#skauto{min-height:44px;min-width:64px;border-radius:22px;border:2px solid #fff6;background:#000a;color:#ddd;font-weight:800;font-size:12px;padding:0 12px}
+#skauto.on{border-color:#ffe27a;color:#2a1403;background:linear-gradient(#ffd75e,#e0901a)}
+.skr{display:flex;gap:12px;align-items:flex-end}
+.skb{--p:0;width:62px;height:62px;border-radius:50%;border:3px solid #fffb;background:radial-gradient(circle at 40% 35%,#6a5aa8,#1d1533);position:relative;padding:0;box-shadow:0 3px 8px #000a;flex:none;color:#fff;transition:transform .08s}
+.skb:active{transform:scale(.92)}
+.skb.s1{width:44px;height:44px;border-width:2px;opacity:.9}
+.skb.s1.hit{transform:scale(.88)}
+.skb.ult{width:68px;height:68px;background:radial-gradient(circle at 40% 35%,#c8962a,#3a2206)}
+.skb .skf{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px}
+.skb img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;pointer-events:none}
+.skb .skc{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#000c calc(var(--p)*1%),#0000 0)}
+.skb .skt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;text-shadow:0 0 4px #000,0 1px 2px #000}
+.skb .skn{position:absolute;left:50%;bottom:calc(100% + 3px);transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:800;text-shadow:0 1px 3px #000,0 0 4px #000;opacity:.95}
+.skb.ult .skn{left:auto;right:-4px;transform:none;bottom:calc(100% + 16px)}
+.skb.cd img{filter:saturate(.4) brightness(.7)}
+.skb.rdy{border-color:#ffe27a;animation:ultp .9s infinite}
+@keyframes ultp{0%,100%{box-shadow:0 0 0 0 #ffd75ecc,0 0 14px #ffb21e;transform:scale(1)}50%{box-shadow:0 0 0 9px #ffd75e00,0 0 26px #ffd75e;transform:scale(1.08)}}
+.skb.no{animation:skno .25s}
+@keyframes skno{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+body.sheet .skb{width:50px;height:50px}body.sheet .skb.ult{width:54px;height:54px}body.sheet .skb.s1{width:38px;height:38px}body.sheet #skills{bottom:14px}body.sheet .skb .skn{display:none}
+.card.pv{display:flex;gap:10px;align-items:center;position:sticky;top:-14px;z-index:3;box-shadow:0 6px 12px #000a}
+#pvc{width:150px;height:150px;flex:none;border-radius:10px;background:radial-gradient(circle at 50% 60%,#4a3d30,#1a1410)}
+.pvt{flex:1;min-width:0}
+.card.sel{box-shadow:0 0 0 2px var(--gold)}
+#toast{top:calc(env(safe-area-inset-top) + 58px);font-size:14px}
+.mbox{font-size:15px}
+#tut{position:fixed;inset:0;z-index:60;pointer-events:none;display:none}
+#tut .tring{position:absolute;border:3px solid var(--gold);border-radius:14px;box-shadow:0 0 0 200vmax #000a,0 0 18px var(--gold);animation:tutp 1s infinite}
+@keyframes tutp{50%{border-color:#fff}}
+#tut .tbub{position:absolute;left:50%;transform:translateX(-50%);width:min(340px,calc(100vw - 32px));background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:12px 14px;font-size:15px;font-weight:600;pointer-events:auto;box-shadow:0 6px 20px #000}
+#tut .tbub .row{margin-top:10px;justify-content:flex-end}
+#tut .tbub small{color:var(--mut);font-weight:700}
+
+/* ===== V4: tela inteira de celular, sem rolagem (canvas atrás, HUD/abas/painel sobrepostos) ===== */
+html,body{background:#0a0807}
+#app{position:fixed;inset:0;width:100dvw;height:100dvh;max-width:none;margin:0;display:block;overflow:hidden;box-shadow:none;--navh:calc(58px + env(safe-area-inset-bottom))}
+@media (min-width:600px) and (min-height:500px){
+  #app{inset:auto;left:50%;top:20px;transform:translateX(-50%);height:calc(100dvh - 40px);width:min(430px,calc((100dvh - 40px) * 0.48));border-radius:28px;box-shadow:0 0 0 3px #2a231d,0 20px 60px #000}
+}
+#stage{position:absolute;inset:0;height:auto;background:#14110f}
+body.sheet #stage{height:auto}
+#cv{position:absolute;inset:0;width:100%;height:100%}
+#hud{position:absolute;left:0;right:0;top:0;z-index:4;background:linear-gradient(#000c,#0007 70%,#0000);border-bottom:0;flex-wrap:wrap;padding-bottom:10px;text-shadow:0 1px 3px #000}
+#hud button{background:#000a}
+#wv{flex:1 0 100%;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#f1e8dcdd}
+#wv .bar{flex:1;height:6px}
+#tabs{position:absolute;left:0;right:0;bottom:0;z-index:5;background:#17130fee;border-top:1px solid var(--line);height:var(--navh)}
+#view{position:absolute;left:0;right:0;top:40%;bottom:var(--navh);margin:0;z-index:3;overflow:hidden;display:none;padding:14px 10px 6px;border-radius:16px 16px 0 0;background:#17130ff5}
+body.sheet #view{display:block}
+#view::before{margin:-8px auto 8px}
+#skills{left:8px;right:8px;bottom:calc(var(--navh) + 12px);top:auto;z-index:2}
+body.sheet #skills{bottom:auto;top:calc(env(safe-area-inset-top) + 78px);align-items:flex-start}
+body.sheet .skb,body.sheet .skb.ult{width:46px;height:46px}body.sheet .skb.s1{display:none}
+body.sheet #skauto{min-height:40px;font-size:11px;min-width:0}
+.skb.ult{width:72px;height:72px}.skb{width:60px;height:60px}
+#toast,#title,#modal,#tut{position:absolute}
+#toast{top:calc(env(safe-area-inset-top) + 84px);max-width:90%}
+.card{padding:8px 10px;margin-bottom:8px}
+.card.cmp{display:flex;align-items:center;gap:8px}
+.row.tight{gap:6px;margin-bottom:8px}
+.line{margin:0 2px 8px;min-height:18px}
+.btn.sml{min-height:44px;padding:6px 10px;font-size:14px;white-space:nowrap}
+.row.tight .btn.sml{flex:1;padding:6px 4px}
+.ok{color:#4cd964}.mut{color:var(--mut)}
+.tb{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;flex:none;border:2px solid var(--line);border-radius:10px;background:radial-gradient(circle at 50% 40%,#4a3d30,#241d17);overflow:hidden;font-size:22px;padding:0;color:#fff}
+.tb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:2px}.tb img.weapon{transform:scale(1.3)}
+.tb i{position:absolute;left:0;right:0;bottom:0;font:800 10px system-ui;background:#000b;text-align:center;font-style:normal;padding:1px 0}
+.tb.big{width:100%;max-width:var(--tb,84px);justify-self:center;height:auto;aspect-ratio:1}
+.pvrow.small .pvu{min-height:44px;margin:0}.pvrow.small .sm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow{min-height:58px}.tb.sel{box-shadow:0 0 0 2px var(--gold)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gc{display:flex;gap:8px;align-items:center;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px;height:68px;color:var(--txt);min-width:0;font:inherit}
+.gc.eq{background:#2c2618}
+.gt{display:flex;flex-direction:column;min-width:0;flex:1}.gt b,.gt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.grid2s{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sc{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px 4px;text-align:center;min-width:0}
+.sc b{font-size:13px;line-height:1.15;height:30px;overflow:hidden;display:flex;align-items:center}
+.sc .btn{width:100%;padding:4px 2px}
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 8px;font-size:14px}
+.pgb{width:48px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-size:22px;font-weight:800}
+.pgb:disabled{opacity:.3}
+.pvrow{display:flex;gap:10px;align-items:center;margin-bottom:2px}
+#pvc{width:124px;height:124px}
+.pvu{min-height:46px;display:flex;align-items:center;margin:2px 0 4px}
+.mrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 10px;margin-bottom:6px}
+.mrow .bar{height:5px;margin-top:3px}.mrow b{font-size:14px}
+.trow{margin-bottom:4px}.trow .tcell{min-height:38px}.trow.thead .tcell{min-height:0;border:0;background:none;justify-content:center}.trow.thead .tnum{background:none;border:0}
+#tut{z-index:90}
+#tut .tbub{width:min(330px,calc(100% - 24px))}
+#tut .tring{box-shadow:0 0 0 2000px #000a,0 0 18px var(--gold)}
+
+/* ===== cenário vivo (EonScene) atrás do canvas da batalha ===== */
+.scn{position:absolute;left:0;top:0;display:none;will-change:transform;pointer-events:none}
+#cv{background:transparent}
+/* ===== botões pelo protótipo da Batalha: nunca sobre personagem nem barra de vida =====
+   coluna direita no topo do campo (velocidade, música) · coluna esquerda no topo (baú, missões) · habilidades no canto inferior direito, abaixo da linha dos pés */
+#colR,#colL{position:absolute;top:calc(env(safe-area-inset-top) + 110px);display:flex;flex-direction:column;gap:8px;z-index:2}
+#colR{right:8px;align-items:flex-end}#colL{left:8px;align-items:flex-start}
+#colR button,#colL>button{width:52px;min-height:44px;border-radius:12px;border:2px solid #fff6;background:#000a;color:#eee;font-weight:800;font-size:13px;padding:0}
+#colR #skauto{min-width:0;width:auto;padding:0 8px;font-size:11px}
+#colR #skauto.on{border-color:#ffe27a;color:#2a1403;background:linear-gradient(#ffd75e,#e0901a)}
+#musb.off{opacity:.55}
+#lvb{display:inline-flex;flex-direction:column;align-items:stretch;justify-content:center;min-width:54px;padding:3px 7px 4px;border-radius:10px;background:#000a;border:1px solid #6fe3ff66;font-size:12px;line-height:1.1}
+#lvb b{color:#bff2ff;white-space:nowrap}
+#lvb .lvbar{display:block;height:4px;margin-top:3px;border-radius:3px;background:#0009;overflow:hidden}
+#lvx{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fb6e0,#9af0ff);transition:width .3s}
+#hud .res{gap:8px}
+#chestbox .sys-chest-btn{width:52px;height:52px}#chestbox .sys-chest-btn img,#chestbox .sys-chest-emo{inset:7px;width:38px;height:38px;line-height:38px;font-size:24px}
+#skills{justify-content:flex-end}
+/* com painel aberto (Equip., Loja, Skins...): o campo fica com 40% da tela; as colunas somem e as habilidades vão para a faixa entre a linha dos pés e o painel */
+body.sheet #colR,body.sheet #colL{display:none}
+body.sheet #skills{top:auto;bottom:calc(60% + 2px);align-items:flex-end}
+body.sheet .skb,body.sheet .skb.ult{width:32px;height:32px;border-width:2px}body.sheet .skb .skt{font-size:12px}body.sheet .skr{gap:8px}
+#loading canvas.lscn{inset:auto;left:0;top:0;animation:none}
+/* ===== tela de carregamento (protótipo 00): .lwrap tem as medidas do protótipo (844 px de altura) e é escalada por --s ===== */
+#loading .lwrap{position:absolute;left:0;top:0;width:calc(100%/var(--s));height:844px;transform:scale(var(--s));transform-origin:0 0}
+#loading{--s:1;position:absolute;inset:0;z-index:95;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;transition:opacity .45s;outline:0}
+#loading.out{opacity:0;pointer-events:none}
+#loading .lbg{position:absolute;inset:0;opacity:0;--pw:1641;--py:-189;background-size:auto 1100px;background-repeat:repeat-x;background-position-y:calc(var(--py)*1px);filter:brightness(.62) saturate(1.1);animation:lpanx 6.8s linear infinite;transition:opacity .7s ease}
+@keyframes lpanx{from{background-position-x:0}to{background-position-x:calc(var(--pw)*-1px)}}
+#loading .lshade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.7) 0%,rgba(10,7,5,.2) 45%,rgba(10,7,5,.95) 100%)}
+#loading .lpillw{position:absolute;top:300px;left:0;right:0;display:flex;justify-content:center;z-index:2}
+#lpill{padding:8px 16px;border-radius:999px;background:rgba(22,17,13,.82);border:2px solid #ffc94a;font-family:'Lilita One',Nunito,system-ui,sans-serif;font-size:18px;color:#ffc94a;white-space:nowrap}
+.erapill{animation:lpin .5s both}
+@keyframes lpin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+#loading .llogo{position:absolute;top:120px;left:0;right:0;display:flex;justify-content:center}
+#loading .llogo img{width:260px;height:160px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.6));animation:lfloat 3.6s ease-in-out infinite}
+@keyframes lfloat{50%{transform:translateY(-6px)}}
+#loading .lsh{position:absolute;left:50%;top:650px;width:160px;height:16px;margin-left:-80px;border-radius:50%;background:rgba(0,0,0,.45)}
+#lrun{position:absolute;left:50%;top:507px;width:160px;height:160px;margin-left:-80px;background-size:1280px 160px;background-repeat:no-repeat;animation:lrunc .667s steps(8) infinite;opacity:0;transition:opacity .2s}
+#lrun.ok{opacity:1;background-image:url(assets/anim/hyb/kael_run_body.png)}
+@keyframes lrunc{from{background-position:0 0}to{background-position:-1280px 0}}
+#loading .lbarbox{position:absolute;left:24px;right:24px;bottom:120px;display:flex;flex-direction:column;gap:8px}
+#lbarw{height:18px;border-radius:10px;background:rgba(0,0,0,.6);border:2px solid #4a3a2b;padding:2px;box-sizing:border-box}
+#lbar{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#f2a826,#ffe07a);box-shadow:0 0 12px rgba(255,201,74,.8);transition:width .25s linear}
+#loading .lrow{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:#e8dccb}
+#loading .lfoot{position:absolute;left:24px;right:24px;bottom:36px;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px}
+#ltip{margin:0;padding:10px 14px;border-radius:14px;background:rgba(29,22,17,.85);border:1px solid #4a3a2b;font-size:14px;font-weight:700;text-align:center;line-height:1.35}
+#ltip b{color:#ffc94a}
+.tip{animation:ltipin .5s both}
+@keyframes ltipin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#lgo{display:none;align-items:center;justify-content:center;width:100%;height:56px;font-family:'Lilita One',Nunito,system-ui,sans-serif;font-size:24px;color:#ffc94a;text-shadow:0 2px 0 #000;background:none;border:0;animation:lblink 1.1s ease-in-out infinite}
+@keyframes lblink{50%{opacity:.35}}
+#loading.done #ltip{display:none}
+#loading.done #lgo{display:flex}
+#loading.done{cursor:pointer}
+#lver{position:absolute;left:0;right:0;bottom:10px;margin:0;text-align:center;font-size:11px;font-weight:700;color:#b9a993}
+
+/* ===== V5 (rodada 7): GEOMETRIA DO PROTÓTIPO. Tela 390x844: topo (HUD) 0..64 · CAMPO 64..768 (704) · abas 768..844. O #stage É o campo. ===== */
+#app{--navh:calc(76px + env(safe-area-inset-bottom));--hudh:calc(64px + env(safe-area-inset-top))}
+#stage{position:absolute;left:0;right:0;top:var(--hudh);bottom:var(--navh);height:auto}
+body.sheet #stage{height:auto}
+#hud{position:absolute;left:0;right:0;top:0;height:var(--hudh);z-index:6;display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:8px;padding:env(safe-area-inset-top) 12px 0;background:#1d1611;border-bottom:2px solid #4a3a2b;box-sizing:border-box;font-family:Nunito,system-ui,sans-serif;font-weight:800;color:#f6ecdf;text-shadow:none;font-size:14px}
+#hud button{min-width:0;min-height:0;padding:0;font-family:inherit}
+#lvb{position:relative;display:block;width:44px;height:44px;min-width:0;flex:none;padding:0;border-radius:12px;border:2px solid #ffc94a;background:#33271d;overflow:hidden;box-sizing:border-box}
+.kidle{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:kidl 1s steps(12,jump-none) infinite}
+.kidle.t1{background-image:url(assets/anim/hyb/R/kael_idle_era2_t1.png)}.kidle.t2{background-image:url(assets/anim/hyb/R/kael_idle_era2_t2.png)}
+@keyframes kidl{from{background-position:0 0}to{background-position:100% 0}}
+#hav{position:absolute;left:-20px;top:-8px;width:80px;height:80px}
+#lvb .hxp{position:absolute;left:0;right:0;bottom:0;height:7px;background:rgba(0,0,0,.75)}
+#lvx{display:block;height:100%;width:0;background:linear-gradient(90deg,#2fc9a8,#8ff5dc);transition:width .45s ease-out;animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+#hud .hnm{display:flex;flex-direction:column;min-width:0;flex:1}
+#hud .hn1{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:16px;line-height:1.1;white-space:nowrap}
+#lvt{font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#ffc94a}
+#fcv{font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap}
+#hud .hpill{display:flex;align-items:center;gap:4px;height:32px;padding:0 4px 0 2px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;flex:none}
+#hud .hpill img{object-fit:contain}
+#hud .hpill b{font-size:14px;font-weight:900;padding-right:6px}
+#hud .hpill.g{padding:0 2px}#hud .hpill.g b{padding-right:0}
+#gemplus{width:26px;height:26px;border-radius:50%;border:0;background:#5fd068;color:#0d2410;font-weight:900;font-size:18px;line-height:1}
+#hud #cfgb{width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+#ftop{position:absolute;top:10px;left:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none;font-family:Nunito,system-ui,sans-serif;color:#fff}
+#ftop .ft1{display:flex;flex-direction:column}
+#ftop .ftr{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+#bossb{pointer-events:auto;height:44px;padding:0 12px 0 8px;border-radius:14px;border:2px solid #7a1f17;background:linear-gradient(180deg,#ff6a50,#c0301f);color:#fff;font:400 16px 'Lilita One',Nunito,sans-serif;display:flex;align-items:center;gap:6px;box-shadow:0 3px 0 #5a140d;box-sizing:border-box;flex:none}
+#skauto{display:none!important}   /* só automático: a chave saiu */
+#bossb.glow{animation:bossglow 1.2s ease-in-out infinite}
+#bossb.dimb{background:linear-gradient(180deg,#5a4a40,#3a2c24);border-color:#4a3a2b;color:#c9b9a2;box-shadow:0 3px 0 #1d1611}
+#spd{position:relative}#spd .spl{position:absolute;right:-5px;top:-8px;height:16px;padding:0 4px;border-radius:8px;background:#0e0a07;border:1px solid #6a5a48;color:#c9b9a2;font:900 9px Nunito,system-ui,sans-serif;display:flex;align-items:center;gap:1px}
+#spd.spdnew{animation:spdnew .9s ease-out 3}@keyframes spdnew{0%{box-shadow:0 0 0 0 rgba(255,201,74,.9);transform:scale(1)}40%{transform:scale(1.18)}100%{box-shadow:0 0 0 16px rgba(255,201,74,0);transform:scale(1)}}
+body.full[data-v=pass] #toast{top:auto;bottom:calc(var(--navh) + 10px);max-width:250px}body.full[data-v=prog] #toast{top:auto;bottom:calc(var(--navh) + 72px);max-width:300px}   /* Passe e Progresso: o aviso global cai sobre a paginação, nunca sobre abas, cabeçalho ou botão */
+body.resui #ftop,body.resui #colL,body.resui #colR,body.resui #skills,body.resui #hpe,body.resui #ulttip{display:none!important}body.resui #hud,body.resui #tabs{visibility:hidden}
+@keyframes bossglow{0%,100%{box-shadow:0 3px 0 #5a140d,0 0 6px rgba(255,201,74,.5)}50%{box-shadow:0 3px 0 #5a140d,0 0 24px 6px rgba(255,201,74,1);border-color:#ffc94a}}
+#stg{font-family:'Lilita One',Nunito,sans-serif;font-size:20px;text-shadow:0 2px 0 #000}
+#wvp{display:flex;gap:4px;align-items:center;margin-top:2px;min-height:12px}
+#wvp i{width:22px;height:6px;border-radius:3px;background:rgba(255,255,255,.3);transition:background .3s}#wvp i.on{background:#ffc94a}
+#wvp b{font-size:11px;font-weight:900;color:#ffb3a8;margin-left:2px}
+#wv{flex:none;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000}
+#wv .bar{flex:1;height:10px;border-radius:6px;background:rgba(0,0,0,.55);border:1px solid rgba(0,0,0,.6)}
+#wvb{background:linear-gradient(180deg,#ff7a5c,#d63b26);transition:width .4s}
+#colR,#colL{top:110px;gap:10px}#colR{right:10px}#colL{left:10px}
+#skills{bottom:10px}
+body.sheet #skills{top:auto;bottom:calc(var(--apph,844px)*0.6 - var(--navh) + 4px)}
+body.sheet #ftop{display:none}
+#toast{top:calc(var(--hudh) + 20px)}
+body.full #toast{top:calc(var(--hudh) + 150px);max-width:210px;font-size:13px}   /* telas cheias: o aviso cai no miolo (pedestal / palco do baú), nunca em cabeçalho nem em rótulo de espaço */
+/* 5 abas, como no protótipo: Batalha, Equip., Invocar, Loja, Passe */
+#tabs{background:#1d1611;border-top:2px solid #4a3a2b;padding:6px 6px calc(8px + env(safe-area-inset-bottom));gap:4px;box-sizing:border-box;font-family:Nunito,system-ui,sans-serif}
+#tabs button{min-height:0;height:100%;border:0;border-radius:14px;color:#c9b9a2;font-size:11px;font-weight:900;gap:2px;padding:0;justify-content:center;background:none}
+#tabs button.on{background:#3a2c1f;color:#ffc94a;border:0}
+#tabs button .ti{height:28px;font-size:0}#tabs button .ti img{width:28px;height:28px;object-fit:contain}
+.ti small{position:absolute;top:-4px;right:-12px;min-width:16px;height:16px;border-radius:8px;background:#ff4d3d;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #16110d;padding:0 2px;box-sizing:content-box}
+/* rótulos das habilidades colados nos botões; o selo "+N" da fila fica na linha do chão: os dois não se cruzam */
+.skb .skn{bottom:calc(100% + 1px)}.skb.ult .skn{bottom:calc(100% + 4px);right:-2px}
+/* ===== TELA 04 BATALHA (canvas aprovado): colunas, vida/energia, habilidades com o rótulo embaixo ===== */
+#colR button,#colL>button{width:52px;height:44px;min-height:0;border-radius:14px;border:2px solid #4a3a2b;background:rgba(29,22,17,.88);color:#f6ecdf;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:18px;padding:0;display:flex;align-items:center;justify-content:center}
+#colR #skauto{width:52px;padding:0;font-size:13px;transition:background .2s}
+#colR #skauto.on{border-color:#ffc94a;color:#2a1403;background:linear-gradient(180deg,#ffe07a,#f2a826)}
+#colR #skauto:not(.on){font-size:11px}
+#musb.on{border-color:#ffc94a;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403}#musb.off{opacity:1}
+#musb .eq{display:flex;gap:2px;align-items:flex-end;height:14px}#musb .eq i{width:3px;background:#2a1403;border-radius:1px;animation:eqa .9s ease-in-out infinite}
+#musb .eq i:nth-child(2){animation-delay:.2s}#musb .eq i:nth-child(3){animation-delay:.4s}
+@keyframes eqa{0%,100%{height:4px}50%{height:14px}}
+#colL>#msb{position:relative;height:52px;color:#ffc94a}
+#msn{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:#ff4d3d;color:#fff;font:900 12px Nunito,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #16110d;box-sizing:border-box}
+#hpe{position:absolute;left:12px;bottom:16px;width:150px;display:flex;flex-direction:column;gap:3px;z-index:2;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;pointer-events:none;text-shadow:0 1px 2px #000}
+#hpe .hr{display:flex;justify-content:space-between;font-size:11px;font-weight:900}#hpe .hr+.hb+.hr{margin-top:3px}
+#hpe .hb{height:12px;border-radius:6px;background:rgba(0,0,0,.6);border:1px solid #000;overflow:hidden}#hpe .hb.e{height:8px;border-radius:5px}
+#hpb{display:block;height:100%;width:100%;background:linear-gradient(180deg,#7ee27a,#3fae3c);transition:width .2s}
+#enb{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a4dff,#d07bff);transition:width .2s}
+#skills{right:12px;left:auto;bottom:14px}
+.skr{gap:10px}
+.skw{display:flex;flex-direction:column;align-items:center;gap:2px}.skw:nth-child(1){width:48px}.skw:nth-child(2){width:62px}.skw:nth-child(3){width:80px}
+.skl{font:900 10px Nunito,system-ui,sans-serif;color:#e8dccb;text-shadow:0 1px 2px #000;white-space:nowrap}
+.skb,.skb.s1,.skb.ult{background:#1d1611;box-shadow:none;overflow:hidden;opacity:1}
+.skb.s1{width:48px;height:48px;border-radius:14px;border:2px solid #4a3a2b}
+.skb.s2{width:62px;height:62px;border-radius:16px;border:2px solid #4aa3ff}
+.skb.ult{width:80px;height:80px;border-radius:50%;border:3px solid #6a5a8a}
+.skb img{border-radius:0}
+.skb .skc{position:absolute;left:0;right:0;bottom:0;top:auto;height:calc(var(--p)*1%);border-radius:0;background:rgba(0,0,0,.65);transition:height .25s linear}
+.skb .skt{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;text-shadow:0 2px 0 #000}
+.skb.ult .skt{inset:auto 0 6px 0;font-size:14px}
+.skb.ult.rdy{border-color:#d07bff;animation:ultr 1.2s ease-in-out infinite}
+@keyframes ultr{0%,100%{box-shadow:0 0 10px rgba(208,123,255,.6)}50%{box-shadow:0 0 30px rgba(208,123,255,1)}}
+#ulttip{position:absolute;right:104px;bottom:120px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none;z-index:3;font-family:Nunito,system-ui,sans-serif}
+#ulttip span{padding:8px 12px;border-radius:12px;background:#f6ecdf;color:#2a1403;font-size:13px;font-weight:900;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+#ulttip .finger{margin-right:20px;animation:tapf 1s ease-in-out infinite}
+@keyframes tapf{0%,100%{transform:translate(0,0)}50%{transform:translate(-6px,-8px) scale(.92)}}
+#lvb.lvlglow{animation:lvlglow .5s ease-in-out 4 both}
+@keyframes lvlglow{0%,100%{box-shadow:0 0 0 rgba(95,240,207,0)}50%{box-shadow:0 0 18px 6px rgba(95,240,207,1)}}
+#hud .hpill.cbump{animation:cbump .35s ease-out}
+@keyframes cbump{0%{transform:scale(1)}40%{transform:scale(1.18);box-shadow:0 0 12px rgba(255,201,74,.9)}100%{transform:scale(1)}}
+/* esconder interface (botão do olho): some tudo do campo, menos o próprio botão */
+body.hideui #ftop,body.hideui #colL,body.hideui #skills,body.hideui #hpe,body.hideui #ulttip,body.hideui #colR>button:not(#hideb){display:none}
+body.hideui #hideb{opacity:.6}
+/* com painel aberto (Passe): só as habilidades, pequenas, na faixa entre os pés e o painel */
+body.sheet #hpe,body.sheet #ulttip,body.sheet .skl,body.full #ulttip{display:none}
+body.sheet .skb,body.sheet .skb.ult,body.sheet .skb.s2{width:32px;height:32px;border-width:2px}body.sheet .skb.s1{display:none}body.sheet .skb .skt,body.sheet .skb.ult .skt{font-size:11px;inset:0}
+#hud .hn1{overflow:hidden;text-overflow:ellipsis}
+/* Passe: abas internas (Passe | Missões) */
+.ptabs{display:flex;gap:6px;margin:0 0 8px}.ptabs button{flex:1;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;font:400 14px 'Lilita One',Nunito,sans-serif;position:relative}
+.ptabs button.on{border-color:#ffc94a;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403}
+.ptabs small{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff4d3d;color:#fff;font:900 11px Nunito,sans-serif;display:flex;align-items:center;justify-content:center;border:2px solid #16110d}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div id="lvb" role="img" aria-label="Kael: nível e experiência"><div class="kidle" id="hav"></div><span class="hxp"><span id="lvx"></span></span></div>
+    <div class="hnm"><span class="hn1"><span id="hname">Kael</span> <span id="lvt">Nv. 1</span></span><span id="fcv">FC 0</span></div>
+    <div class="hpill" id="goldp"><img src="assets/ui/coin.png" alt="Moedas" style="width:26px;height:26px"><b id="gold">0</b></div>
+    <div class="hpill g"><img src="assets/ui/gem.png" alt="Gemas" style="width:24px;height:24px"><b id="gems">0</b><button id="gemplus" aria-label="Comprar gemas">+</button></div>
+    <button id="cfgb" aria-label="Configurações"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg></button>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas>
+    <div id="ftop"><div class="ftr"><div class="ft1"><span id="stg"></span><span id="wvp"></span></div><button id="bossb" aria-label="Desafiar o chefe"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.4 0-8 3.1-8 7 0 2.2 1.1 4.1 3 5.4V19h10v-3.6c1.9-1.3 3-3.2 3-5.4 0-3.9-3.6-7-8-7z"></path><circle cx="9" cy="10.5" r="1.4" fill="currentColor"></circle><circle cx="15" cy="10.5" r="1.4" fill="currentColor"></circle><path d="M10 19v-2M14 19v-2"></path></svg>Desafiar</button></div><div id="wv"><span id="wvt"></span><div class="bar"><i id="wvb" style="width:0"></i></div></div></div>
+    <div id="colR">
+
+      <button id="spd" aria-label="Velocidade">x1</button>
+      <button id="musb" aria-label="Música e som"></button>
+      <button id="hideb" aria-label="Esconder interface" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
+    </div>
+    <div id="colL">
+      <button id="msb" aria-label="Missões"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.5"></circle></svg><span id="msn" style="display:none"></span></button>
+      <div id="chestbox"></div>
+    </div>
+    <div id="hpe" aria-label="Vida e energia do herói">
+      <div class="hr"><span>Vida</span><span id="hpt"></span></div><div class="hb"><i id="hpb"></i></div>
+      <div class="hr"><span>Energia</span><span id="ent" style="color:#d9b3ff"></span></div><div class="hb e"><i id="enb"></i></div>
+    </div>
+
+    <div id="skills">
+      <div class="skr">
+        <div class="skw"><div class="skb s1" id="sk1" aria-label="Ataque básico, automático"><img alt="" onerror="this.style.display='none'"></div><span class="skl">Auto</span></div>
+        <div class="skw"><button class="skb s2" id="sk2" aria-label="Especial"><img alt="" onerror="this.style.display='none'"><i class="skc"></i><b class="skt"></b></button><span class="skl" id="sk2n"></span></div>
+        <div class="skw"><button class="skb ult" id="sk3" aria-label="Ultimate"><img alt="" onerror="this.style.display='none'"><b class="skt"></b></button><span class="skl">Ultimate</span></div>
+      </div>
+    </div>
+  </div>
+  <div id="view"></div>
+  <nav id="tabs"></nav>
+</div>
+<div id="toast"></div>
+<div id="tut"><div class="tring"></div><div class="tbub"></div></div>
+<div id="title">
+  <div class="tshade"></div>
+  <div class="tmid">
+    <img id="tlogo" alt="" style="display:none">
+    <div id="tname" class="tname"></div>
+    <div id="ttag" class="ttag"></div>
+  </div>
+  <div class="tbot">
+    <button class="play" id="playb">JOGAR</button>
+    <button class="btn dim" id="tcfg">⚙️ Configurações</button>
+    <div class="ver" id="ver"></div>
+  </div>
+</div>
+<div id="loading" role="dialog" aria-label="Carregando">
+<div class="lwrap">
+  <div class="lbg" id="lbg0"></div><div class="lbg" id="lbg1"></div><div class="lbg" id="lbg2"></div><div class="lbg" id="lbg3"></div><div class="lbg" id="lbg4"></div><div class="lbg" id="lbg5"></div><div class="lbg" id="lbg6"></div>
+  <div class="lpillw"><span id="lpill" class="erapill">Era 1 de 7 · Pré-História</span></div>
+  <div class="lshade"></div>
+  <div class="llogo"><img src="assets/brand/logo.png" alt="Eonbound" onerror="this.style.visibility='hidden'"></div>
+  <div class="lsh"></div>
+  <div id="lrun" role="img" aria-label="Kael correndo"></div>
+  <div class="lbarbox">
+    <div id="lbarw" role="progressbar" aria-label="Carregando" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><i id="lbar"></i></div>
+    <div class="lrow"><span id="lstep">Atravessando a Pré-História…</span><span id="lpct">0%</span></div>
+  </div>
+  <div class="lfoot">
+    <p id="ltip" class="tip"><b>Dica:</b> <span></span></p>
+    <button id="lgo" type="button">Toque para continuar</button>
+  </div>
+  <p id="lver"></p>
+</div></div>
+<div id="modal" style="display:none"><div class="mbox" id="mbox"></div></div>
+
+<script>
+'use strict';
+/* ================= DADOS ================= */
+const RAR = [
+  {n:'Básico',  c:'#9aa0a6', m:1,   pull:50, drop:70},
+  {n:'Raro',    c:'#4aa3ff', m:1.7, pull:28, drop:22},
+  {n:'Épico',   c:'#b45cff', m:3,   pull:14, drop:6},
+  {n:'Mítico',  c:'#ff4d6d', m:5.5, pull:6,  drop:1.6},
+  {n:'Lendário',c:'#ffb21e', m:10,  pull:2,  drop:0.4},
+];
+/* 7 ESPAÇOS (regra do dono). Os atributos de cada espaço NÃO ficam aqui: vêm do Sys.stats (js/sys/stats.js). */
+const SLOT = { weapon:{n:'Arma'}, armor:{n:'Colete'}, hat:{n:'Chapéu/Elmo'}, gloves:{n:'Luvas'}, boots:{n:'Botas'}, necklace:{n:'Colar'}, wing:{n:'Asa'} };
+const SLOTS7=['weapon','armor','hat','gloves','boots','necklace','wing'];
+/* MARCADOR PROVISÓRIO POR ESPAÇO, em SVG DESENHADO (os mesmos do protótipo 05; a asa não existe lá e foi desenhada no mesmo traço). Nunca emoji.
+   A raridade aparece na moldura e no brilho. A arte final dos 49 ícones (fps-ff) entra trocando esta tabela. */
+const svgIcon=body=>"data:image/svg+xml;utf8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='#c9ccd6' stroke='#2a1f16' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'>"+body+"</svg>");
+const ICON={
+  weapon:  svgIcon("<path d='M44 6 L58 6 L58 20 L26 48 L16 38 Z'/><path d='M12 36 L28 52' stroke-width='5' stroke='#8a5a2a'/><path d='M14 46 L6 54' stroke-width='6' stroke='#5a3a1a'/>"),
+  armor:   svgIcon("<path d='M20 8 L32 14 L44 8 L56 18 L50 28 L48 56 L16 56 L14 28 L8 18 Z'/><path d='M32 14 V54' stroke-width='2'/><path d='M22 30 h20 M22 40 h20' stroke='#e8e2d8' stroke-width='2'/>"),
+  hat:     svgIcon("<path d='M10 40 C10 18 54 18 54 40 L54 50 L40 50 L38 40 L26 40 L24 50 L10 50 Z'/><path d='M32 14 V40' stroke-width='2'/>"),
+  gloves:  svgIcon("<path d='M18 58 L18 30 L18 14 a4 4 0 0 1 8 0 L26 28 L26 10 a4 4 0 0 1 8 0 L34 28 L34 12 a4 4 0 0 1 8 0 L42 32 L48 24 a4 4 0 0 1 7 4 L44 50 L44 58 Z'/>"),
+  boots:   svgIcon("<path d='M20 6 L38 6 L38 38 L56 44 L56 56 L14 56 L14 44 L20 40 Z'/><path d='M20 18 h18' stroke='#8a5a2a' stroke-width='3'/>"),
+  necklace:svgIcon("<path d='M14 10 C14 34 50 34 50 10' fill='none' stroke='#c9ccd6' stroke-width='4'/><path d='M32 30 L42 42 L32 58 L22 42 Z' fill='#ff5a5a'/>"),
+  wing:    svgIcon("<path d='M30 54 C22 42 6 40 6 14 C14 22 20 22 24 14 C26 26 30 34 30 54 Z'/><path d='M34 54 C42 42 58 40 58 14 C50 22 44 22 40 14 C38 26 34 34 34 54 Z'/><path d='M14 26 C20 30 24 36 28 46 M50 26 C44 30 40 36 36 46' fill='none' stroke-width='2'/>"),
+};
+/* ÍCONES APROVADOS (icon-eraN_<slot>, 49 arquivos em assets/icons/slots): um por espaço e por era do VISUAL do item. O marcador SVG acima fica só
+   para o espaço VAZIO (não há item para mostrar). */
+const SLOT_FILE={weapon:'weapon',armor:'vest',hat:'helmet',gloves:'gloves',boots:'boots',necklace:'necklace',wing:'wings'};
+const slotIcon=(slot,e)=>SLOT_FILE[slot]?'assets/icons/slots/era'+Math.max(0,Math.min(6,e|0))+'_'+SLOT_FILE[slot]+'.png':ICON.armor;
+/* nomes dos 5 espaços novos: era 2 = os do protótipo; as outras eras ainda não têm nome próprio (pendência para o PO): "Elmo de Bronze" etc. */
+const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do Dragão','Coroa Sagrada'], gloves:['Luvas de Couro','Manoplas de Aço','Manoplas Rúnicas','Garras do Dragão','Mãos Sagradas'],
+  boots:['Botas de Couro','Grevas de Aço','Botas Rúnicas','Botas do Dragão','Passos Sagrados'], necklace:['Cordão de Osso','Colar de Prata','Amuleto Rúnico','Presa do Dragão','Relicário Sagrado'] };
+const INOUN={hat:'Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asas'}, ERA_MAT=['de Osso','de Bronze','de Aço','da Pólvora','a Vapor','de Kevlar','de Plasma'];
+const WSHAPE=['club','spear','sword','musket','rifle','rifle','energy'];
+const ERAS=[
+ {n:'Pré-História',icon:'🦴',sceneV2:true,sky:['#5aa7d6','#f2c37a'],mtn:'#7a5c3d',gr:'#5a6b2e',gr2:'#7a8a3e',sun:'#fff3c4',
+  w:['Graveto Afiado','Clava de Pedra','Lança de Sílex','Machado de Osso','Presa de Mamute'],
+  a:['Pele de Coelho','Pele de Lobo','Couro de Urso','Pele de Mamute','Manto do Xamã'],
+  ws:['Pedra Lascada','Madeira Bruta','Osso Polido','Pedra Vulcânica','Presa Dourada'],
+  as:['Pele Suja','Pele Parda','Couro Tribal','Pelagem Branca','Manto do Chefe'],
+  wp:['#9b8a73','#8a5a2b','#e8dcc2','#4a3b3b','#ffd86b'], ap:['#7a5a3a','#8a6a45','#a0724a','#e8e4da','#c0392b'],
+  en:[{n:'Lagarto',s:'beast',c:'#6a8f3a'},{n:'Homem das Cavernas',s:'h',c:'#a87b55'},{n:'Dente-de-Sabre',s:'beast',c:'#c79a4a'},{n:'Javali',s:'beast',c:'#6b4a3a'}]},
+ {n:'Antiguidade',icon:'🏛️',sceneV2:true,sky:['#e9c46a','#f4a261'],mtn:'#b08968',gr:'#c2a15a',gr2:'#d6b970',sun:'#fff0b0',
+  w:['Lança de Bronze','Gládio','Falcata de Ferro','Xifos Espartano','Lâmina de Aquiles'],
+  a:['Túnica de Linho','Couraça de Couro','Peitoral de Bronze','Armadura Hoplita','Égide de Atena'],
+  ws:['Bronze Opaco','Ferro Polido','Aço de Esparta','Bronze Real','Ouro de Troia'],
+  as:['Linho Cru','Couro Romano','Bronze Grego','Púrpura Imperial','Manto Olímpico'],
+  wp:['#b08d57','#b8c0c8','#6fa8dc','#d4a017','#ffe27a'], ap:['#d9c9a3','#9b6b3f','#c08a3e','#7b2d8b','#f2d45c'],
+  en:[{n:'Legionário Rebelde',s:'h',c:'#b5453a'},{n:'Gladiador',s:'h',c:'#8a6a4a'},{n:'Escorpião Gigante',s:'beast',c:'#7a5a2a'},{n:'Minotauro',s:'h',c:'#5a3a2a'}]},
+ {n:'Medieval',icon:'🏰',sceneV2:true,sky:['#3a2a52','#c0714a'],mtn:'#4a2f3a',gr:'#2d3b22',gr2:'#3d5230',sun:'#ffe9b0',
+  w:['Espada Enferrujada','Espada de Aço','Lâmina Rúnica','Espada do Dragão','Excalibur'],
+  a:['Túnica de Couro','Cota de Malha','Armadura de Placas','Armadura Infernal','Égide Sagrada'],
+  ws:['Aço Comum','Lâmina Azul','Espada Arcana','Lâmina Carmesim','Sol Dourado'],
+  as:['Ferro Cinza','Guarda Azul','Manto Arcano','Cavaleiro Rubro','Paladino Solar'],
+  wp:['#c9d1d9','#7cc4ff','#cf8bff','#ff6b81','#ffe27a'], ap:['#8c939b','#3f86d6','#8a43d6','#c22a46','#e8a817'],
+  en:[{n:'Goblin',s:'h',c:'#5fae48'},{n:'Esqueleto',s:'h',c:'#dfe3e6'},{n:'Orc',s:'h',c:'#4d7a3a'},{n:'Cultista',s:'h',c:'#8b4fb0'},{n:'Lobo',s:'beast',c:'#8a8f98'}]},
+ {n:'Era da Pólvora',icon:'🔫',sceneV2:true,sky:['#2f4858','#d98e5f'],mtn:'#3e4a52',gr:'#3b4a30',gr2:'#4e6040',sun:'#ffd9a0',
+  w:['Pistola de Pederneira','Mosquete','Arcabuz Raro','Bacamarte Real','Canhão de Mão Dourado'],
+  a:['Casaca de Soldado','Colete Reforçado','Couraça de Oficial','Casaca Real','Manto do Almirante'],
+  ws:['Cano de Ferro','Mosquete Azul','Arcabuz Arcano','Bacamarte Rubro','Ouro do Rei'],
+  as:['Casaca Cinza','Casaca Naval','Oficial Roxo','Casaca Carmesim','Almirante Dourado'],
+  wp:['#8d8d8d','#6fa8dc','#b57cf0','#d94a5e','#f5d062'], ap:['#6b6f78','#2f5fa8','#6a3a9a','#a02035','#d4a017'],
+  en:[{n:'Pirata',s:'h',c:'#7a4a3a'},{n:'Soldado Inimigo',s:'h',c:'#4a5a8a'},{n:'Bucaneiro',s:'h',c:'#8a5a2a'},{n:'Capitão Fantasma',s:'h',c:'#9fd8d0'}]},
+ {n:'Era Industrial',icon:'⚙️',sky:['#4b4237','#c9a46a'],mtn:'#4a443c',gr:'#3a3630',gr2:'#4e4840',sun:'#e8d9b0',
+  w:['Revólver a Vapor','Rifle de Repetição','Carabina Steampunk','Metralhadora Gatling','Canhão de Tesla'],
+  a:['Casaco de Fábrica','Colete de Latão','Armadura a Vapor','Exo de Engrenagens','Traje Tesla'],
+  ws:['Ferro Fundido','Cobre Azulado','Latão Arcano','Bronze Rubro','Ouro Elétrico'],
+  as:['Lona Cinza','Latão Escuro','Vapor Roxo','Engrenagem Rubra','Tesla Dourado'],
+  wp:['#7a7a7a','#c07a3a','#a06ad0','#c03a3a','#ffd23f'], ap:['#5d5a55','#a8742e','#7a4aa8','#a02a2a','#e0b030'],
+  en:[{n:'Autômato',s:'robot',c:'#a8742e'},{n:'Operário Rebelde',s:'h',c:'#6a6a6a'},{n:'Aranha Mecânica',s:'beast',c:'#8a6a3a'},{n:'Golem a Vapor',s:'robot',c:'#6a6f78'}]},
+ {n:'Era Moderna',icon:'🪖',sky:['#223a5e','#7aa6c9'],mtn:'#34425a',gr:'#2e3a2e',gr2:'#445544',sun:'#f4f4f4',
+  w:['Pistola 9mm','Fuzil de Assalto','Fuzil de Precisão','Minigun','Railgun Protótipo'],
+  a:['Colete Tático','Armadura Kevlar','Traje Blindado','Exoesqueleto','Armadura Stealth'],
+  ws:['Preto Fosco','Camuflagem','Aço Escovado','Vermelho Tático','Dourado Elite'],
+  as:['Verde Oliva','Camuflado','Cinza Urbano','Vermelho Tático','Preto e Ouro'],
+  wp:['#3a3a3a','#6b7a4a','#8aa0b0','#c0392b','#e8c040'], ap:['#5a6b4a','#6b7a4a','#4a5058','#a02a2a','#2a2a2a'],
+  en:[{n:'Mercenário',s:'h',c:'#6b6b4a'},{n:'Drone',s:'robot',c:'#8a8f98'},{n:'Soldado Blindado',s:'h',c:'#3a4a3a'},{n:'Tanque Robô',s:'robot',c:'#5a6a4a'}]},
+ {n:'Era Futurista',icon:'🚀',sky:['#0b0b2e','#5b2a8a'],mtn:'#1b1b4a',gr:'#15153a',gr2:'#2a2a7a',sun:'#9ad8ff',stars:true,
+  w:['Blaster Básico','Espada de Plasma','Rifle de Íons','Canhão de Antimatéria','Lâmina do Vazio'],
+  a:['Traje Espacial','Nano-Armadura','Escudo de Energia','Armadura Quântica','Manto Cósmico'],
+  ws:['Plasma Azul','Plasma Verde','Íon Violeta','Antimatéria','Vazio Dourado'],
+  as:['Traje Branco','Nano Azul','Escudo Violeta','Quântica Rubra','Cósmico Dourado'],
+  wp:['#5ad1ff','#5aff9a','#c07cff','#ff4d6d','#ffe27a'], ap:['#d8e0ea','#3fa0e0','#8a5ae0','#d02a5a','#e8b020'],
+  en:[{n:'Alienígena',s:'beast',c:'#6ad07a'},{n:'Ciborgue',s:'robot',c:'#6a8aa8'},{n:'Zangão Espacial',s:'robot',c:'#a05ad0'},{n:'Devorador',s:'beast',c:'#d05a7a'}]},
+];
+/* sceneV2:true numa era = cenário vivo em camadas (assets/bg/v2/era<N>/meta.json, via EonScene); sem a chave = fundo antigo. */
+const STAGES_PER_ERA=10;
+const eraOf = stage => Math.min(ERAS.length-1, Math.floor((stage-1)/STAGES_PER_ERA));
+const ieraV = it => Math.max(0,Math.min(ERAS.length-1,Number.isInteger(it.look)?it.look:it.e|0));   // era do VISUAL/nome (item.look, do Sys.stats; sem ele, a era do item)
+const iname = it => { const e=ieraV(it), r=Math.max(0,Math.min(4,it.r|0)); if(it.slot==='weapon') return ERAS[e].w[r]; if(it.slot==='armor') return ERAS[e].a[r];
+  try{ const n=window.Sys&&Sys.loot&&Sys.loot.itemName?Sys.loot.itemName(it):null; if(n) return n; }catch(er){}   // 5 espaços novos: nomes do Sys.loot (pela era de aparência)
+  if(e===2&&INAME_E2[it.slot]) return INAME_E2[it.slot][r]; return (INOUN[it.slot]||'Item')+' '+ERA_MAT[e]; };
+// skins: cosmético puro (não dá atributo -> não é pay to win)
+const SKINS=[];
+ERAS.forEach((E,e)=>['weapon','armor'].forEach(slot=>RAR.forEach((R,r)=>SKINS.push({
+  id:slot[0]+e+r,slot,e,r,n:E[slot==='weapon'?'ws':'as'][r],col:(slot==='weapon'?E.wp:E.ap)[r],glow:r>=2?R.c:null}))));
+// skins exclusivas do passe (cosmético puro; aparência vem da era 'e')
+[ {id:'p5', slot:'weapon',e:2,r:3,n:'Lâmina da Temporada', col:'#ff8a3d'},
+  {id:'p10',slot:'armor', e:3,r:3,n:'Casaca da Temporada', col:'#ff8a3d'},
+  {id:'p15',slot:'weapon',e:6,r:3,n:'Plasma Solar',        col:'#ffb36b'},
+  {id:'p20',slot:'armor', e:5,r:4,n:'Traje Elite Solar',   col:'#ffb21e'},
+  {id:'p25',slot:'weapon',e:4,r:4,n:'Tesla Imperial',      col:'#ffe27a'},
+  {id:'p30',slot:'armor', e:6,r:4,n:'Imperador das Eras',  col:'#ffd23f'},
+].forEach(s=>SKINS.push({...s,pass:true,glow:RAR[s.r].c}));
+/* Sys.pass: a skin da temporada (premium, nível 25 do passe) é a Casaca da Temporada. As outras 5 skins do passe antigo só aparecem para quem já tem. */
+const SEASON_SKIN='p10', PASS_SKIN_AT={25:SEASON_SKIN};
+const SKIN = id => SKINS.find(s=>s.id===id);
+
+/* ================= ESTADO ================= */
+const SAVE_KEY='eras_proto_v2';
+let S;
+function newState(){
+  const w={id:1,slot:'weapon',r:0,e:0,lvl:1,gold:0,subs:[]}, a={id:2,slot:'armor',r:0,e:0,lvl:1,gold:0,subs:[]};   // formato final do item: {slot, r, e, lvl, gold, subs} + id
+  return {gold:0,gems:30,stage:1,wave:1,best:1,eraMax:0,nextId:3,inv:[w,a],eq:{weapon:1,armor:2},
+          skins:['w00','a00'],skinEq:{weapon:'w00',armor:'a00'},kills:0,tut:0,freePull:true,welcome:false};
+}
+function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){S=JSON.parse(j);return;} }catch(e){} S=newState(); }
+function save(){ if(window.__noSave) return; S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+load();
+if(/[?&]debug=1/.test(location.search)&&/[?&]fresh=1/.test(location.search)){ window.__noSave=true; S=newState(); }
+if(S.tut===undefined) S.tut=(S.kills>0||S.stage>1)?99:0;
+const AWAY=S.lastSeen?(Date.now()-S.lastSeen)/1000:0;   // segundos fora (ganhos offline)
+if(!S.set) S.set={sound:true};
+const DEBUG=/[?&]debug=1/.test(location.search);
+/* CHAVES DE TELA (voto do dono): só entra ligada a tela aprovada. bossResult = tela 10 (Vitória/Derrota do chefe): REPROVADA depois de escrita;
+   o código fica em js/screens2.js, desligado. Com a chave desligada vale o comportamento da v0.9 (aviso de derrota + farm; vitória no fluxo normal).
+   Em debug, ?res=1 liga só para conferência. */
+const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
+  rarityFx:DEBUG&&/[?&]rar=1/.test(location.search),
+  fullBattle:!(DEBUG&&/[?&]fb=0/.test(location.search))};   /* fullBattle = tela 04b Batalha em tela cheia (js/fullbattle.js), ícones V2: LIGADA POR PADRÃO desde a v0.12.0. O layout antigo (abas) só para comparação: ?debug=1&fb=0 */   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 (botão "Progresso" no Equipamento) */
+const VERSION='v0.12.1';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
+delete S.set.auto2; delete S.set.autoUlt;
+if(S.set.vib===undefined) S.set.vib=true;
+if(S.set.spd===undefined) S.set.spd=1;
+/* ---------- som / vibração (js/audio.js é opcional: window.GameAudio) ---------- */
+let actx=null;
+function sfx(f,d,type,v){ if(!S.set.sound) return; try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain();
+  o.type=type||'square'; o.frequency.value=f; g.gain.value=v||0.03; g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+d); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+d); }catch(e){} }
+const SYN={hit:[300,.07],crit:[520,.12],hero_hurt:[110,.12,'sawtooth'],enemy_die:[180,.18,'sawtooth'],coin:[660,.08],gem:[880,.1],ui_tap:[500,.04],upgrade:[700,.12],
+  summon:[600,.2],legendary:[990,.4],era_change:[440,.5],ult_ready:[880,.25],claim:[780,.12],boss_appear:[90,.5,'sawtooth'],defeat:[70,.6,'sawtooth']};
+function snd(name){ if(!S.set.sound||(typeof SFX_MUTE!=='undefined'&&SFX_MUTE[name])) return; const g=window.GameAudio;
+  if(g&&g.sfx){ try{ g.sfx(name); }catch(e){} return; }
+  const s=SYN[name]||(/_s3$/.test(name)?[140,.5,'sawtooth']:/_s2$/.test(name)?[240,.2]:/_s1$/.test(name)?[330,.06]:null); if(s) sfx(s[0],s[1],s[2]); }
+function music(key){ const g=window.GameAudio; if(g&&g.music){ try{ g.music(key); }catch(e){} } }
+function vib(ms){ if(S.set.vib&&navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+const pvSkin={weapon:null,armor:null};   // skin em prévia na aba Skins
+/* ?debug=1&era=N[&boss=1|eb=1][&wr=R&ar=R][&skip=1][&tab=gear]  -> força era/skins/estado (não grava o save) */
+const QP=new URLSearchParams(location.search);
+/* DEBUG OFICIAL DO SENHOR DA ERA (pedido do QA): ?debug=1&fresh=1&lord=<era 0..6> põe o save na fase <era*10+10>, onda 5 (Senhor da Era), com o herói
+   forte o bastante para vencer e SEM __stay (o chefe morre de verdade, a fase avança e a era troca). O reforço é refeito a cada 0,2 s (ver o fim do arquivo). */
+if(DEBUG&&QP.has('lord')){ QP.set('era',QP.get('lord')); QP.set('eb','1'); window.__lord=true; }
+if(DEBUG&&(QP.has('era')||QP.has('wr')||QP.has('ar')||QP.has('gold'))){
+  window.__noSave=true; S.tut=99; S.welcome=true; S.set.auto=true;
+  const era=+(QP.get('era')||eraOf(S.stage));
+  S.stage=era*STAGES_PER_ERA+1+(QP.has('eb')?9:0); S.wave=(QP.has('boss')||QP.has('eb'))?5:(+QP.get('wave')||1); S.eraMax=Math.max(S.eraMax,era); S.best=Math.max(S.best,S.stage);
+  if(QP.has('plv')) window.__plv=+QP.get('plv');   /* nível do jogador de teste (aplicado no boot) */
+  const wr=+(QP.get('wr')||0), ar=+(QP.get('ar')||0), we=+(QP.get('we')||era), ae=+(QP.get('ae')||era);
+  ['w'+we+wr,'a'+ae+ar].forEach(id=>{ if(!S.skins.includes(id)) S.skins.push(id); });
+  S.skinEq.weapon='w'+we+wr; S.skinEq.armor='a'+ae+ar;
+  S.gold=+(QP.get('gold')||50000); S.gems=Math.max(S.gems,500);
+  if(QP.has('stay')) window.__stay=true;
+}
+// debug: troca era/skins/chefe ao vivo (sem recarregar)
+window.dbgSet=function(era,wr,ar,mode){ if(!DEBUG) return; window.__noSave=true; window.__stay=true;
+  S.eraMax=Math.max(S.eraMax,era); S.stage=era*STAGES_PER_ERA+1+(mode==='eb'?9:0); S.wave=(mode==='boss'||mode==='eb')?5:1; S.best=Math.max(S.best,S.stage);
+  ['w'+era+wr,'a'+era+ar].forEach(id=>{ if(!S.skins.includes(id)) S.skins.push(id); }); S.skinEq.weapon='w'+era+wr; S.skinEq.armor='a'+era+ar;
+  B.dispEra=era; B.tr=null; B.deadT=0; B.corpses=[]; B.act=null; B.eshots=[]; startWave(0); if(mode==='boss'||mode==='eb') B.toSpawn=['boss'];   /* chefe sozinho, de frente */
+  while(B.toSpawn.length) B.en.push(mkEnemy(S.stage,B.toSpawn.shift())); placeNow(); };
+window.dbgSkill=function(n){ if(!DEBUG) return; if(n===2) B.cd2=0; if(n===3) B.energy=100; return useSkill(n); };
+/* debug: liga/desliga o VIP (a flag só muda por aqui; o botão "Comprar VIP" da loja só mostra "Pagamento em breve") */
+window.dbgVip=function(on){ if(!DEBUG||!(window.Sys&&Sys.vip)) return; if(typeof on==='number'&&Sys.vip.setLevel) Sys.vip.setLevel(S,on); else Sys.vip.setActive(S,!!on); statsChanged(); if(view!=='battle') render(); return Sys.vip.level?Sys.vip.level(S):Sys.vip.active(S); };   /* dbgVip(true|false) ou dbgVip(0..10) = nível de VIP */
+let GAME_NAME='Eras de Guerra', GAME_TAG='';   // provisório; name.json substitui
+
+const itemOf = id => S.inv.find(i=>i.id===id);
+/* ATRIBUTOS DO HERÓI: PONTO ÚNICO. Nenhuma conta aqui: Sys.fc.stats (js/sys/fc.js + stats.js) devolve ATK, HP, DEF, chance de crítico,
+   dano crítico e velocidade de ataque já com os 7 espaços, o nível do item, o fortalecimento do espaço, o nível do jogador, skin, coleção e VIP.
+   Nível do item, custos e melhoria: Sys.stats (upgradeCost / canUpgrade / upgrade / planUpgrade / upgradeTo). Desmontar: Sys.loot.dismantle. */
+function heroStats(){ if(window.Sys&&Sys.fc&&Sys.stats&&Sys.host) return Sys.fc.stats(S,Sys.host); return {atk:5,hp:100,def:0,critRate:12,critDmg:100,aspd:0}; }
+const heroFC = () => (window.Sys&&Sys.fc&&Sys.stats&&Sys.host)?Sys.fc.compute(S,Sys.host):0;
+/* FC RECOMENDADA DA FASE (modo farm e tela de derrota). Nenhum módulo expõe essa função; a fonte é docs/balance.json →
+   tower.fc_mediana_do_gratis_no_fim_de_cada_era (FC mediana do grátis ao derrubar o Senhor de cada era), interpolada geometricamente dentro da era
+   a partir da FC do fim da era anterior (era 0: a partir de REC_FC0, a FC do jogador novo). O carregador troca REC_FC pelo valor do arquivo. */
+let REC_FC=[1440,12300,395000,13900000,829000000,34300000000,1540000000000]; const REC_FC0=264, BOSS_GLOW_AT=0.9;   // o botão "Desafiar" brilha com a FC em 90% da recomendada
+function recFC(stage){ const e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1, a=e>0?REC_FC[e-1]:REC_FC0, b=REC_FC[e]; return Math.round(a*Math.pow(b/a,inEra/STAGES_PER_ERA)); }
+/* chamar depois de QUALQUER troca de item ou skin, melhoria ou desmonte: recalcula na hora (sem cache), grava a FC da semana (ranking) e salva */
+function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+function roll(key){
+  const tot=RAR.reduce((s,r)=>s+r[key],0); let x=Math.random()*tot;
+  for(let i=0;i<RAR.length;i++){ x-=RAR[i][key]; if(x<=0) return i; } return 0;
+}
+// era do item sorteado/dropado: era mais alta liberada, às vezes uma abaixo
+const dropEra = () => (S.eraMax>0 && Math.random()<0.3) ? S.eraMax-1 : S.eraMax;
+const fmt = n => n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.floor(n)+'';
+
+/* ================= TOAST ================= */
+let toastT;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),2200); }
+
+/* batalha: js/battle.js · reserva: js/fallback.js · tutorial/áudio/offline: js/meta.js */
+let HUDK={};
+function hudSet(id,t){ if(HUDK[id]!==t){ HUDK[id]=t; const el=document.getElementById(id); if(el) el.textContent=t; } }
+function hud(){
+  hudSet('gold',typeof kf==='function'?kf(S.gold):fmt(S.gold)); hudSet('gems',String(S.gems));
+  { const fc=heroFC(); hudSet('fcv','FC '+(typeof gNum==='function'?gNum(fc):fmt(fc))); hudSet('hname',S.name||'Kael'); }
+  { const n=missionAlerts(), el=document.getElementById('msn'), t=n?String(n):''; if(el&&el.textContent!==t){ el.textContent=t; el.style.display=n?'flex':'none'; } }
+  { const sk=SKIN(S.skinEq.armor), t=sk?tierOf(sk.r):0, c='kidle'+(t?' t'+t:''), el=document.getElementById('hav'); if(el&&el.className!==c) el.className=c; }
+  { const e=eraOf(S.stage), t=`${ERAS[e].n} · ${e+1}-${((S.stage-1)%STAGES_PER_ERA)+1}`, el=document.getElementById('stg'); if(el.textContent!==t) el.textContent=t; }
+  updHudExtra(); hudSys(); syncSpeed(); if(typeof fbTick==='function') fbTick();
+  badges();
+}
+
+/* ================= UI ================= */
+let view='battle';
+const V=document.getElementById('view');
+const ic=(n,em,cls)=>`<img class="${cls||'hi'}" src="assets/ui/${n}.png" alt="" onerror="this.outerHTML='${em}'">`;
+const COIN=()=>ic('coin','🪙'), GEM=()=>ic('gem','💎');
+const thumb=(slot,e,r)=>`<img class="th ${slot}" src="assets/${slot==='weapon'?'weapons':'hero'}/era${e}_t${tierOf(r)}.png" alt="" loading="lazy" decoding="async" style="${r>0?`filter:drop-shadow(0 0 ${2+r}px ${RAR[r].c})`:''}" onerror="this.style.display='none'">`;
+const rb = r => `<span class="badge" style="background:${RAR[r].c}">${RAR[r].n}</span>`;
+
+function render(){
+  const fn=({battle:renderBattle,gear:scrGear,summon:scrSummon,shop:scrShop,pass:scrPass,prog:scrProg})[view];
+  if(fn) fn(); else if(Screens.reg[view]&&typeof Screens.reg[view].render==='function') Screens.reg[view].render(V,S); else V.innerHTML='';   /* tela registrada por Screens.register */
+}
+/* INVOCAÇÃO: só ITENS, pagos em OURO (decisão do PO): x1, x10 e 1 grátis por dia. Preço, tabela e grátis são do Sys.loot (fps-30):
+   Sys.loot.summon cobra por host.spendGold e entrega por host.addItem (js/farm.js, que aplica a garantia a cada BAL.pullPity). Sem sorteio de skin. */
+/* INVOCAÇÃO (só itens, em ouro), Equipamento e Loja: js/screens.js. Aqui ficam só as ações das telas antigas que continuam (Coleção de skins). */
+V.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
+  if(a==='skinera'){ if(b.dataset.e==='pass'){ skinEra='pass'; render(); return; } const e=+b.dataset.e; if(e<=S.eraMax){ skinEra=e; render(); } return; }
+  if(a==='skin'){ const s=SKIN(b.dataset.id); S.skinEq[s.slot]=s.id; pvSkin[s.slot]=null; snd('ui_tap'); preloadAssets(); statsChanged(); }
+  else if(a==='pv'){ const s=SKIN(b.dataset.id); pvSkin[s.slot]=s.id; snd('ui_tap'); render(); return; }
+  else return;
+  save(); render(); hud();
+});
+/* 5 ABAS, como no protótipo (decisão do PO): Batalha, Equip., Invocar, Loja e Passe. Skins = aba interna "Coleção" da Loja; Missões = aba interna do Passe. */
+const TAB_SVG={ battle:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line><line x1="19" y1="21" x2="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" y1="14" x2="9" y2="18"></line><line x1="7" y1="17" x2="4" y2="20"></line><line x1="3" y1="19" x2="5" y2="21"></line></svg>',
+  gear:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>' };
+const TABS=[['battle','','Batalha'],['gear','','Equip.'],['summon','','Invocar','chest'],['shop','','Loja','gem'],['pass','','Passe','pass']];
+const tabsEl=document.getElementById('tabs');
+function tabHTML(t){ const n=t[0]==='pass'?passAlerts()+missionAlerts():0;
+  return `<span class="ti">${t[3]?`<img src="assets/ui/${t[3]}.png" alt="">`:TAB_SVG[t[0]]}${n?`<small>${n}</small>`:''}</span><span>${t[2]}</span>`; }
+tabsEl.innerHTML=TABS.map(t=>`<button data-t="${t[0]}"></button>`).join('');
+function syncTabs(){ tabsEl.querySelectorAll('button').forEach((b,i)=>{ b.classList.toggle('on',b.dataset.t===(view==='prog'?'gear':view)); const h=tabHTML(TABS[i]); if(b.dataset.h!==h){ b.dataset.h=h; b.innerHTML=h; } }); }
+const FULLV={gear:1,summon:1,shop:1,pass:1,prog:1};   // telas cheias (entre o HUD e as abas)
+function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.tab='col'; } else if(v==='missions'){ v='pass'; passTab='mis'; }
+  if(v==='pass'&&typeof XP!=='undefined') XP.anim=true; if(v==='prog'&&typeof XR!=='undefined') XR.anim=true;
+  view=v; document.body.dataset.v=v; document.body.classList.toggle('sheet',false); document.body.classList.toggle('full',!!FULLV[v]); syncTabs();
+  if(typeof XG!=='undefined'){ XG.anim=XS.anim=XH.anim=true; if(v!=='gear'){ XG.sel=null; XG.cf=null; } if(v!=='shop'){ XH.sel=null; XH.cf=null; } }
+  render(); V.scrollTop=0;
+  V.classList.remove('up'); void V.offsetWidth; V.classList.add('up'); resize(); if(typeof tutEvent==='function') tutEvent('view'); }
+tabsEl.addEventListener('click',ev=>{ const b=ev.target.closest('button'); if(!b) return; snd('ui_tap'); if(b.dataset.t==='pass'){ Screens.open('pass',{tab:view!=='pass'?'rewards':(passTab==='mis'?'missions':'rewards')}); } else setView(b.dataset.t); });
+document.getElementById('msb').addEventListener('click',()=>{ snd('ui_tap'); Screens.open('pass',{tab:'missions'}); });   // missões da batalha: abre o Passe direto na aba Missões
+/* "Desafiar" (PO): SEMPRE visível. Brilha com a FC ≥ 90% da recomendada; abaixo disso fica apagado e o toque mostra a FC que falta
+   (um segundo toque em até 4 s desafia assim mesmo, para o jogador nunca ficar sem saída). Fora do farm, o toque só antecipa a onda do chefe. */
+let bossAskT=0;
+document.getElementById('bossb').addEventListener('click',()=>{ snd('ui_tap');
+  if(S.wave===5){ toast('Você já está enfrentando o chefe'); return; }
+  const rec=recFC(S.stage), fc=heroFC(), f=typeof gNum==='function'?gNum:fmt;
+  if(fc<BOSS_GLOW_AT*rec&&Date.now()-bossAskT>4000){ bossAskT=Date.now(); toast('Faltam '+f(Math.max(1,Math.ceil(rec-fc)))+' de FC (recomendada: '+f(rec)+'). Toque de novo para desafiar assim mesmo'); return; }
+  bossAskT=0; if(challengeBoss()) toast('Desafiando o chefe!'); });
+document.getElementById('hideb').addEventListener('click',()=>{ const on=document.body.classList.toggle('hideui'); document.getElementById('hideb').setAttribute('aria-pressed',on?'true':'false'); snd('ui_tap'); });
+document.getElementById('gemplus').addEventListener('click',()=>{ snd('ui_tap'); if(typeof XH!=='undefined') XH.tab='gem'; setView('shop'); });
+const MUS_ON='<span class="eq"><i></i><i></i><i></i></span>', MUS_OFF='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+function syncMus(){ const b=document.getElementById('musb'); b.innerHTML=S.set.sound?MUS_ON:MUS_OFF; b.classList.toggle('on',!!S.set.sound); b.classList.toggle('off',!S.set.sound); b.setAttribute('aria-pressed',S.set.sound?'true':'false'); }
+document.getElementById('musb').addEventListener('click',()=>{ S.set.sound=!S.set.sound; if(window.GameAudio&&GameAudio.setEnabled){ try{ GameAudio.setEnabled(S.set.sound); }catch(e){} } save(); syncMus(); snd('ui_tap'); });
+syncMus();
+/* VELOCIDADE (regra do dono): x1 no começo; x2 com qualquer VIP ou nível 15; x4 só com VIP 5+ e nível 40+. A regra é do Sys.vip.maxSpeed(S, host);
+   no jogo, o ponto único é canSpeed(n). O botão alterna só entre as liberadas; a próxima bloqueada aparece com cadeado e o toque mostra o motivo. */
+function speedInfo(){ try{ const m=Sys.vip.maxSpeed(S,Sys.host); return {ok:[1].concat(m.speeds.filter(x=>x.unlocked).map(x=>x.speed)),next:m.next,max:m.max}; }catch(e){ return {ok:[1],next:null,max:1}; } }
+function canSpeed(n){ return n===1||(DEBUG&&window.__spd===n)||speedInfo().ok.includes(n); }
+const SPD_LOCK='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
+let SPDK='';
+function syncSpeed(){ const I=speedInfo(), b=document.getElementById('spd'); if(!b) return;
+  if(!canSpeed(B.speed)){ B.speed=I.ok.filter(x=>x<=B.speed).pop()||1; S.set.spd=B.speed; }   /* save antigo em x2 sem o nível 15 nem VIP: volta para x1 */
+  if(S.set.spdMax!==undefined&&I.max>S.set.spdMax) SPD_NEW=I.max;   /* liberou uma velocidade nova: aviso animado */
+  S.set.spdMax=I.max;
+  if(SPD_NEW&&!B.banner&&!B.res&&view==='battle'&&!B.paused){ B.banner={txt:'Velocidade x'+SPD_NEW+' liberada!',pill:true,bg:'rgba(120,80,10,.92)',bd:'#ffc94a',sh:'#4a2a05',t:0,dur:2.6,col:'#ffc94a'}; snd('upgrade'); b.classList.remove('spdnew'); void b.offsetWidth; b.classList.add('spdnew'); SPD_NEW=0; }
+  const k=B.speed+'|'+(I.next?I.next.speed:0); if(k===SPDK) return; SPDK=k;
+  b.innerHTML='x'+B.speed+(I.next?'<span class="spl">'+SPD_LOCK+'x'+I.next.speed+'</span>':''); b.setAttribute('aria-label','Velocidade x'+B.speed+(I.next?'. Bloqueada: '+I.next.text:'')); }
+let SPD_NEW=0;
+document.getElementById('spd').addEventListener('click',()=>{ const I=speedInfo(), ok=DEBUG&&window.__spd?I.ok.concat(window.__spd).filter((x,i,a)=>a.indexOf(x)===i).sort((a,b)=>a-b):I.ok, i=ok.indexOf(B.speed); snd('ui_tap');
+  if(I.next&&i>=ok.length-1) toast(I.next.text);
+  B.speed=ok[(i+1)%ok.length]||1; S.set.spd=B.speed; save(); syncSpeed(); });
+/* debug: força a velocidade (1, 2 ou 4), mesmo bloqueada; dbgSpeed(0) volta à regra */
+window.dbgSpeed=function(n){ if(!DEBUG) return; window.__spd=n||0; if(n) B.speed=n; SPDK=''; syncSpeed(); return B.speed; };
+/* ABRIR E FECHAR TELAS POR UMA FUNÇÃO ÚNICA (PO): os painéis não dependem da barra de abas para existir, entrar ou sair; a barra só chama Screens.open.
+   Screens.open('pass',{tab:'missions'|'rewards'}) · Screens.open('progress',{tab:'practice'|'titles'}) · Screens.open('result',{mode:'win'|'lose',...}) · Screens.close() */
+const Screens={
+  /* PONTO DE EXTENSÃO (pedido B-3): Screens.register(nome, {title, render(el, S), onOpen(opções), onClose()}) registra uma tela cheia sem editar este
+     arquivo. Depois disso Screens.open(nome) abre (o render é chamado a cada redesenho, com el = #view), Screens.close() fecha, o título aparece no
+     cabeçalho do painel e, se o nome for uma chave do MENU da batalha (forge, pets, tower, inst, rank, vip, mail, events), o item deixa de dizer "Em breve". */
+  reg:{},
+  register(name,def){ if(!name||FULLV[name]&&!this.reg[name]) return false; this.reg[name]=def||{}; FULLV[name]=1; return true; },
+  open(name,o){ o=o||{};
+    if(this.reg[name]){ const d=this.reg[name]; setView(name); if(typeof d.onOpen==='function'){ try{ d.onOpen(o); }catch(e){ console.error('Screens.onOpen',e); } } return true; }
+    if(name==='pass'||name==='missions'){ passTab=(name==='missions'||o.tab==='missions'||o.tab==='mis')?'mis':'pass'; setView('pass'); }
+    else if(name==='progress'||name==='prog'){ if(!SCREENS_ON.progress) return false; if(typeof XR!=='undefined'){ XR.tab=o.tab==='titles'?'tit':'prac'; XR.back=view==='prog'?XR.back:view; } setView('prog'); }
+    else if(name==='result'){ return typeof resOpen==='function'&&resOpen(o.mode||'win',o,true); }
+    else setView(name);
+    return true; },
+  close(){ if(typeof B!=='undefined'&&B.res&&typeof resClose==='function'){ resClose('close'); return; }
+    if(this.reg[view]){ const d=this.reg[view]; setView('battle'); if(typeof d.onClose==='function'){ try{ d.onClose(); }catch(e){ console.error('Screens.onClose',e); } } return; }
+    if(view==='prog'){ setView(typeof XR!=='undefined'&&XR.back&&XR.back!=='prog'?XR.back:'gear'); return; }
+    if(view!=='battle') setView('battle'); },
+  current(){ return (typeof B!=='undefined'&&B.res)?'result':view==='prog'?'progress':view; } };
+window.Screens=Screens;
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
+/* o WebView do app demora segundos para gravar o localStorage: grava também ao sair da tela, ao congelar e na pausa do app (Capacitor) */
+addEventListener('pagehide',()=>save()); document.addEventListener('freeze',()=>save()); document.addEventListener('pause',()=>save());
+
+/* ================= PASSE E MISSÕES: Sys.pass (js/sys/pass.js, fps-30). Tela 08 em js/screens2.js =================
+   O passe antigo (S.pass, MISSIONS, PASS_*, addPxp) saiu. A XP do passe vem só das missões. Migração do save: sysBoot (js/farm.js). */
+const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+const PASS_OK = () => !!(window.Sys&&Sys.pass&&Sys.host);
+/* evento de missão: kill · boss · ult · chest · instance · forge · summon · upgrade */
+function ptrack(ev,n){ const v=n==null?1:n;
+  if(PASS_OK()){ try{ Sys.pass.track(S,Sys.host,ev,v); }catch(e){} }
+  if(window.Sys&&Sys.events&&typeof Sys.events.track==='function'){ try{ Sys.events.track(S,Sys.host,ev,v); }catch(e){} }   /* missões do Festival (módulo desligado por chave: a chamada não faz nada até ligarem) */
+}
+/* pedras de forja coletadas (Sys.loot.todayCount) e baús abertos (S.sys.chest.opened): os módulos não avisam, então o jogo compara os contadores */
+function passSync(){ if(!PASS_OK()||!Sys.loot||!Sys.chest) return;
+  try{ const day=Sys.pass.dayKey(Date.now()), f=Sys.loot.todayCount(S,Sys.host,'forge'), c=Sys.chest.ensure(S).opened; let o=S.psync;
+    if(!o){ o=S.psync={day,forge:f,chest:c}; } else if(o.day!==day){ o.day=day; o.forge=0; }
+    if(f>o.forge) ptrack('forge',f-o.forge); o.forge=f; if(c>o.chest) ptrack('chest',c-o.chest); o.chest=c; }catch(e){} }
+function missionAlerts(){ if(!PASS_OK()) return 0; try{ const L=Sys.pass.list(S,Sys.host); return L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0); }catch(e){ return 0; } }
+function passAlerts(){ if(!PASS_OK()) return 0; try{ return Math.max(0,Sys.pass.alerts(S,Sys.host)-missionAlerts()); }catch(e){ return 0; } }
+function badges(){ syncTabs(); }
+/* debug: liga/desliga o Premium do passe (a compra real mostra só "Pagamento em breve") e soma XP do passe */
+window.dbgPremium=function(on){ if(!DEBUG||!PASS_OK()) return; Sys.pass.setPremium(S,on!==false); save(); if(view!=='battle') render(); hud(); return Sys.pass.progress(S).premium; };
+window.dbgPassXp=function(n){ if(!DEBUG||!PASS_OK()) return; Sys.pass.addXp(S,n||100); save(); if(view!=='battle') render(); hud(); return Sys.pass.progress(S); };
+
+/* ================= LOJA (moedas e diamantes) ================= */
+function hash(str){ let h=2166136261; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; }
+function rngSeed(seed){ let a=seed; return ()=>{ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const COIN_BASE=[150,420,1300,4000,12000];
+const itemPrice=(r,e)=>Math.floor(COIN_BASE[r]*Math.pow(4,e));
+const SKIN_PRICE=[30,60,120,250,500];
+/* pacotes de skin sorteada: REMOVIDOS (o dono proibiu sorteio de skin). Skin só por venda direta (skins do dia) e no passe. */
+function ensureShop(){
+  const k=todayKey(); if(S.shop&&S.shop.date===k) return;
+  const rnd=rngSeed(hash(k+'|'+S.eraMax)), rs=[0,0,1,1,2,2];
+  /* estoque do dia montado pelo Sys.loot.rollItem ({source:'shop'}, com os portões de raridade); a vitrine mostra o item inteiro e a compra é direta, sem sorteio */
+  const sh=Object.assign({},window.Sys&&Sys.host,{rng:rnd});
+  const offers=rs.map((r,i)=>{ let o; if(window.Sys&&Sys.loot){ const it=normItem(Sys.loot.rollItem(sh,{source:'shop',minR:r})); o={slot:it.slot,r:it.r,e:it.e,subs:it.subs}; } else o={slot:i%2?'armor':'weapon',r,e:(S.eraMax>0&&rnd()<.3)?S.eraMax-1:S.eraMax,subs:[]};
+    return {slot:o.slot,r:o.r,e:o.e,subs:o.subs,price:itemPrice(o.r,o.e),sold:false}; });   /* o item inteiro fica na vitrine (espaço, era, raridade, secundários): compra direta, sem sorteio */
+  const pool=SKINS.filter(x=>!x.pass&&x.e<=S.eraMax&&!S.skins.includes(x.id));
+  const skins=[]; while(skins.length<4&&pool.length){ skins.push(pool.splice(Math.floor(rnd()*pool.length),1)[0].id); }
+  S.shop={date:k,offers,skins}; save();
+}
+/* compra de item e de skin: js/screens.js (com confirmação antes de cobrar) */
+function shopLeft(){ const d=new Date(), m=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)-d; const h=Math.floor(m/3600000), mi=Math.floor(m%3600000/60000), se=Math.floor(m%60000/1000); return `${h}h ${String(mi).padStart(2,'0')}m ${String(se).padStart(2,'0')}s`; }
+function updShop(){ if(typeof scrTick==='function') scrTick(); }
+/* ================= TELA INICIAL / CONFIG ================= */
+const modal=document.getElementById('modal'), mbox=document.getElementById('mbox');
+function closeModal(){ modal.style.display='none'; }
+/* O index.html não tem "?v=": o celular pode guardar a página antiga. Ao carregar, compara a VERSION com version.json (buscado sem cache);
+   se for diferente, recarrega com um parâmetro novo (_v=<versão>), o que força a busca do index novo. Não repete se já recarregou para essa versão. */
+function versionCheck(){ if(DEBUG) return;
+  fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ const v=j&&j.version; if(!v||v===VERSION) return;
+    const u=new URL(location.href); if(u.searchParams.get('_v')===v) return; u.searchParams.set('_v',v); save(); location.replace(u.toString()); }).catch(()=>{}); }
+function openSettings(confirmReset){
+  mbox.innerHTML=confirmReset?`<h3>Resetar progresso?</h3><div class="sm">Isso apaga TODO o seu progresso, itens, skins e moedas. Não dá para desfazer.</div>
+    <div class="row"><button class="btn dim grow" id="m_no">Cancelar</button><button class="btn grow" style="background:linear-gradient(#e05555,#a02020);color:#fff" id="m_yes">Apagar tudo</button></div>`
+  :`<h3>⚙️ Configurações</h3>
+    <div class="row"><div class="grow">Som</div><button class="btn ${S.set.sound?'':'dim'}" id="m_snd">${S.set.sound?'Ligado':'Desligado'}</button></div>
+    <div class="row"><div class="grow">Vibração</div><button class="btn ${S.set.vib?'':'dim'}" id="m_vib">${S.set.vib?'Ligada':'Desligada'}</button></div>
+    <div class="row"><div class="grow">Desafiar o chefe sozinho<div class="sm">quando a sua FC chegar à recomendada da fase</div></div><button class="btn ${S.set.autoBoss?'':'dim'}" id="m_ab">${S.set.autoBoss?'Ligado':'Desligado'}</button></div>
+    <div class="row"><div class="grow">Progresso</div><button class="btn dim" id="m_rst">Resetar</button></div>
+    <div class="sm" style="margin-top:10px">${GAME_NAME} · ${VERSION}${DEBUG?' · DEBUG':''}</div>
+    <div class="row"><button class="btn grow" id="m_ok">Fechar</button></div>`;
+  modal.style.display='flex';
+  const on=(id,fn)=>{ const el=document.getElementById(id); if(el) el.onclick=fn; };
+  on('m_ok',closeModal); on('m_no',()=>openSettings(false));
+  on('m_vib',()=>{ S.set.vib=!S.set.vib; save(); openSettings(false); vib(30); });
+  on('m_ab',()=>{ S.set.autoBoss=!S.set.autoBoss; save(); openSettings(false); });
+  on('m_snd',()=>{ setTimeout(syncMus,0); S.set.sound=!S.set.sound; if(window.GameAudio&&GameAudio.setEnabled){ try{ GameAudio.setEnabled(S.set.sound); }catch(e){} } save(); openSettings(false); snd('ui_tap'); });
+  on('m_rst',()=>openSettings(true));
+  on('m_yes',()=>{ window.__noSave=true; try{ localStorage.removeItem(SAVE_KEY); }catch(e){} location.href=location.pathname+location.search; });
+}
+modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+document.getElementById('cfgb').onclick=()=>openSettings(false);
+document.getElementById('tcfg').onclick=()=>openSettings(false);
+function applyName(){
+  document.title=GAME_NAME; document.getElementById('tname').textContent=GAME_NAME; document.getElementById('ttag').textContent=GAME_TAG;
+  document.getElementById('ver').textContent=`${GAME_NAME} · ${VERSION}${DEBUG?' · DEBUG':''}`;
+}
+function initTitle(){
+  applyName();
+  fetch('assets/brand/name.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.name){ GAME_NAME=j.name; GAME_TAG=j.tagline||''; applyName(); } }).catch(()=>{});
+  const bg=new Image(); bg.onload=()=>{ document.getElementById('title').style.backgroundImage='url(assets/brand/title_bg.png)'; }; bg.src='assets/brand/title_bg.png';
+  const lg=document.getElementById('tlogo'); lg.onload=()=>{ lg.style.display='inline-block'; document.getElementById('tname').style.display='none'; }; lg.onerror=()=>{ lg.style.display='none'; }; lg.src='assets/brand/logo.png';
+  document.getElementById('playb').onclick=()=>{ B.paused=false; document.getElementById('title').classList.add('out'); onPlay(); setTimeout(()=>{ document.getElementById('title').style.display='none'; },550); };
+}
+if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg'; document.body.appendChild(d);
+  setInterval(()=>{ if(typeof B==='undefined') return; d.textContent=`${VERSION} era ${eraOf(S.stage)} disp ${B.dispEra} stg ${S.stage}-${S.wave} ${window.__fps||0}fps img ${Object.values(IMGS).filter(o=>o.ok).length}/${Object.keys(IMGS).length} ${B.paused?'pausa':'ok'}`; },300); }
+
+/* ================= INÍCIO ================= */
+</script>
+<script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
+['battle','stage','farm','fallback','ui','screens','screens2','rarity','fullbattle','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+<script>
+'use strict';
+['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"
+loadBalance(); initSkills(); versionCheck();
+sysBoot(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); syncTabs(); hud(); if(typeof fbInit==='function'){ fbInit(); if(typeof FB_ON==='function'&&FB_ON()) dispatchEvent(new Event('resize')); } if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
+if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px'; document.getElementById('app').style.width='min(900px,100dvw)'; resize(); }
+if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
+if(DEBUG&&window.__lord) setInterval(()=>{ const h=B.hero, e=B.en[0]; if(h&&e){ h.atk=Math.max(h.atk,e.maxhp/(e.boss?12:3)); h.maxhp=Math.max(h.maxhp,e.dmg*400); h.hp=h.maxhp; } },200);   /* ?lord=<era>: herói forte, sem stay */
+if(DEBUG&&QP.has('skip')){ document.getElementById('title').style.display='none'; B.paused=false; if(!S.name){ S.name='Kael'; S.hero='kael'; } if(S.tut<99) startTut(); }
+</script>
+<script src="js/native.js"></script>   <!-- APP ANDROID (Capacitor): ponte nativa; fora do app não faz nada -->
+</body>
+</html>

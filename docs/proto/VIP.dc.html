@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — VIP</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+/* Kael aprovado: folha parado 12 quadros + aura +13 (16 quadros 256x320, âncora no chão) */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kid 1s steps(12, jump-none) infinite}
+@keyframes kid{from{background-position:0 0}to{background-position:100% 0}}
+.aura13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:kid 1.333s steps(16, jump-none) infinite}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
+/* moldura VIP animada */
+.vframe{position:absolute;border-radius:20px;padding:3px;background:conic-gradient(from var(--a,0deg),#8a4f0c,#ffe07a,#fff6d0,#f2a826,#8a4f0c,#ffe07a,#8a4f0c);animation:vrot 3s linear infinite}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes vrot{to{--a:360deg}}
+.vin{width:100%;height:100%;border-radius:17px;background:radial-gradient(circle at 50% 62%,#5a3d12 0%,#2a1d0f 55%,#140e08 100%);overflow:hidden;position:relative}
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.4) 0deg 8deg,rgba(255,201,74,0) 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 16s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,201,74,.9);animation:tw 1.8s ease-in-out infinite}
+@keyframes tw{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.2);opacity:1}}
+.badge{animation:badge 2.4s ease-in-out infinite}
+@keyframes badge{0%,100%{filter:drop-shadow(0 0 6px rgba(255,201,74,.5))}50%{filter:drop-shadow(0 0 18px rgba(255,201,74,1))}}
+.gtext{background:linear-gradient(100deg,#ffe07a 20%,#fff8de 45%,#f2a826 60%,#ffe07a 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 3s linear infinite}
+@keyframes gsh{from{background-position:120% 0}to{background-position:-130% 0}}
+.bar{transition:width .5s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+.bar::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:220% 100%;animation:gsh 2.2s linear infinite}
+.prop{animation:prop 2.2s ease-in-out infinite}
+@keyframes prop{0%,100%{border-color:#ffc94a;box-shadow:0 0 0 rgba(255,201,74,0)}50%{border-color:#fff1b8;box-shadow:0 0 14px rgba(255,201,74,.7)}}
+.lvin{animation:lvin .35s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes lvin{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.trow{animation:trow .3s ease-out both}
+.newtag{animation:newtag 1.2s ease-in-out infinite}
+@keyframes newtag{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.cta{animation:cta 1.5s ease-in-out infinite}
+@keyframes cta{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 8px rgba(255,201,74,.3)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 26px rgba(255,201,74,.95)}}
+.shine{position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);background-size:260% 100%;animation:gsh 2.6s ease-in-out infinite;pointer-events:none}
+.veil{animation:veil .2s ease-out both}
+@keyframes veil{from{opacity:0}to{opacity:1}}
+.pop{animation:lvin .32s cubic-bezier(.2,1.4,.4,1) both}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2): voltar à batalha, título no centro, pílulas de moedas e gemas, sem engrenagem ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-sizing:border-box;background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhT .gtext{text-shadow:none}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+/* painel em tela cheia por cima da batalha: o miolo rola em tela baixa, a ação principal fica fixa embaixo (polegar) */
+.nhBody{position:relative;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
+.nhFoot{position:relative;z-index:10;flex:none;width:100%;max-width:640px;margin:0 auto;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box}
+</style>
+</helmet>
+<div class="nhApp" style="background: radial-gradient(120% 60% at 50% 18%, #3a2810 0%, #16110d 62%)">
+
+  <!-- HEADER NOVO (igual Batalha tela cheia V2): voltar à batalha · título · moedas e gemas (sem engrenagem; Configurações fica no MENU da batalha) -->
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1"><span class="gtext">Clube VIP</span></span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Moedas: 48.200. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>48.200</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Gemas: 320. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+    </div>
+  </div>
+
+  <!-- Painel em tela cheia (ocupa o espaço da antiga barra de abas); rola só em tela baixa -->
+  <div class="nhBody"><div class="nhWrap" style="min-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 6px 12px 4px">
+
+    <!-- legenda (o título "Clube VIP" está no header) -->
+    <span style="flex: none; text-align: center; font-size: 12px; font-weight: 800; color: #c9b9a2; line-height: 1.15">Sobe acumulando compras na loja</span>
+
+    <!-- Vitrine: Kael com aura dourada dentro da moldura VIP animada + nível atual -->
+    <div style="height: 196px; flex: none; position: relative; display: flex; gap: 10px">
+      <div style="position: relative; width: 168px; flex: none">
+        <div class="vframe" style="inset: 0">
+          <div class="vin">
+            <div class="rays" style="left: -36px; top: -30px; width: 240px; height: 240px"></div>
+            <!-- chão do quadro em y 168 (pedestal). Aura 132x165 com a base no chão: top 168 - 165 = 3. Kael 140: pés em 95% -> top 168 - 133 = 35 -->
+            <div class="aura13" aria-hidden="true" style="position: absolute; left: 15px; top: 3px; width: 132px; height: 165px"></div>
+            <div style="position: absolute; left: 24px; top: 158px; width: 114px; height: 22px; border-radius: 50%; background: radial-gradient(ellipse at 50% 35%, #7a5a26 0%, #3a2810 60%, #1a120a 100%); border: 2px solid #ffc94a; box-shadow: 0 0 16px rgba(255,201,74,0.6)"></div>
+            <div style="position: absolute; left: 44px; top: 162px; width: 74px; height: 10px; border-radius: 50%; background: rgba(0,0,0,0.45)"></div>
+            <div class="kidle" role="img" aria-label="Kael com a aura dourada VIP" style="position: absolute; left: 11px; top: 35px; width: 140px; height: 140px"></div>
+            <span class="spark" style="left: 18px; top: 26px"></span>
+            <span class="spark" style="left: 136px; top: 50px; animation-delay: .6s"></span>
+            <span class="spark" style="left: 30px; top: 120px; animation-delay: 1.2s"></span>
+            <span class="spark" style="left: 128px; top: 132px; animation-delay: 1.6s"></span>
+          </div>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; justify-content: center">
+        <span style="font-size: 11px; font-weight: 900; color: #c9b9a2; letter-spacing: 1px">SEU NÍVEL</span>
+        <div class="badge" style="align-self: flex-start; display: flex; align-items: center; gap: 6px; padding: 4px 14px 6px; border-radius: 14px; background: linear-gradient(180deg, #ffe07a, #c9831a); box-shadow: 0 4px 0 #6a3a08">
+          <svg width="26" height="22" viewBox="0 0 40 28" aria-hidden="true"><path d="M3 24 6 6l9 9 5-13 5 13 9-9 3 18z" fill="#2a1403"></path></svg>
+          <span style="font-family: 'Lilita One', sans-serif; font-size: 34px; line-height: 1; color: #2a1403">VIP {{cur}}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900"><span>Até o VIP {{next}}</span><span style="color: #ffc94a">{{progPct}}</span></div>
+        <div role="progressbar" aria-label="Progresso até o próximo VIP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{progNum}}" style="height: 14px; border-radius: 7px; background: #0e0a07; border: 1px solid #6a4a1a; overflow: hidden"><div class="bar" style="width: {{progPct}}; height: 100%; background: linear-gradient(90deg, #f2a826, #ffe07a)"></div></div>
+        <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; line-height: 1.2">Faltam [VALOR] em compras. Toda compra conta (diamantes, passe, ofertas).</span>
+      </div>
+    </div>
+
+    <!-- Destaque: números são proposta -->
+    <div class="prop" role="note" style="height: 34px; flex: none; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; border: 2px dashed #ffc94a; background: rgba(255,201,74,0.1); font-size: 12px; font-weight: 900; color: #ffe07a; text-align: center">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffe07a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"></path><line x1="12" y1="10" x2="12" y2="14"></line></svg>
+      NÚMEROS = PROPOSTA para o dono escolher
+    </div>
+
+    <!-- Carrossel dos níveis 1-10 -->
+    <div style="height: 50px; flex: none; display: flex; align-items: center; gap: 8px">
+      <button onClick="{{prev}}" aria-label="Nível VIP anterior" style="width: 48px; height: 48px; flex: none; border-radius: 12px; border: 2px solid #6a4a1a; background: #2a1d0f; color: {{prevFg}}; font-family: 'Lilita One', sans-serif; font-size: 26px; padding: 0">‹</button>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+        <span class="lvin {{selKey}}" style="font-family: 'Lilita One', sans-serif; font-size: 22px; line-height: 1">{{selTitle}}</span>
+        <div aria-hidden="true" style="display: flex; gap: 4px">
+          <sc-for list="{{dots}}" as="d" hint-placeholder-count="10"><span style="width: {{d.w}}; height: 8px; border-radius: 4px; background: {{d.c}}; transition: width .25s"></span></sc-for>
+        </div>
+      </div>
+      <button onClick="{{nextLv}}" aria-label="Próximo nível VIP" style="width: 48px; height: 48px; flex: none; border-radius: 12px; border: 2px solid #6a4a1a; background: #2a1d0f; color: {{nextFg}}; font-family: 'Lilita One', sans-serif; font-size: 26px; padding: 0">›</button>
+    </div>
+
+    <!-- Sem VIP x Com VIP (nível escolhido) -->
+    <div role="table" aria-label="{{tableAria}}" style="flex: 1; min-height: 320px; border-radius: 16px; border: 2px solid #6a4a1a; background: #1d1611; overflow: hidden; display: flex; flex-direction: column">
+      <div role="row" style="height: 36px; flex: none; display: grid; grid-template-columns: 1.25fr 0.9fr 1.2fr; align-items: center; background: #2a1d0f; border-bottom: 1px solid #6a4a1a">
+        <span role="columnheader" style="padding-left: 10px; font-size: 11px; font-weight: 900; color: #c9b9a2">BENEFÍCIO</span>
+        <span role="columnheader" style="text-align: center; font-size: 12px; font-weight: 900; color: #c9b9a2">Sem VIP</span>
+        <span role="columnheader" style="height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, rgba(255,201,74,0.3), rgba(255,201,74,0.08)); font-family: 'Lilita One', sans-serif; font-size: 15px; color: #ffe07a">Com {{selTitle}}</span>
+      </div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+        <div role="row" class="trow" style="flex: 1; min-height: 0; display: grid; grid-template-columns: 1.25fr 0.9fr 1.2fr; align-items: center; border-bottom: 1px solid #2a2018; animation-delay: {{r.delay}}">
+          <span role="cell" style="display: flex; align-items: center; gap: 6px; padding-left: 8px; font-size: 12px; font-weight: 900">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="{{r.icon}}"></path></svg>{{r.label}}</span>
+          <span role="cell" style="text-align: center; font-size: {{r.bfs}}; line-height: 1.1; font-weight: 800; color: #9c8d7a">{{r.base}}</span>
+          <span role="cell" style="height: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(255,201,74,0.07); font-size: {{r.fs}}; line-height: 1.1; text-align: center; font-weight: 900; color: {{r.col}}">{{r.val}}
+            <sc-if value="{{r.isNew}}" hint-placeholder-val="{{false}}"><span class="newtag" style="padding: 0 4px; border-radius: 5px; background: #5fd068; color: #0d2410; font-size: 9px; font-weight: 900">NOVO</span></sc-if>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+
+  </div></div>
+
+  <!-- ação principal fixa embaixo, ao alcance do polegar (a barra de abas antiga foi removida: navegação pelos ícones e MENU da batalha) -->
+  <div class="nhFoot">
+    <button class="gold cta" onClick="{{buy}}" style="position: relative; overflow: hidden; width: 100%; height: 58px; border-radius: 16px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05">
+      <span class="shine"></span>
+      <span style="font-family: 'Lilita One', sans-serif; font-size: 22px">Comprar VIP [PREÇO]</span>
+      <span style="font-size: 11px; font-weight: 900; color: #5a330a">Pagamento em breve</span>
+    </button>
+  </div>
+
+  <sc-if value="{{cfOpen}}" hint-placeholder-val="{{false}}">
+    <div class="veil" style="position: absolute; inset: 0; z-index: 30; background: rgba(8,6,4,0.8); display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box">
+      <div class="pop" role="alertdialog" aria-label="Pagamento em breve" style="width: 100%; max-width: 320px; border-radius: 18px; border: 3px solid #ffc94a; background: #241a10; padding: 18px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 0 30px rgba(255,201,74,0.45)">
+        <span class="gtext" style="font-family: 'Lilita One', sans-serif; font-size: 24px">Pagamento em breve</span>
+        <span style="font-size: 14px; font-weight: 800; text-align: center; color: #e8dccb">A compra do VIP ainda não está disponível. Quando abrir, cada compra soma pontos para subir de nível.</span>
+        <button class="gold" onClick="{{closeCf}}" style="width: 180px; height: 50px; border-radius: 14px; font-family: 'Lilita One', sans-serif; font-size: 19px">Entendi</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+/* PROPOSTA (o dono escolhe os números). Índice 0 = sem VIP. Os benefícios só crescem. */
+var B = {
+  spd:   [0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+  atk:   [0, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10],
+  gold:  [0, 10, 12, 14, 16, 18, 20, 21, 22, 24, 25],
+  key:   [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3],
+  chest: [0, 0, 0, 10, 10, 10, 10, 12, 12, 12, 14],
+  off:   [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+  frame: [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+  skin:  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+  aura:  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+};
+var SPD = ['x1 (x2 no nível 15)', 'x2 já', 'x2 já · x4 no nível 40'];
+var ROWS = [
+  { k: 'spd', label: 'Velocidade', icon: 'M5 19l7-7-7-7M12 19l7-7-7-7', f: function (v) { return SPD[v]; } },
+  { k: 'atk', label: 'ATK e Vida', icon: 'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6', f: function (v) { return v ? '+' + v + '%' : '—'; } },
+  { k: 'gold', label: 'Ouro e XP', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v10M9 9.5h4.5a1.8 1.8 0 0 1 0 3.5h-3a1.8 1.8 0 0 0 0 3.5H15', f: function (v) { return v ? '+' + v + '%' : '—'; } },
+  { k: 'key', label: 'Chaves/dia', icon: 'M8 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8zM11 10h10M18 10v4M21 10v3', f: function (v) { return v ? '+' + v : '—'; } },
+  { k: 'chest', label: 'Baús/dia', icon: 'M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4', f: function (v) { return v ? v + '/dia' : 'padrão'; } },
+  { k: 'off', label: 'Ganho offline', icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2', f: function (v) { return 'x' + v; } },
+  { k: 'frame', label: 'Moldura animada', icon: 'M4 4h16v16H4zM8 8h8v8H8z', f: function (v) { return v ? 'Sim' : '—'; } },
+  { k: 'skin', label: 'Skin exclusiva', icon: 'M8 3l4 3 4-3 4 4-2 4v10H6V11L4 7z', f: function (v) { return v ? 'Sim' : '—'; } },
+  { k: 'aura', label: 'Aura VIP', icon: 'M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z', f: function (v) { return v ? 'Sim' : '—'; } }
+];
+var CUR = 3, PROG = 60;
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487' };
+
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: 5, cf: false, k: 0 }; }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  renderVals() {
+    var s = this.state, self = this, L = s.sel;
+    var rows = ROWS.map(function (r, i) {
+      var v = B[r.k][L], pv = B[r.k][L - 1], b = B[r.k][0];
+      return { label: r.label, icon: r.icon, base: r.f(b), val: r.f(v), fs: r.f(v).length > 12 ? '10px' : '13px', bfs: r.f(b).length > 12 ? '10px' : '12px', isNew: v !== pv, col: v !== b ? '#ffe07a' : '#9c8d7a', delay: (i * 0.03) + 's' };
+    });
+    var dots = [];
+    for (var i = 1; i <= 10; i++) dots.push({ w: i === L ? '20px' : '8px', c: i === L ? '#ffc94a' : (i <= CUR ? '#a8761f' : '#4a3a2b') });
+    var go = function (n) { if (n < 1 || n > 10) return; self.sfx(SND.tap); self.setState({ sel: n, k: s.k + 1 }); };
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      cur: CUR, next: CUR + 1, progPct: PROG + '%', progNum: PROG,
+      selTitle: 'VIP ' + L + (L === CUR ? ' (você)' : ''), selKey: s.k % 2 ? 'k1' : 'k0',
+      dots: dots, rows: rows,
+      tableAria: 'Benefícios: sem VIP comparado com VIP ' + L + ' (proposta)',
+      prevFg: L > 1 ? '#ffe07a' : '#6b5843', nextFg: L < 10 ? '#ffe07a' : '#6b5843',
+      prev: function () { go(L - 1); }, nextLv: function () { go(L + 1); },
+      buy: function () { self.sfx(SND.claim); self.setState({ cf: true }); },
+      cfOpen: s.cf, closeCf: function () { self.sfx(SND.tap); self.setState({ cf: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kael híbrido</title>
+<style>
+ body{margin:0;background:#15151c;color:#eee;font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:#aab}
+ .row{display:flex;flex-wrap:wrap;gap:12px;padding:10px 16px}
+ .cell{background:#000;border-radius:8px;overflow:hidden;max-width:100%} .cell b{display:block;padding:6px 10px;background:#222}
+ canvas{display:block;max-width:100%}
+ .ctl{padding:4px 16px;display:flex;gap:6px;flex-wrap:wrap}
+ button{background:#333;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-weight:600} button.on{background:#2d6cdf}
+</style></head><body>
+<h1>Kael correndo por vídeo, com a arma trocável presa nos dedos</h1>
+<p>O corpo vem de um vídeo (como a corrida aprovada) em que ele segura um bastão-guia. Em cada quadro a arma é posta no lugar do bastão, e os dedos são redesenhados por cima do cabo.</p>
+<div class="ctl" id="ctl"></div>
+<div class="row"><div class="cell"><b>Ao vivo (12 fps)</b><canvas id="live" width="420" height="320"></canvas></div>
+<div class="cell"><b>Corrida por quadros aprovada (sem arma)</b><canvas id="ref" width="420" height="320"></canvas></div></div>
+<div class="row"><div class="cell"><b>Quadros</b><canvas id="strip" width="2048" height="256"></canvas></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const OPT=[['era2_t1','Espada rúnica'],['era2_t0','Espada de ferro'],['era2_t2','Espada lendária'],['none','Sem arma (bastão apagado)']];
+let cur='era2_t1';const ST=new URLSearchParams(location.search).get('s')||'run';
+(async()=>{
+ const body=await L('../../../assets/anim/hyb/'+(new URLSearchParams(location.search).get('v')||'')+'kael_'+ST+'_body.png'), meta=await (await fetch('../../../assets/anim/hyb/'+(new URLSearchParams(location.search).get('v')||'')+'kael_'+ST+'_body.json')).json(); const NF=meta.frames; $('strip').width=256*NF;
+ const NECK=[];{const c=document.createElement('canvas');c.width=body.width;c.height=256;const g=c.getContext('2d');g.drawImage(body,0,0);const d=g.getImageData(0,0,c.width,256).data;
+  for(let i=0;i<NF;i++){let top=256;for(let y=0;y<256&&top===256;y++)for(let x=i*256;x<i*256+256;x++){const k=(y*c.width+x)*4;if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){top=y;break;}}NECK.push(top);}}
+ const WM=await (await fetch('../../../assets/weapons/meta.json')).json(), W={};
+ for(const [k] of OPT) if(k!=='none'){const img=await L('../../../assets/weapons/'+k+'.png');W[k]={img,...WM[k]};}
+ const AU=new URLSearchParams(location.search).get('aura');const auImg=AU?await L('../../../assets/anim/aura/aura'+AU+'.png'):null;const auM=AU?await (await fetch('../../../assets/anim/aura/aura'+AU+'.json')).json():null;
+ const bgM=await (await fetch('../../../assets/bg/meta.json')).json(), bg=await L('../../../assets/bg/era2.png'), ref=await L('../../../assets/anim/era2_hero_t0_run.png');
+ const trimC=new Map();
+ function trim(img){if(trimC.has(img))return trimC.get(img);const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const g=c.getContext('2d');g.drawImage(img,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=1e9,y0=1e9,x1=0,y1=0;for(let y=0;y<c.height;y+=2)for(let x=0;x<c.width;x+=2)if(d[(y*c.width+x)*4+3]>20){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}const r={w:x1-x0,h:y1-y0};trimC.set(img,r);return r;}
+ // desenha o quadro i com a arma em (dx,dy) escala s
+ function frame(g,i,dx,dy,s,wk){
+  const G=meta.grip[i];g.save();g.translate(dx,dy);g.scale(s,s);if(s===1){g.beginPath();g.rect(0,0,256,256);g.clip();}
+  const w=W[wk];
+  if(w&&(G.behind||Math.cos(G.ang*Math.PI/180)<-0.25)){const tr=trim(w.img),k=(256*0.5)/Math.max(tr.w,tr.h);g.save();g.translate(G.x,G.y);g.rotate(-(G.ang-(w.angle??90))*Math.PI/180);g.scale(k,k);g.drawImage(w.img,-w.grip[0]*w.img.width,-w.grip[1]*w.img.height);g.restore();g.drawImage(body,i*256,0,256,256,0,0,256,256);g.restore();return;}
+  g.drawImage(body,i*256,0,256,256,0,0,256,256);
+  if(w){const tr=trim(w.img),k=(256*0.5)/Math.max(tr.w,tr.h);
+   g.save();g.translate(G.x,G.y);g.rotate(-(G.ang-(w.angle??90))*Math.PI/180);g.scale(k,k);g.drawImage(w.img,-w.grip[0]*w.img.width,-w.grip[1]*w.img.height);g.restore();
+   // dedos por cima do cabo: redesenha o trecho do quadro em volta da mão
+   const ux=G.ux,uy=G.uy,px=-uy,py=ux,a=G.f0-1.5,b=G.f1+1.5,h=G.hw+5;
+   g.save();g.beginPath();
+   const P=(t,s2)=>[G.x+ux*t+px*s2,G.y+uy*t+py*s2];
+   const q=[P(a,-h),P(b,-h),P(b,h),P(a,h)];g.moveTo(...q[0]);for(const v of q.slice(1))g.lineTo(...v);g.closePath();g.clip();
+   g.drawImage(body,i*256,0,256,256,0,0,256,256);g.restore();
+   g.save();g.beginPath();g.rect(0,0,256,NECK[i]+2);g.clip();g.drawImage(body,i*256,0,256,256,0,0,256,256);g.restore();}   // cabeça por cima da lâmina
+  g.restore();}
+ const TRAIL=new URLSearchParams(location.search).get('trail');
+ function tipOf(i,wk){const G=meta.grip[i],w=W[wk];if(!w||!G)return null;const tr=trim(w.img),k=(256*0.5)/Math.max(tr.w,tr.h),L=(1-w.grip[1])*w.img.height*k*0.95;return [G.x+G.ux*L,G.y+G.uy*L,G.x,G.y];}
+ const slashImg=new Image();slashImg.onload=()=>{try{strip();}catch(e){}};slashImg.src='../../../assets/fx/slash.png';
+ // s1: arco de corte (assets/fx/slash.png) no quadro de maior giro da lâmina, some em 3 quadros
+ let CUT=-1;{let best=0;for(let j=1;j<meta.grip.length;j++){const d=Math.abs(((meta.grip[j].ang-meta.grip[j-1].ang+540)%360)-180);if(d>best&&meta.grip[j].ux>0){best=d;CUT=j;}}}
+ function trail(g,i,dx,dy,s,wk,col){if(CUT<0||!slashImg.complete)return;const k=i-CUT;if(k<0||k>2)return;const G=meta.grip[CUT];
+  g.save();g.translate(dx,dy);g.scale(s,s);g.translate(G.x+18,G.y-6);g.rotate(0.25);g.globalCompositeOperation='lighter';g.globalAlpha=[1,0.7,0.35][k];
+  const S=150*(1+k*0.12);if(!trail.c){const c=document.createElement('canvas');c.width=slashImg.width;c.height=slashImg.height;const x=c.getContext('2d');x.drawImage(slashImg,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='rgb(120,190,255)';x.fillRect(0,0,c.width,c.height);trail.c=c;}g.drawImage(trail.c,-S*0.35,-S/2,S,S);g.globalAlpha*=0.6;g.drawImage(slashImg,-S*0.3,-S*0.42,S*0.84,S*0.84);g.restore();}
+ function ui(){const c=$('ctl');c.innerHTML='';for(const [k,l] of OPT){const b=document.createElement('button');b.textContent=l;if(k===cur)b.className='on';b.onclick=()=>{cur=k;ui();strip();};c.appendChild(b);}}
+ function strip(){const g=$('strip').getContext('2d');g.clearRect(0,0,256*NF,256);for(let i=0;i<NF;i++){frame(g,i,i*256,0,1,cur);if(TRAIL&&ST==='attack')trail(g,i,i*256,0,1,cur,TRAIL==='1'?'150,200,255':TRAIL);}}
+ window.exportSheet=async(wk,file)=>{const c=document.createElement('canvas');c.width=256*NF;c.height=256;const g=c.getContext('2d');for(let i=0;i<NF;i++){frame(g,i,i*256,0,1,wk);if(TRAIL&&ST==='attack')trail(g,i,i*256,0,1,wk,TRAIL==='1'?'150,200,255':TRAIL);}
+  const r=await fetch('/save?path='+encodeURIComponent(file),{method:'POST',body:await new Promise(ok=>c.toBlob(ok,'image/png'))});return r.status;};
+ ui();strip();
+ const t0=performance.now(), spd=ST==='run'?95:0;
+ function scene(c,t,draw){const g=c.getContext('2d'),Wd=c.width,H=c.height,gy=H*0.82,gyF=bgM.era2.groundY;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,Wd,H);
+  if(bg){const s=H/(bg.height*(0.82/gyF)),bw=bg.width*s,bh=bg.height*s,off=(t*spd)%bw;for(let x=-off;x<Wd;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);} draw(g,Wd,gy);}
+ function loop(now){const t=Math.max(0,(now-t0)/1000),i=Math.floor(t*12)%NF,S=0.94;
+  scene($('live'),t,(g,Wd,gy)=>{const POST=()=>{if(TRAIL&&ST==='attack'){const i2=Math.floor(Math.max(0,t)*12)%NF;trail(g,i2,Wd*0.42-128*0.94,gy-243*0.94,0.94,cur,TRAIL==='1'?'150,200,255':TRAIL);}};setTimeout(0);if(auImg){const j=Math.floor(t*auM.fps)%auM.frames,aw=auM.w*S*1.2,ah=auM.h*S*1.2;g.save();g.drawImage(auImg,j*auM.w,0,auM.w,auM.h,Wd*0.42-aw/2+4,gy-ah+10*S,aw,ah);g.globalCompositeOperation=auM.blend||'lighter';g.globalAlpha=auM.blend==='source-over'?0:0.35;g.drawImage(auImg,j*auM.w,0,auM.w,auM.h,Wd*0.42-aw/2+4,gy-ah+10*S,aw,ah);g.restore();}frame(g,i,Wd*0.42-128*S,gy-243*S,S,cur);POST();});
+  scene($('ref'),t,(g,Wd,gy)=>{if(ref)g.drawImage(ref,i*256,0,256,256,Wd*0.42-128*S,gy-243*S,256*S,256*S);});
+  requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+})();
+</script></body></html>

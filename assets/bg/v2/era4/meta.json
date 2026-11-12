@@ -1,0 +1,1481 @@
+{
+ "version": 2,
+ "era": 4,
+ "nome": "Era Industrial - cidade fabril steampunk ao entardecer: fabrica, caldeira, estacao de trem, bobina de Tesla e rua de paralelepipedos",
+ "unidades": "Tudo em FRACAO DA ALTURA DA CENA (SH), inclusive medidas horizontais, salvo quando dito. px = valor * SH. Velocidades em SH por segundo. x do heroi em fracao da LARGURA. Cena de referencia: 390 x 692 px CSS (campo de batalha no topo de uma tela 390x844; linha do chao = 0.78*692 = 540 px = 64% da tela, igual ao jogo).",
+ "scene": {"refWidth": 390, "refHeight": 692},
+ "groundY": 0.78,
+ "runSpeed": 0.275,
+ "hero": {
+  "file": "hero_run.png",
+  "frames": 8,
+  "fps": 12,
+  "frameW": 256,
+  "frameH": 256,
+  "x": 0.3,
+  "size": 0.2643,
+  "footY": 0.947,
+  "figureHeight": 0.231,
+  "nota": "Folha de corrida do Kael (a mesma das eras 0 a 3; a roupa da era 4 ainda nao existe animada). size = lado do quadro 256 em SH (183 px na cena de 692; o boneco fica com 160 px). footY = fracao do quadro onde ficam os pes. Desenhar em (x*W - size/2, groundY - size*footY).",
+  "shadow": {"rx": 0.21, "ry": 0.05, "alpha": 0.34, "nota": "elipse sob os pes; rx/ry em fracao de size"},
+  "stepDust": {
+   "color": "#d9c7ae",
+   "perStep": 3,
+   "life": [0.45, 0.65],
+   "radius": [0.004, 0.012]
+  }
+ },
+ "layers": [
+  {
+   "id": "sky",
+   "file": "sky.webp",
+   "tile": "repeat",
+   "parallax": 0.015,
+   "drift": 0.005,
+   "top": 0,
+   "px": [2048, 887],
+   "height": 0.62,
+   "repeatWidth": 1.432,
+   "nota": "entardecer ambar e cobre; o terco de baixo e nevoa de carvao clara (aparece atras da cidade e nos vaos entre os predios). Repete em si mesmo, sem espelho"
+  },
+  {
+   "id": "far",
+   "file": "far.webp",
+   "tile": "repeat",
+   "parallax": 0.06,
+   "drift": 0,
+   "offset": 0.13,
+   "bottom": 0.565,
+   "px": [1240, 961],
+   "height": 0.5,
+   "repeatWidth": 0.645,
+   "deckY": 0.1753,
+   "clock": {"x": 0.4635, "y": 0.3723, "rx": 0.0377, "ry": 0.0486},
+   "nota": "cidade fabril distante: viaduto de ferro de ponta a ponta (o trem passa por tras dele, em actors), 3 chamines, torre do relogio (mostrador pintado sem ponteiros; os dois ponteiros giram em rotors) e gasometro. Repete em si mesmo, sem espelho; ladrilho de 0.645 SH: a torre quase nunca sai de cena e nunca aparecem duas inteiras. A base some no degrade do ceu (alfa)"
+  },
+  {
+   "id": "mid",
+   "files": ["midA.webp", "midB.webp"],
+   "filesLow": ["midA_lo.webp", "midB_lo.webp"],
+   "tile": "sequence",
+   "parallax": 0.38,
+   "drift": 0,
+   "bottom": 0.622,
+   "px": [2640, 1063],
+   "height": 0.54,
+   "repeatWidth": 2.682,
+   "nota": "A: caixotes e carvao, fabrica de tijolos com janelas acesas, anexo (o par de engrenagens gira por tras dele), caldeira de cobre com tubos e valvulas, guindaste a vapor. B: banca de jornal, lampiao a gas, galpao aberto da estacao de ferro e vidro (vidro translucido; o trem cruza por tras, em actors), tampa de bueiro, oficina do inventor com bobina de Tesla. Cada trecho termina antes das bordas: nos vaos aparece a cidade distante na nevoa"
+  },
+  {
+   "id": "ground",
+   "file": "ground.webp",
+   "tile": "repeat",
+   "parallax": 1,
+   "drift": 0,
+   "top": 0.6,
+   "px": [1600, 779],
+   "height": 0.408,
+   "repeatWidth": 0.838,
+   "roadY": [0.728, 0.932],
+   "curbY": [0.707, 0.946],
+   "railsY": [0.807, 0.881],
+   "nota": "calcada de lajes (topo, com a borda de cima esmaecida sobre o pe dos predios), guia, rua de paralelepipedos (roadY) com 2 trilhos de bonde embutidos (railsY), guia, calcada da frente. Os pes (groundY) caem nos paralelepipedos, atras do primeiro trilho"
+  }
+ ],
+ "tileNota": "repeat: emenda nela mesma. mirror: alternar normal/espelhada. sequence: arquivos de files em ordem (A,B,A,B...). repeatWidth = largura do ciclo completo em SH. off(camada) = scroll*parallax + t*drift + offset.",
+ "drawOrder": [
+  "sky",
+  "clouds: nuvens de fuligem em 2 velocidades",
+  "actors(sky): 2 dirigiveis com helices, trem do viaduto com rodas",
+  "birds (corvos)",
+  "far",
+  "rotors(far): ponteiros das horas e dos minutos",
+  "farFill (transparente)",
+  "fx(far): brilho do mostrador, fumaca das chamines distantes",
+  "haze",
+  "fog[0]",
+  "actors(mid): mureta com trilho, trem da estacao",
+  "rotors(mid): par de engrenagens (atras do mid)",
+  "mid",
+  "towerFlags (barra do toldo da banca, flamulas)",
+  "fx(mid): luz das janelas e lampioes, fumaca das chamines, vapor da caldeira e das valvulas, faiscas de solda, vapor do bueiro, raios e brilho da bobina de Tesla",
+  "fog[1]",
+  "ground",
+  "decals",
+  "roadside",
+  "hero",
+  "motes",
+  "fg",
+  "bottomShade"
+ ],
+ "placeholder": {
+  "sky": ["#4d3a2f", "#9c4f2b", "#d57b36", "#f3bc62", "#f7ca89", "#f7ca89"],
+  "ground": [
+   [0.707, "#d9c2a2"],
+   [0.728, "#e6d3b3"],
+   [0.932, "#8c7458"],
+   [0.946, "#d9c2a2"],
+   [1.001, "#a38d7c"]
+  ],
+  "nota": "fundo desenhado no primeiro quadro, antes de qualquer imagem: degrade do ceu ate o topo do chao e faixas [ate y, cor] do chao. filesLow = versoes leves (880 px) carregadas primeiro e trocadas pelas definitivas."
+ },
+ "spacing": "Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.",
+ "farFill": {"color": "rgba(0,0,0,0)", "nota": "transparente nesta era: atras da cidade fica a nevoa clara da camada sky"},
+ "rotors": [
+  {"id": "engrenagem_16", "sprite": "gear", "layer": "mid", "tile": 0, "x": 0.5271, "y": 0.5174, "w": 0.1326, "period": 18, "phase": 0},
+  {"id": "engrenagem_8", "sprite": "gear8", "layer": "mid", "tile": 0, "x": 0.603, "y": 0.3855, "w": 0.0663, "period": -9, "phase": 0.9162},
+  {"id": "ponteiro_horas", "sprite": "handH", "layer": "far", "tile": 0, "front": true, "x": 0.4635, "y": 0.3723, "w": 0.0701, "period": 480, "phase": 5.236},
+  {"id": "ponteiro_minutos", "sprite": "handM", "layer": "far", "tile": 0, "front": true, "x": 0.4635, "y": 0.3723, "w": 0.0701, "period": 40, "phase": 0}
+ ],
+ "rotorsNota": "Sprites girando em torno do proprio centro, presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta, negativo = anti-horario; phase em rad). PAR ENGRENADO atras da fabrica, em ferro com ferrugem: 16 dentes (1 volta em 18 s) e 8 dentes (sentido oposto, 1 volta em 9 s: mesma velocidade no dente); a fase da menor poe um vao dela de frente para um dente da maior. Sem sombra projetada: atras delas so ha ceu e cidade (nao ha parede para receber sombra); ficam a sombra interna do aro e do cubo. PONTEIROS da torre: os dois sao sprites escuros (o mostrador pintado ficou sem ponteiro); minutos = 1 volta em 40 s; horas = 1/12 da velocidade (1 volta em 480 s), partindo das 10 h.",
+ "actors": [
+  {
+   "id": "dirigivel_pequeno",
+   "slot": "sky",
+   "sprite": "airship2",
+   "x": 0.9,
+   "y": 0.07,
+   "w": 0.095,
+   "parallax": 0.02,
+   "drift": -0.02,
+   "loop": 1.9,
+   "bob": 0.004,
+   "bobF": 0.6,
+   "parts": [
+    {"sprite": "prop", "x": 0.075, "y": 0.33, "w": 0.085, "period": 0.42, "flap": true},
+    {"sprite": "prop", "x": 0.2, "y": 0.74, "w": 0.055, "period": 0.36, "phase": 1, "flap": true}
+   ]
+  },
+  {
+   "id": "dirigivel_grande",
+   "slot": "sky",
+   "sprite": "airship",
+   "x": 0.02,
+   "y": 0.018,
+   "w": 0.2,
+   "parallax": 0.035,
+   "drift": -0.034,
+   "loop": 1.75,
+   "bob": 0.004,
+   "bobF": 0.5,
+   "parts": [
+    {"sprite": "prop", "x": 0.035, "y": 0.335, "w": 0.05, "period": 0.5, "flap": true}
+   ]
+  },
+  {
+   "id": "trem_viaduto",
+   "slot": "sky",
+   "sprite": "train",
+   "x": 0.2,
+   "y": 0.1049,
+   "w": 0.32,
+   "parallax": 0.06,
+   "drift": -0.078,
+   "loop": 1.55,
+   "parts": [
+    {"sprite": "wheel", "x": 0.7781, "y": 0.8734, "w": 0.0511, "period": 0.634, "phase": 0.6},
+    {"sprite": "wheel", "x": 0.8349, "y": 0.8734, "w": 0.0511, "period": 0.634, "phase": 0.6},
+    {"sprite": "wheel", "x": 0.8876, "y": 0.9499, "w": 0.0231, "period": 0.287, "phase": 3.4},
+    {"sprite": "wheel", "x": 0.9391, "y": 0.9525, "w": 0.0231, "period": 0.287, "phase": 5.1},
+    {"sprite": "wheel", "x": 0.6288, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 0.52},
+    {"sprite": "wheel", "x": 0.6522, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 2.22},
+    {"sprite": "wheel", "x": 0.6903, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 3.92},
+    {"sprite": "wheel", "x": 0.7137, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 5.62},
+    {"sprite": "wheel", "x": 0.4327, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 1.04},
+    {"sprite": "wheel", "x": 0.4561, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 2.74},
+    {"sprite": "wheel", "x": 0.5381, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 4.44},
+    {"sprite": "wheel", "x": 0.5597, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 6.14},
+    {"sprite": "wheel", "x": 0.2354, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 1.56},
+    {"sprite": "wheel", "x": 0.2588, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 3.26},
+    {"sprite": "wheel", "x": 0.3407, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 4.96},
+    {"sprite": "wheel", "x": 0.3624, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 0.38},
+    {"sprite": "wheel", "x": 0.0375, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 2.08},
+    {"sprite": "wheel", "x": 0.0609, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 3.78},
+    {"sprite": "wheel", "x": 0.1429, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 5.48},
+    {"sprite": "wheel", "x": 0.1651, "y": 0.9499, "w": 0.0268, "period": 0.332, "phase": 0.9},
+    {"rod": true, "x": 0.7781, "y": 0.8734, "x2": 0.8349, "y2": 0.8734, "r": 0.0072, "w": 0.0026, "period": 0.634, "phase": 0.6},
+    {"rod": true, "slide": true, "x": 0.8349, "y": 0.8734, "x2": 0.8728, "y2": 0.8691, "r": 0.0072, "w": 0.0026, "period": 0.634, "phase": 0.6}
+   ],
+   "smoke": [
+    {"id": "fumaca_trem_viaduto_traco", "type": "plume", "n": 7, "life": 2.2, "rise": 0.04, "wind": -0.15, "spread": 0.01, "wobble": 0.003, "r0": 0.0045, "grow": 0.0105, "fadeIn": 0.05, "seed": 82, "light": "#43322f", "dark": "#43322f", "alpha": 0.86, "fade": 0.8, "x": 0.9157, "y": 0.3762},
+    {"id": "fumaca_trem_viaduto", "type": "plume", "n": 7, "life": 2.2, "rise": 0.04, "wind": -0.15, "spread": 0.01, "wobble": 0.003, "r0": 0.0032, "grow": 0.0105, "fadeIn": 0.05, "seed": 82, "light": "#eadfce", "dark": "#b29d8f", "alpha": 0.95, "fade": 0.84, "x": 0.9157, "y": 0.3762}
+   ]
+  },
+  {"id": "trilho_estacao", "slot": "mid", "sprite": "railbed", "tile": true, "x": 0, "y": 0.5505, "w": 0.36, "parallax": 0.38, "drift": 0, "loop": 0.36},
+  {
+   "id": "trem_estacao",
+   "slot": "mid",
+   "sprite": "train",
+   "x": -2.26,
+   "y": 0.2441,
+   "w": 1.382,
+   "parallax": 0.38,
+   "drift": -0.19,
+   "loop": 5.2,
+   "parts": [
+    {"sprite": "wheel", "x": 0.7781, "y": 0.8734, "w": 0.0511, "period": 1.124, "phase": 0.6},
+    {"sprite": "wheel", "x": 0.8349, "y": 0.8734, "w": 0.0511, "period": 1.124, "phase": 0.6},
+    {"sprite": "wheel", "x": 0.8876, "y": 0.9499, "w": 0.0231, "period": 0.508, "phase": 3.4},
+    {"sprite": "wheel", "x": 0.9391, "y": 0.9525, "w": 0.0231, "period": 0.508, "phase": 5.1},
+    {"sprite": "wheel", "x": 0.6288, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 0.52},
+    {"sprite": "wheel", "x": 0.6522, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 2.22},
+    {"sprite": "wheel", "x": 0.6903, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 3.92},
+    {"sprite": "wheel", "x": 0.7137, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 5.62},
+    {"sprite": "wheel", "x": 0.4327, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 1.04},
+    {"sprite": "wheel", "x": 0.4561, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 2.74},
+    {"sprite": "wheel", "x": 0.5381, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 4.44},
+    {"sprite": "wheel", "x": 0.5597, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 6.14},
+    {"sprite": "wheel", "x": 0.2354, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 1.56},
+    {"sprite": "wheel", "x": 0.2588, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 3.26},
+    {"sprite": "wheel", "x": 0.3407, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 4.96},
+    {"sprite": "wheel", "x": 0.3624, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 0.38},
+    {"sprite": "wheel", "x": 0.0375, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 2.08},
+    {"sprite": "wheel", "x": 0.0609, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 3.78},
+    {"sprite": "wheel", "x": 0.1429, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 5.48},
+    {"sprite": "wheel", "x": 0.1651, "y": 0.9499, "w": 0.0268, "period": 0.589, "phase": 0.9},
+    {"rod": true, "x": 0.7781, "y": 0.8734, "x2": 0.8349, "y2": 0.8734, "r": 0.0072, "w": 0.0026, "period": 1.124, "phase": 0.6},
+    {"rod": true, "slide": true, "x": 0.8349, "y": 0.8734, "x2": 0.8728, "y2": 0.8691, "r": 0.0072, "w": 0.0026, "period": 1.124, "phase": 0.6}
+   ],
+   "smoke": [
+    {"id": "fumaca_trem_estacao_traco", "type": "plume", "n": 9, "life": 2.4, "rise": 0.15, "wind": -0.4, "spread": 0.035, "wobble": 0.012, "r0": 0.0153, "grow": 0.042, "fadeIn": 0.04, "seed": 81, "light": "#43322f", "dark": "#43322f", "alpha": 0.86, "fade": 0.8, "x": 0.9157, "y": 0.3762},
+    {"id": "fumaca_trem_estacao", "type": "plume", "n": 9, "life": 2.4, "rise": 0.15, "wind": -0.4, "spread": 0.035, "wobble": 0.012, "r0": 0.013, "grow": 0.042, "fadeIn": 0.04, "seed": 81, "light": "#eadfce", "dark": "#b29d8f", "alpha": 0.95, "fade": 0.84, "x": 0.9157, "y": 0.3762}
+   ]
+  }
+ ],
+ "actorsNota": "Sprites que cruzam a cena (x, y, w em SH; deslocamento = scroll*parallax + t*drift; da a volta a cada loop SH), com pecas presas (x, y = centro em fracao do corpo; w = fracao da largura do corpo; period = s por volta; flap = helice vista de lado, achata em cosseno). slot sky = depois das nuvens, antes do far (dirigiveis e trem do viaduto passam por tras das chamines e da torre). slot mid = antes da camada mid: o TREM DA ESTACAO entra, cruza o galpao aberto e sai (anda 0.19 SH/s em relacao aos predios), passando por tras da ferragem, dos predios e das engrenagens; rodas girando na velocidade do trem. BIELAS (parts com rod: true): haste entre os pinos das duas rodas grandes e haste da roda da frente ate a cruzeta (slide), com o mesmo periodo e fase das rodas grandes. FUMACA (smoke): plumes presos a boca da chamine, soprados para tras conforme a velocidade do trem (a fumaca pintada saiu do sprite). TRILHO DA ESTACAO (tile: true = a faixa se repete a cada loop): mureta de tijolo com dormentes e trilho em cima, presa aos predios (mesmo parallax do mid), continua de ponta a ponta; o topo do trilho fica na linha da base das rodas do trem em todo o percurso. Aparece nos vaos entre os predios; no galpao a plataforma cobre a mureta e a base das rodas.",
+ "fx": [
+  {
+   "id": "brilho_mostrador",
+   "type": "glow",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.4635, "y": 0.3723}
+    ]
+   ],
+   "radius": 0.034,
+   "alpha": 0.2,
+   "pulse": 1.3,
+   "rgb": ["255,244,200", "255,214,130", "255,180,80"]
+  },
+  {
+   "id": "fumaca_cidade_traco",
+   "type": "plume",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.0329, "y": 0.1568},
+     {"x": 0.1202, "y": 0.095},
+     {"x": 0.2183, "y": 0.2092}
+    ]
+   ],
+   "n": 6,
+   "life": 7.5,
+   "rise": 0.085,
+   "wind": -0.05,
+   "spread": 0.012,
+   "wobble": 0.006,
+   "r0": 0.0058,
+   "grow": 0.011,
+   "fadeIn": 0.06,
+   "seed": 77,
+   "margin": 0.2,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.7,
+   "fade": 0.78
+  },
+  {
+   "id": "fumaca_cidade",
+   "type": "plume",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.0329, "y": 0.1568},
+     {"x": 0.1202, "y": 0.095},
+     {"x": 0.2183, "y": 0.2092}
+    ]
+   ],
+   "n": 6,
+   "life": 7.5,
+   "rise": 0.085,
+   "wind": -0.05,
+   "spread": 0.012,
+   "wobble": 0.006,
+   "r0": 0.0042,
+   "grow": 0.011,
+   "fadeIn": 0.06,
+   "seed": 77,
+   "margin": 0.2,
+   "light": "#e6cdb0",
+   "dark": "#b89684",
+   "alpha": 0.85,
+   "fade": 0.82
+  },
+  {
+   "id": "janelas_fornalha",
+   "type": "glow",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.1282, "y": 0.7134},
+     {"x": 0.1907, "y": 0.7134},
+     {"x": 0.2525, "y": 0.7134},
+     {"x": 0.3302, "y": 0.6177},
+     {"x": 0.3756, "y": 0.6177},
+     {"x": 0.4211, "y": 0.6177}
+    ],
+    []
+   ],
+   "radius": 0.05,
+   "alpha": 0.3,
+   "pulse": 4.6,
+   "rgb": ["255,206,110", "255,150,50", "255,110,30"],
+   "nota": "janelas da fabrica pulsando com o fogo das fornalhas"
+  },
+  {
+   "id": "luzes_estacao",
+   "type": "glow",
+   "layer": "mid",
+   "anchors": [
+    [],
+    [
+     {"x": 0.2948, "y": 0.45},
+     {"x": 0.803, "y": 0.7024},
+     {"x": 0.8681, "y": 0.7024},
+     {"x": 0.9331, "y": 0.7024}
+    ]
+   ],
+   "radius": 0.036,
+   "alpha": 0.3,
+   "pulse": 5.5,
+   "rgb": ["255,222,140", "255,170,70", "255,130,40"],
+   "nota": "lampiao a gas e 3 vigias da oficina"
+  },
+  {
+   "id": "fumaca_chamines_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.1364, "y": 0.0784},
+     {"x": 0.221, "y": 0.0784}
+    ],
+    []
+   ],
+   "n": 8,
+   "life": 6.2,
+   "rise": 0.2,
+   "wind": -0.1,
+   "spread": 0.03,
+   "wobble": 0.012,
+   "r0": 0.0148,
+   "grow": 0.03,
+   "fadeIn": 0.05,
+   "seed": 71,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.86,
+   "fade": 0.8
+  },
+  {
+   "id": "fumaca_chamines",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.1364, "y": 0.0784},
+     {"x": 0.221, "y": 0.0784}
+    ],
+    []
+   ],
+   "n": 8,
+   "life": 6.2,
+   "rise": 0.2,
+   "wind": -0.1,
+   "spread": 0.03,
+   "wobble": 0.012,
+   "r0": 0.0125,
+   "grow": 0.03,
+   "fadeIn": 0.05,
+   "seed": 71,
+   "light": "#eadfce",
+   "dark": "#b29d8f",
+   "alpha": 0.95,
+   "fade": 0.84
+  },
+  {
+   "id": "fumaca_guindaste_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.9388, "y": 0.4578}
+    ],
+    []
+   ],
+   "n": 5,
+   "life": 3.4,
+   "rise": 0.085,
+   "wind": -0.04,
+   "spread": 0.014,
+   "wobble": 0.006,
+   "r0": 0.0064,
+   "grow": 0.012,
+   "fadeIn": 0.06,
+   "seed": 72,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.86,
+   "fade": 0.8
+  },
+  {
+   "id": "fumaca_guindaste",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.9388, "y": 0.4578}
+    ],
+    []
+   ],
+   "n": 5,
+   "life": 3.4,
+   "rise": 0.085,
+   "wind": -0.04,
+   "spread": 0.014,
+   "wobble": 0.006,
+   "r0": 0.0045,
+   "grow": 0.012,
+   "fadeIn": 0.06,
+   "seed": 72,
+   "light": "#eadfce",
+   "dark": "#b29d8f",
+   "alpha": 0.95,
+   "fade": 0.84
+  },
+  {
+   "id": "vapor_caldeira_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.702, "y": 0.3763}
+    ],
+    []
+   ],
+   "n": 6,
+   "life": 1.5,
+   "rise": 0.085,
+   "wind": -0.012,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0054,
+   "grow": 0.012,
+   "fadeIn": 0.06,
+   "seed": 73,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "vapor_caldeira",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.702, "y": 0.3763}
+    ],
+    []
+   ],
+   "n": 6,
+   "life": 1.5,
+   "rise": 0.085,
+   "wind": -0.012,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0035,
+   "grow": 0.012,
+   "fadeIn": 0.06,
+   "seed": 73,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_esq_1_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.018,
+   "wind": -0.062,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0073,
+   "grow": 0.016,
+   "fadeIn": 0.02,
+   "seed": 60,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_esq_1",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.018,
+   "wind": -0.062,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.005,
+   "grow": 0.016,
+   "fadeIn": 0.02,
+   "seed": 60,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_esq_2_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.03,
+   "wind": -0.04,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0083,
+   "grow": 0.014,
+   "fadeIn": 0.02,
+   "seed": 61,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_esq_2",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.03,
+   "wind": -0.04,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.006,
+   "grow": 0.014,
+   "fadeIn": 0.02,
+   "seed": 61,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_esq_3_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.012,
+   "wind": -0.022,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0073,
+   "grow": 0.011,
+   "fadeIn": 0.02,
+   "seed": 62,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_esq_3",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.6174, "y": 0.7369}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 3.3,
+   "rise": 0.012,
+   "wind": -0.022,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.005,
+   "grow": 0.011,
+   "fadeIn": 0.02,
+   "seed": 62,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_dir_1_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.02,
+   "wind": 0.062,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0073,
+   "grow": 0.016,
+   "fadeIn": 0.02,
+   "seed": 64,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_dir_1",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.02,
+   "wind": 0.062,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.005,
+   "grow": 0.016,
+   "fadeIn": 0.02,
+   "seed": 64,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_dir_2_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.034,
+   "wind": 0.04,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0083,
+   "grow": 0.014,
+   "fadeIn": 0.02,
+   "seed": 65,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_dir_2",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.034,
+   "wind": 0.04,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.006,
+   "grow": 0.014,
+   "fadeIn": 0.02,
+   "seed": 65,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "jato_valvula_dir_3_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.012,
+   "wind": 0.022,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.0073,
+   "grow": 0.011,
+   "fadeIn": 0.02,
+   "seed": 66,
+   "margin": 0.4,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.9,
+   "fade": 0.82
+  },
+  {
+   "id": "jato_valvula_dir_3",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.7854, "y": 0.7792}
+    ],
+    []
+   ],
+   "n": 1,
+   "life": 4.1,
+   "rise": 0.012,
+   "wind": 0.022,
+   "spread": 0.012,
+   "wobble": 0.004,
+   "r0": 0.005,
+   "grow": 0.011,
+   "fadeIn": 0.02,
+   "seed": 66,
+   "margin": 0.4,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "vapor_bueiro_traco",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [],
+    [
+     {"x": 0.6452, "y": 0.9062}
+    ]
+   ],
+   "n": 7,
+   "life": 2.8,
+   "rise": 0.105,
+   "wind": -0.02,
+   "spread": 0.035,
+   "wobble": 0.012,
+   "r0": 0.0083,
+   "grow": 0.017,
+   "fadeIn": 0.08,
+   "seed": 76,
+   "light": "#43322f",
+   "dark": "#43322f",
+   "alpha": 0.86,
+   "fade": 0.8
+  },
+  {
+   "id": "vapor_bueiro",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [],
+    [
+     {"x": 0.6452, "y": 0.9062}
+    ]
+   ],
+   "n": 7,
+   "life": 2.8,
+   "rise": 0.105,
+   "wind": -0.02,
+   "spread": 0.035,
+   "wobble": 0.012,
+   "r0": 0.006,
+   "grow": 0.017,
+   "fadeIn": 0.08,
+   "seed": 76,
+   "light": "#fbf7ee",
+   "dark": "#cfc4b6",
+   "alpha": 0.96,
+   "fade": 0.86
+  },
+  {
+   "id": "solda_clarao",
+   "type": "glow",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.8788, "y": 0.7495}
+    ],
+    []
+   ],
+   "radius": 0.026,
+   "alpha": 0.55,
+   "pulse": 23,
+   "rgb": ["235,245,255", "150,200,255", "90,140,255"]
+  },
+  {
+   "id": "solda_faiscas",
+   "type": "embers",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.8788, "y": 0.7495}
+    ],
+    []
+   ],
+   "n": 14,
+   "life": 0.75,
+   "angle": 2.6,
+   "speed": 0.15,
+   "gravity": 0.75,
+   "radius": [0.0012, 0.0026],
+   "rgb": "255,248,220",
+   "glowRgb": "255,190,90",
+   "seed": 91,
+   "nota": "faiscas de solda caindo em arco na base do guindaste"
+  },
+  {
+   "id": "tesla_brilho",
+   "type": "glow",
+   "layer": "mid",
+   "anchors": [
+    [],
+    [
+     {"x": 0.8681, "y": 0.1489}
+    ]
+   ],
+   "radius": 0.05,
+   "alpha": 0.42,
+   "pulse": 11,
+   "rgb": ["225,238,255", "150,190,255", "90,120,255"]
+  },
+  {
+   "id": "raio_0",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "bolt0",
+   "rect": [0.7734, -0.1176, 0.1894, 0.3763],
+   "rgb": "205,225,255",
+   "blend": "lighter",
+   "loop": 1.7,
+   "frames": 24,
+   "maxScale": 2,
+   "bands": [],
+   "base": -3.12,
+   "pulse": -1.9231,
+   "pulseCycles": 3
+  },
+  {
+   "id": "raio_1",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "bolt1",
+   "rect": [0.7734, -0.1176, 0.1894, 0.3763],
+   "rgb": "205,225,255",
+   "blend": "lighter",
+   "loop": 2.3,
+   "frames": 32,
+   "maxScale": 2,
+   "bands": [],
+   "base": -3.6,
+   "pulse": 1.6667,
+   "pulseCycles": 4
+  },
+  {
+   "id": "raio_2",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "bolt2",
+   "rect": [0.7734, -0.1176, 0.1894, 0.3763],
+   "rgb": "205,225,255",
+   "blend": "lighter",
+   "loop": 2.9,
+   "frames": 41,
+   "maxScale": 2,
+   "bands": [],
+   "base": -3.36,
+   "pulse": -1.7857,
+   "pulseCycles": 5
+  },
+  {
+   "id": "raio_3",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "bolt3",
+   "rect": [0.7734, -0.1176, 0.1894, 0.3763],
+   "rgb": "205,225,255",
+   "blend": "lighter",
+   "loop": 3.7,
+   "frames": 52,
+   "maxScale": 2,
+   "bands": [],
+   "base": -3.84,
+   "pulse": 1.5625,
+   "pulseCycles": 7
+  }
+ ],
+ "fxNota": "Efeitos presos a uma camada. anchors/rect: fracoes (x,y[,w,h]) dentro do arquivo da camada (indice = posicao em files). flow: laco de loop segundos em frames quadros; cada quadro = mascara (sprite branco com alfa) pintada com rgb e alfa base*(1+pulse*sin(2pi*fase*pulseCycles)), limitado a 0..1 pelo canvas (aqui sem faixas). Os ponteiros do relogio nao sao mais flow: giram em rotors. RAIOS: 4 flows com limiar alto: cada raio acende em rajadas curtas, com lacos de duracoes diferentes. glow: brilho radial aditivo pulsando. plume: n bolhas sem estado; fase p = frac(t/life + k/n + id*0.37); x = ax + wind*p^1.5 + espalhamento; y = ay - rise*p^0.85; raio = r0 + grow*p. FUMACA E VAPOR COM CONTORNO: cada um e um par de plumes com a MESMA semente (mesmas posicoes): *_traco desenha os discos um pouco maiores na cor do traco da arte e some antes; o plume seguinte pinta os 2 tons por cima. JATO: plumes com n=1 e a mesma life nascem juntos na valvula, abrem para o lado e somem (um jato a cada life segundos). embers: particulas aditivas em arco (faiscas de solda).",
+ "haze": {
+  "y": [0.2, 0.565],
+  "rgb": "247,196,128",
+  "alpha": 0.36
+ },
+ "fog": [
+  {"y": 0.455, "height": 0.12, "parallax": 0.1, "drift": 0.012, "alpha": 0.6},
+  {"y": 0.548, "height": 0.075, "parallax": 0.5, "drift": 0.02, "alpha": 0.34}
+ ],
+ "fogTexture": {
+  "w": 768,
+  "h": 160,
+  "blobs": 22,
+  "rgb": "250,214,160",
+  "alpha": 0.3,
+  "nota": "textura procedural: elipses radiais com posicoes de hash, repetida na horizontal. fog[0] = nevoa de carvao na base da cidade distante; fog[1] = nevoa baixa no pe dos predios"
+ },
+ "clouds": {
+  "nota": "x inicial, y, largura em SH; deslocamento = scroll*parallax + t*drift; cada grupo da a volta a cada period. Grupos 0 e 1 = nuvens de fuligem em 2 velocidades. Os dirigiveis e o trem do viaduto sairam daqui: estao em actors (slot sky).",
+  "groups": [
+   {
+    "parallax": 0.03,
+    "drift": 0.011,
+    "alpha": 0.92,
+    "period": 2.3,
+    "items": [
+     {"s": "cloud1", "x": 0.15, "y": 0.075, "w": 0.26},
+     {"s": "cloud3", "x": 1.3, "y": 0.03, "w": 0.3}
+    ]
+   },
+   {
+    "parallax": 0.06,
+    "drift": 0.026,
+    "alpha": 1,
+    "period": 2.7,
+    "items": [
+     {"s": "cloud2", "x": 0.75, "y": -0.012, "w": 0.36},
+     {"s": "cloud1", "x": 1.95, "y": 0.035, "w": 0.3}
+    ]
+   }
+  ]
+ },
+ "birds": {
+  "sprite": "crow",
+  "flocks": [
+   {"period": 14, "duration": 8, "y": 0.07, "size": 0.105, "n": 2, "phase": 2, "alpha": 1},
+   {"period": 23, "duration": 13, "y": 0.025, "size": 0.06, "n": 3, "phase": 11, "alpha": 0.95}
+  ],
+  "nota": "corvos (6 quadros de 4 poses): cruzam da esquerda para a direita; size = lado do quadro em SH"
+ },
+ "flagWave": {"k1": 6.2, "w1": 7, "k2": 2.4, "w2": 2.6, "droop": 0.1, "sliceCss": 1.5, "nota": "dy(u) = sin(u*k1 - t*w1 + ph)*amp*h*(0.15+u) + sin(u*k2 - t*w2 + ph*1.7)*amp*h*0.7*u + u*u*h*droop ; u = 0 na ponta presa, 1 na ponta solta"},
+ "towerFlags": {"pole": 0, "width": 0.0821, "amp": 0.16, "nota": "panos presos pela direita, ondulando por fatias. pole 0: prendem direto na ancora"},
+ "midAnchors": {
+  "nota": "fracoes (x,y) dentro de cada arquivo da camada mid (indice = posicao em files). mid A: flamula na ponta da lanca do guindaste. mid B: 3 panos da barra do toldo da banca de jornal + flamula no pinaculo da estacao.",
+  "towerFlags": [
+   [
+    {"x": 0.7835, "y": 0.2383, "flag": "pennB"}
+   ],
+   [
+    {"x": 0.1225, "y": 0.6146, "flag": "awn"},
+    {"x": 0.1837, "y": 0.6146, "flag": "awn"},
+    {"x": 0.2449, "y": 0.6146, "flag": "awn"},
+    {"x": 0.6048, "y": 0.0141, "flag": "pennR"}
+   ]
+  ]
+ },
+ "roadside": {
+  "parallax": 1,
+  "cell": 0.34,
+  "prob": 0.92,
+  "seed": 11,
+  "minGap": 0.05,
+  "sameTypeGap": 0.62,
+  "reach": 0.75,
+  "baseY": [0.69, 0.698],
+  "nota": "objetos ANIMADOS na calcada de tras, junto a guia, atras do heroi; sorteio por celula igual ao dos decalques. Animados e parados disputam o MESMO sorteio: nunca se sobrepoem (minGap) e o mesmo tipo nunca aparece duas vezes a menos de sameTypeGap (0.62 SH, mais que uma tela): nunca dois gatos, dois automatos ou duas bandeiras iguais juntos. GATO (pacer): fica sentado mexendo a cauda (quadros 0-3), anda 0.04 SH em 6 passos gingando (quadros 4-5 alternados, base no chao), senta virado para tras e volta. CORVO (hopper): dois tocos a 0.115 SH; fica pousado num (4 poses), voa em arco batendo asas ate o outro, pousa, e depois volta. span = espaco extra a direita reservado no sorteio. Automato: folha de 4 quadros. type: torch (poste de luz a gas + chama em quadros), fire (cesto de carvao em brasa: 3 chamas em quadros + brilho + faiscas), banner (haste + bandeira ondulando), critter (gato: cauda e cabeca; corvo no toco: cauda), sprite com sway (automato balancando a cabeca e o corpo) ou parado",
+  "pool": [
+   {
+    "type": "torch",
+    "h": [0.268, 0.28],
+    "weight": 5
+   },
+   {
+    "type": "fire",
+    "sprite": "brazier",
+    "h": [0.095, 0.102],
+    "weight": 2,
+    "fire": {
+     "y": 0.72,
+     "size": 0.62,
+     "glow": 2.1,
+     "glowAlpha": 0.14,
+     "sparks": {"n": 8, "life": 1.5, "spread": 0.5, "wobble": 0.3, "wind": 0.55, "rise": 2.6, "radius": 0.036}
+    }
+   },
+   {
+    "type": "banner",
+    "flag": "bannerG",
+    "h": [0.3, 0.32],
+    "flagW": 0.13,
+    "amp": 0.08,
+    "weight": 1
+   },
+   {
+    "type": "banner",
+    "flag": "pennR",
+    "h": [0.28, 0.3],
+    "flagW": 0.14,
+    "amp": 0.12,
+    "weight": 1
+   },
+   {
+    "type": "pacer",
+    "sprite": "cat",
+    "h": [0.08, 0.086],
+    "weight": 2,
+    "span": 0.045,
+    "walk": {
+     "dist": 0.04,
+     "period": 6,
+     "split": [0.38, 0.5, 0.86],
+     "sit": 4,
+     "steps": 6
+    }
+   },
+   {
+    "type": "sprite",
+    "sprite": "robot",
+    "h": [0.1, 0.108],
+    "sway": true,
+    "swayAmp": 0.75,
+    "weight": 2
+   },
+   {
+    "type": "hopper",
+    "sprite": "crowsit",
+    "h": [0.112, 0.12],
+    "weight": 2,
+    "span": 0.115,
+    "hop": {"post": "post", "dx": 0.115, "period": 5, "flight": 0.7, "fly": "crowhop", "size": 0.16, "height": 0.035, "cx": 0.42, "cy": 0.4}
+   },
+   {
+    "type": "sprite",
+    "sprite": "hydrant",
+    "h": [0.078, 0.084],
+    "weight": 1
+   },
+   {
+    "type": "sprite",
+    "sprite": "mailbox",
+    "h": [0.116, 0.122],
+    "weight": 1
+   },
+   {
+    "type": "sprite",
+    "sprite": "papers",
+    "h": [0.084, 0.09],
+    "weight": 1
+   },
+   {
+    "type": "sprite",
+    "sprite": "cart",
+    "h": [0.098, 0.104],
+    "weight": 1
+   },
+   {
+    "type": "sprite",
+    "sprite": "bench",
+    "h": [0.092, 0.098],
+    "weight": 1
+   },
+   {
+    "type": "sprite",
+    "sprite": "bike",
+    "h": [0.135, 0.142],
+    "weight": 1
+   }
+  ]
+ },
+ "torch": {"flameY": 0.7, "flameSize": 0.105, "glowRadius": 2.3, "glowAlpha": 0.26, "nota": "fracoes da altura do poste; chama = folha flame (4 quadros, 10 fps), desenhada dentro e na frente do vidro da lanterna. Vale tambem para as chamas do cesto de carvao."},
+ "decals": {
+  "file": "decals.webp",
+  "atlas": {
+   "oil1": [2, 2, 132, 72],
+   "oil2": [136, 2, 201, 102],
+   "manhole": [339, 2, 178, 134],
+   "grate": [519, 2, 168, 126],
+   "paper": [689, 2, 193, 131],
+   "bolt": [884, 2, 77, 67],
+   "bolts": [963, 2, 153, 116],
+   "gear": [2, 138, 94, 77],
+   "gears": [98, 138, 161, 110],
+   "watch": [261, 138, 134, 108],
+   "leaves3": [397, 138, 164, 117],
+   "leaves5": [563, 138, 156, 105],
+   "coal3": [721, 138, 108, 79],
+   "stain": [831, 138, 179, 86],
+   "patch": [2, 257, 192, 116],
+   "paperball": [196, 257, 107, 103],
+   "coalheap": [305, 257, 192, 113],
+   "wrench": [499, 257, 171, 110],
+   "pipe": [672, 257, 152, 105],
+   "can": [826, 257, 86, 121]
+  },
+  "pxScale": 0.00046,
+  "minGap": 0.012,
+  "reach": 0.62,
+  "sameTypeGap": 0.564,
+  "footClear": [0.765, 0.8],
+  "regras": "sameTypeGap (SH; 0.564 = 390 px = 1 tela): o MESMO decalque (mesmo nome no atlas) nunca aparece duas vezes a menos dessa distancia horizontal; entre dois candidatos iguais vence o de maior prioridade rnd(i,seed,6) (deterministico, vale entre todos os grupos; reach >= sameTypeGap). footClear = faixa vertical em torno da linha dos pes (groundY 0.78) livre de pecas com volume: carvao, bola de jornal, cano quebrado e lata so entram em roadBigBack (base acima da faixa) e roadBigFront (topo abaixo da faixa); pocas de oleo, tampas de bueiro, jornal aberto, parafusos, engrenagens, relogio, folhas, mancha de carvao, remendo de pedras e chave inglesa sao rasos e podem passar sob os pes.",
+  "nota": "atlas: nome -> [x,y,w,h] em px. tamanho na cena = px * pxScale * escala (em SH). Espalhamento pseudoaleatorio infinito: para cada celula i (largura cell), se rnd(i,seed,0) < prob, sorteia item do pool por peso (rnd 1), x = (i + 0.15 + 0.7*rnd 2)*cell, base y em yRange (rnd 3), escala em scale (rnd 4), espelha se rnd 5 < 0.5. Nunca repete.",
+  "groups": [
+   {
+    "id": "calcada",
+    "parallax": 1,
+    "cell": 0.3,
+    "prob": 0.6,
+    "seed": 5,
+    "yRange": [0.672, 0.69],
+    "scale": [0.5, 0.7],
+    "flip": true,
+    "nota": "folhas secas e jornal na calcada de tras",
+    "pool": [
+     ["leaves3", 2],
+     ["leaves5", 2],
+     ["paper", 1],
+     ["stain", 1]
+    ]
+   },
+   {
+    "id": "ruaTampas",
+    "parallax": 1,
+    "cell": 0.5,
+    "prob": 0.8,
+    "seed": 3,
+    "yRange": [0.785, 0.799],
+    "scale": [0.72, 0.9],
+    "flip": true,
+    "nota": "pecas rasas grandes na faixa da pisada, entre a guia e o primeiro trilho",
+    "pool": [
+     ["manhole", 3],
+     ["grate", 2],
+     ["oil2", 3],
+     ["patch", 2],
+     ["paper", 2],
+     ["stain", 2]
+    ]
+   },
+   {
+    "id": "ruaMiudos",
+    "parallax": 1,
+    "cell": 0.15,
+    "prob": 0.8,
+    "seed": 7,
+    "yRange": [0.758, 0.928],
+    "scale": [0.6, 0.9],
+    "flip": true,
+    "nota": "miudos rasos por toda a rua: podem ficar sob os pes",
+    "pool": [
+     ["bolt", 3],
+     ["bolts", 3],
+     ["gear", 3],
+     ["gears", 2],
+     ["watch", 1],
+     ["leaves3", 3],
+     ["leaves5", 3],
+     ["oil1", 3],
+     ["wrench", 1]
+    ]
+   },
+   {
+    "id": "entreTrilhos",
+    "parallax": 1,
+    "cell": 0.45,
+    "prob": 0.7,
+    "seed": 9,
+    "yRange": [0.867, 0.872],
+    "scale": [0.7, 0.85],
+    "flip": true,
+    "nota": "pecas rasas grandes entre os dois trilhos",
+    "pool": [
+     ["manhole", 2],
+     ["grate", 3],
+     ["oil2", 3],
+     ["patch", 2],
+     ["stain", 2]
+    ]
+   },
+   {
+    "id": "roadBigBack",
+    "parallax": 1,
+    "cell": 0.42,
+    "prob": 0.7,
+    "seed": 13,
+    "yRange": [0.75, 0.764],
+    "scale": [0.6, 0.78],
+    "flip": true,
+    "nota": "pecas com volume na borda de tras da rua (base acima da faixa dos pes)",
+    "pool": [
+     ["coal3", 3],
+     ["coalheap", 2],
+     ["paperball", 2],
+     ["pipe", 2],
+     ["can", 2]
+    ]
+   },
+   {
+    "id": "roadBigFront",
+    "parallax": 1,
+    "cell": 0.3,
+    "prob": 0.8,
+    "seed": 17,
+    "yRange": [0.868, 0.872],
+    "scale": [0.7, 0.88],
+    "flip": true,
+    "nota": "pecas com volume ENTRE os dois trilhos (topo abaixo do primeiro trilho, base acima do segundo): nunca em cima do trilho",
+    "pool": [
+     ["coal3", 3],
+     ["coalheap", 2],
+     ["paperball", 2],
+     ["pipe", 2],
+     ["can", 2]
+    ]
+   },
+   {
+    "id": "roadBigCurb",
+    "parallax": 1,
+    "cell": 0.38,
+    "prob": 0.6,
+    "seed": 19,
+    "yRange": [0.928, 0.931],
+    "scale": [0.55, 0.7],
+    "flip": true,
+    "nota": "pecas com volume pequenas entre o segundo trilho e a guia da frente",
+    "pool": [
+     ["coal3", 3],
+     ["paperball", 2],
+     ["can", 2]
+    ]
+   },
+   {
+    "id": "calcadaFrente",
+    "parallax": 1,
+    "cell": 0.25,
+    "prob": 0.5,
+    "seed": 8,
+    "yRange": [0.976, 0.996],
+    "scale": [0.7, 1],
+    "flip": true,
+    "nota": "folhas e manchas na calcada da frente",
+    "pool": [
+     ["leaves3", 2],
+     ["leaves5", 2],
+     ["stain", 1],
+     ["bolt", 1]
+    ]
+   }
+  ]
+ },
+ "fg": {
+  "parallax": 1.3,
+  "cell": 0.4,
+  "prob": 0.8,
+  "seed": 21,
+  "minGap": 0.03,
+  "reach": 0.6,
+  "baseY": [1.02, 1.05],
+  "nota": "primeiro plano, na frente do heroi: cardos e capim seco balancam (skew); monte de carvao com pa, caixote com engrenagens, tambor de oleo e cano de latao com registro ficam parados",
+  "pool": [
+   {
+    "sprite": "thistle",
+    "h": [0.15, 0.18],
+    "sway": true,
+    "weight": 3
+   },
+   {
+    "sprite": "drygrass",
+    "h": [0.13, 0.16],
+    "sway": true,
+    "weight": 3
+   },
+   {
+    "sprite": "coalpile",
+    "h": [0.11, 0.13],
+    "weight": 1
+   },
+   {
+    "sprite": "crate",
+    "h": [0.12, 0.14],
+    "weight": 1
+   },
+   {
+    "sprite": "drum",
+    "h": [0.13, 0.15],
+    "weight": 1
+   },
+   {
+    "sprite": "pipe",
+    "h": [0.13, 0.15],
+    "weight": 1
+   }
+  ]
+ },
+ "sway": {"a1": 0.1, "f1": 1.9, "a2": 0.04, "f2": 3.1, "bias": -0.05},
+ "motes": {
+  "count": 30,
+  "yRange": [0.3, 0.96],
+  "rgb": "255,214,140",
+  "glowRgb": "255,150,70",
+  "radius": [0.0012, 0.003],
+  "parallax": 0.55,
+  "drift": 0.016,
+  "blend": "lighter",
+  "nota": "fuligem em brasa e poeira flutuando e piscando"
+ },
+ "bottomShade": {"from": 0.94, "alpha": 0.3, "rgb": "40,24,18"},
+ "rnd": "rnd(i,seed,k): x=imul(i|0,0x9E3779B1)^imul(seed*31+k+1,0x85EBCA6B); x^=x>>>15; x=imul(x,0x2C1B3C6D); x^=x>>>12; x=imul(x,0x297A2D39); x^=x>>>15; return (x>>>0)/2^32",
+ "sprites": {
+  "cloud1": "cloud1.webp",
+  "cloud2": "cloud2.webp",
+  "cloud3": "cloud3.webp",
+  "airship": "airship.webp",
+  "airship2": "airship2.webp",
+  "train": "train.webp",
+  "gear": "gear.webp",
+  "gear8": "gear8.webp",
+  "wheel": "wheel.webp",
+  "prop": "prop.webp",
+  "handM": "handM.webp",
+  "handH": "handH.webp",
+  "railbed": "railbed.webp",
+  "crow": {"file": "crow.webp", "frames": 6, "fps": 11},
+  "flame": {"file": "flame.webp", "frames": 4, "fps": 10},
+  "pennR": "pennR.webp",
+  "pennB": "pennB.webp",
+  "bannerG": "bannerG.webp",
+  "awn": "awn.webp",
+  "pole": "pole.webp",
+  "torch": "torch.webp",
+  "brazier": "brazier.webp",
+  "cat": {"file": "cat.webp", "frames": 6, "fps": 2.6},
+  "robot": {"file": "robot.webp", "frames": 4, "fps": 2.2},
+  "crowsit": {"file": "crowsit.webp", "frames": 4, "fps": 1.7},
+  "post": "post.webp",
+  "crowhop": {"file": "crowhop.webp", "frames": 6, "fps": 11},
+  "hydrant": "hydrant.webp",
+  "mailbox": "mailbox.webp",
+  "papers": "papers.webp",
+  "cart": "cart.webp",
+  "bench": "bench.webp",
+  "bike": "bike.webp",
+  "thistle": "thistle.webp",
+  "drygrass": "drygrass.webp",
+  "coalpile": "coalpile.webp",
+  "crate": "crate.webp",
+  "drum": "drum.webp",
+  "pipe": "pipe.webp",
+  "bolt0": "bolt0.webp",
+  "bolt1": "bolt1.webp",
+  "bolt2": "bolt2.webp",
+  "bolt3": "bolt3.webp"
+ },
+ "animated": [
+  {"id": "ceu_deriva", "tipo": "ceu derivando devagar, independe da corrida"},
+  {"id": "nuvens_2_vel", "tipo": "nuvens de fuligem em 2 velocidades"},
+  {"id": "dirigiveis", "tipo": "2 dirigiveis cruzando o ceu em distancias e velocidades diferentes, flutuando, com as helices girando"},
+  {"id": "trem_no_viaduto", "tipo": "trem a vapor cruzando o viaduto de ferro ao fundo, por tras das chamines e da torre, com rodas e bielas girando e fumaca saindo da chamine"},
+  {"id": "corvos", "tipo": "2 grupos de corvos batendo asas (quadros)"},
+  {"id": "relogio_da_torre", "tipo": "ponteiro dos minutos em rotacao continua (1 volta em 40 s), ponteiro das horas a 1/12 da velocidade + mostrador pulsando"},
+  {"id": "fumaca_cidade", "tipo": "fumaca das 3 chamines distantes, com contorno"},
+  {"id": "nevoa", "tipo": "nevoa de carvao deslizando na base da cidade e no pe dos predios"},
+  {"id": "engrenagem_gigante", "tipo": "par engrenado girando de verdade por tras da fabrica: 16 dentes num sentido, 8 dentes no sentido oposto com o dobro da velocidade"},
+  {"id": "fumaca_chamines", "tipo": "fumaca das 2 chamines da fabrica e da chamine do guindaste em baforadas, com contorno no traco da arte"},
+  {"id": "janelas_fornalha", "tipo": "6 janelas da fabrica pulsando com o fogo das fornalhas"},
+  {"id": "vapor_valvulas", "tipo": "vapor continuo no topo da caldeira + jatos em pulsos nas 2 valvulas, com contorno"},
+  {"id": "faiscas_de_solda", "tipo": "clarao azulado piscando e faiscas caindo em arco no guindaste"},
+  {"id": "flamulas_e_toldo", "tipo": "flamula no guindaste, flamula na estacao e barra do toldo da banca tremulando"},
+  {"id": "trem_da_estacao", "tipo": "trem a vapor que entra, cruza o galpao aberto da estacao e sai, por tras da ferragem e dos predios, com rodas e bielas girando sobre o trilho da mureta e fumaca ficando para tras"},
+  {"id": "vapor_do_bueiro", "tipo": "vapor subindo da tampa de bueiro da estacao, com contorno"},
+  {"id": "bobina_de_tesla", "tipo": "4 raios em ziguezague piscando em rajadas + brilho azulado"},
+  {"id": "luzes", "tipo": "lampiao a gas da estacao e vigias da oficina pulsando"},
+  {"id": "postes_a_gas", "tipo": "postes de luz a gas na calcada com chama em quadros e brilho"},
+  {"id": "cesto_de_brasas", "tipo": "cesto de carvao: 3 chamas em quadros, brilho e faiscas"},
+  {"id": "bandeiras_calcada", "tipo": "estandarte da engrenagem e flamula vermelha em hastes"},
+  {"id": "gato", "tipo": "gato preto: senta mexendo a cauda, anda alguns passos gingando e volta"},
+  {"id": "automato", "tipo": "automato de latao: cabeca em 4 quadros + corpo balancando"},
+  {"id": "corvo_nos_tocos", "tipo": "corvo que pula de um toco a outro batendo asas e pousa"},
+  {"id": "fuligem_e_poeira", "tipo": "fuligem em brasa e poeira flutuando e piscando"},
+  {"id": "primeiro_plano", "tipo": "cardos e capim seco balancando na frente"},
+  {"id": "poeira_passos", "tipo": "poeirinha nos pes do heroi"}
+ ]
+}

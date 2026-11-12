@@ -1,0 +1,659 @@
+{
+ "version": 2,
+ "era": 0,
+ "nome": "Pre-Historia - selva, acampamento e vulcao ao amanhecer",
+ "unidades": "Tudo em FRACAO DA ALTURA DA CENA (SH), inclusive medidas horizontais, salvo quando dito. px = valor * SH. Velocidades em SH por segundo. x do heroi em fracao da LARGURA. Cena de referencia: 390 x 692 px CSS (campo de batalha no topo de uma tela 390x844; linha do chao = 0.78*692 = 540 px = 64% da tela, igual ao jogo).",
+ "scene": {"refWidth": 390, "refHeight": 692},
+ "groundY": 0.78,
+ "runSpeed": 0.275,
+ "hero": {
+  "file": "hero_run.png",
+  "frames": 8,
+  "fps": 12,
+  "frameW": 256,
+  "frameH": 256,
+  "x": 0.3,
+  "size": 0.2643,
+  "footY": 0.947,
+  "figureHeight": 0.231,
+  "nota": "Folha de corrida do Kael (a mesma da era 2; a roupa da era 0 ainda nao existe animada). size = lado do quadro 256 em SH (183 px na cena de 692; o boneco fica com 160 px). footY = fracao do quadro onde ficam os pes. Desenhar em (x*W - size/2, groundY - size*footY).",
+  "shadow": {"rx": 0.21, "ry": 0.05, "alpha": 0.3, "nota": "elipse sob os pes; rx/ry em fracao de size"},
+  "stepDust": {
+   "color": "#e6bf86",
+   "perStep": 3,
+   "life": [0.45, 0.65],
+   "radius": [0.004, 0.012]
+  }
+ },
+ "layers": [
+  {
+   "id": "sky",
+   "file": "sky.webp",
+   "tile": "repeat",
+   "parallax": 0.015,
+   "drift": 0.004,
+   "top": 0,
+   "px": [2048, 882],
+   "height": 0.5,
+   "repeatWidth": 1.161
+  },
+  {
+   "id": "far",
+   "file": "far.webp",
+   "tile": "mirror",
+   "parallax": 0.06,
+   "drift": 0,
+   "offset": 0.45,
+   "bottom": 0.403,
+   "px": [2048, 522],
+   "height": 0.323,
+   "repeatWidth": 2.534
+  },
+  {
+   "id": "mid",
+   "files": ["midA.webp", "midB.webp"],
+   "filesLow": ["midA_lo.webp", "midB_lo.webp"],
+   "tile": "sequence",
+   "parallax": 0.38,
+   "drift": 0,
+   "bottom": 0.645,
+   "px": [2640, 1005],
+   "height": 0.555,
+   "repeatWidth": 2.916
+  },
+  {
+   "id": "ground",
+   "file": "ground.webp",
+   "tile": "repeat",
+   "parallax": 1,
+   "drift": 0,
+   "top": 0.62,
+   "px": [2048, 576],
+   "height": 0.4,
+   "repeatWidth": 1.422,
+   "roadY": [0.722, 0.92],
+   "nota": "roadY = faixa de terra batida (topo, base) em SH; os pes (groundY) caem dentro dela"
+  }
+ ],
+ "tileNota": "repeat: emenda nela mesma. mirror: alternar normal/espelhada. sequence: arquivos de files em ordem (A,B,A,B...). repeatWidth = largura do ciclo completo em SH. off(camada) = scroll*parallax + t*drift + offset (offset opcional, em SH: aqui poe o vulcao em cena desde o primeiro quadro).",
+ "drawOrder": [
+  "sky",
+  "clouds",
+  "birds",
+  "far",
+  "farFill",
+  "fx(far): lava, brilho da cratera, fumaca, brasas",
+  "haze",
+  "fog[0]",
+  "sunRays",
+  "mid",
+  "fx(mid): fumaca das tendas, fogo das cavernas, cachoeira, respingo",
+  "fog[1]",
+  "ground",
+  "decals",
+  "roadside",
+  "hero",
+  "motes",
+  "fg",
+  "bottomShade"
+ ],
+ "placeholder": {
+  "sky": ["#6fb0ea", "#b89ac6", "#f08a86", "#ffc566"],
+  "ground": [
+   [0.722, "#3f7a37"],
+   [0.92, "#bf7b31"],
+   [1.001, "#2c5c2a"]
+  ],
+  "nota": "fundo desenhado no primeiro quadro, antes de qualquer imagem: degrade do ceu ate o topo do chao e faixas [ate y, cor] do chao. filesLow = versoes leves (880 px) carregadas primeiro e trocadas pelas definitivas."
+ },
+ "spacing": "Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.",
+ "farFill": {"color": "#5b8377", "nota": "retangulo do pe da camada far ate o topo do chao (fica atras da selva)"},
+ "fx": [
+  {
+   "id": "lava",
+   "type": "flow",
+   "layer": "far",
+   "tile": 0,
+   "mask": "lavaMask",
+   "rect": [0.5947, 0.0359, 0.1951, 0.6696],
+   "rgb": "255,244,170",
+   "blend": "lighter",
+   "base": 0.1,
+   "pulse": 0.6,
+   "pulseCycles": 2,
+   "loop": 1.7,
+   "frames": 34,
+   "bands": [
+    {"len": 0.034, "cycles": 1, "alpha": 0.6},
+    {"len": 0.019, "cycles": 3, "alpha": 0.32, "peak": 0.35}
+   ]
+  },
+  {
+   "id": "cratera",
+   "type": "glow",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.6931, "y": 0.093}
+    ]
+   ],
+   "radius": 0.062,
+   "alpha": 0.5,
+   "pulse": 2.3,
+   "rgb": ["255,205,120", "255,140,50", "255,90,20"]
+  },
+  {
+   "id": "fumaca",
+   "type": "plume",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.6931, "y": 0.083}
+    ]
+   ],
+   "n": 24,
+   "life": 12,
+   "rise": 0.19,
+   "wind": -0.17,
+   "spread": 0.035,
+   "wobble": 0.006,
+   "r0": 0.015,
+   "grow": 0.052,
+   "alpha": 0.92,
+   "fade": 0.55,
+   "light": "#958a93",
+   "dark": "#655d6c",
+   "hot": "#ffb765",
+   "hotDark": "#dd6a2e",
+   "hotUntil": 0.24,
+   "fadeIn": 0.025,
+   "seed": 71
+  },
+  {
+   "id": "brasas",
+   "type": "embers",
+   "layer": "far",
+   "anchors": [
+    [
+     {"x": 0.6931, "y": 0.093}
+    ]
+   ],
+   "n": 16,
+   "life": 2.8,
+   "angle": 1.25,
+   "speed": 0.058,
+   "gravity": 0.045,
+   "wind": -0.008,
+   "radius": [0.0012, 0.0027],
+   "rgb": "255,226,130",
+   "glowRgb": "255,120,40",
+   "seed": 91
+  },
+  {
+   "id": "fumaca_tendas",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.497, "y": 0.429},
+     {"x": 0.877, "y": 0.569}
+    ],
+    [
+     {"x": 0.492, "y": 0.438}
+    ]
+   ],
+   "n": 10,
+   "life": 5.5,
+   "rise": 0.115,
+   "wind": -0.055,
+   "spread": 0.014,
+   "wobble": 0.005,
+   "r0": 0.004,
+   "grow": 0.017,
+   "alpha": 0.62,
+   "fade": 0.45,
+   "light": "#f1e8de",
+   "dark": "#c2b8bb",
+   "seed": 75
+  },
+  {
+   "id": "fogo_caverna",
+   "type": "glow",
+   "layer": "mid",
+   "anchors": [
+    [
+     {"x": 0.34, "y": 0.725}
+    ],
+    [
+     {"x": 0.697, "y": 0.742}
+    ]
+   ],
+   "radius": 0.05,
+   "alpha": 0.42,
+   "pulse": 5.5,
+   "rgb": ["255,190,90", "255,140,50", "255,110,30"]
+  },
+  {
+   "id": "cachoeira",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "fallMask",
+   "rect": [0.214, 0.1592, 0.0612, 0.6824],
+   "rgb": "255,255,255",
+   "blend": "source-over",
+   "base": 0,
+   "loop": 0.28,
+   "frames": 16,
+   "bands": [
+    {"len": 0.062, "cycles": 1, "alpha": 0.62},
+    {"len": 0.037, "cycles": 2, "alpha": 0.42, "peak": 0.3}
+   ]
+  },
+  {
+   "id": "respingo",
+   "type": "plume",
+   "layer": "mid",
+   "anchors": [
+    [],
+    [
+     {"x": 0.2446, "y": 0.8296}
+    ]
+   ],
+   "n": 10,
+   "life": 1.9,
+   "rise": 0.026,
+   "wind": 0,
+   "spread": 0.075,
+   "wobble": 0.003,
+   "r0": 0.007,
+   "grow": 0.02,
+   "alpha": 0.6,
+   "fade": 0.3,
+   "light": "#ffffff",
+   "dark": "#d3ecf8",
+   "seed": 73
+  }
+ ],
+ "fxNota": "Efeitos presos a uma camada. anchors/rect: fracoes (x,y[,w,h]) dentro do arquivo da camada (indice = posicao em files; em ladrilho espelhado x vira 1-x). flow: laco de loop segundos em frames quadros; cada quadro = mascara (sprite branco com alfa) preenchida por faixas de brilho que descem (len = periodo em SH, cycles = quantos periodos a faixa anda por laco, alpha no pico) + base pulsando; os quadros sao montados uma vez e guardados. glow: brilho radial aditivo pulsando. plume: n bolhas de fumaca sem estado; fase p = frac(t/life + k/n); x = ax + wind*p^1.5 + espalhamento; y = ay - rise*p^0.85; raio = r0 + grow*p; cor quente perto da boca (hot) ate hotUntil. embers: fagulhas aditivas em arco (angle = abertura em rad, gravity em SH/s2).",
+ "haze": {
+  "y": [0.17, 0.41],
+  "rgb": "255,206,172",
+  "alpha": 0.5
+ },
+ "fog": [
+  {"y": 0.235, "height": 0.17, "parallax": 0.14, "drift": 0.012, "alpha": 0.85},
+  {"y": 0.58, "height": 0.075, "parallax": 0.5, "drift": 0.022, "alpha": 0.36}
+ ],
+ "fogTexture": {"w": 768, "h": 160, "blobs": 22, "rgb": "255,232,212", "alpha": 0.3, "nota": "textura procedural: elipses radiais com posicoes de hash, repetida na horizontal"},
+ "sunRays": {
+  "origin": [-0.06, -0.14],
+  "length": 1.05,
+  "count": 5,
+  "angle0": 0.5,
+  "angleStep": 0.17,
+  "halfWidth": [0.045, 0.065],
+  "alpha": [0.008, 0.062],
+  "rgb": "255,214,150",
+  "pulse": 0.45,
+  "blend": "lighter"
+ },
+ "clouds": {
+  "nota": "x inicial, y, largura em SH; deslocamento = scroll*parallax + t*drift; cada grupo da a volta a cada period",
+  "groups": [
+   {
+    "parallax": 0.03,
+    "drift": 0.01,
+    "alpha": 0.9,
+    "period": 2.2,
+    "items": [
+     {"s": "cloud1", "x": 0.1, "y": 0.105, "w": 0.17},
+     {"s": "cloud3", "x": 1.25, "y": 0.07, "w": 0.19}
+    ]
+   },
+   {
+    "parallax": 0.06,
+    "drift": 0.024,
+    "alpha": 1,
+    "period": 2.6,
+    "items": [
+     {"s": "cloud2", "x": 0.42, "y": -0.012, "w": 0.31},
+     {"s": "cloud1", "x": 1.7, "y": 0.012, "w": 0.27}
+    ]
+   }
+  ]
+ },
+ "birds": {
+  "sprite": "ptero",
+  "flocks": [
+   {"period": 17, "duration": 11, "y": 0.035, "size": 0.092, "n": 2, "phase": 3, "alpha": 1},
+   {"period": 27, "duration": 18, "y": 0.012, "size": 0.05, "n": 3, "phase": 12, "alpha": 0.8}
+  ],
+  "nota": "pterossauros: cruzam da esquerda para a direita atras do vulcao; size = lado do quadro em SH"
+ },
+ "roadside": {
+  "parallax": 1,
+  "cell": 0.5,
+  "prob": 0.92,
+  "seed": 11,
+  "minGap": 0.085,
+  "reach": 0.6,
+  "baseY": [0.686, 0.7],
+  "nota": "objetos na beira de tras da trilha, atras do heroi; sorteio por celula igual ao dos decalques. type: sprite (parado ou sway), fire (fogueira: 3 chamas em quadros + brilho + faiscas), torch (tocha: sprite torch + chama), critter (cauda e cabeca mexem por fatias), vent (geiser: jato de vapor em pulsos)",
+  "pool": [
+   {
+    "type": "fire",
+    "sprite": "campfire",
+    "h": [0.062, 0.068],
+    "weight": 4,
+    "fire": {
+     "y": 0.5,
+     "size": 1.55,
+     "glow": 2.3,
+     "glowAlpha": 0.13,
+     "sparks": {"n": 8, "life": 1.5, "spread": 0.5, "wobble": 0.3, "wind": 0.55, "rise": 2.5, "radius": 0.034}
+    }
+   },
+   {
+    "type": "torch",
+    "h": [0.2, 0.212],
+    "weight": 3
+   },
+   {
+    "type": "critter",
+    "sprite": "dino",
+    "h": [0.084, 0.094],
+    "weight": 2,
+    "tail": {"x": 0.5, "amp": 0.17, "f": 2.7, "k": 2.2},
+    "head": {"x": 0.76, "amp": 0.1, "f": 1.15}
+   },
+   {
+    "type": "vent",
+    "sprite": "vent",
+    "h": [0.066, 0.074],
+    "weight": 2,
+    "vent": {"y": 0.9, "period": 7.5, "duration": 3.4, "idle": 0.28, "n": 11, "life": 1.5, "rise": 0.21, "wind": -0.035, "spread": 0.035, "wobble": 0.004, "r0": 0.006, "grow": 0.023, "alpha": 0.78, "fade": 0.45, "light": "#ffffff", "dark": "#d7e5ee", "seed": 77}
+   },
+   {
+    "type": "sprite",
+    "sprite": "cycad",
+    "h": [0.14, 0.16],
+    "sway": true,
+    "swayAmp": 0.4,
+    "weight": 2
+   },
+   {
+    "type": "sprite",
+    "sprite": "skullpole",
+    "h": [0.2, 0.215],
+    "weight": 2
+   },
+   {
+    "type": "sprite",
+    "sprite": "totem",
+    "h": [0.165, 0.18],
+    "weight": 2
+   },
+   {
+    "type": "sprite",
+    "sprite": "ribs",
+    "h": [0.15, 0.165],
+    "weight": 2
+   },
+   {
+    "type": "sprite",
+    "sprite": "runestone",
+    "h": [0.13, 0.145],
+    "weight": 2
+   }
+  ]
+ },
+ "torch": {"flameY": 0.87, "flameSize": 0.36, "glowRadius": 1.7, "glowAlpha": 0.24, "nota": "fracoes da altura do poste; chama = folha flame (4 quadros, 10 fps). Vale tambem para as chamas da fogueira."},
+ "decals": {
+  "file": "decals.webp",
+  "atlas": {
+   "dino1": [2, 2, 119, 126],
+   "dino2": [123, 2, 188, 135],
+   "paw": [313, 2, 132, 123],
+   "feet": [447, 2, 132, 124],
+   "tracks": [581, 2, 126, 102],
+   "bone": [709, 2, 160, 117],
+   "bones": [871, 2, 127, 93],
+   "skull": [1000, 2, 138, 125],
+   "ribs": [2, 139, 157, 114],
+   "tusk": [161, 139, 142, 113],
+   "stone1": [305, 139, 155, 87],
+   "stone2": [462, 139, 164, 93],
+   "stone3": [628, 139, 167, 103],
+   "slab": [797, 139, 185, 74],
+   "pile": [984, 139, 179, 105],
+   "tuft1": [2, 255, 130, 101],
+   "gtuft1": [134, 255, 129, 94],
+   "tuft2": [265, 255, 125, 97],
+   "gtuft2": [392, 255, 123, 91],
+   "tuft3": [517, 255, 145, 108],
+   "gtuft3": [664, 255, 143, 100],
+   "sprout": [809, 255, 71, 98],
+   "gsprout": [882, 255, 69, 92],
+   "pebbles": [953, 255, 118, 72]
+  },
+  "pxScale": 0.0005,
+  "minGap": 0.012,
+  "reach": 0.62,
+  "sameTypeGap": 0.564,
+  "footClear": [0.765, 0.8],
+  "regras": "sameTypeGap (SH; 0.564 = 390 px = 1 tela): o MESMO decalque (mesmo nome no atlas) nunca aparece duas vezes a menos dessa distancia horizontal; entre dois candidatos iguais vence o de maior prioridade rnd(i,seed,6), como na distancia minima (deterministico, vale entre todos os grupos; reach >= sameTypeGap). footClear = faixa vertical em torno da linha dos pes (groundY 0.78) que fica livre de pedras, ossos e tufos: eles so entram nos grupos roadBigBack (base acima da faixa) e roadBigFront (topo abaixo da faixa); pegadas e seixos (roadFlat) podem passar sob os pes.",
+  "nota": "atlas: nome -> [x,y,w,h] em px. tamanho na cena = px * pxScale * escala (em SH). Espalhamento pseudoaleatorio infinito: para cada celula i (largura cell), se rnd(i,seed,0) < prob, sorteia item do pool por peso (rnd 1), x = (i + 0.15 + 0.7*rnd 2)*cell, base y em yRange (rnd 3), escala em scale (rnd 4), espelha se rnd 5 < 0.5. Nunca repete.",
+  "groups": [
+   {
+    "id": "edgeTop",
+    "parallax": 1,
+    "cell": 0.19,
+    "prob": 0.55,
+    "seed": 5,
+    "yRange": [0.665, 0.71],
+    "scale": [0.7, 1],
+    "flip": true,
+    "pool": [
+     ["gtuft1", 3],
+     ["gtuft2", 3],
+     ["gtuft3", 3],
+     ["gsprout", 2]
+    ]
+   },
+   {
+    "id": "roadFlat",
+    "parallax": 1,
+    "cell": 0.15,
+    "prob": 0.9,
+    "seed": 3,
+    "yRange": [0.762, 0.916],
+    "scale": [0.8, 1.15],
+    "flip": true,
+    "nota": "marcas rasas: podem ficar sob os pes",
+    "pool": [
+     ["dino1", 3],
+     ["dino2", 3],
+     ["paw", 2],
+     ["feet", 2],
+     ["tracks", 3],
+     ["pebbles", 3]
+    ]
+   },
+   {
+    "id": "roadBigBack",
+    "parallax": 1,
+    "cell": 0.42,
+    "prob": 0.75,
+    "seed": 13,
+    "yRange": [0.746, 0.76],
+    "scale": [0.75, 1],
+    "flip": true,
+    "nota": "pedras, ossos e tufos na borda de tras da trilha (base acima da faixa dos pes)",
+    "pool": [
+     ["bone", 2],
+     ["bones", 1],
+     ["skull", 1],
+     ["ribs", 1],
+     ["tusk", 1],
+     ["stone1", 2],
+     ["stone2", 2],
+     ["stone3", 2],
+     ["slab", 1],
+     ["pile", 1],
+     ["tuft1", 1],
+     ["tuft2", 1],
+     ["tuft3", 1]
+    ]
+   },
+   {
+    "id": "roadBigFront",
+    "parallax": 1,
+    "cell": 0.26,
+    "prob": 0.85,
+    "seed": 17,
+    "yRange": [0.862, 0.916],
+    "scale": [0.85, 1.15],
+    "flip": true,
+    "nota": "pedras, ossos e tufos na metade da frente da trilha (topo abaixo da faixa dos pes)",
+    "pool": [
+     ["bone", 2],
+     ["bones", 1],
+     ["skull", 1],
+     ["ribs", 1],
+     ["tusk", 1],
+     ["stone1", 2],
+     ["stone2", 2],
+     ["stone3", 2],
+     ["slab", 1],
+     ["pile", 1],
+     ["tuft1", 1],
+     ["tuft2", 1],
+     ["tuft3", 1]
+    ]
+   },
+   {
+    "id": "edgeBottom",
+    "parallax": 1,
+    "cell": 0.21,
+    "prob": 0.5,
+    "seed": 8,
+    "yRange": [0.932, 0.95],
+    "scale": [0.9, 1.3],
+    "flip": true,
+    "pool": [
+     ["gtuft1", 3],
+     ["gtuft2", 3],
+     ["gtuft3", 3],
+     ["gsprout", 2]
+    ]
+   }
+  ]
+ },
+ "fg": {
+  "parallax": 1.3,
+  "cell": 0.4,
+  "prob": 0.8,
+  "seed": 21,
+  "minGap": 0.03,
+  "reach": 0.6,
+  "baseY": [1.02, 1.05],
+  "nota": "primeiro plano, na frente do heroi; samambaias balancam (skew)",
+  "pool": [
+   {
+    "sprite": "fern1",
+    "h": [0.13, 0.16],
+    "sway": true,
+    "weight": 2
+   },
+   {
+    "sprite": "fern2",
+    "h": [0.16, 0.2],
+    "sway": true,
+    "weight": 2
+   },
+   {
+    "sprite": "fern3",
+    "h": [0.15, 0.18],
+    "sway": true,
+    "weight": 2
+   },
+   {
+    "sprite": "fern4",
+    "h": [0.15, 0.185],
+    "sway": true,
+    "weight": 2
+   },
+   {
+    "sprite": "rock1",
+    "h": [0.085, 0.11],
+    "weight": 1
+   },
+   {
+    "sprite": "rock2",
+    "h": [0.08, 0.1],
+    "weight": 1
+   }
+  ]
+ },
+ "sway": {"a1": 0.1, "f1": 1.9, "a2": 0.04, "f2": 3.1, "bias": -0.05},
+ "motes": {
+  "count": 28,
+  "yRange": [0.4, 0.96],
+  "rgb": "232,255,150",
+  "glowRgb": "170,255,90",
+  "radius": [0.0013, 0.0031],
+  "parallax": 0.55,
+  "drift": 0.013,
+  "blend": "lighter",
+  "nota": "vaga-lumes: piscam e flutuam"
+ },
+ "bottomShade": {"from": 0.94, "alpha": 0.35, "rgb": "8,18,8"},
+ "rnd": "rnd(i,seed,k): x=imul(i|0,0x9E3779B1)^imul(seed*31+k+1,0x85EBCA6B); x^=x>>>15; x=imul(x,0x2C1B3C6D); x^=x>>>12; x=imul(x,0x297A2D39); x^=x>>>15; return (x>>>0)/2^32",
+ "sprites": {
+  "cloud1": "cloud1.webp",
+  "cloud2": "cloud2.webp",
+  "cloud3": "cloud3.webp",
+  "ptero": {"file": "ptero.webp", "frames": 4, "fps": 7},
+  "flame": {"file": "flame.webp", "frames": 4, "fps": 10},
+  "lavaMask": "lava.webp",
+  "fallMask": "fall.webp",
+  "campfire": "campfire.webp",
+  "torch": "torch.webp",
+  "vent": "vent.webp",
+  "dino": "dino.webp",
+  "cycad": "cycad.webp",
+  "skullpole": "skullpole.webp",
+  "totem": "totem.webp",
+  "ribs": "ribs.webp",
+  "runestone": "runestone.webp",
+  "fern1": "fern1.webp",
+  "fern2": "fern2.webp",
+  "fern3": "fern3.webp",
+  "fern4": "fern4.webp",
+  "rock1": "rock1.webp",
+  "rock2": "rock2.webp"
+ },
+ "animated": [
+  {"id": "ceu_deriva", "tipo": "ceu pintado derivando devagar, independe da corrida"},
+  {"id": "nuvens_2_vel", "tipo": "nuvens grandes soltas em 2 velocidades"},
+  {"id": "raios_de_sol", "tipo": "feixes de luz do amanhecer pulsando"},
+  {"id": "pterossauros", "tipo": "2 grupos de pterossauros batendo asas (4 quadros)"},
+  {"id": "fumaca_vulcao", "tipo": "coluna de fumaca saindo da cratera, quente na boca, levada pelo vento"},
+  {"id": "brasas_vulcao", "tipo": "brasas saltando da cratera em arco"},
+  {"id": "brilho_cratera", "tipo": "brilho da cratera pulsando"},
+  {"id": "lava", "tipo": "lava escorrendo: faixas de brilho descendo pelos veios"},
+  {"id": "nevoa", "tipo": "nevoa no pe das montanhas e nevoa baixa sobre o acampamento, deslizando"},
+  {"id": "cachoeira", "tipo": "agua da cachoeira descendo + respingo na base"},
+  {"id": "fumaca_tendas", "tipo": "fumaca fina saindo do topo das tendas de pele"},
+  {"id": "fogo_caverna", "tipo": "luz de fogo tremulando dentro das cavernas"},
+  {"id": "fogueira", "tipo": "fogueira com 3 chamas em quadros, brilho e faiscas subindo"},
+  {"id": "tochas", "tipo": "tochas com chama animada e brilho"},
+  {"id": "geiser", "tipo": "geiser soltando vapor em pulsos"},
+  {"id": "dinossauro", "tipo": "dinossauro pequeno na beira da trilha mexendo a cauda e a cabeca"},
+  {"id": "cicadacea", "tipo": "cicadacea da beira da trilha balancando"},
+  {"id": "vaga_lumes", "tipo": "vaga-lumes piscando e flutuando"},
+  {"id": "samambaias", "tipo": "samambaias do primeiro plano balancando"},
+  {"id": "poeira_passos", "tipo": "poeirinha nos pes do heroi"}
+ ]
+}

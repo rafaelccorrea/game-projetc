@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kael modular</title>
+<style>
+ :root{--bg:#15151c;--fg:#eee;--mut:#aab;--card:#000;--bar:#222;--acc:#2d6cdf}
+ body{margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif}
+ h1{font-size:17px;margin:12px 16px 4px} p{margin:4px 16px;color:var(--mut)}
+ .row{display:flex;flex-wrap:wrap;gap:12px;padding:10px 16px}
+ .cell{background:var(--card);border-radius:8px;overflow:hidden;max-width:100%}
+ .cell b{display:block;padding:6px 10px;background:var(--bar)}
+ canvas{display:block;max-width:100%}
+ .ctl{padding:4px 16px 8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+ .grp{display:flex;gap:4px;align-items:center} .grp span{color:var(--mut);margin-right:2px}
+ button{background:#333;color:#fff;border:0;border-radius:6px;padding:7px 11px;font-weight:600}
+ button.on{background:var(--acc)}
+</style></head><body>
+<h1>Kael em camadas: cabelo, olhos e arma trocáveis</h1>
+<p>Cabeça, rosto, cabelos e olhos tirados do sprite aprovado. A mão fecha sobre o cabo da arma. À direita, a corrida por quadros (aprovada) para comparar.</p>
+<div class="ctl" id="ctl"></div>
+<div class="row">
+ <div class="cell"><b>Camadas (ossos)</b><canvas id="cm" width="420" height="320"></canvas></div>
+ <div class="cell"><b>Quadros (vídeo), aprovado</b><canvas id="cf" width="420" height="320"></canvas></div>
+</div>
+<div class="row"><div class="cell"><b>Todas as combinações (parado)</b><canvas id="grid" width="1080" height="380"></canvas></div></div>
+<script src="../../../js/anim.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const S={state:'idle',hair:'orig',eyes:'orig',weapon:'era2_t1',slow:false,line:true};
+const OPT={state:[['idle','Parado'],['run','Correndo'],['attack','Golpe']],hair:[['orig','Cabelo castanho'],['spiky','Loiro espetado'],['pony','Rabo de cavalo']],eyes:[['orig','Olhos castanhos'],['cyan','Olhos azuis'],['closed','Olhos fechados']],weapon:[['era2_t0','Espada de ferro'],['era2_t1','Espada rúnica'],['era3_t1','Arma de fogo'],['none','Sem arma']]};
+function ui(){const c=$('ctl');c.innerHTML='';for(const [k,list] of Object.entries(OPT)){const g=document.createElement('div');g.className='grp';
+ for(const [v,lab] of list){const b=document.createElement('button');b.textContent=lab;if(S[k]===v)b.className='on';b.onclick=()=>{S[k]=v;if(k==='state')t0=performance.now();ui();};g.appendChild(b);}c.appendChild(g);}
+ const sl=document.createElement('button');sl.textContent='Câmera lenta';if(S.slow)sl.className='on';sl.onclick=()=>{S.slow=!S.slow;ui();};c.appendChild(sl);}
+let t0=performance.now();
+(async()=>{
+ const bgM=await (await fetch('../../../assets/bg/meta.json')).json(), gyF=bgM.era2.groundY, bg=await L('../../../assets/bg/era2.png');
+ const WM=await (await fetch('../../../assets/weapons/meta.json')).json(); const W={};
+ for(const k of ['era2_t0','era2_t1','era3_t1']){const img=await L('../../../assets/weapons/'+k+'.png');W[k]={img,grip:WM[k].grip,angle:WM[k].angle,type:WM[k].type};}
+ await Anim.load('k','../../../assets/anim/rig/era2_hero_t0/');
+ const fr=await L('../../../assets/anim/era2_hero_t0_run.png');
+ ui(); const SIZE=240;
+ function scene(c,t,spd,drawChar){const g=c.getContext('2d'),Wd=c.width,H=c.height,gy=H*0.82;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,Wd,H);
+  if(bg){const s=H/(bg.height*(0.82/gyF)),bw=bg.width*s,bh=bg.height*s,off=(t*spd)%bw;for(let x=-off;x<Wd;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+  drawChar(g,Wd*0.42,gy);}
+ function loop(now){const t=(now-t0)/1000*(S.slow?0.25:1), w=S.weapon==='none'?null:W[S.weapon], look={hair:S.hair,eyes:S.eyes};
+  const st=S.state==='attack'?'attack':S.state, ta=S.state==='attack'?(t%1.2):t;
+  const spd=S.state==='run'?Anim.groundSpeed('k',SIZE):0;
+  scene($('cm'),t,spd,(g,x,gy)=>Anim.draw(g,'k',st,ta,x,gy,SIZE,{weapon:w,look}));
+  scene($('cf'),t,S.state==='run'?Anim.groundSpeed('k',SIZE):0,(g,x,gy)=>{if(!fr)return;const n=8,i=Math.floor(t*12)%n,k=SIZE/256;g.drawImage(fr,i*256,0,256,256,x-128*k,gy-243*k,256*k,256*k);});
+  requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);
+ // grade de combinações
+ const gg=$('grid').getContext('2d');let i=0;
+ for(const h of ['orig','spiky','pony'])for(const e of ['orig','cyan','closed']){const x=60+i*115;Anim.draw(gg,'k','idle',0.5,x,360,170,{weapon:W[['era2_t0','era2_t1','era3_t1'][i%3]],look:{hair:h,eyes:e}});i++;}
+})();
+</script></body></html>

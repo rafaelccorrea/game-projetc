@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Progresso</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+/* Kael aprovado: folha parado 12 quadros, 12 fps */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:kidl 1s steps(12, jump-none) infinite}
+@keyframes kidl{from{background-position:0 0}to{background-position:100% 0}}
+.xpf{animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+a{color:#ffc94a}a:hover{color:#ffe08a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 5px 0 #8a4f0c}
+.gold:active{transform:translateY(3px);box-shadow:0 2px 0 #8a4f0c}
+.pulse{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 5px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 5px 0 #8a4f0c,0 0 18px rgba(255,201,74,.85)}}
+.paneIn{animation:paneIn .35s ease both}
+@keyframes paneIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.rowin{animation:rowin .4s ease both}
+@keyframes rowin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.bar{transition:width .6s cubic-bezier(.2,1.3,.4,1)}
+.barfill{position:relative;overflow:hidden}
+.barfill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:run 2.2s linear infinite}
+@keyframes run{from{background-position:-60% 0}to{background-position:160% 0}}
+.rowup{animation:rowup .8s ease-out both}
+@keyframes rowup{0%{box-shadow:0 0 0 rgba(95,208,104,0);border-color:#5fd068}30%{box-shadow:0 0 22px rgba(95,208,104,.8);border-color:#5fd068}100%{box-shadow:0 0 0 rgba(95,208,104,0)}}
+.floatup{animation:floatup 1s ease-out both;pointer-events:none}
+@keyframes floatup{0%{opacity:0;transform:translateY(6px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.15)}100%{opacity:0;transform:translateY(-30px)}}
+.popn{animation:popn .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes popn{from{transform:scale(1.6)}to{transform:none}}
+.stoneTw{animation:tw 2.6s ease-in-out infinite}
+@keyframes tw{0%,100%{filter:drop-shadow(0 0 0 rgba(150,210,255,0))}50%{filter:drop-shadow(0 0 6px rgba(150,210,255,.95))}}
+.won{position:relative;overflow:hidden}
+.won::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.28) 48%,transparent 62%);background-size:280% 100%;animation:shine 3.4s ease-in-out infinite;pointer-events:none}
+@keyframes shine{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+.feat{animation:feat 1.8s ease-in-out infinite}
+@keyframes feat{0%,100%{box-shadow:0 0 6px rgba(255,201,74,.35)}50%{box-shadow:0 0 20px rgba(255,201,74,.9)}}
+.unlock{animation:unlock 1.4s ease-out both}
+@keyframes unlock{0%{transform:scale(.7);filter:brightness(2.4)}30%{transform:scale(1.08);filter:brightness(1.6)}100%{transform:none;filter:none}}
+.medal{animation:swingm 2.8s ease-in-out infinite;transform-origin:50% 10%}
+@keyframes swingm{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.banner{animation:ban 2.6s ease-out both;pointer-events:none}
+@keyframes ban{0%{transform:scale(1.8);opacity:0}12%{transform:scale(1);opacity:1}82%{opacity:1}100%{opacity:0;transform:translateY(-16px)}}
+.rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,201,74,.4) 0deg 9deg,rgba(255,201,74,0) 9deg 30deg);-webkit-mask:radial-gradient(circle,#000 25%,transparent 70%);mask:radial-gradient(circle,#000 25%,transparent 70%);animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tick{animation:tick .35s ease both}
+@keyframes tick{from{color:#ffe07a;transform:scale(1.2)}to{transform:none}}
+.card:active,.tbtn:active{transform:scale(.96)}
+/* ===== PADRÃO V2: header novo (igual BatalhaTelaCheiaV2) + tela cheia sobre a batalha, sem barra de abas embaixo ===== */
+html,body{height:100%}
+.scr{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;display:flex;flex-direction:column}
+.bbg{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:#7fb3d9}
+.bbg i{position:absolute;left:-24px;right:-24px;background-repeat:repeat-x;filter:blur(5px) saturate(.9)}
+.bbg .s{top:0;height:492px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 492px}
+.bbg .f{top:181px;height:344px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 344px}
+.bbg .m{top:144px;height:410px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 410px}
+.bbg .g{top:537px;height:312px;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 312px}
+.bbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.38),rgba(10,7,5,.72) 120px,rgba(10,7,5,.92))}
+.hgl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.hd{position:relative;z-index:5;flex:none;display:flex;align-items:center;gap:8px;padding:10px 10px 8px;padding-top:max(10px,env(safe-area-inset-top));box-sizing:border-box}
+.hrb{width:44px;height:44px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box;text-decoration:none;transition:transform .12s}
+.hrb:active{transform:scale(.9)}
+.ht{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(17px,5.2vw,22px);line-height:1.1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hps{flex:none;display:flex;align-items:center;gap:6px}
+.hpill{height:44px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;text-decoration:none;font:inherit;transition:transform .12s}
+.hpill:active{transform:scale(.95)}
+.hpill img{object-fit:contain;flex:none}
+.hpill b{font-size:13.5px;font-weight:900;padding-right:2px}
+.hplus{width:24px;height:24px;flex:none;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+.pnl{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;background:#16110d;border-radius:22px 22px 0 0;border-top:1px solid rgba(255,236,200,.18);box-shadow:0 -10px 30px rgba(0,0,0,.5);overflow:hidden;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
+.pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
+@keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
+</style>
+</helmet>
+<div class="scr">
+
+  <div class="bbg" aria-hidden="true"><i class="s"></i><i class="f"></i><i class="m"></i><i class="g"></i></div>
+
+  <!-- Header novo (padrão Batalha V2): voltar · título · moedas/gemas. Sem engrenagem: Configurações ficam no MENU da batalha -->
+  <header class="hd">
+    <a href="Equipamento.dc.html" onClick="{{tap}}" aria-label="Voltar para Equipamento" class="hgl hrb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></a>
+    <h1 class="ht">Progresso</h1>
+    <div class="hps">
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Moedas: 48,2K. Abrir loja" class="hgl hpill"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 24px; height: 24px"><b>48,2K</b><span class="hplus opt" aria-hidden="true">+</span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" aria-label="Gemas: 320. Comprar na loja" class="hgl hpill"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="hplus" aria-hidden="true">+</span></a>
+    </div>
+  </header>
+
+  <!-- Painel em tela cheia por cima da batalha (sem barra de abas embaixo) -->
+  <div class="pnl pnlIn">
+
+  <!-- Conteúdo (tela cheia; rola só em telas baixas; ação de cada aba fica embaixo) -->
+  <div style="position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overflow-x: hidden; padding: 8px 12px 10px; box-sizing: border-box">
+
+    <!-- Abas internas da tela (voltar e título agora ficam no header novo) -->
+    <div style="height: 52px; flex: none; display: flex; align-items: center; gap: 8px">
+      <div role="group" aria-label="Seção" style="flex: 1; display: flex; height: 52px; padding: 3px; gap: 3px; border-radius: 14px; background: #0e0a07; border: 1px solid #4a3a2b; box-sizing: border-box">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+          <button onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="position: relative; flex: 1; height: 44px; padding: 0 12px; border-radius: 11px; border: 0; background: {{t.bg}}; color: {{t.color}}; font-size: 14px; font-weight: 900">{{t.label}}
+            <sc-if value="{{t.dot}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: #ff4d3d"></span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- ===== PRÁTICAS ===== -->
+    <sc-if value="{{isPrac}}" hint-placeholder-val="{{true}}">
+      <div class="paneIn" style="flex: 1 0 auto; display: flex; flex-direction: column; gap: 8px">
+        <div style="height: 48px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 14px; background: #1d1611; border: 1px solid #4a3a2b">
+          <div style="position: relative; display: flex; align-items: center; gap: 6px">
+            <svg class="stoneTw" width="26" height="26" viewBox="0 0 24 24" fill="#8fc7ff" stroke="#2a4a6a" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l4-5h5l4 5-3 10H9z"></path><path d="M6 9h13M10 4l-1 5 3 10M15 4l1 5-4 10" fill="none"></path></svg>
+            <div style="display: flex; flex-direction: column; line-height: 1.05">
+              <span class="{{stoneFx}}" style="font-family: 'Lilita One', sans-serif; font-size: 19px">{{stonesTxt}}</span>
+              <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Pedras de prática</span>
+            </div>
+            <sc-if value="{{dropFx}}" hint-placeholder-val="{{false}}"><span class="floatup" style="position: absolute; left: 28px; top: -10px; font-family: 'Lilita One', sans-serif; font-size: 15px; color: #8fc7ff; text-shadow: 0 2px 0 #000">+1</span></sc-if>
+          </div>
+          <div style="flex: 1"></div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15">
+            <span style="font-size: 13px; font-weight: 900">Teto Nv {{cap}} <span style="color: #c9b9a2; font-weight: 800">· {{eraName}}</span></span>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">+10 níveis a cada era liberada</span>
+          </div>
+        </div>
+
+        <div style="flex: 1 0 auto; display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{tracks}}" as="r" hint-placeholder-count="5">
+            <div class="rowin {{r.fx}}" style="position: relative; height: 80px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 16px; background: #1d1611; border: 2px solid #4a3a2b; box-sizing: border-box; animation-delay: {{r.delay}}">
+              <div style="width: 48px; height: 48px; flex: none; border-radius: 14px; background: radial-gradient(circle at 50% 40%, #4a3a2b, #120d0a); border: 2px solid {{r.col}}; display: flex; align-items: center; justify-content: center; color: {{r.col}}">
+                <sc-if value="{{r.isStr}}" hint-placeholder-val="{{true}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" y1="19" x2="19" y2="13"></line><line x1="16" y1="16" x2="20" y2="20"></line></svg></sc-if>
+                <sc-if value="{{r.isVit}}" hint-placeholder-val="{{false}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"></path></svg></sc-if>
+                <sc-if value="{{r.isCrit}}" hint-placeholder-val="{{false}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="1" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="23"></line></svg></sc-if>
+                <sc-if value="{{r.isDef}}" hint-placeholder-val="{{false}}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></sc-if>
+                <sc-if value="{{r.isGold}}" hint-placeholder-val="{{false}}"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="width: 34px; height: 34px; object-fit: contain"></sc-if>
+              </div>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+                <div style="display: flex; align-items: baseline; gap: 6px">
+                  <span style="font-family: 'Lilita One', sans-serif; font-size: 17px">{{r.name}}</span>
+                  <span class="{{r.lvFx}}" style="font-size: 12px; font-weight: 900; color: {{r.lvColor}}">Nv {{r.lv}}/{{r.cap}}</span>
+                </div>
+                <div style="height: 10px; border-radius: 5px; background: #0e0a07; border: 1px solid #4a3a2b; overflow: hidden">
+                  <div class="bar barfill" style="width: {{r.pct}}; height: 100%; background: linear-gradient(90deg, {{r.col}}, #ffe07a)"></div>
+                </div>
+                <span style="font-size: 12px; font-weight: 800; color: #c9b9a2">{{r.now}} <span style="color: #5fd068">{{r.next}}</span></span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: none">
+                <button class="tbtn {{r.btnClass}}" onClick="{{r.train}}" aria-label="{{r.aria}}" style="width: 88px; height: 44px; border-radius: 12px; border: {{r.btnBorder}}; background: {{r.btnBg}}; color: {{r.btnColor}}; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1">
+                  <span style="font-family: 'Lilita One', sans-serif; font-size: 15px">{{r.btnLabel}}</span>
+                  <span style="font-size: 11px; font-weight: 900">{{r.costTxt}}</span>
+                </button>
+              </div>
+              <sc-if value="{{r.float}}" hint-placeholder-val="{{false}}"><span class="floatup" style="position: absolute; right: 108px; top: 6px; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #5fd068; text-shadow: 0 2px 0 #000">{{r.floatTxt}}</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="height: 56px; flex: none; display: flex; align-items: center; gap: 8px">
+          <div style="flex: 1; height: 56px; display: flex; flex-direction: column; justify-content: center; padding: 0 12px; border-radius: 14px; background: #0e0a07; border: 1px solid #4a3a2b; line-height: 1.25">
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Total das práticas</span>
+            <span style="font-size: 13px; font-weight: 900">{{sumTxt}}</span>
+          </div>
+          <button class="{{maxClass}}" onClick="{{trainAll}}" aria-label="Treinar o máximo possível" style="width: 96px; height: 56px; border-radius: 14px; border: {{maxBorder}}; background: {{maxBg}}; color: {{maxColor}}; font-family: 'Lilita One', sans-serif; font-size: 17px; line-height: 1.05">Treinar<br>máx.</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== TÍTULOS ===== -->
+    <sc-if value="{{isTit}}" hint-placeholder-val="{{false}}">
+      <div class="paneIn" style="flex: 1 0 auto; display: flex; flex-direction: column; gap: 8px">
+        <div class="feat" style="height: 56px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 14px; background: linear-gradient(180deg, #3a2c1f, #241a12); border: 2px solid #ffc94a; box-sizing: border-box">
+          <svg class="medal" width="30" height="34" viewBox="0 0 24 28" fill="none" stroke-linejoin="round" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e" stroke="#16110d" stroke-width="1.2"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle><path d="M12 12.5l1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z" fill="#fff3c4"></path></svg>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+            <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; letter-spacing: 1px">EM DESTAQUE · VALE x2</span>
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 17px; color: #ffc94a">{{featName}}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15">
+            <span style="font-size: 13px; font-weight: 900; color: #5fd068">{{featBonus}}</span>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{wonTxt}} conquistados</span>
+          </div>
+        </div>
+
+        <div role="group" aria-label="Filtro" style="height: 52px; flex: none; display: flex; padding: 3px; gap: 3px; border-radius: 12px; background: #0e0a07; border: 1px solid #4a3a2b; box-sizing: border-box">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="3">
+            <button onClick="{{f.pick}}" aria-pressed="{{f.pressed}}" style="flex: 1; height: 44px; border-radius: 9px; border: 0; background: {{f.bg}}; color: {{f.color}}; font-size: 13px; font-weight: 900">{{f.label}}</button>
+          </sc-for>
+        </div>
+
+        <div style="flex: 1 0 auto; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, minmax(100px, 1fr)); gap: 8px">
+          <sc-for list="{{cards}}" as="c" hint-placeholder-count="8">
+            <button class="card rowin {{c.cls}}" onClick="{{c.pick}}" aria-label="{{c.aria}}" style="position: relative; min-height: 0; border-radius: 14px; border: 2px solid {{c.border}}; background: {{c.bg}}; padding: 7px 9px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; color: #f6ecdf; box-sizing: border-box; animation-delay: {{c.delay}}">
+              <span style="display: flex; align-items: center; gap: 6px">
+                <sc-if value="{{c.won}}" hint-placeholder-val="{{true}}"><svg width="18" height="20" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="{{c.ribbon}}"></path><circle cx="12" cy="17" r="8" fill="{{c.medal}}" stroke="#16110d" stroke-width="1.4"></circle></svg></sc-if>
+                <sc-if value="{{c.locked}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+                <span style="flex: 1; min-width: 0; font-family: 'Lilita One', sans-serif; font-size: 14px; line-height: 1.1; color: {{c.nameColor}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+                <sc-if value="{{c.isFeat}}" hint-placeholder-val="{{false}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffc94a" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg></sc-if>
+              </span>
+              <span style="font-size: 12px; font-weight: 900; color: {{c.bonColor}}">{{c.bonus}}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; line-height: 1.15">{{c.cond}}</span>
+              <span style="flex: 1"></span>
+              <sc-if value="{{c.hasBar}}" hint-placeholder-val="{{true}}">
+                <span style="display: flex; align-items: center; gap: 6px">
+                  <span style="flex: 1; height: 7px; border-radius: 4px; background: #0e0a07; overflow: hidden"><span class="bar" style="display: block; width: {{c.pct}}; height: 100%; background: {{c.barCol}}"></span></span>
+                  <span class="{{c.tick}}" style="font-size: 10px; font-weight: 900; color: #e8dccb">{{c.prog}}</span>
+                </span>
+              </sc-if>
+              <sc-if value="{{c.won}}" hint-placeholder-val="{{true}}">
+                <span style="font-size: 11px; font-weight: 900; color: {{c.stColor}}">{{c.status}}</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: center; gap: 12px">
+          <button onClick="{{prevPage}}" aria-label="Página anterior" style="width: 48px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{prevColor}}; padding: 0; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style="display: flex; gap: 6px; align-items: center" aria-label="{{pageAria}}">
+            <sc-for list="{{dots}}" as="d" hint-placeholder-count="5">
+              <span style="width: {{d.w}}; height: 8px; border-radius: 4px; background: {{d.bg}}; transition: width .2s"></span>
+            </sc-for>
+          </div>
+          <button onClick="{{nextPage}}" aria-label="Próxima página" style="width: 48px; height: 44px; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: {{nextColor}}; padding: 0; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- Aviso de título novo / destaque -->
+    <sc-if value="{{hasBanner}}" hint-placeholder-val="{{false}}">
+      <div class="banner" style="position: absolute; left: 0; right: 0; top: 230px; display: flex; justify-content: center; pointer-events: none">
+        <div style="position: relative; width: 300px; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+          <div class="rays" style="left: 50px; top: -50px; width: 200px; height: 200px"></div>
+          <svg width="54" height="62" viewBox="0 0 24 28" aria-hidden="true" style="position: relative"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle><path d="M12 12.5l1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z" fill="#fff3c4"></path></svg>
+          <span style="position: relative; padding: 6px 14px; border-radius: 12px; background: rgba(14,10,7,0.94); border: 2px solid #ffc94a; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ffc94a; text-align: center">{{bannerTxt}}</span>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Práticas: js/sys/practice.js (per 0,5/0,5/0,1/0,15/0,5; custo ceil(4*1,06^nível); teto 10 + 10*era). Títulos: js/sys/titles.js (bônus x0,5; destaque x2).
+var ERA = 2, ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista'];
+var CAPN = 10 + 10 * ERA, PER_PAGE = 8;
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var TRACKS = [
+  { id: 'str', name: 'Força', per: 0.5, unit: '% ATK', col: '#ff8a5c' },
+  { id: 'vit', name: 'Vitalidade', per: 0.5, unit: '% HP', col: '#5fd068' },
+  { id: 'crit', name: 'Crítico', per: 0.1, unit: ' pt crítico', col: '#ffc94a' },
+  { id: 'def', name: 'Defesa', per: 0.15, unit: '% defesa', col: '#4aa3ff' },
+  { id: 'gold', name: 'Coleta', per: 0.5, unit: '% ouro', col: '#ffe07a' }
+];
+var BUNIT = { atkPct: '% ATK', hpPct: '% HP', critPct: ' pt crít.', defPct: '% def.', goldPct: '% ouro' };
+// bônus como na tabela (valor cheio); a tela mostra x0,5
+var TITLES = [
+  { id: 'stage10', name: 'Desbravador', t: 'stage', n: 10, b: { atkPct: 1 } },
+  { id: 'stage30', name: 'Veterano das Eras', t: 'stage', n: 30, b: { atkPct: 2, hpPct: 2 } },
+  { id: 'stage50', name: 'Conquistador', t: 'stage', n: 50, b: { atkPct: 3, hpPct: 3 } },
+  { id: 'stage70', name: 'Senhor das Eras', t: 'stage', n: 70, b: { atkPct: 5, hpPct: 5 } },
+  { id: 'era2', name: 'Cavaleiro do Tempo', t: 'era', n: 2, b: { hpPct: 2 } },
+  { id: 'era4', name: 'Mente Inventiva', t: 'era', n: 4, b: { goldPct: 4 } },
+  { id: 'era6', name: 'Viajante do Futuro', t: 'era', n: 6, b: { critPct: 1, goldPct: 5 } },
+  { id: 'boss10', name: 'Caçador de Chefes', t: 'boss', n: 10, b: { critPct: 0.5 } },
+  { id: 'boss50', name: 'Matador de Titãs', t: 'boss', n: 50, b: { critPct: 1.5 } },
+  { id: 'kill1k', name: 'Implacável', t: 'kills', n: 1000, b: { goldPct: 3 } },
+  { id: 'kill10k', name: 'Lenda da Horda', t: 'kills', n: 10000, b: { goldPct: 8 } },
+  { id: 'tow10', name: 'Escalador', t: 'tower', n: 10, b: { defPct: 1 } },
+  { id: 'tow25', name: 'Guardião da Torre', t: 'tower', n: 25, b: { defPct: 2, hpPct: 2 } },
+  { id: 'tow50', name: 'Senhor da Torre', t: 'tower', n: 50, b: { defPct: 3, atkPct: 3 } },
+  { id: 'tow100', name: 'Imortal', t: 'tower', n: 100, b: { defPct: 5, atkPct: 5, hpPct: 5 } },
+  { id: 'arena10', name: 'Gladiador', t: 'arena', n: 10, b: { atkPct: 2 } },
+  { id: 'arena3', name: 'Campeão da Arena', t: 'arena', n: 3, b: { atkPct: 4, critPct: 1 } },
+  { id: 'arena1', name: 'Rei da Arena', t: 'arena', n: 1, b: { atkPct: 6, critPct: 2 } },
+  { id: 'prac50', name: 'Disciplinado', t: 'practice', n: 50, b: { hpPct: 3 } },
+  { id: 'prac200', name: 'Mestre do Treino', t: 'practice', n: 200, b: { hpPct: 4, defPct: 1 } },
+  { id: 'weap7', name: 'Armeiro', t: 'weaponEras', n: 7, b: { atkPct: 2 } },
+  { id: 'weapAll', name: 'Arsenal Completo', t: 'weapons', n: 28, b: { atkPct: 5 } },
+  { id: 'mount1', name: 'Cavaleiro', t: 'mounts', n: 1, b: { hpPct: 2 } },
+  { id: 'mountAll', name: 'Senhor das Montarias', t: 'mounts', n: 2, b: { hpPct: 4, critPct: 1 } },
+  { id: 'pet1', name: 'Amigo dos Bichos', t: 'pets', n: 1, b: { hpPct: 1 } },
+  { id: 'pet3', name: 'Domador', t: 'pets', n: 3, b: { hpPct: 2 } },
+  { id: 'petAll', name: 'Arca das Eras', t: 'pets', n: 5, b: { atkPct: 2, hpPct: 2 } },
+  { id: 'phoenix5', name: 'Laço Lendário', t: 'petStar', n: 5, b: { critPct: 2 } },
+  { id: 'skin10', name: 'Colecionador', t: 'skins', n: 10, cos: true },
+  { id: 'skin25', name: 'Estilista das Eras', t: 'skins', n: 25, cos: true },
+  { id: 'skinAll', name: 'Guarda-Roupa Lendário', t: 'skins', n: 38, cos: true },
+  { id: 'hairAll', name: 'Estilo Próprio', t: 'hair', n: 5, cos: true },
+  { id: 'eyesAll', name: 'Olhar Marcante', t: 'eyes', n: 5, cos: true },
+  { id: 'hatsAll', name: 'Chapeleiro', t: 'hats', n: 4, cos: true }
+];
+var COND = {
+  stage: function (n) { return 'Vencer a fase ' + n; },
+  era: function (n) { return 'Liberar a ' + ERAN[n]; },
+  boss: function (n) { return 'Derrotar ' + n + ' chefes'; },
+  kills: function (n) { return 'Derrotar ' + n.toLocaleString('pt-BR') + ' inimigos'; },
+  tower: function (n) { return 'Vencer o andar ' + n + ' da torre'; },
+  arena: function (n) { return n === 1 ? 'Terminar a semana em 1º na arena' : 'Terminar no top ' + n + ' da arena'; },
+  practice: function (n) { return 'Somar ' + n + ' níveis de prática'; },
+  weaponEras: function () { return 'Armas de 7 eras, só ITEM (skin não conta)'; },
+  weapons: function (n) { return 'As ' + n + ' armas como ITEM (skin não conta)'; },
+  mounts: function (n) { return n === 1 ? 'Ter 1 montaria' : 'Ter as ' + n + ' montarias'; },
+  pets: function (n) { return n === 5 ? 'Ter os 5 pets' : 'Ter ' + n + (n === 1 ? ' pet' : ' pets'); },
+  petStar: function () { return 'Fênix em 5 estrelas'; },
+  skins: function (n) { return n + ' skins de arma ou roupa'; },
+  hair: function (n) { return 'Todos os cabelos (' + n + ')'; },
+  eyes: function (n) { return 'Todos os olhos (' + n + ')'; },
+  hats: function (n) { return 'Todos os chapéus (' + n + ')'; }
+};
+function f1(v) { return (Math.round(v * 100) / 100).toString().replace('.', ','); }
+function cost(lv) { return Math.ceil(4 * Math.pow(1.06, lv)); }
+function bonusTxt(t, mult) {
+  if (t.cos) return 'Cosmético';
+  var out = [];
+  for (var k in t.b) out.push('+' + f1(t.b[k] * 0.5 * mult) + BUNIT[k]);
+  return out.join(' · ');
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      tab: 'prac', filter: 'all', page: 0,
+      stones: 132, lv: { str: 24, vit: 22, crit: 14, def: 10, gold: 18 },
+      kills: 9986, feat: 'era2', fresh: null, banner: null, bk: 0,
+      rowFx: null, floatTxt: '', dropFx: false, fcBump: false, seenNew: true
+    };
+  }
+  componentDidMount() {
+    var self = this;
+    // abates da batalha em segundo plano: pedras de prática caem (8% por abate) e o contador de abates sobe
+    this.iv = setInterval(function () {
+      var s = self.state, up = { kills: Math.min(10000, s.kills + 1) };
+      if (s.kills < 10000 && up.kills >= 10000) {
+        up.fresh = 'kill10k'; up.seenNew = s.tab === 'tit';
+        self.sfx(SND.legendary, 0.6);
+        self.showBanner('Novo título: Lenda da Horda!');
+      }
+      self.setState(up);
+    }, 700);
+    this.iv2 = setInterval(function () {
+      self.setState({ stones: self.state.stones + 1, dropFx: false });
+      setTimeout(function () { self.setState({ dropFx: true }); }, 20);
+    }, 3200);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.iv2); clearTimeout(this.tb); clearTimeout(this.tr); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  showBanner(txt) {
+    var self = this; clearTimeout(this.tb);
+    this.setState({ banner: null });
+    setTimeout(function () { self.setState({ banner: txt, bk: self.state.bk + 1 }); }, 20);
+    this.tb = setTimeout(function () { self.setState({ banner: null }); }, 2600);
+  }
+  bump(rowId, txt) {
+    var self = this; clearTimeout(this.tr);
+    this.setState({ rowFx: null, fcBump: false });
+    setTimeout(function () { self.setState({ rowFx: rowId, floatTxt: txt, fcBump: true }); }, 20);
+    this.tr = setTimeout(function () { self.setState({ rowFx: null, fcBump: false }); }, 1000);
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var pracSum = 0; TRACKS.forEach(function (t) { pracSum += s.lv[t.id]; });
+    var cur = { stage: 27, era: 2, boss: 26, kills: s.kills, tower: 12, arena: 0, practice: pracSum, weaponEras: 3, weapons: 9, mounts: 0, pets: 4, petStar: 0, skins: 6, hair: 2, eyes: 1, hats: 0 };
+    function won(t) { return t.t === 'arena' ? false : cur[t.t] >= t.n; }
+    var fc = Math.round(12480 * (1 + (s.lv.str * 0.5 + s.lv.vit * 0.5) / 200));
+
+    var tabs = [['prac', 'Práticas'], ['tit', 'Títulos']].map(function (x) {
+      var on = s.tab === x[0];
+      return { label: x[1], pressed: on ? 'true' : 'false', bg: on ? '#3a2c1f' : 'transparent', color: on ? '#ffc94a' : '#c9b9a2',
+        dot: x[0] === 'tit' && !s.seenNew,
+        pick: function () { self.sfx(SND.tap); self.setState({ tab: x[0], seenNew: x[0] === 'tit' ? true : s.seenNew }); } };
+    });
+
+    function trainOne(id, st) {
+      var lv = st.lv[id]; if (lv >= CAPN) return null;
+      var c = cost(lv); if (st.stones < c) return null;
+      var nl = Object.assign({}, st.lv); nl[id] = lv + 1;
+      return { lv: nl, stones: st.stones - c };
+    }
+    var tracks = TRACKS.map(function (t, i) {
+      var lv = s.lv[t.id], full = lv >= CAPN, c = cost(lv), can = !full && s.stones >= c;
+      return {
+        name: t.name, lv: lv, cap: CAPN, col: t.col, delay: (i * 0.06) + 's',
+        isStr: t.id === 'str', isVit: t.id === 'vit', isCrit: t.id === 'crit', isDef: t.id === 'def', isGold: t.id === 'gold',
+        pct: Math.round(lv / CAPN * 100) + '%',
+        now: '+' + f1(lv * t.per) + t.unit, next: full ? '· máximo da era' : '→ +' + f1((lv + 1) * t.per) + t.unit,
+        lvColor: full ? '#5fd068' : '#ffc94a', lvFx: s.rowFx === t.id ? 'popn' : '',
+        fx: s.rowFx === t.id ? 'rowup' : '', float: s.rowFx === t.id, floatTxt: s.floatTxt,
+        btnLabel: full ? 'Máx.' : 'Treinar', costTxt: full ? 'teto da era' : c + ' pedras',
+        btnClass: can ? 'gold pulse' : '', btnBg: can ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d',
+        btnColor: can ? '#2a1403' : '#c9b9a2', btnBorder: can ? '0' : '2px solid #4a3a2b',
+        aria: full ? t.name + ' no teto da era' : 'Treinar ' + t.name + ' por ' + c + ' pedras de prática',
+        train: function () {
+          var r = trainOne(t.id, self.state);
+          if (!r) { self.sfx(SND.tap); return; }
+          self.sfx(SND.claim);
+          self.setState(r);
+          self.bump(t.id, '+' + f1(t.per) + t.unit);
+        }
+      };
+    });
+    var anyCan = TRACKS.some(function (t) { return s.lv[t.id] < CAPN && s.stones >= cost(s.lv[t.id]); });
+    var sumTxt = '+' + f1(s.lv.str * 0.5) + '% ATK · +' + f1(s.lv.vit * 0.5) + '% HP · +' + f1(s.lv.crit * 0.1) + ' crít. · +' + f1(s.lv.def * 0.15) + '% def. · +' + f1(s.lv.gold * 0.5) + '% ouro';
+
+    // títulos
+    var list = TITLES.map(function (t) { return Object.assign({}, t, { w: won(t), frac: t.t === 'arena' ? 0 : Math.min(1, cur[t.t] / t.n) }); });
+    list.sort(function (a, b) { return (b.w ? 1 : 0) - (a.w ? 1 : 0) || b.frac - a.frac; });
+    var filtered = list.filter(function (t) { return s.filter === 'all' || (s.filter === 'won' ? t.w : !t.w); });
+    var pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE)), page = Math.min(s.page, pages - 1);
+    var cards = filtered.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).map(function (t, i) {
+      var isFeat = s.feat === t.id, fresh = s.fresh === t.id;
+      var ARENA_LV = 30, PLAYER_LV = 24; // portões provisórios: arena 30; jogador no Nv. 24
+      var arenaLock = t.t === 'arena' && PLAYER_LV < ARENA_LV;
+      var prog = arenaLock ? 'Libera no nível ' + ARENA_LV : t.t === 'arena' ? 'sem ranking' : Math.min(cur[t.t], t.n).toLocaleString('pt-BR') + '/' + t.n.toLocaleString('pt-BR');
+      return {
+        name: t.name, won: t.w, locked: !t.w, isFeat: isFeat, delay: (i * 0.04) + 's',
+        cls: (t.w ? 'won ' : '') + (isFeat ? 'feat ' : '') + (fresh ? 'unlock' : ''),
+        border: isFeat ? '#ffc94a' : (t.w ? (t.cos ? '#b07cff' : '#c9973a') : '#4a3a2b'),
+        bg: t.w ? 'linear-gradient(180deg, #3a2c1f, #241a12)' : '#1a140f',
+        nameColor: t.w ? '#f6ecdf' : '#c9b9a2',
+        medal: t.cos ? '#b07cff' : '#ffc94a', ribbon: t.cos ? '#4aa3ff' : '#ff5a4e',
+        bonus: bonusTxt(t, 1), bonColor: t.cos ? '#d4b8ff' : (t.w ? '#5fd068' : '#a9d9ad'),
+        cond: COND[t.t](t.n), hasBar: !t.w, pct: Math.round(t.frac * 100) + '%',
+        barCol: t.frac > 0.9 ? 'linear-gradient(90deg,#ffc94a,#ffe07a)' : '#6a5440',
+        prog: prog, tick: t.t === 'kills' && !t.w ? 'tick' : '',
+        status: isFeat ? 'Em destaque (x2)' : (t.cos ? 'Cosmético, sem destaque' : 'Toque para destacar'),
+        stColor: isFeat ? '#ffc94a' : '#c9b9a2',
+        aria: t.name + ', ' + (t.w ? 'conquistado' : 'bloqueado') + (arenaLock ? ', arena libera no nível ' + ARENA_LV : '') + ', ' + bonusTxt(t, 1) + ', ' + COND[t.t](t.n) + (isFeat ? ', em destaque' : ''),
+        pick: function () {
+          if (!t.w || t.cos) { self.sfx(SND.tap); return; }
+          if (isFeat) { self.sfx(SND.tap); return; }
+          self.sfx(SND.claim);
+          self.setState({ feat: t.id, fresh: null });
+          self.bump(null, '');
+          self.showBanner('Destaque: ' + t.name + ' (x2)');
+        }
+      };
+    });
+    var featT = TITLES.find(function (t) { return t.id === s.feat; });
+    var wonN = list.filter(function (t) { return t.w; }).length;
+    var filters = [['all', 'Todos'], ['won', 'Conquistados'], ['lock', 'Bloqueados']].map(function (f) {
+      var on = s.filter === f[0];
+      return { label: f[1], pressed: on ? 'true' : 'false', bg: on ? '#3a2c1f' : 'transparent', color: on ? '#ffc94a' : '#c9b9a2',
+        pick: function () { self.sfx(SND.tap); self.setState({ filter: f[0], page: 0 }); } };
+    });
+    var dots = [];
+    for (var i = 0; i < pages; i++) dots.push({ w: i === page ? '22px' : '8px', bg: i === page ? '#ffc94a' : '#4a3a2b' });
+
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      fcTxt: fc.toLocaleString('pt-BR'), fcFx: s.fcBump ? 'popn' : '', fcColor: s.fcBump ? '#5fd068' : '#c9b9a2',
+      tabs: tabs, isPrac: s.tab === 'prac', isTit: s.tab === 'tit',
+      stonesTxt: String(s.stones), stoneFx: s.dropFx ? 'popn' : '', dropFx: s.dropFx,
+      cap: CAPN, eraName: ERAN[ERA], tracks: tracks, sumTxt: sumTxt,
+      maxClass: anyCan ? 'gold' : '', maxBg: anyCan ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : '#33271d',
+      maxColor: anyCan ? '#2a1403' : '#c9b9a2', maxBorder: anyCan ? '0' : '2px solid #4a3a2b',
+      trainAll: function () {
+        var st = { lv: Object.assign({}, self.state.lv), stones: self.state.stones }, n = 0, guard = 0;
+        // treina sempre a trilha mais barata que couber
+        while (guard++ < 300) {
+          var best = null;
+          TRACKS.forEach(function (t) { var lv = st.lv[t.id]; if (lv < CAPN && st.stones >= cost(lv) && (!best || cost(lv) < cost(st.lv[best]))) best = t.id; });
+          if (!best) break;
+          st = trainOne(best, st); n++;
+        }
+        if (!n) { self.sfx(SND.tap); return; }
+        self.sfx(SND.claim);
+        self.setState(st);
+        self.bump(null, '');
+        self.showBanner('+' + n + (n === 1 ? ' nível de prática' : ' níveis de prática'));
+      },
+      featName: featT ? featT.name : 'Nenhum', featBonus: featT ? bonusTxt(featT, 2) : '',
+      wonTxt: wonN + '/' + TITLES.length,
+      filters: filters, cards: cards, dots: dots,
+      pageAria: 'Página ' + (page + 1) + ' de ' + pages,
+      prevColor: page === 0 ? '#6a5a48' : '#f6ecdf', nextColor: page >= pages - 1 ? '#6a5a48' : '#f6ecdf',
+      prevPage: function () { if (page > 0) { self.sfx(SND.tap); self.setState({ page: page - 1 }); } },
+      nextPage: function () { if (page < pages - 1) { self.sfx(SND.tap); self.setState({ page: page + 1 }); } },
+      hasBanner: !!s.banner, bannerTxt: s.banner || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

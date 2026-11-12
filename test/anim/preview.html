@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prova de animação — corrida (era 2)</title>
+<style>
+  body{margin:0;background:#15171c;color:#e8e8ea;font:13px/1.35 system-ui,Arial,sans-serif}
+  .wrap{width:390px;margin:0 auto;padding-bottom:24px}
+  h1{font-size:15px;margin:8px 8px 2px}
+  h2{font-size:12px;margin:10px 8px 4px;color:#ffd35a;font-weight:600}
+  canvas{display:block;width:390px;background:#000}
+  .bar{display:flex;gap:6px;align-items:center;padding:6px 8px;flex-wrap:wrap}
+  button{background:#2b2f3a;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px}
+  .strip{overflow-x:auto;background:repeating-conic-gradient(#30343d 0 25%,#262931 0 50%) 0 0/16px 16px;margin:0 0 6px}
+  .strip img{height:96px;display:block}
+  small{color:#9aa0ad}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Prova de corrida — Kael, Goblin, Esqueleto</h1>
+  <div class="bar">
+    <button id="bPause">Pausar</button>
+    <button id="bStep">Quadro +1</button>
+    <label>fps <input id="fps" type="number" min="1" max="30" value="12" style="width:44px"></label>
+    <span id="info"></span>
+  </div>
+  <h2>NOVO: ciclo de corrida (folhas de quadros)</h2>
+  <canvas id="cA" width="780" height="520"></canvas>
+  <h2>ATUAL: sprite parado (o jogo só desloca/quica a imagem)</h2>
+  <canvas id="cB" width="780" height="520"></canvas>
+  <h2>Quadros de cada ciclo</h2>
+  <div class="strip"><img src="../../assets/anim/era2_hero_t0_run.png" alt=""></div>
+  <div class="strip"><img src="../../assets/anim/era2_e0_run.png" alt=""></div>
+  <div class="strip"><img src="../../assets/anim/era2_e1_run.png" alt=""></div>
+  <small style="padding:0 8px;display:block">Parâmetros de URL: ?f=N congela no quadro N · ?fps=N · ?noscroll=1</small>
+</div>
+<script>
+(async function(){
+  const R='../../assets/', q=new URLSearchParams(location.search);
+  const J=u=>fetch(u).then(r=>r.json());
+  const I=u=>new Promise((ok,er)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>er(new Error('falhou '+u));i.src=u;});
+  const [meta,bgMeta]=await Promise.all([J(R+'anim/meta.json'),J(R+'bg/meta.json')]);
+  const groundY=(bgMeta.era2||{}).groundY||0.72;
+  const chars=[
+    {key:'era2_hero_t0_run',still:'hero/era2_t0.png',x:0.20},
+    {key:'era2_e0_run',still:'enemies/era2_e0.png',x:0.60},
+    {key:'era2_e1_run',still:'enemies/era2_e1.png',x:0.84},
+  ];
+  const bg=await I(R+'bg/era2.png');
+  for(const c of chars){c.sheet=await I(R+'anim/'+c.key+'.png');c.img=await I(R+c.still);c.m=meta[c.key];}
+  const W=780,H=520,SZ=230;                 // canvas em 2x (390 CSS px); sprite ~115 CSS px
+  const gy=Math.round(H*groundY);
+  const bw=Math.round(bg.width*H/bg.height);
+  let fps=+(q.get('fps')||12), paused=q.has('f'), frame=+(q.get('f')||0), t0=performance.now(), scroll=0, last=t0;
+  document.getElementById('fps').value=fps;
+  function drawBg(g,sx){            // ladrilho espelhado para não aparecer emenda
+    const off=((sx%(2*bw))+2*bw)%(2*bw);
+    for(let k=-1;k<3;k++){const x=k*bw-off+bw; g.save(); if(((k%2)+2)%2===1){g.translate(x+bw,0);g.scale(-1,1);g.drawImage(bg,0,0,bw,H);}else g.drawImage(bg,x,0,bw,H); g.restore();}
+  }
+  function line(g){g.fillStyle='rgba(255,0,255,.55)';g.fillRect(0,gy,W,1);}
+  function render(now){
+    const dt=Math.min(100,now-last);last=now;
+    if(!paused){frame=Math.floor((now-t0)/1000*fps); if(!q.has('noscroll'))scroll+=dt*0.045;}
+    const a=document.getElementById('cA').getContext('2d'), b=document.getElementById('cB').getContext('2d');
+    a.imageSmoothingQuality=b.imageSmoothingQuality='high';
+    drawBg(a,scroll);drawBg(b,scroll);
+    if(q.has('line')){line(a);line(b);}
+    for(const c of chars){
+      const f=frame%c.m.frames, dx=Math.round(W*c.x-SZ/2), dy=Math.round(gy-SZ*0.95);
+      a.drawImage(c.sheet,f*c.m.w,0,c.m.w,c.m.h,dx,dy,SZ,SZ);
+      // "atual": a mesma imagem parada com o quique que o jogo faz hoje
+      const hop=paused?0:-Math.abs(Math.sin(now/1000*Math.PI*2.2))*10;
+      b.drawImage(c.img,dx,dy+hop,SZ,SZ);
+    }
+    document.getElementById('info').textContent='quadro '+frame%chars[0].m.frames+'/'+chars[0].m.frames+' · groundY '+groundY;
+    requestAnimationFrame(render);
+  }
+  document.getElementById('bPause').onclick=e=>{paused=!paused;if(!paused)t0=performance.now()-frame/fps*1000;e.target.textContent=paused?'Continuar':'Pausar';};
+  document.getElementById('bStep').onclick=()=>{paused=true;frame++;document.getElementById('bPause').textContent='Continuar';};
+  document.getElementById('fps').onchange=e=>{fps=Math.max(1,+e.target.value||12);t0=performance.now()-frame/fps*1000;};
+  window.__setFrame=n=>{paused=true;frame=n;};
+  requestAnimationFrame(render);
+})().catch(e=>{document.body.insertAdjacentHTML('beforeend','<pre style="color:#f66">'+e.message+'</pre>');});
+</script>
+</body>
+</html>

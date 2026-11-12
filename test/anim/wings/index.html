@@ -1,0 +1,34 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Asas do Kael</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.ctl{padding:6px 16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}.ctl span{color:#aab;width:60px}button{background:#333;color:#fff;border:0;border-radius:6px;padding:6px 10px;font-weight:600}button.on{background:#2d6cdf}
+.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}canvas{display:block;max-width:100%;border-radius:8px}</style></head><body>
+<h1>Asas: demoníaca e de anjo</h1>
+<p>Cada asa fica presa às costas no ponto rastreado quadro a quadro (abaixo do pescoço) e bate devagar, girando pela raiz. O corpo é a folha aprovada, intocada: os pés ficam no chão sempre. A asa de trás é menor e fica atrás do corpo.</p>
+<div class="ctl" id="c1"></div><div class="ctl" id="c2"></div><div class="g" id="g"></div>
+<script>
+const A='../../../assets/';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const S={wing:'demon',spd:1};
+const mk=(id,lab,key,opts)=>{const c=document.getElementById(id);const draw=()=>{c.innerHTML='<span>'+lab+'</span>';for(const [v,t] of opts){const b=document.createElement('button');b.textContent=t;if(S[key]===v)b.className='on';b.onclick=()=>{S[key]=v;draw();};c.appendChild(b);}};draw();};
+mk('c1','Asa','wing',[['demon','Demoníaca'],['angel','Anjo'],['','Sem asa']]);mk('c2','Batida','spd',[[0.6,'Lenta'],[1,'Normal']]);
+(async()=>{
+ const W={};for(const k of ['demon','angel'])W[k]={L:await L(A+'anim/equip/wing_'+k+'_L.png'),R:await L(A+'anim/equip/wing_'+k+'_R.png'),m:await (await fetch(A+'anim/equip/wing_'+k+'.json')).json()};
+ const bg=await L(A+'bg/era2.png'),gyF=(await (await fetch(A+'bg/meta.json')).json()).era2.groundY;
+ const ST=[];
+ for(const s of ['idle','run']){const body=await L(A+'anim/hyb/R/kael_'+s+'_body.png'),comp=await L(A+'anim/hyb/R/kael_'+s+'_era2_t1.png');const n=Math.round(body.width/256);
+  const c=document.createElement('canvas');c.width=body.width;c.height=256;const g=c.getContext('2d');g.drawImage(body,0,0);const d=g.getImageData(0,0,c.width,256).data;const NECK=[];
+  for(let i=0;i<n;i++){let top=-1,xs=[];for(let y=0;y<256&&top<0;y++)for(let x=i*256;x<i*256+256;x++){const k=(y*c.width+x)*4;if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){top=y;xs.push(x-i*256);}}NECK.push({y:top,x:xs.length?xs.reduce((a,v)=>a+v,0)/xs.length:128});}
+  const cv=document.createElement('canvas');cv.width=380;cv.height=300;document.getElementById('g').appendChild(cv);ST.push({s,comp,n,NECK,cv});}
+ const t0=performance.now();
+ function wing(g,img,root,ang,sc,flip){const w=img.width*sc,h=img.height*sc;g.save();g.rotate(ang);if(flip)g.scale(-1,1);g.drawImage(img,-root[0]*w,-root[1]*h,w,h);g.restore();}
+ (function loop(now){const t=(now-t0)/1000;
+  for(const {s,comp,n,NECK,cv} of ST){const g=cv.getContext('2d'),Wd=cv.width,H=cv.height,gy=H*0.85,S2=1.0;g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,Wd,H);
+   if(bg){const sc=Math.max(H/(bg.height*(0.85/gyF)),Wd/bg.width),bw=bg.width*sc,bh=bg.height*sc,off=s==='run'?(t*95)%bw:0;for(let x=-off-bw;x<Wd+bw;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+   const i=Math.floor(t*12)%n,N=NECK[i];g.save();g.translate(Wd*0.5-128*S2,gy-243*S2);g.scale(S2,S2);
+   const wk=W[S.wing];if(wk){const f=Math.sin(t*Math.PI*2*0.55*S.spd),rx=N.x-16,ry=N.y+26,sc=0.6;
+    g.save();g.translate(rx+18,ry-6);wing(g,wk.R,wk.m.R.root,-0.12-f*0.12,sc*0.7,false);g.restore();   // asa de trás (menor), para a direita, atrás do corpo
+    g.save();g.translate(rx,ry);wing(g,wk.L,wk.m.L.root,0.05+f*0.16,sc,false);g.restore();}            // asa da frente (das costas para a esquerda)
+   g.drawImage(comp,i*256,0,256,256,0,0,256,256);g.restore();
+   g.fillStyle='#fff';g.font='12px system-ui';g.fillText(s==='run'?'correndo':'parado',8,16);}
+  requestAnimationFrame(loop);})(t0);
+})();
+</script></body></html>

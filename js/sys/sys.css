@@ -1,0 +1,179 @@
+/* Eonbound — estilos dos módulos js/sys/*. Arquivo COMPARTILHADO entre sessões:
+   cada módulo escreve só dentro do seu bloco marcado e com edição pontual (nunca reescrever o arquivo inteiro).
+   Comuns: .sys-btn .sys-grid .sys-card e o pager .sys-pg (‹ 1/3 ›). Tudo usa as variáveis do index.html com reserva. */
+
+/* == sys:comum == (dono: fps-30; mudanças aqui, avisar a fps-e2) */
+.sys-btn{min-height:44px;min-width:44px;padding:8px 12px;border:0;border-radius:10px;font:800 13px system-ui,sans-serif;color:#1a1205;
+  background:linear-gradient(#e0a52a,#b27a14);cursor:pointer;touch-action:manipulation}
+.sys-btn.alt{background:linear-gradient(#4aa9d8,#2e7ea8);color:#06151d}
+.sys-btn.dim{background:var(--panel2,#2a231d);color:var(--txt,#f1e8dc);border:1px solid var(--line,#3b3129)}
+.sys-btn:disabled{opacity:.4;cursor:default}
+.sys-btn:active:not(:disabled){transform:translateY(1px)}
+.sys-grid{display:grid;gap:8px;min-height:0}
+.sys-card{background:var(--panel,#1f1a16);border:1px solid var(--line,#3b3129);border-radius:12px;padding:8px;min-width:0;min-height:0;overflow:hidden}
+.sys-pg{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.sys-pg button{width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line,#3b3129);background:var(--panel2,#2a231d);
+  color:var(--txt,#f1e8dc);font:900 22px system-ui;line-height:1;cursor:pointer}
+.sys-pg button:disabled{opacity:.3}
+.sys-pg span{flex:1;min-width:0;text-align:center;font:800 12px system-ui;line-height:1.2;color:var(--txt,#f1e8dc)}
+.sys-pg small{font-weight:700;color:var(--mut,#a89a88)}
+/* == fim sys:comum == */
+
+/* == sys:chest == (dono: fps-30) */
+.sys-chest-btn{position:relative;width:64px;height:64px;border:0;border-radius:50%;padding:0;background:radial-gradient(circle at 50% 40%,#4a3d30,#1c1611);
+  box-shadow:0 3px 10px #000a;cursor:pointer;touch-action:manipulation}
+.sys-chest-btn img,.sys-chest-emo{position:absolute;inset:9px;width:46px;height:46px;object-fit:contain;font-size:30px;line-height:46px;text-align:center;pointer-events:none}
+.sys-chest-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.sys-chest-ring circle{fill:none;stroke-width:4}
+.sys-chest-ring .bg{stroke:#0008}
+.sys-chest-ring .fg{stroke:var(--gold,#ffc94a);stroke-linecap:round;stroke-dasharray:0 100;transition:stroke-dasharray .25s}
+.sys-chest-btn.ready{animation:sys-chest-pulse 1.1s ease-in-out infinite;box-shadow:0 0 0 2px #ffc94a,0 0 18px #ffc94aaa}
+.sys-chest-btn.ready img{animation:sys-chest-wobble 1.1s ease-in-out infinite}
+.sys-chest-btn.capped{filter:grayscale(.7) brightness(.8)}
+.sys-chest-btn.capped .sys-chest-n{background:#3b3129}
+.sys-chest-n{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#e5382f;color:#fff;
+  font:900 12px/22px system-ui;box-shadow:0 1px 4px #000a}
+@keyframes sys-chest-pulse{50%{transform:scale(1.08)}}
+@keyframes sys-chest-wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.sys-chest-ov{position:absolute;inset:0;z-index:90;background:#000c;display:flex;align-items:center;justify-content:center;padding:16px;animation:sys-fade .2s}
+.sys-chest-ov.fixed{position:fixed}
+.sys-chest-box{width:100%;max-width:370px;background:var(--panel,#1f1a16);border:2px solid var(--gold,#ffc94a);border-radius:16px;padding:14px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 0 30px #ffc94a55;color:var(--txt,#f1e8dc);font-family:system-ui,sans-serif}
+.sys-chest-top{display:flex;align-items:center;gap:8px;font-size:20px}
+.sys-chest-top img{width:44px;height:44px;object-fit:contain;animation:sys-chest-wobble .5s 2}
+.sys-chest-items{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:6px;width:100%}
+.sys-chest-it{min-width:0;border:2px solid var(--c);border-radius:10px;padding:5px 3px;text-align:center;background:var(--panel2,#2a231d);
+  box-shadow:0 0 10px color-mix(in srgb,var(--c) 45%,transparent);opacity:0;animation:sys-chest-pop .35s ease-out forwards}
+.sys-chest-it.hot{box-shadow:0 0 16px var(--c)}
+.sys-chest-th{height:40px;display:flex;align-items:center;justify-content:center;font-size:26px}
+.sys-chest-th img{max-width:100%;max-height:40px;object-fit:contain}
+.sys-chest-nm{font:700 10px/1.15 system-ui;height:23px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sys-chest-rr{font:900 10px system-ui;color:var(--c)}
+.sys-chest-extra{font:800 15px system-ui;color:var(--gold,#ffc94a)}
+.sys-chest-row{display:flex;gap:8px;width:100%}
+.sys-chest-row .sys-btn{flex:1}
+@keyframes sys-chest-pop{0%{opacity:0;transform:scale(.4) translateY(14px)}70%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:none}}
+@keyframes sys-fade{from{opacity:0}}
+/* == fim sys:chest == */
+
+/* == sys:instances == (dono: fps-30) — preenche o contêiner (altura fixa), sem scroll */
+.sys-inst{height:100%;display:flex;flex-direction:column;gap:8px;color:var(--txt,#f1e8dc);font-family:system-ui,sans-serif;min-height:0}
+.sys-inst-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:6px}
+.sys-inst-top b:first-child{font-size:15px}
+.sys-inst-grid{flex:1;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.sys-inst-card{display:flex;flex-direction:column;gap:5px;border-color:color-mix(in srgb,var(--c) 55%,#3b3129);
+  background:linear-gradient(color-mix(in srgb,var(--c) 14%,#1f1a16),#1f1a16 60%)}
+.sys-inst-hd{display:flex;align-items:center;gap:6px;font-size:13px;line-height:1.1}
+.sys-inst-hd img,.sys-inst-hd span{width:24px;height:24px;object-fit:contain;font-size:20px;flex:none;text-align:center}
+.sys-inst-ds{font-size:11px;color:var(--mut,#a89a88);line-height:1.2;min-height:0;overflow:hidden}
+.sys-inst-rw{font:800 11px/1.25 system-ui;color:var(--gold,#ffc94a);margin-top:auto}
+.sys-inst-rw small{color:var(--mut,#a89a88);font-weight:700}
+.sys-inst-bt{display:flex;gap:5px}
+.sys-inst-bt .sys-btn{flex:1;padding:6px 4px;font-size:12px}
+.sys-inst-res{font-size:13px;text-align:center}
+@media (max-height:620px){.sys-inst-ds{display:none}}
+/* == fim sys:instances == */
+
+/* == sys:e2-comum == (dono: fps-e2) — base dos painéis fc, practice, titles, tower, forge e pet: preenchem o contêiner, sem scroll */
+.sys-fc,.sys-prac,.sys-tit,.sys-tow,.sys-forge,.sys-pet{height:100%;display:flex;flex-direction:column;gap:8px;min-height:0;
+  color:var(--txt,#f1e8dc);font-family:system-ui,sans-serif;font-size:13px;line-height:1.25}
+.sys-fc small,.sys-prac small,.sys-tit small,.sys-tow small,.sys-forge small,.sys-pet small{color:var(--mut,#a89a88);font-weight:700}
+.sys-btn small{display:block;font-size:10px;font-weight:800;color:inherit;opacity:.85}
+.sys-prac-top,.sys-tit-top,.sys-tow-top,.sys-forge-top,.sys-pet-top{display:flex;justify-content:space-between;align-items:center;gap:6px;flex:none}
+/* painel bloqueado pelo nível do jogador (Sys.level) */
+.sys-lock{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+.sys-lock-ic{color:var(--mut,#a89a88);flex:none}
+.sys-lock b{font-size:16px}.sys-lock span{font:800 14px system-ui;color:var(--gold,#ffc94a)}
+/* == fim sys:e2-comum == */
+
+/* == sys:fc == (dono: fps-e2) */
+.sys-fc-top{display:flex;gap:8px;align-items:stretch;flex:none}
+.sys-fc-big{flex:none;display:flex;flex-direction:column;justify-content:center;padding:6px 12px;border-radius:12px;
+  background:linear-gradient(#3a2a12,#1f1a16);border:1px solid var(--gold,#ffc94a)}
+.sys-fc-big b{font:900 24px system-ui;color:var(--gold,#ffc94a)}
+.sys-fc-stats{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:4px;min-width:0}
+.sys-fc-stat{display:flex;justify-content:space-between;gap:4px;padding:3px 6px;border-radius:8px;background:var(--panel2,#2a231d);font-size:12px}
+.sys-fc-srcs{display:flex;flex-wrap:wrap;gap:4px;flex:none;max-height:44px;overflow:hidden}
+.sys-fc-src{padding:2px 7px;border-radius:10px;background:var(--panel2,#2a231d);font-size:11px}
+.sys-fc-h{font:900 14px system-ui;flex:none}
+.sys-fc-list{flex:1;display:flex;flex-direction:column;gap:6px;min-height:0}
+.sys-fc-adv{display:flex;align-items:center;gap:8px;min-height:48px;padding:6px 8px;border-radius:10px;border:1px solid var(--line,#3b3129);
+  background:var(--panel,#1f1a16);color:inherit;font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.sys-fc-adv.ready{border-color:var(--gold,#ffc94a);box-shadow:inset 3px 0 0 var(--gold,#ffc94a)}
+.sys-fc-ai{font-size:20px;width:26px;text-align:center;flex:none}
+.sys-fc-at{flex:1;min-width:0;overflow:hidden}
+.sys-fc-at small{display:block}
+.sys-fc-ag{flex:none;font-weight:900;color:#7be08a}
+/* == fim sys:fc == */
+
+/* == sys:practice == (dono: fps-e2) */
+.sys-prac-st b{font-size:16px}
+.sys-prac-cap{font-size:11px;color:var(--mut,#a89a88);text-align:right}
+.sys-prac-list{flex:1;display:flex;flex-direction:column;gap:6px;min-height:0}
+.sys-prac-row{display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 6px;border-radius:10px;background:var(--panel,#1f1a16);border:1px solid var(--line,#3b3129)}
+.sys-prac-row.full{opacity:.75}
+.sys-prac-ic{font-size:22px;width:28px;text-align:center;flex:none}
+.sys-prac-tx{flex:1;min-width:0;font-size:12px;overflow:hidden}
+.sys-prac-go{flex:none;min-width:78px}
+.sys-prac-max{flex:none;padding:8px}
+/* == fim sys:practice == */
+
+/* == sys:titles == (dono: fps-e2) */
+.sys-tit-f{font-size:12px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sys-tit-grid{flex:1;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);align-content:start}
+.sys-tit-card{position:relative;display:flex;flex-direction:column;gap:2px;min-height:66px;color:inherit;font:inherit;text-align:left;cursor:pointer;opacity:.55}
+.sys-tit-card.on{opacity:1;border-color:#7a6a50}
+.sys-tit-card.fe{border-color:var(--gold,#ffc94a);box-shadow:0 0 10px #ffc94a55}
+.sys-tit-card:disabled{cursor:default}
+.sys-tit-card b{font-size:12px}
+.sys-tit-bn{font:800 11px system-ui;color:#7be08a}
+.sys-tit-card.cos .sys-tit-bn{color:#c9a0ff}
+.sys-tit-cd{font-size:10px;color:var(--mut,#a89a88)}
+.sys-tit-card i{position:absolute;left:0;bottom:0;height:3px;background:var(--gold,#ffc94a)}
+/* == fim sys:titles == */
+
+/* == sys:tower == (dono: fps-e2) */
+.sys-tow-opp{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;min-height:0}
+.sys-tow-opp.boss{border-color:#e5382f;background:linear-gradient(#3a1612,#1f1a16 70%)}
+.sys-tow-fl{font-size:14px}.sys-tow-fl b{font-size:22px}
+.sys-tow-nm{font:900 16px system-ui}
+.sys-tow-vs{display:flex;align-items:center;gap:14px}
+.sys-tow-vs b{font-size:16px}
+.sys-tow-x{font:900 18px system-ui;color:#e5382f}
+.sys-tow-dif{padding:2px 10px;border-radius:10px;font-weight:900}
+.sys-tow-dif.easy{background:#1f4a28;color:#9cf0a8}.sys-tow-dif.even{background:#4a4318;color:#ffe27a}
+.sys-tow-dif.hard{background:#4a2a18;color:#ffb26b}.sys-tow-dif.nope{background:#4a1818;color:#ff8a8a}
+.sys-tow-rw{font:800 12px system-ui;color:var(--gold,#ffc94a)}
+.sys-tow-go{flex:none;width:100%;font-size:16px}
+.sys-tow-info,.sys-tow-last{flex:none;font-size:11px;text-align:center;color:var(--mut,#a89a88)}
+/* == fim sys:tower == */
+
+/* == sys:forge == (dono: fps-e2) */
+.sys-forge-list{flex:1;display:flex;flex-direction:column;gap:5px;min-height:0}
+.sys-forge-row{display:flex;align-items:center;gap:8px;min-height:54px;padding:4px 6px}
+.sys-forge-nm{flex:none;width:86px;display:flex;flex-direction:column;line-height:1.1}
+.sys-forge-nm b{font-size:12px}
+.sys-forge-lv{font:900 18px system-ui;color:var(--gold,#ffc94a)}
+.sys-forge-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:12px;overflow:hidden}
+.sys-forge-mid small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sys-forge-pity{display:block;height:5px;border-radius:3px;background:#0006;overflow:hidden}
+.sys-forge-pity i{display:block;height:100%;background:linear-gradient(90deg,#4aa3ff,#ffd23f);transition:width .25s}
+.sys-forge-go{flex:none;min-width:88px}
+.sys-forge-aura{flex:none;text-align:center;padding:4px;border-radius:10px;background:var(--panel2,#2a231d);
+  box-shadow:0 0 12px var(--aura,transparent)}
+.sys-forge-msg{flex:none;font-size:11px;text-align:center;color:var(--mut,#a89a88)}
+/* == fim sys:forge == */
+
+/* == sys:pet == (dono: fps-e2) */
+.sys-pet-feed{flex:none}
+.sys-pet-grid{flex:1;grid-template-columns:1fr 1fr 1fr;grid-auto-rows:minmax(0,1fr);align-content:start}
+.sys-pet-card{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;color:inherit;font:inherit;cursor:pointer;min-height:96px}
+.sys-pet-card.off{opacity:.6;cursor:default}
+.sys-pet-card.eq{border-color:var(--gold,#ffc94a);box-shadow:0 0 10px #ffc94a55;cursor:default;opacity:1}
+.sys-pet-card b{font-size:12px}
+.sys-pet-card small{font-size:10px}
+.sys-pet-ic{font-size:28px;line-height:1.1}
+.sys-pet-st{color:var(--gold,#ffc94a);letter-spacing:1px;font-size:12px}
+.sys-pet-golem{flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px}
+.sys-pet-msg{flex:none;font-size:11px;text-align:center;color:var(--mut,#a89a88)}
+/* == fim sys:pet == */
