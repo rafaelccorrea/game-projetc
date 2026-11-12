@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Chat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+.note{font-size:clamp(11px,3.1vw,12.5px);font-weight:800;color:#c9b9a2;line-height:1.3}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-1600px}}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-weight:900;font-size:13px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
+.ghost:active,.ph:active,.msgB:active{transform:scale(.96)}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:80;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.6s ease both;box-sizing:border-box;display:flex;align-items:center;gap:8px}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.toast button{min-height:44px;border:0;border-radius:10px;background:#ffc94a;color:#2a1403;font-weight:900;padding:0 12px}
+/* ===== batalha ao fundo (correndo) ===== */
+.bat{position:absolute;inset:0;overflow:hidden;background:#2a3a4a}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}
+.far2{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);animation:drift 60s linear infinite}
+.mid2{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);animation:drift 30s linear infinite}
+.gnd2{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);animation:drift 9s linear infinite}
+.cld2{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);animation:drift 90s linear infinite}
+.krun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .66s steps(8, jump-none) infinite}
+.katk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet .75s steps(17, jump-none) infinite}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.kael{position:absolute;left:12%;width:min(34vw,150px);aspect-ratio:1/1;z-index:2}
+.kael .au{position:absolute;left:5%;right:5%;bottom:0;height:125%;opacity:.8}
+.kael .sp{position:absolute;inset:0}
+.hpTop{position:absolute;left:50%;transform:translateX(-50%);width:70%;height:7px;top:-10px;border-radius:4px;background:#120c08;border:1px solid #000;overflow:hidden}
+.hpTop i{display:block;height:100%;width:82%;background:linear-gradient(180deg,#9ff0a6,#3fae3c)}
+.dmg{position:absolute;font-family:'Lilita One',sans-serif;font-size:20px;color:#ffe07a;text-shadow:0 2px 0 #120c08;animation:dmgUp 1.2s ease-out infinite;pointer-events:none;z-index:3}
+@keyframes dmgUp{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1;transform:translateY(-6px) scale(1.1)}100%{transform:translateY(-44px);opacity:0}}
+.openChat{position:absolute;right:12px;width:56px;height:56px;border-radius:18px;border:2px solid #ffc94a;background:rgba(16,11,8,.7);color:#ffe07a;display:flex;align-items:center;justify-content:center;z-index:5;animation:oc 2s ease-in-out infinite}
+@keyframes oc{0%,100%{transform:scale(1)}50%{transform:scale(1.08);box-shadow:0 0 16px rgba(255,201,74,.7)}}
+.badge{position:absolute;right:-6px;top:-6px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:linear-gradient(180deg,#ff6a5a,#c0392b);color:#fff;font-size:12px;font-weight:900;line-height:22px;text-align:center;box-shadow:0 0 0 2px #120c08;box-sizing:border-box}
+/* ===== gaveta do chat: de baixo no celular, lateral em tela larga ===== */
+.dw{position:absolute;left:0;right:0;bottom:0;height:64%;z-index:10;display:flex;flex-direction:column;border-radius:22px 22px 0 0;background:linear-gradient(180deg,rgba(44,32,23,.97),rgba(22,17,13,.98));border:2px solid #ffc94a;border-bottom:0;box-shadow:0 -10px 30px rgba(0,0,0,.55);animation:dwUp .35s cubic-bezier(.2,1.2,.4,1) both;box-sizing:border-box;overflow:hidden}
+@keyframes dwUp{from{transform:translateY(100%)}to{transform:none}}
+.dw.closing{animation:dwDn .25s ease-in both}
+@keyframes dwDn{to{transform:translateY(100%)}}
+@media (min-width:700px),(orientation:landscape) and (min-width:560px){
+  .dw{left:auto;top:0;width:min(400px,52%);height:auto;border-radius:22px 0 0 22px;border-bottom:2px solid #ffc94a;border-right:0;animation-name:dwIn}
+  .dw.closing{animation-name:dwOut}
+  .kael{left:8%}
+}
+@keyframes dwIn{from{transform:translateX(100%)}to{transform:none}}
+@keyframes dwOut{to{transform:translateX(100%)}}
+.grip{width:44px;height:5px;border-radius:3px;background:#6a5a48;margin:6px auto 0;flex:none}
+.dwH{flex:none;display:flex;align-items:center;gap:8px;padding:4px 10px 6px}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhGl{background:rgba(16,11,8,.56);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nhT{flex:1;min-width:0;text-align:center;font-family:'Lilita One',sans-serif;font-size:clamp(18px,5.6vw,22px);color:#fff;text-shadow:0 2px 0 #120c08}
+.tabs{flex:none;display:flex;gap:4px;padding:0 10px}
+.tab{position:relative;flex:1;min-height:44px;border-radius:11px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:14px;padding:0}
+.tab.on{border-color:#ffc94a;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403}
+.tab .badge{right:-4px;top:-7px;animation:bp 1.2s ease-in-out infinite}
+@keyframes bp{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.info{flex:none;margin:6px 10px 0;padding:6px 10px;border-radius:10px;font-size:11.5px;font-weight:900;display:flex;align-items:center;gap:6px;line-height:1.2}
+.info.new{background:rgba(255,122,74,.14);border:1px solid #ff7a4a;color:#ffb08a;animation:urgB 1.6s ease-in-out infinite}
+@keyframes urgB{0%,100%{box-shadow:0 0 0 rgba(255,122,74,0)}50%{box-shadow:0 0 12px rgba(255,122,74,.6)}}
+.info.ok{background:#1d1611;border:1px solid #4a3a2b;color:#c9b9a2}
+.msgs{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column-reverse;gap:6px;padding:8px 10px}
+.msg{display:flex;gap:8px;align-items:flex-start;animation:mIn .35s ease-out both}
+@keyframes mIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.msg.mine{flex-direction:row-reverse}
+.ava{position:relative;width:40px;height:40px;flex:none;border-radius:11px;overflow:hidden;display:block}
+.ava .ring{position:absolute;left:-50%;top:-50%;width:200%;height:200%;animation:spin 2.4s linear infinite;display:block}
+.ava .in{position:absolute;inset:3px;border-radius:8px;background:#33271d;overflow:hidden;display:block}
+.msgB{flex:1;min-width:0;min-height:44px;display:flex;flex-direction:column;gap:2px;padding:6px 9px;border-radius:4px 14px 14px 14px;background:#2a1f16;border:1px solid #4a3a2b;color:#f6ecdf;text-align:left;box-sizing:border-box}
+.msg.mine .msgB{border-radius:14px 4px 14px 14px;background:linear-gradient(180deg,#4a3214,#3a2810);border-color:#c77a12;flex:0 1 auto;max-width:78%}
+.msgB.sel{border-color:#ffc94a;box-shadow:0 0 12px rgba(255,201,74,.5)}
+.tt{display:inline-block;padding:0 5px;border-radius:5px;font-size:9.5px;font-weight:900;line-height:15px;color:#120c08;white-space:nowrap}
+.vip{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-radius:5px;padding:0 4px;font-size:9px;font-weight:900;line-height:14px}
+.acts{display:flex;gap:6px;margin:2px 0 2px 48px;animation:fadeIn .2s both}
+.acts .ghost{flex:1;font-size:12px;padding:0 6px}
+.acts .ghost.r{border-color:#a0301e;color:#ffb0a0}
+.sys{align-self:center;max-width:92%;padding:4px 10px;border-radius:999px;background:rgba(255,201,74,.12);border:1px solid rgba(255,201,74,.35);font-size:11px;font-weight:900;color:#ffe07a;text-align:center;animation:mIn .35s ease-out both}
+.muted{display:flex;align-items:center;gap:8px;padding:0 4px 0 10px;min-height:44px;border-radius:12px;border:1px dashed #4a3a2b;font-size:11.5px;font-weight:800;color:#8a7a68;animation:fadeIn .3s both}
+.muted button{margin-left:auto;min-height:44px;border:0;background:none;color:#ffc94a;font-weight:900;font-size:12px;padding:0 10px}
+.comp{flex:none;border-top:1px solid #4a3a2b;padding:8px 10px max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;background:rgba(14,10,7,.6)}
+.lockIn{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 10px;border-radius:12px;background:#120c08;border:1px solid #33271d;color:#6a5a48;font-size:12.5px;font-weight:800}
+.cd{position:relative;flex:none;width:34px;height:34px}
+.cd svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.cd b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#ffe07a}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:144px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media (min-width:700px){.grid{max-height:200px}}
+.ph{min-height:44px;border-radius:12px;border:2px solid #6a4a20;background:linear-gradient(180deg,#3a2c1f,#2a1f16);color:#f6ecdf;font-size:13px;font-weight:900;padding:2px 8px;line-height:1.15;transition:transform .1s,opacity .2s}
+.ph.off{opacity:.4}
+.ph.shake{animation:shk .3s}
+@keyframes shk{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.sheetBg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.62);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+.sheet{position:relative;width:100%;max-width:560px;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:12px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;animation:sheetUp .35s cubic-bezier(.2,1.2,.4,1) both;box-sizing:border-box}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 100%; height: 100vh; height: 100dvh; min-height: 520px; overflow: hidden; background: #16110d">
+
+  <!-- batalha continua rodando atrás; o Kael fica visível acima da gaveta -->
+  <div class="bat" aria-label="Batalha em andamento" role="img">
+    <div class="ly sky2" style="top: 0; height: 30%; background-size: auto 100%"></div>
+    <div class="ly cld2" style="top: 2%; height: 12%; background-size: auto 100%; opacity: .8"></div>
+    <div class="ly far2" style="top: 9%; height: 22%; background-size: auto 100%"></div>
+    <div class="ly mid2" style="top: 7%; height: 25%; background-size: auto 100%"></div>
+    <div class="ly gnd2" style="top: 29%; height: 20%; background-size: auto 100%"></div>
+    <div class="kael" style="top: calc(32% - min(34vw,150px))">
+      <span class="au au13"></span>
+      <span class="hpTop"><i></i></span>
+      <div class="{{kCls}}"></div>
+    </div>
+    <sc-if value="{{atk}}" hint-placeholder-val="{{false}}"><span class="dmg" style="left: 44%; top: 16%">{{dmgTxt}}</span></sc-if>
+    <!-- área da batalha some quando o chat abre: só fica um botão para reabrir -->
+    <sc-if value="{{closed}}" hint-placeholder-val="{{false}}">
+      <button class="openChat" onClick="{{openChat}}" aria-label="{{openAria}}" style="bottom: max(20px, env(safe-area-inset-bottom))">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"></path></svg>
+        <sc-if value="{{hasTotalUn}}" hint-placeholder-val="{{true}}"><span class="badge">{{totalUn}}</span></sc-if>
+      </button>
+      <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="ghost" style="position: absolute; left: 12px; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 5; min-height: 52px; text-decoration: none">Voltar para a batalha</a>
+    </sc-if>
+  </div>
+
+  <!-- gaveta do chat -->
+  <sc-if value="{{open}}" hint-placeholder-val="{{true}}">
+    <div class="{{dwCls}}" role="dialog" aria-label="Chat">
+      <div class="grip" aria-hidden="true"></div>
+      <div class="dwH">
+        <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </a>
+        <span class="nhT" role="heading" aria-level="1">Chat</span>
+        <button class="nhBk nhGl" onClick="{{closeChat}}" aria-label="Recolher o chat e ver a batalha" style="padding: 0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Canais">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+          <button role="tab" aria-selected="{{t.sel}}" class="{{t.cls}}" onClick="{{t.pick}}" aria-label="{{t.aria}}">{{t.label}}<sc-if value="{{t.hasUn}}" hint-placeholder-val="{{false}}"><span class="badge">{{t.un}}</span></sc-if></button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{isNew}}" hint-placeholder-val="{{false}}">
+        <div class="info new" role="status">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+          <span style="flex: 1">Conta nova só lê na 1ª hora · envio libera em {{newLeft}}</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{notNew}}" hint-placeholder-val="{{true}}">
+        <div class="info ok">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01 M11 12h1v4h1"></path></svg>
+          <span style="flex: 1">{{chanHint}}</span>
+        </div>
+      </sc-if>
+
+      <!-- mensagens: a mais nova embaixo -->
+      <div class="msgs" role="log" aria-live="polite" aria-label="{{logAria}}">
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="6">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <sc-if value="{{m.isSys}}" hint-placeholder-val="{{false}}"><span class="sys">{{m.text}}</span></sc-if>
+            <sc-if value="{{m.isMuted}}" hint-placeholder-val="{{false}}">
+              <div class="muted"><span>{{m.mutedTxt}}</span><button onClick="{{m.unmute}}">Ouvir de novo</button></div>
+            </sc-if>
+            <sc-if value="{{m.isMsg}}" hint-placeholder-val="{{true}}">
+              <div class="{{m.cls}}">
+                <span class="ava" aria-hidden="true"><span class="ring" style="background: {{m.ring}}; animation-delay: {{m.rD}}"></span><span class="in"><span class="kidle" style="position: absolute; left: -14px; top: -4px; width: 62px; height: 62px; display: block; filter: {{m.hue}}; animation-delay: {{m.kD}}"></span></span></span>
+                <button class="{{m.bCls}}" onClick="{{m.pick}}" aria-label="{{m.aria}}" aria-expanded="{{m.exp}}">
+                  <span style="display: flex; align-items: center; gap: 4px; min-width: 0; line-height: 1.2">
+                    <span style="font-size: 12.5px; font-weight: 900; color: {{m.nameC}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.name}}</span>
+                    <sc-if value="{{m.vip}}" hint-placeholder-val="{{false}}"><span class="vip">VIP</span></sc-if>
+                    <span class="tt" style="background: {{m.tc}}">{{m.title}}</span>
+                    <span style="flex: 1"></span>
+                    <span style="font-size: 10.5px; font-weight: 800; color: #8a7a68">{{m.time}}</span>
+                  </span>
+                  <span style="font-size: 14px; font-weight: 800; line-height: 1.25">{{m.text}}</span>
+                </button>
+              </div>
+              <sc-if value="{{m.showActs}}" hint-placeholder-val="{{false}}">
+                <div class="acts">
+                  <button class="ghost r" onClick="{{m.report}}">Denunciar</button>
+                  <button class="ghost" onClick="{{m.block}}">Bloquear</button>
+                  <button class="ghost" onClick="{{m.mute}}">Silenciar</button>
+                </div>
+              </sc-if>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- envio: só frases prontas -->
+      <div class="comp">
+        <div class="lockIn" aria-disabled="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+          <span style="flex: 1">Chat livre chega em breve</span>
+          <sc-if value="{{cdOn}}" hint-placeholder-val="{{false}}">
+            <span class="cd" role="timer" aria-label="{{cdAria}}">
+              <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="14" fill="none" stroke="#33271d" stroke-width="4"></circle><circle cx="17" cy="17" r="14" fill="none" stroke="#ffc94a" stroke-width="4" stroke-linecap="round" stroke-dasharray="88" stroke-dashoffset="{{cdOff}}"></circle></svg>
+              <b>{{cdTxt}}</b>
+            </span>
+          </sc-if>
+          <sc-if value="{{cdIdle}}" hint-placeholder-val="{{true}}"><span style="font-size: 11px; font-weight: 900; color: #7ef08a">pronto</span></sc-if>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px">
+          <span style="flex: 1; font-size: 12px; font-weight: 900; color: #ffe07a">Frases prontas · {{chanName}}</span>
+          <span style="font-size: 10.5px; font-weight: 800; color: #8a7a68">1 a cada 3 s</span>
+          <button class="ghost" onClick="{{toggleNew}}" aria-label="Prévia: simular conta nova" style="min-height: 44px; font-size: 10.5px; padding: 0 8px; border-style: dashed">{{newBtn}}</button>
+        </div>
+        <div class="grid" role="group" aria-label="Frases prontas">
+          <sc-for list="{{phrases}}" as="p" hint-placeholder-count="20">
+            <button class="{{p.cls}}" onClick="{{p.send}}" aria-disabled="{{p.dis}}">{{p.t}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- denunciar: motivo -->
+  <sc-if value="{{hasRep}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeRep}}" aria-label="Cancelar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="Denunciar jogador">
+        <span class="lil ol" style="font-size: 20px; text-align: center">Denunciar {{repName}}</span>
+        <span class="note" style="text-align: center">Mensagem: “{{repText}}”. Nossa equipe confere em até 24 h.</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px">
+          <sc-for list="{{reasons}}" as="r" hint-placeholder-count="4">
+            <button class="ghost" onClick="{{r.pick}}" style="min-height: 52px">{{r.t}}</button>
+          </sc-for>
+        </div>
+        <button class="ghost" onClick="{{closeRep}}" style="min-height: 48px">Cancelar</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+    <div class="toast" role="status"><span>{{toast}}</span><sc-if value="{{hasUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undo}}">Desfazer</button></sc-if></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', send: '/_blob/8863b3ab71afe08aef6c7aa26d104efc', swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d' };
+var PHRASES = ['Bom jogo!', 'Valeu!', 'Oi, pessoal!', 'Boa sorte no chefe!', 'Alguém para a guilda?', 'Entrem na minha guilda!', 'Parabéns!', 'Que sorte!', 'Bora subir no ranking!', 'Ajuda no chefe?', 'Já volto!', 'Bom dia!', 'Boa noite!', 'Foi por pouco!', 'Que drop lindo!', 'Vamos de arena?', 'Obrigado pela ajuda!', 'Nova era liberada!', 'Até mais!', 'GG!'];
+var CH = [
+  { k: 'w', label: 'Mundial', name: 'Mundial', hint: 'Todos os jogadores do servidor · seja gentil' },
+  { k: 'e', label: 'Era', name: 'Era Medieval', hint: 'Só quem está na Era Medieval' },
+  { k: 'g', label: 'Guilda', name: 'Guilda Lobos de Ferro', hint: 'Só membros da sua guilda' }
+];
+// moldura (anel) por raridade, título com cor
+var FR = ['conic-gradient(from 0deg,#4a3a2b 0 55%,#b8bec4 75%,#fff 80%,#4a3a2b 95%)', 'conic-gradient(from 0deg,#1a3a6a 0 50%,#4aa3ff 72%,#cfe8ff 80%,#1a3a6a 95%)', 'conic-gradient(from 0deg,#3a1a5a 0 50%,#c58bff 72%,#f0dcff 80%,#3a1a5a 95%)', 'conic-gradient(from 0deg,#ff6f88,#ffd0da,#a02a4a,#ff6f88)', 'conic-gradient(from 0deg,#ffc94a,#fff3c4,#f2a826,#ffc94a)'];
+var TITLES = [['Novato', '#b8bec4'], ['Caçador', '#7cc0ff'], ['Lâmina Veloz', '#c58bff'], ['Desafiante', '#ff8aa0'], ['Lenda das Eras', '#ffc94a'], ['Oficial', '#7ef08a']];
+var PEOPLE = [
+  { n: 'LunaFerro', fr: 4, t: 4, vip: true, h: 'hue-rotate(200deg)', g: true },
+  { n: 'Tavinho', fr: 1, t: 1, vip: false, h: 'hue-rotate(90deg)', g: false },
+  { n: 'Rex_Brasa', fr: 3, t: 3, vip: true, h: 'hue-rotate(320deg) saturate(1.3)', g: true },
+  { n: 'Mari Lâmina', fr: 2, t: 2, vip: false, h: 'hue-rotate(260deg)', g: true },
+  { n: 'Caio Trovão', fr: 0, t: 0, vip: false, h: 'hue-rotate(40deg)', g: false },
+  { n: 'Bia Arcana', fr: 2, t: 5, vip: false, h: 'hue-rotate(150deg)', g: true },
+  { n: 'Dudu77', fr: 0, t: 0, vip: false, h: 'grayscale(.4)', g: false },
+  { n: 'Nina Sol', fr: 1, t: 1, vip: true, h: 'hue-rotate(20deg) saturate(1.4)', g: false }
+];
+var ME = { n: 'Você · Kael', fr: 3, t: 2, vip: false, h: 'none', me: true };
+var SYS = { w: ['Bia Arcana venceu o chefe da Era Medieval!', 'LunaFerro chegou ao nível 60!', 'Torneio de Poder começa em 2 h'], e: ['Chefe da Era Medieval reapareceu', 'Rex_Brasa forjou uma arma Mítica!'], g: ['Chefe da guilda: 62% de vida', 'Mari Lâmina doou 5 pedras de forja'] };
+var REASONS = ['Ofensa', 'Spam', 'Golpe ou fraude', 'Nome impróprio'];
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function hm(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+var UID = 100;
+function seed() {
+  var now = Date.now(), out = { w: [], e: [], g: [] };
+  function add(ch, who, text, ago) { out[ch].push({ id: ++UID, who: who, text: text, t: now - ago * 1000 }); }
+  add('w', null, 'Bem-vindo ao Mundial. Envio só por frases prontas.', 600);
+  add('w', 0, 'Bom dia!', 420); add('w', 1, 'Alguém para a guilda?', 300); add('w', 2, 'Vamos de arena?', 200);
+  add('w', null, 'LunaFerro chegou ao nível 60!', 150); add('w', 3, 'Parabéns!', 120); add('w', 6, 'GG!', 40);
+  add('e', 4, 'Boa sorte no chefe!', 500); add('e', 7, 'Que drop lindo!', 260); add('e', 2, 'Ajuda no chefe?', 90);
+  add('g', null, 'Chefe da guilda: 70% de vida', 700); add('g', 0, 'Oi, pessoal!', 360); add('g', 5, 'Obrigado pela ajuda!', 180); add('g', 3, 'Boa sorte no chefe!', 60);
+  return out;
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { tab: 0, log: seed(), un: { w: 0, e: 2, g: 1 }, sel: null, blocked: [], muted: {}, cdUntil: 0, now: Date.now(),
+      isNew: false, newEnd: 0, open: true, closing: false, rep: null, toast: '', undo: null, shake: -1, atk: false, dmg: 0 };
+  }
+  componentDidMount() {
+    var self = this;
+    this.iv = setInterval(function () { self.setState({ now: Date.now() }); }, 200);
+    this.bot = setInterval(function () { self.incoming(); }, 4200);
+    this.fx = setInterval(function () { self.setState({ atk: true, dmg: 800 + Math.floor(Math.random() * 900) }); self.sfx(SND.swing, 0.25); setTimeout(function () { self.setState({ atk: false }); }, 750); }, 3000);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.bot); clearInterval(this.fx); clearTimeout(this.tt); clearTimeout(this.ct); clearTimeout(this.rt); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t, undo) { var self = this; clearTimeout(this.tt); this.setState({ toast: t, undo: undo || null }); this.tt = setTimeout(function () { self.setState({ toast: '', undo: null }); }, 2600); }
+  push(ch, who, text) {
+    var s = this.state, log = {}, un = Object.assign({}, s.un);
+    Object.keys(s.log).forEach(function (k) { log[k] = s.log[k].slice(-40); });
+    log[ch].push({ id: ++UID, who: who, text: text, t: Date.now() });
+    if (CH[s.tab].k !== ch || !s.open) un[ch] = (un[ch] || 0) + 1;
+    this.setState({ log: log, un: un });
+  }
+  incoming() {
+    var ch = pick(['w', 'w', 'e', 'g']);
+    if (Math.random() < 0.18) { this.push(ch, null, pick(SYS[ch])); return; }
+    var pool = PEOPLE.map(function (p, i) { return i; }).filter(function (i) { return ch !== 'g' || PEOPLE[i].g; });
+    this.push(ch, pick(pool), pick(PHRASES));
+  }
+  renderVals() {
+    var s = this.state, self = this, C = CH[s.tab], now = s.now;
+    var cdLeft = Math.max(0, s.cdUntil - now), newLeft = s.isNew ? Math.max(0, s.newEnd - now) : 0;
+    var locked = cdLeft > 0 || newLeft > 0;
+    var src = s.log[C.k].filter(function (m) { return m.who == null || m.who === 'me' || s.blocked.indexOf(m.who) < 0; });
+    var msgs = src.slice().reverse().map(function (m) {
+      if (m.who == null) return { isSys: true, isMuted: false, isMsg: false, text: m.text };
+      var mine = m.who === 'me', P = mine ? ME : PEOPLE[m.who];
+      var mu = !mine && s.muted[m.who] && s.muted[m.who] > now;
+      if (mu) {
+        var mins = Math.ceil((s.muted[m.who] - now) / 60000);
+        return { isSys: false, isMuted: true, isMsg: false, mutedTxt: P.n + ' silenciado · ' + mins + ' min',
+          unmute: function () { self.sfx(SND.tap); var mt = Object.assign({}, s.muted); delete mt[m.who]; self.setState({ muted: mt }); } };
+      }
+      var on = s.sel === m.id && !mine;
+      return {
+        isSys: false, isMuted: false, isMsg: true, cls: 'msg' + (mine ? ' mine' : ''), bCls: 'msgB' + (on ? ' sel' : ''),
+        name: P.n, vip: !!P.vip, title: TITLES[P.t][0], tc: TITLES[P.t][1], time: hm(m.t), text: m.text,
+        nameC: P.vip ? '#ffd84a' : mine ? '#ffc94a' : '#f6ecdf', ring: FR[P.fr], hue: P.h,
+        rD: (-(m.id * 0.37) % 2.4).toFixed(2) + 's', kD: (-(m.id * 0.29) % 1).toFixed(2) + 's',
+        exp: on ? 'true' : 'false', showActs: on,
+        aria: P.n + ', ' + TITLES[P.t][0] + ', ' + hm(m.t) + ': ' + m.text + (mine ? '' : '. Toque para denunciar, bloquear ou silenciar'),
+        pick: function () { if (mine) return; self.sfx(SND.tap); self.setState({ sel: on ? null : m.id }); },
+        report: function () { self.sfx(SND.tap); self.setState({ rep: { who: m.who, text: m.text }, sel: null }); },
+        block: function () {
+          self.sfx(SND.tap); var who = m.who;
+          self.setState({ blocked: s.blocked.concat([who]), sel: null });
+          self.say(P.n + ' bloqueado', function () { self.setState({ blocked: self.state.blocked.filter(function (b) { return b !== who; }) }); });
+        },
+        mute: function () {
+          self.sfx(SND.tap); var mt = Object.assign({}, s.muted); mt[m.who] = Date.now() + 3600000;
+          self.setState({ muted: mt, sel: null }); self.say(P.n + ' silenciado por 1 h');
+        }
+      };
+    });
+    var phrases = PHRASES.map(function (t, i) {
+      return {
+        t: t, dis: locked ? 'true' : 'false', cls: 'ph' + (locked ? ' off' : '') + (s.shake === i ? ' shake' : ''),
+        send: function () {
+          if (newLeft > 0) { self.sfx(SND.tap); self.setState({ shake: i }); self.say('Conta nova só lê na 1ª hora'); return; }
+          if (cdLeft > 0) { self.sfx(SND.tap); self.setState({ shake: i }); self.say('Espere ' + Math.ceil(cdLeft / 1000) + ' s para enviar de novo'); return; }
+          self.sfx(SND.send, 0.5);
+          self.push(C.k, 'me', t);
+          self.setState({ cdUntil: Date.now() + 3000, shake: -1, sel: null });
+          // alguém responde às vezes
+          clearTimeout(self.rt);
+          if (Math.random() < 0.6) self.rt = setTimeout(function () {
+            var pool = PEOPLE.map(function (p, j) { return j; }).filter(function (j) { return C.k !== 'g' || PEOPLE[j].g; });
+            self.push(C.k, pick(pool), pick(['Valeu!', 'Bom jogo!', 'GG!', 'Boa sorte no chefe!', 'Oi, pessoal!']));
+          }, 1500);
+        }
+      };
+    });
+    var totalUn = (s.un.w || 0) + (s.un.e || 0) + (s.un.g || 0);
+    var nl = Math.ceil(newLeft / 1000);
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      kCls: 'sp ' + (s.atk ? 'katk' : 'krun'), atk: s.atk, dmgTxt: '-' + s.dmg,
+      open: s.open, closed: !s.open, dwCls: 'dw' + (s.closing ? ' closing' : ''),
+      hasTotalUn: totalUn > 0, totalUn: totalUn, openAria: 'Abrir chat' + (totalUn ? ', ' + totalUn + ' novas' : ''),
+      openChat: function () { self.sfx(SND.tap); var un = Object.assign({}, s.un); un[C.k] = 0; self.setState({ open: true, un: un }); },
+      closeChat: function () { self.sfx(SND.tap); self.setState({ closing: true, sel: null }); clearTimeout(self.ct); self.ct = setTimeout(function () { self.setState({ open: false, closing: false }); }, 250); },
+      tabs: CH.map(function (c, i) {
+        var u = i === s.tab ? 0 : (s.un[c.k] || 0);
+        return { label: c.label, sel: i === s.tab ? 'true' : 'false', cls: 'tab' + (i === s.tab ? ' on' : ''), hasUn: u > 0, un: u > 9 ? '9+' : u,
+          aria: c.name + (u ? ', ' + u + ' novas' : ''),
+          pick: function () { self.sfx(SND.tap); var un = Object.assign({}, s.un); un[c.k] = 0; self.setState({ tab: i, un: un, sel: null }); } };
+      }),
+      isNew: newLeft > 0, notNew: newLeft <= 0, newLeft: pad(Math.floor(nl / 60)) + ':' + pad(nl % 60),
+      chanHint: C.hint + ' · toque numa mensagem para denunciar, bloquear ou silenciar',
+      logAria: 'Mensagens do canal ' + C.name, chanName: C.name, msgs: msgs,
+      cdOn: cdLeft > 0, cdIdle: cdLeft <= 0, cdTxt: (cdLeft / 1000).toFixed(1).replace('.', ','), cdOff: (88 * (1 - cdLeft / 3000)).toFixed(1),
+      cdAria: 'Próximo envio em ' + Math.ceil(cdLeft / 1000) + ' segundos',
+      phrases: phrases,
+      newBtn: s.isNew ? 'Prévia: conta antiga' : 'Prévia: conta nova',
+      toggleNew: function () { self.sfx(SND.tap); var on = !s.isNew; self.setState({ isNew: on, newEnd: Date.now() + 47 * 60000 + 12000 }); self.say(on ? 'Conta nova: só lê na 1ª hora' : 'Conta antiga: envio liberado'); },
+      hasRep: !!s.rep, repName: s.rep ? PEOPLE[s.rep.who].n : '', repText: s.rep ? s.rep.text : '',
+      reasons: REASONS.map(function (r) {
+        return { t: r, pick: function () { self.sfx(SND.tap); var n = PEOPLE[s.rep.who].n; self.setState({ rep: null }); self.say('Denúncia de ' + n + ' enviada (' + r.toLowerCase() + '). Obrigado!'); } };
+      }),
+      closeRep: function () { self.sfx(SND.tap); self.setState({ rep: null }); },
+      hasToast: !!s.toast, toast: s.toast, hasUndo: !!s.undo,
+      undo: function () { self.sfx(SND.tap); if (s.undo) s.undo(); self.setState({ toast: '', undo: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -274,3 +274,14 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - js/screens.js: `'p_pets'` entrou na lista de carga (`['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets']`); não estava.
 - A tela de escolha de ovo (`eggpick`) continua pendente (A-15). Hoje o aviso é "Você ganhou um ovo para escolher: abra Pets".
 - Para a fps-ff (via PO): `assets/anim/hyb/phase3/kael_attack_era2_t1.json` está com `padLeft: 0` (deveria ser 96, como nas fases 1 e 2).
+
+### Q-5. Ranking semanal (js/p_rank.js) — escrita pelo QA, NÃO vista rodando
+- Peça: carregar `'p_rank'` na lista de scripts do js/screens.js e ligar `PANEL_ON.rank` (item Ranking do MENU `soon:rank`, nível 28; a Torre já abre o ranking quando `Panels.on('rank')`).
+- Abas: Força e Arena usam `Sys.arena.ranking` (hoje com jogadores SIMULADOS pelo módulo: a tela avisa "Prévia com jogadores simulados"). Nível, Torre e Passe não têm ranking sem servidor: mostram só o valor real do jogador e o aviso. Prêmios = `Sys.arena.DATA.rewards`, com o aviso "valem quando o ranking online abrir". Relógio de fechamento = `Sys.arena.weekInfo().msLeft`.
+- Nome de global renomeado para XRK (XR já existe em screens2.js). Zero emoji. Smoke: `node test/paineis/p_rank.smoke.js`.
+
+### Q-6. Missões (js/p_missions.js) — escrita pelo QA, NÃO vista rodando
+- Peça: carregar `'p_missions'` e ligar `PANEL_ON.missions`; o MENU "Missões" (`missions`, hoje `Screens.open('pass',{tab:'missions'})` em fullbattle.js) passa a abrir `Panels.open('missions')`; no Passe, a aba de missões vira o botão "Missões" que abre esta tela.
+- Dados: Diárias/Semanais/bônus = `Sys.pass.list` + `Sys.pass.claimMission` (id ou 'bonus'); Guia = `Sys.guide.current/claim/list`, aba só aparece com `Sys.guide.DATA.on`. "Resgatar tudo" relê o bônus depois das diárias.
+- "Atividade de hoje x/100" (baús de marco) e aba "Conquistas": ENTRAM no lançamento (PO), atrás das chaves `P_MISSIONS.activity` e `P_MISSIONS.achievements` (desligadas; lidas de `mActivity()`/`mAch()`, que hoje devolvem null; contrato no topo do arquivo). Ligar quando a API de Sistemas chegar.
+- Chama `statsChanged()` ao resgatar. Zero emoji. Smoke: `node test/paineis/p_missions.smoke.js`.

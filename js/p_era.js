@@ -1,20 +1,20 @@
 'use strict';
 /* ================= 17 TROCA DE ERA (abertura da nova era) — tela nova, nasce DESLIGADA (PANEL_ON.era) =================
    Protótipo: docs/proto/TrocaEra.dc.html. É um OVERLAY (def.overlay): não é uma "view"; abre por Panels.open('era', {from, to, boss, gems, essence, onDone}),
-   quem chama é o fim da luta do Senhor da Era (pedido Q-2). NENHUMA regra de jogo aqui: nomes de era e inimigos (ERAS), nome da ultimate (SKN),
+   quem chama é o fim da luta do Senhor da Era (pedido Q-2). NENHUMA regra de jogo aqui: nomes de era e inimigos (ERAS), 
    o que o jogador ganhou vem em `o` (gems/essence) — o que não vier não aparece (nada de número inventado).
    ROTEIRO (o do protótipo): a) o Senhor da Era antigo cai e o letreiro "Senhor da Era derrotado!" · b) portal e Kael correndo até ele · c) clarão e o cenário da nova era ·
-   d) letreiro "NOVA ERA LIBERADA · ERA n · NOME" · e) cartões um de cada vez: nova ultimate (prévia animada), novos inimigos (andando), arma
+   d) letreiro "NOVA ERA LIBERADA · ERA n · NOME" · e) cartões um de cada vez: novos inimigos (andando), itens novos que caem (arma e armadura da era; a ultimate é da arma, não da era)
    (só se a arma do jogador for de era anterior), recompensa (só se houver) · f) resumo e "Começar a era".
    Toque em qualquer lugar adianta para o próximo passo; "Pular" vai direto ao resumo. O jogo fica parado enquanto a tela está aberta (B.res), como as
    outras telas de resultado, e volta sozinho ao fechar. Folhas e imagens vêm de assets/ (sem blob): cenário assets/bg/era<n>.png (linha do chão em
-   assets/bg/meta.json), Kael assets/anim/hyb/R/kael_run_body, chefe caindo era<n>_boss_die, inimigo andando era<n>_e0_run, ultimate assets/anim/ult/era<n>_ult.
+   assets/bg/meta.json), Kael assets/anim/hyb/R/kael_run_body, chefe caindo era<n>_boss_die, inimigo andando era<n>_e0_run.
    DIFERENÇAS CONSCIENTES em relação ao protótipo:
    - o cenário é a imagem de fundo da era (assets/bg), não as camadas de parallax do kit (a Antiguidade/Medieval do protótipo eram só demonstração);
    - sem "Essência da Era: ícone provisório": a Essência só aparece quando o jogo informa quantas deu (o.essence), com texto próprio;
    - o cartão da arma só aparece se a arma EQUIPADA for de era anterior à nova (o protótipo afirmava isso sempre). */
 const PE={el:null,step:'',steps:[],i:0,o:null,timer:0,meta:{},open:false,prevRes:null,prevRun:false,done:false};
-const PE_MS={boss:1800,portal:1600,flash:900,title:2300,ult:2600,foe:2600,weap:2400,reward:2400};
+const PE_MS={boss:1800,portal:1600,flash:900,title:2300,foe:2600,weap:2400,reward:2400};
 const PE_CSS=`.pe-ov{position:absolute;inset:0;z-index:95;overflow:hidden;background:#16110d;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .pe-bg{position:absolute;inset:0;background-size:cover;background-position:50% 100%;transition:opacity .6s ease}
 .pe-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.55) 0%,rgba(10,7,5,.05) 30%,rgba(10,7,5,.05) 72%,rgba(10,7,5,.92) 100%);pointer-events:none}
@@ -77,15 +77,14 @@ function peStatic(src,hPx,cx,gy){ const w=hPx; return `<img alt="" src="${src}" 
 
 /* passos desta abertura: a lista depende do que o jogo informou e do que o jogador tem */
 function peSteps(o){ const to=peEra(o.to), out=['boss','portal','flash','title'];
-  out.push('ult'); out.push('foe');
-  let weap=false; try{ const w=(typeof heroLook==='function'?heroLook().weapon:null); weap=!!(w&&typeof w.e==='number'&&w.e<o.to); }catch(e){}
-  if(weap) out.push('weap'); if((o.gems|0)>0||(o.essence|0)>0) out.push('reward'); out.push('final'); return out; }
-function peUlt(n){ try{ return (typeof SKN!=='undefined'&&SKN[n])?SKN[n][1]:''; }catch(e){ return ''; } }
+  out.push('foe'); out.push('weap'); if((o.gems|0)>0||(o.essence|0)>0) out.push('reward'); out.push('final'); return out; }
+/* a ultimate é da ARMA equipada (ordem do dono): a era só muda cenário, inimigos e itens que caem */
+function peOld(o){ try{ const w=(typeof heroLook==='function'?heroLook().weapon:null); return !!(w&&typeof w.e==='number'&&w.e<o.to); }catch(e){ return false; } }
 function peFoes(n){ const e=peEra(n); return e&&e.en?e.en.map(x=>x.n):[]; }
 const peJoin=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' e '+a[a.length-1];
 
 function peFrame(){ const o=PE.o, W=PE.el.clientWidth||390, H=PE.el.clientHeight||844, u=W/390, sk=PE.step, f=o.from, t=o.to, ef=peEra(f), et=peEra(t);
-  const gyA=peGround(f)*H, gyB=peGround(t)*H, onNew=['title','ult','foe','weap','reward','final'].includes(sk)||sk==='flash';
+  const gyA=peGround(f)*H, gyB=peGround(t)*H, onNew=['title','foe','weap','reward','final'].includes(sk)||sk==='flash';
   let stage='';
   const bossBase=`assets/anim/hyb/enemy/era${f}_boss_die`, bossLay=peSprite(bossBase,264*u,W*0.42,gyA,'pe-sh1','--d:1.083s');
   if(sk==='boss'){ stage+=`<div style="position:absolute;left:${(70*u).toFixed(0)}px;top:${(gyA-8*u).toFixed(0)}px;width:${(230*u).toFixed(0)}px;height:${(18*u).toFixed(0)}px;border-radius:50%;background:rgba(0,0,0,.45)"></div>`+(bossLay||peStatic(`assets/enemies/era${f}_boss.png`,200*u,W*0.42,gyA))
@@ -98,16 +97,12 @@ function peFrame(){ const o=PE.o, W=PE.el.clientWidth||390, H=PE.el.clientHeight
   if(onNew&&sk!=='flash'&&sk!=='final') stage+=`<div class="pe-runin" style="position:absolute;inset:0">${peSprite(runBase,176*u,W*0.3,gyB,'pe-sh','--d:.667s')}</div>`;
   if(sk==='title') stage+=`<div style="position:absolute;left:0;right:0;top:${(70*u).toFixed(0)}px;height:${(150*u).toFixed(0)}px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="pe-rays" aria-hidden="true" style="left:${(W/2-150*u).toFixed(0)}px;top:${(-75*u).toFixed(0)}px;width:${(300*u).toFixed(0)}px;height:${(300*u).toFixed(0)}px"></div><span style="position:relative;font-size:14px;font-weight:900;letter-spacing:3px;text-shadow:0 2px 4px #000">NOVA ERA LIBERADA</span><span class="pe-title pe-lil" style="position:relative;font-size:${Math.min(42,Math.max(26,W/(String(et?et.n:'').length+8)*1.35)).toFixed(0)}px;color:#ffc94a;white-space:nowrap">ERA ${t+1} · ${peEsc(et?et.n.toUpperCase():'')}</span></div>`;
   const card=(bd,glow,top,inner)=>`<div class="pe-card" role="group" style="position:absolute;left:${(20*u).toFixed(0)}px;right:${(20*u).toFixed(0)}px;top:${(top*u).toFixed(0)}px;padding:12px;border-radius:18px;background:rgba(29,22,17,.94);border:2px solid ${bd};${glow?`box-shadow:0 0 24px ${glow};`:''}box-sizing:border-box;display:flex;flex-direction:column;gap:8px">${inner}</div>`;
-  if(sk==='ult'){ const j=PE.meta['assets/anim/ult/era'+t+'_ult.json'], cols=(j&&j.cols)||8, rows=j&&j.frames?Math.ceil(j.frames/cols):7, fps=(j&&j.fps)||12;
-    stage+=card('#b07cff','rgba(176,124,255,.6)',236,`<span class="pe-lil" style="font-size:20px;text-align:center">Nova ultimate: <span style="color:#d9b3ff">${peEsc(peUlt(t))}</span></span>
-      <div role="img" aria-label="Prévia animada da ultimate" style="position:relative;align-self:center;width:${Math.min(320,W-80).toFixed(0)}px;aspect-ratio:${(j&&j.w)||384}/${(j&&j.h)||216};border-radius:12px;overflow:hidden;background:#0e0a07"><div class="pe-ultr" style="width:100%;height:${rows*100}%;--rows:${rows};--dy:${(rows*cols/fps).toFixed(2)}s"><div class="pe-ultc" style="width:${cols*100}%;height:100%;--cols:${cols};--dx:${(cols/fps).toFixed(2)}s;background-image:url(assets/anim/ult/era${t}_ult.png)"></div></div></div>`); }
   if(sk==='foe'){ const names=peFoes(t), base=peRunBase(t,'e0'), sp=peSprite(base,106*u,0,106*u,'pe-sh','');
     stage+=card('#ff5a4e','',266,`<span class="pe-lil" style="font-size:20px;text-align:center">Novos inimigos</span><span style="font-size:13px;font-weight:800;color:#c9b9a2;text-align:center">${peEsc(peJoin(names))} e o Senhor da Era ${peEsc(et?et.n:'')}</span>
       <div style="position:relative;height:${(106*u).toFixed(0)}px;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#2a1f16 0%,#3a2c1f 78%,#5a4430 78%,#4a3826 100%)"><div class="pe-walk" style="position:absolute;left:50%;top:0;width:0;height:100%">${sp||peStatic(`assets/enemies/era${t}_e0.png`,106*u,0,106*u)}</div></div>`); }
-  if(sk==='weap') stage+=card('#4aa3ff','',296,`<span class="pe-lil" style="font-size:19px;text-align:center">Sua arma é de uma era anterior</span><span style="font-size:14px;font-weight:800;color:#e8dccb;text-align:center">Transforme-a ou conquiste uma nova nesta era.</span>`);
+  if(sk==='weap') stage+=card('#4aa3ff','',296,`<span class="pe-lil" style="font-size:19px;text-align:center">Novos itens caem aqui</span><div style="display:flex;gap:18px;justify-content:center"><img alt="Arma da era" src="assets/weapons/era${t}_t0.png" style="width:96px;height:96px;object-fit:contain" onerror="this.style.display='none'"><img alt="Armadura da era" src="assets/hero/era${t}_t0.png" style="width:96px;height:96px;object-fit:contain" onerror="this.style.display='none'"></div><span style="font-size:14px;font-weight:800;color:#e8dccb;text-align:center">Armas e armaduras da ${peEsc(et?et.n:'nova era')} passam a cair nos inimigos.${peOld(o)?' A sua arma atual é de uma era anterior.':''}</span>`);
   if(sk==='reward'){ const g=o.gems|0, es=o.essence|0; stage+=card('#ffc94a','rgba(255,201,74,.6)',286,`<span class="pe-lil" style="font-size:22px;color:#ffc94a;text-align:center">Recompensa</span><div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">${g?`<span class="pe-lil" style="display:flex;align-items:center;gap:6px;font-size:22px"><img class="pe-gem" src="assets/ui/gem.png" alt="" style="width:34px;height:34px;object-fit:contain">+${g} gemas</span>`:''}${es?`<span class="pe-lil" style="display:flex;align-items:center;gap:6px;font-size:20px"><span class="pe-gem" aria-hidden="true" style="width:26px;height:26px;border-radius:50%;background:radial-gradient(#e7c4ff,#8a4fd0);display:inline-block"></span>+${es} Essência da Era</span>`:''}</div>`); }
-  if(sk==='final'){ const rows=[['#b07cff','Nova ultimate: <span style="color:#d9b3ff">'+peEsc(peUlt(t))+'</span>'],['#ff5a4e','Novos inimigos: '+peEsc(peJoin(peFoes(t)))]];
-    if(PE.steps.includes('weap')) rows.push(['#4aa3ff','Arma de era anterior: transforme ou conquiste uma nova']);
+  if(sk==='final'){ const rows=[['#ff5a4e','Novos inimigos: '+peEsc(peJoin(peFoes(t)))],['#4aa3ff','Novas armas e armaduras caem nesta era'+(peOld(o)?' (a sua arma é de uma era anterior)':'')]];
     if(PE.steps.includes('reward')){ const g=o.gems|0, es=o.essence|0; rows.push(['#ffc94a','Recompensa: '+[g?'+'+g+' gemas':'',es?'+'+es+' Essência da Era':''].filter(Boolean).join(', ')]); }
     stage+=`<div style="position:absolute;left:${(20*u).toFixed(0)}px;right:${(20*u).toFixed(0)}px;top:${(120*u).toFixed(0)}px;display:flex;flex-direction:column;gap:8px"><span class="pe-lil" style="text-align:center;font-size:26px;color:#ffc94a;text-shadow:0 3px 0 #6a3a08">ERA ${t+1} · ${peEsc(et?et.n.toUpperCase():'')}</span>${rows.map((r,i)=>`<div class="pe-row" style="min-height:58px;display:flex;align-items:center;padding:6px 12px;border-radius:14px;background:rgba(29,22,17,.94);border:2px solid ${r[0]};font-size:15px;font-weight:900;line-height:1.2;animation-delay:${(i*.08).toFixed(2)}s">${r[1]}</div>`).join('')}</div>`
       +`<button data-e="start" class="pe-gold pe-pulse pe-lil" style="position:absolute;left:${(40*u).toFixed(0)}px;right:${(40*u).toFixed(0)}px;bottom:${Math.max(24,54*u).toFixed(0)}px;height:64px;border-radius:18px;font-size:26px;padding:0;cursor:pointer">Começar a era</button>`; }
@@ -133,7 +128,7 @@ function peOpen(o){ o=o||{}; if(PE.open) return false; const to=o.to|0, from=(o.
   host.appendChild(PE.el);
   try{ if(typeof B!=='undefined'&&!B.res){ B.res={mode:'era'}; B.act=null; B.banner=null; B.running=false; B.eshots=[]; } }catch(e){}
   PE.step='boss'; PE.i=0; PE.el.innerHTML='<div class="pe-bg" style="background:#16110d"></div>';
-  const urls=[`assets/anim/hyb/enemy/era${from}_boss_die.json`,'assets/anim/hyb/R/kael_run_body.json',peRunBase(to,'e0')+'.json',`assets/anim/ult/era${to}_ult.json`,'assets/bg/meta.json'];
+  const urls=[`assets/anim/hyb/enemy/era${from}_boss_die.json`,'assets/anim/hyb/R/kael_run_body.json',peRunBase(to,'e0')+'.json','assets/bg/meta.json'];
   peLoad(urls).then(()=>{ PE.meta.bg=PE.meta['assets/bg/meta.json']||{}; if(PE.open) peGo(0); });   /* as folhas ficam em PE.meta[base+'.json'], lidas por peSprite */
   return true; }
 

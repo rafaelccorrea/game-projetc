@@ -765,4 +765,37 @@ t('torre com a 17b: andar 100 = ovo Épico À ESCOLHA (Dragão/Papagaio), sem f�
   assert.deepStrictEqual(W.rewardsFor(100,makeHost()).egg,{r:4,source:'tower100',pet:'phoenix'},'sem a 17b: formato antigo');
 });
 
+t('atividade de hoje 0/100: pontos = diárias resgatadas do Sys.pass (6 = 100), baús 20-100 uma vez por dia, zera no dia seguinte, sem 💎',()=>{
+  const V=require('../../js/sys/activity.js'), P=require('../../js/sys/pass.js'), Ac=require('../../js/sys/achievements.js');
+  const S=newS(), h=makeHost({eraMax:0}); h.t=new Date(2026,10,12,10).getTime();
+  assert.deepStrictEqual(V.status(S,h),{on:false}); assert.strictEqual(V.claim(S,h,20).reason,'off');
+  const act=P.list(S,h).daily.map(m=>m.id); assert.strictEqual(act.length,6); assert.strictEqual(act.reduce((t,id)=>t+V.DATA.points[id],0),100,'6 diárias = 100');
+  assert.ok(V.DATA.milestones.every(m=>!m.reward.gems),'sem diamante');
+  V.DATA.on=true; Ac.DATA.on=true; try{
+    assert.strictEqual(V.status(S,h).points,0); assert.strictEqual(V.claim(S,h,20).reason,'points');
+    const o=P.ensure(S); P.refresh(S,h); o.d.c.push('d_kill','d_ult'); assert.strictEqual(V.points(S,h),35);
+    const st=V.status(S,h); assert.deepStrictEqual(st.milestones.filter(m=>m.reached).map(m=>m.at),[20]); assert.strictEqual(st.ready,1);
+    const g0=h.gold, r=V.claim(S,h,20); assert.ok(r.ok&&r.got.gold>0&&h.gold>g0); assert.strictEqual(V.claim(S,h,20).reason,'done');
+    o.d.c.push(...act.filter(id=>!o.d.c.includes(id))); assert.strictEqual(V.points(S,h),100); const all=V.claimAll(S,h); assert.strictEqual(all.length,4);
+    assert.strictEqual(Ac.ensure(S).c.activity100,1,'dia completo conta na conquista Dedicado');
+    h.t+=864e5; assert.strictEqual(V.status(S,h).points,0,'virou o dia'); assert.strictEqual(V.status(S,h).milestones.filter(m=>m.claimed).length,0);
+  } finally { V.DATA.on=false; Ac.DATA.on=false; }
+});
+t('conquistas: 33 em 5 grupos, níveis com prêmio fixo, save antigo entra com o que tem, maior marca não volta, 💎 dentro da meta',()=>{
+  const Ac=require('../../js/sys/achievements.js'), L=require('../../js/sys/level.js'), M=require('../../js/sys/mount.js');
+  const b=Ac.budget(); assert.strictEqual(b.achievements,33); assert.ok(b.gems<=300,'💎 do jogo inteiro: '+b.gems);
+  assert.ok(Ac.DATA.list.every(a=>a.tiers.every((x,i)=>i===0||x>a.tiers[i-1])),'metas crescentes'); assert.strictEqual(new Set(Ac.DATA.list.map(a=>a.id)).size,33);
+  const S=Object.assign(newS(),{kills:12345}), h=makeHost({eraMax:3}); assert.strictEqual(Ac.track(S,h,'kill',5),0,'desligada não grava');
+  Ac.DATA.on=true; M.DATA.on=true; globalThis.Sys.mount=M; try{
+    L.ensure(S).lvl=55; const st=Ac.status(S,h); const it=id=>st.groups.flatMap(g=>g.items).find(i=>i.id===id);
+    assert.strictEqual(it('kill').value,12345,'migração: abates antigos'); assert.strictEqual(it('kill').ready,true); assert.strictEqual(it('level').value,55); assert.strictEqual(it('era').value,3);
+    const g0=h.gold, c=Ac.claim(S,h,'kill'); assert.ok(c.ok&&c.tier===1&&h.gold>g0); assert.strictEqual(Ac.claim(S,h,'kill').tier,2,'10.000 também'); assert.strictEqual(Ac.claim(S,h,'kill').reason,'need');
+    Ac.track(S,h,'boss',10); assert.ok(Ac.claim(S,h,'boss').ok); assert.strictEqual(Ac.claim(S,h,'xyz').reason,'id'); assert.strictEqual(Ac.track(S,h,'nada',3),0);
+    M.add(S,h,'pony'); assert.strictEqual(Ac.value(S,h,'mounts'),1); delete M.ensure(S).owned.pony; assert.strictEqual(Ac.value(S,h,'mounts'),1,'maior marca fica');
+    const all=Ac.claimAll(S,h); assert.ok(all.every(x=>x.ok)); assert.strictEqual(Ac.status(S,h).ready,0);
+    const S2=JSON.parse(JSON.stringify(S)); Ac.ensure(S2); assert.deepStrictEqual(S2.sys.achv,S.sys.achv,'save volta igual');
+    const S3={sys:{achv:{c:{kill:'x',boss:-4,zzz:9},t:{kill:99},hi:{fc:'a'}}}}; Ac.ensure(S3); assert.deepStrictEqual(S3.sys.achv.c,{}); assert.strictEqual(S3.sys.achv.t.kill,4);
+  } finally { Ac.DATA.on=false; M.DATA.on=false; delete globalThis.Sys.mount; }
+});
+
 console.log(`ok: ${n} testes`);

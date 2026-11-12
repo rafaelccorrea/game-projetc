@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Correio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+.note{font-size:clamp(11px,3.1vw,12.5px);font-weight:800;color:#c9b9a2;line-height:1.3}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-weight:900;font-size:13px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ghost:active,.grn:active,.row:active{transform:scale(.97)}
+.grn{min-height:44px;border:0;border-radius:12px;background:linear-gradient(180deg,#9ff0a6,#3fae3c);color:#0d2410;font-family:'Lilita One',sans-serif;font-size:16px;box-shadow:0 4px 0 #1f6a1d;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px}
+.grn.pulse{animation:gP 1.2s ease-in-out infinite}
+@keyframes gP{0%,100%{box-shadow:0 4px 0 #1f6a1d,0 0 0 rgba(127,224,122,0)}50%{box-shadow:0 4px 0 #1f6a1d,0 0 16px rgba(127,224,122,.9)}}
+.grn.off{background:#3a2c1f;color:#c9b9a2;box-shadow:0 4px 0 #1d1611;font-family:Nunito,sans-serif;font-size:12.5px;font-weight:900}
+.red{min-height:44px;border:0;border-radius:12px;background:linear-gradient(180deg,#ff8a7a,#c0392b);color:#2a0805;font-family:'Lilita One',sans-serif;font-size:16px;box-shadow:0 4px 0 #6a1a12;padding:0 12px}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:80;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.6s ease both;box-sizing:border-box}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.sheetBg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.62);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+.sheet{position:relative;width:100%;max-width:560px;max-height:90%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:12px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:sheetUp .35s cubic-bezier(.2,1.2,.4,1) both;box-sizing:border-box}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+/* ===== HEADER NOVO (igual Batalha tela cheia V2) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-sizing:border-box;background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+.nhBody{position:relative;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
+.nhFoot{position:relative;z-index:10;flex:none;width:100%;max-width:640px;margin:0 auto;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box}
+/* ===== correio ===== */
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:linear-gradient(180deg,#ff6a5a,#c0392b);color:#fff;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;box-shadow:0 0 0 2px #120c08;animation:bdgP 1.4s ease-in-out infinite;vertical-align:middle;margin-left:6px;box-sizing:border-box}
+@keyframes bdgP{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.row{position:relative;width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;min-height:72px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b;color:#f6ecdf;text-align:left;box-sizing:border-box;animation:rowIn .35s ease-out both;transition:transform .12s}
+.row.unread{background:linear-gradient(90deg,#3a2c1f,#231a13);border-color:#c77a12}
+@keyframes rowIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.row.gone{animation:rowOut .4s ease-in both}
+@keyframes rowOut{to{transform:translateX(-40px);opacity:0}}
+.lic{position:relative;width:46px;height:46px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.lic.bob{animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}
+.dot{position:absolute;right:-3px;top:-3px;width:12px;height:12px;border-radius:50%;background:#ff5a4a;box-shadow:0 0 0 2px #1d1611;animation:dotP 1.2s ease-in-out infinite}
+@keyframes dotP{0%,100%{box-shadow:0 0 0 2px #1d1611,0 0 0 rgba(255,90,74,0)}50%{box-shadow:0 0 0 2px #1d1611,0 0 10px rgba(255,90,74,.9)}}
+.att{position:relative;flex:none;border-radius:8px;border:2px solid;background:#120c08;display:flex;align-items:center;justify-content:center;box-sizing:border-box;overflow:hidden}
+.att.shine::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:300% 100%;animation:shine 2.6s ease-in-out infinite}
+@keyframes shine{0%,50%{background-position:160% 0}100%{background-position:-60% 0}}
+.att img{width:76%;height:76%;object-fit:contain}
+.att svg{width:72%;height:72%}
+.att .q{position:absolute;right:1px;bottom:0;font-size:9.5px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;line-height:1.1}
+.att.done{filter:grayscale(1) brightness(.6)}
+.exp{font-size:11px;font-weight:900;white-space:nowrap}
+.exp.urg{color:#ff7a5a;animation:urgT 1s ease-in-out infinite}
+@keyframes urgT{0%,100%{opacity:1}50%{opacity:.55}}
+.tabs{height:44px;flex:none;display:flex;gap:4px}
+.tab{flex:1;border-radius:11px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:14px;padding:0;min-height:44px}
+.tab.on{border-color:#ffc94a;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403}
+.bigAtt{display:flex;flex-direction:column;align-items:center;gap:3px;width:78px;animation:pop .45s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
+.bigAtt.fly{animation:fly .7s cubic-bezier(.5,-0.3,.7,1) both}
+@keyframes fly{0%{transform:none;opacity:1}40%{transform:translateY(12px) scale(1.15)}100%{transform:translateY(-260px) scale(.3);opacity:0}}
+.rays{position:absolute;left:50%;top:50%;width:180px;height:180px;margin:-90px 0 0 -90px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.3) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 14s linear infinite;pointer-events:none}
+.paper{border-radius:14px;background:linear-gradient(180deg,#f3e3c3,#e0c89c);color:#3a2510;padding:12px 14px;font-size:14px;font-weight:700;line-height:1.45;box-shadow:inset 0 0 0 2px #c9a36a,0 4px 0 #6a4426;animation:fadeIn .4s both}
+.seal{position:absolute;right:12px;top:-14px;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff7a6a,#a02a1e);box-shadow:0 2px 0 #5a120a;display:flex;align-items:center;justify-content:center;animation:bob 2.4s ease-in-out infinite}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 10px;text-align:center;animation:fadeIn .4s both}
+.empty svg{animation:bob 2.4s ease-in-out infinite}
+.dayBtn{min-height:44px;border-radius:12px;border:1px dashed #6a5a48;background:transparent;color:#c9b9a2;font-size:11.5px;font-weight:900;padding:0 10px}
+@media (min-width:700px){.row{min-height:78px}}
+</style>
+</helmet>
+<div class="nhApp" style="background: #16110d">
+
+  <!-- HEADER NOVO (igual Batalha tela cheia V2): voltar à batalha · título · moedas e gemas -->
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Correio<sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="badge" aria-label="{{unreadAria}}">{{unread}}</span></sc-if></span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="{{coinAria}}"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>{{coins}}</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="{{gemAria}}"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gems}}</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+    </div>
+  </div>
+
+  <div class="nhBody" style="background: radial-gradient(ellipse at 50% 18%, #3a2810 0%, #1d1611 45%, #16110d 80%)"><div class="nhWrap" style="min-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 6px">
+
+    <!-- filtros -->
+    <div class="tabs" role="tablist" aria-label="Filtrar cartas">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button role="tab" aria-selected="{{t.sel}}" class="{{t.cls}}" onClick="{{t.pick}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- regra + prévia do tempo -->
+    <div style="display: flex; align-items: center; gap: 8px; min-height: 44px">
+      <span class="note" style="flex: 1; min-width: 0">{{ruleTxt}}</span>
+      <button class="dayBtn" onClick="{{addDay}}" aria-label="Prévia: avançar um dia">{{dayTxt}}</button>
+    </div>
+
+    <!-- lista de cartas -->
+    <div role="list" aria-label="Cartas" style="display: flex; flex-direction: column; gap: 6px">
+      <sc-for list="{{rows}}" as="l" hint-placeholder-count="6">
+        <button role="listitem" class="{{l.cls}}" onClick="{{l.open}}" aria-label="{{l.aria}}" style="animation-delay: {{l.d}}">
+          <span class="{{l.icCls}}" style="background: {{l.icBg}}; animation-delay: {{l.d}}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{l.icFg}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{l.ip}}"></path></svg>
+            <sc-if value="{{l.unread}}" hint-placeholder-val="{{true}}"><span class="dot"></span></sc-if>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.15">
+            <span style="font-size: 14px; font-weight: {{l.fw}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{l.title}}</span>
+            <span style="font-size: 11.5px; font-weight: 800; color: #c9b9a2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{l.from}} · {{l.date}}</span>
+            <span style="display: flex; align-items: center; gap: 4px; margin-top: 2px; min-height: 26px">
+              <sc-for list="{{l.atts}}" as="a" hint-placeholder-count="3">
+                <span class="{{a.cls}}" style="width: 26px; height: 26px; border-color: {{a.rc}}" title="{{a.name}}">
+                  <sc-if value="{{a.isImg}}" hint-placeholder-val="{{true}}"><img src="{{a.src}}" alt=""></sc-if>
+                  <sc-if value="{{a.isSvg}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{a.ip}}" fill="{{a.fill}}" stroke="#120c08" stroke-width="1.2" fill-rule="evenodd" stroke-linejoin="round"></path></svg></sc-if>
+                </span>
+              </sc-for>
+              <span style="flex: 1"></span>
+              <span class="{{l.expCls}}" style="color: {{l.expC}}">{{l.expTxt}}</span>
+            </span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <div class="empty">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#c77a12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z M3 6l9 7 9-7"></path></svg>
+        <span class="lil ol" style="font-size: 20px">{{emptyT}}</span>
+        <span class="note">Prêmios de arena, ranking, torneio e eventos chegam aqui.</span>
+      </div>
+    </sc-if>
+    <div style="flex: 1"></div>
+  </div></div>
+
+  <!-- ações fixas embaixo (polegar) -->
+  <div class="nhFoot" style="display: flex; gap: 8px; padding-top: 6px">
+    <button class="ghost" onClick="{{askDelete}}" aria-label="{{delAria}}" style="flex: 1; min-height: 52px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18 M8 6V4h8v2 M6 6l1 15h10l1-15 M10 11v6 M14 11v6"></path></svg>Apagar lidas
+    </button>
+    <button class="{{allCls}}" onClick="{{collectAll}}" aria-label="{{allAria}}" style="flex: 1.4; min-height: 52px">
+      <img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="width: 26px; height: 26px; object-fit: contain">{{allTxt}}
+    </button>
+  </div>
+
+  <!-- ===== carta aberta ===== -->
+  <sc-if value="{{hasOpen}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeOpen}}" aria-label="Fechar carta" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="{{op.title}}">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span class="lic bob" style="background: {{op.icBg}}">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{op.icFg}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{op.ip}}"></path></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.15">
+            <span class="lil ol" style="font-size: 19px">{{op.title}}</span>
+            <span class="note">{{op.from}} · {{op.date}}</span>
+          </span>
+          <button class="ghost" onClick="{{closeOpen}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg></button>
+        </div>
+        <div style="position: relative; margin-top: 8px">
+          <div class="paper">{{op.body}}</div>
+          <span class="seal" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe0c0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{op.ip}}"></path></svg></span>
+        </div>
+        <sc-if value="{{op.hasAtt}}" hint-placeholder-val="{{true}}">
+          <div style="position: relative; display: flex; flex-direction: column; gap: 6px">
+            <span style="font-size: 12px; font-weight: 900; color: #ffe07a">Anexos</span>
+            <div style="position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 6px 0">
+              <sc-if value="{{op.pending}}" hint-placeholder-val="{{true}}"><span class="rays"></span></sc-if>
+              <sc-for list="{{op.atts}}" as="a" hint-placeholder-count="3">
+                <span class="{{a.bigCls}}" style="animation-delay: {{a.d}}">
+                  <span class="{{a.cls}}" style="width: 60px; height: 60px; border-width: 3px; border-color: {{a.rc}}; box-shadow: 0 0 12px {{a.glow}}">
+                    <sc-if value="{{a.isImg}}" hint-placeholder-val="{{true}}"><img src="{{a.src}}" alt=""></sc-if>
+                    <sc-if value="{{a.isSvg}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{{a.ip}}" fill="{{a.fill}}" stroke="#120c08" stroke-width="1.2" fill-rule="evenodd" stroke-linejoin="round"></path></svg></sc-if>
+                    <span class="q" style="font-size: 12px">{{a.qty}}</span>
+                  </span>
+                  <span style="font-size: 11px; font-weight: 900; text-align: center; line-height: 1.1">{{a.name}}</span>
+                  <span style="font-size: 10px; font-weight: 900; color: {{a.rc}}">{{a.rn}}</span>
+                </span>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <span class="{{op.expCls}}" style="text-align: center; color: {{op.expC}}">{{op.expLong}}</span>
+        <div style="display: flex; gap: 8px">
+          <sc-if value="{{op.canDel}}" hint-placeholder-val="{{false}}">
+            <button class="ghost" onClick="{{op.del}}" style="flex: 1; min-height: 52px">Apagar</button>
+          </sc-if>
+          <button class="{{op.btnCls}}" onClick="{{op.act}}" style="flex: 2; min-height: 52px">{{op.btnTxt}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== confirmar apagar lidas ===== -->
+  <sc-if value="{{hasConfirm}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeConfirm}}" aria-label="Cancelar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="alertdialog" aria-label="Apagar cartas lidas">
+        <span class="lil ol" style="font-size: 20px; text-align: center">{{confT}}</span>
+        <span class="note" style="text-align: center">Cartas com anexo ainda não coletado não são apagadas.</span>
+        <div style="display: flex; gap: 8px">
+          <button class="ghost" onClick="{{closeConfirm}}" style="flex: 1; min-height: 52px">Cancelar</button>
+          <button class="red" onClick="{{doDelete}}" style="flex: 1; min-height: 52px">Apagar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var COIN = '/_blob/3f2502c864add38c4b3faf5853f0dd9a', GEM = '/_blob/1c420bdcae24bd962967021584f5bd64', CHEST = '/_blob/b8d381af334d1ec5e3023cf138922df4';
+var RN = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'];
+var RC = ['#b8bec4', '#4aa3ff', '#c58bff', '#ff6f88', '#ffc94a'];
+// ícones das cartas (traço) por tipo
+var TYPE = {
+  sys: { bg: 'linear-gradient(180deg,#5a7a9a,#2a3a4a)', fg: '#e0f0ff', ip: 'M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z M15 9a4 4 0 0 1 0 6 M18 6a8 8 0 0 1 0 12' },
+  arena: { bg: 'linear-gradient(180deg,#ff8a6a,#a0301e)', fg: '#fff0e0', ip: 'M14.5 17.5L3 6V3h3l11.5 11.5 M13 19l6-6 M16 16l4 4 M19 21l2-2 M14.5 6.5L18 3h3v3l-3.5 3.5 M5 14l4 4 M7 17l-3 3 M3 19l2 2' },
+  rank: { bg: 'linear-gradient(180deg,#ffe07a,#c77a12)', fg: '#3a1a04', ip: 'M8 21h8 M12 17v4 M7 4h10v5a5 5 0 0 1-10 0z M7 5H4v2a3 3 0 0 0 3 3 M17 5h3v2a3 3 0 0 1-3 3' },
+  torneio: { bg: 'linear-gradient(180deg,#c58bff,#5a2a9a)', fg: '#fff', ip: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
+  comp: { bg: 'linear-gradient(180deg,#7fe07a,#2a7a2a)', fg: '#0d2410', ip: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z' },
+  evento: { bg: 'linear-gradient(180deg,#ff8ad0,#a02a6a)', fg: '#fff', ip: 'M20 12v9H4v-9 M2 7h20v5H2z M12 21V7 M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z' }
+};
+// itens: imagem aprovada (moeda, gema, baú) ou desenho simples
+var ITEM = {
+  coin: { name: 'Moedas', src: COIN },
+  gem: { name: 'Gemas', src: GEM },
+  chest: { name: 'Baú', src: CHEST },
+  stone: { name: 'Pedra de forja', ip: 'M12 2L20 8 17 21H7L4 8z M12 2v19 M4 8h16', fill: '#7cc0ff' },
+  ess: { name: 'Essência', ip: 'M12 2C8 8 5 11 5 15a7 7 0 0 0 14 0c0-4-3-7-7-13z', fill: '#c58bff' },
+  title: { name: 'Título', ip: 'M3 5h18v9l-9 7-9-7z M7 9h10', fill: '#ff6f88' },
+  frame: { name: 'Moldura', ip: 'M2 2h20v20H2z M7 7v10h10V7z', fill: '#ffc94a' }
+};
+function A(k, q, r, label) { return { k: k, q: q, r: r, label: label || '' }; }
+var LETTERS = [
+  { id: 1, type: 'comp', title: 'Compensação: manutenção de 10/11', from: 'Equipe Eonbound', sent: 1, hh: '18:40', exp: 1, read: null,
+    body: 'Olá, viajante! A manutenção de 10/11 durou mais que o previsto. Pedimos desculpas pelo tempo fora. Aqui está uma compensação para todos os jogadores.',
+    atts: [A('gem', 200, 4), A('coin', 50000, 0)] },
+  { id: 2, type: 'arena', title: 'Prêmio da Arena · semana 46', from: 'Arena', sent: 0, hh: '00:05', exp: 6, read: null,
+    body: 'Você terminou a semana na Liga Ouro II com 1.240 pontos. Continue lutando para subir de liga!',
+    atts: [A('gem', 120, 2), A('chest', 1, 1, 'Baú raro'), A('coin', 15000, 0)] },
+  { id: 3, type: 'rank', title: 'Ranking semanal: 37º lugar', from: 'Ranking', sent: 0, hh: '00:02', exp: 6, read: null,
+    body: 'Parabéns! Você ficou em 37º no ranking de Força da semana. Prêmio da faixa 11 a 50.',
+    atts: [A('gem', 60, 1), A('stone', 8, 1)] },
+  { id: 4, type: 'evento', title: 'Presente do Festival da Colheita', from: 'Evento', sent: 2, hh: '12:00', exp: 3, read: null,
+    body: 'O Festival da Colheita chegou às eras! Abra seu presente e aproveite as missões especiais até domingo.',
+    atts: [A('chest', 1, 2, 'Baú épico'), A('ess', 20, 2), A('frame', 1, 4, 'Moldura Outonal')] },
+  { id: 5, type: 'torneio', title: 'Torneio de Poder · Top 100', from: 'Torneio', sent: 3, hh: '21:15', exp: 13, read: null,
+    body: 'Você entrou no Top 100 do Torneio de Poder! Seu novo título já pode ser usado no perfil.',
+    atts: [A('title', 1, 3, 'Título Desafiante'), A('gem', 80, 2)] },
+  { id: 6, type: 'sys', title: 'Bem-vindo à Era Medieval', from: 'Equipe Eonbound', sent: 0, hh: '09:12', exp: null, read: null,
+    body: 'Você chegou à Era Medieval! Novos inimigos, novas armas na Forja e a Torre ganhou novos andares. Boa jornada, Kael.',
+    atts: [] },
+  { id: 7, type: 'sys', title: 'Manutenção concluída', from: 'Equipe Eonbound', sent: 5, hh: '06:30', exp: null, read: -5,
+    body: 'A manutenção terminou. Obrigado pela paciência! Confira as novidades da versão em Configurações.',
+    atts: [] },
+  { id: 8, type: 'arena', title: 'Prêmio da Arena · semana 45', from: 'Arena', sent: 7, hh: '00:05', exp: 6, read: -7, done: true,
+    body: 'Você terminou a semana na Liga Ouro III com 1.110 pontos.',
+    atts: [A('gem', 100, 2), A('coin', 12000, 0)] }
+];
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function kq(v) { return v >= 1000 ? (v / 1000).toLocaleString('pt-BR') + 'K' : (v > 1 ? 'x' + v : ''); }
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function dateTxt(ago) { return ago <= 0 ? 'hoje' : ago === 1 ? 'ontem' : 'há ' + ago + ' dias'; }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { list: clone(LETTERS), tab: 0, day: 0, openId: null, flying: false, confirm: false, toast: '', tid: 0, coins: 48200, gems: 320 };
+  }
+  componentWillUnmount() { clearTimeout(this.tt); clearTimeout(this.ft); }
+  sfx(u) { try { var a = new Audio(u); a.volume = 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this; clearTimeout(this.tt); this.setState({ toast: t, tid: this.state.tid + 1 }); this.tt = setTimeout(function () { self.setState({ toast: '' }); }, 2600); }
+  left(l) { return l.exp == null ? null : l.exp - this.state.day; }
+  pending(l) { return l.atts.length > 0 && !l.done; }
+  // carta some: anexo vence; carta sem anexo some 7 dias depois de lida
+  alive(l) {
+    var d = this.state.day, lf = this.left(l);
+    if (lf != null && lf <= 0) return false;
+    if (!l.atts.length && l.read != null && d - l.read >= 7) return false;
+    return true;
+  }
+  gain(atts) {
+    var c = 0, g = 0, bag = {};
+    atts.forEach(function (a) { if (a.k === 'coin') c += a.q; else if (a.k === 'gem') g += a.q; else { var n = a.label || ITEM[a.k].name; bag[n] = (bag[n] || 0) + a.q; } });
+    var parts = [];
+    if (g) parts.push(n0(g) + ' gemas'); if (c) parts.push(n0(c) + ' moedas');
+    Object.keys(bag).forEach(function (n) { parts.push((bag[n] > 1 ? bag[n] + 'x ' : '') + n); });
+    return { c: c, g: g, txt: parts.join(', ') };
+  }
+  collect(ids) {
+    var self = this, s = this.state, got = [], legend = false;
+    var list = s.list.map(function (l) {
+      if (ids.indexOf(l.id) < 0 || !self.pending(l) || !self.alive(l)) return l;
+      var n = clone(l); n.done = true; if (n.read == null) n.read = s.day;
+      n.atts.forEach(function (a) { got.push(a); if (a.r >= 4) legend = true; });
+      return n;
+    });
+    if (!got.length) return null;
+    var g = this.gain(got);
+    this.sfx(legend ? SND.legendary : SND.claim);
+    setTimeout(function () { self.sfx(SND.coin); }, 260);
+    this.setState({ list: list, coins: s.coins + g.c, gems: s.gems + g.g });
+    return g;
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    var live = s.list.filter(function (l) { return self.alive(l); });
+    var unread = live.filter(function (l) { return l.read == null; }).length;
+    var pend = live.filter(function (l) { return self.pending(l); });
+    var readDel = live.filter(function (l) { return l.read != null && !self.pending(l); });
+    var shown = live.filter(function (l) { return s.tab === 0 ? true : s.tab === 1 ? l.read == null : l.atts.length > 0; })
+      .sort(function (a, b) { var ua = a.read == null ? 0 : 1, ub = b.read == null ? 0 : 1; return ua - ub || (self.pending(b) - self.pending(a)) || a.sent - b.sent; });
+    function attV(l) {
+      return l.atts.map(function (a, i) {
+        var it = ITEM[a.k];
+        return { isImg: !!it.src, isSvg: !it.src, src: it.src || '', ip: it.ip || '', fill: it.fill || '', rc: RC[a.r], rn: RN[a.r], glow: RC[a.r] + '99',
+          name: a.label || it.name, qty: kq(a.q), cls: 'att' + (a.r >= 3 && !l.done ? ' shine' : '') + (l.done ? ' done' : ''),
+          bigCls: 'bigAtt' + (s.flying ? ' fly' : ''), d: (i * 0.08) + 's' };
+      });
+    }
+    function expV(l) {
+      var lf = self.left(l);
+      if (!l.atts.length) {
+        if (l.read == null) return { t: 'sem anexo', long: 'Sem anexo · some 7 dias depois de lida', c: '#8a7a68', cls: 'exp' };
+        var k = 7 - (s.day - l.read);
+        return { t: 'some em ' + k + (k === 1 ? ' dia' : ' dias'), long: 'Carta sem anexo: some em ' + k + (k === 1 ? ' dia' : ' dias'), c: '#8a7a68', cls: 'exp' };
+      }
+      if (l.done) return { t: 'coletado ✓', long: 'Anexos coletados', c: '#7ef08a', cls: 'exp' };
+      var t = lf === 1 ? 'expira amanhã' : 'expira em ' + lf + ' dias';
+      return { t: t, long: 'Anexos ' + (lf === 1 ? 'expiram amanhã' : 'expiram em ' + lf + ' dias') + ' · colete antes', c: lf <= 2 ? '#ff7a5a' : '#ffe07a', cls: lf <= 2 ? 'exp urg' : 'exp' };
+    }
+    var rows = shown.map(function (l, i) {
+      var T = TYPE[l.type], e = expV(l), ago = l.sent + s.day, isU = l.read == null;
+      return {
+        title: l.title, from: l.from, date: dateTxt(ago) + (ago <= 1 ? ' ' + l.hh : ''), unread: isU, fw: isU ? 900 : 700,
+        cls: 'row' + (isU ? ' unread' : ''), icCls: 'lic' + (self.pending(l) ? ' bob' : ''), icBg: T.bg, icFg: T.fg, ip: T.ip,
+        atts: attV(l), expTxt: e.t, expC: e.c, expCls: e.cls, d: (i * 0.05) + 's',
+        aria: (isU ? 'Não lida. ' : '') + l.title + ', de ' + l.from + '. ' + (l.atts.length ? l.atts.length + ' anexos. ' : '') + e.t,
+        open: function () {
+          self.sfx(SND.tap);
+          var list = s.list.map(function (x) { if (x.id !== l.id || x.read != null) return x; var n = clone(x); n.read = s.day; return n; });
+          self.setState({ list: list, openId: l.id, flying: false });
+        }
+      };
+    });
+    var op = {}, cur = s.list.filter(function (l) { return l.id === s.openId; })[0];
+    if (cur) {
+      var T = TYPE[cur.type], e = expV(cur), ago = cur.sent + s.day, pd = self.pending(cur);
+      op = {
+        title: cur.title, from: cur.from, date: dateTxt(ago) + ' ' + cur.hh, body: cur.body, icBg: T.bg, icFg: T.fg, ip: T.ip,
+        hasAtt: cur.atts.length > 0, pending: pd, atts: attV(cur), expLong: e.long, expC: e.c, expCls: e.cls,
+        canDel: !pd, btnCls: pd ? 'grn pulse' : 'grn off', btnTxt: pd ? 'Coletar' : (cur.atts.length ? 'Coletado ✓ · Fechar' : 'Fechar'),
+        act: function () {
+          if (!pd) { self.sfx(SND.tap); self.setState({ openId: null }); return; }
+          self.setState({ flying: true });
+          var g = self.collect([cur.id]);
+          clearTimeout(self.ft); self.ft = setTimeout(function () { self.setState({ flying: false }); }, 700);
+          if (g) self.say('Coletado: ' + g.txt);
+        },
+        del: function () { self.sfx(SND.tap); self.setState({ list: s.list.filter(function (x) { return x.id !== cur.id; }), openId: null }); self.say('Carta apagada'); }
+      };
+    }
+    var tabsDef = [['Todas', live.length], ['Não lidas', unread], ['Com anexo', pend.length]];
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      hasUnread: unread > 0, unread: unread, unreadAria: unread + ' não lidas',
+      coins: n0(s.coins), gems: n0(s.gems), coinAria: 'Moedas: ' + n0(s.coins) + '. Comprar na loja', gemAria: 'Gemas: ' + n0(s.gems) + '. Comprar na loja',
+      tabs: tabsDef.map(function (t, i) {
+        return { label: t[0] + ' ' + t[1], sel: i === s.tab ? 'true' : 'false', cls: 'tab' + (i === s.tab ? ' on' : ''),
+          pick: function () { self.sfx(SND.tap); self.setState({ tab: i }); } };
+      }),
+      ruleTxt: 'Anexos vencem na data mostrada. Carta sem anexo some 7 dias depois de lida.',
+      dayTxt: s.day ? 'Prévia: +' + s.day + 'd · +1 dia' : 'Prévia: +1 dia',
+      addDay: function () {
+        self.sfx(SND.tap);
+        var before = live.length, d = s.day + 1;
+        self.setState({ day: d });
+        var after = s.list.filter(function (l) { var lf = l.exp == null ? null : l.exp - d; if (lf != null && lf <= 0) return false; if (!l.atts.length && l.read != null && d - l.read >= 7) return false; return true; }).length;
+        self.say(before - after > 0 ? 'Passou 1 dia: ' + (before - after) + ' carta(s) sumiram' : 'Passou 1 dia');
+      },
+      rows: rows, isEmpty: rows.length === 0, emptyT: s.tab === 1 ? 'Tudo lido!' : s.tab === 2 ? 'Nenhum anexo para coletar' : 'Correio vazio',
+      allCls: pend.length ? 'grn pulse' : 'grn off', allTxt: pend.length ? 'Coletar tudo (' + pend.length + ')' : 'Nada a coletar',
+      allAria: pend.length ? 'Coletar tudo: ' + pend.length + ' cartas com anexo' : 'Nada a coletar',
+      collectAll: function () {
+        if (!pend.length) { self.sfx(SND.tap); self.say('Nenhum anexo para coletar'); return; }
+        var g = self.collect(pend.map(function (l) { return l.id; }));
+        if (g) self.say('Coletado: ' + g.txt);
+      },
+      delAria: 'Apagar lidas: ' + readDel.length + ' cartas',
+      askDelete: function () {
+        self.sfx(SND.tap);
+        if (!readDel.length) { self.say('Nenhuma carta lida para apagar'); return; }
+        self.setState({ confirm: true });
+      },
+      hasConfirm: s.confirm, confT: 'Apagar ' + readDel.length + (readDel.length === 1 ? ' carta lida?' : ' cartas lidas?'),
+      closeConfirm: function () { self.sfx(SND.tap); self.setState({ confirm: false }); },
+      doDelete: function () {
+        var ids = readDel.map(function (l) { return l.id; });
+        self.sfx(SND.tap);
+        self.setState({ confirm: false, list: s.list.filter(function (l) { return ids.indexOf(l.id) < 0; }) });
+        self.say(ids.length + (ids.length === 1 ? ' carta apagada' : ' cartas apagadas'));
+      },
+      hasOpen: !!cur, op: op, closeOpen: function () { self.sfx(SND.tap); self.setState({ openId: null }); },
+      hasToast: !!s.toast, toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

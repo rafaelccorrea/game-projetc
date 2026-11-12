@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Missões</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- Missões (protótipo). Layout novo: sem barra de baixo, header da Batalha V2 com VOLTAR, responsivo (100dvh, largura até 640).
+     Abas Diárias · Semanais · Conquistas · Guia. Cada missão: ícone, barra, recompensa, Ir / Resgatar (prêmio voa até o header) / Feito.
+     Baú de progresso diário com marcos 20/40/60/80/100 pontos (só nas Diárias). Renovação à meia-noite de Brasília (UTC-3):
+     diárias todo dia, semanais na segunda-feira. "Resgatar tudo" resgata a aba aberta. Quantidades de prêmio = valores de PROTÓTIPO.
+     "Ir" no protótipo avança o progresso (+1 ou +meta) para dar para testar o resgate. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+html,body{height:100%}
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#0e0a07}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf;-webkit-tap-highlight-color:transparent}
+button:active{transform:scale(.96)}
+.ol{text-shadow:-1px -1px 0 #120c08,1px -1px 0 #120c08,-1px 1px 0 #120c08,1px 1px 0 #120c08,0 2px 0 #120c08}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2) ===== */
+.nhApp{position:relative;width:100%;max-width:640px;margin:0 auto;height:100vh;height:100dvh;min-height:560px;overflow:hidden;display:flex;flex-direction:column;background:#16110d}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900;font-variant-numeric:tabular-nums}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+.cbump{animation:cbump .35s ease-out}
+@keyframes cbump{0%,100%{transform:scale(1)}40%{transform:scale(1.2)}}
+.nhBody{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:radial-gradient(ellipse at 50% 0%,#3a2414 0%,#1d1611 45%,#16110d 80%)}
+
+/* faixa de renovação */
+.rn{flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 6px 4px 10px;border-radius:14px;background:#1d1611;border:2px solid #4a3a2b}
+.hg{animation:hg 2s ease-in-out infinite;transform-origin:50% 50%}
+@keyframes hg{0%,40%{transform:rotate(0)}50%,90%{transform:rotate(180deg)}100%{transform:rotate(180deg)}}
+/* baú diário */
+.chestCard{flex:none;position:relative;border-radius:16px;padding:8px 10px 6px;background:linear-gradient(180deg,#3a2a1c,#241b14);border:2px solid #6a4a2a;overflow:hidden}
+.chestCard::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,236,200,.08) 50%,transparent 65%);background-size:300% 100%;animation:shn 4s ease-in-out infinite;pointer-events:none}
+.track{position:relative;height:12px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden}
+.track > span{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,#2fc9a8,#8ff5dc);transition:width .6s cubic-bezier(.2,1,.4,1)}
+.track > span::after,.bar > span::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);background-size:300% 100%;animation:shn 2.2s ease-in-out infinite}
+.mk{position:absolute;top:0;width:48px;height:58px;margin-left:-24px;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.chest{width:38px;height:34px;transition:transform .2s}
+.chReady{animation:chJ 1.1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,201,74,.9))}
+@keyframes chJ{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-5px) rotate(-6deg)}50%{transform:translateY(0) rotate(0)}75%{transform:translateY(-3px) rotate(5deg)}}
+.chDone{opacity:.55;filter:grayscale(.6)}
+.chOpen{animation:chOpen .6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes chOpen{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-8deg)}100%{transform:scale(1)}}
+.ptsIco{animation:ptsG 2s ease-in-out infinite}
+@keyframes ptsG{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.ptsBump{animation:cbump .35s ease-out}
+
+/* abas */
+.tab{position:relative;flex:1;min-width:0;height:44px;border-radius:12px;font-size:14px;padding:0 2px;font-family:'Lilita One',sans-serif;font-weight:400;white-space:nowrap}
+.bdg{position:absolute;top:-6px;right:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ff4a3a;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;line-height:20px;border:2px solid #16110d;animation:bdgP 1.4s ease-in-out infinite}
+@keyframes bdgP{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+/* lista */
+.list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:6px;padding:2px 2px 4px;scrollbar-width:thin;scrollbar-color:#4a3a2b transparent}
+.ms{flex:none;position:relative;display:flex;align-items:center;gap:8px;min-height:66px;padding:6px 6px 6px 6px;border-radius:14px;background:#1d1611;border:2px solid #3a2e24;animation:mIn .35s ease-out both}
+@keyframes mIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.msReady{border-color:#ffc94a;background:linear-gradient(90deg,#3a2c18,#1d1611 70%)}
+.msReady::after{content:"";position:absolute;inset:0;border-radius:12px;background:linear-gradient(110deg,transparent 35%,rgba(255,224,122,.16) 50%,transparent 65%);background-size:300% 100%;animation:shn 2.6s ease-in-out infinite;pointer-events:none}
+.msDone{opacity:.6}
+.ico{width:44px;height:44px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#4a3a2b,#241b14);border:1px solid #5a4a3a}
+.icoReady{animation:icoW 1.8s ease-in-out infinite}
+@keyframes icoW{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg) scale(1.06)}}
+.bar{position:relative;height:10px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden}
+.bar > span{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .5s cubic-bezier(.2,1,.4,1)}
+.rw{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;width:46px;line-height:1}
+.rw img{width:26px;height:26px;object-fit:contain}
+.rw b{font-size:11.5px;font-weight:900;margin-top:2px}
+.btn{min-height:44px;min-width:76px;border-radius:12px;border:0;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 8px;flex:none}
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10}
+.green{background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1f6a1d}
+.ghost{background:#33271d;border:2px solid #4a3a2b;color:#f6ecdf}
+.off{background:#2a221b;color:#7a6a5a;box-shadow:none}
+.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{filter:brightness(1);transform:scale(1)}50%{filter:brightness(1.15);transform:scale(1.04)}}
+.allBar{flex:none;display:flex;gap:6px;align-items:center}
+.guideHd{flex:none;display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:12px;background:#241b14;border:1px solid #4a3a2b}
+.lockIco{animation:padl 2.4s ease-in-out infinite;transform-origin:50% 30%}
+@keyframes padl{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-9deg)}92%{transform:rotate(8deg)}}
+
+/* prêmio voando */
+.fly{position:absolute;z-index:50;pointer-events:none;width:26px;height:26px;object-fit:contain;animation:fly .85s cubic-bezier(.5,0,.6,1) both}
+@keyframes fly{0%{transform:translate(0,0) scale(.5);opacity:0}18%{opacity:1;transform:translate(var(--jx),-34px) scale(1.25)}100%{transform:translate(var(--dx),var(--dy)) scale(.55);opacity:.3}}
+.flyPt{position:absolute;z-index:50;pointer-events:none;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,#8ff5dc 55%,#2fc9a8);box-shadow:0 0 10px 3px rgba(143,245,220,.8);animation:fly .85s cubic-bezier(.5,0,.6,1) both}
+.gain{position:absolute;z-index:51;pointer-events:none;font-family:'Lilita One',sans-serif;font-size:16px;color:#ffe07a;animation:gain 1.1s ease-out both}
+@keyframes gain{0%{opacity:0;transform:translateY(6px)}20%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:60;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.4s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-8px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@media (max-height:720px){.ms{min-height:58px}.chestCard{padding:6px 8px 4px}}
+</style>
+</helmet>
+<div class="nhApp">
+
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Missões</span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="{{goldAria}}">
+        <span class="{{goldCls}}" data-tgt="gold"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>{{goldTxt}}</b><span class="nhPlus" aria-hidden="true">+</span></span>
+      </a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="{{gemAria}}">
+        <span class="{{gemCls}}" data-tgt="gem"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gemTxt}}</b><span class="nhPlus" aria-hidden="true">+</span></span>
+      </a>
+    </div>
+  </div>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+  <sc-for list="{{flies}}" as="f" hint-placeholder-count="0">
+    <sc-if value="{{f.img}}" hint-placeholder-val="{{true}}">
+      <img class="fly" src="{{f.src}}" alt="" style="left: {{f.x}}; top: {{f.y}}; --dx: {{f.dx}}; --dy: {{f.dy}}; --jx: {{f.jx}}; animation-delay: {{f.d}}">
+    </sc-if>
+    <sc-if value="{{f.pt}}" hint-placeholder-val="{{false}}">
+      <span class="flyPt" aria-hidden="true" style="left: {{f.x}}; top: {{f.y}}; --dx: {{f.dx}}; --dy: {{f.dy}}; --jx: {{f.jx}}; animation-delay: {{f.d}}"></span>
+    </sc-if>
+  </sc-for>
+  <sc-for list="{{gains}}" as="g" hint-placeholder-count="0">
+    <span class="gain ol" aria-hidden="true" style="left: {{g.x}}; top: {{g.y}}">{{g.t}}</span>
+  </sc-for>
+
+  <div class="nhBody">
+
+    <!-- renovação -->
+    <div class="rn" role="timer" aria-label="{{rnAria}}">
+      <svg class="hg" width="16" height="20" viewBox="0 0 12 16" aria-hidden="true"><path d="M1 1 H11 M1 15 H11 M2 1 C2 5 6 6.5 6 8 C6 9.5 2 11 2 15 M10 1 C10 5 6 6.5 6 8 C6 9.5 10 11 10 15" fill="none" stroke="#ffe07a" stroke-width="1.4"></path></svg>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+        <span style="font-size: 12px; font-weight: 900">{{rnLbl}}</span>
+        <span style="font-size: 10.5px; font-weight: 800; color: #c9b9a2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{rnSub}}</span>
+      </span>
+      <span class="lil" style="font-size: 18px; color: #ffe07a; font-variant-numeric: tabular-nums; white-space: nowrap">{{rnLeft}}</span>
+    </div>
+
+    <!-- baú de progresso diário -->
+    <sc-if value="{{tDay}}" hint-placeholder-val="{{true}}">
+      <div class="chestCard">
+        <div style="position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; margin-bottom: 4px">
+          <svg class="ptsIco" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#2fc9a8" stroke="#0d4a3a" stroke-width="2"></circle><path d="M12 5 L13.8 10.2 L19 12 L13.8 13.8 L12 19 L10.2 13.8 L5 12 L10.2 10.2 Z" fill="#eafff8"></path></svg>
+          <span class="{{ptsCls}}" style="font-size: 13px; font-weight: 900" data-tgt="pts">Atividade de hoje: <b style="color: #8ff5dc">{{pts}}</b> / 100</span>
+          <span style="flex: 1"></span>
+          <span style="font-size: 10.5px; font-weight: 800; color: #c9b9a2">{{chestHint}}</span>
+        </div>
+        <div style="position: relative; z-index: 1; height: 74px; margin: 0 20px 0 6px">
+          <div class="track" role="progressbar" aria-label="Pontos de atividade do dia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{pts}}" style="position: absolute; left: 0; right: 0; top: 26px"><span style="width: {{ptsPct}}"></span></div>
+          <sc-for list="{{chests}}" as="c" hint-placeholder-count="5">
+            <button class="mk" onClick="{{c.pick}}" aria-label="{{c.aria}}" style="left: {{c.l}}; top: 0">
+              <svg class="{{c.cls}}" viewBox="0 0 40 36" aria-hidden="true"><path d="M3 15 Q3 4 20 4 Q37 4 37 15 Z" fill="{{c.lid}}" stroke="#3a1e08" stroke-width="2"></path><rect x="3" y="15" width="34" height="18" rx="3" fill="{{c.body}}" stroke="#3a1e08" stroke-width="2"></rect><rect x="17" y="12" width="6" height="10" rx="1.5" fill="#ffe07a" stroke="#3a1e08" stroke-width="1.5"></rect><path d="M3 21 H37" stroke="#3a1e08" stroke-width="1.5"></path></svg>
+              <span style="font-size: 11px; font-weight: 900; color: {{c.fg}}; margin-top: 10px">{{c.v}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- abas -->
+    <div role="tablist" aria-label="Tipos de missão" style="flex: none; display: flex; gap: 4px; margin-top: 4px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+        <button role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}" class="tab" style="border: 2px solid {{t.bd}}; background: {{t.bg}}; color: {{t.fg}}">
+          {{t.label}}
+          <sc-if value="{{t.has}}" hint-placeholder-val="{{false}}"><span class="bdg">{{t.n}}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{tGuide}}" hint-placeholder-val="{{false}}">
+      <div class="guideHd">
+        <span class="lil" style="font-size: 15px; color: #ffe07a">Capítulo {{chap}}</span>
+        <span style="flex: 1; min-width: 0; font-size: 11px; font-weight: 800; color: #c9b9a2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{chapTxt}}</span>
+        <span style="font-size: 12px; font-weight: 900">{{chapProg}}</span>
+      </div>
+    </sc-if>
+
+    <div class="list" role="list" aria-label="{{listAria}}">
+      <sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+        <div role="listitem" class="{{m.cls}}" style="animation-delay: {{m.dl}}">
+          <span class="{{m.icoCls}}">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{m.ic}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{m.path}}"></path></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <span style="font-size: 13px; font-weight: 900; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{m.txt}}</span>
+            <span style="display: flex; align-items: center; gap: 6px">
+              <span class="bar" role="progressbar" aria-label="{{m.barAria}}" aria-valuemin="0" aria-valuemax="{{m.need}}" aria-valuenow="{{m.have}}" style="flex: 1"><span style="width: {{m.pct}}; background: {{m.barBg}}"></span></span>
+              <span style="flex: none; font-size: 11px; font-weight: 900; color: #c9b9a2; font-variant-numeric: tabular-nums">{{m.prog}}</span>
+            </span>
+          </span>
+          <span class="rw" role="img" aria-label="{{m.rwAria}}">
+            <img src="{{m.rwImg}}" alt="">
+            <b>{{m.rwQ}}</b>
+            <sc-if value="{{m.hasPts}}" hint-placeholder-val="{{false}}"><b style="color: #8ff5dc; font-size: 10px">+{{m.p}} pts</b></sc-if>
+          </span>
+          <sc-if value="{{m.ready}}" hint-placeholder-val="{{false}}">
+            <button class="btn gold pulse" onClick="{{m.claim}}" aria-label="{{m.claimAria}}">Resgatar</button>
+          </sc-if>
+          <sc-if value="{{m.going}}" hint-placeholder-val="{{true}}">
+            <button class="btn green" onClick="{{m.go}}" aria-label="{{m.goAria}}">Ir</button>
+          </sc-if>
+          <sc-if value="{{m.locked}}" hint-placeholder-val="{{false}}">
+            <span class="btn off" role="img" aria-label="Bloqueada: termine a anterior"><svg class="lockIco" width="18" height="20" viewBox="0 0 24 28" aria-hidden="true"><path d="M6 12 V8 A6 6 0 0 1 18 8 V12" fill="none" stroke="#7a6a5a" stroke-width="2.6"></path><rect x="3" y="12" width="18" height="14" rx="3" fill="#5a4a3a"></rect></svg></span>
+          </sc-if>
+          <sc-if value="{{m.done}}" hint-placeholder-val="{{false}}">
+            <span class="btn off" role="img" aria-label="Resgatada" style="color: #7fe07a"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7fe07a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 12 10 18 20 6"></polyline></svg>Feito</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+
+    <div class="allBar">
+      <span style="flex: 1; min-width: 0; font-size: 11.5px; font-weight: 800; color: #c9b9a2; line-height: 1.2">{{allTxt}}</span>
+      <button class="{{allCls}}" onClick="{{claimAll}}" aria-label="{{allAria}}" style="min-width: 150px">Resgatar tudo</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878', up: '/_blob/ca8bcec3fced3c13b36555744659895a' };
+var IMG = { gold: '/_blob/3f2502c864add38c4b3faf5853f0dd9a', gem: '/_blob/1c420bdcae24bd962967021584f5bd64' };
+// ícones (traço) — objetos, nenhum animal
+var IC = {
+  sword: 'M14.5 17.5 L3 6 V3 H6 L17.5 14.5 M13 19 L19 13 M16 16 L20 20 M19 21 L21 19',
+  skull: 'M12 3 C7 3 4 6.5 4 10.5 C4 13 5.5 14.5 7 15.5 V19 H17 V15.5 C18.5 14.5 20 13 20 10.5 C20 6.5 17 3 12 3 Z M9 11 H9.01 M15 11 H15.01 M10 19 V21 M14 19 V21',
+  star: 'M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z',
+  hammer: 'M15 12 L6 21 L3 18 L12 9 M14 4 L20 10 M11 7 L17 1 L23 7 L17 13',
+  bag: 'M6 7 H18 L20 21 H4 Z M9 7 V5 A3 3 0 0 1 15 5 V7',
+  flag: 'M5 21 V4 M5 4 H17 L14.5 8 L17 12 H5',
+  tower: 'M6 21 V8 H18 V21 M6 8 V4 H8 V6 H11 V4 H13 V6 H16 V4 H18 V8 M10 21 V16 H14 V21',
+  bolt: 'M13 2 L4 14 H11 L10 22 L20 9 H13 Z',
+  map: 'M3 6 L9 3 L15 6 L21 3 V18 L15 21 L9 18 L3 21 Z M9 3 V18 M15 6 V21',
+  shield: 'M12 2 L20 5 V11 C20 16 16.5 20 12 22 C7.5 20 4 16 4 11 V5 Z',
+  heart: 'M12 21 C12 21 3 15 3 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8.5 C21 15 12 21 12 21 Z',
+  gift: 'M3 9 H21 V13 H3 Z M5 13 V21 H19 V13 M12 9 V21 M12 9 C9 9 7 7 8.5 5.5 C10 4 12 6 12 9 C12 6 14 4 15.5 5.5 C17 7 15 9 12 9',
+  login: 'M15 3 H19 A2 2 0 0 1 21 5 V19 A2 2 0 0 1 19 21 H15 M10 17 L15 12 L10 7 M15 12 H3',
+  crown: 'M3 18 L5 7 L10 12 L12 5 L14 12 L19 7 L21 18 Z'
+};
+// k: chave, t: texto, n: meta, h: progresso inicial, rw: tipo, q: qtd, p: pontos diários, ic, go (tela ou passo)
+var DATA = [
+  [ // Diárias
+    { k: 'd1', t: 'Entre no jogo', n: 1, h: 1, rw: 'gold', q: 500, p: 10, ic: 'login', c: '#8ff5dc', step: 1 },
+    { k: 'd2', t: 'Vença 30 batalhas', n: 30, h: 30, rw: 'gold', q: 1200, p: 20, ic: 'sword', c: '#ff8a6a', step: 5 },
+    { k: 'd3', t: 'Derrote 1 chefe', n: 1, h: 0, rw: 'gem', q: 20, p: 20, ic: 'skull', c: '#ff5a5a', step: 1 },
+    { k: 'd4', t: 'Invoque 1 vez', n: 1, h: 1, rw: 'gem', q: 10, p: 10, ic: 'star', c: '#b07cff', step: 1 },
+    { k: 'd5', t: 'Melhore um item na Forja', n: 3, h: 1, rw: 'gold', q: 800, p: 10, ic: 'hammer', c: '#ffc94a', step: 1 },
+    { k: 'd6', t: 'Alimente o pet', n: 1, h: 0, rw: 'gold', q: 400, p: 10, ic: 'heart', c: '#ff8ad8', step: 1 },
+    { k: 'd7', t: 'Suba 1 andar da Torre', n: 1, h: 0, rw: 'gem', q: 15, p: 20, ic: 'tower', c: '#4aa3ff', step: 1 },
+    { k: 'd8', t: 'Compre 1 item na Loja', n: 1, h: 0, rw: 'gold', q: 300, p: 10, ic: 'bag', c: '#7fe07a', step: 1 }
+  ],
+  [ // Semanais
+    { k: 'w1', t: 'Vença 500 batalhas', n: 500, h: 500, rw: 'gem', q: 60, ic: 'sword', c: '#ff8a6a', step: 100 },
+    { k: 'w2', t: 'Complete 20 diárias', n: 20, h: 14, rw: 'gem', q: 50, ic: 'flag', c: '#8ff5dc', step: 3 },
+    { k: 'w3', t: 'Derrote 7 chefes', n: 7, h: 4, rw: 'gold', q: 8000, ic: 'skull', c: '#ff5a5a', step: 1 },
+    { k: 'w4', t: 'Participe de 3 eventos', n: 3, h: 3, rw: 'gem', q: 40, ic: 'gift', c: '#ffc94a', step: 1 },
+    { k: 'w5', t: 'Suba 10 andares da Torre', n: 10, h: 6, rw: 'gold', q: 6000, ic: 'tower', c: '#4aa3ff', step: 2 }
+  ],
+  [ // Conquistas
+    { k: 'a1', t: 'Chegue ao nível 50', n: 50, h: 46, rw: 'gem', q: 100, ic: 'crown', c: '#ffc94a', step: 1 },
+    { k: 'a2', t: 'Libere a era Medieval', n: 1, h: 1, rw: 'gem', q: 80, ic: 'map', c: '#c98a4a', step: 1 },
+    { k: 'a3', t: 'Tenha 3 montarias', n: 3, h: 3, rw: 'gem', q: 60, ic: 'shield', c: '#b07cff', step: 1 },
+    { k: 'a4', t: 'Vença 10.000 batalhas', n: 10000, h: 7420, rw: 'gold', q: 25000, ic: 'sword', c: '#ff8a6a', step: 1000 },
+    { k: 'a5', t: 'Leve um pet a 5★', n: 5, h: 3, rw: 'gem', q: 120, ic: 'star', c: '#ff8ad8', step: 1 },
+    { k: 'a6', t: 'Use o poder especial 200 vezes', n: 200, h: 200, rw: 'gold', q: 5000, ic: 'bolt', c: '#8ff5ff', step: 25 }
+  ],
+  [ // Guia (em ordem: só a primeira aberta destrava a próxima)
+    { k: 'g1', t: 'Equipe uma arma nova', n: 1, h: 1, rw: 'gold', q: 1000, ic: 'sword', c: '#ff8a6a', step: 1 },
+    { k: 'g2', t: 'Equipe a montaria', n: 1, h: 1, rw: 'gem', q: 30, ic: 'shield', c: '#b07cff', step: 1 },
+    { k: 'g3', t: 'Melhore 2 itens na Forja', n: 2, h: 1, rw: 'gold', q: 1500, ic: 'hammer', c: '#ffc94a', step: 1 },
+    { k: 'g4', t: 'Entre em uma guilda', n: 1, h: 0, rw: 'gem', q: 50, ic: 'flag', c: '#8ff5dc', step: 1 },
+    { k: 'g5', t: 'Vença o chefe da era', n: 1, h: 0, rw: 'gem', q: 80, ic: 'skull', c: '#ff5a5a', step: 1 }
+  ]
+];
+var MARKS = [
+  { v: 20, rw: 'gold', q: 1000 }, { v: 40, rw: 'gem', q: 20 }, { v: 60, rw: 'gold', q: 3000 }, { v: 80, rw: 'gem', q: 40 }, { v: 100, rw: 'gem', q: 80 }
+];
+var TABS = ['Diárias', 'Semanais', 'Conquistas', 'Guia'];
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function dur(ms) { var L = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(L / 86400), h = Math.floor(L % 86400 / 3600), m = Math.floor(L % 3600 / 60), s = L % 60; return (d > 0 ? d + 'd ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s); }
+// meia-noite de Brasília = 03:00 UTC (UTC-3, sem horário de verão)
+function nextMidBR(now) { var d = new Date(now); d.setUTCHours(3, 0, 0, 0); if (d.getTime() <= now) d.setUTCDate(d.getUTCDate() + 1); return d.getTime(); }
+function nextMonBR(now) { var t = nextMidBR(now); for (var i = 0; i < 8; i++) { var br = new Date(t - 3 * 3600000); if (br.getUTCDay() === 1) return t; t += 86400000; } return t; }
+function fmt(n) { return n.toLocaleString('pt-BR'); }
+function short(n) { return n >= 10000 ? (Math.round(n / 100) / 10).toString().replace('.', ',') + ' mil' : fmt(n); }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    var prog = {}, claimed = {};
+    DATA.forEach(function (L) { L.forEach(function (m) { prog[m.k] = m.h; }); });
+    claimed.d1 = true; claimed.a2 = true; claimed.g1 = true;
+    this.state = { tab: 0, now: Date.now(), prog: prog, claimed: claimed, pts: 10, chestC: {}, chOpen: -1, gold: 48250, gem: 320,
+      bumpG: false, bumpE: false, bumpP: false, flies: [], gains: [], toast: '', tk: 0 };
+    this.tm = []; this.fl = []; this.gn = []; this.fk = 0; this.acc = { gold: 48250, gem: 320, pts: 10 };
+  }
+  componentDidMount() { var self = this; this.iv = setInterval(function () { self.setState({ now: Date.now() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.iv); this.tm.forEach(clearTimeout); }
+  later(fn, ms) { this.tm.push(setTimeout(fn, ms)); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.6; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this, k = this.state.tk + 1; this.setState({ toast: t, tk: k }); this.later(function () { if (self.state.tk === k) self.setState({ toast: '' }); }, 2400); }
+  isLocked(tab, i) { if (tab !== 3) return false; for (var j = 0; j < i; j++) if (!this.state.claimed[DATA[3][j].k]) return true; return false; }
+  // posição (relativa ao app) do botão tocado e do alvo no header
+  pos(el, sel) {
+    var out = { x: 180, y: 500, tx: 300, ty: 20 };
+    try {
+      var app = document.querySelector('.nhApp').getBoundingClientRect();
+      if (el && el.getBoundingClientRect) { var r = el.getBoundingClientRect(); out.x = r.left - app.left + r.width / 2 - 13; out.y = r.top - app.top + r.height / 2 - 13; }
+      var t = document.querySelector('[data-tgt="' + sel + '"]');
+      if (t) { var q = t.getBoundingClientRect(); out.tx = q.left - app.left + 2; out.ty = q.top - app.top + q.height / 2 - 13; }
+    } catch (e) {}
+    return out;
+  }
+  // anima o prêmio voando até o header e credita ao chegar
+  fly(el, rw, q, pts, delay) {
+    var self = this, d0 = delay || 0, P = this.pos(el, rw), mine = [];
+    this.fk++;
+    for (var k = 0; k < 5; k++) mine.push({ img: true, pt: false, src: IMG[rw], x: P.x + 'px', y: P.y + 'px', dx: (P.tx - P.x) + 'px', dy: (P.ty - P.y) + 'px', jx: ((k - 2) * 14) + 'px', d: (d0 + k * 0.06) + 's' });
+    if (pts) {
+      var Q = this.pos(el, 'pts');
+      for (var j = 0; j < 3; j++) mine.push({ img: false, pt: true, x: Q.x + 'px', y: Q.y + 'px', dx: (Q.tx + 60 - Q.x) + 'px', dy: (Q.ty - Q.y) + 'px', jx: ((j - 1) * 12) + 'px', d: (d0 + 0.1 + j * 0.08) + 's' });
+    }
+    var gain = { x: P.x + 'px', y: (P.y - 10) + 'px', t: '+' + short(q) };
+    this.fl = this.fl.concat(mine); this.gn = this.gn.concat([gain]);
+    this.setState({ flies: this.fl, gains: this.gn });
+    this.later(function () {
+      self.fl = self.fl.filter(function (f) { return mine.indexOf(f) < 0; }); self.gn = self.gn.filter(function (g) { return g !== gain; });
+      var A = self.acc, ch = { flies: self.fl, gains: self.gn };
+      if (rw === 'gold') { A.gold += q; ch.gold = A.gold; ch.bumpG = true; } else { A.gem += q; ch.gem = A.gem; ch.bumpE = true; }
+      if (pts) { A.pts = Math.min(100, A.pts + pts); ch.pts = A.pts; ch.bumpP = true; }
+      self.sfx(SND.coin, 0.45); self.setState(ch);
+      self.later(function () { self.setState({ bumpG: false, bumpE: false, bumpP: false }); }, 400);
+    }, 900 + d0 * 1000);
+  }
+  claimOne(tab, m, el, delay) {
+    var c = Object.assign({}, this.state.claimed); c[m.k] = true; this.setState({ claimed: c });
+    this.fly(el, m.rw, m.q, tab === 0 ? m.p : 0, delay);
+  }
+  renderVals() {
+    var s = this.state, self = this, tab = s.tab, L = DATA[tab];
+    var readyN = DATA.map(function (LL, ti) { return LL.filter(function (m, i) { return !s.claimed[m.k] && s.prog[m.k] >= m.n && !self.isLocked(ti, i); }).length; });
+    var tabs = TABS.map(function (l, k) {
+      var on = tab === k;
+      return { label: l, sel: on ? 'true' : 'false', bd: on ? '#ffc94a' : '#4a3a2b', bg: on ? '#4a3420' : '#241b14', fg: on ? '#ffe07a' : '#c9b9a2', has: readyN[k] > 0, n: readyN[k],
+        pick: function () { self.sfx(SND.tap, 0.5); self.setState({ tab: k }); } };
+    });
+    // ordem: prontas, em andamento, feitas
+    var items = L.map(function (m, i) { var h = Math.min(m.n, s.prog[m.k]), done = !!s.claimed[m.k], lock = self.isLocked(tab, i), ready = !done && !lock && h >= m.n; return { m: m, i: i, h: h, done: done, lock: lock, ready: ready, o: ready ? 0 : (done ? 2 : 1) }; });
+    if (tab !== 3) items.sort(function (a, b) { return a.o - b.o || a.i - b.i; });
+    var rows = items.map(function (it, r) {
+      var m = it.m, pc = Math.round(it.h / m.n * 100);
+      return {
+        cls: 'ms' + (it.ready ? ' msReady' : '') + (it.done ? ' msDone' : ''), dl: (r * 0.04) + 's',
+        icoCls: 'ico' + (it.ready ? ' icoReady' : ''), ic: it.lock ? '#7a6a5a' : m.c, path: IC[m.ic],
+        txt: m.t, need: m.n, have: it.h, pct: pc + '%', prog: short(it.h) + '/' + short(m.n),
+        barBg: it.ready || it.done ? 'linear-gradient(90deg, #f2a826, #ffe07a)' : 'linear-gradient(90deg, #2fc9a8, #8ff5dc)',
+        barAria: m.t + ': ' + it.h + ' de ' + m.n,
+        rwImg: IMG[m.rw], rwQ: short(m.q), hasPts: tab === 0, p: m.p || 0,
+        rwAria: 'Prêmio: ' + fmt(m.q) + (m.rw === 'gold' ? ' de ouro' : ' gemas') + (tab === 0 ? ' e ' + m.p + ' pontos' : ''),
+        ready: it.ready, done: it.done, locked: it.lock, going: !it.ready && !it.done && !it.lock,
+        claimAria: 'Resgatar ' + fmt(m.q) + (m.rw === 'gold' ? ' de ouro' : ' gemas'), goAria: 'Ir fazer: ' + m.t,
+        claim: function (e) { var el = e && (e.currentTarget || e.target); self.sfx(SND.claim, 0.6); self.claimOne(tab, m, el, 0); },
+        go: function () {
+          var pr = Object.assign({}, self.state.prog); pr[m.k] = Math.min(m.n, pr[m.k] + m.step); self.sfx(SND.tap, 0.5); self.setState({ prog: pr });
+          self.say(pr[m.k] >= m.n ? 'Concluída! Toque em Resgatar' : 'Prévia: progresso +' + short(m.step) + ' (no jogo abre a tela da missão)');
+        }
+      };
+    });
+    // baú
+    var chests = MARKS.map(function (c, k) {
+      var got = !!s.chestC[k], ready = !got && s.pts >= c.v;
+      return { l: c.v + '%', v: c.v, fg: ready ? '#ffe07a' : (got ? '#7a6a5a' : '#c9b9a2'),
+        cls: 'chest' + (ready ? ' chReady' : '') + (got ? ' chDone' : '') + (s.chOpen === k ? ' chOpen' : ''),
+        lid: got ? '#5a4a3a' : (k === 4 ? '#ffc94a' : (k >= 2 ? '#b07cff' : '#c77a3a')), body: got ? '#4a3a2b' : (k === 4 ? '#f2a826' : (k >= 2 ? '#7a4ac8' : '#8a4a1a')),
+        aria: 'Baú de ' + c.v + ' pontos: ' + fmt(c.q) + (c.rw === 'gold' ? ' de ouro' : ' gemas') + (got ? ' (aberto)' : (ready ? ' (pronto, toque para abrir)' : ' (faltam ' + (c.v - s.pts) + ' pontos)')),
+        pick: function (e) {
+          var S = self.state; if (S.chestC[k]) { self.say('Baú já aberto hoje'); return; }
+          if (S.pts < c.v) { self.say('Faltam ' + (c.v - S.pts) + ' pontos: faça as diárias'); return; }
+          var cc = Object.assign({}, S.chestC); cc[k] = true; self.sfx(SND.up, 0.6); self.setState({ chestC: cc, chOpen: k });
+          self.fly(e && (e.currentTarget || e.target), c.rw, c.q, 0, 0.15);
+          self.later(function () { if (self.state.chOpen === k) self.setState({ chOpen: -1 }); }, 700);
+        } };
+    });
+    var nReadyCh = MARKS.filter(function (c, k) { return !s.chestC[k] && s.pts >= c.v; }).length;
+    var nextMk = MARKS.filter(function (c) { return s.pts < c.v; })[0];
+    var tReset = tab === 1 ? nextMonBR(s.now) : nextMidBR(s.now), noReset = tab >= 2;
+    var allN = readyN[tab] + (tab === 0 ? nReadyCh : 0);
+    return {
+      tap: function () { self.sfx(SND.tap, 0.5); },
+      goldTxt: fmt(s.gold), goldAria: 'Ouro: ' + fmt(s.gold) + '. Comprar na loja', goldCls: 'nhPill nhGl' + (s.bumpG ? ' cbump' : ''),
+      gemTxt: fmt(s.gem), gemAria: 'Gemas: ' + fmt(s.gem) + '. Comprar na loja', gemCls: 'nhPill nhGl' + (s.bumpE ? ' cbump' : ''),
+      hasToast: !!s.toast, toast: s.toast, flies: s.flies, gains: s.gains,
+      rnLbl: tab === 0 ? 'Diárias renovam em' : (tab === 1 ? 'Semanais renovam em' : (tab === 2 ? 'Conquistas não renovam' : 'Guia: siga em ordem')),
+      rnSub: noReset ? 'Diárias renovam à meia-noite de Brasília' : (tab === 0 ? 'meia-noite de Brasília (00:00)' : 'segunda-feira, meia-noite de Brasília'),
+      rnLeft: noReset ? dur(nextMidBR(s.now) - s.now) : dur(tReset - s.now),
+      rnAria: 'Renovação: ' + dur((noReset ? nextMidBR(s.now) : tReset) - s.now),
+      tDay: tab === 0, pts: s.pts, ptsPct: s.pts + '%', ptsCls: s.bumpP ? 'ptsBump' : '',
+      chests: chests, chestHint: nReadyCh ? nReadyCh + ' baú(s) pronto(s)!' : (nextMk ? 'próximo: ' + nextMk.v + ' pts' : 'todos abertos'),
+      tabs: tabs, tGuide: tab === 3, rows: rows, listAria: 'Missões: ' + TABS[tab],
+      chap: 3, chapTxt: 'Rumo à era Medieval', chapProg: DATA[3].filter(function (m) { return s.claimed[m.k]; }).length + '/' + DATA[3].length,
+      allTxt: allN ? allN + ' prêmio(s) para resgatar nesta aba' : 'Nada para resgatar agora · toque em Ir para avançar',
+      allCls: 'btn ' + (allN ? 'gold pulse' : 'off'), allAria: allN ? 'Resgatar tudo: ' + allN + ' prêmios' : 'Nada para resgatar',
+      claimAll: function (e) {
+        var S = self.state, el = e && (e.currentTarget || e.target), n = 0;
+        if (!allN) { self.say('Nada para resgatar agora'); return; }
+        self.sfx(SND.claim, 0.6);
+        var c = Object.assign({}, S.claimed), list = [];
+        L.forEach(function (m, i) { if (!c[m.k] && S.prog[m.k] >= m.n && !self.isLocked(tab, i)) { c[m.k] = true; list.push(m); } });
+        if (tab === 3) { // guia: resgatar destrava a próxima, então repete em ordem
+          var again = true; while (again) { again = false; L.forEach(function (m, i) { if (!c[m.k] && S.prog[m.k] >= m.n) { var lk = false; for (var j = 0; j < i; j++) if (!c[L[j].k]) lk = true; if (!lk) { c[m.k] = true; list.push(m); again = true; } } }); }
+        }
+        self.setState({ claimed: c });
+        list.forEach(function (m) { self.fly(el, m.rw, m.q, tab === 0 ? m.p : 0, n * 0.18); n++; });
+        if (tab === 0) {
+          var cc = Object.assign({}, S.chestC);
+          MARKS.forEach(function (mk, k) { if (!cc[k] && S.pts >= mk.v) { cc[k] = true; self.fly(el, mk.rw, mk.q, 0, n * 0.18); n++; } });
+          self.setState({ chestC: cc });
+        }
+        self.say(n + ' prêmio(s) resgatado(s)');
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

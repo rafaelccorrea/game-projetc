@@ -37,9 +37,9 @@ const tick = () => new Promise(r => setImmediate(r));
   const st = window.PEra.state, el = st.el; assert(el, 'overlay criado'); assert(timers.length > 0, 'passo agendado');
   const H = () => el.innerHTML; const seq = [];
   const need = { boss: ['Senhor da Era derrotado!', 'Minotauro', 'Antiguidade'], portal: ['pe-portal', 'pe-toportal'], flash: ['pe-flash'], title: ['NOVA ERA LIBERADA', 'ERA 3 · MEDIEVAL'],
-    ult: ['Lâmina do Dragão', 'era2_ult.png'], foe: ['Goblin, Esqueleto e Orc', 'assets/anim/era2_e0_run.png'], weap: ['Sua arma é de uma era anterior'], reward: ['+30 gemas'], final: ['Começar a era', 'ERA 3 · MEDIEVAL', 'Lâmina do Dragão', '+30 gemas'] };
-  for (let i = 0; i < st.steps.length; i++) { window.PEra.go(i); const k = st.step; seq.push(k); for (const s of need[k] || []) assert(H().includes(s), `${k}: faltou "${s}"`); }
-  assert.deepStrictEqual(seq, ['boss', 'portal', 'flash', 'title', 'ult', 'foe', 'weap', 'reward', 'final'], 'ordem dos passos: ' + seq.join(','));
+    foe: ['Goblin, Esqueleto e Orc', 'assets/anim/era2_e0_run.png'], weap: ['Novos itens caem aqui', 'assets/weapons/era2_t0.png', 'assets/hero/era2_t0.png', 'A sua arma atual é de uma era anterior'], reward: ['+30 gemas'], final: ['Começar a era', 'ERA 3 · MEDIEVAL', 'Novas armas e armaduras caem', '+30 gemas'] };
+  for (let i = 0; i < st.steps.length; i++) { window.PEra.go(i); const k = st.step; seq.push(k); for (const s of need[k] || []) assert(H().includes(s), `${k}: faltou "${s}"`); assert(!/ultimate|Lâmina do Dragão/i.test(H()), k + ': a ultimate não é da era'); }
+  assert.deepStrictEqual(seq, ['boss', 'portal', 'flash', 'title', 'foe', 'weap', 'reward', 'final'], 'ordem dos passos: ' + seq.join(','));
   assert(!/data-e="skip"/.test(H()), 'no resumo não há "Pular"'); out.push('passos: ' + seq.join(' > '));
   // 3) cliques: toque avança, Pular vai ao resumo, Começar fecha, chama onDone e devolve o jogo
   const click = a => el.listeners.click({ target: { closest: () => (a ? { dataset: { e: a } } : null) } });
@@ -48,7 +48,7 @@ const tick = () => new Promise(r => setImmediate(r));
   assert.strictEqual(st.open, false); assert.strictEqual(done, 1, 'onDone'); assert.strictEqual(g.B.res, null, 'B.res livre'); assert.strictEqual(g.B.running, true, 'o jogo volta'); out.push('toque / Pular / Começar a era / onDone / jogo volta: ok');
   // 4) arma da era nova: sem cartão de arma; sem recompensa: sem cartão de recompensa e sem a linha no resumo
   wEra = 2; def.open({ from: 1, to: 2, boss: '', gems: 0 }); await tick(); await tick(); await tick();
-  assert(!window.PEra.state.steps.includes('weap') && !window.PEra.state.steps.includes('reward'), 'sem weap/reward'); window.PEra.go(window.PEra.state.steps.length - 1);
+  assert(!window.PEra.state.steps.includes('reward'), 'sem reward'); assert(window.PEra.state.steps.includes('weap'), 'itens da era sempre'); window.PEra.go(window.PEra.state.steps.length - 1);
   assert(!window.PEra.state.el.innerHTML.includes('Recompensa'), 'sem recompensa inventada'); assert(!window.PEra.state.el.innerHTML.includes('Essência'), 'sem Essência inventada'); def.close(); out.push('sem arma antiga/sem recompensa: cartões e linhas não aparecem');
   // 5) Essência só quando informada
   wEra = 1; def.open({ from: 1, to: 2, gems: 0, essence: 2 }); await tick(); await tick(); await tick(); window.PEra.go(window.PEra.state.steps.indexOf('reward')); assert(window.PEra.state.el.innerHTML.includes('+2 Essência da Era')); def.close(); out.push('Essência só se informada: ok');

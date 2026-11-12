@@ -782,3 +782,21 @@ alimentar (o custo por nível é menor que os 25 por toque até o nível 30); ra
 
 Aviso: no momento desta conferência `js/petfx.js` (do agente A) estava com erro de sintaxe na linha 75 (arquivo em edição); o teste de
 fumaça acusa "ERRO ao carregar petfx.js". Não é meu arquivo e não mexi.
+
+## Bloco 21 (v0.12.7): tela 33 MONTARIAS. Escrita, carregada, DESLIGADA (`PANEL_ON.mounts`), NÃO vista rodando
+
+Arquivo `js/p_mounts.js` (subagente; conferi `node --check`, fumaça, conflito de nomes e busca por emoji/serpe: nada).
+- Palco com o Kael montado animado (folhas `assets/anim/mounts/kael_<id>_idle_era2_t1.png`, uma por vez), aura por estrela; abas Detalhes,
+  Estrelas e Coleção; barra fixa embaixo com "Subir nível" e "Equipar" / "Desmontar". Tudo do `Sys.mount`; `statsChanged()` depois de
+  cada ação; moldura e nome pela raridade (`xRar`).
+- Lista: `mountIds()` do agente A quando existe (pony, horse, wolf, griffin, mythic); reserva com os mesmos ids. A serpe (`wyvern`) é
+  cortada sempre, mesmo se estiver no save.
+- Sem o módulo ou com a chave dele desligada: "Montarias: em breve". Abaixo do nível e sem montaria: portão com Voltar.
+- Diferenças conscientes: não há botão "Subir estrela" (no módulo a estrela sobe sozinha com os fragmentos; a aba mostra o progresso);
+  a montaria equipada tem "Desmontar"; "como conseguir" só é específico para o Lobo (oferta de 1ª compra), as outras dizem "Passe, loja
+  direta ou evento" (o módulo não tem a fonte por montaria); cartões da Coleção com marcador desenhado (não há miniatura leve: as 5
+  folhas somam ~8,7 MB); a prévia mostra o Kael com a arma da era 2 fixa.
+- Para o PO: (1) o teto da montaria é nível do jogador ÷ 2 e o máximo dela é 60: com o jogador no 100 ela para no 50; (2) auras de 2 e 3
+  estrelas iguais no módulo ("Brilho leve"; o protótipo tem "Brilho forte" na 3ª); (3) a fonte de cada montaria.
+- Testes: fumaça sem falha; conflito de nomes ok; teste de cliques do subagente (53 verificações em 5 medidas; 263 HTMLs varridos).
+- A ver no navegador: posição do Kael montado no palco, auras, quebras de texto; equipar lobo e grifo e ver o Kael montar na batalha.

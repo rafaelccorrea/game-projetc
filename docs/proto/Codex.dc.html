@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Códex das Eras</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- Códex v2 (refeito após reprovação: "visual fraco, ícones provisórios em SVG, coisa demais").
+     SIMPLES: álbum com 6 cartões grandes (Armas · Armaduras · Pets · Montarias · Bestiário · Auras), só arte REAL subida ao canvas.
+     Armas: 3 por era (t0 Básico, t1 Épico, t2 Lendário), eras 0-6. Armaduras: só os ícones de espaço com arte (era 2 completa; eras 0/1 parciais; coletes 3-6).
+     Montarias: as 6 com arte (Pônei, Cavalo de guerra, Lobo de guerra, Grifo dourado, Tigre de cristal, Serpe dourada). Bestiário: só inimigos/chefes com arte aprovada.
+     Categoria = faixas por ERA roláveis na horizontal, um seletor Todos · Tenho · Falta. Ficha: arte grande, raridade, 1 linha, Onde conseguir + Ir.
+     Topo: % total e só o PRÓXIMO marco de prêmio (quantidades [QTD] com o PO). Layout novo: sem barra de baixo, header da Batalha V2 com VOLTAR. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#16110d}
+html,body{height:100%}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf;-webkit-tap-highlight-color:transparent}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400;letter-spacing:.2px}
+
+/* ===== animações ===== */
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes ei{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+@keyframes drift{from{background-position:0 0}to{background-position:-1200px 0}}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes shine{0%,55%{transform:translateX(-140%) skewX(-20deg)}100%{transform:translateX(260%) skewX(-20deg)}}
+@keyframes glowB{0%,100%{box-shadow:0 0 0 2px var(--rc),0 0 10px rgba(var(--rg),.35)}50%{box-shadow:0 0 0 2px var(--rc),0 0 22px rgba(var(--rg),.8)}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(4deg)}}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 4px 0 #8a4f0c,0 0 0 0 rgba(255,201,74,.6)}50%{transform:scale(1.06);box-shadow:0 4px 0 #8a4f0c,0 0 0 8px rgba(255,201,74,0)}}
+@keyframes halo{0%,100%{opacity:.55;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+@keyframes spark{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+
+/* ===== arte aprovada ===== */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.au13,.au10,.au7{background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77)}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4)}
+.au7{background-image:url(/_blob/77c79b0f46d2e8ae8b53d9f6308c3206)}
+.gIdle{background-image:url(/_blob/0024a72ae893244dd7cc9b50d5f6bf13);background-size:1200% 100%;background-repeat:no-repeat;background-position:0 0;animation:ei 1.4s ease-in-out infinite;transform-origin:50% 95%}
+.sIdle{background-image:url(/_blob/ca69f41bfb4a37a1fcb54bc06614f1ae);background-size:1200% 100%;background-repeat:no-repeat;background-position:0 0;animation:ei 1.6s ease-in-out infinite;transform-origin:50% 95%}
+.gAtk{background-image:url(/_blob/0024a72ae893244dd7cc9b50d5f6bf13);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.sAtk{background-image:url(/_blob/ca69f41bfb4a37a1fcb54bc06614f1ae);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.sky{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:cover;background-position:50% 30%}
+.cld{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 100%;background-repeat:repeat-x;animation:drift 120s linear infinite}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#16110d}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;padding:0;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 10px 0 6px;border-radius:999px;color:#f6ecdf}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+
+/* ===== fundo vivo ===== */
+.bgS{position:absolute;left:0;right:0;top:0;height:46%;opacity:.32;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,#000 30%,transparent);mask-image:linear-gradient(180deg,#000 30%,transparent)}
+.bgC{position:absolute;left:0;right:0;top:40px;height:120px;opacity:.28;pointer-events:none}
+.body{position:relative;z-index:1;flex:1;min-height:0;width:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;padding:10px 12px max(12px,env(safe-area-inset-bottom))}
+
+/* ===== topo: % total + próximo marco ===== */
+.top{flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;animation:rise .45s ease-out both}
+.pct{flex:none;font-size:40px;line-height:1;color:#ffc94a;text-shadow:0 3px 0 #6a3a08}
+.pct small{font-size:20px}
+.tMid{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.tSub{font-size:12.5px;font-weight:800;color:#c9b9a2}
+.bar{position:relative;height:12px;border-radius:99px;background:#0e0a07;box-shadow:inset 0 1px 3px rgba(0,0,0,.7);overflow:visible}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,#f2a826,#ffe07a);transform-origin:0 50%;animation:grow .9s cubic-bezier(.2,.8,.2,1) both .2s}
+.bar .mk{position:absolute;top:-4px;width:4px;height:20px;margin-left:-2px;border-radius:2px;background:#f6ecdf;box-shadow:0 0 6px rgba(255,236,200,.8)}
+.nxt{flex:none;min-width:98px;height:56px;display:flex;align-items:center;gap:6px;padding:0 10px 0 6px;border-radius:14px;border:1px solid #4a3a2b;background:#1d1611;text-align:left}
+.nxt img{width:36px;height:36px;object-fit:contain;flex:none}
+.nxt span{display:flex;flex-direction:column;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.2}
+.nxt span b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:16px;color:#f6ecdf}
+.nxt.ready{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);animation:pulse 1.2s ease-in-out infinite}
+.nxt.ready span,.nxt.ready span b{color:#2a1403}
+
+/* ===== álbum: cartões grandes ===== */
+.cards{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;padding:2px;margin-top:10px}
+.card{position:relative;flex:1 1 0;min-height:76px;max-height:150px;display:flex;align-items:stretch;padding:0;border:0;border-radius:20px;overflow:hidden;text-align:left;background:#1d1611;box-shadow:0 0 0 1.5px rgba(var(--cg),.55),0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);animation:rise .5s cubic-bezier(.2,.8,.2,1) both;transition:transform .12s}
+.card:active{transform:scale(.97)}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(70% 120% at 82% 60%,rgba(var(--cg),.42),transparent 70%),linear-gradient(90deg,#1d1611 30%,rgba(29,22,17,0) 100%)}
+.card::after{content:"";position:absolute;top:0;bottom:0;left:0;width:34%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent);animation:shine 5s ease-in-out infinite;animation-delay:inherit;pointer-events:none}
+.cA{--cg:255,201,74}.cR{--cg:74,163,255}.cM{--cg:95,208,104}.cP{--cg:255,138,58}.cB{--cg:255,90,78}.cU{--cg:176,124,255}
+.cTx{position:relative;z-index:2;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px 0 12px 16px}
+.cN{font-size:clamp(24px,7vw,30px);line-height:1;color:#fff;text-shadow:0 3px 0 #120c08}
+.cBar{position:relative;height:10px;width:100%;max-width:170px;border-radius:99px;background:#0e0a07;box-shadow:inset 0 1px 3px rgba(0,0,0,.7);overflow:hidden}
+.cBar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,rgb(var(--cg)),#fff2c4);transform-origin:0 50%;animation:grow .9s cubic-bezier(.2,.8,.2,1) both .35s}
+.cCt{font-size:13px;font-weight:800;color:#c9b9a2}
+.cCt b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:17px;color:#f6ecdf}
+.cArt{position:relative;z-index:1;flex:none;width:44%;max-width:210px}
+.cGo{position:relative;z-index:2;flex:none;width:30px;display:flex;align-items:center;justify-content:center;color:rgba(255,236,200,.7)}
+.ped{position:absolute;left:12%;right:12%;bottom:7%;height:14%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.6),transparent)}
+.halo{position:absolute;left:10%;right:10%;top:8%;bottom:8%;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--cg),.55),transparent);animation:halo 2.6s ease-in-out infinite}
+.stand{position:absolute;left:6%;right:6%;top:6%;bottom:10%;display:block;width:88%;height:84%;object-fit:contain;object-position:50% 100%;transform-origin:50% 100%;animation:ei 1.8s ease-in-out infinite}
+.wpn{position:absolute;left:14%;right:14%;top:8%;bottom:12%;display:block;width:72%;height:80%;object-fit:contain;transform-origin:50% 85%;animation:sway 3.2s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(255,201,74,.55))}
+.auraBox{position:absolute;left:50%;bottom:8%;height:96%;aspect-ratio:256/320;transform:translateX(-50%)}
+.auraBox .au{position:absolute;inset:0}
+.auraBox .kl{position:absolute;left:2%;right:2%;bottom:0;aspect-ratio:1/1}
+.sp{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff6d0;box-shadow:0 0 8px #ffc94a;animation:spark 2.2s ease-in-out infinite}
+
+/* ===== categoria ===== */
+.seg{flex:none;display:flex;gap:4px;padding:4px;border-radius:16px;background:#0e0a07;border:1px solid #4a3a2b;animation:rise .35s ease-out both}
+.seg button{flex:1;height:44px;border:0;border-radius:12px;background:transparent;font-size:15px;font-weight:900;color:#c9b9a2;transition:background .15s,color .15s}
+.seg button.on{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #8a4f0c}
+.cProg{flex:none;display:flex;align-items:center;gap:10px;margin:10px 2px 4px;font-size:13px;font-weight:800;color:#c9b9a2}
+.cProg b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;color:#f6ecdf}
+.cProg .bar{flex:1;height:10px}
+.list{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:4px 0 12px}
+.band{margin-top:10px;animation:rise .45s ease-out both}
+.bH{display:flex;align-items:baseline;justify-content:space-between;padding:0 16px 6px}
+.bH .lil{font-size:19px;color:#f6ecdf;text-shadow:0 2px 0 #120c08}
+.bH span:last-child{font-size:12.5px;font-weight:800;color:#c9b9a2}
+.row{display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;padding:4px 16px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.cell{flex:none;width:92px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;border:0;background:none;scroll-snap-align:start;animation:pop .4s cubic-bezier(.2,.8,.2,1) both}
+.cell:active .fr{transform:scale(.93)}
+.fr{position:relative;width:88px;height:88px;border-radius:18px;overflow:hidden;background:radial-gradient(80% 80% at 50% 40%,rgba(var(--rg),.38),#1d1611 75%);box-shadow:0 0 0 2px var(--rc),0 6px 12px rgba(0,0,0,.4);transition:transform .12s}
+.fr.glow{animation:glowB 2s ease-in-out infinite}
+.fr.shn::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shine 3.4s ease-in-out infinite}
+.fr .art{position:absolute;left:8%;top:8%;width:84%;height:84%}
+.fr img.art{object-fit:contain;object-position:50% 100%;transform-origin:50% 100%;animation:ei 1.9s ease-in-out infinite}
+.fr img.art.w{object-position:50% 50%;animation:sway 3.4s ease-in-out infinite;transform-origin:50% 85%}
+.fr img.art.ic,.wpn.ic{object-position:50% 50%;transform-origin:50% 50%;animation:breathe 2.4s ease-in-out infinite}
+.fr .auraBox{height:100%;bottom:0}
+.miss .fr{background:radial-gradient(80% 80% at 50% 40%,#2a211a,#120d0a 75%);box-shadow:0 0 0 2px rgba(var(--rg),.45),0 6px 12px rgba(0,0,0,.4)}
+.miss .art,.miss .auraBox{filter:brightness(0);opacity:.78}
+.q{position:absolute;right:6px;bottom:4px;font-family:'Lilita One',sans-serif;font-size:18px;color:rgba(201,185,162,.75);text-shadow:0 1px 0 #000}
+.tN{width:100%;font-size:12px;font-weight:800;line-height:1.15;text-align:center;color:#f6ecdf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.miss .tN{color:#8f806c}
+.r0{--rc:#e8e2d8;--rg:232,226,216}.r1{--rc:#4aa3ff;--rg:74,163,255}.r2{--rc:#b07cff;--rg:176,124,255}.r3{--rc:#ff5a5a;--rg:255,90,90}.r4{--rc:#ffc94a;--rg:255,201,74}.r5{--rc:#8ff5ff;--rg:143,245,255}
+.empty{margin:40px 16px;text-align:center;font-size:15px;font-weight:800;color:#c9b9a2;animation:fadeIn .3s both}
+
+/* ===== ficha ===== */
+.shade{position:absolute;inset:0;z-index:40;background:rgba(8,5,3,.66);animation:fadeIn .2s both}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;max-width:640px;margin:0 auto;padding:14px 18px max(18px,env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:linear-gradient(180deg,#2a2018,#1d1611);box-shadow:0 0 0 1.5px rgba(var(--rg),.6),0 -10px 30px rgba(0,0,0,.6);animation:up .32s cubic-bezier(.2,.8,.2,1) both;display:flex;flex-direction:column;align-items:center;gap:8px}
+.x{position:absolute;right:10px;top:10px;width:44px;height:44px;border-radius:14px;border:1px solid #4a3a2b;background:#16110d;display:flex;align-items:center;justify-content:center;color:#f6ecdf}
+.stg{position:relative;width:200px;height:200px;margin-top:4px}
+.stg .halo{--cg:var(--rg);left:0;right:0;top:4%;bottom:0}
+.stg .ped{left:14%;right:14%;bottom:4%;height:12%}
+.stg .stand{left:8%;right:8%;top:4%;bottom:9%;width:84%;height:87%}
+.stg .wpn{left:16%;right:16%;width:68%}
+.stg .big{position:absolute;left:4%;right:4%;bottom:8%;aspect-ratio:1/1}
+.stg.miss .stand,.stg.miss .wpn,.stg.miss .big,.stg.miss .auraBox{filter:brightness(0) drop-shadow(0 0 8px rgba(var(--rg),.7))}
+.stg.miss .halo{opacity:.25;animation:none}
+.chip{height:26px;display:flex;align-items:center;padding:0 12px;border-radius:99px;font-size:13px;font-weight:900;color:#16110d;background:var(--rc)}
+.fN{font-size:26px;line-height:1.05;text-align:center;color:#fff;text-shadow:0 3px 0 #120c08}
+.fE{margin-top:-4px;font-size:13px;font-weight:800;color:#c9b9a2}
+.fA{width:100%;padding:10px 12px;border-radius:14px;background:#16110d;border:1px solid #4a3a2b;text-align:center;font-size:15px;font-weight:900;color:#f6ecdf}
+.src{width:100%;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border-radius:16px;background:#33271d;border:1px solid #4a3a2b}
+.src span{flex:1;min-width:0;display:flex;flex-direction:column;font-size:14px;font-weight:800;line-height:1.25;color:#f6ecdf}
+.src span small{font-size:11.5px;font-weight:800;color:#c9b9a2;text-transform:uppercase;letter-spacing:.6px}
+.go{flex:none;min-width:84px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:linear-gradient(180deg,#ffe07a,#f2a826);box-shadow:0 4px 0 #8a4f0c;color:#2a1403;font-family:'Lilita One',sans-serif;font-size:20px;text-decoration:none;transition:transform .1s}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #8a4f0c}
+
+.toast{position:absolute;left:50%;bottom:24px;z-index:60;transform:translateX(-50%);max-width:90%;padding:12px 18px;border-radius:16px;background:#33271d;border:1.5px solid #ffc94a;font-size:14px;font-weight:900;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.5);animation:rise .3s both}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important}}
+</style>
+</helmet>
+<div class="nhApp">
+  <span class="bgS sky" aria-hidden="true"></span>
+  <span class="bgC cld" aria-hidden="true"></span>
+
+  <!-- HEADER (igual Batalha V2): voltar · título · moedas/gemas -->
+  <div class="nh">
+    <sc-if value="{{isAlbum}}" hint-placeholder-val="{{true}}">
+      <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </a>
+    </sc-if>
+    <sc-if value="{{isCat}}" hint-placeholder-val="{{false}}">
+      <button onClick="{{back}}" class="nhBk nhGl" aria-label="Voltar para o álbum">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+    </sc-if>
+    <span class="nhT" role="heading" aria-level="1">{{title}}</span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Moedas: 48.200. Abrir loja"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>48,2K</b></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Gemas: {{gems}}. Abrir loja"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>{{gems}}</b></span></a>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- ===== ÁLBUM ===== -->
+    <sc-if value="{{isAlbum}}" hint-placeholder-val="{{true}}">
+      <div class="top nhGl">
+        <span class="pct lil" aria-label="{{pctAria}}">{{pct}}<small>%</small></span>
+        <div class="tMid">
+          <span class="tSub">{{totTxt}}</span>
+          <div class="bar" aria-hidden="true"><i style="width: {{pctW}}"></i><span class="mk" style="left: {{mkX}}"></span></div>
+        </div>
+        <sc-if value="{{nxtReady}}" hint-placeholder-val="{{true}}">
+          <button class="nxt ready" onClick="{{claim}}" aria-label="{{nxtAria}}"><img src="{{nxtImg}}" alt=""><span><b>Pegar</b>{{nxtP}}%</span></button>
+        </sc-if>
+        <sc-if value="{{nxtWait}}" hint-placeholder-val="{{false}}">
+          <button class="nxt" onClick="{{peek}}" aria-label="{{nxtAria}}"><img src="{{nxtImg}}" alt=""><span><b>{{nxtP}}%</b>{{nxtLeft}}</span></button>
+        </sc-if>
+      </div>
+
+      <div class="cards">
+        <sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+          <button class="{{c.cls}}" onClick="{{c.open}}" style="animation-delay: {{c.dl}}" aria-label="{{c.aria}}">
+            <span class="cTx">
+              <span class="cN lil">{{c.n}}</span>
+              <span class="cBar" aria-hidden="true"><i style="width: {{c.w}}"></i></span>
+              <span class="cCt"><b>{{c.own}}/{{c.tot}}</b> · {{c.p}}%</span>
+            </span>
+            <span class="cArt" aria-hidden="true">
+              <span class="halo"></span>
+              <span class="ped"></span>
+              <sc-if value="{{c.isImg}}" hint-placeholder-val="{{true}}"><img class="{{c.imgCls}}" src="{{c.src}}" alt=""></sc-if>
+              <sc-if value="{{c.isAura}}" hint-placeholder-val="{{false}}"><span class="auraBox"><span class="au au13"></span><span class="kl kidle"></span></span></sc-if>
+              <span class="sp" style="left: 20%; top: 22%; animation-delay: .3s"></span>
+              <span class="sp" style="right: 16%; top: 40%; animation-delay: 1.4s"></span>
+            </span>
+            <span class="cGo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ===== CATEGORIA ===== -->
+    <sc-if value="{{isCat}}" hint-placeholder-val="{{false}}">
+      <div class="seg" role="group" aria-label="Mostrar">
+        <sc-for list="{{segs}}" as="s" hint-placeholder-count="3">
+          <button class="{{s.cls}}" onClick="{{s.pick}}" aria-pressed="{{s.on}}">{{s.n}}</button>
+        </sc-for>
+      </div>
+      <div class="cProg"><b>{{catOwn}}/{{catTot}}</b><div class="bar" aria-hidden="true"><i style="width: {{catW}}"></i></div><span>{{catP}}%</span></div>
+      <div class="list">
+        <sc-for list="{{bands}}" as="b" hint-placeholder-count="3">
+          <section class="band" style="animation-delay: {{b.dl}}" aria-label="{{b.n}}">
+            <div class="bH"><span class="lil">{{b.n}}</span><span>{{b.ct}}</span></div>
+            <div class="row">
+              <sc-for list="{{b.items}}" as="t" hint-placeholder-count="3">
+                <button class="{{t.cellCls}}" onClick="{{t.pick}}" style="animation-delay: {{t.dl}}" aria-label="{{t.aria}}">
+                  <span class="{{t.frCls}}">
+                    <sc-if value="{{t.isImg}}" hint-placeholder-val="{{true}}"><img class="{{t.imgCls}}" src="{{t.src}}" alt=""></sc-if>
+                    <sc-if value="{{t.isSheet}}" hint-placeholder-val="{{false}}"><span class="{{t.sheetCls}}"></span></sc-if>
+                    <sc-if value="{{t.isAura}}" hint-placeholder-val="{{false}}"><span class="auraBox"><span class="{{t.auCls}}"></span><span class="kl kidle"></span></span></sc-if>
+                    <sc-if value="{{t.miss}}" hint-placeholder-val="{{false}}"><span class="q" aria-hidden="true">?</span></sc-if>
+                  </span>
+                  <span class="tN">{{t.label}}</span>
+                </button>
+              </sc-for>
+            </div>
+          </section>
+        </sc-for>
+        <sc-if value="{{noItems}}" hint-placeholder-val="{{false}}"><p class="empty">{{emptyTxt}}</p></sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- ===== FICHA ===== -->
+  <sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}">
+    <div class="shade" onClick="{{closeSel}}" aria-hidden="true"></div>
+    <div class="{{fCls}}" role="dialog" aria-modal="true" aria-label="{{f.n}}">
+      <button class="x" onClick="{{closeSel}}" aria-label="Fechar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+      <div class="{{fStg}}" aria-hidden="true">
+        <span class="halo"></span>
+        <span class="ped"></span>
+        <sc-if value="{{f.isImg}}" hint-placeholder-val="{{true}}"><img class="{{f.bigImgCls}}" src="{{f.src}}" alt=""></sc-if>
+        <sc-if value="{{f.isSheet}}" hint-placeholder-val="{{false}}"><span class="{{f.bigSheetCls}}"></span></sc-if>
+        <sc-if value="{{f.isAura}}" hint-placeholder-val="{{false}}"><span class="auraBox"><span class="{{f.auCls}}"></span><span class="kl kidle"></span></span></sc-if>
+      </div>
+      <span class="chip">{{f.chip}}</span>
+      <span class="fN lil">{{f.n}}</span>
+      <span class="fE">{{f.sub}}</span>
+      <div class="fA">{{f.attr}}</div>
+      <div class="src">
+        <span><small>Onde conseguir</small>{{f.how}}</span>
+        <a class="go" href="{{f.go}}" onClick="{{tap}}" aria-label="{{f.goAria}}">Ir</a>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// ===================== DADOS (só arte REAL das telas aprovadas; nomes do index.html, PetsV2, Perfil, MapaEras, Forja, Invocar) =====================
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d' };
+var IMG = {
+  mino: '/_blob/2f5945188cf88834a2dd2ac72fc890bc', drag: '/_blob/6ab9e2e6c54dbef8618daf37fd11342f', devo: '/_blob/66f81c3b14550f0bf1b2fa94f79ceef8',
+  gem: '/_blob/1c420bdcae24bd962967021584f5bd64', coin: '/_blob/3f2502c864add38c4b3faf5853f0dd9a', chest: '/_blob/b8d381af334d1ec5e3023cf138922df4', pets: '/_blob/13fa18cfe7810c18b0a3682060fe93cc'
+};
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista', 'Submundo', 'Celestial', 'Prismático'];
+var RN = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário', 'Prismático'];
+var RM = ['×1', '×1,7', '×3', '×5,5', '×10'];
+var STG = ['Filhote', 'Médio', 'Evoluído'], STG_REQ = [1, 30, 60], STG_CAP = [30, 60, 90];
+
+// pets (PetsV2 aprovado): 3 estágios cada; quantos estágios o jogador já tem
+var PETS = [
+  { id: 'mamute', n: 'Mamute', era: 0, r: 0, has: 3, img: ['/_blob/a395abb2b61c877d72952084dedf26f9', '/_blob/f8b78b358e1c17ac2cddf616380f1954', '/_blob/1db13b539820b25a4c1d668c7c699396'], atk: ['Chifrada', 'Jato de tromba', 'Tremor'], how: 'Ovo do Nv 20 ou ovo da Pré-História' },
+  { id: 'esfinge', n: 'Esfinge', era: 1, r: 1, has: 2, img: ['/_blob/fa413530233d0a00733dd91e5f209163', '/_blob/968b22b78282e798cf505461467d511a', '/_blob/f3cf376df05d882f29a48f7088cf3b21'], atk: ['Garra', 'Raio do sol', 'Tempestade de areia'], how: 'Ovo do Nv 20 ou ovo da Antiguidade' },
+  { id: 'dragao', n: 'Dragão', era: 2, r: 2, has: 1, img: ['/_blob/214bbe0911a92842eb7bc3418f0d7fe3', '/_blob/ff7f571bd90ca393e4f569fd0c30203b', '/_blob/35a1caf5a506ee22de74a59a3a2b0e35'], atk: ['Mordida', 'Bola de fogo', 'Rabada'], how: 'Ovo do chefe da era Medieval' },
+  { id: 'papagaio', n: 'Papagaio-fênix', era: 3, r: 2, has: 1, img: ['/_blob/512f66d72ab75b464e6aadd17f8da816', '/_blob/374deab8d1dab02b31e90134f8f7c0cd', '/_blob/7b1cec387f5210eb5e43384622737832'], atk: ['Bicada', 'Pena de fogo', 'Rasante'], how: 'Ovo do chefe da era da Pólvora' },
+  { id: 'cao', n: 'Cão mecânico', era: 4, r: 3, has: 0, img: ['/_blob/0d399cd624e83fdd506e5e9888ec5894', '/_blob/8438d7548cd54946f46707e602062c39', '/_blob/5acafd676f8733d0217345bac56193eb'], atk: ['Mordida de aço', 'Parafuso disparado', 'Jato de vapor'], how: 'Ovo do chefe da era Industrial' },
+  { id: 'cerbero', n: 'Cérbero', era: 7, r: 3, has: 0, img: ['/_blob/a026d7ff4f58cb5e38f8a9bcb9fc00ff', '/_blob/b02b2ce80822fc8b8d12780cf0097435', '/_blob/0c63a6ee42b92025d1c77cc04b45113f'], atk: ['Mordida tripla', 'Chama do submundo', 'Uivo'], how: 'Ovo do chefe do Submundo' },
+  { id: 'pegaso', n: 'Pégaso', era: 8, r: 4, has: 0, img: ['/_blob/66bc8414263e975002b576b0ab1f157d', '/_blob/d17e921de171fd8cc2b225a3b4aab545', '/_blob/e9a451c3c5508168cc3dc6dbd99ad74a'], atk: ['Coice', 'Estrela cadente', 'Vendaval'], how: 'Ovo do chefe Celestial' },
+  { id: 'prisma', n: 'Raposa de cristal', era: 9, r: 5, has: 0, img: ['/_blob/e753821b8a7c7e196fc83974078f5131', '/_blob/2e37c32c38e935c0a151be2f8aab46fd', '/_blob/4fd3b7ac0b32c806fb7583ce6059e114'], atk: ['Patada de cristal', 'Lança de cristal', 'Prisma'], how: '1000 fragmentos prismáticos' }
+];
+
+var WPN = [
+  { n: ['Graveto Afiado', 'Lança de Sílex', 'Presa de Mamute'], img: ['/_blob/d431e6f2842c45f37f7061c154fe2c17', '/_blob/bc1b1f72b404ceaf81feef4779187618', '/_blob/47081cad336632783fc39fd21307871b'] },
+  { n: ['Lança de Bronze', 'Falcata de Ferro', 'Lâmina de Aquiles'], img: ['/_blob/f43fc2f5b696339684ceed8c63c916df', '/_blob/5f0560b84a4e4f9c06e4eba9c79440bf', '/_blob/bed6ccb87e23c8916a156529e92bda44'] },
+  { n: ['Espada Enferrujada', 'Lâmina Rúnica', 'Excalibur'], img: ['/_blob/5f32f74faa09b4be933bfdfc87dea31f', '/_blob/ac4b29b33e4b5a256a3bc7d9a78ca2dc', '/_blob/09fb47d34a82695672f3a68adc69527d'] },
+  { n: ['Pistola de Pederneira', 'Arcabuz Raro', 'Canhão de Mão Dourado'], img: ['/_blob/75da9fe2f0c8fa3c70edeabc6a8c7e2b', '/_blob/f40779d67a9835751e417ee4ebe87320', '/_blob/7f14478eb2ca094f9b295c130d89130a'] },
+  { n: ['Revólver a Vapor', 'Carabina Steampunk', 'Canhão de Tesla'], img: ['/_blob/9ce473d2e772a1bc6ad17a6365ced91c', '/_blob/10fda1c7ea89b0ecd3917edea81ee0f9', '/_blob/fc7a97f4087ee9761311207c93e21fdd'] },
+  { n: ['Pistola 9mm', 'Fuzil de Precisão', 'Railgun Protótipo'], img: ['/_blob/c0046bb7f267ba01ab04dec9b414ac5b', '/_blob/b9d88d199eae86f10d0a7d369e5a5874', '/_blob/29dddcd450a7fb6050a48492c45cb177'] },
+  { n: ['Blaster Básico', 'Rifle de Íons', 'Lâmina do Vazio'], img: ['/_blob/816fb601f540cd49853737f0df38ff9d', '/_blob/1c431c90d57f7b87b333e0b445214f5e', '/_blob/27d309951856354aed4201625b9ed3c3'] }
+];
+// colete: nome Básico da era (index.html ERAS[e].a[0]); atributos principais por espaço (js/sys/stats.js main)
+var ARMN = ['Pele de Coelho', 'Túnica de Linho', 'Túnica de Couro', 'Casaca de Soldado', 'Casaco de Fábrica', 'Colete Tático', 'Traje Espacial'];
+var SLOT = {
+  colete: { n: 'Colete', a: 'Vida e Defesa' }, elmo: { n: 'Elmo', a: 'Vida' }, luvas: { n: 'Luvas', a: 'Ataque e Crítico' },
+  botas: { n: 'Botas', a: 'Velocidade de ataque' }, colar: { n: 'Colar', a: 'Dano crítico' }, asa: { n: 'Asa', a: 'Ataque % e Vida %' }
+};
+var ARMS = [
+  { e: 0, s: 'colete', img: '/_blob/61bb3df0ecd8f2319596bccc6e2f38bd' }, { e: 0, s: 'elmo', img: '/_blob/22318121e067e6ce64b5bef3711cf640' }, { e: 0, s: 'botas', img: '/_blob/33055f95f28b286bb383fa8dd7b61cd0' },
+  { e: 1, s: 'colete', img: '/_blob/c0bedaf132eba4957c1e5cfe27de55bd' }, { e: 1, s: 'elmo', img: '/_blob/5a13c15e2a78121daf5ec9bcd65b1802' },
+  { e: 2, s: 'colete', img: '/_blob/ee6a204b42b3650024c52c837db24477' }, { e: 2, s: 'elmo', img: '/_blob/441d5a4aec48460d9f3fd5f25ac20969' }, { e: 2, s: 'luvas', img: '/_blob/e62c567b6540d731191deca19e06280e' },
+  { e: 2, s: 'botas', img: '/_blob/c2b00a2d12710579c73941427f51c811' }, { e: 2, s: 'colar', img: '/_blob/19c3851fb28feb418358e83c61ead95d' }, { e: 2, s: 'asa', img: '/_blob/d93c4ac6c2aa4bf5fb5178b9c5fdafd2' },
+  { e: 3, s: 'colete', img: '/_blob/b7d164a018e62a214e99c82cc3b03650' }, { e: 4, s: 'colete', img: '/_blob/c1931e7467e04fb7c34b54e2abeb1c53' },
+  { e: 5, s: 'colete', img: '/_blob/4d77d28ae609eb96ac37cfa36ebbab32' }, { e: 6, s: 'colete', img: '/_blob/efc6d3df4ea862033ba5c2edf2c262f1' }
+];
+var MPCT = ['3', '4,5', '6,5', '9', '12'];
+var MNT = [
+  { id: 'pony', n: 'Pônei', r: 0, own: true, img: '/_blob/b7658c742be542a1c08b083a27b2f739', how: 'Loja direta', go: 'Loja.dc.html', goN: 'Loja' },
+  { id: 'horse', n: 'Cavalo de guerra', r: 1, own: true, img: '/_blob/1c2b767f0590dda9ac679f1565f476a2', how: 'Passe da temporada', go: 'Passe.dc.html', goN: 'Passe' },
+  { id: 'wolf', n: 'Lobo de guerra', r: 2, own: false, img: '/_blob/7f9a4168467b1844f68a5b1ff79ca528', how: 'Oferta de 1ª compra', go: 'OfertaInicial.dc.html', goN: 'Oferta' },
+  { id: 'griffin', n: 'Grifo dourado', r: 2, own: false, img: '/_blob/05510e83764611ffb6266b14c5a6cacb', how: 'Eventos', go: 'Eventos.dc.html', goN: 'Eventos' },
+  { id: 'tiger', n: 'Tigre de cristal', r: 3, own: false, img: '/_blob/75708eb32e723a82847e13b64acd5e6f', how: 'Eventos', go: 'Eventos.dc.html', goN: 'Eventos' },
+  { id: 'wyvern', n: 'Serpe dourada', r: 4, own: false, img: '/_blob/67c023a24611d6d88f79b5c095e930de', how: 'Loja direta', go: 'Loja.dc.html', goN: 'Loja' }
+];
+
+// itens do Códex. art: { t: 'img'|'sheet'|'aura', ... }
+function buildItems() {
+  var A = [];
+  // ARMAS: 3 por era (t0 Básico, t1 Épico, t2 Lendário); nomes = index.html ERAS[e].w[0/2/4]
+  WPN.forEach(function (W, e) {
+    for (var t = 0; t < 3; t++) {
+      var r = [0, 2, 4][t];
+      A.push({ id: 'w-' + e + '-' + t, cat: 'arm', era: e, r: r, n: W.n[t], own: t === 0 ? e <= 3 : t === 1 ? e <= 2 : false, art: { t: 'img', src: W.img[t], w: true },
+        attr: 'Ataque ' + RM[r] + ' · ' + RN[r],
+        how: t === 0 ? 'Baús da era ' + ERAN[e] : t === 1 ? 'Baús da era ' + ERAN[e] + ' ou Invocar' : 'Invocar (2% por puxada)',
+        go: t === 0 ? 'BatalhaTelaCheiaV2.dc.html' : 'Invocar.dc.html', goN: t === 0 ? 'Batalha' : 'Invocar' });
+    }
+  });
+  // ARMADURAS: ícones de espaço com arte real
+  ARMS.forEach(function (x) {
+    var sl = SLOT[x.s];
+    A.push({ id: 'a-' + x.e + '-' + x.s, cat: 'eq', era: x.e, r: 0, n: x.s === 'colete' ? ARMN[x.e] : sl.n + ' ' + ERAN[x.e], label: sl.n, own: x.e < 2 || (x.e === 2 && x.s !== 'asa' && x.s !== 'colar'),
+      art: { t: 'img', src: x.img, w: true, ic: true }, sub2: sl.n, attr: sl.a, how: 'Baús da era ' + ERAN[x.e], go: 'Equipamento.dc.html', goN: 'Equipamento' });
+  });
+  // MONTARIAS (js/sys/mount.js): ATK% e Vida% no Nv 60 5★
+  MNT.forEach(function (m) {
+    A.push({ id: 'm-' + m.id, cat: 'mnt', era: -2, r: m.r, n: m.n, own: m.own, art: { t: 'img', src: m.img },
+      attr: 'Ataque e Vida até +' + MPCT[m.r] + '%', how: m.how, go: m.go, goN: m.goN });
+  });
+  // PETS: 3 estágios por pet
+  PETS.forEach(function (p) {
+    for (var s = 0; s < 3; s++) {
+      A.push({ id: 'p-' + p.id + s, cat: 'pet', era: p.era, r: p.r, n: p.n, label: STG[s], own: s < p.has, art: { t: 'img', src: p.img[s] },
+        sub2: STG[s], attr: 'Golpe: ' + p.atk[s] + ' · Nv. máx ' + STG_CAP[s],
+        how: s === 0 ? p.how : 'Evolua o pet no Nv ' + STG_REQ[s], go: 'PetsV2.dc.html', goN: 'Pets' });
+    }
+  });
+  // BESTIÁRIO: só inimigos e chefes com arte aprovada
+  A.push({ id: 'b-mino', cat: 'bes', era: 1, r: 4, boss: true, n: 'Minotauro', own: true, art: { t: 'img', src: IMG.mino },
+    attr: 'Chefe da Antiguidade', how: 'Mapa das Eras · Antiguidade', go: 'MapaEras.dc.html', goN: 'Mapa das Eras' });
+  A.push({ id: 'b-gob', cat: 'bes', era: 2, r: 0, n: 'Goblin', own: true, art: { t: 'sheet', cls: 'gIdle', big: 'gAtk' },
+    attr: 'Inimigo comum da era Medieval', how: 'Fases da era Medieval', go: 'BatalhaTelaCheiaV2.dc.html', goN: 'Batalha' });
+  A.push({ id: 'b-esq', cat: 'bes', era: 2, r: 0, n: 'Esqueleto', own: true, art: { t: 'sheet', cls: 'sIdle', big: 'sAtk' },
+    attr: 'Inimigo comum da era Medieval', how: 'Fases da era Medieval', go: 'BatalhaTelaCheiaV2.dc.html', goN: 'Batalha' });
+  A.push({ id: 'b-drag', cat: 'bes', era: 2, r: 4, boss: true, n: 'Dragão Real', own: true, art: { t: 'img', src: IMG.drag },
+    attr: 'Chefe da era Medieval', how: 'Desafie o chefe na batalha', go: 'BatalhaTelaCheiaV2.dc.html', goN: 'Batalha' });
+  A.push({ id: 'b-devo', cat: 'bes', era: 6, r: 4, boss: true, n: 'Devorador', own: false, art: { t: 'img', src: IMG.devo },
+    attr: 'Chefe da era Futurista', how: 'Chegue à era Futurista', go: 'MapaEras.dc.html', goN: 'Mapa das Eras' });
+  // AURAS (Perfil aprovado): vêm da Forja
+  [[7, 2, true], [10, 3, false], [13, 4, false]].forEach(function (a) {
+    A.push({ id: 'u-' + a[0], cat: 'aur', era: -1, r: a[1], n: 'Aura +' + a[0], own: a[2], art: { t: 'aura', cls: 'au' + a[0] },
+      attr: 'Brilho atrás do Kael', how: 'Forje a arma até +' + a[0], go: 'Forja.dc.html', goN: 'Forja' });
+  });
+  return A;
+}
+var ITEMS = buildItems();
+
+var CATS = [
+  { k: 'arm', n: 'Armas', cls: 'cA', art: { t: 'img', src: '/_blob/09fb47d34a82695672f3a68adc69527d', cls: 'wpn' } },
+  { k: 'eq', n: 'Armaduras', cls: 'cR', art: { t: 'img', src: '/_blob/ee6a204b42b3650024c52c837db24477', cls: 'wpn ic' } },
+  { k: 'pet', n: 'Pets', cls: 'cP', art: { t: 'img', src: '/_blob/35a1caf5a506ee22de74a59a3a2b0e35', cls: 'stand' } },
+  { k: 'mnt', n: 'Montarias', cls: 'cM', art: { t: 'img', src: '/_blob/05510e83764611ffb6266b14c5a6cacb', cls: 'stand' } },
+  { k: 'bes', n: 'Bestiário', cls: 'cB', art: { t: 'img', src: IMG.mino, cls: 'stand' } },
+  { k: 'aur', n: 'Auras', cls: 'cU', art: { t: 'aura' } }
+];
+
+// MARCOS (prêmio fixo, sem sorteio; quantidades com o PO). Só o PRÓXIMO aparece.
+var MILES = [
+  { p: 10, img: IMG.gem, d: '[QTD] gemas' },
+  { p: 25, img: IMG.coin, d: '[QTD] de ouro + [QTD] gemas' },
+  { p: 50, img: IMG.chest, d: 'Título "Guardião do Códex" + [QTD] gemas' },
+  { p: 75, img: IMG.pets, d: '[QTD] fragmentos prismáticos' },
+  { p: 100, img: IMG.chest, d: 'Título "Cronista das Eras" + [QTD] gemas' }
+];
+var FILT = ['Todos', 'Tenho', 'Falta'];
+
+function pctOf(a, b) { return b ? Math.floor(a * 100 / b) : 0; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { view: 'album', cat: 'pet', filt: 0, sel: null, claimed: { 10: true }, gems: 320, toast: '', tk: 0 };
+  }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) {
+    var k = this.state.tk + 1, self = this;
+    this.setState({ toast: t, tk: k });
+    setTimeout(function () { if (self.state.tk === k) self.setState({ toast: '' }); }, 2400);
+  }
+  artFor(it, big) {
+    var a = it.art;
+    return {
+      isImg: a.t === 'img', isSheet: a.t === 'sheet', isAura: a.t === 'aura', src: a.src || '',
+      imgCls: a.ic ? 'art ic' : a.w ? 'art w' : 'art', sheetCls: 'art ' + (a.cls || ''), auCls: 'au ' + (a.cls || ''),
+      bigImgCls: a.ic ? 'wpn ic' : a.w ? 'wpn' : 'stand', bigSheetCls: 'big ' + (a.big || a.cls || '')
+    };
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    var tap = function () { self.sfx(SND.tap, 0.5); };
+    var ownAll = ITEMS.filter(function (i) { return i.own; }).length, totAll = ITEMS.length, pct = pctOf(ownAll, totAll);
+
+    // próximo marco: o primeiro não pego
+    var nx = MILES.filter(function (m) { return !s.claimed[m.p]; })[0] || null;
+    var ready = !!nx && pct >= nx.p;
+    var need = nx ? Math.max(0, Math.ceil(nx.p * totAll / 100) - ownAll) : 0;
+
+    var cards = CATS.map(function (c, i) {
+      var its = ITEMS.filter(function (x) { return x.cat === c.k; });
+      var own = its.filter(function (x) { return x.own; }).length, p = pctOf(own, its.length);
+      return {
+        n: c.n, cls: 'card ' + c.cls, own: own, tot: its.length, p: p, w: p + '%', dl: (0.08 + i * 0.08) + 's',
+        aria: c.n + ': ' + own + ' de ' + its.length + ' (' + p + '%)',
+        isImg: c.art.t === 'img', isAura: c.art.t === 'aura', src: c.art.src || '', imgCls: c.art.cls || '',
+        open: function () { self.sfx(SND.tap, 0.5); self.setState({ view: 'cat', cat: c.k, filt: 0, sel: null }); }
+      };
+    });
+
+    // categoria
+    var cat = CATS.filter(function (c) { return c.k === s.cat; })[0];
+    var cIts = ITEMS.filter(function (x) { return x.cat === s.cat; });
+    var cOwn = cIts.filter(function (x) { return x.own; }).length, cP = pctOf(cOwn, cIts.length);
+    var shown = cIts.filter(function (x) { return s.filt === 0 || (s.filt === 1 ? x.own : !x.own); });
+    var groups = [], gIdx = {};
+    shown.forEach(function (x) {
+      var key = s.cat === 'pet' ? x.id.replace(/\d$/, '') : String(x.era);
+      if (gIdx[key] === undefined) {
+        var nm = x.era === -2 ? 'Estábulo' : x.era < 0 ? 'Forja da arma' : ERAN[x.era];
+        if (s.cat === 'pet') nm = ERAN[x.era] + ' · ' + x.n;
+        gIdx[key] = groups.length; groups.push({ key: key, n: nm, era: x.era, list: [] });
+      }
+      groups[gIdx[key]].list.push(x);
+    });
+    groups.sort(function (a, b) { return a.era - b.era; });
+    var bands = groups.map(function (g, bi) {
+      var all = cIts.filter(function (x) { return s.cat === 'pet' ? x.id.replace(/\d$/, '') === g.key : String(x.era) === g.key; });
+      var o = all.filter(function (x) { return x.own; }).length;
+      return {
+        n: g.n, ct: o + '/' + all.length, dl: (0.05 + bi * 0.07) + 's',
+        items: g.list.map(function (x, ti) {
+          var a = self.artFor(x, false);
+          var rare = x.own && x.r >= 3;
+          return {
+            label: x.label || x.n, miss: !x.own, dl: (0.1 + bi * 0.07 + ti * 0.05) + 's',
+            cellCls: 'cell r' + x.r + (x.own ? '' : ' miss'),
+            frCls: 'fr' + (rare ? ' glow' : '') + (x.own && x.r >= 4 ? ' shn' : ''),
+            aria: (x.label ? x.n + ' ' + x.label : x.n) + (x.own ? ', tenho' : ', falta'),
+            isImg: a.isImg, isSheet: a.isSheet, isAura: a.isAura, src: a.src, imgCls: a.imgCls, sheetCls: a.sheetCls, auCls: a.auCls,
+            pick: function () { self.sfx(x.own && x.r >= 4 ? SND.legendary : SND.tap, 0.55); self.setState({ sel: x.id }); }
+          };
+        })
+      };
+    });
+    var segs = FILT.map(function (n, i) {
+      return { n: n, on: s.filt === i ? 'true' : 'false', cls: s.filt === i ? 'on' : '',
+        pick: function () { self.sfx(SND.tap, 0.45); self.setState({ filt: i }); } };
+    });
+
+    // ficha
+    var it = s.sel ? ITEMS.filter(function (x) { return x.id === s.sel; })[0] : null, f = { n: '' };
+    if (it) {
+      var fa = this.artFor(it, true);
+      var sub = it.era === -2 ? 'Montaria' : it.era < 0 ? 'Forja' : ERAN[it.era];
+      if (it.sub2) sub = it.sub2 + ' · ' + sub;
+      f = {
+        n: it.n, sub: sub, attr: it.attr, how: it.how, go: it.go, goAria: 'Ir para ' + it.goN,
+        chip: (it.own ? '' : 'Falta · ') + (it.cat === 'bes' ? (it.boss ? 'Chefe' : 'Inimigo') : RN[it.r]),
+        isImg: fa.isImg, isSheet: fa.isSheet, isAura: fa.isAura, src: fa.src, bigImgCls: fa.bigImgCls, bigSheetCls: fa.bigSheetCls, auCls: fa.auCls
+      };
+    }
+
+    return {
+      tap: tap, gems: String(s.gems),
+      isAlbum: s.view === 'album', isCat: s.view === 'cat',
+      title: s.view === 'album' ? 'Códex das Eras' : cat.n,
+      back: function () { self.sfx(SND.tap, 0.5); self.setState({ view: 'album', sel: null }); },
+
+      pct: String(pct), pctW: pct + '%', pctAria: 'Coleção ' + pct + '%', totTxt: ownAll + ' de ' + totAll + ' itens',
+      mkX: (nx ? nx.p : 100) + '%',
+      nxtReady: ready, nxtWait: !!nx && !ready, nxtP: nx ? nx.p : 100, nxtImg: nx ? nx.img : IMG.chest,
+      nxtLeft: need === 1 ? 'falta 1' : 'faltam ' + need,
+      nxtAria: nx ? ('Prêmio de ' + nx.p + '%: ' + nx.d + (ready ? '. Pegar' : '. Faltam ' + need + ' itens')) : 'Todos os prêmios pegos',
+      claim: function () {
+        if (!nx) return;
+        var c = Object.assign({}, s.claimed); c[nx.p] = true;
+        self.sfx(SND.claim, 0.8); self.setState({ claimed: c }); self.say('Prêmio de ' + nx.p + '%: ' + nx.d);
+      },
+      peek: function () { self.sfx(SND.tap, 0.5); if (nx) self.say(nx.p + '%: ' + nx.d); },
+      cards: cards,
+
+      segs: segs, bands: bands, catOwn: cOwn, catTot: cIts.length, catP: cP, catW: cP + '%',
+      noItems: bands.length === 0, emptyTxt: s.filt === 1 ? 'Nenhum ainda. Vá caçar!' : 'Você já tem todos!',
+
+      hasSel: !!it, f: f,
+      fCls: 'sheet' + (it ? ' r' + it.r : ''), fStg: 'stg' + (it && !it.own ? ' miss' : ''),
+      closeSel: function () { self.setState({ sel: null }); },
+      hasToast: !!s.toast, toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
