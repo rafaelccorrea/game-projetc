@@ -1,0 +1,13 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kael por fase</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}canvas{display:block;max-width:100%;border-radius:8px}</style></head><body>
+<h1 id="t">Kael</h1><p>Mesmo método aprovado do Kael garoto (corpo em vídeo, arma por código). O garoto aparece à esquerda para comparar a altura.</p><div class="g" id="g"></div>
+<script>
+const A='../../../assets/anim/hyb/';const P=+(new URLSearchParams(location.search).get('p')||1);document.getElementById('t').textContent='Kael '+(P===1?'adolescente':P===2?'adulto':'guerreiro lendário')+': correndo, parado, golpe, giro, morte e pistola';
+const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const S=[['kael_run_era2_t1','correndo','kael_run_era2_t1'],['kael_idle_era2_t1','parado','kael_idle_era2_t1'],['kael_attack_era2_t1','golpe','kael_attack_wide_era2_t1'],['kael_spin_era2_t1','giro','kael_spin_era2_t1'],['kael_die_body','morte',null],['kael_pistol_idle_era5_t0','pistola parado','pistol/kael_pistol_idle_era5_t0'],['kael_pistol_run_era5_t0','pistola correndo','pistol/kael_pistol_run_era5_t0'],['kael_pistol_shoot_era5_t0','pistola atirando','pistol/kael_pistol_shoot_era5_t0']];
+(async()=>{const items=[];for(const [f,lab,boy] of S){const img=await L(A+'phase'+P+'/'+f+'.png');if(!img)continue;const m=await (await fetch(A+'phase'+P+'/'+f+'.json')).json();let b=null;if(boy){const bi=await L(A+'R/'+boy+'.png');let bm=null;try{bm=await (await fetch(A+'R/'+boy+'.json')).json();}catch(e){}b={img:bi,m:bm};}
+ const c=document.createElement('canvas');c.width=460;c.height=280;document.getElementById('g').appendChild(c);items.push({c,img,m,b,lab});}
+ const t0=performance.now();(function loop(n){const t=(n-t0)/1000;for(const {c,img,m,b,lab} of items){const g=c.getContext('2d'),gy=258;g.fillStyle='#2e3a2a';g.fillRect(0,0,c.width,c.height);g.fillStyle='#3d4a3a';g.fillRect(0,gy,c.width,22);
+  if(b&&b.img){const bw=b.m&&b.m.w?b.m.w:256,bn=b.m&&b.m.frames?b.m.frames:Math.round(b.img.width/bw),pl=b.m&&b.m.padLeft?b.m.padLeft:0,j=Math.floor(t*12)%bn;g.globalAlpha=0.55;g.drawImage(b.img,j*bw,0,bw,256,110-(pl+128),gy-243,bw,256);g.globalAlpha=1;}
+  const i=Math.floor(t*(m.fps||12))%m.frames;g.drawImage(img,i*m.w,0,m.w,m.h,300-((m.padLeft||96)+128),gy-(m.feetY||243),m.w,m.h);g.fillStyle='#fff';g.font='12px system-ui';g.fillText(lab+' (garoto à esquerda, transparente)',8,16);}requestAnimationFrame(loop);})(t0);})();
+</script></body></html>

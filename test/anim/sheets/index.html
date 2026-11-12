@@ -14,7 +14,7 @@
 <div class="grid" id="g"></div>
 <script>
 const ERA=new URLSearchParams(location.search).get('era');
-const NAMES={0:['Dente-de-Sabre','Brutamontes','Rex Furioso'],1:['Legionário','Escorpião','Minotauro'],2:['Goblin','Esqueleto','Dragão Real'],3:['Pirata','Mosqueteiro','Capitão Fantasma'],4:['Golem','Aranha Mecânica','Caldeira'],5:['Drone','Soldado','Tanque'],6:['Alien','Ciborgue','Tentáculo']};
+const NAMES={0:['Dente-de-Sabre','Brutamontes','Rex Furioso'],1:['Legionário','Escorpião','Minotauro'],2:['Goblin','Esqueleto','Dragão Real'],3:['Pirata','Mosqueteiro','Capitão Fantasma'],4:['Golem','Aranha Mecânica','Caldeira'],5:['Drone','Soldado','Tanque'],6:['Alien','Ciborgue','Tentáculo'],7:['Diabrete','Cão Infernal','Senhor do Fogo'],8:['Cavaleiro Alado','Golem de Runas','Arcanjo']};
 const ITEMS0=[
  ['Goblin: ataque','../../../assets/anim/hyb/enemy/era2_e0_attack','enemy'],
  ['Esqueleto: ataque','../../../assets/anim/hyb/enemy/era2_e1_attack','enemy'],
@@ -39,7 +39,7 @@ const ITEMS0=[
 const ITEMS=ERA==null?ITEMS0:(()=>{const n=NAMES[ERA],r=[];['run','attack','hurt','die'].forEach(s=>['e0','e1','boss'].forEach((k,i)=>r.push([n[i]+': '+({run:'andando',attack:'ataque',hurt:'apanhando',die:'morrendo'}[s]),'../../../assets/anim/hyb/enemy/era'+ERA+'_'+k+'_'+s,(k==='boss'?'boss':'enemy')+(s==='run'?'Run':'')])));return r;})();
 const L=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src+'?v='+Date.now();});
 (async()=>{
- const EB=ERA==null?'2':ERA;const bg=await L('../../../assets/bg/era'+EB+'.png'),gyF=(await (await fetch('../../../assets/bg/meta.json')).json())['era'+EB].groundY;
+ const EB=ERA==null?'2':ERA;const bg=(await L('../../../assets/bg/era'+EB+'.png'))||(await L('../../../assets/bg/era'+EB+'_ref.png')),gyF=((await (await fetch('../../../assets/bg/meta.json')).json())['era'+EB]||{groundY:0.78}).groundY;
  const kael=await L('../../../assets/anim/hyb/R/kael_idle_era2_t1.png');
  const cells=[];
  for(const [name,base,kind] of ITEMS){const img=await L(base+'.png');let m=null;try{m=await (await fetch(base+'.json?v='+Date.now())).json();}catch(e){}

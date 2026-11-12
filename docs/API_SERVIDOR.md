@@ -74,6 +74,9 @@ do resumo são lidos de caminhos fixos do S, combinados com a fps-c9 em `summary
   "summary": { "level": 63, "xp": 120345, "era": 4, "stage": 812, "fc": 1830000, "gems": 2140, "playSeconds": 512340, "maxRarity": 3 },
   "save": { "...": "objeto S completo" } }
 ```
+- O servidor NÃO tem lista de campos permitidos: o S inteiro é guardado como está. Campos novos entram sem mudar o servidor (ex.: `S.look` da fps-e2,
+  só visual, sem FC; reports/sys-e2-api.md §5j). Quando houver servidor, a lista de cosméticos possuídos (`S.look.cos.owned`) passa a vir dos direitos
+  do servidor (`GET /entitlements`), como as skins: compra direta (produto `cos_<id>`), evento ou conquista. Nunca sorteio.
 ### 3.2 Rotas
 - `GET /save` → 200 `{ "version": 41, "updatedAt", "deviceId", "summary", "save" }` ou 404 (sem save na nuvem).
 - `GET /save/head` → 200 `{ "version", "updatedAt", "deviceId", "summary" }` (sem o blob; usado na abertura do jogo).
@@ -120,6 +123,14 @@ Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do se
 - Limite: 5 lutas por dia e a semana da arena, contados no relógio do servidor (`429 arena_limit`, com `attemptsLeft` em toda resposta).
 - Prêmios contra bots e o fechamento da semana só ligam com o servidor: o servidor fecha o ranking da semana e manda o prêmio pelo correio (§8).
 - Lista do ranking: top 100 + a posição do jogador. A FC usada no ranking é a do retrato validado.
+- **Semana:** a chave é a do jogo (`Sys.fc.weekKey`), a data da segunda-feira (`2026-11-09`). O servidor aceita também `2026-W46` e devolve as duas
+  (`week` e `iso`). A virada é à meia-noite de Brasília, no servidor.
+- **Regras do servidor:**
+  - só os pontos de quem ataca mudam (o defensor não ganha nem perde);
+  - luta contra bot gasta tentativa e não dá ponto;
+  - conta marcada (`save_review`/`cheater`) ou banida não aparece para os outros;
+  - o servidor não completa o ranking com bots (`bots: false`).
+- Erros: `400 no_snapshot`, `400 bad_request` (`reason: "self"`), `429 arena_limit` (`reason: "refresh"` ou com `retryAfterMs` até a meia-noite), `400 week_open` (fechamento).
 
 ## 5. CHAT (WebSocket) — ponto 5
 - Gateway Socket.IO no caminho `/chat`, com o access token no `auth` do handshake. Token vencido: o servidor manda o evento `auth_expired`, e o cliente renova o token e reconecta.
@@ -167,6 +178,22 @@ endereço com número, links e domínios, @ de redes sociais, números longos). 
   O servidor recusa (`403 account_mismatch`) compra feita com outro valor, e também a compra sem esse valor. O mesmo `purchaseToken` em outra conta → `409 token_used`.
 - **Quem reconhece (acknowledge) e consome é o SERVIDOR:** o app não chama `acknowledge` nem `consume`. Produto fora do catálogo → `400 unknown_product`.
   Pagamento pendente (ex.: boleto) → `status: "pending"`, e a entrega vem sozinha quando o Google avisar (a tela pode consultar `GET /entitlements`).
+- **Catálogo aprovado** (ids, preços e conteúdo: `fps-server/docs/google-play-setup.md`): `gems_60/130/350/750/1600/3400` (1ª compra de cada pacote em dobro),
+  `monthly_card`, `pass_premium` (temporada atual do servidor), `first_offer`, `skin_<id>`. Pontos VIP = reais pagos (o servidor soma em centavos).
+- `GET /offers` → `[{ "productId", "endsAt" }]`: a 1ª chamada MARCA o início da janela de 24 h da oferta de 1ª compra, no relógio do servidor.
+  A tela usa só o `endsAt` daqui, nunca o relógio do aparelho.
+- `GET /purchases/can-buy?productId=` → `{ "ok", "reason"?, "endsAt"? }`, chamado ANTES de abrir a compra no Google. Motivos possíveis:
+  `already_bought`, `offer_not_seen`, `offer_expired`, `already_premium`, `already_owned`, `unknown_product`.
+- `POST /purchases/monthly-card/claim` → `{ "gems": 60, "daysLeft" }`, uma vez por dia de Brasília. Dia não resgatado se perde. Erros: `404 no_active_card`, `409 already_claimed`.
+- **Como o jogo aplica os `grants` da resposta:**
+  - `gems` → `host.addGems`, EXCETO quando vier `deliveredBy: "offer"`;
+  - `bundle` com `att.offer` → `Sys.offer.grant(S, host)` da fps-e2 (que já soma os 💎 da oferta);
+  - outro `bundle` → `Sys.loot.grantBundle(S, host, att)`;
+  - `vip_points` → `Sys.vip.addPoints`;
+  - `pass_premium` → `Sys.pass.setPremium` se `season` = a atual;
+  - `skin` → `host.addSkin`;
+  - `monthly_card` → só mostra o cartão.
+  O servidor é a fonte da verdade: em caso de dúvida, consulte `GET /entitlements`.
 - `POST /purchases/apple` — `{ "transactionId" }` → igual (App Store Server API).
 - `GET /entitlements` → `{ "vip": { "points", "level" }, "passPremium": { "season", "active" }, "skins": [...], "purchasedGems": 0 }`.
 - Reembolso e estorno: notificações da loja (Google RTDN, Apple Server Notifications v2) em `/webhooks/*`. O servidor tira o que foi dado ou marca saldo devedor.
@@ -184,3 +211,44 @@ O resgate é idempotente (2º resgate → `409 already_claimed`).
 | `/auth/guest` | 5 por hora por IP; 3 contas novas por aparelho por dia |
 | Arena | conforme as entradas do jogo (conferidas no servidor) |
 | Geral | 120 pedidos por minuto por conta |
+
+## 10. GUILDAS — PROPOSTA de rotas (spec: reports/spec-guildas.md; plano: reports/backend-guildas.md). NADA implementado até o voto do dono.
+Tudo que vale prêmio é decidido no servidor, com o mesmo `js/sys` do jogo (vm) e o retrato de poder validado (§4). No jogo, o `Sys.guild` da fps-e2
+usa um provider trocável (como a arena); sem servidor, a guilda fica fechada.
+### 10.1 Guilda e membros
+- `POST /guilds` `{ name, emblemId, lang, open, minLevel }` → `Guild`.
+  - Precisa do nível 30. O custo de 8 h de farm em ouro é cobrado pelo cliente e conferido no save. Nome e emblema passam pelo filtro do chat.
+  - Erros: `name_taken`, `name_filtered`, `level_required`, `already_in_guild`, `cooldown` (24 h depois de sair).
+- `GET /guilds?search=&lang=&open=` (lista paginada) · `GET /guilds/{id}` · `GET /guild` (a minha, com membros, cargos, nível, XP e vagas).
+- `POST /guilds/{id}/join` → `{ status: "joined"|"requested" }` · `POST /guild/requests/{playerId}/(accept|decline)` · `POST /guild/invite {playerId}`.
+- `POST /guild/leave` (perde a moeda não gasta) · `POST /guild/members/{id}/(kick|promote|demote)` · `POST /guild/leader {playerId}` · `PATCH /guild`.
+  - Erros: `forbidden` (o cargo não permite), `guild_full`, `rejoin_cooldown` (7 dias para voltar à mesma guilda).
+- Liderança automática: o líder ausente por 7 dias passa a liderança ao oficial mais ativo, por uma rotina diária do servidor.
+- Para a tela: `Guild = { id, name, emblemId, level, xp, xpNext, members, maxMembers, open, minLevel, lang, power, bonus: { blessings, territory } }`.
+### 10.2 Troca (mural de pedidos e doação de item) — atrás de chave; SÓ 18+ até o parecer
+- `POST /guild/requests-board { slot, minRarity }` (24 h) · `GET /guild/requests-board`.
+- `POST /guild/gifts { itemId, toPlayerId, boardRequestId? }` → `{ gift, item }`. O item chega no Nv 1, o doador recebe 50% do ouro investido, e os portões valem para quem recebe (acima do portão, fica guardado).
+  - Erros: `age_restricted`, `member_too_new` (7 dias), `item_too_new` (24 h), `item_not_tradeable` (comprado, oferta, pet, skin, VIP, montaria...), `daily_limit` (doar 3, receber 2, mesmo par 1).
+- `GET /guild/gifts/log` (30 dias; só líder e oficiais).
+- Pré-requisito: inventário de itens oficial no servidor (o mesmo do leilão).
+### 10.3 Torneio do Poder (semana no relógio de Brasília)
+- `GET /territory/map` → 28 territórios `[{ id, region (era), capital, owner, bonus, attackable }]`.
+  Um território da região *e* só pode ser atacado se a mediana de era dos 15 escalados for ≥ *e*.
+- `POST /territory/declare { territoryId }` (segunda a quinta; até 2 por guilda por dia; 1 território defendido por vez) · `DELETE /territory/declare/{id}`.
+- `PUT /territory/lineup { battleId, players: [id, ... até 15] }` (líder e oficiais). Na trava, o servidor copia o retrato validado de cada escalado.
+- `GET /territory/battles?week=` → `[{ id, territoryId, attacker, defender, at, state, result?, duels?: [{ a, b, win, hpLeftA, hpLeftB, log }] }]`.
+  - Batalhas: sexta e sábado às 20h, rei da colina 15 contra 15 (N configurável) com atributos reais, fila por FC. Cada duelo usa `Sys.tower.duelCarry(A, B, seed, hpA0, hpB0)` → `{win, hpLeftA, hpLeftB, hpA, hpB, log, timeout}` (fps-e2): as vidas iniciais são absolutas, e `timeout` = empate, que dá o território ao defensor.
+  - O vencedor de cada duelo segue com a vida que sobrou. Empate por tempo: o defensor fica. Domingo é o dia dos prêmios.
+- Bônus de território, no teto: ouro +10%, XP +5%, drop +5%. Ficam em `Guild.bonus.territory`; no jogo, `Sys.guild.perks(S)` → `{goldPct, xpPct, dropPct}` (já no teto), e o `Sys.loot` soma ao do VIP. As bênçãos de atributo entram no `bonus()` do `Sys.fc`.
+### 10.4 Ranking, chefe, loja, doações, bênçãos, missões, check-in
+- `GET /guild-ranking?kind=power|territory|tournament&week=` (top 100 + a minha). Prêmios do torneio aos domingos pelo correio (1º: 300 moedas + 3
+  fragmentos do Prismático...), para quem lutou ou estava escalado, inclusive quem foi expulso nos últimos 3 dias.
+- `GET /guild/boss` · `POST /guild/boss/hit` → `{ damage, seed, log, hitsLeft }` (2 por dia; dano simulado no servidor). Prêmio fixo por faixa de dano.
+- `GET /guild/shop` · `POST /guild/shop/buy { itemId }` (Brasões, limite semanal, nada sorteado).
+- `POST /guild/donate { kind: "gold_small"|"gold_big"|"gems" }` (1 de cada por dia).
+  - A de 💎 (50 → 40 Brasões + 80 XP) foi mantida pelo PO, com limite de 1 por dia.
+  - Hoje o servidor NÃO vê o saldo de 💎: o cliente debita, e o servidor confere pelo resumo do save (§3.4). Por isso o limite diário é a trava.
+- `GET /guild/blessings` · `POST /guild/blessings/{id}/upgrade` (líder e oficiais, com XP da guilda; teto ATK +5%, Vida +5%, DEF +3%, ouro +10%, ração +10%).
+- `GET /guild/missions` · `POST /guild/missions/{id}/claim`. As missões contam só eventos que o servidor vê.
+- `POST /guild/checkin` (+5 Brasões, +5 XP da guilda, uma vez por dia de Brasília).
+- Chat da guilda: canal `guild:<id>` no gateway do chat (§5), com frases prontas para TODOS até o parecer. Depois, vale a regra de idade da spec (menor de 16, só frases).

@@ -42,7 +42,8 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 function fmt(n){ n=num(n,0); return n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.floor(n)); }
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const changed=host=>{ if(host&&typeof host.onChange==='function') host.onChange(); };
-function dayKey(ms){ const d=new Date(ms); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const CLK=()=>{ const C=root.Sys&&root.Sys.clock; return C&&typeof C.dayKey==='function'?C:null; };   // fuso único (Brasília com servidor): Sys.clock da fps-30
+function dayKey(ms){ const C=CLK(); if(C) return C.dayKey(ms); const d=new Date(ms); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function hash(){ let h=2166136261; for(const x of arguments){ const s=String(x); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } h^=124; } return h>>>0; }
 
@@ -111,13 +112,17 @@ function playerStats(S,host){
 
 /* luta automática, alternada, A começa. Golpe = ATK × (1 + vel. ataque) × (1 + dano crít, se critar) × (1 − redução da DEF do alvo).
    Empate por tempo (maxRounds) = derrota de A. Determinística pela semente. */
-function duel(A,B,seed){
-  const D=DATA.duel, rng=mulberry(seed>>>0), hp=[Math.max(1,A.hp),Math.max(1,B.hp)], max=hp.slice(), P=[A,B], log=[]; let r=0, w=-1;
+function duel(A,B,seed,hpA0,hpB0){
+  const D=DATA.duel, rng=mulberry(seed>>>0), max=[Math.max(1,A.hp),Math.max(1,B.hp)], P=[A,B], log=[]; let r=0, w=-1;
+  const hp=[hpA0!=null?clamp(num(hpA0,max[0]),1,max[0]):max[0], hpB0!=null?clamp(num(hpB0,max[1]),1,max[1]):max[1]];   // vida inicial (rei da colina)
   for(r=1;r<=D.maxRounds&&w<0;r++) for(let s=0;s<2&&w<0;s++){ const a=P[s], d=P[1-s], crit=rng()*100<clamp(num(a.critRate,num(a.crit,0)),0,100);
     const dmg=Math.max(0,num(a.atk,0))*(1+Math.max(0,num(a.aspd,0))/100)*(crit?1+num(a.critDmg,D.baseCritDmg)/100:1)*(0.9+rng()*0.2)*(1-defRed(d.def,a.atk));
     hp[1-s]-=dmg; if(log.length<80) log.push({s,dmg,crit,hp:Math.max(0,hp[1-s])}); if(hp[1-s]<=0) w=s; }
-  return {win:w===0,rounds:Math.min(r-1,D.maxRounds),hpA:Math.max(0,hp[0])/max[0],hpB:Math.max(0,hp[1])/max[1],log,timeout:w<0};
+  return {win:w===0,rounds:Math.min(r-1,D.maxRounds),hpA:Math.max(0,hp[0])/max[0],hpB:Math.max(0,hp[1])/max[1],hpLeftA:Math.max(0,hp[0]),hpLeftB:Math.max(0,hp[1]),log,timeout:w<0};
 }
+/* REI DA COLINA (torneio das guildas, servidor e jogo): o mesmo duelo, começando com a vida que sobrou do anterior. hpA0/hpB0 em vida ABSOLUTA
+   (padrão: cheia). {win, hpLeftA, hpLeftB (absolutas), hpA, hpB (frações), log, timeout}. timeout = empate no tempo (quem decide é a regra do torneio). */
+const duelCarry=(A,B,seed,hpA0,hpB0)=>duel(A,B,seed,hpA0,hpB0);
 /* texto de dificuldade pela razão de FC */
 /* rótulo pela razão de FC (jogador / adversário), calibrado na taxa de vitória MEDIDA com o adversário-cópia (scaledFoe):
    ≥ 1,05 vence ~99% (Fácil) · 0,97-1,05 ~20-90% (Equilibrado) · 0,9-0,97 ~0-20% (Difícil) · < 0,9 ~0% (Muito difícil). A luta varia pouco: 10% de FC decide. */
@@ -204,7 +209,7 @@ function render(el,S,host,opt){
     if(host&&host.toast) host.toast(el.__sysTowMsg); changed(host); render(el,S,host,opt); };
 }
 
-const API={DATA,ensure,nextFloor,isBoss,floorFC,isMilestone,nextMilestone,opponent,playerStats,duel,difficulty,statsFromFC,fcOfStats,scaledFoe,rewardsFor,fight,onDayChange,bonus,advice,render,_hash:hash,_dayKey:dayKey};
+const API={DATA,ensure,nextFloor,isBoss,floorFC,isMilestone,nextMilestone,opponent,playerStats,duel,duelCarry,difficulty,statsFromFC,fcOfStats,scaledFoe,rewardsFor,fight,onDayChange,bonus,advice,render,_hash:hash,_dayKey:dayKey};
 root.Sys=root.Sys||{}; root.Sys.tower=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

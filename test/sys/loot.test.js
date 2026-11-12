@@ -8,7 +8,7 @@ const fresh=()=>{ delete globalThis.Sys.forge; delete globalThis.Sys.pet; };
 
 t('ensure cria estado padrão e conserta save antigo (v1) e inválido',()=>{
   const S={}; L.ensure(S); const o=S.sys.loot;
-  assert.strictEqual(o.v,2); assert.deepStrictEqual(o.mat,{forge:0,food:0,xp:0,essence:0,eggs:{}}); assert.strictEqual(o.egg.pity,0); assert.strictEqual(o.egg.first,false);
+  assert.strictEqual(o.v,2); assert.deepStrictEqual(o.mat,{forge:0,food:0,xp:0,essence:0,stones:0,eggs:{}}); assert.strictEqual(o.egg.pity,0); assert.strictEqual(o.egg.first,false);
   const S1={sys:{loot:{v:1,kills:5,gold:9,gems:1,items:2,bosses:0,byR:[1]}}}; L.ensure(S1); assert.strictEqual(S1.sys.loot.kills,5); assert.ok(S1.sys.loot.mat);
   const S2={sys:{loot:{kills:'x',gold:-5,byR:null,mat:{forge:'a',eggs:{'2':3,'x':1,'1':0}},egg:{pity:-1,eraFirst:'z'}}}}; L.ensure(S2);
   assert.strictEqual(S2.sys.loot.kills,0); assert.strictEqual(S2.sys.loot.mat.forge,0); assert.deepStrictEqual(S2.sys.loot.mat.eggs,{'2':3});
@@ -119,12 +119,12 @@ t('Senhor da Era: 1ª vitória de cada era dá ovo com raridade mínima; repeti�
 t('materiais vão para Sys.forge / Sys.pet; sem os módulos ficam pendentes e saem no flush',()=>{
   fresh(); const S={}, h=makeHost({seed:4});
   L.grant(S,h,{gold:1,gems:0,items:[],forge:3,food:7,eggs:[2,0]});
-  assert.deepStrictEqual(L.pending(S),{forge:3,food:7,xp:0,eggs:{'0':1,'2':1}});
+  assert.deepStrictEqual(L.pending(S),{forge:3,food:7,xp:0,stones:0,eggs:{'0':1,'2':1}});
   const got={forge:0,food:0,eggs:[]};
   globalThis.Sys.forge={addStones:(S,n)=>{ got.forge+=n; }};
   globalThis.Sys.pet={addFood:(S,n)=>{ got.food+=n; },addEgg:(S,h,o)=>{ got.eggs.push(o.r); return {pet:'p'+o.r,novo:true}; }};
   const f=L.flushPending(S,h); assert.strictEqual(f.forge,3); assert.strictEqual(got.food,7); assert.deepStrictEqual(got.eggs.sort(),[0,2]);
-  assert.deepStrictEqual(L.pending(S),{forge:0,food:0,xp:0,eggs:{}});
+  assert.deepStrictEqual(L.pending(S),{forge:0,food:0,xp:0,stones:0,eggs:{}});
   const r=L.grant(S,h,{gold:1,gems:0,items:[],forge:2,food:0,eggs:[1]}); assert.strictEqual(got.forge,5); assert.deepStrictEqual(r.hatched,[{pet:'p1',novo:true}]);
   fresh();
 });

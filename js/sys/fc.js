@@ -119,7 +119,8 @@ const hud=(S,host)=>'FC '+fmt(compute(S,host));
 
 /* RANKING (regra F): cada troca de item/skin grava a FC atual; o ranking semanal usa a MAIOR FC registrada na semana (segunda a domingo,
    hora local). Chamar depois de equipar/desequipar item ou skin, de fortalecer, treinar, alimentar o pet etc. Devolve {fc, week, max, newMax}. */
-function weekKey(ms){ const d=new Date(ms); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7));
+function weekKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.weekKey==='function') return C.weekKey(ms);   // fuso único com servidor
+  const d=new Date(ms); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7));
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function record(S,host){
   if(!S||typeof S!=='object') return null; if(!S.sys||typeof S.sys!=='object') S.sys={};

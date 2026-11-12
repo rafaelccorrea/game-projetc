@@ -592,6 +592,9 @@ t('oferta de 1ª compra: janela de 24 h, uma vez só, arma Épica que acompanha 
     h.t+=23*3600*1000; const g=OF.grant(S,h); assert.ok(g.ok); assert.strictEqual(h.gems,300); assert.ok(h.gold>0); assert.strictEqual(h.items[0].r,2);
     assert.strictEqual(OF.grant(S,h).reason,'done'); assert.ok(M.ensure(S).owned.wolf); assert.ok(M.bonus(S).atkPct>0);
     const S2=newS(), h2=makeHost(); OF.status(S2,h2); h2.t+=25*3600*1000; assert.strictEqual(OF.grant(S2,h2).reason,'expired');
+    // D11: só para quem nunca comprou (VIP com pontos, passe premium ou qualquer compra marcada)
+    const S3=newS(), h3=makeHost(); S3.sys={vip:{level:1,active:true,points:50}}; assert.strictEqual(OF.status(S3,h3).reason,'not_first_purchase'); assert.ok(!OF.status(S3,h3).available);
+    const S4=newS(), h4=makeHost(); assert.ok(OF.status(S4,h4).available); OF.markPurchase(S4,h4); assert.ok(!OF.status(S4,h4).available);
     // a arma acompanha: nível e era do jogador até o Nv 25, sempre ≥ ×1,15 da arma normal (Básico < 10, Raro 10-24) da mesma era e nível
     const w=h.items[0]; for(let L=1;L<=25;L++){ const era=L<12?0:L<25?1:2; LV.ensure(S).lvl=L; ST.offerSync(w,S,makeHost({eraMax:era}));
       assert.strictEqual(w.lvl,Math.max(L,3)); assert.strictEqual(w.e,era);
@@ -605,12 +608,38 @@ t('montaria: % de ATK e Vida 3/4,5/6,5/9/12 no máximo, nível com ouro até ní
   const S=newS(); M.add(S,makeHost(),'griffin'); assert.strictEqual(M.bonus(S).atkPct,0,'desligada');
   M.DATA.on=true;
   try{
-    assert.deepStrictEqual(M.DATA.mounts.map(m=>M.pctOf(m.id,60,5)),[3,4.5,6.5,9,12]); near(M.pctOf('wolf',1,1),6.5*0.4*0.8,1e-3);
+    assert.deepStrictEqual(['pony','horse','wolf','griffin','mythic','wyvern'].map(id=>M.pctOf(id,60,5)),[3,4.5,6.5,6.5,9,12],'lobo e grifo Épicos'); assert.strictEqual(M.add(newS(),makeHost(),'mythic').reason,'tbd'); near(M.pctOf('wolf',1,1),6.5*0.4*0.8,1e-3);
     const h=makeHost(); let paid=0; h.spendGold=n=>{ paid+=n; return true; }; LV.ensure(S).lvl=20;
     const u=M.upgrade(S,h,'griffin',100); assert.strictEqual(u.lvl,10,'teto = 20 ÷ 2'); assert.ok(paid>0); assert.strictEqual(M.canUpgrade(S,h,'griffin').reason,'cap');
     for(let i=0;i<4;i++) M.add(S,h,'griffin'); assert.strictEqual(M.ensure(S).owned.griffin.stars,3,'40 fragmentos = 1→2 (10) + 2→3 (20)');
     assert.ok(M.bonus(S).atkPct===M.bonus(S).hpPct); assert.strictEqual(M.battleInfo(S).visual,false,'visual desligado até a arte');
+    assert.deepStrictEqual([1,2,3,4,5].map(n=>M.auraOf(n).id),['none','glow','glow','aura_smoke','aura_full']); assert.strictEqual(M.battleInfo(S).aura.id,'glow','3★ = brilho leve');
   } finally { M.DATA.on=false; }
+});
+
+t('rei da colina: duelCarry começa com a vida que sobrou; sem vida inicial = o duelo de sempre',()=>{
+  const a={atk:100,hp:2000,def:0,critRate:10,critDmg:100,aspd:0}, b={atk:90,hp:2000,def:0,critRate:10,critDmg:100,aspd:0};
+  assert.deepStrictEqual(W.duelCarry(a,b,5),W.duel(a,b,5),'sem vida inicial = igual');
+  const d1=W.duelCarry(a,b,5); assert.ok(d1.hpLeftA>0||d1.hpLeftB>0);
+  const tired=W.duelCarry(a,b,5,200); assert.ok(tired.hpLeftA<=d1.hpLeftA); assert.ok(!tired.win||tired.hpLeftA<200,'cansado começa com 200');
+});
+
+t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), ocultar peça, cosméticos, modo skin; só visual',()=>{
+  const AP=require('../../js/sys/appearance.js');
+  const eq={weapon:{slot:'weapon',e:2,r:3},armor:{slot:'armor',e:1,r:2},hat:{slot:'hat',e:1,r:1},boots:{slot:'boots',e:0,r:0},gloves:{slot:'gloves',e:1,r:1},necklace:{slot:'necklace',e:1,r:1}};
+  const h={equipped:()=>eq}, S={skinEq:{weapon:'w00',armor:'a00'}};
+  let L=AP.layers(S,h).map(l=>l.layer); assert.deepStrictEqual(L,['base','boots','armor','hat','weapon'],'colar e luvas não aparecem; skin inicial não esconde o item');
+  assert.strictEqual(AP.layers(S,h).find(l=>l.layer==='weapon').key,'item/weapon/e2_r3');
+  AP.setLookHidden(S,'hat',true); assert.ok(!AP.layers(S,h).some(l=>l.layer==='hat'),'chapéu oculto');
+  assert.ok(AP.addCosmetic(S,'glasses_aviator').ok); assert.ok(AP.equipCosmetic(S,'glasses','glasses_aviator')); assert.ok(!AP.equipCosmetic(S,'mask','glasses_aviator'));
+  assert.ok(AP.layers(S,h).some(l=>l.layer==='glasses'&&l.key==='cos/glasses_aviator'));
+  AP.setMode(S,'skin'); assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'modo skin sem skin escolhida = itens');
+  S.skinEq.armor='a31'; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','skin','weapon'],'skin completa esconde as peças');
+  assert.deepStrictEqual(AP.bonus(),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0},'só visual');
+  assert.strictEqual(AP.look({look:'lixo'}).mode,'items');
+  // asa: atrás do corpo, nos dois modos, com olho para ocultar; skin de asa vence o item
+  eq.wing={slot:'wing',e:3,r:2}; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['wing','base','skin','weapon'],'asa também no modo skin');
+  AP.setSkin(S,'wing','wing_angel'); assert.strictEqual(AP.layers(S,h)[0].key,'skin/wing_angel'); AP.setLookHidden(S,'wing',true); assert.ok(!AP.layers(S,h).some(l=>l.layer==='wing'));
 });
 
 console.log(`ok: ${n} testes`);

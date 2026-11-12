@@ -1,0 +1,13 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kael montado</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}canvas{display:block;max-width:100%;border-radius:8px}</style></head><body>
+<h1>Kael montado: galope, parado e golpe da sela</h1>
+<p>Kael e a montaria no mesmo vídeo (método híbrido aprovado). A espada é desenhada por código, então qualquer arma serve. As patas ficam na linha do chão.</p><div class="g" id="g"></div>
+<script>
+const A='../../../assets/';const MT=new URLSearchParams(location.search).get('m')||'wolf';const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+(async()=>{const bg=await L(A+'bg/era2.png'),gyF=(await (await fetch(A+'bg/meta.json')).json()).era2.groundY;const items=[];
+ for(const [s,lab] of [['run','galope'],['idle','parado'],['attack','golpe']]){const img=await L(A+'anim/mounts/kael_'+MT+'_'+s+'_era2_t1.png');if(!img)continue;const m=await (await fetch(A+'anim/mounts/kael_'+MT+'_'+s+'_era2_t1.json')).json();const c=document.createElement('canvas');c.width=420;c.height=300;document.getElementById('g').appendChild(c);items.push({c,img,m,lab,s});}
+ const t0=performance.now();(function loop(n){const t=(n-t0)/1000;for(const {c,img,m,lab,s} of items){const g=c.getContext('2d'),Wd=c.width,H=c.height,gy=H*0.88;g.clearRect(0,0,Wd,H);
+  if(bg){const k=Math.max(H/(bg.height*(0.88/gyF)),Wd/bg.width),bw=bg.width*k,bh=bg.height*k,off=s==='run'?(t*160)%bw:0;for(let x=-off-bw;x<Wd+bw;x+=bw)g.drawImage(bg,x,gy-gyF*bh,bw,bh);}
+  const i=Math.floor(t*m.fps)%m.frames;g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(Wd*0.5,gy+2,90,9,0,0,7);g.fill();g.drawImage(img,i*m.w,0,m.w,m.h,Wd*0.5-(m.padLeft+128),gy-m.feetY,m.w,m.h);
+  g.fillStyle='#fff';g.font='12px system-ui';g.fillText(lab,8,16);}requestAnimationFrame(loop);})(t0);})();
+</script></body></html>

@@ -1268,3 +1268,51 @@ Arquivos mexidos: `index.html`, `js/fullbattle.js`, `js/battle.js`, `js/meta.js`
 ### Diferenças conscientes do protótipo V2
 - Guia de missão sob a barra da fase e alerta "Evento": não feitos (sem lógica/evento aprovado).
 - Sem botão AUTO (ordem do dono, posterior ao protótipo).
+
+
+## Rodada 12 — v0.12.2: respiro Kael × inimigo, barras sobre o Kael, cabeçalho, desempenho, LAYOUT ANTIGO APAGADO (2026-11-12)
+
+Arquivos: `index.html`, `js/battle.js`, `js/fullbattle.js`, `js/ui.js`, `js/farm.js`, `js/meta.js`, `js/loading.js`, `js/native.js`, `sw.js`, `version.json`.
+
+### O que mudou
+1. **Respiro Kael × inimigo da frente** (`hordeFit`, `battle.js`): borda esquerda do inimigo da frente (sprite parado) a `HERO_GAP` = 32 px ou mais da borda do corpo do Kael (`HERO_EDGE` = 150). Os centros andam para a direita (teto 48 px). Para caber atrás: 1º o do fundo encolhe até 80 px; 2º o da frente até a escala 1,10. O da frente com folha de golpe não ganha mais o avanço de 12 px por código (a folha já leva o corpo). `contact()` usa o centro real do slot da frente (`B.front`).
+2. **Barras de vida e energia sobre a cabeça do Kael** (aprovado pelo dono): DOM sem blur; vida 10 px (verde → amarelo < 50% → vermelho < 25%), rastro do pedaço perdido, treme e pisca no dano; energia roxa 6 px, pulsa cheia. Ancoradas nos pés + altura do corpo parado. A caixa do canto inferior esquerdo saiu. Em tela curta (360x640) as barras começam depois da coluna de ícones.
+3. **FC sob o avatar**: pílula escura, 11,5 px. **Nome da era** inteiro em 360 ("Pré-História 1-9"): faixa mais larga, Desafiar menor; tabela `FB_ERA_SHORT` só entra se não couber.
+4. **Desempenho**: sem `backdrop-filter` em nada sobre o canvas; pulsos contínuos só com opacidade/transform de pseudo-elemento (sem animar box-shadow/filter); teto de DPR do canvas 2,5 → 2; HUD some e para as animações com painel aberto.
+5. **Layout antigo apagado**: saíram `#hud`, `#ftop`, `#colL`, `#colR`, `#hpe`, `#skills`, `#tabs`, a chave `fullBattle`, `?fb=0`, `FB_GEO`, `FB_ON`, abas, `updSkills`/`initSkills`, e 171 regras de CSS mortas (35 KB → 20 KB). Ficou `#chestbox` escondido (hospedeiro do `Sys.chest`). Novas funções: `bossTap()`, `toggleSound()`. Cópia: `docs/arquivo/layout-antigo-v0.12.1/` e git 68b1e16.
+6. `native.js`: VOLTAR fecha o MENU aberto. `normItem` copia `origin`. MENU: campo `tag` (selo de texto) e entrada do Leilão pronta e DESLIGADA (`on:false`, martelinho por código).
+
+### Números do respiro (390x844, por era; combinações frente/meio/fundo; gap em px, alturas, sobreposição frente×meio / meio×fundo em %)
+- Era 0: gap 32–37; alturas 105–112 / 98–122 / 80; sobreposição 46–51 / **64–75** (limite 55).
+- Era 1: gap 32–37; 102–118 / 97–118 / 80–106; 26–51 / 29–**74**.
+- Era 2: gap 34–38; 110–118 / 118–120 / 80–96; 39–44 / 50–**60** (limite 50).
+- Era 3: gap 40–42; 109–114 / 118–122 / 80; 39–43 / 50–**58**.
+- Era 4: gap 32–48; 105–118 / 115–118 / 80–84; 34–**59** / 55–**88**.
+- Era 5: 1 visível; gap 32 (drone) e 58.
+- Era 6: gap 45–56; 113–122 / 118–122 / 80–106; 23–39 / 44–50 (cabe).
+NÃO COUBE em 55% nas eras 0, 1 e 4 (e passa de 50% nas 2 e 3) mesmo com fundo em 80 e frente em 1,10: decisão do PO (2 comuns visíveis nas eras de bicho largo, ou aceitar).
+
+### O que eu vi
+- 390x844 eras 0, 1, 2 e 360x640 eras 0 e 2: folga visível entre Kael e o da frente, cabeçalho inteiro, FC legível, barras sobre o Kael (prints `v0122_*.png`).
+- Jogador novo SEM debug: carregamento → título → introdução → escolha do herói → nome → tutorial 5 passos até o fim (`S.tut=99`, +20 gemas), zero erros. Passos 3 e 4 com toque simulado nos alvos.
+- Diária da ultimate no jogador novo: chegou a 2/3 em ~2 min de jogo a x1 (parei aí); na v0.12.1 vi fechar com 3.
+- Depois de apagar o layout antigo: batalha, 5 painéis (tela cheia 56/788), MENU, Desafiar, música: sem erro no console.
+
+### O que NÃO testei / não consegui
+- **Medição de FPS antes/depois: não saiu.** O PC estava saturado (10–15 FPS com ou sem HUD, com ou sem blur) e a ferramenta do navegador não limita CPU. As correções são as da lista do S24; a prova é no aparelho.
+- Barras: tremor/piscar e cor vermelha vistos só por estado forçado; rastro não conferido quadro a quadro.
+- Eras 3–6 só por números, sem print. Chefes e Senhor da Era depois das mudanças.
+- VOLTAR do Android, APK, aparelho real.
+- Telas do agente B além de abrir (Configurações nova `p_cfg.js` não aberta).
+- Fica para a v0.12.3: gravar `origin` nos criadores de item ('shop', 'gift').
+
+
+### v0.12.2, último item: ARMA EQUIPADA NA MÃO DO KAEL (defeito visto pelo dono)
+- `heroLook()` (index.html): função única da aparência. Arma = skin de arma escolhida (qualquer uma menos a inicial `w00`); senão a arma do item equipado (era = `item.look ?? item.e`, raridade do item → objeto `w<era><raridade>` de SKINS, mesma arte); senão a inicial.
+- NÃO usei `Sys.appearance.of`: lá qualquer `S.skinEq.weapon` (inclusive a inicial) vence o item; o módulo continua sem ser carregado. Mesma regra, com a exceção do `w00`.
+- Batalha: `wSkin()` passou a ler `heroLook().weapon` (arma, golpes, ícones e nomes das habilidades seguem a era da arma na mão); ao trocar, a arte carrega na hora. Folha composta só com roupa e arma da era 2 no mesmo tier (regra que já existia).
+- Vitrine do Equipamento: `drawHeroPreview(canvas, look, dt)` em `js/battle.js` (Kael parado respirando, mesma função de desenho da batalha); `scrGear` em `js/screens.js` troca a folha pronta por `<canvas id="gkc">` (única linha mexida no arquivo do agente B, por exceção do coordenador). O laço desenha a cada quadro, então atualiza ao equipar, "Equipar melhor" e arrastar.
+- Cabeçalho dos painéis: "Equipamento" cabe inteiro (título 18 px, botões mais justos).
+- Visto (390x844): itens de arma das eras 1 (espada), 3 (pistola) e 6 equipados → mudam na vitrine e na batalha; skin `w22` escolhida vence; voltar para `w00` devolve o item; botão "Equipar melhor" real troca a arma e o boneco. Zero erros. Prints `v0122_arma_*.png`.
+- NÃO testado: arrastar para equipar; lança e demais tiers; encaixe da mão conferido a olho só nessas 3 armas, em tamanho pequeno; item com campo `look` diferente de `e` (transformação); 360x640; tela de Skins da Loja pela interface (a troca de skin foi feita por estado); carregamento com arma de item; APK.
+- Atenção: com arma de fogo o Kael da batalha usa a pose de tiro que o jogo já tinha (não mexi); na vitrine fica parado.

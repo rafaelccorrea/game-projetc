@@ -81,7 +81,7 @@ function neckRows(s){
   return out;
 }
 function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p, sheetLoad(set.idle).p, sheetLoad(set.attack).p];
-  const ws = SKIN(S.skinEq.weapon), sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
+  const ws = heroLook().weapon, sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
   { const tb = ws && trailBase(ws); if (tb) out.push(sheetLoad(tb, true).p); }
   const au = auraBase(); if (au) out.push(sheetLoad(au, true).p);
   return out; }

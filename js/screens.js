@@ -9,9 +9,11 @@ const RN=i=>RAR[i]?RAR[i].n:'';
 const BAG_MAX=60, FULL_VIEWS={gear:1,summon:1,shop:1,pass:1,prog:1};
 /* CHAVES POR TELA (agente B, painéis iguais ao protótipo): false = volta ao comportamento anterior daquela parte, sem mexer no resto.
    fit = encolher a tela até caber o arranjo completo do protótipo (2 fileiras de mochila, 2 de skins, 5 níveis do passe) em vez de cortar linhas;
+   real = LAYOUT NOVO dos protótipos convertidos (v0.12.2): tamanho real (sem escala), largura até 600 px centrada, o conteúdo ROLA quando falta altura
+          e sobra fica antes das ações de baixo. Desligada, volta o arranjo anterior (escala pela base de 390 + xFit).
    frame = CONTORNO COMUM em tela cheia (cabeçalho + VOLTAR + conteúdo, sem folha e sem barra de baixo): ver xHead/xWrap. Desligada até ser vista no navegador.
    equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true},window.PANEL_V2||{});
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true},window.PANEL_V2||{});
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
 const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
 const kf=v=>{ v=Math.max(0,v||0); const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
@@ -204,8 +206,23 @@ body.full #view.up{animation:xfade .22s ease-out}
 .x-drop.over{animation:none;box-shadow:0 0 0 4px #fff3c4,0 0 26px 10px rgba(255,243,196,.95);transform:scale(1.14)}
 .x-nodrop{opacity:.38;transition:opacity .15s}
 .x-dragsrc{opacity:.3}
-.x-bestoff{opacity:.8}
+.x-bestoff{opacity:1}
+/* layout novo (protótipo convertido): pouso dourado de todos os espaços juntos, selo "FC +N" na vitrine, arrasto com o anel dourado */
+.x-land{animation:xland2 .55s ease-out both!important}
+@keyframes xland2{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,224,122,0)}35%{transform:scale(1.22);box-shadow:0 0 0 3px #ffe07a,0 0 26px 8px rgba(255,201,74,.9)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,224,122,0)}}
+.x-landring{display:none}
+.x-gainp{animation:xgainp 1.6s ease-out both}
+@keyframes xgainp{0%{transform:translateY(16px) scale(.8);opacity:0}18%{transform:translateY(0) scale(1.12);opacity:1}70%{transform:translateY(-14px) scale(1);opacity:1}100%{transform:translateY(-34px);opacity:0}}
+.x-drop{animation:xselr 1.2s ease-in-out infinite!important;transition:transform .12s}
+.x-drop.over{animation:xselr 1.2s ease-in-out infinite!important;transform:scale(1.14);box-shadow:0 0 0 2px #ffc94a,0 0 14px 4px rgba(255,201,74,.8)}
+.x-nodrop{opacity:1}
+.x-dragsrc{opacity:.35}
+.x-ghost{box-shadow:0 0 18px 4px rgba(255,201,74,.55)}
+.x-ghost.drag{box-shadow:0 12px 24px rgba(0,0,0,.6);opacity:.95}
 .x-rulep svg{animation:xshieldPulse 2.4s ease-in-out infinite}
+/* rolagem do conteúdo (layout novo): some a barra, rola só na vertical, sem puxar a página */
+.x-scroll{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;touch-action:pan-y}
+.x-scroll::-webkit-scrollbar{display:none}
 /* CONTORNO COMUM (PANEL_V2.frame): o painel ocupa a tela inteira; some a folha da batalha, o HUD antigo e a barra de abas de baixo */
 body.full.xframe #view{top:0!important;bottom:0!important;z-index:62!important;border-radius:0!important;animation:xfade .2s ease-out!important}
 body.full.xframe #fbsheet,body.full.xframe #fbdim,body.full.xframe #tabs{display:none!important}
@@ -230,13 +247,22 @@ function xHead(){ return `<div class="x-head" style="height:${X_HEAD}px">
     <span class="x-hpill" aria-label="Moedas">${COIN_I(24)}<span id="xf_gold">${kf(S.gold)}</span></span>
     <span class="x-hpill" aria-label="Gemas">${GEM_I(22)}<span id="xf_gems">${n0(S.gems)}</span></span></div>`; }
 function xHeadTick(){ if(!xFrameOn()) return; const a=document.getElementById('xf_gold'), b=document.getElementById('xf_gems'); if(a){ const t=kf(S.gold); if(a.textContent!==t) a.textContent=t; } if(b){ const t=n0(S.gems); if(b.textContent!==t) b.textContent=t; } }
-function xDims(minH){ const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), s=Math.min(W/390,Hp/(minH+hh)); return {s,H:Hp/s-hh,ox:(W-390*s)/2,Wb:W/s}; }
+/* LAYOUT NOVO (PANEL_V2.real): 1 px da tela = 1 px do protótipo. d.H = altura útil do #view (tela − área segura − cabeçalho de 56 px do index);
+   d.Wb = largura do conteúdo (até 600, centrada). Nada encolhe: cada tela põe rolagem (classe x-scroll) onde o protótipo rola. */
+/* PAGINADOR COMUM: "‹ 2/5 ›" centrado, com o número ENTRE as setas (para a seta de página não parecer um Voltar) e a seta apagada na primeira/última página.
+   act = data-x do toque (o tratador da tela lê b.dataset.d = -1 | 1) · sub = linha pequena opcional sob o número */
+const X_CHEV=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="${d<0?'15 18 9 12 15 6':'9 18 15 12 9 6'}"></polyline></svg>`;
+function xPager(act,pg,pages,sub,prevLb,nextLb){ const b=(d,on,lb)=>`<button data-x="${act}" data-d="${d}" aria-label="${lb}" ${on?'':'disabled aria-disabled="true"'} style="width:44px;height:44px;flex:none;border-radius:50%;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center;opacity:${on?1:.3}">${X_CHEV(d)}</button>`;
+  return `<div style="min-height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:14px">${b(-1,pg>0,prevLb||'Página anterior')}<span style="display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:60px"><span class="lil" role="status" aria-label="Página ${pg+1} de ${pages}" style="font-size:17px">${pg+1}/${pages}</span>${sub?`<span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">${sub}</span>`:''}</span>${b(1,pg<pages-1,nextLb||'Próxima página')}</div>`; }
+function xReal(){ const W=V.clientWidth||390, Hp=V.clientHeight||704, Wb=Math.min(W,600); return {s:1,H:Hp,ox:(W-Wb)/2,Wb,full:true,real:true}; }
+function xDims(minH){ if(PANEL_V2.real&&!xFrameOn()) return xReal(); const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), s=Math.min(W/390,Hp/(minH+hh)); return {s,H:Hp/s-hh,ox:(W-390*s)/2,Wb:W/s}; }
 /* arranjo COMPLETO do protótipo (fullH, na base de 390) sempre que couber encolhendo até 14% além da largura; senão o arranjo curto (minH), com menos linhas.
    Na folha da batalha em tela cheia sobram 656 px de base (o protótipo tinha 704): a tela encolhe ~3% e mostra tudo, igual ao canvas. */
-function xFit(fullH,minH){ const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), sw=W/390, sf=Math.min(sw,Hp/(fullH+hh));
+function xFit(fullH,minH){ if(PANEL_V2.real&&!xFrameOn()) return xReal(); const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), sw=W/390, sf=Math.min(sw,Hp/(fullH+hh));
   if(PANEL_V2.fit&&sf>=sw*0.86&&sf>=0.76) return {s:sf,H:Hp/sf-hh,ox:(W-390*sf)/2,Wb:W/sf,full:true};   /* 0,76: abaixo disso o espaço de 58 px ficaria com menos de 44 px de toque */
   const d=xDims(minH); d.full=d.H>=fullH; return d; }
-const xWrap=(d,cls,inner)=>xFrameOn()?`<div class="xs ${cls||''}" style="width:${d.Wb.toFixed(1)}px;height:${(d.H+X_HEAD).toFixed(1)}px;transform:scale(${d.s.toFixed(4)})">${xHead()}<div class="x-body">${inner}</div></div>`
+const xWrap=(d,cls,inner)=>d.real?`<div class="xs ${cls||''}" style="width:${d.Wb.toFixed(1)}px;height:${d.H.toFixed(1)}px;transform:translateX(${d.ox.toFixed(1)}px)">${inner}</div>`
+  :xFrameOn()?`<div class="xs ${cls||''}" style="width:${d.Wb.toFixed(1)}px;height:${(d.H+X_HEAD).toFixed(1)}px;transform:scale(${d.s.toFixed(4)})">${xHead()}<div class="x-body">${inner}</div></div>`
   :PANEL_V2.fit?`<div class="xs ${cls||''}" style="width:${d.Wb.toFixed(1)}px;height:${d.H.toFixed(1)}px;transform:scale(${d.s.toFixed(4)})">${inner}</div>`
   :`<div class="xs ${cls||''}" style="height:${d.H.toFixed(1)}px;transform:translateX(${d.ox.toFixed(1)}px) scale(${d.s.toFixed(4)})">${inner}</div>`;
 /* peças em coordenadas fixas do protótipo (vitrine do Kael, palco do baú) ficam numa caixa de 390 px centrada na largura real */
@@ -284,16 +310,16 @@ function gBest(){ const lv=plv(), eq=Object.assign({},S.eq), real=S.eq; let n=0;
 function gMaxPlan(it){ const cap=Math.min(100,plv()); let g=S.gold, l=it.lvl||1, sum=0, n=0; while(l<cap){ const c=Sys.stats.upgradeCost(Object.assign({},it,{lvl:l})).gold; if(g<c) break; g-=c; sum+=c; l++; n++; } return {n,sum,to:l}; }
 
 function scrGear(){
-  const d=xFit(680,614), H=d.H, lv=plv(), rows=d.full?2+Math.min(2,Math.max(0,Math.floor((H-680)/66))):1, PER=rows*5, now=gSnap(), tw=XG.tw, shown=tw?tw.from:now;
+  const d=xFit(680,614), H=d.H, lv=plv(), rows=d.real?2:(d.full?2+Math.min(2,Math.max(0,Math.floor((H-680)/66))):1), PER=rows*5, vitH=d.real?Math.max(236,Math.min(292,Math.round(0.34*(H+56)))):292, now=gSnap(), tw=XG.tw, shown=tw?tw.from:now;
   const wingOpen=Sys.stats.slotOpen('wing',lv); let auraN=0; try{ auraN=({blue:4,purple:7,flame:10,gold:13})[Sys.forge.aura(S).id]||0; }catch(e){}
   /* 7 espaços */
-  const slotsH=SLOTS7.map(slot=>{ const [x,y]=GSLOT_POS[slot], it=eqItem(slot), nm=SLOT[slot].n;
-    if(slot==='wing'&&!wingOpen) return `<div style="position:absolute;left:${x}px;top:${y}px;width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
+  const slotsH=SLOTS7.map(slot=>{ const [x,y]=GSLOT_POS[slot], it=eqItem(slot), nm=SLOT[slot].n, pos=!d.real?'left:'+x+'px;top:'+y+'px':slot==='wing'?'left:calc(50% - 29px);top:6px':(x<195?'left:10px':'right:10px')+';top:'+(y/292*100).toFixed(2)+'%';
+    if(slot==='wing'&&!wingOpen) return `<div style="position:absolute;${pos};width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
       <button class="x-slot" data-x="wing" data-slot="wing" aria-label="Asa, bloqueado, libera no nível ${Sys.stats.DATA.wing.minLevel}" style="position:relative;width:58px;height:58px;border-radius:14px;border:2px dashed #8a7458;background:rgba(14,10,7,.82);color:#e8dccb;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
         ${SVG_LOCK(22)}<span style="font-size:9px;font-weight:900;line-height:1.05">Nível ${Sys.stats.DATA.wing.minLevel}</span></button>
       <span style="font-size:10px;font-weight:900;color:#e8dccb;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">Asa</span></div>`;
     const c=it?RC[it.r]:'#8a7458';
-    return `<div style="position:absolute;left:${x}px;top:${y}px;width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
+    return `<div style="position:absolute;${pos};width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
       <div class="${XG.filter===slot?'x-selring':''} ${XG.land&&XG.land[slot]?'x-land':''}" data-slotbox="${slot}" style="position:relative;width:58px;height:58px;border-radius:14px">${XG.land&&XG.land[slot]?'<span class="x-landring" aria-hidden="true"></span>':''}
         ${it&&it.r>=2?`<span class="x-halo" style="background:${c}"></span>`:''}
         <button class="x-slot" data-x="slot" data-slot="${slot}" aria-label="${nm}${it?': '+esc2(iname(it))+', '+RN(it.r)+', item nível '+it.lvl:': vazio'}. Toque para ver os itens deste espaço" style="position:absolute;inset:0;border-radius:14px;border:${it?'3px solid '+c:'2px dashed #8a7458'};background:${it?'radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611)':'rgba(14,10,7,.82)'};padding:0;overflow:hidden">
@@ -322,47 +348,52 @@ function scrGear(){
     ||`<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:58px;font-size:13px;font-weight:800;color:#c9b9a2">Nenhum item neste espaço ainda. Invoque ou derrote chefes.</div>`;
   const best=gBest(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XG.page?22:8}px;height:8px;border-radius:4px;background:${i===XG.page?'#ffc94a':'#4a3a2b'};transition:width .2s"></span>`).join('');
   const selIt=XG.sel!=null?itemOf(XG.sel):null; if(XG.sel!=null&&!selIt) XG.sel=null;
+  const sc0=document.getElementById('xg_sc'), scTop=sc0?sc0.scrollTop:0, gain=tw&&tw.big&&tw.to.fc>tw.from.fc+0.5?tw.to.fc-tw.from.fc:0;
   V.innerHTML=xWrap(d,XG.anim?'x-in':'',`
-    <div style="position:relative;height:292px;flex:none;overflow:hidden;background:#7fb3d9">
+    <div ${d.real?'class="x-scroll" id="xg_sc" style="flex:1;min-height:0;display:flex;flex-direction:column"':'style="display:contents"'}>
+    <div style="position:relative;height:${vitH}px;flex:none;overflow:hidden;background:#7fb3d9">
       <div class="x-ly x-sky" style="top:0;height:175px;background-size:auto 175px"></div><div class="x-ly x-cld" style="top:14px;height:46px;background-size:auto 46px"></div>
       <div class="x-ly x-far" style="top:64px;height:123px;background-size:auto 123px"></div><div class="x-ly x-gnd" style="top:191px;height:111px;background-size:auto 111px"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(22,17,13,.25) 0%,rgba(22,17,13,.78) 60%,rgba(22,17,13,.95) 100%)"></div>
-      <div style="${X390(292)}"><div class="x-ped" style="position:absolute;left:120px;top:258px;width:150px;height:28px;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#6a5440 0%,#3a2c1f 60%,#241a12 100%);border:2px solid #ffc94a;box-sizing:border-box"></div>
+      <div style="${d.real?'position:absolute;left:50%;bottom:0;width:390px;height:292px;margin-left:-195px;pointer-events:none':X390(292)}"><div class="x-ped" style="position:absolute;left:120px;top:258px;width:150px;height:28px;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#6a5440 0%,#3a2c1f 60%,#241a12 100%);border:2px solid #ffc94a;box-sizing:border-box"></div>
       <span class="x-spark" style="left:136px;top:258px"></span><span class="x-spark" style="left:176px;top:266px;animation-delay:1.1s;width:4px;height:4px"></span><span class="x-spark" style="left:218px;top:262px;animation-delay:2s"></span><span class="x-spark" style="left:250px;top:256px;animation-delay:.6s;width:3px;height:3px"></span>
-      ${auraN?'<div class="x-aura" aria-hidden="true" style="left:111px;top:64px;width:168px;height:210px;background-image:url(assets/anim/aura/aura'+auraN+'.png)"></div>':''}<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael com a skin equipada" style="position:absolute;left:111px;top:110px;width:168px;height:168px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))"></div>
+      ${auraN?'<div class="x-aura" aria-hidden="true" style="left:111px;top:64px;width:168px;height:210px;background-image:url(assets/anim/aura/aura'+auraN+'.png)"></div>':''}<canvas id="gkc" role="img" aria-label="Kael com a arma equipada" style="position:absolute;left:61px;top:110px;width:268px;height:168px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none"></canvas>
       ${XG.upfx?'<div class="x-upfx" aria-hidden="true" style="position:absolute;left:115px;top:110px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,220,.9) 0%,rgba(255,201,74,.5) 40%,rgba(255,201,74,0) 70%)"></div>':''}
-      ${slotsH}<div id="xg_toast"></div></div>
+      ${d.real?'</div>':''}${slotsH}<div id="xg_toast"></div>${d.real?'':'</div>'}
+      ${gain&&d.real?`<div class="x-gainp" aria-hidden="true" style="position:absolute;left:0;right:0;bottom:64px;display:flex;justify-content:center;z-index:5;pointer-events:none"><span class="lil" style="padding:4px 12px;border-radius:12px;background:rgba(14,10,7,.88);border:2px solid #5fd068;font-size:22px;color:#7ef08a;text-shadow:0 2px 0 #0d2410;box-shadow:0 0 18px rgba(95,208,104,.6);white-space:nowrap">FC +${gNum(gain)}</span></div>`:''}
     </div>
     <div style="height:140px;flex:none;margin:8px 12px 0;padding:8px;border-radius:16px;background:#1d1611;border:1px solid #4a3a2b;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
       <div style="height:46px;flex:none;display:flex;gap:6px">
-        <div class="x-fcbox ${tw&&tw.big?'x-fcboxUp':''}" id="xg_fcbox" style="flex:1;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:12px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box;min-width:0">${tw&&tw.big&&tw.to.fc>tw.from.fc+0.5?'<span class="x-fcgain" aria-hidden="true">+'+gNum(tw.to.fc-tw.from.fc)+'</span>':''}
+        <div class="x-fcbox ${tw&&tw.big&&!d.real?'x-fcboxUp':''}" id="xg_fcbox" style="flex:1;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:12px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box;min-width:0">${gain&&!d.real?'<span class="x-fcgain" aria-hidden="true">+'+gNum(gain)+'</span>':''}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
-          <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span style="font-size:9px;font-weight:900;color:#c9b9a2;letter-spacing:1px;white-space:nowrap">FORÇA DE COMBATE</span>
-            <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
-        <button data-x="goskins" aria-label="Skin equipada e coleção de skins: ir para a loja" style="width:168px;flex:none;display:flex;align-items:center;gap:6px;padding:0 6px;border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
+          <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span style="font-size:9px;font-weight:900;color:#c9b9a2;letter-spacing:${d.Wb<380?0:1}px;white-space:nowrap">FORÇA DE COMBATE</span>
+            <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
+        <button data-x="goskins" aria-label="Skin equipada e coleção de skins: ir para a loja" style="width:${d.real?(d.Wb<380?168:204):168}px;flex:none;display:flex;align-items:center;gap:6px;padding:0 6px;border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
           <span style="position:relative;width:34px;height:34px;flex:none;border-radius:9px;background:#1d1611;overflow:hidden"><span class="kidle ${tier?'t'+tier:''}" style="position:absolute;left:-12px;top:-4px;width:58px;height:58px;display:block"></span></span>
           <span style="display:flex;flex-direction:column;line-height:1.15;min-width:0"><span style="font-size:11px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
             <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span></button>
       </div>
       <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:5px">${stats}</div>
     </div>
-    <div style="flex:1;margin-top:8px;display:flex;flex-direction:column;gap:6px;padding:8px 12px 8px;background:#1d1611;border-top:2px solid #4a3a2b;border-radius:18px 18px 0 0;box-sizing:border-box;min-height:0">
-      <div style="height:40px;flex:none;display:flex;align-items:center;gap:8px">
+    <div style="${d.real?'flex:1 0 auto':'flex:1;min-height:0'};margin-top:8px;display:flex;flex-direction:column;gap:6px;padding:8px 12px 8px;background:#1d1611;border-top:2px solid #4a3a2b;border-radius:18px 18px 0 0;box-sizing:border-box">
+      <div style="min-height:${d.real?44:40}px;flex:none;display:flex;align-items:center;gap:8px">
         <div style="flex:1;display:flex;flex-direction:column;line-height:1.1;min-width:0;overflow:hidden"><span class="lil" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${XG.filter==='all'?'Todos os itens':'Itens: '+SLOT[XG.filter].n}</span>
-          <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Mochila ${S.inv.length}/${BAG_MAX}</span></div>
-        ${XG.filter!=='all'?'<button data-x="all" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:12px;font-weight:900;flex:none">Ver todos</button>':''}
-        <button data-x="prog" ${SCREENS_ON.progress?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:40px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
-        ${best.n>0?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" style="height:40px;padding:0 12px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>`
-          :'<button class="lil x-bestoff" data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: você já está com o melhor" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#2a211a;color:#9c8d7a;font-size:12px;line-height:1.05;flex:none;text-align:center">Já está com<br>o melhor</button>'}
+          <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mochila ${S.inv.length}/${BAG_MAX}${d.real&&PANEL_V2.equipDrag?' · arraste o item até o espaço':''}</span></div>
+        ${XG.filter!=='all'?'<button data-x="all" style="height:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:12px;font-weight:900;flex:none">Ver todos</button>':''}
+        <button data-x="prog" ${SCREENS_ON.progress?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:44px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
+        ${window.Panels&&Panels.on('forge')?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
+        ${d.real?'':best.n>0?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" style="height:40px;padding:0 12px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>`
+          :'<button class="lil x-bestoff" data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: você já está com o melhor" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#2a211a;color:#9c8d7a;font-size:12px;line-height:1.05;flex:none;text-align:center">Já está com <br>o melhor</button>'}
       </div>
-      <div style="flex:none;height:${rows*58+(rows-1)*8}px;display:grid;grid-template-columns:repeat(5,58px);grid-auto-rows:58px;justify-content:space-between;row-gap:8px;align-content:start">${cells}</div>
-      <div style="height:40px;flex:none;display:flex;align-items:center;justify-content:center;gap:10px">
-        <button data-x="pg" data-d="-1" aria-label="Página anterior" style="width:44px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XG.page===0?'#6a5a48':'#f6ecdf'};padding:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-        <div style="display:flex;gap:6px;align-items:center" aria-label="Página ${XG.page+1} de ${pages}">${dots}</div>
-        <button data-x="pg" data-d="1" aria-label="Próxima página" style="width:44px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XG.page>=pages-1?'#6a5a48':'#f6ecdf'};padding:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-      </div>
+      <div data-bag="1" style="flex:none;height:${rows*58+(rows-1)*8}px;display:grid;grid-template-columns:repeat(5,58px);grid-auto-rows:58px;justify-content:space-between;row-gap:8px;align-content:start">${cells}</div>
+      ${xPager('pg',XG.page,pages)}
     </div>
+    </div>
+    ${d.real?`<div style="flex:none;display:flex;padding:8px 12px 10px;background:#1d1611;border-top:1px solid #4a3a2b;box-sizing:border-box">${best.n>0
+      ?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" aria-label="Equipar melhor: troca ${best.n} ${best.n===1?'item':'itens'} pelo de maior FC em cada espaço" style="flex:1;height:56px;border-radius:16px;padding:0 14px;font-size:21px;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:8px">${SVG_UP(20)}EQUIPAR MELHOR<span style="min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#2a1403;color:#ffe07a;font-family:Nunito,system-ui,sans-serif;font-size:13px;font-weight:900;letter-spacing:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${best.n}</span></button>`
+      :'<button data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: já está com o melhor" style="flex:1;height:56px;border-radius:16px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15"><span class="lil" style="font-size:19px;letter-spacing:.5px">EQUIPAR MELHOR</span><span style="font-size:11px;font-weight:800">Já está com o melhor</span></button>'}</div>`:''}
     ${selIt?gSheet(selIt,H,now,shown):''}${XG.cf?gConfirm():''}`);
+  { const sc1=document.getElementById('xg_sc'); if(sc1&&scTop) sc1.scrollTop=scTop; }
   XG.anim=false; XG.pages=pages; XG.best=best;
   if(XG.toast&&Date.now()-XG.toastT<1500){ const m=XG.toast; gToast(m); }
 }
@@ -450,6 +481,7 @@ function gClick(b){
   else if(a==='all'){ snd('ui_tap'); XG.filter='all'; XG.page=0; XG.anim=true; render(); }
   else if(a==='pg'){ const p=XG.page+(+b.dataset.d); if(p>=0&&p<(XG.pages||1)){ snd('ui_tap'); XG.page=p; XG.anim=true; render(); } }
   else if(a==='prog'){ snd('ui_tap'); Screens.open('progress'); }
+  else if(a==='forge'){ snd('ui_tap'); if(window.Panels) Panels.open('forge'); }
   else if(a==='goskins'){ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
   else if(a==='cell'){ snd('ui_tap'); const x=itemOf(+b.dataset.id); if(x){ delete x.nw; XG.sel=x.id; XG.sheetIn=true; render(); XG.sheetIn=false; if(typeof tutEvent==='function') tutEvent('view'); } }
   else if(a==='close'){ snd('ui_tap'); XG.sel=null; render(); }
@@ -486,7 +518,7 @@ function sChances(){ const O=Sys.loot.summonOdds(Sys.host), G=Sys.loot.DATA.gate
 function scrSummon(){
   const d=xDims(560), H=d.H, L=Sys.loot, c1=L.summonCost(Sys.host,1), c10=L.summonCost(Sys.host,10), free=L.summonFreeLeft(S,Sys.host)>0, brinde=c1>0?Math.round(10-c10/c1):0;
   const cap=Math.min(L.maxAllowedR(Sys.host),RAR.length-1), P=L.DATA.summon.pity||10, st=(L.ensure(S).summon)||{pity:0}, pity=Math.min(P,st.pity||0), left=Math.max(1,P-pity);
-  const stageH=Math.max(170,Math.min(262,H-22-58-70-54-74-40)), cy=stageH-262;   // palco do baú absorve a altura que faltar
+  const stageH=Math.max(170,Math.min(262,H-22-58-70-54-74-40)), cy=d.real?0:stageH-262, stK=H+56<=600?0.6:H+56<=700?0.72:1;   // layout novo: o palco estica (flex) e o conteúdo reduz em tela baixa; antigo: o palco absorve a altura
   const chips=sChances().map((c,i)=>c.locked
     ?`<div class="x-chip" style="height:46px;border-radius:12px;background:#120d0a;border:2px dashed #6b5843;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;animation-delay:${i*0.06}s;box-sizing:border-box;color:#c9b9a2" aria-label="${RN(i)}: trancado, libera no ${c.txt}">
         <span style="font-size:10px;font-weight:900;color:${RC[i]};opacity:.75">${RN(i)}</span><span style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:900">${SVG_LOCK(12)}${c.txt}</span></div>`
@@ -505,14 +537,14 @@ function scrSummon(){
         <span style="font-size:13px;font-weight:900;line-height:1.15">Garantia da melhor raridade liberada a cada ${P}</span>
         <div role="img" aria-label="Garantia: ${pity} de ${P}" style="display:flex;gap:3px">${Array.from({length:P},(_,i)=>`<span style="flex:1;height:8px;border-radius:4px;background:${i<pity?'#b07cff':'#33271d'};transition:background .3s"></span>`).join('')}</div>
       </div></div>
-    <div style="position:relative;height:${stageH}px;flex:none;width:366px;align-self:center">
+    <div style="position:relative;${d.real?'flex:1 1 262px;min-height:170px;width:100%':'height:'+stageH+'px;flex:none;width:366px'};align-self:center"><div style="${d.real?'position:absolute;left:50%;top:50%;width:366px;height:262px;margin:-131px 0 0 -183px;transform:scale('+stK+')':'position:absolute;inset:0'}">
       <div class="x-rays" style="left:33px;top:${-4+cy/2}px;width:300px;height:300px"></div><div class="x-rays x-rays2" style="left:63px;top:${26+cy/2}px;width:240px;height:240px"></div><div class="x-glow" style="left:88px;top:${50+cy/2}px;width:190px;height:190px"></div>
       <span class="x-spark x-spark2" style="left:110px;top:${210+cy}px"></span><span class="x-spark x-spark2" style="left:150px;top:${228+cy}px;animation-delay:.8s;width:4px;height:4px"></span><span class="x-spark x-spark2" style="left:205px;top:${222+cy}px;animation-delay:1.7s"></span><span class="x-spark x-spark2" style="left:250px;top:${212+cy}px;animation-delay:2.3s;width:3px;height:3px"></span><span class="x-spark x-spark2" style="left:182px;top:${236+cy}px;animation-delay:1.2s;width:3px;height:3px"></span>
       ${shake?`<div class="x-charge" style="position:absolute;left:83px;top:${30+cy}px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,190,.95) 0%,rgba(255,201,74,.5) 40%,rgba(255,201,74,0) 70%)"></div>
         <img class="x-chestS" src="assets/ui/chest.png" alt="Baú abrindo" style="position:absolute;left:83px;top:${30+cy}px;width:200px;height:200px;object-fit:contain">`
        :`<div class="x-shadowF" style="position:absolute;left:118px;top:${232+cy}px;width:130px;height:18px;border-radius:50%;background:rgba(0,0,0,.55)"></div>
         <img class="x-chestF" src="assets/ui/chest.png" alt="Baú de equipamento" style="position:absolute;left:83px;top:${30+cy}px;width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.6))">`}
-      <div id="xs_toast"></div>
+      <div id="xs_toast"></div></div>
     </div>
     <div style="position:relative;flex:none;display:flex;flex-direction:column;gap:6px">
       <span style="font-size:12px;font-weight:900;color:#c9b9a2">Chances neste nível</span>
@@ -591,7 +623,7 @@ function hFeat(tab){ const slot=tab==='weapon'?'weapon':'armor', L=hList(tab); e
 function hToast(txt){ const el=document.getElementById('xh_toast'); if(el) el.innerHTML=`<div style="position:absolute;left:24px;right:24px;bottom:16px;z-index:40;display:flex;justify-content:center;pointer-events:none"><span class="x-stoast" role="status" style="padding:10px 16px;border-radius:12px;background:#12261a;border:2px solid #5fd068;color:#e6fbe7;font-size:14px;font-weight:900;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.6)">${esc2(txt)}</span></div>`; }
 function scrShop(){
   ensureShop(); if(XH.tab==='col'&&!PANEL_V2.shopCol) XH.tab='hero';
-  const tab=XH.tab, skinTab=tab==='hero'||tab==='weapon', d=skinTab?xFit(684,532):xDims(tab==='item'?568:532), H=d.H, rows=skinTab?(d.full?2+Math.min(1,Math.max(0,Math.floor((H-684)/158))):1):2, PER=rows*3, SK=Sys.skin.DATA;
+  const tab=XH.tab, skinTab=tab==='hero'||tab==='weapon', d=skinTab?xFit(684,532):xDims(tab==='item'?568:532), H=d.H, rows=skinTab?(d.real?2:(d.full?2+Math.min(1,Math.max(0,Math.floor((H-684)/158))):1)):2, PER=rows*3, SK=Sys.skin.DATA;
   const tb=(k,lb,fl,extra)=>{ const on=tab===k; return `<button role="tab" aria-selected="${on}" data-x="tab" data-t="${k}" class="lil" style="flex:${fl};border-radius:12px;border:2px solid ${on?'#ffc94a':'#4a3a2b'};background:${on?'linear-gradient(180deg,#ffe07a,#f2a826)':'#33271d'};color:${on?'#2a1403':'#c9b9a2'};font-size:13px;line-height:1.05;padding:0;display:flex;align-items:center;justify-content:center;gap:3px">${extra||''}<span>${lb}</span></button>`; };
   let body='';
   if(tab==='hero'||tab==='weapon'){
@@ -625,12 +657,9 @@ function scrShop(){
             :`<button data-x="skin" data-id="${feat.id}" class="lil" style="height:46px;border-radius:14px;border:2px solid #5fd068;background:#12261a;color:#c8f5cb;font-size:17px;padding:0">Na coleção · ver</button>`}
         </div></div>
       <div style="height:${rows*150+(rows-1)*8}px;flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(${rows},150px);gap:8px">${tiles}</div>
-      <div style="height:44px;flex:none;display:flex;align-items:center;gap:8px">
-        <button data-x="pg" data-d="-1" aria-label="Página anterior" class="lil" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg>0?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">‹</button>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div style="display:flex;gap:6px">${dots}</div><span style="font-size:12px;font-weight:800;color:#c9b9a2;margin-top:4px">Página ${pg+1} de ${pages} · ${owned} na coleção</span></div>
-        <button data-x="pg" data-d="1" aria-label="Próxima página" class="lil" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg<pages-1?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">›</button></div>`;
+      <div style="flex:none;margin-top:auto">${xPager('pg',pg,pages,owned+' na coleção')}</div>`;
   } else if(tab==='gem'){
-    const vOn=Sys.vip.active(S), small=H<640, vLv=Math.max(1,Sys.vip.level?Sys.vip.level(S):1), VI=Sys.vip.levelInfo(vLv), V0=Sys.vip.levelInfo(0);
+    const vOn=Sys.vip.active(S), small=!d.real&&H<640, vLv=Math.max(1,Sys.vip.level?Sys.vip.level(S):1), VI=Sys.vip.levelInfo(vLv), V0=Sys.vip.levelInfo(0);
     /* cartão do VIP: linha do nível atual (ou do VIP 1, o que a compra dá primeiro), pelo Sys.vip.levelInfo; benefício que vale 0 não aparece */
     const vTxt=[VI.atkPct?'+'+VI.atkPct+'% ATK e HP':'',VI.goldXpPct?'+'+VI.goldXpPct+'% XP e ouro':'',VI.offlineMult>1?'offline x'+VI.offlineMult:'',VI.chestPerDay>V0.chestPerDay?'+'+(VI.chestPerDay-V0.chestPerDay)+' baús por dia':'',VI.keys?'+'+VI.keys+' chave'+(VI.keys>1?'s':''):'',VI.speedTier>=1?'velocidade x2 liberada':''].filter(Boolean).join(', ');
     const bundles=['Punhado de gemas','Saco de gemas','Baú de gemas','Tesouro de gemas'].map((n,i)=>`<button class="x-tile" data-x="iap" aria-label="${n}: pagamento em breve" style="border-radius:14px;border:2px solid ${i===3?'#ffc94a':'#4aa3ff'};background:linear-gradient(180deg,#2b3a52 0%,#1d1611 70%);color:#f6ecdf;padding:${small?4:8}px;display:flex;flex-direction:column;align-items:center;gap:${small?1:4}px">
@@ -662,9 +691,9 @@ function scrShop(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">Compra direta: você vê o item inteiro.</span></span>
         <span style="flex:none;display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;font-size:11px;font-weight:800;color:#c9b9a2">Repõe em <span id="xh_cd" class="x-tick lil" style="font-size:15px">${midnightLeft()}</span></span></div>
       <div style="height:${rows*196+(rows-1)*8}px;flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(${rows},196px);gap:8px">${tiles}</div>
-      ${XH.pages>1?`<div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:12px"><button data-x="pg" data-d="-1" class="lil" aria-label="Página anterior" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg>0?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">‹</button><span style="font-size:12px;font-weight:800;color:#c9b9a2">Página ${pg+1} de ${XH.pages}</span><button data-x="pg" data-d="1" class="lil" aria-label="Próxima página" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg<XH.pages-1?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">›</button></div>`:''}`;
+      ${XH.pages>1?xPager('pg',pg,XH.pages):''}`;
   }
-  V.innerHTML=xWrap(d,XH.anim?'x-in':'',`<div style="flex:1;position:relative;display:flex;flex-direction:column;gap:8px;padding:8px 12px;box-sizing:border-box;background:radial-gradient(120% 60% at 50% 0%,#2a1f16 0%,#16110d 70%);min-height:0">
+  V.innerHTML=xWrap(d,XH.anim?'x-in':'',`<div class="x-scroll" style="flex:1;position:relative;display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;box-sizing:border-box;background:radial-gradient(120% 60% at 50% 0%,#2a1f16 0%,#16110d 70%);min-height:0">
       <div style="height:44px;flex:none;display:flex;gap:6px">
         <div class="x-rulep ${XH.anim?'x-rule':''}" role="note" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:10px;background:#12261a;border:1px solid #2f6b36;color:#c8f5cb;font-size:11px;font-weight:900;line-height:1.2;box-sizing:border-box">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="8.5 12 11 14.5 15.5 9.5"></polyline></svg>

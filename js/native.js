@@ -73,6 +73,8 @@
       if (b && modal.contains(b)) b.click(); else closeModal();
       return;
     }
+    /* a2) MENU da batalha aberto: o VOLTAR fecha o menu */
+    if (document.getElementById('fbdrop') && typeof fbMenuClose === 'function'){ fbMenuClose(); return; }
     /* b) carregamento, título ou introdução: não há o que fechar; o VOLTAR manda o app para o fundo (não mexe no estado) */
     if (el('loading') || titleOpen() || el('intro')){ minimize(); return; }
     /* c) painel/tela aberta: primeiro o subpainel (comparação de item etc.), depois a tela inteira */

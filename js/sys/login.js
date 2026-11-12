@@ -21,7 +21,8 @@ const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const pad=n=>String(n).padStart(2,'0');
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==="function") return C.dayKey(ms);   // fuso único (Sys.clock.DATA.tzOffsetMin; com servidor, Brasília)
+  const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 const Loot=()=>root.Sys&&root.Sys.loot;
 
 function ensure(S){

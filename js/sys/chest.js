@@ -32,7 +32,8 @@ const rngOf=host=>(host&&typeof host.rng==='function')?host.rng:Math.random;
 const randInt=(rng,a,b)=>a+Math.floor(rng()*(b-a+1));
 const Loot=()=>root.Sys&&root.Sys.loot;
 const pad=n=>String(n).padStart(2,'0');
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==="function") return C.dayKey(ms);   // fuso único (Sys.clock.DATA.tzOffsetMin; com servidor, Brasília)
+  const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 
 function ensure(S){

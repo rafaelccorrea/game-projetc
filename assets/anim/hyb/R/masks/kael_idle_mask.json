@@ -1,0 +1,12 @@
+{
+ "frames": 12,
+ "fps": 12,
+ "w": 256,
+ "h": 256,
+ "padLeft": 0,
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura total. Pintar: cor = luminância do pixel da folha × tinta do material, misturada pela força.",
+ "files": [
+  "kael_idle_mask.png"
+ ],
+ "sheet": "assets/anim/hyb/R/kael_idle_era2_t1.png"
+}

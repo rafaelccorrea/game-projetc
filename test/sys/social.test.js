@@ -97,4 +97,11 @@ t('EVENTO: 100 fragmentos do Prismático por evento (5 missões × 10 + loja 5 �
   assert.strictEqual(E.shop(S,h,evId).find(x=>x.id==='s_prism').bought,5,'limite 5');
   delete globalThis.Sys.pet;
 });
+t('grantBundle: stones = pedras de TREINO → Sys.practice.addStones (prêmio da arena); sem o módulo ficam pendentes e saem no flush',()=>{
+  const S={}, h=makeHost(); delete (globalThis.Sys||{}).practice;
+  L.grantBundle(S,h,{stones:7}); assert.strictEqual(L.pending(S).stones,7,'sem o Sys.practice: pendente');
+  const got=[]; globalThis.Sys.practice={addStones:(S2,n)=>{ got.push(n); return n; }};
+  L.flushPending(S,h); assert.deepStrictEqual(got,[7]); assert.strictEqual(L.pending(S).stones,0);
+  L.grantBundle(S,h,{stones:3}); assert.deepStrictEqual(got,[7,3]); delete globalThis.Sys.practice;
+});
 console.log(`\nsocial: ${n} testes ok`);

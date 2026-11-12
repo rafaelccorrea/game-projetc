@@ -14,7 +14,7 @@ t('abate de chefe: pedra vai para S.sys.forge, ração para S.sys.pet, ovo choca
   assert.strictEqual(P.ensure(S).food>=r.food,true,'ração no estoque do pet');
   assert.deepStrictEqual(r.eggs,[0]); assert.strictEqual(r.hatched.length,1);
   const hz=r.hatched[0]; assert.ok(hz&&('pet' in hz)&&('isNew' in hz),'retorno do addEgg: '+JSON.stringify(hz));
-  assert.deepStrictEqual(L.pending(S),{forge:0,food:0,xp:0,eggs:{}},'nada pendente com os módulos carregados');
+  assert.deepStrictEqual(L.pending(S),{forge:0,food:0,xp:0,stones:0,eggs:{}},'nada pendente com os módulos carregados');
   assert.strictEqual(Lv.ensure(S).total,r.xp,'XP do abate no Sys.level real');
   assert.strictEqual(L.todayCount(S,h,'forge'),r.forge);
 });

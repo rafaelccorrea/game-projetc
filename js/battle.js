@@ -5,16 +5,14 @@ const cv=document.getElementById('cv'); let ctx=cv.getContext('2d'); const mainC
 const LW=330, PX=LW/390, HX=108*PX;   // PX: px do protótipo (tela de 390) → px lógicos. Herói: caixa de 176 px em x=20..196 (centro 108)          // mundo lógico: largura fixa, altura variável (retrato)
 /* GEOMETRIA DO PROTÓTIPO (PO, rodada 7): tela 390x844 = HUD y 0..64 · CAMPO y 64..768 (704) · abas y 768..844. O canvas (#cv) ocupa SÓ o campo
    (#stage). LINHA DOS PÉS = 0,78 do campo (549 de 704 = y 613 da tela). Em outra proporção de tela vale a mesma fração do campo. */
-/* TELA 04b (chave SCREENS_ON.fullBattle, desligada): a cena ocupa a tela inteira, pés em y=640 de 844 e quadro do Kael de 176 px, como no protótipo.
-   Com a chave desligada os números são os de sempre (0,78 e 0,2643). */
-const FB_GEO=typeof SCREENS_ON!=='undefined'&&!!SCREENS_ON.fullBattle;
+/* TELA CHEIA (única desde a v0.12.2): a cena ocupa a tela inteira, pés em y=640 de 844 e quadro do Kael de 176 px, como no protótipo. */
 /* 04b: LIMITE DIREITO DOS SLOTS dos comuns, em px da tela de 390. A coluna direita de ícones do protótipo atual começa em x=325 e vai de y=150 a 522;
    os comuns (até 122 px, pés em 640) ficam abaixo dela, por isso hoje o limite é a borda de sempre (382). Se a V2 dos ícones descer a coluna, baixe aqui. */
 const FB_SLOT_XMAX=382;
-const FIELD_FEET=FB_GEO?640/844:0.78, HERO_FRAME=FB_GEO?176/844:0.2643;   // HERO_FRAME: lado do quadro do herói em fração da altura do campo (186 px em 704; boneco ~160 px), como no cenário v2
+const FIELD_FEET=640/844, HERO_FRAME=176/844;   // HERO_FRAME: lado do quadro do herói em fração da altura do campo (186 px em 704; boneco ~160 px), como no cenário v2
 let LH=600, GY=LH*FIELD_FEET;        // GY = linha do chão (interpolada na troca de aba)
 function resize(){
-  const dpr=Math.min(window.devicePixelRatio||1,2.5);
+  const dpr=Math.min(window.devicePixelRatio||1,2);   /* v0.12.2 (desempenho no S24): teto 2. A tela cheia tem 20% mais pixels que o campo antigo; 2,5 custava caro em aparelho de DPR alto */
   const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return;
   cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr);
   const first=!cv.dataset.ok; cv.dataset.ok=1; LH=ch/(cw/LW); if(first) GY=LH*FIELD_FEET;
@@ -52,7 +50,7 @@ const BOSS_FALL_DUR=1.4;   // chefe tombando (sem folha de morte ligada)
 const B={hero:null,enemy:null,fx:[],t:0,speed:1,deadT:0,swing:0,hurt:0,parts:[],rings:[],corpses:[],wfx:[],shake:0,cam:0,tr:null,
   dispEra:eraOf(S.stage),paused:true,tipW:null,cd2:0,energy:0,act:null,slow:0,dim:0,banner:null,step:0,
   en:[],toSpawn:[],spawnT:0,spawnN:0,waveT:0,running:true,holdT:0,reach:HX+74,at:0,eshots:[],eAtkT:-9};   // reach = borda direita do herói + arma em repouso
-const wSkin = () => SKIN(S.skinEq.weapon);
+const wSkin = () => heroLook().weapon;   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
 const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
 const wIsGun = ws => { const m=J('assets/weapons/meta.json')[heroKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
 
@@ -110,7 +108,7 @@ const SLOTX=[222,282,338].map(v=>v*PX),   /* 04b (PO): a V2 dos ícones deixa li
 let MAXVIS=MAXVIS_ALL;   // 3 visíveis; cai para 1 na onda em que uma espécie larga demais não cabe (ver SOLO_WIDE)
 /* ESPÉCIE LARGA (PO): mínimo de altura próprio; se mesmo no mínimo não couber nas sobreposições, entra SOZINHA (1 visível, o resto no "+N").
    Hoje só o Drone da era 5 (a arte será refeita mais estreita; quando chegar, tirar a entrada). */
-const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX;
+const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX, HERO_GAP=32*PX, HERO_REACH=4*PX, HERO_SHIFT_MAX=48*PX, HERO_BACK_MIN=80*PX, HERO_FRONT_K=1.10/1.20;   // folga de 32 px do corpo do Kael parado (QA pediu 30-40); fundo até 80 px; frente até a escala 1,10   // HERO_EDGE: borda direita do corpo do Kael parado; HERO_GAP: respiro mínimo até o inimigo da frente
 function waveVis(){ const keys=new Set(B.toSpawn.concat(B.en.map(e=>e.kind)).map(k=>`era${eraOf(S.stage)}_${k}`));
   for(const k of keys){ const W=SOLO_WIDE[k]; if(!W) continue; const sp=SPR(`assets/enemies/${k}.png`,'enemy'), w=W.minH*(sp?sp.w/sp.h:2);
     if((w+60*PX)/2-(SLOTX[1]-SLOTX[0])>SLOT_OVL[0]*Math.min(w,60*PX)) return 1; } return MAXVIS_ALL; }
@@ -142,7 +140,7 @@ function hordeFit(vis){
   const n=vis.length, H=[], A=[], X=[];
   for(let i=0;i<n;i++){ const sp=SPR(vis[i].spr,'enemy'); A[i]=sp?sp.w/sp.h:0.9; H[i]=slotH(vis[i],i); X[i]=SLOTX[i]; }
   const W=i=>H[i]*A[i];
-  const XR=FB_GEO?FB_SLOT_XMAX*PX:BOSS_X1;   // limite direito dos slots dos comuns (04b: constante própria)
+  const XR=FB_SLOT_XMAX*PX;   // limite direito dos slots dos comuns (04b: constante própria)
   for(let i=0;i<n;i++){ const mw=2*(XR-X[i]); if(W(i)>mw){ H[i]=Math.max(slotMin(vis[i],i),mw/A[i]); if(W(i)>mw) X[i]=XR-W(i)/2; } }
   if(n===1&&SOLO_WIDE[vis[0].key]){ const Wm=BOSS_X1-HERO_EDGE; if(W(0)>Wm) H[0]=Math.max(slotMin(vis[0],0),Wm/A[0]); X[0]=Math.min(BOSS_X1-W(0)/2,Math.max(X[0],HERO_EDGE+W(0)/2)); }   /* sozinho: usa a largura inteira entre o herói e x=382 (o centro vai para a direita) antes de encolher */
   /* COMUNS: golpe, dano e morte também ficam dentro de x<=382 pela POSIÇÃO DO SLOT (PO): se um quadro dessas folhas passa da borda, o centro do slot recua;
@@ -154,6 +152,20 @@ function hordeFit(vis){
     const o=((W(i)+W(i+1))/2-(X[i+1]-X[i]))/Math.min(W(i),W(i+1)); if(o<=(ERA_OVL[eraOf(S.stage)]||SLOT_OVL)[i]) break;
     const ma=slotMin(vis[i],i), mb=slotMin(vis[i+1],i+1), a=H[i]/ma, b=H[i+1]/mb, j=b>=a?i+1:i, mj=j===i?ma:mb; if(H[j]<=mj+0.01) break;
     H[j]=Math.max(mj,H[j]*0.985); }
+  /* v0.12.2 (dono, visto no celular; números do QA/PO): o inimigo da FRENTE para com FOLGA VISÍVEL do corpo do Kael. A borda esquerda da parte opaca
+     dele (sprite parado, centrado no slot) fica em HERO_EDGE + HERO_GAP ou mais à direita; no golpe, a ponta da folha de ataque entra no máximo
+     HERO_REACH na borda do Kael. Os centros andam para a direita o que falta (os de trás juntos, até a borda de 382). Se com isso a sobreposição entre
+     inimigos passar do limite da era, encolhe nesta ordem (PO): 1º só o do FUNDO, até HERO_BACK_MIN; 2º o da FRENTE, até HERO_FRONT_K da altura dele.
+     O do meio não encolhe aqui. O que ainda sobrar fica como sobreposição entre inimigos (nunca corte, nunca em cima do herói). */
+  if(n){ const XB0=X.slice(), H00=H[0], la=enExtL(vis[0],SPR(vis[0].spr,'enemy')), lim=ERA_OVL[eraOf(S.stage)]||SLOT_OVL;
+    const place=()=>{ for(let i=0;i<n;i++) X[i]=Math.min(XB0[i],Math.max(XR-W(i)/2,XB0[i]-0)); const need=Math.max(HERO_EDGE+HERO_GAP+W(0)/2, la?HERO_EDGE-HERO_REACH+H[0]*la.l:0);
+      if(X[0]<need){ const d=Math.min(need-X[0],HERO_SHIFT_MAX); for(let i=0;i<n;i++) X[i]=Math.max(X[i],Math.min(X[i]+d,XR-W(i)/2)); } };
+    const ovl=i=>((W(i)+W(i+1))/2-(X[i+1]-X[i]))/Math.min(W(i),W(i+1));
+    for(let it=0;it<80;it++){ place(); if(n<2) break; const bad=[]; for(let i=0;i<n-1;i++) if(ovl(i)>lim[i]+0.005) bad.push(i); if(!bad.length) break;
+      const bk=n-1; if(bad.includes(bk-1)&&bk>=1&&H[bk]>HERO_BACK_MIN+0.01){ H[bk]=Math.max(HERO_BACK_MIN,H[bk]*0.985); continue; }
+      if(H[0]>H00*HERO_FRONT_K+0.01){ H[0]=Math.max(H00*HERO_FRONT_K,H[0]*0.985); continue; }
+      break; }
+    B.front=X[0]; }
   for(let i=0;i<n;i++){ vis[i].slot=X[i]; vis[i].dhT=H[i]; }
 }
 const WAITX=LW+110;
@@ -181,7 +193,7 @@ function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no go
   if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5; snd('defeat'); if(!B.deadBoss) toast('Derrotado... recomeçando a fase'); return true; }
   return false;
 }                                   // fila de espera, fora da tela (selo "+N" na borda direita)
-const contact = e => e.boss?bossSlot(e):SLOTX[0];   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
+const contact = e => e.boss?bossSlot(e):Math.max(SLOTX[0],B.front||0);   // B.front: centro real do slot da frente (hordeFit pode levá-lo para a direita)   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
 const eY = e => GY+LANEY[e.lane]-(e.dh||80)*0.5;
 const heroGun = () => wIsGun(wSkin());
 /* REGRA DO CHEFE (decisão do PO; ponto único para trocar): as escoltas vêm primeiro e o chefe conta no selo "+N"; quando elas morrem,
@@ -190,7 +202,7 @@ const BOSS_AFTER_ESCORTS=true, EDGE=8*PX, BOSS_X0=190*PX, BOSS_X0MIN=170*PX, BOS
 const BOSS_FIT = () => BOSS_X1-BOSS_X0;
 function bossSlot(e){ const w=Math.min(e.dw||BOSS_FIT(),BOSS_X1-BOSS_X0MIN); return w>BOSS_FIT()?BOSS_X1-w/2:(BOSS_X0+BOSS_X1)/2; }   // mais largo que a caixa (altura mínima): cresce para a esquerda, a borda direita não passa
 function layoutHorde(){
-  MAXVIS=waveVis();
+  MAXVIS=waveVis(); B.front=0;
   const L=B.en;   /* ordem da fila = ordem de chegada (B.en); NÃO reordenar por x: com velocidades diferentes os inimigos trocavam de slot andando, aos trancos */
   const nv=Math.min(MAXVIS,L.length);
   for(let i=0;i<L.length;i++){ const e=L[i]; e.idx=i;
@@ -204,7 +216,7 @@ function layoutHorde(){
 function eAdvK(e){ if(!(e.sw>0)) return 0; const D=e.swD||EATK, u=1-e.sw/D, hu=(e.swH||EHIT)/D; return u<hu?easeOut(u/hu):1-smooth((u-hu)/(1-hu)); }
 /* corpo a corpo: avança NO CHÃO até a borda esquerda do sprite encostar na frente do corpo do herói (HX + 0,18·HS) e volta */
 const EN_LUNGE=[12,12,12].map(v=>v*PX), EN_LUNGE_BOSS=10;   // AVANÇO MÁXIMO do golpe por slot (frente, meio, fundo), em px de tela: constante única (número a confirmar pelo PO)
-function eAdv(e){ const k=eAdvK(e); return k?(ENEMY_RANGED[e.key]?-4*k:(e.boss?EN_LUNGE_BOSS:EN_LUNGE[Math.min(e.idx,MAXVIS-1)])*k):0; }
+function eAdv(e){ const k=eAdvK(e); return k?(ENEMY_RANGED[e.key]?-4*k:(e.boss?EN_LUNGE_BOSS:(e.idx===0&&enOn(e.key,'attack'))?0:EN_LUNGE[Math.min(e.idx,MAXVIS-1)])*k):0; }
 /* herói: no golpe corpo a corpo avança até 12 px (de tela) no chão e volta; com arma de fogo e na ultimate fica no lugar */
 const HERO_LUNGE=12*PX;
 function heroLunge(){ const a=B.act; if(!a||a.gun||a.type==='s3'||B.deadT>0) return 0; return HERO_LUNGE*Math.sin(Math.PI*Math.min(1,a.t/a.dur)); }
@@ -569,7 +581,7 @@ function preloadEra(era){
 }
 function preloadAssets(){
   J('assets/hero/anchors.json'); J('assets/weapons/meta.json'); J('assets/enemies/meta.json'); J('assets/bg/meta.json'); J('assets/fx/meta.json');
-  const ae=SKIN(S.skinEq.armor), we=SKIN(S.skinEq.weapon);
+  const ae=SKIN(S.skinEq.armor), we=wSkin();
   SPR(hp('hero',ae.e,tierOf(ae.r)),'hero'); SPR(hp('weapons',we.e,tierOf(we.r)),'weapon'); heroPreload(ae.e);
   ['hit','crit','muzzle','slash','aura'].forEach(n=>{ if(FX_ART[n]==='sprite') IMG(`assets/fx/${n}.png`); });
   ['ult','s2','s1'].forEach(kd=>{ const A=FX_ART[kd][we.e]; if(A&&!(kd==='ult'&&!ART_ON['ult_era'+we.e])){ IMG(fxPng(A)); if(A.meta) J(A.sheet+'.json'); } });
@@ -789,7 +801,11 @@ function enBounds(sh){ if(sh.bb) return sh.bb; const M=sh.meta, n=M.frames, W=M.
 /* CHAVE: true = o slot do comum recua para o golpe/dano/morte caberem em x<=382 (pedido do PO na v0.11.5; custo: o do fundo fica menor nas eras em que a
    folha de golpe é bem mais larga que o sprite parado). false = centros fixos 222/282/338 e a arma do comum pode passar de 382 em alguns quadros. */
 const EN_EXT_ON=false;   // DESLIGADA: medido na v0.11.5, ligar isto leva o slot do fundo ~27-37 px para a esquerda e a sobreposição meio×fundo vai a 64-109% com o meio e o fundo no mínimo (95/85 px). Ver reports/agente5-engenheiro.md
-const EN_EXT={};
+const EN_EXT={}, EN_EXTL={};
+/* quanto a parte opaca da folha de GOLPE passa à ESQUERDA da âncora, por px de altura do inimigo (para o da frente não atravessar o Kael ao golpear) */
+function enExtL(e,spr){ const c=EN_EXTL[e.key]; if(c) return c; const T=ENEMY_SETS[e.key]; if(!T||!spr||!enOn(e.key,'attack')) return null; const sh=sheetLoad(T.attack,true); if(!sh.ok) return null; const M=sh.meta; let ll=0;
+  for(const b of enBounds(sh)) if(b){ const v=((spr.fx+spr.fw/2)-(b.l-(M.padLeft||0))/256)/spr.fh; if(v>ll) ll=v; }
+  return EN_EXTL[e.key]={l:ll}; }
 function enExt(e,spr){ const c=EN_EXT[e.key]; if(c) return c; const T=ENEMY_SETS[e.key]; if(!T||!spr) return null; let rr=0;
   for(const st of ['attack','hurt','die']){ if(!enOn(e.key,st)) continue; const sh=sheetLoad(T[st],true); if(!sh.ok) return null; const M=sh.meta;
     for(const b of enBounds(sh)) if(b){ const v=((b.r-(M.padLeft||0))/256-(spr.fx+spr.fw/2))/spr.fh; if(v>rr) rr=v; } }
@@ -887,7 +903,7 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); HM.ws=wSkin(); HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   const ultOn=!!(B.act&&B.act.type==='s3');
   if(!ultOn) drawHero(HM);
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
@@ -907,7 +923,7 @@ function draw(){
     else if(e.hp<e.maxhp||e===B.enemy) bar(vx-21,gy-top-9,42,e.hp/e.maxhp,'#ff5a4e',5);
   }
   { const nw=waitingN(); if(nw>0&&B.deadT<=0&&!B.res){ const tx='+'+nw, pop=1+0.06*Math.sin(B.at*5);   // fila de espera: selo na borda direita, na altura do chão
-      ctx.save(); ctx.font=`${LILITA()?'400':'900'} 15px ${LILITA()?'"Lilita One",':''}system-ui`; const tw=Math.max(29,ctx.measureText(tx).width+12), bx=LW-tw/2-6*PX, by2=GY-(FB_GEO?86:136)*PX;
+      ctx.save(); ctx.font=`${LILITA()?'400':'900'} 15px ${LILITA()?'"Lilita One",':''}system-ui`; const tw=Math.max(29,ctx.measureText(tx).width+12), bx=LW-tw/2-6*PX, by2=GY-86*PX;
       ctx.translate(bx,by2); ctx.scale(pop,pop); ctx.fillStyle='#ff5a4e'; ctx.strokeStyle='#7a1a14'; ctx.lineWidth=1.5; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(-tw/2,-11,tw,22,11); else ctx.rect(-tw/2,-11,tw,22); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tx,0,1); ctx.restore(); } }
   drawPicks();
@@ -983,13 +999,26 @@ function drawPreview(dt){
   const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, hgt=c.clientHeight; if(!w) return;
   if(c.width!==Math.round(w*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(hgt*dpr); }
   const x=c.getContext('2d'), k=c.height/190; x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,w*dpr/k+2,192);
-  pvT+=dt; PV.t=pvT; PV.sk=SKIN(pvSkin.armor||S.skinEq.armor); PV.ws=SKIN(pvSkin.weapon||S.skinEq.weapon); PV.x=(c.width/k)/2-8; PV.gy=176;
+  pvT+=dt; PV.t=pvT; PV.sk=SKIN(pvSkin.armor||S.skinEq.armor); PV.ws=(pvSkin.weapon&&SKIN(pvSkin.weapon))||wSkin(); PV.x=(c.width/k)/2-8; PV.gy=176;
   if(PV.act){ PV.act.t+=dt; if(PV.act.t>=PV.act.dur) PV.act=null; }
   else if(pvT>pvN){ const ws=PV.ws, gun=wIsGun(ws), ty=(Math.floor(pvT/1.7)%3===2)?'s2':'s1'; pvN=pvT+1.7;
     const a={type:ty,t:0,era:ws.e,gun,col:ws.r>0?RAR[ws.r].c:'#ffffff',hits:[],dur:ty==='s1'?SWT:S2DUR[ws.e]};
     if(ty==='s1') a.hits.push({t:gun?0.03:0.19}); else S2HITS[ws.e].forEach(h=>a.hits.push({t:h[0]})); PV.act=a; }
   ctx=x; try{ drawHero(PV); }finally{ ctx=mainCtx; }
 }
+
+/* ---------- VITRINE DO EQUIPAMENTO: Kael parado (respirando) num canvas, com a MESMA regra de aparência da batalha (heroLook) ----------
+   drawHeroPreview(canvas, look, dt): look = {armor, weapon} (objetos de SKINS). O quadro do herói ocupa a ALTURA do canvas; pés em 243/256 da altura. */
+const HPVW={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false}; let hpvT=0, hpvWs=null;
+function drawHeroPreview(c,look,dt){
+  const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, hgt=c.clientHeight; if(!w||!hgt) return;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(hgt*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(hgt*dpr); }
+  const x=c.getContext('2d'), k=c.height/HS; x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,c.width/k+2,HS+2);
+  hpvT+=dt||0; HPVW.t=hpvT; HPVW.sk=look.armor; HPVW.ws=look.weapon; HPVW.x=(c.width/k)/2; HPVW.gy=HS*243/256;
+  if(hpvWs!==look.weapon){ hpvWs=look.weapon; preloadAssets(); }
+  ctx=x; try{ drawHero(HPVW); }finally{ ctx=mainCtx; }
+}
+function drawGearPreview(dt){ const c=document.getElementById('gkc'); if(c) drawHeroPreview(c,heroLook(),dt); }
 
 /* ---------- laço ---------- */
 let last=performance.now(), hudT=0, saveT=0, fpsA=16;
@@ -1002,34 +1031,9 @@ function loop(now){
   if(typeof resTick==='function') resTick(rdt);
   tickFx(dt); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
-  drawPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
-  updSkills();
+  drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
   hudT+=rdt; if(hudT>0.25){ hudT=0; hud(); }
   saveT+=rdt; if(saveT>5){ saveT=0; save(); }
   requestAnimationFrame(loop);
 }
 
-/* ---------- barra de habilidades (DOM) ---------- */
-const SKB={e:-1,p2:-1,p3:-1,rdy:null,p1:-1,auto:''};
-function updSkills(){
-  const el2=document.getElementById('sk2'); if(!el2) return;
-  const E=wSkin().e;
-  if(E!==SKB.e){ SKB.e=E; for(let n=1;n<=3;n++){ const im=document.querySelector('#sk'+n+' img'); im.style.display=''; im.src=`assets/icons/era${E}_s${n}.png`; }
-    document.getElementById('sk2n').textContent=SKN[E][0]; document.getElementById('sk2').setAttribute('aria-label',SKN[E][0]); document.getElementById('sk3').setAttribute('aria-label','Ultimate: '+SKN[E][1]); }
-  const p2=Math.max(0,Math.ceil(B.cd2/BAL.s2Cooldown*50)), p3=Math.floor(B.energy/2), rdy=B.energy>=100;
-  if(p2!==SKB.p2){ SKB.p2=p2; el2.style.setProperty('--p',p2*2); el2.classList.toggle('cd',p2>0); el2.querySelector('.skt').textContent=p2>0?Math.ceil(B.cd2):''; }
-  const el3=document.getElementById('sk3');
-  if(p3!==SKB.p3){ SKB.p3=p3; el3.querySelector('.skt').textContent=rdy?'PRONTA':p3*2+'%'; }
-  { const h=B.hero; if(h){ const hp=Math.max(0,Math.ceil(h.hp)), k=hp+'|'+Math.ceil(h.maxhp)+'|'+p3; if(k!==SKB.hk){ SKB.hk=k; const f=typeof gNum==='function'?gNum:fmt;
-      document.getElementById('hpt').textContent=f(hp)+' / '+f(Math.ceil(h.maxhp)); document.getElementById('hpb').style.width=Math.max(0,Math.min(100,100*h.hp/h.maxhp))+'%';
-      document.getElementById('ent').textContent=rdy?'PRONTA':p3*2+'%'; document.getElementById('enb').style.width=Math.min(100,p3*2)+'%'; } }
-  }
-  if(rdy!==SKB.rdy){ SKB.rdy=rdy; el3.classList.toggle('rdy',rdy); el3.classList.toggle('cd',!rdy); }
-  const p1=B.act&&B.act.type==='s1'?1:0; if(p1!==SKB.p1){ SKB.p1=p1; document.getElementById('sk1').classList.toggle('hit',!!p1); }
-}
-function initSkills(){
-  /* SÓ AUTOMÁTICO: os botões de habilidade são INDICADORES de recarga e de energia. Tocar neles não dispara nada: só lembra que saem sozinhos. */
-  const tap=(id,fn)=>{ const el=document.getElementById(id); if(el) el.addEventListener('pointerdown',ev=>{ ev.preventDefault(); fn(el); }); };
-  tap('sk2',()=>toast('O especial dispara sozinho quando recarrega'));
-  tap('sk3',()=>toast('A ultimate dispara sozinha quando a energia enche'));
-}

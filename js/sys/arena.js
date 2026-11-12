@@ -38,9 +38,10 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function hash(){ let h=2166136261; for(const x of arguments){ const s=String(x); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } h^=124; } return h>>>0; }
-function dayKey(ms){ const d=new Date(ms); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const CLK=()=>{ const C=root.Sys&&root.Sys.clock; return C&&typeof C.dayKey==='function'?C:null; };   // fuso único (Brasília com servidor): Sys.clock da fps-30
+function dayKey(ms){ const C=CLK(); if(C) return C.dayKey(ms); const d=new Date(ms); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function weekKey(ms){ const F=root.Sys&&root.Sys.fc; if(F&&F.weekKey) return F.weekKey(ms); const d=new Date(ms); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return dayKey(d.getTime()); }
-function weekStart(ms){ const d=new Date(ms); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getTime(); }
+function weekStart(ms){ const C=CLK(); if(C&&typeof C.weekStart==='function') return C.weekStart(ms); const d=new Date(ms); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getTime(); }
 const weekFrac=ms=>clamp((ms-weekStart(ms))/(7*86400000),0,1);
 const playerFC=(S,host)=>{ const F=root.Sys&&root.Sys.fc; return F&&F.compute?Math.max(1,F.compute(S,host)):1; };
 const weekMaxFC=(S,host)=>{ const F=root.Sys&&root.Sys.fc; const m=F&&F.weekMax?F.weekMax(S,host):0; return Math.max(m,playerFC(S,host)); };

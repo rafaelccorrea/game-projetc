@@ -172,6 +172,14 @@ button{font-family:inherit;cursor:pointer}
 @keyframes trkOut{to{opacity:0;transform:translateX(24px)}}
 .trkDone.trkInA,.trkDone.trkInB{animation:hot 1.2s ease-in-out infinite}
 .trkArrow{animation:trkA 1.4s ease-in-out infinite}
+/* vida/energia sobre a cabeça do Kael */
+.hpShake{animation:hpShake .4s linear both}
+@keyframes hpShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-3px,1px)}40%{transform:translate(3px,-1px)}60%{transform:translate(-2px,0)}80%{transform:translate(2px,0)}}
+.hpflash{animation:flash .35s ease-out both}
+.hpLow .hpbar{animation:hpLow .9s ease-in-out infinite}
+@keyframes hpLow{0%,100%{box-shadow:0 2px 6px rgba(0,0,0,.5)}50%{box-shadow:0 0 10px 2px rgba(255,90,78,.85)}}
+.enFull{animation:enFull 1.2s ease-in-out infinite}
+@keyframes enFull{0%,100%{box-shadow:0 0 3px rgba(208,123,255,.5);filter:none}50%{box-shadow:0 0 10px 3px rgba(208,123,255,1);filter:brightness(1.35)}}
 @keyframes trkA{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
 </style>
 </helmet>
@@ -198,9 +206,27 @@ button{font-family:inherit;cursor:pointer}
     <div class="{{kaelHitCls}}" style="position: absolute; left: {{kaelX}}; top: 473px; width: {{kaelW}}; height: 176px; z-index: 4">
       <div class="{{kaelCls}}" role="img" aria-label="{{kaelAria}}" style="width: 100%; height: 100%; animation-duration: {{kaelDur}}"></div>
     </div>
+    <!-- VIDA + ENERGIA sobre a cabeça do Kael (x 44–172, y 448–476): abaixo da coluna esquerda (termina y 446), longe do cartão de missão (y 124–172) e da faixa livre x>=300 -->
+    <div class="{{hpWrapCls}}" style="position: absolute; left: 44px; top: 448px; width: 128px; display: flex; flex-direction: column; gap: 3px; z-index: 6; pointer-events: none">
+      <div style="display: flex; align-items: center; gap: 4px">
+        <span style="min-width: 34px; font-size: 11px; line-height: 12px; font-weight: 900; color: {{hpNumCol}}; text-align: right; text-shadow: 0 1px 2px #000, 0 0 4px #000; transition: color .3s">{{hpTxt}}</span>
+        <div role="img" aria-label="{{hpAria}}" class="hpbar" style="position: relative; flex: 1; height: 10px; border-radius: 5px; background: rgba(10,7,5,0.72); border: 1px solid rgba(255,236,200,.35); box-shadow: 0 2px 6px rgba(0,0,0,.5); overflow: hidden; box-sizing: border-box">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{hpLagPct}}; background: rgba(255,240,220,0.85); transition: width .5s ease-in .25s"></div>
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: {{hpPct}}; background: {{hpBg}}; transition: width .15s ease-out, background .3s"></div>
+          <div style="position: absolute; left: 0; right: 0; top: 0; height: 40%; background: rgba(255,255,255,0.28)"></div>
+          <sc-if value="{{kaelHit}}" hint-placeholder-val="{{false}}"><div class="hpflash" style="position: absolute; inset: 0; background: #fff"></div></sc-if>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px">
+        <span style="min-width: 34px; display: flex; justify-content: flex-end"><svg width="10" height="10" viewBox="0 0 24 24" fill="#d07bff" stroke="none" aria-hidden="true" style="filter: drop-shadow(0 1px 1px #000)"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg></span>
+        <div role="img" aria-label="{{energyAria}}" class="{{enBarCls}}" style="flex: 1; height: 6px; border-radius: 3px; background: rgba(10,7,5,0.72); border: 1px solid rgba(208,123,255,.45); overflow: hidden; box-sizing: border-box">
+          <div style="width: {{energyPct}}; height: 100%; background: linear-gradient(90deg, #8a4dff, #d07bff); transition: width .6s"></div>
+        </div>
+      </div>
+    </div>
     <sc-if value="{{kaelHit}}" hint-placeholder-val="{{false}}">
       <div class="hitfx" aria-hidden="true" style="position: absolute; left: 112px; top: 521px; width: 86px; height: 86px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,120,80,0.75) 35%, rgba(255,90,78,0) 70%); z-index: 5"></div>
-      <span class="dmgo" style="position: absolute; left: 66px; top: 465px; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ff8a7a; text-shadow: 0 2px 0 #000; z-index: 6">{{hitDmg}}</span>
+      <span class="dmgo" style="position: absolute; left: 128px; top: 424px; font-family: 'Lilita One', sans-serif; font-size: 18px; color: #ff8a7a; text-shadow: 0 2px 0 #000; z-index: 6">{{hitDmg}}</span>
     </sc-if>
 
     <!-- Inimigos (folhas reais). Quadro 480x256 a 50%: pés em y 243 do quadro → 640 na tela -->
@@ -380,19 +406,6 @@ button{font-family:inherit;cursor:pointer}
     </button>
   </div>
 
-  <!-- Inf. esquerdo: vida/energia compactas -->
-  <div class="gl" style="position: absolute; left: 10px; top: 662px; width: 176px; padding: 7px 10px 8px; border-radius: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 5px; z-index: 30">
-    <div style="display: flex; align-items: center; gap: 6px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="#7ee27a" stroke="none" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"></path></svg>
-      <div role="img" aria-label="Vida 8.420 de 10.000" style="flex: 1; height: 9px; border-radius: 5px; background: rgba(0,0,0,0.6); overflow: hidden"><div style="width: 84%; height: 100%; background: linear-gradient(180deg, #7ee27a, #3fae3c)"></div></div>
-      <span style="font-size: 10px; font-weight: 900; color: #e8dccb; width: 34px; text-align: right">8.420</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 6px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="#d07bff" stroke="none" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
-      <div role="img" aria-label="{{energyAria}}" style="flex: 1; height: 6px; border-radius: 4px; background: rgba(0,0,0,0.6); overflow: hidden"><div style="width: {{energyPct}}; height: 100%; background: linear-gradient(90deg, #8a4dff, #d07bff); transition: width .6s"></div></div>
-      <span style="font-size: 10px; font-weight: 900; color: #e3c6ff; width: 34px; text-align: right">{{energyLabel}}</span>
-    </div>
-  </div>
 
   <!-- aviso de cadeado -->
   <sc-if value="{{toastOn}}" hint-placeholder-val="{{false}}">
@@ -602,6 +615,7 @@ var MENU = [
   { k: 'eventos', name: 'Eventos', img: '/_blob/28732a175ad6914976d4e1fc426e3d67', badge: 0 },
   { k: 'config', name: 'Config.', aria: 'Configurações', img: '/_blob/1754b7b24b47f23ab918dc51cb2cb732', badge: 0 }
 ];
+var HP_MAX = 10000;
 class Component extends DCLogic {
   constructor(p) {
     super(p);
@@ -609,7 +623,7 @@ class Component extends DCLogic {
     this.state = {
       auto: true, speed: 2, ult: false, ultFx: false, ultDmg: false, cd: 3, ultCd: 0, music: false, tut: true, quake: false, ultHit: false,
       foes: FOES.map(function (f) { return Object.assign({}, f, { st: 'gone', hp: 100, zap: false }); }),
-      kael: 'atk', spinQ: false, kHit: false, eFx: '', q: 6, rr: 0, nHit: 0,
+      kael: 'atk', spinQ: false, kHit: false, hp: 8420, hpLag: 8420, eFx: '', q: 6, rr: 0, nHit: 0,
       dmgOn: false, dmgTxt: '', dmgX: '204px', dmgBig: false,
       drops: [], gold: 48200, lvl: 24, xp: 84, vip: 0, gainC: false, gainX: false, lvlUp: false, bump: false,
       sheet: '', sheetOut: false, menu: false, menuOut: false, trkI: 0, trkP: GUIDE[0].p0, trkMin: false, trkBusy: false, trkOut: false, fly: null, gemBump: false, gainR: '', bauN: 2, bauP: 70, bauAnim: false, toast: '', toastN: 0
@@ -633,7 +647,8 @@ class Component extends DCLogic {
       var s = self.state, p = {};
       if (s.cd > 0) p.cd = s.cd - 1;
       if (s.ultCd > 0) p.ultCd = s.ultCd - 1;
-      if (p.cd !== undefined || p.ultCd !== undefined) self.setState(p);
+      if (s.hp < HP_MAX) { p.hp = Math.min(HP_MAX, s.hp + 90); p.hpLag = p.hp; }
+      if (p.cd !== undefined || p.ultCd !== undefined || p.hp !== undefined) self.setState(p);
     }, 1000);
     this.kloop = function () {
       var s = self.state;
@@ -690,7 +705,9 @@ class Component extends DCLogic {
   hurtKael(k) {
     var self = this;
     this.sfx(SND.hurt, 0.4);
-    this.setState({ kHit: true, eFx: k === 'a' ? '160px' : (k === 'b' ? '174px' : '188px') });
+    var hp = Math.max(HP_MAX * 0.12, this.state.hp - 320);
+    this.setState({ kHit: true, hp: hp, eFx: k === 'a' ? '160px' : (k === 'b' ? '174px' : '188px') });
+    this.later(function () { self.setState({ hpLag: self.state.hp }); }, 60);
     this.later(function () { self.setState({ kHit: false, eFx: '' }); }, 450);
   }
   hitFoe(k, dmg, spin) {
@@ -714,7 +731,8 @@ class Component extends DCLogic {
     this.setFoe('a', { st: 'die', hp: 0, zap: false });
     this.spawnDrops();
     this.trkEvent('kill', '');
-    this.setState({ q: this.state.q > 1 ? this.state.q - 1 : 6 });
+    var heal = Math.min(HP_MAX, this.state.hp + 1600); // roubo de vida ao abater
+    this.setState({ q: this.state.q > 1 ? this.state.q - 1 : 6, hp: heal, hpLag: heal });
     this.later(function () { self.setFoe('a', { st: 'gone' }); }, this.ms(FOE_DIE_MS) + 500);
     this.later(function () { self.walkIn('a'); }, this.ms(FOE_DIE_MS) + 800);
   }
@@ -824,6 +842,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     var s = this.state, self = this, spd = s.speed;
+    var hpR = s.hp / HP_MAX;
     var spin = s.kael === 'spin';
     var foes = s.foes.map(function (f) {
       var w = f.st === 'walk' ? 128 : 240, T = f.type;
@@ -967,6 +986,12 @@ class Component extends DCLogic {
       energyAria: 'Energia da ultimate ' + (s.ult ? 'carregando' : 'cheia'),
       // combate
       kaelHit: s.kHit, kaelHitCls: s.kHit ? 'khit' : '', hitDmg: '-320',
+      hpPct: (s.hp / HP_MAX * 100).toFixed(1) + '%', hpLagPct: (Math.max(s.hp, s.hpLag) / HP_MAX * 100).toFixed(1) + '%',
+      hpBg: hpR > 0.5 ? 'linear-gradient(180deg,#9cf08f,#3fae3c)' : (hpR > 0.25 ? 'linear-gradient(180deg,#ffe07a,#e0a020)' : 'linear-gradient(180deg,#ff8a7a,#d0301f)'),
+      hpNumCol: hpR > 0.5 ? '#eaffe4' : (hpR > 0.25 ? '#ffe9a0' : '#ffb3a8'),
+      hpTxt: Math.round(s.hp).toLocaleString('pt-BR'), hpAria: 'Vida do Kael ' + Math.round(s.hp).toLocaleString('pt-BR') + ' de ' + HP_MAX.toLocaleString('pt-BR'),
+      hpWrapCls: (s.kHit ? 'hpShake' : '') + (hpR <= 0.25 ? ' hpLow' : ''),
+      enBarCls: s.ult ? '' : 'enFull',
       eFlash: !!s.eFx, eFlashX: s.eFx || '0px',
       dmgOn: s.dmgOn, dmgTxt: s.dmgTxt, dmgX: s.dmgX, dmgFs: s.dmgBig ? '26px' : '22px', dmgColor: s.dmgBig ? '#ffcf3a' : '#fff',
       hasQueue: s.q > 0, queueTxt: '+' + s.q + ' na fila', queueAria: 'Mais ' + s.q + ' inimigos na fila',

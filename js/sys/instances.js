@@ -42,7 +42,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rngOf=host=>(host&&typeof host.rng==='function')?host.rng:Math.random;
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const pad=n=>String(n).padStart(2,'0');
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==="function") return C.dayKey(ms);   // fuso único (Sys.clock.DATA.tzOffsetMin; com servidor, Brasília)
+  const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 function msToMidnight(ms){ const d=new Date(ms); return new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)-d; }
 /* VIP (Sys.vip.perks(S) via Sys.loot.vipPerks): +1 chave por dia (instanceKeysAdd) e +ouro (goldPct) */
 const vipOf=S=>{ const L=root.Sys&&root.Sys.loot; return L&&L.vipPerks&&S?L.vipPerks(S):{instanceKeysAdd:0,goldPct:0}; };

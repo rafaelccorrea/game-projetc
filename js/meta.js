@@ -96,11 +96,11 @@ function showOffline(){
 /* ---------- tutorial guiado ---------- */
 const TUT=[
   {txt:'A batalha é <b>automática</b>: seu herói ataca sozinho. Derrote 4 inimigos e o chefe 👑 para avançar de fase.', sel:()=>'#cv', ok:true},
-  {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#sk2', ok:true},
+  {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#fb_s2b', ok:true},
   {txt:()=>view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
-   sel:()=>view!=='gear'?'#tabs [data-t=gear]':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
-  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#tabs [data-t=summon]', ev:'pull'},
-  {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#sk3', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
+   sel:()=>view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
+  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull'},
+  {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#fb_s3b', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
 ];
 let tutT=null;
 const tutOn = () => S.tut<99 && tutT!==null;

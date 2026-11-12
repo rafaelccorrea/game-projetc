@@ -1,0 +1,10 @@
+{
+ "frames": 49,
+ "cols": 8,
+ "fps": 12,
+ "w": 384,
+ "h": 216,
+ "loop": false,
+ "blend": "lighter",
+ "screen": "full"
+}

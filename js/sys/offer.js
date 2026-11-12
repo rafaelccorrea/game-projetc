@@ -16,13 +16,19 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const Sys=()=>root.Sys||{};
 function ensure(S,host){ if(!S||typeof S!=='object') throw new Error('Sys.offer.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
-  let o=S.sys.offer; if(!o||typeof o!=='object') o=S.sys.offer={}; o.v=1; o.seen=num(o.seen,0); o.claimed=o.claimed===true;
+  let o=S.sys.offer; if(!o||typeof o!=='object') o=S.sys.offer={}; o.v=1; o.seen=num(o.seen,0); o.claimed=o.claimed===true; o.bought=o.bought===true;
   if(!o.seen&&host&&DATA.on===true) o.seen=nowOf(host);   // o relógio de 24 h começa no 1º acesso COM a oferta ligada
   return o; }
-/* a tela pergunta: {on, available, msLeft, claimed, expired, price, contents} */
+/* D11 (PO): a oferta só aparece para quem NUNCA comprou nada. Sem servidor, conta como compra: host.hasPurchased() (se o jogo tiver), pontos de VIP
+   (Sys.vip, só vêm de compra), passe premium (Sys.pass) ou markPurchase(S) chamado pelo jogo em qualquer compra. Com servidor: GET /purchases/can-buy. */
+function hasPurchased(S,host){ try{ if(host&&typeof host.hasPurchased==='function'&&host.hasPurchased()) return true; }catch(e){}
+  const o=S&&S.sys&&S.sys.offer; if(o&&o.bought===true) return true;
+  if(S&&S.sys&&S.sys.vip&&int0(S.sys.vip.points)>0) return true; if(S&&S.sys&&S.sys.pass&&S.sys.pass.premium===true) return true; return false; }
+const markPurchase=(S,host)=>{ ensure(S,host).bought=true; return true; };
+/* a tela pergunta: {on, available, msLeft, claimed, expired, price, contents, reason} */
 function status(S,host){ if(DATA.on!==true) return {on:false,available:false};
-  const o=ensure(S,host), left=Math.max(0,o.seen+DATA.windowMs-nowOf(host));
-  return {on:true,available:!o.claimed&&left>0,msLeft:left,claimed:o.claimed,expired:!o.claimed&&left<=0,price:DATA.priceBRL,
+  const o=ensure(S,host), left=Math.max(0,o.seen+DATA.windowMs-nowOf(host)), bought=!o.claimed&&hasPurchased(S,host);
+  return {on:true,available:!o.claimed&&!bought&&left>0,reason:o.claimed?'done':bought?'not_first_purchase':left<=0?'expired':'',msLeft:left,claimed:o.claimed,expired:!o.claimed&&left<=0,price:DATA.priceBRL,
     contents:{weapon:'Arma Épica 3★',mount:(Sys().mount&&Sys().mount.info?Sys().mount.info(S,host,DATA.mount).name:DATA.mount),gems:DATA.gems,goldk:DATA.goldk}}; }
 /* ENTREGA depois da compra confirmada. Uma vez só. {ok, weapon, mount, gems, gold} ou {ok:false, reason: off|done|expired} */
 function grant(S,host,opts){ if(DATA.on!==true) return {ok:false,reason:'off'}; const o=ensure(S,host);
@@ -34,7 +40,9 @@ function grant(S,host,opts){ if(DATA.on!==true) return {ok:false,reason:'off'}; 
   if(host&&host.addGems) host.addGems(DATA.gems);
   const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.round(DATA.goldk*unit); if(host&&host.addGold) host.addGold(gold);
   o.claimed=true; return {ok:true,weapon:w,mount,gems:DATA.gems,gold}; }
-const API={DATA,ensure,status,grant};
+/* com servidor: a janela vem do GET /offers (endsAt, relógio do servidor). O seen passa a ser endsAt − 24 h, e o relógio do aparelho não manda mais. */
+function setWindow(S,endsAt){ const e=num(endsAt,0); if(!(e>0)) return false; const o=ensure(S); o.seen=e-DATA.windowMs; o.server=true; return true; }
+const API={DATA,ensure,status,grant,setWindow,hasPurchased,markPurchase};
 root.Sys=root.Sys||{}; root.Sys.offer=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

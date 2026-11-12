@@ -46,7 +46,7 @@ Legenda: `[x]` feito · `[ ]` falta · `[~]` em andamento
 - [~] Qualquer item de qualquer era pode ser usado em qualquer era. Item de era futura pode cair cedo, muito raro. Mítico e Lendário das 3 últimas eras nunca caem antes do portão deles. (números sendo calculados junto com a qualidade)
 - [x] Pets novos: Submundo (ataque, era 7) e Celestial (defesa, era 8), Lendários; PRISMÁTICO, o mais raro (até 25% da força): 1.000 fragmentos sem sorteio (evento mensal 100, VIP 10 dá 500 de uma vez, arena semanal 1º 10 / 2º 7 / 3º 5, chefe da era 8, torre). Tempo: quem paga e joga ~3,4 meses; VIP médio ~6,5; grátis ~7,5. Estrelas: mais 500 fragmentos até 5★.
 - [x] Duração: terminar a última era (Celestial) leva ~6 meses grátis / ~4 meses VIP, jogando ~40 min por dia. Trava de nível para entrar nas eras: 1, 12, 25, 40, 55, 70, 85, 100, 110. Era 0 continua curta (troca de era no 1º dia). Quem falta recebe bônus de retorno (até 3 dias).
-- [~] 19 Prólogo: refazendo de verdade (relógio com arte, 4 cenas, o mapa ilustrado)
+- [x] 19 Prólogo V2 APROVADO
 - [x] 17b Pets V2: APROVADA
 - [x] 20 Mapa das Eras V2: APROVADO (entra junto com as 100 fases e 4 dificuldades); mapas das eras 1 a 8 pedidos à arte (~16 créditos)
 - [~] Dano coerente com a força: o dano sai dos atributos; ninguém com 2 mil de FC dá 1 milhão de dano. Tabela de tetos por golpe sendo feita e o QA vai medir em cada era.
@@ -64,9 +64,23 @@ Legenda: `[x]` feito · `[ ]` falta · `[~]` em andamento
 - [x] Canvas: TODAS as telas aprovadas convertidas para o layout novo (sem barra de baixo, header novo, voltar, responsivas)
 - [~] Jogo: painéis em tela cheia; Equipamento, Invocar, Loja, Passe e Práticas já abrem assim na v0.12.1 (Configurações e os outros em seguida); layout antigo será apagado do código
 - [x] 22 Oferta de primeira compra APROVADA (arma Épica 3★ + lobo Épico + 300 gemas + 48 mil de ouro, de R$ 89,90 por R$ 29,90, 24 h)
-- [~] Protótipos de Arena, Eventos e Leilão em produção
+- [x] 25 Leilão APROVADO (liga com o servidor e o parecer jurídico)
+- [x] 23 Arena V2 e 24 Eventos V2 APROVADAS
+- [x] 27 Torneio do Poder APROVADO
+- [~] 26 Guilda: REPROVADA, refazendo
 - [x] Preços da loja aprovados: gemas de R$ 4,90 (60) a R$ 199,90 (3.400), 1ª compra de cada pacote em dobro; cartão mensal R$ 19,90; Passe Premium R$ 24,90/temporada; skins R$ 9,90-29,90; oferta de 1ª compra R$ 29,90; VIP sobe com o valor gasto.
-- [x] Montaria dá atributo (3% a 12% de ataque e vida); o Kael monta nela
+- [x] Montaria dá atributo (3% a 12% de ataque e vida); o Kael monta nela. Raridades: Básico (pônei), Raro (cavalo de guerra), Épico (lobo de guerra e grifo dourado, já feitos), Mítico (a definir), Lendário (serpe dourada)
+- [~] Montaria evoluída ganha aura com fumaça (por estrelas: 2-3★ brilho, 4★ fumaça, 5★ aura forte com fumaça e partículas); feito por código, prévia virá para a página
+- [x] Barras de vida e energia acima da cabeça do Kael (aprovado)
+- [x] Arte aprovada nesta rodada: 4 fases do Kael, subir de nível e evolução, Kaia animada, 5 pets animados, Submundo e Celestial animados com ultimates, pistola (pederneira, pistola, blaster), lobo e grifo
+- [~] Revólver atirando: reprovado, sendo refeito
+- [~] Animações das fases adolescente e adulta do Kael (~35-40 créditos cada); guerreiro lendário quando entrar crédito
+- [ ] Kael montado no grifo: na página, esperando seu voto (o do lobo também)
+- [~] Guildas: troca de itens entre membros, Torneio do Poder por territórios no mapa das eras, ranking de guildas, chefe da guilda, loja, bênçãos, doações e missões. Regras e protótipos em produção (depende do servidor).
+- [~] Equipar a ARMA muda a arma na mão do Kael (prévia e batalha), na 0.12.2
+- [~] Aparência em camadas (sua decisão): roupa base + chapéu, colete, botas e cosméticos (óculos, máscara) por cima, sem combinações; modo Itens ou Skin, e ocultar peça por peça (só visual). Arte e protótipo em produção.
+- [~] Tabela de liberação por nível de todas as funções (eventos, arena, guilda, torneio, leilão etc.) sendo montada
+- [ ] FUTURO (depois do lançamento): Bênção de equipamento: só itens Míticos; até 5 gemas cravejadas na borda do item, cada uma de um tipo (dano, armadura, defesa...). As "bênçãos" da guilda vão mudar de nome para não confundir.
 - [x] Transformação de item: paga ouro + Essência da Era, e o item antigo vira da era atual com a mesma raridade e o mesmo visual (nível volta ao 1).
 
 ## 2. Arte (página de aprovação)
@@ -191,6 +205,9 @@ Conferido no banco da página em 12/11/2026: **220 itens aprovados, 27 reprovado
 
 ## 9. Créditos de arte
 
+- 12/11/2026: você comprou +1.000 e pediu para FINALIZAR com o que temos, racionando. Fila enxuta (~260): Kael adolescente/adulto/guerreiro → ícone do leilão e arte do avô → pets do lançamento médio/evoluído com animação econômica. O resto (~850) fica de reserva para refações.
+- Ficam para depois do lançamento (atualização): montarias Básica, Rara, Mítica e Lendária (lança com Lobo e Grifo), Kaia crescendo (lança como garota), pets do Submundo, Celestial e Prismático animados.
+
 - Você comprou +500. Saldo conferido pela arte: ~580.
 - Já feito: inimigos das 7 eras (21) e as 7 ultimates animadas.
 - Fila (~340): 7 espaços (~48) → Kaia (~14) → 5 pets (~78) → roupas do Kael por era (~98) → 2 montarias (~30); cenários de Pólvora, Industrial, Moderna e Futurista (~72) em paralelo.
@@ -213,3 +230,12 @@ Conferido no banco da página em 12/11/2026: **220 itens aprovados, 27 reprovado
 - [ ] Compras pela Google Play (VIP, Passe, skins, montarias)
 - [ ] Ficha da loja: textos, imagens, classificação etária, público-alvo (menores: regras de família e ECA Digital), segurança de dados
 - [ ] Teste fechado e publicação
+
+## 11. Caminho até a loja (docs/LANCAVEL.md)
+
+- [~] A) Jogo com o que já foi aprovado: versões 0.12.2 a 0.12.10 (painéis, Kaia, pistola, pets, montarias, telas que faltam, prólogo, perfil, oferta)
+- [ ] B) Progressão final: 0.13.0 curva de 9 eras + 100 fases × 4 dificuldades + mapa + qualidade/fusão; 0.13.1 calibração; 0.13.2 eras 7 e 8 (com o Kael crescendo)
+- [ ] Cenários vivos das eras 5 a 8 (~72 créditos da reserva), cada um para seu voto
+- [ ] C) Loja: carregar arte por era, app assinado, teste interno, compras reais
+- [ ] Servidor mínimo no ar (login, save na nuvem, compras) — precisa do seu acesso à AWS e do banco
+- [ ] Você: produtos no Play Console, política de privacidade, classificação etária e parecer do advogado

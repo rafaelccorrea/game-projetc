@@ -157,7 +157,7 @@ const DATA={
 };
 // multiplicadores externos (VIP, prática de Coleta, eventos). Fora do save.
 const params={mult:{gold:1, gems:1, item:1, forge:1, food:1, xp:1}, offlineMult:1, offlineCapHours:null};
-const MAT_KEYS=['forge','food','xp','essence'];   // essence não tem destino externo: o estoque é S.sys.loot.mat.essence
+const MAT_KEYS=['forge','food','xp','essence','stones'];   // essence não tem destino externo: o estoque é S.sys.loot.mat.essence · stones = pedras de TREINO (Sys.practice), não as de forja
 
 /* ---------------- utilidades ---------------- */
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -166,7 +166,8 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rngOf=host=>(host&&typeof host.rng==='function')?host.rng:Math.random;
 const randInt=(rng,a,b)=>a+Math.floor(rng()*(b-a+1));
 const pad=n=>String(n).padStart(2,'0');
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==="function") return C.dayKey(ms);   // fuso único (Sys.clock.DATA.tzOffsetMin; com servidor, Brasília)
+  const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 function eraMaxOf(host){ return clamp(Math.floor(num(host&&host.eraMax&&host.eraMax(),0)),0,99); }
 function goldUnitOf(host,stage){ const g=num(host&&host.goldUnit&&host.goldUnit(stage),1); return g>0?g:1; }
@@ -268,6 +269,9 @@ function topWeights(w,cap,b){
 }
 /* um item {slot,r,e,subs}. opts: era (fixa), minR, upChance, boost, slot (força o espaço),
    source ('drop'|'boss'|'chest'|'arsenal'|'eraBossInst'|'summon'|'shop') = distribuição de espaços */
+/* ORIGEM do item (Cofre do Mercado, reports/backend-economia.md): de onde veio. Só itens GANHOS jogando entram no mercado; 'shop'/'offer'/'gift' não.
+   O campo é só informativo no jogo solo (não muda poder nem regra). */
+const ORIGIN_OF={drop:'drop',boss:'boss',chest:'chest',arsenal:'instance',eraBossInst:'instance',summon:'summon',shop:'shop'};
 function rollItem(host,opts){
   opts=opts||{}; const rng=rngOf(host), em=eraMaxOf(host);
   const e=opts.era!=null?clamp(Math.floor(num(opts.era,em)),0,99):rollEra(rng,em);
@@ -279,7 +283,7 @@ function rollItem(host,opts){
   let r=launchFix(slot,x.r,opts.minR,x.up);
   if(r>cap) r=launchFix(slot,cap,0,false);                      // portão: cai para a maior permitida (e arma não vira Mítica)
   if(slot==='wing') r=Math.max(r,Math.min(DATA.wing.minR,maxDropR()));   // asa forçada: nunca abaixo de Épica
-  const it={slot,r,e,subs:rollSubs(rng,r,slot)}; let qp=qualityOf(rng);
+  const it={slot,r,e,subs:rollSubs(rng,r,slot),origin:opts.origin||ORIGIN_OF[opts.source]||'drop'}; let qp=qualityOf(rng);
   if(qp!=null) for(let k=1;k<Math.max(1,int0(opts.qBest));k++) qp=Math.max(qp,qualityOf(rng));   // dificuldade: melhor de N (Difícil 2, Hell 3)
   if(qp!=null) it.qp=qp;
   return it;
@@ -329,14 +333,14 @@ function summon(S,host,n,opts){
 }
 /* o item como o jogo recebe (host.addItem). Nível é do ITEM (1-100, teto = nível do jogador); item novo nasce no 1, sem ouro investido.
    gold = ouro investido em melhorias (nome do stats.js da fps-e2, que soma a cada melhoria por ouro; diamante NÃO entra). */
-const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; return o; };
+const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; if(it.origin) o.origin=it.origin; return o; };
 /* ---------------- entrega de PACOTE (correio, login diário, eventos) ----------------
    bundle = {gold?, goldk? (× ouro de um abate), gems?, essence?, forge?, food?, xp?, skin?, items?:[{slot, r, e?}], eggs?:[r]}
    Regras únicas: item acima do portão (ou asa sem nível 50 / abaixo de Épica) fica GUARDADO e sai na era da liberação; ovo acima do portão fica GUARDADO
    (presente não é rebaixado); arma não tem Mítica no lançamento. Nada aqui é sorteio: o pacote diz exatamente o que se ganha. */
 function canHold(host,spec){ if(spec.r>maxAllowedR(host)) return false; if(spec.slot==='wing'&&!wingOk(host,spec.r)) return false; return true; }
 function makeFixedItem(host,spec){ const rng=rngOf(host); let r=clamp(int0(spec.r),0,maxDropR()); if(spec.slot==='weapon'&&r===DATA.launch.mythicR) r--;
-  const e=spec.e!=null?clamp(int0(spec.e),0,99):eraMaxOf(host); const it={slot:spec.slot,r,e,lvl:1,gold:0,subs:rollSubs(rng,r,spec.slot)};
+  const e=spec.e!=null?clamp(int0(spec.e),0,99):eraMaxOf(host); const it={slot:spec.slot,r,e,lvl:1,gold:0,subs:rollSubs(rng,r,spec.slot),origin:spec.origin||'reward'};
   const qp=qualityOf(rng); if(qp!=null) it.qp=qp; return it; }
 function grantBundle(S,host,b){
   const o=ensure(S), out={gold:0,gems:0,items:[],heldItems:[],eggs:[],heldEggs:[],skin:null}; if(!b||typeof b!=='object') return out;
@@ -345,7 +349,7 @@ function grantBundle(S,host,b){
   for(const k of MAT_KEYS) if(int0(b[k])){ addMat(S,host,k,int0(b[k])); out[k]=int0(b[k]); }
   if(b.skin){ out.skin=b.skin; if(host.addSkin) host.addSkin(b.skin); }
   for(const sp of Array.isArray(b.items)?b.items:[]){ if(!sp||!DATA.slots.includes(sp.slot)) continue;
-    const spec={slot:sp.slot,r:clamp(int0(sp.r),0,maxDropR())};
+    const spec={slot:sp.slot,r:clamp(int0(sp.r),0,maxDropR()),origin:typeof b.origin==='string'?b.origin:'reward'};   // origem: quem chama diz ('pass', 'mail', 'event', 'arena'...)
     if(canHold(host,spec)){ const it=makeFixedItem(host,{...spec,e:sp.e}); out.items.push(it); if(host.addItem) host.addItem(it); }
     else { o.heldItems.push(spec); out.heldItems.push({...spec,needLevel:Math.max(num((DATA.gates[spec.r]||{}).lvl,1),spec.slot==='wing'?DATA.wing.minLevel:1)}); } }
   // fragmentos de pet (ex.: Prismático nos eventos; fps-e2, atrás de Sys.pet.DATA.v4): {petId: n} → Sys.pet.addFragments (pet não nascido guarda)
@@ -496,10 +500,11 @@ function rollKill(S,host,enemy){
    pedra de forja → Sys.forge.addStones(S,n,host) · ração → Sys.pet.addFood(S,n,host) · ovo → Sys.pet.addEgg(S,host,{r}) (choca na hora).
    Se o módulo ainda não estiver carregado, fica PENDENTE em S.sys.loot.mat e sai no próximo flushPending (nada se perde).
    O contador do dia (missão "Colete 15 pedras de forja") é daqui: today(S,host).forge. */
-const sinkOf=key=>{ const F=root.Sys&&root.Sys.forge, P=root.Sys&&root.Sys.pet, Lv=root.Sys&&root.Sys.level;
+const sinkOf=key=>{ const F=root.Sys&&root.Sys.forge, P=root.Sys&&root.Sys.pet, Lv=root.Sys&&root.Sys.level, Pr=root.Sys&&root.Sys.practice;
   if(key==='forge') return F&&typeof F.addStones==='function'?(S,n,h)=>F.addStones(S,n,h):null;
   if(key==='food')  return P&&typeof P.addFood==='function'?(S,n,h)=>P.addFood(S,n,h):null;
   if(key==='xp')    return Lv&&typeof Lv.addXp==='function'?(S,n,h)=>Lv.addXp(S,n,h):null;
+  if(key==='stones') return Pr&&typeof Pr.addStones==='function'?(S,n,h)=>Pr.addStones(S,n,h):null;   // prêmio da arena (fps-e2)
   return null; };
 const eggSink=()=>{ const P=root.Sys&&root.Sys.pet; return P&&typeof P.addEgg==='function'?P:null; };
 function addMat(S,host,key,n){
@@ -527,7 +532,7 @@ function flushPending(S,host){
   return out;
 }
 /* o que está pendente (não entregue a forja/pet) */
-function pending(S){ const o=ensure(S); return {forge:o.mat.forge,food:o.mat.food,xp:o.mat.xp,eggs:Object.assign({},o.mat.eggs)}; }
+function pending(S){ const o=ensure(S); return {forge:o.mat.forge,food:o.mat.food,xp:o.mat.xp,stones:o.mat.stones,eggs:Object.assign({},o.mat.eggs)}; }
 
 /* entrega pelo host (ouro, gemas, itens) e guarda os materiais em S */
 function grant(S,host,res){

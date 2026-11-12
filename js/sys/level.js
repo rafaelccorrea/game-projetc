@@ -58,7 +58,7 @@ function progress(S){ const o=ensure(S), n=need(o.lvl); return {lvl:o.lvl,xp:o.x
 
 /* soma XP e sobe de nível quantas vezes der. Devolve {gained, levels, from, to, unlocked:[funções novas]} */
 /* teto diário da XP de abate (v9): devolve quanto de n entra hoje. Estado: o.kd (dia), o.kx (XP de abate BRUTA do dia). */
-const dayKeyOf=host=>{ const d=new Date(num(host&&host.now&&host.now(),Date.now())); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+const dayKeyOf=host=>{ const t=num(host&&host.now&&host.now(),Date.now()), C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==='function') return C.dayKey(t); const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 function killCredit(S,host,n){ const K=DATA.v9.kill, o=ensure(S), dk=dayKeyOf(host); if(o.kd!==dk){ o.kd=dk; o.kx=0; }
   const t=num(K.T[clamp(eraMaxOf(host),0,K.T.length-1)],K.T[K.T.length-1])*vipXp(S), f=x=>Math.min(x,t)+K.mid*Math.max(0,Math.min(x,2*t)-t)+K.over*Math.max(0,x-2*t);
   const a=f(o.kx), b=f(o.kx+n); o.kx+=n; return Math.round(b-a); }

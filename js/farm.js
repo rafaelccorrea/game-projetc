@@ -13,6 +13,7 @@ function normItem(o){ const slot = SLOT[o.slot] ? o.slot : 'armor', r = Math.max
   /* Item da Temporada do passe (premium 27 e 30): season, targetR e seasonEnd precisam ficar no item, senão o Sys.pass.evolveSeason não o acha; look = era da aparência */
   if (o.season){ it.season = true; if (Number.isInteger(o.targetR)) it.targetR = o.targetR; if (o.seasonEnd != null) it.seasonEnd = o.seasonEnd; }
   if (Number.isInteger(o.look)) it.look = o.look;
+  if (typeof o.origin === 'string') it.origin = o.origin;   // origem do item (shop, gift, offer...): sem efeito visível; o servidor confere depois
   if (o.qp != null) it.qp = o.qp;   // qualidade do item (regra da fps-e2, ainda desligada em Sys.stats.DATA.quality.on): só não perder o campo
   return it; }
 
@@ -97,7 +98,7 @@ function onLevelUp(lv){
   if (typeof speedCheck === 'function') speedCheck(lv);
   refreshHero(); snd('upgrade'); vib(40);
   B.banner = { txt: 'Nível ' + lv.to + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };   // "Nível X!" como no canvas
-  { const av = document.getElementById('lvb'); if (av){ av.classList.remove('lvlglow'); void av.offsetWidth; av.classList.add('lvlglow'); } }
+  { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
   for (let i = 0; i < 18; i++) emit({ x: HX + (Math.random() - .5) * 50, y: GY - Math.random() * HS * 0.8, vx: (Math.random() - .5) * 40, vy: -60 - Math.random() * 80, g: 0, t: 0, life: .8, col: Math.random() < .5 ? '#6fe3ff' : '#ffffff', sz: 2 + Math.random() * 3, glow: true });
   if (view !== 'battle' && typeof softRender === 'function') softRender();
 }
@@ -133,7 +134,7 @@ function spawnPicks(arr, x){
 function pickTarget(to){
   if (B.at - PK.tgT > 0.5){ PK.tgT = B.at; PK.tg = {}; }
   let T = PK.tg[to]; if (T) return T;
-  const id = PK_TO[to] || 'gold', el0 = id === 'tabgear' ? document.querySelector('#tabs [data-t=gear]') : document.getElementById(id), el = (typeof FB_ON === 'function' && FB_ON() && typeof fbTarget === 'function' && fbTarget(to)) || el0,   // 04b: os pickups voam para o HUD novo
+  const el = fbTarget(to),   // 04b: os pickups voam para o HUD novo
     cr = cv.getBoundingClientRect(), k = cr.width / LW;
   if (el && k){ const r = el.getBoundingClientRect(); T = { x: (r.left + r.width / 2 - cr.left) / k, y: (r.top + r.height / 2 - cr.top) / k }; } else T = { x: 30, y: 20 };
   return PK.tg[to] = T;
@@ -145,7 +146,7 @@ function tickPicks(dt){
     if (q.st === 0){ q.vy += 620 * dt; q.x += q.vx * dt - run; q.y += q.vy * dt; if (q.y >= GY - 6 && q.vy > 0){ q.y = GY - 6; q.st = 1; } }
     else if (q.st === 1){ q.rt += dt; q.x -= run; if (q.rt > q.rest || q.x < 6){ q.st = 2; q.sx = q.x; q.sy = q.y; } }
     else { q.ft += dt / 0.5; const k = Math.min(1, q.ft), e = k * k, T = pickTarget(q.p.to); q.x = q.sx + (T.x - q.sx) * e; q.y = q.sy + (T.y - q.sy) * e - Math.sin(Math.PI * k) * 26;
-      if (k >= 1){ q.done = true; PK.G.add(q.p.type, q.p.value, B.at); if (q.p.type === 'gold' && B.at - (PK.bumpT || 0) > 0.4){ PK.bumpT = B.at; const gp = document.getElementById('goldp'); if (gp){ gp.classList.remove('cbump'); void gp.offsetWidth; gp.classList.add('cbump'); } } } }
+      if (k >= 1){ q.done = true; PK.G.add(q.p.type, q.p.value, B.at); if (q.p.type === 'gold' && B.at - (PK.bumpT || 0) > 0.4){ PK.bumpT = B.at; const gp = document.getElementById('fb_goldp'); if (gp){ gp.classList.remove('fb-cbump'); void gp.offsetWidth; gp.classList.add('fb-cbump'); } } } }
   }
   PK.list = PK.list.filter(q => !q.done);
 }
@@ -178,7 +179,5 @@ const LVH = { t: '', w: -1 };
 function hudSys(){
   if (!SYS_ON) return;
   const h = Sys.level.hud(S), w = Math.round((h.max ? 1 : h.frac) * 100);
-  if (h.text !== LVH.t){ LVH.t = h.text; document.getElementById('lvt').textContent = h.text; }
-  if (w !== LVH.w){ LVH.w = w; document.getElementById('lvx').style.width = w + '%'; }
   const el = document.getElementById('chestbox'); if (el){ try { Sys.chest.update(el, S, Sys.host); } catch (e) {} }
 }

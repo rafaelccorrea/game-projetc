@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Torneio do Poder</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- Torneio do Poder (guilda x guilda). Layout novo: sem barra de baixo, header da Batalha V2 com VOLTAR, responsivo.
+     Depende de servidor: selo "Em breve: abre com o online"; tudo aqui é PRÉVIA.
+     Mapa: o mapa-múndi ilustrado aprovado (MapaEras) vira mapa de territórios: as 9 eras, cada uma com bandeira/cor da guilda dona,
+     brilho de disputa nas regiões em guerra, contagem da temporada semanal. Tocar num território: dono, bônus (ouro/XP/drop %), prêmios e Atacar/Defender.
+     Batalha automática: os 5 melhores de cada lado em fila, duelos (Kael recolorido pela cor da guilda), placar ao vivo, resultado e território trocando de cor.
+     Ranking de guildas (territórios / poder) com faixas de prêmio, inclusive fragmentos do Prismático.
+     Bônus % e regras de duelo (vencedor fica com a vida que sobrou) são valores de PROTÓTIPO; quantidades de prêmio = [QTD]. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+button:active{transform:scale(.96)}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+@keyframes twk{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.25);opacity:1}}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-1600px}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2 / Ranking / Leilão) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+.nhBody{position:relative;flex:1;min-height:0;overflow:hidden}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;height:100%}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;animation:paneIn .3s ease-out both}
+@keyframes paneIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.inUp{animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes inUp{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+
+/* selo "em breve" */
+.soon{flex:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:3px 4px 3px 10px;border-radius:14px;background:linear-gradient(90deg,#1d4a7a,#13314f 60%,#1d1611);border:2px solid #4aa3ff;position:relative;overflow:hidden}
+.soon::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);background-size:300% 100%;animation:shn 3s ease-in-out infinite;pointer-events:none}
+.soon .ico{flex:none;animation:sig 1.6s ease-in-out infinite}
+@keyframes sig{0%,100%{filter:drop-shadow(0 0 2px rgba(140,200,255,.5));transform:scale(1)}50%{filter:drop-shadow(0 0 10px rgba(140,200,255,1));transform:scale(1.1)}}
+.badge{display:inline-block;font-size:10px;font-weight:900;line-height:16px;padding:0 6px;border-radius:6px;background:#ffc94a;color:#2a1403;animation:bdgP 1.2s ease-in-out infinite}
+@keyframes bdgP{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.clock{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;line-height:1.1;flex:none}
+.hg{animation:hgFlip 3s cubic-bezier(.6,0,.3,1) infinite;transform-origin:50% 50%}
+@keyframes hgFlip{0%,80%{transform:rotate(0)}100%{transform:rotate(180deg)}}
+
+/* abas */
+.tabs{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b}
+.tab{min-width:0;min-height:48px;border:0;border-radius:10px;background:transparent;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:clamp(13px,4vw,17px);line-height:1.05;padding:0 3px;position:relative;display:flex;align-items:center;justify-content:center;gap:6px}
+.tab svg{width:20px;height:20px;flex:none}
+.tab[aria-selected="true"]{background:#3a2c1f;color:#ffc94a;box-shadow:inset 0 -3px 0 #ffc94a}
+.tab[aria-selected="true"] svg{animation:tabI 1.6s ease-in-out infinite}
+@keyframes tabI{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.dot{position:absolute;top:3px;right:5px;min-width:16px;height:16px;border-radius:8px;background:#ff3b30;color:#fff;font-family:Nunito,sans-serif;font-size:10px;font-weight:900;line-height:16px;padding:0 3px;animation:bdgP 1.2s ease-in-out infinite}
+.seg{flex:none;display:flex;gap:4px}
+.seg button{flex:1;min-height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;font-weight:900;font-size:13px;padding:0 6px}
+.seg button[aria-pressed="true"]{border-color:#ffc94a;background:#3a2c1f;color:#ffc94a}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-weight:900;font-size:13px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ghost[aria-pressed="true"]{border-color:#ffc94a;color:#ffc94a;background:#3a2c1f}
+.note{font-size:clamp(11px,3.1vw,13px);font-weight:800;color:#c9b9a2;line-height:1.3}
+
+/* emblema */
+.emb{position:relative;display:block;flex:none;aspect-ratio:48/56}
+.emb svg{width:100%;height:100%;display:block;overflow:visible;animation:embG 2.6s ease-in-out infinite}
+@keyframes embG{0%,100%{filter:drop-shadow(0 0 2px var(--ec)) drop-shadow(0 2px 0 rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 9px var(--ec)) drop-shadow(0 2px 0 rgba(0,0,0,.6))}}
+.emb .sym{transform-box:view-box;transform-origin:24px 28px;animation:symW 3.2s ease-in-out infinite}
+@keyframes symW{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-4deg)}}
+
+/* ===== MAPA DE TERRITÓRIOS (arte do MapaEras, recorte x 200..1336 de 1536) ===== */
+.mapView{position:relative;flex:1;min-height:0;border-radius:16px;overflow:hidden;border:2px solid #d9a441;box-shadow:inset 0 0 0 2px #5a3a12;background:#0d0a08}
+.mapScroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column-reverse;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mapScroll::-webkit-scrollbar{display:none}
+.map{position:relative;flex:none;width:100%;aspect-ratio:1136/2752;overflow:hidden}
+.bgWorld{position:absolute;inset:0;background-image:url(/_blob/7ed135dbfe0ec47afa32938b1ad0e00d);background-size:135.21% 100%;background-position:50% 0;background-repeat:no-repeat}
+.cloudA{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 100%;background-repeat:repeat-x}
+.cloudB{background-image:url(/_blob/665cc1b081c457c24fdbb9a04f90fc98);background-size:auto 100%;background-repeat:repeat-x}
+.drift1{animation:drift 70s linear infinite}
+.drift2{animation:drift 110s linear infinite reverse}
+.shadowC{position:absolute;border-radius:50%;background:radial-gradient(ellipse,rgba(10,20,40,.28),transparent 70%);pointer-events:none;animation:shadowC 38s linear infinite}
+@keyframes shadowC{from{transform:translateX(-260px)}to{transform:translateX(520px)}}
+.wave{position:absolute;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent);pointer-events:none;animation:waveM 3.4s ease-in-out infinite}
+@keyframes waveM{0%{opacity:0;transform:translateX(-10px) scaleX(.4)}50%{opacity:.9}100%{opacity:0;transform:translateX(14px) scaleX(1)}}
+.lava{position:absolute;border-radius:50%;mix-blend-mode:screen;pointer-events:none;background:radial-gradient(ellipse,rgba(255,150,40,.85),rgba(255,70,20,.35) 45%,transparent 72%);animation:lava 1.8s ease-in-out infinite}
+@keyframes lava{0%,100%{opacity:.35;transform:scale(.92)}50%{opacity:.95;transform:scale(1.06)}}
+.glint{position:absolute;width:12px;height:12px;background:radial-gradient(circle,#fff 0 18%,rgba(255,240,170,.9) 22%,transparent 60%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twk 2.2s ease-in-out infinite;pointer-events:none}
+.anc{position:absolute;width:0;height:0}
+.terr{position:absolute;left:-74px;top:-46px;width:148px;height:92px;border-radius:50%;pointer-events:none;opacity:.62;mix-blend-mode:screen;animation:terrP 3.2s ease-in-out infinite}
+@keyframes terrP{0%,100%{transform:scale(.94);opacity:.5}50%{transform:scale(1.04);opacity:.72}}
+.terrB{position:absolute;left:-60px;top:-36px;width:120px;height:72px;border-radius:50%;pointer-events:none;border:2px dashed var(--oc);opacity:.85;animation:spin 24s linear infinite}
+.war{position:absolute;left:-66px;top:-42px;width:132px;height:84px;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(255,90,40,.0) 30%,rgba(255,70,30,.75) 62%,transparent 72%);mix-blend-mode:screen;animation:warP 1s ease-in-out infinite}
+@keyframes warP{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:1;transform:scale(1.12)}}
+.warRing{position:absolute;left:-46px;top:-28px;width:92px;height:56px;border-radius:50%;border:3px solid #ff7a3a;pointer-events:none;animation:ringP 1.4s ease-out infinite}
+@keyframes ringP{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.7);opacity:0}}
+.swords{position:absolute;left:-16px;top:-96px;width:32px;height:32px;pointer-events:none;animation:swC .9s ease-in-out infinite;transform-origin:50% 70%}
+@keyframes swC{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.2) rotate(-8deg)}}
+.spark{position:absolute;width:4px;height:4px;border-radius:50%;background:#ffd08a;box-shadow:0 0 6px 2px rgba(255,90,30,.9);pointer-events:none;animation:sparkU 1.8s linear infinite}
+@keyframes sparkU{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(10px,-46px);opacity:0}}
+.flagW{transform-box:fill-box;transform-origin:0 50%;animation:flagW 1.1s ease-in-out infinite}
+@keyframes flagW{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(7deg) scaleX(.88)}}
+.capt{position:absolute;left:-80px;top:-56px;width:160px;height:112px;border-radius:50%;pointer-events:none;border:4px solid #fff3c4;animation:capt 1.2s ease-out 3 both}
+@keyframes capt{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.captF{position:absolute;left:-90px;top:-60px;width:180px;height:120px;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse,rgba(255,250,220,.95),transparent 70%);animation:fadeOut 1.6s ease-out both}
+@keyframes fadeOut{0%{opacity:1}100%{opacity:0}}
+.plateM{position:absolute;width:124px;min-height:40px;border-radius:10px;padding:3px 7px;display:flex;flex-direction:column;justify-content:center;line-height:1.08;pointer-events:none;background:linear-gradient(180deg,rgba(40,28,18,.92),rgba(22,16,11,.92));border:2px solid var(--oc);box-shadow:0 3px 0 rgba(0,0,0,.55)}
+.plateM.mine{box-shadow:0 3px 0 rgba(0,0,0,.55),0 0 10px var(--oc)}
+.plateM .t{font-family:'Lilita One',sans-serif;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plateM .o{font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wTag{display:inline-block;font-size:9.5px;font-weight:900;line-height:14px;padding:0 5px;border-radius:5px;background:#ff5a2a;color:#fff;animation:bdgP .9s ease-in-out infinite}
+.mkBtn{position:absolute;left:-36px;top:-84px;width:72px;height:96px;background:transparent;border:0;padding:0;border-radius:16px}
+.mkBtn:focus-visible{outline:3px solid #ffe07a}
+.mkSel{position:absolute;left:-40px;top:-14px;width:80px;height:28px;border-radius:50%;border:3px solid #ffe07a;pointer-events:none;animation:selP .9s ease-in-out infinite}
+@keyframes selP{0%,100%{opacity:.5;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
+.mapHud{position:absolute;left:8px;right:8px;top:8px;z-index:5;display:flex;align-items:center;gap:6px;pointer-events:none}
+.mapHud > *{pointer-events:auto}
+.legend{position:absolute;left:8px;right:8px;bottom:8px;z-index:5;display:flex;gap:5px;flex-wrap:wrap;pointer-events:none}
+.legend span{display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:9px;background:rgba(14,10,7,.86);border:1px solid #4a3a2b;font-size:11px;font-weight:900}
+.legend i{width:10px;height:10px;border-radius:50%;display:block}
+
+/* ===== BATALHA ===== */
+.score{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;padding:6px 8px;border-radius:16px;background:linear-gradient(90deg,var(--lc) -60%,#1d1611 45%,#1d1611 55%,var(--rc) 160%);border:2px solid #d9a441}
+.side{min-width:0;display:flex;flex-direction:column;gap:3px}
+.side.r{align-items:flex-end;text-align:right}
+.sideH{display:flex;align-items:center;gap:5px;min-width:0}
+.side.r .sideH{flex-direction:row-reverse}
+.sideN{font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.q{display:flex;gap:3px}
+.side.r .q{flex-direction:row-reverse}
+.qa{position:relative;width:26px;height:26px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);border:2px solid #5a4430;flex:none}
+.qa .kidle{position:absolute;width:182%;height:182%;left:-41%;top:-10%;display:block}
+.qa.cur{border-color:#ffe07a;animation:qaC 1s ease-in-out infinite}
+@keyframes qaC{0%,100%{box-shadow:0 0 0 rgba(255,224,122,0)}50%{box-shadow:0 0 10px rgba(255,224,122,1)}}
+.qa.ko{filter:grayscale(1) brightness(.45)}
+.qa.ko::after{content:"";position:absolute;inset:0;background:linear-gradient(45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%),linear-gradient(-45deg,transparent 44%,#ff5a4e 44% 56%,transparent 56%)}
+.bigS{display:flex;align-items:center;gap:6px;font-family:'Lilita One',sans-serif;font-size:clamp(26px,8vw,34px);line-height:1}
+.bigS b{font-weight:400;display:inline-block}
+.bump{animation:bump .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.4);color:#fff}100%{transform:scale(1)}}
+.live{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:900;color:#fff;background:#d8261a;border-radius:6px;padding:0 6px;line-height:16px}
+.live i{width:6px;height:6px;border-radius:50%;background:#fff;animation:fadeBlink 1s steps(1) infinite}
+@keyframes fadeBlink{0%{opacity:1}50%{opacity:.2}}
+.arena{position:relative;flex:1;min-height:250px;border-radius:16px;overflow:hidden;border:2px solid #5a4430;background:#1f2a3a}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}
+.far2{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}
+.mid2{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}
+.gnd2{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.cld2{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);animation:drift 90s linear infinite}
+.ftr{position:absolute;bottom:calc(22% - clamp(100px,30vw,136px) * .05);width:clamp(100px,30vw,136px);aspect-ratio:1}
+.ftr.L{left:20%}
+.ftr.R{right:20%}
+.ftr .hue,.ftr .fx,.ftr .sp{position:absolute;inset:0}
+.ftr.R .flip{position:absolute;inset:0;transform:scaleX(-1)}
+.ftr.L .flip{position:absolute;inset:0}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite;pointer-events:none}
+.kaelatk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet .75s steps(17, jump-none) infinite;pointer-events:none}
+.krun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .66s steps(8, jump-none) infinite;pointer-events:none}
+.hitA{animation:hit .4s linear}
+.hitB{animation:hit2 .4s linear}
+@keyframes hit{0%,100%{filter:none}25%{filter:brightness(2.6) saturate(0)}55%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}}
+@keyframes hit2{0%,100%{filter:none}25%{filter:brightness(2.6) saturate(0)}55%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}}
+.koOut{animation:koF .8s ease-in both}
+@keyframes koF{0%{opacity:1;filter:none}40%{filter:grayscale(1) brightness(1.8)}100%{opacity:0;filter:grayscale(1) brightness(.4)}}
+.walkL{animation:walkL .9s linear both}
+@keyframes walkL{from{transform:translateX(-120%)}to{transform:none}}
+.walkR{animation:walkR .9s linear both}
+@keyframes walkR{from{transform:translateX(120%)}to{transform:none}}
+.ped{position:absolute;bottom:20%;width:clamp(70px,20vw,92px);height:14px;border-radius:50%;background:radial-gradient(ellipse,var(--pc),transparent 70%);opacity:.8;animation:pedP 1.6s ease-in-out infinite}
+@keyframes pedP{0%,100%{opacity:.55}50%{opacity:.95}}
+.wait{position:absolute;bottom:calc(22% - clamp(62px,18vw,80px) * .05);width:clamp(62px,18vw,80px);aspect-ratio:1;opacity:.82}
+.wait .kidle{position:absolute;inset:0;filter:brightness(.7)}
+.bhp{position:absolute;bottom:calc(22% + clamp(100px,30vw,136px) * .92);width:clamp(96px,28vw,124px);display:flex;flex-direction:column;gap:2px}
+.bhp.L{left:calc(20% + 4px)}
+.bhp.R{right:calc(20% + 4px);align-items:flex-end}
+.bhp .nm{font-size:11.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hpBar{position:relative;width:100%;height:12px;border-radius:7px;background:#0e0a07;border:2px solid #2a1a0a;overflow:hidden}
+.hpBar .lag{position:absolute;top:0;bottom:0;background:#ffe07a;transition:width .9s ease-in .25s}
+.hpBar .hp{position:absolute;top:0;bottom:0;transition:width .25s ease-out}
+.bhp.L .lag,.bhp.L .hp{left:0}
+.bhp.R .lag,.bhp.R .hp{right:0}
+.dmg{position:absolute;font-family:'Lilita One',sans-serif;font-size:19px;color:#fff;text-shadow:0 2px 0 #8a1a12,1px 0 0 #8a1a12,-1px 0 0 #8a1a12,0 -1px 0 #8a1a12;pointer-events:none;animation:dmg .9s ease-out both;white-space:nowrap}
+.dmg.cr{font-size:24px;color:#ffe07a}
+@keyframes dmg{0%{transform:translateY(0) scale(.6);opacity:0}15%{transform:translateY(-6px) scale(1.25);opacity:1}100%{transform:translateY(-48px) scale(1);opacity:0}}
+.clash{position:absolute;left:50%;bottom:38%;width:70px;height:70px;margin-left:-35px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff 0 12%,rgba(255,230,150,.9) 25%,transparent 62%);animation:clash .32s ease-out both}
+@keyframes clash{from{transform:scale(.3);opacity:1}to{transform:scale(1.5);opacity:0}}
+.clash2{animation:clash2 .32s ease-out both}
+@keyframes clash2{from{transform:scale(.3);opacity:1}to{transform:scale(1.5);opacity:0}}
+.vs{position:absolute;left:50%;top:14%;transform:translateX(-50%);font-family:'Lilita One',sans-serif;font-size:30px;color:#ffe07a;text-shadow:0 3px 0 #8a4f0c,0 0 14px rgba(255,201,74,.8);animation:vsP 1.2s ease-in-out infinite}
+@keyframes vsP{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.15)}}
+.duelTag{position:absolute;left:50%;top:6px;transform:translateX(-50%);padding:2px 10px;border-radius:9px;background:rgba(14,10,7,.82);border:1px solid #d9a441;font-size:12px;font-weight:900;white-space:nowrap}
+.log{flex:none;min-height:44px;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;font-size:12.5px;font-weight:900;line-height:1.25}
+.log span{animation:logIn .3s ease-out both}
+@keyframes logIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ctr{flex:none;display:flex;gap:6px;align-items:stretch}
+.gold{width:100%;min-height:54px;border:0;border-radius:16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:clamp(18px,5.4vw,23px);box-shadow:0 6px 0 #8a4f0c;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden}
+.gold.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 22px rgba(255,201,74,.9)}}
+.gold::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:300% 100%;animation:shn 2.6s ease-in-out infinite;pointer-events:none}
+.gold.red{background:linear-gradient(180deg,#ff8a6a,#d8261a);color:#fff;box-shadow:0 6px 0 #6e1408;text-shadow:0 2px 0 #6e1408}
+.gold.red.pulse{animation:pulseR 1.3s ease-in-out infinite}
+@keyframes pulseR{0%,100%{box-shadow:0 6px 0 #6e1408,0 0 0 rgba(255,90,78,0)}50%{box-shadow:0 6px 0 #6e1408,0 0 22px rgba(255,90,78,.95)}}
+.gold.blue{background:linear-gradient(180deg,#8cc8ff,#2f86e0);color:#fff;box-shadow:0 6px 0 #173f6e;text-shadow:0 2px 0 #173f6e}
+.gold.blue.pulse{animation:pulseB 1.3s ease-in-out infinite}
+@keyframes pulseB{0%,100%{box-shadow:0 6px 0 #173f6e,0 0 0 rgba(74,163,255,0)}50%{box-shadow:0 6px 0 #173f6e,0 0 22px rgba(74,163,255,.95)}}
+/* resultado */
+.resBg{position:absolute;inset:0;z-index:40;background:rgba(8,5,3,.78);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .3s both}
+.res{position:relative;width:100%;max-width:420px;border-radius:22px;padding:18px 14px 14px;background:linear-gradient(180deg,#3a2a18,#16110d);border:3px solid #d9a441;box-shadow:inset 0 0 0 2px #5a3a12,0 16px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;overflow:hidden;animation:resIn .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes resIn{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.rays{position:absolute;left:50%;top:70px;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.28) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 18s linear infinite;pointer-events:none}
+.resT{position:relative;font-family:'Lilita One',sans-serif;font-size:clamp(34px,11vw,46px);line-height:1;animation:resT 1.4s ease-in-out infinite}
+@keyframes resT{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.conf{position:absolute;top:-10px;width:6px;height:9px;border-radius:1px;animation:conf 2.6s linear infinite;opacity:0}
+@keyframes conf{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translateY(320px) rotate(540deg);opacity:0}}
+.swap{position:relative;width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#0e0a07;border:1px solid #5a4430}
+.swapC{width:48px;height:48px;border-radius:50%;flex:none;border:3px solid #fff3c4;animation:swapC 2.4s ease-in-out both}
+@keyframes swapC{0%,30%{background:var(--from);box-shadow:0 0 0 var(--from)}55%{background:#fff;box-shadow:0 0 24px #fff}100%{background:var(--to);box-shadow:0 0 16px var(--to)}}
+
+/* ===== RANKING ===== */
+.bands{flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.band{min-width:0;min-height:96px;border-radius:12px;background:#1d1611;border:2px solid var(--bc);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding:4px 2px;text-align:center;line-height:1.1;animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+.band.my{animation:inUp .4s both,myB 1.6s ease-in-out .4s infinite}
+@keyframes myB{0%,100%{box-shadow:0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 0 14px rgba(95,208,104,.9)}}
+.band b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:14px;color:var(--bc)}
+.band span{font-size:9.5px;font-weight:900;color:#e8dccb}
+.prz{display:flex;align-items:center;justify-content:center;gap:1px}
+.prz img{width:22px;height:22px;object-fit:contain}
+.fox{width:28px;height:28px;object-fit:contain;animation:foxG 2.4s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes foxG{0%,100%{filter:drop-shadow(0 0 3px #8ff5ff) hue-rotate(0)}50%{filter:drop-shadow(0 0 10px #ff8ad8) hue-rotate(60deg)}}
+.grow{min-height:52px;flex:none;display:grid;grid-template-columns:30px auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:4px 8px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;animation:rowIn .35s ease-out both}
+@keyframes rowIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.grow.me{border:2px solid #ffc94a;background:linear-gradient(90deg,#4a3214,#2a1f16);animation:rowIn .35s ease-out both,meRow 1.6s ease-in-out .35s infinite}
+@keyframes meRow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 14px rgba(255,201,74,.8)}}
+.flags{display:flex;gap:2px;align-items:flex-end}
+.flags i{width:7px;height:11px;display:block;clip-path:polygon(0 0,100% 15%,70% 50%,100% 85%,0 100%);animation:flagW 1.1s ease-in-out infinite}
+.crown{animation:crown 1.8s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes crown{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.12)}}
+.pager{height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:10px}
+
+/* folhas */
+.sheetBg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.62);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+.sheet{position:relative;width:100%;max-width:560px;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid var(--oc,#ffc94a);border-bottom:0;padding:12px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px;animation:sheetUp .35s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.shHead{display:flex;align-items:center;gap:10px}
+.bon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.bon span{min-height:58px;border-radius:12px;background:#1d1611;border:1px solid #5a4430;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1}
+.bon b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:20px;color:#8ff09a}
+.bon em{font-style:normal;font-size:11px;font-weight:900;color:#d8cbb8}
+.bon img,.bon svg{width:22px;height:22px;object-fit:contain;animation:icB 2.6s ease-in-out infinite}
+@keyframes icB{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg) scale(1.06)}}
+.own{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#0e0a07;border:1px solid var(--oc)}
+.warBox{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:linear-gradient(90deg,#5a1a0a,#1d1611);border:2px solid #ff7a3a;animation:warBx 1.2s ease-in-out infinite}
+@keyframes warBx{0%,100%{box-shadow:0 0 0 rgba(255,122,58,0)}50%{box-shadow:0 0 14px rgba(255,122,58,.8)}}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:60;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.4s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+</style>
+</helmet>
+<div class="nhApp" style="background: #16110d">
+
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Torneio do Poder</span>
+    <div class="nhP">
+      <a href="Guilda.dc.html" onClick="{{tap}}" class="nhB" aria-label="Abrir a sede da guilda Guardiões do Tempo">
+        <span class="nhPill nhGl" style="padding: 0 8px 0 4px">
+          <span class="emb" style="--ec: #c8322a; width: 26px">
+            <svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="#c8322a" stroke="#ffe9b0" stroke-width="2"></path><g class="sym"><path d="M7 4 H17 M7 20 H17 M8 4 C8 9 12 10 12 12 C12 14 8 15 8 20 M16 4 C16 9 12 10 12 12 C12 14 16 15 16 20" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+          </span>
+          <b>GDT</b>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+
+  <div class="nhBody" style="background: radial-gradient(ellipse at 50% 10%, #3a2414 0%, #1d1611 45%, #16110d 80%)"><div class="nhWrap" style="display: flex; flex-direction: column; gap: 6px; padding: 8px 12px max(10px, env(safe-area-inset-bottom))">
+
+    <div class="soon" role="note">
+      <svg class="ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8cc8ff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 9 C8 3 16 3 22 9"></path><path d="M5 12.5 C9 8.5 15 8.5 19 12.5"></path><path d="M8.5 16 C10.5 14 13.5 14 15.5 16"></path><circle cx="12" cy="19.5" r="1.4" fill="#8cc8ff"></circle></svg>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15; position: relative; z-index: 1">
+        <span class="ol" style="font-size: 13px; font-weight: 900"><span class="badge">EM BREVE</span> Abre com o online</span>
+        <span style="font-size: 11px; font-weight: 800; color: #cfe7ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Prévia com guildas de exemplo</span>
+      </span>
+      <span class="clock" role="timer" aria-label="{{seasonAria}}" style="position: relative; z-index: 1">
+        <svg class="hg" width="14" height="18" viewBox="0 0 12 16" aria-hidden="true"><path d="M1 1 H11 M1 15 H11 M2 1 C2 5 6 6.5 6 8 C6 9.5 2 11 2 15 M10 1 C10 5 6 6.5 6 8 C6 9.5 10 11 10 15" fill="none" stroke="#ffe07a" stroke-width="1.4"></path></svg>
+        <span style="display: flex; flex-direction: column; align-items: flex-end">
+          <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Temporada {{season}}</span>
+          <span class="lil" style="font-size: 14px; color: #ffe07a; font-variant-numeric: tabular-nums; white-space: nowrap">{{seasonLeft}}</span>
+        </span>
+      </span>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Seções do torneio">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button class="tab" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.ic}}"></path></svg>{{t.label}}
+          <sc-if value="{{t.hasDot}}" hint-placeholder-val="{{false}}"><span class="dot">{{t.dot}}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- ===== MAPA DE TERRITÓRIOS ===== -->
+    <sc-if value="{{tMap}}" hint-placeholder-val="{{true}}">
+      <div class="pane">
+        <div class="mapView">
+          <div class="mapScroll">
+            <div class="map">
+              <div class="bgWorld" role="img" aria-label="Mapa-múndi das 9 eras dividido em territórios de guildas"></div>
+              <sc-for list="{{lava}}" as="l" hint-placeholder-count="3">
+                <span class="lava" style="left: {{l.x}}; top: {{l.y}}; width: {{l.w}}; height: {{l.h}}; animation-delay: {{l.d}}"></span>
+              </sc-for>
+              <sc-for list="{{waves}}" as="w" hint-placeholder-count="4">
+                <span class="wave" style="left: {{w.x}}; top: {{w.y}}; width: 40px; animation-delay: {{w.d}}"></span>
+              </sc-for>
+              <sc-for list="{{glints}}" as="g" hint-placeholder-count="4">
+                <span class="glint" style="left: {{g.x}}; top: {{g.y}}; animation-delay: {{g.d}}"></span>
+              </sc-for>
+              <span class="shadowC" style="left: 0; top: 52%; width: 260px; height: 120px"></span>
+              <span class="shadowC" style="left: -120px; top: 78%; width: 300px; height: 140px; animation-duration: 52s; animation-delay: -20s"></span>
+              <div class="cloudA drift1" style="position: absolute; left: 0; right: 0; top: 34%; height: 80px; opacity: .45; pointer-events: none"></div>
+              <div class="cloudB drift2" style="position: absolute; left: 0; right: 0; top: 66%; height: 64px; opacity: .4; pointer-events: none"></div>
+
+              <!-- territórios das 9 eras -->
+              <sc-for list="{{terrs}}" as="k" hint-placeholder-count="9">
+                <div class="anc" style="left: {{k.x}}; top: {{k.y}}; --oc: {{k.oc}}; z-index: {{k.z}}">
+                  <span class="terr" style="background: radial-gradient(ellipse, {{k.oc}} 0%, {{k.oc2}} 45%, transparent 72%); animation-delay: {{k.d}}"></span>
+                  <span class="terrB"></span>
+                  <sc-if value="{{k.war}}" hint-placeholder-val="{{false}}">
+                    <span class="war"></span>
+                    <span class="warRing"></span>
+                    <span class="warRing" style="animation-delay: .7s"></span>
+                    <span class="spark" style="left: -20px; top: -10px"></span>
+                    <span class="spark" style="left: 14px; top: -4px; animation-delay: .6s"></span>
+                    <span class="spark" style="left: -2px; top: -16px; animation-delay: 1.2s"></span>
+                    <svg class="swords" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3 L14 13 M3 4 L4 3 L6 3.5 L15 12.5 L12.5 15 L3.5 6 Z" fill="#e8e2d8" stroke="#2a1a0a" stroke-width="1.2" stroke-linejoin="round"></path><path d="M20 3 L10 13 M21 4 L20 3 L18 3.5 L9 12.5 L11.5 15 L20.5 6 Z" fill="#e8e2d8" stroke="#2a1a0a" stroke-width="1.2" stroke-linejoin="round"></path><path d="M5 17 L8 14 L10 16 L7 19 Z M19 17 L16 14 L14 16 L17 19 Z" fill="#ff7a3a" stroke="#2a1a0a" stroke-width="1.2"></path></svg>
+                  </sc-if>
+                  <sc-if value="{{k.capt}}" hint-placeholder-val="{{false}}"><span class="captF"></span><span class="capt"></span></sc-if>
+                  <sc-if value="{{k.sel}}" hint-placeholder-val="{{false}}"><span class="mkSel"></span></sc-if>
+                  <span style="position: absolute; left: -14px; top: -5px; width: 28px; height: 10px; border-radius: 50%; background: rgba(0,0,0,.5)"></span>
+                  <svg width="52" height="66" viewBox="0 0 52 66" aria-hidden="true" style="position: absolute; left: -12px; top: -64px; overflow: visible">
+                    <ellipse cx="10" cy="63" rx="9" ry="3.5" fill="#6a4a2a" stroke="#2a1a0a" stroke-width="1.5"></ellipse>
+                    <line x1="10" y1="63" x2="10" y2="4" stroke="#2a1a0a" stroke-width="5" stroke-linecap="round"></line>
+                    <line x1="10" y1="63" x2="10" y2="4" stroke="#e8c27a" stroke-width="2.6" stroke-linecap="round"></line>
+                    <circle cx="10" cy="4" r="3.6" fill="#ffe07a" stroke="#2a1a0a" stroke-width="1.5"></circle>
+                    <path class="flagW" d="M12 7 L48 10 L40 21 L48 32 L12 30 Z" fill="{{k.oc}}" stroke="#2a1a0a" stroke-width="2" stroke-linejoin="round" style="animation-delay: {{k.d}}"></path>
+                    <path class="flagW" d="{{k.sym}}" transform="translate(19 10) scale(.66)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="animation-delay: {{k.d}}"></path>
+                  </svg>
+                  <div class="{{k.plCls}}" style="left: {{k.lx}}; top: -26px">
+                    <span class="t">{{k.title}}</span>
+                    <span class="o" style="color: {{k.otc}}">{{k.owner}}</span>
+                    <sc-if value="{{k.war}}" hint-placeholder-val="{{false}}"><span style="display: flex; align-items: center; gap: 4px; margin-top: 1px"><span class="wTag">GUERRA</span><span style="font-size: 10.5px; font-weight: 900; color: #ffcfb8; font-variant-numeric: tabular-nums">{{k.left}}</span></span></sc-if>
+                  </div>
+                  <button class="mkBtn" onClick="{{k.pick}}" aria-label="{{k.aria}}"></button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div class="mapHud">
+            <span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; background: rgba(14,10,7,.86); border: 1px solid #d9a441">
+              <span class="lil" style="font-size: 18px; color: #ffe07a">{{myTer}}</span>
+              <span style="font-size: 11.5px; font-weight: 900; line-height: 1.15">territórios seus<br><span style="color: #ffcfb8">{{warN}} em guerra agora</span></span>
+            </span>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i style="background: #c8322a; box-shadow: 0 0 6px #c8322a"></i>Sua guilda</span>
+            <span><i style="background: #ff7a3a; animation: warP 1s ease-in-out infinite"></i>Em guerra</span>
+            <span>Toque numa região</span>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== BATALHA GUILDA x GUILDA ===== -->
+    <sc-if value="{{tBat}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="score" style="--lc: {{L.c}}; --rc: {{Rr.c}}">
+          <div class="side">
+            <span class="sideH">
+              <span class="emb" style="--ec: {{L.c}}; width: 26px"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="{{L.c}}" stroke="#ffe9b0" stroke-width="2"></path><g class="sym"><path d="{{L.sym}}" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>
+              <span class="sideN">{{L.name}}</span>
+            </span>
+            <span class="q">
+              <sc-for list="{{qL}}" as="a" hint-placeholder-count="5"><span class="{{a.cls}}" title="{{a.name}}"><span class="kidle" style="filter: {{a.hue}}; animation-delay: {{a.kD}}"></span></span></sc-for>
+            </span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+            <sc-if value="{{isLive}}" hint-placeholder-val="{{true}}"><span class="live"><i></i>AO VIVO</span></sc-if>
+            <span class="bigS" role="status" aria-label="{{scoreAria}}"><b class="{{sLcls}}" style="color: #fff">{{sL}}</b><span style="color: #c9b9a2; font-size: .6em">x</span><b class="{{sRcls}}" style="color: #fff">{{sR}}</b></span>
+            <span style="font-size: 10px; font-weight: 900; color: #e8dccb; white-space: nowrap">{{batEra}}</span>
+          </div>
+          <div class="side r">
+            <span class="sideH">
+              <span class="emb" style="--ec: {{Rr.c}}; width: 26px"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="{{Rr.c}}" stroke="#ffe9b0" stroke-width="2"></path><g class="sym"><path d="{{Rr.sym}}" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>
+              <span class="sideN">{{Rr.name}}</span>
+            </span>
+            <span class="q">
+              <sc-for list="{{qR}}" as="a" hint-placeholder-count="5"><span class="{{a.cls}}" title="{{a.name}}"><span class="kidle" style="filter: {{a.hue}}; animation-delay: {{a.kD}}"></span></span></sc-for>
+            </span>
+          </div>
+        </div>
+
+        <div class="arena" role="img" aria-label="{{arenaAria}}">
+          <div class="ly sky2" style="top: 0; height: 60%; background-size: auto 100%"></div>
+          <div class="ly cld2" style="top: 4%; height: 24%; background-size: auto 100%; opacity: .8"></div>
+          <div class="ly far2" style="top: 22%; height: 42%; background-size: auto 100%"></div>
+          <div class="ly mid2" style="top: 17.5%; height: 50%; background-size: auto 100%"></div>
+          <div class="ly gnd2" style="top: 65.5%; height: 38%; background-size: auto 100%"></div>
+          <span class="duelTag">{{duelTxt}}</span>
+          <!-- fila: os próximos esperando atrás (pés no chão) -->
+          <sc-for list="{{waitL}}" as="w" hint-placeholder-count="2">
+            <div class="wait" style="left: {{w.x}}; filter: {{w.hue}}"><div class="kidle" style="animation-delay: {{w.kD}}"></div></div>
+          </sc-for>
+          <sc-for list="{{waitR}}" as="w" hint-placeholder-count="2">
+            <div class="wait" style="right: {{w.x}}; filter: {{w.hue}}"><div style="position: absolute; inset: 0; transform: scaleX(-1)"><div class="kidle" style="animation-delay: {{w.kD}}"></div></div></div>
+          </sc-for>
+          <span class="ped" style="left: calc(20% + 14px); --pc: {{L.c}}"></span>
+          <span class="ped" style="right: calc(20% + 14px); --pc: {{Rr.c}}"></span>
+          <sc-if value="{{fOn}}" hint-placeholder-val="{{true}}">
+            <div class="ftr L">
+              <div class="{{fL.wrap}}" style="position: absolute; inset: 0">
+                <div class="hue" style="filter: {{fL.hue}}"><div class="{{fL.fx}}" style="position: absolute; inset: 0"><div class="flip"><div class="{{fL.sp}}" style="position: absolute; inset: 0; animation-duration: {{atkDur}}"></div></div></div></div>
+              </div>
+            </div>
+            <div class="ftr R">
+              <div class="{{fR.wrap}}" style="position: absolute; inset: 0">
+                <div class="hue" style="filter: {{fR.hue}}"><div class="{{fR.fx}}" style="position: absolute; inset: 0"><div class="flip"><div class="{{fR.sp}}" style="position: absolute; inset: 0; animation-duration: {{atkDur}}"></div></div></div></div>
+              </div>
+            </div>
+            <div class="bhp L">
+              <span class="nm ol">{{fL.name}} · FC {{fL.fc}}</span>
+              <span class="hpBar"><span class="lag" style="width: {{fL.lag}}"></span><span class="hp" style="width: {{fL.hp}}; background: linear-gradient(180deg, #8ff09a, #2f8a38)"></span></span>
+            </div>
+            <div class="bhp R">
+              <span class="nm ol">{{fR.name}} · FC {{fR.fc}}</span>
+              <span class="hpBar"><span class="lag" style="width: {{fR.lag}}"></span><span class="hp" style="width: {{fR.hp}}; background: linear-gradient(180deg, #ff8a6a, #d8261a)"></span></span>
+            </div>
+          </sc-if>
+          <sc-if value="{{clashOn}}" hint-placeholder-val="{{false}}"><span class="{{clashCls}}"></span></sc-if>
+          <sc-for list="{{floats}}" as="f" hint-placeholder-count="2">
+            <span class="{{f.cls}}" style="left: {{f.x}}; top: {{f.y}}">{{f.t}}</span>
+          </sc-for>
+          <sc-if value="{{preOn}}" hint-placeholder-val="{{false}}"><span class="vs">VS</span></sc-if>
+        </div>
+
+        <div class="log" role="log" aria-live="polite">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffe07a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M4 3 L14 13 M20 3 L10 13 M5 17 L8 14 M19 17 L16 14"></path></svg>
+          <span>{{logTxt}}</span>
+        </div>
+        <div class="ctr">
+          <button class="ghost" onClick="{{toggleSpd}}" aria-pressed="{{spd2}}" aria-label="{{spdAria}}" style="flex: none; width: 60px; font-family: 'Lilita One', sans-serif; font-size: 18px">{{spdTxt}}</button>
+          <sc-if value="{{canStart}}" hint-placeholder-val="{{true}}"><button class="{{startCls}}" onClick="{{start}}" style="flex: 1">{{startTxt}}</button></sc-if>
+          <sc-if value="{{running}}" hint-placeholder-val="{{false}}"><button class="ghost" onClick="{{skip}}" style="flex: 1; min-height: 54px; font-size: 15px">Pular para o resultado</button></sc-if>
+          <button class="ghost" onClick="{{goMap}}" aria-label="Voltar ao mapa" style="flex: none; width: 54px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6 L9 3 L15 6 L21 3 V18 L15 21 L9 18 L3 21 Z M9 3 V18 M15 6 V21"></path></svg>
+          </button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== RANKING DE GUILDAS ===== -->
+    <sc-if value="{{tRank}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="seg" role="group" aria-label="Ordenar ranking">
+          <button aria-pressed="{{rkTer}}" onClick="{{byTer}}">Territórios</button>
+          <button aria-pressed="{{rkPow}}" onClick="{{byPow}}">Poder total</button>
+        </div>
+        <div class="bands" role="list" aria-label="Faixas de prêmio da temporada">
+          <sc-for list="{{bands}}" as="b" hint-placeholder-count="5">
+            <div class="{{b.cls}}" role="listitem" aria-label="{{b.aria}}" style="--bc: {{b.c}}; animation-delay: {{b.d}}">
+              <b>{{b.t}}</b>
+              <sc-if value="{{b.fox}}" hint-placeholder-val="{{true}}"><img class="fox" src="/_blob/e753821b8a7c7e196fc83974078f5131" alt="" style="animation-delay: {{b.d}}"></sc-if>
+              <sc-if value="{{b.noFox}}" hint-placeholder-val="{{false}}"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="width: 26px; height: 26px; object-fit: contain"></sc-if>
+              <span>{{b.l1}}</span>
+              <span style="color: #c9b9a2">{{b.l2}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span class="note" style="flex: none">Fragmentos do Prismático vão para cada membro da guilda. Faixa pela posição no fim da temporada.</span>
+        <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; scrollbar-width: none">
+          <sc-for list="{{gRows}}" as="r" hint-placeholder-count="5">
+            <div class="{{r.cls}}" style="animation-delay: {{r.d}}">
+              <span class="lil" style="font-size: 17px; color: {{r.rc}}; text-align: center; position: relative">{{r.rank}}<sc-if value="{{r.top}}" hint-placeholder-val="{{false}}"><svg class="crown" width="18" height="13" viewBox="0 0 24 17" aria-hidden="true" style="position: absolute; left: 6px; top: -11px"><path d="M2 15 L3.5 4 L8.5 9 L12 1 L15.5 9 L20.5 4 L22 15 Z" fill="#ffc94a" stroke="#6a3a08" stroke-width="1.3" stroke-linejoin="round"></path></svg></sc-if></span>
+              <span class="emb" style="--ec: {{r.c}}; width: 34px"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="{{r.c}}" stroke="#ffe9b0" stroke-width="1.8"></path><g class="sym" style="animation-delay: {{r.d}}"><path d="{{r.sym}}" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>
+              <span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.15; gap: 2px">
+                <span style="font-size: 13.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+                <span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; color: #c9b9a2; white-space: nowrap">Nv. {{r.lv}} · FC {{r.pow}}</span>
+              </span>
+              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+                <span class="flags"><sc-for list="{{r.flags}}" as="f" hint-placeholder-count="2"><i style="background: {{f.c}}; animation-delay: {{f.d}}"></i></sc-for></span>
+                <span class="lil" style="font-size: 14px; color: #ffe07a; white-space: nowrap">{{r.val}}</span>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+        <div class="pager">
+          <button class="ghost" onClick="{{prevPage}}" aria-label="Página anterior" style="padding: 0; width: 44px; color: {{prevC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+          <span style="min-width: 110px; text-align: center; font-size: 12px; font-weight: 900; color: #c9b9a2">{{pageTxt}}</span>
+          <button class="ghost" onClick="{{nextPage}}" aria-label="Próxima página" style="padding: 0; width: 44px; color: {{nextC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+        </div>
+        <button class="grow me" onClick="{{goMine}}" aria-label="{{meAria}}" style="text-align: left; color: #f6ecdf; min-height: 56px">
+          <span class="lil" style="font-size: 18px; color: #ffc94a; text-align: center">{{meRank}}</span>
+          <span class="emb" style="--ec: #c8322a; width: 34px"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="#c8322a" stroke="#ffe9b0" stroke-width="1.8"></path><g class="sym"><path d="M7 4 H17 M7 20 H17 M8 4 C8 9 12 10 12 12 C12 14 8 15 8 20 M16 4 C16 9 12 10 12 12 C12 14 16 15 16 20" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>
+          <span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+            <span style="font-size: 13.5px; font-weight: 900">Sua guilda · Guardiões do Tempo</span>
+            <span style="font-size: 11.5px; font-weight: 900; color: #7ef08a">{{meGap}}</span>
+          </span>
+          <span class="lil" style="font-size: 15px; color: #ffe07a; white-space: nowrap">{{meVal}}</span>
+        </button>
+      </div>
+    </sc-if>
+  </div></div>
+
+  <!-- ===== folha do território ===== -->
+  <sc-if value="{{cardOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeCard}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="{{c.title}}" style="--oc: {{c.oc}}">
+        <div class="shHead">
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.05">
+            <span style="font-size: 11px; font-weight: 900; color: #e8c27a; letter-spacing: .6px">TERRITÓRIO · ERA {{c.num}}</span>
+            <span class="lil ol" style="font-size: 25px; color: #fff">{{c.name}}</span>
+          </span>
+          <span style="padding: 3px 9px; border-radius: 9px; background: {{c.chipBg}}; color: {{c.chipC}}; font-size: 12px; font-weight: 900; white-space: nowrap">{{c.status}}</span>
+          <button class="ghost" onClick="{{closeCard}}" aria-label="Fechar" style="padding: 0; width: 44px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div class="own">
+          <span class="emb" style="--ec: {{c.oc}}; width: 46px"><svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="{{c.oc}}" stroke="#ffe9b0" stroke-width="1.6"></path><path d="M24 5 L42 11 V19 H6 V11 Z" fill="rgba(255,255,255,.18)"></path><g class="sym"><path d="{{c.sym}}" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2">
+            <span style="font-size: 11px; font-weight: 900; color: #c9b9a2">DONO</span>
+            <span style="font-size: 15px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.owner}}</span>
+            <span class="note">Nv. {{c.olv}} · FC total {{c.opow}} · {{c.since}}</span>
+          </span>
+        </div>
+        <span class="lil" style="font-size: 15px; color: #e8c27a">Bônus para os membros do dono</span>
+        <div class="bon">
+          <span><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>+{{c.gold}}%</b><em>ouro</em></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#8cc8ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6 C8 4 11 5 12 7 C13 5 16 4 20 6 V19 C16 17 13 18 12 20 C11 18 8 17 4 19 Z"></path></svg><b>+{{c.xp}}%</b><em>XP</em></span>
+          <span><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt=""><b>+{{c.drop}}%</b><em>drop</em></span>
+        </div>
+        <span class="note">Prêmio diário do dono: [QTD] brasões da guilda + Baú da guilda. Ao fim da temporada, cada território conta para o ranking.</span>
+        <sc-if value="{{c.war}}" hint-placeholder-val="{{false}}">
+          <div class="warBox">
+            <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; animation: swC .9s ease-in-out infinite"><path d="M4 3 L14 13 M3 4 L4 3 L6 3.5 L15 12.5 L12.5 15 L3.5 6 Z" fill="#e8e2d8" stroke="#2a1a0a" stroke-width="1.2"></path><path d="M21 4 L20 3 L18 3.5 L9 12.5 L11.5 15 L20.5 6 Z" fill="#e8e2d8" stroke="#2a1a0a" stroke-width="1.2"></path></svg>
+            <span style="flex: 1; min-width: 0; font-size: 13px; font-weight: 900; line-height: 1.25">{{c.warTxt}}</span>
+            <span class="lil" style="font-size: 16px; color: #ffcfb8; font-variant-numeric: tabular-nums">{{c.left}}</span>
+          </div>
+        </sc-if>
+        <span class="note" style="text-align: center">{{c.hint}}</span>
+        <button class="{{c.btnCls}}" onClick="{{c.go}}">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.btnIc}}"></path></svg>{{c.btn}}
+        </button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== resultado da batalha ===== -->
+  <sc-if value="{{resOn}}" hint-placeholder-val="{{false}}">
+    <div class="resBg">
+      <div class="res" role="dialog" aria-label="{{res.title}}">
+        <span class="rays"></span>
+        <sc-if value="{{res.win}}" hint-placeholder-val="{{true}}">
+          <span class="conf" style="left: 12%; background: #ffc94a"></span>
+          <span class="conf" style="left: 26%; background: #ff5a5a; animation-delay: .6s"></span>
+          <span class="conf" style="left: 40%; background: #5fd068; animation-delay: 1.3s"></span>
+          <span class="conf" style="left: 55%; background: #4aa3ff; animation-delay: .3s"></span>
+          <span class="conf" style="left: 70%; background: #fff3c4; animation-delay: 1.8s"></span>
+          <span class="conf" style="left: 84%; background: #b07cff; animation-delay: 1s"></span>
+        </sc-if>
+        <span class="resT" style="color: {{res.tc}}; text-shadow: 0 4px 0 {{res.ts}}, 0 0 18px {{res.tg}}">{{res.title}}</span>
+        <span class="lil" style="position: relative; font-size: 22px">{{res.score}}</span>
+        <span style="position: relative; font-size: 14px; font-weight: 900; line-height: 1.3">{{res.line}}</span>
+        <div class="swap">
+          <span class="swapC" style="--from: {{res.from}}; --to: {{res.to}}"></span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; text-align: left; line-height: 1.2">
+            <span class="lil" style="font-size: 17px">{{res.era}}</span>
+            <span style="font-size: 12px; font-weight: 900; color: {{res.ownC}}">{{res.own}}</span>
+          </span>
+        </div>
+        <span class="note" style="position: relative">MVP: {{res.mvp}} · dano total {{res.dmg}}</span>
+        <button class="gold pulse" onClick="{{resMap}}" style="position: relative">Ver no mapa</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05',
+  hurt: '/_blob/8ebbcd838ede94b3a5b1ecc55e95d1db', ult: '/_blob/5d4b1eda7d276cb9adda5ac1a6aa0543', ready: '/_blob/8863b3ab71afe08aef6c7aa26d104efc',
+  legend: '/_blob/266edcaffe0fe5d99485bbe84d2d6c05', portal: '/_blob/af2eace71811af794b916b2e691a9489', swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d'
+};
+var SYM = [
+  'M7 4 H17 M7 20 H17 M8 4 C8 9 12 10 12 12 C12 14 8 15 8 20 M16 4 C16 9 12 10 12 12 C12 14 16 15 16 20',
+  'M12 2 L14 5 V15 H10 V5 Z M6 15 H18 M12 15 V21',
+  'M4 17 L5 7 L9 11 L12 5 L15 11 L19 7 L20 17 Z',
+  'M12 3 C15 8 18 10 18 14 A6 6 0 0 1 6 14 C6 10 9 9 9 6 C10 8 11 9 12 9 Z',
+  'M12 3 L14.6 9 L21 9.5 L16 13.6 L17.6 20 L12 16.5 L6.4 20 L8 13.6 L3 9.5 L9.4 9 Z',
+  'M12 3 L19 13 H15 L18 18 H6 L9 13 H5 Z M12 18 V22'
+];
+// guildas do torneio (cor da bandeira + giro de cor do Kael)
+var GU = [
+  { id: 0, name: 'Guardiões do Tempo', tag: 'GDT', c: '#c8322a', hue: 'none', sym: SYM[0], lv: 7, pow: 61.2e6, me: true },
+  { id: 1, name: 'Lobos de Ferro', tag: 'LDF', c: '#2f86e0', hue: 'hue-rotate(200deg) saturate(1.2)', sym: SYM[1], lv: 9, pow: 66.4e6 },
+  { id: 2, name: 'Ordem da Aurora', tag: 'ODA', c: '#e8a21a', hue: 'hue-rotate(40deg) saturate(1.3)', sym: SYM[4], lv: 8, pow: 48.9e6 },
+  { id: 3, name: 'Clã do Trovão', tag: 'CDT', c: '#8a52e0', hue: 'hue-rotate(255deg)', sym: SYM[2], lv: 10, pow: 74.0e6 },
+  { id: 4, name: 'Filhos do Sol', tag: 'FDS', c: '#3fae4a', hue: 'hue-rotate(110deg)', sym: SYM[3], lv: 6, pow: 31.5e6 },
+  { id: 5, name: 'Corvos Rúnicos', tag: 'CRR', c: '#1aa8a8', hue: 'hue-rotate(165deg)', sym: SYM[5], lv: 7, pow: 44.7e6 }
+];
+var NAMES = {
+  0: ['Rex_Brasa', 'LunaFerro', 'Mari Lâmina', 'Você · Kael', 'Caio Trovão'],
+  1: ['Lobo Alfa', 'Duda Gelo', 'Enzo Aço', 'Igor Lobo', 'Malu Escudo'],
+  2: ['Sofi Raio', 'Theo Aurora', 'Bel Estrela', 'Ana Flecha', 'Tito'],
+  3: ['Trovão Rei', 'Max Brado', 'Vini Mago', 'Nico Tora', 'Zoe'],
+  4: ['Solaris', 'Alice Fogo', 'Bento', 'Cecí', 'Ravi'],
+  5: ['Corvo Negro', 'Isa Prata', 'Lívia Mar', 'Juca', 'Helô']
+};
+var TOPFC = {
+  0: [5.9e6, 5.1e6, 4.6e6, 152400 * 30, 3.9e6], 1: [6.4e6, 5.0e6, 4.4e6, 4.1e6, 3.6e6], 2: [4.8e6, 4.0e6, 3.6e6, 3.2e6, 3.0e6],
+  3: [7.2e6, 5.8e6, 5.0e6, 4.4e6, 4.0e6], 4: [3.4e6, 3.0e6, 2.6e6, 2.3e6, 2.0e6], 5: [4.5e6, 3.9e6, 3.4e6, 3.0e6, 2.8e6]
+};
+// 9 eras: posição no mapa-múndi (arte 1536x2752, igual ao MapaEras) e bônus de protótipo
+var ERAS = [
+  { n: 'Pré-História', o: [670, 2610], side: 'r', b: [3, 2, 1] },
+  { n: 'Antiguidade', o: [522, 2090], side: 'r', b: [4, 2, 1] },
+  { n: 'Medieval', o: [860, 1790], side: 'l', b: [4, 3, 2] },
+  { n: 'Pólvora', o: [585, 1590], side: 'r', b: [5, 3, 2] },
+  { n: 'Industrial', o: [720, 1420], side: 'l', b: [5, 4, 2] },
+  { n: 'Moderna', o: [730, 1160], side: 'r', b: [6, 4, 3] },
+  { n: 'Futurista', o: [790, 790], side: 'l', b: [6, 5, 3] },
+  { n: 'Submundo', o: [915, 590], side: 'l', b: [7, 5, 4] },
+  { n: 'Celestial', o: [770, 330], side: 'r', b: [8, 6, 5] }
+];
+var OWN0 = [4, 2, 0, 0, 1, 1, 3, 5, 3];
+var NOW0 = Date.now();
+// guerras em andamento: era -> guilda atacante, fim
+var WARS0 = { 3: { atk: 1, end: NOW0 + (2 * 3600 + 14 * 60 + 33) * 1000 }, 4: { atk: 0, end: NOW0 + (5 * 3600 + 2 * 60) * 1000 }, 7: { atk: 3, end: NOW0 + (47 * 60 + 10) * 1000 } };
+var SEASON = 12;
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function dur(L) { if (L <= 0) return '00:00:00'; var d = Math.floor(L / 86400), h = Math.floor(L % 86400 / 3600), m = Math.floor(L % 3600 / 60), s = L % 60; return (d > 0 ? d + 'd ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s); }
+function fmtFC(n) {
+  function f(v, u) { var r = v < 10 ? (Math.round(v * 10) / 10) : Math.round(v); return String(r).replace('.', ',') + ' ' + u; }
+  if (n >= 1e12) return f(n / 1e12, 'tri');
+  if (n >= 1e9) return f(n / 1e9, 'bi');
+  if (n >= 1e6) return f(n / 1e6, 'mi');
+  if (n >= 1e3) return f(n / 1e3, 'mil');
+  return String(Math.round(n));
+}
+function nextSunday(now) { var d = new Date(now); d.setHours(21, 0, 0, 0); var add = (7 - d.getDay()) % 7; if (add === 0 && d.getTime() <= now) add = 7; d.setDate(d.getDate() + add); return d.getTime(); }
+function mx(x) { return ((x - 200) / 1136 * 100).toFixed(2) + '%'; }
+function my(y) { return (y / 2752 * 100).toFixed(2) + '%'; }
+function team(g) { return NAMES[g].map(function (n, i) { return { name: n, fc: TOPFC[g][i], hue: GU[g].hue, me: n.indexOf('Você') === 0 }; }).sort(function (a, b) { return b.fc - a.fc; }); }
+// ranking: as 6 do mapa + outras guildas sem território
+var OTHER = ['Raposas de Cristal', 'Lâminas Livres', 'Dragões de Bronze', 'Guarda Celeste', 'Era de Ouro', 'Maré Vermelha', 'Os Imortais', 'Filhos da Névoa', 'Punho de Pedra', 'Estrela Cadente', 'Coroa Partida', 'Vento Norte', 'Chama Eterna', 'Escudo Real'];
+var OC = ['#d86aff', '#6a8aa8', '#c98a4a', '#8cc8ff', '#ffd24a', '#e8402a', '#9a9a9a', '#5ad8e6', '#a87a5a', '#ff8ad8', '#b0a040', '#4ac0a0', '#ff7a2a', '#7a8ae0'];
+var RO = rng(5), OTHERS = OTHER.map(function (n, i) { return { id: 10 + i, name: n, c: OC[i], sym: SYM[i % 6], lv: Math.round(3 + RO() * 6), pow: Math.round((8 + RO() * 40) * 1e5) * 100 }; });
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = { tab: 0, now: Date.now(), sel: -1, own: OWN0.slice(), wars: Object.assign({}, WARS0), capt: -1, toast: '', tk: 0,
+      bt: null, rk: 0, page: 0, spd: 1, res: null };
+    this.timers = [];
+    this.setupBattle(3, true);
+  }
+  componentDidMount() { var self = this; this.iv = setInterval(function () { self.setState({ now: Date.now() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.bi); this.timers.forEach(function (t) { clearTimeout(t); }); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this, k = this.state.tk + 1; this.setState({ toast: t, tk: k }); this.later(function () { if (self.state.tk === k) self.setState({ toast: '' }); }, 2500); }
+  setupBattle(era, init) {
+    var own = (this.state && this.state.own) || OWN0, wars = (this.state && this.state.wars) || WARS0;
+    var owner = own[era], defend = owner === 0;
+    var foe = defend ? (wars[era] ? wars[era].atk : 1) : owner;
+    var L = team(0).map(function (f) { return Object.assign({ hp: 100, lag: 100, ko: false }, f); });
+    var Rt = team(foe).map(function (f) { return Object.assign({ hp: 100, lag: 100, ko: false }, f); });
+    var bt = { era: era, foe: foe, defend: defend, L: L, R: Rt, li: 0, ri: 0, turn: 0, phase: 'pre', sL: 0, sR: 0, hitK: 0, atk: '', floats: [], log: 'Os 5 melhores de cada guilda entram em fila. Quem vence o duelo continua com a vida que sobrou.',
+      walkL: false, walkR: false, koSide: '', dmgL: 0, dmgR: 0, best: {} };
+    if (init) this.state.bt = bt; else this.setState({ bt: bt, res: null });
+  }
+  stepBattle() {
+    var s = this.state, bt = Object.assign({}, s.bt), self = this;
+    if (bt.phase !== 'run') return;
+    if (bt.koSide) {
+      // entra o próximo da fila
+      var side = bt.koSide; bt.koSide = '';
+      if (side === 'L') { bt.li++; bt.walkL = true; } else { bt.ri++; bt.walkR = true; }
+      if (bt.li >= 5 || bt.ri >= 5) { this.finish(bt); return; }
+      var nx = side === 'L' ? bt.L[bt.li] : bt.R[bt.ri];
+      bt.log = nx.name + ' entra no duelo!'; bt.atk = ''; bt.floats = [];
+      this.setState({ bt: bt });
+      return;
+    }
+    bt.walkL = false; bt.walkR = false;
+    var leftAtk = bt.turn % 2 === 0;
+    var A = leftAtk ? bt.L[bt.li] : bt.R[bt.ri], D = leftAtk ? bt.R[bt.ri] : bt.L[bt.li];
+    var crit = Math.random() < 0.18;
+    var dmgP = (A.fc / (A.fc + D.fc)) * (22 + Math.random() * 14) * (crit ? 1.8 : 1);
+    var nd = Object.assign({}, D, { hp: Math.max(0, D.hp - dmgP) });
+    var dmgAbs = dmgP / 100 * D.fc * 2;
+    if (leftAtk) { bt.R = bt.R.slice(); bt.R[bt.ri] = nd; bt.dmgL += dmgAbs; } else { bt.L = bt.L.slice(); bt.L[bt.li] = nd; bt.dmgR += dmgAbs; }
+    bt.best[A.name] = (bt.best[A.name] || 0) + dmgAbs;
+    bt.atk = leftAtk ? 'L' : 'R'; bt.hitK++; bt.turn++;
+    bt.floats = [{ cls: crit ? 'dmg cr' : 'dmg', x: leftAtk ? (62 + Math.random() * 10) + '%' : (18 + Math.random() * 10) + '%', y: (30 + Math.random() * 14) + '%', t: (crit ? 'CRÍTICO ' : '') + fmtFC(dmgAbs) }];
+    this.sfx(crit ? SND.ult : SND.hit, 0.5);
+    if (nd.hp <= 0) {
+      nd.ko = true;
+      if (leftAtk) bt.sL++; else bt.sR++;
+      bt.koSide = leftAtk ? 'R' : 'L';
+      bt.log = A.name + ' derrotou ' + D.name + '!';
+      this.sfx(SND.hurt, 0.6);
+      var lastL = leftAtk ? false : bt.li >= 4, lastR = leftAtk ? bt.ri >= 4 : false;
+      if (lastL || lastR) { this.setState({ bt: bt }); this.later(function () { self.finish(self.state.bt); }, 900 / s.spd); return; }
+    } else {
+      bt.log = A.name + (crit ? ' acerta um CRÍTICO em ' : ' golpeia ') + D.name;
+    }
+    this.setState({ bt: bt });
+    this.later(function () {
+      var b2 = Object.assign({}, self.state.bt);
+      b2.L = b2.L.map(function (f) { return Object.assign({}, f, { lag: f.hp }); });
+      b2.R = b2.R.map(function (f) { return Object.assign({}, f, { lag: f.hp }); });
+      self.setState({ bt: b2 });
+    }, 300 / s.spd);
+  }
+  run() {
+    var self = this; clearInterval(this.bi);
+    this.bi = setInterval(function () { self.stepBattle(); }, 800 / this.state.spd);
+  }
+  finish(bt) {
+    clearInterval(this.bi);
+    if (bt.phase === 'done') return;
+    var b = Object.assign({}, bt, { phase: 'done', atk: '', floats: [] });
+    var win = b.ri >= 5 || (b.R.every(function (f) { return f.ko; }));
+    var era = b.era, own = this.state.own.slice(), wars = Object.assign({}, this.state.wars);
+    var before = own[era];
+    if (win && !b.defend) own[era] = 0;
+    if (!win && b.defend) own[era] = b.foe;
+    delete wars[era];
+    var mvp = '', mv = -1; Object.keys(b.best).forEach(function (k) { if (b.best[k] > mv) { mv = b.best[k]; mvp = k; } });
+    var res = { win: win, era: ERAS[era].n, from: GU[before].c, to: GU[own[era]].c, mvp: mvp, dmg: fmtFC(b.dmgL),
+      title: win ? (b.defend ? 'DEFENDIDO!' : 'VITÓRIA!') : 'DERROTA',
+      score: GU[0].tag + ' ' + b.sL + ' x ' + b.sR + ' ' + GU[b.foe].tag,
+      line: win ? (b.defend ? ERAS[era].n + ' continua com a sua guilda.' : ERAS[era].n + ' agora é da sua guilda!') : (b.defend ? GU[b.foe].name + ' tomou ' + ERAS[era].n + '.' : GU[b.foe].name + ' segurou ' + ERAS[era].n + '. Tente na próxima guerra.'),
+      own: 'Dono: ' + GU[own[era]].name, ownC: GU[own[era]].c };
+    this.sfx(win ? SND.legend : SND.hurt, 0.8);
+    this.setState({ bt: b, own: own, wars: wars, res: res });
+  }
+  renderVals() {
+    var s = this.state, self = this, now = s.now;
+    var tap = function () { self.sfx(SND.tap); };
+    var seasonLeft = dur(Math.floor((nextSunday(now) - now) / 1000));
+    var warKeys = Object.keys(s.wars);
+    var TABS = [
+      { label: 'Mapa', ic: 'M3 6 L9 3 L15 6 L21 3 V18 L15 21 L9 18 L3 21 Z M9 3 V18 M15 6 V21', dot: warKeys.length },
+      { label: 'Batalha', ic: 'M4 3 L14 13 M20 3 L10 13 M5 17 L8 14 M19 17 L16 14 M3 21 L6 18 M21 21 L18 18' },
+      { label: 'Ranking', ic: 'M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z' }
+    ];
+    var tabs = TABS.map(function (t, i) { return { label: t.label, ic: t.ic, sel: s.tab === i ? 'true' : 'false', hasDot: !!t.dot, dot: t.dot || '', pick: function () { self.sfx(SND.tap); self.setState({ tab: i, sel: -1 }); } }; });
+
+    // ---------- mapa ----------
+    var terrs = ERAS.map(function (E, i) {
+      var o = GU[s.own[i]], w = s.wars[i], mine = s.own[i] === 0;
+      return { x: mx(E.o[0]), y: my(E.o[1]), oc: o.c, oc2: o.c + '66', sym: o.sym, d: (i * 0.27) + 's', z: s.sel === i ? 6 : (w ? 4 : 3),
+        war: !!w, capt: s.capt === i, sel: s.sel === i, lx: E.side === 'r' ? '30px' : '-154px',
+        plCls: 'plateM' + (mine ? ' mine' : ''), title: E.n, owner: (mine ? 'Sua · ' : '') + o.name, otc: mine ? '#ffd84a' : '#e8dccb',
+        left: w ? dur(Math.floor((w.end - now) / 1000)) : '',
+        aria: 'Território ' + E.n + ', dono ' + o.name + (w ? ', em guerra contra ' + GU[w.atk === s.own[i] ? 0 : w.atk].name : '') + '. Abrir detalhes',
+        pick: function () { self.sfx(SND.tap); self.setState({ sel: i, capt: -1 }); } };
+    });
+    function L2(arr, f) { return arr.map(f); }
+    var lava = L2([[420, 650, 330, 120], [610, 700, 200, 70], [360, 2410, 110, 60], [330, 2500, 90, 120]], function (p, n) { return { x: mx(p[0] - p[2] * .65), y: my(p[1] - p[3] * .65), w: (p[2] * 1.3 / 1136 * 100).toFixed(1) + '%', h: (p[3] * 1.3 / 2752 * 100).toFixed(1) + '%', d: (n * 0.3) + 's' }; });
+    var waves = L2([[1300, 1180], [1230, 1520], [1350, 2480], [1250, 2600], [760, 2140], [300, 1650]], function (p, n) { return { x: mx(p[0]), y: my(p[1]), d: (n * 0.53) + 's' }; });
+    var glints = L2([[1260, 1450], [1200, 1700], [1300, 2650], [800, 2120], [470, 1010], [850, 1950], [700, 200]], function (p, n) { return { x: mx(p[0]), y: my(p[1]), d: (n * 0.47) + 's' }; });
+    var myTer = s.own.filter(function (o) { return o === 0; }).length;
+
+    // folha do território
+    var c = {}, i = s.sel;
+    if (i >= 0) {
+      var E = ERAS[i], O = GU[s.own[i]], W = s.wars[i], mine = s.own[i] === 0;
+      var foe = W ? (mine ? GU[W.atk] : (W.atk === 0 ? O : GU[W.atk])) : null;
+      c = { title: 'Território ' + E.n, num: i, name: E.n, oc: O.c, sym: O.sym, owner: O.name + (mine ? ' (sua)' : ''), olv: O.lv, opow: fmtFC(O.pow), since: 'dono há ' + (2 + i % 4) + ' dias',
+        gold: E.b[0], xp: E.b[1], drop: E.b[2], war: !!W,
+        status: W ? 'Em guerra' : (mine ? 'Sua' : 'Livre p/ atacar'), chipBg: W ? '#ff5a2a' : (mine ? '#ffc94a' : '#33271d'), chipC: W ? '#fff' : (mine ? '#2a1403' : '#e8dccb'),
+        warTxt: W ? (mine ? GU[W.atk].name + ' está atacando! Defenda até o fim da contagem.' : (W.atk === 0 ? 'Sua guilda está atacando ' + O.name + '.' : GU[W.atk].name + ' ataca ' + O.name + '.')) : '',
+        left: W ? dur(Math.floor((W.end - now) / 1000)) : '',
+        hint: mine ? 'Os 5 melhores da guilda defendem em duelos automáticos.' : 'Os 5 melhores da guilda atacam em duelos automáticos. Vencer muda a cor do território.',
+        btn: mine ? 'Defender' : 'Atacar', btnCls: mine ? 'gold blue pulse' : 'gold red pulse',
+        btnIc: mine ? 'M12 3 L20 6 V12 C20 17 16 20 12 21 C8 20 4 17 4 12 V6 Z' : 'M4 3 L14 13 M20 3 L10 13 M5 17 L8 14 M19 17 L16 14',
+        go: function () { self.sfx(SND.portal, 0.7); clearInterval(self.bi); self.setupBattle(i, false); self.setState({ sel: -1, tab: 1 }); } };
+    }
+
+    // ---------- batalha ----------
+    var bt = s.bt, F = GU[0], Fo = GU[bt.foe];
+    function qList(arr, idx) { return arr.map(function (f, j) { return { name: f.name, hue: f.hue, kD: (-j * 0.21) + 's', cls: 'qa' + (f.ko ? ' ko' : (j === idx && bt.phase !== 'done' ? ' cur' : '')) }; }); }
+    var li = Math.min(bt.li, 4), ri = Math.min(bt.ri, 4), fl = bt.L[li], fr = bt.R[ri];
+    var koL = fl.ko && bt.koSide === 'L', koR = fr.ko && bt.koSide === 'R';
+    var hitL = bt.atk === 'R', hitR = bt.atk === 'L';
+    var fL = { name: fl.name, fc: fmtFC(fl.fc), hue: fl.hue, hp: fl.hp + '%', lag: fl.lag + '%',
+      wrap: koL ? 'koOut' : (bt.walkL ? 'walkL' : ''), fx: hitL ? (bt.hitK % 2 ? 'hitA' : 'hitB') : '', sp: bt.walkL ? 'krun' : (bt.atk === 'L' ? 'kaelatk' : 'kidle') };
+    var fR = { name: fr.name, fc: fmtFC(fr.fc), hue: fr.hue, hp: fr.hp + '%', lag: fr.lag + '%',
+      wrap: koR ? 'koOut' : (bt.walkR ? 'walkR' : ''), fx: hitR ? (bt.hitK % 2 ? 'hitA' : 'hitB') : '', sp: bt.walkR ? 'krun' : (bt.atk === 'R' ? 'kaelatk' : 'kidle') };
+    var waitL = bt.L.slice(li + 1, li + 3).map(function (f, j) { return { x: (11 - j * 9) + '%', hue: f.hue, kD: (-j * 0.4) + 's' }; });
+    var waitR = bt.R.slice(ri + 1, ri + 3).map(function (f, j) { return { x: (11 - j * 9) + '%', hue: f.hue, kD: (-j * 0.4 - 0.2) + 's' }; });
+    var running = bt.phase === 'run';
+    var duelN = Math.min(9, bt.li + bt.ri + 1);
+
+    // ---------- ranking ----------
+    var all = GU.map(function (g) { return { id: g.id, name: g.name, c: g.c, sym: g.sym, lv: g.lv, pow: g.pow, me: !!g.me, ter: s.own.filter(function (o) { return o === g.id; }).length }; }).concat(OTHERS.map(function (g) { return Object.assign({ ter: 0 }, g); }));
+    all.sort(s.rk === 0 ? function (a, b) { return (b.ter - a.ter) || (b.pow - a.pow); } : function (a, b) { return b.pow - a.pow; });
+    var myIdx = 0; all.forEach(function (g, k) { if (g.me) myIdx = k; });
+    var PER = 5, pages = Math.ceil(all.length / PER), page = Math.min(s.page, pages - 1);
+    var gRows = all.slice(page * PER, page * PER + PER).map(function (g, j) {
+      var rk = page * PER + j;
+      var flags = []; for (var t = 0; t < g.ter; t++) flags.push({ c: g.c, d: (t * 0.2) + 's' });
+      return { rank: rk + 1, top: rk === 0, rc: rk === 0 ? '#ffc94a' : (rk === 1 ? '#e8e2d8' : (rk === 2 ? '#e8a26a' : '#c9b9a2')), name: g.name, c: g.c, sym: g.sym, lv: g.lv, pow: fmtFC(g.pow),
+        flags: flags, val: s.rk === 0 ? g.ter + (g.ter === 1 ? ' território' : ' territórios') : fmtFC(g.pow), cls: 'grow' + (g.me ? ' me' : ''), d: (j * 0.05) + 's' };
+    });
+    var BANDS = [{ t: '1º', c: '#ffc94a', l1: '[QTD] frag.', l2: 'Prismático', fox: true, lo: 0, hi: 0 },
+      { t: '2º-3º', c: '#e8e2d8', l1: '[QTD] frag.', l2: 'Prismático', fox: true, lo: 1, hi: 2 },
+      { t: '4º-10º', c: '#e8a26a', l1: '[QTD] frag.', l2: '+ brasões', fox: true, lo: 3, hi: 9 },
+      { t: '11º-50º', c: '#4aa3ff', l1: 'Baú épico', l2: '+ brasões', fox: false, lo: 10, hi: 49 },
+      { t: 'Todas', c: '#8a7a68', l1: 'Baú', l2: 'participação', fox: false, lo: 50, hi: 9999 }];
+    var bands = BANDS.map(function (B, k) { var my2 = myIdx >= B.lo && myIdx <= B.hi; return { t: B.t, c: B.c, l1: B.l1, l2: B.l2, fox: B.fox, noFox: !B.fox, d: (k * 0.06) + 's', cls: 'band' + (my2 ? ' my' : ''),
+      aria: 'Posição ' + B.t + ': ' + B.l1 + ' ' + B.l2 + (my2 ? ', faixa atual da sua guilda' : '') }; });
+    var me = all[myIdx], above = myIdx > 0 ? all[myIdx - 1] : null;
+
+    return {
+      tap: tap, hasToast: !!s.toast, toast: s.toast,
+      season: SEASON, seasonLeft: seasonLeft, seasonAria: 'Temporada ' + SEASON + ' termina em ' + seasonLeft,
+      tabs: tabs, tMap: s.tab === 0, tBat: s.tab === 1, tRank: s.tab === 2,
+      // mapa
+      terrs: terrs, lava: lava, waves: waves, glints: glints, myTer: myTer, warN: warKeys.length,
+      cardOn: i >= 0, c: c, closeCard: function () { self.sfx(SND.tap); self.setState({ sel: -1 }); },
+      // batalha
+      L: F, Rr: Fo, qL: qList(bt.L, li), qR: qList(bt.R, ri), sL: bt.sL, sR: bt.sR,
+      sLcls: bt.koSide === 'R' ? 'bump' : '', sRcls: bt.koSide === 'L' ? 'bump' : '',
+      scoreAria: 'Placar: ' + F.name + ' ' + bt.sL + ', ' + Fo.name + ' ' + bt.sR,
+      isLive: running, batEra: (bt.defend ? 'Defesa · ' : 'Ataque · ') + ERAS[bt.era].n,
+      arenaAria: 'Duelo: ' + fl.name + ' contra ' + fr.name, duelTxt: bt.phase === 'pre' ? 'Os 5 melhores de cada lado' : 'Duelo ' + duelN,
+      fOn: true, fL: fL, fR: fR, waitL: waitL, waitR: waitR, atkDur: (0.75 / s.spd) + 's', floats: bt.floats,
+      clashOn: !!bt.atk, clashCls: bt.hitK % 2 ? 'clash' : 'clash clash2', preOn: bt.phase === 'pre',
+      logTxt: bt.log,
+      spdTxt: 'x' + s.spd, spd2: s.spd === 2 ? 'true' : 'false', spdAria: 'Velocidade x' + s.spd + '. Trocar',
+      toggleSpd: function () { self.sfx(SND.tap); var n = s.spd === 1 ? 2 : 1; self.setState({ spd: n }); if (self.state.bt.phase === 'run') { var me2 = self; clearInterval(me2.bi); me2.bi = setInterval(function () { me2.stepBattle(); }, 800 / n); } },
+      canStart: !running, running: running,
+      startTxt: bt.phase === 'done' ? 'Revanche (prévia)' : (bt.defend ? 'Começar a defesa' : 'Começar o ataque'), startCls: bt.defend ? 'gold blue pulse' : 'gold red pulse',
+      start: function () {
+        if (self.state.bt.phase === 'done') { self.sfx(SND.tap); self.setupBattle(bt.era, false); return; }
+        self.sfx(SND.ready, 0.7); var b = Object.assign({}, self.state.bt, { phase: 'run', log: 'Começou! ' + fl.name + ' contra ' + fr.name + '.' }); self.setState({ bt: b }); self.run();
+      },
+      skip: function () {
+        self.sfx(SND.tap); clearInterval(self.bi);
+        var b = Object.assign({}, self.state.bt); b.L = b.L.slice(); b.R = b.R.slice(); b.koSide = '';
+        var guard = 0;
+        while (b.li < 5 && b.ri < 5 && guard++ < 400) {
+          var A = b.L[b.li], D = b.R[b.ri];
+          var pL = A.fc / (A.fc + D.fc);
+          var nl = Object.assign({}, A), nr = Object.assign({}, D);
+          nr.hp -= pL * 30; nl.hp -= (1 - pL) * 30 * (0.8 + Math.random() * 0.4);
+          var dm = pL * 30 / 100 * D.fc * 2; b.dmgL += dm; b.best[A.name] = (b.best[A.name] || 0) + dm;
+          if (nr.hp <= 0) { nr.hp = 0; nr.ko = true; b.sL++; b.R[b.ri] = nr; b.L[b.li] = nl; b.ri++; continue; }
+          if (nl.hp <= 0) { nl.hp = 0; nl.ko = true; b.sR++; b.L[b.li] = nl; b.R[b.ri] = nr; b.li++; continue; }
+          b.L[b.li] = nl; b.R[b.ri] = nr;
+        }
+        self.finish(b);
+      },
+      goMap: function () { self.sfx(SND.tap); self.setState({ tab: 0 }); },
+      resOn: !!s.res, res: s.res || {},
+      resMap: function () {
+        var era = self.state.bt.era; self.sfx(SND.claim); self.setState({ res: null, tab: 0, capt: era });
+        self.later(function () { if (self.state.capt === era) self.setState({ capt: -1 }); }, 3800);
+      },
+      // ranking
+      rkTer: s.rk === 0 ? 'true' : 'false', rkPow: s.rk === 1 ? 'true' : 'false',
+      byTer: function () { self.sfx(SND.tap); self.setState({ rk: 0, page: 0 }); }, byPow: function () { self.sfx(SND.tap); self.setState({ rk: 1, page: 0 }); },
+      bands: bands, gRows: gRows, pageTxt: 'Página ' + (page + 1) + '/' + pages,
+      prevC: page > 0 ? '#f6ecdf' : '#5a4a3a', nextC: page < pages - 1 ? '#f6ecdf' : '#5a4a3a',
+      prevPage: function () { self.sfx(SND.tap); self.setState({ page: Math.max(0, page - 1) }); },
+      nextPage: function () { self.sfx(SND.tap); self.setState({ page: Math.min(pages - 1, page + 1) }); },
+      meRank: (myIdx + 1) + 'º', meVal: s.rk === 0 ? me.ter + ' terr.' : fmtFC(me.pow),
+      meGap: above ? (s.rk === 0 ? (above.ter > me.ter ? 'Faltam ' + (above.ter - me.ter) + ' território(s) para passar ' + above.name : 'Empate em territórios, desempate pelo poder') : 'Faltam ' + fmtFC(above.pow - me.pow) + ' de poder para passar ' + above.name) : 'Você lidera a temporada!',
+      meAria: 'Sua guilda está em ' + (myIdx + 1) + 'º. Ir para a página',
+      goMine: function () { self.sfx(SND.tap); self.setState({ page: Math.floor(myIdx / PER) }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -52,4 +52,17 @@ t('RETORNO: dias perdidos viram XP descansada (meio dia de abates por dia, até 
 });
 
 t('save antigo e lixo',()=>{ const S={sys:{clock:{max:'x',rested:-3,lastDay:5}}}; K.ensure(S); assert.deepStrictEqual([S.sys.clock.max,S.sys.clock.rested,S.sys.clock.lastDay],[0,0,'']); assert.throws(()=>K.ensure(null)); });
+t('FUSO e SEMANA: null = aparelho (igual a hoje); -180 = Brasília; semana começa na segunda; chave = data da segunda (igual ao Sys.fc.weekKey)',()=>{
+  K.DATA.tzOffsetMin=null; const loc=new Date(2026,10,12,10).getTime(); assert.strictEqual(K.dayKey(loc),'2026-11-12');
+  const F=require('../../js/sys/fc.js'); if(F.weekKey) assert.strictEqual(K.weekKey(loc),F.weekKey(loc),'aparelho: igual ao fc.weekKey');
+  K.DATA.tzOffsetMin=-180;
+  assert.strictEqual(K.dayKey(Date.UTC(2026,10,13,2,59)),'2026-11-12','23:59 em Brasília ainda é dia 12');
+  assert.strictEqual(K.dayKey(Date.UTC(2026,10,13,3,0)),'2026-11-13','meia-noite de Brasília vira o dia');
+  assert.strictEqual(K.weekKey(Date.UTC(2026,10,12,15)),'2026-11-09','quinta 12/11 → semana da segunda 09/11');
+  assert.strictEqual(K.weekStart(Date.UTC(2026,10,12,15)),Date.UTC(2026,10,9,3),'segunda 00:00 de Brasília');
+  assert.strictEqual(K.weekKey(Date.UTC(2026,10,16,2,59)),'2026-11-09','domingo 23:59 BRT: ainda a semana anterior');
+  assert.strictEqual(K.weekKey(Date.UTC(2026,10,16,3,0)),'2026-11-16','segunda 00:00 BRT: semana nova');
+  assert.strictEqual(K.weekKey(Date.UTC(2027,0,1,12)),'2026-12-28','virada de ano');
+  K.DATA.tzOffsetMin=null;
+});
 console.log(`\nclock: ${n} testes ok`);

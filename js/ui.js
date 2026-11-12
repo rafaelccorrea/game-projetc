@@ -11,12 +11,7 @@ function pager(key,pages){ const p=PG[key]; return pages<=1?'':`<div class="page
 const th2=(slot,e,r)=>`<span class="tb" style="border-color:${RAR[r].c}">${thumb(slot,e,r)}</span>`;
 
 function renderBattle(){ V.innerHTML=''; }
-function updHudExtra(){
-  const inEra=((S.stage-1)%STAGES_PER_ERA)+1, el=document.getElementById('wvb');
-  if(el){ const tot=Math.max(1,B.waveN||1), left=B.en.length+B.toSpawn.length; el.style.width=Math.round(100*Math.max(0,Math.min(1,(tot-left)/tot)))+'%';   /* barra = abates da horda atual */
-    const NW=S.farm?4:5, t=`Horda ${S.wave}/${NW}`, wt=document.getElementById('wvt'); if(wt.textContent!==t) wt.textContent=t;
-    { const bb=document.getElementById('bossb'); if(bb){ const inB=S.wave===5, gl=!inB&&heroFC()>=BOSS_GLOW_AT*recFC(S.stage); if(bb.dataset.k!==inB+'|'+gl){ bb.dataset.k=inB+'|'+gl; bb.classList.toggle('glow',gl); bb.classList.toggle('dimb',!gl); } } }   /* sempre visível (PO): brilha com a FC ≥ 90% da recomendada; apagado abaixo disso e durante o chefe */
-    const wp=document.getElementById('wvp'), k=S.wave+'|'+NW; if(wp&&wp.dataset.k!==k){ wp.dataset.k=k; wp.innerHTML=Array.from({length:NW},(_,i)=>`<i class="${i+1<=S.wave?'on':''}"></i>`).join('')+(S.farm?'<b>FARM</b>':'<b>CHEFE</b>'); } }
+function updHudExtra(){   // 4x por segundo: relógios das telas abertas (a faixa da fase e o Desafiar são do js/fullbattle.js)
   if(view==='shop'||view==='summon') updShop(); else if(view==='pass'&&typeof passTick==='function') passTick();
 }
 

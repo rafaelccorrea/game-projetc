@@ -20,7 +20,12 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(window.Screens&&typeof Screens.register==='function'){ try{ Screens.register(name,{title:d.title,render:d.render,onOpen:d.onOpen,onClose:d.onClose}); }catch(e){} }
     if(typeof FULLV!=='undefined') FULLV[name]=1; if(typeof FULL_VIEWS!=='undefined') FULL_VIEWS[name]=1;
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
+    if(d.parent) this.hookClose();
     this.hook(); return true; },
+  /* SUBTELA (decisão do PO: Forja é subtela do Equipamento): o Voltar leva à tela-mãe (def.parent), não à batalha. Contorno do pedido B-11:
+     enquanto o Screens.close() do index não ler 'parent', ele é envolvido aqui, só quando uma subtela é ligada. */
+  hookClose(){ if(this.closeHooked||!window.Screens||typeof Screens.close!=='function') return; this.closeHooked=true; const P=this, c0=Screens.close.bind(Screens);
+    Screens.close=function(){ const cur=P.cur(); if(cur&&cur.parent&&typeof setView==='function'){ if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(cur.parent); return; } return c0(); }; },
   hook(){ if(this.hooked) return; this.hooked=true; const P=this;
     if(typeof render==='function'&&!(window.Screens&&typeof Screens.register==='function')){ const r0=render; render=function(){ const d=P.defs[view]; if(d&&P.on(view)&&!d.overlay) return d.render(); return r0(); }; }
     if(typeof setView==='function'&&!(window.Screens&&typeof Screens.register==='function')){ const s0=setView;   /* com o registro oficial, quem chama onOpen/onClose é o index */ setView=function(v){ const prev=P.defs[view], next=P.defs[v];

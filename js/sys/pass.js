@@ -56,8 +56,10 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const pad=n=>String(n).padStart(2,'0');
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function weekKey(ms){ const d=new Date(ms); d.setHours(0,0,0,0); const wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return dayKey(d.getTime()); }   // semana começa na segunda (convenção da fps-e2)
+function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==="function") return C.dayKey(ms);   // fuso único (Sys.clock.DATA.tzOffsetMin; com servidor, Brasília)
+  const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function weekKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.weekKey==="function") return C.weekKey(ms);
+  const d=new Date(ms); d.setHours(0,0,0,0); const wd=(d.getDay()+6)%7; d.setDate(d.getDate()-wd); return dayKey(d.getTime()); }   // semana começa na segunda (convenção da fps-e2)
 const rngOf=host=>(host&&typeof host.rng==='function')?host.rng:Math.random;
 const Loot=()=>root.Sys&&root.Sys.loot;
 /* nível do jogador: Sys.level (fps-e2) ou host.level(); sem nenhum, conta como liberado */
@@ -137,7 +139,7 @@ function makeItem(host,spec){
   const L=Loot(), rng=rngOf(host), e=clamp(int0(host&&host.eraMax&&host.eraMax()),0,99);
   let r=clamp(int0(spec.r),0,4); if(spec.slot==='weapon'&&r===3) r=2;
   const subs=L&&L.rollSubs?L.rollSubs(rng,r,spec.slot):[];
-  const it={slot:spec.slot,r,e,lvl:1,gold:0,subs}; const qp=L&&L.qualityOf?L.qualityOf(rng):null; if(qp!=null) it.qp=qp;   // qualidade (chave da fps-e2)
+  const it={slot:spec.slot,r,e,lvl:1,gold:0,subs,origin:'pass'}; const qp=L&&L.qualityOf?L.qualityOf(rng):null; if(qp!=null) it.qp=qp;   // qualidade (chave da fps-e2)
   return it;
 }
 /* o jogador pode receber agora? (portão de raridade e regra da asa: nível 50+ e Épica+) */

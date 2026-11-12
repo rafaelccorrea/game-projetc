@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Eventos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- 19 Eventos v2 (refeita após reprovação; o TOPO aprovado pelo dono — lista de eventos, banner animado e contagem — foi mantido igual).
+     Novo: TRILHA DE RECOMPENSAS em mini-mapa (mapa-múndi no Festival, mapa/cenário da era nos outros): os pontos GANHOS movem o Kael pelo caminho;
+     9 marcos com prêmios grandes (baú, skin, fragmentos do Prismático) que pulsam quando dá para resgatar; no Festival cada marco acende um pedaço do Relógio.
+     Missões ficam numa GAVETA. CHEFE DO EVENTO (inimigo de era com aura especial): vida coletiva + dano pessoal, 3 tentativas/dia, dá pontos extras.
+     LOJA: vitrine com o prêmio principal (skin com aura) + itens com moldura por raridade, limite e preço; compra direta, NUNCA sorteio; 2 dias de carência.
+     Pontos SALDO (loja) separados dos GANHOS (trilha). Fechados pelo dono: skin 150, Colar Épico 120, 100 fragmentos/mês (20 na trilha + 8x10 na loja).
+     Demais preços (*), marcos e pontos do chefe = PROPOSTA de protótipo. Vida coletiva = prévia offline. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+button:active{transform:scale(.96)}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes gsh{from{background-position:120% 0}to{background-position:-130% 0}}
+@keyframes twk{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.25);opacity:1}}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2 / Ranking) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-sizing:border-box;background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+.nhBody{position:relative;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
+.nhFoot{position:relative;z-index:10;flex:none;width:100%;max-width:640px;margin:0 auto;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box}
+
+.inUp{animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes inUp{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.inR{animation:inR .35s ease-out both}
+@keyframes inR{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* lista de eventos */
+.evs{flex:none;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,1fr);gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.evs::-webkit-scrollbar{display:none}
+.ev{min-height:56px;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:14px;border:2px solid #4a3a2b;background:#1d1611;text-align:left;min-width:0}
+.ev[aria-selected="true"]{border-color:#ffc94a;background:#3a2c1f;box-shadow:inset 0 -3px 0 #ffc94a}
+.ev img{width:30px;height:30px;object-fit:contain;flex:none}
+.tag{display:inline-block;font-size:10px;font-weight:900;line-height:16px;padding:0 6px;border-radius:6px;white-space:nowrap}
+.tag.on{background:#2f8a36;color:#fff;animation:tagP 1.3s ease-in-out infinite}
+@keyframes tagP{0%,100%{box-shadow:0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 0 10px rgba(95,208,104,.95)}}
+.tag.soon{background:#1d5a9a;color:#fff}
+.tag.gr{background:#a8650c;color:#fff;animation:tagP2 1.3s ease-in-out infinite}
+@keyframes tagP2{0%,100%{box-shadow:0 0 0 rgba(255,160,60,0)}50%{box-shadow:0 0 10px rgba(255,160,60,.95)}}
+
+/* banner animado */
+.ban{position:relative;flex:none;height:clamp(138px,21vh,200px);border-radius:18px;overflow:hidden;border:2px solid var(--bd);background:var(--bg);animation:banIn .5s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes banIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.ban .rays{position:absolute;right:-10%;top:-40%;width:min(80vw,340px);aspect-ratio:1;border-radius:50%;background:repeating-conic-gradient(rgba(255,230,160,.24) 0deg 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:spin 16s linear infinite}
+.ban::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);background-size:300% 100%;animation:shn 4s ease-in-out infinite;pointer-events:none}
+.bTxt{position:absolute;left:12px;top:10px;bottom:10px;right:42%;display:flex;flex-direction:column;justify-content:space-between;z-index:2;min-width:0}
+.bTitle{font-family:'Lilita One',sans-serif;font-size:clamp(21px,6.4vw,30px);line-height:1.02;background-image:linear-gradient(100deg,#ffe07a 20%,#fffaf0 45%,#f2a826 60%,#ffe07a 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 2.6s linear infinite;filter:drop-shadow(0 2px 0 #3a1a04) drop-shadow(0 0 6px rgba(0,0,0,.6))}
+.stg{position:absolute;right:2%;bottom:0;width:40%;height:100%;z-index:1}
+.stg .ped{position:absolute;left:16%;right:16%;bottom:6%;height:9%;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#8a6a3a 0%,#4a3420 60%,#22180f 100%);border:2px solid #c9973a;animation:pedG 2.6s ease-in-out infinite}
+@keyframes pedG{0%,100%{box-shadow:0 0 6px rgba(255,201,74,.3)}50%{box-shadow:0 0 18px rgba(255,201,74,.85)}}
+.stg .hero{position:absolute;left:50%;bottom:6.5%;height:86%;aspect-ratio:1;transform:translateX(-50%)}
+.stg .aur{position:absolute;left:50%;bottom:10%;height:96%;aspect-ratio:256/320;transform:translateX(-50%);opacity:.85}
+.stg .boss{position:absolute;left:50%;bottom:10.5%;height:80%;aspect-ratio:1;transform:translateX(-50%)}
+.stg .boss img{width:100%;height:100%;object-fit:contain;object-position:50% 100%;animation:ei 1.6s ease-in-out infinite;transform-origin:50% 100%;display:block}
+@keyframes ei{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+.conf{position:absolute;top:-10px;width:6px;height:9px;border-radius:1px;animation:conf 3s linear infinite;opacity:0;z-index:1}
+@keyframes conf{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translateY(210px) rotate(600deg);opacity:0}}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff3c4;box-shadow:0 0 8px 3px rgba(255,201,74,.9);animation:twk 1.8s ease-in-out infinite;z-index:1}
+.timer{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:10px;background:rgba(10,7,5,.72);border:1px solid rgba(255,236,200,.22);align-self:flex-start;max-width:100%}
+.hg{animation:hgFlip 3s cubic-bezier(.6,0,.3,1) infinite;transform-origin:50% 50%;flex:none}
+@keyframes hgFlip{0%,80%{transform:rotate(0)}100%{transform:rotate(180deg)}}
+.sandT{animation:sandT 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandT{0%{transform:scaleY(1)}80%,100%{transform:scaleY(0)}}
+.sandB{animation:sandB 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandB{0%{transform:scaleY(0)}80%,100%{transform:scaleY(1)}}
+.secA,.secB{display:inline-block}
+.secA{animation:secA .6s ease-out both}.secB{animation:secB .6s ease-out both}
+@keyframes secA{0%{transform:translateY(-4px) scale(1.2);color:#fff}100%{transform:none;color:#ffe07a}}
+@keyframes secB{0%{transform:translateY(-4px) scale(1.2);color:#fff}100%{transform:none;color:#ffe07a}}
+
+/* regras */
+.rules{flex:none;display:flex;flex-wrap:wrap;gap:4px}
+.rule{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:2px 8px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;font-size:clamp(10.5px,3vw,12.5px);font-weight:900;color:#e8dccb;line-height:1.1}
+.rule.ok{border-color:#3fae3c;color:#b8f5bd}
+.rule.ok svg{animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* pontos do evento */
+.ptsBox{flex:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:4px 10px;border-radius:14px;background:linear-gradient(90deg,#3a2350,#1d1611);border:2px solid #b07cff;position:relative}
+.tok{flex:none;animation:tokS 3s ease-in-out infinite}
+@keyframes tokS{0%,100%{transform:rotateY(0)}50%{transform:rotateY(180deg)}}
+.popA{animation:popA .5s cubic-bezier(.2,1.6,.4,1) both;display:inline-block}
+.popB{animation:popB .5s cubic-bezier(.2,1.6,.4,1) both;display:inline-block}
+@keyframes popA{from{transform:scale(1.5);color:#fff}to{transform:none}}
+@keyframes popB{from{transform:scale(1.5);color:#fff}to{transform:none}}
+.flyA,.flyB{position:absolute;right:16px;top:-6px;font-family:'Lilita One',sans-serif;font-size:22px;color:#7ef08a;animation:flyA 1.1s ease-out both;pointer-events:none}
+.flyB{animation-name:flyB}
+@keyframes flyA{0%{transform:translateY(16px) scale(.6);opacity:0}25%{transform:translateY(0) scale(1.2);opacity:1}100%{transform:translateY(-26px);opacity:0}}
+@keyframes flyB{0%{transform:translateY(16px) scale(.6);opacity:0}25%{transform:translateY(0) scale(1.2);opacity:1}100%{transform:translateY(-26px);opacity:0}}
+
+/* abas */
+.tabs{flex:none;display:flex;gap:4px;padding:4px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b}
+.tab{position:relative;flex:1;min-width:0;min-height:44px;border:0;border-radius:10px;background:transparent;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:clamp(14px,4.2vw,17px);padding:0 6px}
+.tab[aria-selected="true"]{background:#3a2c1f;color:#ffc94a;box-shadow:inset 0 -3px 0 #ffc94a}
+.dot{position:absolute;top:5px;right:8px;min-width:18px;height:18px;border-radius:9px;background:#ff3b30;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;line-height:18px;padding:0 4px;animation:dotP 1.2s ease-in-out infinite}
+@keyframes dotP{0%,100%{transform:scale(1)}50%{transform:scale(1.2);box-shadow:0 0 8px #ff3b30}}
+
+/* missões */
+.mis{min-height:60px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 8px 6px 10px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b}
+.mis.done{border-color:#5fd068;background:linear-gradient(90deg,#1f3a1f,#1d1611)}
+.mis.claimed{opacity:.62}
+.bar{display:block;height:10px;border-radius:5px;background:#0e0a07;border:1px solid #000;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#b07cff,#e6d0ff);position:relative;overflow:hidden;animation:grow .8s cubic-bezier(.2,1,.4,1) both;transform-origin:0 50%}
+.bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);background-size:50% 100%;background-repeat:no-repeat;animation:run 1.8s linear infinite}
+.mis.done .bar i{background:linear-gradient(90deg,#3fae3c,#c4f27a)}
+@keyframes grow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes run{from{background-position:-60% 0}to{background-position:160% 0}}
+.cl{min-width:84px;min-height:44px;border-radius:12px;border:0;font-family:'Lilita One',sans-serif;font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:0 8px}
+.cl.go{background:linear-gradient(180deg,#9ff0a6,#3fae3c);color:#0d2410;box-shadow:0 4px 0 #1f6a1d;animation:clP 1.2s ease-in-out infinite}
+@keyframes clP{0%,100%{box-shadow:0 4px 0 #1f6a1d,0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 4px 0 #1f6a1d,0 0 16px rgba(95,208,104,.95)}}
+.cl.wait{background:#33271d;border:2px solid #4a3a2b;color:#e6d0ff}
+.cl.ok{background:transparent;color:#7ef08a}
+
+/* loja */
+.shop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+@media (max-width:359px){.shop{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:600px){.shop{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.it{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 5px 6px;border-radius:14px;background:linear-gradient(180deg,#2c2017,#19120d);border:2px solid var(--rc);min-width:0;overflow:hidden}
+.it.hot{animation:itG 2s ease-in-out infinite}
+@keyframes itG{0%,100%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 14px var(--rg)}}
+.it::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.1) 50%,transparent 65%);background-size:300% 100%;animation:shn 3.4s ease-in-out infinite;pointer-events:none}
+.ic{position:relative;width:clamp(50px,15vw,66px);aspect-ratio:1;flex:none;display:flex;align-items:center;justify-content:center}
+.ic svg,.ic img{width:84%;height:84%;object-fit:contain}
+.ic .glow{position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,var(--rg),transparent 68%);animation:glowP 2s ease-in-out infinite}
+@keyframes glowP{0%,100%{transform:scale(.85);opacity:.6}50%{transform:scale(1.08);opacity:1}}
+.ic .bob{animation:icB 2.4s ease-in-out infinite;transform-origin:50% 100%;position:relative}
+@keyframes icB{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg) scale(1.05)}}
+.cspin{animation:cspin 2.4s linear infinite}
+@keyframes cspin{0%{transform:scaleX(1)}50%{transform:scaleX(.15)}100%{transform:scaleX(1)}}
+.pf{animation:hue 3s linear infinite,pfG 1.6s ease-in-out infinite}
+@keyframes pfG{0%,100%{filter:drop-shadow(0 0 2px rgba(143,245,255,.6))}50%{filter:drop-shadow(0 0 9px rgba(143,245,255,1))}}
+.bubl{animation:bubl 1.6s ease-in infinite}
+@keyframes bubl{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+.skf{position:relative;width:90%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#5a3a7a,#120d0a);border:3px solid #ffc94a;box-shadow:0 0 10px rgba(255,201,74,.7)}
+.skf .kidle{position:absolute;width:182%;height:182%;left:-41%;top:-10%;filter:hue-rotate(250deg) saturate(1.3)}
+.inm{font-size:clamp(11px,3.2vw,13px);font-weight:900;text-align:center;line-height:1.1;min-height:2.2em;display:flex;align-items:center;justify-content:center}
+.lim{font-size:10.5px;font-weight:800;color:#c9b9a2}
+.buy{width:100%;min-height:44px;border-radius:12px;border:0;font-family:'Lilita One',sans-serif;font-size:16px;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 4px;position:relative;z-index:1}
+.buy.can{background:linear-gradient(180deg,#d9b8ff,#8a4dff);color:#1a0a33;box-shadow:0 4px 0 #4a1f8a}
+.buy.no{background:#33271d;color:#8a7a68;border:2px solid #4a3a2b}
+.buy.out{background:transparent;color:#7ef08a;border:2px dashed #3fae3c}
+
+.gold{width:100%;min-height:56px;border:0;border-radius:16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:clamp(19px,5.6vw,24px);box-shadow:0 6px 0 #8a4f0c;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden}
+.gold.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 22px rgba(255,201,74,.9)}}
+.gold::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:300% 100%;animation:shn 2.6s ease-in-out infinite}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-weight:900;font-size:14px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px}
+.note{font-size:clamp(11px,3.1vw,13px);font-weight:800;color:#c9b9a2;line-height:1.3}
+.lock{display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px;padding:10px;border-radius:14px;border:2px dashed #4a3a2b;background:#1d1611;font-size:13px;font-weight:900;color:#c9b9a2;text-align:center}
+/* confirmação */
+.sheetBg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.7);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{width:100%;max-width:520px;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:14px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:sheetUp .35s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:60;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #b07cff;font-size:13px;font-weight:900;text-align:center;animation:toast 2.2s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+
+/* ===== v2: arte do mapa, relógio, folhas extras ===== */
+.mWorld{background-image:url(/_blob/7ed135dbfe0ec47afa32938b1ad0e00d)}
+.mEra0{background-image:url(/_blob/04aacd68437b885b898fd0ed2bdebf8f)}
+.mapImg{position:absolute;inset:-4%;background-size:cover;background-position:50% 50%;animation:kb 24s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1) translate(0,0)}to{transform:scale(1.08) translate(-2%,1.5%)}}
+.lSky2{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}
+.lMid2{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}
+.lGnd2{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.lSky0{background-image:url(/_blob/fcb19c47e6bcf95a909b7a4a8410c8a6)}
+.lMid0{background-image:url(/_blob/2a828af40defb3a91b3ad05fd9fe48b9)}
+.lGnd0{background-image:url(/_blob/2239f5d7b483d0d30e06ead641b7339a)}
+.lay{position:absolute;left:0;right:0;background-repeat:repeat-x;background-size:auto 100%}
+.lay.s{top:0;height:60%}.lay.m{top:20%;height:50%;animation:pan 90s linear infinite}.lay.g{top:65.5%;height:38%}
+@keyframes pan{from{background-position-x:0}to{background-position-x:-1600px}}
+.cldE{position:absolute;left:0;right:0;top:3%;height:28%;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-repeat:repeat-x;background-size:auto 100%;animation:pan 120s linear infinite;opacity:.85}
+.krun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .66s steps(8, jump-none) infinite}
+.katk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet 1s steps(17, jump-none) both}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.sh{background-size:contain;background-repeat:no-repeat;background-position:center;display:block;flex:none}
+.sh0{background-image:url(/_blob/0c6810bd9282d0db4d57f76e3b3229be)}
+.sh1{background-image:url(/_blob/e79e5d21067e1a849a3842755e948924)}
+.sh2{background-image:url(/_blob/8c4986b95e32fc1d4e7188545bd5d68b)}
+.sh3{background-image:url(/_blob/a08335cc1e169faac8b8033abff4e89a)}
+.sh4{background-image:url(/_blob/3977c9828fa5ef9e50d15600b2fb439b)}
+.sh5{background-image:url(/_blob/e5627d17b0156a2a5a1b925c02407798)}
+.sh6{background-image:url(/_blob/5ef4b06ee45325247a9b66632033a99d)}
+.sh7{background-image:url(/_blob/bc83a4e7189935a1eb93c85bfcb4d983)}
+.sh8{background-image:url(/_blob/1d714680fd4ff7239ba17d05a4a06ce8)}
+.shOn{animation:shOn 2.2s ease-in-out infinite}
+@keyframes shOn{0%,100%{filter:drop-shadow(0 0 3px rgba(255,220,140,.7)) brightness(1)}50%{filter:drop-shadow(0 0 10px rgba(255,220,140,1)) brightness(1.2)}}
+.shOff{filter:grayscale(1) brightness(.4);opacity:.55}
+.clk{width:30px;height:30px;flex:none;border-radius:50%;background-image:url(/_blob/08ed4e4b1651d79ec95dd597c093353a);background-size:100% 100%;animation:clkS 6s linear infinite;box-shadow:0 0 10px rgba(255,201,74,.6)}
+@keyframes clkS{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.port{background-size:contain;background-repeat:no-repeat;background-position:50% 100%;animation:ei 1.8s ease-in-out infinite;transform-origin:50% 100%}
+.pMino{background-image:url(/_blob/2f5945188cf88834a2dd2ac72fc890bc)}
+.pDrag{background-image:url(/_blob/6ab9e2e6c54dbef8618daf37fd11342f)}
+.pDevo{background-image:url(/_blob/66f81c3b14550f0bf1b2fa94f79ceef8)}
+
+/* pontos (ganhos = trilha · saldo = loja) */
+.ptsRow{flex:none;display:flex;align-items:stretch;gap:6px}
+.pBox{position:relative;flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:48px;padding:4px 10px;border-radius:14px;background:linear-gradient(90deg,var(--t1),#1d1611);border:2px solid var(--ta)}
+.pCol{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+.pCol small{font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap}
+.pCol b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.4vw,23px);color:#fff}
+.mBtn{position:relative;flex:none;min-width:84px;min-height:48px;border-radius:14px;border:2px solid var(--ta);background:#33271d;font-family:'Lilita One',sans-serif;font-size:15px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 10px}
+.mBtn.go{background:linear-gradient(180deg,#9ff0a6,#3fae3c);color:#0d2410;border-color:#c4f7c8;animation:clP 1.2s ease-in-out infinite}
+
+/* ===== TRILHA DE RECOMPENSAS ===== */
+.shards{flex:none;display:flex;align-items:center;gap:5px;min-height:34px;padding:2px 8px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b}
+.trail{position:relative;flex:1;min-height:250px;border-radius:18px;overflow:hidden;border:2px solid var(--ta);background:#120d0a;box-shadow:inset 0 0 0 2px rgba(0,0,0,.4)}
+.trail .fog{position:absolute;inset:0;background:var(--fog);pointer-events:none}
+.trail .vg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(0,0,0,.55));pointer-events:none}
+.trail svg.pth{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dash{animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-14}}
+.prog{filter:drop-shadow(0 0 4px rgba(255,201,74,.95))}
+.ndRay{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;background:repeating-conic-gradient(var(--rg) 0deg 9deg,transparent 9deg 24deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 68%);mask:radial-gradient(circle,#000 22%,transparent 68%);animation:spin 9s linear infinite;pointer-events:none}
+.nd{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;border:3px solid var(--rc);background:radial-gradient(circle at 50% 35%,#5a4632,#140e0a);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 10px var(--rg);z-index:2}
+.nd.big{width:60px;height:60px;margin:-30px 0 0 -30px;border-width:4px}
+.nd.go{animation:ndP 1.1s ease-in-out infinite}
+@keyframes ndP{0%,100%{transform:scale(1);box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 6px var(--rg)}50%{transform:scale(1.12);box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 22px var(--rc)}}
+.nd.done .ni{filter:saturate(.35) brightness(.7)}
+.nd.lock .ni{filter:grayscale(.5) brightness(.6)}
+.nd:active{transform:scale(.92)}
+.ni{position:relative;width:70%;height:70%;display:flex;align-items:center;justify-content:center}
+.ni img,.ni svg{width:100%;height:100%;object-fit:contain}
+.ni .bob{animation:icB 2.4s ease-in-out infinite;transform-origin:50% 100%}
+.ni .skf{width:100%;height:100%;border:0;box-shadow:none}
+.npt{position:absolute;left:50%;top:100%;transform:translate(-50%,3px);min-width:30px;padding:0 5px;border-radius:7px;background:rgba(14,10,7,.92);border:1px solid var(--rc);font-size:10.5px;font-weight:900;line-height:15px;color:#fff;white-space:nowrap}
+.nck{position:absolute;right:-5px;top:-5px;width:20px;height:20px;border-radius:50%;background:#3fae3c;border:2px solid #0d2410;display:flex;align-items:center;justify-content:center}
+.nbg{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #fff;color:#fff;font-size:12px;font-weight:900;line-height:16px;text-align:center;animation:dotP 1.2s ease-in-out infinite}
+.mk{position:absolute;width:60px;height:60px;margin:-57px 0 0 -30px;z-index:3;pointer-events:none;transition:left .14s linear,top .14s linear}
+.mk .fl{position:absolute;inset:0}
+.mk .sp{position:absolute;inset:0}
+.mk .shd{position:absolute;left:24%;right:24%;bottom:1%;height:9%;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 70%)}
+.mkTag{position:absolute;left:50%;top:-4px;transform:translateX(-50%);padding:0 6px;border-radius:7px;background:#ffc94a;color:#2a1403;font-size:9.5px;font-weight:900;line-height:14px;white-space:nowrap}
+.startF{position:absolute;margin:-30px 0 0 -6px;pointer-events:none;z-index:1}
+.startF i{position:absolute;left:3px;top:0;width:20px;height:13px;background:#5fd068;transform-origin:0 50%;clip-path:polygon(0 0,100% 50%,0 100%);animation:wave 1s ease-in-out infinite alternate}
+@keyframes wave{from{transform:skewY(-9deg) scaleX(.85)}to{transform:skewY(7deg) scaleX(1)}}
+.trailNote{position:absolute;left:8px;right:8px;top:6px;display:flex;justify-content:space-between;gap:6px;z-index:4;pointer-events:none}
+
+/* ===== CHEFE DO EVENTO ===== */
+.bossSt{position:relative;flex:1;min-height:200px;border-radius:18px;overflow:hidden;border:2px solid var(--ta);background:#120d0a}
+.bossSt .fog{position:absolute;inset:0;background:var(--fog)}
+.mist{position:absolute;left:-20%;right:-20%;bottom:6%;height:30%;background:radial-gradient(ellipse 30% 50% at 30% 60%,var(--mc),transparent 70%),radial-gradient(ellipse 30% 50% at 70% 50%,var(--mc),transparent 70%);animation:mist 7s ease-in-out infinite alternate;pointer-events:none}
+@keyframes mist{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+.bFig{position:absolute;right:4%;bottom:12%;width:min(48%,230px);aspect-ratio:1}
+.bFig .rune{position:absolute;left:4%;right:4%;bottom:-6%;height:20%;border-radius:50%;background:repeating-conic-gradient(var(--bc) 0deg 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);animation:spin 6s linear infinite;opacity:.9}
+.bFig .bAura{position:absolute;left:-12%;width:124%;height:150%;bottom:0;opacity:.95}
+.bFig .bBody{position:absolute;inset:0}
+.bFig .bBody.hit1{animation:bHit1 .35s ease-out}.bFig .bBody.hit2{animation:bHit2 .35s ease-out}
+@keyframes bHit1{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(8px)}100%{filter:none;transform:none}}
+@keyframes bHit2{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(8px)}100%{filter:none;transform:none}}
+.emb2{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--bc);box-shadow:0 0 6px 2px var(--bc);animation:rise 2.4s ease-out infinite;opacity:0}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-120px);opacity:0}}
+.kFig{position:absolute;left:4%;bottom:calc(12% - min(36%,170px) * .05);width:min(36%,170px);aspect-ratio:1}
+.kFig .au13{position:absolute;left:0;width:100%;height:125%;bottom:3%}
+.kFig .sp{position:absolute;inset:0}
+.flr{position:absolute;left:0;right:0;bottom:0;height:13%;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55))}
+.bdp{position:absolute;right:18%;top:22%;font-family:'Lilita One',sans-serif;line-height:1;white-space:nowrap;z-index:5;animation-duration:1s;animation-fill-mode:both;animation-timing-function:ease-out;pointer-events:none}
+.bdp.k1{animation-name:bdp1}.bdp.k2{animation-name:bdp2}
+@keyframes bdp1{0%{opacity:0;transform:scale(.4)}15%{opacity:1;transform:scale(1.3)}30%{transform:scale(1)}80%{opacity:1;transform:translateY(-24px)}100%{opacity:0;transform:translateY(-36px)}}
+@keyframes bdp2{0%{opacity:0;transform:scale(.4)}15%{opacity:1;transform:scale(1.3)}30%{transform:scale(1)}80%{opacity:1;transform:translateY(-24px)}100%{opacity:0;transform:translateY(-36px)}}
+.bName{position:absolute;left:10px;top:8px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;z-index:4}
+.hbar{position:relative;height:20px;border-radius:10px;background:#0e0a07;border:2px solid #000;overflow:hidden}
+.hbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#ff9a8a,#c0392b);transition:width .4s ease-out}
+.hbar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:run 1.8s linear infinite}
+.hbar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;white-space:nowrap}
+.hbar .mkr{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}
+.pips{display:flex;gap:4px}
+.pip{width:15px;height:15px;border-radius:50%;border:2px solid #000;background:#33271d}
+.pip.on{background:radial-gradient(circle at 35% 35%,#fff3c4,var(--ta) 50%,#3a1a04);animation:tagP 1.6s ease-in-out infinite}
+.chip{display:inline-flex;align-items:center;gap:3px;min-height:24px;padding:1px 7px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;font-size:11px;font-weight:900;line-height:1.1;white-space:nowrap}
+.chip img{width:15px;height:15px;object-fit:contain}
+.chip.ok{border-color:#3fae3c;color:#b8f5bd}
+
+/* ===== LOJA: vitrine ===== */
+.vit{position:relative;flex:none;display:grid;grid-template-columns:44% minmax(0,1fr);min-height:150px;border-radius:18px;overflow:hidden;border:2px solid #ffb21e;background:radial-gradient(ellipse at 22% 70%,var(--vg),#1d1611 70%);animation:itG 2s ease-in-out infinite;--rg:rgba(255,178,30,.75)}
+.vit::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.14) 50%,transparent 65%);background-size:300% 100%;animation:shn 3.4s ease-in-out infinite;pointer-events:none}
+.vSt{position:relative;min-height:150px}
+.vSt .rays{position:absolute;left:50%;top:44%;width:210px;height:210px;margin:-105px 0 0 -105px;border-radius:50%;background:repeating-conic-gradient(rgba(255,214,120,.3) 0deg 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);animation:spin 14s linear infinite}
+.vSt .ped{position:absolute;left:14%;right:14%;bottom:7%;height:10%;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#8a6a3a 0%,#4a3420 60%,#22180f 100%);border:2px solid #ffb21e;animation:pedG 2.6s ease-in-out infinite}
+.vSt .aur{position:absolute;left:50%;bottom:11%;height:96%;aspect-ratio:256/320;transform:translateX(-50%)}
+.vSt .hero{position:absolute;left:50%;bottom:calc(12% - 4px);height:80%;aspect-ratio:1;transform:translateX(-50%)}
+.vInfo{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:10px 10px 10px 4px;min-width:0}
+.rib{align-self:flex-start;padding:1px 8px;border-radius:7px;font-size:10px;font-weight:900;letter-spacing:.8px;line-height:16px;color:#2a1403;background:linear-gradient(100deg,#ffe07a 20%,#fffaf0 45%,#f2a826 60%,#ffe07a 80%);background-size:250% 100%;animation:gsh 2.6s linear infinite}
+.vName{font-family:'Lilita One',sans-serif;font-size:clamp(19px,5.6vw,24px);line-height:1.05;color:#fff}
+.shopRow{flex:none;display:grid;grid-template-columns:44px repeat(3,minmax(0,1fr)) 44px;gap:5px;align-items:stretch}
+.shopRow .ghost{height:auto;min-height:44px}
+.rlab{position:relative;z-index:1;font-size:9.5px;font-weight:900;letter-spacing:.6px;color:var(--rc);text-transform:uppercase}
+.it .cnr{position:absolute;right:-1px;top:-1px;width:18px;height:18px;background:var(--rc);clip-path:polygon(0 0,100% 0,100% 100%);opacity:.9}
+.pf{animation:hue 3s linear infinite,pfG 1.6s ease-in-out infinite}
+.rulesS{flex:none;display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.rulesS .rule{min-height:24px}
+</style>
+</helmet>
+<div class="nhApp" style="background: #16110d">
+
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Eventos</span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Moedas: 48.200. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>48.200</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Gemas: 320. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+    </div>
+  </div>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+
+  <div class="nhBody" style="background: radial-gradient(ellipse at 50% 18%, #2e2040 0%, #1d1611 45%, #16110d 80%)"><div class="nhWrap" style="min-height: 100%; display: flex; flex-direction: column; gap: 7px; padding: 8px 12px 6px">
+
+    <!-- eventos ativos, em carência e futuros -->
+    <div class="evs" role="tablist" aria-label="Eventos">
+      <sc-for list="{{evs}}" as="e" hint-placeholder-count="4">
+        <button class="ev inR" role="tab" aria-selected="{{e.sel}}" onClick="{{e.pick}}" aria-label="{{e.aria}}" style="animation-delay: {{e.d}}">
+          <img src="{{e.img}}" alt="">
+          <span style="min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.1">
+            <span style="font-size: 12.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{e.name}}</span>
+            <span><span class="{{e.tagCls}}">{{e.tag}}</span></span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+
+    <!-- banner do evento -->
+    <div class="ban" style="--bg: {{bBg}}; --bd: {{bBd}}" role="img" aria-label="{{bAria}}">
+      <div class="rays"></div>
+      <sc-for list="{{confs}}" as="c" hint-placeholder-count="8"><span class="conf" style="left: {{c.l}}; background: {{c.c}}; animation-delay: {{c.d}}"></span></sc-for>
+      <span class="spark" style="left: 46%; top: 18%"></span>
+      <span class="spark" style="left: 88%; top: 12%; animation-delay: .7s"></span>
+      <span class="spark" style="left: 70%; top: 60%; animation-delay: 1.3s"></span>
+      <div class="stg" aria-hidden="true">
+        <span class="ped"></span>
+        <sc-if value="{{bHero}}" hint-placeholder-val="{{true}}">
+          <div class="au13 aur"></div>
+          <div class="kidle hero"></div>
+        </sc-if>
+        <sc-if value="{{bBoss}}" hint-placeholder-val="{{false}}"><div class="boss"><img src="{{bImg}}" alt=""></div></sc-if>
+      </div>
+      <div class="bTxt">
+        <span style="display: flex; flex-direction: column; gap: 3px">
+          <span class="bTitle">{{bName}}</span>
+          <span class="ol" style="font-size: clamp(11px,3.3vw,13.5px); font-weight: 900; color: #fff; line-height: 1.2">{{bSub}}</span>
+        </span>
+        <span class="timer" role="timer" aria-label="{{tAria}}">
+          <svg class="hg" width="15" height="20" viewBox="0 0 12 16" aria-hidden="true">
+            <path d="M1 1 H11 M1 15 H11" stroke="#c77a12" stroke-width="1.6" stroke-linecap="round"></path>
+            <path d="M2.2 1.5 C2.2 5.5 5.2 6.6 5.6 8 C5.2 9.4 2.2 10.5 2.2 14.5 H9.8 C9.8 10.5 6.8 9.4 6.4 8 C6.8 6.6 9.8 5.5 9.8 1.5 Z" fill="rgba(255,240,200,0.12)" stroke="#ffe07a" stroke-width="0.9"></path>
+            <path class="sandT" d="M3.4 3.2 H8.6 C8 5.6 6.4 6.6 6 7.4 C5.6 6.6 4 5.6 3.4 3.2 Z" fill="#ffc94a"></path>
+            <path class="sandB" d="M3 14 C3.4 11.6 5.2 10.6 6 10.4 C6.8 10.6 8.6 11.6 9 14 Z" fill="#ffc94a"></path>
+          </svg>
+          <span style="display: flex; flex-direction: column; line-height: 1.05; min-width: 0">
+            <span style="font-size: 10px; font-weight: 800; color: #e8dccb; white-space: nowrap">{{tLbl}}</span>
+            <span class="lil" style="font-size: clamp(14px,4.2vw,17px); color: #ffe07a; font-variant-numeric: tabular-nums; white-space: nowrap">{{tHead}}<span class="{{secCls}}">{{tSec}}</span></span>
+          </span>
+        </span>
+      </div>
+    </div>
+
+
+    <!-- pontos: GANHOS avançam a trilha (nunca diminuem) · SALDO se gasta na loja -->
+    <div class="ptsRow" style="--t1: {{tT1}}; --ta: {{tA}}">
+      <div class="pBox">
+        <svg class="tok" width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="{{tokF}}" stroke="#fff3c4" stroke-width="1.6"></circle><path d="M12 5.5 L13.9 9.6 L18.3 10 L15 13 L16 17.4 L12 15.1 L8 17.4 L9 13 L5.7 10 L10.1 9.6 Z" fill="#ffe07a" stroke="#6a3a08" stroke-width=".9" stroke-linejoin="round"></path></svg>
+        <span class="pCol"><small>Ganhos (trilha)</small><b class="ol"><span class="{{popCls}}">{{earnTxt}}</span></b></span>
+        <span style="width: 1px; align-self: stretch; background: rgba(255,236,200,.18)"></span>
+        <span class="pCol"><small>Saldo (loja)</small><b class="ol" style="color: #ffe07a"><span class="{{popCls}}">{{balTxt}}</span></b></span>
+        <sc-if value="{{fly}}" hint-placeholder-val="{{false}}"><span class="{{flyCls}} ol">+{{flyN}}</span></sc-if>
+      </div>
+      <button class="{{mBtnCls}}" onClick="{{openMis}}" aria-label="{{mBtnAria}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 H20 M9 12 H20 M9 18 H20"></path><polyline points="3 6 4.5 7.5 7 5"></polyline><polyline points="3 12 4.5 13.5 7 11"></polyline><polyline points="3 18 4.5 19.5 7 17"></polyline></svg>Missões
+        <sc-if value="{{misDot}}" hint-placeholder-val="{{true}}"><span class="dot" style="top: -6px; right: -6px">{{misReady}}</span></sc-if>
+      </button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Seções do evento">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button class="tab" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}<sc-if value="{{t.hasDot}}" hint-placeholder-val="{{false}}"><span class="dot">{{t.dot}}</span></sc-if></button>
+      </sc-for>
+    </div>
+
+    <!-- ===== TRILHA (mini-mapa do evento) ===== -->
+    <sc-if value="{{showTrail}}" hint-placeholder-val="{{true}}">
+      <div class="shards" role="img" aria-label="{{shAria}}">
+        <sc-if value="{{hasShards}}" hint-placeholder-val="{{true}}">
+          <span class="clk" aria-hidden="true"></span>
+          <span style="font-size: 11.5px; font-weight: 900; color: #ffe07a; white-space: nowrap">Relógio {{shTxt}}</span>
+          <span style="flex: 1"></span>
+          <sc-for list="{{shards}}" as="h" hint-placeholder-count="9"><span class="{{h.cls}}" style="width: clamp(15px,4.8vw,22px); height: clamp(19px,6vw,28px); animation-delay: {{h.d}}"></span></sc-for>
+        </sc-if>
+        <sc-if value="{{noShards}}" hint-placeholder-val="{{false}}"><span style="flex: 1; font-size: 11.5px; font-weight: 900; color: #e8dccb">{{trailHint}}</span></sc-if>
+        <sc-if value="{{trailLocked}}" hint-placeholder-val="{{false}}"><span class="chip" style="border-color: #4aa3ff; color: #cfe6ff">prévia</span></sc-if>
+      </div>
+      <div class="trail" style="--ta: {{tA}}; --fog: {{tFog}}">
+        <sc-if value="{{mapIsImg}}" hint-placeholder-val="{{true}}"><div class="mapImg {{mapCls}}" style="filter: {{mapFilter}}"></div></sc-if>
+        <sc-if value="{{mapIsLay}}" hint-placeholder-val="{{false}}">
+          <div style="position: absolute; inset: 0; filter: {{mapFilter}}"><div class="lay s {{laySky}}"></div><div class="cldE"></div><div class="lay m {{layMid}}"></div><div class="lay g {{layGnd}}"></div></div>
+        </sc-if>
+        <div class="fog"></div>
+        <div class="vg"></div>
+        <svg class="pth" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="{{pathAll}}" fill="none" stroke="rgba(14,8,4,.78)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+          <polyline class="dash" points="{{pathAll}}" fill="none" stroke="rgba(255,240,210,.55)" stroke-width="3" stroke-dasharray="4 10" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+          <polyline class="prog" points="{{pathDone}}" fill="none" stroke="#ffc94a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        <span class="startF" style="left: {{startX}}; top: {{startY}}"><svg width="4" height="30" aria-hidden="true"><rect width="3" height="30" fill="#2a180a"></rect></svg><i></i></span>
+        <sc-for list="{{nodes}}" as="n" hint-placeholder-count="9">
+          <span>
+            <sc-if value="{{n.big}}" hint-placeholder-val="{{false}}"><span class="ndRay" style="left: {{n.x}}; top: {{n.y}}; --rg: {{n.rg}}"></span></sc-if>
+            <button class="{{n.cls}}" onClick="{{n.act}}" aria-label="{{n.aria}}" style="left: {{n.x}}; top: {{n.y}}; --rc: {{n.rc}}; --rg: {{n.rg}}; animation-delay: {{n.d}}">
+              <span class="ni" aria-hidden="true">
+                <sc-if value="{{n.isImg}}" hint-placeholder-val="{{true}}"><img class="bob" src="{{n.img}}" alt=""></sc-if>
+                <sc-if value="{{n.isGold}}" hint-placeholder-val="{{false}}"><img class="cspin" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""></sc-if>
+                <sc-if value="{{n.isFrag}}" hint-placeholder-val="{{false}}"><svg class="pf" viewBox="0 0 24 24"><path d="M12 2 L19 9 L12 22 L5 9 Z" fill="#8ff5ff" stroke="#1d4a5a" stroke-width="1.2" stroke-linejoin="round"></path><path d="M5 9 H19 L12 22 Z" fill="#ff8ad8" opacity=".75"></path><path d="M12 2 L9 9 L12 22 L15 9 Z" fill="#fff" opacity=".45"></path></svg></sc-if>
+                <sc-if value="{{n.isSkin}}" hint-placeholder-val="{{false}}"><span class="skf" style="border-radius: 50%; background: radial-gradient(circle at 50% 40%, #5a3a7a, #120d0a)"><span class="kidle" style="filter: hue-rotate({{n.hue}}) saturate(1.3)"></span></span></sc-if>
+                <sc-if value="{{n.isSvg}}" hint-placeholder-val="{{false}}"><svg class="bob" viewBox="0 0 24 24" style="animation-delay: {{n.d}}"><path d="{{n.p1}}" fill="{{n.f1}}" stroke="{{n.st}}" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"></path><path d="{{n.p2}}" fill="{{n.f2}}" stroke="{{n.st}}" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"></path></svg></sc-if>
+              </span>
+              <span class="npt">{{n.pts}}</span>
+              <sc-if value="{{n.isDone}}" hint-placeholder-val="{{false}}"><span class="nck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span></sc-if>
+              <sc-if value="{{n.isGo}}" hint-placeholder-val="{{false}}"><span class="nbg">!</span></sc-if>
+            </button>
+          </span>
+        </sc-for>
+        <sc-if value="{{mkOn}}" hint-placeholder-val="{{true}}">
+          <div class="mk" style="left: {{mkX}}; top: {{mkY}}" role="img" aria-label="{{mkAria}}">
+            <span class="shd"></span>
+            <div class="fl" style="transform: {{mkFlip}}"><div class="sp {{mkSpr}}"></div></div>
+            <span class="mkTag">VOCÊ</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ===== CHEFE DO EVENTO ===== -->
+    <sc-if value="{{showBoss}}" hint-placeholder-val="{{false}}">
+      <div class="bossSt" style="--ta: {{tA}}; --fog: {{bFog}}; --bc: {{bossC}}; --mc: {{bossMist}}">
+        <sc-if value="{{mapIsImg}}" hint-placeholder-val="{{true}}"><div class="mapImg {{mapCls}}" style="filter: {{bossMapF}}"></div></sc-if>
+        <sc-if value="{{mapIsLay}}" hint-placeholder-val="{{false}}">
+          <div style="position: absolute; inset: 0; filter: {{bossMapF}}"><div class="lay s {{laySky}}"></div><div class="cldE"></div><div class="lay m {{layMid}}"></div><div class="lay g {{layGnd}}"></div></div>
+        </sc-if>
+        <div class="fog"></div>
+        <div class="mist"></div>
+        <div class="flr"></div>
+        <sc-for list="{{embers}}" as="m" hint-placeholder-count="6"><span class="emb2" style="right: {{m.x}}; bottom: {{m.y}}; animation-delay: {{m.d}}"></span></sc-for>
+        <div class="bFig" role="img" aria-label="{{bossAria}}">
+          <span class="rune"></span>
+          <div class="bAura au10" style="filter: hue-rotate({{bossHue}}) saturate(1.4)"></div>
+          <div class="bBody {{bHitCls}}"><div class="port {{bossCls}}" style="position: absolute; inset: 0; transform: scaleX(-1)"></div></div>
+        </div>
+        <div class="kFig" aria-hidden="true">
+          <div class="au13"></div>
+          <div class="sp {{kSpr}}"></div>
+        </div>
+        <sc-if value="{{bdpOn}}" hint-placeholder-val="{{false}}"><span class="{{bdpCls}}" style="color: {{bdpC}}; font-size: {{bdpFs}}; text-shadow: 0 3px 0 #3a0d0a, 0 0 10px #000">{{bdpTx}}</span></sc-if>
+        <div class="bName">
+          <span style="display: flex; flex-direction: column; line-height: 1.1; min-width: 0">
+            <span style="font-size: 10.5px; font-weight: 900; color: {{bossC}}; letter-spacing: 1px; text-shadow: 0 1px 2px #000">CHEFE DO EVENTO · {{bossEra}}</span>
+            <span class="lil ol" style="font-size: clamp(18px,5.4vw,22px)">{{bossName}}</span>
+          </span>
+          <span class="chip" style="background: rgba(14,10,7,.88); border-color: {{bossC}}">aura {{bossAuraN}}</span>
+        </div>
+      </div>
+      <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+        <span style="display: flex; justify-content: space-between; gap: 6px; font-size: 11.5px; font-weight: 900; color: #e8dccb"><span>Vida coletiva (todos os jogadores)</span><span style="color: #c9b9a2">prévia offline</span></span>
+        <div class="hbar"><i style="width: {{gHpW}}"></i><span class="mkr" style="left: 25%"></span><span class="mkr" style="left: 50%"></span><span class="mkr" style="left: 75%"></span><b>{{gHpTx}}</b></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center">
+          <span class="chip"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">baú para todos a cada 25%</span>
+          <span class="chip ok">+{{bossPts}} pts por luta</span>
+          <span class="chip">+1 pt a cada 5.000 de dano</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px">
+          <span style="font-size: 12px; font-weight: 900">Seu dano: <span style="color: #ffe07a">{{myDmgTx}}</span> <span style="color: #c9b9a2">· melhor {{bestTx}}</span></span>
+          <span style="display: flex; align-items: center; gap: 6px"><span style="font-size: 11px; font-weight: 900; color: #c9b9a2">{{triesTxt}}</span><span class="pips" style="--ta: {{tA}}"><sc-for list="{{tries}}" as="p" hint-placeholder-count="3"><span class="{{p.cls}}"></span></sc-for></span></span>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===== LOJA DO EVENTO: compra direta, nunca sorteio ===== -->
+    <sc-if value="{{showShop}}" hint-placeholder-val="{{false}}">
+      <sc-if value="{{shopLocked}}" hint-placeholder-val="{{false}}"><div class="lock" style="min-height: 44px">A loja abre junto com o evento. Prévia:</div></sc-if>
+      <div class="vit" style="--vg: {{vitG}}">
+        <div class="vSt" aria-hidden="true">
+          <span class="rays"></span>
+          <span class="spark" style="left: 12%; top: 16%"></span>
+          <span class="spark" style="left: 82%; top: 24%; animation-delay: .7s"></span>
+          <span class="spark" style="left: 66%; top: 70%; animation-delay: 1.3s"></span>
+          <span class="ped"></span>
+          <div class="au13 aur" style="filter: hue-rotate({{vHue}}) saturate(1.3)"></div>
+          <div class="kidle hero" style="filter: hue-rotate({{vHue}}) saturate(1.3)"></div>
+        </div>
+        <div class="vInfo">
+          <span class="rib">PRÊMIO PRINCIPAL · LENDÁRIO</span>
+          <span class="vName ol">{{vName}}</span>
+          <span class="note" style="font-size: 11.5px">Skin com aura própria · só visual, nunca dá atributo</span>
+          <span class="lim">{{vLim}}</span>
+          <button class="{{vBtnCls}}" onClick="{{vAct}}" aria-label="{{vAria}}">
+            <sc-if value="{{vShowPrice}}" hint-placeholder-val="{{true}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="{{tokF}}" stroke="#fff3c4" stroke-width="1.8"></circle><path d="M12 5.5 L13.9 9.6 L18.3 10 L15 13 L16 17.4 L12 15.1 L8 17.4 L9 13 L5.7 10 L10.1 9.6 Z" fill="#ffe07a"></path></svg></sc-if>{{vBtn}}
+          </button>
+        </div>
+      </div>
+      <div class="shopRow">
+        <button class="ghost" onClick="{{shPrev}}" aria-label="Itens anteriores" style="padding: 0; color: {{shPrevC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <sc-for list="{{shop}}" as="s" hint-placeholder-count="3">
+          <div class="{{s.cls}}" style="--rc: {{s.rc}}; --rg: {{s.rg}}; animation-delay: {{s.d}}, {{s.d}}">
+            <span class="cnr"></span>
+            <span class="rlab">{{s.rar}}</span>
+            <span class="ic" aria-hidden="true">
+              <span class="glow" style="animation-delay: {{s.d}}"></span>
+              <sc-if value="{{s.isGold}}" hint-placeholder-val="{{false}}"><img class="cspin" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""></sc-if>
+              <sc-if value="{{s.isFrag}}" hint-placeholder-val="{{false}}"><svg class="pf" viewBox="0 0 24 24"><path d="M12 2 L19 9 L12 22 L5 9 Z" fill="#8ff5ff" stroke="#1d4a5a" stroke-width="1.2" stroke-linejoin="round"></path><path d="M5 9 H19 L12 22 Z" fill="#ff8ad8" opacity=".75"></path><path d="M12 2 L9 9 L12 22 L15 9 Z" fill="#fff" opacity=".45"></path></svg></sc-if>
+              <sc-if value="{{s.isSvg}}" hint-placeholder-val="{{true}}"><svg class="bob" viewBox="0 0 24 24" style="animation-delay: {{s.d}}"><path d="{{s.p1}}" fill="{{s.f1}}" stroke="{{s.st}}" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"></path><path d="{{s.p2}}" fill="{{s.f2}}" stroke="{{s.st}}" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"></path><circle class="bubl" cx="{{s.bx}}" cy="{{s.by}}" r="{{s.br}}" fill="#fff" opacity=".9"></circle></svg></sc-if>
+            </span>
+            <span class="inm ol">{{s.name}}</span>
+            <span class="lim">{{s.limTxt}}</span>
+            <button class="{{s.btnCls}}" onClick="{{s.act}}" aria-label="{{s.aria}}">
+              <sc-if value="{{s.showPrice}}" hint-placeholder-val="{{true}}"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="{{s.tokF}}" stroke="#fff3c4" stroke-width="1.8"></circle><path d="M12 5.5 L13.9 9.6 L18.3 10 L15 13 L16 17.4 L12 15.1 L8 17.4 L9 13 L5.7 10 L10.1 9.6 Z" fill="#ffe07a"></path></svg></sc-if>{{s.btn}}
+            </button>
+          </div>
+        </sc-for>
+        <button class="ghost" onClick="{{shNext}}" aria-label="Próximos itens" style="padding: 0; color: {{shNextC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+      <div class="rulesS" role="list" aria-label="Regras da loja">
+        <span class="rule ok" role="listitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Compra direta, nunca sorteio</span>
+        <span class="rule" role="listitem">Limite por item · {{shPageTxt}}</span>
+        <span class="rule" role="listitem">+2 dias para gastar após o fim</span>
+      </div>
+    </sc-if>
+    <div style="flex: none; height: 2px"></div>
+  </div></div>
+
+  <div class="nhFoot">
+    <button class="{{footCls}}" onClick="{{footAct}}" aria-label="{{footAria}}"><span style="position: relative; z-index: 1">{{footLbl}}</span></button>
+  </div>
+
+  <!-- GAVETA DE MISSÕES (dão pontos) -->
+  <sc-if value="{{misOpen}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Missões do evento" style="border-color: {{tA}}">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span class="lil ol" style="flex: 1; font-size: 22px">Missões do evento</span>
+          <button class="ghost" onClick="{{closeMis}}" aria-label="Fechar missões" style="padding: 0; width: 44px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg></button>
+        </div>
+        <span class="note">Cada missão dá pontos: eles somam nos GANHOS (avançam a trilha) e no SALDO (gasta na loja).</span>
+        <sc-if value="{{misLocked}}" hint-placeholder-val="{{false}}"><div class="lock" style="min-height: 44px">{{misLockTxt}}</div></sc-if>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <sc-for list="{{mis}}" as="m" hint-placeholder-count="4">
+            <div class="{{m.cls}}" style="animation-delay: {{m.d}}">
+              <span style="min-width: 0; display: flex; flex-direction: column; gap: 4px">
+                <span style="display: flex; justify-content: space-between; gap: 6px; font-size: clamp(12px,3.6vw,14px); font-weight: 900; line-height: 1.15">
+                  <span style="min-width: 0">{{m.name}}</span>
+                  <span style="flex: none; color: #c9b9a2; font-variant-numeric: tabular-nums">{{m.prog}}</span>
+                </span>
+                <span class="bar"><i style="width: {{m.pct}}; animation-delay: {{m.d}}"></i></span>
+              </span>
+              <button class="{{m.btnCls}}" onClick="{{m.act}}" aria-label="{{m.aria}}">
+                <span style="font-size: 11px; font-family: Nunito, sans-serif; font-weight: 900">{{m.top}}</span>
+                <span>+{{m.pts}}</span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="height: 44px; display: flex; align-items: center; justify-content: center; gap: 10px">
+          <button class="ghost" onClick="{{misPrev}}" aria-label="Missões anteriores" style="padding: 0; width: 44px; color: {{misPrevC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+          <span style="min-width: 90px; text-align: center; font-size: 12px; font-weight: 900; color: #c9b9a2">{{misPageTxt}}</span>
+          <button class="ghost" onClick="{{misNext}}" aria-label="Próximas missões" style="padding: 0; width: 44px; color: {{misNextC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+        </div>
+        <button class="{{misAllCls}}" onClick="{{misAll}}" aria-label="{{misAllAria}}"><span style="position: relative; z-index: 1">{{misAllLbl}}</span></button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- confirmar compra -->
+  <sc-if value="{{hasBuy}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Confirmar compra">
+        <span class="lil ol" style="font-size: 22px; text-align: center">Comprar {{buyName}}?</span>
+        <span class="note" style="text-align: center">Você leva exatamente este item. Sem sorteio. Restam {{buyLeft}} no limite do evento.</span>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 900">
+          <span>Saldo {{balTxt}}</span><span style="color: #c9b9a2">→</span><span style="color: #ffe07a">{{buyAfter}}</span>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button class="ghost" onClick="{{closeBuy}}" style="flex: 1; min-height: 52px">Cancelar</button>
+          <button class="gold" onClick="{{confirmBuy}}" style="flex: 1.4; min-height: 52px"><span style="position: relative; z-index: 1">Pagar {{buyPrice}}</span></button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878', up: '/_blob/ca8bcec3fced3c13b36555744659895a',
+  swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d', hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05', legendary: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d' };
+var IMG = { ev: '/_blob/28732a175ad6914976d4e1fc426e3d67', boss: '/_blob/6ab9e2e6c54dbef8618daf37fd11342f', tower: '/_blob/427ea533d63a98d29680ea732b96bd17', chest: '/_blob/b8d381af334d1ec5e3023cf138922df4' };
+var DAY = 86400;
+// status: 'on' ativo · 'gr' encerrado, em carência (2 dias para gastar) · 'soon' futuro. th = cara própria de cada evento.
+var EVENTS = [
+  { id: 'fest', name: 'Festival das Eras', st: 'on', days: 14, left: 9 * DAY + 7 * 3600 + 1520, img: IMG.ev, hero: true,
+    sub: '14 dias · trilha no mapa-múndi, chefe do evento e loja', bg: 'linear-gradient(135deg,#5a2ea0 0%,#a8650c 60%,#3a1a04 100%)', bd: '#ffc94a',
+    th: { t1: '#3a2350', a: '#b07cff', tok: '#8a4dff', map: 'img', mapCls: 'mWorld', mapF: 'saturate(1.1)', fog: 'linear-gradient(180deg,rgba(58,35,80,.18),rgba(20,10,30,.4))', shards: true,
+      trailSkin: 'Skin Arauto das Eras', trailHue: '200deg', vit: 'rgba(176,124,255,.6)',
+      skin: { n: 'Skin Folião das Eras', hue: '250deg' },
+      boss: { n: 'Devorador do Tempo', era: 'Era Futurista', cls: 'pDevo', c: '#c58bff', hue: '0deg', aura: 'do Tempo', mist: 'rgba(176,124,255,.4)',
+        fog: 'linear-gradient(180deg,rgba(40,10,70,.5),rgba(10,4,20,.72))', mapF: 'brightness(.5) saturate(1.3) hue-rotate(30deg)', hp: 5000000, cur: 3120000 } } },
+  { id: 'outono', name: 'Colheita do Tempo', st: 'gr', days: 7, left: 1 * DAY + 5 * 3600 + 610, img: IMG.chest, hero: true,
+    sub: 'Encerrado · use seus pontos na loja antes de sumirem', bg: 'linear-gradient(135deg,#6a3a10 0%,#3a2010 60%,#1d1611 100%)', bd: '#ff9a3a',
+    th: { t1: '#4a2a10', a: '#ff9a3a', tok: '#d86a1a', map: 'img', mapCls: 'mEra0', mapF: 'sepia(.35) saturate(1.2)', fog: 'linear-gradient(180deg,rgba(120,60,10,.18),rgba(40,20,5,.42))', shards: false,
+      trailSkin: 'Skin Ceifador do Tempo', trailHue: '20deg', vit: 'rgba(255,154,58,.55)',
+      skin: { n: 'Skin Colhedor do Tempo', hue: '30deg' },
+      boss: { n: 'Minotauro da Colheita', era: 'Antiguidade', cls: 'pMino', c: '#ff9a3a', hue: '-50deg', aura: 'da Colheita', mist: 'rgba(255,154,58,.35)',
+        fog: 'linear-gradient(180deg,rgba(80,40,10,.45),rgba(20,10,4,.72))', mapF: 'brightness(.5) sepia(.5)', hp: 3000000, cur: 0 } } },
+  { id: 'chefes', name: 'Desafio dos Chefes', st: 'soon', days: 7, left: 4 * DAY + 2 * 3600 + 333, img: IMG.boss, boss: IMG.boss,
+    sub: '7 dias · vença chefes de era para somar pontos', bg: 'linear-gradient(135deg,#7a1a1a 0%,#3a1010 60%,#16110d 100%)', bd: '#ff5a5a',
+    th: { t1: '#4a1414', a: '#ff5a5a', tok: '#c0392b', map: 'lay', sky: 'lSky2', mid: 'lMid2', gnd: 'lGnd2', mapF: 'saturate(1.1) hue-rotate(-14deg)', fog: 'linear-gradient(180deg,rgba(120,10,10,.28),rgba(30,5,5,.5))', shards: false,
+      trailSkin: 'Skin Matador de Titãs', trailHue: '300deg', vit: 'rgba(255,90,90,.55)',
+      skin: { n: 'Skin Caçador de Chefes', hue: '330deg' },
+      boss: { n: 'Dragão Rubro', era: 'Medieval', cls: 'pDrag', c: '#ff5a5a', hue: '-70deg', aura: 'Rubra', mist: 'rgba(255,90,90,.35)',
+        fog: 'linear-gradient(180deg,rgba(90,10,10,.45),rgba(20,4,4,.72))', mapF: 'brightness(.55) saturate(1.2) hue-rotate(-20deg)', hp: 4000000, cur: 4000000 } } },
+  { id: 'torre', name: 'Semana da Torre', st: 'soon', days: 7, left: 18 * DAY + 11 * 3600 + 42, img: IMG.tower, boss: IMG.tower,
+    sub: '7 dias · cada andar novo da torre vale pontos', bg: 'linear-gradient(135deg,#1d4a7a 0%,#13314f 60%,#16110d 100%)', bd: '#4aa3ff',
+    th: { t1: '#13314f', a: '#4aa3ff', tok: '#1d5a9a', map: 'lay', sky: 'lSky0', mid: 'lMid0', gnd: 'lGnd0', mapF: 'hue-rotate(170deg) saturate(.85)', fog: 'linear-gradient(180deg,rgba(10,40,90,.25),rgba(5,15,35,.5))', shards: false,
+      trailSkin: 'Skin Vigia da Torre', trailHue: '160deg', vit: 'rgba(74,163,255,.55)',
+      skin: { n: 'Skin Guardião da Torre', hue: '190deg' },
+      boss: { n: 'Minotauro da Torre', era: 'Antiguidade', cls: 'pMino', c: '#4aa3ff', hue: '170deg', aura: 'Glacial', mist: 'rgba(74,163,255,.35)',
+        fog: 'linear-gradient(180deg,rgba(10,30,80,.45),rgba(4,10,25,.72))', mapF: 'brightness(.5) hue-rotate(170deg)', hp: 4000000, cur: 4000000 } } }
+];
+var MIS = [
+  { n: 'Derrote 500 inimigos', cur: 320, max: 500, pts: 40 },
+  { n: 'Vença 3 chefes de era', cur: 3, max: 3, pts: 60 },
+  { n: 'Lute 5 vezes na Arena', cur: 5, max: 5, pts: 40 },
+  { n: 'Fortaleça itens 20 vezes', cur: 20, max: 20, pts: 30 },
+  { n: 'Vença 10 andares da Torre', cur: 4, max: 10, pts: 50 },
+  { n: 'Entre no jogo 7 dias', cur: 5, max: 7, pts: 80 },
+  { n: 'Enfrente o chefe do evento 3 vezes', cur: 3, max: 3, pts: 40 },
+  { n: 'Alimente o pet 10 vezes', cur: 7, max: 10, pts: 30 }
+];
+// ícones SVG desenhados em código (viewBox 24)
+var P = {
+  neck: ['M5 4 C5 12 9 15 12 15 C15 15 19 12 19 4', 'M12 14 L15.5 18 L12 22.5 L8.5 18 Z'],
+  ess: ['M9 3 H15 M10 3 V8 L5.5 17 C4.6 19 6 21 8 21 H16 C18 21 19.4 19 18.5 17 L14 8 V3', 'M7 15.5 H17 L18.5 18 C19 19.6 17.8 21 16 21 H8 C6.2 21 5 19.6 5.5 18 Z'],
+  stone: ['M6 9 L10 4 L17 5 L21 11 L18 19 L9 20 L3 14 Z', 'M10 4 L12 11 L21 11 M12 11 L9 20 M12 11 L3 14'],
+  food: ['M14 4 C19 4 21 9 19 13 C17 17 12 18 9 15 C6 12 8 4 14 4 Z', 'M9 15 L5 19 M4.5 17.5 C3 17 2.5 19 4 19.6 C4.3 21 6.4 20.6 6 19.1']
+};
+var ICS = { stone: { p: P.stone, f1: '#4aa3ff', f2: 'none', st: '#d8ecff' }, food: { p: P.food, f1: '#d86a3a', f2: '#f3e3c8', st: '#3a1a06' }, ess: { p: P.ess, f1: 'rgba(255,255,255,.08)', f2: '#5fd068', st: '#d8ffd0' }, neck: { p: P.neck, f1: 'none', f2: '#b07cff', st: '#e6d0ff' } };
+var RN = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário', 'Prismático'];
+var RC = ['#9aa0a6', '#4aa3ff', '#b45cff', '#ff4d6d', '#ffb21e', '#8ff5ff'];
+var RG = ['rgba(154,160,166,.35)', 'rgba(74,163,255,.6)', 'rgba(180,92,255,.7)', 'rgba(255,77,109,.6)', 'rgba(255,178,30,.75)', 'rgba(143,245,255,.75)'];
+// TRILHA: 9 marcos; os grandes = baú, skin e fragmentos do Prismático. Pontos = PROPOSTA.
+var TRAIL = [
+  { pts: 40, k: 'gold', n: 'Ouro ×10.000', r: 0 },
+  { pts: 90, k: 'svg', ic: 'stone', n: 'Pedras de fortalecer ×10', r: 1 },
+  { pts: 150, k: 'img', img: IMG.chest, n: 'Baú do evento', r: 3, big: true },
+  { pts: 220, k: 'svg', ic: 'food', n: 'Ração ×50', r: 0 },
+  { pts: 300, k: 'svg', ic: 'ess', n: 'Essência ×5', r: 2 },
+  { pts: 390, k: 'skin', n: 'skin', r: 4, big: true },
+  { pts: 490, k: 'gold', n: 'Ouro ×30.000', r: 1 },
+  { pts: 600, k: 'svg', ic: 'stone', n: 'Pedras de fortalecer ×20', r: 2 },
+  { pts: 720, k: 'frag', n: '20 Fragmentos do Prismático', r: 5, big: true }
+];
+// posições no mini-mapa (% da caixa), em serpente de baixo para cima
+var START = [7, 81];
+var NODES = [[27, 81], [53, 81], [82, 81], [75, 53], [48, 53], [21, 53], [26, 25], [53, 25], [82, 25]];
+var TURN = { 3: 9, 6: -9 }; // nas curvas o Kael para ao lado do caminho (não cobre os marcos)
+var PTS = [0].concat(TRAIL.map(function (t) { return t.pts; }));
+var CO = [START].concat(NODES);
+// LOJA: compra direta. Prêmio principal (skin) 150; Colar Épico 120 (fechados pelo dono); demais com * = proposta.
+var SHOP = [
+  { id: 'colar', n: 'Colar Épico', price: 120, lim: 1, r: 2, kind: 'svg', ic: 'neck', b: [12, 18, 1] },
+  { id: 'frag', n: '10 Fragmentos do Prismático', price: 40, lim: 8, r: 5, kind: 'frag', star: true },
+  { id: 'ess', n: 'Essência ×5', price: 30, lim: 5, r: 3, kind: 'svg', ic: 'ess', b: [11, 16, 1.2], star: true },
+  { id: 'pedra', n: 'Pedras de fortalecer ×10', price: 20, lim: 10, r: 1, kind: 'svg', ic: 'stone', b: [16, 8, 0.9], star: true },
+  { id: 'racao', n: 'Ração ×50', price: 15, lim: 10, r: 0, kind: 'svg', ic: 'food', b: [15, 7, 0.9], star: true },
+  { id: 'ouro', n: 'Ouro ×20.000', price: 10, lim: 20, r: 0, kind: 'gold', star: true }
+];
+var SKIN_PRICE = 150, SPER = 3, MPER = 4, TRIES = 3, BOSS_PTS = 30;
+var CONF = ['#ffc94a', '#ff5a5a', '#5fd068', '#4aa3ff', '#fff3c4', '#b07cff', '#ff8ad8', '#8ff5ff'];
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fOf(e) { for (var i = 0; i < PTS.length - 1; i++) if (e < PTS[i + 1]) return i + (e - PTS[i]) / (PTS[i + 1] - PTS[i]); return PTS.length - 1; }
+// onde o Kael para (nunca em cima de um marco): meio do trecho, ou ao lado do último
+function visF(e) { var f = fOf(e), i = Math.floor(f); if (i >= PTS.length - 1) return PTS.length - 1.5; if (TURN[i]) return i + 0.5; return i + Math.max(0.42, Math.min(0.58, f - i)); }
+function posAt(f) { var i = Math.min(CO.length - 2, Math.floor(f)), t = Math.max(0, Math.min(1, f - i)); var a = CO[i], b = CO[i + 1]; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; }
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    var now = Date.now();
+    this.ends = EVENTS.map(function (e) { return now + e.left * 1000; });
+    var pts = { fest: { e: 380, b: 245 }, outono: { e: 520, b: 95 }, chefes: { e: 0, b: 0 }, torre: { e: 0, b: 0 } };
+    this.state = { ev: 0, tab: 0, pts: pts, claimed: { 1: true }, tc: { fest: { 0: 1, 1: 1, 2: 1 }, outono: { 0: 1, 1: 1, 2: 1, 3: 1, 4: 1 }, chefes: {}, torre: {} },
+      bought: { fest: { racao: 2 }, outono: {}, chefes: {}, torre: {} }, mPage: 0, sPage: 0, now: now, buy: null, fly: 0, flyN: 0, pop: 0, toast: '', misOpen: false,
+      mk: visF(380), mkTo: visF(380), mkDir: 1,
+      tries: { fest: 3, outono: 0, chefes: 0, torre: 0 }, gHp: { fest: 3120000, outono: 0, chefes: 4000000, torre: 4000000 }, myDmg: { fest: 184200, outono: 96400, chefes: 0, torre: 0 }, best: { fest: 52600, outono: 41800, chefes: 0, torre: 0 },
+      kSpr: 'kidle', bHit: '', bdp: null, busy: false };
+  }
+  componentDidMount() { var self = this; this.iv = setInterval(function () { self.setState({ now: Date.now() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.mv); clearTimeout(this.tt); (this.bt || []).forEach(clearTimeout); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this; clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(function () { self.setState({ toast: '' }); }, 2200); }
+  ev() { return EVENTS[this.state.ev]; }
+  // marcador: Kael corre pelo caminho até o novo ponto (passa pelas curvas)
+  runTo(e) {
+    var self = this, to = visF(e); clearInterval(this.mv);
+    this.setState({ mkTo: to });
+    this.mv = setInterval(function () {
+      var m = self.state.mk, d = to - m;
+      if (Math.abs(d) < 0.05) { clearInterval(self.mv); self.setState({ mk: to }); return; }
+      var nm = m + Math.sign(d) * Math.min(Math.abs(d), 0.05), a = posAt(m), b = posAt(nm + Math.sign(d) * 0.01);
+      self.setState({ mk: nm, mkDir: b[0] < a[0] - 0.01 ? -1 : (b[0] > a[0] + 0.01 ? 1 : self.state.mkDir) });
+    }, 40);
+  }
+  addPts(n) {
+    var s = this.state, E = this.ev(), pts = Object.assign({}, s.pts), cur = pts[E.id];
+    pts[E.id] = { e: cur.e + n, b: cur.b + n };
+    this.setState({ pts: pts, fly: s.fly + 1, flyN: n, pop: s.pop + 1 });
+    this.runTo(cur.e + n);
+  }
+  claimMis(i) { var c = Object.assign({}, this.state.claimed); c[i] = true; this.sfx(SND.claim); this.setState({ claimed: c }); this.addPts(MIS[i].pts); }
+  claimAllMis() {
+    var s = this.state, c = Object.assign({}, s.claimed), sum = 0;
+    MIS.forEach(function (m, i) { if (m.cur >= m.max && !c[i]) { c[i] = true; sum += m.pts; } });
+    if (!sum) return;
+    this.sfx(SND.claim); this.setState({ claimed: c, misOpen: false, tab: 0 }); this.addPts(sum);
+  }
+  prizeName(t) { return t.k === 'skin' ? this.ev().th.trailSkin : t.n; }
+  claimNode(i) {
+    var s = this.state, E = this.ev(), tc = Object.assign({}, s.tc), mine = Object.assign({}, tc[E.id]); mine[i] = 1; tc[E.id] = mine;
+    var t = TRAIL[i]; this.sfx(t.big ? SND.legendary : SND.claim, 0.8); this.setState({ tc: tc });
+    this.say(this.prizeName(t) + ' foi para a sua mochila!' + (E.th.shards ? ' Um pedaço do Relógio se acendeu.' : ''));
+  }
+  claimAllNodes() {
+    var s = this.state, E = this.ev(), tc = Object.assign({}, s.tc), mine = Object.assign({}, tc[E.id]), e = s.pts[E.id].e, n = 0, big = false;
+    TRAIL.forEach(function (t, i) { if (e >= t.pts && !mine[i]) { mine[i] = 1; n++; if (t.big) big = true; } });
+    if (!n) return;
+    tc[E.id] = mine; this.sfx(big ? SND.legendary : SND.claim, 0.8); this.setState({ tc: tc });
+    this.say(n + (n > 1 ? ' prêmios da trilha resgatados!' : ' prêmio da trilha resgatado!'));
+  }
+  fightBoss() {
+    var s = this.state, E = this.ev(), self = this;
+    if (s.busy) return;
+    if (E.st !== 'on') { this.sfx(SND.tap); this.say(E.st === 'gr' ? 'Evento encerrado: o chefe já caiu.' : 'O chefe aparece quando o evento começar.'); return; }
+    if (s.tries[E.id] <= 0) { this.sfx(SND.tap); this.say('Sem tentativas hoje. Voltam à meia-noite.'); return; }
+    var tr = Object.assign({}, s.tries); tr[E.id]--;
+    var h1 = Math.round((12800 + Math.random() * 3000) / 10) * 10, h2 = Math.round((24500 + Math.random() * 5000) / 10) * 10, h3 = Math.round((13000 + Math.random() * 3000) / 10) * 10;
+    this.setState({ tries: tr, busy: true, kSpr: 'katk' }); this.sfx(SND.swing, 0.6);
+    this.bt = [];
+    function at(ms, fn) { self.bt.push(setTimeout(fn, ms)); }
+    function hit(d, crit, k) {
+      var g = Object.assign({}, self.state.gHp); g[E.id] = Math.max(0, g[E.id] - d);
+      self.setState({ gHp: g, bHit: k % 2 ? 'hit1' : 'hit2', bdp: { k: k % 2 ? 'k1' : 'k2', txt: n0(d), crit: crit } });
+      self.sfx(SND.hit, crit ? 0.9 : 0.6);
+    }
+    at(560, function () { hit(h1, false, 1); });
+    at(1000, function () { self.setState({ kSpr: 'kidle' }); });
+    at(1100, function () { self.setState({ kSpr: 'katk' }); self.sfx(SND.swing, 0.6); });
+    at(1660, function () { hit(h2, true, 2); });
+    at(2100, function () { self.setState({ kSpr: 'kidle' }); });
+    at(2200, function () { self.setState({ kSpr: 'katk' }); self.sfx(SND.swing, 0.6); });
+    at(2760, function () { hit(h3, false, 3); });
+    at(3200, function () {
+      var tot = h1 + h2 + h3, md = Object.assign({}, self.state.myDmg), bs = Object.assign({}, self.state.best);
+      md[E.id] += tot; bs[E.id] = Math.max(bs[E.id], tot);
+      var gain = BOSS_PTS + Math.floor(tot / 5000);
+      self.setState({ kSpr: 'kidle', busy: false, myDmg: md, best: bs, bdp: null, bHit: '' });
+      self.addPts(gain); self.sfx(SND.claim);
+      self.say('Dano ' + n0(tot) + ' · +' + gain + ' pontos do evento!');
+    });
+  }
+  renderVals() {
+    var s = this.state, self = this, E = EVENTS[s.ev], st = E.st, th = E.th, B = th.boss;
+    var left = Math.max(0, Math.floor((this.ends[s.ev] - s.now) / 1000));
+    var d = Math.floor(left / DAY), hh = Math.floor(left % DAY / 3600), mm = Math.floor(left % 3600 / 60), ss = left % 60;
+    var P2 = s.pts[E.id], earn = P2.e, bal = P2.b, bought = s.bought[E.id] || {}, tc = s.tc[E.id] || {};
+    var fest = E.id === 'fest', misOn = st === 'on';
+    var misReadyL = fest ? MIS.filter(function (m, i) { return m.cur >= m.max && !s.claimed[i]; }) : [];
+    var misSum = misReadyL.reduce(function (a, m) { return a + m.pts; }, 0);
+    var trailLocked = st === 'soon';
+    var nodesGo = trailLocked ? 0 : TRAIL.filter(function (t, i) { return earn >= t.pts && !tc[i]; }).length;
+    var claimedN = Object.keys(tc).length;
+    // ----- trilha -----
+    var nodes = TRAIL.map(function (t, i) {
+      var reached = !trailLocked && earn >= t.pts, done = !!tc[i], go = reached && !done, ic = ICS[t.ic] || {};
+      var name = self.prizeName(t), c = NODES[i];
+      return { x: c[0] + '%', y: c[1] + '%', big: !!t.big, rc: RC[t.r], rg: RG[t.r], d: (i * 0.09).toFixed(2) + 's', pts: n0(t.pts),
+        cls: 'nd' + (t.big ? ' big' : '') + (go ? ' go' : (done ? ' done' : (reached ? '' : ' lock'))), isDone: done, isGo: go,
+        isImg: t.k === 'img', img: t.img || '', isGold: t.k === 'gold', isFrag: t.k === 'frag', isSkin: t.k === 'skin', isSvg: t.k === 'svg', hue: th.trailHue,
+        p1: ic.p ? ic.p[0] : '', p2: ic.p ? ic.p[1] : '', f1: ic.f1 || 'none', f2: ic.f2 || 'none', st: ic.st || '#000',
+        aria: name + ', marco de ' + t.pts + ' pontos, ' + (done ? 'resgatado' : (go ? 'pronto para resgatar' : 'faltam ' + Math.max(0, t.pts - earn) + ' pontos')),
+        act: function () {
+          if (go) { self.claimNode(i); return; }
+          self.sfx(SND.tap);
+          self.say(done ? name + ': já resgatado.' : (trailLocked ? name + ' · ' + t.pts + ' pts (prévia)' : name + ': faltam ' + (t.pts - earn) + ' pontos.'));
+        } };
+    });
+    var mk = trailLocked ? 0.5 : s.mk, mkP = posAt(mk), moving = Math.abs(s.mkTo - s.mk) > 0.001;
+    var mkSeg = Math.floor(mk), mkOff = !moving && TURN[mkSeg] ? TURN[mkSeg] : 0;
+    var done = []; var fi = Math.floor(mk);
+    for (var k = 0; k <= Math.min(fi, CO.length - 1); k++) done.push(CO[k][0] + ',' + CO[k][1]);
+    done.push(mkP[0].toFixed(2) + ',' + mkP[1].toFixed(2));
+    // direção em repouso: para onde vai o próximo trecho
+    var seg = Math.min(CO.length - 2, Math.floor(mk)), restDir = CO[seg + 1][0] < CO[seg][0] ? -1 : 1;
+    var dir = moving ? s.mkDir : restDir;
+    var nextT = TRAIL.filter(function (t) { return t.pts > earn; })[0];
+    var trailHint = trailLocked ? 'Começa em breve · veja os prêmios' : (nextT ? 'Próximo marco: ' + self.prizeName(nextT) + ' em ' + (nextT.pts - earn) + ' pts' : 'Trilha completa!');
+    // ----- missões -----
+    var mPages = Math.ceil(MIS.length / MPER), mPage = Math.min(s.mPage, mPages - 1);
+    var mis = MIS.slice(mPage * MPER, mPage * MPER + MPER).map(function (m, j) {
+      var i = mPage * MPER + j, dn = fest && m.cur >= m.max, cl = fest && !!s.claimed[i], cur = fest ? m.cur : (st === 'gr' ? m.max : 0);
+      return { name: m.n, prog: cl ? 'feito' : n0(cur) + '/' + n0(m.max), pct: Math.min(100, cur / m.max * 100) + '%', pts: m.pts, d: (j * 0.06) + 's',
+        cls: 'mis inR' + (dn ? ' done' : '') + (cl ? ' claimed' : ''),
+        btnCls: 'cl ' + (cl ? 'ok' : (dn ? 'go' : 'wait')), top: cl ? 'resgatado' : (dn ? 'Resgatar' : 'pontos'),
+        aria: m.n + ': ' + (cl ? 'resgatado' : (dn ? 'resgatar ' + m.pts + ' pontos' : cur + ' de ' + m.max + ', vale ' + m.pts + ' pontos')),
+        act: function () { if (dn && !cl) self.claimMis(i); else self.sfx(SND.tap); } };
+    });
+    // ----- chefe -----
+    var gHp = s.gHp[E.id], tries = s.tries[E.id];
+    var bd = s.bdp;
+    // ----- loja -----
+    var shopOpen = st !== 'soon';
+    var sPages = Math.ceil(SHOP.length / SPER), sPage = Math.min(s.sPage, sPages - 1);
+    var shop = SHOP.slice(sPage * SPER, sPage * SPER + SPER).map(function (it, j) {
+      var have = bought[it.id] || 0, out = have >= it.lim, can = shopOpen && !out && bal >= it.price, b = it.b || [0, 0, 0], ic = ICS[it.ic] || {};
+      return { name: it.n, rar: RN[it.r], rc: RC[it.r], rg: RG[it.r], d: (j * 0.06) + 's', cls: 'it inUp' + (it.r >= 2 ? ' hot' : ''), tokF: th.tok,
+        isGold: it.kind === 'gold', isFrag: it.kind === 'frag', isSvg: it.kind === 'svg',
+        p1: ic.p ? ic.p[0] : '', p2: ic.p ? ic.p[1] : '', f1: ic.f1 || 'none', f2: ic.f2 || 'none', st: ic.st || '#000', bx: b[0], by: b[1], br: b[2],
+        limTxt: 'limite ' + have + '/' + it.lim, showPrice: !out, btn: out ? 'Esgotado' : n0(it.price) + (it.star ? '*' : ''),
+        btnCls: 'buy ' + (out ? 'out' : (can ? 'can' : 'no')),
+        aria: it.n + ', ' + RN[it.r] + (out ? ', esgotado' : ', ' + it.price + ' pontos' + (can ? '' : ', saldo insuficiente')) + ', comprados ' + have + ' de ' + it.lim,
+        act: function () { self.tryBuy(it.id, it.n, it.price, it.lim); } };
+    });
+    var vHave = bought.skin || 0, vOut = vHave >= 1, vCan = shopOpen && !vOut && bal >= SKIN_PRICE;
+    var bi = s.buy;
+    // ----- rodapé -----
+    var footLbl, footCls = 'gold', footAct, footAria;
+    if (s.tab === 0) {
+      if (nodesGo > 0) { footLbl = 'Resgatar trilha · ' + nodesGo + (nodesGo > 1 ? ' prêmios' : ' prêmio'); footCls = 'gold pulse'; footAct = function () { self.claimAllNodes(); }; }
+      else if (misSum > 0) { footLbl = 'Resgatar missões · +' + misSum + ' pts'; footCls = 'gold pulse'; footAct = function () { self.claimAllMis(); }; }
+      else { footLbl = 'Ver missões do evento'; footAct = function () { self.sfx(SND.tap); self.setState({ misOpen: true }); }; }
+    } else if (s.tab === 1) {
+      if (st !== 'on') { footLbl = st === 'gr' ? 'Chefe derrotado · evento encerrado' : 'Chefe aparece quando começar'; footCls = 'gold off'; footAct = function () { self.fightBoss(); }; }
+      else if (s.busy) { footLbl = 'Lutando…'; footCls = 'gold off'; footAct = function () {}; }
+      else if (tries > 0) { footLbl = 'Enfrentar chefe · ' + tries + '/' + TRIES; footCls = 'gold pulse'; footAct = function () { self.fightBoss(); }; }
+      else { footLbl = 'Tentativas voltam à meia-noite'; footCls = 'gold off'; footAct = function () { self.fightBoss(); }; }
+    } else {
+      if (vCan) { footLbl = 'Comprar ' + th.skin.n + ' · ' + SKIN_PRICE; footCls = 'gold pulse'; footAct = function () { self.tryBuy('skin', th.skin.n, SKIN_PRICE, 1); }; }
+      else { footLbl = st === 'soon' ? 'Ver a trilha do evento' : 'Ganhar mais pontos'; footAct = function () { self.sfx(SND.tap); self.setState({ tab: 0 }); }; }
+    }
+    footAria = footLbl;
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      hasToast: !!s.toast, toast: s.toast,
+      evs: EVENTS.map(function (e, i) {
+        var tag = e.st === 'on' ? 'ATIVO' : (e.st === 'gr' ? 'CARÊNCIA' : 'EM BREVE');
+        return { name: e.name, img: e.img, tag: tag, tagCls: 'tag ' + e.st, sel: i === s.ev ? 'true' : 'false', d: (i * 0.06) + 's',
+          aria: e.name + ', ' + tag.toLowerCase(),
+          pick: function () { self.sfx(SND.tap); clearInterval(self.mv); var v = visF(s.pts[e.id].e); self.setState({ ev: i, mPage: 0, sPage: 0, buy: null, mk: v, mkTo: v, bdp: null, bHit: '' }); } };
+      }),
+      bBg: E.bg, bBd: E.bd, bName: E.name, bSub: E.sub, bHero: !!E.hero, bBoss: !!E.boss, bImg: E.boss || '',
+      bAria: 'Banner do evento ' + E.name, confs: CONF.map(function (c, i) { return { l: (8 + i * 11.5) + '%', c: c, d: (i * 0.37) + 's' }; }),
+      tLbl: st === 'on' ? 'Termina em' : (st === 'gr' ? 'Pontos valem por mais' : 'Começa em'),
+      tHead: (d > 0 ? d + 'd ' : '') + pad(hh) + ':' + pad(mm) + ':', tSec: pad(ss), secCls: ss % 2 ? 'secA' : 'secB',
+      tAria: (st === 'on' ? 'Termina em ' : (st === 'gr' ? 'Pontos valem por mais ' : 'Começa em ')) + d + ' dias, ' + hh + ' horas e ' + mm + ' minutos',
+      // pontos
+      tT1: th.t1, tA: th.a, tokF: th.tok, earnTxt: n0(earn), balTxt: n0(bal), popCls: s.pop % 2 ? 'popA' : 'popB',
+      fly: s.fly > 0 && s.flyN > 0, flyCls: s.fly % 2 ? 'flyA' : 'flyB', flyN: s.flyN,
+      mBtnCls: 'mBtn' + (misSum > 0 ? ' go' : ''), misDot: misReadyL.length > 0, misReady: misReadyL.length,
+      mBtnAria: 'Abrir missões do evento' + (misReadyL.length ? ', ' + misReadyL.length + ' prontas' : ''),
+      openMis: function () { self.sfx(SND.tap); self.setState({ misOpen: true }); },
+      tabs: [['Trilha', 0, nodesGo], ['Chefe', 1, misOn ? tries : 0], ['Loja', 2, vCan ? 1 : 0]].map(function (t) {
+        return { label: t[0], sel: s.tab === t[1] ? 'true' : 'false', hasDot: t[2] > 0, dot: t[2], pick: function () { self.sfx(SND.tap); self.setState({ tab: t[1] }); } };
+      }),
+      showTrail: s.tab === 0, showBoss: s.tab === 1, showShop: s.tab === 2,
+      // trilha
+      hasShards: !!th.shards, noShards: !th.shards, shTxt: Math.min(9, claimedN) + '/9',
+      shAria: th.shards ? 'Relógio do Festival: ' + Math.min(9, claimedN) + ' de 9 pedaços acesos' : trailHint,
+      shards: [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return { cls: 'sh sh' + i + (i < claimedN ? ' shOn' : ' shOff'), d: (-i * 0.24).toFixed(2) + 's' }; }),
+      tFog: th.fog, mapIsImg: th.map === 'img', mapIsLay: th.map === 'lay', mapCls: th.mapCls || '', mapFilter: th.mapF + (trailLocked ? ' grayscale(.4) brightness(.8)' : ''),
+      laySky: th.sky || '', layMid: th.mid || '', layGnd: th.gnd || '',
+      pathAll: CO.map(function (c) { return c[0] + ',' + c[1]; }).join(' '), pathDone: trailLocked ? '' : done.join(' '),
+      startX: START[0] + '%', startY: START[1] + '%', nodes: nodes,
+      mkOn: !trailLocked, mkX: (mkP[0] + mkOff).toFixed(2) + '%', mkY: mkP[1].toFixed(2) + '%', mkSpr: moving ? 'krun' : 'kidle', mkFlip: dir < 0 ? 'scaleX(-1)' : 'none',
+      mkAria: 'Você: ' + earn + ' pontos ganhos na trilha', trailHint: trailHint, trailLocked: trailLocked,
+      // chefe
+      bFog: B.fog, bossC: B.c, bossMist: B.mist, bossMapF: B.mapF, bossHue: B.hue, bossCls: B.cls, bossName: B.n, bossEra: B.era, bossAuraN: B.aura,
+      bossAria: B.n + ', chefe do evento com aura ' + B.aura, bHitCls: s.bHit, kSpr: s.kSpr,
+      embers: [0, 1, 2, 3, 4, 5].map(function (i) { return { x: (8 + i * 7) + '%', y: (12 + (i * 11) % 30) + '%', d: (-i * 0.4).toFixed(1) + 's' }; }),
+      bdpOn: !!bd, bdpCls: bd ? 'bdp ' + bd.k : '', bdpC: bd && bd.crit ? '#ffd23a' : '#fff', bdpFs: bd && bd.crit ? '38px' : '26px', bdpTx: bd ? (bd.crit ? 'CRÍTICO! ' : '') + bd.txt : '',
+      gHpW: (gHp / B.hp * 100).toFixed(1) + '%', gHpTx: st === 'gr' ? 'Derrotado por todos!' : n0(gHp) + ' / ' + n0(B.hp) + ' (' + Math.round(gHp / B.hp * 100) + '%)',
+      bossPts: BOSS_PTS, myDmgTx: n0(s.myDmg[E.id]), bestTx: n0(s.best[E.id]),
+      triesTxt: misOn ? 'Tentativas hoje' : 'Indisponível',
+      tries: [0, 1, 2].map(function (i) { return { cls: 'pip' + (misOn && i < tries ? ' on' : '') }; }),
+      // loja
+      shopLocked: !shopOpen, vitG: th.vit, vHue: th.skin.hue, vName: th.skin.n,
+      vLim: 'limite ' + vHave + '/1 · ' + SKIN_PRICE + ' pontos', vShowPrice: !vOut, vBtn: vOut ? 'Comprada' : n0(SKIN_PRICE),
+      vBtnCls: 'buy ' + (vOut ? 'out' : (vCan ? 'can' : 'no')),
+      vAria: th.skin.n + (vOut ? ', já comprada' : ', ' + SKIN_PRICE + ' pontos' + (vCan ? '' : ', saldo insuficiente')),
+      vAct: function () { self.tryBuy('skin', th.skin.n, SKIN_PRICE, 1); },
+      shop: shop, shPageTxt: 'página ' + (sPage + 1) + '/' + sPages,
+      shPrevC: sPage > 0 ? '#f6ecdf' : '#6a5a48', shNextC: sPage < sPages - 1 ? '#f6ecdf' : '#6a5a48',
+      shPrev: function () { if (sPage > 0) { self.sfx(SND.tap); self.setState({ sPage: sPage - 1 }); } },
+      shNext: function () { if (sPage < sPages - 1) { self.sfx(SND.tap); self.setState({ sPage: sPage + 1 }); } },
+      footLbl: footLbl, footCls: footCls, footAct: footAct, footAria: footAria,
+      // gaveta de missões
+      misOpen: s.misOpen, closeMis: function () { self.sfx(SND.tap); self.setState({ misOpen: false }); },
+      misLocked: !misOn, misLockTxt: st === 'gr' ? 'Evento encerrado: as missões fecharam. A loja fica aberta na carência.' : 'As missões abrem quando o evento começar. Prévia:',
+      mis: mis, misPageTxt: (mPage + 1) + '/' + mPages,
+      misPrevC: mPage > 0 ? '#f6ecdf' : '#6a5a48', misNextC: mPage < mPages - 1 ? '#f6ecdf' : '#6a5a48',
+      misPrev: function () { if (mPage > 0) { self.sfx(SND.tap); self.setState({ mPage: mPage - 1 }); } },
+      misNext: function () { if (mPage < mPages - 1) { self.sfx(SND.tap); self.setState({ mPage: mPage + 1 }); } },
+      misAllCls: misSum > 0 ? 'gold pulse' : 'gold off', misAllLbl: misSum > 0 ? 'Resgatar tudo · +' + misSum + ' pts' : 'Nada para resgatar agora',
+      misAllAria: misSum > 0 ? 'Resgatar todas as missões prontas, mais ' + misSum + ' pontos' : 'Nenhuma missão pronta',
+      misAll: function () { if (misSum > 0) self.claimAllMis(); else self.sfx(SND.tap); },
+      // compra
+      hasBuy: !!bi, buyName: bi ? bi.n : '', buyPrice: bi ? n0(bi.price) : '', buyAfter: bi ? n0(bal - bi.price) : '', buyLeft: bi ? bi.left : 0,
+      closeBuy: function () { self.sfx(SND.tap); self.setState({ buy: null }); },
+      confirmBuy: function () {
+        if (!bi) return;
+        var p2 = Object.assign({}, s.pts), b2 = Object.assign({}, s.bought), mine = Object.assign({}, bought);
+        p2[E.id] = { e: earn, b: bal - bi.price }; mine[bi.id] = (mine[bi.id] || 0) + 1; b2[E.id] = mine;
+        self.sfx(bi.id === 'skin' ? SND.legendary : SND.coin); self.setState({ pts: p2, bought: b2, buy: null, pop: s.pop + 1, fly: 0 });
+        self.say(bi.n + ' foi para a sua mochila!');
+      }
+    };
+  }
+  tryBuy(id, n, price, lim) {
+    var s = this.state, E = this.ev(), bal = s.pts[E.id].b, have = (s.bought[E.id] || {})[id] || 0;
+    if (E.st === 'soon') { this.sfx(SND.tap); this.say('A loja abre junto com o evento.'); return; }
+    if (have >= lim) { this.sfx(SND.tap); this.say('Limite do evento atingido.'); return; }
+    if (bal < price) { this.sfx(SND.tap); this.say('Faltam ' + (price - bal) + ' pontos. Faça missões e enfrente o chefe!'); return; }
+    this.sfx(SND.tap); this.setState({ buy: { id: id, n: n, price: price, left: lim - have } });
+  }
+}
+</script>
+</body>
+</html>

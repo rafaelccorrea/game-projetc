@@ -29,7 +29,7 @@ function initLoading(){
   LD.t0 = performance.now();
 
   /* --- fila real de pré-carregamento --- */
-  const era = eraOf(S.stage), ae = SKIN(S.skinEq.armor), we = SKIN(S.skinEq.weapon);
+  const era = eraOf(S.stage), ae = SKIN(S.skinEq.armor), we = typeof heroLook === 'function' ? heroLook().weapon : SKIN(S.skinEq.weapon);
   ['assets/hero/anchors.json', 'assets/weapons/meta.json', 'assets/enemies/meta.json', 'assets/bg/meta.json', 'assets/fx/meta.json'].forEach(p => loadTrack(loadJson(p)));
   heroPreload(ae.e).forEach(loadTrack);                                            // folhas do Kael (corrida, parado, golpe)
   [hp('weapons', we.e, tierOf(we.r)), hp('hero', ae.e, tierOf(ae.r))].forEach(p => loadTrack(loadGameImg(p)));
@@ -44,7 +44,7 @@ function initLoading(){
   /* fundos das 7 eras desta própria tela (o chão de cada um cai na linha dos pés: 78% da altura) */
   const bgMeta = fetch('assets/bg/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
   /* linha dos pés da tela de carregamento: 658 de 844 (jogo de hoje) ou 640 com a 04b ligada (mesma linha da batalha em tela cheia) */
-  const LOAD_FEET = (typeof FB_GEO !== 'undefined' && FB_GEO) ? 640 : 658;
+  const LOAD_FEET = 640;
   if (LOAD_FEET !== 658){ const lr = document.getElementById('lrun'); if (lr) lr.style.top = (507 - (658 - LOAD_FEET)) + 'px'; }
   LOAD_ERAS.forEach((n, i) => { const d = document.getElementById('lbg' + i), path = `assets/bg/era${i}.png`;
     if (sceneOn(i) && d){   // era com cenário novo aprovado (sceneV2): a própria cena viva, com o chão do meta na linha dos pés (658 de 844)

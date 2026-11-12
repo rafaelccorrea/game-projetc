@@ -195,7 +195,7 @@ function addFragments(S,id,n,host){
 const starCostOf=def=>(def&&def.starCost)||DATA.starCost;   // Prismático tem custo próprio
 function starUp(x,def){ const C=starCostOf(def); while(x.stars<DATA.maxStars&&x.frags>=C[x.stars-1]){ x.frags-=C[x.stars-1]; x.stars++; } }
 /* ---- fontes do Prismático (Revisão 5; só com v4) ---- */
-const dayOf=host=>{ const d=new Date(num(host&&host.now&&host.now(),Date.now())); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const dayOf=host=>{ const t=num(host&&host.now&&host.now(),Date.now()), C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==='function') return C.dayKey(t); const d=new Date(t); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const vipLvl=S=>{ const V=root.Sys&&root.Sys.vip; return V&&V.level?int0(V.level(S)):0; };
 /* vitória sobre o chefe da era 8+: 1 fragmento por DIA (a 2ª vitória no dia não dá); com VIP, +1 a cada 4 dias com fragmento. → resultado de addFragments ou {ok:false,reason} */
 function prismBoss(S,host,era){ const B=DATA.v4d.prism.boss; if(!V4()) return {ok:false,reason:'off'};

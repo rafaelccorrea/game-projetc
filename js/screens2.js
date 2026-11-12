@@ -176,7 +176,7 @@ function pRenew(mt){ const d=new Date(); if(mt==='d'){ const m=new Date(d.getFul
 function passTick(){ const el=document.getElementById('xp_renew'); if(el){ const t=pRenew(XP.mt); if(el.textContent!==t) el.textContent=t; } }
 function scrPass(){
   if(!PASS_OK()){ V.innerHTML=''; return; }
-  const d=xFit(682,610), H=d.H, PER=d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4, P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
+  const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
   const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0;
   const seg=on=>on?'background:linear-gradient(180deg,#b07cff,#6a3cff);color:#fff':'background:transparent;color:#c9b9a2';
@@ -207,19 +207,16 @@ function scrPass(){
         <span style="text-align:center;font-size:9px;font-weight:900;color:#c9b9a2">NÍVEL DO PASSE</span>
         <span style="display:flex;flex-direction:column;align-items:center;line-height:1.1"><span class="lil" style="display:flex;align-items:center;gap:4px;font-size:15px;color:#d9b3ff">${prem?'':SVG_LOCK(13,'#e6d4ff')}Premium</span><span style="font-size:9px;font-weight:800;color:#d9c8ff;text-align:center">Raro → Épico → Lendário, + diamantes, skin</span></span></div>
       <div style="height:${PER*70+(PER-1)*5}px;flex:none;display:flex;flex-direction:column;gap:5px">${rows}</div>
-      <div style="height:52px;flex:none;display:flex;gap:8px">
+      <div style="height:52px;flex:none;display:flex;gap:8px;margin-top:auto">
         <button class="lil ${pend.length?'y-gold y-cta':''}" data-x="all" id="xp_all" style="flex:1;height:50px;border-radius:14px;${pend.length?'':'border:2px solid #4a3a2b;background:#241b14;color:#c9b9a2;'}font-size:16px;padding:0">${pend.length?'Resgatar tudo ('+pend.length+')':'Tudo resgatado'}</button>
         ${prem?`<div class="lil" style="flex:1.3;height:50px;border-radius:14px;border:2px solid #8a4dff;background:#241a38;color:#e6d4ff;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box"><img src="assets/ui/pass.png" alt="" style="width:26px;height:26px;object-fit:contain">Premium ativo</div>`
           :`<button class="p-prem" data-x="askprem" style="position:relative;overflow:hidden;flex:1.3;height:50px;border-radius:14px;padding:0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="p-premsh"></span><span class="lil" style="font-size:16px">Ativar Premium</span><span style="font-size:10px;font-weight:900;color:#2a1250">Pagamento em breve</span></button>`}</div>
-      <div style="height:44px;flex:none;display:flex;align-items:center;gap:8px">
-        <button class="lil" data-x="pg" data-d="-1" aria-label="Níveis anteriores" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg>0?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">‹</button>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="display:flex;gap:5px">${dots}</div><span style="font-size:12px;font-weight:800;color:#c9b9a2">Níveis ${pg*PER+1}–${Math.min(T,pg*PER+PER)} de ${T} · itens da sua era</span></div>
-        <button class="lil" data-x="pg" data-d="1" aria-label="Próximos níveis" style="width:52px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${pg<pages-1?'#f6ecdf':'#6b5843'};font-size:24px;padding:0">›</button></div>`;
+      ${xPager('pg',pg,pages,'Níveis '+(pg*PER+1)+'–'+Math.min(T,pg*PER+PER)+' de '+T+' · itens da sua era','Níveis anteriores','Próximos níveis')}`;
     XP.pages=pages;
   } else {
     const src=XP.mt==='d'?L.daily:L.weekly, list=src.map(m=>({m,ev:pEvOf(m.id)}));
     if(XP.mt==='d') list.push({bonus:true,m:{id:'bonus',txt:L.bonus.txt||'Complete as diárias',pxp:L.bonus.pxp,gems:L.bonus.gems,p:L.daily.filter(x=>x.claimed).length,need:L.daily.length,done:L.bonus.ready,claimed:L.bonus.claimed},ev:'boss'});
-    const avail=H-260, nAll=list.length, hAll=Math.floor((avail-(nAll-1)*8)/Math.max(1,nAll)), noPg=hAll>=74, rowH=noPg?Math.min(86,hAll):86;
+    const avail=H-260, nAll=list.length, hAll=Math.floor((avail-(nAll-1)*8)/Math.max(1,nAll)), noPg=!!d.real||hAll>=74, rowH=d.real?86:(noPg?Math.min(86,hAll):86);   /* layout novo: linha de 86 px, sem páginas (a tela rola) */
     const per=noPg?nAll:Math.max(2,Math.floor((H-260-46+8)/94)), pages=Math.max(1,Math.ceil(list.length/per)); XP.mpage=Math.max(0,Math.min(pages-1,XP.mpage)); XP.mpages=pages;
     const rows=list.slice(XP.mpage*per,XP.mpage*per+per).map(({m,ev,bonus})=>{ const can=m.done&&!m.claimed, off=ev==='instance'&&!m.done, pct=Math.round(Math.min(1,m.p/m.need)*100);
       return `<div class="p-mrow" style="height:${rowH}px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:16px;border:2px solid ${can?'#ffc94a':'#4a3a2b'};background:${can?'linear-gradient(90deg,#3a2c1f,#1d1611)':'#1d1611'};box-sizing:border-box;opacity:${m.claimed?.6:1}">
@@ -232,29 +229,29 @@ function scrPass(){
           :off?`<span style="width:92px;height:46px;flex:none;border-radius:12px;border:2px dashed #4a3a2b;color:#c9b9a2;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box">${SVG_LOCK(14)}Em breve</span>`
           :`<button data-x="mgo" data-ev="${ev}" aria-label="${esc2(m.txt)}, ${m.p} de ${m.need}, ir jogar" style="width:92px;height:46px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:13px;font-weight:900;padding:0">Ir</button>`}</div>`; }).join('');
     const mdots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XP.mpage?22:8}px;height:8px;border-radius:4px;background:${i===XP.mpage?'#b07cff':'#4a3a2b'}"></span>`).join('');
-    body=`<div style="height:44px;flex:none;display:flex;align-items:center;gap:8px">
-        <div role="radiogroup" aria-label="Tipo de missão" style="flex:1;display:flex;height:44px;padding:3px;gap:3px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
+    body=`<div style="height:52px;flex:none;display:flex;align-items:center;gap:8px">
+        <div role="radiogroup" aria-label="Tipo de missão" style="flex:1;display:flex;height:52px;padding:3px;gap:3px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
           <button role="radio" aria-checked="${XP.mt==='d'}" data-x="mt" data-m="d" style="flex:1;border-radius:9px;border:0;${seg(XP.mt==='d')};font-size:14px;font-weight:900;padding:0">Diárias</button>
           <button role="radio" aria-checked="${XP.mt==='w'}" data-x="mt" data-m="w" style="flex:1;border-radius:9px;border:0;${seg(XP.mt==='w')};font-size:14px;font-weight:900;padding:0">Semanais</button></div>
         <span style="flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:#c9b9a2">${Y_CLOCK}<span id="xp_renew">${pRenew(XP.mt)}</span></span></div>
-      <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">${rows}</div>
+      <div style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px">${rows}</div>
       ${pages>1?`<div style="height:40px;flex:none;display:flex;align-items:center;justify-content:center;gap:12px"><button data-x="mpg" data-d="-1" aria-label="Missões anteriores" style="width:48px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XP.mpage>0?'#f6ecdf':'#6b5843'};padding:0;display:flex;align-items:center;justify-content:center">${Y_BACK}</button><div style="display:flex;gap:5px">${mdots}</div><button data-x="mpg" data-d="1" aria-label="Próximas missões" style="width:48px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XP.mpage<pages-1?'#f6ecdf':'#6b5843'};padding:0;display:flex;align-items:center;justify-content:center">${Y_FWD}</button></div>`:''}
       <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#1d1611;border:1px dashed #5a3f8a;font-size:12px;font-weight:800;color:#d9c8ff;text-align:center;padding:0 10px;box-sizing:border-box">XP do passe sobe o NÍVEL DO PASSE (${P.DATA.xpPerTier} XP por nível). Não muda o nível do jogador.</div>`;
   }
   const pct=pr.max?100:Math.round(pr.inTier/pr.per*100);
-  V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px;box-sizing:border-box;background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
+  V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div class="x-scroll" style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;box-sizing:border-box;background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
     <div class="p-hdr" style="height:92px;flex:none;position:relative;display:flex;border-radius:16px;border:2px solid #8a4dff;background:linear-gradient(120deg,#2e1f4a 0%,#1d1611 70%);overflow:hidden">
       <div style="position:relative;width:92px;flex:none;overflow:hidden"><div class="p-aura"></div><div class="p-ped" style="left:18px;top:76px;width:56px;height:12px"></div>
         <div class="kidle ${skT?'t'+skT:''} p-glow" role="img" aria-label="Skin da temporada, prêmio Premium do nível 25 do passe" style="position:absolute;left:6px;top:6px;width:80px;height:80px"></div></div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 12px 6px 4px">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px"><span class="lil" style="font-size:18px;line-height:1.05;white-space:nowrap">Temporada Solar</span>
           <span style="flex:none;display:flex;align-items:center;gap:3px;font-size:12px;font-weight:900;color:#e8dccb">${Y_CLOCK}${days} dia${days===1?'':'s'}
-            <button data-x="close" aria-label="Fechar o Passe" ${xFrameOn()?'hidden ':''}style="width:32px;height:32px;margin:-4px -2px -4px 4px;border-radius:10px;border:2px solid #5a3f8a;background:#1d1611;color:#e6d4ff;padding:0;display:flex;align-items:center;justify-content:center">${Y_X}</button></span></div>
+            <button data-x="close" aria-label="Fechar o Passe" ${xFrameOn()||document.body.classList.contains('fb')?'hidden ':''}style="width:32px;height:32px;margin:-4px -2px -4px 4px;border-radius:10px;border:2px solid #5a3f8a;background:#1d1611;color:#e6d4ff;padding:0;display:flex;align-items:center;justify-content:center">${Y_X}</button></span></div>
         <div style="display:flex;align-items:center;gap:8px"><span class="lil ${XP.lvfx?'p-lvup':''}" style="flex:none;padding:2px 8px;border-radius:9px;background:linear-gradient(180deg,#b07cff,#6a3cff);color:#fff;font-size:15px;white-space:nowrap">Nível do passe ${CUR}</span>
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">jogador: Nv. ${lvP}</span></div>
         <div role="progressbar" aria-label="XP do passe" aria-valuemin="0" aria-valuemax="${pr.per}" aria-valuenow="${pr.inTier}" style="height:12px;border-radius:6px;background:#0e0a07;border:1px solid #5a3f8a;overflow:hidden"><div class="p-fill p-pxp" style="width:${pct}%;height:100%"></div></div>
         <span style="font-size:11px;font-weight:800;color:#d9c8ff;white-space:nowrap">${pr.max?'Nível máximo do passe':pr.inTier+'/'+pr.per+' XP do passe · ganhe nas Missões'}</span></div></div>
-    <div role="tablist" aria-label="Passe" style="height:40px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
+    <div role="tablist" aria-label="Passe" style="height:52px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
       <button role="tab" class="lil" aria-selected="${!isMs}" data-x="tab" data-t="pass" style="flex:1;border-radius:10px;border:0;${seg(!isMs)};font-size:16px;padding:0">Recompensas</button>
       <button role="tab" class="lil" aria-selected="${isMs}" data-x="tab" data-t="mis" style="position:relative;flex:1;border-radius:10px;border:0;${seg(isMs)};font-size:16px;padding:0">Missões${ready?`<span class="p-pill" style="position:absolute;top:4px;right:10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff5a4e;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}</button></div>
     ${body}<div id="xp_toast"></div></div>
@@ -314,7 +311,7 @@ function rCond(t){ const c=t.cond, T=Sys.titles, n=T.need(S,Sys.host,c);
 function scrProg(){
   if(typeof SYS_E2==='undefined'||!SYS_E2){ V.innerHTML=''; return; }
   const d=xDims(622), H=d.H, P=Sys.practice, T=Sys.titles, lvP=plv(), isP=XR.tab==='prac';
-  const tabs=[['prac','Práticas'],['tit','Títulos']].map(x=>{ const on=XR.tab===x[0]; return `<button data-x="tab" data-t="${x[0]}" aria-pressed="${on}" style="position:relative;height:36px;padding:0 12px;border-radius:11px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:14px;font-weight:900">${x[1]}${x[0]==='tit'&&XR.newDot?'<span aria-hidden="true" style="position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4d3d"></span>':''}</button>`; }).join('');
+  const tabs=[['prac','Práticas'],['tit','Títulos']].map(x=>{ const on=XR.tab===x[0]; return `<button data-x="tab" data-t="${x[0]}" aria-pressed="${on}" style="position:relative;flex:1;height:44px;padding:0 12px;border-radius:11px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:14px;font-weight:900">${x[1]}${x[0]==='tit'&&XR.newDot?'<span aria-hidden="true" style="position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4d3d"></span>':''}</button>`; }).join('');
   let pane='';
   if(isP){
     const o=P.ensure(S), cap=P.capOf(Sys.host), lock=pracLocked(), need=pracNeed(), b=P.bonus(S); let anyCan=false;
@@ -328,12 +325,12 @@ function scrProg(){
         <button class="r-tbtn ${can?'y-gold r-pulse':''}" data-x="train" data-id="${t.id}" aria-label="${lock?'Práticas: libera no nível '+need:full?esc2(t.name)+' no teto da era':'Treinar '+esc2(t.name)+' por '+c.cost+' pedras de prática'}" style="width:88px;height:44px;flex:none;border-radius:12px;${can?'box-shadow:0 5px 0 #8a4f0c;':'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;'}padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
           <span class="lil" style="font-size:15px">${lock?'Nível '+need:full?'Máx.':'Treinar'}</span><span style="font-size:11px;font-weight:900">${lock?'bloqueado':full?'teto da era':c.cost+' pedras'}</span></button>
         ${fx?`<span class="r-float lil" style="position:absolute;right:108px;top:6px;font-size:18px;color:#5fd068;text-shadow:0 2px 0 #000">${esc2(XR.floatTxt)}</span>`:''}</div>`; }).join('');
-    pane=`<div class="r-pane" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;position:relative">
+    pane=`<div class="r-pane" style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px;position:relative">
       <div style="height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b">
         <div style="position:relative;display:flex;align-items:center;gap:6px">${Y_STONE(26)}<div style="display:flex;flex-direction:column;line-height:1.05"><span class="lil" id="xr_st" style="font-size:19px">${n0(o.stones)}</span><span style="font-size:10px;font-weight:800;color:#c9b9a2">Pedras de prática</span></div><span id="xr_stf"></span></div>
         <div style="flex:1"></div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.15"><span style="font-size:13px;font-weight:900">Teto Nv ${cap} <span style="color:#c9b9a2;font-weight:800">· ${ERAS[S.eraMax].n}</span></span><span style="font-size:11px;font-weight:800;color:#c9b9a2">+${P.DATA.cap.perEra} níveis a cada era liberada</span></div></div>
-      <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;position:relative">${rows}
+      <div style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px;position:relative">${rows}
         ${lock?`<div style="position:absolute;left:40px;right:40px;top:120px;padding:14px 12px;border-radius:16px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;box-shadow:0 0 22px rgba(0,0,0,.7)"><span class="r-lockp" style="color:#ffc94a;display:flex">${SVG_LOCK(34,'#ffc94a')}</span><span class="lil" style="font-size:20px;color:#ffc94a">Libera no nível ${need}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">Você está no nível ${lvP}. As pedras de prática que caem ficam guardadas.</span></div>`:''}</div>
       <div style="height:56px;flex:none;display:flex;align-items:center;gap:8px">
         <div style="flex:1;height:56px;display:flex;flex-direction:column;justify-content:center;padding:0 12px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b;line-height:1.25;box-sizing:border-box;min-width:0"><span style="font-size:11px;font-weight:800;color:#c9b9a2">Total das práticas</span>
@@ -356,25 +353,20 @@ function scrProg(){
         ${w?`<span style="font-size:11px;font-weight:900;color:${isF?'#ffc94a':'#c9b9a2'}">${isF?'Em destaque (x'+T.DATA.featuredMult+')':cos?'Cosmético, sem destaque':'Toque para destacar'}</span>`
           :`<span style="display:flex;align-items:center;gap:6px"><span style="flex:1;height:7px;border-radius:4px;background:#0e0a07;overflow:hidden"><span class="r-bar" style="display:block;width:${Math.round(p.frac*100)}%;height:100%;background:${p.frac>0.9?'linear-gradient(90deg,#ffc94a,#ffe07a)':'#6a5440'}"></span></span><span style="font-size:10px;font-weight:900;color:#e8dccb;white-space:nowrap">${prog}</span></span>`}</button>`; }).join('')
       ||'<div style="grid-column:1/-1;grid-row:1/-1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#c9b9a2;text-align:center">Nenhum título aqui ainda. Vença fases e chefes para conquistar o primeiro.</div>';
-    const filters=[['all','Todos'],['won','Conquistados'],['lock','Bloqueados']].map(f=>{ const on=XR.filter===f[0]; return `<button data-x="filter" data-f="${f[0]}" aria-pressed="${on}" style="flex:1;height:32px;border-radius:9px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:13px;font-weight:900;padding:0">${f[1]}</button>`; }).join('');
+    const filters=[['all','Todos'],['won','Conquistados'],['lock','Bloqueados']].map(f=>{ const on=XR.filter===f[0]; return `<button data-x="filter" data-f="${f[0]}" aria-pressed="${on}" style="flex:1;height:44px;border-radius:9px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:13px;font-weight:900;padding:0">${f[1]}</button>`; }).join('');
     const dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XR.page?22:8}px;height:8px;border-radius:4px;background:${i===XR.page?'#ffc94a':'#4a3a2b'};transition:width .2s"></span>`).join('');
-    pane=`<div class="r-pane" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
+    pane=`<div class="r-pane" style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px">
       <div class="r-feat" style="height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:14px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box">${Y_MEDAL(30,34,true)}
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:10px;font-weight:900;color:#c9b9a2;letter-spacing:1px">EM DESTAQUE · VALE x${T.DATA.featuredMult}</span><span class="lil" style="font-size:17px;color:#ffc94a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${feat?esc2(feat.name):'Nenhum'}</span></div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.15"><span style="font-size:13px;font-weight:900;color:#5fd068;white-space:nowrap">${feat?esc2(T.bonusText(feat,T.DATA.featuredMult)):''}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">${Object.keys(o.unlocked).length}/${T.DATA.titles.length} conquistados</span></div></div>
-      <div role="group" aria-label="Filtro" style="height:40px;flex:none;display:flex;padding:3px;gap:3px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">${filters}</div>
-      <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:8px">${cards}</div>
-      <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:12px">
-        <button data-x="pg" data-d="-1" aria-label="Página anterior" style="width:48px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XR.page===0?'#6a5a48':'#f6ecdf'};padding:0;display:flex;align-items:center;justify-content:center">${Y_BACK}</button>
-        <div style="display:flex;gap:6px;align-items:center" aria-label="Página ${XR.page+1} de ${pages}">${dots}</div>
-        <button data-x="pg" data-d="1" aria-label="Próxima página" style="width:48px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XR.page>=pages-1?'#6a5a48':'#f6ecdf'};padding:0;display:flex;align-items:center;justify-content:center">${Y_FWD}</button></div></div>`;
+      <div role="group" aria-label="Filtro" style="height:52px;flex:none;display:flex;padding:3px;gap:3px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">${filters}</div>
+      <div style="flex:1 0 auto;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(100px,1fr));gap:8px">${cards}</div>
+      ${xPager('pg',XR.page,pages)}</div>`;
   }
   const ban=XR.banner&&Date.now()-XR.bannerT<2500;
-  V.innerHTML=xWrap(d,XR.anim?'r-in':'',`<div style="position:relative;flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:6px 12px 10px;box-sizing:border-box;min-height:0">
-    <div style="height:46px;flex:none;display:flex;align-items:center;gap:8px">
-      <button data-x="back" aria-label="Voltar" ${xFrameOn()?'hidden ':''}style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0">${Y_BACK}</button>
-      <span class="lil" style="font-size:24px;flex:1;text-shadow:0 2px 0 #000">${document.body.classList.contains('fb')||xFrameOn()?'':'Progresso'}</span>
-      <div role="group" aria-label="Seção" style="display:flex;height:44px;padding:3px;gap:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">${tabs}</div></div>
+  V.innerHTML=xWrap(d,XR.anim?'r-in':'',`<div class="x-scroll" style="position:relative;flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px;box-sizing:border-box;min-height:0">
+    <div style="height:52px;flex:none;display:flex;align-items:center;gap:8px">
+      <div role="group" aria-label="Seção" style="flex:1;display:flex;height:52px;padding:3px;gap:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">${tabs}</div></div>
     ${pane}
     ${ban?`<div class="r-banner" style="position:absolute;left:0;right:0;top:230px;display:flex;justify-content:center;z-index:5"><div style="position:relative;width:300px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div class="r-rays" style="left:50px;top:-50px;width:200px;height:200px"></div><span style="position:relative;display:flex">${Y_MEDAL(54,62,true)}</span><span class="lil" style="position:relative;padding:6px 14px;border-radius:12px;background:rgba(14,10,7,.94);border:2px solid #ffc94a;font-size:18px;color:#ffc94a;text-align:center">${esc2(XR.banner)}</span></div></div>`:''}</div>`);
   XR.anim=false; if(XR.fresh&&!isP){ /* o brilho de "novo" toca uma vez */ setTimeout(()=>{ XR.fresh=null; },1500); }

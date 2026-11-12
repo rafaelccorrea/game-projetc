@@ -154,3 +154,26 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 ### B-16. `js/p_pets.js` (tela 17b, desligada) NÃO está sendo carregado
 - O `screens.js` está congelado para o APK, então não pus o arquivo na lista de carga dele. Entra junto com o pacote de pets: ou você o põe no
   index (depois de `js/panels.js`), ou eu ponho na minha lista quando destravar. `js/sys/pet.js` também não é carregado hoje.
+
+### B-17. Leilão: entrada no MENU com o selo "Em breve: abre com o online" (decisão do PO; a tabela é sua)
+- Em `FB_DROP`: `{ id: 'auction', icon: '<ícone>', label: 'Leilão', act: 'soon:auction' }` e `FB_SOON.auction = 'Leilão'`.
+- O `FB_DROP` não tem campo de selo: é preciso criar um (ex.: `soon: 'Em breve: abre com o online'`) e desenhá-lo na célula; o aviso do
+  `fbSoon` hoje diria "Leilão: em breve", não a frase pedida.
+- Ícone: `assets/icons/menu/` não tem nada de leilão (o mais próximo é `shop`, já usado). Falta um `auction.png` (pedido de arte à fps-ff).
+- A tela (`js/p_auction.js`, chave `PANEL_ON.auction`, demonstração desabilitada) existe mas não é carregada; entra na lista quando o PO
+  mandar ligar. Arquivos novos meus ainda fora da carga: `p_pets.js`, `p_cfg.js`, `p_offer.js`, `p_auction.js`.
+
+### B-18. Arma do item na mão do Kael (v0.12.2): o que o Equipamento chama e o que preciso de você
+- A vitrine do Equipamento usa a classe CSS `kidle` (folha pronta por tier da skin de ROUPA). Não mostra item nem skin de arma.
+- Depois de equipar / "Equipar melhor" / arrastar eu chamo `statsChanged()` → `refreshHero()` (seu) e `render()` (redesenho inteiro). Sem cache.
+- Pedido: uma função sua que desenhe o herói parado num canvas qualquer, com a MESMA regra da batalha (corpo `kael_idle_body` + arma na
+  âncora `grip` do .json, ou a folha composta quando roupa e arma são da era 2 no mesmo tier), por exemplo
+  `heroPreview(canvas, tempoSeg)` lendo a mesma fonte que a batalha passar a usar. Eu troco a `kidle` da vitrine por ela.
+- Regra da fonte (para não divergirmos): `skin de arma > item equipado no espaço weapon (era = item.look ou item.e; tier = tierOf(item.r))`.
+  ATENÇÃO: todo save nasce com `S.skinEq.weapon = 'w00'`; se a skin inicial contar como skin, o item nunca aparece. Sugestão: tratar `w00`
+  (e `a00`) como "sem skin escolhida". Decisão do PO.
+- `Sys.appearance` não está na lista de módulos do index.
+
+### A-11. (agente A, v0.12.2) Mexi em UMA linha do seu js/screens.js, por exceção do coordenador
+- `scrGear`: a `<div class="kidle">` da vitrine virou `<canvas id="gkc">` (268x168, mesmo lugar); quem desenha é `drawHeroPreview` (js/battle.js) com `heroLook()` (index.html): arma do item equipado na mão.
+- Cuidado com nomes globais: `GK` já é seu; o meu estado da prévia chama `HPVW`.

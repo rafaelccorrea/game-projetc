@@ -268,6 +268,39 @@ Não conferido: tudo o que é visual; toque real. Em 320 px de largura os botõe
 Teste: fumaça 46 passos, 0 falhas, em 390x656, 390x844, 360x583; teste de cliques do subagente (17 passos: portão, sem pedra, sucesso, falha,
 sem ouro, teto da era, máximo, asa, nível) sem falha.
 
+### Forja ajustada ao protótipo CONVERTIDO (v0.12.2; continua desligada, não vista)
+
+- Layout novo: tamanho real, o miolo rola (`x-scroll`) e guarda a posição da rolagem no redesenho; em tela alta o cartão estica e a ação
+  fica embaixo. Ordem e medidas do protótipo: pedras (44) · modos (52, botões de 44) · palco (258, peças presas ao centro e às bordas) ·
+  faixa dos 7 espaços · trilha · cartão com o aviso sempre visível.
+- Subtela do Equipamento: `parent:'gear'`, sem voltar próprio; o portão de nível diz "Voltar ao Equipamento". O `js/panels.js` agora
+  faz o Voltar de uma subtela ligada levar à tela-mãe (envolve o `Screens.close()` só quando há subtela ligada; contorno do pedido B-11).
+- Alvos de toque medidos no teste (px reais): espaço 44,6x50 em 320 de largura, 54,6x50 em 390; pastilha de aura 52x44; ação 56.
+- Ficam: 7 espaços (o protótipo convertido ainda desenha 2), sem "Transformar" (só marcadores no protótipo e sem função no `Sys.forge`),
+  "Nível" = nível do item. Em tela baixa, rolada até o botão, a faixa "+N!" / "Falhou" do palco pode ficar fora da vista.
+- Testes: `node --check`; fumaça 54 / 0 falhas; teste de cliques do subagente, 19 passos da Forja em 4 medidas, sem falha.
+
+## Bloco 8: tela 09 Configurações nova. Escrita, DESLIGADA (`PANEL_ON.cfg`), NÃO carregada, não vista
+
+Arquivo `js/p_cfg.js` (subagente; conferi `node --check`, fumaça, busca por "manual" = 0 e por chamada de rede = nenhuma).
+- Aba "Som · Jogo": Som (mesmas chamadas do modal antigo), Música e Efeitos em controle deslizante (só se `GameAudio.setVolume` existir),
+  Velocidade x1/x2/x4 com cadeado e o motivo lido de `Sys.vip.maxSpeed` (x2: nível 15 ou VIP; x4: VIP 5 e nível 40), Vibração, Desafiar o
+  chefe sozinho. SEM Auto/Manual.
+- Aba "Conta · Progresso": nome e nível; **Exportar** (código `EON1:<base64>.<8 letras de conferência>`, campo selecionável, botão Copiar com
+  reserva); **Importar** (valida prefixo, base64, conferência, UTF-8, JSON e campos do save; confirmação "Substituir o progresso?" com nome,
+  nível, moedas e gemas do código; grava, confere a gravação e recarrega; código inválido não muda nada); **Resetar** em dois passos.
+  Nada sai do aparelho.
+- Diferenças conscientes: 2 abas em vez de 3 (ficaram de fora qualidade gráfica, bateria, notificações, vincular Google/Apple, idioma, ID,
+  ajuda, código de resgate, termos: o jogo não tem nada por trás); as 8 letras de conferência no código (um caractere trocado não vira save
+  adulterado); fundo com as camadas da era 2 desfocadas.
+- Para o agente A / áudio: o volume não é gravado pelo `js/audio.js`; a tela guarda em `S.set.volMus`, `volSfx`, `musOff`, `sfxOff` (campos
+  novos no save) e reaplica ao carregar. Os valores de fábrica (música 50, efeitos 90) estão copiados numa constante da tela.
+- Não conferido: tudo o que é visual; arrastar o controle de volume; selecionar/colar no campo; teclado do celular cobrindo a janela;
+  cópia real para a área de transferência; a recarga.
+- Testes: fumaça 54 / 0 falhas; teste de cliques do subagente, 27 passos em 4 medidas (ida e volta do save com acento e emoji idêntica,
+  17 tipos de lixo recusados, cancelar, falha de gravação, resetar).
+- O arquivo não está na lista de carga do `screens.js` (entra quando for visto; pedido B-10 ao A lista os arquivos).
+
 ## Bloco 6: tela 17b Pets V2. Escrita, DESLIGADA (`PANEL_ON.pets`), NÃO carregada, não vista rodando
 
 Arquivo `js/p_pets.js` (subagente; conferi `node --check`, teste de fumaça 50 passos / 0 falhas em 390x788, 360x583, 320x500, e busca por
@@ -296,7 +329,39 @@ Arquivo `js/p_pets.js` (subagente; conferi `node --check`, teste de fumaça 50 p
 2. Equipamento: entrada para a Forja como subtela (posição e desenho conforme o protótipo convertido; auditoria em curso).
 3. Apagar o meu cabeçalho `xHead` / `PANEL_V2.frame` (o cabeçalho de 56 px do A é o contorno comum; pedido B-12) e o CSS `xframe`.
 4. Altura útil nova (tela − 56 px = 788 em 390x844): o `xFit` já se adapta sozinho (lê a altura do `#view`); conferir as fileiras a mais.
-5. Loja, Passe e Progresso contra os protótipos convertidos: auditoria em curso; entra aqui quando voltar.
+5. **Mudança de fundo, vale para as 5 telas:** os protótipos convertidos NÃO encolhem o desenho para caber. Desenham em tamanho real, deixam
+   sobra quando a tela é alta (com a paginação e os botões principais colados embaixo, `margin-top:auto`), ROLAM quando é baixa
+   (`overflow-y:auto`) e param de alargar em 600 px (`max-width:600px`, centrado). O meu `xFit` faz o contrário (encolhe e muda o número de
+   fileiras). Plano para quando liberar: o `xFit` passa a nunca encolher pela altura (só escala pela largura, com teto), o conteúdo ganha
+   rolagem, e as contagens voltam a ser fixas (mochila 2 fileiras, skins 2 fileiras, passe 5 níveis, títulos 8). Isso desfaz parte do bloco 1.
+   Pergunta ao PO: confirma rolagem dentro do painel? (a regra antiga era "sem rolagem onde o protótipo não rola"; agora o protótipo rola.)
+
+#### 07 Loja contra o protótipo CONVERTIDO (nada aplicado)
+- Altos: conteúdo rola em vez de encolher (padding 8/12/10); grade de skins SEMPRE 2 fileiras (6 por página; hoje ganha 3ª ou cai para 1);
+  paginação colada embaixo (`margin-top:auto`).
+- Médios: aba Gemas sem versão "pequena" (rola); toque no pacote de gemas abre "Confirmar compra" com "Você recebe", "Valor",
+  "Pagamento em breve: nada é cobrado agora." e botões Cancelar / Entendi (hoje só aviso; quantidade e preço ainda são marcadores);
+  nota da prévia "Equipada: +X% de ATK e HP (Raridade). Na coleção: +0,5% para sempre."; tela larga para em 600 px.
+- Baixos: confirmação em ouro sem a linha "Seu ouro"; brilho de Mítico/Lendário também na skin bloqueada; Kael da grade 4 px acima;
+  nomes curtos de era na pílula ("Pré-Hist.", "Antiguid."); posições do palco da prévia em `calc(50% ...)`; aviso "Equipada: Nome" sem FC.
+
+#### 08 Passe contra o protótipo CONVERTIDO (nada aplicado)
+- Altos: SEMPRE 5 níveis por página (hoje, em 788 px, mostra 6); barra Recompensas/Missões com 52 px (hoje 40); seletor Diárias/Semanais
+  com 52 px (hoje 44); "Resgatar tudo / Ativar Premium" e paginação colados embaixo; conteúdo rola em tela baixa.
+- Médios: missões com linha fixa de 86 px, sem paginação (rola); paginação "itens no seu nível (Nv. N)" e item da trilha com "· Nv. N"
+  (hoje "itens da sua era", sem nível: depende da regra real do `Sys.pass`, perguntar à fps-30); tela larga para em 600 px.
+- **Decisão do PO:** o diálogo Premium do protótipo diz "Skin da temporada no nível 25 (só visual, não muda atributos)", o que contradiz o
+  bônus de skin da Loja ("Skins dão bônus"). Mantive o texto atual até decidirem.
+- Baixos: ícone de linha do equipamento na trilha; anel de "desbloqueou" ao ativar o Premium.
+
+#### 16 Progresso contra o protótipo CONVERTIDO (nada aplicado)
+- Altos: dentro do conteúdo só as ABAS, ocupando a largura toda (faixa de 52 px, botões de 44 com `flex:1`); sem Voltar e sem título (ficam
+  no cabeçalho; o Voltar leva ao Equipamento). Hoje a faixa tem a seta e um título vazio e as abas ficam espremidas à direita (36 px).
+  Filtro Todos/Conquistados/Bloqueados com 52 px e botões de 44 (hoje 40 e 32). Conteúdo rola; padding 8/12/10.
+- Médios: fileiras da grade de títulos com no mínimo 100 px; painéis crescem em vez de encolher.
+- Baixo: contador de abates pulsa ao subir.
+
+Também a corrigir junto: `X_HEAD` (64) só vale com a minha `frame`, que vai sair; a altura útil real já vem do `#view` (788).
 
 #### 05 Equipamento contra o protótipo CONVERTIDO (auditoria por leitura; nada aplicado)
 
@@ -345,7 +410,195 @@ Dois pontos em que eu NÃO seguiria o protótipo sem ordem expressa (decisão do
 - Baixos: grade do x10 encolhível; etiqueta "LENDÁRIO!" sempre 10 px; linha "Melhor" sem cor; aviso com escala 0,9 na entrada.
 - Ficam por decisão anterior: selo "GARANTIA", som por carta.
 
+## Bloco 7 (v0.12.2): layout novo dos protótipos convertidos nas 5 telas. Escrito e LIGADO, NÃO visto rodando
+
+Chave `PANEL_V2.real` (ligada). Desligada, volta o arranjo anterior (escala pela base de 390 + `xFit`), sem mexer no resto.
+Conferência feita: `node --check` (screens.js, screens2.js, equipfx.js) e teste de fumaça 54 passos / 0 falhas em 390x788, 360x584,
+320x500, 430x876 e 768x968 (inclui "Equipar melhor" e os 4 casos do arrasto). Nenhuma tela vista.
+
+Base (vale para as 5): tamanho real, sem escala (1 px da tela = 1 px do protótipo); largura até 600 px, centrada; altura útil lida do
+`#view` (tela − área segura − 56 px do cabeçalho do agente A); o conteúdo ROLA quando falta altura (classe `x-scroll`, sem barra visível);
+contagens fixas de novo. Paginador comum `xPager`: "‹ 2/5 ›" centrado, número ENTRE as setas, botões redondos de 44 px, seta apagada e
+desabilitada na primeira/última página (a seta de página não parece mais um Voltar; era isso que o QA via na Loja e no Passe).
+
+- **1) Dois voltar.** Loja e Passe: era a seta do paginador (corrigido acima). Passe: o X próprio não aparece mais na batalha em tela cheia.
+  Progresso: saíram a seta e o título internos; ficam só as abas, na largura toda (52 px, botões de 44). O Voltar do cabeçalho já leva ao
+  Equipamento (`Screens.close()` usa `XR.back`). Forja: `parent:'gear'` depende do pedido B-11 (a tela está desligada).
+- **05 Equipamento.** Vitrine com altura `clamp(236, 34% da tela, 292)`; espaços presos às bordas (10 px) e em % da altura; Kael, pedestal
+  e aura presos ao fundo e ao centro; atributos; mochila sempre com 2 fileiras (10 por página), cabeçalho de 44 px, subtítulo
+  "Mochila N/60 · arraste o item até o espaço"; tudo isso rola. Barra FIXA embaixo com o botão de 56 px: "EQUIPAR MELHOR" + selo com a
+  contagem; sem melhoria, apagado em duas linhas: "EQUIPAR MELHOR" / "Já está com o melhor" (texto confirmado pela coordenação; o
+  protótipo diz "Você já usa o melhor de cada espaço"). O "como melhor" que o QA leu era a quebra de linha sem espaço do botão antigo.
+  Voo: 0,64 s, fantasma de 48 px com brilho dourado, sobe 46 px, termina em 0,85; item de outra página sai do centro da mochila; a tela
+  rola para o topo antes; sem efeito por pouso: todos os espaços brilham juntos (dourado, 0,55 s) quando a troca aplica; contagem da FC
+  de 650 ms com o realce comum; selo "FC +N" (pílula verde, 22 px, 1,6 s) no meio da vitrine, também ao soltar certo no arrasto.
+  Arrasto: começa com 8 px, fantasma centrado no dedo, girado −4°, escala 1,1; o espaço certo ganha o anel dourado e cresce 1,14 com o
+  dedo em cima; os outros não apagam; avisos "Esse item vai no espaço X" e "Já está equipado".
+  Botão "Forja" no cabeçalho da mochila só quando a tela da Forja estiver ligada; a medalha do Progresso continua lá.
+- **06 Invocar.** O palco do baú estica (`flex: 1 1 262px`, mínimo 170) com o baú centrado; garantia em cima, chances, grátis e botões
+  colados embaixo; em tela baixa o conteúdo do palco reduz (0,72 até 700 px de tela, 0,6 até 600).
+- **07 Loja.** Conteúdo rola (padding 8/12/10); grade de skins sempre 2 fileiras; paginador colado embaixo com "N na coleção"; aba Gemas
+  sem versão pequena; paginador novo também na aba Itens.
+- **08 Passe.** Sempre 5 níveis por página; barra Recompensas/Missões e seletor Diárias/Semanais com 52 px; "Resgatar tudo / Ativar
+  Premium" e paginador colados embaixo; missões com linha de 86 px, sem páginas (rola).
+- **16 Progresso.** Abas e filtro com 52/44 px; grade de títulos com fileiras de no mínimo 100 px; tudo rola.
+
+Ficou de fora desta leva (lista curta, para depois de ver no navegador): vitrine e Invocar sem a camada "mid" e a nuvem alta; diálogo
+"Confirmar compra" dos pacotes de gemas (quantidade e preço ainda são marcadores); nota da prévia da Loja; nomes curtos de era; anel de
+"desbloqueou" e ícone de linha no Passe; pulso do contador de abates; folha de comparação com rolagem; "itens no seu nível (Nv. N)".
+Mantidos de propósito até o PO decidir: item volta animado ao soltar fora (o protótipo só some); folga de 20% na área de soltar.
+
+Riscos que só o navegador mostra: rolagem dentro do `#view` (se o Android deixa rolar com o dedo sobre as células, que têm
+`touch-action:none` para o arrasto: sobre a mochila o dedo arrasta item, fora dela rola); posição do Kael quando a vitrine fica baixa (o
+espaço da asa pode encostar na cabeça); barra de baixo com a área segura de baixo do aparelho; 320 px de largura sem escala (o cartão da
+skin de 168 px aperta a caixa da FC).
+
+### Plano (não implementado): PASSE com rolagem contínua, sem páginas
+
+- Uma lista só, do nível 1 ao último (hoje 30 linhas de 70 px + 5 de vão = ~2.245 px), dentro da área que já rola; cabeçalho da
+  temporada e abas no topo rolando junto ou presos (`position: sticky`), conforme o protótipo que vier.
+- Ao abrir, a lista já aparece rolada até o nível atual (`scrollIntoView` no nó do nível, centrado); a trilha roxa ligada de ponta a ponta.
+- "Resgatar tudo" e "Ativar Premium" numa barra fixa embaixo (como o "EQUIPAR MELHOR"), para não precisar rolar 30 níveis até eles.
+- Redesenho sem perder a posição: guardar e devolver o `scrollTop` (já faço no Equipamento) e, no resgate de um nível, trocar só a linha.
+- Custo: 60 cartões no DOM em vez de 10; as animações de entrada por linha saem (ou valem só para as visíveis). Saem `XP.page`, os pontos
+  e o `xPager` do Passe. Missões já estão sem páginas.
+- Dúvidas para o protótipo: cabeçalho preso ou rolando; onde fica "itens da sua era"; se há atalho "ir para o nível atual".
+
 ## Fila (ordem nova do PO)
 
 15 Forja e 17b Pets V2: sendo escritas agora por dois subagentes, um arquivo cada (`js/p_forge.js`, `js/p_pets.js`), atrás de chave.
 Depois: 18 VIP, 11 Troca de era, 12 Ranking, 13 Instâncias, 14 Torre, 10 Vitória/Derrota, 09 Configurações, 21 Perfil. 20 Mapa das Eras: não.
+
+## Atualização da fila (decisões do PO recebidas depois da v0.12.2)
+
+- Ordem de LIGAÇÃO no jogo, uma por APK: v0.12.2 = ajustes das 5 telas (bloco 7); v0.12.4 = Forja e Configurações; Pets V2 com o pacote de pets.
+- Configurações: o PO mandou seguir o protótipo (3 abas); as linhas sem função aparecem desabilitadas com selo "em breve" (qualidade gráfica,
+  bateria, notificações, vincular Google/Apple, idioma, ID do jogador, ajuda); "código de resgate" e "termos" somem. Exportar/Importar com
+  conferência e volume no save aprovados. Ajuste em curso (subagente), em `js/p_cfg.js`.
+- 22 Oferta de primeira compra: sendo escrita em `js/p_offer.js`, atrás de `PANEL_ON.offer` (sem preço riscado; "Pacote exclusivo ·
+  compra única"; o botão abre "Pagamento em breve").
+- 25 Leilão: na fila logo depois (só a entrada no MENU com "Em breve: abre com o online" e a tela em demonstração desabilitada, sem dado
+  falso que pareça real). A entrada no MENU é do agente A (`FB_DROP`): pedido a registrar quando a tela existir.
+- Passe com rolagem contínua: plano no bloco 7; protótipo ainda em voto, nada implementado.
+
+### Configurações ajustada à decisão do PO (continua desligada, não vista)
+
+- 3 abas do protótipo. "Som · Jogo": Som, Música e Efeitos, Velocidade com cadeado, Vibração, Desafiar o chefe sozinho. "Tela · Avisos":
+  tudo "em breve" (qualidade, economia de bateria, notificações), desabilitado, sem opção marcada. "Conta · Ajuda": nome e nível reais,
+  "ID do jogador: em breve", Vincular Google/Apple (em breve), Cópia de segurança com Exportar/Importar (ativa), Idioma (em breve),
+  Resetar em dois passos, Central de ajuda (em breve). "Código de resgate" e "Termos" não são desenhados.
+- Linha "em breve": `disabled`, apagada, selo; o toque só mostra o aviso e não grava nada (testado: save idêntico depois de 9 toques).
+- Layout novo (tamanho real, miolo com `x-scroll`, rolagem guardada no redesenho).
+- Diferenças pequenas: ícones das notificações em SVG (as imagens do protótipo não existem em `assets/`); "Quando o baú encher".
+- Testes: `node --check`; fumaça 54 / 0 falhas (390x788 e 320x500 refeitos por mim); teste de cliques do subagente, 31 passos em 4 medidas.
+- A ver no navegador: textos das abas e dos botões de idioma em 320 px; se o toque numa linha desabilitada chega a mostrar "Em breve".
+
+## Bloco 9: tela 22 Oferta de primeira compra. Escrita, DESLIGADA (`PANEL_ON.offer`), NÃO carregada, não vista
+
+Arquivo `js/p_offer.js` (subagente; conferi `node --check`, fumaça e busca por "manual" / preço riscado = 0).
+- Estado lido de `Sys.offer.status`; sem o módulo ou com a chave dele desligada: "Oferta: em breve", sem botão e sem preço. A tela não
+  liga chave nenhuma do módulo.
+- Com o módulo: ativa (relógio que troca só os dígitos, botão de comprar), encerrada, comprada, indisponível.
+- "Pacote exclusivo · compra única" + o preço que o módulo der (`status().price`); sem preço no módulo, nenhum número. Sem preço riscado.
+- Comprar abre "Pagamento em breve" ("Nada foi cobrado e nada foi entregue"); não chama `grant` nem grava nada (testado: save idêntico).
+- Conteúdo do pacote (arma, montaria, gemas, ouro, prazo) do `Sys.offer` / `Sys.mount` / `Sys.stats`.
+- Diferenças conscientes: é painel, não modal (sem X e sem "Agora não": sai pelo Voltar do cabeçalho); nome da arma do módulo
+  ("Arma Épica 3★", não "Espada Arcana"); montaria com marcador neutro (em `assets/mounts` só há referências de 3 a 4 MB, não arte de
+  interface); bônus da montaria como "até +6,5%"; sem "Pagamento pela loja do aparelho".
+- Para a fps-e2: `contents` não traz raridade/qualidade da arma, a prévia do ouro nem a raridade da montaria (a tela lê de `DATA` e repete
+  a conta `goldk × goldUnit`).
+- **Decisão do PO:** o módulo devolve um preço (R$ 29,90 no teste) e a tela o mostra. Se o preço ainda não é oficial, digam e eu escondo.
+- Não conferido: tudo o que é visual; quebras em 320 px; rolagem; navegação real para Loja/Equipamento.
+
+## Bloco 10: tela 25 Leilão em demonstração desabilitada. Escrita, DESLIGADA (`PANEL_ON.auction`), NÃO carregada, não vista
+
+Arquivo `js/p_auction.js` (subagente; conferi `node --check`, fumaça e busca por "manual" / `fetch` = 0).
+- Selo fixo "Em breve: abre com o online" no topo de todas as abas, com "Demonstração: lances e vendas só valem quando o leilão online abrir."
+- Abas Comprar, Vender, Meus anúncios, Histórico no desenho do protótipo, tudo desabilitado. Cartões de lote marcados "EXEMPLO", com
+  vendedor, preço e tempo "—"; nenhum relógio corre. Sem nomes de jogadores, lances, preços ou contagens.
+- Únicos números reais: o ouro do jogador e os itens da mochila dele (aba Vender, também desabilitada). Regras (taxa, duração, limite)
+  aparecem como "a definir com o online".
+- Nenhum toque muda o save (teste do subagente: ~400 toques por medida, `JSON.stringify(S)` idêntico, `save()` chamado 0 vezes). Sem rede.
+- Diferenças conscientes: sem números de regra do protótipo (10%, 50%, 12/24/48 h); "Marcos de Leilão" virou "moeda do leilão" com saldo
+  "—"; Vender mostra os três passos de uma vez; filtro de espaços em grade (sem rolagem lateral).
+- Pedido ao agente A (B-17): entrada no MENU.
+
+## Respostas da coordenação aplicadas (aguardando a vez do navegador)
+
+- Oferta: R$ 29,90 é o preço aprovado; a tela já o mostra (vem do `Sys.offer`), sem preço riscado. Nada a mudar.
+- Equipamento, soltar fora: o item VOLTA para a mochila com animação. Já está assim (não segui o "some" do protótipo).
+- Equipamento, folga da área de soltar: o espaço aceita se o centro do item arrastado cair dentro do espaço ampliado. Já está assim: o item
+  fica centrado no dedo e a folga é `max(8 px, 20% do espaço)` = ~11,6 px num espaço de 58 px (os ~12 px pedidos).
+- Equipamento, entradas de Forja e Progresso: o protótipo convertido que está em `docs/proto/Equipamento.dc.html` (cópia das 16:12, 65.423
+  bytes) NÃO contém as palavras "Forja" nem "Progresso" (busca feita no arquivo inteiro). O protótipo é omisso, então ficam onde estão:
+  no cabeçalho da mochila, a medalha do Progresso (44 px) e o botão "Forja" (só aparece com a tela da Forja ligada). Se o PO recopiar um
+  protótipo que desenhe as duas entradas, eu movo.
+- Leilão: não ligo; ícone e selo do MENU ficam com o PO e o agente A.
+- Parado, sem gravar mais nada, até o aviso "sua vez do navegador". Primeiro a conferir: as 5 telas ligadas, o paginador, "Equipar melhor"
+  e o arrastar, em 360x640 e 390x844.
+
+## Decisões do PO anotadas (continuo aguardando a vez do navegador)
+
+1. Forja e Progresso: as entradas FICAM no cabeçalho da mochila (medalha do Progresso e botão "Forja"), com alvo >= 44 px e selo de novidade.
+   - Progresso: o selo já existe (ponto vermelho quando `progAlert()` é verdadeiro: prática treinável ou título novo; lê `Sys.practice` e
+     `Sys.titles`). A medalha tem 44 px de largura e 40 de altura no arranjo antigo; no layout novo o cabeçalho tem 44, mas o botão ainda
+     tem 40 de altura: a corrigir.
+   - Forja: selo PREPARADO em `js/p_forge.js` (`forgeAlert()`: forja liberada e algum espaço aberto com `Sys.forge.canTry(...).ok`).
+     Falta desenhar o ponto no botão "Forja" (uma linha em `js/screens.js`, que está ligado: aplico quando liberarem a gravação, junto com a
+     altura de 44 px da medalha).
+2. Leilão: ícone provisório = o da Loja com um martelinho por código + selo "Em breve"; o agente A cria o campo de selo no MENU e deixa a
+   entrada desligada. Do meu lado nada a fazer agora (a tela está escrita e desligada).
+3. Passe com rolagem contínua: protótipo em voto, NÃO implementar (o plano fica no bloco 7).
+4. Arena e Eventos: reprovados, sendo refeitos: não fazer.
+
+Pendências minhas em arquivo ligado, para aplicar assim que puder gravar: (a) ponto de novidade no botão "Forja"; (b) medalha do
+Progresso e botão "Forja" com 44 px de altura.
+
+## Bloco 11 (v0.12.2): CONFERIDO NO NAVEGADOR (uma aba, fechada). Prints em `reports/prints/v0122_painel_*.png`
+
+Como conferi: `localhost:8080/?debug=1&fresh=1&skip=1`, `#app` forçado em 360x640 (zoom 1, interação real com o ponteiro) e em 390x844
+(a janela só tinha 639 px de altura: usei zoom 0,75 da página, que serve para ver o desenho mas desalinha os fantasmas do voo; por isso voo
+e arrasto foram testados em 360x640). Nenhum erro no console em nenhuma tela.
+
+VISTO FUNCIONANDO
+- As 5 telas abrem em tela cheia sob o cabeçalho do agente A, sem corte nem sobreposição em 390x844; Equipamento também em 360x640 (rola).
+- Voltar do cabeçalho: Progresso → Equipamento → batalha. Progresso sem seta nem título internos.
+- Paginador "‹ 1/6 ›" (Loja, Passe, Equipamento): número entre as setas, seta apagada no fim; troca de página funcionando.
+- Equipamento: "EQUIPAR MELHOR" com o selo da contagem; 4 e 5 itens voaram da mochila e pousaram nos espaços certos (medi o centro dos
+  fantasmas contra o centro dos espaços no meio do voo), a troca aplicou, a FC contou (258 → 1.590), apareceu "FC +N" e o aviso; depois o
+  botão ficou apagado com "EQUIPAR MELHOR / Já está com o melhor".
+- Arrastar com o ponteiro (eventos reais): soltar no espaço certo equipou ("Equipado: Lança de Sílex", com pouso e "FC +N"); soltar no
+  espaço errado avisou "Esse item vai no espaço Colete" e nada mudou; a tela rolou para o topo no começo do arrasto.
+- Invocar: palco esticado com o baú no centro, garantia em cima, chances e botões embaixo, "1 de brinde".
+- Loja: regra + VIP, 4 abas em 2 linhas, OFERTA, 2 fileiras, paginador embaixo. Passe: 5 níveis, ações e paginador embaixo; Missões com
+  7 linhas, rolando. Progresso: abas na largura toda, práticas com o aviso de bloqueio, títulos com 8 cartões.
+
+CORRIGIDO NESTA PASSADA
+- Tela baixa (360x640): com a mochila à vista os espaços de cima saíam da tela e não dava para arrastar até a arma. Agora a tela rola
+  para o topo quando o arrasto começa; a volta do item usa a posição atual da célula.
+- Cartão da skin cortava o texto ("Skin Básica +4% A..."): largura 204 px (168 abaixo de 380 px de tela); rótulo "FORÇA DE COMBATE" sem
+  espaçamento em tela estreita para não cortar.
+- Medalha do Progresso com 44x44; botão "Forja" com 44 px e o ponto de novidade (`forgeAlert`), só aparece com a Forja ligada.
+
+NÃO DESLIGUEI NADA.
+
+NÃO CONSEGUI VER / LIMITES
+- Toque de dedo de verdade (testei com ponteiro de mouse): a rolagem por dedo e o arrasto no Android continuam por provar no aparelho.
+- Aura atrás do Kael (o save novo não tem +4 na arma); selo da Forja (tela desligada); compra na Loja e resgate no Passe (não cliquei);
+  o voo em 390x844 (limite da janela).
+- 360x640: o rótulo "Chapéu/Elmo" encosta no selo "+0" do espaço de baixo (vitrine de 236 px). Título do cabeçalho corta em
+  "Equipame..." (cabeçalho do agente A).
+
+### Kael do Equipamento não muda ao equipar (defeito visto pelo dono)
+- O Kael da VITRINE do Equipamento é meu (`scrGear`, `js/screens.js`): é a classe CSS `kidle` (folha pronta `kael_idle_era2_t<tier>.png`,
+  com a arma já pintada), escolhida só pelo tier da SKIN de roupa. Não lê item nenhum, nem a skin de arma, nem a era. Por isso nada muda
+  ao equipar. (O desenho em `js/battle.js` ~1002, `PV.sk`/`PV.ws`, é o da Coleção antiga de skins, que saiu da Loja.)
+- `Sys.appearance` NÃO é carregado pelo index (conferido no navegador: `Sys` tem loot, chest, level, stats, skin, vip, forge, pass,
+  practice, titles, instances, tower, arena, fc). E há um porém na regra "skin > item": todo save nasce com a skin de arma `w00` equipada,
+  então `Sys.appearance.of` devolveria sempre a skin e o item nunca apareceria. Precisa de decisão: a skin inicial conta como "sem skin"?
+- Depois de equipar, "Equipar melhor" ou arrastar, a tela chama `statsChanged()` (que chama `refreshHero()` do agente A) e redesenha
+  (`render()`): não há preview em cache do meu lado. Quando o agente A tiver uma função única de desenho do herói (corpo + arma na âncora),
+  eu troco a `kidle` da vitrine por ela (pedido B-18).
+- Arte vestível: para chapéu, colete e botas só existem ÍCONES (`assets/icons/slots`); em `assets/hero` há 31 arquivos `era<N>_t<tier>.png`
+  (corpo inteiro por era/tier da skin) e `anchors.json`; em `assets/weapons`, 27 PNG `era<N>_t<tier>.png` + `meta.json` (âncora da mão).
+  Não há sprite por peça de elmo/colete/botas.

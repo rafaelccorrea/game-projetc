@@ -190,12 +190,26 @@ O 1º ovo do Nv 20 (79/21) passa a dar **Mamute** (79%) ou **Esfinge** (21%), os
 - **`Sys.mount`** (js/sys/mount.js, `DATA.on=false`; carregar no index.html junto dos outros). O Kael MONTA; a montaria não ataca, só dá % de ATK e % de Vida
   (entram sozinhos na FC pelo `bonus`). `add(S, host, id)` (repetida = 10 fragmentos), `equip(S, id)`, `info(S, host, id)` → `{name, rarityName, lvl, cap,
   stars, frags, need, pct, maxPct, equipped}`, `canUpgrade/upgrade(S, host, id, n)` (ouro; teto = nível do jogador ÷ 2), `battleInfo(S)` → `{id, sprite,
-  visual}`: **`visual:false` = não desenhar o Kael montado** (atributo vale antes da arte, PO). Catálogo (PO): Pônei, Cavalo de guerra, Lobo de guerra (o da oferta), Grifo dourado, Serpe dourada; sprite = `mount_<id>` (assets/mounts).
+  visual, stars, aura}`: **`visual:false` = não desenhar o Kael montado**. `aura` (por estrela, só visual): 1★ `none`, 2-3★ `glow` (brilho leve), 4★ `aura_smoke`, 5★ `aura_full` (fumaça e partículas); `auraOf(estrelas)` (atributo vale antes da arte, PO). Catálogo (dono): Pônei (Básico), Cavalo de guerra (Raro), Lobo de guerra (Épico, o da oferta) e Grifo dourado (Épico), Mítico a definir (`mythic`, fora do `add` até ter nome), Serpe dourada (Lendário); sprite = `mount_<id>` (assets/mounts).
 - **`Sys.offer`** (js/sys/offer.js, `DATA.on=false`). `status(S, host)` → `{available, msLeft, claimed, expired, price, contents}` (24 h a partir do 1º acesso com
   a oferta ligada). Depois do pagamento confirmado (jogo/servidor): `grant(S, host)` → arma Épica 3★ (`host.addItem`), montaria Lobo de guerra, 300 💎 (`host.addGems`),
   ouro de 2.000 abates (`host.addGold`); uma vez só.
 - **Arma da oferta** (`item.offer = true`): `Sys.stats` faz ela ACOMPANHAR o nível e a era do jogador até o Nv 25 (`offerSync`, sozinho ao calcular). Do Nv 1 ao 24
   ela fica entre ×1,76 e ×3 da arma normal da mesma era e nível; no 25 o Épico vira normal (empata; ×1,10 com a qualidade ligada). Depois do 25 é um item comum.
+- **Com servidor:** a janela da oferta vem do `GET /offers` (`Sys.offer.setWindow(S, endsAt)`). Arena no servidor: só quem ataca ganha ou perde pontos;
+  luta contra bot gasta tentativa e não dá ponto; ranking sem bots (no modo local, sem servidor, os adversários são bots e dão pontos).
+  Dia e semana em Brasília: os módulos da fps-e2 usam `Sys.clock.dayKey/weekKey/weekStart` quando existirem (fuso único da fps-30); sem eles, o fuso do aparelho.
+- **D11 (PO): a oferta só aparece para quem NUNCA comprou.** `status().reason = 'not_first_purchase'` se `host.hasPurchased()` (se o jogo tiver), pontos de VIP > 0,
+  passe premium ou `Sys.offer.markPurchase(S, host)` (o jogo chama em QUALQUER compra). Com servidor: `GET /purchases/can-buy`.
+
+## 5j. Aparência em camadas (regra do dono) — `Sys.appearance`, estado em `S.look` (só visual: atributos e FC não mudam)
+- `S.look = {mode:'items'|'skin', hidden:{boots|armor|hat|glasses|mask: true}, cos:{owned:[ids], eq:{glasses, mask}}}`; `Sys.appearance.look(S)` arruma o save.
+- **`Sys.appearance.layers(S, host)`** → camadas DE BAIXO PARA CIMA, já sem o que está oculto: `[{layer:'base'}, boots, armor, hat, glasses, mask, weapon]`, cada uma
+  com `{key, source:'base'|'item'|'skin'|'cos', era, r, id}`. A ASA vem PRIMEIRO (atrás do corpo), nos dois modos, com olho para ocultar; skin de asa (demoníaca, anjo) vence o item. Item: `item/<espaço>/e<era do visual>_r<raridade>`; cosmético: `cos/<id>`; skin: `skin/<id>`.
+  Colar e luvas NÃO aparecem. Modo 'skin' com skin de roupa escolhida: `[base, skin, weapon]` (a skin completa esconde peças e cosméticos); sem skin escolhida,
+  o modo 'skin' mostra os itens. As skins iniciais w00/a00 contam como "nenhuma escolhida" (a mesma regra do heroLook).
+- Ações: `setMode(S, 'items'|'skin')`, `setLookHidden(S, peça, true|false)`, `addCosmetic(S, id)` (compra direta, evento ou conquista; nunca sorteio),
+  `equipCosmetic(S, 'glasses'|'mask', id|null)`. Catálogo de cosméticos PROVISÓRIO em `DATA.cosmetics` (nomes e arte com a fps-ff).
 
 ## 6. Eventos
 | Quando | Chamar |

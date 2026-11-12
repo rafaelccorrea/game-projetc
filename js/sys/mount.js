@@ -13,12 +13,19 @@ const DATA={
   starBase:0.75, starStep:0.05, maxStars:5, starCost:[10,20,30,40], dupFrags:10,
   // ouro do nível N ao N+1 = goldK × ouro de um abate da fase × (1 + growth·(N−1)) × (1 + raridade·rarCost): acompanha a economia da fase
   cost:{goldK:20, growth:0.05, rarCost:0.5},
+  // ESTÁGIO VISUAL por estrela (dono via PO; SÓ visual, os atributos não mudam): o engenheiro desenha pela chave id
+  aura:[{stars:1,id:'none',name:'Sem aura',glow:0,smoke:false,particles:false},
+        {stars:2,id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},
+        {stars:3,id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},
+        {stars:4,id:'aura_smoke',name:'Aura com fumaça',glow:2,smoke:true,particles:false},
+        {stars:5,id:'aura_full',name:'Aura forte com fumaça e partículas',glow:3,smoke:true,particles:true}],
   // catálogo (nomes do PO, alinhados com a arte da fps-ff): 1 por raridade no lançamento
   mounts:[
     {id:'pony',    name:'Pônei',            r:0},
     {id:'horse',   name:'Cavalo de guerra', r:1},
     {id:'wolf',    name:'Lobo de guerra',   r:2},   // o da oferta de 1ª compra (arte: assets/mounts/mount_wolf_ref.png)
-    {id:'griffin', name:'Grifo dourado',    r:3},   // arte: assets/mounts/mount_griffin_ref.png
+    {id:'griffin', name:'Grifo dourado',    r:2},   // ÉPICO também (dono); arte: assets/mounts/mount_griffin_ref.png
+    {id:'mythic',  name:'(a definir)',      r:3, tbd:true},   // Mítico NOVO a definir (nome e arte com o PO/fps-ff): fora de add() até ter nome
     {id:'wyvern',  name:'Serpe dourada',    r:4},
   ],
 };
@@ -45,7 +52,7 @@ function pctOf(id,lvl,stars){ const m=BY[id]; if(!m) return 0; const L=DATA.lvlM
   return Math.round(DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))*1000)/1000; }
 function starUp(x){ while(x.stars<DATA.maxStars&&x.frags>=DATA.starCost[x.stars-1]){ x.frags-=DATA.starCost[x.stars-1]; x.stars++; } }
 /* ganha uma montaria (oferta, passe, loja, evento). Repetida = 10 fragmentos. A primeira entra equipada se não houver outra melhor. */
-function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; const o=ensure(S), x=o.owned[id];
+function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; if(m.tbd) return {ok:false,reason:'tbd'}; const o=ensure(S), x=o.owned[id];
   if(x){ const a=addFragments(S,id,DATA.dupFrags); return {ok:true,id,isNew:false,frags:DATA.dupFrags,stars:a.stars}; }
   o.owned[id]={stars:1,frags:0,lvl:1,gold:0}; const sv=o.stored[id]||0; delete o.stored[id]; if(sv) addFragments(S,id,sv);
   if(!o.eq||pctOf(id,1,o.owned[id].stars)>pctOf(o.eq,o.owned[o.eq].lvl,o.owned[o.eq].stars)) o.eq=id;
@@ -64,17 +71,18 @@ function upgrade(S,host,id,times){ let n=0, spent=0, why=''; const max=Math.max(
   while(n<max){ const c=canUpgrade(S,host,id); if(!c.ok){ why=c.reason; break; } if(host&&typeof host.spendGold==='function'&&host.spendGold(c.gold)===false){ why='money'; break; }
     const x=S.sys.mount.owned[id]; x.lvl++; x.gold+=c.gold; spent+=c.gold; n++; }
   return {ok:n>0,n,spent,reason:n>0?'':why,lvl:S.sys.mount.owned[id]?S.sys.mount.owned[id].lvl:0}; }
+const auraOf=stars=>DATA.aura[clamp(int0(stars)||1,1,DATA.maxStars)-1];
 /* para a tela: {id, name, rarity, rarityName, lvl, cap, stars, frags, need, pct, maxPct, equipped} */
 function info(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!m) return null;
   return {id,name:m.name,rarity:m.r,rarityName:DATA.rarName[m.r],owned:!!x,lvl:x?x.lvl:0,cap:lvlCap(S,host),stars:x?x.stars:0,frags:x?x.frags:int0(o.stored[id]),
-    need:x&&x.stars<DATA.maxStars?DATA.starCost[x.stars-1]:0,pct:x?pctOf(id,x.lvl,x.stars):0,maxPct:DATA.maxPct[m.r],equipped:o.eq===id}; }
+    need:x&&x.stars<DATA.maxStars?DATA.starCost[x.stars-1]:0,pct:x?pctOf(id,x.lvl,x.stars):0,maxPct:DATA.maxPct[m.r],equipped:o.eq===id,aura:auraOf(x?x.stars:1)}; }
 /* bônus no Sys.fc: % de ATK e de Vida da equipada (zero com a chave desligada) */
 function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!S||!ON()) return b; const o=ensure(S); if(!o.eq) return b;
   const x=o.owned[o.eq], p=pctOf(o.eq,x.lvl,x.stars); b.atkPct=p; b.hpPct=p; return b; }
 /* para a batalha: o que desenhar (visual desligado até a arte existir) */
-const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return null; return {id:o.eq,name:BY[o.eq].name,rarity:BY[o.eq].r,visual:DATA.visual===true,sprite:'mount_'+o.eq}; };
+const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return null; return {id:o.eq,name:BY[o.eq].name,rarity:BY[o.eq].r,visual:DATA.visual===true,sprite:'mount_'+o.eq,stars:o.owned[o.eq].stars,aura:auraOf(o.owned[o.eq].stars)}; };
 
-const API={DATA,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const API={DATA,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

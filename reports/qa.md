@@ -483,6 +483,10 @@ NÃO CONFERIDO AINDA nesta rodada: velocidade x1/x2/x4 e regras de VIP/nível, "
 - Kael folha larga t0/t1/t2: 0 quadros na borda, sola 241-247.
 - ABERTO: pé patinando nas 7 eras, Kael t2 e misto em jogo, medir eras 0/1/4/5/6 em jogo na v0.11.6.
 
+## RODADA 10 — v0.12.x (sem navegador, ordem do dono)
+- Era 0, por réplica de hordeFit (qa_tests/qa_horde_e0.js, 8 combinações e0/e1): distância frente→Kael parado 14-17 px de 390; frente×meio 46-55%; meio×fundo 53-64% (acima dos 55% em 4 combinações). Bordas ≤382, alturas < Kael. Não validado em jogo.
+- v0.12.1 parcial: sem AUTO/MANUAL, tutorial avança, painéis Equip/Invocar ok; Loja/Passe: "Voltar" do topo funciona, "‹" do rodapé é paginação. Faltou Progresso, arrastar, 390x844, alvos ≥44, fim do tutorial.
+
 ## ROTEIRO FIXO DA RODADA (acrescentado a pedido do PO; vale a cada build)
 Para cada era 0 a 6, com horda e com chefe, ~10 s de combate com golpes:
 1) PÉS DESENHADOS quadro a quadro (gancho em drawImage + getTransform, menos o deslocamento da câmera): variação <= 2 px por inimigo (centro, esquerdo, direito). Sheets: medir também a sola dentro da folha.

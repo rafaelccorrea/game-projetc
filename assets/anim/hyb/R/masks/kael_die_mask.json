@@ -1,0 +1,12 @@
+{
+ "frames": 18,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 0,
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura total. Pintar: cor = luminância do pixel da folha × tinta do material, misturada pela força.",
+ "files": [
+  "kael_die_mask.png"
+ ],
+ "sheet": "assets/anim/hyb/R/kael_die_body.png"
+}

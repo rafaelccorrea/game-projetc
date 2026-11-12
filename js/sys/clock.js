@@ -13,13 +13,26 @@ const DATA={
   backTolerance:10*60*1000,       // até 10 min para trás (ajuste de fuso/sincronização) não conta como voltar o relógio
   sessionSlack:2*60*1000,         // app aberto: o Date pode andar até 2 min a mais que o tempo real da sessão
   rested:{maxDays:3, killsPerDay:480, mult:2},   // 480 = meio dia de abates (40 min × 24/min ÷ 2); dobra XP e ouro
+  // FUSO das viradas (dia e semana) de TODOS os módulos (pedido da fps-e2): null = fuso do aparelho (hoje); com servidor, -180 (Brasília, UTC-3).
+  // Os módulos usam Sys.clock.dayKey / weekKey / weekStart quando existem, então muda num lugar só.
+  tzOffsetMin:null,
 };
 const DAY=86400000;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const pad=n=>String(n).padStart(2,'0');
-function dayKey(ms){ const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function dayIndex(ms){ const d=new Date(ms); return Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/DAY+0.5); }
+/* partes da data no fuso escolhido: fixo (DATA.tzOffsetMin, em minutos a partir do UTC) ou o do aparelho (null) */
+const tzFixed=()=>typeof DATA.tzOffsetMin==='number'&&isFinite(DATA.tzOffsetMin);
+function parts(ms){ if(tzFixed()){ const d=new Date(ms+DATA.tzOffsetMin*60000); return {y:d.getUTCFullYear(),m:d.getUTCMonth(),d:d.getUTCDate(),wd:d.getUTCDay()}; }
+  const d=new Date(ms); return {y:d.getFullYear(),m:d.getMonth(),d:d.getDate(),wd:d.getDay()}; }
+/* meia-noite (instante em ms) do dia de calendário y-m-d no fuso escolhido */
+function midnight(y,m,d){ return tzFixed()?Date.UTC(y,m,d)-DATA.tzOffsetMin*60000:new Date(y,m,d).getTime(); }
+const keyOf=p=>`${p.y}-${pad(p.m+1)}-${pad(p.d)}`;
+function dayKey(ms){ return keyOf(parts(ms)); }
+function dayIndex(ms){ const p=parts(ms); return Math.floor(Date.UTC(p.y,p.m,p.d)/DAY+0.5); }
+/* semana na SEGUNDA-FEIRA: início (ms) e chave = a data da segunda ("2026-11-09"), igual ao Sys.fc.weekKey da fps-e2 */
+function weekStart(ms){ const p=parts(ms), back=(p.wd+6)%7; return midnight(p.y,p.m,p.d-back); }
+function weekKey(ms){ return dayKey(weekStart(ms)+3600000); }   // +1 h: evita cair no domingo por arredondamento em troca de horário de verão
 const rawNow=host=>num(host&&host.rawNow?host.rawNow():(host&&host.now&&host.now()),Date.now());
 const perfNow=host=>num(host&&host.perf?host.perf():(typeof performance!=='undefined'?performance.now():NaN),NaN);
 
@@ -63,7 +76,7 @@ function takeRested(S){ if(!DATA.on) return false; const o=ensure(S); if(o.reste
 const rested=S=>ensure(S).rested;
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,now,offlineSeconds,checkIn,takeRested,rested,bonus,dayKey,_reset:()=>{ sess=null; }};
+const API={DATA,ensure,now,offlineSeconds,checkIn,takeRested,rested,bonus,dayKey,weekKey,weekStart,_reset:()=>{ sess=null; }};
 root.Sys=root.Sys||{}; root.Sys.clock=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

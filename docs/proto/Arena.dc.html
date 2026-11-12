@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Arena</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- 18 Arena v2 (refeita após reprovação: "visual fraco/parado", "luta sem graça", "falta progressão").
+     Coliseu vivo em camadas (céu e chão aprovados da era 2 + arquibancada em código com público, bandeiras, tochas e poeira).
+     LIGAS Bronze→Lenda com linha de subida e de queda (fecham toda semana), prêmio por liga (fragmentos do Prismático da Platina para cima).
+     3 adversários = cópias de jogadores com FC ±10% (Kael espelhado e recolorido). 5 lutas/dia.
+     Luta automática: VS com retratos, câmera, críticos, especial (Corte Giratório), ULTIMATE da era (folha aprovada), câmera lenta no golpe final.
+     Números de pontos/prêmios = PROPOSTA de protótipo; [QTD] até o PO fechar. Prêmios só valem quando o ranking online abrir. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400;letter-spacing:.2px}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes twk{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.25);opacity:1}}
+@keyframes gsh{from{background-position:120% 0}to{background-position:-130% 0}}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ===== folhas aprovadas ===== */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+.katk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet 1s steps(17, jump-none) both}
+.kspin{background-image:url(/_blob/e0439bba0b87e691e027578c2aacacfb);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet 1s steps(17, jump-none) both}
+.au13,.au10,.au7{background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77)}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4)}
+.au7{background-image:url(/_blob/77c79b0f46d2e8ae8b53d9f6308c3206)}
+.ultRows{animation:ultY 2.8s steps(7, jump-end) both}
+@keyframes ultY{from{transform:translateY(0)}to{transform:translateY(-100%)}}
+.ultCols{background-image:url(/_blob/fb846159b3bd0fe1a081e64cf4a5c93e);background-size:100% 100%;background-repeat:no-repeat;animation:ultX .4s steps(8, jump-end) infinite}
+@keyframes ultX{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2 / Ranking) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#16110d}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));box-sizing:border-box;background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;box-sizing:border-box;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.nhPill img{width:24px;height:24px;object-fit:contain}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhPlus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
+@media (max-width:380px){.nhPlus{display:none}.nhPill{padding:0 10px 0 4px}}
+.nhBody{position:relative;z-index:2;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;box-sizing:border-box}
+.nhFoot{position:relative;z-index:10;flex:none;width:100%;max-width:640px;margin:0 auto;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box}
+
+/* ===== COLISEU VIVO (céu + nuvem + chão aprovados da era 2; arquibancada em código) ===== */
+.scn{position:absolute;inset:0;overflow:hidden;background:#2a1d12;pointer-events:none}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;background-size:auto 100%}
+.l-sky{top:0;height:60%;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}
+.l-cld{top:2%;height:26%;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);animation:drift 160s linear infinite;opacity:.9}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-2400px}}
+.l-gnd{top:65.5%;height:38%;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.sand{position:absolute;left:0;right:0;top:66%;bottom:0;background:radial-gradient(ellipse 70% 40% at 50% 30%,rgba(255,214,150,.28),transparent 70%),linear-gradient(180deg,rgba(200,150,90,.25),rgba(60,36,18,.35));mix-blend-mode:soft-light}
+.sunG{position:absolute;right:-20%;top:-25%;width:90%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,236,170,.55),rgba(255,200,110,.18) 40%,transparent 68%);animation:sunP 5s ease-in-out infinite}
+@keyframes sunP{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+.rayG{position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,236,190,0) 0 40px,rgba(255,236,190,.07) 40px 70px);animation:rayM 9s ease-in-out infinite alternate}
+@keyframes rayM{from{opacity:.4;background-position:0 0}to{opacity:1;background-position:80px 0}}
+.col{position:absolute;left:-4%;right:-4%;top:18%;height:50%}
+.tier{position:absolute;left:0;right:0;overflow:hidden;background:linear-gradient(180deg,#4a3424,#2e2016)}
+.tier::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(180deg,#d4ad7c,#9a7650 55%,#5e4430);box-shadow:inset 0 2px 0 rgba(255,240,210,.35),0 3px 0 rgba(0,0,0,.4)}
+.t1{top:0;height:24%;filter:brightness(.78) saturate(.85)}
+.t2{top:24%;height:30%;filter:brightness(.9)}
+.t3{top:54%;height:32%}
+.crowd{position:absolute;left:0;right:0;top:4%;bottom:20%;animation:cheer .7s ease-in-out infinite alternate}
+.cb{top:12%;animation-delay:-.35s}
+@keyframes cheer{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+.hype .crowd{animation-duration:.3s}
+.cs.ca{background-image:radial-gradient(circle 2.6px at 5px 4px,#f0c49a 98%,transparent),radial-gradient(4px 4.5px at 5px 11px,#c0392b 98%,transparent),radial-gradient(4px 4.5px at 15px 11px,#e0b030 98%,transparent),radial-gradient(4px 4.5px at 5px 11px,#7a4a8a 98%,transparent);background-size:10px 13px,20px 13px,30px 13px,10px 13px}
+.cs.cb{background-image:radial-gradient(circle 2.6px at 10px 4px,#c98a5a 98%,transparent),radial-gradient(4px 4.5px at 10px 11px,#2f6fb0 98%,transparent),radial-gradient(4px 4.5px at 10px 11px,#e8e2d8 98%,transparent),radial-gradient(4px 4.5px at 10px 11px,#3fae3c 98%,transparent);background-size:10px 13px,30px 13px,20px 13px,10px 13px}
+.cm.ca{background-image:radial-gradient(circle 3.3px at 6.5px 5px,#f0c49a 98%,transparent),radial-gradient(5px 5.6px at 6.5px 13.5px,#c0392b 98%,transparent),radial-gradient(5px 5.6px at 19.5px 13.5px,#e0b030 98%,transparent),radial-gradient(5px 5.6px at 6.5px 13.5px,#7a4a8a 98%,transparent);background-size:13px 16px,26px 16px,39px 16px,13px 16px}
+.cm.cb{background-image:radial-gradient(circle 3.3px at 13px 5px,#c98a5a 98%,transparent),radial-gradient(5px 5.6px at 13px 13.5px,#2f6fb0 98%,transparent),radial-gradient(5px 5.6px at 13px 13.5px,#e8e2d8 98%,transparent),radial-gradient(5px 5.6px at 13px 13.5px,#3fae3c 98%,transparent);background-size:13px 16px,39px 16px,26px 16px,13px 16px}
+.cl.ca{background-image:radial-gradient(circle 4px at 8px 6px,#f0c49a 98%,transparent),radial-gradient(6.2px 7px at 8px 17px,#c0392b 98%,transparent),radial-gradient(6.2px 7px at 24px 17px,#e0b030 98%,transparent),radial-gradient(6.2px 7px at 8px 17px,#7a4a8a 98%,transparent);background-size:16px 20px,32px 20px,48px 20px,16px 20px}
+.cl.cb{background-image:radial-gradient(circle 4px at 16px 6px,#c98a5a 98%,transparent),radial-gradient(6.2px 7px at 16px 17px,#2f6fb0 98%,transparent),radial-gradient(6.2px 7px at 16px 17px,#e8e2d8 98%,transparent),radial-gradient(6.2px 7px at 16px 17px,#3fae3c 98%,transparent);background-size:16px 20px,48px 20px,32px 20px,16px 20px}
+.ola{position:absolute;left:0;right:0;top:0;height:86%;background:linear-gradient(90deg,transparent 0,rgba(255,240,200,.22) 6%,transparent 12%);background-size:220% 100%;animation:ola 7s linear infinite;mix-blend-mode:screen}
+@keyframes ola{from{background-position:130% 0}to{background-position:-30% 0}}
+.arc{position:absolute;left:0;right:0;top:86%;height:14%;background:radial-gradient(28% 78% at 50% 100%,#140c07 96%,transparent 100%) 0 0/58px 100% repeat-x,linear-gradient(180deg,#b08a5e,#7a5a3c)}
+.flg{position:absolute;width:3px;height:38px;margin-left:-1px;background:linear-gradient(90deg,#2a180a,#6a4a2a);border-radius:2px}
+.flg::before{content:"";position:absolute;left:-2px;top:-4px;width:7px;height:7px;border-radius:50%;background:#ffc94a;box-shadow:0 0 6px rgba(255,201,74,.8)}
+.flg i{position:absolute;left:3px;top:2px;width:28px;height:17px;transform-origin:0 50%;clip-path:polygon(0 0,100% 12%,82% 50%,100% 88%,0 100%);animation:wave 1.1s ease-in-out infinite alternate}
+.flg i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.25),rgba(255,255,255,.25) 40%,rgba(0,0,0,.2) 70%,rgba(255,255,255,.15));background-size:200% 100%;animation:wvL 1.1s ease-in-out infinite alternate}
+@keyframes wave{from{transform:skewY(-9deg) scaleX(.84)}to{transform:skewY(7deg) scaleX(1)}}
+@keyframes wvL{from{background-position:0 0}to{background-position:100% 0}}
+.pen{position:absolute;top:54%;width:22px;height:44px;margin-left:-11px;transform-origin:50% 0;clip-path:polygon(0 0,100% 0,100% 78%,50% 100%,0 78%);background:linear-gradient(90deg,transparent 0 38%,rgba(255,224,122,.95) 38% 62%,transparent 62%),linear-gradient(180deg,var(--pc),rgba(0,0,0,.45));animation:sway 2.6s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-4deg) skewX(-3deg)}to{transform:rotate(4deg) skewX(3deg)}}
+.tch{position:absolute;top:80%;width:7px;height:24px;margin-left:-3.5px;border-radius:2px;background:linear-gradient(90deg,#2a180a,#6a4220,#2a180a)}
+.tch::before{content:"";position:absolute;left:-4px;top:0;width:15px;height:6px;border-radius:2px;background:#3a2410}
+.tch b{position:absolute;left:50%;bottom:calc(100% - 2px);width:16px;height:24px;margin-left:-8px;border-radius:50% 50% 45% 45%/62% 62% 38% 38%;background:radial-gradient(ellipse at 50% 72%,#fff6c0 0 18%,#ffb21e 42%,#ff5a00 70%,rgba(255,60,0,0) 76%);transform-origin:50% 100%;animation:flick .16s ease-in-out infinite alternate;filter:drop-shadow(0 0 6px rgba(255,140,40,.9))}
+@keyframes flick{from{transform:scale(1,1) rotate(-3deg)}to{transform:scale(.9,1.12) rotate(3deg)}}
+.tch i{position:absolute;left:50%;top:-12px;width:130px;height:130px;margin:-65px 0 0 -65px;border-radius:50%;background:radial-gradient(circle,rgba(255,170,60,.42),rgba(255,140,40,0) 64%);animation:glw 1.3s ease-in-out infinite;mix-blend-mode:screen}
+@keyframes glw{0%,100%{opacity:.7;transform:scale(1)}40%{opacity:1;transform:scale(1.08)}70%{opacity:.8;transform:scale(.96)}}
+.tch em{position:absolute;left:50%;top:-14px;width:3px;height:3px;border-radius:50%;background:#ffd27a;box-shadow:0 0 4px 1px #ff8a1a;animation:ember 1.6s ease-out infinite}
+@keyframes ember{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(6px,-40px);opacity:0}}
+.dst{position:absolute;left:-6%;border-radius:50%;background:radial-gradient(circle,rgba(240,210,160,.75),rgba(240,210,160,0) 70%);animation:dust 9s linear infinite}
+@keyframes dust{0%{transform:translateX(0) translateY(0) scale(.6);opacity:0}15%{opacity:.9}85%{opacity:.7}100%{transform:translateX(112vw) translateY(-18px) scale(1.4);opacity:0}}
+.vig{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,3,.15),transparent 30%,transparent 62%,rgba(10,6,3,.6))}
+
+/* ===== EMBLEMA DE LIGA (SVG; brilho, raios, asas batendo) ===== */
+.emb{position:relative;display:block;flex:none}
+.emb svg{position:relative;width:100%;height:100%;overflow:visible;display:block;animation:embG 2.4s ease-in-out infinite}
+@keyframes embG{0%,100%{filter:drop-shadow(0 0 3px var(--lg))}50%{filter:drop-shadow(0 0 14px var(--lg)) brightness(1.12)}}
+.emb .er{position:absolute;inset:-28%;border-radius:50%;background:repeating-conic-gradient(var(--lg) 0deg 7deg,transparent 7deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);animation:spin 14s linear infinite;opacity:.65}
+.emb.rb svg{animation:embG 2.4s ease-in-out infinite,hue 4s linear infinite}
+.wL,.wR{transform-box:fill-box;animation:flap 1.6s ease-in-out infinite}
+.wL{transform-origin:100% 30%}.wR{transform-origin:0 30%;animation-name:flapR}
+@keyframes flap{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
+@keyframes flapR{0%,100%{transform:rotate(0)}50%{transform:rotate(9deg)}}
+.esh{animation:esh 3s ease-in-out infinite}
+@keyframes esh{0%,55%{transform:translateX(-70px)}100%{transform:translateX(70px)}}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff3c4;box-shadow:0 0 8px 3px rgba(255,201,74,.9);animation:twk 1.8s ease-in-out infinite}
+
+/* liga atual (topo) */
+.lgc{position:relative;flex:none;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px 10px 10px;border-radius:18px;background:linear-gradient(135deg,rgba(40,26,14,.86),rgba(16,11,8,.72));border:2px solid var(--lc);box-shadow:0 10px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.1);overflow:hidden;animation:lgIn .5s cubic-bezier(.2,1.2,.4,1) both;text-align:left;width:100%;color:#f6ecdf}
+@keyframes lgIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
+.lgc::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.12) 50%,transparent 65%);background-size:300% 100%;animation:shn 4.2s ease-in-out infinite;pointer-events:none}
+.lgn{font-family:'Lilita One',sans-serif;font-size:clamp(24px,7vw,32px);line-height:1;background-image:linear-gradient(100deg,var(--lc) 20%,#fff 45%,var(--lc) 62%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 3s linear infinite;filter:drop-shadow(0 2px 0 #120c08)}
+.pbar{position:relative;height:16px;border-radius:8px;background:#0e0a07;border:2px solid #000;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,var(--lc2),var(--lc));transition:width 1.2s cubic-bezier(.2,1,.4,1)}
+.pbar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:run 1.8s linear infinite}
+@keyframes run{from{background-position:-50% 0}to{background-position:150% 0}}
+.pbar.promo{animation:prG 1.1s ease-in-out infinite}
+@keyframes prG{0%,100%{box-shadow:0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 0 14px rgba(95,208,104,.95)}}
+.pbar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:3px;min-height:22px;padding:1px 7px;border-radius:999px;background:rgba(14,10,7,.8);border:1px solid #4a3a2b;font-size:11px;font-weight:900;line-height:1.1;white-space:nowrap}
+.chip img{width:15px;height:15px;object-fit:contain}
+.chip.up{border-color:#3fae3c;color:#b8f5bd}.chip.dn{border-color:#a8453a;color:#ffc0b8}
+.clock{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 6px;border-radius:10px;background:rgba(14,10,7,.85);border:1px solid #4a3a2b;line-height:1.05}
+.hg{animation:hgFlip 3s cubic-bezier(.6,0,.3,1) infinite;transform-origin:50% 50%;flex:none}
+@keyframes hgFlip{0%,80%{transform:rotate(0)}100%{transform:rotate(180deg)}}
+.sandT{animation:sandT 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandT{0%{transform:scaleY(1)}80%,100%{transform:scaleY(0)}}
+.sandB{animation:sandB 3s linear infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes sandB{0%{transform:scaleY(0)}80%,100%{transform:scaleY(1)}}
+
+/* abas */
+.tabs{flex:none;display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(14,10,7,.82);border:1px solid #4a3a2b}
+.tab{position:relative;flex:1;min-width:0;min-height:44px;border:0;border-radius:10px;background:transparent;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:clamp(14px,4.2vw,17px);padding:0 4px}
+.tab[aria-selected="true"]{background:#3a2c1f;color:#ffc94a;box-shadow:inset 0 -3px 0 #ffc94a}
+.tab:active{transform:scale(.96)}
+
+/* cartões de adversário */
+.opps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px 7px;border-radius:16px;border:2px solid var(--oc);background:linear-gradient(180deg,rgba(44,32,23,.92),rgba(18,12,9,.95));min-width:0;overflow:hidden;animation:ocIn .45s cubic-bezier(.2,1.2,.4,1) both;transition:transform .18s}
+@keyframes ocIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
+.oc:active{transform:scale(.96)}
+.oc.sel{animation:ocIn .45s cubic-bezier(.2,1.2,.4,1) both,ocSel 1.3s ease-in-out .45s infinite;border-color:#ffc94a}
+@keyframes ocSel{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0),0 8px 18px rgba(0,0,0,.5)}50%{box-shadow:0 0 20px rgba(255,201,74,.85),0 8px 18px rgba(0,0,0,.5)}}
+.oc::before{content:"";position:absolute;left:0;right:0;top:0;height:58%;background:radial-gradient(ellipse 80% 70% at 50% 85%,var(--og),transparent 70%);opacity:.75}
+.oc::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.1) 50%,transparent 65%);background-size:300% 100%;animation:shn 3.6s ease-in-out infinite;pointer-events:none}
+.ocTop{position:relative;z-index:1;width:100%;display:flex;align-items:center;justify-content:space-between;gap:2px;padding:0 2px}
+.ocSt{position:relative;width:100%;aspect-ratio:1/1.02;flex:none;z-index:1}
+.ocSt .ped{position:absolute;left:14%;right:14%;bottom:4%;height:11%;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#9a7a52 0%,#5a4030 60%,#2a1d12 100%);border:2px solid var(--oc);box-shadow:0 0 10px var(--og)}
+.ocSt .au{position:absolute;left:50%;bottom:8%;width:92%;aspect-ratio:256/320;transform:translateX(-50%);opacity:.9}
+.ocSt .fl{position:absolute;left:4%;right:4%;bottom:8%;aspect-ratio:1;transform:scaleX(-1)}
+.ocSt .fl .kidle{position:absolute;inset:0}
+.ocN{position:relative;z-index:1;font-size:clamp(12px,3.5vw,14px);font-weight:900;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.ocR{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:3px;width:100%;min-height:26px;border-radius:9px;background:#0e0a07;border:1px solid #4a3a2b;font-size:12px;font-weight:900;margin-top:2px}
+.selTag{position:absolute;z-index:2;top:-1px;left:50%;transform:translateX(-50%);padding:0 8px;border-radius:0 0 8px 8px;background:#ffc94a;color:#2a1403;font-size:9.5px;font-weight:900;line-height:15px;letter-spacing:.5px}
+.diff{font-size:10px;font-weight:900;padding:0 5px;border-radius:6px;line-height:15px;white-space:nowrap}
+.tt{font-family:'Lilita One',sans-serif;letter-spacing:.3px;display:inline-block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;font-size:clamp(11px,3.2vw,13px);line-height:1.15}
+.tt1{color:#8cc8ff;animation:glo1 2.4s ease-in-out infinite}
+@keyframes glo1{0%,100%{text-shadow:0 0 2px rgba(74,163,255,.4)}50%{text-shadow:0 0 10px rgba(74,163,255,.95)}}
+.tt2,.tt3,.tt4{background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 3s linear infinite}
+.tt2{background-image:linear-gradient(100deg,#c890ff 20%,#f4e6ff 45%,#a35cff 60%,#c890ff 80%)}
+.tt3{background-image:linear-gradient(100deg,#ff6f88 20%,#ffe0e6 45%,#ff2a55 60%,#ff6f88 80%)}
+.tt4{background-image:linear-gradient(100deg,#ffe07a 20%,#fffaf0 45%,#f2a826 60%,#ffe07a 80%)}
+.pips{display:flex;gap:4px}
+.pip{width:14px;height:14px;border-radius:50%;border:2px solid #000;background:#33271d}
+.pip.on{background:radial-gradient(circle at 35% 35%,#fff3c4,#ffc94a 45%,#c77a12);animation:pipP 1.6s ease-in-out infinite}
+@keyframes pipP{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 8px rgba(255,201,74,.95)}}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:rgba(51,39,29,.92);color:#f6ecdf;font-weight:900;font-size:13px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ghost:active{transform:scale(.95)}
+.note{font-size:clamp(11px,3.1vw,12.5px);font-weight:800;color:#e8dccb;line-height:1.3;text-shadow:0 1px 2px #000}
+.inR{animation:inR .35s ease-out both}
+@keyframes inR{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+
+/* ligas (lista) */
+.lgr{width:100%;min-height:52px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 8px;border-radius:14px;background:rgba(29,22,17,.92);border:2px solid #4a3a2b;text-align:left;color:#f6ecdf}
+.lgr.me{border-color:var(--lc);background:linear-gradient(90deg,rgba(90,64,32,.95),rgba(29,22,17,.92));animation:inR .35s ease-out both,meRow 1.6s ease-in-out .35s infinite}
+@keyframes meRow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 16px var(--lg)}}
+.lgr.lock{opacity:.78}
+.prz{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:3px;max-width:190px}
+.pf{animation:hue 3s linear infinite,pfG 1.6s ease-in-out infinite}
+@keyframes pfG{0%,100%{filter:drop-shadow(0 0 2px rgba(143,245,255,.6))}50%{filter:drop-shadow(0 0 7px rgba(143,245,255,1))}}
+
+/* ranking */
+.rrow{min-height:44px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:rgba(29,22,17,.92);border:1px solid #4a3a2b}
+.rrow.me{background:#4a3214;border:2px solid #ffc94a;animation:inR .35s ease-out both,meG 1.4s ease-in-out .35s infinite}
+@keyframes meG{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 14px rgba(255,201,74,.8)}}
+.ava{position:relative;width:34px;height:34px;flex:none;border-radius:10px;overflow:hidden;display:block;background:#33271d;border:2px solid var(--ac)}
+.ava .kidle{position:absolute;left:-12px;top:-3px;width:54px;height:54px;display:block}
+
+/* botão principal */
+.gold{width:100%;min-height:58px;border:0;border-radius:16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:clamp(20px,6vw,25px);box-shadow:0 6px 0 #8a4f0c;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;padding:0 12px}
+.gold.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 24px rgba(255,201,74,.95)}}
+.gold::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:300% 100%;animation:shn 2.6s ease-in-out infinite}
+.gold:active{transform:translateY(3px);box-shadow:0 3px 0 #8a4f0c}
+.gold.off{background:#33271d;color:#c9b9a2;box-shadow:0 6px 0 #1a120c;animation:none}
+.gold.off::after{display:none}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:80;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.2s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+
+/* ===================== LUTA ===================== */
+.fov{position:absolute;inset:0;z-index:60;overflow:hidden;background:#000;--fs:min(46vw,200px);--fo:min(25vw,108px)}
+.cam{position:absolute;inset:0;transform-origin:50% 76%;will-change:transform}
+.qa{animation:qa .5s linear}.qb{animation:qb .5s linear}
+@keyframes qa{10%{transform:translate(-9px,5px)}25%{transform:translate(8px,-5px)}40%{transform:translate(-7px,3px)}55%{transform:translate(6px,-3px)}75%{transform:translate(-3px,1px)}}
+@keyframes qb{10%{transform:translate(9px,-5px)}25%{transform:translate(-8px,5px)}40%{transform:translate(7px,-3px)}55%{transform:translate(-6px,3px)}75%{transform:translate(3px,-1px)}}
+.ftr{position:absolute;bottom:calc(20% - var(--fs) * .05);width:var(--fs);height:var(--fs);z-index:4}
+.ftrA{left:calc(50% - var(--fo) - var(--fs) / 2)}
+.ftrB{left:calc(50% + var(--fo) - var(--fs) / 2)}
+.hw{position:absolute;inset:0;transform-origin:50% 95%;transition:transform .7s cubic-bezier(.55,0,.85,.5),filter .7s}
+.flip{position:absolute;inset:0}
+.ftrB .flip{transform:scaleX(-1)}
+.faur{position:absolute;left:0;width:100%;height:125%;bottom:3%;pointer-events:none}
+.spr{position:absolute;left:0;top:0;width:100%;height:100%}
+.spr.wide{left:-37.5%;width:175%}
+.shad{position:absolute;left:22%;right:22%;bottom:2%;height:7%;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 70%)}
+.hA1{animation:kbL1 .4s ease-out}.hA2{animation:kbL2 .4s ease-out}
+.hB1{animation:kbR1 .4s ease-out}.hB2{animation:kbR2 .4s ease-out}
+@keyframes kbL1{0%{filter:none}15%{filter:brightness(2.8) saturate(0);transform:translateX(-14px)}45%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}100%{filter:none;transform:none}}
+@keyframes kbL2{0%{filter:none}15%{filter:brightness(2.8) saturate(0);transform:translateX(-14px)}45%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}100%{filter:none;transform:none}}
+@keyframes kbR1{0%{filter:none}15%{filter:brightness(2.8) saturate(0);transform:translateX(14px)}45%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}100%{filter:none;transform:none}}
+@keyframes kbR2{0%{filter:none}15%{filter:brightness(2.8) saturate(0);transform:translateX(14px)}45%{filter:brightness(1.3) sepia(1) saturate(6) hue-rotate(-40deg)}100%{filter:none;transform:none}}
+.downA{transform:rotate(-80deg);filter:grayscale(.75) brightness(.7)}
+.downB{transform:rotate(80deg);filter:grayscale(.75) brightness(.7)}
+.winG{filter:drop-shadow(0 0 14px rgba(255,201,74,.95))}
+.slash{position:absolute;bottom:calc(20% + var(--fs) * .3);width:calc(var(--fs) * .9);height:calc(var(--fs) * .5);margin-left:calc(var(--fs) * -.45);z-index:5;pointer-events:none;border-radius:50%;border-top:6px solid rgba(255,250,220,.95);filter:drop-shadow(0 0 8px rgba(255,201,74,.95));animation:slash .3s ease-out both}
+@keyframes slash{from{opacity:1;transform:rotate(-30deg) scale(.5)}to{opacity:0;transform:rotate(20deg) scale(1.3)}}
+.hitfx{position:absolute;bottom:calc(20% + var(--fs) * .25);width:90px;height:90px;margin-left:-45px;border-radius:50%;z-index:5;pointer-events:none;background:radial-gradient(circle,rgba(255,250,220,.95) 0%,rgba(255,201,74,.6) 40%,rgba(255,201,74,0) 70%);animation:hitfx .35s ease-out both}
+@keyframes hitfx{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.6)}}
+.dp{position:absolute;z-index:7;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-family:'Lilita One',sans-serif;line-height:1;white-space:nowrap;pointer-events:none;animation-duration:1.1s;animation-timing-function:ease-out;animation-fill-mode:both}
+.dp.k1{animation-name:dp1}.dp.k2{animation-name:dp2}
+@keyframes dp1{0%{opacity:0;transform:translateX(-50%) scale(.4)}12%{opacity:1;transform:translateX(-50%) scale(1.3)}24%{transform:translateX(-50%) scale(1)}78%{opacity:1;transform:translateX(-50%) translateY(-26px)}100%{opacity:0;transform:translateX(-50%) translateY(-40px)}}
+@keyframes dp2{0%{opacity:0;transform:translateX(-50%) scale(.4)}12%{opacity:1;transform:translateX(-50%) scale(1.3)}24%{transform:translateX(-50%) scale(1)}78%{opacity:1;transform:translateX(-50%) translateY(-26px)}100%{opacity:0;transform:translateX(-50%) translateY(-40px)}}
+.dp .lb{font-size:15px;letter-spacing:1px;margin-bottom:2px}
+.dp .burstC{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px 0 0 -60px;background:repeating-conic-gradient(rgba(255,214,90,.75) 0 10deg,transparent 10deg 30deg);-webkit-mask:radial-gradient(circle,#000 10%,transparent 62%);mask:radial-gradient(circle,#000 10%,transparent 62%);animation:spin 1.6s linear infinite;z-index:-1}
+.flashW{position:absolute;inset:0;z-index:8;pointer-events:none;animation:flashW .6s ease-out both}
+@keyframes flashW{0%{opacity:.95}100%{opacity:0}}
+.ultBox{position:absolute;left:0;width:100%;aspect-ratio:390/219;bottom:calc(20% - 34px);overflow:hidden;mix-blend-mode:screen;pointer-events:none;z-index:6}
+.lbox{position:absolute;left:0;right:0;height:0;background:#000;z-index:9;transition:height .45s ease}
+.hud{position:absolute;left:0;right:0;top:0;z-index:12;padding:10px 10px 0;padding-top:max(10px,env(safe-area-inset-top));display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:4px;align-items:start;max-width:640px;margin:0 auto}
+.side{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sideB{align-items:flex-end}
+.who{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%}
+.sideB .who{flex-direction:row-reverse}
+.port{position:relative;width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;border:3px solid var(--pc);background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);box-shadow:0 0 10px var(--pc)}
+.port .kidle{position:absolute;left:-40%;top:-8%;width:180%;height:180%}
+.port.fB .kidle{transform:scaleX(-1)}
+.hpb{position:relative;width:100%;height:18px;border-radius:9px;background:#0e0a07;border:2px solid #000;overflow:hidden;box-shadow:0 2px 0 rgba(0,0,0,.5)}
+.hpb .lag,.hpb .cur{position:absolute;top:0;bottom:0}
+.sideA .hpb .lag,.sideA .hpb .cur{left:0}
+.sideB .hpb .lag,.sideB .hpb .cur{right:0}
+.hpb .lag{background:#fff3c4;transition:width .5s ease .3s}
+.hpb .cur{transition:width .22s ease-out}
+.sideA .cur{background:linear-gradient(180deg,#9ff0a6,#2f8a36)}
+.sideB .cur{background:linear-gradient(180deg,#ff9a8a,#c0392b)}
+.hpb b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000}
+.enb{position:relative;width:78%;height:8px;border-radius:4px;background:#0e0a07;border:1px solid #000;overflow:hidden}
+.enb i{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#8a4dff,#e6d0ff);transition:width .3s}
+.sideA .enb i{left:0}.sideB .enb i{right:0}
+.enb.full{animation:enF .6s ease-in-out infinite}
+@keyframes enF{0%,100%{box-shadow:0 0 0 rgba(176,124,255,0)}50%{box-shadow:0 0 10px rgba(208,160,255,1)}}
+.vsS{font-family:'Lilita One',sans-serif;font-size:22px;color:#ffc94a;text-align:center;line-height:42px;text-shadow:0 2px 0 #3a1a04,0 0 8px rgba(255,201,74,.7);animation:vsP 1.4s ease-in-out infinite}
+@keyframes vsP{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.ctl{position:absolute;left:0;right:0;bottom:0;z-index:12;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;padding-bottom:max(14px,env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+.cbtn{min-width:64px;min-height:48px;border-radius:14px;border:2px solid rgba(255,236,200,.3);background:rgba(16,11,8,.72);color:#f6ecdf;font-family:'Lilita One',sans-serif;font-size:17px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px}
+.cbtn[aria-pressed="true"]{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-color:#fff0b0}
+.cbtn:active{transform:scale(.94)}
+.logT{flex:1;min-width:0;text-align:center;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000,0 0 6px #000;line-height:1.2}
+/* VS */
+.vsBg{position:absolute;inset:0;z-index:20;background:radial-gradient(circle at 50% 50%,rgba(40,20,8,.55),rgba(0,0,0,.88));animation:fadeIn .3s both}
+.vsP{position:absolute;top:24%;height:32%;width:62%;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 6%}
+.vsL{left:0;clip-path:polygon(0 0,100% 0,78% 100%,0 100%);background:linear-gradient(120deg,#8a1a10,#e0702a 70%,#ffc94a);animation:vsL .45s cubic-bezier(.2,1.2,.4,1) both;align-items:flex-start}
+.vsR{right:0;top:44%;clip-path:polygon(22% 0,100% 0,100% 100%,0 100%);background:linear-gradient(240deg,#1d2a8a,#6a3ac0 70%,#c58bff);animation:vsR .45s cubic-bezier(.2,1.2,.4,1) .15s both;align-items:flex-end;text-align:right}
+@keyframes vsL{from{transform:translateX(-105%)}to{transform:none}}
+@keyframes vsR{from{transform:translateX(105%)}to{transform:none}}
+.vsFace{position:absolute;bottom:0;width:46%;aspect-ratio:1;pointer-events:none}
+.vsL .vsFace{right:4%}.vsR .vsFace{left:4%}
+.vsFace .kidle{position:absolute;inset:0}
+.vsR .vsFace .kidle{transform:scaleX(-1)}
+.vsName{position:relative;z-index:1;font-family:'Lilita One',sans-serif;font-size:clamp(20px,6vw,28px);color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);max-width:46%;line-height:1.05}
+.vsSub{position:relative;z-index:1;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000;max-width:46%}
+.vsX{position:absolute;left:0;right:0;top:41%;z-index:22;text-align:center;font-family:'Lilita One',sans-serif;font-size:clamp(76px,24vw,110px);line-height:1;background-image:linear-gradient(180deg,#fff6d0,#ffc94a 50%,#c77a12);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #3a1a04) drop-shadow(0 0 18px rgba(255,201,74,.9));animation:vsX .5s cubic-bezier(.3,1.6,.5,1) .55s both}
+@keyframes vsX{from{opacity:0;transform:scale(3.2) rotate(-12deg)}to{opacity:1;transform:none}}
+.vsFl{position:absolute;inset:0;z-index:21;background:#fff;animation:vsFl .5s ease-out .6s both;pointer-events:none}
+@keyframes vsFl{0%{opacity:0}10%{opacity:.85}100%{opacity:0}}
+.lute{position:absolute;left:0;right:0;top:38%;z-index:14;text-align:center;font-family:'Lilita One',sans-serif;font-size:clamp(48px,15vw,70px);color:#fff;text-shadow:0 4px 0 #8a1a10,0 0 18px rgba(255,90,40,.9);animation:lute .9s ease-out both;pointer-events:none}
+@keyframes lute{0%{opacity:0;transform:scale(2.4)}20%{opacity:1;transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:scale(1.1)}}
+/* corte de ultimate */
+.cutBg{position:absolute;inset:0;z-index:10;background:rgba(10,0,20,.6);animation:fadeIn .2s both;pointer-events:none}
+.cutBand{position:absolute;left:0;right:0;top:30%;height:20%;z-index:11;overflow:hidden;pointer-events:none;animation:cutIn .3s cubic-bezier(.2,1.2,.4,1) both;border-top:3px solid #e6d0ff;border-bottom:3px solid #e6d0ff}
+.cutA{background:linear-gradient(90deg,#3a0d6a,#8a4dff 60%,#e6d0ff)}
+.cutB{background:linear-gradient(270deg,#5a0a1a,#d0305a 60%,#ffc0d0);animation-name:cutInR}
+@keyframes cutIn{from{transform:translateX(-100%) skewX(-12deg)}to{transform:none}}
+@keyframes cutInR{from{transform:translateX(100%) skewX(12deg)}to{transform:none}}
+.cutBand::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(100deg,transparent 0 22px,rgba(255,255,255,.14) 22px 26px);animation:speed .35s linear infinite}
+@keyframes speed{from{background-position:0 0}to{background-position:-120px 0}}
+.cutFace{position:absolute;top:-30%;height:200%;aspect-ratio:1}
+.cutA .cutFace{left:2%}.cutB .cutFace{right:2%}
+.cutB .cutFace .kidle{transform:scaleX(-1)}
+.cutTx{position:absolute;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;z-index:1}
+.cutA .cutTx{right:5%;align-items:flex-end}.cutB .cutTx{left:5%;align-items:flex-start}
+/* final */
+.burst{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;z-index:8;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,250,220,.95) 0,rgba(255,201,74,.55) 18%,rgba(255,201,74,0) 45%);animation:burst 1.2s ease-out both}
+@keyframes burst{0%{transform:scale(0);opacity:1}60%{opacity:.9}100%{transform:scale(1);opacity:0}}
+.raysW{position:absolute;left:50%;top:38%;width:520px;height:520px;margin:-260px 0 0 -260px;z-index:13;border-radius:50%;background:repeating-conic-gradient(var(--rc) 0deg 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 14%,transparent 66%);mask:radial-gradient(circle,#000 14%,transparent 66%);animation:spin 10s linear infinite,fadeIn .5s both;pointer-events:none}
+.endT{position:absolute;left:0;right:0;top:30%;z-index:14;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;animation:endIn .6s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes endIn{from{opacity:0;transform:scale(2.2)}to{opacity:1;transform:none}}
+.vic{font-family:'Lilita One',sans-serif;font-size:clamp(54px,17vw,82px);line-height:1;background-image:linear-gradient(100deg,#ffe07a 20%,#fffaf0 45%,#f2a826 60%,#ffe07a 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 2s linear infinite;filter:drop-shadow(0 4px 0 #3a1a04) drop-shadow(0 0 16px rgba(255,201,74,.8))}
+.def{font-family:'Lilita One',sans-serif;font-size:clamp(48px,15vw,72px);line-height:1;color:#cfd6e0;text-shadow:0 4px 0 #1a2030,0 0 16px rgba(120,150,200,.7)}
+.conf{position:absolute;top:-12px;width:7px;height:11px;border-radius:2px;z-index:13;animation:conf 2.6s linear infinite;opacity:0;pointer-events:none}
+@keyframes conf{0%{transform:translateY(0) rotate(0);opacity:0}8%{opacity:1}90%{opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}
+/* resultado */
+.resBg{position:absolute;inset:0;z-index:30;background:rgba(6,4,2,.55);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+.res{position:relative;width:100%;max-width:520px;border-radius:24px 24px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid var(--rcB);border-bottom:0;padding:16px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:10px;animation:sheetUp .45s cubic-bezier(.2,1.2,.4,1) both;overflow:hidden}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.embFlip{animation:embFlip .9s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes embFlip{0%{transform:rotateY(0) scale(1)}45%{transform:rotateY(90deg) scale(1.2)}100%{transform:rotateY(0) scale(1)}}
+.upA{display:inline-block;animation:upA 1s ease-in-out infinite}
+@keyframes upA{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.cnt{font-family:'Lilita One',sans-serif;font-size:34px;color:#fff;font-variant-numeric:tabular-nums;line-height:1}
+.dlt{font-family:'Lilita One',sans-serif;font-size:22px;animation:dltP .5s cubic-bezier(.3,1.6,.5,1) .3s both}
+@keyframes dltP{from{opacity:0;transform:scale(2)}to{opacity:1;transform:none}}
+.zone{padding:6px 12px;border-radius:12px;font-size:13px;font-weight:900;text-align:center;line-height:1.25}
+.zone.promo{background:linear-gradient(90deg,#1f5a24,#2f8a36);border:2px solid #9ff0a6;color:#fff;animation:prG 1.1s ease-in-out infinite}
+.zone.safe{background:#1d1611;border:1px solid #4a3a2b;color:#e8dccb}
+.zone.releg{background:#4a1a14;border:2px solid #ff7a6a;color:#ffd8d2}
+</style>
+</helmet>
+<div class="nhApp">
+
+  <!-- coliseu vivo atrás de tudo -->
+  <div class="scn" aria-hidden="true">
+    <div class="ly l-sky"></div>
+    <div class="ly l-cld"></div>
+    <div class="sunG"></div>
+    <div class="col">
+      <div class="tier t1"><div class="crowd cs ca"></div><div class="crowd cs cb"></div></div>
+      <div class="tier t2"><div class="crowd cm ca"></div><div class="crowd cm cb"></div></div>
+      <div class="tier t3"><div class="crowd cl ca"></div><div class="crowd cl cb"></div></div>
+      <div class="ola"></div>
+      <div class="arc"></div>
+      <sc-for list="{{flags}}" as="f" hint-placeholder-count="6"><span class="flg" style="left: {{f.x}}; top: {{f.y}}"><i style="background: {{f.c}}; animation-delay: {{f.d}}"></i></span></sc-for>
+      <sc-for list="{{pens}}" as="p" hint-placeholder-count="5"><span class="pen" style="left: {{p.x}}; --pc: {{p.c}}; animation-delay: {{p.d}}"></span></sc-for>
+      <sc-for list="{{torches}}" as="t" hint-placeholder-count="4"><span class="tch" style="left: {{t.x}}"><i style="animation-delay: {{t.d}}"></i><b style="animation-delay: {{t.d}}"></b><em style="animation-delay: {{t.d}}"></em></span></sc-for>
+    </div>
+    <div class="ly l-gnd"></div>
+    <div class="sand"></div>
+    <div class="rayG"></div>
+    <sc-for list="{{dust}}" as="d" hint-placeholder-count="7"><span class="dst" style="top: {{d.y}}; width: {{d.s}}; height: {{d.s}}; animation-delay: {{d.d}}; animation-duration: {{d.t}}"></span></sc-for>
+    <div class="vig"></div>
+  </div>
+
+  <div class="nh">
+    <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </a>
+    <span class="nhT" role="heading" aria-level="1">Arena</span>
+    <div class="nhP">
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Moedas: 48.200. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt=""><b>48.200</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+      <a href="Loja.dc.html" onClick="{{tap}}" class="nhB" aria-label="Gemas: 320. Comprar na loja"><span class="nhPill nhGl"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 22px; height: 22px"><b>320</b><span class="nhPlus" aria-hidden="true">+</span></span></a>
+    </div>
+  </div>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+
+  <div class="nhBody"><div class="nhWrap" style="min-height: 100%; display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 6px">
+
+    <!-- LIGA ATUAL, grande, com progresso até subir -->
+    <button class="lgc" onClick="{{goLigas}}" aria-label="{{lgAria}}" style="--lc: {{lc}}; --lc2: {{lc2}}; --lg: {{lgl}}">
+      <span class="emb {{lRb}}" style="width: clamp(84px,24vw,104px); height: clamp(84px,24vw,104px); --lg: {{lgl}}" aria-hidden="true">
+        <span class="er"></span>
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <defs><clipPath id="embClip"><path d="M32 6 L52 13 V31 C52 45 43 54 32 59 C21 54 12 45 12 31 V13 Z"></path></clipPath></defs>
+          <path class="wL" display="{{lWing}}" d="M14 20 C4 20 0 31 1 40 C5 35 9 34 13 35 C8 40 7 45 8 51 C12 46 15 44 18 43 Z" fill="{{lc2}}" stroke="#1a0f05" stroke-width="1.5" stroke-linejoin="round"></path>
+          <path class="wR" display="{{lWing}}" d="M50 20 C60 20 64 31 63 40 C59 35 55 34 51 35 C56 40 57 45 56 51 C52 46 49 44 46 43 Z" fill="{{lc2}}" stroke="#1a0f05" stroke-width="1.5" stroke-linejoin="round"></path>
+          <path d="M32 6 L52 13 V31 C52 45 43 54 32 59 C21 54 12 45 12 31 V13 Z" fill="{{lc}}" stroke="#1a0f05" stroke-width="2.4" stroke-linejoin="round"></path>
+          <path d="M32 11 L47 16.5 V31 C47 42 40 49.5 32 53.5 C24 49.5 17 42 17 31 V16.5 Z" fill="{{lc2}}"></path>
+          <path d="M32 11 L17 16.5 V31 C17 42 24 49.5 32 53.5 Z" fill="#fff" opacity=".14"></path>
+          <path d="M32 20 L41.5 31 L32 45 L22.5 31 Z" fill="{{lc3}}" stroke="#1a0f05" stroke-width="1.6" stroke-linejoin="round"></path>
+          <path d="M32 20 L28 31 L32 45 Z" fill="#fff" opacity=".5"></path>
+          <g clip-path="url(#embClip)"><rect class="esh" x="20" y="0" width="9" height="64" fill="#fff" opacity=".35" transform="skewX(-18)"></rect></g>
+          <path display="{{lCrown}}" d="M22 9 L24 1.5 L28.5 5.5 L32 0 L35.5 5.5 L40 1.5 L42 9 Z" fill="#ffe07a" stroke="#6a3a08" stroke-width="1.2" stroke-linejoin="round"></path>
+        </svg>
+        <span class="spark" style="left: 8%; top: 14%"></span>
+        <span class="spark" style="left: 84%; top: 30%; animation-delay: .8s"></span>
+      </span>
+      <span style="position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px">
+        <span style="display: flex; align-items: center; justify-content: space-between; gap: 6px">
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span style="font-size: 10.5px; font-weight: 900; color: #e8dccb; letter-spacing: 1px">LIGA DA SEMANA</span>
+            <span class="lgn">{{lName}}</span>
+          </span>
+          <span class="clock" role="timer" aria-label="{{wAria}}">
+            <svg class="hg" width="12" height="17" viewBox="0 0 12 16" aria-hidden="true"><path d="M1 1 H11 M1 15 H11" stroke="#c77a12" stroke-width="1.6" stroke-linecap="round"></path><path d="M2.2 1.5 C2.2 5.5 5.2 6.6 5.6 8 C5.2 9.4 2.2 10.5 2.2 14.5 H9.8 C9.8 10.5 6.8 9.4 6.4 8 C6.8 6.6 9.8 5.5 9.8 1.5 Z" fill="rgba(255,240,200,0.12)" stroke="#ffe07a" stroke-width="0.9"></path><path class="sandT" d="M3.4 3.2 H8.6 C8 5.6 6.4 6.6 6 7.4 C5.6 6.6 4 5.6 3.4 3.2 Z" fill="#ffc94a"></path><path class="sandB" d="M3 14 C3.4 11.6 5.2 10.6 6 10.4 C6.8 10.6 8.6 11.6 9 14 Z" fill="#ffc94a"></path></svg>
+            <span style="display: flex; flex-direction: column"><span style="font-size: 9.5px; font-weight: 800; color: #c9b9a2">Fecha em</span><span class="lil" style="font-size: 13px; color: #ffe07a; font-variant-numeric: tabular-nums; white-space: nowrap">{{wTxt}}</span></span>
+          </span>
+        </span>
+        <span class="{{barCls}}"><i style="width: {{barW}}"></i><b>{{barTxt}}</b></span>
+        <span style="display: flex; flex-wrap: wrap; gap: 4px">
+          <span class="chip up"><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 L20 14 H15 V20 H9 V14 H4 Z" fill="#5fd068"></path></svg>{{upTxt}}</span>
+          <span class="chip dn"><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20 L4 10 H9 V4 H15 V10 H20 Z" fill="#ff7a6a"></path></svg>{{dnTxt}}</span>
+        </span>
+      </span>
+    </button>
+
+    <div class="tabs" role="tablist" aria-label="Seções da arena">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <button class="tab" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <!-- ===== LUTAR ===== -->
+    <sc-if value="{{showFight}}" hint-placeholder-val="{{true}}">
+      <div style="flex: 1; min-height: 8px"></div>
+      <div style="flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px">
+        <span class="nhGl" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px; border-radius: 12px">
+          <span style="display: flex; flex-direction: column; line-height: 1.1">
+            <span style="font-size: 11px; font-weight: 900; color: #e8dccb">Lutas hoje {{fightsTxt}}</span>
+            <span style="font-size: 10px; font-weight: 800; color: #c9b9a2; white-space: nowrap">recarrega em {{dayTxt}}</span>
+          </span>
+          <span class="pips" aria-hidden="true"><sc-for list="{{pips}}" as="p" hint-placeholder-count="5"><span class="{{p.cls}}" style="animation-delay: {{p.d}}"></span></sc-for></span>
+        </span>
+        <button class="ghost" onClick="{{reroll}}" aria-label="Trocar os três adversários (grátis)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11 A8 8 0 0 0 6 6 L4 8"></path><polyline points="4 3 4 8 9 8"></polyline><path d="M4 13 A8 8 0 0 0 18 18 L20 16"></path><polyline points="20 21 20 16 15 16"></polyline></svg>Trocar
+        </button>
+      </div>
+      <div class="opps" role="radiogroup" aria-label="Escolha um adversário">
+        <sc-for list="{{opps}}" as="o" hint-placeholder-count="3">
+          <button class="{{o.cls}}" role="radio" aria-checked="{{o.sel}}" onClick="{{o.pick}}" aria-label="{{o.aria}}" style="--oc: {{o.oc}}; --og: {{o.og}}; animation-delay: {{o.d}}">
+            <sc-if value="{{o.isSel}}" hint-placeholder-val="{{false}}"><span class="selTag">ESCOLHIDO</span></sc-if>
+            <span class="ocTop">
+              <span class="emb" style="width: 22px; height: 22px; --lg: {{o.lgl}}" aria-hidden="true">
+                <svg viewBox="0 0 64 64"><path d="M32 6 L52 13 V31 C52 45 43 54 32 59 C21 54 12 45 12 31 V13 Z" fill="{{o.lc}}" stroke="#1a0f05" stroke-width="3"></path><path d="M32 20 L41.5 31 L32 45 L22.5 31 Z" fill="{{o.lc3}}" stroke="#1a0f05" stroke-width="2"></path></svg>
+              </span>
+              <span style="font-size: 10.5px; font-weight: 900; color: {{o.lc}}; white-space: nowrap; overflow: hidden">{{o.lName}}</span>
+              <span class="diff" style="background: {{o.dBg}}; color: {{o.dFg}}">{{o.diff}}</span>
+            </span>
+            <span class="ocSt" aria-hidden="true">
+              <span class="ped"></span>
+              <sc-if value="{{o.hasAura}}" hint-placeholder-val="{{true}}"><span class="au {{o.aura}}" style="filter: hue-rotate({{o.hue}}); animation-delay: {{o.kd}}"></span></sc-if>
+              <span class="fl"><span class="kidle" style="filter: hue-rotate({{o.hue}}) saturate(1.25); animation-delay: {{o.kd}}"></span></span>
+            </span>
+            <span class="ocN ol">{{o.name}}</span>
+            <span class="{{o.tt}}">{{o.title}}</span>
+            <span style="position: relative; z-index: 1; font-size: 11.5px; font-weight: 900; color: {{o.fcC}}">FC {{o.fc}} · Nv. {{o.lvl}}</span>
+            <span class="ocR"><span style="color: #7ef08a">+{{o.win}}</span><span style="color: #8a7a68">/</span><span style="color: #ff9a8a">−{{o.lose}}</span><span style="font-size: 10px; color: #c9b9a2">pts</span></span>
+          </button>
+        </sc-for>
+      </div>
+      <span class="note" style="flex: none; text-align: center">Cópias de jogadores com FC até ±10% da sua · luta automática · prêmios valem quando o ranking online abrir</span>
+    </sc-if>
+
+    <!-- ===== LIGAS ===== -->
+    <sc-if value="{{showLeagues}}" hint-placeholder-val="{{false}}">
+      <span class="note" style="flex: none">Toda semana: quem fecha acima da linha da próxima liga <b style="color: #7ef08a">sobe</b>; quem fica abaixo do mínimo da sua <b style="color: #ff9a8a">cai</b>. O prêmio é o da liga em que você fechar.</span>
+      <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+        <sc-for list="{{leagues}}" as="l" hint-placeholder-count="7">
+          <button class="{{l.cls}}" onClick="{{l.pick}}" aria-label="{{l.aria}}" style="--lc: {{l.lc}}; --lg: {{l.lgl}}; animation-delay: {{l.d}}">
+            <span class="emb {{l.rb}}" style="width: 44px; height: 44px; --lg: {{l.lgl}}" aria-hidden="true">
+              <svg viewBox="0 0 64 64">
+                <path class="wL" display="{{l.wing}}" d="M14 20 C4 20 0 31 1 40 C5 35 9 34 13 35 C8 40 7 45 8 51 C12 46 15 44 18 43 Z" fill="{{l.lc2}}" stroke="#1a0f05" stroke-width="2"></path>
+                <path class="wR" display="{{l.wing}}" d="M50 20 C60 20 64 31 63 40 C59 35 55 34 51 35 C56 40 57 45 56 51 C52 46 49 44 46 43 Z" fill="{{l.lc2}}" stroke="#1a0f05" stroke-width="2"></path>
+                <path d="M32 6 L52 13 V31 C52 45 43 54 32 59 C21 54 12 45 12 31 V13 Z" fill="{{l.lc}}" stroke="#1a0f05" stroke-width="3" stroke-linejoin="round"></path>
+                <path d="M32 11 L47 16.5 V31 C47 42 40 49.5 32 53.5 C24 49.5 17 42 17 31 V16.5 Z" fill="{{l.lc2}}"></path>
+                <path d="M32 20 L41.5 31 L32 45 L22.5 31 Z" fill="{{l.lc3}}" stroke="#1a0f05" stroke-width="2" stroke-linejoin="round"></path>
+                <path display="{{l.crown}}" d="M22 9 L24 1.5 L28.5 5.5 L32 0 L35.5 5.5 L40 1.5 L42 9 Z" fill="#ffe07a" stroke="#6a3a08" stroke-width="1.4"></path>
+              </svg>
+            </span>
+            <span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+              <span style="display: flex; align-items: center; gap: 5px"><span class="lil" style="font-size: 17px; color: {{l.lc}}; text-shadow: 0 1px 0 #000">{{l.name}}</span><sc-if value="{{l.isMe}}" hint-placeholder-val="{{false}}"><span class="chip" style="min-height: 18px; background: #ffc94a; color: #2a1403; border: 0">VOCÊ</span></sc-if></span>
+              <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">{{l.range}}</span>
+            </span>
+            <span class="prz">
+              <sc-for list="{{l.prz}}" as="z" hint-placeholder-count="3">
+                <span class="chip" style="border-color: {{z.bd}}">
+                  <sc-if value="{{z.isImg}}" hint-placeholder-val="{{true}}"><img src="{{z.img}}" alt=""></sc-if>
+                  <sc-if value="{{z.isFrag}}" hint-placeholder-val="{{false}}"><svg class="pf" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L19 9 L12 22 L5 9 Z" fill="#8ff5ff" stroke="#1d4a5a" stroke-width="1.4" stroke-linejoin="round"></path><path d="M5 9 H19 L12 22 Z" fill="#ff8ad8" opacity=".75"></path></svg></sc-if>
+                  {{z.txt}}
+                </span>
+              </sc-for>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      <span class="note" style="flex: none; text-align: center">Fragmentos do Prismático a partir da Platina · prêmios valem quando o ranking online abrir</span>
+    </sc-if>
+
+    <!-- ===== RANKING SEMANAL ===== -->
+    <sc-if value="{{showRank}}" hint-placeholder-val="{{false}}">
+      <span class="note" style="flex: none">Ranking da sua liga ({{lName}}) nesta semana. Verde = acima da linha de subida · vermelho = abaixo da linha de queda.</span>
+      <div style="flex: none; display: flex; flex-direction: column; gap: 4px">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+          <div class="{{r.cls}}" style="animation-delay: {{r.d}}">
+            <span class="lil" style="width: 30px; text-align: center; font-size: 16px; color: {{r.rc}}">{{r.rank}}</span>
+            <span class="ava" style="--ac: {{r.ac}}"><span class="kidle" style="filter: hue-rotate({{r.hue}}); animation-delay: {{r.kd}}"></span></span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+              <span style="font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">FC {{r.fc}}</span>
+            </span>
+            <sc-if value="{{r.hasZone}}" hint-placeholder-val="{{false}}"><span class="{{r.zCls}}">{{r.zone}}</span></sc-if>
+            <span class="lil" style="min-width: 62px; text-align: right; font-size: 15px; color: #ffe07a">{{r.pts}}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: center; gap: 10px">
+        <button class="ghost" onClick="{{rPrev}}" aria-label="Página anterior" style="padding: 0; width: 44px; color: {{rPrevC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <span class="note" style="min-width: 110px; text-align: center">{{rPageTxt}}</span>
+        <button class="ghost" onClick="{{rNext}}" aria-label="Próxima página" style="padding: 0; width: 44px; color: {{rNextC}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+      <span class="note" style="flex: none; text-align: center">Prévia com jogadores simulados · prêmios valem quando o ranking online abrir</span>
+    </sc-if>
+    <div style="flex: none; height: 2px"></div>
+  </div></div>
+
+  <div class="nhFoot">
+    <button class="{{footCls}}" onClick="{{footAct}}" aria-label="{{footAria}}">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="position: relative; z-index: 1"><path d="M4 20 L14 10 M14 10 L12 4 L20 4 L20 12 L14 10 Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"></path><path d="M20 20 L10 10 M10 10 L12 4 L4 4 L4 12 L10 10 Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" opacity=".55"></path></svg>
+      <span style="position: relative; z-index: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{footLbl}}</span>
+    </button>
+  </div>
+
+  <!-- ===================== LUTA ÉPICA (tela cheia) ===================== -->
+  <sc-if value="{{inFight}}" hint-placeholder-val="{{false}}">
+    <div class="fov" role="dialog" aria-modal="true" aria-label="{{fAria}}">
+      <div class="{{qCls}}" style="position: absolute; inset: 0">
+        <div class="cam" style="transform: {{camT}}; transition: transform {{camD}} cubic-bezier(.25,.9,.35,1)">
+          <div class="scn hype" aria-hidden="true">
+            <div class="ly l-sky"></div>
+            <div class="ly l-cld"></div>
+            <div class="sunG"></div>
+            <div class="col">
+              <div class="tier t1"><div class="crowd cs ca"></div><div class="crowd cs cb"></div></div>
+              <div class="tier t2"><div class="crowd cm ca"></div><div class="crowd cm cb"></div></div>
+              <div class="tier t3"><div class="crowd cl ca"></div><div class="crowd cl cb"></div></div>
+              <div class="ola"></div>
+              <div class="arc"></div>
+              <sc-for list="{{flags}}" as="f" hint-placeholder-count="6"><span class="flg" style="left: {{f.x}}; top: {{f.y}}"><i style="background: {{f.c}}; animation-delay: {{f.d}}"></i></span></sc-for>
+              <sc-for list="{{pens}}" as="p" hint-placeholder-count="5"><span class="pen" style="left: {{p.x}}; --pc: {{p.c}}; animation-delay: {{p.d}}"></span></sc-for>
+              <sc-for list="{{torches}}" as="t" hint-placeholder-count="4"><span class="tch" style="left: {{t.x}}"><i style="animation-delay: {{t.d}}"></i><b style="animation-delay: {{t.d}}"></b><em style="animation-delay: {{t.d}}"></em></span></sc-for>
+            </div>
+            <div class="ly l-gnd"></div>
+            <div class="sand"></div>
+            <sc-for list="{{dust}}" as="d" hint-placeholder-count="7"><span class="dst" style="top: {{d.y}}; width: {{d.s}}; height: {{d.s}}; animation-delay: {{d.d}}; animation-duration: {{d.t}}"></span></sc-for>
+            <div class="vig"></div>
+          </div>
+
+          <!-- lutadores: pés na linha do chão (80%); avanço só no chão -->
+          <div class="ftr ftrA" style="transform: translateX({{aX}}); transition: transform {{lungeD}} ease-out">
+            <div class="hw {{aHw}}">
+              <span class="shad"></span>
+              <div class="flip">
+                <div class="faur au13" style="animation-duration: {{auraDur}}"></div>
+                <div class="spr {{aSpr}}" role="img" aria-label="Kael" style="animation-duration: {{aDur}}"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ftr ftrB" style="transform: translateX({{bX}}); transition: transform {{lungeD}} ease-out">
+            <div class="hw {{bHw}}">
+              <span class="shad"></span>
+              <div class="flip" style="filter: hue-rotate({{oHue}}) saturate(1.25)">
+                <sc-if value="{{oHasAura}}" hint-placeholder-val="{{true}}"><div class="faur {{oAura}}" style="animation-duration: {{auraDur}}"></div></sc-if>
+                <div class="spr {{bSpr}}" role="img" aria-label="{{oName}}" style="animation-duration: {{bDur}}"></div>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{slashOn}}" hint-placeholder-val="{{false}}"><span class="slash" style="left: {{fxX}}"></span><span class="hitfx" style="left: {{fxX}}"></span></sc-if>
+
+          <!-- ULTIMATE da era (folha aprovada, 49 quadros, blend screen; espelhada quando é o adversário) -->
+          <sc-if value="{{ultOn}}" hint-placeholder-val="{{false}}">
+            <div class="ultBox" style="transform: {{ultFlip}}">
+              <div class="ultRows" style="width: 100%; height: 700%; animation-duration: {{ultDur}}">
+                <div class="ultCols" style="width: 800%; height: 100%; animation-duration: {{ultColDur}}"></div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- números de dano -->
+          <sc-if value="{{dpAOn}}" hint-placeholder-val="{{false}}">
+            <span class="{{dpACls}}" style="left: calc(50% - var(--fo)); bottom: calc(20% + var(--fs) * .78); color: {{dpAC}}; font-size: {{dpAFs}}; text-shadow: 0 3px 0 {{dpASh}}, 0 0 10px #000; animation-duration: {{dpDur}}">
+              <sc-if value="{{dpABig}}" hint-placeholder-val="{{false}}"><span class="burstC"></span></sc-if>
+              <sc-if value="{{dpAHasLb}}" hint-placeholder-val="{{false}}"><span class="lb">{{dpALb}}</span></sc-if>
+              <span>{{dpATx}}</span>
+            </span>
+          </sc-if>
+          <sc-if value="{{dpBOn}}" hint-placeholder-val="{{false}}">
+            <span class="{{dpBCls}}" style="left: calc(50% + var(--fo)); bottom: calc(20% + var(--fs) * .78); color: {{dpBC}}; font-size: {{dpBFs}}; text-shadow: 0 3px 0 {{dpBSh}}, 0 0 10px #000; animation-duration: {{dpDur}}">
+              <sc-if value="{{dpBBig}}" hint-placeholder-val="{{false}}"><span class="burstC"></span></sc-if>
+              <sc-if value="{{dpBHasLb}}" hint-placeholder-val="{{false}}"><span class="lb">{{dpBLb}}</span></sc-if>
+              <span>{{dpBTx}}</span>
+            </span>
+          </sc-if>
+          <sc-if value="{{burstOn}}" hint-placeholder-val="{{false}}"><div class="burst" style="background: {{burstBg}}"></div></sc-if>
+        </div>
+      </div>
+
+      <sc-if value="{{flashOn}}" hint-placeholder-val="{{false}}"><div class="{{flashCls}}" style="background: {{flashBg}}"></div></sc-if>
+      <div class="lbox" style="top: 0; height: {{lbH}}"></div>
+      <div class="lbox" style="bottom: 0; height: {{lbH}}"></div>
+
+      <!-- corte da ultimate -->
+      <sc-if value="{{cutOn}}" hint-placeholder-val="{{false}}">
+        <div class="cutBg"></div>
+        <div class="{{cutCls}}">
+          <div class="cutFace"><div class="kidle" style="position: absolute; inset: 0; filter: {{cutFilter}}"></div></div>
+          <div class="cutTx">
+            <span class="lil" style="font-size: 14px; color: #fff; letter-spacing: 2px; text-shadow: 0 2px 0 #000">ULTIMATE</span>
+            <span class="lil" style="font-size: clamp(24px,7vw,32px); color: #fff; text-shadow: 0 3px 0 #2a0a4a, 0 0 12px rgba(0,0,0,.6)">Lâmina do Dragão</span>
+            <span style="font-size: 12px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000">{{cutWho}}</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- barras de vida e energia -->
+      <div class="hud">
+        <div class="side sideA">
+          <div class="who"><span class="port" style="--pc: #ffc94a"><span class="kidle"></span></span><span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.1"><span class="ol" style="font-size: 13px; font-weight: 900; white-space: nowrap">Você · Kael</span><span style="font-size: 10.5px; font-weight: 900; color: #ffe07a; text-shadow: 0 1px 2px #000">FC {{myFc}}</span></span></div>
+          <div class="hpb"><span class="lag" style="width: {{hpAL}}"></span><span class="cur" style="width: {{hpAW}}"></span><b>{{hpATx}}</b></div>
+          <div class="{{enACls}}"><i style="width: {{enAW}}"></i></div>
+        </div>
+        <span class="vsS" aria-hidden="true">VS</span>
+        <div class="side sideB">
+          <div class="who"><span class="port fB" style="--pc: {{oCol}}"><span class="kidle" style="filter: hue-rotate({{oHue}}) saturate(1.25)"></span></span><span style="min-width: 0; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1"><span class="ol" style="font-size: 13px; font-weight: 900; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis">{{oName}}</span><span style="font-size: 10.5px; font-weight: 900; color: #ffe07a; text-shadow: 0 1px 2px #000">FC {{oFc}}</span></span></div>
+          <div class="hpb"><span class="lag" style="width: {{hpBL}}"></span><span class="cur" style="width: {{hpBW}}"></span><b>{{hpBTx}}</b></div>
+          <div class="{{enBCls}}"><i style="width: {{enBW}}"></i></div>
+        </div>
+      </div>
+
+      <!-- controles: x2 e pular (embaixo, no polegar) -->
+      <sc-if value="{{ctlOn}}" hint-placeholder-val="{{true}}">
+        <div class="ctl">
+          <button class="cbtn" aria-pressed="{{x2P}}" onClick="{{toggleX2}}" aria-label="Velocidade dobrada">x2</button>
+          <span class="logT" role="status">{{logTxt}}</span>
+          <button class="cbtn" onClick="{{skip}}" aria-label="Pular a luta e ver o resultado">Pular<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M12 5 L21 12 L12 19 Z" fill="currentColor"></path></svg></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{luteOn}}" hint-placeholder-val="{{false}}"><div class="lute">LUTE!</div></sc-if>
+
+      <!-- entrada VS com retratos -->
+      <sc-if value="{{vsOn}}" hint-placeholder-val="{{true}}">
+        <div class="vsBg"></div>
+        <div class="vsP vsL" style="z-index: 21">
+          <div class="vsFace"><div class="kidle"></div></div>
+          <span class="vsName">Kael</span>
+          <span class="vsSub">Você · Nv. 24 · FC {{myFc}}</span>
+          <span class="vsSub">Liga {{lName}}</span>
+        </div>
+        <div class="vsP vsR" style="z-index: 21">
+          <div class="vsFace"><div class="kidle" style="filter: hue-rotate({{oHue}}) saturate(1.25)"></div></div>
+          <span class="vsName">{{oName}}</span>
+          <span class="vsSub">{{oTitle}} · Nv. {{oLvl}} · FC {{oFc}}</span>
+          <span class="vsSub">Liga {{oLeague}}</span>
+        </div>
+        <div class="vsFl"></div>
+        <div class="vsX" aria-hidden="true">VS</div>
+      </sc-if>
+
+      <!-- final: explosão de vitória ou derrota digna -->
+      <sc-if value="{{endOn}}" hint-placeholder-val="{{false}}">
+        <div class="raysW" style="--rc: {{endRay}}"></div>
+        <sc-if value="{{fWin}}" hint-placeholder-val="{{true}}"><sc-for list="{{confs}}" as="c" hint-placeholder-count="12"><span class="conf" style="left: {{c.l}}; background: {{c.c}}; animation-delay: {{c.d}}"></span></sc-for></sc-if>
+        <div class="endT">
+          <sc-if value="{{fWin}}" hint-placeholder-val="{{true}}"><span class="vic">VITÓRIA!</span></sc-if>
+          <sc-if value="{{fLose}}" hint-placeholder-val="{{false}}"><span class="def">DERROTA</span></sc-if>
+          <span class="ol" style="font-size: 15px; font-weight: 900; color: #fff">{{endSub}}</span>
+        </div>
+      </sc-if>
+
+      <!-- resultado: pontos e liga subindo -->
+      <sc-if value="{{resOn}}" hint-placeholder-val="{{false}}">
+        <div class="resBg">
+          <div class="res" style="--rcB: {{resBd}}" role="status" aria-label="{{resAria}}">
+            <span class="{{resTitleCls}}" style="font-size: clamp(34px,10vw,44px)">{{resTitle}}</span>
+            <div style="display: flex; align-items: center; gap: 14px">
+              <span class="{{resEmbCls}}" style="width: 88px; height: 88px; --lg: {{rLgl}}" aria-hidden="true">
+                <span class="er"></span>
+                <svg viewBox="0 0 64 64">
+                  <path class="wL" display="{{rWing}}" d="M14 20 C4 20 0 31 1 40 C5 35 9 34 13 35 C8 40 7 45 8 51 C12 46 15 44 18 43 Z" fill="{{rLc2}}" stroke="#1a0f05" stroke-width="1.5"></path>
+                  <path class="wR" display="{{rWing}}" d="M50 20 C60 20 64 31 63 40 C59 35 55 34 51 35 C56 40 57 45 56 51 C52 46 49 44 46 43 Z" fill="{{rLc2}}" stroke="#1a0f05" stroke-width="1.5"></path>
+                  <path d="M32 6 L52 13 V31 C52 45 43 54 32 59 C21 54 12 45 12 31 V13 Z" fill="{{rLc}}" stroke="#1a0f05" stroke-width="2.4" stroke-linejoin="round"></path>
+                  <path d="M32 11 L47 16.5 V31 C47 42 40 49.5 32 53.5 C24 49.5 17 42 17 31 V16.5 Z" fill="{{rLc2}}"></path>
+                  <path d="M32 20 L41.5 31 L32 45 L22.5 31 Z" fill="{{rLc3}}" stroke="#1a0f05" stroke-width="1.6" stroke-linejoin="round"></path>
+                  <path d="M32 20 L28 31 L32 45 Z" fill="#fff" opacity=".5"></path>
+                </svg>
+              </span>
+              <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                <span class="lil" style="font-size: 18px; color: {{rLc}}">Liga {{rName}}</span>
+                <span style="display: flex; align-items: baseline; gap: 8px"><span class="cnt">{{cntTxt}}</span><span class="dlt" style="color: {{dltC}}">{{dltTxt}}</span></span>
+                <span style="font-size: 12px; font-weight: 900; color: #c9b9a2">pontos de arena</span>
+              </span>
+            </div>
+            <span class="{{resBarCls}}" style="width: 100%; --lc: {{lc}}; --lc2: {{lc2}}"><i style="width: {{resBarW}}"></i><b>{{resBarTxt}}</b></span>
+            <span class="{{zoneCls}}">{{zoneTxt}}</span>
+            <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">Posição na liga: <span style="color: #c9b9a2">#{{rkFrom}}</span><span class="{{rkArrCls}}" style="color: {{rkC}}">{{rkArr}}</span><span class="lil" style="font-size: 18px; color: {{rkC}}">#{{rkTo}}</span></span>
+            <span class="note" style="text-align: center">{{resNote}}</span>
+            <div style="width: 100%; display: flex; gap: 8px">
+              <button class="ghost" onClick="{{closeRes}}" style="flex: 1; min-height: 54px; font-size: 15px">Voltar à arena</button>
+              <button class="{{againCls}}" onClick="{{again}}" style="flex: 1.4; min-height: 54px; font-size: clamp(16px,4.6vw,20px)"><span style="position: relative; z-index: 1">{{againLbl}}</span></button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d', hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05',
+  hurt: '/_blob/8ebbcd838ede94b3a5b1ecc55e95d1db', s2: '/_blob/bb53155419d7c9377e23d14b92c2a485', ult: '/_blob/5d4b1eda7d276cb9adda5ac1a6aa0543',
+  ultReady: '/_blob/8863b3ab71afe08aef6c7aa26d104efc', vs: '/_blob/07a146ee324bece467fc05bedf4435b0', win: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d',
+  claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878'
+};
+var IMG = { gold: '/_blob/3f2502c864add38c4b3faf5853f0dd9a', gem: '/_blob/1c420bdcae24bd962967021584f5bd64', chest: '/_blob/b8d381af334d1ec5e3023cf138922df4' };
+var MAX_FIGHTS = 5, MY_FC = 12480, MY_LG = 2;
+// ligas: mínimo de pontos (proposta). Fecha semanal: >= mínimo da próxima sobe; < mínimo da sua cai.
+var LEAGUES = [
+  { n: 'Bronze', min: 0, c1: '#d08a4a', c2: '#6a3a14', c3: '#ffd2a3', gl: 'rgba(208,138,74,.85)', prz: [['gold', '[QTD]']] },
+  { n: 'Prata', min: 600, c1: '#d6dde8', c2: '#5a6270', c3: '#ffffff', gl: 'rgba(214,221,232,.85)', prz: [['gold', '[QTD]'], ['gem', '[QTD]']] },
+  { n: 'Ouro', min: 1200, c1: '#ffc94a', c2: '#8a4f0c', c3: '#fff3c4', gl: 'rgba(255,201,74,.95)', prz: [['gem', '[QTD]'], ['chest', '1']] },
+  { n: 'Platina', min: 1600, c1: '#5fe0d0', c2: '#136a63', c3: '#e0fffb', gl: 'rgba(95,224,208,.9)', prz: [['gem', '[QTD]'], ['chest', '1'], ['frag', '1']] },
+  { n: 'Diamante', min: 2100, c1: '#6ab8ff', c2: '#1d4a8a', c3: '#e6f4ff', gl: 'rgba(106,184,255,.95)', wing: true, prz: [['gem', '[QTD]'], ['chest', '2'], ['frag', '3']] },
+  { n: 'Mestre', min: 2700, c1: '#c97cff', c2: '#4a1f8a', c3: '#ffd0ff', gl: 'rgba(201,124,255,.95)', wing: true, crown: true, prz: [['gem', '[QTD]'], ['chest', '3'], ['frag', '5'], ['txt', 'moldura']] },
+  { n: 'Lenda', min: 3400, c1: '#ff5a7a', c2: '#6a0f24', c3: '#ffe07a', gl: 'rgba(255,90,122,.95)', wing: true, crown: true, rb: true, prz: [['gem', '[QTD]'], ['chest', '3'], ['frag', '10'], ['txt', 'título']] }
+];
+var NAMES = ['LunaFerro', 'Tavinho', 'Rex_Brasa', 'Mari Lâmina', 'Caio Trovão', 'Bia Arcana', 'Dudu77', 'Nina Sol', 'Theo Rúnico', 'Gabi Fênix', 'Leo Bravo', 'Iara Lua', 'Pedrão', 'Duda Gelo', 'Rafa Corte', 'Lia Vento', 'Joca', 'Mel Dragão', 'Enzo Aço', 'Clara Rubi', 'Bento', 'Yasmin Z', 'Davi Rocha', 'Sofi Raio', 'Hugo Elmo', 'Lara Brisa', 'Vini Mago', 'Alice Fogo', 'Otto'];
+// títulos reais (Perfil aprovado) com raridade 1-4
+var TITLES = [['Gladiador', 2], ['Caçador de Chefes', 1], ['Senhor da Torre', 3], ['Desbravador', 1], ['Mente Inventiva', 2], ['Matador de Titãs', 3], ['Cavaleiro do Tempo', 1], ['Campeão da Arena', 4]];
+var RC = ['#9aa0a6', '#4aa3ff', '#b45cff', '#ff4d6d', '#ffb21e'];
+var RG = ['rgba(154,160,166,.4)', 'rgba(74,163,255,.6)', 'rgba(180,92,255,.65)', 'rgba(255,77,109,.6)', 'rgba(255,178,30,.7)'];
+var HUES = ['150deg', '205deg', '265deg', '320deg', '95deg', '40deg'];
+var CONF = ['#ffc94a', '#ff5a5a', '#5fd068', '#4aa3ff', '#fff3c4', '#b07cff', '#ff8ad8', '#8ff5ff', '#ffc94a', '#5fd068', '#ff5a5a', '#4aa3ff'];
+var FLAGS = [['4%', '-12%', '#c0392b'], ['21%', '-10%', '#ffc94a'], ['38%', '-12%', '#2f6fb0'], ['62%', '-12%', '#c0392b'], ['79%', '-10%', '#ffc94a'], ['96%', '-12%', '#2f6fb0']];
+var PENS = [['12%', '#8a1a10'], ['31%', '#1d4a8a'], ['50%', '#6a1a8a'], ['69%', '#1d4a8a'], ['88%', '#8a1a10']];
+var TORCH = ['7%', '36%', '64%', '93%'];
+// tempos base (ms, x1)
+var ATK = 1000, ATK_HIT = 560, SPIN = 1000, SPIN_HIT = 600, ULT_D = 2800, ULT_HIT = 1500, CUT = 950, GAP = 320, VS_MS = 2300;
+
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function kf(v) { return v >= 1000 ? (v / 1000).toFixed(1).replace('.', ',') + 'K' : String(v); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function weekLeft() { var d = new Date(), m = new Date(d); var add = (8 - d.getDay()) % 7 || 7; m.setDate(d.getDate() + add); m.setHours(0, 0, 0, 0); return Math.floor((m - d) / 1000); }
+function dayLeft() { var d = new Date(), m = new Date(d); m.setDate(d.getDate() + 1); m.setHours(0, 0, 0, 0); return Math.floor((m - d) / 1000); }
+function hms(L) { return pad(Math.floor(L / 3600)) + ':' + pad(Math.floor(L % 3600 / 60)) + ':' + pad(L % 60); }
+function lgOf(p) { var k = 0; LEAGUES.forEach(function (L, i) { if (p >= L.min) k = i; }); return k; }
+var R0 = rng(5);
+var BOARD = NAMES.map(function (n, i) { return { name: n, pts: Math.round(1120 + R0() * 640), fc: Math.round(MY_FC * (0.85 + R0() * 0.35)), hue: HUES[i % HUES.length] }; });
+var seedN = 11;
+function makeOpps() {
+  var r = rng(seedN++), used = {}, out = [];
+  var muls = [0.92 + r() * 0.04, 0.98 + r() * 0.04, 1.04 + r() * 0.06]; // fácil · parelho · difícil, sempre dentro de ±10%
+  for (var i = 0; i < 3; i++) {
+    var k; do { k = Math.floor(r() * NAMES.length); } while (used[k]); used[k] = 1;
+    var t = TITLES[Math.floor(r() * TITLES.length)], fc = Math.round(MY_FC * muls[i]), ratio = fc / MY_FC;
+    out.push({ name: NAMES[k], title: t[0], tr: t[1], fc: fc, lvl: 22 + Math.floor(r() * 5), hue: HUES[(k + i) % HUES.length],
+      lg: i === 2 && r() > 0.4 ? MY_LG + 1 : MY_LG, aura: i === 2 ? 'au10' : (i === 1 ? 'au7' : ''),
+      win: Math.round(24 * ratio * ratio), lose: Math.round(14 / ratio) });
+  }
+  return out;
+}
+// modelo da luta (puro: usado ao vivo e no "pular")
+function newModel(o) {
+  var r = o.fc / MY_FC, maxB = Math.round(MY_FC * 5 * r), maxA = Math.round(MY_FC * 5.5);
+  return { hpA: maxA, hpB: maxB, maxA: maxA, maxB: maxB, enA: 0, enB: 0, turn: 0, cA: 0, cB: 0, atkA: MY_FC * 0.42, atkB: MY_FC * 0.42 * r, dealt: 0 };
+}
+function decide(M) {
+  var who = M.turn % 2 === 0 ? 'A' : 'B', def = who === 'A' ? 'B' : 'A';
+  var en = M['en' + who], c = M['c' + who], atk = M['atk' + who], v = 0.88 + Math.random() * 0.24;
+  var type = 'atk', crit = false, dmg;
+  if (en >= 100) { type = 'ult'; dmg = atk * 4.2 * v; M['en' + who] = 0; }
+  else if (c % 3 === 2) { type = 'spin'; dmg = atk * 2.0 * v; }
+  else { crit = Math.random() < 0.24; dmg = atk * (crit ? 1.8 : 1) * v; }
+  dmg = Math.round(dmg / 10) * 10;
+  if (type !== 'ult') M['en' + who] = Math.min(100, en + 30);
+  M['en' + def] = Math.min(100, M['en' + def] + 14);
+  M['c' + who] = c + 1; M.turn++;
+  var hp = M['hp' + def], fin = dmg >= hp;
+  M['hp' + def] = Math.max(0, hp - dmg);
+  if (who === 'A') M.dealt += Math.min(hp, dmg);
+  return { who: who, def: def, type: type, crit: crit, dmg: dmg, fin: fin };
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.T = [];
+    this.state = { tab: 0, sel: 1, opps: makeOpps(), fights: 3, pts: 1582, left: weekLeft(), day: dayLeft(), toast: '', rPage: 0,
+      fOn: false, ph: '', spd: 1, slow: false, A: { an: 'idle', x: 0, h: '' }, B: { an: 'idle', x: 0, h: '' },
+      hpA: 1, hpB: 1, hpAL: 1, hpBL: 1, enA: 0, enB: 0, dpA: null, dpB: null, cam: { s: 1, x: 0, y: 0, t: 0 }, qk: 0, ult: null, cut: null,
+      flash: 0, flashBg: '', slash: null, burst: false, lbox: false, lute: false, log: '', win: false, res: null, shown: 0, hitN: 0 };
+  }
+  componentDidMount() { var self = this; this.iv = setInterval(function () { self.setState({ left: weekLeft(), day: dayLeft() }); }, 1000); }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.cu); this.clr(); clearTimeout(this.tt); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this; clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(function () { self.setState({ toast: '' }); }, 2200); }
+  clr() { this.T.forEach(clearTimeout); this.T = []; }
+  eff() { return this.state.spd * (this._slow ? 0.38 : 1); }
+  later(fn, ms) { var self = this; this.T.push(setTimeout(function () { fn.call(self); }, ms / this.eff())); }
+  side(k, o) { var p = {}; p[k] = Object.assign({}, this.state[k], o); this.setState(p); }
+  focus(k, s, t) { return { s: s, x: k === 'A' ? 13 : (k === 'B' ? -13 : 0), y: 0, t: t }; }
+  rankOf(pts) { var r = 1; BOARD.forEach(function (b) { if (b.pts > pts) r++; }); return r; }
+
+  begin() {
+    var s = this.state, o = s.opps[s.sel];
+    if (s.fights <= 0) { this.sfx(SND.tap); this.say('Sem lutas hoje. Recarrega à meia-noite.'); return; }
+    this.clr(); clearInterval(this.cu);
+    this.M = newModel(o); this.O = o; this._slow = false;
+    this.setState({ fOn: true, ph: 'vs', fights: s.fights - 1, slow: false, A: { an: 'idle', x: 0, h: '' }, B: { an: 'idle', x: 0, h: '' },
+      hpA: 1, hpB: 1, hpAL: 1, hpBL: 1, enA: 0, enB: 0, dpA: null, dpB: null, cam: { s: 1.55, x: 0, y: -6, t: 0 }, qk: 0, ult: null, cut: null,
+      flash: 0, slash: null, burst: false, lbox: false, lute: false, res: null, log: 'Kael contra ' + o.name, rankFrom: this.rankOf(s.pts), ptsFrom: s.pts });
+    this.sfx(SND.vs, 0.8);
+    var self = this;
+    setTimeout(function () { self.setState({ cam: { s: 1, x: 0, y: 0, t: 2.0 } }); }, 60);
+    this.later(function () { this.setState({ ph: 'fight', lute: true, log: 'Luta automática!' }); }, VS_MS);
+    this.later(function () { this.setState({ lute: false }); this.step(); }, VS_MS + 900);
+  }
+  step() {
+    var M = this.M; if (!M || this.state.ph !== 'fight') return;
+    if (M.hpA <= 0 || M.hpB <= 0) return;
+    var act = decide(M);
+    var slowFin = act.fin && act.type !== 'ult';
+    if (slowFin) this._slow = true;
+    if (act.fin && !slowFin) this.setState({ lbox: true, log: 'Golpe final!' });
+    if (slowFin) this.setState({ slow: true, lbox: true, cam: this.focus(act.def, 1.32, 0.7), log: 'Golpe final!' });
+    if (act.type === 'ult') this.doUlt(act); else this.doHit(act);
+  }
+  doHit(act) {
+    var spin = act.type === 'spin', a = act.who, lx = (a === 'A' ? 1 : -1) * (spin ? 46 : 64);
+    this.side(a, { an: spin ? 'spin' : 'atk', x: lx });
+    if (!act.fin) this.setState({ cam: this.focus(act.def, spin ? 1.16 : 1.06, 0.35), log: spin ? (a === 'A' ? 'Kael usa Corte Giratório!' : this.O.name + ' usa Corte Giratório!') : (a === 'A' ? 'Kael ataca' : this.O.name + ' ataca') });
+    this.sfx(spin ? SND.s2 : SND.swing, 0.6);
+    this.later(function () { this.impact(act); }, spin ? SPIN_HIT : ATK_HIT);
+    this.later(function () { this.side(a, { an: 'idle', x: 0 }); this.after(act); }, spin ? SPIN : ATK);
+  }
+  doUlt(act) {
+    var a = act.who, self = this;
+    this.setState({ cut: a, cam: this.focus(a, 1.24, 0.4), log: (a === 'A' ? 'Kael' : this.O.name) + ' solta a ULTIMATE!' });
+    this.sfx(SND.ultReady, 0.8);
+    this.later(function () {
+      this.setState({ cut: null, ult: { who: a }, cam: act.fin ? this.state.cam : this.focus(act.def, 1.1, 0.6) });
+      this.side(a, { an: 'atk', x: (a === 'A' ? 1 : -1) * 30 });
+      this.sfx(SND.ult, 0.85);
+    }, CUT);
+    this.later(function () { this.impact(act); }, CUT + ULT_HIT);
+    this.later(function () { this.setState({ ult: null }); this.side(a, { an: 'idle', x: 0 }); this.after(act); }, CUT + ULT_D);
+  }
+  impact(act) {
+    var s = this.state, M = this.M, d = act.def, n = s.hitN + 1, big = act.type === 'ult' || act.type === 'spin';
+    var kind = act.type === 'ult' ? 'ult' : (act.type === 'spin' ? 'spin' : (act.crit ? 'crit' : 'n'));
+    var p = {}; p['hp' + d] = M['hp' + d] / M['max' + d]; p.enA = M.enA; p.enB = M.enB; p.hitN = n;
+    var prev = s['dp' + d];
+    p['dp' + d] = { k: prev && prev.k === 'k1' ? 'k2' : 'k1', kind: kind, txt: n0(act.dmg), onMe: d === 'A' };
+    p.slash = { x: d, n: n };
+    p[d] = Object.assign({}, s[d], { h: 'h' + d + (s[d].h === 'h' + d + '1' ? '2' : '1') });
+    if (big) { p.qk = s.qk % 2 ? 2 : 1; }
+    if (act.type === 'ult') { p.flash = n; p.flashBg = act.who === 'A' ? 'radial-gradient(circle at 66% 70%, rgba(255,255,255,.95), rgba(208,123,255,.55) 40%, rgba(208,123,255,0) 75%)' : 'radial-gradient(circle at 34% 70%, rgba(255,255,255,.95), rgba(255,90,120,.55) 40%, rgba(255,90,120,0) 75%)'; }
+    if (act.crit && !act.fin) { p.cam = { s: (s.cam.s || 1) + 0.09, x: s.cam.x, y: s.cam.y, t: 0.08 }; }
+    this.setState(p);
+    this.sfx(d === 'B' ? SND.hit : SND.hurt, act.crit || big ? 0.9 : 0.6);
+    var self = this;
+    if (act.crit && !act.fin) setTimeout(function () { self.setState({ cam: self.focus(act.def, 1.06, 0.25) }); }, 130);
+    setTimeout(function () { var q = {}; q['hp' + d + 'L'] = self.M ? self.M['hp' + d] / self.M['max' + d] : 0; self.setState(q); }, 260);
+    setTimeout(function () { self.setState({ slash: null, qk: 0, flash: 0 }); }, 520);
+    if (act.fin) this.ko(act);
+  }
+  after(act) {
+    if (act.fin) return;
+    this.setState({ cam: { s: 1, x: 0, y: 0, t: 0.45 } });
+    this.later(function () { this.step(); }, GAP);
+  }
+  ko(act) {
+    var win = act.def === 'B', d = act.def, w = act.who;
+    this.clr();
+    this._slow = true;
+    this.setState({ win: win, slow: true, lbox: true, ult: null, cam: this.focus(d, 1.3, 0.5) });
+    this.later(function () { this.side(d, { h: 'down' + d, an: 'idle' }); }, 160);
+    this.later(function () {
+      this._slow = false;
+      this.setState({ slow: false, lbox: false, burst: true, ult: null, cut: null, cam: this.focus(w, 1.12, 0.8), ph: 'end' });
+      this.side(w, { h: 'winG', an: 'idle', x: 0 });
+      this.sfx(win ? SND.win : SND.hurt, 0.85);
+    }, 700 * 0.38);
+    var self = this;
+    this.T.push(setTimeout(function () { self.finish(); }, 2700 / this.state.spd + 300));
+  }
+  skip() {
+    if (!this.M || this.state.ph === 'res') return;
+    this.sfx(SND.tap); this.clr(); this._slow = false;
+    var M = this.M, last = null;
+    while (M.hpA > 0 && M.hpB > 0) last = decide(M);
+    var win = M.hpB <= 0;
+    this.setState({ ph: 'end', win: win, slow: false, lbox: false, burst: true, ult: null, cut: null, lute: false, dpA: null, dpB: null,
+      hpA: M.hpA / M.maxA, hpB: M.hpB / M.maxB, hpAL: M.hpA / M.maxA, hpBL: M.hpB / M.maxB, enA: M.enA, enB: M.enB,
+      A: { an: 'idle', x: 0, h: win ? 'winG' : 'downA' }, B: { an: 'idle', x: 0, h: win ? 'downB' : 'winG' }, cam: { s: 1, x: 0, y: 0, t: 0.3 } });
+    this.sfx(win ? SND.win : SND.hurt, 0.85);
+    var self = this; this.T.push(setTimeout(function () { self.finish(); }, 1500));
+  }
+  finish() {
+    var s = this.state, o = this.O, win = s.win, gain = win ? o.win : -o.lose, from = s.ptsFrom, to = Math.max(0, from + gain);
+    var rTo = this.rankOf(to);
+    this.setState({ ph: 'res', pts: to, res: { gain: gain, from: from, to: to, rFrom: s.rankFrom, rTo: rTo, dealt: Math.round(this.M.dealt / this.M.maxB * 100) }, shown: from });
+    this.sfx(win ? SND.claim : SND.tap, 0.8);
+    var self = this, steps = 28, k = 0; clearInterval(this.cu);
+    this.cu = setInterval(function () { k++; self.setState({ shown: Math.round(from + (to - from) * Math.min(1, k / steps)) }); if (k % 4 === 0) self.sfx(SND.coin, 0.25); if (k >= steps) clearInterval(self.cu); }, 40);
+  }
+  close() { this.clr(); clearInterval(this.cu); this.M = null; this._slow = false; this.setState({ fOn: false, ph: '', res: null, slow: false, opps: makeOpps(), sel: 1 }); }
+
+  renderVals() {
+    var s = this.state, self = this, L = LEAGUES[MY_LG], N = LEAGUES[MY_LG + 1];
+    var pct = Math.max(0, Math.min(1, (s.pts - L.min) / (N.min - L.min)));
+    var promo = s.pts >= N.min, releg = s.pts < L.min;
+    var wl = s.left, wd = Math.floor(wl / 86400);
+    var wTxt = (wd > 0 ? wd + 'd ' : '') + pad(Math.floor(wl % 86400 / 3600)) + ':' + pad(Math.floor(wl % 3600 / 60)) + ':' + pad(wl % 60);
+    var myRank = this.rankOf(s.pts);
+    // adversários
+    var opps = s.opps.map(function (o, i) {
+      var on = i === s.sel, ratio = o.fc / MY_FC, OL = LEAGUES[o.lg];
+      var diff = ratio < 0.97 ? ['Fácil', '#1f5a24', '#c4f7c8'] : (ratio < 1.03 ? ['Parelho', '#6a4a0c', '#ffe9a8'] : ['Difícil', '#6a1a14', '#ffd0c8']);
+      return { name: o.name, title: o.title, tt: 'tt tt' + o.tr, fc: kf(o.fc), lvl: o.lvl, win: o.win, lose: o.lose, hue: o.hue, kd: (-i * 0.33).toFixed(2) + 's',
+        hasAura: !!o.aura, aura: o.aura, oc: on ? '#ffc94a' : RC[o.tr], og: RG[o.tr], lc: OL.c1, lc3: OL.c3, lgl: OL.gl, lName: OL.n,
+        diff: diff[0], dBg: diff[1], dFg: diff[2], fcC: ratio < 0.97 ? '#7ef08a' : (ratio < 1.03 ? '#ffe07a' : '#ff9a8a'),
+        cls: 'oc' + (on ? ' sel' : ''), sel: on ? 'true' : 'false', isSel: on, d: (i * 0.08) + 's',
+        aria: o.name + ', ' + o.title + ', liga ' + OL.n + ', FC ' + n0(o.fc) + ', ' + diff[0] + ', vitória +' + o.win + ' pontos, derrota −' + o.lose,
+        pick: function () { self.sfx(SND.tap); self.setState({ sel: i }); } };
+    });
+    // ligas
+    var leagues = LEAGUES.map(function (G, i) {
+      var me = i === MY_LG, nx = LEAGUES[i + 1];
+      return { name: G.n, lc: G.c1, lc2: G.c2, lc3: G.c3, lgl: G.gl, wing: G.wing ? 'inline' : 'none', crown: G.crown ? 'inline' : 'none', rb: G.rb ? 'rb' : '',
+        isMe: me, cls: 'lgr inR' + (me ? ' me' : (i > MY_LG ? ' lock' : '')), d: (i * 0.04) + 's',
+        range: nx ? n0(G.min) + ' – ' + n0(nx.min - 1) + ' pts' : n0(G.min) + '+ pts',
+        prz: G.prz.map(function (z) {
+          var isImg = z[0] === 'gold' || z[0] === 'gem' || z[0] === 'chest';
+          return { isImg: isImg, isFrag: z[0] === 'frag', img: IMG[z[0]] || '', txt: z[0] === 'chest' ? '×' + z[1] : (z[0] === 'frag' ? z[1] : z[1]), bd: z[0] === 'frag' ? '#8ff5ff' : (z[0] === 'txt' ? '#ffc94a' : '#4a3a2b') };
+        }),
+        aria: 'Liga ' + G.n + (me ? ', sua liga' : '') + ', ' + (nx ? 'de ' + G.min + ' a ' + (nx.min - 1) : 'a partir de ' + G.min) + ' pontos',
+        pick: function () { self.sfx(SND.tap); self.say(me ? 'Você está na ' + G.n + '. Feche a semana com ' + n0(N.min) + ' pts para subir.' : (i > MY_LG ? 'Liga ' + G.n + ': precisa de ' + n0(G.min) + ' pts ao fechar a semana.' : 'Liga ' + G.n + ' já foi vencida.')); } };
+    });
+    // ranking da liga
+    var all = BOARD.concat([{ name: 'Você · Kael', pts: s.pts, fc: MY_FC, hue: '0deg', me: true }]).sort(function (a, b) { return b.pts - a.pts; });
+    var PER = 6, pages = Math.ceil(all.length / PER), rp = Math.min(s.rPage, pages - 1);
+    var rows = all.slice(rp * PER, rp * PER + PER).map(function (p, j) {
+      var rank = rp * PER + j + 1, up = p.pts >= N.min, dn = p.pts < L.min;
+      return { rank: rank, name: p.name, fc: kf(p.fc), pts: n0(p.pts), hue: p.hue, kd: (-(rank * 0.29) % 1).toFixed(2) + 's', d: (j * 0.04) + 's',
+        rc: rank === 1 ? '#ffc94a' : (rank === 2 ? '#d6dde8' : (rank === 3 ? '#e09a5a' : '#c9b9a2')), ac: p.me ? '#ffc94a' : '#4a3a2b',
+        cls: 'rrow inR' + (p.me ? ' me' : ''), hasZone: up || dn, zone: up ? 'SOBE' : 'CAI', zCls: 'chip ' + (up ? 'up' : 'dn') };
+    });
+    // rodapé
+    var o = s.opps[s.sel];
+    var footLbl, footCls, footAct, footAria;
+    if (s.tab !== 0) { footLbl = 'Ir lutar'; footCls = 'gold'; footAct = function () { self.sfx(SND.tap); self.setState({ tab: 0 }); }; footAria = 'Ir para a aba de luta'; }
+    else if (s.fights > 0) { footLbl = 'LUTAR · ' + o.name; footCls = 'gold pulse'; footAct = function () { self.begin(); }; footAria = 'Lutar contra ' + o.name + '. Restam ' + s.fights + ' de ' + MAX_FIGHTS + ' lutas hoje'; }
+    else { footLbl = 'Volte em ' + hms(s.day); footCls = 'gold off'; footAct = function () { self.sfx(SND.tap); self.say('Sem lutas hoje. Recarrega à meia-noite.'); }; footAria = 'Sem lutas hoje. Recarrega em ' + hms(s.day); }
+
+    // ===== luta =====
+    var F = s.fOn, e = s.spd * (s.slow ? 0.38 : 1), O = this.O || o, OL = LEAGUES[O.lg];
+    function spr(st) { return st.an === 'atk' ? 'katk' : (st.an === 'spin' ? 'kspin wide' : 'kidle'); }
+    function dur(st) { return ((st.an === 'idle' ? 1000 : (st.an === 'spin' ? SPIN : ATK)) / e / 1000).toFixed(3) + 's'; }
+    function dp(k) {
+      var d = s['dp' + k]; if (!d) return { on: false };
+      var me = d.onMe, map = {
+        n: [me ? '#ff8a7a' : '#ffffff', '26px', '#3a1a04', ''],
+        crit: ['#ffd23a', '40px', '#8a2a04', 'CRÍTICO!'],
+        spin: ['#ffa64a', '36px', '#6a2a04', 'ESPECIAL'],
+        ult: ['#e9c4ff', '52px', '#3a0d6a', 'ULTIMATE']
+      }[d.kind];
+      return { on: true, cls: 'dp ' + d.k, c: map[0], fs: map[1], sh: map[2], lb: map[3], hasLb: !!map[3], big: d.kind === 'crit' || d.kind === 'ult', tx: (me ? '−' : '') + d.txt };
+    }
+    var DA = dp('A'), DB = dp('B');
+    var cam = s.cam;
+    var M = this.M || { hpA: 1, maxA: 1, hpB: 1, maxB: 1 };
+    var res = s.res, rL = res ? LEAGUES[res.to >= N.min ? MY_LG + 1 : MY_LG] : L, rPromo = res && res.to >= N.min, rReleg = res && res.to < L.min;
+    var shownPct = res ? Math.max(0, Math.min(1, (s.shown - L.min) / (N.min - L.min))) : 0;
+    var zoneTxt = rPromo ? 'ZONA DE SUBIDA! Feche a semana com ' + n0(N.min) + '+ e você sobe para ' + N.n + '.' : (rReleg ? 'Abaixo de ' + n0(L.min) + ': se fechar assim, cai para ' + LEAGUES[MY_LG - 1].n + '.' : 'Faltam ' + n0(N.min - (res ? res.to : s.pts)) + ' pts para a zona de subida (' + N.n + ').');
+    var rkUp = res && res.rTo < res.rFrom, rkDn = res && res.rTo > res.rFrom;
+
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      hasToast: !!s.toast, toast: s.toast,
+      flags: FLAGS.map(function (f, i) { return { x: f[0], y: f[1], c: f[2], d: (-i * 0.27).toFixed(2) + 's' }; }),
+      pens: PENS.map(function (p, i) { return { x: p[0], c: p[1], d: (-i * 0.6).toFixed(2) + 's' }; }),
+      torches: TORCH.map(function (x, i) { return { x: x, d: (-i * 0.31).toFixed(2) + 's' }; }),
+      dust: [0, 1, 2, 3, 4, 5, 6].map(function (i) { return { y: (70 + (i * 37) % 26) + '%', s: (10 + (i * 13) % 22) + 'px', d: (-i * 1.4).toFixed(1) + 's', t: (8 + (i * 7) % 6) + 's' }; }),
+      // liga atual
+      lc: L.c1, lc2: L.c2, lc3: L.c3, lgl: L.gl, lName: L.n, lWing: L.wing ? 'inline' : 'none', lCrown: L.crown ? 'inline' : 'none', lRb: L.rb ? 'rb' : '',
+      wTxt: wTxt, wAria: 'A semana fecha em ' + wTxt,
+      barCls: 'pbar' + (promo ? ' promo' : ''), barW: (pct * 100).toFixed(1) + '%',
+      barTxt: promo ? n0(s.pts) + ' pts · zona de subida!' : n0(s.pts) + ' / ' + n0(N.min) + ' pts para ' + N.n,
+      upTxt: 'Sobe com ' + n0(N.min) + '+', dnTxt: 'Cai abaixo de ' + n0(L.min),
+      lgAria: 'Liga ' + L.n + ', ' + n0(s.pts) + ' pontos de ' + n0(N.min) + ' para subir. Toque para ver as ligas e prêmios',
+      goLigas: function () { self.sfx(SND.tap); self.setState({ tab: 1 }); },
+      tabs: [['Lutar', 0], ['Ligas', 1], ['Ranking', 2]].map(function (t) { return { label: t[0], sel: s.tab === t[1] ? 'true' : 'false', pick: function () { self.sfx(SND.tap); self.setState({ tab: t[1] }); } }; }),
+      showFight: s.tab === 0, showLeagues: s.tab === 1, showRank: s.tab === 2,
+      fightsTxt: s.fights + '/' + MAX_FIGHTS, dayTxt: hms(s.day),
+      pips: [0, 1, 2, 3, 4].map(function (i) { return { cls: 'pip' + (i < s.fights ? ' on' : ''), d: (i * 0.2) + 's' }; }),
+      reroll: function () { self.sfx(SND.tap); self.setState({ opps: makeOpps(), sel: 1 }); },
+      opps: opps, leagues: leagues, rows: rows,
+      rPageTxt: 'Posições ' + (rp * PER + 1) + '–' + Math.min(all.length, rp * PER + PER) + ' · você #' + myRank,
+      rPrevC: rp > 0 ? '#f6ecdf' : '#6a5a48', rNextC: rp < pages - 1 ? '#f6ecdf' : '#6a5a48',
+      rPrev: function () { if (rp > 0) { self.sfx(SND.tap); self.setState({ rPage: rp - 1 }); } },
+      rNext: function () { if (rp < pages - 1) { self.sfx(SND.tap); self.setState({ rPage: rp + 1 }); } },
+      footLbl: footLbl, footCls: footCls, footAct: footAct, footAria: footAria,
+      // luta
+      inFight: F, fAria: 'Luta de arena: Kael contra ' + O.name,
+      qCls: s.qk === 1 ? 'qa' : (s.qk === 2 ? 'qb' : ''),
+      camT: 'translate(' + cam.x + '%, ' + cam.y + '%) scale(' + cam.s + ')', camD: (cam.t / (s.slow ? 0.6 : 1)).toFixed(2) + 's',
+      aX: s.A.x + 'px', bX: s.B.x + 'px', lungeD: (0.22 / e).toFixed(2) + 's',
+      aHw: s.A.h, bHw: s.B.h, aSpr: spr(s.A), bSpr: spr(s.B), aDur: dur(s.A), bDur: dur(s.B), auraDur: (1.333 / e).toFixed(2) + 's',
+      oHue: O.hue, oHasAura: !!O.aura, oAura: O.aura, oName: O.name, oFc: kf(O.fc), oTitle: O.title, oLvl: O.lvl, oLeague: OL.n, oCol: OL.c1, myFc: kf(MY_FC),
+      slashOn: !!s.slash, fxX: s.slash && s.slash.x === 'A' ? 'calc(50% - var(--fo))' : 'calc(50% + var(--fo))',
+      ultOn: !!s.ult, ultFlip: s.ult && s.ult.who === 'B' ? 'scaleX(-1)' : 'none', ultDur: (ULT_D / e / 1000).toFixed(3) + 's', ultColDur: (ULT_D / 7 / e / 1000).toFixed(3) + 's',
+      dpAOn: DA.on, dpACls: DA.cls || '', dpAC: DA.c || '', dpAFs: DA.fs || '', dpASh: DA.sh || '', dpALb: DA.lb || '', dpAHasLb: !!DA.hasLb, dpABig: !!DA.big, dpATx: DA.tx || '',
+      dpBOn: DB.on, dpBCls: DB.cls || '', dpBC: DB.c || '', dpBFs: DB.fs || '', dpBSh: DB.sh || '', dpBLb: DB.lb || '', dpBHasLb: !!DB.hasLb, dpBBig: !!DB.big, dpBTx: DB.tx || '',
+      dpDur: (1.1 / Math.max(1, e)).toFixed(2) + 's',
+      burstOn: s.burst, burstBg: s.win ? 'radial-gradient(circle, rgba(255,250,220,.95) 0, rgba(255,201,74,.55) 18%, rgba(255,201,74,0) 45%)' : 'radial-gradient(circle, rgba(200,215,240,.7) 0, rgba(90,110,160,.4) 18%, rgba(90,110,160,0) 45%)',
+      flashOn: !!s.flash, flashCls: 'flashW', flashBg: s.flashBg,
+      lbH: s.lbox ? '8%' : '0px',
+      cutOn: !!s.cut, cutCls: 'cutBand ' + (s.cut === 'B' ? 'cutB' : 'cutA'), cutWho: s.cut === 'B' ? O.name : 'Kael',
+      cutFilter: s.cut === 'B' ? 'hue-rotate(' + O.hue + ') saturate(1.25)' : 'none',
+      hpAW: (s.hpA * 100).toFixed(1) + '%', hpAL: (s.hpAL * 100).toFixed(1) + '%', hpBW: (s.hpB * 100).toFixed(1) + '%', hpBL: (s.hpBL * 100).toFixed(1) + '%',
+      hpATx: n0(s.hpA * M.maxA), hpBTx: n0(s.hpB * M.maxB),
+      enAW: s.enA + '%', enBW: s.enB + '%', enACls: 'enb' + (s.enA >= 100 ? ' full' : ''), enBCls: 'enb' + (s.enB >= 100 ? ' full' : ''),
+      ctlOn: s.ph === 'vs' || s.ph === 'fight', x2P: s.spd === 2 ? 'true' : 'false', logTxt: s.log,
+      toggleX2: function () { self.sfx(SND.tap); self.setState({ spd: s.spd === 2 ? 1 : 2 }); },
+      skip: function () { self.skip(); },
+      luteOn: s.lute, vsOn: s.ph === 'vs',
+      endOn: s.ph === 'end', fWin: s.win, fLose: !s.win, endRay: s.win ? 'rgba(255,201,74,.35)' : 'rgba(150,170,210,.22)',
+      endSub: s.win ? 'Que luta! A torcida vai à loucura.' : 'Luta digna. Você causou ' + (this.M ? Math.round(this.M.dealt / this.M.maxB * 100) : 0) + '% da vida dele.',
+      confs: CONF.map(function (c, i) { return { l: (4 + i * 8) + '%', c: c, d: (i * 0.21).toFixed(2) + 's' }; }),
+      resOn: s.ph === 'res' && !!res, resBd: res && res.gain > 0 ? '#ffc94a' : '#8a9ab8',
+      resTitle: res && res.gain > 0 ? 'VITÓRIA!' : 'DERROTA', resTitleCls: res && res.gain > 0 ? 'vic' : 'def',
+      resAria: res ? (res.gain > 0 ? 'Vitória' : 'Derrota') + ': ' + (res.gain > 0 ? '+' : '') + res.gain + ' pontos, agora ' + res.to : '',
+      resEmbCls: 'emb' + (rPromo ? ' embFlip' : '') + (rL.rb ? ' rb' : ''), rLc: rL.c1, rLc2: rL.c2, rLc3: rL.c3, rLgl: rL.gl, rName: rL.n + (rPromo ? ' (ao fechar)' : ''),
+      rWing: rL.wing ? 'inline' : 'none',
+      cntTxt: n0(s.shown), dltTxt: res ? (res.gain > 0 ? '+' + res.gain : '−' + (-res.gain)) : '', dltC: res && res.gain > 0 ? '#7ef08a' : '#ff9a8a',
+      resBarCls: 'pbar' + (rPromo ? ' promo' : ''), resBarW: (shownPct * 100).toFixed(1) + '%',
+      resBarTxt: rPromo ? 'Zona de subida para ' + N.n + '!' : n0(s.shown) + ' / ' + n0(N.min) + ' para ' + N.n,
+      zoneCls: 'zone ' + (rPromo ? 'promo' : (rReleg ? 'releg' : 'safe')), zoneTxt: zoneTxt,
+      rkFrom: res ? res.rFrom : 0, rkTo: res ? res.rTo : 0, rkArr: rkUp ? '▲' : (rkDn ? '▼' : '='), rkArrCls: rkUp ? 'upA' : '', rkC: rkUp ? '#7ef08a' : (rkDn ? '#ff9a8a' : '#e8dccb'),
+      resNote: (res && res.gain > 0 ? 'Venceu com ' + Math.round(this.M ? this.M.hpA / this.M.maxA * 100 : 0) + '% de vida.' : 'Dica: fortaleça a arma na Forja para subir a FC.') + ' Lutas restantes hoje: ' + s.fights + '/' + MAX_FIGHTS + '.',
+      closeRes: function () { self.sfx(SND.tap); self.close(); },
+      againCls: s.fights > 0 ? 'gold pulse' : 'gold off', againLbl: s.fights > 0 ? 'Lutar de novo · ' + s.fights : 'Sem lutas hoje',
+      again: function () { if (s.fights <= 0) { self.sfx(SND.tap); self.say('Sem lutas hoje. Recarrega à meia-noite.'); return; } self.close(); setTimeout(function () { self.begin(); }, 80); }
+    };
+  }
+}
+</script>
+</body>
+</html>

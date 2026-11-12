@@ -1,0 +1,12 @@
+{
+ "frames": 17,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura total. Pintar: cor = luminância do pixel da folha × tinta do material, misturada pela força.",
+ "files": [
+  "kael_attack_mask.png"
+ ],
+ "sheet": "assets/anim/hyb/R/kael_attack_wide_era2_t1.png"
+}
