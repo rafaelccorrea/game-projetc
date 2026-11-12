@@ -66,7 +66,8 @@ const chosenSkin=(S,k)=>{ const id=S&&S.skinEq&&S.skinEq[k]; return typeof id===
    Modo 'skin' COM skin de roupa escolhida: base + a skin completa + a arma (skin de arma ou item). Sem skin escolhida, o modo 'skin' cai no 'items'. */
 function layers(S,host){ const o=look(S), eq=host&&typeof host.equipped==='function'?(host.equipped()||{}):{}, out=[];
   if(!o.hidden.wing){ const ws=skinOf(S,'wing'), wi=eq.wing; if(ws) out.push({layer:'wing',key:DATA.skinKey(ws),source:'skin',id:ws});
-    else if(wi) out.push({layer:'wing',key:DATA.itemKey('wing',visualEra(wi),clamp(int0(wi.r),0,5)),source:'item',era:visualEra(wi),r:clamp(int0(wi.r),0,5)}); }
+    else if(wi){ const T=root.Sys&&root.Sys.stats, id=T&&T.wingOf?T.wingOf(wi):(wi.wing||'angel');   // asa = item próprio: a chave é QUAL asa (não muda por era/raridade)
+      out.push({layer:'wing',key:'wing/'+id,source:'item',id,era:visualEra(wi),r:clamp(int0(wi.r),0,5)}); } }
   out.push({layer:'base',key:'base/'+heroOf(S),source:'base',hero:heroOf(S)});
   const wSkin=chosenSkin(S,'weapon'), wItem=eq.weapon, weapon=wSkin?{layer:'weapon',key:DATA.skinKey(wSkin),source:'skin',id:wSkin}
     :wItem?{layer:'weapon',key:DATA.itemKey('weapon',visualEra(wItem),clamp(int0(wItem.r),0,5)),source:'item',era:visualEra(wItem),r:clamp(int0(wItem.r),0,5)}:{layer:'weapon',key:DATA.skinKey('w00'),source:'skin',id:'w00'};

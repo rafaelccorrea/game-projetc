@@ -22,8 +22,8 @@ Atualizado em 12/11/2026 pelo PO. Legenda: `[x]` já funciona no jogo · `[~]` s
 - [x] Batalha em tela cheia com menu agrupado, barras de vida/energia sobre o Kael
 - [x] Equipamento (Equipar melhor, arrastar), Invocar, Loja, Passe, Missões, Práticas e Títulos
 - [x] Forja e Configurações novas (v0.12.4)
-- [ ] VIP · Troca de era — [~] escritas, falta ligar
-- [ ] Torre · Instâncias · Ranking animado · Vitória/Derrota — [~] sendo escritas
+- [x] VIP (v0.12.5) · [ ] Troca de era — [~] escrita, falta ligar
+- [ ] Torre (inteira rolando, igual ao canvas) · Instâncias · Ranking animado · Vitória/Derrota — [~] sendo escritas
 - [ ] Título novo (logo B Cristal) · Login · Prólogo com o avô · Criação (Kael/Kaia) · Nome do jogador · Bem-vindo de volta
 - [ ] Perfil e Coleção (títulos, molduras, auras, asas, estatísticas)
 - [ ] Códex das Eras (sendo refeito)
@@ -38,9 +38,9 @@ Atualizado em 12/11/2026 pelo PO. Legenda: `[x]` já funciona no jogo · `[~]` s
 - [ ] Kaia jogável (garota) e Kaia crescendo (3 fases)
 - [ ] Morte nova do Kael (joelho, de bruços, espada cai, escurece)
 - [x] Pistola nas eras 3, 5, 6 e revólver na era 4
-- [ ] Armas diferentes por raridade (45 armas) + brilho da raridade na arma — [~] v0.12.5
+- [x] Armas diferentes por raridade (45 armas) + brilho da raridade (v0.12.5)
 - [ ] Aparência em camadas: chapéu por era, colete e botas mudando de cor, óculos e máscaras, modo Itens/Skin, esconder peça
-- [ ] Asas (demoníaca, anjo) no espaço de asa — [~] v0.12.5
+- [~] Asas (demoníaca, anjo) no espaço de asa — já aparece (v0.12.5); regra: cada asa é um item, você equipa a que quiser (não muda por era nem raridade)
 - [ ] Auras maligna e celestial (Submundo e Celestial)
 
 **PETS (você ainda não viu nenhum no jogo)**
@@ -79,5 +79,6 @@ Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sa
 ## D. Versões (no computador; o celular só no fim)
 
 - [x] v0.12.1 tela cheia · v0.12.2 arma na mão, barras · v0.12.3 pistola, liberação por nível, level up · v0.12.4 Forja, Configurações, botões, revólver
-- [~] v0.12.5 modo dono, prévia da arte, 45 armas, asa, tela de Pets, raridade pela cor
+- [x] v0.12.5 modo dono, prévia da arte, 45 armas, asa, VIP, raridade pela cor
+- [~] v0.12.6 pets (ovo no 20, pet na batalha, tela de Pets) → depois montarias
 - [ ] seguintes: pets, montarias, Kaia, morte, cenários, aparência, 4 fases, telas iniciais, mapa + curva, eras 7-8, carregamento sob demanda, servidor e compras

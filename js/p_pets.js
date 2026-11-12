@@ -634,3 +634,13 @@ Panels.add('pets',{title:'Pets',render:scrPets,click:ptClick,
     if(op&&op.tab&&/^(det|atk|evo|col)$/.test(op.tab)) XPT.tab=op.tab; else XPT.tab='det';
     if(ptReady()){ const o=ptSave(); XPT.sel=(op&&op.pet&&ptDef(op.pet))?op.pet:(o.eq||XPT.sel); } },
   onClose(){ ptStop(); XPT.fx=null; XPT.confirm=false; XPT.choice=false; XPT.hatch=null; XPT.hRes=null; XPT.evo=null; XPT.evoId=null; XPT.lvPop=false; } });
+
+/* ESCOLHA DE OVO chamada de fora (pedido A-15): quando o Sys.pet.addEgg devolve {choice:true, options, index}, o jogo chama
+   Screens.open('eggpick', {index, options}). Esta entrada só leva à tela de Pets já com a folha "Escolha seu ovo" aberta: a escolha em si
+   (Sys.pet.chooseEgg) e a animação de chocar são as mesmas da tela. Liga junto com a tela de Pets (Panels.enable em js/panels.js). */
+if(!('eggpick' in PANEL_ON)) PANEL_ON.eggpick=false;
+Panels.add('eggpick',{title:'Escolher ovo',render(){ V.innerHTML=''; },
+  onOpen(){ setTimeout(()=>{ if(typeof view==='undefined'||view!=='eggpick') return;
+    if(window.Panels&&Panels.on('pets')){ Panels.open('pets'); if(ptChoices().length){ XPT.choice=true; render(); } } else if(window.Screens) Screens.close(); },0); },
+  onClose(){ } });
+if(PANEL_ON.pets) Panels.enable('eggpick');

@@ -15,6 +15,10 @@ const DATA={
   slots:['weapon','armor','hat','gloves','boots','necklace','wing'],
   slotName:{weapon:'Arma',armor:'Colete',hat:'Chapéu/Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asa'},
   wing:{minLevel:50, minR:2},                       // a asa abre no nível 50 e só existe Épica ou acima
+  // ASA = ITEM PRÓPRIO (dono via engenheiro, 12/11): item.wing diz QUAL asa é; a aparência NÃO muda por raridade nem por era (o poder sim, como
+  // qualquer item). Artes aprovadas: anjo e demoníaca (assets/anim/equip/wing_<id>). De onde cai = PROPOSTA ao PO (wingForDrop):
+  // anjo nas eras 0-6 e 8 (a 1ª asa, no Nv 50, e a do Celestial); demoníaca na era 7 (Submundo) e no Hell de qualquer era (fim de jogo).
+  wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'}}, wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
   eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
   maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
   rarFlat:[1,1.7,3,5.5,10,18],                      // planos × raridade (mesmo RAR.m do jogo); [5] = DIVINO (×1,8, só com era9.on)
@@ -326,7 +330,11 @@ function upgradeTo(S,host,item,currency,toLvl){
 }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // atributos não são módulo de bônus (o fc.js chama compute)
-const API={DATA,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+/* qual asa é o item: item.wing se válido; item antigo sem o campo = pela regra de drop da era dele (determinístico, não sorteia) */
+const wingForDrop=(era,diff)=>{ const W=DATA.wingDrop; return (W.demonEras.includes(int0(era))||int0(diff)>=W.demonDiff)?'demon':W.default; };
+const wingOf=it=>it&&it.slot==='wing'?(DATA.wingTypes[it.wing]?it.wing:wingForDrop(it.e,it.diff)):null;
+const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
+const API={DATA,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

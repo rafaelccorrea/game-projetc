@@ -42,4 +42,9 @@ def.click(btn('rank'), {}); assert(toasts.some(t => /ranking/i.test(t)), 'aviso 
 const lv = g.Sys.level; g.Sys.level = { isUnlocked: () => false, unlockLevel: () => 15 }; def.render(); has('Libera no nível 15'); def.click(btn('back'), {}); assert(g.closed); g.Sys.level = lv;
 const tw = g.Sys.tower; delete g.Sys.tower; def.render(); has('indisponível'); g.Sys.tower = tw; out.push('ranking avisa, bloqueio por nível, Voltar, sem Sys.tower: ok');
 bt = H().match(/<button[^>]*>/g) || []; assert(bt.every(b => /data-x="/.test(b)));
+// 8) formato final (Sistemas): andar 100 = ovo Épico à escolha; acima, fragmentos do pet escolhido ou pendente; sem 'fênix'
+g.Sys.pet = g.Sys.pet || {}; const A = tReward({ egg: { r: 2, source: 'tower100', choice: ['drake', 'parrot'] } }); assert(A.includes('Ovo Épico à escolha (Dragão ou Papagaio)'));
+const B = tReward({ t100Frags: 3, t100Pet: 'drake', phoenixFrags: 0 }); assert(B.includes('3 fragmentos do Dragão'), B); const C = tReward({ t100Frags: 1, t100Pet: '' }); assert(C.includes('1 fragmento do pet do andar 100'), C);
+const D = tReward({ egg: { r: 4, pet: 'phoenix' }, t100Frags: 2, t100Pet: 'phoenix' }); assert(D.includes('Ovo raro') && !/fênix|fenix/i.test(D + A + B + C), D);
+out.push('formato do andar 100 e acima: ok, sem fênix');
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

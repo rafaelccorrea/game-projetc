@@ -756,3 +756,29 @@ visíveis: funciona e lê bem em 360x640, mas o protótipo mostra a torre inteir
 NÃO VISTO: título "em destaque" / cosmético (o save de teste não tinha título conquistado); arrasto depois da correção; barra parcial de
 alimentar (o custo por nível é menor que os 25 por toque até o nível 30); raridade junto com `?rar=1`; toque de dedo real; o VIP em
 "Faltam 1 pontos" tem erro de concordância (arquivo do QA, avisado).
+
+## Bloco 18 (rumo à v0.12.6): preparado sem navegador
+
+1. Torre e Troca de era (do QA): conferidas por leitura. Zero emoji nos dois arquivos (busca por faixa de código), sem "fênix" na Torre;
+   `node --check` ok; as duas estão na lista de carga; chaves `PANEL_ON.tower` e `PANEL_ON.era` desligadas, prontas para ligar.
+   Não achei na Torre um texto específico do andar 100 além dos marcos lidos do `Sys.tower` (a conferir na tela).
+2. Escolha de ovo (pedido A-15): registrei `eggpick` no fim de `js/p_pets.js`. `Screens.open('eggpick', {index, options})` leva à tela de
+   Pets já com a folha "Escolha seu ovo" aberta; a escolha chama `Sys.pet.chooseEgg` e toca a mesma animação de chocar da tela. Liga
+   junto com a tela de Pets. Escrito e não visto.
+3. `PANEL_ON.pets` e a entrada `p_pets` na lista de carga: encontrei as duas JÁ ligadas no disco (mudança do agente A no pacote de pets,
+   nos meus `js/panels.js` e `js/screens.js`). Mantive. A tela foi vista por mim funcionando na passada anterior (carregada à mão).
+4. Espaço de MONTARIA no Equipamento: o protótipo convertido (`docs/proto/Equipamento.dc.html`) não desenha montaria (busca por
+   "montaria"/"mount": só um nome de função interno). Nada a fazer; não inventei espaço.
+5. Herói do save (Kaia): o que é FIXO no Kael nas telas dos painéis:
+   - meu: miniatura do cartão da skin no Equipamento e arte das skins de herói da era 2 na Loja (`js/screens.js`, classe `kidle`);
+     cartão da temporada e recompensa de skin do Passe (`js/screens2.js`); palco da Forja; conta nas Configurações; vitrine da Oferta;
+     prévia "na batalha" dos Pets. Todos usam a classe CSS `kidle`, que é definida no index.html com a folha do Kael.
+   - do QA: VIP, Torre e Troca de era usam o caminho `kael_...` direto.
+   - NÃO é fixo: a vitrine grande do Equipamento (canvas do agente A, `drawHeroPreview` / `heroLook`).
+   Existem pastas `assets/anim/hyb/kaia`, `kaia_phase1`, `kaia_phase2`, mas nenhuma folha da Kaia em `assets/anim/hyb/R`.
+   Pedido B-22: a troca tem de ser num ponto só (a classe `kidle` seguir `S.hero`).
+6. Oferta: continua desligada.
+7. `js/p_pets.js` usa o caractere "★" para as estrelas (6 vezes): não é emoji colorido, mas vale trocar por SVG; anotado.
+
+Aviso: no momento desta conferência `js/petfx.js` (do agente A) estava com erro de sintaxe na linha 75 (arquivo em edição); o teste de
+fumaça acusa "ERRO ao carregar petfx.js". Não é meu arquivo e não mexi.

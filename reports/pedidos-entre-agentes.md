@@ -251,3 +251,26 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
   `COIN_I(px)`, `GEM_I(px)`, `SVG_LOCK`, `Y_STONE`, `Y_CHK` do screens.js/screens2.js ou SVG próprio); (2) tirar o "Ovo ... Fênix" (a fênix
   saiu; ovo é da espécie da era); (3) 3 andares visíveis em vez da torre inteira: decisão do PO.
 - TROCA DE ERA: `p_era.js` tem 2 emojis (diamante e bola de cristal): trocar antes de eu conferir com o agente A.
+
+### B-22. Para o agente A: Kaia nas telas dos painéis + escolha de ovo
+- `eggpick` está registrada (fim de `js/p_pets.js`): `Screens.open('eggpick', {index, options})` abre a tela de Pets com "Escolha seu ovo".
+  A escolha chama `Sys.pet.chooseEgg(S, Sys.host, índice, id)` e toca a animação de chocar da PRÓPRIA tela (não chama o seu `petNotice`;
+  se quiser a sua animação no lugar, diga e eu troco). Usa a 1ª escolha pendente de `Sys.pet.ensure(S).choices`.
+- KAIA: nos painéis o herói pequeno é a classe CSS `kidle` (definida no seu index.html, folha do Kael). Para a Kaia aparecer em todo lugar
+  de uma vez: faça a `kidle` seguir o herói do save (ex.: `body[data-hero=kaia] .kidle{background-image:...}`), com as folhas da Kaia no
+  mesmo formato (12 quadros). VIP, Torre e Troca de era (do QA) usam o caminho `kael_...` direto: aviso a ela.
+- Vi `PANEL_ON.pets = true` e `p_pets` na lista de carga já no disco (sua mudança nos meus arquivos): mantive.
+- `js/petfx.js` estava com erro de sintaxe na linha 75 quando rodei o teste de fumaça (provável edição em curso).
+
+### Q-4. Instâncias (js/p_inst.js) — escrita pelo QA, NÃO vista rodando
+- Peça: carregar `'p_inst'` na lista de scripts do js/screens.js e ligar `PANEL_ON.inst` (o item Instâncias do MENU, `soon:inst`, abre sozinho quando `Screens.reg.inst` existir).
+- A tela mostra as 4 áreas do `Sys.instances` (Mina de Ouro, Arsenal, Chefe de Era, Caverna de Cristal), seletor de era + dificuldade, prêmio de `rewardPreview`, entradas por área, renovação. Varrer funciona dentro da tela.
+- DEPENDE DO ENGENHEIRO (batalha da instância): defina `window.startInstanceRun(run)` (recebe a definição de `Sys.instances.start`), execute a horda cronometrada, chame `Sys.instances.finish(S, Sys.host, run.id, {win, kills})` e depois `window.PInst.showResult(out)` (abre a tela e mostra o painel Vitória/Derrota). Sem isso o botão "Entrar" só avisa "A batalha das instâncias ainda não está ligada" e NÃO abre entrada.
+- Sem FC recomendada/"Sua FC"/VIP no protótipo: o módulo não tem esses dados; a entrada VIP já vem em `status().max`. Zero emoji. Smoke: `node test/paineis/p_inst.smoke.js`.
+- Ajustes do B-21 já feitos: p_tower sem emoji/Fênix/✓ (visto vira forma CSS), p_era sem emoji, p_vip "Falta 1 ponto VIP" no singular.
+
+### A-16. (agente A, v0.12.6) Mexi em duas linhas suas, por exceção do coordenador
+- js/panels.js: `PANEL_ON.pets` de false para true.
+- js/screens.js: `'p_pets'` entrou na lista de carga (`['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets']`); não estava.
+- A tela de escolha de ovo (`eggpick`) continua pendente (A-15). Hoje o aviso é "Você ganhou um ovo para escolher: abra Pets".
+- Para a fps-ff (via PO): `assets/anim/hyb/phase3/kael_attack_era2_t1.json` está com `padLeft: 0` (deveria ser 96, como nas fases 1 e 2).

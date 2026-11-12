@@ -19,7 +19,7 @@ const DATA={
   reward:{goldMult:20, goldPerFloor:0.03, stones:1, stonesPer:5, bossGems:10, bossGemsPer:5,
           forgeFrom:20, forgeOnBoss:4},
   // pets (balance v5.1 "pet"): 1 ovo a cada 10 andares até o 100 (mínimo Raro até o 40, Épico de 50 a 90, pesos do chefe de fase);
-  // fênix garantida no 100; depois, 1 fragmento de fênix por andar do 101 ao 110 e 1 a cada 10 andares.
+  // andar 100: com a 17b, ovo Épico à escolha (Dragão/Papagaio); sem ela, a fênix antiga. Depois, 1 fragmento DESSE pet por andar do 101 ao 110 e 1 a cada 10.
   pet:{eggEvery:10, eggWeights:[50,32,13,5,0], minR:[[40,1],[90,2]], phoenixAt:100, fragEach:[101,110], fragEvery:10},
   milestones:[10,25,50,100], milestoneEvery:50, milestoneGems:20,   // depois de 100: a cada 50
   // luta com os 6 atributos (regras novas). Pesos e curva da DEF: os do Sys.fc / Sys.stats quando carregados (função ÚNICA de FC);
@@ -130,19 +130,26 @@ function difficulty(pfc,ofc){ const k=ofc>0?pfc/ofc:9; return k>=1.05?{id:'easy'
 
 /* Revisão 5: fragmentos do Prismático na torre (tabela única Sys.pet.DATA.v4d.prism.tower; só com a v4 da pet ligada) */
 function prismAt(f){ const P=root.Sys&&root.Sys.pet; if(!P||P.DATA.v4!==true||P.DATA.v3!==true) return 0; const T=P.DATA.v4d.prism.tower; return f>T.from&&(f-T.from)%T.every===0?T.frags:0; }
-function rewardsFor(f,host){
+function rewardsFor(f,host,S){   // S opcional: com ele, t100Pet diz o pet já escolhido no andar 100
   const R=DATA.reward, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1));
   const P=DATA.pet, egg=f<P.phoenixAt&&f%P.eggEvery===0, minR=egg?(P.minR.find(([upTo])=>f<=upTo)||[0,2])[1]:0;
   const frag=f>P.phoenixAt&&((f>=P.fragEach[0]&&f<=P.fragEach[1])||f%P.fragEvery===0)?1:0;
   return {gold:Math.round(unit*R.goldMult*(1+R.goldPerFloor*f)), stones:R.stones+Math.floor(f/R.stonesPer),
     gems:(isBoss(f)?R.bossGems+Math.floor(f/R.bossGemsPer):0)+(isMilestone(f)?DATA.milestoneGems:0),
     forge:f>=R.forgeFrom&&isBoss(f)?R.forgeOnBoss:0,
-    // andar 100: fênix (Lendário) garantida, exceção ao portão de raridade (source:'tower100'); os outros ovos respeitam o portão
-    egg:f===P.phoenixAt?{r:4,source:'tower100',pet:'phoenix'}:egg?{weights:P.eggWeights,minR}:null,
+    // andar 100: ovo ÉPICO À ESCOLHA (17b, PO: a fênix saiu) — {r:2, source:'tower100', choice:['drake','parrot']}; sem a 17b, a fênix antiga.
+    // Exceção ao portão de raridade (source:'tower100'); os outros ovos respeitam o portão
+    egg:f===P.phoenixAt?t100Egg():egg?{weights:P.eggWeights,minR}:null,
     // Revisão 4 (Sys.pet.DATA.v4): 5 fragmentos do Prismático a cada 25 andares acima do 105 (130, 155, ...)
     prismFrags:prismAt(f),
-    phoenixFrags:frag};
+    // fragmentos do pet do andar 100 acima dele: com a 17b vão para o pet ESCOLHIDO (t100Pet; '' = escolha pendente, guardados no ovo à escolha)
+    t100Frags:frag, t100Pet:V17()?t100Pet(S):'phoenix',
+    phoenixFrags:V17()?0:frag};   // nome antigo (só sem a 17b)
 }
+const PETM=()=>root.Sys&&root.Sys.pet;
+const V17=()=>{ const P=PETM(); return !!(P&&P.DATA&&P.DATA.v17&&P.DATA.v17.on===true&&P.DATA.v3===true); };
+const t100Egg=()=>V17()?{r:2,source:'tower100',choice:PETM().DATA.v17.tower100.slice()}:{r:4,source:'tower100',pet:'phoenix'};
+const t100Pet=S=>{ try{ return S&&PETM()?PETM().ensure(S).t100||'':''; }catch(e){ return ''; } };
 /* entrega cada prêmio pelo módulo dono; se o módulo não estiver carregado, zera o campo (a tela não promete o que não entrega) */
 function grantRewards(S,host,rw){
   const sys=root.Sys||{};
@@ -151,7 +158,8 @@ function grantRewards(S,host,rw){
   if(rw.forge){ if(sys.forge&&sys.forge.addStones) sys.forge.addStones(S,rw.forge,host); else rw.forge=0; }
   if(rw.egg){ if(sys.pet&&sys.pet.addEgg) rw.hatched=sys.pet.addEgg(S,host,rw.egg); else rw.egg=null; }
   if(rw.prismFrags){ if(sys.pet&&sys.pet.addFragments) rw.prism=sys.pet.addFragments(S,'prism',rw.prismFrags,host); else rw.prismFrags=0; }
-  if(rw.phoenixFrags){ if(sys.pet&&sys.pet.addFragments) rw.phoenix=sys.pet.addFragments(S,'phoenix',rw.phoenixFrags,host); else rw.phoenixFrags=0; }
+  const tf=rw.phoenixFrags||(V17()?rw.t100Frags:0);   // com a 17b, o Sys.pet manda 'phoenix' para o pet escolhido (ou guarda no ovo à escolha)
+  if(tf){ if(sys.pet&&sys.pet.addFragments) rw.t100=rw.phoenix=sys.pet.addFragments(S,'phoenix',tf,host); else { rw.phoenixFrags=0; rw.t100Frags=0; } }
   return rw;
 }
 /* desbloqueio pelo nível do jogador (Sys.level); sem o Sys.level carregado, fica liberado */
@@ -166,7 +174,7 @@ function fight(S,host){
   if(o.lossesLeft<=0) return {ok:false,reason:'tries',floor:f};
   const opp=opponent(f), me=playerStats(S,host), d=duel(me,scaledFoe(me,opp.fc),hash('fight',f,o.fights)); o.fights++;
   const res={ok:true,win:d.win,floor:f,opp,me,duel:d,rewards:null};
-  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host));
+  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host,S));
     const T=root.Sys&&root.Sys.titles; if(T&&T.check) T.check(S,host);
   } else o.lossesLeft--;
   o.last={floor:f,win:d.win,rounds:d.rounds,hp:Math.round((d.win?d.hpA:d.hpB)*100),ts:nowOf(host),name:opp.name};
@@ -185,7 +193,7 @@ function advice(S,host){ const o=ensure(S,host), f=o.best+1, me=playerStats(S,ho
 function render(el,S,host,opt){
   if(!el) return; opt=opt||{};
   if(locked(S)){ el.innerHTML=`<div class="sys-tow"><div class="sys-card sys-lock">${LOCK}<b>Torre</b><span>Libera no nível ${lockLevel()}</span></div></div>`; el.onclick=null; return; }
-  const o=ensure(S,host), f=o.best+1, opp=opponent(f), me=playerStats(S,host), dif=difficulty(me.fc,opp.fc), rw=rewardsFor(f,host), ms=nextMilestone(f);
+  const o=ensure(S,host), f=o.best+1, opp=opponent(f), me=playerStats(S,host), dif=difficulty(me.fc,opp.fc), rw=rewardsFor(f,host,S), ms=nextMilestone(f);
   const L=o.last, msg=el.__sysTowMsg||'', SYS=root.Sys||{};
   el.innerHTML=`<div class="sys-tow">
     <div class="sys-tow-top"><span>🗼 Melhor: <b>${o.best}</b></span><span>Bônus: +${(o.best*DATA.perFloor.atkPct).toFixed(1).replace('.',',')}% ATK/HP</span></div>
@@ -195,7 +203,7 @@ function render(el,S,host,opt){
       <div class="sys-tow-vs"><span>Você<br><b>${fmt(me.fc)}</b></span><span class="sys-tow-x">VS</span><span>FC<br><b>${fmt(opp.fc)}</b></span></div>
       <div class="sys-tow-dif ${dif.id}">${dif.txt}</div>
       <div class="sys-tow-rw">Prêmio: 🪙${fmt(rw.gold)}${rw.stones&&SYS.practice?` · 🪨${rw.stones}`:''}${rw.forge&&SYS.forge?` · 🔨${rw.forge}`:''}${rw.gems?` · 💎${rw.gems}`:''}${
-        rw.egg&&SYS.pet?(rw.egg.r===4?' · 🥚 FÊNIX':' · 🥚 ovo de pet'):''}${rw.phoenixFrags&&SYS.pet?` · 🔥${rw.phoenixFrags} fragmento de fênix`:''}</div>
+        rw.egg&&SYS.pet?(rw.egg.choice?' · 🥚 ovo Épico à escolha':rw.egg.r===4?' · 🥚 FÊNIX':' · 🥚 ovo de pet'):''}${rw.phoenixFrags&&SYS.pet?` · 🔥${rw.phoenixFrags} fragmento de fênix`:''}${!rw.phoenixFrags&&rw.t100Frags&&SYS.pet?` · ${rw.t100Frags} fragmento ${rw.t100Pet?'do '+((SYS.pet.DATA.pets.find(x=>x.id===rw.t100Pet)||{}).name||'pet'):'do pet do andar 100'}`:''}</div>
     </div>
     <button class="sys-btn sys-tow-go" ${o.lossesLeft>0?'':'disabled'}>${o.lossesLeft>0?'Desafiar':'Sem tentativas hoje'}</button>
     <div class="sys-tow-info">Tentativas: <b>${o.lossesLeft}/${DATA.lossesPerDay}</b> (só a derrota gasta) · Marco: andar ${ms}</div>
@@ -209,7 +217,7 @@ function render(el,S,host,opt){
     if(host&&host.toast) host.toast(el.__sysTowMsg); changed(host); render(el,S,host,opt); };
 }
 
-const API={DATA,ensure,nextFloor,isBoss,floorFC,isMilestone,nextMilestone,opponent,playerStats,duel,duelCarry,difficulty,statsFromFC,fcOfStats,scaledFoe,rewardsFor,fight,onDayChange,bonus,advice,render,_hash:hash,_dayKey:dayKey};
+const API={DATA,ensure,nextFloor,isBoss,floorFC,isMilestone,nextMilestone,opponent,playerStats,duel,duelCarry,difficulty,statsFromFC,fcOfStats,scaledFoe,rewardsFor,grantRewards,fight,onDayChange,bonus,advice,render,_hash:hash,_dayKey:dayKey};
 root.Sys=root.Sys||{}; root.Sys.tower=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

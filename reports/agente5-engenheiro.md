@@ -1388,3 +1388,33 @@ NÃO testado / pendências:
 - Espaço de asa no nível 50 dentro do Equipamento (painel do agente B).
 - Item 5 (tela de troca de era, Q-2): NÃO feito nesta passada.
 - 360x640; jogador novo; aparelho.
+
+## Rodada 16 — v0.12.6: PACOTE DE PETS ligado (2026-11-12)
+
+Arquivos meus: `index.html` ('pet' antes do 'fc'; `petfx` na lista), `js/petfx.js` (novo), `js/battle.js`, `js/farm.js`, `js/artprev.js`, `sw.js`, `version.json`.
+Por exceção do coordenador, nos arquivos do agente B: `js/panels.js` (`PANEL_ON.pets = true`) e `js/screens.js` (`'p_pets'` na lista de carga, que não estava). Pedido A-16.
+
+Visto (390x844, `?debug=1&fresh=1`):
+- FC sem pet: 1.386 com o módulo carregado e 1.386 sem ele (igual). Com o Mamute filhote: 1.484.
+- Nível 19: ovo ganho fica guardado ("Ovo guardado: choca no nível 20"). Ao chegar no 20 (e na carga com nível 20+): ovo treme, racha, luz, o Mamute salta e pousa atrás do Kael; entra equipado; nome e raridade na faixa de aviso do jogo.
+- Pet na batalha: atrás do Kael, pés no chão, filhote menor que ele; médio e evoluído (folhas `_mid` e `_evo`) trocam ao evoluir; papagaio voando na altura da cabeça com sombra no chão.
+- Golpe: a cada 2,0 s exatos (medido: 16,08 / 18,09 / 20,09); dano 3 com ATK 57 × 0,0235 × 2,5 (regra do módulo).
+- MENU no nível 20: Forja, Pets, Missões, VIP, Config., Teste; Pets abre a tela 17b em tela cheia e fecha.
+- Avisos: guardado antes do 20, portão de raridade ("Ovo de Cão mecânico guardado até você liberar essa raridade"), entradas vazias não avisam nada.
+- Asa demoníaca atrás do Kael correndo e no golpe (pendência da v0.12.5).
+- Prévia, Fase 3 "golpe deslocado": é do ARQUIVO. `assets/anim/hyb/phase3/kael_attack_era2_t1.json` traz `padLeft: 0` numa folha de 448 (as fases 1 e 2 e a do garoto trazem 96). O tocador segue o .json. Para a fps-ff corrigir o .json.
+
+DESEMPENHO (estimativa, PC, aba em primeiro plano, sem limite de CPU; método: contador de quadros por requestAnimationFrame em 20 s + performance.now em volta do draw):
+- com pet (Mamute evoluído): 138,5 quadros/s; desenho 1,11 ms em média (95% até 1,6 ms); memória do JS 65 MB.
+- sem pet: 115,2 quadros/s; desenho 1,17 ms em média (95% até 1,8 ms).
+- A diferença entre as duas medidas é ruído da máquina; o custo do pet no desenho não aparece. Não é medida de celular.
+
+Ajustes feitos durante a conferência: o ovo e o pet ficavam fora da tela à esquerda / em cima do inimigo → passaram para meio corpo atrás do Kael; o intervalo do golpe saía 3 s (somava a animação) → 2 s exatos; o nome do pet caía sobre as barras do Kael → foi para a faixa de aviso.
+
+NÃO testado:
+- Sorteio 79% / 21% (só vi sair Mamute, 2 vezes); Esfinge, Dragão e Cão mecânico na batalha; estágios médio/evoluído de outros pets.
+- Ovo à escolha: o aviso foi chamado por estado; a tela `eggpick` não existe; ao conferir, a tela de Pets estava aberta e não sei se foi o meu aviso ou o painel do agente B que abriu.
+- Cura por onda (nenhum pet de cura equipado); pet com o herói morto; pet durante a ultimate (vi um quadro).
+- Modo dono: botões "Ganhar ovo" e "nível 20" pelo painel (usei as funções direto); save real sem pet (só a conta da FC).
+- Ovo vindo de drop, chefe e baú de verdade.
+- 360x640; jogador novo; aparelho. Troca de era: não ligada (ordem do coordenador).

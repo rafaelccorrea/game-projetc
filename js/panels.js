@@ -10,7 +10,7 @@
    render()  desenha em V (use xFit/xDims + xWrap do screens.js, base de 390 px)
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
-const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,vip:true,era:false,rank:false,inst:false,tower:false,result:false,cfg:true,profile:false,pets:false},window.PANEL_ON||{});
+const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,vip:true,era:false,rank:false,inst:false,tower:false,result:false,cfg:true,profile:false,pets:true},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   add(name,def){ def.name=name; this.defs[name]=def; if(PANEL_ON[name]) this.enable(name); return def; },
@@ -22,6 +22,7 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
     if(d.parent) this.hookClose();
     if(name==='cfg') this.hookCfg();
+    if(name==='pets'&&this.defs.eggpick&&!PANEL_ON.eggpick) this.enable('eggpick');   /* a escolha de ovo (pedido A-15) liga junto com a tela de Pets */
     this.hook(); return true; },
   /* SUBTELA (decisão do PO: Forja é subtela do Equipamento): o Voltar leva à tela-mãe (def.parent), não à batalha. Contorno do pedido B-11:
      enquanto o Screens.close() do index não ler 'parent', ele é envolvido aqui, só quando uma subtela é ligada. */

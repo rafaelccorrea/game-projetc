@@ -92,7 +92,7 @@ nada de fundo sobrando. Conferido pixel a pixel pela fps-e2 (QA abaixo, §8). N�
   `kaia_die_body` · `kaia_pistol_{idle,run,shoot}_era5_t0` + `_body`. Escolha da pasta: `Sys.appearance.sheets(S, host)` → `{dir, prefix, masks}` pelo `S.hero` e pela fase do `Sys.level` (vale para Kael e Kaia).
 - Máscaras da Kaia (12/11): `<pasta>/masks/kaia_<estado>_{head.json, hair.png, mask.png, mask.json}`, mesmo formato do Kael (§5-7; `mask.json.sheet` diz a folha).
   Menina: run/idle/attack; fases: os 8 estados. Botas de aço da adulta/guerreira pintáveis. `e` alto (~130-180) é esperado (rosto diferente da referência).
-  **Pendência:** adulta (`kaia_phase2`) com âncora no quadril em idle, pistol_idle, pistol_shoot e parte de attack/spin/die — em correção pela Arte.
+  QA 12/11: âncoras na cabeça em todas as fases (adulta refeita: y 43-60; na morte acompanha a cabeça até deitada). Tudo pronto para ligar.
 - QA 12/11: pés no chão em todas (242-244). Aceitos (iguais ao Kael aprovado): o arco do golpe e o cano da guerreira passam da borda; espada some 1-2 quadros
   de costas no giro. Observação: a GUERREIRA (fase 3) tem o topo do cabelo encostado em y 0 em todos os quadros — igual ao Kael guerreiro aprovado (12/12).
 

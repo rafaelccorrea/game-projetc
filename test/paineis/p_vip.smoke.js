@@ -25,7 +25,7 @@ const out = [];
 
 // 1) sem VIP: abre no VIP 1, "Sem VIP", seta anterior escondida, sem aura nem moldura animada, texto real de pontos
 g.S.sys = {}; def.onOpen(); def.render(); html = g.V.innerHTML;
-has('Sem VIP'); has('VIP 1'); has('Faltam 1 pontos VIP'.replace('1 pontos', '1 pontos')); has('Comprar VIP'); has('Pagamento em breve');
+has('Sem VIP'); has('VIP 1'); has('Falta 1 ponto VIP'.replace('1 pontos', '1 pontos')); has('Comprar VIP'); has('Pagamento em breve');
 has('data-x="prev"'); assert(/data-x="prev"[^>]*visibility:hidden/.test(html), 'seta anterior escondida no VIP 1');
 not('class="pv-aura"'); not('class="pv-frame"'); not('[VALOR]'); not('PROPOSTA');
 out.push('sem VIP: ok');

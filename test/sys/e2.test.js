@@ -753,4 +753,16 @@ t('aparência: herói Kael/Kaia (S.hero) escolhe o corpo e a pasta das folhas pe
   } finally { L.setV9(v9); }
 });
 
+t('torre com a 17b: andar 100 = ovo Épico À ESCOLHA (Dragão/Papagaio), sem fênix; fragmentos acima do 100 vão para o pet escolhido',()=>{
+  const W=require('../../js/sys/tower.js'), P=require('../../js/sys/pet.js'); const v3=P.DATA.v3; P.DATA.v3=true; P.setV17(true);
+  try{ const S=newS(), h=makeHost({level:100,eraMax:6});
+    const r100=W.rewardsFor(100,h,S); assert.deepStrictEqual(r100.egg,{r:2,source:'tower100',choice:['drake','parrot']}); assert.strictEqual(r100.phoenixFrags,0);
+    let r101=W.rewardsFor(101,h,S); assert.strictEqual(r101.t100Frags,1); assert.strictEqual(r101.t100Pet,''); assert.strictEqual(r101.phoenixFrags,0);
+    const e=P.addEgg(S,h,r100.egg); assert.ok(e.choice,'vira escolha'); const i=P.ensure(S).choices.findIndex(c=>c.source==='tower100');
+    assert.ok(P.chooseEgg(S,h,i,'parrot').ok); assert.strictEqual(W.rewardsFor(101,h,S).t100Pet,'parrot');
+    const f0=P.ensure(S).owned.parrot.frags; if(W.grantRewards){ W.grantRewards(S,h,W.rewardsFor(101,h,S)); assert.strictEqual(P.ensure(S).owned.parrot.frags+P.ensure(S).owned.parrot.stars*0,f0+1,'fragmento no papagaio'); }
+  } finally { P.setV17(false); P.DATA.v3=v3; }
+  assert.deepStrictEqual(W.rewardsFor(100,makeHost()).egg,{r:4,source:'tower100',pet:'phoenix'},'sem a 17b: formato antigo');
+});
+
 console.log(`ok: ${n} testes`);

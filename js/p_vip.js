@@ -85,7 +85,7 @@ function scrVip(){
   const arrow=(a,label,ch,show)=>`<button data-x="${a}" aria-label="${label}" style="width:48px;height:48px;flex:none;border-radius:12px;border:2px solid #6a4a1a;background:#2a1d0f;color:#ffe07a;font-family:'Lilita One',sans-serif;font-size:26px;padding:0;visibility:${show?'visible':'hidden'}" ${show?'':'tabindex="-1" aria-hidden="true"'}>${ch}</button>`;
   const title=cur>=1?'VIP '+cur:'Sem VIP';
   const hasFrame=!!here.frame, hasAura=!!here.aura;
-  const need=P.max?'Você está no nível máximo do Clube VIP.':`Faltam ${kf(P.missing)} pontos VIP em compras. Toda compra conta (diamantes, passe, ofertas).`;
+  const need=P.max?'Você está no nível máximo do Clube VIP.':`${P.missing===1?"Falta 1 ponto VIP":"Faltam "+kf(P.missing)+" pontos VIP"} em compras. Toda compra conta (diamantes, passe, ofertas).`;
   const stage=`<div style="height:196px;flex:none;position:relative;display:flex;gap:10px;padding:0 12px">
       <div style="position:relative;width:168px;flex:none"><div class="${hasFrame?'pv-frame':'pv-frame0'}"><div class="pv-in">
         <div class="pv-rays" style="left:-36px;top:-30px;width:240px;height:240px"></div>

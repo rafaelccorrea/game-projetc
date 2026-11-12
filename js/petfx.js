@@ -6,6 +6,7 @@
    Chave geral: PETS_ON. Desligada, nada disto roda e o Sys.pet fica como veio (portões fechados). */
 const PETS_ON = true;
 const PET_DIR = 'assets/anim/pets/', PET_SCALE = [0.60, 0.74, 0.88];   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
+const PET_BACK = 0.34;   // o pet fica ATRÁS do Kael, meio corpo para a esquerda (o Kael está a ~60 px da borda: mais que isso sai da tela)
 const PETK = { id: null, info: null, base: '', t: 0, atkT: 0, act: null, infoT: 0 };
 const HATCH = { q: [], cur: null, egg: null };
 const petOk = () => PETS_ON && typeof Sys !== 'undefined' && !!Sys.pet;
@@ -31,11 +32,11 @@ function petInfo(){ if (!petOk()) return null; if (B.at - PETK.infoT > 0.5 || !P
   return PETK.info; }
 const petSheet = st => PETK.base ? sheetLoad(PET_DIR + PETK.base + '_' + st, true) : null;
 /* passo da batalha: o pet bate sozinho no inimigo da frente a cada info.interval segundos */
-function petStep(dt){ const I = petInfo(); if (!I || B.deadT > 0 || B.res) return; PETK.t += dt;
+function petStep(dt){ const I = petInfo(); if (!I || B.deadT > 0 || B.res) return; PETK.t += dt; PETK.atkT += dt;   /* o intervalo conta do INÍCIO de um golpe ao início do outro (a animação do golpe não soma) */
   if (PETK.act){ const a = PETK.act; a.t += dt;
     if (!a.done && a.t >= a.hitT){ a.done = true; const e = (a.e && !a.e.dead) ? a.e : target(); if (e) petHit(e, I); }
     if (a.t >= a.dur) PETK.act = null; return; }
-  PETK.atkT += dt; if (PETK.atkT < (I.interval || 2)) return; const e = target(); if (!e || e.x > LW - 10) return;
+  if (PETK.atkT < (I.interval || 2)) return; const e = target(); if (!e || e.x > LW - 10) return;
   PETK.atkT = 0; const sh = petSheet('atk1'), dur = sh && sh.ok ? sh.meta.frames / (sh.meta.fps || 12) : 0.6; PETK.act = { t: 0, dur, hitT: dur * 0.5, e, done: false }; }
 function petHit(e, I){ let st = null, roll = null; try { st = heroStats(); roll = Sys.pet.rollAttack(S, I.id); } catch (er) {}
   const pa = st && st.pet ? st.pet.atk : 0; if (!(pa > 0)) return; const d = st.atk * pa * (I.hitMult || 1) * (roll && roll.mult ? roll.mult : 1); if (!(d > 0)) return;
@@ -51,13 +52,13 @@ function drawPet(){ const I = petInfo(); if (!I || B.res || HATCH.cur) return; c
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
   const k = HS / 256 * (PET_SCALE[Math.max(0, Math.min(2, (I.stage | 0) - 1))] || 0.6), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-  const px = HX - HS * 0.58, fly = I.draw.fly ? HS * (0.42 + 0.03 * Math.sin(B.at * 3)) : 0;
+  const px = HX - HS * PET_BACK, fly = I.draw.fly ? HS * (0.42 + 0.03 * Math.sin(B.at * 3)) : 0;
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, GY + HS * 0.012, HS * (fly ? 0.1 : 0.15), HS * 0.035, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra no chão (quem voa: sombra menor)
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, GY - fly - fy * k, M.w * k, M.h * k); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */
 function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q.shift(); h.t0 = B.at; HATCH.cur = h; snd('claim');
     if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); }
-  const h = HATCH.cur, T = B.at - h.t0, cx = HX + HS * 0.95, gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
+  const h = HATCH.cur, T = B.at - h.t0, cx = HX - HS * PET_BACK, gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
   if (T > 5.2){ HATCH.cur = null; return; }
   const ew = HS * 0.5, eh = eg && eg.naturalWidth ? ew * eg.naturalHeight / eg.naturalWidth : ew * 1.25;
   if (T < 2.4 && eg && eg.complete && eg.naturalWidth){ const sh = T < 1.4 ? Math.sin(T * 22) * 0.05 * (T / 1.4) : Math.sin(T * 40) * 0.1; ctx.save(); ctx.translate(cx, gy); ctx.rotate(sh); ctx.drawImage(eg, -ew / 2, -eh, ew, eh);
@@ -65,12 +66,11 @@ function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length
       [[-0.12, -0.42], [-0.02, -0.6], [0.1, -0.44], [0.2, -0.62], [0.3, -0.5]].slice(0, Math.ceil(p * 5)).forEach(q => ctx.lineTo(q[0] * ew, q[1] * eh)); ctx.stroke(); }
     ctx.restore(); }
   if (T >= 2.1 && T < 3.1){ const p = T - 2.1; drawGlow('#ffffff', cx, gy - eh * 0.5, HS * (0.3 + 1.4 * p), Math.max(0, 1 - p)); drawGlow(col, cx, gy - eh * 0.5, HS * (0.5 + 1.0 * p), Math.max(0, 0.8 - p)); }
-  if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx - (cx - (HX - HS * 0.58)) * (T > 3.6 ? Math.min(1, (T - 3.6) / 1.2) : 0);
+  if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx - (cx - (HX - HS * PET_BACK)) * (T > 3.6 ? Math.min(1, (T - 3.6) / 1.2) : 0);
     if (sh && sh.ok){ const M = sh.meta, k = HS / 256 * PET_SCALE[0], fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
       ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
-    if (T < 4.6){ const a = Math.min(1, (T - 2.4) * 3) * Math.min(1, (4.6 - T) * 3), ty = gy - HS * 1.05; ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';   // nome e raridade
-      ctx.font = `${LILITA() ? '400' : '900'} 17px ${LILITA() ? '"Lilita One",' : ''}system-ui`; ctx.lineWidth = 4; ctx.strokeStyle = '#1a110b'; ctx.strokeText(h.name, cx, ty); ctx.fillStyle = '#fff'; ctx.fillText(h.name, cx, ty);
-      ctx.font = '900 12px Nunito,system-ui'; ctx.lineWidth = 3; ctx.strokeText(RAR[h.r] ? RAR[h.r].n : '', cx, ty + 16); ctx.fillStyle = col; ctx.fillText(RAR[h.r] ? RAR[h.r].n : '', cx, ty + 16); ctx.restore(); } }
+    if (!h.said){ h.said = true; B.banner = { txt: h.name + ' · ' + (RAR[h.r] ? RAR[h.r].n : ''), pill: true, bg: 'rgba(29,22,17,.92)', bd: col, sh: '#0e0a07', t: 0, dur: 2.4, col }; }   // nome e raridade na faixa de aviso do jogo (fora das barras do Kael)
+  }
 }
 /* debug / modo dono: ganhar um ovo agora (raridade opcional) */
 function petGiveEgg(r){ if (!petOk()) return null; let x = null; try { x = Sys.pet.addEgg(S, Sys.host, r != null ? { r, source: 'test' } : { source: 'test' }); } catch (e) { console.error('addEgg', e); } petNotice([x]); if (typeof refreshHero === 'function') refreshHero(); save(); return x; }
