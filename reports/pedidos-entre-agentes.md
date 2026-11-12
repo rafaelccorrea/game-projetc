@@ -177,3 +177,8 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 ### A-11. (agente A, v0.12.2) Mexi em UMA linha do seu js/screens.js, por exceção do coordenador
 - `scrGear`: a `<div class="kidle">` da vitrine virou `<canvas id="gkc">` (268x168, mesmo lugar); quem desenha é `drawHeroPreview` (js/battle.js) com `heroLook()` (index.html): arma do item equipado na mão.
 - Cuidado com nomes globais: `GK` já é seu; o meu estado da prévia chama `HPVW`.
+
+### A-12. (agente A, v0.12.3) Pedidos no seu js/screens.js
+- Compra da Loja (linha do `addItemToBag({slot:o.slot,r:o.r,e:o.e,subs:o.subs})`): acrescentar `origin:'shop'` (o `normItem` já copia o campo).
+- Aba de GEMAS da Loja: esconder até o nível 10. A tabela está em `FB_UNLOCK` (js/fullbattle.js); use `fbUnl('shopgem')`.
+- Passe só no nível 18, mas Missões libera no 2 e abre o seu painel do Passe na aba Missões: esconda a aba de Prêmios enquanto `!fbUnl('pass')`.

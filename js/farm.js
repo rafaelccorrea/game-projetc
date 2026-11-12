@@ -99,7 +99,7 @@ function onLevelUp(lv){
   refreshHero(); snd('upgrade'); vib(40);
   B.banner = { txt: 'Nível ' + lv.to + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };   // "Nível X!" como no canvas
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
-  for (let i = 0; i < 18; i++) emit({ x: HX + (Math.random() - .5) * 50, y: GY - Math.random() * HS * 0.8, vx: (Math.random() - .5) * 40, vy: -60 - Math.random() * 80, g: 0, t: 0, life: .8, col: Math.random() < .5 ? '#6fe3ff' : '#ffffff', sz: 2 + Math.random() * 3, glow: true });
+  B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
   if (view !== 'battle' && typeof softRender === 'function') softRender();
 }
 /* abate na campanha: ouro, XP, gema, item e materiais pelo Sys.loot; carga do baú pelo Sys.chest */

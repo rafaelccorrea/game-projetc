@@ -4,7 +4,7 @@
    fx[] (flow | glow | plume | embers presos a uma camada), roadside fire/critter/vent/sway (era 0 em diante),
    props[] (sprites soltos presos a uma camada, com bob/tilt/kick/flags; era 3 em diante),
    rotors[] (sprites girando presos a uma camada), actors[] (sprites que cruzam a cena com pecas girando), roadside.sameTypeGap e
-   folhas de quadros em objetos da beira, actors com tile/rod/smoke, beira pacer/hopper (era 4 em diante).
+   folhas de quadros em objetos da beira, actors com tile/rod/smoke, beira pacer/hopper (era 4 em diante); slot far de actors, flap com ang em pecas e em rotors (era 5 em diante).
    Quem não está no meta não é desenhado: a era 2 roda exatamente como foi aprovada.
 
    Uso:
@@ -159,14 +159,14 @@
              w (fracao da largura do corpo), period, phase, flap (true = helice vista de lado: achata em cos), back (true = atras do corpo)}]. */
         function spinImg(im, cx, cy, w, ang, sy) { var h = w * im.height / im.width; g.save(); g.translate(cx, cy); g.rotate(ang); if (sy != null) g.scale(1, sy); g.drawImage(im, -w / 2, -h / 2, w, h); g.restore(); }
         function drawRotors(id, front) { if (!M.rotors) return; var L = LAY[id]; M.rotors.forEach(function (R) { if (R.layer !== id || !!R.front !== front) return; var im = sp(R.sprite); if (!im) return;
-            tiles(L, function (i, x, flip, G, k) { if (k !== (R.tile || 0) || !L.imgs[k]) return; var w = R.w * G.w, cx = x + (flip ? 1 - R.x : R.x) * G.w, cy = G.y + R.y * G.h; if (cx < -w || cx > W + w) return; spinImg(im, cx, cy, w, (flip ? -1 : 1) * (PI2 * T / R.period + (R.phase || 0))); }); }); }
+            tiles(L, function (i, x, flip, G, k) { if (k !== (R.tile || 0) || !L.imgs[k]) return; var w = R.w * G.w, cx = x + (flip ? 1 - R.x : R.x) * G.w, cy = G.y + R.y * G.h; if (cx < -w || cx > W + w) return; if (R.flap) spinImg(im, cx, cy, w, R.ang || 0, Math.cos(PI2 * T / R.period + (R.phase || 0))); else spinImg(im, cx, cy, w, (flip ? -1 : 1) * (PI2 * T / R.period + (R.phase || 0))); }); }); }
         function drawActors(slot) { if (!M.actors) return; M.actors.forEach(function (A) { if (A.slot !== slot) return; var im = sp(A.sprite); if (!im) return;
             var w = A.w * SH, h = w * im.height / im.width, x = mod((A.x - scroll * A.parallax - T * A.drift) * SH + w, A.loop * SH) - w, y = A.y * SH + Math.sin(T * (A.bobF || 0) + A.x * 7) * (A.bob || 0) * SH; if (x > W || x + w < 0) return;
             if (A.tile) { for (var xx = x; xx < W; xx += A.loop * SH) g.drawImage(im, xx, y, w + 0.6, h); return; }   /* tile: faixa repetida a cada loop (ex.: trilho sob o trem; era 4 em diante) */
             function part(P) { var a = PI2 * T / P.period + (P.phase || 0);
               if (P.rod) { var rx = Math.cos(a) * P.r * w, ry = Math.sin(a) * P.r * w, ax = x + P.x * w + rx, ay = y + P.y * h + ry, bx = x + P.x2 * w + rx, by = y + P.y2 * h + (P.slide ? 0 : ry);   /* rod: haste entre dois pinos de manivela (ou ate a cruzeta, slide), em fase com as rodas */
                 g.save(); g.lineCap = 'round'; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.strokeStyle = P.dark || '#231a1c'; g.lineWidth = P.w * w * 1.9; g.stroke(); g.strokeStyle = P.light || '#a39aa1'; g.lineWidth = P.w * w; g.stroke(); g.restore(); return; }
-              var pi = sp(P.sprite); if (!pi) return; if (P.flap) spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, 0, Math.cos(a)); else spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, a); }
+              var pi = sp(P.sprite); if (!pi) return; if (P.flap) spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, P.ang || 0, Math.cos(a)); else spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, a); }
             (A.parts || []).forEach(function (P) { if (P.back) part(P); }); g.drawImage(im, x, y, w, h); (A.parts || []).forEach(function (P) { if (!P.back) part(P); });
             (A.smoke || []).forEach(function (P) { plume(P, x + P.x * w, y + P.y * h, 5); }); }); }   /* smoke: plumes presos ao corpo (wind negativo = fica para tras) */
 
@@ -265,7 +265,7 @@
           g.setTransform(DPR, 0, 0, DPR, 0, 0); g.imageSmoothingQuality = 'high';
           drawBackdrop();
           drawLayer(LAY.sky); drawClouds(); drawActors('sky'); drawBirds();
-          if (LAY.far.imgs[0]) { drawProps('far', false); drawLayer(LAY.far); drawProps('far', true); drawRotors('far', true); g.fillStyle = M.farFill.color; g.fillRect(0, LAY.far.bottom * SH - 1, W, (LAY.ground.top - LAY.far.bottom) * SH + 3); drawFx('far'); drawHaze(); drawFog(M.fog[0]); }
+          if (LAY.far.imgs[0]) { drawProps('far', false); drawLayer(LAY.far); drawActors('far'); drawProps('far', true); drawRotors('far', true); g.fillStyle = M.farFill.color; g.fillRect(0, LAY.far.bottom * SH - 1, W, (LAY.ground.top - LAY.far.bottom) * SH + 3); drawFx('far'); drawHaze(); drawFog(M.fog[0]); }
           drawRays();
           drawMill(); drawActors('mid'); drawRotors('mid', false); drawProps('mid', false); drawLayer(LAY.mid); drawProps('mid', true); drawTowerFlags(); drawForge(); drawSmoke(); drawFx('mid'); if (LAY.far.imgs[0]) drawFog(M.fog[1]);
           drawProps('ground', false); drawLayer(LAY.ground); drawProps('ground', true); drawDecals(); drawRoadside();

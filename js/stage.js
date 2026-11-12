@@ -82,6 +82,7 @@ function neckRows(s){
 }
 function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p, sheetLoad(set.idle).p, sheetLoad(set.attack).p];
   const ws = heroLook().weapon, sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
+  { const pe = pistolEra(ws); if (pe >= 0) for (const st of ['idle', 'run', 'shoot']) out.push(pistolSheet(pe, st).p); }
   { const tb = ws && trailBase(ws); if (tb) out.push(sheetLoad(tb, true).p); }
   const au = auraBase(); if (au) out.push(sheetLoad(au, true).p);
   return out; }
@@ -128,6 +129,9 @@ function atkFrame(a, gun, K){
   return K.strike[K.strike.length - 1];
 }
 
+/* pistola ainda carregando (só no primeiro instante do jogo: depois o wSkin segura a arma anterior): Kael parado da folha do corpo, sem a pose de tiro antiga */
+function drawHeroPistolWait(H){ const sh = SHEET(heroSet(H.sk.e).idle); if (!sh) return true; const M = sh.meta, k = HS / M.w, fi = Math.floor(H.t * (M.fps || 12)) % M.frames;
+  ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore(); return true; }
 const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; const HFLx = HFL.getContext('2d');
 /* H: {x,gy,t,sk,ws,walking,hurt,deadP,act,main}. Devolve false se as folhas ainda não carregaram (cai no sprite antigo). */
 /* KAEL EM FOLHA COMPOSTA (decisão do PO): com a skin de ROUPA e a de ARMA da era 2 no MESMO tier, a batalha usa a folha aprovada
@@ -139,7 +143,46 @@ function heroCompTier(sk, ws){ if (!sk || !ws || sk.e !== 2 || ws.e !== 2) retur
    feetY 243): a de 256 cortava a arma em alguns quadros. Parado e corrida continuam nas de 256. */
 const HERO_WIDE_PAD = 96, HERO_WIDE_W = 448;
 const heroCompImg = (st, t) => IMG(HERO_DIR + 'kael_' + (st === 'attack' ? 'attack_wide' : st) + '_era2_t' + t + '.png');
+/* PISTOLA APROVADA (v0.12.3): com arma de fogo (regra heroLook) nas eras 3, 5 e 6 o Kael usa as folhas assets/anim/hyb/R/pistol/kael_pistol_<idle|run|shoot>_era<E>_t0
+   (448x256, padLeft 96, pés em feetY do .json; a pistola da era já vem pintada no quadro; grip[quadro] = {hand, ang, muzzle, shot}; shots = quadros do disparo).
+   A pose de tiro antiga (corpo + arma girada por código) SAIU. Era 4: só com ART_ON.pistol_era4 (desligada): sem ela o wIsGun devolve false e vale a espada. */
+const PISTOL_DIR = 'assets/anim/hyb/R/pistol/', PISTOL_ERAS = { 3: 1, 5: 1, 6: 1 };
+const pistolEra = ws => (ws && wIsGun(ws) && (PISTOL_ERAS[ws.e] || (ws.e === 4 && ART_ON.pistol_era4 === true))) ? ws.e : -1;
+const pistolSheet = (e, st) => sheetLoad(PISTOL_DIR + 'kael_pistol_' + st + '_era' + e + '_t0', true);
+function pistolReady(e){ let ok = true; for (const st of ['idle', 'run', 'shoot']) if (!pistolSheet(e, st).ok) ok = false; return ok; }
+function drawHeroPistol(H, E){
+  const a = H.deadP >= 0 ? null : H.act, st = a ? 'shoot' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = pistolSheet(E, st); if (!pistolReady(E)) return false;
+  const M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fps = M.fps || 12, t = H.t; let fi;
+  if (a){ const s0 = (M.shots && M.shots.length) ? M.shots[0] : 3, s1 = (M.shots && M.shots.length > 1) ? M.shots[1] : n; let last = -1; for (const h of a.hits) if (a.t >= h.t) last = Math.max(last, h.t);
+    /* o quadro do disparo ("shot") cai EXATAMENTE no instante do tiro; antes dele, a preparação; depois, o coice e a volta (a cada tiro recomeça) */
+    if (last < 0){ const h0 = a.hits.length ? a.hits[0].t : 0.1; fi = Math.min(s0 - 1, Math.floor(s0 * a.t / Math.max(0.001, h0))); }
+    else fi = Math.min(s1 - 1, s0 + Math.floor((a.t - last) * fps * 2)); }
+  else fi = Math.floor(t * fps) % n;
+  if (!(fi >= 0 && fi < n)) fi = 0;
+  const G = M.grip[fi] || M.grip[0], k = HS / 256, gy = H.gy, fy = typeof M.feetY === 'number' ? M.feetY : 243;
+  const P = PZ; P.dx = P.dy = P.rot = P.rec = P.flash = P.trail = 0; P.sx = P.sy = 1; P.wang = 0;
+  let ox = H.x, alpha = 1, rot = 0;
+  if (H.hurt > 0 && H.deadP < 0) ox += (Math.random() - .5) * 3;
+  if (H.deadP >= 0){ const p = H.deadP; rot = -1.45 * Math.min(1, p * 3.2); ox -= Math.min(1, p * 3) * 14; alpha = p > .55 ? Math.max(0.1, 1 - (p - .55) / .45) : 1; }
+  ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
+  if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
+  ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
+  if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, 0, -HS * .45, HS * (0.5 + 0.2 * Math.min(1, a.t)), 0.5 + 0.2 * Math.sin(t * 20));
+  ctx.translate(-HS / 2 - pad * k, -fy * k); ctx.scale(k, k);          // espaço do quadro largo (0..448); a célula de 256 começa em padLeft
+  ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const mz = G.muzzle || { x: pad + 220, y: 110 };
+  if (a){ const fl = shotEnv(a, 0.09); if (fl > 0){ const c0 = a.col && a.col !== '#ffffff' ? a.col : '#ffd45a', r = 22 + 14 * fl, L = r * (0.9 + 1.1 * fl), ang = -(G.ang || 0) * Math.PI / 180;   // clarão SAINDO DO CANO, no quadro do disparo
+      ctx.save(); ctx.translate(mz.x, mz.y); ctx.rotate(ang); drawGlow(c0, 5, 0, r, fl); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = alpha * fl;
+      [[0, 1.5], [-0.45, 0.8], [0.45, 0.8]].forEach((q, i) => { ctx.fillStyle = i ? c0 : '#ffffff'; ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(Math.cos(q[0]) * L * q[1], Math.sin(q[0]) * L * q[1]); ctx.lineTo(0, 3); ctx.fill(); }); ctx.restore(); } }
+  if (H.hurt > 0 && H.deadP < 0){ HFLx.globalCompositeOperation = 'source-over'; HFLx.clearRect(0, 0, 256, 256); HFLx.drawImage(sh.img, fi * FW + pad, 0, 256, FH, 0, 0, 256, 256); HFLx.globalCompositeOperation = 'source-atop'; HFLx.fillStyle = '#ff3030'; HFLx.fillRect(0, 0, 256, 256);
+    ctx.globalAlpha = alpha * Math.min(1, H.hurt / 0.15 * 0.65); ctx.drawImage(HFL, pad, 0, 256, FH); }
+  ctx.restore();
+  if (H.main){ B.tipW = { x: ox - HS / 2 + (mz.x - pad) * k, y: gy - fy * k + mz.y * k };
+    if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 0.62, B.tipW.x + 3)); B.reach += (rc - B.reach) * 0.2; } }
+  return true;
+}
 function drawHeroAnim(H){
+  { const pe = pistolEra(H.ws); if (pe >= 0) return drawHeroPistol(H, pe) || drawHeroPistolWait(H); }
   if (H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);
   const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;
   const st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle';

@@ -79,8 +79,9 @@ Legenda: `[x]` feito · `[ ]` falta · `[~]` em andamento
 - [~] Guildas: troca de itens entre membros, Torneio do Poder por territórios no mapa das eras, ranking de guildas, chefe da guilda, loja, bênçãos, doações e missões. Regras e protótipos em produção (depende do servidor).
 - [~] Equipar a ARMA muda a arma na mão do Kael (prévia e batalha), na 0.12.2
 - [~] Aparência em camadas (sua decisão): roupa base + chapéu, colete, botas e cosméticos (óculos, máscara) por cima, sem combinações; modo Itens ou Skin, e ocultar peça por peça (só visual). Arte e protótipo em produção.
-- [~] Tabela de liberação por nível de todas as funções (eventos, arena, guilda, torneio, leilão etc.) sendo montada
-- [ ] FUTURO (depois do lançamento): Bênção de equipamento: só itens Míticos; até 5 gemas cravejadas na borda do item, cada uma de um tipo (dano, armadura, defesa...). As "bênçãos" da guilda vão mudar de nome para não confundir.
+- [x] Menu e ícones: cada função fica oculta até o nível de liberação; quando libera, aparece com animação de "NOVO!" e um balão explicando
+- [x] Liberação por nível (reports/liberacao-por-nivel.md), uma novidade por nível: dia 1 missões (2), invocar (3), práticas (5), correio/login (7), perfil e loja (10), forja (12), instâncias (14), torre (15); passe (18) e pets (20) no dia 2; EVENTOS no 24 (dia 3); ARENA e ranking no 28 (dia 4-5); guilda no 32 (dia 6); montaria 38; Torneio do Poder 40; leilão 45 (18+); asa 50
+- [ ] FUTURO (depois do lançamento): Bênção de equipamento: só itens Míticos; até 5 gemas cravejadas na borda do item, cada uma de um tipo (dano, armadura, defesa...). Na guilda, as "bênçãos" passaram a se chamar Estandartes da guilda.
 - [x] Transformação de item: paga ouro + Essência da Era, e o item antigo vira da era atual com a mesma raridade e o mesmo visual (nível volta ao 1).
 
 ## 2. Arte (página de aprovação)
@@ -198,6 +199,7 @@ Conferido no banco da página em 12/11/2026: **220 itens aprovados, 27 reprovado
 
 ## 8. O que eu preciso de você
 
+- [ ] URGENTE: liberar espaço no disco C: (está com menos de 1 GB; o app do celular não compila sem ~1 GB livre). Ideal: 20 GB. Sugestões: esvaziar a Lixeira, ver a pasta Vídeos (3,2 GB), Downloads, programas que não usa, e o arquivo temporário C:\Users\rafae\AppData\Local\Temp\77aff2e7-ca58-4163-a9f7-5e36c91716eb.tmp (188 MB).
 - [ ] Página de aprovação: referências do Submundo e do Celestial, os 5 pets e a Kaia sem fundo verde (aba "Antes × Depois (V2)" mostra o reprovado ao lado do novo)
 - [ ] Canvas: votar a 04b Batalha em tela cheia
 - [ ] Fechar à mão a aba "CALIBRACAO - NAO USAR NEM FECHAR" no Chrome

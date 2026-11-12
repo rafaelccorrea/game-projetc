@@ -602,3 +602,51 @@ NÃO CONSEGUI VER / LIMITES
 - Arte vestível: para chapéu, colete e botas só existem ÍCONES (`assets/icons/slots`); em `assets/hero` há 31 arquivos `era<N>_t<tier>.png`
   (corpo inteiro por era/tier da skin) e `anchors.json`; em `assets/weapons`, 27 PNG `era<N>_t<tier>.png` + `meta.json` (âncora da mão).
   Não há sprite por peça de elmo/colete/botas.
+
+## Bloco 12 (para a v0.12.3): liberação por nível nas minhas telas. Escrito e ligado, NÃO visto rodando
+
+Regra do dono: o que não está liberado fica OCULTO (nem cadeado). Um lugar só em `js/screens.js`: `xUnlocked(id)` / `xUnlockLv(id)`.
+Fonte: `Sys.level.DATA.unlock[id]` quando o módulo tem a chave (practice 5, forge 12, instances 14, tower 15); para os ids que o módulo
+ainda NÃO tem, tabela minha `X_UNLOCK` (gemShop 10, pass 18, pet 20). `pet` usa a tabela porque no módulo vale 1 enquanto a chave v20 está
+desligada. Chave para desligar a regra inteira: `PANEL_V2.gate = false`.
+
+| Onde | Antes do nível | O que acontece |
+|---|---|---|
+| Equipamento: medalha do Progresso | 5 | não aparece (Práticas E Títulos ficam sem entrada até o 5) |
+| Equipamento: botão "Forja" | 12 | não aparece (e a tela da Forja continua desligada por chave) |
+| Equipamento: cartão da skin | 10 | aparece, mas o toque não leva à Loja de skins |
+| Loja: abas "Skins herói", "Skins arma" e "Gemas" | 10 | a barra de abas some; a Loja mostra só "Itens (ouro)"; a faixa verde diz "Itens do dia: compra direta em ouro, sem sorteio..."; o "+" das gemas do cabeçalho cai nos Itens |
+| Loja: botão "Ganhe no Passe" (prévia de skin do passe) | 18 | não leva ao Passe |
+
+Interpretação minha, a confirmar: a ordem dizia "aba de GEMAS só no nível 10 (antes disso a Loja mostra só o que se compra com ouro)".
+Como as SKINS se compram com gemas, escondi também as duas abas de skins antes do 10. Se a intenção era esconder só a aba Gemas, é uma
+linha. O botão VIP da faixa continua visível (a tabela diz "VIP: compra a qualquer hora").
+Não há atalho para Pets, Instâncias ou Torre dentro dos meus painéis ligados. As missões do Passe com botão "Ir" levam à batalha, ao
+Invocar ou ao Equipamento (liberados desde o início; Invocar no nível 3 é do MENU do agente A).
+Não desfiz a linha do agente A (canvas `gkc` na vitrine, pedido A-11): conferi que continua lá.
+Testes: `node --check`; fumaça 62 passos / 0 falhas em 390x788 e 360x584 (save novo, nível 1: a Loja desenha só Itens).
+
+## Bloco 13 (v0.12.3): pedidos do agente A + liberação por nível, CONFERIDOS NO NAVEGADOR (aba fechada)
+
+Prints: `reports/prints/v0123_painel_missoes_nv2_360x640.png`, `..._equip_pistola_360x640.png`, `..._loja_nv1_360x640.png`.
+Conferido em 360x640 com ponteiro real e medidas por script; em 390x844 só as alturas (nenhuma tela estoura: 713/713 e 788/788) e o
+console (sem erro). Nível trocado por depuração (1, 2, 5, 10, 12, 18).
+
+Feito nesta passada
+- A-12 (a): a compra de item da Loja grava `origin:'shop'` (comprei um item no navegador: `origin` = "shop", ouro descontado, cartão "Comprado").
+- A-12 / Missões no nível 2: antes do nível do Passe o painel abre só em MISSÕES: sem o cartão da temporada, sem a barra
+  Recompensas/Missões, sem "Ativar Premium", sem a nota do XP do passe; o título do cabeçalho fica "Missões". No 18 volta o Passe completo
+  (conferido: cartão, abas e "Ativar Premium" de volta, título "Passe"). Missão que só dá XP do passe mostra "(o Passe abre no nível 18)".
+- A liberação agora lê a tabela do agente A (`fbUnl` / `FB_UNLOCK`) quando ela existe, para o MENU e os painéis nunca divergirem;
+  a minha tabela fica só de reserva.
+- Corrigi um erro meu achado na conferência: o "ocultar" do cartão e das abas do Passe não valia (o `display:flex` do mesmo estilo
+  ganhava); agora vale.
+- Cartão da skin em tela estreita: letra menor para não cortar (não revi depois da mudança).
+
+Visto
+- Nível 1: sem medalha do Progresso, sem Forja; cartão da skin não leva à Loja; Loja só com "Estoque do dia" (6 itens em ouro), sem abas.
+- Nível 5: medalha do Progresso aparece. Nível 10: abas da Loja (skins e gemas) aparecem e o cartão da skin leva à Loja.
+- Nível 12: botão Forja continua oculto (a tela da Forja está desligada por chave: esperado).
+- Vitrine do Kael com a arma do item: equipei um Arcabuz (era 3) e a pistola apareceu na mão (canvas do agente A).
+
+Não desliguei nada. Não visto: toque de dedo real; o voo do "Equipar melhor" em 390x844; resgates do Passe.

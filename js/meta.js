@@ -99,9 +99,12 @@ const TUT=[
   {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#fb_s2b', ok:true},
   {txt:()=>view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
    sel:()=>view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
-  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull'},
   {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#fb_s3b', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
+  /* v0.12.3 (liberação por nível): Invocar só existe a partir do nível 3. O passo fica por último e ESPERA o nível (when); até lá o tutorial some da tela */
+  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull',
+   when:()=>typeof fbUnl!=='function'||fbUnl('summon'), pre:()=>{ if(!S.unl||typeof S.unl!=='object') S.unl={}; S.unl.summon=1; }},
 ];
+let tutWait=false;   // true = o passo atual espera uma condição (when); o balão e o anel ficam escondidos
 let tutT=null;
 const tutOn = () => S.tut<99 && tutT!==null;
 /* a arma equipada já está no teto (nível do jogador)? Então o passo "Upar" vira aviso com "Entendi" (o jogador novo começa no nível 1) */
@@ -119,6 +122,8 @@ function endTut(skip){
 }
 function tutShow(){
   const st=TUT[S.tut]; if(!st){ endTut(false); return; }
+  if(st.when&&!st.when()){ tutWait=true; document.getElementById('tut').style.display='none'; return; }
+  if(tutWait){ tutWait=false; document.getElementById('tut').style.display='block'; if(typeof fbLayout==='function') fbLayout(); }
   if(st.pre) st.pre();
   if(S.tut===1) B.cd2=0;
   const b=document.querySelector('#tut .tbub');
@@ -131,6 +136,7 @@ function tutShow(){
 }
 function tutLayout(){
   if(!tutOn()) return; const st=TUT[S.tut]; if(!st) return;
+  if(tutWait){ if(!st.when||st.when()){ if(view==='battle'&&!B.paused) tutShow(); } return; }
   const b=document.querySelector('#tut .tbub'), r=document.querySelector('#tut .tring');
   if(b.dataset.k!==S.tut+'|'+st.sel()+'|'+(st.okIf?st.okIf():'')){ tutShow(); return; }
   if(S.tut===1&&B.cd2>0&&!(B.act&&B.act.type==='s2')) B.cd2=0;

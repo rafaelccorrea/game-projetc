@@ -13,7 +13,7 @@ const BAG_MAX=60, FULL_VIEWS={gear:1,summon:1,shop:1,pass:1,prog:1};
           e sobra fica antes das ações de baixo. Desligada, volta o arranjo anterior (escala pela base de 390 + xFit).
    frame = CONTORNO COMUM em tela cheia (cabeçalho + VOLTAR + conteúdo, sem folha e sem barra de baixo): ver xHead/xWrap. Desligada até ser vista no navegador.
    equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true},window.PANEL_V2||{});
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true},window.PANEL_V2||{});
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
 const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
 const kf=v=>{ v=Math.max(0,v||0); const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
@@ -254,6 +254,13 @@ function xHeadTick(){ if(!xFrameOn()) return; const a=document.getElementById('x
 const X_CHEV=d=>`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="${d<0?'15 18 9 12 15 6':'9 18 15 12 9 6'}"></polyline></svg>`;
 function xPager(act,pg,pages,sub,prevLb,nextLb){ const b=(d,on,lb)=>`<button data-x="${act}" data-d="${d}" aria-label="${lb}" ${on?'':'disabled aria-disabled="true"'} style="width:44px;height:44px;flex:none;border-radius:50%;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center;opacity:${on?1:.3}">${X_CHEV(d)}</button>`;
   return `<div style="min-height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:14px">${b(-1,pg>0,prevLb||'Página anterior')}<span style="display:flex;flex-direction:column;align-items:center;line-height:1.15;min-width:60px"><span class="lil" role="status" aria-label="Página ${pg+1} de ${pages}" style="font-size:17px">${pg+1}/${pages}</span>${sub?`<span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">${sub}</span>`:''}</span>${b(1,pg<pages-1,nextLb||'Próxima página')}</div>`; }
+/* LIBERAÇÃO POR NÍVEL (reports/liberacao-por-nivel.md): nas telas, o que ainda não liberou NÃO APARECE (nem cadeado).
+   Fonte: Sys.level.DATA.unlock[id] quando o módulo tem a chave; senão esta tabela (ids que o módulo ainda não tem: trocar aqui = trocar 1 número).
+   'pet' usa a tabela (20) porque no módulo ele ainda vale 1 enquanto a chave v20 está desligada. PANEL_V2.gate=false desliga a regra inteira. */
+const X_UNLOCK={gemShop:10,pass:18,pet:20,practice:5,forge:12,instances:14,tower:15};
+function xUnlockLv(id){ try{ const U=Sys.level.DATA.unlock; if(id!=='pet'&&U&&typeof U[id]==='number') return U[id]; }catch(e){} return X_UNLOCK[id]||1; }
+const X_FBID={gemShop:'shopgem',pass:'pass',practice:'practice',forge:'forge',instances:'inst',tower:'tower',pet:'pets'};   /* mesmos níveis do MENU: tabela FB_UNLOCK do agente A (js/fullbattle.js) */
+function xUnlocked(id){ if(PANEL_V2.gate===false) return true; try{ if(typeof fbUnl==='function'&&X_FBID[id]) return !!fbUnl(X_FBID[id]); return plv()>=xUnlockLv(id); }catch(e){ return true; } }
 function xReal(){ const W=V.clientWidth||390, Hp=V.clientHeight||704, Wb=Math.min(W,600); return {s:1,H:Hp,ox:(W-Wb)/2,Wb,full:true,real:true}; }
 function xDims(minH){ if(PANEL_V2.real&&!xFrameOn()) return xReal(); const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), s=Math.min(W/390,Hp/(minH+hh)); return {s,H:Hp/s-hh,ox:(W-390*s)/2,Wb:W/s}; }
 /* arranjo COMPLETO do protótipo (fullH, na base de 390) sempre que couber encolhendo até 14% além da largura; senão o arranjo curto (minH), com menos linhas.
@@ -370,7 +377,7 @@ function scrGear(){
             <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
         <button data-x="goskins" aria-label="Skin equipada e coleção de skins: ir para a loja" style="width:${d.real?(d.Wb<380?168:204):168}px;flex:none;display:flex;align-items:center;gap:6px;padding:0 6px;border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
           <span style="position:relative;width:34px;height:34px;flex:none;border-radius:9px;background:#1d1611;overflow:hidden"><span class="kidle ${tier?'t'+tier:''}" style="position:absolute;left:-12px;top:-4px;width:58px;height:58px;display:block"></span></span>
-          <span style="display:flex;flex-direction:column;line-height:1.15;min-width:0"><span style="font-size:11px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
+          <span style="display:flex;flex-direction:column;line-height:1.15;min-width:0"><span style="font-size:${d.Wb<380?9.5:11}px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
             <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span></button>
       </div>
       <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:5px">${stats}</div>
@@ -380,8 +387,8 @@ function scrGear(){
         <div style="flex:1;display:flex;flex-direction:column;line-height:1.1;min-width:0;overflow:hidden"><span class="lil" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${XG.filter==='all'?'Todos os itens':'Itens: '+SLOT[XG.filter].n}</span>
           <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mochila ${S.inv.length}/${BAG_MAX}${d.real&&PANEL_V2.equipDrag?' · arraste o item até o espaço':''}</span></div>
         ${XG.filter!=='all'?'<button data-x="all" style="height:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:12px;font-weight:900;flex:none">Ver todos</button>':''}
-        <button data-x="prog" ${SCREENS_ON.progress?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:44px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
-        ${window.Panels&&Panels.on('forge')?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
+        <button data-x="prog" ${SCREENS_ON.progress&&xUnlocked('practice')?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:44px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
+        ${window.Panels&&Panels.on('forge')&&xUnlocked('forge')?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
         ${d.real?'':best.n>0?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" style="height:40px;padding:0 12px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>`
           :'<button class="lil x-bestoff" data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: você já está com o melhor" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#2a211a;color:#9c8d7a;font-size:12px;line-height:1.05;flex:none;text-align:center">Já está com <br>o melhor</button>'}
       </div>
@@ -480,9 +487,9 @@ function gClick(b){
   else if(a==='wing'){ snd('ui_tap'); gToast(`Asa: libera no nível ${Sys.stats.DATA.wing.minLevel} (você está no ${lv})`); }
   else if(a==='all'){ snd('ui_tap'); XG.filter='all'; XG.page=0; XG.anim=true; render(); }
   else if(a==='pg'){ const p=XG.page+(+b.dataset.d); if(p>=0&&p<(XG.pages||1)){ snd('ui_tap'); XG.page=p; XG.anim=true; render(); } }
-  else if(a==='prog'){ snd('ui_tap'); Screens.open('progress'); }
-  else if(a==='forge'){ snd('ui_tap'); if(window.Panels) Panels.open('forge'); }
-  else if(a==='goskins'){ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
+  else if(a==='prog'){ if(!xUnlocked('practice')) return; snd('ui_tap'); Screens.open('progress'); }
+  else if(a==='forge'){ if(!xUnlocked('forge')) return; snd('ui_tap'); if(window.Panels) Panels.open('forge'); }
+  else if(a==='goskins'){ if(!xUnlocked('gemShop')) return;   /* loja de skins (gemas) só no nível 10 */ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
   else if(a==='cell'){ snd('ui_tap'); const x=itemOf(+b.dataset.id); if(x){ delete x.nw; XG.sel=x.id; XG.sheetIn=true; render(); XG.sheetIn=false; if(typeof tutEvent==='function') tutEvent('view'); } }
   else if(a==='close'){ snd('ui_tap'); XG.sel=null; render(); }
   else if(a==='best'){ const bst=gBest(); if(!bst.n){ snd('ui_tap'); gToast('Já está com o melhor'); return; }
@@ -623,6 +630,7 @@ function hFeat(tab){ const slot=tab==='weapon'?'weapon':'armor', L=hList(tab); e
 function hToast(txt){ const el=document.getElementById('xh_toast'); if(el) el.innerHTML=`<div style="position:absolute;left:24px;right:24px;bottom:16px;z-index:40;display:flex;justify-content:center;pointer-events:none"><span class="x-stoast" role="status" style="padding:10px 16px;border-radius:12px;background:#12261a;border:2px solid #5fd068;color:#e6fbe7;font-size:14px;font-weight:900;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.6)">${esc2(txt)}</span></div>`; }
 function scrShop(){
   ensureShop(); if(XH.tab==='col'&&!PANEL_V2.shopCol) XH.tab='hero';
+  const gemOk=xUnlocked('gemShop'); if(!gemOk&&SHOP_ITEMS_TAB&&XH.tab!=='item'){ XH.tab='item'; XH.sel=null; XH.cf=null; }
   const tab=XH.tab, skinTab=tab==='hero'||tab==='weapon', d=skinTab?xFit(684,532):xDims(tab==='item'?568:532), H=d.H, rows=skinTab?(d.real?2:(d.full?2+Math.min(1,Math.max(0,Math.floor((H-684)/158))):1)):2, PER=rows*3, SK=Sys.skin.DATA;
   const tb=(k,lb,fl,extra)=>{ const on=tab===k; return `<button role="tab" aria-selected="${on}" data-x="tab" data-t="${k}" class="lil" style="flex:${fl};border-radius:12px;border:2px solid ${on?'#ffc94a':'#4a3a2b'};background:${on?'linear-gradient(180deg,#ffe07a,#f2a826)':'#33271d'};color:${on?'#2a1403':'#c9b9a2'};font-size:13px;line-height:1.05;padding:0;display:flex;align-items:center;justify-content:center;gap:3px">${extra||''}<span>${lb}</span></button>`; };
   let body='';
@@ -697,9 +705,9 @@ function scrShop(){
       <div style="height:44px;flex:none;display:flex;gap:6px">
         <div class="x-rulep ${XH.anim?'x-rule':''}" role="note" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:10px;background:#12261a;border:1px solid #2f6b36;color:#c8f5cb;font-size:11px;font-weight:900;line-height:1.2;box-sizing:border-box">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="8.5 12 11 14.5 15.5 9.5"></polyline></svg>
-        <span>Skins dão bônus: +${SK.equippedPct[0]}% a +${SK.equippedPct[SK.equippedPct.length-1]}% de ATK e HP pela raridade, e cada skin da coleção soma +${String(SK.collectionPer).replace('.',',')}%</span></div>
+        <span>${gemOk?'':'Itens do dia: compra direta em ouro, sem sorteio. Você vê o item inteiro antes de pagar.</span><span hidden>'}Skins dão bônus: +${SK.equippedPct[0]}% a +${SK.equippedPct[SK.equippedPct.length-1]}% de ATK e HP pela raridade, e cada skin da coleção soma +${String(SK.collectionPer).replace('.',',')}%</span></div>
         <button data-x="vip" class="x-gold x-cta" aria-label="Clube VIP" style="width:64px;flex:none;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;padding:0"><svg width="20" height="16" viewBox="0 0 24 18" fill="currentColor" aria-hidden="true"><path d="M2 16 L4 4 L9 9 L12 1 L15 9 L20 4 L22 16 Z"></path></svg><span class="lil" style="font-size:16px">VIP</span></button></div>
-      <div role="tablist" aria-label="Seções da loja" style="height:44px;flex:none;display:flex;gap:4px">${tb('hero','Skins<br>herói',1)}${tb('weapon','Skins<br>arma',1)}${SHOP_ITEMS_TAB?tb('item','Itens<br>(ouro)',1.1,'<img src="assets/ui/coin.png" alt="" style="width:20px;height:20px;object-fit:contain">'):''}${tb('gem','Gemas',0.9,'<img src="assets/ui/gem.png" alt="" style="width:20px;height:20px;object-fit:contain">')}${PANEL_V2.shopCol?tb('col','Coleção',0.9):''}</div>
+      <div role="tablist" aria-label="Seções da loja" style="height:44px;flex:none;display:${gemOk?'flex':'none'};gap:4px">${tb('hero','Skins<br>herói',1)}${tb('weapon','Skins<br>arma',1)}${SHOP_ITEMS_TAB?tb('item','Itens<br>(ouro)',1.1,'<img src="assets/ui/coin.png" alt="" style="width:20px;height:20px;object-fit:contain">'):''}${tb('gem','Gemas',0.9,'<img src="assets/ui/gem.png" alt="" style="width:20px;height:20px;object-fit:contain">')}${PANEL_V2.shopCol?tb('col','Coleção',0.9):''}</div>
       ${body}<div id="xh_toast"></div></div>${XH.sel?hPreview():''}${XH.cf?hConfirm():''}`);
   XH.anim=false;
   if(tab==='col'){ const el=document.getElementById('xh_col'); if(el) renderSkins(el,Math.max(300,H-112)); }
@@ -741,7 +749,7 @@ function hConfirm(){ const cf=XH.cf; let name='', cost=0, have=0, coin=false, li
       <div style="display:flex;gap:8px"><button data-x="cfno" class="lil" style="flex:1;height:50px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:18px;padding:0">Cancelar</button>
         ${ok?'<button class="x-gold lil" data-x="cfyes" style="flex:1.3;height:50px;border-radius:14px;font-size:18px;padding:0">Confirmar</button>':coin?'':'<button class="x-green lil" data-x="gogems" style="flex:1.3;height:50px;border-radius:14px;font-size:18px;padding:0">Ver gemas</button>'}</div></div></div>`; }
 function hClick(b){ const a=b.dataset.x;
-  if(a==='tab'){ snd('ui_tap'); XH.tab=b.dataset.t; XH.anim=true; render(); }
+  if(a==='tab'){ if(b.dataset.t!=='item'&&!xUnlocked('gemShop')) return; snd('ui_tap'); XH.tab=b.dataset.t; XH.anim=true; render(); }
   else if(a==='pg'){ const k=XH.tab, p=XH.page[k]+(+b.dataset.d); if(p>=0&&p<(XH.pages||1)){ snd('ui_tap'); XH.page[k]=p; XH.anim=true; render(); } }
   else if(a==='skin'){ snd('ui_tap'); XH.sel=b.dataset.id; XH.cf=null; XH.burst=false; XH.popIn=true; render(); XH.popIn=false; }
   else if(a==='pvclose'){ snd('ui_tap'); XH.sel=null; XH.cf=null; render(); }
@@ -749,14 +757,14 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='offer'){ const o=S.shop.offers[+b.dataset.i]; snd('ui_tap'); if(!o||o.sold){ hToast('Já comprado hoje. Repõe à meia-noite'); return; } if(S.gold<o.price){ hToast(needMsg('gold',o.price)); return; } XH.cf={kind:'item',i:+b.dataset.i}; render(); }
   else if(a==='cfno'){ snd('ui_tap'); XH.cf=null; render(); }
   else if(a==='gogems'){ snd('ui_tap'); XH.sel=null; XH.cf=null; XH.tab='gem'; XH.anim=true; render(); }
-  else if(a==='gopass'){ snd('ui_tap'); XH.sel=null; setView('pass'); }
+  else if(a==='gopass'){ snd('ui_tap'); if(!xUnlocked('pass')){ hToast('Skin do Passe da temporada'); return; } XH.sel=null; setView('pass'); }
   else if(a==='vip'){ snd('ui_tap'); if(typeof scrVip==='function'&&window.Screens) Screens.open('vip'); else hToast('Clube VIP: em breve'); }   /* tela 18 (VIP): entra no item 3 */
   else if(a==='iap'){ snd('ui_tap'); hToast('Pagamento em breve: nada é cobrado agora'); }
   else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+gNum(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
     else { const o=S.shop.offers[cf.i]; if(!o||o.sold||S.gold<o.price) return; if(S.inv.length>=BAG_MAX){ XH.cf=null; render(); hToast('Mochila cheia: desmonte itens em Equip.'); return; }
-      S.gold-=o.price; o.sold=true; XH.cf=null; const was=PULLING; PULLING=[]; let got; try{ addItemToBag({slot:o.slot,r:o.r,e:o.e,subs:o.subs}); got=PULLING[0]; }finally{ PULLING=was; }
+      S.gold-=o.price; o.sold=true; XH.cf=null; const was=PULLING; PULLING=[]; let got; try{ addItemToBag({slot:o.slot,r:o.r,e:o.e,subs:o.subs,origin:'shop'}); got=PULLING[0]; }finally{ PULLING=was; }
       statsChanged(); snd('coin'); render(); hToast(got&&got.eq?'Comprado e equipado: '+got.name:'Comprado: '+(got?got.name:'item')+' (na mochila)'); } }
 }
 

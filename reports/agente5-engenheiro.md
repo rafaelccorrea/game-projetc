@@ -1316,3 +1316,32 @@ NÃO COUBE em 55% nas eras 0, 1 e 4 (e passa de 50% nas 2 e 3) mesmo com fundo e
 - Visto (390x844): itens de arma das eras 1 (espada), 3 (pistola) e 6 equipados → mudam na vitrine e na batalha; skin `w22` escolhida vence; voltar para `w00` devolve o item; botão "Equipar melhor" real troca a arma e o boneco. Zero erros. Prints `v0122_arma_*.png`.
 - NÃO testado: arrastar para equipar; lança e demais tiers; encaixe da mão conferido a olho só nessas 3 armas, em tamanho pequeno; item com campo `look` diferente de `e` (transformação); 360x640; tela de Skins da Loja pela interface (a troca de skin foi feita por estado); carregamento com arma de item; APK.
 - Atenção: com arma de fogo o Kael da batalha usa a pose de tiro que o jogo já tinha (não mexi); na vitrine fica parado.
+
+
+## Rodada 13 — v0.12.3: pistola aprovada, 2 comuns nas eras 0/1/4, level up novo, liberação por nível (2026-11-12)
+
+Arquivos: `index.html` (versão), `js/battle.js`, `js/stage.js`, `js/farm.js`, `js/fullbattle.js`, `js/meta.js`, `sw.js`, `version.json`.
+
+1. **Pistola aprovada** (`js/stage.js`, `drawHeroPistol`): com arma de fogo (regra `heroLook`) nas eras 3, 5 e 6 o Kael usa `assets/anim/hyb/R/pistol/kael_pistol_<idle|run|shoot>_era<E>_t0` (a pistola da era já vem pintada no quadro). O quadro "shot" do .json cai no instante do tiro; o clarão sai de `grip[quadro].muzzle`; `B.tipW` (origem do projétil) também. A pose de tiro antiga não é mais usada por nenhuma arma. Era 4: `ART_ON.pistol_era4=false`; desligada, `wIsGun` devolve false e o revólver luta corpo a corpo (pose de espada). Vitrine: mesma função de desenho, parado.
+   - Limite: só existe a folha `t0` por era; arma de tier 1 ou 2 aparece com a pistola do tier 0. A roupa do Kael na folha é a da folha (a skin de roupa não aparece nela).
+2. **Arma estável** (`wSkin`, `HLK`): a arma nova só entra na mão quando a arte carregou (sprite e, se pistola, as 3 folhas); até lá fica a anterior; em 4 s troca de qualquer jeito. Vale para qualquer caminho que mude `S.eq`/`S.skinEq` (equipar, "Equipar melhor", arrastar, skin), porque a conta é feita a cada quadro.
+3. **2 comuns visíveis nas eras 0, 1 e 4** (`ERA_VIS`): total da onda igual; selo "+N" conta a fila. Medido (390x844, todas as combinações): folga do Kael 32–48 px; sobreposição frente × atrás 26–55%. Na era 4, com Aranha na frente e o outro atrás, o de trás ainda cai a 80 px pela regra de encolher da v0.12.2.
+4. **Level up novo**: folha `assets/anim/fx/levelup` (22 quadros, 12 fps, pés e âncora do .json), uma vez, sobre o Kael, pés no chão, na escala do herói; desenhada no canvas (fica atrás do HUD). Saíram as partículas antigas; o aviso "Nível X!" e o som ficaram.
+5. **Liberação por nível LIGADA** (`FB_UNLOCK` em `js/fullbattle.js`): ícones e itens do MENU ocultos até o nível; sem tela pronta = oculto (nada de "Em breve"); coluna esquerda sem buraco; selo "NOVO!" + balão, um por vez, guardado em `S.unl`. Não usei `Sys.level.isUnlocked`: a tabela do módulo só tem practice, forge, instances, tower, arena e pet; a conta usa `Sys.level.level(S)` com a tabela nova.
+   - Tutorial: ordem nova (sozinho, Especial, Equip., Ultimate, Invocar). O passo do Invocar espera o nível 3 com o tutorial escondido.
+6. `origin`: o único criador de item fora dos módulos é a compra da Loja, em `js/screens.js` (agente B). Não editei; pedido A-12. Não há criador de presente/boas-vindas que gere item nos meus arquivos.
+
+### Visto
+- Pistola nas eras 3, 5 e 6 atirando, clarão/traço saindo do cano, pés no chão. Era 4: sem arma de fogo, golpe corpo a corpo.
+- Eras 0, 1, 4 com 2 visíveis e "+1".
+- Level up: disparado por estado na era 0 e de verdade no jogador novo (níveis 2 e 3), sem erro.
+- Jogador novo sem debug até o fim do tutorial: Equip. e Loja no início; "NOVO!" de Missões no nível 2; Invocar aparece no nível 3 e o passo do tutorial acontece aí; fim com +20 gemas; MENU só com Missões e Config.
+
+### NÃO testado
+- Pistola: parado e correndo vistos só de passagem; vitrine do Equipamento com pistola; especial e ultimate com pistola; morte e dano com pistola; tiers 1 e 2.
+- Revólver da era 4 na pose de espada: vi um quadro só (durante dano); não conferi se a mão encaixa.
+- Um quadro com duas armas apareceu logo depois de trocar de era por comando de debug no meio de um golpe; não reproduzi em jogo normal nem investiguei.
+- Chefe entrando depois das escoltas com 2 visíveis; Senhor da Era.
+- Save antigo com vários "NOVO!" em fila (só a lógica); níveis acima do 3; Passe aparecendo no 18.
+- Missões no nível 2 abre o painel do Passe na aba Missões (o painel é do agente B): não conferi se a aba de Prêmios fica acessível antes do 18.
+- 360x640 nesta versão; APK; aparelho.

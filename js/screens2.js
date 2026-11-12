@@ -176,6 +176,7 @@ function pRenew(mt){ const d=new Date(); if(mt==='d'){ const m=new Date(d.getFul
 function passTick(){ const el=document.getElementById('xp_renew'); if(el){ const t=pRenew(XP.mt); if(el.textContent!==t) el.textContent=t; } }
 function scrPass(){
   if(!PASS_OK()){ V.innerHTML=''; return; }
+  const passOk=xUnlocked('pass'); if(!passOk) passTab='mis';   /* antes do nível do Passe (18) o painel é só MISSÕES: sem cabeçalho da temporada, sem aba de recompensas, sem Premium */
   const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
   const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0;
@@ -222,7 +223,7 @@ function scrPass(){
       return `<div class="p-mrow" style="height:${rowH}px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:16px;border:2px solid ${can?'#ffc94a':'#4a3a2b'};background:${can?'linear-gradient(90deg,#3a2c1f,#1d1611)':'#1d1611'};box-sizing:border-box;opacity:${m.claimed?.6:1}">
         <span style="width:46px;height:46px;flex:none;border-radius:12px;background:#16110d;border:2px solid #5a3f8a;color:#d9b3ff;display:flex;align-items:center;justify-content:center">${bonus?'<img src="assets/ui/pass.png" alt="" style="width:30px;height:30px;object-fit:contain">':`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${P_MICON[ev]||P_MICON.kill}"></path></svg>`}</span>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:900;line-height:1.15">${esc2(m.txt)}</span>
-          <span style="font-size:12px;font-weight:900;color:#d9c8ff">+${m.pxp} XP do passe${m.gems?' · +'+m.gems+' diamantes':''}</span>
+          <span style="font-size:12px;font-weight:900;color:#d9c8ff">${passOk?'+'+m.pxp+' XP do passe':''}${m.gems?(passOk?' · ':'')+'+'+m.gems+' diamantes':''}${!passOk&&!m.gems?'+'+m.pxp+' XP do passe (o Passe abre no nível '+xUnlockLv('pass')+')':''}</span>
           <span style="display:flex;align-items:center;gap:6px"><span style="flex:1;height:8px;border-radius:4px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden"><span class="p-pxp" style="display:block;width:${pct}%;height:100%;transition:width .5s"></span></span><span style="flex:none;font-size:11px;font-weight:900;color:#e8dccb">${n0(m.p)}/${n0(m.need)}</span></span></div>
         ${can?`<button class="y-gold y-cta lil" data-x="mclaim" data-id="${m.id}" aria-label="${esc2(m.txt)}, resgatar" style="width:92px;height:46px;flex:none;border-radius:12px;font-size:16px;padding:0">Resgatar</button>`
           :m.claimed?`<span style="width:92px;flex:none;display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:900;color:#8fe596">${Y_CHK(14)}Feito</span>`
@@ -236,11 +237,11 @@ function scrPass(){
         <span style="flex:none;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:#c9b9a2">${Y_CLOCK}<span id="xp_renew">${pRenew(XP.mt)}</span></span></div>
       <div style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px">${rows}</div>
       ${pages>1?`<div style="height:40px;flex:none;display:flex;align-items:center;justify-content:center;gap:12px"><button data-x="mpg" data-d="-1" aria-label="Missões anteriores" style="width:48px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XP.mpage>0?'#f6ecdf':'#6b5843'};padding:0;display:flex;align-items:center;justify-content:center">${Y_BACK}</button><div style="display:flex;gap:5px">${mdots}</div><button data-x="mpg" data-d="1" aria-label="Próximas missões" style="width:48px;height:40px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${XP.mpage<pages-1?'#f6ecdf':'#6b5843'};padding:0;display:flex;align-items:center;justify-content:center">${Y_FWD}</button></div>`:''}
-      <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#1d1611;border:1px dashed #5a3f8a;font-size:12px;font-weight:800;color:#d9c8ff;text-align:center;padding:0 10px;box-sizing:border-box">XP do passe sobe o NÍVEL DO PASSE (${P.DATA.xpPerTier} XP por nível). Não muda o nível do jogador.</div>`;
+      <div style="${passOk?'':'display:none!important;'}height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#1d1611;border:1px dashed #5a3f8a;font-size:12px;font-weight:800;color:#d9c8ff;text-align:center;padding:0 10px;box-sizing:border-box">XP do passe sobe o NÍVEL DO PASSE (${P.DATA.xpPerTier} XP por nível). Não muda o nível do jogador.</div>`;
   }
   const pct=pr.max?100:Math.round(pr.inTier/pr.per*100);
   V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div class="x-scroll" style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;box-sizing:border-box;background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
-    <div class="p-hdr" style="height:92px;flex:none;position:relative;display:flex;border-radius:16px;border:2px solid #8a4dff;background:linear-gradient(120deg,#2e1f4a 0%,#1d1611 70%);overflow:hidden">
+    <div class="p-hdr" style="${passOk?'':'display:none!important;'}height:92px;flex:none;position:relative;display:flex;border-radius:16px;border:2px solid #8a4dff;background:linear-gradient(120deg,#2e1f4a 0%,#1d1611 70%);overflow:hidden">
       <div style="position:relative;width:92px;flex:none;overflow:hidden"><div class="p-aura"></div><div class="p-ped" style="left:18px;top:76px;width:56px;height:12px"></div>
         <div class="kidle ${skT?'t'+skT:''} p-glow" role="img" aria-label="Skin da temporada, prêmio Premium do nível 25 do passe" style="position:absolute;left:6px;top:6px;width:80px;height:80px"></div></div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 12px 6px 4px">
@@ -251,7 +252,7 @@ function scrPass(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">jogador: Nv. ${lvP}</span></div>
         <div role="progressbar" aria-label="XP do passe" aria-valuemin="0" aria-valuemax="${pr.per}" aria-valuenow="${pr.inTier}" style="height:12px;border-radius:6px;background:#0e0a07;border:1px solid #5a3f8a;overflow:hidden"><div class="p-fill p-pxp" style="width:${pct}%;height:100%"></div></div>
         <span style="font-size:11px;font-weight:800;color:#d9c8ff;white-space:nowrap">${pr.max?'Nível máximo do passe':pr.inTier+'/'+pr.per+' XP do passe · ganhe nas Missões'}</span></div></div>
-    <div role="tablist" aria-label="Passe" style="height:52px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
+    <div role="tablist" aria-label="Passe" style="${passOk?'':'display:none!important;'}height:52px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
       <button role="tab" class="lil" aria-selected="${!isMs}" data-x="tab" data-t="pass" style="flex:1;border-radius:10px;border:0;${seg(!isMs)};font-size:16px;padding:0">Recompensas</button>
       <button role="tab" class="lil" aria-selected="${isMs}" data-x="tab" data-t="mis" style="position:relative;flex:1;border-radius:10px;border:0;${seg(isMs)};font-size:16px;padding:0">Missões${ready?`<span class="p-pill" style="position:absolute;top:4px;right:10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff5a4e;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}</button></div>
     ${body}<div id="xp_toast"></div></div>
@@ -269,7 +270,7 @@ function scrPass(){
 }
 function pClick(b){ const a=b.dataset.x, P=Sys.pass;
   if(a==='close'){ snd('ui_tap'); Screens.close(); }
-  else if(a==='tab'){ snd('ui_tap'); passTab=b.dataset.t; XP.anim=true; render(); }
+  else if(a==='tab'){ if(b.dataset.t!=='mis'&&!xUnlocked('pass')) return; snd('ui_tap'); passTab=b.dataset.t; XP.anim=true; render(); }
   else if(a==='mt'){ snd('ui_tap'); XP.mt=b.dataset.m; XP.mpage=0; XP.anim=true; render(); }
   else if(a==='pg'){ const p=XP.page+(+b.dataset.d); if(p>=0&&p<(XP.pages||1)){ snd('ui_tap'); XP.page=p; XP.anim=true; render(); } }
   else if(a==='mpg'){ const p=XP.mpage+(+b.dataset.d); if(p>=0&&p<(XP.mpages||1)){ snd('ui_tap'); XP.mpage=p; XP.anim=true; render(); } }

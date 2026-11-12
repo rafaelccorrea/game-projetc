@@ -1,0 +1,38 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aparência em camadas</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}
+.bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px}.bar a{color:#cde;background:#262a36;padding:6px 10px;border-radius:6px;text-decoration:none}.bar a.on{background:#4a6cf0;color:#fff}
+.g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px 16px}.g div{font-size:12px;color:#aab;text-align:center}canvas{display:block;width:100%;border-radius:8px;background:#2e3a2a}
+@media(max-width:700px){.g{grid-template-columns:repeat(2,minmax(0,1fr))}}</style></head><body>
+<h1 id="t">Aparência em camadas</h1>
+<p>Chapéu por era (PNG solto preso à cabeça rastreada quadro a quadro) + colete e botas recoloridos por código sobre as máscaras. A última coluna mostra tudo oculto (só a roupa base).</p>
+<div class="bar" id="ph"></div><div class="bar" id="st"></div>
+<div class="g" id="g"></div>
+<script>
+const R='../../../';const Q=new URLSearchParams(location.search);const P=Q.get('p')||'R';const ST=Q.get('s')||'run';
+const PH=[['R','garoto'],['phase1','adolescente'],['phase2','adulto'],['phase3','lendário']],SS=[['run','correndo'],['idle','parado'],['attack','golpe'],['spin','giro'],['die','morte'],['pistol_idle','pistola parado'],['pistol_run','pistola correndo'],['pistol_shoot','pistola atirando']];
+const bar=(id,arr,key,cur)=>{const e=document.getElementById(id);for(const [k,l] of arr){const a=document.createElement('a');a.textContent=l;a.className=k===cur?'on':'';const q=new URLSearchParams(location.search);q.set(key,k);a.href='?'+q;e.appendChild(a);}};
+bar('ph',PH,'p',P);bar('st',SS,'s',ST);
+const MAT={ferro:[180,190,205,1.15],ouro:[240,190,70,1.35],cristal:[110,200,255,1.45],couro_escuro:[95,60,40,0.9],obsidiana:[120,70,160,1.0]};
+const COMBOS=[{hat:'era2',vest:'ferro',boots:'couro_escuro',lab:'elmo de cavaleiro · colete ferro · botas couro escuro'},{hat:'era3',vest:'ouro',boots:'ouro',lab:'tricórnio · colete ouro · botas ouro'},{hat:'era6',vest:'cristal',boots:'ferro',lab:'capacete sci-fi · colete cristal · botas ferro'},{hat:null,vest:null,boots:null,lab:'tudo oculto (roupa base)'}];
+const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const J=async s=>{try{return await (await fetch(s)).json()}catch(e){return null}};
+(async()=>{
+ const D=R+'assets/anim/hyb/'+P+'/';const MJ=await J(D+'masks/kael_'+ST+'_mask.json');const HJ=await J(D+'masks/kael_'+ST+'_head.json');const HATS=(await J(R+'assets/anim/equip/hats/hats.json')).hats;
+ let sheetP=MJ&&MJ.sheet?R+MJ.sheet:null,M=MJ;
+ if(!sheetP){const alt=ST.startsWith('pistol')?D+'pistol/kael_'+ST+'_era5_t0':D+'kael_'+ST+'_era5_t0';const j=await J(alt+'.json');if(j){sheetP=alt+'.png';M=j;}else{const j2=await J(D+'kael_'+ST+'_era5_t0.json');sheetP=D+'kael_'+ST+'_era5_t0.png';M=j2;}}
+ document.getElementById('t').textContent='Aparência em camadas — '+PH.find(x=>x[0]===P)[1]+', '+SS.find(x=>x[0]===ST)[1]+(MJ?'':' (sem máscara: só chapéu)')+(HJ?'':' — âncoras ainda sendo geradas');
+ const sheet=await L(sheetP);if(!sheet||!M)return;const mask=MJ?await L(D+'masks/kael_'+ST+'_mask.png'):null;
+ const W=sheet.width,H=sheet.height,CW=M.w,N=M.frames||Math.round(W/CW),fps=M.fps||12;
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const cx=cv.getContext('2d');cx.drawImage(sheet,0,0);const base=cx.getImageData(0,0,W,H);
+ let md=null;if(mask){cx.clearRect(0,0,W,H);cx.drawImage(mask,0,0,W,H);md=cx.getImageData(0,0,W,H).data;}
+ const hatImg={};for(const c of COMBOS)if(c.hat&&!hatImg[c.hat])hatImg[c.hat]=await L(R+'assets/anim/equip/hats/'+HATS[c.hat].file);
+ const items=[];
+ for(const c of COMBOS){const out=new ImageData(new Uint8ClampedArray(base.data),W,H);
+  if(md&&(c.vest||c.boots)){const d=out.data;for(let i=0;i<d.length;i+=4){const a=md[i+3]/255;if(!a)continue;for(const [ch,mk] of [[0,c.vest],[2,c.boots]]){if(!mk)continue;const m=md[i+ch]/255*a;if(m<=0)continue;const t=MAT[mk],l=(d[i]*0.3+d[i+1]*0.59+d[i+2]*0.11)/128*t[3];for(let k=0;k<3;k++)d[i+k]=d[i+k]*(1-m)+Math.min(255,t[k]*l)*m;}}}
+  const sc=document.createElement('canvas');sc.width=W;sc.height=H;sc.getContext('2d').putImageData(out,0,0);
+  const wrap=document.createElement('div');const c2=document.createElement('canvas');c2.width=CW;c2.height=H;wrap.appendChild(c2);wrap.appendChild(document.createTextNode(c.lab));document.getElementById('g').appendChild(wrap);items.push({c2,sc,c});}
+ const t0=performance.now();(function loop(n){const f=Math.floor((n-t0)/1000*fps)%N;for(const {c2,sc,c} of items){const g=c2.getContext('2d');g.clearRect(0,0,CW,H);g.drawImage(sc,f*CW,0,CW,H,0,0,CW,H);
+  if(c.hat&&HJ&&HJ.head[f]&&HJ.head[f].ok){const a=HJ.head[f],h=HATS[c.hat],im=hatImg[c.hat];g.save();g.translate(a.x,a.y);g.rotate(a.ang*Math.PI/180);g.scale(a.s/h.res,a.s/h.res);g.drawImage(im,-h.pivot.x,-h.pivot.y);g.restore();}}
+  requestAnimationFrame(loop);})(t0);
+})();
+</script></body></html>

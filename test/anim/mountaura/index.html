@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aura das montarias</title>
+<style>
+ body{margin:0;background:#14161b;color:#e8e2d8;font:13px/1.35 system-ui,sans-serif}
+ h1{font-size:15px;margin:12px 16px 4px} p{margin:0 16px 10px;color:#a9a39a}
+ .grid{display:flex;flex-wrap:wrap;gap:10px;padding:0 16px 16px}
+ .cell{background:linear-gradient(#1b1e25 70%,#2a2620 70%);border:1px solid #2c3039;border-radius:8px;padding:6px}
+ .cell b{display:block;font-size:12px;margin:0 0 4px} canvas{display:block;width:256px;height:176px;image-rendering:auto}
+</style></head><body>
+<h1>Aura da montaria por estrela — lobo e grifo</h1>
+<p>3★ brilho na cor da raridade (Épico) · 5★ aura forte + fumaça colorida e partículas. Tudo atrás do sprite, nunca sobre o Kael. Clique num quadro para pausar.</p>
+<div class="grid" id="g"></div>
+<script>
+const DIR='../../../assets/anim/mounts/';
+const LIST=[];for(const m of['wolf','griffin'])for(const s of['run','idle'])for(const n of[3,5])LIST.push('kael_'+m+'_'+s+'_'+n+'star');
+const items=[];
+for(const name of LIST){
+  const box=document.createElement('div');box.className='cell';
+  const lab=document.createElement('b');lab.textContent=name.replace('kael_','').replace(/_/g,' ').replace('star','★');
+  const cv=document.createElement('canvas');box.append(lab,cv);document.getElementById('g').append(box);
+  const it={name,cv,ctx:cv.getContext('2d'),img:new Image(),meta:null,paused:false,f:0};
+  cv.onclick=()=>it.paused=!it.paused;
+  fetch(DIR+name+'.json').then(r=>r.json()).then(j=>{it.meta=j;cv.width=j.w;cv.height=j.h;cv.style.width=(j.w/2)+'px';cv.style.height=(j.h/2)+'px';it.img.src=DIR+name+'.png';})
+    .catch(()=>{lab.textContent+=' (não encontrado)';});
+  items.push(it);
+}
+let t0=performance.now();
+function loop(now){
+  for(const it of items){const j=it.meta;if(!j||!it.img.complete||!it.img.naturalWidth)continue;
+    if(!it.paused)it.f=Math.floor((now-t0)/1000*j.fps)%j.frames;
+    it.ctx.clearRect(0,0,j.w,j.h);it.ctx.drawImage(it.img,it.f*j.w,0,j.w,j.h,0,0,j.w,j.h);}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script></body></html>

@@ -584,3 +584,10 @@ Defeitos que ficaram:
 - Fumaça do trem da estação passa por trás do vidro do galpão (aparece pouco lá dentro).
 - Nos arcos do galpão sobram 3 ou 4 lascas horizontais pequenas na borda do recorte.
 - Trem menor que a locomotiva que era pintada; miúdos rasos ainda podem cair sobre o trilho do bonde.
+
+## Era 5 (Moderna) — rodada 1: montada SEM navegador, aguardando a vez para a conferência visual
+Pasta `assets/bg/v2/era5/` (52 arquivos, ~1,35 MB) · `tools/build5.js`, `tools/mkmeta5.js`, `tools/info.era5.json` · 8 gerações Nano Banana 2.1 2K = 16 créditos
+(far, mid A, chão, mid B, decalques, folha de bichos/nuvens/bandeiras, folha de veículos, folha de objetos de rua; céu procedural).
+`scene.js`: 3 blocos opcionais (slot `far` em actors; `flap` com `ang` em peças e em rotors). SHA-1 `a1e1157e…` → `5b725460ae70667db764598823f7ff729eee8b99`;
+cópia anterior em `test/bg/tools/scene.pre-era5.js`. A comparação pixel a pixel das eras 0 a 4 AINDA NÃO FOI FEITA (precisa do navegador).
+Conferido só por maquete estática (camadas, veículos, peças e âncoras desenhados pelo meta): nada em movimento foi visto ainda.

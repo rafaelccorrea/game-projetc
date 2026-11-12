@@ -72,6 +72,7 @@ body.fb #tut .tring{box-shadow:0 0 0 3px #ffc94a,0 0 18px 6px rgba(255,201,74,.7
 .fb-lb{font-size:10.5px;line-height:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000;white-space:nowrap}
 .fb-bdg{position:absolute;top:-4px;right:-5px;min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:#ff3b30;border:2px solid #1a110b;color:#fff;font-size:11px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;animation:fbbdg 1.8s ease-in-out infinite}
 .fb-bdg:empty{display:none}
+.fb-novo{position:absolute;left:50%;top:-9px;transform:translateX(-50%);height:15px;padding:0 6px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:9.5px;line-height:15px;font-weight:900;white-space:nowrap;border:1px solid #2a1403;animation:fbbdg 1s ease-in-out infinite;z-index:2}
 .fb-tag{position:absolute;left:50%;top:-7px;transform:translateX(-50%);height:14px;padding:0 5px;border-radius:7px;background:#ffc94a;color:#2a1403;font-size:8.5px;line-height:14px;font-weight:900;white-space:nowrap;border:1px solid #2a1403}
 @keyframes fbbdg{0%,80%,100%{transform:scale(1)}88%{transform:scale(1.25)}}
 .fb-pill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
@@ -142,6 +143,25 @@ const FB_DROP = [
   { id: 'auction',  icon: 'shop',      label: 'Leilão',     act: 'soon:auction', tag: 'Em breve', hammer: true, on: false },
 ];
 const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="position:absolute;right:-3px;bottom:-3px;filter:drop-shadow(0 1px 1px #000)"><rect x="10" y="9" width="4" height="13" rx="1.5" fill="#8a5a2b" stroke="#2a1403" stroke-width="1" transform="rotate(-40 12 12)"/><rect x="3" y="3" width="13" height="7" rx="2" fill="#ffc94a" stroke="#2a1403" stroke-width="1.2" transform="rotate(-40 12 12)"/></svg>';
+/* ============ LIBERAÇÃO POR NÍVEL (regra do dono, níveis confirmados pelo PO; reports/liberacao-por-nivel.md) ============
+   Cada função fica OCULTA (nem cadeado) até o nível do jogador. Função sem tela pronta continua oculta mesmo passado o nível (nada de "Em breve").
+   Ao liberar, o ícone aparece UMA vez com o selo "NOVO!" e um balão curto; um por vez, em fila; S.unl guarda o que já foi anunciado.
+   Trocar o nível = trocar 1 número aqui. (O Sys.level.isUnlocked só conhece as chaves do módulo: practice, forge, instances, tower, arena, pet;
+   as outras ainda não estão lá, por isso a tabela fica aqui e a conta usa Sys.level.level(S).) Sem entrada na tabela = desde o início. */
+const FB_UNLOCK = { missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
+const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
+const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
+const fbUnl = id => !(FB_UNLOCK[id] > fbLvl());
+const fbHasScreen = m => m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)]);
+const fbShown = m => m.on !== false && fbUnl(m.id) && fbHasScreen(m);
+const FBN = { id: null, el: null, until: 0 };
+function fbNovoTick(){ if (view !== 'battle' || B.paused || document.getElementById('fbdrop') || (typeof tutOn === 'function' && tutOn() && !(typeof tutWait !== 'undefined' && tutWait))) return; const now = Date.now(); if (FBN.until > now) return;
+  if (FBN.id){ if (FBN.el){ const s = FBN.el.querySelector('.fb-novo'); if (s) s.remove(); } FBN.id = null; FBN.el = null; }
+  if (!S.unl || typeof S.unl !== 'object') S.unl = {};
+  for (const m of FB_MENU.concat(FB_DROP)){ if (!FB_UNLOCK[m.id] || S.unl[m.id] || !fbShown(m)) continue;
+    S.unl[m.id] = 1; save(); const own = document.getElementById('fbm_' + m.id), el = (own && own.style.display !== 'none') ? own : document.getElementById('fb_mbtn'), ib = el && el.querySelector('.fb-ib');
+    if (ib){ const s = document.createElement('span'); s.className = 'fb-novo'; s.textContent = 'NOVO!'; ib.appendChild(s); }
+    toast(FB_UNLOCK_TXT[m.id] || (m.label + ' liberado')); snd('claim'); FBN.id = m.id; FBN.el = el; FBN.until = now + 4500; return; } }
 const FB_BAND = 240;        // faixa livre de ícones: do chão até 240 px acima (base de 390), em x >= 300, RELATIVA à linha dos pés, em qualquer altura de tela
 const FB_HIDDEN = {};       // ícones principais que não couberam nesta tela: vão para o MENU (nunca encolhem abaixo de 44 px)
 const fbChestInner = '<img src="assets/ui/chest.png" alt="" style="width:32px;height:30px;object-fit:contain;margin-top:-6px"><span style="position:absolute;left:10px;right:10px;bottom:7px;height:4px;border-radius:2px;background:rgba(0,0,0,.65);overflow:hidden"><span id="fb_chp" style="display:block;width:0;height:100%;background:linear-gradient(90deg,#f2a826,#ffe07a);transition:width .4s"></span></span>';
@@ -151,7 +171,7 @@ function fbMenuHtml(){ return '<div id="fb_menu" style="position:absolute;left:0
 /* botão MENU e o drop down (desce do canto superior direito; toque fora fecha) */
 function fbMenuClose(){ const d = document.getElementById('fbdrop'); if (d) d.remove(); const b = document.getElementById('fb_mbtn'); if (b){ b.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); } FBK.mb = null; fbTick(); }
 function fbMenuToggle(){ if (document.getElementById('fbdrop')){ fbMenuClose(); return; }
-  const items = FB_DROP.filter(m => m.on !== false).concat(FB_MENU.filter(m => FB_HIDDEN[m.id]).map(m => ({ id: m.id, icon: m.icon, label: m.label, act: m.act, chest: m.chest, alerts: m.id === 'pass' ? () => passAlerts() : m.chest ? () => { try { return Sys.chest.progress(S, Sys.host).stored; } catch (e) { return 0; } } : null })));
+  const items = FB_DROP.filter(fbShown).concat(FB_MENU.filter(m => FB_HIDDEN[m.id] && fbUnl(m.id)).map(m => ({ id: m.id, icon: m.icon, label: m.label, act: m.act, chest: m.chest, alerts: m.id === 'pass' ? () => passAlerts() : m.chest ? () => { try { return Sys.chest.progress(S, Sys.host).stored; } catch (e) { return 0; } } : null })));
   const el = document.createElement('div'); el.id = 'fbdrop'; el.innerHTML = '<div class="fb-mdim" data-fb="menu"></div><div role="dialog" aria-modal="true" aria-label="Menu" class="fb-mpanel"><div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px"><span class="lil" style="font-size:20px;color:#fff">Menu</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">toque fora para fechar</span></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px">'
     + items.map((m, i) => { const n = m.alerts ? m.alerts() : 0; return `<button class="fb-mi" data-fb="${m.act}" data-drop="1" aria-label="${m.label}" style="animation-delay:${(i * 0.02).toFixed(2)}s"><span class="fb-ib fb-gl" style="animation-delay:${(i * 0.2).toFixed(1)}s">${m.chest ? '<img src="assets/ui/chest.png" alt="" style="width:34px;height:32px;object-fit:contain">' : `<img class="fb-ico" src="assets/icons/menu/${m.icon}.png" alt="">`}${m.hammer ? FB_HAMMER : ''}${n ? `<span class="fb-bdg">${n}</span>` : ''}${m.tag ? `<span class="fb-tag">${m.tag}</span>` : ''}</span><span class="fb-lb">${m.label}</span></button>`; }).join('') + '</div></div>';
   document.getElementById('fb_w').appendChild(el); const b = document.getElementById('fb_mbtn'); b.classList.add('open'); b.setAttribute('aria-expanded', 'true'); FBK.mb = null; fbTick(); }
@@ -239,10 +259,11 @@ function fbLayout(){ const app = document.getElementById('app'), w = document.ge
   /* barras do Kael: ancoradas na linha dos pés + altura do corpo PARADO (não seguem golpe nem dano). Protótipo: x 44, 34 px acima do topo da cabeça */
   { const kb = document.getElementById('fb_kb'), cvw = (typeof cv !== 'undefined' && cv.clientWidth) || W, k = cvw / LW / s; if (kb){ const top = (FIELD_FEET * H - st) / s - heroBodyH() * k - 34; let left = HX * k - 64;
       /* tela curta (360x640): a coluna esquerda de ícones (x 4-70) desce até a altura das barras; aí as barras começam depois da coluna, sem encostar no ícone */
-      if (FB_MENU.some(m => m.side === 'left' && m.y + (m.big ? 70 : 62) > top - 2 && m.y < top + 24)) left = Math.max(left, 74);
+      if (FB_MENU.some((m, i) => { if (m.side !== 'left' || !fbUnl(m.id)) return false; const y = 136 + 78 * FB_MENU.filter((q, j) => j < i && q.side === 'left' && fbUnl(q.id)).length; return y + (m.big ? 70 : 62) > top - 2 && y < top + 24; })) left = Math.max(left, 74);
       kb.style.left = left.toFixed(1) + 'px'; kb.style.top = top.toFixed(1) + 'px'; } }
   const feet = (FIELD_FEET * H - st) / s, bandTop = feet - FB_BAND, bottomLim = Hb - 182 - 6; let changed = false;
-  FB_MENU.forEach(m => { const b = document.getElementById('fbm_' + m.id); if (!b) return; const bot = m.y + (m.big ? 70 : 62), lim = m.side === 'right' ? Math.min(bandTop, bottomLim) : bottomLim, hide = bot > lim;
+  { let li = 0; FB_MENU.forEach(m => { m.cy = m.y; if (m.side === 'left' && fbUnl(m.id)){ m.cy = 136 + 78 * li; li++; } }); }   // coluna esquerda: só os liberados, de cima para baixo, sem buraco
+  FB_MENU.forEach(m => { const b = document.getElementById('fbm_' + m.id); if (!b) return; if (!fbUnl(m.id)){ FB_HIDDEN[m.id] = false; b.style.display = 'none'; return; } b.style.top = m.cy + 'px'; const bot = m.cy + (m.big ? 70 : 62), lim = m.side === 'right' ? Math.min(bandTop, bottomLim) : bottomLim, hide = bot > lim;
     if (!!FB_HIDDEN[m.id] !== hide) changed = true; FB_HIDDEN[m.id] = hide; b.style.display = hide ? 'none' : ''; });
   if (changed && document.getElementById('fbdrop')) fbMenuClose();
   app.style.setProperty('--fbtop', Math.max(0, H - FB_SHEET_H * Math.min(s, H / 844 > 1 ? s : s)).toFixed(0) + 'px'); app.style.setProperty('--fbhead', (FB_HEAD * Math.min(1.2, s)).toFixed(0) + 'px'); }
@@ -264,7 +285,8 @@ function fbTick(){
   { const k = B.speed + '|' + [1, 2, 4].map(n => canSpeed(n) ? 1 : 0).join(''); if (FBK.spd !== k){ FBK.spd = k;
       document.getElementById('fb_spd').innerHTML = [1, 2, 4].map(n => { const ok = canSpeed(n), on = B.speed === n; return `<button data-fb="spd${n}" class="lil" aria-label="Velocidade x${n}${ok ? '' : ', bloqueada'}" aria-pressed="${on}" style="position:relative;width:var(--fbt,44px);height:var(--fbt,44px);border-radius:11px;border:0;padding:0;background:${on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'transparent'};color:${on ? '#2a1403' : ok ? '#f6ecdf' : '#9c8d7a'};font-size:14px;display:flex;align-items:center;justify-content:center">x${n}${ok ? '' : `<span style="position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:#1a110b;display:flex;align-items:center;justify-content:center">${FB_LOCK}</span>`}</button>`; }).join(''); } }
   { let lab = 'Baú'; try { if (Sys.chest.progress(S, Sys.host).stored) lab = 'Baú cheio'; } catch (e) {} fbSet('fbl_chest', lab); }
-  { let n = missionAlerts(); if (FB_HIDDEN.pass) n += passAlerts(); fbSet('fb_bmenu', n ? String(n) : ''); }
+  { let n = fbUnl('missions') ? missionAlerts() : 0; if (FB_HIDDEN.pass && fbUnl('pass')) n += passAlerts(); fbSet('fb_bmenu', n ? String(n) : ''); }
+  { const lv = fbLvl() + '|' + Object.keys(Screens.reg || {}).length; if (FBK.unl !== lv){ FBK.unl = lv; fbLayout(); } fbNovoTick(); }   // subiu de nível (ou uma tela foi registrada): refaz o que aparece
   fbFast();
 }
 /* parte rápida (10x por segundo): vida, energia, recarga do especial e da ultimate */
@@ -284,7 +306,7 @@ function fbFast(){ const h = B.hero; if (!h || !document.getElementById('fbhud')
   { const p = Math.max(0, Math.ceil(B.cd2 / BAL.s2Cooldown * 20)); if (FBK.cd !== p){ FBK.cd = p; document.getElementById('fb_s2c').style.height = (p * 5) + '%'; document.getElementById('fb_s2b').style.boxShadow = '0 6px 16px rgba(0,0,0,.45),0 0 ' + (p ? 0 : 16) + 'px rgba(74,163,255,.8)'; } fbSet('fb_s2t', B.cd2 > 0 ? String(Math.ceil(B.cd2)) : ''); }
   { const tp = document.getElementById('fb_tip'); if (tp && FBK.tip !== 0){ FBK.tip = 0; tp.style.display = 'none'; } }   // só automático: a dica "toque na ultimate" saiu
   /* tutorial: o balão fica FB_TUT_SHOW s por passo; depois some (o anel fica). Passo só de leitura ("Entendi") avança sozinho. */
-  if (typeof tutOn === 'function'){ const tu = document.getElementById('tut'); if (tu && tutOn()){ const st = TUT[S.tut], q = st ? st.sel() : '', k = S.tut + '|' + q;
+  if (typeof tutOn === 'function'){ const tu = document.getElementById('tut'); if (tu && tutOn() && !(typeof tutWait !== 'undefined' && tutWait)){ const st = TUT[S.tut], q = st ? st.sel() : '', k = S.tut + '|' + q;
       if (FBK.tut !== k){ FBK.tut = k; FBK.tutT = Date.now(); tu.classList.remove('fbq');
         /* o alvo é um ícone da batalha e há um painel aberto por cima: fecha o painel antes de apontar (senão o anel fica num canto vazio) */
         if (/^#fb/.test(q) && view !== 'battle') setTimeout(() => { if (view !== 'battle' && tutOn() && /^#fb/.test(TUT[S.tut] ? TUT[S.tut].sel() : '')) Screens.close(); }, 700); }
@@ -306,8 +328,8 @@ const FB_TUT_TXT = [
   'Seu herói luta <b>sozinho</b>.',
   'O <b>Especial</b> dispara sozinho.',
   () => view !== 'gear' ? 'Abra <b>Equip.</b>' : !document.getElementById('g_upgold') ? 'Toque na sua <b>arma</b>.' : (typeof tutCapped === 'function' && tutCapped()) ? 'O item sobe até o <b>seu nível</b>.' : 'Toque em <b>Upar</b>.',
-  () => view === 'summon' ? 'Toque na invocação <b>grátis</b>.' : 'Abra <b>Invocar</b>.',
   'A <b>Ultimate</b> dispara sozinha.',
+  () => view === 'summon' ? 'Toque na invocação <b>grátis</b>.' : 'Abra <b>Invocar</b>.',
 ];
 function fbInit(){ fbCss();
   if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); }

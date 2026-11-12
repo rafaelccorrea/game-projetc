@@ -1,0 +1,82 @@
+{
+ "note": "chapéu solto por era; desenhar na âncora head do quadro: translate(x,y) rotate(ang) scale(s/res) drawImage(png,-pivot.x,-pivot.y). Âncoras em assets/anim/hyb/<R|phase1|phase2|phase3>/masks/kael_<estado>_head.json; ok=false -> ocultar o chapéu no quadro.",
+ "hats": {
+  "era0": {
+   "name": "skull",
+   "file": "hat_era0.png",
+   "w": 356,
+   "h": 193,
+   "pivot": {
+    "x": 199.8,
+    "y": 131.1
+   },
+   "res": 1
+  },
+  "era1": {
+   "name": "roman",
+   "file": "hat_era1.png",
+   "w": 232,
+   "h": 253,
+   "pivot": {
+    "x": 122.8,
+    "y": 152.6
+   },
+   "res": 1
+  },
+  "era2": {
+   "name": "knight",
+   "file": "hat_era2.png",
+   "w": 269,
+   "h": 250,
+   "pivot": {
+    "x": 155.8,
+    "y": 150.1
+   },
+   "res": 1
+  },
+  "era3": {
+   "name": "tricorn",
+   "file": "hat_era3.png",
+   "w": 322,
+   "h": 175,
+   "pivot": {
+    "x": 177.3,
+    "y": 130.1
+   },
+   "res": 1
+  },
+  "era4": {
+   "name": "tophat",
+   "file": "hat_era4.png",
+   "w": 293,
+   "h": 161,
+   "pivot": {
+    "x": 158.3,
+    "y": 142.6
+   },
+   "res": 1
+  },
+  "era5": {
+   "name": "army",
+   "file": "hat_era5.png",
+   "w": 259,
+   "h": 224,
+   "pivot": {
+    "x": 131.3,
+    "y": 123.5
+   },
+   "res": 1
+  },
+  "era6": {
+   "name": "scifi",
+   "file": "hat_era6.png",
+   "w": 254,
+   "h": 219,
+   "pivot": {
+    "x": 129.3,
+    "y": 118.5
+   },
+   "res": 1
+  }
+ }
+}

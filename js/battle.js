@@ -50,9 +50,15 @@ const BOSS_FALL_DUR=1.4;   // chefe tombando (sem folha de morte ligada)
 const B={hero:null,enemy:null,fx:[],t:0,speed:1,deadT:0,swing:0,hurt:0,parts:[],rings:[],corpses:[],wfx:[],shake:0,cam:0,tr:null,
   dispEra:eraOf(S.stage),paused:true,tipW:null,cd2:0,energy:0,act:null,slow:0,dim:0,banner:null,step:0,
   en:[],toSpawn:[],spawnT:0,spawnN:0,waveT:0,running:true,holdT:0,reach:HX+74,at:0,eshots:[],eAtkT:-9};   // reach = borda direita do herói + arma em repouso
-const wSkin = () => heroLook().weapon;   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
+/* v0.12.3: a arma nova só entra na mão quando a arte dela (sprite da arma e, se for pistola, as 3 folhas) já carregou; até lá fica a ANTERIOR
+   (nunca mão vazia). Se a arte não chegar em 4 s, troca assim mesmo. */
+const HLK={cur:null,req:null,t0:0};
+function lookReady(w){ if(!SPR(hp('weapons',w.e,tierOf(w.r)),'weapon')) return false; const pe=typeof pistolEra==='function'?pistolEra(w):-1; return pe<0||pistolReady(pe); }
+const wSkin = () => { const w=heroLook().weapon; if(w!==HLK.cur){ if(HLK.req!==w){ HLK.req=w; HLK.t0=performance.now(); }
+    if(!HLK.cur||lookReady(w)||performance.now()-HLK.t0>4000) HLK.cur=w; } return HLK.cur; };   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
 const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
-const wIsGun = ws => { const m=J('assets/weapons/meta.json')[heroKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
+const wIsGun0 = ws => { const m=J('assets/weapons/meta.json')[heroKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
+const wIsGun = ws => wIsGun0(ws)&&(ws.e!==4||ART_ON.pistol_era4===true);   /* v0.12.3: arma de fogo só com a PISTOLA APROVADA (eras 3, 5 e 6; era 4 atrás da chave ART_ON.pistol_era4). Sem ela, golpe corpo a corpo (pose de espada) */
 
 /* ---------- horda: fábrica de inimigos, ondas e saque (pontos de extensão: mkEnemy, waveSpec, lootFor) ---------- */
 function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
@@ -111,7 +117,9 @@ let MAXVIS=MAXVIS_ALL;   // 3 visíveis; cai para 1 na onda em que uma espécie 
 const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX, HERO_GAP=32*PX, HERO_REACH=4*PX, HERO_SHIFT_MAX=48*PX, HERO_BACK_MIN=80*PX, HERO_FRONT_K=1.10/1.20;   // folga de 32 px do corpo do Kael parado (QA pediu 30-40); fundo até 80 px; frente até a escala 1,10   // HERO_EDGE: borda direita do corpo do Kael parado; HERO_GAP: respiro mínimo até o inimigo da frente
 function waveVis(){ const keys=new Set(B.toSpawn.concat(B.en.map(e=>e.kind)).map(k=>`era${eraOf(S.stage)}_${k}`));
   for(const k of keys){ const W=SOLO_WIDE[k]; if(!W) continue; const sp=SPR(`assets/enemies/${k}.png`,'enemy'), w=W.minH*(sp?sp.w/sp.h:2);
-    if((w+60*PX)/2-(SLOTX[1]-SLOTX[0])>SLOT_OVL[0]*Math.min(w,60*PX)) return 1; } return MAXVIS_ALL; }
+    if((w+60*PX)/2-(SLOTX[1]-SLOTX[0])>SLOT_OVL[0]*Math.min(w,60*PX)) return 1; } return ERA_VIS[eraOf(S.stage)]||MAXVIS_ALL; }
+/* v0.12.3 (PO): nas eras de bicho largo só 2 comuns visíveis por vez (com 3, a folga de 32 px do Kael levava a sobreposição atrás a 64-88%). O total da onda não muda: os outros entram conforme morrem. */
+const ERA_VIS={0:2,1:2,4:2};
 /* ALTURA POR ESPÉCIE (e0 98 px, e1 106 px), fixa durante a vida do inimigo; o slot do fundo desenha a 0,9 (profundidade). Antes a altura era
    do SLOT (100/116/95): a cada passo na fila o inimigo crescia e encolhia ~20%, com a cabeça subindo e descendo: era o "pulo de pato". */
 const KINDH={e0:98*PX,e1:106*PX}, BACK_SC=0.9, SLOTH=[KINDH.e0,KINDH.e1,KINDH.e0*BACK_SC];
@@ -686,6 +694,12 @@ function heroPose(a,gun,t){
 }
 /* H: {x,gy,t,sk,ws,walking,hurt,deadP,act,main}
    Rig: anchors.json {hand,handR,angle} · weapons/meta.json {type,grip,angle(graus, 0=direita, 90=cima),len,muzzle,layer:"back"} */
+/* SUBIR DE NÍVEL (aprovado): folha assets/anim/fx/levelup (quadros, fps, pés e âncora do .json), tocada UMA vez sobre o Kael, pés na linha do chão,
+   na mesma escala do quadro do herói. B.lvfx = {t} é ligado em js/farm.js quando o nível sobe. */
+const LVUP='assets/anim/fx/levelup';
+function drawLevelUp(){ const f=B.lvfx; if(!f) return; const sh=sheetLoad(LVUP,true); if(!sh.ok){ if(sh.fail) B.lvfx=null; return; }
+  const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
+  const k=HS/256; ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
 function drawHero(H){
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
   const sk=H.sk, ws=H.ws, key=heroKey(sk), t=H.t;
@@ -765,6 +779,7 @@ const ART_ON={
      Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
      as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
+  pistol_era4:false,   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
   s1_era2_t0:true, s1_era2_t1:true, s1_era2_t2:true,                                       // golpe básico com rastro (kael_attack_trail_era2_t<tier>)
   s2_era2_t0:true, s2_era2_t1:true, s2_era2_t2:true,                                       // Corte Giratório (kael_spin_era2_t<tier>)
@@ -905,13 +920,13 @@ function draw(){
   const h=B.hero, L=B.en;
   HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   const ultOn=!!(B.act&&B.act.type==='s3');
-  if(!ultOn) drawHero(HM);
+  if(!ultOn){ drawHero(HM); drawLevelUp(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
   for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
     for(let j=5;j>=0;j--){ const kj=Math.max(0,k-j*0.035), x=p.x0+(p.x1-p.x0)*kj, y=p.y0+(p.y1-p.y0)*kj-(p.kind==='shell'?26*4*kj*(1-kj):0); drawGlow(col,x,y,(big?11:6)*(1-j/7)*(p.kind==='fire'?1.5+0.3*Math.sin(B.at*40+j):1),j?0.6*(1-j/6):1,false);
       if(!j){ ctx.fillStyle=p.kind==='shell'?'#2a2a30':'#ffffff'; ctx.strokeStyle='#3a1a08'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,y,big?4.5:2.6,0,7); ctx.fill(); ctx.stroke(); } } }   /* núcleo sólido: aparece também sobre fundo claro */
-  if(ultOn){ drawWfx(2); drawHero(HM); }   // herói sempre por cima do efeito da ultimate
+  if(ultOn){ drawWfx(2); drawHero(HM); drawLevelUp(); }   // herói sempre por cima do efeito da ultimate
   drawWfx(1);
   // barras de vida depois dos efeitos (nunca cobertas)
   ctx.textAlign='center'; ctx.lineJoin='round';

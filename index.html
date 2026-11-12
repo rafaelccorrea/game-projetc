@@ -428,7 +428,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
    Em debug, ?res=1 liga só para conferência. */
 const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.2';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.12.3';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;

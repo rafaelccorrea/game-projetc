@@ -1,0 +1,10 @@
+{
+ "frames": 17,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 0,
+ "padRight": 0,
+ "feetY": 243,
+ "note": "pés em x = padLeft+128"
+}

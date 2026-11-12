@@ -4,10 +4,10 @@
 <h1>Pets filhote animados: andar/voar, parado e 3 ataques</h1>
 <p>Atrás do Kael, olhando para a direita. Pés na linha do chão (o papagaio voa: sombra por código). Os efeitos são menores que os do Kael.</p><div id="L"></div>
 <script>
-const A='../../../assets/anim/pets/';const P=[['era0_mammoth','Mamute'],['era1_sphinx','Esfinge'],['era2_dragon','Dragão'],['era3_parrot','Papagaio'],['era4_mechdog','Cão mecânico']];const S=[['run','andar/voar'],['idle','parado'],['atk1','básico'],['atk2','mediano'],['atk3','crítico']];
+const A='../../../assets/anim/pets/';const STG=new URLSearchParams(location.search).get('s')||'';const SUF=STG?'_'+STG:'';const P=[['era0_mammoth','Mamute'],['era1_sphinx','Esfinge'],['era2_dragon','Dragão'],['era3_parrot','Papagaio'],['era4_mechdog','Cão mecânico']];const S=(STG?[['run','andar/voar'],['idle','parado'],['atk1','ataque']]:[['run','andar/voar'],['idle','parado'],['atk1','básico'],['atk2','mediano'],['atk3','crítico']]);
 const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=s;});
 (async()=>{const items=[];for(const [k,n] of P){const row=document.createElement('div');row.className='row';row.innerHTML='<h2>'+n+'</h2><div class="g"></div>';document.getElementById('L').appendChild(row);
- for(const [s,sn] of S){const m=await (await fetch(A+k+'_'+s+'.json')).json(),img=await L(A+k+'_'+s+'.png');const d=document.createElement('div');d.className='c';d.innerHTML='<b>'+sn+'</b>';const c=document.createElement('canvas');c.width=256;c.height=176;d.appendChild(c);row.querySelector('.g').appendChild(d);items.push({c,m,img,fly:k==='era3_parrot'});}}
+ for(const [s,sn] of S){try{const m=await (await fetch(A+k+SUF+'_'+s+'.json')).json(),img=await L(A+k+SUF+'_'+s+'.png');const d=document.createElement('div');d.className='c';d.innerHTML='<b>'+sn+'</b>';const c=document.createElement('canvas');c.width=256;c.height=176;d.appendChild(c);row.querySelector('.g').appendChild(d);items.push({c,m,img,fly:k==='era3_parrot'});}catch(e){}}}
  const t0=performance.now();(function loop(n){const t=(n-t0)/1000;for(const {c,m,img,fly} of items){const g=c.getContext('2d'),s=0.5,i=Math.floor(t*m.fps)%m.frames;g.clearRect(0,0,c.width,c.height);g.fillStyle='#3d4a3a';g.fillRect(0,m.feetY*s,c.width,c.height);
   g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse((m.padLeft+128)*s,m.feetY*s+1,fly?22:34,fly?4:6,0,0,7);g.fill();g.drawImage(img,i*m.w,0,m.w,m.h,0,0,m.w*s,m.h*s);}requestAnimationFrame(loop);})(t0);})();
 </script></body></html>
