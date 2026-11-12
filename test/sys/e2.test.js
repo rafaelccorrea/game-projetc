@@ -613,7 +613,7 @@ t('montaria: % de ATK e Vida 3/4,5/6,5/9/12 no máximo, nível com ouro até ní
   const S=newS(); M.add(S,makeHost(),'griffin'); assert.strictEqual(M.bonus(S).atkPct,0,'desligada');
   M.DATA.on=true;
   try{
-    assert.deepStrictEqual(['pony','horse','wolf','griffin','mythic','wyvern'].map(id=>M.pctOf(id,60,5)),[3,4.5,6.5,6.5,9,12],'lobo e grifo Épicos'); assert.strictEqual(M.add(newS(),makeHost(),'mythic').reason,'tbd'); near(M.pctOf('wolf',1,1),6.5*0.4*0.8,1e-3);
+    assert.deepStrictEqual(['pony','horse','wolf','griffin','mythic','wyvern'].map(id=>M.pctOf(id,60,5)),[3,4.5,6.5,6.5,9,12],'lobo e grifo Épicos'); assert.strictEqual(M.add(newS(),makeHost(),'mythic').isNew,true); assert.strictEqual(M.info(newS(),makeHost(),'mythic').name,'Tigre de cristal'); near(M.pctOf('wolf',1,1),6.5*0.4*0.8,1e-3);
     const h=makeHost(); let paid=0; h.spendGold=n=>{ paid+=n; return true; }; LV.ensure(S).lvl=20;
     const u=M.upgrade(S,h,'griffin',100); assert.strictEqual(u.lvl,10,'teto = 20 ÷ 2'); assert.ok(paid>0); assert.strictEqual(M.canUpgrade(S,h,'griffin').reason,'cap');
     for(let i=0;i<4;i++) M.add(S,h,'griffin'); assert.strictEqual(M.ensure(S).owned.griffin.stars,3,'40 fragmentos = 1→2 (10) + 2→3 (20)');
@@ -636,8 +636,8 @@ t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), o
   let L=AP.layers(S,h).map(l=>l.layer); assert.deepStrictEqual(L,['base','boots','armor','hat','weapon'],'colar e luvas não aparecem; skin inicial não esconde o item');
   assert.strictEqual(AP.layers(S,h).find(l=>l.layer==='weapon').key,'item/weapon/e2_r3');
   AP.setLookHidden(S,'hat',true); assert.ok(!AP.layers(S,h).some(l=>l.layer==='hat'),'chapéu oculto');
-  assert.ok(AP.addCosmetic(S,'glasses_aviator').ok); assert.ok(AP.equipCosmetic(S,'glasses','glasses_aviator')); assert.ok(!AP.equipCosmetic(S,'mask','glasses_aviator'));
-  assert.ok(AP.layers(S,h).some(l=>l.layer==='glasses'&&l.key==='cos/glasses_aviator'));
+  assert.ok(AP.addCosmetic(S,'goggles').ok); assert.ok(AP.equipCosmetic(S,'glasses','goggles')); assert.ok(!AP.equipCosmetic(S,'mask','goggles'));
+  assert.ok(AP.layers(S,h).some(l=>l.layer==='glasses'&&l.key==='cos/goggles'));
   AP.setMode(S,'skin'); assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'modo skin sem skin escolhida = itens');
   S.skinEq.armor='a31'; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','skin','weapon'],'skin completa esconde as peças');
   assert.deepStrictEqual(AP.bonus(),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0},'só visual');
@@ -645,6 +645,112 @@ t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), o
   // asa: atrás do corpo, nos dois modos, com olho para ocultar; skin de asa vence o item
   eq.wing={slot:'wing',e:3,r:2}; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['wing','base','skin','weapon'],'asa também no modo skin');
   AP.setSkin(S,'wing','wing_angel'); assert.strictEqual(AP.layers(S,h)[0].key,'skin/wing_angel'); AP.setLookHidden(S,'wing',true); assert.ok(!AP.layers(S,h).some(l=>l.layer==='wing'));
+});
+
+t('fases (Revisão 2): tabela = balance-v9 rev2, inimigo com DEF, ordem, nível, era seguinte e migração',()=>{
+  const P=require('../../js/sys/phases.js'), T=require('../../js/sys/stats.js'), R=require('../../docs/balance-v9.json').rev2;
+  assert.strictEqual(R.stages.length,3600);
+  for(const x of R.stages){ const f=P.fcRec(x.era,x.diff,x.stage); assert.ok(Math.abs(f-x.fcRec)<=Math.max(1,x.fcRec*1e-5),'fc '+JSON.stringify(x));
+    assert.strictEqual(P.lvlLock(x.era,x.diff,x.stage),x.lvlLock); assert.strictEqual(P.kindOf(x.stage),x.boss); assert.strictEqual(P.isRequired(x.era,x.diff),x.required); }
+  assert.strictEqual(P.fcRec(0,0,0),0); assert.strictEqual(P.enemy(9,0,1),null); assert.strictEqual(P.info(0,4,1),null);
+  // DEF na fcRec (ATK ≈ 5,5% da FC): comum 10%, chefe 20%, Senhor 25%; vida ×0,9/×0,8/×0,75
+  for(const [n,k,red] of [[30,'common',0.10],[50,'boss',0.20],[100,'boss',0.25]]){ const e=P.enemy(5,2,n,k); near(T.defReduction(e.def,0.055*e.fcRec),red,0.01); }
+  assert.strictEqual(P.enemy(3,0,50,'boss').kind,'chefe'); assert.strictEqual(P.enemy(3,0,100,'boss').kind,'senhor'); assert.strictEqual(P.enemy(3,0,100,'common').kind,'common');
+  assert.ok(P.enemy(3,1,10,'common').hp===Math.round(P.fcRec(3,1,10)*0.04*0.9));
+  // como hoje: o comum cai em ~1 golpe na fcRec; o Senhor aguenta uma ultimate inteira (10× ATK) de quem está na fcRec
+  { const e=P.enemy(6,3,100,'boss'), atk=0.055*e.fcRec; assert.ok(T.hit({atk,critRate:0,critDmg:0},10,e.def,false).dmg<e.hp); }
+  const S=newS(), h=makeHost({eraMax:0}), L=require('../../js/sys/level.js');
+  assert.deepStrictEqual(P.canChallenge(S,h,0,0,1),{ok:false,reason:'off'});
+  P.DATA.on=true; try{
+    assert.strictEqual(P.canChallenge(S,h,0,0,1).ok,true); assert.strictEqual(P.canChallenge(S,h,0,0,2).reason,'order'); assert.strictEqual(P.canChallenge(S,h,1,0,1).reason,'era');
+    assert.strictEqual(P.canChallenge(S,h,0,1,1).reason,'order','Médio só depois do Fácil 100');
+    L.ensure(S).lvl=1; let lastLv=0; for(let n=1;n<=100;n++){ const c=P.canChallenge(S,h,0,0,n); if(!c.ok){ assert.strictEqual(c.reason,'level'); L.ensure(S).lvl=c.needLevel; }
+      assert.ok(P.lvlLock(0,0,n)>=lastLv); lastLv=P.lvlLock(0,0,n); const w=P.win(S,h,0,0,n); assert.ok(w.ok&&w.first,'fase '+n); if(n===100) assert.strictEqual(w.eraUnlocked,1); }
+    assert.strictEqual(P.win(S,h,0,0,5).first,false,'repetir não é 1ª vitória'); assert.ok(P.eraOpen(S,1)&&!P.eraOpen(S,2)); assert.strictEqual(P.eraMax(S),1);
+    assert.deepStrictEqual(P.ensure(S).cur,{e:1,d:0,n:1}); assert.strictEqual(P.canChallenge(S,h,0,1,1).ok,true,'Médio da era 0 é opcional mas abre');
+    assert.strictEqual(P.lvlLock(0,1,1),12,'opcional: nível de saída');
+    // era 2 exige Fácil + Médio
+    assert.deepStrictEqual(P.next(S,h,2,0,100),{e:2,d:1,n:1}); assert.deepStrictEqual(P.next(S,h,2,1,100),{e:3,d:0,n:1}); assert.deepStrictEqual(P.next(S,h,8,2,100),{e:8,d:3,n:1}); assert.strictEqual(P.next(S,h,8,3,100),null);
+    // migração do save de hoje: fase antiga 27 = era 2, 7ª fase → eras 0-1 vencidas, Fácil da era 2 em 60
+    const S2=newS(); const m=P.migrate(S2,h,27); assert.deepStrictEqual([m.era,m.best],[2,60]); assert.ok(P.eraCleared(S2,1)&&P.eraOpen(S2,2)&&!P.eraCleared(S2,2));
+    assert.deepStrictEqual(P.ensure(S2).cur,{e:2,d:0,n:61}); assert.strictEqual(P.migrate(S2,h,27).reason,'done');
+    const S3={sys:{phases:{best:{0:[999,-3,'x'],7:'lixo'},cur:{e:99}}}}; P.ensure(S3); assert.deepStrictEqual(S3.sys.phases.best,{0:[100,0,0,0]}); assert.deepStrictEqual(S3.sys.phases.cur,{e:0,d:0,n:1});
+    assert.deepStrictEqual(P.rewardOf(3),{gold:4,mats:4,topRarChance:2.2,qualityBestOf:3,firstWinGems:3,firstWinPetFrag:1});
+  } finally { P.DATA.on=false; }
+});
+
+t('ensure NÃO troca a ficha do pet/montaria: feedTap e quem segurou x gravam no save (defeito avisado pela tela de pets)',()=>{
+  const P=require('../../js/sys/pet.js'), M=require('../../js/sys/mount.js'); const v3=P.DATA.v3; P.DATA.v3=true; P.setV17(true);
+  try{ const S=newS(), h=makeHost({level:100,eraMax:0}); P.addEgg(S,h,{r:0}); const id=Object.keys(P.ensure(S).owned)[0]; P.ensure(S).food=1e6;
+    const x=P.ensure(S).owned[id]; P.ensure(S); assert.strictEqual(P.ensure(S).owned[id],x,'mesma ficha depois do ensure');
+    const l0=x.lvl, r=P.feedTap(S,h,id,1); assert.ok(r.ok); assert.strictEqual(P.ensure(S).owned[id].fx,1,'barra parcial gravada');
+    for(let i=0;i<50;i++) P.feedTap(S,h,id,25); assert.ok(P.ensure(S).owned[id].lvl>l0,'nível gravado');
+    const Sm=newS(); M.add(Sm,h,'pony'); const y=M.ensure(Sm).owned.pony; M.ensure(Sm); assert.strictEqual(M.ensure(Sm).owned.pony,y);
+  } finally { P.setV17(false); P.DATA.v3=v3; }
+});
+
+t('pet 17b na batalha: folhas pelo estágio (filhote/_mid/_evo), atk2/atk3 só no filhote antigo, e todas existem no disco',()=>{
+  const P=require('../../js/sys/pet.js'), fs=require('fs'), path=require('path'); const v3=P.DATA.v3; P.DATA.v3=true; P.setV17(true);
+  try{ const S=newS(), h=makeHost({level:120,eraMax:8}); require('../../js/sys/level.js').ensure(S).lvl=100; P.ensure(S).owned.underworld={stars:1,frags:0,lvl:1};
+    const o=P.ensure(S); o.eq='underworld'; assert.ok(o.owned.underworld,'pet no save'); let b=P.battleInfo(S,h); assert.strictEqual(b.draw.base,'era7_cerberus'); assert.deepStrictEqual(b.draw.extra,[]);
+    o.owned.underworld.stg=2; b=P.battleInfo(S,h); assert.strictEqual(b.draw.base,'era7_cerberus_evo'); assert.ok(b.draw.sheets.includes('era7_cerberus_evo_atk1'));
+    const dir=path.join(__dirname,'../../assets/anim/pets'); if(fs.existsSync(dir)) for(const sp of ['era0_mammoth','era7_cerberus','era8_pegasus','prism_fox'])
+      for(const sh of [sp+'_idle',sp+'_mid_run',sp+'_evo_atk1']) assert.ok(fs.existsSync(path.join(dir,sh+'.png')),'falta '+sh);
+  } finally { P.setV17(false); P.DATA.v3=v3; }
+});
+
+t('guilda (Sys.guild): desligada não muda nada; sem servidor fica fechada; tetos, vagas, nível, territórios, troca com travas, prêmios',()=>{
+  const G=require('../../js/sys/guild.js'), L=require('../../js/sys/level.js'), F=require('../../js/sys/fc.js');
+  const S=newS(), h=makeHost({eraMax:3}); h.t=Date.UTC(2026,10,12,12);
+  assert.deepStrictEqual(G.status(S,h),{on:false,open:false,reason:'off'}); assert.deepStrictEqual(G.bonus(S),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
+  // regras puras
+  assert.strictEqual(G.memberCap(1),20); assert.strictEqual(G.memberCap(6),30); assert.strictEqual(G.memberCap(10),30);
+  assert.strictEqual(G.xpToNext(1),1000); assert.strictEqual(G.xpToNext(2),1600); assert.strictEqual(G.xpToNext(10),0); assert.deepStrictEqual(G.levelOfXp(2600),{level:3,into:0,need:2560});
+  assert.strictEqual(G.bannerCap('atk',10),5); assert.strictEqual(G.bannerCap('def',10),3); assert.strictEqual(G.bannerCap('atk',5),2.5); assert.strictEqual(G.bannerCap('crit',10),0);
+  assert.deepStrictEqual(G.territoryBonus([{region:1},{region:2}]),{gold:4,xp:2,drop:2}); assert.deepStrictEqual(G.territoryBonus(Array(9).fill({region:0}).concat([{region:4,capital:true}])),{gold:10,xp:5,drop:5});
+  assert.ok(G.canAttackRegion([3,4,5],4)&&!G.canAttackRegion([2,2,8],4)&&!G.canAttackRegion([],0));
+  assert.deepStrictEqual(G.tourneyReward(1),{coin:300,prism:3,frame:true}); assert.strictEqual(G.tourneyReward(7).prism,1); assert.strictEqual(G.tourneyReward(60).coin,0);
+  assert.strictEqual(G.createCost(h),8000*4);
+  G.DATA.on=true; try{
+    L.ensure(S).lvl=10; assert.strictEqual(G.status(S,h).reason,'level'); assert.strictEqual(G.status(S,h).needLevel,L.unlockLevel('guild'));
+    L.ensure(S).lvl=40; assert.deepStrictEqual([G.status(S,h).open,G.status(S,h).reason],[false,'server'],'sem servidor = fechada');
+    assert.strictEqual(G.canCreate(S,h).reason,'server');
+    G.setProvider({online:true,status:()=>({open:true})}); assert.strictEqual(G.status(S,h).open,true); assert.ok(G.canCreate(S,h).ok);
+    // servidor manda a guilda: tetos valem também aqui (estandarte acima do teto do nível é cortado)
+    G.applyServer(S,{id:'g1',name:'Lobos',role:'officer',xp:3000,banners:{atk:9,hp:1,def:2.9,gold:4,food:20},territories:[{region:2},{region:3,capital:true}],coin:50,joinedAt:h.t-10*864e5});
+    const o=G.ensure(S); assert.strictEqual(o.level,3); assert.strictEqual(o.banners.atk,1.5); assert.strictEqual(o.banners.def,0.9); assert.strictEqual(o.banners.food,3);
+    const b0=F.total?null:null; assert.deepStrictEqual(G.bonus(S),{atkPct:1.5,hpPct:1,goldPct:0,critPct:0,defPct:0.9,fc:0});
+    assert.deepStrictEqual(G.perks(S),{goldPct:3+8,xpPct:4,dropPct:4,foodPct:3});
+    assert.strictEqual(G.canCreate(S,h).reason,'in_guild');
+    // troca: 18+, 7 dias de membro, item comprado não troca, item novo (<24 h) não troca, limites
+    const it={slot:'boots',e:3,r:2,lvl:40,gold:1000,qp:5000,subs:[{k:'hpPct',q:0.5}],gotAt:h.t-48*36e5};
+    assert.strictEqual(G.canDonate(S,h,it,'u2',{age:15}).reason,'adult'); assert.strictEqual(G.canDonate(S,h,it,'u2',{}).reason,'adult');
+    assert.deepStrictEqual(G.canDonate(S,h,it,'u2',{age:20}),{ok:true,goldBack:500});
+    assert.strictEqual(G.canDonate(S,h,Object.assign({},it,{offer:true}),'u2',{age:20}).reason,'bought');
+    assert.strictEqual(G.canDonate(S,h,Object.assign({},it,{origin:'shop_gem'}),'u2',{age:20}).reason,'bought');
+    assert.strictEqual(G.canDonate(S,h,Object.assign({},it,{gotAt:h.t-36e5}),'u2',{age:20}).reason,'item_age');
+    G.markDonated(S,h,'u2'); assert.strictEqual(G.canDonate(S,h,it,'u2',{age:20}).reason,'pair_limit'); G.markDonated(S,h,'u3'); G.markDonated(S,h,'u4');
+    assert.strictEqual(G.canDonate(S,h,it,'u5',{age:20}).reason,'day_limit'); h.t+=864e5; assert.ok(G.canDonate(S,h,it,'u5',{age:20}).ok,'novo dia zera');
+    const rc=G.received(it); assert.deepStrictEqual([rc.lvl,rc.gold,rc.qp,rc.e,rc.r,rc.origin],[1,0,5000,3,2,'guild']); assert.strictEqual(it.lvl,40,'original intacto');
+    const S2=newS(); L.ensure(S2).lvl=40; G.applyServer(S2,{id:'g2',role:'member',level:1,joinedAt:h.t-864e5}); assert.strictEqual(G.canDonate(S2,h,it,'x',{age:30}).reason,'member_days');
+    // sair: some o bônus; 24 h para outra guilda, 7 dias para a mesma
+    G.applyServer(S,null,h); assert.strictEqual(G.inGuild(S),false); assert.deepStrictEqual(G.bonus(S).atkPct,0); assert.strictEqual(G.perks(S).goldPct,0);
+    assert.strictEqual(G.canJoin(S,h,'g9').reason,'cooldown'); h.t+=25*36e5; assert.ok(G.canJoin(S,h,'g9').ok); assert.strictEqual(G.canJoin(S,h,'g1').reason,'cooldown');
+    h.t+=7*864e5; assert.ok(G.canJoin(S,h,'g1').ok);
+    // save sujo
+    const S3={sys:{guild:{id:5,banners:{atk:'x'},territories:[null,{region:99}],role:'rei'}}}; G.ensure(S3); assert.strictEqual(S3.sys.guild.id,null); assert.strictEqual(S3.sys.guild.role,'member');
+  } finally { G.DATA.on=false; G.setProvider(null); }
+});
+
+t('aparência: herói Kael/Kaia (S.hero) escolhe o corpo e a pasta das folhas pela fase; as 8 pastas existem',()=>{
+  const A=require('../../js/sys/appearance.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const v9=L.DATA.v9.on;
+  try{ assert.strictEqual(A.heroOf({}),'kael'); assert.strictEqual(A.heroOf({hero:'kaia'}),'kaia'); assert.strictEqual(A.heroOf({hero:'x'}),'kael');
+    assert.strictEqual(A.layers({hero:'kaia'},makeHost()).find(l=>l.layer==='base').key,'base/kaia');
+    assert.deepStrictEqual(A.sheets({},makeHost()),{hero:'kael',stage:0,dir:'assets/anim/hyb/R/',prefix:'kael_',masks:'assets/anim/hyb/R/masks/'});
+    L.setV9(true); const S={hero:'kaia'}; L.ensure(S).lvl=80; L.ensure(S).stg=3; assert.strictEqual(A.sheets(S,makeHost()).dir,'assets/anim/hyb/kaia_phase3/');
+    const root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/hyb'))) for(const h of ['kael','kaia']) for(let st=0;st<4;st++){ const T={hero:h}; L.ensure(T).lvl=120; L.ensure(T).stg=st;
+      const d=A.sheets(T,makeHost()); assert.strictEqual(d.stage,st); assert.ok(fs.existsSync(path.join(root,d.dir,d.prefix+'idle_body.json')),'falta '+d.dir+d.prefix+'idle_body.json'); }
+  } finally { L.setV9(v9); }
 });
 
 console.log(`ok: ${n} testes`);

@@ -23,13 +23,13 @@ const DATA={
   layerOrder:['wing','base','boots','armor','hat','glasses','mask','weapon'],   // de baixo para cima (a asa fica atrás do corpo)
   itemLayers:['boots','armor','hat','weapon'], lookHideable:['wing','boots','armor','hat','glasses','mask'],
   cosCats:['glasses','mask'],
-  cosmetics:[   // catálogo PROVISÓRIO (nomes e arte com a fps-ff/PO); src = de onde vem
-    {id:'glasses_aviator', cat:'glasses', name:'Óculos de aviador', src:'shop'},
-    {id:'glasses_round',   cat:'glasses', name:'Óculos redondos',   src:'event'},
-    {id:'mask_bandit',     cat:'mask',    name:'Máscara de bandido', src:'achievement'},
-    {id:'mask_samurai',    cat:'mask',    name:'Máscara samurai',   src:'shop'},
+  cosmetics:[   // ids = os da ARTE (assets/anim/equip/cos/cos.json, fps-ff); nomes e de onde vem (src) ainda PROVISÓRIOS até o PO fechar catálogo e preços
+    {id:'goggles',  cat:'glasses', name:'Óculos de proteção', src:'shop'},
+    {id:'visor',    cat:'glasses', name:'Viseira',            src:'event'},
+    {id:'ninja',    cat:'mask',    name:'Máscara ninja',      src:'achievement'},
+    {id:'carnival', cat:'mask',    name:'Máscara de carnaval', src:'shop'},
   ],
-  cosKey:id=>`cos/${id}`,
+  cosKey:id=>`cos/${id}`,   // arquivo: assets/anim/equip/cos/<id>.png; âncora e pivot em cos.json (items[id])
 };
 const COS={}; for(const c of DATA.cosmetics) COS[c.id]=c;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -67,7 +67,7 @@ const chosenSkin=(S,k)=>{ const id=S&&S.skinEq&&S.skinEq[k]; return typeof id===
 function layers(S,host){ const o=look(S), eq=host&&typeof host.equipped==='function'?(host.equipped()||{}):{}, out=[];
   if(!o.hidden.wing){ const ws=skinOf(S,'wing'), wi=eq.wing; if(ws) out.push({layer:'wing',key:DATA.skinKey(ws),source:'skin',id:ws});
     else if(wi) out.push({layer:'wing',key:DATA.itemKey('wing',visualEra(wi),clamp(int0(wi.r),0,5)),source:'item',era:visualEra(wi),r:clamp(int0(wi.r),0,5)}); }
-  out.push({layer:'base',key:'base/kael',source:'base'});
+  out.push({layer:'base',key:'base/'+heroOf(S),source:'base',hero:heroOf(S)});
   const wSkin=chosenSkin(S,'weapon'), wItem=eq.weapon, weapon=wSkin?{layer:'weapon',key:DATA.skinKey(wSkin),source:'skin',id:wSkin}
     :wItem?{layer:'weapon',key:DATA.itemKey('weapon',visualEra(wItem),clamp(int0(wItem.r),0,5)),source:'item',era:visualEra(wItem),r:clamp(int0(wItem.r),0,5)}:{layer:'weapon',key:DATA.skinKey('w00'),source:'skin',id:'w00'};
   const outfit=chosenSkin(S,'armor');
@@ -97,7 +97,13 @@ function of(S,host){
   return out;
 }
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // visual não dá poder (o poder da skin é do Sys.skin)
-const API={DATA,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+/* HERÓI (S.hero do engenheiro: 'kael' | 'kaia') e a pasta das folhas pela fase do Sys.level (0 garoto/menina … 3 guerreiro/guerreira).
+   sheets(S,host) → {hero, stage, dir:'assets/anim/hyb/<pasta>/', prefix:'kael_'|'kaia_', masks:'<dir>masks/'} (docs/ARTE_LIGAR.md §5 e §9b) */
+const HERO_DIRS={kael:['R','phase1','phase2','phase3'],kaia:['kaia','kaia_phase1','kaia_phase2','kaia_phase3']};
+const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
+function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level; let st=0; try{ if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) st=clamp(int0(g.stage),0,3); } }catch(e){}
+  const dir='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'; return {hero:h,stage:st,dir,prefix:h+'_',masks:dir+'masks/'}; }
+const API={DATA,heroOf,sheets,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

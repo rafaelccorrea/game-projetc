@@ -32,7 +32,7 @@ function initLoading(){
   const era = eraOf(S.stage), ae = SKIN(S.skinEq.armor), we = typeof heroLook === 'function' ? heroLook().weapon : SKIN(S.skinEq.weapon);
   ['assets/hero/anchors.json', 'assets/weapons/meta.json', 'assets/enemies/meta.json', 'assets/bg/meta.json', 'assets/fx/meta.json'].forEach(p => loadTrack(loadJson(p)));
   heroPreload(ae.e).forEach(loadTrack);                                            // folhas do Kael (corrida, parado, golpe)
-  [hp('weapons', we.e, tierOf(we.r)), hp('hero', ae.e, tierOf(ae.r))].forEach(p => loadTrack(loadGameImg(p)));
+  [wPng(we), hp('hero', ae.e, tierOf(ae.r))].forEach(p => loadTrack(loadGameImg(p)));
   EN_IDS(era).forEach(k => enPreload(k).forEach(loadTrack));   // corrida dos inimigos que têm folha
   EN_IDS(era).forEach(k => loadTrack(loadGameImg(`assets/enemies/${k}.png`)));
   { const A = FX_ART.ult[we.e]; if (A){ loadTrack(loadGameImg(fxPng(A))); if (A.meta) loadTrack(loadJson(A.sheet + '.json')); } }   // ultimate animada da arma equipada

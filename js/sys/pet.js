@@ -111,6 +111,7 @@ const avail=(p,host)=>!(V17()&&p.removed)&&(!p.v17||V17())&&(!p.v4||V4())&&(!p.m
 const eggPets=host=>DATA.pets.filter(p=>!p.noEgg&&avail(p,host));
 const maxR=host=>eggPets(host).reduce((m,p)=>Math.max(m,p.r),0);
 
+const keepObj=(old,e)=>{ if(old&&typeof old==='object'&&!Array.isArray(old)){ for(const k of Object.keys(old)) delete old[k]; return Object.assign(old,e); } return e; };   // ensure atualiza NO LUGAR: quem segurou a ficha (x=o.owned[id]) continua gravando no save
 function ensure(S){
   if(!S||typeof S!=='object') throw new Error('Sys.pet.ensure: save inválido');
   if(!S.sys||typeof S.sys!=='object') S.sys={};
@@ -124,7 +125,7 @@ function ensure(S){
     if(int0(x.lvl)>=1) e.lvl=clamp(int0(x.lvl),1,DATA.v3d.maxLvl); else if(DATA.v3===true) e.lvl=clamp(int0(o.lvl)||1,1,DATA.v3d.maxLvl);
     if(int0(x.food)>0) e.food=int0(x.food);   // ração gasta NESTE pet (v3; base da devolução ao liberar)
     if(int0(x.stg)>0) e.stg=clamp(int0(x.stg),0,2); if(int0(x.fx)>0) e.fx=int0(x.fx);   // 17b: estágio guardado e barra parcial de ração
-    o.owned[id]=e; }
+    o.owned[id]=keepObj(ow[id],e); }
   const st=(o.stored&&typeof o.stored==='object')?o.stored:{}; o.stored={};
   for(const id in st) if(BY[id]&&int0(st[id])>0&&!o.owned[id]) o.stored[id]=int0(st[id]);   // guardados só existem antes de nascer
   if(!BY[o.eq]||!o.owned[o.eq]) o.eq=null;
@@ -297,7 +298,9 @@ function chooseEgg(S,host,index,id){ if(!V17()) return {ok:false,reason:'off'}; 
   const hatch=addEgg(S,host,{pet:id,r:BY[id].r,source:c.source,v17ok:true}); if(c.source==='tower100'||c.source==='phoenix') o.t100=id;
   if(c.frags) addFragments(S,id,c.frags,host); if(c.food) addFood(S,c.food,host); return {ok:true,hatch,frags:c.frags,food:c.food}; }
 /* solta os ovos guardados pelo portão de raridade (a fps-30 chama junto do Sys.loot.releaseHeld, ao subir de nível) */
-function releaseGated(S,host){ if(!V17()) return []; const o=ensure(S), out=[]; o.gated=o.gated.filter(g=>{ const r=BY[g.pet].r; if(gateR(S,host,r)>=r){ out.push(addEgg(S,host,{pet:g.pet,r,source:g.source,v17ok:true})); return false; } return true; }); return out; }
+function releaseGated(S,host){ if(!V17()) return []; const o=ensure(S), go=[];   // separa ANTES de chocar (o addEgg chama o ensure e pode guardar ovo novo no o.gated)
+  o.gated=o.gated.filter(g=>{ const r=BY[g.pet].r; if(gateR(S,host,r)>=r){ go.push({pet:g.pet,r,source:g.source}); return false; } return true; });
+  return go.map(g=>addEgg(S,host,{pet:g.pet,r:g.r,source:g.source,v17ok:true})); }
 /* que espécie o ovo do chefe da era `era` dá (para a tela de recompensa): {pet} | {choice} | {pet, held} */
 const eraEgg=(S,host,era)=>V17()?egg17(S,host,{era}):null;
 /* política "auto" (aceita pelo PO na v5.1): golem enquanto a fênix não nasceu; depois, fênix (só 1 pet fica equipado) */
@@ -352,8 +355,13 @@ function battleInfo(S,host){ const o=ensure(S); if(locked(S)||!o.eq||!o.owned[o.
   const B=DATA.battle, idx=V17()?stgOf(x):Math.max(0,DATA.v3d.stages.findIndex(z=>z.id===sg.id));
   return {id:d.id,name:d.name,icon:d.icon,rarity:d.r,rarityName:RNAME[d.r],type:d.type,stars:x.stars,level:levelOf(S,d.id),
     stage:idx+1,stageId:sg.id||'cub',aura:sg.aura||null,interval:B.interval,hitMult:B.hitMult,healEvery:B.healEvery,
-    // 17b: folhas em assets/anim/pets/<sprite>_{idle,run,atk1,atk2,atk3}.json (atk1 básico, atk2 mediano, atk3 crítico; conferir com a fps-ff)
-    draw:V17()&&d.sprite?{sprite:d.sprite,sheets:['idle','run','atk1','atk2','atk3'].map(k=>d.sprite+'_'+k),behind:'hero'}:{sprite:'pet_'+d.id+'_s'+(idx+1),behind:'hero'}}; }
+    // 17b (formato da fps-ff, docs/ARTE_LIGAR.md): assets/anim/pets/<base>_{run,idle,atk1}.png/.json, base = sprite + '' | '_mid' | '_evo' pelo estágio.
+    // Célula 512×352, pés em y 307, 12 fps. atk2/atk3 só existem no FILHOTE dos 5 pets antigos (opcionais). fly = papagaio (sombra por código).
+    draw:V17()&&d.sprite?drawOf(d.sprite,idx):{sprite:'pet_'+d.id+'_s'+(idx+1),behind:'hero'}}; }
+const PET_EXTRA=['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog'];
+function drawOf(sprite,idx){ const base=sprite+(['','_mid','_evo'][clamp(int0(idx),0,2)]), extra=idx===0&&PET_EXTRA.includes(sprite)?['atk2','atk3']:[];
+  return {sprite,base,stageSuffix:base.slice(sprite.length),sheets:['run','idle','atk1'].concat(extra).map(k=>base+'_'+k),extra:extra.map(k=>base+'_'+k),
+    cell:{w:512,h:352,feetY:307,fps:12},fly:sprite==='era3_parrot',behind:'hero'}; }
 const LOCK='<svg class="sys-lock-ic" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="15.4" r="1.6" fill="#0008"/></svg>';   // cadeado desenhado (sem emoji, pedido do PO)
 /* alimentar: sobe o nível do ESPAÇO (vale para todos os pets). {ok, n, spent, reason:'locked'|'cap'|'food'|'max'} */
 /* v3: alimenta UM pet (id; padrão = o equipado). v2: o nível do espaço. */

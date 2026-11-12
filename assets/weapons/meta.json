@@ -1,37 +1,487 @@
 {
- "era0_t0": {"type":"melee","grip":[0.489,0.75],"angle":92,"len":0.621},
- "era0_t1": {"type":"melee","grip":[0.499,0.715],"angle":92,"len":0.595},
- "era0_t2": {"type":"melee","grip":[0.395,0.729],"angle":66,"len":0.671},
- "era1_t0": {"type":"melee","grip":[0.498,0.765],"angle":90,"len":0.683},
- "era1_t1": {"type":"melee","grip":[0.5,0.79],"angle":90,"len":0.708},
- "era1_t2": {"type":"melee","grip":[0.5,0.765],"angle":90,"len":0.656,"layer":"back"},
- "era2_t0": {"type":"melee","grip":[0.496,0.78],"angle":90,"len":0.694},
- "era2_t1": {"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},
- "era2_t2": {"type":"melee","grip":[0.362,0.705],"angle":57.5,"len":0.642},
- "era3_t0": {"type":"gun","grip":[0.19,0.63],"angle":5,"len":0.745,"muzzle":[0.895,0.39]},
- "era3_t1": {"type":"gun","grip":[0.205,0.65],"angle":14,"len":0.78,"muzzle":[0.88,0.29]},
- "era3_t2": {"type":"gun","grip":[0.165,0.62],"angle":2,"len":0.773,"muzzle":[0.905,0.39]},
- "era4_t0": {"type":"gun","grip":[0.19,0.66],"angle":0,"len":0.714,"muzzle":[0.89,0.345]},
- "era4_t1": {"type":"gun","grip":[0.235,0.565],"angle":6,"len":0.735,"muzzle":[0.86,0.455]},
- "era4_t2": {"type":"gun","grip":[0.185,0.61],"angle":3,"len":0.693,"muzzle":[0.83,0.47]},
- "era5_t0": {"type":"gun","grip":[0.285,0.63],"angle":0,"len":0.567,"muzzle":[0.83,0.38]},
- "era5_t1": {"type":"gun","grip":[0.275,0.625],"angle":0,"len":0.651,"muzzle":[0.92,0.455]},
- "era5_t2": {"type":"gun","grip":[0.24,0.65],"angle":0,"len":0.61,"muzzle":[0.84,0.47],"layer":"back"},
- "era6_t0": {"type":"gun","grip":[0.23,0.68],"angle":2,"len":0.649,"muzzle":[0.81,0.45]},
- "era6_t1": {"type":"melee","grip":[0.502,0.76],"angle":89,"len":0.676},
- "era6_t2": {"type":"melee","grip":[0.389,0.752],"angle":63,"len":0.733},
- "era0_raro": {"type":"melee","grip":[0.489,0.75],"angle":92,"len":0.621},
- "era0_mitico": {"type":"melee","grip":[0.499,0.715],"angle":92,"len":0.595},
- "era1_raro": {"type":"melee","grip":[0.498,0.765],"angle":90,"len":0.683},
- "era1_mitico": {"type":"melee","grip":[0.5,0.79],"angle":90,"len":0.708},
- "era2_raro": {"type":"melee","grip":[0.496,0.78],"angle":90,"len":0.694},
- "era2_mitico": {"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},
- "era3_raro": {"type":"gun","grip":[0.19,0.63],"angle":5,"len":0.745,"muzzle":[0.895,0.39]},
- "era3_mitico": {"type":"gun","grip":[0.205,0.65],"angle":14,"len":0.78,"muzzle":[0.88,0.29]},
- "era4_raro": {"type":"gun","grip":[0.19,0.66],"angle":0,"len":0.714,"muzzle":[0.89,0.345]},
- "era4_mitico": {"type":"gun","grip":[0.235,0.565],"angle":6,"len":0.735,"muzzle":[0.86,0.455]},
- "era5_raro": {"type":"gun","grip":[0.285,0.63],"angle":0,"len":0.567,"muzzle":[0.83,0.38]},
- "era5_mitico": {"type":"gun","grip":[0.275,0.625],"angle":0,"len":0.651,"muzzle":[0.92,0.455]},
- "era6_raro": {"type":"gun","grip":[0.23,0.68],"angle":2,"len":0.649,"muzzle":[0.81,0.45]},
- "era6_mitico": {"type":"melee","grip":[0.502,0.76],"angle":89,"len":0.676}
+ "era0_t0": {
+  "type": "melee",
+  "grip": [
+   0.489,
+   0.75
+  ],
+  "angle": 92,
+  "len": 0.621
+ },
+ "era0_t1": {
+  "type": "melee",
+  "grip": [
+   0.499,
+   0.715
+  ],
+  "angle": 92,
+  "len": 0.595
+ },
+ "era0_t2": {
+  "type": "melee",
+  "grip": [
+   0.395,
+   0.729
+  ],
+  "angle": 66,
+  "len": 0.671
+ },
+ "era1_t0": {
+  "type": "melee",
+  "grip": [
+   0.498,
+   0.765
+  ],
+  "angle": 90,
+  "len": 0.683
+ },
+ "era1_t1": {
+  "type": "melee",
+  "grip": [
+   0.5,
+   0.79
+  ],
+  "angle": 90,
+  "len": 0.708
+ },
+ "era1_t2": {
+  "type": "melee",
+  "grip": [
+   0.5,
+   0.765
+  ],
+  "angle": 90,
+  "len": 0.656,
+  "layer": "back"
+ },
+ "era2_t0": {
+  "type": "melee",
+  "grip": [
+   0.496,
+   0.78
+  ],
+  "angle": 90,
+  "len": 0.694
+ },
+ "era2_t1": {
+  "type": "melee",
+  "grip": [
+   0.385,
+   0.741
+  ],
+  "angle": 62,
+  "len": 0.696
+ },
+ "era2_t2": {
+  "type": "melee",
+  "grip": [
+   0.362,
+   0.705
+  ],
+  "angle": 57.5,
+  "len": 0.642
+ },
+ "era3_t0": {
+  "type": "gun",
+  "grip": [
+   0.19,
+   0.63
+  ],
+  "angle": 5,
+  "len": 0.745,
+  "muzzle": [
+   0.895,
+   0.39
+  ]
+ },
+ "era3_t1": {
+  "type": "gun",
+  "grip": [
+   0.205,
+   0.65
+  ],
+  "angle": 14,
+  "len": 0.78,
+  "muzzle": [
+   0.88,
+   0.29
+  ]
+ },
+ "era3_t2": {
+  "type": "gun",
+  "grip": [
+   0.165,
+   0.62
+  ],
+  "angle": 2,
+  "len": 0.773,
+  "muzzle": [
+   0.905,
+   0.39
+  ]
+ },
+ "era4_t0": {
+  "type": "gun",
+  "grip": [
+   0.19,
+   0.66
+  ],
+  "angle": 0,
+  "len": 0.714,
+  "muzzle": [
+   0.89,
+   0.345
+  ]
+ },
+ "era4_t1": {
+  "type": "gun",
+  "grip": [
+   0.235,
+   0.565
+  ],
+  "angle": 6,
+  "len": 0.735,
+  "muzzle": [
+   0.86,
+   0.455
+  ]
+ },
+ "era4_t2": {
+  "type": "gun",
+  "grip": [
+   0.185,
+   0.61
+  ],
+  "angle": 3,
+  "len": 0.693,
+  "muzzle": [
+   0.83,
+   0.47
+  ]
+ },
+ "era5_t0": {
+  "type": "gun",
+  "grip": [
+   0.285,
+   0.63
+  ],
+  "angle": 0,
+  "len": 0.567,
+  "muzzle": [
+   0.83,
+   0.38
+  ]
+ },
+ "era5_t1": {
+  "type": "gun",
+  "grip": [
+   0.275,
+   0.625
+  ],
+  "angle": 0,
+  "len": 0.651,
+  "muzzle": [
+   0.92,
+   0.455
+  ]
+ },
+ "era5_t2": {
+  "type": "gun",
+  "grip": [
+   0.24,
+   0.65
+  ],
+  "angle": 0,
+  "len": 0.61,
+  "muzzle": [
+   0.84,
+   0.47
+  ],
+  "layer": "back"
+ },
+ "era6_t0": {
+  "type": "gun",
+  "grip": [
+   0.23,
+   0.68
+  ],
+  "angle": 2,
+  "len": 0.649,
+  "muzzle": [
+   0.81,
+   0.45
+  ]
+ },
+ "era6_t1": {
+  "type": "melee",
+  "grip": [
+   0.502,
+   0.76
+  ],
+  "angle": 89,
+  "len": 0.676
+ },
+ "era6_t2": {
+  "type": "melee",
+  "grip": [
+   0.389,
+   0.752
+  ],
+  "angle": 63,
+  "len": 0.733
+ },
+ "era0_raro": {
+  "type": "melee",
+  "grip": [
+   0.489,
+   0.75
+  ],
+  "angle": 92,
+  "len": 0.621
+ },
+ "era0_mitico": {
+  "type": "melee",
+  "grip": [
+   0.499,
+   0.715
+  ],
+  "angle": 92,
+  "len": 0.595
+ },
+ "era1_raro": {
+  "type": "melee",
+  "grip": [
+   0.498,
+   0.765
+  ],
+  "angle": 90,
+  "len": 0.683
+ },
+ "era1_mitico": {
+  "type": "melee",
+  "grip": [
+   0.5,
+   0.79
+  ],
+  "angle": 90,
+  "len": 0.708
+ },
+ "era2_raro": {
+  "type": "melee",
+  "grip": [
+   0.496,
+   0.78
+  ],
+  "angle": 90,
+  "len": 0.694
+ },
+ "era2_mitico": {
+  "type": "melee",
+  "grip": [
+   0.385,
+   0.741
+  ],
+  "angle": 62,
+  "len": 0.696
+ },
+ "era3_raro": {
+  "type": "gun",
+  "grip": [
+   0.19,
+   0.63
+  ],
+  "angle": 5,
+  "len": 0.745,
+  "muzzle": [
+   0.895,
+   0.39
+  ]
+ },
+ "era3_mitico": {
+  "type": "gun",
+  "grip": [
+   0.205,
+   0.65
+  ],
+  "angle": 14,
+  "len": 0.78,
+  "muzzle": [
+   0.88,
+   0.29
+  ]
+ },
+ "era4_raro": {
+  "type": "gun",
+  "grip": [
+   0.19,
+   0.66
+  ],
+  "angle": 0,
+  "len": 0.714,
+  "muzzle": [
+   0.89,
+   0.345
+  ]
+ },
+ "era4_mitico": {
+  "type": "gun",
+  "grip": [
+   0.235,
+   0.565
+  ],
+  "angle": 6,
+  "len": 0.735,
+  "muzzle": [
+   0.86,
+   0.455
+  ]
+ },
+ "era5_raro": {
+  "type": "gun",
+  "grip": [
+   0.285,
+   0.63
+  ],
+  "angle": 0,
+  "len": 0.567,
+  "muzzle": [
+   0.83,
+   0.38
+  ]
+ },
+ "era5_mitico": {
+  "type": "gun",
+  "grip": [
+   0.275,
+   0.625
+  ],
+  "angle": 0,
+  "len": 0.651,
+  "muzzle": [
+   0.92,
+   0.455
+  ]
+ },
+ "era6_raro": {
+  "type": "gun",
+  "grip": [
+   0.23,
+   0.68
+  ],
+  "angle": 2,
+  "len": 0.649,
+  "muzzle": [
+   0.81,
+   0.45
+  ]
+ },
+ "era6_mitico": {
+  "type": "melee",
+  "grip": [
+   0.502,
+   0.76
+  ],
+  "angle": 89,
+  "len": 0.676
+ },
+ "era7_t0": {
+  "type": "melee",
+  "grip": [
+   0.253,
+   0.77
+  ],
+  "angle": 64,
+  "len": 0.735,
+  "auto": "calibrado no era2_t1"
+ },
+ "era7_t1": {
+  "type": "melee",
+  "grip": [
+   0.339,
+   0.775
+  ],
+  "angle": 61,
+  "len": 0.803,
+  "auto": "calibrado no era2_t1"
+ },
+ "era7_t2": {
+  "type": "melee",
+  "grip": [
+   0.327,
+   0.784
+  ],
+  "angle": 60,
+  "len": 0.827,
+  "auto": "calibrado no era2_t1"
+ },
+ "era7_raro": {
+  "type": "melee",
+  "grip": [
+   0.251,
+   0.772
+  ],
+  "angle": 63,
+  "len": 0.723,
+  "auto": "calibrado no era2_t1"
+ },
+ "era7_mitico": {
+  "type": "melee",
+  "grip": [
+   0.33,
+   0.795
+  ],
+  "angle": 61,
+  "len": 0.842,
+  "auto": "calibrado no era2_t1"
+ },
+ "era8_t0": {
+  "type": "melee",
+  "grip": [
+   0.278,
+   0.8
+  ],
+  "angle": 53,
+  "len": 0.947,
+  "auto": "calibrado no era2_t1"
+ },
+ "era8_t1": {
+  "type": "melee",
+  "grip": [
+   0.286,
+   0.776
+  ],
+  "angle": 53,
+  "len": 0.915,
+  "auto": "calibrado no era2_t1"
+ },
+ "era8_t2": {
+  "type": "melee",
+  "grip": [
+   0.258,
+   0.803
+  ],
+  "angle": 58,
+  "len": 0.898,
+  "auto": "calibrado no era2_t1"
+ },
+ "era8_raro": {
+  "type": "melee",
+  "grip": [
+   0.279,
+   0.803
+  ],
+  "angle": 53,
+  "len": 0.948,
+  "auto": "calibrado no era2_t1"
+ },
+ "era8_mitico": {
+  "type": "melee",
+  "grip": [
+   0.283,
+   0.773
+  ],
+  "angle": 53,
+  "len": 0.912,
+  "auto": "calibrado no era2_t1"
+ }
 }

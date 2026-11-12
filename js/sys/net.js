@@ -113,8 +113,14 @@ async function pull(){
 /* sobe o S. 409 save_conflict: rejeita com details.cloud (a tela decide com chooseSide). */
 async function push(S,summary){
   const m=saveMeta();
-  const r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
-    clientTime:Date.now(),summary:summary||{},save:S});
+  let r;
+  try{ r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
+    clientTime:Date.now(),summary:summary||{},save:S}); }
+  catch(e){
+    // 422 save_implausible: o servidor GUARDOU o save (marcado para revisão) na versão details.version; o aparelho precisa saber, senão o próximo dá conflito
+    if(e.code==='save_implausible'&&e.details&&typeof e.details.version==='number') setMeta(e.details.version,false);
+    throw e;
+  }
   setMeta(r.version,false);
   return r;
 }

@@ -118,3 +118,15 @@ test('compras: só o recibo vai ao servidor (sem preço, sem 💎) e o id ofusca
   assert.equal(r.status, 'granted');
   assert.deepEqual(Object.keys(f.calls.at(-1).body).sort(), ['orderId', 'productId', 'purchaseToken']);
 });
+
+test('save marcado (422 save_implausible): o aparelho guarda a versão gravada e o próximo envio não dá conflito', async () => {
+  let ver = 0;
+  boot({
+    'POST /auth/guest': () => [200, session(1)],
+    'PUT /save': b => { if (b.baseVersion !== ver) return [409, { error: { code: 'save_conflict' } }]; ver++; return b.summary.bad ? [422, { error: { code: 'save_implausible', details: { flags: ['x'], version: ver } } }] : [200, { version: ver }]; },
+  });
+  await net.ensureSession();
+  await assert.rejects(net.push({}, { bad: 1 }), e => e.code === 'save_implausible');
+  assert.equal(net.saveMeta().version, 1);
+  assert.equal((await net.push({}, {})).version, 2);
+});

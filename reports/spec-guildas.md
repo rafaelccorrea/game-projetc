@@ -18,7 +18,7 @@ como a arena. Nada de sorteio pago. Números = proposta; os de poder foram confe
 - **Sair:** a qualquer hora; **24 h** sem entrar em outra guilda; voltar à MESMA guilda: 7 dias (evita "pular de guilda" atrás de prêmio). Quem sai perde a
   moeda da guilda que não gastou.
 - **Nível da guilda 1-10**, por **XP da guilda** (contribuição: doações, chefe, missões, check-in). Cada nível libera +2 vagas, itens da loja e o teto dos estandartes.
-  XP por nível: 1.000 × 1,6^(n−1) (nível 10 ≈ 69 mil de XP somado; uma guilda cheia e ativa sobe ~1 nível por semana no começo e leva ~3 meses ao 10).
+  XP por nível: 1.000 × 1,6^(n−1) (nível 10 ≈ 113 mil de XP somado — corrigido em 12/11, antes dizia 69 mil por erro de conta; PO decidiu manter a fórmula (progressão longa), reavaliar com o ritmo medido no servidor; uma guilda cheia e ativa sobe ~1 nível por semana no começo e leva ~3 meses ao 10).
 
 ## 2. Troca de itens na guilda (o dono quer facilitar) — com as travas do leilão
 - **Pedido:** o membro pede um item (espaço + raridade mínima; ex.: "Botas Épicas"), visível 24 h no mural. **Doação:** qualquer membro doa um item da

@@ -699,3 +699,60 @@ usava um save sem `fresh=1` nesse perfil, ele foi substituído.
   Passe e Forja (existe um `js/rarity.js` do engenheiro atrás de chave desligada; a ordem é reusar se der, ou espelhar medidas e cores).
 - A conferir na próxima vez de navegador (escritos e não tocados): cartão do Passe já resgatado, título cosmético / em destaque, botão
   Treinar apagado, e as telas acima.
+- VIP, Troca de era e Torre (sessão do QA; pedidos Q-1 a Q-3): `p_vip`, `p_era` e `p_tower` na lista de carga do `js/screens.js`, chaves DESLIGADAS. `node --check` ok nos três; fumaça registra e desenha VIP e Torre sem erro (a Troca de era é overlay: só registra). Conferir e ligar na minha vez de navegador, nesta ordem: Pets V2 e raridade; VIP; Torre; Troca de era (com o agente A).
+- Pets V2 PRONTA PARA LIGAR (`js/p_pets.js`, chave desligada, não vista): refeita no layout novo; ovo com animação de chocar; folhas
+  reais de `assets/anim/pets` (mamute, esfinge, dragão, papagaio e cão com idle e atk1 nos 3 estágios; atk2/atk3 só no filhote): idle no
+  palco e na prévia, ataque na demonstração; Cérbero (folhas incompletas), Pégaso e Raposa em silhueta "em breve".
+  O defeito do `Sys.pet.feedTap` (B-14) CONTINUA no módulo: a tela mantém o contorno (devolve a ração e sobe 1 nível inteiro pelo
+  `Sys.pet.feed`); a barra parcial de 25 por toque só volta quando a fps-e2 corrigir. B-15 (funções a exportar) também segue aberto.
+  Testes: `node --check`; fumaça sem falha; teste de cliques do subagente, 85 passos nas quatro medidas (não reexecutado por mim).
+- Pets V2, `feedTap`: a sessão de Sistemas corrigiu o módulo. Conferi em Node (`feedTap` agora grava nível e ração: lobo Nv 1 → 2 → 3,
+  ração 100 → 97 → 93) e TIREI o contorno da tela (`ptFeedTap` chama o módulo direto). Teste de cliques do subagente reexecutado por mim
+  em 390x788: 149 linhas OK, nenhuma falha; "alimentar 1 toque" grava. Pedido B-14 encerrado; B-15 (funções a exportar) continua.
+
+## Bloco 16: raridade pela borda e cor, componente único. Escrito e LIGADO (`PANEL_V2.rar`), NÃO visto rodando
+
+Componente em `js/screens.js`: `xRar(item | raridade)` (classe `xr xrN` + `data-rar`), `xRarName`, `xRarBox`; CSS com uma regra por
+raridade (borda de 3 px na cor, fundo radial com o tom, brilho crescente, pulso só em Mítico e Lendário). A moldura sai no próprio HTML.
+Paleta lida do `js/rarity.js` do engenheiro (com cópia idêntica de reserva) e mesmo contrato `data-rar` do `rarDecorate` dele; não chamo o
+`rarFrame` porque ele devolve um quadrado fixo que não serve para a célula que o voo e o arrasto procuram.
+Aplicado em: espaços e mochila do Equipamento; cartões e título da comparação; cartas do Invocar e a linha "Melhor"; cartões de item e
+de skin da Loja, prévia e confirmação; recompensas do Passe; espaço escolhido, faixa e nome do modo Nível da Forja.
+Mudanças que aparecem: borda dos cartões da Loja e da comparação de 2 para 3 px; a confirmação de compra de item ganhou o ícone na
+moldura; na Forja o espaço escolhido leva a cor da raridade (era sempre dourado), com anel dourado na faixa; nomes no tom claro da raridade.
+Ficou de fora: o item garantido da tela 10 antiga (desligada), o fantasma do voo, e as telas `p_pets` / `p_offer` / `p_auction`.
+Chave `PANEL_V2.rar = false` devolve o HTML de antes (o subagente relata 54 cenas idênticas byte a byte).
+Conferido por mim: `node --check` nos cinco arquivos; fumaça sem falha em 390x788 e 360x584 (voo e arrasto continuam passando); a linha
+da lista de carga (`p_vip`, `p_era`, `p_tower`) e a retirada do `xLegacy` sobreviveram à edição paralela.
+A ver no navegador: brilho/pulso cortando na borda da mochila; anel dourado da Forja em 320 px; entrada + pulso na Loja e no Invocar;
+comportamento junto com `?rar=1` (o `rarDecorate` poria o pulso dele por cima). Pedido B-20 ao dono do `js/rarity.js`.
+
+## Bloco 17 (v0.12.5): conferência no navegador (aba fechada). Prints `reports/prints/v0125_*.png` (5)
+
+360x640 com zoom 1 e ponteiro real; 390x844 só alturas e larguras (nenhuma tela estoura) e console (sem erro). Nível 55 por depuração.
+
+VISTO
+- Raridade pela borda e cor: mochila e espaços do Equipamento (brilho sem cortar na borda), comparação, resultado do Invocar x10 (10 cartas
+  com moldura e nome na cor, linha "Melhor"), Loja (itens e skins), Passe, Forja: todas desenham com a moldura, sem erro.
+  "Equipar melhor" (3 itens voaram, FC 4.718 → 6.247, "FC +N") continua funcionando com a moldura nova.
+- Asa: no nível 55 a asa (Mítica) equipou e aparece atrás do Kael na vitrine.
+- Passe: resgatar um nível; tocar de novo → "Recompensa já resgatada". Progresso: Treinar apagado → "Faltam pedras de prática: custa 4";
+  com pedras, treinou.
+- VIP (do QA): abre pelo MENU, carrossel VIP 1 a 10, tabela de benefícios do `Sys.vip`, "Comprar VIP" mostra "Pagamento em breve" e não
+  cobra; Voltar → batalha. LIGUEI `PANEL_ON.vip`.
+- Torre (do QA): abre pelo MENU, lutei o andar 1 (vitória, prêmio, passou ao andar 2, melhor = 1), aviso "Valendo quando o online abrir".
+- Pets V2 (carregada só no teste): mamute no pedestal em posição e escala boas; chocar ovo com a animação → pet obtido; alimentar
+  grava (Nv 1 → 2 → 3 ... → 30, ração descontada) e trava em "Evoluir primeiro"; evoluir para Médio trocou a folha. NÃO liguei.
+
+CORRIGIDO
+- Arrastar em tela baixa: a rolagem para o topo no começo do arrasto era suave; quem soltava rápido caía no espaço errado ("Esse item
+  vai no espaço Arma" ao soltar a arma na arma). Agora a rolagem é imediata. Escrito depois do teste; não revisto.
+
+NÃO LIGUEI: Torre. Motivos (lista devolvida ao QA, pedido B-21): (1) 15 emojis na interface (moeda, pedra, martelo, diamante, ovo, fogo,
+arco-íris, cadeado, troféu...), contra a regra "nunca emoji"; (2) o texto "Ovo ... Fênix" (a fênix saiu do jogo); (3) os 3 andares
+visíveis: funciona e lê bem em 360x640, mas o protótipo mostra a torre inteira; decisão do PO.
+`js/p_era.js` também tem 2 emojis (diamante e bola de cristal): mesma lista.
+
+NÃO VISTO: título "em destaque" / cosmético (o save de teste não tinha título conquistado); arrasto depois da correção; barra parcial de
+alimentar (o custo por nível é menor que os 25 por toque até o nível 30); raridade junto com `?rar=1`; toque de dedo real; o VIP em
+"Faltam 1 pontos" tem erro de concordância (arquivo do QA, avisado).

@@ -1366,3 +1366,25 @@ Visto (390x844, e 360x640 onde indicado):
 - Jogador novo sem debug até o fim do tutorial (Invocar no nível 3), zero erros.
 
 NÃO testado: quadro exato do tiro do revólver e encaixe da mão em movimento; Práticas/Progresso no save antigo (botão é do agente B); "Voltar" da Forja volta para o Equipamento (desenho do agente B), não conferi se é o esperado quando aberta pelo MENU; tela que quebra (caminho do aviso) só por leitura; toque real com o dedo em cada botão (ações chamadas por código); 360x640 só por medidas; APK e aparelho.
+
+## Rodada 15 — v0.12.5: armas por raridade, Modo dono, asa no Kael, Prévia da arte (2026-11-12)
+
+Arquivos: `index.html`, `js/battle.js`, `js/stage.js`, `js/loading.js`, `js/artprev.js` (novo), `sw.js`, `version.json`; UMA linha em `js/screens.js` (`skinArt`, autorizada: pedido A-14).
+
+1. **Armas por raridade**: `wKey(ws)` / `wPng(ws)` em `js/battle.js` (Básico `_t0`, Raro `_raro`, Épico `_t1`, Mítico `_mitico`, Lendário `_t2`), usados na batalha, vitrine, carregamento e miniatura de item. Folhas com a arma pintada (compostas, giro e rastro da era 2) só valem para Básico, Épico e Lendário; Raro e Mítico usam corpo + arma na mão.
+   - **Pistola**: troquei a folha com a pistola do tier 0 pintada pelo corpo aprovado sem arma (`R/kael_pistol_<idle|run|shoot>_body`) + a arma DA RARIDADE desenhada na mão (pivô do meta.json, ângulo da mão do .json, tamanho pelo `scale` do .json aprovado da era, dedos por cima). Assim cada raridade mostra a sua pistola.
+   - Não fiz brilho extra: ficou o contorno discreto que já existia (`skinSpr`).
+2. **Modo dono** (`js/artprev.js`, só com `TEST_BUILD`): item "Teste" no MENU fora da regra de nível; save separado `eras_owner_v1`; selo "MODO DONO" no topo; tudo que tem tela liberado; atalhos nível 20/32/50/70 (itens equipados sobem junto), asa, avançar era, +500 pedras de forja, +1 milhão de ouro, +5.000 gemas; sair volta ao save real.
+3. **Asa no Kael** (`WING_DRAW=true`): duas metades atrás do corpo, batendo de leve. Item de asa Épico ou acima = anjo; abaixo = demoníaca; skin de asa vence.
+4. **Prévia da arte**: 24 cartões por tabela, tocador genérico, carrega ao abrir o cartão e solta ao sair.
+
+Visto (390x844): as 5 raridades com armas diferentes na mão nas eras 0–6 (vitrine em grade; print das pistolas); pistola Rara atirando na batalha; Modo dono entrando (save real intocado: mesmo tamanho), selo, atalhos, asa de anjo atrás do Kael na batalha, saída devolvendo o save real; os 24 cartões da prévia carregam todos os estados; vistos a olho: Kael no lobo (parado) e Fase 3 (golpe).
+
+NÃO testado / pendências:
+- FPS e memória com CPU limitada: a ferramenta não limita CPU e a medição de quadros saiu inválida (aba em segundo plano, 1 quadro/s). Memória do JS: 57 MB. Sem estimativa válida.
+- Encaixe da mão nas armas novas só em tamanho pequeno; golpe/giro com Raro e Mítico da era 2; especial e ultimate com pistola de raridade; mão nas pistolas em movimento.
+- Asa: vista parada na batalha com um item (anjo); demoníaca, correndo, golpe e vitrine não conferidos a olho; a posição é estimada (não vem de âncora da arte).
+- Prévia: só 2 cartões vistos a olho; na Fase 3 o golpe aparece deslocado para a direita da sombra (pode ser o avanço da folha; não conferi); ovo chocando não visto; liberação de memória ao sair não medida.
+- Espaço de asa no nível 50 dentro do Equipamento (painel do agente B).
+- Item 5 (tela de troca de era, Q-2): NÃO feito nesta passada.
+- 360x640; jogador novo; aparelho.

@@ -1,0 +1,16 @@
+{
+ "frames": 8,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "era2_t1",
+ "note": "PRÉVIA montada (aparência em camadas); no jogo as camadas são desenhadas por código",
+ "look": {
+  "hat": null,
+  "vest": null,
+  "boots": null
+ }
+}

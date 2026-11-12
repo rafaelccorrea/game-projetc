@@ -25,7 +25,7 @@ const DATA={
     {id:'horse',   name:'Cavalo de guerra', r:1},
     {id:'wolf',    name:'Lobo de guerra',   r:2},   // o da oferta de 1ª compra (arte: assets/mounts/mount_wolf_ref.png)
     {id:'griffin', name:'Grifo dourado',    r:2},   // ÉPICO também (dono); arte: assets/mounts/mount_griffin_ref.png
-    {id:'mythic',  name:'(a definir)',      r:3, tbd:true},   // Mítico NOVO a definir (nome e arte com o PO/fps-ff): fora de add() até ter nome
+    {id:'mythic',  name:'Tigre de cristal', r:3},   // PO 12/11 (arte: kael_mythic_*); o dono ainda pode trocar pela serpe verde no voto. tbd:true tira de add()
     {id:'wyvern',  name:'Serpe dourada',    r:4},
   ],
 };
@@ -36,12 +36,13 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const ON=()=>DATA.on===true;
 const playerLevel=(S,host)=>{ const L=root.Sys&&root.Sys.level; if(L&&L.level) return L.level(S); return int0(host&&host.level&&host.level())||1; };
 
+const keepObj=(old,e)=>{ if(old&&typeof old==='object'&&!Array.isArray(old)){ for(const k of Object.keys(old)) delete old[k]; return Object.assign(old,e); } return e; };   // ensure atualiza NO LUGAR: quem segurou a ficha (x=o.owned[id]) continua gravando no save
 function ensure(S){
   if(!S||typeof S!=='object') throw new Error('Sys.mount.ensure: save inválido');
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.mount; if(!o||typeof o!=='object') o=S.sys.mount={};
   o.v=1; const ow=(o.owned&&typeof o.owned==='object'&&!Array.isArray(o.owned))?o.owned:{}; o.owned={};
-  for(const id in ow) if(BY[id]){ const x=ow[id]||{}; o.owned[id]={stars:clamp(int0(x.stars)||1,1,DATA.maxStars),frags:int0(x.frags),lvl:clamp(int0(x.lvl)||1,1,DATA.maxLvl),gold:int0(x.gold)}; }
+  for(const id in ow) if(BY[id]){ const x=ow[id]||{}; o.owned[id]=keepObj(ow[id],{stars:clamp(int0(x.stars)||1,1,DATA.maxStars),frags:int0(x.frags),lvl:clamp(int0(x.lvl)||1,1,DATA.maxLvl),gold:int0(x.gold)}); }
   const st=(o.stored&&typeof o.stored==='object')?o.stored:{}; o.stored={}; for(const id in st) if(BY[id]&&!o.owned[id]&&int0(st[id])>0) o.stored[id]=int0(st[id]);
   if(!BY[o.eq]||!o.owned[o.eq]) o.eq=null;
   return o;

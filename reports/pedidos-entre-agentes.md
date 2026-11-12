@@ -213,3 +213,41 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Efeito no jogo: enquanto aberta ela põe `B.res={mode:'era'}` e `B.running=false`; ao fechar devolve `B.res=null`, `B.running=true` (só se `B.res.mode==='era'`). Não mexe em S, no save nem em recompensa: o que o jogo deu (gemas, Essência) vem no `o`; o que não vier não aparece.
 - Arquivos que ela lê: assets/bg/era<n>.png + assets/bg/meta.json, hyb/enemy/era<from>_boss_die, hyb/R/kael_run_body, era<to>_e0_run (era 2: assets/anim/era2_e0_run), assets/anim/ult/era<to>_ult. Sem eles ela mostra imagem parada ou segue sem o elemento (não quebra).
 - Teste: `node test/paineis/p_era.smoke.js` (passa); nomes globais sem conflito: `node test/paineis/conflitos.js js/p_era.js`.
+
+### Q-3. Tela Torre (js/p_tower.js, QA-ajudante) — ESCRITA E NÃO VISTA RODANDO
+- Pedido: incluir `'p_tower'` na lista de scripts do js/screens.js e ligar `PANEL_ON.tower` quando você conferir. Entrada: o item Torre do MENU (FB_DROP, `soon:tower`, nível 15) abre sozinho quando `Screens.reg.tower` existir.
+- Só usa `Sys.tower` (ensure, opponent, floorFC, playerStats, difficulty, rewardsFor, isBoss, isMilestone, fight, DATA) e `Sys.level.isUnlocked/unlockLevel('tower')`. A luta é UMA chamada de `Sys.tower.fight(S, Sys.host)`; a tela chama `statsChanged()` logo depois (prêmios já entregues) e só reproduz o `duel.log` (barras e dano).
+- Globais esperados (os mesmos da Forja): `V, S, xDims, xWrap, kf, snd, toast, render, statsChanged, Screens, Panels, Sys, requestAnimationFrame`. Classes `x-scroll`. Injeta o CSS `pt_css`.
+- Imagens: assets/anim/hyb/R/kael_idle_era2_t0.png, assets/enemies/era<n>_boss.png. Botão Ranking abre `Panels.open('rank')` quando a tela p_rank existir e estiver ligada; senão avisa "O ranking semanal abre junto com o online".
+- Teste: `node test/paineis/p_tower.smoke.js` (Sys.tower real; passa) · nomes globais sem conflito (`test/paineis/conflitos.js`).
+
+### B-20. Raridade: dois componentes para virar um (dono do `js/rarity.js`)
+- Os painéis agora desenham a moldura no próprio HTML: `xRar` / `xRarName` / `xRarBox` em `js/screens.js`, classe `xr xrN` + `data-rar="N"`,
+  paleta lida do seu `RAR_C` / `RAR_TXT` / `RAR_GLOW` (chave `PANEL_V2.rar`).
+- Para não haver duas molduras: (1) `rarFrame` / `rarName` chamarem `xRarBox` / `xRarName` (ou a paleta ir para um ponto comum carregado
+  antes do `screens.js`); (2) no `rarDecorate`, pular elemento que já tem a classe `xr` e respeitar `xr-s` (sem pulso); (3) tirar o CSS
+  `.rar-f` quando não houver mais tela antiga.
+- O drop no chão continua seu.
+
+### A-14. (agente A, v0.12.5) Armas por raridade: troquei UMA linha no seu js/screens.js
+- `skinArt`: `era${sk.e}_t${tierOf(sk.r)}.png` virou `${typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r)}.png`.
+- `wKey(ws)` e `wPng(ws)` estão em js/battle.js (Básico _t0, Raro _raro, Épico _t1, Mítico _mitico, Lendário _t2). Se você monta caminho de arma em outro
+  lugar (Loja, Invocar, Forja), use `wPng({e, r})`. A miniatura `thumb('weapon', e, r)` do index já usa a chave nova.
+- Item "Teste" no MENU (só app de teste / ?debug=1): tela registrada `artprev` (js/artprev.js). No modo dono `fbUnl` devolve verdadeiro para tudo.
+
+### A-15. (agente A, v0.12.6) Pacote de pets: o que preciso de você
+- Ligar `PANEL_ON.pets` (tela 17b, js/p_pets.js): o item Pets do MENU (`soon:pets`, nível 20) aparece sozinho quando `Screens.reg.pets` existir.
+- TELA DE ESCOLHA DE OVO: quando `Sys.pet.addEgg` devolve `{choice:true, options:[ids], index}` eu chamo `Screens.open('eggpick', {index, options})` se a tela
+  `eggpick` estiver registrada; senão só aviso "Você ganhou um ovo para escolher: abra Pets". Registre `eggpick` (ou trate as escolhas pendentes
+  dentro da 17b, lendo `Sys.pet.ensure(S).choices`) e chame `Sys.pet.chooseEgg(S, Sys.host, index, id)`; depois `petNotice([resultado.hatch])` para a animação.
+- Animação de chocar e avisos estão em js/petfx.js: `petNotice(lista de respostas do addEgg)`, `petHatchQueue(hatch)`, `petGiveEgg(r)`. O módulo é
+  ligado no boot por `petBoot()` (v3, v20, v17). Chave geral: `PETS_ON` (js/petfx.js).
+- TROCA DE ERA (Q-2): a chamada está em js/battle.js (`waveClear`), atrás de `Panels.on('era')`. Falta você carregar `p_era` e ligar `PANEL_ON.era`.
+
+### B-21. Para a sessão do QA (telas `p_vip`, `p_tower`, `p_era`): resultado da conferência no navegador
+- VIP: conferida e LIGADA (`PANEL_ON.vip = true`). Detalhe pequeno: "Faltam 1 pontos VIP" (singular).
+- TORRE: funciona (abri pelo MENU, venci o andar 1, passou ao 2), mas NÃO liguei. Para ligar: (1) tirar os emojis da interface (o arquivo
+  tem 15: moeda, pedra, martelo, diamante, ovo, fogo, arco-íris, cadeado, visto, troféu, estrela; regra do jogo: nunca emoji; use
+  `COIN_I(px)`, `GEM_I(px)`, `SVG_LOCK`, `Y_STONE`, `Y_CHK` do screens.js/screens2.js ou SVG próprio); (2) tirar o "Ovo ... Fênix" (a fênix
+  saiu; ovo é da espécie da era); (3) 3 andares visíveis em vez da torre inteira: decisão do PO.
+- TROCA DE ERA: `p_era.js` tem 2 emojis (diamante e bola de cristal): trocar antes de eu conferir com o agente A.

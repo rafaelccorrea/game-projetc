@@ -83,7 +83,7 @@ function canChallenge(S,host,e,d,n,fc){ if(!ON()) return {ok:false,reason:'off'}
 /* venceu a fase: grava o melhor e devolve {ok, first, next:{e,d,n}|null, eraUnlocked} (o prêmio é do jogo/fps-30, com rewardOf(d)) */
 function win(S,host,e,d,n){ const c=canChallenge(S,host,e,d,n); if(!c.ok) return {ok:false,reason:c.reason};
   const o=ensure(S); if(!o.best[e]) o.best[e]=[0,0,0,0]; const first=o.best[e][d]<n; if(first) o.best[e][d]=n;
-  const before=eraOpen(S,e+1)&&first&&n===DATA.perEra&&d===DATA.required[e]-1, nx=next(S,host,e,d,n); if(nx) o.cur=nx;
+  const before=eraOpen(S,e+1)&&first&&n===DATA.perEra&&d===DATA.required[e]-1, nx=next(S,host,e,d,n); if(nx&&first) o.cur=nx;   // repetir fase antiga (farm) não puxa o jogador para trás
   return {ok:true,first,next:nx,eraUnlocked:before&&okE(e+1)?e+1:null,reward:rewardOf(d)}; }
 /* próxima fase a jogar depois de (e,d,n): a seguinte da mesma dificuldade; na 100, a próxima dificuldade EXIGIDA; fim das exigidas: era seguinte */
 function next(S,host,e,d,n){ if(n<DATA.perEra) return {e,d,n:n+1}; if(d+1<DATA.required[e]) return {e,d:d+1,n:1};

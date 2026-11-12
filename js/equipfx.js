@@ -60,7 +60,7 @@ function gDragDown(ev){
 function gDragStart(p){ const it=itemOf(p.id); if(!it){ GFX.p=null; return false; } const r=p.cell.getBoundingClientRect();
   p.on=true; p.w=r.width; p.h=r.height; p.home={left:r.left,top:r.top}; p.lift=0;   /* protótipo: o item fica centrado no dedo */
   p.g=gGhost(it,r,'drag'); if(p.cell.parentNode) p.cell.parentNode.classList.add('x-dragsrc'); XG.drag=it.id; gDragMarks(it); snd('ui_tap');
-  { const sc=document.getElementById('xg_sc'); if(sc&&sc.scrollTop>0){ try{ sc.scrollTo({top:0,behavior:'smooth'}); }catch(e){ sc.scrollTop=0; } } }   /* tela baixa: a vitrine sobe para os espaços de cima ficarem ao alcance */
+  { const sc=document.getElementById('xg_sc'); if(sc&&sc.scrollTop>0) sc.scrollTop=0;   /* na hora (sem rolagem suave): quem solta rápido tem de achar o espaço já no lugar */ }   /* tela baixa: a vitrine sobe para os espaços de cima ficarem ao alcance */
   return true; }
 function gDragMove(ev){ const p=GFX.p; if(!p||ev.pointerId!==p.pid) return; const dx=ev.clientX-p.x, dy=ev.clientY-p.y;
   if(!p.on){ if(Math.abs(dx)+Math.abs(dy)<8) return; if(!gDragStart(p)) return; }

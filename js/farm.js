@@ -91,6 +91,7 @@ function sysBootE2(){
   delete S.pass; delete S.daily; Sys.pass.refresh(S, Sys.host);
   Sys.practice.ensure(S); Sys.titles.ensure(S); Sys.titles.check(S, Sys.host, { silent: true });
   if (DEBUG && QP.has('stones')) Sys.practice.addStones(S, +QP.get('stones') || 0, Sys.host);
+  if (typeof petBoot === 'function') petBoot();   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
 }
 /* nível do jogador: teto do nível dos itens e bônus de atributo (entra em heroStats) */
 function onLevelUp(lv){
@@ -99,7 +100,8 @@ function onLevelUp(lv){
   refreshHero(); snd('upgrade'); vib(40);
   B.banner = { txt: 'Nível ' + lv.to + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };   // "Nível X!" como no canvas
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
-  B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
+  B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);
+  if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
   if (view !== 'battle' && typeof softRender === 'function') softRender();
 }
 /* abate na campanha: ouro, XP, gema, item e materiais pelo Sys.loot; carga do baú pelo Sys.chest */
@@ -116,7 +118,9 @@ function farmKill(e, y){
   if (!r) return;
   spawnPicks(r.pickups || [], e.x);
   if (r.levelUp && r.levelUp.to > r.levelUp.from) onLevelUp(r.levelUp);
-  if (r.held && r.held.length && !(e.boss && SCREENS_ON.bossResult)) toast('Ovo guardado: choca no nível ' + r.held[0].needLevel);
+  /* ovos: as respostas do Sys.pet.addEgg (chocou, guardado antes do nível 20, escolha, portão de raridade) são tratadas num lugar só (petNotice) */
+  if (typeof petNotice === 'function' && typeof petOk === 'function' && petOk()){ petNotice(Array.isArray(r.eggs) ? r.eggs : []); if (Array.isArray(r.held)) petNotice(r.held.filter(x => x && (x.pre || x.gated || x.choice))); }
+  else if (r.held && r.held.length && !(e.boss && SCREENS_ON.bossResult)) toast(r.held[0].needLevel ? 'Ovo guardado: choca no nível ' + r.held[0].needLevel : 'Ovo guardado');
 }
 
 /* ---------- pickups: pulam do inimigo, ficam um instante no chão (moeda girando, orbe pulsando, item brilhando na cor da raridade)

@@ -133,10 +133,12 @@ function scrForge(){
 
   /* ----- espaço escolhido (grande, no palco) ----- */
   const plusBg=t=>t===0?'#33271d':F_TC[t], plusFg=t=>t===0?'#f6ecdf':t===4?'#2a1403':'#0e0a07';
+  /* com item: a moldura única da raridade (xRar, js/screens.js) no lugar da borda dourada e do halo; vazio (ou PANEL_V2.rar desligada): como antes */
+  const qB=xRar(it);
   const bigSlot=`<div style="position:absolute;left:12px;top:18px;width:96px;display:flex;flex-direction:column;align-items:flex-start;gap:2px">
       <div class="${fx==='fail'?'f-shake':fx?'f-bright':''}" style="position:relative;width:72px;height:72px">
-        <span class="f-halo" style="background:#ffc94a"></span>
-        <div role="img" aria-label="${esc2(SLOT[sl].n)}${it?': '+esc2(iname(it))+', '+RN(it.r)+', nível '+it.lvl:': vazio'}, mais ${n}" style="position:absolute;inset:0;border-radius:16px;border:3px solid #ffc94a;background:radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611);overflow:hidden;box-sizing:border-box;text-align:center">
+        ${qB.on?'':'<span class="f-halo" style="background:#ffc94a"></span>'}
+        <div${qB.on?' class="'+qB.cls.trim()+'"'+qB.at:''} role="img" aria-label="${esc2(SLOT[sl].n)}${it?': '+esc2(iname(it))+', '+RN(it.r)+', nível '+it.lvl:': vazio'}, mais ${n}" style="position:absolute;inset:0;border-radius:16px;${qB.on?'':'border:3px solid #ffc94a;background:radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611);'}overflow:hidden;box-sizing:border-box;text-align:center">
           <img src="${it?slotIcon(sl,ieraV(it)):ICON[sl]}" alt="" style="width:58px;height:58px;object-fit:contain;margin-top:2px;${it?'':'opacity:.55'}">
           <span class="f-sheen"></span>
           <span style="position:absolute;left:0;right:0;bottom:0;height:18px;background:rgba(0,0,0,.72);font-size:11px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:18px">${it?'Nv.'+it.lvl:'vazio'}</span></div>
@@ -144,7 +146,7 @@ function scrForge(){
         ${XF.busy?'<svg class="f-hammer" width="44" height="44" viewBox="0 0 24 24" fill="#c9b9a2" stroke="#16110d" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true" style="position:absolute;right:-28px;top:-18px"><path d="M14.5 3.5l6 6-2.5 2.5-6-6z"></path><path d="M12.5 7.5 3.5 16.5l4 4 9-9z" fill="#8a5a33"></path></svg>':''}
       </div>
       <span style="width:72px;text-align:center;font-size:11px;font-weight:900;color:#ffc94a;text-shadow:0 1px 2px #000;white-space:nowrap">${esc2(SLOT[sl].n)}</span>
-      ${it?`<span style="max-width:96px;font-size:10px;font-weight:800;color:${RC[it.r]};text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>`:''}</div>`;
+      ${it?`<span style="max-width:96px;font-size:10px;font-weight:800;color:${xRarT(it)};text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>`:''}</div>`;
 
   /* ----- prévia das auras (direita): pastilha de 52x44 como no protótipo; o botão em volta é o alvo de toque (cresce em tela estreita) ----- */
   const chips=A.map((a,i)=>{ const on=shownT===i, col=F_TC[i]||F_TC[0];
@@ -191,9 +193,10 @@ function scrForge(){
     if(s==='wing'&&!wingOpen) return `<button class="f-mini" data-x="slot" data-slot="wing" aria-label="Asa, bloqueada, libera no nível ${fWingLv()}" style="${miniBtn}">
         <span style="flex:1;min-width:0;max-width:58px;height:48px;border-radius:12px;border:2px dashed #8a7458;background:rgba(14,10,7,.82);color:#e8dccb;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box">
         ${SVG_LOCK(18)}<span style="font-size:9px;font-weight:900;line-height:1.05;white-space:nowrap">Nível ${fWingLv()}</span></span></button>`;
+    const q=xRar(x);   /* com item: moldura da raridade; o escolhido ganha um anel dourado POR DENTRO da moldura (a cor da raridade continua visível). Vazio: como antes */
     return `<button class="f-mini" data-x="slot" data-slot="${s}" aria-pressed="${on}" aria-label="${esc2(nm)}${x?': '+esc2(iname(x)):': vazio'}, mais ${p}${on?', selecionado':''}" style="${miniBtn}">
-        <span style="position:relative;flex:1;min-width:0;max-width:58px;height:48px;border-radius:12px;border:${on?'3px solid #ffc94a':x?'2px solid '+RC[x.r]:'2px dashed #8a7458'};background:${on?'radial-gradient(circle at 50% 40%,#5a4631,#241a12)':'radial-gradient(circle at 50% 40%,#3a2c1f,#16110d)'};display:flex;align-items:center;justify-content:center;box-sizing:border-box${on?';box-shadow:0 0 10px rgba(255,201,74,.55)':''}">
-        <img src="${x?slotIcon(s,ieraV(x)):ICON[s]}" alt="" style="width:30px;height:30px;object-fit:contain;${x?'':'opacity:.5'}">
+        <span${q.on?' class="'+q.cls.trim()+'"'+q.at:''} style="position:relative;flex:1;min-width:0;max-width:58px;height:48px;border-radius:12px;${q.on?'':`border:${on?'3px solid #ffc94a':x?'2px solid '+RC[x.r]:'2px dashed #8a7458'};background:${on?'radial-gradient(circle at 50% 40%,#5a4631,#241a12)':'radial-gradient(circle at 50% 40%,#3a2c1f,#16110d)'};`}display:flex;align-items:center;justify-content:center;box-sizing:border-box${on&&!q.on?';box-shadow:0 0 10px rgba(255,201,74,.55)':''}">
+        ${q.on&&on?'<span aria-hidden="true" style="position:absolute;inset:0;border-radius:9px;border:2px solid #ffc94a;box-sizing:border-box;pointer-events:none"></span>':''}<img src="${x?slotIcon(s,ieraV(x)):ICON[s]}" alt="" style="width:30px;height:30px;object-fit:contain;${x?'':'opacity:.5'}">
         <span class="lil" style="position:absolute;top:-6px;right:-4px;min-width:22px;height:17px;padding:0 3px;border-radius:9px;background:${plusBg(t)};border:2px solid #16110d;color:${plusFg(t)};font-size:11px;line-height:13px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">+${p}</span></span></button>`; }).join('');
 
   /* ----- trilha +1 a +15 com o teto da era ----- */
@@ -260,7 +263,7 @@ function scrForge(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(fStatName(sl))} do item</span>
           <span style="font-size:15px;font-weight:900;white-space:nowrap">${fMul(L)} <span style="color:#c9b9a2">→</span> <span style="color:#5fd068">${isMax?'—':fMul(L+1)}</span></span></div></div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;gap:8px"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${RC[it.r]}">${esc2(iname(it))}</span><span style="color:#ffc94a;white-space:nowrap">${L} / ${ML}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;gap:8px"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${xRarT(it)}">${esc2(iname(it))}</span><span style="color:#ffc94a;white-space:nowrap">${L} / ${ML}</span></div>
         <div style="height:14px;border-radius:7px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden">
           <div class="f-pitybar" style="width:${Math.round(L/ML*100)}%;height:100%;background:linear-gradient(90deg,#5fd068,#b6f07a)"></div></div></div>
       <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b">${F_SHIELD}

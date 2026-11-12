@@ -1,0 +1,13 @@
+{
+ "frames": 12,
+ "fps": 12,
+ "w": 256,
+ "h": 256,
+ "padLeft": 0,
+ "look": {
+  "hat": null,
+  "vest": null,
+  "boots": null
+ },
+ "note": "PRÉVIA montada (aparência em camadas); no jogo as camadas são desenhadas por código"
+}

@@ -12,8 +12,10 @@ const BAG_MAX=60, FULL_VIEWS={gear:1,summon:1,shop:1,pass:1,prog:1};
    real = LAYOUT NOVO dos protótipos convertidos (v0.12.2): tamanho real (sem escala), largura até 600 px centrada, o conteúdo ROLA quando falta altura
           e sobra fica antes das ações de baixo. Desligada, volta o arranjo anterior (escala pela base de 390 + xFit).
    frame = CONTORNO COMUM em tela cheia (cabeçalho + VOLTAR + conteúdo, sem folha e sem barra de baixo): ver xHead/xWrap. Desligada até ser vista no navegador.
-   equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true},window.PANEL_V2||{});
+   equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo).
+   rar = RARIDADE PELA BORDA E PELA COR com UM componente (xRar / classe .xr, mais abaixo) em todo lugar que mostra item nos painéis: mochila, espaços,
+         comparação, Invocar, Loja, Passe e Forja. Desligada, cada tela volta a desenhar o item exatamente como antes (mesmo HTML). */
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true},window.PANEL_V2||{});
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
 const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
 const kf=v=>{ v=Math.max(0,v||0); const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
@@ -277,6 +279,38 @@ const xWrap=(d,cls,inner)=>d.real?`<div class="xs ${cls||''}" style="width:${d.W
 /* peças em coordenadas fixas do protótipo (vitrine do Kael, palco do baú) ficam numa caixa de 390 px centrada na largura real */
 const X390=h=>`position:absolute;left:50%;top:0;width:390px;height:${h}px;margin-left:-195px`;
 const itemIcon=(it,sz,extra)=>`<img src="${slotIcon(it.slot,ieraV(it))}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;${extra||''}">`;
+/* ---------- RARIDADE: UM COMPONENTE para todas as telas dos painéis (chave PANEL_V2.rar) ----------
+   MOLDURA = classe .xr + .xr<0..4> + atributo data-rar: borda de 3 px na cor, fundo radial com o tom da raridade, brilho em volta (cresce com a
+   raridade) e pulso em Mítico e Lendário. Sai no próprio modelo de HTML da tela (nenhum passe de DOM depois do render). Uso:
+     const q=xRar(item | raridade | null, modificador)  →  {on, r, c (cor da moldura), t (cor do nome), cls (' xr xrN'), at (' data-rar="N"')}
+     <button class="x-cell${q.cls}"${q.at} style="...${q.on?'':'borda e fundo antigos;'}...">     (com a chave desligada ou sem item: on=false, cls e at vazios)
+   Modificador 'xr-s' = sem o pulso do componente, para o elemento que já tem animação própria (x-newcard, x-legcard, x-pop, cartão vendido/bloqueado).
+   Fundo especial (ex.: carta lendária, prévia da skin): basta manter o background em linha, que vence o da classe.
+   NOME = xRarName(item | raridade, texto) devolve o texto (já escapado) na cor da raridade; onde o <span> do nome já existe, usa-se color:${xRarT(x)}.
+   xRarBox(x, miolo, lado) = quadrado pronto com a moldura (mesmas medidas do rarFrame do js/rarity.js).
+   MESMAS cores e medidas do js/rarity.js (.rar-f): quando ele está carregado, a paleta vem DELE (RAR_C, RAR_TXT, RAR_GLOW), lida no primeiro desenho
+   (ele carrega depois deste arquivo); senão vale a cópia abaixo. O data-rar é o mesmo contrato do rarDecorate: com a chave SCREENS_ON.rarityFx ligada
+   ele reconhece estas molduras pelo atributo e põe a classe .rar-f dele por cima, que tem os mesmos valores (nada muda na tela). */
+const XR_TXT=['#f0ebe2','#7dbcff','#c9a4ff','#ff8a8a','#ffd872'], XR_GLOW=[4,7,10,13,16];
+let XR_PAL=null;
+function xRarPal(){ if(XR_PAL) return XR_PAL; const ok=a=>Array.isArray(a)&&a.length>=5;
+  const P=XR_PAL={c:typeof RAR_C!=='undefined'&&ok(RAR_C)?RAR_C:RC, t:typeof RAR_TXT!=='undefined'&&ok(RAR_TXT)?RAR_TXT:XR_TXT, g:typeof RAR_GLOW!=='undefined'&&ok(RAR_GLOW)?RAR_GLOW:XR_GLOW};
+  let css='.xr[data-rar]{border:3px solid var(--rc);background:radial-gradient(circle at 50% 38%,var(--rb),#120d0a 75%)}\n.xr-n{text-shadow:0 1px 2px #000}\n';
+  for(let i=0;i<5;i++){ const c=P.c[i], g=P.g[i];
+    css+=`.xr${i}[data-rar]{--rc:${c};--rb:${c}33;box-shadow:0 0 ${g}px ${c}${i?'cc':'55'}}\n`;
+    if(i>=3) css+=`.xr${i}[data-rar]:not(.xr-s){animation:xrpulse${i} 1.6s ease-in-out infinite}\n@keyframes xrpulse${i}{0%,100%{box-shadow:0 0 6px ${c}aa}50%{box-shadow:0 0 ${g+8}px ${c}}}\n`
+      +`.x-in .x-tile.xr${i}[data-rar]:not(.xr-s){animation:xtileIn .35s ease-out both,xrpulse${i} 1.6s ease-in-out infinite}\n`     /* entrada do cartão da loja + pulso */
+      +`.x-cardin.xr${i}[data-rar]:not(.xr-s){animation:xflip .42s cubic-bezier(.2,1.4,.4,1) both,xrpulse${i} 1.6s .45s ease-in-out infinite}\n`; }   /* virada da carta do Invocar + pulso */
+  try{ const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st); }catch(e){}
+  P.css=css; return P; }
+const xRarOn=()=>PANEL_V2.rar!==false;
+const xRarR=x=>{ const r=x!=null&&typeof x==='object'?x.r:x; return Math.max(0,Math.min(4,r|0)); };
+function xRar(x,mod){ const r=xRarR(x); if(x==null||!xRarOn()) return {on:false,r,c:RC[r],t:RC[r],cls:'',at:''};
+  const P=xRarPal(); return {on:true,r,c:P.c[r],t:P.t[r],cls:' xr xr'+r+(mod?' '+mod:''),at:' data-rar="'+r+'"'}; }
+const xRarT=x=>xRar(x).t;   /* cor do nome: tom claro da raridade (chave desligada: a cor de antes, RC) */
+function xRarName(x,txt){ const q=xRar(x); return q.on?`<span class="xr-n" data-rar="${q.r}" style="color:${q.t}">${esc2(txt)}</span>`:esc2(txt); }
+function xRarBox(x,inner,size,extra){ const q=xRar(x), s=size||58; if(!q.on) return '';
+  return `<span class="${q.cls.trim()}"${q.at} style="position:relative;display:flex;align-items:center;justify-content:center;width:${s}px;height:${s}px;flex:none;border-radius:${Math.round(s*0.24)}px;box-sizing:border-box;overflow:hidden;${extra||''}">${inner||''}</span>`; }
 const forgeLv=slot=>(window.Sys&&Sys.forge)?Sys.forge.level(S,slot):0;
 const forgeMult=slot=>(window.Sys&&Sys.forge)?Sys.forge.mult(S,slot):0;
 const canEq=it=>Sys.stats.canEquip(it,plv());
@@ -327,11 +361,11 @@ function scrGear(){
       <button class="x-slot" data-x="wing" data-slot="wing" aria-label="Asa, bloqueado, libera no nível ${Sys.stats.DATA.wing.minLevel}" style="position:relative;width:58px;height:58px;border-radius:14px;border:2px dashed #8a7458;background:rgba(14,10,7,.82);color:#e8dccb;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
         ${SVG_LOCK(22)}<span style="font-size:9px;font-weight:900;line-height:1.05">Nível ${Sys.stats.DATA.wing.minLevel}</span></button>
       <span style="font-size:10px;font-weight:900;color:#e8dccb;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">Asa</span></div>`;
-    const c=it?RC[it.r]:'#8a7458';
+    const c=it?RC[it.r]:'#8a7458', q=xRar(it);   /* equipado = moldura da raridade (xRar); vazio = tracejado neutro */
     return `<div style="position:absolute;${pos};width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
       <div class="${XG.filter===slot?'x-selring':''} ${XG.land&&XG.land[slot]?'x-land':''}" data-slotbox="${slot}" style="position:relative;width:58px;height:58px;border-radius:14px">${XG.land&&XG.land[slot]?'<span class="x-landring" aria-hidden="true"></span>':''}
-        ${it&&it.r>=2?`<span class="x-halo" style="background:${c}"></span>`:''}
-        <button class="x-slot" data-x="slot" data-slot="${slot}" aria-label="${nm}${it?': '+esc2(iname(it))+', '+RN(it.r)+', item nível '+it.lvl:': vazio'}. Toque para ver os itens deste espaço" style="position:absolute;inset:0;border-radius:14px;border:${it?'3px solid '+c:'2px dashed #8a7458'};background:${it?'radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611)':'rgba(14,10,7,.82)'};padding:0;overflow:hidden">
+        ${it&&it.r>=2&&!q.on?`<span class="x-halo" style="background:${c}"></span>`:''}
+        <button class="x-slot${q.cls}" data-x="slot" data-slot="${slot}"${q.at} aria-label="${nm}${it?': '+esc2(iname(it))+', '+RN(it.r)+', item nível '+it.lvl:': vazio'}. Toque para ver os itens deste espaço" style="position:absolute;inset:0;border-radius:14px;${q.on?'':`border:${it?'3px solid '+c:'2px dashed #8a7458'};background:${it?'radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611)':'rgba(14,10,7,.82)'};`}padding:0;overflow:hidden">
           <img src="${it?slotIcon(slot,ieraV(it)):ICON[slot]}" alt="" class="${it?'':'x-emptyp'}" style="width:38px;height:38px;object-fit:contain;margin-top:-8px">
           <span style="position:absolute;left:0;right:0;bottom:0;height:16px;background:rgba(0,0,0,.72);font-size:10px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:16px">${it?'Nv.'+it.lvl:'vazio'}</span></button>
         <span class="x-plus lil" style="position:absolute;top:-7px;right:-8px;padding:1px 5px;border-radius:8px;background:#2a1403;border:2px solid #ffc94a;color:#ffc94a;font-size:12px;line-height:14px">+${forgeLv(slot)}</span>
@@ -346,9 +380,9 @@ function scrGear(){
   /* mochila */
   const list=S.inv.filter(x=>XG.filter==='all'||x.slot===XG.filter).sort((a,b)=>(b.nw?1:0)-(a.nw?1:0)||b.r-a.r||b.e-a.e||b.lvl-a.lvl||a.id-b.id);
   const pages=Math.max(1,Math.ceil(list.length/PER)); XG.page=Math.max(0,Math.min(XG.page,pages-1));
-  const cells=list.slice(XG.page*PER,XG.page*PER+PER).map(it=>{ const eq=S.eq[it.slot]===it.id, c=RC[it.r]; let better=false; if(!eq&&canEq(it)){ try{ better=Sys.fc.itemFC(S,Sys.host,it).swap>0.5; }catch(e){} }
-    return `<div class="x-cellin" style="position:relative;width:58px;height:58px">${it.r>=2?`<span class="x-halo" style="background:${c}"></span>`:''}
-      <button class="x-cell${eq&&it.slot==='weapon'?' eqw':''}" data-x="cell" data-id="${it.id}" aria-label="${esc2(iname(it))}, ${RN(it.r)}, nível ${it.lvl}, ${SLOT[it.slot].n}${eq?', equipado':''}${it.nw?', novo':''}" style="position:absolute;inset:0;border-radius:14px;border:3px solid ${c};background:radial-gradient(circle at 50% 38%,${c}33,#120d0a 75%);padding:0;overflow:hidden">
+  const cells=list.slice(XG.page*PER,XG.page*PER+PER).map(it=>{ const eq=S.eq[it.slot]===it.id, c=RC[it.r], q=xRar(it); let better=false; if(!eq&&canEq(it)){ try{ better=Sys.fc.itemFC(S,Sys.host,it).swap>0.5; }catch(e){} }
+    return `<div class="x-cellin" style="position:relative;width:58px;height:58px">${it.r>=2&&!q.on?`<span class="x-halo" style="background:${c}"></span>`:''}
+      <button class="x-cell${eq&&it.slot==='weapon'?' eqw':''}${q.cls}" data-x="cell" data-id="${it.id}"${q.at} aria-label="${esc2(iname(it))}, ${RN(it.r)}, nível ${it.lvl}, ${SLOT[it.slot].n}${eq?', equipado':''}${it.nw?', novo':''}" style="position:absolute;inset:0;border-radius:14px;${q.on?'':`border:3px solid ${c};background:radial-gradient(circle at 50% 38%,${c}33,#120d0a 75%);`}padding:0;overflow:hidden">
         ${itemIcon(it,40,'margin-top:-6px')}${it.r>=2?'<span class="x-sheen"></span>':''}
         <span style="position:absolute;left:0;right:0;bottom:0;height:15px;background:rgba(0,0,0,.72);font-size:9px;font-weight:900;color:${c};line-height:15px">Nv.${it.lvl}</span></button>
       ${eq?`<span aria-hidden="true" style="position:absolute;top:-5px;left:-5px;width:20px;height:20px;border-radius:50%;background:#5fd068;border:2px solid #16110d;display:flex;align-items:center;justify-content:center;pointer-events:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`:''}
@@ -417,15 +451,16 @@ function gSheet(it,H,now,shown){
       <span style="font-size:12px;font-weight:800;color:#c9b9a2;width:92px">${GL[k]}</span>
       <span style="font-size:13px;font-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span style="color:#c9b9a2">→</span> ${gFmt(k,after[k])}</span>
       <span class="lil" style="display:flex;align-items:center;gap:3px;font-size:14px;color:${up?'#5fd068':dn?'#ff5a4e':'#c9b9a2'}">${up?SVG_UP(14):dn?SVG_DN(14):''}${up?'+'+dt:dn?'−'+dt:'='}</span></div>`; }).join('');
-  const card=(x,tag,tagC,cls,bg)=>`<div class="${cls}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;border-radius:14px;background:${bg};border:2px solid ${x?RC[x.r]:'#4a3a2b'};box-sizing:border-box">
+  /* cartão da comparação: com item, moldura da raridade (3 px; o respiro cai de 6 para 5 px, o cartão não muda de tamanho); 'xr-s' no cartão que já pulsa (x-newcard) */
+  const card=(x,tag,tagC,cls,bg)=>{ const q=xRar(x,cls?'xr-s':''); return `<div class="${cls}${q.cls}"${q.at} style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:${q.on?5:6}px;border-radius:14px;${q.on?'':`background:${bg};border:2px solid ${x?RC[x.r]:'#4a3a2b'};`}box-sizing:border-box">
       <span style="font-size:9px;font-weight:900;color:${tagC};letter-spacing:1px">${tag}</span>${x?itemIcon(x,36):`<img src="${ICON[it.slot]}" alt="" class="x-emptyp" style="width:36px;height:36px">`}
-      <span style="font-size:11px;font-weight:900;text-align:center;line-height:1.1;color:${x?RC[x.r]:'#c9b9a2'}">${x?esc2(iname(x)):'Espaço vazio'}</span>
-      ${x?itemLines(x).map(t=>`<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:nowrap">${t}</span>`).join(''):''}</div>`;
+      <span style="font-size:11px;font-weight:900;text-align:center;line-height:1.1;color:${x?xRarT(x):'#c9b9a2'}">${x?esc2(iname(x)):'Espaço vazio'}</span>
+      ${x?itemLines(x).map(t=>`<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:nowrap">${t}</span>`).join(''):''}</div>`; };
   const off='#33271d', offF='#8a7a68';
   return `<button class="x-scrim" data-x="close" aria-label="Fechar comparação" style="position:absolute;inset:0;border:0;padding:0;background:rgba(8,5,3,.66)"></button>
   <div class="${XG.sheetIn?'x-sheet':''}" role="dialog" aria-label="Comparar item" style="position:absolute;left:0;right:0;bottom:0;height:${Math.min(696,H-8)}px;padding:10px 14px 12px;box-sizing:border-box;background:#1d1611;border-top:3px solid ${c};border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${small?6:8}px">
     <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0;display:flex;flex-direction:column">
-        <span class="lil" style="font-size:21px;color:${c};text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>
+        <span class="lil" style="font-size:21px;color:${xRarT(it)};text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>
         <span style="font-size:12px;font-weight:800;color:#c9b9a2">${RN(it.r)} · ${ERAS[it.e].n} · ${SLOT[it.slot].n}</span></div>
       <button data-x="close" aria-label="Fechar" style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center">${SVG_X}</button></div>
     <div style="display:flex;align-items:stretch;gap:6px;height:118px;flex:none">
@@ -471,7 +506,7 @@ function gConfirm(){ const it=itemOf(XG.cf); if(!it){ XG.cf=null; return ''; } c
   return `<div class="x-scrim" style="position:absolute;inset:0;z-index:30;background:rgba(8,6,4,.7);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
     <div class="x-pop" role="alertdialog" aria-label="Confirmar melhoria" style="width:330px;border-radius:18px;border:3px solid #ffc94a;background:#241b14;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.7)">
       <span class="lil" style="font-size:20px;text-align:center">${isEq?'Upar':'Equipar e upar'} até o nível ${pg.to}</span>
-      <span style="font-size:14px;font-weight:900;text-align:center;color:${RC[it.r]}">${esc2(iname(it))} · Nv. ${pg.from} → ${pg.to} (+${pg.levels})</span>
+      <span style="font-size:14px;font-weight:900;text-align:center;color:${xRarT(it)}">${esc2(iname(it))} · Nv. ${pg.from} → ${pg.to} (+${pg.levels})</span>
       <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:#16110d;border:1px solid #4a3a2b;font-size:14px;font-weight:800">
         <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#c9b9a2">Custo total em ouro</span><span style="display:flex;align-items:center;gap:4px;font-weight:900">${COIN_I(20)}${gNum(pg.gold)}</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#c9b9a2">Seu ouro</span><span style="font-weight:900">${kf(S.gold)} → <span style="color:${pg.ok?'#c8f5cb':'#ff8a7a'}">${pg.ok?kf(S.gold-pg.gold):'faltam '+kf(pg.gold-S.gold)}</span></span></div>
@@ -581,11 +616,13 @@ function sCard(k,i,shown){ const x10=XS.mode===10, w=x10?62:150, h=x10?92:210, i
   const tag=k.pity?'GARANTIA':k.r===4?'LENDÁRIO!':'';
   const tagH=tag?`<span class="x-legtag" style="position:absolute;left:50%;top:-10px;padding:1px 6px;border-radius:6px;background:${k.r===4?'#ffc94a':c};color:#2a1403;font-size:${x10?9:11}px;font-weight:900;white-space:nowrap;box-shadow:0 0 10px ${c};z-index:2">${tag}</span>`:'';
   const eqB=k.eq?`<span title="Equipado" style="position:absolute;top:-6px;left:-6px;width:20px;height:20px;border-radius:50%;background:#5fd068;border:2px solid #16110d;display:flex;align-items:center;justify-content:center;z-index:2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`:'';
+  /* moldura da raridade (xRar). Lendária: mesma moldura, com o fundo dourado e o pulso próprios dela ('xr-s'); garantia: mantém o brilho forte em linha */
+  const q=xRar(k.r,k.r===4?'xr-s':'');
   if(k.r===4) return `<span class="x-lrays" style="width:${x10?150:340}px;height:${x10?150:340}px"></span>
-    <div class="x-legcard" style="position:absolute;inset:0;border-radius:12px;border:3px solid #ffc94a;background:radial-gradient(circle at 50% 35%,#8a5a12 0%,#3a2408 70%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
-      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain;filter:drop-shadow(0 0 8px #ffc94a)"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px;color:#fff">${esc2(k.name)}</span><span class="x-sheen2"></span></div>${tagH}${eqB}`;
-  return `<div class="x-cardin" style="position:absolute;inset:0;border-radius:12px;border:3px solid ${c};background:radial-gradient(circle at 50% 35%,${c}44 0%,#1d1611 70%);box-shadow:${k.pity?'0 0 18px 4px '+c:k.r>=1?'0 0 '+(6+k.r*4)+'px '+c:'none'};overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
-      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px">${esc2(k.name)}</span>
+    <div class="x-legcard${q.cls}"${q.at} style="position:absolute;inset:0;border-radius:12px;${q.on?'':'border:3px solid #ffc94a;'}background:radial-gradient(circle at 50% 35%,#8a5a12 0%,#3a2408 70%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
+      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain;filter:drop-shadow(0 0 8px #ffc94a)"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px;color:${q.on?q.t:'#fff'}">${esc2(k.name)}</span><span class="x-sheen2"></span></div>${tagH}${eqB}`;
+  return `<div class="x-cardin${q.cls}"${q.at} style="position:absolute;inset:0;border-radius:12px;${q.on?(k.pity?'box-shadow:0 0 18px 4px '+c+';':''):`border:3px solid ${c};background:radial-gradient(circle at 50% 35%,${c}44 0%,#1d1611 70%);box-shadow:${k.pity?'0 0 18px 4px '+c:k.r>=1?'0 0 '+(6+k.r*4)+'px '+c:'none'};`}overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
+      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px${q.on?';color:'+q.t:''}">${esc2(k.name)}</span>
       <span style="font-size:9px;font-weight:900;color:${c}">${k.dism?'Desmontado':RN(k.r)}</span>${k.r>=2?'<span class="x-sheen2"></span>':''}</div>${tagH}${eqB}`; }
 function sOverlay(full){ const el=document.getElementById('xs_over'); if(!el) return; const x10=XS.mode===10, tot=XS.res.length, all=XS.shown>=tot;
   let best=null; XS.res.slice(0,XS.shown).forEach(x=>{ if(!best||x.r>best.r) best=x; });
@@ -596,7 +633,7 @@ function sOverlay(full){ const el=document.getElementById('xs_over'); if(!el) re
         ${XS.res.map((k,i)=>`<div id="xs_c${i}" style="position:relative;width:${x10?62:150}px;height:${x10?92:210}px">${sCard(k,i,i<XS.shown)}</div>`).join('')}</div></div>
       <div id="xs_best" style="position:relative;height:22px;font-size:14px;font-weight:800;white-space:nowrap"></div><div id="xs_btn" style="position:relative"></div></div><div id="xs_fl"></div>`; }
   const sub=document.getElementById('xs_sub'); if(sub) sub.textContent=x10?'Abertura x10 · '+XS.shown+' / '+tot:'Abertura x1';
-  const bt=document.getElementById('xs_best'); if(bt) bt.innerHTML=best?`Melhor: <span style="color:${RC[best.r]}">${esc2(best.name)} (${RN(best.r)})</span>`:'';
+  const bt=document.getElementById('xs_best'); if(bt) bt.innerHTML=best?`Melhor: <span style="color:${xRarT(best.r)}">${esc2(best.name)} (${RN(best.r)})</span>`:'';
   const bn=document.getElementById('xs_btn'); if(bn&&bn.dataset.k!==String(all)){ bn.dataset.k=String(all); bn.innerHTML=all?'<button class="x-gold x-pulse lil" data-x="collect" style="width:240px;height:58px;border-radius:18px;font-size:24px">Coletar</button>'
       :'<button data-x="skip" class="lil" style="width:240px;height:58px;border-radius:18px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:20px">Revelar tudo</button>'; } }
 function sRevealNext(){ if(XS.phase!=='reveal'||XS.shown>=XS.res.length) return; const i=XS.shown, it=XS.res[i]; XS.shown++;
@@ -624,7 +661,7 @@ const XH={tab:'hero',page:{hero:0,weapon:0,item:0},sel:null,cf:null,burst:false,
 const SHOP_ITEMS_TAB=true;   // aba extra "Itens" (ofertas do dia em ouro, compra direta): NÃO existe no canvas; false = some (decisão do PO pendente)
 const hList=tab=>SKINS.filter(s=>s.slot===(tab==='hero'?'armor':'weapon')&&(!s.pass||s.id===SEASON_SKIN||S.skins.includes(s.id))).sort((a,b)=>(a.pass?1:0)-(b.pass?1:0)||a.e-b.e||a.r-b.r);
 function hStatus(sk){ const eq=S.skinEq[sk.slot]===sk.id, own=S.skins.includes(sk.id), locked=!own&&!sk.pass&&sk.e>S.eraMax; return {eq,own:own&&!eq,pass:!own&&!!sk.pass,locked,buy:!own&&!sk.pass&&!locked}; }
-const skinArt=(sk,sz,op,cls)=>sk.slot==='weapon'?`<img class="${cls||''}" src="assets/weapons/era${sk.e}_t${tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`
+const skinArt=(sk,sz,op,cls)=>sk.slot==='weapon'?`<img class="${cls||''}" src="assets/weapons/${typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`
   :sk.e===2?`<span class="kidle ${tierOf(sk.r)?'t'+tierOf(sk.r):''}" aria-hidden="true" style="position:relative;display:block;width:${sz}px;height:${sz}px;opacity:${op}"></span>`
   :`<img class="x-breathe" src="assets/hero/era${sk.e}_t${tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`;
 function hFeat(tab){ const slot=tab==='weapon'?'weapon':'armor', L=hList(tab); ensureShop();
@@ -640,13 +677,14 @@ function scrShop(){
   if(tab==='hero'||tab==='weapon'){
     const list=hList(tab), pages=Math.max(1,Math.ceil(list.length/PER)); XH.page[tab]=Math.max(0,Math.min(XH.page[tab],pages-1)); const pg=XH.page[tab]; XH.pages=pages;
     const feat=hFeat(tab), fs=hStatus(feat), owned=list.filter(s=>S.skins.includes(s.id)).length;
-    const tiles=list.slice(pg*PER,pg*PER+PER).map(sk=>{ const st=hStatus(sk), c=RC[sk.r], op=st.locked?0.45:1;
-      return `<button class="x-tile ${sk.r>=3&&!st.locked?'x-r'+sk.r:''}" data-x="skin" data-id="${sk.id}" aria-label="${esc2(sk.n)}, ${RN(sk.r)}${st.eq?', equipada':st.own?', na coleção':st.pass?', só no passe':st.locked?', bloqueada até a '+ERAS[sk.e].n:', '+SKIN_PRICE[sk.r]+' gemas'}" style="border-radius:14px;border:2px solid ${c};background:linear-gradient(180deg,${RT[sk.r]} 0%,#1d1611 60%);color:#f6ecdf;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px">
+    /* cartão de skin: mesma moldura dos itens (xRar); a borda passa de 2 para 3 px e o respiro perde 1 px, o miolo fica do mesmo tamanho; bloqueada = sem pulso */
+    const tiles=list.slice(pg*PER,pg*PER+PER).map(sk=>{ const st=hStatus(sk), c=RC[sk.r], op=st.locked?0.45:1, q=xRar(sk.r,st.locked?'xr-s':'');
+      return `<button class="x-tile ${q.on?'':sk.r>=3&&!st.locked?'x-r'+sk.r:''}${q.cls}" data-x="skin" data-id="${sk.id}"${q.at} aria-label="${esc2(sk.n)}, ${RN(sk.r)}${st.eq?', equipada':st.own?', na coleção':st.pass?', só no passe':st.locked?', bloqueada até a '+ERAS[sk.e].n:', '+SKIN_PRICE[sk.r]+' gemas'}" style="border-radius:14px;${q.on?'':`border:2px solid ${c};background:linear-gradient(180deg,${RT[sk.r]} 0%,#1d1611 60%);`}color:#f6ecdf;padding:${q.on?'5px 3px':'6px 4px'};display:flex;flex-direction:column;align-items:center;gap:2px">
         ${sk.r>=2&&!st.locked?'<span class="x-tshine"></span>':''}<span style="font-size:11px;font-weight:900;color:${c}">${RN(sk.r)}</span>
         <div style="position:relative;width:70px;height:66px;display:flex;align-items:center;justify-content:center">
           ${tab==='hero'?'<span class="x-sped" style="left:13px;top:58px;width:44px;height:9px;border-width:1px"></span>':''}${skinArt(sk,tab==='hero'?70:66,op)}
           ${st.locked?`<span style="position:absolute;right:-6px;top:-4px;width:26px;height:26px;border-radius:50%;background:#0e0a07;border:2px solid #6b5843;display:flex;align-items:center;justify-content:center">${SVG_LOCK(14,'#f6ecdf')}</span>`:''}</div>
-        <span style="height:28px;font-size:12px;font-weight:900;line-height:1.15;text-align:center;display:flex;align-items:center">${esc2(sk.n)}</span>
+        <span style="height:28px;font-size:12px;font-weight:900;line-height:1.15;text-align:center;display:flex;align-items:center${q.on?';color:'+q.t:''}">${esc2(sk.n)}</span>
         ${st.eq?'<span style="height:22px;padding:0 8px;border-radius:999px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900;display:flex;align-items:center">Equipada</span>'
           :st.own?'<span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #5fd068;color:#c8f5cb;font-size:11px;font-weight:900;display:flex;align-items:center">Na coleção</span>'
           :st.pass?'<span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #ffc94a;color:#ffc94a;font-size:11px;font-weight:900;display:flex;align-items:center;gap:3px"><img src="assets/ui/pass.png" alt="" style="width:16px;height:16px;object-fit:contain">Só no Passe</span>'
@@ -689,10 +727,11 @@ function scrShop(){
     body='<div id="xh_col" style="flex:1;min-height:0;position:relative;font-family:system-ui,Segoe UI,Roboto,sans-serif;font-size:15px"></div>';
   } else {   // itens do dia, em ouro
     const offers=S.shop.offers, pages=Math.max(1,Math.ceil(offers.length/(PER*(rows===2?1:1)))), per=rows*3; XH.page.item=Math.max(0,Math.min(XH.page.item,Math.ceil(offers.length/per)-1)); const pg=XH.page.item; XH.pages=Math.max(1,Math.ceil(offers.length/per));
-    const tiles=offers.map((o,i)=>{ if(i<pg*per||i>=pg*per+per) return ''; const it=shopItem(o), c=RC[o.r];
-      return `<button class="x-tile ${o.r>=3&&!o.sold?'x-r'+o.r:''}" data-x="offer" data-i="${i}" aria-label="${esc2(iname(it))}, ${RN(o.r)}, ${SLOT[o.slot].n}, ${o.sold?'comprado':o.price+' moedas'}" style="border-radius:14px;border:2px solid ${c};background:linear-gradient(180deg,${RT[o.r]} 0%,#1d1611 60%);color:#f6ecdf;padding:6px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;opacity:${o.sold?.6:1}">
+    /* cartão de item: moldura da raridade (xRar), nome na cor; borda de 2 para 3 px e respiro 1 px menor (miolo igual); comprado = sem pulso */
+    const tiles=offers.map((o,i)=>{ if(i<pg*per||i>=pg*per+per) return ''; const it=shopItem(o), c=RC[o.r], q=xRar(o.r,o.sold?'xr-s':'');
+      return `<button class="x-tile ${q.on?'':o.r>=3&&!o.sold?'x-r'+o.r:''}${q.cls}" data-x="offer" data-i="${i}"${q.at} aria-label="${esc2(iname(it))}, ${RN(o.r)}, ${SLOT[o.slot].n}, ${o.sold?'comprado':o.price+' moedas'}" style="border-radius:14px;${q.on?'':`border:2px solid ${c};background:linear-gradient(180deg,${RT[o.r]} 0%,#1d1611 60%);`}color:#f6ecdf;padding:${q.on?'5px 4px':'6px 5px'};display:flex;flex-direction:column;align-items:center;gap:2px;opacity:${o.sold?.6:1}">
         ${o.r>=2&&!o.sold?'<span class="x-tshine"></span>':''}<span style="font-size:11px;font-weight:900;color:${c}">${RN(o.r)}</span>${itemIcon(it,44)}
-        <span style="font-size:11px;font-weight:900;line-height:1.1;text-align:center;height:24px;display:flex;align-items:center">${esc2(iname(it))}</span>
+        <span style="font-size:11px;font-weight:900;line-height:1.1;text-align:center;height:24px;display:flex;align-items:center${q.on?';color:'+q.t:''}">${esc2(iname(it))}</span>
         <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">${SLOT[o.slot].n} · ${ERAS[o.e].n.replace('Era da ','').replace('Era ','')}</span>
         <span style="display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;min-height:0;overflow:hidden">${itemLines(it).map(t=>`<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:nowrap">${t}</span>`).join('')}</span>
         ${o.sold?'<span style="height:24px;padding:0 8px;border-radius:999px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900;display:flex;align-items:center;flex:none">Comprado</span>'
@@ -716,11 +755,11 @@ function scrShop(){
   if(tab==='col'){ const el=document.getElementById('xh_col'); if(el) renderSkins(el,Math.max(300,H-112)); }
 }
 function shopItem(o){ const it={id:'shop'+o.slot+o.r+o.e,slot:o.slot,r:o.r,e:o.e,lvl:1,gold:0,subs:Array.isArray(o.subs)?o.subs:[]}; if(!Array.isArray(o.subs)){ Sys.stats.ensureSubs(it); o.subs=it.subs; } return it; }
-function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } const st=hStatus(sk), c=RC[sk.r], hero=sk.slot==='armor'?sk:SKIN(S.skinEq.armor), weap=sk.slot==='weapon'?sk:SKIN(S.skinEq.weapon), SK=Sys.skin.DATA;
+function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } const st=hStatus(sk), c=RC[sk.r], q=xRar(sk.r,'xr-s'), hero=sk.slot==='armor'?sk:SKIN(S.skinEq.armor), weap=sk.slot==='weapon'?sk:SKIN(S.skinEq.weapon), SK=Sys.skin.DATA;
   const passLv=Object.keys(PASS_SKIN_AT).find(k=>PASS_SKIN_AT[k]===sk.id);
   return `<div class="x-scrim" style="position:absolute;inset:0;z-index:20;background:rgba(8,6,4,.82);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
-    <div class="${XH.popIn?'x-pop':''}" role="dialog" aria-label="Prévia: ${esc2(sk.n)}" style="width:358px;max-height:100%;border-radius:20px;border:3px solid ${c};background:#1d1611;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 30px ${c}88">
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 10px 6px 16px;flex:none"><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span class="lil" style="font-size:24px;line-height:1.1">${esc2(sk.n)}</span>
+    <div class="${XH.popIn?'x-pop':''}${q.cls}"${q.at} role="dialog" aria-label="Prévia: ${esc2(sk.n)}" style="width:358px;max-height:100%;border-radius:20px;${q.on?'':`border:3px solid ${c};`}background:#1d1611;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 30px ${c}88">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 10px 6px 16px;flex:none"><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span class="lil" style="font-size:24px;line-height:1.1${q.on?';color:'+q.t:''}">${esc2(sk.n)}</span>
           <span style="font-size:13px;font-weight:900;color:${c}">${RN(sk.r)} · <span style="color:#c9b9a2">${sk.slot==='armor'?'Skin de herói':'Skin de arma'} · ${ERAS[sk.e].n}</span></span></div>
         <button data-x="pvclose" aria-label="Fechar prévia" style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;justify-content:center;padding:0">${SVG_X}</button></div>
       <div style="position:relative;height:300px;flex:0 1 300px;min-height:180px;margin:0 10px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 55%,${RT[sk.r]} 0%,#120d0a 70%)">
@@ -738,13 +777,13 @@ function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } c
         :st.locked?`<div style="flex:1;height:54px;border-radius:16px;border:2px solid #4a3a2b;background:#2a211a;color:#e8dccb;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">${SVG_LOCK(20)}Libera na ${ERAS[sk.e].n}</div>`
         :`<button data-x="gopass" class="x-gold lil" style="flex:1;height:54px;border-radius:16px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:6px"><img src="assets/ui/pass.png" alt="" style="width:30px;height:30px;object-fit:contain">Ganhe no Passe · Nv. ${passLv||''}</button>`}
       </div></div></div>`; }
-function hConfirm(){ const cf=XH.cf; let name='', cost=0, have=0, coin=false, lines='';
-  if(cf.kind==='skin'){ const sk=SKIN(cf.id); name=sk.n+' ('+RN(sk.r)+')'; cost=SKIN_PRICE[sk.r]; have=S.gems; }
-  else { const o=S.shop.offers[cf.i], it=shopItem(o); name=iname(it)+' ('+RN(o.r)+' · '+SLOT[o.slot].n+')'; cost=o.price; have=S.gold; coin=true; lines=itemLines(it).join(' · '); }
+function hConfirm(){ const cf=XH.cf; let name='', cost=0, have=0, coin=false, lines='', rr=0, box='';   /* rr = raridade (nome na cor); box = o item na moldura da raridade (só com PANEL_V2.rar) */
+  if(cf.kind==='skin'){ const sk=SKIN(cf.id); name=sk.n+' ('+RN(sk.r)+')'; cost=SKIN_PRICE[sk.r]; have=S.gems; rr=sk.r; }
+  else { const o=S.shop.offers[cf.i], it=shopItem(o); name=iname(it)+' ('+RN(o.r)+' · '+SLOT[o.slot].n+')'; cost=o.price; have=S.gold; coin=true; lines=itemLines(it).join(' · '); rr=o.r; box=xRarBox(o.r,itemIcon(it,40),58,'align-self:center;'); }
   const ok=have>=cost, ic=coin?COIN_I(20):GEM_I(20), unit=coin?'moedas':'gemas';
   return `<div class="x-scrim" style="position:absolute;inset:0;z-index:30;background:rgba(8,6,4,.7);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
     <div class="x-pop" role="alertdialog" aria-label="Confirmar compra" style="width:320px;border-radius:18px;border:3px solid #ffc94a;background:#241b14;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.7)">
-      <span class="lil" style="font-size:22px;text-align:center">Confirmar compra</span><span style="font-size:15px;font-weight:900;text-align:center">${esc2(name)}</span>
+      <span class="lil" style="font-size:22px;text-align:center">Confirmar compra</span>${box}<span style="font-size:15px;font-weight:900;text-align:center">${xRarName(rr,name)}</span>
       <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:#16110d;border:1px solid #4a3a2b;font-size:14px;font-weight:800">
         <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#c9b9a2">Preço</span><span style="display:flex;align-items:center;gap:4px;font-weight:900">${ic}${coin?gNum(cost):cost}</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:#c9b9a2">${coin?'Seu ouro':'Suas gemas'}</span><span style="font-weight:900">${coin?kf(have):have} → <span style="color:${ok?'#c8f5cb':'#ff8a7a'}">${coin?kf(Math.max(0,have-cost)):have-cost}</span></span></div>${coin?`<span style="font-size:12px;color:#c9b9a2">${lines}</span><span style="font-size:12px;color:#c9b9a2">Vai direto para a mochila. Sem sorteio.</span>`:''}</div>
@@ -781,6 +820,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();

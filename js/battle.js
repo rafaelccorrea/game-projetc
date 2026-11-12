@@ -53,11 +53,11 @@ const B={hero:null,enemy:null,fx:[],t:0,speed:1,deadT:0,swing:0,hurt:0,parts:[],
 /* v0.12.3: a arma nova só entra na mão quando a arte dela (sprite da arma e, se for pistola, as 3 folhas) já carregou; até lá fica a ANTERIOR
    (nunca mão vazia). Se a arte não chegar em 4 s, troca assim mesmo. */
 const HLK={cur:null,req:null,t0:0};
-function lookReady(w){ if(!SPR(hp('weapons',w.e,tierOf(w.r)),'weapon')) return false; const pe=typeof pistolEra==='function'?pistolEra(w):-1; return pe<0||pistolReady(pe); }
+function lookReady(w){ if(!SPR(wPng(w),'weapon')) return false; const pe=typeof pistolEra==='function'?pistolEra(w):-1; return pe<0||pistolReady(pe); }
 const wSkin = () => { const w=heroLook().weapon; if(w!==HLK.cur){ if(HLK.req!==w){ HLK.req=w; HLK.t0=performance.now(); }
     if(!HLK.cur||lookReady(w)||performance.now()-HLK.t0>4000) HLK.cur=w; } return HLK.cur; };   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
 const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
-const wIsGun0 = ws => { const m=J('assets/weapons/meta.json')[heroKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
+const wIsGun0 = ws => { const m=J('assets/weapons/meta.json')[wKey(ws)]; return m&&m.type?m.type==='gun':(ws.e>=3&&ws.e<=5)||(ws.e===6&&tierOf(ws.r)===0); };
 const wIsGun = ws => wIsGun0(ws)&&(ws.e!==4||ART_ON.pistol_era4===true);   /* v0.12.3: arma de fogo só com a PISTOLA APROVADA (eras 3, 5 e 6; era 4 atrás da chave ART_ON.pistol_era4). Sem ela, golpe corpo a corpo (pose de espada) */
 
 /* ---------- horda: fábrica de inimigos, ondas e saque (pontos de extensão: mkEnemy, waveSpec, lootFor) ---------- */
@@ -268,6 +268,7 @@ function killEnemy(e){
 }
 function waveClear(){
   const h=B.hero;
+  if(typeof petWave==='function') petWave();   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
@@ -275,7 +276,9 @@ function waveClear(){
     const ne=eraOf(S.stage), newEra=ne>oldEra&&ne>S.eraMax;
     if(newEra){ S.eraMax=ne; S.gems+=30; }
     /* TELA 10 (vitória): abre por cima da batalha; se não puder abrir (outra tela aberta, tutorial), vale o aviso curto de antes */
-    const shown=typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1});
+    /* TROCA DE ERA (pedido Q-2): tela nova em overlay (js/p_era.js), só com PANEL_ON.era ligada pelo agente B; se não abrir, vale o fluxo de sempre */
+    let eraShown=false; if(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era')){ try{ eraShown=Panels.open('era',{from:oldEra,to:ne,boss:(ERAS[oldEra]&&ERAS[oldEra].lord)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}})!==false; }catch(er){ console.error('era',er); eraShown=false; } }
+    const shown=eraShown||(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(!shown) toast(newEra?`🌟 NOVA ERA: ${ERAS[ne].icon} ${ERAS[ne].n}! +40💎`:`Fase ${S.stage-1} vencida! +10💎`);
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
     if(S.set.autoBoss&&heroFC()>=recFC(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
@@ -506,6 +509,11 @@ function J(path){
 }
 const tierOf = r => r<=1?0:r<=3?1:2;           // r0,r1->T0 · r2,r3->T1 · r4->T2
 const heroKey = sk => `era${sk.e}_t${tierOf(sk.r)}`;
+/* v0.12.5 ARMAS POR RARIDADE (arte nova): cada raridade tem a SUA imagem. Básico = eraN_t0 · Raro = eraN_raro · Épico = eraN_t1 · Mítico = eraN_mitico ·
+   Lendário = eraN_t2 (assets/weapons/ e as mesmas chaves no meta.json). wKey/wPng valem para a ARMA; heroKey/tierOf continuam para a roupa. */
+const W_RKEY=['t0','raro','t1','mitico','t2'];
+const wKey = ws => 'era'+ws.e+'_'+W_RKEY[Math.max(0,Math.min(4,ws.r|0))];
+const wPng = ws => 'assets/weapons/'+wKey(ws)+'.png';
 const SWT=0.4;                                  // duração do ataque básico
 let HS=155;                                     // lado do quadro do herói em px lógicos (recalculado no resize)
 const tc=document.createElement('canvas'); tc.width=tc.height=400; const tx=tc.getContext('2d');
@@ -591,7 +599,7 @@ function preloadEra(era){
 function preloadAssets(){
   J('assets/hero/anchors.json'); J('assets/weapons/meta.json'); J('assets/enemies/meta.json'); J('assets/bg/meta.json'); J('assets/fx/meta.json');
   const ae=SKIN(S.skinEq.armor), we=wSkin();
-  SPR(hp('hero',ae.e,tierOf(ae.r)),'hero'); SPR(hp('weapons',we.e,tierOf(we.r)),'weapon'); heroPreload(ae.e);
+  SPR(hp('hero',ae.e,tierOf(ae.r)),'hero'); SPR(wPng(we),'weapon'); heroPreload(ae.e);
   ['hit','crit','muzzle','slash','aura'].forEach(n=>{ if(FX_ART[n]==='sprite') IMG(`assets/fx/${n}.png`); });
   ['ult','s2','s1'].forEach(kd=>{ const A=FX_ART[kd][we.e]; if(A&&!(kd==='ult'&&!ART_ON['ult_era'+we.e])){ IMG(fxPng(A)); if(A.meta) J(A.sheet+'.json'); } });
   const era=eraOf(S.stage); preloadEra(era);
@@ -701,7 +709,7 @@ const LVUP='assets/anim/fx/levelup';
 function drawLevelUp(){ const f=B.lvfx; if(!f) return; const sh=sheetLoad(LVUP,true); if(!sh.ok){ if(sh.fail) B.lvfx=null; return; }
   const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
   const k=HS/256; ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
-const WING_DRAW=false;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
+const WING_DRAW=true;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
   if(WING_DRAW&&H.deadP<0&&typeof drawWings==='function') drawWings(H);   // asa equipada: ATRÁS do corpo
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
@@ -709,7 +717,7 @@ function drawHero(H){
   const body0=SPR(hp('hero',sk.e,tierOf(sk.r)),'hero');
   if(!body0){ if(H.main) drawHeroOld(); return; }
   const body=skinSpr(body0,sk.r), top0=body0.bot||0.95, gy=H.gy;
-  const wk=heroKey(ws), wm=J('assets/weapons/meta.json')[wk]||{}, gun=wIsGun(ws);
+  const wk=wKey(ws), wm=J('assets/weapons/meta.json')[wk]||{}, gun=wIsGun(ws);
   const P=heroPose(H.act,gun,t);
   let bob,sx,sy,rot;
   if(H.walking){ bob=-Math.abs(Math.sin(t*14))*5; const s=Math.sin(t*28); sy=1+s*0.035; sx=1-s*0.035; rot=0.08+Math.sin(t*14)*0.03; }   // corrida
@@ -727,7 +735,7 @@ function drawHero(H){
   const an=J('assets/hero/anchors.json')[key]||{}, anc=an.hand||[0.82,0.68], hr=(an.handR||0.05)*1.15;
   const hx=-HS/2+anc[0]*HS, hy=-HS*top0+anc[1]*HS;
   const grip=wm.grip||(gun?[0.26,0.6]:[0.5,0.78]);
-  const w0=SPR(hp('weapons',ws.e,tierOf(ws.r)),'weapon'), wimg=skinSpr(w0,ws.r), fx=WFIX[wk]||{}, back=wm.layer==='back';
+  const w0=SPR(wPng(ws),'weapon'), wimg=skinSpr(w0,ws.r), fx=WFIX[wk]||WFIX[heroKey(ws)]||{}, back=wm.layer==='back';
   if(H.main) B.tipW=null;
   const drawW=()=>{
     const L=HS*(gun?0.72:0.82)*(fx.s||1), k=Math.min(L/Math.max(w0.w,w0.h),gun?HS*0.36*(fx.s||1)/w0.h:1e9), dw=w0.w*k, dh=w0.h*k;
@@ -924,13 +932,15 @@ function draw(){
   const h=B.hero, L=B.en;
   HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); HM.wing=heroLook().wing; { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   const ultOn=!!(B.act&&B.act.type==='s3');
+  if(typeof drawPet==='function') drawPet();   // pet ATRÁS do Kael
   if(!ultOn){ drawHero(HM); drawLevelUp(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
   for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
     for(let j=5;j>=0;j--){ const kj=Math.max(0,k-j*0.035), x=p.x0+(p.x1-p.x0)*kj, y=p.y0+(p.y1-p.y0)*kj-(p.kind==='shell'?26*4*kj*(1-kj):0); drawGlow(col,x,y,(big?11:6)*(1-j/7)*(p.kind==='fire'?1.5+0.3*Math.sin(B.at*40+j):1),j?0.6*(1-j/6):1,false);
       if(!j){ ctx.fillStyle=p.kind==='shell'?'#2a2a30':'#ffffff'; ctx.strokeStyle='#3a1a08'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,y,big?4.5:2.6,0,7); ctx.fill(); ctx.stroke(); } } }   /* núcleo sólido: aparece também sobre fundo claro */
-  if(ultOn){ drawWfx(2); drawHero(HM); drawLevelUp(); }   // herói sempre por cima do efeito da ultimate
+  if(ultOn){ drawWfx(2); drawHero(HM); drawLevelUp(); }
+  if(typeof drawHatch==='function') drawHatch();   // ovo chocando (por cima da cena, abaixo do HUD)   // herói sempre por cima do efeito da ultimate
   drawWfx(1);
   // barras de vida depois dos efeitos (nunca cobertas)
   ctx.textAlign='center'; ctx.lineJoin='round';
@@ -1046,7 +1056,7 @@ function loop(now){
   let dt=rdt; if(B.slow>0){ B.slow-=rdt; dt=rdt*0.3; }
   /* um erro num quadro NUNCA pode matar o laço do jogo (antes, uma exceção no desenho parava tudo para sempre: o requestAnimationFrame ficava no fim) */
   try{
-  if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++) step(dt); }
+  if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
   tickFx(dt); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }

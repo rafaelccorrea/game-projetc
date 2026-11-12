@@ -1,8 +1,11 @@
 'use strict';
 /* ================= TELA 17b PETS V2 (docs/proto/PetsV2.dc.html) — NASCE DESLIGADA (PANEL_ON.pets = false) =================
-   Só a TELA: palco do pet, estágios, abas Detalhes / Ataques / Evoluir / Coleção, redefinir nível, evoluir e o ovo do nível 20.
-   Nenhuma regra aqui: tudo vem do Sys.pet (js/sys/pet.js, §5h do reports/sys-e2-api.md). A tela NÃO liga nenhuma chave do módulo:
-   sem o módulo carregado ou com a chave da tela 17b desligada (Sys.pet.setV17), mostra "Pets: em breve". */
+   Só a TELA: palco do pet (folha animada), estágios, abas Detalhes / Ataques / Evoluir / Coleção, alimentar, redefinir nível, evoluir,
+   ovo do nível 20 e ovo à escolha (com a animação de chocar). Nenhuma regra aqui: tudo vem do Sys.pet (js/sys/pet.js, §5f e §5h do
+   reports/sys-e2-api.md). A tela NÃO liga nenhuma chave do módulo: sem o módulo carregado ou com a chave da tela 17b desligada
+   (Sys.pet.setV17), mostra "Pets: em breve"; antes do nível de liberação, o portão com Voltar.
+   LAYOUT NOVO (PANEL_V2.real do screens.js): tamanho real, largura d.Wb de 320 a 600 px, altura útil d.H; nada encolhe, o miolo ROLA
+   (x-scroll, a rolagem é devolvida no redesenho) e a ação principal fica fixa embaixo. O cabeçalho com Voltar é do index. */
 
 /* ---------- chamadas ao Sys.pet ISOLADAS (valor de reserva seguro; o que falta no módulo está anotado em cada uma) ---------- */
 const ptP=()=>(window.Sys&&Sys.pet)||null;
@@ -25,16 +28,9 @@ const ptGateTxt=r=>{ const l=ptGateLevel(r); return l>0?'guardado até o nível 
 /* ovos À ESCOLHA pendentes e ovos guardados pelo portão (listas do save do módulo) */
 const ptChoices=()=>{ const c=ptSave().choices; return Array.isArray(c)?c.map((q,i)=>({i,c:q})).filter(q=>q.c&&Array.isArray(q.c.options)&&q.c.options.length):[]; };   /* i = índice para o chooseEgg */
 const ptGated=id=>{ const g=ptSave().gated; return Array.isArray(g)?g.filter(q=>q&&q.pet===id).length:0; };
-/* DEFEITO NO MÓDULO (js/sys/pet.js, feedTap; avisado à fps-e2): ele desconta a ração e devolve {ok:true}, mas o nível e a barra NÃO ficam gravados
-   (o canFeed chamado no meio refaz os objetos do save e a escrita vai para um objeto velho). Proteção da tela, sem regra nova:
-   confere se gravou; se não gravou, DEVOLVE a ração descontada e, quando há ração para o nível inteiro, sobe 1 nível pelo Sys.pet.feed
-   (que funciona). Com o módulo corrigido este desvio não é usado: a conferência passa e vale a barra parcial de 25 por toque. */
-function ptFeedTap(id){ const P=ptP(), host=ptHost(), o0=ptSave(), x0=o0.owned[id]||{}, food0=o0.food, l0=x0.lvl|0, f0=x0.fx|0;
-  const r=ptCall('feedTap',[S,host,id,P.DATA.v17.tapFood],{ok:false,reason:'off'}); if(!r.ok) return r;
-  const o1=ptSave(), x1=o1.owned[id]||{}; if((x1.lvl|0)!==l0||(x1.fx|0)!==f0) return r;
-  o1.food=food0;
-  const c=P.canFeed(S,host,id); if(!c.ok) return {ok:false,reason:c.reason||'food',need:c.cost|0,fallback:true};
-  const g=ptCall('feed',[S,host,1,id],{ok:false,reason:'food'}); return g.ok?{ok:true,given:g.spent|0,up:true,lvl:g.lvl,fx:0,fallback:true}:{ok:false,reason:g.reason||'food',need:c.cost|0,fallback:true}; }
+/* Alimentar por toque: direto no Sys.pet.feedTap (barra parcial de DATA.v17.tapFood por toque). O defeito que existia no módulo (nível e barra não
+   gravavam) foi corrigido pela sessão de Sistemas (Sys.pet.ensure atualiza a ficha no lugar; há teste de regressão): o desvio da tela saiu. */
+function ptFeedTap(id){ const P=ptP(); return ptCall('feedTap',[S,ptHost(),id,P.DATA.v17.tapFood],{ok:false,reason:'off'}); }
 /* 1º ovo (chave v20 do módulo): só aparece na tela quando o módulo diz que está pendente */
 function ptEggPending(){ const P=ptP(); if(!P||!P.DATA.v20||P.DATA.v20.on!==true||typeof P.firstEgg!=='function') return false; return ptSave().first!==true&&!ptLocked(); }
 
@@ -72,10 +68,6 @@ const PT_DECO={
 const PT_STAR='M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z';
 const PT_BOWL='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 H21 L19 19 A2 2 0 0 1 17 20.5 H7 A2 2 0 0 1 5 19 Z" fill="#c77a3a" stroke="#5a2d10" stroke-width="1.3"></path><circle cx="8" cy="10.5" r="2.2" fill="#e8b070" stroke="#5a2d10" stroke-width="1"></circle><circle cx="12" cy="9" r="2.4" fill="#d89a5a" stroke="#5a2d10" stroke-width="1"></circle><circle cx="16" cy="10.5" r="2.2" fill="#e8b070" stroke="#5a2d10" stroke-width="1"></circle></svg>';
 const PT_PAW='<svg viewBox="0 0 24 24" width="60%" height="60%" fill="#6a5a48" aria-hidden="true"><ellipse cx="12" cy="16" rx="5.2" ry="4.2"></ellipse><circle cx="5.5" cy="10.5" r="2.2"></circle><circle cx="9.5" cy="6.5" r="2.2"></circle><circle cx="14.5" cy="6.5" r="2.2"></circle><circle cx="18.5" cy="10.5" r="2.2"></circle></svg>';
-
-/* ---------- estado ---------- */
-const XPT={sel:null,view:null,tab:'det',anim:true,pin:true,page:0,toast:'',toastT:0,fx:null,fxN:0,lastAtk:0,lvPop:false,confirm:false,
-  choice:false,hatch:null,hRes:null,evo:null,evoFrom:0,evoId:null,seq:0,timers:[],maxTxt:null};
 
 (function(){ const st=document.createElement('style'); st.textContent=`
 .pt-root,.pt-root *{box-sizing:border-box}
@@ -216,6 +208,11 @@ const XPT={sel:null,view:null,tab:'det',anim:true,pin:true,page:0,toast:'',toast
 .pt-glowUp{animation:ptk-glowUp 1.2s ease-in both}
 @keyframes ptk-glowUp{from{filter:brightness(1)}to{filter:brightness(3) saturate(0)}}
 .pt-hrays{position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;margin:-75% 0 0 -75%;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.3) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 66%);mask:radial-gradient(circle,#000 20%,transparent 66%);animation:ptk-spin 14s linear infinite}
+.pt-jump{animation:ptk-jump .6s cubic-bezier(.3,1.2,.5,1) both}
+@keyframes ptk-jump{0%{transform:translateY(-34%) scale(.55);opacity:0}45%{transform:translateY(-16%) scale(1.04);opacity:1}78%{transform:translateY(0) scale(1.06,.92)}100%{transform:none;opacity:1}}
+.pt-pulse2{animation:ptk-pulse2 1.4s ease-in-out infinite}
+@keyframes ptk-pulse2{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 16px rgba(255,201,74,.9)}}
+@keyframes ptk-sp{from{background-position:0 0}to{background-position:100% 0}}
 `; document.head.appendChild(st); })();
 
 /* ---------- peças ---------- */
@@ -255,19 +252,9 @@ function ptFxHtml(k,def){ const a=ptArt(def), K=PT_KIND[k], A=ptP().DATA.v3d.att
   return (k==='crit'?`<span class="pt-shot" aria-hidden="true" style="top:52%;background:radial-gradient(circle,#fff 0 25%,${c} 60%);box-shadow:0 0 14px 4px ${c}"></span><span class="pt-boom" aria-hidden="true" style="top:42%;background:radial-gradient(circle,#fff 0 18%,${c} 50%,transparent 72%)"></span>`
     :k==='basic'?'<span class="pt-slash" aria-hidden="true" style="right:8%;top:40%"></span>':`<span class="pt-shock" aria-hidden="true" style="bottom:6%;border-color:${c}"></span>`)
     +`<span class="pt-atkTag lil pt-ol" role="status" style="position:absolute;right:8px;top:4px;font-size:16px;color:${K.c}">${esc2(a.atk[K.i])} ${ptMult(A[k].dmg)}</span>`; }
-/* toca um ataque no palco SEM redesenhar a tela (só troca o efeito e a classe do pet) */
-function ptPlayAtk(k,loud){ const def=ptDef(XPT.sel); if(!def) return; const n=++XPT.fxN; XPT.fx=k; XPT.lastAtk=Date.now(); if(loud) snd('ui_tap');
-  const fx=document.getElementById('pt_fx'), act=document.getElementById('pt_act'), row=document.getElementById('pt_ak_'+k);
-  if(fx) fx.innerHTML=ptFxHtml(k,def); if(act) act.className=PT_KIND[k].act; if(row&&row.style) row.style.borderColor=PT_KIND[k].c;
-  ptLater(()=>{ if(XPT.fxN!==n) return; XPT.fx=null; const f2=document.getElementById('pt_fx'), a2=document.getElementById('pt_act'), r2=document.getElementById('pt_ak_'+k);
-    if(f2) f2.innerHTML=''; if(a2) a2.className=''; if(r2&&r2.style) r2.style.borderColor='#4a3a2b'; },950); }
 /* quanto o pet soma à FC (número): a parte dele na FC TOTAL (Sys.pet.fcShare) aplicada sobre a FC atual do herói */
 function ptFcAdd(id,sh,o){ const fc=heroFC(); if(!(sh.now>0)||!(fc>0)) return 0; if(o.eq===id) return fc*sh.now/100;
   const e=o.eq?ptCall('fcShare',[S,ptHost(),o.eq],{now:0,max:0}).now:0, base=fc*(1-e/100); return base*sh.now/(100-sh.now); }
-/* frase do topo ("bônus na FC até X%"): máximos por raridade lidos uma vez do fcShare */
-function ptMaxTxt(){ if(XPT.maxTxt!=null) return XPT.maxTxt; let a=0, b=0; const P=ptP();
-  for(const d of P.DATA.pets){ if(!PT_ART[d.id]) continue; const m=ptCall('fcShare',[S,ptHost(),d.id],{now:0,max:0}).max||0; if(d.r>=5) b=Math.max(b,m); else a=Math.max(a,m); }
-  XPT.maxTxt=a>0?'bônus na FC até '+p1(a)+(b>0?' (Prismático '+p1(b)+')':''):''; return XPT.maxTxt; }
 function ptHow(def){ const P=ptP(), a=ptArt(def), D=P.DATA; if(def.hatchFrags) return n0(def.hatchFrags)+' fragmentos prismáticos';
   let t=a.how||'';
   if(a.egg20&&D.v20&&D.v20.on===true){ const od=ptCall('firstEggOdds',[],[]).find(x=>x.r===def.r); if(od) t='ovo do Nv '+D.v20.unlockLevel+' ('+p1(od.pct)+')'+(t?' ou '+t:''); }
@@ -277,61 +264,99 @@ function ptHow(def){ const P=ptP(), a=ptArt(def), D=P.DATA; if(def.hatchFrags) r
 function ptEggLine(h,stageName){ if(!h) return ''; if(h.held) return 'Ovo '+ptGateTxt(h.needR!=null?h.needR:(ptDef(h.pet)||{}).r|0);
   if(h.isNew) return 'novo na coleção, '+stageName; if(h.to==='food'||h.food>0) return 'repetido com 5★: +'+n0(h.food|0)+' de ração';
   return 'repetido: +'+n0(h.frags|0)+' fragmentos'; }
+
+/* ---------- FOLHAS REAIS (assets/anim/pets; conferidas arquivo a arquivo, .json + .png) ----------
+   Todas as folhas têm o MESMO formato (lido dos .json): quadro 512x352 numa fila só, 12 fps, pés em y=307, desenho na faixa x 96..352 (centro em 224),
+   y 64..320 (256 px). idle e atk têm 12 quadros (1 s); run tem 8 (não é usado aqui: a tela não anda).
+   PT_SH[sprite][estágio] = folhas que EXISTEM daquele estágio (0 filhote, 1 médio "_mid_", 2 evoluído "_evo_"). Sem folha do estágio: imagem parada.
+   Filhote tem atk1/atk2/atk3 (básico/mediano/crítico); médio e evoluído só atk1 (formato econômico da fps-ff): os 3 ataques tocam o atk1.
+   Cérbero: só parte das folhas (filhote idle+atk1, médio idle, evoluído nada) => segue em silhueta "em breve" (PT_ART.sheet=false). */
+const PT_SHEET={frames:12,fps:12,w:512,h:352,feetY:307,cx:224,box:256};
+const PT_SH={
+  era0_mammoth:[['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
+  era1_sphinx: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
+  era2_dragon: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
+  era3_parrot: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
+  era4_mechdog:[['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
+  era7_cerberus:[['idle','atk1'],['idle'],[]] };
+const PT_SHP=['','mid_','evo_'], PT_ATKSH={basic:'atk1',mid:'atk2',crit:'atk3'};
+function ptSheet(def,stg,k){ const a=ptArt(def), t=PT_SH[a.sprite]; return t&&t[stg]&&t[stg].indexOf(k)>=0?'assets/anim/pets/'+a.sprite+'_'+PT_SHP[stg]+k+'.png':''; }
+const ptAtkSheet=(def,stg,k)=>ptSheet(def,stg,PT_ATKSH[k])||ptSheet(def,stg,'atk1');
+/* folha animada dentro de uma caixa QUADRADA: a faixa desenhada (256 px) ocupa a caixa e os pés ficam na base dela, como a imagem parada */
+function ptSprite(url,once,alt){ const F=PT_SHEET;
+  return `<div role="img" aria-label="${esc2(alt||'')}" style="position:absolute;left:50%;bottom:0;height:${(F.h/F.box*100).toFixed(1)}%;aspect-ratio:${F.w}/${F.h};transform:translate(-${(F.cx/F.w*100).toFixed(2)}%,${((F.h-F.feetY)/F.h*100).toFixed(2)}%);background:url(${url}) 0 0/${F.frames*100}% 100% no-repeat;animation:ptk-sp ${(F.frames/F.fps).toFixed(2)}s steps(${F.frames},jump-none) ${once?'1 both':'infinite'}"></div>`; }
+/* o pet vivo (palco e prévia): folha idle quando existe; senão a imagem parada respirando (e flutuando, se voa) */
+function ptLive(def,stg,alt,sil){ const a=ptArt(def), u=sil?'':ptSheet(def,stg,'idle'); if(u) return ptSprite(u,false,alt);
+  return `<div class="${a.fly?'pt-fly':''}" style="position:absolute;inset:0"><div class="pt-breathe" style="position:absolute;inset:0;transform-origin:50% 100%">${ptPic(def,stg,sil?'pt-sil':'',`position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;transform:translateY(${ptShift(def,stg)})`,alt)}</div></div>`; }
+/* toca um ataque no palco SEM redesenhar a tela: efeito + folha de ataque (ou o movimento em CSS do protótipo, se o estágio não tem folha) */
+function ptPlayAtk(k,loud){ const def=ptDef(XPT.sel); if(!def) return; const n=++XPT.fxN, stg=XPT.vw|0, u=ptAtkSheet(def,stg,k); XPT.fx=k; XPT.lastAtk=Date.now(); if(loud) snd('ui_tap');
+  const fx=document.getElementById('pt_fx'), act=document.getElementById('pt_act'), pet=document.getElementById('pt_pet'), row=document.getElementById('pt_ak_'+k);
+  if(fx) fx.innerHTML=ptFxHtml(k,def); if(u){ if(pet) pet.innerHTML=ptSprite(u,true,''); } else if(act) act.className=PT_KIND[k].act; if(row&&row.style) row.style.borderColor=PT_KIND[k].c;
+  ptLater(()=>{ if(XPT.fxN!==n) return; XPT.fx=null; const f2=document.getElementById('pt_fx'), a2=document.getElementById('pt_act'), p2=document.getElementById('pt_pet'), r2=document.getElementById('pt_ak_'+k);
+    if(f2) f2.innerHTML=''; if(a2) a2.className=''; if(u&&p2) p2.innerHTML=ptLive(def,stg,'',false); if(r2&&r2.style) r2.style.borderColor='#4a3a2b'; },1000); }
+
+/* ---------- liberação por nível: o módulo (chave v20) e a regra comum das telas (xUnlocked do screens.js) ---------- */
+function ptHidden(){ if(ptLocked()) return true; try{ return typeof xUnlocked==='function'&&!xUnlocked('pet'); }catch(e){ return false; } }
+function ptHiddenLv(){ if(ptLocked()) return ptLockLevel(); try{ return typeof xUnlockLv==='function'?xUnlockLv('pet'):ptLockLevel(); }catch(e){ return ptLockLevel(); } }
+
+/* ---------- estado ---------- */
+const PT_MINH=240;   /* altura mínima passada ao xDims: pequena de propósito (no layout novo nada encolhe; o miolo rola) */
+const XPT={sel:null,view:null,vw:0,tab:'det',anim:true,pin:true,toast:'',toastT:0,fx:null,fxN:0,lastAtk:0,lvPop:false,confirm:false,
+  choice:false,hatch:null,hRes:null,evo:null,evoFrom:0,evoId:null,seq:0,timers:[]};
 function ptEmpty(d,html){ V.innerHTML=xWrap(d,'pt-root '+(XPT.anim?'pt-in':''),`<div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center">${html}</div>`); XPT.anim=false; }
 
-/* ---------- desenho ---------- */
+/* ---------- desenho (layout novo: tamanho real, largura d.Wb de 320 a 600, o miolo rola e a ação principal fica embaixo) ---------- */
 function scrPets(){
-  const d=xFit(700,504), H=d.H;
+  const d=xDims(PT_MINH), H=d.H, W=d.Wb;
   if(!ptReady()){ ptEmpty(d,`<img src="assets/pets/pet_egg.png" alt="" style="width:120px;height:120px;object-fit:contain;opacity:.85"><span class="lil" style="font-size:24px">Pets: em breve</span>`); return; }
   const P=ptP(), D=P.DATA, o=ptSave(), host=ptHost();
-  if(ptLocked()){ const n=Object.keys(o.owned).length;
-    ptEmpty(d,`${SVG_LOCK(56,'#c9b9a2')}<span class="lil" style="font-size:24px">Pets</span><span style="font-size:14px;font-weight:900;color:#ffe07a">Libera no nível ${n0(ptLockLevel())}</span>${n?`<span style="font-size:12px;font-weight:800;color:#c9b9a2">${n0(n)} ${n===1?'pet esperando':'pets esperando'}</span>`:''}`); return; }
+  if(ptHidden()){ const n=Object.keys(o.owned).length;
+    ptEmpty(d,`${SVG_LOCK(56,'#ffc94a')}<span class="lil" style="font-size:26px">Pets</span><span style="padding:6px 14px;border-radius:999px;background:#33271d;border:2px solid #ffc94a;color:#ffc94a;font-size:15px;font-weight:900">Libera no nível ${n0(ptHiddenLv())}</span>
+      <span style="font-size:13px;font-weight:800;color:#c9b9a2">Você está no nível ${n0(plv())}. Continue lutando para liberar.</span>${n?`<span style="font-size:12px;font-weight:800;color:#c9b9a2">${n0(n)} ${n===1?'pet esperando':'pets esperando'}</span>`:''}
+      <button class="pt-gold lil" data-x="back" style="margin-top:6px;height:52px;padding:0 28px;border-radius:16px;font-size:20px">Voltar</button>`); return; }
   const list=ptList();
   if(!list.length){ ptEmpty(d,'<span class="lil" style="font-size:24px">Pets: em breve</span>'); return; }
   if(!list.some(p=>p.id===XPT.sel)) XPT.sel=(list.find(p=>p.id===o.eq)||list.find(p=>o.owned[p.id])||list[0]).id;
-  const def=list.find(p=>p.id===XPT.sel), id=def.id, art=ptArt(def), x=o.owned[id]||null, owned=!!x, soon=ptSoon(def,o);
+  const def=list.find(p=>p.id===XPT.sel), idx=list.indexOf(def), id=def.id, art=ptArt(def), x=o.owned[id]||null, owned=!!x, soon=ptSoon(def,o);
   const r=Math.max(0,Math.min(5,def.r|0)), rc=PT_RC[r], prism=r===5, rb=prism?' pt-rainbow':'';
   const SN=D.v3d.stages.map(s=>s.name), REQ=D.v17.stageReq, CAP=D.v17.stageCap, MAXL=D.v3d.maxLvl;
   const sg=owned?ptCall('stage',[S,id],{}):{}, stg=owned?Math.max(0,Math.min(2,sg.index|0)):0;
-  let vw=XPT.view!=null?XPT.view:stg; if(XPT.evo==='glow'||XPT.evo==='coc') vw=XPT.evoFrom; if(soon) vw=0; vw=Math.max(0,Math.min(2,vw|0));
+  let vw=XPT.view!=null?XPT.view:stg; if(XPT.evo==='glow'||XPT.evo==='coc') vw=XPT.evoFrom; if(soon) vw=0; vw=Math.max(0,Math.min(2,vw|0)); XPT.vw=vw;
   const lv=owned?P.levelOf(S,id):0, stars=owned?x.stars:0, isEq=o.eq===id, strong=vw===2;
   const sh=ptCall('fcShare',[S,host,id],{now:0,max:0}), fcAdd=owned?ptFcAdd(id,sh,o):0;
   const cf=owned?P.canFeed(S,host,id):{ok:false,reason:'pet',cost:0}, need=P.foodCost(lv||1), fxb=owned?(x.fx|0):0;
-  const ce=owned?P.canEvolve(S,id):{ok:false,reason:'pet'};
-  const cmp=H<650, panelH=cmp?232:252, prevMin=cmp?56:72, cardH=cmp?44:64, era=art.era;
-  const eraName=art.eraN||(typeof def.homeEra==='number'&&ERAS[def.homeEra]&&ERAS[def.homeEra].n)||'', egg=ptEggPending();
-  const sk=SKIN(S.skinEq.armor), tier=tierOf(sk?sk.r:0), chs=ptChoices(), nCh=chs.length, nGate=ptGated(id);
-  const footS=`position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;transform:translateY(${ptShift(def,vw)})`;
+  const ce=owned?P.canEvolve(S,id):{ok:false,reason:'pet'}, ready=ce.ok===true;
+  const era=art.era, eraName=art.eraN||'', egg=ptEggPending(), chs=ptChoices(), nCh=chs.length, nGate=ptGated(id);
+  const sk=SKIN(S.skinEq.armor), tier=tierOf(sk?sk.r:0);
   const petAlt=def.name+', '+SN[vw]+', '+ptRN(r);
   const layers=e=>`<div class="pt-L pt-Lsky pt-sky${e}"></div><div class="pt-L pt-Lcld pt-cld${e}"></div><div class="pt-L pt-Lfar pt-far${e}"></div><div class="pt-L pt-Lmid pt-mid${e}"></div><div class="pt-L pt-Lgnd pt-gnd${e}"></div>`;
   const pin=XPT.pin?'pt-panelIn':'';
+  const stH=Math.round(Math.max(190,Math.min(340,H*0.36))), petPx=Math.round(Math.min(380,W*0.58));
+  const sc0=XPT.anim?null:document.getElementById('pt_scroll'), y0=sc0?(+sc0.scrollTop||0):0;   /* o redesenho não devolve a rolagem ao topo */
+  const eggBtn=(act,l1,aria)=>`<button data-x="${act}" aria-label="${aria}" class="pt-pulse2" style="position:absolute;right:6px;bottom:6px;z-index:4;min-width:64px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:2px 6px;border-radius:14px;border:2px solid #ffc94a;background:rgba(51,39,29,0.94);color:#ffe07a;font-size:11px;font-weight:900;line-height:1.05">
+      <img class="pt-eggBtn" src="assets/pets/pet_egg.png" alt="" style="width:38px;height:38px;object-fit:contain"><span>${l1}</span></button>`;
 
   /* ----- PALCO ----- */
-  const stage=`<div style="position:relative;flex:1 1 auto;min-height:140px;border-radius:18px;overflow:hidden;border:2px solid ${rc};display:flex;flex-direction:column;background:#1d1611">
+  const stage=`<div style="position:relative;flex:none;height:${stH}px;border-radius:18px;overflow:hidden;border:2px solid ${rc};display:flex;flex-direction:column;background:#1d1611">
       ${era===0||era===2?layers(era):`<div class="pt-th ${PT_DECO[era]?'pt-th'+era:''}"></div>${PT_DECO[era]?`<div class="pt-floor pt-fl${era}"></div>`:''}`}
       ${(PT_DECO[era]||[]).map(q=>`<span class="${q[0]}" aria-hidden="true" style="left:${q[1]};bottom:${q[2]};width:${q[3]};height:${q[4]};animation-delay:${q[5]}"></span>`).join('')}
       <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(10,7,5,0.6) 0%,rgba(10,7,5,0) 26%,rgba(10,7,5,0) 80%,rgba(10,7,5,0.45) 100%)"></div>
-      <div style="position:relative;z-index:3;height:48px;flex:none;display:flex;align-items:center;gap:8px;padding:4px 6px">
-        <span class="pt-ol" style="flex:1;min-width:0;font-size:11px;font-weight:900;color:#f0e2cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cmp?'':esc2((o.eq?'1 ativo':'nenhum ativo')+(ptMaxTxt()?' · '+ptMaxTxt():''))}</span>
+      <div style="position:relative;z-index:3;height:52px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px">
+        <span style="flex:none">${xPager('pet',idx,list.length,null,'Pet anterior','Próximo pet')}</span>
         <span role="img" aria-label="Ração: ${n0(o.food)}" style="flex:none;display:flex;align-items:center;gap:4px;height:32px;padding:0 8px 0 4px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b">${PT_BOWL}<span id="pt_food" style="font-size:14px;font-weight:900">${gNum(o.food)}</span></span>
-        ${egg?`<button data-x="egg" aria-label="Chocar o ovo do nível ${n0(D.v20.unlockLevel)}" style="height:44px;flex:none;display:flex;align-items:center;gap:4px;padding:0 10px 0 4px;border-radius:12px;border:2px solid #ffc94a;background:rgba(51,39,29,0.92);color:#ffe07a;font-size:12px;font-weight:900;line-height:1.05;text-align:left">
-          <img class="pt-eggBtn" src="assets/pets/pet_egg.png" alt="" style="width:34px;height:34px;object-fit:contain"><span>Chocar ovo<br><span style="color:#f6ecdf">(nível ${n0(D.v20.unlockLevel)})</span></span></button>`:''}
-        ${nCh?`<button data-x="choose" aria-label="Escolher ovo: ${n0(nCh)} pendente${nCh>1?'s':''}" class="pt-pulse" style="position:relative;height:44px;flex:none;display:flex;align-items:center;gap:4px;padding:0 10px 0 4px;border-radius:12px;border:2px solid #ffc94a;background:rgba(51,39,29,0.92);color:#ffe07a;font-size:12px;font-weight:900;line-height:1.05;text-align:left">
-          <img class="pt-eggBtn" src="assets/pets/pet_egg.png" alt="" style="width:34px;height:34px;object-fit:contain"><span>Escolher<br><span style="color:#f6ecdf">ovo${nCh>1?' ('+n0(nCh)+')':''}</span></span></button>`:''}
       </div>
       <div style="position:relative;z-index:2;flex:1;min-height:0">
         <div class="pt-ped" style="bottom:4%;width:min(62%,300px);height:15%"><span class="pt-pedRim" style="border-color:${rc}"></span></div>
-        <div style="position:absolute;left:50%;bottom:11.5%;height:min(84%,${Math.round(Math.min(380,d.Wb*0.58))}px);aspect-ratio:1/1;transform:translateX(-50%)">
-          <div id="pt_act" class="${XPT.fx?PT_KIND[XPT.fx].act:''}" style="position:absolute;inset:0">
+        <div style="position:absolute;left:50%;bottom:11.5%;height:min(84%,${petPx}px);aspect-ratio:1/1;transform:translateX(-50%)">
+          <div id="pt_act" class="${XPT.fx&&!ptAtkSheet(def,vw,XPT.fx)?PT_KIND[XPT.fx].act:''}" style="position:absolute;inset:0">
             ${soon?'':`<div class="pt-aura pt-a${vw}${rb}" aria-hidden="true" style="background:${ptAuraBg(r,vw,strong)}"></div>${vw>=1?`<span class="pt-ring${rb}" aria-hidden="true" style="border-color:${rc}"></span>`:''}${strong?ptStrong(r):''}`}
             <span class="pt-shd ${art.fly?'pt-shdFly':''}" aria-hidden="true" style="bottom:-3%;width:54%;height:8%"></span>
-            <div class="${art.fly?'pt-fly':''}" style="position:absolute;inset:0"><div class="pt-breathe" style="position:absolute;inset:0;transform-origin:50% 100%">${ptPic(def,vw,soon?'pt-sil':'',footS,soon?def.name+', em breve':petAlt)}</div></div>
+            <div id="pt_pet" style="position:absolute;inset:0">${XPT.fx&&!soon&&ptAtkSheet(def,vw,XPT.fx)?ptSprite(ptAtkSheet(def,vw,XPT.fx),true,petAlt):ptLive(def,vw,soon?def.name+', em breve':petAlt,soon)}</div>
           </div>
         </div>
         <div id="pt_fx" style="position:absolute;inset:0;pointer-events:none">${XPT.fx&&!soon?ptFxHtml(XPT.fx,def):''}</div>
-        ${list.length>1?`<button data-x="prev" aria-label="Pet anterior" style="position:absolute;left:6px;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;border:2px solid #4a3a2b;background:rgba(29,22,17,0.85);color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center">${Y_BACK}</button>
-        <button data-x="next" aria-label="Próximo pet" style="position:absolute;right:6px;top:50%;margin-top:-22px;width:44px;height:44px;border-radius:50%;border:2px solid #4a3a2b;background:rgba(29,22,17,0.85);color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center">${Y_FWD}</button>`:''}
-        ${soon||!owned||vw!==stg?`<span class="pt-ol" style="position:absolute;left:8px;bottom:6px;padding:2px 8px;border-radius:8px;background:rgba(14,10,7,0.8);border:1px dashed #c9b9a2;font-size:11px;font-weight:900;color:#f6ecdf">${soon?'em breve':!owned?'não obtido · prévia':'prévia: '+esc2(SN[vw])}</span>`:''}
+        ${soon||!owned||vw!==stg?`<span class="pt-ol" style="position:absolute;left:8px;bottom:6px;padding:2px 8px;border-radius:8px;background:rgba(14,10,7,0.8);border:1px dashed #c9b9a2;font-size:11px;font-weight:900;color:#f6ecdf">${soon?'em breve':!owned?'não obtido':'vendo: '+esc2(SN[vw])}</span>`:''}
+        ${egg?eggBtn('egg','Chocar<br>ovo','Chocar o ovo do nível '+n0(D.v20.unlockLevel)):nCh?eggBtn('choose','Escolher<br>ovo'+(nCh>1?' ('+n0(nCh)+')':''),'Escolher ovo: '+n0(nCh)+' pendente'+(nCh>1?'s':'')):''}
       </div>
     </div>`;
 
@@ -340,71 +365,53 @@ function scrPets(){
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
         <span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="lil pt-ol" style="font-size:21px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(def.name)}</span>
           ${isEq?`<span role="img" aria-label="Equipado" style="flex:none;width:20px;height:20px;border-radius:50%;background:#5fd068;display:flex;align-items:center;justify-content:center">${Y_CHK(13,'#0d2410')}</span>`:''}</span>
-        <span style="display:flex;align-items:center;gap:5px;flex-wrap:nowrap;min-width:0;overflow:hidden">
+        <span style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0">
           <span class="${prism?'pt-rbw pt-rare':r>=3?'pt-rare':''}" style="flex:none;padding:1px 7px;border-radius:7px;font-size:11px;font-weight:900;color:#16110d;background:${rc}">${esc2(ptRN(r))}</span>
           <span role="img" aria-label="${owned?stars+' de '+D.maxStars+' estrelas':'não obtido'}" style="display:flex;gap:1px;flex:none">${Array.from({length:D.maxStars},(_,i)=>`<svg class="${i<stars?'pt-star':''}" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${(i*0.2).toFixed(1)}s"><path d="${PT_STAR}" fill="${i<stars?'#ffc94a':'#3a2c1f'}" stroke="#6a3a08" stroke-width="1.4" stroke-linejoin="round"></path></svg>`).join('')}</span>
           <span class="${XPT.lvPop?'pt-lvPop':''}" style="font-size:13px;font-weight:900;color:#ffe07a;white-space:nowrap">${owned?'Nv '+n0(lv)+'/'+n0(MAXL):'Nv —'}</span>
         </span>
       </div>
-      <div role="group" aria-label="Estágios do pet (toque para ver)" style="flex:none;position:relative;display:flex;gap:2px">
+      ${soon?'':`<div role="group" aria-label="Estágios do pet (toque para ver)" style="flex:none;position:relative;display:flex;gap:2px">
         <span aria-hidden="true" style="position:absolute;left:22px;right:22px;top:13px;height:3px;background:#4a3a2b;border-radius:2px"></span>
         ${SN.map((n,i)=>{ const reached=owned&&i<=stg, cur=i===vw;
           return `<button data-x="stg" data-i="${i}" aria-label="${esc2(n)}${i===0?'':' (Nv '+REQ[i]+')'}${reached?', alcançado':', ainda não'}. Toque para ver" aria-pressed="${cur}" style="position:relative;width:44px;height:48px;border:0;border-radius:10px;background:${cur?'#3a2c1f':'transparent'};padding:4px 0 0;display:flex;flex-direction:column;align-items:center;gap:3px;color:${cur?'#ffc94a':'#c9b9a2'}">
             <span class="${owned&&i===stg?'pt-dotCur':''}" style="width:16px;height:16px;border-radius:50%;border:3px solid ${reached?rc:'#6a5a48'};background:${reached?rc:'#16110d'}"></span><span style="font-size:10px;font-weight:900;line-height:1">${esc2(n)}</span></button>`; }).join('')}
-      </div>
+      </div>`}
     </div>`;
 
   const tabs=`<div role="tablist" aria-label="Seções do pet" style="height:44px;flex:none;display:flex;gap:4px">${[['det','Detalhes'],['atk','Ataques'],['evo','Evoluir'],['col','Coleção']].map(t=>{ const on=XPT.tab===t[0];
-      return `<button role="tab" aria-selected="${on}" data-x="tab" data-t="${t[0]}" class="lil" style="flex:1;min-width:0;border-radius:12px;border:2px solid ${on?'#ffc94a':'#4a3a2b'};background:${on?'linear-gradient(180deg,#ffe07a,#f2a826)':'#33271d'};color:${on?'#2a1403':'#c9b9a2'};font-size:15px;padding:0">${t[1]}</button>`; }).join('')}</div>`;
+      return `<button role="tab" aria-selected="${on}" data-x="tab" data-t="${t[0]}" class="lil" style="flex:1;min-width:0;border-radius:12px;border:2px solid ${on?'#ffc94a':'#4a3a2b'};background:${on?'linear-gradient(180deg,#ffe07a,#f2a826)':'#33271d'};color:${on?'#2a1403':'#c9b9a2'};font-size:${W<350?14:15}px;padding:0">${t[1]}</button>`; }).join('')}</div>`;
 
-  const soonBox=`<div class="${pin}" style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:8px">
-      <span style="font-size:13px;font-weight:900;line-height:1.3;text-align:center;color:#c9b9a2">${esc2(PT_TXT.soon)}</span>
-      ${XPT.tab==='col'?'':'<button data-x="gocol" class="pt-sec lil" style="height:48px;flex:none;border-radius:14px;font-size:18px">Ver coleção</button>'}</div>`;
+  const soonBox=`<div class="${pin}" style="display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:72px"><span style="font-size:13px;font-weight:900;line-height:1.3;text-align:center;color:#c9b9a2">${esc2(PT_TXT.soon)}</span></div>`;
+  const cell=(lb,val)=>`<div style="flex:1;min-width:0;min-height:40px;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:2px 8px;line-height:1.15"><span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lb}</span><span style="font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${val}</span></div>`;
 
   /* ----- DETALHES ----- */
-  const det=()=>{ const atMax=cf.reason==='max', atEvo=cf.reason==='evolve', atCap=cf.reason==='cap', full=atMax||atEvo||atCap, capEra=atCap?P.lvlCap(host):0;
-    const feedTxt=atMax?'máximo':atEvo?'teto do estágio':atCap?'teto da era':n0(fxb)+'/'+n0(need);
-    const feedNote=atMax?'Nv '+n0(MAXL):atEvo?'evolua para passar do Nv '+n0(CAP[stg]):atCap?'avance de era para passar do Nv '+n0(capEra):'Nv '+n0(lv+1)+' custa '+n0(need);
-    const feedOff=full||o.food<=0, feedBtn=atEvo?'Evoluir primeiro':atCap?'Teto da era':atMax?'Nível máximo':'Alimentar +'+n0(D.v17.tapFood);
-    const bpH=[44,54,62][vw];
-    return `<div class="${pin}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
-      <div style="height:34px;flex:none;display:flex;gap:4px">
-        <div style="flex:1.3;min-width:0;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:0 8px;line-height:1.1"><span style="font-size:10px;font-weight:800;color:#c9b9a2">Bônus na FC</span>
-          <span style="font-size:13px;font-weight:900;white-space:nowrap"><span style="color:#7ef08a">+${p1(sh.now||0)}</span> <span style="font-size:10px;color:#c9b9a2">máx ${p1(sh.max||0)}</span></span></div>
-        <div style="flex:1;min-width:0;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:0 8px;line-height:1.1"><span style="font-size:10px;font-weight:800;color:#c9b9a2">Soma à FC</span>
-          <span style="font-size:13px;font-weight:900;color:#ffe07a;white-space:nowrap">${owned?'+'+kf(fcAdd)+' FC':'—'}</span></div>
-        <div style="flex:1;min-width:0;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:0 8px;line-height:1.1"><span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(eraName||'Pet')}</span>
-          <span style="font-size:13px;font-weight:900;white-space:nowrap">${art.fly?'Voa':'Terrestre'}</span></div>
+  const det=()=>{ const bpH=[44,54,62][vw], pvH=Math.round(Math.max(88,Math.min(132,W*0.27)));
+    return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
+      <div style="flex:none;display:flex;gap:4px">
+        ${cell('Bônus na FC',`<span style="color:#7ef08a">+${p1(sh.now||0)}</span> <span style="font-size:10px;color:#c9b9a2">máx ${p1(sh.max||0)}</span>`)}
+        ${cell('Soma à FC',`<span style="color:#ffe07a">${owned?'+'+kf(fcAdd)+' FC':'—'}</span>`)}
+        ${cell(esc2(eraName||'Pet'),art.fly?'Voa':'Terrestre')}
       </div>
-      <div role="img" aria-label="Prévia na batalha: Kael parado e ${esc2(def.name)} atrás dele, no chão" style="position:relative;flex:1;min-height:${prevMin}px;border-radius:12px;overflow:hidden;border:1px solid #4a3a2b;background:#7fb3d9">
+      <div role="img" aria-label="Prévia na batalha: Kael parado e ${esc2(def.name)} atrás dele, no chão" style="position:relative;flex:none;height:${pvH}px;border-radius:12px;overflow:hidden;border:1px solid #4a3a2b;background:#7fb3d9">
         ${layers(2)}
-        <div style="position:absolute;left:4%;top:${80-bpH}%;height:${bpH}%;aspect-ratio:1/1"><span class="pt-shd ${art.fly?'pt-shdFly':''}" aria-hidden="true" style="bottom:-5%;width:60%;height:12%"></span>
-          <div class="${art.fly?'pt-fly':''}" style="position:absolute;inset:0"><div class="pt-breathe" style="position:absolute;inset:0;transform-origin:50% 100%">${ptPic(def,vw,'',footS,'')}</div></div></div>
+        <div style="position:absolute;left:4%;top:${80-bpH}%;height:${bpH}%;aspect-ratio:1/1"><span class="pt-shd ${art.fly?'pt-shdFly':''}" aria-hidden="true" style="bottom:-5%;width:60%;height:12%"></span>${ptLive(def,vw,'',false)}</div>
         <div style="position:absolute;left:26%;top:9.7%;height:74%;aspect-ratio:1/1"><span class="pt-shd" aria-hidden="true" style="bottom:1%;width:46%;height:9%"></span><div class="kidle ${tier?'t'+tier:''}" style="position:absolute;inset:0"></div></div>
         <span class="pt-ol" style="position:absolute;left:6px;top:4px;padding:1px 7px;border-radius:7px;background:rgba(14,10,7,0.75);font-size:11px;font-weight:900;color:${isEq?'#9ff0a6':'#f6ecdf'}">${isEq?'Na batalha: atrás do Kael':'Prévia na batalha'}</span>
       </div>
-      ${owned?`<div style="height:44px;flex:none;display:flex;align-items:center;gap:8px">
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
-          <span style="display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:900;white-space:nowrap"><span>Ração <span style="color:#ffe07a">${feedTxt}</span></span><span style="color:#c9b9a2;overflow:hidden;text-overflow:ellipsis">${feedNote}</span></span>
-          <span class="pt-bar"><span class="pt-barF" style="width:${full?'100':Math.min(100,fxb/Math.max(1,need)*100).toFixed(1)}%;background:linear-gradient(90deg,#c77a3a,#ffc94a)"><span class="pt-shine"></span></span></span>
-        </div>
-        <button data-x="reset" class="pt-sec" aria-label="Redefinir nível de ${esc2(def.name)}: devolve ${p1(D.v3d.releaseRefund*100)} da ração" style="flex:none;height:44px;padding:0 10px;border-radius:12px;font-size:11px;font-weight:900;line-height:1.05">Redefinir<br>nível</button>
-      </div>
-      <div style="height:52px;flex:none;display:flex;gap:8px;padding-bottom:4px">
-        <button data-x="equip" class="lil ${isEq?'pt-eqd':'pt-sec'}" aria-pressed="${isEq}" style="flex:1;border-radius:14px;font-size:18px">${isEq?'Equipado':'Equipar'}</button>
-        <button data-x="feed" class="lil ${feedOff?'pt-off':'pt-gold'}" aria-disabled="${feedOff}" style="flex:1.25;border-radius:14px;font-size:18px;line-height:1.05">${feedBtn}</button>
-      </div>`
-      :`<div style="flex:none;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:900;line-height:1.25"><span style="color:#ff8a7a">Não obtido.</span> ${nGate?`<span style="color:#ffe07a">Ovo ${esc2(ptGateTxt(r))}.</span>`:`Como conseguir: <span style="color:#ffe07a">${esc2(ptHow(def))}</span>`}</span>
-        <button data-x="gocol" class="pt-sec lil" style="height:48px;border-radius:14px;font-size:18px">Ver coleção</button></div>`}
+      ${owned?`<div style="flex:none;display:flex;align-items:center;gap:8px">
+        <span style="flex:1;min-width:0;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">Ração gasta neste pet: <b style="color:#ffe07a">${n0(x.food|0)}</b>. Redefinir devolve ${p1(D.v3d.releaseRefund*100)}; estrelas e estágio ficam.</span>
+        <button data-x="reset" class="pt-sec" aria-label="Redefinir nível de ${esc2(def.name)}: devolve ${p1(D.v3d.releaseRefund*100)} da ração" style="flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-size:12px;font-weight:900;line-height:1.05">Redefinir<br>nível</button></div>`
+      :`<span style="flex:none;font-size:12px;font-weight:900;line-height:1.25"><span style="color:#ff8a7a">Não obtido.</span> ${nGate?`<span style="color:#ffe07a">Ovo ${esc2(ptGateTxt(r))}.</span>`:`Como conseguir: <span style="color:#ffe07a">${esc2(ptHow(def))}</span>`}</span>`}
     </div>`; };
 
   /* ----- ATAQUES ----- */
-  const atk=()=>`<div class="${pin}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
+  const atk=()=>`<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
       <span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.2">Ataca <b style="color:#f6ecdf">sozinho</b> a cada ~${String(D.battle.interval).replace('.',',')} s. A chance sobe com <b style="color:#ffc94a">estrelas</b> e <b style="color:#ffc94a">nível</b>. Toque para ver.</span>
       ${ptAtkInfo(def,x).map(k=>{ const sc=k.k==='basic'?1:0.15;
-        return `<button data-x="atk" data-k="${k.k}" id="pt_ak_${k.k}" aria-label="${esc2(k.name)}, ${k.kind}, dano ${k.mult}, chance atual ${ptPct(k.now)}, no máximo ${ptPct(k.max)}. Toque para ver" style="flex:1;min-height:46px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;border:2px solid ${XPT.fx===k.k?k.c:'#4a3a2b'};background:#33271d;color:#f6ecdf;text-align:left">
+        return `<button data-x="atk" data-k="${k.k}" id="pt_ak_${k.k}" aria-label="${esc2(k.name)}, ${k.kind}, dano ${k.mult}, chance atual ${ptPct(k.now)}, no máximo ${ptPct(k.max)}. Toque para ver" style="flex:none;min-height:52px;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:12px;border:2px solid ${XPT.fx===k.k?k.c:'#4a3a2b'};background:#33271d;color:#f6ecdf;text-align:left">
         <span style="flex:none;width:36px;height:36px;border-radius:10px;background:${k.c};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16110d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${PT_ICON[k.k]}"></path></svg></span>
-        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(k.name)}</span><span style="font-size:11px;font-weight:800;color:${k.c};white-space:nowrap">${k.kind} · dano ${k.mult}</span></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(k.name)}</span><span style="font-size:11px;font-weight:800;color:${k.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.kind} · dano ${k.mult}</span></span>
         <span style="flex:none;width:32%;display:flex;flex-direction:column;gap:2px;line-height:1.1">
           <span style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;white-space:nowrap"><span class="lil" style="font-size:17px;color:${k.c}">${ptPct(k.now)}</span><span style="font-size:10px;font-weight:900;color:#c9b9a2">máx ${ptPct(k.max)}</span></span>
           <span class="pt-bar" style="height:8px"><span class="pt-barF" style="width:${Math.min(100,k.now/sc*100).toFixed(1)}%;background:${k.c}"></span><span aria-hidden="true" style="position:absolute;top:0;bottom:0;left:${Math.min(99,k.max/sc*100).toFixed(1)}%;width:2px;background:#f6ecdf"></span></span>
@@ -412,51 +419,63 @@ function scrPets(){
     </div>`;
 
   /* ----- EVOLUIR ----- */
-  const evo=()=>{ const ready=ce.ok===true, sc=owned?P.starCostOf(def):[];
-    const evoTxt=!owned?'Pet não obtido':stg>=2?'Forma final alcançada':ready?'Evoluir para '+SN[stg+1]:'Evoluir no Nv '+n0(REQ[stg+1])+' (está no '+n0(lv)+')';
-    const rep='repetido = +'+n0(D.repeatFrags)+' fragmentos';
+  const evo=()=>{ const sc=owned?P.starCostOf(def):[], rep='repetido = +'+n0(D.repeatFrags)+' fragmentos';
     const starTxt=!owned?rep+' (com '+D.maxStars+'★ vira ração)':stars>=D.maxStars?D.maxStars+'★ máximo, repetido vira ração':n0(x.frags|0)+'/'+n0(sc[stars-1]|0)+' fragmentos, '+rep;
-    return `<div class="${pin}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
-      <div style="flex:1;min-height:0;display:flex;gap:5px">${SN.map((n,i)=>{ const reached=owned&&i<=stg, can=owned&&i===stg+1&&ready;
-        return `<button data-x="stg" data-i="${i}" data-keep="1" aria-label="${esc2(n)}, ${i===0?'ao chocar':'nível '+REQ[i]}. Toque para ver" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border-radius:12px;border:2px solid ${i===vw?'#ffc94a':reached?rc:'#4a3a2b'};background:${reached?'#33271d':'#241b14'};color:#f6ecdf;overflow:hidden">
-          <span style="position:relative;width:100%;height:${cardH}px;flex:none"><span style="position:absolute;left:18%;right:18%;bottom:2px;height:10px;border-radius:50%;background:rgba(0,0,0,0.45)"></span>
+    return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
+      <div style="flex:none;display:flex;gap:5px">${SN.map((n,i)=>{ const reached=owned&&i<=stg, can=owned&&i===stg+1&&ready;
+        return `<button data-x="stg" data-i="${i}" data-keep="1" aria-label="${esc2(n)}, ${i===0?'ao chocar':'nível '+REQ[i]}. Toque para ver" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px 6px;border-radius:12px;border:2px solid ${i===vw?'#ffc94a':reached?rc:'#4a3a2b'};background:${reached?'#33271d':'#241b14'};color:#f6ecdf;overflow:hidden">
+          <span style="position:relative;width:100%;height:72px;flex:none"><span style="position:absolute;left:18%;right:18%;bottom:2px;height:10px;border-radius:50%;background:rgba(0,0,0,0.45)"></span>
             <span class="pt-aura pt-a${i}${rb}" aria-hidden="true" style="background:${ptAuraBg(r,i,i===2)};height:70%"></span>
             ${ptPic(def,i,'',`position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:1/1;transform:translate(-50%,${ptShift(def,i)});object-fit:contain`,'')}</span>
           <span class="lil" style="font-size:14px;line-height:1">${esc2(n)}</span><span style="font-size:10px;font-weight:900;color:#c9b9a2;line-height:1">${i===0?'ao chocar':'Nv '+n0(REQ[i])}</span>
           <span style="padding:1px 6px;border-radius:6px;font-size:10px;font-weight:900;background:${reached?'#1f3a22':can?'#ffc94a':'#16110d'};color:${reached?'#9ff0a6':can?'#2a1403':'#c9b9a2'};white-space:nowrap">${reached?(i===stg?'atual':'feito'):can?'pronto!':owned?'faltam '+n0(Math.max(0,REQ[i]-lv))+' Nv':'bloqueado'}</span></button>`; }).join('')}</div>
-      <span style="flex:none;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">Aura: <b style="color:#f6ecdf">leve</b> · <b style="color:${rc}">cor da raridade</b> · <b style="color:#ffe07a">forte com partículas</b>${prism?' (arco-íris mudando de cor)':''}. Estrelas: ${starTxt}.</span>
-      <button data-x="evolve" class="lil ${ready?'pt-gold pt-pulse':'pt-off'}" aria-disabled="${!ready}" style="height:52px;flex:none;border-radius:14px;font-size:18px;margin-bottom:4px">${esc2(evoTxt)}</button>
+      <span style="flex:none;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.3">Aura: <b style="color:#f6ecdf">leve</b> · <b style="color:${rc}">cor da raridade</b> · <b style="color:#ffe07a">forte com partículas</b>${prism?' (arco-íris mudando de cor)':''}. Estrelas: ${starTxt}.</span>
     </div>`; };
 
-  /* ----- COLEÇÃO (8 por página; com mais de 8, a última casa vira "mais") ----- */
-  const col=()=>{ const per=list.length>8?7:8, pages=Math.max(1,Math.ceil(list.length/per)); if(XPT.page>=pages) XPT.page=0;
-    const part=list.slice(XPT.page*per,XPT.page*per+per), nOwn=list.filter(p=>o.owned[p.id]).length;
+  /* ----- COLEÇÃO ----- */
+  const col=()=>{ const nOwn=list.filter(p=>o.owned[p.id]).length;
     const tile=p=>{ const po=o.owned[p.id], on=p.id===id, isP=p.r>=5, sn=ptSoon(p,o), st=po?Math.max(0,Math.min(2,ptCall('stage',[S,p.id],{}).index|0)):0;
       const fr=isP&&!po&&p.hatchFrags?Math.floor(Math.min(1,(o.stored[p.id]|0)/p.hatchFrags)*100)+'%':'';
       const lbl=po?'Nv '+n0(P.levelOf(S,p.id)):ptGated(p.id)?'guardado':sn?'em breve':(fr||'?');
-      return `<button data-x="sel" data-id="${p.id}" aria-label="${esc2(p.name)} (${esc2(ptRN(p.r))})${po?', obtido, nível '+P.levelOf(S,p.id):sn?', em breve':', não obtido'}" aria-pressed="${on}" class="pt-tile ${on?'pt-tileSel':''}${isP?' pt-rare':''}" style="position:relative;height:50px;min-width:0;border-radius:11px;border:2px solid ${on?'#ffc94a':po?PT_RC[Math.min(5,p.r)]:'#4a3a2b'};background:${on?'#3a2c1f':isP?'#2a1f3a':'#241b14'};padding:0;overflow:hidden;color:#f6ecdf">
-        ${ptPic(p,st,po?'':'pt-sil','position:absolute;left:50%;top:1px;height:36px;width:36px;margin-left:-18px;object-fit:contain','')}
-        <span class="pt-ol" style="position:absolute;left:0;right:0;bottom:1px;font-size:10px;font-weight:900;line-height:1.1;text-align:center;color:${po?'#ffe07a':isP?'#e6d8ff':'#c9b9a2'}">${lbl}</span></button>`; };
-    const more=list.length>8?`<button data-x="more" aria-label="Mais pets: página ${XPT.page+1} de ${pages}" class="pt-tile" style="height:50px;min-width:0;border-radius:11px;border:2px solid #4a3a2b;background:#33271d;padding:0;color:#f6ecdf;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">${Y_FWD}<span style="font-size:10px;font-weight:900;line-height:1">${XPT.page+1}/${pages}</span></button>`:'';
+      return `<button data-x="sel" data-id="${p.id}" aria-label="${esc2(p.name)} (${esc2(ptRN(p.r))})${po?', obtido, nível '+P.levelOf(S,p.id):sn?', em breve':', não obtido'}" aria-pressed="${on}" class="pt-tile ${on?'pt-tileSel':''}${isP?' pt-rare':''}" style="position:relative;height:60px;min-width:0;border-radius:11px;border:2px solid ${on?'#ffc94a':po?PT_RC[Math.min(5,p.r)]:'#4a3a2b'};background:${on?'#3a2c1f':isP?'#2a1f3a':'#241b14'};padding:0;overflow:hidden;color:#f6ecdf">
+        ${ptPic(p,st,po?'':'pt-sil','position:absolute;left:50%;top:2px;height:42px;width:42px;margin-left:-21px;object-fit:contain','')}
+        <span class="pt-ol" style="position:absolute;left:0;right:0;bottom:2px;font-size:10px;font-weight:900;line-height:1.1;text-align:center;color:${po?'#ffe07a':isP?'#e6d8ff':'#c9b9a2'}">${lbl}</span></button>`; };
     let box;
-    if(prism&&!soon||prism&&owned||prism&&ptCall('avail',[def,host],false)){ const have=o.stored[id]|0, tot=def.hatchFrags|0, pr=(D.v4d&&D.v4d.prism)||{}, ar=window.Sys&&Sys.arena&&Sys.arena.DATA&&Sys.arena.DATA.rewards;
+    if(prism&&(owned||ptCall('avail',[def,host],false))){ const have=o.stored[id]|0, tot=def.hatchFrags|0, pr=(D.v4d&&D.v4d.prism)||{}, ar=window.Sys&&Sys.arena&&Sys.arena.DATA&&Sys.arena.DATA.rewards;
       const src=[]; if(pr.event) src.push(['Evento mensal','+'+n0(pr.event)]); if(pr.vipMax) src.push(['VIP '+pr.vipMax.level+' (1 vez)','+'+n0(pr.vipMax.frags)]);
       if(ar&&ar[0]&&ar[0].prism) src.push(['Arena (1º lugar)','+'+n0(ar[0].prism)]); if(pr.boss) src.push(['Chefe da era '+pr.boss.minEra,'+'+n0(pr.boss.perDay)+' por dia']);
       if(pr.tower) src.push(['Torre (a cada '+pr.tower.every+')','+'+n0(pr.tower.frags)]);
-      box=`<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:6px 8px;border-radius:12px;background:#2a1f3a;border:2px solid #b07cff">
-        <span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><span class="lil" style="font-size:14px">${esc2(def.name)}</span><span class="pt-rbw pt-rare" style="padding:1px 7px;border-radius:7px;font-size:10px;font-weight:900;color:#16110d">O MAIS RARO</span>
+      box=`<div style="display:flex;flex-direction:column;gap:5px;padding:6px 8px;border-radius:12px;background:#2a1f3a;border:2px solid #b07cff">
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="lil" style="font-size:14px">${esc2(def.name)}</span><span class="pt-rbw pt-rare" style="padding:1px 7px;border-radius:7px;font-size:10px;font-weight:900;color:#16110d">O MAIS RARO</span>
           <span style="margin-left:auto;font-size:12px;font-weight:900;color:#e6d8ff">${owned?n0(stars)+'★ · Nv '+n0(lv):n0(have)+'/'+n0(tot)}</span></span>
         <span class="pt-bar" style="flex:none"><span class="pt-barF pt-rbw" style="width:${owned?100:Math.min(100,have/Math.max(1,tot)*100).toFixed(1)}%"></span></span>
-        <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:3px">${src.map(f=>`<span style="min-width:0;border-radius:7px;background:#1d1611;padding:2px 4px;display:flex;flex-direction:column;justify-content:center;line-height:1.1"><span style="font-size:10px;font-weight:800;line-height:1.05;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[0])}</span><span style="font-size:10px;font-weight:900;line-height:1.05;color:#e6d8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[1])}</span></span>`).join('')}</div></div>`; }
-    else box=`<div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 10px;border-radius:12px;background:#33271d;border:2px solid ${rc}">
-        <span style="display:flex;align-items:center;gap:6px;white-space:nowrap;min-width:0"><span class="lil" style="font-size:16px">${esc2(def.name)}</span><span style="font-size:11px;font-weight:900;color:#c9b9a2;overflow:hidden;text-overflow:ellipsis">${esc2((eraName?eraName+' · ':'')+ptRN(r))}</span></span>
+        <div style="display:grid;grid-template-columns:repeat(${W<360?2:3},1fr);gap:3px">${src.map(f=>`<span style="min-width:0;min-height:30px;border-radius:7px;background:#1d1611;padding:2px 5px;display:flex;flex-direction:column;justify-content:center;line-height:1.15"><span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[0])}</span><span style="font-size:10px;font-weight:900;color:#e6d8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[1])}</span></span>`).join('')}</div></div>`; }
+    else box=`<div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 10px;border-radius:12px;background:#33271d;border:2px solid ${rc}">
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0"><span class="lil" style="font-size:16px">${esc2(def.name)}</span><span style="font-size:11px;font-weight:900;color:#c9b9a2">${esc2((eraName?eraName+' · ':'')+ptRN(r))}</span></span>
         <span style="font-size:12px;font-weight:900;line-height:1.25">${owned?'Obtido · '+n0(stars)+'★ · '+esc2(SN[stg])+' · Nv '+n0(lv):nGate?'Ovo '+esc2(ptGateTxt(r)):soon?esc2(PT_TXT.soon):'Como conseguir: '+esc2(ptHow(def))}</span>
         <span style="font-size:11px;font-weight:800;color:#c9b9a2">Coleção: ${n0(nOwn)} de ${n0(list.length)} pets</span></div>`;
-    return `<div class="${pin}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px"><div style="flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:5px">${part.map(tile).join('')}${more}</div>${box}</div>`; };
+    return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px"><div style="flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:5px">${list.map(tile).join('')}</div>${box}</div>`; };
 
   const body=XPT.tab==='col'?col():soon?soonBox:XPT.tab==='atk'?atk():XPT.tab==='evo'?evo():det();
-  const toast=XPT.toast&&Date.now()-XPT.toastT<2200?`<span class="pt-toast" role="status" style="position:absolute;left:50%;top:-42px;z-index:6;padding:6px 12px;border-radius:10px;background:#0e0a07;border:2px solid #ffc94a;font-size:12px;font-weight:900;white-space:nowrap">${esc2(XPT.toast)}</span>`:'';
-  const panel=`<div style="flex:none;height:${panelH}px;position:relative;border-radius:16px;background:#1d1611;border:2px solid #4a3a2b;padding:8px;display:flex;flex-direction:column">${body}${toast}</div>`;
+  const panel=`<div style="flex:none;position:relative;border-radius:16px;background:#1d1611;border:2px solid #4a3a2b;padding:8px;display:flex;flex-direction:column">${body}</div>`;
+
+  /* ----- AÇÃO PRINCIPAL (fixa embaixo, fora da rolagem) ----- */
+  let bar='';
+  if(owned&&XPT.tab==='evo'){ const evoTxt=stg>=2?'Forma final alcançada':ready?'Evoluir para '+SN[stg+1]:'Evoluir no Nv '+n0(REQ[stg+1])+' (está no '+n0(lv)+')';
+    bar=`<button data-x="evolve" class="lil ${ready?'pt-gold pt-pulse':'pt-off'}" aria-disabled="${!ready}" style="width:100%;min-height:52px;border-radius:14px;font-size:${W<350?16:18}px">${esc2(evoTxt)}</button>`; }
+  else if(owned){ const atMax=cf.reason==='max', atEvo=cf.reason==='evolve', atCap=cf.reason==='cap', full=atMax||atEvo||atCap, capEra=atCap?P.lvlCap(host):0;
+    const feedTxt=atMax?'máximo':atEvo?'teto do estágio':atCap?'teto da era':n0(fxb)+'/'+n0(need);
+    const feedNote=atMax?'Nv '+n0(MAXL):atEvo?'evolua para passar do Nv '+n0(CAP[stg]):atCap?'avance de era para passar do Nv '+n0(capEra):'Nv '+n0(lv+1)+' custa '+n0(need);
+    const feedOff=full||o.food<=0, feedBtn=atEvo?'Evoluir primeiro':atCap?'Teto da era':atMax?'Nível máximo':'Alimentar +'+n0(D.v17.tapFood);
+    bar=`<div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px">
+        <span style="display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:900;white-space:nowrap"><span>Ração <span style="color:#ffe07a">${feedTxt}</span></span><span style="color:#c9b9a2;overflow:hidden;text-overflow:ellipsis">${feedNote}</span></span>
+        <span class="pt-bar"><span class="pt-barF" style="width:${full?'100':Math.min(100,fxb/Math.max(1,need)*100).toFixed(1)}%;background:linear-gradient(90deg,#c77a3a,#ffc94a)"><span class="pt-shine"></span></span></span></div>
+      <div style="display:flex;gap:8px">
+        <button data-x="equip" class="lil ${isEq?'pt-eqd':'pt-sec'}" aria-pressed="${isEq}" style="flex:1;min-width:0;min-height:52px;border-radius:14px;font-size:${W<350?16:18}px">${isEq?'Equipado':'Equipar'}</button>
+        <button data-x="feed" class="lil ${feedOff?'pt-off':'pt-gold'}" aria-disabled="${feedOff}" style="flex:1.25;min-width:0;min-height:52px;border-radius:14px;font-size:${W<350?16:18}px;line-height:1.05">${feedBtn}</button></div>`; }
+  else if(XPT.tab!=='col') bar='<button data-x="gocol" class="pt-sec lil" style="width:100%;min-height:52px;border-radius:14px;font-size:18px">Ver coleção</button>';
+  const toast=XPT.toast&&Date.now()-XPT.toastT<2200?`<span class="pt-toast" role="status" style="position:absolute;left:50%;bottom:100%;margin-bottom:8px;z-index:6;width:max-content;max-width:calc(100% - 24px);padding:6px 12px;border-radius:10px;background:#0e0a07;border:2px solid #ffc94a;font-size:12px;font-weight:900;text-align:center;line-height:1.25;pointer-events:none">${esc2(XPT.toast)}</span>`:'';
+  const foot=`<div style="position:relative;flex:none;${bar?'padding:8px 10px 10px;border-top:2px solid #33271d;background:#16110d':''}">${toast}${bar}</div>`;
 
   /* ----- CONFIRMAR REDEFINIR ----- */
   let over='';
@@ -465,29 +484,28 @@ function scrPets(){
       <div class="pt-panelIn" style="width:100%;max-width:340px;border-radius:18px;background:#1d1611;border:2px solid #ffc94a;padding:16px;display:flex;flex-direction:column;gap:10px">
         <span class="lil" style="font-size:22px">Redefinir nível?</span>
         <span style="font-size:13px;font-weight:800;line-height:1.35">${esc2(def.name)} volta para o <b>Nv 1</b>. Você recebe de volta <b style="color:#ffe07a">${n0(cr.refund|0)}</b> de ração (${p1(D.v3d.releaseRefund*100)} de ${n0(x.food|0)}). Estrelas e estágio ficam.</span>
-        <div style="display:flex;gap:8px"><button data-x="cfno" class="pt-sec lil" style="flex:1;height:50px;border-radius:14px;font-size:18px">Cancelar</button><button data-x="cfyes" class="pt-gold lil" style="flex:1;height:50px;border-radius:14px;font-size:18px">Redefinir</button></div>
+        <div style="display:flex;gap:8px"><button data-x="cfno" class="pt-sec lil" style="flex:1;min-height:50px;border-radius:14px;font-size:18px">Cancelar</button><button data-x="cfyes" class="pt-gold lil" style="flex:1;min-height:50px;border-radius:14px;font-size:18px">Redefinir</button></div>
       </div></div>`; }
-  const scW=Math.round(Math.min(340,d.Wb*0.84,Math.max(160,H-250)));
+  const scW=Math.round(Math.min(340,W*0.84,Math.max(150,H-230)));
 
-  /* ----- ESCOLHER O OVO (ovo à escolha pendente: Sys.pet.ensure(S).choices[0]) ----- */
+  /* ----- ESCOLHER O OVO (ovo à escolha pendente: Sys.pet.ensure(S).choices) ----- */
   if(XPT.choice&&nCh&&!XPT.hatch){ const c=chs[0].c, extra=[c.frags?'+'+n0(c.frags)+' fragmentos':'',c.food?'+'+n0(c.food)+' de ração':''].filter(Boolean).join(' e ');
-    over+=`<div role="dialog" aria-label="Escolha seu ovo" class="x-scrim" style="position:absolute;inset:0;z-index:45;background:rgba(8,6,4,0.85);display:flex;align-items:center;justify-content:center;padding:16px">
-      <div class="pt-panelIn" style="width:100%;max-width:350px;border-radius:18px;background:#1d1611;border:2px solid #ffc94a;padding:14px;display:flex;flex-direction:column;gap:10px">
-        <span class="lil" style="font-size:22px">Escolha seu ovo</span>
-        <span style="font-size:12px;font-weight:800;line-height:1.3;color:#c9b9a2">Toque no pet que você quer${nCh>1?' ('+n0(nCh)+' ovos para escolher)':''}.${extra?' Vai junto: <b style="color:#ffe07a">'+extra+'</b>.':''}</span>
-        <div style="display:flex;gap:8px">${c.options.map(q=>{ const pd=ptDef(q); if(!pd) return ''; const pr=Math.max(0,Math.min(5,pd.r|0)), has=!!o.owned[q];
+    over+=`<div role="dialog" aria-label="Escolha seu ovo" class="x-scrim" style="position:absolute;inset:0;z-index:45;background:rgba(8,6,4,0.85);display:flex;align-items:center;justify-content:center;padding:12px">
+      <div class="pt-panelIn x-scroll" style="width:100%;max-width:360px;max-height:100%;border-radius:18px;background:#1d1611;border:2px solid #ffc94a;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <span class="lil" style="font-size:22px;flex:none">Escolha seu ovo</span>
+        <span style="flex:none;font-size:12px;font-weight:800;line-height:1.3;color:#c9b9a2">Toque no pet que você quer${nCh>1?' ('+n0(nCh)+' ovos para escolher)':''}.${extra?' Vai junto: <b style="color:#ffe07a">'+extra+'</b>.':''}</span>
+        <div style="flex:none;display:flex;gap:8px">${c.options.map(q=>{ const pd=ptDef(q); if(!pd) return ''; const pr=Math.max(0,Math.min(5,pd.r|0)), has=!!o.owned[q];
           return `<button data-x="pick" data-id="${q}" aria-label="Escolher ${esc2(pd.name)}, ${esc2(ptRN(pr))}${has?', você já tem':''}" style="flex:1;min-width:0;min-height:150px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border-radius:14px;border:2px solid ${PT_RC[pr]};background:#33271d;color:#f6ecdf;overflow:hidden">
             <span style="position:relative;width:100%;height:84px;flex:none">${ptPic(pd,0,'',`position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:1/1;transform:translate(-50%,${ptShift(pd,0)});object-fit:contain`,'')}</span>
             <span class="lil" style="font-size:15px;line-height:1.05;text-align:center">${esc2(pd.name)}</span>
             <span style="padding:1px 7px;border-radius:7px;font-size:10px;font-weight:900;color:#16110d;background:${PT_RC[pr]}">${esc2(ptRN(pr))}</span>
             <span style="font-size:10px;font-weight:900;color:#c9b9a2;line-height:1.1;text-align:center">${has?(o.owned[q].stars>=D.maxStars?'você já tem '+D.maxStars+'★: vira ração':'você já tem: +'+n0(D.repeatFrags)+' fragmentos'):'novo na coleção'}</span></button>`; }).join('')}</div>
-        <button data-x="chno" class="pt-sec lil" style="height:46px;border-radius:14px;font-size:17px">Escolher depois</button>
+        <button data-x="chno" class="pt-sec lil" style="flex:none;min-height:46px;border-radius:14px;font-size:17px">Escolher depois</button>
       </div></div>`; }
 
-  /* ----- CHOCAR O OVO ----- */
+  /* ----- CHOCAR O OVO: treme, racha com luz, explode em brilho, o pet salta ao chão ----- */
   if(XPT.hatch){ const h=XPT.hatch, R=XPT.hRes||{}, hd=ptDef(R.pet)||list[0], hr=Math.max(0,Math.min(5,hd.r|0)), odds=ptCall('firstEggOdds',[],[]), od=odds.find(q=>q.r===R.rarity), isNew=!R.hatch||R.hatch.isNew!==false;
-    const shown=h==='card'||h==='reveal', lvl=n0(D.v20.unlockLevel);
-    const first=R.kind!=='choice', eggT=first?'Ovo do nível '+lvl:'Ovo à escolha';
+    const shown=h==='card'||h==='reveal', first=R.kind!=='choice', eggT=first?'Ovo do nível '+n0(D.v20.unlockLevel):'Ovo à escolha';
     over+=`<div class="pt-ovl" role="dialog" aria-label="Chocando: ${eggT}">
       <span class="lil pt-ol" style="font-size:26px;text-align:center">${shown?esc2(hd.name)+'!':eggT}</span>
       <div class="pt-scene" style="width:${scW}px">
@@ -499,16 +517,16 @@ function scrPets(){
           <svg viewBox="0 0 100 100" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><polyline class="pt-crk" points="30,44 40,52 36,60 48,66 46,76 56,82" fill="none" stroke="#fff7d0" stroke-width="3.2" stroke-linejoin="round" style="filter:drop-shadow(0 0 4px #ffe07a)"></polyline><polyline class="pt-crk" points="62,36 56,46 64,54 58,62" fill="none" stroke="#fff7d0" stroke-width="2.6" stroke-linejoin="round" style="animation-delay:.35s;filter:drop-shadow(0 0 4px #ffe07a)"></polyline><polyline class="pt-crk" points="48,30 52,38 46,44" fill="none" stroke="#fff7d0" stroke-width="2.2" stroke-linejoin="round" style="animation-delay:.6s;filter:drop-shadow(0 0 4px #ffe07a)"></polyline></svg>`:''}</div>`:''}
         ${h==='burst'?'<span class="pt-burstRing" aria-hidden="true"></span>'+ptSpokes():''}
         ${h==='burst'||shown?`<div style="position:absolute;left:12%;bottom:10%;width:76%;aspect-ratio:1/1"><span class="pt-aura pt-a1" aria-hidden="true" style="background:${ptAuraBg(hr,1,false)}"></span>
-          <div class="${h==='card'?'':'pt-reveal'}" style="position:absolute;inset:0;transform-origin:50% 100%"><div class="pt-breathe" style="position:absolute;inset:0;transform-origin:50% 100%">${ptPic(hd,0,'',`position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;transform:translateY(${ptShift(hd,0)})`,hd.name+' filhote')}</div></div></div>`:''}
+          <div class="${h==='card'?'':h==='burst'?'pt-reveal':'pt-jump'}" style="position:absolute;inset:0;transform-origin:50% 100%"><div class="pt-breathe" style="position:absolute;inset:0;transform-origin:50% 100%">${ptPic(hd,0,'',`position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;transform:translateY(${ptShift(hd,0)})`,hd.name+' filhote')}</div></div></div>`:''}
         ${h==='burst'?'<span class="pt-flash" aria-hidden="true"></span>':''}
       </div>
       ${h==='card'?`<div class="pt-cardIn" style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 14px;border-radius:18px;background:#1d1611;border:2px solid ${PT_RC[hr]}">
         <span style="font-size:14px;font-weight:900;text-align:center">${esc2(ptRN(hr))}${first&&od?' ('+p1(od.pct)+')':''} · ${isNew?'novo na coleção, '+esc2(SN[0]):esc2(ptEggLine(R.hatch,SN[0]))}</span>
-        <button data-x="eggend" class="pt-gold pt-pulse lil" style="width:100%;max-width:240px;height:52px;border-radius:14px;font-size:20px">Pegar pet</button></div>`
+        <button data-x="eggend" class="pt-gold pt-pulse lil" style="width:100%;max-width:240px;min-height:52px;border-radius:14px;font-size:20px">Pegar pet</button></div>`
       :!first?'':`<span style="font-size:13px;font-weight:900;color:#e8dccb;text-align:center;line-height:1.35">Sorteio grátis: ${odds.map(q=>`<span style="color:${PT_RC[Math.min(5,q.r)]}">${p1(q.pct)} ${esc2(q.name)}</span>`).join(' · ')}<br>nunca Lendário</span>`}
     </div>`; }
 
-  /* ----- EVOLUÇÃO ----- */
+  /* ----- EVOLUÇÃO: brilho, casulo de luz, explosão, forma nova com a aura do estágio ----- */
   if(XPT.evo){ const e=XPT.evo, eTo=Math.min(2,XPT.evoFrom+1), eStg=e==='burst'||e==='new'?eTo:XPT.evoFrom;
     over+=`<div class="pt-ovl" role="dialog" aria-label="Evolução do pet">
       <span class="lil pt-ol" style="font-size:26px;text-align:center">${e==='new'?'Evoluiu: '+esc2(SN[eTo])+'!':'Evoluindo…'}</span>
@@ -524,14 +542,16 @@ function scrPets(){
       </div>
       ${e==='new'?`<div class="pt-cardIn" style="width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 14px;border-radius:18px;background:#1d1611;border:2px solid ${rc}">
         <span style="font-size:14px;font-weight:900;text-align:center">${esc2(def.name)} agora é ${esc2(SN[eTo])} · aura ${eTo===1?'na cor da raridade':'forte com partículas'} · teto Nv ${n0(CAP[eTo])}</span>
-        <button data-x="evoend" class="pt-gold pt-pulse lil" style="width:100%;max-width:240px;height:52px;border-radius:14px;font-size:20px">Continuar</button></div>`:''}
+        <button data-x="evoend" class="pt-gold pt-pulse lil" style="width:100%;max-width:240px;min-height:52px;border-radius:14px;font-size:20px">Continuar</button></div>`:''}
     </div>`; }
 
-  V.innerHTML=xWrap(d,'pt-root '+(XPT.anim?'pt-in':''),`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:6px 10px 10px">${stage}${info}${tabs}${panel}${over}</div>`);
+  V.innerHTML=xWrap(d,'pt-root '+(XPT.anim?'pt-in':''),`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
+    <div id="pt_scroll" class="x-scroll" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:6px 10px 10px">${stage}${info}${tabs}${panel}</div>${foot}${over}</div>`);
   XPT.anim=false; XPT.pin=false;
+  if(y0){ const sc=document.getElementById('pt_scroll'); if(sc) sc.scrollTop=y0; }
 }
 
-/* animação de chocar (treme 1,6 s, racha 1,3 s, explode 0,5 s, revela 0,6 s, cartão): o ovo JÁ foi resolvido pelo módulo antes de ela começar */
+/* animação de chocar (treme 1,6 s, racha 1,3 s, explode 0,5 s, salta 0,6 s, cartão): o ovo JÁ foi resolvido pelo módulo antes de ela começar */
 function ptHatchAnim(){ snd('summon'); ptStop(); XPT.fx=null; XPT.hatch='shake'; render();
   ptLater(()=>{ XPT.hatch='crack'; snd('ui_tap'); render(); },1600);
   ptLater(()=>{ XPT.hatch='burst'; snd('legendary'); render(); },2900);
@@ -540,7 +560,9 @@ function ptHatchAnim(){ snd('summon'); ptStop(); XPT.fx=null; XPT.hatch='shake';
 
 /* ---------- toques ---------- */
 function ptClick(b,ev){
-  const a=b.dataset.x; if(!ptReady()||ptLocked()) return;
+  const a=b.dataset.x;
+  if(a==='back'){ snd('ui_tap'); if(window.Screens&&typeof Screens.close==='function') Screens.close(); return; }
+  if(!ptReady()||ptHidden()) return;
   const P=ptP(), D=P.DATA, host=ptHost(), o=ptSave(), list=ptList(), def=list.find(p=>p.id===XPT.sel); if(!def) return;
   const id=def.id, x=o.owned[id]||null;
   /* animações de tela cheia: só os botões delas */
@@ -563,21 +585,21 @@ function ptClick(b,ev){
       if(r&&r.ok){ snd('coin'); statsChanged(); ptToast('+'+n0(r.refund|0)+' de ração devolvida'); } else ptToast('Já está no Nv 1');
       render(); }
     return; }
-  if(a==='tab'){ if(XPT.tab!==b.dataset.t){ snd('ui_tap'); XPT.tab=b.dataset.t; XPT.pin=true; render(); } return; }
-  if(a==='prev'||a==='next'){ const i=list.indexOf(def), n=list.length; snd('ui_tap'); XPT.sel=list[(i+(a==='next'?1:n-1))%n].id; XPT.view=null; XPT.fx=null; XPT.fxN++; render(); return; }
+  if(a==='tab'){ if(XPT.tab!==b.dataset.t&&/^(det|atk|evo|col)$/.test(b.dataset.t)){ snd('ui_tap'); XPT.tab=b.dataset.t; XPT.pin=true; render(); } return; }
+  if(a==='pet'){ const i=list.indexOf(def)+(+b.dataset.d<0?-1:1); if(i<0||i>=list.length) return; snd('ui_tap'); XPT.sel=list[i].id; XPT.view=null; XPT.fx=null; XPT.fxN++; render(); return; }
   if(a==='sel'){ if(list.some(p=>p.id===b.dataset.id)){ snd('ui_tap'); XPT.sel=b.dataset.id; XPT.view=null; XPT.fx=null; XPT.fxN++; render(); } return; }
-  if(a==='more'){ snd('ui_tap'); XPT.page++; render(); return; }
   if(a==='gocol'){ snd('ui_tap'); XPT.tab='col'; XPT.pin=true; render(); return; }
   if(a==='stg'){ const i=Math.max(0,Math.min(2,+b.dataset.i|0)), cur=x?Math.max(0,Math.min(2,ptCall('stage',[S,id],{}).index|0)):0; snd('ui_tap');
-    XPT.view=(x&&i===cur&&!b.dataset.keep)?null:i; render(); return; }
+    XPT.view=(x&&i===cur&&!b.dataset.keep)?null:i; XPT.fx=null; XPT.fxN++; render(); return; }
   if(a==='atk'){ if(PT_KIND[b.dataset.k]&&!ptSoon(def,o)) ptPlayAtk(b.dataset.k,true); return; }
   if(a==='egg'){ if(!ptEggPending()) return; const r=P.firstEgg(S,host);
     if(!r||!r.ok){ ptToast(r&&r.reason==='level'?'Libera no nível '+n0(r.needLevel||ptLockLevel()):'O ovo já foi chocado'); render(); return; }
     statsChanged(); XPT.hRes=r; ptHatchAnim(); return; }
   if(a==='choose'){ if(ptChoices().length){ snd('ui_tap'); XPT.choice=true; render(); } return; }
-  if(!x){ if(a==='evolve'){ ptToast('Pet não obtido'); render(); } return; }
+  if(!x){ if(a==='evolve'||a==='equip'||a==='feed'||a==='reset'){ ptToast('Pet não obtido'); render(); } return; }
   if(a==='equip'){ if(o.eq===id){ snd('ui_tap'); ptToast('Já está na batalha (1 ativo)'); }
     else if(P.equip(S,id)){ snd('claim'); statsChanged(); ptToast(def.name+' vai lutar atrás do Kael'); }
+    else ptToast('Não foi possível equipar agora');
     render(); return; }
   if(a==='reset'){ const c=P.canResetLevel(S,id); snd('ui_tap'); if(!c.ok){ ptToast('Já está no Nv 1'); } else XPT.confirm=true; render(); return; }
   if(a==='feed'){ const c=P.canFeed(S,host,id), cur=Math.max(0,Math.min(2,ptCall('stage',[S,id],{}).index|0));
@@ -591,7 +613,7 @@ function ptClick(b,ev){
     render(); return; }
   if(a==='evolve'){ const c=P.canEvolve(S,id);
     if(!c.ok){ snd('ui_tap'); ptToast(c.reason==='max'?'Já está no último estágio':c.reason==='level'?'Precisa do Nv '+n0(c.need)+': alimente o pet':'Evolução indisponível'); render(); return; }
-    const from=c.stage, r=P.evolve(S,id); if(!r||!r.ok){ render(); return; }
+    const from=c.stage, r=P.evolve(S,id); if(!r||!r.ok){ ptToast('Evolução indisponível'); render(); return; }
     snd('summon'); statsChanged(); ptStop(); XPT.fx=null; XPT.evoFrom=from; XPT.evoId=id; XPT.view=null; XPT.evo='glow'; render();
     ptLater(()=>{ XPT.evo='coc'; render(); },1200);
     ptLater(()=>{ XPT.evo='burst'; snd('legendary'); render(); },2500);
@@ -601,14 +623,14 @@ function ptClick(b,ev){
 
 if(!('pets' in PANEL_ON)) PANEL_ON.pets=false;
 Panels.add('pets',{title:'Pets',render:scrPets,click:ptClick,
-  /* 4x por segundo: ataque automático de demonstração a cada ~2,4 s (só efeito no palco, sem redesenhar) e a ração do topo */
-  tick(){ if(!ptReady()||ptLocked()||XPT.hatch||XPT.evo||XPT.confirm||XPT.choice) return; const o=ptSave(), el=document.getElementById('pt_food');
+  /* 4x por segundo: ataque de demonstração a cada ~2,4 s (só efeito no palco, sem redesenhar) e a ração do topo */
+  tick(){ if(!ptReady()||ptHidden()||XPT.hatch||XPT.evo||XPT.confirm||XPT.choice) return; const o=ptSave(), el=document.getElementById('pt_food');
     if(el){ const t=gNum(o.food); if(el.textContent!==t) el.textContent=t; }
     if(XPT.fx||Date.now()-XPT.lastAtk<2400) return; const def=ptDef(XPT.sel); if(!def||ptSoon(def,o)) return;
     const x=o.owned[def.id], od=ptP().attackOdds(x?x.stars:1,x?(x.lvl||1):1,def.id), u=Math.random();
     ptPlayAtk(u<od.crit?'crit':u<od.crit+od.mid?'mid':'basic',false); },
   busy(){ return !!(XPT.hatch||XPT.evo||XPT.confirm||XPT.choice); },
-  onOpen(op){ ptStop(); XPT.anim=true; XPT.pin=true; XPT.view=null; XPT.page=0; XPT.fx=null; XPT.toast=''; XPT.confirm=false; XPT.choice=false; XPT.hatch=null; XPT.hRes=null; XPT.evo=null; XPT.evoId=null; XPT.lvPop=false; XPT.maxTxt=null; XPT.lastAtk=Date.now();
+  onOpen(op){ ptStop(); XPT.anim=true; XPT.pin=true; XPT.view=null; XPT.fx=null; XPT.toast=''; XPT.confirm=false; XPT.choice=false; XPT.hatch=null; XPT.hRes=null; XPT.evo=null; XPT.evoId=null; XPT.lvPop=false; XPT.lastAtk=Date.now();
     if(op&&op.tab&&/^(det|atk|evo|col)$/.test(op.tab)) XPT.tab=op.tab; else XPT.tab='det';
     if(ptReady()){ const o=ptSave(); XPT.sel=(op&&op.pet&&ptDef(op.pet))?op.pet:(o.eq||XPT.sel); } },
   onClose(){ ptStop(); XPT.fx=null; XPT.confirm=false; XPT.choice=false; XPT.hatch=null; XPT.hRes=null; XPT.evo=null; XPT.evoId=null; XPT.lvPop=false; } });

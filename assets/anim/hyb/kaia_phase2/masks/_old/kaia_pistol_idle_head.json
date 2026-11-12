@@ -1,0 +1,103 @@
+{
+ "frames": 12,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro",
+ "head": [
+  {
+   "x": 218,
+   "y": 180,
+   "ang": 4.5,
+   "s": 0.4467,
+   "e": 181,
+   "ok": true
+  },
+  {
+   "x": 217,
+   "y": 179,
+   "ang": 2.5,
+   "s": 0.4735,
+   "e": 182,
+   "ok": true
+  },
+  {
+   "x": 218,
+   "y": 179,
+   "ang": 12.5,
+   "s": 0.4199,
+   "e": 182,
+   "ok": true
+  },
+  {
+   "x": 217,
+   "y": 176,
+   "ang": 7.5,
+   "s": 0.4262,
+   "e": 181,
+   "ok": true
+  },
+  {
+   "x": 217,
+   "y": 178,
+   "ang": 2.5,
+   "s": 0.4664,
+   "e": 180,
+   "ok": true
+  },
+  {
+   "x": 216,
+   "y": 179,
+   "ang": 6.5,
+   "s": 0.4136,
+   "e": 180,
+   "ok": true
+  },
+  {
+   "x": 217,
+   "y": 178,
+   "ang": 7.5,
+   "s": 0.4136,
+   "e": 180,
+   "ok": true
+  },
+  {
+   "x": 218,
+   "y": 179,
+   "ang": 7.5,
+   "s": 0.44,
+   "e": 182,
+   "ok": true
+  },
+  {
+   "x": 219,
+   "y": 179,
+   "ang": 4.5,
+   "s": 0.4593,
+   "e": 182,
+   "ok": true
+  },
+  {
+   "x": 217,
+   "y": 178,
+   "ang": 4.5,
+   "s": 0.4333,
+   "e": 182,
+   "ok": true
+  },
+  {
+   "x": 210,
+   "y": 56,
+   "ang": -2.5,
+   "s": 0.4073,
+   "e": 183,
+   "ok": true
+  },
+  {
+   "x": 218,
+   "y": 179,
+   "ang": 7.5,
+   "s": 0.44,
+   "e": 182,
+   "ok": true
+  }
+ ]
+}

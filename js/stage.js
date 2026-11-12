@@ -88,12 +88,12 @@ function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p
   return out; }
 /* ESPECIAL ANIMADO (Corte Giratório, era 2): folha composta (corpo + arma + rastro) assets/anim/hyb/R/kael_spin_era2_t<tier>, quadro 448x256,
    pés em x = padLeft + 128 e y = feetY (do .json). Só entra com a chave ART_ON['s2_era2_t<tier>'] ligada; senão vale o golpe por código. */
-function spinBase(ws){ if (!ws || ws.e !== 2) return null; const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
+function spinBase(ws){ if (!ws || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
 /* GOLPE BÁSICO COM RASTRO (s1-era2_t<tier>, aprovado): folha composta assets/anim/hyb/R/kael_attack_trail_era2_t<tier> (17 quadros, 448x256,
    pés em x = padLeft + 128, y = feetY; golpe no quadro 6). Toca dentro da duração do golpe básico (o ritmo do balanceamento não muda): os quadros
    0-6 até o instante do acerto e os 7-16 na volta. Só com skin de arma da era 2 e a chave ART_ON['s1_era2_t<tier>']. */
 const TRAIL_HIT = 6;
-function trailBase(ws){ if (!ws || ws.e !== 2) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
+function trailBase(ws){ if (!ws || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
 function heroTrailSheet(ws){ const b = trailBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 function heroSpinSheet(ws){ const b = spinBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 /* AURA DE FORTALECIMENTO (auras +4/+7/+10/+13 aprovadas): o nível vem do +N do espaço da ARMA no Sys.forge (Sys.forge.aura(S).id).
@@ -148,7 +148,7 @@ const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; cons
    assets/anim/hyb/R/kael_<run|idle|attack>_era2_t<tier>.png (corpo + roupa + arma num quadro só; mesmos quadros, fps e pés do .json do corpo, que é o
    .json do conjunto). Em qualquer outro caso (roupa ou arma de outra era, tiers diferentes) vale corpo + arma na mão. Chave: ART_ON.kael_hybR_t<tier>.
    A hyb-attack-era2_t* (assets/anim/hyb/, REPROVADA) nunca é usada: só a pasta R. */
-function heroCompTier(sk, ws){ if (!sk || !ws || sk.e !== 2 || ws.e !== 2) return -1; const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
+function heroCompTier(sk, ws){ if (!sk || !ws || sk.e !== 2 || ws.e !== 2 || ws.r % 2) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
 /* GOLPE: folha LARGA aprovada pelo PO como correção técnica (kael_attack_wide_era2_t<tier>: 17 quadros, 448x256, padLeft 96, pés em x = padLeft+128,
    feetY 243): a de 256 cortava a arma em alguns quadros. Parado e corrida continuam nas de 256. */
 const HERO_WIDE_PAD = 96, HERO_WIDE_W = 448;
@@ -158,12 +158,13 @@ const heroCompImg = (st, t) => IMG(HERO_DIR + 'kael_' + (st === 'attack' ? 'atta
    A pose de tiro antiga (corpo + arma girada por código) SAIU. Era 4: só com ART_ON.pistol_era4 (desligada): sem ela o wIsGun devolve false e vale a espada. */
 const PISTOL_DIR = 'assets/anim/hyb/R/pistol/', PISTOL_ERAS = { 3: 1, 5: 1, 6: 1 };
 const pistolEra = ws => (ws && wIsGun(ws) && (PISTOL_ERAS[ws.e] || (ws.e === 4 && ART_ON.pistol_era4 === true))) ? ws.e : -1;
-const pistolSheet = (e, st) => sheetLoad(PISTOL_DIR + 'kael_pistol_' + st + '_era' + e + '_t0', true);
+const pistolSheet = (e, st) => sheetLoad(HERO_DIR + 'kael_pistol_' + st + '_body', true);   /* v0.12.5: corpo sem arma (mesmos quadros e âncoras da mão); a arma da raridade é desenhada na mão por código */
+const pistolScale = (e, st) => { const j = J(PISTOL_DIR + 'kael_pistol_' + st + '_era' + e + '_t0.json'); return (j && typeof j.scale === 'number') ? j.scale * 1024 : 80; };   // lado da imagem da arma (1024 px) em px do quadro, do .json aprovado da era
 function pistolReady(e){ let ok = true; for (const st of ['idle', 'run', 'shoot']) if (!pistolSheet(e, st).ok) ok = false; return ok; }
 function drawHeroPistol(H, E){
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'shoot' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = pistolSheet(E, st); if (!pistolReady(E)) return false;
   const M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fps = M.fps || 12, t = H.t; let fi;
-  if (a){ const s0 = (M.shots && M.shots.length) ? M.shots[0] : 3, s1 = (M.shots && M.shots.length > 1) ? M.shots[1] : n; let last = -1; for (const h of a.hits) if (a.t >= h.t) last = Math.max(last, h.t);
+  if (a){ const s0 = (M.shots && M.shots.length) ? M.shots[0] : 3, s1 = (M.shots && M.shots.length > 1) ? M.shots[1] : 14; let last = -1; for (const h of a.hits) if (a.t >= h.t) last = Math.max(last, h.t);
     /* o quadro do disparo ("shot") cai EXATAMENTE no instante do tiro; antes dele, a preparação; depois, o coice e a volta (a cada tiro recomeça) */
     if (last < 0){ const h0 = a.hits.length ? a.hits[0].t : 0.1; fi = Math.min(s0 - 1, Math.floor(s0 * a.t / Math.max(0.001, h0))); }
     else fi = Math.min(s1 - 1, s0 + Math.floor((a.t - last) * fps * 2)); }
@@ -179,12 +180,22 @@ function drawHeroPistol(H, E){
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, 0, -HS * .45, HS * (0.5 + 0.2 * Math.min(1, a.t)), 0.5 + 0.2 * Math.sin(t * 20));
   ctx.translate(-HS / 2 - pad * k, -fy * k); ctx.scale(k, k);          // espaço do quadro largo (0..448); a célula de 256 começa em padLeft
-  ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
-  const mz = G.muzzle || { x: pad + 220, y: 110 };
-  if (false && H.ws && H.ws.r > 0 && G.hand){ const r = H.ws.r; drawGlow(RAR[r].c, (G.hand.x + mz.x) / 2, (G.hand.y + mz.y) / 2, 20 + 5 * r, 0.16 + 0.07 * r); }   // raridade visível também na pistola (a arte é a do tier 0)
-  if (a){ const fl = shotEnv(a, 0.09); if (fl > 0){ const c0 = a.col && a.col !== '#ffffff' ? a.col : '#ffd45a', r = 22 + 14 * fl, L = r * (0.9 + 1.1 * fl), ang = -(G.ang || 0) * Math.PI / 180;   // clarão SAINDO DO CANO, no quadro do disparo
-      ctx.save(); ctx.translate(mz.x, mz.y); ctx.rotate(ang); drawGlow(c0, 5, 0, r, fl); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = alpha * fl;
-      [[0, 1.5], [-0.45, 0.8], [0.45, 0.8]].forEach((q, i) => { ctx.fillStyle = i ? c0 : '#ffffff'; ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(Math.cos(q[0]) * L * q[1], Math.sin(q[0]) * L * q[1]); ctx.lineTo(0, 3); ctx.fill(); }); ctx.restore(); } }
+  const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  body();
+  /* arma da raridade na mão: pivô = grip do meta.json; direção = ângulo da mão do .json menos o ângulo nativo da arma; tamanho = scale do .json aprovado da era */
+  const ws = H.ws, wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, w0 = SPR(wPng(ws), 'weapon'), S0 = pistolScale(E, st), fl = a ? shotEnv(a, 0.09) : 0, rec = a ? shotEnv(a, 0.16) * 4 : 0;
+  let mz = { x: G.x + 50, y: G.y - 20 };
+  if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || [0.2, 0.65], mzf = wm.muzzle || [0.88, 0.38], wang = typeof wm.angle === 'number' ? wm.angle : 0, ang = -(G.ang - wang) * Math.PI / 180;
+    const dw = w0.fw * S0, dh = w0.fh * S0, gx = (grip[0] - w0.fx) * S0, gy2 = (grip[1] - w0.fy) * S0, tx0 = (mzf[0] - w0.fx) * S0 - gx, ty0 = (mzf[1] - w0.fy) * S0 - gy2, c = Math.cos(ang), sn = Math.sin(ang);
+    mz = { x: G.x + (tx0 - rec) * c - ty0 * sn, y: G.y + (tx0 - rec) * sn + ty0 * c };
+    ctx.save(); ctx.translate(G.x, G.y); ctx.rotate(ang); ctx.translate(-rec, 0); dspr(wimg, -gx, -gy2, dw, dh);
+    if (fl > 0){ const c0 = a.col && a.col !== '#ffffff' ? a.col : '#ffd45a', r = 22 + 14 * fl, L = r * (0.9 + 1.1 * fl);   // clarão SAINDO DO CANO, no quadro do disparo
+      drawGlow(c0, tx0 + 5, ty0, r, fl); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = alpha * fl;
+      [[0, 1.5], [-0.45, 0.8], [0.45, 0.8]].forEach((q, i) => { ctx.fillStyle = i ? c0 : '#ffffff'; ctx.beginPath(); ctx.moveTo(tx0, ty0 - 3); ctx.lineTo(tx0 + Math.cos(q[0]) * L * q[1], ty0 + Math.sin(q[0]) * L * q[1]); ctx.lineTo(tx0, ty0 + 3); ctx.fill(); }); }
+    ctx.restore();
+    /* dedos por cima do cabo: redesenha o trecho do corpo em volta da mão */
+    if (typeof G.ux === 'number'){ const ux = G.ux, uy = G.uy, px = -uy, py = ux, f0 = (G.f0 != null ? G.f0 : -5) - 1.5, f1 = (G.f1 != null ? G.f1 : 5) + 1.5, hh = (G.hw || 3.4) + 5;
+      ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); } }
   if (H.hurt > 0 && H.deadP < 0){ HFLx.globalCompositeOperation = 'source-over'; HFLx.clearRect(0, 0, 256, 256); HFLx.drawImage(sh.img, fi * FW + pad, 0, 256, FH, 0, 0, 256, 256); HFLx.globalCompositeOperation = 'source-atop'; HFLx.fillStyle = '#ff3030'; HFLx.fillRect(0, 0, 256, 256);
     ctx.globalAlpha = alpha * Math.min(1, H.hurt / 0.15 * 0.65); ctx.drawImage(HFL, pad, 0, 256, FH); }
   ctx.restore();
@@ -221,7 +232,7 @@ function drawHeroAnim(H){
   const wide = comp && st === 'attack';   // folha larga: o quadro de 448 é desenhado com a célula de 256 no mesmo lugar (96 px para cada lado)
   const body = () => wide ? ctx.drawImage(comp, fi * HERO_WIDE_W, 0, HERO_WIDE_W, FH, -HERO_WIDE_PAD, 0, HERO_WIDE_W, FH) : ctx.drawImage(comp || sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
   // arma: pivô = grip do meta.json da arma, na mão do quadro; direção = eixo da mão (bastão-guia) do .json
-  const wk = heroKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(hp('weapons', ws.e, tierOf(ws.r)), 'weapon'), fx = WFIX[wk] || {};
+  const wk = wKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(wPng(ws), 'weapon'), fx = WFIX[wk] || WFIX[heroKey(ws)] || {};
   if (H.main) B.tipW = null;
   let drawW = null;
   if (w0){

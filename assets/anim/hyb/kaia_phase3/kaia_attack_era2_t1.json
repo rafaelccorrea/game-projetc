@@ -1,0 +1,11 @@
+{
+ "frames": 17,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "note": "fase guerreira lendária (116%); pés em x=padLeft+128",
+ "weapon": "era2_t1"
+}

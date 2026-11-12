@@ -422,7 +422,7 @@ function newState(){
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){S=JSON.parse(j);return;} }catch(e){} S=newState(); }
 function save(){ if(window.__noSave) return; S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
 load();
-if(OWNER_MODE&&S.tut===undefined&&!(S.kills>0)){ S.tut=99; S.welcome=true; }   /* modo dono: save novo entra direto no jogo, sem tutorial */
+if(OWNER_MODE&&!S.ownerInit){ S.ownerInit=1; if(!(S.kills>0)){ S.tut=99; S.welcome=true; } }   /* modo dono: save novo entra direto no jogo, sem tutorial */
 if(/[?&]debug=1/.test(location.search)&&/[?&]fresh=1/.test(location.search)){ window.__noSave=true; S=newState(); }
 if(S.tut===undefined) S.tut=(S.kills>0||S.stage>1)?99:0;
 const AWAY=S.lastSeen?(Date.now()-S.lastSeen)/1000:0;   // segundos fora (ganhos offline)
@@ -433,7 +433,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
    Em debug, ?res=1 liga só para conferência. */
 const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.4';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.12.5';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
@@ -524,7 +524,7 @@ let view='battle';
 const V=document.getElementById('view');
 const ic=(n,em,cls)=>`<img class="${cls||'hi'}" src="assets/ui/${n}.png" alt="" onerror="this.outerHTML='${em}'">`;
 const COIN=()=>ic('coin','🪙'), GEM=()=>ic('gem','💎');
-const thumb=(slot,e,r)=>`<img class="th ${slot}" src="assets/${slot==='weapon'?'weapons':'hero'}/era${e}_t${tierOf(r)}.png" alt="" loading="lazy" decoding="async" style="${r>0?`filter:drop-shadow(0 0 ${2+r}px ${RAR[r].c})`:''}" onerror="this.style.display='none'">`;
+const thumb=(slot,e,r)=>`<img class="th ${slot}" src="assets/${slot==='weapon'?'weapons/era'+e+'_'+W_RKEY[Math.max(0,Math.min(4,r|0))]:'hero/era'+e+'_t'+tierOf(r)}.png" alt="" loading="lazy" decoding="async" style="${r>0?`filter:drop-shadow(0 0 ${2+r}px ${RAR[r].c})`:''}" onerror="this.style.display='none'">`;
 const rb = r => `<span class="badge" style="background:${RAR[r].c}">${RAR[r].n}</span>`;
 
 function render(){
@@ -691,7 +691,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
 ['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
-['battle','stage','farm','fallback','ui','screens','screens2','rarity','fullbattle','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+['battle','stage','farm','petfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"

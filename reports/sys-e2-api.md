@@ -211,6 +211,24 @@ O 1º ovo do Nv 20 (79/21) passa a dar **Mamute** (79%) ou **Esfinge** (21%), os
 - Ações: `setMode(S, 'items'|'skin')`, `setLookHidden(S, peça, true|false)`, `addCosmetic(S, id)` (compra direta, evento ou conquista; nunca sorteio),
   `equipCosmetic(S, 'glasses'|'mask', id|null)`. Catálogo de cosméticos PROVISÓRIO em `DATA.cosmetics` (nomes e arte com a fps-ff).
 
+## 5k. Curva de 9 eras, Revisão 2 (100 fases × 4 dificuldades) — `Sys.phases` (js/sys/phases.js), ATRÁS DE CHAVE: `Sys.phases.DATA.on = false`
+- Ligar junto com `Sys.level.setV9(true)` e `Sys.stats.setEra9(true)`. Passo a passo de integração: **reports/ligar-sistemas-e2.md §1**.
+- Tabela (pura, vale desligada): `fcRec(e,d,n)`, `lvlLock(e,d,n)`, `isRequired(e,d)`, `kindOf(n)` (50 'chefe', 100 'senhor'), `info(e,d,n)`, `rewardOf(d)`,
+  `enemy(e,d,n,'common'|'boss')` → `{hp, dmg, def, kind, name, fcRec, goldStage, goldMult}`. Reproduz docs/balance-v9.json rev2 (teste).
+- Progresso (`S.sys.phases {best:{era:[b0..b3]}, cur, migrated}`): `canChallenge(S,host,e,d,n,fc)`, `win(S,host,e,d,n)`, `next`, `eraOpen/eraCleared/eraMax(S)`,
+  `eraView(S,e)`, `current(S)`, `migrate(S,host,stageAntigo)` (idempotente). Repetir fase antiga não move o cursor.
+- Inimigo = fração da FC recomendada calibrada na era 2 de hoje; DEF: comum 10% / chefe 20% / Senhor 25% de redução na FC recomendada (vida ×0,9/0,8/0,75).
+
+## 5l. Guildas — `Sys.guild` (js/sys/guild.js), ATRÁS DE CHAVE: `Sys.guild.DATA.on = false` (spec: reports/spec-guildas.md)
+- Sem servidor fica FECHADA (`status` → `reason:'server'`, "Em breve: abre com o online"). O servidor liga com `Sys.guild.setProvider({online:true, status:()=>({open:true}), ...})`
+  e manda o estado com `applyServer(S, dadosDoGET /guild/me, host)` (`null` = saiu: começa a espera de 24 h / 7 dias para a mesma).
+- Nível para criar/entrar: `Sys.level.unlockLevel('guild')` (32). Criar: `canCreate(S,host)` (ouro de 8 h, sem 💎). Entrar: `canJoin(S,host,guildId)`.
+- Regras puras (o servidor usa as mesmas): `memberCap(nível)` 20→30, `levelOfXp(xp)`/`xpToNext(n)` (1.000 × 1,6^(n−1)), `bannerCap(k, nível)`,
+  `territoryBonus(lista)` (teto ouro 10 / XP 5 / drop 5), `canAttackRegion(erasDosEscalados, região)`, `tourneyReward(posição)` (Prismático 3/2/1).
+- Troca: `canDonate(S,host,item,paraQuem,{age})` → `reason: adult|member_days|item_age|bought|kind|day_limit|pair_limit`; `received(item)` (chega no Nv 1,
+  ouro zerado; o doador recebe `goldBack` = 50%); `markDonated(S,host,paraQuem)`.
+- Bônus: `bonus(S)` (Sys.fc: estandartes ATK/Vida/DEF, teto +5/+5/+3%) e `perks(S)` → `{goldPct, xpPct, dropPct, foodPct}` para os módulos da fps-30 (como o VIP).
+
 ## 6. Eventos
 | Quando | Chamar |
 |---|---|

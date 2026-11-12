@@ -1,0 +1,16 @@
+{
+ "frames": 8,
+ "fps": 12,
+ "w": 512,
+ "h": 352,
+ "padLeft": 96,
+ "padRight": 160,
+ "padTop": 96,
+ "feetY": 339,
+ "weapon": "era2_t1",
+ "mount": "mythic",
+ "state": "run",
+ "stars": 4,
+ "aura": "aura_smoke",
+ "note": "aura por código atrás do sprite (nunca cobre o Kael); mesmo formato/células da folha kael_mythic_run_era2_t1"
+}
