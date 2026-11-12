@@ -2,15 +2,6 @@
   "v": 3,
   "attachments": {},
   "boards": {
-    "Batalha.dc.html": {
-      "h": 844,
-      "is_interactive": true,
-      "radius": 28,
-      "title": "04 Batalha (layout antigo, substituído pela 04c V2)",
-      "w": 390,
-      "x": 1880,
-      "y": 0
-    },
     "Carregamento.dc.html": {
       "h": 844,
       "is_interactive": true,
@@ -42,7 +33,7 @@
       "h": 844,
       "is_interactive": true,
       "radius": 28,
-      "title": "05 Equipamento · APROVADA",
+      "title": "05 Equipamento · APROVADA  +  ★ VOTAR: aba Aparência (modo Itens/Skin, ocultar peça por peça, cosméticos)",
       "w": 390,
       "x": 2350,
       "y": 0
@@ -105,19 +96,10 @@
       "h": 844,
       "is_interactive": true,
       "radius": 28,
-      "title": "08 Passe · APROVADA",
+      "title": "08 Passe · APROVADO  +  ★ VOTAR: rolagem contínua até o fim (sem páginas)",
       "w": 390,
       "x": 3760,
       "y": 0
-    },
-    "Pets.dc.html": {
-      "h": 844,
-      "is_interactive": true,
-      "radius": 28,
-      "title": "17 Pets (antiga) · REPROVADA — substituída pela 17b",
-      "w": 390,
-      "x": 1880,
-      "y": 3000
     },
     "Progresso.dc.html": {
       "h": 844,
@@ -186,7 +168,7 @@
       "h": 844,
       "is_interactive": true,
       "radius": 28,
-      "title": "04c Batalha V2 (menu agrupado) · APROVADA  +  ★ VOTAR: missão guia na tela (cartão sob a barra de fase)",
+      "title": "04c Batalha V2 · APROVADA (barras de vida/energia acima do Kael APROVADAS)  +  ★ VOTAR: missão guia na tela",
       "w": 390,
       "x": 2350,
       "y": -1250
@@ -195,7 +177,7 @@
       "h": 844,
       "is_interactive": true,
       "radius": 28,
-      "title": "★ VOTAR · 19 Prólogo V2 (relógio com arte, 4 cenas, mapa ilustrado)",
+      "title": "19 Prólogo V2 · APROVADO",
       "w": 390,
       "x": 2820,
       "y": -1250
@@ -226,6 +208,114 @@
       "w": 390,
       "x": 4230,
       "y": -1250
+    },
+    "OfertaInicial.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "22 Oferta de primeira compra · APROVADA",
+      "w": 390,
+      "x": 4700,
+      "y": -1250
+    },
+    "Leilao.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "25 Leilão · APROVADO (abre com o online)",
+      "w": 390,
+      "x": 2820,
+      "y": -2400
+    },
+    "Arena.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "23 Arena V2 · APROVADA",
+      "w": 390,
+      "x": 1880,
+      "y": -2400
+    },
+    "Eventos.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "24 Eventos V2 · APROVADA",
+      "w": 390,
+      "x": 2350,
+      "y": -2400
+    },
+    "Guilda.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "26 Guilda V2 · APROVADA",
+      "w": 390,
+      "x": 3290,
+      "y": -2400
+    },
+    "TorneioPoder.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "27 Torneio do Poder · APROVADO",
+      "w": 390,
+      "x": 3760,
+      "y": -2400
+    },
+    "BemVindo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "28 Bem-vindo de volta · APROVADO",
+      "w": 390,
+      "x": 2350,
+      "y": -3550
+    },
+    "NomeJogador.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "29 Nome do jogador · APROVADO",
+      "w": 390,
+      "x": 2820,
+      "y": -3550
+    },
+    "Codex.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "30 Códex das Eras · REPROVADO, refazendo",
+      "w": 390,
+      "x": 3290,
+      "y": -3550
+    },
+    "TituloV2A.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "★ ESCOLHA O LOGO · 01b Título · opção A · Dourado (pôr do sol, espada, relógio)",
+      "w": 390,
+      "x": 1880,
+      "y": -4700
+    },
+    "TituloV2B.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "★ ESCOLHA O LOGO · 01b Título · opção B · Cristal (noite futurista, anéis de luz)",
+      "w": 390,
+      "x": 2350,
+      "y": -4700
+    },
+    "TituloV2C.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "radius": 28,
+      "title": "★ ESCOLHA O LOGO · 01b Título · opção C · Rúnico (neblina, runas em brasa)",
+      "w": 390,
+      "x": 2820,
+      "y": -4700
     }
   },
   "createdOnFiles": {
@@ -330,7 +420,6 @@
     "Main.dc.html",
     "Login.dc.html",
     "CriarJogador.dc.html",
-    "Batalha.dc.html",
     "BatalhaTelaCheia.dc.html",
     "BatalhaTelaCheiaV2.dc.html",
     "Equipamento.dc.html",
@@ -345,12 +434,23 @@
     "Torre.dc.html",
     "Forja.dc.html",
     "Progresso.dc.html",
-    "Pets.dc.html",
     "PetsV2.dc.html",
     "VIP.dc.html",
     "Prologo.dc.html",
     "MapaEras.dc.html",
-    "Perfil.dc.html"
+    "Perfil.dc.html",
+    "OfertaInicial.dc.html",
+    "Leilao.dc.html",
+    "Arena.dc.html",
+    "Eventos.dc.html",
+    "Guilda.dc.html",
+    "TorneioPoder.dc.html",
+    "BemVindo.dc.html",
+    "NomeJogador.dc.html",
+    "Codex.dc.html",
+    "TituloV2A.dc.html",
+    "TituloV2B.dc.html",
+    "TituloV2C.dc.html"
   ],
   "pages": [],
   "title": "Eonbound Telas"

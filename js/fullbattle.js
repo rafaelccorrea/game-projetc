@@ -16,7 +16,7 @@ const FB_LOCK = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" strok
 
 function fbCss(){ const st = document.createElement('style'); st.textContent = `
 body.fb #stage{top:0;bottom:0}
-body.fb #toast{top:126px;max-width:230px}
+body.fb #toast{top:calc(var(--fbsafe,0px) + 128px * var(--fbs,1));max-width:230px}   /* avisos (Drop: ...) SEMPRE abaixo do cabeçalho e da faixa da fase, contando o entalhe e a escala do HUD */
 body.fb [data-x=close][aria-label="Fechar o Passe"]{display:none!important}   /* na folha o X é o da folha: o Passe não mostra o dele */
 #fbhud{position:absolute;inset:0;z-index:30;pointer-events:none;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
 #fbhud .fbw{position:absolute;left:0;top:0;width:390px;transform-origin:0 0}
@@ -151,8 +151,15 @@ const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="
 const FB_UNLOCK = { missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
 const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
 const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
-const fbUnl = id => !(FB_UNLOCK[id] > fbLvl());
-const fbHasScreen = m => m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)]);
+/* SAVE ANTIGO NÃO PERDE ACESSO (PO, v0.12.4): quem já jogava antes da liberação por nível continua vendo o que já usava, em qualquer nível.
+   Marcador no save: S.bornV ('old' = save anterior à regra; senão a versão em que o save nasceu). Lista herdada: S.unlKeep = {id:1}.
+   Só jogador novo segue a tabela de níveis. Quem lê (agente B): fbUnl(id) já devolve verdadeiro para o que está em S.unlKeep. */
+const FB_KEEP_OLD = ['missions', 'summon', 'practice', 'shopgem', 'pass'];
+function fbLegacy(){ try { if (S.bornV === undefined) S.bornV = ((S.kills | 0) > 0 || (S.stage | 0) > 1 || fbLvl() > 1) ? 'old' : VERSION;
+    if (S.bornV === 'old' && !S.unlKeep){ S.unlKeep = {}; if (!S.unl || typeof S.unl !== 'object') S.unl = {}; for (const id of FB_KEEP_OLD){ S.unlKeep[id] = 1; S.unl[id] = 1; } save(); } } catch (e) {} }
+const fbLvU = id => { try { const u = Sys.level.unlockLevel(id); return u > 1 ? u : (FB_UNLOCK[id] || u || 1); } catch (e) { return FB_UNLOCK[id] || 1; } };   /* chave que o módulo não conhece devolve 1: aí vale a reserva (senão 'inst' e 'rank' liberariam no nível 1) */   // fonte única: Sys.level.DATA.unlock (fps-e2); FB_UNLOCK fica só de reserva
+const fbUnl = id => (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || !!(S.unlKeep && S.unlKeep[id]) || !(FB_UNLOCK[id] && fbLvU(id) > fbLvl());   // MODO DONO (app de teste): tudo que tem tela aparece, sem regra de nível
+const fbHasScreen = m => m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)] && !Screens.reg[m.act.slice(5)].broken);
 const fbShown = m => m.on !== false && fbUnl(m.id) && fbHasScreen(m);
 const FBN = { id: null, el: null, until: 0 };
 function fbNovoTick(){ if (view !== 'battle' || B.paused || document.getElementById('fbdrop') || (typeof tutOn === 'function' && tutOn() && !(typeof tutWait !== 'undefined' && tutWait))) return; const now = Date.now(); if (FBN.until > now) return;
@@ -232,11 +239,11 @@ function fbAct(a, b){
   snd('ui_tap');
   if (a === 'gear' || a === 'summon' || a === 'shop') setView(a);
   else if (a === 'shopitem'){ if (typeof XH !== 'undefined') XH.tab = 'item'; setView('shop'); }
-  else if (a === 'shopgem'){ if (typeof XH !== 'undefined') XH.tab = 'gem'; setView('shop'); }
+  else if (a === 'shopgem'){ if (!fbUnl('shopgem')){ toast('Loja de gemas: libera no nível ' + FB_UNLOCK.shopgem); return; } if (typeof XH !== 'undefined') XH.tab = 'gem'; setView('shop'); }
   else if (a === 'missions') Screens.open('pass', { tab: 'missions' });
   else if (a === 'pass') Screens.open('pass', { tab: 'rewards' });
   else if (a === 'cfg') openSettings(false);
-  else if (a === 'music') toggleSound();
+  else if (a === 'music'){ toggleSound(); toast(S.set.sound ? 'Som ligado' : 'Som desligado'); }
   else if (a === 'boss') bossTap();          // mesma regra do botão antigo (brilho, FC que falta, 2º toque)
 
   else if (a.indexOf('spd') === 0){ const n = +a.slice(3); if (canSpeed(n)){ B.speed = n; S.set.spd = n; save(); syncSpeed(); } else { let tx = ''; try { const m = Sys.vip.maxSpeed(S, Sys.host).speeds.find(x => x.speed === n); tx = m && m.text; } catch (e) {} toast(tx || ('x' + n + ' bloqueada')); } fbTick(); }
@@ -252,7 +259,7 @@ function fbTarget(to){ return document.getElementById(to === 'gold' ? 'fb_goldp'
 function fbSafeTop(){ let el = document.getElementById('fb_safe'); if (!el){ el = document.createElement('div'); el.id = 'fb_safe'; el.style.cssText = 'position:absolute;left:0;top:0;width:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none'; document.getElementById('app').appendChild(el); } return el.offsetHeight || 0; }
 function fbLayout(){ const app = document.getElementById('app'), w = document.getElementById('fb_w'); if (!w) return; const W = app.clientWidth, H = app.clientHeight, st = fbSafeTop();
   const s = Math.min(W / 390, Math.max(1, H / 844)), Hb = (H - st) / s;
-  app.style.setProperty('--fbsafe', st + 'px');
+  app.style.setProperty('--fbsafe', st + 'px'); document.documentElement.style.setProperty('--fbsafe', st + 'px'); document.documentElement.style.setProperty('--fbs', s.toFixed(4));   // o #toast fica fora do #app
   w.style.transform = `scale(${s.toFixed(4)})`; w.style.top = st + 'px'; w.style.width = (W / s).toFixed(1) + 'px'; w.style.height = Hb.toFixed(1) + 'px';
   /* alvo de toque nunca abaixo de 44 px na tela: em tela estreita (escala < 1) Desafiar e velocidade ganham altura na base */
   { const mh = (s < 1 ? 44 / s : 44).toFixed(1) + 'px'; app.style.setProperty('--fbt', mh); const e = document.getElementById('fb_boss'); if (e) e.style.height = mh; }
@@ -281,6 +288,7 @@ function fbTick(){
       b.classList.toggle('fb-desglow', gl); b.style.filter = gl ? '' : 'grayscale(.75) brightness(.8)'; } }
   { const nm = missionAlerts(), np = passAlerts(); fbSet('fb_bm', nm ? String(nm) : ''); fbSet('fb_bp', np ? String(np) : ''); }
   try { const p = Sys.chest.progress(S, Sys.host), w = Math.round((p.stored ? 1 : p.pct) * 100); fbSet('fb_bc', p.stored ? String(p.stored) : ''); if (FBK.chp !== w){ FBK.chp = w; document.getElementById('fb_chp').style.width = w + '%'; } } catch (er) {}
+  { const gp = fbUnl('shopgem') ? 1 : 0; if (FBK.gp !== gp){ FBK.gp = gp; const pl = document.querySelector('#fb_gemp .fb-plus'); if (pl) pl.style.display = gp ? '' : 'none'; } }   // o "+" das gemas só aparece quando a loja de gemas existe para o jogador
   { const k = S.set.sound ? 1 : 0; if (FBK.mus !== k){ FBK.mus = k; document.getElementById('fb_mus').innerHTML = k ? '<span class="fb-eq"><i></i><i></i><i></i></span>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>'; } }
   { const k = B.speed + '|' + [1, 2, 4].map(n => canSpeed(n) ? 1 : 0).join(''); if (FBK.spd !== k){ FBK.spd = k;
       document.getElementById('fb_spd').innerHTML = [1, 2, 4].map(n => { const ok = canSpeed(n), on = B.speed === n; return `<button data-fb="spd${n}" class="lil" aria-label="Velocidade x${n}${ok ? '' : ', bloqueada'}" aria-pressed="${on}" style="position:relative;width:var(--fbt,44px);height:var(--fbt,44px);border-radius:11px;border:0;padding:0;background:${on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'transparent'};color:${on ? '#2a1403' : ok ? '#f6ecdf' : '#9c8d7a'};font-size:14px;display:flex;align-items:center;justify-content:center">x${n}${ok ? '' : `<span style="position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:#1a110b;display:flex;align-items:center;justify-content:center">${FB_LOCK}</span>`}</button>`; }).join(''); } }
@@ -331,5 +339,5 @@ const FB_TUT_TXT = [
   'A <b>Ultimate</b> dispara sozinha.',
   () => view === 'summon' ? 'Toque na invocação <b>grátis</b>.' : 'Abra <b>Invocar</b>.',
 ];
-function fbInit(){ fbCss();
+function fbInit(){ fbLegacy(); fbCss();
   if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); }

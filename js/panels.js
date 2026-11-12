@@ -10,7 +10,7 @@
    render()  desenha em V (use xFit/xDims + xWrap do screens.js, base de 390 px)
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
-const PANEL_ON=window.PANEL_ON=Object.assign({forge:false,vip:false,era:false,rank:false,inst:false,tower:false,result:false,cfg:false,profile:false,pets:false},window.PANEL_ON||{});
+const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,vip:false,era:false,rank:false,inst:false,tower:false,result:false,cfg:true,profile:false,pets:false},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   add(name,def){ def.name=name; this.defs[name]=def; if(PANEL_ON[name]) this.enable(name); return def; },
@@ -21,9 +21,14 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(typeof FULLV!=='undefined') FULLV[name]=1; if(typeof FULL_VIEWS!=='undefined') FULL_VIEWS[name]=1;
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
     if(d.parent) this.hookClose();
+    if(name==='cfg') this.hookCfg();
     this.hook(); return true; },
   /* SUBTELA (decisão do PO: Forja é subtela do Equipamento): o Voltar leva à tela-mãe (def.parent), não à batalha. Contorno do pedido B-11:
      enquanto o Screens.close() do index não ler 'parent', ele é envolvido aqui, só quando uma subtela é ligada. */
+  /* CONFIGURAÇÕES NOVAS (tela 09) no lugar do modal antigo: todo lugar do jogo que chama openSettings(false) passa a abrir o painel.
+     openSettings(true) (confirmação de reset do modal antigo) continua indo para o original. Só envolve quando a tela 'cfg' é ligada. */
+  hookCfg(){ if(this.cfgHooked||typeof openSettings!=='function') return; this.cfgHooked=true; const P=this, o0=openSettings;
+    openSettings=function(confirmReset){ if(confirmReset||!P.on('cfg')) return o0(confirmReset); if(!P.open('cfg')) return o0(confirmReset); }; },
   hookClose(){ if(this.closeHooked||!window.Screens||typeof Screens.close!=='function') return; this.closeHooked=true; const P=this, c0=Screens.close.bind(Screens);
     Screens.close=function(){ const cur=P.cur(); if(cur&&cur.parent&&typeof setView==='function'){ if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(cur.parent); return; } return c0(); }; },
   hook(){ if(this.hooked) return; this.hooked=true; const P=this;

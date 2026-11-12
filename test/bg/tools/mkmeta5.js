@@ -32,9 +32,10 @@ const veh = (name, w, speed) => { const v = info.veh[name], big = name === 'truc
 const car = (id, name, slot, x, w, baseY, parallax, speed, loop) => { const v = veh(name, w, speed); return { id, slot, sprite: name, x, y: r4(baseY - v.h), w, parallax, drift: -speed, loop, parts: v.parts }; };
 const FS = 0.07, MS = 0.17;   // velocidade (SH/s) em relacao a camada: viaduto / rua de tras
 const lampRect = k => [r4((LAMP[k][0] - LAMPR) / PW), r4((LAMP[k][1] - LAMPR) / PH), r4(2 * LAMPR / PW), r4(2 * LAMPR / PH)];
-// semaforo: laco de 9 s em 90 quadros. alfa = base*(1+pulse*sin(2pi*fase*ciclos)), limitado a 0..1 pelo canvas:
-//   vermelho aceso com sin > 0.2 (fase 0.03-0.47); verde com sin < -0.2 (0.53-0.97); amarelo com meio ciclo de seno (so perto de 0 e de 1): entre o verde e o vermelho.
-const lights = [['vermelho', 0, '255,60,50', -5, -5, 1], ['amarelo', 1, '255,205,60', 6, -10.6, 0.5], ['verde', 2, '70,255,120', -5, 5, 1]].map(q => ({ id: 'semaforo_' + q[0], type: 'flow', layer: 'mid', tile: 0, mask: 'lampmask', rect: lampRect(q[1]), rgb: q[2], blend: 'lighter', loop: 9, frames: 90, maxScale: 2, bands: [], base: q[3], pulse: q[4], pulseCycles: q[5] }));
+// semaforo: laco de 9 s em 90 quadros. alfa = base*(1+pulse*sin(2pi*fase*ciclos)), limitado a 0..1 pelo canvas. Com 1/4 de ciclo o seno so cresce (degrau): VERDE aceso com fase < 0,30;
+//   VERMELHO com fase > 0,367; AMARELO usa 3/4 de ciclo (pico em 1/3) e so passa do limiar entre 0,30 e 0,367. Ordem: verde (2,7 s) -> amarelo (0,6 s) -> vermelho (5,7 s) -> verde, sem intervalo apagado.
+const SG = Math.sin(Math.PI * 0.30 / 2), SR = Math.sin(Math.PI * 0.367 / 2), SY = Math.sin(1.5 * Math.PI * 0.30);
+const lights = [['vermelho', 0, '255,60,50', -30, r4(-1 / SR), 0.25], ['amarelo', 1, '255,205,60', -120, r4(-1 / SY), 0.75], ['verde', 2, '70,255,120', 30, r4(-1 / SG), 0.25]].map(q => ({ id: 'semaforo_' + q[0], type: 'flow', layer: 'mid', tile: 0, mask: 'lampmask', rect: lampRect(q[1]), rgb: q[2], blend: 'lighter', loop: 9, frames: 90, maxScale: 2, bands: [], base: q[3], pulse: q[4], pulseCycles: q[5] }));
 const hel = { w: 0.22 };
 const m = {
   version: 2, era: 5, nome: 'Era Moderna - cidade em conflito de dia: torres de vidro, viaduto com transito, predio em ruinas, posto de controle, radar e rua de asfalto',
@@ -54,15 +55,14 @@ const m = {
     Object.assign(L('ground', { file: 'ground.webp', tile: 'repeat', parallax: 1, drift: 0, top: G.top }, info.ground, G.height), { roadY: road, curbY: curb, lineY: line, nota: 'calcada de lajes (borda de cima esmaecida sobre o pe dos predios), guia, asfalto liso (roadY) com faixa dupla amarela continua (lineY), guia, calcada da frente. Os pes (groundY) caem no asfalto liso, acima da faixa amarela' })
   ],
   tileNota: 'repeat: emenda nela mesma. mirror: alternar normal/espelhada. sequence: arquivos de files em ordem (A,B,A,B...). repeatWidth = largura do ciclo completo em SH. off(camada) = scroll*parallax + t*drift + offset.',
-  drawOrder: ['sky', 'clouds: nuvens em 2 velocidades', 'birds (pombos)', 'far', 'actors(far): transito do viaduto (5 veiculos com rodas girando) e helicoptero', 'farFill (transparente)', 'fx(far): farol da torre de radio, fumaca de 2 predios distantes', 'haze', 'fog[0]', 'actors(mid): rua de tras (ladrilho) e 5 veiculos com rodas girando', 'mid', 'rotors(mid): antena de radar girando, helice do ar-condicionado', 'towerFlags (bandeira no mastro da guarita)', 'fx(mid): semaforo trocando, letreiro piscando, janelas, holofote, fumaca das ruinas e do entulho', 'fog[1]', 'ground', 'decals', 'roadside', 'hero', 'motes', 'fg', 'bottomShade'],
+  drawOrder: ['sky', 'clouds: nuvens em 2 velocidades', 'birds (pombos)', 'far', 'actors(far): transito do viaduto (5 veiculos com rodas girando) e helicoptero', 'farFill (transparente)', 'fx(far): farol da torre de radio, fumaca de 2 predios distantes', 'haze', 'fog[0]', 'actors(mid): rua de tras (ladrilho) e 5 veiculos com rodas girando', 'rotors(mid): antena de radar girando (acima do mastro)', 'mid', 'towerFlags (bandeira no mastro da guarita)', 'fx(mid): semaforo trocando, letreiro piscando, janelas, holofote, fumaca das ruinas e do entulho', 'fog[1]', 'ground', 'decals', 'roadside', 'hero', 'motes', 'fg', 'bottomShade'],
   placeholder: { sky: [hex(info.skyTop), hex(info.skyHi), hex(info.skyMid), hex(info.skyLow), hex(info.skyBottom), hex(info.skyBottom)], ground: [[curb[0], '#aeb6b6'], [road[0], '#d9d2cf'], [road[1], '#42566c'], [curb[1], '#d9d2cf'], [1.001, '#aeb6b6']], nota: 'fundo desenhado no primeiro quadro, antes de qualquer imagem: degrade do ceu ate o topo do chao e faixas [ate y, cor] do chao. filesLow = versoes leves (880 px) carregadas primeiro e trocadas pelas definitivas.' },
   spacing: 'Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.',
   farFill: { color: 'rgba(0,0,0,0)', nota: 'transparente nesta era: atras da cidade fica a bruma clara do ceu' },
   rotors: [
-    { id: 'antena_radar', sprite: 'dish', layer: 'mid', tile: 1, front: true, flap: true, ang: 1.5708, x: r4(MAST.x / PW), y: r4((MAST.y + 5) / PH - 0.085 / 2 / MID.height), w: r4(0.085 / midW), period: 5, phase: 0.4 },
-    { id: 'helice_ar_condicionado', sprite: 'fan', layer: 'mid', tile: 1, front: true, x: r4(FAN.x / PW), y: r4(FAN.y / PH), w: r4(2 * FAN.r * 0.93 / PW), period: 0.9, phase: 0 }
+    { id: 'antena_radar', sprite: 'dish', layer: 'mid', tile: 1, flap: true, ang: 1.5708, x: r4(MAST.x / PW), y: r4((MAST.y + 5) / PH - 0.085 / 2 / MID.height), w: r4(0.085 / midW), period: 5, phase: 0.4 }
   ],
-  rotorsNota: 'Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe). HELICE do ar-condicionado da lanchonete: rotacao continua no plano.',
+  rotorsNota: 'Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; so vale para a camada far). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).',
   actors: [
     car('viaduto_sedan', 'sedan', 'far', 0.3, 0.063, deckY, 0.06, FS, 3.2), car('viaduto_onibus', 'bus', 'far', 1.0, 0.14, deckY, 0.06, FS, 3.2), car('viaduto_taxi', 'taxi', 'far', 1.9, 0.063, deckY, 0.06, FS, 3.2), car('viaduto_caminhao', 'truck', 'far', 2.45, 0.1, deckY, 0.06, FS, 3.2), car('viaduto_jipe', 'jeep', 'far', 2.9, 0.055, deckY, 0.06, FS, 3.2),
     { id: 'helicoptero', slot: 'far', sprite: 'heli', x: 0.4, y: 0.022, w: hel.w, parallax: 0.03, drift: -0.05, loop: 2.6, bob: 0.006, bobF: 0.9, parts: [
@@ -96,7 +96,7 @@ const m = {
       { parallax: 0.04, drift: 0.02, alpha: 1, period: 2.7, items: [{ s: 'cloud2', x: 0.75, y: 0.11, w: 0.26 }, { s: 'cloud1', x: 1.95, y: 0.035, w: 0.22 }] }
     ]
   },
-  birds: { sprite: 'pigeon', flocks: [{ period: 13, duration: 7, y: 0.15, size: 0.07, n: 3, phase: 2, alpha: 1 }, { period: 21, duration: 12, y: 0.05, size: 0.045, n: 4, phase: 11, alpha: 0.95 }], nota: 'pombos (6 quadros de 4 poses): cruzam da esquerda para a direita; size = lado do quadro em SH' },
+  birds: { sprite: 'pigeon', flocks: [{ period: 13, duration: 7, y: 0.012, size: 0.046, n: 3, phase: 2, alpha: 1 }, { period: 21, duration: 12, y: -0.004, size: 0.034, n: 4, phase: 11, alpha: 0.95 }], nota: 'pombos (6 quadros de 4 poses): cruzam da esquerda para a direita no alto do ceu, acima das torres; size = lado do quadro em SH' },
   flagWave: { k1: 6.2, w1: 7, k2: 2.4, w2: 2.6, droop: 0.1, sliceCss: 1.5, nota: 'dy(u) = sin(u*k1 - t*w1 + ph)*amp*h*(0.15+u) + sin(u*k2 - t*w2 + ph*1.7)*amp*h*0.7*u + u*u*h*droop ; u = 0 na ponta presa, 1 na ponta solta' },
   towerFlags: { pole: 0, width: 0.105, amp: 0.14, nota: 'pano preso pela direita, ondulando por fatias. pole 0: prende direto na ancora' },
   midAnchors: { nota: 'fracoes (x,y) dentro de cada arquivo da camada mid (indice = posicao em files). mid A: bandeira vermelha no topo do mastro da guarita.', towerFlags: [FLAGS_A, FLAGS_B] },
@@ -106,7 +106,7 @@ const m = {
       { type: 'sprite', sprite: 'lamp', h: [0.3, 0.315], weight: 4 },
       { type: 'fire', sprite: 'barrel', h: [0.1, 0.106], weight: 2, fire: { y: 0.93, size: 0.6, glow: 2.0, glowAlpha: 0.1, sparks: { n: 8, life: 1.5, spread: 0.5, wobble: 0.3, wind: 0.55, rise: 2.6, radius: 0.036 } } },
       { type: 'pacer', sprite: 'dog', h: [0.085, 0.09], weight: 3, span: 0.1, walk: { dist: 0.09, period: 7, split: [0.3, 0.5, 0.8], sit: 1, steps: 8 } },
-      { type: 'hopper', sprite: 'pigeonsit', h: [r4(0.072 * info.pigeon.frame[1] / info.pigeon.bollardH), r4(0.076 * info.pigeon.frame[1] / info.pigeon.bollardH)], weight: 3, span: 0.13, hop: { post: 'bollardP', dx: 0.13, period: 5, flight: 0.7, fly: 'pigeon', size: 0.085, height: 0.04, cx: 0.5, cy: r4(info.pigeon.cy) } },
+      { type: 'hopper', sprite: 'pigeonsit', h: [r4(0.072 * info.pigeon.frame[1] / info.pigeon.bollardH), r4(0.076 * info.pigeon.frame[1] / info.pigeon.bollardH)], weight: 2, span: 0.13, hop: { post: 'bollardP', dx: 0.13, period: 5, flight: 0.7, fly: 'pigeon', size: 0.056, height: 0.04, cx: 0.5, cy: r4(info.pigeon.cy) } },
       { type: 'sprite', sprite: 'hydrant', h: [0.078, 0.084], weight: 1 }, { type: 'sprite', sprite: 'bin', h: [0.082, 0.088], weight: 1 }, { type: 'sprite', sprite: 'vbox', h: [0.098, 0.104], weight: 1 }, { type: 'sprite', sprite: 'vbox2', h: [0.118, 0.124], weight: 1 },
       { type: 'sprite', sprite: 'bench', h: [0.084, 0.09], weight: 1 }, { type: 'sprite', sprite: 'bike', h: [0.108, 0.114], weight: 1 }, { type: 'sprite', sprite: 'mailbox', h: [0.108, 0.114], weight: 1 }, { type: 'sprite', sprite: 'barrier', h: [0.074, 0.08], weight: 1 },
       { type: 'sprite', sprite: 'signpole', h: [0.2, 0.21], weight: 1 }, { type: 'sprite', sprite: 'sawhorse', h: [0.084, 0.09], weight: 1 }]
@@ -139,7 +139,7 @@ const m = {
   sprites: {
     cloud1: 'cloud1.webp', cloud2: 'cloud2.webp', cloud3: 'cloud3.webp', pigeon: { file: 'pigeon.webp', frames: 6, fps: 12 }, flame: { file: 'flame.webp', frames: 4, fps: 10 },
     heli: 'heli.webp', rotor: 'rotor.webp', trotor: 'trotor.webp', bus: 'bus.webp', truck: 'truck.webp', sedan: 'sedan.webp', taxi: 'taxi.webp', jeep: 'jeep.webp', wheel: 'wheel.webp', wheelT: 'wheelT.webp', backroad: 'backroad.webp',
-    dish: 'dish.webp', fan: 'fan.webp', lampmask: 'lampmask.webp', signmask: 'signmask.webp', flagR: 'flagR.webp',
+    dish: 'dish.webp', lampmask: 'lampmask.webp', signmask: 'signmask.webp', flagR: 'flagR.webp',
     lamp: 'lamp.webp', barrel: 'barrel.webp', dog: { file: 'dog.webp', frames: 5, fps: 2 }, pigeonsit: { file: 'pigeonsit.webp', frames: 2, fps: 0.9 }, bollardP: 'bollardP.webp',
     hydrant: 'hydrant.webp', bin: 'bin.webp', vbox: 'vbox.webp', vbox2: 'vbox2.webp', bench: 'bench.webp', bike: 'bike.webp', mailbox: 'mailbox.webp', barrier: 'barrier.webp', signpole: 'signpole.webp', sawhorse: 'sawhorse.webp',
     weeds: 'weeds.webp', drygrass: 'drygrass.webp', rubble: 'rubble.webp', cones: 'cones.webp', sandbags: 'sandbags.webp', drum: 'drum.webp'
@@ -155,7 +155,7 @@ const m = {
     { id: 'semaforo', tipo: 'semaforo trocando: verde, amarelo, vermelho (laco de 9 s)' },
     { id: 'janelas', tipo: 'janelas acesas do predio de tijolos e vitrine da lanchonete tremeluzindo' }, { id: 'holofote', tipo: 'holofote da guarita pulsando' },
     { id: 'bandeira', tipo: 'bandeira vermelha tremulando no mastro da guarita' },
-    { id: 'letreiro', tipo: 'painel do letreiro da lanchonete piscando em rosa' }, { id: 'helice_ar', tipo: 'helice do ar-condicionado girando' },
+    { id: 'letreiro', tipo: 'painel do letreiro da lanchonete piscando em rosa' },
     { id: 'antena_radar', tipo: 'antena de radar girando no mastro da estacao' },
     { id: 'fumaca_ruinas', tipo: 'fumaca escura subindo do predio em ruinas e poeira no entulho, com contorno' },
     { id: 'tambor_em_chamas', tipo: 'tambor com 3 chamas em quadros, brilho e faiscas' },

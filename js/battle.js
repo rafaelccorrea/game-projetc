@@ -533,7 +533,8 @@ function SPR(path,kind){
   return s;
 }
 /* variante com tingimento leve + brilho por raridade, pré-renderizada */
-const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2];
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2];   // (a raridade mais visível na arma fica para a versão seguinte; valores da v0.12.3)
+//   /* v0.12.4 (dono): raridades que repetem a imagem (tiers) ficam diferentes na mão: contorno/brilho e tinta na cor da raridade, crescente do Raro ao Lendário; o Básico fica sem nada */
 function skinSpr(s,r){
   if(!s||r<1) return s;
   if(!s.v) s.v={};
@@ -700,7 +701,9 @@ const LVUP='assets/anim/fx/levelup';
 function drawLevelUp(){ const f=B.lvfx; if(!f) return; const sh=sheetLoad(LVUP,true); if(!sh.ok){ if(sh.fail) B.lvfx=null; return; }
   const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
   const k=HS/256; ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
+const WING_DRAW=false;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
+  if(WING_DRAW&&H.deadP<0&&typeof drawWings==='function') drawWings(H);   // asa equipada: ATRÁS do corpo
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
   const sk=H.sk, ws=H.ws, key=heroKey(sk), t=H.t;
   const body0=SPR(hp('hero',sk.e,tierOf(sk.r)),'hero');
@@ -779,7 +782,8 @@ const ART_ON={
      Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
      as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
-  pistol_era4:false,   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
+  pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
+  //   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
   s1_era2_t0:true, s1_era2_t1:true, s1_era2_t2:true,                                       // golpe básico com rastro (kael_attack_trail_era2_t<tier>)
   s2_era2_t0:true, s2_era2_t1:true, s2_era2_t2:true,                                       // Corte Giratório (kael_spin_era2_t<tier>)
@@ -918,7 +922,7 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); HM.wing=heroLook().wing; { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   const ultOn=!!(B.act&&B.act.type==='s3');
   if(!ultOn){ drawHero(HM); drawLevelUp(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
@@ -1029,7 +1033,7 @@ function drawHeroPreview(c,look,dt){
   const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, hgt=c.clientHeight; if(!w||!hgt) return;
   if(c.width!==Math.round(w*dpr)||c.height!==Math.round(hgt*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(hgt*dpr); }
   const x=c.getContext('2d'), k=c.height/HS; x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,c.width/k+2,HS+2);
-  hpvT+=dt||0; HPVW.t=hpvT; HPVW.sk=look.armor; HPVW.ws=look.weapon; HPVW.x=(c.width/k)/2; HPVW.gy=HS*243/256;
+  hpvT+=dt||0; HPVW.t=hpvT; HPVW.sk=look.armor; HPVW.ws=look.weapon; HPVW.wing=look.wing; HPVW.x=(c.width/k)/2; HPVW.gy=HS*243/256;
   if(hpvWs!==look.weapon){ hpvWs=look.weapon; preloadAssets(); }
   ctx=x; try{ drawHero(HPVW); }finally{ ctx=mainCtx; }
 }

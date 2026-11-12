@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Guilda</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<!-- Guilda v2 (refeita após reprovação: "visual fraco, falta o social, chefe e trocas sem graça").
+     Layout novo: sem barra de baixo, header da Batalha V2 com VOLTAR, responsivo (100dvh, largura até 640).
+     SEDE VIVA: salão da guilda ilustrado em camadas CSS/SVG (paredes de pedra, estandartes da cor da guilda tremulando, lareira e tochas acesas,
+     emblema grande animado, portão do chefe com o cenário aprovado da era 2 e o Dragão Rubro atrás das grades). Membros online = Kael recolorido
+     andando/parados no chão, com título e nome em cima e balões de fala (frases prontas). Locais clicáveis: Mesa de guerra (Torneio do Poder),
+     Portão do chefe, Mercador (loja de Brasões), Mastro dos estandartes (Estandartes da guilda), Quadro de pedidos (trocas).
+     SOCIAL: feed ao vivo, conquistas, líder em destaque, membros (cargo/poder/online), ranking interno da semana com pódio, chat só com frases prontas.
+     CHEFE: cena grande, vida coletiva com marcos 25/50/75/100% (baús), ataque em grupo animado, números de dano, contribuição e ranking de dano.
+     TROCAS: mural com cartões de item pendurados (moldura de raridade, estrelas), Doar com o item voando até o membro, regras em resumo.
+     Regras da spec (reports/spec-guildas.md): até 30 membros, guilda libera no Nv. 32 (ajuste do PO), moeda Brasões, Estandartes ATK +5% / Vida +5% / DEF +3% no máximo.
+     Depende de servidor: tudo é PRÉVIA ("abre com o online"). Preços em Brasões, metas e XP de estandarte = valores de PROTÓTIPO; quantidades de prêmio = [QTD]. -->
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+button:active{transform:scale(.96)}
+.ol{text-shadow:1px 0 0 #120c08,-1px 0 0 #120c08,0 1px 0 #120c08,0 -1px 0 #120c08,0 2px 3px rgba(0,0,0,.7)}
+.lil{font-family:'Lilita One',sans-serif;font-weight:400}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shn{0%,55%{background-position:160% 0}100%{background-position:-60% 0}}
+@keyframes twk{0%,100%{transform:scale(.2);opacity:0}50%{transform:scale(1.25);opacity:1}}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-1600px}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bdgP{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes ei{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.035)}}
+
+/* ===== HEADER NOVO (igual Batalha tela cheia V2 / Torneio do Poder) ===== */
+.nhApp{position:relative;width:100%;height:100vh;height:100dvh;min-height:520px;overflow:hidden;display:flex;flex-direction:column;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.nhGl{background:rgba(16,11,8,.56);-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2);border:1px solid rgba(255,236,200,.16);box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08)}
+.nh{position:relative;z-index:20;flex:none;display:flex;align-items:center;gap:8px;min-height:60px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:linear-gradient(180deg,rgba(12,8,6,.92),rgba(12,8,6,.62));border-bottom:1px solid rgba(255,236,200,.12)}
+.nhBk{width:44px;height:44px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#f6ecdf;text-decoration:none;padding:0;transition:transform .12s}
+.nhBk:active{transform:scale(.9)}
+.nhT{flex:1;min-width:0;margin:0;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(18px,5.6vw,24px);line-height:1.15;color:#fff;text-shadow:0 2px 0 #120c08,0 0 8px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nhP{flex:none;display:flex;align-items:center;gap:6px}
+.nhB{height:44px;display:flex;align-items:center;padding:0;border:0;background:none;text-decoration:none;color:#f6ecdf}
+.nhB:active .nhPill{transform:scale(.94)}
+.nhPill{height:38px;display:flex;align-items:center;gap:5px;padding:0 10px 0 6px;border-radius:999px;color:#f6ecdf}
+.nhPill svg{width:24px;height:24px;flex:none}
+.nhPill b{font-size:13.5px;font-weight:900}
+.nhBody{position:relative;flex:1;min-height:0;overflow:hidden}
+.nhWrap{width:100%;max-width:640px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:6px;padding:8px 12px max(10px,env(safe-area-inset-bottom))}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;animation:paneIn .3s ease-out both}
+@keyframes paneIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.inUp{animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes inUp{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.badge{display:inline-block;font-size:10px;font-weight:900;line-height:16px;padding:0 6px;border-radius:6px;background:#ffc94a;color:#2a1403;animation:bdgP 1.2s ease-in-out infinite}
+.note{font-size:clamp(11px,3.1vw,12.5px);font-weight:800;color:#c9b9a2;line-height:1.3}
+.dot{position:absolute;top:2px;right:4px;min-width:18px;height:18px;border-radius:9px;background:#ff3b30;color:#fff;font-family:Nunito,sans-serif;font-size:10.5px;font-weight:900;line-height:18px;padding:0 4px;text-align:center;animation:bdgP 1.2s ease-in-out infinite}
+.ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-weight:900;font-size:13px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:6px}
+.seg{flex:none;display:flex;gap:4px}
+.seg button{flex:1;min-height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;font-weight:900;font-size:13px;padding:0 6px}
+.seg button[aria-pressed="true"]{border-color:#ffc94a;background:#3a2c1f;color:#ffc94a}
+.tabs{flex:none;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px;padding:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b}
+.tab{min-width:0;min-height:48px;border:0;border-radius:10px;background:transparent;color:#c9b9a2;font-family:'Lilita One',sans-serif;font-size:clamp(12.5px,3.8vw,16px);line-height:1.05;padding:0 3px;position:relative;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab svg{width:19px;height:19px;flex:none}
+.tab[aria-selected="true"]{background:#3a2c1f;color:#ffc94a;box-shadow:inset 0 -3px 0 #ffc94a}
+.tab[aria-selected="true"] svg{animation:tabI 1.6s ease-in-out infinite}
+@keyframes tabI{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.gold{width:100%;min-height:54px;border:0;border-radius:16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:clamp(17px,5.2vw,22px);box-shadow:0 6px 0 #8a4f0c;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;padding:0 10px}
+.gold::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:300% 100%;animation:shn 2.6s ease-in-out infinite;pointer-events:none}
+.gold.pulse{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 22px rgba(255,201,74,.9)}}
+.gold.red{background:linear-gradient(180deg,#ff8a6a,#d8261a);color:#fff;box-shadow:0 6px 0 #6e1408;text-shadow:0 2px 0 #6e1408}
+.gold.red.pulse{animation:pulseR 1.3s ease-in-out infinite}
+@keyframes pulseR{0%,100%{box-shadow:0 6px 0 #6e1408,0 0 0 rgba(255,90,78,0)}50%{box-shadow:0 6px 0 #6e1408,0 0 24px rgba(255,90,78,.95)}}
+.gold.off{background:#4a3a2b;color:#c9b9a2;box-shadow:0 6px 0 #2a1f16;text-shadow:none}
+.gold.off::after{display:none}
+.grn{min-height:44px;border:0;border-radius:12px;background:linear-gradient(180deg,#9ff0a6,#3fae3c);color:#0d2410;font-family:'Lilita One',sans-serif;font-size:16px;box-shadow:0 4px 0 #1f6a1d;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px}
+.grn.pulse{animation:gP 1.2s ease-in-out infinite}
+@keyframes gP{0%,100%{box-shadow:0 4px 0 #1f6a1d,0 0 0 rgba(95,208,104,0)}50%{box-shadow:0 4px 0 #1f6a1d,0 0 16px rgba(95,208,104,.95)}}
+.grn.off{background:#3a2c1f;color:#c9b9a2;box-shadow:0 4px 0 #1d1611;font-family:Nunito,sans-serif;font-size:12px;font-weight:900}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:80;max-width:92%;padding:10px 14px;border-radius:14px;background:#0e0a07;border:2px solid #ffc94a;font-size:13px;font-weight:900;text-align:center;animation:toast 2.6s ease both}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-10px)}12%,82%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.live{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:900;color:#fff;background:#d8261a;border-radius:6px;padding:0 6px;line-height:16px;flex:none}
+.live i{width:6px;height:6px;border-radius:50%;background:#fff;animation:blink 1s steps(1) infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:.2}}
+.onDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#5fd068;box-shadow:0 0 0 0 rgba(95,208,104,.8);animation:onP 1.6s ease-out infinite;flex:none}
+@keyframes onP{0%{box-shadow:0 0 0 0 rgba(95,208,104,.8)}100%{box-shadow:0 0 0 7px rgba(95,208,104,0)}}
+.offDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#6a5a4a;flex:none}
+
+/* Kael aprovado (folhas) */
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite;pointer-events:none}
+.krun{background-image:url(/_blob/8afa0095963300992a571cfceba1ffe4);background-size:800% 100%;background-repeat:no-repeat;animation:sheet .66s steps(8, jump-none) infinite;pointer-events:none}
+.katk{background-image:url(/_blob/5aefbf9aed07e3825a987748e552e61c);background-size:1700% 100%;background-repeat:no-repeat;animation:sheet .75s steps(17, jump-none) infinite;pointer-events:none}
+.au13{background-image:url(/_blob/76eb68fb1277fd16b380293b2c5b5c77);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite;pointer-events:none}
+.au10{background-image:url(/_blob/12c1278cafbd0597e44a6ed8d6a27ec4);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite;pointer-events:none}
+.au7{background-image:url(/_blob/77c79b0f46d2e8ae8b53d9f6308c3206);background-size:1600% 100%;background-repeat:no-repeat;animation:sheet 1.333s steps(16, jump-none) infinite;pointer-events:none}
+.walk{animation-duration:.95s}
+.sp{position:absolute;inset:0}
+.flp{position:absolute;inset:0;transition:transform .15s}
+/* cabeça do Kael num círculo (lista) */
+.qa{position:relative;width:36px;height:36px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);border:2px solid #5a4430;flex:none}
+.qa .kidle{position:absolute;width:182%;height:182%;left:-41%;top:-10%;display:block}
+.qa.on{border-color:#5fd068}
+.qa.ld{border-color:#ffc94a;box-shadow:0 0 8px rgba(255,201,74,.7)}
+
+/* emblema */
+.emb{position:relative;display:block;flex:none;aspect-ratio:48/56}
+.emb svg{width:100%;height:100%;display:block;overflow:visible;animation:embG 2.6s ease-in-out infinite}
+@keyframes embG{0%,100%{filter:drop-shadow(0 0 2px var(--ec)) drop-shadow(0 2px 0 rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 10px var(--ec)) drop-shadow(0 2px 0 rgba(0,0,0,.6))}}
+.emb .sym{transform-box:view-box;transform-origin:24px 28px;animation:symW 3.2s ease-in-out infinite}
+@keyframes symW{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-4deg)}}
+.crest{flex:none}
+
+/* barra da guilda */
+.gBar{flex:none;display:flex;align-items:center;gap:9px;min-height:62px;padding:5px 8px;border-radius:16px;background:linear-gradient(90deg,#5a1a14,#2a1d14 55%,#1d1611);border:2px solid #d9a441;position:relative;overflow:hidden}
+.gBar::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,230,170,.16) 50%,transparent 65%);background-size:300% 100%;animation:shn 4s ease-in-out infinite;pointer-events:none}
+.xpb{position:relative;height:9px;border-radius:5px;background:#0e0a07;border:1px solid #000;overflow:hidden}
+.xpb i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ffb21e,#ffe07a);animation:xpp 2s ease-in-out infinite}
+@keyframes xpp{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)}}
+.gChip{display:flex;align-items:center;gap:5px;padding:2px 7px;border-radius:9px;background:rgba(14,10,7,.8);border:1px solid #4a3a2b;font-size:11.5px;font-weight:900;white-space:nowrap}
+
+/* ===== SALÃO DA GUILDA ===== */
+.hall{position:relative;flex:1;min-height:300px;border-radius:18px;overflow:hidden;border:2px solid #d9a441;box-shadow:inset 0 0 0 2px #5a3a12;background:#1e140d;isolation:isolate}
+.hWall{position:absolute;left:0;right:0;top:0;height:63%;overflow:hidden}
+.hWall svg{position:absolute;inset:0;width:100%;height:100%}
+.hShade{position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 50% 92%,rgba(255,140,50,.42),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 28%,rgba(0,0,0,.1) 80%,rgba(0,0,0,.35));pointer-events:none}
+.wains{position:absolute;left:0;right:0;bottom:0;height:13%;background:repeating-linear-gradient(90deg,#4a2c18 0 36px,#3a2212 36px 38px),linear-gradient(180deg,#6a4426,#3a2212);background-blend-mode:multiply;border-top:3px solid #8a5a2a;box-shadow:0 -2px 0 #2a1608}
+.beam{position:absolute;left:0;right:0;top:0;height:5%;min-height:16px;background:linear-gradient(180deg,#5a3a20,#3a2212);border-bottom:3px solid #2a1608;box-shadow:0 4px 8px rgba(0,0,0,.5);z-index:3}
+.hFloor{position:absolute;left:0;right:0;top:62%;bottom:0;overflow:hidden;background:#3a2414}
+.hPlane{position:absolute;left:-60%;right:-60%;top:0;height:160%;transform-origin:50% 0;transform:perspective(240px) rotateX(46deg);background:repeating-linear-gradient(90deg,#6b4428 0 46px,#55361f 46px 48px,#704a2c 48px 94px,#4a2c18 94px 96px)}
+.carpet{position:absolute;left:45%;width:10%;top:0;bottom:0;background:linear-gradient(90deg,#d9a441 0 6%,#8e1d17 6% 12%,#b0261d 12% 88%,#8e1d17 88% 94%,#d9a441 94%);box-shadow:0 0 12px rgba(0,0,0,.5)}
+.carpet::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 40px,rgba(255,201,74,.35) 40px 44px)}
+.fGlow{position:absolute;left:20%;right:20%;top:-10%;height:60%;background:radial-gradient(ellipse at 50% 0,rgba(255,150,60,.5),transparent 70%);animation:flick 1.6s ease-in-out infinite;pointer-events:none}
+.fShade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,0) 45%,rgba(0,0,0,.25));pointer-events:none}
+.light{position:absolute;inset:0;pointer-events:none;z-index:9;background:radial-gradient(ellipse 70% 60% at 50% 55%,rgba(255,170,80,.12),transparent 70%),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.45));animation:flick 2.2s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:.82}20%{opacity:1}45%{opacity:.75}70%{opacity:.95}}
+.mote{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffe9b0;box-shadow:0 0 4px #ffd08a;pointer-events:none;z-index:9;animation:mote 7s linear infinite;opacity:0}
+@keyframes mote{0%{transform:translate(0,0);opacity:0}15%{opacity:.8}100%{transform:translate(26px,-90px);opacity:0}}
+/* bandeirolas */
+.pen{position:absolute;top:5%;width:5.4%;height:5%;min-height:14px;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;animation:penS 1.8s ease-in-out infinite;z-index:3}
+@keyframes penS{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+/* estandartes */
+.ban{position:absolute;top:4%;width:9.5%;height:33%;z-index:2}
+.ban svg{width:100%;height:100%;overflow:visible;display:block}
+.banC{transform-box:fill-box;transform-origin:50% 0;animation:banW 2.4s ease-in-out infinite}
+@keyframes banW{0%,100%{transform:skewX(0) scaleX(1)}25%{transform:skewX(4deg) scaleX(.96)}75%{transform:skewX(-4deg) scaleX(1.02)}}
+.banR{animation:banR 2.4s linear infinite}
+@keyframes banR{from{transform:translateY(-40%)}to{transform:translateY(40%)}}
+/* emblema grande */
+.bigE{position:absolute;left:50%;top:6%;width:clamp(62px,18%,112px);transform:translateX(-50%);z-index:4}
+.bigE .emb{width:100%}
+.eRays{position:absolute;left:50%;top:44%;width:230%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.32) 0deg 8deg,transparent 8deg 22deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 66%);mask:radial-gradient(circle,#000 18%,transparent 66%);animation:spin 16s linear infinite;pointer-events:none}
+.eRib{position:absolute;left:50%;top:94%;transform:translateX(-50%);padding:1px 10px;border-radius:6px;background:linear-gradient(180deg,#ffe07a,#c98a1a);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:12px;white-space:nowrap;box-shadow:0 2px 0 #6a3a08}
+.eGl{position:absolute;width:10px;height:10px;background:radial-gradient(circle,#fff 0 18%,rgba(255,240,170,.9) 22%,transparent 60%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:twk 2.2s ease-in-out infinite;pointer-events:none}
+/* lareira */
+.fp{position:absolute;left:38.5%;width:23%;top:33%;height:30%;z-index:2}
+.fpM{position:absolute;left:-10%;right:-10%;top:0;height:16%;background:linear-gradient(180deg,#a89480,#6e5e50);border:2px solid #2a1d14;border-radius:4px;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.fpS{position:absolute;left:0;right:0;top:14%;bottom:0;background:linear-gradient(90deg,#7a6a5a,#8e7e6c 20%,#7a6a5a 80%,#6a5a4a);border:2px solid #2a1d14;border-bottom:0}
+.fpO{position:absolute;left:16%;right:16%;top:28%;bottom:0;border-radius:48% 48% 0 0 / 30% 30% 0 0;background:radial-gradient(ellipse at 50% 100%,#3a1206,#120806 70%);box-shadow:inset 0 0 14px #000;overflow:hidden}
+.flm{position:absolute;bottom:8%;border-radius:50% 50% 35% 35% / 65% 65% 35% 35%;transform-origin:50% 100%;mix-blend-mode:screen;animation:flm .5s ease-in-out infinite alternate}
+@keyframes flm{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.92,1.12) skewX(4deg)}100%{transform:scale(1.06,.94) skewX(-4deg)}}
+.logs{position:absolute;left:12%;right:12%;bottom:2%;height:12%;border-radius:6px;background:linear-gradient(180deg,#5a3a20,#2a1608);box-shadow:0 0 8px rgba(255,120,40,.7)}
+.spk{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffd08a;box-shadow:0 0 6px 2px rgba(255,110,30,.9);pointer-events:none;animation:spk 1.8s linear infinite;opacity:0}
+@keyframes spk{0%{transform:translate(0,0);opacity:0}15%{opacity:1}100%{transform:translate(8px,-70px);opacity:0}}
+/* tochas */
+.tch{position:absolute;top:36%;width:5%;min-width:16px;height:12%;z-index:3}
+.tchG{position:absolute;left:50%;top:10%;width:500%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,170,70,.45),transparent 65%);animation:flick 1.3s ease-in-out infinite;pointer-events:none}
+.tchS{position:absolute;left:35%;width:30%;top:30%;bottom:0;background:linear-gradient(90deg,#3a2212,#6a4426,#3a2212);border-radius:2px}
+.tchF{position:absolute;left:10%;width:80%;top:-18%;height:52%;border-radius:50% 50% 40% 40% / 70% 70% 30% 30%;background:radial-gradient(ellipse at 50% 80%,#fff3c4,#ffb21e 40%,#ff5a1e 70%,transparent 72%);transform-origin:50% 100%;animation:flm .35s ease-in-out infinite alternate}
+/* locais clicáveis */
+.spot{position:absolute;padding:0;border:0;background:transparent;border-radius:10px;-webkit-tap-highlight-color:transparent}
+.spot:focus-visible{outline:3px solid #ffe07a}
+.spot:active{transform:scale(.97)}
+.plq{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:2px 8px;min-height:22px;border-radius:8px;background:linear-gradient(180deg,#5a3a20,#2e1c10);border:2px solid #d9a441;box-shadow:0 2px 0 rgba(0,0,0,.6);font-family:'Lilita One',sans-serif;font-size:clamp(10.5px,3vw,13px);line-height:1.05;color:#ffe9b0;white-space:nowrap;z-index:8;pointer-events:none;animation:plq 2.6s ease-in-out infinite}
+@keyframes plq{0%,100%{box-shadow:0 2px 0 rgba(0,0,0,.6),0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 2px 0 rgba(0,0,0,.6),0 0 10px rgba(255,201,74,.75)}}
+.pB{display:inline-block;min-width:16px;height:16px;border-radius:8px;background:#ff3b30;color:#fff;font-family:Nunito,sans-serif;font-size:10px;font-weight:900;line-height:16px;text-align:center;padding:0 4px;animation:bdgP 1.2s ease-in-out infinite}
+/* quadro de pedidos */
+.qd{left:2%;top:11%;width:22%;height:37%;z-index:2}
+.qdF{position:absolute;inset:0;border-radius:6px;border:4px solid #6a4426;box-shadow:0 4px 0 rgba(0,0,0,.45),inset 0 0 8px rgba(0,0,0,.5);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.08) 0 2px,transparent 3px) 0 0/9px 9px,radial-gradient(circle at 70% 60%,rgba(0,0,0,.12) 0 2px,transparent 3px) 0 0/11px 11px,linear-gradient(180deg,#b88a52,#9a6e3c)}
+.qdP{position:absolute;width:38%;height:30%;border-radius:3px;background:#f3e6c8;box-shadow:0 2px 3px rgba(0,0,0,.45);transform-origin:50% 0;animation:swg 2.6s ease-in-out infinite;display:flex;align-items:center;justify-content:center}
+.qdP::before{content:"";position:absolute;left:50%;top:-3px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:#d8261a;box-shadow:0 1px 0 #000}
+.qdP svg{width:62%;height:62%}
+@keyframes swg{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+/* portão do chefe */
+.gt{right:2%;top:7%;width:22%;height:56%;z-index:2}
+.gtA{position:absolute;inset:0;border-radius:50% 50% 0 0 / 24% 24% 0 0;background:linear-gradient(90deg,#5a4a3c,#8a7a68 50%,#5a4a3c);border:2px solid #2a1d14;box-shadow:0 0 18px rgba(255,60,30,.55);animation:gtG 1.8s ease-in-out infinite}
+@keyframes gtG{0%,100%{box-shadow:0 0 10px rgba(255,60,30,.4)}50%{box-shadow:0 0 26px rgba(255,60,30,.95)}}
+.gtI{position:absolute;left:12%;right:12%;top:7%;bottom:0;border-radius:50% 50% 0 0 / 22% 22% 0 0;overflow:hidden;background:#2a0c08}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{background-image:url(/_blob/76d16952e1067c864246744b4de14ec2)}
+.far2{background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431)}
+.mid2{background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3)}
+.gnd2{background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d)}
+.cld2{background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);animation:drift 90s linear infinite}
+.redF{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 80%,rgba(255,60,20,.55),rgba(80,0,0,.55) 60%,rgba(20,0,0,.75));mix-blend-mode:multiply;pointer-events:none}
+.pDrag{background-image:url(/_blob/6ab9e2e6c54dbef8618daf37fd11342f)}
+.port{background-size:contain;background-repeat:no-repeat;background-position:50% 100%;animation:ei 1.8s ease-in-out infinite;transform-origin:50% 100%}
+.gtBoss{position:absolute;left:-30%;right:-30%;bottom:2%;height:78%;filter:brightness(.45) sepia(1) hue-rotate(-30deg) saturate(3.5) drop-shadow(0 0 6px rgba(255,40,20,.9))}
+.bars{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 9px,#26262a 9px 12px,#4a4a52 12px 13px,transparent 13px 22px),repeating-linear-gradient(180deg,transparent 0 22px,#26262a 22px 25px);animation:bars 3s ease-in-out infinite;pointer-events:none}
+@keyframes bars{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.gtHp{position:absolute;left:8%;right:8%;bottom:6%;height:8px;border-radius:4px;background:#0e0a07;border:1px solid #000;overflow:hidden;z-index:8}
+.gtHp i{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(180deg,#ff9a8a,#c0392b)}
+.rRing{position:absolute;left:-10%;right:-10%;bottom:-6%;height:12%;border-radius:50%;border:2px dashed #ff5a3a;animation:spin 8s linear infinite;opacity:.8;pointer-events:none}
+/* mesa de guerra */
+.ms{left:29%;width:42%;top:76%;bottom:2%;z-index:7}
+.msT{position:absolute;left:0;right:0;top:0;height:48%;transform-origin:50% 100%;transform:perspective(160px) rotateX(34deg);border:4px solid #6a4426;border-radius:6px;background-color:#2a3a4a;background-image:url(/_blob/7ed135dbfe0ec47afa32938b1ad0e00d);background-size:100% auto;background-position:50% 62%;box-shadow:0 0 0 2px #2a1608,inset 0 0 12px rgba(0,0,0,.6);animation:mapP 14s ease-in-out infinite alternate}
+@keyframes mapP{from{background-position:50% 55%}to{background-position:50% 70%}}
+.msK{position:absolute;left:-2%;right:-2%;top:46%;height:30%;border-radius:0 0 6px 6px;background:linear-gradient(180deg,#7a4e2a,#4a2c18);border:2px solid #2a1608}
+.msL{position:absolute;top:74%;bottom:0;width:8%;background:linear-gradient(90deg,#3a2212,#5a3a20);border:1px solid #1a0c04}
+.msFl{position:absolute;width:16px;height:22px;z-index:2}
+.msFl svg{width:100%;height:100%;overflow:visible}
+.flagW{transform-box:fill-box;transform-origin:0 50%;animation:flagW 1.1s ease-in-out infinite}
+@keyframes flagW{0%,100%{transform:skewY(0) scaleX(1)}50%{transform:skewY(7deg) scaleX(.88)}}
+.cdl{position:absolute;width:5px;height:12px;background:#f3e6c8;border-radius:1px}
+.cdl::before{content:"";position:absolute;left:-2px;top:-8px;width:9px;height:9px;border-radius:50% 50% 40% 40%;background:radial-gradient(ellipse at 50% 70%,#fff3c4,#ffb21e 50%,transparent 72%);transform-origin:50% 100%;animation:flm .3s ease-in-out infinite alternate}
+/* mercador */
+.mc{left:0;width:27%;top:72%;bottom:0;z-index:7}
+.mcAw{position:absolute;left:-4%;right:2%;top:0;height:20%;background:repeating-linear-gradient(90deg,#c8322a 0 12px,#f3e6c8 12px 24px);border-radius:4px 4px 0 0;box-shadow:0 3px 0 rgba(0,0,0,.4);transform-origin:50% 0;animation:awS 3s ease-in-out infinite;z-index:2}
+.mcAw::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:7px;background:radial-gradient(circle at 6px 0,#c8322a 5px,transparent 6px) 0 0/12px 7px repeat-x}
+@keyframes awS{0%,100%{transform:skewX(0)}50%{transform:skewX(2deg)}}
+.mcPo{position:absolute;top:10%;bottom:0;width:6%;background:linear-gradient(90deg,#3a2212,#6a4426);z-index:1}
+.mcNpc{position:absolute;left:50%;bottom:22%;width:78%;aspect-ratio:1;transform:translateX(-50%);z-index:1}
+.mcC{position:absolute;left:2%;right:6%;bottom:0;height:42%;background:linear-gradient(180deg,#8a5a2a,#5a3a20);border:2px solid #2a1608;border-radius:4px 4px 0 0;z-index:3;box-shadow:inset 0 3px 0 rgba(255,220,160,.25)}
+.mcG{position:absolute;bottom:38%;z-index:4;object-fit:contain;animation:gShn 2.4s ease-in-out infinite}
+@keyframes gShn{0%,100%{filter:drop-shadow(0 0 2px rgba(255,220,120,.6)) brightness(1)}50%{filter:drop-shadow(0 0 8px rgba(255,220,120,1)) brightness(1.2)}}
+/* mastro dos estandartes (antigo altar) */
+.mt{right:0;width:27%;top:68%;bottom:0;z-index:7}
+.mtB{position:absolute;left:18%;right:18%;bottom:0;height:20%;background:linear-gradient(180deg,#8e7e6c,#5a4a3c);clip-path:polygon(12% 0,88% 0,100% 100%,0 100%);z-index:3}
+.mtRing{position:absolute;left:4%;right:4%;bottom:-4%;height:16%;border-radius:50%;background:repeating-conic-gradient(#ffc94a 0deg 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);animation:spin 7s linear infinite;z-index:2}
+.mtBeam{position:absolute;left:30%;right:30%;bottom:16%;height:90%;background:linear-gradient(0deg,rgba(255,201,74,.45),transparent);filter:blur(2px);animation:flick 1.8s ease-in-out infinite;z-index:1;pointer-events:none}
+.mtS{position:absolute;bottom:16%;width:30%;height:82%;z-index:4}
+.mtS svg{width:100%;height:100%;overflow:visible;display:block}
+/* membros no salão */
+.hm{position:absolute;aspect-ratio:1;transform:translate(-50%,-95%);background:none;border:0;padding:0;transition-property:left;transition-timing-function:linear;pointer-events:none}
+.hm:active{transform:translate(-50%,-95%)}
+.hmHit{position:absolute;left:25%;right:25%;top:22%;bottom:3%;pointer-events:auto;border-radius:12px}
+.hm:focus-visible .hmHit{outline:3px solid #ffe07a}
+.hmSh{position:absolute;left:30%;right:30%;bottom:1%;height:7%;border-radius:50%;background:rgba(0,0,0,.45)}
+.hmTag{position:absolute;left:50%;bottom:84%;transform:translateX(-50%);max-width:74%;display:flex;flex-direction:column;align-items:center;line-height:1.05;pointer-events:none;white-space:nowrap}
+.hmTag em{font-style:normal;font-size:9.5px;font-weight:900;color:#ffd84a;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.hmTag b{font-size:11px;font-weight:900;color:#fff;max-width:100%;overflow:hidden;text-overflow:ellipsis;padding:0 4px;border-radius:5px;background:rgba(14,10,7,.72)}
+.hmTag.ld em{color:#ffc94a}
+.hmTag.me b{background:#3fae3c;color:#0d2410}
+.bub{position:absolute;left:50%;bottom:calc(84% + 30px);transform:translateX(-50%);padding:4px 9px;border-radius:12px;background:#fff8e6;color:#2a1403;font-size:11.5px;font-weight:900;white-space:nowrap;box-shadow:0 3px 0 rgba(0,0,0,.4);z-index:12;animation:bubIn .35s cubic-bezier(.2,1.6,.4,1) both;pointer-events:none}
+.bub::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border:6px solid transparent;border-bottom:0;border-top-color:#fff8e6}
+@keyframes bubIn{from{opacity:0;transform:translateX(-50%) scale(.4)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+.crn{animation:crown 1.8s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes crown{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.12)}}
+
+/* feed ao vivo no salão */
+.feed{flex:none;display:flex;flex-direction:column;gap:3px;padding:6px 8px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b;text-align:left;width:100%;color:#f6ecdf}
+.fRow{display:flex;align-items:center;gap:7px;min-height:26px;font-size:12px;font-weight:800;line-height:1.2;animation:fIn .45s cubic-bezier(.2,1.2,.4,1) both}
+.fRow.new{animation:fIn .45s cubic-bezier(.2,1.2,.4,1) both,fNew 1.6s ease-out .45s}
+@keyframes fIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes fNew{0%{background:rgba(255,201,74,.25)}100%{background:transparent}}
+.fIc{width:24px;height:24px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;background:#0e0a07;border:1px solid var(--fc)}
+.fIc svg{width:15px;height:15px}
+.fTx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fAg{flex:none;font-size:10.5px;font-weight:900;color:#a89a86}
+.qRow{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.qBtn{position:relative;min-height:54px;border-radius:14px;border:2px solid #4a3a2b;background:linear-gradient(180deg,#3a2c1f,#271d15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-family:'Lilita One',sans-serif;font-size:clamp(11.5px,3.4vw,14px);color:#f6ecdf;padding:2px}
+.qBtn svg{width:22px;height:22px;animation:icB 2.6s ease-in-out infinite}
+@keyframes icB{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg) scale(1.06)}}
+.qBtn.go{border-color:#5fd068;animation:gP 1.2s ease-in-out infinite}
+
+/* ===== SOCIAL ===== */
+.card{flex:none;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b;padding:7px 9px}
+.lead{flex:none;display:flex;align-items:center;gap:10px;padding:6px 10px 6px 4px;border-radius:16px;background:linear-gradient(90deg,#4a3410,#1d1611 70%);border:2px solid #ffc94a;position:relative;overflow:hidden}
+.lead::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,230,170,.18) 50%,transparent 65%);background-size:300% 100%;animation:shn 3.4s ease-in-out infinite;pointer-events:none}
+.ldSt{position:relative;width:92px;height:92px;flex:none}
+.ldSt .ped{position:absolute;left:14%;right:14%;bottom:2%;height:12%;border-radius:50%;background:radial-gradient(ellipse,#ffc94a,transparent 70%);animation:pedP 1.6s ease-in-out infinite}
+@keyframes pedP{0%,100%{opacity:.55}50%{opacity:.95}}
+.ldSt .au{position:absolute;left:0;width:100%;height:125%;bottom:4%}
+.ldSt .k{position:absolute;inset:0;bottom:4%;top:-4%}
+.ach{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.achI{min-width:0;min-height:86px;border-radius:12px;background:#1d1611;border:2px solid var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:5px 3px;text-align:center;line-height:1.1;position:relative;overflow:hidden;animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+.achI::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);background-size:300% 100%;animation:shn 3s ease-in-out infinite;pointer-events:none}
+.achI.off{border-color:#4a3a2b;filter:saturate(.3)}
+.med{width:34px;height:34px;animation:icB 2.6s ease-in-out infinite}
+.achI b{font-size:10.5px;font-weight:900}
+.achI small{font-size:9.5px;font-weight:900;color:#c9b9a2}
+.fList{flex:1;min-height:0;display:flex;flex-direction:column;gap:3px;overflow:hidden;padding:6px 8px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b}
+.mRow{flex:none;min-height:50px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:3px 8px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;text-align:left;color:#f6ecdf;animation:rowIn .35s ease-out both;width:100%}
+@keyframes rowIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.mRow.me{border:2px solid #ffc94a;background:linear-gradient(90deg,#4a3214,#2a1f16)}
+.role{display:inline-block;font-size:9.5px;font-weight:900;line-height:15px;padding:0 5px;border-radius:5px;flex:none}
+.role.L{background:#ffc94a;color:#2a1403}
+.role.O{background:#2f86e0;color:#fff}
+.role.M{background:#4a3a2b;color:#e8dccb}
+.pager{height:44px;flex:none;display:flex;align-items:center;justify-content:center;gap:10px}
+.podium{flex:none;position:relative;height:184px;border-radius:16px;overflow:hidden;border:2px solid #d9a441;background:radial-gradient(ellipse at 50% 100%,#5a3a12,#1d1611 70%)}
+.podR{position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 100%,rgba(255,201,74,.14) 0deg 6deg,transparent 6deg 16deg);animation:podR 10s linear infinite;pointer-events:none}
+@keyframes podR{0%,100%{opacity:.6}50%{opacity:1}}
+.pod{position:absolute;bottom:0;width:31%;display:flex;flex-direction:column;align-items:center}
+.podB{width:100%;border-radius:8px 8px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:3px;font-family:'Lilita One',sans-serif;font-size:20px;color:#2a1403;box-shadow:inset 0 3px 0 rgba(255,255,255,.4)}
+.podK{position:relative;width:78%;aspect-ratio:1;margin-bottom:-4%}
+.podN{font-size:11px;font-weight:900;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1.15}
+.rRow{flex:none;min-height:44px;display:grid;grid-template-columns:26px auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:3px 8px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;animation:rowIn .35s ease-out both}
+.rRow.me{border:2px solid #ffc94a;background:linear-gradient(90deg,#4a3214,#2a1f16);animation:rowIn .35s ease-out both,meRow 1.6s ease-in-out .35s infinite}
+@keyframes meRow{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 14px rgba(255,201,74,.8)}}
+.chatBox{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;padding:8px;border-radius:14px;background:radial-gradient(ellipse at 50% 0,#2a1d14,#16110d 80%);border:1px solid #4a3a2b}
+.msg{display:flex;align-items:flex-end;gap:6px;animation:fIn .35s ease-out both}
+.msg.mine{flex-direction:row-reverse}
+.msgB{max-width:76%;padding:5px 10px;border-radius:14px 14px 14px 4px;background:#33271d;border:1px solid #4a3a2b;line-height:1.2}
+.msg.mine .msgB{border-radius:14px 14px 4px 14px;background:#2e4a1e;border-color:#5fd068}
+.msgB small{display:block;font-size:10.5px;font-weight:900;color:#ffd84a}
+.msgB span{font-size:13px;font-weight:800}
+.phr{flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.phr button{min-height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;font-weight:900;font-size:12.5px;padding:2px 6px;line-height:1.15}
+.phr button:active{border-color:#ffc94a;background:#3a2c1f}
+
+/* ===== CHEFE ===== */
+.bSt{position:relative;flex:1;min-height:260px;border-radius:18px;overflow:hidden;border:2px solid #ff5a3a;background:#120806}
+.bSt.shA{animation:shA .4s linear}
+.bSt.shB{animation:shB .4s linear}
+@keyframes shA{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}}
+@keyframes shB{0%,100%{transform:none}20%{transform:translate(-5px,2px)}40%{transform:translate(5px,-2px)}60%{transform:translate(-3px,1px)}80%{transform:translate(3px,0)}}
+.bLy{position:absolute;inset:0;filter:brightness(.55) sepia(.6) hue-rotate(-25deg) saturate(1.6)}
+.bFog{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 60%,rgba(255,60,20,.35),transparent 60%),linear-gradient(180deg,rgba(40,0,0,.5),rgba(0,0,0,0) 40%,rgba(0,0,0,.5));pointer-events:none}
+.mist{position:absolute;left:-20%;right:-20%;bottom:6%;height:30%;background:radial-gradient(ellipse 30% 50% at 30% 60%,rgba(255,90,60,.35),transparent 70%),radial-gradient(ellipse 30% 50% at 70% 50%,rgba(255,90,60,.35),transparent 70%);animation:mist 7s ease-in-out infinite alternate;pointer-events:none}
+@keyframes mist{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+.emb2{position:absolute;width:4px;height:4px;border-radius:50%;background:#ff8a3a;box-shadow:0 0 6px 2px #ff5a1e;animation:rise 2.4s ease-out infinite;opacity:0;pointer-events:none}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-140px);opacity:0}}
+.boss{position:absolute;right:-6%;top:80%;width:min(70%,360px);aspect-ratio:1;transform:translateY(-100%);z-index:3}
+.boss .rune{position:absolute;left:6%;right:6%;bottom:-7%;height:20%;border-radius:50%;background:repeating-conic-gradient(#ff5a3a 0deg 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);mask:radial-gradient(ellipse,transparent 40%,#000 46%,#000 64%,transparent 70%);animation:spin 6s linear infinite;opacity:.95}
+.boss .bAu{position:absolute;left:-14%;width:128%;height:150%;bottom:0;opacity:.95;filter:hue-rotate(-70deg) saturate(1.6)}
+.boss .bBody{position:absolute;inset:0}
+.boss .bBody.hit1{animation:bHit1 .35s ease-out}
+.boss .bBody.hit2{animation:bHit2 .35s ease-out}
+@keyframes bHit1{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(10px)}100%{filter:none;transform:none}}
+@keyframes bHit2{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(10px)}100%{filter:none;transform:none}}
+.roar{position:absolute;left:4%;right:30%;top:46%;height:34%;z-index:4;border-radius:50%;background:radial-gradient(ellipse at 100% 50%,rgba(255,240,170,.95),rgba(255,120,30,.8) 35%,rgba(255,40,10,.4) 60%,transparent 72%);mix-blend-mode:screen;transform-origin:100% 50%;animation:roar .8s ease-out both;pointer-events:none}
+@keyframes roar{0%{transform:scaleX(.1);opacity:0}30%{opacity:1}100%{transform:scaleX(1.1);opacity:0}}
+.bA{position:absolute;aspect-ratio:1;transform:translate(-50%,-95%);transition:left .5s linear;z-index:5}
+.bA .au{position:absolute;left:0;width:100%;height:125%;bottom:3%}
+.bA.hurt .flp{animation:hurtF .5s linear}
+@keyframes hurtF{0%,100%{filter:none}30%{filter:brightness(1.6) sepia(1) saturate(6) hue-rotate(-40deg)}}
+.bTag{position:absolute;left:50%;bottom:86%;transform:translateX(-50%);font-size:10.5px;font-weight:900;white-space:nowrap;padding:0 5px;border-radius:5px;background:rgba(14,10,7,.75)}
+.bTag.me{background:#3fae3c;color:#0d2410}
+.dmgF{position:absolute;font-family:'Lilita One',sans-serif;font-size:clamp(15px,4.6vw,20px);color:#fff;text-shadow:0 2px 0 #8a1a12,1px 0 0 #8a1a12,-1px 0 0 #8a1a12,0 -1px 0 #8a1a12;pointer-events:none;white-space:nowrap;z-index:7;display:flex;flex-direction:column;align-items:center;line-height:1}
+.dmgF small{font-family:Nunito,sans-serif;font-size:10px;font-weight:900;color:#ffe9b0;text-shadow:0 1px 2px #000}
+.dmgF.cr{font-size:clamp(19px,5.8vw,25px);color:#ffe07a}
+.dmgF.w0{animation:dmgA 1s ease-out both}
+.dmgF.w1{animation:dmgB 1s ease-out both}
+@keyframes dmgA{0%{transform:translateY(0) scale(.5);opacity:0}15%{transform:translateY(-6px) scale(1.3);opacity:1}100%{transform:translateY(-54px) scale(1);opacity:0}}
+@keyframes dmgB{0%{transform:translateY(0) scale(.5);opacity:0}15%{transform:translateY(-6px) scale(1.3);opacity:1}100%{transform:translateY(-54px) scale(1);opacity:0}}
+.slash{position:absolute;left:58%;top:38%;width:30%;aspect-ratio:1;z-index:6;pointer-events:none;border-radius:50%;background:radial-gradient(circle,#fff 0 10%,rgba(255,230,150,.9) 22%,transparent 60%);mix-blend-mode:screen}
+.slash.w0{animation:clashA .35s ease-out both}
+.slash.w1{animation:clashB .35s ease-out both}
+@keyframes clashA{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+@keyframes clashB{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+.combo{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:8;display:flex;flex-direction:column;align-items:center;font-family:'Lilita One',sans-serif;line-height:1;text-align:center;animation:combo 1.6s cubic-bezier(.2,1.4,.4,1) both;pointer-events:none;white-space:nowrap}
+.combo small{font-size:13px;color:#ffe9b0;letter-spacing:1px}
+.combo b{font-weight:400;font-size:clamp(28px,9vw,40px);color:#ffe07a;text-shadow:0 3px 0 #8a4f0c,0 0 16px rgba(255,150,40,.9)}
+@keyframes combo{0%{transform:translateX(-50%) scale(.3);opacity:0}20%{transform:translateX(-50%) scale(1.15);opacity:1}35%{transform:translateX(-50%) scale(1)}85%{opacity:1}100%{opacity:0}}
+.bPlate{position:absolute;left:8px;right:8px;top:8px;z-index:8;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;pointer-events:none}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;min-height:22px;border-radius:9px;background:rgba(14,10,7,.88);border:1px solid #5a4430;font-size:11px;font-weight:900;white-space:nowrap}
+.chip img{width:16px;height:16px;object-fit:contain}
+.chip.ok{border-color:#5fd068;color:#bff5c4}
+.hbar{position:relative;height:22px;border-radius:11px;background:#0e0a07;border:2px solid #000;overflow:hidden}
+.hbar i{position:absolute;right:0;top:0;bottom:0;background:linear-gradient(180deg,#ff9a8a,#c0392b);transition:width .5s ease-out}
+.hbar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:runL 1.8s linear infinite}
+@keyframes runL{from{background-position:-40% 0}to{background-position:140% 0}}
+.hbar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;white-space:nowrap}
+.hbar .mkr{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.8)}
+.chs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.chB{justify-self:end;position:relative;width:48px;height:46px;margin-right:-24px;border:0;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.chs .chB:last-child{margin-right:0}
+.chB img{width:34px;height:34px;object-fit:contain}
+.chB span{font-size:10px;font-weight:900;line-height:12px;padding:0 4px;border-radius:5px;background:#0e0a07;border:1px solid #4a3a2b}
+.chB.lock img{filter:grayscale(1) brightness(.6)}
+.chB.got img{filter:saturate(.4) brightness(.75)}
+.chB.ready img{animation:chR 1s ease-in-out infinite}
+@keyframes chR{0%,100%{transform:scale(1) rotate(0);filter:drop-shadow(0 0 4px #ffc94a)}50%{transform:scale(1.14) rotate(-6deg);filter:drop-shadow(0 0 14px #ffc94a)}}
+.chB.ready span{background:#ffc94a;color:#2a1403;border-color:#fff3c4}
+.chRay{position:absolute;left:50%;top:40%;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.5) 0deg 9deg,transparent 9deg 24deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 68%);mask:radial-gradient(circle,#000 22%,transparent 68%);animation:spin 6s linear infinite;pointer-events:none}
+.pips{display:flex;gap:4px}
+.pip{width:14px;height:14px;border-radius:50%;border:2px solid #ff8a6a;background:#ff5a4e;box-shadow:0 0 6px #ff5a4e}
+.pip.off{background:#2a1f16;border-color:#4a3a2b;box-shadow:none}
+.dmgRow{flex:none;min-height:42px;display:grid;grid-template-columns:24px auto minmax(0,1fr) auto;align-items:center;gap:7px;padding:2px 8px;border-radius:11px;background:#1d1611;border:1px solid #4a3a2b}
+.dmgRow.me{border:2px solid #ffc94a;background:linear-gradient(90deg,#4a3214,#2a1f16)}
+.dBar{height:6px;border-radius:3px;background:#0e0a07;overflow:hidden}
+.dBar i{display:block;height:100%;background:linear-gradient(90deg,#ff8a6a,#ffe07a)}
+
+/* ===== TROCAS: quadro de pedidos ===== */
+.rules{flex:none;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.rules .chip{background:#1d1611}
+.muralW{position:relative;flex:1;min-height:280px}
+.mural{position:absolute;inset:0;border-radius:16px;overflow:hidden;border:6px solid #6a4426;box-shadow:inset 0 0 0 2px #2a1608,inset 0 0 22px rgba(0,0,0,.55),0 4px 0 rgba(0,0,0,.45);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.07) 0 2px,transparent 3px) 0 0/11px 11px,radial-gradient(circle at 70% 60%,rgba(0,0,0,.12) 0 2px,transparent 3px) 0 0/14px 14px,linear-gradient(180deg,#a87a44,#8a5e30);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:10px;padding:14px 10px 10px}
+.rq{position:relative;min-height:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px 6px;border-radius:6px;background:linear-gradient(180deg,#f6ead0,#e8d6b0);color:#2a1403;box-shadow:0 4px 6px rgba(0,0,0,.45);transform-origin:50% -10px;animation:swg 3.2s ease-in-out infinite}
+.rq::before{content:"";position:absolute;left:50%;top:-7px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff8a7a,#b0261d 60%);box-shadow:0 2px 0 rgba(0,0,0,.5);z-index:2}
+.rq.mine{background:linear-gradient(180deg,#e6f4d6,#c8e4b0)}
+.rqW{display:flex;align-items:center;gap:5px;width:100%;min-width:0}
+.rqW .qa{width:28px;height:28px}
+.rqW span{min-width:0;display:flex;flex-direction:column;line-height:1.05}
+.rqW b{font-size:11.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rqW small{font-size:10px;font-weight:800;color:#6a4a2a;white-space:nowrap}
+.itF{position:relative;width:clamp(50px,15vw,70px);aspect-ratio:1;flex:none;border-radius:12px;border:3px solid var(--rc);background:radial-gradient(circle at 50% 35%,var(--rb2),var(--rb) 75%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px var(--rg),inset 0 0 10px rgba(0,0,0,.5);animation:itG 2.2s ease-in-out infinite}
+@keyframes itG{0%,100%{box-shadow:0 0 4px var(--rg),inset 0 0 10px rgba(0,0,0,.5)}50%{box-shadow:0 0 16px var(--rc),inset 0 0 10px rgba(0,0,0,.5)}}
+.itF svg{width:62%;height:62%;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6))}
+.itF::after{content:"";position:absolute;inset:0;border-radius:9px;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);background-size:300% 100%;animation:shn 2.8s ease-in-out infinite;pointer-events:none}
+.stars{display:flex;gap:1px;justify-content:center}
+.stars svg{width:11px;height:11px}
+.stars .on{animation:stT 1.8s ease-in-out infinite}
+@keyframes stT{0%,100%{filter:drop-shadow(0 0 1px #ffc94a)}50%{filter:drop-shadow(0 0 4px #ffc94a)}}
+.rqN{font-family:'Lilita One',sans-serif;font-size:clamp(13px,3.9vw,16px);line-height:1.05;text-align:center;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.rqM{font-size:10.5px;font-weight:800;color:#6a4a2a;text-align:center;line-height:1.15}
+.rq .grn{width:100%;margin-top:auto}
+.rqWait{width:100%;margin-top:auto;min-height:44px;border-radius:12px;background:rgba(74,58,43,.18);border:2px dashed #8a6a4a;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;font-weight:900;color:#5a3a20;line-height:1.15;padding:2px 6px}
+.stamp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%) rotate(-14deg);padding:3px 10px;border:3px solid #2f9a3a;border-radius:8px;color:#2f9a3a;font-family:'Lilita One',sans-serif;font-size:20px;background:rgba(246,234,208,.82);animation:stampIn .5s cubic-bezier(.2,1.6,.4,1) both;z-index:3;white-space:nowrap}
+@keyframes stampIn{from{transform:translate(-50%,-50%) rotate(-14deg) scale(2.2);opacity:0}to{transform:translate(-50%,-50%) rotate(-14deg) scale(1);opacity:1}}
+.flyW{position:absolute;z-index:20;width:54px;height:54px;margin:-27px 0 0 -27px;pointer-events:none;animation:flyM 1.1s cubic-bezier(.5,0,.4,1) both}
+@keyframes flyM{from{left:50%;top:104%}to{left:var(--fx);top:var(--fy)}}
+.flyI{position:absolute;inset:0;animation:flyA 1.1s ease-in-out both}
+@keyframes flyA{0%{transform:scale(.6) rotate(0)}50%{transform:scale(1.35) rotate(200deg) translateY(-30px)}100%{transform:scale(.4) rotate(360deg)}}
+.flyI .itF{width:54px}
+.flyT{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;background:#ffe07a;box-shadow:0 0 10px 4px rgba(255,201,74,.9);animation:twk .5s ease-in-out infinite}
+.burst{position:absolute;z-index:19;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,250,220,.95),rgba(255,201,74,.5) 35%,transparent 68%);animation:burst .7s ease-out 1.05s both}
+@keyframes burst{0%{transform:scale(.2);opacity:0}30%{opacity:1}100%{transform:scale(1.5);opacity:0}}
+.trBar{flex:none;display:flex;gap:6px;align-items:stretch}
+.lim{display:flex;flex-direction:column;justify-content:center;gap:1px;padding:2px 10px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b;font-size:11.5px;font-weight:900;line-height:1.2;white-space:nowrap}
+
+/* folhas */
+.sheetBg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.62);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .25s both}
+.sheet{position:relative;width:100%;max-width:560px;max-height:90%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:12px 14px max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px;animation:sheetUp .35s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.shHead{display:flex;align-items:center;gap:10px}
+.invG{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.invC{position:relative;min-height:118px;border-radius:12px;border:2px solid #4a3a2b;background:#1d1611;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 3px;text-align:center;line-height:1.1;color:#f6ecdf}
+.invC[aria-pressed="true"]{border-color:#ffc94a;background:#3a2c1f;box-shadow:0 0 12px rgba(255,201,74,.6)}
+.invC.lk{opacity:.72}
+.invC .itF{width:52px}
+.invC b{font-size:11px;font-weight:900}
+.invC small{font-size:9.5px;font-weight:900;color:#c9b9a2}
+.lkB{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:#0e0a07;border:1px solid #ff5a4e;display:flex;align-items:center;justify-content:center}
+.pickG{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.pickG button,.pickR button{min-height:46px;border-radius:10px;border:2px solid #4a3a2b;background:#33271d;padding:2px;display:flex;align-items:center;justify-content:center}
+.pickG button svg{width:24px;height:24px}
+.pickG button[aria-pressed="true"],.pickR button[aria-pressed="true"]{border-color:#ffc94a;background:#3a2c1f}
+.pickR{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.pickR button{font-size:11px;font-weight:900}
+.rulesL{display:flex;flex-direction:column;gap:5px}
+.rulesL span{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:800;line-height:1.3;padding:6px 8px;border-radius:10px;background:#1d1611;border:1px solid #4a3a2b}
+.rulesL b{flex:none;width:20px;height:20px;border-radius:50%;background:#ffc94a;color:#2a1403;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+
+/* ===== MERCADOR / ESTANDARTES / MISSÕES ===== */
+.shopG{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:6px}
+.shI{position:relative;min-height:0;border-radius:14px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 30%,var(--rb2),#1d1611 75%);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:7px 4px 5px;text-align:center;line-height:1.1;animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+.shI.lk{filter:saturate(.3) brightness(.75)}
+.shIc{width:46px;height:46px;animation:icB 2.6s ease-in-out infinite}
+.shIc svg,.shIc img{width:100%;height:100%;object-fit:contain}
+.shI b{font-size:11.5px;font-weight:900}
+.shI small{font-size:10px;font-weight:900;color:#c9b9a2}
+.shI .grn{width:100%;min-height:44px;font-size:14px}
+.pop{animation:popI .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes popI{0%{transform:scale(1)}40%{transform:scale(1.15)}100%{transform:scale(1)}}
+.stdG{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.std{flex:1;min-height:0;display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:16px;background:linear-gradient(90deg,var(--sd),#1d1611 60%);border:2px solid var(--sc);animation:inUp .4s cubic-bezier(.2,1.2,.4,1) both}
+.stdF{position:relative;width:72px;height:88px}
+.stdF svg{width:100%;height:100%;overflow:visible}
+.stdF.up{animation:stdUp .8s ease-out}
+@keyframes stdUp{0%{filter:none}30%{filter:brightness(2) drop-shadow(0 0 16px #ffe07a)}100%{filter:none}}
+.lvP{display:flex;gap:3px}
+.lvP i{flex:1;height:9px;border-radius:3px;background:#0e0a07;border:1px solid #4a3a2b}
+.lvP i.on{background:linear-gradient(180deg,#ffe07a,#f2a826);border-color:#ffe07a;animation:xpp 2s ease-in-out infinite}
+.lvP i.cap{background:repeating-linear-gradient(45deg,#2a1f16 0 3px,#3a2c1f 3px 6px)}
+.mRowB{flex:none;min-height:50px;display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 8px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b}
+.pBar{height:8px;border-radius:4px;background:#0e0a07;border:1px solid #000;overflow:hidden;margin-top:3px}
+.pBar i{display:block;height:100%;background:linear-gradient(90deg,#5fd068,#c4f27a)}
+.donG{flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.don{min-height:112px;border-radius:14px;border:2px solid var(--rc);background:#1d1611;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:6px 4px;text-align:center;line-height:1.1;color:#f6ecdf}
+.don img{width:34px;height:34px;object-fit:contain;animation:icB 2.4s ease-in-out infinite}
+.don b{font-size:11.5px;font-weight:900}
+.don small{font-size:10px;font-weight:900;color:#bff5c4}
+.don.done{opacity:.55;border-color:#4a3a2b}
+.don.go{animation:gP 1.2s ease-in-out infinite}
+</style>
+</helmet>
+<div class="nhApp" style="background: #16110d">
+
+  <div class="nh">
+    <sc-if value="{{isHall}}" hint-placeholder-val="{{true}}">
+      <a href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}" class="nhBk nhGl" aria-label="Voltar para a batalha">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </a>
+    </sc-if>
+    <sc-if value="{{notHall}}" hint-placeholder-val="{{false}}">
+      <button onClick="{{goHall}}" class="nhBk nhGl" aria-label="Voltar para o salão da guilda">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+    </sc-if>
+    <span class="nhT" role="heading" aria-level="1">{{title}}</span>
+    <div class="nhP">
+      <button class="nhB" onClick="{{openShop}}" aria-label="{{brAria}}">
+        <span class="nhPill nhGl">
+          <svg class="crest" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16.5 16.5 20 12 22 C7.5 20 4 16.5 4 11 V5 Z" fill="#c8322a" stroke="#ffe07a" stroke-width="1.8"></path><path d="M12 6 L13.6 10 H17.6 L14.4 12.6 L15.6 16.6 L12 14.2 L8.4 16.6 L9.6 12.6 L6.4 10 H10.4 Z" fill="#ffe07a"></path></svg>
+          <b>{{brTx}}</b>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}"><div class="toast" role="status">{{toast}}</div></sc-if>
+
+  <div class="nhBody" style="background: radial-gradient(ellipse at 50% 10%, #3a2414 0%, #1d1611 45%, #16110d 80%)"><div class="nhWrap">
+
+    <!-- ===================== SEDE: SALÃO DA GUILDA ===================== -->
+    <sc-if value="{{isHall}}" hint-placeholder-val="{{true}}">
+      <div class="pane">
+        <div class="gBar inUp">
+          <span class="emb" style="--ec: #ff5a4e; width: 44px">
+            <svg viewBox="0 0 48 56" aria-hidden="true"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="#c8322a" stroke="#ffe9b0" stroke-width="2"></path><path d="M24 5 L42 11 V19 H6 V11 Z" fill="rgba(255,255,255,.18)"></path><g class="sym"><path d="M7 4 H17 M7 20 H17 M8 4 C8 9 12 10 12 12 C12 14 8 15 8 20 M16 4 C16 9 12 10 12 12 C12 14 16 15 16 20" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; position: relative; z-index: 1">
+            <span style="display: flex; align-items: center; gap: 6px; min-width: 0">
+              <span class="lil ol" style="font-size: clamp(16px,4.8vw,20px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0">Guardiões do Tempo</span>
+              <span class="badge" style="flex: none">PRÉVIA</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 6px">
+              <span class="lil" style="font-size: 13px; color: #ffe07a; flex: none">Nv. {{gLv}}</span>
+              <span class="xpb" style="flex: 1" role="progressbar" aria-label="{{gXpAria}}"><i style="width: {{gXpW}}"></i></span>
+              <span style="font-size: 10.5px; font-weight: 900; color: #e8dccb; flex: none">{{gXpTx}}</span>
+            </span>
+          </span>
+          <span style="flex: none; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; position: relative; z-index: 1">
+            <span class="gChip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffe07a" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M9 11 A4 4 0 1 0 9.01 11 M2 21 C2 16 16 16 16 21 M16 4 A4 4 0 0 1 16 12 M18 15 C21 16 22 18 22 21"></path></svg>{{memTx}}</span>
+            <span class="gChip"><span class="onDot"></span>{{onTx}}</span>
+          </span>
+        </div>
+
+        <div class="hall" role="group" aria-label="Salão da guilda: toque num local ou num membro">
+          <!-- parede de pedra -->
+          <div class="hWall">
+            <svg aria-hidden="true"><defs><pattern id="gBrk" width="64" height="34" patternUnits="userSpaceOnUse"><rect width="64" height="34" fill="#2e2219"></rect><rect x="1.5" y="1.5" width="61" height="15" rx="2" fill="#5a483a"></rect><rect x="-31" y="18.5" width="61" height="14" rx="2" fill="#524236"></rect><rect x="33" y="18.5" width="61" height="14" rx="2" fill="#5e4c3e"></rect><rect x="4" y="3" width="30" height="2" fill="rgba(255,240,210,.12)"></rect></pattern></defs><rect width="100%" height="100%" fill="url(#gBrk)"></rect></svg>
+            <div class="hShade"></div>
+            <div class="wains"></div>
+          </div>
+          <div class="beam"></div>
+          <sc-for list="{{pens}}" as="p" hint-placeholder-count="12"><span class="pen" style="left: {{p.x}}; background: {{p.c}}; animation-delay: {{p.d}}"></span></sc-for>
+          <!-- chão em perspectiva com tapete da guilda -->
+          <div class="hFloor"><div class="hPlane"><div class="carpet"></div></div><div class="fGlow"></div><div class="fShade"></div></div>
+
+          <!-- estandartes da cor da guilda -->
+          <sc-for list="{{bans}}" as="b" hint-placeholder-count="2">
+            <div class="ban" style="left: {{b.x}}" aria-hidden="true">
+              <svg viewBox="0 0 40 124" preserveAspectRatio="none">
+                <rect x="0" y="0" width="40" height="5" rx="2" fill="#8a5a2a" stroke="#2a1608" stroke-width="1"></rect>
+                <circle cx="2" cy="2.5" r="3" fill="#ffc94a"></circle><circle cx="38" cy="2.5" r="3" fill="#ffc94a"></circle>
+                <g class="banC" style="animation-delay: {{b.d}}">
+                  <path d="M4 5 H36 V108 L20 96 L4 108 Z" fill="#a8241c" stroke="#ffc94a" stroke-width="2.4" stroke-linejoin="round"></path>
+                  <path d="M8 5 H32 V100 L20 90 L8 100 Z" fill="#c8322a"></path>
+                  <path d="M7 14 H33" stroke="#ffc94a" stroke-width="2"></path>
+                  <path d="M7 4 C10 4 10 8 14 8 M33 4 C30 4 30 8 26 8" stroke="#2a1608" stroke-width="1" fill="none"></path>
+                  <path d="M14 34 H26 M14 62 H26 M15 34 C15 44 20 45 20 48 C20 51 15 52 15 62 M25 34 C25 44 20 45 20 48 C20 51 25 52 25 62" fill="none" stroke="#ffe9b0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </g>
+              </svg>
+            </div>
+          </sc-for>
+
+          <!-- emblema grande animado sobre a lareira -->
+          <div class="bigE" aria-hidden="true">
+            <span class="eRays"></span>
+            <span class="eGl" style="left: -18%; top: 12%"></span>
+            <span class="eGl" style="left: 104%; top: 30%; animation-delay: .8s"></span>
+            <span class="eGl" style="left: 46%; top: -14%; animation-delay: 1.5s"></span>
+            <span class="emb" style="--ec: #ff7a4a">
+              <svg viewBox="0 0 48 56"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="#c8322a" stroke="#ffe07a" stroke-width="2"></path><path d="M24 5 L42 11 V19 H6 V11 Z" fill="rgba(255,255,255,.2)"></path><g class="sym"><path d="M7 4 H17 M7 20 H17 M8 4 C8 9 12 10 12 12 C12 14 8 15 8 20 M16 4 C16 9 12 10 12 12 C12 14 16 15 16 20" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+            </span>
+            <span class="eRib">GDT · Nv. {{gLv}}</span>
+          </div>
+
+          <!-- lareira -->
+          <div class="fp" aria-hidden="true">
+            <div class="fpS"></div>
+            <div class="fpO">
+              <span class="flm" style="left: 14%; width: 40%; height: 70%; background: radial-gradient(ellipse at 50% 85%, #ffb21e, #ff5a1e 55%, transparent 72%)"></span>
+              <span class="flm" style="left: 44%; width: 42%; height: 80%; background: radial-gradient(ellipse at 50% 85%, #ffb21e, #ff4a1e 55%, transparent 72%); animation-delay: .17s"></span>
+              <span class="flm" style="left: 30%; width: 40%; height: 56%; background: radial-gradient(ellipse at 50% 85%, #fff3c4, #ffd04a 45%, transparent 72%); animation-delay: .3s"></span>
+              <span class="logs"></span>
+              <span class="spk" style="left: 40%; bottom: 40%"></span>
+              <span class="spk" style="left: 60%; bottom: 36%; animation-delay: .6s"></span>
+              <span class="spk" style="left: 50%; bottom: 44%; animation-delay: 1.2s"></span>
+            </div>
+            <div class="fpM"></div>
+          </div>
+          <!-- tochas -->
+          <div class="tch" style="left: 34.2%" aria-hidden="true"><span class="tchG"></span><span class="tchS"></span><span class="tchF"></span></div>
+          <div class="tch" style="left: 61%" aria-hidden="true"><span class="tchG" style="animation-delay: .4s"></span><span class="tchS"></span><span class="tchF" style="animation-delay: .15s"></span></div>
+
+          <!-- QUADRO DE PEDIDOS -> trocas -->
+          <button class="spot qd" onClick="{{openTrade}}" aria-label="{{qdAria}}">
+            <span class="qdF"></span>
+            <sc-for list="{{qdPapers}}" as="p" hint-placeholder-count="4">
+              <span class="qdP" style="left: {{p.x}}; top: {{p.y}}; border-top: 4px solid {{p.c}}; animation-delay: {{p.d}}"><svg viewBox="0 0 24 24" fill="{{p.c}}" stroke="#2a1403" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="{{p.p1}}"></path></svg></span>
+            </sc-for>
+            <span class="plq" style="top: -9px">Pedidos <span class="pB">{{reqOpenN}}</span></span>
+          </button>
+
+          <!-- PORTÃO DO CHEFE -->
+          <button class="spot gt" onClick="{{openBoss}}" aria-label="{{gtAria}}">
+            <span class="gtA"></span>
+            <span class="gtI">
+              <span class="ly sky2" style="top: 0; height: 62%; background-size: auto 100%"></span>
+              <span class="ly cld2" style="top: 6%; height: 24%; background-size: auto 100%; opacity: .7"></span>
+              <span class="ly far2" style="top: 28%; height: 44%; background-size: auto 100%"></span>
+              <span class="ly gnd2" style="top: 72%; height: 40%; background-size: auto 100%"></span>
+              <span class="redF"></span>
+              <span class="gtBoss port pDrag" style="transform: scaleX(-1)"></span>
+              <span class="bars"></span>
+            </span>
+            <span class="rRing"></span>
+            <span class="gtHp"><i style="width: {{hpW}}"></i></span>
+            <span class="plq" style="top: -9px; border-color: #ff5a3a">Chefe <span class="pB">{{triesN}}</span></span>
+          </button>
+
+          <!-- MESA DE GUERRA -> Torneio do Poder -->
+          <a href="TorneioPoder.dc.html" onClick="{{tap}}" class="spot ms" aria-label="Mesa de guerra: abrir o Torneio do Poder, 2 territórios em guerra">
+            <span class="msL" style="left: 4%"></span>
+            <span class="msL" style="right: 4%"></span>
+            <span class="msT"></span>
+            <span class="msFl" style="left: 20%; top: 2%"><svg viewBox="0 0 16 22" aria-hidden="true"><line x1="2" y1="22" x2="2" y2="1" stroke="#2a1a0a" stroke-width="2"></line><path class="flagW" d="M3 2 L15 4 L11 7 L15 10 L3 10 Z" fill="#c8322a" stroke="#2a1a0a" stroke-width="1"></path></svg></span>
+            <span class="msFl" style="left: 50%; top: -6%"><svg viewBox="0 0 16 22" aria-hidden="true"><line x1="2" y1="22" x2="2" y2="1" stroke="#2a1a0a" stroke-width="2"></line><path class="flagW" d="M3 2 L15 4 L11 7 L15 10 L3 10 Z" fill="#2f86e0" stroke="#2a1a0a" stroke-width="1" style="animation-delay: .3s"></path></svg></span>
+            <span class="msFl" style="left: 74%; top: 4%"><svg viewBox="0 0 16 22" aria-hidden="true"><line x1="2" y1="22" x2="2" y2="1" stroke="#2a1a0a" stroke-width="2"></line><path class="flagW" d="M3 2 L15 4 L11 7 L15 10 L3 10 Z" fill="#c8322a" stroke="#2a1a0a" stroke-width="1" style="animation-delay: .6s"></path></svg></span>
+            <span class="cdl" style="left: 4%; top: 30%"></span>
+            <span class="cdl" style="right: 4%; top: 30%"></span>
+            <span class="msK"></span>
+            <span class="plq" style="bottom: 5%">Mesa de guerra <span class="pB">2</span></span>
+          </a>
+
+          <!-- MERCADOR -> loja de Brasões -->
+          <button class="spot mc" onClick="{{openShop}}" aria-label="Mercador: loja da guilda, comprar com Brasões">
+            <span class="mcPo" style="left: 2%"></span><span class="mcPo" style="right: 6%"></span>
+            <span class="mcNpc"><span class="kidle sp" style="filter: hue-rotate(95deg) saturate(.55) brightness(.9); animation-delay: -.4s"></span></span>
+            <span class="mcAw"></span>
+            <span class="mcC"></span>
+            <img class="mcG" src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="" style="left: 10%; width: 32%">
+            <img class="mcG" src="/_blob/3f2502c864add38c4b3faf5853f0dd9a" alt="" style="left: 48%; width: 20%; animation-delay: .6s">
+            <img class="mcG" src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="left: 68%; width: 18%; animation-delay: 1.2s">
+            <span class="plq" style="bottom: 6%">Mercador</span>
+          </button>
+
+          <!-- MASTRO DOS ESTANDARTES -->
+          <button class="spot mt" onClick="{{openStd}}" aria-label="{{mtAria}}">
+            <span class="mtBeam"></span>
+            <span class="mtRing"></span>
+            <sc-for list="{{mtFlags}}" as="f" hint-placeholder-count="3">
+              <span class="mtS" style="left: {{f.x}}; height: {{f.h}}">
+                <svg viewBox="0 0 24 80" preserveAspectRatio="none" aria-hidden="true">
+                  <line x1="3" y1="80" x2="3" y2="2" stroke="#2a1608" stroke-width="3.4"></line><line x1="3" y1="80" x2="3" y2="2" stroke="#e8c27a" stroke-width="1.6"></line>
+                  <circle cx="3" cy="3" r="2.6" fill="#ffe07a"></circle>
+                  <path class="flagW" d="M4 5 H22 V30 L13 25 L4 30 Z" fill="{{f.c}}" stroke="#ffe07a" stroke-width="1.4" stroke-linejoin="round" style="animation-delay: {{f.d}}"></path>
+                  <path class="flagW" d="{{f.ic}}" transform="translate(7.5 9) scale(.46)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation-delay: {{f.d}}"></path>
+                </svg>
+              </span>
+            </sc-for>
+            <span class="mtB"></span>
+            <span class="plq" style="bottom: 4%">Estandartes</span>
+          </button>
+
+          <!-- membros online: Kael recolorido, pés no chão -->
+          <sc-for list="{{hallMem}}" as="m" hint-placeholder-count="6">
+            <button class="hm" onClick="{{m.pick}}" aria-label="{{m.aria}}" style="left: {{m.x}}; top: {{m.y}}; width: {{m.sz}}; z-index: {{m.z}}; transition-duration: {{m.t}}">
+              <span class="hmSh"></span>
+              <span class="flp" style="transform: scaleX({{m.f}})"><span class="{{m.spr}}" style="filter: {{m.hue}}; animation-delay: {{m.kD}}"></span></span>
+              <span class="{{m.tagCls}}">
+                <em>{{m.title}}</em>
+                <b>{{m.name}}</b>
+              </span>
+              <sc-if value="{{m.talk}}" hint-placeholder-val="{{false}}"><span class="bub">{{m.say}}</span></sc-if>
+              <span class="hmHit"></span>
+            </button>
+          </sc-for>
+
+          <sc-for list="{{motes}}" as="d" hint-placeholder-count="6"><span class="mote" style="left: {{d.x}}; top: {{d.y}}; animation-delay: {{d.d}}"></span></sc-for>
+          <div class="light"></div>
+        </div>
+
+        <!-- feed ao vivo -->
+        <button class="feed" onClick="{{openFeed}}" aria-label="Atividades ao vivo da guilda. Abrir o salão social">
+          <span style="display: flex; align-items: center; gap: 6px; min-height: 18px">
+            <span class="live"><i></i>AO VIVO</span>
+            <span class="lil" style="flex: 1; font-size: 13.5px; color: #e8c27a">Na guilda agora</span>
+            <span style="font-size: 11px; font-weight: 900; color: #ffc94a">Ver tudo</span>
+          </span>
+          <sc-for list="{{feedTop}}" as="e" hint-placeholder-count="3">
+            <span class="{{e.cls}}">
+              <span class="fIc" style="--fc: {{e.c}}"><svg viewBox="0 0 24 24" fill="none" stroke="{{e.c}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{e.ic}}"></path></svg></span>
+              <span class="fTx"><b style="color: #ffd84a">{{e.a}}</b>{{e.b}}<b style="color: {{e.c}}">{{e.cc}}</b></span>
+              <span class="fAg">{{e.ago}}</span>
+            </span>
+          </sc-for>
+        </button>
+
+        <div class="qRow">
+          <button class="qBtn" onClick="{{openMembers}}"><svg viewBox="0 0 24 24" fill="none" stroke="#8cc8ff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 11 A4 4 0 1 0 9.01 11 M2 21 C2 16 16 16 16 21 M16 4 A4 4 0 0 1 16 12 M18 15 C21 16 22 18 22 21"></path></svg>Membros</button>
+          <button class="qBtn" onClick="{{openChat}}"><svg viewBox="0 0 24 24" fill="none" stroke="#8ff09a" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M4 5 H20 V16 H9 L4 20 Z"></path></svg>Chat<sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="dot">{{unread}}</span></sc-if></button>
+          <button class="{{donBtnCls}}" onClick="{{openMis}}"><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a9a" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M12 20 C5 15 3 11 3 8 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8 C21 11 19 15 12 20 Z"></path></svg>Doar<sc-if value="{{donLeftOn}}" hint-placeholder-val="{{true}}"><span class="dot">{{donLeft}}</span></sc-if></button>
+          <button class="qBtn" onClick="{{openRank}}"><svg viewBox="0 0 24 24" fill="none" stroke="#ffe07a" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z"></path></svg>Ranking</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== SOCIAL ===================== -->
+    <sc-if value="{{isSocial}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="tabs" role="tablist" aria-label="Salão social">
+          <sc-for list="{{sTabs}}" as="t" hint-placeholder-count="4">
+            <button class="tab" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.ic}}"></path></svg>{{t.label}}<sc-if value="{{t.hasDot}}" hint-placeholder-val="{{false}}"><span class="dot">{{t.dot}}</span></sc-if></button>
+          </sc-for>
+        </div>
+
+        <!-- FEED -->
+        <sc-if value="{{sFeed}}" hint-placeholder-val="{{true}}">
+          <div class="lead inUp">
+            <div class="ldSt" aria-hidden="true"><span class="ped"></span><span class="au au7" style="filter: hue-rotate(10deg) saturate(1.3)"></span><span class="k kidle" style="filter: {{ldHue}}"></span></div>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.15; position: relative; z-index: 1">
+              <span style="display: flex; align-items: center; gap: 5px"><svg class="crn" width="18" height="13" viewBox="0 0 24 17" aria-hidden="true"><path d="M2 15 L3.5 4 L8.5 9 L12 1 L15.5 9 L20.5 4 L22 15 Z" fill="#ffc94a" stroke="#6a3a08" stroke-width="1.3" stroke-linejoin="round"></path></svg><span style="font-size: 10.5px; font-weight: 900; color: #ffc94a; letter-spacing: .6px">LÍDER EM DESTAQUE</span></span>
+              <span class="lil ol" style="font-size: 20px">{{ldName}}</span>
+              <span class="note" style="color: #e8dccb">Nv. {{ldLv}} · FC {{ldFc}} · <span class="onDot" style="width: 8px; height: 8px"></span> online</span>
+              <span style="font-size: 12px; font-weight: 800; color: #fff3c4; font-style: italic">"Chefe até domingo: 2 ataques por dia, todo mundo!"</span>
+            </span>
+            <button class="grn" onClick="{{greetLeader}}" style="position: relative; z-index: 1; flex: none; padding: 0 10px; font-size: 14px">Saudar</button>
+          </div>
+          <div class="ach" role="list" aria-label="Conquistas da guilda">
+            <sc-for list="{{achs}}" as="a" hint-placeholder-count="4">
+              <div class="{{a.cls}}" role="listitem" style="--ac: {{a.c}}; animation-delay: {{a.d}}">
+                <svg class="med" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay: {{a.d}}"><path d="M8 2 L10 8 M16 2 L14 8" stroke="{{a.c}}" stroke-width="2.4" stroke-linecap="round"></path><circle cx="12" cy="14" r="7.5" fill="{{a.c}}" stroke="#2a1403" stroke-width="1.6"></circle><path d="{{a.ic}}" transform="translate(7 9) scale(.42)" fill="none" stroke="#2a1403" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <b>{{a.n}}</b>
+                <small>{{a.s}}</small>
+              </div>
+            </sc-for>
+          </div>
+          <div class="fList" role="log" aria-live="polite" aria-label="Atividades da guilda">
+            <span style="display: flex; align-items: center; gap: 6px"><span class="live"><i></i>AO VIVO</span><span class="lil" style="font-size: 14px; color: #e8c27a">Atividades</span></span>
+            <sc-for list="{{feedAll}}" as="e" hint-placeholder-count="7">
+              <span class="{{e.cls}}">
+                <span class="fIc" style="--fc: {{e.c}}"><svg viewBox="0 0 24 24" fill="none" stroke="{{e.c}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{e.ic}}"></path></svg></span>
+                <span class="fTx"><b style="color: #ffd84a">{{e.a}}</b>{{e.b}}<b style="color: {{e.c}}">{{e.cc}}</b></span>
+                <span class="fAg">{{e.ago}}</span>
+              </span>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- MEMBROS -->
+        <sc-if value="{{sMem}}" hint-placeholder-val="{{false}}">
+          <div class="seg" role="group" aria-label="Ordenar membros">
+            <sc-for list="{{mSorts}}" as="o" hint-placeholder-count="3"><button aria-pressed="{{o.on}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for>
+          </div>
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; overflow: hidden">
+            <sc-for list="{{mRows}}" as="r" hint-placeholder-count="7">
+              <button class="{{r.cls}}" onClick="{{r.open}}" aria-label="{{r.aria}}" style="animation-delay: {{r.d}}">
+                <span class="{{r.qa}}"><span class="kidle" style="filter: {{r.hue}}; animation-delay: {{r.kD}}"></span></span>
+                <span style="min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.15">
+                  <span style="display: flex; align-items: center; gap: 5px; min-width: 0"><span class="{{r.roleCls}}">{{r.role}}</span><span style="font-size: 13.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span></span>
+                  <span style="font-size: 11px; font-weight: 800; color: #c9b9a2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Nv. {{r.lv}} · {{r.title}}</span>
+                </span>
+                <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1.1">
+                  <span class="lil" style="font-size: 14px; color: #ffe07a; white-space: nowrap">FC {{r.fc}}</span>
+                  <span style="display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 900; color: {{r.stC}}; white-space: nowrap"><span class="{{r.dotCls}}"></span>{{r.seen}}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+          <div class="pager">
+            <button class="ghost" onClick="{{mPrev}}" aria-label="Página anterior" style="padding: 0; width: 44px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <span style="min-width: 110px; text-align: center; font-size: 12px; font-weight: 900; color: #c9b9a2">{{mPageTx}}</span>
+            <button class="ghost" onClick="{{mNext}}" aria-label="Próxima página" style="padding: 0; width: 44px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+          </div>
+          <div class="card" style="display: flex; align-items: center; gap: 8px">
+            <span class="note" style="flex: 1">{{memTx}} membros · entrada a partir do Nv. 32 · Líder (1), Oficiais (até 4) e Membros</span>
+            <button class="grn" onClick="{{invite}}" style="flex: none">Convidar</button>
+          </div>
+        </sc-if>
+
+        <!-- RANKING INTERNO DA SEMANA -->
+        <sc-if value="{{sRank}}" hint-placeholder-val="{{false}}">
+          <div class="seg" role="group" aria-label="Ranking da semana por">
+            <button aria-pressed="{{rkCtb}}" onClick="{{byCtb}}">Contribuição</button>
+            <button aria-pressed="{{rkDmg}}" onClick="{{byDmg}}">Dano no chefe</button>
+          </div>
+          <div class="podium" role="list" aria-label="Pódio da semana">
+            <span class="podR"></span>
+            <sc-for list="{{pod}}" as="p" hint-placeholder-count="3">
+              <div class="pod" role="listitem" aria-label="{{p.aria}}" style="left: {{p.x}}">
+                <sc-if value="{{p.first}}" hint-placeholder-val="{{false}}"><svg class="crn" width="26" height="18" viewBox="0 0 24 17" aria-hidden="true"><path d="M2 15 L3.5 4 L8.5 9 L12 1 L15.5 9 L20.5 4 L22 15 Z" fill="#ffc94a" stroke="#6a3a08" stroke-width="1.3" stroke-linejoin="round"></path></svg></sc-if>
+                <span class="podN">{{p.name}}<br><span class="lil" style="font-size: 13px; color: #ffe07a">{{p.val}}</span></span>
+                <div class="podK"><span class="kidle sp" style="filter: {{p.hue}}; animation-delay: {{p.kD}}"></span></div>
+                <div class="podB" style="height: {{p.h}}; background: {{p.bg}}">{{p.rk}}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; overflow: hidden">
+            <sc-for list="{{rkRows}}" as="r" hint-placeholder-count="5">
+              <div class="{{r.cls}}" style="animation-delay: {{r.d}}">
+                <span class="lil" style="font-size: 16px; color: #c9b9a2; text-align: center">{{r.rk}}</span>
+                <span class="qa" style="width: 32px; height: 32px"><span class="kidle" style="filter: {{r.hue}}"></span></span>
+                <span style="min-width: 0; font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+                <span class="lil" style="font-size: 14px; color: #ffe07a; white-space: nowrap">{{r.val}}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div class="{{rkMeCls}}">
+            <span class="lil" style="font-size: 16px; color: #ffc94a; text-align: center">{{rkMeRk}}</span>
+            <span class="qa on" style="width: 32px; height: 32px"><span class="kidle"></span></span>
+            <span style="min-width: 0; display: flex; flex-direction: column; line-height: 1.15"><span style="font-size: 13px; font-weight: 900">Você · Kael</span><span style="font-size: 11px; font-weight: 900; color: #7ef08a">{{rkMeGap}}</span></span>
+            <span class="lil" style="font-size: 14px; color: #ffe07a; white-space: nowrap">{{rkMeVal}}</span>
+          </div>
+          <span class="note" style="flex: none; text-align: center">Semana fecha em {{weekLeft}} · top 3 ganham moldura de nome (visual)</span>
+        </sc-if>
+
+        <!-- CHAT (frases prontas) -->
+        <sc-if value="{{sChat}}" hint-placeholder-val="{{false}}">
+          <div class="chatBox" role="log" aria-live="polite" aria-label="Chat da guilda">
+            <sc-for list="{{chat}}" as="c" hint-placeholder-count="6">
+              <div class="{{c.cls}}">
+                <span class="qa" style="width: 30px; height: 30px"><span class="kidle" style="filter: {{c.hue}}"></span></span>
+                <span class="msgB"><small>{{c.who}} · {{c.ago}}</small><span>{{c.t}}</span></span>
+              </div>
+            </sc-for>
+          </div>
+          <span class="note" style="flex: none">Chat da guilda só com frases prontas (sem texto livre, igual ao chat global).</span>
+          <div class="phr" role="group" aria-label="Frases prontas">
+            <sc-for list="{{phrases}}" as="p" hint-placeholder-count="8"><button onClick="{{p.send}}">{{p.t}}</button></sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ===================== CHEFE DA GUILDA ===================== -->
+    <sc-if value="{{isBoss}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="{{bStCls}}" role="img" aria-label="{{bossAria}}">
+          <div class="bLy">
+            <div class="ly sky2" style="top: 0; height: 60%; background-size: auto 100%"></div>
+            <div class="ly cld2" style="top: 4%; height: 24%; background-size: auto 100%; opacity: .8"></div>
+            <div class="ly far2" style="top: 22%; height: 42%; background-size: auto 100%"></div>
+            <div class="ly mid2" style="top: 17.5%; height: 50%; background-size: auto 100%"></div>
+            <div class="ly gnd2" style="top: 65.5%; height: 38%; background-size: auto 100%"></div>
+          </div>
+          <div class="bFog"></div>
+          <div class="mist"></div>
+          <sc-for list="{{embers}}" as="m" hint-placeholder-count="8"><span class="emb2" style="left: {{m.x}}; bottom: {{m.y}}; animation-delay: {{m.d}}"></span></sc-for>
+          <div class="boss">
+            <span class="rune"></span>
+            <div class="bAu au10"></div>
+            <div class="{{bHitCls}}"><div class="port pDrag" style="position: absolute; inset: 0; transform: scaleX(-1)"></div></div>
+          </div>
+          <sc-if value="{{roarOn}}" hint-placeholder-val="{{false}}"><span class="roar"></span></sc-if>
+          <sc-for list="{{atk}}" as="a" hint-placeholder-count="4">
+            <div class="{{a.cls}}" style="left: {{a.x}}; top: {{a.y}}; width: {{a.sz}}; z-index: {{a.z}}">
+              <sc-if value="{{a.me}}" hint-placeholder-val="{{false}}"><span class="au au13"></span></sc-if>
+              <div class="flp" style="transform: scaleX({{a.f}})"><div class="{{a.spr}}" style="filter: {{a.hue}}; animation-delay: {{a.kD}}"></div></div>
+              <span class="{{a.tagCls}}">{{a.name}}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{slashOn}}" hint-placeholder-val="{{false}}"><span class="{{slashCls}}"></span></sc-if>
+          <sc-for list="{{floats}}" as="f" hint-placeholder-count="4">
+            <span class="{{f.cls}}" style="left: {{f.x}}; top: {{f.y}}; animation-delay: {{f.d}}"><small>{{f.who}}</small>{{f.t}}</span>
+          </sc-for>
+          <sc-if value="{{comboOn}}" hint-placeholder-val="{{false}}"><span class="combo"><small>ATAQUE EM GRUPO</small><b>{{comboTx}}</b></span></sc-if>
+          <div class="bPlate">
+            <span style="display: flex; flex-direction: column; line-height: 1.1; min-width: 0">
+              <span style="font-size: 10.5px; font-weight: 900; color: #ff8a6a; letter-spacing: 1px; text-shadow: 0 1px 2px #000">CHEFE DA GUILDA · SEMANA</span>
+              <span class="lil ol" style="font-size: clamp(18px,5.4vw,23px)">Dragão Rubro</span>
+              <span class="ol" style="font-size: 11.5px; font-weight: 900; color: #ffe9b0">Senhor da Era Medieval</span>
+            </span>
+            <span style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end">
+              <span class="chip" style="border-color: #ff5a3a">aura Rubra</span>
+              <span class="chip">volta em {{weekLeft}}</span>
+            </span>
+          </div>
+        </div>
+
+        <div style="flex: none; display: flex; flex-direction: column; gap: 3px">
+          <div class="chs" role="group" aria-label="Baús por marco de dano da guilda">
+            <sc-for list="{{chests}}" as="c" hint-placeholder-count="4">
+              <button class="{{c.cls}}" onClick="{{c.tap}}" aria-label="{{c.aria}}">
+                <sc-if value="{{c.ready}}" hint-placeholder-val="{{false}}"><span class="chRay"></span></sc-if>
+                <img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">
+                <span>{{c.lbl}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div class="hbar" role="progressbar" aria-label="{{hpAria}}"><i style="width: {{hpW}}"></i><span class="mkr" style="left: 25%"></span><span class="mkr" style="left: 50%"></span><span class="mkr" style="left: 75%"></span><b>{{hpTx}}</b></div>
+          <span style="display: flex; justify-content: space-between; gap: 6px; font-size: 11px; font-weight: 900; color: #c9b9a2"><span>Vida coletiva · {{hitters}} membros já bateram</span><span>baú para todos a cada 25%</span></span>
+        </div>
+
+        <div style="flex: none; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 6px 4px 10px; border-radius: 14px; background: #1d1611; border: 1px solid #4a3a2b">
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2">
+            <span style="font-size: 12px; font-weight: 900">Sua contribuição: <span style="color: #ffe07a">{{myDmgTx}}</span> <span style="color: #c9b9a2">({{myPctTx}})</span></span>
+            <span style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 900; color: #c9b9a2">{{myRkTx}} · ataques hoje <span class="pips"><sc-for list="{{pips}}" as="p" hint-placeholder-count="2"><span class="{{p.cls}}"></span></sc-for></span></span>
+          </span>
+          <button class="ghost" onClick="{{openDmg}}" style="flex: none; font-size: 12.5px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffe07a" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true"><path d="M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z"></path></svg>Dano e prêmios</button>
+        </div>
+        <button class="{{atkCls}}" onClick="{{attack}}">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3 L14 13 M20 3 L10 13 M5 17 L8 14 M19 17 L16 14 M3 21 L6 18 M21 21 L18 18"></path></svg>{{atkTx}}
+        </button>
+      </div>
+    </sc-if>
+
+    <!-- ===================== TROCAS: QUADRO DE PEDIDOS ===================== -->
+    <sc-if value="{{isTrade}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="rules" aria-label="Regras de troca em resumo">
+          <span class="chip ok">Chega no Nv. 1</span>
+          <span class="chip">Sem comprados, pets, skins, VIP</span>
+          <span class="chip">Doar 3 · receber 2 /dia</span>
+          <span class="chip">7 dias de membro</span>
+          <span class="chip" style="border-color: #ff5a4e">Só 18+</span>
+          <button class="ghost" onClick="{{openRules}}" style="min-height: 44px; font-size: 12px; padding: 0 8px">Regras</button>
+        </div>
+        <div class="muralW"><div class="mural" role="list" aria-label="Quadro de pedidos da guilda">
+          <sc-for list="{{rqCards}}" as="q" hint-placeholder-count="4">
+            <div class="{{q.cls}}" role="listitem" style="animation-delay: {{q.d}}">
+              <span class="rqW">
+                <span class="{{q.qa}}"><span class="kidle" style="filter: {{q.hue}}"></span></span>
+                <span><b>{{q.who}}</b><small>{{q.sub}}</small></span>
+              </span>
+              <span class="itF" style="--rc: {{q.rc}}; --rg: {{q.rg}}; --rb: {{q.rb}}; --rb2: {{q.rb2}}">
+                <svg viewBox="0 0 24 24" fill="{{q.rc}}" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{q.p1}}"></path><path d="{{q.p2}}" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"></path></svg>
+              </span>
+              <span class="stars" aria-label="{{q.stAria}}"><sc-for list="{{q.stars}}" as="s" hint-placeholder-count="5"><svg class="{{s.cls}}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z" fill="{{s.f}}" stroke="#6a3a08" stroke-width="1.2"></path></svg></sc-for></span>
+              <span class="rqN" style="color: {{q.rcT}}">{{q.item}}</span>
+              <span class="rqM">{{q.meta}}</span>
+              <sc-if value="{{q.canGive}}" hint-placeholder-val="{{true}}"><button class="grn pulse" onClick="{{q.give}}" aria-label="{{q.aria}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><path d="M4 10 H20 V20 H4 Z M3 7 H21 V10 H3 Z M12 7 V20 M12 7 C10 3 6 4 8 7 M12 7 C14 3 18 4 16 7"></path></svg>Doar</button></sc-if>
+              <sc-if value="{{q.noGive}}" hint-placeholder-val="{{false}}"><span class="rqWait">{{q.why}}</span></sc-if>
+              <sc-if value="{{q.done}}" hint-placeholder-val="{{false}}"><span class="stamp">ATENDIDO</span></sc-if>
+            </div>
+          </sc-for>
+          </div>
+          <sc-if value="{{flyOn}}" hint-placeholder-val="{{false}}">
+            <span class="flyW" style="--fx: {{fly.fx}}; --fy: {{fly.fy}}"><span class="flyI"><span class="itF" style="--rc: {{fly.rc}}; --rg: {{fly.rg}}; --rb: {{fly.rb}}; --rb2: {{fly.rb2}}"><svg viewBox="0 0 24 24" fill="{{fly.rc}}" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{fly.p1}}"></path></svg></span></span><span class="flyT"></span></span>
+            <span class="burst" style="left: {{fly.fx}}; top: {{fly.fy}}"></span>
+          </sc-if>
+        </div>
+        <div class="trBar">
+          <button class="ghost" onClick="{{rqPrev}}" aria-label="Página anterior do quadro" style="padding: 0; width: 44px; flex: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+          <span class="lim" style="flex: 1; min-width: 0"><span>{{rqPageTx}}</span><span style="color: #8ff09a">{{limTx}}</span></span>
+          <button class="ghost" onClick="{{rqNext}}" aria-label="Próxima página do quadro" style="padding: 0; width: 44px; flex: none"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+          <button class="grn" onClick="{{openReq}}" style="flex: none">Fazer pedido</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ===================== MERCADOR · ESTANDARTES · MISSÕES ===================== -->
+    <sc-if value="{{isShop}}" hint-placeholder-val="{{false}}">
+      <div class="pane">
+        <div class="tabs" role="tablist" aria-label="Funções da guilda">
+          <sc-for list="{{shTabs}}" as="t" hint-placeholder-count="3">
+            <button class="tab" role="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.ic}}"></path></svg>{{t.label}}<sc-if value="{{t.hasDot}}" hint-placeholder-val="{{false}}"><span class="dot">{{t.dot}}</span></sc-if></button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{shLoja}}" hint-placeholder-val="{{true}}">
+          <div class="card" style="display: flex; align-items: center; gap: 8px">
+            <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true" style="flex: none"><path d="M12 2 L20 5 V11 C20 16.5 16.5 20 12 22 C7.5 20 4 16.5 4 11 V5 Z" fill="#c8322a" stroke="#ffe07a" stroke-width="1.8"></path><path d="M12 6 L13.6 10 H17.6 L14.4 12.6 L15.6 16.6 L12 14.2 L8.4 16.6 L9.6 12.6 L6.4 10 H10.4 Z" fill="#ffe07a"></path></svg>
+            <span style="flex: 1; min-width: 0; line-height: 1.2"><span class="lil" style="font-size: 18px; color: #ffe07a">{{brTx}} Brasões</span><br><span class="note">Ganhos só jogando (chefe, doações, missões, check-in). Compra direta, limite semanal, sem sorteio.</span></span>
+          </div>
+          <div class="shopG">
+            <sc-for list="{{shop}}" as="s" hint-placeholder-count="6">
+              <div class="{{s.cls}}" style="--rc: {{s.rc}}; --rb2: {{s.rb2}}; animation-delay: {{s.d}}">
+                <span class="shIc"><svg viewBox="0 0 24 24" fill="{{s.f}}" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{s.p1}}"></path><path d="{{s.p2}}" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+                <b>{{s.n}}</b>
+                <small>{{s.lim}}</small>
+                <button class="{{s.btnCls}}" onClick="{{s.buy}}" aria-label="{{s.aria}}">{{s.btn}}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{shStd}}" hint-placeholder-val="{{false}}">
+          <div class="card" style="display: flex; align-items: center; gap: 8px">
+            <span style="flex: 1; min-width: 0; line-height: 1.2"><span class="lil" style="font-size: 17px; color: #ffe07a">Estandartes da guilda</span><br><span class="note">Valem para todos os membros. Teto: ATK +5%, Vida +5%, DEF +3% (Nv. 10 da guilda). Líder e oficiais erguem com XP da guilda.</span></span>
+            <span style="flex: none; text-align: right; line-height: 1.1"><span class="lil" style="font-size: 16px; color: #8cc8ff">{{gXpNow}}</span><br><span style="font-size: 10.5px; font-weight: 900; color: #c9b9a2">XP da guilda</span></span>
+          </div>
+          <div class="stdG">
+            <sc-for list="{{stds}}" as="b" hint-placeholder-count="3">
+              <div class="std" style="--sc: {{b.c}}; --sd: {{b.dk}}; animation-delay: {{b.d}}">
+                <span class="{{b.fCls}}"><svg viewBox="0 0 40 50" aria-hidden="true"><line x1="5" y1="50" x2="5" y2="2" stroke="#2a1608" stroke-width="4"></line><line x1="5" y1="50" x2="5" y2="2" stroke="#e8c27a" stroke-width="2"></line><circle cx="5" cy="3" r="3" fill="#ffe07a"></circle><path class="flagW" d="M6 5 H38 V36 L22 30 L6 36 Z" fill="{{b.c}}" stroke="#ffe07a" stroke-width="1.6" stroke-linejoin="round" style="animation-delay: {{b.d}}"></path><path class="flagW" d="{{b.ic}}" transform="translate(12 8) scale(.62)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation-delay: {{b.d}}"></path></svg></span>
+                <span style="min-width: 0; display: flex; flex-direction: column; gap: 3px; line-height: 1.15">
+                  <span class="lil" style="font-size: 17px">{{b.n}} <span style="color: {{b.c}}">{{b.stat}} +{{b.cur}}%</span></span>
+                  <span class="lvP"><sc-for list="{{b.pips}}" as="p" hint-placeholder-count="5"><i class="{{p.cls}}"></i></sc-for></span>
+                  <span style="font-size: 11px; font-weight: 900; color: #c9b9a2">{{b.sub}}</span>
+                </span>
+                <button class="{{b.btnCls}}" onClick="{{b.up}}" aria-label="{{b.aria}}" style="flex: none; min-width: 84px; flex-direction: column; gap: 0; line-height: 1.05">{{b.btn}}<span style="font-family: Nunito, sans-serif; font-size: 10.5px; font-weight: 900">{{b.cost}}</span></button>
+              </div>
+            </sc-for>
+          </div>
+          <span class="note" style="flex: none; text-align: center">É o único poder (FC) que a guilda dá: +5% de FC no máximo. Quem sai perde os estandartes.</span>
+        </sc-if>
+
+        <sc-if value="{{shMis}}" hint-placeholder-val="{{false}}">
+          <span class="lil" style="flex: none; font-size: 15px; color: #e8c27a">Doação diária · 1 de cada por dia</span>
+          <div class="donG">
+            <sc-for list="{{dons}}" as="o" hint-placeholder-count="3">
+              <button class="{{o.cls}}" onClick="{{o.give}}" aria-label="{{o.aria}}" style="--rc: {{o.rc}}">
+                <img src="{{o.img}}" alt="">
+                <b>{{o.n}}</b>
+                <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">{{o.cost}}</span>
+                <small>{{o.gain}}</small>
+              </button>
+            </sc-for>
+          </div>
+          <button class="{{ciCls}}" onClick="{{checkin}}" style="flex: none; width: 100%">{{ciTx}}</button>
+          <span class="lil" style="flex: none; font-size: 15px; color: #e8c27a">Missões da semana (todos somam)</span>
+          <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; overflow: hidden">
+            <sc-for list="{{mis}}" as="m" hint-placeholder-count="5">
+              <div class="mRowB">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{m.c}}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{m.ic}}"></path></svg>
+                <span style="min-width: 0; line-height: 1.15"><span style="font-size: 12.5px; font-weight: 900">{{m.t}}</span><span style="display: block; font-size: 10.5px; font-weight: 900; color: #c9b9a2">{{m.pTx}} · {{m.rw}}</span><span class="pBar"><i style="width: {{m.w}}"></i></span></span>
+                <button class="{{m.btnCls}}" onClick="{{m.claim}}" aria-label="{{m.aria}}" style="flex: none; min-width: 74px">{{m.btn}}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div></div>
+
+  <!-- ===== folha: membro ===== -->
+  <sc-if value="{{memOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeSheet}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="{{ms.name}}">
+        <div class="shHead">
+          <div class="ldSt" style="width: 84px; height: 84px" aria-hidden="true"><span class="ped" style="background: radial-gradient(ellipse, {{ms.pc}}, transparent 70%)"></span><span class="k kidle" style="filter: {{ms.hue}}"></span></div>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; line-height: 1.15">
+            <span style="display: flex; align-items: center; gap: 5px"><span class="{{ms.roleCls}}">{{ms.role}}</span><span style="font-size: 11px; font-weight: 900; color: #ffd84a">{{ms.title}}</span></span>
+            <span class="lil ol" style="font-size: 22px">{{ms.name}}</span>
+            <span class="note">Nv. {{ms.lv}} · FC {{ms.fc}} · {{ms.days}} dias na guilda</span>
+            <span style="display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 900; color: {{ms.stC}}"><span class="{{ms.dotCls}}"></span>{{ms.seen}}</span>
+          </span>
+          <button class="ghost" onClick="{{closeSheet}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 5px">
+          <span class="card" style="text-align: center; line-height: 1.15"><span class="lil" style="font-size: 17px; color: #ffe07a">{{ms.ctb}}</span><br><span style="font-size: 10.5px; font-weight: 900; color: #c9b9a2">contribuição</span></span>
+          <span class="card" style="text-align: center; line-height: 1.15"><span class="lil" style="font-size: 17px; color: #ff8a6a">{{ms.dmg}}</span><br><span style="font-size: 10.5px; font-weight: 900; color: #c9b9a2">dano no chefe</span></span>
+          <span class="card" style="text-align: center; line-height: 1.15"><span class="lil" style="font-size: 17px; color: #8ff09a">{{ms.don}}</span><br><span style="font-size: 10.5px; font-weight: 900; color: #c9b9a2">doações</span></span>
+        </div>
+        <div style="display: flex; gap: 6px">
+          <button class="grn" onClick="{{ms.greet}}" style="flex: 1">Saudar</button>
+          <button class="ghost" onClick="{{ms.thank}}" style="flex: 1">Agradecer</button>
+        </div>
+        <span class="note">Cargos: só o líder promove oficiais. Sem mensagem privada: na guilda, só frases prontas.</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== folha: doar item ===== -->
+  <sc-if value="{{giveOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeSheet}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="{{gv.title}}">
+        <div class="shHead">
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.1">
+            <span style="font-size: 11px; font-weight: 900; color: #e8c27a; letter-spacing: .6px">DOAR PARA {{gv.whoUp}}</span>
+            <span class="lil ol" style="font-size: 22px; color: {{gv.rcT}}">{{gv.item}}</span>
+          </span>
+          <button class="ghost" onClick="{{closeSheet}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <span class="lil" style="font-size: 14px; color: #e8c27a">Da sua mochila</span>
+        <div class="invG">
+          <sc-for list="{{invCards}}" as="c" hint-placeholder-count="3">
+            <button class="{{c.cls}}" onClick="{{c.pick}}" aria-pressed="{{c.sel}}" aria-label="{{c.aria}}">
+              <span class="itF" style="--rc: {{c.rc}}; --rg: {{c.rg}}; --rb: {{c.rb}}; --rb2: {{c.rb2}}"><svg viewBox="0 0 24 24" fill="{{c.rc}}" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{c.p1}}"></path><path d="{{c.p2}}" fill="none" stroke="#1a0e06" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+              <span class="stars"><sc-for list="{{c.stars}}" as="s" hint-placeholder-count="5"><svg class="{{s.cls}}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L14.9 8.6 L22 9.3 L16.6 14 L18.2 21 L12 17.3 L5.8 21 L7.4 14 L2 9.3 L9.1 8.6 Z" fill="{{s.f}}" stroke="#6a3a08" stroke-width="1.2"></path></svg></sc-for></span>
+              <b style="color: {{c.rcT}}">{{c.n}}</b>
+              <small>{{c.sub}}</small>
+              <sc-if value="{{c.lk}}" hint-placeholder-val="{{false}}"><span class="lkB"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ff8a7a" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 11 H18 V21 H6 Z M8.5 11 V7.5 A3.5 3.5 0 0 1 15.5 7.5 V11"></path></svg></span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <span class="note">{{gv.note}}</span>
+        <button class="{{gv.btnCls}}" onClick="{{doGive}}">{{gv.btn}}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== folha: fazer pedido ===== -->
+  <sc-if value="{{reqOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeSheet}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="Fazer pedido no quadro">
+        <div class="shHead">
+          <span class="lil ol" style="flex: 1; font-size: 22px">Fazer pedido</span>
+          <button class="ghost" onClick="{{closeSheet}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <span class="lil" style="font-size: 14px; color: #e8c27a">Espaço</span>
+        <div class="pickG" role="group" aria-label="Espaço do item">
+          <sc-for list="{{rqSlots}}" as="o" hint-placeholder-count="7"><button onClick="{{o.pick}}" aria-pressed="{{o.on}}" aria-label="{{o.n}}"><svg viewBox="0 0 24 24" fill="#e8c27a" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{o.p1}}"></path></svg></button></sc-for>
+        </div>
+        <span class="lil" style="font-size: 14px; color: #e8c27a">Raridade mínima</span>
+        <div class="pickR" role="group" aria-label="Raridade mínima">
+          <sc-for list="{{rqRars}}" as="o" hint-placeholder-count="5"><button onClick="{{o.pick}}" aria-pressed="{{o.on}}" style="color: {{o.c}}">{{o.n}}</button></sc-for>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 14px; background: #1d1611; border: 1px solid #4a3a2b">
+          <span class="itF" style="--rc: {{rqPv.rc}}; --rg: {{rqPv.rg}}; --rb: {{rqPv.rb}}; --rb2: {{rqPv.rb2}}; width: 58px"><svg viewBox="0 0 24 24" fill="{{rqPv.rc}}" stroke="#1a0e06" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true"><path d="{{rqPv.p1}}"></path></svg></span>
+          <span style="line-height: 1.2"><span class="lil" style="font-size: 18px; color: {{rqPv.rcT}}">{{rqPv.n}}</span><br><span class="note">Fica 24 h no quadro. Itens acima do seu portão chegam guardados.</span></span>
+        </div>
+        <button class="gold pulse" onClick="{{postReq}}">Pendurar no quadro</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== folha: regras de troca ===== -->
+  <sc-if value="{{rulesOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeSheet}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="Regras de troca da guilda">
+        <div class="shHead">
+          <span class="lil ol" style="flex: 1; font-size: 22px">Regras de troca</span>
+          <button class="ghost" onClick="{{closeSheet}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <div class="rulesL">
+          <span><b>1</b>O item chega no nível 1. Estrelas, raridade, era e secundários ficam. Quem doa recebe 50% do ouro investido de volta.</span>
+          <span><b>2</b>Não troca: itens comprados, pets, skins, VIP, montarias, fragmentos, materiais e moedas.</span>
+          <span><b>3</b>Portões valem para quem recebe: item acima do permitido fica guardado até liberar.</span>
+          <span><b>4</b>Por dia: doar 3, receber 2. O mesmo par doador e recebedor: 1 por dia.</span>
+          <span><b>5</b>7 dias de membro para doar e para receber.</span>
+          <span><b>6</b>Item obtido há menos de 24 h não pode ser doado.</span>
+          <span><b>7</b>Registro de 30 dias visível ao líder e aos oficiais.</span>
+          <span><b>8</b>Só 18+: menor de idade não doa nem recebe. É doação: nenhuma moeda entra na troca.</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===== folha: dano e prêmios do chefe ===== -->
+  <sc-if value="{{dmgOn}}" hint-placeholder-val="{{false}}">
+    <div class="sheetBg">
+      <button onClick="{{closeSheet}}" aria-label="Fechar" style="position: absolute; inset: 0; border: 0; padding: 0; background: transparent"></button>
+      <div class="sheet" role="dialog" aria-label="Ranking de dano e prêmios do chefe" style="border-color: #ff5a3a">
+        <div class="shHead">
+          <span class="lil ol" style="flex: 1; font-size: 22px">Ranking de dano</span>
+          <button class="ghost" onClick="{{closeSheet}}" aria-label="Fechar" style="padding: 0; width: 44px; flex: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button>
+        </div>
+        <sc-for list="{{dmgRows}}" as="r" hint-placeholder-count="6">
+          <div class="{{r.cls}}">
+            <span class="lil" style="font-size: 15px; color: {{r.rc}}; text-align: center">{{r.rk}}</span>
+            <span class="qa" style="width: 30px; height: 30px"><span class="kidle" style="filter: {{r.hue}}"></span></span>
+            <span style="min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span><span class="dBar"><i style="width: {{r.w}}"></i></span></span>
+            <span class="lil" style="font-size: 14px; color: #ffe07a; white-space: nowrap">{{r.val}}</span>
+          </div>
+        </sc-for>
+        <span class="lil" style="font-size: 14px; color: #e8c27a">Prêmio por faixa de dano pessoal (fixo, sem sorteio)</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px">
+          <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4"><span class="{{t.cls}}">{{t.t}}</span></sc-for>
+        </div>
+        <span class="lil" style="font-size: 14px; color: #e8c27a">Baús por marco (para todos que bateram)</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px">
+          <span class="chip"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">25%: [QTD] Brasões</span>
+          <span class="chip"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">50%: pedras de forja</span>
+          <span class="chip"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">75%: Essência e ração</span>
+          <span class="chip" style="border-color: #ffc94a"><img src="/_blob/b8d381af334d1ec5e3023cf138922df4" alt="">100%: baú da guilda + XP da guilda</span>
+        </div>
+        <span class="note">2 ataques de 30 s por dia, com os seus atributos reais (simulado no servidor). Vida do chefe = poder somado dos membros.</span>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+var SND = {
+  tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', coin: '/_blob/84ab4c639b3c7f8af848b41172359878',
+  hit: '/_blob/fa0a62b02a3086bcbce94142b3441c05', hurt: '/_blob/8ebbcd838ede94b3a5b1ecc55e95d1db', ult: '/_blob/5d4b1eda7d276cb9adda5ac1a6aa0543',
+  ready: '/_blob/8863b3ab71afe08aef6c7aa26d104efc', up: '/_blob/ca8bcec3fced3c13b36555744659895a', swing: '/_blob/1d98ad83c7e223edc91aff699d443c4d',
+  legend: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', summon: '/_blob/07a146ee324bece467fc05bedf4435b0'
+};
+var COIN = '/_blob/3f2502c864add38c4b3faf5853f0dd9a', GEM = '/_blob/1c420bdcae24bd962967021584f5bd64', CHEST = '/_blob/b8d381af334d1ec5e3023cf138922df4';
+// raridades (nomes do index.html)
+var RN = ['Básic', 'Rar', 'Épic', 'Mític', 'Lendári'];
+var RNF = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'];
+var RC = ['#e8e2d8', '#4aa3ff', '#b07cff', '#ff5a5a', '#ffc94a'];
+var RCT = ['#5a4a3a', '#1f6ec0', '#7a3ad0', '#c0262a', '#a86a00'];
+var RG = ['rgba(232,226,216,.35)', 'rgba(74,163,255,.6)', 'rgba(176,124,255,.7)', 'rgba(255,90,90,.65)', 'rgba(255,201,74,.8)'];
+var RB = ['#2c2621', '#14304d', '#2e1f4a', '#4a1a1a', '#4a3410'];
+var RB2 = ['#5a524a', '#2f6ab0', '#6a44a8', '#a83a3a', '#b0841e'];
+var SLOTS = [
+  { n: 'Espada', g: 'a', pl: false, p1: 'M18 3 H21 V6 L10 17 L7 14 Z', p2: 'M5 12 L12 19 M6.5 17.5 L3.5 20.5' },
+  { n: 'Colete', g: 'o', pl: false, p1: 'M8 3 L12 5.5 L16 3 L20.5 6.5 L18 10 V21 H6 V10 L3.5 6.5 Z', p2: 'M12 6 V20 M8 13 H16' },
+  { n: 'Elmo', g: 'o', pl: false, p1: 'M4 15 C4 8.5 7.5 4 12 4 C16.5 4 20 8.5 20 15 Z', p2: 'M3 15 H21 M12 4 V9' },
+  { n: 'Luvas', g: 'a', pl: true, p1: 'M7 21 V11 L5 7.5 C4.4 6 6.4 5 7.4 6.4 L9 8.5 V4.5 C9 3 11 3 11 4.5 V8 V3.8 C11 2.4 13 2.4 13 3.8 V8 V4.8 C13 3.4 15 3.4 15 4.8 V9 V6.8 C15 5.4 17 5.4 17 6.8 V14 L15 21 Z', p2: 'M7 18 H15' },
+  { n: 'Botas', g: 'a', pl: true, p1: 'M7 3 H13 V13 L19.5 15.5 C21 16.2 21 19 19.5 19 H6 Z', p2: 'M6 19 V21 H20 V19 M7 7 H13' },
+  { n: 'Colar', g: 'o', pl: false, p1: 'M12 14 L15.5 18 L12 22.5 L8.5 18 Z', p2: 'M5 4 C5 12 9 15 12 15 C15 15 19 12 19 4' },
+  { n: 'Asas', g: 'a', pl: true, p1: 'M12 9 C9 3.5 4 3.5 2 5.5 C5 6.5 5 8.5 3 9.5 C6 10.5 6 12.5 4 13.5 C8 14.5 10 13.5 12 11.5 C14 13.5 16 14.5 20 13.5 C18 12.5 18 10.5 21 9.5 C19 8.5 19 6.5 22 5.5 C20 3.5 15 3.5 12 9 Z', p2: 'M12 9 V19' }
+];
+function itemName(slot, r) { var S = SLOTS[slot]; return S.n + ' ' + RN[r] + S.g + (S.pl ? 's' : ''); }
+function withArt(slot, r) { var S = SLOTS[slot]; return (S.pl ? (S.g === 'a' ? 'umas ' : 'uns ') : (S.g === 'a' ? 'uma ' : 'um ')) + itemName(slot, r); }
+var ERAN = ['Pré-História', 'Antiguidade', 'Medieval', 'Pólvora', 'Industrial', 'Moderna', 'Futurista'];
+var IC = {
+  boss: 'M18 3 H21 V6 L10 17 L7 14 Z M5 12 L12 19 M6.5 17.5 L3.5 20.5',
+  gift: 'M4 10 H20 V20 H4 Z M3 7 H21 V10 H3 Z M12 7 V20 M12 7 C10 3 6 4 8 7 M12 7 C14 3 18 4 16 7',
+  flag: 'M5 21 V4 M5 4 L19 6 L15 10 L19 14 L5 14',
+  up: 'M12 19 V5 M5 12 L12 5 L19 12',
+  chest: 'M4 10 H20 V20 H4 Z M4 10 L6 5 H18 L20 10 M10 14 H14',
+  join: 'M9 11 A4 4 0 1 0 9.01 11 M2 21 C2 16 16 16 16 21 M19 8 V14 M16 11 H22',
+  std: 'M5 21 V3 M5 4 H18 V13 L12 11 L5 13',
+  req: 'M4 8 H17 L14 5 M20 16 H7 L10 19',
+  dmg: 'M13 2 L5 13 H11 L10 22 L19 10 H13 Z'
+};
+var FC = { boss: '#ff8a6a', gift: '#8ff09a', flag: '#ffc94a', up: '#8cc8ff', chest: '#ffd24a', join: '#c9a2ff', std: '#ffc94a', req: '#8cc8ff', dmg: '#ff8a6a' };
+
+// ---------- membros (protótipo): nome, cargo, Nv, FC, online, giro de cor, título, dias, contribuição, dano no chefe, doações, visto ----------
+var MROWS = [
+  ['LunaFerro', 'L', 78, 6.1e6, 1, 40, 'Lenda do Porto', 210, 4120, 9.8e6, 41, ''],
+  ['Rex_Brasa', 'O', 71, 5.2e6, 1, 0, 'Matador de Dragões', 180, 3760, 11.2e6, 22, ''],
+  ['Mari Lâmina', 'O', 66, 4.6e6, 0, 300, 'Lâmina de Prata', 150, 2980, 7.4e6, 30, 'há 2 h'],
+  ['Você · Kael', 'O', 44, 4.57e6, 1, -1, 'Guardião', 12, 2140, 1.84e6, 9, ''],
+  ['Caio Trovão', 'O', 63, 3.9e6, 1, 200, 'Caçador de chefes', 120, 2650, 6.9e6, 12, ''],
+  ['Bia Arcana', 'M', 58, 3.4e6, 1, 260, 'Doadora da semana', 96, 3310, 4.1e6, 58, ''],
+  ['Theo Rúnico', 'M', 31, 0.9e6, 1, 160, 'Novato', 3, 260, 0.4e6, 0, ''],
+  ['Tavinho', 'M', 55, 3.1e6, 1, 120, 'Explorador', 70, 1810, 3.3e6, 14, ''],
+  ['Dudu77', 'M', 49, 2.6e6, 0, 330, 'Ferreiro', 64, 1290, 2.4e6, 8, 'há 5 h'],
+  ['Nina Sol', 'M', 52, 2.8e6, 1, 50, 'Estrela da guilda', 58, 1650, 2.9e6, 17, ''],
+  ['Gabi Fênix', 'M', 61, 3.7e6, 1, 20, 'Fênix', 88, 2210, 5.6e6, 11, ''],
+  ['Leo Bravo', 'M', 47, 2.3e6, 0, 230, 'Bravo', 41, 980, 1.9e6, 6, 'há 1 d'],
+  ['Iara Lua', 'M', 45, 2.1e6, 1, 280, 'Luar', 36, 1120, 1.7e6, 9, ''],
+  ['Pedrão', 'M', 57, 3.2e6, 0, 90, 'Muralha', 77, 1430, 3.8e6, 10, 'há 3 h'],
+  ['Duda Gelo', 'M', 43, 1.9e6, 0, 190, 'Gélida', 30, 760, 1.2e6, 5, 'há 2 d'],
+  ['Rafa Corte', 'M', 50, 2.7e6, 1, 140, 'Corte Rápido', 52, 1370, 2.6e6, 7, ''],
+  ['Lia Vento', 'M', 40, 1.6e6, 0, 170, 'Ventania', 25, 640, 0.9e6, 4, 'há 8 h'],
+  ['Joca', 'M', 38, 1.4e6, 0, 60, 'Aprendiz', 21, 410, 0.7e6, 3, 'há 1 d'],
+  ['Mel Dragão', 'M', 54, 3.0e6, 1, 310, 'Domadora', 60, 1540, 3.1e6, 13, ''],
+  ['Enzo Aço', 'M', 46, 2.2e6, 0, 210, 'Aço Frio', 44, 870, 1.6e6, 6, 'há 6 h'],
+  ['Clara Rubi', 'M', 42, 1.8e6, 0, 340, 'Rubi', 33, 700, 1.1e6, 5, 'há 3 d'],
+  ['Bento', 'M', 36, 1.2e6, 0, 100, 'Sentinela', 18, 380, 0.6e6, 2, 'há 4 h'],
+  ['Yasmin Z', 'M', 33, 1.0e6, 0, 250, 'Novata', 9, 220, 0.3e6, 1, 'há 2 d'],
+  ['Davi Rocha', 'M', 35, 1.1e6, 0, 80, 'Rocha', 14, 300, 0.5e6, 2, 'há 1 d']
+];
+var MEM = MROWS.map(function (r, i) { return { id: 'm' + i, name: r[0], role: r[1], lv: r[2], fc: r[3], on: !!r[4], hue: r[5] < 0 ? 'none' : (r[5] === 0 ? 'saturate(1.1)' : 'hue-rotate(' + r[5] + 'deg) saturate(1.15)'), title: r[6], days: r[7], ctb: r[8], dmg: r[9], don: r[10], seen: r[11], me: i === 3 }; });
+function M(name) { for (var i = 0; i < MEM.length; i++) if (MEM[i].name === name) return MEM[i]; return MEM[0]; }
+var ME = MEM[3];
+var GUILD_MAX = 30, G_LV = 7, G_XP = 6420, G_XPMAX = Math.round(1000 * Math.pow(1.6, G_LV - 1));
+var BOSS_MAX = 120e6;
+var ROLEN = { L: 'Líder', O: 'Oficial', M: 'Membro' };
+
+function n0(v) { return Math.round(v).toLocaleString('pt-BR'); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fmtFC(n) {
+  function f(v, u) { var r = v < 10 ? (Math.round(v * 10) / 10) : Math.round(v); return String(r).replace('.', ',') + ' ' + u; }
+  if (n >= 1e9) return f(n / 1e9, 'bi');
+  if (n >= 1e6) return f(n / 1e6, 'mi');
+  if (n >= 1e3) return f(n / 1e3, 'mil');
+  return String(Math.round(n));
+}
+function dur(L) { if (L <= 0) return '00:00'; var d = Math.floor(L / 86400), h = Math.floor(L % 86400 / 3600), m = Math.floor(L % 3600 / 60); return d > 0 ? d + 'd ' + h + 'h' : pad(h) + ':' + pad(m); }
+function nextMonday(now) { var d = new Date(now); d.setHours(5, 0, 0, 0); var add = (8 - d.getDay()) % 7; if (add === 0 && d.getTime() <= now) add = 7; d.setDate(d.getDate() + add); return d.getTime(); }
+function ago(ts, now) { var s = (now - ts) / 1000; if (s < 45) return 'agora'; if (s < 3600) return Math.max(1, Math.round(s / 60)) + ' min'; if (s < 86400) return Math.round(s / 3600) + ' h'; return Math.round(s / 86400) + ' d'; }
+function starsOf(n) { var a = []; for (var i = 0; i < 5; i++) a.push({ cls: i < n ? 'on' : '', f: i < n ? '#ffc94a' : 'rgba(90,70,50,.35)' }); return a; }
+
+// ---------- feed ----------
+var NOW0 = Date.now();
+var FEED0 = [
+  { ty: 'boss', a: 'Rex_Brasa', b: ' derrotou o ', c: 'Senhor da Era Medieval', ts: NOW0 - 50e3 },
+  { ty: 'gift', a: 'Bia Arcana', b: ' doou ', c: 'um Colar Épico para Nina', ts: NOW0 - 3 * 60e3 },
+  { ty: 'flag', a: 'A guilda', b: ' conquistou ', c: 'o Porto da Pólvora', ts: NOW0 - 12 * 60e3 },
+  { ty: 'up', a: 'Gabi Fênix', b: ' subiu para o ', c: 'Nv. 61', ts: NOW0 - 20 * 60e3 },
+  { ty: 'chest', a: 'Chefe', b: ': baú de ', c: '50% liberado para todos', ts: NOW0 - 41 * 60e3 },
+  { ty: 'dmg', a: 'Caio Trovão', b: ' causou ', c: '2,4 mi no chefe', ts: NOW0 - 55 * 60e3 },
+  { ty: 'join', a: 'Theo Rúnico', b: ' entrou ', c: 'na guilda', ts: NOW0 - 3 * 864e5 }
+];
+var CHAT0 = [
+  { who: 'LunaFerro', t: 'Bora no chefe!', ts: NOW0 - 9 * 60e3 },
+  { who: 'Rex_Brasa', t: 'Ataque às 20h no torneio', ts: NOW0 - 7 * 60e3 },
+  { who: 'Theo Rúnico', t: 'Obrigado pela doação!', ts: NOW0 - 4 * 60e3 },
+  { who: 'Bia Arcana', t: 'Boa, time!', ts: NOW0 - 3 * 60e3 },
+  { who: 'Nina Sol', t: 'Preciso de ajuda', ts: NOW0 - 90e3 }
+];
+var PHRASES = ['Olá, guilda!', 'Bora no chefe!', 'Preciso de ajuda', 'Obrigado pela doação!', 'Boa, time!', 'Ataque às 20h no torneio', 'Doei hoje!', 'Até amanhã!'];
+var REPLY = { 'Olá, guilda!': 'Olá, guilda!', 'Bora no chefe!': 'Bora no chefe!', 'Preciso de ajuda': 'Vou ver o quadro!', 'Obrigado pela doação!': 'Boa, time!', 'Boa, time!': 'Boa, time!', 'Ataque às 20h no torneio': 'Estarei lá!', 'Doei hoje!': 'Boa, time!', 'Até amanhã!': 'Até amanhã!' };
+var TERR = ['o Castelo Medieval', 'a Forja Industrial', 'o Porto da Pólvora', 'a Vila Antiga'];
+
+// ---------- salão: quem aparece e onde (pés no chão, % do salão) ----------
+var HALL = [
+  { m: 'Theo Rúnico', x: 12, y: 71, mode: 'stand', f: 1 },
+  { m: 'Rex_Brasa', x: 31, y: 71, mode: 'walk', seg: [28, 41] },
+  { m: 'Bia Arcana', x: 68, y: 71, mode: 'walk', seg: [59, 72] },
+  { m: 'Caio Trovão', x: 86, y: 71, mode: 'stand', f: 1 },
+  { m: 'Você · Kael', x: 41, y: 84, mode: 'stand', f: 1 },
+  { m: 'LunaFerro', x: 59, y: 84, mode: 'stand', f: -1 }
+];
+var SPEAKERS = [0, 1, 2, 3];
+
+// ---------- trocas ----------
+var INV0 = [
+  { id: 'i1', slot: 2, r: 2, st: 3, lvl: 31, era: 2 },
+  { id: 'i2', slot: 0, r: 3, st: 4, lvl: 44, era: 2 },
+  { id: 'i3', slot: 4, r: 1, st: 2, lvl: 18, era: 1 },
+  { id: 'i4', slot: 6, r: 4, st: 4, lvl: 50, era: 2, bought: true },
+  { id: 'i5', slot: 5, r: 2, st: 3, lvl: 26, era: 2 },
+  { id: 'i6', slot: 1, r: 1, st: 2, lvl: 12, era: 2 },
+  { id: 'i7', slot: 3, r: 0, st: 1, lvl: 7, era: 0 },
+  { id: 'i8', slot: 4, r: 2, st: 3, lvl: 22, era: 2, newH: 5 },
+  { id: 'i9', slot: 3, r: 1, st: 2, lvl: 15, era: 1 }
+];
+var REQ0 = [
+  { id: 'q1', who: 'Mari Lâmina', slot: 4, r: 2, st: 3, left: 14 },
+  { id: 'q2', who: 'Theo Rúnico', slot: 5, r: 1, st: 2, left: 6 },
+  { id: 'q3', who: 'Nina Sol', slot: 2, r: 2, st: 3, left: 20 },
+  { id: 'q4', who: 'Iara Lua', slot: 3, r: 1, st: 1, left: 9 },
+  { id: 'q5', who: 'Gabi Fênix', slot: 6, r: 3, st: 4, left: 2 },
+  { id: 'q6', who: 'Tavinho', slot: 0, r: 2, st: 2, left: 17 },
+  { id: 'q7', who: 'Rafa Corte', slot: 1, r: 1, st: 2, left: 11 },
+  { id: 'q8', who: 'Mel Dragão', slot: 4, r: 3, st: 4, left: 22 }
+];
+var GIVE_MAX = 3, MIN_DAYS = 7;
+
+// ---------- loja / estandartes / missões ----------
+var SHOP = [
+  { id: 's1', n: 'Pedra de forja ×5', r: 1, f: '#8cc8ff', p1: 'M4 15 L9 10 L14 15 L9 20 Z M10 9 L16 3 L21 8 L15 14', p2: 'M9 10 L14 15', price: 60, lim: 5 },
+  { id: 's2', n: 'Ração de pet ×20', r: 0, f: '#c98a4a', p1: 'M6 9 C4 9 3 7 4.5 6 C4 4 6.5 3 7.5 5 L16.5 14 C18.5 13 20 15.5 18 16 C19 17.5 17 19.5 15.5 18 C14.5 20 12 19 12.5 17 Z', p2: 'M9 9 L15 15', price: 40, lim: 5 },
+  { id: 's3', n: 'Essência ×1', r: 2, f: '#b07cff', p1: 'M12 2 C16 8 19 11 19 15 A7 7 0 0 1 5 15 C5 11 8 8 12 2 Z', p2: 'M9 15 A3 3 0 0 0 12 18', price: 120, lim: 2 },
+  { id: 's4', n: 'Pedra de treino ×3', r: 1, f: '#8ff09a', p1: 'M12 3 L20 8 V16 L12 21 L4 16 V8 Z', p2: 'M12 3 V21 M4 8 L20 16', price: 80, lim: 3 },
+  { id: 's5', n: 'Frag. de montaria Raro', r: 1, f: '#4aa3ff', p1: 'M5 19 L8 9 L12 5 L17 6 L19 10 L16 12 L18 19 Z', p2: 'M12 5 L11 9 M15 9 H16', price: 250, lim: 1, glv: 5 },
+  { id: 's6', n: 'Moldura Guardião', r: 4, f: '#ffc94a', p1: 'M4 4 H20 V20 H4 Z M7 7 H17 V17 H7 Z', p2: 'M4 4 L7 7 M20 4 L17 7 M4 20 L7 17 M20 20 L17 17', price: 600, lim: 1, glv: 8, vis: true }
+];
+var STD = [
+  { id: 'atk', n: 'Estandarte da Lâmina', stat: 'ATK', max: 5, c: '#ff5a4e', dk: '#5a1a14', ic: 'M18 3 H21 V6 L10 17 L7 14 Z M5 12 L12 19' },
+  { id: 'hp', n: 'Estandarte do Vigor', stat: 'Vida', max: 5, c: '#3fae4a', dk: '#1a3a1a', ic: 'M12 20 C5 15 3 11 3 8 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8 C21 11 19 15 12 20 Z' },
+  { id: 'def', n: 'Estandarte da Muralha', stat: 'DEF', max: 3, c: '#2f86e0', dk: '#14304d', ic: 'M12 3 L20 6 V12 C20 17 16 20 12 21 C8 20 4 17 4 12 V6 Z' }
+];
+// teto liberado pelo nível da guilda (Nv. 7 da guilda)
+var STD_CAP = { atk: 4, hp: 4, def: 2 };
+var DONS = [
+  { n: 'Ouro pequeno', img: COIN, cost: '1 h de farm', br: 10, xp: 20, r: 0 },
+  { n: 'Ouro grande', img: COIN, cost: '4 h de farm', br: 30, xp: 60, r: 1 },
+  { n: '50 gemas', img: GEM, cost: '50 gemas', br: 40, xp: 80, r: 2, gem: 50 }
+];
+var MIS0 = [
+  { t: 'Derrubar o chefe da guilda', ic: IC.boss, c: '#ff8a6a', cur: 0.61, goal: 1, pct: true, rw: '+400 Brasões' },
+  { t: '150 doações', ic: 'M12 20 C5 15 3 11 3 8 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 21 8 C21 11 19 15 12 20 Z', c: '#8ff09a', cur: 150, goal: 150, rw: '+300 Brasões' },
+  { t: '300 mil abates', ic: 'M4 3 L14 13 M20 3 L10 13', c: '#ffe07a', cur: 212400, goal: 300000, rw: '+500 XP da guilda' },
+  { t: '1.000 instâncias', ic: 'M5 21 V4 M5 4 L19 6 L15 10 L19 14 L5 14', c: '#8cc8ff', cur: 1000, goal: 1000, rw: '+250 Brasões' },
+  { t: '2 batalhas do torneio', ic: 'M3 6 L9 3 L15 6 L21 3 V18 L15 21 L9 18 L3 21 Z', c: '#c9a2ff', cur: 1, goal: 2, rw: '+200 Brasões' }
+];
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    var wk = {};
+    HALL.forEach(function (h, i) { wk[i] = { x: h.x, f: h.f || 1, mv: false, t: 0 }; });
+    this.state = { view: 'hall', sTab: 0, shTab: 0, now: Date.now(), toast: '', tk: 0,
+      feed: FEED0.map(function (e, i) { return Object.assign({ id: 'f' + i }, e); }), fid: 100, newId: '',
+      chat: CHAT0.slice(), unread: 2, wk: wk, talk: -1, say: '', sk: 0,
+      memSel: '', mSort: 0, mPage: 0, rk: 0,
+      br: 1240, gxp: G_XP, gems: 320,
+      dealt: 0.61 * BOSS_MAX, my: ME.dmg, tries: 2, hitters: 19, ph: 'idle', wave: 0, hitK: 0, shK: 0, floats: [], roar: false, slash: false, combo: '', hurt: false,
+      chest: { 25: 'got', 50: 'ready', 75: 'lock', 100: 'lock' }, dmgOn: false,
+      reqs: REQ0.map(function (q) { return Object.assign({}, q); }), inv: INV0.slice(), rqPage: 0, giveReq: '', givePick: '', gaveN: 0, fly: null, flyK: 0, reqOn: false, rqSlot: 4, rqR: 2, rulesOn: false,
+      bought: {}, popId: '', std: { atk: 3, hp: 2, def: 1 }, stdUp: '', donDone: {}, ci: false, misGot: {} };
+    this.timers = [];
+  }
+  componentDidMount() {
+    var self = this;
+    this.iv = setInterval(function () { self.setState({ now: Date.now() }); }, 1000);
+    this.wIv = setInterval(function () { self.wander(); }, 1700);
+    this.sIv = setInterval(function () { self.chatter(); }, 6500);
+    this.fIv = setInterval(function () { self.liveFeed(); }, 7500);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.wIv); clearInterval(this.sIv); clearInterval(this.fIv); this.timers.forEach(function (t) { clearTimeout(t); }); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  say(t) { var self = this, k = this.state.tk + 1; this.setState({ toast: t, tk: k }); this.later(function () { if (self.state.tk === k) self.setState({ toast: '' }); }, 2600); }
+  pushFeed(e) { var id = 'f' + this.state.fid; var f = [Object.assign({ id: id, ts: Date.now() }, e)].concat(this.state.feed).slice(0, 30); this.setState({ feed: f, fid: this.state.fid + 1, newId: id }); }
+  pushChat(who, t) {
+    var c = this.state.chat.concat([{ who: who, t: t, ts: Date.now() }]).slice(-20);
+    var inChat = this.state.view === 'social' && this.state.sTab === 3;
+    this.setState({ chat: c, unread: inChat || who === ME.name ? this.state.unread : this.state.unread + 1 });
+  }
+  // membros andando pelo salão (só no chão, nunca flutuam)
+  wander() {
+    var s = this.state, self = this;
+    HALL.forEach(function (h, i) {
+      if (h.mode !== 'walk' || s.wk[i].mv || s.talk === i || Math.random() < 0.45) return;
+      var cur = s.wk[i].x, nx = h.seg[0] + Math.random() * (h.seg[1] - h.seg[0]);
+      if (Math.abs(nx - cur) < 3) return;
+      var t = Math.abs(nx - cur) * 0.16;
+      var wk = Object.assign({}, self.state.wk); wk[i] = { x: nx, f: nx > cur ? 1 : -1, mv: true, t: t };
+      self.setState({ wk: wk });
+      self.later(function () { var w2 = Object.assign({}, self.state.wk); w2[i] = Object.assign({}, w2[i], { mv: false }); self.setState({ wk: w2 }); }, t * 1000);
+    });
+  }
+  chatter() {
+    var self = this, i = SPEAKERS[Math.floor(Math.random() * SPEAKERS.length)], h = HALL[i];
+    var t = PHRASES[Math.floor(Math.random() * PHRASES.length)], k = this.state.sk + 1;
+    this.setState({ talk: i, say: t, sk: k });
+    this.pushChat(h.m, t);
+    this.later(function () { if (self.state.sk === k) self.setState({ talk: -1 }); }, 3200);
+  }
+  liveFeed() {
+    var on = MEM.filter(function (m) { return m.on && !m.me; });
+    var a = on[Math.floor(Math.random() * on.length)], b = on[Math.floor(Math.random() * on.length)];
+    var era = ERAN[Math.floor(Math.random() * 4) + 1], r = Math.floor(Math.random() * 4), sl = Math.floor(Math.random() * 7);
+    var pool = [
+      { ty: 'boss', a: a.name, b: ' derrotou o ', c: 'Senhor da Era ' + era },
+      { ty: 'gift', a: a.name, b: ' doou ', c: withArt(sl, r) + (b.name !== a.name ? ' para ' + b.name.split(' ')[0] : '') },
+      { ty: 'dmg', a: a.name, b: ' causou ', c: fmtFC(4e5 + Math.random() * 2.6e6) + ' no chefe' },
+      { ty: 'up', a: a.name, b: ' subiu para o ', c: 'Nv. ' + (a.lv + 1) },
+      { ty: 'req', a: a.name, b: ' pediu ', c: itemName(sl, r) },
+      { ty: 'flag', a: 'A guilda', b: ' defendeu ', c: TERR[Math.floor(Math.random() * TERR.length)] }
+    ];
+    this.pushFeed(pool[Math.floor(Math.random() * pool.length)]);
+  }
+  go(view, extra) { this.sfx(SND.tap); this.setState(Object.assign({ view: view }, extra || {})); }
+
+  // ---------- chefe: ataque em grupo ----------
+  attack() {
+    var s = this.state, self = this;
+    if (s.ph !== 'idle') return;
+    if (s.tries <= 0) { this.sfx(SND.tap); this.say('Ataques voltam à meia-noite. Seus companheiros continuam batendo!'); return; }
+    var team = [ME, M('Rex_Brasa'), M('Caio Trovão'), M('Gabi Fênix')];
+    this.sfx(SND.summon, 0.6);
+    this.setState({ ph: 'run', tries: s.tries - 1, combo: '', floats: [] });
+    var total = 0;
+    function swing(n) {
+      var st = self.state, w = st.wave + 1, fl = [], sum = 0, md = 0;
+      team.forEach(function (m, j) {
+        var crit = Math.random() < 0.2, d = m.fc * 0.18 * (0.8 + Math.random() * 0.4) * (crit ? 1.8 : 1);
+        sum += d; if (m.me) md += d;
+        fl.push({ cls: 'dmgF ' + (crit ? 'cr ' : '') + 'w' + (w % 2), x: (50 + j * 7 + Math.random() * 6) + '%', y: (26 + (j % 2) * 12 + Math.random() * 8) + '%', d: (j * 0.12) + 's', who: m.me ? 'Você' : m.name.split(/[ _]/)[0], t: (crit ? 'CRÍTICO ' : '') + fmtFC(d) });
+      });
+      total += sum;
+      self.sfx(SND.hit, 0.6); self.later(function () { self.sfx(SND.swing, 0.4); }, 160);
+      self.setState({ wave: w, floats: fl, hitK: st.hitK + 1, shK: st.shK + 1, slash: true, dealt: Math.min(BOSS_MAX, st.dealt + sum), my: st.my + md });
+      self.later(function () { self.setState({ slash: false }); }, 340);
+      if (n === 2) { self.later(function () { self.sfx(SND.hurt, 0.6); self.setState({ roar: true, hurt: true }); }, 380); self.later(function () { self.setState({ roar: false, hurt: false }); }, 1000); }
+    }
+    this.later(function () { self.setState({ ph: 'atk' }); }, 520);
+    this.later(function () { swing(1); }, 900);
+    this.later(function () { swing(2); }, 1650);
+    this.later(function () { swing(3); }, 2400);
+    this.later(function () { self.sfx(SND.ult, 0.7); self.setState({ combo: fmtFC(total) }); }, 2900);
+    this.later(function () { self.setState({ ph: 'back', floats: [] }); }, 3600);
+    this.later(function () {
+      var st = self.state, ch = Object.assign({}, st.chest), opened = '';
+      [25, 50, 75, 100].forEach(function (p) { if (ch[p] === 'lock' && st.dealt >= BOSS_MAX * p / 100) { ch[p] = 'ready'; opened = p; } });
+      self.setState({ ph: 'idle', combo: '', chest: ch, hitters: Math.max(st.hitters, 19) });
+      self.pushFeed({ ty: 'dmg', a: 'Você', b: ' liderou um ataque em grupo: ', c: fmtFC(total) });
+      if (opened) { self.sfx(SND.ready, 0.8); self.say('Marco de ' + opened + '%! Baú liberado para todos que bateram.'); self.pushFeed({ ty: 'chest', a: 'Chefe', b: ': baú de ', c: opened + '% liberado para todos' }); }
+    }, 4200);
+  }
+  claimChest(p) {
+    var s = this.state, st = s.chest[p];
+    if (st === 'ready') {
+      var ch = Object.assign({}, s.chest); ch[p] = 'got';
+      var gain = { 25: 60, 50: 90, 75: 120, 100: 300 }[p];
+      this.sfx(SND.claim, 0.8);
+      this.setState({ chest: ch, br: s.br + gain });
+      this.say('Baú de ' + p + '% aberto: +' + gain + ' Brasões' + (p === 75 ? ', Essência e ração' : p === 50 ? ' e pedras de forja' : ''));
+      return;
+    }
+    this.sfx(SND.tap);
+    var what = { 25: '[QTD] Brasões', 50: 'pedras de forja', 75: 'Essência e ração', 100: 'baú da guilda + XP da guilda' }[p];
+    this.say(st === 'got' ? 'Baú de ' + p + '% já aberto.' : 'Ao chegar em ' + p + '% de dano: ' + what + ' para todos.');
+  }
+  // ---------- trocas ----------
+  reqState(q) {
+    var s = this.state, who = M(q.who);
+    if (q.done) return { k: 'done' };
+    if (q.mine) return { k: 'mine', why: 'Seu pedido · aguardando' };
+    if (who.days < MIN_DAYS) return { k: 'wait', why: 'Recebe em ' + (MIN_DAYS - who.days) + ' dias (7 dias de membro)' };
+    if (s.gaveN >= GIVE_MAX) return { k: 'lim', why: 'Você já doou 3 hoje' };
+    var fit = s.inv.filter(function (it) { return it.slot === q.slot && it.r >= q.r; });
+    var ok = fit.filter(function (it) { return !it.bought && !it.newH; });
+    if (ok.length) return { k: 'ok', items: fit };
+    if (fit.some(function (it) { return it.bought; })) return { k: 'none', why: 'Seu item foi comprado: não troca' };
+    if (fit.some(function (it) { return it.newH; })) return { k: 'none', why: 'Seu item é novo: doa em 19 h' };
+    return { k: 'none', why: 'Sem item compatível na mochila' };
+  }
+  doGive() {
+    var s = this.state, self = this;
+    var q = s.reqs.filter(function (r) { return r.id === s.giveReq; })[0];
+    var it = s.inv.filter(function (i) { return i.id === s.givePick; })[0];
+    if (!q || !it || it.bought || it.newH) { this.sfx(SND.tap); this.say('Escolha um item que pode ser doado.'); return; }
+    var page = s.reqs.slice(s.rqPage * 4, s.rqPage * 4 + 4), j = page.indexOf(q);
+    var fx = (j % 2 === 0 ? 25 : 75) + '%', fy = (j < 2 ? 18 : 64) + '%';
+    this.sfx(SND.summon, 0.6);
+    this.setState({ giveReq: '', givePick: '', fly: { fx: fx, fy: fy, rc: RC[it.r], rg: RG[it.r], rb: RB[it.r], rb2: RB2[it.r], p1: SLOTS[it.slot].p1 }, flyK: s.flyK + 1 });
+    this.later(function () {
+      var st = self.state;
+      var reqs = st.reqs.map(function (r) { return r.id === q.id ? Object.assign({}, r, { done: true }) : r; });
+      self.sfx(SND.claim, 0.8);
+      self.setState({ reqs: reqs, inv: st.inv.filter(function (i) { return i.id !== it.id; }), gaveN: st.gaveN + 1, br: st.br + 15 });
+      self.pushFeed({ ty: 'gift', a: 'Você', b: ' doou ', c: withArt(it.slot, it.r) + ' para ' + q.who.split(' ')[0] });
+      self.say(q.who + ' recebeu ' + itemName(it.slot, it.r) + ' (chega no Nv. 1). +15 Brasões e 50% do ouro de volta.');
+    }, 1100);
+    this.later(function () { self.setState({ fly: null }); self.pushChat(q.who, 'Obrigado pela doação!'); }, 1900);
+  }
+
+  renderVals() {
+    var s = this.state, self = this, now = s.now;
+    var tap = function () { self.sfx(SND.tap); };
+    var weekLeft = dur(Math.floor((nextMonday(now) - now) / 1000));
+    var online = MEM.filter(function (m) { return m.on; }).length;
+    var TITLES = { hall: 'Guilda', social: 'Salão social', boss: 'Portão do chefe', trade: 'Quadro de pedidos', shop: 'Mercador e mastro' };
+    var hpPct = Math.max(0, 1 - s.dealt / BOSS_MAX);
+    var reqOpen = s.reqs.filter(function (r) { return !r.done; }).length;
+
+    // ---------- salão ----------
+    var hallMem = HALL.map(function (h, i) {
+      var m = M(h.m), w = s.wk[i], walking = h.mode === 'walk' && w.mv;
+      return { x: w.x + '%', y: h.y + '%', sz: h.y > 80 ? 'clamp(74px, 24%, 128px)' : 'clamp(70px, 23%, 120px)', z: h.y > 80 ? 6 : 5, t: (w.mv ? w.t : 0) + 's',
+        f: w.f, spr: walking ? 'krun sp walk' : 'kidle sp', hue: m.hue, kD: (-i * 0.23) + 's',
+        tagCls: 'hmTag' + (m.role === 'L' ? ' ld' : '') + (m.me ? ' me' : ''), title: m.role === 'L' ? 'Líder' : m.title, name: m.me ? 'Você' : m.name,
+        talk: s.talk === i, say: s.say,
+        aria: (m.me ? 'Você' : m.name) + ', ' + ROLEN[m.role] + ', ' + m.title + '. Ver perfil',
+        pick: function () { self.sfx(SND.tap); self.setState({ memSel: m.id }); } };
+    });
+    var pens = []; for (var p = 0; p < 13; p++) pens.push({ x: (2 + p * 7.6) + '%', c: p % 2 ? '#ffc94a' : '#c8322a', d: (p * 0.19) + 's' });
+    var bans = [{ x: '24.5%', d: '0s' }, { x: '66%', d: '-1.1s' }];
+    var openReqs = s.reqs.filter(function (r) { return !r.done; }).slice(0, 4);
+    var qdPapers = openReqs.map(function (q, j) { return { x: (j % 2 ? 54 : 8) + '%', y: (j < 2 ? 16 : 56) + '%', c: RC[q.r], p1: SLOTS[q.slot].p1, d: (j * 0.4) + 's' }; });
+    var motes = [[20, 60], [44, 58], [56, 50], [70, 62], [36, 70], [82, 48]].map(function (q, j) { return { x: q[0] + '%', y: q[1] + '%', d: (j * 1.1) + 's' }; });
+    var mtFlags = STD.map(function (b, j) { return { x: (14 + j * 26) + '%', h: (j === 1 ? 92 : 76) + '%', c: b.c, ic: b.ic, d: (j * 0.3) + 's' }; });
+    var feedRows = function (list) { return list.map(function (e) { return { cls: 'fRow' + (e.id === s.newId ? ' new' : ''), c: FC[e.ty], ic: IC[e.ty], a: e.a, b: e.b, cc: e.c, ago: ago(e.ts, now) }; }); };
+    var donLeft = DONS.filter(function (d, i) { return !s.donDone[i]; }).length;
+
+    // ---------- social ----------
+    var sTabs = [
+      { label: 'Feed', ic: 'M4 6 H20 M4 12 H20 M4 18 H14' },
+      { label: 'Membros', ic: 'M9 11 A4 4 0 1 0 9.01 11 M2 21 C2 16 16 16 16 21 M16 4 A4 4 0 0 1 16 12' },
+      { label: 'Ranking', ic: 'M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16' },
+      { label: 'Chat', ic: 'M4 5 H20 V16 H9 L4 20 Z', dot: s.unread }
+    ].map(function (t, i) { return { label: t.label, ic: t.ic, sel: s.sTab === i ? 'true' : 'false', hasDot: !!t.dot && s.sTab !== i, dot: t.dot || '', pick: function () { self.sfx(SND.tap); self.setState(i === 3 ? { sTab: i, unread: 0 } : { sTab: i }); } }; });
+    var LD = MEM[0];
+    var achs = [
+      { n: 'Porto', s: 'conquistado', c: '#ffc94a', ic: IC.flag },
+      { n: 'Chefe ×12', s: 'derrubado', c: '#ff8a6a', ic: IC.boss },
+      { n: '100 trocas', s: 'entre membros', c: '#8ff09a', ic: IC.req },
+      { n: 'Nv. 8', s: '6.420 / ' + n0(G_XPMAX), c: '#8cc8ff', ic: IC.up, off: true }
+    ].map(function (a, i) { return Object.assign({}, a, { cls: 'achI' + (a.off ? ' off' : ''), d: (i * 0.08) + 's' }); });
+    // membros
+    var ordered = MEM.slice();
+    if (s.mSort === 0) ordered.sort(function (a, b) { return b.fc - a.fc; });
+    else if (s.mSort === 1) ordered.sort(function (a, b) { return (b.on - a.on) || (b.fc - a.fc); });
+    else { var RO = { L: 0, O: 1, M: 2 }; ordered.sort(function (a, b) { return (RO[a.role] - RO[b.role]) || (b.fc - a.fc); }); }
+    var PER = 7, mPages = Math.ceil(ordered.length / PER), mp = Math.min(s.mPage, mPages - 1);
+    var mRows = ordered.slice(mp * PER, mp * PER + PER).map(function (m, i) {
+      return { cls: 'mRow' + (m.me ? ' me' : ''), qa: 'qa' + (m.role === 'L' ? ' ld' : (m.on ? ' on' : '')), hue: m.hue, kD: (-i * 0.2) + 's', d: (i * 0.04) + 's',
+        role: ROLEN[m.role], roleCls: 'role ' + m.role, name: m.name, lv: m.lv, title: m.title, fc: fmtFC(m.fc), seen: m.on ? 'online' : m.seen, stC: m.on ? '#8ff09a' : '#a89a86', dotCls: m.on ? 'onDot' : 'offDot',
+        aria: m.name + ', ' + ROLEN[m.role] + ', nível ' + m.lv + ', FC ' + fmtFC(m.fc) + ', ' + (m.on ? 'online' : 'visto ' + m.seen),
+        open: function () { self.sfx(SND.tap); self.setState({ memSel: m.id }); } };
+    });
+    var mSorts = ['Poder', 'Online', 'Cargo'].map(function (l, i) { return { label: l, on: s.mSort === i ? 'true' : 'false', pick: function () { self.sfx(SND.tap); self.setState({ mSort: i, mPage: 0 }); } }; });
+    // ranking da semana
+    var key = s.rk === 0 ? 'ctb' : 'dmg';
+    var meVal = s.rk === 0 ? ME.ctb : s.my;
+    var rk = MEM.map(function (m) { return { m: m, v: m.me ? meVal : m[key] }; }).sort(function (a, b) { return b.v - a.v; });
+    var fmtV = function (v) { return s.rk === 0 ? n0(v) + ' pts' : fmtFC(v); };
+    var podPos = [{ i: 1, x: '2%', h: '52px', bg: 'linear-gradient(180deg,#e8e8f0,#9aa0aa)' }, { i: 0, x: '34.5%', h: '72px', bg: 'linear-gradient(180deg,#ffe07a,#f2a826)' }, { i: 2, x: '67%', h: '40px', bg: 'linear-gradient(180deg,#e0a070,#a8642a)' }];
+    var pod = podPos.map(function (P) { var e = rk[P.i]; return { x: P.x, h: P.h, bg: P.bg, rk: P.i + 1, first: P.i === 0, name: e.m.me ? 'Você' : e.m.name, val: fmtV(e.v), hue: e.m.hue, kD: (-P.i * 0.3) + 's', aria: (P.i + 1) + 'º lugar: ' + e.m.name + ', ' + fmtV(e.v) }; });
+    var rkRows = rk.slice(3, 8).map(function (e, i) { return { cls: 'rRow' + (e.m.me ? ' me' : ''), rk: i + 4, name: e.m.name, val: fmtV(e.v), hue: e.m.hue, d: (i * 0.05) + 's' }; });
+    var myIdx = 0; rk.forEach(function (e, i) { if (e.m.me) myIdx = i; });
+    var gapTx = myIdx === 0 ? 'Você lidera a semana!' : 'Faltam ' + fmtV(rk[myIdx - 1].v - meVal) + ' para o ' + myIdx + 'º';
+    // chat
+    var chat = s.chat.slice(-7).map(function (c) { var m = M(c.who); return { cls: 'msg' + (m.me ? ' mine' : ''), who: m.me ? 'Você' : c.who, t: c.t, ago: ago(c.ts, now), hue: m.hue }; });
+    var phrases = PHRASES.map(function (t) { return { t: t, send: function () {
+      self.sfx(SND.tap); self.pushChat(ME.name, t);
+      var k = self.state.sk + 1; self.setState({ talk: -1 });
+      self.later(function () { var i = SPEAKERS[Math.floor(Math.random() * SPEAKERS.length)]; var r = REPLY[t]; self.setState({ talk: i, say: r, sk: k }); self.pushChat(HALL[i].m, r); self.later(function () { if (self.state.sk === k) self.setState({ talk: -1 }); }, 3000); }, 1400);
+    } }; });
+
+    // ---------- chefe ----------
+    var team = [ME, M('Rex_Brasa'), M('Caio Trovão'), M('Gabi Fênix')];
+    var base = [[16, 88, 'clamp(80px,26%,150px)', 6], [10, 75, 'clamp(66px,21%,124px)', 5], [32, 88, 'clamp(80px,26%,150px)', 6], [27, 75, 'clamp(66px,21%,124px)', 5]];
+    var adv = s.ph === 'run' || s.ph === 'atk' ? 18 : 0;
+    var atk = team.map(function (m, j) {
+      var b = base[j];
+      return { cls: 'bA' + (s.hurt ? ' hurt' : ''), x: (b[0] + adv) + '%', y: b[1] + '%', sz: b[2], z: b[3], me: !!m.me, f: s.ph === 'back' ? -1 : 1,
+        spr: (s.ph === 'run' || s.ph === 'back') ? 'krun sp' : (s.ph === 'atk' ? 'katk sp' : 'kidle sp'), hue: m.hue, kD: (-j * 0.17) + 's',
+        tagCls: 'bTag' + (m.me ? ' me' : ''), name: m.me ? 'Você' : m.name };
+    });
+    var embers = [[56, 10], [64, 18], [72, 8], [80, 22], [88, 12], [60, 30], [76, 34], [92, 26]].map(function (q, j) { return { x: q[0] + '%', y: q[1] + '%', d: (j * 0.31) + 's' }; });
+    var chests = [25, 50, 75, 100].map(function (p) { var st = s.chest[p]; return { cls: 'chB ' + st, ready: st === 'ready', lbl: st === 'got' ? 'aberto' : (st === 'ready' ? 'ABRIR' : p + '%'), aria: 'Baú do marco de ' + p + '%: ' + (st === 'got' ? 'já aberto' : st === 'ready' ? 'pronto para abrir' : 'bloqueado'), tap: function () { self.claimChest(p); } }; });
+    var dRank = MEM.map(function (m) { return { m: m, v: m.me ? s.my : m.dmg }; }).sort(function (a, b) { return b.v - a.v; });
+    var myDR = 0; dRank.forEach(function (e, i) { if (e.m.me) myDR = i + 1; });
+    var top = dRank[0].v;
+    var dmgRows = dRank.slice(0, 6).map(function (e, i) { return { cls: 'dmgRow' + (e.m.me ? ' me' : ''), rk: i + 1, rc: i === 0 ? '#ffc94a' : (i < 3 ? '#e8e8f0' : '#c9b9a2'), name: e.m.me ? 'Você · Kael' : e.m.name, val: fmtFC(e.v), w: Math.round(e.v / top * 100) + '%', hue: e.m.hue }; });
+    if (myDR > 6) dmgRows.push({ cls: 'dmgRow me', rk: myDR, rc: '#ffc94a', name: 'Você · Kael', val: fmtFC(s.my), w: Math.round(s.my / top * 100) + '%', hue: 'none' });
+    var TIERS = [[0.5e6, '50 Brasões'], [2e6, '+ pedras de forja'], [5e6, '+ ração e Essência'], [10e6, '+ moldura do chefe (visual)']];
+    var tiers = TIERS.map(function (t) { return { cls: 'chip' + (s.my >= t[0] ? ' ok' : ''), t: fmtFC(t[0]) + ': ' + t[1] }; });
+    var pips = [0, 1].map(function (i) { return { cls: 'pip' + (i < s.tries ? '' : ' off') }; });
+    var atkCls = s.ph !== 'idle' ? 'gold red' : (s.tries > 0 ? 'gold red pulse' : 'gold off');
+    var atkTx = s.ph !== 'idle' ? 'Atacando juntos...' : (s.tries > 0 ? 'Atacar com a guilda · ' + s.tries + '/2' : 'Ataques voltam à meia-noite');
+
+    // ---------- trocas ----------
+    var rqPages = Math.max(1, Math.ceil(s.reqs.length / 4)), rp = Math.min(s.rqPage, rqPages - 1);
+    var rqCards = s.reqs.slice(rp * 4, rp * 4 + 4).map(function (q, j) {
+      var m = q.mine ? ME : M(q.who), st = self.reqState(q), r = q.r;
+      return { cls: 'rq' + (q.mine ? ' mine' : ''), d: (-j * 0.7) + 's', qa: 'qa' + (m.on ? ' on' : ''), hue: m.hue, who: q.mine ? 'Você' : q.who, sub: q.mine ? 'seu pedido' : (ROLEN[m.role] + ' · ' + q.left + ' h'),
+        rc: RC[r], rg: RG[r], rb: RB[r], rb2: RB2[r], rcT: RCT[r], p1: SLOTS[q.slot].p1, p2: SLOTS[q.slot].p2, stars: starsOf(q.st), stAria: q.st + ' estrelas ou mais',
+        item: itemName(q.slot, r), meta: 'mín. ' + RNF[r] + ' · ★' + q.st + '+',
+        canGive: st.k === 'ok', noGive: st.k !== 'ok' && st.k !== 'done', done: st.k === 'done', why: st.why || '',
+        aria: 'Doar ' + itemName(q.slot, r) + ' para ' + q.who,
+        give: function () { self.sfx(SND.tap); var ok = (self.reqState(q).items || []).filter(function (it) { return !it.bought && !it.newH; }); self.setState({ giveReq: q.id, givePick: ok.length ? ok[0].id : '' }); } };
+    });
+    var gq = s.reqs.filter(function (r) { return r.id === s.giveReq; })[0];
+    var gv = {}, invCards = [];
+    if (gq) {
+      var gst = self.reqState(gq);
+      invCards = (gst.items || []).map(function (it) {
+        var lk = !!(it.bought || it.newH);
+        return { cls: 'invC' + (lk ? ' lk' : ''), sel: s.givePick === it.id ? 'true' : 'false', lk: lk, rc: RC[it.r], rg: RG[it.r], rb: RB[it.r], rb2: RB2[it.r], rcT: RC[it.r], p1: SLOTS[it.slot].p1, p2: SLOTS[it.slot].p2,
+          stars: starsOf(it.st), n: itemName(it.slot, it.r), sub: it.bought ? 'comprado: não troca' : (it.newH ? 'novo: doa em ' + (24 - it.newH) + ' h' : 'Nv. ' + it.lvl + ' → chega Nv. 1'),
+          aria: itemName(it.slot, it.r) + ', ' + it.st + ' estrelas' + (lk ? ', não pode ser doado' : ''),
+          pick: function () { self.sfx(SND.tap); if (lk) { self.say(it.bought ? 'Itens comprados não entram em troca.' : 'Item obtido há menos de 24 h não pode ser doado.'); return; } self.setState({ givePick: it.id }); } };
+      });
+      var pk = s.inv.filter(function (i) { return i.id === s.givePick; })[0];
+      gv = { title: 'Doar ' + itemName(gq.slot, gq.r) + ' para ' + gq.who, whoUp: gq.who.toUpperCase(), item: itemName(gq.slot, gq.r), rcT: RC[gq.r],
+        note: pk ? 'O item chega no Nv. 1 para ' + gq.who.split(' ')[0] + ' (estrelas e raridade ficam). Você recebe 50% do ouro investido de volta. Doações hoje: ' + s.gaveN + '/' + GIVE_MAX + '.' : 'Escolha um item.',
+        btnCls: pk ? 'gold pulse' : 'gold off', btn: pk ? 'Doar ' + itemName(pk.slot, pk.r) : 'Escolha um item' };
+    }
+    var fly = s.fly || { fx: '50%', fy: '50%', rc: '#fff', rg: '#fff', rb: '#000', rb2: '#000', p1: '' };
+    var rqSlots = SLOTS.map(function (S, i) { return { n: S.n, p1: S.p1, on: s.rqSlot === i ? 'true' : 'false', pick: function () { self.sfx(SND.tap); self.setState({ rqSlot: i }); } }; });
+    var rqRars = RNF.map(function (n, i) { return { n: n, c: RC[i], on: s.rqR === i ? 'true' : 'false', pick: function () { self.sfx(SND.tap); self.setState({ rqR: i }); } }; });
+    var rqPv = { rc: RC[s.rqR], rg: RG[s.rqR], rb: RB[s.rqR], rb2: RB2[s.rqR], rcT: RC[s.rqR], p1: SLOTS[s.rqSlot].p1, n: itemName(s.rqSlot, s.rqR) };
+
+    // ---------- loja / estandartes / missões ----------
+    var shTabs = [
+      { label: 'Loja', ic: 'M4 9 H20 L18 20 H6 Z M8 9 C8 4 16 4 16 9' },
+      { label: 'Estandartes', ic: 'M5 21 V3 M5 4 H18 V13 L12 11 L5 13' },
+      { label: 'Missões', ic: 'M6 3 H18 V21 H6 Z M9 8 H15 M9 12 H15 M9 16 L11 18 L15 14', dot: donLeft + (s.ci ? 0 : 1) }
+    ].map(function (t, i) { return { label: t.label, ic: t.ic, sel: s.shTab === i ? 'true' : 'false', hasDot: !!t.dot && s.shTab !== i, dot: t.dot || '', pick: function () { self.sfx(SND.tap); self.setState({ shTab: i }); } }; });
+    var shop = SHOP.map(function (it, i) {
+      var got = s.bought[it.id] || 0, left = it.lim - got, lk = it.glv && it.glv > G_LV, can = !lk && left > 0 && s.br >= it.price;
+      return { cls: 'shI' + (lk ? ' lk' : '') + (s.popId === it.id ? ' pop' : ''), rc: RC[it.r], rb2: RB2[it.r], d: (i * 0.05) + 's', f: it.f, p1: it.p1, p2: it.p2, n: it.n,
+        lim: lk ? 'libera no Nv. ' + it.glv + ' da guilda' : (it.vis ? 'visual · ' : '') + 'semana: ' + left + '/' + it.lim,
+        btnCls: can ? 'grn' : 'grn off', btn: lk ? 'Bloqueado' : (left <= 0 ? 'Esgotado' : it.price + ' Brasões'),
+        aria: 'Comprar ' + it.n + ' por ' + it.price + ' Brasões',
+        buy: function () {
+          if (lk) { self.sfx(SND.tap); self.say('Libera quando a guilda chegar ao Nv. ' + it.glv + '.'); return; }
+          if (left <= 0) { self.sfx(SND.tap); self.say('Limite da semana atingido.'); return; }
+          if (self.state.br < it.price) { self.sfx(SND.tap); self.say('Faltam ' + (it.price - self.state.br) + ' Brasões. Bata no chefe e doe!'); return; }
+          var b = Object.assign({}, self.state.bought); b[it.id] = got + 1;
+          self.sfx(SND.coin, 0.8); self.setState({ bought: b, br: self.state.br - it.price, popId: it.id }); self.say('Comprado: ' + it.n);
+          self.later(function () { self.setState({ popId: '' }); }, 600);
+        } };
+    });
+    var stds = STD.map(function (b, i) {
+      var cur = s.std[b.id], cap = STD_CAP[b.id], cost = 800 * (cur + 1), atCap = cur >= cap, atMax = cur >= b.max, can = !atCap && s.gxp >= cost;
+      var pp = []; for (var k = 0; k < b.max; k++) pp.push({ cls: k < cur ? 'on' : (k >= cap ? 'cap' : '') });
+      return { n: b.n, stat: b.stat, cur: cur, c: b.c, dk: b.dk, ic: b.ic, d: (i * 0.3) + 's', pips: pp, fCls: 'stdF' + (s.stdUp === b.id ? ' up' : ''),
+        sub: atMax ? 'No máximo: +' + b.max + '%' : (atCap ? 'Nv. 8 da guilda libera +' + (cur + 1) + '%' : 'Próximo: +' + (cur + 1) + '% · máx. +' + b.max + '%'),
+        btnCls: can ? 'grn pulse' : 'grn off', btn: atMax ? 'Máximo' : (atCap ? 'Teto' : 'Erguer'), cost: atCap ? '' : n0(cost) + ' XP',
+        aria: 'Erguer ' + b.n + ' para ' + b.stat + ' +' + (cur + 1) + '% por ' + n0(cost) + ' XP da guilda',
+        up: function () {
+          if (atCap) { self.sfx(SND.tap); self.say(atMax ? 'Já está no máximo.' : 'O teto sobe com o nível da guilda.'); return; }
+          if (self.state.gxp < cost) { self.sfx(SND.tap); self.say('Falta XP da guilda.'); return; }
+          var sd = Object.assign({}, self.state.std); sd[b.id] = cur + 1;
+          self.sfx(SND.up, 0.8); self.setState({ std: sd, gxp: self.state.gxp - cost, stdUp: b.id });
+          self.pushFeed({ ty: 'std', a: 'Você', b: ' ergueu o ', c: b.n.replace('Estandarte ', 'estandarte ') + ' (' + b.stat + ' +' + (cur + 1) + '%)' });
+          self.later(function () { self.setState({ stdUp: '' }); }, 900);
+        } };
+    });
+    var dons = DONS.map(function (d, i) {
+      var done = !!s.donDone[i];
+      return { cls: 'don' + (done ? ' done' : ' go'), rc: RC[d.r], img: d.img, n: d.n, cost: d.cost, gain: done ? 'feito hoje' : '+' + d.br + ' Brasões · +' + d.xp + ' XP',
+        aria: 'Doar ' + d.n + ' (' + d.cost + ') por ' + d.br + ' Brasões e ' + d.xp + ' XP da guilda',
+        give: function () {
+          if (done) { self.sfx(SND.tap); self.say('Já doado hoje. Volta à meia-noite.'); return; }
+          if (d.gem && self.state.gems < d.gem) { self.sfx(SND.tap); self.say('Gemas insuficientes.'); return; }
+          var dd = Object.assign({}, self.state.donDone); dd[i] = true;
+          self.sfx(SND.coin, 0.8); self.setState({ donDone: dd, br: self.state.br + d.br, gxp: self.state.gxp + d.xp, gems: self.state.gems - (d.gem || 0) });
+          self.pushFeed({ ty: 'gift', a: 'Você', b: ' doou para a guilda: ', c: d.n.toLowerCase() }); self.say('+' + d.br + ' Brasões e +' + d.xp + ' XP da guilda');
+        } };
+    });
+    var mis = MIS0.map(function (m, i) {
+      var cur = m.pct ? s.dealt / BOSS_MAX : m.cur, done = cur >= m.goal, got = !!s.misGot[i];
+      return { t: m.t, ic: m.ic, c: m.c, rw: m.rw, w: Math.min(100, Math.round(cur / m.goal * 100)) + '%', pTx: m.pct ? Math.round(cur * 100) + '%' : n0(cur) + '/' + n0(m.goal),
+        btnCls: got ? 'grn off' : (done ? 'grn pulse' : 'grn off'), btn: got ? 'Feito' : (done ? 'Resgatar' : 'Em curso'), aria: m.t + ': ' + (got ? 'resgatado' : done ? 'resgatar ' + m.rw : 'em andamento'),
+        claim: function () {
+          if (got || !done) { self.sfx(SND.tap); if (!done) self.say('Missão da guilda em andamento: todos somam.'); return; }
+          var mg = Object.assign({}, self.state.misGot); mg[i] = true;
+          var add = parseInt(m.rw.replace(/\D/g, ''), 10) || 0, isXp = m.rw.indexOf('XP') >= 0;
+          self.sfx(SND.claim, 0.8); self.setState({ misGot: mg, br: self.state.br + (isXp ? 0 : add), gxp: self.state.gxp + (isXp ? add : 0) }); self.say('Missão resgatada: ' + m.rw);
+        } };
+    });
+
+    // ---------- folha de membro ----------
+    var msM = s.memSel ? MEM.filter(function (m) { return m.id === s.memSel; })[0] : null;
+    var ms = {};
+    if (msM) ms = { name: msM.me ? 'Você · Kael' : msM.name, role: ROLEN[msM.role], roleCls: 'role ' + msM.role, title: msM.title, lv: msM.lv, fc: fmtFC(msM.fc), days: msM.days,
+      seen: msM.on ? 'online agora' : 'visto ' + msM.seen, stC: msM.on ? '#8ff09a' : '#a89a86', dotCls: msM.on ? 'onDot' : 'offDot', hue: msM.hue, pc: msM.role === 'L' ? '#ffc94a' : '#c8322a',
+      ctb: n0(msM.me ? ME.ctb : msM.ctb), dmg: fmtFC(msM.me ? s.my : msM.dmg), don: msM.don,
+      greet: function () { self.sfx(SND.tap); self.pushChat(ME.name, 'Olá, ' + msM.name.split(/[ _]/)[0] + '!'); self.setState({ memSel: '' }); self.say('Saudação enviada no chat da guilda.'); },
+      thank: function () { self.sfx(SND.tap); self.pushChat(ME.name, 'Obrigado pela doação!'); self.setState({ memSel: '' }); self.say('Agradecimento enviado.'); } };
+
+    return {
+      tap: tap, title: TITLES[s.view], isHall: s.view === 'hall', notHall: s.view !== 'hall',
+      goHall: function () { self.go('hall'); },
+      brTx: n0(s.br), brAria: 'Brasões: ' + n0(s.br) + '. Abrir o mercador da guilda',
+      hasToast: !!s.toast, toast: s.toast,
+      openShop: function () { self.go('shop', { shTab: 0 }); }, openStd: function () { self.go('shop', { shTab: 1 }); }, openMis: function () { self.go('shop', { shTab: 2 }); },
+      openTrade: function () { self.go('trade'); }, openBoss: function () { self.go('boss'); },
+      openFeed: function () { self.go('social', { sTab: 0 }); }, openMembers: function () { self.go('social', { sTab: 1 }); },
+      openRank: function () { self.go('social', { sTab: 2 }); }, openChat: function () { self.go('social', { sTab: 3, unread: 0 }); },
+      // salão
+      gLv: G_LV, gXpW: Math.round(s.gxp / G_XPMAX * 100) + '%', gXpTx: n0(s.gxp) + '/' + n0(G_XPMAX), gXpAria: 'XP da guilda ' + n0(s.gxp) + ' de ' + n0(G_XPMAX),
+      memTx: MEM.length + '/' + GUILD_MAX, onTx: online + ' online',
+      pens: pens, bans: bans, qdPapers: qdPapers, reqOpenN: reqOpen, qdAria: 'Quadro de pedidos: trocas de itens, ' + reqOpen + ' pedidos abertos',
+      hpW: Math.round(hpPct * 1000) / 10 + '%', triesN: s.tries, gtAria: 'Portão do chefe: Dragão Rubro com ' + Math.round(hpPct * 100) + '% de vida, ' + s.tries + ' ataques hoje',
+      mtFlags: mtFlags, mtAria: 'Mastro dos estandartes: ATK +' + s.std.atk + '%, Vida +' + s.std.hp + '%, DEF +' + s.std.def + '%',
+      hallMem: hallMem, motes: motes, feedTop: feedRows(s.feed.slice(0, 3)),
+      hasUnread: s.unread > 0, unread: s.unread, donLeft: donLeft, donLeftOn: donLeft > 0, donBtnCls: 'qBtn' + (donLeft > 0 ? ' go' : ''),
+      // social
+      isSocial: s.view === 'social', sTabs: sTabs, sFeed: s.sTab === 0, sMem: s.sTab === 1, sRank: s.sTab === 2, sChat: s.sTab === 3,
+      ldHue: LD.hue, ldName: LD.name, ldLv: LD.lv, ldFc: fmtFC(LD.fc),
+      greetLeader: function () { self.sfx(SND.tap); self.pushChat(ME.name, 'Olá, Luna!'); self.say('Você saudou a líder.'); self.later(function () { self.pushChat('LunaFerro', 'Bora no chefe!'); }, 1200); },
+      achs: achs, feedAll: feedRows(s.feed.slice(0, 8)),
+      mSorts: mSorts, mRows: mRows, mPageTx: 'Página ' + (mp + 1) + ' de ' + mPages,
+      mPrev: function () { self.sfx(SND.tap); self.setState({ mPage: Math.max(0, mp - 1) }); }, mNext: function () { self.sfx(SND.tap); self.setState({ mPage: Math.min(mPages - 1, mp + 1) }); },
+      invite: function () { self.sfx(SND.tap); self.say('Convite: ' + (GUILD_MAX - MEM.length) + ' vagas, a partir do Nv. 32.'); },
+      rkCtb: s.rk === 0 ? 'true' : 'false', rkDmg: s.rk === 1 ? 'true' : 'false',
+      byCtb: function () { self.sfx(SND.tap); self.setState({ rk: 0 }); }, byDmg: function () { self.sfx(SND.tap); self.setState({ rk: 1 }); },
+      pod: pod, rkRows: rkRows, rkMeCls: 'rRow me', rkMeRk: myIdx + 1, rkMeGap: gapTx, rkMeVal: fmtV(meVal), weekLeft: weekLeft,
+      chat: chat, phrases: phrases,
+      // chefe
+      isBoss: s.view === 'boss', bStCls: 'bSt' + (s.shK ? (s.shK % 2 ? ' shA' : ' shB') : ''),
+      bossAria: 'Dragão Rubro, Senhor da Era Medieval, chefe da guilda, ' + Math.round(hpPct * 100) + '% de vida',
+      embers: embers, bHitCls: 'bBody' + (s.hitK ? (s.hitK % 2 ? ' hit1' : ' hit2') : ''), roarOn: s.roar, atk: atk,
+      slashOn: s.slash, slashCls: 'slash w' + (s.wave % 2), floats: s.floats, comboOn: !!s.combo, comboTx: s.combo,
+      chests: chests, hpTx: Math.round(hpPct * 100) + '% · ' + fmtFC(BOSS_MAX - s.dealt) + ' / ' + fmtFC(BOSS_MAX), hpAria: 'Vida coletiva do chefe: ' + Math.round(hpPct * 100) + '%',
+      hitters: s.hitters, myDmgTx: fmtFC(s.my), myPctTx: (Math.round(s.my / BOSS_MAX * 1000) / 10).toString().replace('.', ',') + '% do chefe', myRkTx: myDR + 'º no dano', pips: pips,
+      openDmg: function () { self.sfx(SND.tap); self.setState({ dmgOn: true }); }, atkCls: atkCls, atkTx: atkTx, attack: function () { self.attack(); },
+      dmgOn: s.dmgOn, dmgRows: dmgRows, tiers: tiers,
+      // trocas
+      isTrade: s.view === 'trade', rqCards: rqCards, flyOn: !!s.fly, fly: fly,
+      rqPageTx: 'Mural ' + (rp + 1) + '/' + rqPages + ' · ' + reqOpen + ' pedidos', limTx: 'Doações hoje ' + s.gaveN + '/' + GIVE_MAX,
+      rqPv: rqPv, rqPrev: function () { self.sfx(SND.tap); self.setState({ rqPage: (rp - 1 + rqPages) % rqPages }); },
+      rqNext: function () { self.sfx(SND.tap); self.setState({ rqPage: (rp + 1) % rqPages }); },
+      openRules: function () { self.sfx(SND.tap); self.setState({ rulesOn: true }); }, rulesOn: s.rulesOn,
+      openReq: function () { self.sfx(SND.tap); self.setState({ reqOn: true }); }, reqOn: s.reqOn, rqSlots: rqSlots, rqRars: rqRars,
+      postReq: function () {
+        if (self.state.reqs.some(function (r) { return r.mine && !r.done; })) { self.sfx(SND.tap); self.setState({ reqOn: false }); self.say('Você já tem um pedido no quadro (1 por vez).'); return; }
+        var q = { id: 'my' + Date.now(), who: ME.name, mine: true, slot: self.state.rqSlot, r: self.state.rqR, st: 1, left: 24 };
+        self.sfx(SND.claim, 0.7); self.setState({ reqs: [q].concat(self.state.reqs), reqOn: false, rqPage: 0 });
+        self.pushFeed({ ty: 'req', a: 'Você', b: ' pediu ', c: itemName(q.slot, q.r) }); self.say('Pedido pendurado no quadro por 24 h.');
+      },
+      giveOn: !!gq, gv: gv, invCards: invCards, doGive: function () { self.doGive(); },
+      // loja
+      isShop: s.view === 'shop', shTabs: shTabs, shLoja: s.shTab === 0, shStd: s.shTab === 1, shMis: s.shTab === 2,
+      shop: shop, stds: stds, gXpNow: n0(s.gxp), dons: dons, mis: mis,
+      ciCls: s.ci ? 'gold off' : 'gold pulse', ciTx: s.ci ? 'Check-in feito hoje' : 'Check-in diário · +5 Brasões +5 XP',
+      checkin: function () { if (self.state.ci) { self.sfx(SND.tap); self.say('Check-in já feito hoje.'); return; } self.sfx(SND.claim, 0.8); self.setState({ ci: true, br: self.state.br + 5, gxp: self.state.gxp + 5 }); self.say('+5 Brasões e +5 XP da guilda'); },
+      // folhas
+      memOn: !!msM, ms: ms,
+      closeSheet: function () { self.sfx(SND.tap); self.setState({ memSel: '', giveReq: '', givePick: '', reqOn: false, rulesOn: false, dmgOn: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

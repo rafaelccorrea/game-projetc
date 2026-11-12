@@ -111,6 +111,19 @@ html,body{height:100%}
 .pnl > div{width:100%;max-width:600px;margin-left:auto;margin-right:auto}
 .pnlIn{animation:pnlIn .3s cubic-bezier(.2,.9,.25,1) both}
 @keyframes pnlIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+/* APARÊNCIA EM CAMADAS (prévia por código: arte final dos acessórios em produção) */
+.kwrap{position:absolute;left:calc(50% - 84px);bottom:14px;width:168px;height:168px;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.6))}
+.kwrap .kidle{position:absolute;inset:0}
+.ktint{transition:opacity .25s,filter .25s;pointer-events:none}
+.khead{position:absolute;height:auto;pointer-events:none;transition:opacity .25s}
+.lkSheet{position:absolute;left:0;right:0;bottom:0;top:clamp(236px,34vh,292px);overflow-y:auto;padding:10px 14px 14px;box-sizing:border-box;background:#1d1611;border-top:3px solid #b07cff;border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px;z-index:20}
+.lkScrim{position:absolute;left:0;right:0;bottom:0;top:clamp(236px,34vh,292px);border:0;padding:0;background:rgba(8,5,3,.5);z-index:19}
+.lkRow{display:flex;align-items:center;gap:10px;min-height:52px;padding:4px 6px 4px 8px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box;transition:opacity .2s}
+.eyeb{width:44px;height:44px;flex:none;border-radius:12px;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.eyeb:active,.cosc:active,.segb:active{transform:scale(.94)}
+.segb{flex:1;height:44px;border-radius:11px;border:0;font-family:'Lilita One',sans-serif;font-size:16px;letter-spacing:.3px;transition:background .2s,color .2s}
+.cosc{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 6px;border-radius:14px;background:#0e0a07;box-sizing:border-box;color:#f6ecdf}
+@media (max-width:374px){.cosg{grid-template-columns:repeat(2,1fr) !important}}
 @media (max-width:374px){.hd{gap:6px;padding-left:8px;padding-right:8px}.hpill .hplus.opt{display:none}.hpill b{font-size:12.5px}}
 </style>
 </helmet>
@@ -147,7 +160,25 @@ html,body{height:100%}
       <span class="spark" style="left: calc(50% + 23px); bottom: 25px; animation-delay: 2.0s"></span>
       <span class="spark" style="left: calc(50% + 55px); bottom: 33px; animation-delay: 0.6s; width: 3px; height: 3px"></span>
       <div class="aura13" aria-hidden="true" style="position: absolute; left: calc(50% - 84px); bottom: 18px; width: 168px; height: 210px"></div>
-      <div class="kidle" role="img" aria-label="Kael com a skin equipada" style="position: absolute; left: calc(50% - 84px); bottom: 14px; width: 168px; height: 168px; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.6))"></div>
+      <!-- Kael em camadas: roupa base (folha animada aprovada, pés no chão) + peças por cima.
+           Colete/botas = tinta de cor sobre o tronco/pés; arma = tinta na mão; chapéu/óculos/máscara = camada na cabeça.
+           As camadas de tinta são cópias da MESMA folha (sempre montadas, só mudam opacidade/filtro) para ficarem sincronizadas. -->
+      <div class="kwrap" role="img" aria-label="{{kAria}}">
+        <div class="kidle"></div>
+        <div class="kidle ktint" aria-hidden="true" style="clip-path: {{ly.vest.clip}}; filter: {{ly.vest.f}}; opacity: {{ly.vest.o}}; mix-blend-mode: {{ly.vest.bm}}"></div>
+        <div class="kidle ktint" aria-hidden="true" style="clip-path: {{ly.boots.clip}}; filter: {{ly.boots.f}}; opacity: {{ly.boots.o}}; mix-blend-mode: {{ly.boots.bm}}"></div>
+        <div class="kidle ktint" aria-hidden="true" style="clip-path: {{ly.weapon.clip}}; filter: {{ly.weapon.f}}; opacity: {{ly.weapon.o}}; mix-blend-mode: {{ly.weapon.bm}}"></div>
+        <sc-if value="{{ly.hatOn}}" hint-placeholder-val="{{true}}">
+          <img class="khead" src="{{ly.hatImg}}" alt="" style="left: {{ly.hatL}}; top: {{ly.hatT}}; width: {{ly.hatW}}">
+        </sc-if>
+        <sc-if value="{{ly.cosOn}}" hint-placeholder-val="{{false}}">
+          <img class="khead" src="{{ly.cosImg}}" alt="" style="left: {{ly.cosL}}; top: {{ly.cosT}}; width: {{ly.cosW}}">
+        </sc-if>
+      </div>
+      <!-- selo da prévia (embaixo do pedestal) -->
+      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 1px; display: flex; justify-content: center; pointer-events: none; z-index: 3">
+        <span style="padding: 1px 7px; border-radius: 7px; background: rgba(14,10,7,0.78); font-size: 9px; font-weight: 900; color: {{lkTagC}}; letter-spacing: .3px">{{lkTag}}</span>
+      </div>
       <sc-if value="{{upFx}}" hint-placeholder-val="{{false}}">
         <div class="upfx" aria-hidden="true" style="position: absolute; left: calc(50% - 80px); bottom: 22px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(255,250,220,0.9) 0%, rgba(255,201,74,0.5) 40%, rgba(255,201,74,0) 70%)"></div>
       </sc-if>
@@ -167,6 +198,11 @@ html,body{height:100%}
               <img src="{{sl.img}}" alt="" style="width: 38px; height: 38px; object-fit: contain; margin-top: -8px">
               <span style="position: absolute; left: 0; right: 0; bottom: 0; height: 16px; background: rgba(0,0,0,0.72); font-size: 10px; font-weight: 900; color: #fff; line-height: 16px">{{sl.lvlTxt}}</span>
             </button>
+            <sc-if value="{{sl.hid}}" hint-placeholder-val="{{false}}">
+              <span title="Oculto no visual" aria-hidden="true" style="position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; border-radius: 50%; background: #16110d; border: 2px solid #c9b9a2; color: #c9b9a2; display: flex; align-items: center; justify-content: center; box-sizing: border-box">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"></path><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6A17 17 0 0 0 2 12s4 7 10 7a9.6 9.6 0 0 0 5.4-1.6"></path></svg>
+              </span>
+            </sc-if>
             <span class="plus" style="position: absolute; top: -7px; right: -8px; padding: 1px 5px; border-radius: 8px; background: #2a1403; border: 2px solid #ffc94a; color: #ffc94a; font-family: 'Lilita One', sans-serif; font-size: 12px; line-height: 14px">{{sl.plus}}</span>
           </div>
           <span style="font-size: 10px; font-weight: 900; color: #f6ecdf; text-shadow: 0 1px 2px #000, 0 0 4px #000; white-space: nowrap">{{sl.name}}</span>
@@ -199,13 +235,17 @@ html,body{height:100%}
             <span class="{{fcCls}}" style="font-family: 'Lilita One', sans-serif; font-size: 25px; color: #ffc94a; text-shadow: 0 2px 0 #6a3a08; transform-origin: 0 50%">{{fcTxt}}</span>
           </div>
         </div>
-        <a href="Loja.dc.html" aria-label="Skin equipada e coleção de skins" style="width: 168px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 6px; border-radius: 12px; background: #33271d; border: 2px solid #b07cff; box-sizing: border-box; text-decoration: none; color: #f6ecdf">
+        <!-- Aba APARÊNCIA (abre o painel: modo Itens/Skin, olho por peça, cosméticos). A coleção de skins na Loja fica dentro do painel -->
+        <button onClick="{{openLook}}" aria-label="Aparência: Skin Épica +5% ATK e HP, coleção de skins +3,5%. Abrir modo Itens ou Skin, ocultar peças e cosméticos" style="width: 168px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 6px; border-radius: 12px; background: #33271d; border: 2px solid #b07cff; box-sizing: border-box; color: #f6ecdf; text-align: left">
           <span style="position: relative; width: 34px; height: 34px; flex: none; border-radius: 9px; background: #1d1611; overflow: hidden"><span class="kidle" style="position: absolute; left: -12px; top: -4px; width: 58px; height: 58px; display: block"></span></span>
-          <span style="display: flex; flex-direction: column; line-height: 1.15; min-width: 0">
-            <span style="font-size: 11px; font-weight: 900; color: #c9a3ff">Skin Épica +5% ATK/HP</span>
-            <span style="font-size: 10px; font-weight: 800; color: #c9b9a2">Coleção de skins +3,5%</span>
+          <span style="display: flex; flex-direction: column; line-height: 1.12; min-width: 0; flex: 1">
+            <span style="display: flex; align-items: center; gap: 4px; font-family: 'Lilita One', sans-serif; font-size: 13px; color: #f6ecdf">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Aparência</span>
+            <span style="font-size: 10px; font-weight: 900; color: #c9a3ff; white-space: nowrap">Skin Épica +5% ATK/HP</span>
+            <span style="font-size: 9.5px; font-weight: 800; color: #c9b9a2; white-space: nowrap">Coleção de skins +3,5%</span>
           </span>
-        </a>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
       </div>
       <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr; gap: 5px">
         <sc-for list="{{stats}}" as="st" hint-placeholder-count="6">
@@ -289,6 +329,91 @@ html,body{height:100%}
         </button>
       </sc-if>
     </div>
+
+    <!-- APARÊNCIA: painel abaixo da vitrine (o Kael continua visível e reage na hora) -->
+    <sc-if value="{{lookOpen}}" hint-placeholder-val="{{false}}">
+      <button class="lkScrim scrim" onClick="{{closeLook}}" aria-label="Fechar aparência"></button>
+      <div class="lkSheet sheet" role="dialog" aria-label="Aparência do Kael">
+        <div style="display: flex; align-items: center; gap: 10px; flex: none">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 21px; color: #c9a3ff; text-shadow: 0 2px 0 #000">Aparência</span>
+            <span style="font-size: 11px; font-weight: 800; color: #c9b9a2">Roupa base + peças por cima. Só muda o visual.</span>
+          </div>
+          <button onClick="{{closeLook}}" aria-label="Fechar" style="width: 44px; height: 44px; flex: none; border-radius: 12px; border: 2px solid #4a3a2b; background: #33271d; color: #f6ecdf; padding: 0; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <!-- regra em destaque -->
+        <div style="flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: #1f3a22; border: 1px solid #5fd068">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7ef08a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path><polyline points="8.5 12 11 14.5 15.5 9.5"></polyline></svg>
+          <span style="font-size: 12px; font-weight: 900; color: #b8f0bd; line-height: 1.2">Ocultar não tira atributos. A peça continua equipada e somando FC.</span>
+        </div>
+
+        <!-- MODO: Itens ↔ Skin -->
+        <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+          <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; letter-spacing: 1px">MODO</span>
+          <div role="radiogroup" aria-label="Modo de aparência" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: #0e0a07; border: 1px solid #4a3a2b">
+            <button class="segb" role="radio" aria-checked="{{mItems.on}}" onClick="{{mItems.tap}}" style="background: {{mItems.bg}}; color: {{mItems.fg}}">Itens</button>
+            <button class="segb" role="radio" aria-checked="{{mSkin.on}}" onClick="{{mSkin.tap}}" style="background: {{mSkin.bg}}; color: {{mSkin.fg}}">Skin</button>
+          </div>
+          <span style="font-size: 11px; font-weight: 800; color: #e8dccb; line-height: 1.25">{{modeTxt}}</span>
+        </div>
+
+        <!-- olho por espaço visível -->
+        <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+            <span style="font-size: 10px; font-weight: 900; color: #c9b9a2; letter-spacing: 1px">PEÇAS NO VISUAL</span>
+            <span style="font-size: 10px; font-weight: 800; color: #8a7a68">Colar e luvas não aparecem</span>
+          </div>
+          <sc-for list="{{lookRows}}" as="r" hint-placeholder-count="5">
+            <div class="lkRow" style="opacity: {{r.op}}">
+              <span style="position: relative; width: 40px; height: 40px; flex: none; border-radius: 10px; border: 2px solid {{r.c}}; background: radial-gradient(circle at 50% 40%, #4a3a2b, #1d1611); box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+                <img src="{{r.img}}" alt="" style="width: 28px; height: 28px; object-fit: contain">
+              </span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15">
+                <span style="font-size: 13px; font-weight: 900; color: #f6ecdf">{{r.name}}</span>
+                <span style="font-size: 11px; font-weight: 800; color: {{r.c}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.item}}</span>
+                <span style="font-size: 10px; font-weight: 800; color: #8a7a68">{{r.state}}</span>
+              </span>
+              <button class="eyeb" onClick="{{r.toggle}}" aria-label="{{r.aria}}" aria-pressed="{{r.off}}" style="border: 2px solid {{r.eyeBd}}; background: {{r.eyeBg}}; color: {{r.eyeFg}}">
+                <sc-if value="{{r.on}}" hint-placeholder-val="{{true}}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </sc-if>
+                <sc-if value="{{r.off}}" hint-placeholder-val="{{false}}">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6A17 17 0 0 0 2 12s4 7 10 7a9.6 9.6 0 0 0 5.4-1.6"></path></svg>
+                </sc-if>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- COSMÉTICOS (cabeça): sem sorteio -->
+        <div style="flex: none; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; flex-direction: column; line-height: 1.15">
+            <span style="font-family: 'Lilita One', sans-serif; font-size: 17px">Cosméticos</span>
+            <span style="font-size: 10.5px; font-weight: 800; color: #c9b9a2">Só visual, aparecem nos dois modos. Sem sorteio: loja direta, evento ou conquista.</span>
+          </div>
+          <div class="cosg" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px">
+            <sc-for list="{{cosList}}" as="cs" hint-placeholder-count="4">
+              <button class="{{cs.cls}}" onClick="{{cs.tap}}" aria-label="{{cs.aria}}" style="border: 2px solid {{cs.bd}}">
+                <span style="font-size: 8.5px; font-weight: 900; color: #c9b9a2; letter-spacing: .6px">{{cs.kind}}</span>
+                <span style="width: 46px; height: 34px; display: flex; align-items: center; justify-content: center; opacity: {{cs.op}}"><img src="{{cs.img}}" alt="" style="width: 44px; height: auto"></span>
+                <span style="font-size: 10px; font-weight: 900; line-height: 1.1; text-align: center; min-height: 22px; display: flex; align-items: center">{{cs.name}}</span>
+                <span style="max-width: 100%; padding: 1px 5px; border-radius: 6px; background: {{cs.oBg}}; color: {{cs.oFg}}; font-size: 8.5px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box">{{cs.origin}}</span>
+                <span style="font-size: 10px; font-weight: 900; color: {{cs.stC}}; line-height: 1.1; text-align: center">{{cs.st}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- rodapé: prévia + coleção de skins -->
+        <div style="flex: none; display: flex; align-items: center; gap: 8px">
+          <span style="flex: 1; min-width: 0; font-size: 10.5px; font-weight: 800; color: #c9b9a2; line-height: 1.25">Prévia: arte final em produção. Chapéu, óculos e máscara são formas provisórias; colete e botas aparecem como tinta de cor.</span>
+          <a href="Loja.dc.html" onClick="{{tap}}" style="height: 44px; flex: none; padding: 0 12px; border-radius: 12px; border: 2px solid #b07cff; background: #33271d; color: #c9a3ff; font-size: 12px; font-weight: 900; text-decoration: none; display: flex; align-items: center">Coleção de skins</a>
+        </div>
+      </div>
+    </sc-if>
 
     <!-- Comparação atributo a atributo -->
     <sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}">
@@ -458,6 +583,35 @@ var SND = {
   coin: '/_blob/84ab4c639b3c7f8af848b41172359878', upgrade: '/_blob/ca8bcec3fced3c13b36555744659895a'
 };
 var PER = 10;
+// ===== APARÊNCIA EM CAMADAS (prévia por código; arte final dos acessórios em produção) =====
+// regiões na folha do Kael parado (frações do quadro 168x168; ajustar quando a arte chegar)
+var REG = {
+  vest: 'inset(44% 20% 22% 24%)',   // tronco e braços
+  boots: 'inset(83% 26% 1% 26%)',   // pés
+  weapon: 'inset(46% 8% 9% 50%)',   // arma na mão direita
+  hat: { l: '29%', t: '1%', w: '44%' },
+  glasses: { l: '38%', t: '25%', w: '30%' },
+  mask: { l: '36%', t: '31%', w: '34%' }
+};
+var LOOK_K = ['weapon', 'helm', 'vest', 'boots', 'cos'];
+var LOOK_N = { weapon: 'Arma', helm: 'Chapéu', vest: 'Colete', boots: 'Botas', cos: 'Cosmético (cabeça)' };
+// tinta por raridade: sépia + giro de matiz, misturada em modo "color" (mantém o sombreado da roupa base)
+var TINT_H = [0, 175, 235, 320, 8];
+function tintF(r, b) { return r === 0 ? 'sepia(.7) saturate(.9) brightness(' + b + ')' : 'sepia(1) saturate(3.2) hue-rotate(' + TINT_H[r] + 'deg) brightness(' + b + ')'; }
+function svgU(vb, body) { return "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='" + vb + "'>" + body + "</svg>"; }
+function hx(c) { return c.replace('#', '%23'); }
+var OUT = '%232a1f16';
+function hatSvg(c) { return svgU('0 0 64 36', "<path d='M8 31 C8 5 56 5 56 31 Z' fill='" + hx(c) + "' stroke='" + OUT + "' stroke-width='3' stroke-linejoin='round'/><path d='M32 8 V30' stroke='" + OUT + "' stroke-width='2' opacity='.5'/><path d='M17 18 C21 12 27 10 33 10' fill='none' stroke='%23fff' stroke-opacity='.45' stroke-width='3' stroke-linecap='round'/><rect x='2' y='28' width='60' height='6' rx='3' fill='" + hx(c) + "' stroke='" + OUT + "' stroke-width='3'/>"); }
+function glassesSvg(frame, lens) { return svgU('0 0 64 24', "<rect x='3' y='4' width='23' height='15' rx='6' fill='" + hx(lens) + "' fill-opacity='.85' stroke='" + hx(frame) + "' stroke-width='3'/><rect x='38' y='4' width='23' height='15' rx='6' fill='" + hx(lens) + "' fill-opacity='.85' stroke='" + hx(frame) + "' stroke-width='3'/><path d='M26 10 Q32 6 38 10' fill='none' stroke='" + hx(frame) + "' stroke-width='3'/><path d='M7 9 L12 7 M42 9 L47 7' stroke='%23fff' stroke-opacity='.7' stroke-width='2' stroke-linecap='round'/>"); }
+function maskSvg(c, beak) { return svgU('0 0 64 34', beak ? "<path d='M3 5 Q32 13 61 5 L54 18 L32 31 L10 18 Z' fill='" + hx(c) + "' stroke='" + OUT + "' stroke-width='3' stroke-linejoin='round'/><path d='M22 16 L32 27 L42 16' fill='none' stroke='%23ffc94a' stroke-width='2.5' stroke-linejoin='round'/>" : "<path d='M3 6 Q32 14 61 6 L57 20 Q32 34 7 20 Z' fill='" + hx(c) + "' stroke='" + OUT + "' stroke-width='3' stroke-linejoin='round'/><path d='M14 17 Q32 25 50 17' fill='none' stroke='" + OUT + "' stroke-width='2' opacity='.5'/>"); }
+var ORIG = { loja: { t: 'Loja direta', bg: '#3a2c10', fg: '#ffc94a' }, evento: { t: 'Evento', bg: '#1f3a22', fg: '#7ef08a' }, conquista: { t: 'Conquista', bg: '#14283f', fg: '#9fd0ff' } };
+var COS = [
+  { id: 'g1', kind: 'glasses', name: 'Óculos de Aviador', c: '#4aa3ff', img: glassesSvg('#c9a26a', '#4aa3ff'), orig: 'loja', owned: true },
+  { id: 'g2', kind: 'glasses', name: 'Óculos Rúnicos', c: '#b07cff', img: glassesSvg('#ffc94a', '#b07cff'), orig: 'evento', owned: true, how: 'Festival das Eras' },
+  { id: 'm1', kind: 'mask', name: 'Máscara do Corvo', c: '#ff5a5a', img: maskSvg('#2d2a33', true), orig: 'conquista', owned: false, how: 'Vença 50 chefes', prog: '32/50' },
+  { id: 'm2', kind: 'mask', name: 'Bandana de Ladino', c: '#e8e2d8', img: maskSvg('#7a2a22', false), orig: 'loja', owned: false, price: 180 }
+];
+var COSI = {}; COS.forEach(function (c) { COSI[c.id] = c; });
 function forgePct(n) { var t = 0; for (var i = 1; i <= n; i++) t += i <= 6 ? 3 : (i <= 9 ? 5 : (i <= 12 ? 8 : 12)); return t; }
 // nível é do ITEM (1 a 100, teto = nível do jogador); o +N de fortalecimento continua no ESPAÇO
 var PLAYER_LV = 24, ITEM_MAX = 100;
@@ -528,7 +682,8 @@ class Component extends DCLogic {
       { id: 17, slot: 'helm', r: 0, lvl: 2, secs: [] },
       { id: 18, slot: 'neck', r: 4, lvl: 1, secs: ['cd', 'crit'], isNew: true }
     ];
-    this.state = { inv: inv, eq: { weapon: 1, vest: 4, helm: 7, gloves: 9, boots: 11, neck: 14 }, filter: 'all', page: 0, sel: null, gold: 48200, toast: null, tw: null, tick: 0, upFx: false, flies: [], drag: null, land: [], gain: '' };
+    this.state = { inv: inv, eq: { weapon: 1, vest: 4, helm: 7, gloves: 9, boots: 11, neck: 14 }, filter: 'all', page: 0, sel: null, gold: 48200, toast: null, tw: null, tick: 0, upFx: false, flies: [], drag: null, land: [], gain: '',
+      lookOpen: false, mode: 'items', hide: { weapon: false, helm: false, vest: false, boots: false, cos: false }, cos: 'g1' };
   }
   componentWillUnmount() { clearTimeout(this.tt); clearTimeout(this.ut); clearTimeout(this.ft); clearTimeout(this.lt); clearTimeout(this.gt); clearInterval(this.ti); if (this.unDrag) this.unDrag(); }
   // V2: brilho no espaço que recebeu item + "FC +N" subindo
@@ -658,7 +813,7 @@ class Component extends DCLogic {
       return {
         k: sl.k, l: sl.side === 'l' ? '10px' : 'auto', r: sl.side === 'r' ? '10px' : 'auto', y: ROW_Y[sl.row],
         name: sl.name, c: RC[it.r], img: ICON[sl.k], rare: it.r >= 2,
-        lvlTxt: 'Nv.' + it.lvl, plus: '+' + sl.fg,
+        lvlTxt: 'Nv.' + it.lvl, plus: '+' + sl.fg, hid: !!s.hide[sl.k],
         ring: s.land.indexOf(sl.k) >= 0 ? 'land' : (s.drag && s.drag.slot === sl.k ? (s.drag.over === sl.k ? 'selring dropok' : 'selring') : (!s.drag && s.filter === sl.k ? 'selring' : '')),
         aria: sl.name + ': ' + NAMES[sl.k][it.r] + ', ' + RN[it.r] + ', item nível ' + it.lvl + ', fortalecimento do espaço +' + sl.fg + '. Toque para ver os itens deste espaço',
         pick: function () { self.sfx(SND.tap); self.setState({ filter: s.filter === sl.k ? 'all' : sl.k, page: 0 }); }
@@ -724,6 +879,70 @@ class Component extends DCLogic {
       });
     }
 
+    // ===== APARÊNCIA: camadas da prévia + painel =====
+    var itemsMode = s.mode === 'items', cosIt = s.cos ? COSI[s.cos] : null;
+    function vis(k) { return k === 'cos' ? !!cosIt && !s.hide.cos : itemsMode && !s.hide[k]; }
+    function tintLy(k, b, op) {
+      var it = self.item(s.eq[k]);
+      return { clip: REG[k], f: tintF(it.r, b), o: vis(k) ? op : 0, bm: 'color' };
+    }
+    var wIt = this.item(s.eq.weapon), ly = { vest: tintLy('vest', 1, 0.62), boots: tintLy('boots', 0.95, 0.7) };
+    // arma: visível = brilho/tinta da raridade na lâmina; oculta = "fantasma" apagado (só no modo Itens)
+    ly.weapon = itemsMode && s.hide.weapon
+      ? { clip: REG.weapon, f: 'grayscale(1) brightness(.42)', o: 0.72, bm: 'normal' }
+      : { clip: REG.weapon, f: tintF(wIt.r, 1.2), o: vis('weapon') && wIt.r > 0 ? 0.5 : 0, bm: 'color' };
+    var hIt = this.item(s.eq.helm), cg = cosIt ? REG[cosIt.kind] : REG.glasses;
+    ly.hatOn = vis('helm'); ly.hatImg = hatSvg(RC[hIt.r]); ly.hatL = REG.hat.l; ly.hatT = REG.hat.t; ly.hatW = REG.hat.w;
+    ly.cosOn = vis('cos'); ly.cosImg = cosIt ? cosIt.img : ''; ly.cosL = cg.l; ly.cosT = cg.t; ly.cosW = cg.w;
+    var shownK = LOOK_K.filter(vis).map(function (k) { return LOOK_N[k].toLowerCase(); });
+    var kAria = 'Kael, modo ' + (itemsMode ? 'Itens' : 'Skin') + (shownK.length ? ': ' + shownK.join(', ') + (shownK.length > 1 ? ' visíveis' : ' visível') : ': só a skin');
+    var anyHid = LOOK_K.some(function (k) { return s.hide[k]; });
+    function setHide(k, v) { var h = Object.assign({}, s.hide); h[k] = v; self.setState({ hide: h }); }
+    var lookRows = LOOK_K.map(function (k) {
+      var isCos = k === 'cos', it = isCos ? null : self.item(s.eq[k]);
+      var off = !!s.hide[k], blocked = !isCos && !itemsMode, none = isCos && !cosIt;
+      var on = !off;
+      return {
+        name: LOOK_N[k], img: isCos ? (cosIt ? cosIt.img : ICON.helm) : ICON[k],
+        c: isCos ? (cosIt ? cosIt.c : '#6a5a48') : RC[it.r],
+        item: isCos ? (cosIt ? cosIt.name : 'Nenhum equipado') : NAMES[k][it.r],
+        state: none ? 'Equipe um abaixo' : (blocked ? 'Escondida pela skin (modo Skin)' : (off ? 'Oculta no visual · atributos mantidos' : 'Aparecendo no Kael')),
+        op: blocked || none ? 0.55 : 1, on: on, off: off,
+        eyeBd: off ? '#6a5a48' : '#c9a3ff', eyeBg: off ? '#16110d' : '#2d2140', eyeFg: off ? '#8a7a68' : '#e3d0ff',
+        aria: (off ? 'Mostrar ' : 'Ocultar ') + LOOK_N[k].toLowerCase() + ' no visual (não tira atributos)',
+        toggle: function () {
+          self.sfx(SND.tap);
+          if (none) { self.flash('Equipe um cosmético primeiro'); return; }
+          setHide(k, !off);
+          self.flash((off ? 'Mostrando ' : 'Ocultou ') + LOOK_N[k].toLowerCase() + (off ? '' : ' · atributos mantidos'));
+        }
+      };
+    });
+    var cosList = COS.map(function (c) {
+      var eqd = s.cos === c.id, o = ORIG[c.orig];
+      var st = eqd ? 'Usando' : (c.owned ? 'Usar' : (c.price ? c.price + ' gemas' : c.prog));
+      return {
+        kind: c.kind === 'glasses' ? 'ÓCULOS' : 'MÁSCARA', name: c.name, img: c.img,
+        origin: o.t + (c.how ? ': ' + c.how : ''), oBg: o.bg, oFg: o.fg,
+        st: st, stC: eqd ? '#7ef08a' : (c.owned ? '#f6ecdf' : '#c9b9a2'),
+        bd: eqd ? '#5fd068' : (c.owned ? c.c : '#4a3a2b'), op: c.owned ? 1 : 0.5,
+        cls: eqd ? 'cosc selring' : 'cosc',
+        aria: c.name + ', ' + (c.kind === 'glasses' ? 'óculos' : 'máscara') + ', origem ' + o.t + (c.how ? ' ' + c.how : '') + ', ' + (eqd ? 'em uso, toque para tirar' : (c.owned ? 'toque para usar' : (c.price ? 'compre na loja por ' + c.price + ' gemas' : 'bloqueado, progresso ' + c.prog))),
+        tap: function () {
+          self.sfx(SND.tap);
+          if (eqd) { self.setState({ cos: null }); self.flash('Tirou: ' + c.name); return; }
+          if (c.owned) { var h = Object.assign({}, s.hide, { cos: false }); self.setState({ cos: c.id, hide: h }); self.flash('Usando: ' + c.name); return; }
+          if (c.price) { self.flash('Loja direta: ' + c.price + ' gemas, preço fixo (sem sorteio)'); return; }
+          self.flash('Conquista: ' + c.how + ' (' + c.prog + ')');
+        }
+      };
+    });
+    function seg(m) {
+      var on = s.mode === m;
+      return { on: on ? 'true' : 'false', bg: on ? 'linear-gradient(180deg,#c9a3ff,#8a55e0)' : 'transparent', fg: on ? '#1a0d2e' : '#c9b9a2',
+        tap: function () { if (on) return; self.sfx(SND.tap); self.setState({ mode: m }); self.flash(m === 'items' ? 'Modo Itens: peças por cima da roupa base' : 'Modo Skin: skin completa, peças escondidas'); } };
+    }
+
     var best = this.bestEq();
     var dots = [];
     for (var i = 0; i < pages; i++) dots.push({ w: i === page ? '22px' : '8px', bg: i === page ? '#ffc94a' : '#4a3a2b' });
@@ -747,6 +966,17 @@ class Component extends DCLogic {
         if (best.n === 0) { self.sfx(SND.tap); self.flash('Você já usa o melhor'); return; }
         self.flyBest(best);
       },
+      ly: ly, kAria: kAria, lookRows: lookRows, cosList: cosList, mItems: seg('items'), mSkin: seg('skin'),
+      lkTag: (itemsMode ? 'Itens' : 'Skin') + (anyHid ? ' · peças ocultas' : '') + ' · prévia: arte final em produção',
+      lkTagC: itemsMode ? '#e8dccb' : '#c9a3ff',
+      modeTxt: itemsMode ? 'Itens: a roupa base com arma, chapéu, colete e botas equipados por cima.' : 'Skin: mostra a skin completa e esconde as peças. Os atributos continuam valendo.',
+      lookOpen: s.lookOpen,
+      openLook: function () {
+        self.sfx(SND.tap);
+        try { var sc = document.querySelector('[data-eqscroll]'); if (sc) sc.scrollTop = 0; } catch (e) {}
+        self.setState({ lookOpen: true, sel: null });
+      },
+      closeLook: function () { self.sfx(SND.tap); self.setState({ lookOpen: false }); },
       flies: s.flies, gainOn: !!s.gain, gainTxt: s.gain,
       dragOn: !!s.drag, dragX: s.drag ? s.drag.x : '0px', dragY: s.drag ? s.drag.y : '0px', dragC: s.drag ? s.drag.c : '#ffc94a', dragImg: s.drag ? s.drag.img : '',
       hasSel: !!selIt, sel: sel, cur: cur, diffs: diffs,

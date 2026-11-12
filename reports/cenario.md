@@ -591,3 +591,49 @@ Pasta `assets/bg/v2/era5/` (52 arquivos, ~1,35 MB) · `tools/build5.js`, `tools/
 `scene.js`: 3 blocos opcionais (slot `far` em actors; `flap` com `ang` em peças e em rotors). SHA-1 `a1e1157e…` → `5b725460ae70667db764598823f7ff729eee8b99`;
 cópia anterior em `test/bg/tools/scene.pre-era5.js`. A comparação pixel a pixel das eras 0 a 4 AINDA NÃO FOI FEITA (precisa do navegador).
 Conferido só por maquete estática (camadas, veículos, peças e âncoras desenhados pelo meta): nada em movimento foi visto ainda.
+
+## Era 5 (Moderna) — rodada 1: conferida no navegador
+
+**Ver:** http://localhost:8080/test/bg/preview?era=5 · instantes lado a lado: `http://localhost:8080/test/bg/sheet?era=5&t=3,9,15,21&w=340&line=1`
+**Pasta:** `assets/bg/v2/era5/` (51 arquivos, ~1,35 MB) · `tools/build5.js`, `tools/mkmeta5.js`, `tools/info.era5.json` (meta refeito idêntico).
+**Créditos:** 16 (8 gerações Nano Banana 2.1 2K a 2; nenhuma regeração; céu procedural). Saldo 1147,65 no início; as outras baixas da conta não são desta sessão.
+
+**`scene.js`:** SHA-1 final `5b725460ae70667db764598823f7ff729eee8b99` (o mesmo informado antes da conferência; as correções desta
+rodada foram só no meta). Cópia anterior em `test/bg/tools/scene.pre-era5.js`. Blocos opcionais novos: slot `far` em actors; `flap`
+com `ang` em peças e em rotors. **Eras 0 a 4: 0 canais diferentes** entre `scene.pre-era5.js` e o novo (mesma semente, 390x692,
+t = 3, 27, 48, 75 s; ~1,08 milhão de canais não nulos por comparação).
+
+Corrigido na conferência (0 crédito): semáforo tinha ~0,5 s com tudo apagado e o amarelo quase não aparecia → degraus exatos
+(verde 2,7 s → amarelo 0,6 s → vermelho 5,7 s); antena de radar não aparecia (rotor `front` só é desenhado na camada far) → passou a
+ser desenhada antes do mid, acima do mastro; hélice do ar-condicionado RETIRADA pelo mesmo motivo (ficaria atrás da grade pintada;
+exigiria mudar o `scene.js` depois de ele já ter sido liberado); pombos do céu passavam por trás das torres → subiram e ficaram
+menores; pombo em voo era 2x o pousado → 0,056; menos pares de pilaretes (peso 2).
+
+Conferido (cena a dpr 3, recortes ampliados; rolagem parada para os ciclos): semáforo em 12 instantes (verde → amarelo → vermelho,
+sem intervalo apagado); caminhão na rua de trás em 2 instantes (roda sobre o asfalto, abaixo da guia) e sedan atrás do vidro do
+ponto de ônibus; caminhão no viaduto em 2 instantes (rodas na pista); helicóptero em 2 instantes (rotor de cauda em ângulos
+diferentes, rotor principal horizontal, voltado para a direita); antena em 3 instantes (larguras diferentes, apoiada na plataforma);
+letreiro aceso em t = 23,5 e apagado em t = 51; cachorro em 12 instantes (senta, anda, senta virado, volta; patas na calçada);
+pombo em 12 instantes (pousa em pé/bicando, voa, pousa no outro pilarete, volta); tambor em chamas; fumaça das ruínas e da cidade por
+partículas; bandeira no mastro; farol da torre; 15 faixas da calçada entre t = 20 e 49 s sem objetos sobrepostos; pés no asfalto liso;
+prévia `preview?era=5` abre e roda; sem erro de console.
+Custo por quadro (dpr 2, 240 quadros seguidos a 30 por segundo, leitura forçada): era 1 = 27,5 ms (p90 34), era 5 = 26,4 ms (p90 33),
+era 4 = 25,5 ms: equivalentes. Valor absoluto não é fps (a leitura forçada pesa igual em todas).
+NÃO conferido: giro das rodas em par ampliado (as rodas-sprite estão no lugar, mas não comparei dois ângulos); jipe, táxi e ônibus de
+perto; emenda do far espelhado (os 2 instantes calculados caíram atrás de prédios; nenhum defeito visto no resto); decalques perto
+da faixa amarela em muitas telas (vi 4); botão "Ver ANTES"; celular.
+
+Defeitos que o dono pode notar:
+- Não há pessoas; o ar-condicionado tem a hélice parada; outdoor e cancela são parados.
+- Rotor principal do helicóptero é uma barra que encolhe e estica (vista de perfil), não um disco.
+- Cachorro e pombo trocam de sentido de uma vez (espelham); o pombo pousado é pequeno.
+- Trânsito sempre para a direita, todos na mesma velocidade (para nunca se atravessarem); sem motorista visível.
+- Letreiro pisca como painel inteiro rosa/branco, sem texto. Semáforo fica mais tempo no vermelho.
+- Torre de vidro do trecho A é cortada pela borda de cima da tela. Céu é um degradê liso.
+
+## Era 5 — rodada 2 (acabamento): INTERROMPIDA por disco cheio (256 MB livres), nada conferido
+Estado seguro: `test/bg/scene.js` voltou ao SHA liberado `5b725460…`; o meta da era 5 continua o da rodada 1 (só o céu novo entrou).
+Pronto e guardado, ainda NÃO ligado: `test/bg/tools/scene.era5r2.wip.js` (SHA `d5665703…`: peças em quadros, actors espelhados, rotors
+que balançam e na frente do mid, virada suave em pacer/hopper) e os sprites `rotordisc`, `txtA/txtB`, `adA/adB`, `boom`, `fan`,
+`walkerA/B/C` (`tools/build5b.js`). Falta: apagar a cancela pintada do midA (a gravação falhou), ligar tudo no `mkmeta5.js`,
+comparar eras 0-4 pixel a pixel e conferir no navegador.

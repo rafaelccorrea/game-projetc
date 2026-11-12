@@ -185,7 +185,12 @@ endereço com número, links e domínios, @ de redes sociais, números longos). 
 - `GET /purchases/can-buy?productId=` → `{ "ok", "reason"?, "endsAt"? }`, chamado ANTES de abrir a compra no Google. Motivos possíveis:
   `already_bought`, `offer_not_seen`, `offer_expired`, `already_premium`, `already_owned`, `unknown_product`.
 - `POST /purchases/monthly-card/claim` → `{ "gems": 60, "daysLeft" }`, uma vez por dia de Brasília. Dia não resgatado se perde. Erros: `404 no_active_card`, `409 already_claimed`.
-- **Como o jogo aplica os `grants` da resposta:**
+- **ENTREGAS (mudança de 2026-11-12, para o lançamento):** o jogo aplica SÓ o que vem de `GET /purchases/deliveries` → `[{ "id", "grants": [...], "revoke": false, "createdAt" }]`.
+  O `grants` da resposta do `POST /purchases/google` passa a ser só informativo (mostrar "você recebeu"). Fluxo: ao abrir o jogo e depois de cada compra, pedir as entregas,
+  aplicar cada uma (regras abaixo), gravar o save e confirmar `POST /purchases/deliveries/{id}/ack` (idempotente). Assim nada se perde se o app fechar no meio,
+  e a compra pendente (boleto) confirmada depois pelo Google também chega. `revoke: true` = estorno de uma entrega já aplicada: tirar o que der (💎 até 0,
+  pontos VIP, skin, passe). Entrega estornada antes de aplicada some da lista. No jogo: `Sys.net.deliveries()` e `Sys.net.ackDelivery(id)` (js/sys/net.js).
+- **Como o jogo aplica cada entrega (`grants`):**
   - `gems` → `host.addGems`, EXCETO quando vier `deliveredBy: "offer"`;
   - `bundle` com `att.offer` → `Sys.offer.grant(S, host)` da fps-e2 (que já soma os 💎 da oferta);
   - outro `bundle` → `Sys.loot.grantBundle(S, host, att)`;

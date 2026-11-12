@@ -260,6 +260,8 @@ function xPager(act,pg,pages,sub,prevLb,nextLb){ const b=(d,on,lb)=>`<button dat
 const X_UNLOCK={gemShop:10,pass:18,pet:20,practice:5,forge:12,instances:14,tower:15};
 function xUnlockLv(id){ try{ const U=Sys.level.DATA.unlock; if(id!=='pet'&&U&&typeof U[id]==='number') return U[id]; }catch(e){} return X_UNLOCK[id]||1; }
 const X_FBID={gemShop:'shopgem',pass:'pass',practice:'practice',forge:'forge',instances:'inst',tower:'tower',pet:'pets'};   /* mesmos níveis do MENU: tabela FB_UNLOCK do agente A (js/fullbattle.js) */
+/* SAVE ANTIGO (regra do PO): quem já jogava não perde Loja completa nem Passe. A fonte é do agente A: S.bornV + S.unlKeep, lidos por fbUnl(id)
+   (js/fullbattle.js, pedido A-13). Aqui não há marcador próprio. */
 function xUnlocked(id){ if(PANEL_V2.gate===false) return true; try{ if(typeof fbUnl==='function'&&X_FBID[id]) return !!fbUnl(X_FBID[id]); return plv()>=xUnlockLv(id); }catch(e){ return true; } }
 function xReal(){ const W=V.clientWidth||390, Hp=V.clientHeight||704, Wb=Math.min(W,600); return {s:1,H:Hp,ox:(W-Wb)/2,Wb,full:true,real:true}; }
 function xDims(minH){ if(PANEL_V2.real&&!xFrameOn()) return xReal(); const W=V.clientWidth||390, Hp=V.clientHeight||704, hh=xHeadH(), s=Math.min(W/390,Hp/(minH+hh)); return {s,H:Hp/s-hh,ox:(W-390*s)/2,Wb:W/s}; }
@@ -388,7 +390,7 @@ function scrGear(){
           <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mochila ${S.inv.length}/${BAG_MAX}${d.real&&PANEL_V2.equipDrag?' · arraste o item até o espaço':''}</span></div>
         ${XG.filter!=='all'?'<button data-x="all" style="height:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:12px;font-weight:900;flex:none">Ver todos</button>':''}
         <button data-x="prog" ${SCREENS_ON.progress&&xUnlocked('practice')?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:44px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
-        ${window.Panels&&Panels.on('forge')&&xUnlocked('forge')?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
+        ${window.Panels&&Panels.on('forge')&&xUnlocked('forge')&&!(window.Screens&&Screens.reg&&Screens.reg.forge&&Screens.reg.forge.broken)?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
         ${d.real?'':best.n>0?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" style="height:40px;padding:0 12px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>`
           :'<button class="lil x-bestoff" data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: você já está com o melhor" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#2a211a;color:#9c8d7a;font-size:12px;line-height:1.05;flex:none;text-align:center">Já está com <br>o melhor</button>'}
       </div>
@@ -489,7 +491,7 @@ function gClick(b){
   else if(a==='pg'){ const p=XG.page+(+b.dataset.d); if(p>=0&&p<(XG.pages||1)){ snd('ui_tap'); XG.page=p; XG.anim=true; render(); } }
   else if(a==='prog'){ if(!xUnlocked('practice')) return; snd('ui_tap'); Screens.open('progress'); }
   else if(a==='forge'){ if(!xUnlocked('forge')) return; snd('ui_tap'); if(window.Panels) Panels.open('forge'); }
-  else if(a==='goskins'){ if(!xUnlocked('gemShop')) return;   /* loja de skins (gemas) só no nível 10 */ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
+  else if(a==='goskins'){ if(!xUnlocked('gemShop')){ snd('ui_tap'); gToast('Loja de skins: libera no nível '+xUnlockLv('gemShop')); return; }   /* loja de skins (gemas) só no nível 10 */ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
   else if(a==='cell'){ snd('ui_tap'); const x=itemOf(+b.dataset.id); if(x){ delete x.nw; XG.sel=x.id; XG.sheetIn=true; render(); XG.sheetIn=false; if(typeof tutEvent==='function') tutEvent('view'); } }
   else if(a==='close'){ snd('ui_tap'); XG.sel=null; render(); }
   else if(a==='best'){ const bst=gBest(); if(!bst.n){ snd('ui_tap'); gToast('Já está com o melhor'); return; }
@@ -527,7 +529,7 @@ function scrSummon(){
   const cap=Math.min(L.maxAllowedR(Sys.host),RAR.length-1), P=L.DATA.summon.pity||10, st=(L.ensure(S).summon)||{pity:0}, pity=Math.min(P,st.pity||0), left=Math.max(1,P-pity);
   const stageH=Math.max(170,Math.min(262,H-22-58-70-54-74-40)), cy=d.real?0:stageH-262, stK=H+56<=600?0.6:H+56<=700?0.72:1;   // layout novo: o palco estica (flex) e o conteúdo reduz em tela baixa; antigo: o palco absorve a altura
   const chips=sChances().map((c,i)=>c.locked
-    ?`<div class="x-chip" style="height:46px;border-radius:12px;background:#120d0a;border:2px dashed #6b5843;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;animation-delay:${i*0.06}s;box-sizing:border-box;color:#c9b9a2" aria-label="${RN(i)}: trancado, libera no ${c.txt}">
+    ?`<div class="x-chip" data-x="chiplock" data-msg="${RN(i)}: libera no ${c.txt.replace('Nv.','nível').replace('Era','era')}" style="height:46px;border-radius:12px;background:#120d0a;border:2px dashed #6b5843;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;animation-delay:${i*0.06}s;box-sizing:border-box;color:#c9b9a2" aria-label="${RN(i)}: trancado, libera no ${c.txt}">
         <span style="font-size:10px;font-weight:900;color:${RC[i]};opacity:.75">${RN(i)}</span><span style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:900">${SVG_LOCK(12)}${c.txt}</span></div>`
     :`<div class="x-chip" style="height:46px;border-radius:12px;background:#1d1611;border:2px solid ${RC[i]};display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;animation-delay:${i*0.06}s;box-sizing:border-box">
         <span style="font-size:11px;font-weight:900;color:${RC[i]}">${RN(i)}</span><span class="lil" style="font-size:16px">${String(c.p).replace('.',',')}%</span></div>`).join('');
@@ -612,6 +614,7 @@ function sStart(n,free){
 }
 function sClick(b){ const a=b.dataset.x;
   if(a==='pull') sStart(+b.dataset.n,b.dataset.free==='1');
+  else if(a==='chiplock'){ snd('ui_tap'); sToast(b.dataset.msg||'Raridade ainda trancada'); }
   else if(a==='skip'){ sClear(); snd('ui_tap'); if(XS.res.slice(XS.shown).some(x=>x.r===4)) snd('legendary'); XS.shown=XS.res.length; sOverlay(true); }
   else if(a==='collect'){ sClear(); snd('claim'); XS.phase='idle'; XS.res=[]; XS.shown=0; XS.anim=true; render(); }
 }
@@ -778,6 +781,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['equipfx','panels','p_forge']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();

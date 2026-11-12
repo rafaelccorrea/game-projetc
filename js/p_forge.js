@@ -310,7 +310,7 @@ function fForge(){
   if(!c.ok){ snd('ui_tap');
     fToast(c.reason==='max'?SLOT[sl].n+' já está no máximo: +'+FD.max
       :c.reason==='cap'?'Teto da '+fEraName(fEraNow())+': +'+fCap()+'. Avance de era para passar.'
-      :c.reason==='stones'?'Pedras de Forja insuficientes: faltam '+n0(Math.max(1,c.stones-fStones()))
+      :c.reason==='stones'?'Pedras de Forja insuficientes: faltam '+n0(Math.max(1,c.stones-fStones()))+'. Elas caem de chefes e inimigos e vêm ao desmontar itens.'
       :c.reason==='gold'?needMsg('gold',c.gold)
       :c.reason==='locked'?'Forja: libera no nível '+fGateLv():'Não dá para fortalecer este espaço agora');
     return; }

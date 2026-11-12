@@ -19,5 +19,19 @@
  "era5_t2": {"type":"gun","grip":[0.24,0.65],"angle":0,"len":0.61,"muzzle":[0.84,0.47],"layer":"back"},
  "era6_t0": {"type":"gun","grip":[0.23,0.68],"angle":2,"len":0.649,"muzzle":[0.81,0.45]},
  "era6_t1": {"type":"melee","grip":[0.502,0.76],"angle":89,"len":0.676},
- "era6_t2": {"type":"melee","grip":[0.389,0.752],"angle":63,"len":0.733}
+ "era6_t2": {"type":"melee","grip":[0.389,0.752],"angle":63,"len":0.733},
+ "era0_raro": {"type":"melee","grip":[0.489,0.75],"angle":92,"len":0.621},
+ "era0_mitico": {"type":"melee","grip":[0.499,0.715],"angle":92,"len":0.595},
+ "era1_raro": {"type":"melee","grip":[0.498,0.765],"angle":90,"len":0.683},
+ "era1_mitico": {"type":"melee","grip":[0.5,0.79],"angle":90,"len":0.708},
+ "era2_raro": {"type":"melee","grip":[0.496,0.78],"angle":90,"len":0.694},
+ "era2_mitico": {"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},
+ "era3_raro": {"type":"gun","grip":[0.19,0.63],"angle":5,"len":0.745,"muzzle":[0.895,0.39]},
+ "era3_mitico": {"type":"gun","grip":[0.205,0.65],"angle":14,"len":0.78,"muzzle":[0.88,0.29]},
+ "era4_raro": {"type":"gun","grip":[0.19,0.66],"angle":0,"len":0.714,"muzzle":[0.89,0.345]},
+ "era4_mitico": {"type":"gun","grip":[0.235,0.565],"angle":6,"len":0.735,"muzzle":[0.86,0.455]},
+ "era5_raro": {"type":"gun","grip":[0.285,0.63],"angle":0,"len":0.567,"muzzle":[0.83,0.38]},
+ "era5_mitico": {"type":"gun","grip":[0.275,0.625],"angle":0,"len":0.651,"muzzle":[0.92,0.455]},
+ "era6_raro": {"type":"gun","grip":[0.23,0.68],"angle":2,"len":0.649,"muzzle":[0.81,0.45]},
+ "era6_mitico": {"type":"melee","grip":[0.502,0.76],"angle":89,"len":0.676}
 }

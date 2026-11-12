@@ -1,0 +1,49 @@
+{
+ "note": "cosméticos de rosto: mesma âncora head e mesmo desenho dos chapéus (óculos = camada óculos, máscara = camada máscara)",
+ "items": {
+  "goggles": {
+   "layer": "glasses",
+   "file": "goggles.png",
+   "w": 223,
+   "h": 81,
+   "pivot": {
+    "x": 115.3,
+    "y": -6
+   },
+   "res": 1
+  },
+  "visor": {
+   "layer": "glasses",
+   "file": "visor.png",
+   "w": 202,
+   "h": 69,
+   "pivot": {
+    "x": 95.8,
+    "y": -13.9
+   },
+   "res": 1
+  },
+  "ninja": {
+   "layer": "mask",
+   "file": "ninja.png",
+   "w": 284,
+   "h": 120,
+   "pivot": {
+    "x": 195.8,
+    "y": 19.6
+   },
+   "res": 1
+  },
+  "carnival": {
+   "layer": "mask",
+   "file": "carnival.png",
+   "w": 164,
+   "h": 86,
+   "pivot": {
+    "x": 57.4,
+    "y": -1.4
+   },
+   "res": 1
+  }
+ }
+}

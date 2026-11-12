@@ -650,3 +650,52 @@ Visto
 - Vitrine do Kael com a arma do item: equipei um Arcabuz (era 3) e a pistola apareceu na mão (canvas do agente A).
 
 Não desliguei nada. Não visto: toque de dedo real; o voo do "Equipar melhor" em 390x844; resgates do Passe.
+
+## Bloco 14 (v0.12.4): FORJA e CONFIGURAÇÕES LIGADAS no padrão, conferidas no navegador (aba fechada)
+
+`PANEL_ON.forge = true` e `PANEL_ON.cfg = true` em `js/panels.js`. Prints: `reports/prints/v0124_forja_mais6_aura_360x640.png`,
+`v0124_forja_sem_pedra_390x844.png`, `v0124_configuracoes_360x640.png`. Lista de botões: `reports/botoes-paineis-v0.12.4.md`.
+Sem erro no console. 360x640 com zoom 1; 390x844 com zoom 0,75 (janela baixa).
+
+FORJA, visto
+- Entra pelo botão "Forja" do cabeçalho da mochila (nível 12; oculto antes) e pelo item Forja do MENU (`Screens.register`). Voltar leva ao
+  Equipamento nos dois casos (e do Equipamento à batalha). Pelo MENU antes do nível 12: tela "Libera no nível 12" com "Voltar ao Equipamento".
+- Forjei de verdade: +0 → +1 (pedras 60 → 58, ouro −60, FC 938 → 939), depois até +6 (pedras 22, FC 946), aura azul no +4/+6, botão
+  "Teto da era" e aviso "Teto da Pré-História: +6. Avance de era para passar." Durante o martelo o botão diz "Forjando...".
+- Sem pedra: botão "Faltam pedras" e aviso com onde ganhar (acrescentado nesta passada).
+- 360x640: a tela rola (758 de conteúdo em 584); 390x844: cabe inteira.
+
+CONFIGURAÇÕES, visto
+- O item Config. do MENU abre o painel novo (o modal antigo não aparece mais; `openSettings(true)`, a confirmação antiga de reset, ficou
+  como estava). 3 abas; sem "manual", sem "código de resgate" e sem "termos"; 7 selos "EM BREVE"; tocar numa linha desabilitada mostra
+  "Em breve" e o save fica idêntico.
+- Exportar → código `EON1:...` (2.366 caracteres). Importar: lixo → "Código inválido: ele precisa começar com EON1:" e nada muda;
+  o próprio código → "Substituir o progresso?" com nome, nível, moedas e gemas → confirmar grava e recarrega; recarregando sem `fresh` o
+  save voltou igual (nome com acento "João Ñ", ouro, gemas, nível 12, arma +6, pedras 22).
+
+Também nesta passada
+- Save antigo: marcador provisório meu `S.bornV` (save com progresso e sem o campo = 'old'): Loja completa e Passe completo para ele.
+  Conferido de passagem: o save importado ficou 'old'. Pedido B-19 para o agente A gravar o marcador dele.
+- Regra "nada mudo": cartão da skin antes do nível 10, raridade trancada do Invocar, cartão do Passe já resgatado, título bloqueado /
+  cosmético / já em destaque e Treinar apagado agora explicam. Os quatro primeiros conferidos no navegador; o do Treinar foi escrito
+  depois de fechar a aba.
+
+NÃO visto: arrastar o volume; copiar para a área de transferência; Resetar; modo "Nível" da Forja; falha de forja (as 6 tentativas
+acertaram); toque de dedo real.
+
+AVISO: o teste de importar gravou um save de teste (nível 12, "João Ñ") no armazenamento do `localhost:8080` deste navegador. Se alguém
+usava um save sem `fresh=1` nesse perfil, ele foi substituído.
+
+## Bloco 15 (rumo ao backlog completo): em andamento, sem navegador
+
+- Save antigo: o marcador provisório `xLegacy` saiu de `js/screens.js`. A fonte única é a do agente A (`S.bornV` + `S.unlKeep`, lidos por
+  `fbUnl`, pedido A-13). `node --check` e fumaça ok; não visto no navegador.
+- Botão "Forja" do Equipamento some também quando `Screens.reg.forge.broken` (pedido A-13).
+- VIP (tela da sessão do QA, `js/p_vip.js`): incluída na lista de carga do `js/screens.js`, chave `PANEL_ON.vip` DESLIGADA. O teste de
+  fumaça a desenha sem erro. Conferência contra `docs/proto/VIP.dc.html` fica para a minha próxima vez de navegador.
+- Pets V2: o subagente que escreveu a tela está deixando-a pronta para ligar (layout novo, ovo com animação de chocar, folhas reais de
+  `assets/anim/pets`, evoluir, alimentar, redefinir, equipar, ovo à escolha). Só `js/p_pets.js`.
+- Raridade pela borda e cor: um subagente está fazendo o componente único em `js/screens.js` e aplicando em Equipamento, Loja, Invocar,
+  Passe e Forja (existe um `js/rarity.js` do engenheiro atrás de chave desligada; a ordem é reusar se der, ou espelhar medidas e cores).
+- A conferir na próxima vez de navegador (escritos e não tocados): cartão do Passe já resgatado, título cosmético / em destaque, botão
+  Treinar apagado, e as telas acima.

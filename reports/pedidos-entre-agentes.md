@@ -182,3 +182,34 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Compra da Loja (linha do `addItemToBag({slot:o.slot,r:o.r,e:o.e,subs:o.subs})`): acrescentar `origin:'shop'` (o `normItem` já copia o campo).
 - Aba de GEMAS da Loja: esconder até o nível 10. A tabela está em `FB_UNLOCK` (js/fullbattle.js); use `fbUnl('shopgem')`.
 - Passe só no nível 18, mas Missões libera no 2 e abre o seu painel do Passe na aba Missões: esconda a aba de Prêmios enquanto `!fbUnl('pass')`.
+
+### A-13. (agente A, v0.12.4) Save antigo, botões mortos e tela que quebra
+- SAVE ANTIGO: adotei o SEU marcador `S.bornV` ('old' = save anterior à liberação por nível; senão a versão em que nasceu). Além dele gravo
+  `S.unlKeep = {missions:1, summon:1, practice:1, shopgem:1, pass:1}` nos saves 'old' (`fbLegacy()` em js/fullbattle.js, chamado no `fbInit`).
+  LEITURA: `fbUnl(id)` já devolve verdadeiro para o que está em `S.unlKeep` (e para tudo no modo dono). Use só `fbUnl`; o seu `xLegacy()` pode sair.
+- TELA QUE QUEBRA: se o `render` de uma tela registrada lançar erro, o index fecha a tela, avisa e marca `Screens.reg[nome].broken = true`;
+  a entrada some do MENU. Se o seu botão da Forja no Equipamento abre `forge`, esconda-o também quando `Screens.reg.forge.broken`.
+- AUDITORIA DE BOTÕES (regra do dono: nada visível sem ação): a parte de DENTRO dos painéis é sua. Lista da minha parte: reports/botoes-v0.12.4.md.
+- Continuam valendo os pedidos do A-12 (origin:'shop' na compra; aba de gemas e aba de Prêmios do Passe por `fbUnl`).
+
+### B-19. Marcador de save antigo (regra do PO: quem já jogava não perde Loja completa nem Passe)
+- Ainda não achei o seu marcador. Por ora uso um meu, em `js/screens.js` (`xLegacy`): na 1ª leitura, save sem `S.bornV` e com progresso
+  (abates > 0, fase > 1 ou nível > 1) recebe `S.bornV = 'old'`; save zerado recebe a versão atual. Só `gemShop` e `pass` são herdados.
+- Quando você gravar o seu (no `newState()` / migração), diga o nome do campo: eu troco a leitura e apago o meu.
+- A v0.12.4 liga `PANEL_ON.forge` e `PANEL_ON.cfg`. Com `cfg` ligada o `js/panels.js` envolve o seu `openSettings(false)` para abrir o painel
+  novo (o `openSettings(true)` continua seu). Se preferir, troque o `act: 'cfg'` do MENU por `Screens.open('cfg')` e eu tiro o envoltório.
+- Forja como subtela: o `js/panels.js` envolve o `Screens.close()` para voltar ao Equipamento (pedido B-11 continua de pé: `parent` no registro).
+
+### Q-1. Tela VIP (js/p_vip.js, QA-ajudante) — ESCRITA E NÃO VISTA RODANDO
+- Pedido ao engenheiro: incluir `'p_vip'` na lista de scripts de js/screens.js (linha `for(const n of ['equipfx','panels','p_forge','p_cfg',...])`) e ligar `PANEL_ON.vip` quando você conferir. Ela só usa `Sys.vip` (level, progress, levelInfo, DATA.maxLevel) e, no onOpen, `Sys.pet.prismVipMax` se existir (idempotente).
+- Globais que ela espera do jogo (os mesmos da Forja): `V, S, xDims, xWrap, kf, snd, render, Panels, Sys, window`. Classes `x-scroll` e `f-in` (as do screens.js). Injeta o próprio CSS (id `pv_css`).
+- Botão "Comprar VIP": hoje só mostra o aviso "Pagamento em breve" (nada é cobrado). Quando a Loja tiver a compra, trocar a ação `buy` por `Screens.open('shop')` com `XH.tab='gem'` (ou o que você definir).
+- Entrada no MENU: o item VIP já existe em FB_DROP (act `soon:vip`); basta `Screens.reg.vip` existir (o painel registra pelo Panels.enable).
+- Teste: `node test/paineis/p_vip.smoke.js` (passa).
+
+### Q-2. Tela Troca de era (js/p_era.js, QA-ajudante) — ESCRITA E NÃO VISTA RODANDO
+- É um OVERLAY (`Panels.add('era',{overlay:true,open,close})`): não é view; abre por `Panels.open('era',{from,to,boss,gems,essence,onDone})` (só funciona com `PANEL_ON.era=true`). `window.PEra.open({...})` serve para conferir no console.
+- Pedido ao engenheiro: (1) incluir `'p_era'` na lista de scripts do js/screens.js e ligar `PANEL_ON.era`; (2) chamar na hora da troca de era (js/battle.js, `waveClear`, quando `newEra`): `Panels.open('era',{from:oldEra,to:ne,boss:<nome do Senhor da Era morto>,gems:30,essence:<se o jogo der>,onDone:()=>{...}})`; se retornar `false`, segue o fluxo antigo (resOpen/toast). A ordem com a tela de vitória é sua decisão (a Troca de era foi escrita para vir ANTES e devolver o controle no `onDone`).
+- Efeito no jogo: enquanto aberta ela põe `B.res={mode:'era'}` e `B.running=false`; ao fechar devolve `B.res=null`, `B.running=true` (só se `B.res.mode==='era'`). Não mexe em S, no save nem em recompensa: o que o jogo deu (gemas, Essência) vem no `o`; o que não vier não aparece.
+- Arquivos que ela lê: assets/bg/era<n>.png + assets/bg/meta.json, hyb/enemy/era<from>_boss_die, hyb/R/kael_run_body, era<to>_e0_run (era 2: assets/anim/era2_e0_run), assets/anim/ult/era<to>_ult. Sem eles ela mostra imagem parada ou segue sem o elemento (não quebra).
+- Teste: `node test/paineis/p_era.smoke.js` (passa); nomes globais sem conflito: `node test/paineis/conflitos.js js/p_era.js`.

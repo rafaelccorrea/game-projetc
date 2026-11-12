@@ -57,11 +57,11 @@ Tudo que falha vai para a fila do `/admin` ("saves marcados"), com o motivo. Tud
 
 ## 3c. Origem do item (campo origin, já no jogo)
 - O Sys.loot e o Sys.pass (fps-30) já gravam origin em todo item que criam:
-  - drop, oss, chest, instance (arsenal ou chefe da instância), summon, shop;
-  - eward (pacotes: correio, login, eventos, guia) e pass. Quem chama o grantBundle pode dizer a origem com .origin.
+  - drop, boss, chest, instance (arsenal ou chefe da instância), summon, shop;
+  - reward (pacotes: correio, login, eventos, guia) e pass. Quem chama o grantBundle pode dizer a origem com b.origin.
 - Faltam os criadores fora desses módulos (loja do engenheiro, oferta da fps-e2, presentes), que devem gravar shop, offer ou gift.
-- Também falta o 
-ormItem do js/farm.js manter o campo (pedido à fps-c9). O campo não muda poder nem regra no jogo solo.
+- Também falta o normItem do js/farm.js manter o campo (pedido à fps-c9). O campo não muda poder nem regra no jogo solo.
+
 ## 4. Etapas
 | Etapa | O quê | Libera |
 |---|---|---|

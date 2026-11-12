@@ -1,4 +1,4 @@
-# Liberação por nível — todas as funções, na curva de 9 eras (PROPOSTA da fps-e2 para o PO; 2026-11-12)
+# Liberação por nível — todas as funções, na curva de 9 eras (APROVADA pelo PO em 2026-11-12: arena 28, guilda 32)
 **CONTA:** dia/minuto em que o jogador chega a cada nível pela simulação da curva v9 (reports/curva-9-eras-e2.md; 40 min/dia + offline). Dia 1 em minutos de jogo.
 Critério do dono: uma novidade a cada pouco tempo no começo; nada que confunda o novato; social/competitivo só quando ele já entende o básico.
 Uma novidade por nível (nunca duas no mesmo nível); as já aprovadas (✅) ficam onde estão, salvo onde digo "proposta de mudança".
@@ -28,9 +28,9 @@ Uma novidade por nível (nunca duas no mesmo nível); as já aprovadas (✅) fic
 | 70 | (Kael guerreiro lendário; Mítico) | dia 40 | dia 28 | |
 
 - **Ritmo do 1º dia:** 9 novidades em ~40 min (uma a cada ~4 min); dias 2-10: uma a cada 1-2 dias; depois, as eras e as raridades seguram o interesse.
-- **O que já está no código** (`Sys.level.DATA.unlock`): pet 1→20 (com o v20), practice 5, forge 12, instances 14, tower 15, arena 30. As outras
-  (missões, invocar, correio, login, perfil, loja de 💎, passe, eventos, guilda, montaria, torneio, leilão) entram como chaves novas na mesma tabela quando o
-  PO aprovar (cada tela consulta `Sys.level.isUnlocked(S, 'id')`; trocar o nível = trocar 1 número).
+- **No código (FONTE ÚNICA, PO 2026-11-12):** `Sys.level.DATA.unlock` tem TODAS as chaves com as ids do menu (missions, summon, practice, mail, login, profile,
+  shopgem, forge, instances (= inst), tower, pass, pets, events, rank, arena, guild, mount, tourney, auction, wing) + 'pet' (portão do módulo Sys.pet: 1; com o v20 vale o 20).
+  Cada tela consulta `Sys.level.isUnlocked(S, 'id')` / `unlockLevel('id')`; trocar o nível = trocar 1 número lá. O FB_UNLOCK do menu passa a ler dessa tabela.
 - **Fora do nível:** a oferta de 1ª compra (24 h do 1º acesso), a Loja de itens com ouro (desde o início) e o VIP (compra a qualquer hora).
 
 ## Para decidir

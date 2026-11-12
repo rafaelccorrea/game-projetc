@@ -381,7 +381,12 @@ t('appearance: o que desenhar em cada um dos 7 espaços (skin > visual do item >
 t('level: XP, +0,3%/nível na FC, desbloqueios e portões de raridade dos ovos',()=>{
   const L=require('../../js/sys/level.js'), S=newS(), h=makeHost({eraMax:0});
   assert.strictEqual(L.level(S),1); near(L.bonus(S).atkPct,0.3);
-  const r=L.addXp(S,L.need(1)+L.need(2)+L.need(3)+L.need(4),h); assert.strictEqual(r.to,5); assert.deepStrictEqual(r.unlocked,['practice']);
+  const r=L.addXp(S,L.need(1)+L.need(2)+L.need(3)+L.need(4),h); assert.strictEqual(r.to,5); assert.deepStrictEqual(r.unlocked,['missions','summon','practice']);
+  // fonte única (PO): a tabela do Sys.level é a do menu (FB_UNLOCK); 'inst' é apelido de 'instances'; 'pet' (portão do módulo) não aparece duas vezes
+  { const FB={missions:2,summon:3,practice:5,mail:7,login:7,profile:10,shopgem:10,forge:12,inst:14,tower:15,pass:18,pets:20,events:24,rank:28,arena:28,guild:32,mount:38,tourney:40,auction:45,wing:50};
+    for(const k in FB) assert.strictEqual(L.unlockLevel(k),FB[k],k); assert.strictEqual(L.unlockLevel('pet'),1);
+    const Sn=newS(); assert.strictEqual(L.nextUnlock(Sn).feature,'missions'); L.ensure(Sn).lvl=19; assert.strictEqual(L.nextUnlock(Sn).feature,'pets');
+    const r20=L.addXp(Sn,L.need(19),makeHost({eraMax:0})); assert.deepStrictEqual(r20.unlocked,['pets']); }
   assert.ok(h.toasts.some(m=>m.includes('Práticas'))); near(L.bonus(S).hpPct,1.5);
   // XP de instância escala com a dificuldade (3º parâmetro); valor inválido vale 1
   const Si=newS(), hi=makeHost({eraMax:0}); const x1=L.onInstance(Si,hi).gained, x25=L.onInstance(Si,hi,2.5).gained;

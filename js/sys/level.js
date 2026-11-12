@@ -16,9 +16,15 @@ const DATA={
   // que entrega por addXp: por isso não há kill/boss/eraBoss aqui (ordem do dono via PO).
   // v6: instance 25 (× 1 / 1,6 / 2,5 pela dificuldade), mission 30, dailyBonus 50 (todas as missões do dia), offline 20/h
   xp:{instance:25, mission:30, dailyBonus:50, offlinePerHour:20, offlineCapHours:8, eraScale:1},
-  // nível em que cada função abre (proposta da fps-e2, confirmada pela v6). Materiais caem antes e ficam guardados.
-  unlock:{pet:1, practice:5, forge:12, tower:15, instances:14, arena:30},   // instâncias 14 (PO, após a v6: abrem no dia 1-2)
-  unlockName:{pet:'Pets',practice:'Práticas',forge:'Forja',tower:'Torre',instances:'Instâncias',arena:'Arena'},
+  // FONTE ÚNICA da liberação por nível (PO, 2026-11-12; reports/liberacao-por-nivel.md). As ids são as do MENU (FB_UNLOCK em js/fullbattle.js),
+  // que passa a ler daqui. Chaves dos módulos: 'pet' = portão do Sys.pet (1; com o v20 ligado quem manda é Sys.pet.DATA.v20.unlockLevel = 20)
+  // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).
+  unlock:{missions:2, summon:3, practice:5, mail:7, login:7, profile:10, shopgem:10, forge:12, instances:14, tower:15, pass:18, pets:20,
+          events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1},
+  alias:{inst:'instances'},
+  unlockName:{missions:'Missões',summon:'Invocar',practice:'Práticas',mail:'Correio',login:'Login diário',profile:'Perfil',shopgem:'Loja de gemas',
+    forge:'Forja',instances:'Instâncias',tower:'Torre',pass:'Passe',pets:'Pets',events:'Eventos',rank:'Ranking',arena:'Arena',guild:'Guilda',
+    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets'},
   // portões de raridade dos OVOS (decisão do PO): raridade r exige nível E era mínimos. A fênix do andar 100 da torre é exceção.
   eggGate:{3:{level:70,era:4}, 4:{level:85,era:5}},
   // ===== CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA). Spec e simulação: reports/curva-9-eras-e2.md =====
@@ -72,7 +78,7 @@ function addXp(S,n,host,src){
   o.total+=k; o.xp+=k;
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }
   if(o.lvl>=DATA.maxLevel) o.xp=0;
-  const unlocked=Object.keys(DATA.unlock).filter(f=>DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl);
+  const unlocked=Object.keys(DATA.unlock).filter(f=>f!=='pet'&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl);
   if(o.lvl>from&&host&&host.toast) host.toast(`⭐ Nível ${o.lvl}!${unlocked.length?' Liberou: '+unlocked.map(f=>DATA.unlockName[f]||f).join(', '):''}`);
   return {gained:k,levels:o.lvl-from,from,to:o.lvl,unlocked};
 }
@@ -91,9 +97,10 @@ const onMission=(S,host)=>addXp(S,Math.round(DATA.xp.mission*eraMul(host)*vipXp(
 const onDailyBonus=(S,host)=>addXp(S,Math.round(DATA.xp.dailyBonus*eraMul(host)*vipXp(S)),host);
 
 /* desbloqueios. Sem Sys.level carregado, os outros módulos tratam tudo como liberado. */
-const unlockLevel=f=>num(DATA.unlock[f],1);
+const unlockKey=f=>(DATA.alias&&DATA.alias[f])||f;
+const unlockLevel=f=>num(DATA.unlock[unlockKey(f)],1);
 const isUnlocked=(S,f)=>level(S)>=unlockLevel(f);
-function nextUnlock(S){ const l=level(S); let best=null; for(const f in DATA.unlock){ const u=DATA.unlock[f]; if(u>l&&(!best||u<best.level)) best={feature:f,name:DATA.unlockName[f]||f,level:u}; } return best; }
+function nextUnlock(S){ const l=level(S); let best=null; for(const f in DATA.unlock){ if(f==='pet') continue; const u=DATA.unlock[f]; if(u>l&&(!best||u<best.level)) best={feature:f,name:DATA.unlockName[f]||f,level:u}; } return best; }
 /* portão de raridade de ovo: maior raridade permitida (<= r) para o nível e a era atuais.
    Fonte única: Sys.loot.capEggR (fps-30, DATA.gates). DATA.eggGate daqui é só a reserva para quando o Sys.loot não estiver carregado. */
 function eggMaxR(S,host,r){
@@ -114,7 +121,7 @@ function stage(S,host){ const o=ensure(S), T=DATA.v9.stages; if(!V9()) return {o
   return {on:true,stage:st,id:T[st].id,name:T[st].name,ready:!!nx&&lv>=nx.lvl&&fc>=nx.fc,
     next:nx?{stage:st+1,id:nx.id,name:nx.name,lvl:nx.lvl,fc:nx.fc,needLvl:Math.max(0,nx.lvl-lv),needFc:Math.max(0,Math.ceil(nx.fc-fc))}:null}; }
 function evolve(S,host){ const s0=stage(S,host); if(!s0.ready) return {ok:false,reason:s0.on?'need':'off',stage:s0.stage}; ensure(S).stg=s0.stage+1; return {ok:true,from:s0.stage,stage:s0.stage+1}; }
-const API={DATA,setV9,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
+const API={DATA,setV9,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
 root.Sys=root.Sys||{}; root.Sys.level=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

@@ -279,7 +279,7 @@ function pClick(b){ const a=b.dataset.x, P=Sys.pass;
   else if(a==='all'){ const els={}; pPending().forEach(([t,l])=>{ const e=document.getElementById('xp_'+t+l); if(e) els[t+l]=e; }); pAfterClaim(P.claimAll(S,Sys.host),els); }
   else if(a==='claim'){ const t=b.dataset.t, lv=+b.dataset.lv, o=P.ensure(S), reached=lv<=P.tier(S);
     if(t==='premium'&&!o.premium){ snd('ui_tap'); XP.cf=true; render(); return; }
-    if(!reached||(t==='free'?o.free:o.prem).includes(lv)){ snd('ui_tap'); if(!reached) pToast('Libera no nível '+lv+' do passe'); return; }
+    if(!reached||(t==='free'?o.free:o.prem).includes(lv)){ snd('ui_tap'); pToast(!reached?'Libera no nível '+lv+' do passe':'Recompensa já resgatada'); return; }
     const els={}; els[t+lv]=b; pAfterClaim(pClaimOne(t,lv),els); }
   else if(a==='mclaim'){ const id=b.dataset.id, daily=id==='bonus'||P.DATA.daily.some(x=>x.id===id), r=P.claimMission(S,Sys.host,id); if(!r.ok){ snd('ui_tap'); return; }
     snd('claim'); if(r.gems) yFly(b,'gem',0); if(r.tierUp){ setTimeout(()=>snd('upgrade'),250); XP.lvfx=true; XP.page=-1; }
@@ -382,14 +382,14 @@ function rClick(b){ const a=b.dataset.x, P=Sys.practice, T=Sys.titles;
   else if(a==='filter'){ snd('ui_tap'); XR.filter=b.dataset.f; XR.page=0; XR.anim=true; render(); }
   else if(a==='pg'){ const p=XR.page+(+b.dataset.d); if(p>=0&&p<(XR.pages||1)){ snd('ui_tap'); XR.page=p; XR.anim=true; render(); } }
   else if(a==='train'){ const t=P.DATA.tracks.find(x=>x.id===b.dataset.id), r=P.train(S,Sys.host,b.dataset.id,1);
-    if(!r.ok){ snd('ui_tap'); if(r.reason==='locked'){ rBanner('Libera no nível '+pracNeed()); render(); } return; }
+    if(!r.ok){ snd('ui_tap'); let m='Libera no nível '+pracNeed(); if(r.reason!=='locked'){ let full=false, cost=0; try{ full=P.ensure(S).lv[b.dataset.id]>=P.capOf(Sys.host); cost=P.canTrain(S,Sys.host,b.dataset.id).cost; }catch(e){} m=full?'No teto da era: avance de era para treinar mais':'Faltam pedras de prática'+(cost?': custa '+cost:''); } rBanner(m); render(); return; }   /* nunca mudo: diz o motivo */
     snd('claim'); rAfter(t.id,'+'+f1c(t.per)+(R_UNIT[t.id]||t.unit)); }
   else if(a==='trainall'){ let n=0, guard=0;   /* treina sempre a trilha mais barata que couber (como no canvas) */
     while(guard++<2000){ let best=null, bc=Infinity; for(const t of P.DATA.tracks){ const c=P.canTrain(S,Sys.host,t.id); if(c.ok&&c.cost<bc){ bc=c.cost; best=t.id; } } if(!best||!P.train(S,Sys.host,best,1).ok) break; n++; }
-    if(!n){ snd('ui_tap'); if(pracLocked()){ rBanner('Libera no nível '+pracNeed()); render(); } return; }
+    if(!n){ snd('ui_tap'); rBanner(pracLocked()?'Libera no nível '+pracNeed():'Nada para treinar agora: faltam pedras ou está no teto da era'); render(); return; }
     snd('claim'); rAfter(null,'','+'+n+(n===1?' nível de prática':' níveis de prática')); }
   else if(a==='title'){ const id=b.dataset.id, t=T.DATA.titles.find(x=>x.id===id), f=T.featured(S);
-    if(!t||!T.isUnlocked(S,id)||t.cosmetic||(f&&f.id===id)){ snd('ui_tap'); return; }
+    if(!t||!T.isUnlocked(S,id)||t.cosmetic||(f&&f.id===id)){ snd('ui_tap'); if(t){ rBanner(!T.isUnlocked(S,id)?'Bloqueado: '+rCond(t):t.cosmetic?'Título cosmético: não entra em destaque':'Este título já está em destaque'); render(); } return; }
     if(T.setFeatured(S,id)){ snd('claim'); XR.fresh=null; rAfter(null,'','Destaque: '+t.name+' (x'+T.DATA.featuredMult+')'); } }
 }
 

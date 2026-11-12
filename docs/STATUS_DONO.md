@@ -1,243 +1,103 @@
-# Eonbound — status para o dono
+# Eonbound — checklist do dono
 
-Atualizado em 12/11/2026 pelo PO/design (sessão fps-98).
-Legenda: `[x]` feito · `[ ]` falta · `[~]` em andamento
+Atualizado em 12/11/2026 pelo PO (sessão fps-98). Legenda: `[x]` feito · `[~]` em andamento · `[ ]` falta
 
 **Links**
-- Aprovação de arte: https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19
-- Protótipos das telas (canvas): https://claude.ai/artifact/PkyVkM4ZUtaob6Nursh6ba
-
-**Como a esteira funciona:** você aprova a arte → eu monto a tela com ela → você aprova a tela → o engenheiro implementa → o QA testa jogando as 7 eras. O que você aprova vai para os devs no mesmo dia.
+- Canvas das telas: https://claude.ai/artifact/PkyVkM4ZUtaob6Nursh6ba
+- Página de aprovação de arte: https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19
+- Código no GitHub: https://github.com/rafaelccorrea/game-projetc (branch main; só código, sem imagens e áudio)
+- Lista do que falta para a loja: `docs/LANCAVEL.md`
 
 ---
 
-## 1. Suas decisões que já valem
+## 1. O que eu preciso de você agora
 
-- [x] Nada estático: personagem, arma, efeito, ultimate, cenário e ícone só entram se estiverem em movimento.
-- [x] Nenhum personagem flutua, quica ou pula: pés sempre na linha do chão.
-- [x] Espada na mão direita do Kael.
-- [x] VIP só por compra (o pagamento real fica para depois).
-- [x] Skin e VIP dão poder, mas só por compra direta ou pelo Passe. Nunca por sorteio pago.
-- [x] Montaria dá poder.
-- [x] Personagem customizável com 7 espaços: arma, colete, chapéu/elmo, luvas, botas, colar e asa (a asa libera no nível 50).
-- [x] Nível do jogador de 1 a 100, difícil de subir.
-- [x] Raridade presa ao nível e à era (Épico a partir do nível 25; Mítico no 70 e da era Industrial em diante; Lendário no 85 e da era Moderna em diante).
-- [x] Nível do item de 1 a 100, limitado ao nível do jogador; sobe com ouro ou diamante; item novo começa no 1.
-- [x] Farm no automático: moedas e experiência caem no chão a cada abate.
-- [x] Passe de batalha com nível próprio, que sobe com missões. Grátis dá pouco; Premium dá itens melhores.
-- [x] Heroína Kaia, escolhida na criação do personagem.
-- [x] Só AUTOMÁTICO: o modo manual foi removido (habilidades e ultimate disparam sozinhas).
-- [x] Pets: 15 no total, 5 no lançamento e 10 em atualização.
-- [x] Forja +0 a +15: pode falhar, mas nunca perde nível.
-- [x] Plano de arte em fases, cortado para caber no saldo de créditos.
-- [x] Pets: estrelas = qualidade, nível = atributos; 3 ataques automáticos (básico ~90%, crítico "tiro" ~7%, mediano ~3%, chances sobem com estrelas e nível); efeito do pet nunca maior que as habilidades do personagem.
-- [x] Customização: chapéu, arma, asa e colar trocam peça por peça; colete, luvas e botas formam a roupa (luva e bota mudam cor por raridade).
-- [x] VIP 1 a 10 por pontos de compra (o nível nunca desce); faltam os pontos de cada nível, que vêm com o preço real.
-- [x] Arena: 5 lutas por dia contra cópias com a sua força ±10%; prêmios só quando o online abrir.
-- [x] Skin de chapéu, luvas, botas, colar e asa também dá poder (+1% a +4%), dentro do teto de coleção de +10%.
-- [x] Duas eras novas depois da Futurista: Submundo (era 7) e Celestial (era 8), com armas, skins e cenário. Nível máximo sobe para 120 (proposta: raridade Divino só nelas).
-- [x] Créditos: eras novas e pets andam juntos.
-- [x] Torre: chefe a cada 10 andares. Instâncias: 2 entradas por área por dia, +1 com VIP.
-- [x] Pets em 3 estágios: filhote → médio → evoluído, por nível do pet, cada estágio com aura própria, animação de evolução, e o evoluído bem épico. As 5 imagens atuais valem como filhote. Números: cada pet tem o próprio nível (máximo 90); vira médio no nível 30 e evoluído no 60; o pet vale no máximo 20% da sua força.
-- [x] Qualidade do item (todos os 7 espaços): poder 0-10.000 e estrelas 1-5; 4★+ em ~10%, 5★ em ~2%, 10.000 em 1 por milhão; a raridade sempre manda no atributo principal; média igual à de hoje (o jogo não fica mais difícil).
-- [x] Fusão: 3 itens iguais com a mesma estrela viram 1 com +1 estrela, até 5★ (5★ não funde). Sem diamante.
-- [x] Item de era futura que cai cedo fica "adormecido" (rende como 1 era à frente, nível 1) até você chegar na era dele.
-- [ ] Leilão entre jogadores: plano escrito, entra quando houver servidor online.
-- [~] Qualquer item de qualquer era pode ser usado em qualquer era. Item de era futura pode cair cedo, muito raro. Mítico e Lendário das 3 últimas eras nunca caem antes do portão deles. (números sendo calculados junto com a qualidade)
-- [x] Pets novos: Submundo (ataque, era 7) e Celestial (defesa, era 8), Lendários; PRISMÁTICO, o mais raro (até 25% da força): 1.000 fragmentos sem sorteio (evento mensal 100, VIP 10 dá 500 de uma vez, arena semanal 1º 10 / 2º 7 / 3º 5, chefe da era 8, torre). Tempo: quem paga e joga ~3,4 meses; VIP médio ~6,5; grátis ~7,5. Estrelas: mais 500 fragmentos até 5★.
-- [x] Duração: terminar a última era (Celestial) leva ~6 meses grátis / ~4 meses VIP, jogando ~40 min por dia. Trava de nível para entrar nas eras: 1, 12, 25, 40, 55, 70, 85, 100, 110. Era 0 continua curta (troca de era no 1º dia). Quem falta recebe bônus de retorno (até 3 dias).
-- [x] 19 Prólogo V2 APROVADO
-- [x] 17b Pets V2: APROVADA
-- [x] 20 Mapa das Eras V2: APROVADO (entra junto com as 100 fases e 4 dificuldades); mapas das eras 1 a 8 pedidos à arte (~16 créditos)
-- [~] Dano coerente com a força: o dano sai dos atributos; ninguém com 2 mil de FC dá 1 milhão de dano. Tabela de tetos por golpe sendo feita e o QA vai medir em cada era.
-- [x] Kael cresce com a progressão: garoto → adolescente (nível 20 + ~15 mil de força) → adulto → guerreiro lendário, com animação de evolução. Substitui as roupas por era. Skins viram cor e detalhe sobre cada fase.
-- [~] Animação nova de subir de nível (a atual está tosca)
-- [x] Números grandes abreviados (mil, mi, bi, tri). Poder recomendado do Senhor: 1,7 mil (era 0) até 719 tri (era 8).
-- [x] Pet libera no nível 20: ovo com animação de chocar, 79% Básico / 21% da 2ª raridade (nunca Lendário); pet equipado aparece na batalha.
-- [x] Kael: adolescente no nível 22 (para não cair junto com o ovo do pet), adulto no 35, guerreiro lendário no 70.
-- [x] Diamante grátis: ~10 mil em 6 meses (as missões diárias passam a dar menos).
-- [x] Cada era com 100 fases e 4 dificuldades (Fácil, Médio, Difícil, Hell), cada dificuldade 3x mais forte. Para liberar: eras 0-1 só Fácil; 2-3 + Médio; 4-5 + Difícil; 6-7 + Hell; o Celestial fecha no Difícil e o Hell dele é o desafio final. Prêmio maior em cada dificuldade (até 4x de ouro e material; no Difícil e no Hell a qualidade do item sai melhor). Calendário mantido: dia 179 grátis, 121 VIP.
-- [x] 21 Perfil e Coleção: APROVADO
-- [x] Todas as telas têm que funcionar em qualquer tamanho de celular (responsivas)
-- [x] Diamante nas fases só em marcos (a cada 10 fases, chefe e Senhor da Era); fase comum dá ouro e experiência
-- [~] Equipamento: botão "Equipar melhor" (automático) e arrastar o item para o espaço
-- [x] Canvas: TODAS as telas aprovadas convertidas para o layout novo (sem barra de baixo, header novo, voltar, responsivas)
-- [~] Jogo: painéis em tela cheia; Equipamento, Invocar, Loja, Passe e Práticas já abrem assim na v0.12.1 (Configurações e os outros em seguida); layout antigo será apagado do código
-- [x] 22 Oferta de primeira compra APROVADA (arma Épica 3★ + lobo Épico + 300 gemas + 48 mil de ouro, de R$ 89,90 por R$ 29,90, 24 h)
-- [x] 25 Leilão APROVADO (liga com o servidor e o parecer jurídico)
-- [x] 23 Arena V2 e 24 Eventos V2 APROVADAS
-- [x] 27 Torneio do Poder APROVADO
-- [~] 26 Guilda: REPROVADA, refazendo
-- [x] Preços da loja aprovados: gemas de R$ 4,90 (60) a R$ 199,90 (3.400), 1ª compra de cada pacote em dobro; cartão mensal R$ 19,90; Passe Premium R$ 24,90/temporada; skins R$ 9,90-29,90; oferta de 1ª compra R$ 29,90; VIP sobe com o valor gasto.
-- [x] Montaria dá atributo (3% a 12% de ataque e vida); o Kael monta nela. Raridades: Básico (pônei), Raro (cavalo de guerra), Épico (lobo de guerra e grifo dourado, já feitos), Mítico (a definir), Lendário (serpe dourada)
-- [~] Montaria evoluída ganha aura com fumaça (por estrelas: 2-3★ brilho, 4★ fumaça, 5★ aura forte com fumaça e partículas); feito por código, prévia virá para a página
-- [x] Barras de vida e energia acima da cabeça do Kael (aprovado)
-- [x] Arte aprovada nesta rodada: 4 fases do Kael, subir de nível e evolução, Kaia animada, 5 pets animados, Submundo e Celestial animados com ultimates, pistola (pederneira, pistola, blaster), lobo e grifo
-- [~] Revólver atirando: reprovado, sendo refeito
-- [~] Animações das fases adolescente e adulta do Kael (~35-40 créditos cada); guerreiro lendário quando entrar crédito
-- [ ] Kael montado no grifo: na página, esperando seu voto (o do lobo também)
-- [~] Guildas: troca de itens entre membros, Torneio do Poder por territórios no mapa das eras, ranking de guildas, chefe da guilda, loja, bênçãos, doações e missões. Regras e protótipos em produção (depende do servidor).
-- [~] Equipar a ARMA muda a arma na mão do Kael (prévia e batalha), na 0.12.2
-- [~] Aparência em camadas (sua decisão): roupa base + chapéu, colete, botas e cosméticos (óculos, máscara) por cima, sem combinações; modo Itens ou Skin, e ocultar peça por peça (só visual). Arte e protótipo em produção.
-- [x] Menu e ícones: cada função fica oculta até o nível de liberação; quando libera, aparece com animação de "NOVO!" e um balão explicando
-- [x] Liberação por nível (reports/liberacao-por-nivel.md), uma novidade por nível: dia 1 missões (2), invocar (3), práticas (5), correio/login (7), perfil e loja (10), forja (12), instâncias (14), torre (15); passe (18) e pets (20) no dia 2; EVENTOS no 24 (dia 3); ARENA e ranking no 28 (dia 4-5); guilda no 32 (dia 6); montaria 38; Torneio do Poder 40; leilão 45 (18+); asa 50
-- [ ] FUTURO (depois do lançamento): Bênção de equipamento: só itens Míticos; até 5 gemas cravejadas na borda do item, cada uma de um tipo (dano, armadura, defesa...). Na guilda, as "bênçãos" passaram a se chamar Estandartes da guilda.
-- [x] Transformação de item: paga ouro + Essência da Era, e o item antigo vira da era atual com a mesma raridade e o mesmo visual (nível volta ao 1).
+- [ ] **Religar o celular no cabo e deixar desbloqueado** (a versão 0.12.3 está pronta para instalar)
+- [ ] Liberar mais espaço no disco C: (hoje ~7 GB; ideal 20 GB): Lixeira, pasta Vídeos (3,2 GB)
+- [ ] Votar no canvas: 01b Título novo (escolher o logo A/B/C), 26 Guilda V2, 28 Bem-vindo de volta, 29 Nome do jogador, 30 Códex das Eras, aba Aparência no Equipamento, missão guia na Batalha, Passe com rolagem
+- [ ] Servidor: passar o acesso à AWS e um Postgres de desenvolvimento (sem mandar senha por mensagem)
+- [ ] Play Console: criar os produtos de compra (lista em `fps-server/docs/google-play-setup.md`)
+- [ ] Política de privacidade publicada num link; classificação etária
+- [ ] Parecer de advogado (chat com menores, leilão e trocas; ECA Digital e LGPD)
 
-## 2. Arte (página de aprovação)
+## 2. Regras do jogo que você decidiu
 
-Conferido no banco da página em 12/11/2026: **220 itens aprovados, 27 reprovados, nenhum esperando voto.**
+**Visual e combate**
+- [x] Nada parado; ninguém flutua; pés sempre no chão; arma na mão direita
+- [x] Só AUTOMÁTICO (sem modo manual)
+- [x] Batalha em tela cheia, sem barra de baixo; ícones Equipamento/Invocar/Loja/Passe à esquerda; MENU agrupado
+- [x] Barras de vida e energia acima da cabeça do Kael
+- [x] Dano sai dos atributos (2 mil de força nunca dá 1 milhão de dano); números grandes abreviados (mil, mi, bi, tri)
+- [x] Kael cresce: garoto → adolescente (nível 22) → adulto (35) → guerreiro lendário (70), com animação de evolução
+- [x] Aparência em camadas: arma, chapéu, colete, botas e cosméticos (óculos, máscara) por cima da roupa; modo Itens ou Skin; ocultar peça por peça; colar e luvas não aparecem
 
-### Aprovada por você
-- [x] Kael correndo, parado e golpeando, espada na mão direita, 3 espadas trocáveis (versão final "R")
-- [x] Kael correndo sem arma (carregamento)
-- [x] Habilidades do Kael no Medieval: golpe com rastro e Corte Giratório (3 espadas)
-- [x] Cabelos e chapéu: elmo, loiro espetado e coque
-- [x] Auras +4 azul, +7 roxa, +10 fogo e +13 dourada (parado, correndo e golpe)
-- [x] Cenários vivos: Pré-História, Medieval, Antiguidade e Pólvora (era 3)
-- [x] Inimigos das 7 eras completos: corrida, ataque/tiro, apanhando e morrendo dos 2 comuns e do chefe de cada era (Goblin, Esqueleto e Dragão do Medieval inclusos)
-- [x] Ultimates animadas das 7 eras
-- [x] Ícones dos 7 espaços nas 7 eras (49: arma, colete, chapéu, luvas, botas, colar, asa)
-- [x] As 8 músicas (título + 7 eras)
-- [x] Sons: os 13 refeitos e os demais efeitos
+**Progressão**
+- [x] 9 eras (Pré-História → Celestial); nível máximo 120
+- [x] Cada era com 100 fases e 4 dificuldades (Fácil, Médio, Difícil, Hell); liberar a próxima era exige dificuldades crescentes
+- [x] Duração: ~6 meses grátis / ~4 meses VIP até o fim; quem falta ganha bônus de retorno (até 3 dias)
+- [x] Funções escondidas até o nível de liberação, com "NOVO!": missões 2, invocar 3, práticas 5, correio 7, perfil/loja de gemas 10, forja 12, instâncias 14, torre 15, passe 18, pets 20, eventos 24, arena 28, guilda 32, montaria 38, torneio 40, leilão 45, asa 50
+- [x] Torre com chefe a cada 10 andares; instâncias com 2 entradas por área (+1 VIP)
 
-### Reprovada por você
-- [x] Kael por peças articuladas ("andar de siri", arma no braço errado, pernas duras) → trocado pela técnica de vídeo, já aprovada
-- [x] Golpe antigo do Kael → refeito e aprovado (versão "R")
-- [ ] **Kaia (imagem de referência): fundo verde** → refazer sem o fundo
-- [x] 13 sons da primeira versão → refeitos e aprovados
+**Itens**
+- [x] Qualidade do item: poder 0-10.000 e estrelas 1-5 (10.000 = 1 em 1 milhão); a raridade sempre manda
+- [x] Fusão: 3 iguais com a mesma estrela → +1 estrela (até 5★); sem diamante
+- [x] Item de qualquer era serve em qualquer era; item de era futura fica "adormecido" até você chegar lá
+- [x] Transformação de item (sobe de era mantendo raridade e visual)
+- [x] Equipar melhor (automático) e arrastar o item para o espaço
 
-### O que falta (parado até o jogo receber o que já foi aprovado)
-- [ ] **Colocar no jogo tudo o que está aprovado acima** (o engenheiro está conferindo item por item; você disse que os inimigos ainda andam e atacam errado no jogo)
-- [ ] Kaia: refazer a referência sem fundo verde, depois as animações
-- [~] Pets por era: 5 imagens de referência sendo feitas (mamute, esfinge, dragãozinho, papagaio, cão mecânico)
-- [ ] Customização no corpo: chapéu e arma trocando de verdade, asa e colar presos por código, colete+luvas+botas como roupa
-- [ ] Cenários de Industrial, Moderna e Futurista
-- [ ] Kael apanhando e morrendo; pose de tiro para armas de fogo
-- [~] Montarias: lobo e grifo APROVADOS; depois o Kael montado (~14-18 créditos cada, começando pelo lobo da oferta)
-- [~] Kael nas 4 fases de idade: 4 imagens primeiro (~8 créditos), depois as animações (~35-40 por fase)
-- [ ] Morte do herói refeita (você achou horrível)
-- [x] Aura maligna e celestial, asas demoníaca e de anjo: prontas, esperando seu voto
-- [~] Pose de tiro: a 1ª foi reprovada; refazendo como pistola com uma mão (~18 créditos, liberado por você)
-- [ ] Pets do Submundo, Celestial e Prismático: imagens dos 3 estágios (~18 créditos)
-- [ ] Pets: imagens dos estágios médio e evoluído (~20 créditos), depois animação e evolução
-- [ ] Submundo e Celestial: 16 imagens de referência prontas, esperando seu voto na página
-- [~] Cenário da Industrial pronto, ajustando as partes paradas antes de ir para o seu voto
+**Pets, montarias e economia**
+- [x] Pets: libera no nível 20 com ovo (79% Básico / 21% Raro); estrelas = qualidade, nível até 90; filhote → médio (30) → evoluído (60) com aura; 3 ataques automáticos (básico ~90%, crítico ~7%, mediano ~3%)
+- [x] Prismático: o mais raro (até 25% da força), 1.000 fragmentos sem sorteio (eventos, VIP 10, arena, chefe da era 8, torre)
+- [x] Montaria: o Kael monta; dá 3% a 12% de ataque e vida; aura com fumaça ao evoluir (estrelas); Lobo e Grifo são Épicos
+- [x] Preços: gemas R$ 4,90 a 199,90 (1ª compra em dobro), cartão mensal R$ 19,90, Passe Premium R$ 24,90, skins R$ 9,90-29,90, oferta de 1ª compra R$ 29,90 (24 h, só para quem nunca comprou), VIP pelo valor gasto
+- [x] Nunca sorteio pago; diamante comprado nunca passa para outra conta
+- [x] Leilão de itens (ouro ou Marcos, vendedor anônimo, item chega no nível 1, 18+)
+- [x] Guildas: até 30 membros, trocas com as travas do leilão, Torneio do Poder (28 territórios, 15 contra 15), Estandartes até +5%
 
 ## 3. Telas (canvas)
 
-| Tela | Situação |
-|---|---|
-| 00 Carregamento | [x] Aprovada |
-| 01 Título | [x] Aprovada (melhorar depois) |
-| 02 Login | [x] Aprovada |
-| 03 Intro e nome (escolha Kael/Kaia) | [x] Aprovada |
-| 04 Batalha | [x] Aprovada · 04b tela cheia [x] Aprovada · 04c V2 com menu agrupado [x] Aprovada (missão guia na tela: protótipo em produção) |
-| 05 Equipamento (7 espaços) | [x] Aprovada |
-| 06 Invocar | [x] Aprovada |
-| 07 Loja | [x] Aprovada |
-| 08 Passe (nível próprio e missões) | [x] Aprovada |
-| 09 Configurações | [x] Aprovada |
-| 10 Vitória/Derrota do chefe | [x] Aprovada |
-| 11 Troca de era | [x] Aprovada |
-| 12 Ranking | [x] Aprovada (sem servidor: rivais locais, prêmios só quando o online abrir) |
-| 13 Instâncias | [x] Aprovada |
-| 14 Torre | [x] Aprovada |
-| 15 Forja | [x] Aprovada |
-| 16 Práticas e Títulos | [x] Aprovada |
-| 17 Pets | [x] Aprovada a V2 (17b) |
-| 18 VIP | [x] Aprovada |
+**Aprovadas:** 00 Carregamento · 01 Título · 02 Login · 03 Criar personagem · 04c Batalha V2 · 05 Equipamento · 06 Invocar · 07 Loja · 08 Passe · 09 Configurações · 10 Vitória/Derrota · 11 Troca de era · 12 Ranking · 13 Instâncias · 14 Torre · 15 Forja · 16 Práticas e Títulos · 17b Pets · 18 VIP · 19 Prólogo · 20 Mapa das Eras · 21 Perfil · 22 Oferta · 23 Arena · 24 Eventos · 25 Leilão · 27 Torneio do Poder
 
-## 4. Regras do jogo (escritas e no código, prontas para ligar)
+**Esperando seu voto:** 01b Título novo · 26 Guilda V2 · 28 Bem-vindo de volta · 29 Nome do jogador · 30 Códex das Eras · aba Aparência (05) · missão guia (04c) · Passe com rolagem (08)
 
-- [x] Loot, baú de toque (8 por dia, 12 com VIP), instâncias diárias
-- [x] Moedas e experiência por abate
-- [x] Raridade presa a nível e era (num ponto só do código)
-- [x] Nível do jogador e desbloqueio de funções (pet 1, práticas 5, forja 12, instâncias 14, torre 15, arena 30)
-- [x] Atributos (ataque, vida, defesa, chance e dano crítico, velocidade) e fórmula de força
-- [x] Skin com bônus e coleção (até +10%)
-- [x] VIP: +10% ataque/vida, +25% experiência/ouro, offline em dobro, 12 baús, 1 chave extra
-- [x] Nível do item 1-100; desmontar devolve metade do ouro
-- [x] Invocação só com ouro (sem gemas)
-- [x] Passe com nível e missões próprios; Item da Temporada no Premium
-- [x] Forja, práticas, títulos, torre e pets
-- [~] Transformação de item (lógica e Essência da Era sendo feitas; tela na aba "Transformar" da Forja)
-- [ ] Ritmo do jogo recalibrado com a medição real (o simulador está otimista; os dias valem só como comparação)
+## 4. Arte
 
-## 5. Balanceamento (simulação, ainda não é medida real)
+**Aprovada (destaques):** Kael nas 4 fases com todas as animações · Kaia garota · inimigos e ultimates das 9 eras · cenários vivos das eras 0-4 · 5 pets do lançamento nos 3 estágios · pets do Submundo, Celestial e Prismático (imagens) · lobo e grifo montados + aura · asas · auras · pistola · mapas das 9 eras · relógio · avô · ícones
 
-- [x] Grátis chega ao fim em cerca de 59-61 dias
-- [x] VIP chega ao fim em cerca de 41 dias
-- [x] Níveis no fim de cada era: 11, 17, 26, 43, 73, 87, 100
-- [x] Pets: golem ~3 estrelas e fênix ~2,5 no grátis
-- [ ] Medir abates por minuto no jogo real e recalibrar tudo
+**Sendo corrigida (você reprovou):** pistola do Kael guerreiro (arma fora da mão) · Kael no lobo parado (arma some dentro da montaria)
 
-## 6. Jogo (o que o engenheiro já entregou — versão 0.7)
+**Em produção:** chapéus por era nas 4 fases · 2 óculos e 2 máscaras · prévia da aparência em camadas · cenários vivos das eras 5 a 8
 
-- [x] Tela de carregamento igual ao protótipo
-- [x] Cenários vivos da Pré-História e do Medieval
-- [x] Kael animado com a espada na mão
-- [x] Música e sons aprovados
-- [x] No máximo 3 inimigos na tela, com selo "+N"; todos atacam
-- [x] Inimigos do Medieval com ataque, dano e morte animados
-- [x] Ultimates animadas de Pré-História, Medieval e Moderna
-- [x] Inimigos virados corrigidos (T-rex, Pirata, Tanque)
-- [x] Nível do jogador, moedas e experiência voando
-- [x] Invocação em ouro, sem sorteio de skin
-- [~] Linha dos pés e tamanho dos inimigos iguais ao protótipo
-- [~] Inimigos sem animação não podem pular (sua reclamação da Pré-História)
-- [ ] Telas Equipamento, Invocar e Loja (próxima rodada)
-- [ ] Demais telas, depois que você aprovar
+**Em produção, antes do lançamento (sua correção):** montarias Pônei, Cavalo de guerra, Mítica e Serpe dourada · Kaia crescendo (3 fases) · pets do Submundo, Celestial e Prismático animados
 
-## 7. QA
+**Só depois do lançamento:** Bênção de equipamento (gemas cravejadas nos Míticos)
 
-- [x] Roteiro obrigatório: joga as 7 eras a cada versão, numa aba só
-- [x] Rodadas 1 e 2 feitas (orientação, pés, ataques, chefe inteiro)
-- [ ] Medir a altura dos pés quadro a quadro em todas as eras
-- [ ] Ultimates uma a uma, troca de era, derrota, projéteis dos chefes
-- [ ] O som: o QA mede por script, mas quem precisa ouvir é você
+**Créditos:** saldo ~920. Fila enxuta para o lançamento quase toda gasta; o resto é reserva para refazer o que você reprovar.
 
-## 8. O que eu preciso de você
+## 5. Jogo no seu celular
 
-- [ ] URGENTE: liberar espaço no disco C: (está com menos de 1 GB; o app do celular não compila sem ~1 GB livre). Ideal: 20 GB. Sugestões: esvaziar a Lixeira, ver a pasta Vídeos (3,2 GB), Downloads, programas que não usa, e o arquivo temporário C:\Users\rafae\AppData\Local\Temp\77aff2e7-ca58-4163-a9f7-5e36c91716eb.tmp (188 MB).
-- [ ] Página de aprovação: referências do Submundo e do Celestial, os 5 pets e a Kaia sem fundo verde (aba "Antes × Depois (V2)" mostra o reprovado ao lado do novo)
-- [ ] Canvas: votar a 04b Batalha em tela cheia
-- [ ] Fechar à mão a aba "CALIBRACAO - NAO USAR NEM FECHAR" no Chrome
-- [ ] Ouvir os sons dentro do jogo
+**Hoje no seu celular abre:** Equipamento, Invocar, Loja, Passe, Missões, Práticas e Títulos, Configurações (antiga), Baú, Desafiar. **Ainda não existe como tela no jogo:** Forja (0.12.4), Pets (0.12.5), Montarias (0.12.6), VIP/Instâncias/Torre/Ranking/Troca de era/Vitória-Derrota (em paralelo, saindo junto), Título/Login/Prólogo/Criação/Perfil/Oferta (0.12.10), Mapa e 100 fases (0.13.0), fases do Kael e Kaia, aparência, eras 7-8 (0.13.x), Correio/Eventos/Arena/Leilão/Guilda/Torneio/chat (com o servidor, 0.14.x).
 
-## 9. Créditos de arte
+- [x] 0.12.1: batalha em tela cheia, painéis em tela cheia, sem modo manual
+- [x] 0.12.2 (instalada): barras sobre o Kael, jogo mais leve (98 quadros/s), arma do item na mão, Equipar melhor e arrastar
+- [~] 0.12.3 (pronta, falta o celular no cabo): pistola, 2 inimigos por vez em 3 eras, level up novo, funções escondidas até o nível
+- [ ] 0.12.4 Forja e Configurações novas, cenário Industrial, inimigo parado, morte nova do Kael
+- [ ] 0.12.5 Kaia jogável · 0.12.6+ pets, montarias, raridade pela cor, telas que faltam, prólogo, perfil, oferta
+- [ ] 0.13.x curva de 9 eras + 100 fases × 4 dificuldades + mapa + qualidade/fusão + Kael crescendo + Submundo e Celestial
+- [ ] 0.14.x loja: arte carregada por era, app assinado, teste interno, compras reais
 
-- 12/11/2026: você comprou +1.000 e pediu para FINALIZAR com o que temos, racionando. Fila enxuta (~260): Kael adolescente/adulto/guerreiro → ícone do leilão e arte do avô → pets do lançamento médio/evoluído com animação econômica. O resto (~850) fica de reserva para refações.
-- Ficam para depois do lançamento (atualização): montarias Básica, Rara, Mítica e Lendária (lança com Lobo e Grifo), Kaia crescendo (lança como garota), pets do Submundo, Celestial e Prismático animados.
+## 6. Servidor (NestJS + Postgres, AWS opção A)
 
-- Você comprou +500. Saldo conferido pela arte: ~580.
-- Já feito: inimigos das 7 eras (21) e as 7 ultimates animadas.
-- Fila (~340): 7 espaços (~48) → Kaia (~14) → 5 pets (~78) → roupas do Kael por era (~98) → 2 montarias (~30); cenários de Pólvora, Industrial, Moderna e Futurista (~72) em paralelo.
-- Sobra prevista: ~320 para refazer o que você reprovar e para a Kaia completa.
+- [x] Login (convidado + Google/Apple), save na nuvem, relógio do servidor — escritos e testados sem banco
+- [x] Compras Google Play conferidas no servidor, catálogo aprovado
+- [x] Arena, ranking, eventos, correio, leilão e Cofre do Mercado — núcleo escrito, desligado
+- [x] Chat com frases prontas para todos + painel de moderação (texto livre só após parecer jurídico)
+- [ ] Banco remoto e acesso à AWS (seus) → colocar no ar
+- [ ] Guildas no servidor (depois do voto na tela 26)
 
-## 10. Play Store (Android)
+## 7. Organização do time
 
-- [x] Caminho: Capacitor (o mesmo jogo web vira app Android)
-- [x] Conta do Google Play Console no nome da EMPRESA
-- [x] App de teste instalado no seu S24 Ultra: abre em 3 a 5 s, batalha bem fluida, tela cheia, botão voltar e save funcionando (ainda é a versão de tela antiga)
-- [ ] Você: criar a conta de organização no Play Console (taxa única de 25 dólares; o Google pede o número D-U-N-S da empresa, que é gratuito e pode levar alguns dias)
-- [ ] Política de privacidade (eu escrevo; precisa de um link público)
-- [x] Backend próprio: NestJS + Postgres (líder: fps-30, em Desktop\fps-server)
-- [x] Plano do backend pronto (reports/backend-plano.md). Hospedagem APROVADA: opção A na AWS (EC2 t4g.small em São Paulo, servidor + banco juntos, backup diário, ~R$ 120-155/mês; banco vai para RDS quando passar de 2-5 mil jogadores/dia). Moderação do chat: você ou alguém da empresa, com painel de denúncias
-- [ ] Você: passar o acesso à AWS quando for subir, e um Postgres remoto de desenvolvimento (o disco do PC não aguenta rodar o banco aqui)
-- [ ] Você: parecer de um advogado sobre chat com menores (ECA Digital e LGPD) antes de ligar o chat livre
-- [ ] Login: convidado + Google/Apple; salvar progresso na nuvem
-- [ ] Chat com proteção: filtro de palavrão e dados pessoais, denunciar, bloquear, silenciar; menores de 13 só frases prontas
-- [ ] Ranking, arena, eventos e leilão no servidor; verificação de compras
-- [ ] Compras pela Google Play (VIP, Passe, skins, montarias)
-- [ ] Ficha da loja: textos, imagens, classificação etária, público-alvo (menores: regras de família e ECA Digital), segurança de dados
-- [ ] Teste fechado e publicação
-
-## 11. Caminho até a loja (docs/LANCAVEL.md)
-
-- [~] A) Jogo com o que já foi aprovado: versões 0.12.2 a 0.12.10 (painéis, Kaia, pistola, pets, montarias, telas que faltam, prólogo, perfil, oferta)
-- [ ] B) Progressão final: 0.13.0 curva de 9 eras + 100 fases × 4 dificuldades + mapa + qualidade/fusão; 0.13.1 calibração; 0.13.2 eras 7 e 8 (com o Kael crescendo)
-- [ ] Cenários vivos das eras 5 a 8 (~72 créditos da reserva), cada um para seu voto
-- [ ] C) Loja: carregar arte por era, app assinado, teste interno, compras reais
-- [ ] Servidor mínimo no ar (login, save na nuvem, compras) — precisa do seu acesso à AWS e do banco
-- [ ] Você: produtos no Play Console, política de privacidade, classificação etária e parecer do advogado
+- [x] Uma aba de navegador por vez; testou, fecha
+- [x] Até 2 ajudantes por sessão
+- [x] Código no GitHub (game-projetc), um commit por versão
+- [x] Toda tela nova é responsiva e no layout novo

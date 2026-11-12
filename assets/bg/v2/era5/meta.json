@@ -33,9 +33,9 @@
    "parallax": 0.015,
    "drift": 0.005,
    "top": 0,
-   "px": [256, 512],
+   "px": [1024, 512],
    "height": 0.62,
-   "repeatWidth": 0.31,
+   "repeatWidth": 1.24,
    "nota": "ceu de dia procedural: degrade vertical azul -> bruma clara. Repete em si mesmo"
   },
   {
@@ -93,8 +93,8 @@
   "haze",
   "fog[0]",
   "actors(mid): rua de tras (ladrilho) e 5 veiculos com rodas girando",
+  "rotors(mid): antena de radar girando (acima do mastro)",
   "mid",
-  "rotors(mid): antena de radar girando, helice do ar-condicionado",
   "towerFlags (bandeira no mastro da guarita)",
   "fx(mid): semaforo trocando, letreiro piscando, janelas, holofote, fumaca das ruinas e do entulho",
   "fog[1]",
@@ -120,10 +120,9 @@
  "spacing": "Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.",
  "farFill": {"color": "rgba(0,0,0,0)", "nota": "transparente nesta era: atras da cidade fica a bruma clara do ceu"},
  "rotors": [
-  {"id": "antena_radar", "sprite": "dish", "layer": "mid", "tile": 1, "front": true, "flap": true, "ang": 1.5708, "x": 0.9335, "y": 0.0995, "w": 0.0537, "period": 5, "phase": 0.4},
-  {"id": "helice_ar_condicionado", "sprite": "fan", "layer": "mid", "tile": 1, "front": true, "x": 0.7441, "y": 0.5942, "w": 0.0268, "period": 0.9, "phase": 0}
+  {"id": "antena_radar", "sprite": "dish", "layer": "mid", "tile": 1, "flap": true, "ang": 1.5708, "x": 0.9335, "y": 0.0995, "w": 0.0537, "period": 5, "phase": 0.4}
  ],
- "rotorsNota": "Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe). HELICE do ar-condicionado da lanchonete: rotacao continua no plano.",
+ "rotorsNota": "Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; so vale para a camada far). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).",
  "actors": [
   {
    "id": "viaduto_sedan",
@@ -428,9 +427,9 @@
    "frames": 90,
    "maxScale": 2,
    "bands": [],
-   "base": -5,
-   "pulse": -5,
-   "pulseCycles": 1
+   "base": -30,
+   "pulse": -1.8346,
+   "pulseCycles": 0.25
   },
   {
    "id": "semaforo_amarelo",
@@ -445,9 +444,9 @@
    "frames": 90,
    "maxScale": 2,
    "bands": [],
-   "base": 6,
-   "pulse": -10.6,
-   "pulseCycles": 0.5
+   "base": -120,
+   "pulse": -1.0125,
+   "pulseCycles": 0.75
   },
   {
    "id": "semaforo_verde",
@@ -462,9 +461,9 @@
    "frames": 90,
    "maxScale": 2,
    "bands": [],
-   "base": -5,
-   "pulse": 5,
-   "pulseCycles": 1
+   "base": 30,
+   "pulse": -2.2027,
+   "pulseCycles": 0.25
   },
   {
    "id": "letreiro_lanchonete",
@@ -631,10 +630,10 @@
  "birds": {
   "sprite": "pigeon",
   "flocks": [
-   {"period": 13, "duration": 7, "y": 0.15, "size": 0.07, "n": 3, "phase": 2, "alpha": 1},
-   {"period": 21, "duration": 12, "y": 0.05, "size": 0.045, "n": 4, "phase": 11, "alpha": 0.95}
+   {"period": 13, "duration": 7, "y": 0.012, "size": 0.046, "n": 3, "phase": 2, "alpha": 1},
+   {"period": 21, "duration": 12, "y": -0.004, "size": 0.034, "n": 4, "phase": 11, "alpha": 0.95}
   ],
-  "nota": "pombos (6 quadros de 4 poses): cruzam da esquerda para a direita; size = lado do quadro em SH"
+  "nota": "pombos (6 quadros de 4 poses): cruzam da esquerda para a direita no alto do ceu, acima das torres; size = lado do quadro em SH"
  },
  "flagWave": {"k1": 6.2, "w1": 7, "k2": 2.4, "w2": 2.6, "droop": 0.1, "sliceCss": 1.5, "nota": "dy(u) = sin(u*k1 - t*w1 + ph)*amp*h*(0.15+u) + sin(u*k2 - t*w2 + ph*1.7)*amp*h*0.7*u + u*u*h*droop ; u = 0 na ponta presa, 1 na ponta solta"},
  "towerFlags": {"pole": 0, "width": 0.105, "amp": 0.14, "nota": "pano preso pela direita, ondulando por fatias. pole 0: prende direto na ancora"},
@@ -695,9 +694,9 @@
     "type": "hopper",
     "sprite": "pigeonsit",
     "h": [0.1082, 0.1143],
-    "weight": 3,
+    "weight": 2,
     "span": 0.13,
-    "hop": {"post": "bollardP", "dx": 0.13, "period": 5, "flight": 0.7, "fly": "pigeon", "size": 0.085, "height": 0.04, "cx": 0.5, "cy": 0.1886}
+    "hop": {"post": "bollardP", "dx": 0.13, "period": 5, "flight": 0.7, "fly": "pigeon", "size": 0.056, "height": 0.04, "cx": 0.5, "cy": 0.1886}
    },
    {
     "type": "sprite",
@@ -985,7 +984,6 @@
   "wheelT": "wheelT.webp",
   "backroad": "backroad.webp",
   "dish": "dish.webp",
-  "fan": "fan.webp",
   "lampmask": "lampmask.webp",
   "signmask": "signmask.webp",
   "flagR": "flagR.webp",
@@ -1026,7 +1024,6 @@
   {"id": "holofote", "tipo": "holofote da guarita pulsando"},
   {"id": "bandeira", "tipo": "bandeira vermelha tremulando no mastro da guarita"},
   {"id": "letreiro", "tipo": "painel do letreiro da lanchonete piscando em rosa"},
-  {"id": "helice_ar", "tipo": "helice do ar-condicionado girando"},
   {"id": "antena_radar", "tipo": "antena de radar girando no mastro da estacao"},
   {"id": "fumaca_ruinas", "tipo": "fumaca escura subindo do predio em ruinas e poeira no entulho, com contorno"},
   {"id": "tambor_em_chamas", "tipo": "tambor com 3 chamas em quadros, brilho e faiscas"},

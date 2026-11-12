@@ -408,7 +408,11 @@ const SEASON_SKIN='p10', PASS_SKIN_AT={25:SEASON_SKIN};
 const SKIN = id => SKINS.find(s=>s.id===id);
 
 /* ================= ESTADO ================= */
-const SAVE_KEY='eras_proto_v2';
+/* v0.12.4: APP DE TESTE. TEST_BUILD liga a "Prévia da arte" e o "Modo dono" (js/artprev.js): vale no app (window.Capacitor) e em ?debug=1.
+   A versão de loja desliga trocando STORE_BUILD para true. MODO DONO = save SEPARADO (outra chave do localStorage); o save real fica intocado. */
+const STORE_BUILD=false, TEST_BUILD=!STORE_BUILD&&(!!window.Capacitor||/[?&]debug=1/.test(location.search));
+const OWNER_MODE=TEST_BUILD&&(function(){ try{ return localStorage.getItem('eon_owner_mode')==='1'; }catch(e){ return false; } })();
+const SAVE_KEY=OWNER_MODE?'eras_owner_v1':'eras_proto_v2';
 let S;
 function newState(){
   const w={id:1,slot:'weapon',r:0,e:0,lvl:1,gold:0,subs:[]}, a={id:2,slot:'armor',r:0,e:0,lvl:1,gold:0,subs:[]};   // formato final do item: {slot, r, e, lvl, gold, subs} + id
@@ -418,6 +422,7 @@ function newState(){
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){S=JSON.parse(j);return;} }catch(e){} S=newState(); }
 function save(){ if(window.__noSave) return; S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
 load();
+if(OWNER_MODE&&S.tut===undefined&&!(S.kills>0)){ S.tut=99; S.welcome=true; }   /* modo dono: save novo entra direto no jogo, sem tutorial */
 if(/[?&]debug=1/.test(location.search)&&/[?&]fresh=1/.test(location.search)){ window.__noSave=true; S=newState(); }
 if(S.tut===undefined) S.tut=(S.kills>0||S.stage>1)?99:0;
 const AWAY=S.lastSeen?(Date.now()-S.lastSeen)/1000:0;   // segundos fora (ganhos offline)
@@ -428,7 +433,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
    Em debug, ?res=1 liga só para conferência. */
 const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.3';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.12.4';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
@@ -481,7 +486,10 @@ const itemOf = id => S.inv.find(i=>i.id===id);
 function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'), sid=S.skinEq.weapon; let w=null;
   if(sid&&sid!=='w00') w=SKIN(sid);
   if(!w){ const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(6,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
-  return {armor:a, weapon:w||SKIN('w00')}; }
+  /* ASA (v0.12.4): skin de asa escolhida (Sys.appearance) > item equipado no espaço de asa > nada. Arte: anjo (Épico ou acima) ou demoníaca. */
+  let wing=null; try{ const ws=S.sys&&S.sys.appearance&&S.sys.appearance.skin&&S.sys.appearance.skin.wing, hid=S.sys&&S.sys.appearance&&S.sys.appearance.hidden&&S.sys.appearance.hidden.wing, wi=S.eq&&S.eq.wing!=null?itemOf(S.eq.wing):null;
+    if(!hid){ if(typeof ws==='string') wing=/angel|anjo|holy/i.test(ws)?'angel':'demon'; else if(wi) wing=(wi.r|0)>=3?'angel':'demon'; } }catch(e){}
+  return {armor:a, weapon:w||SKIN('w00'), wing}; }
 /* ATRIBUTOS DO HERÓI: PONTO ÚNICO. Nenhuma conta aqui: Sys.fc.stats (js/sys/fc.js + stats.js) devolve ATK, HP, DEF, chance de crítico,
    dano crítico e velocidade de ataque já com os 7 espaços, o nível do item, o fortalecimento do espaço, o nível do jogador, skin, coleção e VIP.
    Nível do item, custos e melhoria: Sys.stats (upgradeCost / canUpgrade / upgrade / planUpgrade / upgradeTo). Desmontar: Sys.loot.dismantle. */
@@ -521,7 +529,10 @@ const rb = r => `<span class="badge" style="background:${RAR[r].c}">${RAR[r].n}<
 
 function render(){
   const fn=({battle:renderBattle,gear:scrGear,summon:scrSummon,shop:scrShop,pass:scrPass,prog:scrProg})[view];
-  if(fn) fn(); else if(Screens.reg[view]&&typeof Screens.reg[view].render==='function') Screens.reg[view].render(V,S); else V.innerHTML='';   /* tela registrada por Screens.register */
+  if(fn) fn(); else if(Screens.reg[view]&&typeof Screens.reg[view].render==='function'){
+    /* tela registrada que QUEBRA ao desenhar: fecha, avisa e a entrada dela SOME do MENU (nunca fica um botão morto) */
+    try{ Screens.reg[view].render(V,S); }catch(e){ console.error('tela '+view,e); Screens.reg[view].broken=true; V.innerHTML=''; setView('battle'); toast('Esta tela não abriu. Avise o suporte.'); if(typeof fbLayout==='function') fbLayout(); } }
+  else V.innerHTML='';   /* tela registrada por Screens.register */
 }
 /* INVOCAÇÃO: só ITENS, pagos em OURO (decisão do PO): x1, x10 e 1 grátis por dia. Preço, tabela e grátis são do Sys.loot (fps-30):
    Sys.loot.summon cobra por host.spendGold e entrega por host.addItem (js/farm.js, que aplica a garantia a cada BAL.pullPity). Sem sorteio de skin. */

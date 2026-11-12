@@ -132,6 +132,16 @@ function atkFrame(a, gun, K){
 /* pistola ainda carregando (só no primeiro instante do jogo: depois o wSkin segura a arma anterior): Kael parado da folha do corpo, sem a pose de tiro antiga */
 function drawHeroPistolWait(H){ const sh = SHEET(heroSet(H.sk.e).idle); if (!sh) return true; const M = sh.meta, k = HS / M.w, fi = Math.floor(H.t * (M.fps || 12)) % M.frames;
   ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore(); return true; }
+/* ASA NO KAEL (v0.12.4): duas metades (assets/anim/equip/wing_<anjo|demon>_L/R.png; raiz de cada uma no .json), ATRÁS do corpo, presas às costas,
+   batendo de leve (escala em x a partir da raiz). Mesma escala do quadro do herói. H.wing = 'angel' | 'demon' (heroLook). */
+const WING_IMG = {};
+function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ o = WING_IMG[k] = { img: null, ok: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.src = 'assets/anim/equip/wing_' + kind + '_' + side + '.png'; } return o; }
+function drawWings(H){ const kind = H.wing; if (!kind) return; const M = J('assets/anim/equip/wing_' + kind + '.json'), L = wingPart(kind, 'L'), R = wingPart(kind, 'R'); if (!M || !M.L || !L.ok || !R.ok) return;
+  const k = HS / 256 * 0.62, bx = H.x - HS * 0.07, by = H.gy - HS * 0.5, fl = 1 + 0.07 * Math.sin(H.t * 3.2);
+  ctx.save(); ctx.translate(bx, by);
+  { const w = M.L.w * k, h = M.L.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * w, -M.L.root[1] * h, w, h); ctx.restore(); }
+  { const w = M.R.w * k, h = M.R.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * w, -M.R.root[1] * h, w, h); ctx.restore(); }
+  ctx.restore(); }
 const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; const HFLx = HFL.getContext('2d');
 /* H: {x,gy,t,sk,ws,walking,hurt,deadP,act,main}. Devolve false se as folhas ainda não carregaram (cai no sprite antigo). */
 /* KAEL EM FOLHA COMPOSTA (decisão do PO): com a skin de ROUPA e a de ARMA da era 2 no MESMO tier, a batalha usa a folha aprovada
@@ -171,6 +181,7 @@ function drawHeroPistol(H, E){
   ctx.translate(-HS / 2 - pad * k, -fy * k); ctx.scale(k, k);          // espaço do quadro largo (0..448); a célula de 256 começa em padLeft
   ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
   const mz = G.muzzle || { x: pad + 220, y: 110 };
+  if (false && H.ws && H.ws.r > 0 && G.hand){ const r = H.ws.r; drawGlow(RAR[r].c, (G.hand.x + mz.x) / 2, (G.hand.y + mz.y) / 2, 20 + 5 * r, 0.16 + 0.07 * r); }   // raridade visível também na pistola (a arte é a do tier 0)
   if (a){ const fl = shotEnv(a, 0.09); if (fl > 0){ const c0 = a.col && a.col !== '#ffffff' ? a.col : '#ffd45a', r = 22 + 14 * fl, L = r * (0.9 + 1.1 * fl), ang = -(G.ang || 0) * Math.PI / 180;   // clarão SAINDO DO CANO, no quadro do disparo
       ctx.save(); ctx.translate(mz.x, mz.y); ctx.rotate(ang); drawGlow(c0, 5, 0, r, fl); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = alpha * fl;
       [[0, 1.5], [-0.45, 0.8], [0.45, 0.8]].forEach((q, i) => { ctx.fillStyle = i ? c0 : '#ffffff'; ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(Math.cos(q[0]) * L * q[1], Math.sin(q[0]) * L * q[1]); ctx.lineTo(0, 3); ctx.fill(); }); ctx.restore(); } }

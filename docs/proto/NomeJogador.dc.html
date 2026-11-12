@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Eonbound — Nome do jogador</title>
+<!-- NOME DO JOGADOR (escolher na 1ª vez / trocar depois). Substitui o passo antigo de apelido.
+     Regras: 3 a 14 caracteres, só letras, números e _, filtro de palavras proibidas e nomes reservados, nome único (o servidor confere).
+     1ª escolha grátis; trocas seguintes 200 gemas (exemplo pedido pelo dono). Protótipo: botões tracejados trocam entre "1ª vez" e "Trocar". -->
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&amp;family=Nunito:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;background:#16110d}
+*{box-sizing:border-box}
+a{color:#ffc94a}
+button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:#f6ecdf}
+.lil{font-family:'Lilita One',sans-serif;letter-spacing:.2px}
+.app{position:relative;width:100%;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#2b2216}
+@keyframes sheet{from{background-position:0 0}to{background-position:100% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes gsh{from{background-position:120% 0}to{background-position:-130% 0}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes vrot{to{--a:360deg}}
+/* fundo: vila era 2 viva (cena 844 ancorada embaixo) */
+.scene{position:absolute;left:0;right:0;bottom:0;height:844px}
+.ly{position:absolute;left:0;right:0;background-repeat:repeat-x;pointer-events:none}
+.sky2{top:0;height:506px;background-image:url(/_blob/76d16952e1067c864246744b4de14ec2);background-size:auto 506px}
+.cld2{top:30px;height:220px;background-image:url(/_blob/2325ac84d4473d6f98d442c2f25e8041);background-size:auto 220px;animation:drift 160s linear infinite}
+.far2{top:186px;height:354px;background-image:url(/_blob/b560db0d0fbc53ee2808f8e477d1d431);background-size:auto 354px}
+.mid2{top:148px;height:422px;background-image:url(/_blob/ebc43f044a58cac3143a4fcbbaad4ef3);background-size:auto 422px}
+.gnd2{top:553px;bottom:0;background-image:url(/_blob/37aa087099d000ccdf18a4e875a5ba0d);background-size:auto 321px;background-color:#5a4426}
+@keyframes drift{from{background-position-x:0}to{background-position-x:-2400px}}
+.kidle{background-image:url(/_blob/579019ed03216cec9c8ba3c275bdff17);background-size:1200% 100%;background-repeat:no-repeat;animation:sheet 1s steps(12, jump-none) infinite}
+/* modal */
+.mIn{animation:mIn .45s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes mIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
+.frame{position:relative;width:100%;max-width:372px;max-height:100%;border-radius:24px;padding:3px;display:flex;background:conic-gradient(from var(--a,0deg),#8a4f0c,#ffe07a,#4aa3ff,#8a4f0c,#ffe07a,#fff6d0,#8a4f0c);animation:vrot 6s linear infinite;box-shadow:0 0 30px rgba(255,201,74,.35),0 18px 40px rgba(0,0,0,.6)}
+.inner{position:relative;flex:1;min-width:0;min-height:0;border-radius:21px;background:radial-gradient(130% 60% at 50% 0%,#3a2a18 0%,#211810 55%,#16110d 100%);overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;gap:clamp(6px,1.2vh,10px);padding:10px 12px 12px}
+.gtext{background:linear-gradient(100deg,#ffe07a 20%,#fff8de 45%,#f2a826 60%,#ffe07a 80%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:gsh 3s linear infinite}
+.xbtn{width:44px;height:44px;flex:none;border-radius:14px;border:1px solid rgba(255,236,200,.25);background:rgba(16,11,8,.6);display:flex;align-items:center;justify-content:center;padding:0;text-decoration:none;color:#f6ecdf}
+.xbtn:active{transform:scale(.9)}
+.proto{min-height:44px;flex:1;border-radius:12px;border:2px dashed #ffc94a;background:rgba(255,201,74,.06);color:#ffe07a;font-size:11.5px;font-weight:900;line-height:1.1;padding:0 6px}
+.proto[aria-pressed="true"]{background:rgba(255,201,74,.22);border-style:solid}
+/* avatar com moldura animada */
+.av{position:relative;width:clamp(84px,12vh,104px);aspect-ratio:1/1;flex:none}
+.avRing{position:absolute;inset:0;border-radius:50%;padding:4px;background:conic-gradient(from var(--a,0deg),#ffe07a,#ff8a3a,#ffc94a,#fff6d0,#f2a826,#ffe07a);animation:vrot 3s linear infinite;box-shadow:0 0 16px rgba(255,201,74,.6)}
+.avIn{width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 35%,#5a4430,#1d1611)}
+.avK{position:absolute;left:-30%;top:-8%;width:160%;height:160%}
+.orb{position:absolute;inset:-8px;animation:spin 6s linear infinite;pointer-events:none}
+.orb i{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff3c4;box-shadow:0 0 10px 3px rgba(255,220,140,.95)}
+.avLv{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);height:20px;padding:0 8px;border-radius:10px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:'Lilita One',sans-serif;font-size:12px;line-height:20px;white-space:nowrap;box-shadow:0 2px 0 #8a4f0c;z-index:2}
+.flash{animation:flash .9s ease-out both}
+@keyframes flash{0%{filter:brightness(2.6) drop-shadow(0 0 20px #fff)}100%{filter:none}}
+/* placa de nome (perfil) */
+.plate{flex:1;min-width:0;border-radius:14px;border:2px solid #4a3a2b;background:linear-gradient(180deg,#33271d,#211810);padding:8px 10px;display:flex;flex-direction:column;gap:3px;overflow:hidden;position:relative}
+.plate::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.12) 50%,transparent 65%);background-size:260% 100%;animation:gsh 3.4s linear infinite;pointer-events:none}
+.pName{font-family:'Lilita One',sans-serif;font-size:clamp(19px,2.8vh,23px);line-height:1.05;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.caret{display:inline-block;width:2px;height:.9em;margin-left:2px;background:#ffc94a;vertical-align:-2px;animation:car 1s steps(2,jump-none) infinite}
+@keyframes car{0%{opacity:1}100%{opacity:0}}
+.ttl{align-self:flex-start;height:22px;padding:0 9px;border-radius:11px;border:1.5px solid #4aa3ff;background:rgba(74,163,255,.16);color:#bfe0ff;font-size:12px;font-weight:900;line-height:19px;white-space:nowrap;animation:glo 2.2s ease-in-out infinite}
+@keyframes glo{0%,100%{box-shadow:0 0 0 rgba(74,163,255,0)}50%{box-shadow:0 0 12px rgba(74,163,255,.9)}}
+.drop{animation:drop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes drop{0%{transform:translateY(-14px) scale(1.5);opacity:0}100%{transform:none;opacity:1}}
+/* ranking */
+.rk{display:flex;flex-direction:column;gap:4px}
+.row{display:flex;align-items:center;gap:8px;height:clamp(36px,4.8vh,42px);padding:0 8px;border-radius:12px;background:rgba(29,22,17,.85);border:1px solid #3a2c1f}
+.me{border:2px solid #ffc94a;background:linear-gradient(90deg,rgba(255,201,74,.22),rgba(255,201,74,.04));animation:meP 1.8s ease-in-out infinite}
+@keyframes meP{0%,100%{box-shadow:0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 0 14px rgba(255,201,74,.6)}}
+.pos{width:30px;flex:none;font-family:'Lilita One',sans-serif;font-size:16px;color:#c9b9a2;text-align:center}
+.mini{width:28px;height:28px;flex:none;border-radius:50%;overflow:hidden;position:relative;border:2px solid #4a3a2b;background:#1d1611}
+.me .mini{border-color:#ffc94a}
+.mini .kidle{position:absolute;left:-12px;top:-3px;width:48px;height:48px}
+.rName{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rTtl{font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap}
+.fc{margin-left:auto;flex:none;font-family:'Lilita One',sans-serif;font-size:14px;color:#ffe07a}
+/* campo */
+.field{position:relative;display:flex;gap:8px;align-items:stretch}
+.inp{flex:1;min-width:0;height:clamp(56px,7.4vh,64px);border-radius:16px;border:3px solid var(--bd);background:#0e0a07;color:#fff;font-family:'Lilita One',sans-serif;font-size:clamp(22px,3.2vh,27px);letter-spacing:.5px;text-align:center;padding:0 44px 0 44px;outline:none;box-shadow:0 0 0 0 var(--bd),inset 0 3px 0 rgba(0,0,0,.4);transition:border-color .2s,box-shadow .2s}
+.inp:focus{box-shadow:0 0 16px var(--bd),inset 0 3px 0 rgba(0,0,0,.4)}
+.shake{animation:shake .4s ease-in-out}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.cnt{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:900;color:#c9b9a2;pointer-events:none;font-variant-numeric:tabular-nums}
+.vIco{position:absolute;right:76px;top:50%;width:28px;height:28px;margin-top:-14px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;animation:pop .35s cubic-bezier(.2,1.8,.4,1) both}
+@keyframes pop{from{transform:scale(0)}to{transform:none}}
+.chk{width:16px;height:16px;border:3px solid rgba(255,255,255,.25);border-top-color:#ffc94a;border-radius:50%;animation:spin .6s linear infinite}
+.dice{width:clamp(56px,7.4vh,64px);flex:none;border-radius:16px;border:0;background:linear-gradient(180deg,#5a4430,#33271d);box-shadow:0 5px 0 #1d1611,inset 0 1px 0 rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;padding:0}
+.dice:active{transform:translateY(3px);box-shadow:0 2px 0 #1d1611}
+.dIdle{animation:dIdle 2.4s ease-in-out infinite}
+@keyframes dIdle{0%,80%,100%{transform:rotate(0)}86%{transform:rotate(-14deg)}93%{transform:rotate(10deg)}}
+.dRoll{animation:dRoll .6s cubic-bezier(.3,.7,.3,1) both}
+@keyframes dRoll{0%{transform:rotate(0) scale(1)}50%{transform:rotate(400deg) scale(1.25)}100%{transform:rotate(720deg) scale(1)}}
+.msg{min-height:20px;font-size:13.5px;font-weight:900;display:flex;align-items:center;gap:6px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.rule{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;line-height:1.15;min-height:20px}
+.dot{width:16px;height:16px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.dotOk{background:#5fd068;animation:pop .3s cubic-bezier(.2,1.8,.4,1) both}
+.dotBad{background:#ff5a4e}
+.dotWait{background:#4a3a2b}
+/* sugestões */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{height:44px;min-width:44px;padding:0 12px;border-radius:22px;border:2px solid #4a3a2b;background:#2a2018;font-size:13.5px;font-weight:900;color:#f6ecdf;animation:chipIn .4s cubic-bezier(.2,1.5,.4,1) both;animation-delay:var(--d)}
+.chip:active{transform:scale(.94)}
+.chip[aria-pressed="true"]{border-color:#ffc94a;background:#3a2c1f;color:#ffe07a}
+@keyframes chipIn{from{opacity:0;transform:translateY(8px) scale(.8)}to{opacity:1;transform:none}}
+/* custo */
+.cost{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 10px;border-radius:12px}
+.free{border:2px solid #5fd068;background:rgba(95,208,104,.14)}
+.paid{border:2px solid #4aa3ff;background:rgba(74,163,255,.12)}
+.gemB{animation:gemB 1.8s ease-in-out infinite}
+@keyframes gemB{0%,100%{filter:drop-shadow(0 0 2px rgba(120,220,255,.5))}50%{filter:drop-shadow(0 0 8px rgba(120,220,255,1)) brightness(1.2)}}
+.freeTag{height:22px;padding:0 9px;border-radius:11px;background:#5fd068;color:#0d2410;font-family:'Lilita One',sans-serif;font-size:13px;line-height:22px;animation:freeP 1.4s ease-in-out infinite}
+@keyframes freeP{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+/* botão */
+.gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.cta{animation:cta 1.5s ease-in-out infinite}
+@keyframes cta{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 8px rgba(255,201,74,.3)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 26px rgba(255,201,74,.95)}}
+.ok{height:clamp(54px,7vh,60px);border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Lilita One',sans-serif;font-size:clamp(20px,2.9vh,24px);width:100%}
+.ok[aria-disabled="true"]{background:#3a2c1f;color:#a8987f;box-shadow:0 6px 0 #1d1611;animation:none;cursor:default}
+.green{background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;box-shadow:0 6px 0 #1f6a1d;border:0;text-decoration:none}
+.bspin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(42,20,3,.25);border-top-color:#2a1403;animation:spin .7s linear infinite}
+/* confirmação */
+.burst{position:absolute;left:50%;top:30%;width:0;height:0;z-index:30;pointer-events:none}
+.burst i{position:absolute;width:8px;height:14px;border-radius:2px;background:var(--c);animation:conf 1.2s cubic-bezier(.2,.7,.4,1) both;animation-delay:var(--d)}
+@keyframes conf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+.okBanner{position:absolute;left:12px;right:12px;top:34%;z-index:31;padding:10px;border-radius:16px;border:3px solid #5fd068;background:rgba(13,36,16,.92);text-align:center;animation:okB .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes okB{0%{transform:scale(2) rotate(-6deg);opacity:0}100%{transform:none;opacity:1}}
+@media (max-height:720px){.rkOther{display:none}.rules{grid-template-columns:1fr 1fr}}
+@media (max-height:620px){.plateTtl{display:none}}
+</style>
+</helmet>
+<div class="app">
+  <div style="position: absolute; inset: 0; background: #7fb3d9"></div>
+  <div class="scene">
+    <div class="ly sky2"></div>
+    <div class="ly cld2"></div>
+    <div class="ly far2"></div>
+    <div class="ly mid2"></div>
+    <div class="ly gnd2"></div>
+  </div>
+
+  <div style="position: absolute; inset: 0; z-index: 10; background: rgba(8,5,3,0.72); display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom))">
+    <div class="mIn" role="dialog" aria-modal="true" aria-labelledby="nmT" style="display: flex; justify-content: center; width: 100%; max-height: 100%">
+      <div class="frame">
+        <div class="inner">
+
+          <div role="group" aria-label="Protótipo: situação" style="flex: none; display: flex; gap: 6px">
+            <button class="proto" onClick="{{mFirst}}" aria-pressed="{{pFirst}}">PROTÓTIPO<br>1ª vez (grátis)</button>
+            <button class="proto" onClick="{{mChange}}" aria-pressed="{{pChange}}">PROTÓTIPO<br>trocar (200 gemas)</button>
+          </div>
+
+          <!-- título -->
+          <div style="flex: none; display: flex; align-items: center; gap: 6px">
+            <span style="width: 44px; flex: none"></span>
+            <div style="flex: 1; min-width: 0; text-align: center">
+              <div id="nmT" role="heading" aria-level="1" class="gtext lil" style="font-size: clamp(23px, 6.8vw, 28px); line-height: 1.1; filter: drop-shadow(0 2px 0 #2a1403)">{{titleTxt}}</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #c9b9a2">{{subTxt}}</div>
+            </div>
+            <sc-if value="{{canClose}}" hint-placeholder-val="{{false}}">
+              <a class="xbtn" href="Perfil.dc.html" onClick="{{tap}}" aria-label="Fechar e voltar ao perfil">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+              </a>
+            </sc-if>
+            <sc-if value="{{noClose}}" hint-placeholder-val="{{true}}"><span style="width: 44px; flex: none"></span></sc-if>
+          </div>
+
+          <!-- avatar + placa do perfil (prévia ao vivo) -->
+          <div style="flex: none; display: flex; align-items: center; gap: 12px">
+            <div class="{{avCls}}" role="img" aria-label="Seu avatar com moldura dourada, nível 34">
+              <div class="avRing"><div class="avIn"><div class="kidle avK"></div></div></div>
+              <div class="orb" aria-hidden="true"><i style="left: 50%; top: 0"></i><i style="left: 6%; top: 70%; width: 5px; height: 5px"></i><i style="left: 88%; top: 76%; width: 4px; height: 4px"></i></div>
+              <span class="avLv">Nv. 34</span>
+            </div>
+            <div class="plate">
+              <span style="font-size: 11px; font-weight: 900; color: #c9b9a2; letter-spacing: .6px">NO PERFIL</span>
+              <span class="{{nameCls}}" aria-live="polite">{{shown}}<span class="caret"></span></span>
+              <span class="ttl plateTtl">Cavaleiro do Tempo</span>
+            </div>
+          </div>
+
+          <!-- prévia no ranking -->
+          <div class="rk" aria-label="Prévia no ranking">
+            <span style="font-size: 11px; font-weight: 900; color: #c9b9a2; letter-spacing: .6px">NO RANKING DE PODER</span>
+            <div class="row rkOther">
+              <span class="pos">11</span>
+              <span class="mini" style="border-color: #c58bff"><span class="kidle" style="filter: hue-rotate(200deg)"></span></span>
+              <span style="min-width: 0; display: flex; flex-direction: column"><span class="rName">OssoDeFerro</span><span class="rTtl">Matador de Titãs</span></span>
+              <span class="fc">13.020</span>
+            </div>
+            <div class="row me">
+              <span class="pos" style="color: #ffe07a">12</span>
+              <span class="mini"><span class="kidle"></span></span>
+              <span style="min-width: 0; display: flex; flex-direction: column"><span class="rName" style="color: #fff">{{shown}}</span><span class="rTtl" style="color: #bfe0ff">Cavaleiro do Tempo</span></span>
+              <span class="fc">12.480</span>
+            </div>
+          </div>
+
+          <!-- campo grande -->
+          <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+            <label for="nmIn" style="font-size: 12px; font-weight: 900; color: #c9b9a2; letter-spacing: .6px">SEU NOME</label>
+            <div class="field">
+              <input id="nmIn" class="{{inpCls}}" value="{{nick}}" onInput="{{typeNick}}" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="nmMsg" style="--bd: {{bd}}">
+              <span class="cnt" aria-hidden="true">{{len}}/14</span>
+              <sc-if value="{{icoOk}}" hint-placeholder-val="{{true}}">
+                <span class="vIco" style="background: #5fd068"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>
+              </sc-if>
+              <sc-if value="{{icoBad}}" hint-placeholder-val="{{false}}">
+                <span class="vIco" style="background: #ff5a4e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a0a06" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></span>
+              </sc-if>
+              <sc-if value="{{icoWait}}" hint-placeholder-val="{{false}}">
+                <span class="vIco" style="background: #2a2018"><span class="chk"></span></span>
+              </sc-if>
+              <button class="dice" onClick="{{roll}}" aria-label="Sortear um nome">
+                <svg class="{{diceCls}}" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="4" fill="#f6ecdf" stroke="#2a1403" stroke-width="1.6"></rect>
+                  <circle cx="8" cy="8" r="1.7" fill="#c0392b"></circle><circle cx="16" cy="8" r="1.7" fill="#2a1403"></circle><circle cx="12" cy="12" r="1.7" fill="#2a1403"></circle><circle cx="8" cy="16" r="1.7" fill="#2a1403"></circle><circle cx="16" cy="16" r="1.7" fill="#2a1403"></circle>
+                </svg>
+              </button>
+            </div>
+            <div id="nmMsg" class="msg" role="status" style="color: {{msgColor}}">{{msg}}</div>
+            <div class="rules" aria-label="Regras do nome">
+              <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+                <span class="rule" style="color: {{r.col}}"><span class="{{r.cls}}" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#16110d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="{{r.path}}"></path></svg></span><span>{{r.txt}}</span><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">{{r.sr}}</span></span>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- sugestões -->
+          <div style="flex: none; display: flex; flex-direction: column; gap: 5px">
+            <span style="font-size: 12px; font-weight: 900; color: #c9b9a2; letter-spacing: .6px">SUGESTÕES</span>
+            <div class="chips">
+              <sc-for list="{{sugs}}" as="g" hint-placeholder-count="4">
+                <button class="chip" onClick="{{g.pick}}" aria-pressed="{{g.on}}" style="--d: {{g.d}}">{{g.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- custo -->
+          <sc-if value="{{isFirst}}" hint-placeholder-val="{{true}}">
+            <div class="cost free">
+              <span class="freeTag">GRÁTIS</span>
+              <span style="flex: 1; font-size: 12.5px; font-weight: 800; line-height: 1.2">A 1ª escolha é grátis. Depois, cada troca custa <b style="color: #9fe8ff">200</b> <img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="gemas" style="width: 14px; height: 14px; vertical-align: -2px">.</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{isChange}}" hint-placeholder-val="{{false}}">
+            <div class="cost paid">
+              <img class="gemB" src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 28px; height: 28px; object-fit: contain">
+              <span style="flex: 1; font-size: 12.5px; font-weight: 800; line-height: 1.2">Trocar custa <b style="color: #9fe8ff">200 gemas</b>. Você tem <b style="color: #9fe8ff">{{gems}}</b>. O nome antigo fica livre em 7 dias.</span>
+            </div>
+          </sc-if>
+
+          <!-- confirmar -->
+          <sc-if value="{{notDone}}" hint-placeholder-val="{{true}}">
+            <button class="{{okCls}}" onClick="{{confirm}}" aria-disabled="{{okDis}}" aria-label="{{okAria}}">
+              <sc-if value="{{saving}}" hint-placeholder-val="{{false}}"><span class="bspin"></span></sc-if>
+              <span>{{okTxt}}</span>
+              <sc-if value="{{okGem}}" hint-placeholder-val="{{false}}"><img src="/_blob/1c420bdcae24bd962967021584f5bd64" alt="" style="width: 24px; height: 24px; object-fit: contain"></sc-if>
+            </button>
+          </sc-if>
+          <sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+            <a class="ok green" href="BatalhaTelaCheiaV2.dc.html" onClick="{{tap}}">Continuar</a>
+          </sc-if>
+
+          <sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+            <div class="burst" aria-hidden="true">
+              <sc-for list="{{confetti}}" as="c" hint-placeholder-count="16"><i style="--c: {{c.c}}; --d: {{c.d}}; --x: {{c.x}}; --y: {{c.y}}; --r: {{c.r}}"></i></sc-for>
+            </div>
+            <div class="okBanner" role="status">
+              <div class="lil" style="font-size: 26px; color: #a8f0ae">Nome salvo!</div>
+              <div class="lil gtext" style="font-size: 30px; line-height: 1.1">{{nick}}</div>
+              <div style="font-size: 12.5px; font-weight: 800; color: #d8f5da">Já aparece no perfil e no ranking.</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+/* Nome do jogador. Validação ao vivo: tamanho, caracteres, filtro, único (simula a consulta ao servidor por 450 ms).
+   Lista de palavras proibidas e nomes já usados = exemplos; no jogo, o servidor decide. */
+var SND = { tap: '/_blob/e3753a41131f84e23546318c17022b13', claim: '/_blob/c51c552050293b88cfe558b9b3b3e487', roll: '/_blob/07a146ee324bece467fc05bedf4435b0', ok: '/_blob/5eb72cefec6505c46ef89f0dc1a4214d', coin: '/_blob/84ab4c639b3c7f8af848b41172359878' };
+var CUR = 'Kael_BR';
+var BAD = ['merda', 'porra', 'caralho', 'puta', 'fdp', 'idiota', 'otario', 'otário'];
+var RESERVED = ['admin', 'moderador', 'suporte', 'eonbound', 'gm'];
+var TAKEN = ['kael', 'lenda', 'mestre', 'dragao', 'dragão', 'ossodeferro', 'matagoblin', 'shadow'];
+var PRE = ['Lâmina', 'Cachecol', 'Viajante', 'Eco', 'Guardião', 'Brasa', 'Ponteiro', 'Lobo', 'Martelo', 'Corvo'];
+var SUF = ['Rubro', 'DoTempo', 'DeFerro', 'DasEras', 'Veloz', 'Sombrio', 'Antigo', 'Dourado'];
+var CONF = ['#ffc94a', '#5fd068', '#4aa3ff', '#c58bff', '#ff6f88', '#fff6d0'];
+function rnd(a) { return a[Math.floor(Math.random() * a.length)]; }
+function makeName() {
+  for (var i = 0; i < 20; i++) {
+    var n = rnd(PRE) + rnd(SUF);
+    if (Math.random() < 0.3) n += (10 + Math.floor(Math.random() * 89));
+    if (n.length <= 14 && TAKEN.indexOf(n.toLowerCase()) < 0) return n;
+  }
+  return 'Viajante' + (10 + Math.floor(Math.random() * 89));
+}
+function check(n, mode) {
+  var low = n.toLowerCase();
+  var r = {
+    len: n.length >= 3 && n.length <= 14,
+    chars: n.length > 0 && /^[A-Za-z0-9_À-ÿ]+$/.test(n),
+    clean: n.length > 0 && !BAD.some(function (b) { return low.indexOf(b) >= 0; }) && RESERVED.indexOf(low) < 0,
+    uniq: n.length > 0 && TAKEN.indexOf(low) < 0 && !(mode === 'change' && n === CUR),
+    msg: ''
+  };
+  if (!n.length) r.msg = 'Digite um nome ou toque no dado.';
+  else if (n.length < 3) r.msg = 'Faltam ' + (3 - n.length) + ' caractere(s). Mínimo de 3.';
+  else if (!r.chars) r.msg = 'Use só letras, números e _ (sem espaço).';
+  else if (!r.clean) r.msg = RESERVED.indexOf(low) >= 0 ? 'Esse nome é reservado.' : 'Esse nome não é permitido.';
+  else if (mode === 'change' && n === CUR) r.msg = 'Esse já é o seu nome atual.';
+  else if (!r.uniq) r.msg = 'Já existe um jogador com esse nome.';
+  r.ok = r.len && r.chars && r.clean && r.uniq;
+  return r;
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.tm = [];
+    this.sugList = this.freshSugs();
+    this.state = { mode: 'first', nick: 'CachecolRubro', checking: false, shake: 0, roll: 0, phase: 'edit', gems: 320, flash: false };
+  }
+  sfx(u, v) { try { var a = new Audio(u); a.volume = v || 0.7; a.play().catch(function () {}); } catch (e) {} }
+  later(fn, ms) { var t = setTimeout(fn, ms); this.tm.push(t); return t; }
+  componentWillUnmount() { this.tm.forEach(clearTimeout); }
+  freshSugs() { var o = []; while (o.length < 4) { var n = makeName(); if (o.indexOf(n) < 0) o.push(n); } return o; }
+  setNick(n) {
+    var self = this;
+    this.setState({ nick: n, checking: true, phase: 'edit' });
+    if (this.ct) clearTimeout(this.ct);
+    this.ct = this.later(function () { self.setState({ checking: false }); }, 450);
+  }
+  mode(m) {
+    this.sfx(SND.tap);
+    this.setState({ mode: m, nick: m === 'change' ? CUR : 'CachecolRubro', phase: 'edit', checking: false, gems: 320 });
+  }
+  renderVals() {
+    var s = this.state, self = this;
+    var c = check(s.nick, s.mode);
+    var waiting = s.checking && c.len && c.chars && c.clean;
+    var ok = c.ok && !s.checking;
+    var bad = s.nick.length > 0 && !c.ok && !waiting;
+    var first = s.mode === 'first';
+    var P_OK = 'M5 12l5 5 9-10', P_BAD = 'M6 6l12 12M18 6 6 18', P_WAIT = 'M8 12h8';
+    function rule(on, txt, wait) {
+      var st = wait ? 'wait' : on ? 'ok' : 'bad';
+      return { txt: txt, cls: 'dot ' + (st === 'ok' ? 'dotOk' : st === 'bad' ? 'dotBad' : 'dotWait'), path: st === 'ok' ? P_OK : st === 'bad' ? P_BAD : P_WAIT,
+        col: st === 'ok' ? '#a8f0ae' : st === 'bad' ? '#ffb0a8' : '#c9b9a2', sr: st === 'ok' ? ' (cumprida)' : st === 'bad' ? ' (não cumprida)' : ' (verificando)' };
+    }
+    var rules = [
+      rule(c.len, '3 a 14 caracteres', false),
+      rule(c.chars, 'Letras, números e _', false),
+      rule(c.clean, 'Sem palavras proibidas', false),
+      rule(c.uniq, 'Nome único', waiting)
+    ];
+    var msg = waiting ? 'Verificando se o nome está livre...' : ok ? 'Nome disponível!' : c.msg;
+    var col = waiting ? '#c9b9a2' : ok ? '#7ee27a' : '#ff8a7a';
+    var bd = waiting ? '#8a7a66' : ok ? '#5fd068' : (s.nick.length ? '#ff5a4e' : '#4a3a2b');
+    var enough = first || s.gems >= 200;
+    var canOk = ok && enough && s.phase === 'edit';
+    var confetti = [];
+    for (var i = 0; i < 18; i++) {
+      var a = i / 18 * Math.PI * 2;
+      confetti.push({ c: CONF[i % CONF.length], d: (i % 3) * 0.06 + 's', x: Math.round(Math.cos(a) * (110 + (i % 4) * 25)) + 'px', y: Math.round(Math.sin(a) * (90 + (i % 3) * 30) + 60) + 'px', r: (200 + i * 40) + 'deg' });
+    }
+    return {
+      tap: function () { self.sfx(SND.tap); },
+      pFirst: first ? 'true' : 'false', pChange: first ? 'false' : 'true',
+      mFirst: function () { self.mode('first'); },
+      mChange: function () { self.mode('change'); },
+      titleTxt: first ? 'Como devemos te chamar?' : 'Trocar nome',
+      subTxt: first ? 'Esse nome aparece no perfil, no ranking e na guilda.' : 'Nome atual: ' + CUR,
+      canClose: !first, noClose: first,
+      avCls: 'av' + (s.flash ? ' flash' : ''),
+      nameCls: 'pName' + (s.phase === 'done' ? ' drop' : ''),
+      shown: s.nick.length ? s.nick : '...',
+      nick: s.nick,
+      len: s.nick.length,
+      typeNick: function (e) { var v = String((e && e.target && e.target.value) || '').replace(/\s/g, '').slice(0, 14); self.setNick(v); },
+      inpCls: 'inp' + (s.shake ? ' shake' : ''),
+      bd: bd,
+      icoOk: ok, icoBad: bad, icoWait: waiting,
+      diceCls: s.roll ? 'dRoll' : 'dIdle',
+      roll: function () {
+        self.sfx(SND.roll, 0.6);
+        self.setState({ roll: s.roll + 1 });
+        self.later(function () { self.setNick(makeName()); self.sfx(SND.tap); }, 380);
+        self.later(function () { self.setState({ roll: 0 }); }, 650);
+      },
+      msg: msg, msgColor: col,
+      rules: rules,
+      sugs: this.sugList.map(function (g, i) {
+        return { label: g, on: g === s.nick ? 'true' : 'false', d: (i * 0.07) + 's', pick: function () { self.sfx(SND.tap); self.setNick(g); } };
+      }),
+      isFirst: first, isChange: !first,
+      gems: s.gems,
+      notDone: s.phase !== 'done', isDone: s.phase === 'done',
+      saving: s.phase === 'saving',
+      okCls: 'ok gold' + (canOk ? ' cta' : ''),
+      okDis: canOk ? 'false' : 'true',
+      okGem: !first && s.phase === 'edit',
+      okTxt: s.phase === 'saving' ? 'Salvando...' : !enough ? 'Gemas insuficientes' : first ? 'Confirmar nome' : 'Trocar por 200',
+      okAria: first ? 'Confirmar nome ' + s.nick : 'Trocar o nome para ' + s.nick + ' por 200 gemas',
+      confetti: confetti,
+      confirm: function () {
+        if (s.phase !== 'edit') return;
+        if (!canOk) { self.sfx(SND.tap, 0.4); self.setState({ shake: 1 }); self.later(function () { self.setState({ shake: 0 }); }, 420); return; }
+        self.sfx(SND.claim, 0.8);
+        self.setState({ phase: 'saving' });
+        self.later(function () {
+          self.sfx(SND.ok, 0.8);
+          if (!first) self.sfx(SND.coin, 0.5);
+          self.setState({ phase: 'done', flash: true, gems: first ? s.gems : s.gems - 200 });
+        }, 700);
+        self.later(function () { self.setState({ flash: false }); }, 1700);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

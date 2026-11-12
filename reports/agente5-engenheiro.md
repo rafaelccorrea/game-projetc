@@ -1345,3 +1345,24 @@ Arquivos: `index.html` (versão), `js/battle.js`, `js/stage.js`, `js/farm.js`, `
 - Save antigo com vários "NOVO!" em fila (só a lógica); níveis acima do 3; Passe aparecendo no 18.
 - Missões no nível 2 abre o painel do Passe na aba Missões (o painel é do agente B): não conferi se a aba de Prêmios fica acessível antes do 18.
 - 360x640 nesta versão; APK; aparelho.
+
+## Rodada 14 — v0.12.4: nenhum botão morto, Forja e Configurações pelo registro, save antigo sem perder acesso (2026-11-12)
+
+Arquivos meus: `index.html`, `js/fullbattle.js`, `js/battle.js`, `js/stage.js`, `sw.js`, `version.json`. Lista dos botões: `reports/botoes-v0.12.4.md`.
+
+- Botões: pílula de gemas antes do nível 10 avisa "Loja de gemas: libera no nível 10" e o "+" some; botão de som avisa "Som ligado/desligado".
+- MENU: Forja aparece no nível 12 com a tela registrada; Config. abre a tela nova. Tela registrada que quebra ao desenhar fecha, avisa e some do MENU.
+- Save antigo: marcador `S.bornV` (o mesmo do agente B) + `S.unlKeep` (missions, summon, practice, shopgem, pass). `fbUnl` respeita a lista. Uma regra só nos dois códigos.
+- `fbLvU` (mudança do coordenador): corrigi a reserva. O módulo devolve 1 para chave que não conhece ('inst', 'rank'), o que liberaria no nível 1; agora nesse caso vale o `FB_UNLOCK`.
+- Revólver da era 4 ligado; aviso de Drop abaixo do cabeçalho (conta o entalhe e a escala).
+- Escrito e DESLIGADO (versão seguinte): asa desenhada no Kael (`WING_DRAW=false`), constantes do Modo dono (`TEST_BUILD`, `OWNER_MODE`; nada liga o modo).
+
+Visto (390x844, e 360x640 onde indicado):
+- Save antigo no nível 12: Equip., Invocar, Loja, Passe e Baú visíveis; MENU = Forja, Missões, Config.; Forja e Configurações novas abrem em tela cheia (788 px) e fecham.
+- Jogador novo no nível 12 (por estado): Passe oculto; no nível 5: MENU = Missões, Config.; gemas com aviso e sem "+".
+- Níveis lidos por `fbLvU`: missions 2, summon 3, practice 5, shopgem 10, forge 12, inst 14, tower 15, pass 18, pets 20, rank 28.
+- Aviso de Drop: topo 128 com cabeçalho até 118 (390); topo 118 com cabeçalho até 104 (360).
+- Revólver da era 4 na mão, pés no chão (print `v0124_era4_revolver_menu.png`).
+- Jogador novo sem debug até o fim do tutorial (Invocar no nível 3), zero erros.
+
+NÃO testado: quadro exato do tiro do revólver e encaixe da mão em movimento; Práticas/Progresso no save antigo (botão é do agente B); "Voltar" da Forja volta para o Equipamento (desenho do agente B), não conferi se é o esperado quando aberta pelo MENU; tela que quebra (caminho do aviso) só por leitura; toque real com o dedo em cada botão (ações chamadas por código); 360x640 só por medidas; APK e aparelho.

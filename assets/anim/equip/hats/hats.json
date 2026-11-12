@@ -10,7 +10,8 @@
     "x": 199.8,
     "y": 131.1
    },
-   "res": 1
+   "res": 1,
+   "hideHair": false
   },
   "era1": {
    "name": "roman",
@@ -21,7 +22,8 @@
     "x": 122.8,
     "y": 152.6
    },
-   "res": 1
+   "res": 1,
+   "hideHair": true
   },
   "era2": {
    "name": "knight",
@@ -32,7 +34,8 @@
     "x": 155.8,
     "y": 150.1
    },
-   "res": 1
+   "res": 1,
+   "hideHair": true
   },
   "era3": {
    "name": "tricorn",
@@ -43,7 +46,8 @@
     "x": 177.3,
     "y": 130.1
    },
-   "res": 1
+   "res": 1,
+   "hideHair": false
   },
   "era4": {
    "name": "tophat",
@@ -54,7 +58,8 @@
     "x": 158.3,
     "y": 142.6
    },
-   "res": 1
+   "res": 1,
+   "hideHair": false
   },
   "era5": {
    "name": "army",
@@ -65,7 +70,8 @@
     "x": 131.3,
     "y": 123.5
    },
-   "res": 1
+   "res": 1,
+   "hideHair": true
   },
   "era6": {
    "name": "scifi",
@@ -76,7 +82,32 @@
     "x": 129.3,
     "y": 118.5
    },
-   "res": 1
+   "res": 1,
+   "hideHair": true
+  },
+  "era7": {
+   "name": "demon",
+   "file": "hat_era7.png",
+   "w": 283,
+   "h": 248,
+   "pivot": {
+    "x": 147.8,
+    "y": 147.6
+   },
+   "res": 1,
+   "hideHair": true
+  },
+  "era8": {
+   "name": "celestial",
+   "file": "hat_era8.png",
+   "w": 279,
+   "h": 133,
+   "pivot": {
+    "x": 152.8,
+    "y": 125.5
+   },
+   "res": 1,
+   "hideHair": false
   }
  }
 }
