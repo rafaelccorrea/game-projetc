@@ -650,7 +650,7 @@ t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), o
 t('fases (Revisão 2): tabela = balance-v9 rev2, inimigo com DEF, ordem, nível, era seguinte e migração',()=>{
   const P=require('../../js/sys/phases.js'), T=require('../../js/sys/stats.js'), R=require('../../docs/balance-v9.json').rev2;
   assert.strictEqual(R.stages.length,3600);
-  for(const x of R.stages){ const f=P.fcRec(x.era,x.diff,x.stage); assert.ok(Math.abs(f-x.fcRec)<=Math.max(1,x.fcRec*1e-5),'fc '+JSON.stringify(x));
+  for(const x of R.stages){ const f=P.fcRec(x.era,x.diff,x.stage), want=x.fcRec*(P.DATA.fcScale.on?P.DATA.fcScale.mult[x.era]:1); assert.ok(Math.abs(f-want)<=Math.max(1,want*1e-5),'fc '+JSON.stringify(x));   // fcScale (dono: inimigos mais fortes)
     assert.strictEqual(P.lvlLock(x.era,x.diff,x.stage),x.lvlLock); assert.strictEqual(P.kindOf(x.stage),x.boss); assert.strictEqual(P.isRequired(x.era,x.diff),x.required); }
   assert.strictEqual(P.fcRec(0,0,0),0); assert.strictEqual(P.enemy(9,0,1),null); assert.strictEqual(P.info(0,4,1),null);
   // DEF na fcRec (ATK ≈ 5,5% da FC): comum 10%, chefe 20%, Senhor 25%; vida ×0,9/×0,8/×0,75
