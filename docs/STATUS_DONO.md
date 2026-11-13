@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **19h40 · LEVANTAMENTO DA ARTE QUE FALTA** (docs/LEVANTAMENTO_ARTE.md): obrigatório = Samurai e Ciborgue (em produção), 10 montarias novas montadas (~280-350 créditos), 6 pets novos animados (~255-270), voto na Asa Serafim. Completo: as outras skins, 6 montarias, 11 pets, 9 asas, 55 armas, todas as ultimates, inimigos e cenários das 9 eras, ícones (34 títulos prontos). Saldo ~173: dá Samurai, Ciborgue, peças e 2 montarias (Fênix e Dragão Negro); para o resto, comprar ~500-550
+
 - **19h · Suas regras novas, passadas a todos:** pet SEMPRE na frente (da montaria e do herói); tudo que muda no personagem atualiza na hora em todas as telas; nunca rolagem para o lado. **Perfil V5** no mesmo link (herói sempre à vista, tocou-trocou, todas as skins do Kael e da Kaia, asas nas costas, 11 pets animados). **v0.13.0:** sai sem esperar o online, com a TELA DE SELEÇÃO DE SERVIDOR ligada (S1 · Nova Era); o online entra na seguinte (o CORS do servidor já foi corrigido). **Arte:** Samurai e Ciborgue retomados como prioridade; ícones dos 34 títulos aprovados (~20 créditos); peças com 3 desenhos seguindo (~86)
 
 - **18h35 · Online testado contra o servidor real: 18 de 18 OK** (servidor S1 Nova Era, conta de convidado, mesmo aparelho = mesma conta, save na nuvem com conflito, histórico, correio, sessão). Banco montado; o servidor religa sozinho se a máquina reiniciar. Sinal dado para o online ir na v0.13.0 depois da conferência do QA. Seguem desligados de propósito (esperam seu voto): arena online, chat, guildas, leilão e moderação; compras reais esperam os produtos no Play Console
