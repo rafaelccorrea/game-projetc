@@ -98,8 +98,8 @@ const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 function advice(S,host){
   const out=[]; for(const s of DATA.slots){ const n=level(S,s), c=canTry(S,host,s); if(c.reason==='max'||c.reason==='cap') continue;
     const g=((1+DATA.bonus[n+1])/(1+DATA.bonus[n])-1)*100;
-    out.push({id:'forge.'+s,icon:'🔨',label:`Fortalecer ${DATA.slotName[s]} +${n+1} (${c.chance}%)`,delta:s==='weapon'?{atkPct:g}:{hpPct:g},
-      cost:`${c.stones} 🔨`,ready:c.ok,tab:'forge'}); }
+    out.push({id:'forge.'+s,icon:'forge',label:`Fortalecer ${DATA.slotName[s]} +${n+1} (${c.chance}%)`,delta:s==='weapon'?{atkPct:g}:{hpPct:g},
+      cost:`${c.stones} pedras de forja`,ready:c.ok,tab:'forge'}); }
   return out;
 }
 

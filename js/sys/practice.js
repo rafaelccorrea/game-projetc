@@ -99,7 +99,7 @@ function bonus(S){
 function advice(S,host){
   const o=ensure(S), cap=capOf(host), out=[];
   for(const t of DATA.tracks){ const lv=o.lv[t.id]; if(lv>=cap) continue; const c=cost(lv);
-    out.push({id:'practice.'+t.id,icon:t.icon,label:`Prática: ${t.name} Nv ${lv+1}`,delta:{[t.stat]:t.per},cost:`${c} 🪨`,ready:o.stones>=c,tab:'practice'}); }
+    out.push({id:'practice.'+t.id,icon:'practice',label:`Prática: ${t.name} Nv ${lv+1}`,delta:{[t.stat]:t.per},cost:`${c} pedras de prática`,ready:o.stones>=c,tab:'practice'}); }
   return out;
 }
 
@@ -116,7 +116,7 @@ function render(el,S,host,opt){
     return `<div class="sys-prac-row${full?' full':''}">
       <span class="sys-prac-ic">${t.icon}</span>
       <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${cap}</small><br><span>+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}</span></span>
-      <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${full?'Teto':`Treinar<small>${c.cost} 🪨</small>`}</button>
+      <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${full?'Teto':`Treinar<small>${c.cost} pedras</small>`}</button>
       <button class="sys-btn sys-prac-max" data-id="${t.id}" data-max="1" ${c.ok?'':'disabled'} aria-label="Treinar o máximo">Máx</button>
     </div>`; }).join('');
   el.innerHTML=`<div class="sys-prac">

@@ -453,7 +453,7 @@ function advice(S,host){
   const o=ensure(S), out=[]; if(!Object.keys(o.owned).length) return out;
   const bst=best(S); if(bst&&bst!==o.eq){ const d=deltaFor(S,bst); out.push({id:'pet.equip',icon:BY[bst].icon,label:`Equipar ${BY[bst].name}`,delta:d,cost:'grátis',ready:true,tab:'pet'}); }
   const c=canFeed(S,host); if(o.eq&&c.reason!=='max'&&c.reason!=='cap'&&c.reason!=='pet'){ const tgt=V3()?o.owned[o.eq]:o, save=tgt.lvl; tgt.lvl++; const nb=bonus(S); tgt.lvl=save; const cb=bonus(S), d={};
-    for(const k in nb) d[k]=nb[k]-cb[k]; out.push({id:'pet.feed',icon:'🍖',label:`Alimentar o pet (Nv ${save+1})`,delta:d,cost:`${c.cost} 🍖`,ready:c.ok,tab:'pet'}); }
+    for(const k in nb) d[k]=nb[k]-cb[k]; out.push({id:'pet.feed',icon:'pet',label:`Alimentar o pet (Nv ${save+1})`,delta:d,cost:`${c.cost} de ração`,ready:c.ok,tab:'pet'}); }
   return out;
 }
 function deltaFor(S,id){ const o=ensure(S), save=o.eq, cb=bonus(S); o.eq=id; const nb=bonus(S); o.eq=save; const d={}; for(const k in nb) d[k]=nb[k]-cb[k]; return d; }
@@ -474,7 +474,7 @@ function render(el,S,host,opt){
       <small>${need?`${x.frags}/${need} fragmentos`:'5★ máximo'} · ${eq?'Equipado':'Toque para equipar'}</small></button>`; };
   el.innerHTML=`<div class="sys-pet">
     <div class="sys-pet-top"><span>🍖 <b>${fmtN(o.food)}</b> ração</span><span>Nível do pet <b>${o.eq?levelOf(S,o.eq):o.lvl}</b>/${cap}</span>
-      <button class="sys-btn sys-pet-feed" data-feed="1" ${c.ok?'':'disabled'}>${c.reason==='max'?'Máximo':c.reason==='cap'?'Teto da era':`Alimentar<small>${c.cost} 🍖</small>`}</button></div>
+      <button class="sys-btn sys-pet-feed" data-feed="1" ${c.ok?'':'disabled'}>${c.reason==='max'?'Máximo':c.reason==='cap'?'Teto da era':`Alimentar<small>${c.cost} de ração</small>`}</button></div>
     <div class="sys-grid sys-pet-grid">${DATA.pets.filter(p=>avail(p,host)).map(card).join('')}</div>
     <div class="sys-pet-golem">Golem repetido vira: <button class="sys-btn dim" data-gc="1">${o.golemChoice==='auto'?'Automático':o.golemChoice==='golem'?'Fragmentos de golem':'Fragmentos de fênix'}</button></div>
     <div class="sys-pet-msg">${esc(msg)||'O nível é do espaço: trocar de pet não perde a ração investida.'}</div>

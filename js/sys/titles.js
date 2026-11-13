@@ -178,9 +178,9 @@ function advice(S,host){
   const o=ensure(S), out=[], power=t=>{ const tb=titleBonus(t,1); return tb.atkPct*1.2+tb.hpPct+tb.critPct*1.5+tb.defPct*1.5+tb.goldPct*0.2; };
   const cur=o.featured?BY[o.featured]:null, best=Object.keys(o.unlocked).map(id=>BY[id]).filter(t=>!t.cosmetic).sort((a,b)=>power(b)-power(a))[0];
   if(best&&best!==cur){ const d={}; const add=(t,s)=>{ if(!t) return; const tb=titleBonus(t,DATA.featuredMult-1); for(const k of KEYS) d[k]=(d[k]||0)+s*tb[k]; };
-    add(best,1); add(cur,-1); out.push({id:'titles.feature',icon:'🎖️',label:`Destacar o título ${best.name}`,delta:d,cost:'grátis',ready:true,tab:'titles'}); }
+    add(best,1); add(cur,-1); out.push({id:'titles.feature',icon:'title',label:`Destacar o título ${best.name}`,delta:d,cost:'grátis',ready:true,tab:'titles'}); }
   const next=DATA.titles.filter(t=>!o.unlocked[t.id]&&!t.cosmetic).map(t=>({t,p:progress(S,host,t)})).sort((a,b)=>b.p.frac-a.p.frac)[0];
-  if(next) out.push({id:'titles.'+next.t.id,icon:'🎖️',label:`Título ${next.t.name}: ${condLabel(S,host,next.t)}`,delta:titleBonus(next.t,1),cost:'',ready:false,tab:'titles'});
+  if(next) out.push({id:'titles.'+next.t.id,icon:'title',label:`Título ${next.t.name}: ${condLabel(S,host,next.t)}`,delta:titleBonus(next.t,1),cost:'',ready:false,tab:'titles'});
   return out;
 }
 
