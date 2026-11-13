@@ -31,6 +31,10 @@ Comparação do catálogo do código com os arquivos em `assets/` (pastas de rep
 - Peças com 3 desenhos: eras 0-3 prontas, 4-8 em produção (aprovado pelo dono)
 - Skins montadas (hoje montado usa a roupa padrão, regra aprovada)
 
+## Skin × asa (conferido pela Arte)
+- Só o Kael Anjo tem asa desenhada no corpo: versão sem asa por código (0 crédito; reserva de ~36 se não ficar limpo). Kaia Angelical não tem asa. As capas (Demônio, Paladino, Demoníaca) convivem com a asa como o cachecol do herói padrão.
+- Ícones médio/evoluído do lobo, falcão e pantera e ícones das asas Anjo/Demoníaca: 0 crédito, por código.
+
 ## Créditos
 Saldo ~173. Samurai/Ciborgue (~60) + resto das peças → sobram ~90-100 = Fênix Gigante e Dragão Negro montados.
-Para o resto (8 montarias + 6 pets): ~535-620 → comprar ~500-550.
+Para o resto (9 montarias + 6 pets) com folga de ~20%: ~700 créditos. Comprar 1.000 cobre tudo com margem.
