@@ -1132,3 +1132,8 @@ contra a decisão de não ter fases, não vem destes arquivos.
 
 `js/p_pets.js`: saiu a célula da porcentagem (decisão do PO); ficam "Soma à FC" (por `fcTxt`) e a do tipo do pet, que dividem a fileira
 (as células são `flex:1`, não sobra buraco). Nenhuma conta mudou. `node --check`, `run.js` "TUDO OK", fumaça em 390 e 288 sem falha.
+
+## Bloco 41 (sem navegador): tela Coleção carregada, chave desligada
+
+`'p_colecao'` no fim da lista de carga do `js/screens.js`; `PANEL_ON.colecao=false` em `js/panels.js`. Sem item no MENU nem entrada em outra tela.
+Conflitos de nomes: nenhum; `run.js` "TUDO OK" (148); `flows.js` "fluxos duros OK"; a fumaça registra e desenha a tela (só no teste, com a chave ligada lá).

@@ -16,6 +16,7 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   mounts:true,   /* conferida pelo QA no navegador (equipar, nível, aura, batalha) */  result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,   /* só no Modo dono até existir compra real (PO) */  auction:true,   /* demonstração "Em breve: abre com o online" (PO); conferida pelo QA */    /* esperam pagamento / servidor */
   arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false,
+  colecao:false,   /* Coleção (js/p_colecao.js, do QA): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
   fuse:false   /* Fusão (js/p_fuse.js, de Sistemas): DESLIGADA; só liga junto com Sys.stats.DATA.quality.on (qualidade/fusão é da v0.13, sem voto ainda) */},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
