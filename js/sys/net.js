@@ -159,12 +159,12 @@ async function pull(){
 /* summary pode ser o OBJETO ou a FUNÇÃO S → resumo: com a função, o resumo é montado junto com o corpo do pedido (o mesmo instante em que o S
    é serializado), então gemas/fase que mudarem durante um await não divergem do save (o servidor confere era/fase/gemas contra o blob). */
 const sumOf=(S,summary)=>{ try{ return (typeof summary==='function'?summary(S):summary)||{}; }catch(e){ return {}; } };
-async function push(S,summary){
+async function push(S,summary,o){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta();
   let r;
   try{ r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
-    clientTime:Date.now(),summary:sumOf(S,summary),save:S}); }
+    clientTime:Date.now(),summary:sumOf(S,summary),save:S,...(o&&o.force?{force:true}:{})}); }
   catch(e){
     // 422 save_implausible: o servidor GUARDOU o save (marcado para revisão) na versão details.version; o aparelho precisa saber, senão o próximo dá conflito
     if(e.code==='save_implausible'&&e.details&&typeof e.details.version==='number') setMeta(e.details.version,false);
@@ -178,24 +178,37 @@ async function push(S,summary){
    'push'    = só o aparelho mudou (ou nuvem vazia): já subiu;
    'pulled'  = nuvem mais nova e o aparelho não mudou: já baixou (r.save = o S novo; a camada troca o S local);
    'choose'  = os DOIS mudaram: a tela mostra os resumos (device × cloud) e chama chooseSide('device'|'cloud'). Nunca há fusão. */
+/* PROTEÇÃO DO SAVE DA NUVEM (perda achada pelo QA: aparelho sem save local + identidade guardada subiu um save VAZIO por cima da nuvem):
+   - aparelho NOVO/VAZIO (nível ≤ 1, fase ≤ 1, sem XP nem tempo de jogo) e nuvem COM progresso → BAIXA a nuvem, nunca sobe;
+   - aparelho ATRÁS da nuvem (nível ou era menores) → PERGUNTA (choose), nunca sobe sozinho. Só a escolha explícita do jogador (chooseSide) sobe por cima,
+     e o servidor também recusa a regressão sem essa marca (409 save_regress). */
+const num=v=>(typeof v==='number'&&isFinite(v))?v:0;
+const isFresh=d=>num(d.level)<=1&&num(d.stage)<=1&&num(d.xp)<=0&&num(d.playSeconds)<=0;
+const hasProgress=c=>num(c.level)>1||num(c.stage)>1||num(c.xp)>0||num(c.playSeconds)>0;
+const behind=(d,c)=>num(d.level)<num(c.level)||num(d.era)<num(c.era);
+/* lado recomendado: mais tempo de jogo; empate (ex.: tempo ainda não medido) → o mais avançado (nível, era, fase, FC); empate total → nuvem */
+function recommendOf(d,c){ for(const k of ['playSeconds','level','era','stage','fc']){ if(num(d[k])>num(c[k])) return 'device'; if(num(d[k])<num(c[k])) return 'cloud'; } return 'cloud'; }
 async function sync(S,summary){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta(), h=await head();
   if(!h){ const r=await push(S,summary); return {action:'push',version:r.version}; }
+  const cs=(h&&h.summary)||{}, dv=sumOf(S,summary), choose=()=>({action:'choose',cloud:h,device:dv,recommend:recommendOf(dv,cs)});
+  const pullIt=async()=>{ const r=await pull(); return {action:'pulled',version:r.version,save:r.save,summary:r.summary}; };
+  if(hasProgress(cs)&&isFresh(dv)) return pullIt();                       // aparelho vazio nunca cobre uma nuvem com progresso
   if(h.version===m.version){
     if(!m.dirty) return {action:'none',version:h.version};
+    if(behind(dv,cs)) return choose();                                    // aparelho atrás: o jogador decide
     const r=await push(S,summary); return {action:'push',version:r.version};
   }
-  if(!m.dirty){ const r=await pull(); return {action:'pulled',version:r.version,save:r.save,summary:r.summary}; }
-  const dv=sumOf(S,summary); return {action:'choose',cloud:h,device:dv,recommend:num(dv.playSeconds)>=num(h.summary&&h.summary.playSeconds)?'device':'cloud'};
+  if(!m.dirty) return pullIt();
+  return choose();
 }
-const num=v=>(typeof v==='number'&&isFinite(v))?v:0;
 /* escolha da tela no conflito. 'device' sobe o S por cima (a versão da nuvem vai para o histórico); 'cloud' baixa. */
 async function chooseSide(side,S,summary){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   if(side==='cloud'){ const r=await pull(); return {action:'pulled',version:r.version,save:r.save,summary:r.summary}; }
   const h=await head(); setMeta(h?h.version:0,true);
-  const r=await push(S,summary); return {action:'push',version:r.version};
+  const r=await push(S,summary,{force:true}); return {action:'push',version:r.version};   // escolha EXPLÍCITA do jogador: o servidor aceita mesmo se regredir
 }
 const history=()=>call('GET','/save/history');
 const restore=version=>ownerMode()?Promise.resolve(Object.assign({},OWNER_SKIP)):call('POST','/save/restore',{version}).then(r=>{ setMeta(r.version,false); return r; });

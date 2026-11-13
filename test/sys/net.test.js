@@ -205,3 +205,25 @@ test('resumo como FUNÇÃO: montado na hora do pedido, junto com o save (sem div
   const p = net.push(S, S2 => ({ gems: S2.gems, stage: S2.stage })); S.gems = 99; await p;   // mudou depois da chamada: o resumo acompanha o save enviado
   assert.equal(body.summary.gems, body.save.gems); assert.equal(body.summary.stage, 3);
 });
+
+test('PERDA DE SAVE (QA): aparelho sem save local + identidade guardada NUNCA sobe vazio por cima da nuvem com progresso', async () => {
+  const st = store(); let puts = 0;
+  const cloud = { version: 5, updatedAt: 1, summary: { level: 23, xp: 9000, era: 1, stage: 140, fc: 5000, gems: 300, playSeconds: 0, maxRarity: 3 } };
+  boot({ 'POST /auth/guest': () => [200, session(1)], 'GET /save/head': () => [200, cloud], 'GET /save': () => [200, { version: 5, save: { from: 'cloud' }, summary: cloud.summary }],
+    'PUT /save': () => { puts++; return [200, { version: 6 }]; } }, st);
+  await net.ensureSession(); await net.push({}, {}); puts = 0;                            // meta conhecida = a da nuvem
+  st.m['eon.net'] = JSON.stringify(Object.assign(JSON.parse(st.m['eon.net']), { save: { version: 5, dirty: true } }));
+  boot({ 'POST /auth/guest': () => [200, session(1)], 'GET /save/head': () => [200, cloud], 'GET /save': () => [200, { version: 5, save: { from: 'cloud' }, summary: cloud.summary }],
+    'PUT /save': () => { puts++; return [200, { version: 6 }]; } }, st);
+  const empty = { level: 1, xp: 0, era: 0, stage: 1, fc: 10, gems: 30, playSeconds: 0, maxRarity: 0 };
+  let r = await net.sync({ fresh: true }, empty);
+  assert.equal(r.action, 'pulled'); assert.equal(r.save.from, 'cloud'); assert.equal(puts, 0);
+  // aparelho com algum progresso mas ATRÁS da nuvem: pergunta, não sobe
+  st.m['eon.net'] = JSON.stringify(Object.assign(JSON.parse(st.m['eon.net']), { save: { version: 5, dirty: true } })); net.init({ fetch: undefined, storage: st, clientVersion: '0.12.4' });
+  boot({ 'POST /auth/guest': () => [200, session(1)], 'GET /save/head': () => [200, cloud], 'PUT /save': b => { puts++; return [200, { version: 6, force: b.force }]; } }, st);
+  r = await net.sync({}, { ...empty, level: 8, stage: 40, xp: 500 });
+  assert.equal(r.action, 'choose'); assert.equal(r.recommend, 'cloud'); assert.equal(puts, 0);
+  // só a escolha explícita sobe por cima — e com a marca force
+  let sent = null; boot({ 'POST /auth/guest': () => [200, session(1)], 'GET /save/head': () => [200, cloud], 'PUT /save': b => { sent = b; return [200, { version: 6 }]; } }, st);
+  await net.chooseSide('device', {}, { ...empty, level: 8 }); assert.equal(sent.force, true);
+});
