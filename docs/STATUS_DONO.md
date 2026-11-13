@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **04h20 · PARA VOCÊ VOTAR: Kaia adulta e guerreira V2 animadas** (página de aprovação, 8 animações de cada fase, corpo e rosto de mulher adulta). Avisos da Arte: no golpe da adulta a espada passa do topo em 2 quadros; no giro a espada some atrás do corpo de costas. Créditos: saldo ~237
+- **04h20 · Achado da Arte:** as folhas do Kael crescendo estavam com um desvio de 96 px (ele pularia ao golpear); a Arte corrige pelo código antes do APK
+
 - **04h10 · Avatar (sua ordem):** o rosto no topo e no Perfil vai acompanhar a fase (garoto, adolescente, adulto, guerreiro) e o herói, com chapéu e óculos. A Arte faz 8 retratos pelo código; o engenheiro troca em todos os lugares (topo, Perfil, ranking, guilda, chat). Entra junto com as 4 fases no próximo APK
 
 - **04h · Skins em camadas PRONTAS (regra, Sistemas):** as 38 skins mantêm nome e preço e viraram chapéu + cor do colete/botas + óculos/máscara (+ aura nas Lendárias). As do Passe: Casaca da Temporada = tricórnio + colete rubi + máscara de carnaval; Traje Elite Solar = chapéu militar + ouro + viseira + aura; Imperador das Eras = chapéu celestial + ouro e obsidiana + aura forte. Valem nas 4 fases e nos 2 heróis; podem voltar à Loja. Próximo de Sistemas: tela de Fusão, brilho do item caído por raridade, testes das 4 fases
@@ -189,7 +192,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
 - [x] Votados: cenários 5 e 8, asa nas costas, Oferta, Bem-vindo de volta (tudo aprovado)
-- [ ] Próximos votos (quando chegarem, eu aviso): asa nas costas (refeita), Kaia adulta e guerreira V2 animadas
+- [ ] VOTAR AGORA: Kaia adulta e guerreira V2 animadas (página de aprovação)
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
 - [~] Banco de desenvolvimento: Supabase criado; falta você seguir o passo a passo na parte AGORA (02h) e pôr as 3 variáveis de ambiente
