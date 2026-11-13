@@ -15,7 +15,7 @@ const ERAS78=[
   ws:['Brasa Opaca','Ferro Negro','Obsidiana','Lava Viva','Chama Eterna'],
   as:['Cinza','Obsidiana','Rubro Vulcânico','Sombra Ardente','Fogo Real'],
   wp:['#8a3a2a','#3a2a2a','#1a1a24','#ff5a1a','#ffcf4a'], ap:['#5a2a1a','#2a2028','#7a1a12','#3a0a2a','#ff7a2a'],
-  en:[{n:'Diabrete',s:'h',c:'#c8322a',art:'era7_e0'},{n:'Cão Infernal',s:'beast',c:'#3a2a24',art:'era7_e1'},{n:'Demônio Ceifador',s:'h',c:'#a8221a',art:'era7_boss'}]},
+  en:[{n:'Diabrete',s:'h',c:'#c8322a',art:'era7_e0'},{n:'Cão Infernal',s:'beast',c:'#3a2a24',art:'era7_e1'},{n:'Senhor do Submundo',s:'h',c:'#a8221a',art:'era7_boss'}]},
  {n:'Celestial', icon:'', key:'celestial',
   sky:['#bfe3ff','#fff4d0'], mtn:'#d8e4f0', gr:'#e8eef6', gr2:'#cfd9e6', sun:'#fffbe0',
   w:['Lança de Luz','Espada Alada','Lâmina Celeste','Gládio do Firmamento','Juízo do Arcanjo'],
@@ -23,7 +23,7 @@ const ERAS78=[
   ws:['Prata Clara','Aço Celeste','Ouro Branco','Luz Viva','Aurora Eterna'],
   as:['Nuvem','Prata','Ouro Branco','Céu Profundo','Aurora'],
   wp:['#c9d6e3','#e6eef7','#ffe7a3','#ffffff','#ffd84a'], ap:['#e8eef6','#c0ccd8','#ffe9b8','#8cc8ff','#fff3c4'],
-  en:[{n:'Guardião Alado',s:'h',c:'#e8eef6',art:'era8_e0'},{n:'Golem Rúnico',s:'beast',c:'#c9d2dc',art:'era8_e1'},{n:'Arcanjo',s:'h',c:'#ffd84a',art:'era8_boss'}]},
+  en:[{n:'Guardião Alado',s:'h',c:'#e8eef6',art:'era8_e0'},{n:'Golem Rúnico',s:'beast',c:'#c9d2dc',art:'era8_e1'},{n:'Juiz Celestial',s:'h',c:'#ffd84a',art:'era8_boss'}]},
 ];
 /* nome do Senhor da Era (fase 100 de cada dificuldade) para as 9 eras: as 7 primeiras usam o chefe da era como hoje; 7-8 têm nome próprio */
 const SENHOR={7:'Senhor do Submundo', 8:'Juiz Celestial'};
