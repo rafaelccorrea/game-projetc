@@ -253,7 +253,9 @@ function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().he
   ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);
   /* a arma cai por código: sai da mão, gira e deita no chão à frente */
   const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
-  if (w0){ const kk = 256 * 0.5 / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, y = (fy - 112) + (112 - 10) * e2, ang = -0.3 + (Math.PI / 2 + 0.3) * e2;
+  /* P20: a arma termina DEITADA conforme o ângulo nativo dela (meta.json: espada 90 = gira 90°, como antes; pistola 0 = já está deitada) e o ponto mais baixo para em fy-2: nada abaixo do chão */
+  const wm = ws ? (J('assets/weapons/meta.json')[wKey(ws)] || {}) : {}, a1 = (typeof wm.angle === 'number' ? wm.angle : (wm.type === 'gun' ? 0 : 90)) * Math.PI / 180;
+  if (w0){ const kk = 256 * 0.5 / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, hh = (Math.abs(dw * Math.sin(a1)) + Math.abs(dh * Math.cos(a1))) / 2, y = (fy - 112) + (110 - hh) * e2, ang = -0.3 + (a1 + 0.3) * e2;
     ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha; dspr(skinSpr(w0, ws.r), -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
   { const L = layNow(H); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); } ctx.restore();
   if (H.main){ B.tipW = null; const imp = (M.impact && M.impact.body) || 16;

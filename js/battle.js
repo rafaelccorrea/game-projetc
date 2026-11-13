@@ -722,7 +722,8 @@ function heroPose(a,gun,t){
    Rig: anchors.json {hand,handR,angle} · weapons/meta.json {type,grip,angle(graus, 0=direita, 90=cima),len,muzzle,layer:"back"} */
 /* SUBIR DE NÍVEL (aprovado): folha assets/anim/fx/levelup (quadros, fps, pés e âncora do .json), tocada UMA vez sobre o Kael, pés na linha do chão,
    na mesma escala do quadro do herói. B.lvfx = {t} é ligado em js/farm.js quando o nível sobe. */
-const LVUP='assets/anim/fx/levelup_fx';   /* Engenheiro 4 (dono): versão SÓ-EFEITO (22 quadros, 448x384, pés em (224, 352)), por cima do herói desenhado, em qualquer herói/skin e montado. A folha antiga (levelup, com o Kael garoto desenhado) saiu de uso. */
+const LVUP='assets/anim/fx/levelup_fx_low';   /* P21: versão com o "NÍVEL +1" a 150 px dos pés (a levelup_fx punha o texto na altura da barra de vida do herói, que é HTML e fica por cima do canvas) */
+const LVUP_OLD_FX='assets/anim/fx/levelup_fx';   /* Engenheiro 4 (dono): versão SÓ-EFEITO (22 quadros, 448x384, pés em (224, 352)), por cima do herói desenhado, em qualquer herói/skin e montado. A folha antiga (levelup, com o Kael garoto desenhado) saiu de uso. */
 /* A folha levelup TRAZ O KAEL GAROTO A PÉ desenhado (visto: por cima do herói montado/adolescente aparecia um segundo Kael criança com espada). Ela só vale quando o
    herói na tela É esse (Kael, fase 0, a pé). Nos outros casos (fases 1 a 3, montado, Kaia): efeito por código (coluna de luz + anel no chão), na escala do herói,
    até a Arte entregar a versão só-efeito (levelup_fx). */
@@ -970,13 +971,13 @@ function draw(){
   /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
   { const he=heroEdge(); if(B.heK!=null&&Math.abs(he-B.heK)>1&&B.deadT<=0&&!B.res){ try{ layoutHorde(); }catch(e){} } B.heK=he; }
   const ultOn=!!(B.act&&B.act.type==='s3');
-  if(!ultOn){ drawHero(HM); drawLevelUp(); if(typeof drawEvo==='function') drawEvo(); }
+  if(!ultOn){ drawHero(HM); if(typeof drawEvo==='function') drawEvo(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
   for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
     for(let j=5;j>=0;j--){ const kj=Math.max(0,k-j*0.035), x=p.x0+(p.x1-p.x0)*kj, y=p.y0+(p.y1-p.y0)*kj-(p.kind==='shell'?26*4*kj*(1-kj):0); drawGlow(col,x,y,(big?11:6)*(1-j/7)*(p.kind==='fire'?1.5+0.3*Math.sin(B.at*40+j):1),j?0.6*(1-j/6):1,false);
       if(!j){ ctx.fillStyle=p.kind==='shell'?'#2a2a30':'#ffffff'; ctx.strokeStyle='#3a1a08'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,y,big?4.5:2.6,0,7); ctx.fill(); ctx.stroke(); } } }   /* núcleo sólido: aparece também sobre fundo claro */
-  if(ultOn){ drawWfx(2); drawHero(HM); drawLevelUp(); }
+  if(ultOn){ drawWfx(2); drawHero(HM); }
   if(typeof drawPet==='function') drawPet();   // v0.12.7 (dono): pet AO LADO e um pouco À FRENTE do Kael, por cima da montaria
   if(typeof drawHatch==='function') drawHatch();   // ovo chocando (por cima da cena, abaixo do HUD)   // herói sempre por cima do efeito da ultimate
   drawWfx(1);
@@ -993,6 +994,7 @@ function draw(){
       ctx.save(); ctx.font=`${LILITA()?'400':'900'} 15px ${LILITA()?'"Lilita One",':''}system-ui`; const tw=Math.max(29,ctx.measureText(tx).width+12), bx=LW-tw/2-6*PX, by2=GY-86*PX;
       ctx.translate(bx,by2); ctx.scale(pop,pop); ctx.fillStyle='#ff5a4e'; ctx.strokeStyle='#7a1a14'; ctx.lineWidth=1.5; ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(-tw/2,-11,tw,22,11); else ctx.rect(-tw/2,-11,tw,22); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tx,0,1); ctx.restore(); } }
+  drawLevelUp();   /* P21: subir de nível DEPOIS das barras de vida e dos selos do canvas (o texto nunca fica atrás deles) */
   drawPicks();
   for(const p of B.parts){ const a=Math.max(0,1-p.t/p.life); ctx.globalAlpha=a; ctx.fillStyle=p.col;
     if(p.glow) ctx.globalCompositeOperation='lighter'; const s=p.sz*(p.glow?a+.4:1); ctx.fillRect(p.x-s/2,p.y-s/2,s,s); if(p.glow) ctx.globalCompositeOperation='source-over'; }

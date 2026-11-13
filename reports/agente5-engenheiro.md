@@ -1697,3 +1697,8 @@ Arquivos mexidos: `index.html`, `js/stage.js`, `js/battle.js`, `js/farm.js`, `js
 - Servidor: `js/p_intro.js` `PI_KAIA=false`.
 - Asa nas skins de corpo próprio fica bem maior (escala 1,25/1,30 × âncora): conferir no voto.
 - Prints em .jpg (captura do navegador), não .png.
+
+### Engenheiro 4 — consertos P20 e P21 (2026-11-13), VISTOS
+- **P20 morte com pistola** (`js/stage.js` drawHeroDie): a arma termina deitada pelo ângulo nativo dela (meta.json; espada 90 = como antes, pistola 0 = deitada) e o ponto mais baixo para em fy-2. Visto Kael e Kaia, espada, pistola da era 3 e da era 5, em 3 momentos: nada abaixo da linha do chão (`v0128_morte_pistola_{kael,kaia}.jpg`). No fim a pistola fica quase toda atrás do corpo deitado.
+- **P21 "NÍVEL +1"** (`js/battle.js`): `drawLevelUp()` passou para depois das barras de vida e selos do canvas; como a barra de vida do herói é HTML (fica por cima do canvas), a folha virou `assets/anim/fx/levelup_fx_low` (arquivo conferido). Visto a pé e no lobo: texto inteiro visível, abaixo da barra (`v0128_levelup_texto.png`, `v0128_levelup_texto_montado.png`). Montado (efeito ×1,3) o texto passa por cima da cabeça do Kael.
+- `node --check`, `run.js` TUDO OK (145), `flows.js` fluxos duros OK. Aba fechada; save em memória; armazenamento com as mesmas 4 chaves.
