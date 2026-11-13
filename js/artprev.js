@@ -59,12 +59,89 @@ const OWNER_KEYS = [
   { k: 'pets', t: 'Pets e montarias novos', get: () => (Sys.pet && Sys.mount && 'newPets' in Sys.pet.DATA && 'newOn' in Sys.mount.DATA) ? (Sys.pet.DATA.newPets === true && Sys.mount.DATA.newOn === true) : null,
     set: on => { Sys.pet.DATA.newPets = on; Sys.mount.DATA.newOn = on; } },
   { k: 'drops', t: 'Entregas dos itens novos', get: () => (Sys.newDrops && Sys.newDrops.DATA) ? Sys.newDrops.DATA.on === true : null, set: on => { Sys.newDrops.DATA.on = on; } },
+  /* Engenheiro 11: Mochila nova (js/p_bag.js, de Sistemas; painel 'bag', chave PANEL_ON.bag). Enquanto o painel não estiver registrado (Panels.defs.bag), o botão não aparece. */
+  { k: 'bag', t: 'Mochila nova', get: () => (window.Panels && Panels.defs && Panels.defs.bag) ? Panels.on('bag') : null, set: on => { if (on) Panels.enable('bag'); else PANEL_ON.bag = false; } },
   /* o HUD dos eventos com horário (SCREENS_ON.evHud) saiu daqui: ligado por padrão por decisão do PO/dono (13/11) */
 ];
 const keyGet = K => { try { return K.get(); } catch (e) { return null; } };
 function keySet(K, on){ try { K.set(!!on); } catch (e) { console.error('chave ' + K.k, e); } return keyGet(K) === !!on; }
 /* reaplica as escolhas guardadas no save do Modo dono (só com OWNER_MODE; chamada uma vez, na carga) */
 function keysBoot(){ if (!OWNER_MODE) return; const o = S.ownerKeys; if (!o || typeof o !== 'object') return; for (const K of OWNER_KEYS) if (typeof o[K.k] === 'boolean' && keyGet(K) !== null && keyGet(K) !== o[K.k]) keySet(K, o[K.k]); }
+/* ================= LIBERAR TUDO + RECURSOS INFINITOS (Engenheiro 11; pedido direto do dono) =================
+   SÓ no Modo dono: ownerOk() exige OWNER_MODE e a chave de gravação 'eras_owner_v1' (index.html decide as duas UMA vez, na carga). Fora dele nada
+   aqui roda, nada é escrito e nenhum nome é posto em window (o save real, 'eras_proto_v2', nunca é lido nem escrito por este arquivo).
+   - LIBERAR TUDO (ownerAll): põe no save de teste, como se o jogador tivesse ganho, todas as skins fixas, uma arma de cada família em cada raridade
+     (família em it.wt, conferida por Sys.stats.ensureWeaponType), todas as asas, todos os pets e montarias vivos, forja alta e todos os títulos.
+     NÃO equipa nada por conta própria: a troca é pelas telas normais (o módulo de montaria equipa a 1ª sozinho, como no jogo).
+     Os itens entram pelo normalizador do jogo (normItem, js/farm.js) com origin:'owner', sem passar pelo limite da mochila nem pelo equipar/desmontar sozinho.
+   - RECURSOS INFINITOS (S.ownerKeys.inf; ligado por padrão): um reabastecimento por segundo (setInterval; nada por quadro) mantém no máximo ouro,
+     gemas, pedras de forja e de treino, ração, Essência, tentativas (arena, torre, instâncias, eventos com hora, chefe do evento) e baús.
+     window.OWNER_INFINITE (só existe no Modo dono) diz se está ligado.
+   - MOCHILA: window.bagMax (js/vipauto.js) é envolvida SÓ em memória: com o infinito ligado devolve 9.999; desligado, o limite do jogo + os itens
+     liberados (origin 'owner'), para a coleção não ocupar o espaço normal. */
+const BIG = 999e9, ESS_MAX = 999999;
+const ownerOk = () => typeof OWNER_MODE !== 'undefined' && OWNER_MODE === true && typeof SAVE_KEY !== 'undefined' && SAVE_KEY === 'eras_owner_v1';
+const infOn = () => ownerOk() && !(S.ownerKeys && typeof S.ownerKeys === 'object' && S.ownerKeys.inf === false);
+const cl = (v, a, b) => Math.max(a, Math.min(b, v));
+/* item novo na mochila do save de teste, no formato do jogo (normItem valida espaço, raridade e era e preserva wt/wing/look/origin) */
+function giveItem(o){ const it = normItem(Object.assign({ origin: 'owner' }, o)); const top = S.inv.reduce((m, i) => Math.max(m, i && i.id | 0), 0); S.nextId = Math.max(S.nextId | 0, top + 1);
+  it.id = S.nextId++; it.gotAt = Date.now(); it.lvl = Math.max(1, o.lvl | 0); try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; S.inv.push(it); return it; }
+function allSkins(){ const A = Sys.appearance; for (const k of A.fixedSkins(S)){ if (!k.owned){ try { A.grantFixed(S, k.id, { owner: true }); } catch (e) {} } } return A.fixedSkins(S).filter(k => k.owned).length; }
+/* uma arma de cada família (lista do módulo) em cada raridade que o módulo permite (Sys.stats.maxR: Lendário; Divino só com a curva das 9 eras) */
+function allWeapons(){ const T = Sys.stats, W = T.DATA.weaponTypes, mr = Math.min(RAR.length - 1, T.maxR()), lv = Sys.level.level(S), e = cl(S.eraMax | 0, 0, Math.min(ERAS.length - 1, T.DATA.maxEra));
+  for (const t of Object.keys(W)) for (let r = 0; r <= mr; r++){ if (S.inv.some(i => i && i.slot === 'weapon' && i.origin === 'owner' && i.wt === t && (i.r | 0) === r)) continue;
+    const o = { slot: 'weapon', r, e, lvl: lv, wt: t }; if (W[t].artEra != null) o.look = cl(W[t].artEra | 0, 0, ERAS.length - 1);
+    const it = giveItem(o); it.wt = t; if (T.ensureWeaponType(it) !== t){ S.inv = S.inv.filter(x => x !== it); } }   /* família que o módulo não aceita: o item não fica */
+  return S.inv.filter(i => i && i.slot === 'weapon' && i.origin === 'owner').length; }
+/* as 2 asas antigas + as 8 novas (Serafim inclusa): item de asa com o modelo, na raridade do modelo (nunca abaixo da mínima da asa, para poder equipar) */
+function allWings(){ const T = Sys.stats, W = T.DATA.wingTypes, minR = T.DATA.wing.minR | 0, lv = Sys.level.level(S), e = cl(S.eraMax | 0, 0, Math.min(ERAS.length - 1, T.DATA.maxEra));
+  for (const w of Object.keys(W)){ if (S.inv.some(i => i && i.slot === 'wing' && i.wing === w)) continue; const it = giveItem({ slot: 'wing', r: cl(W[w].r == null ? minR : W[w].r | 0, minR, RAR.length - 1), e, lvl: lv, wing: w }); if (it.wing !== w) it.wing = w; }
+  return new Set(S.inv.filter(i => i && i.slot === 'wing' && W[i.wing]).map(i => i.wing)).size; }
+/* pets: os de hoje + os novos VIVOS no módulo (newReady, ou todos com a chave "Pets e montarias novos"); os da Revisão 4 seguem a chave do módulo */
+function petLive(d){ const D = Sys.pet.DATA; return !!d && (!d.nw || D.newPets === true || (D.newReady && D.newReady[d.id] === true)) && !d.removed && (!d.v17 || (D.v17 && D.v17.on === true)) && (!d.v4 || (D.v4 === true && D.v3 === true)); }
+function allPets(){ if (!(typeof petOk === 'function' && petOk())) return 0; const P = Sys.pet, o = P.ensure(S);
+  for (const d of P.DATA.pets){ if (!petLive(d) || o.owned[d.id]) continue; o.owned[d.id] = { stars: 1, frags: 0, lvl: 1 }; delete o.stored[d.id]; o.hatched = (o.hatched | 0) + 1; }
+  return Object.keys(P.ensure(S).owned).length; }
+/* estágio 1/2/3 do pet equipado: com a tela 17b o estágio é guardado (stg) e o nível fica na faixa do estágio; sem ela, o estágio sai do nível */
+function petStage(n){ if (!(typeof petOk === 'function' && petOk())) return null; const P = Sys.pet, D = P.DATA, o = P.ensure(S), x = o.eq ? o.owned[o.eq] : null; if (!x) return null; const i = cl((n | 0) - 1, 0, 2);
+  if (D.v17 && D.v17.on === true && D.v3 === true){ x.stg = i; x.lvl = cl(x.lvl | 0 || 1, D.v17.stageReq[i] | 0 || 1, D.v17.stageCap[i] | 0 || 90); }
+  else if (D.v3 === true){ const st = D.v3d.stages, lo = st[i] ? st[i].from | 0 : 1, hi = st[i + 1] ? (st[i + 1].from | 0) - 1 : D.v3d.maxLvl | 0; x.lvl = cl(x.lvl | 0 || 1, lo, Math.max(lo, hi)); }
+  else return null;
+  P.ensure(S); if (typeof PETK !== 'undefined' && PETK) PETK.infoT = 0; return i + 1; }
+function allMounts(){ if (!(typeof mountOk === 'function' && mountOk())) return 0; const M = Sys.mount, o = M.ensure(S);
+  for (const m of M.DATA.mounts){ if (m.tbd || !M.live(m) || o.owned[m.id]) continue; try { M.add(S, Sys.host, m.id); } catch (e) { console.error('ownerAll mount', e); } }
+  return Object.keys(M.ensure(S).owned).length; }
+function allForge(){ const F = Sys.forge, o = F.ensure(S), top = F.DATA.max | 0; for (const s of F.DATA.slots) o.lv[s] = Math.max(o.lv[s] | 0, Math.min(top, s === 'weapon' || s === 'wing' ? 13 : 10)); F.addStones(S, 5000, Sys.host); return o.lv.weapon; }
+/* títulos: o módulo não tem função de dar; o estado aceito pelo ensure é unlocked[id] = hora em que ganhou */
+function allTitles(){ const T = Sys.titles; if (!T) return 0; const o = T.ensure(S), now = Date.now(); for (const t of T.DATA.titles) if (!o.unlocked[t.id]) o.unlocked[t.id] = now; return Object.keys(T.ensure(S).unlocked).length; }
+function ownerAll(){ if (!ownerOk()) return null; const R = { skins: 0, weapons: 0, wings: 0, pets: 0, mounts: 0, titles: 0, forge: 0, err: [] }, run = (k, fn) => { try { R[k] = fn(); } catch (e) { R.err.push(k); console.error('ownerAll ' + k, e); } };
+  try { const L = Sys.level.ensure(S); if ((L.lvl | 0) < 70){ L.lvl = 70; L.xp = 0; } } catch (e) { R.err.push('level'); }   /* asa abre no nível 50 e pet no 20: sem isto nada disso equipa */
+  if (!S.ownerKeys || typeof S.ownerKeys !== 'object') S.ownerKeys = {};
+  for (const id of ['wings', 'bow', 'ult']){ const K = OWNER_KEYS.find(x => x.k === id); if (K && keyGet(K) !== null && (keyGet(K) === true || keySet(K, true))) S.ownerKeys[id] = true; }   /* Serafim e asas novas desenham a própria folha; arco/bumerangue batem; Lendárias próprias */
+  run('skins', allSkins); run('weapons', allWeapons); run('wings', allWings); run('pets', allPets); run('mounts', allMounts); run('forge', allForge); run('titles', allTitles);
+  S.gold = Math.max(+S.gold || 0, 1e9);
+  R.text = 'Liberado: ' + R.skins + ' skins, ' + R.weapons + ' armas, ' + R.pets + ' pets, ' + R.mounts + ' montarias, ' + R.wings + ' asas, ' + R.titles + ' títulos' + (R.err.length ? '. Falhou: ' + R.err.join(', ') : '');
+  return R; }
+/* RECURSOS INFINITOS: devolve quantas coisas completou (0 = já estava tudo no máximo, ou o interruptor está desligado) */
+function refill(){ if (!infOn()) return 0; let n = 0; const H = Sys.host, up = (o, k, v) => { if (o && !(o[k] >= v)){ o[k] = v; n++; } }, tryDo = fn => { try { fn(); } catch (e) {} };
+  up(S, 'gold', BIG); up(S, 'gems', BIG);
+  tryDo(() => { const F = Sys.forge, o = F.ensure(S), mx = F.DATA.maxStones; if (o.stones < mx){ F.addStones(S, mx - o.stones, H); n++; } });
+  tryDo(() => { const F = Sys.practice, o = F.ensure(S), mx = F.DATA.maxStones; if (o.stones < mx){ F.addStones(S, mx - o.stones, H); n++; } });
+  tryDo(() => { const P = Sys.pet, o = P.ensure(S), mx = P.DATA.maxFood; if (o.food < mx){ P.addFood(S, mx - o.food, H); n++; } });
+  tryDo(() => up(Sys.loot.ensure(S).mat, 'essence', ESS_MAX));
+  tryDo(() => { const A = Sys.arena, o = A.ensure(S, H), a = o.attemptsLeft, r = o.refreshLeft; o.attemptsLeft = 1e6; o.refreshLeft = 1e6; A.ensure(S, H); if (o.attemptsLeft !== a || o.refreshLeft !== r) n++; });   /* o ensure do módulo corta no máximo do dia (com o VIP) */
+  tryDo(() => { const T = Sys.tower, o = T.ensure(S, H), a = o.lossesLeft; o.lossesLeft = 1e6; T.ensure(S, H); if (o.lossesLeft !== a) n++; });
+  tryDo(() => { const I = Sys.instances, o = I.ensure(S), mx = I.keysMax(S); for (const t of I.DATA.order) up(o.keys, t, mx); if (o.eggs > 0){ o.eggs = 0; n++; } });
+  tryDo(() => { const o = Sys.schedule.ensure(S); if (Object.keys(o.entered).length){ o.entered = {}; n++; } });   /* entradas usadas por janela de evento */
+  tryDo(() => { const o = Sys.evtrail.ensure(S); for (const id in o) if (o[id].att > 0){ o[id].att = 0; n++; } });   /* ataques do dia no chefe do evento */
+  tryDo(() => { const C = Sys.chest, o = C.ensure(S); if (o.today > 0){ o.today = 0; n++; } up(o, 'stored', C.maxStored()); });
+  tryDo(() => { const o = Sys.guild.ensure(S); if (o.id) up(o, 'coin', ESS_MAX); });
+  if (n) tryDo(() => hud());
+  return n; }
+/* relógio de teste dos eventos com hora: desloca SÓ em memória o relógio que o jogo entrega aos módulos (Sys.host.now); o save guarda só a trava do módulo */
+const CLK = { off: 0, real: null };
+function clockSet(off){ if (!ownerOk()) return; if (!CLK.real) CLK.real = Sys.host.now; CLK.off = off; Sys.host.now = off ? () => Date.now() + CLK.off : CLK.real;
+  if (!off){ try { Sys.schedule.ensure(S).seen = 0; } catch (e) {} } }   /* de volta ao relógio real: solta a trava "a hora nunca volta" do módulo */
 const WING_NEW = ['phoenix', 'ice', 'shadow', 'storm', 'mechanical', 'bone', 'seraph', 'darkmoth'];
 const WING_SHORT = { phoenix: 'Fênix', ice: 'Gelo', shadow: 'Sombra', storm: 'Tempestade', mechanical: 'Mecânicas', bone: 'Ossos', seraph: 'Serafim', darkmoth: 'Mariposa' };
 const UI = { open: null, st: 0, layers: null, raf: 0, t0: 0, tok: 0 };
@@ -107,6 +184,8 @@ function openCard(gi, ci){ const card = TB[gi].c[ci], tok = ++UI.tok; freeLayers
     if (!ok.length){ UI.open = null; paint(); toast('Arte ainda não entregue'); return; }
     UI.layers = ok; UI.st = 0; UI.t0 = performance.now(); paint(); UI.raf = requestAnimationFrame(play); }); }
 function closeCard(){ freeLayers(); UI.open = null; paint(); }
+const gold = 'background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-color:#8a4f0c';
+const vipNow = () => { try { return Sys.vip.level(S) | 0; } catch (e) { return 0; } };
 const btn = 'min-height:48px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font:900 14px Nunito,system-ui,sans-serif;padding:0 12px;cursor:pointer';
 function ownerHtml(){
   if (!OWNER_MODE) return `<div style="padding:12px;border-radius:16px;background:#241b14;border:2px solid #4a3a2b;margin-bottom:12px"><div style="font:400 18px 'Lilita One',Nunito,sans-serif;color:#ffc94a">Modo dono</div>
@@ -114,9 +193,18 @@ function ownerHtml(){
     <button data-o="enter" style="${btn};width:100%;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-color:#8a4f0c">Jogar no modo dono</button></div>`;
   const b = (k, t) => `<button data-o="${k}" style="${btn}">${t}</button>`;
   return `<div style="padding:12px;border-radius:16px;background:#241b14;border:2px solid #ffc94a;margin-bottom:12px"><div style="font:400 18px 'Lilita One',Nunito,sans-serif;color:#ffc94a">Modo dono ligado</div>
-    <div style="font-size:12.5px;color:#c9b9a2;margin:4px 0 10px">Este é o jogo de teste. Todas as telas que existem estão liberadas.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('hero_kael', 'Herói: Kael')}${b('hero_kaia', 'Herói: Kaia')}${b('scn7', 'Cenário: Submundo')}${b('scn8', 'Cenário: Celestial')}${b('scn', 'Cenário da era atual')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
+    <div style="font-size:12.5px;color:#c9b9a2;margin:4px 0 10px">Este é o jogo de teste. Todas as telas que existem estão liberadas. O seu jogo de verdade está guardado.</div>
+    <button data-o="exit" style="${btn};width:100%;margin-bottom:10px">Sair do modo dono (volta ao seu jogo)</button>
+    <button data-o="all" aria-label="Liberar tudo: skins, armas, asas, pets, montarias, forja e títulos" style="${btn};${gold};width:100%;min-height:56px;font-size:16px;line-height:1.15">${UI.arm && Date.now() - UI.arm < 6000 ? 'Toque de novo para confirmar' : 'LIBERAR TUDO'}<br><span style="font-size:11.5px">skins, armas, asas, pets, montarias, forja, títulos</span></button>
+    ${UI.sum ? `<div role="status" style="font-size:12.5px;color:#f6ecdf;margin:6px 0 0;overflow-wrap:anywhere">${esc(UI.sum)}</div>` : ''}
+    <button data-o="inf" aria-pressed="${infOn()}" style="${btn};${infOn() ? gold : ''};width:100%;min-height:52px;line-height:1.15;margin:8px 0 10px">RECURSOS INFINITOS<br><span style="font-size:11.5px">${infOn() ? 'LIGADO: ouro, gemas, pedras, ração e tentativas sempre cheios' : 'DESLIGADO'}</span></button>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('hero_kael', 'Herói: Kael')}${b('hero_kaia', 'Herói: Kaia')}${b('scn7', 'Cenário: Submundo')}${b('scn8', 'Cenário: Celestial')}${b('scn', 'Cenário da era atual')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
     ${typeof mountOk === 'function' && mountOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">MONTARIAS</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + mountIds().map(m => b('mt_' + m.id, m.name)).join('') + b('mtstar', 'Estrela +1') + b('mtstar0', 'Estrela -1') + b('mtoff', 'Desmontar') + '</div>' : ''}
+    ${typeof petOk === 'function' && petOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">PET EQUIPADO: ESTÁGIO</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + [1, 2, 3].map(n => `<button data-o="pst${n}" aria-label="Pet: estágio ${n}" style="${btn};padding:0 4px">Estágio ${n}</button>`).join('') + '</div>' : ''}
+    ${window.Sys && Sys.vip ? `<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">NÍVEL DE VIP (agora: ${vipNow()})</div><div role="group" aria-label="Nível de VIP" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px">` + Array.from({ length: (Sys.vip.DATA.maxLevel | 0) + 1 }, (_, n) => `<button data-o="vip${n}" aria-label="VIP ${n}" aria-pressed="${vipNow() === n}" style="${btn};padding:0;min-height:44px;${vipNow() === n ? gold : ''}">${n}</button>`).join('') + '</div>' : ''}
+    <div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">TEMPO</div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">${b('off1', 'Adiantar 1 h')}${b('off8', 'Adiantar 8 h')}${window.Sys && Sys.schedule ? b('evnow', 'Abrir evento agora') + b('evreal', CLK.off ? 'Voltar ao relógio real' : 'Relógio real (em uso)') : ''}</div>
+    <div style="font-size:12px;color:#c9b9a2;margin:6px 0 0">Adiantar recarrega o jogo e mostra o ganho do tempo fora.</div>
     <div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:12px 0 2px">CHAVES PARA O VOTO</div>
     <div style="font-size:12px;color:#c9b9a2;margin:0 0 6px">Liga e desliga o que ainda espera o seu voto. Vale só neste jogo de teste; ao sair do modo dono tudo volta ao padrão.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${OWNER_KEYS.map(K => { const v = keyGet(K); return v === null ? '' : `<button data-o="key_${K.k}" aria-pressed="${v}" style="${btn};min-height:52px;line-height:1.15;${v ? 'background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-color:#8a4f0c' : ''}">${K.t}<br><span style="font-size:11.5px">${v ? 'LIGADA' : 'DESLIGADA'}</span></button>`; }).join('')}</div>
@@ -135,6 +223,25 @@ function paint(){ const el = document.getElementById('apv'); if (!el) return;
 function ownerAct(k){
   if (k === 'enter' || k === 'exit'){ try { save(); if (k === 'enter') localStorage.setItem('eon_owner_mode', '1'); else localStorage.removeItem('eon_owner_mode'); } catch (e) {} window.__noSave = true; location.reload(); return; }
   if (!OWNER_MODE) return;
+  /* ----- Engenheiro 11: LIBERAR TUDO, RECURSOS INFINITOS, estágio do pet, VIP e tempo. Tudo recusa fora do save de teste (ownerOk). ----- */
+  if (k === 'all' || k === 'inf' || /^(pst|vip)\d+$/.test(k) || k === 'off1' || k === 'off8' || k === 'evnow' || k === 'evreal'){ if (!ownerOk()){ toast('Só no modo dono'); return; }
+    if (k === 'all'){ const now = Date.now(); if (!(UI.arm && now - UI.arm < 6000)){ UI.arm = now; paint(); toast('Toque de novo para liberar tudo'); return; }   /* confirmação: segundo toque no próprio botão */
+      UI.arm = 0; const R = ownerAll(); UI.sum = R ? R.text : ''; refill();
+      if (typeof formRefresh === 'function') formRefresh(); if (typeof refreshHero === 'function') refreshHero(); if (typeof preloadAssets === 'function') preloadAssets(); if (typeof avatarRefresh === 'function') avatarRefresh();
+      toast(R ? R.text : 'Não deu para liberar'); }
+    else if (k === 'inf'){ const want = !infOn(); if (!S.ownerKeys || typeof S.ownerKeys !== 'object') S.ownerKeys = {}; S.ownerKeys.inf = want; if (want) refill(); toast('Recursos infinitos: ' + (want ? 'ligado' : 'desligado')); }
+    else if (k.indexOf('pst') === 0){ const n = petStage(+k.slice(3)); if (n){ if (typeof preloadAssets === 'function') preloadAssets(); toast('Pet no estágio ' + n); } else toast('Equipe um pet na tela Pets'); }
+    else if (k.indexOf('vip') === 0){ const n = cl(+k.slice(3) | 0, 0, Sys.vip.DATA.maxLevel | 0); let ok = false;   /* mesmo dado da compra simulada do Servidor: S.sys.vip.points (pontos do nível) + nível pelo Sys.vip.setLevel */
+      try { if (Sys.buy && typeof Sys.buy.simVip === 'function'){ Sys.buy.simVip(S, n); ok = Sys.vip.level(S) === n; } } catch (e) { ok = false; }
+      if (!ok){ try { if (!S.sys || typeof S.sys !== 'object') S.sys = {}; if (!S.sys.vip || typeof S.sys.vip !== 'object') S.sys.vip = {}; S.sys.vip.points = Sys.vip.DATA.points[n] | 0; ok = Sys.vip.setLevel(S, n) && Sys.vip.level(S) === n; } catch (e) { ok = false; } }
+      if (ok){ refill(); if (typeof syncSpeed === 'function') syncSpeed(); toast(n ? 'VIP ' + n : 'Sem VIP'); } else toast('VIP indisponível'); }
+    else if (k === 'off1' || k === 'off8'){ const h = k === 'off1' ? 1 : 8; if (typeof B !== 'undefined' && B && B.inst){ toast('Termine a instância antes'); return; }
+      try { save(); S.lastSeen = Date.now() - h * 3600000; localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { toast('Não deu para adiantar'); return; }   /* o ganho do tempo fora é medido na carga pelo lastSeen do save de teste */
+      window.__noSave = true; location.reload(); return; }
+    else if (k === 'evnow'){ let up = null; try { up = Sys.schedule.upcoming(S, Sys.host, 1)[0] || null; } catch (e) {} if (!up){ toast('Sem evento na agenda'); return; }
+      clockSet(CLK.off + up.msToStart + 1000); if (typeof evhTick === 'function'){ try { evhTick(); } catch (e) {} } toast(up.name + ': aberto agora'); }
+    else if (k === 'evreal'){ clockSet(0); if (typeof evhTick === 'function'){ try { evhTick(); } catch (e) {} } toast('Relógio real'); }
+    statsChanged(); if (typeof fbLayout === 'function') fbLayout(); paint(); return; }
   if (k.indexOf('lv') === 0){ const n = +k.slice(2), o = Sys.level.ensure(S); o.lvl = Math.max(o.lvl | 0, n); o.xp = 0;
     for (const s of SLOTS7){ const it = S.eq[s] != null ? itemOf(S.eq[s]) : null; if (it) it.lvl = Math.max(it.lvl | 0, n); }   // FC coerente: os itens equipados sobem junto
     S.gold += 200000; toast('Nível ' + n + '. Itens equipados no nível ' + n); if (typeof petLevel === 'function') petLevel(false); }   /* o atalho pula o caminho normal de subir de nível: chama aqui o ovo do nível 20 */
@@ -176,10 +283,21 @@ Screens.register('artprev', { title: 'Teste',
   render(el){ if (document.getElementById('apv')) return; el.innerHTML = '<div id="apv" style="padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:Nunito,system-ui,sans-serif"></div>'; document.getElementById('apv').addEventListener('click', onClick); paint(); },
   onOpen(){ UI.open = null; }, onClose(){ freeLayers(); UI.open = null; } });
 keysBoot();   /* Modo dono: reaplica as chaves do voto guardadas no save de teste */
+/* Engenheiro 11: partida do Modo dono (nada disto existe fora dele) */
+if (ownerOk()){
+  try { Object.defineProperty(window, 'OWNER_INFINITE', { configurable: true, get: infOn }); } catch (e) {}   /* true = recursos infinitos ligados (para as telas e a compra simulada) */
+  if (typeof window.bagMax === 'function'){ const bm0 = window.bagMax;   /* mochila: só em memória; js/vipauto.js não é editado */
+    window.bagMax = function(S0){ const base = bm0(S0); try { if (S0 && S0 !== S) return base; if (infOn()) return Math.max(base, 9999); return base + S.inv.filter(i => i && i.origin === 'owner').length; } catch (e) { return base; } }; }
+  try { const o = Sys.schedule.ensure(S); if (o.seen > Date.now() + 300000) o.seen = 0; } catch (e) {}   /* sobra do relógio de teste de uma sessão anterior: solta a trava */
+  setInterval(() => { try { refill(); } catch (e) {} }, 1000);   /* reabastece 1 vez por segundo (nada por quadro); desligado, o refill sai na 1ª linha */
+  window.ownerAct = ownerAct; window.ownerRefill = refill;   /* para o teste sem navegador (test/e2e/owner_all.js) */
+}
 /* item do MENU, fora da regra de nível (sem entrada em FB_UNLOCK) */
 if (typeof FB_DROP !== 'undefined') FB_DROP.push({ id: 'artprev', icon: 'settings', label: 'Teste', act: 'soon:artprev', tag: OWNER_MODE ? 'Dono' : 'Arte' });
 /* selo fixo "MODO DONO" no topo, o tempo todo */
-if (OWNER_MODE){ const s = document.createElement('div'); s.id = 'ownertag'; s.textContent = 'MODO DONO'; s.setAttribute('role', 'status');
-  s.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 2px);transform:translateX(-50%);z-index:99;padding:1px 10px;border-radius:0 0 10px 10px;background:#ffc94a;color:#2a1403;font:900 10.5px Nunito,system-ui,sans-serif;letter-spacing:.06em;pointer-events:none';
+/* Engenheiro 11 (QA R3): se o app fechar à força dentro do Modo dono, a próxima abertura volta nele. O selo ficou maior e diz que é o jogo de teste;
+   o caminho de saída é MENU > Teste > "Sair do modo dono" (primeiro botão da tela). O selo segue sem toque (pointer-events:none) para não cobrir o topo. */
+if (OWNER_MODE){ const s = document.createElement('div'); s.id = 'ownertag'; s.textContent = 'MODO DONO · JOGO DE TESTE'; s.setAttribute('role', 'status'); s.setAttribute('aria-label', 'Modo dono ligado: este é o jogo de teste. Para sair: Menu, Teste, Sair do modo dono');
+  s.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 2px);transform:translateX(-50%);z-index:99;padding:2px 12px;border-radius:0 0 10px 10px;background:#ffc94a;color:#2a1403;font:900 12px Nunito,system-ui,sans-serif;letter-spacing:.05em;white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.45)';
   document.body.appendChild(s); }
 })();
