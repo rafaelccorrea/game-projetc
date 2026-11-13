@@ -105,6 +105,10 @@ do resumo são lidos de caminhos fixos do S, combinados com a fps-c9 em `summary
   (a nova versão gravada: o cliente passa a usá-la como `baseVersion`). A conta entra numa
   fila de revisão; ranking e arena ignoram a conta marcada até a revisão. O jogador não perde nada por falso positivo.
 - O servidor não recalcula o jogo inteiro. O que é autoritativo de verdade (ranking, arena, compras, eventos) roda no servidor (§4, §7).
+- **Implementado (fps-server, 13/11):**
+  - Tabela `limits_curve` = `docs/limits_curve.json` da Sistemas (VIP 10 ativo, dias 0-400, `tools/sim-paredes.js --limits`); o servidor guarda uma cópia em `fps-server/data/` e regrava a tabela na subida quando muda. Vale a linha do **fim** do dia de conta em curso, com +20%. `maxGemsTotal` null = 💎 sem teto por dia.
+  - Ritmo entre dois saves (sem depender da tabela): fases 1-90 até 2 por minuto real +10 (`stage_jump`); fases sem fim até 3 por dia +2 (`stage_post_jump`); fase > 90 com conta de menos de 60 dias (`stage_too_early`); FC acima de 4× a anterior +5 000 em menos de 1 h (`fc_jump`). O salto é medido contra a MAIOR fase já guardada (`summary.stageMax`, que o servidor mantém): voltar a uma fase antiga e retornar não conta.
+  - `summary.stage` = `S.stage` do jogo (fase 1..N, a mesma contagem do `fcNeed`).
 
 ## 4. ARENA E RANKING — baseadas no provider da fps-e2 (ponto 2)
 Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do servidor.
@@ -320,3 +324,13 @@ Tudo do lado do jogo já existe em `js/sys/`, atrás de chave (`DATA.on=false`),
 4. **Dicas de FC — `js/sys/advice.js` (`Sys.advice`). Sem servidor.** Quando a tela da dificuldade nova existir: `Sys.advice(S, Sys.host, {need})`. O `need` vem da fase/chefe (hoje o REC_FC da era). Ícone = id curto (`equip`, `forge`, `fuse`, `pet`, `mount`, `title`, `level`); a tela troca por imagem. `tab` → `host.goTab`.
 - **Chaves no servidor** (com o dono, em `/etc/eonbound/server.env`): `GUILD_ON`, `ARENA_ON`, `TOURNEY_ON`, `AUCTION_ON`, `ADMIN_ON` (painel e aviso para todos). Tudo desligado hoje.
 - **Deploy:** `bash deploy/release.sh` no fps-server, assim que o SSH voltar (testes, deploy, migrações, versão no ar, smoke real, CORS).
+
+## 13. RANKING DAS FASES SEM FIM (pós-eras) — IMPLEMENTADO atrás de `POSERAS_ON` (fps-server; regras: docs/PROPOSTA_POS_ERAS.md)
+Combinado com a Sistemas (13/11). Desligado até o dono aprovar o pós-eras (`balance.json posEras.on`). Sem `POSERAS_ON=1`: 404.
+- **Quem entra:** personagem com fase > 90, no seu servidor (realm). Vale a fase MAIS ALTA alcançada até o fim da semana; empate = quem chegou primeiro.
+- **De onde vem a fase:** do resumo de cada save LIMPO (`PUT /save` sem flag). O horário é o DO SERVIDOR do primeiro save com aquela fase. Save marcado (§3.4) não anota; conta excluída, banida ou com `save_review`/`cheater` sai da lista. O jogo não manda nada novo.
+- **Semana:** segunda 00:00 (Brasília) a segunda 00:00, igual à arena.
+- `GET /v1/poseras/ranking?week=AAAA-MM-DD` (padrão: a atual, parcial) → `{week, realm, closesAt, closed, minStage:91, prizes:[{upTo:1,gems:50},{upTo:10,gems:30},{upTo:100,gems:15}], me:{pos, stage, reachedAt, gems}|null, list:[{pos, id, name, stage, reachedAt, seal}]}` (top 100; `me.gems` só na semana fechada; `name` = nome do personagem no save).
+- `GET /v1/poseras/me` → `{stage, minStage, seal:{week}|null}` (`stage` = maior fase anotada; 0 se nunca passou da 90).
+- **Prêmio** (fechamento a cada 30 min, idempotente): 1º 50 💎, 2º-10º 30, 11º-100º 15, pelo correio (`att:{gems}`, `source:'poseras'`).
+- **Selo do 1º:** só visual e só no servidor: `seal:true` na linha do campeão e `seal:{week}` no `/me` dele, durante a semana seguinte. Nenhuma chave nova no save nem no `Sys.loot.grantBundle`.
