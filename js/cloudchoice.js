@@ -20,7 +20,7 @@ const cAvatar=sm=>sm&&sm.avatar?sm.avatar:((sm&&sm.hero)==='kaia'?'kaia_phase0':
 const C={el:null,info:null,pick:null,resolve:null,busy:false};
 function inject(){ if(document.getElementById('cc_css')) return; const st=document.createElement('style'); st.id='cc_css'; st.textContent=`
 #cc_root{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(8,6,4,.88);padding:14px;box-sizing:border-box;font-family:inherit}
-#cc_root .cc-box{width:100%;max-width:420px;max-height:100%;overflow-y:auto;border-radius:20px;background:#1d1611;border:2px solid #ffc94a;box-shadow:0 0 24px rgba(255,201,74,.25);padding:16px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;color:#f6ecdf;animation:cc-in .22s ease-out}
+#cc_root .cc-box{width:100%;max-width:420px;max-height:100%;overflow-y:auto;overflow-x:hidden;border-radius:20px;background:#1d1611;border:2px solid #ffc94a;box-shadow:0 0 24px rgba(255,201,74,.25);padding:16px 14px;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;color:#f6ecdf;animation:cc-in .22s ease-out}
 #cc_root .cc-cards{display:flex;gap:10px}
 #cc_root .cc-card{flex:1;min-width:0;border-radius:16px;border:2px solid #4a3a2b;background:#16110d;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;position:relative;box-sizing:border-box}
 #cc_root .cc-card.rec{border-color:#5fd068;box-shadow:0 0 14px rgba(95,208,104,.35)}
