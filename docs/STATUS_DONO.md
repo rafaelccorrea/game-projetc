@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h30 · DIFICULDADE (sua decisão):** o jogo não pode deixar passar fácil. A Sistemas está fazendo a proposta: FC recomendada por fase e chefe (abaixo dela fica muito difícil), paredes de 1 a 3 dias no chefe de cada era, tabela de onde vem o FC (raridade, Forja, pet, montaria, coleção), aviso do que fazer quando travar, simulação de 180 dias com paredes. Te mostro antes de ligar
+
 - **00h10 · Código do servidor no GitHub privado** (eonbound-server, 38 commits, sem nenhuma senha ou chave dentro; conferido que é privado). Páginas de privacidade e excluir conta atualizadas no ar (rascunho). A exclusão agora vale para a conta em todos os servidores
 
 - **23h55 · Commit e push de tudo (sua ordem):** todas as sessões avisadas; o que estava só no disco era a parte do Engenheiro (convidado só no JOGAR) e a auditoria do QA, que estão subindo agora. **Fênix Gigante:** Kael montado pronto (f597b4b); a Kaia está paga e pronta no Higgsfield, só falta baixar. **O conector do Higgsfield caiu:** para a Arte continuar, digite /mcp, escolha higgsfield e entre de novo
@@ -440,7 +442,7 @@ Legenda: `[x]` pronto no jogo · `[~]` em produção ou esperando voto/arte · `
 
 ## C. Regras que você decidiu (resumo)
 
-Nada parado; ninguém flutua; arma na mão direita (sempre a equipada) · Só automático · Dano sai dos atributos · Ultimate pela família da arma (a raridade mais alta ganha animação nova), a era muda só cenário e drops · FC que sobe/desce, em escala grande · Pet SEMPRE NA FRENTE; pet, montaria, asa e aura nunca somem · Tudo que muda no personagem aparece na hora · Nunca rolagem para o lado · O herói não cresce; toda skin usa o mesmo corpo; sem combinação de peças; nunca versão adulta; o jogador nunca precisa tirar a asa por causa da skin · Tudo novo tem evolução · Visual maduro, nada infantil · NUNCA sensualizar · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP · Chat só com frases prontas · Leilão em ouro, 18+ · Um mundo por servidor (S1 Nova Era, S2...) · Excluir conta apaga tudo
+Nada parado; ninguém flutua; arma na mão direita (sempre a equipada) · Só automático · Dano sai dos atributos · Ultimate pela família da arma (a raridade mais alta ganha animação nova), a era muda só cenário e drops · FC que sobe/desce, em escala grande · Pet SEMPRE NA FRENTE; pet, montaria, asa e aura nunca somem · Tudo que muda no personagem aparece na hora · Nunca rolagem para o lado · O herói não cresce; toda skin usa o mesmo corpo; sem combinação de peças; nunca versão adulta; o jogador nunca precisa tirar a asa por causa da skin · Tudo novo tem evolução · Visual maduro, nada infantil · NUNCA sensualizar · Nunca sorteio pago; diamante comprado não passa entre contas · Dificuldade força evolução: abaixo da FC recomendada fica muito difícil, paredes no chefe de cada era · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP · Chat só com frases prontas · Leilão em ouro, 18+ · Um mundo por servidor (S1 Nova Era, S2...) · Excluir conta apaga tudo
 
 ## D. Versões
 
