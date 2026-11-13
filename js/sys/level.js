@@ -15,7 +15,8 @@ const DATA={
   // XP por fonte, × (1 + era). Provisório. O XP de ABATE (orbes) é do Sys.loot (fps-30, Sys.loot.DATA.xp, sobe com era e fase),
   // que entrega por addXp: por isso não há kill/boss/eraBoss aqui (ordem do dono via PO).
   // v6: instance 25 (× 1 / 1,6 / 2,5 pela dificuldade), mission 30, dailyBonus 50 (todas as missões do dia), offline 20/h
-  xp:{instance:25, mission:30, dailyBonus:50, offlinePerHour:20, offlineCapHours:8, eraScale:1},
+  xp:{instance:25, mission:30, dailyBonus:50, offlinePerHour:20, offlineCapHours:8,   // XP offline: 8 h para TODOS (o VIP de conveniência aumenta o teto do ouro/itens/pedras/ração, não do XP: o calendário está calibrado)
+  eraScale:1},
   // FONTE ÚNICA da liberação por nível (PO, 2026-11-12; reports/liberacao-por-nivel.md). As ids são as do MENU (FB_UNLOCK em js/fullbattle.js),
   // que passa a ler daqui. Chaves dos módulos: 'pet' = portão do Sys.pet (1; com o v20 ligado quem manda é Sys.pet.DATA.v20.unlockLevel = 20)
   // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).

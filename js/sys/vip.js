@@ -36,10 +36,10 @@ const DATA={
   conv:[
     {id:'autoCollect', name:'Coleta automática (baús do dia, missões feitas e correio sem item)', v:1, free:'toca um a um'},
     {id:'bag',         name:'Espaços extras na mochila', v:1, val:[0,20,20,20,20,20,40,40,40,40,40], free:'60 espaços'},
-    {id:'offlineH',    name:'Horas máximas de ganho offline', v:1, val:[8,10,10,10,10,12,12,12,12,12,14], free:'8 h'},
+    {id:'offlineH',    name:'Horas máximas de ouro, itens, pedras e ração offline (o XP offline fica em 8 h)', v:1, val:[8,10,10,10,10,12,12,12,12,12,14], free:'8 h'},
     {id:'autoFuse',    name:'Fusão automática (junta 3 iguais sozinha; nunca o equipado nem item de 5 estrelas)', v:2, free:'fusão manual na Forja'},
-    {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:2, free:'aviso "item melhor" + 1 toque'},
-    {id:'autoSell',    name:'Desmontar sozinho itens fracos (Básico/Raro, o jogador escolhe)', v:3, free:'"desmontar todos" manual'},
+    {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:0, free:'todos (dono 13/11: é do grátis, como sempre foi)'},
+    {id:'autoSell',    name:'Desmontar sozinho o que sobra, virando ouro (Básico/Raro, o jogador escolhe; nunca o equipado)', v:2, free:'"desmontar todos" manual'},   // dono 13/11: no lugar do equipar sozinho (que voltou a ser de todos)
     {id:'skipBoss',    name:'Pular chefe já vencido (resultado na hora, mesmo prêmio)', v:3, free:'luta inteira (até x2/x4)'},
     {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'3 por dia'},
     {id:'autoForge',   name:'Forja automática até o nível escolhido (mesma chance e custo; para no ouro ou nas pedras)', v:4, free:'1 toque por tentativa'},

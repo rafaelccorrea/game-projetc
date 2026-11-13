@@ -83,8 +83,9 @@ function onKill(S,host,enemy){
   return rngOf(host)()<D.commonChance?addStones(S,D.common,host):0;
 }
 const vipOff=S=>{ const V=root.Sys&&root.Sys.vip; let p=null; try{ p=V&&V.perks?V.perks(S):null; }catch(e){ p=null; } return Math.max(1,num(p&&p.offlineMult,1)); };   // VIP: offline em dobro
+const offH=(S,base)=>{ const V=root.Sys&&root.Sys.vip; try{ const c=V&&V.conv?V.conv(S,'offlineH'):null; return Math.max(base,c?+c.value||base:base); }catch(e){ return base; } };   // VIP de conveniência: teto do offline 10/12/14 h (XP fica em 8 h: o calendário)
 function onOffline(S,host,seconds){
-  const h=clamp(num(seconds,0),0,DATA.offline.capHours*3600)/3600;
+  const h=clamp(num(seconds,0),0,offH(S,DATA.offline.capHours)*3600)/3600;
   return addStones(S,Math.floor(h*DATA.offline.perHour*vipOff(S)),host);
 }
 
