@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13h50 · Checklist atualizado.** Carregamento novo ligado (bloqueio resolvido). APK: falta só conferir e ligar as 9 ultimates Lendárias e as 7 asas. Skins animadas: 3 de 10. Pets: 2 de 9. Créditos ~459 (vai precisar de mais para terminar tudo)
+
 - **13h40 · Bloqueio do APK RESOLVIDO:** o carregamento novo passou nos 4 testes (normal 6 s, internet lenta 9 s, muito lenta 15 s, segundo plano) e está ligado. O próximo APK sai assim que as 9 ultimates Lendárias e as 7 asas forem conferidas e ligadas (falta pouco). Leva: carregamento novo, fundo da abertura, 60 quadros por segundo, eventos na batalha, Kaia montada nas 6, vantagens do VIP, ícone A, logo animado, sem Facebook
 - **13h40 · Skins animadas:** Arlequina e Ninja da Kaia prontas (na página para você ver); Demoníaca em produção. Créditos ~469
 
@@ -292,12 +294,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 **Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
 - [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
-- [ ] Ainda para votar: Fusão (prints na página) · Coleção (no Modo dono) · Serafim refeito com 6 asas (2 versões) · Lobo das Sombras animado (padrão dos pets novos) · tela de carregamento nova com o fundo da abertura
+- [ ] Ainda para votar: Fusão · Coleção (no Modo dono) · Serafim refeito (2 versões) · Lobo das Sombras animado · tela de carregamento nova · skins animadas (Arlequina, Ninja da Kaia, Demônio do Kael) · poses do arco e do bumerangue
 - [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md; grátis 3 na Arena e 3 na Torre) · como ganhar cada skin · VIP pelo total gasto
 - [x] Números das guildas online aprovados
 
 **Créditos Higgsfield:**
-- [ ] Saldo ~527. Cobre o resto das skins (9 × ~38) e parte dos pets (7 × ~44); as 10 montarias novas montadas (~280) vão precisar de mais crédito
+- [ ] Saldo ~459. Faltam 7 skins (~280) e 7 pets (~310): ~590 no total, mais ~280 das 10 montarias novas montadas. Vai precisar de mais crédito (eu aviso antes de acabar)
 
 **Celular:**
 - [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -330,7 +332,7 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Herói e skins**
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
-- [~] Skins novas no corpo padrão APROVADAS e sendo animadas (Arlequina da Kaia PRONTA; Ninja da Kaia em produção): Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
+- [~] Skins novas no corpo padrão APROVADAS e sendo animadas (PRONTAS: Arlequina e Ninja da Kaia, Demônio do Kael; em produção: Anjo do Kael e Demoníaca da Kaia; faltam 5): Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
 - [x] Kaia montada nas 6 montarias, no jogo (conferida pelo QA)
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
