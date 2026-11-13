@@ -281,7 +281,7 @@
           drawLoading();
           if (self.firstPaintMs == null) self.firstPaintMs = Math.round(performance.now() - t0);
         }
-        function frame(now) { var dt = Math.min(0.05, (now - last) / 1000); last = now; if (!frozen) { T += dt; if (running) { scroll += M.runSpeed * dt; runT += dt; } stepSmoke(dt); stepPuffs(dt); } else stepSmoke(0.016); draw(); self.fps = dt > 0 ? 1 / dt : 0; raf = requestAnimationFrame(frame); }
+        function frame(now) { if (self.maxFps && now - last < 1000 / self.maxFps - 2) { raf = requestAnimationFrame(frame); return; } var dt = Math.min(0.05, (now - last) / 1000); last = now; if (!frozen) { T += dt; if (running) { scroll += M.runSpeed * dt; runT += dt; } stepSmoke(dt); stepPuffs(dt); } else stepSmoke(0.016); draw(); self.fps = dt > 0 ? 1 / dt : 0; raf = requestAnimationFrame(frame); }
         self = {
           meta: M, fps: 0, loaded: false, progress: 0, firstPaintMs: null, readyMs: null, ready: null,
           start: function () { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } return self; },
