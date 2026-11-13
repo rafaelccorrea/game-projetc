@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **01h20 · Sistemas:** inimigos mais fortes por era LIGADOS (calendário de 6 meses confirmado). Testes automáticos da batalha real: Troca de era OK; Vitória/Derrota com chefe OK; Instância funciona, mas com 2 defeitos já com o engenheiro (o resultado não aparece; ao morrer mostra a mensagem da batalha normal)
+
 - **01h10 · QA com fila nova (sem pausa):** aba Aparência no Equipamento (saiu da fila do engenheiro para andar em paralelo) → ligar o Mapa das Eras à curva das 100 fases → conferir o Leilão → conferir no navegador cada tela que o engenheiro ligar (Instâncias, Vitória/Derrota, missão guia, Correio, Oferta)
 
 - **01h · Seus votos:**
@@ -165,7 +167,8 @@ Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo,
 - [x] Arena · Eventos (loja, missões, Trilha e Chefe) · Torneio do Poder · Montarias
 - [x] Telas de entrada: Título B · Login (convidado; Google "em breve") · Prólogo com o avô · Criação · Nome · Bem-vindo de volta
 - [x] Menu por nível com "NOVO!" e os 7 ícones novos
-- [~] Correio (carta de boas-vindas entrando) · Instâncias (luta em conferência) · Vitória/Derrota com chefe real · missão guia na batalha
+- [~] Correio (carta de boas-vindas entrando) · Instâncias (2 defeitos sendo corrigidos) · missão guia na batalha
+- [x] Troca de era real e Vitória/Derrota com chefe real (testadas pelo laço da batalha)
 - [~] Mapa das Eras (escrito; o QA liga à curva das 100 fases × 4 dificuldades)
 - [~] Aba Aparência no Equipamento (QA fazendo agora)
 - [~] Leilão (só ouro, preço fixo, 18+; QA conferindo) · Oferta de 1ª compra (pronta; por enquanto só no Modo dono)
