@@ -65,6 +65,7 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 18:2x (Brasília) | +1 convidado "Viajante8359" (S1) | `smoke-real.mjs` (8ª execução, deploy dd1805b) | idem |
 | 13/11/2026 18:2x (Brasília) | +1 convidado "Viajante3322" (S1) | `release.sh --ligar` (conferência das chaves) | idem |
 | 13/11/2026 18:5x (Brasília) | convidados "Viajante6053" (arena-A), "Viajante3820" (arena-B), "Viajante2902" (guilda-G, líder da guilda "Teste E2E 7SZB") | `fps-server/scripts/e2e-online.ts` (força-tarefa P3: luta real, guilda, torneio) | REUSADOS em toda execução (não criam conta nova); apagar com `--apagar` no fim do teste ou na limpeza; a guilda some quando o líder sai |
+| 13/11/2026 19:2x (Brasília) | +1 convidado "Viajante1184" (S1) | `smoke-real.mjs` (9ª execução, deploy 24e5906) | idem às outras execuções |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
 
