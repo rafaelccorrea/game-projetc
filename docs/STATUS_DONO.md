@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **12h40 · Checklist atualizado.** O BLOQUEIO do APK é o carregamento: anda bem com internet lenta, mas trava quando o app vai para segundo plano; o engenheiro parou o resto para corrigir. Servidor: guildas online completas (desligadas). Arte: pets e skins em produção, Kaia montada nas 6 montarias pronta
+
 - **12h15 · Sua decisão:** grátis 3 entradas por dia na Arena e 3 na Torre; VIP soma (Arena 5 no VIP 4 e 6 no VIP 8; Torre 4 no VIP 5 e 5 no VIP 10). Vantagens do VIP LIGADAS nos módulos; as automações nascem desligadas e nunca mexem em item equipado, travado ou de 5 estrelas
 - **12h15 · Guildas online:** chefe semanal, loja de Brasões, estandartes, missões semanais e ranking prontos no servidor (desligados). Sistemas monta a tabela de números para você aprovar
 - **12h15 · Arte:** Kaia montada nas 6 montarias pronta; Lobo das Sombras ligado no jogo
@@ -281,8 +283,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 **Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
 - [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
-- [ ] Ainda para votar: Fusão (prints na página) · Coleção (no Modo dono) · Serafim refeito com 6 asas (2 versões) · Lobo das Sombras animado (padrão dos pets novos)
-- [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md) · como ganhar cada skin · VIP pelo total gasto
+- [ ] Ainda para votar: Fusão (prints na página) · Coleção (no Modo dono) · Serafim refeito com 6 asas (2 versões) · Lobo das Sombras animado (padrão dos pets novos) · tela de carregamento nova com o fundo da abertura
+- [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md; grátis 3 na Arena e 3 na Torre) · como ganhar cada skin · VIP pelo total gasto
+- [ ] Em breve para votar: números das guildas online (chefe semanal, loja de Brasões, estandartes, missões)
 
 **Créditos Higgsfield:**
 - [ ] Saldo ~713 (gastos: ultimates do arco/bumerangue, Kaia montada, 1º pet). Cobre o resto das skins e dos pets; para as 10 montarias novas montadas faltam ~280 (a Arte avisa quando parar)
@@ -319,7 +322,7 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
 - [~] Skins novas no corpo padrão APROVADAS e sendo animadas: Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
-- [x] Kaia montada no pônei e no cavalo (no jogo) · [~] tigre, lobo, grifo e serpe em produção
+- [x] Kaia montada: pônei e cavalo no jogo; tigre, lobo, grifo e serpe com arte pronta, sendo ligados
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
 **Armas e poder**
@@ -338,8 +341,8 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Online e loja**
 - [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
 - [~] Tamanho do app: plano pronto (base ~148 MB + pacotes por era) · [x] Facebook e permissões de publicidade fora · [x] ícone A e abertura no app
-- [x] Logo animado na tela de título · [x] carregamento de verdade (falta corrigir o aviso falso com internet lenta, bloqueio do APK) · [~] 60 FPS escrito, medir no S24
-- [~] Vantagens do VIP aprovadas, sendo ligadas nas telas
+- [x] Logo animado na tela de título · [~] carregamento de verdade: corrigido para internet lenta, mas TRAVA quando o app vai para segundo plano (em correção; BLOQUEIA o APK) · [~] 60 FPS escrito, medir no S24
+- [~] Vantagens do VIP LIGADAS nos módulos (Arena, Torre, Chefe Mundial, eventos, XP do Passe); mochila, offline e automações sendo ligadas nas telas
 - [ ] App assinado, teste interno, ficha da loja
 
 ## C. Regras que você decidiu (resumo)
