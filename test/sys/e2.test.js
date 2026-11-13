@@ -752,17 +752,16 @@ t('aparência: herói Kael/Kaia (S.hero) no corpo PADRÃO em todo nível; a past
     L.setV9(true); PU.DATA.on=true; const S={hero:'kaia'}; L.ensure(S).lvl=80; L.ensure(S).stg=3; PU.ensure(S).stg=3;
     assert.strictEqual(PU.current(S),0); assert.strictEqual(PU.pending(S,makeHost()).ready,false); assert.strictEqual(PU.catchUp(S,makeHost()).ok,false); assert.strictEqual(PU.evolve(S,makeHost()).ok,false);
     assert.strictEqual(A.sheets(S,makeHost()).dir,'assets/anim/hyb/kaia/'); assert.strictEqual(PU.ensure(S).stg,3,'nada apagado do save');
-    // skins fixas: não obtidas pelo jogador (fixedGrant=false), Modo dono libera; uma por herói; morte, avatar e escala pela skin; bônus no padrão do Sys.skin
-    const list=A.fixedSkins(S,makeHost()); assert.deepStrictEqual(list.map(x=>x.name),['Kael Cavaleiro','Kael Guerreiro Lendário','Kaia Cavaleira','Kaia Guerreira Lendária']);
-    assert.ok(list.every(x=>!x.owned&&x.soon&&x.how)); assert.strictEqual(A.grantFixed(S,'kaia_knight').reason,'off');
-    assert.ok(A.grantFixed(S,'kaia_knight',{owner:true}).ok); assert.ok(A.grantFixed(S,'kael_legend',{owner:true}).ok);
-    assert.strictEqual(A.equipFixed(S,'kael_legend').reason,'hero'); assert.ok(A.equipFixed(S,'kaia_knight').ok);
-    const die=A.sheetFor(S,makeHost(),'die'); assert.strictEqual(die.body,'assets/anim/hyb/kaia_phase2/kaia_die_body'); assert.strictEqual(die.scale,1.25); assert.strictEqual(die.mountArt,false);
-    assert.strictEqual(A.avatarKey(S,makeHost()),'kaia_phase2'); assert.strictEqual(K.bonus(S).atkPct,K.DATA.equippedPct[3]+2*K.DATA.collectionPer);
-    assert.ok(A.equipFixed(S,null).ok); assert.strictEqual(A.avatarKey(S,makeHost()),'kaia_phase0'); assert.strictEqual(K.bonus(S).atkPct,2*K.DATA.collectionPer);
-    const root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/hyb'))) for(const k of A.FIXED.concat([{hero:'kael'},{hero:'kaia'}])){ const T={hero:k.hero}; if(k.id){ A.grantFixed(T,k.id,{owner:true}); A.equipFixed(T,k.id); }
-      for(const st of A.STATES){ const d=A.sheetFor(T,makeHost(),st); assert.ok(fs.existsSync(path.join(root,d.body+'.json')),'falta '+d.body+'.json'); }
-      if(k.avatar) assert.ok(fs.existsSync(path.join(root,'assets/hero/avatar/'+k.avatar+'.png'))); }
+    // DONO (12/11): as 4 skins ADULTAS saem (off, não apagadas): vitrine vazia, ninguém obtém nem equipa (nem o Modo dono); save que tinha uma volta ao padrão sem bônus
+    assert.deepStrictEqual(A.fixedSkins(S,makeHost()),[]); for(const id of ['kael_knight','kael_legend','kaia_knight','kaia_legend']){ assert.ok(A.FIXED.some(k=>k.id===id&&k.off===true),'não apagada: '+id); assert.strictEqual(A.grantFixed(S,id,{owner:true}).reason,'retired'); assert.strictEqual(A.equipFixed(S,id).reason,'retired'); }
+    S.look=S.look||{}; S.look.fixed={owned:['kaia_knight','kael_legend'],eq:{kaia:'kaia_knight'}}; const d0k=A.sheetFor(S,makeHost(),'die'); assert.strictEqual(d0k.body,'assets/anim/hyb/kaia/kaia_die_body'); assert.strictEqual(d0k.scale,1);
+    assert.strictEqual(A.avatarKey(S,makeHost()),'kaia_phase0'); assert.strictEqual(K.bonus(S).atkPct,0,'sem bônus nem coleção das 4'); assert.deepStrictEqual(S.look.fixed.owned,['kaia_knight','kael_legend'],'nada apagado');
+    // skin NOVA (gancho addFixed): corpo padrão, só troca a folha; uma por herói; fonte 'offer' entrega com as vendas fechadas; escala ÚNICA
+    assert.ok(A.addFixed({id:'t_kaia',name:'Teste Kaia',hero:'kaia',dir:'kaia',r:3,avatar:'kaia_phase0',sources:['offer']})); assert.strictEqual(A.addFixed({id:'t_kaia',name:'x'}),false);
+    assert.strictEqual(A.grantFixed(S,'t_kaia').reason,'off'); assert.ok(A.grantFixed(S,'t_kaia',{source:'offer'}).ok); S.hero='kael'; assert.strictEqual(A.equipFixed(S,'t_kaia').reason,'hero'); S.hero='kaia';
+    assert.ok(A.equipFixed(S,'t_kaia').ok); const dn=A.sheetFor(S,makeHost(),'idle'); assert.strictEqual(dn.skin,'t_kaia'); assert.strictEqual(dn.scale,1); assert.strictEqual(dn.mountArt,false); assert.strictEqual(A.fixedSkins(S,makeHost()).length,1);
+    assert.strictEqual(K.bonus(S).atkPct,K.DATA.equippedPct[3]+K.DATA.collectionPer); assert.ok(A.equipFixed(S,null).ok); assert.strictEqual(K.bonus(S).atkPct,K.DATA.collectionPer);
+    const root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/hyb'))) for(const h of ['kael','kaia']){ const T={hero:h}; for(const st of A.STATES){ const d=A.sheetFor(T,makeHost(),st); assert.ok(fs.existsSync(path.join(root,d.body+'.json')),'falta '+d.body+'.json'); } assert.ok(fs.existsSync(path.join(root,'assets/hero/avatar/'+h+'_phase0.png'))); }
   } finally { L.setV9(v9); PU.DATA.on=pon; }
 });
 

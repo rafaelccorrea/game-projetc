@@ -24,12 +24,12 @@ t('needed/plan: herói e fase, era atual + próxima, pistola, montaria e pet equ
   A.DATA.on=true; PU.DATA.on=true; M.DATA.on=true; globalThis.Sys.mount=M; try{
     const S={hero:'kaia',inv:[{slot:'weapon',e:3,r:2}]}, h=makeHost({eraMax:3}); L.ensure(S).lvl=30; PU.evolve(S,h); M.add(S,h,'wolf'); const AP=require('../../js/sys/appearance.js'); globalThis.Sys.appearance=AP;
     assert.strictEqual(A.needed(S,h).phase,0,'sem crescimento: corpo padrão'); assert.ok(!A.needed(S,h).packs.includes('hero:kaia:1'),'não baixa a fase seguinte');
-    AP.grantFixed(S,'kaia_knight',{owner:true}); AP.equipFixed(S,'kaia_knight');   // skin fixa Kaia Cavaleira = pasta kaia_phase2
-    const nd=A.needed(S,h); assert.deepStrictEqual([nd.hero,nd.phase,nd.era],['kaia',2,3]);
-    for(const p of ['core','aura','hero:kaia:2','era:3','era:4','enemy:3','enemy:4','gun:3','mount:wolf']) assert.ok(nd.packs.includes(p),'falta '+p);
+    assert.strictEqual(AP.equipFixed(S,'kaia_knight').reason,'retired','skins adultas fora do jogo (dono)');
+    const nd=A.needed(S,h); assert.deepStrictEqual([nd.hero,nd.phase,nd.era],['kaia',0,3]);
+    for(const p of ['core','aura','hero:kaia:0','era:3','era:4','enemy:3','enemy:4','gun:3','mount:wolf']) assert.ok(nd.packs.includes(p),'falta '+p);
     assert.ok(!nd.packs.includes('hero:kael:0')&&!nd.packs.includes('era:5'));
     const pl=A.plan(S,h,['core','aura','era:0','era:1','enemy:0','enemy:1','hero:kael:0','hero:kaia:0','mount:pony']);
-    assert.ok(pl.fetch.includes('hero:kaia:2')&&pl.fetch.includes('mount:wolf')); assert.deepStrictEqual(pl.drop,['mount:pony'],'só sai o que não é do APK base nem é preciso'); assert.ok(pl.fetchBytes>0);
+    assert.ok(!pl.fetch.includes('hero:kaia:0')&&pl.fetch.includes('mount:wolf'),'a Kaia padrão já vem no APK base'); assert.deepStrictEqual(pl.drop,['mount:pony'],'só sai o que não é do APK base nem é preciso'); assert.ok(pl.fetchBytes>0);
   } finally { A.DATA.on=false; PU.DATA.on=false; M.DATA.on=false; delete globalThis.Sys.mount; A.setManifest(null); }
 });
 t('manifesto real (se gerado): APK base com os dois heróis < 150 MB e todo arquivo listado existe',()=>{

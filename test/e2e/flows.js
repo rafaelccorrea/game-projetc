@@ -226,18 +226,20 @@ async function flowPhases() {
   check('34→35: onLevelUp do jogo (' + lineOf(G, 'js/farm.js', /function onLevelUp/) + ') sem exceção', !lvErr, lvErr, true);
   check('34→35: o herói NÃO evolui (fase 0, pending vazio)', ev('Sys.phaseUp.current(S)') === 0 && ev('Sys.phaseUp.pending(S,Sys.host).ready') === false, 'fase ' + ev('Sys.phaseUp.current(S)'));
   check('34→35: Sys.appearance.layers iguais antes e depois', k0 === keys(), 'antes ' + k0 + ' | depois ' + keys());
-  /* (c) SKIN FIXA: não obtida pelo jogador; Modo dono libera; equipar troca a pasta, a morte, o avatar e a escala; um herói não usa a do outro */
-  const fx = ev(`(function(){ const A=Sys.appearance, list=A.fixedSkins(S,Sys.host), sk0=Sys.skin.bonus(S).atkPct; const g0=A.grantFixed(S,'kael_knight'); const g1=A.grantFixed(S,'kael_knight',{owner:true}); A.grantFixed(S,'kaia_legend',{owner:true});
-    const wrong=A.equipFixed(S,'kaia_legend'), e=A.equipFixed(S,'kael_knight'); statsChanged&&statsChanged(); refreshHero&&refreshHero();
-    return {names:list.map(x=>x.name), soon:list.every(x=>x.soon&&!x.owned&&x.how), g0:g0.reason, g1:g1.ok, wrong:wrong.reason, e:e.ok, idle:A.sheetFor(S,Sys.host,'idle'), die:A.sheetFor(S,Sys.host,'die').body,
-      card:A.sheetFor(S,Sys.host,'idle',{skin:'default'}).body, av:A.avatarKey(S,Sys.host), sk:Math.round((Sys.skin.bonus(S).atkPct-sk0)*1e6)/1e6}; })()`);
-  check('skins fixas na vitrine: ' + fx.names.join(', ') + ' (não obtidas, "como obter")', fx.names.length === 4 && fx.soon, JSON.stringify(fx.names));
-  check('jogador não obtém (off); Modo dono libera; skin da Kaia não equipa no Kael', fx.g0 === 'off' && fx.g1 && fx.wrong === 'hero' && fx.e, JSON.stringify({ g0: fx.g0, g1: fx.g1, wrong: fx.wrong, e: fx.e }));
-  check('Kael Cavaleiro: folhas phase2, morte phase2, escala ' + fx.idle.scale + ', avatar ' + fx.av + ', sem arte montada', /hyb\/phase2\/kael_idle_body$/.test(fx.idle.body) && /hyb\/phase2\/kael_die_body$/.test(fx.die) && fx.idle.scale > 1 && fx.av === 'kael_phase2' && fx.idle.mountArt === false, JSON.stringify(fx));
+  /* (c) SKINS (dono, 12/11): as 4 adultas SAÍRAM (off, não apagadas); toda skin nova usa o corpo PADRÃO (mesma pasta/âncoras/escala, só troca a folha) */
+  const fx = ev(`(function(){ const A=Sys.appearance, sk0=Sys.skin.bonus(S).atkPct; const list=A.fixedSkins(S,Sys.host);
+    const ret=['kael_knight','kael_legend','kaia_knight','kaia_legend'].map(id=>A.grantFixed(S,id,{owner:true}).reason+'/'+A.equipFixed(S,id).reason);
+    S.look.fixed={owned:['kael_knight'],eq:{kael:'kael_knight'}}; const old=A.sheetFor(S,Sys.host,'idle'), oldAv=A.avatarKey(S,Sys.host), oldSk=Math.round((Sys.skin.bonus(S).atkPct-sk0)*1e6)/1e6;
+    A.addFixed({id:'e2e_kael',name:'Teste Kael',hero:'kael',dir:'R',r:3,avatar:'kael_phase0',sources:['offer']}); const g=A.grantFixed(S,'e2e_kael',{source:'offer'}), e=A.equipFixed(S,'e2e_kael');
+    const idle=A.sheetFor(S,Sys.host,'idle'), card=A.sheetFor(S,Sys.host,'idle',{skin:'default'}).body;
+    return {n:list.length, ret, old:{body:old.body,scale:old.scale,skin:old.skin}, oldAv, oldSk, g:g.ok, e:e.ok, idle, card, vit:A.fixedSkins(S,Sys.host).map(x=>x.id)}; })()`);
+  check('vitrine sem as 4 adultas (fixedSkins = [])', fx.n === 0, 'fixedSkins: ' + fx.n);
+  check('as 4 adultas recusam obter e equipar, até no Modo dono (retired)', fx.ret.every(x => x === 'retired/retired'), JSON.stringify(fx.ret));
+  check('save que tinha Kael Cavaleiro equipado: corpo padrão R, escala 1, avatar kael_phase0, sem bônus (nada apagado)', /hyb\/R\/kael_idle_body$/.test(fx.old.body) && fx.old.scale === 1 && !fx.old.skin && fx.oldAv === 'kael_phase0' && fx.oldSk === 0 && ev('S.look.fixed.owned.includes("kael_knight")'), JSON.stringify(fx));
+  check('skin nova (gancho addFixed, fonte offer): entrega e equipa no corpo padrão, escala 1; aparece na vitrine', fx.g && fx.e && fx.idle.skin === 'e2e_kael' && fx.idle.scale === 1 && fx.vit.join() === 'e2e_kael', JSON.stringify({ g: fx.g, e: fx.e, idle: fx.idle, vit: fx.vit }));
   check('cartão da vitrine: sheetFor(..., {skin:"default"}) → corpo padrão ' + fx.card, /hyb\/R\/kael_idle_body$/.test(fx.card), fx.card);
-  check('bônus da skin fixa no Sys.skin (Mítico equipada +7 e 2 na coleção +1; o teto da coleção pode cortar) = +' + fx.sk + '%', fx.sk >= 7 && fx.sk <= 8, String(fx.sk));
   G.drawOn = true; const d = tapDraws(G); G.mode = 'strong'; ev(SAFE_START + ' 1'); await G.run(4);
-  check('batalha desenha o Kael Cavaleiro (hyb/phase2)', has(d, /hyb\/phase2\//), 'corpo desenhado: ' + (pick(d, /hyb\/(R|phase\d)\//) || '(nenhum)') + ': o jogo ainda escolhe a pasta pela fase (stage.js heroPhase), não pelo Sys.appearance.sheetFor', true);
+  check('batalha desenha o corpo padrão (hyb/R), nenhuma pasta adulta', has(d, /hyb\/R\//) && !has(d, /hyb\/(kaia_)?phase\d\//), 'corpo desenhado: ' + (pick(d, /hyb\/(R|phase\d|kaia[^/]*)\//) || '(nenhum)'), true);
   ev('Sys.appearance.equipFixed(S,null); 1');
   check('voltar ao padrão: sheetFor idle → R', /hyb\/R\//.test(ev("Sys.appearance.sheetFor(S,Sys.host,'idle').body")), ev("Sys.appearance.sheetFor(S,Sys.host,'idle').body"));
   noErr(G, 'skins fixas: nenhuma exceção no laço (com desenho)');

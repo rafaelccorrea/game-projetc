@@ -111,11 +111,15 @@ const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
    (substitui a da fase). mountArt:false = sem arte montada: montado usa o corpo PADRÃO até a Arte fazer. avatar = assets/hero/avatar/<avatar>.png.
    how = como se obtém (PROPOSTA ao dono, sem sorteio). DATA.fixedGrant=false: o jogador ainda não obtém (vitrine 'em breve'); Modo dono libera com {owner:true}. */
 DATA.fixedGrant=false;
+/* DECISÃO DO DONO (12/11, a mais nova): as 4 skins ADULTAS saem do jogo (off:true; não apagadas). Skins novas usam o corpo PADRÃO do garoto/menina:
+   cada uma é só uma folha alternativa com a MESMA estrutura, escala e âncoras — ESCALA ÚNICA para todas (DATA.skinScale). Skin off: não aparece na
+   vitrine, não se obtém (nem no Modo dono) e, se estava equipada num save, o herói volta ao padrão (continua na coleção, sem perda). */
+DATA.skinScale=1;
 const FIXED=[
-  {id:'kael_knight', name:'Kael Cavaleiro',          hero:'kael', dir:'phase2',      r:3, scale:1.25, avatar:'kael_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
-  {id:'kael_legend', name:'Kael Guerreiro Lendário', hero:'kael', dir:'phase3',      r:4, scale:1.30, avatar:'kael_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
-  {id:'kaia_knight', name:'Kaia Cavaleira',          hero:'kaia', dir:'kaia_phase2', r:3, scale:1.25, avatar:'kaia_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
-  {id:'kaia_legend', name:'Kaia Guerreira Lendária', hero:'kaia', dir:'kaia_phase3', r:4, scale:1.30, avatar:'kaia_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
+  {id:'kael_knight', off:true, name:'Kael Cavaleiro',          hero:'kael', dir:'phase2',      r:3, scale:1, avatar:'kael_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kael_legend', off:true, name:'Kael Guerreiro Lendário', hero:'kael', dir:'phase3',      r:4, scale:1, avatar:'kael_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
+  {id:'kaia_knight', off:true, name:'Kaia Cavaleira',          hero:'kaia', dir:'kaia_phase2', r:3, scale:1, avatar:'kaia_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kaia_legend', off:true, name:'Kaia Guerreira Lendária', hero:'kaia', dir:'kaia_phase3', r:4, scale:1, avatar:'kaia_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
 ];
 /* SKINS NOVAS NO TAMANHO DO GAROTO (dono, 12/11; 5 a escolher entre Demônio, Anjo, Paladino, Bobo da corte, Ninja, Pirata, Samurai, Ciborgue): mesmas
    regras das fixas, hero:'both' com dir POR HERÓI ({kael:'<pasta>', kaia:'<pasta>'}; herói sem pasta não equipa), scale 1, e sources = de onde a skin
@@ -126,25 +130,25 @@ const FX={}; for(const k of FIXED) FX[k.id]=k;
 const dirOf=(k,h)=>k?(k.dir&&typeof k.dir==='object'?k.dir[h]||null:k.dir):null;
 const fitsHero=(k,h)=>!!k&&(k.hero===h||(k.hero==='both'&&!!dirOf(k,h)));
 function addFixed(def){ if(!def||typeof def.id!=='string'||FX[def.id]||!def.name) return false;
-  const k=Object.assign({r:3,scale:1,mountArt:false,hero:'both',sources:[],how:''},def); FIXED.push(k); FX[k.id]=k; return true; }
+  const k=Object.assign({r:3,mountArt:false,hero:'both',sources:[],how:''},def); delete k.scale; FIXED.push(k); FX[k.id]=k; return true; }   // corpo padrão: mesma escala e âncoras; mountArt:true só quando a Arte fizer a folha montada da skin
 const DEFAULT_LOOK={kael:{dir:'R',scale:1,avatar:'kael_phase0'},kaia:{dir:'kaia',scale:1,avatar:'kaia_phase0'}};
 function fixedState(S){ const o=look(S), f=(o.fixed&&typeof o.fixed==='object')?o.fixed:{}, owned=Array.isArray(f.owned)?[...new Set(f.owned.filter(id=>FX[id]))]:[], eq={kael:null,kaia:null};
   for(const h of ['kael','kaia']){ const id=f.eq&&f.eq[h]; if(typeof id==='string'&&fitsHero(FX[id],h)&&owned.includes(id)) eq[h]=id; }
   o.fixed={owned,eq}; return o.fixed; }
-const fixedEquipped=S=>{ if(!S||typeof S!=='object') return null; const id=fixedState(S).eq[heroOf(S)]; return id?FX[id]:null; };
+const fixedEquipped=S=>{ if(!S||typeof S!=='object') return null; const id=fixedState(S).eq[heroOf(S)]; return id&&FX[id]&&FX[id].off!==true?FX[id]:null; };
 /* para a vitrine: [{id, name, hero, r, owned, equipped, available (do herói atual), how, bonus (texto '+7% ATK e Vida'), bonusPct:{equipped, collection}, soon, avatar, scale, mountArt}] */
 function fixedSkins(S,host){ const f=fixedState(S), h=heroOf(S), K=root.Sys&&root.Sys.skin&&root.Sys.skin.DATA;
-  return FIXED.map(k=>({id:k.id,name:k.name,hero:k.hero,r:k.r,owned:f.owned.includes(k.id),equipped:f.eq[k.hero]===k.id,available:fitsHero(k,h),how:k.how,
-    soon:DATA.fixedGrant!==true,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:k.scale,mountArt:k.mountArt})); }
+  return FIXED.filter(k=>k.off!==true).map(k=>({id:k.id,name:k.name,hero:k.hero,r:k.r,owned:f.owned.includes(k.id),equipped:f.eq[k.hero]===k.id,available:fitsHero(k,h),how:k.how,
+    soon:DATA.fixedGrant!==true,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
 /* obter: {ok, reason: id|owned|off}. Enquanto DATA.fixedGrant=false só o Modo dono ({owner:true}) libera. */
-function grantFixed(S,id,opt){ if(!FX[id]) return {ok:false,reason:'id'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
+function grantFixed(S,id,opt){ if(!FX[id]) return {ok:false,reason:'id'}; if(FX[id].off===true) return {ok:false,reason:'retired'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
   const f=fixedState(S); if(f.owned.includes(id)) return {ok:false,reason:'owned'}; f.owned.push(id); return {ok:true,id}; }
 /* equipar (null = voltar ao padrão do herói atual). Skin de um herói não equipa no outro. {ok, reason: id|hero|owned} */
 function equipFixed(S,id){ const f=fixedState(S), h=heroOf(S); if(id==null){ f.eq[h]=null; return {ok:true,id:null}; }
-  const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(!fitsHero(k,h)) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};
+  const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(k.off===true) return {ok:false,reason:'retired'}; if(!fitsHero(k,h)) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};
   f.eq[h]=id; return {ok:true,id}; }
 /* skin fixa para o Sys.skin: raridade da equipada (r, -1 = nenhuma) e quantas possui (o Sys.skin converte em pontos %) */
-function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e?e.r:-1,owned:fixedState(S).owned.length}; }
+function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e?e.r:-1,owned:fixedState(S).owned.filter(id=>FX[id]&&FX[id].off!==true).length}; }   // skin retirada (off) não dá bônus nem conta na coleção
 /* retrato: 'kael_phase0' | 'kael_phase2' | ... (assets/hero/avatar/<key>.png) */
 const avatarKey=(S,host)=>{ const e=fixedEquipped(S); return e?e.avatar:DEFAULT_LOOK[heroOf(S)].avatar; };
 /* pasta das folhas pela SKIN FIXA equipada (não há mais fase). stage = índice da pasta antiga (0 padrão, 2 cavaleiro, 3 lendário) só por compatibilidade. */
@@ -152,7 +156,7 @@ const PH_SCALE=[1,1.12,1.25,1.30];   // só o caminho ANTIGO (Sys.phaseUp com re
 const legacyStage=S=>{ const PU=root.Sys&&root.Sys.phaseUp; try{ return PU&&PU.current?clamp(int0(PU.current(S)),0,3):0; }catch(e){ return 0; } };
 /* opt.skin = id de skin fixa (cartão da vitrine: desenhar uma que não é a equipada) ou 'default' (corpo padrão); sem opt = a equipada */
 function sheets(S,host,opt){ const os=opt&&opt.skin, e=os?(os==='default'?null:FX[os]||null):fixedEquipped(S), h=e&&e.hero!=='both'?e.hero:heroOf(S), lg=e||os?0:legacyStage(S), d=e?dirOf(e,h)||DEFAULT_LOOK[h].dir:lg?HERO_DIRS[h][lg]:DEFAULT_LOOK[h].dir, st=Math.max(0,HERO_DIRS[h].indexOf(d));
-  const dir='assets/anim/hyb/'+d+'/'; return {hero:h,stage:st,skin:e?e.id:null,scale:e?e.scale:PH_SCALE[lg],mountArt:e?e.mountArt:true,avatar:e?e.avatar:DEFAULT_LOOK[h].avatar,dir,prefix:h+'_',masks:dir+'masks/'}; }
+  const dir='assets/anim/hyb/'+d+'/'; return {hero:h,stage:st,skin:e?e.id:null,scale:e?DATA.skinScale:PH_SCALE[lg],mountArt:e?e.mountArt:true,avatar:e?e.avatar:DEFAULT_LOOK[h].avatar,dir,prefix:h+'_',masks:dir+'masks/'}; }
 /* KAIA JOGÁVEL: estados de animação que a batalha toca e onde cada um existe. A Kaia garota (fase 0) só tem run/idle/attack: giro, morte e pistola
    caem na FASE MAIS PRÓXIMA que tem o estado (kaia_phase1), com fallback:true (pedir a arte que falta à fps-75). O Kael garoto tem todos. */
 const STATES=['run','idle','attack','spin','die','pistol_idle','pistol_run','pistol_shoot'];
