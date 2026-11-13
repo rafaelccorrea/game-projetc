@@ -1,0 +1,273 @@
+{
+ "frames": 12,
+ "cols": 6,
+ "fps": 12,
+ "w": 512,
+ "h": 352,
+ "padLeft": 96,
+ "padRight": 160,
+ "padTop": 96,
+ "padBottom": 0,
+ "feetY": 339,
+ "xf": {
+  "sc": 0.6,
+  "ox": 70.4,
+  "oy": 96
+ },
+ "shoot": {
+  "fireAt": 0.09,
+  "dur": 0.4,
+  "aimFrom": 2,
+  "recoil": [
+   3,
+   5
+  ],
+  "restFrom": 10,
+  "video": "hf_20261113_223030_19ee0026-f21e-4b91-9637-e83f3781bc4f.mp4",
+  "pick": [
+   32,
+   34,
+   36,
+   38,
+   40,
+   45,
+   51,
+   57,
+   63
+  ]
+ },
+ "grip": [
+  {
+   "x": 182.38,
+   "y": 163.6,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "idle q0"
+  },
+  {
+   "x": 227.05,
+   "y": 129.46,
+   "ang": 12,
+   "ux": 0.9781,
+   "uy": -0.2079,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.8,
+   "behind": false,
+   "src": "f033.png (sobe: ang 12)"
+  },
+  {
+   "x": 227.12,
+   "y": 129.72,
+   "ang": 2.73,
+   "ux": 0.9989,
+   "uy": -0.0476,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.8,
+   "behind": false,
+   "src": "f035.png"
+  },
+  {
+   "x": 227.13,
+   "y": 126.75,
+   "ang": 10.86,
+   "ux": 0.9821,
+   "uy": -0.1884,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.8,
+   "behind": false,
+   "src": "f037.png (recuo)"
+  },
+  {
+   "x": 228.13,
+   "y": 127.76,
+   "ang": 7.93,
+   "ux": 0.9904,
+   "uy": -0.138,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.8,
+   "behind": false,
+   "src": "f039.png (recuo)"
+  },
+  {
+   "x": 228.13,
+   "y": 128.7,
+   "ang": 4.93,
+   "ux": 0.9963,
+   "uy": -0.0859,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.8,
+   "behind": false,
+   "src": "f041.png (recuo)"
+  },
+  {
+   "x": 227.11,
+   "y": 129.34,
+   "ang": 3.03,
+   "ux": 0.9986,
+   "uy": -0.0529,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.9,
+   "behind": false,
+   "src": "f046.png"
+  },
+  {
+   "x": 227.13,
+   "y": 128.83,
+   "ang": 2.85,
+   "ux": 0.9988,
+   "uy": -0.0497,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.9,
+   "behind": false,
+   "src": "f052.png"
+  },
+  {
+   "x": 227.12,
+   "y": 128.87,
+   "ang": 2.63,
+   "ux": 0.9989,
+   "uy": -0.0459,
+   "f0": -11,
+   "f1": 11,
+   "hw": 4,
+   "behind": false,
+   "src": "f058.png"
+  },
+  {
+   "x": 228.13,
+   "y": 129.75,
+   "ang": 10,
+   "ux": 0.9848,
+   "uy": -0.1736,
+   "f0": -11,
+   "f1": 11,
+   "hw": 3.9,
+   "behind": false,
+   "src": "f064.png (baixa: ang 10)"
+  },
+  {
+   "x": 182.31,
+   "y": 163.52,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "idle q11"
+  },
+  {
+   "x": 182.38,
+   "y": 163.6,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "idle q0"
+  }
+ ],
+ "back": [
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) entre as escápulas; ang: tronco em graus (mediana do Kael na mesma montaria); s: cabeça montada / a pé; ok=false: estimado dos vizinhos}. Kaia: tools/kaiamount/kback.js (rosto -> costas, calibrado no Kael)",
+ "note": "tiro montado: q0/q11 = idle q0, q10 = idle q11; q1..q9 = idle q0 + cavaleiro do vídeo (mira, só até o punho). Sem arma: a arma de fogo vai no grip pelo código. tools/mshoot/shootset.js"
+}
