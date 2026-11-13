@@ -398,6 +398,7 @@ const ERAS=[
   wp:['#5ad1ff','#5aff9a','#c07cff','#ff4d6d','#ffe27a'], ap:['#d8e0ea','#3fa0e0','#8a5ae0','#d02a5a','#e8b020'],
   en:[{n:'Alienígena',s:'beast',c:'#6ad07a'},{n:'Ciborgue',s:'robot',c:'#6a8aa8'},{n:'Zangão Espacial',s:'robot',c:'#a05ad0'},{n:'Devorador',s:'beast',c:'#d05a7a'}]},
 ];
+/* ERAS 7 (Submundo) e 8 (Celestial): NÃO ficam nesta tabela. Vêm do Sys.eras (js/sys/eras.js) e são anexadas pelo js/eras9.js (chave ERA9_KEY, nomes dos chefes, números provisórios e conversão do save antigo), que carrega antes do resto do jogo. */
 /* sceneV2:true numa era = cenário vivo em camadas (assets/bg/v2/era<N>/meta.json, via EonScene); sem a chave = fundo antigo. */
 const STAGES_PER_ERA=10;
 const eraOf = stage => Math.min(ERAS.length-1, Math.floor((stage-1)/STAGES_PER_ERA));
@@ -526,7 +527,7 @@ const itemOf = id => S.inv.find(i=>i.id===id);
 /* DECISÃO DO DONO (opção A): a arma na mão é SEMPRE a do item equipado. S.skinEq.weapon (skin de arma de save antigo) é IGNORADO no desenho; o campo fica
    no save como está (nada é apagado nem migrado). */
 function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'); let w=null;
-  { const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(6,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
+  { const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(ERAS.length-1,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
   /* ASA (v0.12.4): skin de asa escolhida (Sys.appearance) > item equipado no espaço de asa > nada. Arte: anjo (Épico ou acima) ou demoníaca. */
   /* ASA (v0.12.7, dono): cada asa é um ITEM; aparece a asa EQUIPADA (item.wing = 'angel' | 'demon', lido por Sys.stats.wingOf, que resolve itens antigos).
      Não muda por raridade nem por era. Se um dia houver skin de asa escolhida (Sys.appearance), ela vence. hidden.wing esconde. */
@@ -777,9 +778,9 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule','newdrops','assets'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements','eras'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule','newdrops','assets'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c60')+'"><\/script>');   /* módulo EonScene, carregado como está */
-['preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','cloudchoice','onlineboot','delacct','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+['eras9','preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','cloudchoice','onlineboot','delacct','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"

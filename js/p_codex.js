@@ -51,7 +51,7 @@ function cdxLoadMeta(){ if(XK.metaTry||typeof fetch!=='function') return; XK.met
 /* ---- catálogo ---- */
 const cdxImg=(src,cls)=>({t:'img',src,cls:cls||''});
 function cdxItems(){
-  const A=[]; let eras=7; try{ eras=Math.min(7,ERAS.length); }catch(e){}
+  const A=[]; let eras=7; try{ eras=ERAS.length; }catch(e){}   /* 7 eras; 9 com as eras 7-8 ligadas (js/eras9.js) */
   const rm=r=>{ try{ return String(RAR[r].m).replace('.',','); }catch(e){ return ''; } };
   for(let e=0;e<eras;e++) for(let t=0;t<3;t++){ const r=[0,2,4][t], nm=(()=>{ try{ return ERAS[e].w[r]; }catch(x){ return 'Arma'; } })();
     A.push({id:'w-'+e+'-'+t,cat:'arm',era:e,r,n:nm,art:cdxImg('assets/weapons/era'+e+'_t'+t+'.png','w'),attr:'Ataque ×'+rm(r)+' · '+cdxRar(r),how:t===0?'Baús da era '+cdxEra(e):t===1?'Baús da era '+cdxEra(e)+' ou Invocar':'Invocar',go:t===0?'battle':'summon',goN:t===0?'Batalha':'Invocar'}); }
@@ -61,7 +61,7 @@ function cdxItems(){
   for(const m of ((window.Sys&&Sys.mount&&Sys.mount.DATA&&Sys.mount.DATA.mounts)||K_MFALL)){ const f=K_MART[m.id]; if(!f) continue; const pct=(()=>{ try{ return Sys.mount.DATA.maxPct[m.r]; }catch(e){ return null; } })(), h=K_MHOW[m.id]||['Em breve',''];
     A.push({id:'m-'+m.id,cat:'mnt',era:-2,r:m.r,n:m.name,art:cdxImg('assets/mounts/'+f+'.png','stand'),attr:pct!=null?'Ataque e Vida até +'+String(pct).replace('.',',')+'%':'',how:h[0],go:h[1],goN:h[0]}); }
   for(const p of K_PETS) for(let s=0;s<3;s++) A.push({id:'p-'+p.id+'-'+s,cat:'pet',era:p.era,r:p.r,n:p.n,label:K_STG[s],art:cdxImg('assets/pets/'+p.f+'_'+K_STGF[s]+'.png','stand'),sub2:K_STG[s],attr:'Golpe: '+p.atk[s],how:s===0?'Ovo da '+cdxEra(p.era):'Evolua o pet',go:'pets',goN:'Pets',grp:p.id});
-  const M=XK.meta; let eb=7; for(let e=0;e<eb;e++) for(const k of ['e0','e1','boss']){ const nm=M&&M['era'+e+'_'+k]&&M['era'+e+'_'+k].name; if(!nm) continue; const boss=k==='boss';
+  const M=XK.meta; let eb=eras; for(let e=0;e<eb;e++) for(const k of ['e0','e1','boss']){ const nm=(typeof era9Name==='function'&&era9Name('era'+e+'_'+k))||(M&&M['era'+e+'_'+k]&&M['era'+e+'_'+k].name); if(!nm) continue;   /* chefes das eras 7-8: nome do dono (js/eras9.js) */ const boss=k==='boss';
     A.push({id:'b-'+e+'-'+k,cat:'bes',era:e,r:boss?4:0,boss,n:nm,art:cdxImg('assets/enemies/era'+e+'_'+k+'.png','stand'),attr:(boss?'Chefe da ':'Inimigo comum da ')+cdxEra(e),how:boss?'Desafie o chefe na batalha':'Fases da era '+cdxEra(e),go:'battle',goN:'Batalha'}); }
   for(const n of [7,10,13]) A.push({id:'u-'+n,cat:'aur',era:-1,r:n===7?2:n===10?3:4,n:'Aura +'+n,art:{t:'aura',src:'assets/anim/aura/aura'+n+'.png'},attr:'Brilho atrás do Kael',how:'Forje a arma até +'+n,go:'forge',goN:'Forja'});
   return A; }

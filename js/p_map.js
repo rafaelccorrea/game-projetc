@@ -19,6 +19,8 @@
    - a trilha das 100 fases usa o mesmo traçado em S da era 0 do protótipo em todas as eras (as artes das eras 1-8 têm a estrada no mesmo eixo; ajuste fino depois);
    - escala da arte da era reduzida para caber nos 390 px sem rolagem lateral. */
 const XM={layer:'world',sel:-1,era:0,diff:0,node:1,clock:false,toast:'',tt:0,scrollTo:'',anim:true};
+/* chefes das eras 7 e 8: nome escolhido pelo dono, num lugar só (ERA9_BOSS, js/eras9.js) */
+function mBossName(e){ try{ if(typeof era9Boss==='function'&&era9Boss(e)) return era9Boss(e); }catch(x){} return 'Senhor da Era'; }
 const M_ERAS=[
   {flag:'#ff7a2a',tint:'#ff8a3a',boss:'Rex Furioso',lord:'o Rex, já tomado pelo brilho do pedaço',o:[670,2610],story:'O pedaço do Relógio caiu num vulcão e enlouqueceu as feras. Na arena de pedra ao pé da cratera, o Rex Furioso brilha com a luz roubada.'},
   {flag:'#ffd24a',tint:'#ffd76a',boss:'Minotauro',lord:'o general no labirinto',o:[522,2090],story:'Um general usou o pedaço para fazer seu exército nunca morrer. No coração do labirinto, o Minotauro guarda o caminho até ele.'},
@@ -27,8 +29,8 @@ const M_ERAS=[
   {flag:'#ff9a4a',tint:'#ff9a4a',boss:'Golem de ferro',lord:'o Golem-motor',o:[720,1420],story:'Uma fábrica usa o pedaço como motor e transforma gente em máquina. O Golem-motor nunca para de trabalhar.'},
   {flag:'#c9d36a',tint:'#c9d36a',boss:'Tanque',lord:'o comandante do Tanque',o:[730,1160],story:'Exércitos disputam o pedaço numa guerra que recomeça todo dia. O comandante do Tanque não deixa ninguém cruzar a linha.'},
   {flag:'#5ad8e6',tint:'#5ad8e6',boss:'Devorador',lord:'o Devorador, que foge ferido para baixo do tempo',o:[790,790],story:'O Devorador de Eras se esconde aqui, num corpo de máquina. Ferido, ele foge para baixo do tempo.'},
-  {flag:'#b07cff',tint:'#b07cff',boss:'Senhor Demônio',lord:'a forma verdadeira do Devorador',o:[915,590],story:'Ferido, o Devorador se refugia no Submundo e acorda os demônios. Aqui ele mostra a sua forma verdadeira.'},
-  {flag:'#ffe07a',tint:'#ffe07a',boss:'Arcanjo Serafim',lord:'o Serafim, que precisa ser libertado, não destruído',o:[770,330],story:'O último pedaço subiu ao Trono do Tempo. O Serafim que o guarda foi corrompido e não deixa ninguém passar.'}];
+  {flag:'#b07cff',tint:'#b07cff',boss:mBossName(7),lord:'a forma verdadeira do Devorador',o:[915,590],story:'Ferido, o Devorador se refugia no Submundo e acorda os demônios. Aqui ele mostra a sua forma verdadeira.'},
+  {flag:'#ffe07a',tint:'#ffe07a',boss:mBossName(8),lord:'o '+mBossName(8)+', que precisa ser libertado, não destruído',o:[770,330],story:'O último pedaço subiu ao Trono do Tempo. O '+mBossName(8)+' que o guarda foi corrompido e não deixa ninguém passar.'}];
 const M_DIFF=[{c:'#3fae4a',hi:'#7be08a',dk:'#1d5a24'},{c:'#2f86e0',hi:'#7cc0ff',dk:'#173f6e'},{c:'#8a52e0',hi:'#c49cff',dk:'#40246e'},{c:'#e8401a',hi:'#ffb03a',dk:'#6e1408'}];
 const M_ANG=[0,34,71,109,145,180,215,251,289];   /* encaixes do relógio (assets/map/clock_shards/shards.json), horário a partir do topo */
 /* geometria do mundo (arte 1536×2752) e da era (mesmo tamanho de arte) */

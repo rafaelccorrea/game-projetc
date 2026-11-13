@@ -18,8 +18,8 @@ O Relógio das Eras, que mantém o tempo andando em ordem, foi quebrado; os peda
 | 4 Industrial | Uma fábrica usa o pedaço como motor e transforma gente em máquina. | Golem de ferro | o Golem-motor |
 | 5 Moderna | Exércitos disputam o pedaço numa guerra que recomeça todo dia. | Tanque | o comandante do Tanque |
 | 6 Futurista | O Devorador de Eras se esconde aqui, num corpo de máquina. | Devorador | o Devorador, que foge ferido para baixo do tempo |
-| 7 Submundo | Ferido, o Devorador se refugia no Submundo e acorda os demônios. | Senhor Demônio | a forma verdadeira do Devorador |
-| 8 Celestial | O último pedaço subiu ao Trono do Tempo; o Serafim que o guarda foi corrompido e não deixa ninguém passar. | Arcanjo Serafim | o Serafim, que precisa ser libertado, não destruído |
+| 7 Submundo | Ferido, o Devorador se refugia no Submundo e acorda os demônios. | Senhor do Submundo | a forma verdadeira do Devorador |
+| 8 Celestial | O último pedaço subiu ao Trono do Tempo; o Juiz Celestial que o guarda foi corrompido e não deixa ninguém passar. | Juiz Celestial | o Juiz Celestial, que precisa ser libertado, não destruído |
 
 **Final:** com os nove pedaços, Kael remonta o Relógio. Do coração dele nasce uma raposa de cristal que reflete as cores de todas as eras: o **Pet Prismático** (é por isso que ele é o mais raro: só existe um coração do Relógio).
 

@@ -49,10 +49,12 @@ function loadBalance(){
   fetch('docs/balance.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(!j) return;
     const src=Object.assign({},j,j.BAL||{},j.combat||{},j.combate||{},j.offline||{});
     /* as tabelas de XP do Sys.level NÃO são mais sobrescritas aqui: o js/sys/level.js já traz os números do balance.json (remendo da rodada 6 retirado) */
-    try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&t.length===REC_FC.length&&t.every(v=>typeof v==='number'&&v>0)) REC_FC=t.slice(); }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
+    try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&(t.length===7||t.length===ERAS.length)&&t.every(v=>typeof v==='number'&&v>0)){ REC_FC=t.slice(); if(typeof ERA9!=='undefined') ERA9.fcDer=false; } }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
     for(const k in BAL){ const v=src[k]; if(Array.isArray(BAL[k])?Array.isArray(v):(typeof v==='number'&&isFinite(v)&&v>0)) BAL[k]=v; }
+    if(typeof era9Bal==='function') era9Bal();   /* eras 7-8 (js/eras9.js): o arquivo traz 7 valores de eraMult e de FC recomendada; os das eras 7-8 seguem a regra das eras de trás */
   }).catch(()=>{});
 }
+if(typeof era9Bal==='function') era9Bal();   /* eras 7-8 jogáveis (js/eras9.js): eraMult e FC recomendada das duas eras novas, sem tocar nas eras 0-6 */
 
 const SKN=[['Golpe Sísmico','Fúria do Mamute'],['Estocada Tripla','Ira do Olimpo'],['Corte Giratório','Lâmina do Dragão'],
   ['Tiro Duplo','Salva de Canhões'],['Rajada a Vapor','Tempestade Tesla'],['Rajada Tática','Ataque Aéreo'],['Corte de Plasma','Colapso do Vazio'],
@@ -114,7 +116,7 @@ function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
   const gold=Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,stage-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
   return {kind,key,boss,eraBoss,maxhp:hp,hp,dmg,gold,atkEvery:boss?1.15:BAL.commonAtkInterval,atkT:0.5+Math.random()*0.7,
     id:B.spawnN++,x:WAITX,slot:WAITX,lane:0,idx:9,sc:1,wt:Math.random()*2,parked:false,dead:false,hit:0,sw:0,seed:Math.random()*6,spd:EN_WALK,
-    name:eraBoss?'Senhor da Era '+k.n:boss?'Chefe '+k.n:k.n,col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
+    name:(boss&&typeof era9Boss==='function'&&era9Boss(era))||(eraBoss?'Senhor da Era '+k.n:boss?'Chefe '+k.n:k.n),col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
 }
 function waveSpec(stage,wave){
   if(wave===5) return ['e0','e1','boss'];
@@ -383,7 +385,7 @@ function waveClear(){
     /* TROCA DE ERA (pedido Q-2): tela nova em overlay (js/p_era.js), só com PANEL_ON.era ligada pelo agente B; se não abrir, vale o fluxo de sempre */
     /* Engenheiro 2 (coordenador): no Senhor da Era a ORDEM é VITÓRIA (tela 10) → TROCA DE ERA, uma depois da outra: a Troca de era fica guardada em B.eraPend e
        abre quando a vitória fechar (laço do jogo). Sem a tela 10 (chave desligada, tutorial, outra tela aberta) a Troca de era abre direto, como antes. */
-    const eraOpts=(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era'))?{from:oldEra,to:ne,boss:((J('assets/enemies/meta.json')['era'+oldEra+'_boss']||{}).name)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}}:null;   /* nome do Senhor da Era vencido, do meta dos inimigos */
+    const eraOpts=(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era'))?{from:oldEra,to:ne,boss:(typeof era9Boss==='function'&&era9Boss(oldEra))||((J('assets/enemies/meta.json')['era'+oldEra+'_boss']||{}).name)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}}:null;   /* nome do Senhor da Era vencido, do meta dos inimigos */
     let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
@@ -467,12 +469,12 @@ function hordeCenter(all){ if(!all.length) return {x:HX+120,y:GY-45}; let x=0; f
 const FX_ART={
   /* ultimates ANIMADAS entregues pela fps-ff (assets/anim/ult/era<N>_ult.png + .json: grade de quadros 384x216, 49 quadros, "screen":"full"):
      eras 0, 2 e 5. meta:true = lê quadros/colunas/blend do .json ao lado; dur = segundos em que a folha inteira toca. */
-  ult:[0,1,2,3,4,5,6].map(e=>({sheet:'assets/anim/ult/era'+e+'_ult',meta:true,dur:2.5})),   // as 7 aprovadas; blend lido do .json (eras 0, 3 e 5 source-over; as outras lighter)
+  ult:[0,1,2,3,4,5,6,7,8].map(e=>({sheet:'assets/anim/ult/era'+e+'_ult',meta:true,dur:2.5})),   // as 7 aprovadas + eras 7 e 8 (folhas em disco, chaves ult_era7/ult_era8); blend lido do .json (eras 0, 3 e 5 source-over; as outras lighter)
   s2: [null,null,null,null,null,null,null],
   s1: [null,null,null,null,null,null,null],
   slash:null, hit:null, crit:null, muzzle:null, aura:null,
 };
-const ULTCOL=['#d8a868','#9ad8ff','#ff8a2a','#ffb040','#7ad8ff','#ff9a3a','#b45cff'];
+const ULTCOL=['#d8a868','#9ad8ff','#ff8a2a','#ffb040','#7ad8ff','#ff9a3a','#b45cff','#ff5a1a','#ffe7a3'];   /* eras 7 e 8: cores da paleta das armas do Sys.eras (lava, ouro branco) */
 const PART_MAX=260;                                   // teto de partículas (desempenho em celular)
 /* emissores chamados A CADA QUADRO (ambiente da ultimate): a quantidade por segundo é a mesma a 60 e a 120 quadros (B.fk = fração de um quadro de 60) e cai com o degrau de qualidade */
 function emit(p){ const q=PART_Q[FP.q]*(B.fk>0?B.fk:1); if(q<1&&Math.random()>q) return; if(B.parts.length<PART_MAX*PART_Q[FP.q]) B.parts.push(p); }
@@ -584,7 +586,7 @@ function ultPre(a,v){
   }
 }
 function ultHit(a,h,ex,ey){
-  const E=a.era, col=a.col, c2=col==='#ffffff'?['#d8a868','#9ad8ff','#ff8a2a','#ffb040','#7ad8ff','#ff9a3a','#b45cff'][E]:col, fin=h.fin;
+  const E=a.era, col=a.col, c2=col==='#ffffff'?(ULTCOL[E]||col):col, fin=h.fin;
   const all=B.en.filter(e=>!e.dead&&e.x<=LW+20), pick=i=>all.length?all[i%all.length]:{x:ex,lane:1,dh:80};
   B.shake=Math.max(B.shake,fin?1.3:.55);
   if(E===0){ wfx(fnShock,0.55,{x:ex,r:fin?190:90,col:c2,layer:0}); dust(ex,GY,fin?26:10); if(fin){ wfx(fnShock,0.7,{x:ex,r:130,col:'#ffffff',layer:0,delay:.1}); burst(ex,GY-10,'#8a6a45',24,1.5); } }
@@ -1113,6 +1115,7 @@ function drawEnemyAt(e,x,deadP){
 }
 function bar(x,y,w,pct,col,hh){ hh=hh||7; ctx.fillStyle='#0008'; ctx.fillRect(x,y,w,hh); ctx.fillStyle=col; ctx.fillRect(x,y,w*Math.max(0,pct),hh); ctx.strokeStyle='#000a'; ctx.lineWidth=1; ctx.strokeRect(x,y,w,hh); }
 function enemyLabel(e){
+  const own=typeof era9Name==='function'?era9Name(e.key):null; if(own) return own;   /* eras 7-8: nome próprio do chefe (js/eras9.js), sem prefixo */
   const mn=(J('assets/enemies/meta.json')[e.key]||{}).name;
   if(!mn) return e.name;
   return e.eraBoss?'Senhor da Era '+mn:e.boss?'Chefe '+mn:mn;   /* sem emoji (regra do dono) */

@@ -64,7 +64,7 @@ module.exports = function boot(opt) {
     setTimeout(fn, ms) { const id = ++tid; Q.push({ fn, at: vnow + (+ms || 0), id }); return id; }, clearTimeout(id) { const i = Q.findIndex(t => t.id === id); if (i >= 0) Q.splice(i, 1); },
     setInterval() { return 0; }, clearInterval() {}, requestAnimationFrame() { return 0; }, cancelAnimationFrame() {},
     localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; }, clear() {} },
-    navigator: { userAgent: 'node', vibrate() {}, language: 'pt-BR' }, location: { search: opt.search || '?debug=1&fresh=1&skip=1', href: 'http://x/' + (opt.search || '?debug=1&fresh=1&skip=1'), pathname: '/', hash: '', replace() {}, reload() {} },
+    navigator: { userAgent: 'node', vibrate() {}, language: 'pt-BR' }, location: { search: opt.search || process.env.E2E_SEARCH || '?debug=1&fresh=1&skip=1', href: 'http://x/' + (opt.search || process.env.E2E_SEARCH || '?debug=1&fresh=1&skip=1'),   /* E2E_SEARCH: roda qualquer teste desta pasta com outro endereço (ex.: E2E_SEARCH='?debug=1&fresh=1&skip=1&eras9=1' para as eras 7-8 ligadas) */ pathname: '/', hash: '', replace() {}, reload() {} },
     performance: { now: () => Date.now() },
     /* fetch: por padrão nunca responde (run.js é síncrono). Com opt.realFetch lê o arquivo do disco (só leitura) e responde por Promise (flows.js) */
     fetch: opt.realFetch ? (u => { const f = path.join(ROOT, String(u).split('?')[0].replace(/^\.?\//, '')); let txt = null; try { if (fs.existsSync(f) && fs.statSync(f).isFile()) txt = fs.readFileSync(f, 'utf8'); } catch (e) {}
