@@ -303,7 +303,7 @@ function onClick(ev){ const b = ev.target.closest('button'); if (!b) return; snd
   else if (b.dataset.p === 'back') closeCard();
   else if (b.dataset.p === 'st'){ UI.st = +b.dataset.i; UI.t0 = performance.now(); const raf = UI.raf; paint(); if (!raf) UI.raf = requestAnimationFrame(play); } }
 Screens.register('artprev', { title: 'Teste',
-  render(el){ if (document.getElementById('apv')) return; el.innerHTML = '<div id="apv" style="padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:Nunito,system-ui,sans-serif"></div>'; document.getElementById('apv').addEventListener('click', onClick); paint(); },
+  render(el){ if (document.getElementById('apv')) return; el.innerHTML = '<div id="apv" style="padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;font-family:Nunito,system-ui,sans-serif"></div>'; document.getElementById('apv').addEventListener('click', onClick); paint(); },
   onOpen(){ UI.open = null; }, onClose(){ freeLayers(); UI.open = null; } });
 keysBoot();   /* Modo dono: reaplica as chaves do voto guardadas no save de teste */
 /* Engenheiro 11: partida do Modo dono (nada disto existe fora dele) */
