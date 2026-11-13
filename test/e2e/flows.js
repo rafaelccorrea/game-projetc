@@ -233,8 +233,8 @@ async function flowPhases() {
     A.addFixed({id:'e2e_kael',name:'Teste Kael',hero:'kael',dir:'R',r:3,avatar:'kael_phase0',sources:['offer']}); const g0=A.grantFixed(S,'e2e_kael',{source:'offer'}).reason; A.DATA.skinsOn=true; const g=A.grantFixed(S,'e2e_kael',{source:'offer'}), e=A.equipFixed(S,'e2e_kael');
     const noArt=[['kael_ninja','offer'],['kael_cyborg','shop']].map(([id,src])=>A.grantFixed(S,id,{source:src}).ok+'/'+A.equipFixed(S,id).reason); A.DATA.skinsOn=false;
     const idle=A.sheetFor(S,Sys.host,'idle'), card=A.sheetFor(S,Sys.host,'idle',{skin:'default'}).body;
-    return {n:list.length, ids:list.map(x=>x.id), soonAll:list.every(x=>x.soon&&!x.art), g0, noArt, ret, old:{body:old.body,scale:old.scale,skin:old.skin}, oldAv, oldSk, g:g.ok, e:e.ok, idle, card, vit:A.fixedSkins(S,Sys.host).map(x=>x.id)}; })()`);
-  check('vitrine: as 10 skins aprovadas "em breve" (sem arte), nenhuma das 4 adultas', fx.n === 10 && fx.soonAll && !fx.ids.some(id => /knight|legend/.test(id)), JSON.stringify(fx.ids));
+    return {n:list.length, ids:list.map(x=>x.id), soonAll:list.every(x=>x.soon), withArt:list.filter(x=>x.art).map(x=>x.id), g0, noArt, ret, old:{body:old.body,scale:old.scale,skin:old.skin}, oldAv, oldSk, g:g.ok, e:e.ok, idle, card, vit:A.fixedSkins(S,Sys.host).map(x=>x.id)}; })()`);
+  check('vitrine: as 10 skins aprovadas "em breve" (só o Modo dono equipa), nenhuma das 4 adultas; com arte: ' + fx.withArt.join(','), fx.n === 10 && fx.soonAll && !fx.ids.some(id => /knight|legend/.test(id)) && fx.withArt.includes('kaia_harlequin'), JSON.stringify(fx.ids));
   check('skin sem arte: entra na coleção pela fonte (direito guardado), mas NÃO equipa (art)', fx.noArt.every(x => x === 'true/art'), JSON.stringify(fx.noArt));
   check('fontes de skin só com a chave skinsOn (desligada = off)', fx.g0 === 'off', fx.g0);
   check('as 4 adultas recusam obter e equipar, até no Modo dono (retired)', fx.ret.every(x => x === 'retired/retired'), JSON.stringify(fx.ret));
