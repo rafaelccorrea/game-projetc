@@ -14,7 +14,7 @@ t('classify: cada tipo de arte no seu pacote; fontes brutas fora',()=>{
   assert.strictEqual(A.deliveryOf('core'),'base'); assert.strictEqual(A.deliveryOf('aura'),'fast'); assert.strictEqual(A.deliveryOf('retired'),'none'); assert.strictEqual(A.deliveryOf('mount:wolf'),'demand'); assert.ok(!A.DATA.fastFollow().some(p=>p.startsWith('hero:')),'fast-follow sem herói');
   assert.strictEqual(C('assets/anim/hyb/R/pistol/kael_pistol_idle_era5_t0.png'),'gun:5'); assert.strictEqual(C('assets/anim/hyb/R/gun/kael_gun_shoot_era3_t2.png'),'gun:3');
   assert.strictEqual(C('assets/anim/hyb/enemy/era7_boss_attack.png'),'enemy:7'); assert.strictEqual(C('assets/enemies/era2_e0.png'),'enemy:2');
-  assert.strictEqual(C('assets/anim/mounts/kael_wolf_idle_3star.png'),'mount:wolf'); assert.strictEqual(C('assets/anim/pets/era7_cerberus_mid_atk1.png'),'pet:era7_cerberus:1');
+  assert.strictEqual(C('assets/anim/mounts/kael_wolf_idle_3star.png'),'preview','estrela da montaria: aura por código no jogo'); assert.strictEqual(C('assets/anim/mounts/kael_wolf_idle_body.png'),'mount:wolf'); assert.strictEqual(C('assets/anim/pets/era7_cerberus_mid_atk1.png'),'pet:era7_cerberus:1');
   assert.strictEqual(C('assets/anim/pets/prism_fox_idle.png'),'pet:prism_fox:0'); assert.strictEqual(C('assets/anim/pets/era0_mammoth_evo_run.json'),'pet:era0_mammoth:2');
   assert.strictEqual(C('assets/weapons/era4_mitico.png'),'era:4'); assert.strictEqual(C('assets/anim/ult/era8_ult.png'),'era:8'); assert.strictEqual(C('assets/bg/era1.png'),'era:1');
   assert.strictEqual(C('assets/anim/look_preview/kael_phase3_idle_look_b.png'),'preview'); assert.strictEqual(C('assets/ui/coin.png'),'core'); assert.strictEqual(C('js/battle.js'),'core');

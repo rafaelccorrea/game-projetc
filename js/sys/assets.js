@@ -42,6 +42,7 @@ function classify(p0){ const p=norm(p0); let m;
   if((m=/^assets\/anim\/hyb\/enemy\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/enemies\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/anim\/hyb\/kael_[a-z_]+_era(\d)_/.exec(p))) return 'hero:kael:0';
+  if(/^assets\/anim\/mounts\/(?:kael|kaia)_[a-z]+_[a-z]+_\dstar\./.test(p)) return 'preview';   // folhas por estrela: o jogo faz a aura por CÓDIGO (mountfx MOUNT_AURA, aprovado v0.12.8); só a Prévia do Modo dono usa
   if((m=/^assets\/anim\/mounts\/(?:kael|kaia)_([a-z]+)_/.exec(p))) return 'mount:'+m[1];   // folha montada do Kael e da Kaia (Kaia lote 1: pônei e cavalo)
   if((m=/^assets\/(anim\/)?mounts\/(?:mount_)?([a-z]+)[_.]/.exec(p))) return 'mount:'+m[2];
   if((m=/^assets\/anim\/pets\/([a-z0-9]+_[a-z]+?)(_mid|_evo)?_(run|idle|atk\d)/.exec(p))) return 'pet:'+m[1]+':'+(m[2]==='_mid'?1:m[2]==='_evo'?2:0);
