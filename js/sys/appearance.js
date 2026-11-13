@@ -122,7 +122,7 @@ function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='k
    em vez de um corpo inteiro é chapéu + tinta de colete e botas (nas máscaras R/B de cada fase) + óculos/máscara + aura nas Lendárias. Peças da Arte:
    chapéus por era (assets/anim/equip/hats/hat_<eraN>.png), cosméticos (assets/anim/equip/cos/<id>.png), auras (assets/anim/aura/<id>), tintas abaixo
    (formato da página de aparência da Arte: [R, G, B, ganho]). Save antigo com roupa-skin: MESMA id, passa a desenhar a combinação sozinho. */
-const MATERIALS={couro:[150,105,65,1.0],couro_escuro:[95,60,40,0.9],bronze:[200,130,70,1.15],ferro:[180,190,205,1.15],prata:[215,220,230,1.25],
+const MATERIALS={couro:[150,105,65,1.0],couro_escuro:[95,60,40,0.9],bronze:[205,115,50,1.25],ferro:[150,160,180,1.05],prata:[232,235,245,1.4],
   ouro:[240,190,70,1.35],cristal:[110,200,255,1.45],obsidiana:[120,70,160,1.0],rubi:[210,40,60,1.2],esmeralda:[60,190,110,1.2]};
 const RAR_MAT=[['couro','couro'],['couro_escuro','couro'],['bronze','couro_escuro'],['ferro','ferro'],['ouro','ouro']];   // [colete, botas] pela raridade
 const PASS_COMBO={p10:{hat:'era3',vest:'rubi',boots:'couro_escuro',mask:'carnival'},      // Casaca da Temporada
@@ -132,7 +132,9 @@ const PASS_COMBO={p10:{hat:'era3',vest:'rubi',boots:'couro_escuro',mask:'carniva
 function comboOf(id){ if(PASS_COMBO[id]) return Object.assign({hat:null,vest:null,boots:null,glasses:null,mask:null,aura:null},PASS_COMBO[id]);
   const m=/^a(\d)(\d)$/.exec(String(id||'')); if(!m) return null; const e=+m[1], r=Math.min(4,+m[2]); let [vest,boots]=RAR_MAT[r];
   if(e===6&&r>=3) vest='cristal'; if(e===5&&r===3) boots='obsidiana'; if(e===1&&r===4) boots='bronze';   // sabor da era nas raras de cima
-  return {hat:r>=1?'era'+e:null,vest,boots,glasses:r>=2&&e>=4?(e===6?'visor':'goggles'):null,mask:null,aura:r>=4?'aura10':null}; }
+  // Arte 12/11 (render das 8 versões): chapéus das eras 4 e 6 já trazem óculos/viseira → sem óculos nelas; aura da Lendária pela era (não fogo em todas)
+  const AURA_BY_ERA=['aura7','aura_holy','aura_holy','aura10','aura13','aura_evil','aura4'];
+  return {hat:r>=1?'era'+e:null,vest,boots,glasses:r>=2&&e===5?'goggles':null,mask:null,aura:r>=4?AURA_BY_ERA[e]:null}; }
 /* camadas da combinação (respeita o que o jogador ocultou; óculos/máscara PRÓPRIOS do jogador vencem os da skin) */
 function comboLayers(id,c,o){ const out=[], hid=(o&&o.hidden)||{}, own=(o&&o.cos&&o.cos.eq)||{}, tint=(layer,mat)=>({layer,key:'tint/'+layer+'/'+mat,source:'skin',id,mat,tint:MATERIALS[mat]});
   if(c.aura) out.push({layer:'aura',key:'aura/'+c.aura,source:'skin',id,aura:c.aura,sheet:'assets/anim/aura/'+c.aura});

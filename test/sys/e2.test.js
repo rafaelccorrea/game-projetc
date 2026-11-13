@@ -938,12 +938,12 @@ t('skins × evolução: a skin equipada sobrevive à troca de fase (21→22, 34�
 t('roupa-skin = combinação (dono): 38 skins com chapéu + tinta de colete/botas + óculos/máscara + aura; todas vendáveis; save antigo desenha a combinação em qualquer fase',()=>{
   const A=require('../../js/sys/appearance.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const ex=f=>fs.existsSync(path.join(__dirname,'../..',f));
   const ids=[]; for(let e=0;e<7;e++) for(let r=0;r<5;r++) ids.push('a'+e+r); ids.push('p10','p20','p30'); assert.ok(ids.every(id=>A.canSell(id,ex)),'as 38 vendáveis');
-  assert.deepStrictEqual(A.comboOf('a00'),{hat:null,vest:'couro',boots:'couro',glasses:null,mask:null,aura:null}); assert.strictEqual(A.comboOf('a64').glasses,'visor'); assert.strictEqual(A.comboOf('p10').mask,'carnival'); assert.strictEqual(A.comboOf('w12'),null);
+  assert.deepStrictEqual(A.comboOf('a00'),{hat:null,vest:'couro',boots:'couro',glasses:null,mask:null,aura:null}); assert.strictEqual(A.comboOf('a64').glasses,null,'o chapéu da era 6 já tem a viseira'); assert.strictEqual(A.comboOf('a64').aura,'aura4'); assert.strictEqual(A.comboOf('a43').glasses,null); assert.strictEqual(A.comboOf('p10').mask,'carnival'); assert.strictEqual(A.comboOf('w12'),null);
   for(const id of ids){ const c=A.comboOf(id); for(const k of ['vest','boots']) assert.ok(A.MATERIALS[c[k]],id+' '+k); }
   // save ANTIGO: roupa-skin equipada no modo skin → agora vira camadas (nada de corpo inteiro), igual em todas as fases e nos dois heróis
   PU.DATA.on=true; try{ for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero,skins:['w00','a00','a54'],skinEq:{weapon:'w00',armor:'a54'}}; A.setMode(S,'skin'); L.ensure(S).lvl=120; PU.ensure(S).stg=st;
       const lay=A.layers(S,makeHost()); assert.ok(!lay.some(l=>l.layer==='skin'),'sem corpo inteiro'); const by=k=>lay.find(l=>l.layer===k);
-      assert.deepStrictEqual([by('hat').hat,by('armor').mat,by('boots').mat,by('glasses').cos,by('aura').aura,lay[0].layer],['era5','ouro','ouro','goggles','aura10','aura']);
+      assert.deepStrictEqual([by('hat').hat,by('armor').mat,by('boots').mat,by('glasses').cos,by('aura').aura,lay[0].layer],['era5','ouro','ouro','goggles','aura_evil','aura']);
       A.setLookHidden(S,'hat',true); assert.ok(!A.layers(S,makeHost()).some(l=>l.layer==='hat'),'ocultar o chapéu vale na combinação'); A.addCosmetic(S,'ninja'); A.equipCosmetic(S,'mask','ninja');
       assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; }
 });
