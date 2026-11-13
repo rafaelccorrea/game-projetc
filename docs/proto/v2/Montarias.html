@@ -146,7 +146,7 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events
 .cell .fb i{display:block;height:100%;background:linear-gradient(90deg,#7a54d8,#c3a3ff)}
 
 /* estrelas e aura */
-.st5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.st5{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
 .sc{min-width:0;border-radius:11px;border:1px solid var(--line2);background:rgba(5,8,28,.5);padding:5px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;overflow:hidden}
 .sc[aria-pressed="true"]{border:2px solid var(--gold)}
 .sc.no{opacity:.62}
@@ -223,8 +223,8 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events
         <li>A montaria dá % de ATK e % de VIDA (os dois iguais). No Nv 60 e 5★, sem o pacote: 3 / 4,5 / 6,5 / 9 / 12% (Básico a Lendário)</li>
         <li>Pacote de dificuldade (aprovado pelo dono): cada estrela acima da 1ª soma +2 / +2,25 / +2,5 / +2,75 / +3% de ATK e VIDA pela raridade, fora do fator de nível. Os números da tela já usam essa regra</li>
         <li>Nível 1 a 60 com ouro; teto = nível do jogador ÷ 2. Ouro do Nv N ao N+1 = 20 × ouro de um abate da fase × (1 + 0,05 × (N−1)) × (1 + 0,5 × raridade)</li>
-        <li>Estrelas: 10 / 20 / 30 / 40 fragmentos (2★ a 5★); montaria repetida = 10 fragmentos</li>
-        <li>Aura pelas estrelas (só visual): 1★ sem aura, 2★ e 3★ brilho leve, 4★ aura com fumaça, 5★ aura forte com fumaça e partículas</li>
+        <li>Estrelas: 10 / 20 / 30 / 40 / 50 / 60 fragmentos (2★ a 7★); a 6ª abre na era 7 e a 7ª na era 8 (dono aprovou), sempre com fragmentos ganhos jogando; montaria repetida = 10 fragmentos</li>
+        <li>Aura pelas estrelas (só visual): 1★ sem aura, 2★ e 3★ brilho leve, 4★ aura com fumaça, 5★ aura forte com fumaça e partículas, 6★ aura de brasas, 7★ aura celestial com raios</li>
         <li>As 10 novas nascem sozinhas ao juntar os fragmentos (60 / 100 / 200 / 400 pela raridade); o Mecha é compra direta inteira. Sem sorteio pago</li>
         <li>Arte montada pronta: Pônei, Cavalo, Lobo, Grifo, Tigre de cristal e Serpe (Kael e Kaia, as folhas do Perfil V5). As 10 novas aparecem paradas atrás do herói até a arte montada chegar</li>
         <li>As folhas montadas já vêm com a espada da Medieval na mão; por isso a arma equipada nos dois exemplos é essa mesma espada (a pé ela é desenhada no punho, como no jogo)</li>
@@ -252,12 +252,14 @@ addEventListener('resize',fit); fit();
    starFlat.pct [2 2,25 2,5 2,75 3] por estrela acima da 1ª (pacote de dificuldade; docs/balance.json dificuldade.mountStarFlat on:true) · starCost [10,20,30,40] · dupFrags 10
    cost {goldK 20, growth 0,05, rarCost 0,5} × host.goldUnit() = ouro de 1 abate comum da fase (js/farm.js: ceil(goldBase 4 × goldGrowth 1,15^(fase−1) × commonGoldMult 0,32), js/battle.js BAL)
    lvlCap = piso(nível do jogador ÷ 2), 1..60 · aura por estrela (DATA.aura) · cor da aura por estrela (js/mountfx.js MOUNT_AURA) · arte montada = js/mountfx.js MOUNT_TBL */
-const R={maxPct:[3,4.5,6.5,9,12],maxLvl:60,lvlMin:0.4,starBase:0.75,starStep:0.05,maxStars:5,starFlat:[2,2.25,2.5,2.75,3],starCost:[10,20,30,40],dupFrags:10,
+const R={maxPct:[3,4.5,6.5,9,12],maxLvl:60,lvlMin:0.4,starBase:0.75,starStep:0.05,maxStars:7,starFlat:[2,2.25,2.5,2.75,3],starCost:[10,20,30,40,50,60],starEra:{6:7,7:8},dupFrags:10,
   cost:{goldK:20,growth:0.05,rarCost:0.5},bal:{goldBase:4,goldGrowth:1.15,commonGoldMult:0.32}};
 const AURA=[{id:'none',name:'Sem aura',glow:0,smoke:false,particles:false},{id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},{id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},
-  {id:'aura_smoke',name:'Aura com fumaça',glow:2,smoke:true,particles:false},{id:'aura_full',name:'Aura forte com fumaça e partículas',glow:3,smoke:true,particles:true}];
-const AURA_S=['Sem aura','Brilho','Brilho','Fumaça','Partículas'];
-const MAURA=[null,'rgba(200,230,255,','rgba(120,200,255,','rgba(120,200,255,','rgba(190,140,255,','rgba(255,214,120,'];
+  {id:'aura_smoke',name:'Aura com fumaça',glow:2,smoke:true,particles:false},{id:'aura_full',name:'Aura forte com fumaça e partículas',glow:3,smoke:true,particles:true},
+  {id:'aura_ember',name:'Aura de brasas (6 estrelas)',glow:4,smoke:true,particles:true},{id:'aura_celestial',name:'Aura celestial com raios (7 estrelas)',glow:5,smoke:true,particles:true}];
+const AURA_S=['Sem aura','Brilho','Brilho','Fumaça','Partículas','Brasas','Celestial'];
+/* 1-5 = js/mountfx.js MOUNT_AURA; 6 e 7 = cores novas por código (o jogo precisa das mesmas duas entradas no MOUNT_AURA) */
+const MAURA=[null,'rgba(200,230,255,','rgba(120,200,255,','rgba(120,200,255,','rgba(190,140,255,','rgba(255,214,120,','rgba(255,120,70,','rgba(255,246,200,'];
 const RIDE={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1};   /* MOUNT_TBL do js/mountfx.js */
 const RN=['Básico','Raro','Épico','Mítico','Lendário'];
 const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434'];
@@ -294,8 +296,10 @@ function pctOf(id,lvl,stars,flat){ const m=BY[id]; if(!m) return 0; const L=R.lv
 const goldUnit=st=>Math.max(1,Math.ceil(R.bal.goldBase*Math.pow(R.bal.goldGrowth,st-1)*R.bal.commonGoldMult));
 const lvlCost=(id,lvl)=>{ const C=R.cost, m=BY[id]; return Math.ceil(C.goldK*goldUnit(P.stage)*(1+C.growth*(lvl-1))*(1+m.r*C.rarCost)); };
 const lvlCap=()=>clamp(Math.floor(P.lvl/2),1,R.maxLvl);
-const starNeed=x=>x.stars<R.maxStars?R.starCost[x.stars-1]:0;
-const auraOf=st=>AURA[clamp(st|0||1,1,5)-1];
+const starNeed=x=>x.stars<starCap()?R.starCost[x.stars-1]:0;
+const auraOf=st=>AURA[clamp(st|0||1,1,7)-1];
+/* teto de estrelas pela era: 5 até a era 6, 6 na era 7, 7 na era 8 ("Tudo liberado" = era 8) */
+const starCap=()=>S&&S.key==='all'?7:5;
 const live=m=>!m.minEra||P.era>=m.minEra;
 /* FC: ATK e VIDA valem metade da FC cada; a montaria soma a mesma % nos dois, então FC = FC sem montaria × (1 + %/100) */
 const fcWithPct=p=>P.baseFC*(1+p/100);
@@ -312,7 +316,7 @@ const pcd=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1).replace('.',',')+'%';
 const SV={go:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
  lock:'<svg viewBox="0 0 24 24" fill="#9aa6d6"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>'};
 const star=on=>`<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="${on?'#ffd25e':'rgba(255,255,255,.12)'}" stroke="${on?'#9a5a10':'rgba(160,180,255,.4)'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
-const stars=k=>{ let h=''; for(let i=1;i<=5;i++) h+=star(i<=k); return h; };
+const stars=k=>{ let h=''; for(let i=1;i<=Math.max(5,starCap());i++) h+=star(i<=k); return h; };
 
 /* ---------- os dois jogadores do Simular (FC sem montaria, ouro e diamantes = exemplo; o resto pelas regras) ---------- */
 const PL={
@@ -382,22 +386,23 @@ function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(
 
 /* AURA DA MONTARIA pelas estrelas (DATA.aura + cores do MOUNT_AURA): brilho em volta do contorno (sombra de uma cópia fora da tela, como o jogo),
    fumaça subindo do chão (4★ e 5★) e partículas (5★). Cresce a cada estrela. Tudo preso ao chão da montaria. */
-const SEED=[]; for(let i=0;i<40;i++) SEED.push([((i*7919)%997)/997,((i*104729)%991)/991,((i*1299709)%983)/983]);
+const SEED=[]; for(let i=0;i<50;i++) SEED.push([((i*7919)%997)/997,((i*104729)%991)/991,((i*1299709)%983)/983]);
 function halo(x,drawFn,col,blur){ const OFF=1200; x.save(); x.shadowColor=col; x.shadowBlur=blur; x.shadowOffsetX=OFF*2; x.shadowOffsetY=0; x.translate(-OFF,0); drawFn(); x.restore(); }
 function auraBack(x,t,st,cx,w,h,drawFn){ const A=auraOf(st), col=MAURA[st]; if(!A||!col) return;
   const pu=0.5+0.2*Math.sin(t*2.4);
   if(A.glow>0){ /* luz no chão, maior com as estrelas */ const r=w*(0.45+0.05*st), g=x.createRadialGradient(cx,GY,4,cx,GY,r); g.addColorStop(0,col+(0.18+0.07*A.glow)*pu*2+')'); g.addColorStop(1,col+'0)');
     x.fillStyle=g; x.beginPath(); x.ellipse(cx,GY,r,r*0.2,0,0,7); x.fill(); }
-  if(A.smoke){ const N=A.glow>=3?16:10, sc=st>=5?'rgba(255,196,120,':'rgba(160,120,220,';
+  if(A.smoke){ const N=A.glow>=3?16:10, sc=st>=7?'rgba(255,248,215,':st>=6?'rgba(255,120,60,':st>=5?'rgba(255,196,120,':'rgba(160,120,220,';
     for(let i=0;i<N;i++){ const s=SEED[i], p=(t*(0.18+0.1*s[2])+s[0])%1, px=cx+(s[1]-0.5)*w*0.95+Math.sin(t*0.8+i)*6, py=GY+4-p*h*0.62, r=8+p*(18+6*A.glow);
       const a=Math.sin(Math.PI*p)*(A.glow>=3?0.26:0.2); const g=x.createRadialGradient(px,py,1,px,py,r); g.addColorStop(0,sc+a.toFixed(3)+')'); g.addColorStop(1,sc+'0)');
       x.fillStyle=g; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); } }
-  if(A.glow>0&&drawFn){ const blur=[0,10,22,30][A.glow]+(st===3?6:0), al=[0,.55,.8,.95][A.glow]+(st===3?.12:0);
+  if(A.glow>0&&drawFn){ const blur=[0,10,22,30,36,42][A.glow]+(st===3?6:0), al=[0,.55,.8,.95,1,1][A.glow]+(st===3?.12:0);
     halo(x,drawFn,col+Math.min(1,al*pu*1.6).toFixed(2)+')',blur); if(A.glow>=3) halo(x,drawFn,col+'0.55)',12); } }
 function auraFront(x,t,st,cx,w,h){ const A=auraOf(st), col=MAURA[st]; if(!A||!A.particles||!col) return;
   x.save(); x.globalCompositeOperation='lighter';
-  for(let i=0;i<22;i++){ const s=SEED[i+12], p=(t*(0.22+0.12*s[2])+s[0])%1, px=cx+(s[1]-0.5)*w+Math.sin(t*2+i)*4, py=GY+2-p*h*0.85, r=1.2+2.2*(1-p)*s[2]+0.6;
-    x.fillStyle=(i%3?'rgba(255,226,140,':'rgba(255,255,230,')+(Math.sin(Math.PI*p)*0.9).toFixed(3)+')'; x.beginPath(); x.arc(px,py,r,0,7); x.fill();
+  if(st>=7){ /* 7 estrelas: raios girando atrás da montaria (aura celestial) */ for(let k=0;k<10;k++){ const a=t*0.4+k*Math.PI/5, L2=w*0.62; const g=x.createLinearGradient(cx,GY-h*0.45,cx+Math.cos(a)*L2,GY-h*0.45+Math.sin(a)*L2*0.6); g.addColorStop(0,'rgba(255,246,200,0.22)'); g.addColorStop(1,'rgba(255,246,200,0)'); x.strokeStyle=g; x.lineWidth=6; x.beginPath(); x.moveTo(cx,GY-h*0.45); x.lineTo(cx+Math.cos(a)*L2,GY-h*0.45+Math.sin(a)*L2*0.6); x.stroke(); } }
+  for(let i=0;i<(st>=6?30:22);i++){ const s=SEED[i+12], p=(t*(0.22+0.12*s[2])+s[0])%1, px=cx+(s[1]-0.5)*w+Math.sin(t*2+i)*4, py=GY+2-p*h*0.85, r=1.2+2.2*(1-p)*s[2]+0.6;
+    x.fillStyle=(st===6?(i%3?'rgba(255,140,70,':'rgba(255,220,150,'):(i%3?'rgba(255,226,140,':'rgba(255,255,230,'))+(Math.sin(Math.PI*p)*0.9).toFixed(3)+')'; x.beginPath(); x.arc(px,py,r,0,7); x.fill();
     if(i%4===0){ x.strokeStyle=x.fillStyle; x.lineWidth=0.8; x.beginPath(); x.moveTo(px-r*2.2,py); x.lineTo(px+r*2.2,py); x.moveTo(px,py-r*2.2); x.lineTo(px,py+r*2.2); x.stroke(); } }
   x.restore(); }
 
@@ -454,7 +459,7 @@ function renderTop(){
   else if(L.m&&S.mode==='foot') note=`A pé: a montaria fica parada atrás do herói`;
   $('#over').innerHTML=note?`<div class="note">${note}</div>`:'';
   document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===S.mode));
-  const ownN=Object.keys(S.own).length, ready=Object.keys(S.own).filter(id=>{ const x=S.own[id]; return x.stars<5&&x.frags>=starNeed(x); }).length;
+  const ownN=Object.keys(S.own).length, ready=Object.keys(S.own).filter(id=>{ const x=S.own[id]; return x.stars<starCap()&&x.frags>=starNeed(x); }).length;
   const x=S.eq&&S.own[S.eq], p=x?pctOf(S.eq,x.lvl,x.stars):0;
   $('#chip').innerHTML=`<span>Montarias <b>${ownN}/${MOUNTS.length}</b></span><span>${ready?`<span class="pg">${ready} pronta${ready>1?'s':''} para subir estrela</span>`:'ATK e VIDA '+pc(p)}</span>`; }
 
@@ -480,7 +485,7 @@ function renderDet(){ const d0=$('#det'), id=S.pv||S.eq, m=BY[id]; if(!m){ d0.in
       <p class="src">Como conseguir: ${how}. Sem sorteio pago.</p>
       <div class="acts"><button class="bt off" data-x="sair">Sair</button><button class="bt blue" data-go="${m.go}">Ir: ${m.go}</button></div></div>`; return; }
   const why=canLvl(id), need=starNeed(x), p0=pctOf(id,x.lvl,x.stars), cost=x.lvl<R.maxLvl?lvlCost(id,x.lvl):0;
-  const canStar=need&&x.frags>=need, nextSt=Math.min(5,x.stars+1);
+  const canStar=need&&x.frags>=need, nextSt=Math.min(starCap(),x.stars+1);
   let pcmp, cmp;
   if(S.last&&S.last.id===id){ pcmp=pctHTML('ATK E VIDA · '+S.last.what.toUpperCase(),S.last.pa,S.last.pb); cmp=cmpHTML('FC ANTES → DEPOIS',S.last.a,S.last.b); }
   else if(S.apv&&S.apv.id===id&&S.apv.st!==x.stars){ const xs={...x,stars:S.apv.st}; pcmp=pctHTML(`ATK E VIDA · ${x.stars}★ → ${S.apv.st}★`,p0,pctOf(id,x.lvl,S.apv.st)); cmp=cmpHTML(`FC ANTES → COM ${S.apv.st}★`,fcNow(),fcWith(id,xs)); }
@@ -491,18 +496,18 @@ function renderDet(){ const d0=$('#det'), id=S.pv||S.eq, m=BY[id]; if(!m){ d0.in
   const lvB=why==='max'?`<button class="bt off two" disabled><span>Subir nível</span><small>nível máximo</small></button>`
     :why==='cap'?`<button class="bt off two" disabled><span>Subir nível</span><small>teto: jogador Nv ${(x.lvl+1)*2}</small></button>`
     :`<button class="bt two" data-x="lvl" ${why==='money'?'aria-disabled="true"':''}><span>Subir nível · +${fmtD(gL)} FC</span><small>${fmtFC(cost)} de ouro${why==='money'?' (falta ouro)':''}</small></button>`;
-  const stB=!need?`<button class="bt on two" disabled><span>5★ máximo</span><small>${AURA_S[4]}</small></button>`
+  const stB=!need?(x.stars>=7?`<button class="bt on two" disabled><span>7★ máximo</span><small>${AURA_S[6]}</small></button>`:`<button class="bt off two" disabled><span>${x.stars+1}★ abre na era ${R.starEra[x.stars+1]||7}</span><small>${R.starCost[x.stars-1]} frag. jogando</small></button>`)
     :canStar?`<button class="bt grn two" data-x="star"><span>Subir estrela</span><small>${need} frag. · <b>+${fmtD(gS)} FC</b></small></button>`
     :`<button class="bt off two" disabled><span>Subir estrela</span><small>${x.frags}/${need} frag. · +${fmtD(gS)} FC</small></button>`;
   const eqB=S.undo&&S.own[S.undo]?`<button class="bt off two" data-x="undo"><span>Desfazer</span><small>volta ${BY[S.undo].name}</small></button>`:`<span class="bt on two"><span>Usando</span><small>${RIDE[id]?'montado':'arte em produção'}</small></span>`;
   d0.innerHTML=`<div class="det" style="--rc:${RC[m.r]}">
-    <div class="dt"><span class="th" style="background-image:url(${icon(m)})"></span><div class="di"><div class="dn"><span class="pvt eq">USANDO</span>${m.name} <span class="rar">${RN[m.r]}</span></div><div class="dh">${need?x.frags+'/'+need+' fragmentos':'5★ máximo'} · aura: ${auraOf(x.stars).name}</div></div><span class="stars" aria-label="${x.stars} de 5 estrelas">${stars(x.stars)}</span></div>
+    <div class="dt"><span class="th" style="background-image:url(${icon(m)})"></span><div class="di"><div class="dn"><span class="pvt eq">USANDO</span>${m.name} <span class="rar">${RN[m.r]}</span></div><div class="dh">${need?x.frags+'/'+need+' fragmentos':(x.stars>=7?'7★ máximo':x.stars+'★ · próxima na era '+(R.starEra[x.stars+1]||7))} · aura: ${auraOf(x.stars).name}</div></div><span class="stars" aria-label="${x.stars} de 5 estrelas">${stars(x.stars)}</span></div>
     ${lvlBar(id,x)}${pcmp}${cmp}
     <div class="acts">${lvB}${stB}${eqB}</div></div>`; }
 
 /* ---------- corpo: grade, estrelas e aura, nível, como conseguir ---------- */
 function cellHTML(m){ const x=S.own[m.id], sel=(S.pv||S.eq)===m.id, eq=S.eq===m.id;
-  if(x){ const rd=x.stars<5&&x.frags>=starNeed(x);
+  if(x){ const rd=x.stars<starCap()&&x.frags>=starNeed(x);
     return `<button class="cell ${sel?'sel':''}" style="--rc:${RC[m.r]}" data-m="${m.id}" aria-label="${m.name}, ${RN[m.r]}, nível ${x.lvl}, ${x.stars} estrelas${eq?', em uso':''}">
     <span class="pi" style="background-image:url(${icon(m)})"></span>${eq?'<span class="bdg">USANDO</span>':''}${rd?'<span class="bdg ev">ESTRELA</span>':''}
     <span class="cn">${m.name}</span><span class="cs r">Nv ${x.lvl} · ${RN[m.r]}</span><span class="ss">${stars(x.stars)}</span></button>`; }
@@ -516,13 +521,13 @@ function gridHTML(){ const ownN=Object.keys(S.own).length;
   return `<div class="pan"><div class="sec"><span>Montarias</span><span><b>${ownN}/${MOUNTS.length}</b> · toque para montar ou ver</span></div><div class="grid">${MOUNTS.map(cellHTML).join('')}</div>
     <p class="hint">Só uma montaria por vez dá o bônus (a que você usa). <b>NOVA</b> = entra no jogo quando a arte dela for aprovada.</p></div>`; }
 function starsHTML(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return ''; const x=S.own[id], lv=x?x.lvl:1, cur=S.apv&&S.apv.id===id?S.apv.st:(x?x.stars:1);
-  const cards=[1,2,3,4,5].map(s=>{ const A=auraOf(s), col=MAURA[s], reached=x&&s<=x.stars;
+  const cards=[1,2,3,4,5,6,7].map(s=>{ const A=auraOf(s), col=MAURA[s], reached=x&&s<=x.stars;
     const dot=A.glow?`background:radial-gradient(circle,${col}0.95) 0,${col}0.35) ${30+10*A.glow}%,transparent 72%)${A.smoke?`,radial-gradient(circle at 50% 80%,rgba(170,130,230,.6),transparent 60%)`:''}`:'background:rgba(255,255,255,.06);border:1px dashed rgba(160,180,255,.35)';
     return `<button class="sc ${reached||!x?'':'no'}" data-st="${s}" aria-pressed="${cur===s}" aria-label="${s} estrelas: ${A.name}. Ver no herói"><b>${s}★</b><i style="${dot}"></i><small>${AURA_S[s-1]}</small><small class="v">${pc(pctOf(id,lv,s))}</small></button>`; }).join('');
   const fl=R.starFlat[m.r].toString().replace('.',','), noP=pctOf(id,lv,cur,false), wP=pctOf(id,lv,cur);
   return `<div class="pan"><div class="sec"><span>Estrelas e aura</span><span>${m.name} · Nv ${lv} · toque para ver</span></div><div class="st5">${cards}</div>
     <p class="hint">% de ATK e VIDA no Nv ${lv} com o <b>pacote de dificuldade</b>: +${fl}% por estrela acima da 1ª (${RN[m.r]}). Em ${cur}★: ${pc(wP)} (sem o pacote seria ${pc(noP)}).</p>
-    <div class="kv"><span>Custo</span><span>${R.starCost.join(' / ')} fragmentos (2★ a 5★)</span></div>
+    <div class="kv"><span>Custo</span><span>${R.starCost.join(' / ')} fragmentos (2★ a 7★) · 6★ na era 7 e 7★ na era 8, com fragmentos ganhos jogando</span></div>
     <div class="kv"><span>Fragmentos</span><span>${FRAG_SRC}</span></div></div>`; }
 function levelHTML(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return ''; const x=S.own[id], lv=x?x.lvl:1, gu=goldUnit(P.stage);
   return `<div class="pan"><div class="sec"><span>Nível</span><span>teto agora: Nv ${lvlCap()} (jogador Nv ${P.lvl} ÷ 2)</span></div>
@@ -558,7 +563,7 @@ function undo(){ const p=S.undo; if(!p||!S.own[p]) return; const before=fcNow(),
   S.last={id:p,what:'voltou',a:before,b:fcNow(),pa,pb:pctOf(p,x.lvl,x.stars)}; full(false); fcFly(fcNow()-before); toast('Voltou: '+BY[p].name); }
 /* Simular: +10 fragmentos (montaria repetida) na montaria da faixa; nova que junta hatchFrags nasce sozinha (addFragments do mount.js) */
 function giveFrags(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return; const x=S.own[id];
-  if(x){ if(x.stars>=5){ toast(m.name+' já está em 5★'); return; } x.frags+=R.dupFrags; S.last=null; full(false); toast('+10 fragmentos: '+m.name+' ('+x.frags+'/'+starNeed(x)+')'); return; }
+  if(x){ if(x.stars>=starCap()){ toast(m.name+' já está em '+x.stars+'★'+(x.stars<7?' (próxima na era '+(R.starEra[x.stars+1]||7)+')':'')); return; } x.frags+=R.dupFrags; S.last=null; full(false); toast('+10 fragmentos: '+m.name+' ('+x.frags+'/'+starNeed(x)+')'); return; }
   S.stored[id]=(S.stored[id]||0)+R.dupFrags;
   if(m.hatch&&live(m)&&S.stored[id]>=m.hatch){ const left=S.stored[id]-m.hatch; delete S.stored[id]; S.own[id]={lvl:1,stars:1,frags:left};
     /* add() do mount.js: entra em uso só se não houver outra melhor */

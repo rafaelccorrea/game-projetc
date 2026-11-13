@@ -1,0 +1,801 @@
+<title>Eonbound Forja V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Equipamento V2 aprovado.
+   Forja V2: o herói fica SEMPRE à vista no topo, com a ARMA EQUIPADA NA MÃO (corpo sem arma do jogo + a arma no grip de cada quadro, como js/stage.js)
+   e a AURA DA ARMA em volta dele, crescendo com o +N da arma (azul, roxa, chamas vermelhas, dourada com raios). Pet na frente. Nunca rolagem horizontal. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:380px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.55) hue-rotate(150deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(255,150,70,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 28%,var(--night) 42%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,170,80,.55)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:236px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:236px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;max-width:250px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap}
+.who i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.who span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.who.pv{background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22));border-color:var(--gold);color:var(--gold);padding-right:3px}
+.who.pv i{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.who button{flex:none;height:18px;padding:0 8px;border-radius:9px;border:0;background:var(--gold);color:var(--ink);font-weight:900;font-size:10px}
+.slot{position:absolute;z-index:3;width:50px;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:0}
+.slot .sb{position:relative;width:46px;height:46px;border-radius:13px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 38%,#1a2366),#0c1238);box-shadow:0 0 8px color-mix(in srgb,var(--rc) 45%,transparent);overflow:hidden}
+.slot .sb img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.slot .fg{position:absolute;right:1px;top:1px;padding:0 4px;border-radius:6px;background:rgba(5,8,28,.88);color:var(--gold);font-size:10px;font-weight:900;line-height:14px}
+.slot .fg.cp{color:var(--muted)}
+.slot .lk{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:5px;background:rgba(5,8,28,.85);display:grid;place-items:center}
+.slot .lk svg{width:10px;height:10px}
+.slot.lock .sb img{filter:grayscale(.85) brightness(.5)}
+.slot .sl{font-size:9px;font-weight:900;color:var(--muted);text-shadow:0 1px 0 #000;white-space:nowrap}
+.slot.on .sb{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(255,210,94,.6)}
+.slot.on .sl{color:var(--gold)}
+
+.fcrow{position:relative;z-index:3;display:flex;align-items:center;gap:8px;margin:2px 12px 0;padding:4px 8px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5)}
+.fcb{flex:1;min-width:0}
+.fcb small{display:block;font-size:9px;letter-spacing:1.2px;color:var(--gold);font-weight:900}
+.fcb b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fcb em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.achip{flex:none;display:flex;align-items:center;gap:6px;max-width:150px;height:38px;padding:0 10px 0 8px;border-radius:11px;background:rgba(5,8,28,.6);border:1px solid color-mix(in srgb,var(--ac) 70%,transparent)}
+.achip i{flex:none;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,var(--ac) 45%,transparent 72%);box-shadow:0 0 10px var(--ac)}
+.achip span{min-width:0;font-size:11px;font-weight:900;line-height:1.15;color:var(--text)}
+.achip small{display:block;font-size:9px;color:var(--muted);letter-spacing:.6px}
+.bt{flex:none;min-width:76px;height:38px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.off,.bt:disabled{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line);cursor:default;transform:none}
+.bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f;box-shadow:0 3px 0 #164e8c}
+.bt.blue:disabled{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none}
+.bt.red{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a;box-shadow:none}
+.bt svg{width:15px;height:15px;flex:none}
+.bt small{font-size:10px;font-weight:800;opacity:.85}
+
+.tabs{position:relative;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin:6px 12px 0;padding:3px;border-radius:14px;background:rgba(5,8,28,.75);border:1px solid var(--line)}
+.tab{height:28px;border:0;border-radius:10px;background:none;font-weight:900;font-size:12px;color:var(--muted);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+
+/* faixa de detalhe (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;margin:6px 12px 0;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.dt{display:flex;gap:9px;align-items:center}
+.di0{flex:none;width:42px;height:42px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.di0 img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.di{flex:1;min-width:0}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh b{color:var(--gold)}
+.lvb{flex:none;font-family:var(--fd);font-weight:400;font-size:24px;line-height:1;color:var(--gold);text-shadow:0 0 12px rgba(255,210,94,.5);display:flex;align-items:center;gap:3px;font-variant-numeric:tabular-nums}
+.lvb svg{width:14px;height:14px}
+.lvb .nx{color:var(--green);text-shadow:0 0 12px rgba(94,240,160,.5)}
+.tagl{display:inline-block;font-size:9px;font-weight:900;letter-spacing:.8px;padding:1px 6px;border-radius:6px;background:var(--rose);color:#2a0612;vertical-align:1px;margin-right:4px}
+.chn{display:flex;gap:10px;align-items:center;margin-top:6px;padding:6px 8px;border-radius:10px;background:rgba(5,8,28,.55)}
+.chn .pc{flex:none;font-family:var(--fd);font-weight:400;font-size:30px;line-height:1;color:var(--cyan);text-shadow:0 0 12px rgba(94,231,255,.45);font-variant-numeric:tabular-nums;min-width:62px;text-align:center}
+.chn .cw{flex:1;min-width:0}
+.chn small{display:block;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chn small b{color:var(--green)}
+.chn em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pity{display:block;height:7px;margin:3px 0;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.pity i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#5ef0a0,#5ee7ff);transition:width .3s}
+.chn.msg{color:var(--muted);font-size:12px;font-weight:800;line-height:1.35}
+.chn.msg b{color:var(--gold)}
+.sts{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);gap:4px;margin-top:5px}
+.sts div{border-radius:9px;background:rgba(5,8,28,.45);padding:4px 6px;min-width:0}
+.sts small{display:block;font-size:8.5px;font-weight:900;color:var(--muted);letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sts b{display:block;font-size:11.5px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sts em{display:block;font-style:normal;font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sts .up b{color:var(--green)}
+.sts .bad b{color:var(--red)}
+.cmp{display:flex;align-items:center;gap:6px;margin-top:5px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
+.cmp small{font-size:9px;letter-spacing:1px;color:var(--muted);flex:none}
+.cmp .a{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp .b{font-family:var(--fd);font-weight:400;font-size:17px;color:var(--green);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp svg{width:14px;height:14px;flex:none}
+.cmp .d{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:var(--green)} .dn2{color:var(--red)} .eq0{color:var(--muted)}
+.acts{display:flex;gap:6px;margin-top:7px}
+.acts .bt{flex:1 1 0;min-width:0;height:42px;font-size:12px;padding:0 6px;flex-direction:column;gap:0;line-height:1.1}
+.acts .bt span{max-width:100%;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:4px}
+.foot{margin-top:5px;font-size:10px;font-weight:800;color:var(--muted);line-height:1.3}
+.foot b{color:var(--text)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 20px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:2px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right;min-width:0}
+.sec b{color:var(--text)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4}
+.hint b{color:var(--gold)}
+.note{padding:7px 9px;border-radius:11px;background:rgba(255,107,154,.1);border:1px solid rgba(255,107,154,.45);font-size:11px;font-weight:800;color:#ffc9d8;line-height:1.35;margin-bottom:8px}
+.note b{color:#fff}
+/* legenda das auras */
+.alg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:10px}
+.ac{position:relative;border-radius:12px;border:1px solid var(--line);background:rgba(5,8,28,.5);padding:6px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.ac .sw{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#fff 0 12%,var(--ac) 40%,transparent 72%);box-shadow:0 0 12px var(--ac)}
+.ac .sw.none{background:radial-gradient(circle,#55608f 0 30%,transparent 70%);box-shadow:none}
+.ac .sw.fl{border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 70%,#ffe28a 0 14%,#ff8a3d 34%,#ff4d3d 52%,transparent 74%)}
+.ac .sw.gd{background:conic-gradient(from 0deg,#ffd23f 0 8%,transparent 8% 17%,#ffd23f 17% 25%,transparent 25% 33%,#ffd23f 33% 42%,transparent 42% 50%,#ffd23f 50% 58%,transparent 58% 67%,#ffd23f 67% 75%,transparent 75% 83%,#ffd23f 83% 92%,transparent 92%);-webkit-mask:radial-gradient(circle,#000 0 70%,transparent 72%);mask:radial-gradient(circle,#000 0 70%,transparent 72%)}
+.ac b{font-size:12px;font-weight:900;color:var(--gold)}
+.ac small{font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.ac.cur{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,94,.45)}
+.ac.cur::after{content:'SUA';position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:900;letter-spacing:.6px;padding:0 5px;border-radius:5px;background:var(--gold);color:var(--ink)}
+.ac.pv{border-color:var(--cyan)}
+/* tabela da forja */
+.tbl{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr .7fr;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.tbl>span{padding:4px 6px;background:rgba(5,8,28,.45);border-top:1px solid rgba(130,150,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px}
+.tbl>span.h{background:rgba(61,79,184,.35);color:var(--muted);font-size:9px;letter-spacing:.8px;border-top:0}
+.tbl>span.dn{color:#6f7ab0}
+.tbl>span.cu{background:rgba(255,210,94,.18);color:var(--gold)}
+.tbl>span.cp{color:#58628f}
+.tbl>span.lt{color:#c79ab0}
+.tbl i.d{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac)}
+/* listas (transformar / fundir) */
+.row{width:100%;display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px;text-align:left}
+.row .di0{width:40px;height:40px}
+.row div.tx{flex:1;min-width:0}
+.row b{display:block;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small{display:block;font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row strong{flex:none;font-size:11px;font-weight:900;text-align:right;line-height:1.3;font-variant-numeric:tabular-nums}
+.row.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,94,.35)}
+.row .eqb{font-size:8px;font-weight:900;padding:1px 5px;border-radius:5px;background:var(--green);color:#043018;vertical-align:1px;margin-left:4px}
+.mat{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:14px;background:rgba(5,8,28,.5);border:1px solid var(--line);margin-bottom:8px}
+.mat img{width:30px;height:30px;object-fit:contain;flex:none}
+.mat div{flex:1;min-width:0;font-size:11px;color:var(--muted);font-weight:800;line-height:1.3}
+.mat div b{display:block;color:var(--text);font-size:13px}
+.mat strong{font-family:var(--fd);font-weight:400;font-size:20px;color:var(--gold);font-variant-numeric:tabular-nums}
+.stars{display:inline-flex;gap:1px;vertical-align:-2px}
+.stars svg{width:11px;height:11px}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto minmax(0,1.1fr);gap:5px;align-items:center;margin-top:6px}
+.trio .q{border-radius:10px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:4px 2px;text-align:center;min-width:0}
+.trio .q img{width:30px;height:30px;object-fit:contain;display:block;margin:0 auto}
+.trio .q small{display:block;font-size:9px;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trio .q.res{border-color:var(--gold);background:rgba(255,210,94,.12)}
+.trio>svg{width:16px;height:16px}
+.bands{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-bottom:10px}
+.bands div{border-radius:10px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:0}
+.bands b{display:block;font-size:11px;color:var(--gold)}
+.bands small{display:block;font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.ban{position:absolute;z-index:30;left:50%;top:214px;transform:translateX(-50%);min-width:220px;max-width:350px;padding:7px 14px;border-radius:14px;text-align:center;pointer-events:none;animation:bin 2.4s ease-out forwards;white-space:nowrap}
+.ban b{display:block;font-family:var(--fd);font-weight:400;font-size:22px;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
+.ban small{display:block;font-size:11px;font-weight:900;overflow:hidden;text-overflow:ellipsis}
+.ban.ok{background:linear-gradient(180deg,rgba(60,40,6,.94),rgba(30,20,4,.94));border:2px solid var(--gold);color:var(--gold);box-shadow:0 0 24px rgba(255,210,94,.5)}
+.ban.ok small{color:var(--green)}
+.ban.no{background:rgba(42,21,48,.94);border:2px solid var(--rose);color:#ffb3c4}
+.ban.no small{color:var(--text)}
+.ban.au{top:150px;border-color:var(--ac);color:#fff;box-shadow:0 0 30px var(--ac)}
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.7);display:flex;align-items:center;animation:fade .2s}
+.modal{margin:auto 16px;width:100%;max-height:80%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;animation:up .25s ease-out}
+.modal h3{font-family:var(--fd);font-weight:400;font-size:22px;margin:0 0 8px}
+.modal p{margin:0 0 6px;font-size:13px;color:var(--muted);line-height:1.45}
+.modal p b{color:var(--text)}
+.mi{display:flex;gap:10px;align-items:center;padding:8px;border-radius:14px;background:rgba(5,8,28,.5);margin-bottom:10px}
+.gain{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+.gain span{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:9px;background:rgba(255,107,107,.12);color:#ffc9c9;font-weight:900;font-size:12px}
+.gain img{width:18px;height:18px}
+.macts{display:flex;gap:8px;margin-top:12px}
+.macts .bt{flex:1;height:46px;font-size:14px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.fcfly{position:absolute;z-index:40;left:50%;top:252px;transform:translateX(-50%);font-family:var(--fd);font-size:26px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap;color:var(--green)}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes bin{0%{opacity:0;transform:translate(-50%,8px) scale(.85)}10%{opacity:1;transform:translate(-50%,0) scale(1.06)}18%{transform:translate(-50%,0) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="760"></canvas>
+        <div class="top">
+          <button class="back" data-go="Equipamento" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">FORJA</div>
+          <div class="cur"><img src="a/coin.png" alt="Ouro"><span id="gold">0</span></div>
+          <div class="cur"><img src="a/forge.png" alt="Pedras de forja"><span id="stones">0</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="472" role="img" aria-label="Seu herói com a arma na mão e a aura da arma, que cresce com o nível da Forja, e o pet na frente"></canvas>
+          <div class="who" id="who"></div>
+          <div id="slots"></div>
+        </div>
+        <div class="fcrow">
+          <div class="fcb"><small>PODER (FC)</small><b id="fc">0</b><em id="fcsub"></em></div>
+          <div class="achip" id="achip"></div>
+        </div>
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <div id="det"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Forja (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">O herói fica sempre no topo com a arma na mão, e a aura da arma cresce com o +N dela: azul no +4, roxa no +7, chamas vermelhas no +10 e dourada com raios no +13. As 7 peças ficam em volta dele; toque numa para ver a chance, a garantia, o custo por tentativa e o FC antes e depois. A falha nunca tira nível: só gasta e soma +5% na próxima. Transformar leva uma peça antiga para a sua era; Fundir junta 3 iguais em 1 com mais estrelas.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Momento do jogo" style="margin-top:8px"><button data-sc="a" aria-pressed="true">Era 2, arma +7</button><button data-sc="b" aria-pressed="false">Era 8, arma +16 (pacote do fim)</button></div>
+      <div class="seg" style="margin-top:8px"><button data-add="50" aria-pressed="false">Ganhar 50 pedras (como jogando)</button></div>
+      <p class="sub" style="margin-top:8px">"Era 2, arma +7": Medieval, fase 25, teto +9, a arma com 10% de garantia acumulada (2 falhas). "Era 8, arma +16": Celestial, fase 85, com o pacote do fim que o dono aprovou e que está DESLIGADO no jogo (+16 a +20, teto +18 na era 7 e +20 na era 8). Chance, pedras, garantia, bônus, teto, ouro por tentativa, aura, custos de Transformar e Fundir vêm do código; o FC total, o ouro e as pedras em estoque são exemplos. A arma da era 8 usa a arte da era 5 até a arte nova chegar.</p>
+    </div>
+    <div class="box">
+      <h2>Como funciona (números do código)</h2>
+      <ul>
+        <li>Forja no ESPAÇO (+0 a +15), não na peça: trocar de arma mantém o +N</li>
+        <li>Chance do +1 ao +15: 100, 100, 100, 90, 80, 70, 60, 50, 40, 30, 25, 20, 15, 10, 5%</li>
+        <li>Pedras por tentativa: 2, 3, 4, 5, 6, 6, 8, 9, 10, 11, 13, 16, 19, 22, 25</li>
+        <li>Cada falha soma +5% na próxima daquele espaço; zera ao acertar. A falha nunca tira nível</li>
+        <li>Ouro por tentativa = 30 × ouro de 1 abate da fase atual (fase 25: 1.110 ouro)</li>
+        <li>Bônus do espaço: +3% no +1 até +93% no +15 (pacote do fim: +105% a +153% do +16 ao +20)</li>
+        <li>Teto por era: +6, +6, +9, +9, +12, +12, +15 (pacote do fim: +18 na era 7, +20 na era 8)</li>
+        <li>Transformar: Essência da Era e ouro, por raridade e por era pulada; o nível volta a 1, o visual fica</li>
+        <li>Fundir: 3 iguais (era, espaço, raridade, estrelas; arma da mesma família) viram 1 com +1 estrela, só ouro. Ainda desligado no código</li>
+        <li>Sem sorteio pago: pedras e ouro vêm de jogar (inimigos, chefes, Desmontar). Nada de diamante nem dinheiro na Forja</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: chamas mais altas no +10, botão Forjar maior"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+const RM=(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais ao Equipamento V2 / Pets V2): caixa e grip das armas, grip por quadro dos corpos ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},"era5_t2":{"w":300,"h":157,"fx":0.04492,"fy":0.30371,"fw":0.80566,"fh":0.4209,"type":"gun","grip":[0.24,0.65],"angle":0}},"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]},"kael_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[313.81,133.99,4.26,0.9972,-0.0744,-4.57,4.57,3.43,0],[312.33,133.76,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.67,133.82,5.47,0.9955,-0.0953,-4.57,4.57,3.43,0],[310.33,136.05,4.75,0.9966,-0.0828,-4.57,4.57,3.43,0],[310.5,137.08,3.96,0.9976,-0.069,-4.57,4.57,3.43,0],[312.5,136.33,5.27,0.9958,-0.0918,-4.57,4.57,3.43,0],[310.44,135.82,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.04,135.53,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.33,135.59,5.01,0.9962,-0.0873,-4.57,4.57,3.43,0],[311.01,136.68,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.67,136.16,3.65,0.998,-0.0637,-4.57,4.57,3.43,0],[310.61,135.36,4.39,0.9971,-0.0766,-4.57,4.57,3.43,0]],"back":{"x":202.2,"y":166,"a":0,"s":1},"neck":null},"kaia_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[320.22,152.93,2.73,0.9989,-0.0476,-4.43,4.43,3.32,0],[319.23,154.26,2.28,0.9992,-0.0398,-4.43,4.43,3.32,0],[320.34,154.2,2.06,0.9994,-0.0359,-4.43,4.43,3.32,0],[320.06,152.88,2.96,0.9987,-0.0516,-4.43,4.43,3.32,0],[319.23,151.44,3.49,0.9981,-0.0608,-4.43,4.43,3.32,0],[319.01,151.99,3.82,0.9978,-0.0666,-4.43,4.43,3.32,0],[320.5,153.21,2.75,0.9988,-0.0479,-4.43,4.43,3.32,0],[319.73,154.2,2.51,0.999,-0.0439,-4.43,4.43,3.32,0],[319.34,154.15,2.17,0.9993,-0.0378,-4.43,4.43,3.32,0],[320.11,152.88,3.08,0.9986,-0.0537,-4.43,4.43,3.32,0],[319.34,151.99,3.55,0.9981,-0.0619,-4.43,4.43,3.32,0],[319.39,153.32,2.69,0.9989,-0.0469,-4.43,4.43,3.32,0]],"back":{"x":202,"y":166,"a":13.9,"s":1},"neck":null}},"PS":{"kael":{"4":0.0764,"5":0.0874},"kaia":{"4":0.0601,"5":0.0688}}};
+
+/* ---------- REGRAS (copiadas do código, sem inventar) ----------
+   FORGE: js/sys/forge.js DATA (max, chance, stones, pityPerFail, bonus, capByEra, goldPerTryKills, auras)
+   LATE:  docs/balance.json dificuldade.pacoteFim.forge (aprovado pelo dono, DESLIGADO: on=false)
+   BAL:   js/battle.js BAL (goldBase, goldGrowth, commonGoldMult) → goldUnit do js/farm.js
+   TRANS: js/sys/loot.js DATA.transform (transformCost / payTransform)
+   QUAL:  js/sys/stats.js DATA.quality (+ fusion) e DATA.upgrade (custo do Nv 1, para o ouro da fusão) */
+const FORGE={max:15,chance:[100,100,100,90,80,70,60,50,40,30,25,20,15,10,5],stones:[2,3,4,5,6,6,8,9,10,11,13,16,19,22,25],pityPerFail:5,
+  bonus:[0,0.03,0.06,0.09,0.12,0.15,0.18,0.23,0.28,0.33,0.41,0.49,0.57,0.69,0.81,0.93],capByEra:[6,6,9,9,12,12,15],goldPerTryKills:30};
+const LATE={max:20,bonus16a20:[1.05,1.17,1.29,1.41,1.53],capByEra:[6,6,9,9,12,12,15,18,20],chance16a20:[5,5,4,4,3],stones16a20:[28,32,36,40,45]};
+const AUR=[{from:0,id:'none',name:'Sem aura',col:'#55608f'},{from:4,id:'blue',name:'Aura azul',col:'#4aa3ff'},{from:7,id:'purple',name:'Aura roxa',col:'#b45cff'},
+  {from:10,id:'flame',name:'Chamas vermelhas',col:'#ff4d3d'},{from:13,id:'gold',name:'Dourada com raios',col:'#ffd23f'}];
+const BAL={goldBase:4,goldGrowth:1.15,commonGoldMult:0.32};
+const TRANS={essence:[1,2,4,7,12],goldBase:[100,300,900,2500,6000],goldEra:4};
+const QUAL={min:0.90,max:1.30,top:10000,stars:[0,2000,4000,6000,8000],fusion:{count:3,goldPerLevel1:3,maxFusedQp:9999}};
+const UPG={goldBaseV8:25,rarityCost:0.6,priceEra:3.5};
+const ERAN=['Pré-História','Antiguidade','Medieval','Era da Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
+const RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'];
+const SLOTS=[['weapon','Arma'],['hat','Chapéu'],['armor','Colete'],['gloves','Luvas'],['necklace','Colar'],['boots','Botas'],['wing','Asa']];
+const SLN={weapon:'Arma',armor:'Colete',hat:'Chapéu/Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asa'};   /* DATA.slotName */
+const SLOT_POS={weapon:[10,2],hat:[10,58],armor:[10,114],gloves:[10,170],necklace:[330,30],boots:[330,86],wing:[330,142]};
+
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+function fmtG(v){ const a=Math.abs(v), f=(x,u)=>(x>=100?String(Math.round(x)):x.toFixed(1).replace('.',',').replace(/,0$/,''))+' '+u;
+  if(a>=1e12) return f(v/1e12,'tri'); if(a>=1e9) return f(v/1e9,'bi'); if(a>=1e6) return f(v/1e6,'mi'); if(a>=1e4) return f(v/1e3,'mil'); return n(v); }
+const pctB=b=>'+'+Math.round(b*100)+'%';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ord=k=>k+'ª';
+const SV={go:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ goG:'<svg viewBox="0 0 24 24" fill="none" stroke="#5ef0a0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="#c9d0f5"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>',
+ hammer:'<svg viewBox="0 0 24 24" fill="none" stroke="#1c1206" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6zM11 7l-8 8 3 3 8-8"/></svg>',
+ loop:'<svg viewBox="0 0 24 24" fill="none" stroke="#04223f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0114-5.3L20 9M20 4v5h-5M20 12a8 8 0 01-14 5.3L4 15M4 20v-5h5"/></svg>',
+ star:on=>`<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="${on?'#ffd25e':'#2b3260'}" stroke="${on?'#9a5a10':'#454e86'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`};
+const starsH=(s,max)=>`<span class="stars" aria-label="${s} de ${max||5} estrelas">${Array.from({length:max||5},(_,i)=>SV.star(i<s)).join('')}</span>`;
+
+/* ---------- os dois momentos do Simular (FC total, ouro, pedras e essência em estoque = exemplo; o resto pelas regras) ----------
+   item: id, slot, e (era de poder), r (raridade), lvl, name, ic (ícone), wk (arte da arma na mão), gold (ouro investido no nível), eq (equipado) */
+const SC={
+ a:{era:2,stage:25,late:false,wingOpen:false,stones:86,gold:486000,ess:9,fc:92100,
+   forge:{weapon:7,armor:5,hat:4,gloves:5,boots:3,necklace:4,wing:0},pity:{weapon:10,boots:5},
+   items:[
+    {id:'w1',slot:'weapon',e:2,r:2,lvl:12,name:'Lâmina Rúnica',ic:'ic_era2_t1',wk:'era2_t1',gold:4800,eq:1},
+    {id:'a1',slot:'armor',e:2,r:2,lvl:12,name:'Armadura de Placas',ic:'era2_vest_t1',gold:4800,eq:1},
+    {id:'h1',slot:'hat',e:2,r:1,lvl:12,name:'Elmo de Ferro',ic:'era2_helmet',gold:3900,eq:1},
+    {id:'g1',slot:'gloves',e:2,r:2,lvl:12,name:'Manoplas de Ferro',ic:'era2_gloves_t1',gold:4800,eq:1},
+    {id:'b1',slot:'boots',e:1,r:3,lvl:10,name:'Grevas Espartanas',ic:'era1_boots_t1',gold:2100,eq:1},
+    {id:'n1',slot:'necklace',e:2,r:1,lvl:12,name:'Medalhão de Ferro',ic:'era2_necklace',gold:3900,eq:1},
+    {id:'s1',slot:'wing',e:2,r:2,lvl:1,name:'Asa (abre no nível 50)',ic:'wing_angel',gold:0,eq:1},
+    {id:'w3',slot:'weapon',e:1,r:3,lvl:11,name:'Xifos Espartano',ic:'ic_era1_mitico',gold:2400},
+    {id:'w4',slot:'weapon',e:0,r:4,lvl:8,name:'Presa de Mamute',ic:'ic_era0_t2',gold:900},
+    {id:'w6',slot:'weapon',e:1,r:2,lvl:9,name:'Falcata de Ferro',ic:'ic_era1_t1',gold:1500}],
+   groups:[
+    {name:'Espada de Aço',slot:'weapon',e:2,r:1,ic:'ic_era2_raro',fam:'Espada',qps:[2400,3100,3800],lvls:[13,9,5]},
+    {name:'Cota de Malha',slot:'armor',e:2,r:1,ic:'era2_vest',fam:'',qps:[600,1200,1900,1500],lvls:[12,10,8,4]},
+    {name:'Arco e flecha',slot:'weapon',e:2,r:1,ic:'wh_bow_raro',fam:'Arco',qps:[4500,5200],lvls:[14,6]},
+    {name:'Elmo de Cavaleiro',slot:'hat',e:2,r:2,ic:'era2_helmet_t1',fam:'',qps:[8100,8500,9000],lvls:[11,9,7]}],
+   pet:'a/pt_pet_shadowwolf_idle.png',wing:null},
+ b:{era:8,stage:85,late:true,wingOpen:true,stones:700,gold:2.4e9,ess:20,fc:2.31e14,
+   forge:{weapon:16,armor:15,hat:14,gloves:15,boots:13,necklace:14,wing:12},pity:{weapon:5},
+   items:[
+    {id:'w1',slot:'weapon',e:8,r:4,lvl:100,name:'Fuzil Celestial',ic:'ic_era5_t2',wk:'era5_t2',gold:0,eq:1},
+    {id:'a1',slot:'armor',e:8,r:4,lvl:100,name:'Couraça Celestial',ic:'era5_vest_t2',gold:0,eq:1},
+    {id:'h1',slot:'hat',e:8,r:3,lvl:98,name:'Elmo Celestial',ic:'era5_helmet_t2',gold:0,eq:1},
+    {id:'g1',slot:'gloves',e:8,r:4,lvl:100,name:'Manoplas Celestiais',ic:'era5_gloves_t2',gold:0,eq:1},
+    {id:'b1',slot:'boots',e:8,r:3,lvl:96,name:'Botas Celestiais',ic:'era5_boots_t2',gold:0,eq:1},
+    {id:'n1',slot:'necklace',e:7,r:4,lvl:100,name:'Colar do Submundo',ic:'era5_necklace_t2',gold:9.8e8,eq:1},
+    {id:'s1',slot:'wing',e:8,r:3,lvl:90,name:'Asa de anjo',ic:'wing_angel',gold:0,eq:1},
+    {id:'w7',slot:'weapon',e:7,r:3,lvl:100,name:'Lâmina do Submundo',ic:'ic_era5_t1',gold:6.1e8},
+    {id:'b6',slot:'boots',e:6,r:2,lvl:100,name:'Botas Futuristas',ic:'era5_boots_t1',gold:2.2e8}],
+   groups:[
+    {name:'Fuzil Celestial',slot:'weapon',e:8,r:1,ic:'ic_era5_raro',fam:'Fuzil',qps:[2100,2600,3900],lvls:[100,88,70]},
+    {name:'Colete Celestial',slot:'armor',e:8,r:2,ic:'era5_vest_t1',fam:'',qps:[500,900,1700],lvls:[96,90,81]},
+    {name:'Arco Celestial',slot:'weapon',e:8,r:1,ic:'wh_bow_raro',fam:'Arco',qps:[4200,5800],lvls:[100,94]},
+    {name:'Elmo Celestial',slot:'hat',e:8,r:3,ic:'era5_helmet_t2',fam:'',qps:[8200,8800,9400],lvls:[100,99,97]}],
+   pet:'a/pt_pet_shadowwolf_idle.png',wing:'angel'}};
+
+/* ---------- estado ---------- */
+let S=null, tab='forge';
+const R=()=>S&&S.late?{max:LATE.max,chance:FORGE.chance.concat(LATE.chance16a20),stones:FORGE.stones.concat(LATE.stones16a20),bonus:FORGE.bonus.concat(LATE.bonus16a20),capByEra:LATE.capByEra}
+  :{max:FORGE.max,chance:FORGE.chance,stones:FORGE.stones,bonus:FORGE.bonus,capByEra:FORGE.capByEra};
+function reset(key){ const P=SC[key];
+  S={key,hero:S?S.hero:'kael',era:P.era,stage:P.stage,late:P.late,wingOpen:P.wingOpen,stones:P.stones,gold:P.gold,ess:P.ess,
+    items:P.items.map(i=>({...i})),forge:{...P.forge},pity:{},groups:P.groups.map(g=>({...g,qps:g.qps.slice(),lvls:g.lvls.slice()})),
+    slot:'weapon',tsel:null,gsel:0,apv:null,fx:null,busy:false,auto:null,pet:P.pet,wing:P.wing,K:1,hand:null};
+  for(const [s] of SLOTS) S.pity[s]=P.pity[s]||0;
+  S.eq={}; for(const it of S.items) if(it.eq) S.eq[it.slot]=it;
+  S.K=P.fc/rawFC(S.eq,S.forge);
+  const tl=transList(); S.tsel=tl.length?tl[0].id:null; }
+
+/* ---------- Forja (mesma lógica do Sys.forge: capOf, chance, canTry, attempt, worstTries, aura) ---------- */
+const capNow=()=>{ const c=R().capByEra; return c[clamp(S.era,0,c.length-1)]; };
+const goldUnit=st=>Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,st-1)*BAL.commonGoldMult));   /* js/farm.js goldUnit */
+const goldTry=()=>Math.round(FORGE.goldPerTryKills*goldUnit(S.stage));
+const bon=lv=>{ const b=R().bonus; return b[clamp(lv|0,0,b.length-1)]||0; };
+function chanceOf(s){ const lv=S.forge[s]; if(lv>=R().max) return 0; return clamp(R().chance[lv]+S.pity[s],0,100); }
+function worst(s){ const lv=S.forge[s]; if(lv>=R().max) return 0; return Math.max(1,Math.ceil((100-chanceOf(s))/FORGE.pityPerFail)+1); }
+function canTry(s){ const lv=S.forge[s], st=lv<R().max?R().stones[lv]:0, g=goldTry(), ch=chanceOf(s), r={ok:false,reason:'',stones:st,gold:g,chance:ch};
+  if(s==='wing'&&!S.wingOpen){ r.reason='locked'; return r; }
+  if(lv>=R().max){ r.reason='max'; return r; }
+  if(lv>=capNow()){ r.reason='cap'; return r; }
+  if(S.stones<st){ r.reason='stones'; return r; }
+  if(S.gold<g){ r.reason='gold'; return r; }
+  r.ok=true; return r; }
+function attempt(s){ const c=canTry(s); if(!c.ok) return {ok:false,reason:c.reason};
+  S.stones-=c.stones; S.gold-=c.gold; const roll=Math.random()*100, success=roll<c.chance;
+  if(success){ S.forge[s]++; S.pity[s]=0; } else S.pity[s]+=FORGE.pityPerFail;
+  return {ok:true,success,chance:c.chance,stones:c.stones,gold:c.gold,lv:S.forge[s]}; }
+const auraOf=lv=>{ let a=AUR[0]; for(const x of AUR) if(lv>=x.from) a=x; return a; };
+const tierOf=lv=>AUR.indexOf(auraOf(lv));
+function nextCapEra(){ const c=R().capByEra, cur=capNow(); for(let e=S.era+1;e<c.length;e++) if(c[e]>cur) return e; return -1; }
+/* custo para guardar pedras: quantas tentativas o estoque paga no nível de agora */
+const triesPaid=s=>{ const lv=S.forge[s]; if(lv>=R().max) return 0; const st=R().stones[lv]; return Math.min(Math.floor(S.stones/st),Math.floor(S.gold/goldTry())); };
+const reasonTxt=(r,s)=>({locked:'A asa abre no nível 50',max:'Já está no máximo',cap:'Teto da era: +'+capNow(),stones:'Faltam pedras de forja',gold:'Falta ouro'})[r]||'Não dá agora';
+
+/* ---------- FC (modelo do protótipo com a FORMA do Sys.stats: planos × raridade × 12^era × nível × (1 + bônus da Forja);
+   botas, colar e asa são %: × (1 + 0,25·era) × (1 + 1%·(nível−1)) × (1 + bônus × 0,5) = pctForgeShare). Calibrado no FC de exemplo. ---------- */
+const RARF=[1,1.7,3,5.5,10,18], RARP=[1,1.25,1.5,1.8,2.2,2.7];
+const lvlF=L=>(1+0.15*(L-1))*Math.pow(1.01,L-1);   /* lvlCurve v8 */
+const FLAT_W={weapon:1,armor:.6,hat:.35,gloves:.45}, PCT={boots:[4,.010],necklace:[10,.005],wing:[6,.018]};
+const qMult=qp=>QUAL.min+(QUAL.max-QUAL.min)*qp/QUAL.top;
+function flatPow(it,lv){ return RARF[it.r]*Math.pow(12,it.e)*lvlF(it.lvl)*(1+bon(lv))*(it.qm||1); }
+function pctVal(it,lv){ return PCT[it.slot][0]*RARP[it.r]*(1+.25*it.e)*(1+.01*(it.lvl-1))*(1+bon(lv)*.5)*(it.qm||1); }
+function rawFC(eq,fg){ let f=0,p=1; for(const [s] of SLOTS){ const it=eq[s]; if(!it) continue; if(s==='wing'&&!S.wingOpen) continue;
+    if(FLAT_W[s]) f+=FLAT_W[s]*flatPow(it,fg[s]); else p+=PCT[s][1]*pctVal(it,fg[s]); } return f*1.18*p; }
+const fcOf=(eq,fg)=>S.K*rawFC(eq||S.eq,fg||S.forge);
+
+/* ---------- Transformar (Sys.loot.transformCost / payTransform + Sys.stats.canTransform / transform) ---------- */
+function transCost(it){ const to=S.era, jump=to-it.e, r=clamp(it.r,0,TRANS.essence.length-1); if(jump<=0) return null;
+  return {jump,to,essence:TRANS.essence[r]*jump,gold:Math.round(TRANS.goldBase[r]*Math.pow(TRANS.goldEra,to)*jump)}; }
+const transList=()=>S.items.filter(i=>i.slot!=='wing'&&i.e<S.era);
+const byId=id=>S.items.find(i=>i.id===id);
+
+/* ---------- Fundir (Sys.stats.canFuse: 3 iguais, mesma era, espaço, raridade, estrelas; arma da mesma família) ---------- */
+const starsOf=qp=>{ let s=1; QUAL.stars.forEach((x,i)=>{ if(clamp(qp,0,QUAL.top)>=x) s=i+1; }); return s; };
+const bandOf=st=>{ const B=QUAL.stars; return [B[st-1],st<B.length?B[st]-1:QUAL.top]; };
+const upCost1=(r,e)=>Math.floor(UPG.goldBaseV8*(1+r*UPG.rarityCost)*Math.pow(UPG.priceEra,e));   /* upgradeCost({lvl:1}) com a curva v8 */
+/* os grupos do protótipo guardam as peças por estrela: cada grupo tem as suas qps já na mesma faixa */
+function groupInfo(g){ const idx=g.qps.map((q,i)=>i).sort((a,b)=>g.qps[a]-g.qps[b]), st=starsOf(g.qps[idx[0]]||0);
+  const pick=idx.slice(0,QUAL.fusion.count), can=pick.length===QUAL.fusion.count&&st<QUAL.stars.length;
+  const gold=QUAL.fusion.goldPerLevel1*upCost1(g.r,g.e);
+  let res=null; if(can){ const m=pick.reduce((t,i)=>t+g.qps[i],0)/pick.length, [lo,hi]=bandOf(st), [nlo,nhi]=bandOf(st+1), rel=hi>lo?clamp((m-lo)/(hi-lo),0,1):0;
+    const qp=Math.min(QUAL.fusion.maxFusedQp,Math.round(nlo+rel*(Math.min(nhi,QUAL.fusion.maxFusedQp)-nlo)));
+    res={qp,st:st+1,lvl:Math.max(...pick.map(i=>g.lvls[i])),mean:m}; }
+  return {st,pick,can,gold,res,reason:pick.length<QUAL.fusion.count?'falta':st>=QUAL.stars.length?'max':''}; }
+
+/* ---------- PALCO EM CANVAS (receita do jogo: js/stage.js drawHeroAnim / drawHeroPistol; igual ao Equipamento V2) ---------- */
+const IM={};
+/* imagens do palco como <img> DE VERDADE na página (no host publicado, new Image() não chega ao canvas), escondidas fora da tela;
+   cada uma avisa se carregou ou falhou na linha "Palco" do painel ao lado */
+const STG_EL=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG_EL.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo: GLOWB/TINT) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[rr], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; return -(G.ang-wang)*Math.PI/180; }
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+const HX=196, GY=222, HK=0.8, PCX=126, KP=150/512;
+/* sil = true: desenha só o herói (para o brilho da aura em volta do contorno), sem a sombra do chão */
+function drawHero(x,t,sil){
+  const wi=S.eq.weapon, key=wi&&wi.wk, W=key?D.W[key]:null, gun=!!(W&&W.type==='gun'), bid=S.hero+(gun?'_p':''), B=D.B[bid], sh=img('a/body_'+bid+'.png');
+  if(!ok(sh)) return;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=HX-(B.pad+128)*k, y0=GY-((S.hero==='kael'&&!gun)?242:B.fy)*k;
+  if(!sil){ S.hand={x:x0+G.x*k,y:y0+G.y*k};
+    x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(HX-3,GY+2,34,8,0,0,7); x.fill(); x.restore(); }
+  /* asa: atrás do corpo, raiz na âncora das costas, batendo (só com o espaço da asa aberto) */
+  const WA=S.wingOpen&&S.wing&&WING_AN[S.wing];
+  if(WA&&B.back){ const Li=img('a/wg_'+S.wing+'_L.png'), Ri=img('a/wg_'+S.wing+'_R.png');
+    if(ok(Li)&&ok(Ri)){ const b=B.back, ax=x0+b.x*k, ay=y0+b.y*k, sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+      x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+      x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+      x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+      x.restore(); } }
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*B.w,0,B.w,B.h,0,0,B.w,B.h);
+  const ws=W?wSpr(key,wi.r):null;
+  if(gun){ /* PISTOLA (drawHeroPistol): corpo, arma no grip com a escala aprovada da era, dedos por cima do cabo */
+    body();
+    if(ws){ const ps=D.PS[S.hero], S0=(ps[key.charAt(3)]||ps[5])*1024, grip=W.grip, ang=wAng(W,G);
+      const dw=W.fw*S0, dh=W.fh*S0, gx=(grip[0]-W.fx)*S0, gy2=(grip[1]-W.fy)*S0;
+      x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore();
+      fingers(x,G,body,-5,5,G.hw+5); }
+  } else { let drawW=null;
+    if(ws){ const grip=W.grip, kk=256*0.5/Math.max(W.w,W.h);
+      const dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+      drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+    const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+    if(drawW&&behind){ drawW(); body(); }
+    else { body(); if(drawW){ drawW();
+        fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);   /* dedos por cima do cabo */
+        const nk=B.neck&&B.neck[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }   /* cabeça por cima da lâmina */
+  }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+
+/* AURA DA ARMA pelo +N (Sys.forge.aura: +4 azul, +7 roxa, +10 chamas vermelhas, +13 dourada com raios). Tudo preso ao chão do herói:
+   luz no chão, brilho em volta do contorno (sombra de uma cópia fora da tela), e por faixa: fumaça roxa, chamas que sobem do chão,
+   raios de luz girando atrás e relâmpagos dourados. Dentro da faixa, cada +1 deixa a aura um pouco mais forte. */
+const SEED=[]; for(let i=0;i<48;i++) SEED.push([((i*7919)%997)/997,((i*104729)%991)/991,((i*1299709)%983)/983]);
+function hexA(h,a){ const v=parseInt(h.slice(1),16); return `rgba(${v>>16&255},${v>>8&255},${v&255},${clamp(a,0,1).toFixed(3)})`; }
+function halo(x,drawFn,col,blur){ const OFF=1200; x.save(); x.shadowColor=col; x.shadowBlur=blur; x.shadowOffsetX=OFF*2; x.shadowOffsetY=0; x.translate(-OFF,0); drawFn(); x.restore(); }
+const CY=GY-82;   /* meio do corpo do herói */
+function flames(x,t,q,front){ x.save(); x.globalCompositeOperation='lighter'; const N=front?5:9;
+  for(let i=0;i<N;i++){ const s=SEED[i+(front?24:0)], bx=HX-4+(s[0]-.5)*(front?64:100), h=(front?30:66)+34*q+16*Math.sin(t*7+i*1.7)+12*s[1], w=(front?8:13)+6*s[2], sw=Math.sin(t*5+i*2.1)*7;
+    const g=x.createLinearGradient(bx,GY+2,bx,GY-h); g.addColorStop(0,`rgba(255,60,40,${front?.38:.55})`); g.addColorStop(.45,`rgba(255,140,40,${front?.28:.42})`); g.addColorStop(1,'rgba(255,220,90,0)');
+    x.fillStyle=g; x.beginPath(); x.moveTo(bx-w,GY+2); x.quadraticCurveTo(bx-w*.7+sw*.3,GY-h*.5,bx+sw,GY-h); x.quadraticCurveTo(bx+w*.7+sw*.3,GY-h*.5,bx+w,GY+2); x.closePath(); x.fill(); }
+  x.restore(); }
+function auraBack(x,t,lv){ const a=auraOf(lv), T=AUR.indexOf(a); if(!T) return;
+  const col=a.col, q=Math.min(1,(lv-a.from+1)/3)+(lv>15?(lv-15)*0.12:0), pu=.5+.2*Math.sin(t*2.6);
+  /* luz no chão */
+  const r=70+12*T+8*q, g=x.createRadialGradient(HX,GY,4,HX,GY,r); g.addColorStop(0,hexA(col,.32+.08*q)); g.addColorStop(1,hexA(col,0)); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,r,r*.22,0,0,7); x.fill();
+  /* clarão atrás do corpo */
+  const g2=x.createRadialGradient(HX,CY,8,HX,CY,80+10*T); g2.addColorStop(0,hexA(col,(.10+.05*T)*(.8+pu*.5))); g2.addColorStop(1,hexA(col,0)); x.fillStyle=g2; x.fillRect(HX-140,CY-120,280,200);
+  if(T>=4){ /* raios de luz dourados girando atrás */ x.save(); x.globalCompositeOperation='lighter'; x.translate(HX,CY); x.rotate(t*.22); const N=14;
+    for(let i=0;i<N;i++){ x.rotate(Math.PI*2/N); const len=105+18*Math.sin(t*1.7+i)+22*q, w=6+3*Math.sin(t*2.3+i*1.3);
+      const lg=x.createLinearGradient(0,0,len,0); lg.addColorStop(0,'rgba(255,226,120,.42)'); lg.addColorStop(1,'rgba(255,210,63,0)'); x.fillStyle=lg;
+      x.beginPath(); x.moveTo(0,0); x.lineTo(len,-w); x.lineTo(len,w); x.closePath(); x.fill(); }
+    x.restore(); }
+  if(T===2||T===4){ /* fumaça subindo do chão (roxa; dourada no +13) */ const N=T===4?12:10+Math.round(4*q), sc=T===4?'255,214,110':'180,92,255';
+    for(let i=0;i<N;i++){ const s=SEED[i], p=(t*(0.2+0.1*s[2])+s[0])%1, px=HX+(s[1]-0.5)*96+Math.sin(t*0.9+i)*6, py=GY+2-p*150, rr=7+p*(16+6*q);
+      const al=Math.sin(Math.PI*p)*(.2+.08*q), rg=x.createRadialGradient(px,py,1,px,py,rr); rg.addColorStop(0,`rgba(${sc},${al.toFixed(3)})`); rg.addColorStop(1,`rgba(${sc},0)`);
+      x.fillStyle=rg; x.beginPath(); x.arc(px,py,rr,0,7); x.fill(); } }
+  if(T===3) flames(x,t,q,false);
+  /* brilho em volta do contorno do herói (cor da aura) */
+  const blur=[0,12,16,20,24][T]+5*q, al=(.5+.12*T+.1*q)*(.75+pu*.5);
+  halo(x,()=>drawHero(x,t,true),hexA(col,al),blur);
+  if(T>=3) halo(x,()=>drawHero(x,t,true),hexA(T===3?'#ffb03d':'#fff3b0',.5),7); }
+function auraFront(x,t,lv){ const a=auraOf(lv), T=AUR.indexOf(a); if(!T) return; const q=Math.min(1,(lv-a.from+1)/3)+(lv>15?(lv-15)*0.12:0);
+  if(T===3) flames(x,t,q,true);
+  x.save(); x.globalCompositeOperation='lighter';
+  /* faíscas subindo (mais e mais rápidas a cada faixa) */
+  const N=5+4*T+Math.round(4*q), c=T===3?'255,150,60':T===4?'255,232,140':a.id==='purple'?'214,160,255':'140,200,255';
+  for(let i=0;i<N;i++){ const s=SEED[(i+11)%48], p=(t*(0.25+0.12*s[2]+0.04*T)+s[0])%1, px=HX+(s[1]-0.5)*(84+6*T)+Math.sin(t*2+i)*4, py=GY-p*(130+12*T), rr=1+1.8*(1-p)*s[2]+.5;
+    x.fillStyle=`rgba(${c},${(Math.sin(Math.PI*p)*.9).toFixed(3)})`; x.beginPath(); x.arc(px,py,rr,0,7); x.fill();
+    if(T===4&&i%4===0){ x.strokeStyle=x.fillStyle; x.lineWidth=.8; x.beginPath(); x.moveTo(px-rr*2.4,py); x.lineTo(px+rr*2.4,py); x.moveTo(px,py-rr*2.4); x.lineTo(px,py+rr*2.4); x.stroke(); } }
+  x.restore();
+  if(T>=4){ /* relâmpagos dourados dos dois lados do herói */ const P=1.3, ph=t%P, k=Math.floor(t/P);
+    if(ph<0.2){ const side=k%2?1:-1, al=1-ph/0.2; x.save(); x.globalCompositeOperation='lighter'; x.strokeStyle=`rgba(255,240,170,${al.toFixed(2)})`; x.lineWidth=2; x.shadowColor='#ffd23f'; x.shadowBlur=10;
+      x.beginPath(); let px=HX+side*(46+8*q), py=GY-158; x.moveTo(px,py);
+      for(let j=1;j<=7;j++){ const s=SEED[(k*7+j)%48]; px=HX+side*(40+(s[0]-.5)*24); py=GY-158+j*19; x.lineTo(px,py); }
+      x.stroke(); x.lineWidth=.8; x.strokeStyle=`rgba(255,255,255,${al.toFixed(2)})`; x.stroke(); x.restore(); } } }
+/* efeito do Forjar: faíscas saindo da mão (acertou), onda e clarão quando a aura sobe de faixa; fumaça cinza (falhou) */
+function forgeFx(x,t){ const f=S.fx; if(!f) return; const age=(performance.now()-f.t)/1000; if(age>1.6){ S.fx=null; return; }
+  const hx=S.hand?S.hand.x:HX+20, hy=S.hand?S.hand.y-24:GY-90;
+  x.save(); x.globalCompositeOperation='lighter';
+  if(f.ok){ for(let i=0;i<30;i++){ const s=SEED[i], an=s[0]*Math.PI*2, v=70+150*s[1], life=.7+.5*s[2]; if(age>life) continue;
+      const px=hx+Math.cos(an)*v*age, py=hy+Math.sin(an)*v*age+150*age*age, al=1-age/life;
+      x.strokeStyle=i%3?`rgba(255,200,80,${al.toFixed(2)})`:`rgba(255,255,220,${al.toFixed(2)})`; x.lineWidth=1.6;
+      x.beginPath(); x.moveTo(px,py); x.lineTo(px-Math.cos(an)*6,py-Math.sin(an)*6-3); x.stroke(); }
+    if(age<.35){ const g=x.createRadialGradient(hx,hy,2,hx,hy,60); g.addColorStop(0,`rgba(255,240,180,${(.7*(1-age/.35)).toFixed(2)})`); g.addColorStop(1,'rgba(255,200,80,0)'); x.fillStyle=g; x.beginPath(); x.arc(hx,hy,60,0,7); x.fill(); }
+    if(f.cross){ const col=auraOf(f.to).col, rr=20+300*age, al=Math.max(0,1-age/1.2); x.strokeStyle=hexA(col,al); x.lineWidth=6*(1-age/1.6)+1; x.beginPath(); x.ellipse(HX,CY,rr,rr*.62,0,0,7); x.stroke();
+      if(age<.3){ x.fillStyle=hexA(col,.35*(1-age/.3)); x.fillRect(0,0,390,236); } }
+  } else { x.globalCompositeOperation='source-over';
+    for(let i=0;i<7;i++){ const s=SEED[i+30], p=age/1.3; if(p>1) continue; const px=hx+(s[0]-.5)*30+Math.sin(age*3+i)*4, py=hy-p*50-s[1]*10, rr=6+p*16;
+      const g=x.createRadialGradient(px,py,1,px,py,rr); g.addColorStop(0,`rgba(150,150,170,${(.4*(1-p)).toFixed(2)})`); g.addColorStop(1,'rgba(150,150,170,0)'); x.fillStyle=g; x.beginPath(); x.arc(px,py,rr,0,7); x.fill(); }
+    for(let i=0;i<8;i++){ const s=SEED[i+38], an=Math.PI*(.15+.7*s[0]), v=40+60*s[1], px=hx+Math.cos(an)*v*age*(s[2]>.5?1:-1), py=hy+Math.sin(an)*v*age*.3+120*age*age, al=Math.max(0,1-age/.9);
+      x.fillStyle=`rgba(255,120,90,${al.toFixed(2)})`; x.beginPath(); x.arc(px,py,1.3,0,7); x.fill(); } }
+  x.restore(); }
+/* nível da aura que vai para o palco: a prévia tocada na legenda, ou o +N da arma (na hora de subir de faixa, a antiga fica até o clarão) */
+function shownLv(){ if(S.apv!=null) return S.apv; const f=S.fx; if(f&&f.cross&&(performance.now()-f.t)<350) return f.from; return S.forge.weapon; }
+function draw(t){
+  if(!S||!S.eq) return;
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,236);
+  const lv=shownLv();
+  try{ const g=x.createRadialGradient(HX,GY,10,HX,GY,130); g.addColorStop(0,'rgba(255,170,90,.28)'); g.addColorStop(1,'rgba(255,170,90,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,130,20,0,0,7); x.fill();
+    x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(HX,GY,104,15,0,0,7); x.stroke(); x.setLineDash([]); }catch(err){ stgErr('o chão',err); }
+  try{ auraBack(x,t,lv); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a aura',err); }
+  try{ drawHero(x,t,false); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  try{ auraFront(x,t,lv); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('as faíscas da aura',err); }
+  try{ forgeFx(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o efeito da Forja',err); }
+  /* PET SEMPRE NA FRENTE (regra do dono): depois do herói e da aura, à frente e no chão (quadro 512x352, pés em 307) */
+  try{ const I=img(S.pet); if(ok(I)){ const fw=I.naturalWidth/12, fh=I.naturalHeight, fi=((Math.floor(t*12)%12)+12)%12;
+      x.drawImage(I,fi*fw,0,fw,fh,PCX-224*KP,GY+8-307*KP,512*KP,352*KP); } }catch(err){ stgErr('o pet',err); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- topo: ouro, pedras, espaços em volta do herói, FC e aura ---------- */
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+function renderTop(){
+  $('#gold').textContent=fmtG(S.gold); $('#stones').textContent=n(S.stones);
+  const w=$('#who');
+  if(S.apv!=null){ w.className='who pv'; w.innerHTML=`<i></i><span>Prévia: ${auraOf(S.apv).name} (+${S.apv})</span><button data-x="sair">Sair</button>`; }
+  else { w.className='who'; w.innerHTML=`<i></i><span>${hn()} · Era ${S.era} ${ERAN[S.era]} · Teto +${capNow()}</span>`; }
+  $('#slots').innerHTML=SLOTS.map(([s,nm])=>{ const it=S.eq[s], p=SLOT_POS[s], lv=S.forge[s], lock=s==='wing'&&!S.wingOpen, atCap=lv>=capNow()||lv>=R().max;
+    return `<button class="slot ${S.slot===s&&tab==='forge'?'on':''} ${lock?'lock':''}" data-slot="${s}" style="left:${p[0]}px;top:${p[1]}px;--rc:${it&&!lock?RC[it.r]:'#55608f'}" aria-label="${SLN[s]}: Forja +${lv}${lock?', abre no nível 50':atCap?', no teto':''}"><span class="sb">${it?`<img src="a/${it.ic}.png" alt="">`:''}${lock?`<span class="lk">${SV.lock}</span>`:`<span class="fg ${atCap?'cp':''}">+${lv}</span>`}</span><span class="sl">${nm}</span></button>`; }).join('');
+  $('#fc').textContent=fmtG(fcOf());
+  const a=auraOf(S.forge.weapon), nx=AUR[AUR.indexOf(a)+1];
+  $('#fcsub').textContent=`Arma +${S.forge.weapon} · bônus do espaço ${pctB(bon(S.forge.weapon))}`;
+  const ac=$('#achip'); ac.style.setProperty('--ac',a.col);
+  ac.innerHTML=`<i></i><span>${a.name}<small>${nx?'próxima no +'+nx.from:'aura máxima'}</small></span>`; }
+
+/* ---------- abas ---------- */
+const TABS=[['forge','Forjar'],['trans','Transformar'],['fuse','Fundir']];
+function renderTabs(){ $('#tabs').innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-t="${k}" aria-selected="${tab===k}">${l}</button>`).join(''); }
+
+/* ---------- faixa de detalhe ---------- */
+function renderDet(){ const d=$('#det'); d.innerHTML=tab==='forge'?detForge():tab==='trans'?detTrans():detFuse(); }
+function detForge(){ const s=S.slot, it=S.eq[s], lv=S.forge[s], c=canTry(s), M=R().max, cap=capNow(), lock=s==='wing'&&!S.wingOpen;
+  const top=lv>=M, atCap=!top&&lv>=cap, late=lv>=15;
+  const head=`<div class="dt"><span class="di0"><img src="a/${it.ic}.png" alt=""></span><div class="di"><div class="dn">${SLN[s]} · ${lock?'abre no nível 50':it.name} ${lock?'':`<span class="rar">${RN[it.r]}</span>`}</div>
+    <div class="dh">${late?'<span class="tagl">PACOTE DO FIM · ERAS 7-8</span>':''}${top?`Forja <b>+${lv}</b> · máximo`:atCap?`Forja <b>+${lv}</b> · no teto da era`:`Forja <b>+${lv} → +${lv+1}</b> · teto da era +${cap}`}</div></div>
+    <span class="lvb">+${lv}${top||atCap||lock?'':SV.goG+`<span class="nx">+${lv+1}</span>`}</span></div>`;
+  if(lock) return `<div class="det" style="--rc:#55608f">${head}<div class="chn msg"><div>O espaço da asa abre no <b>nível 50</b> (a asa só existe Épica para cima). O +N fica guardado no espaço.</div></div></div>`;
+  if(top) return `<div class="det" style="--rc:${RC[it.r]}">${head}<div class="chn msg"><div>Este espaço chegou ao máximo: <b>+${M}</b>, bônus ${pctB(bon(lv))}.${!S.late?' O pacote do fim (eras 7-8, desligado) levaria até o +20.':''}</div></div></div>`;
+  if(atCap){ const e=nextCapEra(); return `<div class="det" style="--rc:${RC[it.r]}">${head}<div class="chn msg"><div>Teto da era: <b>+${cap}</b>. ${e>=0?`O +${R().capByEra[e]} abre na <b>era ${e} (${ERAN[e]})</b>.`:'Não há era com teto maior.'} Guarde as pedras: elas não se perdem.</div></div></div>`; }
+  const base=R().chance[lv], pity=S.pity[s], pw=clamp(pity/Math.max(1,100-base)*100,0,100), wt=worst(s);
+  const a0=s==='weapon'?auraOf(lv):null, a1=s==='weapon'?auraOf(lv+1):null, auraUp=a0&&a1.id!==a0.id;
+  const fa=fcOf(), fb=fcOf(null,{...S.forge,[s]:lv+1}), df=fb-fa;
+  const paid=triesPaid(s), autoN=Math.min(wt,paid);
+  const pctNote=FLAT_W[s]?'':' (metade, é %)';
+  const busy=S.busy, au=S.auto;
+  return `<div class="det" style="--rc:${RC[it.r]}">${head}
+    <div class="chn"><b class="pc">${c.chance}%</b><div class="cw"><small>${base}% ${pity?`<b>+ ${pity}% de garantia</b>`:'· sem garantia acumulada'}</small><span class="pity" aria-label="Garantia acumulada: ${pity}%"><i style="width:${pw}%"></i></span><em>Garantido em até ${wt} ${wt===1?'tentativa':'tentativas'} · cada falha soma +${FORGE.pityPerFail}%</em></div></div>
+    <div class="sts">
+      <div class="${S.stones<c.stones?'bad':''}"><small>PEDRAS</small><b>${c.stones}</b><em>tem ${n(S.stones)}</em></div>
+      <div class="${S.gold<c.gold?'bad':''}"><small>OURO/TENT.</small><b>${fmtG(c.gold)}</b><em>30 abates da fase ${S.stage}</em></div>
+      <div class="up"><small>BÔNUS${pctNote}</small><b>${pctB(bon(lv))} → ${pctB(bon(lv+1))}</b><em>${late||lv+1>15?'pacote do fim':'do espaço'}</em></div>
+      <div class="${auraUp?'up':''}"><small>AURA DA ARMA</small><b>${s!=='weapon'?'só na arma':auraUp?a1.name.replace('Aura ',''):a0.name.replace('Aura ','')}</b><em>${s!=='weapon'?'a aura vem do +N da arma':auraUp?'nova aura no +'+(lv+1):'continua'}</em></div>
+    </div>
+    <div class="cmp"><small>FC ANTES → DEPOIS</small><span class="a">${fmtG(fa)}</span>${SV.go}<span class="b">${fmtG(fb)}</span><span class="d up">▲ +${fmtG(df)}</span></div>
+    <div class="acts">
+      <button class="bt" data-forge="1" ${c.ok&&!busy?'':'disabled'}><span>${SV.hammer}Forjar</span><small>${c.stones} pedras · ${fmtG(c.gold)} ouro</small></button>
+      <button class="bt blue" data-auto="1" ${c.ok&&!busy?'':'disabled'}><span>${au?`Tentativa ${au.k}…`:'Forjar até conseguir'}</span><small>${au?`${au.stones} pedras gastas`:paid>=wt?`até ${wt}× · ${wt*c.stones} pedras no pior caso`:`pedras para ${paid}×`}</small></button>
+    </div>
+    <div class="foot">${c.ok?'':'<b>'+reasonTxt(c.reason,s)+'.</b> '}A falha nunca tira nível. Pedras e ouro vêm de jogar: nunca diamante nem dinheiro.</div></div>`; }
+function detTrans(){ const it=S.tsel&&byId(S.tsel), L=transList();
+  if(!it||it.e>=S.era) return `<div class="det" style="--rc:#55608f"><div class="chn msg"><div>${L.length?'Toque numa peça da lista para ver o custo.':'Nenhuma peça de era antiga na mochila: tudo já está na <b>era '+S.era+' ('+ERAN[S.era]+')</b>.'}</div></div></div>`;
+  const c=transCost(it), after={...it,e:S.era,lvl:1}, isEq=S.eq[it.slot]===it;
+  const fa=isEq?fcOf():fcOf({...S.eq,[it.slot]:it}), fb=fcOf({...S.eq,[it.slot]:after}), df=fb-fa, can=S.ess>=c.essence&&S.gold>=c.gold;
+  return `<div class="det" style="--rc:${RC[it.r]}"><div class="dt"><span class="di0"><img src="a/${it.ic}.png" alt=""></span><div class="di"><div class="dn">${it.name} <span class="rar">${RN[it.r]}</span></div>
+    <div class="dh">${SLN[it.slot]} · era ${it.e} ${ERAN[it.e]} <b>→ era ${S.era} ${ERAN[S.era]}</b></div></div></div>
+    <div class="sts">
+      <div class="${S.ess<c.essence?'bad':''}"><small>ESSÊNCIA</small><b>${c.essence}</b><em>tem ${S.ess}</em></div>
+      <div class="${S.gold<c.gold?'bad':''}"><small>OURO</small><b>${fmtG(c.gold)}</b><em>${c.jump} ${c.jump===1?'era':'eras'} de salto</em></div>
+      <div><small>NÍVEL</small><b>${it.lvl} → 1</b><em>volta ao 1</em></div>
+      <div class="up"><small>VISUAL</small><b>igual</b><em>raridade e extras ficam</em></div>
+    </div>
+    <div class="cmp"><small>${isEq?'FC ANTES → DEPOIS':'FC SE EQUIPAR'}</small><span class="a">${fmtG(fa)}</span>${SV.go}<span class="b" style="color:${df>=0?'var(--green)':'var(--red)'}">${fmtG(fb)}</span><span class="d ${df>=0?'up':'dn2'}">${df>=0?'▲ +':'▼ −'}${fmtG(Math.abs(df))}</span></div>
+    <div class="acts"><button class="bt" data-trans="${it.id}" ${can?'':'disabled'}><span>Transformar</span><small>${c.essence} essências · ${fmtG(c.gold)} ouro</small></button></div>
+    <div class="foot">O +N da Forja continua no espaço. ${it.gold?`O ouro investido nos níveis (${fmtG(it.gold)}) não volta.`:''}${can?'':' <b>'+(S.ess<c.essence?'Falta Essência da Era':'Falta ouro')+'.</b>'}</div></div>`; }
+function detFuse(){ const g=S.groups[S.gsel]; if(!g) return '';
+  const I=groupInfo(g), gold=I.gold;
+  if(!I.can) return `<div class="det" style="--rc:${RC[g.r]}"><div class="dt"><span class="di0"><img src="a/${g.ic}.png" alt=""></span><div class="di"><div class="dn">${g.name} <span class="rar">${RN[g.r]}</span></div><div class="dh">${g.qps.length} iguais · ${starsH(I.st)}</div></div></div>
+    <div class="chn msg"><div>${I.reason==='max'?'<b>5 estrelas não funde</b>: já é a melhor qualidade. A qualidade 10.000 perfeita só vem de drop.':`Faltam <b>${QUAL.fusion.count-g.qps.length}</b> iguais (mesma era, espaço, raridade, estrelas${g.slot==='weapon'?' e família: '+g.fam.toLowerCase()+' só com '+g.fam.toLowerCase():''}).`}</div></div></div>`;
+  const qa=I.pick.reduce((t,i)=>t+qMult(g.qps[i]),0)/I.pick.length, qb=qMult(I.res.qp);
+  const best=I.pick.reduce((b,i)=>g.qps[i]>g.qps[b]?i:b,I.pick[0]);
+  const mk=(qp,lvl)=>({slot:g.slot,e:g.e,r:g.r,lvl,qm:qMult(qp)});
+  const fa=fcOf({...S.eq,[g.slot]:mk(g.qps[best],g.lvls[best])}), fb=fcOf({...S.eq,[g.slot]:mk(I.res.qp,I.res.lvl)}), df=fb-fa, can=S.gold>=gold;
+  return `<div class="det" style="--rc:${RC[g.r]}"><div class="dt"><span class="di0"><img src="a/${g.ic}.png" alt=""></span><div class="di"><div class="dn">${g.name} <span class="rar">${RN[g.r]}</span></div>
+    <div class="dh">3 iguais ${starsH(I.st)} → 1 com ${starsH(I.res.st)}</div></div></div>
+    <div class="trio">${I.pick.map(i=>`<div class="q"><img src="a/${g.ic}.png" alt=""><small>Nv ${g.lvls[i]} · ${n(g.qps[i])}</small></div>`).join('')}${SV.goG}<div class="q res"><img src="a/${g.ic}.png" alt=""><small>Nv ${I.res.lvl} · ${n(I.res.qp)}</small></div></div>
+    <div class="sts">
+      <div class="up"><small>ESTRELAS</small><b>${I.st} → ${I.res.st}</b><em>sem sorte</em></div>
+      <div class="${can?'':'bad'}"><small>OURO</small><b>${fmtG(gold)}</b><em>só ouro</em></div>
+      <div class="up"><small>QUALIDADE</small><b>×${qa.toFixed(2).replace('.',',')} → ×${qb.toFixed(2).replace('.',',')}</b><em>em tudo da peça</em></div>
+      <div><small>NÍVEL</small><b>${I.res.lvl}</b><em>o maior dos 3</em></div>
+    </div>
+    <div class="cmp"><small>FC SE EQUIPAR</small><span class="a">${fmtG(fa)}</span>${SV.go}<span class="b">${fmtG(fb)}</span><span class="d up">▲ +${fmtG(df)}</span></div>
+    <div class="acts"><button class="bt" data-fuse="1" ${can?'':'disabled'}><span>Fundir 3 em 1</span><small>${fmtG(gold)} ouro</small></button></div>
+    <div class="foot">Ouro investido = a soma dos 3 (o Desmontar não perde nada). Extras e visual vêm da de maior qualidade.</div></div>`; }
+
+/* ---------- corpo das abas ---------- */
+function renderBody(top){ const b=$('#body'), y=b.scrollTop; b.innerHTML=tab==='forge'?bodyForge():tab==='trans'?bodyTrans():bodyFuse(); if(top) b.scrollTop=0; else b.scrollTop=y; }
+function bodyForge(){ const lv=S.forge.weapon, cur=auraOf(lv);
+  let h=`<div class="sec"><span>Auras da arma</span><span>toque para ver no herói</span></div><div class="alg">`+AUR.map(a=>{
+    const cls=a.id==='none'?'none':a.id==='flame'?'fl':a.id==='gold'?'gd':'';
+    return `<button class="ac ${a===cur?'cur':''} ${S.apv!=null&&auraOf(S.apv)===a?'pv':''}" style="--ac:${a.col}" data-aura="${a.from}" aria-label="${a.name}, a partir do +${a.from}"><span class="sw ${cls}"></span><b>${a.from?'+'+a.from:'+0'}</b><small>${a.name.replace('Aura ','')}</small></button>`; }).join('')+`</div>`;
+  /* tabela inteira: +1 ao +15 do jogo e +16 ao +20 do pacote do fim */
+  const s=S.slot, sl=S.forge[s], cap=capNow(), C=FORGE.chance.concat(LATE.chance16a20), ST=FORGE.stones.concat(LATE.stones16a20), BO=FORGE.bonus.concat(LATE.bonus16a20);
+  h+=`<div class="sec"><span>Tabela da Forja</span><span>${SLN[s]} · teto da era <b>+${cap}</b></span></div><div class="tbl" role="table" aria-label="Chance, pedras e bônus por nível">
+    <span class="h">NÍVEL</span><span class="h">CHANCE</span><span class="h">PEDRAS</span><span class="h">BÔNUS</span><span class="h">AURA</span>`;
+  for(let i=0;i<20;i++){ const lt=i>=15, cls=i<sl?'dn':i===sl?'cu':(lt&&!S.late)?'lt':i>=cap?'cp':'';
+    h+=`<span class="${cls}">+${i}→+${i+1}</span><span class="${cls}">${C[i]}%</span><span class="${cls}">${ST[i]}</span><span class="${cls}">${pctB(BO[i+1])}</span><span class="${cls}"><i class="d" style="--ac:${auraOf(i+1).col}"></i>${lt?'7-8':''}</span>`; }
+  h+=`</div><p class="hint">Linhas apagadas: já feitas ou acima do teto da era. <b>+16 ao +20</b> = pacote do fim das eras 7-8 que o dono aprovou e que está desligado no jogo (teto +18 na era 7, +20 na era 8). Ouro por tentativa = 30 × ouro de 1 abate da fase atual.</p>`;
+  return h; }
+function bodyTrans(){ const L=transList();
+  let h=`<div class="mat"><img src="a/gem.png" alt=""><div><b>Essência da Era</b>Cai do Senhor da Era (5 na 1ª vitória) e do Chefe de Era</div><strong>${S.ess}</strong></div>`;
+  h+=`<div class="sec"><span>Peças de era antiga</span><span>vão para a era ${S.era} (${ERAN[S.era]})</span></div>`;
+  if(!L.length) h+=`<p class="hint">Nada para transformar agora.</p>`;
+  h+=L.map(it=>{ const c=transCost(it), can=S.ess>=c.essence&&S.gold>=c.gold;
+    return `<button class="row ${S.tsel===it.id?'on':''}" data-ts="${it.id}" style="--rc:${RC[it.r]}"><span class="di0"><img src="a/${it.ic}.png" alt=""></span><div class="tx"><b>${it.name}${S.eq[it.slot]===it?'<span class="eqb">USANDO</span>':''}</b><small>${RN[it.r]} · era ${it.e} ${ERAN[it.e]} · Nv ${it.lvl}</small></div><strong style="color:${can?'var(--text)':'var(--red)'}">${c.essence} ess.<br>${fmtG(c.gold)}</strong></button>`; }).join('');
+  h+=`<p class="hint">Custo do código: essência = <b>${TRANS.essence.join(', ')}</b> por raridade (Básico a Lendário) × eras puladas; ouro = <b>${TRANS.goldBase.map(v=>n(v)).join(', ')}</b> × 4<sup>era de destino</sup> × eras puladas. Só para a era atual.</p>`;
+  return h; }
+function bodyFuse(){ let h=`<div class="note"><b>Ainda desligado no código</b> (qualidade do item, Sys.stats quality.on = false). Os números são os do código e esta aba mostra como ficaria.</div>`;
+  h+=`<div class="sec"><span>Estrelas da qualidade</span><span>multiplica tudo da peça</span></div><div class="bands">`+[1,2,3,4,5].map(s=>{ const [lo,hi]=bandOf(s); return `<div><b>${s}★</b><small>${n(lo)}-${n(hi)}</small><small>×${qMult(lo).toFixed(2).replace('.',',')}-${qMult(hi).toFixed(2).replace('.',',')}</small></div>`; }).join('')+`</div>`;
+  h+=`<div class="sec"><span>Grupos de iguais</span><span>toque para ver</span></div>`;
+  h+=S.groups.map((g,i)=>{ const I=groupInfo(g);
+    return `<button class="row ${S.gsel===i?'on':''}" data-gs="${i}" style="--rc:${RC[g.r]}"><span class="di0"><img src="a/${g.ic}.png" alt=""></span><div class="tx"><b>${g.name} ×${g.qps.length}</b><small>${RN[g.r]} · era ${g.e} · ${starsH(I.st)}</small></div><strong style="color:${I.can?'var(--green)':'var(--muted)'}">${I.can?'pode fundir':I.reason==='max'?'5★ não funde':'falta '+(QUAL.fusion.count-g.qps.length)}</strong></button>`; }).join('');
+  h+=`<p class="hint">Ouro da fusão = 3 × o custo de subir a peça do Nv 1 ao 2 (era ${S.era}: ${RN.slice(0,5).map((r,i)=>fmtG(QUAL.fusion.goldPerLevel1*upCost1(i,S.era))).join(', ')}). A qualidade nova fica na mesma posição da média dos 3, na faixa da estrela seguinte.</p>`;
+  return h; }
+
+/* ---------- ações ---------- */
+function forgeOnce(){ if(S.busy) return; const s=S.slot, before=fcOf(), lv0=S.forge.weapon, r=attempt(s);
+  if(!r.ok){ toast(reasonTxt(r.reason,s)); return; }
+  S.apv=null; result(r,s,lv0,before,1); }
+/* depois de uma tentativa: efeito no palco, faixa com o resultado e FC subindo */
+function result(r,s,lv0,before,k,spent){ const cross=s==='weapon'&&r.success&&tierOf(S.forge.weapon)!==tierOf(lv0);
+  S.fx={t:performance.now(),ok:r.success,cross,from:lv0,to:S.forge.weapon};
+  if(r.success){ fcFly(fcOf()-before);
+    banner('ok',`${SLN[s]} +${r.lv}!`,k>1?`Conseguiu na ${ord(k)} tentativa · ${spent.stones} pedras · ${fmtG(spent.gold)} ouro`:`Bônus do espaço ${pctB(bon(r.lv))}`);
+    if(cross) setTimeout(()=>{ const a=auraOf(S.forge.weapon); banner('ok au','Nova aura: '+a.name,'a arma brilha mais no herói',a.col); },700); }
+  else banner('no',`Falhou, +${FORGE.pityPerFail}% na próxima`,`Próxima: ${chanceOf(s)}% · o nível não cai`);
+  full(false); }
+function autoForge(){ if(S.busy) return; const s=S.slot, c=canTry(s); if(!c.ok){ toast(reasonTxt(c.reason,s)); return; }
+  S.busy=true; S.apv=null; const st0=S.stones, g0=S.gold, fc0=fcOf(), lv0=S.forge.weapon; let k=0;
+  const step=()=>{ if(!S.busy) return; const r=attempt(s);
+    if(!r.ok){ S.busy=false; S.auto=null; banner('no',`Parou: ${reasonTxt(r.reason,s).toLowerCase()}`,`${k} ${k===1?'tentativa':'tentativas'} · garantia agora +${S.pity[s]}% · próxima ${chanceOf(s)}%`); full(false); return; }
+    k++; S.auto={k,stones:st0-S.stones};
+    if(r.success){ S.busy=false; S.auto=null; result(r,s,lv0,fc0,k,{stones:st0-S.stones,gold:g0-S.gold}); return; }
+    S.fx={t:performance.now(),ok:false,cross:false,from:lv0,to:lv0}; renderTop(); renderDet(); setTimeout(step,RM?60:300); };
+  step(); }
+function askTrans(id){ const it=byId(id); if(!it) return; const c=transCost(it);
+  modal(`<h3>Transformar?</h3><div class="mi" style="--rc:${RC[it.r]}"><span class="di0"><img src="a/${it.ic}.png" alt=""></span><div style="min-width:0"><div class="dn">${it.name}</div><div class="rar">${RN[it.r]} · era ${it.e} → era ${S.era}</div></div></div>
+  <p>A peça vai para a <b>era ${S.era} (${ERAN[S.era]})</b> com a mesma raridade, os mesmos extras e o mesmo visual. O nível volta ao <b>1</b>${it.gold?` e o ouro investido (${fmtG(it.gold)}) não volta`:''}.</p>
+  <p>Você paga:</p><div class="gain"><span><img src="a/gem.png" alt="">${c.essence} Essência da Era</span><span><img src="a/coin.png" alt="">${fmtG(c.gold)} ouro</span></div>
+  <div class="macts"><button class="bt off" data-x="mclose" style="flex:.7">Cancelar</button><button class="bt" data-transok="${id}">Transformar</button></div>`); }
+function doTrans(id){ closeModal(); const it=byId(id); if(!it) return; const c=transCost(it); if(!c||S.ess<c.essence||S.gold<c.gold){ toast('Falta Essência ou ouro'); return; }
+  const before=fcOf(); S.ess-=c.essence; S.gold-=c.gold; it.e=S.era; it.lvl=1; it.gold=0;
+  const L=transList(); S.tsel=L.length?L[0].id:null; full(false); fcFly(fcOf()-before); toast(it.name+' agora é da era '+S.era); }
+function doFuse(){ const g=S.groups[S.gsel], I=g&&groupInfo(g); if(!I||!I.can) return; if(S.gold<I.gold){ toast('Falta ouro'); return; }
+  S.gold-=I.gold; const keep=g.qps.map((q,i)=>i).filter(i=>!I.pick.includes(i));
+  const ng={...g,qps:[I.res.qp],lvls:[I.res.lvl]}; g.qps=keep.map(i=>g.qps[i]); g.lvls=keep.map(i=>g.lvls[i]);
+  S.groups.splice(S.gsel+1,0,ng); if(!g.qps.length){ S.groups.splice(S.gsel,1); } else S.gsel=S.gsel+1;
+  if(!g.qps.length) S.gsel=S.groups.indexOf(ng);
+  full(false); banner('ok',`${g.name} ${I.res.st}★`,`qualidade ${n(I.res.qp)} · ×${qMult(I.res.qp).toFixed(2).replace('.',',')}`); }
+
+/* ---------- comum ---------- */
+function modal(html){ closeModal(); const s=document.createElement('div'); s.className='shade'; s.id='shade'; s.innerHTML=`<div class="modal" role="dialog" aria-modal="true">${html}</div>`; scr.appendChild(s); s.addEventListener('click',e=>{ if(e.target===s) closeModal(); }); }
+function closeModal(){ const s=$('#shade'); if(s) s.remove(); }
+function go(where){ closeModal(); const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar à Forja"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>No jogo, este botão volta para a tela <b>${where}</b>.</p><button class="bt" data-x="navback" style="height:46px;min-width:200px">Voltar à Forja</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+function banner(cls,title,sub,col){ document.querySelectorAll('.ban'+(cls.includes('au')?'.au':':not(.au)')).forEach(e=>e.remove());
+  const o=document.createElement('div'); o.className='ban '+cls; if(col) o.style.setProperty('--ac',col); o.setAttribute('role','status');
+  const b=document.createElement('b'); b.textContent=title; const s=document.createElement('small'); s.textContent=sub||''; o.append(b,s); scr.appendChild(o); setTimeout(()=>o.remove(),2400); }
+function fcFly(d){ if(Math.abs(d)<1) return; const o=document.createElement('div'); o.className='fcfly'; o.textContent='▲ +'+fmtG(Math.abs(d))+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+function full(top){ renderTop(); renderTabs(); renderDet(); renderBody(top); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; const d=b.dataset;
+  if(d.x==='mclose'){ closeModal(); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(S.busy) return;   /* durante "Forjar até conseguir", o resto espera */
+  if(d.t){ tab=d.t; full(true); return; }
+  if(d.slot){ S.slot=d.slot; tab='forge'; S.apv=null; full(true); return; }
+  if(d.forge){ forgeOnce(); return; }
+  if(d.auto){ autoForge(); return; }
+  if(d.aura!=null){ const v=+d.aura; S.apv=(S.apv===v||(!v&&S.forge.weapon<4&&S.apv==null))?null:v; renderTop(); renderBody(false); return; }
+  if(d.x==='sair'){ S.apv=null; renderTop(); renderBody(false); return; }
+  if(d.ts){ S.tsel=d.ts; renderDet(); renderBody(false); return; }
+  if(d.trans){ askTrans(d.trans); return; }
+  if(d.transok){ doTrans(d.transok); return; }
+  if(d.gs!=null){ S.gsel=+d.gs; renderDet(); renderBody(false); return; }
+  if(d.fuse){ doFuse(); return; }
+  if(d.go){ go(d.go); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(false); }
+  if(b.dataset.sc){ S.busy=false; reset(b.dataset.sc); tab='forge'; document.querySelectorAll('[data-sc]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(true); }
+  if(b.dataset.add){ S.stones+=+b.dataset.add; full(false); toast('+'+b.dataset.add+' pedras de forja'); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brasas subindo atrás do herói (clima de forja) */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(RM) return;
+  const W=780,H=760,Pp=[]; for(let i=0;i<36;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?28:45,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,65%,${.2+.5*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+reset('a'); full(true);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-forja-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Forja V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
