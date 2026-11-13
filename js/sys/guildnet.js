@@ -16,7 +16,7 @@ const DATA={ on:true };   // ONLINE LIGADO (dono: 'liga tudo', 14/11; servidor e
 const SYS=()=>root.Sys||{};
 const call=(m,p,b)=>{ const n=SYS().net; if(!n||typeof n._call!=='function') return Promise.reject(Object.assign(new Error('net'),{code:'net_off'})); return n._call(m,p,b); };
 const ST={ started:false, mine:null, banners:null, err:null, at:0 };
-const fail=e=>{ ST.err=(e&&e.code)||'error'; return {ok:false,reason:ST.err,details:(e&&e.details)||null}; };
+const fail=e=>{ ST.err=(e&&e.code)||'error'; return {ok:false,reason:ST.err,details:(e&&e.details)||null,retryAfterMs:(e&&e.retryAfterMs)||0}; };   // retryAfterMs: o Sys.net põe no erro (429 daily_limit etc.); a tela mostra 'Volta em X h Y min'
 const enc=encodeURIComponent;
 
 /* provider do Sys.guild quando o servidor responde: só o status (o resto continua o fechado, ver acima) */

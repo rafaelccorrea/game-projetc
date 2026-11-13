@@ -14,7 +14,7 @@ const SYS=()=>root.Sys||{};
 const call=(m,p,b)=>{ const n=SYS().net; if(!n||typeof n._call!=='function') return Promise.reject(Object.assign(new Error('net'),{code:'net_off'})); return n._call(m,p,b); };
 const ST={ view:null, ranking:{}, battles:null, lineup:{}, err:null, at:0, busy:false };
 const codeOf=e=>(e&&e.code)||'error';
-const fail=e=>{ ST.err=codeOf(e); return {ok:false,reason:ST.err,details:e&&e.details||null}; };
+const fail=e=>{ ST.err=codeOf(e); return {ok:false,reason:ST.err,details:e&&e.details||null,retryAfterMs:(e&&e.retryAfterMs)||0}; };   // retryAfterMs do Sys.net (429): a tela mostra quando volta
 
 /* ---------------- leitura (cache, síncrona) ---------------- */
 const state=()=>({on:DATA.on===true,ready:!!ST.view,err:ST.err,at:ST.at,phase:ST.view?ST.view.phase:null,week:ST.view?ST.view.week:null,size:ST.view?ST.view.size:null});

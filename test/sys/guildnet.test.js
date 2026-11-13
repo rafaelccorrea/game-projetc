@@ -16,7 +16,7 @@ function server(o) {
         territories: [{ region: 0, capital: false }, { region: 8, capital: true }] }; },
     'GET /guild/blessings': () => ({ level: 2, xpFree: 100, list: bk.map((k, i) => ({ id: k, value: i === 0 ? G.bannerCap(k, LV) : 0, cap: G.bannerCap(k, LV) })) }),
     'POST /guild/leave': () => { inGuild = false; return { closed: false }; },
-    'POST /guild/donate': b => (b.kind === 'gold_s' ? { ok: true, coin: 10 } : Promise.reject(Object.assign(new Error('x'), { code: 'daily_limit', status: 429, details: { kind: b.kind } }))),
+    'POST /guild/donate': b => (b.kind === 'gold_s' ? { ok: true, coin: 10 } : Promise.reject(Object.assign(new Error('x'), { code: 'daily_limit', status: 429, details: { kind: b.kind }, retryAfterMs: b.kind === 'gold_l' ? 3600000 : 0 }))),
     'GET /guilds': () => [{ id: 'g1', name: 'Lobos' }],
     'POST /guild/leader': b => ({ ok: true, to: b.playerId }),
   };
@@ -49,7 +49,8 @@ const host = () => ({ level: () => 40, now: () => Date.UTC(2026, 10, 13, 15) });
   await t('ações: Promise; depois de mudar refaz o refresh (sair da guilda limpa o save); erro do servidor vira {ok:false, reason, details}', async () => {
     GN._reset(); const sv = server(), S = lv40(); await GN.start(S, host());
     assert.strictEqual((await GN.donate(S, host(), 'gold_s')).ok, true);
-    assert.deepStrictEqual(await GN.donate(S, host(), 'gems'), { ok: false, reason: 'daily_limit', details: { kind: 'gems' } });
+    assert.deepStrictEqual(await GN.donate(S, host(), 'gems'), { ok: false, reason: 'daily_limit', details: { kind: 'gems' }, retryAfterMs: 0 });
+    assert.strictEqual((await GN.donate(S, host(), 'gold_l')).retryAfterMs, 3600000, '429 com tempo: a tela mostra quando volta');
     assert.strictEqual((await GN.transfer(S, host(), 'p1')).to, 'p1'); assert.deepStrictEqual(sv.calls.find(c => c.k === 'POST /guild/leader').b, { playerId: 'p1' });
     const l = await GN.list(S, host(), { search: 'lo', open: 1 }); assert.deepStrictEqual(l.data, [{ id: 'g1', name: 'Lobos' }]); assert.ok(sv.calls.some(c => c.p === '/guilds?search=lo&open=1'));
     const r = await GN.leave(S, host()); assert.strictEqual(r.ok, true);

@@ -42,7 +42,7 @@ function server(o) {
     TN._reset(); server(); await TN.refresh();
     const r = await TN.declare('r0t1', 'd5'); assert.strictEqual(r.ok, true); assert.strictEqual(r.attacksLeftToday, 1);
     assert.deepStrictEqual(TN.map()[0].attacks, [{ slot: 'd5', attacker: { id: 'g1', name: 'Lobos' } }]); assert.strictEqual(TN.my().attacksLeftToday, 1);
-    assert.deepStrictEqual(await TN.declare('capital', 'd5'), { ok: false, reason: 'era_too_low', details: { region: 8 } });
+    assert.deepStrictEqual(await TN.declare('capital', 'd5'), { ok: false, reason: 'era_too_low', details: { region: 8 }, retryAfterMs: 0 });
   });
   await t('escalação: grava, atualiza o cache da minha guilda; leitura da escalação do dia', async () => {
     TN._reset(); const sv = server(); await TN.refresh();
@@ -52,7 +52,7 @@ function server(o) {
   });
   await t('servidor com o torneio desligado (404) ou sem guilda: refresh falha sem quebrar e o cache não inventa nada', async () => {
     TN._reset(); server({ down: true });
-    assert.deepStrictEqual(await TN.refresh(), { ok: false, reason: 'not_found', details: null }); assert.deepStrictEqual(TN.map(), []); assert.strictEqual(TN.state().err, 'not_found');
+    assert.deepStrictEqual(await TN.refresh(), { ok: false, reason: 'not_found', details: null, retryAfterMs: 0 }); assert.deepStrictEqual(TN.map(), []); assert.strictEqual(TN.state().err, 'not_found');
   });
   TN.DATA.on = false; console.log(n + ' testes ok');
 })().catch(e => { console.error(e); process.exit(1); });
