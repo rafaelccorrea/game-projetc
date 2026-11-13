@@ -212,9 +212,9 @@ async function flowPhases() {
     check(T + ': as folhas do herói desenhadas vêm de ' + (hero === 'kaia' ? 'kaia_phase2' : 'phase2'), has(d, dir), 'folhas do herói desenhadas: ' + (pick(d, /hyb\/(R|phase\d|kaia[^/]*)\//) || '(nenhuma)'), true);
     noErr(G, T + ': nenhuma exceção na carga e no laço');
     /* LADO DO Sys (duro): o próprio catchUp no mesmo save antigo */
-    const r = ev(`(function(){ const T=JSON.parse(${JSON.stringify(save)}); Sys.phaseUp.DATA.on=true; const a=Sys.phaseUp.catchUp(T,Sys.host), b=Sys.phaseUp.catchUp(T,Sys.host), sh=Sys.appearance.sheetFor(T,Sys.host,'idle');
-      return {a, b, cur:Sys.phaseUp.current(T), lstg:Sys.level.ensure(T).stg, body:sh&&sh.body, name:Sys.phaseUp.nameOf(T,Sys.phaseUp.current(T))}; })()`);
-    check(T + ' (Sys): catchUp no Nv 60 → {ok, from 0, to 2, applied 2}', r.a && r.a.ok && r.a.from === 0 && r.a.to === 2 && r.a.applied === 2, JSON.stringify(r.a));
+    const r = ev(`(function(){ const T=JSON.parse(${JSON.stringify(save)}); Sys.phaseUp.DATA.on=true; const a=Sys.phaseUp.catchUp(T,Sys.host), b=Sys.phaseUp.catchUp(T,Sys.host), pe=Sys.phaseUp.pending(T,Sys.host), ev1=Sys.phaseUp.evolve(T,Sys.host), sh=Sys.appearance.sheetFor(T,Sys.host,'idle');
+      return {a, b, pe:{ready:pe.ready,from:pe.from,to:pe.to,sheet:pe.anim&&pe.anim.sheet}, ev:ev1&&ev1.ok, cur:Sys.phaseUp.current(T), lstg:Sys.level.ensure(T).stg, body:sh&&sh.body, name:Sys.phaseUp.nameOf(T,Sys.phaseUp.current(T))}; })()`);
+    check(T + ' (Sys): catchUp no Nv 60 aplica tudo MENOS a última (→ fase 1) e deixa UMA animação final 1→2', r.a && r.a.ok && r.a.from === 0 && r.a.to === 1 && r.a.applied === 1 && r.pe.ready && r.pe.from === 1 && r.pe.to === 2 && r.ev, JSON.stringify({a:r.a,pe:r.pe,ev:r.ev}));
     check(T + ' (Sys): fase 2 = "' + r.name + '", Sys.level stg também 2; segunda chamada não aplica nada', r.cur === 2 && r.lstg === 2 && r.b && r.b.applied === 0, JSON.stringify({ cur: r.cur, lstg: r.lstg, b: r.b }));
     check(T + ' (Sys): Sys.appearance.sheetFor idle → ' + r.body, dir.test(String(r.body)), 'pasta errada: ' + r.body);
   }

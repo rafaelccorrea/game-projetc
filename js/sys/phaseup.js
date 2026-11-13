@@ -12,7 +12,10 @@ const DATA={
   names:{kael:['Garoto','Adolescente','Adulto','Guerreiro lendário'], kaia:['Menina','Adolescente','Adulta','Guerreira lendária']},
   // animação de evolução por passo (de → para). Só existe a 0→1 (assets/anim/fx/evolve_0_1, 38 quadros, pés em (224, 352)); as outras usam a do
   // subir de nível até a arte chegar (fallback:true). Formato do .json: {frames, fps, w, h, feetY, anchorX}; tocar UMA vez, pés do herói no anchor.
-  anim:{'0_1':'assets/anim/fx/evolve_0_1'}, fallbackAnim:'assets/anim/fx/levelup',
+  // folhas COM o herói por herói (Arte; a troca de fase fica escondida no clarão do quadro 27) e só-efeito comuns (evolve_<a>_<b>_fx, para desenhar por cima das camadas)
+  anim:{kael:{'0_1':'assets/anim/fx/evolve_0_1','1_2':'assets/anim/fx/evolve_1_2','2_3':'assets/anim/fx/evolve_2_3'},
+        kaia:{'0_1':'assets/anim/fx/kaia_evolve_0_1','1_2':'assets/anim/fx/kaia_evolve_1_2','2_3':'assets/anim/fx/kaia_evolve_2_3'}}, fallbackAnim:'assets/anim/fx/levelup',
+  catchUpKeepLast:true,   // save antigo: o catchUp aplica tudo MENOS a última fase; pending() fica com a evolução FINAL (UMA animação)
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
@@ -33,9 +36,9 @@ function next(S,host){ if(!ON()) return null; const o=ensure(S), to=o.stg+1; if(
   return {to,name:nameOf(S,to),needLevel:nl,needFc:nf,ready:lv>=nl&&fc>=nf,missing:{level:Math.max(0,nl-lv),fc:Math.max(0,nf-fc)}}; }
 /* evolução pendente para tocar: {ready, from, to, fromName, toName, hero, anim:{sheet, fallback}} */
 function pending(S,host){ const n=next(S,host); if(!n||!n.ready) return {ready:false,next:n};
-  const from=n.to-1, key=from+'_'+n.to, sheet=DATA.anim[key]||DATA.fallbackAnim;
+  const from=n.to-1, key=from+'_'+n.to, H=DATA.anim[heroOf(S)]||{}, sheet=H[key]||DATA.fallbackAnim;
   const AP=SYS().appearance, layered=!!(AP&&AP.evolveNeedsLayers&&AP.evolveNeedsLayers(S,host));   // skin/cosmético visível: desenhar por camadas (a folha aprovada tem o herói padrão)
-  return {ready:true,from,to:n.to,fromName:nameOf(S,from),toName:n.name,hero:heroOf(S),anim:{sheet,fallback:!DATA.anim[key],layered,fx:'assets/anim/fx/evolve_'+key+'_fx'}}; }   // fx = só o efeito (sem herói nem texto; a Arte faz por código): por cima das camadas quando layered
+  return {ready:true,from,to:n.to,fromName:nameOf(S,from),toName:n.name,hero:heroOf(S),anim:{sheet,fallback:!H[key],layered,fx:'assets/anim/fx/evolve_'+key+'_fx'}}; }   // fx = só o efeito (sem herói nem texto; a Arte faz por código): por cima das camadas quando layered
 /* aplica UMA fase (depois da animação). {ok, reason: off|max|level|fc, from, to, name} */
 function evolve(S,host){ if(!ON()) return {ok:false,reason:'off'}; const n=next(S,host); if(!n) return {ok:false,reason:'max'};
   if(!n.ready) return {ok:false,reason:n.missing.level?'level':'fc',need:n.missing};
@@ -47,7 +50,8 @@ const pendingCount=(S,host)=>{ if(!ON()) return 0; const o=ensure(S), lv=lvlOf(S
 
 /* SAVE ANTIGO NA CARGA (PO): quem já passou dos níveis entra DIRETO na fase certa (Nv 60 → adulto), sem tocar as animações em fila. A evolução animada
    (pending/evolve) fica para quem sobe de nível jogando. Chamar UMA vez no boot, antes de desenhar o herói. {ok, from, to, applied} */
-function catchUp(S,host){ if(!ON()) return {ok:false,reason:'off'}; const o=ensure(S), from=o.stg; let n=0; while(n<4){ const x=next(S,host); if(!x||!x.ready) break; o.stg=x.to; n++; }
+function catchUp(S,host){ if(!ON()) return {ok:false,reason:'off'}; const o=ensure(S), from=o.stg, keep=DATA.catchUpKeepLast===true?1:0, todo=Math.max(0,pendingCount(S,host)-keep); let n=0;
+  while(n<todo){ const x=next(S,host); if(!x||!x.ready) break; o.stg=x.to; n++; }
   const L=SYS().level; try{ if(n&&L&&L.ensure) L.ensure(S).stg=o.stg; }catch(e){} return {ok:true,from,to:o.stg,applied:n}; }
 const API={DATA,ensure,current,nameOf,next,pending,evolve,pendingCount,catchUp};
 root.Sys=root.Sys||{}; root.Sys.phaseUp=API;

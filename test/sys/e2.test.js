@@ -871,8 +871,8 @@ t('fases do herói (Sys.phaseUp): gatilho nos níveis 22/35/70, uma fase por vez
   PU.DATA.on=true; try{
     L.ensure(S).lvl=21; let p=PU.pending(S,h); assert.ok(!p.ready&&p.next.needLevel===22&&p.next.missing.level===1); assert.strictEqual(PU.evolve(S,h).reason,'level');
     L.ensure(S).lvl=80; assert.strictEqual(PU.pendingCount(S,h),3,'save antigo: 3 fases pendentes, nada aplicado sozinho'); assert.strictEqual(PU.current(S),0);
-    p=PU.pending(S,h); assert.deepStrictEqual([p.ready,p.from,p.to,p.fromName,p.toName,p.anim.sheet,p.anim.fallback],[true,0,1,'Menina','Adolescente','assets/anim/fx/evolve_0_1',false]);
-    assert.ok(PU.evolve(S,h).ok); assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase1/'); assert.strictEqual(PU.pending(S,h).anim.fallback,true);
+    p=PU.pending(S,h); assert.deepStrictEqual([p.ready,p.from,p.to,p.fromName,p.toName,p.anim.sheet,p.anim.fallback],[true,0,1,'Menina','Adolescente','assets/anim/fx/kaia_evolve_0_1',false],'folha da Kaia');
+    assert.ok(PU.evolve(S,h).ok); assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase1/'); assert.strictEqual(PU.pending(S,h).anim.sheet,'assets/anim/fx/kaia_evolve_1_2'); assert.strictEqual(PU.pending(S,h).anim.fallback,false,'1→2 já tem arte');
     PU.evolve(S,h); const e=PU.evolve(S,h); assert.deepStrictEqual([e.to,e.name],[3,'Guerreira lendária']); assert.strictEqual(PU.evolve(S,h).reason,'max'); assert.strictEqual(L.ensure(S).stg,3,'Sys.level em dia');
     assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase3/'); assert.strictEqual(PU.nameOf({},3),'Guerreiro lendário');
     PU.DATA.useFc=true; const S2={}; L.ensure(S2).lvl=30; assert.strictEqual(PU.pending(S2,h).next.missing.fc>0,true,'com a trava de FC ligada, FC baixa segura');
@@ -898,7 +898,7 @@ t('Kaia jogável: setHero, FC idêntica ao Kael, folha de cada estado em cada fa
   const root=path.join(__dirname,'../..'); PU.DATA.on=true; try{
     for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero}; L.ensure(S).lvl=120; PU.ensure(S).stg=st;
       for(const state of A.STATES){ const r=A.sheetFor(S,h,state); assert.ok(fs.existsSync(path.join(root,r.body+'.json')),'falta '+r.body);
-        if(hero==='kaia'&&st===0&&['spin','die','pistol_idle'].includes(state)) assert.ok(r.fallback&&r.stage===1,'garota: '+state+' da fase 1'); } }
+        assert.strictEqual(r.fallback,false,hero+' fase '+st+' '+state+': folha própria'); } }
     const g={hero:'kaia'}; assert.strictEqual(A.sheetFor(g,h,'idle').fallback,false);
   } finally { PU.DATA.on=false; }
 });
@@ -960,9 +960,11 @@ t('decisão final do dono: Kael/Kaia de hoje são o padrão; roupa-skin fora de 
 t('fases na carga: save antigo no Nv 60 entra adulto direto (catchUp), camadas mantidas 34→35; drop no chão por raridade (tabela única)',()=>{
   const PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), A=require('../../js/sys/appearance.js'), T=require('../../js/sys/stats.js');
   PU.DATA.on=true; try{ const S={hero:'kaia',skins:['w00','a00','a43'],skinEq:{weapon:'w00',armor:'a43'}}; A.setMode(S,'skin'); L.ensure(S).lvl=60;
-    const c=PU.catchUp(S,makeHost()); assert.deepStrictEqual([c.from,c.to,c.applied],[0,2,2]); assert.strictEqual(A.sheetFor(S,makeHost(),'idle').dir,'assets/anim/hyb/kaia_phase2/'); assert.strictEqual(PU.pending(S,makeHost()).ready,false,'nada em fila');
+    const c=PU.catchUp(S,makeHost()); assert.deepStrictEqual([c.from,c.to,c.applied],[0,1,1],'aplica tudo menos a última');
+    const pe=PU.pending(S,makeHost()); assert.deepStrictEqual([pe.ready,pe.from,pe.to,pe.anim.sheet],[true,1,2,'assets/anim/fx/kaia_evolve_1_2'],'UMA animação: a final, da Kaia'); assert.ok(PU.evolve(S,makeHost()).ok);
+    assert.strictEqual(A.sheetFor(S,makeHost(),'idle').dir,'assets/anim/hyb/kaia_phase2/'); assert.strictEqual(PU.pending(S,makeHost()).ready,false,'nada em fila');
     assert.strictEqual(PU.catchUp(S,makeHost()).applied,0,'idempotente');
-    const S2={hero:'kael',skins:['a43'],skinEq:{armor:'a43'}}; A.setMode(S2,'skin'); L.ensure(S2).lvl=34; PU.catchUp(S2,makeHost()); const before=A.layers(S2,makeHost()).map(l=>l.key).join('|');
+    const S2={hero:'kael',skins:['a43'],skinEq:{armor:'a43'}}; A.setMode(S2,'skin'); L.ensure(S2).lvl=34; PU.catchUp(S2,makeHost()); while(PU.pending(S2,makeHost()).ready) PU.evolve(S2,makeHost()); const before=A.layers(S2,makeHost()).map(l=>l.key).join('|');
     L.ensure(S2).lvl=35; assert.ok(PU.evolve(S2,makeHost()).ok); assert.strictEqual(A.layers(S2,makeHost()).map(l=>l.key).join('|'),before,'camadas iguais 34→35'); assert.strictEqual(PU.current(S2),2);
   } finally { PU.DATA.on=false; }
   const d=[0,1,2,3,4,5].map(r=>T.dropFx(r)); assert.deepStrictEqual(d.map(x=>x.beam),[0,0,0,62,62,62]); assert.deepStrictEqual(d.map(x=>x.sound&&x.sound.id),[null,null,'gem','legendary','legendary','legendary']);

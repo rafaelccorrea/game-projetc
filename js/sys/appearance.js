@@ -111,7 +111,7 @@ function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level, PU=root.
 /* KAIA JOGÁVEL: estados de animação que a batalha toca e onde cada um existe. A Kaia garota (fase 0) só tem run/idle/attack: giro, morte e pistola
    caem na FASE MAIS PRÓXIMA que tem o estado (kaia_phase1), com fallback:true (pedir a arte que falta à fps-75). O Kael garoto tem todos. */
 const STATES=['run','idle','attack','spin','die','pistol_idle','pistol_run','pistol_shoot'];
-const HAS={kaia:{0:['run','idle','attack']}};   // o que falta em cada fase (o resto existe em todas: conferido no disco em 12/11)
+const HAS={};   // Arte (b3d89ba): a Kaia menina ganhou os 8 estados; todas as fases dos dois heróis têm todos (fallback só se um dia faltar)
 function sheetFor(S,host,state){ const sh=sheets(S,host), h=sh.hero, st=STATES.includes(state)?state:'idle';
   const has=ph=>{ const L=HAS[h]&&HAS[h][ph]; return !L||L.includes(st); };
   let ph=sh.stage; if(!has(ph)){ for(let k=1;k<4;k++){ if(ph+k<=3&&has(ph+k)){ ph=ph+k; break; } if(ph-k>=0&&has(ph-k)){ ph=ph-k; break; } } }
