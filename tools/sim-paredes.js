@@ -52,9 +52,19 @@ const fcAt=(C,t,eCap)=>C.at(Math.max(0,t),eCap==null?8:eCap);
 // ---- calendário-alvo do grátis ativo (fim de cada era, dias) e PAREDES (dias de espera no chefe do meio e no Senhor da Era) ----
 const END=[1,3,10,22,40,65,97,135,179];
 const WB=[0.1,1,2,2.5,3,3,3,3,3], WM=[0,0,0.5,1,1,1.5,1.5,1.5,1.5];
-const plan=[]; let t=0;
-for(let e=0;e<9;e++){ const D=END[e]-(e?END[e-1]:0), norm=Math.max(0,D-WB[e]-WM[e])/8;
-  for(let s=1;s<=10;s++){ const w=s===10?WB[e]:s===5?WM[e]:norm; t+=w; plan.push({stage:e*10+s,e,s,wall:s===10?'Senhor da Era':s===5&&WM[e]>0?'chefe do meio':'',days:w,target:t,rec:fcAt(free,t,e)}); } }
+/* PAREDES PELA RAZÃO DE FC (13/11, depois da medida no jogo): pelo modelo da luta, chegar com 97% ainda vence ~95%; parede de verdade = chegar com ~83%.
+   Senhor da Era: pede 1,2× a FC com que o grátis CHEGA nele; chefe do meio: 1,1×. As outras fases seguem o calendário (dia-alvo × c). c é ajustado para o
+   grátis terminar no dia ~180. O tempo de cada parede SAI do crescimento da FC (não é mais escolhido). */
+/* razão por era: o 1º Senhor é suave (jogador novo), cresce até 1,15 da era 2 em diante (chegar com 87% = ~1 em 4 vence) */
+const WR_BOSS=[1.06,1.1,1.15,1.15,1.15,1.15,1.15,1.15,1.15], WR_MID=1.07;
+function buildPlan(c){ const out=[]; let t=0, now=0;
+  for(let e=0;e<9;e++){ const D=(END[e]-(e?END[e-1]:0))*c;
+    for(let s=1;s<=10;s++){ t+=D/10; const wall=s===10?'Senhor da Era':(s===5&&e>=2)?'chefe do meio':''; let rec=fcAt(free,t,e);
+      if(wall){ rec=Math.max(rec,fcAt(free,now,e)*(s===10?WR_BOSS[e]:WR_MID)); }
+      let tp=now; while(tp<400&&fcAt(free,tp,e)<rec) tp+=0.05; now=tp;
+      out.push({stage:e*10+s,e,s,wall,days:0,target:t,rec}); } }
+  return {out,end:now}; }
+let plan; { let lo=0.3, hi=1.2; for(let k=0;k<18;k++){ const m=(lo+hi)/2, r=buildPlan(m); if(r.end>180) hi=m; else lo=m; } plan=buildPlan(lo).out; console.log('calendário comprimido x'+lo.toFixed(3)); }
 // ---- jogar: passa a fase no 1º momento (passo de 0,05 dia) em que FC >= 100% da recomendada ----
 function play(C){ let i=0, now=0; const pass=[]; while(i<plan.length&&now<400){ if(fcAt(C,now,plan[i].e)>=plan[i].rec){ pass.push(now); i++; } else now+=0.05; }
   return {pass,done:i,stuck:plan.map((p,j)=>pass[j]!=null?pass[j]-(j?pass[j-1]:0):null)}; }
@@ -93,3 +103,20 @@ for(const e of [1,3,5,7,8]){ const day=END[e]-0.5, L=free.L(day), e2=e, f=(L-LIN
 // ---- saída para o docs/balance.json (bloco dificuldade): FC pedida das 90 fases, paredes e calendário ----
 if(process.argv.includes("--json")) console.log("JSON "+JSON.stringify({recFc:plan.map(p=>Number(p.rec.toPrecision(3))),wallBossDays:WB,wallMidDays:WM,eraEndDay:END}));
 if(process.argv.includes('--dbg')){ const p=play(vip10), j=59; console.log('vip10 era5 chega',p.pass[j-1],'passa',p.pass[j],'rec',plan[j].rec,'fc chegada',fcAt(vip10,p.pass[j-1],5),'fc +0,5',fcAt(vip10,p.pass[j-1]+0.5,5),'L',vip10.L(p.pass[j-1]),vip10.L(p.pass[j-1]+0.5)); }
+// ---- ESCALA DO JOGO (13/11, medida do Engenheiro: jogador novo tem FC 260, a fase 1 pedia 947) ----
+// A forma das paredes vem da simulação; a ESCALA vem do jogo: fase 1 = 80% da FC de quem começa (REC_FC0 = 264 → 210);
+// Senhor da Era e = a FC medida/estimada com que o grátis chega a ele no jogo (docs/balance.json tower.fc_mediana_do_gratis_no_fim_de_cada_era)
+// × a parede da simulação (pedida ÷ FC ao chegar). Entre âncoras: interpolação geométrica do fator por fase.
+const BALJ=JSON.parse(require('fs').readFileSync(process.cwd()+'/docs/balance.json','utf8')), MED=BALJ.tower.fc_mediana_do_gratis_no_fim_de_cada_era;
+const START_GAME=210;
+/* fator CONSTANTE por era (mantém a forma da simulação dentro da era, inclusive a parede do Senhor):
+   k_e = FC com que o grátis chega ao Senhor da Era e no jogo ÷ a mesma FC na simulação. Era 0: subida suave de 210 até chegar ao Senhor. */
+const kEra=[]; for(let e=0;e<9;e++){ const j=e*10+9, arr=P.free.pass[j-1]!=null?fcAt(free,P.free.pass[j-1],e):plan[j].rec; kEra.push(MED[e]/arr); }
+const recGame=plan.map((p,i)=>Number((p.rec*kEra[Math.floor(i/10)]).toPrecision(3)));
+{ const arr0=MED[0], wall0=plan[9].rec/(P.free.pass[8]!=null?fcAt(free,P.free.pass[8],0):plan[9].rec);
+  for(let s1=1;s1<=9;s1++) recGame[s1-1]=Number((START_GAME*Math.pow(arr0/START_GAME,(s1-1)/8)).toPrecision(3));
+  recGame[9]=Number((arr0*Math.max(WR_BOSS[0],wall0)).toPrecision(3)); }   // 1º Senhor da Era: a primeira parede (no mínimo +15%)
+if(process.argv.includes('--game')){ const ab2=v=>ST.abbr(v);
+  console.log('\n## FC pedida NA ESCALA DO JOGO (fase 1, 5, 9, 10 de cada era) — a parede é a razão f10/f9');
+  for(let e=0;e<9;e++){ const g=s=>recGame[e*10+s-1]; console.log('era '+e+': f1 '+ab2(g(1))+' · f5 '+ab2(g(5))+' · f9 '+ab2(g(9))+' · f10 '+ab2(g(10))+' · Senhor ÷ fase 9 = x'+(g(10)/g(9)).toFixed(2)+' · medida '+ab2(MED[e])); }
+  console.log('JSONGAME '+JSON.stringify(recGame)); }

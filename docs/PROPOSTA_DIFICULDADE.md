@@ -211,3 +211,29 @@ Pedido do PO; o dono quer a evolução como caminho para vencer a parede. Hoje (
 - **O pet evoluído no topo fica igual ao de hoje.** Cada evolução soma +11 a +12,5% na parte do pet, de +0,4% (pet baixo) a ~2% (pet perto do topo) de FC na hora.
 - **Curva de 180 dias refeita:** mesmos fins (grátis no dia 180, VIP 5 no 139, VIP 10 no 121); quem não forja nem evolui o pet trava na fase 60.
 - **Números:** as FC pedidas mudaram pouco (estão no balance.json). A chave fica no bloco `dificuldade` como `petStageMult` e liga junto com as outras.
+
+### Correção depois da medida no jogo (13/11)
+
+O Engenheiro ligou a chave e encontrou 3 bloqueios:
+1. **Jogador novo travava** (FC 260 contra 947 pedidos). A escala agora vem do jogo: a fase 1 pede 210 (80% de quem começa) e a era 0 sobe suave até 1,6 mil. O Senhor de cada era pede a FC com que o grátis chega nele no jogo (eras 0-2 medidas, 3-8 estimadas) × a parede.
+2. **Comuns pesavam demais.** Agora cada comum e cada escolta tem 10% da vida e 5% do dano do chefe da MESMA fase. A onda do chefe é calibrada inteira (2 escoltas + chefe): com 100% da FC, vence em ~32 s e aguentaria ~40 s.
+3. **O chefe sai só da FC PEDIDA da fase**, nunca do herói do momento (`boss.fromRecOnly`).
+
+**As paredes também mudaram: agora são pela razão de FC.** Pelo modelo da luta, chegar com 97% ainda vence ~95%, então as paredes "em dias" da versão anterior quase não seguravam ninguém nas eras finais.
+- **Nova regra:** o Senhor da Era pede 1,06× (era 0), 1,1× (era 1) e 1,15× da era 2 em diante. 1,15× = chegar com 87%, e só ~1 em 4 lutas vence.
+- **Chefe do meio:** pede 1,07× a partir da era 2.
+
+Simulação refeita:
+
+| Perfil | Fim | Paredes |
+|---|---|---|
+| Grátis | dia 178 | Senhor: 7 h (era 0), 1,1 d (era 1), ~3-4 d (eras 2-4), 5-12 d (eras 5-8) |
+| VIP 5 | dia 137 | para em todos os Senhores |
+| VIP 10 | dia 121 | para em todos os Senhores |
+| Sem Forja nem pet | trava na fase 60 | — |
+
+**Atenção:** nas eras 5-8 as paredes ficam longas (5 a 12 dias para o grátis), porque lá a FC do jogador sobe só ~2% por dia. São duas saídas:
+- **(a)** aceitar;
+- **(b)** dar mais fontes de FC nas eras finais. Exemplos: a Forja passar do +15, raridade Divino mais cedo, títulos das eras 7-8.
+
+Decisão do dono. Os números estão no balance.json (bloco `dificuldade`, `on:false`).
