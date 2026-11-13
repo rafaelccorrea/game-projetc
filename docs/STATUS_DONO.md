@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **04h50 · Link das telas recriado:** https://claude.ai/artifact/Dje98dqTa6vConwpewnGds (o antigo sumiu, e os votos de lá se perderam). São 10 telas, com **Montarias até 7★**, **VIP** e **Forja** novas. **Fim do jogo: você mandou ligar.** Antes, a Sistemas corrige um erro achado na medição: o jogador real perderia os chefes das eras 0-5 mesmo com o poder pedido. Ela liga logo depois da APK. **APK v0.13.1 liberada pelo QA.** Só falta memória no PC: feche abas do Chrome e o Cursor, e espere acabar a compilação do RabiscaAI
+
 - **04h25 · Torneio do Poder pronto no servidor** (mapa de 28 territórios, escalação de 15, lutas sexta e sábado 20h, baús e ranking pelo correio no domingo), 236 testes ok, ainda desligado. Brasões caem direto na guilda (o correio só avisa). A tela de Oferta foi corrigida, e isso destrava a APK v0.13.1. **Precisa de você:** liberar o seu IP no SSH da AWS para subir isso ao servidor
 
 - **04h10 · Era Medieval vazia: causa achada.** O servidor local caiu enquanto o QA jogava e a arte da era 2 não carregou; com ele no ar a era aparece completa (cenário, inimigos, chefe). Não afeta a APK (a arte vai dentro dela). Vai entrar depois da v0.13.1: o jogo tenta carregar de novo e avisa em vez de mostrar a tela vazia. **Fim do jogo simulado (ainda desligado):** grátis termina no dia 178, VIP 5 no dia 136, VIP 10 no dia 118; as paredes ficam em 3-6 dias, menos o chefe do meio da era 8, que segura o grátis por 9,5 dias. **Esperando você:** ligar ou não. **Montarias refeita**, falta ela mostrar a 6ª e a 7ª estrela. **O link das telas parou de funcionar**; esperando você dizer se recrio
