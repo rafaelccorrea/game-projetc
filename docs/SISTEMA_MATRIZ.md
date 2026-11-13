@@ -252,3 +252,25 @@ Item 4 (P1) do `docs/IDLE_PARECIDOS.md`, aprovado pelo dono em 13/11.
 3. Mostrar `r.text` ("Você tirou 62% da vida do chefe."), `r.reward` (`gold`, `xp`, `stones`; zero = não mostrar) e as `r.tips` `[{id,kind,label,gain,gainText,dest,ready}]`: o Ir abre `dest` pela mesma rota do `DIFF_ROUTE` (o filtro de tela existente/trancada continua do lado do Engenheiro).
 4. Opcional: `Sys.bossLoss.peek(S,host,opts)` mostra quanto renderia sem creditar (`left` = derrotas premiadas que ainda restam na fase hoje).
 5. **Falta**: ligar na tela da Derrota (Engenheiro) e aprovação do dono na tela.
+
+### Fim das 9 eras e pós-eras (`js/sys/erasend.js`, `Sys.erasEnd`)
+
+Tela aprovada: `docs/proto/v2/FimDasEras.html`. Números: `docs/balance.json` blocos `fimDasEras` e `posEras` (o teste confere). A fase 90 é o **fim das 9 eras**, nunca o fim do jogo.
+
+| Linha | Estado |
+|---|---|
+| O que é | 1) Prêmio do fim das 9 eras (vencer o Juiz Celestial, fase 90), **uma vez por save**: título **Lenda das 9 Eras** (Divino, +3% ATQ e +3% VIDA efetivos, o dobro em destaque), moldura **Nove Eras** e aura **Luz das Eras** (só visuais), **300 diamantes uma vez** e a carta "As 9 eras concluídas: a jornada continua". 2) **Marcos** nas fases 100, 110, 120...: título **Marco N** (+1% ATQ e VIDA efetivos até o 150; do 160 em diante só o nome), 30 diamantes, moldura **Além das Eras** (100) e **Sem Fim** (150), 30 pedras astrais, carta. 3) **Forja Astral** +21..+25 por espaço (bônus 1,65 / 1,77 / 1,89 / 2,01 / 2,13), cada nível só abre ao vencer o marco 100/110/120/130/140 |
+| Chave | ⏸ `Sys.erasEnd.DATA.on=false` · liga com `Sys.erasEnd.setOn(true)` (registra os títulos no `Sys.titles`; desligar tira de novo). Desligado: nenhuma função escreve no save, a tabela de títulos e a FC ficam iguais, `forgeMult` = `Sys.forge.mult` |
+| Mudança em módulo existente | `js/sys/titles.js`: `addTitle(def)`, `removeTitle(id)`, `grant(S,id,host)` e o tipo de condição `grant` (título que só abre por outro módulo). Ninguém chama com a chave desligada: tabela e save iguais |
+| Estado | `S.sys.erasEnd = {final (momento da entrega, 0 = não), marks:[100,...], top (maior fase sem fim já paga em pedras), stones, earned, spent, cos:{owned, eq:{frame, aura}}, lv:{slot:0..5}, pity:{slot}}`. O título fica também no `Sys.titles`; se sumir de lá, `resync` devolve sem pagar de novo |
+| Diamantes | Com o `Sys.mail` ligado vão como anexo da carta (vale 3650 dias: prêmio único não se perde; resgate idempotente pela carta). Correio desligado: direto (`Sys.loot.grantBundle` ou `host.addGems`). Carta já enviada nunca paga de novo |
+| PROPOSTA (Sistemas, não estava no balance.json) | Forja Astral: chance 3/3/3/2/2% (segue a descida da +16..+20: 5/5/4/4/3), garantia +5 por falha, custo 4/4/5/5/6 pedras astrais por tentativa (~23/23/28/29/35 pedras por nível em média; ~140 por espaço do +21 ao +25). Pedra astral: 3 por fase sem fim vencida pela 1ª vez + 30 por marco = ~60 a cada 10 fases (~2,7 níveis de espaço). Sem ouro, sem loja. Raridade do título de marco: Mítico (100-140), Lendário (150+); ícone único `assets/icons/titles/mark.png` (pedido de Arte) |
+| Testes | `test/sys/erasend.test.js` (9): desligado = nada muda; números = balance.json; sem "fim do jogo"; entrega única (direto e pelo correio); marcos; save antigo (`sync`); Forja Astral (base +20, trava por marco, garantia, multiplicador); save torto |
+
+**O que o Engenheiro chama (quando o dono ligar):**
+1. Carregar `js/sys/erasend.js` depois de `titles.js`, `forge.js` e `mail.js`; ligar com `Sys.erasEnd.setOn(true)`.
+2. Ao carregar o save: `Sys.erasEnd.sync(S,host)` (quem já passou da 90 recebe uma vez o fim das 9 eras e os marcos vencidos; devolve títulos ao `Sys.titles`).
+3. **Toda vitória de fase**: `const r=Sys.erasEnd.onStageClear(S,host,fase)` (ignora < 90). Na **fase 90**: `r.final` → abrir `Panels.open('end9',{stage:90, prizes:r.final.prizes, milestone:r.final.milestone, ...})` (o formato `[{title,text}]` e `{stage,rewards}` é o que o `js/p_end9.js` já aceita). Acima da 90: `r.stones` (pedras astrais ganhas), `r.mark` (prêmio do marco: `{stage,title,gems,stones,frame,astralUnlock}`) para o aviso de vitória, e `r.milestone` = próximo marco.
+4. Forja: usar `Sys.erasEnd.forgeMult(S,slot)` **no lugar** de `Sys.forge.mult(S,slot)` em `heroStats()` (igual ao de hoje sem nível astral). Tela da Forja: `Sys.erasEnd.view(S,host).astral` (`level`, `astral`, `can:{ok,reason:'base'|'marco'|'pedras'|'max',stones,chance,next,needStage}`), botão → `Sys.erasEnd.astralTry(S,host,slot)`.
+5. Perfil/herói: `Sys.erasEnd.cosmetics(S)`, `equip(S,'frame'|'aura',id|null)`, `equipped(S,'frame')` / `equipped(S,'aura')` (só visual: a aura Luz das Eras = contorno dourado e faíscas, como no protótipo).
+6. **Falta**: arte da moldura Nove Eras, Além das Eras, Sem Fim, ícones `legend9.png` e `mark.png`; tela da Forja Astral (protótipo pelo PO/Arte); servidor guardar `S.sys.erasEnd` junto com o save.

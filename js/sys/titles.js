@@ -64,7 +64,8 @@ const DATA={
     tower:n=>`Chegar ao andar ${n} da torre`, arena:n=>n===1?'Terminar a semana em 1º na arena':`Terminar a semana no top ${n} da arena`,
     practice:n=>`Somar ${n} níveis de prática`, skins:n=>`Ter ${n} skins de arma ou roupa`,
     weaponEras:n=>`Conquistar armas de ${n} eras`, weapons:n=>`Conquistar as ${n} armas`, mounts:n=>n===1?'Ter 1 montaria':`Ter as ${n} montarias`,
-    pets:n=>n===1?'Ter 1 pet':`Ter ${n} pets`, petStar:(n,c)=>c&&c.pet?`${(((root.Sys&&root.Sys.pet&&root.Sys.pet.DATA.pets)||[]).find(x=>x.id===c.pet)||{}).name||'Pet'} com ${n}★`:`Pet Lendário com ${n}★`, hair:n=>`Ter os ${n} cabelos`, eyes:n=>`Ter os ${n} olhos`, hats:n=>`Ter os ${n} chapéus` },
+    pets:n=>n===1?'Ter 1 pet':`Ter ${n} pets`, petStar:(n,c)=>c&&c.pet?`${(((root.Sys&&root.Sys.pet&&root.Sys.pet.DATA.pets)||[]).find(x=>x.id===c.pet)||{}).name||'Pet'} com ${n}★`:`Pet Lendário com ${n}★`, hair:n=>`Ter os ${n} cabelos`, eyes:n=>`Ter os ${n} olhos`, hats:n=>`Ter os ${n} chapéus`,
+    grant:(n,c)=>c&&c.text?String(c.text):'Prêmio especial' },
   statText:{atkPct:'ATK',hpPct:'HP',critPct:'crítico',defPct:'defesa',goldPct:'ouro'},
 };
 const KEYS=['atkPct','hpPct','goldPct','critPct','defPct','fc'];
@@ -224,7 +225,18 @@ DATA.titleR={stage10:0,pet1:0,mount1:0,prac50:0,tow10:0,skin10:0,
 DATA.titleRName=['Comum','Raro','Épico','Mítico','Lendário','Divino'];
 for(const t of DATA.titles){ t.r=DATA.titleR[t.id]!=null?DATA.titleR[t.id]:0; t.icon='assets/icons/titles/'+t.id+'.png'; }
 const titleRarity=id=>{ const t=DATA.titles.find(x=>x.id===id); return t?{r:t.r,name:DATA.titleRName[t.r],icon:t.icon}:null; };
-const API={DATA,titleRarity,ensure,current,progress,need,seenWeapons,check,setFeatured,isUnlocked,featured,onKill,onWaveClear,onBossKill:onWaveClear,bonus,bonusText,condLabel,advice,render};
+/* TÍTULOS DADOS POR OUTRO MÓDULO (Sys.erasEnd: fim das 9 eras e marcos do pós-eras). cond {type:'grant', text} nunca abre sozinho pelo check():
+   só grant(S,id) abre. addTitle registra na tabela em tempo de execução (só quem liga a própria chave chama); removeTitle tira de novo.
+   Nada aqui roda sem alguém chamar: a tabela e o save ficam iguais. */
+function addTitle(def){ if(!def||typeof def.id!=='string'||!def.name||BY[def.id]) return false;
+  const t={id:def.id,name:String(def.name),cond:{type:'grant',n:1,text:def.text?String(def.text):''},bonus:Object.assign({},def.bonus||{}),added:true};
+  if(def.cosmetic) t.cosmetic=true; t.r=clamp(int0(def.r),0,DATA.titleRName.length-1); t.icon=typeof def.icon==='string'?def.icon:'assets/icons/titles/'+t.id+'.png';
+  DATA.titles.push(t); BY[t.id]=t; return true; }
+function removeTitle(id){ const t=BY[id]; if(!t||!t.added) return false; DATA.titles.splice(DATA.titles.indexOf(t),1); delete BY[id]; return true; }
+/* abre um título registrado por addTitle (idempotente). Devolve true só na 1ª vez. */
+function grant(S,id,host){ const t=BY[id]; if(!t||!t.added) return false; const o=ensure(S); if(o.unlocked[id]) return false;
+  o.unlocked[id]=nowOf(host); if(!o.featured) o.featured=id; return true; }
+const API={DATA,titleRarity,addTitle,removeTitle,grant,ensure,current,progress,need,seenWeapons,check,setFeatured,isUnlocked,featured,onKill,onWaveClear,onBossKill:onWaveClear,bonus,bonusText,condLabel,advice,render};
 root.Sys=root.Sys||{}; root.Sys.titles=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
