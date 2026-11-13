@@ -286,13 +286,32 @@ Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado 
   fragmentos do Prismático...), para quem lutou ou estava escalado, inclusive quem foi expulso nos últimos 3 dias.
 - `GET /guild/boss` · `POST /guild/boss/hit` → `{ damage, seed, log, hitsLeft }` (2 por dia; dano simulado no servidor). Prêmio fixo por faixa de dano.
 - `GET /guild/shop` · `POST /guild/shop/buy { itemId }` (Brasões, limite semanal, nada sorteado).
-- `POST /guild/donate { kind: "gold_small"|"gold_big"|"gems" }` (1 de cada por dia).
+- `POST /guild/donate { kind: "gold_s"|"gold_l"|"gems" }` (1 de cada por dia). Os ids são os do `Sys.guild.DATA.donate` do jogo, que o servidor lê; "gold_small"/"gold_big" eram o rascunho antigo. Id fora da lista: 400 `bad_request` `fields:["kind"]`.
   - A de 💎 (50 → 40 Brasões + 80 XP) foi mantida pelo PO, com limite de 1 por dia.
   - Hoje o servidor NÃO vê o saldo de 💎: o cliente debita, e o servidor confere pelo resumo do save (§3.4). Por isso o limite diário é a trava.
 - `GET /guild/blessings` · `POST /guild/blessings/{id}/upgrade` (líder e oficiais, com XP da guilda; teto ATK +5%, Vida +5%, DEF +3%, ouro +10%, ração +10%).
 - `GET /guild/missions` · `POST /guild/missions/{id}/claim`. As missões contam só eventos que o servidor vê.
 - `POST /guild/checkin` (+5 Brasões, +5 XP da guilda, uma vez por dia de Brasília).
 - Chat da guilda: canal `guild:<id>` no gateway do chat (§5), com frases prontas para TODOS até o parecer. Depois, vale a regra de idade da spec (menor de 16, só frases).
+
+### 10.5 Guilda V2 e Torneio V2: formato EXATO das respostas (gerado do código, fps-server, 13/11)
+- **Criar** `POST /guilds {name, emblemId, lang, open, minLevel}`: `emblemId` é texto livre de até 24 caracteres. O número `0` é aceito e volta como `"0"`.
+- **`GET /guild`** →
+  - `{guild:GuildView, me:{role, coin, contrib, donatedToday:["donate:gold_s","checkin"], checkinToday:true}, members:[…], requests:[…]}`;
+  - cada membro: `{id, name, role, contrib, joinedAt, lastSeen, me, fc?, level?, era?}`;
+  - `requests` (só para quem pode aceitar): `[{id, name, at}]`, em que `id` = o jogador que pediu (use em `/guild/requests/:id/accept`).
+  - `donatedToday` traz as chaves feitas no dia de Brasília: `donate:<kind>` e `checkin`. `checkinToday` é o mesmo dado como booleano.
+- **Doar** `POST /guild/donate` → `{guild:GuildView, coin, gained:{xp, coin, contrib}, cost:{goldk, gems}}` (o cliente debita o `cost`). **Check-in** `POST /guild/checkin` → `{guild, coin, gained}`. Repetido no dia: 429 `daily_limit` `{key}` com `retryAfterMs` até a virada.
+- **Chefe** `GET /guild/boss` → `{week, hpMax, hpLeft, down, hitsLeft, myDamage, top:[{id, name, damage}], bands:[{minRatio, coin, forge?, food?, essence?}], kill:{xp, coin, forge, food, essence}}`.
+  - Golpe `POST /guild/boss/hit` → `{damage, seed, log, timeout, killed, band, hitsLeft, hpLeft, hpMax}`.
+- **Loja** `GET /guild/shop` → `{coin, week, items:[{id, name, cost, weekly, minLevel, give:{…}, bought, left, locked}]}`.
+- **Missões** `GET /guild/missions` → `{week, list:[{id, name, counter, target, xp, coin, progress, done, contributed, claimed}]}`.
+- **Torneio, batalhas** `GET /tourney/battles` → `{week, list:[{id, slot, territory, attacker:{id, name}, defender:{id, name}|null, winner, reason, duels, at, …}]}`.
+  - `winner` = id da GUILDA vencedora (compare com `attacker.id` / `defender.id`; `null` em empate sem dono).
+  - `reason`: `fight` | `neutral` | `walkover` | `empty` | `era` | `owner`.
+- **Torneio, trava da escalação:** `lockAt` vem na resposta do `PUT /tourney/lineup` (`{ok, slot, members, lockAt}`), no 409 `lineup_locked` (`details.lockAt`), no `GET /tourney/lineup?slot=` (`{slot, members, lockAt, locked}`) e em `GET /tourney` → `battles:[{slot, at, lockAt}]` (o `lineups` dali é só `{d5:[ids], d6:[ids]}`).
+- **Arena contra robô:** gasta a tentativa, mas `delta` 0 e nenhum ponto. É regra do servidor; a tela pode mostrar "sem pontos".
+- **Erro 429 do limitador por IP** (ex.: 5 convidados por hora): `retryAfterMs` agora vem do `Retry-After` real, em milissegundos (antes vinha 0).
 
 ## 11. SERVIDORES (realms) — IMPLEMENTADO (fps-server af8ebbb; regras: docs/SERVIDORES.md)
 - **Identificador:** `'s1'`, `'s2'`... (`^s[0-9]{1,3}$`). Ausente = `'s1'`. Estados: `new` | `open` (aceitam personagem novo) | `full` | `closed` (só quem já tem personagem entra).
