@@ -685,7 +685,7 @@ function resOpen(mode,o,force){
   if(mode==='win'){
     const cards=RES.cards=resLoot(o), Y=RES.lay=resLay('win',G,resCardsH());
     RES.gain=cards.length&&cards[0].k==='gold'?cards[0].gold:0; RES.g0=Math.max(0,S.gold-RES.gain);
-    RES.sub=o.newEra>=0&&ERAS[o.newEra]?'Nova era liberada: '+ERAS[o.newEra].n:(bname||'Chefe')+' derrotado · Fase '+(eraOf(stage+1)+1)+'-'+((stage%STAGES_PER_ERA)+1)+' liberada';
+    RES.sub=o.newEra>=0&&ERAS[o.newEra]?'Nova era liberada: '+ERAS[o.newEra].n:(bname||(()=>{ try{ return Sys.eras.bossName(stage,{perEra:STAGES_PER_ERA}); }catch(e){ return 'Chefe'; } })())+' derrotado · Fase '+(eraOf(stage+1)+1)+'-'+((stage%STAGES_PER_ERA)+1)+' liberada';
     /* linha do tempo (s), nos tempos do protótipo contados a partir do fim da morte do chefe: clarão · baú +0,15 · baú estoura +0,7 · letreiro +0,9 ·
        moedas voam +1,7 · cartões +3,3 / +3,9 / +4,6 (+0,7 cada um a mais) · "Continuar" 0,8 s depois do último cartão */
     const ev=RES.ev; if(d>0.3) ev.push([d-0.3,'flash']); ev.push([d+0.15,'chest'],[d+0.7,'boom'],[d+0.9,'title'],[d+1.7,'fly']);

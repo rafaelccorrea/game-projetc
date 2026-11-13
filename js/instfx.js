@@ -24,7 +24,7 @@ function instWaveClear(){ const I = B.inst; if (!I || I.done) return; I.wi++;
   if (I.run.loop){ I.wi = 0; instWave(0); return; }
   instEnd(true); }
 function instEnd(win){ const I = B.inst; if (!I || I.done) return; I.done = true; let out = null;
-  try { out = Sys.instances.finish(S, Sys.host, I.run.id, { win: !!win, kills: I.kills }); } catch (e) { console.error('instances.finish', e); out = { ok: false, reason: 'erro' }; }
+  try { out = Sys.instances.finish(S, Sys.host, I.run.id, { win: !!win, kills: I.kills, timeout: !win && I.t <= 0 }); } catch (e) { console.error('instances.finish', e); out = { ok: false, reason: 'erro' }; }
   S.stage = I.back.stage; S.wave = I.back.wave; S.farm = I.back.farm; B.inst = null;   // volta ao farm onde estava
   B.deadT = 0; B.deadBoss = false; startBattle(); if (typeof refreshHero === 'function') refreshHero(); save(); hud();
   /* Engenheiro 2 (achado dos testes de Sistemas): o PInst.showResult devolve true mesmo sem abrir (tela 'inst' desligada). Só confio nele com a tela ligada;

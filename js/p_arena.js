@@ -97,7 +97,8 @@ function paRanking(){ const li=Sys.arena.leagueInfo(S,paH()); let r=null; try{ r
   const me=r.me, from=Math.max(0,Math.min(me.rank-4,r.list.length-8)), rows=r.list.slice(from,from+8).map(x=>`<div style="flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:${x.me?'#3a2c1f':'#1d1611'};border:${x.me?'2px solid #ffc94a':'1px solid #4a3a2b'}">
       <span style="width:30px;text-align:center;font-family:'Lilita One',sans-serif;color:#c9b9a2">${x.rank}</span><span style="flex:1;min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(x.me?'Você · '+paMe():x.name)}</span>
       <span style="font-family:'Lilita One',sans-serif;color:#ffe07a">${paN(x.value)} pts</span></div>`).join('');
-  return `<span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2">Ranking da sua liga (${paEsc(li.league.name)}) nesta semana · você em ${me.rank}º</span>
+  const rb=(()=>{ try{ return typeof realmBadge==='function'?realmBadge():''; }catch(e){ return ''; } })();
+  return `<span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;overflow-wrap:anywhere">${rb?'<b style="color:#ffe07a">'+paEsc(rb)+'</b> · ':''}Ranking da sua liga (${paEsc(li.league.name)}) nesta semana · você em ${me.rank}º</span>
     <div style="flex:none;display:flex;flex-direction:column;gap:4px">${rows}</div>
     <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Prévia com jogadores simulados · prêmios valem quando o ranking online abrir</span>`; }
 /* ---------- LUTA: VS → golpes do registro → resultado ---------- */

@@ -60,9 +60,9 @@ function iResult(r){ if(!r) return ''; const T=Sys.instances.DATA.types[r.type]|
   const egg=rw.egg>=0&&rw.hatched!==undefined?`<div style="font-size:14px;font-weight:900;color:#ffc94a">Ganhou um ovo ${iEsc(iRar(rw.egg))}!</div>`:'';
   return `<div role="dialog" aria-label="Resultado da instância" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px">
     <div class="pi-pop" style="width:100%;max-width:340px;border-radius:18px;background:#1d1611;border:3px solid ${r.win?'#ffc94a':'#8a6a3a'};padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;box-sizing:border-box;text-align:center">
-      <b style="font-family:'Lilita One',sans-serif;font-size:26px;color:${r.win?'#ffe07a':'#f6ecdf'}">${r.win?(r.sweep?'Varrido!':'Vitória!'):'Não foi dessa vez'}</b>
+      <b style="font-family:'Lilita One',sans-serif;font-size:26px;color:${r.win?'#ffe07a':'#f6ecdf'}">${r.win?(r.sweep?'Varrido!':'Vitória!'):r.reason==='timeout'?'Tempo esgotado':'Não foi dessa vez'}</b>
       <span style="font-size:14px;font-weight:800;color:#c9b9a2">${iEsc(T.n)}${r.kills?' · '+r.kills+' abates':''}</span>
-      ${r.win?`<div style="display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;font-size:15px;font-weight:900;color:#ffe07a">${P.join('<span aria-hidden="true">·</span>')||'—'}</div>${its?`<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">${its}</div>`:''}${egg}`:'<span style="font-size:13px;font-weight:800;color:#c9b9a2">A entrada não foi gasta.</span>'}
+      ${r.win?`<div style="display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;font-size:15px;font-weight:900;color:#ffe07a">${P.join('<span aria-hidden="true">·</span>')||'—'}</div>${its?`<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">${its}</div>`:''}${egg}`:`<span style="font-size:13px;font-weight:800;color:#c9b9a2;text-align:center;line-height:1.3">${iEsc((()=>{ try{ return Sys.instances.outcomeText(r,{timedOut:r.reason==='timeout'}); }catch(e){ return 'A entrada não foi gasta.'; } })())}</span>`}
       <button data-x="ok" class="pi-btn" style="width:100%">Coletar</button></div></div>`; }
 function scrInst(){
   iInject(); const d=xDims(I_MINH);
