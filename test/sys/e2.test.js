@@ -1001,6 +1001,7 @@ t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era d
   assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',r}).tier),['base','base','base','boost','own','own']);
   const M=T.ultOf({wt:'rifle',r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.ok(M.boost.size>1);
   const L=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L.fallback,true); assert.strictEqual(L.sheet,'assets/anim/ult/era5_ult','sem a folha própria: base reforçada'); assert.ok(L.boost);
+  { const path=require('path'), fs=require('fs'), root=path.join(__dirname,'../..'); for(const k of D.ownDelivered) assert.ok(fs.existsSync(path.join(root,'assets/anim/ult/'+k+'_legend.json')),'entregue sem arquivo: '+k); assert.deepStrictEqual(Object.keys(D.ownReady),[],'nada ligado sem o voto do dono'); }
   D.ownReady.rifle=true; try{ const L2=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L2.sheet,'assets/anim/ult/rifle_legend'); assert.strictEqual(L2.boost,null); } finally { delete D.ownReady.rifle; }
   assert.strictEqual(T.weaponStyle({wt:'plasma',r:0}),'gun'); assert.strictEqual(T.weaponStyle({wt:'plasma',r:4}),'melee'); assert.strictEqual(T.weaponStyle({wt:'flintlock',r:4}),'gun');
   // drop: arco/bumerangue desligados até a arte; ligados, 15% cada, com nível e era mínimos
