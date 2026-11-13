@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **17h · Drop do chefe com anti-repetição LIGADO** (ff809dd): a mesma peça seguida caiu de ~20% para 0 em 400 chefes, sem mudar as chances. **Online:** ligação definida (o jogo conecta ao abrir, com limite de 4 s e queda segura para o save do celular; salva na nuvem a cada gravação); a Sistemas faz a tela "nuvem × aparelho" para escolher o save; teste automático contra o servidor real pronto. Cartão Mensal real preparado. Tudo espera só você rodar o script do banco
+
 - **16h50 · PERFIL VERSÃO 4 para o seu voto** (mesmo link: https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc): Kael montado nas 6 montarias reais, auras reais animadas, pet animado no estágio certo, prévia de skin no herói, "como ganhar" leva à tela, VIP com benefícios, Coleção e Números detalhados. Na mesma página: o print das 8 skins que já existem no jogo
 - **16h50 · Skins:** as 8 com arte EXISTEM no jogo (print real); não apareceram porque a v0.12.9 é anterior a elas e a entrega ao jogador está desligada até o seu voto. Na próxima APK: Modo dono → Liberar tudo → Aparência (com prévia e botão para trocar de herói)
 - **16h50 · Drop do chefe:** confirmado aleatório (200 chefes simulados); no nível 13 só sai Raro e só há 12 visuais (6 peças × 2 eras). Anti-repetição sendo ligado; proposta: o ícone da peça mudar com a raridade (Arte orça antes de gastar)
