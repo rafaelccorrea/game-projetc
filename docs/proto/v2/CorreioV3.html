@@ -1,0 +1,528 @@
+<title>Eonbound Correio V3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Correio V3: as DUAS direções (docs/proto/v2/DirecoesMapaCorreio.html) na mesma página, com a troca A/B no painel e no chip do aparelho.
+   A = cartões com o prêmio à vista, arrastar para a direita para resgatar (botão Resgatar como alternativa).
+   B = abas Prêmios / Avisos / Sistema; a carta escolhida mostra o prêmio NO HERÓI (cosmético equipado na prévia, como Loja e VIP) e os itens no chão ao lado dele.
+   Base visual e de código: VIP V2 / Loja V2 (aparelho 390x844 escalado, palco em canvas com <img> reais, arma na mão, asa nas costas, pet na frente).
+   Regras: js/sys/mail.js; rota: docs/API_SERVIDOR.md §8. Nada à venda dentro do Correio. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+button:disabled{cursor:default}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px;overflow-wrap:anywhere}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box.dirbox{border-color:rgba(255,210,94,.55)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:44px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.seg.dirs button{min-height:52px;font-size:15px}
+.seg.dirs button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);border-color:#ffe58a}
+.dirtxt{font-size:13.5px;line-height:1.5;margin:10px 0 0;color:#d6dcff}
+.dirtxt b{color:var(--gold)}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:360px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(255,210,94,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 26%,var(--night) 40%)}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:6px;padding:12px 12px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:20px;letter-spacing:.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.5)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 8px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+.sr{position:absolute;left:-9999px}
+/* chip A/B no aparelho (só no protótipo, para o dono comparar) */
+.dchip{flex:none;display:flex;padding:2px;gap:2px;border-radius:13px;background:rgba(5,8,28,.75);border:1px dashed rgba(255,210,94,.7)}
+.dchip button{width:34px;height:40px;border:0;border-radius:11px;background:none;font-family:var(--fd);font-size:17px;color:var(--muted);padding:0}
+.dchip button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink)}
+
+.stage{position:relative;z-index:2;height:132px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:132px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
+.who i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
+.who span{overflow:hidden;text-overflow:ellipsis}
+.prevb{position:absolute;z-index:3;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 12px;border-radius:12px;background:rgba(255,107,154,.2);border:1px solid var(--rose);font-size:11px;font-weight:900;color:#ffd6e2;white-space:nowrap;max-width:94%;overflow:hidden}
+.prevb.use{background:rgba(94,240,160,.16);border-color:var(--green);color:#c9ffe2}
+.prevb span{overflow:hidden;text-overflow:ellipsis}
+
+.bt{flex:none;min-width:76px;height:40px;padding:0 12px;border-radius:12px;border:0;font-weight:900;font-size:13px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green)}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.ghost{background:rgba(255,255,255,.08);color:var(--text);box-shadow:none;border:1px solid var(--line2)}
+.bt.rose{background:linear-gradient(180deg,#ff9fbe,#e0477a);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
+.bt svg{width:15px;height:15px}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 12px 14px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.hint{font-size:11px;color:var(--muted);margin:2px 0 8px;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.empty{text-align:center;padding:26px 18px;color:var(--muted);font-weight:800;font-size:13px;line-height:1.5}
+.empty svg{width:64px;height:64px;display:block;margin:0 auto 10px;opacity:.85}
+.empty b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+.foot2{position:relative;z-index:5;flex:none;display:flex;gap:6px;padding:8px 12px 14px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%)}
+.foot2 .bt{flex:1;height:48px;font-size:14px;min-width:0}
+.foot2 .bt:first-child{flex:0 1 40%}
+
+/* ícones de tipo */
+.lic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;position:relative}
+.lic svg{width:24px;height:24px}
+.lic.reward{background:rgba(255,210,94,.18)}.lic.guild{background:rgba(94,231,255,.16)}.lic.event{background:rgba(169,123,255,.18)}.lic.system{background:rgba(255,255,255,.08)}
+.lic .dot{position:absolute;right:-3px;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--cyan);border:2px solid var(--night);box-shadow:0 0 8px var(--cyan)}
+.bdg{flex:none;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;white-space:nowrap;line-height:1.4}
+.bdg.new{background:rgba(94,231,255,.18);color:var(--cyan)}
+.bdg.exp{background:rgba(255,107,107,.2);color:#ffb0b0;border:1px solid rgba(255,107,107,.6)}
+.bdg.got{background:rgba(94,240,160,.15);color:var(--green)}
+.bdg.cos{background:rgba(255,107,154,.2);color:#ffd6e2}
+
+/* ===== DIREÇÃO A: cartões ===== */
+.cw{position:relative;margin-bottom:8px;border-radius:16px;overflow:hidden}
+.under{position:absolute;inset:0;display:flex;align-items:center;gap:8px;padding-left:18px;border-radius:16px;background:linear-gradient(90deg,#1b7a4c,#0f3b2a);color:#c9ffe2;font-family:var(--fd);font-size:18px;letter-spacing:.5px}
+.under svg{width:26px;height:26px}
+.under.go{background:linear-gradient(90deg,#22c47a,#127046);color:#fff}
+.cd{position:relative;border-radius:16px;background:linear-gradient(160deg,rgba(40,52,128,.96),rgba(18,25,70,.98));border:1px solid var(--line);padding:8px 9px 9px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.cd.unr{border-color:rgba(94,231,255,.65)}
+.cd.pend{box-shadow:inset 0 0 0 1px rgba(255,210,94,.35)}
+.cd.exp{border-color:rgba(255,107,107,.75)}
+.cd.got{background:rgba(20,26,66,.96)}
+.cd.drag{box-shadow:0 10px 22px rgba(0,0,0,.5);border-color:var(--green)}
+.ch{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;border:0;background:none;padding:0;text-align:left}
+.ch .mi{flex:1;min-width:0}
+.ch .mi b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd:not(.unr) .ch .mi b{color:#c9d0f0}
+.ch .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch .bs{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.rwd{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:7px}
+.tl{position:relative;border-radius:12px;border:2px solid var(--rc,var(--line2));background:radial-gradient(circle at 50% 32%,color-mix(in srgb,var(--rc,#5e6fd0) 30%,#1a2366),#0c1238);padding:4px 3px 4px;text-align:center;min-width:0}
+.tl .ar{display:block;width:46px;height:46px;margin:0 auto;object-fit:contain}
+.tl b{display:block;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.tl small{display:block;font-size:9px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl .rb{position:absolute;left:3px;top:3px;font-size:8px;font-weight:900;padding:1px 4px;border-radius:5px;background:var(--rose);color:#3a0716;letter-spacing:.3px}
+.tl.more{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:var(--gold)}
+.tl.more small{font-family:var(--fb)}
+.cd.got .tl{opacity:.42}
+.cd.got .tl::after{content:"";position:absolute;right:4px;bottom:4px;width:16px;height:16px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%2305301b' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/80% no-repeat}
+.txt{margin:7px 0 0;font-size:12px;font-weight:700;line-height:1.45;color:#dfe5ff}
+.ca{display:flex;align-items:center;gap:6px;margin-top:8px}
+.ca .sw{flex:1;min-width:0;height:40px;border-radius:12px;background:rgba(94,240,160,.1);border:1px dashed rgba(94,240,160,.55);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:11.5px;font-weight:900;color:#bff5d8;white-space:nowrap;overflow:hidden}
+.ca .sw svg{width:18px;height:18px;flex:none;animation:nudge 1.4s ease-in-out infinite}
+.ca .sw span{overflow:hidden;text-overflow:ellipsis}
+.ca .info{flex:1;min-width:0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.3}
+.ca .info b{color:var(--green)}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+
+/* ===== DIREÇÃO B: abas + prêmio no herói ===== */
+.scr.dB .stage{height:226px}
+.scr.dB #stc{height:226px}
+.tabs{position:relative;z-index:4;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:4px 12px 0}
+.tabs button{position:relative;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:13px;color:var(--muted);padding:0 4px}
+.tabs button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.tabs i{position:absolute;right:-3px;top:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--rose);color:#fff;font-size:10px;font-style:normal;line-height:18px;font-weight:900}
+.det{position:relative;z-index:3;margin:6px 12px 0;padding:8px 10px 10px;border-radius:16px;background:linear-gradient(160deg,rgba(255,210,94,.14),rgba(24,33,86,.95) 55%);border:1px solid rgba(255,210,94,.55);animation:rin .2s ease-out}
+.det .dh{display:flex;align-items:center;gap:8px}
+.det .dh .mi{flex:1;min-width:0}
+.det .dh b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.det .dh small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.det .dt{margin:6px 0 0;font-size:11.5px;font-weight:700;line-height:1.4;color:#dfe5ff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.det .dr{display:flex;align-items:center;gap:5px;margin-top:7px}
+.det .chips{flex:1;min-width:0;display:flex;gap:4px;overflow:hidden}
+.det .chips span{flex:none;display:flex;align-items:center;gap:3px;height:30px;padding:0 7px 0 3px;border-radius:10px;background:rgba(5,8,28,.6);border:1px solid var(--rc,var(--line));font-size:11px;font-weight:900;white-space:nowrap}
+.det .chips img{width:24px;height:24px;object-fit:contain}
+.det.got .chips span{opacity:.5}
+.det .bt{min-width:92px}
+.det .note2{font-size:10px;color:var(--muted);font-weight:800;margin-top:5px;line-height:1.35}
+.ln{display:flex;align-items:center;gap:8px;width:100%;min-height:54px;text-align:left;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;padding:6px 9px}
+.ln.unr{border-color:rgba(94,231,255,.6)}
+.ln[aria-pressed="true"]{border:2px solid var(--gold);background:rgba(255,210,94,.12)}
+.ln .mi{flex:1;min-width:0}
+.ln .mi b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln:not(.unr) .mi b{color:#c9d0f0}
+.ln .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln .mi small em{font-style:normal;color:#ff9f9f}
+.atr{flex:none;display:flex;align-items:center;gap:2px}
+.atr img{width:22px;height:22px;object-fit:contain}
+.atr .ok{font-size:10px;font-weight:900;color:var(--green)}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr dA" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <div class="top">
+          <button class="back" data-go="Menu" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">Correio</div>
+          <div class="cur"><img src="a/coin.png" alt=""><span id="gold">0</span><span class="sr">ouro</span></div>
+          <div class="cur"><img src="a/gem.png" alt=""><span id="gems">0</span><span class="sr">diamantes</span></div>
+          <div class="dchip" role="group" aria-label="Direção do protótipo"><button data-dir="A" aria-pressed="true" aria-label="Direção A">A</button><button data-dir="B" aria-pressed="false" aria-label="Direção B">B</button></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="264" role="img" aria-label="Seu herói com a arma na mão, a asa nas costas e o pet na frente; ao resgatar, os prêmios voam até ele"></canvas>
+          <div class="who" id="who"><i></i><span>Kael</span></div>
+          <div id="over"></div>
+        </div>
+        <div class="tabs" id="tabs" role="group" aria-label="Tipo de carta"></div>
+        <div id="det"></div>
+        <div class="body" id="body"></div>
+        <div class="foot2" id="foot"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Correio (versão 3)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <div class="box dirbox">
+      <h2>Escolha a direção</h2>
+      <div class="seg dirs" role="group" aria-label="Direção"><button data-dir="A" aria-pressed="true">A · Cartões</button><button data-dir="B" aria-pressed="false">B · Abas e herói</button></div>
+      <p class="dirtxt" id="dirtxt"></p>
+      <p class="sub" style="font-size:12px;margin-top:6px">O chip <b>A | B</b> no topo do aparelho troca também. O voto abaixo salva a direção que estiver escolhida.</p>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Caixa" style="margin-top:8px"><button data-scn="full" aria-pressed="true">Caixa cheia</button><button data-scn="first" aria-pressed="false">Primeiro dia</button><button data-scn="empty" aria-pressed="false">Vazia</button></div>
+      <p class="sub" style="margin-top:8px;font-size:13px">Caixa cheia: Arena, Torneio, baú de território (4 itens, com arma Mítica), chefe da guilda, Invasão (vence em 2 dias), asa de sombra da Arena, skin do evento (vence amanhã), compensação, avisos e boas-vindas. Primeiro dia: só a carta de boas-vindas.</p>
+    </div>
+    <div class="box">
+      <h2>Regras (iguais nas duas)</h2>
+      <ul>
+        <li>Nada à venda dentro do Correio, nenhum sorteio pago: só prêmios e avisos.</li>
+        <li>Bolinha azul = não lida ou com anexo pendente; o número nas abas e no ícone conta essas cartas.</li>
+        <li>Cada carta vence em 30 dias; o anexo não resgatado se perde (selo vermelho nos últimos 3 dias).</li>
+        <li>Resgatar tudo pega todos os anexos de uma vez; só dá para apagar carta sem anexo pendente.</li>
+        <li>Cosmético resgatado vai para a coleção; "Usar agora" equipa na hora. Item acima do seu portão fica guardado.</li>
+        <li>Fonte: js/sys/mail.js (tipos, 30 dias, até 100 cartas, resgate idempotente) e docs/API_SERVIDOR.md §8. Asa de sombra: Arena liga Diamante (Loja V2). Skin no evento e arma Mítica no baú: EXEMPLO para mostrar cosmético e item na carta.</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: A, mas com as abas da B"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais à Loja/VIP V2): W = armas (assets/weapons/meta.json), B = corpo sem arma de cada skin ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},"era2_mitico":{"w":186,"h":300,"fx":0.29297,"fy":0.125,"fw":0.47266,"fh":0.76172,"kb":55,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"n":12,"fps":12,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"fy":242},"kaia":{"n":12,"fps":12,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243},"kael_demon":{"n":12,"fps":12,"g":[[117.58,207.42,42.99,0.7314,-0.6819,-1.92,1.92,3.64,0],[117.75,207.85,42.88,0.7328,-0.6804,-5.41,5.41,3.69,0],[117.62,208.26,42.27,0.74,-0.6726,-5.41,5.41,3.69,0],[120.15,205.33,41.5,0.7489,-0.6627,-5.41,5.41,3.69,0],[121.81,202.96,41.63,0.7475,-0.6643,-8.41,8.41,3.74,0],[121.94,202.75,42.42,0.7382,-0.6746,-5.41,5.41,3.69,0],[122.01,203.26,43,0.7313,-0.682,-5.41,5.41,3.69,0],[122.45,203.53,42.85,0.7332,-0.6801,-8.51,8.51,3.69,0],[122.32,204.03,42.17,0.7412,-0.6713,-8.71,8.71,3.69,0],[122.26,203.24,41.44,0.7496,-0.6618,-5.41,5.41,3.69,0],[122.39,202.34,41.8,0.7455,-0.6665,-5.41,5.41,3.69,0],[125.98,199.14,42.62,0.7358,-0.6772,-9.79,9.79,3.69,0]],"back":{"x":95.8,"y":161,"a":0,"s":1},"fy":242},"kaia_demon":{"n":12,"fps":12,"g":[[114.75,196.04,40.81,0.7569,-0.6536,-11.6,11.6,4.05,0],[114.74,196.7,40.93,0.7555,-0.6552,-11.71,11.71,4.05,0],[114.69,196.24,40.61,0.7591,-0.6509,-11.43,11.43,4.05,0],[115.3,196.17,40.46,0.7609,-0.6489,-10.55,10.55,4.05,0],[115.4,196.45,40.62,0.759,-0.6511,-10.38,10.38,4.11,0],[115.77,195.69,40.96,0.7551,-0.6556,-10.27,10.27,4.05,0],[115.57,196.56,40.73,0.7578,-0.6524,-10.27,10.27,4.11,0],[114.64,196.74,40.41,0.7614,-0.6483,-11.43,11.43,4.11,0],[114.7,195.98,40.73,0.7578,-0.6524,-11.6,11.6,4.11,0],[114.85,195.6,40.97,0.755,-0.6557,-11.6,11.6,4.05,0],[111.95,199.79,40.64,0.7588,-0.6514,-5.44,5.44,4.11,0],[119.75,193.33,40.4,0.7615,-0.6482,-4.66,4.66,4.11,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243}}};
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1},bone:{L:[0.996,0.927,229,281],R:[0,0.927,230,281],fit:0.93},shadow:{L:[0.996,0.821,231,333],R:[0,0.821,229,335],fit:0.85}};
+
+/* ---------- CORREIO: js/sys/mail.js (tipos, remetente, prazo) ---------- */
+const FROM={system:'Equipe Eonbound',reward:'Prêmios',guild:'Guilda',event:'Eventos'};
+const TABS={premios:'Prêmios',avisos:'Avisos',sistema:'Sistema'};
+const tabOf=m=>m.type==='system'?'sistema':hasAtt(m)?'premios':'avisos';
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'], RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
+const AT={gold:['a/coin.png','Ouro'],gems:['a/gem.png','Diamantes'],forge:['a/forge.png','Pedras de forja'],food:['a/pets.png','Ração'],essence:['a/chest.png','Essência'],stones:['a/forge.png','Pedras de treino'],prism:['a/pp_prism_fox.png','Fragm. Prismático',12]};
+/* cosméticos que chegam pelo correio (prévia no herói na B) */
+const COS={
+ wing_shadow:{kind:'wing',id:'shadow',name:'Asa de sombra',r:3,icon:'a/wing_shadow.png'},
+ skin_demon:{kind:'skin',id:'demon',name:h=>h==='kael'?'Kael Demônio':'Kaia Demônia',r:4,icon:h=>'a/av_'+h+'_demon.png'}};
+const nm=v=>typeof v==='function'?v(S.hero):v;
+function pieces(att){ const out=[]; if(!att) return out; for(const k of Object.keys(att)){
+  if(k==='cos'){ const c=COS[att.cos]; out.push({img:nm(c.icon),b:RN[c.r],s:nm(c.name),rc:RC[c.r],k,cos:1}); continue; }
+  if(k==='item'){ const it=att.item; out.push({img:it.img,b:RN[it.r],s:it.name,rc:RC[it.r],k,cos:it.wh?1:0}); continue; }
+  const a=AT[k]; if(a) out.push({img:a[0],sheet:a[2]||0,b:k==='gold'?ab(att[k]):'×'+n(att[k]),s:a[1],k}); } return out; }
+/* o que a carta põe NO herói: cosmético (asa/skin) ou arma (item com mão) */
+function cosOf(m){ const a=m&&m.att; if(!a) return null; if(a.cos){ const c=COS[a.cos]; return {kind:c.kind,id:c.id,name:nm(c.name)}; }
+  if(a.item&&a.item.wh) return {kind:'weapon',id:a.item.wh,name:a.item.name,r:a.item.r}; return null; }
+const ico=(p,sz,cls)=>p.sheet?`<span class="${cls||''}" style="display:block;width:${sz}px;height:${sz}px;margin:0 auto;background:url(${p.img}) 0 50%/${p.sheet*100}% auto no-repeat"></span>`:`<img class="${cls||''}" src="${p.img}" alt="" style="width:${sz}px;height:${sz}px">`;
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',').replace(/,0+$/,'');
+const ab=v=>v>=1e9?dec(v/1e9,2)+' bi':v>=1e6?dec(v/1e6,1)+' mi':v>=1e4?dec(v/1e3,1)+' mil':n(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dias=k=>k+' dia'+(k===1?'':'s');
+const SV={reward:'<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#ffd25e" stroke="#9a5a10" stroke-width="1.5"/><path d="M3 9h18v4H3z" fill="#f4a52a"/><path d="M12 9v12" stroke="#9a5a10" stroke-width="2"/><path d="M12 9c-2-4-6-4-6-1.5S10 9 12 9c2 0 6 1 6-1.5S14 5 12 9z" fill="#ff6b9a"/></svg>',
+ guild:'<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5.5-3.6 9.3-8 11-4.4-1.7-8-5.5-8-11V5z" fill="#5ee7ff" stroke="#16306e" stroke-width="1.6"/><path d="M12 6.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff6d6"/></svg>',
+ event:'<svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.3 6.6.5-5 4.4 1.6 6.5L12 16.2 6.2 19.7l1.6-6.5-5-4.4 6.6-.5z" fill="#a97bff" stroke="#3a1a6e" stroke-width="1.3"/></svg>',
+ system:'<svg viewBox="0 0 24 24" fill="none" stroke="#dfe5ff" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5L12 13l8.5-6.5"/></svg>',
+ arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="#7dffb8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h14M13 6l6 6-6 6"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ box:'<svg viewBox="0 0 64 64"><path d="M8 24l24-14 24 14v26a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z" fill="#26338a" stroke="#7f93ff" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 24l24 16 24-16" fill="none" stroke="#7f93ff" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 20h32v12L32 42 16 32z" fill="#eef1ff" opacity=".9"/></svg>'};
+
+/* ---------- cartas de EXEMPLO (formato do mail-core: id, title, body, att, createdAt, expiresAt, source → type) ---------- */
+function seed(kind){ if(kind==='empty') return [];
+  const W={id:'welcome',type:'system',title:'Bem-vindo a Eonbound',body:'Que bom ter você aqui, viajante! Aqui chegam avisos da equipe e, quando o jogo estiver online, os prêmios de ranking, arena e eventos.',att:null,age:0.1,left:30,read:kind!=='first'};
+  if(kind==='first') return [W];
+  const L=[
+   {id:'m7',type:'event',title:'Festival das Eras: skin do evento',body:'Você completou as 7 missões do Festival das Eras. A skin é sua para sempre, com o bônus dela.',att:{cos:'skin_demon',gems:40},age:29,left:1},
+   {id:'m5',type:'event',title:'Invasão: prêmio de participação',body:'Você ajudou a defender a cidade na Invasão de sábado.',att:{essence:2,stones:5},age:27.5,left:2},
+   {id:'m6',type:'reward',title:'Arena: temporada na liga Diamante',body:'Você terminou a temporada da Arena na liga Diamante. A asa de sombra é o prêmio da liga.',att:{cos:'wing_shadow',gems:120},age:0.2,left:30},
+   {id:'m3',type:'guild',title:'Baú de território (3 territórios)',body:'Um item para cada território da sua guilda, na raridade mais alta que você pode receber, mais materiais.',att:{item:{name:'Lâmina Mítica',r:3,img:'a/ic_era2_mitico.png',wh:'era2_mitico'},forge:6,food:90,essence:3,gold:1.5e6},age:0.6,left:29},
+   {id:'m1',type:'reward',title:'Arena: prêmio da semana (14º lugar)',body:'Sua posição final na Arena da semana passada foi 14º. Obrigado pelas lutas!',att:{gems:80,gold:4.2e6,forge:6},age:0.4,left:29},
+   {id:'m2',type:'reward',title:'Torneio do Poder: 3º lugar',body:'A Ordem do Alvorecer ficou em 3º no Torneio do Poder. Prêmio para quem estava escalado.',att:{prism:2},age:0.5,left:29},
+   {id:'m4',type:'guild',title:'Chefe da guilda derrubado',body:'A guilda derrubou o chefe da semana. Prêmio para todos os membros.',att:{forge:5,food:50,essence:2},age:2,left:28},
+   {id:'a1',type:'guild',title:'Guerra de território no sábado, 20h',body:'O líder marcou a guerra de território para sábado às 20h. Entre no grupo da guilda 10 minutos antes.',att:null,age:0.3,left:30},
+   {id:'a2',type:'event',title:'A Invasão volta no sábado',body:'Os inimigos voltam a atacar a cidade no sábado. Quem participa ganha essência e pedras de treino.',att:null,age:1.2,left:29,read:true},
+   {id:'m8',type:'system',title:'Manutenção de quinta: compensação',body:'O servidor ficou fora do ar por 40 minutos na quinta. Obrigado pela paciência.',att:{gems:50},age:4,left:26},
+   {id:'m9',type:'system',title:'Novidades da versão 0.13',body:'Eras 7 e 8, montarias até 7 estrelas e o Torneio do Poder. Bom jogo!',att:null,age:5,left:25,read:true}];
+  return [...L,W]; }
+
+/* ---------- estado ---------- */
+let S={hero:'kael'}, DIR='A', tabB='premios', selB=null, openA=null;
+const DIRTXT={A:'<b>A · Cartões.</b> Cada carta é um cartão grande com o prêmio à vista (até 4 peças). <b>Arraste o cartão para a direita</b> para resgatar; quem preferir toca em Resgatar. Selo vermelho quando vai vencer, "Resgatado" depois. Herói pequeno no topo recebe os prêmios.',
+ B:'<b>B · Abas e herói.</b> Abas Prêmios, Avisos e Sistema com o total não lido. Toque numa carta: o <b>prêmio aparece no herói</b> (asa, skin ou arma equipadas na prévia, como na Loja e no VIP) e os itens ficam no chão ao lado dele. Resgatar embaixo do herói.'};
+function reset(kind){ const hero=S.hero||'kael';
+  S={hero,kind,skin:'def',wing:'angel',weapon:['era2_t1',2,'Lâmina Rúnica'],gold:18.6e6,gems:640,
+     own:{wing:new Set(['angel']),skin:new Set(['def']),weapon:new Set(['era2_t1'])},
+     box:seed(kind).map(m=>Object.assign({read:false,claimed:false},m)),fly:[],fx:[]};
+  openA=null; selB=null; tabB='premios'; }
+const hasAtt=m=>!!(m&&m.att&&Object.keys(m.att).length);
+const pending=m=>hasAtt(m)&&!m.claimed;
+const unreadOf=m=>!m.read||pending(m);
+const byId=id=>S.box.find(m=>m.id===id);
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+const usingCos=c=>c&&(c.kind==='wing'?S.wing===c.id:c.kind==='skin'?S.skin===c.id:S.weapon[0]===c.id);
+const ownCos=c=>c&&S.own[c.kind].has(c.id);
+
+/* ---------- PALCO (receita do jogo: js/stage.js; igual à Loja/VIP V2) ---------- */
+/* imagens do palco como <img> de verdade numa caixa fora da tela (no host publicado, new Image() não desenha no canvas) */
+const IM={}, IMS={};
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+const NECK={};
+function neckOf(u,im,nf){ if(NECK[u]) return NECK[u]; const fw=im.naturalWidth/nf, fh=im.naturalHeight, fs=fw/256, out=[];
+  try{ const W=Math.round(fw), c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=fh; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+    for(let i=0;i<nf;i++){ const d=g.getImageData(Math.round(i*fw),0,W,fh).data; let top=Math.round(fh*.3);
+      scan: for(let y=0;y<fh;y++) for(let x=0;x<W;x++){ const k=(y*W+x)*4; if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){ top=y; break scan; } }
+      out.push(top/fs); } }
+  catch(e){ out.length=0; for(let i=0;i<nf;i++) out.push(77); }
+  return NECK[u]=out; }
+/* medidas do palco por direção: A = herói pequeno no topo; B = herói grande (vitrine do prêmio) */
+const GEO={A:{SH:132,GY:120,HK:0.42,HX:196,PCX:140,PK:78},B:{SH:226,GY:206,HK:0.74,HX:176,PCX:92,PK:132}};
+const G_=()=>GEO[DIR];
+const sheetOf=sk=>sk==='def'?'a/body_'+S.hero+'.png':'a/body_'+S.hero+'_demon.png';
+/* visual: o que está equipado e, na B, a prévia da carta escolhida por cima */
+function look(){ const L={skin:S.skin,wing:S.wing,weapon:S.weapon,pv:null}; if(DIR!=='B') return L; const m=byId(selB), c=cosOf(m); if(!c||usingCos(c)) return L;
+  L.pv=c; if(c.kind==='wing') L.wing=c.id; else if(c.kind==='skin') L.skin=c.id; else if(c.kind==='weapon') L.weapon=[c.id,c.r,c.name]; return L; }
+function wings(x,ax,ay,b,k,t,wing){ const WA=WING_AN[wing]; if(!WA||!b) return; const Li=img('a/wg_'+wing+'_L.png'), Ri=img('a/wg_'+wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* herói A PÉ: corpo sem arma + a arma equipada no punho de cada quadro; asa nas costas (a skin Demônio já traz a asa na arte, ela vence o item) */
+function drawHero(x,t,L){ const g_=G_(), k=g_.HK, hx=g_.HX, GY=g_.GY;
+  const sid=L.skin==='def'?S.hero:S.hero+'_demon', B=D.B[sid], url=sheetOf(L.skin), sh=img(url); if(!B||!ok(sh)) return;
+  const fw=sh.naturalWidth/B.n, fh=sh.naturalHeight, fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]};
+  const x0=hx-128*k, y0=GY-B.fy*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34*k/0.52,8,0,0,7); x.fill(); x.restore();
+  if(L.skin==='def'&&B.back) wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t,L.wing);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*fw,0,fw,fh,0,0,256,256);
+  /* ARMA NA MÃO = a arma equipada (ou a da prévia), no grip de cada quadro */
+  const wk=L.weapon[0], W=D.W[wk], ws=W?wSpr(wk,L.weapon[1]):null; let drawW=null;
+  if(ws){ const grip=W.grip||[0.5,0.78], kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=neckOf(url,sh,B.n)[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,256,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+/* PET SEMPRE NA FRENTE (regra do dono), pés no chão */
+function drawPet(x,t){ const g_=G_(), I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) return; const fi=((Math.floor(t*12)%12)+12)%12, fw=I.naturalWidth/12, fh=I.naturalHeight, kp=g_.PK/512;
+  x.drawImage(I,fi*fw,0,fw,fh,g_.PCX-224*kp,g_.GY+6-307*kp,512*kp,352*kp); }
+/* B: os itens da carta escolhida PARADOS NO CHÃO à direita do herói, com sombra (nada flutua) */
+function drawPile(x,t){ if(DIR!=='B') return; const m=byId(selB); if(!m||!hasAtt(m)) return; const P=pieces(m.att).filter(p=>!p.cos).slice(0,3), g_=G_();
+  P.forEach((p,i)=>{ const im=img(p.img); if(!ok(im)) return; const s=i===0?44:36, cx=268+i*42+(i?6:0), by=g_.GY+4-(i%2)*2;
+    x.save(); x.globalAlpha=m.claimed?.35:1;
+    x.save(); x.globalAlpha*=.35; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(cx,by+1,s*.42,5,0,0,7); x.fill(); x.restore();
+    if(!m.claimed){ const gl=x.createRadialGradient(cx,by-s*.4,2,cx,by-s*.4,s*.8); gl.addColorStop(0,'rgba(255,210,94,'+(.22+.08*Math.sin(t*3+i))+')'); gl.addColorStop(1,'rgba(255,210,94,0)'); x.fillStyle=gl; x.beginPath(); x.arc(cx,by-s*.4,s*.8,0,7); x.fill(); }
+    if(p.sheet){ const fw=im.naturalWidth/p.sheet, fh=im.naturalHeight, h=s*fh/fw; x.drawImage(im,0,0,fw,fh,cx-s/2,by-h,s,h); } else x.drawImage(im,cx-s/2,by-s,s,s);
+    x.restore(); }); }
+/* prêmios voando até o herói ao resgatar: saem de baixo (da carta) num arco e somem no peito dele */
+function drawFly(x,t){ const g_=G_(); S.fly=S.fly.filter(p=>t-p.t<1.1+p.d); for(const p of S.fly){ const u=Math.max(0,Math.min(1,(t-p.t-p.d)/0.9)); if(u<=0) continue; const im=img(p.img); if(!ok(im)) continue;
+    const sx=p.x0, sy=g_.SH+20, ex=g_.HX, ey=g_.GY-110*g_.HK, cx=(sx+ex)/2, cy=Math.min(sy,ey)-50, k=1-u, xx=k*k*sx+2*k*u*cx+u*u*ex, yy=k*k*sy+2*k*u*cy+u*u*ey, s=26*(1-u*0.5);
+    x.save(); x.globalAlpha=u>0.85?(1-u)/0.15:1; if(p.sheet){ const fw=im.naturalWidth/p.sheet, fh=im.naturalHeight; x.drawImage(im,0,0,fw,fh,xx-s/2,yy-s/2,s,s*fh/fw); } else x.drawImage(im,xx-s/2,yy-s/2,s,s); x.restore(); } }
+function drawFx(x,t){ S.fx=S.fx.filter(p=>t-p.t<1.3); for(const p of S.fx){ const a=(t-p.t)/1.3; x.save(); x.globalAlpha=1-a; x.font='900 14px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle=p.c; x.strokeText(p.s,p.x,p.y-a*28); x.fillText(p.s,p.x,p.y-a*28); x.restore(); } }
+function draw(t){ if(!S.box) return; S.t=t; const g_=G_(), c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,g_.SH);
+  let L=null; try{ L=look(); }catch(err){ stgErr('a prévia',err); return; }
+  try{ const g=x.createRadialGradient(g_.HX,g_.GY,10,g_.HX,g_.GY,160); g.addColorStop(0,'rgba(255,210,94,'+(L.pv?.4:.25)+')'); g.addColorStop(1,'rgba(255,210,94,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(g_.HX+30,g_.GY,170,DIR==='B'?20:12,0,0,7); x.fill();
+    if(DIR==='B'){ x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(g_.HX,g_.GY,92,13,0,0,7); x.stroke(); x.setLineDash([]); } }catch(err){ stgErr('o chão',err); }
+  try{ drawPile(x,t); }catch(err){ try{ x.restore(); x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os itens no chão',err); }
+  try{ drawHero(x,t,L); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  try{ drawPet(x,t); }catch(err){ stgErr('o pet',err); }
+  try{ drawFly(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os prêmios',err); }
+  try{ drawFx(x,t); }catch(err){ stgErr('os números',err); } }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- partes comuns ---------- */
+function renderTop(){ $('#gold').textContent=ab(S.gold); $('#gems').textContent=n(S.gems); $('#who').innerHTML='<i></i><span>'+hn()+' · '+esc(S.weapon[2])+' na mão</span>';
+  const L=look(); $('#over').innerHTML=L.pv?`<div class="prevb"><span>Prévia no herói: ${esc(L.pv.name)}</span></div>`:''; }
+function sub(m){ const P=pending(m), warn=P&&m.left<=3; return esc(FROM[m.type])+' · '+(m.age<1?'hoje':'há '+dias(Math.floor(m.age)))+' · '+(warn?'<em>vence em '+dias(m.left)+'</em>':'vence em '+dias(m.left)); }
+function badges(m){ const P=pending(m), c=cosOf(m); let h='';
+  if(P&&m.left<=3) h+=`<span class="bdg exp">Vence em ${dias(m.left)}</span>`; else if(!m.read) h+='<span class="bdg new">Nova</span>';
+  if(m.claimed) h+='<span class="bdg got">Resgatado</span>'; else if(c&&c.kind!=='weapon') h+='<span class="bdg cos">Cosmético</span>';
+  return h; }
+function emptyHTML(){ return `<div class="empty">${SV.box}<b>Sua caixa está vazia</b>Prêmios de Arena, Torneio, guilda e eventos chegam aqui. Nada é vendido no Correio.</div>`; }
+function renderFoot(){ const p=S.box.filter(pending).length, rd=S.box.filter(m=>!pending(m)&&m.read).length;
+  $('#foot').innerHTML=`<button class="bt off" data-act="delread" ${rd?'':'disabled'}>Apagar lidas${rd?' ('+rd+')':''}</button><button class="bt ${p?'':'off'}" data-act="all" ${p?'':'disabled'}>${p?'Resgatar tudo ('+p+')':'Nada para resgatar'}</button>`; }
+/* botões depois do resgate: cosmético/arma da coleção que ainda não está em uso */
+function afterBtns(m){ const c=cosOf(m); let h='';
+  if(m.claimed&&c&&ownCos(c)&&!usingCos(c)) h+=`<button class="bt" data-use="${m.id}" data-nodrag="1">${c.kind==='weapon'?'Equipar':'Usar agora'}</button>`;
+  else if(m.claimed&&c&&usingCos(c)) h+=`<span class="bt on" style="height:40px">Usando</span>`;
+  if(m.read&&!pending(m)) h+=`<button class="bt off" data-del="${m.id}" data-nodrag="1" aria-label="Apagar ${esc(m.title)}">Apagar</button>`;
+  return h; }
+
+/* ---------- DIREÇÃO A: cartões com o prêmio à vista ---------- */
+function tile(p){ return `<div class="tl" style="${p.rc?'--rc:'+p.rc:''}">${p.cos?'<span class="rb">'+(p.k==='item'?'ITEM':'VISUAL')+'</span>':''}${ico(p,46,'ar')}<b>${esc(p.b)}</b><small>${esc(p.s)}</small></div>`; }
+function card(m){ const P=pending(m), pcs=pieces(m.att), op=openA===m.id||!hasAtt(m), c=cosOf(m);
+  let tiles=''; if(pcs.length){ const show=pcs.length>4?pcs.slice(0,3):pcs; tiles='<div class="rwd">'+show.map(tile).join('')+(pcs.length>4?`<div class="tl more">+${pcs.length-3}<small>${esc(pcs.slice(3).map(p=>p.s).join(', '))}</small></div>`:'')+'</div>'; }
+  let act=''; if(P) act=`<div class="sw" aria-hidden="true">${SV.arrow}<span>Arraste para a direita</span></div><button class="bt" data-claim="${m.id}" data-nodrag="1" aria-label="Resgatar ${esc(m.title)}">Resgatar</button>`;
+  else { const ab2=afterBtns(m); const info=m.claimed?`<span class="info"><b>Resgatado.</b> ${c?esc(c.name)+' foi para a coleção.':'Já está na sua conta.'}</span>`:(!m.read?'<span class="info">Toque no título para ler.</span>':'<span class="info">Lida.</span>'); act=info+ab2; }
+  return `<div class="cw"><div class="under" aria-hidden="true">${SV.check}Resgatar</div><div class="cd ${unreadOf(m)?'unr':''} ${P?'pend':''} ${P&&m.left<=3?'exp':''} ${m.claimed?'got':''}" data-card="${m.id}">
+    <button class="ch" data-open="${m.id}" aria-expanded="${op}"><span class="lic ${m.type}">${SV[m.type]}${unreadOf(m)?'<span class="dot"></span>':''}</span><span class="mi"><b>${esc(m.title)}</b><small>${sub(m)}</small></span><span class="bs">${badges(m)}</span></button>
+    ${tiles}${op?`<p class="txt">${esc(m.body)}${m.att&&m.att.item?' Item acima do seu portão fica guardado até você poder usar.':''}</p>`:''}<div class="ca">${act}</div></div></div>`; }
+function orderA(){ const L=S.box.slice(); const rank=m=>pending(m)?0:!m.read?1:2; return L.sort((a,b)=>rank(a)-rank(b)||(rank(a)===0?a.left-b.left:a.age-b.age)); }
+function renderA(keep){ const b=$('#body'), sc=b.scrollTop, p=S.box.filter(pending).length;
+  $('#tabs').innerHTML=''; $('#det').innerHTML='';
+  b.innerHTML=S.box.length?`<p class="hint">${p?'<b>'+p+' com prêmio.</b> Arraste o cartão para a direita ou toque em Resgatar.':'Tudo resgatado.'} ${S.box.length} de 100 cartas.</p>`+orderA().map(card).join(''):emptyHTML();
+  b.scrollTop=keep?sc:0; }
+
+/* ---------- DIREÇÃO B: abas + prêmio no herói ---------- */
+function inTab(k){ return S.box.filter(m=>tabOf(m)===k); }
+function line(m){ const pcs=pieces(m.att), sel=selB===m.id;
+  const atr=hasAtt(m)?(m.claimed?'<span class="atr"><span class="ok">Resgatado</span></span>':'<span class="atr">'+pcs.slice(0,3).map(p=>ico(p,22)).join('')+(pcs.length>3?'<span class="ok" style="color:var(--muted)">+'+(pcs.length-3)+'</span>':'')+'</span>'):'';
+  return `<button class="ln ${unreadOf(m)?'unr':''}" data-sel="${m.id}" aria-pressed="${sel}"><span class="lic ${m.type}">${SV[m.type]}${unreadOf(m)?'<span class="dot"></span>':''}</span><span class="mi"><b>${esc(m.title)}</b><small>${sub(m)}</small></span>${atr}</button>`; }
+function fixSel(){ const L=inTab(tabB); if(selB&&L.some(m=>m.id===selB)) return; const f=L.find(pending)||L.find(m=>!m.read)||L[0]; selB=f?f.id:null; if(f) f.read=true; }
+function renderDet(){ const d=$('#det'), m=byId(selB); if(!m){ d.innerHTML=''; return; }
+  const P=pending(m), pcs=pieces(m.att), c=cosOf(m);
+  const chips=pcs.length?'<div class="chips">'+pcs.map(p=>`<span style="${p.rc?'--rc:'+p.rc:''}">${ico(p,24)}${esc(p.cos?p.s:p.b)}</span>`).join('')+'</div>':'<div class="chips"></div>';
+  const btn=P?`<button class="bt" data-claim="${m.id}">Resgatar</button>`:afterBtns(m);
+  d.innerHTML=`<div class="det ${m.claimed?'got':''}"><div class="dh"><span class="lic ${m.type}">${SV[m.type]}</span><span class="mi"><b>${esc(m.title)}</b><small>${sub(m)}</small></span>${badges(m).replace('<span class="bdg new">Nova</span>','')}</div>
+   <p class="dt">${esc(m.body)}</p><div class="dr">${chips}${btn}</div>${c&&!usingCos(c)?`<div class="note2">${c.kind==='weapon'?'A arma da carta aparece na mão do herói (prévia).':'O herói mostra '+esc(c.name)+' na prévia.'} ${P?'Resgate para ficar com ela.':''}</div>`:''}</div>`; }
+function renderB(keep){ fixSel(); const b=$('#body'), sc=b.scrollTop;
+  $('#tabs').innerHTML=Object.keys(TABS).map(k=>{ const c=inTab(k).filter(unreadOf).length; return `<button data-tab="${k}" aria-pressed="${tabB===k}">${TABS[k]}${c?'<i>'+c+'</i>':''}</button>`; }).join('');
+  renderDet(); const L=inTab(tabB);
+  b.innerHTML=!S.box.length?emptyHTML():L.length?L.map(line).join('')+`<p class="hint" style="margin-top:6px">${S.box.length} de 100 cartas. Cartas vencem em 30 dias.</p>`:`<div class="empty"><b>Nada em ${TABS[tabB]}</b>${tabB==='premios'?'Os prêmios resgatados somem desta aba quando você apaga a carta.':'Nenhuma carta deste tipo agora.'}</div>`;
+  b.scrollTop=keep?sc:0; }
+
+function full(keep){ scr.className='scr d'+DIR; const g_=G_(), c=$('#stc'); if(c.height!==g_.SH*2){ c.height=g_.SH*2; }
+  if(DIR==='A') renderA(keep); else renderB(keep); renderTop(); renderFoot(); syncSide(); }
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2000); }
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${esc(where)}</div></div><div class="navb"><p>No jogo, volta para <b>${esc(where)}</b>.</p><button class="bt" data-x="navback" style="height:44px;min-width:200px">Voltar para o Correio</button></div>`; scr.appendChild(d); }
+
+/* ---------- ações (Sys.mail.claim / claimAll / remove; no servidor POST /mail/{id}/claim; entrega pelo Sys.loot.grantBundle) ---------- */
+function claim(m,delay){ if(!pending(m)) return false; m.claimed=true; m.read=true; const a=m.att, c=cosOf(m);
+  if(a.gold) S.gold+=a.gold; if(a.gems) S.gems+=a.gems; if(c) S.own[c.kind].add(c.id);
+  pieces(a).forEach((p,i)=>S.fly.push({img:p.img,sheet:p.sheet,x0:60+((i*67)%270),t:S.t||0,d:(delay||0)+i*0.12}));
+  setTimeout(()=>{ S.fx.push({s:a.gems?'+'+a.gems+' diamantes':a.gold?'+'+ab(a.gold)+' ouro':'Resgatado!',c:'#5ef0a0',x:G_().HX,y:G_().GY-150*G_().HK,t:S.t||0}); renderTop(); },700);
+  return true; }
+function claimOne(m){ if(!claim(m)) return false; const c=cosOf(m); toast(c?c.name+' na coleção':'Resgatado: '+m.title); full(true); return true; }
+function useCos(m){ const c=cosOf(m); if(!c||!ownCos(c)) return false; if(c.kind==='wing') S.wing=c.id; else if(c.kind==='skin') S.skin=c.id; else S.weapon=[c.id,c.r,c.name]; toast(c.name+(c.kind==='weapon'?' na mão':' em uso')); full(true); return true; }
+function setDir(d){ if(d!=='A'&&d!=='B') return; DIR=d; full(false); }
+let noClickUntil=0;
+scr.addEventListener('click',e=>{ if(performance.now()<noClickUntil) return; const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(d.dir){ setDir(d.dir); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.tab){ tabB=d.tab; selB=null; full(false); return; }
+  if(d.sel){ const m=byId(d.sel); selB=d.sel; if(m) m.read=true; full(true); return; }
+  if(d.open){ const m=byId(d.open); openA=openA===d.open?null:d.open; if(m) m.read=true; full(true); return; }
+  if(d.claim){ claimOne(byId(d.claim)); return; }
+  if(d.use){ useCos(byId(d.use)); return; }
+  if(d.del){ const m=byId(d.del); if(!m) return; if(pending(m)){ toast('Resgate o anexo antes de apagar'); return; } S.box=S.box.filter(x=>x!==m); if(selB===m.id) selB=null; openA=null; toast('Carta apagada'); full(true); return; }
+  if(d.act==='all'){ const P=S.box.filter(pending); P.forEach((m,i)=>claim(m,i*0.25)); toast(P.length+' cartas resgatadas'); full(true); return; }
+  if(d.act==='delread'){ const k=S.box.filter(m=>!pending(m)&&m.read).length; S.box=S.box.filter(m=>pending(m)||!m.read); selB=null; openA=null; toast(k+' cartas apagadas'); full(true); return; } });
+
+/* A: arrastar o cartão para a direita resgata (passou de 45% da largura); o botão Resgatar faz o mesmo */
+const SWIPE=0.45; let drag=null;
+scr.addEventListener('pointerdown',e=>{ if(DIR!=='A'||!e.target||!e.target.closest) return; if(e.target.closest('[data-nodrag]')) return; const cd=e.target.closest('[data-card]'); if(!cd) return;
+  const m=byId(cd.dataset.card); if(!pending(m)) return; drag={m,el:cd,x0:e.clientX,y0:e.clientY,w:cd.getBoundingClientRect().width||300,on:false,p:0,pid:e.pointerId}; });
+scr.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
+  if(!drag.on){ if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){ drag=null; return; } if(dx>8&&dx>Math.abs(dy)){ drag.on=true; try{ drag.el.setPointerCapture(drag.pid); }catch(_){} drag.el.classList.add('drag'); } else return; }
+  drag.p=Math.max(0,Math.min(1,dx/drag.w)); drag.el.style.transition='none'; drag.el.style.transform='translateX('+(drag.p*100)+'%)';
+  const u=drag.el.parentNode&&drag.el.parentNode.querySelector('.under'); if(u) u.classList.toggle('go',drag.p>=SWIPE); });
+function endDrag(){ if(!drag) return; const d=drag; drag=null; if(!d.on) return; noClickUntil=performance.now()+350;
+  if(d.p>=SWIPE){ d.el.style.transition='transform .18s ease-in'; d.el.style.transform='translateX(105%)'; setTimeout(()=>claimOne(d.m),190); }
+  else { d.el.style.transition='transform .2s ease-out'; d.el.style.transform=''; d.el.classList.remove('drag'); } }
+scr.addEventListener('pointerup',endDrag); scr.addEventListener('pointercancel',endDrag);
+
+function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scn===S.kind));
+  document.querySelectorAll('[data-dir]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.dir===DIR)); $('#dirtxt').innerHTML=DIRTXT[DIR]; }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.dir){ setDir(d.dir); } else if(d.hero){ S.hero=d.hero; full(true); } else if(d.scn){ reset(d.scn); full(false); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ const nv=$('#nav'); if(nv) nv.remove(); } });
+S.hero='kael'; reset('full'); full(false);
+setTimeout(()=>{ for(const h of ['kael','kaia']){ img('a/body_'+h+'.png'); img('a/body_'+h+'_demon.png'); } img('a/wh_era2_mitico.png'); img('a/wg_shadow_L.png'); img('a/wg_shadow_R.png'); },600);
+
+/* teste sem navegador (domstub) e no console */
+window.__correioTeste={ get S(){ return S; }, get dir(){ return DIR; }, get tab(){ return tabB; }, get sel(){ return selB; }, setDir, reset:k=>{ reset(k); full(false); },
+  claim:id=>claimOne(byId(id)), swipe:(id,p)=>{ const m=byId(id); if(DIR!=='A'||!pending(m)||!(p>=SWIPE)) return false; return claimOne(m); },
+  use:id=>useCos(byId(id)), look:()=>look(), pending:()=>S.box.filter(pending).length, unread:()=>S.box.filter(unreadOf).length };
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-correio-v3';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.escolha?' · direção <b>'+String(d.escolha).replace(/[<>&]/g,'')+'</b>':'')+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,escolha:DIR,nota:$('#nota').value.trim(),tela:'Correio V3',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
