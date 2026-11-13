@@ -405,3 +405,13 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Para ligar faltam: o módulo `Sys.offer` carregado fora do `NEXT_ON` e com a chave dele ligada; o pagamento (`Sys.buy`) entregando de
   verdade; a decisão do PO sobre abrir sozinha no 1º acesso.
 - Também seu: `js/sys/mail.js` não está na lista de módulos do index (o Correio está ligado e abre vazio sem o módulo).
+
+### A-21. (Engenheiro 2, v0.12.8, Bloco A) Pedidos
+- PARA A ARTE (via PO): `assets/anim/mounts/kael_wolf_idle_body.png` e `kael_wolf_run_body.png` têm um RESÍDUO ESCURO (rabisco preto, resto da arma apagada)
+  entre a cabeça do Kael e a cabeça do lobo; aparece no jogo por cima da asa. Conferido desenhando o quadro 0 da folha sozinho: está no arquivo, não é do código.
+- PARA A ARTE (via PO): nas montarias pônei, cavalo e tigre, parado e correndo, a cabeça da maça (arma da era 0) fica em cima da boca/queixo do Kael
+  (ângulo do grip da folha). Com espada não incomoda. Decisão de arte: baixar a mão ou girar o grip.
+- PARA O AGENTE B (informação, js/p_forge.js): na Forja o Kael da vitrine aparece com uma ESPADA quando a arma equipada é o "Machado de Osso" (maça); a vitrine
+  do Equipamento mostra a arma certa. Usar `heroLook()` como o Equipamento.
+- PARA O AGENTE B / PO (informação): o letreiro da ultimate ("Lâmina do Dragão!") é roxo em qualquer raridade; a tinta, as partículas e o anel do golpe final
+  seguem a raridade. Se o PO quiser a borda do letreiro na cor da raridade, é uma linha no meu `startAct`.

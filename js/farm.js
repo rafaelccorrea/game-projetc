@@ -115,7 +115,7 @@ function onLevelUp(lv){
 }
 /* abate na campanha: ouro, XP, gema, item e materiais pelo Sys.loot; carga do baú pelo Sys.chest */
 function farmKill(e, y){
-  if (!SYS_ON){ S.gold += e.gold; floatText(e.x, y - 30, '+' + fmt(e.gold) + '🪙', '#ffc94a'); return; }
+  if (!SYS_ON){ S.gold += e.gold; floatText(e.x, y - 30, '+' + fmt(e.gold), '#ffc94a'); return; }
   let r = null;
   try { r = Sys.loot.onKill(S, Sys.host, { gold: e.gold, boss: e.boss, eraBoss: e.eraBoss, era: eraOf(S.stage), stage: S.stage, x: e.x, y });
     Sys.chest.onKill(S, { boss: e.boss, eraBoss: e.eraBoss }, Sys.host);

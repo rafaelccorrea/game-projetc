@@ -16,7 +16,7 @@ const MOUNT_TBL = {
   wolf:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.70, pdy: 9 },
   griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 26 },   /* 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
   mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10 },
-  wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 26 },   /* Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
+  wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 10 },   /* Engenheiro 2: wy2 26 → 10 (na serpe a sela já é alta: com 26 a asa do Kael ficava solta acima da cabeça) · Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
 };
 const mountOk = () => MOUNTS_ON && typeof Sys !== 'undefined' && !!Sys.mount;
 function mountBoot(){ if (!mountOk()) return; try { Sys.mount.DATA.on = true; Sys.mount.DATA.visual = true; Sys.mount.ensure(S); } catch (e) { console.error('mountBoot', e); } }
@@ -55,6 +55,9 @@ function drawHeroMounted(H){ const id = H.mount.id; if (!mountReady(id)) return 
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.translate(-(pad + 128 - T.dx) * k, -(fy - T.dy) * k); ctx.scale(k, k);          // espaço do quadro (0..512); patas em feetY na linha do chão
   const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  /* Engenheiro 2: CONTORNO DE LUZ da aura por estrela, colado na silhueta da montaria (o halo de trás sumia em cima do cenário claro): 1 estrela = fino e claro; 5 = largo e dourado */
+  const stN = H.deadP < 0 ? Math.max(0, Math.min(5, H.mount.stars | 0)) : 0, glowC = MOUNT_AURA[stN];
+  const body0 = !glowC ? body : () => { let dp = 1; try { dp = Math.abs(ctx.getTransform().a) / k; } catch (e) {} ctx.save(); ctx.shadowColor = glowC + (0.7 + 0.06 * stN).toFixed(2) + ')'; ctx.shadowBlur = (6 + 2.4 * stN) * dp * (0.85 + 0.15 * Math.sin(t * 2.4)); body(); body(); if (stN >= 5) body(); ctx.restore(); };
   const wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, w0 = SPR(wPng(ws), 'weapon'), gun = wm.type === 'gun';
   let tip = { x: G.x + 40, y: G.y - 40 }, drawW = null;
   if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 / w0.h);
@@ -63,8 +66,8 @@ function drawHeroMounted(H){ const id = H.mount.id; if (!mountReady(id)) return 
     else { const ln = typeof wm.len === 'number' ? wm.len * (dw / w0.fw) : gy2, wa = wang * Math.PI / 180; tx0 = Math.cos(wa) * ln; ty0 = -Math.sin(wa) * ln; }
     const c = Math.cos(ang), s = Math.sin(ang); tip = { x: G.x + tx0 * c - ty0 * s, y: G.y + tx0 * s + ty0 * c };
     drawW = () => { ctx.save(); ctx.translate(G.x, G.y); ctx.rotate(ang); dspr(wimg, -gx, -gy2, dw, dh); ctx.restore(); }; }
-  if (drawW && G.behind){ drawW(); body(); }
-  else { body(); if (drawW){ drawW();
+  if (drawW && G.behind){ drawW(); body0(); }
+  else { body0(); if (drawW){ drawW();
       /* dedos por cima do cabo */
       if (typeof G.ux === 'number'){ const ux = G.ux, uy = G.uy, px = -uy, py = ux, f0 = (G.f0 != null ? G.f0 : -5) - 1.5, f1 = (G.f1 != null ? G.f1 : 5) + 1.5, hh = Math.min(G.hw || 3.4, 4) + 5;
         ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); }

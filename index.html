@@ -275,14 +275,14 @@ body.full #toast{top:calc(var(--hudh) + 150px);max-width:210px;font-size:13px}
   </div>
   <div class="tbot">
     <button class="play" id="playb">JOGAR</button>
-    <button class="btn dim" id="tcfg">⚙️ Configurações</button>
+    <button class="btn dim" id="tcfg">Configurações</button>
     <div class="ver" id="ver"></div>
   </div>
 </div>
 <div id="loading" role="dialog" aria-label="Carregando">
 <div class="lwrap">
   <div class="lbg" id="lbg0"></div><div class="lbg" id="lbg1"></div><div class="lbg" id="lbg2"></div><div class="lbg" id="lbg3"></div><div class="lbg" id="lbg4"></div><div class="lbg" id="lbg5"></div><div class="lbg" id="lbg6"></div>
-  <div class="lpillw"><span id="lpill" class="erapill">Era 1 de 7 · Pré-História</span></div>
+  <div class="lpillw"><span id="lpill" class="erapill">Pré-História</span></div>
   <div class="lshade"></div>
   <div class="llogo"><img src="assets/brand/logo.png" alt="Eonbound" onerror="this.style.visibility='hidden'"></div>
   <div class="lsh"></div>
@@ -453,6 +453,8 @@ function vib(ms){ if(S.set.vib&&navigator.vibrate){ try{ navigator.vibrate(ms); 
 const pvSkin={weapon:null,armor:null};   // skin em prévia na aba Skins
 /* ?debug=1&era=N[&boss=1|eb=1][&wr=R&ar=R][&skip=1][&tab=gear]  -> força era/skins/estado (não grava o save) */
 const QP=new URLSearchParams(location.search);
+/* Engenheiro 2: ?debug=1&skip=1 também pula a ENTRADA NOVA (js/p_intro.js): a chave da tela nasce desligada só nesta carga (o js/panels.js respeita window.PANEL_ON) */
+if(DEBUG&&QP.has('skip')) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{intro:false});
 /* DEBUG OFICIAL DO SENHOR DA ERA (pedido do QA): ?debug=1&fresh=1&lord=<era 0..6> põe o save na fase <era*10+10>, onda 5 (Senhor da Era), com o herói
    forte o bastante para vencer e SEM __stay (o chefe morre de verdade, a fase avança e a era troca). O reforço é refeito a cada 0,2 s (ver o fim do arquivo). */
 if(DEBUG&&QP.has('lord')){ QP.set('era',QP.get('lord')); QP.set('eb','1'); window.__lord=true; }
@@ -549,7 +551,7 @@ function hud(){ updHudExtra(); hudSys(); syncSpeed(); fbTick(); fcNotice(); }   
 let view='battle';
 const V=document.getElementById('view');
 const ic=(n,em,cls)=>`<img class="${cls||'hi'}" src="assets/ui/${n}.png" alt="" onerror="this.outerHTML='${em}'">`;
-const COIN=()=>ic('coin','🪙'), GEM=()=>ic('gem','💎');
+const COIN=()=>ic('coin',''), GEM=()=>ic('gem','');   /* sem emoji de reserva (regra do dono) */
 const thumb=(slot,e,r)=>`<img class="th ${slot}" src="assets/${slot==='weapon'?'weapons/era'+e+'_'+W_RKEY[Math.max(0,Math.min(4,r|0))]:'hero/era'+e+'_t'+tierOf(r)}.png" alt="" loading="lazy" decoding="async" style="${r>0?`filter:drop-shadow(0 0 ${2+r}px ${RAR[r].c})`:''}" onerror="this.style.display='none'">`;
 const rb = r => `<span class="badge" style="background:${RAR[r].c}">${RAR[r].n}</span>`;
 
@@ -682,7 +684,7 @@ function versionCheck(){ if(DEBUG) return;
 function openSettings(confirmReset){
   mbox.innerHTML=confirmReset?`<h3>Resetar progresso?</h3><div class="sm">Isso apaga TODO o seu progresso, itens, skins e moedas. Não dá para desfazer.</div>
     <div class="row"><button class="btn dim grow" id="m_no">Cancelar</button><button class="btn grow" style="background:linear-gradient(#e05555,#a02020);color:#fff" id="m_yes">Apagar tudo</button></div>`
-  :`<h3>⚙️ Configurações</h3>
+  :`<h3>Configurações</h3>
     <div class="row"><div class="grow">Som</div><button class="btn ${S.set.sound?'':'dim'}" id="m_snd">${S.set.sound?'Ligado':'Desligado'}</button></div>
     <div class="row"><div class="grow">Vibração</div><button class="btn ${S.set.vib?'':'dim'}" id="m_vib">${S.set.vib?'Ligada':'Desligada'}</button></div>
     <div class="row"><div class="grow">Desafiar o chefe sozinho<div class="sm">quando a sua FC chegar à recomendada da fase</div></div><button class="btn ${S.set.autoBoss?'':'dim'}" id="m_ab">${S.set.autoBoss?'Ligado':'Desligado'}</button></div>

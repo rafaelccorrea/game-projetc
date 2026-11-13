@@ -1,6 +1,6 @@
 'use strict';
 /* ================= TELA DE CARREGAMENTO (protótipo 00 do canvas de design) =================
-   Kael corre sem arma atravessando as 7 eras enquanto o pré-carregamento REAL anda; dicas rotativas;
+   Kael corre sem arma atravessando as eras (até a era do jogador) enquanto o pré-carregamento REAL anda; dicas rotativas;
    ao terminar, "Toque para continuar" leva à tela de título. Medidas do protótipo (390x844) escaladas por --s.
    Debug: ?skip=1 pula; ?ldur=N = duração mínima em segundos (padrão 2,4); ?lhold=1 não fecha no toque (para prints). */
 const LOAD_TIPS = [
@@ -73,12 +73,13 @@ function loadTick(now){
   let real = LD.total ? LD.done / LD.total : 1; if (el_s > 15) real = 1;                         // rede travada: não prende o jogador
   const cap = Math.min(1, el_s / minDur);                                                        // duração mínima: dá tempo de ver a travessia
   LD.shown = Math.max(LD.shown, Math.min(real, cap));
-  const p = Math.floor(LD.shown * 100), ei = Math.min(6, Math.floor(LD.shown * 7));
+  /* Engenheiro 2 (QA): a travessia vai da Pré-História até a ERA DO JOGADOR e para nela (jogador novo: só Pré-História); o rótulo é só o nome da era, sem "de 7" */
+  const pe = Math.max(0, Math.min(6, eraOf(S.stage))), p = Math.floor(LD.shown * 100), ei = Math.min(pe, Math.floor(LD.shown * (pe + 1)));
   document.getElementById('lbar').style.width = p + '%'; document.getElementById('lbarw').setAttribute('aria-valuenow', p);
   document.getElementById('lpct').textContent = p + '%';
   if (ei !== LD.era || !LD.bgOn){ LD.era = ei; LD.bgOn = !!LD.bg[ei];
     for (let i = 0; i < 7; i++){ const on = i === ei && LD.bg[i]; document.getElementById('lbg' + i).style.opacity = on ? 1 : 0; const a = LD.scn[i]; if (a){ if (on) a.start(); else a.stop(); } }
-    const pill = document.getElementById('lpill'), tx = `Era ${ei + 1} de 7 · ${LOAD_ERAS[ei]}`; if (pill.textContent !== tx){ pill.textContent = tx; pill.classList.remove('erapill'); void pill.offsetWidth; pill.classList.add('erapill'); }
+    const pill = document.getElementById('lpill'), tx = LOAD_ERAS[ei]; if (pill.textContent !== tx){ pill.textContent = tx; pill.classList.remove('erapill'); void pill.offsetWidth; pill.classList.add('erapill'); }
     document.getElementById('lstep').textContent = `Atravessando a ${LOAD_ERAS[ei]}…`; }
   const ti = Math.floor(Math.max(p / 26, el_s / 3.5)) % LOAD_TIPS.length;
   if (ti !== LD.tip && p < 100){ LD.tip = ti; const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }

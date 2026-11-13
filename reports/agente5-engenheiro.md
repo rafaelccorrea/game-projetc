@@ -1511,3 +1511,51 @@ NÃO conferido nesta parte (fica para a próxima passada): pônei, cavalo e tigr
 - Escrito e NÃO visto: na morte montado as barras de vida descem com o Kael (`heroRise()` devolve 0 enquanto `B.deadT > 0` com a morte nova ligada; o HUD já refaz a posição quando esse valor muda).
 - BLOCO A e BLOCO B do coordenador: NÃO iniciados nesta passada, fora a linha acima. Continuam abertos, na ordem dele: (1) morte a pé e conferir as barras; (2) inimigo parado nas eras 0–6; (3) ultimate por raridade a olho; (4) pônei, cavalo, tigre, lobo, grifo em movimento, aura 1 e 5 estrelas, prints `v0128_*`; (5) aviso de poder no Equipar melhor real, Forja e Modo dono; (6) custo do cenário da era 4 sozinho; (7) Troca de era; (8) luta da instância; (9) missão guia; (10) `setView('missions')` direto para a tela nova (B-26); (11) módulos chat, codex, phaseup, evtrail, name + provedores `P_CHAT` / `P_CODEX` + `Sys.codex.sync`.
 - Achados do QA ainda não tratados: retorno imediato ao tocar em Pets (leva ~1 s para abrir); tutorial de save novo esperar a tela aberta fechar.
+
+## Engenheiro 2 — v0.12.8, BLOCO A (2026-11-12)
+
+Assumi no meio da v0.12.8. Tudo abaixo foi olhado no Chrome, origem `localhost:8080`, Modo dono (save separado), com o jogo esticado para 390x844 por script (a janela não aceita redimensionar: a tela inteira não cabe em 639 px de altura; conferi por faixas e por uma lupa do canvas). Zero erro no console nas cargas finais; `node --check` em todos os `js/*.js`. Versão continua v0.12.8.
+
+### Visto rodando
+1. **Morte nova do Kael a pé**: ajoelha, cai deitado, a arma cai ao lado, "DERROTADO". **Morte montado**: a montaria sai, o Kael cai a pé e as BARRAS DESCEM com ele (`heroRise()` 33,5 → 0; a linha escrita na parada funciona).
+2. **Inimigo parado, eras 0 a 6**: pés na linha nas 7 eras. Medi a troca de quadro em cada passagem: parado → golpe sem pulo (ex.: `i2>a2`, `i3>a3`), golpe → parado sempre do último quadro para o quadro 0. Ver "Corrigido".
+3. **Ultimate por raridade** (arma da era 2): Básico = cinza/branco, sem clarão; Épico = roxo, mais partículas, anel maior; Lendário = dourado, dois anéis, clarão (0,26) só nele. Tremor medido em px de TELA: no máximo 2,95 nas três.
+4. **Montarias**: pônei, cavalo, tigre, lobo, grifo e serpe, cada uma parada, correndo e no golpe: patas no chão, arma na mão, pet à frente com as patas da frente à vista. Prints novos em `reports/prints/`: `v0128_sem_nada`, `v0128_so_pet`, `v0128_so_montaria_lobo`, `v0128_lobo_pet_asa`, `v0128_grifo_pet_evoluido_asa`, `v0128_ponei`, `v0128_cavalo`, `v0128_tigre`, `v0128_serpe` (recorte da tela de 205 a 844 px).
+5. **Aviso de poder**: "Equipar melhor" real = um aviso só ("+126 ▲ FC 2.228"), sem o selo "FC +N" do Equipamento; Forja (Fortalecer) = "+11 ▲ FC 2.239"; entrar e sair do Modo dono pelo botão, 10 s de espera cada: nenhum aviso.
+6. **Desempenho** (PC, aba em primeiro plano, 15 a 17 s por medida, `performance.now` em volta do desenho; cenário e jogo medidos separados):
+
+| canvas | era | sem nada: cenário / jogo | com tudo (serpe 5 estrelas + pet + asa): cenário / jogo |
+|---|---|---|---|
+| 360x749 (janela como está) | 4 | 1,75 / 2,06 ms | 1,66 / 2,80 ms |
+| 360x749 | 0 | 1,15 / 2,23 ms | 1,21 / 3,35 ms |
+| 488x1055 (390x844) | 4 | 2,74 ms (cenário) | 2,62 ms (cenário) |
+| 488x1055 | 0 | 1,41 ms | 1,23 ms |
+
+   O cenário vivo da era 4 sozinho fica ABAIXO de 3 ms (1,7 ms no tamanho de sempre; 2,7 ms em 390x844): não proponho corte. Ele custa ~1,5 a 2 vezes o da era 0 (mais camadas: cidade ao fundo, engrenagens, fumaça, névoa, raios). As medidas do jogo na tabela de 488x1055 não valem (a entrada nova abriu por cima no meio).
+7. **Achados do QA**: (a) com Configurações aberta durante o tutorial o holofote e o balão somem e voltam ao fechar; (b) Pets: o botão responde em 27 ms, a tela está montada em 89 ms e visível em ~270 ms; toque duplo não fecha nem trava.
+8. **Jogador novo pela entrada nova** (save novo de verdade, sem `fresh`): carregamento mostra só "Pré-História" e fica na era do jogador; depois do nome NÃO abre o modal antigo: aviso curto "Presente de boas-vindas: +200 (moeda) +50 (gema)" com os ícones do jogo, 200 moedas e 80 gemas no save, tutorial começa. Recarregar: continua 212 / 80, sem segundo presente.
+
+### Corrigido
+- `js/battle.js`: inimigo parado com relógio próprio e o golpe começando no quadro em que o preparo estava (antes voltava ao quadro 0: pulo de até 3 quadros). TREMOR com teto de 3 px de tela (o golpe final da ultimate chegava a ±5,2 px). Emojis fora do nome do chefe ("Chefe Rex Furioso", "Senhor da Era …") e da transição de era antiga.
+- `js/mountfx.js`: a aura por estrela NÃO aparecia em cima do cenário claro (só em fundo escuro). Agora é um contorno de luz colado na silhueta: fino e claro em 1 estrela, largo e dourado em 5. Asa do Kael na serpe: `wy2` 26 → 10 (ficava solta acima da cabeça).
+- `js/meta.js`: boas-vindas sem emoji e sem "7 eras"; com a entrada nova ligada o modal antigo não abre (presente uma vez, aviso curto, tutorial); `showWelcome` não repete; holofote escondido com tela cheia que não é a do passo e com Vitória/Derrota ou Troca de era abertas; "Enquanto você esteve fora", passo 1 do tutorial e "Tutorial concluído" sem emoji.
+- `js/loading.js` + `index.html`: rótulo só com o nome da era; a travessia vai da Pré-História até a era do jogador.
+- `index.html`: "Configurações" sem emoji (título antigo e modal antigo); reserva de moeda/gema sem emoji; `?debug=1&skip=1` também pula a entrada nova.
+- `js/fullbattle.js`: retorno imediato no toque dos itens do MENU. `js/farm.js`: emoji de moeda fora do texto flutuante reserva.
+
+### Escrito e NÃO visto
+- Modal antigo de boas-vindas (entrada nova desligada) depois da troca do emoji pelo ícone do baú.
+- Clarão do Mítico (só li o valor da tabela); ultimate por raridade em outras eras além da 2.
+- Holofote por cima da DERROTA (a regra nova cobre `B.res`; a tela 10 fica para o Bloco B).
+- 360x640; celular.
+
+### Anotado, não corrigido
+- Custo do contorno de luz no celular: usa sombra do canvas (2 a 3 desenhos do quadro da montaria). No PC a montaria + pet + asa somam 0,7 a 1,1 ms. Se o aparelho sentir, troco por silhueta guardada em cache.
+- Kael caído fica parcialmente atrás do pet (o pet continua à frente).
+- Grifo 5 estrelas + pet evoluído: a asa do pet encosta no focinho do inimigo da frente.
+- Parado dura pouco na prática (os inimigos emendam golpes): nas eras 1 e 4 só vi o quadro 0 do preparo em 6 s.
+- A folha de fogo da ultimate não muda de cor com a raridade (só partículas, anéis e brilho mudam).
+- Save de teste da origem `localhost:8080` (nível 60): guardei, usei a chave para o teste de jogador novo e devolvi igual (2.908 caracteres).
+
+Pedidos abertos: A-21 (Arte: resíduo escuro nas folhas do lobo; maça sobre o rosto em pônei/cavalo/tigre; agente B: arma errada na vitrine da Forja; letreiro da ultimate).
+BLOCO B: não iniciado (itens 8 a 13 + Vitória/Derrota do chefe no jogo real + Correio com `mail` na lista de módulos).

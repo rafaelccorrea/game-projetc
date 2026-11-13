@@ -243,11 +243,18 @@ function fbBuild(){
   /* SÓ AUTOMÁTICO (ordem do dono): os botões de habilidade são indicadores de recarga e energia; o toque só lembra que disparam sozinhos */
   el.addEventListener('pointerdown', ev => { const b = ev.target.closest('[data-fb=s2],[data-fb=s3]'); if (!b) return; ev.preventDefault(); toast(b.dataset.fb === 's2' ? 'O especial dispara sozinho quando recarrega' : 'A ultimate dispara sozinha quando a energia enche'); });
 }
+let FB_OPENING = null;
 function fbAct(a, b){
   if (a === 's2' || a === 's3') return;
   if (a === 'menu'){ snd('ui_tap'); fbMenuToggle(); return; }
+  /* Engenheiro 2 (QA: "tocar em Pets leva ~1 s e o segundo toque parece não fazer nada"): RETORNO IMEDIATO. O botão afunda e acende no próprio toque,
+     o menu fica na tela até a tela nova estar desenhada (antes ele sumia e nada aparecia), e toques repetidos enquanto abre são ignorados. */
+  if (a.indexOf('soon:') === 0 && Screens.reg && Screens.reg[a.slice(5)]){ const k = a.slice(5); if (FB_OPENING) return; FB_OPENING = k; snd('ui_tap');
+    if (b && b.style){ b.style.transition = 'none'; b.style.transform = 'scale(.92)'; b.style.filter = 'brightness(1.45)'; }
+    let went = false; const go = () => { if (went) return; went = true; FB_OPENING = null; if (b && b.style){ b.style.transform = ''; b.style.filter = ''; b.style.transition = ''; } try { Screens.open(k); } finally { if (b && b.dataset && b.dataset.drop) fbMenuClose(); } };
+    requestAnimationFrame(() => setTimeout(go, 0)); setTimeout(go, 150); return; }   /* 150 ms = reserva se o quadro não vier (aba em segundo plano) */
   if (b && b.dataset && b.dataset.drop) fbMenuClose();
-  if (a.indexOf('soon:') === 0){ const k = a.slice(5); if (Screens.reg && Screens.reg[k]){ snd('ui_tap'); Screens.open(k); return; } fbSoon(k); return; }   // tela registrada (Screens.register) abre; sem registro, "Em breve"
+  if (a.indexOf('soon:') === 0){ fbSoon(a.slice(5)); return; }   // tela registrada (Screens.register) abre; sem registro, "Em breve"
   snd('ui_tap');
   if (a === 'avatar'){ if (window.Panels && Panels.defs && Panels.defs.profile && Panels.on('profile') && fbUnl('profile')) Panels.open('profile'); else setView('gear'); }   // avatar: Perfil quando a tela estiver ligada (nível 10); senão Equipamento
   else if (a === 'gear' || a === 'summon' || a === 'shop') setView(a);

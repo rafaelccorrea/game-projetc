@@ -66,14 +66,20 @@ function afterIntro(){
   else if(!showOffline()&&S.tut<99) startTut();
 }
 function showWelcome(){
+  if(S.welcome) return;   /* o presente entra UMA vez (recarregar não dá de novo: S.welcome vai no save) */
   S.welcome=true; S.gold+=200; S.gems+=50; save(); hud();
-  mbox.innerHTML=`<h3>🎁 Bem-vindo a ${GAME_NAME}!</h3>
-    <div>Você começa na <b>Pré-História</b> com um graveto e muita coragem. Atravesse as 7 eras!</div>
+  /* Engenheiro 2 (decisão do coordenador): quem passou pela ENTRADA NOVA (js/p_intro.js ligada) não vê o modal antigo: o presente entra do mesmo jeito,
+     aparece num aviso curto com os ícones do jogo e o tutorial começa em seguida. Com a entrada nova desligada vale o modal de sempre (sem emoji). */
+  if(typeof Panels!=='undefined'&&typeof Panels.on==='function'&&Panels.on('intro')){ toastHtml(`Presente de boas-vindas: +200 ${COIN()} +50 ${GEM()}`,3200); snd('claim'); if(S.tut<99) startTut(); return; }
+  mbox.innerHTML=`<h3><img src="assets/ui/chest.png" alt="" style="width:24px;height:24px;object-fit:contain;vertical-align:-5px;margin-right:6px">Bem-vindo a ${GAME_NAME}!</h3>
+    <div>Você começa na <b>Pré-História</b> com um graveto e muita coragem. Atravesse as eras!</div>
     <div class="card" style="margin-top:10px;text-align:center"><b>Presente de boas-vindas</b><div style="font-size:18px;margin-top:4px">+200 ${COIN()} &nbsp; +50 ${GEM()}</div><div class="sm">e 1 invocação grátis por dia</div></div>
     <div class="row"><button class="btn grow" id="m_go">Começar</button></div>`;
   modal.style.display='flex'; B.paused=true;
   document.getElementById('m_go').onclick=()=>{ closeModal(); B.paused=false; snd('claim'); if(S.tut<99) startTut(); };
 }
+/* aviso curto com ícones (o toast comum só aceita texto) */
+function toastHtml(html,ms){ const t=document.getElementById('toast'); if(!t) return; t.innerHTML=html; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),ms||2200); }
 /* ---------- ganhos offline: moedas por tempo fora, com teto ---------- */
 function showOffline(){
   if(window.__noSave||S.tut<99||AWAY<120||window.__offDone) return false; window.__offDone=true;
@@ -82,7 +88,7 @@ function showOffline(){
   let om=1; try{ om=Math.max(1,Sys.vip.perks(S).offlineMult||1); }catch(e){}   // VIP: ouro offline em dobro (número do Sys.vip)
   const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
   const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60);
-  mbox.innerHTML=`<h3>🌙 Enquanto você esteve fora</h3>
+  mbox.innerHTML=`<h3>Enquanto você esteve fora</h3>
     <div>Seu guerreiro continuou lutando por <b>${hh?hh+'h ':''}${mm}min</b>${AWAY>cap?` (teto de ${BAL.offlineCapHours}h)`:''}.</div>
     <div class="card" style="margin-top:10px;text-align:center;font-size:20px"><b>+${fmt(gold)}</b> ${COIN()}</div>
     <div class="row"><button class="btn grow" id="m_go">Resgatar</button></div>`;
@@ -95,13 +101,13 @@ function showOffline(){
 
 /* ---------- tutorial guiado ---------- */
 const TUT=[
-  {txt:'A batalha é <b>automática</b>: seu herói ataca sozinho. Derrote 4 inimigos e o chefe 👑 para avançar de fase.', sel:()=>'#cv', ok:true},
+  {txt:'A batalha é <b>automática</b>: seu herói ataca sozinho. Derrote 4 inimigos e o chefe para avançar de fase.', sel:()=>'#cv', ok:true},
   {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#fb_s2b', ok:true},
   {txt:()=>view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
-   sel:()=>view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
+   sel:()=>view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', views:['gear'], okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
   {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#fb_s3b', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
   /* v0.12.3 (liberação por nível): Invocar só existe a partir do nível 3. O passo fica por último e ESPERA o nível (when); até lá o tutorial some da tela */
-  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull',
+  {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull', views:['summon'],
    when:()=>typeof fbUnl!=='function'||fbUnl('summon'), pre:()=>{ if(!S.unl||typeof S.unl!=='object') S.unl={}; S.unl.summon=1; }},
 ];
 let tutWait=false;   // true = o passo atual espera uma condição (when); o balão e o anel ficam escondidos
@@ -117,7 +123,7 @@ function startTut(){
 }
 function endTut(skip){
   S.tut=99; clearInterval(tutT); tutT=null; document.getElementById('tut').style.display='none';
-  if(!skip){ S.gems+=20; toast('🎓 Tutorial concluído! +20💎'); snd('claim'); }
+  if(!skip){ S.gems+=20; toast('Tutorial concluído! +20 gemas'); snd('claim'); }
   save(); hud();
 }
 function tutShow(){
@@ -140,7 +146,9 @@ function tutLayout(){
   const b=document.querySelector('#tut .tbub'), r=document.querySelector('#tut .tring');
   if(b.dataset.k!==S.tut+'|'+st.sel()+'|'+(st.okIf?st.okIf():'')){ tutShow(); return; }
   if(S.tut===1&&B.cd2>0&&!(B.act&&B.act.type==='s2')) B.cd2=0;
-  const el=document.querySelector(st.sel()), hide=modal.style.display==='flex'&&!(el&&modal.contains(el));
+  /* Engenheiro 2 (QA): com uma TELA CHEIA aberta que não é a do passo (Pets, Arena, Torneio...), o holofote e o balão somem e voltam ao fechar */
+  const other=(view!=='battle'&&!(st.views&&st.views.indexOf(view)>=0))||!!(typeof B!=='undefined'&&B.res);   /* B.res = Vitória/Derrota do chefe ou Troca de era por cima da batalha */
+  const el=document.querySelector(st.sel()), hide=other||(modal.style.display==='flex'&&!(el&&modal.contains(el)));
   document.getElementById('tut').style.visibility=hide?'hidden':'visible';
   if(!el){ r.style.display='none'; b.style.top='40%'; b.style.bottom='auto'; return; }
   const q0=el.getBoundingClientRect(), ar=document.getElementById('app').getBoundingClientRect(), cvS=st.sel()==='#cv', pad=6;

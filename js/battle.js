@@ -71,7 +71,7 @@ function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
   const gold=Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,stage-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
   return {kind,key,boss,eraBoss,maxhp:hp,hp,dmg,gold,atkEvery:boss?1.15:BAL.commonAtkInterval,atkT:0.5+Math.random()*0.7,
     id:B.spawnN++,x:WAITX,slot:WAITX,lane:0,idx:9,sc:1,wt:Math.random()*2,parked:false,dead:false,hit:0,sw:0,seed:Math.random()*6,spd:EN_WALK,
-    name:eraBoss?'🔥 Senhor da Era '+k.n:boss?'👑 Chefe '+k.n:k.n,col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
+    name:eraBoss?'Senhor da Era '+k.n:boss?'Chefe '+k.n:k.n,col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
 }
 function waveSpec(stage,wave){
   if(wave===5) return ['e0','e1','boss'];
@@ -900,11 +900,12 @@ function drawEnemyAt(e,x,deadP){
     const F=dh/spr.fh;                       // F = lado do quadro inteiro (512 da arte) na tela
     e.spd=enOn(e.key,'run')?(EN_STRIDE[e.key]||0.9)*F:EN_WALK;
     if(e.boss&&!(dying&&SCREENS_ON.bossResult)) drawGlow(e.eraBoss?'#ff2a2a':'#ff7a30',0,-dh*.5,dh*.8,alpha*(e.eraBoss?0.4:0.28),false);
+    if(!shAtk) e.inAtk=false; if(!shAtk&&!shIdle) e.idA=null;
     if(shDie) enFrame(shDie,deadP,spr,F);                                              // morte: toca a folha e some no fim
-    else if(shAtk) enFrame(shAtk,1-e.sw/(e.swD||EATK),spr,F);                          // ataque
+    else if(shAtk){ if(!e.inAtk){ e.inAtk=true; e.atk0=e.idA!=null?(e.idF||0)/(shAtk.meta.frames||1):0; } e.idA=null; enFrame(shAtk,e.atk0+(1-e.atk0)*(1-e.sw/(e.swD||EATK)),spr,F); }   /* Engenheiro 2: o golpe começa no quadro em que o preparo estava (sem pulo para o quadro 0) */                          // ataque
     else if(shHurt) enFrame(shHurt,1-e.hurtT/(e.hurtD||EN_HURT_DUR),spr,F);                       // levando dano
     else if(shRun) enFrame(shRun,0,spr,F,e.wt);
-    else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando                                        // corrida (pés do quadro na linha do chão)
+    else if(shIdle){ if(e.idA==null) e.idA=B.at; e.inAtk=false; const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor((B.at-e.idA)*EN_IDLE_FPS)%per, fi=ph<m?ph:per-ph; e.idF=fi; enFrame(shIdle,(fi+0.5)/n,spr,F); }   /* relógio próprio: o preparo recomeça do quadro 0 depois de golpe/dano/corrida */   // preparo do golpe, indo e voltando                                        // corrida (pés do quadro na linha do chão)
     else { ctx.scale(1,sy); if(dark>0) dspr(spr,-dw/2,-dh,dw,dh,'#0a0705',dark); else dspr(spr,-dw/2,-dh,dw,dh,'#fff',(!dying&&e.hit>0)?e.hit/0.12*0.85:0); }
   }else drawEnemyOld(e,1,sy,dying);
   ctx.restore();
@@ -913,7 +914,7 @@ function bar(x,y,w,pct,col,hh){ hh=hh||7; ctx.fillStyle='#0008'; ctx.fillRect(x,
 function enemyLabel(e){
   const mn=(J('assets/enemies/meta.json')[e.key]||{}).name;
   if(!mn) return e.name;
-  return e.eraBoss?'🔥 Senhor da Era '+mn:e.boss?'👑 Chefe '+mn:mn;
+  return e.eraBoss?'Senhor da Era '+mn:e.boss?'Chefe '+mn:mn;   /* sem emoji (regra do dono) */
 }
 /* cenário rolando: imagem | cópia espelhada | imagem ... (sem costura) */
 const BGM={}; let bgFade=null;
@@ -940,7 +941,7 @@ const HM={x:HX,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,m
 function draw(){
   ctx=mainCtx;
   ctx.save();
-  B.shx=B.shake>0?(Math.random()-.5)*B.shake*8:0;   // tremor (só ultimate e golpe de chefe): SÓ HORIZONTAL e o MESMO deslocamento para o cenário (js/stage.js) e os personagens: ninguém sai da linha do chão
+  { const lim=3*LW/(cv.clientWidth||LW), amp=Math.min(B.shake*4,lim); B.shx=B.shake>0?(Math.random()-.5)*2*amp:0; if(DEBUG&&B.shx){ const px=Math.abs(B.shx)*(cv.clientWidth||LW)/LW; if(!(window.__shxMax>=px)) window.__shxMax=px; } }   /* Engenheiro 2: TETO de 3 px de TELA (regra do dono); antes o golpe final da ultimate chegava a ±5,2 px lógicos */   // tremor (só ultimate e golpe de chefe): SÓ HORIZONTAL e o MESMO deslocamento para o cenário (js/stage.js) e os personagens: ninguém sai da linha do chão
   if(B.shx) ctx.translate(B.shx,0);
   drawBG();
   if(B.dim>0.01){ ctx.fillStyle=`rgba(4,2,14,${B.dim*0.68})`; ctx.fillRect(-10,-10,LW+20,LH+20); }
@@ -1006,7 +1007,7 @@ function draw(){
       ctx.save(); ctx.globalAlpha=al; ctx.fillStyle='#0009'; ctx.fillRect(0,by-28,LW,70); ctx.textAlign='center';
       ctx.translate(LW/2,by); ctx.scale(sc,sc);
       ctx.font='900 24px system-ui'; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.strokeStyle='#5a2a05'; ctx.fillStyle='#ffd75e'; ctx.strokeText('NOVA ERA',0,0); ctx.fillText('NOVA ERA',0,0);
-      ctx.font='800 16px system-ui'; ctx.lineWidth=4; ctx.strokeStyle='#000'; ctx.fillStyle='#fff'; const nm=ERAS[tr.to].icon+' '+ERAS[tr.to].n; ctx.strokeText(nm,0,28); ctx.fillText(nm,0,28);
+      ctx.font='800 16px system-ui'; ctx.lineWidth=4; ctx.strokeStyle='#000'; ctx.fillStyle='#fff'; const nm=ERAS[tr.to].n; ctx.strokeText(nm,0,28); ctx.fillText(nm,0,28);
       ctx.restore();
     }
   }
