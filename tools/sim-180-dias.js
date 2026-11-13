@@ -21,13 +21,17 @@ const titlesPct=d=>{ let a=0; for(const t of TI.DATA.titles) a+=(t.bonus&&t.bonu
 const petShare=(L,e)=>L<20?0:[0.08,0.11,0.11,0.14,0.17,0.17,0.17,0.17,0.20][e]*Math.min(1,(L-20)/40+0.3);
 // montaria: oferta (lobo Épico) só no pagante; grátis ganha montaria Rara no Nv 38 (passe/evento) e Épica ~era 5; nível = jogador/2; estrelas pela atividade (1/dia)
 const mountPct=(L,d,pay)=>{ if(!pay&&L<38) return 0; const id=pay?'wolf':(L>=85?'griffin':'horse'), st=Math.min(5,1+Math.floor((pay?d:Math.max(0,d-20))/25)); return MO.pctOf(id,Math.min(60,Math.floor(L/2)),st); };
+// --new (itens novos aprovados, 13/11): montarias por fragmentos de fonte fixa no grátis típico: Pantera sombria Épica pela arena (Ouro, 10/semana → 100 = dia ~75),
+// Lobo de gelo Mítico pelo torneio de fim de semana (top 100, 10/semana → 200 = dia ~150). Pets: o portão de raridade segura (igual ao de hoje); asas e arco/bumerangue = mesmo atributo.
+const NEW=process.argv.includes('--new');
+const mountPctNew=(L,d,pay)=>{ const old=mountPct(L,d,pay); if(!NEW||pay) return old; let best=old; if(d>=75) best=Math.max(best,MO.pctOf('panther',Math.min(60,Math.floor(L/2)),Math.min(5,1+Math.floor((d-75)/25)))); if(d>=150) best=Math.max(best,MO.pctOf('icewolf',Math.min(60,Math.floor(L/2)),1+Math.floor((d-150)/25))); return best; };
 const guildPct=d=>Math.min(5,d<12?0:(d-12)/90*5);   // estandartes ATK/Vida até +5% (guilda nível 10 em ~3 meses)
 const vipPct=v=>VT.atk[v]||0;
 function run(o){ let L=1,xp=0; const rows=[]; let stuck=0, easy=0;
   for(let d=1;d<=200;d++){ const e0=eraOfLevel(L); xp+=d===1?dayXp(0,1,o)*0.9:dayXp(e0,L,o); while(L<120&&xp>=X[L-1]){ xp-=X[L-1]; L++; }
     const e=eraOfLevel(L), f=(L-LIN[e])/Math.max(1,LOUT[e]-LIN[e]), r=capR(L,e), forge=Math.round(forgeAt(Math.max(0,e-1))+(forgeAt(e)-forgeAt(Math.max(0,e-1)))*f);
     const qp=o.vip?6000:4000;   // qualidade: grátis 3★ médio (garimpo), VIP/fusão 4★
-    const base=baseFc(L,e,r,forge,qp), pct=1+(titlesPct(d)+mountPct(L,d,!!o.vip)+guildPct(d)+vipPct(o.vip||0))/100, withPet=base*pct/(1-petShare(L,e));
+    const base=baseFc(L,e,r,forge,qp), pct=1+(titlesPct(d)+mountPctNew(L,d,!!o.vip)+guildPct(d)+vipPct(o.vip||0))/100, withPet=base*pct/(1-petShare(L,e));
     // fase onde o jogador está: dificuldades exigidas da era percorridas pelo progresso de nível na era
     const req=PH.DATA.required[e], idx=Math.min(req*100-1,Math.floor(f*req*100)), dd=Math.floor(idx/100), n=idx%100+1, rec=PH.fcRec(e,dd,n);
     const m=withPet/rec; if(m<0.9) stuck++; if(m>2) easy++;

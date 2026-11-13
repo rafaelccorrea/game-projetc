@@ -102,3 +102,16 @@ Fontes no dia 120 (grátis, Nv 106): títulos +18.7% · montaria +6.0% · guilda
 EXTRA GRÁTIS: 1:×1.02 2:×1.08 3:×1.21 4:×1.30 5:×1.36 6:×1.46 7:×1.55 8:×1.70
 EXTRA VIP 10: 1:×1.15 2:×1.22 3:×1.33 4:×1.42 5:×1.46 6:×1.52 7:×1.58 8:×1.78
 ```
+
+## Itens novos aprovados (13/11): 9 pets, 10 montarias, 8 asas, arco/bumerangue, 10 skins — `node tools/sim-180-dias.js --scale --new`
+| | sem os novos | com os novos |
+|---|---|---|
+| Grátis: fim das eras (dia) | 1,3,10,22,40,65,97,135,179 | **igual** (Nv 120 no dia 179) |
+| VIP 5 / VIP 10: Nv 120 | dia 140 / 121 | **igual** |
+| Grátis: margem mínima da era 8 | ×1,07 | ×1,08 |
+| Dias abaixo de 90% da FC recomendada | 0 | 0 |
+| Diamantes novos | — | **0** (nenhum item novo dá diamante; meta ~10 mil intacta) |
+Por quê não mexe: o calendário é pelo XP, e nada novo dá XP; pets novos seguem o portão de raridade do ovo (os fragmentos esperam o portão abrir), então
+o grátis típico tem a mesma raridade de pet de antes; asas e arco/bumerangue usam o atributo do item (mesmo padrão); montaria é a única que adianta
+(Pantera sombria Épica pela arena ~dia 75, Lobo de gelo Mítico pelo torneio de fim de semana ~dia 150): +2 a +2,5 pontos de % de ATK/Vida nesse período.
+VIP de conveniência (proposta, Sys.vip.DATA.conv): nenhum benefício dá XP, atributo ou diamante → não entra na simulação.
