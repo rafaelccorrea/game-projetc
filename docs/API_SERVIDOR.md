@@ -301,3 +301,22 @@ Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado 
 - **Save:** `PUT /save` com `save.realm` diferente do servidor da sessão → 409 `realm_mismatch { session, save }`. Nada é gravado.
 - **Isolamento:** tudo do mundo é do personagem (`player_id`): save, correio, compras, VIP, arena, guilda, leilão. Itens, ouro e 💎 (inclusive comprados) nunca passam entre servidores.
 - **Fase 2 (antes de abrir o S2):** as listas do mundo (rankings, guildas, chat Mundial/Era, Chefe Mundial, torneio, correio para todos) passam a filtrar por realm.
+
+## 12. LIGAR NAS TELAS — lista do Engenheiro, EM ORDEM (13/11; depois da v0.13.1)
+Tudo do lado do jogo já existe em `js/sys/`, atrás de chave (`DATA.on=false`), com testes. Nada aparece para o jogador até: (a) o dono ligar a chave no SERVIDOR, (b) a chave do módulo ser ligada no jogo, (c) a tela ler o módulo. Os scripts entram DEPOIS de `js/sys/net.js` e do módulo que cada um liga.
+1. **Guilda — `js/sys/guildnet.js` (`Sys.guildNet`). Servidor: `GUILD_ON=1`.** É a base: traz a guilda, os estandartes (FC) e os territórios (bônus) para o save.
+   - No boot online (onlineboot, depois do `Sys.online.boot`): `Sys.guildNet.DATA.on=true; await Sys.guildNet.start(S, Sys.host)`. Repita `refresh(S, host)` ao abrir a tela de guilda.
+   - `js/p_guild.js:105`: trocar `Sys.guild.provider.leave(...)` (síncrono, segue respondendo "em breve") por `await Sys.guildNet.leave(S, Sys.host)`.
+   - Os outros botões da guilda: as funções com Promise do `Sys.guildNet` (lista na mensagem do Servidor ao Engenheiro de 13/11 e no topo do arquivo). A tela continua lendo o `Sys.guild`.
+2. **Arena — `js/sys/arenanet.js` (`Sys.arenaNet`). Servidor: `ARENA_ON=1`. Contrato §4 e §4.1.**
+   - Expor `window.heroSnapshot()` → `{look, level, petFrac}` (formato do §4.1; combinado com o Engenheiro).
+   - No boot online: `Sys.arenaNet.DATA.on=true; await Sys.arenaNet.start(S, Sys.host)` (manda a foto e troca o provider do `Sys.arena`; sem servidor, ficam os bots locais).
+   - Depois de trocar equipamento, skin, montaria ou pet: `Sys.arenaNet.snapshot(S, Sys.host)` (só reenvia se mudou).
+   - `js/p_arena.js`: com `Sys.arenaNet.state().started`, a luta vira `await Sys.arenaNet.fight(S, Sys.host, oppId)` (mesmo resultado do `Sys.arena.fight` + `oppServer` com a aparência); trocar a lista: `Sys.arenaNet.refresh`; ranking: `Sys.arenaNet.loadRanking(kind)` (o `Sys.arena.ranking` lê o cache).
+3. **Torneio do Poder — `js/sys/tourneynet.js` (`Sys.tourneyNet`). Servidor: `TOURNEY_ON=1` (com `GUILD_ON=1`). Contrato §10.3.** Precisa do item 1.
+   - Ao abrir a tela: `await Sys.tourneyNet.refresh({territory:true})`.
+   - `js/p_tourney.js`: trocar o estado vazio por `state()` (fase, semana, tamanho), `map()` (donos e ataques por território), `my()` (cargo, ataques que restam, escalações), `schedule()` (horários e travas), `ranking(kind)` e `battles()` (duelos para animar).
+   - Botões: Atacar → `declare(território, 'd5'|'d6')`; Escalar → `setLineup(slot, ids)`. Os motivos de recusa estão no §10.3.
+4. **Dicas de FC — `js/sys/advice.js` (`Sys.advice`). Sem servidor.** Quando a tela da dificuldade nova existir: `Sys.advice(S, Sys.host, {need})`. O `need` vem da fase/chefe (hoje o REC_FC da era). Ícone = id curto (`equip`, `forge`, `fuse`, `pet`, `mount`, `title`, `level`); a tela troca por imagem. `tab` → `host.goTab`.
+- **Chaves no servidor** (com o dono, em `/etc/eonbound/server.env`): `GUILD_ON`, `ARENA_ON`, `TOURNEY_ON`, `AUCTION_ON`, `ADMIN_ON` (painel e aviso para todos). Tudo desligado hoje.
+- **Deploy:** `bash deploy/release.sh` no fps-server, assim que o SSH voltar (testes, deploy, migrações, versão no ar, smoke real, CORS).
