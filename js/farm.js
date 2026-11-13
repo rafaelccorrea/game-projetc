@@ -60,7 +60,7 @@ Sys.host = {
   addItem: o => addItemToBag(o),
   /* Sys.pass: mochila (o Item da Temporada evolui no level up) e skin da temporada; Sys.titles: tamanho do catálogo de skins */
   items: () => S.inv,
-  addSkin: id => { const k = id === 'season' ? SEASON_SKIN : id; if (SKIN(k) && !S.skins.includes(k)) S.skins.push(k); },
+  addSkin: id => { const k = id === 'season' ? SEASON_SKIN : id; if (k && SKIN(k) && !S.skins.includes(k)) S.skins.push(k); },   /* 'season' sem skin da temporada (SEASON_SKIN vazio): não entrega nada */
   catalog: kind => kind === 'wardrobe' ? SKINS.filter(s => !s.pass || s.id === SEASON_SKIN).length : undefined,
   now: () => Date.now(), rng: Math.random, toast: m => toast(String(m).replace(/ Liberou:.*$/, '').replace(/^🎖️\s*/, '')),   // sem anunciar funções que ainda não estão ligadas
   // opcionais de interface
@@ -98,7 +98,8 @@ function sysBootE2(){
   Sys.practice.ensure(S); Sys.titles.ensure(S); Sys.titles.check(S, Sys.host, { silent: true });
   if (DEBUG && QP.has('stones')) Sys.practice.addStones(S, +QP.get('stones') || 0, Sys.host);
   { const dk = (typeof Sys !== 'undefined' && Sys.pass && typeof Sys.pass.dayKey === 'function') ? Sys.pass.dayKey(Date.now()) : new Date().toDateString(); if (S.loginDay !== dk){ S.loginDay = dk; ptrack('login'); } }   // login do dia (conquistas; o passe ignora o evento)
-  if (typeof mountBoot === 'function') mountBoot();   // pacote de montarias (js/mountfx.js)
+  if (typeof mountBoot === 'function') mountBoot();
+  try { if (typeof Sys.pass.releaseMountFrags === 'function') Sys.pass.releaseMountFrags(S); } catch (e) {}   /* fragmentos do Passe guardados sem montaria: entram se ela já existir */   // pacote de montarias (js/mountfx.js)
   if (typeof petBoot === 'function') petBoot();   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
 }
 /* nível do jogador: teto do nível dos itens e bônus de atributo (entra em heroStats) */
@@ -108,7 +109,7 @@ function onLevelUp(lv){
   refreshHero(); snd('upgrade'); vib(40);
   B.banner = { txt: 'Nível ' + lv.to + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };   // "Nível X!" como no canvas
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
-  B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);
+  B.lvfx = { t0: B.at }; sheetLoad(LVUP, true);
   if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20
   if (typeof phaseCheck === 'function') phaseCheck(false);   // Kael por fase: níveis 22, 35 e 70
   if (typeof fcNotice === 'function') fcNotice();   // subir de nível muda a FC: o aviso de poder mostra a diferença   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)

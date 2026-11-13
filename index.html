@@ -223,6 +223,8 @@ html,body{background:#0a0807}
 
 .kidle{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:kidl 1s steps(12,jump-none) infinite}
 .kidle.t1{background-image:url(assets/anim/hyb/R/kael_idle_era2_t1.png)}.kidle.t2{background-image:url(assets/anim/hyb/R/kael_idle_era2_t2.png)}
+body.kaia .kidle,body.kaia .kidle.t1,body.kaia .kidle.t2,.kidle.kaia{background-image:url(assets/anim/hyb/kaia/kaia_idle_body.png)}
+body.kaia #lrun.ok{background-image:url(assets/anim/hyb/kaia/kaia_run_body.png)}
 @keyframes kidl{from{background-position:0 0}to{background-position:100% 0}}
 
 @keyframes xpp{0%,100%{filter:none}50%{filter:brightness(1.35)}}
@@ -327,13 +329,13 @@ const ICON={
 /* ÍCONES APROVADOS (icon-eraN_<slot>, 49 arquivos em assets/icons/slots): um por espaço e por era do VISUAL do item. O marcador SVG acima fica só
    para o espaço VAZIO (não há item para mostrar). */
 const SLOT_FILE={weapon:'weapon',armor:'vest',hat:'helmet',gloves:'gloves',boots:'boots',necklace:'necklace',wing:'wings'};
-const slotIcon=(slot,e)=>SLOT_FILE[slot]?'assets/icons/slots/era'+Math.max(0,Math.min(6,e|0))+'_'+SLOT_FILE[slot]+'.png':ICON.armor;
+const slotIcon=(slot,e)=>SLOT_FILE[slot]?'assets/icons/slots/era'+Math.max(0,Math.min(8,e|0))+'_'+SLOT_FILE[slot]+'.png':ICON.armor;
 /* nomes dos 5 espaços novos: era 2 = os do protótipo; as outras eras ainda não têm nome próprio (pendência para o PO): "Elmo de Bronze" etc. */
 const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do Dragão','Coroa Sagrada'], gloves:['Luvas de Couro','Manoplas de Aço','Manoplas Rúnicas','Garras do Dragão','Mãos Sagradas'],
   boots:['Botas de Couro','Grevas de Aço','Botas Rúnicas','Botas do Dragão','Passos Sagrados'], necklace:['Cordão de Osso','Colar de Prata','Amuleto Rúnico','Presa do Dragão','Relicário Sagrado'] };
 const INOUN={hat:'Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asas'}, ERA_MAT=['de Osso','de Bronze','de Aço','da Pólvora','a Vapor','de Kevlar','de Plasma'];
 const WSHAPE=['club','spear','sword','musket','rifle','rifle','energy'];
-const PHASES_ON=!/[?&]fases=0/.test(location.search);   /* KAEL POR FASE (Engenheiro 2): garoto → adolescente (22) → adulto (35) → guerreiro (70). ?fases=0 desliga para conferência */
+const PHASES_ON=false;   /* DECISÃO FINAL DO DONO (Engenheiro 4): NÃO há mais crescimento por fase; o padrão é o garoto/a menina em qualquer nível e adulto/guerreiro viram skins fixas (a pasta e a escala vêm do Sys.appearance.sheetFor; ver heroForm no js/stage.js). O código de evolução (phaseBoot/phaseCheck/drawEvo) fica inerte atrás desta chave. */
 const LAYERS_ON=/[?&]debug=1/.test(location.search)&&/[?&]camadas=1/.test(location.search);   /* ROUPA-SKIN EM CAMADAS: DESLIGADA (decisão final do dono: não haverá combinações de camadas para o jogador). O código (js/stage.js, bloco CAMADAS DA ROUPA-SKIN) fica inerte: com a chave desligada layNow() devolve null e o desenho é o de sempre, sem custo por quadro. Só para conferência: ?debug=1&camadas=1 */
 const NEXT_ON=true;   /* LOTE v0.12.8 (escrito, ainda NÃO visto rodando): cenário vivo da era 4, morte nova do Kael, inimigo parado animado e luta da instância. Trocar para true na conferência. */
 const ERAS=[
@@ -407,7 +409,7 @@ ERAS.forEach((E,e)=>['weapon','armor'].forEach(slot=>RAR.forEach((R,r)=>SKINS.pu
   {id:'p30',slot:'armor', e:6,r:4,n:'Imperador das Eras',  col:'#ffd23f'},
 ].forEach(s=>SKINS.push({...s,pass:true,glow:RAR[s.r].c}));
 /* Sys.pass: a skin da temporada (premium, nível 25 do passe) é a Casaca da Temporada. As outras 5 skins do passe antigo só aparecem para quem já tem. */
-const SEASON_SKIN='p10', PASS_SKIN_AT={25:SEASON_SKIN};
+const SEASON_SKIN='', PASS_SKIN_AT={};   /* Engenheiro 4 (dono): o nível 25 do Passe NÃO dá mais a roupa-skin p10 (virou Arma Épica + pedras + Essências + fragmentos de montaria, Sys.pass). Sem skin da temporada: nada é entregue nem anunciado; quem já tem a p10 no save continua com ela. */
 const SKIN = id => SKINS.find(s=>s.id===id);
 
 /* ================= ESTADO ================= */
@@ -425,6 +427,9 @@ function newState(){
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){S=JSON.parse(j);return;} }catch(e){} S=newState(); }
 function save(){ if(window.__noSave||(typeof B!=='undefined'&&B&&B.inst)) return;   /* durante a luta da instância a fase em memória é a da instância: não grava */ S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
 load();
+/* Engenheiro 4: herói escolhido na <body> (classe kaia): as miniaturas .kidle e a corrida do carregamento mostram a Kaia para quem joga de Kaia (um ponto só, vale para todas as telas) */
+function heroClass(){ try{ document.body.classList.toggle('kaia',S.hero==='kaia'); }catch(e){} }
+heroClass();
 if(OWNER_MODE&&!S.ownerInit){ S.ownerInit=1; if(!(S.kills>0)){ S.tut=99; S.welcome=true; } }   /* modo dono: save novo entra direto no jogo, sem tutorial */
 if(/[?&]debug=1/.test(location.search)&&/[?&]fresh=1/.test(location.search)){ window.__noSave=true; S=newState(); }
 if(S.tut===undefined) S.tut=(S.kills>0||S.stage>1)?99:0;
@@ -528,20 +533,24 @@ function fcNotice(){ if(!NEXT_ON||!window.Sys||!Sys.fc||typeof Sys.fc.snapshot!=
     el.style.cssText="position:fixed;left:50%;top:calc(var(--fbsafe,0px) + 132px);transform:translateX(-50%);z-index:80;pointer-events:none;text-align:center;padding:8px 16px 9px;border-radius:16px;background:rgba(22,16,12,.92);border:2px solid #4a3a2b;font-family:'Lilita One',Nunito,system-ui,sans-serif;white-space:nowrap";
     el.innerHTML='<div id="fcn_d" style="font-size:26px;line-height:1"></div><div id="fcn_t" style="margin-top:3px;font:900 12px Nunito,system-ui,sans-serif;color:#f6ecdf"></div>'; document.body.appendChild(el); }
   const f=typeof gNum==='function'?gNum:fmt, up=d.diff>0; el.style.display='block'; el.style.borderColor=d.color||(up?'#5fd068':'#ff6b6b');
-  const dd=document.getElementById('fcn_d'), tt=document.getElementById('fcn_t'); dd.textContent=(d.text||((up?'+':'−')+f(Math.abs(d.diff))))+(up?' ▲':' ▼'); dd.style.color=d.color||(up?'#5fd068':'#ff6b6b');
+  const dd=document.getElementById('fcn_d'), tt=document.getElementById('fcn_t'); dd.textContent=(d.text||((up?'+':'−')+fcShow(Math.abs(d.diff))))+(up?' ▲':' ▼'); dd.style.color=d.color||(up?'#5fd068':'#ff6b6b');
   FCN.until=t+2600; const from=d.before, to=d.after, t0=performance.now(); cancelAnimationFrame(FCN.raf);
-  const step=()=>{ const k=Math.min(1,(performance.now()-t0)/700), v=from+(to-from)*(1-Math.pow(1-k,3)); tt.textContent='FC '+f(Math.round(v)); if(k<1) FCN.raf=requestAnimationFrame(step); }; step();
+  const step=()=>{ const k=Math.min(1,(performance.now()-t0)/700), v=from+(to-from)*(1-Math.pow(1-k,3)); tt.textContent='FC '+fcShow(Math.round(v)); if(k<1) FCN.raf=requestAnimationFrame(step); }; step();
   clearTimeout(FCN.hide); FCN.hide=setTimeout(()=>{ if(Date.now()>=FCN.until-50){ el.style.display='none'; FCN.base=null; } },2650); }
 setTimeout(()=>{ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.snapshot==='function'&&Sys.host) FCN.snap=Sys.fc.snapshot(S,Sys.host); }catch(e){} FCN.armed=true; },4000);   // na carga do jogo e na troca de save não avisa
 /* CÓDEX: registra o que o jogador já teve/viu (grava mesmo com a chave do módulo desligada; sem prêmio). Chamado depois de drop, equipar, ovo, evolução, montaria, forja e fase vencida. */
 function codexSync(){ try{ if(window.Sys&&Sys.codex&&typeof Sys.codex.sync==='function'&&Sys.host) Sys.codex.sync(S,Sys.host); }catch(e){} }
-function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); fcNotice(); codexSync(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+function statsChanged(){ try{ if(window.Sys&&Sys.pass&&typeof Sys.pass.releaseMountFrags==='function') Sys.pass.releaseMountFrags(S); }catch(e){}   /* fragmentos de montaria do Passe guardados: entram quando existir a 1ª montaria */
+  heroClass(); if(typeof refreshHero==='function') refreshHero(); fcNotice(); codexSync(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
 function roll(key){
   const tot=RAR.reduce((s,r)=>s+r[key],0); let x=Math.random()*tot;
   for(let i=0;i<RAR.length;i++){ x-=RAR[i][key]; if(x<=0) return i; } return 0;
 }
 // era do item sorteado/dropado: era mais alta liberada, às vezes uma abaixo
 const dropEra = () => (S.eraMax>0 && Math.random()<0.3) ? S.eraMax-1 : S.eraMax;
+/* FC NA TELA (Engenheiro 4; ordem do dono): PONTO ÚNICO de exibição da FC nos arquivos da batalha. Passa pela escala visual do Sys.fc (viewText; só exibição:
+   contas e comparações usam a FC real; ATK/Vida/DEF e dano não escalam). Sem o módulo, a formatação de antes. */
+function fcShow(fc){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return Sys.fc.viewText(fc); }catch(e){} return (typeof gNum==='function'?gNum:fmt)(fc); }
 const fmt = n => n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.floor(n)+'';
 
 /* ================= TOAST ================= */
@@ -592,7 +601,7 @@ let bossAskT=0;
 function bossTap(){ if(B.inst){ toast('Termine a instância primeiro'); return; }
   if(S.wave===5){ toast('Você já está enfrentando o chefe'); return; }
   const rec=recFC(S.stage), fc=heroFC(), f=typeof gNum==='function'?gNum:fmt;
-  if(fc<BOSS_GLOW_AT*rec&&Date.now()-bossAskT>4000){ bossAskT=Date.now(); toast('Faltam '+f(Math.max(1,Math.ceil(rec-fc)))+' de FC (recomendada: '+f(rec)+'). Toque de novo para desafiar assim mesmo'); return; }
+  if(fc<BOSS_GLOW_AT*rec&&Date.now()-bossAskT>4000){ bossAskT=Date.now(); toast('Faltam '+fcShow(Math.max(1,Math.ceil(rec-fc)))+' de FC (recomendada: '+fcShow(rec)+'). Toque de novo para desafiar assim mesmo'); return; }
   bossAskT=0; if(challengeBoss()) toast('Desafiando o chefe!'); }
 function syncMus(){ if(typeof fbTick==='function') fbTick(); }   // o ícone de música é do HUD da batalha
 function toggleSound(){ S.set.sound=!S.set.sound; if(window.GameAudio&&GameAudio.setEnabled){ try{ GameAudio.setEnabled(S.set.sound); }catch(e){} } save(); syncMus(); }

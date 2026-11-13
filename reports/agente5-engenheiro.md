@@ -1663,3 +1663,37 @@ Arquivos mexidos: `index.html`, `js/stage.js`, `js/battle.js`, `js/fullbattle.js
 - Arte: versão só-efeito da `levelup` (`levelup_fx`); `R/masks/kael_attack_head.json` e `kael_spin_head.json` dizem `w:256` mas as coordenadas estão na célula de 448.
 - Sistemas: `js/sys/level.js:83` aviso com emoji de estrela. Fluxos 4 e 5 do `flows.js` não são meus.
 - `js/avatar.js` desenha chapéu/óculos pelo `layers()`; hoje o módulo não devolve mais essas camadas.
+
+## Engenheiro 4 — v0.12.8, herói sem crescimento + skins fixas + Kaia (2026-11-12)
+
+Plano mudou no meio (dono, via coordenador): SEM crescimento por fase; padrão = garoto/menina; adulto/guerreiro = skins fixas. As tarefas 1a-1c (evoluções) foram canceladas e não foram vistas.
+Arquivos mexidos: `index.html`, `js/stage.js`, `js/battle.js`, `js/farm.js`, `js/fullbattle.js`, `js/mountfx.js`, `js/artprev.js`, `js/intro.js`. `node --check` em todos; `run.js` TUDO OK (145); `flows.js` "fluxos duros OK" (fluxo 4 novo de Sistemas 34/34). Navegador: uma aba em `localhost:8080/?debug=1&fresh=1&skip=1` (save em memória, `__noSave`); os 4 itens do armazenamento conferidos iguais ao backup no fim (a chave `eon_owner_mode`, criada para ver o Modo dono, foi removida); aba fechada. Aviso: a 1ª carga foi sem `fresh=1` (o save de teste carregou antes do `__noSave`; o backup foi tirado logo depois).
+
+### A) Fases → skins no desenho (VISTO)
+- `PHASES_ON = false` (index.html:336). `phaseBoot/phaseCheck/drawEvo` inertes atrás da chave (nada apagado).
+- `heroForm()` (js/stage.js): PONTO ÚNICO de herói + pasta + escala, lido de `Sys.appearance.sheetFor(S, host, estado[, {skin}])` (dir e scale do retorno; `PH_SCALE` só de reserva). O desenho não lê mais `Sys.phaseUp`. `heroPhase()` = número da pasta (formato da folha). Morte, asa (back), arma e pistola saem da pasta devolvida. Herói/skin mudou → `avatarRefresh()`.
+- Pistola: `pistolSheet/pistolScale` saem da pasta do herói/skin (antes `R/` + `kael_` fixos); as skins de corpo próprio passaram a usar as folhas `pistol_*` (antes seguravam a pistola na pose da espada, apontada para o chão: visto e corrigido).
+- `drawHeroFull(..., {skin: id|'default'})`: campo opcional novo (vitrine do QA); assinatura igual.
+- Modo dono: saíram "Fase: ..."; entraram "Herói: Kael/Kaia" e "Skin: Padrão / Cavaleiro / Guerreiro Lendário" (`grantFixed(owner)` + `equipFixed`). Os BOTÕES não foram clicados; as chamadas por trás foram feitas pelo console.
+- Visto: nível 60 → garoto (`form.stage 0`), FC igual com e sem `S.sys.phaseUp.stg=2` no save (4489 = 4489); Kael padrão/Cavaleiro/Lendário e Kaia padrão/Cavaleira/Lendária em parado, corrida, golpe, giro, morte, pistola, tiro e montado, com asa: `v0128_skins_fixas_{kael,kaia}.jpg`. Kael Cavaleiro equipado na batalha real (escala 1,25; retrato do cabeçalho trocou; FC 4489 → 4733).
+
+### B) Subir de nível (VISTO)
+`LVUP = assets/anim/fx/levelup_fx` por cima do herói desenhado (escala da skin; montado ×1,3 e centrado na sela); a folha antiga saiu de uso; arquivo faltando = efeito por código. Visto: Kaia a pé, Kael a pé, Kael no lobo com asa (`v0128_levelup_fx_montado.png`): um herói só. A pé, o texto "NÍVEL +1" da folha cai atrás da barra de vida/botão Passe (arte/posição: decidir).
+
+### C) Kaia jogável (VISTO)
+- `KAIA_ON = true` (js/intro.js); cartão da Kaia com a folha dela, seleção, nome com o herói escolhido; grava por `Sys.appearance.setHero`. Visto na intro ANTIGA (js/intro.js) até entrar no jogo de Kaia. A entrada NOVA é `js/p_intro.js` (`PI_KAIA=false`, do Servidor): lá a Kaia continua "em breve".
+- Batalha real: Kaia com asa, pet, retrato; parado/corrida/golpe/giro/morte/pistola: `v0128_kaia_menina_{parado,golpe,morte}.jpg`. Nenhum caminho cai no Kael (carregando = nada por um instante).
+- MONTADA: só existem `assets/anim/mounts/kael_*`. A Kaia aparece A PÉ e a montaria não é desenhada (bônus da montaria continua); `MOUNT_HERO` em js/mountfx.js recebe `kaia: 'kaia_'` quando a arte chegar. Visto (antes do conserto o `state.mount` do drawHeroFull mostrava o Kael no lobo: corrigido).
+- `body.kaia` (index.html): `.kidle` e a corrida do carregamento mostram a Kaia em todas as telas (classe posta; telas dos outros donos NÃO vistas).
+
+### D) FC, E) Passe 25, F) slots 7-8, G) conferências
+- FC trocada nos meus arquivos: `fcShow()` (index.html:547) em index.html:531, :533 (anima o valor real), :598 (dois números) e js/fullbattle.js:307. Visto "FC 2,2 mil".
+- Passe: `SEASON_SKIN=''`, `PASS_SKIN_AT={}` (index.html:410), `addSkin('season')` não entrega nada (js/farm.js:63); `Sys.pass.releaseMountFrags(S)` no `statsChanged()` e no boot. ESCRITO, não visto.
+- `slotIcon` até a era 8 (index.html:330; os 14 arquivos existem). ESCRITO, não visto.
+- VISTO: `setView('missions')` abre Missões (Diárias/Semanais); ícone da Oferta 24h no Modo dono (`assets/icons/menu/offer.png`, "23h 59min"); arma no punho montado em lobo, grifo e serpe com armas das eras 4, 5 e 6 (`v0128_arma_punho_montado.jpg`, tamanho de grade).
+
+### Achados para outros donos
+- Arte: `kaia_phase2/kaia_pistol_*_body.json`: grip fora da mão (pistola da Kaia Cavaleira flutua ~10 px à frente). Morte com pistola (todos): a arma gira abaixo da linha do chão no meio da queda.
+- Servidor: `js/p_intro.js` `PI_KAIA=false`.
+- Asa nas skins de corpo próprio fica bem maior (escala 1,25/1,30 × âncora): conferir no voto.
+- Prints em .jpg (captura do navegador), não .png.

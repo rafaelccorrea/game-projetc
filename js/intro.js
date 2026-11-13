@@ -5,7 +5,7 @@
    Save antigo sem nome: vira "Kael" na carga (sysMigrate, js/farm.js) e a intro não aparece.
    Base de 390 px de largura (medidas do protótipo), escalada para a largura real; depende de index.html (S, save, snd, hud). */
 const INTRO={step:0,hero:'',nick:'',sugs:null,done:null,el:null};
-const KAIA_ON=false;   // chave: true quando a arte da Kaia for aprovada (aí ela pode ser escolhida)
+const KAIA_ON=true;   // Engenheiro 4: Kaia APROVADA pelo dono e jogável (menina padrão; folhas assets/anim/hyb/kaia/kaia_*). Com false ela volta a ser silhueta "em breve"
 const INTRO_CARDS=[
   {k:'ERA 0 · PRÉ-HISTÓRIA', h:'Tudo começa com um osso e coragem.', b:'Kael acorda sem nada. Lute, junte moedas e deixe seus itens mais fortes: tudo automático, até offline.'},
   {k:'ATRAVESSE AS ERAS', h:'Derrote o chefe e abra o portal.', b:'Cada era traz uma arma nova com 3 ataques: o básico, o especial e uma Ultimate de arrasar.'},
@@ -41,6 +41,7 @@ const KAIA_SVG='<svg width="120" height="144" viewBox="0 0 100 120" aria-hidden=
 @keyframes iloom{0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px rgba(180,80,255,.6))}50%{transform:scale(1.05);filter:drop-shadow(0 0 26px rgba(180,80,255,.95))}}
 #intro .portal{animation:ispin 6s linear infinite}
 @keyframes ispin{to{transform:rotate(360deg)}}
+#intro .kidle.ikael{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png)}
 #intro .shake{animation:ishake .35s}
 @keyframes ishake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 #intro .hcard{transition:transform .15s}#intro .hcard:active{transform:scale(.97)}
@@ -78,19 +79,19 @@ function introRender(){
       <div style="position:absolute;left:24px;right:24px;bottom:34px;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;gap:8px">${dot(0)}${dot(1)}${dot(2)}</div>
         <button data-i="next" class="lil" style="height:56px;padding:0 28px;border-radius:16px;border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);box-shadow:0 5px 0 #8a4f0c;color:#2a1403;font-size:20px">${I.step===2?'Vamos!':'Próximo'}</button></div></div>`;
-  } else if(I.step===3){ const on=I.hero==='kael', ch=Math.max(300,Math.min(430,d.H-56-34-14*3-36-40-62)), dy=ch-430;
+  } else if(I.step===3){ const on=I.hero==='kael', onK=KAIA_ON&&I.hero==='kaia', okMark='<span style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:#ffc94a;color:#2a1403;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>', ch=Math.max(300,Math.min(430,d.H-56-34-14*3-36-40-62)), dy=ch-430;
     const base=bd=>`<span class="shad" style="left:52px;right:52px;top:${304+dy}px;height:12px;z-index:1"></span><span style="position:absolute;left:22px;right:22px;top:${300+dy}px;height:26px;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#6b5236 0%,#3a2c1f 60%,#1d1611 100%);border:2px solid ${bd}"></span>`;
     h=`<div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;padding:56px 16px 34px;box-sizing:border-box;gap:14px;background:radial-gradient(circle at 50% 35%,#3a2c1f 0%,#16110d 70%)">
       <h1 class="lil" style="margin:0;font-size:30px;text-align:center">Escolha seu herói</h1>
       <p style="margin:0;font-size:14px;font-weight:700;color:#c9b9a2;text-align:center">Os dois usam o cachecol vermelho. A força vem da jornada, não do herói.</p>
       <div role="group" aria-label="Heróis" style="display:flex;gap:12px">
         <button class="hcard ${on?'hsel':''}" data-i="kael" aria-pressed="${on}" aria-label="KAEL" style="position:relative;flex:1;min-width:0;height:${ch}px;border-radius:22px;border:3px solid ${on?'#ffc94a':'#4a3a2b'};background:radial-gradient(circle at 50% 42%,${on?'rgba(255,201,74,.38)':'#33271d'} 0%,#1d1611 70%);color:#f6ecdf;padding:0;overflow:hidden;display:block">
-          ${base(on?'#ffc94a':'#4a3a2b')}<span class="kidle" aria-hidden="true" style="position:absolute;left:50%;top:${150+dy}px;width:168px;height:168px;margin-left:-84px"></span>
+          ${base(on?'#ffc94a':'#4a3a2b')}<span class="kidle ikael" aria-hidden="true" style="position:absolute;left:50%;top:${150+dy}px;width:168px;height:168px;margin-left:-84px"></span>
           <span style="position:absolute;left:0;right:0;top:${344+dy}px;display:flex;flex-direction:column;align-items:center;gap:4px"><span class="lil" style="font-size:30px;letter-spacing:1px">KAEL</span><span style="font-size:13px;font-weight:800;color:#c9b9a2">O viajante do tempo</span></span>
           ${on?'<span style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:#ffc94a;color:#2a1403;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>':''}</button>
-        <button class="hcard" data-i="kaia" aria-pressed="false" aria-label="KAIA, em breve" style="position:relative;flex:1;min-width:0;height:${ch}px;border-radius:22px;border:3px solid #4a3a2b;background:radial-gradient(circle at 50% 42%,#33271d 0%,#1d1611 70%);color:#f6ecdf;padding:0;overflow:hidden;display:block">
-          ${base('#4a3a2b')}<span class="sil" style="position:absolute;left:50%;top:${166+dy}px;width:120px;height:144px;margin-left:-60px;display:block;filter:drop-shadow(0 0 10px rgba(255,201,74,.25))">${KAIA_SVG}</span>
-          <span class="wip" style="position:absolute;left:12px;top:12px;padding:4px 8px;border-radius:8px;background:rgba(14,10,7,.92);border:1px dashed #ffb3a8;color:#ffb3a8;font-size:11px;font-weight:900">em breve</span>
+        <button class="hcard ${onK?'hsel':''}" data-i="kaia" aria-pressed="${onK}" aria-label="${KAIA_ON?'KAIA':'KAIA, em breve'}" style="position:relative;flex:1;min-width:0;height:${ch}px;border-radius:22px;border:3px solid ${onK?'#ffc94a':'#4a3a2b'};background:radial-gradient(circle at 50% 42%,${onK?'rgba(255,201,74,.38)':'#33271d'} 0%,#1d1611 70%);color:#f6ecdf;padding:0;overflow:hidden;display:block">
+          ${base(onK?'#ffc94a':'#4a3a2b')}${KAIA_ON?`<span class="kidle kaia" aria-hidden="true" style="position:absolute;left:50%;top:${150+dy}px;width:168px;height:168px;margin-left:-84px"></span>${onK?okMark:''}`:`<span class="sil" style="position:absolute;left:50%;top:${166+dy}px;width:120px;height:144px;margin-left:-60px;display:block;filter:drop-shadow(0 0 10px rgba(255,201,74,.25))">${KAIA_SVG}</span>
+          <span class="wip" style="position:absolute;left:12px;top:12px;padding:4px 8px;border-radius:8px;background:rgba(14,10,7,.92);border:1px dashed #ffb3a8;color:#ffb3a8;font-size:11px;font-weight:900">em breve</span>`}
           <span style="position:absolute;left:0;right:0;top:${344+dy}px;display:flex;flex-direction:column;align-items:center;gap:4px"><span class="lil" style="font-size:30px;letter-spacing:1px">KAIA</span><span style="font-size:13px;font-weight:800;color:#c9b9a2">A heroína do cachecol</span></span></button>
       </div><div id="i_toast"></div>
       <div style="flex:1"></div>
@@ -99,7 +100,7 @@ function introRender(){
   } else { const chk=introCheck(I.nick); if(!I.sugs) I.sugs=['Lenda_'+(10+Math.floor(Math.random()*89))].concat(INTRO_POOL.slice().sort(()=>Math.random()-.5).slice(0,2));
     h=`<div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:${d.H<760?30:70}px 24px 34px;box-sizing:border-box;gap:14px;background:radial-gradient(circle at 50% 30%,#3a2c1f 0%,#16110d 70%)">
       <div style="position:relative;width:200px;height:200px;flex:none"><div style="position:absolute;left:30px;right:30px;bottom:6px;height:22px;border-radius:50%;background:rgba(255,201,74,.25);box-shadow:0 0 30px rgba(255,201,74,.5)"></div><div class="shad" style="left:55px;right:55px;top:179px;height:12px"></div>
-        <div class="kidle" role="img" aria-label="Kael" style="position:absolute;left:0;top:-4px;width:200px;height:200px"></div></div>
+        <div class="kidle ${I.hero==='kaia'?'kaia':'ikael'}" role="img" aria-label="${I.hero==='kaia'?'Kaia':'Kael'}" style="position:absolute;left:0;top:-4px;width:200px;height:200px"></div></div>
       <h1 class="lil" style="margin:0;font-size:28px;text-align:center">Como vão te chamar, lenda?</h1>
       <p style="margin:0;font-size:14px;font-weight:700;color:#c9b9a2;text-align:center">Esse nome aparece no jogo e no ranking. O herói continua sendo o personagem escolhido.</p>
       <div style="width:100%;display:flex;flex-direction:column;gap:6px;margin-top:6px"><label for="i_nick" style="font-size:13px;font-weight:900">Nome do jogador</label>
@@ -126,7 +127,7 @@ function introClick(ev){ const b=ev.target.closest('[data-i]'); if(!b) return; c
   else if(a==='dice'){ snd('ui_tap'); I.sugs=null; I.nick=INTRO_POOL[Math.floor(Math.random()*INTRO_POOL.length)]; introRender(); }
   else if(a==='sug'){ snd('ui_tap'); I.nick=b.dataset.n; introRender(); }
   else if(a==='go'){ const chk=introCheck(I.nick); if(!chk.ok){ const f=document.getElementById('i_field'); if(f){ f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); } return; }
-    snd('claim'); S.hero=I.hero||'kael'; S.name=I.nick; save(); hud(); const el=I.el, done=I.done; I.el=null; I.done=null; el.style.transition='opacity .35s'; el.style.opacity='0'; setTimeout(()=>{ el.remove(); if(done) done(); },360); }
+    snd('claim'); { const h=(KAIA_ON&&I.hero==='kaia')?'kaia':'kael'; let ok=false; try{ ok=!!(window.Sys&&Sys.appearance&&Sys.appearance.setHero(S,h)); }catch(e){} if(!ok) S.hero=h; if(typeof heroClass==='function') heroClass(); if(typeof formRefresh==='function') formRefresh(); if(typeof preloadAssets==='function') preloadAssets(); } S.name=I.nick; save(); hud(); const el=I.el, done=I.done; I.el=null; I.done=null; el.style.transition='opacity .35s'; el.style.opacity='0'; setTimeout(()=>{ el.remove(); if(done) done(); },360); }
 }
 /* jogador novo = ainda sem nome no save */
 const introNeeded = () => !S.name;

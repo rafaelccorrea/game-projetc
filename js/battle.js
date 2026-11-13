@@ -722,7 +722,7 @@ function heroPose(a,gun,t){
    Rig: anchors.json {hand,handR,angle} · weapons/meta.json {type,grip,angle(graus, 0=direita, 90=cima),len,muzzle,layer:"back"} */
 /* SUBIR DE NÍVEL (aprovado): folha assets/anim/fx/levelup (quadros, fps, pés e âncora do .json), tocada UMA vez sobre o Kael, pés na linha do chão,
    na mesma escala do quadro do herói. B.lvfx = {t} é ligado em js/farm.js quando o nível sobe. */
-const LVUP='assets/anim/fx/levelup';
+const LVUP='assets/anim/fx/levelup_fx';   /* Engenheiro 4 (dono): versão SÓ-EFEITO (22 quadros, 448x384, pés em (224, 352)), por cima do herói desenhado, em qualquer herói/skin e montado. A folha antiga (levelup, com o Kael garoto desenhado) saiu de uso. */
 /* A folha levelup TRAZ O KAEL GAROTO A PÉ desenhado (visto: por cima do herói montado/adolescente aparecia um segundo Kael criança com espada). Ela só vale quando o
    herói na tela É esse (Kael, fase 0, a pé). Nos outros casos (fases 1 a 3, montado, Kaia): efeito por código (coluna de luz + anel no chão), na escala do herói,
    até a Arte entregar a versão só-efeito (levelup_fx). */
@@ -733,10 +733,12 @@ function drawLevelUpCode(t,dur){ const u=Math.max(0,Math.min(1,t/dur)), k=(typeo
   ctx.fillStyle=g; ctx.fillRect(HX-w/2,GY-h,w,h);
   ctx.globalAlpha=a; ctx.strokeStyle='#bffcee'; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(HX,GY,HS*(0.25+0.45*u)*k,HS*(0.06+0.1*u)*k,0,0,7); ctx.stroke();
   ctx.restore(); }
-function drawLevelUp(){ const f=B.lvfx; if(!f) return; if(!lvupPlain()){ const t=B.at-f.t0; if(t<0||t>=1.1){ B.lvfx=null; return; } drawLevelUpCode(t,1.1); return; }
-  const sh=sheetLoad(LVUP,true); if(!sh.ok){ if(sh.fail) B.lvfx=null; return; }
+function drawLevelUp(){ const f=B.lvfx; if(!f) return;
+  const sh=sheetLoad(LVUP,true); if(sh.fail){ const t=B.at-f.t0; if(t<0||t>=1.1){ B.lvfx=null; return; } drawLevelUpCode(t,1.1); return; }   /* arquivo faltando: efeito por código (reserva) */
+  if(!sh.ok) return;
   const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
-  const k=HS/256; ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
+  const mo=!!heroLook().mount&&typeof heroRise==='function'&&heroRise()>0, k=HS/256*(typeof phaseK==='function'?phaseK():1)*(mo?1.3:1);   /* na escala do herói; montado, maior (cobre herói + montaria) e centrado na sela */
+  ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX+(mo?HS*0.1:0)-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
 const WING_DRAW=true;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js): a ASA é desenhada lá dentro, presa à âncora das costas de cada quadro
@@ -1110,6 +1112,7 @@ function loop(now){
    drawHeroFull(ctx2, x, y, scale, state): desenha asa + Kael (montado se tiver montaria; na fase certa) + aura + pet com o MESMO código e as MESMAS tabelas da
    batalha, em qualquer canvas. (x, y) = ponto dos pés no canvas de destino; scale = 1 → tamanho da batalha (HS px lógicos de quadro).
    state (tudo opcional): { t, walking, act, deadP, pet (false esconde), mount (false esconde / {id, stars}), wing (false / 'angel' | 'demon'), weapon (skin), armor (skin),
+   skin (id de skin fixa ou 'default': desenha essa skin em vez da equipada; vitrine da Aparência),
    layers (lista do Sys.appearance.layers: tinta de colete/botas, chapéu, óculos, máscara e aura da roupa-skin; sem o campo valem as do save; [] = nenhuma) }.
    drawHeroLayers(canvas, layers, dt): vitrine da Aparência (pedido Q-15): encaixa o herói completo no canvas; 'layers' (Sys.appearance.layers) define asa e arma visíveis. */
 const HFULL={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false};
@@ -1117,10 +1120,11 @@ function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1
   HFULL.x=HX; HFULL.gy=GY; HFULL.t=st.t!=null?st.t:B.at; HFULL.sk=st.armor||SKIN(S.skinEq.armor); HFULL.ws=st.weapon||lk.weapon||wSkin(); HFULL.walking=!!st.walking; HFULL.deadP=st.deadP!=null?st.deadP:-1; HFULL.act=st.act||null;
   HFULL.wing=st.wing===false?null:(st.wing||lk.wing); HFULL.mount=st.mount===false?null:(st.mount||lk.mount);
   HFULL.lay=(st.layers!==undefined&&typeof layParse==='function')?layParse(st.layers):undefined;   /* camadas da roupa-skin: as passadas (Sys.appearance.layers) ou, sem elas, as do save */
+  const ov0=(typeof FORM!=='undefined')?FORM.ov:null; if(typeof FORM!=='undefined') FORM.ov=(st.skin!=null&&st.skin!=='')?st.skin:null;   /* state.skin (opcional): desenha essa skin fixa ('default' = corpo padrão) em vez da equipada */
   c2.save(); c2.translate(x-HX*k,y-GY*k); c2.scale(k,k); ctx=c2;
   try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running; B.res=null; B.deadT=0; B.running=!!st.walking; try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; } } }
   catch(e){ if(!window.__hfErr){ window.__hfErr=1; console.error('drawHeroFull',e); } }
-  finally{ ctx=old; c2.restore(); } }
+  finally{ ctx=old; c2.restore(); if(typeof FORM!=='undefined') FORM.ov=ov0; } }
 window.drawHeroFull=drawHeroFull;
 let hlT=0;
 function drawHeroLayers(c,layers,dt){ if(!c) return; const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth||c.width, h=c.clientHeight||c.height; if(!w||!h) return;
