@@ -143,7 +143,8 @@ for(const k of [
    dir:'assets/anim/skins/kael_angel', avatar:'kael_angel', art:true, families:[]},   // ARTE ENTREGUE (4598ed9); arco/bumerangue por código
   {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_paladin',
    dir:'assets/anim/skins/kael_solar_paladin', avatar:'kael_solar_paladin', art:true, families:[]},   // ARTE ENTREGUE (9d920e7; pasta da Arte 'kael_solar_paladin', id e produto continuam kael_paladin)
-  {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer']},
+  {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer'],
+   dir:'assets/anim/skins/kael_ninja', avatar:'kael_ninja', art:true, families:[]},   // ARTE ENTREGUE (6133650); arco/bumerangue por código
   {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada', sources:['reward']},
   {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_cyborg'},
   {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kaia_harlequin',
