@@ -16,7 +16,7 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 ## Achados (formato: `- [ ] P<n> · tela · o que está errado · dono da correção`)
 - [ ] P1 · Oferta de 1ª compra · não mostra a imagem do Lobo de guerra (montaria) nem do pet; tem que mostrar tudo com a arte real · Engenheiro/Servidor (p_offer)
 - [ ] P2 · Batalha montado · a arma sai da mão e flutua em cima da montaria · Arte (encaixe nas folhas montadas) + Engenheiro
-- [ ] P3 · Vários lugares · imagem de arma que não aparece · QA levanta onde; Engenheiro corrige
+- [ ] P3 · Batalha montado · a arma não aparece na mão com o Kael montado (QA confirmou: não é arquivo faltando; 26 telas sem imagem quebrada) · Engenheiro junto com a asa montada
 - [ ] P4 · Vitória (e outras cenas) · o pet some; montaria/asa/aura também precisam aparecer · Engenheiro (drawHeroFull)
 - [ ] P5 · Todas as cenas · a asa fica atrás da cabeça em vez das costas · Engenheiro (âncora das costas da Arte)
 - [ ] P6 · Vitória · diz "Javali" quando o chefe é o Rex Furioso (nome do chefe errado) · Engenheiro
@@ -26,9 +26,9 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - [ ] P10 · Instâncias · tela ainda desligada (fluxo 24/26) · Engenheiro (painéis)
 
 ## Achados do QA (varredura de 13/11, aba 2, Modo teste nível 60; prints em reports/prints/)
-- [ ] P6 · Batalha montado (grifo) · CONFIRMA P2/P3: o Kael montado não mostra a arma na mão (só um brilho); print reports/prints/pol_1_montado_asa_arma.png · Arte (folhas montadas com arma) + Engenheiro
-- [ ] P7 · Batalha a pé e montado · CONFIRMA P5: a asa nasce na altura da CABEÇA/ombros (asas abertas atrás da cabeça), não nas costas; prints pol_1 e pol_2_asa_na_cabeca_a_pe.png · Engenheiro (âncora das costas, vinda da Arte)
-- [ ] P8 · Vitória (lobo + asa) · CONFIRMA P4: o pet (mamute) some na cena da vitória; a montaria e a asa aparecem (asa também na cabeça); print pol_3_vitoria_sem_pet_asa_cabeca.jpg · Engenheiro (drawHeroFull)
-- [x] P9 · Loja (cartão OFERTA) · cortava o texto em 288 px · CORRIGIDO e conferido em 288 e 390 px (QA)
+- [ ] P11 · Batalha montado (grifo) · CONFIRMA P2/P3: o Kael montado não mostra a arma na mão (só um brilho); print reports/prints/pol_1_montado_asa_arma.png · Arte (folhas montadas com arma) + Engenheiro
+- [ ] P12 · Batalha a pé e montado · CONFIRMA P5: a asa nasce na altura da CABEÇA/ombros (asas abertas atrás da cabeça), não nas costas; prints pol_1 e pol_2_asa_na_cabeca_a_pe.png · Engenheiro (âncora das costas, vinda da Arte)
+- [ ] P13 · Vitória (lobo + asa) · CONFIRMA P4: o pet (mamute) some na cena da vitória; a montaria e a asa aparecem (asa também na cabeça); print pol_3_vitoria_sem_pet_asa_cabeca.jpg · Engenheiro (drawHeroFull)
+- [x] P14 · Loja (cartão OFERTA) · cortava o texto em 288 px · CORRIGIDO e conferido em 288 e 390 px (QA)
 - Conferido SEM defeito (varredura de 26 telas): nenhuma imagem quebrada nas telas Equipamento, Invocar, Loja, Passe, Forja, Pets, VIP, Ranking, Config., Torre, Missões, Instâncias, Perfil, Códex, Guilda, Chat, Arena, Eventos, Torneio, Mapa, Correio, Montarias, Aparência, Leilão, Oferta, Práticas; nenhum emoji nelas; todos os arquivos assets/weapons/era0..8_t0..2.png, assets/hero/era0..8_t0..2.png, assets/enemies/era0..8_boss.png e assets/map/era0..8.jpg existem.
 - [ ] A VARRER (próxima passada): arma por era/raridade em campo na batalha (eras 1-8), Kael sem montaria/pet/asa em cada era, pet sob a montaria, Oferta (P1) e Invocar com a arte, Passe/Correio com imagem de prêmio, níveis 1/20/38/50/70 de verdade (a varredura de hoje foi num save de nível 60).
