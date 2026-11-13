@@ -8,6 +8,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **10h · No Modo dono:** botões "CHAVES PARA O VOTO" para você ligar e testar cada novidade antes de aprovar (Fusão, asas novas, arco/bumerangue, ultimates lendárias, pets e montarias novos) · brilho do item caído por raridade pronto (desligado) · telas com imagem esperam carregar antes de mostrar
+- **10h · Kaia menina montada:** pônei e cavalo prontos e sendo ligados; tigre, lobo, grifo e serpe em produção
+- **10h · PARA VOCÊ VOTAR:** ícone do app (A, B ou C) e tela de abertura · eventos com horário na batalha (já ligados) · skins, pets, montarias, asas e ultimates
+- **10h · APK v0.12.8** gerado de novo sem permissões de publicidade; o kit do Facebook que veio junto com o login está sendo removido por completo (jogo com menores)
+
 - **09h30 · Prioridade 1 do engenheiro: CARREGAMENTO DE VERDADE.** A tela de carregamento só fecha com todas as imagens da cena prontas (herói, montaria, pet, asa, cenário, inimigos, arma, ícones), com barra de progresso real; o mesmo na troca de era e ao equipar. Depois: o jogo travado em 60 quadros por segundo, estável (hoje roda a 120 no S24 e esquenta à toa), com qualidade automática em celular fraco
 - **09h30 · Mobile:** a Arte está fazendo 3 opções de ícone do app (o "E" de cristal, o Kael diante do portal, um brasão), o splash do Android e a tela de abertura; depois a arte da ficha da loja. O logo animado também está em produção
 - **09h30 · Sua decisão:** VIP vem do total gasto (R$ 1 = 1 ponto); o "Comprar VIP" abre a Loja. Lista dos 10 produtos para você cadastrar no Play Console: reports/play-console-produtos.md (6 pacotes de diamantes, cartão mensal, passe premium, oferta do Guardião, Mecha). A tabela de vantagens do VIP (fundir automático, ×4, mais Arena etc.) está sendo montada por Sistemas
