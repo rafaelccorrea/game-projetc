@@ -375,6 +375,58 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
       if (ev('!!__fxm')) { await until(() => { drawList(); return ev('XA2.pv.rdy===true'); }, 500); const L2 = drawList().filter(o => o.m).map(o => o.s); check('skin fixa do adversário MONTADO: corpo padrão na folha da montaria (nenhuma folha da pasta da skin)', L2.some(x => RE.mount.test(x)) && !L2.some(x => x.indexOf(q.fxDir) >= 0), L2.slice(0, 5).join(' | ')); } } }
   ev('paPvFree(); XA2.view="lobby"; 1');
 
+  /* ---------- ARENA ONLINE com um Sys.arenaNet de mentira (o de verdade fica desligado) ---------- */
+  { const micro = async () => { for (let i = 0; i < 4; i++) await new Promise(r => setImmediate(r)); };
+    ev(`(function(){ window.__an0=Sys.arenaNet; window.__tl=[]; window.__t0=toast; toast=function(t){ __tl.push(String(t)); };
+      window.__fake={st:false, calls:[], ref:0, rank:[], snap:0, res:null, state:function(){ return {on:true,started:this.st}; },
+        fight:function(S2,h,id){ this.calls.push(id); const me=this; return new Promise(function(ok,no){ me.res=ok; me.rej=no; }); },
+        refresh:function(){ this.ref++; const me=this; return new Promise(function(ok){ me.rres=ok; }); },
+        loadRanking:function(k){ this.rank.push(k); return Promise.resolve({}); }, snapshot:function(){ this.snap++; return Promise.resolve({ok:true,sent:true}); }};
+      Sys.arenaNet=__fake; Sys.arena.ensure(S,Sys.host).attemptsLeft=3; view='arena'; XA2.view='lobby'; XA2.tab=0; XA2.sel=0; XA2.wait=null; render(); })(); 1`);
+    const st = () => ev("(function(){ const o=Sys.arena.ensure(S,Sys.host); return {left:o.attemptsLeft, fights:o.fights, refreshes:o.refreshes, refLeft:o.refreshLeft, calls:__fake.calls.length, ref:__fake.ref, snap:__fake.snap, rank:__fake.rank.join(','), wait:!!XA2.wait, view:XA2.view, pv:!!XA2.pv, toasts:__tl.join(' | '), busy:Panels.defs.arena.busy()}; })()");
+    /* desligada (started=false): tudo como antes */
+    const a0 = st(); click('fight'); const a1 = st();
+    check('arenaNet com started=false: o LUTE! usa o Sys.arena.fight local na hora (nada vai ao provider online)', a1.calls === 0 && a1.pv && a1.view === 'fight' && a1.fights === a0.fights + 1 && a1.left === a0.left - 1 && !a1.wait, JSON.stringify(a1));
+    click('skip'); click('back'); ev("Sys.arena.ensure(S,Sys.host).refreshLeft=1; render(); 1"); const r0 = st(); click('refresh'); const r1 = st();
+    check('started=false: Trocar usa o Sys.arena.refresh local; foto e ranking online não são chamados', r1.ref === 0 && r1.refreshes === r0.refreshes + 1 && (() => { ev('Panels.defs.arena.onOpen(); 1'); click('tab', { i: '2' }); const z = st(); click('tab', { i: '0' }); return z.snap === 0 && z.rank === ''; })(), JSON.stringify(r1));
+    /* ligada (started=true) */
+    ev("__fake.st=true; Sys.arena.ensure(S,Sys.host).attemptsLeft=3; Sys.arena.ensure(S,Sys.host).refreshLeft=1; __tl.length=0; Panels.defs.arena.onOpen(); render(); 1");
+    check('started=true: abrir a Arena manda a foto (Sys.arenaNet.snapshot) e o evento herochange também', st().snap === 1 && ev("(function(){ const n=__fake.snap; paNetSnap(); return __fake.snap===n+1; })()") && /addEventListener\('herochange'/.test(fs.readFileSync(path.join(G.ROOT, 'js/p_arena.js'), 'utf8')));
+    const b0 = st(); click('fight'); const b1 = st(), hw = html(); click('fight'); click('refresh'); click('tab', { i: '2' }); click('sel', { i: '1' }); const b2 = st();
+    check('started=true: o LUTE! chama o provider UMA vez e mostra "Procurando adversário" (estado de espera, sem botão morto por baixo)', b1.calls === 1 && b1.wait && b1.busy && !b1.pv && b1.view === 'lobby' && /role="status"[^>]*aria-label="Procurando adversário"/.test(hw) && /z-index:40/.test(hw), JSON.stringify(b1));
+    check('esperando o servidor: toque duplo e qualquer outro toque são ignorados; nenhuma tentativa local gasta', b2.calls === 1 && b2.ref === b1.ref && b2.rank === b1.rank && b2.left === b0.left && b2.fights === b0.fights && ev('XA2.sel') === 0, JSON.stringify(b2));
+    /* a resposta chega: mesmo objeto do Sys.arena.fight + oppServer */
+    ev("(function(){ const ops=Sys.arena.opponents(S,Sys.host), o=ops[0]; const r=Sys.arena.fight(S,Sys.host,o.id); r.oppServer={id:o.id,name:'Jogadora Real',fc:o.fc,level:77,look:heroSnapshot().look}; window.__nr=r; __fake.res(r); })(); 1"); await micro();
+    const c1 = st(), cq = ev("(function(){ const pv=XA2.pv; return pv?{same:pv.r===__nr, phase:pv.phase, name:pv.opp.name, lvl:pv.opp.level, look:JSON.stringify(pv.opp.look)===JSON.stringify(__nr.oppServer.look), log:pv.log===__nr.log||pv.log.length===__nr.log.length}:null; })()");
+    check('resposta do servidor: a luta abre no VS com o MESMO resultado devolvido (registro, vencedor) e o adversário do servidor (nome, nível, aparência)', !c1.wait && c1.pv && c1.view === 'fight' && !!cq && cq.same && cq.phase === 'vs' && cq.name === 'Jogadora Real' && cq.lvl === 77 && cq.look && cq.log && html().indexOf('Jogadora Real') >= 0, JSON.stringify([c1, cq]));
+    click('skip'); const cr = ev("(function(){ const pv=XA2.pv, L=pv.log; let h0=pv.max[0], h1=pv.max[1]; for(const e of L){ if(e.s===0) h1=e.hp; else h0=e.hp; } return {res:pv.phase==='result', hp:Math.abs(h0-pv.hp[0])<1e-6&&Math.abs(h1-pv.hp[1])<1e-6, win:pv.r.win===__nr.win, used:pv.used.length===L.length}; })()");
+    check('luta online: resultado igual ao do registro (vida final, vencedor, registro inteiro)', cr.res && cr.hp && cr.win && cr.used && new RegExp(ev('__nr.win') ? '>VITÓRIA<' : '>DERROTA<').test(html()), JSON.stringify(cr));
+    /* Lutar de novo online e erros */
+    const errCase = async (label, how, want) => { ev("Sys.arena.ensure(S,Sys.host).attemptsLeft=3; __tl.length=0; 1"); const z0 = st(); if (ev('!!XA2.pv')) click('again'); else click('fight'); const zw = st(); ev(how); await micro(); const z1 = st();
+      check('erro online (' + label + '): aviso claro em português, volta para a lista, nada preso, nenhuma tentativa local gasta', zw.wait && zw.calls === z0.calls + 1 && !z1.wait && !z1.pv && z1.view === 'lobby' && !z1.busy && z1.left === z0.left && z1.fights === z0.fights && want.test(z1.toasts) && /role="tablist"/.test(html()) && !/Procurando adversário/.test(html()), JSON.stringify(z1)); };
+    await errCase('tries, vindo do Lutar de novo', "__fake.res({ok:false,reason:'tries'}); 1", /Sem lutas hoje/);
+    await errCase('offline', "__fake.res({ok:false,reason:'offline'}); 1", /Sem conexão/);
+    await errCase('busy', "__fake.res({ok:false,reason:'busy'}); 1", /Luta em andamento/);
+    await errCase('motivo desconhecido', "__fake.res({ok:false,reason:'qualquer_coisa'}); 1", /Luta indisponível agora/);
+    await errCase('Promise rejeitada', "__fake.rej(new Error('rede')); 1", /Sem conexão/);
+    await errCase('resposta vazia', "__fake.res(null); 1", /Luta indisponível agora/);
+    /* servidor mudo: 20 s e a tela se solta; a resposta atrasada só avisa */
+    ev("Sys.arena.ensure(S,Sys.host).attemptsLeft=3; __tl.length=0; 1"); click('fight'); G.inCtx(() => G.advance(21000)); const t1 = st();
+    check('servidor sem responder: depois de 20 s a tela avisa e volta para a lista (nunca fica presa)', !t1.wait && t1.view === 'lobby' && /demorou para responder/.test(t1.toasts), JSON.stringify(t1));
+    ev("__tl.length=0; __fake.res({ok:true,win:true,delta:21,log:[]}); 1"); await micro(); const t2 = st(); check('resposta que chega depois do tempo: só um aviso com o resultado, a tela não muda', !t2.pv && t2.view === 'lobby' && /vitória/.test(t2.toasts) && /\+21 pontos/.test(t2.toasts), t2.toasts);
+    /* fechar a tela enquanto espera */
+    ev("__tl.length=0; 1"); click('fight'); ev('Panels.defs.arena.onClose(); 1'); ev("__fake.res({ok:false,reason:'offline'}); 1"); await micro(); const u1 = st(); check('fechar a Arena enquanto espera: nada preso, a resposta atrasada não reabre nada', !u1.wait && !u1.pv && u1.view === 'lobby', JSON.stringify(u1));
+    /* Trocar e Ranking online */
+    ev("view='arena'; XA2.view='lobby'; XA2.tab=0; __tl.length=0; render(); 1"); const v0 = st(); click('refresh'); const hb = html(); click('refresh'); const v1 = st(); ev("__fake.rres({ok:true,list:[]}); 1"); await micro(); const v2 = st();
+    check('Trocar online: chama Sys.arenaNet.refresh UMA vez (toque duplo ignorado, botão mostra "Trocando"), não gasta a troca local', v1.ref === v0.ref + 1 && /aria-busy="true"[^>]*>Trocando/.test(hb) && v2.refreshes === v0.refreshes && ev('XA2.refBusy===false') && !/Trocando/.test(html()), JSON.stringify(v2));
+    click('refresh'); ev("__fake.rres({ok:false,reason:'refresh'}); 1"); await micro(); check('Trocar online recusado: aviso "Sem trocas grátis hoje"', /Sem trocas grátis hoje/.test(st().toasts) && ev('XA2.refBusy===false'));
+    const w0 = st(); click('tab', { i: '2' }); await micro(); const w1 = st(), hr = html();
+    check('Ranking online: abrir a aba chama loadRanking("arena") e a lista continua vindo do Sys.arena.ranking', w1.rank === (w0.rank ? w0.rank + ',' : '') + 'arena' && /Ranking da sua liga/.test(hr) && !/undefined|NaN|nullº/.test(hr), w1.rank);
+    { const q = ev("(function(){ const r0=Sys.arena.ranking; let out=[]; for(const fake of [{kind:'arena',list:[],me:{rank:null,value:0},bots:false,loading:true},{kind:'arena',list:[],me:{rank:null,value:0},bots:false},{kind:'arena',list:[{rank:1,name:'A',value:1200,me:false},{rank:2,name:'B',value:1100,me:true}],me:{rank:null,value:1100},bots:false}]){ Sys.arena.ranking=function(){ return fake; }; render(); out.push(String(V_TEST.innerHTML)); } Sys.arena.ranking=r0; render(); return out; })()");
+      check('Ranking online carregando / vazio / sem posição: texto claro, sem "null" nem "undefined", sem falar em jogadores simulados', /Carregando o ranking/.test(q[0]) && /Ninguém no ranking/.test(q[1]) && /Ranking do servidor/.test(q[2]) && !/simulados/.test(q[2]) && q.every(x => !/undefined|NaN|nullº|você em null/.test(x)), q.map(x => x.length).join(',')); }
+    click('tab', { i: '0' }); ev("toast=__t0; Sys.arenaNet=__an0; XA2.wait=null; XA2.refBusy=false; paPvFree(); XA2.view='lobby'; 1");
+    check('arenaNet de verdade (js/sys/arenanet.js) carregado e DESLIGADO: a tela não o usa', ev("!!Sys.arenaNet&&Sys.arenaNet.state().started===false&&paNet()===null")); }
+
   /* ---------- texto: sem emoji; roteiro puro ---------- */
   { const src = fs.readFileSync(path.join(G.ROOT, 'js/p_arena.js'), 'utf8'), blk = src.slice(src.indexOf('LUTA PvP (Tela 23')), emo = /[\u2600-\u27BF\u2B00-\u2BFF\u{1F000}-\u{1FAFF}\uFE0F]/u.exec(blk);
     check('código da luta nova sem emoji nem símbolo de estrela/visto', !emo, emo ? 'achado: U+' + emo[0].codePointAt(0).toString(16) : '');
