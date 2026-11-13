@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **02h · TELA DE EQUIPAMENTO REFEITA para o seu voto:** https://claude.ai/artifact/L95m2uAwaAewKue4iBBe32 (herói com a arma na mão, asa e pet na frente; 7 peças em volta; tocou-trocou com FC antes e depois; mochila com 8 abas). **Bug da Arena** (a luta continuava depois do fim): corrigido no protótipo e em correção no jogo, entra na v0.13.1. Kaia Angelical não tem asa pintada (era uma marcação errada no código, em correção)
+
 - **01h40 · VIP também para em toda parede** (16 h a 3,5 dias em cada Senhor da Era); o grátis segue fechando no dia 180. **Equipamento refeito:** protótipo pronto, mas ao conferir o herói não apareceu no palco; voltou para a Sistemas corrigir antes de chegar a você. **Asa na morte:** a Arte gravou o encaixe das costas nas 13 folhas de morte; falta o Engenheiro ligar
 
 - **01h10 · Dificuldade pronta no código** (desligada até o QA medir): 90 FC pedidas, paredes, montaria +2,5% por estrela, teto diário de XP de abate. Simulação: grátis fecha no dia 180 (29 dias em paredes), VIP 5 no 139, VIP 10 no 121; quem não forja nem evolui o pet trava na fase 61. Ajustando a era 5 para o VIP também parar. **Arena:** ultimate e golpe do pet de verdade; prêmio por luta (moedas sempre, 1 gema na 1ª vitória do dia, baú na 3ª luta); robôs com aparência pelo nível

@@ -205,20 +205,21 @@ function setBars(){ for(let i=0;i<2;i++){ const f=F[i], p=Math.max(0,f.hp/f.max*
   $('#d0').textContent=fmt(d0); $('#d1').textContent=fmt(d1); $('#cr').textContent=crits; }
 const fmt=v=>v>=1000?(v/1000).toFixed(1).replace('.',',')+' mil':String(Math.round(v));
 function feed(t,cls){ const d=document.createElement('div'); d.className=cls||''; d.textContent=t; const fd=$('#feed'); fd.prepend(d); while(fd.children.length>2) fd.lastChild.remove(); }
-function newFight(winSide){ const seed=Math.random(); F[0].max=F[0].hp=48200; F[1].max=F[1].hp=49600; F.forEach(f=>{f.en=0;f.alpha=1;f.anim='idle';}); d0=d1=crits=0; done=false; ULT=null; FX=[]; $('#feed').innerHTML='';
+let FID=0;
+function newFight(winSide){ FID++; const seed=Math.random(); F[0].max=F[0].hp=48200; F[1].max=F[1].hp=49600; F.forEach(f=>{f.en=0;f.alpha=1;f.anim='idle';}); d0=d1=crits=0; done=false; ULT=null; FX=[]; $('#feed').innerHTML='';
   fight={next:clock+.4,turn:0,win:winSide,n:0,start:clock}; setBars(); }
 function hitPos(side){ return side===0?{x:96+24,y:GY-120}:{x:390-96-24,y:GY-120}; }
 function step(){ const T=fight; if(done||clock<T.next) return; const a=T.turn%2, d=1-a, A=F[a], D=F[d];
   if(ULT) return;
   const tm=Math.floor(clock-T.start); $('#tm').textContent=Math.floor(tm/60)+':'+String(tm%60).padStart(2,'0');
   if(A.en>=100){ A.en=0; ULT={t:clock,src:A.ultImg,side:a}; const b=document.createElement('div'); b.className='ultban'; b.innerHTML=`<div><small>ULTIMATE · ${a===0?'SUA':'ADVERSÁRIO'}</small>${A.ult}</div>`; $('#ov').appendChild(b); setTimeout(()=>b.remove(),1400/speed+200);
-    const dmg=Math.round(D.max*(a===T.win?.30:.22)); setTimeout(()=>apply(a,d,dmg,true,true),1700/speed); feed((a===0?'Você usou ':'Sombra usou ')+A.ult,'u'); T.turn++; T.next=clock+4.4; setBars(); return; }
+    const dmg=Math.round(D.max*(a===T.win?.30:.22)); {const fid=FID; setTimeout(()=>apply(a,d,dmg,true,true,false,fid),1700/speed);}; feed((a===0?'Você usou ':'Sombra usou ')+A.ult,'u'); T.turn++; T.next=clock+4.4; setBars(); return; }
   A.anim='atk'; A.at=clock; const crit=Math.random()<.22, pet=Math.random()<.35;
   let dmg=Math.round((2300+Math.random()*1400)*(crit?1.9:1)*(a===T.win?1.12:.92));
-  setTimeout(()=>apply(a,d,dmg,crit,false),640/speed);
-  if(pet){ setTimeout(()=>{ A.petA='atk'; A.petT=clock; setTimeout(()=>apply(a,d,Math.round(dmg*.25),false,false,true),500/speed); },300/speed); }
+  {const fid=FID; setTimeout(()=>apply(a,d,dmg,crit,false,false,fid),640/speed);}
+  if(pet){ {const fid=FID; setTimeout(()=>{ if(fid!==FID||done) return; A.petA='atk'; A.petT=clock; setTimeout(()=>apply(a,d,Math.round(dmg*.25),false,false,true,fid),500/speed); },300/speed);} }
   T.turn++; T.next=clock+1.35; }
-function apply(a,d,dmg,crit,ult,pet){ if(done) return; const D=F[d], A=F[a];
+function apply(a,d,dmg,crit,ult,pet,fid){ if(done||fid!==FID) return; /* golpe atrasado de luta que já acabou: ignorado */ const D=F[d], A=F[a];
   if(d!==fight.win||D.hp-dmg>0||ult){}
   if(d===fight.win&&D.hp-dmg<D.max*.08) dmg=Math.max(0,Math.round(D.hp-D.max*.08)); /* o vencedor do roteiro não cai antes */
   D.hp-=dmg; D.shake=crit||ult?1.4:.8; if(crit) crits+=a===0?1:0; if(a===0) d0+=dmg; else d1+=dmg;
@@ -226,7 +227,7 @@ function apply(a,d,dmg,crit,ult,pet){ if(done) return; const D=F[d], A=F[a];
   const p=hitPos(d); FX.push({kind:'n',x:p.x+(pet?24:0)*(d===0?1:-1),y:p.y+(pet?70:0),txt:fmt(dmg),crit:crit||ult,t:clock}); FX.push({kind:'s',x:p.x,y:p.y+30,t:clock,s:Math.random()*6});
   if(crit&&!pet) feed((a===0?'Crítico seu: ':'Crítico dele: ')+fmt(dmg),'k');
   setBars(); if(D.hp<=0){ D.hp=0; setBars(); end(); } }
-function end(){ done=true; const win=fight.win===0; const L=F[win?1:0]; let a=1; const fade=setInterval(()=>{ a-=.06; L.alpha=Math.max(.15,a); if(a<=.15) clearInterval(fade); },40);
+function end(){ done=true; ULT=null; F.forEach(f=>{f.anim='idle';f.petA='idle';}); const win=fight.win===0; const L=F[win?1:0]; let a=1; const fade=setInterval(()=>{ a-=.06; L.alpha=Math.max(.15,a); if(a<=.15) clearInterval(fade); },40);
   setTimeout(()=>showResult(win),1100/Math.min(speed,2)); fight=null; }
 function showResult(win){ const pts=win?24:-11, lp=win?78:46;
   $('#ov').innerHTML=`<div class="ovl res"><div class="card"><h2 class="${win?'win':'lose'}">${win?'VITÓRIA':'DERROTA'}</h2><p>${win?'Você venceu Sombra em ':'Sombra venceu em '}${$('#tm').textContent}</p>
