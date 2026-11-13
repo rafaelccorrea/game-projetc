@@ -617,9 +617,11 @@ function resLoot(o){ const L=o.loot||{}, n=v=>Math.max(0,Math.round(+v||0)), car
   const ex=[], egg=(g,note)=>{ if(g&&typeof g==='object'&&g.ok===false) return; const r=resEggR(g); ex.push({ic:Y_EGG(22,RC[r]||'#e8e2d8'),r,tx:'Ovo '+RN(r),note}); };
   for(const g of Array.isArray(L.eggs)?L.eggs:[]) egg(g,'');
   for(const hd of Array.isArray(L.held)?L.held:[]) egg(hd,hd&&hd.needLevel?'guardado até o nível '+hd.needLevel:'guardado');
-  if(n(L.forge)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra de forja':' pedras de forja')});
-  if(n(L.essence)) ex.push({ic:Q_ESS,tx:'+'+gNum(n(L.essence))+' de essência'});
-  if(n(L.food)) ex.push({ic:Q_FOOD,tx:'+'+gNum(n(L.food))+' de ração de pet'});
+  /* QA no S24: com ovo + pedras + ração a linha passava da largura e era cortada. Com 3 ou mais prêmios o texto fica curto (tx2); o ícone e o aria dizem o resto */
+  if(n(L.forge)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra de forja':' pedras de forja'),tx2:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra':' pedras')});
+  if(n(L.essence)) ex.push({ic:Q_ESS,tx:'+'+gNum(n(L.essence))+' de essência',tx2:'+'+gNum(n(L.essence))+' essência'});
+  if(n(L.food)) ex.push({ic:Q_FOOD,tx:'+'+gNum(n(L.food))+' de ração de pet',tx2:'+'+gNum(n(L.food))+' ração'});
+  if(ex.length>=3) for(const x of ex){ if(x.tx2){ x.full=x.tx; x.tx=x.tx2; } }
   if(ex.length) cards.push({k:'extra',h:46,ex});
   const its=Array.isArray(L.items)?L.items.filter(x=>x&&SLOT[x.slot]):[];
   if(its.length){ const it0=its.slice().sort((a,b)=>b.r-a.r)[0], ni=normItem(it0), mine=S.inv.filter(x=>x.slot===it0.slot&&x.r===it0.r&&x.e===it0.e).pop(), eq=mine&&S.eq[mine.slot]===mine.id; let sw=0; try{ if(mine&&!eq) sw=Sys.fc.itemFC(S,Sys.host,mine).swap; }catch(er){}
@@ -639,7 +641,7 @@ function resCardHtml(c,fast){ const cls=fast?'':'q-card', base='flex:none;box-si
       <span style="min-width:78px;flex:none;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:${x.length>8?19:24}px;color:#9be89f;white-space:nowrap">${x}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">Kael</span></span>
       <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="display:flex;justify-content:space-between;gap:6px;font-size:12px;font-weight:900;white-space:nowrap"><span>${esc2(c.lv)}${c.up?' <span style="color:#ffe07a">Subiu de nível</span>':''}</span><span id="res_xpt" style="color:#9be89f">${p0}%</span></span>
         <span role="progressbar" aria-label="XP do nível" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p1}" style="height:10px;border-radius:5px;background:#0e0a07;border:1px solid #2f5a32;overflow:hidden;display:block"><span class="q-xpf" id="res_xpf" style="display:block;height:100%;width:${p0}%;background:linear-gradient(90deg,#5fd068,#c4f27a)"></span></span></span></div>`; }
-  if(c.k==='extra') return `<div class="${cls}" style="${base};height:46px;border-radius:14px;border:2px solid #4a3a2b;gap:12px;padding:0 12px;overflow:hidden">${c.ex.map(x=>`<span style="flex:none;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:900;white-space:nowrap">${x.ic}<span>${x.r!=null?xRarName(x.r,x.tx):esc2(x.tx)}${x.note?` <span style="color:#c9b9a2;font-weight:800">${esc2(x.note)}</span>`:''}</span></span>`).join('')}</div>`;
+  if(c.k==='extra') return `<div class="${cls}" style="${base};height:46px;border-radius:14px;border:2px solid #4a3a2b;gap:12px;padding:0 12px;overflow:hidden">${c.ex.map((x,i)=>`<span ${x.full?'aria-label="'+esc2(x.full)+'" ':''}style="flex:${i===c.ex.length-1?'0 1 auto;min-width:0':'none'};display:flex;align-items:center;gap:5px;font-size:12px;font-weight:900;white-space:nowrap">${x.ic}<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${x.r!=null?xRarName(x.r,x.tx):esc2(x.tx)}${x.note?` <span style="color:#c9b9a2;font-weight:800">${esc2(x.note)}</span>`:''}</span></span>`).join('')}</div>`;
   /* item ganho: moldura e nome pelo componente único de raridade (xRar / xRarBox / xRarName, js/screens.js) */
   const q=xRar(c.r,'xr-s'), col=q.c, img=`<img class="q-wob" src="${xRarIco(slotIcon(c.slot,c.e),c.r,54)}" alt="" style="width:54px;height:54px;object-fit:contain">`;
   const box=q.on?xRarBox(c.r,img,72):`<div style="width:72px;height:72px;flex:none;border-radius:14px;background:radial-gradient(circle,${col}99,#16110d 72%);border:3px solid ${col};display:flex;align-items:center;justify-content:center;box-sizing:border-box">${img}</div>`;

@@ -230,9 +230,9 @@ async function flowPhases() {
   const fx = ev(`(function(){ const A=Sys.appearance, sk0=Sys.skin.bonus(S).atkPct; const list=A.fixedSkins(S,Sys.host);
     const ret=['kael_knight','kael_legend','kaia_knight','kaia_legend'].map(id=>A.grantFixed(S,id,{owner:true}).reason+'/'+A.equipFixed(S,id).reason);
     S.look.fixed={owned:['kael_knight'],eq:{kael:'kael_knight'}}; const old=A.sheetFor(S,Sys.host,'idle'), oldAv=A.avatarKey(S,Sys.host), oldSk=Math.round((Sys.skin.bonus(S).atkPct-sk0)*1e6)/1e6;
-    A.addFixed({id:'e2e_kael',name:'Teste Kael',hero:'kael',dir:'R',r:3,avatar:'kael_phase0',sources:['offer']}); const g0=A.grantFixed(S,'e2e_kael',{source:'offer'}).reason; A.DATA.skinsOn=true; const g=A.grantFixed(S,'e2e_kael',{source:'offer'}), e=A.equipFixed(S,'e2e_kael');
+    A.addFixed({id:'e2e_kael',name:'Teste Kael',hero:'kael',dir:'R',r:3,avatar:'kael_phase0',sources:['offer']}); const on0=A.DATA.skinsOn; A.DATA.skinsOn=false; const g0=A.grantFixed(S,'e2e_kael',{source:'offer'}).reason; A.DATA.skinsOn=true;   /* a chave nasce LIGADA desde c6e79ca (dono: liga tudo): o teste desliga para provar a trava e devolve o padrão no fim */ const g=A.grantFixed(S,'e2e_kael',{source:'offer'}), e=A.equipFixed(S,'e2e_kael');
     const noArt=A.FIXED.filter(k=>k.art===false&&!k.off&&(k.sources||[]).length&&k.hero==='kael').slice(0,2).map(k=>A.grantFixed(S,k.id,{source:k.sources[0]}).ok+'/'+A.equipFixed(S,k.id).reason);   /* as que AINDA não têm arte, lidas do módulo */
-    const live=A.FIXED.filter(k=>!k.off).length; A.DATA.skinsOn=false;
+    const live=A.FIXED.filter(k=>!k.off).length; A.DATA.skinsOn=on0;
     const idle=A.sheetFor(S,Sys.host,'idle'), card=A.sheetFor(S,Sys.host,'idle',{skin:'default'}).body;
     return {n:list.length, ids:list.map(x=>x.id), soonAll:list.every(x=>x.soon), withArt:list.filter(x=>x.art).map(x=>x.id), g0, noArt, ret, old:{body:old.body,scale:old.scale,skin:old.skin}, oldAv, oldSk, g:g.ok, e:e.ok, idle, card, vit:A.fixedSkins(S,Sys.host).map(x=>x.id), live}; })()`);
   check('vitrine: as 10 skins aprovadas "em breve" (só o Modo dono equipa), nenhuma das 4 adultas; com arte: ' + fx.withArt.join(','), fx.n === 10 && fx.soonAll && !fx.ids.some(id => /knight|legend/.test(id)) && fx.withArt.includes('kaia_harlequin'), JSON.stringify(fx.ids));
