@@ -1052,15 +1052,15 @@ t('passe nível 25: os 10 fragmentos de montaria entram na equipada (viram estre
 
 t('Sys.newDrops (itens novos aprovados): desligado não dá nada; ligado entrega pela fonte, uma vez nos marcos, por dia nos diários, repetido = 10, asa guardada abaixo do Nv 50',()=>{
   const N=require('../../js/sys/newdrops.js'), P=require('../../js/sys/pet.js'), M=require('../../js/sys/mount.js'), T=require('../../js/sys/stats.js'), V=require('../../js/sys/vip.js');
-  Object.assign(globalThis.Sys,{pet:P,mount:M,stats:T,newDrops:N}); const items=[]; const h=makeHost({level:60,eraMax:4}); h.addItem=it=>items.push(it);
-  const Lv=require('../../js/sys/level.js'), lv=(X,n)=>{ Lv.ensure(X).lvl=n; return X; }; const S=lv(newS(),60); assert.strictEqual(N.grant(S,h,'tower:floor',{floor:30}).reason,'off');
+  Object.assign(globalThis.Sys,{pet:P,mount:M,stats:T,newDrops:N}); const items=[]; const h=makeHost({level:120,eraMax:8}); h.addItem=it=>items.push(it);
+  const Lv=require('../../js/sys/level.js'), lv=(X,n)=>{ Lv.ensure(X).lvl=n; return X; }; const S=lv(newS(),120); assert.strictEqual(N.grant(S,h,'tower:floor',{floor:30}).reason,'off');
   N.DATA.on=true; P.DATA.newPets=true; M.DATA.newOn=true; T.DATA.newWings=true;
   try{
     const a=N.grant(S,h,'tower:floor',{floor:30}); assert.ok(a.got[0].hatched,'falcão inteiro'); assert.ok(P.ensure(S).owned.falcon);
     assert.strictEqual(N.grant(S,h,'tower:floor',{floor:30}).got.length,0,'marco uma vez só');
     N.grant(S,h,'arena:season',{league:3}); assert.strictEqual(P.ensure(S).stored.panther,30); assert.strictEqual(M.ensure(S).stored.panther,20);
     N.grant(S,h,'activity:full',{}); N.grant(S,h,'activity:full',{}); assert.strictEqual(P.ensure(S).stored.shadowwolf,2,'por dia');
-    V.setLevel(S,9); assert.ok(M.ensure(S).owned.phoenixm,'VIP 8: Fênix gigante'); assert.ok(P.ensure(S).owned.wyvernpet,'VIP 9: Serpe infernal');
+    globalThis.Sys.host=h; V.setLevel(S,9); delete globalThis.Sys.host; assert.ok(M.ensure(S).owned.phoenixm,'VIP 8: Fênix gigante'); assert.ok(P.ensure(S).owned.wyvernpet,'VIP 9: Serpe infernal');
     N.grant(S,h,'shop:product',{productId:'mount_mecha',orderId:'o1'}); assert.ok(M.ensure(S).owned.mecha); const st=M.ensure(S).owned.mecha.stars;
     N.grant(S,h,'shop:product',{productId:'mount_mecha',orderId:'o2'}); assert.strictEqual(M.ensure(S).owned.mecha.stars,st+1,'repetida = 10 fragmentos (1 estrela)');
     N.grant(S,h,'tower:floor',{floor:120}); const w=items.find(i=>i.wing==='storm'); assert.ok(w&&w.slot==='wing'&&w.r===3&&w.subs,'asa da tempestade como item');
@@ -1068,7 +1068,9 @@ t('Sys.newDrops (itens novos aprovados): desligado não dá nada; ligado entrega
     assert.strictEqual(N.releaseHeld(L,makeHost({level:30})).length,0); lv(L,55); const lh=makeHost({level:55,eraMax:4}); lh.addItem=it=>items.push(it); assert.strictEqual(N.releaseHeld(L,lh).length,1);
     assert.strictEqual(N.wingTypeForDrop(3,1,0),'darkmoth'); assert.strictEqual(N.wingTypeForDrop(1,1,0),'angel');
     assert.ok(N.shop()[0].priceBRL===49.9&&N.shop()[0].on); assert.ok(N.table().length>=30);
-    const g=lv(newS(),60); assert.strictEqual(T.DATA.wingTypes.seraph.r,4); N.grant(g,h,'tourney:season',{rank:1}); assert.ok(items.some(i=>i.wing==='seraph')); assert.ok(P.ensure(g).owned.icedragon&&M.ensure(g).owned.blackdragon);
+    const g=lv(newS(),120); assert.strictEqual(T.DATA.wingTypes.seraph.r,4);
+    const low=lv(newS(),30), hlow=makeHost({level:30,eraMax:2}); const gx=N.grant(low,hlow,'tourney:season',{rank:2}).got.find(x=>x.kind==='pet'); assert.ok(gx.gated&&gx.stored&&!P.ensure(low).owned.icedragon,'portão de raridade: Lendário guardado no Nv 30');
+    lv(low,120); N.releaseHeld(low,makeHost({level:120,eraMax:8})); assert.ok(P.ensure(low).owned.icedragon,'nasce quando o portão abre'); N.grant(g,h,'tourney:season',{rank:1}); assert.ok(items.some(i=>i.wing==='seraph')); assert.ok(P.ensure(g).owned.icedragon&&M.ensure(g).owned.blackdragon);
   } finally { N.DATA.on=false; P.DATA.newPets=false; M.DATA.newOn=false; T.DATA.newWings=false; }
 });
 

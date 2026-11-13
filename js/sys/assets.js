@@ -11,9 +11,10 @@
 const DATA={
   on:false,
   // o que NÃO vai para o app (mesma regra da cópia do www: fontes brutas, pastas começadas por _, rascunhos)
-  // referências de APROVAÇÃO (guias, refs grandes) ficam fora do APK; a Coleção usa só os *_ref_prev.png (pequenos).
+  // referências de APROVAÇÃO das pastas new/ (grandes) e as guias ficam fora do APK; a Coleção usa só os *_ref_prev.png (pequenos).
+  // FICAM no APK os _ref que as telas desenham: assets/pets/<espécie>_ref.png (1º estágio na tela de Pets) e assets/mounts/mount_<id>_ref.png (Códex).
   // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo).
-  exclude:[/_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/map\//,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
+  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/map\//,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
@@ -38,7 +39,7 @@ function classify(p0){ const p=norm(p0); let m;
   if((m=/^assets\/anim\/hyb\/enemy\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/enemies\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/anim\/hyb\/kael_[a-z_]+_era(\d)_/.exec(p))) return 'hero:kael:0';
-  if((m=/^assets\/anim\/mounts\/kael_([a-z]+)_/.exec(p))) return 'mount:'+m[1];
+  if((m=/^assets\/anim\/mounts\/(?:kael|kaia)_([a-z]+)_/.exec(p))) return 'mount:'+m[1];   // folha montada do Kael e da Kaia (Kaia lote 1: pônei e cavalo)
   if((m=/^assets\/(anim\/)?mounts\/(?:mount_)?([a-z]+)[_.]/.exec(p))) return 'mount:'+m[2];
   if((m=/^assets\/anim\/pets\/([a-z0-9]+_[a-z]+?)(_mid|_evo)?_(run|idle|atk\d)/.exec(p))) return 'pet:'+m[1]+':'+(m[2]==='_mid'?1:m[2]==='_evo'?2:0);
   if(/^assets\/anim\/aura\//.test(p)) return 'aura';
@@ -97,7 +98,7 @@ const isReady=p=>{ const id=classify(p); return DATA.basePacks().includes(id)||!
    missing = caminho calculado que o manifesto não tem (manifesto velho ou arte que falta: o engenheiro pode pular ou cair no código).
    Herói: a pasta da skin equipada (Sys.appearance.sheets), corpo e máscaras, + as tintas só da era da ARTE da arma na mão (e a pistola dela);
    arma: assets/weapons/<chave>.png pela família (Sys.stats.weaponType/artEra) e raridade; ultimate: Sys.stats.ultOf(arma).sheet;
-   montaria: assets/anim/mounts/kael_<id>_* (só o Kael tem folha montada); pet: pacote pet:<sprite>:<estágio>; asa: wing_<tipo>_L/_R/.json;
+   montaria: assets/anim/mounts/<herói>_<id>_* (Kaia: só as que a Arte já fez; sem folha, vazio); pet: pacote pet:<sprite>:<estágio>; asa: wing_<tipo>_L/_R/.json;
    era: fundo assets/bg/v2/era<N>/ + assets/bg/era<N>.png; inimigos: pacote enemy:<N>; ícones: assets/ui e assets/icons. opt.era = era da cena
    (padrão: host.era() ou host.eraMax()). nextEraSet(S, host) = fundo + inimigos da era seguinte (pré-carga em segundo plano). */
 const W_RKEY=['t0','raro','t1','mitico','t2','t2'], RNAME_F=['basico','raro','epico','mitico','lendario','lendario'];
@@ -122,7 +123,7 @@ function sceneSet(S,host,opt){ const all=allFiles(), has=new Set(all), T=SYS().s
     if(sd==='pistol'||sd==='gun') return style==='gun'&&(!tint.test(p)||+tint.exec(p)[1]===artEra); if(sd&&sd!=='masks') return sd===wt;
     if(tint.test(p)) return +tint.exec(p)[1]===artEra; return true; });
   // montaria equipada (folha montada só do Kael)
-  try{ const M=SYS().mount, mo=M&&M.ensure?M.ensure(S):null; if(mo&&mo.eq&&heroOf(S)==='kael') addPrefix('mount','assets/anim/mounts/kael_'+mo.eq+'_',p=>!tint.test(p)||+tint.exec(p)[1]===artEra); }catch(x){}
+  try{ const M=SYS().mount, mo=M&&M.ensure?M.ensure(S):null; if(mo&&mo.eq) addPrefix('mount','assets/anim/mounts/'+heroOf(S)+'_'+mo.eq+'_',p=>!tint.test(p)||+tint.exec(p)[1]===artEra); }catch(x){}
   // pet equipado: pacote do sprite no estágio
   try{ const P=SYS().pet, b=P&&P.battleInfo?P.battleInfo(S,host):null, sp=b&&b.draw&&b.draw.sprite; if(sp&&MAN){ const pk=MAN.packs['pet:'+sp+':'+Math.max(0,int0(b.stage)-1)]; if(pk) for(const p of pk.files) G.pet.push(p); else missing.push('pet:'+sp); } }catch(x){}
   // asa equipada
@@ -137,7 +138,9 @@ function sceneSet(S,host,opt){ const all=allFiles(), has=new Set(all), T=SYS().s
 function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1, top=SYS().stats&&SYS().stats.DATA?int0(SYS().stats.DATA.maxEra):6; if(e>top) return {era:e,files:[],groups:{era:[],enemies:[]}};
   const G={era:eraFiles(all,e),enemies:MAN&&MAN.packs['enemy:'+e]?MAN.packs['enemy:'+e].files.filter(isImg).slice():[]};
   return {era:e,files:[...G.era,...G.enemies],groups:G,count:G.era.length+G.enemies.length}; }
-const API={DATA,sceneSet,nextEraSet,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
+/* existe folha MONTADA deste herói nesta montaria? (fonte única para o desenho e a pré-carga) true/false pelo manifesto; null sem manifesto */
+const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs['mount:'+id]; return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
+const API={DATA,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

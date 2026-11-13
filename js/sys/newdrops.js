@@ -31,7 +31,7 @@ const DATA={
     'guild:capital': [{pet:'obsidian', n:40}, {mount:'celtiger', n:40}],
     'evtrail:top':   [{pet:'scorpion', n:20}, {mount:'scorpion', n:20}],
     // Chefe Mundial: frac = parte da vida do chefe tirada pelo jogador; monthTop = faixa de topo do mês
-    'worldboss':     [{when:c=>c.frac>=0.05, pet:'griffin', n:10}, {when:c=>c.frac>=0.05, mount:'scorpion', n:10}, {when:c=>c.monthTop===true, wing:'phoenix'}],
+    'worldboss':     [{when:c=>c.frac>=0.05, pet:'griffin', n:10, perDay:1}, {when:c=>c.frac>=0.05, mount:'scorpion', n:10, perDay:1}, {when:c=>c.monthTop===true, wing:'phoenix'}],
     // chefe de ERA (fim da era, cada vitória): era 7 / 8 por dia; asa de ossos na 1ª vitória de cada dificuldade na era 7; serafim na 1ª no Hell da era 8
     'boss:era':      [{when:c=>c.era===7, pet:'wyvernpet', n:3, perDay:1}, {when:c=>c.era===7, mount:'hellhorse', n:2, perDay:1},
                       {when:c=>c.era===7, wing:'bone', once:true, key:c=>'d'+c.diff},
@@ -65,6 +65,9 @@ const eraOf=host=>int0(host&&host.eraMax&&host.eraMax());
 function givePetMount(S,host,kind,id,rule){ const M=kind==='pet'?SYS().pet:SYS().mount; if(!M||!M.addFragments) return null;
   const def=(M.DATA&&(kind==='pet'?M.DATA.pets:M.DATA.mounts)||[]).find(x=>x.id===id); if(!def) return null;
   const owned=!!(M.ensure&&M.ensure(S).owned&&M.ensure(S).owned[id]); const n=rule.whole?(owned?DATA.dupFrags:int0(def.hatchFrags)):int0(rule.n);
+  // PORTÃO DE RARIDADE do pet (o mesmo do ovo: Sys.level.eggMaxR / Sys.loot.capEggR): acima dele os fragmentos ficam GUARDADOS e o pet nasce quando o portão abrir
+  if(kind==='pet'&&!owned){ const L=SYS().level; let cap=def.r; try{ if(L&&L.eggMaxR) cap=L.eggMaxR(S,host,def.r); }catch(e){}
+    if(cap<def.r){ const o=M.ensure(S); o.stored[id]=int0(o.stored[id])+n; return {kind,id,frags:n,whole:false,hatched:false,stored:true,gated:true}; } }
   const r=M.addFragments(S,id,n,host); return {kind,id,frags:n,whole:!!rule.whole&&!owned,hatched:!!(r&&r.hatched),stored:!!(r&&r.stored)}; }
 /* uma asa: item de asa com a raridade do modelo, era atual, nível do jogador (atributo pelo padrão do item) */
 function makeWing(S,host,id,era){ const T=SYS().stats, W=T&&T.DATA&&T.DATA.wingTypes&&T.DATA.wingTypes[id]; if(!W) return null;
@@ -88,7 +91,11 @@ function grant(S,host,src,ctx){ if(!ON()) return {ok:false,reason:'off',got:[]};
   for(const dk of Object.keys(o.day)) if(+dk.split('@').pop()<day-2) delete o.day[dk];   // só os últimos dias
   return {ok:true,got}; }
 /* asas guardadas por nível: chamar no subir de nível */
-function releaseHeld(S,host){ const o=ensure(S), Lt=SYS().loot, minL=num(Lt&&Lt.DATA&&Lt.DATA.wing&&Lt.DATA.wing.minLevel,50); if(lvlOf(S,host)<minL) return [];
+function releaseHeld(S,host){ const o=ensure(S), Lt=SYS().loot, minL=num(Lt&&Lt.DATA&&Lt.DATA.wing&&Lt.DATA.wing.minLevel,50);
+  // pets novos guardados pelo portão de raridade: nascem quando o portão abre (o que juntou vai inteiro pelo caminho normal)
+  const P=SYS().pet, L=SYS().level; if(ON()&&P&&P.ensure&&P.addFragments) for(const d of (P.DATA.pets||[]).filter(x=>x.nw&&x.hatchFrags)){ const po=P.ensure(S), k=int0(po.stored[d.id]);
+    if(!k||po.owned[d.id]||k<d.hatchFrags) continue; let cap=d.r; try{ if(L&&L.eggMaxR) cap=L.eggMaxR(S,host,d.r); }catch(e){} if(cap<d.r) continue; delete po.stored[d.id]; P.addFragments(S,d.id,k,host); }
+  if(lvlOf(S,host)<minL) return [];
   const out=[]; for(const w of o.heldWings.splice(0)){ const it=makeWing(S,host,w.id,eraOf(host)); if(it&&host&&host.addItem){ host.addItem(it); out.push(it); } } return out; }
 /* modelo da asa de um drop de asa comum (Sys.loot): Rara a partir da era 2 vira a Mariposa sombria (se liberada); senão o de hoje (anjo/demônio) */
 function wingTypeForDrop(era,r,diff){ const T=SYS().stats; if(int0(era)>=2&&int0(r)===1&&T&&T.wingLive&&T.wingLive('darkmoth')&&ON()) return 'darkmoth';
