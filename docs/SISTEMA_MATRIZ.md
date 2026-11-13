@@ -69,7 +69,7 @@ Ordem: os 3 pets que estão fechando agora. Depois, item por item, na ordem que 
 | Atributo | ✓ ATK principal, cresce com o nível e a Forja; o Básico é o menor das 5 | `Sys.stats.mainOf` |
 | Forja +0..+15 | ✓ chance, pedras, teto por era (era 0: +6) | `js/sys/forge.js:14` |
 | Aura da Forja | ✓ +4 azul, +7 roxa, +10 chamas, +13 dourada | `js/sys/forge.js:22` |
-| Forja +16..+20 | ⏸ `Sys.forge.setForge20(true)`: teto 20 (era 7 +18, era 8 +20), bônus 1,05 a 1,53, chance 5/5/4/4/3, pedras 28 a 45 (números do `balance.json` pacoteFim). Desligado até a medida do Engenheiro. A aura de +16 a +20 fica a dourada: não há arte de aura nova; se o dono quiser uma, é pedido de Arte | `js/sys/forge.js:28` |
+| Forja +16..+20 | ⏸ `Sys.forge.setForge20(true)`: teto 20 (era 7 +18, era 8 +20), bônus 1,05 a 1,53, chance 5/5/4/4/3, pedras 28 a 45 (números do `balance.json` pacoteFim). Desligado até a medida do Engenheiro. A aura de +16 a +20 fica a dourada por enquanto. **Pendência da ARTE (PO, 14/11): aura própria para +16..+20, entra quando o pacote das últimas eras for ligado** | `js/sys/forge.js:28` |
 | Fontes | ✓ arma inicial do jogador · drop da era 0 (Básico é a raridade mais comum) · Invocação (peso 50 de 100) | `index.html:438`, `index.html:314`, `js/sys/loot.js:141` |
 | Preço | ✓ não se vende; melhoria só com ouro (`Sys.stats.upgradeCost`) | — |
 | Códex | ✓ marca `w-0-0` (Básico e Raro) | `js/sys/codex.js` |
@@ -139,3 +139,19 @@ Igual à Básica em Forja, aura e ultimate (folha-base `era0_ult`). Teste: `test
 ### Resumo da família Clava (itens 1 a 5)
 - Sistema pronto nas 5. Uma decisão de texto: os nomes da era 0 são de armas diferentes (Graveto, Clava, Lança, Machado, Presa), mas a arte das 5 é de clava.
 - Uma decisão de jogo: a arma Mítica (item 4) não existe no lançamento.
+
+## Itens 6 a 10: Gládio da era 1 (Básico, Raro, Épico, Mítico, Lendário), adiantado
+
+Abre oficialmente só depois que a Clava Básica fechar com o QA (PO, 14/11). Teste: `test/sys/item-armas.test.js` (71, com as 10 armas).
+
+| Linha | Estado |
+|---|---|
+| Arte que o sistema lê | ✓ `assets/weapons/era1_{t0,raro,t1,mitico,t2}.png` + grip nas 5 |
+| Família / ultimate | ✓ Gládio (corpo a corpo) / base `era1_ult` (Básico a Épico), base reforçada (Mítico), **própria `gladius_legend`** (Lendário, ligada no boot) |
+| Efeito por raridade | ✓ nas 5, dano igual |
+| Atributo | ✓ cresce com a raridade (0/1/2/2/2 secundários) |
+| Fontes | ✓ drop da era 1 e Invocação; ⏸ Mítico bloqueado pela regra do lançamento (mesma decisão da Clava Mítica) |
+| Códex | ✓ `w-1-0`, `w-1-1`, `w-1-2` |
+| Nomes na tela (`index.html:359`) | ⚠ Básico **"Lança de Bronze"** com arte de gládio (mesma conversa dos nomes); Raro "Gládio" ✓; Épico "Falcata de Ferro" ✓ (espada curta); Mítico "Xifos Espartano" ✓; Lendário "Lâmina de Aquiles" ✓ |
+
+**Do lado de sistema: pronto.** Pendências: o nome do Básico e a arma Mítica (decisões do dono).
