@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **17h30 · Você APROVOU:** desenho das peças por raridade, opção de 3 desenhos + cor (~100 créditos); a Arte começa e manda amostra de 1 era antes do resto. A parte por código (moldura, brilho e gema por raridade) JÁ está pronta (d5069c6)
+- **17h30 · Aparência com TODAS as skins** (e39d3c5, conferida pelo QA): prévia animada a pé e montado, como ganhar com botão para a tela, troca Kael ↔ Kaia no Modo dono. Prints na página do Perfil. Achado: a prévia mostrava os heróis com pistola (pode ser o "revólver" que você viu); em correção
+- **17h30 · Online:** ligação no jogo pronta e desligada (0e3ceac) + tela nuvem × aparelho (b6d3dce); falta o script do banco e o teste real. Desempenho: parcial com pior quadro 30 ms e nenhum acima de 50 ms (antes 85 ms); medição completa e memória em andamento
+
 - **17h · Drop do chefe com anti-repetição LIGADO** (ff809dd): a mesma peça seguida caiu de ~20% para 0 em 400 chefes, sem mudar as chances. **Online:** ligação definida (o jogo conecta ao abrir, com limite de 4 s e queda segura para o save do celular; salva na nuvem a cada gravação); a Sistemas faz a tela "nuvem × aparelho" para escolher o save; teste automático contra o servidor real pronto. Cartão Mensal real preparado. Tudo espera só você rodar o script do banco
 
 - **16h50 · PERFIL VERSÃO 4 para o seu voto** (mesmo link: https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc): Kael montado nas 6 montarias reais, auras reais animadas, pet animado no estágio certo, prévia de skin no herói, "como ganhar" leva à tela, VIP com benefícios, Coleção e Números detalhados. Na mesma página: o print das 8 skins que já existem no jogo
