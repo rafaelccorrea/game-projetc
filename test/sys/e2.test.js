@@ -798,4 +798,24 @@ t('conquistas: 33 em 5 grupos, níveis com prêmio fixo, save antigo entra com o
   } finally { Ac.DATA.on=false; M.DATA.on=false; delete globalThis.Sys.mount; }
 });
 
+t('asa = item próprio: item.wing diz qual asa; a aparência não muda por era/raridade; item antigo sem o campo segue a regra de drop',()=>{
+  const T=require('../../js/sys/stats.js'), A=require('../../js/sys/appearance.js');
+  assert.strictEqual(T.wingOf({slot:'wing',e:3,r:2,wing:'demon'}),'demon'); assert.strictEqual(T.wingOf({slot:'wing',e:3,r:4}),'angel'); assert.strictEqual(T.wingOf({slot:'wing',e:7,r:4}),'demon');
+  assert.strictEqual(T.wingOf({slot:'wing',e:2,r:2,diff:3}),'demon'); assert.strictEqual(T.wingOf({slot:'wing',e:1,wing:'xyz'}),'angel'); assert.strictEqual(T.wingOf({slot:'boots'}),null);
+  assert.strictEqual(T.wingName({slot:'wing',wing:'angel'}),'Asa de anjo'); assert.strictEqual(T.wingForDrop(8,0),'angel'); assert.strictEqual(T.wingForDrop(0,3),'demon');
+  const S=newS(), h=makeHost(); for(const [it,key] of [[{slot:'wing',e:3,r:2,wing:'angel'},'wing/angel'],[{slot:'wing',e:8,r:5,wing:'angel'},'wing/angel'],[{slot:'wing',e:3,r:2,wing:'demon'},'wing/demon']]){
+    h.equipped=()=>({wing:it}); const w=A.layers(S,h).find(l=>l.layer==='wing'); assert.strictEqual(w.key,key); assert.strictEqual(w.id,it.wing); }
+});
+t('FC +/−: snapshot/delta/measure (Sys.fc) e Sys.stats.powerDelta; efeito das habilidades pela raridade é só visual',()=>{
+  const F=require('../../js/sys/fc.js'), T=require('../../js/sys/stats.js'), M=require('../../js/sys/mount.js');
+  const d=F.delta(1000,1250); assert.deepStrictEqual([d.diff,d.pct,d.sign,d.text.startsWith('+')],[250,25,'up',true]); assert.strictEqual(F.delta(1000,900).sign,'down'); assert.ok(F.delta(1000,900).text.startsWith('−'));
+  assert.deepStrictEqual([F.delta(5,5).sign,F.delta(5,5).text],['same','']); assert.strictEqual(T.powerDelta(10,20).diff,10);
+  const S=newS(), h=makeHost(); M.DATA.on=true; globalThis.Sys.mount=M; try{ M.add(S,h,'wyvern'); M.equip(S,null);
+    const m=F.measure(S,h,()=>M.equip(S,'wyvern')); assert.strictEqual(m.result,true); assert.strictEqual(m.delta.sign,'up'); assert.ok(m.delta.stats.atk>0&&m.delta.stats.hp>0,'mostra ATK e Vida');
+    const a=F.snapshot(S,h); M.equip(S,null); assert.strictEqual(F.delta(a,F.snapshot(S,h)).sign,'down');
+  } finally { M.DATA.on=false; delete globalThis.Sys.mount; }
+  const fx=[0,1,2,3,4,5].map(r=>T.skillFx({r},'s3')); assert.ok(fx.every((x,i)=>i===0||(x.particles>fx[i-1].particles&&x.size>=fx[i-1].size)),'cresce com a raridade');
+  assert.ok(fx.every(x=>x.dmgMult===1),'nunca mexe no dano'); assert.strictEqual(T.skillFx(4,'s1').size,1); assert.strictEqual(T.skillFx(9,'s3').r,5); assert.strictEqual(T.skillFx(null).r,0);
+});
+
 console.log(`ok: ${n} testes`);

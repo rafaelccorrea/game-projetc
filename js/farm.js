@@ -13,6 +13,7 @@ function normItem(o){ const slot = SLOT[o.slot] ? o.slot : 'armor', r = Math.max
   /* Item da Temporada do passe (premium 27 e 30): season, targetR e seasonEnd precisam ficar no item, senão o Sys.pass.evolveSeason não o acha; look = era da aparência */
   if (o.season){ it.season = true; if (Number.isInteger(o.targetR)) it.targetR = o.targetR; if (o.seasonEnd != null) it.seasonEnd = o.seasonEnd; }
   if (Number.isInteger(o.look)) it.look = o.look;
+  if (typeof o.wing === 'string') it.wing = o.wing;   // tipo da asa (angel | demon): a aparência é a do item
   if (typeof o.origin === 'string') it.origin = o.origin;   // origem do item (shop, gift, offer...): sem efeito visível; o servidor confere depois
   if (o.qp != null) it.qp = o.qp;   // qualidade do item (regra da fps-e2, ainda desligada em Sys.stats.DATA.quality.on): só não perder o campo
   return it; }
@@ -91,6 +92,7 @@ function sysBootE2(){
   delete S.pass; delete S.daily; Sys.pass.refresh(S, Sys.host);
   Sys.practice.ensure(S); Sys.titles.ensure(S); Sys.titles.check(S, Sys.host, { silent: true });
   if (DEBUG && QP.has('stones')) Sys.practice.addStones(S, +QP.get('stones') || 0, Sys.host);
+  if (typeof mountBoot === 'function') mountBoot();   // pacote de montarias (js/mountfx.js)
   if (typeof petBoot === 'function') petBoot();   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
 }
 /* nível do jogador: teto do nível dos itens e bônus de atributo (entra em heroStats) */

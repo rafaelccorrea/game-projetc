@@ -262,7 +262,7 @@ function ptHow(def){ const P=ptP(), a=ptArt(def), D=P.DATA; if(def.hatchFrags) r
   return t; }
 /* resultado de um ovo (addEgg do módulo) em uma frase: novo, repetido (fragmentos ou ração) ou guardado pelo portão */
 function ptEggLine(h,stageName){ if(!h) return ''; if(h.held) return 'Ovo '+ptGateTxt(h.needR!=null?h.needR:(ptDef(h.pet)||{}).r|0);
-  if(h.isNew) return 'novo na coleção, '+stageName; if(h.to==='food'||h.food>0) return 'repetido com 5★: +'+n0(h.food|0)+' de ração';
+  if(h.isNew) return 'novo na coleção, '+stageName; if(h.to==='food'||h.food>0) return 'repetido com 5 estrelas: +'+n0(h.food|0)+' de ração';
   return 'repetido: +'+n0(h.frags|0)+' fragmentos'; }
 
 /* ---------- FOLHAS REAIS (assets/anim/pets; conferidas arquivo a arquivo, .json + .png) ----------
@@ -420,7 +420,7 @@ function scrPets(){
 
   /* ----- EVOLUIR ----- */
   const evo=()=>{ const sc=owned?P.starCostOf(def):[], rep='repetido = +'+n0(D.repeatFrags)+' fragmentos';
-    const starTxt=!owned?rep+' (com '+D.maxStars+'★ vira ração)':stars>=D.maxStars?D.maxStars+'★ máximo, repetido vira ração':n0(x.frags|0)+'/'+n0(sc[stars-1]|0)+' fragmentos, '+rep;
+    const starTxt=!owned?rep+' (com '+D.maxStars+' estrelas vira ração)':stars>=D.maxStars?D.maxStars+' estrelas máximo, repetido vira ração':n0(x.frags|0)+'/'+n0(sc[stars-1]|0)+' fragmentos, '+rep;
     return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
       <div style="flex:none;display:flex;gap:5px">${SN.map((n,i)=>{ const reached=owned&&i<=stg, can=owned&&i===stg+1&&ready;
         return `<button data-x="stg" data-i="${i}" data-keep="1" aria-label="${esc2(n)}, ${i===0?'ao chocar':'nível '+REQ[i]}. Toque para ver" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px 6px;border-radius:12px;border:2px solid ${i===vw?'#ffc94a':reached?rc:'#4a3a2b'};background:${reached?'#33271d':'#241b14'};color:#f6ecdf;overflow:hidden">
@@ -447,12 +447,12 @@ function scrPets(){
       if(pr.tower) src.push(['Torre (a cada '+pr.tower.every+')','+'+n0(pr.tower.frags)]);
       box=`<div style="display:flex;flex-direction:column;gap:5px;padding:6px 8px;border-radius:12px;background:#2a1f3a;border:2px solid #b07cff">
         <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span class="lil" style="font-size:14px">${esc2(def.name)}</span><span class="pt-rbw pt-rare" style="padding:1px 7px;border-radius:7px;font-size:10px;font-weight:900;color:#16110d">O MAIS RARO</span>
-          <span style="margin-left:auto;font-size:12px;font-weight:900;color:#e6d8ff">${owned?n0(stars)+'★ · Nv '+n0(lv):n0(have)+'/'+n0(tot)}</span></span>
+          <span style="margin-left:auto;font-size:12px;font-weight:900;color:#e6d8ff">${owned?n0(stars)+(stars===1?' estrela':' estrelas')+' · Nv '+n0(lv):n0(have)+'/'+n0(tot)}</span></span>
         <span class="pt-bar" style="flex:none"><span class="pt-barF pt-rbw" style="width:${owned?100:Math.min(100,have/Math.max(1,tot)*100).toFixed(1)}%"></span></span>
         <div style="display:grid;grid-template-columns:repeat(${W<360?2:3},1fr);gap:3px">${src.map(f=>`<span style="min-width:0;min-height:30px;border-radius:7px;background:#1d1611;padding:2px 5px;display:flex;flex-direction:column;justify-content:center;line-height:1.15"><span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[0])}</span><span style="font-size:10px;font-weight:900;color:#e6d8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(f[1])}</span></span>`).join('')}</div></div>`; }
     else box=`<div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 10px;border-radius:12px;background:#33271d;border:2px solid ${rc}">
         <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0"><span class="lil" style="font-size:16px">${esc2(def.name)}</span><span style="font-size:11px;font-weight:900;color:#c9b9a2">${esc2((eraName?eraName+' · ':'')+ptRN(r))}</span></span>
-        <span style="font-size:12px;font-weight:900;line-height:1.25">${owned?'Obtido · '+n0(stars)+'★ · '+esc2(SN[stg])+' · Nv '+n0(lv):nGate?'Ovo '+esc2(ptGateTxt(r)):soon?esc2(PT_TXT.soon):'Como conseguir: '+esc2(ptHow(def))}</span>
+        <span style="font-size:12px;font-weight:900;line-height:1.25">${owned?'Obtido · '+n0(stars)+(stars===1?' estrela':' estrelas')+' · '+esc2(SN[stg])+' · Nv '+n0(lv):nGate?'Ovo '+esc2(ptGateTxt(r)):soon?esc2(PT_TXT.soon):'Como conseguir: '+esc2(ptHow(def))}</span>
         <span style="font-size:11px;font-weight:800;color:#c9b9a2">Coleção: ${n0(nOwn)} de ${n0(list.length)} pets</span></div>`;
     return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px"><div style="flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:5px">${list.map(tile).join('')}</div>${box}</div>`; };
 
@@ -499,7 +499,7 @@ function scrPets(){
             <span style="position:relative;width:100%;height:84px;flex:none">${ptPic(pd,0,'',`position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:1/1;transform:translate(-50%,${ptShift(pd,0)});object-fit:contain`,'')}</span>
             <span class="lil" style="font-size:15px;line-height:1.05;text-align:center">${esc2(pd.name)}</span>
             <span style="padding:1px 7px;border-radius:7px;font-size:10px;font-weight:900;color:#16110d;background:${PT_RC[pr]}">${esc2(ptRN(pr))}</span>
-            <span style="font-size:10px;font-weight:900;color:#c9b9a2;line-height:1.1;text-align:center">${has?(o.owned[q].stars>=D.maxStars?'você já tem '+D.maxStars+'★: vira ração':'você já tem: +'+n0(D.repeatFrags)+' fragmentos'):'novo na coleção'}</span></button>`; }).join('')}</div>
+            <span style="font-size:10px;font-weight:900;color:#c9b9a2;line-height:1.1;text-align:center">${has?(o.owned[q].stars>=D.maxStars?'você já tem '+D.maxStars+' estrelas: vira ração':'você já tem: +'+n0(D.repeatFrags)+' fragmentos'):'novo na coleção'}</span></button>`; }).join('')}</div>
         <button data-x="chno" class="pt-sec lil" style="flex:none;min-height:46px;border-radius:14px;font-size:17px">Escolher depois</button>
       </div></div>`; }
 

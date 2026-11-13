@@ -116,6 +116,16 @@ function itemFC(S,host,item){
   return {fc:as-empty, atPlayerLevel:compute(S,host,{item,atLevel:top})-empty, level:Math.max(1,Math.floor(num(item.lvl,1))), playerLevel:pl, swap:as-compute(S,host)};
 }
 const hud=(S,host)=>'FC '+fmt(compute(S,host));
+/* VARIAÇÃO DE PODER (dono via PO: mostrar +/− de FC em TUDO que mexe no poder: título, item, pet, montaria, asa, forja, fusão, estandarte...).
+   Uso: const a=Sys.fc.snapshot(S,host); …ação…; const d=Sys.fc.delta(a, Sys.fc.snapshot(S,host)); ou, de uma vez, Sys.fc.measure(S,host,()=>ação).
+   delta aceita snapshot ou número. {before, after, diff, pct, sign:'up'|'down'|'same', text:'+1,2 mil'|'−340'|'', color, stats:{atk,hp,def,critRate,critDmg,aspd}}.
+   Para PRÉVIA de item sem mexer no save: Sys.fc.itemFC(S,host,item).swap (já existe). */
+const SNAP_KEYS=['atk','hp','def','critRate','critDmg','aspd'];
+function snapshot(S,host){ const st=stats(S,host), o={fc:fcOfStats(st)}; for(const k of SNAP_KEYS) o[k]=num(st[k],0); return o; }
+function delta(a,b){ const A=typeof a==='number'?{fc:a}:(a||{fc:0}), B=typeof b==='number'?{fc:b}:(b||{fc:0}), before=num(A.fc,0), after=num(B.fc,0), diff=after-before;
+  const sign=diff>0?'up':diff<0?'down':'same', st={}; for(const k of SNAP_KEYS) if(A[k]!=null&&B[k]!=null) st[k]=num(B[k],0)-num(A[k],0);
+  return {before,after,diff,pct:before>0?Math.round(diff/before*10000)/100:0,sign,text:diff>0?'+'+fmt(diff):diff<0?'−'+fmt(-diff):'',color:diff>0?'#5fd068':diff<0?'#ff6b6b':'#c9b9a2',stats:st}; }
+function measure(S,host,fn){ const a=snapshot(S,host); const result=typeof fn==='function'?fn():undefined; return {result,delta:delta(a,snapshot(S,host))}; }
 
 /* RANKING (regra F): cada troca de item/skin grava a FC atual; o ranking semanal usa a MAIOR FC registrada na semana (segunda a domingo,
    hora local). Chamar depois de equipar/desequipar item ou skin, de fortalecer, treinar, alimentar o pet etc. Devolve {fc, week, max, newMax}. */
@@ -156,7 +166,7 @@ function render(el,S,host,opt){
     if(b.dataset.tab&&host&&typeof host.goTab==='function') host.goTab(b.dataset.tab); };
 }
 
-const API={DATA,KEYS,modules,sources,total,stats,parts,fcOfStats,compute,breakdown,advice,hud,record,weekMax,weekKey,itemFC,render,fmt,
+const API={DATA,KEYS,snapshot,delta,measure,modules,sources,total,stats,parts,fcOfStats,compute,breakdown,advice,hud,record,weekMax,weekKey,itemFC,render,fmt,
   bonus:()=>zero()};   // o próprio fc não soma nada (é ignorado em modules())
 root.Sys=root.Sys||{}; root.Sys.fc=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;

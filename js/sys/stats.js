@@ -18,6 +18,18 @@ const DATA={
   // ASA = ITEM PRÓPRIO (dono via engenheiro, 12/11): item.wing diz QUAL asa é; a aparência NÃO muda por raridade nem por era (o poder sim, como
   // qualquer item). Artes aprovadas: anjo e demoníaca (assets/anim/equip/wing_<id>). De onde cai = PROPOSTA ao PO (wingForDrop):
   // anjo nas eras 0-6 e 8 (a 1ª asa, no Nv 50, e a do Celestial); demoníaca na era 7 (Submundo) e no Hell de qualquer era (fim de jogo).
+  // EFEITO DAS HABILIDADES PELA RARIDADE DA ARMA (dono via PO, 12/11): a ultimate/s1/s2 é a da ERA DA ARMA (9 famílias = as 9 ultimates animadas,
+  // heroLook do engenheiro); a RARIDADE muda só a FORÇA VISUAL. SÓ VISUAL — nenhum multiplicador de dano: a raridade já entra no ATK do item
+  // (rarPct) e a regra de coerência (dano sai dos atributos; teto por golpe s1 1× / s2 3× / s3 5× final, 10× total) fica intacta.
+  // color = cor da raridade (a mesma do jogo; Divino novo) · tint = quanto pintar o efeito (0-1) · particles = × partículas · size = × tamanho do golpe
+  // final da ultimate · glow = brilho (0-3) · shake = × tremor de tela · trail = rastro no s1/s2 (0-3) · flash = clarão no golpe final.
+  skillFx:[
+    {r:0,name:'Básico',  color:'#9aa0a6',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
+    {r:1,name:'Raro',    color:'#4aa3ff',tint:0.25,particles:1.2,size:1.05,glow:1,shake:1.0,trail:1,flash:false},
+    {r:2,name:'Épico',   color:'#b45cff',tint:0.40,particles:1.5,size:1.10,glow:1,shake:1.1,trail:1,flash:false},
+    {r:3,name:'Mítico',  color:'#ff4d6d',tint:0.55,particles:1.9,size:1.20,glow:2,shake:1.2,trail:2,flash:true},
+    {r:4,name:'Lendário',color:'#ffb21e',tint:0.70,particles:2.4,size:1.30,glow:3,shake:1.3,trail:2,flash:true},
+    {r:5,name:'Divino',  color:'#7ff6ff',tint:0.80,particles:3.0,size:1.40,glow:3,shake:1.4,trail:3,flash:true,prism:true}],   // prism = brilho arco-íris
   wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'}}, wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
   eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
   maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
@@ -334,7 +346,14 @@ const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // atr
 const wingForDrop=(era,diff)=>{ const W=DATA.wingDrop; return (W.demonEras.includes(int0(era))||int0(diff)>=W.demonDiff)?'demon':W.default; };
 const wingOf=it=>it&&it.slot==='wing'?(DATA.wingTypes[it.wing]?it.wing:wingForDrop(it.e,it.diff)):null;
 const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
-const API={DATA,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+/* efeito visual da habilidade pela arma na mão: skillFx(arma|raridade, 's1'|'s2'|'s3') → {r, color, tint, particles, size, glow, shake, trail, flash, prism,
+   dmgMult:1}. s1/s2 usam a mesma cor/tinta com menos força (size 1 e metade do excesso de partículas); dmgMult é sempre 1 (só visual). */
+function skillFx(w,kind){ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.skillFx.length-1), F=Object.assign({},DATA.skillFx[r],{dmgMult:1});
+  if(kind==='s1'||kind==='s2'){ F.particles=Math.round((1+(F.particles-1)/2)*100)/100; F.size=1; F.flash=false; F.shake=kind==='s2'?Math.min(F.shake,1.15):1; }
+  return F; }
+/* atalho com o nome pedido pelo PO: o mesmo Sys.fc.delta (antes/depois: números ou Sys.fc.snapshot) */
+const powerDelta=(a,b)=>{ const F=root.Sys&&root.Sys.fc; return F&&F.delta?F.delta(a,b):null; };
+const API={DATA,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

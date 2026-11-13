@@ -362,7 +362,7 @@ const ERAS=[
   as:['Casaca Cinza','Casaca Naval','Oficial Roxo','Casaca Carmesim','Almirante Dourado'],
   wp:['#8d8d8d','#6fa8dc','#b57cf0','#d94a5e','#f5d062'], ap:['#6b6f78','#2f5fa8','#6a3a9a','#a02035','#d4a017'],
   en:[{n:'Pirata',s:'h',c:'#7a4a3a'},{n:'Soldado Inimigo',s:'h',c:'#4a5a8a'},{n:'Bucaneiro',s:'h',c:'#8a5a2a'},{n:'Capitão Fantasma',s:'h',c:'#9fd8d0'}]},
- {n:'Era Industrial',icon:'⚙️',sky:['#4b4237','#c9a46a'],mtn:'#4a443c',gr:'#3a3630',gr2:'#4e4840',sun:'#e8d9b0',
+ {n:'Era Industrial',icon:'⚙️',sceneV2:true,sky:['#4b4237','#c9a46a'],mtn:'#4a443c',gr:'#3a3630',gr2:'#4e4840',sun:'#e8d9b0',
   w:['Revólver a Vapor','Rifle de Repetição','Carabina Steampunk','Metralhadora Gatling','Canhão de Tesla'],
   a:['Casaco de Fábrica','Colete de Latão','Armadura a Vapor','Exo de Engrenagens','Traje Tesla'],
   ws:['Ferro Fundido','Cobre Azulado','Latão Arcano','Bronze Rubro','Ouro Elétrico'],
@@ -420,7 +420,7 @@ function newState(){
           skins:['w00','a00'],skinEq:{weapon:'w00',armor:'a00'},kills:0,tut:0,freePull:true,welcome:false};
 }
 function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){S=JSON.parse(j);return;} }catch(e){} S=newState(); }
-function save(){ if(window.__noSave) return; S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+function save(){ if(window.__noSave||(typeof B!=='undefined'&&B&&B.inst)) return;   /* durante a luta da instância a fase em memória é a da instância: não grava */ S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
 load();
 if(OWNER_MODE&&!S.ownerInit){ S.ownerInit=1; if(!(S.kills>0)){ S.tut=99; S.welcome=true; } }   /* modo dono: save novo entra direto no jogo, sem tutorial */
 if(/[?&]debug=1/.test(location.search)&&/[?&]fresh=1/.test(location.search)){ window.__noSave=true; S=newState(); }
@@ -433,7 +433,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
    Em debug, ?res=1 liga só para conferência. */
 const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.6';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.12.8';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
@@ -487,9 +487,14 @@ function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'), sid=S.skinEq.wea
   if(sid&&sid!=='w00') w=SKIN(sid);
   if(!w){ const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(6,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
   /* ASA (v0.12.4): skin de asa escolhida (Sys.appearance) > item equipado no espaço de asa > nada. Arte: anjo (Épico ou acima) ou demoníaca. */
-  let wing=null; try{ const ws=S.sys&&S.sys.appearance&&S.sys.appearance.skin&&S.sys.appearance.skin.wing, hid=S.sys&&S.sys.appearance&&S.sys.appearance.hidden&&S.sys.appearance.hidden.wing, wi=S.eq&&S.eq.wing!=null?itemOf(S.eq.wing):null;
-    if(!hid){ if(typeof ws==='string') wing=/angel|anjo|holy/i.test(ws)?'angel':'demon'; else if(wi) wing=(wi.r|0)>=3?'angel':'demon'; } }catch(e){}
-  return {armor:a, weapon:w||SKIN('w00'), wing}; }
+  /* ASA (v0.12.7, dono): cada asa é um ITEM; aparece a asa EQUIPADA (item.wing = 'angel' | 'demon', lido por Sys.stats.wingOf, que resolve itens antigos).
+     Não muda por raridade nem por era. Se um dia houver skin de asa escolhida (Sys.appearance), ela vence. hidden.wing esconde. */
+  let wing=null; try{ const ap=S.sys&&S.sys.appearance, ws=ap&&ap.skin&&ap.skin.wing, hid=ap&&ap.hidden&&ap.hidden.wing, wi=S.eq&&S.eq.wing!=null?itemOf(S.eq.wing):null;
+    if(!hid){ if(typeof ws==='string') wing=/angel|anjo|holy/i.test(ws)?'angel':'demon'; else if(wi) wing=wingArt(wi); } }catch(e){}
+  const mount=typeof mountLook==='function'?mountLook():null;   /* montaria equipada (js/mountfx.js): {id, stars, aura} ou null */
+  return {armor:a, weapon:w||SKIN('w00'), wing, mount}; }
+/* asa do item → arte (função única, isolada): assets/anim/equip/wing_<id>.json + _L/_R.png */
+function wingArt(it){ let w=null; try{ w=Sys.stats.wingOf(it); }catch(e){} if(w!=='angel'&&w!=='demon') w=(it&&(it.wing==='angel'||it.wing==='demon'))?it.wing:'demon'; return w; }
 /* ATRIBUTOS DO HERÓI: PONTO ÚNICO. Nenhuma conta aqui: Sys.fc.stats (js/sys/fc.js + stats.js) devolve ATK, HP, DEF, chance de crítico,
    dano crítico e velocidade de ataque já com os 7 espaços, o nível do item, o fortalecimento do espaço, o nível do jogador, skin, coleção e VIP.
    Nível do item, custos e melhoria: Sys.stats (upgradeCost / canUpgrade / upgrade / planUpgrade / upgradeTo). Desmontar: Sys.loot.dismantle. */
@@ -555,7 +560,7 @@ function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.t
 /* "Desafiar" (PO): SEMPRE visível. Brilha com a FC ≥ 90% da recomendada; abaixo disso fica apagado e o toque mostra a FC que falta
    (um segundo toque em até 4 s desafia assim mesmo, para o jogador nunca ficar sem saída). Fora do farm, o toque só antecipa a onda do chefe. */
 let bossAskT=0;
-function bossTap(){
+function bossTap(){ if(B.inst){ toast('Termine a instância primeiro'); return; }
   if(S.wave===5){ toast('Você já está enfrentando o chefe'); return; }
   const rec=recFC(S.stage), fc=heroFC(), f=typeof gNum==='function'?gNum:fmt;
   if(fc<BOSS_GLOW_AT*rec&&Date.now()-bossAskT>4000){ bossAskT=Date.now(); toast('Faltam '+f(Math.max(1,Math.ceil(rec-fc)))+' de FC (recomendada: '+f(rec)+'). Toque de novo para desafiar assim mesmo'); return; }
@@ -689,9 +694,9 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
-['battle','stage','farm','petfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"

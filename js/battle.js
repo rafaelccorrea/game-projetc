@@ -176,6 +176,7 @@ function hordeFit(vis){
     B.front=X[0]; }
   for(let i=0;i<n;i++){ vis[i].slot=X[i]; vis[i].dhT=H[i]; }
 }
+const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
 const WAITX=LW+110;
 const EN_WALK=62, EN_STEP=120;   // px lógicos/s: entrada pela direita (constante, igual para todos) e passo de um slot para o outro (rápido, para ficar a maior parte do tempo parado e atacando)
 /* ATAQUE DOS INIMIGOS (regra do PO): todo inimigo parado no slot ataca, com cadência própria (atkEvery) e defasado dos outros.
@@ -263,12 +264,14 @@ function useSkill(n){
 function killEnemy(e){
   e.dead=true; const i=B.en.indexOf(e); if(i>=0) B.en.splice(i,1);
   const lt=lootFor(e), y=eY(e); e.x=eX(e); e.sw=0;   // morre onde está desenhado
-  S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y);   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
+  if(B.inst){ B.inst.kills++; }   /* instância: sem drops de fase, sem XP, sem missão; o prêmio vem do Sys.instances.finish */
+  else { S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y); }   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
   burst(e.x,y,e.col,e.boss?22:10); ring(e.x,y,'#ffffff',e.boss?40:26); B.corpses.push({e,x:e.x,t:0,life:enSheet(e,'die')?shDur(enSheet(e,'die'),EN_DIE_DUR):(e.boss&&SCREENS_ON.bossResult)?BOSS_FALL_DUR:0.6}); if(e.boss&&SCREENS_ON.bossResult) for(let i=0;i<3;i++) dust(e.x-30+i*30,GY-2,3,'#c8b496'); snd('enemy_die'); if(e.boss) snd('coin');
 }
 function waveClear(){
   const h=B.hero;
-  if(typeof petWave==='function') petWave();   // cura por onda do pet (se o pet equipado curar)
+  if(typeof petWave==='function') petWave();
+  if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
@@ -443,14 +446,14 @@ function step(dt){
   const h=B.hero; if(!h) return;
   if(window.__stay){ B.hurt=0; h.hp=h.maxhp; } if(B.hurt>0) B.hurt-=dt;
   if(B.cd2>0) B.cd2-=dt;
-  if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
+  if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.inst){ instEnd(false); return; } if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
       /* TELA 10 (derrota): o chefe fica de pé e o herói volta a ficar parado até o jogador escolher; sem a tela, entra direto no farm */
       if(typeof resOpen==='function'&&resOpen('lose',{stage:S.stage})){ h.hp=h.maxhp; return; }
       toast('Derrotado pelo chefe: farmando a fase. Toque em Desafiar para tentar de novo'); }
     S.wave=1; startBattle(); if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); } } return; }
   // surgimento "aos poucos"
   if(B.waveT>0) B.waveT-=dt;
-  if(B.toSpawn.length&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=mkEnemy(S.stage,k); B.en.push(e);
+  if(B.toSpawn.length&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=(B.inst&&typeof instMk==='function')?instMk(k):mkEnemy(S.stage,k); B.en.push(e);
       B.spawnT=(B.toSpawn[0]==='boss'?1:0)+0.55+Math.random()*0.4;
       if(e.boss){ snd('boss_appear'); vib(60); B.banner={txt:e.eraBoss?'SENHOR DA ERA':'CHEFE',sub:'',t:0,dur:1.4,col:'#ff5252'}; } } }
   layoutHorde();
@@ -790,6 +793,8 @@ const ART_ON={
      Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
      as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
+  kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
+  en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
   //   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
@@ -868,6 +873,7 @@ function drawEnemyAt(e,x,deadP){
   if(!dying&&e.hit>0){ const room=BOSS_X1-(x+(e.dw||0)*0.5), k=e.hit/0.12;   // levou golpe: recuo curto e inclinação para trás, SÓ até a margem de 382 (nada desenhado passa dela)
     const lb=Math.min(0.05,Math.max(0,room-0.5)/Math.max(1,e.dh||90)); lean-=lb; ox+=Math.max(0,Math.min(3*k,room-0.5-lb*(e.dh||90))); }
   const shDie=dying?enSheet(e,'die'):null, shAtk=!dying&&e.sw>0?enSheet(e,'attack'):null, shHurt=!dying&&!shAtk&&e.hurtT>0?enSheet(e,'hurt'):null, shRun=walking?enSheet(e,'run'):null;
+  const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
   if(shAtk||shRun||shHurt) lean=0;                              // com folha o corpo não inclina (a folha já tem o movimento)
   let dark=0;
   if(dying){ if(shDie){ rot=0; alpha=deadP>0.8?Math.max(0,1-(deadP-0.8)/0.2):1; }
@@ -878,7 +884,7 @@ function drawEnemyAt(e,x,deadP){
   ctx.save(); ctx.globalAlpha=0.35*alpha; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(x-adv,gy+2,(spr?Math.max(20,dw*.42):22*e.size),5,0,0,7); ctx.fill(); ctx.restore();
   if(window.__probe) window.__probe(e,{x:ox,feet:gy,top:gy-dh*sy,dh,dw,sy,sx:1,rot,lean,adv,walking,atk:e.sw>0,dying,sheet:!!(shDie||shAtk||shHurt||shRun)});   // medição (QA): o que o desenho usa de fato
   ctx.save(); ctx.translate(ox,gy); ctx.rotate(rot); if(lean) ctx.transform(1,0,lean,1,0,0); ctx.globalAlpha=alpha;
-  { const shU=shDie||shAtk||shHurt||shRun; if(shU?EN_FLIP_SHEET[shU.base]:EN_FLIP[e.key]) ctx.scale(-1,1); }   // arquivo virado para a direita: espelha só o corpo (sombra, barra e nome ficam de fora); flag por ARQUIVO (estático x folha)
+  { const shU=shDie||shAtk||shHurt||shRun||shIdle; if(shU?EN_FLIP_SHEET[shU.base]:EN_FLIP[e.key]) ctx.scale(-1,1); }   // arquivo virado para a direita: espelha só o corpo (sombra, barra e nome ficam de fora); flag por ARQUIVO (estático x folha)
   EN_CTX.e=e; EN_CTX.ox=ox; EN_CTX.walk=walking&&!e.wasParked; EN_CTX.st=shDie?'die':shAtk?'attack':shHurt?'hurt':shRun?'run':'idle';
   if(spr){
     const F=dh/spr.fh;                       // F = lado do quadro inteiro (512 da arte) na tela
@@ -887,7 +893,8 @@ function drawEnemyAt(e,x,deadP){
     if(shDie) enFrame(shDie,deadP,spr,F);                                              // morte: toca a folha e some no fim
     else if(shAtk) enFrame(shAtk,1-e.sw/(e.swD||EATK),spr,F);                          // ataque
     else if(shHurt) enFrame(shHurt,1-e.hurtT/(e.hurtD||EN_HURT_DUR),spr,F);                       // levando dano
-    else if(shRun) enFrame(shRun,0,spr,F,e.wt);                                        // corrida (pés do quadro na linha do chão)
+    else if(shRun) enFrame(shRun,0,spr,F,e.wt);
+    else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando                                        // corrida (pés do quadro na linha do chão)
     else { ctx.scale(1,sy); if(dark>0) dspr(spr,-dw/2,-dh,dw,dh,'#0a0705',dark); else dspr(spr,-dw/2,-dh,dw,dh,'#fff',(!dying&&e.hit>0)?e.hit/0.12*0.85:0); }
   }else drawEnemyOld(e,1,sy,dying);
   ctx.restore();
@@ -1056,7 +1063,7 @@ function loop(now){
   let dt=rdt; if(B.slow>0){ B.slow-=rdt; dt=rdt*0.3; }
   /* um erro num quadro NUNCA pode matar o laço do jogo (antes, uma exceção no desenho parava tudo para sempre: o requestAnimationFrame ficava no fim) */
   try{
-  if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); } }
+  if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
   tickFx(dt); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
