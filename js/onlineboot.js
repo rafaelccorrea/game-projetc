@@ -117,17 +117,15 @@
     let p; try { p = fn(Object.assign({}, info, { recommend: rec })); } catch (e) { dbg('CloudChoice falhou ao abrir', e); return Promise.resolve(rec); }
     if (!p || typeof p.then !== 'function') return Promise.resolve(rec);
     ST.choosing = true; beatOn(); emit();
-    /* o resumo foi montado ANTES da escolha e o Sys.online.boot manda esse mesmo objeto no chooseSide: se o jogo andou com a tela aberta, ele é refeito
-       no lugar, do S de agora (o servidor confere era, stage e gems contra o save enviado) */
-    const done = v => { ST.choosing = false; beatOff(); ST.choiceMade = true; try { if (ST.sum) Object.assign(ST.sum, summary(S)); } catch (e) {} emit(); return v === 'cloud' || v === 'device' ? v : rec; };
+    const done = v => { ST.choosing = false; beatOff(); ST.choiceMade = true; emit(); return v === 'cloud' || v === 'device' ? v : rec; };
     return ST.choiceP = Promise.resolve(p).then(done, () => done(rec)); }
   /* com a escolha aberta a tela de carregamento não pode dar "parou" nem abandonar a tarefa "online" (js/preload.js: STALL_MS/TASK_MS): uma tarefa vazia a cada
      5 s marca progresso (o mesmo recurso do "Tentar de novo" do js/loading.js) enquanto o carregamento estiver na frente */
   function beatOn() { beatOff(); try { ST.beat = setInterval(() => { try { if (!ST.choosing) { beatOff(); return; } if (typeof LD !== 'undefined' && LD.el && !LD.closed && !LD.fin && W.Preload && typeof W.Preload.track === 'function') W.Preload.track(Promise.resolve(true), 'online: escolha'); } catch (e) {} }, 5000); } catch (e) {} }
   function beatOff() { try { if (ST.beat) clearInterval(ST.beat); } catch (e) {} ST.beat = 0; }
 
-  /* o resumo é SEMPRE montado na hora, do S que vai junto (boot: logo antes do sync; subida: dentro do temporizador do Sys.online, na hora do PUT) */
-  const HOOKS = { summary: s => (ST.sum = summary(s)), apply, choose };
+  /* o gancho summary é a FUNÇÃO: o Sys.net a chama na hora de cada pedido, junto com o save (d786848). Nada aqui guarda resumo de antes. */
+  const HOOKS = { summary, apply, choose };
 
   /* ---------- boot ---------- */
   async function doBoot() {
