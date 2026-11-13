@@ -640,7 +640,13 @@ V.addEventListener('click',ev=>{
   save(); render(); hud();
 });
 const FULLV={gear:1,summon:1,shop:1,pass:1,prog:1};   // telas cheias (entre o HUD e as abas)
-function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.tab='col'; } else if(v==='missions'&&!(Screens.reg.missions&&!Screens.reg.missions.broken)){ v='pass'; passTab='mis'; }   /* B-26: com a tela 34 (Missões) registrada, 'missions' abre a própria tela; sem ela, a aba antiga do Passe */
+/* TELAS V2 DAS TELAS NATIVAS (Equipamento, Loja, Passe não são painel, então o mapa Panels.v2 não as alcança): com a chave da nova ligada (PANEL_ON.gear2 /
+   shop2 / pass2; nascem desligadas), todo setView('gear'|'shop'|'pass') abre a nova. 'skins' (coleção) e 'missions' sem a tela própria seguem nas telas antigas.
+   A volta VIP/Aparência → Loja (window.SHOP_RETURN) vira o {from} do painel novo. Desligadas, nada muda. */
+const VIEW_V2={gear:'gear2',shop:'shop2',pass:'pass2'};
+function viewV2(v){ try{ const n2=VIEW_V2[v]; if(!n2||typeof PANEL_ON==='undefined'||PANEL_ON[n2]!==true||!window.Panels||!Panels.defs||!Panels.defs[n2]) return false;
+    let o={}; if(v==='shop'&&window.SHOP_RETURN){ o={from:String(window.SHOP_RETURN)}; window.SHOP_RETURN=null; } return Panels.open(n2,o)!==false; }catch(e){ return false; } }
+function setView(v){ if(viewV2(v)) return; if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.tab='col'; } else if(v==='missions'&&!(Screens.reg.missions&&!Screens.reg.missions.broken)){ v='pass'; passTab='mis'; }   /* B-26: com a tela 34 (Missões) registrada, 'missions' abre a própria tela; sem ela, a aba antiga do Passe */
   if(v==='pass'&&typeof XP!=='undefined') XP.anim=true; if(v==='prog'&&typeof XR!=='undefined') XR.anim=true;
   view=v; document.body.dataset.v=v; document.body.classList.toggle('sheet',false); document.body.classList.toggle('full',!!FULLV[v]);
   if(typeof XG!=='undefined'){ XG.anim=XS.anim=XH.anim=true; if(v!=='gear'){ XG.sel=null; XG.cf=null; } if(v!=='shop'){ XH.sel=null; XH.cf=null; } }
