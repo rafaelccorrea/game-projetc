@@ -20,4 +20,6 @@ const txt=b=>(b.children[0]?b.children[0].innerHTML:'').replace(/<[^>]+>/g,' ').
     ok(!gone&&/nada foi apagado/i.test(txt(body))&&/internet/.test(txt(body)),'offline: nada apagado, tente com internet'); }
   { const {ctx,body}=run({}); ctx.DeleteAccount.DATA.localSave='keep'; ctx.Sys={net:{deleteAccount:()=>Promise.resolve(),hasSession:()=>true}}; ctx.DeleteAccount.open(); ok(/jogo sem conta/.test(txt(body)),'opção B: texto de manter'); }
   { const {ctx,body}=run({Sys:{net:{deleteAccount:()=>Promise.reject({code:'no_session'}),hasSession:()=>false}}}); ctx.DeleteAccount.open(); ok(/página de exclusão/.test(txt(body)),'sem sessão: link da página'); }
+  { const {ctx,body}=run({Sys:{net:{deleteAccount:()=>Promise.resolve({ok:true,until:Date.now()}),hasSession:()=>true}},OnlineBoot:{accountDeleted:()=>({ok:false,reason:'storage',step:'save'})}});
+    ctx.DeleteAccount.open(); ctx.DeleteAccount._act('next'); ctx.DeleteAccount._act('go','EXCLUIR'); await new Promise(r=>setTimeout(r,5)); ok(/não deu para limpar este aparelho/.test(txt(body)),'limpeza falhou: avisa para fechar e abrir'); }
   console.log('ok: '+n+' verificações'); })().catch(e=>{ console.error('FALHOU:',e.message); process.exit(1); });

@@ -21,6 +21,7 @@ const DATA={
      offline:'Precisa de internet para excluir a conta. Conecte-se e tente de novo.',
      fail:'Não deu para excluir agora. Nada foi apagado. Tente de novo mais tarde.',
      noNet:'Sem conexão: nada foi apagado. Tente de novo com internet.',
+     cleanFail:'A conta foi excluída, mas não deu para limpar este aparelho. Feche e abra o jogo.',
      noSession:'Você não está conectado a uma conta online. Para pedir a exclusão, use a página de exclusão.',
      sent:'Pedido enviado. A sua conta será apagada em 30 dias.',
      sentAt:'Pedido enviado. A sua conta será apagada em %D. Se você entrar de novo antes disso, a exclusão é cancelada.'}
@@ -61,7 +62,10 @@ function send(){ if(U.busy) return; if(!online()){ show(DATA.t.offline,true); re
   let done=false; const timer=setTimeout(()=>{ if(!done){ done=true; show(DATA.t.fail,true); } },DATA.timeoutMs);
   let p; try{ p=Promise.resolve(window.Sys.net.deleteAccount()); }catch(e){ p=Promise.reject(e); }
   p.then(r=>{ if(done) return; done=true; clearTimeout(timer); U.busy=false; const until=r&&+r.until>0?+r.until:0, msg=until?DATA.t.sentAt.replace('%D',dDate(until)):DATA.t.sent;
-      show(msg,false); const OB=window.OnlineBoot; if(OB&&typeof OB.accountDeleted==='function'){ try{ OB.accountDeleted({localSave:DATA.localSave,until}); }catch(e){} } },
+      show(msg,false); const OB=window.OnlineBoot; if(OB&&typeof OB.accountDeleted==='function'){
+        /* o OnlineBoot limpa o aparelho e recarrega; se a limpeza falhar ({ok:false}), o jogador precisa saber que a conta já foi excluída */
+        let res=null; try{ res=OB.accountDeleted({localSave:DATA.localSave,until}); }catch(e){ res={ok:false,reason:'error'}; }
+        Promise.resolve(res).then(x=>{ if(x&&x.ok===false&&x.reason!=='owner') show(msg+' '+DATA.t.cleanFail,true); },()=>show(msg+' '+DATA.t.cleanFail,true)); } },
     e=>{ if(done) return; done=true; clearTimeout(timer); const c=e&&e.code;
       if(c==='offline'||c==='timeout') show(DATA.t.noNet,true); else if(c==='no_session') show(DATA.t.noSession,true,true); else show(DATA.t.fail,true); }); }
 function onClick(ev){ const b=ev.target&&ev.target.closest?ev.target.closest('[data-da]'):null; if(!b) return; const a=b.getAttribute?b.getAttribute('data-da'):(b.dataset||{}).da;
