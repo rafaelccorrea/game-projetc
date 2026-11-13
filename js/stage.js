@@ -244,6 +244,9 @@ function drawWingsAt(H, sh, fi, ox0, oy0, kc, loop, dead){ const kind = H.wing; 
   else if (dead) return;   /* morte sem âncora: nunca a última posição de pé (ficaria solta no ar) */
   else if (H._wb){ ax = H.x + H._wb.dx; ay = H.gy + H._wb.dy; ang = H._wb.ang; sc = H._wb.sc; }
   else { ax = H.x - HS * 0.10; ay = H.gy - HS * 0.31; ang = 0; sc = HS / 256 * WING_SCALE; }
+  /* MONTARIA COM ASAS (QA: a Seráfica quase some atrás da asa da Fênix): ajuste por montaria na MOUNT_TBL, em px da célula de 256: wbx (negativo = para trás),
+     wby (positivo = para cima) e wbs (escala, 1 = igual). Sem os campos nada muda. Os antigos wx2/wy2 não são lidos por este desenho (a asa segue a âncora "back" da folha montada). */
+  if (!dead && H.mount && typeof MOUNT_TBL !== 'undefined'){ const T = MOUNT_TBL[H.mount.id]; if (T && T.wings && (T.wbx || T.wby || T.wbs)){ const k = HS / 256; ax += (T.wbx || 0) * k; ay -= (T.wby || 0) * k; if (T.wbs > 0) sc *= T.wbs; } }
   if (M.fit > 0) sc *= M.fit;   /* Engenheiro 5: asas novas (mais altas) trazem "fit" no .json (0,74 a 0,93); anjo e demônio não têm o campo (= 1). A raiz nas costas não muda */
   const fl = dead ? 1 : 1 + 0.07 * Math.sin(H.t * 3.2), winged = !dead && !!(H.mount && typeof MOUNT_TBL !== 'undefined' && MOUNT_TBL[H.mount.id] && MOUNT_TBL[H.mount.id].wings);
   ctx.save(); if (dead){ const c = wingDieClip(H); ctx.beginPath(); ctx.rect(c.x, c.y, c.w, c.h); ctx.clip(); }   /* nada da asa abaixo da linha do chão */

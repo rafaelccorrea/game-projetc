@@ -275,10 +275,11 @@ function mountOff(){ if (!mountOk()) return; try { Sys.mount.equip(S, null); } c
 /* GANCHO DE DEBUG DO QA (só com ?debug=1): window.dbgMount(id, estrelas) dá e monta a montaria (id da MOUNT_TBL) com as estrelas pedidas (1 a 5; padrão: as
    que ela já tem); dbgMount() lista os ids; dbgMount(null) desmonta. Por baixo usa o que já existia aqui e continua valendo no console: mountGive(id),
    mountStar(+1 / -1) e mountOff(). Devolve também o estado da imagem parada da Derrota (ok / carregando / falhou). */
-/* MEDIR A ASA DO HERÓI MONTADO (só com ?debug=1; QA: a Seráfica quase some atrás da Fênix): dbgMountWing(id, wx2, wy2) troca SÓ nesta sessão o recuo (wx2, negativo =
-   para trás) e a subida (wy2) da asa do herói nessa montaria e devolve os valores em uso; dbgMountWing(id) só lê. O valor aprovado na tela entra depois na MOUNT_TBL. */
-if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMountWing = function (id, wx2, wy2){ const T = MOUNT_TBL[id]; if (!T) return { erro: 'montaria desconhecida', ids: Object.keys(MOUNT_TBL) };
-    if (typeof wx2 === 'number' && isFinite(wx2)) T.wx2 = wx2; if (typeof wy2 === 'number' && isFinite(wy2)) T.wy2 = wy2; return { id, wings: !!T.wings, wx2: T.wx2 || 0, wy2: T.wy2 || 0 }; }; }
+/* MEDIR A ASA DO HERÓI MONTADO (só com ?debug=1; QA: a Seráfica quase some atrás da Fênix): dbgMountWing(id, wbx, wby, wbs) troca SÓ nesta sessão o ajuste da asa do
+   herói nessa montaria (wbx negativo = para trás; wby positivo = para cima; wbs = escala, 1 = igual), lido pelo drawWingsAt do js/stage.js a cada quadro (sem cache: não
+   precisa montar de novo). dbgMountWing(id) só lê. O valor aprovado na tela entra depois na MOUNT_TBL. A 1ª versão do gancho mexia em wx2/wy2, que este desenho não lê. */
+if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMountWing = function (id, wbx, wby, wbs){ const T = MOUNT_TBL[id]; if (!T) return { erro: 'montaria desconhecida', ids: Object.keys(MOUNT_TBL) };
+    const n = v => typeof v === 'number' && isFinite(v); if (n(wbx)) T.wbx = wbx; if (n(wby)) T.wby = wby; if (n(wbs) && wbs > 0) T.wbs = wbs; return { id, wings: !!T.wings, wbx: T.wbx || 0, wby: T.wby || 0, wbs: T.wbs || 1 }; }; }
 if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMount = function (id, stars){ if (!mountOk()) return { erro: 'montarias desligadas' };
     if (id === null){ mountOff(); if (typeof heroChanged === 'function') heroChanged(); return { desmontado: true }; }
     if (id === undefined || !MOUNT_TBL[id]) return { erro: 'id de montaria desconhecido', ids: Object.keys(MOUNT_TBL) };
