@@ -456,3 +456,30 @@ O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`wo
 
   Provisório; a Sistemas calibra. Entradas por dia: `THIEF_PER_DAY` (padrão 2).
 - **No jogo:** o prêmio do `finish` e do `sweep` entra pelo `Sys.bonfire.addBrasas` (conta no `got`, então cabe no teto do save).
+
+## 16. DUPLA DAS ERAS e FOGUEIRA DA GUILDA (fps-server 81f2662 e b29f7a8; no ar em 9d37586, DESLIGADAS: `DUO_ON` e `GUILDFIRE_ON`)
+Pedido da Sistemas (docs/SISTEMA_MATRIZ.md, 1e54f3f). Nada é vendido em nenhum dos dois. Ligar só depois do voto do dono nas telas. Desligado: toda rota 404.
+
+### 16.1 Dupla das Eras (`Sys.duo`)
+- **Código de amigo** `GET /v1/me/friend-code` → `{code}`. São 8 caracteres de `BCDFGHJKLMNPQRSTVWXZ23456789` (sem vogais, então não forma palavra), aleatórios, numa tabela própria. NÃO expõe o id interno nem dado pessoal. **Todo `id` das rotas da dupla é o CÓDIGO** (partner.id, invites[].id, `:id`).
+- `GET /v1/duo` → no formato do `applyServer`:
+  - `{on, code, day, week, needLevel, partner:{id, name, since, last}|null, leftAt, relinkLeftMs, partnerDay, partnerWeek, partnerPresent, partnerDays[], myDay, myWeek, myDays[], invites:[{id, name, at}], invitesOut, invitesLeft, messages:[{idx, at}], msgLeft, claimed:{daily, weekly[]}, cap}`;
+  - contadores `{kills, bossKills, stages, arenaWins}`. As mensagens são entregues uma vez.
+- **Convite** `POST /v1/duo/invite {code}` → `{ok, code, expiresAt, left}`. Vale 48 h; 5 por dia (429 `limit`); 5 enviados e 10 recebidos abertos. Erros 409 `paired`, `relink`, `self`, `target_paired`, `target_level`, `dup`, `limit_out`, `target_full`; 403 `level` (nível 16). Código inexistente, de outro servidor, banido ou bloqueado: 404 `code`.
+- `POST /v1/duo/accept/:id`, `/decline/:id` (convite inexistente ou vencido: 404 `invite`), `/leave` (`{ok, relinkMs, relinkAt}`; só quem sai espera 24 h), `/block/:id` (bloqueia nos DOIS sentidos, apaga convites e mensagens entre os dois e desfaz a dupla).
+- **Frase** `POST /v1/duo/phrase {idx}`: SÓ o número 0-17, nunca texto. Qualquer outra chave = 400. 1 a cada 5 s (429 `wait`), 30 por dia (429 `day`), a mesma frase no máximo 2 vezes seguidas (409 `repeat`).
+- **Progresso** `POST /v1/duo/progress {kills?, bossKills?, stages?, arenaWins?, day?}` → `{ok, day, mine, capped}`. Os valores são o TOTAL do dia (reenviar não soma). O servidor guarda o maior, cortado no teto do dia (PROVISÓRIO: 20.000 abates, 150 chefes, 60 fases, 40 vitórias de arena; `DUO_CAP_*`). Hoje ou ontem.
+- **Resgate** `POST /v1/duo/claim/:id` (`daily`, `boss200`, `stages40`, `arena20`, `days5`) → `{ok, id, period, value, target, reward}`.
+  - O servidor confere a SOMA dos dois e a presença: o daily exige o parceiro presente hoje; as missões semanais, ao menos 1 dia na semana.
+  - Uma vez por período por jogador: daily por dia, missão por semana. Erros 409 `none`, `presence`, `done`, `claimed`.
+  - O servidor só autoriza; o jogo paga, como o `Sys.duo` faz.
+- **Diferença do jogo:** o `applyServer` do `duo.js` começa 24 h de espera para os DOIS ao receber `partner:null`, mas o servidor só faz esperar quem saiu. O `Sys.duoNet` deve repassar `leftAt` e `relinkLeftMs` do servidor.
+
+### 16.2 Fogueira da Guilda (`Sys.guildFire`)
+- `GET /v1/guild/fire` → `{guildId, flames, level, name, into, need, extra, max, next, perks:{goldPct, xpPct}, free, bra, braLeft, freeFlames, mine, fed, brasaCap, joinedAt, reached:{"2":ms,…,"x1":ms}, chests:[{id, level, extra, reachedAt, chest:{goldk, forge, food}}], resetIn}`. Já traz o `{guildId, flames, free, bra}` do `applyServer`.
+- **Alimentar** `POST /v1/guild/fire/feed {kind:'free'|'brasa', n}`. O limite é POR JOGADOR, não por guilda: 1 grátis por dia e Brasas até 20 por dia (429 `daily_limit`). Devolve as chamas somadas.
+  - **Anti-trapaça:** as Brasas dadas na vida não podem passar do `got` da Fogueira do último save do jogador. Save sem `got`: 409 `brasas_unverified`; acima: 409 `brasas_over` `{left}`. As Brasas saem do estoque (o `got` não muda).
+- **Baú** `POST /v1/guild/fire/claim/:id` (`'2'`…`'10'`, ou `'xN'` para os extras do nível 10) → `{ok, id, level, extra, chest, mailed:true}`, pelo correio, `{goldk: 40×L, forge: L, food: 10×L}`.
+  - SÓ para quem entrou ANTES do nível ser alcançado (o servidor guarda a hora de cada nível): senão 403 `joined_after`. Uma vez (409 `already_claimed`); nível não alcançado: 409 `not_ready`.
+  - Com o servidor ligado, o `claim` local do jogo não credita de novo.
+- Números (chamas, níveis, extras, perks) = os do `guildfire.js`. O `guildfire.js` não está no `game-sys/` do servidor, então, se a Sistemas recalibrar, mude nos DOIS lugares.
