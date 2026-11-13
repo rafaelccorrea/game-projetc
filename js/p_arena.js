@@ -203,6 +203,7 @@ function paSrvFc(){ const N=paNet(); if(!N) return 0; try{ const v=+N.state().sn
   try{ const v=+Sys.tower.playerStats(S,paH()).fc; return v>0&&isFinite(v)?v:0; }catch(e){ return 0; } }
 function paOpps(){ const ops=Sys.arena.opponents(S,paH()); if(!paNet()) return ops; const me=paSrvFc(), D=Sys.arena.DATA, W=Sys.tower, kr=D.kRange||[0.5,2];
   return ops.map(p=>{ const q=Object.assign({},p,{net:true,winPts:null,losePts:null,diff:null,noPts:p.bot===true}), fc=+p.fc;
+    if(me>0&&fc>0&&isFinite(fc)&&typeof Sys.arena.deltaFor==='function'){ try{ const d=Sys.arena.deltaFor(S,me,fc); q.diff=d.diff; if(!q.noPts&&d.winPts>0&&d.losePts>0){ q.winPts=d.winPts; q.losePts=d.losePts; } }catch(e){ q.diff=null; } return q; }   /* fonte única (Sistemas fbd1672): a conta de pontos e a dificuldade são as do módulo; o bloco abaixo é só reserva para módulo antigo */
     if(me>0&&fc>0&&isFinite(fc)){ try{ q.diff=W&&W.difficulty?W.difficulty(me,fc):null; }catch(e){ q.diff=null; }
       if(!q.noPts&&D.winBase>0&&D.lossBase>0){ const k=Math.max(kr[0],Math.min(kr[1],fc/Math.max(1,me))); q.winPts=Math.round(D.winBase*k); q.losePts=Math.round(D.lossBase*k); } }
     return q; }); }
