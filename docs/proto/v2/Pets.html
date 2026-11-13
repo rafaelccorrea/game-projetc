@@ -1,0 +1,600 @@
+<title>Eonbound Pets V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Perfil V5, Equipamento V2 e Invocar V2.
+   Pets V2: o herói fica SEMPRE à vista no topo (arma NA MÃO, asa nas costas) e o pet ativo SEMPRE NA FRENTE dele, no estágio de verdade (Filhote, Médio, Evoluído).
+   Regras = js/sys/pet.js (tela 17b: DATA.v17 + a regra nova stageMult). Nada sorteado por dinheiro. Nunca rolagem horizontal. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:380px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(95deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 24%,rgba(94,240,160,.18),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 28%,var(--night) 42%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(94,240,160,.55)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:236px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:236px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:26px;padding:0 4px 0 10px;border-radius:13px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:92%;overflow:hidden}
+.who span{overflow:hidden;text-overflow:ellipsis;min-width:0;padding-right:6px}
+.who i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.who.pv{background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22));border-color:var(--gold);color:var(--gold)}
+.who.pv i{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.who button{flex:none;height:20px;padding:0 9px;border-radius:10px;border:0;background:var(--gold);color:var(--ink);font-weight:900;font-size:11px}
+
+.fcrow{position:relative;z-index:3;display:flex;align-items:center;gap:8px;margin:2px 12px 0;padding:4px 8px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5)}
+.fcb{flex:1;min-width:0}
+.fcb small{display:block;font-size:9px;letter-spacing:1.2px;color:var(--gold);font-weight:900}
+.fcb b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:10px;font-weight:900;color:var(--muted);text-align:right;white-space:nowrap}
+.chip b{color:var(--text);font-size:12px}
+.chip .pg{color:var(--green)}
+
+.bt{flex:none;min-width:76px;height:38px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green);cursor:default}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f;box-shadow:0 3px 0 #164e8c}
+.bt.grn{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b;box-shadow:0 3px 0 #0d6b40}
+.bt.red{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a;box-shadow:none}
+.bt:disabled{opacity:.55;cursor:default;transform:none}
+.bt svg{width:14px;height:14px;flex:none}
+.bt.two{flex-direction:column;gap:0;line-height:1.1}
+.bt.two span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.bt.two small{font-size:10px;font-weight:900;opacity:.9;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+
+/* faixa do pet escolhido (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;margin:6px 12px 0;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.dt{display:flex;gap:9px;align-items:center;min-width:0}
+.th{flex:none;width:46px;height:40px;border-radius:11px;border:2px solid var(--rc);background-color:#0c1238;background-repeat:no-repeat;overflow:hidden}
+.dt .di{flex:1;min-width:0}
+.pvt{display:inline-block;font-size:9px;font-weight:900;letter-spacing:1px;padding:1px 6px;border-radius:6px;background:var(--gold);color:var(--ink);vertical-align:2px;margin-right:4px}
+.pvt.eq{background:var(--green);color:#043018}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stars{flex:none;display:flex;gap:1px}
+.stars svg{width:13px;height:13px}
+.lvb{margin-top:6px;position:relative;height:20px;border-radius:10px;background:rgba(5,8,28,.6);border:1px solid var(--line);overflow:hidden}
+.lvb>i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#22c47a,#7dffb8);border-radius:10px;transition:width .25s}
+.lvb>i.cap{background:linear-gradient(90deg,#f4a52a,#ffe58a)}
+.lvb span{position:relative;display:flex;justify-content:space-between;gap:6px;padding:0 9px;line-height:18px;font-size:11px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
+.lvb span em{font-style:normal;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cmp{display:flex;align-items:center;gap:6px;margin-top:6px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
+.cmp small{font-size:9px;letter-spacing:1px;color:var(--muted);flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp .a{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.cmp .b{font-family:var(--fd);font-weight:400;font-size:17px;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.cmp svg{width:14px;height:14px;flex:none}
+.cmp .d{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.up{color:var(--green)} .dn2{color:var(--red)} .eq0{color:var(--muted)}
+.acts{display:flex;gap:6px;margin-top:7px}
+.acts .bt{flex:1 1 0;min-width:0;height:40px;font-size:12px;padding:0 6px}
+.src{margin-top:6px;font-size:11px;font-weight:800;color:var(--muted);line-height:1.4}
+.src b{color:var(--gold)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 20px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.pan{border-radius:16px;background:var(--glass);border:1px solid var(--line);padding:10px;margin-bottom:8px;min-width:0}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec b{color:var(--text)}
+.hint{font-size:11px;color:var(--muted);margin:7px 0 0;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+
+/* grade de pets */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cell{position:relative;min-width:0;border-radius:12px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 30%,#1a2366),#0c1238 78%);padding:0 0 4px;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
+.cell.sel{outline:3px solid var(--gold);outline-offset:1px}
+.cell .pi{width:100%;aspect-ratio:1/.8;background-repeat:no-repeat}
+.cell.lk .pi{filter:grayscale(1) brightness(.55)}
+.cell .cn{font-size:10px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:13px}
+.cell .cs{font-size:9px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:12px;color:var(--muted)}
+.cell .cs.r{color:var(--rc)}
+.cell .bdg{position:absolute;left:3px;top:3px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:4px;letter-spacing:.3px;line-height:10px;background:var(--green);color:#043018}
+.cell .bdg.ev{left:auto;right:3px;background:var(--gold);color:var(--ink)}
+.cell .lki{position:absolute;right:4px;top:4px;width:14px;height:14px}
+.cell .ss{display:flex;justify-content:center;gap:0;line-height:10px}
+.cell .ss svg{width:9px;height:9px}
+
+/* estágios e golpe */
+.stg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sc{min-width:0;border-radius:12px;border:1px solid var(--line2);background:rgba(5,8,28,.5);padding:0 0 4px;display:flex;flex-direction:column;overflow:hidden}
+.sc[aria-pressed="true"]{border:2px solid var(--gold)}
+.sc .pi{width:100%;aspect-ratio:1/.7;background-repeat:no-repeat}
+.sc.no .pi{filter:grayscale(.9) brightness(.6)}
+.sc b{font-size:11px;font-weight:900;text-align:center}
+.sc small{font-size:9px;font-weight:900;text-align:center;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.sc small.up{color:var(--green)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;padding:4px 0;border-top:1px solid rgba(130,150,255,.15);min-width:0}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--muted);flex:none}
+.kv span:last-child{text-align:right;min-width:0}
+.odd{display:flex;align-items:center;gap:8px;min-height:22px;font-size:12px;font-weight:900}
+.odd .on{flex:0 0 82px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odd .bar{flex:1;min-width:0;height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.odd .bar span{display:block;height:100%;background:var(--rc);border-radius:4px}
+.odd .pc{flex:0 0 46px;text-align:right;font-variant-numeric:tabular-nums}
+.rowb{display:flex;gap:6px;margin-top:8px}
+.rowb .bt{flex:1 1 0;min-width:0;height:36px}
+
+.flash{position:absolute;left:0;right:0;top:54px;height:250px;z-index:30;pointer-events:none;background:radial-gradient(circle at 32% 70%,rgba(255,250,225,.9),color-mix(in srgb,var(--rc) 45%,transparent) 30%,transparent 62%);animation:flash .9s ease-out forwards}
+.mbn{position:absolute;left:0;right:0;top:96px;z-index:31;text-align:center;pointer-events:none;font-family:var(--fd);font-size:34px;letter-spacing:2px;color:var(--rc);text-shadow:0 0 22px var(--rc),0 3px 0 rgba(0,0,0,.55);animation:mbn 1.5s ease-out forwards}
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.7);display:flex;align-items:center;animation:fade .2s}
+.modal{margin:auto 16px;width:100%;max-height:80%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;animation:mup .25s ease-out}
+.modal h3{font-family:var(--fd);font-weight:400;font-size:22px;margin:0 0 8px}
+.modal p{margin:0 0 6px;font-size:13px;color:var(--muted);line-height:1.45}
+.modal p b{color:var(--text)}
+.macts{display:flex;gap:8px;margin-top:12px}
+.macts .bt{flex:1;height:46px;font-size:14px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.fcfly{position:absolute;z-index:40;left:50%;top:214px;transform:translateX(-50%);font-family:var(--fd);font-size:26px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap}
+.fcfly.up{color:var(--green)} .fcfly.dn{color:var(--red)}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes mup{from{transform:translateY(30px);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes mbn{0%{opacity:0;transform:scale(.4)}18%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="760"></canvas>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">PETS</div>
+          <div class="cur" aria-label="Ouro"><img src="a/coin.png" alt=""><span id="gold">0</span></div>
+          <div class="cur" aria-label="Ração"><img src="a/pets.png" alt=""><span id="food">0</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="472" role="img" aria-label="Seu herói com a arma na mão e o pet ativo na frente dele"></canvas>
+          <div class="who" id="who"><i></i><span>Kael</span></div>
+        </div>
+        <div class="fcrow">
+          <div class="fcb"><small>PODER (FC)</small><b id="fc">0</b></div>
+          <div class="chip" id="chip"></div>
+        </div>
+        <div id="det"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Pets (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">O herói fica sempre no topo e o pet ativo fica na frente dele, no estágio de verdade (Filhote, Médio ou Evoluído, com a animação de cada um). Tocou num pet seu: ele vira o pet ativo na hora. Tocou num pet que você não tem: ele aparece no herói como prévia, com o jeito de conseguir. Alimentar sobe o nível até o teto do estágio; no teto, Evoluir troca o estágio no herói e dá poder na hora (FC em verde). Nada é sorteado por dinheiro.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Jogador" style="margin-top:8px"><button data-pl="25" aria-pressed="true">Jogador nível 25</button><button data-pl="all" aria-pressed="false">Tudo liberado</button></div>
+      <p class="sub" style="margin-top:8px">"Jogador nível 25": Medieval (era 2) liberada, 3 pets (o Mamute está no Nv 30, pronto para evoluir), teto de nível 30 pela era. "Tudo liberado": todos os 11 pets, em estágios diferentes, teto 90. A FC do herói e o estoque de ração são exemplos; a parte do pet na FC, o custo da ração, os tetos, as estrelas e as fontes vêm de js/sys/pet.js.</p>
+    </div>
+    <div class="box">
+      <h2>Como funciona</h2>
+      <ul>
+        <li>Estágios: Filhote (ao chocar), Médio (Nv 30), Evoluído (Nv 60); teto de nível 30 / 60 / 90 por estágio, e também o teto da era (10, 20, 30, 45, 60, 75, 90)</li>
+        <li>Evoluir é manual e sem custo. Regra nova: a parte do pet vale ×0,8 no Filhote, ×0,9 no Médio e ×1 no Evoluído (+11 a +12,5% na parte do pet: perto de +2% de FC com o pet no topo, menos com o pet fraco)</li>
+        <li>Alimentar: cada toque põe até 25 de ração na barra; o nível N pede 3 × 1,05^(N−1) (arredonda para cima)</li>
+        <li>Estrelas: 10 / 20 / 30 / 40 fragmentos (Raposa de cristal: 50 / 100 / 150 / 200); ovo repetido = 10 fragmentos; repetido no 5★ vira ração</li>
+        <li>Parte máxima na FC: 8 / 11 / 14 / 17 / 20% por raridade (Prismático 25%)</li>
+        <li>Ovo de chefe = a espécie da era (sem sorteio); andar 100 da Torre = Épico à escolha; Mítico abre no nível 70 com a era 4, Lendário no 85 com a era 5</li>
+        <li>Redefinir nível: volta ao Nv 1 e devolve 80% da ração; estrelas e estágio ficam</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: pet maior no palco, evolução mais forte"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- REGRAS DO JOGO (copiadas de js/sys/pet.js; não inventar) ----------
+   DATA.pMax 0,25 · DATA.v17.rarW [0,348 0,494 0,651 0,819 1,0 4/3] · starBase 0,75 + starStep 0,05 × estrelas · v3d.lvlMin 0,40 → 1 no Nv 90 (linear, 17b)
+   DATA.v17 {stageReq [1,30,60], stageCap [30,60,90], tapFood 25, stageMult.m [0,8 0,9 1]} · v3d.lvlCapByEra [10,20,30,45,60,75,90] · v3d.foodGrowth 1,05 · foodCost.base 3
+   starCost [10,20,30,40] (Prismático [50,100,150,200]) · repeatFrags 10 · instanceRepeatFood [5,8,12,15,20] · v3d.attacks · battle {interval 2,0, hitMult 2,5}
+   v3d.releaseRefund 0,8 · fc.js maxPetShare 0,25 (Prismático capShare 1/3) · tipo 'combat' na 17b: dano 1 + vínculo 1 */
+const R={pMax:0.25,rarW:[0.348,0.494,0.651,0.819,1.0,4/3],starBase:0.75,starStep:0.05,maxStars:5,lvlMin:0.40,maxLvl:90,
+  lvlCapByEra:[10,20,30,45,60,75,90],foodBase:3,foodGrowth:1.05,stageReq:[1,30,60],stageCap:[30,60,90],tapFood:25,stageMult:[0.8,0.9,1],
+  starCost:[10,20,30,40],repeatFrags:10,repeatFood:[5,8,12,15,20],
+  att:{crit:{base:7,gain:5,dmg:5,name:'Tiro do pet'},mid:{base:3,gain:3,dmg:2.5,name:'Mediano'},basic:{dmg:1,name:'Básico'}},
+  battle:{interval:2.0,hitMult:2.5},refund:0.8,cap:0.25,offlineFood:5,
+  eggGate:{3:{lvl:70,era:4},4:{lvl:85,era:5}}};
+const STG=['Filhote','Médio','Evoluído'];
+const RN=['Básico','Raro','Épico','Mítico','Lendário','Prismático'];
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#8ff5ff'];
+const ERAN=['Pré-História','Antiguidade','Medieval','Era da Pólvora','Era Industrial','Era Moderna','Era Futurista','Submundo','Celestial','era 9'];
+/* os 11 pets da 17b (DATA.v17.species + os 3 novos com newReady: lobo sombrio, falcão, pantera). A fênix SAI na 17b (removed). */
+const PETS=[
+ {id:'wolf',name:'Mamute',r:0,era:0,sp:'era0_mammoth',src:['Pet inicial grátis','Ovo do chefe da Pré-História (era 0)'],go:'Mapa das Eras'},
+ {id:'owl',name:'Esfinge',r:1,era:1,sp:'era1_sphinx',src:['Ovo do chefe da Antiguidade (era 1)'],go:'Mapa das Eras'},
+ {id:'shadowwolf',name:'Lobo sombrio',r:1,sp:'pet_shadowwolf',hatch:60,skill:'avanço rápido até o inimigo da frente',src:['Instância Arsenal: ovo Raro do lobo sombrio na 1ª vitória de cada dificuldade','Baús da atividade: 2 fragmentos/dia'],go:'Instâncias'},
+ {id:'falcon',name:'Falcão de guerra',r:1,sp:'pet_falcon',hatch:60,skill:'mergulha de longe (acerta antes do inimigo encostar)',src:['Torre: andar 30 (ovo inteiro)','Missões diárias: 1 fragmento/dia'],go:'Torre'},
+ {id:'drake',name:'Dragão',r:2,era:2,sp:'era2_dragon',src:['Ovo do chefe da Medieval (era 2)','Torre, andar 100: ovo Épico à escolha (Dragão ou Papagaio-fênix)'],go:'Mapa das Eras'},
+ {id:'parrot',name:'Papagaio-fênix',r:2,era:3,minEra:3,sp:'era3_parrot',src:['Ovo do chefe da Era da Pólvora (era 3)','Torre, andar 100: ovo Épico à escolha (Dragão ou Papagaio-fênix)'],go:'Mapa das Eras'},
+ {id:'panther',name:'Pantera espectral',r:2,sp:'pet_panther',hatch:100,skill:'some e reaparece atrás do inimigo; usa a chance de crítico do pet',src:['Arena: fim de temporada Ouro (15) / Platina+ (30 fragmentos)'],go:'Arena'},
+ {id:'golem',name:'Cão mecânico',r:3,era:4,sp:'era4_mechdog',src:['Ovo do chefe da Era Industrial (era 4)'],go:'Mapa das Eras'},
+ {id:'underworld',name:'Cérbero',r:3,era:7,minEra:7,sp:'era7_cerberus',src:['Ovo do chefe do Submundo (era 7)'],go:'Mapa das Eras'},
+ {id:'celestial',name:'Pégaso',r:4,era:8,minEra:8,sp:'era8_pegasus',src:['Ovo do chefe Celestial (era 8)'],go:'Mapa das Eras'},
+ {id:'prism',name:'Raposa de cristal',r:5,sp:'prism_fox',hatch:1000,noEgg:true,prism:true,src:['Chefe da era 8: 1 fragmento por dia (com VIP, +1 a cada 4 dias)','VIP 10: 500 fragmentos, uma vez','Torre: 5 fragmentos a cada 25 andares, a partir do 105','Eventos mensais: até 100 fragmentos'],go:'Torre'}];
+const BY={}; PETS.forEach(p=>BY[p.id]=p);
+/* folha de cada estágio (512x352 por quadro, 12 quadros, pés em y 307; aqui em cópia reduzida: o quadro é largura/12) */
+function sheet(d,st){ if(st===0&&d.id==='shadowwolf') return 'a/pt_pet_shadowwolf_idle.png'; if(st===0&&d.id==='falcon') return 'a/pt_pet_falcon_idle_62.png';
+  return 'a/pp_'+d.sp+['','_mid','_evo'][st]+'.png'; }
+
+/* ---------- contas (share, attackOdds, foodCost, canFeed, canEvolve, feedTap do pet.js) ---------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function share(d,lvl,stars,stg){ const Rr=R.pMax*R.rarW[d.r]*(R.starBase+R.starStep*clamp(stars,1,5));
+  return Rr*(R.lvlMin+(1-R.lvlMin)*(clamp(lvl,1,R.maxLvl)-1)/(R.maxLvl-1))*R.stageMult[clamp(stg,0,2)]; }
+function odds(d,stars,lvl){ const A=R.att, q=0.5*(clamp(stars,1,5)-1)/4+0.5*(clamp(lvl,1,90)-1)/89;
+  const crit=(A.crit.base+(d.prism?7:A.crit.gain)*q)/100, mid=(A.mid.base+(d.prism?4:A.mid.gain)*q)/100;
+  return {crit,mid,basic:1-crit-mid,avg:(1-crit-mid)*A.basic.dmg+mid*A.mid.dmg+crit*A.crit.dmg}; }
+const foodCost=lvl=>Math.ceil(R.foodBase*Math.pow(R.foodGrowth,Math.max(1,lvl)-1));
+const eraCap=()=>R.lvlCapByEra[clamp(P.era,0,R.lvlCapByEra.length-1)];
+/* FC do pet (fc.js): parte de ATK × golpe + vida do vínculo, travada no teto; aqui ATK e vida do herói valem metade da FC cada */
+function petFC(d,x){ if(!d||!x) return 0; const p=share(d,x.lvl,x.stars,x.stg), am=odds(d,x.stars,x.lvl).avg/odds(d,5,90).avg;
+  return P.heroFC*Math.min(d.prism?1/3:R.cap,0.5*p*am+0.5*p); }
+const fcWith=(id,x)=>P.heroFC+(id?petFC(BY[id],x||S.own[id]):0);
+const fcNow=()=>fcWith(S.eq);
+const maxPct=d=>{ const pm=R.pMax*R.rarW[d.r]; return pm/(1+pm)*100; };
+const sharePct=(d,x)=>{ const f=petFC(d,x); return f/(P.heroFC+f)*100; };
+function canFeed(x){ if(x.lvl>=R.maxLvl) return 'max'; if(x.lvl>=eraCap()) return 'cap'; if(x.lvl>=R.stageCap[x.stg]) return 'evolve'; if(S.food<=0) return 'food'; return ''; }
+const canEvolve=x=>x.stg<2&&x.lvl>=R.stageReq[x.stg+1];
+const spentOn=x=>{ let s=x.fx||0; for(let l=1;l<x.lvl;l++) s+=foodCost(l); return s; };
+const starNeed=(d,x)=>x.stars<5?(d.prism?[50,100,150,200]:R.starCost)[x.stars-1]:0;
+function eggBlock(d){ /* portão de raridade do ovo (Sys.loot.capEggR, só Mítico e Lendário) */
+  const g=R.eggGate[d.r]; return g&&!(P.lvl>=g.lvl&&P.era>=g.era)?g:null; }
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtFC=v=>v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' mi':v>=1e4?(v/1000).toFixed(1).replace('.',',')+' mil':n(v);
+const fmtD=v=>Math.abs(v)>=1e4?fmtFC(Math.abs(v)):n(Math.abs(v));
+const pct=v=>v.toFixed(1).replace('.',',')+'%';
+const SV={go:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="#9aa6d6"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>',
+ undo:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 010 10h-2"/></svg>'};
+const star=on=>`<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="${on?'#ffd25e':'rgba(255,255,255,.12)'}" stroke="${on?'#9a5a10':'rgba(160,180,255,.4)'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+const stars=k=>{ let h=''; for(let i=1;i<=5;i++) h+=star(i<=k); return h; };
+/* recorte do quadro 0 da folha como miniatura (CSS): zoom k, pet centrado em x 224/512 e pés a 92% da altura */
+function thumb(u,ar,k){ const fh=352/512, x=(0.5-224/512*k)/(1-12*k)*100, y=(0.92*ar-307/512*k)/(ar-fh*k)*100;
+  return `background-image:url(${u});background-size:${(1200*k).toFixed(1)}% auto;background-position:${x.toFixed(2)}% ${y.toFixed(2)}%`; }
+
+/* ---------- os dois jogadores do Simular (FC do herói e ração = exemplo; o resto pelas regras) ---------- */
+const PL={
+ 25:{lvl:25,era:2,heroFC:52400,gold:184000,food:640,weapon:{key:'era2_raro',r:1},wing:null,eq:'shadowwolf',
+   own:{wolf:{lvl:30,stg:0,stars:2,frags:8,fx:0},shadowwolf:{lvl:18,stg:0,stars:1,frags:6,fx:4},owl:{lvl:12,stg:0,stars:1,frags:3,fx:0}},
+   stored:{falcon:22,panther:0,prism:0,shadowwolf:0}},
+ all:{lvl:90,era:9,heroFC:8420000,gold:12400000,food:99999,weapon:{key:'era5_t2',r:4},wing:'angel',eq:'celestial',
+   own:{wolf:{lvl:90,stg:2,stars:5,frags:0,fx:0},owl:{lvl:60,stg:1,stars:4,frags:12,fx:0},shadowwolf:{lvl:47,stg:1,stars:3,frags:9,fx:20},
+     falcon:{lvl:30,stg:0,stars:2,frags:5,fx:0},drake:{lvl:90,stg:2,stars:5,frags:0,fx:0},parrot:{lvl:72,stg:2,stars:3,frags:17,fx:40},
+     panther:{lvl:60,stg:1,stars:2,frags:11,fx:0},golem:{lvl:55,stg:1,stars:2,frags:4,fx:30},underworld:{lvl:30,stg:0,stars:1,frags:7,fx:0},
+     celestial:{lvl:60,stg:1,stars:4,frags:31,fx:0},prism:{lvl:44,stg:1,stars:1,frags:20,fx:15}},stored:{}}};
+let P=PL[25];
+let S=null;
+function reset(key){ P=PL[key]; S={key,hero:S?S.hero:'kael',own:JSON.parse(JSON.stringify(P.own)),stored:{...P.stored},eq:P.eq,food:P.food,pv:null,undo:null,last:null,fx:null}; }
+
+/* ---------- dados medidos dos arquivos do jogo (iguais ao Invocar V2 / Equipamento V2) ---------- */
+const D={"W":{
+ "era1_t0":{"w":84,"h":300,"fx":0.38281,"fy":0.08203,"fw":0.23535,"fh":0.83594,"type":"melee","grip":[0.498,0.765],"angle":90},
+ "era1_raro":{"w":84,"h":300,"fx":0.38281,"fy":0.08203,"fw":0.23438,"fh":0.83496,"type":"melee","grip":[0.498,0.765],"angle":90},
+ "era2_t0":{"w":95,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.82813,"type":"melee","grip":[0.496,0.78],"angle":90},
+ "era2_raro":{"w":92,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.85156,"type":"melee","grip":[0.496,0.78],"angle":90},
+ "era4_t0":{"w":300,"h":211,"fx":0.08398,"fy":0.22949,"fw":0.82129,"fh":0.57715,"type":"gun","grip":[0.19,0.66],"angle":0},
+ "era4_raro":{"w":300,"h":210,"fx":0.08496,"fy":0.23145,"fw":0.82031,"fh":0.5752,"type":"gun","grip":[0.19,0.66],"angle":0},
+ "era4_t1":{"w":300,"h":160,"fx":0.06934,"fy":0.22754,"fw":0.88574,"fh":0.47168,"type":"gun","grip":[0.235,0.565],"angle":6},
+ "era4_t2":{"w":300,"h":182,"fx":0.13379,"fy":0.27637,"fw":0.73438,"fh":0.44629,"type":"gun","grip":[0.185,0.61],"angle":3},
+ "era5_t0":{"w":300,"h":217,"fx":0.13672,"fy":0.27051,"fw":0.71777,"fh":0.51953,"type":"gun","grip":[0.285,0.63],"angle":0},
+ "era5_raro":{"w":300,"h":250,"fx":0.1377,"fy":0.20117,"fw":0.71582,"fh":0.59766,"type":"gun","grip":[0.285,0.63],"angle":0},
+ "era5_t1":{"w":300,"h":181,"fx":0.07129,"fy":0.24219,"fw":0.85645,"fh":0.51562,"type":"gun","grip":[0.275,0.625],"angle":0},
+ "era5_t2":{"w":300,"h":157,"fx":0.04492,"fy":0.30371,"fw":0.80566,"fh":0.4209,"type":"gun","grip":[0.24,0.65],"angle":0}},
+"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]},"kael_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[313.81,133.99,4.26,0.9972,-0.0744,-4.57,4.57,3.43,0],[312.33,133.76,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.67,133.82,5.47,0.9955,-0.0953,-4.57,4.57,3.43,0],[310.33,136.05,4.75,0.9966,-0.0828,-4.57,4.57,3.43,0],[310.5,137.08,3.96,0.9976,-0.069,-4.57,4.57,3.43,0],[312.5,136.33,5.27,0.9958,-0.0918,-4.57,4.57,3.43,0],[310.44,135.82,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.04,135.53,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.33,135.59,5.01,0.9962,-0.0873,-4.57,4.57,3.43,0],[311.01,136.68,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.67,136.16,3.65,0.998,-0.0637,-4.57,4.57,3.43,0],[310.61,135.36,4.39,0.9971,-0.0766,-4.57,4.57,3.43,0]],"back":{"x":202.2,"y":166,"a":0,"s":1},"neck":null},"kaia_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[320.22,152.93,2.73,0.9989,-0.0476,-4.43,4.43,3.32,0],[319.23,154.26,2.28,0.9992,-0.0398,-4.43,4.43,3.32,0],[320.34,154.2,2.06,0.9994,-0.0359,-4.43,4.43,3.32,0],[320.06,152.88,2.96,0.9987,-0.0516,-4.43,4.43,3.32,0],[319.23,151.44,3.49,0.9981,-0.0608,-4.43,4.43,3.32,0],[319.01,151.99,3.82,0.9978,-0.0666,-4.43,4.43,3.32,0],[320.5,153.21,2.75,0.9988,-0.0479,-4.43,4.43,3.32,0],[319.73,154.2,2.51,0.999,-0.0439,-4.43,4.43,3.32,0],[319.34,154.15,2.17,0.9993,-0.0378,-4.43,4.43,3.32,0],[320.11,152.88,3.08,0.9986,-0.0537,-4.43,4.43,3.32,0],[319.34,151.99,3.55,0.9981,-0.0619,-4.43,4.43,3.32,0],[319.39,153.32,2.69,0.9989,-0.0469,-4.43,4.43,3.32,0]],"back":{"x":202,"y":166,"a":13.9,"s":1},"neck":null}},
+"PS":{"kael":{"4":0.0764,"5":0.0874},"kaia":{"4":0.0601,"5":0.0688}}};
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={}, WRC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434'];
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1}};
+
+/* ---------- PALCO EM CANVAS (receita do Invocar V2: corpo sem arma + arma no grip de cada quadro, asa nas costas, pet SEMPRE na frente) ---------- */
+const IM={};
+/* imagens do palco como <img> DE VERDADE na página (no host publicado, new Image() não chega ao canvas), escondidas fora da tela */
+const STG_EL=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG_EL.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=WRC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; return -(G.ang-wang)*Math.PI/180; }
+const HX=196, GY=222, HK=0.8;
+function drawHero(x,t){
+  const wi=P.weapon, W=D.W[wi.key], gun=W&&W.type==='gun', bid=S.hero+(gun?'_p':''), B=D.B[bid], sh=img('a/body_'+bid+'.png');
+  if(!ok(sh)) return;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=HX-(B.pad+128)*k, y0=GY-((S.hero==='kael'&&!gun)?242:B.fy)*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(HX-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  const WA=P.wing&&WING_AN[P.wing];
+  if(WA&&B.back){ const Li=img('a/wg_'+P.wing+'_L.png'), Ri=img('a/wg_'+P.wing+'_R.png');
+    if(ok(Li)&&ok(Ri)){ const b=B.back, ax=x0+b.x*k, ay=y0+b.y*k, sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+      x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+      x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+      x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+      x.restore(); } }
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*B.w,0,B.w,B.h,0,0,B.w,B.h);
+  const ws=W?wSpr(wi.key,wi.r):null;
+  if(gun){ body();
+    if(ws){ const S0=(D.PS[S.hero][wi.key.charAt(3)]||D.PS[S.hero][5])*1024, grip=W.grip, ang=wAng(W,G);
+      const dw=W.fw*S0, dh=W.fh*S0, gx=(grip[0]-W.fx)*S0, gy2=(grip[1]-W.fy)*S0;
+      x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore();
+      fingers(x,G,body,-5,5,G.hw+5); }
+  } else { let drawW=null;
+    if(ws){ const grip=W.grip; const kk=256*0.5/Math.max(W.w,W.h);
+      const dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+      drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+    const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+    if(drawW&&behind){ drawW(); body(); }
+    else { body(); if(drawW){ drawW();
+        fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+        const nk=B.neck&&B.neck[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }
+  }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+/* qual pet e qual estágio vão para o palco: a prévia (S.pv) ou o pet ativo; durante a evolução, o estágio troca no meio do clarão */
+function shownPet(now){ if(S.pv) return {d:BY[S.pv.id],st:S.pv.stg,fx:null};
+  const x=S.eq&&S.own[S.eq]; if(!x) return null; const f=S.fx&&S.fx.id===S.eq?S.fx:null, age=f?(now-f.t)/1000:9;
+  return {d:BY[S.eq],st:f&&age<0.7?f.from:x.stg,fx:f&&age<1.6?age:null}; }
+const PCX=126;
+function draw(t,now){
+  if(!S||!S.own) return;
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,236);
+  const sp=shownPet(now), fa=sp&&sp.fx!=null?sp.fx:null, ga=fa!=null?Math.max(0,1-fa/1.6):0, col=sp?RC[sp.d.r]:'#5ee7ff';
+  const g=x.createRadialGradient(HX-20,GY,10,HX-20,GY,140); g.addColorStop(0,ga?hexA(col,.35+.45*ga):'rgba(94,231,255,.35)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX-20,GY,140,22,0,0,7); x.fill();
+  x.strokeStyle=ga?hexA(col,.6+.4*ga):'rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*(10+60*ga); x.lineWidth=1.5+2*ga; x.beginPath(); x.ellipse(HX-20,GY,116,16,0,0,7); x.stroke(); x.setLineDash([]);
+  /* um erro no herói não pode apagar o pet: é pego aqui e aparece na linha "Palco" do painel */
+  try{ drawHero(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar o herói ('+(err&&err.message||err)+')'; } }
+  /* PET SEMPRE NA FRENTE (regra do dono): desenhado depois do herói, à frente e no chão (quadro 512x352, pés em 307) */
+  if(sp&&sp.d){ const I=img(sheet(sp.d,sp.st));
+    if(ok(I)){ const fw=I.naturalWidth/12, fh=I.naturalHeight, fi=((Math.floor(t*12)%12)+12)%12, kp=150/512;
+      if(fa!=null){ /* evolução: anel no chão abrindo e luz subindo do pet (presos ao chão) */
+        const rr=20+fa*70; x.save(); x.strokeStyle=hexA(col,ga); x.lineWidth=3*ga+1; x.beginPath(); x.ellipse(PCX,GY+8,rr,rr*.22,0,0,7); x.stroke();
+        const lg=x.createLinearGradient(0,GY+8,0,GY-150); lg.addColorStop(0,hexA('#fffbe6',.75*ga)); lg.addColorStop(1,hexA(col,0)); x.fillStyle=lg; x.fillRect(PCX-38,GY-150,76,158); x.restore(); }
+      x.save(); if(fa!=null&&'filter' in x) x.filter='brightness('+(1+2.2*Math.max(0,1-Math.abs(fa-0.7)/0.7)).toFixed(2)+')';
+      x.drawImage(I,fi*fw,0,fw,fh,PCX-224*kp,GY+8-307*kp,512*kp,352*kp); x.restore(); } }
+}
+function hexA(h,a){ const v=parseInt(h.slice(1),16); return `rgba(${v>>16&255},${v>>8&255},${v&255},${Math.min(1,Math.max(0,a)).toFixed(3)})`; }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000),now); requestAnimationFrame(loop); })(t0);
+
+/* ---------- topo ---------- */
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+function renderTop(){
+  $('#gold').textContent=fmtFC(P.gold); $('#food').textContent=n(S.food); $('#fc').textContent=fmtFC(fcNow());
+  const w=$('#who');
+  if(S.pv){ const d=BY[S.pv.id]; w.className='who pv'; w.innerHTML=`<i></i><span>Prévia: ${d.name}${S.own[d.id]?' '+STG[S.pv.stg]:''}</span><button data-x="sair">Sair</button>`; }
+  else { const d=S.eq&&BY[S.eq], x=d&&S.own[S.eq]; w.className='who'; w.innerHTML=`<i></i><span>${hn()} · Nível ${P.lvl}${d?' · '+d.name+' '+STG[x.stg]:''}</span>`; }
+  const ownN=Object.keys(S.own).length, ready=Object.keys(S.own).filter(id=>canEvolve(S.own[id])).length;
+  $('#chip').innerHTML=`<span>Pets <b>${ownN}/${PETS.length}</b></span><span>${ready?`<span class="pg">${ready} pronto${ready>1?'s':''} para evoluir</span>`:'Parte do pet: '+pct(S.eq?sharePct(BY[S.eq],S.own[S.eq]):0)}</span>`; }
+
+/* ---------- faixa do pet: nível com o teto, FC antes → depois, Alimentar, Evoluir, Usando ---------- */
+function cmpHTML(label,a,b){ const df=b-a, cls=Math.abs(df)<1?'eq0':df>0?'up':'dn2', tx=Math.abs(df)<1?'igual':(df>0?'▲ +':'▼ −')+fmtD(df);
+  return `<div class="cmp"><small>${label}</small><span class="a">${fmtFC(a)}</span>${SV.go}<span class="b">${fmtFC(b)}</span><span class="d ${cls}">${tx}</span></div>`; }
+function lvlBar(x){ const cap=Math.min(R.stageCap[x.stg],eraCap()), why=canFeed(x), ev=canEvolve(x), need=foodCost(x.lvl);
+  let right, w, capCls='';
+  if(why==='max'){ right='máximo'; w=100; capCls='cap'; }
+  else if(ev&&x.lvl>=R.stageCap[x.stg]){ right='evolua para subir'; w=100; capCls='cap'; }
+  else if(why==='cap'){ const ne=R.lvlCapByEra.findIndex(v=>v>x.lvl); right='teto da era'+(ne>0?': Nv '+R.lvlCapByEra[ne]+' na '+ERAN[ne]:''); w=100; capCls='cap'; }
+  else { right=`${x.fx||0}/${need} ração`; w=(x.fx||0)/need*100; }
+  return `<div class="lvb" aria-label="Nível ${x.lvl} de ${cap}"><i class="${capCls}" style="width:${w.toFixed(1)}%"></i><span><b>Nv ${x.lvl}/${cap}</b><em>${capCls?'— ':''}${right}</em></span></div>`; }
+function renderDet(){ const d0=$('#det'), id=S.pv?S.pv.id:S.eq, d=BY[id]; if(!d){ d0.innerHTML=''; return; }
+  const x=S.own[id];
+  if(!x){ /* prévia de pet que você não tem */
+    const st=S.pv.stg, lv=R.stageReq[st], nx={lvl:lv,stg:st,stars:1,fx:0}, gb=eggBlock(d), sv=S.stored[id]||0;
+    const lockE=d.minEra&&P.era<d.minEra;
+    const how=d.hatch?`<b>${n(sv)}/${n(d.hatch)}</b> fragmentos (nasce sozinho ao completar) · ${d.src.join(' · ')}`:d.src.join(' · ')+(lockE?` · chega na <b>era ${d.minEra} (${ERAN[d.minEra]})</b>`:'')+(gb?` · ${RN[d.r]}: o ovo fica guardado até o <b>nível ${gb.lvl}</b> com a ${ERAN[gb.era]}`:'');
+    d0.innerHTML=`<div class="det" style="--rc:${RC[d.r]}">
+      <div class="dt"><span class="th" style="${thumb(sheet(d,st),40/46,1.15)}"></span><div class="di"><div class="dn"><span class="pvt">PRÉVIA</span>${d.name} <span class="rar">${RN[d.r]}</span></div><div class="dh">${STG[st]} · você ainda não tem · até ${pct(maxPct(d))} da FC no topo</div></div></div>
+      ${cmpHTML(`FC AGORA → COM ELE (${STG[st]} NV ${lv}, 1★)`,fcNow(),fcWith(id,nx))}
+      <p class="src">Como conseguir: ${how}. Sem sorteio pago.</p>
+      <div class="acts"><button class="bt off" data-x="sair">Sair</button><button class="bt blue" data-go="${d.go}">Ir: ${d.go}</button></div></div>`; return; }
+  const why=canFeed(x), ev=canEvolve(x), need=foodCost(x.lvl), give=Math.min(R.tapFood,need-(x.fx||0),S.food), sn=starNeed(d,x);
+  let cmp;
+  if(S.pv){ const st=S.pv.stg, lv=Math.max(x.lvl,R.stageReq[st]); cmp=cmpHTML(`PRÉVIA: ${STG[st]} NO NV ${lv}`,fcNow(),fcWith(id,{...x,lvl:lv,stg:st})); }
+  else if(S.last&&S.last.id===id) cmp=cmpHTML('FC ANTES → DEPOIS · '+S.last.what,S.last.a,S.last.b);
+  else if(ev) cmp=cmpHTML('EVOLUIR PARA '+STG[x.stg+1].toUpperCase(),fcNow(),fcWith(id,{...x,stg:x.stg+1}));
+  else if(!why||why==='food') cmp=cmpHTML(`NV ${x.lvl} → NV ${x.lvl+1}`,fcNow(),fcWith(id,{...x,lvl:x.lvl+1}));
+  else cmp=cmpHTML('FC AGORA',fcNow(),fcNow());
+  const gEv=ev?fcWith(id,{...x,stg:x.stg+1})-fcNow():0;
+  const feedB=why==='max'?`<button class="bt off two" disabled><span>Alimentar</span><small>nível máximo</small></button>`
+    :why==='cap'?`<button class="bt off two" disabled><span>Alimentar</span><small>teto da era</small></button>`
+    :why==='evolve'?`<button class="bt off two" disabled><span>Alimentar</span><small>evolua primeiro</small></button>`
+    :`<button class="bt two" data-x="feed" ${give>0?'':'disabled'}><span>Alimentar</span><small>${give>0?give+' ração':'sem ração'}</small></button>`;
+  const evB=x.stg>=2?`<button class="bt on two" disabled><span>Evoluído</span><small>forma final</small></button>`
+    :ev?`<button class="bt grn two" data-x="evo"><span>Evoluir</span><small>${STG[x.stg+1]} · +${fmtD(gEv)} FC</small></button>`
+    :`<button class="bt off two" disabled><span>Evoluir</span><small>no Nv ${R.stageReq[x.stg+1]}</small></button>`;
+  const eqB=S.undo&&BY[S.undo]?`<button class="bt off two" data-x="undo"><span>Desfazer</span><small>volta ${BY[S.undo].name}</small></button>`:`<span class="bt on two"><span>Usando</span><small>pet ativo</small></span>`;
+  d0.innerHTML=`<div class="det" style="--rc:${RC[d.r]}">
+    <div class="dt"><span class="th" style="${thumb(sheet(d,x.stg),40/46,1.15)}"></span><div class="di"><div class="dn"><span class="pvt eq">ATIVO</span>${d.name} <span class="rar">${RN[d.r]}</span></div><div class="dh">${STG[x.stg]} · ${sn?x.frags+'/'+sn+' fragmentos':'5★ máximo'} · parte na FC ${pct(sharePct(d,x))}</div></div><span class="stars" aria-label="${x.stars} de 5 estrelas">${stars(x.stars)}</span></div>
+    ${lvlBar(x)}${cmp}
+    <div class="acts">${feedB}${evB}${eqB}</div></div>`; }
+
+/* ---------- corpo: grade, sobre o pet, ovos ---------- */
+function cellHTML(d){ const x=S.own[d.id], sel=(S.pv?S.pv.id:S.eq)===d.id, eq=S.eq===d.id;
+  if(x){ return `<button class="cell ${sel?'sel':''}" style="--rc:${RC[d.r]}" data-pet="${d.id}" aria-label="${d.name}, ${RN[d.r]}, ${STG[x.stg]} nível ${x.lvl}${eq?', ativo':''}">
+    <span class="pi" style="${thumb(sheet(d,x.stg),0.8,1.2)}"></span>${eq?'<span class="bdg">ATIVO</span>':''}${canEvolve(x)?'<span class="bdg ev">EVOLUIR</span>':''}
+    <span class="cn">${d.name}</span><span class="cs r">Nv ${x.lvl} · ${STG[x.stg]}</span><span class="ss">${stars(x.stars)}</span></button>`; }
+  const sv=S.stored[d.id]||0, lockE=d.minEra&&P.era<d.minEra, gb=eggBlock(d);
+  const s=d.hatch?`${n(sv)}/${n(d.hatch)} frag.`:lockE?ERAN[d.minEra]:gb?'Nível '+gb.lvl:'Chefe: '+ERAN[d.era];
+  return `<button class="cell lk ${sel?'sel':''}" style="--rc:${RC[d.r]}" data-pet="${d.id}" aria-label="${d.name}, ${RN[d.r]}, você não tem. Tocar para ver no herói">
+    <span class="pi" style="${thumb(sheet(d,0),0.8,1.2)}"></span><span class="lki">${SV.lock}</span>
+    <span class="cn">${d.name}</span><span class="cs r">${RN[d.r]}</span><span class="cs">${s}</span></button>`; }
+function gridHTML(){ const ownN=Object.keys(S.own).length;
+  return `<div class="pan"><div class="sec"><span>Pets</span><span><b>${ownN}/${PETS.length}</b> · toque para usar ou ver</span></div><div class="grid">${PETS.map(cellHTML).join('')}</div>
+    <p class="hint">Ração: baús, drops e <b>${R.offlineFood} a cada 8 h</b> fora do jogo. Mais 6 pets entram quando a arte deles for aprovada.</p></div>`; }
+function aboutHTML(){ const id=S.pv?S.pv.id:S.eq, d=BY[id]; if(!d) return ''; const x=S.own[id], cur=S.pv?S.pv.stg:(x?x.stg:0);
+  const cards=STG.map((nm,i)=>{ const reached=x&&i<=x.stg, ready=x&&i===x.stg+1&&canEvolve(x);
+    const st=reached?(i===x.stg?'atual':'feito'):ready?'pronto!':x?'Nv '+R.stageReq[i]:(i?'Nv '+R.stageReq[i]:'ao chocar');
+    return `<button class="sc ${reached?'':'no'}" data-stg="${i}" aria-pressed="${cur===i}" aria-label="${nm}: ver no herói"><span class="pi" style="${thumb(sheet(d,i),0.7,1.1)}"></span><b>${nm}</b><small class="${ready?'up':''}">${st} · ×${String(R.stageMult[i]).replace('.',',')}</small></button>`; }).join('');
+  const xs=x||{stars:1,lvl:1,stg:0}, od=odds(d,xs.stars,xs.lvl), p=share(d,xs.lvl,xs.stars,xs.stg);
+  const orow=(nm,v,c)=>`<div class="odd" style="--rc:${c}"><span class="on">${nm}</span><span class="bar"><span style="width:${Math.min(100,v*100/.3*1).toFixed(1)}%"></span></span><span class="pc">${pct(v*100)}</span></div>`;
+  const sn=x?starNeed(d,x):0, rel=x&&x.lvl>1;
+  return `<div class="pan"><div class="sec"><span>Estágios · ${d.name}</span><span>toque para ver no herói</span></div><div class="stg3">${cards}</div>
+    <p class="hint">Evoluir é manual e sem custo. Poder do estágio: <b>×0,8</b> Filhote, <b>×0,9</b> Médio, <b>×1</b> Evoluído (regra nova: evoluir dá poder na hora).</p></div>
+  <div class="pan"><div class="sec"><span>Golpe</span><span>${x?'nível '+xs.lvl+', '+xs.stars+'★':'com 1★ no Nv 1'}</span></div>
+    <div class="kv"><span>Ataque</span><span>sozinho, a cada ${String(R.battle.interval).replace('.',',')} s, no inimigo da frente</span></div>
+    ${d.skill?`<div class="kv"><span>Jeito</span><span>${d.skill}</span></div>`:''}
+    <div class="kv"><span>Vínculo</span><span>+${pct(p*100)} de vida do herói</span></div>
+    <div class="kv"><span>Parte na FC</span><span>${x?pct(sharePct(d,x)):'—'} · máximo ${pct(maxPct(d))}</span></div>
+    ${orow(R.att.crit.name+' ×5',od.crit,'#ffa434')}${orow(R.att.mid.name+' ×2,5',od.mid,'#b46bff')}${orow(R.att.basic.name+' ×1',od.basic,'#4fa3ff')}
+    <p class="hint">As chances sobem com as <b>estrelas</b> e o <b>nível</b>.</p></div>
+  <div class="pan"><div class="sec"><span>Estrelas e fragmentos</span><span>${x?(sn?x.frags+'/'+sn+' para '+(x.stars+1)+'★':'5★ máximo'):n(S.stored[id]||0)+' guardados'}</span></div>
+    <div class="kv"><span>Custo</span><span>${(d.prism?[50,100,150,200]:R.starCost).join(' / ')} fragmentos (2★ a 5★)</span></div>
+    <div class="kv"><span>Ovo repetido</span><span>+${R.repeatFrags} fragmentos; no 5★ vira ${R.repeatFood[Math.min(4,d.r)]} de ração</span></div>
+    <div class="kv"><span>Fontes</span><span>${d.src.join(' · ')}</span></div>
+    ${x?`<div class="rowb"><button class="bt red" data-x="rel" ${rel?'':'disabled'}>Redefinir nível</button></div>`:''}</div>`; }
+function eggsHTML(){ return `<div class="pan"><div class="sec"><span>Ovos</span><span>nada sorteado por dinheiro</span></div>
+  <div class="kv"><span>Chefe de era</span><span>dá o ovo da espécie da era</span></div>
+  <div class="kv"><span>Torre, andar 100</span><span>ovo Épico à escolha: Dragão ou Papagaio-fênix</span></div>
+  <div class="kv"><span>Eras 5 e 6</span><span>à escolha entre as espécies já liberadas</span></div>
+  <div class="kv"><span>Mítico / Lendário</span><span>nível 70 com a Era Industrial / nível 85 com a Era Moderna; antes disso o ovo fica guardado</span></div>
+  <p class="hint">Ovos e fragmentos não são vendidos na loja.</p></div>`; }
+function renderBody(top){ const b=$('#body'), y=b.scrollTop; b.innerHTML=gridHTML()+aboutHTML()+eggsHTML(); b.scrollTop=top?0:y; }
+function full(top){ renderTop(); renderDet(); renderBody(top); }
+
+/* ---------- ações ---------- */
+function tapPet(id){ const d=BY[id]; if(!d) return;
+  if(S.own[id]){ if(S.pv){ S.pv=null; }
+    if(S.eq!==id){ const before=fcNow(), prev=S.eq; S.eq=id; S.undo=prev; S.last={id,what:'trocou o pet',a:before,b:fcNow()}; full(false); fcFly(fcNow()-before); toast(d.name+' agora está na frente do herói'); }
+    else full(false); return; }
+  if(S.pv&&S.pv.id===id){ S.pv=null; full(false); return; }
+  S.pv={id,stg:0}; full(false); toast('Prévia: '+d.name+' no herói'); }
+function feedTap(){ const x=S.own[S.eq], d=BY[S.eq]; if(!x) return; const why=canFeed(x);
+  if(why&&why!=='food'){ toast(why==='evolve'?'Teto do estágio: evolua para subir':why==='cap'?'Teto da era':'Nível máximo'); return; }
+  const need=foodCost(x.lvl), give=Math.min(R.tapFood,need-(x.fx||0),S.food);
+  if(give<=0){ toast('Sem ração: vem dos baús, drops e do offline'); return; }
+  const before=fcNow(); S.food-=give; x.fx=(x.fx||0)+give; let up=false; if(x.fx>=need){ x.fx=0; x.lvl++; up=true; }
+  if(up){ S.last={id:S.eq,what:'Nv '+x.lvl,a:before,b:fcNow()}; fcFly(fcNow()-before); toast(d.name+' subiu para o Nv '+x.lvl); }
+  S.undo=null; full(false); }
+function evolve(){ const x=S.own[S.eq], d=BY[S.eq]; if(!x||!canEvolve(x)) return;
+  const before=fcNow(), from=x.stg; x.stg++; S.pv=null; S.undo=null; S.last={id:S.eq,what:STG[x.stg],a:before,b:fcNow()};
+  S.fx={id:S.eq,from,to:x.stg,t:performance.now()};
+  const f=document.createElement('div'); f.className='flash'; f.style.setProperty('--rc',RC[d.r]); scr.appendChild(f); setTimeout(()=>f.remove(),950);
+  setTimeout(()=>{ const m=document.createElement('div'); m.className='mbn'; m.style.setProperty('--rc',RC[d.r]); m.textContent=STG[x.stg].toUpperCase()+'!'; scr.appendChild(m); setTimeout(()=>m.remove(),1550); },500);
+  full(false); setTimeout(()=>fcFly(fcNow()-before),600); toast(d.name+' evoluiu para '+STG[x.stg]); }
+function undo(){ const p=S.undo; if(!p||!S.own[p]) return; const before=fcNow(); S.eq=p; S.undo=null; S.last={id:p,what:'voltou',a:before,b:fcNow()}; full(false); fcFly(fcNow()-before); toast('Voltou: '+BY[p].name); }
+function askRel(){ const x=S.own[S.eq], d=BY[S.eq]; if(!x||x.lvl<=1) return; const sp=spentOn(x), back=Math.floor(sp*R.refund);
+  modal(`<h3>Redefinir nível?</h3><p><b>${d.name}</b> volta para o <b>Nv 1</b>. Você recebe de volta <b>${n(back)}</b> de ração (80% de ${n(sp)}).</p><p>Estrelas (${x.stars}★) e estágio (${STG[x.stg]}) ficam.</p>
+  <div class="macts"><button class="bt off" data-x="mclose" style="flex:.7">Cancelar</button><button class="bt red" data-x="relok">Redefinir</button></div>`); }
+function doRel(){ const x=S.own[S.eq]; closeModal(); if(!x) return; const back=Math.floor(spentOn(x)*R.refund), before=fcNow();
+  x.lvl=1; x.fx=0; S.food+=back; S.last={id:S.eq,what:'Nv 1',a:before,b:fcNow()}; full(false); fcFly(fcNow()-before); toast('+'+n(back)+' de ração de volta'); }
+
+/* ---------- comum ---------- */
+function modal(html){ closeModal(); const s=document.createElement('div'); s.className='shade'; s.id='shade'; s.innerHTML=`<div class="modal" role="dialog" aria-modal="true">${html}</div>`; scr.appendChild(s); s.addEventListener('click',e=>{ if(e.target===s) closeModal(); }); }
+function closeModal(){ const s=$('#shade'); if(s) s.remove(); }
+function go(where){ closeModal(); const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar para Pets"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>No jogo, este botão abre a tela <b>${where}</b>.</p><p>O voltar traz de volta para Pets.</p><button class="bt" data-x="navback" style="height:46px;min-width:200px">Voltar para Pets</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ document.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+function fcFly(d){ if(Math.abs(d)<1) return; const o=document.createElement('div'); o.className='fcfly '+(d>0?'up':'dn'); o.textContent=(d>0?'▲ +':'▼ −')+fmtD(d)+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; const d=b.dataset;
+  if(d.pet){ tapPet(d.pet); return; }
+  if(d.stg!=null){ const id=S.pv?S.pv.id:S.eq, x=S.own[id], i=+d.stg;
+    if(x&&!S.pv&&i===x.stg) return; if(x&&S.pv&&i===x.stg){ S.pv=null; full(false); return; }
+    S.pv={id,stg:i}; full(false); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.x==='sair'){ S.pv=null; full(false); return; }
+  if(d.x==='feed'){ feedTap(); return; }
+  if(d.x==='evo'){ evolve(); return; }
+  if(d.x==='undo'){ undo(); return; }
+  if(d.x==='rel'){ askRel(); return; }
+  if(d.x==='relok'){ doRel(); return; }
+  if(d.x==='mclose'){ closeModal(); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(false); }
+  if(b.dataset.pl){ reset(b.dataset.pl); document.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',x===b)); document.querySelectorAll('.flash,.mbn,.toast').forEach(x=>x.remove()); closeModal(); full(true); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brilho subindo atrás do herói */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const W=780,H=760,Pp=[]; for(let i=0;i<36;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?150:45,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,74%,${.25+.55*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+reset('25'); full(true);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-pets-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Pets V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
