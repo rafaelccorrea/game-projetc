@@ -14,7 +14,7 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - **PO:** prioriza, cobra e mostra ao dono.
 
 ## Achados (formato: `- [ ] P<n> · tela · o que está errado · dono da correção`)
-- [ ] P1 · Oferta de 1ª compra · não mostra a imagem do Lobo de guerra (montaria) nem do pet; tem que mostrar tudo com a arte real · Engenheiro/Servidor (p_offer)
+- [x] P1 · Oferta de 1ª compra · não mostra a imagem do Lobo de guerra (montaria) nem do pet; tem que mostrar tudo com a arte real · Engenheiro/Servidor (p_offer)
 - [x] P2 · Batalha montado · a arma sai da mão e flutua em cima da montaria · Arte (encaixe nas folhas montadas) + Engenheiro
 - [ ] P3 · Batalha montado · a arma não aparece na mão com o Kael montado (QA confirmou: não é arquivo faltando; 26 telas sem imagem quebrada) · Engenheiro junto com a asa montada
 - [ ] P4 · Vitória (e outras cenas) · o pet some; montaria/asa/aura também precisam aparecer · Engenheiro (drawHeroFull)
@@ -39,7 +39,7 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - Nada de parte do corpo sobrando, duplicada, cortada ou atrás de onde não deveria (braço, perna, arma, cabelo, asa).
 - Nada piscando entre os quadros e nenhum resto de recorte (verde, magenta, contorno escuro).
 - A arma sempre na mão, a asa sempre nas costas, os pés e as patas sempre no chão.
-- [ ] P16 · Bem-vindo de volta (ganho offline) · mostrar TUDO que ganhou no tempo fora antes de coletar: tempo fora, ouro, XP e níveis subidos (Nv 58 → 60), itens por raridade com imagem, ração/pedras/fragmentos com ícone; botão Coletar com os números contando · Servidor (p_intro)
+- [x] P16 · Bem-vindo de volta (ganho offline) · mostrar TUDO que ganhou no tempo fora antes de coletar: tempo fora, ouro, XP e níveis subidos (Nv 58 → 60), itens por raridade com imagem, ração/pedras/fragmentos com ícone; botão Coletar com os números contando · Servidor (p_intro)
 
 ### Passada FINA, quadro a quadro, folhas das 6 montarias (QA, offline: folha de contato ampliada; ferramenta test/paineis fora do repo)
 Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_body.png foi aberta quadro a quadro. IDLE e RUN das 6 montarias: LIMPOS (sem sobra, sem piscada). Defeitos só nas folhas de ATAQUE (todas com 17 quadros), todos de IMAGEM (dono: Arte):
@@ -50,6 +50,7 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [ ] P14 · kael_pony_attack_body.png · quadros 7-13: mancha rosa/cinza semitransparente com borda picada sobre pescoço e crina · Arte (sem print ampliado ainda)
 - [ ] P15 · kael_wyvern_attack_body.png · quadros 8-10: mancha rosa translúcida sobre a cabeça da serpe (além do arco de golpe) · Arte (sem print ampliado ainda)
 - [ ] A VARRER: folhas kael_*_era2_t1 (com arma), pétalas 1-5 estrelas (idle_Nstar), Kael a pé nas 4 fases, pet; e CONFIRMAR NO JOGO se esses quadros aparecem (o jogo pode usar só parte dos 17 quadros).
-- [ ] P16 · kael_wolf_attack_era2_t1.png (folha COM ARMA) · quadros 1,3,5: a espada fica SOLTA, atrás do Kael, longe da mão; a mão segura só uma haste fina preta (guia do recorte ainda visível) e há traços pretos verticais na armadura do lobo; é o "arma que sai da mão" do dono; print reports/prints/pol_8_folhas_com_arma_lobo_e_cavalo.png · Arte
+- [x] P16 · kael_wolf_attack_era2_t1.png (folha COM ARMA) · quadros 1,3,5: a espada fica SOLTA, atrás do Kael, longe da mão; a mão segura só uma haste fina preta (guia do recorte ainda visível) e há traços pretos verticais na armadura do lobo; é o "arma que sai da mão" do dono; print reports/prints/pol_8_folhas_com_arma_lobo_e_cavalo.png · Arte
 - [ ] P17 · kael_horse_attack_era2_t1.png (COM ARMA) · quadro 7: além da espada na mão aparece uma PONTA de lança branca sobrando embaixo do peito do cavalo (resto da arma da folha body); mesmo print pol_8 · Arte
 - Conferido LIMPO nas folhas com arma (amostra por contato, 9 quadros por montaria): pônei, grifo, tigre e serpe nos quadros 0-8 (espada na mão, arcos de golpe ok); falta ver os quadros 9-16 e as folhas idle/run com arma.
+- [ ] P17 · Oferta · na vitrine o Kael no lobo segura uma ESPADA, mas a arma da oferta é uma CLAVA (Arma Épica 3★); o Kael tem que segurar a própria arma da oferta · Servidor (p_offer)

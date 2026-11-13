@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h35 · PARA VOCÊ VOTAR (página de aprovação):** a Oferta de 1ª compra com o Lobo de guerra e o Kael montado, tudo com imagem; o Bem-vindo de volta detalhado (8 h fora: +16,6 mi de ouro, XP Nv 1 → 5, 10 itens, baús, pedras, ração). Um detalhe já mandado corrigir: na vitrine da Oferta o Kael segura espada, mas a arma da oferta é uma clava
+- **03h35 · Skins em camadas:** a Arte está mapeando as 38 skins de roupa em chapéu + cores + óculos/máscara e vai te mostrar uma prévia de 6-8 skins nas 4 fases, no Kael e na Kaia
+
 - **03h25 · Sua decisão: as skins de roupa viram CAMADAS** (chapéu + cor do colete/botas + óculos/máscara). Funcionam nas 4 fases e nos 2 heróis, sem gastar crédito; a skin nunca se perde ao evoluir (regra testada em 21→22, 34→35, 69→70). Até as camadas ficarem prontas, a Loja vende só skins de arma
 - **03h25 · Polimento resolvido:** arma no punho no lobo e no grifo (P2), nome do chefe certo na Vitória (P6), a Serpe na tela de Montarias (P7), ícone da Oferta (P9), Instâncias ligada (P10). Eventos com horário LIGADOS (regra)
 
@@ -177,7 +180,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 ## A. O que eu preciso de você
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
-- [ ] VOTAR AGORA: cenários das eras 5 e 8 e a asa nas costas refeita (página de aprovação)
+- [ ] VOTAR AGORA (página de aprovação): cenários das eras 5 e 8, asa nas costas refeita, Oferta com imagem, Bem-vindo de volta detalhado
 - [ ] Próximos votos (quando chegarem, eu aviso): asa nas costas (refeita), Kaia adulta e guerreira V2 animadas
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
