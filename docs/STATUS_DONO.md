@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **15h35 · SERVIDOR NO AR: em andamento (seu pedido).** O Servidor usa um endereço grátis que aponta para a máquina da AWS (15-229-249-157.sslip.io) com HTTPS, então você não precisa comprar domínio agora. A única coisa sua: colar a senha do banco Supabase num comando que você mesmo roda (eu te mando o passo a passo em 3 linhas; a senha não passa por nós). Depois: login Google, save na nuvem, correio e ranking testados contra o servidor real, e a PRÓXIMA APK sai com o online ligado. Compras de verdade ficam desligadas até os produtos no Play Console
+
 - **15h30 · Modo dono com RECURSOS INFINITOS (seu pedido, com o Engenheiro, no mesmo lote do LIBERAR TUDO):** ouro, diamantes/gemas, pedras e materiais da Forja, invocação, itens de evolução de pet e de estrela de montaria, tentativas da Arena, Torre, Chefe e instâncias, ingressos de evento e mochila sem limite; atalho para pular esperas. Nada trava o teste; o save real não muda
 
 - **15h20 · Seus 3 pedidos para o Modo dono, já distribuídos:** (1) Engenheiro: botão LIBERAR TUDO (todas as skins, armas de cada família em cada raridade, pets nos 3 estágios, montarias 1-5★, asas); (2) Servidor: COMPRA SIMULADA (VIP, diamantes, Passe, Oferta, skins pagas; nada é cobrado e o save real não muda); (3) Sistemas: tela de MOCHILA nova com abas, raridade, Forja e detalhe do item. O QA confere cada um no navegador; entram na próxima APK
@@ -325,7 +327,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 **Servidor (para ligar o online):**
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
-- [ ] Domínio para o servidor (ex.: api.seudominio.com.br → IP 15.229.249.157) + um e-mail para o certificado HTTPS
+- [x] Domínio: não precisa agora (usamos 15-229-249-157.sslip.io com HTTPS; troca quando você tiver um)
 - [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
 - [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
 
