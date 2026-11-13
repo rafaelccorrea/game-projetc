@@ -107,7 +107,10 @@ function sysBootE2(){
   { const dk = (typeof Sys !== 'undefined' && Sys.pass && typeof Sys.pass.dayKey === 'function') ? Sys.pass.dayKey(Date.now()) : new Date().toDateString(); if (S.loginDay !== dk){ S.loginDay = dk; ptrack('login'); } }   // login do dia (conquistas; o passe ignora o evento)
   if (typeof mountBoot === 'function') mountBoot();
   try { if (typeof Sys.pass.releaseMountFrags === 'function') Sys.pass.releaseMountFrags(S); } catch (e) {}   /* fragmentos do Passe guardados sem montaria: entram se ela já existir */   // pacote de montarias (js/mountfx.js)
-  if (typeof petBoot === 'function') petBoot();   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
+  if (typeof petBoot === 'function') petBoot();
+  /* prêmios novos GUARDADOS (asa abaixo do nível das asas; pet ou montaria ganho antes de ser liberado no jogo): saem aqui, uma vez na abertura, além do subir de nível.
+     Pedido da Sistemas (c6e79ca): quem já está no nível máximo recebe na hora em que o item é liberado. Depois do mountBoot/petBoot para os módulos já estarem ligados. */
+  try { if (window.Sys && Sys.newDrops && Sys.newDrops.DATA.on === true && typeof Sys.newDrops.releaseHeld === 'function') Sys.newDrops.releaseHeld(S, Sys.host); } catch (e) { console.error('newDrops.releaseHeld (abertura)', e); }   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
 }
 /* nível do jogador: teto do nível dos itens e bônus de atributo (entra em heroStats) */
 function onLevelUp(lv){

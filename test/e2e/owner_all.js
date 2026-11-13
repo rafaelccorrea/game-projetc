@@ -48,7 +48,7 @@ const inv0 = ev('S.inv.length');
 act('all');
 T('3. LIBERAR TUDO: o primeiro toque só pede a confirmação', () => ev('S.inv.length') === inv0 || 'a mochila mudou no primeiro toque');
 act('all');
-const D = ev(`(function(){ const T=Sys.stats, W=T.DATA.weaponTypes, out={fams:Object.keys(W), maxR:T.maxR(), miss:[], bad:[], ult:[]};
+const D = ev(`(function(){ const T=Sys.stats, W=T.DATA.weaponTypes, out={fams:Object.keys(W), maxR:Math.min(RAR.length-1,T.maxR()), miss:[], bad:[], ult:[]};   /* teto de raridade do JOGO (tabela RAR): com as eras 7-8 o módulo fala em Divino (5), que o jogo ainda não tem; a mochila limita ao Lendário (normItem) */
   for(const t of out.fams) for(let r=0;r<=out.maxR;r++){ const it=S.inv.find(i=>i.slot==='weapon'&&i.origin==='owner'&&i.wt===t&&i.r===r);
     if(!it){ out.miss.push(t+':'+r); continue; } if(T.weaponType(it)!==t||T.ensureWeaponType(it)!==t) out.bad.push(t+':'+r+'='+T.weaponType(it));
     const u=T.ultOf(it); if(u.type!==t||u.tier!==T.DATA.ultTier[r]) out.ult.push(t+':'+r+'='+u.type+'/'+u.tier); }
