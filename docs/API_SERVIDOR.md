@@ -250,12 +250,18 @@ usa um provider trocável (como a arena); sem servidor, a guilda fica fechada.
   - Erros: `age_restricted`, `member_too_new` (7 dias), `item_too_new` (24 h), `item_not_tradeable` (comprado, oferta, pet, skin, VIP, montaria...), `daily_limit` (doar 3, receber 2, mesmo par 1).
 - `GET /guild/gifts/log` (30 dias; só líder e oficiais).
 - Pré-requisito: inventário de itens oficial no servidor (o mesmo do leilão).
-### 10.3 Torneio do Poder (semana no relógio de Brasília)
-- `GET /territory/map` → 28 territórios `[{ id, region (era), capital, owner, bonus, attackable }]`.
-  Um território da região *e* só pode ser atacado se a mediana de era dos 15 escalados for ≥ *e*.
-- `POST /territory/declare { territoryId }` (segunda a quinta; até 2 por guilda por dia; 1 território defendido por vez) · `DELETE /territory/declare/{id}`.
-- `PUT /territory/lineup { battleId, players: [id, ... até 15] }` (líder e oficiais). Na trava, o servidor copia o retrato validado de cada escalado.
-- `GET /territory/battles?week=` → `[{ id, territoryId, attacker, defender, at, state, result?, duels?: [{ a, b, win, hpLeftA, hpLeftB, log }] }]`.
+### 10.3 Torneio do Poder (semana no relógio de Brasília) — ENTREGA A IMPLEMENTADA (fps-server 1f568d8; atrás de `TOURNEY_ON=1` + `GUILD_ON=1`, por servidor)
+Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado às 20h de Brasília (configurável), prêmios pelo correio. Os números vêm do `Sys.guild.DATA` do jogo (season, territory, rankPoints, capitalMinEra, tourney.size, perms): o servidor carrega o js/sys/guild.js, não copia tabela.
+- **Territórios:** 28 por servidor, ids `r<era>t<1-3>` (era 0-8) e `capital`. O mapa de cada servidor é separado.
+- **Dias de batalha (`slot`):** `'d5'` = sexta, `'d6'` = sábado, às 20h; a escalação trava 1 h antes (19h).
+- `GET /tourney` → `{week, phase:'declare'|'battle'|'prize', now, size, battles:[{slot, at, lockAt}], map:[{id, region, capital, owner:{id,name}|null, attacks:[{slot, attacker:{id,name}}]}], my:{guildId, role, canDeclare, canLineup, attacksLeftToday, lineups:{d5:[ids], d6:[ids]}, territories:[ids]}}`.
+- `POST /tourney/declare {territory, slot}` (líder/oficial, permissão `declare` do Sys.guild; segunda a quinta). Erros:
+  - `409 tourney_phase` (fora de seg-qui), `409 own_territory`, `429 daily_limit` (2 por guilda por dia);
+  - `409 territory_busy` (já há ataque a esse território nesse dia), `409 defender_busy` (defendOne: o dono já defende outro território nesse dia);
+  - `403 era_too_low` (mediana de era dos 15 de maior FC < região; Capital: < `capitalMinEra`). Na trava (entrega B) a regra é conferida de novo com a escalação de verdade.
+- `GET /tourney/lineup?slot=d5` → `{slot, members, lockAt, locked}` · `PUT /tourney/lineup {slot, members:[playerId…]}` (líder/oficial; até 15; só membros na guilda desde 24 h antes da trava). Erros: `409 lineup_locked`, `409 member_too_new {ids}`, `400 bad_request` (não é membro, repetido, mais de 15).
+- **Entrega B (a fazer):** na trava o servidor copia o retrato validado de cada escalado; às 20h resolve cada ataque com `Sys.tower.duelCarry` (atributos reais, o vencedor segue com a vida que sobrou, empate = defensor fica), grava e expõe o registro: `GET /tourney/battles?week=` → `[{id, territory, slot, attacker, defender, winner, duels:[{a, b, win, hpLeftA, hpLeftB, log}]}]`.
+- **Entrega C (a fazer):** bônus (o `GET /guild` passa a trazer `territories:[{region, capital}]`, que o `Sys.guild.territoryBonus` já entende), baú semanal por território e prêmios do ranking pelo correio, `GET /guild-ranking?kind=territory|tournament`.
   - Batalhas: sexta e sábado às 20h, rei da colina 15 contra 15 (N configurável) com atributos reais, fila por FC. Cada duelo usa `Sys.tower.duelCarry(A, B, seed, hpA0, hpB0)` → `{win, hpLeftA, hpLeftB, hpA, hpB, log, timeout}` (fps-e2): as vidas iniciais são absolutas, e `timeout` = empate, que dá o território ao defensor.
   - O vencedor de cada duelo segue com a vida que sobrou. Empate por tempo: o defensor fica. Domingo é o dia dos prêmios.
 - Bônus de território, no teto: ouro +10%, XP +5%, drop +5%. Ficam em `Guild.bonus.territory`; no jogo, `Sys.guild.perks(S)` → `{goldPct, xpPct, dropPct}` (já no teto), e o `Sys.loot` soma ao do VIP. As bênçãos de atributo entram no `bonus()` do `Sys.fc`.
