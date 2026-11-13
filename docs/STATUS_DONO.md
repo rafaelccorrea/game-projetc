@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h30 · Checklist revisado inteiro** (seções A, B, C e D abaixo). O principal: APK v0.13.0 pronta com online, esperando o cabo + "pode instalar"; voto no Perfil versão 5; créditos para fechar a arte ~700
+
 - **22h · APK v0.13.0 PRONTA** (C:\Users\rafae\Desktop\fps-android\Eonbound-debug-v0.13.0.apk, 1,08 GB), COM ONLINE LIGADO (o QA passou os 6 testes contra o servidor real), escolha de servidor, desempenho novo, arma sempre a equipada, pet na frente, peças em 3 desenhos, Modo dono completo. Para instalar: celular no cabo e escreva "pode instalar" na janela do Engenheiro. Ainda não visto no aparelho: login Google e desempenho no S24
 - **22h · Arte:** Kael CIBORGUE pronto (38 créditos) e Kael ANJO SEM ASA pronto (16) e já ligado: as 6 skins do Kael estão entregues. Agora: Fênix Gigante montada e, se sobrar, Dragão Negro. Saldo 101
 - **22h · Suas decisões aplicadas:** Excluir conta apaga tudo (com aviso); chefes das eras 7 e 8 = Senhor do Submundo e Juiz Celestial; eras 7 e 8 virando jogáveis (9 eras); pet nunca some (Derrota, ovo chocando, Aparência). Servidores fase 2: arena, guildas e chat separados por servidor, no ar
@@ -361,80 +363,69 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ---
 
-## A. O que eu preciso de você (revisado em 13/11, 15h)
-
-**Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
-- [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
-- [ ] Ainda para votar: Fusão · Coleção (no Modo dono) · Serafim refeito (2 versões) · Lobo das Sombras animado · tela de carregamento nova · 8 skins animadas (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo, Paladino Solar, Ninja) · Pantera Espectral e Falcão animados · poses do arco e do bumerangue
-- [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md; grátis 3 na Arena e 3 na Torre) · como ganhar cada skin · VIP pelo total gasto
-- [x] Números das guildas online aprovados
-
-**Créditos Higgsfield:**
-- [ ] Saldo ~313. A próxima parte (Samurai e Ciborgue, 6 pets, 10 montarias novas montadas) custa ~610
+## A. O que eu preciso de você (revisado em 13/11, 22h30)
 
 **Celular:**
-- [ ] APK v0.13.0 PRONTA: ligue o cabo e escreva "pode instalar" na janela do Engenheiro (instalação nova)
+- [ ] APK v0.13.0 PRONTA (com online): ligue o cabo e escreva "pode instalar" na janela do Engenheiro (instalação nova; daqui em diante instale sempre por cima, sem desinstalar)
 
-**Servidor (para ligar o online):**
-- [x] Senha do banco: feito por você (servidor no ar com o banco)
-- [x] Domínio: não precisa agora (usamos 15-229-249-157.sslip.io com HTTPS; troca quando você tiver um)
-- [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
-- [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
+**Votar:**
+- [ ] Tela 21 Perfil versão 5: https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc (voto na própria página)
+- [ ] Página de aprovação (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19): Fusão · Coleção · Asa Serafim refeita (2 versões) · tela de carregamento nova · skins e pets animados · poses do arco e do bumerangue
+- [ ] Próximas telas para refazer: me diga a ordem
+
+**Créditos Higgsfield:**
+- [ ] Saldo ~101, já comprometido com a Fênix Gigante montada e, se sobrar, o Dragão Negro. Para fechar TODA a arte com folga (8 montarias novas montadas, 6 pets novos, montaria sem cavaleiro): ~700. Comprar 1.000 cobre tudo (docs/LEVANTAMENTO_ARTE.md)
 
 **Para a loja:**
-- [ ] Para a loja: rascunhos prontos em docs/loja/ (ficha, dados, classificação etária, privacidade, termos). Você preenche: nome da empresa, CNPJ, e-mail de contato, endereço e encarregado de dados (LGPD); o advogado revisa os pontos marcados [ADVOGADO] (consentimento dos pais para menores de 13, arrependimento em compra digital, transferência internacional, prazos de guarda)
+- [ ] Preencher nos textos (docs/loja/ e páginas /privacidade, /termos, /excluir-conta): nome da empresa, CNPJ, e-mail de contato, endereço e encarregado de dados (LGPD)
+- [ ] Advogado: revisar os rascunhos e os pontos marcados [ADVOGADO] (consentimento dos pais para menores de 13, arrependimento em compra digital, transferência internacional, prazos de guarda)
+- [ ] Play Console: cadastrar os 13 produtos (reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
+- [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (só se quiser o código do servidor lá; o servidor já roda sem isso)
 
-**Já feito:**
-- [x] Firebase (login Google) criado · GOOGLE_CLIENT_ID e JWT_SECRET no seu Windows · máquina na AWS criada e instalada · Supabase criado
-- [x] Votos anteriores: tudo aprovado (telas, cenários das 9 eras, asa nas costas, Oferta, Bem-vindo, Serpe V2, Kaia jogável, etc.)
-- [x] Moedas do incidente: encerrado (conta de teste)
+**Já feito por você:**
+- [x] Senha do banco (servidor no ar) · Firebase · AWS · Supabase · votos anteriores · domínio dispensado (sslip.io com HTTPS)
 
-## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 15h)
+## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 22h30)
 
-Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e desligado (esperando voto/arte) · `[ ]` ainda não feito
+Legenda: `[x]` pronto no jogo · `[~]` em produção ou esperando voto/arte · `[ ]` ainda não feito
 
 **Telas**
-- [x] Batalha, Equipamento, Invocar, Loja, Passe (trilha + botão Missões, nível 25 novo), Práticas, Títulos, Forja, Configurações, VIP, Pets, Ranking, Torre, Troca de era, Missões, Perfil, Códex, Guilda, Chat (frases prontas), Arena, Eventos (Trilha e Chefe), Torneio, Montarias, Correio, Instâncias, Vitória/Derrota
-- [x] Telas de entrada: Título B, Login, Prólogo com o avô, Criação (Kael ou Kaia), Nome, Bem-vindo de volta detalhado
-- [x] Aparência (vitrine com a skin padrão + "Novas skins em breve")
-- [~] Mapa das Eras (100 fases × 4 dificuldades) · Fusão · Coleção (pets, montarias, asas novos) · Leilão · Oferta de 1ª compra (só no Modo dono até as compras existirem)
-- [x] Eventos com horário na tela (ícone pulsando, faixa, aviso) e bônus valendo · [~] brilho do item caído por raridade (pronto, desligado)
+- [x] Todas as telas do jogo e as de entrada; escolha de servidor (S1 · Nova Era) no caminho Login → Servidor → Prólogo e nas Configurações
+- [x] Aparência com TODAS as skins (prévia a pé e montado, como ganhar com botão para a tela) · Mochila nova · Nuvem × Aparelho · Excluir conta (apaga tudo, com aviso)
+- [x] Sem rolagem para o lado (57 telas corrigidas) · [~] textos cortados em celular estreito (Passe, Equipamento, Ranking/VIP): em correção
+- [~] Perfil refeito (versão 5) esperando seu voto · Mapa das Eras · Fusão · Coleção · Leilão · Oferta (só no Modo dono até as compras)
 
 **Herói e skins**
-- [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
-- [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
-- [x] 8 skins novas animadas no corpo padrão: Kaia (Arlequina, Ninja, Demoníaca, Angelical) e Kael (Demônio, Anjo, Paladino Solar, Ninja) · [ ] Samurai e Ciborgue do Kael: próxima parte. Como ganhar: Ninja na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
-- [x] Kaia montada nas 6 montarias, no jogo (conferida pelo QA; pontinhos do lobo limpos)
-- [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
+- [x] Kael garoto e Kaia menina = skins padrão; o herói não cresce
+- [x] 10 skins prontas: Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical) · Kael Anjo sem asa quando há asa equipada
+- [x] Arma na mão = sempre a equipada (a aba "Skins arma" saiu da Loja) · troca do personagem aparece na hora em todas as telas
+- [x] Pet sempre na frente e nunca some (batalha, Vitória, Derrota, ovo chocando, Aparência) · [~] asa na queda da morte e montaria parada na Derrota: dependem da Arte
 
 **Armas e poder**
-- [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
-- [x] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova nas 9 famílias, LIGADAS
-- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas, 4 ultimates e as 12 poses (Kael e Kaia) PRONTAS; sendo ligados no jogo. Skins usam a pose da pistola/golpe com a arma pelo código
+- [x] 55 armas (9 eras × 5 raridades + arco e bumerangue) · ultimate pela família, Lendária com animação própria, Mítica reforçada
+- [x] Peças com 3 desenhos por raridade nas 9 eras + moldura, brilho e gema por raridade · 34 títulos com ícone e raridade
 
 **Pets, montarias e asas**
-- [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
-- [x] Pets novos animados e ligados: Lobo das Sombras, Falcão de Guerra, Pantera Espectral · [ ] os outros 6 (escorpião, corvo, grifo negro, golem, dragão de gelo, wyvern): próxima parte · [x] 7 asas novas ligadas (Serafim refeito, esperando voto) · [ ] 10 montarias novas montadas: próxima parte
+- [x] 11 pets animados nos 3 estágios · 6 montarias com Kael e Kaia montados · 10 asas
+- [~] Fênix Gigante montada: em produção · [ ] outras 9 montarias novas montadas e 6 pets novos animados: precisam de créditos
 
 **Mundo**
-- [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
-- [x] Inimigo sem ficar parado · inimigos mais fortes por era · curva de 6 meses simulada (~10 mil diamantes) · agenda de eventos aprovada
+- [x] 9 cenários vivos · inimigos e chefes das 9 eras · drop do chefe com anti-repetição · curva de 180 dias conferida (grátis no dia 179, VIP 10 no 121)
+- [~] Eras 7 e 8 jogáveis (chefes Senhor do Submundo e Juiz Celestial): em andamento
 
 **Online e loja**
-- [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
-- [~] Tamanho do app: plano pronto (base ~148 MB + pacotes por era) · [x] Facebook e permissões de publicidade fora · [x] ícone A e abertura no app
-- [x] Logo animado na tela de título · [x] carregamento novo (espera tudo, abre em ~5 s, aprovado pelo QA) · [x] 60 FPS ligado (medir no S24 com a v0.12.9)
-- [x] Vantagens do VIP ligadas: Arena e Torre (grátis 3), Chefe Mundial, eventos, XP do Passe, mochila 60/80/100, offline até 14 h, coleta automática, desmontar sozinho. Grátis continua equipando sozinho o item melhor (sua decisão); VIP 2 ganha outra vantagem no lugar
-- [ ] App assinado, teste interno, ficha da loja
+- [x] Servidor no ar com o banco (AWS + Supabase, HTTPS): convidado, save na nuvem com proteção contra perda, correio · Arena, guildas e chat separados por servidor
+- [~] Login Google: pronto, falta provar no celular · compras reais: esperam os produtos no Play Console
+- [x] Desempenho no PC: 5 min sem travada (pior quadro 15 ms; antes 85) · [ ] medir no S24 na instalação
+- [x] Textos da loja (ficha, dados, classificação etária, privacidade, termos) e páginas públicas no ar como rascunho
+- [ ] App assinado para a loja, teste interno
 
 ## C. Regras que você decidiu (resumo)
 
-Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sai dos atributos · Ultimate pela família da arma (a raridade mais alta ganha animação nova), a era muda só cenário e drops · Mostrar FC que sobe/desce, em escala grande · Pet ao lado do Kael; pet, montaria, asa e aura nunca somem · O herói não cresce: garoto/menina são a skin padrão; toda skin usa o mesmo corpo; sem combinação de peças; nunca versão adulta · Tudo novo tem evolução (pets 3 estágios, montarias 1-5★, armas raridade/Forja) · Pets, montarias e asas novos com visual maduro, nada infantil · NUNCA sensualizar temas sensíveis · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP, ~10 mil diamantes · Asa = item, você escolhe · Missões numa tela só · Chat só com frases prontas · Leilão em ouro, preço fixo, anônimo, 18+ · Eventos por horário (agenda aprovada) · Um mundo por servidor (S1 Nova Era, S2...): conta global, personagem e tudo o mais separado por servidor
+Nada parado; ninguém flutua; arma na mão direita (sempre a equipada) · Só automático · Dano sai dos atributos · Ultimate pela família da arma (a raridade mais alta ganha animação nova), a era muda só cenário e drops · FC que sobe/desce, em escala grande · Pet SEMPRE NA FRENTE; pet, montaria, asa e aura nunca somem · Tudo que muda no personagem aparece na hora · Nunca rolagem para o lado · O herói não cresce; toda skin usa o mesmo corpo; sem combinação de peças; nunca versão adulta; o jogador nunca precisa tirar a asa por causa da skin · Tudo novo tem evolução · Visual maduro, nada infantil · NUNCA sensualizar · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP · Chat só com frases prontas · Leilão em ouro, 18+ · Um mundo por servidor (S1 Nova Era, S2...) · Excluir conta apaga tudo
 
-## D. Versões (no GitHub)
+## D. Versões
 
-- [x] v0.12.1 a v0.12.6: tela cheia, armas, Forja, pets
-- [x] v0.12.7: montarias, pet ao lado, asa por item 
-- [x] v0.12.8 (APK pronto, 722 MB): todas as telas novas, telas de entrada, Kaia jogável, Kael garoto em qualquer nível, FC nova, morte nova, inimigo sem parar, cenários, Vitória com pet/montaria/asa. Substituída pela v0.12.9
-- [x] v0.12.9 (APK pronto, 971 MB, em Desktopps-android): carregamento novo, ícone A e abertura, logo animado, 60 FPS, eventos na batalha, VIP, ultimates Lendárias, asas novas, skins e pets novos, arco/bumerangue, sem Facebook. INSTALADA no seu S24
-- [ ] Próxima: FC em telas estreitas, telas VIP, Kael Ninja/Pantera no app, lobo da Kaia limpo, depois a próxima parte da arte (Samurai, Ciborgue, 6 pets, 10 montarias) · itens novos aprovados (skins, pets, montarias, asas, ultimates, arco/bumerangue), eventos com horário, Fusão, Mapa, app menor (Play Asset Delivery), servidor no ar
+- [x] v0.12.1 a v0.12.9 (a v0.12.9 foi instalada e depois desinstalada por você)
+- [ ] v0.13.0 PRONTA, esperando instalar: online ligado, escolha de servidor, desempenho novo, arma sempre a equipada, pet na frente, troca na hora, peças em 3 desenhos, Modo dono completo (Liberar tudo, recursos infinitos, compra simulada), Mochila, Excluir conta
+- [ ] Próxima (v0.13.1): eras 7 e 8 jogáveis, pet na Derrota/ovo/Aparência, Samurai, Ciborgue e Anjo sem asa no app, textos cortados corrigidos, Fênix montada, folhas em grade (desempenho), Perfil novo se aprovado
