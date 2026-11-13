@@ -324,7 +324,13 @@ function drawHeroPistol(H, E){
 }
 /* MORTE NOVA DO KAEL (aprovada, v0.12.8): folha assets/anim/hyb/R/kael_die_body (448x256, padLeft 96, pés em feetY; 18 quadros a 12 fps; o último,
    deitado, segura). Cai de joelho e de bruços; a arma cai por código ao lado; poeira ao bater no chão; a tela escurece (battle.js). Vale montado
-   (não há folha da montaria sem o Kael: ele cai a pé e a montaria sai de cena) e com pet (o pet para). Chave: ART_ON.kael_die. */
+   (não há folha da montaria sem o Kael: ele cai a pé e a montaria FICA em cena, parada atrás dele: drawMountParked, js/mountfx.js) e com pet (o pet fica à frente,
+   parado). Chave: ART_ON.kael_die.
+   ASA NA MORTE: continua SEM desenho (drawWingsAt sai com H.deadP >= 0), de propósito. As folhas da morte trazem a âncora "back", mas ela é medida automática e
+   não acompanha o corpo deitado: no último quadro (o que fica a Derrota inteira) a âncora da folha padrão está em y = 164 da célula, a altura do ombro de quem está
+   EM PÉ, e o corpo deitado está em y 225 a 243; em phase2 ela volta a x do quadro 0; nas skins ninja/samurai/paladino/ciborgue/anjo os últimos quadros vêm ok=false
+   (estimados). Desenhada por essa âncora a asa ficaria SOLTA NO AR acima do corpo caído (quebra "nada flutua"). Para a asa ficar colada nas costas na morte a Arte
+   precisa entregar a âncora "back" conferida quadro a quadro nas folhas *_die_body (dado novo, não código). */
 /* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
 function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) return s; return sheetLoad(HERO_DIR + 'kael_die_body', true); }   /* a pasta que o sheetFor devolver (herói e skin); sem o módulo, a do Kael */
 /* Engenheiro 17 (nada flutua): quanto a arma DEITADA (girada a1) desce abaixo do próprio centro, em px do sprite, medido nos pixels opacos (alfa > 40, passo 2),
@@ -333,7 +339,7 @@ function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) retu
 function wLieH(w0, a1){ if (w0._lieA === a1) return w0._lie; const s = Math.sin(a1), c = Math.cos(a1); let hh = (Math.abs(w0.w * s) + Math.abs(w0.h * c)) / 2;
   try { const d = w0.c.getContext('2d').getImageData(0, 0, w0.w, w0.h).data; let mb = -1e9; for (let j = 0; j < w0.h; j += 2) for (let i = 0; i < w0.w; i += 2) if (d[(j * w0.w + i) * 4 + 3] > 40){ const y = (i - w0.w / 2) * s + (j - w0.h / 2) * c; if (y > mb) mb = y; } if (mb > 0) hh = Math.min(hh, mb + 1); } catch (e) {}
   w0._lieA = a1; w0._lie = hh; return hh; }
-function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
+function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; if (H.mount && typeof drawMountParked === 'function') drawMountParked(H);   /* dono: a montaria nunca some. Fica parada, patas no chão, ATRÁS do herói caído (desenhada antes dele) */ const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
   const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);

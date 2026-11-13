@@ -34,20 +34,22 @@ function plHero(){ try{ const A=window.Sys&&Sys.appearance; const h=A&&A.heroOf?
 function plFixed(hero){ try{ const A=window.Sys&&Sys.appearance; if(!A||typeof A.fixedSkins!=='function') return []; const l=A.fixedSkins(S,Sys.host); return (Array.isArray(l)?l:[]).filter(x=>x&&x.id&&(!x.hero||x.hero===hero)); }catch(e){ return []; } }
 function plDraw(ts){ XLK.raf=0; const cs=document.querySelectorAll?document.querySelectorAll('canvas[data-plsk][data-live]'):[]; if(!cs.length) return; if(!XLK.t0) XLK.t0=ts||0;
   if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; }
-  const hs=(typeof HS==='number'&&HS>0)?HS:155;   /* a vitrine mostra o herói A PÉ e sem pet: com montaria a skin não apareceria (P21) */
-  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk,mount:cv.dataset.mounted==='1'?undefined:false,pet:false,wing:plWingOff(cv.dataset.plsk)?false:undefined}); }catch(e){ XLK.err=1; plFallback(); return; } }
+  const hs=(typeof HS==='number'&&HS>0)?HS:155;   /* a vitrine mostra o herói A PÉ (com montaria a skin não apareceria, P21) e COM O PET, na frente (regra do dono: pet sempre na frente e nunca some): sem state.pet o drawHeroFull desenha o pet por último, na mesma posição das outras telas (Arena, Troca de era). Montado, o herói vai um pouco para a esquerda para o pet (que fica mais à frente) caber no quadro */
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*(cv.dataset.mounted==='1'?0.38:0.45),h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk,mount:cv.dataset.mounted==='1'?undefined:false,wing:plWingOff(cv.dataset.plsk)?false:undefined}); }catch(e){ XLK.err=1; plFallback(); return; } }
   if(typeof requestAnimationFrame==='function') XLK.raf=requestAnimationFrame(plDraw); }
 /* reserva: o Kael parado no lugar de cada canvas */
 function plFallback(){ try{ const cs=document.querySelectorAll('canvas[data-plsk]'); for(const cv of cs){ cv.style.display='none'; const fb=cv.nextElementSibling; if(fb) fb.style.display='block'; } }catch(e){} }
 function plStop(){ if(XLK.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(XLK.raf); XLK.raf=0; }
 /* regra do PO: nada de preço de item que o jogo ainda não entrega: tira o "R$ 24,90" do texto de como ganhar */
 function plNoPrice(s){ return String(s).replace(/ *R[$] *[0-9.,]+/g,'').replace(/ +/g,' ').trim(); }
+/* pet equipado com as folhas ainda carregando: o quadro parado da grade não é dado como pronto (senão o cartão ficaria SEM o pet até reabrir a tela) */
+function plPetWait(){ try{ if(typeof petInfo!=='function'||typeof petReady!=='function') return false; return !!(petInfo()&&PETK.base&&!petReady(PETK.base)); }catch(e){ return false; } }
 /* GRADE: quadro PARADO (um desenho só por cartão, nada de laço de animação: desempenho); tenta de novo algumas vezes porque a folha pode ainda estar carregando */
 function plStills(){ XLK.tm=0; const cs=document.querySelectorAll?document.querySelectorAll('canvas[data-plsk]:not([data-live])'):[]; if(!cs.length) return;
-  if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; } const hs=(typeof HS==='number'&&HS>0)?HS:155; let miss=0;
-  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; if(cv.__painted) continue; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:0.35,skin:cv.dataset.plsk,mount:false,pet:false,wing:plWingOff(cv.dataset.plsk)?false:undefined});
+  if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; } const hs=(typeof HS==='number'&&HS>0)?HS:155, pw=plPetWait(); let miss=0;
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; if(cv.__painted) continue; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:0.35,skin:cv.dataset.plsk,mount:false,wing:plWingOff(cv.dataset.plsk)?false:undefined});
       let ok=true; try{ if(c2.getImageData){ const d=c2.getImageData(Math.floor(w*0.3),Math.floor(h*0.25),Math.floor(w*0.4),Math.floor(h*0.6)).data; ok=false; for(let i=3;i<d.length;i+=16) if(d[i]>0){ ok=true; break; } } }catch(e){ ok=true; }
-      if(ok) cv.__painted=1; else miss++; }catch(e){ XLK.err=1; plFallback(); return; } }
+      if(ok&&!pw) cv.__painted=1; else miss++; }catch(e){ XLK.err=1; plFallback(); return; } }
   XLK.n=(XLK.n||0)+1; if(miss&&XLK.n<20&&typeof setTimeout==='function') XLK.tm=setTimeout(plStills,600); }   /* a folha de cada skin carrega sob demanda: repete a cada 0,6 s (até ~12 s) só nos cartões ainda vazios; o quadro pronto não é redesenhado */
 /* COMO GANHAR: texto do módulo (sem preço) e o botão que leva à tela certa pelos caminhos que o MENU já usa; destino desligado/bloqueado = o botão explica */
 function plOpenTry(fn,msg){ let ok=false; try{ ok=fn()!==false; }catch(e){ ok=false; } if(!ok) plToast(msg); return ok; }

@@ -34,7 +34,7 @@ assert.strictEqual(raf.length, 0, 'nenhum laço de animação na grade'); out.pu
 // 2) destaque de skin bloqueada com arte
 def.click(btn('open', { id: 'kpal' })); has('role="dialog"'); has('COMO GANHAR'); has('Loja: compra direta'); assert(!/R[$]|24,90/.test(H()), 'sem preço'); has('Ir à Loja'); has('data-live="1"'); has('data-x="close"'); assert((H().match(/data-live="1"/g) || []).length === 1, 'só o destaque anima');
 assert(raf.length === 1, 'um laço só, para o destaque'); out.push('destaque: um canvas animado, como ganhar sem preço, botão Ir à Loja');
-mkCanvases(); drew = []; raf.shift()(16); assert(drew[0].wing === undefined, 'skin sem asa própria: wing segue o jogo'); assert(drew.length >= 1 && drew[0].skin === 'kpal' && drew[0].mount === false && drew[0].pet === false, 'desenha a skin a pé no destaque');
+mkCanvases(); drew = []; raf.shift()(16); assert(drew[0].wing === undefined, 'skin sem asa própria: wing segue o jogo'); assert(drew.length >= 1 && drew[0].skin === 'kpal' && drew[0].mount === false, 'desenha a skin a pé no destaque'); assert(drew[0].pet === undefined, 'regra do dono (pet sempre na frente e nunca some): o destaque NÃO esconde o pet (sem state.pet o drawHeroFull desenha o pet por último)');
 // 2b) skin com asa PRÓPRIA (Kael Anjo, Kaia Angelical): wing:false no desenho (sem asa dupla); as outras seguem a regra do jogo (wing indefinido)
 assert(plWingOff('kael_angel') === true && plWingOff('kaia_angel') === true && plWingOff('kdem') === false && plWingOff('default') === false, 'só as skins com asa própria'); 
 out.push('asa própria: wing:false só para kael_angel/kaia_angel');

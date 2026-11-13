@@ -72,19 +72,29 @@ function petHit(e, I){ let st = null, roll = null; try { st = heroStats(); roll 
 function petWave(){ const I = petInfo(); if (!I || !B.hero) return; let st = null; try { st = heroStats(); } catch (e) {} const ph = st && st.pet ? st.pet.heal : 0; if (!(ph > 0)) return;
   const v = st.hp * ph, h = B.hero, b = h.hp; h.hp = Math.min(h.maxhp, h.hp + v); if (h.hp > b + 0.5) floatText(HX, GY - HS - 6, '+' + fmt(h.hp - b), '#7ee27a', 0); }
 /* desenho: atrás do Kael, pés na linha do chão; anda com o cenário, respira parado, golpeia no lugar */
-function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era') || HATCH.cur) return;   /* ordem do dono: o pet NUNCA some (antes sumia na Vitória/Derrota); só não é desenhado atrás da Troca de era, que cobre a tela inteira */ const act = B.res ? null : PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');   /* Engenheiro 17 (P4/P13): com a Vitória/Derrota aberta o petStep para e o golpe em andamento ficava CONGELADO num quadro do ataque (pet no ar / fora do lugar a tela inteira); com resultado aberto o pet fica parado, respirando */
+function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era') || hatchHidesPet()) return;   /* ordem do dono: o pet NUNCA some (antes sumia na Vitória/Derrota e por até 5 s a cada ovo chocando); só não é desenhado atrás da Troca de era, que cobre a tela inteira, e enquanto ELE MESMO ainda está dentro do ovo (hatchHidesPet) */ const act = B.res ? null : PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');   /* Engenheiro 17 (P4/P13): com a Vitória/Derrota aberta o petStep para e o golpe em andamento ficava CONGELADO num quadro do ataque (pet no ar / fora do lugar a tela inteira); com resultado aberto o pet fica parado, respirando */
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
   const T = petTbl(), k = petK(), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-  /* Engenheiro 2: na MORTE do Kael (morte nova) o pet RECUA para trás dele, para não ficar em cima do corpo caído */
-  const dieK = (B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true) ? Math.min(1, (1 - B.deadT / 1.6) * 3.2) : 0, backX = HX - HS * KAEL_W * PET_BACK * 1.5;
-  const dieE = dieK * dieK * (3 - 2 * dieK), px0 = petX(), px = px0 + (backX - px0) * dieE, gy = GY + T.dy + (petMO() ? petMO().dy * (1 - dieE) : 0),   /* morte nova: o Kael cai A PÉ e a montaria sai; o pet volta para a altura de quem está a pé (antes ficava os px da montaria abaixo da linha) */ fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
+  /* DERROTA (regra do dono: PET SEMPRE NA FRENTE E NUNCA SOME): o pet NÃO recua mais para trás do corpo caído. Fica no lugar dele, à frente, parado (folha _idle),
+     pés no chão, desenhado DEPOIS do herói caído (draw() do js/battle.js). A montaria agora fica em cena na Derrota (drawMountParked, js/mountfx.js), então a
+     posição do pet continua a de quem tem montaria (petMO). petPos() é a posição que o desenho usa (o teste confere por ela). */
+  const pp = petPos(), px = pp.x, gy = pp.gy, fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
+/* posição do pet no desenho: x = centro (sempre À FRENTE do herói: petX), gy = linha dos pés (o chão + os px "levemente à frente" da tabela). Igual vivo ou na Derrota. */
+function petPos(){ const T = petTbl(), mo = petMO(); return { x: petX(), gy: GY + T.dy + (mo ? mo.dy : 0) }; }
+/* CHOCAGEM (regra do dono: o pet nunca some): o pet equipado continua desenhado e o ovo aparece AO LADO dele, no chão, do lado de FORA (à frente do pet, longe do
+   herói: nunca sobrepõe o herói), sem sair da tela. Única exceção: quando o pet que está no ovo É o equipado (1º ovo do nível 20: ele entra equipado na hora), ele
+   ainda não nasceu; o ovo fica no lugar do pet e o pet só passa a ser desenhado quando termina de saltar do ovo (HATCH_BORN). Nada some: ele nasce ali. */
+const HATCH_BORN = 3.1;
+const hatchOwn = h => !!h && !h.dup && !!PETK.info && PETK.info.id === h.pet;
+function hatchHidesPet(){ const h = HATCH.cur; return !!h && hatchOwn(h) && B.at - h.t0 < HATCH_BORN; }
+function hatchX(h){ if (!PETK.info || hatchOwn(h)) return petX(); const m = PETK.base ? petMetric(PETK.base) : null, ew = HS * 0.5; return Math.min(LW - ew / 2 - 4, petX() + (m ? m.r * petK() : HS * 0.15) + ew / 2 + 4); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */
 function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q.shift(); h.t0 = B.at; HATCH.cur = h; snd('claim');
     if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); }
-  const h = HATCH.cur, T = B.at - h.t0, cx = petX(), gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
+  const h = HATCH.cur, T = B.at - h.t0, cx = hatchX(h), gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
   if (T > 5.2){ HATCH.cur = null; return; }
   const ew = HS * 0.5, eh = eg && eg.naturalWidth ? ew * eg.naturalHeight / eg.naturalWidth : ew * 1.25;
   if (T < 2.4 && eg && eg.complete && eg.naturalWidth){ const sh = T < 1.4 ? Math.sin(T * 22) * 0.05 * (T / 1.4) : Math.sin(T * 40) * 0.1; ctx.save(); ctx.translate(cx, gy); ctx.rotate(sh); ctx.drawImage(eg, -ew / 2, -eh, ew, eh);
@@ -93,7 +103,7 @@ function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length
     ctx.restore(); }
   if (T >= 2.1 && T < 3.1){ const p = T - 2.1; drawGlow('#ffffff', cx, gy - eh * 0.5, HS * (0.3 + 1.4 * p), Math.max(0, 1 - p)); drawGlow(col, cx, gy - eh * 0.5, HS * (0.5 + 1.0 * p), Math.max(0, 0.8 - p)); }
   if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx;
-    if (sh && sh.ok){ const M = sh.meta, k = heroBodyH() * 0.46 / Math.max(20, (petMetric(h.sprite) || { h: 150 }).h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
+    if (sh && sh.ok && !(hatchOwn(h) && T >= HATCH_BORN)){ const M = sh.meta, k = heroBodyH() * 0.46 / Math.max(20, (petMetric(h.sprite) || { h: 150 }).h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
       ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
     if (!h.said){ h.said = true; B.banner = { txt: h.name + ' · ' + (RAR[h.r] ? RAR[h.r].n : ''), pill: true, bg: 'rgba(29,22,17,.92)', bd: col, sh: '#0e0a07', t: 0, dur: 2.4, col }; }   // nome e raridade na faixa de aviso do jogo (fora das barras do Kael)
   }
