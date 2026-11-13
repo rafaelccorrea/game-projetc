@@ -21,7 +21,8 @@ const DATA={
                       {when:c=>c.league===2, mount:'panther', n:10}, {when:c=>c.league>=3, mount:'panther', n:20},
                       {when:c=>c.league>=4, wing:'shadow'}],
     // torneio da temporada: rank = posição final (1 = primeiro)
-    'tourney:season':[{when:c=>c.rank===1, wing:'seraph'},
+    'tourney:season':[{when:c=>c.rank>=1&&c.rank<=10, skin:{kael:'kael_samurai'}},   // Samurai é do Kael; a Kaia não tem skin de torneio
+                      {when:c=>c.rank===1, wing:'seraph'},
                       {when:c=>c.rank>=1&&c.rank<=3, pet:'icedragon', whole:true}, {when:c=>c.rank>=4&&c.rank<=10, pet:'icedragon', n:100},
                       {when:c=>c.rank>=1&&c.rank<=3, mount:'blackdragon', whole:true}, {when:c=>c.rank>=4&&c.rank<=10, mount:'blackdragon', n:50},
                       {when:c=>c.rank>=1&&c.rank<=10, wing:'phoenix'}],
@@ -43,8 +44,10 @@ const DATA={
     'activity:full': [{pet:'shadowwolf', n:2, perDay:1}, {mount:'raptor', n:1, perDay:1}],   // os 100 pontos da atividade do dia
     'missions:daily':[{pet:'falcon', n:1, perDay:1}],
     'invasion:top':  [{wing:'ice', perDay:1}],                                               // baú de topo da Invasão da Era (1 por semana na agenda)
-    'vip:level':     [{when:c=>c.level>=8, mount:'phoenixm', whole:true, once:true, key:()=>'v8'}, {when:c=>c.level>=9, pet:'wyvernpet', whole:true, once:true, key:()=>'v9'}],
-    'shop:product':  [{when:c=>c.productId==='mount_mecha', mount:'mecha', whole:true, once:true, key:c=>c.orderId||'mecha'}],
+    'vip:level':     [{when:c=>c.level>=7, skin:{kael:'kael_demon',kaia:'kaia_demon'}, once:true, key:()=>'v7'}, {when:c=>c.level>=8, mount:'phoenixm', whole:true, once:true, key:()=>'v8'}, {when:c=>c.level>=9, pet:'wyvernpet', whole:true, once:true, key:()=>'v9'}],
+    'shop:product':  [{when:c=>c.productId==='mount_mecha', mount:'mecha', whole:true, once:true, key:c=>c.orderId||'mecha'},
+                      {when:c=>c.productId==='skin_kael_paladin', skin:{kael:'kael_paladin'}, any:true}, {when:c=>c.productId==='skin_kaia_harlequin', skin:{kaia:'kaia_harlequin'}, any:true},
+                      {when:c=>c.productId==='skin_kael_cyborg', skin:{kael:'kael_cyborg'}, any:true}],
   },
   // loja: compra DIRETA (Sys.buy entrega pelo servidor; aqui só o catálogo e a entrega local)
   shop:[{productId:'mount_mecha', name:'Mecha de guerra', kind:'mount', id:'mecha', priceBRL:49.90}],
@@ -76,14 +79,17 @@ function giveWing(S,host,id){ const T=SYS().stats; if(!T||!T.wingLive||!T.wingLi
   const Lt=SYS().loot, minL=num(Lt&&Lt.DATA&&Lt.DATA.wing&&Lt.DATA.wing.minLevel,50);
   if(lvlOf(S,host)<minL){ ensure(S).heldWings.push({id}); return {kind:'wing',id,held:true,needLevel:minL}; }
   const it=makeWing(S,host,id,eraOf(host)); if(it&&host&&host.addItem) host.addItem(it); return it?{kind:'wing',id,item:it}:null; }
+/* skin (Sys.appearance; chave skinsOn lá): a do herói do jogador; any = produto da loja de um herói só (entrega mesmo se o jogador estiver no outro) */
+function giveSkin(S,map,any){ const A=SYS().appearance; if(!A||!A.grantFixed) return null; const h=S&&S.hero==='kaia'?'kaia':'kael', id=map[h]||(any?Object.values(map)[0]:null); if(!id) return null;
+  const r=A.grantFixed(S,id,{source:'reward'}); return r&&r.ok?{kind:'skin',id}:null; }
 /* ENTREGA de uma fonte. ctx = dados da fonte (floor, league, rank, era, diff, first, frac, level, productId…). Devolve a lista do que entrou. */
 function grant(S,host,src,ctx){ if(!ON()) return {ok:false,reason:'off',got:[]}; const R=DATA.sources[src]; if(!R) return {ok:false,reason:'source',got:[]};
   const c=ctx||{}, o=ensure(S), day=dayOf(host), got=[];
   for(const rule of R){ let ok=false; try{ ok=!rule.when||!!rule.when(c); }catch(e){ ok=false; } if(!ok) continue;
-    const what=rule.pet?'pet:'+rule.pet:rule.mount?'mount:'+rule.mount:'wing:'+rule.wing, k=src+'|'+what+(rule.key?'|'+rule.key(c):rule.once&&c.floor?'|'+c.floor:'');
+    const what=rule.pet?'pet:'+rule.pet:rule.mount?'mount:'+rule.mount:rule.skin?'skin:'+Object.values(rule.skin).join('/'):'wing:'+rule.wing, k=src+'|'+what+(rule.key?'|'+rule.key(c):rule.once&&c.floor?'|'+c.floor:'');
     if(rule.once&&o.done.includes(k)) continue;
     if(rule.perDay){ const dk=k+'@'+day; if(int0(o.day[dk])>=rule.perDay) continue; }
-    const g=rule.pet?givePetMount(S,host,'pet',rule.pet,rule):rule.mount?givePetMount(S,host,'mount',rule.mount,rule):giveWing(S,host,rule.wing);
+    const g=rule.pet?givePetMount(S,host,'pet',rule.pet,rule):rule.mount?givePetMount(S,host,'mount',rule.mount,rule):rule.skin?giveSkin(S,rule.skin,rule.any):giveWing(S,host,rule.wing);
     if(!g) continue; got.push(g);
     if(rule.once) o.done.push(k);
     if(rule.perDay){ const dk=k+'@'+day; o.day[dk]=int0(o.day[dk])+1; }

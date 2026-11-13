@@ -16,7 +16,8 @@ const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const Sys=()=>root.Sys||{};
-const skinName=()=>{ const A=Sys().appearance, k=DATA.skin&&A&&A.FIXED?A.FIXED.find(x=>x.id===DATA.skin):null; return k?k.name:null; };
+const skinId=S=>{ const A=Sys().appearance, sk=DATA.skin||(A&&A.DATA&&A.DATA.skinsOn===true?A.DATA.offerSkin:null); if(!sk) return null; return typeof sk==='object'?sk[S&&S.hero==='kaia'?'kaia':'kael']:sk; };
+const skinName=S=>{ const A=Sys().appearance, id=skinId(S), k=id&&A&&A.FIXED?A.FIXED.find(x=>x.id===id):null; return k?k.name:null; };
 function ensure(S,host){ if(!S||typeof S!=='object') throw new Error('Sys.offer.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.offer; if(!o||typeof o!=='object') o=S.sys.offer={}; o.v=1; o.seen=num(o.seen,0); o.claimed=o.claimed===true; o.bought=o.bought===true;
   if(!o.seen&&host&&DATA.on===true) o.seen=nowOf(host);   // o relógio de 24 h começa no 1º acesso COM a oferta ligada
@@ -31,7 +32,7 @@ const markPurchase=(S,host)=>{ ensure(S,host).bought=true; return true; };
 function status(S,host){ if(DATA.on!==true) return {on:false,available:false};
   const o=ensure(S,host), left=Math.max(0,o.seen+DATA.windowMs-nowOf(host)), bought=!o.claimed&&hasPurchased(S,host);
   return {on:true,available:!o.claimed&&!bought&&left>0,reason:o.claimed?'done':bought?'not_first_purchase':left<=0?'expired':'',msLeft:left,claimed:o.claimed,expired:!o.claimed&&left<=0,price:DATA.priceBRL,
-    contents:{skin:skinName(),weapon:'Arma Épica 3★',mount:(Sys().mount&&Sys().mount.info?Sys().mount.info(S,host,DATA.mount).name:DATA.mount),gems:DATA.gems,goldk:DATA.goldk}}; }
+    contents:{skin:skinName(S),weapon:'Arma Épica 3★',mount:(Sys().mount&&Sys().mount.info?Sys().mount.info(S,host,DATA.mount).name:DATA.mount),gems:DATA.gems,goldk:DATA.goldk}}; }
 /* ENTREGA depois da compra confirmada. Uma vez só. {ok, weapon, mount, gems, gold} ou {ok:false, reason: off|done|expired} */
 function grant(S,host,opts){ if(DATA.on!==true) return {ok:false,reason:'off'}; const o=ensure(S,host);
   if(o.claimed) return {ok:false,reason:'done'}; if(!(opts&&opts.ignoreWindow)&&nowOf(host)>o.seen+DATA.windowMs) return {ok:false,reason:'expired'};
@@ -41,7 +42,7 @@ function grant(S,host,opts){ if(DATA.on!==true) return {ok:false,reason:'off'}; 
   const M=Sys().mount, mount=M&&M.add?M.add(S,host,DATA.mount):null;
   if(host&&host.addGems) host.addGems(DATA.gems);
   const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.round(DATA.goldk*unit); if(host&&host.addGold) host.addGold(gold);
-  const A=Sys().appearance, skin=DATA.skin&&A&&A.grantFixed?A.grantFixed(S,DATA.skin,{source:'offer'}):null;
+  const A=Sys().appearance, sid=skinId(S), skin=sid&&A&&A.grantFixed?A.grantFixed(S,sid,{source:'offer'}):null;
   o.claimed=true; return {ok:true,weapon:w,mount,gems:DATA.gems,gold,skin}; }
 /* com servidor: a janela vem do GET /offers (endsAt, relógio do servidor). O seen passa a ser endsAt − 24 h, e o relógio do aparelho não manda mais. */
 function setWindow(S,endsAt){ const e=num(endsAt,0); if(!(e>0)) return false; const o=ensure(S); o.seen=e-DATA.windowMs; o.server=true; return true; }

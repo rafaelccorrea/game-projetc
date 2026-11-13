@@ -131,17 +131,22 @@ DATA.offerSkin=null; DATA.passSkin=null;
    (o Modo dono vê); quando chegar, preencher dir (+ avatar) e art:true. r = raridade (bônus no padrão do Sys.skin). PROPOSTA dos ganchos:
    oferta de 1ª compra = NINJA do herói do jogador (Épico); fim do Passe premium = ANJO do herói (Lendário). Os ganchos ficam null até a arte. */
 DATA.hookProposal={offer:{kael:'kael_ninja',kaia:'kaia_ninja'},pass:{kael:'kael_angel',kaia:'kaia_angel'}};
+/* APROVADO PELO DONO (13/11, tabela das skins como proposta): ganchos por herói. CHAVE skinsOn (desligada): desligada, nenhuma fonte entrega skin
+   (oferta, passe, VIP, torneio, loja); o Modo dono continua. Ligada: a skin entra na coleção mesmo SEM a arte ainda (o direito não se perde) e só
+   EQUIPA quando art:true (a Arte entregou a pasta). */
+DATA.skinsOn=false;
+DATA.offerSkin={kael:'kael_ninja',kaia:'kaia_ninja'}; DATA.passSkin={kael:'kael_angel',kaia:'kaia_angel'};
 for(const k of [
-  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7 (proposta)'},
-  {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium (proposta)', sources:['pass']},
-  {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta (proposta R$ 24,90)'},
-  {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra (proposta)', sources:['offer']},
-  {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada (proposta)'},
-  {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta (proposta R$ 39,90)'},
-  {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta (proposta R$ 24,90)'},
-  {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra (proposta)', sources:['offer']},
-  {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7 (proposta)'},
-  {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium (proposta)', sources:['pass']},
+  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward']},
+  {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass']},
+  {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta R$ 24,90', sources:['reward','shop'], product:'skin_kael_paladin', priceBRL:24.90},
+  {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer']},
+  {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada', sources:['reward']},
+  {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta R$ 39,90', sources:['reward','shop'], product:'skin_kael_cyborg', priceBRL:39.90},
+  {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta R$ 24,90', sources:['reward','shop'], product:'skin_kaia_harlequin', priceBRL:24.90},
+  {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra', sources:['offer']},
+  {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward']},
+  {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass']},
 ]) FIXED.push(Object.assign({dir:null,avatar:null,mountArt:false,art:false,sources:[]},k));
 const FX={}; for(const k of FIXED) FX[k.id]=k;
 const dirOf=(k,h)=>k?(k.dir&&typeof k.dir==='object'?k.dir[h]||null:k.dir):null;
@@ -159,11 +164,13 @@ function fixedSkins(S,host){ const f=fixedState(S), h=heroOf(S), K=root.Sys&&roo
     soon:DATA.fixedGrant!==true||k.art===false,art:k.art!==false,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
 /* obter: {ok, reason: id|owned|off}. Enquanto DATA.fixedGrant=false só o Modo dono ({owner:true}) libera. */
 function grantFixed(S,id,opt){ if(id&&typeof id==='object') id=id[heroOf(S)];   // gancho por herói ({kael, kaia})
-  if(!FX[id]) return {ok:false,reason:'id'}; if(FX[id].art===false&&!(opt&&opt.owner===true)) return {ok:false,reason:'art'}; if(FX[id].off===true) return {ok:false,reason:'retired'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
+  if(!FX[id]) return {ok:false,reason:'id'}; const own=!!(opt&&opt.owner===true), viaSrc=!!(opt&&opt.source);
+  if(viaSrc&&!own&&DATA.skinsOn!==true) return {ok:false,reason:'off'};   // fontes (oferta, passe, VIP, torneio, loja): só com a chave
+  if(FX[id].art===false&&!own&&!viaSrc) return {ok:false,reason:'art'}; if(FX[id].off===true) return {ok:false,reason:'retired'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
   const f=fixedState(S); if(f.owned.includes(id)) return {ok:false,reason:'owned'}; f.owned.push(id); return {ok:true,id}; }
 /* equipar (null = voltar ao padrão do herói atual). Skin de um herói não equipa no outro. {ok, reason: id|hero|owned} */
 function equipFixed(S,id){ const f=fixedState(S), h=heroOf(S); if(id==null){ f.eq[h]=null; return {ok:true,id:null}; }
-  const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(k.off===true) return {ok:false,reason:'retired'}; if(!fitsHero(k,h)) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};
+  const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(k.off===true) return {ok:false,reason:'retired'}; if(k.art===false) return {ok:false,reason:'art'}; if(!fitsHero(k,h)) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};   // art:false = sem a folha ainda: fica na coleção, não equipa
   f.eq[h]=id; return {ok:true,id}; }
 /* skin fixa para o Sys.skin: raridade da equipada (r, -1 = nenhuma) e quantas possui (o Sys.skin converte em pontos %) */
 function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e?e.r:-1,owned:fixedState(S).owned.filter(id=>FX[id]&&FX[id].off!==true).length}; }   // skin retirada (off) não dá bônus nem conta na coleção
@@ -236,7 +243,9 @@ const outfitStatus=id=>FULL_SKIN(id)?{outfit:true,active:DATA.outfitCombosOn===t
 /* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
    desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
 function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
-const API={DATA,FIXED,addFixed,fixedSkins,grantFixed,equipFixed,fixedEquipped,fixedPct,avatarKey,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+/* loja: skins de compra direta (produtos do Play: 'skin_' + id = skin_kael_paladin, skin_kaia_harlequin, skin_kael_cyborg) */
+const skinProducts=S=>FIXED.filter(k=>k.product&&k.off!==true).map(k=>({productId:k.product,id:k.id,name:k.name,hero:k.hero,priceBRL:k.priceBRL,on:DATA.skinsOn===true,art:k.art!==false,owned:!!(S&&fixedState(S).owned.includes(k.id)),available:!S||fitsHero(k,heroOf(S))}));
+const API={DATA,FIXED,addFixed,skinProducts,fixedSkins,grantFixed,equipFixed,fixedEquipped,fixedPct,avatarKey,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
