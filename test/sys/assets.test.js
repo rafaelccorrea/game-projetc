@@ -46,4 +46,18 @@ t('resolvedor único (Play Asset Delivery): url() aponta para o pack baixado ou 
     A.setPackPath('mount:wolf',null); assert.strictEqual(A.url(p),p);
   } finally { A.DATA.on=false; }
 });
+t('pré-carga da cena (P27): sceneSet com herói/arma/ultimate/montaria/asa/era/inimigos/ícones, só arquivos que existem; nextEraSet = era seguinte',()=>{
+  const f=path.join(__dirname,'../../assets/manifest.json'); if(!fs.existsSync(f)) return; A.setManifest(JSON.parse(fs.readFileSync(f,'utf8')));
+  const T=require('../../js/sys/stats.js'), M=require('../../js/sys/mount.js'), AP=require('../../js/sys/appearance.js'); Object.assign(globalThis.Sys,{stats:T,mount:M,appearance:AP});
+  try{ const S={hero:'kael',inv:[{id:1,slot:'weapon',e:5,r:4},{id:2,slot:'wing',e:0,r:3,wing:'angel'}],eq:{weapon:1,wing:2}}, h=makeHost({eraMax:5}); M.add(S,h,'wolf');
+    const r=A.sceneSet(S,h); assert.ok(r.on); assert.deepStrictEqual(r.missing,[],'tudo existe: '+r.missing.join(', '));
+    const G=r.groups; assert.ok(G.hero.length&&G.hero.every(p=>p.startsWith('assets/anim/hyb/R/'))); assert.ok(!G.hero.some(p=>/\/bow\//.test(p)),'sem as folhas do arco');
+    assert.ok(G.hero.some(p=>/\/(pistol|gun)\//.test(p)),'arma de fogo: folhas da pistola'); assert.ok(!G.hero.some(p=>/_era(\d)_/.test(p)&&!/_era5_/.test(p)),'tintas só da era da arte da arma');
+    assert.ok(G.weapon.includes('assets/weapons/era5_t2.png')); assert.ok(G.ult.includes('assets/anim/ult/era5_ult.png'));
+    assert.ok(G.mount.length&&G.mount.every(p=>p.startsWith('assets/anim/mounts/kael_wolf_'))); assert.ok(G.wing.includes('assets/anim/equip/wing_angel_L.png'));
+    assert.ok(G.era.some(p=>p.startsWith('assets/bg/v2/era5/')||p==='assets/bg/era5.png'),'fundo da era 5'); assert.ok(G.enemies.length); assert.strictEqual(new Set(r.files).size,r.files.length);
+    const n=A.nextEraSet(S,h); assert.strictEqual(n.era,6); assert.ok(n.groups.era.some(p=>p.startsWith('assets/bg/v2/era6/'))&&n.groups.enemies.length);
+    S.hero='kaia'; assert.ok(A.sceneSet(S,h).groups.hero.every(p=>p.startsWith('assets/anim/hyb/kaia/'))); assert.strictEqual(A.sceneSet(S,h).groups.mount.length,0,'Kaia sem folha montada');
+  } finally { A.setManifest(null); }
+});
 console.log(`ok: ${n} testes`);

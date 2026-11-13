@@ -11,7 +11,9 @@
 const DATA={
   on:false,
   // o que NÃO vai para o app (mesma regra da cópia do www: fontes brutas, pastas começadas por _, rascunhos)
-  exclude:[/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/map\//,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
+  // referências de APROVAÇÃO (guias, refs grandes) ficam fora do APK; a Coleção usa só os *_ref_prev.png (pequenos).
+  // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo).
+  exclude:[/_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/map\//,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
@@ -29,6 +31,7 @@ const excluded=p=>DATA.exclude.some(r=>r.test(norm(p)));
 function classify(p0){ const p=norm(p0); let m;
   if(!p.startsWith('assets/')) return 'core';
   if(/^assets\/anim\/(look_preview|equip\/preview)\//.test(p)) return 'preview';   // prévias de arte (Modo dono / aprovação): fora do APK do jogador
+  if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma
   if((m=/^assets\/anim\/hyb\/(phase([123])|kaia_phase([123])|kaia|R)\//.exec(p))){
     if(/\/(pistol|gun)\/.*_era(\d)_/.test(p)) return 'gun:'+/_era(\d)_/.exec(p)[1];
     const hero=m[1].startsWith('kaia')?'kaia':'kael', ph=m[2]||m[3]||'0'; return 'hero:'+hero+':'+ph; }
@@ -39,6 +42,8 @@ function classify(p0){ const p=norm(p0); let m;
   if((m=/^assets\/(anim\/)?mounts\/(?:mount_)?([a-z]+)[_.]/.exec(p))) return 'mount:'+m[2];
   if((m=/^assets\/anim\/pets\/([a-z0-9]+_[a-z]+?)(_mid|_evo)?_(run|idle|atk\d)/.exec(p))) return 'pet:'+m[1]+':'+(m[2]==='_mid'?1:m[2]==='_evo'?2:0);
   if(/^assets\/anim\/aura\//.test(p)) return 'aura';
+  if(/^assets\/anim\/fx\/(kaia_)?evolve_/.test(p)) return 'retired';   // evolução do herói aposentada (dono: o herói não cresce); fora do APK base
+  if((m=/^assets\/anim\/ult\/(?:weapon\/)?([a-z]+)_(legend|legendary|mythic)\./.exec(p))) return 'ult:'+m[1];   // ultimate Lendária própria por família (só quem tem a arma)
   if((m=/^assets\/(bg|weapons|hero|icons|anim\/ult)\/era(\d)[_.]/.exec(p))) return 'era:'+m[2];
   if((m=/^assets\/bg\/v2\/era(\d)\//.exec(p))) return 'era:'+m[1];
   return 'core'; }
@@ -86,7 +91,53 @@ function url(p0){ const p=norm(p0), d=PATHS[classify(p)]; return d?d+p:p0; }
 const installed=()=>{ const base=DATA.basePacks(); return [...new Set(base.concat(Object.keys(PATHS)))].sort(); };
 const isReady=p=>{ const id=classify(p); return DATA.basePacks().includes(id)||!!PATHS[id]||!ON(); };   // desligado: tudo está no APK, como hoje
 
-const API={DATA,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
+/* ---------------- PRÉ-CARGA DA CENA (P27, dono: a tela de carregamento espera TODAS as imagens da 1ª cena) ----------------
+   sceneSet(S, host, opt) → {files:[caminhos .png/.webp/.json], groups:{hero, weapon, ult, mount, pet, wing, era, enemies, icons}, missing:[]}
+   A lista vem do MANIFESTO (setManifest; assets/manifest.json, gerado por tools/asset-manifest.js), então só tem arquivo que existe.
+   missing = caminho calculado que o manifesto não tem (manifesto velho ou arte que falta: o engenheiro pode pular ou cair no código).
+   Herói: a pasta da skin equipada (Sys.appearance.sheets), corpo e máscaras, + as tintas só da era da ARTE da arma na mão (e a pistola dela);
+   arma: assets/weapons/<chave>.png pela família (Sys.stats.weaponType/artEra) e raridade; ultimate: Sys.stats.ultOf(arma).sheet;
+   montaria: assets/anim/mounts/kael_<id>_* (só o Kael tem folha montada); pet: pacote pet:<sprite>:<estágio>; asa: wing_<tipo>_L/_R/.json;
+   era: fundo assets/bg/v2/era<N>/ + assets/bg/era<N>.png; inimigos: pacote enemy:<N>; ícones: assets/ui e assets/icons. opt.era = era da cena
+   (padrão: host.era() ou host.eraMax()). nextEraSet(S, host) = fundo + inimigos da era seguinte (pré-carga em segundo plano). */
+const W_RKEY=['t0','raro','t1','mitico','t2','t2'], RNAME_F=['basico','raro','epico','mitico','lendario','lendario'];
+const allFiles=()=>{ if(!MAN) return []; const out=[]; for(const id in MAN.packs) for(const f of MAN.packs[id].files||[]) out.push(f); return out; };
+const isImg=p=>/\.(png|webp|jpg|json)$/i.test(p);
+function equippedOf(S,host,slot){ try{ const e=host&&typeof host.equipped==='function'?host.equipped():null; if(e&&e[slot]) return e[slot]; }catch(e){}
+  const id=S&&S.eq&&S.eq[slot]; return id!=null&&Array.isArray(S.inv)?S.inv.find(x=>x&&x.id===id)||null:null; }
+function sceneEra(S,host,opt){ if(opt&&opt.era!=null) return int0(opt.era); try{ if(host&&typeof host.era==='function') return int0(host.era()); }catch(e){} return int0(host&&host.eraMax&&host.eraMax()); }
+function eraFiles(all,e){ return all.filter(p=>p.startsWith('assets/bg/v2/era'+e+'/')||p==='assets/bg/era'+e+'.png'||p==='assets/bg/era'+e+'.webp'); }
+function sceneSet(S,host,opt){ const all=allFiles(), has=new Set(all), T=SYS().stats, A=SYS().appearance, missing=[], G={hero:[],weapon:[],ult:[],mount:[],pet:[],wing:[],era:[],enemies:[],icons:[]};
+  const add=(g,p)=>{ if(has.has(p)) G[g].push(p); else missing.push(p); }, addPrefix=(g,pre,filt)=>{ for(const p of all) if(p.startsWith(pre)&&isImg(p)&&!excluded(p)&&(!filt||filt(p))) G[g].push(p); };
+  const e=sceneEra(S,host,opt), w=equippedOf(S,host,'weapon');
+  // arma: família e era da ARTE (nunca a do mapa)
+  let artEra=w?int0(w.look!=null?w.look:w.e):0, wt=null, style='melee';
+  try{ if(T&&w){ wt=T.weaponType(w); const W=T.DATA.weaponTypes[wt]; if(W&&W.artEra!=null) artEra=W.artEra; style=T.weaponStyle?T.weaponStyle(w):style; } }catch(x){}
+  if(w){ const r=int0(w.r); if(wt==='bow'||wt==='boomerang') add('weapon','assets/weapons/'+wt+'_'+RNAME_F[r]+'.png'); else add('weapon','assets/weapons/era'+artEra+'_'+W_RKEY[r]+'.png'); }
+  add('weapon','assets/weapons/meta.json');
+  try{ const u=T&&w&&T.ultOf?T.ultOf(w):null; if(u&&u.sheet){ add('ult',u.sheet+'.png'); add('ult',u.sheet+'.json'); } }catch(x){}
+  // herói (pasta da skin equipada): corpo e máscaras; tintas só da era da arte da arma; pistola só se a arma é de fogo
+  let dir='assets/anim/hyb/'+(heroOf(S)==='kaia'?'kaia':'R')+'/'; try{ if(A&&A.sheets) dir=A.sheets(S,host).dir; }catch(x){}
+  const tint=/_era(\d)_/; addPrefix('hero',dir,p=>{ const sub=p.slice(dir.length), sd=(/^([a-z]+)\//.exec(sub)||[])[1];   // subpastas de ARMA: pistol/gun (de fogo) e bow/boomerang (a família) só se for a arma na mão
+    if(sd==='pistol'||sd==='gun') return style==='gun'&&(!tint.test(p)||+tint.exec(p)[1]===artEra); if(sd&&sd!=='masks') return sd===wt;
+    if(tint.test(p)) return +tint.exec(p)[1]===artEra; return true; });
+  // montaria equipada (folha montada só do Kael)
+  try{ const M=SYS().mount, mo=M&&M.ensure?M.ensure(S):null; if(mo&&mo.eq&&heroOf(S)==='kael') addPrefix('mount','assets/anim/mounts/kael_'+mo.eq+'_',p=>!tint.test(p)||+tint.exec(p)[1]===artEra); }catch(x){}
+  // pet equipado: pacote do sprite no estágio
+  try{ const P=SYS().pet, b=P&&P.battleInfo?P.battleInfo(S,host):null, sp=b&&b.draw&&b.draw.sprite; if(sp&&MAN){ const pk=MAN.packs['pet:'+sp+':'+Math.max(0,int0(b.stage)-1)]; if(pk) for(const p of pk.files) G.pet.push(p); else missing.push('pet:'+sp); } }catch(x){}
+  // asa equipada
+  try{ const wi=equippedOf(S,host,'wing'), k=wi&&T&&T.wingOf?T.wingOf(wi):null; if(k){ add('wing','assets/anim/equip/wing_'+k+'_L.png'); add('wing','assets/anim/equip/wing_'+k+'_R.png'); add('wing','assets/anim/equip/wing_'+k+'.json'); } }catch(x){}
+  // cenário e inimigos da era da cena; ícones
+  G.era=eraFiles(all,e); if(has.has('assets/bg/meta.json')) G.era.push('assets/bg/meta.json');
+  if(MAN&&MAN.packs['enemy:'+e]) G.enemies=MAN.packs['enemy:'+e].files.filter(isImg).slice(); if(has.has('assets/enemies/meta.json')) G.enemies.push('assets/enemies/meta.json');
+  addPrefix('icons','assets/ui/'); addPrefix('icons','assets/icons/');
+  const files=[...new Set(Object.values(G).flat())];
+  return {on:!!MAN,era:e,files,groups:G,missing:[...new Set(missing)],count:files.length}; }
+/* pré-carga em segundo plano da era seguinte (fundo + inimigos); vazio na última */
+function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1, top=SYS().stats&&SYS().stats.DATA?int0(SYS().stats.DATA.maxEra):6; if(e>top) return {era:e,files:[],groups:{era:[],enemies:[]}};
+  const G={era:eraFiles(all,e),enemies:MAN&&MAN.packs['enemy:'+e]?MAN.packs['enemy:'+e].files.filter(isImg).slice():[]};
+  return {era:e,files:[...G.era,...G.enemies],groups:G,count:G.era.length+G.enemies.length}; }
+const API={DATA,sceneSet,nextEraSet,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
