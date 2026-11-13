@@ -284,6 +284,18 @@ var VIPCONV_TESTS=(function(){
       const tg=h.match(/data-bst="(on|gr|soon)"[^>]*><span class="pz-tag (on|gr|soon)"[^>]*>(ATIVO|CARÊNCIA|EM BREVE)</); if(!tg) throw new Error('banner sem o selo do estado');
       out='"'+nm+'" '+n+' vez; selo "'+tg[3]+'" no banner; fileira '+(many?'com '+many+' eventos':'não desenhada'); }catch(e){ err=e; } view=v0; if(err) throw err; return out; };
 
+  /* ---------- FOLHA EM GRADE POR CSS (ajudante xSheet do js/screens.js) ---------- */
+  T['folha em grade: Montarias desenha 6 × 2 com keyframes por quadro; tira continua tira']=function(){ const v0=view; let err=null, out='';
+    try{ const g=xSheetCss(xSheetNorm({frames:12,cols:6,fps:12}),{}), t=xSheetCss(xSheetNorm({frames:12,fps:12}),{}), p=xSheetCss(xSheetNorm({frames:13,cols:7,fps:12}),{once:true});
+      if(g.size!=='600% 200%'||!/^xshf6_12 1s step-end infinite$/.test(g.anim)) throw new Error('grade 6 × 2: '+g.size+' / '+g.anim);
+      if(t.size!=='1200% 100%'||t.anim!=='xshx 1s steps(12,jump-none) infinite') throw new Error('tira: '+t.size+' / '+t.anim);
+      if(p.size!=='700% 200%'||!/^xshf7_13 [0-9.]+s step-end 1 both$/.test(p.anim)) throw new Error('grade incompleta: '+p.size+' / '+p.anim);
+      const k=XSH.css||'', a=k.slice(k.indexOf('@keyframes xshf7_13{')), body=a.slice(0,a.indexOf('}}')), n=(body.match(/background-position:/g)||[]).length; if(n!==14) throw new Error('13 quadros: '+n+' passos (esperado 13 + o final)'); if(/background-position:100\.000% 100\.000%/.test(body)) throw new Error('a célula vazia (7ª da 2ª linha) aparece');
+      if(!(window.Panels&&Panels.defs.mounts&&Panels.on('mounts'))) return 'ajudante ok; painel de montarias desligado';
+      view='mounts'; render(); const h=V_TEST.innerHTML, m=h.match(/kael_[a-z]+_idle_era2_t1\.png\) 0 0\/([0-9% ]+) no-repeat/g)||[];
+      if(m.length){ for(const s of m) if(s.indexOf('0 0/600% 200% no-repeat')<0) throw new Error('Montarias desenha a folha como '+s); if(/idle_era2_t1\.png\) 0 0\/1200% 100%/.test(h)) throw new Error('folha da montaria ainda como tira'); }
+      out='grade 600% 200% + keyframes; tira igual a antes; incompleta sem célula vazia; Montarias: '+m.length+' folha(s) na tela em grade'; }catch(e){ err=e; } view=v0; if(err) throw err; return out; };
+
   /* ---------- COMPRAS PELO Sys.buy ---------- */
   function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, l0=B.cardStatusLive, k0=B.cardClaim, calls=[]; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false;
     B.cardStatusLive=function(){ return {active:false,daysLeft:0,claimedToday:false}; };

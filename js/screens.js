@@ -322,6 +322,46 @@ const xWrap=(d,cls,inner)=>d.real?`<div class="xs ${cls||''}" style="width:${d.W
   :`<div class="xs ${cls||''}" style="height:${d.H.toFixed(1)}px;transform:translateX(${d.ox.toFixed(1)}px) scale(${d.s.toFixed(4)})">${inner}</div>`;
 /* peças em coordenadas fixas do protótipo (vitrine do Kael, palco do baú) ficam numa caixa de 390 px centrada na largura real */
 const X390=h=>`position:absolute;left:50%;top:0;width:390px;height:${h}px;margin-left:-195px`;
+/* ---------- FOLHA DE ANIMAÇÃO POR CSS: TIRA OU GRADE (ajudante único das telas) ----------
+   A Arte está passando folhas de TIRA (uma linha) para GRADE (campo "cols" no .json; ex.: montaria parada 6144x352 → 3072x704, 6 colunas × 2 linhas). O canvas
+   já lê grade (sheetSX/sheetSY do js/stage.js); as telas que desenham a folha por CSS passam por aqui:
+     xSheetMeta(base, reserva) → {frames, cols, rows, fps}: lê o .json REAL da folha (cache do jogo, função J) e, enquanto ele não chegou, a tabela XSH_TAB
+        (conferida contra o .json e o PNG do disco pelo teste test/paineis/sheetcss.test.js). Se o .json chegar diferente da reserva usada, a tela é redesenhada uma vez.
+     xSheetCss(meta, {once, dur}) → {size, anim}: background-size e a(s) animação(ões).
+        tira            : size (frames×100)% 100%; background-position-x 0→100% em steps(frames, jump-none)
+        grade cheia     : size (cols×100)% (rows×100)%; x em steps(cols, jump-none) na duração de UMA linha (repete a cada linha) + y em steps(rows, jump-none) na
+                          duração total
+        grade incompleta: (ex.: 13 quadros em 7×2, 17 em 6×3) keyframes QUADRO A QUADRO gerados uma vez por (cols, frames): a célula vazia nunca aparece
+     xSheetBg(url, meta, opt) → 'background:url(...) 0 0/<size> no-repeat;animation:...' pronto para o style.
+   O enquadramento (posição/tamanho da caixa) continua sendo o de cada tela: aqui só muda COMO o quadro é escolhido dentro da folha. */
+const XSH={m:{},kf:{},st:null,wait:{}};
+const XSH_TAB=[   /* reserva enquanto o .json não chegou: [padrão do caminho sem extensão, quadros, colunas (0 = tira), fps] */
+  [/^assets\/anim\/mounts\/kael_[a-z0-9_]+_idle_era2_t1$/,12,6,12],
+  [/^assets\/anim\/pets\/era0_mammoth_atk[12]$/,12,6,12],
+  [/^assets\/anim\/pets\/[a-z0-9_]+$/,12,0,12]];
+function xSheetNorm(j){ const f=Math.max(1,j.frames|0), c=j.cols>0?Math.min(j.cols|0,f):f; return {frames:f,cols:c,rows:Math.ceil(f/c),fps:j.fps>0?+j.fps:12}; }
+function xSheetMeta(base,fb){ base=String(base||'').replace(/\.(png|json|webp)$/,''); if(XSH.m[base]) return XSH.m[base];
+  let j=null; try{ if(typeof J==='function'){ const o=J(base+'.json'); if(o&&o.frames>0) j=o; } }catch(e){ j=null; }
+  if(j) return XSH.m[base]=xSheetNorm(j);
+  let t=fb||null; if(!t) for(const r of XSH_TAB) if(r[0].test(base)){ t={frames:r[1],cols:r[2],fps:r[3]}; break; }
+  const m=xSheetNorm(t||{frames:1});
+  if(!XSH.wait[base]){ XSH.wait[base]=1;   /* o .json chega depois: se a geometria for outra, um redesenho (nunca a cada quadro) */
+    try{ const e=PRE().get(base+'.json'); if(e&&e.p&&typeof e.p.then==='function') e.p.then(()=>{ if(!(e.ok&&e.data&&e.data.frames>0)) return; const n=xSheetNorm(e.data); XSH.m[base]=n; if(n.frames!==m.frames||n.cols!==m.cols){ try{ softRender(); }catch(er){} } }); }catch(e){} }
+  return m; }
+function xSheetKf(cols,frames){ const k=cols+'_'+frames; if(XSH.kf[k]) return XSH.kf[k]; const rows=Math.ceil(frames/cols), nm='xshf'+k; let css='@keyframes '+nm+'{';
+  const pos=i=>{ const c=i%cols, r=Math.floor(i/cols); return (cols>1?(c/(cols-1)*100).toFixed(3):'0')+'% '+(rows>1?(r/(rows-1)*100).toFixed(3):'0')+'%'; };
+  for(let i=0;i<frames;i++) css+=(i/frames*100).toFixed(4)+'%{background-position:'+pos(i)+'}'; css+='100%{background-position:'+pos(frames-1)+'}}';
+  try{ if(!XSH.st){ XSH.st=document.createElement('style'); XSH.st.id='xsh_css'; XSH.st.textContent='@keyframes xshx{from{background-position-x:0}to{background-position-x:100%}}\n@keyframes xshy{from{background-position-y:0}to{background-position-y:100%}}\n'; document.head.appendChild(XSH.st); }
+    XSH.st.textContent+=css+'\n'; }catch(e){}
+  XSH.css=(XSH.css||'')+css; return XSH.kf[k]=nm; }
+function xSheetCss(m,o){ o=o||{}; const f=m.frames, c=m.cols, r=m.rows, dur=o.dur>0?o.dur:f/(m.fps||12), it=o.once?'1 both':'infinite', s=v=>(+v.toFixed(4))+'s';
+  if(!XSH.st){ try{ XSH.st=document.createElement('style'); XSH.st.id='xsh_css'; XSH.st.textContent='@keyframes xshx{from{background-position-x:0}to{background-position-x:100%}}\n@keyframes xshy{from{background-position-y:0}to{background-position-y:100%}}\n'; document.head.appendChild(XSH.st); }catch(e){} }
+  if(f<=1) return {size:'100% 100%',anim:'none',kind:'parada'};
+  if(r===1) return {size:(f*100)+'% 100%',anim:'xshx '+s(dur)+' steps('+f+',jump-none) '+it,kind:'tira'};
+  /* GRADE (cheia ou com a última linha incompleta): UMA animação com keyframes quadro a quadro (gerados uma vez por colunas × quadros). Preferido às duas
+     animações x + y em paralelo: não há como as duas saírem de passo na virada de linha (quadro errado por um instante) e a célula vazia nunca aparece. */
+  return {size:(c*100)+'% '+(r*100)+'%',anim:xSheetKf(c,f)+' '+s(dur)+' step-end '+it,kind:f===c*r?'grade':'grade incompleta'}; }
+function xSheetBg(url,m,o){ const k=xSheetCss(m,o); return 'background:url('+url+') 0 0/'+k.size+' no-repeat;'+(o&&o.still?'':'animation:'+k.anim); }
 /* ---------- ÍCONE DE PEÇA POR RARIDADE, "opção C" (chave PANEL_V2.rarIcons; arte: assets/icons/rarity/gem_1..4.png) ----------
    As 5 raridades de uma peça usam o mesmo arquivo (assets/icons/slots/era<N>_<peça>.png). Com a chave ligada o ícone sai pintado por código: tinta leve
    na cor da raridade sobre a luminância (0/10/14/18/22%), contorno brilhante na cor e a gema no canto inferior direito (34% do lado). Básico não muda.

@@ -72,7 +72,10 @@ const peRunBase=(n,k)=>n===2?`assets/anim/era2_${k}_run`:`assets/anim/hyb/enemy/
 /* desenha uma folha com os pés numa linha: (base, caixa em px por altura do quadro, pé x do centro, y do chão) */
 function peSprite(base,hPx,cx,gy,cls,extra){ const j=PE.meta[base+'.json']; if(!j||!j.frames||!j.w||!j.h) return '';
   const k=hPx/j.h, w=j.w*k, fy=(typeof j.feetY==='number'?j.feetY:j.h*0.94)*k, n=j.frames;
-  return `<div class="${cls||'pe-sh'}" role="img" aria-hidden="true" style="position:absolute;left:${(cx-w/2).toFixed(1)}px;top:${(gy-fy).toFixed(1)}px;width:${w.toFixed(1)}px;height:${hPx.toFixed(1)}px;background-image:url(${base}.png);background-size:${n*100}% 100%;--n:${n};--d:${(n/(j.fps||12)).toFixed(3)}s;${extra||''}"></div>`; }
+  /* TIRA OU GRADE (a Arte está convertendo: era0_boss_die já é 7 × 2 com 13 quadros): o tamanho e a animação saem do xSheetCss (js/screens.js) pelo "cols" do
+     .json; a duração é a do --d passado em extra (ou quadros ÷ fps) e a classe pe-sh1 = toca uma vez. Sem o ajudante, a tira de antes. */
+  const sm=(typeof xSheetNorm==='function'&&typeof xSheetCss==='function')?xSheetNorm(j):null, dm=/--d:\s*([0-9.]+)s/.exec(extra||''), sc=sm?xSheetCss(sm,{once:cls==='pe-sh1',dur:dm?+dm[1]:0}):null;
+  return `<div class="${cls||'pe-sh'}" role="img" aria-hidden="true" style="position:absolute;left:${(cx-w/2).toFixed(1)}px;top:${(gy-fy).toFixed(1)}px;width:${w.toFixed(1)}px;height:${hPx.toFixed(1)}px;background-image:url(${base}.png);background-size:${sc?sc.size:n*100+'% 100%'};--n:${n};--d:${(n/(j.fps||12)).toFixed(3)}s;${extra||''}${sc?';animation:'+sc.anim:''}"></div>`; }
 /* HERÓI: window.drawHeroFull(ctx, x(centro), y(PÉS), scale(multiplicador do HS da batalha), {t em segundos, walking}) desenha fase, montaria, asa, aura e pet (ordem do dono: nada some).
    Canvas transparente com folga (2,4x de largura e 1,9x de altura do quadro) para o herói montado não cortar; pés em 0,9 da altura; laço enquanto o overlay está aberto.
    Reserva: sem a função (ou se ela der erro) volta a folha do Kael correndo (peSprite). */
