@@ -8,7 +8,7 @@
    - traduz para o state do drawHeroFull (toState);
    - guarda a prévia ("Prévia: X · Sair") por cima do look atual;
    - devolve a GEOMETRIA de um quadro a partir do .json da folha (geometryOf), para testes e para as telas posicionarem selos sem adivinhar.
-   O que a rota ainda NÃO sabe trocar (herói diferente do save, pet diferente do ativo) volta em kit.limits: pedido ao Engenheiro expor no state.
+   Herói e pet diferentes do save: state.hero e state.pet {base,stage,fly} (Engenheiro 0d2eb8d); kit.limits fica vazio. Falta ver na tela (só node).
    Teste: node test/sys/stagekit.test.js (geometria nas folhas reais). */
 (function(root){
 const DATA={on:false};
@@ -20,16 +20,14 @@ function toState(look,opt){ const L=look||{}, o=opt||{}, s={};
   if(o.t!=null) s.t=o.t; if(o.walking) s.walking=true; if(o.act) s.act=o.act;
   if('mount' in L) s.mount=L.mount?{id:String(L.mount.id),stars:Math.max(1,Math.min(7,(L.mount.stars|0)||1))}:false;
   if('wing' in L) s.wing=L.wing?String(L.wing):false;
-  if('pet' in L) s.pet=L.pet?true:false;
+  if('pet' in L) s.pet=L.pet?(L.pet.base?{base:String(L.pet.base),stage:Math.max(1,Math.min(3,(L.pet.stage|0)||1)),fly:+L.pet.fly||0}:true):false;   /* objeto = desenha ESSE pet (Engenheiro 0d2eb8d) */
+  if(L.hero==='kael'||L.hero==='kaia') s.hero=L.hero;
   if(L.skin) s.skin=String(L.skin);
   try{ if(L.weapon&&typeof root.wFamLook==='function') s.weapon=root.wFamLook(L.weapon); }catch(e){}
   try{ if(L.armor&&typeof root.SKIN==='function'){ const a=root.SKIN(L.armor); if(a) s.armor=a; } }catch(e){}
   return s; }
-/* o que o drawHeroFull ainda não troca: herói e pet vêm do save */
-function limitsOf(look){ const out=[]; const S=root.S;
-  try{ if(look&&look.hero&&S&&S.hero&&look.hero!==S.hero) out.push('hero'); }catch(e){}
-  try{ const P=root.Sys&&root.Sys.pet, eq=P&&S&&S.sys&&S.sys.pet&&S.sys.pet.eq; if(look&&look.pet&&look.pet.base&&eq&&String(look.pet.base).indexOf(eq)<0) out.push('pet'); }catch(e){}
-  return out; }
+/* o que o drawHeroFull ainda não troca. Desde o 0d2eb8d (Engenheiro) a rota troca herói (state.hero) e pet (state.pet objeto): nada falta. */
+function limitsOf(look){ return []; }
 /* geometria de um quadro f a partir do .json da folha: pés, grip (mão), costas (raiz da asa) e caixa do quadro na imagem (grade com cols) */
 function geometryOf(meta,f){ const M=meta||{}, n=Math.max(1,M.frames|0), i=((f|0)%n+n)%n, cols=M.cols||n;
   const g=Array.isArray(M.grip)?M.grip[i]:null, b=Array.isArray(M.back)?M.back[i]:null;

@@ -60,7 +60,8 @@ for(const f of fs.readdirSync(path.join(ROOT,'assets/anim/pets'))){ if(!/_idle\.
 t('Kael Anjo: pasta _nowing completa',()=>{ const A=fs.readdirSync(path.join(ROOT,'assets/anim/skins/kael_angel')).filter(f=>!f.startsWith('_')), B=new Set(fs.readdirSync(path.join(ROOT,'assets/anim/skins/kael_angel_nowing'))); const miss=A.filter(f=>!B.has(f)); assert.ok(!miss.length,'faltam '+miss.slice(0,5).join(', ')); });
 /* StageKit: a ordem de desenho é a do drawHeroFull (pet por último); o kit só traduz o look e devolve o que a rota não sabe trocar */
 t('StageKit.toState: look do heroSnapshot → state do drawHeroFull',()=>{ const s=SK.toState({hero:'kael',mount:null,pet:null,wing:null,aura:null},{t:1}); assert.strictEqual(s.mount,false); assert.strictEqual(s.pet,false); assert.strictEqual(s.wing,false); assert.strictEqual(s.t,1);
-  const s2=SK.toState({hero:'kael',mount:{id:'horse',stars:3},pet:{base:'era0_mammoth',stage:1},wing:'angel'},{}); assert.deepStrictEqual(s2.mount,{id:'horse',stars:3}); assert.strictEqual(s2.wing,'angel'); assert.ok(s2.pet!==false); });
+  const s2=SK.toState({hero:'kael',mount:{id:'horse',stars:3},pet:{base:'era0_mammoth',stage:1},wing:'angel'},{}); assert.deepStrictEqual(s2.mount,{id:'horse',stars:3}); assert.strictEqual(s2.wing,'angel'); assert.deepStrictEqual(s2.pet,{base:'era0_mammoth',stage:1,fly:0}); assert.strictEqual(s2.hero,'kael');
+  assert.strictEqual(SK.toState({pet:true}).pet,true); assert.strictEqual(SK.toState({hero:'outro'}).hero,undefined); assert.deepStrictEqual(SK.limitsOf({hero:'kaia',pet:{base:'x'}}),[]); });
 t('StageKit desligado por padrão',()=>{ assert.strictEqual(SK.DATA.on,false); });
 
 /* ACHADOS CONHECIDOS da arte (avisados à Arte e ao Engenheiro em 13/11): aparecem como AVISO e não quebram o teste; achado NOVO quebra */
