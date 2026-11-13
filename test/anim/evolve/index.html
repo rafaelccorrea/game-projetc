@@ -1,0 +1,28 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Evolução por fase</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}h2{font-size:15px;margin:14px 16px 2px}p{margin:4px 16px;color:#aab}.bar{display:flex;flex-wrap:wrap;gap:8px;padding:8px 16px}button{background:#2a2a38;color:#eee;border:1px solid #445;border-radius:6px;padding:6px 10px;font:inherit}.g{display:flex;flex-wrap:wrap;gap:10px;padding:8px 16px}figure{margin:0}figcaption{font-size:12px;color:#ccd;margin:2px 0 0}canvas{display:block;max-width:100%;border-radius:8px;background:#2e3a2a}</style></head><body>
+<h1>Evolução: Kael e Kaia, 0→1, 1→2, 2→3</h1>
+<p>Mesmo roteiro do evolve_0_1 aprovado (38 quadros, 12 fps, 448×384, pés em 224/352, toca uma vez): partículas, casulo, clarão, fase nova com o nome. Sem crédito (código).</p>
+<div class="bar"><button id="re">tocar de novo</button><button id="loop">repetir: sim</button></div>
+<h2>Com o herói desenhado</h2><div class="g" id="a"></div>
+<h2>Só o efeito (_fx), sobre as folhas de parado do jogo (fase antiga até o quadro 27, depois a nova)</h2>
+<p>É assim que o jogo usa quando o herói tem skin, chapéu ou óculos: desenha o herói com as camadas dele e o efeito por cima.</p><div class="g" id="b"></div>
+<script>
+const F='../../../assets/anim/fx/',H='../../../assets/anim/hyb/';let LOOP=true,t0=performance.now();
+const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const J=async s=>{try{return await (await fetch(s)).json();}catch(e){return null;}};
+const WITH=[['evolve_0_1','Kael 0→1 (aprovada)'],['evolve_1_2','Kael 1→2'],['evolve_2_3','Kael 2→3'],['kaia_evolve_0_1','Kaia 0→1'],['kaia_evolve_1_2','Kaia 1→2'],['kaia_evolve_2_3','Kaia 2→3']];
+const IDLE={kael:['R/kael_idle_era2_t1','phase1/kael_idle_era2_t1','phase2/kael_idle_era2_t1','phase3/kael_idle_era2_t1'],kaia:['kaia/kaia_idle_era2_t1','kaia_phase1/kaia_idle_era2_t1','kaia_phase2/kaia_idle_era2_t1','kaia_phase3/kaia_idle_era2_t1']};
+const FX=[];for(const h of ['kael','kaia'])for(const [a,b] of [[0,1],[1,2],[2,3]])FX.push({h,a,b,fx:'evolve_'+a+'_'+b+'_fx',lab:(h==='kael'?'Kael ':'Kaia ')+a+'→'+b+' (só efeito)'});
+const items=[];
+async function sheet(n){const img=await L(F+n+'.png'),m=await J(F+n+'.json');return img&&m?{img,m}:null;}
+async function idle(p){const img=await L(H+p+'.png');if(!img)return null;const m=(await J(H+p+'.json'))||{};const w=m.w||256;return {img,w,n:m.frames||Math.round(img.width/w),pl:m.padLeft||0,fy:m.feetY||243};}
+function cv(host,lab){const f=document.createElement('figure');const c=document.createElement('canvas');c.width=448;c.height=384;f.appendChild(c);const cap=document.createElement('figcaption');cap.textContent=lab;f.appendChild(cap);document.getElementById(host).appendChild(f);return c;}
+(async()=>{for(const [n,lab] of WITH){const s=await sheet(n);if(s)items.push({c:cv('a',lab),s});}
+ for(const x of FX){const s=await sheet(x.fx);if(!s)continue;items.push({c:cv('b',x.lab),s,from:await idle(IDLE[x.h][x.a]),to:await idle(IDLE[x.h][x.b])});}})();
+document.getElementById('re').onclick=()=>{t0=performance.now();};
+document.getElementById('loop').onclick=e=>{LOOP=!LOOP;e.target.textContent='repetir: '+(LOOP?'sim':'não');};
+(function loop(n){const t=(n-t0)/1000;for(const it of items){const {c,s}=it,m=s.m,g=c.getContext('2d');g.clearRect(0,0,448,384);g.fillStyle='#3d4a3a';g.fillRect(0,m.feetY,448,384-m.feetY);
+  const T=LOOP?t%(m.frames/m.fps+0.8):t;let i=Math.floor(T*m.fps);if(i>=m.frames)i=m.frames-1;
+  if(it.from){const sh=i<27?it.from:it.to;if(sh){const j=Math.floor(t*12)%sh.n;g.drawImage(sh.img,j*sh.w,0,sh.w,sh.img.height,m.anchorX-(sh.pl+128),m.feetY-sh.fy,sh.w,sh.img.height);}}
+  g.drawImage(s.img,i*m.w,0,m.w,m.h,0,0,m.w,m.h);g.fillStyle='#fff';g.font='11px system-ui';g.fillText('quadro '+i,6,376);}requestAnimationFrame(loop);})(t0);
+</script></body></html>

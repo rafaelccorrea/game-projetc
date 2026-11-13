@@ -1,0 +1,156 @@
+{
+ "frames": 18,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. Kael V2: âncora pelo pescoço (kv2/headneck.js)",
+ "head": [
+  {
+   "x": 242,
+   "y": 92,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 248,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 245,
+   "y": 94,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 232,
+   "y": 96,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 214,
+   "y": 94,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 203,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 200,
+   "y": 104,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "fill": true
+  },
+  {
+   "x": 196,
+   "y": 115,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 213,
+   "y": 118,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 222,
+   "y": 118,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 219,
+   "y": 117,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 220,
+   "y": 117,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 237,
+   "y": 123,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 250,
+   "y": 133,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 288,
+   "y": 162,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 312,
+   "y": 183,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 316,
+   "y": 185,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 315,
+   "y": 184,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kaia menina</title>
+<style>body{margin:0;background:#15151c;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#aab}.bar{display:flex;flex-wrap:wrap;gap:8px;padding:8px 16px}button{background:#2a2a38;color:#eee;border:1px solid #445;border-radius:6px;padding:6px 10px;font:inherit}button.on{background:#4a5a8a}.g{display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px}canvas{display:block;max-width:100%;border-radius:8px}</style></head><body>
+<h1>Kaia menina (fase 0): os 8 estados</h1>
+<p>Novos: giro, morte, pistola parada/correndo/atirando (as 4 pistolas das eras 3 a 6). Correndo, parado e golpe são os aprovados. O Kael garoto aparece à esquerda, transparente, para comparar altura e linha do chão.</p>
+<div class="bar" id="eras"></div><div class="bar"><button id="anc">âncoras (cabeça verde, costas ciano)</button><button id="slow">lento</button></div>
+<div class="g" id="g"></div>
+<script>
+const A='../../../assets/anim/hyb/';let ERA='era5_t0',ANC=false,SLOW=false;
+const S=[['kaia/kaia_run_era2_t1','correndo','R/kael_run_era2_t1','run'],['kaia/kaia_idle_era2_t1','parado','R/kael_idle_era2_t1','idle'],['kaia/kaia_attack_era2_t1','golpe','R/kael_attack_wide_era2_t1','attack'],
+ ['kaia/kaia_spin_era2_t1','giro (novo)','R/kael_spin_era2_t1','spin'],['kaia/kaia_die_body','morte (nova)','R/kael_die_body','die'],
+ ['kaia/pistol/kaia_pistol_idle_ERA','pistola parada (nova)','R/pistol/kael_pistol_idle_ERA','pistol_idle'],['kaia/pistol/kaia_pistol_run_ERA','pistola correndo (nova)','R/pistol/kael_pistol_run_ERA','pistol_run'],['kaia/pistol/kaia_pistol_shoot_ERA','pistola atirando (nova)','R/pistol/kael_pistol_shoot_ERA','pistol_shoot']];
+const L=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s;});
+const J=async s=>{try{return await (await fetch(s)).json();}catch(e){return null;}};
+const W=(s,f)=>256;
+let items=[];
+async function load(){document.getElementById('g').innerHTML='';items=[];
+ for(const [f0,lab,b0,st] of S){const f=f0.replace('ERA',ERA),b=b0.replace('ERA',ERA);const img=await L(A+f+'.png'),m=await J(A+f+'.json');if(!img||!m)continue;
+  const bi=await L(A+b+'.png'),bm=(await J(A+b+'.json'))||{w:256,frames:bi?Math.round(bi.width/256):1};
+  const head=await J(A+'kaia/masks/kaia_'+st+'_head.json'),body=await J(A+'kaia/kaia_'+st+'_body.json');
+  const c=document.createElement('canvas');c.width=520;c.height=280;document.getElementById('g').appendChild(c);items.push({c,img,m,bi,bm,lab,head,body});}}
+document.getElementById('eras').innerHTML=['era3_t0','era4_t0','era5_t0','era6_t0'].map(e=>`<button data-e="${e}" class="${e===ERA?'on':''}">pistola ${e.slice(3,4)}</button>`).join('');
+document.getElementById('eras').onclick=e=>{const b=e.target.closest('button');if(!b)return;ERA=b.dataset.e;for(const x of document.querySelectorAll('#eras button'))x.classList.toggle('on',x===b);load();};
+document.getElementById('anc').onclick=e=>{ANC=!ANC;e.target.classList.toggle('on',ANC);};
+document.getElementById('slow').onclick=e=>{SLOW=!SLOW;e.target.classList.toggle('on',SLOW);};
+load();const t0=performance.now();
+(function loop(n){const t=(n-t0)/1000*(SLOW?0.25:1);for(const it of items){const {c,img,m,bi,bm,lab,head,body}=it;const g=c.getContext('2d'),gy=258;g.fillStyle='#2e3a2a';g.fillRect(0,0,c.width,c.height);g.fillStyle='#3d4a3a';g.fillRect(0,gy,c.width,22);
+  if(bi){const bw=bm.w||256,bn=bm.frames||Math.round(bi.width/bw),pl=bm.padLeft||0,j=Math.floor(t*12)%bn;g.globalAlpha=0.45;g.drawImage(bi,j*bw,0,bw,bi.height,120-(pl+128),gy-(bm.feetY||243),bw,bi.height);g.globalAlpha=1;}
+  const i=Math.floor(t*(m.fps||12))%m.frames,pl=m.padLeft||0,X=330-(pl+128),Y=gy-(m.feetY||243);g.drawImage(img,i*m.w,0,m.w,m.h,X,Y,m.w,m.h);
+  if(ANC){if(head&&head.head[i]){const h=head.head[i];g.strokeStyle='#0f0';g.lineWidth=2;g.beginPath();g.arc(X+h.x,Y+h.y,6,0,7);g.stroke();}
+   if(body&&body.back&&body.back[i]){const b=body.back[i],off=(m.w-body.w)/2>0?(pl-(body.padLeft||0)):0;g.fillStyle='#0ff';g.beginPath();g.arc(X+b.x+off,Y+b.y,4,0,7);g.fill();}}
+  g.strokeStyle='rgba(255,80,80,.6)';g.beginPath();g.moveTo(0,gy+0.5);g.lineTo(c.width,gy+0.5);g.stroke();
+  g.fillStyle='#fff';g.font='12px system-ui';g.fillText(lab+' · quadro '+i+'/'+m.frames,8,16);}requestAnimationFrame(loop);})(t0);
+</script></body></html>

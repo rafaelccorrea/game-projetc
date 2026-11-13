@@ -178,88 +178,100 @@
  ],
  "back": [
   {
-   "x": 209.2,
-   "y": 42,
-   "ang": -55.6,
+   "x": 202,
+   "y": 166,
+   "ang": 6.7,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 208.4,
-   "y": 42,
-   "ang": -62.7,
+   "x": 203,
+   "y": 166,
+   "ang": 7.7,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 208.4,
-   "y": 42,
-   "ang": -62.7,
+   "x": 201,
+   "y": 166,
+   "ang": 7.7,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 208.4,
-   "y": 43,
-   "ang": 2,
+   "x": 201,
+   "y": 166,
+   "ang": 8.3,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 210.4,
-   "y": 43,
-   "ang": 6.9,
+   "x": 202,
+   "y": 166,
+   "ang": 8.3,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 210.4,
-   "y": 43,
-   "ang": 2,
+   "x": 201,
+   "y": 166,
+   "ang": 8.3,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 209.4,
-   "y": 43,
-   "ang": -1.1,
+   "x": 201,
+   "y": 166,
+   "ang": 14.8,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 209.4,
-   "y": 43,
-   "ang": -1.1,
+   "x": 203,
+   "y": 166,
+   "ang": 14.8,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 209.4,
-   "y": 43,
-   "ang": 1.1,
+   "x": 202,
+   "y": 166,
+   "ang": 14.8,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 210.1,
-   "y": 43,
-   "ang": 7.4,
+   "x": 200,
+   "y": 166,
+   "ang": 13.9,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 210.1,
-   "y": 43,
-   "ang": 7.4,
+   "x": 202,
+   "y": 166,
+   "ang": 13.9,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 210.1,
-   "y": 43,
-   "ang": 7.4,
+   "x": 202,
+   "y": 166,
+   "ang": 13.9,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"

@@ -1,0 +1,9 @@
+{
+ "frames": 15,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "sheet": "assets/anim/hyb/kaia/kaia_spin_era2_t1.png",
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura. Pintar: cor = luminância × tinta do material."
+}

@@ -226,109 +226,120 @@
  "gripfdy": true,
  "back": [
   {
-   "x": 115.4,
-   "y": 42,
-   "ang": -49.4,
+   "x": 105,
+   "y": 166,
+   "ang": 3.1,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 113,
+   "y": 167,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 122,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 106,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 112,
+   "y": 160,
+   "ang": -6.8,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 111,
+   "y": 159,
+   "ang": -6.8,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 99,
+   "y": 159,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 88.4,
+   "y": 159,
+   "ang": 3.5,
    "s": 1,
    "ok": true
   },
   {
-   "x": 116.5,
-   "y": 42,
-   "ang": -49.4,
+   "x": 84.9,
+   "y": 165,
+   "ang": 3.1,
    "s": 1,
    "ok": true
   },
   {
-   "x": 138.9,
-   "y": 55,
-   "ang": -33.5,
+   "x": 88.4,
+   "y": 165,
+   "ang": 3.1,
    "s": 1,
    "ok": true
   },
   {
-   "x": 146.9,
-   "y": 58,
-   "ang": 17.9,
+   "x": 119,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 107,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 98.8,
+   "y": 169,
+   "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 146.9,
-   "y": 58,
-   "ang": 17.9,
+   "x": 107,
+   "y": 166,
+   "ang": 3.1,
    "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   },
   {
-   "x": 146.7,
-   "y": 55,
-   "ang": 47.1,
+   "x": 105,
+   "y": 166,
+   "ang": 3.9,
    "s": 1,
-   "ok": true
-  },
-  {
-   "x": 137.2,
-   "y": 38,
-   "ang": -44.5,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 99.2,
-   "y": 38,
-   "ang": -48.7,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 99.2,
-   "y": 47,
-   "ang": -48.7,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 111.6,
-   "y": 52,
-   "ang": -25.4,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 145,
-   "y": 56,
-   "ang": 28.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 145,
-   "y": 56,
-   "ang": 28.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 138,
-   "y": 46,
-   "ang": -22.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 115.4,
-   "y": 43,
-   "ang": -22.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 112.3,
-   "y": 42,
-   "ang": -31.9,
-   "s": 1,
-   "ok": true
+   "ok": true,
+   "clampx": true
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
