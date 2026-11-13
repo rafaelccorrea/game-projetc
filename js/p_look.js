@@ -38,7 +38,15 @@ function plDraw(ts){ XLK.raf=0; const cs=document.querySelectorAll?document.quer
 function plFallback(){ try{ const cs=document.querySelectorAll('canvas[data-plsk]'); for(const cv of cs){ cv.style.display='none'; const fb=cv.nextElementSibling; if(fb) fb.style.display='block'; } }catch(e){} }
 function plStop(){ if(XLK.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(XLK.raf); XLK.raf=0; }
 /* um cartão de skin: herói, nome, selo, e Equipar ou como obter */
-function plCard(sk,hasFull,i){ const eq=!!sk.equipped, size=hasFull?'':'display:none', rar=sk.r>=0?plRar(sk.r):null;
+/* skin SEM ARTE (art:false): cartão "Em breve" com o nome e como obter, SEM desenhar o herói padrão como se fosse a skin (silhueta/cadeado de código) e sem botão */
+function plSoonCard(sk,i){ const rar=sk.r>=0?plRar(sk.r):null;
+  return `<div class="pl-in" role="group" aria-label="${plEsc(sk.name)}, em breve" style="animation-delay:${i*.06}s;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;background:#1d1611;border:2px dashed ${rar?rar.c:'#4a3a2b'}88;box-sizing:border-box">
+    <div aria-hidden="true" style="width:min(100%,220px);aspect-ratio:1/1;max-height:150px;display:flex;align-items:center;justify-content:center"><svg width="84" height="110" viewBox="0 0 84 110" fill="none"><circle cx="42" cy="26" r="18" fill="#2a2118" stroke="#4a3a2b" stroke-width="3"></circle><path d="M10 104c0-26 14-42 32-42s32 16 32 42z" fill="#2a2118" stroke="#4a3a2b" stroke-width="3"></path><rect x="30" y="58" width="24" height="20" rx="4" fill="#8a6a3a" stroke="#4a3a2b" stroke-width="3"></rect><path d="M35 58v-6a7 7 0 0 1 14 0v6" stroke="#8a6a3a" stroke-width="4" fill="none"></path></svg></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center"><b style="font-family:'Lilita One',sans-serif;font-size:20px;color:#f6ecdf">${plEsc(sk.name)}</b>${rar?`<span style="padding:3px 10px;border-radius:10px;background:#16110d;border:2px solid ${rar.c};color:${rar.c};font-size:12px;font-weight:900">${plEsc(rar.n)}</span>`:''}<span style="padding:3px 10px;border-radius:10px;background:#2a2118;border:2px solid #6b5843;color:#c9b9a2;font-size:12px;font-weight:900">Em breve</span></div>
+    ${sk.bonus?`<span style="font-size:12px;font-weight:800;color:#9ff0a8">${plEsc(sk.bonus)}</span>`:''}${sk.how?`<span style="font-size:12px;font-weight:800;color:#ffd27a;text-align:center;line-height:1.3">${plEsc(plNoPrice(sk.how))}</span>`:''}</div>`; }
+/* regra do PO: nada de preço de item que o jogo ainda não entrega: tira o "R$ 24,90" do texto de como obter */
+function plNoPrice(s){ return String(s).replace(/ *R[$] *[0-9.,]+/g,'').replace(/ +/g,' ').trim(); }
+function plCard(sk,hasFull,i){ if(sk.art===false) return plSoonCard(sk,i); const eq=!!sk.equipped, size=hasFull?'':'display:none', rar=sk.r>=0?plRar(sk.r):null;
   const act=eq?'':(sk.owned?`<button data-x="equip" data-id="${plEsc(sk.id)}" class="pl-btn" aria-label="Equipar ${plEsc(sk.name)}">Equipar</button>`:`<span style="font-size:12px;font-weight:800;color:#ffd27a;text-align:center;line-height:1.3">${plEsc(plHow(sk))}</span>`);
   return `<div class="pl-in" style="animation-delay:${i*.06}s;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;background:radial-gradient(ellipse at 50% 75%,#3a2c4a,#1d1611);border:2px solid ${eq?'#5fd068':rar?rar.c:sk.owned?'#8a6a3a':'#4a3a2b'};box-sizing:border-box;opacity:${sk.owned||eq?1:.85}">
     <div role="img" aria-label="${plEsc(sk.name)}${eq?', equipada':''}" style="position:relative;width:min(100%,220px);aspect-ratio:1/1">
@@ -49,7 +57,7 @@ function plCard(sk,hasFull,i){ const eq=!!sk.equipped, size=hasFull?'':'display:
 function scrLook(){
   plInject(); const d=xDims(PL_MINH), hero=plHero(), name=hero==='kaia'?'Kaia':'Kael', pa=hero==='kaia'?'a':'o';
   const fixed=plFixed(hero), anyEq=fixed.some(x=>x.equipped), hasFull=typeof window.drawHeroFull==='function'&&!XLK.err;
-  const cards=[{id:'default',name:name+' · skin padrão',owned:true,equipped:!anyEq,how:'',bonus:''}].concat(fixed.map(x=>({id:x.id,name:x.name||x.id,owned:!!x.owned,equipped:!!x.equipped,how:x.how||'',bonus:x.bonus||'',soon:!!x.soon,r:Number.isInteger(x.r)?x.r:-1})));
+  const cards=[{id:'default',name:name+' · skin padrão',owned:true,equipped:!anyEq,how:'',bonus:''}].concat(fixed.map(x=>({id:x.id,name:x.name||x.id,owned:!!x.owned,equipped:!!x.equipped,how:x.how||'',bonus:x.bonus||'',soon:!!x.soon,art:x.art,r:Number.isInteger(x.r)?x.r:-1})));
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px">
     ${cards.map((c,i)=>plCard(c,hasFull,i)).join('')}
     <div role="note" style="flex:none;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;border-radius:16px;border:2px dashed #6b5843;background:#1d1611;text-align:center;box-sizing:border-box">
