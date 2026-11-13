@@ -11,6 +11,13 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const Loot=()=>root.Sys&&root.Sys.loot;
 const hasAtt=m=>!!(m.att&&typeof m.att==='object'&&Object.keys(m.att).length);
+/* ITENS NOVOS PELO CORREIO (fps-server §14): a carta do servidor pode trazer att.newDrops = {src, ctx}. O SERVIDOR decide quem ganha e em que posição;
+   o PRÊMIO é o da tabela do Sys.newDrops (newdrops.js), chamado aqui no resgate. Só as fontes que o servidor decide (= SERVER_DROP_SOURCES do mail-core).
+   Idempotente pela carta (o.done, como o resto do anexo). Com o Sys.newDrops desligado, a carta NÃO é consumida (fica para quando ligar). */
+const ND_SRC=['tourney:weekend','guild:weekly','guild:capital','worldboss'];
+const NewDrops=()=>root.Sys&&root.Sys.newDrops;
+const ndOf=m=>{ const x=m.att&&m.att.newDrops; return x&&typeof x==='object'&&ND_SRC.includes(x.src)?{src:x.src,ctx:(x.ctx&&typeof x.ctx==='object')?x.ctx:{}}:null; };
+const ndOn=()=>{ const N=NewDrops(); return !!(N&&N.DATA&&N.DATA.on===true&&typeof N.grant==='function'); };
 /* TIPO e REMETENTE (Q-10, autorizado pela fps-6f): type ∈ TYPES; a caixa do servidor manda `source` (arena, ranking, compensacao, equipe, evento, guilda...)
    e o jogo aceita os dois: type explícito vence; senão vem do source (SOURCE_TYPE); sem nada: 'reward' com anexo, 'system' sem. Formato do servidor
    (fps-server mail-core, contrato §8): {id, title, body, att, createdAt, expiresAt, source, ref}; id pode ser número (local) ou texto (servidor). */
@@ -60,12 +67,15 @@ function claim(S,host,id){
   if(!DATA.enabled) return OFF;
   const o=purge(S,host), m=o.list.find(x=>x.id===id); if(!m) return {ok:false,reason:'id'};   // uma leitura só da caixa: o ensure recria as cartas
   if(!hasAtt(m)) return {ok:false,reason:'sem_anexo'}; if(m.claimed||o.done.includes(m.id)){ m.claimed=true; return {ok:false,reason:'resgatado'}; }
+  const nd=ndOf(m); if(nd&&!ndOn()) return {ok:false,reason:'novos_desligado'};   // não consome: o prêmio novo espera a chave do Sys.newDrops
   const L=Loot(); m.claimed=true; m.read=true; o.done.push(m.id); if(o.done.length>300) o.done.shift();
-  if(L&&L.grantBundle) return {ok:true,got:L.grantBundle(S,host,m.att)};
+  const att=Object.assign({},m.att); delete att.newDrops;   // o pacote comum vai sem a chave nova
+  const ndGot=nd?NewDrops().grant(S,host,nd.src,nd.ctx):null;
+  if(L&&L.grantBundle){ const got=Object.keys(att).length?L.grantBundle(S,host,att):{}; if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got}; }
   // reserva sem Sys.loot: só ouro e gemas (o resto exige o loot carregado)
-  const gold=int0(m.att.gold), gems=int0(m.att.gems);
+  const gold=int0(att.gold), gems=int0(att.gems);
   if(gold&&host.addGold) host.addGold(gold); if(gems&&host.addGems) host.addGems(gems);
-  return {ok:true,got:{gold,gems}};
+  const got={gold,gems}; if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got};
 }
 function claimAll(S,host){ if(!DATA.enabled) return {n:0,list:[],reason:'desligado'}; const out=[]; for(const m of inbox(S,host)) if(m.hasAtt&&!m.claimed){ const r=claim(S,host,m.id); if(r.ok) out.push({id:m.id,got:r.got}); } return {n:out.length,list:out}; }
 /* apaga: só sem anexo pendente */
