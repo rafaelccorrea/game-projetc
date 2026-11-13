@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **06h · Servidor na AWS instalado e protegido (Servidor):** roda com um usuário sem permissões especiais, reinicia sozinho, só a API fica exposta (o resto responde 404), chave de login nova gerada no próprio servidor. Testado lá (login de convidado OK). Está PARADO esperando o banco. Para ligar faltam 3 coisas suas: (1) a senha do banco Supabase; (2) o certificado do Supabase; (3) um domínio para o HTTPS (o Servidor roda o certificado gratuito, se você quiser). Passo a passo: fps-server/deploy/LEIA-ME.md
+- **06h · Sua decisão sobre ultimates:** cada TIPO DE ARMA (não a era) tem 3 níveis: Básica até Épica = a de hoje; Lendária = a de hoje reforçada pelo código; Mítica = animação nova própria (~60 créditos). A Arte faz primeiro uma amostra com a espada para você ver. Arco e flecha e bumerangue: a Arte está calculando o custo
+
 - **05h40 · Sua decisão: o herói NÃO cresce mais.** A skin padrão é o garoto (Kael) e a menina (Kaia), em qualquer nível, que já têm montarias, pistolas, morte e asas prontas. O adulto e o guerreiro já feitos viram as 4 primeiras SKINS FIXAS: Kael Cavaleiro, Kael Guerreiro Lendário, Kaia Cavaleira, Kaia Guerreira Lendária (Sistemas propõe como ganhar e o preço). O adulto montado fica parado (só as 2 guias, 4 créditos)
 - **05h40 · Servidor na AWS CRIADO:** máquina eonbound-server (t4g.small, São Paulo, ~US$ 23/mês), acesso só pelo seu PC, site/API público. Falta: colocar o código (repositório privado) e o banco
 
