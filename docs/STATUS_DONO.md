@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h45 · Você APROVOU:** asa nas costas (a pé e montado), cenários vivos das eras 5 e 8 (com as 6 e 7, as 9 eras têm cenário vivo), Oferta com o Lobo e o Kael montado, Bem-vindo de volta detalhado. O engenheiro liga tudo; próximo APK depois das 4 fases e do pet/montaria em todas as telas
+
 - **03h35 · PARA VOCÊ VOTAR (página de aprovação):** a Oferta de 1ª compra com o Lobo de guerra e o Kael montado, tudo com imagem; o Bem-vindo de volta detalhado (8 h fora: +16,6 mi de ouro, XP Nv 1 → 5, 10 itens, baús, pedras, ração). Um detalhe já mandado corrigir: na vitrine da Oferta o Kael segura espada, mas a arma da oferta é uma clava
 - **03h35 · Skins em camadas:** a Arte está mapeando as 38 skins de roupa em chapéu + cores + óculos/máscara e vai te mostrar uma prévia de 6-8 skins nas 4 fases, no Kael e na Kaia
 
@@ -180,7 +182,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 ## A. O que eu preciso de você
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
-- [ ] VOTAR AGORA (página de aprovação): cenários das eras 5 e 8, asa nas costas refeita, Oferta com imagem, Bem-vindo de volta detalhado
+- [x] Votados: cenários 5 e 8, asa nas costas, Oferta, Bem-vindo de volta (tudo aprovado)
 - [ ] Próximos votos (quando chegarem, eu aviso): asa nas costas (refeita), Kaia adulta e guerreira V2 animadas
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
@@ -217,7 +219,7 @@ Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo,
 **Personagem**
 - [x] Subir de nível novo · pistola e revólver · 45 armas por raridade com brilho
 - [x] Morte nova do Kael (a pé e montado)
-- [~] Asas por item (anjo eras 0-6 e 8; demoníaca era 7 e Hell): a pé ok; MONTADO reprovada por você, sendo presa nas costas
+- [x] Asas por item, nas costas (a pé e montado) APROVADAS por você
 - [~] Kael crescendo: adulto e guerreiro V2 APROVADOS, sendo ligados; tamanho por fase na tela; evolução adolescente→adulto e adulto→guerreiro sendo animada
 - [~] Kaia adulta e guerreira V2 sendo animadas (vão para o seu voto) · [ ] Kaia jogável na Criação (hoje "chega em breve")
 - [ ] Auras maligna e celestial (Submundo e Celestial)
@@ -233,7 +235,7 @@ Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo,
 
 **Mundo e progressão**
 - [x] Inimigo sem ficar parado entre golpes (eras 0-6)
-- [x] Cenários vivos: Medieval e Industrial ligados · [~] Futurista e Submundo APROVADOS, sendo ligados · [~] Moderna (acabamento) e Celestial indo para o seu voto
+- [x] Cenários vivos: Medieval e Industrial ligados · [~] Moderna, Futurista, Submundo e Celestial APROVADOS, sendo ligados
 - [x] Curva de 6 meses simulada (grátis termina no dia 179, ~10,1 mil diamantes); inimigos mais fortes por era (sua decisão)
 - [x] Qualidade (estrelas), fusão, item adormecido (regras prontas) · [~] ligando nas telas
 - [~] Eras 7 (Submundo) e 8 (Celestial) jogáveis: números prontos, inimigos animados aprovados, ligando
