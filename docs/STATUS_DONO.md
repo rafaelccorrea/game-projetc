@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h55 · QA reconferiu no navegador:** asa OK a pé e montado; arma na mão OK com o Kael montado; Serpe na tela de Montarias (6 de 6); Instâncias de ponta a ponta OK (o prêmio estava usando o nível Fácil; já corrigido). Ainda aberto: o pet sumindo na Vitória (próximo do engenheiro). Os cenários das eras 5-8 entram antes do APK; as eras 7 e 8 você vê pelo Modo dono até a curva das 9 eras ligar
+
 - **03h45 · Você APROVOU:** asa nas costas (a pé e montado), cenários vivos das eras 5 e 8 (com as 6 e 7, as 9 eras têm cenário vivo), Oferta com o Lobo e o Kael montado, Bem-vindo de volta detalhado. O engenheiro liga tudo; próximo APK depois das 4 fases e do pet/montaria em todas as telas
 
 - **03h35 · PARA VOCÊ VOTAR (página de aprovação):** a Oferta de 1ª compra com o Lobo de guerra e o Kael montado, tudo com imagem; o Bem-vindo de volta detalhado (8 h fora: +16,6 mi de ouro, XP Nv 1 → 5, 10 itens, baús, pedras, ração). Um detalhe já mandado corrigir: na vitrine da Oferta o Kael segura espada, mas a arma da oferta é uma clava
