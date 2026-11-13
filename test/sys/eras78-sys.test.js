@@ -23,8 +23,12 @@ t('chefes das eras 7 e 8: fragmentos anunciados chegam (Serpe infernal, Cavalo i
   ST.setEra9(true); LV.setCap120(true); Sys.newDrops.DATA.on=true;
   const S={}, h=makeHost({level:110,eraMax:8,stage:80}); Sys.host=h;
   const g7=Sys.loot.rollKill(S,h,{gold:10,eraBoss:true,era:7,stage:80}).newDrops.got, g8=Sys.loot.rollKill(S,h,{gold:10,eraBoss:true,era:8,stage:90}).newDrops.got;
-  assert.ok(g7.some(x=>x.id==='wyvernpet'&&x.frags===3)&&g7.some(x=>x.id==='hellhorse'&&x.frags===2),JSON.stringify(g7));
-  assert.ok(g8.some(x=>x.id==='celtiger'&&x.frags===2),JSON.stringify(g8));
-  Sys.newDrops.DATA.on=false; LV.setCap120(false); ST.setEra9(false);
+  /* sem arte ainda (newReady desligado): o prêmio fica GUARDADO, nada aparece; liberado o item, o releaseHeld entrega o que juntou */
+  assert.ok(g7.some(x=>x.id==='wyvernpet'&&x.held)&&g7.some(x=>x.id==='hellhorse'&&x.held),JSON.stringify(g7)); assert.ok(g8.some(x=>x.id==='celtiger'&&x.held),JSON.stringify(g8));
+  const HP=Sys.newDrops.ensure(S).heldPM; assert.deepStrictEqual([HP['pet:wyvernpet'].n,HP['mount:hellhorse'].n,HP['mount:celtiger'].n],[3,2,2]);
+  const P=Sys.pet.DATA.newReady, M=Sys.mount.DATA.newReady; P.wyvernpet=true; M.hellhorse=true; M.celtiger=true;
+  try{ const rel=Sys.newDrops.releaseHeld(S,h); assert.ok(rel.some(x=>x.id==='wyvernpet'&&x.frags===3)&&rel.some(x=>x.id==='hellhorse'&&x.frags===2)&&rel.some(x=>x.id==='celtiger'&&x.frags===2),JSON.stringify(rel)); assert.deepStrictEqual(Sys.newDrops.ensure(S).heldPM,{}); }
+  finally{ delete P.wyvernpet; delete M.hellhorse; delete M.celtiger; }
+  LV.setCap120(false); ST.setEra9(false);
 });
 console.log(n+' testes ok');

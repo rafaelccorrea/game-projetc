@@ -11,7 +11,7 @@ let n=0; const t=(name,fn)=>{ fn(); n++; console.log('ok -',name); };
 const on=fn=>{ const a=ND.DATA.on, b=AP.DATA.skinsOn; ND.DATA.on=true; AP.DATA.skinsOn=true; try{ fn(); } finally{ ND.DATA.on=a; AP.DATA.skinsOn=b; } };
 const OFF=AP.FIXED.filter(k=>k.off===true).map(k=>k.id), LIVE=AP.FIXED.filter(k=>k.off!==true);
 
-t('hoje as duas chaves estão desligadas',()=>{ assert.strictEqual(ND.DATA.on,false); assert.strictEqual(AP.DATA.skinsOn,false); });
+t('as duas chaves LIGADAS por padrão (dono 14/11, "liga tudo")',()=>{ assert.strictEqual(ND.DATA.on,true); assert.strictEqual(AP.DATA.skinsOn,true); });
 t('skins adultas/retiradas ('+OFF.join(', ')+'): recusadas por TODAS as fontes e pelo Modo dono, mesmo com as chaves ligadas',()=>on(()=>{ assert.ok(OFF.length>=4,'as 4 adultas marcadas off');
   for(const id of OFF) for(const opt of [undefined,{source:'reward'},{source:'shop'},{source:'pass'},{source:'offer'},{owner:true}]){ const S={hero:id.startsWith('kaia')?'kaia':'kael'}; const r=AP.grantFixed(S,id,opt); assert.strictEqual(r.ok,false,id+' '+JSON.stringify(opt)); }
   for(const id of OFF){ const S={hero:id.startsWith('kaia')?'kaia':'kael'}; assert.strictEqual(AP.equipFixed(S,id).ok,false,'equipar '+id); }

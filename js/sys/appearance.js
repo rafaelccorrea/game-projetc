@@ -135,7 +135,7 @@ DATA.hookProposal={offer:{kael:'kael_ninja',kaia:'kaia_ninja'},pass:{kael:'kael_
 /* APROVADO PELO DONO (13/11, tabela das skins como proposta): ganchos por herói. CHAVE skinsOn (desligada): desligada, nenhuma fonte entrega skin
    (oferta, passe, VIP, torneio, loja); o Modo dono continua. Ligada: a skin entra na coleção mesmo SEM a arte ainda (o direito não se perde) e só
    EQUIPA quando art:true (a Arte entregou a pasta). */
-DATA.skinsOn=false;
+DATA.skinsOn=true;   // LIGADO (dono, 14/11, próxima versão): fontes de skin entregam; as 4 adultas seguem off (retired) em qualquer caminho
 DATA.offerSkin={kael:'kael_ninja',kaia:'kaia_ninja'}; DATA.passSkin={kael:'kael_angel',kaia:'kaia_angel'};
 for(const k of [
   {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'],

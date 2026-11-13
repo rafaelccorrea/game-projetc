@@ -15,9 +15,9 @@ t('os 3 estão no módulo como combinado: Raro/Raro/Épico, ataque, 60/60/100 fr
   const by=id=>P.DATA.pets.find(p=>p.id===id); const [w,f,p]=['shadowwolf','falcon','panther'].map(by);
   assert.deepStrictEqual([w.r,f.r,p.r],[1,1,2]); assert.deepStrictEqual([w.hatchFrags,f.hatchFrags,p.hatchFrags],[60,60,100]);
   assert.deepStrictEqual([w.skill.id,f.skill.id,p.skill.id],['dash','ranged','blink']); for(const id of ['shadowwolf','falcon','panther']) assert.strictEqual(P.DATA.newReady[id],true,id); });
-t('entregas DESLIGADAS (padrão): nenhuma fonte dá nada',()=>{ assert.strictEqual(N.DATA.on,false); const S={}, h=host();
+t('entregas LIGADAS por padrão (dono 14/11); desligando a chave, nenhuma fonte dá nada',()=>{ assert.strictEqual(N.DATA.on,true); const keep=N.DATA.on; N.DATA.on=false; try{ const S={}, h=host();
   for(const [src,c] of [['inst:win',{type:'gear',diff:0,first:true}],['activity:full',{}],['tower:floor',{floor:30}],['missions:daily',{}],['arena:season',{league:3}]]){ const r=N.grant(S,h,src,c); assert.strictEqual(r.ok,false); assert.strictEqual(r.reason,'off'); }
-  assert.strictEqual(pet(S,'shadowwolf'),null); assert.strictEqual(pet(S,'falcon'),null); assert.strictEqual(pet(S,'panther'),null); });
+  assert.strictEqual(pet(S,'shadowwolf'),null); assert.strictEqual(pet(S,'falcon'),null); assert.strictEqual(pet(S,'panther'),null); } finally{ N.DATA.on=keep; } });
 t('Lobo sombrio: 1ª vitória na Instância Arsenal dá o pet inteiro, uma vez por dificuldade; repetido vira fragmento',()=>withOn(()=>{ const S={}, h=host();
   N.grant(S,h,'inst:win',{type:'gear',diff:0,first:true}); assert.ok(pet(S,'shadowwolf'),'nasceu');
   const f0=pet(S,'shadowwolf').frags|0; N.grant(S,h,'inst:win',{type:'gear',diff:0,first:true}); assert.strictEqual(pet(S,'shadowwolf').frags|0,f0,'mesma dificuldade não repete');
