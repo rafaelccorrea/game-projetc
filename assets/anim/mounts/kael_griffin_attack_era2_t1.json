@@ -8,10 +8,5 @@
  "padTop": 96,
  "feetY": 339,
  "weapon": "era2_t1",
- "note": "patas no feetY; Kael montado, arma trocável pelo _body.json",
- "skip": [
-  2,
-  12
- ],
- "skipNote": "quadros com defeito de imagem (POLIMENTO P10-P15) — o jogo pula para o limpo mais próximo; a Arte tira o índice quando consertar"
+ "note": "patas no feetY; Kael montado, arma trocável pelo _body.json"
 }

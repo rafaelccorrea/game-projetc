@@ -373,15 +373,5 @@
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
- "skip": [
-  7,
-  8,
-  9,
-  10,
-  11,
-  12,
-  13
- ],
- "skipNote": "quadros com defeito de imagem (POLIMENTO P10-P15) — o jogo pula para o limpo mais próximo; a Arte tira o índice quando consertar"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
 }

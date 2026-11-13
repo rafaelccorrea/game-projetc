@@ -370,11 +370,5 @@
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
- "gripNote": "13/11 (polimento): ângulo de repouso 46->22 (como pônei/cavalo/tigre) para a arma não cobrir o rosto. Backup em _reprovado/2026-11-13_grip/",
- "skip": [
-  8,
-  9,
-  10
- ],
- "skipNote": "quadros com defeito de imagem (POLIMENTO P10-P15) — o jogo pula para o limpo mais próximo; a Arte tira o índice quando consertar"
+ "gripNote": "13/11 (polimento): ângulo de repouso 46->22 (como pônei/cavalo/tigre) para a arma não cobrir o rosto. Backup em _reprovado/2026-11-13_grip/"
 }
