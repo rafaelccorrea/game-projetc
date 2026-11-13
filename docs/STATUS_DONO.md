@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h55 · Telas ESCRITAS e salvas no GitHub (86890ff), ainda não ligadas no jogo:**
+  - Sistemas: Arena (7 ligas Bronze→Lenda, luta animada, resultado), Eventos (loja e missões funcionando; Trilha e Chefe em breve, regra sendo escrita), Torneio do Poder (9 regiões + Capital)
+  - QA: Perfil e Coleção; Torre e Ranking conferidos no navegador
+  - Painéis do engenheiro: Vitória/Derrota do chefe, Montarias, Passe com rolagem
+  - Prêmios da Arena com diamante só valem no online e vão caber na meta de ~10 mil diamantes em 6 meses
+
 - **21h45 · Arte:** começaram as animações do adulto e do guerreiro (Kael e Kaia, 32 vídeos, ~150 créditos, 2 agentes em paralelo); a pistola do guerreiro sai certa junto com elas. A tela Mapa das Eras foi ESCRITA (salva no GitHub, ainda não vista rodando). O QA pula o Mapa e vai direto para o Perfil
 
 - **21h35 · Ninguém parado. Fila de cada um, em ordem:**
