@@ -3,6 +3,12 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Votos do dono no link (13/11, 22h58-23h17):**
+    - Fogueira V5 **aprovada** (V4 reprovada) → Engenheiro escreve a tela com o Sys.bonfire
+    - Arte da Fogueira, 9 estágios: **aprovada** → Arte prepara no formato do botão; loops de chama só com o pedido e o custo
+    - Correio V3: **aprovado, versão A** → Engenheiro
+    - Mapa das Eras V3: **reprovado** ("esta muito simples") → Sistemas faz a V4, mais rica, na direção A
+- [x] **"continua tudo"** · todas as sessões seguem as filas
 - [?] **Votar no link das telas: Grimório V3 e Derrota com prêmio pelo dano** · protótipos da Sistemas; o Engenheiro só liga depois do voto
 - [?] **Encruzilhada das Eras: bênção vale até o fim da era (como no doc) ou é permanente?** Hoje segue o doc. Mudança pequena se for permanente · dono decide
 - [~] **As 14 recomendações do doc de idle: todas prontas no módulo**, desligadas e com testes (74d0956). Cada uma liga depois do voto no protótipo da tela · Sistemas → Engenheiro
