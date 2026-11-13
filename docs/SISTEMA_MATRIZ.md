@@ -77,3 +77,19 @@ Ordem: os 3 pets que estão fechando agora. Depois, item por item, na ordem que 
 | Teste | ✓ `test/sys/item-era0_t0.test.js` (9): arte no disco, família, ultimate, efeito, atributo, Forja hoje e +16..+20, aura, fontes, Códex, nome | — |
 
 **Do lado de sistema, a Clava Básica fecha com 1 decisão pendente: o nome.** O resto da linha (N1 telas montadas e N3 conferência na tela) é do Engenheiro e do QA, como a Arte anotou.
+
+## Arma 2: Clava Rara (`era0_raro`)
+
+Igual à Básica em Forja, aura e ultimate (folha-base `era0_ult`). Teste: `test/sys/item-armas.test.js` (o mesmo arquivo segue para as próximas armas).
+
+| Linha | Estado |
+|---|---|
+| Arte que o sistema lê | ✓ `assets/weapons/era0_raro.png` + grip |
+| Família / ultimate | ✓ Clava / base `era0_ult` |
+| Efeito Raro | ✓ brilho 1, partículas ×1,1, dano igual |
+| Atributo | ✓ acima do Básico; 1 secundário |
+| Fontes | ✓ drop da era 0 (22% das quedas) · Invocação (peso 28) |
+| Códex | ✓ `w-0-0` (o Códex junta Básico e Raro numa casa) |
+| Nome na tela | ✓ "Clava de Pedra" (`index.html:352`), bate com a arte |
+
+**Fechada do lado de sistema, sem pendência.**
