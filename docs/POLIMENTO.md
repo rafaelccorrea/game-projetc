@@ -69,9 +69,9 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [x] P10 cavalo · LIMPO (quadros 0-16; braço/capa fantasma e ponta de lança sumiram; ampliado o 6: ok)
 - [x] P14 pônei · LIMPO (0-16)
 - [x] P15 serpe · LIMPO (0-16)
-- [ ] P11 grifo · quase: o quadro 2 melhorou (rosto visível, punho na frente, sem borrão); sobrou um mini retângulo rosa/branco ao lado do pescoço no quadro 12 · Arte (pequeno)
-- [ ] P12 lobo · MELHOROU muito, mas NÃO fechou: quadros 7 e 10 ainda têm franja de listras verticais no topo da cabeça/armadura e um retângulo rosa-branco solto perto da orelha (7); quadros 1 e 3 com listras verticais fracas na ombreira; ampliações em reports/prints/pol_11_ataque_montado_pos_limpeza_restos.png · Arte
-- [ ] P13 tigre de cristal · a faixa corrompida do rosto SUMIU (8 e 10 ok); restam listras verticais fracas atrás do Kael (capa/cristais) · Arte (menor)
+- [~] P11 grifo · LIMPO pela Arte (43f8b7a), QA reconferir · · quase: o quadro 2 melhorou (rosto visível, punho na frente, sem borrão); sobrou um mini retângulo rosa/branco ao lado do pescoço no quadro 12 · Arte (pequeno)
+- [~] P12 lobo · LIMPO pela Arte (9322a83), QA reconferir · · MELHOROU muito, mas NÃO fechou: quadros 7 e 10 ainda têm franja de listras verticais no topo da cabeça/armadura e um retângulo rosa-branco solto perto da orelha (7); quadros 1 e 3 com listras verticais fracas na ombreira; ampliações em reports/prints/pol_11_ataque_montado_pos_limpeza_restos.png · Arte
+- [~] P13 tigre de cristal · LIMPO pela Arte (f70206e), QA reconferir · · a faixa corrompida do rosto SUMIU (8 e 10 ok); restam listras verticais fracas atrás do Kael (capa/cristais) · Arte (menor)
 - [ ] P16 lobo COM ARMA (era2_t1) · A conferir (as folhas com arma não foram reabertas depois da limpeza)
 - [x] P16 lobo COM ARMA · CORRIGIDO: a espada agora está NA MÃO nos quadros 1, 3, 5 e 9 (sem haste preta solta); só sobram listras verticais fracas na armadura (mesmo resto do P12) · print reports/prints/pol_12_folhas_com_arma_pos_limpeza_ok.png
 - [x] P17 cavalo COM ARMA · CORRIGIDO: quadro 7 sem a ponta de lança sobrando (espada + arco de golpe só); quadros 6 ok; grifo 12, tigre 9 e serpe 9 também ok
