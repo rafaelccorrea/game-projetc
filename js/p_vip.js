@@ -79,6 +79,21 @@ function vIcon(kind,id){ try{ const T=typeof CL_ART!=='undefined'?CL_ART:null; i
 function vUnique(n){ const out=[], re=new RegExp('VIP '+n+'(?![0-9])');
   const scan=(M,kind)=>{ try{ const L=(M&&M.DATA&&(kind==='Montaria'?M.DATA.mounts:M.DATA.pets))||[]; for(const x of L) if(x.nw&&(x.src||[]).some(s=>re.test(s))&&vLive(M,kind,x)) out.push({kind,name:x.name,r:x.r,ic:vIcon(kind,x.id)}); }catch(e){} };
   scan(window.Sys&&Sys.mount,'Montaria'); scan(window.Sys&&Sys.pet,'Pet'); return out; }
+/* CONVENIÊNCIAS DO VIP (aprovadas pelo dono; docs/PROPOSTA_VIP.md): a lista vem TODA de Sys.vip.convTable() (nome, nível, valores por nível, grátis) e Sys.vip.conv(S,id).
+   Do nível escolhido L: toda conveniência que o L já tem (valor acima do grátis). Ativa = o jogador já tem o nível que dá aquele valor; senão TRANCADA com "VIP n".
+   Sem preço. Arena/Torre: o VIP SOMA ao que o grátis tem; o número do grátis vem do módulo (Sys.arena/Sys.tower DATA), nunca de tabela escrita aqui. */
+const V_UNIT={offlineH:' h',bag:' espaços'};
+function vConvRows(L,cur){ let T=[]; try{ T=(window.Sys&&Sys.vip&&Sys.vip.convTable)?Sys.vip.convTable():[]; }catch(e){ T=[]; } const rows=[];
+  for(const c of T){ const vals=Array.isArray(c.values)?c.values:null, has=vals?(vals[L]>vals[0]):(L>=c.vip); if(!has) continue;
+    let need=c.vip; if(vals){ need=vals.findIndex(x=>x===vals[L]); if(need<1) need=c.vip; }
+    let val=''; if(vals){ const u=(c.unit||V_UNIT[c.id]||''); val=(c.id==='offlineH'?'':'+')+vals[L]+u; }
+    let free=String(c.free||''); try{ if(c.id==='arenaAdd'&&Sys.arena&&Sys.arena.DATA) free='hoje: '+Sys.arena.DATA.attemptsPerDay+' por dia'; else if(c.id==='towerAdd'&&Sys.tower&&Sys.tower.DATA) free='hoje: '+Sys.tower.DATA.lossesPerDay+' por dia'; }catch(e){} if(/Sys[.]/.test(free)) free='';
+    rows.push({id:c.id,name:String(c.name).replace(/ *★/g,' estrelas'),val,free,need,on:cur>=need}); }
+  return rows; }
+function vConvCard(L,cur){ const rows=vConvRows(L,cur); if(!rows.length) return '';
+  return '<div role="list" aria-label="Conveniências até o VIP '+L+'" style="flex:none;margin:0 12px;border-radius:16px;border:2px solid #6a4a1a;background:#1d1611;overflow:hidden"><div style="padding:8px 12px;background:#2a1d0f;border-bottom:1px solid #6a4a1a;font-size:11px;font-weight:900;color:#c9b9a2;letter-spacing:1px">CONVENIÊNCIAS DO VIP '+L+'</div>'
+    +rows.map(r=>'<div role="listitem" aria-label="'+vEsc(r.name+(r.val?': '+r.val:'')+(r.on?', ativa':', trancada, '+'VIP '+r.need))+'" style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #2a2018;opacity:'+(r.on?1:.75)+'"><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;font-weight:900;line-height:1.2;color:'+(r.on?'#f6ecdf':'#c9b9a2')+'">'+vEsc(r.name)+(r.val?' · <b style="color:#ffe07a">'+vEsc(r.val)+'</b>':'')+'</span>'+(r.free?'<span style="font-size:11px;font-weight:700;color:#9c8d7a">Grátis: '+vEsc(r.free)+'</span>':'')+'</span>'
+      +(r.on?'<span style="flex:none;padding:2px 8px;border-radius:8px;background:#1f3a22;border:2px solid #5fd068;color:#9ff0a8;font-size:11px;font-weight:900">Ativa</span>':'<span style="flex:none;display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:8px;background:#16110d;border:2px solid #6b5843;color:#c9b9a2;font-size:11px;font-weight:900"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="3" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>VIP '+r.need+'</span>')+'</div>').join('')+'</div>'; }
 function vUniqueCard(n){ const u=vUnique(n); if(!u.length) return '';
   return '<div role="note" style="flex:none;margin:0 12px;padding:10px 12px;border-radius:14px;border:2px solid #ffc94a;background:linear-gradient(180deg,#3a2a12,#2a1d0f);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:900;color:#ffc94a;letter-spacing:1px">SÓ NO VIP '+n+'</span>'
     +u.map(x=>'<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:900;line-height:1.2">'+(x.ic?'<img src="'+x.ic+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true" style="flex:none;width:48px;height:48px;object-fit:contain">':'')+'<span style="min-width:0">'+vEsc(x.kind+' '+(['Básico','Raro','Épico','Mítico','Lendário'][x.r]||'')+': '+x.name)+'</span></span>').join('')
@@ -123,7 +138,7 @@ function scrVip(){
       <button data-x="closecf" class="pv-gold" style="width:180px;height:50px;border-radius:14px;font-family:'Lilita One',sans-serif;font-size:19px">Entendi</button></div></div>`:'';
   V.innerHTML=xWrap(d,XV.anim?'f-in':'',`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
     <div id="pv_scroll" class="x-scroll" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:6px 0 8px;box-sizing:border-box;overflow-y:auto">
-      <span style="flex:none;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.15">Sobe acumulando compras na loja</span>${stage}${carousel}${vUniqueCard(L)}${table}</div>
+      <span style="flex:none;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.15">Sobe acumulando compras na loja</span>${stage}${carousel}${vUniqueCard(L)}${vConvCard(L,cur)}${table}</div>
     <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box"><button data-x="buy" class="pv-gold pv-cta" style="position:relative;overflow:hidden;width:100%;height:58px;border-radius:16px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="pv-shine"></span><span style="font-family:'Lilita One',sans-serif;font-size:22px">Ir à Loja</span><span style="font-size:11px;font-weight:900;color:#5a330a">Cada compra soma pontos VIP</span></button></div>${dlg}</div>`);
   XV.anim=false; XV.sig=vSig();
 }

@@ -72,4 +72,11 @@ out.push('níveis 3/10, tick, sem Sys, alvos e ações: ok');
   liveM = true; h8 = nav(8); assert(/SÓ NO VIP 8/.test(h8) && /Fênix gigante/.test(h8), 'montaria viva: cartão no VIP 8'); h9 = nav(9); assert(!/SÓ NO VIP/.test(h9), 'só a montaria viva: nada no VIP 9');
   liveP = true; h9 = nav(9); assert(/SÓ NO VIP 9/.test(h9) && /Serpe infernal/.test(h9), 'pet vivo: cartão no VIP 9');
   liveM = false; liveP = false; g.Sys.mount = keepM; g.Sys.pet = keepP; out.push('cartão SÓ NO VIP: só com item vivo; desligado a tela não muda'); }
+// conveniências do VIP: vêm de Sys.vip.convTable(); ativas x trancadas com "VIP n"; sem preço
+{ const S0 = g.S; g.S = { sys: {} }; def.onOpen(); const goL = n => { for (let k = 0; k < 12; k++) def.click(btn('prev')); for (let k = 1; k < n; k++) def.click(btn('next')); def.render(); return g.V.innerHTML; };
+  let h3 = goL(3); assert(/CONVENIÊNCIAS DO VIP 3/.test(h3), 'cabeçalho da lista'); assert(/Coleta automática/.test(h3) && /Fusão automática/.test(h3) && /Desmontar sozinho/.test(h3), 'nomes vêm do módulo'); assert(/trancada, VIP 1/.test(h3) && /VIP 3/.test(h3), 'trancadas com o nível'); assert(!/R[$]|Comprar/.test(h3), 'sem preço'); assert(!/, ativa"/.test(h3), 'sem VIP: nada ativo');
+  assert(h3.includes('Espaços extras na mochila · <b style="color:#ffe07a">+20 espaços'), 'valor do módulo: +20 espaços'); assert(h3.includes('Horas máximas de ganho offline · <b style="color:#ffe07a">10 h'), 'offline 10 h');
+  Sys.vip.setLevel(g.S, 3); h3 = goL(3); assert(/, ativa"/.test(h3) && />Ativa</.test(h3), 'com VIP 3: ativas'); assert(!/trancada/.test(h3), 'VIP 3 tem tudo até o 3');
+  let h10 = goL(10); assert(/CONVENIÊNCIAS DO VIP 10/.test(h10) && /trancada, VIP 4/.test(h10) && h10.includes('da torre a mais por dia · <b style="color:#ffe07a">+2'), 'VIP 10: torre +2 trancada para quem tem 3'); assert(/Grátis: hoje: [0-9]+ por dia/.test(h10) || /Grátis:/.test(h10)); assert(!/\p{Extended_Pictographic}/u.test(h10), 'sem emoji');
+  g.Sys.vip.setLevel(g.S, 0); g.S = S0; out.push('conveniências: lista do módulo, ativas x trancadas (VIP n), sem preço'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM (' + bt.length + ' botões, todos com ação)');

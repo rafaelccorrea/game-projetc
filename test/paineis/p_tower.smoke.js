@@ -54,4 +54,7 @@ const sc = { scrollTop: 0, style: {} }, dy = mkEl('pt_dyn'); els.pt_sc = sc; els
 sc.scrollTop = 0; sc.onscroll(); assert(dy.innerHTML.includes('Andar 100') && nF(dy.innerHTML) >= 3 && nF(dy.innerHTML) <= 8, 'topo: andar 100'); assert(/CHEFE/.test(dy.innerHTML));
 out.push('torre inteira: lista virtual (' + nF(dy.innerHTML) + ' andares na janela), câmera no andar atual, rolar repinta');
 delete els.pt_sc; delete els.pt_dyn;
+// tentativas com o bônus do VIP (o que o módulo devolve) e chip trancado para quem não tem
+{ const o2 = g.Sys.tower.ensure(g.S, host); o2.best = 0; o2.lossesLeft = 5; g.Sys.vip = g.Sys.vip || null; const keep = g.Sys.vip; try{ require('../../js/sys/vip.js'); }catch(e){}
+  def.render(); has('Tentativas extras: VIP 5'); has(': +1'); assert(!/R[$]/.test(g.V.innerHTML)); Sys.vip.setLevel(g.S, 5); g.Sys.tower.ensure(g.S, host); g.Sys.tower.ensure(g.S, host).lossesLeft = 6; def.render(); has('6/6'); assert(!/Tentativas extras: VIP/.test(g.V.innerHTML), 'com VIP 5 o chip some'); Sys.vip.setLevel(g.S, 0); g.Sys.vip = keep; out.push('torre: tentativas com bônus do VIP e chip "VIP 5: +1" trancado'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');
