@@ -1,0 +1,12 @@
+{
+ "frames": 12, "cols": 6,
+ "fps": 12,
+ "w": 512,
+ "h": 352,
+ "padLeft": 96,
+ "padRight": 160,
+ "padTop": 96,
+ "feetY": 339,
+ "weapon": "era2_t1",
+ "note": "patas no feetY; Kaia montada, arma trocável pelo _body.json"
+}
