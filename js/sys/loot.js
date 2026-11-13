@@ -274,6 +274,9 @@ function topWeights(w,cap,b){
    O campo é só informativo no jogo solo (não muda poder nem regra). */
 const ORIGIN_OF={drop:'drop',boss:'boss',chest:'chest',arsenal:'instance',eraBossInst:'instance',summon:'summon',shop:'shop'};
 /* ASA (dono): cada asa é anjo ou demoníaca, fixa (não muda por era nem raridade). A regra é do stats (Sys.stats.wingForDrop / DATA.wingDrop). */
+/* ARMA (fps-e2, ordem do dono): família gravada ao criar (arco/bumerangue com as chances e portões do Sys.stats; senão a da arte). Sem o stats, o migrateItem deduz. */
+function wtTag(it,host,rng){ if(!it||it.slot!=='weapon') return it; const St=root.Sys&&root.Sys.stats;
+  try{ if(St&&typeof St.rollWeaponType==='function') it.wt=St.rollWeaponType(it,{level:levelOf(host),era:it.e},rng); }catch(e){} return it; }
 function wingTag(it,diff){ if(!it||it.slot!=='wing') return it; const St=root.Sys&&root.Sys.stats;
   try{ if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
 function rollItem(host,opts){
@@ -290,6 +293,7 @@ function rollItem(host,opts){
   const it={slot,r,e,subs:rollSubs(rng,r,slot),origin:opts.origin||ORIGIN_OF[opts.source]||'drop'}; let qp=qualityOf(rng);
   if(qp!=null) for(let k=1;k<Math.max(1,int0(opts.qBest));k++) qp=Math.max(qp,qualityOf(rng));   // dificuldade: melhor de N (Difícil 2, Hell 3)
   if(qp!=null) it.qp=qp;
+  wtTag(it,host,rng);
   return wingTag(it,opts.diff!=null?opts.diff:diffOf(null,host));
 }
 /* ---------------- invocação por ouro ---------------- */
@@ -345,7 +349,7 @@ const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.su
 function canHold(host,spec){ if(spec.r>maxAllowedR(host)) return false; if(spec.slot==='wing'&&!wingOk(host,spec.r)) return false; return true; }
 function makeFixedItem(host,spec){ const rng=rngOf(host); let r=clamp(int0(spec.r),0,maxDropR()); if(spec.slot==='weapon'&&r===DATA.launch.mythicR) r--;
   const e=spec.e!=null?clamp(int0(spec.e),0,99):eraMaxOf(host); const it={slot:spec.slot,r,e,lvl:1,gold:0,subs:rollSubs(rng,r,spec.slot),origin:spec.origin||'reward'};
-  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; return wingTag(it,spec.diff!=null?spec.diff:diffOf(null,host)); }
+  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; wtTag(it,host,rng); return wingTag(it,spec.diff!=null?spec.diff:diffOf(null,host)); }
 function grantBundle(S,host,b){
   const o=ensure(S), out={gold:0,gems:0,items:[],heldItems:[],eggs:[],heldEggs:[],skin:null}; if(!b||typeof b!=='object') return out;
   const gold=int0(b.gold)+Math.round(num(b.goldk,0)*goldUnitOf(host)); if(gold){ out.gold=gold; if(host.addGold) host.addGold(gold); }

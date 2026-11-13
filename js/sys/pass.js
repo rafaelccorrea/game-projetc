@@ -142,6 +142,7 @@ function makeItem(host,spec){
   let r=clamp(int0(spec.r),0,4); if(spec.slot==='weapon'&&r===3) r=2;
   const subs=L&&L.rollSubs?L.rollSubs(rng,r,spec.slot):[];
   const it={slot:spec.slot,r,e,lvl:1,gold:0,subs,origin:'pass'}; const qp=L&&L.qualityOf?L.qualityOf(rng):null; if(qp!=null) it.qp=qp;   // qualidade (chave da fps-e2)
+  const St=root.Sys&&root.Sys.stats; if(it.slot==='weapon'&&St&&typeof St.rollWeaponType==='function'){ try{ it.wt=St.rollWeaponType(it,{level:playerLevel(null,host),era:e},rng); }catch(err){} }   // família da arma (fps-e2)
   return it;
 }
 /* o jogador pode receber agora? (portão de raridade e regra da asa: nível 50+ e Épica+) */
@@ -181,7 +182,7 @@ function claimAll(S,host){
   const o=ensure(S), t=tier(S), out=[];
   for(let i=1;i<=t;i++){
     if(!o.free.includes(i)){ o.free.push(i); out.push({track:'free',tier:i,...giveReward(S,host,reward('free',i))}); }
-    if(o.premium&&!o.prem.includes(i)){ o.prem.push(i); out.push({track:'premium',tier:i,...giveReward(S,host,reward('premium',i))}); }
+    if(o.premium&&!o.prem.includes(i)){ o.prem.push(i); const g=giveReward(S,host,reward('premium',i)); passSkinBonus(S,'premium',i,g); out.push({track:'premium',tier:i,...g}); }
   }
   o.free.sort((a,b)=>a-b); o.prem.sort((a,b)=>a-b);
   return {n:out.length,list:out};
@@ -222,6 +223,7 @@ function claimTier(S,host,trk,t){
     if(plan.item&&!out.item){ o.held.push({slot:plan.item.slot,r:plan.item.season?int0(plan.item.targetR):plan.item.r}); out.held={slot:plan.item.slot,r:plan.item.r,needLevel:1}; }
     return {ok:true,track:trk,tier:t,rewards:out,partial:true};
   }
+  passSkinBonus(S,trk,t,out);
   return {ok:true,track:trk,tier:t,rewards:out};
 }
 /* itens guardados saem quando o portão abre (chamar no level up; o Sys.loot.onLevelUp também chama). Era decidida AGORA. */
@@ -232,6 +234,8 @@ function releaseHeld(S,host){
   if(host&&typeof host.items==='function') evolveSeason(S,host);   // no level up, também evolui os Itens da Temporada (se o jogo expuser host.items)
   return out;
 }
+/* ÚLTIMO nível premium: a skin Lendária do passe, quando o dono escolher (Sys.appearance.DATA.passSkin; null = o passe fica como está) */
+function passSkinBonus(S,trk,t,out){ if(trk!=='premium'||t!==DATA.tiers) return; const A=root.Sys&&root.Sys.appearance; try{ const id=A&&A.DATA&&A.DATA.passSkin; if(id&&A.grantFixed){ const r=A.grantFixed(S,id,{source:'pass'}); if(r&&r.ok!==false) out.fixedSkin=id; } }catch(e){} }
 /* fragmentos de montaria guardados entram quando o jogador tiver montaria (o jogo pode chamar ao ganhar a 1ª) */
 const held=S=>ensure(S).held.map(h=>({slot:h.slot,r:h.r,needLevel:needLevel(h)}));
 /* raridade permitida agora para um item da temporada (arma não tem Mítica no lançamento) */

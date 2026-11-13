@@ -21,4 +21,10 @@ t('com o stats: item.wing = wingForDrop(era, dificuldade) e o nome = wingName',(
   assert.strictEqual(L.itemName({slot:'wing',e:3,r:2}),'Asa de anjo');           // item antigo sem item.wing: o stats resolve pela mesma regra
   assert.ok(L.itemName({slot:'boots',e:0,r:0}));                                   // os outros espaços seguem com a tabela por era
 });
+t('arma criada leva a família (it.wt) pelo Sys.stats.rollWeaponType; outros espaços não',()=>{
+  require('../../js/sys/stats.js'); const St=globalThis.Sys.stats; const h=makeHost({level:60,eraMax:3});
+  const w=L.rollItem(h,{slot:'weapon',era:3}); assert.ok(typeof w.wt==='string'&&w.wt.length>0, 'wt='+w.wt);
+  const f=L.grantBundle({},h,{items:[{slot:'weapon',r:1}]}); assert.ok(f.items[0]&&typeof f.items[0].wt==='string');
+  assert.strictEqual(L.rollItem(h,{slot:'boots'}).wt,undefined);
+});
 console.log(n+' testes ok');

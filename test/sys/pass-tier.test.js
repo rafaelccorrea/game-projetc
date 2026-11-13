@@ -47,4 +47,13 @@ t('nível 25 premium: Arma Épica + 30 pedras de forja + 5 Essências + 10 fragm
   const M=globalThis.Sys.mount; M.ensure(S); const was=M.DATA.on; M.DATA.on=true; M.add(S,h,'wolf'); assert.strictEqual(P.releaseMountFrags(S),10); assert.strictEqual(S.sys.pass.mfrag,0);
   assert.ok(M.ensure(S).owned.wolf.frags>=10||M.ensure(S).owned.wolf.stars>1); M.DATA.on=was;
 });
+t('último nível premium: entrega a skin Lendária do passe só quando o dono escolher (Sys.appearance.DATA.passSkin)',()=>{
+  const got=[]; globalThis.Sys.appearance={DATA:{passSkin:null},grantFixed:(S,id,o)=>{ got.push([id,o.source]); return {ok:true}; }};
+  const S={}, h=host({level:60}); P.addXp(S,P.DATA.tiers*P.DATA.xpPerTier); P.setPremium(S,true);
+  assert.ok(P.claimTier(S,h,'premium',P.DATA.tiers).ok); assert.deepStrictEqual(got,[]);            // passSkin null: nada
+  const S2={}; P.addXp(S2,P.DATA.tiers*P.DATA.xpPerTier); P.setPremium(S2,true); globalThis.Sys.appearance.DATA.passSkin='skin_lenda';
+  const r=P.claimTier(S2,h,'premium',P.DATA.tiers); assert.strictEqual(r.rewards.fixedSkin,'skin_lenda'); assert.deepStrictEqual(got,[['skin_lenda','pass']]);
+  const S3={}; P.addXp(S3,P.DATA.tiers*P.DATA.xpPerTier); P.setPremium(S3,true); P.claimAll(S3,h); assert.strictEqual(got.length,2, 'claimAll também entrega');
+  delete globalThis.Sys.appearance;
+});
 console.log(n+' testes ok');
