@@ -49,7 +49,7 @@ function loadBalance(){
   fetch('docs/balance.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(!j) return;
     const src=Object.assign({},j,j.BAL||{},j.combat||{},j.combate||{},j.offline||{});
     /* as tabelas de XP do Sys.level NÃO são mais sobrescritas aqui: o js/sys/level.js já traz os números do balance.json (remendo da rodada 6 retirado) */
-    try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&(t.length===7||t.length===ERAS.length)&&t.every(v=>typeof v==='number'&&v>0)){ REC_FC=t.slice(); if(typeof ERA9!=='undefined') ERA9.fcDer=false; } }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
+    try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&t.length>=7&&t.every(v=>typeof v==='number'&&v>0)){ REC_FC=t.slice(0,Math.max(7,ERAS.length));   /* o balance.json pode trazer 9 valores (eras 7-8): com a chave desligada valem só os 7 primeiros */ if(typeof ERA9!=='undefined') ERA9.fcDer=false; } }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
     for(const k in BAL){ const v=src[k]; if(Array.isArray(BAL[k])?Array.isArray(v):(typeof v==='number'&&isFinite(v)&&v>0)) BAL[k]=v; }
     if(typeof era9Bal==='function') era9Bal();   /* eras 7-8 (js/eras9.js): o arquivo traz 7 valores de eraMult e de FC recomendada; os das eras 7-8 seguem a regra das eras de trás */
   }).catch(()=>{});

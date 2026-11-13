@@ -44,6 +44,7 @@ function era9Boot(){ if (ERA9.done) return ERA9.on; ERA9.done = true;
   const T = window.Sys && Sys.stats, E = window.Sys && Sys.eras;
   if (!T || typeof T.setEra9 !== 'function' || !E || typeof E.extra !== 'function' || ERAS.length !== 7){ ERA9.why = 'Sys.stats.setEra9 ou Sys.eras ausente'; try { console.error('eras 7-8: ' + ERA9.why); } catch (e) {} return false; }
   let X = null; try { T.setEra9(true); X = E.extra(); } catch (e) { X = null; }
+  try { if (X && X.length === 2 && Sys.level && typeof Sys.level.setCap120 === 'function') Sys.level.setCap120(true); } catch (e) {}   /* dono: nível máximo 120 com as 9 eras (Sistemas 7da771c); 1-100 idênticos. Nunca o setV9 (troca a curva e liga os estágios do herói) */
   if (!Array.isArray(X) || X.length !== 2 || !X.every(x => x && x.n && Array.isArray(x.en) && x.en.length && Array.isArray(x.w) && Array.isArray(x.a))){
     try { T.setEra9(false); } catch (e) {} ERA9.why = 'Sys.eras.extra() não trouxe as 2 eras'; try { console.error('eras 7-8: ' + ERA9.why); } catch (e) {} return false; }
   X.forEach((era, i) => { const e = 7 + i; era.sceneV2 = ERA9_SCENE; if (ERA9_BOSS[e]) era.en[era.en.length - 1].n = ERA9_BOSS[e];

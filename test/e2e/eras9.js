@@ -78,7 +78,7 @@ const curve = (G, a, b) => G.ev(`(function(){ const o=[]; for(let s=${a};s<=${b}
   check('9 eras: Submundo e Celestial', b('ERAS.length') === 9 && b('ERA9.on') === true && b('ERAS[7].n') === 'Submundo' && b('ERAS[8].n') === 'Celestial', 'ERAS ' + b('ERAS.length') + ' ' + b('ERA9.why'));
   if (b('ERAS.length') !== 9) { console.log('eras 7-8 não ligaram: ' + b('ERA9.why')); process.exit(1); }
   check('Sys.stats com as eras 7-8 (maxEra 8)', b('Sys.stats.DATA.maxEra') === 8);
-  check('Sys.level e Sys.phases NÃO ligados (curva das eras 0-6 intacta)', b('Sys.level.DATA.maxLevel') === 100 && !(b('!!(Sys.phases&&Sys.phases.DATA.on)')));
+  check('nível máximo 120 pelo setCap120 (níveis 1-100 idênticos; nunca o setV9) e Sys.phases NÃO ligado (curva das eras 0-6 intacta)', b('Sys.level.DATA.maxLevel') === 120 &&!(b('!!(Sys.phases&&Sys.phases.DATA.on)')));
   check('skins: 90 de era + 6 do passe, as do passe no fim', b('SKINS.length') === 96 && b('SKINS.slice(-6).every(s=>s.pass)') && b("!!SKIN('w74')&&!!SKIN('a80')"), String(b('SKINS.length')));
   check('eraOf: fase 70 = era 6, 71 = era 7, 81 = era 8, 91 em diante = era 8', b('eraOf(70)') === 6 && b('eraOf(71)') === 7 && b('eraOf(81)') === 8 && b('eraOf(91)') === 8 && b('eraOf(500)') === 8);
   if (base70) {
