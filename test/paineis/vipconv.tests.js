@@ -208,6 +208,45 @@ var VIPCONV_TESTS=(function(){
     }catch(e){ err=e; }
     window.realmBadge=rb0; PANEL_ON.realm=on0; Panels.open=o0; XC.dlg=x0.dlg; XC.page=x0.page; view=v0; animBack(an); if(err) throw err; return out; };
 
+  /* ---------- CONFIGURAÇÕES › CONTA: excluir conta e vincular Google ---------- */
+  T['conta: botão Excluir conta chama DeleteAccount.open; some sem a tela e no Modo dono']=function(){ const D0=window.DeleteAccount, x0={dlg:XC.dlg,page:XC.page}, v0=view; let err=null, out='', n=0;
+    try{ window.DeleteAccount={open:function(){ n++; return true; }}; let h=bad0(cfgAcc()); if(cOwner()) return 'teste rodando em Modo dono: botão oculto por regra';
+      const m=h.match(/<button data-x="delacct"[^>]*>Excluir conta<\/button>/); if(!m) throw new Error('botão Excluir conta ausente'); if(/c-gold|c-red|c-warn/.test(m[0])) throw new Error('botão com cor de ação principal');
+      if(h.indexOf('data-x="delacct"')<h.indexOf('data-x="rst"')) throw new Error('o botão não está no fim do cartão da conta');
+      cClick({dataset:{x:'delacct'}}); if(n!==1) throw new Error('DeleteAccount.open chamado '+n+' vezes');
+      window.DeleteAccount=undefined; h=cfgAcc(); if(h.indexOf('data-x="delacct"')>=0) throw new Error('sem DeleteAccount o botão continua na tela'); cClick({dataset:{x:'delacct'}});
+      out='no fim do cartão, discreto, abre a tela; sem DeleteAccount some'; }catch(e){ err=e; }
+    window.DeleteAccount=D0; XC.dlg=x0.dlg; XC.page=x0.page; view=v0; if(err) throw err; return out; };
+  T['conta: vincular Google com o online ligado; desligado = EM BREVE de antes']=function(){ const O0=window.OnlineBoot, pl0=Sys.net&&Sys.net.player, x0={dlg:XC.dlg,page:XC.page}, v0=view; let err=null, out='';
+    const mk=(on,ret)=>{ const o={n:0,cb:null,state:function(){ return {on:on}; },google:function(){ o.n++; return {then:function(ok){ o.cb=ok; if(ret) ok(ret); }}; }}; return o; };
+    const back=()=>{ XC.gbusy=false; XC.glinked=false; XC.toast=''; };
+    try{ back(); window.OnlineBoot=undefined; let h=bad0(cfgAcc()); if(!/data-row="link"[^>]*data-x="soon"/.test(h)||h.indexOf('EM BREVE')<0||h.indexOf('data-x="glink"')>=0) throw new Error('sem OnlineBoot a linha não é a de antes');
+      window.OnlineBoot=mk(false); h=cfgAcc(); if(h.indexOf('data-x="glink"')>=0) throw new Error('online desligado com botão de vincular');
+      if(Sys.net) Sys.net.player=function(){ return null; };
+      let O=window.OnlineBoot=mk(true); h=bad0(cfgAcc()); if(h.indexOf('data-x="glink"')<0) throw new Error('online ligado sem o botão do Google'); if(/data-row="link"[^>]*data-x="soon"/.test(h)) throw new Error('a linha inteira ainda é "em breve"');
+      if(!/data-x="soon"[^>]*><button class="c-link" disabled[^>]*Apple/.test(h)) throw new Error('Apple deixou de ser "em breve"');
+      cClick({dataset:{x:'glink'}}); if(O.n!==1||!XC.gbusy) throw new Error('google() não foi chamado'); if(V_TEST.innerHTML.indexOf('Conectando...')<0) throw new Error('sem "Conectando..."'); cClick({dataset:{x:'glink'}}); if(O.n!==1) throw new Error('toque duplo chamou google() de novo');
+      O.cb({ok:false,reason:'google_unavailable'}); if(XC.gbusy||XC.toast!=='Disponível no aplicativo') throw new Error('google_unavailable: aviso "'+XC.toast+'"'); if(V_TEST.innerHTML.indexOf('data-x="glink"')<0) throw new Error('depois da recusa o botão sumiu');
+      const cases={cancelled:'Vinculação cancelada',offline:'Sem conexão: tente de novo',link_taken:'Essa conta Google já é de outro jogador',qualquer:'Não deu para vincular agora'};
+      for(const k in cases){ back(); O=window.OnlineBoot=mk(true,{ok:false,reason:k}); cfgAcc(); cClick({dataset:{x:'glink'}}); if(XC.toast!==cases[k]) throw new Error(k+': aviso "'+XC.toast+'"'); }
+      back(); O=window.OnlineBoot=mk(true,{ok:true,action:'linked'}); cfgAcc(); cClick({dataset:{x:'glink'}}); h=V_TEST.innerHTML; if(XC.toast!=='Conta Google vinculada'||h.indexOf('data-glink="on"')<0||h.indexOf('data-x="glink"')>=0) throw new Error('vinculou e a tela não mostra a conta: '+XC.toast);
+      back(); if(Sys.net){ Sys.net.player=function(){ return {linked:['google'],email:'jogador@exemplo.com'}; }; h=bad0(cfgAcc()); if(h.indexOf('data-glink="on"')<0||h.indexOf('jogador@exemplo.com')<0) throw new Error('conta já vinculada (Sys.net.player) não aparece'); }
+      out='desligado = EM BREVE; ligado = botão, uma chamada por vez, avisos por motivo, conta vinculada na tela; Apple em breve'; }catch(e){ err=e; }
+    window.OnlineBoot=O0; if(Sys.net) Sys.net.player=pl0; back(); XC.dlg=x0.dlg; XC.page=x0.page; view=v0; if(err) throw err; return out; };
+  /* ---------- ACHADOS DO QA EM TELA ESTREITA ---------- */
+  T['estreito: células do cartão de poder cabem (grade sem empurrar) e cartão da Loja quebra a linha do espaço']=function(){ const W=V_TEST.clientWidth, v0=view; let err=null, out='';
+    try{ XG.sel=null; XG.tw=null; XG.cf=null; view='gear'; render(); let h=bad0(V_TEST.innerHTML);
+      if(h.indexOf('grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr')<0) throw new Error('a grade dos atributos pode passar da largura (sem minmax(0,1fr))');
+      const cells=h.match(/data-st="[a-z]+" data-sin="[0-9.]+"[^>]*>[\s\S]*?<\/div><\/div>/g)||[]; if(cells.length!==6) throw new Error(cells.length+' células de atributo');
+      for(const c of cells){ const sin=+c.match(/data-sin="([0-9.]+)"/)[1], sp=c.match(/<span[^>]*font-size:([0-9.]+)px[^>]*>([^<]*)<\/span>/g)||[]; if(sp.length!==2) throw new Error('célula sem rótulo e valor');
+        for(const s of sp){ const m=s.match(/font-size:([0-9.]+)px[^>]*>([^<]*)</), px=+m[1], w=xTxtEm(m[2])*px; if(w>sin+0.5) throw new Error('"'+m[2]+'" com '+px+' px passa da célula ('+w.toFixed(1)+' > '+sin+') em '+W+' px'); if(px<6) throw new Error('fonte menor que 6 px: '+m[2]); } }
+      const cellW=(Math.min(W,600)-24-18-10)/3, need=cells.map(c=>+c.match(/data-sin="([0-9.]+)"/)[1]).every(s=>s<=cellW); if(!need) throw new Error('largura útil maior que a célula');
+      XH.tab='item'; XH.sel=null; XH.cf=null; view='shop'; const g0=PANEL_V2.gate; PANEL_V2.gate=false; render(); PANEL_V2.gate=g0; h=bad0(V_TEST.innerHTML);
+      if(h.indexOf('data-x="offer"')>=0){ if(/white-space:nowrap">[^<]* · [^<]*<\/span>\s*<span style="display:flex;flex-direction:column;align-items:center;gap:1px/.test(h)) throw new Error('linha "espaço · era" do cartão ainda sem quebra');
+        if(h.indexOf('flex-wrap:wrap;justify-content:center;gap:0 3px;font-size:10px')<0) throw new Error('linha "espaço · era" sem a quebra'); }
+      out='6 células dentro da largura em '+W+' px; cartão da Loja quebra "espaço · era"'; }catch(e){ err=e; }
+    view=v0; XH.tab='hero'; if(err) throw err; return out; };
+
   /* ---------- COMPRAS PELO Sys.buy ---------- */
   function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, l0=B.cardStatusLive, k0=B.cardClaim, calls=[]; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false;
     B.cardStatusLive=function(){ return {active:false,daysLeft:0,claimedToday:false}; };
@@ -283,7 +322,7 @@ var VIPCONV_TESTS=(function(){
     const mk=o=>{ const b=cB64e(JSON.stringify(o)); return C_PRE+b+'.'+cSum(b); };
     try{ view='cfg'; at('s1'); S.realm='s1'; const code=cExport(); if(!code) throw new Error('exportar falhou'); const r=cParse(code); if(!r.ok) throw new Error('mesmo servidor recusado: '+r.msg);
       if(r.save.realm!=='s1') throw new Error('o código exportado não leva o S.realm: '+r.save.realm);
-      const want='Este código é do servidor S1. Troque para o S1 para importar.';
+      const want='Este código é do servidor S1 · Nova Era. Troque de servidor para usar.';
       at('s2'); const r2=cParse(code); if(r2.ok||r2.msg!==want) throw new Error('S1 → S2: '+JSON.stringify(r2).slice(0,120));
       localStorage.setItem(SAVE_KEY,'ANTES'); XC.dlg='imp'; XC.imp=code; document.getElementById('c_imp').value=code; cClick({dataset:{x:'impgo'}}); if(XC.err!==want||XC.src||XC.dlg!=='imp') throw new Error('tela: err="'+XC.err+'" dlg='+XC.dlg);
       XC.src=r.save; XC.dlg='impok'; window.__noSave=false; if(cImportDo()!==false) throw new Error('cImportDo gravou código de outro servidor'); if(localStorage.getItem(SAVE_KEY)!=='ANTES'||window.__noSave) throw new Error('a chave do save mudou na recusa'); if(XC.err!==want) throw new Error('recusa sem aviso');

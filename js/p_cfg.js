@@ -82,10 +82,36 @@ function cRealmRow(){ const t=cRealmBadge(); if(!t) return ''; const can=!!(wind
   return `<div class="c-row" data-row="realm" style="animation-delay:.14s">${cI(C_IC.globe,24,'#ffc94a',2.3)}
           <span class="c-rl"><b>Servidor</b><small style="overflow-wrap:anywhere">${esc2(t)}</small></span>
           ${can?`<button class="c-dark" data-x="realm" aria-label="Trocar servidor. Atual: ${esc2(t)}" style="width:96px;min-height:44px;flex:none;margin-right:4px;border-radius:12px;font-size:13px;font-weight:900;line-height:1.1;padding:2px 4px;box-sizing:border-box">Trocar servidor</button>`:''}</div>`; }
-function cRealmMsg(o){ const from=cRealmOf(o); if(from===cRealmNow()) return ''; const nm=from.toUpperCase(); return 'Este código é do servidor '+nm+'. Troque para o '+nm+' para importar.'; }
+/* EXCLUIR CONTA (exigência da Play): botão discreto no fim do cartão Conta. A tela é do js/delacct.js (window.DeleteAccount.open(), de Sistemas). Aparece
+   fora do Modo dono e só quando DeleteAccount existe; com o online desligado continua visível (a tela mostra o link da página de exclusão). */
+const cOwner=()=>{ try{ return typeof OWNER_MODE!=='undefined'&&OWNER_MODE===true; }catch(e){ return false; } };
+const cDelOn=()=>{ try{ return !cOwner()&&!!window.DeleteAccount&&typeof window.DeleteAccount.open==='function'; }catch(e){ return false; } };
+/* VINCULAR CONTA (Google): só com o online ligado (window.OnlineBoot.state().on, js/onlineboot.js); desligado, a linha "EM BREVE" de antes.
+   Já vinculado = Sys.net.player().linked traz 'google' (PlayerDto do docs/API_SERVIDOR.md; email quando o servidor mandar) ou o vínculo feito nesta sessão.
+   O toque chama OnlineBoot.google() → {ok, action:'login'|'linked'} | {ok:false, reason}. Apple continua "Em breve". Uma chamada por vez (XC.gbusy). */
+const cLinkOn=()=>{ try{ const O=window.OnlineBoot; return !!(O&&typeof O.state==='function'&&typeof O.google==='function'&&O.state().on); }catch(e){ return false; } };
+function cLinked(){ try{ const p=window.Sys&&Sys.net&&typeof Sys.net.player==='function'?Sys.net.player():null; if(p&&Array.isArray(p.linked)&&p.linked.indexOf('google')>=0) return {on:true,email:typeof p.email==='string'?p.email:''}; }catch(e){}
+  return XC.glinked?{on:true,email:''}:{on:false,email:''}; }
+function cLinkGoogle(){ const k=cLinked(), st='flex:1;min-width:0;height:52px;border-radius:12px;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 6px;box-sizing:border-box';
+  const two=(a,b)=>`<span style="display:flex;flex-direction:column;line-height:1.1;text-align:left;min-width:0"><span>${a}</span><span style="font-size:11px;font-weight:800;opacity:.85;overflow-wrap:anywhere">${b}</span></span>`;
+  if(k.on) return `<span data-glink="on" role="status" aria-label="Conta Google vinculada${k.email?': '+esc2(k.email):''}" style="${st};border:2px solid #2f6b36;background:#12261a;color:#9be89f">${cI(C_IC.chk,18,'#9be89f',3)}${two('Google',k.email?esc2(k.email):'Vinculada')}</span>`;
+  if(XC.gbusy) return `<span data-glink="busy" role="status" style="${st};border:2px solid #4a3a2b;background:#16110d;color:#c9b9a2">${cI(C_IC.cloud,18,'#ffc94a',2.4)}${two('Google','Conectando...')}</span>`;
+  return `<button class="c-dark" data-x="glink" data-glink="off" aria-label="Vincular conta Google" style="${st}">${cI(C_IC.cloud,18,'#ffc94a',2.4)}${two('Google','Vincular')}</button>`; }
+const C_GMSG={google_unavailable:'Disponível no aplicativo',cancelled:'Vinculação cancelada',canceled:'Vinculação cancelada',offline:'Sem conexão: tente de novo',network:'Sem conexão: tente de novo',timeout:'Sem resposta: tente de novo',
+  link_taken:'Essa conta Google já é de outro jogador',already_linked:'Este jogador já tem outra conta Google vinculada',nosave:'Aguarde o jogo terminar de carregar',off:'Online desligado nesta versão'};
+function cLinkGo(){ if(XC.gbusy) return; let p=null; try{ p=window.OnlineBoot.google(); }catch(e){ p=null; }
+  if(!p||typeof p.then!=='function'){ cSay('Não deu para vincular agora'); return; }
+  XC.gbusy=true; XC.keep=true; if(view==='cfg') render();
+  const fin=r=>{ XC.gbusy=false; let msg; if(r&&r.ok){ XC.glinked=true; msg=r.action==='login'?'Você entrou na sua conta Google':'Conta Google vinculada'; }
+      else { const w=r&&r.reason; msg=C_GMSG[w]||'Não deu para vincular agora'; if(w==='link_taken'&&r.other&&r.other.name) msg+=' ('+String(r.other.name).slice(0,24)+')'; }
+      if(view==='cfg'){ XC.keep=true; try{ render(); }catch(e){} } cSay(msg); };
+  p.then(fin,()=>fin(null)); }
+/* nome do servidor para o aviso: "S1 · Nova Era" pela lista do js/p_realm.js (RealmUI.list); sem ela, só "S1" */
+function cRealmName(id){ const nm=String(id||'s1').toUpperCase(); try{ const L=window.RealmUI&&typeof RealmUI.list==='function'?RealmUI.list():null, r=Array.isArray(L)?L.find(x=>x&&x.id===id):null; if(r&&r.name) return (r.code||nm)+' · '+r.name; }catch(e){} return nm; }
+function cRealmMsg(o){ const from=cRealmOf(o); if(from===cRealmNow()) return ''; return 'Este código é do servidor '+cRealmName(from)+'. Troque de servidor para usar.'; }
 /* grava o save importado e recarrega, do mesmo jeito que o "Apagar tudo": __noSave antes, para o save de saída não escrever por cima */
 function cImportDo(){ const o=XC.src; if(!o) return false; const prev=window.__noSave; let ok=false;
-  { const rm=cRealmMsg(o); if(rm){ XC.src=null; XC.dlg='imp'; XC.err=rm; render(); return false; } }   /* segunda trava (o cParse já recusa): código de outro servidor nunca é gravado */
+  { const rm=cRealmMsg(o); if(rm){ XC.src=null; XC.dlg='imp'; XC.err=rm; try{ render(); }catch(e){} return false; } }   /* segunda trava (o cParse já recusa): código de outro servidor NUNCA é gravado; o aviso fica na janela de importar */
   try{ const j=JSON.stringify(o); window.__noSave=true; localStorage.setItem(SAVE_KEY,j); ok=localStorage.getItem(SAVE_KEY)===j; }catch(e){ ok=false; }
   if(!ok){ window.__noSave=prev; try{ save(); }catch(e){} XC.dlg='imp'; XC.err='Não deu para gravar neste aparelho. Nada mudou.'; render(); return false; }
   location.href=location.pathname+location.search; return true; }
@@ -94,7 +120,7 @@ function cResetDo(){ window.__noSave=true; try{ localStorage.removeItem(SAVE_KEY
 (function(){ const st=document.createElement('style'); st.textContent=`
 .c-in{animation:c-fade .22s ease-out}
 @keyframes c-fade{from{opacity:0}to{opacity:1}}
-.c-bg{position:absolute;inset:-14px;filter:blur(5px) saturate(1.1);background:#7fb3d9;pointer-events:none}
+.c-bg{position:absolute;inset:0;filter:blur(5px) saturate(1.1);   /* era inset:-14px (388 px numa tela de 360): o fundo não passa mais da largura; a borda do desfoque fica sob a vinheta escura */background:#7fb3d9;pointer-events:none}
 .c-frame{position:relative;flex:1;min-height:0;width:calc(100% - 20px);max-width:640px;margin:8px auto 12px;box-sizing:border-box;border-radius:26px;padding:4px;background:linear-gradient(160deg,#9a8a74,#3a3028 26%,#7a6852 52%,#2a2018 78%,#8a7860);box-shadow:0 22px 50px rgba(0,0,0,.65),0 0 0 2px #140e08;display:flex;flex-direction:column}
 .c-in .c-frame{animation:c-panelIn .55s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes c-panelIn{0%{transform:translateY(-40px) scale(.94);opacity:0}100%{transform:none;opacity:1}}
@@ -295,10 +321,13 @@ function cPageAccount(){
           <span class="c-rl"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(S.name||'Kael')}${lv?' · Nv. '+n0(lv):''}</b><small>ID do jogador</small><span style="font-size:12px;font-weight:900;color:#8a7a66">em breve</span></span>
           <span class="c-dis" data-x="soon" style="flex:none;display:flex"><button class="c-sb" disabled aria-disabled="true" aria-label="Copiar o ID do jogador, em breve" style="flex:none;width:88px;height:44px;font-size:13px">${cI(C_IC.copy,16,'currentColor',2.4)}Copiar</button></span>
         </div>${cRealmRow()}
-        <div class="c-row c-dis" data-x="soon" aria-disabled="true" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px;animation-delay:.18s">
+        ${cLinkOn()?`<div class="c-row" data-row="link" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px;animation-delay:.18s">
+          <span style="font-size:13px;font-weight:900;color:#e8dccb;line-height:1.25">Vincular conta <span style="color:#c9b9a2;font-weight:700">· salva o progresso na nuvem</span></span>
+          <div style="display:flex;gap:6px">${cLinkGoogle()}<span class="c-dis" data-x="soon" style="flex:1;min-width:0;display:flex">${link('Apple')}</span></div>
+        </div>`:`<div class="c-row c-dis" data-row="link" data-x="soon" aria-disabled="true" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px;animation-delay:.18s">
           <span style="font-size:13px;font-weight:900;color:#e8dccb">Vincular conta <span style="color:#c9b9a2;font-weight:700">· salva o progresso na nuvem</span> ${C_SOON}</span>
           <div style="display:flex;gap:6px">${link('Google')}${link('Apple')}</div>
-        </div>
+        </div>`}
         <div class="c-row" style="flex-direction:column;align-items:stretch;gap:8px;padding:8px;animation-delay:.24s">
           <span style="font-size:13px;font-weight:900;color:#e8dccb;line-height:1.25">Cópia de segurança <span style="color:#c9b9a2;font-weight:700">· guarde o progresso em um código e recupere aqui ou em outro aparelho</span></span>
           <div style="display:flex;gap:8px;padding-bottom:6px">
@@ -312,6 +341,7 @@ function cPageAccount(){
         <div class="c-row" style="animation-delay:.36s">${cI(C_IC.trash,24,'#ff9a8a',2.3)}
           <span class="c-rl"><b>Resetar progresso</b><small>Apaga tudo e começa do zero</small></span>
           <button class="c-warn" data-x="rst" style="width:92px;height:44px;flex:none;margin-right:4px;border-radius:12px;font-size:14px;font-weight:900;padding:0;box-sizing:border-box">Resetar</button></div>
+        ${cDelOn()?`<button data-x="delacct" aria-label="Excluir conta: abre a tela de exclusão" style="align-self:center;min-height:44px;padding:0 16px;border:0;background:none;color:#c9b9a2;font-size:12.5px;font-weight:800;text-decoration:underline;text-underline-offset:3px">Excluir conta</button>`:''}
       </div></section>
     <section class="c-card" aria-label="Suporte" style="animation-delay:.1s">${cHead('help','Suporte','')}
       <div class="c-cbody">
@@ -442,6 +472,8 @@ function cClick(b,ev){
   else if(a==='exp'){ snd('ui_tap'); const c=cExport(); if(!c){ cSay('Não deu para gerar o código agora'); return; } XC.code=c; XC.copied=false; XC.dlg='exp'; render(); }
   else if(a==='imp'){ snd('ui_tap'); XC.err=''; XC.src=null; XC.dlg='imp'; render(); }
   else if(a==='rst'){ snd('ui_tap'); XC.dlg='rst'; render(); }
+  else if(a==='glink'){ snd('ui_tap'); if(!cLinkOn()){ cSay('Em breve'); return; } cLinkGo(); }
+  else if(a==='delacct'){ snd('ui_tap'); let ok=false; try{ ok=cDelOn()&&window.DeleteAccount.open()!==false; }catch(e){ ok=false; } if(!ok) cSay('Não deu para abrir a exclusão de conta agora'); }
   else if(a==='realm'){ snd('ui_tap'); let ok=false; try{ ok=!!(window.Panels&&Panels.open('realm',{from:'cfg'})); }catch(e){ ok=false; } if(!ok) cSay('Troca de servidor indisponível agora'); }
 }
 

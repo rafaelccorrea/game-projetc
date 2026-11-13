@@ -63,9 +63,19 @@ const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     check('(g) artprev.js não compara SAVE_KEY com \'eras_owner_v1\' EXATO (no Modo dono do s2 a chave é eras_owner_v1@s2: as ferramentas do dono ficariam desligadas)', !exact, 'js/artprev.js:83 ownerOk() usa SAVE_KEY === \'eras_owner_v1\': trocar por startsWith(\'eras_owner_v1\') / Realm.key(Realm.id(), true)', true); }
   { /* importar um código exportado de OUTRO servidor */
     const g = game({ eon_realm: 's2' }); const exported = JSON.stringify(Object.assign({}, OLD, { name: 'VIM-DO-S1', realm: 's1' }));
-    g.ev('window.__noSave=false'); try { g.ev(`(function(){ XC.src=${exported}; return cImportDo(); })()`); } catch (e) {}
-    const g2 = game({ eon_realm: 's2', 'eras_proto_v2@s2': g.ls.getItem('eras_proto_v2@s2') || exported });
-    check('(g) importar um código de OUTRO servidor (realm s1) no s2: o save importado carrega depois do reload', g2.ev('S.name') === 'VIM-DO-S1' && !g2.ev('window.REALM_MISMATCH'), 'nome ' + g2.ev('S.name') + ' REALM_MISMATCH ' + JSON.stringify(g2.ev('window.REALM_MISMATCH')) + ' (cImportDo grava o JSON como veio, com realm do outro servidor: o load() recusa e o jogador perde o import sem aviso)', true); }
+    /* REGRA (coordenador): código de OUTRO servidor é RECUSADO na hora, com aviso claro, e NADA é gravado (antes: achado; agora verificação dura).
+       Confere as duas travas do js/p_cfg.js: o cImportDo chamado direto (XC.src já preenchido) e o caminho da tela (cParse do código colado). */
+    g.save(); const before = g.ls.getItem('eras_proto_v2@s2'), ns0 = g.ev('!!window.__noSave');
+    let ret = null, st = {}; try { ret = g.ev(`(function(){ XC.src=${exported}; return cImportDo(); })()`); st = g.ev('({err:XC.err,dlg:XC.dlg,src:XC.src===null,ns:!!window.__noSave})'); } catch (e) { ret = 'erro: ' + errStr(e); }
+    const after = g.ls.getItem('eras_proto_v2@s2'), msgOk = typeof st.err === 'string' && /^Este código é do servidor S1/.test(st.err) && /[Tt]roque de servidor/.test(st.err);
+    check('(g) importar um código de OUTRO servidor (realm s1) no s2: recusado na hora com aviso claro e NADA gravado', ret === false && msgOk && st.dlg === 'imp' && st.src === true && after === before && st.ns === ns0 && (after == null || after.indexOf('VIM-DO-S1') < 0),
+      'cImportDo devolveu ' + JSON.stringify(ret) + '; aviso "' + st.err + '"; janela ' + st.dlg + '; chave do s2 ' + (after === before ? 'igual' : 'MUDOU') + '; __noSave ' + st.ns + ' (antes ' + ns0 + ')');
+    if (!g.G.sandbox.btoa) { g.G.sandbox.btoa = s => Buffer.from(String(s), 'binary').toString('base64'); g.G.sandbox.atob = s => Buffer.from(String(s), 'base64').toString('binary'); }   /* o sandbox não traz btoa/atob (código de cópia de segurança) */
+    let pr = null; try { pr = g.ev(`(function(){ const b=cB64e(JSON.stringify(${exported})); return cParse(C_PRE+b+'.'+cSum(b)); })()`); } catch (e) { pr = { ok: 'erro: ' + errStr(e) }; }
+    check('(g) o código colado de outro servidor é recusado já no "Conferir" (cParse), com o mesmo aviso', pr && pr.ok === false && /^Este código é do servidor S1/.test(pr.msg || ''), JSON.stringify(pr).slice(0, 200));
+    const same2 = JSON.stringify(Object.assign({}, OLD, { name: 'VIM-DO-S2', realm: 's2' })); let ok2 = null; try { ok2 = g.ev(`(function(){ window.__noSave=false; XC.src=${same2}; return cImportDo(); })()`); } catch (e) { ok2 = 'erro: ' + errStr(e); }
+    const g2 = game({ eon_realm: 's2', 'eras_proto_v2@s2': g.ls.getItem('eras_proto_v2@s2') });
+    check('(g) código do MESMO servidor (s2) importa e carrega depois do reload', ok2 === true && g2.ev('S.name') === 'VIM-DO-S2' && !g2.ev('window.REALM_MISMATCH'), 'cImportDo ' + JSON.stringify(ok2) + ' nome ' + g2.ev('S.name') + ' REALM_MISMATCH ' + JSON.stringify(g2.ev('window.REALM_MISMATCH'))); }
   { const g = game({ eon_realm: 's2', 'eras_proto_v2@s2': JSON.stringify(Object.assign({}, OLD, { realm: 's2', name: 'S2' })), eras_proto_v2: CANARY });
     try { g.ev('cResetDo()'); } catch (e) {}
     check('(g) "Apagar tudo" no s2 apaga só a chave do s2 (a do s1 fica)', g.ls.getItem('eras_proto_v2@s2') == null && g.ls.getItem('eras_proto_v2') === CANARY, 's2: ' + g.ls.getItem('eras_proto_v2@s2') + ' s1 intacta: ' + (g.ls.getItem('eras_proto_v2') === CANARY)); }

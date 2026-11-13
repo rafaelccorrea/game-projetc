@@ -474,10 +474,14 @@ function scrGear(){
       <span style="font-size:10px;font-weight:900;color:#f6ecdf;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>`; }).join('');
   /* skin */
   const sa=SKIN(S.skinEq.armor), sr=sa?sa.r:0   /* só a roupa: a skin de arma saiu (decisão do dono: a arma é a do item equipado; S.skinEq.weapon é ignorado) */, SD=Sys.skin.detail(S), tier=tierOf(sa?sa.r:0), skinAdj=['Básica','Rara','Épica','Mítica','Lendária'][sr]||RN(sr), lookOn=!!(window.Panels&&Panels.on('look')&&!(window.Screens&&Screens.reg&&Screens.reg.look&&Screens.reg.look.broken));   /* aba Aparência (tela do QA, js/p_look.js) */
+  const stW=d.real?d.Wb:390, stNar=stW<340, stCell=(stW-24-18-10)/3;   /* cartão de poder: margem 12+12, respiro 8+8 e borda 1+1, 2 vãos de 5 px, 3 colunas */
   const stats=[['atk','atk'],['hp','hp'],['def','def'],['crit','crit'],['cd','cd'],['vel','vel']].map(([k,ic])=>{ let cls=''; if(tw){ const df=tw.to[k]-tw.from[k]; cls=df>0.001?'x-stUp':df<-0.001?'x-stDn':''; }
-    return `<div class="${cls}" style="display:flex;align-items:center;gap:5px;padding:0 6px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;min-width:0">
-      <img src="${STI[ic]}" alt="" style="width:18px;height:18px;flex:none"><div style="display:flex;flex-direction:column;line-height:1.05;min-width:0">
-      <span style="font-size:9px;font-weight:800;color:#c9b9a2;white-space:nowrap">${GL[k]}</span><span class="lil" id="xg_s_${k}" style="font-size:14px;white-space:nowrap">${gFmt(k,shown[k])}</span></div></div>`; }).join('');
+    /* tela estreita: a célula não pode empurrar a grade para fora do cartão. Largura útil do texto = célula − ícone − respiros; rótulo e valor descem a fonte
+       até caber (palavra inteira, sem reticências); abaixo de 340 px o ícone e os respiros encolhem. O valor mede também o destino da contagem animada. */
+    const sIc=stNar?14:18, sGap=stNar?4:5, sPad=stNar?4:6, sIn=Math.max(24,stCell-sIc-sGap-sPad*2-2), v0=gFmt(k,shown[k]), v1=tw?gFmt(k,tw.to[k]):v0, vL=xTxtEm(v1)>xTxtEm(v0)?v1:v0;
+    return `<div class="${cls}" data-st="${k}" data-sin="${sIn.toFixed(1)}" style="display:flex;align-items:center;gap:${sGap}px;padding:0 ${sPad}px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;min-width:0;box-sizing:border-box">
+      <img src="${STI[ic]}" alt="" style="width:${sIc}px;height:${sIc}px;flex:none"><div style="display:flex;flex-direction:column;line-height:1.05;min-width:0">
+      <span style="font-size:${xFitPx(GL[k],sIn,9,6)}px;font-weight:800;color:#c9b9a2;white-space:nowrap">${GL[k]}</span><span class="lil" id="xg_s_${k}" style="font-size:${xFitPx(vL,sIn,14,8)}px;white-space:nowrap">${v0}</span></div></div>`; }).join('');
   /* mochila */
   const list=S.inv.filter(x=>XG.filter==='all'||x.slot===XG.filter).sort((a,b)=>(b.nw?1:0)-(a.nw?1:0)||b.r-a.r||b.e-a.e||b.lvl-a.lvl||a.id-b.id);
   const pages=Math.max(1,Math.ceil(list.length/PER)); XG.page=Math.max(0,Math.min(XG.page,pages-1));
@@ -528,7 +532,7 @@ function scrGear(){
           <span style="display:${fcSlim?'none':'flex'};flex-direction:column;line-height:${lookOn?1.12:1.15};min-width:0;flex:1">${lookOn?'<span class="lil" style="display:flex;align-items:center;gap:4px;font-size:13px;color:#f6ecdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Aparência</span>':''}<span style="font-size:${lookOn?10:(d.Wb<380?9.5:11)}px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
             <span style="font-size:${lookOn?9.5:10}px;font-weight:800;color:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span>${lookOn&&!fcSlim?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><polyline points="9 18 15 12 9 6"></polyline></svg>':''}</button>
       </div>
-      <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:5px">${stats}</div>
+      <div style="flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr;gap:5px">${stats}</div>
     </div>
     <div style="${d.real?'flex:1 0 auto':'flex:1;min-height:0'};margin-top:8px;display:flex;flex-direction:column;gap:6px;padding:8px 12px 8px;background:#1d1611;border-top:2px solid #4a3a2b;border-radius:18px 18px 0 0;box-sizing:border-box">
       <div style="min-height:${d.real?44:40}px;flex:none;display:flex;align-items:center;gap:8px">
@@ -963,7 +967,7 @@ function scrShop(){
       return `<button class="x-tile ${q.on?'':o.r>=3&&!o.sold?'x-r'+o.r:''}${q.cls}" data-x="offer" data-i="${i}"${q.at} aria-label="${esc2(iname(it))}, ${RN(o.r)}, ${SLOT[o.slot].n}, ${o.sold?'comprado':o.price+' moedas'}" style="border-radius:14px;${q.on?'':`border:2px solid ${c};background:linear-gradient(180deg,${RT[o.r]} 0%,#1d1611 60%);`}color:#f6ecdf;padding:${q.on?'5px 4px':'6px 5px'};display:flex;flex-direction:column;align-items:center;gap:2px;opacity:${o.sold?.6:1}">
         ${o.r>=2&&!o.sold?'<span class="x-tshine"></span>':''}<span style="font-size:11px;font-weight:900;color:${c}">${RN(o.r)}</span>${itemIcon(it,44)}
         <span style="font-size:11px;font-weight:900;line-height:1.1;text-align:center;height:24px;display:flex;align-items:center${q.on?';color:'+q.t:''}">${esc2(iname(it))}</span>
-        <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">${SLOT[o.slot].n} · ${ERAS[o.e].n.replace('Era da ','').replace('Era ','')}</span>
+        <span style="max-width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:0 3px;font-size:10px;font-weight:800;line-height:1.1;color:#c9b9a2;text-align:center"><span style="max-width:100%;overflow-wrap:anywhere">${SLOT[o.slot].n}</span><span style="max-width:100%;overflow-wrap:anywhere">· ${ERAS[o.e].n.replace('Era da ','').replace('Era ','')}</span></span>
         <span style="display:flex;flex-direction:column;align-items:center;gap:1px;flex:1;min-height:0;overflow:hidden">${itemLines(it).map(t=>`<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:nowrap">${t}</span>`).join('')}</span>
         ${o.sold?'<span style="height:24px;padding:0 8px;border-radius:999px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900;display:flex;align-items:center;flex:none">Comprado</span>'
           :`<span style="height:24px;padding:0 8px 0 4px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;font-size:12px;font-weight:900;display:flex;align-items:center;gap:3px;flex:none;color:${S.gold>=o.price?'#f6ecdf':'#ff8a7a'}">${COIN_I(16)}${kf(o.price)}</span>`}</button>`; }).join('');

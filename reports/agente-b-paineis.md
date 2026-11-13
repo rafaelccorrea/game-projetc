@@ -1300,3 +1300,16 @@ raridade. `js/p_events.js:324`: prêmio de item do evento. Aplicar duas vezes é
 ACHADO para Sistemas: os t0 estão no pacote `core` e os `_t1/_t2` nos pacotes `era:N` do manifesto; o `tierIcon` só confere o manifesto, não a instalação do pacote.
 Teste novo (fumaça): 270 combinações (9 eras × 5 peças × 6 raridades) no mapeamento e em disco. Fumaça 390/360/288: 200 OK, 0 FALHA; `run.js` 162; `flows.js`
 "fluxos duros OK"; `owner_all.js` 79; `test/sys/assets.test.js` 7.
+
+## Bloco 50 (Painéis 3, sem navegador): achados do QA em 360/288, Excluir conta, vincular Google, import de outro servidor
+
+- 360 px, Configurações: `.c-bg` tinha `inset:-14px` (388 px); agora `inset:0` (o `.x-ly` filho herdava a largura). A borda do desfoque fica sob a vinheta.
+- Loja, cartão de item: a linha "espaço · era" era `white-space:nowrap` e cortava ("péu/Elmo"); agora quebra em duas linhas centradas quando não cabe.
+- Equipamento, cartão de poder em 288: CAUSA achada na grade dos 6 atributos (`repeat(3,1fr)` não encolhe abaixo do texto: "Vel. de Ataque" empurrava a grade
+  para fora do cartão). Agora `minmax(0,1fr)`; rótulo e valor descem a fonte até caber (palavra inteira; abaixo de 340 px ícone 14 px e respiros menores).
+- Conta: "Excluir conta" discreto no fim do cartão (`data-x="delacct"` → `DeleteAccount.open()`); fora do Modo dono e só com `window.DeleteAccount`.
+- Conta: com `OnlineBoot.state().on`, o Google vira botão (`OnlineBoot.google()`; uma chamada por vez; avisos por motivo; "Disponível no aplicativo" para
+  `google_unavailable`) e mostra a conta vinculada (`Sys.net.player().linked` com 'google' + `email`, ou o vínculo desta sessão). Apple segue "Em breve".
+- Import de outro servidor: o `cImportDo` e o `cParse` já recusavam; o aviso passou a "Este código é do servidor S1 · Nova Era. Troque de servidor para usar."
+  O caso (g) do `test/e2e/realm.js` estava escrito ao contrário (gravava o save à mão quando a tela recusava); virou 3 verificações duras.
+- Testes novos na fumaça (3) e ajuste do texto esperado no teste de cópia de segurança. Fumaça 288/360/390: 203 OK, 0 FALHA.
