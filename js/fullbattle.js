@@ -191,7 +191,7 @@ const FB_BAND = 240;        // faixa livre de ícones: do chão até 240 px acim
 const FB_HIDDEN = {};       // ícones principais que não couberam nesta tela: vão para o MENU (nunca encolhem abaixo de 44 px)
 const fbChestInner = '<img src="assets/ui/chest.png" alt="" style="width:32px;height:30px;object-fit:contain;margin-top:-6px"><span style="position:absolute;left:10px;right:10px;bottom:7px;height:4px;border-radius:2px;background:rgba(0,0,0,.65);overflow:hidden"><span id="fb_chp" style="display:block;width:0;height:100%;background:linear-gradient(90deg,#f2a826,#ffe07a);transition:width .4s"></span></span>';
 function fbMenuHtml(){ return '<div id="fb_menu" style="position:absolute;left:0;top:0;right:0;height:0">' + FB_MENU.map((m, i) => { const d = (i * 0.4).toFixed(1);
-    const inner = m.chest ? fbChestInner : `<img class="fb-ico" src="assets/icons/menu/${m.icon}.png" alt="">`;
+    const inner = m.chest ? fbChestInner : `<img class="fb-ico" src="${m.src || 'assets/icons/menu/' + m.icon + '.png'}" alt="">`;   /* src = ícone fora da pasta do menu (evento com horário, js/evhud.js) */
     return `<button class="fb-it ${m.big ? 'big' : ''}" data-fb="${m.act}" id="fbm_${m.id}" aria-label="${m.label}" style="position:absolute;${m.side}:${m.x}px;top:${m.y}px"><span class="fb-ib fb-gl ${m.hot || m.chest ? 'fb-hot' : ''}" style="animation-delay:${d}s${m.chest ? ';overflow:visible' : ''}">${inner}${m.badge ? `<span class="fb-bdg" id="${m.badge}"></span>` : ''}</span><span class="fb-lb" id="fbl_${m.id}">${m.label}</span></button>`; }).join('') + '</div>'; }
 /* botão MENU e o drop down (desce do canto superior direito; toque fora fecha) */
 function fbMenuClose(){ const d = document.getElementById('fbdrop'); if (d) d.remove(); const b = document.getElementById('fb_mbtn'); if (b){ b.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); } FBK.mb = null; fbTick(); }
@@ -260,6 +260,7 @@ function fbAct(a, b){
     let went = false; const go = () => { if (went) return; went = true; FB_OPENING = null; if (b && b.style){ b.style.transform = ''; b.style.filter = ''; b.style.transition = ''; } try { Screens.open(k); } finally { if (b && b.dataset && b.dataset.drop) fbMenuClose(); } };
     requestAnimationFrame(() => setTimeout(go, 0)); setTimeout(go, 150); return; }   /* 150 ms = reserva se o quadro não vier (aba em segundo plano) */
   if (b && b.dataset && b.dataset.drop) fbMenuClose();
+  if (a === 'event'){ if (typeof evhTap === 'function') evhTap(b); return; }   /* ícone do evento com horário (js/evhud.js): abre Eventos pelo caminho do MENU */
   if (a.indexOf('soon:') === 0){ fbSoon(a.slice(5)); return; }   // tela registrada (Screens.register) abre; sem registro, "Em breve"
   snd('ui_tap');
   if (a === 'avatar'){ if (window.Panels && Panels.defs && Panels.defs.profile && Panels.on('profile') && fbUnl('profile')) Panels.open('profile'); else setView('gear'); }   // avatar: Perfil quando a tela estiver ligada (nível 10); senão Equipamento
@@ -295,7 +296,7 @@ function fbLayout(){ const app = document.getElementById('app'), w = document.ge
       if (FB_MENU.some((m, i) => { if (m.side !== 'left' || !fbUnl(m.id)) return false; const y = 136 + 78 * FB_MENU.filter((q, j) => j < i && q.side === 'left' && fbUnl(q.id)).length; return y + (m.big ? 70 : 62) > top - 2 && y < top + 24; })) left = Math.max(left, 74);
       kb.style.left = left.toFixed(1) + 'px'; kb.style.top = top.toFixed(1) + 'px'; } }
   const feet = (FIELD_FEET * H - st) / s, bandTop = feet - FB_BAND, bottomLim = Hb - 182 - 6; let changed = false;
-  { let li = 0; FB_MENU.forEach(m => { m.cy = m.y; if (m.side === 'left' && fbUnl(m.id)){ m.cy = 136 + 78 * li; li++; } }); }   // coluna esquerda: só os liberados, de cima para baixo, sem buraco
+  { let li = 0; FB_MENU.forEach(m => { m.cy = typeof m.yf === 'function' ? m.yf() : m.y; if (m.side === 'left' && fbUnl(m.id)){ m.cy = 136 + 78 * li; li++; } }); }   // coluna esquerda: só os liberados, de cima para baixo, sem buraco
   FB_MENU.forEach(m => { const b = document.getElementById('fbm_' + m.id); if (!b) return; if (!fbUnl(m.id) || (m.show && !m.show())){ FB_HIDDEN[m.id] = false; b.style.display = 'none'; return; } b.style.top = m.cy + 'px'; const bot = m.cy + (m.big ? 70 : 62), lim = m.side === 'right' ? Math.min(bandTop, bottomLim) : bottomLim, hide = bot > lim;
     if (!!FB_HIDDEN[m.id] !== hide) changed = true; FB_HIDDEN[m.id] = hide; b.style.display = hide ? 'none' : ''; });
   if (changed && document.getElementById('fbdrop')) fbMenuClose();
@@ -375,4 +376,4 @@ const FB_TUT_TXT = [
   () => view === 'summon' ? 'Toque na invocação <b>grátis</b>.' : 'Abra <b>Invocar</b>.',
 ];
 function fbInit(){ fbLegacy(); fbCss();
-  if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); }
+  if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); if (typeof evhInit === 'function') evhInit(); }
