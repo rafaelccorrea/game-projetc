@@ -46,6 +46,14 @@ function world(dels) {
     Sys.net.ackDelivery = ack0;
     assert.strictEqual((await B.sync(S, host)).length, 0); assert.strictEqual(S.gems, 70); assert.deepStrictEqual(acks, ['x1']);
   });
+  await t('montaria comprada (Mecha de guerra): Sys.mount.add uma vez', async () => {
+    const dels = [{ id: 'm1', grants: [{ kind: 'mount', mountId: 'mecha' }] }];
+    const { S, host } = world(dels); B.DATA.on = true; const added = [];
+    globalThis.Sys.mount = { add: (S2, h, id) => { added.push(id); return { ok: true, id }; } };
+    const got = await B.sync(S, host); assert.deepStrictEqual(added, ['mecha']); assert.strictEqual(got[0].got[0].kind, 'mount');
+    assert.strictEqual((await B.sync(S, host)).length, 0); assert.deepStrictEqual(added, ['mecha']);
+    delete globalThis.Sys.mount;
+  });
   await t('estorno (revoke): tira 💎 até zero, a skin e o passe', async () => {
     const dels = [{ id: 'g', grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] },
       { id: 'r', revoke: true, grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] }];

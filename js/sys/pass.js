@@ -155,10 +155,11 @@ function canReceive(host,spec){
 /* materiais (pelo Sys.loot.grantBundle: forge, essence...) e fragmentos de montaria (montaria equipada; sem montaria, guardados até a 1ª) */
 function giveExtras(S,host,rw,out){
   if(rw.mat&&typeof rw.mat==='object'){ const L=Loot(), m={}; for(const k in rw.mat) if(int0(rw.mat[k])) m[k]=int0(rw.mat[k]); if(Object.keys(m).length){ if(L&&L.grantBundle) L.grantBundle(S,host,m); out.mat=m; } }
-  const mf=int0(rw.mountFrags); if(mf){ const o=ensure(S); o.mfrag=int0(o.mfrag)+mf; releaseMountFrags(S); out.mountFrags=mf; } }
-function releaseMountFrags(S){ const o=ensure(S), n=int0(o.mfrag); if(!n) return 0; const M=root.Sys&&root.Sys.mount; let id=null;
+  const mf=int0(rw.mountFrags); if(mf){ const o=ensure(S), d={}; o.mfrag=int0(o.mfrag)+mf; releaseMountFrags(S,d);
+    out.mountFrags=d.id?{n:mf,id:d.id,stars:d.stars,up:d.up}:{n:mf,stored:true}; } }   // tela: "+1★ Lobo de guerra" ou "guardados até a 1ª montaria"
+function releaseMountFrags(S,det){ const o=ensure(S), n=int0(o.mfrag); if(!n) return 0; const M=root.Sys&&root.Sys.mount; let id=null;
   try{ const mo=M&&M.ensure?M.ensure(S):null; id=mo&&mo.eq?mo.eq:(mo&&mo.owned?Object.keys(mo.owned)[0]:null); }catch(e){ id=null; }
-  if(!id||!M.addFragments) return 0; const r=M.addFragments(S,id,n); if(r&&r.added>0){ o.mfrag=0; return n; } return 0; }
+  if(!id||!M.addFragments) return 0; const r=M.addFragments(S,id,n); if(r&&r.added>0){ o.mfrag=0; if(det) Object.assign(det,{id,stars:r.stars|0,up:r.up|0}); return n; } return 0; }
 function giveReward(S,host,rw){
   const out={gems:0,gold:0,item:null,held:null,skin:null};
   giveExtras(S,host,rw,out);

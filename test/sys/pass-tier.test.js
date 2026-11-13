@@ -44,8 +44,13 @@ t('nível 25 premium: Arma Épica + 30 pedras de forja + 5 Essências + 10 fragm
   const r=P.claimTier(S,h,'premium',25); assert.ok(r.ok&&r.rewards.item&&r.rewards.item.slot==='weapon'&&r.rewards.item.r===2);
   assert.strictEqual(S.sys.loot.mat.forge,30); assert.strictEqual(S.sys.loot.mat.essence,5);
   assert.strictEqual(S.sys.pass.mfrag,10, 'sem montaria: guardados');
-  const M=globalThis.Sys.mount; M.ensure(S); const was=M.DATA.on; M.DATA.on=true; M.add(S,h,'wolf'); assert.strictEqual(P.releaseMountFrags(S),10); assert.strictEqual(S.sys.pass.mfrag,0);
-  assert.ok(M.ensure(S).owned.wolf.frags>=10||M.ensure(S).owned.wolf.stars>1); M.DATA.on=was;
+  assert.deepStrictEqual(r.rewards.mountFrags,{n:10,stored:true});
+  const M=globalThis.Sys.mount; M.ensure(S); const was=M.DATA.on; M.DATA.on=true; const a=M.add(S,h,'wolf');   // o add da 1ª montaria já libera os guardados (fps-e2, 045252b)
+  assert.strictEqual(a.passFrags,10); assert.strictEqual(S.sys.pass.mfrag,0);
+  assert.ok(M.ensure(S).owned.wolf.frags>=10||M.ensure(S).owned.wolf.stars>1);
+  /* com montaria: o resgate já diz a estrela ganha */
+  const S2={}; M.ensure(S2); M.add(S2,h,'wolf'); P.addXp(S2,2500); P.setPremium(S2,true); const r2=P.claimTier(S2,h,'premium',25);
+  assert.strictEqual(r2.rewards.mountFrags.id,'wolf'); assert.strictEqual(r2.rewards.mountFrags.n,10); assert.ok(r2.rewards.mountFrags.up>=1); M.DATA.on=was;
 });
 t('último nível premium: entrega a skin Lendária do passe só quando o dono escolher (Sys.appearance.DATA.passSkin)',()=>{
   const got=[]; globalThis.Sys.appearance={DATA:{passSkin:null},grantFixed:(S,id,o)=>{ got.push([id,o.source]); return {ok:true}; }};

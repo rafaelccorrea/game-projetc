@@ -81,6 +81,11 @@
         if (!revoke) { if (host && host.addSkin) host.addSkin(g.skinId); else { S.skins = Array.isArray(S.skins) ? S.skins : []; if (!S.skins.includes(g.skinId)) S.skins.push(g.skinId); } }
         else if (Array.isArray(S.skins)) S.skins = S.skins.filter(k => k !== g.skinId);
         out.push({ kind: 'skin', id: g.skinId, on: !revoke });
+      } else if (g.kind === 'mount') {
+        /* montaria comprada inteira (Mecha de guerra): Sys.mount.add. Estorno: a compra fica marcada no servidor (GET /entitlements); a montaria
+           não é tirada da mão do jogador aqui (decisão de produto pendente; o servidor já não conta como comprada) */
+        if (!revoke && g.mountId && X.mount && X.mount.add) { const r = X.mount.add(S, host, g.mountId); out.push({ kind: 'mount', id: g.mountId, ok: !!(r && r.ok !== false) }); }
+        else if (revoke) out.push({ kind: 'mount', id: g.mountId, revoke: true });
       } else if (g.kind === 'monthly_card') out.push({ kind: 'card' });   // só mostra; o resgate diário é POST /purchases/monthly-card/claim
     }
     return out;
