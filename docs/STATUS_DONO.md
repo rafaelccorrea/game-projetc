@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h50 · Arte corrigiu pelo código, sem gastar créditos (8070d32):** a mancha escura atrás da cabeça do Kael no lobo sumiu; no pônei, cavalo e tigre a arma desceu de 46° para 22° e não cobre mais o rosto (conferido com a maça e a espada). Falta só o pet encostando no inimigo (engenheiro)
+
 - **00h40 · PARA VOCÊ VOTAR (página de aprovação):** 12 prints do jogo rodando (só o Kael, com pet, nas 6 montarias, lobo + pet + asa, grifo com aura de 5 estrelas, morte nova, FC no painel); o Kael adulto e guerreiro V2 animados (7 animações cada, com a pistola na mão); os cenários vivos das eras 6 (Futurista) e 7 (Submundo)
 - **00h40 · Batalha da v0.12.8 conferida no navegador (85d3c4e, no GitHub):**
   - [x] Morte nova do Kael, a pé e montado
