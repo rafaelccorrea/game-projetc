@@ -30,11 +30,10 @@ const TB = [
     { t: 'Asa de anjo', s: [['Parado', [EQ + 'kael_idle_wing_angel']], ['Correndo', [EQ + 'kael_run_wing_angel']]] },
     { t: 'Aura maligna', s: [['No Kael', [A + 'aura/aura_evil', KI]]] }, { t: 'Aura celestial', s: [['No Kael', [A + 'aura/aura_holy', KI]]] },
     { t: 'Auras de forja', s: [['+4', [A + 'aura/aura4', KI]], ['+7', [A + 'aura/aura7', KI]], ['+10', [A + 'aura/aura10', KI]], ['+13', [A + 'aura/aura13', KI]]] } ] },
-  { g: 'Fases do Kael', c: [
-    { t: 'Garoto (atual)', s: [['Parado', [KI]], ['Correndo', [kael('run')]], ['Golpe', [R + 'kael_attack_wide_era2_t1']], ['Giro', [R + 'kael_spin_era2_t0']], ['Morte', [R + 'kael_die_body'], { once: 1 }]] },
-    fase(1, 'Fase 1: adolescente'), fase(2, 'Fase 2: adulto'), fase(3, 'Fase 3: guerreiro'),
-    { t: 'Evolução de fase', s: [['Evoluir', [KI, A + 'fx/evolve_0_1'], { once: 1 }]] } ] },
-  { g: 'Kaia', c: [kaiaF(0, 'Kaia garota'), kaiaF(1, 'Kaia adolescente'), kaiaF(2, 'Kaia adulta'), kaiaF(3, 'Kaia guerreira')] },
+  { g: 'Kael', c: [
+    { t: 'Kael (padrão)', s: [['Parado', [KI]], ['Correndo', [kael('run')]], ['Golpe', [R + 'kael_attack_wide_era2_t1']], ['Giro', [R + 'kael_spin_era2_t0']], ['Morte', [R + 'kael_die_body'], { once: 1 }]] },
+    fase(2, 'Skin: Kael Cavaleiro'), fase(3, 'Skin: Kael Guerreiro Lendário') ] },
+  { g: 'Kaia', c: [kaiaF(0, 'Kaia (padrão)'), kaiaF(2, 'Skin: Kaia Cavaleira'), kaiaF(3, 'Skin: Kaia Guerreira Lendária')] },
   { g: 'Pets', c: [pet('era0_mammoth', 'Mamute'), pet('era1_sphinx', 'Esfinge'), pet('era2_dragon', 'Dragão'), pet('era3_parrot', 'Papagaio'), pet('era4_mechdog', 'Cão mecânico'),
     { t: 'Ovo chocando', egg: { egg: 'assets/pets/pet_egg.png', pet: PT + 'era0_mammoth_idle' } }] },
   { g: 'Montarias', c: [mount('wolf', 'Kael no lobo'), mount('griffin', 'Kael no grifo')] },
