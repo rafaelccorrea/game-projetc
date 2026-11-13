@@ -396,12 +396,13 @@ function waveClear(){
     /* Engenheiro 2 (coordenador): no Senhor da Era a ORDEM é VITÓRIA (tela 10) → TROCA DE ERA, uma depois da outra: a Troca de era fica guardada em B.eraPend e
        abre quando a vitória fechar (laço do jogo). Sem a tela 10 (chave desligada, tutorial, outra tela aberta) a Troca de era abre direto, como antes. */
     const eraOpts=(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era'))?{from:oldEra,to:ne,boss:(typeof era9Boss==='function'&&era9Boss(oldEra))||((J('assets/enemies/meta.json')['era'+oldEra+'_boss']||{}).name)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}}:null;   /* nome do Senhor da Era vencido, do meta dos inimigos */
-    let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
+    let ee=null; try{ if(window.Sys&&Sys.erasEnd&&typeof Sys.erasEnd.onStageClear==='function') ee=Sys.erasEnd.onStageClear(S,Sys.host,won); }catch(er){ console.error('erasEnd',er); }
+    const lootW=(ee&&ee.ok&&ee.stones>0)?Object.assign({},loot||{},{astral:ee.stones}):loot;   /* pedras astrais das fases acima da 90: aparecem na linha de prêmios da Vitória (pedido da Sistemas) */
+    let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot:lootW,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
     /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
     /* Sys.erasEnd (Sistemas, chave desligada = {ok:false}): na fase 90 entrega os prêmios do fim das 9 eras (uma vez) e a tela os mostra; acima da 90, marco a cada 10 fases e pedras astrais, num aviso curto */
-    let ee=null; try{ if(window.Sys&&Sys.erasEnd&&typeof Sys.erasEnd.onStageClear==='function') ee=Sys.erasEnd.onStageClear(S,Sys.host,won); }catch(er){ console.error('erasEnd',er); }
     if(ee&&ee.ok&&ee.mark&&typeof toast==='function'){ try{ toast((ee.mark.name||'Marco')+' alcançado'+(ee.stones>0?': +'+ee.stones+' pedras astrais':'')); }catch(er){} }
     if(won===ERAS.length*STAGES_PER_ERA&&window.Panels&&typeof Panels.on==='function'&&Panels.on('end9')){ const eo={stage:won,gems:10,essence:loot&&loot.essence||0}; if(ee&&ee.ok&&ee.final){ if(ee.final.prizes) eo.prizes=ee.final.prizes; if(ee.final.milestone) eo.milestone=ee.final.milestone; } if(shown) B.endPend=eo; else { try{ shown=Panels.open('end9',eo)!==false; }catch(er){ console.error('end9',er); } } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji

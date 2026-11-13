@@ -58,7 +58,7 @@ Sys.host = {
   stage: () => S.stage, eraMax: () => S.eraMax, best: () => S.best,
   level: () => (SYS_ON ? Sys.level.level(S) : 1),
   goldUnit: st => Math.max(1, Math.ceil(BAL.goldBase * Math.pow(BAL.goldGrowth, (st || S.stage) - 1) * BAL.commonGoldMult)),   // ouro de 1 abate comum
-  addGold: n => { S.gold += Math.max(0, n || 0); }, addGems: n => { S.gems += Math.max(0, n || 0); },
+  addGold: n => { const g = Math.max(0, n || 0); S.gold += g; if (g > 0){ try { const P = window.Sys && Sys.profile; if (P && P.DATA && P.DATA.on === true && typeof P.addDaily === 'function') P.addDaily(S, Sys.host, 'goldDay', g); } catch (e) {} } },   /* recorde "ouro num dia" do Perfil V5 (Sys.profile; chave desligada = nada) */ addGems: n => { S.gems += Math.max(0, n || 0); },
   canSpendGold: n => n >= 0 && S.gold >= n, spendGold: n => { if (!(n >= 0) || S.gold < n) return false; S.gold -= n; return true; },
   canSpendGems: n => n >= 0 && S.gems >= n, spendGems: n => { if (!(n >= 0) || S.gems < n) return false; S.gems -= n; return true; },
   skinR: id => { const s = SKIN(id); return s ? s.r : undefined; },

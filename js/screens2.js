@@ -620,6 +620,7 @@ function resLoot(o){ const L=o.loot||{}, n=v=>Math.max(0,Math.round(+v||0)), car
   /* QA no S24: com ovo + pedras + ração a linha passava da largura e era cortada. Com 3 ou mais prêmios o texto fica curto (tx2); o ícone e o aria dizem o resto */
   if(n(L.forge)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra de forja':' pedras de forja'),tx2:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra':' pedras')});
   if(n(L.essence)) ex.push({ic:Q_ESS,tx:'+'+gNum(n(L.essence))+' de essência',tx2:'+'+gNum(n(L.essence))+' essência'});
+  if(n(L.astral)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.astral))+(n(L.astral)===1?' pedra astral':' pedras astrais'),tx2:'+'+gNum(n(L.astral))+' astral'});   /* Sys.erasEnd: fases acima da 90 */
   if(n(L.food)) ex.push({ic:Q_FOOD,tx:'+'+gNum(n(L.food))+' de ração de pet',tx2:'+'+gNum(n(L.food))+' ração'});
   if(ex.length>=3) for(const x of ex){ if(x.tx2){ x.full=x.tx; x.tx=x.tx2; } }
   if(ex.length) cards.push({k:'extra',h:46,ex});
