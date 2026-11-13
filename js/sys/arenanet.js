@@ -14,7 +14,7 @@
 (function(root){
 'use strict';
 
-const DATA={ on:false, opponents:5, minSnapMs:30000 };
+const DATA={ on:true, opponents:5, minSnapMs:30000 };   // ARENA ONLINE LIGADA (dono: 'liga tudo', 14/11; servidor em produção com ARENA_ON e roteiro de ponta a ponta do Servidor: 25 ok). Sem servidor ou com 404 o jogo segue com os bots locais (start devolve ok:false)
 const SYS=()=>root.Sys||{};
 const N=()=>SYS().net;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
