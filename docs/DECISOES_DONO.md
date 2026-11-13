@@ -3,6 +3,9 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Paredes das eras 5-8**: em vez de 5-12 dias, mais fontes de FC no fim (Forja além do +15, Divino mais cedo, títulos das eras 7-8), paredes de 3-5 dias · Sistemas propõe e simula
+- [x] **Um link só para todas as telas** (https://claude.ai/artifact/6AUcyib9p4Z3Qe16Pk6BEb) · PO
+- [x] **Bug da Arena** (a luta seguia depois do fim) corrigido; durante a Arena a batalha das fases segue rendendo escondida · Engenheiro
 - [~] **Dificuldade força evolução** (não pode passar as eras fácil; abaixo da FC recomendada fica muito difícil; paredes de 1-3 dias no chefe de cada era; aviso do que fazer quando travar) · APROVADA pelo dono (00h50): FC pedida por fase, paredes de 1-3 dias, montaria +2-3% por estrela, teto diário de XP de abate ligado. Sistemas fecha os números → Engenheiro liga atrás de chave → QA mede → APK
 - [~] **Telas são prioridade**: protótipos no padrão aprovado (Equipamento, Loja, Invocar, Passe, Pets, Montarias, Forja, VIP, Batalha, fim das 9 eras) · Sistemas → voto do dono
 - [~] **Luta PvP da Arena** (aprovada) · Engenheiro: LIGADA no código (f75739b), QA confere na tela. Decidido pelo PO: prêmio por luta (Sistemas credita), cada um aparece como é (robôs pelo nível), ultimate e golpe de pet marcados no registro da luta
