@@ -1,0 +1,273 @@
+{
+ "frames": 18,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "note": "pés/corpo em y=243; parado aprovado em x=padLeft+128; último quadro = deitado (segure)",
+ "impact": {
+  "knee": -1,
+  "body": 16
+ },
+ "src": [
+  "f001.png",
+  "f008.png",
+  "f013.png",
+  "f016.png",
+  "f022.png",
+  "f025.png",
+  "f029.png",
+  "f032.png",
+  "f035.png",
+  "f041.png",
+  "f046.png",
+  "f049.png",
+  "f054.png",
+  "f066.png",
+  "f075.png",
+  "f079.png",
+  "f082.png",
+  "f089.png"
+ ],
+ "meta": [
+  {
+   "src": "f001.png",
+   "h": 212,
+   "w": 178,
+   "cx": 217
+  },
+  {
+   "src": "f008.png",
+   "h": 212,
+   "w": 181,
+   "cx": 220
+  },
+  {
+   "src": "f013.png",
+   "h": 214,
+   "w": 172,
+   "cx": 214
+  },
+  {
+   "src": "f016.png",
+   "h": 208,
+   "w": 166,
+   "cx": 211
+  },
+  {
+   "src": "f022.png",
+   "h": 205,
+   "w": 184,
+   "cx": 215
+  },
+  {
+   "src": "f025.png",
+   "h": 208,
+   "w": 178,
+   "cx": 224
+  },
+  {
+   "src": "f029.png",
+   "h": 210,
+   "w": 177,
+   "cx": 224
+  },
+  {
+   "src": "f032.png",
+   "h": 210,
+   "w": 167,
+   "cx": 213
+  },
+  {
+   "src": "f035.png",
+   "h": 206,
+   "w": 159,
+   "cx": 202
+  },
+  {
+   "src": "f041.png",
+   "h": 200,
+   "w": 177,
+   "cx": 202
+  },
+  {
+   "src": "f046.png",
+   "h": 182,
+   "w": 185,
+   "cx": 206
+  },
+  {
+   "src": "f049.png",
+   "h": 182,
+   "w": 174,
+   "cx": 205
+  },
+  {
+   "src": "f054.png",
+   "h": 184,
+   "w": 181,
+   "cx": 206
+  },
+  {
+   "src": "f066.png",
+   "h": 183,
+   "w": 180,
+   "cx": 205
+  },
+  {
+   "src": "f075.png",
+   "h": 179,
+   "w": 194,
+   "cx": 215
+  },
+  {
+   "src": "f079.png",
+   "h": 151,
+   "w": 210,
+   "cx": 232
+  },
+  {
+   "src": "f082.png",
+   "h": 134,
+   "w": 221,
+   "cx": 241
+  },
+  {
+   "src": "f089.png",
+   "h": 131,
+   "w": 224,
+   "cx": 242
+  }
+ ],
+ "back": [
+  {
+   "x": 197,
+   "y": 165,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 206,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 196,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 179,
+   "y": 167,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 184,
+   "y": 167,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 204,
+   "y": 172,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 209,
+   "y": 175,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 187,
+   "y": 175,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 172,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 173,
+   "y": 172,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 179,
+   "y": 188,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 191,
+   "y": 197,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 193,
+   "y": 199,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 193,
+   "y": 189,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 209,
+   "y": 201,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 222.2,
+   "y": 132,
+   "ang": 24.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 234.2,
+   "y": 170,
+   "ang": -6.3,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 236.2,
+   "y": 179,
+   "ang": 5.7,
+   "s": 1,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+}
