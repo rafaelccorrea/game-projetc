@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **20h30 · Arte de graça pronta (4475394):** ícones dos 3 estágios do lobo, falcão e pantera; ícones das asas Anjo e Demoníaca. Kael Anjo sem asa: por código ficou bom de lado; giro e golpe vão ser refeitos sem asa (~10 créditos, autorizado), depois do Samurai e do Ciborgue
+
 - **20h15 · Sua ordem: fechar tudo o que não precisa de arte.** Lista distribuída em docs/BACKLOG_SEM_ARTE.md (APK v0.13.0, inimigos das eras 7-8, polimento aberto, servidores fase 2, textos da loja e política de privacidade para o advogado, sem rolagem lateral, desempenho no S24). Arte: Samurai, Ciborgue e Fênix com o saldo. Paramos tudo se você avisar que o uso do Claude chegou a 80%
 
 - **20h · Peças com 3 desenhos PRONTAS nas 9 eras** (104 créditos; 4 acima do aprovado por refações feitas antes do aviso). Folhas: assets/icons/slots/_amostra_era0..8_niveis.png; sendo ligadas no jogo. Saldo 169: Samurai e Ciborgue em produção, depois a Fênix Gigante montada. **Para fechar TODA a arte com folga: ~800 créditos** (9 montarias ~315, 6 pets ~270, skins com asa própria sem a asa embutida ~50-70, ícones ~15, folga ~20%)
