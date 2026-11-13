@@ -8,6 +8,13 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h35 · Ninguém parado. Fila de cada um, em ordem:**
+  - Engenheiro: conferir e fechar a v0.12.7 (com a Serpe V2) → ligar tudo que está escrito (v0.12.8) → ultimate pela raridade → Aparência → Kaia jogável, morte, inimigo, cenário Industrial
+  - QA (ajudante do engenheiro): Mapa das Eras → Perfil → Passe com rolagem → missão guia → ajudar o engenheiro a conferir as telas no navegador
+  - Sistemas: Arena → Eventos → Torneio → curva das 9 eras → qualidade/fusão/números abreviados → Prismático
+  - Servidor: telas de entrada → Oferta pronta para compra → ligação do jogo com o servidor → arena/ranking/eventos
+  - Arte: animações do adulto e do guerreiro → pistola do guerreiro na mão → cenários vivos das eras 5 a 8 → aparência no adulto
+
 - **21h30 · No GitHub (b9a9609):** a v0.12.7 refeita (pet ao lado, asa por item, montarias); as telas do QA (Torre inteira, Troca de era, Correio, Chat, Ranking, Missões, Guilda, Códex); o aviso de FC que sobe/desce; Atividade/Conquistas ligadas por trás. Tudo salvo, mas ainda NÃO conferido no navegador: o engenheiro confere e fecha a v0.12.7
 
 - **21h25 · Seus votos (conferidos na página):** você APROVOU as 4 Fases adultas V2 (Kael e Kaia, adulto e guerreiro) e a Serpe V2. Não há nada pendente na página: 107 aprovados. Ainda falta corrigir a pistola do Kael guerreiro ("arma não está na mão"), que você reprovou
