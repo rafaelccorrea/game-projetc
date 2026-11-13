@@ -63,8 +63,8 @@ const MFILE = (() => { const m = /const MOUNT_FILE = \{([^}]*)\}/.exec(read('js/
 /* Pets: todas as folhas da tabela PT_SH */
 { const s = read('js/p_pets.js'), blk = /const PT_SH=\{([\s\S]*?)\};/.exec(s), pre = ['', 'mid_', 'evo_'];
   say('js/p_pets.js', 'usa o ajudante xSheetBg', /xSheetBg\(/.test(s) && !/0 0\/\$\{F\.frames\*100\}% 100%/.test(s), 'a tela voltou a desenhar a folha como tira fixa');
-  if (blk) { const re = /(era\d_[a-z]+):\s*\[((?:\[[^\]]*\],?\s*)+)\]/g; let q; while ((q = re.exec(blk[1]))) { const stages = q[2].match(/\[[^\]]*\]/g) || [];
-      stages.forEach((st, si) => { (st.match(/'([a-z0-9]+)'/g) || []).forEach(k => { const base = 'assets/anim/pets/' + q[1] + '_' + pre[si] + k.replace(/'/g, ''); if (fs.existsSync(path.join(ROOT, base + '.png'))) checkDyn('js/p_pets.js', base, null, 'pet'); }); }); } } }
+  if (blk) { const re = /((?:era\d|prism|pet)_[a-z]+):\s*\[((?:\[[^\]]*\],?\s*)+)\]/g; let q; while ((q = re.exec(blk[1]))) { const stages = q[2].match(/\[[^\]]*\]/g) || [];
+      stages.forEach((st, si) => { (st.match(/'([a-z0-9]+)'/g) || []).forEach(k => { const base = 'assets/anim/pets/' + q[1] + '_' + pre[si] + k.replace(/'/g, ''); checkDyn('js/p_pets.js', base, null, 'pet'); }); }); } } }
 /* Troca de era: chefe caindo (toca uma vez), inimigo e Kael correndo; a tela lê o .json real (sem reserva): confere só a geometria e a animação */
 { const s = read('js/p_era.js'); say('js/p_era.js', 'peSprite usa xSheetCss', /xSheetCss\(/.test(s), 'a tela voltou a desenhar a folha como tira fixa');
   const bases = ['assets/anim/hyb/R/kael_run_body']; for (let e = 0; e <= 8; e++) { bases.push('assets/anim/hyb/enemy/era' + e + '_boss_die'); bases.push(e === 2 ? 'assets/anim/era2_e0_run' : 'assets/anim/hyb/enemy/era' + e + '_e0_run'); }

@@ -46,11 +46,16 @@ const PT_ART={
   drake:     {sprite:'era2_dragon',  era:2,eraN:'Medieval',    fly:false,fx:'#ff8a3a',foot:[0.949,0.984,0.949],sheet:true, atk:['Mordida','Bola de fogo','Rabada'],                       how:'ovo da era Medieval'},
   parrot:    {sprite:'era3_parrot',  era:3,eraN:'Pólvora',     fly:true, fx:'#ff6a3a',foot:[0.949,1,1],        sheet:true, atk:['Bicada','Pena de fogo','Rasante'],                       how:'ovo da era da Pólvora'},
   golem:     {sprite:'era4_mechdog', era:4,eraN:'Industrial',  fly:false,fx:'#ffd36a',foot:[0.949,1,1],        sheet:true, atk:['Mordida de aço','Parafuso disparado','Jato de vapor'],   how:'ovo da era Industrial'},
+  /* 3 PETS NOVOS já ligados no módulo (Sys.pet.DATA.newReady) e aprovados: Lobo sombrio, Falcão de guerra e Pantera espectral. Imagens paradas da Arte (73ea4f2,
+     pés em 0,95 da altura como os antigos), golpes e origem da Sistemas (fontes do js/sys/newdrops.js). Não são de uma era: sem cenário de era no palco. */
+  shadowwolf:{sprite:'pet_shadowwolf',era:-1,eraN:'',fly:false,fx:'#7a5cff',foot:[0.95,0.95,0.95],sheet:true, atk:['Mordida','Investida sombria','Garra dupla'],   how:'Instância Arsenal (1ª vitória em cada dificuldade) ou baús da atividade'},
+  falcon:    {sprite:'pet_falcon',    era:-1,eraN:'',fly:true, fx:'#d8b47a',foot:[0.95,0.95,0.95],sheet:true, atk:['Bicada','Mergulho','Rajada de penas'],          how:'Torre, andar 30, ou missões diárias'},
+  panther:   {sprite:'pet_panther',   era:-1,eraN:'',fly:false,fx:'#b07cff',foot:[0.95,0.95,0.95],sheet:true, atk:['Patada','Bote pelas costas','Sombra veloz'],        how:'Arena: fim de temporada no Ouro ou acima'},
   underworld:{sprite:'era7_cerberus',era:7,eraN:'Submundo',    fly:false,fx:'#ff4a2a',foot:[0.938,0.951,0.949],sheet:true, atk:['Mordida tripla','Chama do submundo','Uivo'],             how:'ovo do Submundo'},
   celestial: {sprite:'era8_pegasus', era:8,eraN:'Celestial',   fly:true, fx:'#fff3c4',foot:[1,0.986,1],        sheet:true, atk:['Coice','Estrela cadente','Vendaval'],                    how:'ovo da era Celestial'},
   prism:     {sprite:'prism_fox',    era:9,eraN:'Prismático',  fly:false,fx:'#8ff5ff',foot:[0.998,0.973,0.957],sheet:true, atk:['Patada de cristal','Lança de cristal','Prisma'],         how:''},
 };
-const PT_ORDER=['wolf','owl','drake','parrot','golem','underworld','celestial','prism'];   /* ordem do protótipo; só estes aparecem (a fênix saiu do jogo: decisão do PO) */
+const PT_ORDER=['wolf','owl','drake','parrot','golem','shadowwolf','falcon','panther','underworld','celestial','prism'];   /* ordem do protótipo; só estes aparecem (a fênix saiu do jogo: decisão do PO) */
 const PT_NOART={sprite:'',era:-1,eraN:'',fly:false,fx:'#fff3c4',foot:[1,1,1],sheet:true,atk:['Golpe','Tiro','Pancada'],how:''};
 const PT_FILE=['ref','mid','evo'];
 const PT_RC=['#e8e2d8','#4aa3ff','#b07cff','#ff5a5a','#ffc94a','#8ff5ff'], PT_RGB=['232,226,216','74,163,255','176,124,255','255,90,90','255,201,74','143,245,255'];
@@ -282,7 +287,10 @@ const PT_SH={
      Seguem "Em breve" só enquanto o MÓDULO disser que não existem (Sys.pet.avail: chave v4 e eras 7-8, voto do dono), não mais por falta de folha. */
   era7_cerberus:[['idle','atk1'],['idle','atk1'],['idle','atk1']],
   era8_pegasus: [['idle','atk1'],['idle','atk1'],['idle','atk1']],
-  prism_fox:    [['idle','atk1'],['idle','atk1'],['idle','atk1']] };
+  prism_fox:    [['idle','atk1'],['idle','atk1'],['idle','atk1']],
+  pet_shadowwolf:[['idle','atk1'],['idle','atk1'],['idle','atk1']],
+  pet_falcon:   [['idle','atk1'],['idle','atk1'],['idle','atk1']],
+  pet_panther:  [['idle','atk1'],['idle','atk1'],['idle','atk1']] };
 const PT_SHP=['','mid_','evo_'], PT_ATKSH={basic:'atk1',mid:'atk2',crit:'atk3'};
 function ptSheet(def,stg,k){ const a=ptArt(def), t=PT_SH[a.sprite]; return t&&t[stg]&&t[stg].indexOf(k)>=0?'assets/anim/pets/'+a.sprite+'_'+PT_SHP[stg]+k+'.png':''; }
 const ptAtkSheet=(def,stg,k)=>ptSheet(def,stg,PT_ATKSH[k])||ptSheet(def,stg,'atk1');
