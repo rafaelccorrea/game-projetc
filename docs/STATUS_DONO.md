@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h · Telas de entrada ESCRITAS (Servidor, 68653bd):** Título com o logo B, Login (convidado e Google), Prólogo com o avô, Criação (Kael/Kaia), Nome do jogador, Bem-vindo de volta. Sem Apple, porque o lançamento é só Android. Próximo: entram no jogo no próximo lote
+- **23h · Sistemas entregou:** frases prontas do Chat (40, sem texto livre, anti-spam, denúncia), descobertas do Códex (117, prêmios sem diamante), Guilda (cargos, contribuição, ranking), gatilhos do Kael/Kaia crescendo (níveis 22/35/70); o Torneio não mostra mais guildas de exemplo. Próximo: Correio, regras do Leilão, balanço das eras 7 e 8, testes automáticos dos lotes
+- **23h · Arte:** acrescentadas à fila as animações de evolução adolescente→adulto e adulto→guerreiro
+
 - **22h55 · v0.12.8, lote 1 LIGADO NO JOGO e conferido no navegador pelo caminho do jogador (no GitHub):**
   - [x] Torre inteira rolando (com luta e prêmio) · Troca de era · Missões (o Passe ficou com a trilha e um botão "Missões") · Perfil (pelo avatar, nível 10) · Códex · Guilda · Chat (só frases prontas)
   - [x] FC na tela: "+269 ▲" verde / "−269 ▼" vermelho, com o total contando
