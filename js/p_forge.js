@@ -202,7 +202,7 @@ function scrForge(){
         ${shownT>0?`<div class="x-aura" role="img" aria-label="${esc2(A[shownT].name)}" style="left:calc(50% - 88px);top:2px;width:176px;height:220px;background-image:url(assets/anim/aura/aura${A[shownT].from}.png)"></div>`:''}
         <div class="f-ped" style="position:absolute;left:calc(50% - 73px);top:208px;width:146px;height:28px;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#6a5440 0%,#3a2c1f 60%,#241a12 100%);border:2px solid #ffc94a;box-sizing:border-box"></div>
         ${sl!=='weapon'&&selT>0?`<div class="f-footglow" style="left:calc(50% - 63px);top:210px;width:126px;height:22px;background:radial-gradient(ellipse,${F_TC[selT]} 0%,rgba(0,0,0,0) 70%)"></div>`:''}
-        <div class="${fx==='ok'?'f-bright':''}" style="position:absolute;left:calc(50% - 90px);top:51px;width:180px;height:180px"><div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado" style="width:180px;height:180px"></div></div>
+        <div class="${fx==='ok'?'f-bright':''}" style="position:absolute;left:calc(50% - 90px);top:51px;width:180px;height:180px">${fHeroOk()?`<canvas id="f_hero" width="360" height="360" role="img" aria-label="Seu herói com a arma equipada" style="width:180px;height:180px"></canvas>`:`<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado" style="width:180px;height:180px"></div>`}</div>
         ${bigSlot}
         <div role="group" aria-label="Prévia das auras da arma" style="position:absolute;right:${10-(chW-52)/2}px;top:${chTop}px;display:flex;flex-direction:column;gap:${chGap}px;align-items:center">
           <span style="font-size:10px;font-weight:900;color:#c9b9a2;text-shadow:0 1px 2px #000;letter-spacing:.5px;line-height:12px">AURA</span>${chips}</div>
@@ -395,7 +395,15 @@ function fLevelUp(){
   fFire('lv','Nv. '+it.lvl+'!',fStatName(sl)+' '+fMul(it.lvl));
 }
 
-Panels.add('forge',{title:'Forja',parent:'gear',render:scrForge,click:fClick,
+/* QA lote visual B: a prévia era a folha fixa .kidle (kael_idle_era2_t0, espada PINTADA): mostrava espada com a Clava equipada. Agora é o desenho do jogo
+   (window.drawHeroFull: herói atual e arma EQUIPADA, a pé), como no js/p_vip.js; sem o desenho do jogo, vale a folha de antes. */
+const fHeroOk=()=>{ try{ return typeof window.drawHeroFull==='function'&&typeof HS==='number'&&HS>0&&typeof requestAnimationFrame==='function'; }catch(e){ return false; } };
+let fhRaf=0, fhT0=0;
+function fHeroLoop(ts){ fhRaf=0; const c=typeof document!=='undefined'?document.getElementById('f_hero'):null; if(!c||!fOn()){ fhT0=0; return; }
+  try{ if(!fhT0) fhT0=ts; const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); window.drawHeroFull(x,c.width*0.5,c.height*242/256,c.height/HS,{t:(ts-fhT0)/1000,mount:false,pet:false,wing:false});   /* mesmo enquadramento da folha de antes: quadro de 256 na caixa, pés em 242 */ }catch(e){}
+  fhRaf=requestAnimationFrame(fHeroLoop); }
+function fHeroStart(){ try{ if(!fhRaf&&fHeroOk()&&document.getElementById('f_hero')) fhRaf=requestAnimationFrame(fHeroLoop); }catch(e){} }
+Panels.add('forge',{title:'Forja',parent:'gear',render:function(){ const r0=scrForge.apply(this,arguments); fHeroStart(); return r0; },click:fClick,
   tick(){ if(XF.busy||XF.fx||(XF.auto&&XF.auto.run)) return; const el=document.getElementById('f_stones');
     if(el){ let t=''; try{ t=kf(fStones()); }catch(e){ return; } if(el.textContent!==t) el.textContent=t; }
     if(XF.sig&&fSig()!==XF.sig&&fOn()) render(); },

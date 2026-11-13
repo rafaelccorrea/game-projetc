@@ -1025,6 +1025,7 @@ const ART_ON={
   aura4:true, aura7:true, aura10:true, aura13:true,                                        // auras de fortalecimento (assets/anim/aura): só aparecem com o +N da ARMA no Sys.forge
 };
 for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']) for(const st of ['run','attack','hurt','die']){ const k='era'+E+'_'+kd+'_'+st; if(ART_ON[k]===undefined) ART_ON[k]=true; }
+ART_ON.era0_e0_hurt=false;   /* QA lote visual B ("cano cinza com clarão" solto ao lado do herói): a folha de dano do tigre (era0_e0_hurt.png, quadros 3 a 9) traz PINTADO um cano de arma com clarão de tiro à esquerda do bicho; desligada até a Arte refazer (sem ela vale o piscar de dano por código). Religar: apagar esta linha */
 /* QUADRO DO GOLPE/TIRO de cada folha de ataque (contando do 0; medido pela dona da arte: a arma ou o tiro chega mais longe para a esquerda).
    O dano e o projétil saem nesse quadro; a folha toca no fps do .json (12), dentro do intervalo de ataque do balanceamento (que não muda). */
 const EN_HIT_FRAME={ era0_e0:6, era0_e1:6, era0_boss:5, era1_e0:4, era1_e1:6, era1_boss:8, era2_e0:6, era2_e1:8, era2_boss:8, era3_e0:2, era3_e1:1, era3_boss:4,
