@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h30 · No GitHub (b9a9609):** a v0.12.7 refeita (pet ao lado, asa por item, montarias); as telas do QA (Torre inteira, Troca de era, Correio, Chat, Ranking, Missões, Guilda, Códex); o aviso de FC que sobe/desce; Atividade/Conquistas ligadas por trás. Tudo salvo, mas ainda NÃO conferido no navegador: o engenheiro confere e fecha a v0.12.7
+
 - **21h25 · Seus votos (conferidos na página):** você APROVOU as 4 Fases adultas V2 (Kael e Kaia, adulto e guerreiro) e a Serpe V2. Não há nada pendente na página: 107 aprovados. Ainda falta corrigir a pistola do Kael guerreiro ("arma não está na mão"), que você reprovou
   - Arte: começa agora as animações do adulto e do guerreiro (Kael e Kaia)
   - Engenheiro: liga a Serpe V2
