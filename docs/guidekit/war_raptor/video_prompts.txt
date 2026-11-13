@@ -1,0 +1,27 @@
+# war_raptor: vídeos seedance_2_0 (6 = 3 estados x 2 heróis). Params de TODOS:
+#   { model:"seedance_2_0", mode:"fast", resolution:"480p", duration:4, aspect_ratio:"1:1", generate_audio:false,
+#     medias:[{role:"start_image",value:<id do guia>},{role:"end_image",value:<id do guia>}], prompt }
+# start_image = end_image = o MESMO guia aprovado (laço fecha). Anotar job id em jobs.txt ao enviar e baixar a url LOGO (a Kaia da fênix ficou pendente quando o MCP caiu).
+# Golpe = estocada (versão que funcionou no lobo v3/grifo v2/fênix); o golpe "de cima para baixo" riscou o rosto.
+
+## kael (start/end = guia kael_war_raptor)
+
+[kael idle]
+Seamless idle loop: the war raptor stands in place on its two hind legs breathing, its head makes small bird-like movements but stays in side profile facing right, the crest feathers move slightly, the tail sways. The boy rider stays seated in the saddle breathing and blinking, foot in the stirrup, holding the straight magenta pole steady forward in his right hand. Locked camera, side view facing right, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
+
+[kael run]
+Seamless looping run in place: the war raptor sprints in place on its two hind legs with a full running leg cycle, the tail stretched back for balance, the body bobs with each stride, the head stays forward, side view facing right. The boy rider stays seated in the saddle bouncing slightly, foot in the stirrup, holding the straight magenta pole steady forward in his right hand. Locked camera, the raptor stays in the same spot, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
+
+[kael attack]
+The boy rider, seated in the saddle on the standing war raptor, keeps the straight magenta pole pointing forward and slightly up, draws his right hand back to his hip, then lunges forward and stabs the pole strongly ahead to the right with his arm fully extended, then pulls back to the starting pose. The pole always stays in his right hand, below his chin, pointing forward, and never crosses his face. The raptor stays in place on its two legs. Locked camera, side view facing right, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
+
+## kaia (start/end = guia kaia_war_raptor)
+
+[kaia idle]
+Seamless idle loop: the war raptor stands in place on its two hind legs breathing, its head makes small bird-like movements but stays in side profile facing right, the crest feathers move slightly, the tail sways. The girl rider stays seated in the saddle breathing and blinking, foot in the stirrup, holding the straight magenta pole steady forward in her right hand. Locked camera, side view facing right, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
+
+[kaia run]
+Seamless looping run in place: the war raptor sprints in place on its two hind legs with a full running leg cycle, the tail stretched back for balance, the body bobs with each stride, the head stays forward, side view facing right. The girl rider stays seated in the saddle bouncing slightly, foot in the stirrup, holding the straight magenta pole steady forward in her right hand. Locked camera, the raptor stays in the same spot, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
+
+[kaia attack]
+The girl rider, seated in the saddle on the standing war raptor, keeps the straight magenta pole pointing forward and slightly up, draws her right hand back to her hip, then lunges forward and stabs the pole strongly ahead to the right with her arm fully extended, then pulls back to the starting pose. The pole always stays in her right hand, below her chin, pointing forward, and never crosses her face. The raptor stays in place on its two legs. Locked camera, side view facing right, flat green background unchanged. No motion blur, no trails, no glow, no sparks, no floating embers, no visual effects.
