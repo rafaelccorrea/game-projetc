@@ -408,6 +408,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 - [ ] Antes da loja (1 minuto): no Supabase, conferir em Project Settings › Billing que o plano é Pro e em Database › Backups que o PITR está desligado (a política diz "backups do provedor por até 7 dias")
 
+- [ ] AWS (2 minutos): o IP da sua internet mudou e o acesso de manutenção ao servidor travou (o jogo continua no ar). No console da AWS: EC2 → Security Groups → o grupo do eonbound-server → Edit inbound rules → na regra SSH (porta 22) escolha "Meu IP" → Save
+
 **Já feito por você:**
 - [x] Senha do banco (servidor no ar) · Firebase · AWS · Supabase · votos anteriores · domínio dispensado (sslip.io com HTTPS)
 
