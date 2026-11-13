@@ -1009,3 +1009,20 @@ De 340 px para cima o HTML dos textos é o mesmo de antes (as mudanças são tod
 caixa interna de 168 px em volta da arte, na mesma posição).
 `node --check`, conflitos e `node test/e2e/run.js` ("TUDO OK", 140) passam; fumaça sem falha em 288x500 e 390x788. Não visto no navegador:
 a conta dá ~146 px para os textos em 288; o QA precisa confirmar que nada corta.
+
+## Bloco 32 (sem navegador): pedidos A-22 do engenheiro
+
+1. `js/panels.js`: apagado o gancho `hookMissions` e o apelido `missions34` (registro, `FULL_VIEWS`, `PANEL_ON`). `setView('missions')` abre a
+   tela 34 pelo `setView` do index (pedido B-26 atendido). Em `js/screens2.js` sobrou só a comparação inofensiva com 'missions34' no `pMisOpen`.
+2. `js/p_mounts.js` (meu): `MT_ART` ganhou `wyvern:1` e `MT_OFF` ficou vazio; a tela segue o `mountIds()` do engenheiro (6 montarias).
+   ATENÇÃO: a coordenação tinha dito que a serpe foi REPROVADA pelo dono. Segui o pedido A-22; se a reprovação ainda vale, é voltar
+   `MT_OFF=['wyvern']` (uma linha). O enquadramento da folha da serpe na caixa NÃO foi medido nem visto.
+3. `js/screens2.js` (tela 10): o nome do chefe vem de `assets/enemies/meta.json` pela chave do inimigo (`resBossName`), a mesma fonte da
+   batalha ("Rex Furioso"); sem nome próprio, vale o `kindName`. A ração do saque (`loot.food`) entra nos extras com ícone desenhado (tigela).
+4. `PANEL_ON.inst=true`; `test/e2e/flows.js`: `HARD.inst=true` (instância 26/26).
+
+Testes: `node --check` nos 4 arquivos; conflitos: nenhum; `node test/e2e/run.js` "TUDO OK" (141); fumaça sem falha nova.
+`node test/e2e/flows.js`: instância 26/26, vitória/derrota 25/25, TROCA DE ERA 9/13 (FALHA). A falha não vem destes arquivos: o
+`js/battle.js` (mudança do engenheiro ainda não commitada) agora guarda a Troca de era em `B.eraPend` e só abre depois de fechar a
+Vitória; o teste ainda espera `Panels.open('era')` direto e encontra `B.res.mode="win"`. É o teste (ou a ordem) que o engenheiro precisa acertar.
+Nada disto foi visto no navegador.

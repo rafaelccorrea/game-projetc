@@ -10,7 +10,7 @@
 /* ---------- TABELA DE MONTARIAS LIGADAS (decisão do dono). A fonte é o mountIds() do js/mountfx.js quando ele existe (pedido A-17);
    esta tabela é a reserva, com os MESMOS ids. A serpe (MT_OFF) foi REPROVADA: é cortada sempre, venha de onde vier. ---------- */
 const MT_ON=['wolf','griffin','pony','horse','mythic'];
-const MT_OFF=['wyvern'];
+const MT_OFF=[];   /* era ['wyvern'] (serpe reprovada). A-22: o engenheiro religou a serpe (MOUNT_TBL.wyvern; mountIds() devolve as 6): a tela segue a lista dele. Para tirar de novo, pôr o id aqui. A reserva MT_ON (sem mountfx) continua sem a serpe. */
 
 /* ---------- ARTE (conferida arquivo a arquivo em assets/anim/mounts) ----------
    Kael MONTADO parado: kael_<id>_idle_era2_t1.png, 12 quadros de 512x352 numa fila, 12 fps, patas em y=339 (1,1 a 1,7 MB cada).
@@ -18,7 +18,7 @@ const MT_OFF=['wyvern'];
    As referências de assets/mounts (1,1 a 4,2 MB, paradas) NÃO são usadas. Só a folha da montaria em exibição é pedida no palco;
    MT_TILE_ART: false (padrão) = cartões da Coleção com marcador neutro (ferradura na cor da raridade), nenhum arquivo a mais;
    true = cartões com o 1º quadro das mesmas folhas (as 5 juntas somam ~8,7 MB: só ligar quando a Arte entregar miniaturas leves). */
-const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1};
+const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1};   /* wyvern: assets/anim/mounts/kael_wyvern_idle_era2_t1.png (existe; enquadramento NÃO medido) */
 const MT_SHEET={dir:'assets/anim/mounts/',frames:12,fps:12,w:512,h:352,x0:68,y0:36,box:304};
 const MT_TILE_ART=false;
 

@@ -8,7 +8,7 @@
 const VERBOSE = process.argv.includes('-v');
 /* fluxo duro = falha derruba o código de saída. INSTÂNCIA está EM CONFERÊNCIA (PANEL_ON.inst desligada, nunca rodou de ponta a ponta):
    mostra todos os problemas, mas não reprova. Trocar para true quando o engenheiro ligar a tela. */
-const HARD = { era: true, inst: false, result: true };
+const HARD = { era: true, inst: true, result: true };   /* inst: PANEL_ON.inst ligada (pedido A-22) e fluxo 26/26 */
 const DT = 1 / 30;
 const boot = require('./sandbox'), errStr = boot.errStr;
 

@@ -537,6 +537,10 @@ const Q_ESS='<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
 const Q_CHEV=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg>`;
 const resEl=id=>document.getElementById(id);
 function resAdd(id,html){ const el=resEl(id); if(el) el.insertAdjacentHTML('beforeend',html); }
+/* NOME DO CHEFE: o mesmo que a batalha mostra = nome próprio de assets/enemies/meta.json pela chave do inimigo (ex.: era0_boss = "Rex Furioso");
+   sem ele, o nome do tipo (kindName). */
+const Q_FOOD='<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16a8 8 0 0 1-16 0z" fill="#c98a4a" stroke="#2a1f16" stroke-width="1.6" stroke-linejoin="round"></path><path d="M8 9.5c0-2 1.6-3 4-3s4 1 4 3" fill="#e8b56a" stroke="#2a1f16" stroke-width="1.6"></path></svg>';   /* tigela de ração (desenhada) */
+function resBossName(b){ let nm=''; try{ if(b&&b.key&&typeof J==='function') nm=((J('assets/enemies/meta.json')||{})[b.key]||{}).name||''; }catch(e){} return nm||(b&&b.kindName)||''; }
 function resBoss(mode){ let e=null; if(mode==='win'){ for(const c of B.corpses) if(c.e.boss) e=c.e; } else e=B.en.find(x=>x.boss)||null; return e; }
 /* medidas na base de 390: linha do chão, lado do quadro do Kael, x do Kael e do chefe. Sem medida real do canvas vale a tela inteira (batalha em tela cheia). */
 function resGeo(boss){ const app=resEl('app'), W=app.clientWidth||390, H=app.clientHeight||844, s=W/390, Hb=H/s; let cw=W, ct=0, cl=0;
@@ -567,6 +571,7 @@ function resLoot(o){ const L=o.loot||{}, n=v=>Math.max(0,Math.round(+v||0)), car
   for(const hd of Array.isArray(L.held)?L.held:[]) egg(hd,hd&&hd.needLevel?'guardado até o nível '+hd.needLevel:'guardado');
   if(n(L.forge)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra de forja':' pedras de forja')});
   if(n(L.essence)) ex.push({ic:Q_ESS,tx:'+'+gNum(n(L.essence))+' de essência'});
+  if(n(L.food)) ex.push({ic:Q_FOOD,tx:'+'+gNum(n(L.food))+' de ração de pet'});
   if(ex.length) cards.push({k:'extra',h:46,ex});
   const its=Array.isArray(L.items)?L.items.filter(x=>x&&SLOT[x.slot]):[];
   if(its.length){ const it0=its.slice().sort((a,b)=>b.r-a.r)[0], ni=normItem(it0), mine=S.inv.filter(x=>x.slot===it0.slot&&x.r===it0.r&&x.e===it0.e).pop(), eq=mine&&S.eq[mine.slot]===mine.id; let sw=0; try{ if(mine&&!eq) sw=Sys.fc.itemFC(S,Sys.host,mine).swap; }catch(er){}
@@ -637,7 +642,7 @@ function resOpen(mode,o,force){
   if(B.res||!SCREENS_ON.bossResult) return false; o=o||{};   /* a tela só abre com a chave ligada (SCREENS_ON.bossResult, index.html) */
   if(!force&&(view!=='battle'||window.__noRes||(typeof tutOn==='function'&&tutOn())||B.paused||(typeof modal!=='undefined'&&modal.style.display==='flex'))) return false;
   mode=mode==='lose'?'lose':'win';
-  const app=resEl('app'), boss=resBoss(mode), stage=o.stage||S.stage, e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1, bname=boss&&boss.kindName?esc2(boss.kindName):'', lord=!!(boss&&boss.eraBoss), G=resGeo(boss);
+  const app=resEl('app'), boss=resBoss(mode), stage=o.stage||S.stage, e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1, bname=boss?esc2(resBossName(boss)):'', lord=!!(boss&&boss.eraBoss), G=resGeo(boss);
   /* d = quanto falta da morte aprovada do chefe (folha *_die do canvas): nada da tela entra na cena antes disso, e a tela NÃO segura o corpo */
   let d=0; if(mode==='win') for(const c of B.corpses) if(c.e.boss) d=Math.max(d,(c.life||0.6)-c.t); d=Math.max(0,Math.min(RES_DEATH_MAX,d));
   B.res={mode}; B.act=null; B.banner=null; B.running=false; B.swing=0; B.eshots=[]; B.slow=0; document.body.classList.add('resui');

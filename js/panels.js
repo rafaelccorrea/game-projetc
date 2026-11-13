@@ -12,7 +12,7 @@
    onOpen(opções) / onClose() ao entrar e sair da tela. */
 const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas por mim no navegador */
   tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true, intro:true, look:false,   /* aba Aparência do Equipamento (js/p_look.js, do QA): desligada até a conferência */   /* conferida pelo QA (fluxo novo e de quem volta) */    /* telas iniciais do Servidor (js/p_intro.js, arquivo GERADO): desligada */   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
-  mail:true,   /* conferida pelo QA; carta local de boas-vindas (Sys.mail.welcomeOnce, o engenheiro liga o módulo no boot) */     /* espera Sys.mail.DATA.enabled (Servidor) */  inst:false,   /* espera a luta da instância (agente A) */
+  mail:true,   /* conferida pelo QA; carta local de boas-vindas (Sys.mail.welcomeOnce, o engenheiro liga o módulo no boot) */     /* espera Sys.mail.DATA.enabled (Servidor) */  inst:true,   /* luta da instância vista pelo engenheiro no navegador (vitória, derrota, tempo esgotado): pedido A-22 */
   mounts:true,   /* conferida pelo QA no navegador (equipar, nível, aura, batalha) */  result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,   /* só no Modo dono até existir compra real (PO) */  auction:true,   /* demonstração "Em breve: abre com o online" (PO); conferida pelo QA */    /* esperam pagamento / servidor */
   arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false},window.PANEL_ON||{});
@@ -27,7 +27,6 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
     if(d.parent) this.hookClose();
     if(name==='cfg') this.hookCfg();
-    if(name==='missions') this.hookMissions();
     if(name==='pets'&&this.defs.eggpick&&!PANEL_ON.eggpick) this.enable('eggpick');   /* a escolha de ovo (pedido A-15) liga junto com a tela de Pets */
     this.hook(); return true; },
   /* SUBTELA (decisão do PO: Forja é subtela do Equipamento): o Voltar leva à tela-mãe (def.parent), não à batalha. Contorno do pedido B-11:
@@ -53,10 +52,4 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     this.back=this.back||{}; this.back[name]=(o&&typeof o.from==='string')?o.from:null; if(this.back[name]) this.hookClose();
     if(window.Screens&&typeof Screens.open==='function'){ if(typeof Screens.register==='function'&&!(Screens.reg&&Screens.reg[name])) this.enable(name); return Screens.open(name,o||{})!==false; }
     setView(name); return true; },
-  /* 'missions': o setView do index.html troca 'missions' por 'pass' + aba Missões (apelido antigo). Com a tela 34 ligada, este gancho registra a
-     MESMA tela também como 'missions34' e desvia setView('missions') para lá. Sai quando o index condicionar o apelido (pedido B-26). */
-  hookMissions(){ if(this.misHooked||typeof setView!=='function'||!window.Screens||typeof Screens.register!=='function') return; this.misHooked=true; const P=this, d=this.defs.missions, s0=setView;
-    try{ Screens.register('missions34',{title:d.title,render:d.render,onOpen:d.onOpen,onClose:d.onClose}); }catch(e){}
-    this.defs.missions34=d; if(typeof FULL_VIEWS!=='undefined') FULL_VIEWS.missions34=1; PANEL_ON.missions34=true;
-    setView=function(v){ if(v==='missions'&&P.on('missions')&&Screens.reg.missions34&&!Screens.reg.missions34.broken&&!(Screens.reg.missions&&Screens.reg.missions.broken)) v='missions34'; return s0(v); }; },
   cur(){ const d=this.defs[typeof view!=='undefined'?view:'']; return d&&this.on(d.name)&&!d.overlay?d:null; } };
