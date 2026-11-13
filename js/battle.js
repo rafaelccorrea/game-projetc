@@ -141,7 +141,7 @@ const ERA_OVL={ 0:[0.55,0.55], 1:[0.55,0.55], 4:[0.55,0.55], 5:[0.55,0.55] },   
    EN_MINH={ era4_e0:115*PX, era4_e1:115*PX };
 const enScale=e=>(DEBUG&&window.__noScale)?1:(EN_SCALE[e.key]||1);
 const HERO_BODY_FRAC=0.848;   // altura opaca do Kael parado ÷ lado do quadro (medida na folha kael_idle_body: topo do cabelo até os pés)
-const heroBodyH=()=>HS*HERO_BODY_FRAC;
+const heroBodyH=()=>{ const p=(typeof phaseBodyH==='function')?phaseBodyH():0; return p>0?p:HS*HERO_BODY_FRAC; };   /* por fase (adolescente, adulto, guerreiro): altura medida na folha parada × escala da fase */
 const slotMin=(e,i)=>SOLO_WIDE[e.key]?SOLO_WIDE[e.key].minH:(!(DEBUG&&window.__noScale)&&EN_MINH[e.key])?EN_MINH[e.key]*(i===MAXVIS_ALL-1?BACK_SC:1):SLOTMIN[i];
 const slotH=(e,i)=>Math.max(slotMin(e,i),Math.min(heroBodyH(),(KINDH[e.kind]||KINDH.e0)*(i===MAXVIS_ALL-1?BACK_SC:1)*enScale(e)));
 /* ajuste dos comuns visíveis: centro (slot) e altura-alvo (dhT) de cada um, nesta ordem de prioridade:
@@ -957,7 +957,7 @@ function draw(){
   /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
   { const he=heroEdge(); if(B.heK!=null&&Math.abs(he-B.heK)>1&&B.deadT<=0&&!B.res){ try{ layoutHorde(); }catch(e){} } B.heK=he; }
   const ultOn=!!(B.act&&B.act.type==='s3');
-  if(!ultOn){ drawHero(HM); drawLevelUp(); }
+  if(!ultOn){ drawHero(HM); drawLevelUp(); if(typeof drawEvo==='function') drawEvo(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
   for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
@@ -1022,6 +1022,8 @@ function draw(){
 let vigC=null, lilitaOk=false, lilitaT=0;
 function LILITA(){ if(lilitaOk) return true; const now=performance.now(); if(now-lilitaT>1000){ lilitaT=now; try{ lilitaOk=!!(document.fonts&&document.fonts.check('15px "Lilita One"')&&[...document.fonts].some(f=>/Lilita/.test(f.family)&&f.status==='loaded')); }catch(e){} } return lilitaOk; }
 function tickFx(dt){
+  if(B.eraPend&&!B.res&&!B.inst){ const eo=B.eraPend; B.eraPend=null; try{ if(window.Panels&&Panels.on('era')) Panels.open('era',eo); }catch(er){ console.error('era',er); } }   /* a vitória fechou: agora a Troca de era */
+
   B.at+=dt*(B.paused?1:B.speed);   // relógio da animação do herói (não para na pausa: nada estático)
   if(B.running&&B.deadT<=0&&!B.paused){ const st=Math.floor(B.at*3); if(st!==B.step){ B.step=st; dust(HX-HS*0.1,GY-1,2); } }   // poeira a cada passada (2 por ciclo de 8 quadros a 12 fps)
   const gt=document.body.classList.contains('sheet')?sheetGY():LH*FIELD_FEET; GY=Math.abs(gt-GY)<0.5?gt:GY+(gt-GY)*Math.min(1,dt*9);
@@ -1084,7 +1086,6 @@ function loop(now){
   try{
   if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
-  if(B.eraPend&&!B.res&&!B.inst){ const eo=B.eraPend; B.eraPend=null; try{ if(window.Panels&&Panels.on('era')) Panels.open('era',eo); }catch(er){ console.error('era',er); } }   /* a vitória fechou: agora a Troca de era */
   tickFx(dt); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
   drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
@@ -1093,3 +1094,26 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 
+
+/* ================= HERÓI COMPLETO, UM CAMINHO SÓ (ordem do dono: pet, montaria, asa e aura nunca somem) =================
+   drawHeroFull(ctx2, x, y, scale, state): desenha asa + Kael (montado se tiver montaria; na fase certa) + aura + pet com o MESMO código e as MESMAS tabelas da
+   batalha, em qualquer canvas. (x, y) = ponto dos pés no canvas de destino; scale = 1 → tamanho da batalha (HS px lógicos de quadro).
+   state (tudo opcional): { t, walking, act, deadP, pet (false esconde), mount (false esconde / {id, stars}), wing (false / 'angel' | 'demon'), weapon (skin), armor (skin) }.
+   drawHeroLayers(canvas, layers, dt): vitrine da Aparência (pedido Q-15): encaixa o herói completo no canvas; 'layers' (Sys.appearance.layers) define asa e arma visíveis. */
+const HFULL={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false};
+function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1, lk=heroLook(), old=ctx;
+  HFULL.x=HX; HFULL.gy=GY; HFULL.t=st.t!=null?st.t:B.at; HFULL.sk=st.armor||SKIN(S.skinEq.armor); HFULL.ws=st.weapon||lk.weapon||wSkin(); HFULL.walking=!!st.walking; HFULL.deadP=st.deadP!=null?st.deadP:-1; HFULL.act=st.act||null;
+  HFULL.wing=st.wing===false?null:(st.wing||lk.wing); HFULL.mount=st.mount===false?null:(st.mount||lk.mount);
+  c2.save(); c2.translate(x-HX*k,y-GY*k); c2.scale(k,k); ctx=c2;
+  try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running; B.res=null; B.deadT=0; B.running=!!st.walking; try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; } } }
+  catch(e){ if(!window.__hfErr){ window.__hfErr=1; console.error('drawHeroFull',e); } }
+  finally{ ctx=old; c2.restore(); } }
+window.drawHeroFull=drawHeroFull;
+let hlT=0;
+function drawHeroLayers(c,layers,dt){ if(!c) return; const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth||c.width, h=c.clientHeight||c.height; if(!w||!h) return;
+  if(c.clientWidth&&(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr))){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  const x=c.getContext('2d'), st={t:(hlT+=dt||0)}; x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height);
+  if(Array.isArray(layers)){ const has=k=>layers.some(l=>l&&(l.layer===k||l.key===k)); if(!has('wing')) st.wing=false; const wl=layers.find(l=>l&&(l.layer==='weapon'||l.key==='weapon')); if(wl&&wl.id&&SKIN(wl.id)) st.weapon=SKIN(wl.id); }
+  const mounted=!!heroLook().mount, hh=(mounted?heroBodyH()+(typeof heroRise==='function'?heroRise():0):heroBodyH())*1.25, ww=HS*(mounted?1.9:1.5), k=Math.min(c.width/ww,c.height/hh);
+  drawHeroFull(x,c.width*(mounted?0.42:0.45),c.height*0.93,k,st); }
+window.drawHeroLayers=drawHeroLayers;

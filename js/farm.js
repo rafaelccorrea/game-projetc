@@ -110,6 +110,7 @@ function onLevelUp(lv){
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
   B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);
   if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20
+  if (typeof phaseCheck === 'function') phaseCheck(false);   // Kael por fase: níveis 22, 35 e 70
   if (typeof fcNotice === 'function') fcNotice();   // subir de nível muda a FC: o aviso de poder mostra a diferença   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
   if (view !== 'battle' && typeof softRender === 'function') softRender();
 }

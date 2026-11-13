@@ -1602,3 +1602,34 @@ Feito e visto (Chrome, `localhost:8080`, Modo dono, era 0): a asa agora é desen
 - `MOUNT_TBL` wx/wy/wx2/wy2 e `mountWingOff` ficaram sem uso (a âncora substitui). Ícone da Oferta 24h trocado para `offer.png` (não visto na tela depois da troca).
 NÃO feito: asa nas fases 1, 2 e 3 a pé (as fases ainda não estão ligadas na batalha: entra com o item "Kael nas 4 fases"; a âncora dessas folhas já é lida pelo mesmo código); os 7 prints antigos reprovados com os MESMOS nomes; giro/rastro usam a última âncora (a folha composta não tem `back`).
 Achados: (1) montado de perfil só aparece UMA metade da asa na maior parte dos quadros (a outra fica atrás do Kael): é o esperado da receita, mas o dono precisa ver; (2) folhas do lobo parado/correndo AINDA mostram o risco escuro perto da cabeça do Kael nesta aba (pode ser cache de imagem do navegador: não confirmei); (3) "arma some montado no grifo/lobo" (QA): com espada das eras 0 e 2 a arma aparece na mão nos meus prints; não reproduzi; preciso saber qual arma estava equipada; (4) ângulo da maça em pônei/cavalo/tigre: não conferido.
+
+## Engenheiro 2 — KAEL NAS 4 FASES + drawHeroFull (2026-11-12)
+
+### Visto no navegador (`localhost:8080`)
+- **Save de teste de nível 60** (não é o do dono): antes = garoto; ao carregar aparece "Kael evoluiu: Adulto!" com clarão + animação de subir de nível, e ele vira o ADULTO (armadura), pés no chão, arma do item na mão, barras acima da cabeça nova. FC 4.509 antes e depois, 3 itens, skins iguais. Recarreguei duas vezes: sem animação, continua adulto. Prints `v0128_fases_nivel60_antes/evoluindo/depois.jpg`.
+- **4 fases lado a lado** (garoto, adolescente, adulto, guerreiro), com a asa de anjo: parado, correndo, golpe e giro: pés na linha, arma na mão, asa saindo das costas nas 4. Prints `v0128_fases_4_lado_a_lado_{parado,correndo,golpe,giro}.png`. Com arma de fogo (era 5) as fases 1 a 3 seguram a arma na mão.
+- **drawHeroFull / drawHeroLayers**: prévia num canvas à parte com grifo + asa + pet + aura da montaria, e adulto a pé + asa + pet (`v0128_herofull_previa_grifo_e_adulto.png`). Na batalha depois da vitória: grifo + asa + pet na tela.
+- Testes: `node --check` em tudo; `run.js` 141 OK; `flows.js` "fluxos duros OK" (acertei o TESTE da Troca de era para seguir Vitória → Continuar → era; no jogo, a abertura da era pendente saiu do `loop()` e foi para o `tickFx()`, que o teste também roda).
+
+### O que foi escrito
+- `js/stage.js`: bloco "KAEL POR FASE": `PHASES_ON` (index; `?fases=0` desliga), `phaseBoot`, `heroPhase`, `phaseSheet` (lê `Sys.appearance.sheetFor`), `drawHeroPhase` (fases 1 a 3), `phaseCheck` (evolui direto para a fase certa, UMA animação, grava na hora), `drawEvo`, `phaseBodyH`. Fase 0 continua no desenho de sempre.
+- `js/battle.js`: `heroBodyH` por fase; `drawHeroFull(ctx, x, y, scale, state)` e `drawHeroLayers(canvas, layers, dt)` em `window` (recebem o ctx/canvas; a assinatura do `drawHero` e o par `ctx`/`mainCtx` NÃO mudaram).
+- `js/petfx.js`: o pet não some mais com a Vitória/Derrota aberta (sumia por `B.res`). `js/farm.js`: `phaseCheck` no subir de nível. `js/artprev.js`: 4 atalhos "Fase: ..." no Modo dono. `js/mountfx.js`: campo `skip` dos ataques montados. `index.html`: `PHASES_ON`, `phaseBoot`, módulo `schedule` na lista.
+
+### NÃO feito / NÃO visto (honesto)
+- **CAMADAS da roupa-skin** (chapéu, tinta de colete/botas pelas máscaras, óculos/máscara, aura da skin): NÃO desenhadas. `drawHeroLayers` hoje só usa a lista para asa e arma. O print 34→35 com a54 não foi feito. É o próximo passo e é grande (pintura em cache por fase/estado/material).
+- Evolução 0→1 com a folha própria `evolve_0_1` (nível 21→22): escrita, não vista. Evolução subindo de nível de verdade (22, 35, 70): não vista (só a da carga).
+- Pet na tela de Vitória: o conserto está escrito e o pet apareceu na batalha logo depois; os dois prints da Vitória e do subir de nível falharam ao salvar e NÃO os vi. Nome do chefe no letreiro da Vitória em luta real: não conferido.
+- Montado nas fases 1 a 3: as folhas de montaria só têm o Kael GAROTO; montado ele continua garoto em qualquer fase (precisa de arte ou decisão do PO).
+- Cenários das eras 5 a 8, P3, "Pular" do tutorial, ração no `showOffline` antigo, Kaia, pets novos, eventos com horário: não iniciados. `schedule` entrou na lista de módulos, mas NÃO conferi a FC do save com ele (o save de teste deu 4.509 nas cargas desta passada, já com o módulo).
+- Resíduo do lobo com cache limpo, arma do nível 60 no punho montado, ângulo da maça: não conferidos.
+
+### Achados para a Arte / Sistemas
+- `phase1/2/3/kael_die_body`: as três mostram o GAROTO morto (mesma arte da pasta R).
+- Nas fases 1 a 3 as folhas `run`, `attack` e `spin` têm o corpo 96 px mais à direita na célula do que a `idle`, com o mesmo `padLeft: 96` (diferença visível no `xf.ox`). Compensei no código pela diferença do `xf.ox`; o certo é o `padLeft` da folha dizer a verdade.
+- Folhas `pistol_*` por fase existem mas não são usadas nas fases 1 a 3 (uso corpo + arma na mão).
+- Quem desenha o herói fora dos meus arquivos (para trocar por `drawHeroFull`): `js/p_offer.js:51-64` (chama `drawHero` trocando `ctx`/`mainCtx`), `js/p_era.js:11, 92, 131` (folha `kael_run_body` própria, sem asa/pet/montaria), `js/p_forge.js:180`, `js/p_pets.js:399`, `js/p_profile.js:7, 16`, `js/p_tower.js:18`, `js/p_arena.js:17`, `js/p_tourney.js:45, 47`, `js/p_rank.js:16`, `js/p_vip.js:21`, `js/p_events.js:54, 210`, `js/p_map.js:50`, `js/p_codex.js:28`, `js/p_cfg.js:278`, `js/p_intro.js:228`, `js/p_look.js:17`, `js/screens.js:415, 679`, `js/screens2.js:285, 366` (imagem/`kidle`/folha própria do Kael garoto).
+
+### Adendo: "pad duplo" das folhas não-paradas das fases 1 a 3 (aviso da Arte)
+Medido: nos `.json`, `xf.ox` de run/attack/spin é exatamente 96 px maior que o da idle nas fases 1, 2 e 3 (phase1 67,8 → 163,8; phase2 105,2 → 201,2; phase3 98,7 → 194,7). No navegador, SEM compensar, o adolescente/adulto/guerreiro correndo e golpeando apareciam deslocados para a direita da sombra (≈ 96 px da célula × escala da fase; print antigo da 1ª tentativa); COM a compensação ficam centrados na sombra como o parado (prints `v0128_fases_4_lado_a_lado_correndo/golpe/giro`). A compensação está num ponto só: `phasePadFix(M, idM)` em `js/stage.js` (lê `M.padFix` se a Arte gravar; senão a diferença do `xf.ox`). `pistol_run`/`pistol_shoot` por fase não são usadas pelo código. Se a Arte corrigir os PNG sem atualizar o `xf.ox`, o Kael vai pular 96 px para a ESQUERDA: aí basta gravar `"padFix": 0` nos json ou apagar a função. Não medi em px na tela com régua; a conferência foi a olho contra a sombra.
+`js/avatar.js` ainda não existe no disco: o retrato do cabeçalho não foi trocado. `drawHeroFull` tem o ctx como primeiro parâmetro; por dentro ela troca o `ctx` global da batalha só durante a chamada e devolve no `finally` (funciona com canvas fora da tela).

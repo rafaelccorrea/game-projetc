@@ -41,6 +41,7 @@ const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,20
 function drawHeroMounted(H){ const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
   let fi = a ? Math.min(n - 1, Math.floor(a.t / Math.max(0.01, a.dur) * n)) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
+  if (Array.isArray(M.skip) && M.skip.indexOf(fi) >= 0){ let p = fi - 1; while (p >= 0 && M.skip.indexOf(p) >= 0) p--; if (p < 0){ p = fi + 1; while (p < n && M.skip.indexOf(p) >= 0) p++; } if (p >= 0 && p < n) fi = p; }   /* quadro com artefato (campo "skip" da Arte): usa o quadro limpo mais próximo, de preferência o anterior, com o grip e o back dele */
   const G = M.grip[fi] || M.grip[0], k = HS / 256, gy = H.gy, ws = H.ws;
   const P = PZ; P.dx = P.dy = P.rot = P.rec = P.flash = P.trail = 0; P.sx = P.sy = 1; P.wang = 0;
   let ox = H.x, alpha = 1, rot = 0;

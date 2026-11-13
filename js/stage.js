@@ -243,7 +243,9 @@ function drawHeroDie(H){ const sh = sheetLoad(HERO_DIR + 'kael_die_body', true);
   return true; }
 function drawHeroAnim(H){
   if (H.deadP >= 0 && ART_ON.kael_die === true){ if (drawHeroDie(H)) return true; } else if (H.main && H.deadP < 0){ B.dieDustW = 0; B.dieDustB = 0; }
+  if (H.main && typeof evoHidesHero === 'function' && evoHidesHero()) return true;   /* evolução 0→1 com folha própria: o herói é o da folha */
   if (H.mount && typeof drawHeroMounted === 'function' && drawHeroMounted(H)) return true;   // Kael MONTADO (js/mountfx.js); sem as folhas carregadas, segue a pé
+  { const ph = typeof heroPhase === 'function' ? heroPhase() : 0; if (ph > 0 && drawHeroPhase(H, ph)) return true; }   /* fases 1 a 3 (adolescente, adulto, guerreiro) */
   { const pe = pistolEra(H.ws); if (pe >= 0) return drawHeroPistol(H, pe) || drawHeroPistolWait(H); }
   if (H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);
   const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;
@@ -320,3 +322,92 @@ function drawHeroAnim(H){
   ctx.restore();
   return true;
 }
+
+/* ================= KAEL POR FASE (Engenheiro 2; ordem do dono: "nível 60 e não evoluiu") =================
+   Garoto (nível 1) → adolescente (22) → adulto (35) → guerreiro (70): gatilho do Sys.phaseUp; a FOLHA de cada estado vem de
+   Sys.appearance.sheetFor(S, host, estado) (pastas R / phase1 / phase2 / phase3; serve à Kaia quando ligar). Chave: PHASES_ON (index.html).
+   Fase 0 = o desenho de sempre (drawHeroAnim). Fases 1 a 3: drawHeroPhase (folhas de 448 com padLeft/feetY do .json; corpo SEM arma + a arma do item
+   na mão pelo grip do quadro; asa na âncora das costas; escala PH_SCALE com os pés na linha do chão). Skin/cosméticos do jogador não são tocados. */
+const PH_SCALE = [1.00, 1.12, 1.25, 1.30];
+const PH_DIRS = ['R', 'phase1', 'phase2', 'phase3'];
+const phasesOk = () => typeof PHASES_ON !== 'undefined' && PHASES_ON && typeof Sys !== 'undefined' && !!Sys.phaseUp && !!Sys.appearance && typeof Sys.appearance.sheetFor === 'function';
+function phaseBoot(){ if (!phasesOk()) return; try { Sys.phaseUp.DATA.on = true; Sys.phaseUp.ensure(S); phaseCheck(true); } catch (e) { console.error('phaseBoot', e); } }
+/* fase DESENHADA agora (durante a animação de evolução: a antiga até a metade, depois a nova) */
+function heroPhase(){ if (!phasesOk()) return 0; let st = 0; try { st = Sys.phaseUp.current(S) | 0; } catch (e) { st = 0; } const ev = typeof B !== 'undefined' ? B.evo : null; if (ev && (B.at - ev.t0) < ev.dur * 0.5) st = ev.from; return Math.max(0, Math.min(3, st)); }
+const phaseK = () => PH_SCALE[heroPhase()] || 1;
+function phaseSheet(st, stage){ let r = null; try { r = Sys.appearance.sheetFor(S, Sys.host, st); } catch (e) { return null; } if (!r) return null; let base = r.body;
+  if (stage != null && stage !== r.stage && !r.fallback) base = base.replace(/hyb\/[^/]+\//, 'hyb/' + (r.hero === 'kaia' ? (stage ? 'kaia_phase' + stage : 'kaia') : PH_DIRS[stage]) + '/');
+  return sheetLoad(base, st === 'die'); }
+function phaseReady(stage){ let ok = true; for (const st of ['idle', 'run', 'attack']){ const s = phaseSheet(st, stage); if (!s || !s.ok) ok = false; } phaseSheet('spin', stage); phaseSheet('die', stage); return ok; }
+/* altura do corpo parado nesta fase (px lógicos): barras de vida, pet e folgas usam esta */
+const PH_H = {};
+function phaseBodyH(){ const p = heroPhase(); if (!p) return 0; if (PH_H[p]) return PH_H[p] * HS / 256 * PH_SCALE[p]; const sh = phaseSheet('idle', p); if (!sh || !sh.ok) return 0; let h = 0;
+  try { const b = enBounds(sh)[0], fy = typeof sh.meta.feetY === 'number' ? sh.meta.feetY : 243; if (b) h = fy - b.t; } catch (e) {} if (h > 0) PH_H[p] = h; return h * HS / 256 * PH_SCALE[p]; }
+/* EVOLUÇÃO: save antigo que já passou dos níveis evolui DIRETO para a fase certa, com UMA animação (decisão do dono); a fase vai para o save na hora
+   (recarregar não repete). 0→1 sem skin/cosmético visível: folha própria (evolve_0_1, que já traz o herói); nos outros casos o herói é desenhado por
+   camadas (fase antiga → clarão → fase nova) com a animação de subir de nível por cima. */
+function phaseCheck(atBoot){ if (!phasesOk() || (typeof B !== 'undefined' && B.evo)) return; let first = null, last = null, n = 0;
+  try { for (let i = 0; i < 4; i++){ const p = Sys.phaseUp.pending(S, Sys.host); if (!p || !p.ready) break; if (!first) first = p; last = p; const r = Sys.phaseUp.evolve(S, Sys.host); if (!r || !r.ok) break; n++; } } catch (e) { console.error('phaseCheck', e); }
+  if (!n) return; save(); const own = n === 1 && first.from === 0 && first.anim && !first.anim.fallback && !first.anim.layered, base = own ? first.anim.sheet : 'assets/anim/fx/levelup';
+  sheetLoad(base, true); phaseReady(last.to); phaseReady(first.from);
+  B.evo = { t0: (B.at || 0) + (atBoot ? 1.2 : 0.1), from: first.from, to: last.to, sheet: base, own, dur: own ? 38 / 12 : 1.6, name: last.toName };
+  B.banner = { txt: (S.hero === 'kaia' ? 'Kaia' : 'Kael') + ' evoluiu: ' + last.toName + '!', pill: true, bg: 'rgba(60,40,8,.92)', bd: '#ffc94a', sh: '#2a1403', t: -(atBoot ? 1.2 : 0.1), dur: 2.6, col: '#ffe07a' };
+  if (typeof snd === 'function') snd('legendary'); if (typeof fbLayout === 'function') setTimeout(fbLayout, 50); }
+function drawEvo(){ const ev = B.evo; if (!ev) return; const t = B.at - ev.t0; if (t < 0) return;
+  if (t >= ev.dur){ B.evo = null; if (typeof fbLayout === 'function') fbLayout(); if (typeof layoutHorde === 'function'){ try { layoutHorde(); } catch (e) {} } return; }
+  const u = t / ev.dur, gl = Math.max(0, 1 - Math.abs(u - 0.5) * 4);
+  if (!ev.own && gl > 0){ const r = HS * (0.6 + 0.5 * gl), g = ctx.createRadialGradient(HX, GY - HS * 0.5, 2, HX, GY - HS * 0.5, r); g.addColorStop(0, 'rgba(255,255,255,' + (0.95 * gl).toFixed(2) + ')'); g.addColorStop(0.5, 'rgba(255,224,122,' + (0.6 * gl).toFixed(2) + ')'); g.addColorStop(1, 'rgba(255,224,122,0)'); ctx.fillStyle = g; ctx.fillRect(HX - r, GY - HS * 0.5 - r, r * 2, r * 2); }
+  const sh = sheetLoad(ev.sheet, true); if (!sh.ok) return; const M = sh.meta, fi = Math.min(M.frames - 1, Math.floor(u * M.frames)), k = HS / 256 * (ev.own ? 1 : PH_SCALE[ev.to]);
+  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, HX - (M.anchorX || M.w / 2) * k, GY - (M.feetY || M.h) * k, M.w * k, M.h * k); }
+/* PONTO ÚNICO da compensação do "pad duplo" das folhas não-paradas das fases 1 a 3 (aviso da Arte: pés ~96 px à direita de padLeft+128; a parada está certa).
+   Se o .json trouxer padFix (número), vale ele (0 = folha corrigida). Sem o campo, a diferença do xf.ox para a folha parada (medido: 96 px exatos em run, attack e
+   spin das 3 fases). QUANDO A ARTE CORRIGIR OS ARQUIVOS: apagar esta função e trocar a chamada por 0 (ou a Arte grava "padFix": 0). */
+function phasePadFix(M, idM){ if (typeof M.padFix === 'number') return M.padFix; return (idM && idM.xf && M.xf) ? (M.xf.ox - idM.xf.ox) : 0; }
+const evoHidesHero = () => !!(typeof B !== 'undefined' && B.evo && B.evo.own && B.at >= B.evo.t0);
+/* desenho do herói nas fases 1 a 3. Devolve false se as folhas da fase ainda não carregaram (aí vale o desenho da fase 0 por um instante). */
+function drawHeroPhase(H, stage){ if (!phaseReady(stage)) return false;
+  const a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t, PS = PH_SCALE[stage] || 1, k = HS / 256 * PS, gy = H.gy;
+  let st = a ? (a.type === 's2' ? 'spin' : 'attack') : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = phaseSheet(st, stage); if (!sh || !sh.ok){ st = a ? 'attack' : 'idle'; sh = phaseSheet(st, stage); }
+  if (H.deadP >= 0){ const d = phaseSheet('die', stage); if (d && d.ok) return drawHeroPhaseDie(H, d, k); }
+  const M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243;
+  let fi = a ? (st === 'spin' ? Math.min(n - 1, Math.floor(a.t / Math.max(0.01, a.dur) * n)) : atkFrame(a, gun, HERO_SETS[2].atk)) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
+  const G = (M.grip && (M.grip[fi] || M.grip[0])) || { x: pad + 150, y: 190, ang: 45, ux: 0.7, uy: -0.7 };
+  const P = PZ; P.dx = P.dy = P.rot = P.rec = P.flash = P.trail = 0; P.sx = P.sy = 1; P.wang = 0;
+  if (a && gun){ const s = shotEnv(a, a.type === 's1' ? 0.22 : 0.13); P.rec = s * 5; P.flash = shotEnv(a, 0.09); }
+  let ox = H.x, alpha = 1; if (H.hurt > 0 && H.deadP < 0) ox += (Math.random() - .5) * 3;
+  if (H.deadP >= 0) alpha = H.deadP > .55 ? Math.max(0.1, 1 - (H.deadP - .55) / .45) : 1;
+  ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21 * PS, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
+  if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
+  /* nas fases 1 a 3 as folhas de corrida, golpe e giro têm o corpo 96 px mais à direita na célula do que a folha parada (campo xf.ox do .json; o padLeft diz 96 nas duas):
+     a diferença do xf.ox para a folha parada entra na âncora, senão o Kael pula para a frente ao sair do parado */
+  const idM = st !== 'idle' ? (phaseSheet('idle', stage) || {}).meta : null, dxf = phasePadFix(M, idM);
+  const x0 = ox - (pad + 128 + dxf) * k, y0 = gy - fy * k;
+  drawWingsAt(H, sh, fi, x0, y0, k, !a);
+  ctx.save(); ctx.globalAlpha = alpha;
+  if (tierOf(H.sk.r) === 2) drawGlow(RAR[H.sk.r].c, ox, gy - HS * .5 * PS, HS * .7 * PS, alpha * (0.45 + 0.15 * Math.sin(t * 3)));   // skin de raridade alta: o brilho da skin continua
+  if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, ox, gy - HS * .45 * PS, HS * (0.5 + 0.2 * Math.min(1, a.t)) * PS, 0.5 + 0.2 * Math.sin(t * 20));
+  ctx.translate(x0, y0); ctx.scale(k, k);
+  const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const wk = wKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(wPng(ws), 'weapon'), fx = WFIX[wk] || WFIX[heroKey(ws)] || {};
+  let drawW = null, tip = { x: G.x + 40, y: G.y - 40 };
+  if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) * (fx.s || 1) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 * (fx.s || 1) / w0.h);
+    const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh, wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90), ang = -(G.ang - wang) * Math.PI / 180;
+    let tx0, ty0; if (gun){ const mz = wm.muzzle; tx0 = mz ? ((mz[0] - w0.fx) / w0.fw) * dw - gx : dw - gx; ty0 = mz ? ((mz[1] - w0.fy) / w0.fh) * dh - gy2 : dh * 0.42 - gy2; }
+    else { const ln = typeof wm.len === 'number' ? wm.len * (dw / w0.fw) : gy2, wa = wang * Math.PI / 180; tx0 = Math.cos(wa) * ln; ty0 = -Math.sin(wa) * ln; }
+    const c = Math.cos(ang), s = Math.sin(ang); tip = { x: G.x + tx0 * c - ty0 * s, y: G.y + tx0 * s + ty0 * c };
+    drawW = () => { ctx.save(); ctx.translate(G.x + (fx.dx || 0), G.y + (fx.dy || 0)); ctx.rotate(ang); if (gun) ctx.translate(-P.rec, 0); dspr(wimg, -gx, -gy2, dw, dh);
+      if (gun && P.flash > 0){ const c0 = a && a.col !== '#ffffff' ? a.col : '#ffd45a'; drawGlow(c0, tx0 + 5, ty0, 26 + 16 * P.flash, P.flash); }
+      ctx.restore(); }; }
+  const behind = !!G.behind || Math.cos(G.ang * Math.PI / 180) < -0.25;
+  if (drawW && behind){ drawW(); body(); }
+  else { body(); if (drawW){ drawW();
+      if (typeof G.ux === 'number'){ const ux = G.ux, uy = G.uy, px = -uy, py = ux, f0 = (G.f0 != null ? G.f0 : -12) - 1.5, f1 = (G.f1 != null ? G.f1 : 12) + 1.5, hh = Math.min(G.hw || 3.3, 6) + 5;   // dedos por cima do cabo
+        ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); }
+      if (sh.neck && sh.neck[fi]){ ctx.save(); ctx.beginPath(); ctx.rect(0, 0, FW, sh.neck[fi] + 2); ctx.clip(); body(); ctx.restore(); } } }   // cabeça por cima da lâmina
+  ctx.restore();
+  if (H.main){ B.tipW = { x: x0 + tip.x * k, y: y0 + tip.y * k };
+    if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 0.62 * PS, B.tipW.x + (gun ? 3 : 6))); B.reach += (rc - B.reach) * 0.2; } }
+  return true; }
+function drawHeroPhaseDie(H, sh, k){ const M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12)));
+  ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(H.x, H.gy + HS * 0.012, HS * 0.3, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
+  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, H.x - (pad + 128) * k, H.gy - fy * k, M.w * k, M.h * k); return true; }

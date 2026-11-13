@@ -68,7 +68,7 @@ function petHit(e, I){ let st = null, roll = null; try { st = heroStats(); roll 
 function petWave(){ const I = petInfo(); if (!I || !B.hero) return; let st = null; try { st = heroStats(); } catch (e) {} const ph = st && st.pet ? st.pet.heal : 0; if (!(ph > 0)) return;
   const v = st.hp * ph, h = B.hero, b = h.hp; h.hp = Math.min(h.maxhp, h.hp + v); if (h.hp > b + 0.5) floatText(HX, GY - HS - 6, '+' + fmt(h.hp - b), '#7ee27a', 0); }
 /* desenho: atrás do Kael, pés na linha do chão; anda com o cenário, respira parado, golpeia no lugar */
-function drawPet(){ const I = petInfo(); if (!I || B.res || HATCH.cur) return; const act = PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');
+function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era') || HATCH.cur) return;   /* ordem do dono: o pet NUNCA some (antes sumia na Vitória/Derrota); só não é desenhado atrás da Troca de era, que cobre a tela inteira */ const act = PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
   const T = petTbl(), k = petK(), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;

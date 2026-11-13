@@ -65,6 +65,12 @@ async function flowEra() {
   check('Senhor da Era apareceu', sawBoss, 'nenhum inimigo com boss&&eraBoss surgiu');
   check('Senhor morreu e a era avançou (S.eraMax 0→1, S.stage ' + STG + '→' + (STG + 1) + ')', done && ev('S.eraMax') === 1 && ev('S.stage') === STG + 1 && ev('eraOf(S.stage)') === 1,
     'eraMax ' + ev('S.eraMax') + ', stage ' + ev('S.stage') + ', wave ' + ev('S.wave') + ', inimigos ' + ev('B.en.map(e=>e.kind+":"+Math.round(e.hp)).join(",")') + ', aSurgir ' + ev('JSON.stringify(B.toSpawn)'));
+  /* Engenheiro 2: com a tela 10 ligada a ordem é VITÓRIA → "Continuar" → TROCA DE ERA (o jogo guarda a era em B.eraPend e abre quando a vitória fecha) */
+  if (ev('B.res&&B.res.mode') === 'win') {
+    check('vitória do Senhor da Era abre ANTES da Troca de era (B.eraPend guardada, overlay ainda fechado)', !!ev('B.eraPend') && !opens.find(x => x.n === 'era'), 'eraPend=' + !!ev('B.eraPend') + ' abertos: ' + opens.map(x => x.n).join(','));
+    try { G.inCtx(() => X.resClose('next')); } catch (e) { G.frameErr.push('resClose: ' + errStr(e)); }   /* o mesmo que o botão "Continuar" faz */
+    await G.until(() => !!opens.find(x => x.n === 'era'), 10);
+  }
   const eo = opens.find(x => x.n === 'era');
   check("overlay 'era' pedido: Panels.open('era',{from:0,to:1}) devolveu true", eo && eo.r && eo.o && eo.o.from === 0 && eo.o.to === 1, eo ? JSON.stringify({ r: eo.r, from: eo.o && eo.o.from, to: eo.o && eo.o.to }) : 'Panels.open("era") não foi chamado; chamados: ' + opens.map(x => x.n).join(','));
   check('overlay aberto segura a batalha (PE.open, B.res.mode="era")', ev('typeof PE!=="undefined"&&PE.open') && ev('B.res&&B.res.mode') === 'era', 'PE.open=' + ev('typeof PE!=="undefined"&&PE.open') + ' B.res=' + JSON.stringify(ev('B.res')));

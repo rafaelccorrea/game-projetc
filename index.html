@@ -333,6 +333,7 @@ const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do D
   boots:['Botas de Couro','Grevas de Aço','Botas Rúnicas','Botas do Dragão','Passos Sagrados'], necklace:['Cordão de Osso','Colar de Prata','Amuleto Rúnico','Presa do Dragão','Relicário Sagrado'] };
 const INOUN={hat:'Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asas'}, ERA_MAT=['de Osso','de Bronze','de Aço','da Pólvora','a Vapor','de Kevlar','de Plasma'];
 const WSHAPE=['club','spear','sword','musket','rifle','rifle','energy'];
+const PHASES_ON=!/[?&]fases=0/.test(location.search);   /* KAEL POR FASE (Engenheiro 2): garoto → adolescente (22) → adulto (35) → guerreiro (70). ?fases=0 desliga para conferência */
 const NEXT_ON=true;   /* LOTE v0.12.8 (escrito, ainda NÃO visto rodando): cenário vivo da era 4, morte nova do Kael, inimigo parado animado e luta da instância. Trocar para true na conferência. */
 const ERAS=[
  {n:'Pré-História',icon:'🦴',sceneV2:true,sky:['#5aa7d6','#f2c37a'],mtn:'#7a5c3d',gr:'#5a6b2e',gr2:'#7a8a3e',sun:'#fff3c4',
@@ -724,7 +725,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
@@ -738,7 +739,7 @@ function sysBootB(){ if(!window.Sys||!Sys.host) return;
   try{ if(OWNER_MODE&&Sys.offer&&Sys.offer.DATA) Sys.offer.DATA.on=true; }catch(e){}
   codexSync(); }
 loadBalance(); versionCheck();
-sysBoot(); sysBootB(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
+sysBoot(); sysBootB(); if(typeof phaseBoot==='function') phaseBoot(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
 if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px'; document.getElementById('app').style.width='min(900px,100dvw)'; resize(); }
 if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
 if(DEBUG&&window.__lord) setInterval(()=>{ const h=B.hero, e=B.en[0]; if(h&&e){ h.atk=Math.max(h.atk,e.maxhp/(e.boss?12:3)); h.maxhp=Math.max(h.maxhp,e.dmg*400); h.hp=h.maxhp; } },200);   /* ?lord=<era>: herói forte, sem stay */
