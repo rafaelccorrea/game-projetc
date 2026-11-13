@@ -2,7 +2,8 @@
 /* TESTE DO ONLINE NA ABERTURA (Engenheiro 12; sem navegador e SEM REDE). Rodar: node test/e2e/online.js [-v]
    Sobe o jogo no sandbox do e2e (partida real do index.html, runBoot) com os módulos REAIS do Servidor (js/sys/net.js + js/sys/online.js), o
    js/onlineboot.js e a tela real js/cloudchoice.js, contra um SERVIDOR DE MENTIRA (fetch falso: toda URL http(s) cai nele; nada sai para a rede).
-   A chave do jogo nasce DESLIGADA (ONLINE_ON = false): os cenários "ligado" usam ?debug=1&online=1.
+   A chave do jogo nasce LIGADA desde a v0.13.0 (ONLINE_ON = true). Os cenários "ligado" usam ?debug=1&online=1 (valem com a chave em qualquer posição);
+   os de "DESLIGADO" desligam de propósito com ?debug=1&online=0 (o mesmo caminho de ONLINE_ON = false: OnlineBoot.state().why = 'off').
    Prova: desligado = nenhuma chamada; servidor mudo = entra em até 4 s com o save local; save da nuvem antes da batalha = grava e recarrega (só
    se o servidor bate); depois da batalha = pendente, aplica na abertura seguinte; escolha Nuvem × Aparelho (com a tela e sem ela); saved() a cada
    save(); Modo dono / __noSave / save de outro servidor nunca; servidor s2 usa as chaves do s2; resumo com a FC real; login Google (3 caminhos).
@@ -42,6 +43,8 @@ function mkServer(o) {
       case 'GET /save/head': return Promise.resolve(sv.cloud ? resp(200, head()) : err(404, 'not_found'));
       case 'GET /save': return Promise.resolve(sv.cloud ? resp(200, Object.assign(head(), { save: sv.cloud.save })) : err(404, 'not_found'));
       case 'PUT /save': { const cur = sv.cloud ? sv.cloud.version : 0; if (body.baseVersion !== cur) return Promise.resolve(err(409, 'save_conflict', { cloud: head() }));
+        /* regra do servidor real (c2bbf7c): save que REGRIDE (nível ou era menores que os da nuvem) sem a marca force → 409 save_regress {cloud} */
+        if (sv.cloud && !body.force && body.summary && sv.cloud.summary && (body.summary.level < sv.cloud.summary.level || body.summary.era < sv.cloud.summary.era)) return Promise.resolve(err(409, 'save_regress', { cloud: head() }));
         /* o servidor real CONFERE era, stage e gems do resumo contra o save enviado (e os 8 números >= 0): o de mentira anota cada divergência */
         { const s = body.summary || {}, v = body.save || {}; PUTS.n++; if (s.era !== v.eraMax || s.stage !== v.stage || s.gems !== v.gems || s.playSeconds !== Math.floor(v.playSeconds || 0) || !['level', 'xp', 'era', 'stage', 'fc', 'gems', 'playSeconds', 'maxRarity'].every(k => typeof s[k] === 'number' && isFinite(s[k]) && s[k] >= 0)) PUTS.bad.push(JSON.stringify(s) + ' × save {eraMax:' + v.eraMax + ', stage:' + v.stage + ', gems:' + v.gems + '}'); }
         sv.cloud = { version: cur + 1, updatedAt: Date.now(), deviceId: body.deviceId, summary: body.summary, save: body.save }; return Promise.resolve(resp(200, { version: cur + 1, updatedAt: sv.cloud.updatedAt })); }
@@ -76,10 +79,17 @@ const SK = 'eras_proto_v2';
 
 (async () => {
   /* ============ 1. DESLIGADO ============ */
-  sec('1. DESLIGADO (chave ONLINE_ON = false)');
-  { const g = game({ search: '?debug=1&skip=1', storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();
+  sec('0. A chave do index na v0.13.0');
+  { const sv = mkServer(); const g = game({ search: '?debug=1&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle(); const st = g.st();
+    check('0. a chave do index nasce LIGADA na v0.13.0 (ONLINE_ON = true) com o endereço certo', g.ev('ONLINE_ON') === true && g.ev('ONLINE_BASE') === 'https://15-229-249-157.sslip.io/v1' && /^v0\.1[3-9]|^v[1-9]/.test(g.ev('VERSION')), g.ev('ONLINE_ON') + ' ' + g.ev('ONLINE_BASE') + ' ' + g.ev('VERSION'));
+    check('0. sem nenhum parâmetro de online o jogo liga sozinho: sessão, save na nuvem, pedidos só para o endereço da chave; Sys.buy continua desligado', st.on && st.booted && st.lastAction === 'push' && sv.count('POST /auth/guest') === 1 && sv.calls.every(c => c.url.indexOf('https://15-229-249-157.sslip.io/v1/') === 0) && g.ev('Sys.buy.DATA.on') === false, JSON.stringify(st) + ' ' + sv.keys().join(','));
+    const o = game({ search: '?debug=1&skip=1', server: mkServer(), storage: { eon_owner_mode: '1', eras_owner_v1: JSON.stringify(mk()) } }); await o.settle();
+    check('0. com a chave ligada o Modo dono continua sem online (why = owner, nenhuma chamada)', o.st().on === false && o.st().why === 'owner' && o.sv.calls.length === 0, JSON.stringify(o.st())); }
+
+  sec('1. DESLIGADO (?debug=1&online=0 = o caminho de ONLINE_ON = false)');
+  { const g = game({ search: '?debug=1&online=0&skip=1', storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();
     check('1. o jogo carregou sem erro (com cloudchoice e onlineboot na lista)', !g.loadErr.length && g.G.lists.jsList.includes('onlineboot') && g.G.lists.jsList.indexOf('cloudchoice') < g.G.lists.jsList.indexOf('onlineboot') && g.G.lists.jsList.indexOf('cloudchoice') >= 0, g.loadErr.join(' | ') + ' ' + g.G.lists.jsList.join(','));
-    check('1. a chave do index nasce DESLIGADA e com o endereço', g.ev('ONLINE_ON') === false && /^https:\/\/.+\/v1$/.test(g.ev('ONLINE_BASE')), g.ev('ONLINE_ON') + ' ' + g.ev('ONLINE_BASE'));
+    check('1. a chave tem o endereço do servidor (https, /v1)', /^https:\/\/.+\/v1$/.test(g.ev('ONLINE_BASE')), String(g.ev('ONLINE_BASE')));
     const st = g.st(); check('1. OnlineBoot.state(): on = false, booted = false, sem pendente', st.on === false && st.booted === false && st.pending === false && st.why === 'off', JSON.stringify(st));
     check('1. Sys.net e Sys.online continuam desligados; Sys.buy não foi tocado', g.ev('Sys.net.DATA.on') === false && g.ev('Sys.online.DATA.on') === false && g.ev('Sys.buy.DATA.on') === false, '');
     g.ev('window.__sv=0; (function(){ const f=Sys.online.saved; Sys.online.saved=function(){ window.__sv++; return f.apply(this,arguments); }; })()');
@@ -90,7 +100,7 @@ const SK = 'eras_proto_v2';
     const r = await g.promise('OnlineBoot.google()')(); check('1. google() desligado devolve {ok:false, reason:"off"} sem travar', r && r.v && r.v.ok === false && r.v.reason === 'off', JSON.stringify(r));
     const rb = await g.promise('OnlineBoot.reboot()')(); check('1. reboot() desligado não chama nada', rb && rb.v && rb.v.ok === false && g.sv.calls.length === 0, JSON.stringify(rb));
     check('1. nenhuma chave nova no aparelho (sem eon.net, sem pendente)', g.ls.getItem('eon.net') == null && g.ls.getItem('eon_cloud_pending@s1') == null, Object.keys(g.snap()).join(',')); }
-  { const g = game({ search: '?debug=1', storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();
+  { const g = game({ search: '?debug=1&online=0', storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();
     check('1. desligado, com a tela de carregamento: nenhuma tarefa "online" na barra (abertura igual à de hoje)', g.ev("Preload.pending.indexOf('online')") === -1 && g.sv.calls.length === 0, String(g.ev('Preload.pending.join("|")')).slice(0, 200)); }
 
   /* ============ 2. LIGADO, SERVIDOR MUDO: entra em até 4 s com o save local ============ */
@@ -101,7 +111,7 @@ const SK = 'eras_proto_v2';
       for (let i = 0; i < 60 * 30 && !fin; i++) { if (i % 12 === 0) { try { G.inCtx(() => G.ev('loadStep')()); } catch (e) {} } try { G.inCtx(() => G.advance(1000 / 30)); } catch (e) {} t += 1 / 30; if (i % 5 === 0) await tick();
         if (hadOnline && onlineDoneAt == null && G.ev("Preload.pending.indexOf('online')") === -1) onlineDoneAt = t; fin = G.ev('LD.fin===true'); }
       return { g, t, fin, onlineDoneAt, hadOnline }; };
-    const off = await run('?debug=1', mkServer());
+    const off = await run('?debug=1&online=0', mkServer());
     const on = await run('?debug=1&online=1', mkServer({ silent: true }));
     check('2. desligado: a carga termina sozinha (referência: ' + off.t.toFixed(1) + ' s virtuais), sem tarefa "online"', off.fin && !off.hadOnline && off.g.sv.calls.length === 0, 'fin ' + off.fin + ' online ' + off.hadOnline);
     check('2. ligado: a barra tem a tarefa "online" e o boot foi disparado (pedido de sessão)', on.hadOnline && on.g.sv.count('POST /auth/guest') === 1, 'online ' + on.hadOnline + ' chamadas ' + on.g.sv.keys().join(','));
@@ -164,7 +174,7 @@ const SK = 'eras_proto_v2';
     const g = game({ search: '?debug=1&online=1', storage: { [SK]: loc, 'eon_cloud_pending@s1': bad } }); await g.settle();
     check('4. pendente de OUTRO servidor na chave: descartado, nada aplicado', g.ls.getItem(SK) !== null && g.stored().gold === 1234 && g.ls.getItem('eon_cloud_pending@s1') == null && !g.reloaded(), ''); }
   { const pend = JSON.stringify({ realm: 's1', at: 1, save: mk({ gold: 7, realm: 's1' }) }), loc = JSON.stringify(mk());
-    const g = game({ search: '?debug=1&skip=1', storage: { [SK]: loc, 'eon_cloud_pending@s1': pend } }); await g.settle();
+    const g = game({ search: '?debug=1&online=0&skip=1', storage: { [SK]: loc, 'eon_cloud_pending@s1': pend } }); await g.settle();
     check('4. com a chave DESLIGADA um pendente antigo não é tocado nem aplicado', g.ls.getItem(SK) && g.ev('S.gold') === 1234 && g.ls.getItem('eon_cloud_pending@s1') === pend && !g.reloaded(), ''); }
 
   /* ============ 5. OS DOIS MUDARAM, SEM A TELA: info.recommend ============ */
@@ -281,7 +291,7 @@ const SK = 'eras_proto_v2';
 
   /* ============ 9b. TEMPO DE JOGO (S.playSeconds) ============ */
   sec('9b. Tempo de jogo');
-  { const sv = mkServer(); const g = game({ search: '?debug=1&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();   /* online DESLIGADO: o contador é do save */
+  { const sv = mkServer(); const g = game({ search: '?debug=1&online=0&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();   /* online DESLIGADO: o contador é do save */
     const T = 1e12, tk = t => g.ev('OnlineBoot.playTick(' + (T + t) + ')'), ps = () => g.ev('S.playSeconds'), vis = v => { g.G.document.visibilityState = v; };
     check('9b. save antigo sem o campo: começa em 0 no resumo', g.ev('OnlineBoot.summary(S).playSeconds') === 0 && (ps() === undefined || ps() === 0), String(ps()));
     vis('visible'); g.ev('B.paused=false'); tk(0); let sum = 0; for (let i = 1; i <= 10; i++) sum += tk(i * 1000);
@@ -334,7 +344,7 @@ const SK = 'eras_proto_v2';
   sec('11. Aparelho sem save × nuvem com progresso');
   { const PROG = () => cloudOf(5, mk({ gold: 777, name: 'DaNuvem', kills: 16, realm: 's1' }), { level: 2, stage: 9 });
     const meta = d => ({ 'eon.net': netMem({ save: { version: 5, dirty: !!d } }) });
-    const g0 = game({ search: '?debug=1' }); g0.ev('save()'); const EMPTY = g0.ls.getItem(SK);   /* save vazio como o jogo grava ao nascer */
+    const g0 = game({ search: '?debug=1&online=0' }); g0.ev('save()'); const EMPTY = g0.ls.getItem(SK);   /* save vazio como o jogo grava ao nascer */
     check('11. (preparo) o save recém-nascido do jogo: sem nome, tut 0, fase 1, sem abates', !!EMPTY && !JSON.parse(EMPTY).name && JSON.parse(EMPTY).stage === 1 && !JSON.parse(EMPTY).kills, String(EMPTY).slice(0, 120));
     const cases = [['SEM save local, sessão guardada {v5, sem mudança}', meta(false)], ['SEM save local, sessão guardada {v5, "mudou"}', meta(true)],
       ['save local VAZIO já gravado, sessão {v5, sem mudança}', Object.assign({ [SK]: EMPTY }, meta(false))], ['save local VAZIO já gravado, sessão {v5, "mudou"}', Object.assign({ [SK]: EMPTY }, meta(true))]];
@@ -358,6 +368,24 @@ const SK = 'eras_proto_v2';
       check('11. depois de recarregar pelo save da nuvem a marca eon_cloud_reload existe (guarda contra laço)...', !!g.ls.getItem('eon_cloud_reload'), '');
       const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
       check('11. ...e a abertura seguinte (que não recarrega) LIMPA a chave eon_cloud_reload; joga com o save da nuvem, nada sobe', g2.ls.getItem('eon_cloud_reload') == null && g2.ev('S.name') === 'DaNuvem' && g2.st().lastAction === 'none' && sv.count('PUT /save') === 0, String(g2.ls.getItem('eon_cloud_reload')) + ' ' + JSON.stringify(g2.st())); } }
+
+  /* ============ 12. APARELHO ATRÁS DA NUVEM (regressão): pergunta; o servidor recusa sem a marca ============ */
+  sec('12. Regressão (save_regress)');
+  { const mkc = () => mkServer({ cloud: cloudOf(5, mk({ gold: 999999, name: 'DaNuvem', realm: 's1' }), { level: 30 }) }), st5 = { 'eon.net': netMem({ save: { version: 5, dirty: true } }) };
+    { const sv = mkc(); const g = game({ search: '?debug=1&online=1', server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, st5) }); await g.settle(); const st = g.st();
+      check('12. aparelho ATRÁS da nuvem (nível 1 × 30), mesma versão e "mudou": NÃO sobe sozinho; abre a tela Nuvem × Aparelho com a nuvem recomendada', st.choosing && sv.count('PUT /save') === 0 && g.ev('CloudChoice._state.info.recommend') === 'cloud', JSON.stringify(st) + ' ' + sv.keys().join(','));
+      g.ev("CloudChoice._click('device'); CloudChoice._click('device')"); await g.settle();
+      check('12. escolha EXPLÍCITA do aparelho: sobe com a marca force e o servidor aceita (versão 6)', sv.count('PUT /save') === 1 && sv.last('PUT /save').body.force === true && sv.cloud.version === 6 && sv.cloud.save.gold === 1234 && g.st().lastAction === 'push', sv.keys().join(',') + ' ' + JSON.stringify(g.st())); }
+    { const sv = mkc(); const g = game({ search: '?debug=1&online=1', server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, st5) }); await g.settle();
+      g.ev("CloudChoice._click('cloud'); CloudChoice._click('cloud')"); await g.settle();
+      check('12. escolha da nuvem: baixa e aplica; nenhum PUT', sv.count('PUT /save') === 0 && g.stored().name === 'DaNuvem' && g.reloaded(), sv.keys().join(',')); }
+    { const sv = mkServer({ cloud: cloudOf(5, mk({ realm: 's1' })) }); const g = game({ server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, { 'eon.net': netMem({ save: { version: 5, dirty: false } }) }) }); await g.settle();
+      sv.cloud.summary.level = 30; sv.cloud.save = mk({ gold: 999999, name: 'DaNuvem', realm: 's1' });   /* a nuvem "andou" sem mudar a versão (pior caso para o cliente) */
+      g.ev('S.gold=9; save()'); await g.adv(61000); const loc = g.stored();
+      check('12. subida periódica que REGRIDE sem a marca: o servidor responde 409 save_regress e a nuvem fica intacta', sv.count('PUT /save') === 1 && !sv.last('PUT /save').body.force && sv.cloud.version === 5 && sv.cloud.save.name === 'DaNuvem', sv.keys().join(',') + ' v' + sv.cloud.version);
+      check('12. ...e o jogo segue sem erro, com o save local gravando', loc.gold === 9 && !g.reloaded() && g.timerErr.length === 0, JSON.stringify(g.timerErr));
+      const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
+      check('12. ...e na abertura seguinte a regressão vira a pergunta (tela Nuvem × Aparelho), sem subir', g2.st().choosing && sv.count('PUT /save') === 1 && sv.cloud.version === 5, JSON.stringify(g2.st()) + ' ' + sv.keys().join(',')); } }
 
   check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
