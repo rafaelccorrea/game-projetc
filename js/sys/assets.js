@@ -15,7 +15,7 @@ const DATA={
   // FICAM no APK os _ref que as telas desenham: assets/pets/<espécie>_ref.png (1º estágio na tela de Pets) e assets/mounts/mount_<id>_ref.png (Códex).
   // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo). EXCEÇÃO: o fundo da tela de carregamento
   // (splash_loading.webp e a reserva .jpg, a659e6d) é a 1ª coisa que o jogador vê: vai no core (pacote base). A PNG 1080x1920 fica só no Android.
-  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\/(?!splash(\/splash_loading\.(webp|jpg))?$)/,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
+  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\/(?!splash(\/splash_loading\.(webp|jpg))?$)/,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i,/\.pre-[^/]*$/i],   // bg/v2/era5 ENTRA (cenário vivo 5-8 ligado); *.pre-* = rascunho da Arte
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
@@ -153,7 +153,15 @@ function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1,
 const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs['mount:'+id]; return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
 /* (1) grupo de entrega e nome do asset pack do Play de um pacote */
 const deliveryOf=id=>DATA.basePacks().includes(id)?'base':DATA.noneIds.includes(id)?'none':DATA.fastFollow().includes(id)?'fast':'demand';
-const apackOf=id=>String(id).replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+/* asset pack do Play (agrupado: limite da Play é 100 e o PO aprovou ~28; o script do Android aceita vários pacotes no mesmo apack):
+   base (APK) · era_N (era:N + enemy:N + gun:N) · pet_<espécie> (os 3 estágios) · ults_lendarias (todas as ult:*) · skins (todas as skin:*) · mount_<id> · weapon_<tipo> */
+const apackOf=id=>{ const s=String(id); let m;
+  if(DATA.basePacks().includes(s)) return 'base';
+  if((m=/^(?:era|enemy|gun):(\d)$/.exec(s))) return 'era_'+m[1];
+  if((m=/^pet:([a-z0-9_]+):\d$/.exec(s))) return 'pet_'+m[1].replace(/^pet_/,'');
+  if(/^ult:/.test(s)) return 'ults_lendarias';
+  if(/^skin:/.test(s)) return 'skins';
+  return s.replace(/[^a-z0-9]+/gi,'_').toLowerCase(); };
 const API={DATA,deliveryOf,apackOf,setInstalled,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
