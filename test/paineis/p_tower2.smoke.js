@@ -104,8 +104,16 @@ sane('depois da derrota'); out.push('derrota: gasta 1 tentativa, sem prêmio, fr
 // 5) sem tentativa: o botão explica e NÃO chama o módulo
 st().lossesLeft = 0; open(); has('Sem tentativas hoje'); has('aria-disabled="true"'); has('derrotas<b>0/'); { const f0 = fights, n0 = st().fights; def.click(btn('go'));
   assert.strictEqual(fights, f0, 'sem tentativa não chama o módulo'); assert.strictEqual(st().fights, n0); assert(/Sem tentativas hoje/.test(X.toast)); assert(els.t2_toast.innerHTML.includes('Sem tentativas hoje'), 'aviso na tela');
-  assert(/top:\d+px/.test(els.t2_toast.innerHTML) && +/top:(\d+)px/.exec(els.t2_toast.innerHTML)[1] >= 164, 'o aviso fica abaixo do palco (não cobre o herói)'); assert.strictEqual(def.busy(), false); }
-sane('sem tentativa'); T.fight = fight0; out.push('sem tentativa: avisa abaixo do palco e não luta');
+  assert(/top:\d+px/.test(els.t2_toast.innerHTML) && +/top:(\d+)px/.exec(els.t2_toast.innerHTML)[1] >= 164, 'o aviso fica abaixo do palco (não cobre o herói)'); assert.strictEqual(def.busy(), false);
+  // QA lote V2 (C1): diz QUANDO volta. O Sys.tower devolve as tentativas na virada do dia (ensure com o host) e não oferece relógio de contagem:
+  // o texto é o da Arena, "recarrega à meia-noite", no botão, no aviso, no rótulo falado e na dica
+  has('Sem tentativas hoje<small>recarrega à meia-noite</small>'); has(', recarrega à meia-noite"'); has('por dia'); assert(/por dia[^<]*; recarrega à meia-noite\./.test(H()), 'a dica diz quando recarrega');
+  assert.strictEqual(X.toast, 'Sem tentativas hoje: recarrega à meia-noite'); assert(els.t2_toast.innerHTML.includes('recarrega à meia-noite')); assert(!/voltam amanhã/.test(SRC), 'o texto vago saiu');
+  assert(/Sem lutas hoje: recarrega à meia-noite/.test(fs.readFileSync(path.join(R, 'js/p_arena.js'), 'utf8')), 'mesmo texto da Arena');
+  assert(!Object.keys(T).some(k => /reset|until|countdown|dayleft|nextday|recharge/i.test(k)), 'o Sys.tower ganhou relógio de recarga: troque o texto fixo por ele');
+  const o = st(); o.lossesLeft = 0; o.day = '1999-01-01'; assert.strictEqual(st().lossesLeft, T.DATA.lossesPerDay, 'a regra do módulo: virou o dia, as tentativas voltam todas');
+  open(); has('>Desafiar<'); not('recarrega à meia-noite</small>'); st().lossesLeft = 0; open(); }
+sane('sem tentativa'); T.fight = fight0; out.push('sem tentativa: avisa abaixo do palco, não luta e diz quando volta ("recarrega à meia-noite", a virada de dia do Sys.tower)');
 
 // 6) VIP de conveniência: as tentativas a mais vêm do Sys.vip
 st().best = 0; Sys.vip.setLevel(g.S, 5); { const mx = T.DATA.lossesPerDay + Sys.vip.conv(g.S, 'towerAdd').value; st().lossesLeft = mx; open(); has('derrotas<b>' + mx + '/' + mx + '</b>'); assert.strictEqual(mx, T.DATA.lossesPerDay + 1); } Sys.vip.setLevel(g.S, 0); sane('vip');
@@ -144,6 +152,24 @@ out.push('sem o Sys.tower: aviso e Voltar');
 g.S = newSave(); setLv(60); weak(); let taps = 0; open(); for (const b of buttons()) { open(); try { def.click(b); flush(); taps++; } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } sane('toque ' + b.dataset.x); }
 def.tick(); def.onClose(); assert.strictEqual(def.busy(), false);
 out.push('toques: ' + taps + ' botões tocados sem exceção');
+
+// 11b) QA lote V2 (C2): o selo global de ganho de FC ("+124 mil", #fcnote do index.html, fixo perto do topo) não fica em cima dos lutadores: com a Torre V2
+// aberta (body[data-v="tower2"]) a folha de estilo desta tela o manda para a base da tela. O palco só tem o canvas e as barras de vida; nada de FC ganha nele.
+{ const CSS = g.document.head.children.map(c => c.textContent).join('\n'), m = /\nbody\[data-v="tower2"\] #fcnote\{([^}]*)\}/.exec(CSS); assert(m, 'regra que tira o selo de FC de cima do palco');
+  assert(/top:auto!important/.test(m[1]) && /bottom:[^;]+!important/.test(m[1]), 'o selo vai para a base (o estilo do index é inline: precisa de !important)');
+  const IDX = fs.readFileSync(path.join(R, 'index.html'), 'utf8'); assert(/el\.id='fcnote'/.test(IDX) && /position:fixed;left:50%;top:calc\(var\(--fbsafe,0px\) \+ 132px\)[^"]*pointer-events:none/.test(IDX), 'o selo do index ainda é o #fcnote fixo no topo e não segura toque');
+  assert(/document\.body\.dataset\.v=v/.test(IDX), 'o setView marca a tela aberta no body (data-v)');
+  g.S = newSave(); setLv(60); strong(); open(); const h = H(), a = h.indexOf('<div class="t2-stage"'), b = h.indexOf('<div class="t2-fl'); assert(a > 0 && b > a);
+  assert(/^<div class="t2-stage" style="height:\d+px"><canvas id="t2_stc"[^>]*><\/canvas><div id="t2_ov"><\/div><\/div>$/.test(h.slice(a, b)), 'antes da luta o palco só tem o canvas: nenhum selo por cima do herói e do fantasma');
+  out.push('selo de FC: fora de cima dos lutadores (regra body[data-v="tower2"] #fcnote manda para a base); palco sem selo'); weak(); }
+// 11c) QA lote V2 (C3): "Próximos andares" igual ao protótipo docs/proto/v2/Torre.html. O protótipo é DECRESCENTE na tela (lista montada do próximo para cima
+// e empilhada de baixo para cima, column-reverse: o próximo andar fica embaixo, como numa torre). A tela mantém a mesma ordem.
+{ const PROTO = fs.readFileSync(path.join(R, 'docs/proto/v2/Torre.html'), 'utf8'), CSS = g.document.head.children.map(c => c.textContent).join('\n');
+  assert(/\.tw\{display:flex;flex-direction:column-reverse/.test(PROTO) && /for\(let i=f;i<f\+10;i\+\+\)/.test(PROTO), 'protótipo: lista do próximo para cima, empilhada ao contrário (decrescente na tela)');
+  assert(/\n\.t2-tw\{display:flex;flex-direction:column-reverse/.test(CSS), 'a tela empilha igual ao protótipo');
+  g.S = newSave(); setLv(60); st().best = 16; open(); const ns = [...H().matchAll(/<span class="n lil">(\d+)<\/span>/g)].map(x => +x[1]);
+  assert.deepStrictEqual(ns, [17, 18, 19, 20, 21, 22, 23, 24, 25, 26], 'no HTML: do próximo andar para cima (na tela, de baixo para cima)'); assert(/class="t2-fr now[^"]*"><span class="n lil">17</.test(H()), 'o próximo andar é o destacado');
+  out.push('próximos andares: mesma ordem do protótipo (decrescente na tela, o próximo embaixo e destacado)'); }
 
 // 12) toda imagem citada existe em disco
 for (const u of Object.values(g.Tower2.IC)) imgs.add(u); for (let e = 0; e < T.DATA.skin.eras; e++) imgs.add('assets/enemies/era' + e + '_boss.png');

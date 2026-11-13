@@ -60,6 +60,13 @@ const petImg=d=>d&&d.sprite?'assets/icons/pets/'+d.sprite+'_ref.png':IC.egg;
 function pendingPick(){ try{ const P=Sys.pet; if(!P||typeof P.chooseEgg!=='function') return null; const ch=P.ensure(S).choices; if(!Array.isArray(ch)) return null;
     for(let i=0;i<ch.length;i++){ const c=ch[i]; if(c&&c.source==='tower100'&&Array.isArray(c.options)&&c.options.length) return {i:i,options:c.options.slice()}; } }catch(e){} return null; }
 
+/* QUANDO AS TENTATIVAS VOLTAM: o Sys.tower.ensure devolve todas na virada do dia (dayKey do Sys.clock, ou a data local sem ele). O módulo não oferece
+   relógio de contagem; por isso o texto é o mesmo da Arena (js/p_arena.js): "recarrega à meia-noite". Nenhuma regra nova aqui. */
+const RECH='recarrega à meia-noite', NO_TRY='Sem tentativas hoje: '+RECH;
+/* SELO GLOBAL DE GANHO DE FC ("+124 mil", #fcnote do index.html, fixo a 132 px do topo): nesta tela ele cairia em cima da cabeça do herói e do adversário.
+   Enquanto a Torre V2 está aberta (body[data-v="tower2"], posto pelo setView) a folha de estilo acima o manda para a base da tela, abaixo do palco e do
+   cartão do andar, por cima só da lista (ele não segura toque). */
+
 /* ---------- imagens (só as que já existem no jogo) ---------- */
 const IC={coin:'assets/ui/coin.png',gem:'assets/ui/gem.png',forge:'assets/icons/menu/forge.png',egg:'assets/icons/pets/pet_egg.png',tower:'assets/icons/menu/tower.png'};
 const ic=(u,z)=>'<img src="'+u+'" alt="" style="width:'+(z||18)+'px;height:'+(z||18)+'px">';
@@ -89,6 +96,8 @@ const ic=(u,z)=>'<img src="'+u+'" alt="" style="width:'+(z||18)+'px;height:'+(z|
 @keyframes t2-pop{0%{opacity:0;transform:scale(.5)}70%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
 .t2-bt,.xs .t2-bt{flex:1;min-width:0;min-height:44px;padding:4px 10px;border-radius:11px;border:0;font-weight:900;font-size:14px;line-height:1.15;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:#1c1206;box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-align:center;overflow-wrap:anywhere}
 .t2-bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.t2-bt small{display:block;font-size:10.5px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+body[data-v="tower2"] #fcnote{top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 14px)!important}
 .t2-bt.off,.xs .t2-bt.off{background:rgba(255,255,255,.06);color:#9aa6d6;box-shadow:none;border:1px solid rgba(130,150,255,.28)}
 .t2-bt.ghost,.xs .t2-bt.ghost{background:rgba(255,255,255,.08);color:#eef1ff;box-shadow:none;border:1px solid rgba(160,180,255,.5)}
 .t2-fl{position:relative;z-index:3;flex:none;margin:4px 12px 0;padding:9px 10px;border-radius:16px;background:linear-gradient(160deg,rgba(169,123,255,.2),rgba(24,33,86,.94) 60%);border:2px solid rgba(169,123,255,.55);min-width:0}
@@ -231,8 +240,8 @@ function floorHtml(f,me,left,max,busy){ const T=TW(), opp=T.opponent(f), boss=op
     +'<span class="t2-dif '+esc2(dif.id)+'">'+esc2(dif.txt)+'</span></div>'
     +'<div class="t2-vs"><span>Você<b>'+esc2(fcT(me.fc))+'</b></span><i class="lil">VS</i><span>Andar '+nT(f)+'<b>'+esc2(fcT(opp.fc))+'</b></span></div>'
     +'<div class="t2-rws" aria-label="Prêmios do andar '+nT(f)+'">'+chips(rw)+'</div>'
-    +'<div class="t2-row"><button class="t2-bt'+(can?'':' off')+'" data-x="go" aria-disabled="'+(!can)+'">'+(busy?'Lutando...':left>0?'Desafiar':'Sem tentativas hoje')+'</button>'
-    +'<span class="t2-tries" role="img" aria-label="Derrotas que ainda pode ter hoje: '+nT(left)+' de '+nT(max)+'">derrotas<b>'+nT(left)+'/'+nT(max)+'</b></span></div>'
+    +'<div class="t2-row"><button class="t2-bt'+(can?'':' off')+'" data-x="go" aria-disabled="'+(!can)+'">'+(busy?'Lutando...':left>0?'Desafiar':'<span>Sem tentativas hoje<small>'+RECH+'</small></span>')+'</button>'
+    +'<span class="t2-tries" role="img" aria-label="Derrotas que ainda pode ter hoje: '+nT(left)+' de '+nT(max)+(left>0?'':', '+RECH)+'">derrotas<b>'+nT(left)+'/'+nT(max)+'</b></span></div>'
     +(busy?'':resHtml(X.res))+'</div>'; }
 function bodyHtml(best,max){ const T=TW(), D=T.DATA, f=best+1, Y=window.Sys||{}, per=perFloor(); let rows='', b=0; try{ b=num(T.bonus(S).atkPct); }catch(e){}
   for(let i=f;i<f+ROWS;i++){ const o=T.opponent(i), rw=T.rewardsFor(i,host(),S), tg=[]; if(o.kind==='boss') tg.push('<span class="b">CHEFE</span>'); if(rw.egg&&Y.pet) tg.push('<span class="e">OVO</span>'); if(T.isMilestone(i)) tg.push('<span class="m">MARCO</span>');
@@ -240,7 +249,7 @@ function bodyHtml(best,max){ const T=TW(), D=T.DATA, f=best+1, Y=window.Sys||{},
   const vs=vipSteps();
   return '<div class="t2-bon"><b class="lil">+'+pcT(b)+'</b><span><em>ATQ e VIDA para sempre</em> '+(best===1?'pelo andar vencido':'pelos '+nT(best)+' andares vencidos')+(per?' (+'+pcT(per)+' cada)':'')+'</span></div>'
     +'<div class="t2-sec"><span>Próximos andares</span><span>chefe a cada '+nT(D.bossEvery)+'</span></div><div class="t2-tw">'+rows+'</div>'
-    +'<p class="t2-hint">Só a derrota gasta tentativa: '+nT(max)+' por dia'+(vs.length?' ('+esc2(vs.join('; '))+')':'')+'. Vencer não gasta nada, então dá para subir vários andares no mesmo dia.</p>'; }
+    +'<p class="t2-hint">Só a derrota gasta tentativa: '+nT(max)+' por dia'+(vs.length?' ('+esc2(vs.join('; '))+')':'')+'; '+RECH+'. Vencer não gasta nada, então dá para subir vários andares no mesmo dia.</p>'; }
 function ovHtml(){ const F=X.fight; if(!F) return '';
   let h='<div class="t2-hp l"><b>'+esc2(heroName())+' · FC '+esc2(fcT(F.meFc))+'</b><div class="t2-hpb"><i id="t2_hpa" style="width:'+(c01(F.hpA)*100).toFixed(1)+'%"></i></div></div>'
     +'<div class="t2-hp r"><b>'+esc2(F.name)+'</b><div class="t2-hpb"><i id="t2_hpb" style="width:'+(c01(F.hpB)*100).toFixed(1)+'%"></i></div></div>';
@@ -294,9 +303,9 @@ function play(F){ const log=F.log, gap=Math.max(60,Math.min(220,3200/Math.max(1,
     X.timer=setTimeout(step,gap); };
   X.timer=setTimeout(step,gap); }
 function challenge(){ if(X.busy||!tOk()) return; const T=TW(), o=st();
-  if(o.lossesLeft<=0){ sfx('ui_tap'); say('Sem tentativas hoje. Elas voltam amanhã'); return; }
+  if(o.lossesLeft<=0){ sfx('ui_tap'); say(NO_TRY); return; }
   const best0=o.best, left0=o.lossesLeft; let r=null; try{ r=T.fight(S,host()); }catch(e){ r=null; }
-  if(!r||!r.ok){ sfx('ui_tap'); say(r&&r.reason==='locked'?'A Torre libera no nível '+(r.level||'?'):r&&r.reason==='tries'?'Sem tentativas hoje. Elas voltam amanhã':'Não foi possível desafiar agora'); redraw(); return; }
+  if(!r||!r.ok){ sfx('ui_tap'); say(r&&r.reason==='locked'?'A Torre libera no nível '+(r.level||'?'):r&&r.reason==='tries'?NO_TRY:'Não foi possível desafiar agora'); redraw(); return; }
   /* a vitória ou a derrota e os prêmios JÁ estão no save: grava agora, mesmo que o jogador saia antes do fim da animação */
   call(typeof statsChanged==='function'?statsChanged:typeof save==='function'?save:null);
   clearTimeout(X.timer); clearTimeout(X.hold); X.fx=[]; X.res=null; X.pick=false;

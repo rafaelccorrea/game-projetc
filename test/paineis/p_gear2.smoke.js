@@ -194,4 +194,46 @@ out.push('Forja e Aparência: Panels.open com volta para o Equipamento; chave de
       try { def.click(b); taps++; sane('toque ' + b.dataset.x); for (const b2 of buttons().filter(q => ['undo', 'askno', 'close', 'pvout', 'up'].includes(q.dataset.x)).slice(0, 3)) { def.click(b2); taps++; sane('toque ' + b.dataset.x + ' > ' + b2.dataset.x); } } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } } }
   dims = {}; def.tick(); def.onClose(); assert.strictEqual(def.busy(), false); for (const s in g.S.eq) assert(item(g.S.eq[s]), 'nenhum espaço aponta para peça que saiu');
   out.push('toques: ' + taps + ' toques nas 8 abas (390 e 320 px) sem exceção, tela sempre íntegra; ' + seen.size + ' imagens citadas, todas em disco'); }
+
+// 11) QA lote V2 (B1, B2), 320 px: nenhum rótulo cortado com reticências. A folha de estilo não tem text-overflow:ellipsis em lugar nenhum; todo texto variável
+// quebra linha; as 8 abas ficam em duas fileiras de 4, crescem com o texto (min-height 40 px) e em tela estreita usam fonte de 10 px com ponto de quebra
+{ const CSS = g.document.head.children.map(c => c.textContent).join('\n');
+  const rule = sel => { const i = CSS.indexOf('\n' + sel + '{'); assert(i >= 0, 'regra de estilo ausente: ' + sel); return CSS.slice(i + 1, CSS.indexOf('}', i) + 1); };
+  assert(!/text-overflow/.test(CSS) && !/text-overflow/.test(SRC), 'nenhuma regra corta texto com reticências');
+  for (const sel of ['.g2-who span', '.g2-slot .sl', '.g2-fcb b', '.g2-bt span', '.g2-bt small', '.g2-dn', '.g2-dh', '.g2-vs b', '.g2-vs em', '.g2-sts small', '.g2-sts b', '.g2-sts em', '.g2-tab', '.g2-fb b', '.g2-cn', '.g2-row b']) { const r = rule(sel);
+    assert(/white-space:normal/.test(r) && /overflow-wrap:anywhere/.test(r), sel + ': quebra linha'); assert(!/nowrap|overflow:hidden/.test(r), sel + ': não corta'); }
+  // o que sobrou com nowrap: só números curtos da FC (linha que quebra entre eles) e o "+FC" que sobe; nenhum com overflow escondido
+  const nw = [...CSS.matchAll(/\n([^{\n]+)\{[^}]*white-space:nowrap[^}]*\}/g)].map(m => m[1]); assert.deepStrictEqual(nw.sort(), ['.g2-cmp .a', '.g2-cmp .b', '.g2-cmp .d', '.g2-fly'], 'nowrap só em número curto: ' + nw);
+  for (const m of CSS.matchAll(/\n[^{\n]+\{[^}]*white-space:nowrap[^}]*\}/g)) assert(!/overflow:hidden/.test(m[0]), 'nowrap sem corte: ' + m[0]);
+  const tab = rule('.g2-tab'), nar = rule('.g2-tabs.nar .g2-tab'); assert(/min-height:40px/.test(tab) && !/[;{]height:/.test(tab), 'aba: toque de 40 px e cresce com o texto');
+  assert(/font-size:11px/.test(tab) && /font-size:10px/.test(nar), 'aba em tela estreita: fonte de 10 px (o mínimo)'); assert(/repeat\(4,minmax\(0,1fr\)\)/.test(rule('.g2-tabs')), '8 abas em duas fileiras de 4, sem rolagem lateral');
+  assert(!/[;{]height:/.test(rule('.g2-who')) && /min-height:40px/.test(rule('button.g2-who')), 'a faixa do herói cresce com o texto; o botão Sair mantém 40 px');
+  assert(/min-height:44px/.test(rule('.g2-bt')) && /min-height:40px/.test(rule('.g2-fb')) && /width:40px;height:40px/.test(rule('.g2-dx')), 'toque mínimo mantido');
+  dims = { H: 584, Wb: 320 }; def.onOpen({ slot: 'weapon' }); def.render(); assert(X.sel != null, 'arma em uso selecionada');
+  has('class="g2-tabs nar"'); assert.strictEqual((H().match(/role="tab"/g) || []).length, 8); for (const t of ['Equipa&shy;mento', 'Consu&shy;míveis', 'Monta&shy;rias', 'Mate&shy;riais', '>Armas<', '>Asas<', '>Pets<', '>Skins<']) has(t);
+  for (const lab of ['Armas', 'Equipamento', 'Asas', 'Pets', 'Montarias', 'Skins', 'Materiais', 'Consumíveis']) has('aria-label="' + lab + '"');
+  const dh = (/<div class="g2-dh">(.*?)<\/div>/.exec(H()) || [])[1] || ''; assert(/ · Nv\. \d+ · .+ · Forja \+\d+ · <b>usando<\/b>/.test(dh), 'linha do detalhe inteira no HTML (quebra em duas linhas pelo estilo): ' + dh);
+  assert(!/…|\.\.\.<|style="[^"]*(ellipsis|nowrap)/.test(H()), 'nenhuma reticência escrita nem estilo de corte na própria marca'); sane('320 px sem reticências');
+  dims = {}; def.render(); not('g2-tabs nar'); has('class="g2-tabs"'); def.onClose();
+  out.push('320 px: zero text-overflow no arquivo; abas (10 px, ponto de quebra, min-height 40), linha do detalhe, nomes, botões, células e filtros quebram linha'); }
+
+// 12) QA lote V2 (B3): o botão da Forja com o js/panels.js DE VERDADE (num contexto à parte). Com PANEL_ON.forge2 ligada abre a forge2 e o Voltar dela
+// (Screens.close) devolve à gear2; com a forge2 desligada abre a Forja de hoje ('forge') e a volta também cai na gear2. Nenhuma chave é mudada em arquivo.
+{ const PSRC = fs.readFileSync(path.join(R, 'js/panels.js'), 'utf8'); assert(/v2:\{[^}]*forge:'forge2'/.test(PSRC), 'o mapa Panels.v2 leva forge para forge2');
+  assert(/a==='back'\)\{[^}]*Screens\.close\(\)/.test(fs.readFileSync(path.join(R, 'js/p_forge2.js'), 'utf8')), 'o Voltar da forge2 passa pelo Screens.close');
+  const mk = on => { const sb = { PANEL_ON: { gear2: true, forge: true, forge2: on } }; sb.window = sb; vm.createContext(sb);
+    vm.runInContext("var view='gear2', trail=[], got=[]; function setView(v){ view=v; trail.push(v); } var Screens={ open:function(n,o){ setView(n); return true; }, close:function(){ setView('battle'); } };", sb);
+    vm.runInContext(PSRC, sb, { filename: 'panels.js' });
+    vm.runInContext("Panels.add('gear2',{title:'Equipamento'}); ['forge','forge2'].forEach(function(n){ Panels.add(n,{title:'Forja',parent:'gear',onOpen:function(o){ got.push([n,o]); }}); }); var P=Panels;", sb); return sb; };
+  const open0 = g.Panels.open; setLv(60); dims = {};
+  try { for (const on of [true, false]) { const sb = mk(on), want = on ? 'forge2' : 'forge'; g.Panels.open = (n, o) => sb.P.open(n, o);
+      def.onOpen({ tab: 'gear' }); def.render(); X.toast = ''; def.click(btn('forge', { slot: 'armor' }));
+      assert.strictEqual(sb.view, want, 'forge2 ' + (on ? 'ligada' : 'desligada') + ': abre ' + want); assert.strictEqual(sb.got.length, 1); assert.strictEqual(sb.got[0][0], want); assert.strictEqual(sb.got[0][1].slot, 'armor'); assert.strictEqual(sb.got[0][1].from, 'gear2'); assert.strictEqual(X.toast, '', 'sem "em breve"');
+      sb.Screens.close(); assert.strictEqual(sb.view, 'gear2', 'forge2 ' + (on ? 'ligada' : 'desligada') + ': o Voltar devolve à gear2 (não à batalha nem ao Equipamento antigo)'); assert.deepStrictEqual([...sb.trail], [want, 'gear2']);
+      // o botão pequeno "Forja" da faixa da FC (sem espaço escolhido) segue a mesma rota
+      def.click(btn('forge')); assert.strictEqual(sb.view, want); sb.Screens.close(); assert.strictEqual(sb.view, 'gear2'); }
+    // forge2 E forge desligadas: nada abre e a tela diz "em breve"
+    const sb = mk(false); sb.PANEL_ON.forge = false; g.Panels.open = (n, o) => sb.P.open(n, o); def.click(btn('forge')); assert.strictEqual(sb.view, 'gear2'); assert(/Forja: em breve/.test(X.toast));
+  } finally { g.Panels.open = open0; }
+  def.onClose(); out.push('Forja pela rota real (js/panels.js): forge2 ligada abre a forge2, desligada abre a Forja de hoje; nos dois casos o Voltar devolve à gear2'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');
