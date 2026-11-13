@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **16h · Para você ver/votar agora:** TELA 21 PERFIL REFEITA (https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc), funcionando como no jogo, com o voto na própria página. Página de aprovação da arte: https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19 · Canvas das telas antigas: https://claude.ai/artifact/PkyVkM4ZUtaob6Nursh6ba
+- **16h · Modo dono: LIBERAR TUDO e RECURSOS INFINITOS prontos no código (734d28f; o QA confere no navegador).** No jogo: MENU → Teste → Modo dono. Mochila nova e escolha de servidor prontas (57a9f48), esperando o print para o voto. Compra simulada pronta (9b342c6)
+- **16h · Seus 4 pontos da v0.12.9 em correção:** força-tarefa de desempenho (medindo os piores quadros antes de corrigir), tela inicial animada, Bem-vindo que aparecia na conta nova, arma de pedra com quadros de revólver (varredura de todas as armas × poses). Atenção: desinstalar apaga o save do celular; na próxima, instale por cima
+- **16h · Drop repetido no chefe:** o sorteio é aleatório, mas cada peça tem um visual só por raridade e era; no começo quase tudo sai Raro da mesma era e parece "sempre o mesmo". A Sistemas está simulando 200 chefes na sua fase e vai pôr um anti-repetição (sem mudar a curva de 6 meses)
+- **16h · Servidor:** HTTPS no ar (https://15-229-249-157.sslip.io); falta só a senha do banco, pelo script que você mesmo roda (passo a passo na seção A)
+
 - **15h45 · VÁRIOS SERVIDORES (sua decisão):** este é o **S1 · Nova Era**; depois vêm S2, S3..., cada um separado, para jogadores novos. A sua conta Google vale em todos, mas o personagem é de cada servidor e nada passa entre eles (itens, ouro, diamantes, inclusive os comprados). Ranking, Arena, guilda, chat, leilão e eventos são de cada servidor. Abrir um servidor novo não custa máquina nova: é só um cadastro. O Servidor já põe isso no banco agora, antes de entrarem dados; a Sistemas faz a tela de escolha de servidor (depois do Login)
 
 - **15h35 · SERVIDOR NO AR: em andamento (seu pedido).** O Servidor usa um endereço grátis que aponta para a máquina da AWS (15-229-249-157.sslip.io) com HTTPS, então você não precisa comprar domínio agora. A única coisa sua: colar a senha do banco Supabase num comando que você mesmo roda (eu te mando o passo a passo em 3 linhas; a senha não passa por nós). Depois: login Google, save na nuvem, correio e ranking testados contra o servidor real, e a PRÓXIMA APK sai com o online ligado. Compras de verdade ficam desligadas até os produtos no Play Console
@@ -328,7 +334,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] APK v0.12.9 instalado no S24 (save mantido). Jogue e me diga o que achar
 
 **Servidor (para ligar o online):**
-- [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
+- [ ] Senha do banco: (a) Supabase → seu projeto → botão Connect → aba Session pooler → copiar a URI e trocar [YOUR-PASSWORD] pela senha; Project Settings → Database → SSL Configuration → Download certificate. (b) Abrir o PowerShell e rodar: powershell -ExecutionPolicy Bypass -File C:UsersafaeDesktopps-serverdeploydefinir-banco.ps1 (c) Colar a URI (não aparece na tela), Enter no certificado. No fim aparece PRONTO
 - [x] Domínio: não precisa agora (usamos 15-229-249-157.sslip.io com HTTPS; troca quando você tiver um)
 - [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
 - [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
