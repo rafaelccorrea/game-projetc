@@ -135,6 +135,17 @@ Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do se
   Recusa do retrato: `422 snapshot_mismatch` com `details: {reason: "fc", serverFc, sentFc}`. Placar em memória até o PgArenaStore.
 - Erros: `400 no_snapshot`, `400 bad_request` (`reason: "self"`), `429 arena_limit` (`reason: "refresh"` ou com `retryAfterMs` até a meia-noite), `400 week_open` (fechamento).
 
+### 4.1 Luta nova da Arena (13/11; fps-server, contrato com o Engenheiro e a Sistemas 53409f3)
+- **POST /arena/snapshot** aceita também ,  e . Nada disso entra na FC: a conferência de ±1% continua só nos atributos.
+  -  = , com ids . O servidor limpa: id inválido vira null, número sai do intervalo vira o limite, campo desconhecido some. O retrato nunca é recusado por causa da aparência.
+  -  = nível do jogador.
+  -  = parte do ATQ que vem do pet (0..0,9; o mesmo  do jogo).
+- **GET /arena/opponents**: cada adversário traz  e . O real vem com a foto dele; o bot, com  pelo nível (nível do jogador ± ). Retrato sem  = bots com , como antes.
+- **POST /arena/fight**: a luta é  (me × (me, FC do defensor)), com o  de cada retrato; para o bot, a regra do jogo (com pet no look = o mesmo do atacante, senão 0). Cada entrada do  traz  e . A resposta ganha dois campos:
+  - , para desenhar o oponente;
+  -  (): o servidor decide  (1ª vitória do dia) e  (n-ésima luta do dia) pela contagem dele; o ouro é  × o  do jogo (só o jogo sabe). **O servidor não credita nada**: o jogo credita pelo host, uma vez.
+- Robô e jogador real: os mesmos campos.
+
 ## 5. CHAT (WebSocket) — ponto 5
 - Gateway Socket.IO no caminho `/chat`, com o access token no `auth` do handshake. Token vencido: o servidor manda o evento `auth_expired`, e o cliente renova o token e reconecta.
 - Canais: `world` e `era:<n>` (a era liberada do jogador; o servidor confere pelo save).
