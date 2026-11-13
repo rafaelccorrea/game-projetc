@@ -137,7 +137,8 @@ DATA.hookProposal={offer:{kael:'kael_ninja',kaia:'kaia_ninja'},pass:{kael:'kael_
 DATA.skinsOn=false;
 DATA.offerSkin={kael:'kael_ninja',kaia:'kaia_ninja'}; DATA.passSkin={kael:'kael_angel',kaia:'kaia_angel'};
 for(const k of [
-  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward']},
+  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'],
+   dir:'assets/anim/skins/kael_demon', avatar:'kael_demon', art:true, families:[]},   // ARTE ENTREGUE (e6800d4); arco/bumerangue por código
   {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass']},
   {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_paladin'},
   {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer']},
