@@ -1,5 +1,5 @@
 {
- "gerado": "2026-11-13T13:31:25.961Z",
+ "gerado": "2026-11-13T13:50:07.033Z",
  "origem": "http://127.0.0.4:8080",
  "tamanhos": [
   [
@@ -14,16 +14,6 @@
    "h": 780,
    "print": "reports/resp/batalha_360.png",
    "defeitos": [
-    {
-     "tipo": "barra-de-status",
-     "el": "span#fb_ring \"Nv. 1\"",
-     "detalhe": "topo a 9px (área do entalhe)"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span#fb_lv \"Nv. 1\"",
-     "detalhe": "35x17"
-    },
     {
      "tipo": "botao-pequeno",
      "el": "button#fb_goldp \"999 bi+\"",
@@ -40,46 +30,6 @@
      "detalhe": "35x35"
     },
     {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "3x5"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "3x5"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "3x11"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.fb-mgrid",
-     "detalhe": "20x20"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "8x8"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "8x8"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "8x8"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "i",
-     "detalhe": "8x8"
-    },
-    {
      "tipo": "letra-pequena",
      "el": "span.fb-lb \"Menu\"",
      "detalhe": "10.5px"
@@ -93,31 +43,6 @@
      "tipo": "letra-pequena",
      "el": "span.fb-novo \"NOVO!\"",
      "detalhe": "9.5px"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.fb-novo \"NOVO!\"",
-     "detalhe": "42x14"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "img",
-     "detalhe": "30x28"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span",
-     "detalhe": "24x4"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span#fb_chp",
-     "detalhe": "24x4"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span#fb_bc \"3\"",
-     "detalhe": "18x18"
     },
     {
      "tipo": "letra-pequena",
@@ -142,163 +67,241 @@
    ]
   },
   {
-   "tela": "tela_cfg",
+   "tela": "tela_forge",
    "w": 360,
    "h": 780,
-   "print": "reports/resp/tela_cfg_360.png",
+   "print": "reports/resp/tela_forge_360.png",
    "defeitos": [
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.c-knob",
-     "detalhe": "24x24"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.c-knob",
-     "detalhe": "24x24"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.c-knob",
-     "detalhe": "24x24"
-    },
     {
      "tipo": "barra-de-status",
      "el": "button#fb_x \"Voltar\"",
      "detalhe": "topo a 6px (área do entalhe)"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "polyline",
-     "detalhe": "5x10"
     }
    ]
+  },
+  {
+   "tela": "tela_realm",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_cfg",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
   },
   {
    "tela": "tela_vip",
    "w": 360,
    "h": 780,
-   "print": "reports/resp/tela_vip_360.png",
-   "defeitos": [
-    {
-     "tipo": "fora-da-tela",
-     "el": "div.pv-rays",
-     "detalhe": "left -60 right 258 (largura 360)"
-    },
-    {
-     "tipo": "letra-pequena",
-     "el": "span \"x1 (x2 no nível 15)\"",
-     "detalhe": "10.0px"
-    },
-    {
-     "tipo": "letra-pequena",
-     "el": "span.pv-new \"NOVO\"",
-     "detalhe": "9.0px"
-    },
-    {
-     "tipo": "letra-pequena",
-     "el": "span.pv-new \"NOVO\"",
-     "detalhe": "9.0px"
-    },
-    {
-     "tipo": "letra-pequena",
-     "el": "span.pv-new \"NOVO\"",
-     "detalhe": "9.0px"
-    },
-    {
-     "tipo": "letra-pequena",
-     "el": "span.pv-new \"NOVO\"",
-     "detalhe": "9.0px"
-    },
-    {
-     "tipo": "barra-de-status",
-     "el": "button#fb_x \"Voltar\"",
-     "detalhe": "topo a 6px (área do entalhe)"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "polyline",
-     "detalhe": "5x10"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"Ouro e XP\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"—\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"—\"",
-     "detalhe": "cobre span \"Ir à Loja\" (85% do menor)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"+10%NOVO\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span.pv-new \"NOVO\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"Entradas de instância/dia po\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (36%)"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "span \"+1NOVO\"",
-     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (36%)"
-    }
-   ]
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_tower",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_pets",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_eggpick",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_rank",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_inst",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_mounts",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_missions",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_arena",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_events",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_tourney",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_profile",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_guild",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_codex",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_mail",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_chat",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_offer",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_auction",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_look",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "tela_artprev",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "painel_fuse",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "painel_bag",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "painel_map",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "painel_colecao",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "gear_equipamento",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "loja",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "passe",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "troca_de_era",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
   },
   {
    "tela": "derrota",
    "w": 360,
    "h": 780,
-   "print": "reports/resp/derrota_360.png",
-   "defeitos": [
-    {
-     "tipo": "fora-da-tela",
-     "el": "div.q-orbs",
-     "detalhe": "left -38 right 3 (largura 360)"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "polyline",
-     "detalhe": "5x4"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "polyline",
-     "detalhe": "5x4"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span.lil \"Modo farm\"",
-     "detalhe": "173x22"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "span \"Continua farmando automático\"",
-     "detalhe": "173x10"
-    },
-    {
-     "tipo": "botao-pequeno",
-     "el": "polyline",
-     "detalhe": "4x4"
-    },
-    {
-     "tipo": "sobreposicao",
-     "el": "div#toast \"Forja: deixe seus itens mais\"",
-     "detalhe": "cobre span \"RECOMENDADA\" (33%)"
-    }
-   ]
+   "erro": "não abriu: timeout",
+   "defeitos": []
+  },
+  {
+   "tela": "vitoria",
+   "w": 360,
+   "h": 780,
+   "erro": "não abriu: timeout",
+   "defeitos": []
   }
  ]
 }
