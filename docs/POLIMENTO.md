@@ -32,3 +32,10 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - [x] P14 · Loja (cartão OFERTA) · cortava o texto em 288 px · CORRIGIDO e conferido em 288 e 390 px (QA)
 - Conferido SEM defeito (varredura de 26 telas): nenhuma imagem quebrada nas telas Equipamento, Invocar, Loja, Passe, Forja, Pets, VIP, Ranking, Config., Torre, Missões, Instâncias, Perfil, Códex, Guilda, Chat, Arena, Eventos, Torneio, Mapa, Correio, Montarias, Aparência, Leilão, Oferta, Práticas; nenhum emoji nelas; todos os arquivos assets/weapons/era0..8_t0..2.png, assets/hero/era0..8_t0..2.png, assets/enemies/era0..8_boss.png e assets/map/era0..8.jpg existem.
 - [ ] A VARRER (próxima passada): arma por era/raridade em campo na batalha (eras 1-8), Kael sem montaria/pet/asa em cada era, pet sob a montaria, Oferta (P1) e Invocar com a arte, Passe/Correio com imagem de prêmio, níveis 1/20/38/50/70 de verdade (a varredura de hoje foi num save de nível 60).
+- [ ] P15 · Batalha montado (cavalo, e conferir nas 6 montarias) · em alguns quadros aparece um BRAÇO saindo de trás do cavalo, sem sentido (visto pelo dono durante o teste do engenheiro) · Arte (limpar os quadros das folhas montadas) + Engenheiro (camada/ordem de desenho)
+
+## Padrão de polimento FINO (ordem do dono: "o polimento tem que ser bem fino")
+- Conferir QUADRO A QUADRO cada animação montada e a pé (folha de contato ampliada), e não só o print parado.
+- Nada de parte do corpo sobrando, duplicada, cortada ou atrás de onde não deveria (braço, perna, arma, cabelo, asa).
+- Nada piscando entre os quadros e nenhum resto de recorte (verde, magenta, contorno escuro).
+- A arma sempre na mão, a asa sempre nas costas, os pés e as patas sempre no chão.
