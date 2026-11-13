@@ -173,9 +173,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   realmBar(){ const el=this.el; if(!el) return; let b=el.querySelector('.pi-realmbar');
     if(this.id!=='TituloV2B'){ if(b) b.remove(); return; } if(b) return;
     b=document.createElement('div'); b.className='pi-realmbar';
-    b.style.cssText='position:absolute;z-index:4;left:12px;top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:6px;max-width:calc(100% - 84px);font-family:Nunito,system-ui,sans-serif';
+    b.style.cssText='position:absolute;z-index:4;left:12px;top:max(12px,env(safe-area-inset-top));display:flex;flex-wrap:wrap;align-items:center;gap:6px;row-gap:4px;max-width:calc(100% - 84px);font-family:Nunito,system-ui,sans-serif';
     const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    b.innerHTML='<span role="status" aria-label="Servidor atual" style="padding:6px 10px;border-radius:12px;background:rgba(20,14,10,.72);border:1px solid #6b5338;color:#ffe07a;font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(this.realmBadge())+'</span>'
+    b.innerHTML='<span role="status" aria-label="Servidor atual" style="padding:6px 10px;border-radius:12px;background:rgba(20,14,10,.72);border:1px solid #6b5338;color:#ffe07a;font-weight:900;font-size:13px;white-space:nowrap;flex:none">'+esc(this.realmBadge())+'</span>'
       +(this.realmUI()?'<button type="button" class="pi-realmbtn" style="min-height:36px;padding:6px 10px;border-radius:12px;border:1px solid #6b5338;background:rgba(40,28,18,.85);color:#f6ecdf;font:800 13px Nunito,sans-serif;white-space:nowrap">Trocar servidor</button>':'');
     const btn=b.querySelector('.pi-realmbtn'); if(btn) btn.addEventListener('click',ev=>{ ev.stopPropagation(); this.sfx&&this.sfx('snd:ui_tap'); this.realmStep(false,()=>{}); });
     el.appendChild(b); },
