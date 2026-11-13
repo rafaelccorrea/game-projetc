@@ -141,7 +141,8 @@ for(const k of [
   {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'],
    dir:'assets/anim/skins/kael_demon', avatar:'kael_demon', art:true, families:[]},   // ARTE ENTREGUE (e6800d4); arco/bumerangue por código
   {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass'],
-   dir:'assets/anim/skins/kael_angel', avatar:'kael_angel', art:true, families:[]},   // ARTE ENTREGUE (4598ed9); arco/bumerangue por código
+   dir:'assets/anim/skins/kael_angel', avatar:'kael_angel', art:true, families:[],
+   noWingDir:'assets/anim/skins/kael_angel_nowing', noWingReady:false},   // pasta SEM ASA (Arte 0b76db2: só parado/corrida/pistola limpos): ligar quando a Arte avisar 'kael_angel_nowing pronta'   // ARTE ENTREGUE (4598ed9); arco/bumerangue por código
   {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_paladin',
    dir:'assets/anim/skins/kael_solar_paladin', avatar:'kael_solar_paladin', art:true, families:[]},   // ARTE ENTREGUE (9d920e7; pasta da Arte 'kael_solar_paladin', id e produto continuam kael_paladin)
   {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer'],
@@ -191,9 +192,17 @@ const avatarKey=(S,host)=>{ const e=fixedEquipped(S); return e?e.avatar:DEFAULT_
 const PH_SCALE=[1,1.12,1.25,1.30];   // só o caminho ANTIGO (Sys.phaseUp com retired:false, para teste); desligado o herói nunca muda de fase
 const legacyStage=S=>{ const PU=root.Sys&&root.Sys.phaseUp; try{ return PU&&PU.current?clamp(int0(PU.current(S)),0,3):0; }catch(e){ return 0; } };
 /* opt.skin = id de skin fixa (cartão da vitrine: desenhar uma que não é a equipada) ou 'default' (corpo padrão); sem opt = a equipada */
+/* há asa-ITEM equipada e não escondida? (host.equipped().wing ou S.eq.wing; escondida por S.look.hidden.wing / S.sys.appearance.hidden.wing) */
+function wingItemOn(S,host){ let it=null; try{ const eq=host&&typeof host.equipped==='function'?host.equipped()||{}:null; it=eq&&eq.wing; }catch(x){}
+  if(!it){ const id=S&&S.eq&&S.eq.wing; if(id!=null&&Array.isArray(S.inv)) it=S.inv.find(x=>x&&x.id===id)||null; } if(!it) return false;
+  const hid=!!(S&&((S.look&&S.look.hidden&&S.look.hidden.wing)||(S.sys&&S.sys.appearance&&S.sys.appearance.hidden&&S.sys.appearance.hidden.wing))); return !hid; }
 function sheets(S,host,opt){ const os=opt&&opt.skin, e=os?(os==='default'?null:FX[os]||null):fixedEquipped(S), h=e&&e.hero!=='both'?e.hero:heroOf(S), lg=e||os?0:legacyStage(S), d=e?dirOf(e,h)||DEFAULT_LOOK[h].dir:lg?HERO_DIRS[h][lg]:DEFAULT_LOOK[h].dir, st=Math.max(0,HERO_DIRS[h].indexOf(d));
-  const dir=/^assets\//.test(d)?d.replace(/\/?$/,'/'):'assets/anim/hyb/'+d+'/';   // skin nova: caminho inteiro (assets/anim/skins/<id>/); as antigas: pasta dentro de hyb
-  return {hero:h,stage:st,skin:e?e.id:null,families:e?(e.families||[]).slice():['bow','boomerang'],scale:e?DATA.skinScale:PH_SCALE[lg],mountArt:e?e.mountArt:true,avatar:e?e.avatar:DEFAULT_LOOK[h].avatar,dir,prefix:h+'_',masks:dir+'masks/'}; }
+  /* SKIN COM ASA PRÓPRIA + ASA-ITEM equipada e visível (regra do dono: o jogador nunca precisa tirar a asa dele): com a pasta "sem asa" pronta
+     (noWingReady:true), o corpo vem dela e a asa desenhada é a do item; sem a pasta pronta, tudo como antes (a asa-item fica atrás). */
+  const nw=!!(e&&e.noWingDir&&e.noWingReady===true&&!(opt&&opt.skin)&&wingItemOn(S,host));
+  const d2=nw?e.noWingDir:d;
+  const dir=/^assets\//.test(d2)?d2.replace(/\/?$/,'/'):'assets/anim/hyb/'+d2+'/';   // skin nova: caminho inteiro (assets/anim/skins/<id>/); as antigas: pasta dentro de hyb
+  return {hero:h,stage:st,skin:e?e.id:null,noWing:nw,families:e?(e.families||[]).slice():['bow','boomerang'],scale:e?DATA.skinScale:PH_SCALE[lg],mountArt:e?e.mountArt:true,avatar:e?e.avatar:DEFAULT_LOOK[h].avatar,dir,prefix:h+'_',masks:dir+'masks/'}; }
 /* KAIA JOGÁVEL: estados de animação que a batalha toca e onde cada um existe. A Kaia garota (fase 0) só tem run/idle/attack: giro, morte e pistola
    caem na FASE MAIS PRÓXIMA que tem o estado (kaia_phase1), com fallback:true (pedir a arte que falta à fps-75). O Kael garoto tem todos. */
 const STATES=['run','idle','attack','spin','die','pistol_idle','pistol_run','pistol_shoot'];
@@ -205,7 +214,7 @@ function sheetFor(S,host,state,opt){ const sh=sheets(S,host,opt), h=sh.hero, st=
   // noFamilySheet: a skin não tem a subpasta da família (bow/, boomerang/): o desenho aplica a regra do PO (arco = pose de pistola da skin + arco por
   // código; bumerangue = golpe da skin + bumerangue por código), sem trocar de corpo
   const nf={bow:!sh.families.includes('bow'),boomerang:!sh.families.includes('boomerang')};
-  return {hero:h,state:st,stage:ph,skin:sh.skin,scale:sh.scale,mountArt:sh.mountArt,avatar:sh.avatar,fallback:!sh.skin&&ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st,
+  return {hero:h,state:st,stage:ph,skin:sh.skin,noWing:sh.noWing,scale:sh.scale,mountArt:sh.mountArt,avatar:sh.avatar,fallback:!sh.skin&&ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st,
     families:sh.families,noFamilySheet:nf,familyDir:{bow:nf.bow?null:dir+'bow/',boomerang:nf.boomerang?null:dir+'boomerang/'}}; }
 /* troca o herói do save (a criação chama; só 'kael' | 'kaia'). Só visual: atributos e FC iguais (os dois usam os mesmos itens e o mesmo Sys.stats). */
 function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='kael'&&hero!=='kaia') return false; S.hero=hero; return true; }
