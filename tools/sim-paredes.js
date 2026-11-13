@@ -69,11 +69,13 @@ const WB=[0.1,1,2,2.5,3,3,3,3,3], WM=[0,0,0.5,1,1,1.5,1.5,1.5,1.5];
    Senhor da Era: pede 1,2× a FC com que o grátis CHEGA nele; chefe do meio: 1,1×. As outras fases seguem o calendário (dia-alvo × c). c é ajustado para o
    grátis terminar no dia ~180. O tempo de cada parede SAI do crescimento da FC (não é mais escolhido). */
 /* razão por era: o 1º Senhor é suave (jogador novo), cresce até 1,15 da era 2 em diante (chegar com 87% = ~1 em 4 vence) */
+const STEP_MAX=1.3;
 const WR_BOSS=LATE?[1.06,1.1,1.15,1.15,1.15,1.1,1.1,1.1,1.1]:[1.06,1.1,1.15,1.15,1.15,1.15,1.15,1.15,1.15], WR_MID=LATE?1.05:1.07;
 function buildPlan(c){ const out=[]; let t=0, now=0;
   for(let e=0;e<9;e++){ const D=(END[e]-(e?END[e-1]:0))*c;
     for(let s=1;s<=10;s++){ t+=D/10; const wall=s===10?'Senhor da Era':(s===5&&e>=2)?'chefe do meio':''; let rec=fcAt(free,t,e);
       if(wall){ rec=Math.max(rec,fcAt(free,now,e)*(s===10?WR_BOSS[e]:WR_MID)); }
+      else if(s>1&&out.length){ rec=Math.min(rec,out[out.length-1].rec*STEP_MAX); }   /* fase normal: no máximo 1,3x a anterior (sem salto dentro da era quando abre raridade nova) */
       let tp=now; while(tp<400&&fcAt(free,tp,e)<rec) tp+=0.05; now=tp;
       out.push({stage:e*10+s,e,s,wall,days:0,target:t,rec}); } }
   return {out,end:now}; }
@@ -134,3 +136,4 @@ if(process.argv.includes('--game')){ const ab2=v=>ST.abbr(v);
   for(let e=0;e<9;e++){ const g=s=>recGame[e*10+s-1]; console.log('era '+e+': f1 '+ab2(g(1))+' · f5 '+ab2(g(5))+' · f9 '+ab2(g(9))+' · f10 '+ab2(g(10))+' · Senhor ÷ fase 9 = x'+(g(10)/g(9)).toFixed(2)+' · medida '+ab2(MED[e])); }
   console.log('JSONGAME '+JSON.stringify(recGame)); }
 if(process.argv.includes('--dbg2')){ for(const j of [59,69,79,89]){ const p=play(free), arr=p.pass[j-1]; console.log('fase',j+1,'pedida',ab(plan[j].rec),'chegada x WR',ab(fcAt(free,arr,plan[j].e)*WR_BOSS[plan[j].e]),'alvo',plan[j].target.toFixed(1),'chega',arr.toFixed(1),'passa',p.pass[j].toFixed(1),'L',free.L(arr)); } }
+if(process.argv.includes('--levels')){ const p=play(free); const lv=plan.map((pl,j)=>free.L(p.pass[j]!=null?p.pass[j]:p.pass[p.pass.length-1])); console.log('LEVELS '+JSON.stringify(lv)); }
