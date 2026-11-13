@@ -70,6 +70,7 @@ function pGate(urls,o){ o=o||{}; const list=pwUrls(urls); if(pwAllReady(list)||P
 function pWaitClick(b){ const a=b&&b.dataset&&b.dataset.x; if(a!=='pw-retry'&&a!=='pw-go') return false;
   const f=PW.fail; PW.fail=null; PW.busy=null;
   if(f&&f.el){ if(a==='pw-retry') pWait(f.el,f.list,f.o); else { try{ if(f.o&&typeof f.o.onReady==='function') f.o.onReady(f.r); }catch(e){} } return true; }
-  if(a==='pw-go'&&f&&f.key) PW.skip=f.key;
+  if(a==='pw-go'&&f){ for(const u of (f.list||[])) PW.done[u]=1; }   /* "Continuar assim": as urls que falharam são dispensadas de vez (nenhum redesenho espera por elas de novo); a tela usa a reserva que já tem */
   try{ if(typeof render==='function') render(); }catch(e){} PW.skip=null; return true; }
+/* Preload.has()/PW.done verdadeiros para todas as urls: a tela desenha direto (pGate false), sem esqueleto */
 window.pGate=pGate; window.pWait=pWait; window.pWaitClick=pWaitClick;

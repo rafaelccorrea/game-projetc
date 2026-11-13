@@ -22,6 +22,9 @@ const out = []; const tick = () => new Promise(r => setTimeout(r, 5));
   assert.strictEqual(pWaitClick({ dataset: { x: 'pw-retry' } }), true); assert.strictEqual(renders, 1); await tick();
   assert.strictEqual(pGate(['d.png']), true); await tick(); assert.strictEqual(pWaitClick({ dataset: { x: 'pw-go' } }), true); assert.strictEqual(renders, 2); out.push('falha: Tentar de novo e Continuar assim, ambos com ação');
   assert.strictEqual(pWaitClick({ dataset: { x: 'outro' } }), false); assert(!/\p{Extended_Pictographic}/u.test(V.innerHTML), 'sem emoji');
+  // 3b) "Continuar assim" é permanente: o redesenho seguinte não espera a mesma imagem de novo
+  g.Preload = { has: () => false, ready: async () => ({ ok: false, failed: ['f1.png'] }) }; V.innerHTML = ''; assert.strictEqual(pGate(['f1.png']), true); await tick(); assert(/Continuar assim/.test(V.innerHTML)); pWaitClick({ dataset: { x: 'pw-go' } });
+  assert.strictEqual(pGate(['f1.png']), false, 'dispensada: não espera de novo'); assert.strictEqual(pGate(['f1.png']), false, 'segue dispensada em todo redesenho'); out.push('Continuar assim: dispensa permanente, sem voltar ao esqueleto');
   // 4) sem Preload: carregador próprio com a mesma semântica
   delete g.Preload; g.Image = class { set src(u) { this._u = u; } decode() { return /ruim/.test(this._u) ? Promise.reject(new Error('x')) : Promise.resolve(); } };
   assert.strictEqual(pGate(['ok1.png', 'ok2.png']), true); await tick(); await tick(); assert.strictEqual(pGate(['ok1.png', 'ok2.png']), false, 'próprio: pronto depois do decode'); out.push('sem Preload: carregador próprio (Image+decode)');
@@ -29,6 +32,8 @@ const out = []; const tick = () => new Promise(r => setTimeout(r, 5));
   // 5) pWait em elemento + tempo-limite
   const el = { innerHTML: '' }; let got = null; g.Preload = { has: () => false, ready: async (u, o) => { assert(o.timeout === 1234, 'timeout repassado'); return { ok: true, failed: [] }; } };
   assert.strictEqual(pWait(el, ['e.png'], { timeout: 1234, onReady: r => { got = r; } }), true); await tick(); assert(got && got.ok, 'onReady chamado'); out.push('pWait em elemento: onReady e timeout repassado');
+  // 5b) no jogo o V é const do index.html (NÃO está em window): o esqueleto tem que aparecer nele (B-29)
+  delete g.V; vm.runInThisContext("const V={innerHTML:''};"); g.Preload = { has: () => false, ready: () => new Promise(() => {}) }; assert.strictEqual(pGate(['so-const.png']), true); assert(/role="status"/.test(vm.runInThisContext('V.innerHTML')), 'esqueleto escrito no V do jogo (fora de window)'); out.push('V do jogo fora de window: esqueleto aparece');
   // 6) cartão do Mecha: chave desligada = não existe
   g.PANEL_ON = { shopmecha: false }; const prod = { id: 'mount_mecha', kind: 'mount', name: 'Mecha de Guerra', brl: 49.90, mountId: 'mecha', once: true }; let ready = false, owned = {}; const bought = [];
   g.Sys = { buy: { product: id => id === 'mount_mecha' ? prod : null, ready: () => ready, priceText: () => 'R$ 49,90', purchase: async (S, h, id) => { bought.push(id); return { ok: true }; } }, mount: { DATA: { mounts: [{ id: 'mecha', name: 'Mecha de guerra', r: 4 }] }, ensure: () => ({ owned }) }, host: {} };
