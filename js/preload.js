@@ -10,6 +10,13 @@
      {done, total, failed} → lote da tela de carregamento · Preload.reset() zera o lote · Preload.all(promessas, ms) → espera com tempo-limite.
    Cada arquivo: até TRIES tentativas com FILE_MS de tempo-limite cada; falhou em todas = entra na lista de falhas, avisa no console UMA vez e o jogo segue com a
    reserva de sempre (quem desenha confere ok). Sem custo por quadro: tudo é promessa; has() é uma leitura de mapa.
+   RECUPERAÇÃO SOZINHA (Engenheiro; visto com o dono: o servidor caiu, cada arquivo desistiu depois de 3 tentativas e a cena ficou vazia para sempre):
+     - entre as tentativas de um arquivo há espera crescente (BACKOFF);
+     - arquivo que falhou em todas é CONFERIDO (HEAD): 404/410 = não existe no disco (falha definitiva, como antes: quem desenha usa a reserva); sem resposta
+       = REDE FORA. Com a rede fora aparece um aviso no topo ("Sem conexão…") e o carregador tenta de novo sozinho com espera crescente (REC_WAIT, até 60 s),
+       e na hora quando o aparelho avisa que a rede voltou ou a página volta ao primeiro plano. Com a rede fora, pedido novo falha de uma vez (sem segurar a fila);
+     - quando algum arquivo volta, Preload.onRecover(f) avisa o jogo, que solta as folhas marcadas com falha (js/loading.js, artDropFailed) e a cena se refaz.
+     Preload.failing = quantos estão em falha de rede · Preload.netDown = aviso na tela · Preload.recoverNow() tenta já.
    TESTE (só com ?debug=1): &falha=<trecho> força a falha dos arquivos com esse trecho na URL (1 rodada; &falhas=N rodadas) · &lento=N atrasa cada arquivo N ms (até 6 de cada vez, como o navegador) · &frio=1 acrescenta um carimbo à URL (carga sem cache). */
 (function (W) {
   const QS = new URLSearchParams(location.search), DBG = /[?&]debug=1/.test(location.search);
@@ -19,6 +26,7 @@
      (save novo, save antigo que volta, rede lenta, aba em segundo plano). */
   /* 13/11 (QA: "pode ligar: sim", 4 casos com o save de nível 61; decisão do PO): o caminho NOVO é o PADRÃO; ?debug=1&carga=antiga volta ao antigo para comparar. */
   const NEW = !(DBG && QS.get('carga') === 'antiga'); W.PRELOAD_NEW = NEW;
+  const BACKOFF = [0, 500, 1500], REC_WAIT = [4000, 8000, 15000, 30000, 60000];
   const FILE_MS = 12000, TRIES = 3, LIST_MS = 30000, PAR = 8, STALL_MS = 15000, TASK_MS = 38000, DECODE_MS = 1500;
   /* &falha=<trecho da URL> (só debug): os arquivos cuja URL contém o trecho falham na 1ª rodada (as 3 tentativas) e carregam no "Tentar de novo"; &falhas=N = falham N rodadas */
   const FAIL = DBG ? (QS.get('falha') || '') : '', FAILN = Math.max(1, +QS.get('falhas') || 1), HANG = DBG ? (QS.get('trava') || '') : '';
@@ -61,10 +69,35 @@
   function oneJson(e) { return fetch(real(e.url), { cache: COLD ? 'reload' : 'no-cache' }).then(r => r.ok ? r.json() : null).then(j => { if (j && typeof j === 'object'){ e.data = j; return true; } return false; }); }
   function load(e) { let n = 0; e.rounds = (e.rounds || 0) + 1; const forced = FAIL && e.url.indexOf(FAIL) >= 0 && e.rounds <= FAILN;
     const go = () => { n++; const hang = HANG && n === 1 && e.rounds === 1 && e.url.indexOf(HANG) >= 0;   /* &trava=<trecho> (só debug): a 1ª tentativa desses arquivos nunca responde (rede parada) */
-      return (forced ? Promise.resolve(false) : stall(hang ? new Promise(() => {}) : e.json ? oneJson(e) : oneImg(e), FILE_MS)).then(v => { if (v){ e.ok = true; e.fail = false; return e; } if (n < TRIES) return go();
-        e.fail = true; if (!e.warned){ e.warned = true; console.warn('Preload: não carregou depois de ' + TRIES + ' tentativas: ' + e.url); } return e; }); };
+      return (forced ? Promise.resolve(false) : stall(hang ? new Promise(() => {}) : e.json ? oneJson(e) : oneImg(e), FILE_MS)).then(v => { if (v){ e.ok = true; e.fail = false; return e; }
+        if (n < TRIES && !(NEW && REC.net && !e.rec)) return new Promise(r => setTimeout(r, NEW ? BACKOFF[n] || 0 : 0)).then(go);   /* espera crescente; com a rede sabidamente fora, falha de uma vez (a recuperação cuida) */
+        e.fail = true; if (!e.warned){ e.warned = true; console.warn('Preload: não carregou depois de ' + TRIES + ' tentativas: ' + e.url); } if (NEW && !e.gone) recArm(REC.n === 0); return e; }); };
     const end = () => { release(); prog(); return e; };
     e.fail = false; return e.p = acquire().then(go).then(end, () => { e.fail = true; return end(); }); }
+  /* ---------- recuperação sozinha (ver o cabeçalho) ---------- */
+  const REC = { n: 0, t: 0, run: false, net: false, hooks: [], el: null };
+  const failedNow = () => { const L = []; for (const e of C.values()) if (e.fail && !e.gone) L.push(e); return L; };
+  const probe = e => typeof fetch !== 'function' ? Promise.resolve('ok') : limit(fetch(real(e.url), { method: 'HEAD', cache: 'no-store' }).then(r => r.ok ? 'ok' : (r.status === 404 || r.status === 410) ? 'gone' : 'ok', () => 'net'), 8000).then(v => v === false ? 'net' : v);
+  const onLoad = () => { try { return typeof LD !== 'undefined' && !!LD && !!LD.el && !LD.closed; } catch (er) { return false; } };   /* tela de carregamento aberta: ela tem o aviso e o "Tentar de novo" dela; a recuperação sozinha espera fechar */
+  function note() { try { const on = REC.net && !onLoad(); let el = REC.el; if (!on){ if (el) el.style.display = 'none'; return; }
+      if (!el){ el = REC.el = document.createElement('div'); el.id = 'pre_net'; el.setAttribute('role', 'status');
+        el.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:99990;box-sizing:border-box;max-width:92vw;padding:8px 14px;border-radius:12px;background:#13314f;border:2px solid #4aa3ff;color:#fff;font:800 13px Nunito,system-ui,sans-serif;line-height:1.25;text-align:center;pointer-events:none;box-shadow:0 6px 16px rgba(0,0,0,.5)';
+        el.textContent = 'Sem conexão: parte das imagens não carregou. Tentando de novo…'; (document.body || document.documentElement).appendChild(el); }
+      el.style.display = 'block'; } catch (er) {} }
+  function recArm(soon) { if (!NEW || REC.t || REC.run) return; REC.t = setTimeout(recRun, soon ? 300 : REC_WAIT[Math.min(REC.n, REC_WAIT.length - 1)]); }
+  function recRun() { REC.t = 0; if (REC.run) return; const L = failedNow(); if (!L.length){ REC.n = 0; REC.net = false; note(); return; }
+    if (onLoad()){ REC.t = setTimeout(recRun, 2000); return; }
+    if (document.hidden) return;   /* em segundo plano não insiste: a volta ao primeiro plano chama de novo */
+    REC.run = true; const back = [];
+    probe(L[0]).then(v0 => { if (v0 === 'net') return 0;   /* o primeiro serve de sonda: rede ainda fora → nem pergunta pelos outros */
+        return Promise.all(L.map((e, i) => (i ? probe(e) : Promise.resolve(v0)).then(v => { if (v === 'gone') e.gone = true; else if (v === 'ok') back.push(e); })))
+          .then(() => { back.forEach(e => { e.rec = true; load(e); }); return Promise.all(back.map(e => e.p)); }).then(() => back.filter(e => e.ok).length); })
+      .then(got => got, () => 0).then(got => { REC.run = false; const left = failedNow(); REC.net = left.length > 0;
+        if (got > 0){ REC.n = 0; for (const h of REC.hooks){ try { h(got); } catch (er) { console.error(er); } } } else REC.n++;
+        note(); if (left.length) recArm(false); else REC.n = 0; }); }
+  const recNow = () => { if (!failedNow().length) return false; clearTimeout(REC.t); REC.t = 0; REC.n = 0; recArm(true); return true; };
+  try { addEventListener('online', recNow); } catch (er) {}
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) recNow(); });
   function get(url) { let e = C.get(url); if (!e){ e = { url, json: isJson(url), img: null, data: null, ok: false, fail: false, p: null, warned: false }; C.set(url, e); load(e); } return e; }
   const has = url => { const e = C.get(url); return !!(e && e.ok); };
   const image = url => { const e = get(url); return e.ok ? e.img : null; };
@@ -102,5 +135,5 @@
   const TL = [];   /* só debug: [nome, entrou, terminou] em ms da página (Preload.timeline) */
   const reset = () => { B.gen++; B.done = 0; B.total = 0; B.failed = []; B.open = []; prog(); };
   W.Preload = { ready, has, get, image, json, retry, drop, track, reset, all, limit, pin, unpin, pinOk: PIN_OK, pins: () => PINV.size, pinBytes: () => pinTotal, pinPeak: () => pinPeak, pinList: () => [...PINV].map(([u, b]) => [u, b.width, b.height]), get progress() { return { done: B.done, total: B.total, failed: B.failed.slice() }; },
-    get idle() { return idle(); }, get pending() { return B.open.slice(); }, get live() { return live(); }, timeline: TL, stallMs: STALL_MS, slow: SLOW, cold: !!COLD, size: () => C.size };
+    get idle() { return idle(); }, get pending() { return B.open.slice(); }, get live() { return live(); }, onRecover: f => { if (typeof f === 'function') REC.hooks.push(f); }, recoverNow: recNow, get failing() { return failedNow().length; }, get netDown() { return REC.net; }, timeline: TL, stallMs: STALL_MS, slow: SLOW, cold: !!COLD, size: () => C.size };
 })(window);

@@ -202,6 +202,14 @@ document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done
 function loadFailFit(){ const el = LD.el, foot = el && el.querySelector('.lfoot'), bb = el && el.querySelector('.lbarbox'); if (!foot || !bb) return;
   if (!LD.failUI){ bb.style.bottom = ''; return; } const h = foot.offsetHeight || 0; bb.style.bottom = Math.max(120, 36 + h + 12) + 'px'; }
 function loadFailOff(){ const box = LD.failUI; if (!box) return; box.remove(); LD.failUI = null; loadFailFit(); const tip = document.getElementById('ltip'); if (tip) tip.style.display = ''; LD.era = -1; }   /* LD.era = -1: o texto "Atravessando..." volta no próximo quadro */
+/* solta dos caches do jogo tudo o que ficou marcado com falha (folhas, imagens, tabelas vazias, asas, cenários vivos, camadas e montaria parada): o próximo
+   desenho pede de novo ao pré-carregador. Usado pelo "Tentar de novo" da tela de carregamento e pela recuperação sozinha do Preload (rede que voltou). */
+function artDropFailed(){
+  try { for (const k in SHEETS) if (SHEETS[k].fail) delete SHEETS[k]; } catch (e) {} try { for (const k in IMGS) if (IMGS[k].fail) delete IMGS[k]; } catch (e) {}
+  try { for (const k in JSONS) if (JSONS[k] && !Object.keys(JSONS[k]).length) delete JSONS[k]; } catch (e) {} try { for (const k in WING_IMG) if (!WING_IMG[k].ok) delete WING_IMG[k]; } catch (e) {}
+  try { for (const k in SCN.list) if (SCN.list[k].fail) delete SCN.list[k]; } catch (e) {}
+  try { if (typeof LAYI !== 'undefined') for (const k in LAYI) if (LAYI[k].fail) delete LAYI[k]; } catch (e) {} try { if (typeof MOUNT_STILL !== 'undefined') for (const k in MOUNT_STILL) if (MOUNT_STILL[k].fail) delete MOUNT_STILL[k]; } catch (e) {} }
+try { if (window.Preload && typeof Preload.onRecover === 'function') Preload.onRecover(() => { artDropFailed(); try { if (typeof FORM !== 'undefined') FORM.t = -1e9; } catch (e) {} }); } catch (e) {}
 function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySelector('.lfoot'), box = document.createElement('div'); LD.failUI = box; box.id = 'lfail'; box.stall = !!stall;
   box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;width:100%';
   const n = stall ? PG.total - PG.done : PG.failed.length, bt = 'min-height:44px;padding:0 18px;border-radius:12px;font:800 15px Nunito,system-ui,sans-serif;cursor:pointer;';
@@ -218,8 +226,7 @@ function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySel
   box.querySelector('#lretry').addEventListener('click', () => { const wasStall = box.stall; loadFailOff(); document.getElementById('lstep').textContent = 'Tentando de novo…';
     if (wasStall){ PRE().retry(); PRE().track(Promise.resolve(true), 'nova tentativa'); return; }   /* rede parada: os pedidos pendentes seguem (cada um se refaz sozinho); a tarefa vazia marca progresso e dá mais LOAD_STALL_S s antes de avisar de novo */
     /* só o que falhou: solta as folhas/imagens marcadas com falha nos caches do jogo e pede de novo pela mesma lista */
-    for (const k in SHEETS) if (SHEETS[k].fail) delete SHEETS[k]; for (const k in IMGS) if (IMGS[k].fail) delete IMGS[k]; for (const k in JSONS) if (JSONS[k] && !Object.keys(JSONS[k]).length) delete JSONS[k]; for (const k in WING_IMG) if (!WING_IMG[k].ok) delete WING_IMG[k];
-    for (const k in SCN.list) if (SCN.list[k].fail) delete SCN.list[k];
+    artDropFailed();
     LD.retrying = true; const again = () => { PRE().reset(); try { sceneQueue(false); } catch (er) { console.error(er); } LD.retrying = false; };   /* enquanto refaz, o laço não reabre o aviso com a conta do lote anterior */
     PRE().retry().then(again, again); });
   box.querySelector('#lskip').addEventListener('click', () => { loadFailOff(); LD.skipFail = true; }); }
