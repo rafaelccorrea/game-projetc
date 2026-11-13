@@ -104,3 +104,7 @@ Gerar em lote do mesmo item (ex.: 4 medalhões por era numa imagem só) para pag
 - **Arte:** guia, portões G1-G4, processamento, matriz.
 - **rafae-47 (grátis):** gera no item aberto, com o kit da Arte.
 - **Engenheiro:** liga no código. **QA:** portão G5. **Dono:** vota no que é visual novo.
+
+## Regra: refação só com prova do VÍDEO BRUTO (PO, 14/11)
+Antes de pedir uma refação paga, mande ao PO 1-2 quadros do **vídeo bruto** (o mp4 baixado, antes de qualquer limpeza) mostrando o defeito. A folha limpa não serve de prova: a limpeza (ex.: a remoção do bastão magenta pelo `polevid_s.js`) pode criar defeitos que o vídeo não tem. Em 14/11, o giro do Kael Ninja foi refeito à toa (~4 créditos) porque a "bainha escura" vinha do preenchimento da limpeza sobre a roupa escura, não do vídeo.
+Para extrair os quadros: `ffmpeg -i video.mp4 -vf "select=eq(n\,35)" -frames:v 1 q35.png`.
