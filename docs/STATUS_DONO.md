@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h20 · Jogo pronto para conversar com o servidor (Servidor, dff83e0):** ao abrir, faz login, puxa o save da nuvem, as entregas de compra e o correio; depois de cada save, sobe para a nuvem. Tudo desligado e pronto: falta só o servidor no ar, que depende do seu acesso à AWS, ao banco, ao ID do Google e à conta do Play Console. Agora o Servidor faz arena, ranking e eventos online
+
 - **00h15 · Tamanho do app resolvido no papel (Sistemas):** dos 657 MB, 646 são arte. Com o carregamento sob demanda, o jogador novo instala ~121 MB (meta era <150): Kael e Kaia na fase inicial, eras 0-1. Logo depois baixa ~49 MB (eras 2-3) e o resto só quando precisa (eras 4-8, fases adultas, cada montaria e pet). Decisão do PO: entrega pelo próprio Google Play (Play Asset Delivery), sem depender do nosso servidor. O engenheiro liga antes da versão de loja
 - **00h15 · Leilão** ajustado: só ouro e preço fixo. **Eras 7-8** com ouro ×1,5 no começo
 - **00h15 · Sistemas agora:** simulação dos 180 dias com TUDO o que entrou hoje, para conferir se o jogo ainda fecha em ~6 meses grátis / ~4 VIP com ~10 mil diamantes
