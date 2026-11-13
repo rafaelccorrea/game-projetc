@@ -1,5 +1,22 @@
 # Levantamento: arte que falta para 100% (13/11/2026, ~19h30)
 
+## PRIORIDADE (pedido do dono, 14/11: "prioriza o que é pendente no game: Kael montado, ataques etc.")
+
+Critério: primeiro o que o jogador VÊ faltando no jogo; depois o resto. Fluxo grátis (rafae-47: Google AI Studio + Kling grátis, ~1 montaria/dia) faz o máximo; Higgsfield (saldo a confirmar, ~69?) só no que o grátis não alcança.
+
+| # | O que | Por que primeiro | Quem / como | Custo |
+|---|---|---|---|---|
+| 1 | Inimigos das eras 7-8 ligados + fundo de reserva | arte pronta, eras 7-8 mostram inimigo sem animação | Engenheiro (só ligação) | 0 |
+| 2 | 6 ícones de golpe das eras 7-8 | eras 7-8 sem ícone de golpe | Arte, Higgsfield | ~4 |
+| 3 | Kaia na Fênix gigante (parado/correr/golpe) | prêmio do VIP 8 já existe; Kael pronto, Kaia não | Arte, vídeos já pagos | 0 |
+| 4 | Kael montado no **Mecha de Guerra** | é vendido (R$ 49,90) e aparece parado atrás do herói; **não vender antes da arte** | grátis (rafae-47); se não passar no teste, Higgsfield | 0 ou ~28 |
+| 5 | Kael montado no **Raptor** (em andamento), depois **Escorpião**, **Pantera**, **Unicórnio**, **Lobo de gelo** (os que o jogador ganha antes, por Torre/eventos/Arena/Guilda/Torneio) | aparecem cedo no jogo | grátis (rafae-47), 1 por dia | 0 |
+| 6 | Kael montado no **Cavalo infernal**, **Dragão negro**, **Tigre celestial** (eras 7-8 e topo do Torneio) | só no fim | grátis | 0 |
+| 7 | Kaia montada nas 10 novas (mesma ordem) | Kaia hoje cai no padrão | grátis depois do Kael de cada uma | 0 |
+| 8 | Limpezas do Ciborgue (manchas do ataque, faixa do peito) | visível no ataque | Arte, por código | 0 |
+| 9 | 6 pets novos (3 estágios) | ainda desligados no jogo | depois das montarias | ~255-270 ou grátis |
+| 10 | Montaria sem cavaleiro (Derrota) e skins montadas | hoje há paliativo por código | por último | ~80-110 / A-B-C |
+
 Comparação do catálogo do código com os arquivos em `assets/` (pastas de reprovado/backup ignoradas).
 
 ## Obrigatório
