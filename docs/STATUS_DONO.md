@@ -8,6 +8,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **05h · Sua decisão FINAL sobre skins:** nada de combinação de peças. O Kael e a Kaia de hoje são as SKINS PADRÃO. Mais à frente, com mais crédito, skins FIXAS com arte própria (cavaleiro de armadura, cavaleiro das trevas etc.). Por enquanto a Loja vende só skins de arma; a aba Aparência vira uma vitrine de skins
+- **05h · PARA VOCÊ VOTAR:** as 2 guias do ADULTO MONTADO no lobo (Kael e Kaia) antes dos vídeos (~165 créditos)
+- **05h · Polimento:** o braço saindo de trás do cavalo e outros defeitos no golpe das 6 montarias foram limpos quadro a quadro, sem gastar crédito (P15). Avatar por fase pronto (8 retratos). Tela de Fusão pronta (desligada até o voto)
+- **05h · AWS:** você aprovou o servidor t4g.small (~US$ 15-17/mês) em São Paulo e o repositório PRIVADO do servidor no GitHub. Variáveis GOOGLE_CLIENT_ID e JWT_SECRET já criadas no seu Windows; falta o DATABASE_URL
+
 - **04h35 · KAEL CRESCENDO LIGADO (242462f, visto no navegador):** as 4 fases com pés no chão, arma na mão e asa nas costas; o save do nível 60 mostra "Kael evoluiu: Adulto!" uma vez só, sem perder nada (poder igual). Prints na página de aprovação. Antes do APK ainda faltam: as skins em camadas desenhadas na batalha, o pet na Vitória, os cenários 5-8 e o avatar por fase
 - **04h35 · Dois buracos de arte achados:** (a) MONTADO, o Kael adolescente/adulto/guerreiro aparece como garoto (as folhas de montaria só têm o garoto); a Arte está calculando o custo para você decidir; (b) a MORTE do adolescente/adulto/guerreiro mostrava o garoto: aprovei a correção (~14 créditos)
 - **04h35 · PARA VOCÊ VOTAR:** prévia das skins de roupa em camadas (8 skins nas 4 fases, Kael e Kaia) e as 4 fases do Kael no jogo
