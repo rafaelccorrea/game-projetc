@@ -37,9 +37,9 @@ t('1 alimentar grátis por dia (+10); volta no dia seguinte', () => {
   w.host.t += 24 * H; assert.ok(GF.feed(w.S, w.host).ok); assert.strictEqual(GF.view(w.S, w.host).flames, 20);
 });
 
-t('Brasas: sem o gancho do Sys.bonfire recusa (hook); com ele gasta, até 20 por dia', () => {
+t('Brasas: com o gancho do Sys.bonfire (spendBrasas, 80f1c4a) gasta, até 20 por dia; sem o gancho recusaria (hook)', () => {
   GF.DATA.on = true; BF.DATA.on = true; const w = world('g1'); BF.addBrasas(w.S, 'missions', 1);   // 20 Brasas
-  assert.strictEqual(GF.contribute(w.S, w.host, 5).reason, 'hook'); assert.strictEqual(BF.ensure(w.S).bra, 20);
+  { const keep=BF.spendBrasas; delete BF.spendBrasas; try{ assert.strictEqual(GF.contribute(w.S, w.host, 5).reason, 'hook'); } finally { BF.spendBrasas=keep; } } assert.strictEqual(BF.ensure(w.S).bra, 20);
   withHook(() => {
     const r = GF.contribute(w.S, w.host, 5); assert.ok(r.ok); assert.strictEqual(r.flames, 5); assert.strictEqual(BF.ensure(w.S).bra, 15);
     assert.strictEqual(GF.contribute(w.S, w.host, 16).reason, 'day');
