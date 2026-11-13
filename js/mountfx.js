@@ -52,8 +52,9 @@ function mountReady(id){ let ok = true; for (const st of ['idle', 'run', 'attack
 const MOUNT_M = {};
 function mountMetrics(id0){ const id = id0, key = (mountPrefix(id0) || '') + id0; let m = MOUNT_M[key]; if (m) return m; const sh = mountSheet(id, 'idle'); if (!sh.ok) return null; const M = sh.meta, fy = typeof M.feetY === 'number' ? M.feetY : 339, ax = (M.padLeft || 0) + 128;
   let right = 150, top = 200; try { const b = enBounds(sh)[0]; if (b){ right = b.r - ax; top = fy - b.t; } } catch (e) {}
-  let rise = 60; try { const h0 = SHEET(heroSet(2).idle); if (h0 && sh.neck && sh.neck.length) rise = (fy - sh.neck[0]) - (HERO_FOOT * 256 - (h0.neck[0] || 76)); } catch (e) {}
-  return MOUNT_M[key] = { right, top, rise: Math.max(0, rise) }; }   /* medidas por herói + montaria (a folha da Kaia tem as dela) */
+  /* Engenheiro 10: a referência é SEMPRE a folha parada do corpo padrão (montado usa o corpo padrão mesmo com skin fixa); só guarda a medida com ela pronta */
+  let rise = 60, h0 = null; try { h0 = SHEET(HERO_SETS[2].idle); if (h0 && sh.neck && sh.neck.length) rise = (fy - sh.neck[0]) - (HERO_FOOT * 256 - (h0.neck[0] || 76)); } catch (e) {}
+  const mm = { right, top, rise: Math.max(0, rise) }; if (h0 || sheetLoad(HERO_SETS[2].idle).fail) MOUNT_M[key] = mm; return mm; }   /* medidas por herói + montaria (a folha da Kaia tem as dela) */
 /* quanto o Kael montado fica mais ALTO que a pé (px lógicos): as barras de vida/energia e a asa sobem junto */
 function heroRise(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return 0; if (typeof B !== 'undefined' && B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true) return 0;   /* morto: o Kael cai a pé (morte nova); as barras descem com ele */ const m = mountMetrics(mo.id); return m ? m.rise * HS / 256 : 0; }
 /* até onde a montaria passa da borda do corpo do Kael a pé, para a direita (px lógicos): o inimigo da frente guarda a folga a partir daí */

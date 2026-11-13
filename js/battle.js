@@ -1116,7 +1116,7 @@ const LOOKW={};
 function lookWait(part,id){ const k=part+':'+id, now=performance.now(); let o=LOOKW[part]; if(!o||o.k!==k) o=LOOKW[part]={k,t0:now}; return now-o.t0>12000; }
 /* drawHeroFull em outras telas: tudo o que o herói pedido usa está pronto? (dispara as cargas) */
 function fullReady(H){ const F=heroForm(); let ok=true;
-  if(F.hero==='kael'&&F.stage===0){ const set=heroSet(H.sk?H.sk.e:2); for(const st of ['idle','run','attack']) if(!SHEET(set[st])) ok=false; }
+  if(F.hero==='kael'&&F.stage===0&&!F.skin){ const set=heroSet(H.sk?H.sk.e:2); for(const st of ['idle','run','attack']) if(!SHEET(set[st])) ok=false; }
   else if(!phaseReady(F.stage)) ok=false;
   if(H.mount&&typeof mountReady==='function'&&mountPrefix()&&!mountReady(H.mount.id)) ok=false;
   if(H.wing&&typeof wingReady==='function'&&!wingReady(H.wing)) ok=false;

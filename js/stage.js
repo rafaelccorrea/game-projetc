@@ -63,7 +63,13 @@ const HERO_SETS = {
        // quadros do golpe por papel (índices na folha attack)
        atk: { ready: 3, wind: [4, 5, 8], strike: [9, 10, 11, 12], ret: [13, 14, 15, 16], aim: 10, aimIn: 13 } },
 };
-const heroSet = era => HERO_SETS[era] || HERO_SETS[2];
+/* Engenheiro 10: SKIN FIXA do Kael (assets/anim/skins/<pasta>/, mesmos nomes e quadros da hyb/R): o conjunto sai da pasta da skin, nunca do corpo padrão.
+   Quem pergunta (pré-carga, tela de carregamento, fullReady) recebe as folhas da skin equipada (ou da pedida pelo drawHeroFull). */
+const SKIN_SETS = {};
+const formSkinDir = () => { let F = null; try { F = heroForm(); } catch (e) { F = null; } return (F && F.skin && F.dir) ? F.dir : null; };
+const heroSet = era => { const d = formSkinDir(), F = d ? heroForm() : null;
+  if (d && F.hero === 'kael') return SKIN_SETS[d] || (SKIN_SETS[d] = { run: d + 'kael_run_body', idle: d + 'kael_idle_body', attack: d + 'kael_attack_body', atk: HERO_SETS[2].atk });
+  return HERO_SETS[era] || HERO_SETS[2]; };
 const HERO_FOOT = 242 / 256;                     // linha dos pés dentro do quadro
 const HERO_RUN_K = 1.04;                         // velocidade do chão = 1,04 lado-do-quadro por segundo (a mesma do cenário aprovado: runSpeed 0,275 SH/s com quadro de 0,2643 SH)
 const RUNV = () => HERO_RUN_K * HS;              // px lógicos por segundo
@@ -93,18 +99,18 @@ function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p
   const ws = heroLook().weapon, sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
   { const pe = pistolEra(ws); if (pe >= 0) for (const st of ['idle', 'run', 'shoot']) out.push(pistolSheet(pe, st).p); }
   if (ART_ON.kael_die === true) out.push(dieSheet().p);
-  { const F = heroForm(); if (F.hero !== 'kael' || F.stage > 0) for (const st of ['idle', 'run', 'attack', 'spin']){ const q = phaseSheet(st, F.stage); if (q) out.push(q.p); } }   /* Kaia e skins de corpo próprio: as folhas delas */   /* morte: a folha da fase atual */
+  { const F = heroForm(); if (F.hero !== 'kael' || F.stage > 0 || F.skin) for (const st of ['idle', 'run', 'attack', 'spin']){ const q = phaseSheet(st, F.stage); if (q) out.push(q.p); } }   /* Kaia e skins de corpo próprio: as folhas delas */   /* morte: a folha da fase atual */
   { const tb = ws && trailBase(ws); if (tb) out.push(sheetLoad(tb, true).p); }
   const au = auraBase(); if (au) out.push(sheetLoad(au, true).p);
   return out; }
 /* ESPECIAL ANIMADO (Corte Giratório, era 2): folha composta (corpo + arma + rastro) assets/anim/hyb/R/kael_spin_era2_t<tier>, quadro 448x256,
    pés em x = padLeft + 128 e y = feetY (do .json). Só entra com a chave ART_ON['s2_era2_t<tier>'] ligada; senão vale o golpe por código. */
-function spinBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
+function spinBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null;   /* skin fixa: a folha composta traz o corpo padrão pintado → corpo da skin + arma na mão */ const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
 /* GOLPE BÁSICO COM RASTRO (s1-era2_t<tier>, aprovado): folha composta assets/anim/hyb/R/kael_attack_trail_era2_t<tier> (17 quadros, 448x256,
    pés em x = padLeft + 128, y = feetY; golpe no quadro 6). Toca dentro da duração do golpe básico (o ritmo do balanceamento não muda): os quadros
    0-6 até o instante do acerto e os 7-16 na volta. Só com skin de arma da era 2 e a chave ART_ON['s1_era2_t<tier>']. */
 const TRAIL_HIT = 6;
-function trailBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
+function trailBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
 function heroTrailSheet(ws){ const b = trailBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 function heroSpinSheet(ws){ const b = spinBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 /* AURA DE FORTALECIMENTO (auras +4/+7/+10/+13 aprovadas): o nível vem do +N do espaço da ARMA no Sys.forge (Sys.forge.aura(S).id).
@@ -145,7 +151,7 @@ function atkFrame(a, gun, K){
 }
 
 /* pistola ainda carregando (só no primeiro instante do jogo: depois o wSkin segura a arma anterior): Kael parado da folha do corpo, sem a pose de tiro antiga */
-function drawHeroPistolWait(H){ { const F = heroForm(); if (F.hero !== 'kael' || F.stage > 0){ drawHeroPhase(H, F.stage); return true; } }   /* Kaia: a folha dela (nunca o Kael) */
+function drawHeroPistolWait(H){ { const F = heroForm(); if (F.hero !== 'kael' || F.stage > 0 || F.skin){ drawHeroPhase(H, F.stage); return true; } }   /* Kaia: a folha dela (nunca o Kael) */
   const sh = SHEET(heroSet(H.sk.e).idle); if (!sh) return true; const M = sh.meta, k = HS / M.w, fi = Math.floor(H.t * (M.fps || 12)) % M.frames;
   drawWingsAt(H, sh, fi, H.x - HS / 2, H.gy - HS * HERO_FOOT, k, true);
   const L = layNow(H); ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); ctx.restore(); return true; }
@@ -187,7 +193,7 @@ const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; cons
    assets/anim/hyb/R/kael_<run|idle|attack>_era2_t<tier>.png (corpo + roupa + arma num quadro só; mesmos quadros, fps e pés do .json do corpo, que é o
    .json do conjunto). Em qualquer outro caso (roupa ou arma de outra era, tiers diferentes) vale corpo + arma na mão. Chave: ART_ON.kael_hybR_t<tier>.
    A hyb-attack-era2_t* (assets/anim/hyb/, REPROVADA) nunca é usada: só a pasta R. */
-function heroCompTier(sk, ws){ if (!sk || !ws || ws.wk || sk.e !== 2 || ws.e !== 2 || ws.r % 2) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
+function heroCompTier(sk, ws){ if (!sk || !ws || ws.wk || sk.e !== 2 || ws.e !== 2 || ws.r % 2 || formSkinDir()) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
 /* GOLPE: folha LARGA aprovada pelo PO como correção técnica (kael_attack_wide_era2_t<tier>: 17 quadros, 448x256, padLeft 96, pés em x = padLeft+128,
    feetY 243): a de 256 cortava a arma em alguns quadros. Parado e corrida continuam nas de 256. */
 const HERO_WIDE_PAD = 96, HERO_WIDE_W = 448;
@@ -203,6 +209,12 @@ const pistolSheet = (e, st) => { const s = phaseSheet('pistol_' + st, null, true
 const pistolScale = (e, st) => { const m = /^(.*\/)([a-z]+)_pistol_/.exec(pistolSheet(e, st).base), j = J((m ? m[1] + 'pistol/' + m[2] : PISTOL_DIR + 'kael') + '_pistol_' + st + '_era' + e + '_t0.json'); if (j && typeof j.scale === 'number') return j.scale * 1024;
   if (m && heroPhase() > 0){ const j2 = J(m[1] + m[2] + '_pistol_' + st + '_era5_t0.json'); if (j2 && typeof j2.scale === 'number') return j2.scale * 1024; }   /* skins de corpo próprio: só existe o .json da era 5, na própria pasta */
   return 80; };   // lado da imagem da arma (1024 px) em px do quadro, do .json aprovado da era
+/* Engenheiro 10: MÃO FORA DO LUGAR em quadros soltos da folha de tiro (medido: kael_demon quadros 1, 2, 5 e 8; corpo padrão quadro 7: o grip salta 20 a 40 px e a
+   pistola aparecia solta no ar). Quadro cujo grip foge mais de 10 px da mediana dos 5 vizinhos usa a mediana (x, y, ângulo); os outros ficam como a Arte mediu. */
+function gripAt(sh, fi){ const A = sh.meta.grip; let c = sh._gf;
+  if (!c){ const n = A.length, med = a => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; }, win = (i, f) => { const o = []; for (let d = -2; d <= 2; d++){ const g = A[Math.max(0, Math.min(n - 1, i + d))]; if (g) o.push(f(g)); } return med(o); };
+    c = sh._gf = A.map((g, i) => { if (!g) return g; const mx = win(i, q => q.x), my = win(i, q => q.y); if (Math.hypot(g.x - mx, g.y - my) <= 10) return g; const o = Object.assign({}, g); o.x = mx; o.y = my; o.ang = win(i, q => q.ang || 0); const r = o.ang * Math.PI / 180; if (typeof g.ux === 'number'){ o.ux = Math.cos(r); o.uy = -Math.sin(r); } return o; }); }
+  return c[fi] || c[0]; }
 function pistolReady(e){ let ok = true; for (const st of ['idle', 'run', 'shoot']) if (!pistolSheet(e, st).ok) ok = false; return ok; }
 function drawHeroPistol(H, E){
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'shoot' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = pistolSheet(E, st); if (!pistolReady(E)) return false;
@@ -213,7 +225,7 @@ function drawHeroPistol(H, E){
     else fi = Math.min(s1 - 1, s0 + Math.floor((a.t - last) * fps * 2)); }
   else fi = Math.floor(t * fps) % n;
   if (!(fi >= 0 && fi < n)) fi = 0;
-  const G = M.grip[fi] || M.grip[0], k = HS / 256 * phaseK(), gy = H.gy, fy = typeof M.feetY === 'number' ? M.feetY : 243;   /* escala da skin (padrão = 1) */
+  const G = gripAt(sh, fi), k = HS / 256 * phaseK(), gy = H.gy, fy = typeof M.feetY === 'number' ? M.feetY : 243;   /* escala da skin (padrão = 1) */
   const P = PZ; P.dx = P.dy = P.rot = P.rec = P.flash = P.trail = 0; P.sx = P.sy = 1; P.wang = 0;
   let ox = H.x, alpha = 1, rot = 0;
   if (H.hurt > 0 && H.deadP < 0) ox += (Math.random() - .5) * 3;
@@ -276,7 +288,7 @@ function drawHeroAnim(H){
   const F = heroForm();
   { const pe = pistolEra(H.ws); if (pe >= 0) return drawHeroPistol(H, pe) || drawHeroPistolWait(H); }   /* pistola: folhas pistol_* da pasta do herói/skin (antes as skins de corpo próprio seguravam a pistola na pose da espada, apontada para o chão) */
   if (F.stage > 0 && drawHeroPhase(H, F.stage)) return true;   /* skin fixa com corpo próprio (pastas phase2/phase3 e kaia_phase2/3): folhas de 448 */
-  if (F.hero !== 'kael'){ drawHeroPhase(H, F.stage); return true; }   /* KAIA (Engenheiro 4): sempre as folhas DELA; enquanto carregam não aparece nada por um instante (nunca o Kael no lugar) */
+  if (F.hero !== 'kael' || F.skin){ drawHeroPhase(H, F.stage); return true; }   /* Engenheiro 10: Kael com SKIN FIXA segue o mesmo caminho (folhas da pasta da skin: parado, corrida, golpe, giro, morte); nunca o corpo padrão */   /* KAIA (Engenheiro 4): sempre as folhas DELA; enquanto carregam não aparece nada por um instante (nunca o Kael no lugar) */
   const L = layNow(H);   /* camadas da roupa-skin (ou null) */
   if (!L && H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);   /* com roupa-skin em camadas a folha composta (corpo já pintado) não vale: corpo + arma na mão */
   const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;
@@ -374,15 +386,19 @@ const formOk = () => typeof Sys !== 'undefined' && !!Sys.appearance && typeof Sy
 const FORM = { t: -1e9, v: null, k: '', ov: null };
 const formStage = dir => { const m = /phase(\d)\/$/.exec(dir || ''); return m ? Math.max(0, Math.min(3, +m[1])) : 0; };   /* número da pasta: só diz o FORMATO da folha (0 = 256 do garoto/menina; N = 448) */
 const formAsk = st => { const ov = FORM.ov; return ov != null ? Sys.appearance.sheetFor(S, Sys.host, st, { skin: ov }) : Sys.appearance.sheetFor(S, Sys.host, st); };
-function heroForm(){ const now = performance.now(), ov = FORM.ov; if (ov == null && FORM.v && now - FORM.t < 200) return FORM.v; let hero = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael', stage = 0, ps = 1;
-  if (formOk()){ try { const r = formAsk('idle'); if (r){ if (r.hero === 'kaia' || r.hero === 'kael') hero = r.hero; stage = formStage(r.dir); ps = (typeof r.scale === 'number' && r.scale > 0) ? r.scale : (PH_SCALE[stage] || 1); } } catch (e) {} }
-  if (ov != null) return { hero, stage, ps };
-  const k = hero + '|' + stage + '|' + ps;
+function heroForm(){ const now = performance.now(), ov = FORM.ov; if (ov == null && FORM.v && now - FORM.t < 200) return FORM.v; let hero = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael', stage = 0, ps = 1, skin = null, dir = null;
+  if (formOk()){ try { const r = formAsk('idle'); if (r){ if (r.hero === 'kaia' || r.hero === 'kael') hero = r.hero; stage = formStage(r.dir); ps = (typeof r.scale === 'number' && r.scale > 0) ? r.scale : (PH_SCALE[stage] || 1); skin = r.skin || null; dir = r.dir || null; } } catch (e) {} }
+  if (ov != null) return { hero, stage, ps, skin, dir };
+  const k = hero + '|' + stage + '|' + ps + '|' + (skin || '');   /* Engenheiro 10: a SKIN FIXA entra na chave (antes Kael padrão → Kael com skin não era "troca" e a pasta nova entrava sem esperar) */
   /* Engenheiro 5 (P29): TROCA DE HERÓI/SKIN só entra no desenho com as folhas do novo decodificadas; até lá fica o anterior, inteiro (no máximo 12 s) */
-  if (k !== FORM.k && FORM.v){ let rdy = true; try { rdy = (hero === 'kael' && stage === 0) ? ['idle', 'run', 'attack'].every(st => !!SHEET(heroSet(2)[st])) : phaseReady(stage); } catch (e) { rdy = true; }
+  if (k !== FORM.k && FORM.v){ let rdy = true; FORM.chk = true;   /* chk: durante a conferência o phaseSheet devolve as folhas NOVAS (fora dela, as do herói ainda desenhado) */
+    try { rdy = (hero === 'kael' && stage === 0 && !skin) ? ['idle', 'run', 'attack'].every(st => !!SHEET(HERO_SETS[2][st])) : phaseReady(stage);
+      if (hero !== 'kael' || stage > 0 || skin){ const d = phaseSheet('die', stage, true); if (d && !d.ok && !d.fail) rdy = false;
+        const pe = (typeof heroLook === 'function' && typeof pistolEra === 'function') ? pistolEra(heroLook().weapon) : -1; if (pe >= 0) for (const st of ['idle', 'run', 'shoot']){ const q = phaseSheet('pistol_' + st, null, true); if (q && !q.ok && !q.fail) rdy = false; } }   /* morte e pistola da pasta nova também (nada pela metade) */
+    } catch (e) { rdy = true; } FORM.chk = false;
     if (!rdy && !(typeof lookWait === 'function' && lookWait('form', k))){ FORM.t = now - 150; return FORM.v; } }
   if (k !== FORM.k){ FORM.k = k; if (FORM.v && typeof avatarRefresh === 'function'){ try { avatarRefresh(); } catch (e) {} } }   /* herói/skin mudou: retrato do cabeçalho */
-  FORM.t = now; return FORM.v = { hero, stage, ps }; }
+  FORM.t = now; return FORM.v = { hero, stage, ps, skin, dir }; }
 function formRefresh(){ FORM.t = -1e9; return heroForm(); }
 const phasesOk = () => typeof PHASES_ON !== 'undefined' && PHASES_ON && typeof Sys !== 'undefined' && !!Sys.phaseUp && !!Sys.appearance && typeof Sys.appearance.sheetFor === 'function';
 function phaseBoot(){ if (!phasesOk()) return; try { Sys.phaseUp.DATA.on = true; Sys.phaseUp.ensure(S); phaseCheck(true); } catch (e) { console.error('phaseBoot', e); } }
@@ -392,6 +408,9 @@ const phaseK = () => { const F = heroForm(); return heroPhase() === F.stage ? F.
 const stageK = stage => { const F = heroForm(); return stage === F.stage ? F.ps : (PH_SCALE[stage] || 1); };
 function phaseSheet(st, stage, noNeck){ if (!formOk()) return null; let r = null; try { r = formAsk(st); } catch (e) { return null; } if (!r || !r.body) return null; let base = r.body;
   if (stage != null && stage !== formStage(r.dir)) base = base.replace(/hyb\/[^/]+\//, 'hyb/' + (r.hero === 'kaia' ? (stage ? 'kaia_phase' + stage : 'kaia') : PH_DIRS[stage]) + '/');   /* pedido explícito de outra pasta (pistola na pasta-base; evolução inerte) */
+  /* Engenheiro 10: enquanto a troca de herói/skin espera a pasta nova (heroForm segura o anterior), as folhas pedidas são as do herói AINDA DESENHADO: sem isto o
+     módulo já respondia a pasta nova e o herói sumia (ou vinha pela metade) até ela decodificar */
+  { const V = FORM.v; if (FORM.ov == null && !FORM.chk && V && V.dir && (stage == null || stage === formStage(r.dir)) && (V.dir !== r.dir || V.hero !== r.hero) && /^[a-z_]+$/.test(st)) base = V.dir + V.hero + '_' + (r.state || st) + '_body'; }
   return sheetLoad(base, noNeck || st === 'die'); }
 function phaseReady(stage){ let ok = true; for (const st of ['idle', 'run', 'attack']){ const s = phaseSheet(st, stage); if (!s || !s.ok) ok = false; } phaseSheet('spin', stage); phaseSheet('die', stage); return ok; }
 /* altura do corpo parado nesta fase (px lógicos): barras de vida, pet e folgas usam esta */
