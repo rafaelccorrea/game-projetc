@@ -171,3 +171,14 @@ Teste: `test/sys/item-armas.test.js` (306 verificações, as 45 armas). Em todas
 | Celeste (8) | ✓ `celestial_legend` | Mítico ⏸; Básico "Lança de Luz" (conferir com a arte); **Códex não tem a era 8** |
 
 **Lacuna de sistema encontrada: o Códex só cobre 7 eras.** `js/sys/codex.js:23` tem `eras:7`, e a tela usa `Math.min(7, ERAS.length)` (`js/p_codex.js:56`). As armas e armaduras das eras 7 e 8 nunca entram na coleção. Proposta (Sistemas + Engenheiro): com as eras 7-8 ligadas, `eras:9`, com +6 casas de arma e +12 de armadura (os "melhores inimigos" das eras 7-8 também, +6). Muda o total do Códex; os marcos já resgatados ficam.
+
+## Fogueira P1 e Ladrão de Brasas (LoM, aprovado pelo dono)
+
+Origem: `docs/LOM_VS_EONBOUND.md` seç. 5 (itens 2, 3 e 5). Números do Ladrão e do offline = contrato do servidor (fps-6f). Nada à venda, sem sorteio pago.
+
+| Sistema | O que faz | Chave | Teste |
+|---|---|---|---|
+| `Sys.bonfire` (Fogueira das Eras) | **Lote por nível**: `tap(S,host)` forja até `perTap(nível)` peças, 1 Brasa cada (1-3 = 1, 4-6 = 2, 7-9 = 4, 10-19 = 5, 20-34 = 6, 35-49 = 8, 50-60 = 10). **Estoque à vista** no `view` (`stock`, `max`, `pot`, `perTap`, `nextTap`, `unlock` = o que o próximo nível abre). **Só abate novo** enche o pote: `addBrasas(S,'kill',n,{stage,maxStage})` (fase abaixo da maior já alcançada não conta; `best` guardado). **Offline**: `offline(S,host,segundos)` = 1 Brasa a cada 18 min, até 12 h por volta e 40 por dia de Brasília (`S.sys.bonfire.off = {day, n}`), resumo para o painel "Enquanto você esteve fora". Fonte nova `'thief'`. Toda fonte soma em `got` | `DATA.on:false` | `test/sys/bonfire.test.js` (20) |
+| `Sys.thief` (Ladrão de Brasas) | Instância diária: 2 entradas grátis por dia (Brasília), 45 s; prêmio = até 1 lote pelo nível da Fogueira, `finish {score 0..1}` (arredonda; score 1 vence o nível); **Repetir** (`sweep`) dá o lote cheio do melhor nível vencido e gasta 1 entrada. Brasas por `Sys.bonfire.addBrasas(S,'thief',n)` | `DATA.on:false` (precisa também do `Sys.bonfire` ligado) | `test/sys/thief.test.js` (8) |
+
+Falta do Engenheiro: carregar `js/sys/thief.js` na lista de módulos; passar `{stage,maxStage}` no `fogBrasa('kill')` do `js/farm.js`; chamar `Sys.bonfire.offline` uma vez na volta ao jogo e preencher `gold/xp/items/stones` do resumo com o offline que já existe; tela do Ladrão.
