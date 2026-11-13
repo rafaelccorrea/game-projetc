@@ -9,9 +9,9 @@
    Ações (Sistemas 13/11):
      equip   — equipar o melhor item da MOCHILA no espaço ("raridade +1" da proposta = trocar por item melhor que já tem; não existe subir o r)
      forge   — Forja +1 no espaço (Sys.forge.advice)
-     fuse    — Fundir +1★ de qualidade o item equipado (Sys.stats.canFuse; precisa de 3 iguais)
+     fuse    — Fundir (+1 estrela de qualidade) o item equipado (Sys.stats.canFuse; precisa de 3 iguais)
      pet     — evoluir o estágio do pet (Sys.pet.canEvolve), alimentar +1 nível, equipar o melhor pet
-     mount   — +1★ na montaria equipada (fragmentos; Sys.mount.DATA.starCost)
+     mount   — +1 estrela na montaria equipada (fragmentos; Sys.mount.DATA.starCost)
      title   — destacar o melhor título já ganho (Sys.titles.advice)
      level   — subir +1 nível ("falta X% da barra"): NÃO é ação imediata, entra sempre por último
    FORA (Sistemas): práticas e torre (dão recurso, não FC direta), comprar qualquer coisa, invocar (não há sorteio pago).
@@ -36,6 +36,8 @@ const clone=o=>{ try{ return typeof structuredClone==='function'?structuredClone
 const F=()=>SYS().fc;
 const fcOf=(S,host,opts)=>{ try{ return num(F().compute(S,host,opts),0); }catch(e){ return 0; } };
 const view=n=>{ const f=F(); try{ return f&&f.viewText?f.viewText(n):String(Math.round(n)); }catch(e){ return String(Math.round(n)); } };
+/* regra do dono: NENHUM emoji nem estrela desenhada em texto do jogo (rótulos de outros módulos passam por aqui também). icon = id curto que a tela troca por imagem */
+const noEmoji=t=>String(t==null?'':t).replace(/[★☆]/g,' estrelas').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\s{2,}/g,' ').trim();
 const costNum=c=>{ const m=String(c||'').replace(/\./g,'').match(/\d+/); return m?Number(m[0]):0; };
 
 /* ganho de uma mudança feita numa CÓPIA do save (o host lê os itens do jogo, que a cópia não altera) */
@@ -46,27 +48,27 @@ function equip(S,host,now,out){ const T=SYS().stats; if(!T||!Array.isArray(S.inv
   const L=SYS().level, pl=L&&L.level?L.level(S):(host&&host.level?host.level():null), eq=S.eq||{}, best={};
   for(const it of S.inv){ if(!it||!it.slot||eq[it.slot]===it.id) continue; if(typeof T.canEquip==='function'&&!T.canEquip(it,pl)) continue;
     const g=fcOf(S,host,{item:it})-now; if(!best[it.slot]||g>best[it.slot].g) best[it.slot]={g,it}; }
-  for(const s in best){ const b=best[s]; out.push({id:'equip.'+s,kind:'equip',icon:'🗡️',label:`Equipar ${b.it.name||'o melhor da mochila'} (${DATA.slotName[s]||s})`,gain:b.g,ready:true,cost:'grátis',costN:0,itemId:b.it.id}); } }
+  for(const s in best){ const b=best[s]; out.push({id:'equip.'+s,kind:'equip',icon:'equip',label:`Equipar ${b.it.name||'o melhor da mochila'} (${DATA.slotName[s]||s})`,gain:b.g,ready:true,cost:'grátis',costN:0,itemId:b.it.id}); } }
 
 function fromModuleAdvice(S,host,out){ const f=F(); if(!f||typeof f.advice!=='function') return; let list=[]; try{ list=f.advice(S,host,99); }catch(e){ list=[]; }
   for(const a of list){ const id=String(a.id||''); let kind=null;
     if(/^forge\./.test(id)) kind='forge'; else if(id==='pet.feed'||id==='pet.equip') kind='pet'; else if(id==='titles.feature') kind='title';
     if(!kind) continue;   // práticas, torre, baú, instâncias e títulos ainda não ganhos ficam de fora
-    out.push({id,kind,icon:a.icon||'',label:a.label,gain:a.gain,ready:!!a.ready,cost:a.cost||'',costN:costNum(a.cost)}); } }
+    out.push({id,kind,icon:kind,label:noEmoji(a.label),gain:a.gain,ready:!!a.ready,cost:noEmoji(a.cost||''),costN:costNum(a.cost)}); } }
 
 function petEvolve(S,host,now,out){ const P=SYS().pet; if(!P||typeof P.canEvolve!=='function') return; let o; try{ o=P.ensure(S); }catch(e){ return; } const id=o&&o.eq; if(!id) return;
   const c=P.canEvolve(S,id); if(!c||c.reason==='off'||c.reason==='max'||c.reason==='pet') return;
   const g=simGain(S,host,now,S2=>{ const r=P.evolve(S2,id); if(r&&r.ok) return true; P.ensure(S2).owned[id].stg=c.stage+1; return true; });
-  if(g>=DATA.minGain){ out.push({id:'pet.evolve',kind:'pet',icon:'🐾',label:c.ok?`Evoluir o pet (estágio ${c.stage+2})`:`Evoluir o pet: chegue ao Nv ${c.need} do pet`,gain:g,ready:!!c.ok,cost:c.ok?'grátis':'',costN:0}); return; }
+  if(g>=DATA.minGain){ out.push({id:'pet.evolve',kind:'pet',icon:'pet',label:c.ok?`Evoluir o pet (estágio ${c.stage+2})`:`Evoluir o pet: chegue ao Nv ${c.need} do pet`,gain:g,ready:!!c.ok,cost:c.ok?'grátis':'',costN:0}); return; }
   /* tela 17b (Sistemas 13/11): evoluir NÃO dá poder na hora, só libera o teto de nível. No teto do estágio: a dica aparece SEM número */
   const x=o.owned[id], cap=P.DATA.v17&&P.DATA.v17.stageCap?P.DATA.v17.stageCap[c.stage]:null;
-  if(c.ok&&cap!=null&&int0(x&&x.lvl)>=cap) out.push({id:'pet.evolve',kind:'pet',icon:'🐾',label:'Evoluir o pet para liberar mais níveis',gain:0,ready:true,cost:'grátis',costN:0,noGain:true}); }
+  if(c.ok&&cap!=null&&int0(x&&x.lvl)>=cap) out.push({id:'pet.evolve',kind:'pet',icon:'pet',label:'Evoluir o pet para liberar mais níveis',gain:0,ready:true,cost:'grátis',costN:0,noGain:true}); }
 
 function mountStar(S,host,now,out){ const M=SYS().mount; if(!M||typeof M.info!=='function') return; let o; try{ o=M.ensure(S); }catch(e){ return; } const id=o&&o.eq; if(!id) return;
   const inf=M.info(S,host,id); if(!inf||!inf.owned||inf.stars>=M.DATA.maxStars) return;
   const g=simGain(S,host,now,S2=>{ const x=M.ensure(S2).owned[id]; if(!x) return false; x.stars++; return true; });
   const miss=Math.max(0,inf.need-inf.frags);
-  out.push({id:'mount.star',kind:'mount',icon:'🐎',label:`Montaria ${inf.name} ${inf.stars+1}★`+(miss?` (faltam ${miss} fragmentos)`:''),gain:g,ready:miss===0,cost:`${inf.need} fragmentos`,costN:inf.need}); }
+  out.push({id:'mount.star',kind:'mount',icon:'mount',label:`Montaria ${inf.name} para ${inf.stars+1} estrelas`+(miss?` (faltam ${miss} fragmentos)`:''),gain:g,ready:miss===0,cost:`${inf.need} fragmentos`,costN:inf.need}); }
 
 function fuse(S,host,now,out){ const T=SYS().stats; if(!T||typeof T.canFuse!=='function'||!Array.isArray(S.inv)) return; const eq=S.eq||{};
   for(const s in eq){ const cur=S.inv.find(x=>x&&x.id===eq[s]); if(!cur) continue;
@@ -74,12 +76,12 @@ function fuse(S,host,now,out){ const T=SYS().stats; if(!T||typeof T.canFuse!=='f
     for(let i=0;i<same.length;i++) for(let j=i+1;j<same.length;j++){ const c=T.canFuse(S,host,[cur,same[i],same[j]]); if(!c||c.reason==='different'||c.reason==='count') continue;
       if(c.reason==='off'||c.reason==='max') return; const res=c.result||null; if(!res) continue;
       const g=fcOf(S,host,{item:Object.assign({},res,{id:cur.id})})-now;
-      out.push({id:'fuse.'+s,kind:'fuse',icon:'✨',label:`Fundir +1★ (${DATA.slotName[s]||s})`,gain:g,ready:!!c.ok,cost:c.gold?`${c.gold} ouro`:'',costN:int0(c.gold)}); i=same.length; break; } } }
+      out.push({id:'fuse.'+s,kind:'fuse',icon:'fuse',label:`Fundir ${DATA.slotName[s]||s} para ${int0(c.toStars)} estrelas`,gain:g,ready:!!c.ok,cost:c.gold?`${c.gold} ouro`:'',costN:int0(c.gold)}); i=same.length; break; } } }
 
 function levelUp(S,host,now,out){ const L=SYS().level; if(!L||typeof L.progress!=='function') return; const p=L.progress(S); if(!p||p.max) return;
   const g=simGain(S,host,now,S2=>{ const o=L.ensure(S2); o.lvl=int0(o.lvl)+1; o.xp=0; return true; });
   const left=Math.max(0,Math.min(100,Math.ceil((1-num(p.frac,0))*100)));
-  out.push({id:'level.up',kind:'level',icon:'⭐',label:`Subir para o Nv ${p.lvl+1} (falta ${left}% da barra)`,gain:g,ready:false,cost:'',costN:0,last:true}); }
+  out.push({id:'level.up',kind:'level',icon:'level',label:`Subir para o Nv ${p.lvl+1} (falta ${left}% da barra)`,gain:g,ready:false,cost:'',costN:0,last:true}); }
 
 /* ---------------- principal ---------------- */
 function all(S,host){ const now=fcOf(S,host), out=[];

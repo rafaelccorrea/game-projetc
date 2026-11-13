@@ -81,6 +81,12 @@ t('pet e montaria: simulados numa CÓPIA (o save real não muda); ganho = difere
   } finally { PET.DATA.v3 = v3; PET.setV17(false); M.DATA.on = mOn; }
 });
 
+t('regra do dono: nenhum emoji nem estrela desenhada nos rótulos, custos e ícones (ícone = id para a tela)', () => {
+  const w = world(); w.add({ slot: 'weapon', e: 1, r: 0, lvl: 30 }, true); w.add({ slot: 'weapon', e: 1, r: 3, lvl: 30 });
+  const bad = /[★☆]|[🀀-🫿☀-➿]/u;
+  for (const a of A.all(w.S, w.host).list) { assert.ok(!bad.test(a.label + a.cost + a.icon), a.id + ': ' + a.label); assert.ok(/^[a-z]+$/.test(a.icon), 'ícone ' + a.icon); }
+});
+
 t('save vazio/estranho não quebra', () => {
   const w = world(); assert.ok(Array.isArray(A(w.S, w.host).actions)); assert.ok(Array.isArray(A({}, {}).actions)); assert.ok(Array.isArray(A(null, null).actions));
 });
