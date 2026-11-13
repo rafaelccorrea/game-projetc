@@ -8,6 +8,13 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h55 · v0.12.8, lote 1 LIGADO NO JOGO e conferido no navegador pelo caminho do jogador (no GitHub):**
+  - [x] Torre inteira rolando (com luta e prêmio) · Troca de era · Missões (o Passe ficou com a trilha e um botão "Missões") · Perfil (pelo avatar, nível 10) · Códex · Guilda · Chat (só frases prontas)
+  - [x] FC na tela: "+269 ▲" verde / "−269 ▼" vermelho, com o total contando
+  - [x] Menu por nível: 1 VIP/Config. · 2 Missões · 12 Forja e Códex · 15 Torre · 16 Chat · 20 Pets · 28 Ranking · 32 Guilda; os 7 ícones novos aparecem; nenhum botão sem ação
+  - [ ] Ainda desligadas: Instâncias, Correio, Montarias, Vitória/Derrota, missão guia, Arena, Eventos, Torneio, Mapa (em conferência ou esperando um módulo); Oferta e Leilão (dependem do servidor)
+  - [~] Em conferência: Serpe e os 3 ajustes das montarias, morte nova, inimigo sem parar, cenário Industrial, ultimate pela raridade
+
 - **22h45 · Arte:** os 7 ícones de menu que faltavam ficaram prontos (Arena, Guilda, Torneio, Códex, Chat, Mapa, Montarias; 14 créditos). Seguem as animações do adulto e do guerreiro e os cenários das eras 6 a 8
 - **22h45 · Moedas do incidente:** o engenheiro devolve as 9,8 mil moedas quando você escrever "sim" na janela dele e ligar o celular no cabo
 
