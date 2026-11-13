@@ -1,0 +1,454 @@
+<title>Eonbound Fim das Eras V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Equipamento V2 e Montarias V2.
+   Fim das 9 eras V2: tela de festa depois de vencer o Juiz Celestial (Senhor da era 8, fase 90). O herói fica SEMPRE à vista no centro, montado
+   (folhas montadas do Perfil V5: arma na mão, asa nas costas), com o pet NA FRENTE. Sequência de 5 passos com "Pular". Nada à venda nesta tela, nada sorteado. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden}
+/* cenário da era 8 (camadas do jogo: assets/bg/v2/era8 sky/far/ground, posições do meta.json com altura de cena SH = 400) */
+.scene{position:absolute;left:0;top:0;width:390px;height:400px;overflow:hidden;cursor:pointer}
+.l-sky{position:absolute;left:0;top:0;width:390px;height:248px;background:url(a/bg8_sky.webp) 0 0/496px 248px repeat-x}
+.l-far{position:absolute;left:0;top:26px;width:390px;height:200px;background:url(a/bg8_far.webp) -52px 0/501px 200px repeat-x}
+.l-gnd{position:absolute;left:0;top:240px;width:390px;height:163px;background:url(a/bg8_ground.webp) 0 0/193px 163px repeat-x}
+.l-dim{position:absolute;inset:0;background:radial-gradient(70% 45% at 50% 52%,rgba(255,236,170,.18),transparent 70%),linear-gradient(180deg,rgba(11,16,48,.38) 0%,rgba(11,16,48,.05) 30%,rgba(11,16,48,0) 70%,rgba(11,16,48,.75) 92%,var(--night) 100%)}
+#stc{position:absolute;left:0;top:0;width:390px;height:400px}
+.top{position:absolute;z-index:6;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;padding:12px 14px 0}
+.pill{height:30px;padding:0 11px;border-radius:15px;background:rgba(5,8,28,.7);border:1px solid var(--line);display:flex;align-items:center;font-weight:900;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums;flex:none}
+.dots{flex:1;display:flex;justify-content:center;gap:6px;min-width:0}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 0 1px rgba(5,8,28,.5)}
+.dots i.on{background:var(--gold);width:20px;border-radius:4px}
+.skip{flex:none;height:34px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:rgba(5,8,28,.72);font-weight:900;font-size:13px;display:flex;align-items:center;gap:4px}
+.skip svg{width:14px;height:14px}
+.ban{position:absolute;z-index:5;left:0;right:0;top:56px;display:flex;flex-direction:column;align-items:center;pointer-events:none;padding:0 14px}
+.rib{position:relative;max-width:100%;padding:6px 26px 7px;font-family:var(--fd);font-size:25px;letter-spacing:1.2px;color:#fff6d6;text-align:center;line-height:1.05;
+  background:linear-gradient(180deg,#e2a530,#a8641a);border-radius:10px;box-shadow:0 3px 0 #6a3a0c,0 0 26px rgba(255,210,94,.55);text-shadow:0 2px 0 rgba(0,0,0,.35);animation:pop .55s ease-out both}
+.rib.blue{background:linear-gradient(180deg,#4f6bdc,#2a3a96);box-shadow:0 3px 0 #18225e,0 0 22px rgba(94,231,255,.4)}
+.rib small{display:block;font-family:var(--fb);font-weight:900;font-size:11px;letter-spacing:1.4px;color:#ffe9b0;margin-top:2px}
+.tap{margin-top:6px;padding:3px 10px;border-radius:10px;background:rgba(5,8,28,.66);font-size:11px;font-weight:800;color:#dfe5ff;animation:blink 1.6s ease-in-out infinite}
+
+.panel{position:absolute;z-index:4;left:0;right:0;top:388px;bottom:0;display:flex;flex-direction:column}
+.pc{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 12px 8px;scrollbar-width:none}
+.pc::-webkit-scrollbar{display:none}
+.pf{flex:none;display:flex;gap:8px;padding:8px 12px 18px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%)}
+.pan{border-radius:16px;background:var(--glass);border:1px solid var(--line);padding:10px;margin-bottom:8px;min-width:0;animation:rin .3s ease-out}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.sec span:first-child{flex:none}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:9px;font-weight:900;letter-spacing:1px;padding:1px 6px;border-radius:6px;background:var(--violet);color:#160733;vertical-align:1px}
+.tag.ex{background:#ffb84d;color:var(--ink)}
+.tag.code{background:var(--green);color:#043018}
+.tag.pr{background:var(--rose);color:#3a0716}
+.lead{font-size:13px;line-height:1.45;margin:0 0 6px;font-weight:700}
+.lead b{color:var(--gold)}
+.hint{font-size:11px;color:var(--muted);margin:7px 0 0;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;padding:5px 0;border-top:1px solid rgba(130,150,255,.15);min-width:0}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--muted);flex:none}
+.kv span:last-child{text-align:right;min-width:0}
+.kv b{color:var(--gold)}
+
+/* 9 eras: grade 3x3, cada uma acende */
+.eras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.em{min-width:0;border-radius:12px;border:1px solid var(--line);background:rgba(5,8,28,.55);padding:6px 3px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;opacity:.45;filter:grayscale(1);transition:opacity .3s,filter .3s,border-color .3s,box-shadow .3s}
+.em svg{width:40px;height:40px;flex:none}
+.em b{font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 3px}
+.em small{font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 3px}
+.em.on{opacity:1;filter:none;border-color:var(--ec);box-shadow:0 0 14px color-mix(in srgb,var(--ec) 45%,transparent);animation:lit .5s ease-out}
+.em.on small.ok{color:var(--green)}
+.cnt{font-family:var(--fd);font-size:22px;color:var(--gold);text-align:center;margin-top:6px;letter-spacing:1px}
+
+/* resumo */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.sc{min-width:0;border-radius:12px;background:rgba(5,8,28,.55);border:1px solid var(--line);padding:7px 9px}
+.sc small{display:block;font-size:9px;letter-spacing:1px;color:var(--muted);font-weight:900;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc b{display:block;font-family:var(--fd);font-weight:400;font-size:22px;line-height:1.1;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc.code{border-color:rgba(94,240,160,.5)}
+
+/* prêmios */
+.rw{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(130,150,255,.15);min-width:0}
+.sec+.rw{border-top:0}
+.rw .ri{flex:none;width:52px;height:52px;border-radius:12px;display:grid;place-items:center;background:rgba(5,8,28,.6);border:1px solid var(--line2)}
+.rw .ri img{width:34px;height:34px}
+.rw .ri svg{width:30px;height:30px}
+.rw .rt{flex:1;min-width:0}
+.rw .rt b{display:block;font-size:13px;font-weight:900}
+.rw .rt span{display:block;font-size:11px;font-weight:700;color:var(--muted);line-height:1.35}
+.rw .rt span em{font-style:normal;color:var(--green);font-weight:900}
+.rw .bt{flex:none}
+/* moldura proposta: 9 pedras nas cores das eras */
+.frame{position:relative;width:52px;height:52px;border-radius:50%;padding:4px;background:conic-gradient(#f2c37a,#f4a261,#c0714a,#d98e5f,#c9a46a,#7aa6c9,#5b2a8a,#8a1a0a,#fff4d0,#f2c37a);box-shadow:0 0 12px rgba(255,210,94,.6)}
+.frame span{display:block;width:100%;height:100%;border-radius:50%;background:#1a2366 no-repeat center 18%/120% auto;border:2px solid #fff3c4}
+.tframe{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:9px;font-family:var(--fd);font-size:15px;letter-spacing:.6px;color:#fff6d6;background:linear-gradient(90deg,#5b2a8a,#a8641a 50%,#5b2a8a);border:2px solid var(--gold);box-shadow:0 0 12px rgba(255,210,94,.5);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+
+/* fases sem fim */
+.fr{display:grid;grid-template-columns:62px minmax(0,1fr) 82px;gap:8px;align-items:center;font-size:12px;font-weight:900;padding:4px 0;border-top:1px solid rgba(130,150,255,.12)}
+.fr:first-of-type{border-top:0}
+.fr span:first-child{color:var(--muted)}
+.fr i{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,#f4a52a,#ffe58a)}
+.fr.now i{background:linear-gradient(90deg,#22c47a,#7dffb8)}
+.fr span:last-child{text-align:right;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.bt{flex:1 1 0;min-width:0;height:50px;padding:0 12px;border-radius:14px;border:0;font-weight:900;font-size:16px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 4px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 2px 0 #9a5a10}
+.bt.sm{flex:none;height:34px;font-size:12px;padding:0 10px;border-radius:11px;box-shadow:0 3px 0 #9a5a10}
+.bt.off{background:rgba(255,255,255,.06);color:var(--text);box-shadow:none;border:1px solid var(--line2)}
+.bt.grn{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b;box-shadow:0 4px 0 #0d6b40}
+.bt.sm.on{background:rgba(94,240,160,.14);color:var(--green);border:2px solid var(--green);box-shadow:none}
+.bt svg{width:16px;height:16px;flex:none}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.nav .top{position:relative}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.navb .bt{flex:none;min-width:220px}
+.toast{position:absolute;left:50%;top:104px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(8px)}}
+@keyframes pop{0%{opacity:0;transform:scale(.5)}60%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes lit{0%{transform:scale(.8)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes blink{50%{opacity:.45}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="scene" id="scene">
+          <div class="l-sky"></div><div class="l-far"></div><div class="l-gnd"></div>
+          <canvas id="stc" width="780" height="800" role="img" aria-label="Seu herói montado, comemorando no centro, com a arma na mão, a asa nas costas e o pet na frente"></canvas>
+          <div class="l-dim"></div>
+          <div class="ban" id="ban"></div>
+        </div>
+        <div class="top">
+          <span class="pill" id="stepn">1/5</span>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+          <button class="skip" id="skip"><span>Pular</span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l6 6-6 6M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div class="panel">
+          <div class="pc" id="pc"></div>
+          <div class="pf" id="pf"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Fim das 9 eras (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">A festa depois de vencer o Juiz Celestial, o Senhor da era 8 (fase 90, a última). São 5 passos: o chefe some na luz, as 9 eras acendem uma a uma, o resumo da sua jornada, os prêmios do fim e as fases sem fim. Toque no cenário ou em Próximo para seguir; Pular vai direto ao último passo. O herói fica sempre no centro, montado, com a arma na mão e o pet na frente. Nada à venda e nada sorteado nesta tela.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Jogador" style="margin-top:8px"><button data-pl="free" aria-pressed="true">Grátis, dia 178</button><button data-pl="vip" aria-pressed="false">VIP 10, dia 118</button></div>
+      <div class="seg" style="margin-top:8px"><button data-sim="again">Ver a sequência de novo</button></div>
+      <p class="sub" style="margin-top:8px">Os dias (178 grátis, 118 VIP 10) são os da simulação de 180 dias (docs/balance.json, dificuldade.sim180). Grátis: Cavalo de guerra, asa demoníaca e Pégaso adulto. VIP 10: Serpe dourada, asa de anjo e Pégaso evoluído. Chefes, abates, FC mais alta, nível, pets e montarias do resumo são exemplos (marcados como EXEMPLO na tela).</p>
+    </div>
+    <div class="box">
+      <h2>De onde vem cada coisa</h2>
+      <ul>
+        <li>As 9 eras e os chefes: index.html ERAS (eras 0 a 6) e js/sys/eras.js (Submundo e Celestial; Senhor do Submundo e Juiz Celestial, também em js/eras9.js ERA9_BOSS)</li>
+        <li>Arte do Juiz Celestial: assets/enemies/era8_boss.png; cenário: as camadas da era 8 (assets/bg/v2/era8 sky, far e ground)</li>
+        <li>FC pedida da fase 90 e o crescimento depois dela: docs/balance.json (dificuldade.recFc, último valor, e afterLastGrowth 1,03) com a conta do js/diff.js fcNeed</li>
+        <li>Já é seu (do código): título Senhor das Eras (js/sys/titles.js, fase 70) e a conquista Viajante do tempo nível 3 (js/sys/achievements.js, era 8; módulo com a chave desligada)</li>
+        <li>Hoje o código não tem prêmio próprio para vencer a fase 90. Os quatro prêmios marcados PROPOSTA são para o seu voto: título Lenda das 9 Eras, moldura Nove Eras, aura Luz das Eras (só visual) e 300 diamantes uma vez</li>
+        <li>As folhas montadas já vêm com a espada da Medieval na mão; por isso a arma equipada nos dois exemplos é essa mesma espada (igual à tela de Montarias V2)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: mais confete, outro nome para o título, menos diamantes"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- DADOS DO JOGO (copiados; não inventar) ----------
+   9 eras: index.html ERAS[0..6].n e .sky, js/sys/eras.js ERAS78 (Submundo, Celestial). Chefe = último inimigo da era (en[en.length-1]); eras 7-8 = SENHOR / ERA9_BOSS.
+   FC pedida: docs/balance.json dificuldade.recFc[89] = 290 tri; depois da fase 90: recFc[89] × afterLastGrowth^(fase − 90) (js/diff.js fcNeed), afterLastGrowth = 1,03.
+   Dias até a fase 90: docs/balance.json dificuldade.sim180 (grátis 178, VIP 10 118). */
+const ERAS=[
+ {n:'Pré-História',boss:'Javali',c:['#5aa7d6','#f2c37a']},
+ {n:'Antiguidade',boss:'Minotauro',c:['#e9c46a','#f4a261']},
+ {n:'Medieval',boss:'Lobo',c:['#3a2a52','#c0714a']},
+ {n:'Era da Pólvora',boss:'Capitão Fantasma',c:['#2f4858','#d98e5f']},
+ {n:'Era Industrial',boss:'Golem a Vapor',c:['#4b4237','#c9a46a']},
+ {n:'Era Moderna',boss:'Tanque Robô',c:['#223a5e','#7aa6c9']},
+ {n:'Era Futurista',boss:'Devorador',c:['#0b0b2e','#5b2a8a']},
+ {n:'Submundo',boss:'Senhor do Submundo',c:['#2a0a0a','#8a1a0a']},
+ {n:'Celestial',boss:'Juiz Celestial',c:['#bfe3ff','#fff4d0']}];
+const ROM=['I','II','III','IV','V','VI','VII','VIII','IX'];
+const REC90=290e12, GROW=1.03, LAST=90;
+const fcNeed=st=>st<=LAST?REC90:Math.round(REC90*Math.pow(GROW,st-LAST));
+/* títulos e conquistas reais (js/sys/titles.js: bonusMult 0,5, featuredMult 2; js/sys/achievements.js TIER_REWARD[2] + lastGems 15 da conquista 'era') */
+const TITLE70={name:'Senhor das Eras',stage:70,atk:5,hp:5}, BMULT=0.5;
+const ACH_ERA={name:'Viajante do tempo',tier:3,goldk:600,stones:8,forge:4,food:40,gems:15};
+/* PROPOSTA (para o voto do dono): nada disso está no código */
+const PROP={title:{name:'Lenda das 9 Eras',stage:90,atk:6,hp:6},gems:300,budget:10000};
+
+/* os dois jogadores do Simular: dias do sim180; o resto é EXEMPLO */
+const PL={
+ free:{label:'Grátis',days:178,mount:'horse',mname:'Cavalo de guerra',wing:'demon',pet:'a/pp_era8_pegasus_mid.png',pname:'Pégaso (adulto)',
+   fc:301e12,lvl:112,bosses:1240,kills:486000,pets:4,mounts:3,hours:214},
+ vip:{label:'VIP 10',days:118,mount:'wyvern',mname:'Serpe dourada',wing:'angel',pet:'a/pp_era8_pegasus_evo.png',pname:'Pégaso (evoluído)',
+   fc:348e12,lvl:120,bosses:1105,kills:402000,pets:6,mounts:11,hours:171}};
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',');
+const fmtFC=v=>v>=1e12?dec(v/1e12,1)+' tri':v>=1e9?dec(v/1e9,2)+' bi':v>=1e6?dec(v/1e6,2)+' mi':v>=1e4?dec(v/1000,1)+' mil':n(v);
+const SV={next:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ sun:'<svg viewBox="0 0 24 24" fill="none" stroke="#ffd25e" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="#ffe58a"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
+ scroll:'<svg viewBox="0 0 24 24" fill="none" stroke="#5ee7ff" stroke-width="2.2" stroke-linejoin="round"><path d="M6 4h11a2 2 0 012 2v12a2 2 0 01-2 2H7a3 3 0 01-3-3V6a2 2 0 012-2z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>',
+ medal:'<svg viewBox="0 0 24 24"><path d="M7 2h4l1 5-3 1zM17 2h-4l-1 5 3 1z" fill="#ff6b9a"/><circle cx="12" cy="15" r="6.5" fill="#ffd25e" stroke="#9a5a10" stroke-width="1.5"/><path d="M12 11.5l1.1 2.2 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z" fill="#9a5a10"/></svg>'};
+
+/* ---------- estado ---------- */
+const STEPS=5;
+let P=PL.free, S=null, T=0;
+function reset(key){ P=PL[key]; S={key,hero:S?S.hero:'kael',step:0,at:T,lit:0,aura:false,hx:150,cf:[],sp:[]}; }
+
+/* ---------- dados medidos dos arquivos do jogo (iguais ao Montarias V2 / Perfil V5) ---------- */
+/* âncoras das costas no herói MONTADO (Perfil V5 AN.ride, no quadro 512x352) */
+const AN_RIDE={"kael_horse":{"x":160.9,"y":139,"a":34.7,"s":0.654},"kael_wyvern":{"x":159.5,"y":139,"a":5.4,"s":0.654},"kaia_horse":{"x":165.5,"y":139,"a":34.7,"s":0.654},"kaia_wyvern":{"x":164.8,"y":141,"a":5.4,"s":0.654}};
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1}};
+
+/* ---------- PALCO EM CANVAS ---------- */
+const IM={};
+/* imagens do palco como <img> DE VERDADE na página (no host publicado, new Image() não chega ao canvas), escondidas fora da tela */
+const STG_EL=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG_EL.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const GY=312, RK=300/512, KP=145/512, BX=312, BS=210;
+function safeReset(x){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); x.globalAlpha=1; x.globalCompositeOperation='source-over'; x.shadowBlur=0; x.shadowOffsetX=0; }
+function wings(x,ax,ay,b,k,t){ const WA=P.wing&&WING_AN[P.wing]; if(!WA||!b) return; const Li=img('a/wg_'+P.wing+'_L.png'), Ri=img('a/wg_'+P.wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* contorno brilhante: sombra de uma cópia desenhada fora da tela (como a aura do jogo) */
+function halo(x,drawFn,col,blur){ const OFF=1200; x.save(); x.shadowColor=col; x.shadowBlur=blur; x.shadowOffsetX=OFF*2; x.shadowOffsetY=0; x.translate(-OFF,0); drawFn(); x.restore(); }
+const CFC=['#ffd25e','#5ee7ff','#a97bff','#ff6b9a','#5ef0a0','#fff3c4'];
+function burst(nn){ for(let i=0;i<nn;i++) S.cf.push({x:Math.random()*390,y:-10-Math.random()*240,vx:(Math.random()-.5)*30,vy:55+Math.random()*60,r:Math.random()*6.3,vr:(Math.random()-.5)*8,w:4+Math.random()*4,h:2+Math.random()*3,c:CFC[i%CFC.length],sw:Math.random()*6.3,life:0}); }
+let lastT=0;
+function draw(t){
+  T=t; if(!S) return;
+  const dt=clamp(t-lastT,0,0.1); lastT=t;
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,400);
+  const ts=t-S.at, st=S.step;
+  S.hx+=((st===0?150:195)-S.hx)*Math.min(1,dt*3.2);
+  const hx=S.hx, k=RK, ox=hx-256*k, oy=GY-339*k;
+  const H=img('a/'+(S.hero==='kael'?'rd_':'rda_')+P.mount+'.png'), anc=AN_RIDE[S.hero+'_'+P.mount], fi=((Math.floor(t*12)%12)+12)%12;
+  const body=()=>{ if(ok(H)){ const fw=H.naturalWidth/12, fh=H.naturalHeight; x.drawImage(H,fi*fw,0,fw,fh,ox,oy,512*k,352*k); } };
+  /* raios de luz atrás do herói (festa); no passo 1 a luz fica na coluna do chefe */
+  try{ const amp=st===0?clamp((ts-2.6)/1.2,0,1):1, cy=GY-112;
+    if(amp>0){ x.save(); x.globalCompositeOperation='lighter';
+      for(let i=0;i<14;i++){ const a=t*0.18+i*Math.PI/7, L=330, w=0.09;
+        const g=x.createRadialGradient(hx,cy,10,hx,cy,L); g.addColorStop(0,'rgba(255,236,170,'+(0.30*amp).toFixed(3)+')'); g.addColorStop(1,'rgba(255,236,170,0)');
+        x.fillStyle=g; x.beginPath(); x.moveTo(hx,cy); x.arc(hx,cy,L,a-w,a+w); x.closePath(); x.fill(); }
+      const g2=x.createRadialGradient(hx,cy,4,hx,cy,120); g2.addColorStop(0,'rgba(255,250,220,'+(0.35*amp).toFixed(3)+')'); g2.addColorStop(1,'rgba(255,250,220,0)'); x.fillStyle=g2; x.beginPath(); x.arc(hx,cy,120,0,7); x.fill();
+      x.restore(); } }catch(err){ safeReset(x); stgErr('os raios',err); }
+  /* chão iluminado */
+  try{ const g=x.createRadialGradient(hx,GY,8,hx,GY,170); g.addColorStop(0,'rgba(255,226,140,.35)'); g.addColorStop(1,'rgba(255,226,140,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(hx,GY,170,24,0,0,7); x.fill(); }catch(err){ stgErr('o chão',err); }
+  /* PASSO 1: o Juiz Celestial derrotado some na luz (pés no chão, não voa) */
+  if(st===0){
+    try{ const B=img('a/boss_era8.png'), light=clamp((ts-0.3)/1.0,0,1), a=1-clamp((ts-1.3)/1.6,0,1), colA=light*(1-clamp((ts-2.9)/1.2,0,1));
+      if(colA>0){ x.save(); x.globalCompositeOperation='lighter'; const g=x.createLinearGradient(BX-60,0,BX+60,0); g.addColorStop(0,'rgba(255,246,200,0)'); g.addColorStop(.5,'rgba(255,246,200,'+(0.55*colA).toFixed(3)+')'); g.addColorStop(1,'rgba(255,246,200,0)'); x.fillStyle=g; x.fillRect(BX-60,0,120,GY+6); x.restore(); }
+      if(ok(B)&&a>0){ const dw=()=>x.drawImage(B,BX-BS/2,GY+4-BS*(486/512),BS,BS);
+        x.save(); x.globalAlpha=.28*a; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(BX,GY+3,58,8,0,0,7); x.fill(); x.restore();
+        x.save(); x.globalAlpha=a; dw(); x.restore();
+        x.save(); x.globalAlpha=a; halo(x,dw,'rgba(255,250,225,'+Math.min(1,light*1.1).toFixed(3)+')',3); x.restore(); }
+      if(ts>0.8&&ts<4.2){ x.save(); x.globalCompositeOperation='lighter'; for(let i=0;i<28;i++){ const s=((i*7919)%997)/997, s2=((i*104729)%991)/991, p=((ts-0.8)*(0.35+0.3*s)+s2)%1;
+          const px=BX+(s-0.5)*110+Math.sin(ts*2+i)*5, py=GY-p*240, r=1.4+2*(1-p);
+          x.fillStyle='rgba(255,240,190,'+(Math.sin(Math.PI*p)*0.9*colA).toFixed(3)+')'; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); } x.restore(); }
+    }catch(err){ safeReset(x); stgErr('o chefe',err); }
+  }
+  /* herói montado: sombra, brilho de festa (contorno dourado), asa, corpo */
+  try{ x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-10,GY+2,96,10,0,0,7); x.fill(); x.restore(); }catch(err){ stgErr('a sombra',err); }
+  try{ if(ok(H)&&st>0){ const pu=0.6+0.25*Math.sin(t*2.6); halo(x,body,'rgba(255,214,120,'+(S.aura?Math.min(1,pu*1.5):pu*0.7).toFixed(3)+')',S.aura?34:18); if(S.aura) halo(x,body,'rgba(255,250,225,0.6)',10); } }catch(err){ safeReset(x); stgErr('o brilho',err); }
+  try{ if(anc) wings(x,ox+anc.x*k,oy+anc.y*k,anc,k,t); }catch(err){ safeReset(x); stgErr('a asa',err); }
+  try{ body(); }catch(err){ stgErr('o herói montado',err); }
+  /* PROPOSTA "Luz das Eras" (só visual): faíscas subindo do chão em volta do herói */
+  try{ if(S.aura){ x.save(); x.globalCompositeOperation='lighter'; for(let i=0;i<26;i++){ const s=((i*1299709)%983)/983, s2=((i*7919)%997)/997, p=(t*(0.25+0.15*s)+s2)%1;
+      const px=hx-10+(s2-0.5)*240+Math.sin(t*2+i)*4, py=GY-p*190, r=1+2.2*(1-p);
+      x.fillStyle=(i%3?'rgba(255,226,140,':'rgba(255,255,235,')+(Math.sin(Math.PI*p)*0.9).toFixed(3)+')'; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); } x.restore(); } }catch(err){ safeReset(x); stgErr('a aura',err); }
+  /* PET SEMPRE NA FRENTE (regra do dono): à frente e no chão (quadro 512x352, pés em 307) */
+  try{ const I=img(P.pet); if(ok(I)){ const fw=I.naturalWidth/12, fh=I.naturalHeight, pi=((Math.floor(t*12)%12)+12)%12, cxp=hx-91;
+      x.drawImage(I,pi*fw,0,fw,fh,cxp-224*KP,GY+8-307*KP,512*KP,352*KP); } }catch(err){ stgErr('o pet',err); }
+  /* confete nas cores do jogo: cai do alto, pousa no chão e some */
+  try{ if(st>=1&&st<=3&&S.cf.length<70&&Math.random()<dt*14) burst(1);
+    for(const p of S.cf){ if(p.y<GY+30){ p.sw+=dt*3; p.x+=(p.vx+Math.sin(p.sw)*22)*dt; p.y+=p.vy*dt; p.r+=p.vr*dt; if((p.y>=GY+30-Math.random()*40&&p.y>GY-10)||p.y>=GY+30) p.vy=0; }
+      if(p.vy===0) p.life+=dt;
+      const al=p.vy===0?Math.max(0,1-p.life/1.2):1; if(al<=0) continue;
+      x.save(); x.globalAlpha=al; x.translate(p.x,p.y); x.rotate(p.r); x.scale(1,Math.abs(Math.cos(p.sw*1.3))*0.8+0.2); x.fillStyle=p.c; x.fillRect(-p.w/2,-p.h/2,p.w,p.h); x.restore(); }
+    S.cf=S.cf.filter(p=>!(p.vy===0&&p.life>1.2)&&p.x>-20&&p.x<410); }catch(err){ safeReset(x); stgErr('o confete',err); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- passos ---------- */
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+let litTimer=null;
+function eraSvg(i){ const e=ERAS[i], id='g'+i;
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${e.c[0]}"/><stop offset="1" stop-color="${e.c[1]}"/></linearGradient></defs>
+    <path d="M20 2l15 6v11c0 9-6.5 15.5-15 19C11.5 34.5 5 28 5 19V8z" fill="url(#${id})" stroke="#ffd25e" stroke-width="2"/>
+    <text x="20" y="25" text-anchor="middle" font-family="Lilita One,Impact,sans-serif" font-size="${i===7||i===8?10:13}" fill="#fff" stroke="rgba(0,0,0,.55)" stroke-width="2.5" paint-order="stroke">${ROM[i]}</text></svg>`; }
+function banner(){ const st=S.step;
+  const B=[[ 'JUIZ CELESTIAL DERROTADO','FASE 90 · SENHOR DA ERA CELESTIAL',''],['AS 9 ERAS CONCLUÍDAS','DA PRÉ-HISTÓRIA AO CELESTIAL',''],['SUA JORNADA',hn().toUpperCase()+' · '+P.label.toUpperCase()+' · DIA '+P.days,'blue'],['PRÊMIOS DO FIM','NADA SORTEADO, NADA À VENDA',''],['A JORNADA CONTINUA','FASES SEM FIM NA ERA CELESTIAL','blue']][st];
+  if(st===0&&(T-S.at)<2.4) return `<div class="tap">O Juiz Celestial cai…</div>`;
+  return `<div class="rib ${B[2]}">${B[0]}<small>${B[1]}</small></div>${st<STEPS-1?'<div class="tap">Toque para continuar</div>':''}`; }
+function panelHTML(){ const st=S.step;
+  if(st===0) return `<div class="pan"><p class="lead">Você venceu o <b>Juiz Celestial</b>, o Senhor da era 8. Era o último chefe das 9 eras.</p>
+    <div class="kv"><span>Chefe</span><span>Juiz Celestial · era 8, Celestial</span></div>
+    <div class="kv"><span>Fase</span><span><b>90</b> de 90</span></div>
+    <div class="kv"><span>FC pedida na fase 90</span><span><b>${fmtFC(REC90)}</b> <span class="tag code">DO CÓDIGO</span></span></div>
+    <div class="kv"><span>Sua FC</span><span><b>${fmtFC(P.fc)}</b> <span class="tag ex">EXEMPLO</span></span></div>
+    <div class="kv"><span>Herói</span><span>${hn()} em ${P.mname} · pet ${P.pname}</span></div></div>`;
+  if(st===1) return `<div class="pan"><div class="sec"><span>As 9 eras</span><span>cada era com o seu Senhor vencido</span></div>
+    <div class="eras">${ERAS.map((e,i)=>`<div class="em ${i<S.lit?'on':''}" style="--ec:${i===8?'#ffd25e':e.c[1]}" data-em="${i}">${eraSvg(i)}<b>${e.n}</b><small class="ok">${e.boss}</small></div>`).join('')}</div>
+    <div class="cnt" id="cnt">${S.lit}/9 eras</div></div>`;
+  if(st===2){ const c=(l,v,e,cls)=>`<div class="sc ${cls||''}"><small>${l}</small><b>${v}</b><em>${e}</em></div>`;
+    return `<div class="pan"><div class="sec"><span>Resumo</span><span><span class="tag code">DO CÓDIGO</span> <span class="tag ex">EXEMPLO</span></span></div>
+    <div class="stats">
+      ${c('Dias jogados',P.days,'simulação de 180 dias','code')}
+      ${c('Fases vencidas','90/90','todas as 9 eras','code')}
+      ${c('Senhores das eras','9/9','do Javali ao Juiz','code')}
+      ${c('Chefes vencidos',n(P.bosses),'exemplo')}
+      ${c('FC mais alta',fmtFC(P.fc),'exemplo · fase 90 pede '+fmtFC(REC90))}
+      ${c('Nível do herói',P.lvl,'exemplo · teto 120')}
+      ${c('Inimigos derrotados',n(P.kills),'exemplo')}
+      ${c('Horas de jogo',P.hours+' h','exemplo')}
+      ${c('Pets',P.pets,'exemplo · em uso: '+P.pname)}
+      ${c('Montarias',P.mounts+'/16','exemplo · em uso: '+P.mname)}
+    </div>
+    <p class="hint">Verde = vem do jogo. O resto são <b>números de exemplo</b>; no jogo saem do seu save.</p></div>`; }
+  if(st===3){ const av=S.hero==='kael'?'a/kael_phase0.png':'a/kaia_phase0.png', b70=TITLE70.atk*BMULT, b90=PROP.title.atk*BMULT;
+    return `<div class="pan"><div class="sec"><span>Já é seu</span><span class="tag code">DO CÓDIGO</span></div>
+      <div class="rw"><span class="ri">${SV.medal}</span><span class="rt"><b>Título: ${TITLE70.name}</b><span>Ganho na fase ${TITLE70.stage}. <em>+${dec(b70,1)}% ATK e +${dec(b70,1)}% VIDA</em> (o dobro em destaque)</span></span></div>
+      <div class="rw"><span class="ri">${SV.scroll}</span><span class="rt"><b>Conquista: ${ACH_ERA.name} (nível ${ACH_ERA.tier})</b><span>Ao chegar na era 8: ${ACH_ERA.goldk} × ouro de 1 abate, ${ACH_ERA.stones} pedras de treino, ${ACH_ERA.forge} de forja, ${ACH_ERA.food} rações e ${ACH_ERA.gems} diamantes</span></span></div>
+      <p class="hint">Hoje o jogo não tem prêmio próprio por vencer a fase 90. Abaixo, a proposta.</p></div>
+    <div class="pan"><div class="sec"><span>Proposta</span><span class="tag pr">PARA O SEU VOTO</span></div>
+      <div class="rw"><span class="ri" style="width:auto;padding:0 6px;min-width:52px;background:none;border:0"><span class="tframe">${PROP.title.name}</span></span><span class="rt"><b>Título com moldura</b><span>Vencer a fase ${PROP.title.stage}. <em>+${dec(b90,0)}% ATK e +${dec(b90,0)}% VIDA</em> (o dobro em destaque)</span></span></div>
+      <div class="rw"><span class="frame"><span style="background-image:url(${av})"></span></span><span class="rt"><b>Moldura de perfil: Nove Eras</b><span>Só visual: um anel com as cores das 9 eras</span></span></div>
+      <div class="rw"><span class="ri">${SV.sun}</span><span class="rt"><b>Aura do herói: Luz das Eras</b><span>Só visual: contorno dourado e faíscas no herói</span></span><button class="bt sm ${S.aura?'on':''}" data-x="aura" aria-pressed="${S.aura}">${S.aura?'No herói':'Ver no herói'}</button></div>
+      <div class="rw"><span class="ri"><img src="a/gem.png" alt=""></span><span class="rt"><b>${PROP.gems} diamantes, uma vez</b><span>${dec(PROP.gems/PROP.budget*100,0)}% da meta de ~10 mil em 180 dias; chega no fim (dia ${P.days}). A Sistemas confere a margem</span></span></div></div>`; }
+  /* passo 5: fases sem fim */
+  const rows=[90,91,95,100,110,120], mx=Math.log(fcNeed(120)/REC90)||1;
+  return `<div class="pan"><p class="lead">As 9 eras acabaram, a aventura não. Depois da fase 90 vêm as <b>fases sem fim</b> na Era Celestial: mesma era, mesmos inimigos, e a <b>FC pedida sobe 3% a cada fase</b>.</p>
+    <div class="sec" style="margin-top:4px"><span>FC pedida</span><span>fase 90 × 1,03 por fase <span class="tag code">DO CÓDIGO</span></span></div>
+    ${rows.map(r=>{ const v=fcNeed(r), w=12+88*Math.log(v/REC90)/mx; return `<div class="fr ${r===90?'now':''}"><span>Fase ${r}</span><i style="width:${w.toFixed(1)}%"></i><span>${fmtFC(v)}</span></div>`; }).join('')}
+    <p class="hint">A FC pedida <b>dobra a cada 24 fases</b> (1,03 elevado a 24 ≈ 2). Tudo o que você tem continua: forja, pets, montarias, título e prêmios ficam com você.</p></div>`; }
+function footHTML(){ const st=S.step;
+  if(st<STEPS-1) return `<button class="bt" data-x="next">Próximo ${SV.next}</button>`;
+  return `<button class="bt off" data-x="again" style="flex:0 1 120px">Ver de novo</button><button class="bt grn" data-x="cont">Continuar ${SV.next}</button>`; }
+function render(){ const st=S.step;
+  $('#stepn').textContent=(st+1)+'/'+STEPS;
+  $('#dots').innerHTML=Array.from({length:STEPS},(_,i)=>`<i class="${i===st?'on':''}"></i>`).join('');
+  $('#skip').style.visibility=st<STEPS-1?'visible':'hidden';
+  $('#ban').innerHTML=banner(); $('#pc').innerHTML=panelHTML(); $('#pc').scrollTop=0; $('#pf').innerHTML=footHTML(); }
+function updLit(){ document.querySelectorAll('.em').forEach(el=>el.classList.toggle('on',+el.dataset.em<S.lit)); const c=$('#cnt'); if(c) c.textContent=S.lit+'/9 eras'; }
+function setStep(k){ S.step=clamp(k,0,STEPS-1); S.at=T; if(litTimer){ clearInterval(litTimer); litTimer=null; }
+  if(S.step===1){ S.lit=0; burst(60); litTimer=setInterval(()=>{ if(!S||S.step!==1||S.lit>=9){ clearInterval(litTimer); litTimer=null; return; } S.lit++; updLit(); },330); }
+  else S.lit=9;
+  if(S.step===4) S.cf=[];
+  render(); }
+/* banner do passo 1 muda sozinho quando o chefe termina de sumir */
+setInterval(()=>{ if(S&&S.step===0&&!S.bn&&(T-S.at)>=2.4){ S.bn=1; $('#ban').innerHTML=banner(); } },150);
+function next(){ if(S.step<STEPS-1){ if(S.step===0) S.bn=1; setStep(S.step+1); } }
+function again(){ S.bn=0; S.aura=false; S.hx=150; S.cf=[]; setStep(0); }
+
+/* ---------- comum ---------- */
+function go(where,txt){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar para o Fim das 9 eras"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>${txt}</p><p>O voltar traz de volta para esta tela (só no protótipo).</p><button class="bt" data-x="navback">Voltar</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ document.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button');
+  if(!b){ if(e.target.closest('#scene')&&!$('#nav')) next(); return; }
+  if(b.disabled) return; const d=b.dataset;
+  if(b.id==='skip'){ S.bn=1; setStep(STEPS-1); return; }
+  if(d.x==='next'){ next(); return; }
+  if(d.x==='again'){ again(); return; }
+  if(d.x==='cont'){ go('Batalha','No jogo, Continuar volta para a batalha na <b>fase 91</b>, com FC pedida de <b>'+fmtFC(fcNeed(91))+'</b>.'); return; }
+  if(d.x==='aura'){ S.aura=!S.aura; render(); toast(S.aura?'Prévia: aura Luz das Eras no herói':'Aura desligada'); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); render(); }
+  if(b.dataset.pl){ const hero=S.hero; reset(b.dataset.pl); S.hero=hero; document.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',x===b)); const nv=$('#nav'); if(nv) nv.remove(); setStep(0); }
+  if(b.dataset.sim==='again'){ const nv=$('#nav'); if(nv) nv.remove(); again(); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ const nv=$('#nav'); if(nv) nv.remove(); } });
+
+reset('free'); setStep(0);
+/* pré-carrega as folhas dos dois jogadores e dos dois heróis */
+['a/rd_horse.png','a/rda_horse.png','a/rd_wyvern.png','a/rda_wyvern.png','a/wg_angel_L.png','a/wg_angel_R.png','a/wg_demon_L.png','a/wg_demon_R.png','a/pp_era8_pegasus_mid.png','a/pp_era8_pegasus_evo.png','a/boss_era8.png'].forEach(img);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-fim-das-eras-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Fim das 9 eras V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
