@@ -397,6 +397,8 @@ function waveClear(){
     let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
+    /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
+    if(won===ERAS.length*STAGES_PER_ERA&&window.Panels&&typeof Panels.on==='function'&&Panels.on('end9')){ const eo={stage:won,gems:10,essence:loot&&loot.essence||0}; if(shown) B.endPend=eo; else { try{ shown=Panels.open('end9',eo)!==false; }catch(er){ console.error('end9',er); } } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
     if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ challengeBoss(); return; } }   /* a cura é a do próprio desafio (bossChallengeHeal): antes somava 8% e depois enchia a vida */
@@ -1255,6 +1257,7 @@ function draw(){
 let vigC=null, lilitaOk=false, lilitaT=0;
 function LILITA(){ if(lilitaOk) return true; const now=performance.now(); if(now-lilitaT>1000){ lilitaT=now; try{ lilitaOk=!!(document.fonts&&document.fonts.check('15px "Lilita One"')&&[...document.fonts].some(f=>/Lilita/.test(f.family)&&f.status==='loaded')); }catch(e){} } return lilitaOk; }
 function tickFx(dt){
+  if(B.endPend&&!B.res&&!B.inst){ const eo=B.endPend; B.endPend=null; try{ if(window.Panels&&Panels.on('end9')) Panels.open('end9',eo); }catch(er){ console.error('end9',er); } }   /* a vitória fechou: Fim das 9 eras */
   if(B.eraPend&&!B.res&&!B.inst){ const eo=B.eraPend; B.eraPend=null; try{ if(window.Panels&&Panels.on('era')) Panels.open('era',eo); }catch(er){ console.error('era',er); } }   /* a vitória fechou: agora a Troca de era */
 
   B.at+=dt*(B.paused?1:B.speed);   // relógio da animação do herói (não para na pausa: nada estático)
