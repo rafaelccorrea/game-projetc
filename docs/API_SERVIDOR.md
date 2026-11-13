@@ -137,7 +137,7 @@ Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do se
 
 ### 4.1 Luta nova da Arena (13/11; fps-server, contrato com o Engenheiro e a Sistemas 53409f3)
 - **POST /arena/snapshot** aceita também `look`, `level` e `petFrac`. Nada disso entra na FC: a conferência de ±1% continua só nos atributos.
-  - `look` = `{hero, skin, mount:{id, stars 1-5}|null, pet:{base, stage 1-3, fly}|null, wing, aura, weapon:{fam, era, look}|null}`, com ids `[a-z0-9_]`. O servidor limpa: id inválido vira null, número fora do intervalo vira o limite, campo desconhecido some. O retrato nunca é recusado por causa da aparência.
+  - `look` = `{hero, skin, armor, mount:{id, stars 0-5}|null, pet:{base, stage 1-3, fly}|null, wing, aura, weapon:{e 0-20, r 0-4, type}|null}` (formato da tela do Engenheiro: `skin` = skin fixa ou null, `armor` = roupa 'aXY' a pé, `weapon.e` = era visual, `type` = família), com ids `[a-z0-9_]`. No jogo, quem monta é `window.heroSnapshot()` do Engenheiro → `{look, level, petFrac}`; quem manda é `Sys.arenaNet.snapshot` (js/sys/arenanet.js, chave desligada). O servidor limpa: id inválido vira null, número fora do intervalo vira o limite, campo desconhecido some. O retrato nunca é recusado por causa da aparência.
   - `level` = nível do jogador.
   - `petFrac` = parte do ATQ que vem do pet (0..0,9; o mesmo `petFracOf` do jogo).
 - **GET /arena/opponents**: cada adversário traz `look` e `level`. O real vem com a foto dele; o bot, com `Sys.arena.botLook` pelo nível (nível do jogador ± `botLook.levelSpread`). Retrato sem `level` = bots com `level:null, look:null`, como antes.
