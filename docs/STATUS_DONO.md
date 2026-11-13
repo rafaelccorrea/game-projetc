@@ -398,6 +398,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 - [ ] Higgsfield: o conector caiu; digite /mcp → higgsfield → entrar de novo (a Arte está parada esperando)
 
+- [ ] Antes da loja (1 minuto): no Supabase, conferir em Project Settings › Billing que o plano é Pro e em Database › Backups que o PITR está desligado (a política diz "backups do provedor por até 7 dias")
+
 **Já feito por você:**
 - [x] Senha do banco (servidor no ar) · Firebase · AWS · Supabase · votos anteriores · domínio dispensado (sslip.io com HTTPS)
 
