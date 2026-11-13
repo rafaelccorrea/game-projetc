@@ -1078,3 +1078,22 @@ FUSÃO: `p_fuse` na lista de carga (`js/screens.js`), `PANEL_ON.fuse=false` (`js
 `Sys.appearance.layers`; o retrato é só o da Arte para a fase e o herói. O código das peças ficou (true religa).
 `test/paineis/avatar.crop.js` lê a chave: desligada, confere os 8 retratos, a reserva e que as leituras das peças estão atrás da chave.
 `reports/prints/avatar_recortes_8.png` refeito sem peças. `node --check`, `run.js` "TUDO OK" (145), fumaça sem falha nova.
+
+## Bloco 37 (sem navegador): roupas-skin fora de venda e inativas na coleção
+
+Conferido com o `js/sys/appearance.js` REAL do disco: `canSell` recusa as 40 roupas `a..` e p10/p20/p30; aceita as 40 armas e p5/p15/p25.
+`js/screens.js`: `xOutfitNote(id)` lê `Sys.appearance.outfitStatus(id)`. Roupa-skin que o jogador tem (ou está usando) continua na aba
+"Skins herói" com a etiqueta "Nova skin em breve" no lugar de "Equipada"/"Na coleção"; a prévia mostra "Na coleção · Nova skin em breve" e
+não tem botão Equipar; o clique de equipar também recusa. Nada sai de `S.skins` nem de `S.skinEq`. Arma: igual a antes. Sem `outfitStatus`: igual a antes.
+`test/paineis/smoke.js`: bloco novo "loja+appearance" carrega o módulo real e a lista do `assets/manifest.json` e FALHA se: houver roupa à
+venda, arma fora de venda, roupa não possuída na aba, cartão OFERTA/DESTAQUE vendendo roupa, botão Equipar em roupa, arma sem Equipar, ou a
+aba vazia sem "Novas skins em breve". Os 6 passam. (Achado: a fumaça antiga nunca desenhava as abas de skin, o portão de nível mandava
+tudo para "Itens"; o bloco novo abre com `PANEL_V2.gate=false`.)
+Com o save inicial a aba "Skins herói" NÃO fica vazia: mostra a roupa inicial do jogador (a00) com a nota; o texto só aparece para quem não tem nenhuma.
+PASSE × p10 (não mexi; decisão do PO): `index.html:410` (`SEASON_SKIN='p10'`, `PASS_SKIN_AT={25:...}`), `js/farm.js:63` (`addSkin('season')` grava a p10),
+`js/screens2.js:234` (cartão do prêmio), `:246` e `:256` (resgate e aviso), `:273` e `:366` (vitrine "Skin da temporada"), `:384` (texto do Premium),
+`js/screens.js:786` e `:806` (prévia da Loja "Ganhe no Passe · Nv. 25", hoje inalcançável porque a p10 não aparece na aba), `js/p_pass.js:45` (QA).
+
+Acréscimo ao bloco 37 (achado do QA): o cartão OFERTA/DESTAQUE só mostra skin do espaço da aba. Na aba "Skins herói" sem roupa à venda o
+cartão some e entra "Novas skins em breve" no lugar; a skin em uso continua na lista com a nota. Skin de arma só no cartão da aba "Skins arma".
+A fumaça falha se a aba do herói mostrar cartão de arma. `PANEL_ON.look` (ligada pela coordenação) não foi tocada.

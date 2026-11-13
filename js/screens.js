@@ -673,19 +673,24 @@ function xSellLoad(){ if(XSELL.st||typeof fetch!=='function') return; XSELL.st=1
 const xFileHas=p=>XSELL.set?XSELL.set.has(p):String(p).indexOf('assets/weapons/')===0;
 function xCanSell(id){ if(!xSellOn()) return true; xSellLoad(); try{ return !!Sys.appearance.canSell(id,xFileHas); }catch(e){ return true; } }
 const xSkinShow=sk=>S.skins.includes(sk.id)||S.skinEq[sk.slot]===sk.id||xCanSell(sk.id);
+/* ROUPA-SKIN INATIVA (decisão final do dono): Sys.appearance.outfitStatus(id) → {outfit, active, note}. A roupa que o jogador JÁ tem continua aparecendo
+   na coleção, com a nota do módulo ("nova skin em breve") e SEM botão de equipar; nada sai do save. Skin de arma: nota vazia, tudo como antes.
+   Sem outfitStatus no módulo: nota vazia (comportamento de antes). */
+function xOutfitNote(id){ try{ const M=window.Sys&&Sys.appearance; if(!M||typeof M.outfitStatus!=='function') return ''; const o=M.outfitStatus(id); if(!o||!o.outfit||o.active) return '';
+    const t=String(o.note||'nova skin em breve'); return t.charAt(0).toUpperCase()+t.slice(1); }catch(e){ return ''; } }
 try{ if(xSellOn()) xSellLoad(); }catch(e){}   /* lê a lista de arquivos já na carga, para a Loja não abrir com as roupas escondidas e mostrá-las um instante depois */
 const hList=tab=>SKINS.filter(s=>s.slot===(tab==='hero'?'armor':'weapon')&&(!s.pass||s.id===SEASON_SKIN||S.skins.includes(s.id))&&xSkinShow(s)).sort((a,b)=>(a.pass?1:0)-(b.pass?1:0)||a.e-b.e||a.r-b.r);
 function hStatus(sk){ const eq=S.skinEq[sk.slot]===sk.id, own=S.skins.includes(sk.id), locked=!own&&!sk.pass&&sk.e>S.eraMax; return {eq,own:own&&!eq,pass:!own&&!!sk.pass,locked,buy:!own&&!sk.pass&&!locked&&xCanSell(sk.id)}; }
 const skinArt=(sk,sz,op,cls)=>sk.slot==='weapon'?`<img class="${cls||''}" src="assets/weapons/${typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`
   :sk.e===2?`<span class="kidle ${tierOf(sk.r)?'t'+tierOf(sk.r):''}" aria-hidden="true" style="position:relative;display:block;width:${sz}px;height:${sz}px;opacity:${op}"></span>`
   :`<img class="x-breathe" src="assets/hero/era${sk.e}_t${tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`;
-/* cartão OFERTA/DESTAQUE: skin do dia ou a melhor à venda do espaço; na aba do herói, sem nenhuma à venda (canSell), vale a próxima oferta válida = skin de arma;
-   sem nada à venda, a skin em uso ("Na coleção"); sem nem isso, null = o cartão some. sub = chamada interna (não desce de novo). */
+/* cartão OFERTA/DESTAQUE: skin do dia ou a melhor à venda DO ESPAÇO DA ABA (skin de arma só aparece na aba "Skins arma": achado do QA).
+   Sem nada à venda: a skin em uso ("Na coleção"), menos quando ela é roupa-skin inativa (outfitStatus): aí null = o cartão some e a aba mostra
+   "Novas skins em breve" no lugar dele (a skin em uso continua na lista, com a nota). */
 function hFeat(tab,sub){ const slot=tab==='weapon'?'weapon':'armor', L=hList(tab); ensureShop();
   const day=(S.shop.skins||[]).map(SKIN).find(s=>s&&s.slot===slot&&!S.skins.includes(s.id)&&s.e<=S.eraMax&&xCanSell(s.id));
   XH.featDay=!!day; const top=day||L.filter(s=>hStatus(s).buy).sort((a,b)=>b.r-a.r||b.e-a.e)[0]; if(top) return top;
-  if(slot==='armor'&&!sub&&xSellOn()){ const w=hFeat('weapon',true); if(w&&hStatus(w).buy) return w; XH.featDay=false; }
-  return SKIN(S.skinEq[slot])||null; }
+  const eq=SKIN(S.skinEq[slot])||null; return eq&&xOutfitNote(eq.id)?null:eq; }
 function hToast(txt){ const el=document.getElementById('xh_toast'); if(el) el.innerHTML=`<div style="position:absolute;left:24px;right:24px;bottom:16px;z-index:40;display:flex;justify-content:center;pointer-events:none"><span class="x-stoast" role="status" style="padding:10px 16px;border-radius:12px;background:#12261a;border:2px solid #5fd068;color:#e6fbe7;font-size:14px;font-weight:900;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.6)">${esc2(txt)}</span></div>`; }
 function scrShop(){
   ensureShop(); if(XH.tab==='col'&&!PANEL_V2.shopCol) XH.tab='hero';
@@ -697,14 +702,15 @@ function scrShop(){
     const list=hList(tab), pages=Math.max(1,Math.ceil(list.length/PER)); XH.page[tab]=Math.max(0,Math.min(XH.page[tab],pages-1)); const pg=XH.page[tab]; XH.pages=pages;
     const feat=hFeat(tab), fs=feat?hStatus(feat):{}, fw=!!feat&&feat.slot==='weapon', owned=list.filter(s=>S.skins.includes(s.id)).length;
     /* cartão de skin: mesma moldura dos itens (xRar); a borda passa de 2 para 3 px e o respiro perde 1 px, o miolo fica do mesmo tamanho; bloqueada = sem pulso */
-    const tiles=list.slice(pg*PER,pg*PER+PER).map(sk=>{ const st=hStatus(sk), c=RC[sk.r], op=st.locked?0.45:1, q=xRar(sk.r,st.locked?'xr-s':'');
-      return `<button class="x-tile ${q.on?'':sk.r>=3&&!st.locked?'x-r'+sk.r:''}${q.cls}" data-x="skin" data-id="${sk.id}"${q.at} aria-label="${esc2(sk.n)}, ${RN(sk.r)}${st.eq?', equipada':st.own?', na coleção':st.pass?', só no passe':st.locked?', bloqueada até a '+ERAS[sk.e].n:', '+SKIN_PRICE[sk.r]+' gemas'}" style="border-radius:14px;${q.on?'':`border:2px solid ${c};background:linear-gradient(180deg,${RT[sk.r]} 0%,#1d1611 60%);`}color:#f6ecdf;padding:${q.on?'5px 3px':'6px 4px'};display:flex;flex-direction:column;align-items:center;gap:2px">
+    const tiles=list.slice(pg*PER,pg*PER+PER).map(sk=>{ const st=hStatus(sk), off=(st.eq||st.own)?xOutfitNote(sk.id):'', c=RC[sk.r], op=st.locked?0.45:1, q=xRar(sk.r,st.locked?'xr-s':'');
+      return `<button class="x-tile ${q.on?'':sk.r>=3&&!st.locked?'x-r'+sk.r:''}${q.cls}" data-x="skin" data-id="${sk.id}"${q.at} aria-label="${esc2(sk.n)}, ${RN(sk.r)}${off?', na coleção, '+esc2(off):st.eq?', equipada':st.own?', na coleção':st.pass?', só no passe':st.locked?', bloqueada até a '+ERAS[sk.e].n:', '+SKIN_PRICE[sk.r]+' gemas'}" style="border-radius:14px;${q.on?'':`border:2px solid ${c};background:linear-gradient(180deg,${RT[sk.r]} 0%,#1d1611 60%);`}color:#f6ecdf;padding:${q.on?'5px 3px':'6px 4px'};display:flex;flex-direction:column;align-items:center;gap:2px">
         ${sk.r>=2&&!st.locked?'<span class="x-tshine"></span>':''}<span style="font-size:11px;font-weight:900;color:${c}">${RN(sk.r)}</span>
         <div style="position:relative;width:70px;height:66px;display:flex;align-items:center;justify-content:center">
           ${tab==='hero'?'<span class="x-sped" style="left:13px;top:58px;width:44px;height:9px;border-width:1px"></span>':''}${skinArt(sk,tab==='hero'?70:66,op)}
           ${st.locked?`<span style="position:absolute;right:-6px;top:-4px;width:26px;height:26px;border-radius:50%;background:#0e0a07;border:2px solid #6b5843;display:flex;align-items:center;justify-content:center">${SVG_LOCK(14,'#f6ecdf')}</span>`:''}</div>
         <span style="height:28px;font-size:12px;font-weight:900;line-height:1.15;text-align:center;display:flex;align-items:center${q.on?';color:'+q.t:''}">${esc2(sk.n)}</span>
-        ${st.eq?'<span style="height:22px;padding:0 8px;border-radius:999px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900;display:flex;align-items:center">Equipada</span>'
+        ${off?`<span style="min-height:22px;padding:0 6px;border-radius:999px;border:1px solid #6b5843;background:#2a211a;color:#c9b9a2;font-size:10px;font-weight:900;line-height:1.05;text-align:center;display:flex;align-items:center">${esc2(off)}</span>`
+          :st.eq?'<span style="height:22px;padding:0 8px;border-radius:999px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900;display:flex;align-items:center">Equipada</span>'
           :st.own?'<span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #5fd068;color:#c8f5cb;font-size:11px;font-weight:900;display:flex;align-items:center">Na coleção</span>'
           :st.pass?'<span style="height:22px;padding:0 8px;border-radius:999px;border:1px solid #ffc94a;color:#ffc94a;font-size:11px;font-weight:900;display:flex;align-items:center;gap:3px"><img src="assets/ui/pass.png" alt="" style="width:16px;height:16px;object-fit:contain">Só no Passe</span>'
           :st.locked?`<span style="height:22px;padding:0 8px;border-radius:999px;background:#2a211a;color:#c9b9a2;font-size:11px;font-weight:900;display:flex;align-items:center">${ERAS[sk.e].n.replace('Era da ','').replace('Era ','')}</span>`
@@ -725,7 +731,7 @@ function scrShop(){
           ${fs.buy?`<button class="x-gold x-cta lil" data-x="skin" data-id="${feat.id}" style="height:46px;border-radius:14px;font-size:18px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0">Ver ${GEM_I(24)}${SKIN_PRICE[feat.r]}</button>`
             :`<button data-x="skin" data-id="${feat.id}" class="lil" style="height:46px;border-radius:14px;border:2px solid #5fd068;background:#12261a;color:#c8f5cb;font-size:17px;padding:0">Na coleção · ver</button>`}
         </div></div>
-      `:'')+(list.length?`<div style="height:${rows*150+(rows-1)*8}px;flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(${rows},150px);gap:8px">${tiles}</div>`
+      `:list.length?`<div role="status" style="flex:none;padding:16px 12px;border-radius:14px;border:2px dashed #4a3a2b;color:#c9b9a2;font-size:15px;font-weight:900;text-align:center">Novas skins em breve</div>`:'')+(list.length?`<div style="height:${rows*150+(rows-1)*8}px;flex:none;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(${rows},150px);gap:8px">${tiles}</div>`
         :`<div role="status" style="flex:none;padding:30px 12px;border-radius:14px;border:2px dashed #4a3a2b;color:#c9b9a2;font-size:15px;font-weight:900;text-align:center">Novas skins em breve</div>`)+`
       <div style="flex:none;margin-top:auto">${xPager('pg',pg,pages,owned+' na coleção')}</div>`;
   } else if(tab==='gem'){
@@ -776,7 +782,7 @@ function scrShop(){
   if(tab==='col'){ const el=document.getElementById('xh_col'); if(el) renderSkins(el,Math.max(300,H-112)); }
 }
 function shopItem(o){ const it={id:'shop'+o.slot+o.r+o.e,slot:o.slot,r:o.r,e:o.e,lvl:1,gold:0,subs:Array.isArray(o.subs)?o.subs:[]}; if(!Array.isArray(o.subs)){ Sys.stats.ensureSubs(it); o.subs=it.subs; } return it; }
-function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } const st=hStatus(sk), c=RC[sk.r], q=xRar(sk.r,'xr-s'), hero=sk.slot==='armor'?sk:SKIN(S.skinEq.armor), weap=sk.slot==='weapon'?sk:SKIN(S.skinEq.weapon), SK=Sys.skin.DATA;
+function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } const st=hStatus(sk), off=(st.eq||st.own)?xOutfitNote(sk.id):'', c=RC[sk.r], q=xRar(sk.r,'xr-s'), hero=sk.slot==='armor'?sk:SKIN(S.skinEq.armor), weap=sk.slot==='weapon'?sk:SKIN(S.skinEq.weapon), SK=Sys.skin.DATA;
   const passLv=Object.keys(PASS_SKIN_AT).find(k=>PASS_SKIN_AT[k]===sk.id);
   return `<div class="x-scrim" style="position:absolute;inset:0;z-index:20;background:rgba(8,6,4,.82);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
     <div class="${XH.popIn?'x-pop':''}${q.cls}"${q.at} role="dialog" aria-label="Prévia: ${esc2(sk.n)}" style="width:358px;max-height:100%;border-radius:20px;${q.on?'':`border:3px solid ${c};`}background:#1d1611;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 30px ${c}88">
@@ -793,6 +799,7 @@ function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } c
         Equipada: +${SK.equippedPct[sk.r]}% de ATK e HP. Na coleção: +${String(SK.collectionPer).replace('.',',')}% por skin (teto +${SK.collectionCap}%).</div>
       <div style="display:flex;gap:8px;padding:12px 12px 18px;flex:none">
         ${st.buy?`<button class="x-gold x-cta lil" data-x="askbuy" style="flex:1;height:54px;border-radius:16px;font-size:22px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0">Comprar ${GEM_I(28)}${SKIN_PRICE[sk.r]}</button>`
+        :off?`<div class="lil" role="status" style="flex:1;height:54px;border-radius:16px;border:2px solid #4a3a2b;background:#2a211a;color:#e8dccb;font-size:18px;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box">Na coleção · ${esc2(off)}</div>`   /* roupa-skin inativa: sem botão de equipar */
         :st.own?'<button class="x-green lil" data-x="skequip" style="flex:1;height:54px;border-radius:16px;font-size:22px;padding:0">Equipar</button>'
         :st.eq?'<div class="lil" style="flex:1;height:54px;border-radius:16px;border:2px solid #5fd068;background:#12261a;color:#c8f5cb;font-size:20px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Equipada</div>'
         :st.locked?`<div style="flex:1;height:54px;border-radius:16px;border:2px solid #4a3a2b;background:#2a211a;color:#e8dccb;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">${SVG_LOCK(20)}Libera na ${ERAS[sk.e].n}</div>`
@@ -823,7 +830,7 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='gopass'){ snd('ui_tap'); if(!xUnlocked('pass')){ hToast('Skin do Passe da temporada'); return; } XH.sel=null; setView('pass'); }
   else if(a==='vip'){ snd('ui_tap'); if(typeof scrVip==='function'&&window.Screens) Screens.open('vip'); else hToast('Clube VIP: em breve'); }   /* tela 18 (VIP): entra no item 3 */
   else if(a==='iap'){ snd('ui_tap'); hToast('Pagamento em breve: nada é cobrado agora'); }
-  else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+gNum(heroFC())); }
+  else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+gNum(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p||!xCanSell(sk.id)) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
     else { const o=S.shop.offers[cf.i]; if(!o||o.sold||S.gold<o.price) return; if(S.inv.length>=BAG_MAX){ XH.cf=null; render(); hToast('Mochila cheia: desmonte itens em Equip.'); return; }
