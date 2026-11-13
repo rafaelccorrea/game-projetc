@@ -8,6 +8,8 @@
 /* ---------------- dados (balanceamento) ---------------- */
 const DATA={
   entriesPerArea:2,             // dono via PO: 2 entradas POR ÁREA (tipo) por dia, +VIP por área (Sys.vip.perks().instanceKeysAdd). Antes: 3 chaves no total.
+  // textos do resultado (P8: tempo esgotado ≠ derrota). A chave não é gasta em nenhum dos dois (consumeOnFail).
+  outcome:{win:'Instância vencida! Prêmio entregue', timeout:'Tempo esgotado! A chave não foi gasta: tente de novo', defeat:'Você foi derrotado. A chave não foi gasta: fique mais forte e tente de novo'},
   consumeOnFail:false,          // derrota/tempo esgotado não gasta chave
   stagesPerEra:10,
   // at = fase dentro da era usada para os atributos dos inimigos · hp/dmg = multiplicador extra · rw = multiplicador da recompensa
@@ -177,7 +179,10 @@ function finish(S,host,id,result){
   result=result||{}; const T=DATA.types[a.type], kills=Math.max(0,Math.floor(num(result.kills,0)));
   const win=T.mode==='rush'?kills>=T.reward.minKills:!!result.win;
   o.active=null;
-  if(!win){ if(DATA.consumeOnFail&&o.keys[a.type]>0) o.keys[a.type]--; return {ok:true,win:false,type:a.type,level:a.level,reward:{gold:0,gems:0,items:[]},keys:o.keys[a.type]}; }
+  if(!win){ if(DATA.consumeOnFail&&o.keys[a.type]>0) o.keys[a.type]--;
+    /* P8 (POLIMENTO): o resultado diz POR QUE perdeu. result.timeout (ou T.mode rush sem a meta) = 'timeout'; senão 'defeat'. Texto em DATA.outcome. */
+    const why=result.timeout===true||(T.mode==='rush'&&!result.dead)?'timeout':'defeat';
+    return {ok:true,win:false,reason:why,text:DATA.outcome[why],type:a.type,level:a.level,reward:{gold:0,gems:0,items:[]},keys:o.keys[a.type]}; }
   o.keys[a.type]=Math.max(0,o.keys[a.type]-1); o.runs++;
   const first=num(o.best[a.type],-1)<a.level;   // 1ª vitória neste nível
   o.best[a.type]=Math.max(num(o.best[a.type],-1),a.level);
@@ -266,7 +271,9 @@ function showResult(container,out,host){
   container.appendChild(ov); return ov;
 }
 
-const API={DATA,params,ensure,refresh,onDayChange,dayKey,keysMax,levelInfo,levelsUnlocked,isOpen,bestStage,recommended,rewardPreview,canEnter,buildRun,start,finish,abort,canSweep,sweep,status,bonus,advice,render,showResult};
+/* texto do resultado para a tela: outcomeText(out, {timedOut}) (a tela sabe se o relógio zerou: I.t<=0) */
+const outcomeText=(out,ctx)=>out&&out.win?DATA.outcome.win:(ctx&&ctx.timedOut)||(out&&out.reason==='timeout')?DATA.outcome.timeout:DATA.outcome.defeat;
+const API={DATA,outcomeText,params,ensure,refresh,onDayChange,dayKey,keysMax,levelInfo,levelsUnlocked,isOpen,bestStage,recommended,rewardPreview,canEnter,buildRun,start,finish,abort,canSweep,sweep,status,bonus,advice,render,showResult};
 root.Sys=root.Sys||{}; root.Sys.instances=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

@@ -47,6 +47,7 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (2ª execução, com a conferência de CORS) | idem |
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (3ª execução, depois da proteção contra perda) | idem |
+| 13/11/2026 | +1 convidado "Viajante6429" (S1) | `smoke-real.mjs` (4ª execução, com a conferência do save_regress) | idem |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-6:8080). O app (`https://localhost`) fica fixo no código.
 

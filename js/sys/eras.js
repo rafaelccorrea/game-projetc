@@ -39,7 +39,13 @@ function stageCard(e,d,n){ const P=root.Sys&&root.Sys.phases, T=root.Sys&&root.S
   return {era:e,eraName:E.n,stage:n,diff:d,fcRec:c.fcRec,fcText:(root.Sys&&root.Sys.fc&&root.Sys.fc.viewText)?root.Sys.fc.viewText(c.fcRec):ab(c.fcRec),common:{name:E.en[n%2].n,art:E.en[n%2].art,hp:ab(c.hp),dmg:ab(c.dmg),def:ab(c.def)},
     boss:{name:b.kind==='senhor'?SENHOR[e]:E.en[2].n,art:E.en[2].art,kind:b.kind,hp:ab(b.hp),dmg:ab(b.dmg),def:ab(b.def)}}; }
 
-const API={ERAS78,SENHOR,LOAD_NAMES,extra,all78,senhorName,stageCard};
+/* P19 (POLIMENTO): nome do chefe de uma fase sem a luta (ex.: a Vitória aberta pelo dbgResult, sem chefe real). Mesmo padrão do battle.js:117:
+   fase de Senhor (a última da era) = "Senhor da Era <chefe>" (eras 7-8: o nome próprio); senão "Chefe <chefe>". Lê o ERAS do jogo; eras 7-8 daqui. */
+function bossName(stage,opt){ const G=root.ERAS, P=num0(opt&&opt.perEra)||num0(root.STAGES_PER_ERA)||10, st=Math.max(1,Math.floor(+stage||1)), e=Math.floor((st-1)/P), last=((st-1)%P)+1===P;
+  const E=(G&&G[e])||ERAS78[e-7]; if(!E||!Array.isArray(E.en)||!E.en.length) return last?'Senhor da Era':'Chefe';
+  const k=E.en[E.en.length-1]; if(last) return SENHOR[e]||('Senhor da Era '+k.n); return 'Chefe '+k.n; }
+function num0(v){ return typeof v==='number'&&isFinite(v)?v:0; }
+const API={ERAS78,SENHOR,LOAD_NAMES,extra,all78,senhorName,stageCard,bossName};
 root.Sys=root.Sys||{}; root.Sys.eras=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
