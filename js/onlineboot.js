@@ -51,8 +51,8 @@
     try { if (typeof B !== 'undefined' && B && B.paused === false) s = true; } catch (e) {}
     try { const t = document.getElementById('title'); if (t && t.classList && t.classList.contains('out') === true) s = true; } catch (e) {}
     if (s) ST.game = true; return s; }
-  function watchPlay() { try { document.addEventListener('click', ev => { const t = ev.target; if (t && t.closest && t.closest('#playb')) ST.game = true; }, true); } catch (e) {}
-    try { const iv = setInterval(() => { if (started()) clearInterval(iv); }, 1000); } catch (e) {} }
+  function watchPlay() { try { document.addEventListener('click', ev => { const t = ev.target; if (t && t.closest && t.closest('#playb')) { ST.game = true; play(); } }, true); } catch (e) {}
+    try { const iv = setInterval(() => { if (started()) { clearInterval(iv); play(); } }, 1000); } catch (e) {} }   /* o jogo começou por qualquer caminho = JOGAR (ver play) */
 
   /* ---------- ganchos do Sys.online.boot ---------- */
   /* RESUMO (contrato §3 do docs/API_SERVIDOR.md: os 8 números são obrigatórios, finitos e >= 0). De onde sai cada um:
@@ -126,7 +126,20 @@
   function beatOff() { try { if (ST.beat) clearInterval(ST.beat); } catch (e) {} ST.beat = 0; }
 
   /* o gancho summary é a FUNÇÃO: o Sys.net a chama na hora de cada pedido, junto com o save (d786848). Nada aqui guarda resumo de antes. */
-  const HOOKS = { summary, apply, choose };
+  /* A CONTA DE CONVIDADO SÓ NASCE NO JOGAR (decisão do PO; Servidor 03e7dee: Sys.online.boot pergunta hooks.mayCreate()). Aparelho com sessão guardada
+     ou com save com progresso: tudo como antes (renova / cria sozinho). Aparelho VAZIO e sem sessão (1ª abertura, ou logo depois de Excluir conta): abrir
+     o Título NÃO cria conta; o boot termina em {ok:false, reason:'no_session'} sem nenhum pedido (não é erro: só espera). A conta nasce quando o jogador
+     toca em JOGAR (OnlineBoot.play(), chamado pelo Título do js/p_intro.js; e também sozinho quando a batalha sai da pausa por qualquer caminho) ou entra
+     com o Google. */
+  function mayCreate() { return !ST.blank || !!ST.play || started(); }
+  const HOOKS = { summary, apply, choose, mayCreate };
+  /* play() → Promise<{ok, action, pending, ...}>: marca que o jogador tocou em JOGAR e, se o boot terminou (ou terminar) em 'no_session', refaz o boot,
+     agora podendo criar o convidado. Chamar de novo devolve a MESMA promessa (cria uma vez só). Espera o boot em curso (sem corrida). Desligado /
+     Modo dono / hold / outro servidor: não faz nada. */
+  function play() { if (ST.playP) return ST.playP; ST.play = true;
+    if (!ST.on) return Promise.resolve({ ok: false, reason: ST.why || 'off', action: null, pending: !!ST.pending });
+    const again = () => (!ST.reloading && ST.last && !ST.last.ok && ST.last.reason === 'no_session') ? runBoot() : (ST.last || { ok: false, reason: 'nosave' });
+    return ST.playP = (ST.bootP || Promise.resolve()).then(again).then(result, e => ({ ok: false, reason: code(e) })); }
 
   /* ---------- APARELHO SEM SAVE × NUVEM COM PROGRESSO (perda de save achada pelo QA no servidor real; regra do dono: NUNCA subir) ----------
      O Sys.net guarda "a versão da nuvem que o aparelho conhece" na chave da sessão (eon.net), separada do save. Se o save local some (dados do jogo
@@ -141,6 +154,7 @@
   const progress = s => !!s && (num(s.level) > 1 || num(s.stage) > 1 || num(s.era) > 0 || num(s.xp) > 0 || num(s.playSeconds) > 0);
   async function rescue() { const N = X().net;
     N.init({ storage: { get: LS.get, set: LS.set }, clientVersion: HOOKS.clientVersion });
+    if (!N.hasSession() && !mayCreate()) return null;   /* aparelho vazio, sem sessão e sem JOGAR: nenhum pedido (nada a proteger: sem sessão não há nuvem deste aparelho) */
     await N.ensureSession(); const h = await N.head();
     if (!h || !progress(h.summary)) return null;
     dbg('aparelho sem save e nuvem com progresso: baixa a nuvem (nada sobe)');
@@ -214,9 +228,10 @@
       const lift = () => { if (held) { LS.del(HOLD); O.DATA.on = true; ST.on = true; ST.why = ''; watchPlay(); } }, drop = r => { if (held) N.DATA.on = false; return r; };
       try { await N.googleSignIn('login'); }
       catch (e) { const c = code(e); if (c !== 'not_linked') return drop({ ok: false, reason: c });
-        try { if (!N.hasSession()) await N.ensureSession(); const p = await (e && e.idToken ? N.googleSignIn('link', { idToken: e.idToken }) : N.googleSignIn('link')); lift(); if (held) runBoot(); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
+        try { ST.play = true;   /* entrar com o Google também é o jogador pedindo a conta: o convidado pode nascer para receber o vínculo */
+          if (!N.hasSession()) await N.ensureSession(); const p = await (e && e.idToken ? N.googleSignIn('link', { idToken: e.idToken }) : N.googleSignIn('link')); lift(); if (held || !ST.booted) runBoot(); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
         catch (e2) { const c2 = code(e2); return drop(c2 === 'link_taken' ? { ok: false, reason: 'link_taken', other: (e2.details && e2.details.otherPlayer) || null } : { ok: false, reason: c2 }); } }
-      lift(); const r = await reboot(); let pl = null; try { pl = N.player(); } catch (e) {}
+      ST.play = true; lift(); const r = await reboot(); let pl = null; try { pl = N.player(); } catch (e) {}
       return { ok: true, action: 'login', save: r.action, pending: !!ST.pending, player: pl, boot: r }; };
     const fin = () => { ST.gP = null; };
     ST.gP = run().then(r => { fin(); return r; }, e => { fin(); dbg('google falhou', e); return { ok: false, reason: code(e) }; });
@@ -282,10 +297,11 @@
     emit(); return { ok: true, localSave: keep ? 'keep' : 'erase', reloadInMs: ms }; }
   /* depois do 'keep': o jogador pede para voltar ao online sem o Google → sai a marca e o online liga (convidado novo; o save do aparelho sobe) */
   function resume() { if (owner() || ST.reloading) return Promise.resolve({ ok: false, reason: owner() ? 'owner' : 'nosave' });
-    LS.del(HOLD); if (ST.on) return (ST.bootP || Promise.resolve()).then(result);
+    ST.play = true; LS.del(HOLD); if (ST.on) return (ST.bootP || Promise.resolve()).then(result);
     ST.called = false; start(); return ST.on && ST.bootP ? ST.bootP.then(result) : Promise.resolve({ ok: false, reason: ST.why || 'off' }); }
 
-  function state() { return { on: ST.on, why: ST.why, booted: ST.booted, booting: ST.booting, lastAction: ST.lastAction, pending: !!ST.pending, choosing: ST.choosing, started: ST.game }; }
+  function state() { return { on: ST.on, why: ST.why, booted: ST.booted, booting: ST.booting, lastAction: ST.lastAction, pending: !!ST.pending, choosing: ST.choosing, started: ST.game,
+    waitingPlay: ST.on && !ST.booting && !ST.booted && !!ST.last && ST.last.reason === 'no_session' };   /* waitingPlay: sem conta ainda; nasce no JOGAR (não é erro) */ }
 
-  W.OnlineBoot = { start, wait, reboot, google, saved, state, applyPending, accountDeleted, resume, summary, playTick, _st: ST, _pt: PT };
+  W.OnlineBoot = { start, wait, reboot, play, google, saved, state, applyPending, accountDeleted, resume, summary, playTick, _st: ST, _pt: PT };
 })(window);

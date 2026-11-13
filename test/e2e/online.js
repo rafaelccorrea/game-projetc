@@ -363,8 +363,8 @@ const SK = 'eras_proto_v2';
       check('11. aparelho vazio e a cabeça da nuvem não responde: nada sobe', sv.count('PUT /save') === 0 && sv.cloud.version === 5, sv.keys().join(',')); }
     { const sv = mkServer({ cloud: cloudOf(1, JSON.parse(EMPTY), { level: 1, stage: 1, fc: 0, gems: 30, maxRarity: 0 }) }); const g = game({ search: '?debug=1&online=1', server: sv, storage: Object.assign({ [SK]: EMPTY }, { 'eon.net': netMem({ save: { version: 1, dirty: false } }) }) }); await g.settle(); const st = g.st();
       check('11. jogador novo que ainda não jogou (aparelho vazio × nuvem vazia v1): segue normal ("none"), sem baixar nem recarregar em laço', st.lastAction === 'none' && st.booted && !g.reloaded() && sv.count('GET /save') === 0, JSON.stringify(st) + ' ' + sv.keys().join(',')); }
-    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
-      check('11. jogador novo de verdade (sem save, sem sessão, nuvem vazia): cria a sessão e sobe o save novo, como antes', sv.count('POST /auth/guest') === 1 && sv.cloud && sv.cloud.version === 1 && g.st().lastAction === 'push', sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); await g.promise('OnlineBoot.play()')(80);
+      check('11. jogador novo de verdade (sem save, sem sessão, nuvem vazia), depois do JOGAR: cria a sessão e sobe o save novo', sv.count('POST /auth/guest') === 1 && sv.cloud && sv.cloud.version === 1 && g.st().lastAction === 'push', sv.keys().join(',')); }
     { const sv = mkServer({ cloud: PROG() }); const g = game({ search: '?debug=1&online=1', server: sv, storage: meta(false) }); await g.settle();
       check('11. depois de recarregar pelo save da nuvem a marca eon_cloud_reload existe (guarda contra laço)...', !!g.ls.getItem('eon_cloud_reload'), '');
       const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
@@ -412,8 +412,10 @@ const SK = 'eras_proto_v2';
       check('13. recarrega no Título', g.reloaded(), g.G.sandbox.location.href);
       const rb = await g.promise('OnlineBoot.reboot()')(); check('13. reboot() depois da exclusão não chama nada', rb && rb.v && rb.v.ok === false && sv.calls.length === n0, JSON.stringify(rb));
       /* abertura seguinte: jogador novo */
-      const sv2 = mkServer(), g2 = game({ search: '?debug=1&online=1', server: sv2, storage: g.snap() }); await g2.settle();
-      check('13. erase, abertura seguinte: save novo (sem nome, fase 1) e convidado NOVO (outro id de aparelho: não reabre a conta excluída)', !g2.ev('S.name') && g2.ev('S.stage') === 1 && sv2.count('POST /auth/guest') === 1 && sv2.last('POST /auth/guest').body.deviceId !== 'dev-1' && !!sv2.last('POST /auth/guest').body.deviceId, JSON.stringify(sv2.last('POST /auth/guest') && sv2.last('POST /auth/guest').body)); }
+      const sv2 = mkServer(), g2 = game({ search: '?debug=1&online=1', server: sv2, storage: g.snap() }); await g2.settle(); await g2.adv(8000);
+      check('13. erase, abertura seguinte, no Título: save novo e NENHUMA conta criada (zero pedidos) até o JOGAR', !g2.ev('S.name') && g2.ev('S.stage') === 1 && sv2.calls.length === 0 && g2.st().waitingPlay === true, sv2.keys().join(',') + ' ' + JSON.stringify(g2.st()));
+      await g2.promise('OnlineBoot.play()')(80);
+      check('13. erase, depois do JOGAR: save novo (sem nome, fase 1) e convidado NOVO (outro id de aparelho: não reabre a conta excluída)', !g2.ev('S.name') && g2.ev('S.stage') === 1 && sv2.count('POST /auth/guest') === 1 && sv2.last('POST /auth/guest').body.deviceId !== 'dev-1' && !!sv2.last('POST /auth/guest').body.deviceId, JSON.stringify(sv2.last('POST /auth/guest') && sv2.last('POST /auth/guest').body)); }
     { const g = await open(); await del(g); const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))"));
       check('13. delayMs: 0 recarrega na hora', r.ok && g.reloaded(), JSON.stringify(r)); }
     /* ---- keep ---- */
@@ -443,6 +445,53 @@ const SK = 'eras_proto_v2';
     { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 888, name: 'NuvemS2', realm: 's2' })) }), g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: { eon_realm: 's2', eras_proto_v2: JSON.stringify(mk({ realm: 's1' })), 'eras_proto_v2@s2': S2, 'eon.net': netMem() } }); await g.settle();
       const s1 = g.ls.getItem('eras_proto_v2'); const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))"));
       check('13. no servidor s2: apaga só eras_proto_v2@s2 e o pendente @s2; o save do s1 fica; as sessões (eon.net e eon.net@s2) saem', r.ok && g.ls.getItem('eras_proto_v2@s2') == null && g.ls.getItem('eras_proto_v2') === s1 && g.ls.getItem('eon_cloud_pending@s2') == null && g.ls.getItem('eon.net') == null && g.ls.getItem('eon.net@s2') == null, JSON.stringify(r) + ' ' + Object.keys(g.snap()).join(',')); } }
+
+  /* ============ 14. A CONTA DE CONVIDADO SÓ NASCE NO JOGAR (decisão do PO; Servidor 03e7dee) ============ */
+  sec('14. Convidado só no JOGAR');
+  { const CREATE = ['POST /auth/guest', 'POST /auth/login/google', 'POST /auth/link/google'], created = sv => sv.calls.filter(c => CREATE.includes(c.key)).length;
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); g.ev("window.__w=0; OnlineBoot.wait(4000).then(function(){ window.__w=1; })"); await g.settle(); g.ev('save(); save()'); await g.adv(130000); const st = g.st();
+      check('14. Título com armazenamento LIMPO: zero chamadas de criação (zero pedidos ao servidor), mesmo depois de 2 min e de gravações', created(sv) === 0 && sv.calls.length === 0, sv.keys().join(','));
+      check('14. ...o online está ligado e só ESPERA o JOGAR (waitingPlay), sem erro: nada no console de erro, tela de falha não chamada, barra não fica presa', st.on && st.waitingPlay === true && !st.booted && st.lastAction === null && g.ev('window.__w') === 1 && !g.G.consoleErrs.some(x => /no_session|online/i.test(x)), JSON.stringify(st) + ' ' + g.G.consoleErrs.join(' | ').slice(0, 200));
+      check('14. ...e nenhuma sessão guardada no aparelho (sem tokens)', !g.ls.getItem('eon.net') || !JSON.parse(g.ls.getItem('eon.net')).refresh, String(g.ls.getItem('eon.net')));
+      const p1 = g.promise('OnlineBoot.play()'); g.ev('OnlineBoot.play(); OnlineBoot.play()'); const r = await p1(80); g.ev('OnlineBoot.play()'); await g.settle(); const s2 = g.st();
+      check('14. play(): cria o convidado UMA vez só (4 chamadas a play → 1 POST /auth/guest) e o online segue (sobe o save novo)', sv.count('POST /auth/guest') === 1 && r && r.v && r.v.ok === true && s2.booted && !s2.waitingPlay && s2.lastAction === 'push' && sv.cloud && sv.cloud.version === 1, sv.keys().join(',') + ' ' + JSON.stringify(r));
+      g.ev('B.paused=false; S.gold=77; save()'); await g.adv(61000); check('14. depois do JOGAR as gravações sobem normalmente', sv.cloud.save.gold === 77 && sv.count('POST /auth/guest') === 1, 'v' + sv.cloud.version); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); g.ev('OnlineBoot.play(); OnlineBoot.play()'); await g.settle(); g.ev('OnlineBoot.play()'); await g.settle();
+      check('14. play() com o boot da abertura AINDA em curso (sem corrida): um boot só cria, uma conta só', sv.count('POST /auth/guest') === 1 && sv.count('PUT /save') === 1 && g.st().booted, sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1&skip=1', server: sv }); await g.settle();
+      check('14. aparelho vazio com a batalha JÁ rodando (o jogo começou por outro caminho): vale como JOGAR, cria uma vez', sv.count('POST /auth/guest') === 1 && g.st().booted, sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();
+      check('14. save COM progresso e sem sessão (jogador de antes do online): cria sozinho na abertura, sem esperar o JOGAR, e sobe', sv.count('POST /auth/guest') === 1 && sv.cloud && sv.cloud.save.gold === 1234 && g.st().lastAction === 'push', sv.keys().join(',')); }
+    { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 777, name: 'DaNuvem', kills: 16, realm: 's1' }), { level: 2 }) }); const g = game({ search: '?debug=1&online=1', server: sv, storage: { 'eon.net': netMem({ save: { version: 5, dirty: false } }) } }); g.ev('OnlineBoot.play()'); await g.settle();
+      check('14. jogador que VOLTA com sessão guardada e aparelho vazio: nada muda (renova, não cria) e a proteção da nuvem vale também com play(): baixa, nenhum PUT', sv.count('POST /auth/guest') === 0 && sv.count('POST /auth/refresh') >= 1 && sv.count('PUT /save') === 0 && g.stored().name === 'DaNuvem' && g.reloaded(), sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv, storage: { [SK]: JSON.stringify(mk()), 'eon.net': netMem({ save: { version: 0, dirty: false } }) } }); await g.settle();
+      check('14. jogador que volta com sessão e save com progresso: como antes (renova a sessão, nenhuma criação)', sv.count('POST /auth/guest') === 0 && sv.count('POST /auth/refresh') === 1 && g.st().booted, sv.keys().join(',')); }
+    /* depois de Excluir conta */
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle(); await g.promise('Sys.net.deleteAccount()')();
+      g.ev("OnlineBoot.accountDeleted({localSave:'erase',delayMs:0})"); const sv2 = mkServer(), g2 = game({ search: '?debug=1&online=1', server: sv2, storage: g.snap() }); await g2.settle(); await g2.adv(30000);
+      check('14. depois de accountDeleted (erase) + recarga, no Título: zero criação (zero pedidos) até o JOGAR', sv2.calls.length === 0 && g2.st().waitingPlay === true && !g2.reloaded(), sv2.keys().join(',') + ' ' + JSON.stringify(g2.st()));
+      const r = await g2.promise('OnlineBoot.play()')(80); g2.ev('OnlineBoot.play()'); await g2.settle();
+      check('14. ...e o JOGAR cria UMA conta nova (id de aparelho novo)', r && r.v && r.v.ok && sv2.count('POST /auth/guest') === 1 && sv2.last('POST /auth/guest').body.deviceId !== sv.last('POST /auth/guest').body.deviceId, sv2.keys().join(',')); }
+    /* Google sem conta ainda */
+    { const sv = mkServer({ google: 'ok', cloud: cloudOf(9, mk({ gold: 999999, name: 'ContaGoogle', realm: 's1' }), { level: 30 }) }); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); cap(g);
+      const r = await g.promise('OnlineBoot.google()')(120);
+      check('14. Título limpo + entrar com o Google (conta vinculada): entra na conta SEM criar convidado e traz o save da conta', r && r.v && r.v.ok && r.v.action === 'login' && sv.count('POST /auth/guest') === 0 && sv.count('POST /auth/login/google') === 1 && g.stored().name === 'ContaGoogle' && g.reloaded(), JSON.stringify(r) + ' ' + sv.keys().join(',')); }
+    { const sv = mkServer({ google: 'not_linked', link: 'ok' }); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); cap(g);
+      const r = await g.promise('OnlineBoot.google()')(120); await g.settle();
+      check('14. Título limpo + Google sem vínculo: nasce UM convidado para receber o vínculo, a janela abre uma vez, e o boot segue', r && r.v && r.v.ok && r.v.action === 'linked' && sv.count('POST /auth/guest') === 1 && sv.count('POST /auth/link/google') === 1 && g.G.sandbox.__gl === 1 && g.st().booted, JSON.stringify(r) + ' ' + sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); cap(g, 'cancel'); const r = await g.promise('OnlineBoot.google()')(60);
+      check('14. Título limpo + Google cancelado: nenhuma conta criada, continua esperando o JOGAR', r && r.v && r.v.ok === false && sv.calls.length === 0 && g.st().waitingPlay === true, JSON.stringify(r) + ' ' + sv.keys().join(',')); }
+    /* bloqueios continuam */
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv, storage: { eon_owner_mode: '1' } }); await g.settle(); const r = await g.promise('OnlineBoot.play()')(40);
+      check('14. Modo dono: play() não cria nada (reason owner)', r && r.v && r.v.ok === false && r.v.reason === 'owner' && sv.calls.length === 0, JSON.stringify(r)); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv, storage: { [SK]: JSON.stringify(mk()), eon_online_hold: '{"at":1}' } }); await g.settle(); const r = await g.promise('OnlineBoot.play()')(40); g.ev('B.paused=false; save()'); await g.adv(61000);
+      check('14. conta excluída com o save mantido (hold): JOGAR não cria conta nem sobe o save (só resume() ou o Google)', r && r.v && r.v.ok === false && r.v.reason === 'hold' && sv.calls.length === 0 && !!g.ls.getItem('eon_online_hold'), JSON.stringify(r) + ' ' + sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv, storage: { eon_realm: 's2', 'eras_proto_v2@s2': JSON.stringify(mk({ realm: 's1' })) } }); await g.settle(); const r = await g.promise('OnlineBoot.play()')(40);
+      check('14. save de outro servidor (REALM_MISMATCH): play() não cria nada', r && r.v && r.v.ok === false && r.v.reason === 'realm' && sv.calls.length === 0, JSON.stringify(r)); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=0', server: sv }); await g.settle(); const r = await g.promise('OnlineBoot.play()')(40);
+      check('14. chave desligada: play() não faz nada', r && r.v && r.v.ok === false && r.v.reason === 'off' && sv.calls.length === 0, JSON.stringify(r)); }
+    { const sv = mkServer({ silent: true }); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); g.ev('OnlineBoot.play(); OnlineBoot.play()'); await g.adv(20000); g.ev('OnlineBoot.play()'); await g.settle();
+      check('14. JOGAR com o servidor mudo: um pedido de criação só, nada trava, o jogo segue local', sv.count('POST /auth/guest') === 1 && g.st().on && !g.st().booted, sv.keys().join(',')); } }
 
   check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
