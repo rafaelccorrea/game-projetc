@@ -1152,3 +1152,10 @@ Conflitos de nomes: nenhum; `run.js` "TUDO OK" (148); `flows.js` "fluxos duros O
 - `js/screens2.js`: o resgate do Passe agora recebe `mountFrags` como objeto (`{n, stored}` / `{n, id, up}`), o módulo mudou; `pExtras` lê os dois formatos.
 - CORREÇÃO PEQUENA em arquivo do QA (`js/p_wait.js`, aviso B-29): o esqueleto ia para `window.V`, que não existe no jogo.
 - Fumaça: 5 testes novos (esqueleto com imagem carregando e tela depois; só arquivos existentes; Mecha desligado idêntico; Mecha ligado; volta ao VIP).
+
+## Bloco 43 (sem navegador): reserva do avatar sem pedir .json que não existe
+
+`js/avatar.js`: a reserva pedia `assets/anim/hyb/R/kael_idle_era2_t0.json` (não existe: 404). Agora `AV.RES` declara, por herói, a imagem, o .json
+que existe e a âncora: Kael = `R/kael_idle_era2_t0.png` + `R/kael_idle_body.json`; Kaia = `kaia/kaia_idle_body.png` + `kaia/kaia_idle_body.json`
+(a reserva passou a ser do herói do save, não mais sempre o Kael). `need()` aceita os caminhos declarados em vez de deduzir `<base>.json`.
+`test/paineis/avatar.crop.js`: confere que todo caminho escrito no avatar.js existe em disco e que a folha da reserva bate com a grade do .json.

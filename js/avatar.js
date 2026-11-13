@@ -19,7 +19,10 @@
 (function(){
 'use strict';
 const W=typeof window!=='undefined'?window:null; if(!W||typeof document==='undefined') return;
-const AV={K:2.8,DY:0.08,MIN:64,PADS:[96,-96],RES:'assets/anim/hyb/R/kael_idle_era2_t0',RES_HEAD:'assets/anim/hyb/R/masks/kael_idle_head.json',
+const AV={K:2.8,DY:0.08,MIN:64,PADS:[96,-96],/* RESERVA por herói: {img = folha parada que existe, json = o .json QUE EXISTE dela (o kael_idle_era2_t0 só tem .png: o json é o do corpo, mesma grade
+     de 12 quadros de 256), head = âncora da cabeça}. Achado do engenheiro: pedir kael_idle_era2_t0.json dava 404. */
+  RES:{kael:{img:'assets/anim/hyb/R/kael_idle_era2_t0.png',json:'assets/anim/hyb/R/kael_idle_body.json',head:'assets/anim/hyb/R/masks/kael_idle_head.json'},
+       kaia:{img:'assets/anim/hyb/kaia/kaia_idle_body.png',json:'assets/anim/hyb/kaia/kaia_idle_body.json',head:'assets/anim/hyb/kaia/masks/kaia_idle_head.json'}},
   DIR:'assets/hero/avatar/',HATS:'assets/anim/equip/hats/',COS:'assets/anim/equip/cos/'};
 /* PEÇAS DE CABEÇA (chapéu, óculos, máscara) por cima do retrato. DECISÃO FINAL DO DONO: o avatar é SÓ o rosto da fase, sem peça nenhuma → false.
    Desligada: não lê hats.json nem cos.json, não carrega imagem de peça e não consulta Sys.appearance.layers. O código fica para o futuro (true religa). */
@@ -32,8 +35,8 @@ const getImg=u=>new Promise(ok=>{ if(typeof Image==='undefined'){ ok(null); retu
 const gS=()=>{ try{ return typeof S!=='undefined'?S:null; }catch(e){ return null; } };   /* o save do jogo (global do index.html) */
 
 /* folha + json + âncora da cabeça: carrega uma vez por caminho. st: 0 carregando, 1 pronto, 2 faltou arquivo */
-function need(base,headUrl){ let r=res[base]; if(r) return r; r=res[base]={st:0,base};
-  Promise.all([getImg(base+'.png'),getJson(base+'.json'),headUrl?getJson(headUrl):Promise.resolve(null)]).then(a=>{
+function need(base,headUrl,o){ let r=res[base]; if(r) return r; r=res[base]={st:0,base};
+  Promise.all([getImg(o&&o.img?o.img:base+'.png'),getJson(o&&o.json?o.json:base+'.json'),headUrl?getJson(headUrl):Promise.resolve(null)]).then(a=>{
     if(!a[0]){ r.st=2; fire(base); return; } r.img=a[0]; r.meta=a[1]||{}; try{ measure(r,a[2]); r.st=1; }catch(e){ r.st=2; } fire(base); });
   return r; }
 /* mede o quadro 0: topo da figura e a âncora conferida */
@@ -60,7 +63,9 @@ function build(key,r,sh,sv,px){ const B0=box(r), F=px/B0.c, a=mk(px,px), x=a.get
   const e={canvas:a,url:null,src:sh?'folha':'reserva'}; cache.set(key,e); return e; }
 /* busto desenhado: só enquanto nem a reserva carregou */
 function bust(px){ const c=mk(px,px), x=c.getContext('2d'); x.fillStyle='#6b5843'; x.beginPath(); x.arc(px/2,px*0.4,px*0.2,0,7); x.fill(); x.beginPath(); x.ellipse(px/2,px*0.98,px*0.36,px*0.3,0,0,7); x.fill(); return {canvas:c,url:null,src:'busto'}; }
-function reserve(px){ const k='res|'+px, e=cache.get(k); if(e) return {e,key:k}; const r=need(AV.RES,AV.RES_HEAD); if(r.st===1) return {e:build(k,r,null,null,px),key:k};
+const resHero=sv=>sv&&sv.hero==='kaia'?'kaia':'kael';
+const needRes=h=>{ const R=AV.RES[h]||AV.RES.kael; return need('res:'+h,R.head,R); };
+function reserve(px,sv){ const h=resHero(sv), k='res|'+h+'|'+px, e=cache.get(k); if(e) return {e,key:k}; const r=needRes(h); if(r.st===1) return {e:build(k,r,null,null,px),key:k};
   const kb='bust|'+px; let eb=cache.get(kb); if(!eb){ eb=bust(px); cache.set(kb,eb); } return {e:eb,key:kb}; }
 /* ---------- retratos prontos da Arte + camadas de cabeça ---------- */
 function meta(){ if(META.st) return; META.st=1; Promise.all([getJson(AV.DIR+'avatars.json'),AVATAR_PIECES?getJson(AV.HATS+'hats.json'):Promise.resolve(null),AVATAR_PIECES?getJson(AV.COS+'cos.json'):Promise.resolve(null)]).then(a=>{
@@ -83,14 +88,14 @@ function compose(key,img,size,head,parts,px){ const c=mk(px,px), x=c.getContext(
   if(head) for(const p of parts){ const pv=p.m.pivot||{x:0,y:0}, k=(+head.s||1)/(+p.m.res||1); x.save(); x.translate(+head.x||0,+head.y||0); x.rotate((+head.ang||0)*Math.PI/180); x.scale(k,k); x.drawImage(p.img,-pv.x,-pv.y); x.restore(); }
   const e={canvas:c,url:null,src:'retrato'+(parts.length?' + '+parts.map(p=>p.k).join(' + '):'')}; cache.set(key,e); return e; }
 /* recorte da folha parada: só quando o retrato da Arte falta */
-function fromSheet(sv,px){ const sh=sheetFor(sv); if(!sh) return reserve(px); const r=need(sh.body,sh.masks+'_head.json'); if(r.st!==1) return reserve(px);
+function fromSheet(sv,px){ const sh=sheetFor(sv); if(!sh) return reserve(px,sv); const r=need(sh.body,sh.masks+'_head.json'); if(r.st!==1) return reserve(px,sv);
   const key='folha|'+sh.hero+'|'+sh.stage+'|'+px; return {e:cache.get(key)||build(key,r,sh,sv,px),key,ok:true}; }
 /* o melhor retrato de agora para este save e tamanho: {e:{canvas}, key, ok} */
 let bM=null;   /* a mesma resposta vale por 150 ms (vários retratos na mesma tela não refazem a conta); zera quando uma imagem chega */
 function best(sv,px){ const now=Date.now(); if(bM&&bM.sv===sv&&bM.px===px&&now-bM.t<150) return bM.r; const r=best0(sv,px); bM={sv,px,t:now,r}; return r; }
-function best0(sv,px){ if(!sv) return reserve(px); meta(); if(META.st<2) return reserve(px); if(META.st===3) return fromSheet(sv,px);
+function best0(sv,px){ if(!sv) return reserve(px,sv); meta(); if(META.st<2) return reserve(px,sv); if(META.st===3) return fromSheet(sv,px);
   const id=keyOf(sv), it=META.av.items[id]; if(!it||!it.file) return fromSheet(sv,px);
-  const P=pic(AV.DIR+it.file); if(P.st===0) return reserve(px); if(P.st===2) return fromSheet(sv,px);
+  const P=pic(AV.DIR+it.file); if(P.st===0) return reserve(px,sv); if(P.st===2) return fromSheet(sv,px);
   /* peças: a que ainda está carregando fica de fora por enquanto (o retrato é refeito quando ela chega); a que falta fica de fora de vez */
   const parts=[]; let pend=0; for(const h of headLayers(sv)){ const I=pic(h.url); if(I.st===1) parts.push({k:h.k,m:h.m,img:I.img}); else if(I.st===0) pend++; }
   const key=id+'|'+parts.map(p=>p.k).join(',')+(pend?'|+'+pend:'')+'|'+px;
@@ -118,7 +123,7 @@ W.avatarKeyOf=keyOf;   /* (S, itens do avatars.json) → chave do retrato; para 
 W.avatarInfo=function(){ const o={}; for(const k in res){ const r=res[k]; o[k]={st:r.st,hx:r.hx,hy:r.hy,hh:r.hh,note:r.note}; } const im={}; for(const k in imgs) im[k]=imgs[k].st;
   return {meta:META.st,imagens:im,folhas:o,retratos:Array.from(cache.entries()).map(e=>e[0]+' ['+e[1].src+']')}; };   /* para o QA conferir */
 
-need(AV.RES,AV.RES_HEAD); meta();   /* a reserva e as tabelas dos retratos já vêm carregando */
+needRes('kael'); meta();   /* a reserva e as tabelas dos retratos já vêm carregando */
 try{ if(typeof MutationObserver==='function'){ new MutationObserver(ms=>{ for(const m of ms) if(m.addedNodes&&m.addedNodes.length){ scan(); break; } }).observe(document.documentElement,{childList:true,subtree:true}); } }catch(e){}
 try{ setInterval(()=>{ if(live.length) repaint(); },1000); }catch(e){}   /* fase, herói ou camada mudou com o retrato na tela (ex.: cabeçalho): repinta sem a tela precisar avisar */
 })();

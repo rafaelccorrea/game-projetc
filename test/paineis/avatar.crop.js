@@ -40,6 +40,14 @@ console.log('--- 0. qual retrato (sem fases: skin equipada pelo Sys.appearance.a
   Sys.appearance.avatarKey=()=>'nao_existe'; eq(K({hero:'kaia'},IT),'kaia_phase0','avatarKey com chave fora do avatars.json'); Sys.appearance.avatarKey=()=>{ throw new Error('x'); }; eq(K({hero:'kael'},IT),'kael_phase0','avatarKey com erro');
   delete win.Sys; delete global.Sys; }
 console.log('--- 1. retratos da Arte + peças de cabeça');
+// todo arquivo que o avatar.js pede por caminho escrito no código tem de existir (achado do engenheiro: a reserva pedia um .json que não existe = 404)
+{ const lit=Array.from(new Set(src.match(/assets\/[\w\/.-]+\.(?:png|json)/g)||[])).filter(p=>src.split("'"+p+"'").length>1);
+  say(lit.length>=6,'caminhos escritos no avatar.js: '+lit.length); for(const p of lit) say(fs.existsSync(path.join(root,p)),'existe '+p);
+  say(/getJson\(o&&o\.json\?o\.json:base\+'\.json'\)/.test(src)&&!/need\(AV\.RES\s*,/.test(src),'a reserva usa o .json declarado (não deduz <imagem>.json)');
+  // a reserva de cada herói: os campos que o avatar.js lê do .json (frames, w, h) estão lá, e a folha tem essa grade
+  for(const h of ['kael','kaia']){ const m=new RegExp(h+":\\{img:'([^']+)',json:'([^']+)',head:'([^']+)'\\}").exec(src); if(!m){ say(false,'reserva de '+h+' não achada no código'); continue; }
+    const M=J(m[2]), im=readPng(path.join(root,m[1])), H=J(m[3]); say(M.frames>0&&M.w>0&&M.h>0&&im.w===M.frames*M.w&&im.h===M.h,'reserva '+h+': '+m[1]+' = '+im.w+'x'+im.h+' = '+M.frames+' quadros de '+M.w+'x'+M.h+' (json '+m[2]+')');
+    say(!!(H.head&&H.head[0]&&typeof H.head[0].x==='number'),'reserva '+h+': âncora da cabeça em '+m[3]); } }
 const PIECES=/const AVATAR_PIECES=true/.test(src);   // chave do js/avatar.js: desligada (decisão do dono) = só o rosto; as peças nem são lidas
 console.log('    peças de cabeça: '+(PIECES?'LIGADAS':'desligadas (AVATAR_PIECES=false): só o rosto do retrato'));
 // com a chave desligada, toda leitura de hats.json / cos.json tem de estar atrás dela, e a lista de peças tem de sair vazia antes de consultar o módulo
