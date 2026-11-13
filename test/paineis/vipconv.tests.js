@@ -91,7 +91,7 @@ var VIPCONV_TESTS=(function(){
   T['estreito: FC inteira e linha da mochila sem corte']=function(){
     return withVip(0,function(){ const h=bad(gear()), W=V_TEST.clientWidth, slim=W<360, hint=h.indexOf('arraste o item até o espaço')>=0, chip=h.indexOf('data-x="bagvip"')>=0;
       const m=h.match(/data-x="(?:look|goskins)"[^>]*style="width:(\d+)px/); if(!m) throw new Error('botão Aparência não achado'); const bw=+m[1];
-      const row=W-24-16-2-6, fcBox=row-bw, need=4+16+24+6+Math.max(90,String(fcTxt(heroFC())).length*15);   /* borda + respiro + raio + vão + o maior entre o rótulo (9 px) e o valor (Lilita 25 px, ~15 px por letra) */
+      const row=W-24-16-2-6, fcBox=row-bw, need=4+16+Math.ceil(Math.max(xTxtEm('FORÇA DE COMBATE')*9,xTxtEm(fcTxt(heroFC()))*25));   /* borda + respiro + o maior entre o rótulo (9 px) e o valor (25 px); o raio sai quando não cabe (teste "FC inteira") */
       if(slim){ if(bw!==46) throw new Error('Aparência com '+bw+' px em tela de '+W); if(fcBox<need) throw new Error('caixa da FC com '+fcBox+' px, precisa de '+need); if(hint) throw new Error('dica de arrastar na tela estreita (corta)');
         if(/Coleção de skins/.test(h)&&!/display:none;flex-direction:column/.test(h)) throw new Error('texto da skin visível no botão estreito'); }
       else { if(bw<168) throw new Error('largura normal mudou: Aparência com '+bw+' px'); if(chip&&hint) throw new Error('chip e dica na mesma linha (a dica corta)'); }
@@ -129,4 +129,47 @@ var VIPCONV_TESTS=(function(){
       /* zero pedras: nem começa, aviso comum */
       fStop(); o.stones=0; XF.toast=''; fc('autogo'); if(XF.auto||o.tries!==t1+1) throw new Error('começou sem pedra'); if(String(XF.toast).indexOf('Pedras de Forja insuficientes')<0) throw new Error('aviso: '+XF.toast);
       return 'Parar: 1 tentativa; falta de pedra: parou com o motivo; zero pedras: aviso comum'; }); };
+  /* ---------- FC INTEIRA em qualquer largura (288 a 430) e para qualquer texto do formatador ----------
+     Sem navegador não há medida real: a conta usa a mesma estimativa de largura da tela (xTxtEm, com folga). O que o teste garante é a regra:
+     fonte × largura estimada do texto ≤ espaço útil da caixa, sem reticências no número, em todas as larguras e valores. O QA confere no aparelho. */
+  const FC_TXT=(function(){ const l=['195 mil','999,9 mil','999,9 mi','999,9 bi','999,9 tri','1000 tri']; try{ for(const s of Sys.stats.DATA.abbr.pt){ const u=String(s||'').trim(); if(u&&l.indexOf('999,9 '+u)<0) l.push('999,9 '+u); } const big=String(Sys.stats.DATA.abbr.pt.slice(-1)[0]).trim(); l.push('1000 '+big); }catch(e){} return l; })();   /* todos os sufixos do formatador (Sys.stats.DATA.abbr.pt) e o "1000 <maior>" que ele devolve no limite */
+  const FC_W=[288,320,360,384,390,412,430];
+  function withFc(fn){ const f0=fcTxt, w0=V_TEST.clientWidth, s0=XG.sel; let out, err=null; try{ out=fn(function(t){ fcTxt=function(){ return t; }; }); }catch(e){ err=e; } fcTxt=f0; V_TEST.clientWidth=w0; XG.sel=s0; XG.tw=null; if(err) throw err; return out; }
+  const num=(h,re)=>{ const m=h.match(re); return m?+m[1]:NaN; };
+
+  T['FC inteira: caixa do Equipamento em 288 a 430 px, valores longos']=function(){
+    return withFc(function(setTxt){ const out=[]; let minPx=99;
+      for(const W of FC_W){ V_TEST.clientWidth=W; let worst=99;
+        for(const t of FC_TXT){ setTxt(t); const h=gear(), box=h.slice(h.indexOf('id="xg_fcbox"'),h.indexOf('data-x="look"')>0?h.indexOf('data-x="look"'):h.indexOf('data-x="goskins"'));
+          const px=num(box,/id="xg_s_fc"[^>]*font-size:([\d.]+)px/), lpx=num(box,/id="xg_fclbl"[^>]*font-size:([\d.]+)px/), ls=num(box,/id="xg_fclbl"[^>]*letter-spacing:([\d.]+)px/), apW=num(h,/data-x="(?:look|goskins)"[^>]*style="width:(\d+)px/);
+          if(!(px>0)||!(lpx>0)||!(apW>0)) throw new Error(W+' px: caixa da FC não achada'); if(box.indexOf('>'+t+'<')<0) throw new Error(W+' px: número "'+t+'" não está inteiro no HTML');
+          if(/id="xg_s_fc"[^>]*text-overflow/.test(box)) throw new Error('reticências no número');
+          const icon=box.indexOf('M13 2 4 14h7l-1 8 9-12h-7z')>=0, inner=W-24-18-6-apW-20-(icon?30:0), need=xTxtEm(t)*px, lneed=xTxtEm('FORÇA DE COMBATE')*lpx+ls*16;
+          if(need>inner+0.01) throw new Error(W+' px, "'+t+'": precisa de '+need.toFixed(0)+' px e a caixa tem '+inner+' (fonte '+px+')');
+          if(lneed>inner+0.01) throw new Error(W+' px: rótulo precisa de '+lneed.toFixed(0)+' px e a caixa tem '+inner); if(lpx<8) throw new Error(W+' px: rótulo com '+lpx+' px (ilegível)');
+          if(px<16) throw new Error(W+' px, "'+t+'": fonte do número caiu para '+px+' px'); worst=Math.min(worst,px); }
+        minPx=Math.min(minPx,worst); out.push(W+':'+worst); }
+      return 'menor fonte do número por largura (base 25) → '+out.join(' · '); }); };
+
+  T['FC inteira: comparação do item (antes → depois, FC agora, no seu nível)']=function(){
+    return withFc(function(setTxt){ const it=S.inv.find(x=>S.eq[x.slot]!==x.id); if(!it) return 'sem item solto na mochila'; const out=[];
+      for(const W of FC_W){ V_TEST.clientWidth=W; let minF=99, mode='';
+        for(const t of FC_TXT){ setTxt(t); XG.sel=it.id; XG.tw=null; XG.cf=null; view='gear'; render(); const h=V_TEST.innerHTML; if(h.indexOf('aria-label="Comparar item"')<0) throw new Error('comparação não abriu');
+          const rows=h.match(/data-row="[a-z]+" data-need="\d+"/g)||[]; if(rows.length!==7) throw new Error('linhas da comparação: '+rows.length);
+          for(const r of rows){ const need=+r.match(/data-need="(\d+)"/)[1]; if(need>W-28-22) throw new Error(W+' px, "'+t+'", '+r+': passa da linha ('+(W-28-22)+' px)'); }
+          const fr=h.match(/data-row="fc"[^>]*>\s*<span[^>]*>[^<]*<\/span>\s*<span style="font-size:([\d.]+)px/); if(!fr) throw new Error('linha da FC não achada'); minF=Math.min(minF,+fr[1]);
+          const re=/data-fcbox="(col|row)" style="flex:([\d.]+)[^>]*><span style="font-size:([\d.]+)px[^>]*>([^<]*)<\/span><span class="lil" style="font-size:([\d.]+)px[^>]*>([^<]*)</g; let m, n=0;
+          while((m=re.exec(h))){ n++; mode=m[1]; const inner=(W-28-6)*(+m[2])/2.25-22, lw=xTxtEm(m[4])*(+m[3]), vw=xTxtEm(m[6])*(+m[5]); if(m[6]!==t) throw new Error('valor da FC não está inteiro: '+m[6]);
+            if(m[1]==='row'?lw+6+vw>inner+0.01:(lw>inner+0.01||vw>inner+0.01)) throw new Error(W+' px, "'+t+'", '+m[4]+': não cabe ('+m[1]+', '+Math.round(lw)+'+'+Math.round(vw)+' em '+Math.round(inner)+')'); if(+m[5]<10) throw new Error(W+' px: valor com '+m[5]+' px'); }
+          if(n!==2) throw new Error('caixas "FC agora"/"no seu nível": '+n); }
+        out.push(W+': linha '+minF+' px, caixas '+mode); }
+      return out.join(' · '); }); };
+
+  T['FC inteira: Derrota (SUA FC, RECOMENDADA, Faltam)']=function(){
+    if(typeof resLoseHtml!=='function') return 'sem a tela de resultado';
+    return withFc(function(setTxt){ const fc0=RES.fc, rec0=RES.rec; let err=null; const out=[];
+      try{ RES.fc=1000; RES.rec=5000; for(const t of FC_TXT){ setTxt(t); const h=resLoseHtml({top:0,f:1},'Teste',false), a=num(h,/id="res_fc" style="font-size:([\d.]+)px/), b=num(h,/id="res_rec" style="font-size:([\d.]+)px/);
+          if(!(a>0)||a!==b) throw new Error('fontes: '+a+' / '+b); if(xTxtEm(t)*a>RES_FC_W+0.01||xTxtEm('999,9 mil')*a>RES_FC_W+0.01) throw new Error('"'+t+'" não cabe: '+(xTxtEm(t)*a).toFixed(0)+' em '+RES_FC_W); if(a<18) throw new Error('fonte '+a);
+          if(h.indexOf('>'+t+'<')<0||h.indexOf(t+' de FC')<0) throw new Error('texto cortado'); if(/undefined|NaN/.test(h)) throw new Error('undefined/NaN'); out.push(a); } }catch(e){ err=e; }
+      RES.fc=fc0; RES.rec=rec0; if(err) throw err; return 'fonte (base 26) por valor: '+out.join(', ')+'; "Faltam" quebra em linhas'; }); };
   return T; })();

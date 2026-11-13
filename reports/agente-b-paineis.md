@@ -1195,4 +1195,14 @@ desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP 
   da própria linha (`XF.lockTip`, segundo toque recolhe). Teste novo "estreito: FC inteira e linha da mochila sem corte" e o da forja trancada
   refeito. `run.js` TUDO OK (154); `flows.js` "fluxos duros OK" (o fluxo 4 voltou a passar, 36/36); fumaça 390 e 288: 170 OK, 0 FALHA (segue o erro
   de timer do p_intro). Para o QA: em 360 a 390 px a caixa da FC tem ~88 px úteis; um valor longo ("999,9 mil") pode não caber (já era assim).
+- FC INTEIRA em 288 a 430 px (ordem da coordenação; celular do dono em ~384 a 412 px), sem navegador. `js/screens.js`: `xTxtEm`/`xFitPx` (largura
+  estimada do texto e a maior fonte que cabe; nunca reticências no número). Caixa da FC do Equipamento: o raio sai quando o rótulo não caberia ao
+  lado dele (360 a ~400 px), o rótulo perde o espaçamento se precisar e o número só desce de 25 px quando não cabe (pior caso 23,6 px em 412 com
+  "1000 qui"); a contagem animada reajusta a fonte a cada quadro. Comparação do item: linhas "antes → depois" com rótulo justo em tela estreita e
+  fonte que desce junta se faltar espaço; "FC agora"/"FC no seu nível" viram rótulo em cima + valor embaixo quando não cabem lado a lado.
+  `js/screens2.js` (Derrota): "SUA FC"/"RECOMENDADA" com a fonte ajustada à metade do cartão (base 390; fica em 26 px para todos os sufixos).
+  Conferidos e sem mudança: selo "FC +N" (centrado, linha inteira), "Faltam N de FC" (quebra em linhas), aviso "Equipada: … · FC" (quebra), Pets
+  "Soma à FC" (cabe com folga; segue com reticências só como reserva). 3 testes novos ("FC inteira: …") percorrem 288, 320, 360, 384, 390, 412 e
+  430 px com "195 mil", "999,9 mil/mi/bi/tri/qua/qui" e "1000 tri/qui". LIMITE: a conta é estimativa (sem medir no DOM); o QA confere no aparelho.
+  Fumaça 288, 360, 390 e 412: 173 OK, 0 FALHA (segue o timer do p_intro); `run.js` TUDO OK (154); `flows.js` "fluxos duros OK".
 - Largura 288 (nota antiga, resolvida pelo QA: 5 por linha, 1 px de folga): a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.

@@ -26,6 +26,10 @@ const gNum=v=>v>=1e7?kf(v):n0(v);
    todo número de FC escrito na tela (total, diferença "FC +N", recomendada, o que falta) passa por aqui. Contas e comparações continuam com a FC real.
    Sem Sys.fc.viewText: a formatação de antes. */
 function fcTxt(fc){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return Sys.fc.viewText(fc); }catch(e){} return gNum(fc); }
+/* TEXTO QUE TEM DE CABER INTEIRO (a FC na escala nova é longa: "999,9 tri"): largura estimada em "em" (Lilita One / Nunito 900, com 4% de folga) e a
+   maior fonte, até a base, que cabe em avail px. Nunca reticências no número: quem chama diminui a fonte em vez de cortar. Sem medir no DOM. */
+function xTxtEm(t){ let w=0; for(const ch of String(t==null?'':t)){ w+=ch>='0'&&ch<='9'?0.56:ch===','||ch==='.'?0.27:ch===' '?0.25:ch==='m'?0.84:ch==='i'||ch==='l'?0.29:ch==='t'?0.38:ch==='r'?0.4:ch>='A'&&ch<='Z'||ch==='Ç'?0.7:0.57; } return w*1.04; }
+function xFitPx(t,avail,base,min){ const em=xTxtEm(t); if(!(em>0)) return base; return Math.max(min||8,Math.min(base,Math.floor(avail/em*10)/10)); }
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const COIN_I=(s)=>`<img src="assets/ui/coin.png" alt="moedas" style="width:${s}px;height:${s}px;object-fit:contain">`;
 const GEM_I=(s)=>`<img src="assets/ui/gem.png" alt="gemas" style="width:${s}px;height:${s}px;object-fit:contain">`;
@@ -349,7 +353,7 @@ function gChange(fn,msg,sndName,opt){ opt=opt||{};
   snd(sndName||(to.fc>=from.fc?'upgrade':'claim')); XG.tw={from,to,t0:Date.now(),dur:opt.dur||650,big:!!opt.big}; XG.upfx=to.fc>from.fc+0.5; XG.land=opt.land||null; render(); XG.land=null; if(msg) gToast(msg);
   clearInterval(XG.twI); XG.twI=setInterval(()=>{ const tw=XG.tw; if(!tw||view!=='gear'){ clearInterval(XG.twI); XG.tw=null; return; }
     const p=Math.min(1,(Date.now()-tw.t0)/tw.dur), e=1-Math.pow(1-p,3);
-    for(const k of GK){ const v=tw.from[k]+(tw.to[k]-tw.from[k])*e, a=document.getElementById('xg_s_'+k); if(a) a.textContent=gFmt(k,v); const b=document.getElementById('xg_d_'+k); if(b) b.textContent=gFmt(k,v); }
+    for(const k of GK){ const v=tw.from[k]+(tw.to[k]-tw.from[k])*e, a=document.getElementById('xg_s_'+k); if(a){ a.textContent=gFmt(k,v); if(k==='fc'&&XG.fcAvail&&a.style) a.style.fontSize=xFitPx(gFmt(k,v),XG.fcAvail,25,10)+'px'; }   /* a FC no meio da contagem pode ficar mais longa ("999,9 mil"): a fonte acompanha */ const b=document.getElementById('xg_d_'+k); if(b) b.textContent=gFmt(k,v); }
     if(Date.now()-tw.t0>tw.dur+(tw.big?320:110)){ clearInterval(XG.twI); XG.tw=null; XG.upfx=false; } },30);
   return true; }
 function gBest(){ const lv=plv(), eq=Object.assign({},S.eq), real=S.eq; let n=0; S.eq=eq;   // simula em cópia (Sys.host.equipped lê S.eq)
@@ -402,6 +406,11 @@ function scrGear(){
   /* TELA ESTREITA (abaixo de 360 px; defeitos E1/E2 do QA em 288 px): a FC tem de aparecer INTEIRA, então o botão Aparência vira só o retrato (46 px,
      com o olho no canto; o texto completo continua no aria-label) e a dica de arrastar sai da linha do contador. De 360 px para cima nada muda. */
   const fcSlim=!!d.real&&d.Wb<360;
+  /* CAIXA DA FC: o número e o rótulo aparecem INTEIROS em qualquer largura e para qualquer valor do Sys.fc.viewText. Largura útil = tela − margens do
+     cartão (24) − respiro e borda do cartão (18) − vão (6) − botão Aparência − borda e respiro da caixa (20) − raio (30, que sai quando o rótulo não
+     caberia ao lado dele). A fonte do número desce da base de 25 px só quando o texto não cabe; a contagem animada reajusta a cada quadro (gChange). */
+  const apW=fcSlim?46:d.real?(d.Wb<380?168:204):168, fcLbl='FORÇA DE COMBATE', fcIn=d.Wb-24-18-6-apW-20, fcLs0=d.Wb<380?0:1, fcLblW=ls=>xTxtEm(fcLbl)*9+ls*fcLbl.length;
+  const fcIcon=fcIn-30>=fcLblW(0), fcAvail=Math.max(40,fcIn-(fcIcon?30:0)), fcLs=fcLblW(fcLs0)<=fcAvail?fcLs0:0, fcLblPx=xFitPx(fcLbl,fcAvail,9,6), fcPx=xFitPx(gFmt('fc',shown.fc),fcAvail,25,10); XG.fcAvail=fcAvail;
   const bagNext=xBagNext(), autoRows=gAutoRows(), autoOn=autoRows?autoRows.filter(r=>r.on).length:0, autoLock=autoRows&&autoRows.every(r=>r.locked)?autoRows.slice().sort((a,b)=>a.need-b.need)[0].lockText:'';
   const sc0=document.getElementById('xg_sc'), scTop=sc0?sc0.scrollTop:0, gain=tw&&tw.big&&tw.to.fc>tw.from.fc+0.5&&!(typeof NEXT_ON!=='undefined'&&NEXT_ON&&typeof fcNotice==='function')?tw.to.fc-tw.from.fc:0;   /* com o aviso único de poder do index (fcNotice, pedido A-19) o meu "FC +N" sai */
   V.innerHTML=xWrap(d,XG.anim?'x-in':'',`
@@ -420,10 +429,10 @@ function scrGear(){
     <div style="height:140px;flex:none;margin:8px 12px 0;padding:8px;border-radius:16px;background:#1d1611;border:1px solid #4a3a2b;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
       <div style="height:46px;flex:none;display:flex;gap:6px">
         <div class="x-fcbox ${tw&&tw.big&&!d.real?'x-fcboxUp':''}" id="xg_fcbox" style="flex:1;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:12px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box;min-width:0">${gain&&!d.real?'<span class="x-fcgain" aria-hidden="true">+'+fcTxt(gain)+'</span>':''}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
-          <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span style="font-size:9px;font-weight:900;color:#c9b9a2;letter-spacing:${d.Wb<380?0:1}px;white-space:nowrap">FORÇA DE COMBATE</span>
-            <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
-        <button data-x="${lookOn?'look':'goskins'}" aria-label="${lookOn?'Aparência: skin '+skinAdj+', mais '+p1(SD.equipped)+' de ATK e HP; coleção de skins mais '+p1(SD.collection)+'. Abrir modo Itens ou Skin, ocultar peças e cosméticos':'Skin equipada e coleção de skins: ir para a loja'}" style="width:${fcSlim?46:d.real?(d.Wb<380?168:204):168}px;flex:none;display:flex;align-items:center;${fcSlim?'justify-content:center;position:relative;padding:0':'gap:6px;padding:0 6px'};border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
+          ${fcIcon?'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>':''}
+          <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span id="xg_fclbl" style="font-size:${fcLblPx}px;font-weight:900;color:#c9b9a2;letter-spacing:${fcLs}px;white-space:nowrap">${fcLbl}</span>
+            <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" data-av="${fcAvail.toFixed(1)}" style="font-size:${fcPx}px;line-height:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
+        <button data-x="${lookOn?'look':'goskins'}" aria-label="${lookOn?'Aparência: skin '+skinAdj+', mais '+p1(SD.equipped)+' de ATK e HP; coleção de skins mais '+p1(SD.collection)+'. Abrir modo Itens ou Skin, ocultar peças e cosméticos':'Skin equipada e coleção de skins: ir para a loja'}" style="width:${apW}px;flex:none;display:flex;align-items:center;${fcSlim?'justify-content:center;position:relative;padding:0':'gap:6px;padding:0 6px'};border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
           <span style="position:relative;width:34px;height:34px;flex:none;border-radius:9px;background:#1d1611;overflow:hidden">${typeof avatarTag==='function'?avatarTag(34,'position:absolute;left:0;top:0'):`<span class="kidle ${tier?'t'+tier:''}" style="position:absolute;left:-12px;top:-4px;width:58px;height:58px;display:block"></span>`}</span>
           ${fcSlim&&lookOn?'<span aria-hidden="true" style="position:absolute;right:-5px;bottom:-5px;width:18px;height:18px;border-radius:50%;background:#241a12;border:1px solid #c9a3ff;display:flex;align-items:center;justify-content:center;box-sizing:border-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>':''}
           <span style="display:${fcSlim?'none':'flex'};flex-direction:column;line-height:${lookOn?1.12:1.15};min-width:0;flex:1">${lookOn?'<span class="lil" style="display:flex;align-items:center;gap:4px;font-size:13px;color:#f6ecdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Aparência</span>':''}<span style="font-size:${lookOn?10:(d.Wb<380?9.5:11)}px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
@@ -454,22 +463,30 @@ function scrGear(){
     ${d.real?`<div style="flex:none;display:flex;padding:8px 12px 10px;background:#1d1611;border-top:1px solid #4a3a2b;box-sizing:border-box">${best.n>0
       ?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" aria-label="Equipar melhor: troca ${best.n} ${best.n===1?'item':'itens'} pelo de maior FC em cada espaço" style="flex:1;height:56px;border-radius:16px;padding:0 14px;font-size:21px;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:8px">${SVG_UP(20)}EQUIPAR MELHOR<span style="min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#2a1403;color:#ffe07a;font-family:Nunito,system-ui,sans-serif;font-size:13px;font-weight:900;letter-spacing:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${best.n}</span></button>`
       :'<button data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: já está com o melhor" style="flex:1;height:56px;border-radius:16px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15"><span class="lil" style="font-size:19px;letter-spacing:.5px">EQUIPAR MELHOR</span><span style="font-size:11px;font-weight:800">Já está com o melhor</span></button>'}</div>`:''}
-    ${selIt?gSheet(selIt,H,now,shown):''}${XG.cf?gConfirm():''}${XG.auto?gAuto():''}`);
+    ${selIt?gSheet(selIt,H,now,shown,d.Wb):''}${XG.cf?gConfirm():''}${XG.auto?gAuto():''}`);
   { const sc1=document.getElementById('xg_sc'); if(sc1&&scTop) sc1.scrollTop=scTop; }
   XG.anim=false; XG.pages=pages; XG.best=best;
   if(XG.toast&&Date.now()-XG.toastT<1500){ const m=XG.toast; gToast(m); }
 }
-function gSheet(it,H,now,shown){
+function gSheet(it,H,now,shown,Wb){
   const lv=plv(), cap=Math.min(100,lv), cur=eqItem(it.slot), isEq=!!cur&&cur.id===it.id, c=RC[it.r], cost=Sys.stats.upgradeCost(it), atCap=it.lvl>=cap, isMax=it.lvl>=100;
   const cg=Sys.stats.canUpgrade(S,Sys.host,it,'gold'), cd=Sys.stats.canUpgrade(S,Sys.host,it,'gems'), mx=gMaxPlan(it), eqOk=canEq(it);
   const after=isEq?now:gSnap({item:it}), ifc=Sys.fc.itemFC(S,Sys.host,it), small=H<690, rh=small?23:26;
-  const plan=!atCap?Sys.stats.planUpgrade(S,Sys.host,it,'gold'):null;
+  const plan=!atCap?Sys.stats.planUpgrade(S,Sys.host,it,'gold'):null, sheetW=Wb>0?Wb:390, narrow=sheetW<360;
   const diffs=GK.map(k=>{ const df=after[k]-now[k], eps=k==='vel'?0.004:(k==='atk'||k==='hp'||k==='def'||k==='fc'?0.5:0.05), up=df>eps, dn=df<-eps;
     const dt=k==='fc'?fcTxt(Math.abs(df)):k==='atk'||k==='hp'||k==='def'?gNum(Math.abs(df)):k==='vel'?Math.abs(df).toFixed(2).replace('.',','):p1(Math.abs(df));
-    return `<div style="height:${rh}px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:10px;background:${k==='fc'?'#2a2015':'#0e0a07'};border:1px solid #4a3a2b">
-      <span style="font-size:12px;font-weight:800;color:#c9b9a2;width:92px">${GL[k]}</span>
-      <span style="font-size:13px;font-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span style="color:#c9b9a2">→</span> ${gFmt(k,after[k])}</span>
-      <span class="lil" style="display:flex;align-items:center;gap:3px;font-size:14px;color:${up?'#5fd068':dn?'#ff5a4e':'#c9b9a2'}">${up?SVG_UP(14):dn?SVG_DN(14):''}${up?'+'+dt:dn?'−'+dt:'='}</span></div>`; }).join('');
+    /* a linha "antes → depois" cabe inteira: em tela estreita o rótulo ocupa só a largura do texto (em vez da coluna de 92 px) e, se ainda faltar
+       espaço para valores longos, as duas fontes descem juntas (fator f). O "antes" conta com o texto mais longo da contagem (de/até). */
+    const lbW=narrow?Math.ceil(xTxtEm(GL[k])*12)+2:92, dtT=up?'+'+dt:dn?'−'+dt:'=', aEm=Math.max(xTxtEm(gFmt(k,shown[k])),xTxtEm(gFmt(k,now[k])));
+    const needW=(aEm+xTxtEm(' → ')+xTxtEm(gFmt(k,after[k])))*13+(up||dn?17:0)+xTxtEm(dtT)*14, f=Math.min(1,(sheetW-28-22-lbW-16)/needW), f1=Math.max(7,Math.floor(13*f*10)/10), f2=Math.max(7.5,Math.floor(14*f*10)/10);
+    return `<div data-row="${k}" data-need="${Math.ceil(lbW+16+needW*f)}" style="height:${rh}px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:10px;background:${k==='fc'?'#2a2015':'#0e0a07'};border:1px solid #4a3a2b">
+      <span style="font-size:12px;font-weight:800;color:#c9b9a2;width:${lbW}px;flex:none;white-space:nowrap">${GL[k]}</span>
+      <span style="font-size:${f1}px;font-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span style="color:#c9b9a2">→</span> ${gFmt(k,after[k])}</span>
+      <span class="lil" style="display:flex;align-items:center;gap:3px;font-size:${f2}px;white-space:nowrap;color:${up?'#5fd068':dn?'#ff5a4e':'#c9b9a2'}">${up?SVG_UP(14):dn?SVG_DN(14):''}${dtT}</span></div>`; }).join('');
+  /* "FC agora" e "FC no seu nível": lado a lado quando rótulo + valor cabem; senão o rótulo sobe para cima do valor (duas linhas) e o valor ajusta a fonte */
+  const fcA=fcTxt(ifc.fc), fcB=fcTxt(ifc.atPlayerLevel), lbA='FC agora', lbB='FC no seu nível ('+cap+')', boxT=sheetW-28-6, inA=boxT/2.25-22, inB=boxT*1.25/2.25-22;
+  const fcCol=inA<xTxtEm(lbA)*11+6+xTxtEm(fcA)*15||inB<xTxtEm(lbB)*11+6+xTxtEm(fcB)*15;
+  const fcBox=(lb,val,inW,st,lc,vc)=>`<div class="${st?'x-newcard':''}" data-fcbox="${fcCol?'col':'row'}" style="flex:${st?1.25:1};min-width:0;display:flex;${fcCol?'flex-direction:column;align-items:center;justify-content:center;line-height:1.05':'align-items:center;justify-content:space-between'};padding:0 10px;border-radius:10px;background:${st?'#1f3a22':'#2a2015'};border:1px solid ${st?'#5fd068':'#4a3a2b'}"><span style="font-size:${fcCol?xFitPx(lb,inW,10,7):11}px;font-weight:800;color:${lc};white-space:nowrap">${lb}</span><span class="lil" style="font-size:${xFitPx(val,fcCol?inW:inW-xTxtEm(lb)*11-6,fcCol?14:15,8)}px;white-space:nowrap${vc?';color:'+vc:''}">${val}</span></div>`;
   /* cartão da comparação: com item, moldura da raridade (3 px; o respiro cai de 6 para 5 px, o cartão não muda de tamanho); 'xr-s' no cartão que já pulsa (x-newcard) */
   const card=(x,tag,tagC,cls,bg)=>{ const q=xRar(x,cls?'xr-s':''); return `<div class="${cls}${q.cls}"${q.at} style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:${q.on?5:6}px;border-radius:14px;${q.on?'':`background:${bg};border:2px solid ${x?RC[x.r]:'#4a3a2b'};`}box-sizing:border-box">
       <span style="font-size:9px;font-weight:900;color:${tagC};letter-spacing:1px">${tag}</span>${x?itemIcon(x,36):`<img src="${ICON[it.slot]}" alt="" class="x-emptyp" style="width:36px;height:36px">`}
@@ -506,8 +523,8 @@ function gSheet(it,H,now,shown){
         <span class="lil" style="font-size:14px">${isEq?'Upar':'Equipar e upar'} até o meu nível (${plan.to})</span>${COIN_I(14)}${kf(plan.gold)}</button>`:''}
     </div>
     ${!isEq?`<div style="flex:none;height:${small?34:40}px;display:flex;gap:6px">
-      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#2a2015;border:1px solid #4a3a2b"><span style="font-size:11px;font-weight:800;color:#c9b9a2">FC agora</span><span class="lil" style="font-size:15px">${fcTxt(ifc.fc)}</span></div>
-      <div class="x-newcard" style="flex:1.25;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#1f3a22;border:1px solid #5fd068"><span style="font-size:11px;font-weight:800;color:#b8f0bd">FC no seu nível (${cap})</span><span class="lil" style="font-size:15px;color:#7ef08a">${fcTxt(ifc.atPlayerLevel)}</span></div></div>`:''}
+      ${fcBox(lbA,fcA,inA,false,'#c9b9a2','')}
+      ${fcBox(lbB,fcB,inB,true,'#b8f0bd','#7ef08a')}</div>`:''}
     <div style="display:flex;flex-direction:column;gap:3px">${diffs}</div>
     <div style="flex:1"></div>
     <div style="display:flex;gap:10px">
