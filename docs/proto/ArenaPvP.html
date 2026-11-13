@@ -1,0 +1,255 @@
+<title>Eonbound Arena PvP</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) escalado; ao lado o painel de voto. Luta PvP desenhada em canvas com as folhas reais do jogo
+   (Kael no cavalo x Kaia no lobo, pets na frente, asas nas costas, auras, ultimate em tela cheia). Visual escuro único, paleta do Perfil V5 + vermelho da arena. */
+:root{--night:#0b1030;--glass:rgba(24,33,86,.8);--line:rgba(130,150,255,.28);--line2:rgba(160,180,255,.5);--gold:#ffd25e;--cyan:#5ee7ff;--rose:#ff5d7a;--green:#5ef0a0;--red:#ff4f5e;--text:#eef1ff;--muted:#9aa6d6;--ink:#1c1206;
+ --fd:'Lilita One',Impact,'Arial Black',sans-serif;--fb:Nunito,'Segoe UI',system-ui,sans-serif;color-scheme:dark}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 60% at 50% 40%,#2a0f2e,#0b1030 70%)}
+.bg{position:absolute;left:0;right:0;top:0;height:560px;background:url(a/bg_era2.png) center/cover;filter:saturate(1.1) brightness(.5) hue-rotate(310deg)}
+.bg2{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,16,48,.55) 0%,rgba(11,16,48,0) 18%,rgba(11,16,48,0) 50%,var(--night) 70%)}
+#cv{position:absolute;left:0;top:0;width:390px;height:844px}
+.hud{position:absolute;left:10px;right:10px;top:12px;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:start}
+.pl{display:flex;gap:7px;align-items:center;min-width:0}
+.pl.r{flex-direction:row-reverse;text-align:right}
+.av{flex:none;width:46px;height:46px;border-radius:13px;overflow:hidden;position:relative;border:2px solid var(--c);box-shadow:0 0 10px var(--c);background:#0c1238}
+.av img{position:absolute;inset:-3px;width:52px;height:52px;object-fit:cover}
+.pl.r .av img{transform:scaleX(-1)}
+.pi{flex:1;min-width:0}
+.pn{font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf{font-size:10px;font-weight:800;color:var(--gold)}
+.bar{height:11px;border-radius:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);overflow:hidden;margin-top:3px;position:relative}
+.bar i{position:absolute;top:0;bottom:0;left:0;transition:width .25s ease-out}
+.bar i.lag{background:#fff;opacity:.55;transition:width .9s ease-in .25s}
+.bar i.hp{background:linear-gradient(180deg,#7dffb0,#1fbf6c)}
+.pl.r .bar i{left:auto;right:0}
+.bar.low i.hp{background:linear-gradient(180deg,#ff8a8a,#e23b4b)}
+.bar b{position:absolute;inset:0;font-size:8px;font-weight:900;display:grid;place-items:center;text-shadow:0 1px 0 #000}
+.en{height:5px;border-radius:3px;background:rgba(0,0,0,.55);overflow:hidden;margin-top:2px;position:relative}
+.en i{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,#5ee7ff,#a97bff);transition:width .3s}
+.pl.r .en i{left:auto;right:0}
+.en.full i{box-shadow:0 0 8px #5ee7ff;animation:pulse .6s ease-in-out infinite alternate}
+.mid{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:4px}
+.vsm{font-family:var(--fd);font-size:22px;color:var(--gold);text-shadow:0 2px 0 #000,0 0 12px rgba(255,210,94,.6);line-height:1}
+.tm{font-size:10px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums}
+.league{position:absolute;left:50%;top:76px;transform:translateX(-50%);z-index:5;font-size:10px;font-weight:900;padding:3px 10px;border-radius:10px;background:rgba(5,8,28,.7);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.league b{color:#c9d6ff}
+.feed{position:absolute;left:12px;right:12px;top:470px;z-index:5;display:flex;flex-direction:column;gap:4px;align-items:center;pointer-events:none}
+.feed div{font-size:11px;font-weight:800;padding:3px 10px;border-radius:9px;background:rgba(5,8,28,.7);border:1px solid var(--line);animation:fin .25s ease-out;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.feed .k{color:var(--gold)} .feed .u{color:#d9b8ff}
+.ctr{position:absolute;left:12px;right:12px;bottom:max(16px,env(safe-area-inset-bottom));z-index:6;display:flex;gap:8px}
+.ctr button{height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--glass);font-weight:900;font-size:14px;flex:1;min-width:0}
+.ctr button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.ctr .skip{flex:1.3;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);border:0;box-shadow:0 3px 0 #9a5a10;font-family:var(--fd);font-weight:400;font-size:17px}
+.info{position:absolute;left:12px;right:12px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 60px);z-index:5;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.info div{border-radius:12px;background:rgba(10,14,44,.78);border:1px solid var(--line);padding:6px 8px;text-align:center;min-width:0}
+.info small{display:block;font-size:9px;color:var(--muted);font-weight:900;letter-spacing:.8px;text-transform:uppercase}
+.info b{font-family:var(--fd);font-weight:400;font-size:17px;font-variant-numeric:tabular-nums}
+.ovl{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px}
+.vs{background:radial-gradient(circle,rgba(40,10,40,.85),rgba(5,8,28,.95))}
+.vsrow{display:flex;align-items:center;gap:14px;width:100%;justify-content:center}
+.vsc{width:130px;text-align:center;animation:slideL .5s cubic-bezier(.2,1.3,.4,1) both}
+.vsc.r{animation-name:slideR}
+.vsc .bigav{width:110px;height:110px;margin:0 auto 6px;border-radius:24px;overflow:hidden;border:3px solid var(--c);box-shadow:0 0 24px var(--c);position:relative;background:#0c1238}
+.vsc .bigav img{position:absolute;inset:-6px;width:122px;height:122px;object-fit:cover}
+.vsc.r .bigav img{transform:scaleX(-1)}
+.vsc b{display:block;font-family:var(--fd);font-weight:400;font-size:20px}
+.vsc span{font-size:12px;font-weight:900;color:var(--gold)}
+.bigvs{font-family:var(--fd);font-size:54px;color:var(--gold);text-shadow:0 4px 0 #7a2a00,0 0 30px rgba(255,180,60,.8);animation:vsin .6s .3s cubic-bezier(.2,1.6,.4,1) both}
+.res{background:rgba(3,5,18,.78)}
+.card{width:100%;border-radius:24px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:20px 16px;text-align:center;animation:up .35s cubic-bezier(.2,1.3,.4,1)}
+.card h2{font-family:var(--fd);font-weight:400;font-size:40px;margin:0;line-height:1}
+.card h2.win{color:var(--gold);text-shadow:0 3px 0 #7a4a00,0 0 24px rgba(255,210,94,.6)}
+.card h2.lose{color:#ff9aa8;text-shadow:0 3px 0 #5a0010}
+.card p{margin:6px 0 0;color:var(--muted);font-size:13px;font-weight:800}
+.rw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.rw div{border-radius:14px;background:rgba(5,8,28,.55);border:1px solid var(--line);padding:8px 4px;min-width:0}
+.rw img{width:28px;height:28px;display:block;margin:0 auto}
+.rw b{display:block;font-family:var(--fd);font-weight:400;font-size:18px}
+.rw small{font-size:10px;color:var(--muted);font-weight:800}
+.lg{margin:4px 0 14px;text-align:left}
+.lg .row{display:flex;justify-content:space-between;font-size:12px;font-weight:900}
+.lg .row span:last-child{color:var(--gold)}
+.lgb{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:5px;position:relative}
+.lgb i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#9fb6ff,#e9efff);transition:width 1.2s ease-out}
+.acts{display:flex;gap:8px}
+.acts button{flex:1;height:50px;border-radius:14px;font-weight:900;font-size:15px}
+.acts .g{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);border:0;box-shadow:0 3px 0 #9a5a10}
+.acts .o{background:rgba(255,255,255,.06);border:1px solid var(--line2)}
+.ultban{position:absolute;left:0;right:0;top:300px;z-index:15;text-align:center;pointer-events:none;animation:ban 1.4s ease-out both}
+.ultban div{display:inline-block;padding:8px 22px;font-family:var(--fd);font-size:24px;color:#fff;background:linear-gradient(90deg,transparent,rgba(169,123,255,.85),transparent);text-shadow:0 2px 0 #000}
+.ultban small{display:block;font-family:var(--fb);font-size:11px;font-weight:900;color:#e7dcff;letter-spacing:1px}
+@keyframes pulse{to{opacity:.6}}
+@keyframes fin{from{opacity:0;transform:translateY(6px)}}
+@keyframes slideL{from{transform:translateX(-160px);opacity:0}}
+@keyframes slideR{from{transform:translateX(160px);opacity:0}}
+@keyframes vsin{from{transform:scale(3);opacity:0}}
+@keyframes up{from{transform:translateY(40px) scale(.95);opacity:0}}
+@keyframes ban{0%{opacity:0;transform:scaleX(.2)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <div class="bg"></div><div class="bg2"></div>
+    <canvas id="cv" width="780" height="1688" role="img" aria-label="Luta da arena: Kael no cavalo contra Kaia no lobo"></canvas>
+    <div class="hud">
+      <div class="pl" style="--c:#5ee7ff"><div class="av"><img src="a/kael_phase0.png" alt=""></div><div class="pi"><div class="pn">Kael · Nv 32</div><div class="pf">FC 1,24 mi</div><div class="bar" id="hb0"><i class="lag" id="lg0"></i><i class="hp" id="hp0"></i><b id="ht0"></b></div><div class="en" id="eb0"><i id="en0"></i></div></div></div>
+      <div class="mid"><div class="vsm">VS</div><div class="tm" id="tm">0:00</div></div>
+      <div class="pl r" style="--c:#ff5d7a"><div class="av"><img src="a/kaia_demon.png" alt=""></div><div class="pi"><div class="pn">Sombra · Nv 33</div><div class="pf">FC 1,27 mi</div><div class="bar" id="hb1"><i class="lag" id="lg1"></i><i class="hp" id="hp1"></i><b id="ht1"></b></div><div class="en" id="eb1"><i id="en1"></i></div></div></div>
+    </div>
+    <div class="league">Liga <b>Prata II</b> · Luta 2 de 3 de hoje</div>
+    <div class="feed" id="feed"></div>
+    <div class="info"><div><small>Dano seu</small><b id="d0">0</b></div><div><small>Críticos</small><b id="cr">0</b></div><div><small>Dano dele</small><b id="d1">0</b></div></div>
+    <div class="ctr"><button data-sp="1" aria-pressed="true">x1</button><button data-sp="2" aria-pressed="false">x2</button><button data-sp="4" aria-pressed="false">x4</button><button class="skip" id="skip">Pular</button></div>
+    <div id="ov"></div>
+  </div></div></div>
+
+  <aside class="side">
+    <h1>Tela 23 · Luta PvP da Arena</h1>
+    <p class="sub">A luta de verdade, com a arte do jogo: os dois heróis montados frente a frente, pets na frente, asas e auras, golpes com número de dano, crítico, barra de energia que enche e solta a ULTIMATE em tela cheia. Começa com o VS e termina com o resultado (pontos da liga e prêmios). Use x1/x2/x4 e Pular; no fim, "Lutar de novo" mostra outra luta.</p>
+    <div class="box"><h2>O que tem</h2><ul>
+      <li>VS com os dois retratos antes da luta</li>
+      <li>Kael no cavalo x Kaia no lobo (montados reais, golpe real), adversário espelhado</li>
+      <li>Pets na frente de cada um, atacando junto</li>
+      <li>Vida com o "rastro" branco do dano, energia, críticos, dano total</li>
+      <li>Ultimate em tela cheia com o nome do golpe (folhas reais)</li>
+      <li>Resultado: vitória/derrota, pontos da liga, barra para subir, moedas, gemas e baú</li>
+    </ul></div>
+    <div class="box"><h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: heróis maiores, mais efeitos no crítico"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+function fit(){ const a=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=a/390; $('#dev').style.transform='scale('+s+')'; const w=$('#devwrap'); w.style.width=390*s+'px'; w.style.height=844*s+'px'; }
+addEventListener('resize',fit); fit();
+const IM={}; const img=u=>{ let o=IM[u]; if(!o){ o=IM[u]=new Image(); o.src=u; } return o; }; const ok=i=>i&&i.complete&&i.naturalWidth>0;
+['a/k_idle.png','a/k_atk.png','a/q_idle.png','a/q_atk.png','a/p1_idle.png','a/p1_atk.png','a/p2_idle.png','a/p2_atk.png','a/wg_angel_L.png','a/wg_angel_R.png','a/wg_demon_L.png','a/wg_demon_R.png','a/au_aura7.png','a/au_aura_evil.png','a/ult1.png','a/ult2.png'].forEach(img);
+
+/* âncoras reais das costas (idle: mediana; golpe: por quadro) */
+const WING={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187]},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179]}};
+const BK={k:{idle:[160.9,139,34.7],atk:[[161,140,35],[161,140,35],[170,148,37],[161,138,37],[171,141,22],[172,141,20],[174,141,18],[177,141,18],[177,141,12],[177,140,8],[177,140,8],[177,140,8],[177,141,8],[171,141,19],[162,140,34],[161,139,34],[161,140,35]]},
+ q:{idle:[164.7,173,26.4],atk:[[164,173,12],[164,174,12],[157,174,12],[153,173,12],[152,173,12],[151,173,12],[150,173,12],[150,173,12],[170,177,12],[189,180,12],[190,180,12],[190,180,12],[188,180,12],[178,178,12],[167,173,12],[165,173,12],[165,173,12]]}};
+const F=[
+ {id:'k',name:'Kael',idle:'a/k_idle.png',atk:'a/k_atk.png',pet:'p1',wing:'angel',aura:'a/au_aura7.png',cx:118,hp:0,max:0,en:0,anim:'idle',at:0,shake:0,alpha:1,petA:'idle',petT:0,ult:'Lâmina do Tempo',ultImg:'a/ult1.png'},
+ {id:'q',name:'Sombra',idle:'a/q_idle.png',atk:'a/q_atk.png',pet:'p2',wing:'demon',aura:'a/au_aura_evil.png',cx:118,hp:0,max:0,en:0,anim:'idle',at:0,shake:0,alpha:1,petA:'idle',petT:0,ult:'Juízo Celestial',ultImg:'a/ult2.png'}];
+const GY=420, K=250/512, KP=108/512;
+F.forEach(f=>f.cx=96);
+let speed=1, clock=0, last=performance.now(), FX=[], ULT=null, fight=null, done=false, d0=0,d1=0,crits=0;
+
+function drawF(x,f){ /* desenha um lutador no seu lado (o 2º é espelhado por fora) */
+  const atk=f.anim==='atk', fr=atk?Math.min(16,Math.floor((clock-f.at)*14)):Math.floor(clock*12)%12;
+  if(atk&&(clock-f.at)*14>=17){ f.anim='idle'; }
+  const sx=f.shake>0?(Math.random()-.5)*8*f.shake:0;
+  const ox=f.cx-256*K+sx, oy=GY-339*K;
+  x.save(); x.globalAlpha=f.alpha;
+  const A=img(f.aura); if(ok(A)){ const w=210,h=w*1.25,af=Math.floor(clock*12)%16; x.save(); x.globalCompositeOperation='lighter'; x.globalAlpha=.85*f.alpha; x.drawImage(A,af*256,0,256,320,f.cx+14-w/2,GY+8-h,w,h); x.restore(); }
+  const b=atk?BK[f.id].atk[fr]:BK[f.id].idle, W=WING[f.wing], L=img('a/wg_'+f.wing+'_L.png'), R=img('a/wg_'+f.wing+'_R.png');
+  if(ok(L)&&ok(R)){ const ax=ox+b[0]*K, ay=oy+b[1]*K, sc=K*0.62*0.654, fl=1+0.07*Math.sin(clock*3.2); x.save(); x.translate(ax,ay); x.rotate(b[2]*Math.PI/180); x.scale(sc,sc);
+    x.save(); x.scale(fl,1); x.drawImage(L,-W.L[0]*W.L[2],-W.L[1]*W.L[3],W.L[2],W.L[3]); x.restore(); x.save(); x.scale(fl,1); x.drawImage(R,-W.R[0]*W.R[2],-W.R[1]*W.R[3],W.R[2],W.R[3]); x.restore(); x.restore(); }
+  const H=img(atk?f.atk:f.idle); if(ok(H)) x.drawImage(H,fr*512,0,512,352,ox,oy,512*K,352*K);
+  /* pet SEMPRE na frente, do lado do inimigo */
+  const pa=f.petA==='atk', pf=pa?Math.min(11,Math.floor((clock-f.petT)*14)):Math.floor(clock*12)%12; if(pa&&(clock-f.petT)*14>=12) f.petA='idle';
+  /* pet no plano da frente (mais baixo), colado ao próprio dono: nunca encosta no pet do outro lado */
+  const P=img('a/'+f.pet+'_'+(pa?'atk':'idle')+'.png'); if(ok(P)){ const pcx=f.cx+(pa?18:-14); x.drawImage(P,pf*512,0,512,352,pcx-224*KP,GY+46-307*KP,512*KP,352*KP); }
+  x.restore(); f.shake=Math.max(0,f.shake-.08); }
+
+function frame(now){ const dt=Math.min(.05,(now-last)/1000); last=now; clock+=dt*speed;
+  const c=$('#cv'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,844);
+  /* chão da arena */
+  const g=x.createRadialGradient(195,GY,20,195,GY,190); g.addColorStop(0,'rgba(255,93,122,.28)'); g.addColorStop(1,'rgba(255,93,122,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(195,GY,190,30,0,0,7); x.fill();
+  x.strokeStyle='rgba(255,210,94,.45)'; x.setLineDash([6,7]); x.lineDashOffset=-clock*12; x.lineWidth=1.5; x.beginPath(); x.ellipse(195,GY,170,22,0,0,7); x.stroke(); x.setLineDash([]);
+  drawF(x,F[0]); x.save(); x.translate(390,0); x.scale(-1,1); drawF(x,F[1]); x.restore();
+  /* números de dano e faíscas */
+  FX=FX.filter(o=>{ const t=(clock-o.t); if(t>1.1) return false; if(o.kind==='n'){ x.save(); x.globalAlpha=1-Math.max(0,t-.6)/.5; x.font=`400 ${o.crit?30:22}px "Lilita One",Impact`; x.textAlign='center'; x.lineWidth=4; x.strokeStyle='#000'; const y=o.y-t*50; x.strokeText(o.txt,o.x,y); x.fillStyle=o.crit?'#ffe07a':(o.heal?'#7dffb0':'#fff'); x.fillText(o.txt,o.x,y); if(o.crit){ x.font='900 11px Nunito'; x.strokeText('CRÍTICO',o.x,y-24); x.fillStyle='#ffb347'; x.fillText('CRÍTICO',o.x,y-24); } x.restore(); }
+    else { x.save(); x.globalCompositeOperation='lighter'; for(let i=0;i<10;i++){ const a=i/10*6.28+o.s, r=t*120; x.fillStyle=`rgba(255,${200-i*8},120,${1-t})`; x.beginPath(); x.arc(o.x+Math.cos(a)*r,o.y+Math.sin(a)*r*.6,3*(1-t)+1,0,7); x.fill(); } x.restore(); } return true; });
+  /* ultimate em tela cheia (8 colunas x 7 linhas, 384x216, soma de luz) */
+  /* mesma receita da batalha: faixa da largura do campo (LW+24), apoiada logo abaixo da linha dos pés, saindo do lado de quem soltou */
+  if(ULT){ const t=clock-ULT.t, fi=Math.floor(t*12); if(fi>=49){ ULT=null; } else { x.save(); x.fillStyle=`rgba(5,0,20,${Math.min(.22,t)})`; x.fillRect(0,0,390,844); const U=img(ULT.src); if(ok(U)){ x.globalCompositeOperation='lighter'; const w=414,h=w*216/384; if(ULT.side===1){ x.translate(390,0); x.scale(-1,1); } x.drawImage(U,(fi%8)*384,Math.floor(fi/8)*216,384,216,-12,GY+35-h,w,h); } x.restore(); } }
+  if(fight) step(); requestAnimationFrame(frame); }
+
+/* ---------- luta (roteiro simulado; no jogo vem do Sys.arena.fight, golpe a golpe) ---------- */
+function setBars(){ for(let i=0;i<2;i++){ const f=F[i], p=Math.max(0,f.hp/f.max*100); $('#hp'+i).style.width=p+'%'; $('#lg'+i).style.width=p+'%'; $('#ht'+i).textContent=Math.max(0,Math.round(f.hp)).toLocaleString('pt-BR'); $('#hb'+i).classList.toggle('low',p<30); $('#en'+i).style.width=f.en+'%'; $('#eb'+i).classList.toggle('full',f.en>=100); }
+  $('#d0').textContent=fmt(d0); $('#d1').textContent=fmt(d1); $('#cr').textContent=crits; }
+const fmt=v=>v>=1000?(v/1000).toFixed(1).replace('.',',')+' mil':String(Math.round(v));
+function feed(t,cls){ const d=document.createElement('div'); d.className=cls||''; d.textContent=t; const fd=$('#feed'); fd.prepend(d); while(fd.children.length>2) fd.lastChild.remove(); }
+function newFight(winSide){ const seed=Math.random(); F[0].max=F[0].hp=48200; F[1].max=F[1].hp=49600; F.forEach(f=>{f.en=0;f.alpha=1;f.anim='idle';}); d0=d1=crits=0; done=false; ULT=null; FX=[]; $('#feed').innerHTML='';
+  fight={next:clock+.4,turn:0,win:winSide,n:0,start:clock}; setBars(); }
+function hitPos(side){ return side===0?{x:96+24,y:GY-120}:{x:390-96-24,y:GY-120}; }
+function step(){ const T=fight; if(done||clock<T.next) return; const a=T.turn%2, d=1-a, A=F[a], D=F[d];
+  if(ULT) return;
+  const tm=Math.floor(clock-T.start); $('#tm').textContent=Math.floor(tm/60)+':'+String(tm%60).padStart(2,'0');
+  if(A.en>=100){ A.en=0; ULT={t:clock,src:A.ultImg,side:a}; const b=document.createElement('div'); b.className='ultban'; b.innerHTML=`<div><small>ULTIMATE · ${a===0?'SUA':'ADVERSÁRIO'}</small>${A.ult}</div>`; $('#ov').appendChild(b); setTimeout(()=>b.remove(),1400/speed+200);
+    const dmg=Math.round(D.max*(a===T.win?.30:.22)); setTimeout(()=>apply(a,d,dmg,true,true),1700/speed); feed((a===0?'Você usou ':'Sombra usou ')+A.ult,'u'); T.turn++; T.next=clock+4.4; setBars(); return; }
+  A.anim='atk'; A.at=clock; const crit=Math.random()<.22, pet=Math.random()<.35;
+  let dmg=Math.round((2300+Math.random()*1400)*(crit?1.9:1)*(a===T.win?1.12:.92));
+  setTimeout(()=>apply(a,d,dmg,crit,false),640/speed);
+  if(pet){ setTimeout(()=>{ A.petA='atk'; A.petT=clock; setTimeout(()=>apply(a,d,Math.round(dmg*.25),false,false,true),500/speed); },300/speed); }
+  T.turn++; T.next=clock+1.35; }
+function apply(a,d,dmg,crit,ult,pet){ if(done) return; const D=F[d], A=F[a];
+  if(d!==fight.win||D.hp-dmg>0||ult){}
+  if(d===fight.win&&D.hp-dmg<D.max*.08) dmg=Math.max(0,Math.round(D.hp-D.max*.08)); /* o vencedor do roteiro não cai antes */
+  D.hp-=dmg; D.shake=crit||ult?1.4:.8; if(crit) crits+=a===0?1:0; if(a===0) d0+=dmg; else d1+=dmg;
+  A.en=Math.min(100,A.en+(ult?0:22)); D.en=Math.min(100,D.en+(ult?0:12));
+  const p=hitPos(d); FX.push({kind:'n',x:p.x+(pet?24:0)*(d===0?1:-1),y:p.y+(pet?70:0),txt:fmt(dmg),crit:crit||ult,t:clock}); FX.push({kind:'s',x:p.x,y:p.y+30,t:clock,s:Math.random()*6});
+  if(crit&&!pet) feed((a===0?'Crítico seu: ':'Crítico dele: ')+fmt(dmg),'k');
+  setBars(); if(D.hp<=0){ D.hp=0; setBars(); end(); } }
+function end(){ done=true; const win=fight.win===0; const L=F[win?1:0]; let a=1; const fade=setInterval(()=>{ a-=.06; L.alpha=Math.max(.15,a); if(a<=.15) clearInterval(fade); },40);
+  setTimeout(()=>showResult(win),1100/Math.min(speed,2)); fight=null; }
+function showResult(win){ const pts=win?24:-11, lp=win?78:46;
+  $('#ov').innerHTML=`<div class="ovl res"><div class="card"><h2 class="${win?'win':'lose'}">${win?'VITÓRIA':'DERROTA'}</h2><p>${win?'Você venceu Sombra em ':'Sombra venceu em '}${$('#tm').textContent}</p>
+  <div class="rw"><div><img src="a/coin.png" alt=""><b>${win?'+18 mil':'+6 mil'}</b><small>moedas</small></div><div><img src="a/gem.png" alt=""><b>${win?'+12':'+3'}</b><small>gemas</small></div><div><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#ffd25e" stroke-width="2" style="display:block;margin:0 auto"><path d="M4 9h16v11H4zM3 6h18v3H3zM12 6v14"/></svg><b>${win?'1':'0'}</b><small>baú da liga</small></div></div>
+  <div class="lg"><div class="row"><span>Liga Prata II</span><span>${pts>0?'+':''}${pts} pontos</span></div><div class="lgb"><i id="lgbar" style="width:${win?60:56}%"></i></div><div class="row" style="margin-top:4px;color:var(--muted);font-weight:800"><span>${lp} / 100</span><span>${win?'faltam 22 para o Ouro III':'cuidado: abaixo de 40 você cai'}</span></div></div>
+  <div class="acts"><button class="o" id="back">Voltar à arena</button><button class="g" id="again">Lutar de novo · 1</button></div></div></div>`;
+  requestAnimationFrame(()=>{ const b=$('#lgbar'); if(b) b.style.width=lp+'%'; }); }
+function vs(){ $('#ov').innerHTML=`<div class="ovl vs"><div class="vsrow"><div class="vsc" style="--c:#5ee7ff"><div class="bigav"><img src="a/kael_phase0.png" alt=""></div><b>Kael</b><span>FC 1,24 mi</span></div><div class="bigvs">VS</div><div class="vsc r" style="--c:#ff5d7a"><div class="bigav"><img src="a/kaia_demon.png" alt=""></div><b>Sombra</b><span>FC 1,27 mi</span></div></div><div style="font-weight:900;color:var(--muted);font-size:13px">Liga Prata II · luta automática</div></div>`;
+  setTimeout(()=>{ $('#ov').innerHTML=''; newFight(Math.random()<.7?0:1); },1900); }
+let rounds=0;
+document.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.sp){ speed=+b.dataset.sp; document.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',x===b)); }
+  if(b.id==='skip'&&fight){ const w=fight.win; F[1-w].hp=0; F[w].hp=Math.max(F[w].hp,F[w].max*.3); setBars(); end(); }
+  if(b.id==='again'){ rounds++; vs(); }
+  if(b.id==='back'){ $('#ov').innerHTML=`<div class="ovl res"><div class="card"><h2 style="font-size:28px">ARENA</h2><p>No jogo, volta para a tela da Arena (liga, lutas do dia e adversários).</p><div class="acts" style="margin-top:14px"><button class="g" id="again">Ver outra luta</button></div></div></div>`; }
+});
+requestAnimationFrame(frame); vs();
+
+/* voto */
+(async()=>{ const st=$('#vst'), DOC='decisoes/tela-23-arena-pvp-v1'; const tm=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){} if(!db){ clearTimeout(tm); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC), show=d=>{ clearTimeout(tm); if(!d||!d.status){ st.textContent='Ainda sem voto.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'23 Arena PvP V1',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>

@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h30 · Você APROVOU a Tela 23 · Luta PvP da Arena.** O Engenheiro troca a luta atual da Arena por ela, seguindo os golpes de verdade da luta; o QA confere em 3 tamanhos de tela
+
 - **23h20 · Servidor:** conta de convidado só nasce quando o jogador toca em JOGAR ou entra com Google; convidados vazios sem acesso há 30 dias são apagados sozinhos. ACHADO E CORRIGIDO: a exclusão definitiva 30 dias depois do pedido nunca rodava; agora apaga de verdade (ficam só registros de compra e de moderação, com o número da conta; o texto jurídico vai dizer isso). Luta PvP: pets separados e ultimate do tamanho da batalha (mesmo link)
 
 - **23h · TELA 23 LUTA PvP DA ARENA para o seu voto:** https://claude.ai/artifact/8D4uaHp6fDizBUikuEeDcr (VS, os dois montados frente a frente com a arte real, pets na frente, asas, auras, dano e crítico, energia, ultimate em tela cheia, resultado com pontos da liga e prêmios; x1/x2/x4 e Pular). Aprovada, vira a luta da Arena no jogo
