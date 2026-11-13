@@ -72,8 +72,17 @@ function claimAll(S,host){ if(!DATA.enabled) return {n:0,list:[],reason:'desliga
 function remove(S,host,id){ const o=purge(S,host), i=o.list.findIndex(x=>x.id===id); if(i<0) return false; const m=o.list[i]; if(hasAtt(m)&&!m.claimed) return false; o.list.splice(i,1); return true; }
 function unread(S,host){ return inbox(S,host).filter(m=>!m.read||(m.hasAtt&&!m.claimed)).length; }
 
+/* CARTAS LOCAIS ÚNICAS (decisão do PO: sem servidor, só a de boas-vindas, SEM anexo). Idempotente pela ref, guardada em S.sys.mail.sent:
+   apagar a carta ou ela vencer não faz chegar de novo. Save antigo também recebe uma vez. Devolve o id novo, ou 0 (já enviada / desligado). */
+const WELCOME={ref:'boasvindas-v1',type:'system',source:'sistema',title:'Bem-vindo a Eonbound',
+  body:'Que bom ter você aqui, viajante! Aqui chegam avisos da equipe e, quando o jogo estiver online, os prêmios de ranking, arena e eventos.'};
+function sendOnce(S,host,msg){ if(!DATA.enabled||!msg||!msg.ref) return 0; const o=ensure(S); if(!Array.isArray(o.sent)) o.sent=[];
+  const ref=String(msg.ref).slice(0,80); if(o.sent.includes(ref)||o.list.some(m=>m.ref===ref)){ if(!o.sent.includes(ref)) o.sent.push(ref); return 0; }
+  const id=send(S,host,msg); if(id){ o.sent.push(ref); if(o.sent.length>100) o.sent.shift(); } return id; }
+const welcomeOnce=(S,host)=>sendOnce(S,host,WELCOME);
+
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,TYPES,ensure,send,receive,inbox,read,claim,claimAll,remove,unread,bonus};
+const API={DATA,TYPES,ensure,send,sendOnce,welcomeOnce,receive,inbox,read,claim,claimAll,remove,unread,bonus};
 root.Sys=root.Sys||{}; root.Sys.mail=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
