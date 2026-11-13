@@ -33,7 +33,7 @@ const rOn=()=>typeof view!=='undefined'&&view==='realm';
 const R_BADGE={new:['Novo','#5fd068','#0d2410'],recommended:['Recomendado','#ffc94a','#2a1403'],full:['Lotado','#ff6b6b','#2a0a08'],closed:['Fechado','#8a7458','#120d09']};
 const rBadge=r=>r.state==='full'?R_BADGE.full:r.state==='closed'?R_BADGE.closed:r.state==='new'?R_BADGE.new:r.recommended?R_BADGE.recommended:null;
 function rDate(ms){ if(!ms) return ''; try{ return new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}); }catch(e){ return ''; } }
-function rCard(r,cur,t44){ const b=rBadge(r), on=r.id===cur, me=r.me, full=r.state==='full'&&!me, off=r.state==='closed';
+function rCard(r,cur,t44){ const b=rBadge(r), on=r.id===cur, me=r.me, full=(r.state==='full'||r.state==='closed')&&!me, off=false;   // full/closed: só entra quem já tem personagem (contrato fps-6f)
   const ava=me?`<span style="width:56px;height:56px;flex:none;border-radius:14px;overflow:hidden;border:2px solid ${on?'#ffc94a':'#6b5843'};background:#2a1f16"><img src="assets/hero/avatar/${rEsc(me.avatar||'kael_phase0')}.png" alt="" style="width:100%;height:100%;object-fit:cover"></span>`
     :`<span style="width:56px;height:56px;flex:none;border-radius:14px;border:2px dashed #6b5843;background:#16110d;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8a7458" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>`;
   const info=me?`<span style="font-size:12px;font-weight:900;color:#f6ecdf;overflow-wrap:anywhere">${rEsc(me.name)} · Nv. ${me.level|0}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">FC ${rEsc(rTry(()=>Sys.fc.viewText(me.fc),String(me.fc|0)))}</span>`
@@ -66,7 +66,7 @@ function scrRealm(){ const d=rTry(()=>xDims(240),{s:1}), t44=Math.max(44,Math.ce
 function rToast(m){ XR.toast=m; XR.toastT=Date.now(); render(); }
 function rClick(b){ const a=b.dataset.x, L=rList(), cur=rCur();
   if(a==='pick'){ const r=L.find(x=>x.id===b.dataset.id); rSnd('ui_tap'); if(!r) return;
-    if(r.state==='closed'){ rToast('Servidor fechado'); return; } if(r.state==='full'&&!r.me){ rToast('Servidor lotado: escolha outro'); return; }
+    if((r.state==='full'||r.state==='closed')&&!r.me){ rToast(r.state==='closed'?'Servidor fechado para novos personagens':'Servidor lotado: escolha outro'); return; }
     if(r.id===cur){ if(window.Panels&&Panels.close) Panels.close(); else rToast('Você já está neste servidor'); return; }
     XR.cf=r.id; render(); }
   else if(a==='cfno'){ rSnd('ui_tap'); XR.cf=null; render(); }

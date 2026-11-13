@@ -430,9 +430,14 @@ const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
 const FAM_BY_ERA=['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'];
 const famOk=t=>typeof t==='string'&&!!DATA.weaponTypes[t]&&(DATA.weaponTypes[t].on===true||DATA.weaponTypes[t].approved===true);
 /* família da arma: it.wt gravado; senão (save antigo) a da ARTE do item (it.look, senão it.e). Nunca a era do mapa. */
-function weaponType(it){ if(it&&famOk(it.wt)) return it.wt; const e=Number.isInteger(it&&it.look)?it.look:int0(it&&it.e); return FAM_BY_ERA[clamp(e,0,FAM_BY_ERA.length-1)]; }
-/* grava a família no item (save antigo: chamar na migração; drop novo: rollWeaponType). Devolve a família. */
-function ensureWeaponType(it){ if(!it||typeof it!=='object'||it.slot!=='weapon') return null; if(!famOk(it.wt)) it.wt=weaponType(it); return it.wt; }
+/* REGRA (dono): a ARTE do item manda. Nome, ícone (wKey era<look>_…) e batalha saem todos da era da arte (it.look; save antigo: it.ve, senão it.e).
+   Família de era (clava…celeste) TEM de ser a da arte; só arco e bumerangue são famílias fora da era. Família de era gravada que não bate com a arte
+   (defeito do dono: "um revólver saindo da arma de pedra") é ignorada aqui e corrigida no ensureWeaponType (carga do save). */
+const artEraOf=it=>clamp(Number.isInteger(it&&it.look)?it.look:Number.isInteger(it&&it.ve)?it.ve:int0(it&&it.e),0,FAM_BY_ERA.length-1);
+const famCoherent=it=>{ const W=DATA.weaponTypes[it&&it.wt]; return !!W&&(W.artEra==null||W.artEra===artEraOf(it)); };
+function weaponType(it){ if(it&&famOk(it.wt)&&famCoherent(it)) return it.wt; return FAM_BY_ERA[artEraOf(it)]; }
+/* grava a família no item (save antigo: chamar na migração; drop novo: rollWeaponType). Corrige família de era incoerente com a arte. */
+function ensureWeaponType(it){ if(!it||typeof it!=='object'||it.slot!=='weapon') return null; if(!famOk(it.wt)||!famCoherent(it)){ if(it.wt) it.wtFixed=it.wt; it.wt=weaponType(Object.assign({},it,{wt:null})); } return it.wt; }
 /* família de uma arma NOVA no drop: rollWeaponType(item, {level, era}, rnd) → 'bow' | 'boomerang' | a família da arte do item */
 function rollWeaponType(it,ctx,rnd){ const r=typeof rnd==='function'?rnd():Math.random(), lv=int0(ctx&&ctx.level), era=int0(ctx&&ctx.era!=null?ctx.era:it&&it.e);
   let acc=0; for(const k of ['bow','boomerang']){ const W=DATA.weaponTypes[k]; if(W.on!==true||lv<int0(W.unlockLevel)||era<int0(W.fromEra)) continue; acc+=num(W.dropPct,0)/100; if(r<acc) return k; }

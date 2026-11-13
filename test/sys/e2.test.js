@@ -997,16 +997,16 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
 
 t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era do mapa; base → Mítico reforçada → Lendário/Divino própria; arco/bumerangue',()=>{
   const T=require('../../js/sys/stats.js'), D=T.DATA;
-  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).baseSheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'a folha-base de cada família');
-  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'as 9 bases aprovadas (eras 7-8 em 12/11)');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map((f,i)=>T.ultOf({wt:f,r:0,look:i}).baseSheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'a folha-base de cada família');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map((f,i)=>T.ultOf({wt:f,r:0,look:i}).sheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'as 9 bases aprovadas (eras 7-8 em 12/11)');
   const it={slot:'weapon',e:2,r:0}; T.migrateItem(it); assert.strictEqual(it.wt,'sword','save antigo: família pela arte');
-  it.e=6; it.look=6; T.migrateItem(it); assert.strictEqual(it.wt,'sword','gravada, não muda com a era'); assert.strictEqual(T.ultOf(it).sheet,'assets/anim/ult/era2_ult');
-  assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',r}).tier),['base','base','base','boost','own','own']);
-  const M=T.ultOf({wt:'rifle',r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.strictEqual(T.ultOf({wt:'bow',r:0}).sheet,null,'arco: base sem voto'); assert.ok(M.boost.size>1);
-  const L=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L.fallback,true); assert.strictEqual(L.sheet,'assets/anim/ult/era5_ult','sem a folha própria: base reforçada'); assert.ok(L.boost);
+  it.e=6; T.migrateItem(it); assert.strictEqual(it.wt,'sword','gravada, não muda com a era de poder (a arte, look, fica a mesma)'); assert.strictEqual(T.ultOf(it).sheet,'assets/anim/ult/era2_ult');
+  assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',look:5,r}).tier),['base','base','base','boost','own','own']);
+  const M=T.ultOf({wt:'rifle',look:5,r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.strictEqual(T.ultOf({wt:'bow',r:0}).sheet,null,'arco: base sem voto'); assert.ok(M.boost.size>1);
+  const L=T.ultOf({wt:'rifle',look:5,r:4}); assert.strictEqual(L.fallback,true); assert.strictEqual(L.sheet,'assets/anim/ult/era5_ult','sem a folha própria: base reforçada'); assert.ok(L.boost);
   { const path=require('path'), fs=require('fs'), root=path.join(__dirname,'../..'); for(const k of D.ownDelivered) assert.ok(fs.existsSync(path.join(root,'assets/anim/ult/'+k+'_legend.json')),'entregue sem arquivo: '+k); assert.deepStrictEqual(Object.keys(D.ownReady),[],'nada ligado sem o voto do dono'); }
-  D.ownReady.rifle=true; try{ const L2=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L2.sheet,'assets/anim/ult/rifle_legend'); assert.strictEqual(L2.boost,null); } finally { delete D.ownReady.rifle; }
-  assert.strictEqual(T.weaponStyle({wt:'plasma',r:0}),'gun'); assert.strictEqual(T.weaponStyle({wt:'plasma',r:4}),'melee'); assert.strictEqual(T.weaponStyle({wt:'flintlock',r:4}),'gun');
+  D.ownReady.rifle=true; try{ const L2=T.ultOf({wt:'rifle',look:5,r:4}); assert.strictEqual(L2.sheet,'assets/anim/ult/rifle_legend'); assert.strictEqual(L2.boost,null); } finally { delete D.ownReady.rifle; }
+  assert.strictEqual(T.weaponStyle({wt:'plasma',look:6,r:0}),'gun'); assert.strictEqual(T.weaponStyle({wt:'plasma',look:6,r:4}),'melee'); assert.strictEqual(T.weaponStyle({wt:'flintlock',look:3,r:4}),'gun');
   // drop: arco/bumerangue desligados até a arte; ligados, 15% cada, com nível e era mínimos
   assert.strictEqual(T.rollWeaponType({e:3},{level:99,era:3},()=>0),'flintlock','desligados');
   const B=D.weaponTypes.bow, R=D.weaponTypes.boomerang; B.on=R.on=true; try{
@@ -1016,7 +1016,7 @@ t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era d
     assert.strictEqual(T.ultOf({wt:'bow',r:0}).style,'ranged'); assert.strictEqual(T.ultOf({wt:'boomerang',r:0}).style,'return');
   } finally { B.on=R.on=false; }
   for(const k of ['bow','boomerang']){ const W=D.weaponTypes[k]; for(const h of ['s1','s2']) assert.ok(Math.abs(W.hits[h].reduce((x,y)=>x+y,0)-1)<1e-9,'mesmo dano total: '+k+' '+h); }
-  assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').ult.tier,'own'); assert.strictEqual(T.skillFx({wt:'club',r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').dmgMult,1,'só visual');
+  assert.strictEqual(T.skillFx({wt:'club',look:0,r:4},'s3').ult.tier,'own'); assert.strictEqual(T.skillFx({wt:'club',look:0,r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({wt:'club',look:0,r:4},'s3').dmgMult,1,'só visual');
 });
 
 t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade, nascem por fragmentos de fonte fixa, evoluem pelos sistemas de hoje',()=>{
@@ -1084,6 +1084,26 @@ t('guilda: chefe, loja e missões (fonte única com o servidor): sem diamante, l
   assert.ok(!/crow|unicorn/.test(all),'Corvo e Unicórnio só no baú semanal');
   const weekCost=Gd.shop.reduce((t,x)=>t+x.cost*x.weekly,0); assert.ok(weekCost>=400&&weekCost<=600,'loja inteira ~505 Brasões/semana: '+weekCost);
   assert.ok(Gd.boss.bands.every((b,i,a)=>!i||b.minRatio>a[i-1].minRatio));
+});
+
+t('arma coerente (defeito do dono: "revólver saindo da arma de pedra"): família = arte do item em drop, save antigo, transformação e família errada gravada',()=>{
+  const T=require('../../js/sys/stats.js'), L=require('../../js/sys/loot.js'), FB=T.FAM_BY_ERA, W=T.DATA.weaponTypes;
+  const art=it=>Number.isInteger(it.look)?it.look:Number.isInteger(it.ve)?it.ve:(it.e|0);
+  const coherent=it=>{ const t=T.weaponType(it), F=W[t], style=T.weaponStyle(it); if(F.artEra!=null&&F.artEra!==art(it)) return 'família '+t+' com arte da era '+art(it);
+    const gun=F.style==='gun'||(!!F.gunAtR0&&(it.r|0)<=1); if((style==='gun')!==gun) return 'pose '+style+' na família '+t; return null; };
+  // (1) drop em cada era e nível
+  for(let era=0;era<=8;era++) for(let i=0;i<150;i++){ const h={eraMax:()=>era,level:()=>Math.min(120,8+era*12),now:()=>1}; let it=null; try{ it=L.rollItem(h,{source:i%2?'chest':'drop'}); }catch(e){ it=null; }
+    if(it&&it.slot==='weapon'){ const c=coherent(it); assert.ok(!c,'drop era '+era+': '+c+' '+JSON.stringify(it)); } }
+  // (2) save antigo: sem wt, com e/look/ve diversos
+  for(let e=0;e<=8;e++) for(const extra of [{},{look:e},{ve:e,e:Math.min(8,e+2)},{look:e,e:Math.min(8,e+3)}]){ const it=Object.assign({slot:'weapon',e,r:e%5,lvl:3,subs:[]},extra); T.migrateItem(it);
+    assert.strictEqual(it.wt,FB[art(it)],'migrado: '+JSON.stringify(extra)); assert.ok(!coherent(it)); }
+  // (3) família de era ERRADA já gravada (o caso da clava de pedra com 'revolver'): weaponType ignora e a carga corrige
+  const club={slot:'weapon',e:0,r:0,lvl:1,subs:[],wt:'revolver'}; assert.strictEqual(T.weaponType(club),'club','arte manda'); T.migrateItem(club); assert.strictEqual(club.wt,'club'); assert.strictEqual(club.wtFixed,'revolver','registro da correção');
+  const bow={slot:'weapon',e:0,r:1,lvl:1,subs:[],wt:'bow'}; T.migrateItem(bow); assert.strictEqual(bow.wt,'bow','arco não depende da era');
+  // (4) transformação: a arte (look) e a família não mudam
+  const tr={slot:'weapon',e:0,r:2,lvl:5,subs:[],look:0}; T.migrateItem(tr); tr.e=4; T.migrateItem(tr); assert.strictEqual(tr.wt,'club'); assert.strictEqual(T.ultOf(tr).artEra,0);
+  // (5) a skin de arma que a batalha usa (w<artEra><r>) é a da arte do item
+  for(let e=0;e<=8;e++){ const it={slot:'weapon',e,r:1,look:e}; T.migrateItem(it); assert.strictEqual(W[T.weaponType(it)].artEra,e); }
 });
 
 console.log(`ok: ${n} testes`);
