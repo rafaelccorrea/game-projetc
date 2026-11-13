@@ -3,6 +3,13 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Plano dos 119 créditos do Higgsfield, APROVADO:**
+    1. Obrigatório (~10): Kaia na Fênix, ícones das eras 7 e 8, aura da Forja do +16 ao +20, Asa Seráfica depois do voto.
+    2. Tiro montado (~48): Kael e Kaia atirando nas 6 montarias.
+    3. Montaria parada na tela de derrota (~36).
+    4. Reserva de ~25 para refazer.
+    5. Golpe, giro e pistola das skins iguais ao padrão vão pelo Kling grátis (~14 dias).
+  · Arte + rafae-47 + Engenheiro
 - [~] **Nomes das armas pela família** nas 9 eras (ex.: era 0 é tudo clava). A Sistemas monta a tabela "nome atual → novo" e o dono vê antes de aplicar
 - [~] **Arma Mítica liberada** (sai a regra do lançamento que a trocava por Épica) · Sistemas
 - [~] **Ligar itens novos de prêmio (newDrops) e skins (skinsOn)** na próxima versão · Sistemas + Engenheiro
