@@ -68,13 +68,13 @@ function afterIntro(){
 }
 function showWelcome(){
   if(S.welcome) return;   /* o presente entra UMA vez (recarregar não dá de novo: S.welcome vai no save) */
-  S.welcome=true; S.gold+=200; S.gems+=50; save(); hud();
+  S.welcome=true; S.gems+=50; save(); hud();   /* Sistemas (começo mais duro, P0 do dono): o presente deixa de dar 200 de ouro; ficam as 50 gemas */
   /* Engenheiro 2 (decisão do coordenador): quem passou pela ENTRADA NOVA (js/p_intro.js ligada) não vê o modal antigo: o presente entra do mesmo jeito,
      aparece num aviso curto com os ícones do jogo e o tutorial começa em seguida. Com a entrada nova desligada vale o modal de sempre (sem emoji). */
-  if(typeof Panels!=='undefined'&&typeof Panels.on==='function'&&Panels.on('intro')){ toastHtml(`Presente de boas-vindas: +200 ${COIN()} +50 ${GEM()}`,3200); snd('claim'); if(S.tut<99) startTut(); return; }
+  if(typeof Panels!=='undefined'&&typeof Panels.on==='function'&&Panels.on('intro')){ toastHtml(`Presente de boas-vindas: +50 ${GEM()}`,3200); snd('claim'); if(S.tut<99) startTut(); return; }
   mbox.innerHTML=`<h3><img src="assets/ui/chest.png" alt="" style="width:24px;height:24px;object-fit:contain;vertical-align:-5px;margin-right:6px">Bem-vindo a ${GAME_NAME}!</h3>
     <div>Você começa na <b>Pré-História</b> com um graveto e muita coragem. Atravesse as eras!</div>
-    <div class="card" style="margin-top:10px;text-align:center"><b>Presente de boas-vindas</b><div style="font-size:18px;margin-top:4px">+200 ${COIN()} &nbsp; +50 ${GEM()}</div><div class="sm">e 1 invocação grátis por dia</div></div>
+    <div class="card" style="margin-top:10px;text-align:center"><b>Presente de boas-vindas</b><div style="font-size:18px;margin-top:4px">+50 ${GEM()}</div><div class="sm">e 1 invocação grátis por dia</div></div>
     <div class="row"><button class="btn grow" id="m_go">Começar</button></div>`;
   modal.style.display='flex'; B.paused=true;
   document.getElementById('m_go').onclick=()=>{ closeModal(); B.paused=false; snd('claim'); if(S.tut<99) startTut(); };

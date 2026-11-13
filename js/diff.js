@@ -36,6 +36,7 @@ function diffBal(d){ try { if (!d || typeof d !== 'object' || !Array.isArray(d.r
 /* liga/desliga o que anda junto com a chave (nunca mexe nos módulos enquanto a chave nunca foi ligada) */
 function diffApply(){ const on = diffOn(), T = DIFF.tbl; if (!on && !DIFF.applied) return; DIFF.applied = on; DIFF.memo = {};
   try { if (window.Sys && Sys.advice && Sys.advice.DATA) Sys.advice.DATA.on = on; } catch (e) {}
+  try { if (window.Sys && Sys.stats && typeof Sys.stats.setRefFc === 'function') Sys.stats.setRefFc(on); } catch (e) {}   /* Sistemas/PO: a dificuldade nova anda com a referência de FC nova (sem ela as fases 5-6 viram parede para o jogador novo) */
   try { if (window.Sys && Sys.level && typeof Sys.level.setKillCap === 'function') Sys.level.setKillCap(on && !!(T && T.killXpCap && T.killXpCap.on === true)); } catch (e) {}
   try { if (window.Sys && Sys.mount && typeof Sys.mount.setStarFlat === 'function') Sys.mount.setStarFlat(on && !!(T && T.mountStarFlat && T.mountStarFlat.on === true)); } catch (e) {}
   try { if (window.Sys && Sys.pet && typeof Sys.pet.setStageMult === 'function') Sys.pet.setStageMult(on && !!(T && T.petStageMult && T.petStageMult.on === true)); } catch (e) {}

@@ -42,7 +42,7 @@ addEventListener('resize',resize);
    NÃO usados da v6 (regra do dono mudou: nível é do ITEM, teto = nível do jogador): lvlMult, maxLvl, upCostBase, upCostGrowth, upCostRarity. */
 const BAL={ commonHpMult:0.42, commonDmgMult:0.33, commonGoldMult:0.32, commonAtkInterval:1.2, commonDrop:0.035, enemyHpBase:22, enemyHpGrowth:1.282, enemyDmgBase:3.5, enemyDmgGrowth:1.282, bossHpMult:6, eraBossHpMult:1.1,
   eraMult:[0.944,0.777,1.44,4.2,16.1,53.2,161], itemEraFactor:12, priceEraFactor:4, sellBase:8, pullPity:10,
-  bossDmgMult:1.8, eraBossDmgMult:0.9, earlyEase:[0.5,0.65,0.8], s1Interval:0.8, s2Cooldown:6, s2Mult:3, s3Mult:10,
+  bossDmgMult:1.8, eraBossDmgMult:0.9, earlyEase:[], earlyDmg:[], earlyBossDmg:[], s1Interval:0.8, s2Cooldown:6, s2Mult:3, s3Mult:10,
   energyPerHit:4, energyPerSkillHit:2, energyPerHurt:3, critChance:0.12, critMult:2, goldBase:4, goldGrowth:1.15, bossGoldMult:5,
   offlineCapHours:8, offlineKillsPerMin:6, offlineRate:0.5,
   /* CURA DO HERÓI (P0 do dono, 14/11: "quando derrotar um BOSS a vida regenera"). waveHeal = parte da vida máxima que volta depois de cada onda COMUM vencida;
@@ -118,7 +118,7 @@ function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
   const em=BAL.eraMult[era]||1;   // dificuldade por era (v6): multiplica vida E dano
   const dx=typeof diffEnemy==='function'?diffEnemy(stage,kind,null):null;   /* dificuldade com paredes (js/diff.js): com a chave DESLIGADA vem null e vale a conta de sempre */
   const hp=dx?dx.hp:em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult);
-  const dmg=dx?dx.dmg:em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult);
+  const dmg=dx?dx.dmg:em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult)*((boss?BAL.earlyBossDmg:BAL.earlyDmg)[stage-1]||1);   /* P0 do dono (inimigo tirando só "-1" e começo fácil): multiplicador SÓ DE DANO por fase, da Sistemas (docs/balance.json earlyDmg nos comuns, earlyBossDmg no chefe; fase sem valor = 1). A reserva do earlyEase no código passou a 1: o valor que vale é o do arquivo (só vida) */
   const gold=Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,stage-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
   return {kind,key,boss,eraBoss,maxhp:hp,hp,dmg,gold,atkEvery:boss?1.15:BAL.commonAtkInterval,atkT:0.5+Math.random()*0.7,
     id:B.spawnN++,x:WAITX,slot:WAITX,lane:0,idx:9,sc:1,wt:Math.random()*2,parked:false,dead:false,hit:0,sw:0,seed:Math.random()*6,spd:EN_WALK,
