@@ -76,6 +76,27 @@ function mountGlow(sh, fi, stN, FW, FH, k){ const key = sh.base + '|' + fi + '|'
     for (let i = 0, n = stN >= 5 ? 3 : 2; i < n; i++) g.drawImage(sh.img, sheetSX(sh.meta, fi), sheetSY(sh.meta, fi), FW, FH, pad - OFF, pad, FW * MGLOW_K, FH * MGLOW_K); } catch (e) { c = null; }
   MGLOW.set(key, c); if (MGLOW.size > MGLOW_MAX){ const k0 = MGLOW.keys().next().value, v = MGLOW.get(k0); if (v) v.width = v.height = 1; MGLOW.delete(k0); }
   return c; }
+/* Engenheiro 18: PEÇAS DA ROUPA-SKIN NO HERÓI MONTADO (colete/botas por tinta, chapéu/óculos/máscara na cabeça). NASCE DESLIGADO: MOUNT_GEAR_ON = false;
+   só liga com ?debug=1&mgear=1 (e as camadas em si continuam atrás de LAYERS_ON: ?debug=1&camadas=1). Sem dado da Arte na folha montada NADA muda e NADA é pedido
+   à rede (sem 404): o código só age quando o <herói>_<montaria>_<estado>_body.json traz
+     "head": [ {x, y, ang, s, ok} por quadro ]   centro da cabeça do cavaleiro na célula 512x352 (mesmo formato do masks/<herói>_<estado>_head.json a pé)
+     "gear": { "mask": true, "hair": true }      existem assets/anim/mounts/masks/<herói>_<montaria>_<estado>_mask.png (R = colete, B = botas, alfa = cobertura;
+                                                 SÓ o cavaleiro, nunca a montaria) e _hair.png (cabelo, para chapéu com hideHair), do tamanho exato da folha _body.png
+   A tinta usa o layBody do js/stage.js (folha pintada UMA vez por folha + combinação e guardada; por quadro é 1 drawImage); a cabeça repete a conta do layHead. */
+const MOUNT_GEAR_ON = false;
+const MOUNT_GEAR = MOUNT_GEAR_ON || (typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('mgear') === '1');
+const MGEAR = { L: null, M: null, v: null };
+function mountGearLay(H, M){ if (!MOUNT_GEAR || typeof layNow !== 'function' || typeof layBody !== 'function') return null; const L = layNow(H); if (!L) return null;
+  if (MGEAR.L === L && MGEAR.M === M) return MGEAR.v;   /* mesma leitura das camadas e mesma folha: o objeto pronto (nada criado por quadro) */
+  const g = M.gear || null, hm = !!(g && g.mask), hh = !!(g && g.hair), hd = Array.isArray(M.head) && M.head.length > 0; let v = null;
+  if (hm || hd) v = { vest: hm ? L.vest : null, boots: hm ? L.boots : null, hat: (hd && hh) ? L.hat : null, tints: L.tints, hHat: hd ? L.hat : null, glasses: hd ? L.glasses : null, mask: hd ? L.mask : null };
+  MGEAR.L = L; MGEAR.M = M; return MGEAR.v = v; }
+/* chapéu, óculos e máscara na âncora "head" do quadro montado; o ctx já está no espaço da célula (0..512) */
+function mountGearHead(M, fi, V){ if (!V || !(V.hHat || V.glasses || V.mask)) return; const a = M.head[fi]; if (!a || a.ok === false) return;
+  const one = (def, dir) => { if (!def || !def.pivot) return; const im = layLoad(dir + def.file); if (!im.ok) return; const s = (a.s > 0 ? a.s : 1) / (def.res || 1);
+    ctx.save(); ctx.translate(a.x, a.y); ctx.rotate((a.ang || 0) * Math.PI / 180); ctx.scale(s, s); ctx.drawImage(im.img, -def.pivot.x, -def.pivot.y); ctx.restore(); };
+  if (V.hHat) one(layHat(V.hHat), 'assets/anim/equip/hats/');
+  if (V.glasses || V.mask){ const ci = J('assets/anim/equip/cos/cos.json').items || {}; if (V.glasses) one(ci[V.glasses], 'assets/anim/equip/cos/'); if (V.mask) one(ci[V.mask], 'assets/anim/equip/cos/'); } }
 function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
   const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
@@ -98,7 +119,8 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
   if (typeof drawWingsAt === 'function') drawWingsAt(H, sh, fi, ox - (pad + 128 - T.dx) * k, gy - (fy - T.dy) * k, k, !a);   /* asa nas COSTAS do Kael montado: âncora "back" da folha, quadro a quadro, na escala dele na sela */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.translate(-(pad + 128 - T.dx) * k, -(fy - T.dy) * k); ctx.scale(k, k);          // espaço do quadro (0..512); patas em feetY na linha do chão
-  const bsx = sheetSX(M, fi), bsy = sheetSY(M, fi), body = () => ctx.drawImage(sh.img, bsx, bsy, FW, FH, 0, 0, FW, FH);
+  const GV = mountGearLay(H, M), bimg = GV ? layBody(sh, GV) : sh.img;   /* Engenheiro 18: corpo com a tinta das peças (chave MOUNT_GEAR, desligada) ou a folha original */
+  const bsx = sheetSX(M, fi), bsy = sheetSY(M, fi), body = () => ctx.drawImage(bimg, bsx, bsy, FW, FH, 0, 0, FW, FH);
   /* Engenheiro 2: CONTORNO DE LUZ da aura por estrela, colado na silhueta da montaria (o halo de trás sumia em cima do cenário claro): 1 estrela = fino e claro; 5 = largo e dourado */
   const stN = H.deadP < 0 ? Math.max(0, Math.min(5, H.mount.stars | 0)) : 0, glowC = MOUNT_AURA[stN];
   /* Engenheiro 10 (desempenho): o contorno era o corpo desenhado 2 a 3 vezes com shadowBlur A CADA QUADRO (desfoque de 512x352, caro no celular). Agora o contorno
@@ -124,6 +146,7 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
         ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); }
       /* cabeça do Kael por cima da arma: só a cabeça dele (x < grip.x + 8), nunca a da montaria */
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.x + 8, ((sh.neck && sh.neck[fi]) || 0) + 2); ctx.clip(); body(); ctx.restore(); } }
+  if (GV) mountGearHead(M, fi, GV);   /* chapéu/óculos/máscara por cima de tudo, na cabeça do cavaleiro */
   ctx.restore();
   if (H.main){ B.tipW = { x: ox - (pad + 128 - T.dx) * k + tip.x * k, y: gy - (fy - T.dy) * k + tip.y * k };
     if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 1.2, B.tipW.x + 6)); B.reach += (rc - B.reach) * 0.2; } }
