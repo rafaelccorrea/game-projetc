@@ -1,0 +1,134 @@
+{
+ "frames": 12,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "boomerang_mitico",
+ "scale": 0.1036,
+ "refAngle": 10.53,
+ "grip": [
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 304.66,
+    "y": 169.7
+   },
+   "ang": 47.84,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.06,
+    "y": 171.41
+   },
+   "ang": 43.45,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.62,
+    "y": 173.46
+   },
+   "ang": 39.59,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.06,
+    "y": 172.52
+   },
+   "ang": 39.95,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.95,
+    "y": 170.14
+   },
+   "ang": 42.92,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.12,
+    "y": 168.92
+   },
+   "ang": 45.38,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.23,
+    "y": 169.64
+   },
+   "ang": 43.82,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.62,
+    "y": 169.98
+   },
+   "ang": 42.61,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.67,
+    "y": 168.43
+   },
+   "ang": 46.12,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.01,
+    "y": 168.26
+   },
+   "ang": 46.29,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.62,
+    "y": 170.58
+   },
+   "ang": 42.65,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.57,
+    "y": 171.14
+   },
+   "ang": 42.61,
+   "pull": null
+  }
+ ]
+}

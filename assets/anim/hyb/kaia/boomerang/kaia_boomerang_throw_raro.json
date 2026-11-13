@@ -1,0 +1,149 @@
+{
+ "frames": 24,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "boomerang_raro",
+ "scale": 0.1012,
+ "refAngle": 19.3,
+ "grip": [
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 304.8,
+    "y": 169.7
+   },
+   "ang": 48.25,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 299.6,
+    "y": 180.99
+   },
+   "ang": 25.01,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": true,
+   "hand": {
+    "x": 158.64,
+    "y": 170.25
+   },
+   "ang": -67.15,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": true,
+   "hand": {
+    "x": 151.67,
+    "y": 143.2
+   },
+   "ang": 169.15,
+   "pull": null
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": true,
+   "flip": true,
+   "hand": {
+    "x": 299,
+    "y": 156.31
+   },
+   "ang": 57.67,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": true,
+   "hand": {
+    "x": 292.47,
+    "y": 174.4
+   },
+   "ang": 41.8,
+   "pull": null
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 297.5,
+    "y": 173.07
+   },
+   "ang": 34.94,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.37,
+    "y": 169.98
+   },
+   "ang": 44.06,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301.76,
+    "y": 169.37
+   },
+   "ang": 46.02,
+   "pull": null
+  }
+ ]
+}

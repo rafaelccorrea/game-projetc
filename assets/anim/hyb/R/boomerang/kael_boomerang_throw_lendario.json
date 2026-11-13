@@ -1,0 +1,156 @@
+{
+ "frames": 24,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "boomerang_lendario",
+ "scale": 0.1005,
+ "refAngle": 8.59,
+ "grip": [
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 228.24,
+    "y": 193.74
+   },
+   "ang": -7.12,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 228.19,
+    "y": 193.64
+   },
+   "ang": -7.21,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 209.08,
+    "y": 193.35
+   },
+   "ang": -37.32,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 177.03,
+    "y": 185.91
+   },
+   "ang": -84.7,
+   "pull": null
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": false
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 295.69,
+    "y": 147.68
+   },
+   "ang": 39.45,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 295.01,
+    "y": 148.37
+   },
+   "ang": 39.41,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 270.16,
+    "y": 173.56
+   },
+   "ang": 26.8,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 228.73,
+    "y": 192.57
+   },
+   "ang": -6.28,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 228,
+    "y": 193.35
+   },
+   "ang": -6.49,
+   "pull": null
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 227.85,
+    "y": 193.25
+   },
+   "ang": -6.56,
+   "pull": null
+  }
+ ]
+}
