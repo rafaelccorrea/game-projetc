@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **07h20 · Kaia na Criação:** já dá para escolher a Kaia de verdade ao começar o jogo (Servidor, conferido no navegador). Para o APK falta só a passada final do QA
+- **07h20 · Sua direção de arte:** o público é um pouco mais velho. Skins e pets novos no estilo herói semi-chibi (rosto adulto, visual épico), nada infantil. A Arte refaz as 13 referências de skin (~26 créditos). Lista de 13 pets novos (raro a lendário, criaturas ferozes) esperando sua escolha
+
 - **07h10 · PARA VOCÊ VOTAR (página de aprovação):** as 13 referências de skin: Kael (Demônio, Anjo, Paladino Solar, Bobo da Corte, Ninja, Pirata, Samurai, Ciborgue; escolha 5) e Kaia moça adulta (Palhaça, Princesa, Ninja, Demoníaca, Angelical). O bastão rosa é só o marcador da arma. Também a amostra das ultimates da espada, com os nomes corrigidos (Lendária = animação nova; Mítica = reforçada). Créditos: ~187
 - **07h10 · Regra fixa registrada:** nunca sensualizar temas sensíveis, nunca em personagem criança
 - **07h10 · Pets novos:** os de hoje ficam como pets grátis do começo; os novos, com visual de criatura de verdade (não infantil). Sugestões de 12 (raro a lendário) mandadas; ~40 créditos cada, esperando sua escolha
