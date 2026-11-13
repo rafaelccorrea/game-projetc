@@ -75,6 +75,7 @@ function morphKids(par,news){
 }
 function same(o,n){ return o.nodeType===n.nodeType&&(o.nodeType!==1||(o.localName===n.localName&&o.__t===n.__t)); }
 function patch(o,n){
+  if(o.nodeType===1&&o.hasAttribute('data-pi-own')){ o.__on=n.__on; return; }   /* conteúdo controlado pelo código (logo animado) */
   const hero=o.localName==='canvas'&&o.hasAttribute('data-pi-hero');   /* canvas do herói: o tamanho e a folga são do pintor (heroTick), não do modelo */
   const keep=a=>o.localName==='canvas'&&(a==='width'||a==='height'||(hero&&(a==='style'||a==='data-pi-grown')));
   for(const a of [...o.attributes]) if(!n.hasAttribute(a.name)&&!keep(a.name)) o.removeAttribute(a.name);
@@ -112,8 +113,29 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       const as=c.dataset.piAs, sv=G.S(), h0=sv.hero; if(as) sv.hero=as;
       try{ drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false,...(c.dataset.piMount==='0'?{mount:false,wing:false}:{})}); }finally{ if(as) sv.hero=h0; } }catch(e){} }
     this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
+  /* LOGO ANIMADO. assets/brand/logo_anim.json:
+       vídeo (recomendado, leve):  {"type":"video","src":"logo_anim.webm","w":720,"h":480,"loopStart":2.0}   (webm VP9 com alfa; loopStart = s onde começa o loop)
+       folha de quadros:           {"type":"sheet","src":"logo_anim.png","w":384,"h":256,"cols":10,"frames":60,"fps":12,"intro":[0,23],"loop":[24,59]}
+     Entrada uma vez, depois o loop para sempre. Sem o json, ou com erro ao carregar: fica o logo de letras (nada muda). */
+  logoCfg:undefined,
+  logoAnim(){ const box=this.root&&this.root.querySelector('[data-pi-alogo]'); if(!box||box.__pi) return; box.__pi=1;
+    const base='assets/brand/', go=cfg=>{ if(!cfg||!cfg.src||!this.root||!this.root.contains(box)) return;
+      const ok=()=>{ box.style.aspectRatio=(cfg.w&&cfg.h)?cfg.w+' / '+cfg.h:''; box.classList.add('on'); };
+      if(cfg.type==='video'){ const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto'; v.src=base+cfg.src;
+        v.addEventListener('canplay',()=>{ if(!box.classList.contains('on')){ box.appendChild(v); ok(); v.play().catch(()=>{}); } },{once:true});
+        v.addEventListener('ended',()=>{ v.currentTime=+cfg.loopStart||0; v.play().catch(()=>{}); });
+        v.addEventListener('error',()=>{ box.classList.remove('on'); v.remove(); },{once:true}); return; }
+      if(cfg.type==='sheet'){ const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=cfg.w; c.height=cfg.h; box.appendChild(c); ok();
+          const x=c.getContext('2d'), cols=cfg.cols|0||1, fps=+cfg.fps||12, A=cfg.intro||[0,-1], L=cfg.loop||[0,(cfg.frames|0)-1]; let f=A[0]<=A[1]?A[0]:L[0], last=0, intro=A[0]<=A[1];
+          const tick=ts=>{ if(!this.root||!this.root.contains(c)) return; if(ts-last>=1000/fps){ last=ts; x.clearRect(0,0,cfg.w,cfg.h);
+              x.drawImage(img,(f%cols)*cfg.w,Math.floor(f/cols)*cfg.h,cfg.w,cfg.h,0,0,cfg.w,cfg.h);
+              f++; if(intro&&f>A[1]){ intro=false; f=L[0]; } else if(!intro&&f>L[1]) f=L[0]; }
+            requestAnimationFrame(tick); }; requestAnimationFrame(tick); };
+        img.onerror=()=>{}; img.src=base+cfg.src; } };
+    if(this.logoCfg!==undefined){ go(this.logoCfg); return; }
+    fetch(base+'logo_anim.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null).then(cfg=>{ this.logoCfg=cfg; go(cfg); }); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
-    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
+    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(this.id==='TituloV2B') this.logoAnim(); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   extra(){ const av=typeof window.avatarTag==='function', full=!G.isNew()&&typeof drawHeroFull==='function'&&typeof HS==='number'; return {hasAv:av,noAv:!av,fullHero:full,kidHero:!full,pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,googleSoon:!PI.googleReady(),pFc:G.fc()}; },
   fit(){ if(!this.el) return; const app=document.getElementById('app')||document.body, W=app.clientWidth||390, H=app.clientHeight||844, d=PI_SCREENS[this.id]||{};
     const s=d.fluid?W/390:Math.min(W/390,H/844), h=d.fluid?H/s:844;
@@ -209,7 +231,11 @@ const PI_ICON={
   food:piSvg('<path d="M14 36 C14 22 28 14 40 16 C52 18 56 30 50 40 C44 50 26 54 18 46 Z" fill="#c9783a" stroke="#5a2e10" stroke-width="3"/><path d="M44 18 L54 8 M50 22 L58 14" stroke="#f1e2c8" stroke-width="5" stroke-linecap="round"/>'),
   egg:piSvg('<path d="M32 6 C46 6 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 18 6 32 6 Z" fill="#f4e6c8" stroke="#6a5a3a" stroke-width="3"/><path d="M18 34 L26 28 L32 34 L40 28 L48 34" fill="none" stroke="#c9a86a" stroke-width="3"/>'),
 };
-const PI_CSS=`#pin .pi-TituloV2B .logoWrap .clockBox{z-index:1}
+const PI_CSS=`#pin .pi-alogo{display:none;position:absolute;left:50%;top:clamp(40px,calc(6 * var(--pi-vh)),64px);width:min(94%,380px);transform:translateX(-50%);z-index:6;pointer-events:none}
+#pin .pi-alogo.on{display:block}
+#pin .pi-alogo video,#pin .pi-alogo canvas{display:block;width:100%;height:100%;object-fit:contain}
+#pin .pi-alogo.on ~ .logoWrap{display:none}   /* animado carregou: some o logo de letras */
+#pin .pi-TituloV2B .logoWrap .clockBox{z-index:1}
 #pin .pi-TituloV2B .logoWrap .word{z-index:3}   /* o nome EONBOUND sempre por cima do relógio e dos anéis (QA) */
 #pin .pi-lvfrom{font:900 13px Nunito,system-ui,sans-serif;color:#c9b9a2;margin-right:4px;white-space:nowrap}
 #pin .pi-BemVindo .num{white-space:nowrap}
