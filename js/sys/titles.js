@@ -50,7 +50,7 @@ const DATA={
     {id:'pet1',    name:'Amigo dos Bichos',     cond:{type:'pets',n:1},       bonus:{hpPct:1}},
     {id:'pet3',    name:'Domador',              cond:{type:'pets',n:3},       bonus:{hpPct:2}},
     {id:'petAll',  name:'Arca das Eras',        cond:{type:'pets',n:'all'},   bonus:{atkPct:2,hpPct:2}},
-    {id:'phoenix5',name:'Laço Lendário',        cond:{type:'petStar',pet:'phoenix',n:5}, bonus:{critPct:2}},
+    {id:'phoenix5',name:'Laço Lendário',        cond:{type:'petStar',r:4,n:5}, bonus:{critPct:2}},
     // visual: sempre cosmético (skins e peças do herói modular)
     {id:'skin10',  name:'Colecionador',         cond:{type:'skins',n:10},     bonus:{}, cosmetic:true},
     {id:'skin25',  name:'Estilista das Eras',   cond:{type:'skins',n:25},     bonus:{}, cosmetic:true},
@@ -63,7 +63,7 @@ const DATA={
     tower:n=>`Chegar ao andar ${n} da torre`, arena:n=>n===1?'Terminar a semana em 1º na arena':`Terminar a semana no top ${n} da arena`,
     practice:n=>`Somar ${n} níveis de prática`, skins:n=>`Ter ${n} skins de arma ou roupa`,
     weaponEras:n=>`Conquistar armas de ${n} eras`, weapons:n=>`Conquistar as ${n} armas`, mounts:n=>n===1?'Ter 1 montaria':`Ter as ${n} montarias`,
-    pets:n=>n===1?'Ter 1 pet':`Ter ${n} pets`, petStar:(n,c)=>`Fênix com ${n}★`, hair:n=>`Ter os ${n} cabelos`, eyes:n=>`Ter os ${n} olhos`, hats:n=>`Ter os ${n} chapéus` },
+    pets:n=>n===1?'Ter 1 pet':`Ter ${n} pets`, petStar:(n,c)=>c&&c.pet?`${(((root.Sys&&root.Sys.pet&&root.Sys.pet.DATA.pets)||[]).find(x=>x.id===c.pet)||{}).name||'Pet'} com ${n}★`:`Pet Lendário com ${n}★`, hair:n=>`Ter os ${n} cabelos`, eyes:n=>`Ter os ${n} olhos`, hats:n=>`Ter os ${n} chapéus` },
   statText:{atkPct:'ATK',hpPct:'HP',critPct:'crítico',defPct:'defesa',goldPct:'ouro'},
 };
 const KEYS=['atkPct','hpPct','goldPct','critPct','defPct','fc'];
@@ -138,7 +138,8 @@ function need(S,host,c){
 /* {cur, need, done, frac} — arena é "menor é melhor" */
 function progress(S,host,t){
   const c=t.cond;
-  if(c.type==='petStar'){ const p=S.sys&&S.sys.pet&&S.sys.pet.owned&&S.sys.pet.owned[c.pet], cur=p?int0(p.stars):0; return {cur,need:c.n,done:cur>=c.n,frac:clamp(cur/c.n,0,1)}; }
+  if(c.type==='petStar'){ const ow=(S.sys&&S.sys.pet&&S.sys.pet.owned)||{}, P=root.Sys&&root.Sys.pet, defs=(P&&P.DATA&&P.DATA.pets)||[];
+    const cur=c.pet?int0(ow[c.pet]&&ow[c.pet].stars):Math.max(0,...Object.keys(ow).filter(id=>{ const d=defs.find(x=>x.id===id); return d&&d.r>=int0(c.r); }).map(id=>int0(ow[id].stars))); return {cur,need:c.n,done:cur>=c.n,frac:clamp(cur/c.n,0,1)}; }
   const cur=current(S,host,c.type), nd=need(S,host,c);
   if(c.type==='arena'){ const done=cur>0&&cur<=nd; return {cur,need:nd,done,frac:done?1:0}; }
   return {cur,need:nd,done:cur>=nd,frac:clamp(cur/nd,0,1)};

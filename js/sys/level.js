@@ -20,11 +20,12 @@ const DATA={
   // que passa a ler daqui. Chaves dos módulos: 'pet' = portão do Sys.pet (1; com o v20 ligado quem manda é Sys.pet.DATA.v20.unlockLevel = 20)
   // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).
   unlock:{missions:2, summon:3, practice:5, mail:7, login:7, profile:10, shopgem:10, forge:12, instances:14, tower:15, pass:18, pets:20,
-          events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1},
-  alias:{inst:'instances'},
+          events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1,
+          map:1, codex:12, chat:16},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
+  alias:{inst:'instances', mounts:'mount'},
   unlockName:{missions:'Missões',summon:'Invocar',practice:'Práticas',mail:'Correio',login:'Login diário',profile:'Perfil',shopgem:'Loja de gemas',
     forge:'Forja',instances:'Instâncias',tower:'Torre',pass:'Passe',pets:'Pets',events:'Eventos',rank:'Ranking',arena:'Arena',guild:'Guilda',
-    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets'},
+    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat'},
   // portões de raridade dos OVOS (decisão do PO): raridade r exige nível E era mínimos. A fênix do andar 100 da torre é exceção.
   eggGate:{3:{level:70,era:4}, 4:{level:85,era:5}},
   // ===== CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA). Spec e simulação: reports/curva-9-eras-e2.md =====
