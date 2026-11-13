@@ -8,6 +8,16 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **08h40 · TODO MUNDO COM FILA (ninguém parado):**
+  - Engenheiro: ligar atrás de chave as 9 ultimates Lendárias, as 8 asas, arco/bumerangue; tirar do app as permissões de publicidade; diminuir o app (Play Asset Delivery); eventos com horário na tela; brilho do item caído; Fusão
+  - QA: telas de coleção dos pets/montarias/asas novos; VIP 8/9 e Mecha na Loja; varredura de polimento quadro a quadro na v0.12.8
+  - Sistemas: entregas dos itens novos (Loja, VIP, Torre, Arena, Torneio, Guilda, chefes); fragmentos do Passe 25; nova simulação de 6 meses
+  - Servidor: produtos da Google Play (lista para você cadastrar), guilda e leilão online, entregas pelo correio
+  - Arte: vídeos do arco e do bumerangue (Kael e Kaia) + ultimates deles; Kaia menina montada nas 6 montarias
+- **08h40 · APK v0.12.8 PRONTO** (722 MB): para instalar, ligue o celular no cabo e escreva "pode instalar" na janela do Engenheiro
+- **08h40 · PARA VOCÊ VOTAR (página de aprovação):** 8 ultimates Lendárias novas (clava, gládio, pólvora, revólver, fuzil, plasma, infernal, celeste), 10 montarias, 8 asas, 9 pets, 13 skins. Cada voto libera a produção na hora
+- **08h40 · Você aprovou:** Mecha R$ 49,90 · Fênix Gigante no VIP 8 · Wyvern Infernal no VIP 9 · de onde vem cada item novo
+
 - **08h10 · PARA VOCÊ VOTAR (página de aprovação):** as 8 skins do Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Bobo da Corte sinistro, Pirata, Ciborgue) e as 5 da Kaia (Arlequina, Princesa guerreira, Ninja, Demoníaca, Angelical), todas no corpo padrão; os 9 pets novos (visual feroz); as guias do arco, do bumerangue e da Kaia montada. As 10 montarias saem em seguida
 - **08h10 · Em produção direto (padrão já aprovado):** as ultimates Lendária e Mítica de TODAS as famílias de arma. Também na fila: 8 asas novas (Fênix, Gelo, Sombra, Tempestade, Mecânicas, Ossos, Serafim, Mariposa Sombria). Fila completa em docs/FILA_ARTE.md
 - **08h10 · APK v0.12.8:** pronto para gerar assim que entrarem 2 consertos pequenos (pistola abaixo do chão na morte, "NÍVEL +1" atrás da barra). Inclui: Kaia jogável, Kael garoto em qualquer nível, FC grande em escala nova, Passe nível 25 novo, Vitória com pet/montaria/asa
