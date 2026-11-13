@@ -75,8 +75,10 @@ function morphKids(par,news){
 }
 function same(o,n){ return o.nodeType===n.nodeType&&(o.nodeType!==1||(o.localName===n.localName&&o.__t===n.__t)); }
 function patch(o,n){
-  for(const a of [...o.attributes]) if(!n.hasAttribute(a.name)&&!(o.localName==='canvas'&&(a.name==='width'||a.name==='height'))) o.removeAttribute(a.name);
-  for(const a of n.attributes) if(o.getAttribute(a.name)!==a.value) o.setAttribute(a.name,a.value);
+  const hero=o.localName==='canvas'&&o.hasAttribute('data-pi-hero');   /* canvas do herói: o tamanho e a folga são do pintor (heroTick), não do modelo */
+  const keep=a=>o.localName==='canvas'&&(a==='width'||a==='height'||(hero&&(a==='style'||a==='data-pi-grown')));
+  for(const a of [...o.attributes]) if(!n.hasAttribute(a.name)&&!keep(a.name)) o.removeAttribute(a.name);
+  for(const a of n.attributes) if(o.getAttribute(a.name)!==a.value&&!(hero&&a.name==='style'&&o.hasAttribute('data-pi-grown'))) o.setAttribute(a.name,a.value);
   o.__on=n.__on;
   if(o.localName==='input'||o.localName==='textarea'){ const v=n.getAttribute('value')||''; if(o.value!==v) o.value=v; return; }
   morphKids(o,[...n.childNodes]);
@@ -95,9 +97,18 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   heroT:0, heroRaf:0, heroLast:0,
   heroTick(ts){ this.heroRaf=0; if(!this.root) return; const cs=this.root.querySelectorAll('canvas[data-pi-hero]'); if(!cs.length){ this.heroLast=0; return; }
     const dt=this.heroLast?Math.min(0.05,(ts-this.heroLast)/1000):0; this.heroLast=ts; this.heroT+=dt;
-    for(const c of cs){ try{ const r=c.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr); if(!w||!h) continue;
+    for(const c of cs){ try{
+      /* FOLGA (QA P20): o quadro do protótipo (F×F, pés em 95%) só cabe o herói a pé. Montado, com asa e aura, o conjunto é bem maior: o canvas cresce em volta
+         do quadro (×2,4 de largura, ×1,9 de altura, 0,9F de folga em cima), com os pés no MESMO lugar da tela. Transparente, sem borda nem fundo. */
+      if(!c.dataset.piGrown){ const F=c.offsetHeight||c.offsetWidth, P=c.offsetParent; if(!F||!P) continue;
+        /* posição REAL na tela (inclui transform do CSS, ex.: translateX(-50%)), convertida para o palco sem escala */
+        const r0=c.getBoundingClientRect(), pr=P.getBoundingClientRect(), sc=r0.height/F||1, L=(r0.left-pr.left)/sc-P.clientLeft, T=(r0.top-pr.top)/sc-P.clientTop;
+        c.style.cssText+=';position:absolute;transform:none;left:'+(L-0.7*F)+'px;top:'+(T-0.9*F)+'px;right:auto;bottom:auto;margin:0;width:'+(2.4*F)+'px;height:'+(1.9*F)+'px;background:none;border:0;outline:0;box-shadow:none;pointer-events:none';
+        c.dataset.piGrown=String(F); }
+      const r=c.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr); if(!w||!h) continue;
       if(c.width!==w||c.height!==h){ c.width=w; c.height=h; } const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,w,h);
-      const z=+c.dataset.piZoom||1; drawHeroFull(x,w/2,h*243/256,h/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false}); }catch(e){} }
+      const z=+c.dataset.piZoom||1, Fp=h/1.9;   /* F em pixels do canvas */
+      drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false,...(c.dataset.piMount==='0'?{mount:false}:{})}); }catch(e){} }
     this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
     const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
