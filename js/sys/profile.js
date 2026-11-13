@@ -145,7 +145,7 @@ const auraFor=(S,host)=>{ const e=equipped(S,host); return e?e.aura:null; };
 function renameQuote(S,host){ if(!on()) return {on:false}; const o=ensure(S), R=DATA.rename, free=o.renames<R.freeFirst, cost=free?0:R.gems;
   const waitMs=R.cooldownH>0&&o.lastRename?Math.max(0,o.lastRename+R.cooldownH*3600000-nowOf(host)):0;
   return {on:true,free,gems:cost,canPay:cost<=0||gemsOf(S,host)>=cost,waitMs,renames:o.renames,
-    text:free?'A primeira troca é grátis; depois custa '+R.gems+' gemas.':'Custa '+R.gems+' gemas.'}; }
+    text:free?'A primeira troca é grátis; depois custa '+R.gems+' diamantes.':'Custa '+R.gems+' diamantes.'}; }
 function gemsOf(S,host){ if(host&&typeof host.gems==='function') return num(host.gems(),0); return num(S.gems,0); }
 function payGems(S,host,n){ if(n<=0) return true;
   if(host&&typeof host.spendGems==='function') return host.spendGems(n)!==false;
@@ -157,8 +157,8 @@ function rename(S,host,name,opt){ if(!on()) return {...OFF,msg:''}; opt=opt||{};
   if(!c.ok) return {ok:false,reason:'nome',msg:c.msg||'Esse nome não é permitido.',check:c};
   const q=renameQuote(S,host);
   if(q.waitMs>0) return {ok:false,reason:'espera',msg:'Espere '+Math.ceil(q.waitMs/3600000)+' h para trocar de novo.',waitMs:q.waitMs};
-  if(!q.canPay) return {ok:false,reason:'gemas',msg:'Faltam gemas.',gems:q.gems};
-  if(!payGems(S,host,q.gems)) return {ok:false,reason:'gemas',msg:'Faltam gemas.',gems:q.gems};
+  if(!q.canPay) return {ok:false,reason:'gemas',msg:'Faltam diamantes.',gems:q.gems};
+  if(!payGems(S,host,q.gems)) return {ok:false,reason:'gemas',msg:'Faltam diamantes.',gems:q.gems};
   const o=ensure(S); S.name=v; o.renames++; o.lastRename=nowOf(host); changed(host);
   return {ok:true,name:v,gems:q.gems,msg:'Nome trocado para '+v}; }
 

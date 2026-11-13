@@ -75,5 +75,12 @@ t('save sujo é limpo', () => {
   const o = TR.ensure(S); assert.deepStrictEqual(o.passed, { 10: 5 }); assert.deepStrictEqual(o.tries, { 20: 3 }); assert.strictEqual(o.bank, 0); assert.strictEqual(o.cur, null);
 });
 
+t('teto DENTRO do Sys.level.addXp: XP direta (abate, offline, missão) para no nível 10 e guarda o resto; a devolução (src trial) não é barrada de novo', () => {
+  TR.DATA.on = true; const S = world(9, 0), h = makeHost({ level: 9 }); h.level = () => LV.level(S);
+  LV.addXp(S, 1e6, h, 'kill'); assert.strictEqual(LV.level(S), 10, 'parou no teto'); assert.ok(TR.ensure(S).bank > 0, 'guardou');
+  const b = TR.ensure(S).bank; LV.addXp(S, 5, h, 'trial'); assert.ok(TR.ensure(S).bank === b, 'trial não guarda de novo');
+  TR.DATA.on = false; const S2 = world(9, 0); LV.addXp(S2, 1e6, h, 'kill'); assert.ok(LV.level(S2) > 10, 'desligado: sem teto');
+});
+
 TR.DATA.on = false;
 console.log(`trial: ${n} testes ok`);
