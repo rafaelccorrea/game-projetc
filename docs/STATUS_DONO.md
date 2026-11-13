@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h10 · Código do servidor no GitHub privado** (eonbound-server, 38 commits, sem nenhuma senha ou chave dentro; conferido que é privado). Páginas de privacidade e excluir conta atualizadas no ar (rascunho). A exclusão agora vale para a conta em todos os servidores
+
 - **23h55 · Commit e push de tudo (sua ordem):** todas as sessões avisadas; o que estava só no disco era a parte do Engenheiro (convidado só no JOGAR) e a auditoria do QA, que estão subindo agora. **Fênix Gigante:** Kael montado pronto (f597b4b); a Kaia está paga e pronta no Higgsfield, só falta baixar. **O conector do Higgsfield caiu:** para a Arte continuar, digite /mcp, escolha higgsfield e entre de novo
 
 - **23h45 · TELAS = PRIORIDADE (sua ordem):** a Sistemas assumiu os protótipos das telas refeitas no padrão aprovado (Perfil/Arena), nesta ordem: Equipamento (com Mochila), Loja, Invocar, Passe, Pets, Montarias, Forja, VIP, Batalha e a tela de fim das 9 eras. Eu publico cada uma para o seu voto. **Eras 7 e 8 jogáveis** prontas no código (desligadas): falta só a Arte fazer 6 ícones de golpe; depois do Juiz Celestial o jogo segue em fases sem fim com uma tela de celebração
@@ -392,7 +394,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Preencher nos textos (docs/loja/ e páginas /privacidade, /termos, /excluir-conta): nome da empresa, CNPJ, e-mail de contato, endereço e encarregado de dados (LGPD)
 - [ ] Advogado: revisar os rascunhos e os pontos marcados [ADVOGADO] (consentimento dos pais para menores de 13, arrependimento em compra digital, transferência internacional, prazos de guarda)
 - [ ] Play Console: cadastrar os 13 produtos (reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
-- [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (só se quiser o código do servidor lá; o servidor já roda sem isso)
+- [x] GitHub: o código do servidor já subiu para o repositório privado eonbound-server (não precisou de nada seu)
 
 - [ ] Higgsfield: o conector caiu; digite /mcp → higgsfield → entrar de novo (a Arte está parada esperando)
 
