@@ -110,5 +110,15 @@ function world(dels) {
     } finally { B.DATA.simForce = false; delete globalThis.Capacitor; globalThis.Sys.net = oldNet; delete globalThis.Sys.vip; delete globalThis.Sys.pass; }
     assert.strictEqual(B.simulated(), false); assert.strictEqual((await B.purchase(S, host, 'gems_60')).reason, 'soon');   // fora do Modo dono: nada
   });
+  await t('MODO DONO por servidor: a chave do dono com realm (eras_owner_v1@s2) também simula; chave de jogador com @ não', async () => {
+    globalThis.OWNER_MODE = true;
+    try {
+      globalThis.SAVE_KEY = 'eras_owner_v1@s2'; assert.strictEqual(B.simulated(), true);
+      globalThis.SAVE_KEY = 'eras_owner_v1'; assert.strictEqual(B.simulated(), true);
+      globalThis.SAVE_KEY = 'eras_proto_v2@s2'; assert.strictEqual(B.simulated(), false); assert.strictEqual(B.ready(), false);
+      assert.strictEqual((await B.purchase({}, {}, 'gems_60')).reason, 'owner_guard');
+      globalThis.SAVE_KEY = 'eras_owner_v1x'; assert.strictEqual(B.simulated(), false);
+    } finally { delete globalThis.OWNER_MODE; delete globalThis.SAVE_KEY; }
+  });
   console.log(n + ' testes ok');
 })().catch(e => { console.error(e); process.exit(1); });

@@ -60,10 +60,12 @@
 
   /* ---------- MODO DONO: compra simulada ---------- */
   /** true só no app de teste com o Modo dono ligado E o save separado (as duas travas; o save real nunca é tocado) */
-  function simulated() {
-    if (DATA.simForce === true) return true;
-    try { return typeof OWNER_MODE !== 'undefined' && OWNER_MODE === true && typeof SAVE_KEY !== 'undefined' && SAVE_KEY === DATA.ownerSaveKey; } catch (e) { return false; }   // eslint-disable-line no-undef
-  }
+  const ownerFlag = () => { try { return typeof OWNER_MODE !== 'undefined' && OWNER_MODE === true; } catch (e) { return false; } };   // eslint-disable-line no-undef
+  /* chave do save do Modo dono: 'eras_owner_v1' (S1) ou 'eras_owner_v1@<realm>' (um save por servidor): compara pelo PREFIXO */
+  const ownerKey = () => { try { return typeof SAVE_KEY === 'string' && (SAVE_KEY === DATA.ownerSaveKey || SAVE_KEY.indexOf(DATA.ownerSaveKey + '@') === 0); } catch (e) { return false; } };   // eslint-disable-line no-undef
+  function simulated() { if (DATA.simForce === true) return true; return ownerFlag() && ownerKey(); }
+  /** "meio Modo dono" (só uma das duas travas): NUNCA cobra de verdade nem simula — recusa (achado do QA, test/sys/buy_owner_guard.test.js) */
+  const ownerGuard = () => !simulated() && (ownerFlag() || ownerKey());
   function simState(S) { const o = ensure(S); let z = o.sim; if (!z || typeof z !== 'object') z = o.sim = {};
     z.cents = int0(z.cents); z.n = int0(z.n); if (!z.bought || typeof z.bought !== 'object') z.bought = {}; if (!Array.isArray(z.log)) z.log = [];
     if (!z.card || typeof z.card !== 'object') z.card = { until: 0, last: '' }; return z; }
@@ -138,11 +140,12 @@
   }
 
   /** a tela pergunta antes de mostrar o botão: true = cobrança de verdade (ou a SIMULADA do Modo dono); false = "Pagamento em breve" */
-  function ready() { if (simulated()) return true; const N = net(); return !!(DATA.on && N && bridge() && (!N.hasSession || N.hasSession())); }
+  function ready() { if (simulated()) return true; if (ownerGuard()) return false; const N = net(); return !!(DATA.on && N && bridge() && (!N.hasSession || N.hasSession())); }
 
   /** compra um produto do catálogo do servidor. Resolve {ok, status, reason, applied} */
   async function purchase(S, host, productId) {
     if (simulated()) { const p = product(productId); if (!p) return { ok: false, reason: 'unavailable' }; return simPurchase(S, host, p); }
+    if (ownerGuard()) return { ok: false, reason: 'owner_guard' };
     if (!ready()) return { ok: false, reason: 'soon' };
     if (!available(productId, S)) return { ok: false, reason: 'unavailable' };
     const N = net(), B = bridge();

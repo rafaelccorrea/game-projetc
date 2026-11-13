@@ -126,7 +126,8 @@ function markDirty(){ ST.mem.save=Object.assign(saveMeta(),{dirty:true}); persis
 function setMeta(version,dirty){ ST.mem.save={version,dirty:!!dirty}; persist(); }
 /* MODO DONO (app de teste, save separado 'eras_owner_v1'): o save do dono NUNCA sobe nem desce da nuvem (senão o save cheio de itens liberados
    cobriria o da conta real) e as entregas de compra REAIS não caem no save de teste. push/pull/sync/chooseSide/restore e as entregas não tocam em nada. */
-const ownerMode=()=>{ if(DATA.ownerForce===true) return true; try{ return typeof OWNER_MODE!=='undefined'&&OWNER_MODE===true; }catch(e){ return false; } };   // eslint-disable-line no-undef
+/* Modo dono = a flag OU a chave do save do dono ('eras_owner_v1' ou 'eras_owner_v1@<realm>'): qualquer uma das duas basta para nada subir nem descer */
+const ownerMode=()=>{ if(DATA.ownerForce===true) return true; try{ if(typeof OWNER_MODE!=='undefined'&&OWNER_MODE===true) return true; return typeof SAVE_KEY==='string'&&/^eras_owner_v1(@|$)/.test(SAVE_KEY); }catch(e){ return false; } };   // eslint-disable-line no-undef
 const OWNER_SKIP={action:'none',owner:true};
 async function head(){ try{ return await call('GET','/save/head'); }catch(e){ if(e.code==='not_found') return null; throw e; } }
 async function pull(){
