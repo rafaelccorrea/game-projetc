@@ -8,22 +8,23 @@
 const VERBOSE = process.argv.includes('-v');
 /* fluxo duro = falha derruba o código de saída. INSTÂNCIA está EM CONFERÊNCIA (PANEL_ON.inst desligada, nunca rodou de ponta a ponta):
    mostra todos os problemas, mas não reprova. Trocar para true quando o engenheiro ligar a tela. */
-const HARD = { era: true, inst: true, result: true };   /* inst: PANEL_ON.inst ligada (pedido A-22) e fluxo 26/26 */
+const HARD = { era: true, inst: true, result: true, phases: true, heroFull: true };   /* phases: duro no lado do Sys; partida e animação são checks EM CONFERÊNCIA (soft) */   /* inst: PANEL_ON.inst ligada (pedido A-22) e fluxo 26/26 */
 const DT = 1 / 30;
 const boot = require('./sandbox'), errStr = boot.errStr;
 
 const flows = [];   // {id, name, checks:[{name, ok, err}], errs:[]}
 let cur = null;
-const check = (name, ok, err) => { cur.checks.push({ name, ok: !!ok, err: ok ? '' : (err || '') }); if (VERBOSE || !ok) console.log((ok ? '  OK    ' : '  FALHA ') + cur.id + ' · ' + name + (ok || !err ? '' : ' → ' + err)); return !!ok; };
+/* soft = parte EM CONFERÊNCIA dentro de um fluxo duro: aparece com o problema, mas não reprova */
+const check = (name, ok, err, soft) => { cur.checks.push({ name, ok: !!ok, err: ok ? '' : (err || ''), soft: !!soft }); if (VERBOSE || !ok) console.log((ok ? '  OK    ' : soft ? '  EM CONFERÊNCIA ' : '  FALHA ') + cur.id + ' · ' + name + (ok || !err ? '' : ' → ' + err)); return !!ok; };
 const BAD = ['undefined', 'NaN', '[object Object]'];
 const badIn = h => { if (typeof h !== 'string' || !h.trim()) return 'HTML vazio'; const t = h.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '');
   for (const b of BAD) { const i = t.indexOf(b); if (i >= 0) return 'contém "' + b + '": …' + t.slice(Math.max(0, i - 70), i + b.length + 30).replace(/\s+/g, ' ') + '…'; } return null; };
 const attrs = (h, a) => { const out = [], re = new RegExp('\\b' + a + '="([^"]*)"', 'g'); let m; while ((m = re.exec(h))) if (!out.includes(m[1])) out.push(m[1]); return out; };
 
 /* ---------------- jogo + laço manual ---------------- */
-async function newGame() {
+async function newGame(opts) {
   const loadErr = [];
-  const G = boot({ realFetch: true, add: (g, n, ok, e) => { if (!ok) loadErr.push(n + ': ' + e); } });
+  const G = boot({ realFetch: true, ...(opts || {}), add: (g, n, ok, e) => { if (!ok) loadErr.push(n + ': ' + e); } });
   const { ev, inCtx } = G;
   check('jogo carregou (' + G.lists.sysOrder.length + ' js/sys, ' + G.lists.jsList.length + ' js, ' + G.lists.panList.length + ' do screens.js)', !loadErr.length, loadErr.slice(0, 4).join(' | '));
   /* herói: 'strong' = ATK e vida enormes a cada quadro (como o ?lord= do index); 'weak' = sem dano e com 1 de vida; null = o do jogo */
@@ -31,7 +32,7 @@ async function newGame() {
   G.hero = () => { const h = ev('B.hero'); if (!h) return; if (G.mode === 'strong') { h.atk = 1e15; h.maxhp = 1e15; h.hp = 1e15; h.def = 1e9; } else if (G.mode === 'weak') { h.atk = 1e-6; h.critRate = 0; h.hp = Math.min(h.hp, 1); } };
   /* um quadro do loop() de js/battle.js (step, petStep, instStep na velocidade do jogo; resTick; tickFx), sem draw(); os timers andam no relógio virtual */
   sandbox(G).__e2eFrame = dt => { const B = ev('B'); if (!B.paused) { const n = B.speed || 1; for (let i = 0; i < n; i++) { G.hero(); ev('step')(dt); if (typeof sandbox(G).petStep === 'function') ev('petStep')(dt); if (B.inst && typeof sandbox(G).instStep === 'function') ev('instStep')(dt); } }
-    if (typeof sandbox(G).resTick === 'function') ev('resTick')(dt); ev('tickFx')(dt); };
+    if (typeof sandbox(G).resTick === 'function') ev('resTick')(dt); ev('tickFx')(dt); if (G.drawOn) ev('draw')(); };   /* drawOn: também o draw() (canvas que grava, sandbox draw:true) */
   G.frame = async dt => { dt = dt || DT; try { inCtx(() => sandbox(G).__e2eFrame(dt)); } catch (e) { const s = errStr(e); if (!G.frameErr.includes(s)) G.frameErr.push(s); }
     try { inCtx(() => G.advance(dt * 1000)); } catch (e) { const s = 'timer: ' + errStr(e); if (!G.frameErr.includes(s)) G.frameErr.push(s); }
     G.frames++; if (G.frames % 15 === 0) await new Promise(r => setImmediate(r)); };   /* deixa as Promises (fetch) do jogo andarem */
@@ -43,6 +44,8 @@ async function newGame() {
       S.stage=${stage}; S.wave=${wave}; S.best=Math.max(S.best||1,${stage}); S.eraMax=Math.max(S.eraMax||0,eraOf(${stage})); S.farm=false; ${extra || ''}
       B.paused=false; B.res=null; B.inst=null; view='battle'; startBattle(); return 1; })()`); };
   G.errs = () => G.frameErr.slice();
+  /* depois da partida real (runBoot): a entrada nova (js/p_intro.js, overlay) abre sozinha e pausa a batalha; o teste fecha como o jogador (PI.finish) */
+  G.settle = async () => { G.introSeen = false; await G.until(() => { try { return ev("typeof PI!=='undefined'&&!!PI.el"); } catch (e) { return false; } }, 2); try { G.introSeen = ev("typeof PI!=='undefined'&&!!PI.el"); if (G.introSeen) G.inCtx(() => ev('PI.finish()')); } catch (e) { G.frameErr.push('PI.finish: ' + errStr(e)); } await G.run(0.6); };
   return G;
 }
 const sandbox = G => G.sandbox;
@@ -176,15 +179,133 @@ async function flowResult() {
   noErr(G);
 }
 
+/* ---------------- ajudas dos fluxos 4 e 5 ---------------- */
+const fsx = require('fs'), pathx = require('path');
+/* "arquivo:linha" da primeira linha que casa (para apontar onde o jogo pula algo; acompanha as edições do engenheiro) */
+const lineOf = (G, file, re) => { try { const L = G.rd(file).split('\n'); const i = L.findIndex(l => re.test(l)); return i >= 0 ? file + ':' + (i + 1) : file + ':?'; } catch (e) { return file + ':?'; } };
+/* quem no código do jogo (index.html + js/*.js, fora js/sys) chama f( */
+const callersOf = (G, f) => { const out = [], re = new RegExp('\\b' + f.replace(/\./g, '\\.') + '\\s*\\('), def = new RegExp('function\\s+' + f.split('.').pop() + '\\s*\\(');
+  const files = ['index.html'].concat(fsx.readdirSync(pathx.join(G.ROOT, 'js')).filter(x => /\.js$/.test(x)).map(x => 'js/' + x));
+  for (const f2 of files) { let L; try { L = G.rd(f2).replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' ')).split('\n'); } catch (e) { continue; }   /* comentários de bloco não contam */ L.forEach((l, i) => { if (re.test(l) && !def.test(l) && !/^\s*(\/\*|\*|\/\/)/.test(l)) out.push(f2 + ':' + (i + 1)); }); } return out; };
+const tapDraws = G => { const s = new Set(); G.setDrawTap(x => s.add(x)); return s; };
+const has = (set, re) => [...set].some(x => re.test(x));
+const pick = (set, re) => [...set].filter(x => re.test(x)).slice(0, 6).join(', ');
+/* a partida do index pode ter deixado título/tutorial: o laço é o nosso */
+const SAFE_START = "S.tut=99; S.welcome=true; S.name=S.name||'Kael'; B.paused=false; B.res=null; B.inst=null; view='battle';";
+
+/* ---------------- 4. FASES DO HERÓI ---------------- */
+async function flowPhases() {
+  /* (a) SAVE ANTIGO NO NÍVEL 60 → na carga o herói já é ADULTO (fase 2) */
+  for (const hero of ['kael', 'kaia']) { const T = hero === 'kaia' ? 'Kaia' : 'Kael', dir = hero === 'kaia' ? /hyb\/kaia_phase2\// : /hyb\/phase2\//;
+    const G0 = await newGame(); const key = G0.ev('SAVE_KEY');
+    const save = G0.ev(`(function(){ __e2eReplace(JSON.parse(__e2eBase)); S.hero='${hero}'; S.name='${T}'; S.tut=99; S.welcome=true; S.stage=60; S.wave=1; S.best=60; S.eraMax=5; S.kills=20000;
+      try{ if(Sys.appearance.setHero) Sys.appearance.setHero(S,'${hero}'); }catch(e){} const L=Sys.level.ensure(S); L.lvl=60; L.xp=0; L.stg=0; Sys.phaseUp.ensure(S).stg=0; S.lastSeen=Date.now(); return JSON.stringify(S); })()`);
+    const G = await newGame({ search: '?debug=1', storage: { [key]: save }, runBoot: true, draw: true }); const { ev } = G; const stgBoot = ev('Sys.phaseUp.current(S)'); await G.settle();
+    check(T + ' Nv 60: save antigo carregado (nível 60)', ev('Sys.level.level(S)') === 60 && ev('S.hero') === hero, 'nível ' + ev('Sys.level.level(S)') + ' herói ' + ev('S.hero'));
+    check(T + ': Sys.phaseUp.DATA.on ligado na carga (PHASES_ON=' + ev('PHASES_ON') + ')', ev('Sys.phaseUp.DATA.on') === true, 'continua desligado', true);
+    const calls = callersOf(G, 'Sys.phaseUp.catchUp');
+    check(T + ': a partida chama Sys.phaseUp.catchUp(S, Sys.host)' + (calls.length ? ' (' + calls.join(', ') + ')' : ''), calls.length > 0,
+      'EM CONFERÊNCIA: o boot ainda não chama Sys.phaseUp.catchUp. Hoje a partida faz phaseBoot() (' + lineOf(G, 'js/stage.js', /function phaseBoot/) + ') → phaseCheck(true) (' + lineOf(G, 'js/stage.js', /function phaseCheck/) + '), que evolui por pending/evolve e toca UMA animação', true);
+    const stg = stgBoot;
+    check(T + ': depois da carga está na fase 2 (adulto) — via ' + (calls.length ? 'catchUp' : 'phaseBoot/phaseCheck'), stg === 2, 'fase ' + stg + ' (Sys.level stg ' + ev('Sys.level.ensure(S).stg') + ')', true);
+    G.drawOn = true; ev(SAFE_START + ' 1'); const d = tapDraws(G); G.mode = 'strong'; await G.run(7);   /* animação de evolução da carga (1,2 s + 1,6 s) e depois o herói */
+    check(T + ': as folhas do herói desenhadas vêm de ' + (hero === 'kaia' ? 'kaia_phase2' : 'phase2'), has(d, dir), 'folhas do herói desenhadas: ' + (pick(d, /hyb\/(R|phase\d|kaia[^/]*)\//) || '(nenhuma)'), true);
+    noErr(G, T + ': nenhuma exceção na carga e no laço');
+    /* LADO DO Sys (duro): o próprio catchUp no mesmo save antigo */
+    const r = ev(`(function(){ const T=JSON.parse(${JSON.stringify(save)}); Sys.phaseUp.DATA.on=true; const a=Sys.phaseUp.catchUp(T,Sys.host), b=Sys.phaseUp.catchUp(T,Sys.host), sh=Sys.appearance.sheetFor(T,Sys.host,'idle');
+      return {a, b, cur:Sys.phaseUp.current(T), lstg:Sys.level.ensure(T).stg, body:sh&&sh.body, name:Sys.phaseUp.nameOf(T,Sys.phaseUp.current(T))}; })()`);
+    check(T + ' (Sys): catchUp no Nv 60 → {ok, from 0, to 2, applied 2}', r.a && r.a.ok && r.a.from === 0 && r.a.to === 2 && r.a.applied === 2, JSON.stringify(r.a));
+    check(T + ' (Sys): fase 2 = "' + r.name + '", Sys.level stg também 2; segunda chamada não aplica nada', r.cur === 2 && r.lstg === 2 && r.b && r.b.applied === 0, JSON.stringify({ cur: r.cur, lstg: r.lstg, b: r.b }));
+    check(T + ' (Sys): Sys.appearance.sheetFor idle → ' + r.body, dir.test(String(r.body)), 'pasta errada: ' + r.body);
+  }
+  /* (b) CAMADAS MANTIDAS 34 → 35 (skin de roupa + óculos) */
+  const G = await newGame({ search: '?debug=1&fresh=1', runBoot: true, draw: true }), { ev, sandbox: X } = G; await G.settle();
+  const keys = () => ev('JSON.stringify(Sys.appearance.layers(S,Sys.host).map(l=>l.layer+":"+l.key).sort())');
+  const setup = ev(`(function(){ ${SAFE_START} Sys.phaseUp.DATA.on=true; const L=Sys.level.ensure(S); L.lvl=34; L.xp=0; L.stg=1; Sys.phaseUp.ensure(S).stg=1;
+    if(!S.skins.includes('a43')) S.skins.push('a43'); S.skinEq.armor='a43'; const m=Sys.appearance.setMode(S,'skin'); const c=Sys.appearance.addCosmetic(S,'goggles'), e=Sys.appearance.equipCosmetic(S,'glasses','goggles');
+    startBattle(); return {skin:!!SKIN('a43'), mode:m, cos:c, eq:e, lvl:Sys.level.level(S), stg:Sys.phaseUp.current(S)}; })()`);
+  check('34→35: Nv 34, fase 1, skin a43 em modo "skin", óculos equipados', setup.skin && setup.mode && setup.eq && setup.lvl === 34 && setup.stg === 1, JSON.stringify(setup));
+  const k0 = keys(); check('34→35: camadas antes: ' + k0, /goggles/.test(k0), 'óculos não aparecem nas camadas', true);
+  let lr = null; try { lr = G.inCtx(() => X.Sys.level.addXp(ev('S'), X.Sys.level.need(34) - ev('Sys.level.ensure(S).xp'), X.Sys.host)); } catch (e) { lr = { err: errStr(e) }; }
+  check('34→35: XP pelo caminho real (Sys.level.addXp) sobe para 35', lr && lr.from === 34 && lr.to === 35, JSON.stringify(lr));
+  const p = ev('Sys.phaseUp.pending(S,Sys.host)');
+  check('34→35: Sys.phaseUp.pending pronto (1→2, layered=true por causa da skin/óculos)', p && p.ready && p.from === 1 && p.to === 2 && p.anim && p.anim.layered === true, JSON.stringify(p));
+  let lvErr = null; try { G.inCtx(() => X.onLevelUp(lr)); } catch (e) { lvErr = errStr(e); }
+  check('34→35: onLevelUp do jogo (' + lineOf(G, 'js/farm.js', /function onLevelUp/) + ') sem exceção', !lvErr, lvErr, true);
+  let evolved = ev('Sys.phaseUp.current(S)') === 2;
+  check('34→35: o jogo evoluiu no subir de nível (phaseCheck)', evolved, 'continua na fase ' + ev('Sys.phaseUp.current(S)'), true);
+  if (!evolved) { const r = ev('Sys.phaseUp.evolve(S,Sys.host)'); check('34→35 (Sys): Sys.phaseUp.evolve aplica 1→2', r && r.ok && r.to === 2, JSON.stringify(r)); }
+  const k1 = keys(); check('34→35: Sys.appearance.layers iguais antes e depois', k0 === k1, 'antes ' + k0 + ' | depois ' + k1);
+  const evo = ev('B.evo?{sheet:B.evo.sheet,own:B.evo.own,from:B.evo.from,to:B.evo.to}:null');
+  if (evo && p && p.anim) { const fxOk = fsx.existsSync(pathx.join(G.ROOT, String(p.anim.fx) + '.png'));
+    check('34→35 (animação): com layered=true usa pending().anim.fx (' + p.anim.fx + (fxOk ? ', existe em disco' : ', NÃO existe') + ')', evo.sheet === p.anim.fx,
+      'B.evo.sheet = ' + evo.sheet + ': phaseCheck (' + lineOf(G, 'js/stage.js', /base\s*=\s*own\s*\?/) + ') toca a animação de subir de nível e não lê anim.fx', true);
+    G.drawOn = true; const d = tapDraws(G); G.mode = 'strong'; await G.run(4);
+    check('34→35 (animação): desenhou o efeito e o herói por camadas (óculos) na fase 2', has(d, /evolve_1_2_fx|fx\/levelup/) && has(d, /goggles/) && has(d, /hyb\/phase2\//),
+      'efeito: ' + (pick(d, /anim\/fx\//) || '(nenhum)') + ' · óculos: ' + (pick(d, /goggles|glasses/) || '(nenhum)') + ' · corpo: ' + (pick(d, /hyb\/(R|phase\d)\//) || '(nenhum)'), true);
+  } else check('34→35 (animação): B.evo montado no subir de nível', false, 'o jogo não tocou animação de evolução', true);
+  noErr(G, '34→35: nenhuma exceção no laço (com desenho)');
+}
+
+/* ---------------- 5. drawHeroFull com pet + montaria + asa ---------------- */
+async function flowHeroFull() {
+  const G = await newGame({ search: '?debug=1&fresh=1', runBoot: true, draw: true }), { ev, sandbox: X } = G; await G.settle();
+  const pet = ev(`(function(){ ${SAFE_START} const L=Sys.level.ensure(S); L.lvl=50; L.xp=0; S.stage=3; S.best=12; S.wave=1; S.farm=false;
+    Sys.pet.DATA.v3=true; Sys.pet.DATA.v20.on=true; Sys.pet.setV17(true); const o=Sys.pet.ensure(S); const tried=[];
+    for(const p of Sys.pet.DATA.pets){ o.owned={}; o.owned[p.id]={stars:1,lvl:1}; o.eq=p.id; Sys.pet.ensure(S); const i=Sys.pet.battleInfo(S,Sys.host); tried.push(p.id+':'+(i&&i.draw&&i.draw.base)); if(i&&i.draw&&i.draw.base) return {id:p.id, base:i.draw.base, tried}; }
+    return {id:null, tried}; })()`);
+  const petFile = pet.base ? fsx.existsSync(pathx.join(G.ROOT, 'assets/anim/pets', pet.base + '_idle.png')) : false;
+  check('pet equipado (Sys.pet v3+v20+v17): ' + pet.id + ' → assets/anim/pets/' + pet.base + '_idle.png' + (petFile ? '' : ' (ARQUIVO NÃO EXISTE)'), !!pet.id && petFile, JSON.stringify(pet.tried));
+  const mt = ev(`(function(){ Sys.mount.DATA.on=true; Sys.mount.DATA.visual=true; const ids=Object.keys(typeof MOUNT_TBL!=='undefined'?MOUNT_TBL:{}); const id=ids.includes('wolf')?'wolf':ids[0];
+    const a=Sys.mount.add(S,Sys.host,id), e=Sys.mount.equip(S,id); return {id, a, e, look:typeof mountLook==='function'?mountLook():null, ids}; })()`);
+  check('montaria equipada (Sys.mount on+visual, add+equip): ' + mt.id, mt.e && mt.look && mt.look.id === mt.id, JSON.stringify(mt));
+  const wg = ev(`(function(){ addItemToBag({slot:'wing',r:3,e:0,wing:'angel'}); const it=S.inv.filter(x=>x.slot==='wing').pop(); if(it) S.eq.wing=it.id; statsChanged(); refreshHero();
+    return {id:it&&it.id, art:it?wingArt(it):null, look:heroLook().wing, lvl:Sys.level.level(S)}; })()`);
+  check('asa equipada (item slot wing, wing:"angel", Nv ' + wg.lvl + '): heroLook().wing = ' + wg.look, wg.look === 'angel', JSON.stringify(wg));
+  const calls = { n: 0 }; { const f0 = X.drawHeroFull; if (typeof f0 === 'function') X.drawHeroFull = function () { calls.n++; return f0.apply(this, arguments); }; }
+  check('window.drawHeroFull existe (' + lineOf(G, 'js/battle.js', /^function drawHeroFull/) + ')', typeof X.drawHeroFull === 'function', 'não definido');
+  G.drawOn = true; G.mode = 'strong'; const d = tapDraws(G);
+  /* VITÓRIA (bossResult forçado) */
+  ev(`SCREENS_ON.bossResult=true; B.paused=false; S.stage=3; S.wave=5; S.farm=false; B.res=null; view='battle'; startBattle(); 1`);
+  const won = await G.until(() => ev('!!(B.res&&B.res.mode==="win")'), 120);
+  check('vitória com pet+montaria+asa: resOpen("win")', won, 'B.res=' + JSON.stringify(ev('B.res')) + ' · '+ev('JSON.stringify({stage:S.stage,wave:S.wave,farm:S.farm,en:B.en.map(e=>e.kind+(e.boss?"*":"")+":"+Math.round(e.hp)),toSpawn:B.toSpawn,waveT:B.waveT,deadT:B.deadT,paused:B.paused,res:B.res,hp:B.hero&&B.hero.hp,kills:S.kills,evo:!!B.evo,tut:S.tut,view:view})'));
+  if (won) { await G.run(1); try { G.inCtx(() => { X.resAct('skip'); X.resAct('next'); }); } catch (e) { G.frameErr.push('resAct: ' + errStr(e)); } await G.run(2); }
+  const nWin = calls.n;
+  /* TROCA DE ERA */
+  ev(`B.paused=false; S.stage=STAGES_PER_ERA; S.wave=5; S.eraMax=0; S.best=Math.max(S.best,S.stage); B.res=null; view='battle'; startBattle(); 1`);
+  const era = await G.until(() => ev('S.eraMax') >= 1, 240);
+  check('troca de era com pet+montaria+asa: era 0→1', era, 'eraMax ' + ev('S.eraMax') + ' stage ' + ev('S.stage') + ' · '+ev('JSON.stringify({stage:S.stage,wave:S.wave,farm:S.farm,en:B.en.map(e=>e.kind+(e.boss?"*":"")+":"+Math.round(e.hp)),toSpawn:B.toSpawn,waveT:B.waveT,deadT:B.deadT,paused:B.paused,res:B.res,hp:B.hero&&B.hero.hp,kills:S.kills,evo:!!B.evo,tut:S.tut,view:view})'));
+  if (era) { await G.until(() => ev('typeof PE!=="undefined"&&PE.step==="final"'), 30); try { G.inCtx(() => X.Panels.defs.era.close()); } catch (e) { G.frameErr.push('era.close: ' + errStr(e)); } await G.run(3); }
+  const who = callersOf(G, 'drawHeroFull');
+  check('drawHeroFull chamado na vitória e na troca de era (vitória ' + nWin + 'x, total ' + calls.n + 'x)', calls.n > 0,
+    'nenhuma chamada: hoje só ' + (who.join(', ') || 'ninguém') + ' chama drawHeroFull; a batalha, a Vitória e a Troca de era desenham pelo draw() → drawHero(HM) + drawPet() (' + lineOf(G, 'js/battle.js', /drawHero\(HM\); drawLevelUp\(\)/) + ')');
+  const hfErr = ev('!!window.__hfErr') || G.consoleErrs.some(m => /drawHeroFull/.test(m));
+  check('drawHeroFull / desenho sem exceção', !hfErr && !G.frameErr.length, (hfErr ? 'drawHeroFull pegou erro: ' + G.consoleErrs.filter(m => /drawHeroFull/.test(m)).join(' | ') + ' ' : '') + G.frameErr.slice(0, 4).join(' | '));
+  check('canvas da batalha recebeu o pet (pets/)', has(d, /anim\/pets\//), 'nenhuma folha de pet desenhada');
+  check('canvas da batalha recebeu a montaria (mounts/)', has(d, /anim\/mounts\//), 'nenhuma folha de montaria desenhada');
+  check('canvas da batalha recebeu a asa (wing)', has(d, /wing/), 'nenhuma imagem de asa desenhada');
+  /* chamada DIRETA do drawHeroFull num canvas próprio: cada parte, e onde ele pula a que faltar */
+  const cv = G.mkCanvas(false); cv.__tap = true; const d2 = tapDraws(G); let dErr = null; const before = ev('!!window.__hfErr');
+  try { G.inCtx(() => X.drawHeroFull(cv.getContext('2d'), 195, 600, 1, {})); } catch (e) { dErr = errStr(e); }
+  G.setDrawTap(null);
+  const st = ev("({wing:HFULL.wing, mount:HFULL.mount&&HFULL.mount.id, mountReady:HFULL.mount?mountReady(HFULL.mount.id):null, pet:!!petInfo(), petSheet:!!(petSheet('idle')&&petSheet('idle').ok), hf:!!window.__hfErr})");
+  const got = [...d2].slice(0, 8).join(', ');
+  check('drawHeroFull direto: sem exceção', !dErr && !(st.hf && !before), dErr || G.consoleErrs.filter(m => /drawHeroFull/.test(m)).join(' | '));
+  check('drawHeroFull direto: desenha o pet', has(d2, /anim\/pets\//), 'pet não desenhado (petInfo=' + st.pet + ', folha idle carregada=' + st.petSheet + '); drawPet sai cedo em ' + lineOf(G, 'js/petfx.js', /^function drawPet\(\)/) + ' · desenhado: ' + got);
+  check('drawHeroFull direto: desenha a montaria', has(d2, /anim\/mounts\//), 'montaria não desenhada (HFULL.mount=' + st.mount + ', mountReady=' + st.mountReady + '); drawHeroMounted sai em ' + lineOf(G, 'js/mountfx.js', /^function drawHeroMounted/) + ' · desenhado: ' + got);
+  check('drawHeroFull direto: desenha a asa', has(d2, /wing/), 'asa não desenhada (HFULL.wing=' + st.wing + '); drawWingsAt sai em ' + lineOf(G, 'js/stage.js', /^function drawWingsAt/) + ' · desenhado: ' + got);
+  noErr(G);
+}
+
 (async () => {
-  for (const [id, name, fn] of [['era', '1. TROCA DE ERA', flowEra], ['inst', '2. INSTÂNCIA', flowInst], ['result', '3. VITÓRIA/DERROTA', flowResult]]) {
+  for (const [id, name, fn] of [['era', '1. TROCA DE ERA', flowEra], ['inst', '2. INSTÂNCIA', flowInst], ['result', '3. VITÓRIA/DERROTA', flowResult], ['phases', '4. FASES DO HERÓI', flowPhases], ['heroFull', '5. drawHeroFull (pet + montaria + asa)', flowHeroFull]]) {
     cur = { id, name, checks: [] }; flows.push(cur); console.log('--- ' + name + (HARD[id] ? '' : ' (EM CONFERÊNCIA)'));
     try { await fn(); } catch (e) { check('fluxo terminou sem exceção', false, errStr(e)); } }
   console.log('\n================ RESUMO ================'); let hardFail = 0;
-  for (const f of flows) { const bad = f.checks.filter(c => !c.ok), tag = bad.length ? (HARD[f.id] ? 'FALHA' : 'EM CONFERÊNCIA (com problemas)') : (HARD[f.id] ? 'OK' : 'EM CONFERÊNCIA (ok)');
-    if (bad.length && HARD[f.id]) hardFail++;
+  for (const f of flows) { const bad = f.checks.filter(c => !c.ok), hb = bad.filter(c => !c.soft), tag = hb.length && HARD[f.id] ? 'FALHA' : !HARD[f.id] ? (bad.length ? 'EM CONFERÊNCIA (com problemas)' : 'EM CONFERÊNCIA (ok)') : bad.length ? 'OK (com partes EM CONFERÊNCIA)' : 'OK';
+    if (hb.length && HARD[f.id]) hardFail++;
     console.log(tag + '  ' + f.name + ' — ' + (f.checks.length - bad.length) + '/' + f.checks.length + ' verificações');
-    for (const c of (VERBOSE ? f.checks : bad)) console.log('      ' + (c.ok ? 'ok    ' : 'falha ') + c.name + (c.ok ? '' : '\n            → ' + c.err)); }
+    for (const c of (VERBOSE ? f.checks : bad)) console.log('      ' + (c.ok ? 'ok    ' : c.soft ? 'em conferência ' : 'falha ') + c.name + (c.ok ? '' : '\n            → ' + c.err)); }
   console.log('\n' + (hardFail ? hardFail + ' fluxo(s) com FALHA' : 'fluxos duros OK') + (Object.keys(HARD).some(k => !HARD[k]) ? ' (em conferência, não reprovam: ' + Object.keys(HARD).filter(k => !HARD[k]).join(', ') + ')' : ''));
   process.exit(hardFail ? 1 : 0);
 })();

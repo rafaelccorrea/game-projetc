@@ -30,10 +30,30 @@ module.exports = function boot(opt) {
   const V = { clientWidth: W, clientHeight: H, offsetWidth: W, offsetHeight: H, innerHTML: '', scrollTop: 0, scrollLeft: 0, style: styleObj(), dataset: {}, classList: cls(),
     addEventListener() {}, removeEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, contains() { return true; }, appendChild(c) { return c; },
     removeChild() {}, setAttribute() {}, getAttribute() { return null; }, getBoundingClientRect() { return { left: 0, top: 0, width: W, height: H, right: W, bottom: H }; }, scrollTo() {} };
-  const els = {}, store = {};
+  const els = {}, store = Object.assign({}, opt.storage || {});   /* opt.storage: localStorage já gravado antes da carga (save antigo) */
+  /* MODO DESENHO (opt.draw): imagens que carregam de verdade (tamanho lido do PNG em disco) e canvas que GRAVA cada drawImage com a origem da imagem.
+     Canvas desenhado em canvas herda as origens (a folha virada/tingida num canvas auxiliar continua contando como a folha). draws: Map origem → vezes. */
+  const draws = new Map(); let drawTap = null;
+  const srcsOf = im => !im ? [] : im.__srcs ? [...im.__srcs] : im.__src ? [im.__src] : [];
+  const pngSize = f => { try { const fd = fs.openSync(f, 'r'), b = Buffer.alloc(24); fs.readSync(fd, b, 0, 24, 0); fs.closeSync(fd); if (b.readUInt32BE(12) === 0x49484452) return [b.readUInt32BE(16), b.readUInt32BE(20)]; } catch (e) {} return [64, 64]; };
+  function FakeImage() { const im = this; im.__src = ''; im.onload = null; im.onerror = null; im.complete = false; im.naturalWidth = im.naturalHeight = im.width = im.height = 0; im.style = styleObj();
+    im.addEventListener = (t, f) => { if (t === 'load') im.onload = f; else if (t === 'error') im.onerror = f; }; im.removeEventListener = () => {}; im.decode = () => Promise.resolve(); im.setAttribute = () => {}; }
+  Object.defineProperty(FakeImage.prototype, 'src', { get() { return this.__src; }, set(v) { const im = this; im.__src = String(v); const f = path.join(ROOT, im.__src.split('?')[0].replace(/^\.?\//, ''));
+    const ok = /^data:/.test(im.__src) || (fs.existsSync(f) && fs.statSync(f).isFile()); if (ok && !/^data:/.test(im.__src)) { const [w, h] = /\.png$/i.test(f) ? pngSize(f) : [64, 64]; im.naturalWidth = im.width = w; im.naturalHeight = im.height = h; }
+    sandbox.setTimeout(() => { im.complete = ok; const cb = ok ? im.onload : im.onerror; if (typeof cb === 'function') cb.call(im, {}); }, 0); } });
+  const zbuf = new Map(); const pix = (w, h) => { w = Math.max(1, w | 0); h = Math.max(1, h | 0); const n = w * h * 4; if (n <= 4e6) return new Uint8ClampedArray(n); if (!zbuf.has(n)) zbuf.set(n, new Uint8ClampedArray(n)); return zbuf.get(n); };
+  function mkCtx(cv) { const st = { globalAlpha: 1, globalCompositeOperation: 'source-over', fillStyle: '#000', strokeStyle: '#000', font: '10px sans-serif', lineWidth: 1, filter: 'none', canvas: cv };
+    const fns = { drawImage(im) { for (const s of srcsOf(im)) { cv.__srcs.add(s); if (cv.__main || cv.__tap) { draws.set(s, (draws.get(s) || 0) + 1); if (drawTap) drawTap(s); } } },
+      createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), createConicGradient: () => ({ addColorStop() {} }), createPattern: () => ({ setTransform() {} }),
+      measureText: t => ({ width: String(t).length * 7, actualBoundingBoxAscent: 8, actualBoundingBoxDescent: 2 }), getImageData: (x, y, w, h) => ({ data: pix(w, h), width: w | 0, height: h | 0 }),
+      createImageData: (w, h) => ({ data: pix(w, h), width: w | 0, height: h | 0 }), putImageData() {}, isPointInPath: () => false, getTransform: () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }), getLineDash: () => [] };
+    return new Proxy(st, { get(t, k) { if (k in fns) return fns[k]; if (k in t) return t[k]; if (typeof k === 'symbol') return undefined; return () => {}; }, set(t, k, v) { t[k] = v; return true; } }); }
+  function mkCanvas(main) { const cv = { __srcs: new Set(), __main: !!main, width: main ? W : 300, height: main ? 844 : 150, clientWidth: main ? W : 300, clientHeight: main ? 844 : 150, style: styleObj(), dataset: {}, classList: cls(),
+      addEventListener() {}, removeEventListener() {}, setAttribute() {}, getAttribute() { return null; }, appendChild(c) { return c; }, remove() {}, getBoundingClientRect() { return { left: 0, top: 0, width: cv.width, height: cv.height, right: cv.width, bottom: cv.height }; }, toDataURL: () => 'data:,' };
+    let c2 = null; cv.getContext = () => c2 || (c2 = mkCtx(cv)); return cv; }
   const document = { readyState: 'complete', hidden: false, title: '', body: mkStub(), head: mkStub(), documentElement: mkStub(), fonts: mkStub(),
-    getElementById(id) { if (id === 'view') return V; if (/^(xg_|xs_|xh_|xp_|xr_|g_|res_|fb)/.test(id)) return null; return els[id] || (els[id] = mkStub()); },
-    createElement() { return mkStub(); }, createTextNode() { return mkStub(); }, querySelector() { return null; }, querySelectorAll() { return []; },
+    getElementById(id) { if (id === 'view') return V; if (opt.draw && id === 'cv') return els.cv || (els.cv = mkCanvas(true)); if ((opt.runBoot ? /^(xg_|xs_|xh_|xp_|xr_|g_|res_)/ : /^(xg_|xs_|xh_|xp_|xr_|g_|res_|fb)/).test(id)) return null; return els[id] || (els[id] = mkStub()); },
+    createElement(tag) { if (opt.draw && String(tag).toLowerCase() === 'canvas') return mkCanvas(false); return mkStub(); }, createTextNode() { return mkStub(); }, querySelector() { return opt.runBoot ? mkStub() : null; }, querySelectorAll() { return []; },
     addEventListener() {}, removeEventListener() {}, write() {} };
   /* TIMERS: setTimeout entra numa fila com hora VIRTUAL. flush() roda tudo na hora (run.js); advance(ms) anda o relógio virtual e roda só o que venceu (flows.js) */
   let vnow = 0, tid = 0; const Q = [];
@@ -44,12 +64,12 @@ module.exports = function boot(opt) {
     setTimeout(fn, ms) { const id = ++tid; Q.push({ fn, at: vnow + (+ms || 0), id }); return id; }, clearTimeout(id) { const i = Q.findIndex(t => t.id === id); if (i >= 0) Q.splice(i, 1); },
     setInterval() { return 0; }, clearInterval() {}, requestAnimationFrame() { return 0; }, cancelAnimationFrame() {},
     localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; }, clear() {} },
-    navigator: { userAgent: 'node', vibrate() {}, language: 'pt-BR' }, location: { search: '?debug=1&fresh=1&skip=1', href: 'http://x/?debug=1&fresh=1&skip=1', pathname: '/', hash: '', replace() {}, reload() {} },
+    navigator: { userAgent: 'node', vibrate() {}, language: 'pt-BR' }, location: { search: opt.search || '?debug=1&fresh=1&skip=1', href: 'http://x/' + (opt.search || '?debug=1&fresh=1&skip=1'), pathname: '/', hash: '', replace() {}, reload() {} },
     performance: { now: () => Date.now() },
     /* fetch: por padrão nunca responde (run.js é síncrono). Com opt.realFetch lê o arquivo do disco (só leitura) e responde por Promise (flows.js) */
     fetch: opt.realFetch ? (u => { const f = path.join(ROOT, String(u).split('?')[0].replace(/^\.?\//, '')); let txt = null; try { if (fs.existsSync(f) && fs.statSync(f).isFile()) txt = fs.readFileSync(f, 'utf8'); } catch (e) {}
       return Promise.resolve({ ok: txt != null, status: txt != null ? 200 : 404, json: () => (txt != null ? Promise.resolve().then(() => JSON.parse(txt)) : Promise.reject(new Error('404 ' + u))), text: () => Promise.resolve(txt || '') }); })
-      : () => ({ then() { return this; }, catch() { return this; } }), Image: function () { return mkStub(); }, Audio: function () { return mkStub(); },
+      : () => ({ then() { return this; }, catch() { return this; } }), Image: opt.draw ? FakeImage : function () { return mkStub(); }, Audio: function () { return mkStub(); },
     matchMedia: () => ({ matches: false, addEventListener() {}, addListener() {} }), addEventListener() {}, removeEventListener() {}, dispatchEvent() {},
     URL, URLSearchParams, Event: function () {}, CustomEvent: function () {}, devicePixelRatio: 1, innerWidth: W, innerHeight: 844, screen: { width: W, height: 844 },
     getComputedStyle: () => mkStub(), alert() {}, confirm() { return true; }, prompt() { return null; }, Intl, Proxy, Reflect, Float32Array, Uint8Array, TextEncoder, TextDecoder };
@@ -81,7 +101,10 @@ module.exports = function boot(opt) {
   if (fs.existsSync(path.join(ROOT, 'test/bg/scene.js'))) load('test/bg/scene.js');
   for (const n of jsList) { if (!fs.existsSync(path.join(ROOT, 'js', n + '.js'))) { add('carga', 'js/' + n + '.js', false, 'arquivo não existe'); continue; }
     load('js/' + n + '.js'); if (n === 'screens') for (const p of panList) { if (fs.existsSync(path.join(ROOT, 'js', p + '.js'))) load('js/' + p + '.js'); else add('carga', 'js/' + p + '.js', false, 'listado no screens.js mas não existe'); } }
-  try { inCtx(() => ev("if(typeof sysBoot==='function') sysBoot();")); flush(); add('carga', 'sysBoot()', true); } catch (e) { add('carga', 'sysBoot()', false, errStr(e)); }
+  /* opt.runBoot: roda o script de partida do index.html (sysBoot, sysBootB, phaseBoot, startBattle, render…), como no navegador; senão só sysBoot() */
+  const bootSrc = inline.find(c => c !== main && /\bsysBoot\(\);/.test(c) && /startBattle\(\)/.test(c));
+  if (opt.runBoot && bootSrc) load('index.html#partida', bootSrc);
+  else try { inCtx(() => ev("if(typeof sysBoot==='function') sysBoot();")); flush(); add('carga', 'sysBoot()', true); } catch (e) { add('carga', 'sysBoot()', false, errStr(e)); }
 
   /* ---------------- estado: fábrica real do jogo (newState do index.html) ---------------- */
   const hasState = (() => { try { return ev("typeof S==='object'&&S!==null&&typeof newState==='function'"); } catch (e) { return false; } })();
@@ -92,7 +115,7 @@ module.exports = function boot(opt) {
   sandbox.__e2eBase = hasState ? ev('JSON.stringify(S)') : '{}';
   const freshState = () => ev('__e2eReplace(JSON.parse(__e2eBase)); 1');
 
-  return { ROOT, W, H, rd, errStr, sandbox, V, document, mkStub, styleObj, cls, inCtx, ev, flush, advance, vnow: () => vnow, timers: Q, consoleErrs, hasState, freshState,
+  return { ROOT, W, H, rd, errStr, sandbox, draws, setDrawTap: f => { drawTap = f; }, mkCanvas, bootSrc: bootSrc || '', html, V, document, mkStub, styleObj, cls, inCtx, ev, flush, advance, vnow: () => vnow, timers: Q, consoleErrs, hasState, freshState,
     lists: { sysList, sysExtra, sysOrder, jsList, panList, pUnlisted } };
 };
 module.exports.errStr = errStr;

@@ -37,6 +37,8 @@ const paIc=(n,z)=>'<img src="assets/ui/'+n+'.png" alt="" style="width:'+(z||14)+
 const paToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
 const paSnd=n=>{ try{ if(typeof snd==='function') snd(n); }catch(e){} };
 const paH=()=>Sys.host;
+/* o jogador de verdade (ordem do dono: o herói segue a fase e o herói escolhido): nome do save e Kael/Kaia */
+const paMe=()=>{ try{ return (S.name&&String(S.name).trim())||(S.hero==='kaia'?'Kaia':'Kael'); }catch(e){ return 'Kael'; } };
 function paInject(){ if(typeof document==='undefined'||!document.head||document.getElementById('pa_css')) return; const st=document.createElement('style'); st.id='pa_css'; st.textContent=A_CSS; document.head.appendChild(st); }
 function paClock(ms){ const s=Math.max(0,Math.floor(ms/1000)), d=Math.floor(s/86400), h=Math.floor(s%86400/3600), m=Math.floor(s%3600/60), x=s%60, p=n=>String(n).padStart(2,'0'); return (d?d+'d ':'')+p(h)+':'+p(m)+':'+p(x); }
 function paDayLeft(){ const n=new Date(), m=new Date(n); m.setDate(n.getDate()+1); m.setHours(0,0,0,0); return m-n; }
@@ -86,7 +88,7 @@ function paLeagues(){ const li=Sys.arena.leagueInfo(S,paH()), A=Sys.arena.DATA.l
 function paRanking(){ const li=Sys.arena.leagueInfo(S,paH()); let r=null; try{ r=Sys.arena.ranking(S,paH(),'arena'); }catch(e){}
   if(!r||!r.list) return `<div role="note" style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:#c9b9a2;font-weight:800">O ranking abre com o online</div>`;
   const me=r.me, from=Math.max(0,Math.min(me.rank-4,r.list.length-8)), rows=r.list.slice(from,from+8).map(x=>`<div style="flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:${x.me?'#3a2c1f':'#1d1611'};border:${x.me?'2px solid #ffc94a':'1px solid #4a3a2b'}">
-      <span style="width:30px;text-align:center;font-family:'Lilita One',sans-serif;color:#c9b9a2">${x.rank}</span><span style="flex:1;min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(x.me?'Você · Kael':x.name)}</span>
+      <span style="width:30px;text-align:center;font-family:'Lilita One',sans-serif;color:#c9b9a2">${x.rank}</span><span style="flex:1;min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(x.me?'Você · '+paMe():x.name)}</span>
       <span style="font-family:'Lilita One',sans-serif;color:#ffe07a">${paN(x.value)} pts</span></div>`).join('');
   return `<span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2">Ranking da sua liga (${paEsc(li.league.name)}) nesta semana · você em ${me.rank}º</span>
     <div style="flex:none;display:flex;flex-direction:column;gap:4px">${rows}</div>
@@ -97,12 +99,13 @@ function paFightView(){ const F=XA2.fight, log=(F.r.duel&&F.r.duel.log)||[], st=
   const bar=(v,c)=>`<div style="height:12px;border-radius:7px;background:#140e08;border:2px solid #4a3a2b;overflow:hidden"><div class="pa-hp" style="height:100%;width:${Math.max(0,Math.round(v*100))}%;background:${c}"></div></div>`;
   const dmg=cur?`<span class="pa-dmg${cur.crit?' c':''}" style="${cur.s===0?'right:12%':'left:12%'};top:30%">${cur.crit?'CRÍTICO ':''}−${paF(cur.dmg)}</span>`:'';
   return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
-    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · Kael</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paF(F.myFc)}</span>${bar(hpA,'#5fd068')}</div>
+    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · ${paEsc(paMe())}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paF(F.myFc)}</span>${bar(hpA,'#5fd068')}</div>
       <span class="pa-vs" style="font-family:'Lilita One',sans-serif;font-size:28px;color:#ffe07a;text-shadow:0 2px 0 #6a3a08">VS</span>
       <div style="flex:1;min-width:0;text-align:right"><span style="font-weight:900;font-size:13px">${paEsc(F.opp.name)}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paF(F.opp.fc)}</span>${bar(hpB,'#ff5a5a')}</div></div>
     <div style="flex:1;min-height:220px;position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#3a2a18,#1a120b 70%);border:2px solid #4a3a2b">
       <div style="position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(180deg,#5a4026,#2a1c10)"></div>
-      <div role="img" aria-label="Kael" style="position:absolute;left:2%;bottom:46px;width:46%;aspect-ratio:1"><div class="pa-kid${cur&&cur.s===1?' pa-hit':''}" style="position:absolute;inset:0"></div></div>
+      ${typeof window.drawHeroFull==='function'?`<canvas id="pa_me" width="256" height="256" role="img" aria-label="${paEsc(paMe())}" class="${cur&&cur.s===1?'pa-hit':''}" style="position:absolute;left:2%;bottom:46px;width:46%;aspect-ratio:1"></canvas>`
+        :`<div role="img" aria-label="${paEsc(paMe())}" style="position:absolute;left:2%;bottom:46px;width:46%;aspect-ratio:1"><div class="pa-kid${cur&&cur.s===1?' pa-hit':''}" style="position:absolute;inset:0"></div></div>`}
       <div role="img" aria-label="${paEsc(F.opp.name)}" style="position:absolute;right:2%;bottom:46px;width:46%;aspect-ratio:1;transform:scaleX(-1)"><div class="pa-kid${cur&&cur.s===0?' pa-hit':''}" style="position:absolute;inset:0"></div></div>
       ${dmg}<span style="position:absolute;left:8px;top:6px;font-size:11px;font-weight:900;color:#c9b9a2">Golpe ${st}/${log.length}</span></div>
     <div style="flex:none;display:flex;gap:8px"><button data-x="speed" class="pa-btn" style="flex:1" aria-label="Velocidade">x${XA2.speed===1?2:1}</button><button data-x="skip" class="pa-btn" style="flex:2">Pular</button></div></div>`; }
@@ -120,7 +123,7 @@ function paResult(){ const F=XA2.fight, r=F.r, li=Sys.arena.leagueInfo(S,paH()),
 function scrArena(){
   paInject(); const d=xDims(A_MINH);
   if(!paOk()){ V.innerHTML=xWrap(d,'',`<div role="alert" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Arena indisponível agora.</div>`); return; }
-  if(XA2.view==='fight'){ V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 2px 8px">${paFightView()}</div>`); return; }
+  if(XA2.view==='fight'){ V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 2px 8px">${paFightView()}</div>`); if(!paRaf) paDrawMe(); return; }
   if(XA2.view==='result'){ V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 2px 8px">${paResult()}</div>`); return; }
   const TABS=['Arena','Ligas','Ranking'], tabs=TABS.map((t,i)=>`<button role="tab" aria-selected="${i===XA2.tab}" data-x="tab" data-i="${i}" style="flex:1;height:46px;border-radius:11px;border:2px solid ${i===XA2.tab?'#ffc94a':'#4a3a2b'};background:${i===XA2.tab?'#4a3214':'#2a1f16'};color:${i===XA2.tab?'#ffe07a':'#c9b9a2'};font-family:'Lilita One',sans-serif;font-size:15px">${t}</button>`).join('');
   const body=XA2.tab===1?paLeagues():XA2.tab===2?paRanking():paLobby(), o=Sys.arena.ensure(S,paH());
@@ -128,7 +131,13 @@ function scrArena(){
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:4px 2px 6px">
     <div role="tablist" aria-label="Arena" style="flex:none;display:flex;gap:4px">${tabs}</div>${body}</div>${foot}`);
 }
-function paStop(){ if(XA2.timer){ clearTimeout(XA2.timer); XA2.timer=0; } }
+/* herói completo na luta: window.drawHeroFull do jogo (mesmo código da batalha: fase certa, pet, montaria, asa e camadas) */
+let paRaf=0;
+function paDrawMe(){ paRaf=0; if(XA2.view!=='fight') return; const c=typeof document!=='undefined'&&document.getElementById('pa_me'); if(!c||typeof window.drawHeroFull!=='function') return;
+  const g=c.getContext('2d'); if(!g) return; g.clearRect(0,0,c.width,c.height); const hs=(typeof HS!=='undefined'&&HS>0)?HS:155;
+  try{ window.drawHeroFull(g,c.width*0.42,c.height*0.94,c.height*0.62/hs,{t:(typeof performance!=='undefined'?performance.now():Date.now())/1000}); }catch(e){}
+  if(typeof requestAnimationFrame==='function') paRaf=requestAnimationFrame(paDrawMe); }
+function paStop(){ if(paRaf&&typeof cancelAnimationFrame==='function'){ cancelAnimationFrame(paRaf); paRaf=0; } if(XA2.timer){ clearTimeout(XA2.timer); XA2.timer=0; } }
 function paPlay(){ paStop(); const F=XA2.fight; if(!F) return; const n=(F.r.duel&&F.r.duel.log||[]).length;
   if(XA2.step>=n){ XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.view='result'; paSnd(F.r.win?'claim':'ui_tap'); render(); },500/XA2.speed); return; }
   XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.step++; const e=F.r.duel.log[XA2.step-1]; paSnd(e&&e.crit?'crit':'hit'); render(); paPlay(); },(XA2.step===0?900:420)/XA2.speed); }
