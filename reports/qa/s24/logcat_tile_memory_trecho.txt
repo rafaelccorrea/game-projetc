@@ -1,0 +1,41 @@
+11-13 18:46:39.681 I/BUPlugin_Preferences(28253): [manager.launch_activity.last_bt_address] null
+11-13 18:46:39.681 I/BUPlugin_Preferences(28253): [.model_name] null
+11-13 18:46:39.681 I/BUPlugin_UhmDatabase(28253): getDeviceFixedName() : << 74:__:__:__:__:E9 >>
+11-13 18:46:39.681 I/BUPlugin_UhmDatabase(28253): getDevice() : << 74:__:__:__:__:E9 >>
+11-13 18:46:39.681 I/BUPlugin_UhmDatabase(28253): getDeviceList() : result.size() = 1
+11-13 18:46:39.681 I/BUPlugin_PluginModel(28253): detectPluginOffline : device ##:##:##:##:8F:E9 modelName =  deviceFixName ''
+11-13 18:46:39.681 I/BUPlugin_BudsLogManager(28253): onReceive() : not a buds device, skip << 74:__:__:__:__:E9 >>
+11-13 18:46:39.683 I/ActivityManager( 2943): Changes in 10090 19 to 11, 128 to 384
+11-13 18:46:39.686 V/BinderSender(24846): Uid 10090 already starts
+11-13 18:46:39.686 W/BluetoothRemoteDevices( 4366): Address type mismatch for XX:XX:XX:XX:8C:02, new type: 1
+11-13 18:46:39.686 E/BluetoothRemoteDevices( 4366): Remote class is UNCATEGORIZED
+11-13 18:46:39.686 I/BtScan.ScanController( 4366): onScanResult to scannerId: 6- eventType=0x1b, addressType=1, address=XX:XX:XX:XX:8C:02, primaryPhy=1, secondaryPhy=0, advertisingSid=0xff, txPower=127, rssi=-7
+11-13 18:46:39.688 E/bt_btu_hcif( 4366): system/stack/btu/btu_hcif.cc:1350 btu_hcif_hdl_command_complete: Command complete for opcode:0x201b should not be handled here
+11-13 18:46:39.688 I/NearbyDiscovery(27529): (REDACTED) DiscoveryService onStartCommand action: %s, startId: %d
+11-13 18:46:39.689 I/NearbyDiscovery(27529): (REDACTED) onAclChange: state=%s, transport=%s, %s
+11-13 18:46:39.689 I/NearbyDiscovery(27529): (REDACTED) FastPair: lock scan rate if needed, %s, bondState=%s
+11-13 18:46:39.689 D/WearableService(27529): Creating wearable service asynchronously.
+11-13 18:46:39.690 W/ActivityManager( 2943): Skipping manifest association check for null package. SourceUid: -1, SourcePkg: null, TargetUid: 10245, TargetPkg: com.google.android.projection.gearhead
+11-13 18:46:39.690 I/ActivityManager( 2943): Changes in 10245 11 to 19, 384 to 128
+11-13 18:46:39.691 I/ActivityManager( 2943): Changes in 10090 11 to 19, 384 to 128
+11-13 18:46:39.692 E/chromium( 9802): [ERROR:cc/tiles/tile_manager.cc:1046] WARNING: tile memory limits exceeded, some content may not draw
+11-13 18:46:39.692 E/chromium( 9802): [ERROR:cc/tiles/tile_manager.cc:1046] WARNING: tile memory limits exceeded, some content may not draw
+11-13 18:46:39.695 I/bluetooth( 4366): system/gd/hal/snoop_logger.cc:2255 CheckScoPacket: Recv DISC evt with handle 3
+11-13 18:46:39.696 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:864 on_le_disconnect: Handle=0x03, Reason=19
+11-13 18:46:39.696 I/bluetooth( 4366): system/gd/hci/acl_manager/round_robin_scheduler.cc:96 Unregister: unregistering acl_queue handle=3, sent_packets=0
+11-13 18:46:39.696 I/bt_shim_hci( 4366): system/main/shim/hci_layer.cc:348 operator(): ISO disconnection from GD, handle: 0x03, reason: REMOTE_USER_TERMINATED_CONNECTION(0x13)
+11-13 18:46:39.696 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:449 remove: le_impl::remove() handle=0x03 addr=xx:xx:xx:xx:8f:e9
+11-13 18:46:39.697 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:884 on_le_disconnect: [Current Device list in background_connections_ set]
+11-13 18:46:39.697 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:886 on_le_disconnect: #1 xx:xx:xx:xx:ac:e7
+11-13 18:46:39.697 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:886 on_le_disconnect: #2 xx:xx:xx:xx:00:01
+11-13 18:46:39.697 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:886 on_le_disconnect: #3 xx:xx:xx:xx:00:5f
+11-13 18:46:39.697 W/bluetooth( 4366): system/gd/hci/acl_manager/le_impl.h:886 on_le_disconnect: #4 xx:xx:xx:xx:d5:67
+11-13 18:46:39.697 W/btm_acl ( 4366): system/stack/acl/btm_acl.cc:2570 btm_acl_disconnected: 
+11-13 18:46:39.697 W/l2c_link( 4366): system/stack/l2cap/l2c_link.cc:311 l2c_link_hci_disc_comp: 
+11-13 18:46:39.698 W/l2c_link( 4366): system/stack/l2cap/l2c_link.cc:410 l2c_link_hci_disc_comp: l2c_link_hci_disc_comp lcb_is_free is true
+11-13 18:46:39.698 I/bluetooth( 4366): system/stack/arbiter/acl_arbiter.cc:51 OnLeDisconnect: Notifying Rust of LE disconnection
+11-13 18:46:39.698 W/bluetooth( 4366): system/stack/connection_manager/connection_manager.cc:517 on_connection_complete: Le connection completed to device:xx:xx:xx:xx:8f:e9
+11-13 18:46:39.698 W/bluetooth( 4366): system/stack/connection_manager/connection_manager.cc:506 remove_all_clients_with_pending_connections: address=xx:xx:xx:xx:8f:e9
+11-13 18:46:39.698 I/gatt_offload( 4366): system/stack/gatt/gatt_offload.cc:242 gatt_offload_clear_sessions_by_acl_handle: acl_connection_handle: 0x3
+11-13 18:46:39.698 W/gatt_offload( 4366): system/stack/gatt/gatt_offload.cc:687 try_sessions_by_acl_handle_to_unoffload: acl_connection_handle: 3 doesn't exist
+11-13 18:46:39.698 I/bluetooth( 4366): system/stack/eatt/eatt_impl.h:905 disconnect: Device: xx:xx:xx:xx:8f:e9, cid: 0xffff

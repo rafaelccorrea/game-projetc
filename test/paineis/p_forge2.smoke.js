@@ -52,8 +52,12 @@ const sane = what => { const bt = buttons(); assert(bt.length >= 1, what + ': se
   // QA 320 px: nada cortado com reticências por estilo na própria marca; nenhum aviso dentro do palco nem com posição própria (os avisos ficam na faixa do rodapé)
   const h = H(); assert(!/text-overflow\s*:\s*ellipsis/.test(h), what + ': reticências no HTML');
   const sg = stageSeg(h); if (sg) { assert(!/f2-toast|f2_toast|f2-ban|f2-fly|role="status"|role="alert"/.test(sg.in), what + ': aviso dentro do palco');
-    const ni = h.indexOf('class="f2-notes"'); assert(ni > sg.b, what + ': a faixa de avisos fica depois (fora) do palco'); const ti = h.indexOf('id="f2_toast"'); assert(ti > ni, what + ': o aviso mora na faixa do rodapé');
-    for (const c of ['f2-toast', 'f2-ban', 'f2-fly']) for (const m of h.matchAll(new RegExp('<div class="' + c + '[ "][^>]*>', 'g'))) { assert(m.index > ni, what + ': ' + c + ' fora da faixa de avisos'); assert(!/[";]top:|[";]left:/.test(m[0]), what + ': ' + c + ' com posição própria: ' + m[0]); seenNotes.add(c); } }
+    // QA lote V2 (A1): a linha de avisos é do FLUXO, sempre presente, depois do palco e ANTES da rolagem (cartão "+N → +N+1" e botões): nada de aviso por cima deles
+    const ni = h.indexOf('class="f2-notes"'); assert(ni > sg.b, what + ': a linha de avisos fica depois (fora) do palco'); const ti = h.indexOf('id="f2_toast"'); assert(ti > ni, what + ': o aviso mora na linha de avisos');
+    const si = h.indexOf('id="f2_scroll"'); assert(si > ti, what + ': a linha de avisos vem antes da rolagem (não fica por cima do cartão nem dos botões)');
+    assert(h.indexOf('class="f2-notes"', ni + 1) < 0, what + ': uma linha de avisos só');
+    for (const c of ['f2-toast', 'f2-ban', 'f2-fly']) for (const m of h.matchAll(new RegExp('<div class="' + c + '[ "][^>]*>', 'g'))) { assert(m.index > ni && m.index < si, what + ': ' + c + ' fora da linha de avisos'); assert(!/[";]top:|[";]left:|[";]bottom:|position:/.test(m[0]), what + ': ' + c + ' com posição própria: ' + m[0]); seenNotes.add(c); }
+    assert((h.match(/<div class="f2-ban[ "]/g) || []).length <= 1, what + ': uma faixa de resultado por vez'); }
   return bt.length; };
 // o trecho do HTML que é o palco (do <div class="f2-stage"> até o </div> que o fecha)
 function stageSeg(h) { const a = h.indexOf('<div class="f2-stage"'); if (a < 0) return null; const re = /<div\b|<\/div>/g; re.lastIndex = a; let d = 0, m;
@@ -178,11 +182,37 @@ out.push('toques: ' + taps + ' botões das abas tocados sem exceção, tela semp
   // o caso do QA: espaço "Chapéu/Elmo" vazio, em 320 px
   g.xDims = () => ({ H: 560, Wb: 320 }); def.onOpen({ slot: 'hat' }); def.render(); has('Chapéu/Elmo · espaço vazio'); has('grid-template-columns:repeat(2,minmax(0,1fr))'); sane('320 px'); g.xDims = () => ({});
   out.push('320 px: nenhuma regra com reticências; espaço, item, raridade, abas, botões, custos, lista e tabela quebram linha'); }
-// 13) defeito 2: os avisos (mensagem, faixas do resultado, "+FC") ficam numa faixa no RODAPÉ da tela, fora do palco (conferido em toda tela pelo sane)
-{ const n = rule('.f2-notes'); assert(/position:absolute/.test(n) && /bottom:\d+px/.test(n) && !/[;{]top:/.test(n), 'a faixa de avisos é presa ao rodapé'); assert(/pointer-events:none/.test(n), 'a faixa de avisos não segura toque');
-  for (const sel of ['.f2-toast', '.f2-ban', '.f2-fly']) { const r = rule(sel); assert(!/position:absolute|position:fixed|[;{]top:|[;{]left:/.test(r), sel + ': sem posição própria (segue a faixa do rodapé)'); }
-  assert.deepStrictEqual([...seenNotes].sort(), ['f2-ban', 'f2-fly', 'f2-toast'], 'os três avisos apareceram em alguma tela conferida, sempre fora do palco');
-  out.push('avisos: faixa no rodapé (.f2-notes), nunca dentro do palco nem com top próprio'); }
+// 13) QA lote V2 (A1): os avisos (mensagem, faixa do resultado, "+FC") moram numa LINHA PRÓPRIA do fluxo, entre as abas e o cartão "+N → +N+1": não é presa
+// por cima de nada (sem absolute/fixed), tem altura reservada (a tela não pula) e existe vazia quando não há aviso (a ordem no HTML é conferida em toda tela pelo sane)
+{ const n = rule('.f2-notes'); assert(!/position:(absolute|fixed|sticky)/.test(n) && !/[;{](top|bottom|left|right):/.test(n), 'a linha de avisos é do fluxo, não fica por cima de nada');
+  assert(/flex:none/.test(n) && /min-height:40px/.test(n), 'altura reservada: a tela não pula quando o aviso entra'); assert(/pointer-events:none/.test(n), 'a linha de avisos não segura toque');
+  for (const sel of ['.f2-toast', '.f2-ban', '.f2-fly']) { const r = rule(sel); assert(!/position:|[;{](top|bottom|left|right):/.test(r), sel + ': sem posição própria (segue a linha de avisos)'); }
+  for (const k of ['f2-tin', 'f2-fly', 'f2-bin']) { const css = CSS(), i = css.indexOf('@keyframes ' + k + '{'); assert(i >= 0 && !/translate/.test(css.slice(i, css.indexOf('\n', i))), k + ': a animação não desloca o aviso para cima dos vizinhos'); }
+  assert.deepStrictEqual([...seenNotes].sort(), ['f2-ban', 'f2-fly', 'f2-toast'], 'os três avisos apareceram em alguma tela conferida, sempre na linha de avisos');
+  g.S = newSave(); setLv(60); def.onOpen({ slot: 'weapon' }); def.render(); const h = H(), a = h.indexOf('<div class="f2-notes" id="f2_notes">'), b = h.indexOf('<div id="f2_scroll"');
+  assert(a > 0 && b > a && h.slice(a, b) === '<div class="f2-notes" id="f2_notes"><div id="f2_toast"></div></div>', 'sem aviso, a linha existe vazia');
+  assert(h.indexOf('role="tablist"') < a, 'a linha de avisos fica abaixo das abas, logo acima do cartão');
+  // acerto com troca de aura: UMA faixa (título com o +N, 2ª linha com a aura nova) e o "+FC" ao lado, tudo antes da rolagem; os botões seguem tocáveis no HTML
+  g.S.inv = [{ id: 1, slot: 'weapon', e: 4, r: 2, lvl: 20, gold: 500, name: 'Lâmina', subs: [] }]; g.S.eq = { weapon: 1 }; g.S.nextId = 2; setF('weapon', 9, 0); give(500, 1e6); rngV = 0; def.render(); def.click(btn('forge'));
+  const h2 = H(), s2 = h2.indexOf('<div id="f2_scroll"'), nt = h2.slice(h2.indexOf('id="f2_notes"'), s2);
+  assert(/class="f2-ban ok au"/.test(nt) && nt.includes('Arma +10!') && nt.includes('Nova aura: Chamas vermelhas') && /class="f2-fly"/.test(nt), 'faixa única e +FC na linha de avisos');
+  assert(h2.indexOf('data-x="forge"') > s2 && h2.indexOf('data-x="auto"') > s2 && h2.indexOf('class="f2-lvb"') > s2, 'botões e o "+N → +N+1" ficam fora da linha de avisos'); sane('faixa única');
+  def.onClose(); out.push('avisos: linha própria no fluxo (.f2-notes, 40 px reservados, sem absolute/fixed), entre as abas e o cartão; uma faixa por vez; vazia sem aviso'); }
+// 13b) QA lote V2 (A2): em tela baixa (320x640 e 360x640; a altura vem do xDims) o palco encolhe sem baixar de 40 px de toque nos espaços, as margens apertam
+// (.f2-sm) e os botões Forjar / Forjar até conseguir sobem para logo abaixo da chance (antes das células de custo). Em tela alta nada muda.
+{ g.S = newSave(); setLv(60); g.S.inv = [{ id: 1, slot: 'weapon', e: 4, r: 2, lvl: 20, gold: 500, name: 'Clava de Pedra', subs: [] }]; g.S.eq = { weapon: 1 }; g.S.nextId = 2; give(500, 1e6);
+  const stageH = () => +(/class="f2-stage" style="height:(\d+)px"/.exec(H()) || [])[1], pitches = () => [...H().matchAll(/class="f2-slot[^"]*"[^>]*;height:(\d+)px/g)].map(m => +m[1]);
+  for (const [W, Hh] of [[320, 584], [360, 584], [320, 560], [320, 480]]) { g.xDims = () => ({ H: Hh, Wb: W }); def.onOpen({ slot: 'weapon' }); def.render(); const h = H(), sh = stageH(), p = pitches();
+    assert(/<div class="f2 f2-sm/.test(h), W + 'x' + Hh + ': arranjo compacto'); assert(sh >= 166 && sh <= 196 && sh <= Hh - 400 + 166, W + 'x' + Hh + ': palco menor (' + sh + ')');
+    assert.strictEqual(p.length, F.DATA.slots.length); assert(p.every(v => v >= 40), W + 'x' + Hh + ': espaços com 40 px de toque');
+    const iGo = h.indexOf('data-x="forge"'), iAuto = h.indexOf('data-x="auto"'), iSts = h.indexOf('class="f2-sts"'), iChn = h.indexOf('class="f2-chn"'), iCmp = h.indexOf('class="f2-cmp"');
+    assert(iChn > 0 && iGo > iChn && iAuto > iGo && iSts > iAuto && iCmp > iSts, W + 'x' + Hh + ': botões logo abaixo da chance, antes dos custos');
+    has('pedras · '); has('FC ANTES → DEPOIS'); has('A falha nunca tira nível'); sane('tela baixa ' + W + 'x' + Hh); }
+  g.xDims = () => ({ H: 584, Wb: 320 }); def.render(); assert.strictEqual(stageH(), 184, '320x640: palco pela altura disponível');
+  for (const d of [{ H: 788, Wb: 390 }, {}]) { g.xDims = () => d; def.onOpen({ slot: 'weapon' }); def.render(); const h = H(); assert(!/f2-sm/.test(h) && stageH() === 236, 'tela alta: arranjo do protótipo'); assert(h.indexOf('class="f2-sts"') < h.indexOf('data-x="forge"'), 'tela alta: custos antes dos botões'); sane('tela alta'); }
+  for (const sel of ['.f2-sm .f2-fcb b', '.f2-sm .f2-chip', '.f2-sm .f2-det', '.f2-sm .f2-chn']) rule(sel);
+  assert(!/\.f2-sm[^{]*\{[^}]*(nowrap|ellipsis|overflow:hidden)/.test(CSS()), 'o arranjo compacto não corta texto'); assert(/min-height:44px/.test(rule('.f2-bt')) && !/\.f2-sm \.f2-(bt|tab)\b/.test(CSS()), 'compacto não mexe no toque de botões e abas');
+  g.xDims = () => ({}); def.onClose(); out.push('tela baixa (320x640, 360x640): palco de 184 px pela altura do xDims (mínimo 166, toque de 40 px nos espaços), margens menores e Forjar logo abaixo da chance'); }
 // 14) defeito 3: a Forja V2 não tem espera de imagens (nenhum cartaz de carregamento): desenha na hora mesmo com a espera do jogo dizendo "ainda não"
 { assert(!/\b(xGate|pGate|pwGate|pWait)\s*\(/.test(SRC), 'a tela não chama a espera de imagens');
   const poster = () => { g.V.innerHTML = '<span>Carregando as imagens</span>'; return true; }; g.xGate = poster; g.pGate = poster; g.pwGate = poster; g.Preload = { ready: () => Promise.resolve({ ok: false, failed: [] }), has: () => false };

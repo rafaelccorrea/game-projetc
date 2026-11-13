@@ -64,7 +64,7 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
      entrega ao Screens.open, que troca a tela (setView) e chama onOpen. Overlays (era, result) abrem pela função open da própria tela. */
   /* TELAS V2 APROVADAS PELO DONO (passagem dos protótipos docs/proto/v2): cada uma nasce num arquivo novo e DESLIGADA (PANEL_ON.<nome>2 = false). Com a chave dela
      ligada (no código, ou ?debug=1&painel=forge2 para conferir), TODO lugar do jogo que abre a tela antiga abre a nova; desligada, nada muda. */
-  v2:{forge:'forge2',pets:'pets2',vip:'vip2',mounts:'mounts2',tower:'tower2',guild:'guild2',tourney:'tourney2'},
+  v2:{forge:'forge2',pets:'pets2',vip:'vip2',mounts:'mounts2',tower:'tower2',guild:'guild2',tourney:'tourney2',profile:'profile2'},
   open(name,o){ { const n2=this.v2[name]; if(n2&&PANEL_ON[n2]&&this.defs[n2]) name=n2; } if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{};
     /* VOLTAR PARA ONDE VEIO: quem abre passando {from:'<tela>'} (ex.: o botão Missões do Passe) recebe o jogador de volta nessa tela ao fechar */
     this.back=this.back||{}; this.back[name]=(o&&typeof o.from==='string')?o.from:null; if(this.back[name]) this.hookClose();

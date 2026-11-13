@@ -96,7 +96,7 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
     P('fim: ' + (res || 'tempo esgotado') + ' aos ' + (ev('B.t') - t0).toFixed(1) + ' s · herói ' + Math.round(100 * Math.max(0, ev('B.hero.hp/B.hero.maxhp'))) + '%'); G.scale = null; return; }
   if (what === 'cal') { ev('Sys.stats.setRefFc(true)'); const cfg = JSON.parse(process.env.CAL); ev('Object.assign(DIFF.tbl.boss,' + JSON.stringify(cfg) + '); DIFF.memo={}'); P('cal ' + JSON.stringify(cfg)); const [eras, N] = arg.split('/'); const n = +N || 12;
     for (const e of eras.split(',').map(Number)) { const s = e * 10 + 10, r = {}; for (const m of [1, 0.9]) r[m] = await many(n, s, 5, { ref: true, fcm: m, arma: true });
-      P('era ' + e + ' · 100%: ' + show(r[1]) + ' · 90%: ' + show(r[0.9])); P('  runs100 ' + r[1].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0)).join(' ')); P('  runs90 ' + r[0.9].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0)).join(' ')); } return; }
+      P('era ' + e + ' · 100%: ' + show(r[1]) + ' · 90%: ' + show(r[0.9]) + ' · lutas sem desfecho em 150 s (T, fora da conta): ' + r[1].runs.filter(x => x.res === 'tempo').length + ' e ' + r[0.9].runs.filter(x => x.res === 'tempo').length); P('  runs100 ' + r[1].runs.map(x => (x.res==='win'?'V':x.res==='dead'?'D':'T') + x.sec.toFixed(0)).join(' ')); P('  runs90 ' + r[0.9].runs.map(x => (x.res==='win'?'V':x.res==='dead'?'D':'T') + x.sec.toFixed(0)).join(' ')); } return; }
   P('medida desconhecida: ' + MEDIDA); }
 
 (async () => {

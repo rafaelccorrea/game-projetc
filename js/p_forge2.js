@@ -15,7 +15,7 @@
 (function(){
 if(!('forge2' in PANEL_ON)) PANEL_ON.forge2=false;
 
-const X={tab:'forge',slot:'weapon',apv:null,busy:false,auto:null,fx:null,ban:null,ban2:null,fly:null,toast:'',toastT:0,
+const X={tab:'forge',slot:'weapon',apv:null,busy:false,auto:null,fx:null,ban:null,fly:null,toast:'',toastT:0,
   tsel:null,ask:null,gkey:null,sig:'',anim:true,top:true,t1:0,raf:0,t0:0};
 const ACTIONS=['tab','slot','forge','auto','aura','pvout','tsel','trans','transok','askno','gsel','fuse','back'];
 const BAN_MS=2400;
@@ -206,18 +206,29 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-bands div{border-radius:10px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:0}
 .f2-bands b{display:block;font-size:11px;color:var(--gold)}
 .f2-bands small{display:block;font-size:9px;font-weight:800;color:var(--muted);line-height:1.15;white-space:normal;overflow-wrap:anywhere}
-.f2-notes{position:absolute;z-index:40;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;min-width:0}
+.f2-notes{position:relative;z-index:3;flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 6px;min-height:40px;margin:4px 12px 0;pointer-events:none;min-width:0}
 .f2-notes>div:empty{display:none}
-.f2-ban{min-width:min(200px,100%);max-width:100%;padding:7px 14px;border-radius:14px;text-align:center;animation:f2-bin 2.4s ease-out both}
-.f2-ban b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:21px;line-height:1.1;overflow-wrap:anywhere}
-.f2-ban small{display:block;font-size:11px;font-weight:900;overflow-wrap:anywhere}
-.f2-ban.ok{background:linear-gradient(180deg,rgba(60,40,6,.94),rgba(30,20,4,.94));border:2px solid var(--gold);color:var(--gold);box-shadow:0 0 24px rgba(255,210,94,.5)}
+.f2-notes>div{flex:0 1 auto;min-width:0}
+.f2-ban{max-width:100%;padding:3px 12px;border-radius:12px;text-align:center;animation:f2-bin 2.4s ease-out both}
+.f2-ban b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:16px;line-height:1.1;overflow-wrap:anywhere}
+.f2-ban small{display:block;font-size:10px;line-height:1.2;font-weight:900;overflow-wrap:anywhere}
+.f2-ban.ok{background:linear-gradient(180deg,rgba(60,40,6,.94),rgba(30,20,4,.94));border:2px solid var(--gold);color:var(--gold)}
 .f2-ban.ok small{color:var(--green)}
 .f2-ban.no{background:rgba(42,21,48,.94);border:2px solid var(--rose);color:#ffb3c4}
 .f2-ban.no small{color:var(--text)}
-.f2-ban.au{border-color:var(--ac);color:#fff;box-shadow:0 0 30px var(--ac)}
-.f2-fly{padding:2px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);max-width:100%;text-align:center;overflow-wrap:anywhere;font-family:'Lilita One',Nunito,sans-serif;font-size:20px;line-height:1.2;animation:f2-fly 1.6s ease-out both;text-shadow:0 2px 0 rgba(0,0,0,.5);color:var(--green)}
-.f2-toast{padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);box-shadow:0 4px 14px rgba(0,0,0,.5);font-weight:900;font-size:12px;line-height:1.25;text-align:center;animation:f2-tin 2.2s ease both;max-width:100%;overflow-wrap:anywhere}
+.f2-ban.au{border-color:var(--ac);color:#fff}
+.f2-fly{padding:1px 10px;border-radius:11px;background:rgba(5,8,28,.94);border:1px solid var(--line2);max-width:100%;text-align:center;overflow-wrap:anywhere;font-family:'Lilita One',Nunito,sans-serif;font-size:16px;line-height:1.2;animation:f2-fly 1.6s ease-out both;text-shadow:0 2px 0 rgba(0,0,0,.5);color:var(--green)}
+.f2-toast{padding:4px 12px;border-radius:12px;background:rgba(5,8,28,.94);border:1px solid var(--line2);font-weight:900;font-size:12px;line-height:1.25;text-align:center;animation:f2-tin 2.2s ease both;max-width:100%;overflow-wrap:anywhere}
+.f2-sm .f2-fcrow{padding:3px 8px 3px 10px}
+.f2-sm .f2-fcb{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+.f2-sm .f2-fcb b{font-size:20px}
+.f2-sm .f2-fcb em{flex:1 1 100%}
+.f2-sm .f2-chip{min-height:30px}
+.f2-sm .f2-tabs{margin-top:4px}
+.f2-sm .f2-scroll{padding-top:4px}
+.f2-sm .f2-det{padding:6px 10px}
+.f2-sm .f2-chn{margin-top:4px;padding:4px 8px}
+.f2-sm .f2-chn .pc{font-size:24px}
 .f2-shade{position:absolute;inset:0;z-index:50;background:rgba(3,5,18,.72);display:flex;align-items:center;animation:f2-fade .2s}
 .f2-modal{margin:auto 16px;width:100%;max-height:86%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;min-width:0}
 .f2-modal h3{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;margin:0 0 8px}
@@ -227,9 +238,9 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-gain span{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:0 9px;border-radius:9px;background:rgba(255,107,107,.12);color:#ffc9c9;font-weight:900;font-size:12px}
 .f2-gate{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 28px;text-align:center}
 @keyframes f2-fade{from{opacity:0}}
-@keyframes f2-tin{0%{opacity:0;transform:translateY(8px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
-@keyframes f2-fly{0%{opacity:0;transform:translateY(8px) scale(.9)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
-@keyframes f2-bin{0%{opacity:0;transform:translateY(8px) scale(.85)}10%{opacity:1;transform:scale(1.06)}18%{transform:none}82%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes f2-tin{0%{opacity:0;transform:scale(.94)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes f2-fly{0%{opacity:0;transform:scale(.9)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes f2-bin{0%{opacity:0;transform:scale(.9)}10%{opacity:1;transform:none}82%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.f2-in,.f2-shade{animation:none}.f2-ban,.f2-fly,.f2-toast{animation-timing-function:step-end}}
 `; document.head.appendChild(st); })();
 
@@ -347,7 +358,7 @@ const stsCols=narrow=>narrow?'repeat(2,minmax(0,1fr))':'minmax(0,.85fr) minmax(0
 const cmpHtml=(lab,fa,fb)=>{ const d=fcDelta(fa,fb); return '<div class="f2-cmp"><small>'+lab+'</small><span class="a">'+esc2(fcTxt(fa))+'</span>'+SV.go+'<span class="b" style="color:'+esc2(d.color||'#9aa6d6')+'">'+esc2(fcTxt(fb))+'</span><span class="d" style="color:'+esc2(d.color||'#9aa6d6')+'">'+(d.text?esc2(d.text):'sem mudança')+'</span></div>'; };
 
 /* ----- aba Forjar: faixa de detalhe ----- */
-function detForge(narrow){ const D=FD(), sl=X.slot, it=eqOf(sl), n=lvl(sl), M=D.max, cap=capNow(), shut=wingShut(sl), c=Sys.forge.canTry(S,Sys.host,sl);
+function detForge(narrow,short){ const D=FD(), sl=X.slot, it=eqOf(sl), n=lvl(sl), M=D.max, cap=capNow(), shut=wingShut(sl), c=Sys.forge.canTry(S,Sys.host,sl);
   const top=n>=M, atCap=!top&&n>=cap, rc=it&&!shut?rcol(it):'#55608f', late=f20()&&n>=15;
   const head='<div class="f2-dt"><span class="f2-di0"><img src="'+icoOf(sl,shut?null:it,36)+'" alt=""'+(it&&!shut?'':' style="opacity:.5"')+'></span><div class="f2-di"><div class="f2-dn">'+esc2(slotName(sl))+' · '+esc2(shut?'abre no nível '+wingLv():it?iName(it):'espaço vazio')+(it&&!shut?' <span class="f2-rar" style="color:'+rc+'">'+esc2(rname(it))+'</span>':'')+'</div>'
     +'<div class="f2-dh">'+(late?'<span class="f2-tagl">ERAS FINAIS</span>':'')+(top?'Forja <b>+'+n+'</b> · máximo':atCap?'Forja <b>+'+n+'</b> · no teto da era':'Forja <b>+'+n+' → +'+(n+1)+'</b> · teto da era +'+cap)+'</div></div>'
@@ -363,17 +374,18 @@ function detForge(narrow){ const D=FD(), sl=X.slot, it=eqOf(sl), n=lvl(sl), M=D.
   const fa=fcNow(), fb=fcAfterForge(sl), lackS=st<c.stones, lackG=c.reason==='gold'||!canGold(c.gold);
   const paid=Math.max(0,Math.min(c.stones>0?Math.floor(st/c.stones):wt,c.gold>0?Math.floor((+S.gold||0)/c.gold):wt)), A=X.auto, go=c.ok&&!X.busy;
   let stage=0; try{ stage=Sys.host.stage()|0; }catch(e){}
-  return open
-    +'<div class="f2-chn"><b class="pc">'+pc(c.chance)+'</b><div class="cw"><small>'+pc(base)+' '+(pity?'<b>+ '+pc(pity)+' de garantia</b>':'· sem garantia acumulada')+'</small><span class="f2-pity" role="img" aria-label="Garantia acumulada: '+pc(pity)+'"><i style="width:'+pw.toFixed(1)+'%"></i></span><em>Garantido em até '+pl(wt,'tentativa','tentativas')+' · cada falha soma +'+pc(D.pityPerFail)+'</em></div></div>'
-    +'<div class="f2-sts" style="grid-template-columns:'+stsCols(narrow)+'">'
+  /* tela baixa (320x640, 360x640): os botões sobem para logo abaixo da chance, para o Forjar aparecer sem rolar; o custo já está escrito no próprio botão */
+  const chn='<div class="f2-chn"><b class="pc">'+pc(c.chance)+'</b><div class="cw"><small>'+pc(base)+' '+(pity?'<b>+ '+pc(pity)+' de garantia</b>':'· sem garantia acumulada')+'</small><span class="f2-pity" role="img" aria-label="Garantia acumulada: '+pc(pity)+'"><i style="width:'+pw.toFixed(1)+'%"></i></span><em>Garantido em até '+pl(wt,'tentativa','tentativas')+' · cada falha soma +'+pc(D.pityPerFail)+'</em></div></div>';
+  const info='<div class="f2-sts" style="grid-template-columns:'+stsCols(narrow)+'">'
       +'<div class="'+(lackS?'bad':'')+'"><small>PEDRAS</small><b>'+n0(c.stones)+'</b><em>tem '+esc2(kf(st))+'</em></div>'
       +'<div class="'+(lackG?'bad':'')+'"><small>OURO/TENT.</small><b>'+esc2(kf(c.gold))+'</b><em>'+n0(D.goldPerTryKills)+' abates'+(stage?' da fase '+stage:'')+'</em></div>'
       +'<div class="up"><small>BÔNUS</small><b>'+pctB(bonusOf(n))+' → '+pctB(bonusOf(n+1))+'</b><em>do espaço</em></div>'
       +'<div class="'+(auraUp?'up':'')+'"><small>AURA DA ARMA</small><b>'+esc2(!isW?'só na arma':auraUp?a1.name:a0.name)+'</b><em>'+(!isW?'vem do +N da arma':auraUp?'nova aura no +'+(n+1):'continua')+'</em></div></div>'
-    +cmpHtml('FC ANTES → DEPOIS',fa,fb)
-    +'<div class="f2-acts">'
+    +cmpHtml('FC ANTES → DEPOIS',fa,fb);
+  const acts='<div class="f2-acts">'
       +'<button class="f2-bt" data-x="forge" id="f2_go" aria-disabled="'+(!go)+'"><span>'+SV.hammer+'Forjar</span><small>'+pl(c.stones,'pedra','pedras')+' · '+esc2(kf(c.gold))+' de ouro</small></button>'
-      +'<button class="f2-bt blue" data-x="auto" id="f2_auto" aria-disabled="'+(!go)+'"><span>'+(A?'Tentativa '+A.k+'...':'Forjar até conseguir')+'</span><small>'+(A?pl(A.stones,'pedra gasta','pedras gastas'):paid>=wt?'até '+wt+'x · '+n0(wt*c.stones)+' pedras no pior caso':'pedras e ouro para '+paid+'x')+'</small></button></div>'
+      +'<button class="f2-bt blue" data-x="auto" id="f2_auto" aria-disabled="'+(!go)+'"><span>'+(A?'Tentativa '+A.k+'...':'Forjar até conseguir')+'</span><small>'+(A?pl(A.stones,'pedra gasta','pedras gastas'):paid>=wt?'até '+wt+'x · '+n0(wt*c.stones)+' pedras no pior caso':'pedras e ouro para '+paid+'x')+'</small></button></div>';
+  return open+chn+(short?acts+info:info+acts)
     +'<div class="f2-foot">'+(c.ok?'':'<b>'+esc2(whyTxt(c.reason,sl))+'</b> ')+'A falha nunca tira nível. Pedras e ouro vêm de jogar: nunca de diamante nem de dinheiro.</div></div>'; }
 
 /* ----- aba Forjar: legenda das auras e tabela ----- */
@@ -465,19 +477,21 @@ function draw(){
   if(!slotOk(X.slot)) X.slot='weapon';
   if(X.tab==='fuse'&&!qOn()) X.tab='forge';
   let y0=0; try{ const sc0=X.top?null:document.getElementById('f2_scroll'); y0=sc0?(+sc0.scrollTop||0):0; }catch(e){}
-  const Hh=+d.H||0, SH=Hh&&Hh<600?196:236, narrow=(+d.Wb||390)<350;
+  /* TELA BAIXA (QA: 320x640 e 360x640): pela altura que a tela tem (d.H), o palco encolhe (sem baixar de 166 px: 4 espaços de 40 px de toque), as margens
+     apertam (.f2-sm) e os botões da aba Forjar sobem para logo abaixo da chance. REST = o que fica abaixo do palco até o fim do botão Forjar, com folga */
+  const Hh=+d.H||0, narrow=(+d.Wb||390)<350, short=Hh>0&&Hh<(narrow?800:690), REST=400, SH=short?Math.max(166,Math.min(236,Math.round(Hh-REST))):236;
   let det='', body='';
   if(X.tab==='trans'){ const L=transList(); if(!L.some(o=>String(o.it.id)===String(X.tsel))) X.tsel=L.length?L[0].it.id:null; det=detTrans(narrow,L); body=bodyTrans(L); }
   else if(X.tab==='fuse'){ const G=groups(); if(!G.some(o=>o.k===X.gkey)) X.gkey=G.length?G[0].k:null; det=detFuse(narrow,G); body=bodyFuse(G); }
-  else { det=detForge(narrow); body=bodyForge(); }
+  else { det=detForge(narrow,short); body=bodyForge(); }
   const fly=X.fly&&now()-X.fly.t<1600?'<div class="f2-fly" aria-hidden="true" style="animation-delay:'+(X.fly.t-now())+'ms">'+esc2(X.fly.txt)+'</div>':'';
-  V.innerHTML=xWrap(d,'','<div class="f2'+(X.anim?' f2-in':'')+'"><div class="f2-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.5,0.9):'#16110d')+'"></div>'
+  V.innerHTML=xWrap(d,'','<div class="f2'+(short?' f2-sm':'')+(X.anim?' f2-in':'')+'"><div class="f2-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.5,0.9):'#16110d')+'"></div>'
     +stageHtml(SH)+fcRowHtml()+tabsHtml()
-    +'<div id="f2_scroll" class="f2-scroll x-scroll">'+det+body+'</div>'
-    /* AVISOS: faixa no RODAPÉ da tela, fora do palco (nada de texto por cima do herói): faixas do resultado, "+FC" e a mensagem.
-       A 2ª faixa ("Nova aura") nasce 0,7 s depois: hora no futuro = atraso positivo da animação */
-    +'<div class="f2-notes" id="f2_notes">'+banHtml(X.ban2)+banHtml(X.ban)
-    +fly+'<div id="f2_toast">'+(X.toast&&now()-X.toastT<2000?toastHtml(X.toast):'')+'</div></div>'+askHtml()+'</div>');
+    /* AVISOS: linha PRÓPRIA no fluxo, entre as abas e o cartão "+N → +N+1", sempre presente (vazia sem aviso, para a tela não pular). Não é posicionada por
+       cima de nada: não cobre o herói, nem o número, nem os botões. Uma faixa de resultado por vez, o "+FC" ao lado e a mensagem */
+    +'<div class="f2-notes" id="f2_notes">'+banHtml(X.ban)
+    +fly+'<div id="f2_toast">'+(X.toast&&now()-X.toastT<2000?toastHtml(X.toast):'')+'</div></div>'
+    +'<div id="f2_scroll" class="f2-scroll x-scroll">'+det+body+'</div>'+askHtml()+'</div>');
   if(y0){ try{ const sc=document.getElementById('f2_scroll'); if(sc) sc.scrollTop=y0; }catch(e){} }
   X.anim=false; X.top=false; X.sig=sig(); loopStart();
 }
@@ -495,10 +509,10 @@ function tryOnce(sl){ const c=Sys.forge.canTry(S,Sys.host,sl); if(!c.ok) return 
   return r; }
 /* depois da tentativa: efeito no palco, faixa com o resultado e a FC que subiu */
 function result(r,sl,w0,fc0,k,spent){ const w1=lvl('weapon'), cross=sl==='weapon'&&r.success&&tierOf(w1)!==tierOf(w0);
-  X.fx={t:now(),ok:!!r.success,cross:cross,from:w0,to:w1}; X.ban2=null;
-  if(r.success){ sfx('claim'); call(typeof vib==='function'?vib:null,40); const df=fcNow()-fc0; X.fly=df>0?{t:now(),txt:'+'+fcTxt(df)+' FC'}:null;
-    banner('ok',slotShort(sl)+' +'+r.lv+'!',k>1?'Conseguiu na '+k+'ª tentativa · '+pl(spent.stones,'pedra','pedras')+' · '+kf(spent.gold)+' de ouro':'Bônus do espaço '+pctB(bonusOf(r.lv)));
-    if(cross){ const a=auraOf(w1); X.ban2={cls:'ok au',title:'Nova aura: '+a.name,sub:'a arma brilha mais no herói',col:acol(a),t:now()+700}; } }
+  X.fx={t:now(),ok:!!r.success,cross:cross,from:w0,to:w1};   if(r.success){ sfx('claim'); call(typeof vib==='function'?vib:null,40); const df=fcNow()-fc0; X.fly=df>0?{t:now(),txt:'+'+fcTxt(df)+' FC'}:null;
+    /* uma faixa só (cabe na linha de avisos): ao cruzar a faixa da aura, a 2ª linha anuncia a aura nova */
+    if(cross){ const a=auraOf(w1); banner('ok au',slotShort(sl)+' +'+r.lv+'!','Nova aura: '+a.name+(k>1?' · na '+k+'ª tentativa':'')); X.ban.col=acol(a); }
+    else banner('ok',slotShort(sl)+' +'+r.lv+'!',k>1?'Conseguiu na '+k+'ª tentativa · '+pl(spent.stones,'pedra','pedras')+' · '+kf(spent.gold)+' de ouro':'Bônus do espaço '+pctB(bonusOf(r.lv))); }
   else { sfx('ui_tap'); X.fly=null; banner('no','Falhou, +'+pc(FD().pityPerFail)+' na próxima','Próxima: '+pc(Sys.forge.chance(S,sl))+' · o nível não cai'); }
   redraw(); }
 function forgeOnce(){ if(X.busy) return; const sl=X.slot;
@@ -511,7 +525,7 @@ function autoStop(){ clearTimeout(X.t1); X.busy=false; X.auto=null; }
 function autoForge(){ if(X.busy) return; const sl=X.slot;
   if(wingShut(sl)){ sfx('ui_tap'); say(whyTxt('wing',sl)); return; }
   const c0=Sys.forge.canTry(S,Sys.host,sl); if(!c0.ok){ sfx('ui_tap'); say(whyTxt(c0.reason,sl)); return; }
-  X.busy=true; X.apv=null; X.ban=null; X.ban2=null; const fc0=fcNow(), w0=lvl('weapon'), A=X.auto={slot:sl,k:0,stones:0,gold:0};
+  X.busy=true; X.apv=null; X.ban=null; const fc0=fcNow(), w0=lvl('weapon'), A=X.auto={slot:sl,k:0,stones:0,gold:0};
   const step=()=>{ if(!X.busy||X.auto!==A) return; if(!isOn()){ autoStop(); return; }
     const r=tryOnce(sl);
     if(!r.ok){ autoStop(); sfx('ui_tap'); banner('no','Parou: '+whyShort(r.reason),pl(A.k,'tentativa','tentativas')+' · garantia agora +'+pc(pityOf(sl))+' · próxima '+pc(Sys.forge.chance(S,sl))); redraw(); return; }
@@ -526,8 +540,7 @@ function doTrans(id){ const it=byId(id); X.ask=null; if(!it){ redraw(); return; 
   try{ const m=Sys.fc.measure(S,Sys.host,()=>Sys.stats.transform(S,Sys.host,it)); r=m.result; dl=m.delta; }catch(e){ if(!r){ try{ r=Sys.stats.transform(S,Sys.host,it); }catch(e2){ r=null; } } }
   if(!r||!r.ok){ sfx('ui_tap'); say('Não deu para transformar agora'); redraw(); return; }
   call(typeof ptrack==='function'?ptrack:null,'transform',1); call(typeof statsChanged==='function'?statsChanged:null); sfx('upgrade');
-  X.tsel=null; X.fly=eq&&dl&&dl.diff>0?{t:now(),txt:'+'+fcTxt(dl.diff)+' FC'}:null; X.ban2=null;
-  banner('ok','Transformada!',nm+' agora é da '+eraName(r.to)); redraw(); }
+  X.tsel=null; X.fly=eq&&dl&&dl.diff>0?{t:now(),txt:'+'+fcTxt(dl.diff)+' FC'}:null;   banner('ok','Transformada!',nm+' agora é da '+eraName(r.to)); redraw(); }
 /* item novo a partir do resultado do canFuse, no formato da mochila (mesma receita do js/p_fuse.js: o Sys.stats.fuse não mexe no save) */
 function fuseMake(res,best){ let it; try{ it=typeof normItem==='function'?normItem(res):Object.assign({},res); }catch(e){ it=Object.assign({},res); }
   it.lvl=res.lvl; it.gold=res.gold; it.qp=res.qp; if(Number.isInteger(res.look)) it.look=res.look;
@@ -545,8 +558,7 @@ function doFuse(){ if(!qOn()) return; const g=groups().find(o=>o.k===X.gkey); if
   let dl=null; try{ dl=Sys.fc.measure(S,Sys.host,run).delta; }catch(e){ if(!rr) run(); }
   if(!made){ sfx('ui_tap'); say(rr&&rr.reason==='money'?lackGold(c.gold):'Não deu para fundir agora'); redraw(); return; }
   call(typeof statsChanged==='function'?statsChanged:null); sfx('upgrade');   /* mesmas chamadas do js/p_fuse.js */
-  X.gkey=null; X.fly=dl&&dl.diff>0?{t:now(),txt:'+'+fcTxt(dl.diff)+' FC'}:null; X.ban2=null;
-  banner('ok',nm+': '+c.toStars+' estrelas','qualidade '+n0(qpOf(made))+' · '+xq(qMul(qpOf(made)))); redraw(); }
+  X.gkey=null; X.fly=dl&&dl.diff>0?{t:now(),txt:'+'+fcTxt(dl.diff)+' FC'}:null;   banner('ok',nm+': '+c.toStars+' estrelas','qualidade '+n0(qpOf(made))+' · '+xq(qMul(qpOf(made)))); redraw(); }
 
 function click(b){ const a=b&&b.dataset?b.dataset.x:'', ds=b.dataset||{};
   if(a==='back'){ sfx('ui_tap'); try{ Screens.close(); }catch(e){} return; }
@@ -570,9 +582,9 @@ function click(b){ const a=b&&b.dataset?b.dataset.x:'', ds=b.dataset||{};
 const def=Panels.add('forge2',{title:'Forja',parent:'gear',render:draw,click:click,actions:ACTIONS,
   tick(){ if(X.busy||X.ask!=null) return; if(X.fx&&now()-X.fx.t<1700) return; if(X.sig&&isOn()&&sig()!==X.sig) redraw(); },
   busy(){ return X.busy; },
-  onOpen(o){ autoStop(); X.anim=true; X.top=true; X.apv=null; X.fx=null; X.ban=null; X.ban2=null; X.fly=null; X.toast=''; X.ask=null; X.t0=0;
+  onOpen(o){ autoStop(); X.anim=true; X.top=true; X.apv=null; X.fx=null; X.ban=null; X.fly=null; X.toast=''; X.ask=null; X.t0=0;
     X.tab=o&&o.tab==='trans'?'trans':o&&o.tab==='fuse'&&qOn()?'fuse':'forge'; if(o&&o.slot&&slotOk(o.slot)) X.slot=o.slot; },
-  onClose(){ autoStop(); X.apv=null; X.fx=null; X.ban=null; X.ban2=null; X.fly=null; X.toast=''; X.ask=null;
+  onClose(){ autoStop(); X.apv=null; X.fx=null; X.ban=null; X.fly=null; X.toast=''; X.ask=null;
     try{ if(X.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(X.raf); }catch(e){} X.raf=0; X.t0=0; } });
 /* para o teste de fumaça e para conferir no console: o estado da tela (somente leitura por convenção) */
 window.Forge2={X:X,actions:ACTIONS,def:def};
