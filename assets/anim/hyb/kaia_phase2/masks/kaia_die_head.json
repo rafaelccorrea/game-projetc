@@ -4,167 +4,164 @@
  "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro",
  "head": [
   {
-   "x": 213,
-   "y": 68,
+   "x": 223,
+   "y": 54,
+   "ang": 0,
+   "s": 0.4225,
+   "e": 174,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 228,
+   "y": 58,
+   "ang": 0,
+   "s": 0.3852,
+   "e": 169,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 223,
+   "y": 52,
    "ang": -2,
-   "s": 0.4207,
-   "e": 173,
+   "s": 0.3852,
+   "e": 167,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 211,
+   "y": 53,
+   "ang": -4,
+   "s": 0.3852,
+   "e": 168,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 200,
+   "y": 55,
+   "ang": -4,
+   "s": 0.3852,
+   "e": 167,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 199,
+   "y": 53,
+   "ang": -3,
+   "s": 0.3852,
+   "e": 167,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 203,
+   "y": 53,
+   "ang": -4,
+   "s": 0.3852,
+   "e": 167,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 191,
+   "y": 82,
+   "ang": -5,
+   "s": 0.3852,
+   "e": 169,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 197,
+   "y": 101,
+   "ang": -2,
+   "s": 0.3912,
+   "e": 169,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 221,
+   "y": 105,
+   "ang": 5,
+   "s": 0.3852,
+   "e": 168,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
    "x": 232,
-   "y": 50,
-   "ang": 0,
-   "s": 0.3836,
-   "e": 165,
+   "y": 116,
+   "ang": 13,
+   "s": 0.3852,
+   "e": 166,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 217,
-   "y": 52,
-   "ang": 3,
-   "s": 0.3836,
-   "e": 0,
+   "x": 243,
+   "y": 114,
+   "ang": 16,
+   "s": 0.3852,
+   "e": 167,
    "ok": true,
-   "fixed": "média 1-3",
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 202,
-   "y": 54,
-   "ang": 0,
-   "s": 0.3836,
+   "x": 245,
+   "y": 115,
+   "ang": 23,
+   "s": 0.3852,
    "e": 170,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 188,
-   "y": 58,
-   "ang": -2,
-   "s": 0.3836,
+   "x": 261,
+   "y": 135,
+   "ang": 34,
+   "s": 0.3852,
+   "e": 169,
+   "ok": true,
+   "angSrc": "corpo->cabeça"
+  },
+  {
+   "x": 278,
+   "y": 161,
+   "ang": 45,
+   "s": 0.3852,
    "e": 163,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 180,
-   "y": 74,
-   "ang": -3,
-   "s": 0.3836,
-   "e": 164,
+   "x": 278,
+   "y": 161,
+   "ang": 42,
+   "s": 0.3852,
+   "e": 163,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 187,
-   "y": 99,
-   "ang": 0,
-   "s": 0.3836,
-   "e": 167,
+   "x": 260,
+   "y": 177,
+   "ang": 51,
+   "s": 0.3852,
+   "e": 185,
    "ok": true,
    "angSrc": "corpo->cabeça"
   },
   {
-   "x": 205,
-   "y": 109,
-   "ang": 10,
-   "s": 0.3836,
-   "e": 167,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 234,
-   "y": 118,
-   "ang": 21,
-   "s": 0.3836,
-   "e": 161,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 249,
-   "y": 119,
-   "ang": 33,
-   "s": 0.3836,
-   "e": 158,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 250,
-   "y": 148,
-   "ang": 53,
-   "s": 0.4081,
-   "e": 151,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 268,
-   "y": 168,
-   "ang": 83,
-   "s": 0.3955,
-   "e": 154,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 268,
-   "y": 182,
-   "ang": 112,
-   "s": 0.4014,
-   "e": 152,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 267,
-   "y": 182,
-   "ang": 120,
-   "s": 0.4014,
-   "e": 157,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 269,
-   "y": 186.3,
-   "ang": 115,
-   "s": 0.4014,
-   "e": 167,
-   "ok": true,
-   "angSrc": "corpo->cabeça",
-   "fixed": "interp 13-16"
-  },
-  {
-   "x": 271,
-   "y": 190.7,
-   "ang": 104,
-   "s": 0.4014,
-   "e": 170,
-   "ok": true,
-   "angSrc": "corpo->cabeça",
-   "fixed": "interp 13-16"
-  },
-  {
-   "x": 273,
-   "y": 195,
-   "ang": 95,
-   "s": 0.3836,
-   "e": 172,
-   "ok": true,
-   "angSrc": "corpo->cabeça"
-  },
-  {
-   "x": 273,
-   "y": 195,
-   "ang": 88,
-   "s": 0.3836,
-   "e": 172,
+   "x": 315,
+   "y": 188,
+   "ang": 60,
+   "s": 0.3852,
+   "e": 201,
    "ok": true,
    "angSrc": "corpo->cabeça"
   }
