@@ -1418,3 +1418,27 @@ NÃO testado:
 - Modo dono: botões "Ganhar ovo" e "nível 20" pelo painel (usei as funções direto); save real sem pet (só a conta da FC).
 - Ovo vindo de drop, chefe e baú de verdade.
 - 360x640; jogador novo; aparelho. Troca de era: não ligada (ordem do coordenador).
+
+## Rodada 17 — v0.12.7 (REESCRITA em resumo depois da reversão acidental de 2026-11-12)
+
+O `git checkout -- .` de outra sessão apagou tudo o que não estava commitado depois da v0.12.6. Refiz pelos MEUS scripts de edição, que estavam guardados fora do projeto: os arquivos voltaram byte a byte ao tamanho que tinham (index.html 65.758 → 65.960; battle.js 108.816; stage.js 31.277; petfx.js 12.150) antes dos ajustes finais. `js/mountfx.js` e `js/instfx.js` sobreviveram inteiros.
+
+Conteúdo da v0.12.7 (tudo refeito; o que foi VISTO vale para o código de antes da reversão, igual ao de agora):
+1. Pet ao lado e à frente do Kael, na linha do chão, por cima da montaria; tabela `PET_TBL` (dx 0,42 da largura do Kael; dy 5 px; altura 0,46 / 0,52 / 0,62; voador 0,12–0,13); escala pela altura opaca medida da folha.
+2. Folga do inimigo a partir da montaria/pet (`heroEdge()`); teto do recuo dos centros 110 px.
+3. Asa por item: `wingArt(item)` → `Sys.stats.wingOf` (agora protegido por `typeof`, porque os módulos estão em refação) com reserva em `item.wing`; gancho de skin de asa (skin vence), sem skin hoje.
+4. Montarias: `'mount'` antes do `'fc'`; `js/mountfx.js` na lista; Kael montado com as folhas `_body` + arma no grip; barras e asa sobem com a sela; serpe (`wyvern`) fora; item "Montarias" no MENU (`soon:mounts`, nível 38, ícone provisório = Pets).
+5. Modo dono: asa de anjo e asa demoníaca como itens distintos; uma montaria por botão (`mountIds()`), estrela +1 / -1, desmontar.
+6. `normItem`: `wing`, `offer`, `gotAt`, campos simples desconhecidos preservados; `addItemToBag` grava `gotAt`.
+7. Prévia: `PHASE_SCALE` (1,00 / 1,12 / 1,25 / 1,30) para Kael e Kaia (4 cartões da Kaia).
+8. Ajustes do PO (nunca vistos rodando): pet mais à frente/baixo por montaria (`pdx`, `pdy` na `MOUNT_TBL`; grifo e tigre mais à frente); asa do Kael mais alta, mais atrás e com contorno claro em montaria com asas (grifo); aura por estrela visível em 1 estrela, mais forte até 5, fumaça nas patas em 4 e 5.
+
+Visto antes da reversão (390x844, era 0): sem montaria e sem pet; só pet filhote; só lobo; lobo + pet + asa de anjo; grifo 5 estrelas + pet evoluído + asa (prints `v0127_*.png`, que sobreviveram). FC sem montaria igual com e sem o módulo (4.428). Item com `wing`/`offer`/`origin`/`qp` sobrevive a salvar e ler. Desenho por quadro: 1,62 ms com tudo e 1,60 ms sem nada (PC; quadros por segundo dessa medida não valem, máquina ocupada).
+
+## Lote v0.12.8 (REESCRITO; DESLIGADO por `NEXT_ON=false` no index.html; nunca visto rodando)
+1. Luta da instância (`js/instfx.js`, `window.startInstanceRun(run)`): ondas do run com `mkEnemy(run.stage, kind)` × multiplicadores, sem drops de fase, relógio e "Instância" no cabeçalho, `Sys.instances.finish` no fim, volta ao farm, `PInst.showResult(out)`; `save()` suspenso durante a luta; Desafiar bloqueado.
+2. Morte nova do Kael (`drawHeroDie`, `ART_ON.kael_die`): folha `R/kael_die_body`, arma caindo por código, poeira; montado cai a pé.
+3. Inimigo parado (`ART_ON.en_idle_prep`): 4 primeiros quadros do golpe em vai-e-volta a 4 quadros/s (sem tabela da Arte).
+4. Cenário vivo da era 4 (`sceneV2: NEXT_ON`).
+
+O QUE NÃO GARANTO depois da refação: nada foi aberto no navegador desde a reversão; a página inteira precisa de uma conferência (carrega, batalha, pet, montaria, asa, Modo dono, Prévia). `js/meta.js`, `js/loading.js` e `js/ui.js` não tinham mudança minha depois da v0.12.6 (nada a refazer).

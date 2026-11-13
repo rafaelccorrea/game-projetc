@@ -17,7 +17,12 @@ const pet = (sp, nm) => ({ t: nm, s: [['Parado', [PT + sp + '_idle']], ['Andando
 const mount = (m, nm) => ({ t: nm, s: [['Parado', [MT + 'kael_' + m + '_idle_era2_t1']], ['Correndo', [MT + 'kael_' + m + '_run_era2_t1']], ['Golpe', [MT + 'kael_' + m + '_attack_era2_t1']],
   ['3 estrelas parado', [MT + 'kael_' + m + '_idle_3star']], ['3 estrelas correndo', [MT + 'kael_' + m + '_run_3star']], ['5 estrelas parado', [MT + 'kael_' + m + '_idle_5star']], ['5 estrelas correndo', [MT + 'kael_' + m + '_run_5star']]] });
 const gun = (e, nm) => ({ t: nm, s: [['Parado', [PS + 'kael_pistol_idle_era' + e + '_t0']], ['Correndo', [PS + 'kael_pistol_run_era' + e + '_t0']], ['Atirando', [PS + 'kael_pistol_shoot_era' + e + '_t0']]] });
-const fase = (n, nm) => ({ t: nm, s: [['Parado', [ph(n, 'idle_era2_t1')]], ['Correndo', [ph(n, 'run_era2_t1')]], ['Golpe', [ph(n, 'attack_era2_t1')]], ['Giro', [ph(n, 'spin_era2_t1')]], ['Morte', [ph(n, 'die_body')], { once: 1 }]] });
+/* TABELA DE ESCALA POR FASE NA TELA (dono, v0.12.7): garoto 1,00 · adolescente 1,12 · adulto 1,25 · guerreiro 1,30, para Kael e Kaia; pés no chão.
+   Vale na Prévia agora; fica em window.PHASE_SCALE para a batalha usar quando o Kael por fase ligar. O tocador NÃO normaliza altura: desenha cada
+   folha na escala do quadro (HS/256) vezes este número. As folhas de adulto e guerreiro serão REFEITAS pela Arte (corpo de criança): sem polimento agora. */
+const PHASE_SCALE = window.PHASE_SCALE = [1.00, 1.12, 1.25, 1.30];
+const fase = (n, nm) => ({ t: nm, s: [['Parado', [ph(n, 'idle_era2_t1')], { sc: PHASE_SCALE[n] }], ['Correndo', [ph(n, 'run_era2_t1')], { sc: PHASE_SCALE[n] }], ['Golpe', [ph(n, 'attack_era2_t1')], { sc: PHASE_SCALE[n] }], ['Giro', [ph(n, 'spin_era2_t1')], { sc: PHASE_SCALE[n] }], ['Morte', [ph(n, 'die_body')], { once: 1, sc: PHASE_SCALE[n] }]] });
+const kaiaF = (n, nm) => { const d = A + 'hyb/' + (n ? 'kaia_phase' + n : 'kaia') + '/kaia_'; return { t: nm, s: [['Parada', [d + 'idle_era2_t1'], { sc: PHASE_SCALE[n] }], ['Correndo', [d + 'run_era2_t1'], { sc: PHASE_SCALE[n] }], ['Golpe', [d + 'attack_era2_t1'], { sc: PHASE_SCALE[n] }]] }; };
 /* TABELA: grupo → cartões {t: título, s: [[estado, [camadas de baixo para cima], {once}]]}. Camada = 'base' (base.png + base.json) ou {png, json}. */
 const TB = [
   { g: 'Asas e auras', c: [
@@ -29,7 +34,7 @@ const TB = [
     { t: 'Garoto (atual)', s: [['Parado', [KI]], ['Correndo', [kael('run')]], ['Golpe', [R + 'kael_attack_wide_era2_t1']], ['Giro', [R + 'kael_spin_era2_t0']], ['Morte', [R + 'kael_die_body'], { once: 1 }]] },
     fase(1, 'Fase 1: adolescente'), fase(2, 'Fase 2: adulto'), fase(3, 'Fase 3: guerreiro'),
     { t: 'Evolução de fase', s: [['Evoluir', [KI, A + 'fx/evolve_0_1'], { once: 1 }]] } ] },
-  { g: 'Kaia', c: [{ t: 'Kaia', s: [['Parada', [A + 'hyb/kaia/kaia_idle_era2_t1']], ['Correndo', [A + 'hyb/kaia/kaia_run_era2_t1']], ['Golpe', [A + 'hyb/kaia/kaia_attack_era2_t1']]] }] },
+  { g: 'Kaia', c: [kaiaF(0, 'Kaia garota'), kaiaF(1, 'Kaia adolescente'), kaiaF(2, 'Kaia adulta'), kaiaF(3, 'Kaia guerreira')] },
   { g: 'Pets', c: [pet('era0_mammoth', 'Mamute'), pet('era1_sphinx', 'Esfinge'), pet('era2_dragon', 'Dragão'), pet('era3_parrot', 'Papagaio'), pet('era4_mechdog', 'Cão mecânico'),
     { t: 'Ovo chocando', egg: { egg: 'assets/pets/pet_egg.png', pet: PT + 'era0_mammoth_idle' } }] },
   { g: 'Montarias', c: [mount('wolf', 'Kael no lobo'), mount('griffin', 'Kael no grifo')] },
@@ -42,7 +47,7 @@ function loadLayer(L){ const png = typeof L === 'string' ? L + '.png' : L.png, j
   return Promise.all([new Promise((ok, er) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => er(new Error('img')); im.src = png; }), fetch(json).then(r => { if (!r.ok) throw new Error('json'); return r.json(); })]).then(a => ({ img: a[0], m: a[1] })); }
 function freeLayers(){ if (UI.raf) cancelAnimationFrame(UI.raf); UI.raf = 0; if (UI.layers) for (const st of UI.layers) if (st) for (const l of st.ly){ try { l.img.src = ''; } catch (e) {} l.img = null; } UI.layers = null; UI.tok++; }
 /* tocador genérico: pés/âncora de cada folha na linha do chão; escala = a do quadro do herói na batalha (HS px lógicos por 256 px de célula) */
-function drawLayers(g, st, t, cx, gy, k){ let done = true;
+function drawLayers(g, st, t, cx, gy, k){ let done = true; k *= st.sc || 1;
   for (const l of st.ly){ const M = l.m, n = M.frames || 1, fps = M.fps || 12; let fi = Math.floor(t * fps); if (st.once){ if (fi < n) done = false; fi = Math.min(n - 1, fi); } else { fi %= n; done = false; }
     const ax = typeof M.anchorX === 'number' ? M.anchorX : Array.isArray(M.anchor) ? M.anchor[0] * M.w : (M.padLeft != null ? M.padLeft + 128 : M.w / 2);
     const fy = typeof M.feetY === 'number' ? M.feetY : Array.isArray(M.anchor) ? M.anchor[1] * M.h : M.h * 243 / 256;
@@ -71,7 +76,7 @@ function play(){ const c = document.getElementById('apv_cv'); if (!c || !UI.laye
   UI.raf = requestAnimationFrame(play); }
 function openCard(gi, ci){ const card = TB[gi].c[ci], tok = ++UI.tok; freeLayers(); UI.tok = tok; UI.open = [gi, ci]; UI.st = 0; paint();
   const jobs = card.egg ? [Promise.all([new Promise((ok, er) => { const im = new Image(); im.onload = () => ok(im); im.onerror = er; im.src = card.egg.egg; }), loadLayer(card.egg.pet)]).then(a => ({ label: 'Chocar', egg: { egg: a[0], pet: a[1] }, ly: [a[1]] })).catch(() => null)]
-    : card.s.map(s => Promise.all(s[1].map(loadLayer)).then(ly => ({ label: s[0], ly, once: !!(s[2] && s[2].once), dur: Math.max.apply(null, ly.map(l => (l.m.frames || 1) / (l.m.fps || 12))) })).catch(() => null));
+    : card.s.map(s => Promise.all(s[1].map(loadLayer)).then(ly => ({ label: s[0], ly, once: !!(s[2] && s[2].once), sc: (s[2] && s[2].sc) || 1, dur: Math.max.apply(null, ly.map(l => (l.m.frames || 1) / (l.m.fps || 12))) })).catch(() => null));
   Promise.all(jobs).then(res => { if (UI.tok !== tok) return; const ok = res.filter(Boolean);
     if (!ok.length){ UI.open = null; paint(); toast('Arte ainda não entregue'); return; }
     UI.layers = ok; UI.st = 0; UI.t0 = performance.now(); paint(); UI.raf = requestAnimationFrame(play); }); }
@@ -84,7 +89,8 @@ function ownerHtml(){
   const b = (k, t) => `<button data-o="${k}" style="${btn}">${t}</button>`;
   return `<div style="padding:12px;border-radius:16px;background:#241b14;border:2px solid #ffc94a;margin-bottom:12px"><div style="font:400 18px 'Lilita One',Nunito,sans-serif;color:#ffc94a">Modo dono ligado</div>
     <div style="font-size:12.5px;color:#c9b9a2;margin:4px 0 10px">Este é o jogo de teste. Todas as telas que existem estão liberadas.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wing', 'Ganhar asa')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
+    ${typeof mountOk === 'function' && mountOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">MONTARIAS</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' + mountIds().map(m => b('mt_' + m.id, m.name)).join('') + b('mtstar', 'Estrela +1') + b('mtstar0', 'Estrela -1') + b('mtoff', 'Desmontar') + '</div>' : ''}
     <button data-o="exit" style="${btn};width:100%;margin-top:10px">Sair do modo dono (volta ao seu jogo)</button></div>`; }
 function paint(){ const el = document.getElementById('apv'); if (!el) return;
   if (UI.open){ const card = TB[UI.open[0]].c[UI.open[1]], L = UI.layers;
@@ -101,7 +107,12 @@ function ownerAct(k){
   if (k.indexOf('lv') === 0){ const n = +k.slice(2), o = Sys.level.ensure(S); o.lvl = Math.max(o.lvl | 0, n); o.xp = 0;
     for (const s of SLOTS7){ const it = S.eq[s] != null ? itemOf(S.eq[s]) : null; if (it) it.lvl = Math.max(it.lvl | 0, n); }   // FC coerente: os itens equipados sobem junto
     S.gold += 200000; toast('Nível ' + n + '. Itens equipados no nível ' + n); }
-  else if (k === 'wing'){ try { Sys.host.addItem({ slot: 'wing', r: 3, e: Math.min(6, S.eraMax | 0), lvl: 1 }); const it = S.inv[S.inv.length - 1]; if (it && it.slot === 'wing'){ S.eq.wing = it.id; toast('Asa equipada'); } } catch (e) { toast('Não deu para criar a asa'); } }
+  else if (k === 'wingangel' || k === 'wingdemon'){ const w = k === 'wingangel' ? 'angel' : 'demon';   /* as duas asas são ITENS distintos (item.wing) */
+    try { let it = S.inv.find(i => i.slot === 'wing' && i.wing === w); if (!it){ Sys.host.addItem({ slot: 'wing', r: 2, e: Math.min(6, S.eraMax | 0), lvl: 1, wing: w }); it = S.inv[S.inv.length - 1]; if (it && it.slot === 'wing' && it.wing !== w) it.wing = w; }
+      if (it && it.slot === 'wing'){ S.eq.wing = it.id; toast(w === 'angel' ? 'Asa de anjo equipada' : 'Asa demoníaca equipada'); } } catch (e) { toast('Não deu para criar a asa'); } }
+  else if (k.indexOf('mt_') === 0){ const r = mountGive(k.slice(3)); toast(r && r.ok === false ? 'Montaria indisponível' : 'Montaria equipada'); }
+  else if (k === 'mtstar' || k === 'mtstar0'){ const n = mountStar(k === 'mtstar' ? 1 : -1); toast(n ? n + ' estrela(s)' : 'Sem montaria equipada'); }
+  else if (k === 'mtoff'){ mountOff(); toast('A pé'); }
   else if (k === 'era'){ const e = Math.min(6, eraOf(S.stage) + 1); S.stage = e * STAGES_PER_ERA + 1; S.wave = 1; S.eraMax = Math.max(S.eraMax | 0, e); S.best = Math.max(S.best | 0, S.stage); S.farm = false; startBattle(); preloadAssets(); toast('Era ' + (e + 1) + ': ' + ERAS[e].n); }
   else if (k === 'stones'){ try { Sys.forge.addStones(S, 500, Sys.host); toast('+500 pedras de forja'); } catch (e) { toast('Forja indisponível'); } }
   else if (k === 'egg'){ const x = petGiveEgg(); if (x && x.pet) toast('Ovo chocando na batalha'); Screens.close(); return; }

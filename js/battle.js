@@ -794,8 +794,8 @@ const ART_ON={
      Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
      as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
-  kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
-  en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
+  kael_die:NEXT_ON,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
+  en_idle_prep:NEXT_ON,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
   //   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)

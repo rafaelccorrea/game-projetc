@@ -17,7 +17,8 @@ const KAEL_W = 0.56;   // largura do corpo do Kael ÷ lado do quadro (84 de 149 
 const petTbl = () => { const sp = PETK.info ? PETK.info.draw.sprite : ''; return Object.assign({}, PET_TBL._, PET_TBL[sp] || {}); };
 const PET_MOUNT = { dx: 0.62, dy: 9 };   // acréscimos quando há montaria: mais à frente (fração da largura do Kael) e mais para baixo (px)
 const petMounted = () => typeof HM !== 'undefined' && !!HM.mount && typeof mountReady === 'function' && mountReady(HM.mount.id);
-const petX = () => HX + HS * KAEL_W * (petTbl().dx + (petMounted() ? PET_MOUNT.dx : 0));
+const petMO = () => (petMounted() && typeof mountPetOff === 'function' && mountPetOff()) || (petMounted() ? PET_MOUNT : null);   // tabela por montaria (js/mountfx.js)
+const petX = () => { const mo = petMO(); return HX + HS * KAEL_W * (petTbl().dx + (mo ? mo.dx : 0)); };
 /* medida da folha parada (uma vez por folha): altura e meia largura opacas, em px da célula */
 const PET_M = {};
 function petMetric(base){ let m = PET_M[base]; if (m) return m; const sh = sheetLoad(PET_DIR + base + '_idle', true); if (!sh.ok) return null; const M = sh.meta, ax = (M.padLeft != null ? M.padLeft : 96) + 128; let h = 150, r = 70;
@@ -71,7 +72,7 @@ function drawPet(){ const I = petInfo(); if (!I || B.res || HATCH.cur) return; c
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
   const T = petTbl(), k = petK(), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-  const px = petX(), gy = GY + T.dy + (petMounted() ? PET_MOUNT.dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
+  const px = petX(), gy = GY + T.dy + (petMO() ? petMO().dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */

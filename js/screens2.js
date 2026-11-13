@@ -320,18 +320,22 @@ function scrPass(){
           <span style="font-size:12px;color:#c9b9a2">Compra direta pela loja do aparelho (Google Play / App Store), sem sorteio. Níveis já alcançados ficam prontos para resgatar.</span>
           <span role="note" style="padding:6px 8px;border-radius:8px;background:#3a2c1f;border:1px solid #ffc94a;color:#ffe07a;font-size:12px;font-weight:900;text-align:center">Pagamento em breve: a compra ainda não está disponível.</span></div>
         <button class="lil" data-x="cfno" style="height:50px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:18px;padding:0">Fechar</button></div></div>`:''}`);
-  XP.anim=false; XP.lvfx=false;
+  XP.anim=false; XP.lvfx=false; XP.scKey=scKey;
+  { const sc1=document.getElementById('xp_sc'); if(sc1){ if(first&&SC&&!isMs) pScrollCur(sc1,CUR); else if(scTop) sc1.scrollTop=scTop; } }   /* abertura: trilha no nível atual; redesenho: a rolagem fica onde estava */
   if(XP.toast&&Date.now()-XP.toastT<1600) pToast(XP.toast);
 }
 function pClick(b){ const a=b.dataset.x, P=Sys.pass;
   if(a==='close'){ snd('ui_tap'); Screens.close(); }
-  else if(a==='tab'){ if(b.dataset.t!=='mis'&&!xUnlocked('pass')) return; snd('ui_tap'); passTab=b.dataset.t; XP.anim=true; render(); }
+  else if(a==='tab'){ if(b.dataset.t!=='mis'&&!xUnlocked('pass')) return; snd('ui_tap'); passTab=b.dataset.t; XP.anim=true; render(); }   /* também é o "Voltar ao Passe" das Missões (data-t="pass") */
+  else if(a==='mis'){ snd('ui_tap'); if(pMisScreen()&&pMisOpen()) return;   /* tela 34 ligada e aberta: pronto */
+    if(typeof view!=='undefined'&&view!=='pass') return;   /* outra tela ficou na frente: não desenha por cima */
+    passTab='mis'; XP.anim=true; render(); }   /* sem a tela 34 (ou desviada pelo setView): a lista de missões daqui (título "Missões", com o Voltar ao Passe em cima) */
   else if(a==='mt'){ snd('ui_tap'); XP.mt=b.dataset.m; XP.mpage=0; XP.anim=true; render(); }
   else if(a==='pg'){ const p=XP.page+(+b.dataset.d); if(p>=0&&p<(XP.pages||1)){ snd('ui_tap'); XP.page=p; XP.anim=true; render(); } }
   else if(a==='mpg'){ const p=XP.mpage+(+b.dataset.d); if(p>=0&&p<(XP.mpages||1)){ snd('ui_tap'); XP.mpage=p; XP.anim=true; render(); } }
   else if(a==='askprem'){ snd('ui_tap'); XP.cf=true; render(); }
   else if(a==='cfno'){ snd('ui_tap'); XP.cf=false; render(); }
-  else if(a==='all'){ const els={}; pPending().forEach(([t,l])=>{ const e=document.getElementById('xp_'+t+l); if(e) els[t+l]=e; }); pAfterClaim(P.claimAll(S,Sys.host),els); }
+  else if(a==='all'){ const els={}, sc=pScrollOn()?document.getElementById('xp_sc'):null; pPending().forEach(([t,l])=>{ const e=document.getElementById('xp_'+t+l); if(e&&pVisible(e,sc)) els[t+l]=e; }); pAfterClaim(P.claimAll(S,Sys.host),els); }
   else if(a==='claim'){ const t=b.dataset.t, lv=+b.dataset.lv, o=P.ensure(S), reached=lv<=P.tier(S);
     if(t==='premium'&&!o.premium){ snd('ui_tap'); XP.cf=true; render(); return; }
     if(!reached||(t==='free'?o.free:o.prem).includes(lv)){ snd('ui_tap'); pToast(!reached?'Libera no nível '+lv+' do passe':'Recompensa já resgatada'); return; }

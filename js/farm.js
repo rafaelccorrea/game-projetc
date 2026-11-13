@@ -13,9 +13,14 @@ function normItem(o){ const slot = SLOT[o.slot] ? o.slot : 'armor', r = Math.max
   /* Item da Temporada do passe (premium 27 e 30): season, targetR e seasonEnd precisam ficar no item, senão o Sys.pass.evolveSeason não o acha; look = era da aparência */
   if (o.season){ it.season = true; if (Number.isInteger(o.targetR)) it.targetR = o.targetR; if (o.seasonEnd != null) it.seasonEnd = o.seasonEnd; }
   if (Number.isInteger(o.look)) it.look = o.look;
-  if (typeof o.wing === 'string') it.wing = o.wing;   // tipo da asa (angel | demon): a aparência é a do item
+  if (o.wing === 'angel' || o.wing === 'demon') it.wing = o.wing;   // tipo da asa: a aparência é a do item
+  if (o.offer === true) it.offer = true;   // arma da oferta de 1ª compra: acompanha o nível e a era do jogador até o nível 25
+  if (o.gotAt != null) it.gotAt = o.gotAt;
   if (typeof o.origin === 'string') it.origin = o.origin;   // origem do item (shop, gift, offer...): sem efeito visível; o servidor confere depois
   if (o.qp != null) it.qp = o.qp;   // qualidade do item (regra da fps-e2, ainda desligada em Sys.stats.DATA.quality.on): só não perder o campo
+  /* v0.12.7: campo NOVO de módulo não se perde mais. Além dos conhecidos acima, todo campo desconhecido de tipo simples (texto, número, booleano)
+     é preservado. Ficam de fora os de controle (id, nw, pity, source) e os validados (slot, r, e, lvl, gold, subs). */
+  for (const k in o){ if (k in it || k === 'id' || k === 'nw' || k === 'pity' || k === 'source' || k === 'wing') continue; const v = o[k], t = typeof v; if (t === 'string' || t === 'boolean' || (t === 'number' && isFinite(v))) it[k] = v; }
   return it; }
 
 /* aviso de drop: na Loja não aparece (cobriria o destaque); nas outras telas cheias cai no miolo, fora de cabeçalho e rótulo (CSS body.full #toast) */
@@ -23,7 +28,7 @@ function dropToast(msg){ if (view === 'shop') return; toast(msg); }
 /* entrada única de item na mochila (drop, chefe, baú, invocação, loja, offline). Equipar automático: pela FC REAL (Sys.fc.itemFC().swap > 0).
    A garantia da invocação é do Sys.loot.summon (o item vem com pity:true); a do jogo (S.pity) foi retirada. */
 function addItemToBag(o){
-  const it = normItem(o); it.id = S.nextId++; try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; const nm = iname(it);
+  const it = normItem(o); it.id = S.nextId++; if (it.gotAt == null) it.gotAt = Date.now(); try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; const nm = iname(it);
   if (S.inv.length >= BAG_MAX){   /* MOCHILA CHEIA: sai o item MAIS FRACO que não está equipado (FC do item no nível atual, Sys.fc.itemFC().fc); o novo só é descartado se for ele o mais fraco */
     const fcOf = x => { try { return Sys.fc.itemFC(S, Sys.host, x).fc; } catch (e) { return 0; } };
     let weak = null, wf = Infinity; for (const x of S.inv){ if (S.eq[x.slot] === x.id) continue; const f = fcOf(x); if (f < wf){ wf = f; weak = x; } }

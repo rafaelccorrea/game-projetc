@@ -130,6 +130,7 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
 const FB_DROP = [
   { id: 'forge',    icon: 'forge',     label: 'Forja',      act: 'soon:forge' },
   { id: 'pets',     icon: 'pets',      label: 'Pets',       act: 'soon:pets' },
+  { id: 'mount',    icon: 'pets',      label: 'Montarias',  act: 'soon:mounts' },   /* tela 33 (js/p_mounts.js, agente B): aparece no nível 38 quando a tela 'mounts' estiver registrada; ícone PROVISÓRIO (o de Pets) */
   { id: 'tower',    icon: 'tower',     label: 'Torre',      act: 'soon:tower' },
   { id: 'inst',     icon: 'instances', label: 'Instâncias', act: 'soon:inst' },
   { id: 'rank',     icon: 'ranking',   label: 'Ranking',    act: 'soon:rank' },

@@ -140,7 +140,7 @@ function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!
 function drawWings(H){ const kind = H.wing; if (!kind) return; const M = J('assets/anim/equip/wing_' + kind + '.json'), L = wingPart(kind, 'L'), R = wingPart(kind, 'R'); if (!M || !M.L || !L.ok || !R.ok) return;
   const mo = H.mount && typeof mountWingOff === 'function' ? mountWingOff(H) : null;   // montado: as costas do Kael sobem com a sela
   const k = HS / 256 * 0.62, bx = H.x - HS * 0.07 + (mo ? mo.x : 0), by = H.gy - HS * 0.5 + (mo ? mo.y : 0), fl = 1 + 0.07 * Math.sin(H.t * 3.2);
-  ctx.save(); ctx.translate(bx, by);
+  ctx.save(); ctx.translate(bx, by); if (mo && mo.winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: a asa do Kael fica mais alta, mais atrás e com contorno claro (não some)
   { const w = M.L.w * k, h = M.L.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * w, -M.L.root[1] * h, w, h); ctx.restore(); }
   { const w = M.R.w * k, h = M.R.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * w, -M.R.root[1] * h, w, h); ctx.restore(); }
   ctx.restore(); }

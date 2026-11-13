@@ -304,3 +304,18 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Tudo de `Sys.mail` (inbox, read, claim, claimAll, remove, unread); entrega pelo Sys.loot.grantBundle. Chama `statsChanged()` ao coletar.
 - O módulo não guarda remetente nem tipo da carta: a tela não inventa "Arena/Ranking/Evento"; e não existe "carta sem anexo some 7 dias depois de lida" (só expira em `DATA.expireDays`). Se o PO quiser remetente/tipo, Sistemas (fps-69) precisa acrescentar `from`/`type` ao `Sys.mail.send`.
 - Smoke: `node test/paineis/p_mail.smoke.js`. Zero emoji.
+
+### A-17. (agente A, v0.12.7; reescrito depois da reversão) Montarias: o que está pronto para a tela 33 (js/p_mounts.js)
+- MENU: item "Montarias" (`FB_DROP`, id `mount`, `act: 'soon:mounts'`, nível 38; no Modo dono sempre). Aparece quando a tela `mounts` estiver registrada. Ícone provisório: o de Pets.
+- Batalha (js/mountfx.js): `mountLook()` → {id, stars, aura}; `mountIds()` → só as LIGADAS (lobo, grifo, pônei, cavalo, tigre; a serpe `wyvern` está fora: reprovada).
+- Equipar / desmontar: `Sys.mount.equip(S, id | null)` + `statsChanged()`. Asa: `wingArt(item)` (index.html).
+
+### A-18. (agente A, lote v0.12.8; reescrito) Pedidos
+- PARA A ARTE (via PO): folhas de aura por estrela das montarias SEM a espada de referência; tabela de quadros de "preparo" do golpe por inimigo.
+- PARA O AGENTE B: `window.startInstanceRun(run)` está em js/instfx.js atrás de `NEXT_ON` (desligado até eu conferir); falta carregar `'p_inst'` e ligar `PANEL_ON.inst`.
+
+### Q-9. Códex das Eras V2 (js/p_codex.js) — escrita pelo QA, NÃO vista rodando
+- Peça ao engenheiro: carregar `'p_codex'` e ligar `PANEL_ON.codex`; o item "Códex" do MENU abre `Panels.open('codex')` (a tela usa `Screens.close` no Voltar).
+- Catálogo 100% real (arte conferida em assets/, atributos de Sys.stats.DATA.main, montarias de Sys.mount.DATA.mounts, nomes de assets/enemies/meta.json). Papagaio-fênix virou "Papagaio".
+- PEDIDO AO fps-69 (Sistemas): não existe módulo de "descobertas" do Códex. A tela espera, atrás das chaves `window.P_CODEX.owned` e `.rewards` (desligadas; nada aparece, sem espaço vazio): `readOwned()` → ids que o jogador já teve (w-<era>-<0|1|2>, a-<era>-<colete|helmet|gloves|boots|necklace|wings>, m-<id>, p-<pet>-<0|1|2>, b-<era>-<e0|e1|boss>, u-<7|10|13>) e `readRewards()` → `{claimed:[%], marks:[{p, txt}], claim(p) → {ok, txt}}` (marcos em % da coleção, prêmio fixo; só o próximo aparece). Os valores "[QTD]" do protótipo são do PO.
+- Zero emoji. Smoke: `node test/paineis/p_codex.smoke.js` (117 caminhos de arte conferidos).
