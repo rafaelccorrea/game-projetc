@@ -24,6 +24,11 @@ function fakeNet(o) {
     assert.deepStrictEqual([r.ok, r.save, r.deliveries, r.mail, r.errors], [true, 'push', 1, 1, []]); assert.strictEqual(got[0].id, 'm1');
     assert.deepStrictEqual(Sys.net.calls.slice(0, 2), ['init', 'session']);
   });
+  await t('agenda: no boot o Sys.schedule recebe a hora do servidor', async () => {
+    O._reset(); O.DATA.on = true; Sys.net = fakeNet({ serverNow: () => 123456789 }); Sys.buy = null; Sys.mail = null;
+    let got = null; Sys.schedule = { setServerTime: (ms, h) => { got = [ms, h && h.tag]; } };
+    await O.boot({}, { tag: 'host' }, {}); assert.deepStrictEqual(got, [123456789, 'host']); delete Sys.schedule;
+  });
   await t('os dois mudaram: pergunta ao jogo; "nuvem" troca o save', async () => {
     O._reset(); O.DATA.on = true; Sys.net = fakeNet({ sync: async () => ({ action: 'choose', recommend: 'device' }) }); Sys.buy = null; Sys.mail = null;
     let applied = null; const r = await O.boot({ a: 1 }, {}, { choose: async () => 'cloud', apply: s => { applied = s; } });

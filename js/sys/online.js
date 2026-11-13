@@ -23,12 +23,13 @@
   function ready() { const N = X().net; return !!(DATA.on && N && N.DATA); }
 
   async function boot(S, host, hooks) {
-    hooks = hooks || {}; st.hooks = hooks; st.S = S;
+    hooks = hooks || {}; st.hooks = hooks; st.S = S; st.host = host;
     if (!ready()) return { ok: false, reason: 'off' };
     const N = X().net, out = { ok: true, save: null, deliveries: 0, mail: 0, errors: [] };
     N.DATA.on = true; if (DATA.base) N.DATA.base = DATA.base;
     N.init({ storage: hooks.storage || ls(), clientVersion: hooks.clientVersion || '0' });
     try { await N.ensureSession(); } catch (e) { note('session', e.code); return { ok: false, reason: e.code || 'session' }; }
+    clockSync(host);   // agenda (Sys.schedule) e afins passam a usar a hora do servidor
     /* save na nuvem (contrato §3.3): sobe, não faz nada, baixa, ou pergunta */
     try {
       const sum = hooks.summary ? hooks.summary(S) : {};
@@ -45,6 +46,8 @@
     return out;
   }
 
+  /* hora do servidor para os módulos de horário (cada resposta do servidor atualiza o desvio no Sys.net) */
+  function clockSync(host) { try { const Sc = X().schedule, N = X().net; if (Sc && Sc.setServerTime && N && N.serverNow) Sc.setServerTime(N.serverNow(), host); } catch (e) {} }
   /* chamado depois de cada save() local: sobe com intervalo mínimo (o servidor também limita: SAVE_MIN_INTERVAL_SECONDS) */
   function saved(S) {
     if (!ready() || !st.booted) return false;
@@ -52,7 +55,7 @@
     if (st.timer) return true;
     const wait = Math.max(0, st.last + DATA.pushEveryMs - Date.now());
     st.timer = setTimeout(async () => { st.timer = null; st.last = Date.now();
-      try { await N.push(st.S, st.hooks && st.hooks.summary ? st.hooks.summary(st.S) : {}); }
+      try { await N.push(st.S, st.hooks && st.hooks.summary ? st.hooks.summary(st.S) : {}); clockSync(st.host); }
       catch (e) { note('push', e.code); if (e.code === 'save_conflict' && st.hooks && st.hooks.conflict) st.hooks.conflict(e.details); } }, wait);
     return true;
   }
