@@ -19,7 +19,7 @@ const PL_CSS=`.pl-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.p
 @keyframes plk{from{background-position:0 0}to{background-position:100% 0}}
 .pl-in{animation:plr .35s ease-out both}
 @keyframes plr{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
-.pl-btn{border:0;border-radius:12px;font-weight:900;font-size:15px;min-height:46px;padding:0 16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 4px 0 #8a4f0c}
+.pl-btn,.xs .pl-btn{border:0;border-radius:12px;font-weight:900;font-size:15px;min-height:46px;padding:0 16px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 4px 0 #8a4f0c}
 .pl-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a4f0c}
 @media (prefers-reduced-motion:reduce){.pl-kid,.pl-in{animation:none}}`;
 const plEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

@@ -36,7 +36,7 @@ const V_CSS=`.pv-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.pn
 @keyframes pvg{from{background-position:120% 0}to{background-position:-130% 0}}
 .pv-bar{transition:width .5s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
 .pv-bar::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);background-size:220% 100%;animation:pvg 2.2s linear infinite}
-.pv-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
+.pv-gold,.xs .pv-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 6px 0 #8a4f0c;border:0}
 .pv-gold:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
 .pv-cta{animation:pvc 1.5s ease-in-out infinite}
 @keyframes pvc{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 8px rgba(255,201,74,.3)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 26px rgba(255,201,74,.95)}}
