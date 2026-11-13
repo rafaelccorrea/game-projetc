@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13h20 · Checklist atualizado.** Jogo abrindo e conferido pelo QA (34 quadros por segundo no PC cheio, sem travar). Bloqueio do APK: só o carregamento novo passar nos 4 testes. Arte (3 agentes): skins, pets, arco/bumerangue. Créditos ~527
+
 - **13h · Desempenho:** o PC estava sobrecarregado (CPU 83%, 2,6 GB livres; uma página do jogo presa em laço com 1,1 GB). Todas as sessões fecharam navegadores e testes parados; Arte em 3 agentes; compilação do Android pausada. O carregamento antigo volta como padrão até o novo passar nos 4 testes
 - **13h · Você aprovou os números da guilda** (chefe, loja de Brasões, missões, estandartes)
 - **13h · Arte:** Kaia montada nas 6 montarias pronta (98 créditos); pets 2 de 9 (Lobo das Sombras e Falcão de Guerra); skins e arco/bumerangue seguem. Créditos: ~547
@@ -292,7 +294,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Números das guildas online aprovados
 
 **Créditos Higgsfield:**
-- [ ] Saldo ~713 (gastos: ultimates do arco/bumerangue, Kaia montada, 1º pet). Cobre o resto das skins e dos pets; para as 10 montarias novas montadas faltam ~280 (a Arte avisa quando parar)
+- [ ] Saldo ~527. Cobre o resto das skins (9 × ~38) e parte dos pets (7 × ~44); as 10 montarias novas montadas (~280) vão precisar de mais crédito
 
 **Celular:**
 - [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -325,18 +327,18 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Herói e skins**
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
-- [~] Skins novas no corpo padrão APROVADAS e sendo animadas: Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
-- [x] Kaia montada: pônei e cavalo no jogo; tigre, lobo, grifo e serpe com arte pronta, sendo ligados
+- [~] Skins novas no corpo padrão APROVADAS e sendo animadas (Arlequina da Kaia PRONTA; Ninja da Kaia em produção): Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
+- [x] Kaia montada nas 6 montarias, no jogo (conferida pelo QA)
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
 **Armas e poder**
 - [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
 - [~] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova, as 9 famílias APROVADAS e sendo ligadas
-- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas e 4 ultimates prontas; poses do Kael e da Kaia em produção
+- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas, 4 ultimates e as 12 poses (Kael e Kaia) PRONTAS; sendo ligados no jogo. Skins usam a pose da pistola/golpe com a arma pelo código
 
 **Pets, montarias e asas**
 - [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
-- [~] APROVADOS: 9 pets novos (Lobo das Sombras animado; os outros 8 em produção), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
+- [~] APROVADOS: 9 pets novos (Lobo das Sombras e Falcão de Guerra animados e ligados; os outros 7 em produção), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
 
 **Mundo**
 - [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
@@ -345,8 +347,8 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Online e loja**
 - [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
 - [~] Tamanho do app: plano pronto (base ~148 MB + pacotes por era) · [x] Facebook e permissões de publicidade fora · [x] ícone A e abertura no app
-- [x] Logo animado na tela de título · [~] carregamento de verdade: corrigido para internet lenta, mas TRAVA quando o app vai para segundo plano (em correção; BLOQUEIA o APK) · [~] 60 FPS escrito, medir no S24
-- [~] Vantagens do VIP LIGADAS nos módulos (Arena, Torre, Chefe Mundial, eventos, XP do Passe); mochila, offline e automações sendo ligadas nas telas
+- [x] Logo animado na tela de título · [x] tela de carregamento com o fundo novo (carregamento antigo, estável) · [~] carregamento novo (espera tudo): sendo consertado para passar nos 4 testes; BLOQUEIA o APK · [~] 60 FPS escrito, medir no S24
+- [x] Vantagens do VIP ligadas: Arena e Torre (grátis 3), Chefe Mundial, eventos, XP do Passe, mochila 60/80/100, offline até 14 h, coleta automática, desmontar sozinho. Grátis continua equipando sozinho o item melhor (sua decisão); VIP 2 ganha outra vantagem no lugar
 - [ ] App assinado, teste interno, ficha da loja
 
 ## C. Regras que você decidiu (resumo)
