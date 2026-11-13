@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **19h · Suas regras novas, passadas a todos:** pet SEMPRE na frente (da montaria e do herói); tudo que muda no personagem atualiza na hora em todas as telas; nunca rolagem para o lado. **Perfil V5** no mesmo link (herói sempre à vista, tocou-trocou, todas as skins do Kael e da Kaia, asas nas costas, 11 pets animados). **v0.13.0:** sai sem esperar o online, com a TELA DE SELEÇÃO DE SERVIDOR ligada (S1 · Nova Era); o online entra na seguinte (o CORS do servidor já foi corrigido). **Arte:** Samurai e Ciborgue retomados como prioridade; ícones dos 34 títulos aprovados (~20 créditos); peças com 3 desenhos seguindo (~86)
+
 - **18h35 · Online testado contra o servidor real: 18 de 18 OK** (servidor S1 Nova Era, conta de convidado, mesmo aparelho = mesma conta, save na nuvem com conflito, histórico, correio, sessão). Banco montado; o servidor religa sozinho se a máquina reiniciar. Sinal dado para o online ir na v0.13.0 depois da conferência do QA. Seguem desligados de propósito (esperam seu voto): arena online, chat, guildas, leilão e moderação; compras reais esperam os produtos no Play Console
 
 - **18h20 · SERVIDOR NO AR COM O BANCO** (você rodou o script; https://15-229-249-157.sslip.io/health responde OK). Agora: teste automático contra o servidor real, conferência do QA de login + save, e o online vai na v0.13.0. Desempenho em 5 min no navegador: pior quadro 15 ms (antes 85), nenhuma travada, memória 144 MB
