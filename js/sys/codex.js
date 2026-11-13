@@ -30,6 +30,8 @@ const DATA={
   petNew:[['lobo','shadowwolf'],['falcao','falcon'],['pantera','panther']],
   mountArt:['pony','horse','wolf','griffin','mythic','wyvern'],   // ids com arte (K_MART): só esses entram no catálogo
   mountFall:['pony','horse','wolf','griffin','mythic','wyvern'],  // sem Sys.mount (K_MFALL)
+  // montarias NOVAS com arte: entram no FIM da lista de montarias só quando o Sys.mount.live diz que estão no jogo (newReady um a um). Fênix: 73349f0
+  mountNew:['phoenixm'],
   bestEras:7, bestKinds:['e0','e1','boss'],                      // meta.json: eras 0-6 têm nome (7 e 8 ficam de fora, como na tela)
   auras:[7,10,13],
   marks:[
@@ -54,7 +56,8 @@ const erasMax=()=>era9On()?9:DATA.eras;
 const bestEras=()=>era9On()?9:DATA.bestEras;
 function eraCount(){ let n=erasMax(); try{ if(typeof ERAS!=='undefined'&&Array.isArray(ERAS)) n=Math.min(erasMax(),ERAS.length); }catch(e){} return n; }   // eslint-disable-line no-undef
 function mountIds(){ let L=null; try{ const M=SYS().mount; if(M&&M.DATA&&Array.isArray(M.DATA.mounts)) L=M.DATA.mounts.map(m=>m&&m.id); }catch(e){} if(!L) L=DATA.mountFall.slice();
-  return L.filter(id=>DATA.mountArt.includes(id)); }
+  const base=L.filter(id=>DATA.mountArt.includes(id)); let extra=[]; try{ const M=SYS().mount; if(M&&typeof M.live==='function') extra=DATA.mountNew.filter(id=>M.live((M.DATA.mounts||[]).find(m=>m&&m.id===id))); }catch(e){}
+  return base.concat(extra); }
 /* pets novos que já dá para conseguir (ids da tela, na ordem do DATA.petNew) */
 function newPets(){ try{ const P=SYS().pet, N=SYS().newDrops; if(!P||!P.DATA||!N||!N.DATA||N.DATA.on!==true) return [];
   return DATA.petNew.filter(([,id])=>{ const d=(P.DATA.pets||[]).find(x=>x&&x.id===id); return !!d&&(P.DATA.newPets===true||(P.DATA.newReady&&P.DATA.newReady[id]===true)); }).map(([c])=>c); }catch(e){ return []; } }
@@ -82,7 +85,7 @@ function scan(S){ const out=new Set(), E=eraCount(), sys=obj(S&&S.sys)||{};
     else { const s=DATA.slots.find(x=>x[1]===it.slot); if(s) out.add('a-'+e+'-'+s[0]); } } }catch(e){}
   try{ const ow=obj(obj(sys.pet)&&sys.pet.owned)||{}; for(const id in ow){ const c=DATA.pets[id]; if(!c) continue; const st=Math.min(2,int0(ow[id]&&ow[id].stg));
     for(let s=0;s<=st;s++) out.add('p-'+c+'-'+s); } }catch(e){}
-  try{ const ow=obj(obj(sys.mount)&&sys.mount.owned)||{}; for(const id in ow) if(DATA.mountArt.includes(id)) out.add('m-'+id); }catch(e){}
+  try{ const ow=obj(obj(sys.mount)&&sys.mount.owned)||{}; for(const id in ow) if(DATA.mountArt.includes(id)||DATA.mountNew.includes(id)) out.add('m-'+id); }catch(e){}
   try{ const lv=obj(obj(sys.forge)&&sys.forge.lv), w=lv?int0(lv.weapon):0; for(const n of DATA.auras) if(w>=n) out.add('u-'+n); }catch(e){}
   try{ const mark=(e,boss)=>{ if(e<0||e>=bestEras()) return; out.add('b-'+e+'-e0'); out.add('b-'+e+'-e1'); if(boss) out.add('b-'+e+'-boss'); };
     const P=SYS().phases, ph=obj(sys.phases), best=ph&&obj(ph.best);
