@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h35 · Créditos:** para terminar TODA a arte que falta (animações do adulto e do guerreiro, cenários das eras 7 e 8, evolução adolescente→adulto e adulto→guerreiro) a Arte estima ~80-115 créditos. Cabe no saldo de ~295 e sobram ~180. O cenário da era 6 já está no GitHub; o da era 7 começou
+
 - **23h30 · Sua decisão:** Leilão com PREÇO FIXO (só ouro, anônimo, 18+). A tela vai ser ajustada (sai "moeda do leilão" e "lances")
 - **23h30 · Sistemas entregou (fe7a7e1, 23 suítes de teste OK):**
   - Correio completo (tipos, validade, resgate uma vez só)
