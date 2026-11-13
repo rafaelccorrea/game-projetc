@@ -921,4 +921,18 @@ t('ovo do Nv 20: 10 mil sorteios dão 79% Básico / 21% Raro (±1,5), nunca acim
   } finally { P.setV17(false); P.DATA.v3=v3; P.DATA.v20.on=v20; }
 });
 
+t('skins × evolução: a skin equipada sobrevive à troca de fase (21→22, 34→35, 69→70), a folha vem da fase nova, cobertura e venda só com as 8 versões',()=>{
+  const A=require('../../js/sys/appearance.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path');
+  const ex=f=>fs.existsSync(path.join(__dirname,'../..',f)); PU.DATA.on=true;
+  try{ for(const hero of ['kael','kaia']){ const S={hero,skins:['w00','a00','w24','a34'],skinEq:{weapon:'w24',armor:'a34'},inv:[]}, h=makeHost(); h.equipped=()=>({hat:{slot:'hat',e:3,r:2}});
+      A.addCosmetic(S,'goggles'); A.equipCosmetic(S,'glasses','goggles'); const before=JSON.stringify([S.skins,S.skinEq,A.look(S).cos]), lay0=A.layers(S,h).map(l=>l.key).join('|');
+      for(const [a,b,st] of [[21,22,1],[34,35,2],[69,70,3]]){ L.ensure(S).lvl=a; assert.strictEqual(PU.pending(S,h).ready,false,'Nv '+a);
+        L.ensure(S).lvl=b; const p=PU.pending(S,h); assert.ok(p.ready&&p.anim.layered,'Nv '+b+': evolução por camadas (tem skin e óculos)'); assert.ok(PU.evolve(S,h).ok);
+        assert.strictEqual(JSON.stringify([S.skins,S.skinEq,A.look(S).cos]),before,'skin/cosmético intactos na fase '+st); assert.strictEqual(A.layers(S,h).map(l=>l.key).join('|'),lay0,'mesmas camadas');
+        const r=A.sheetFor(S,h,'idle'); assert.strictEqual(r.stage,st); assert.ok(ex(r.body+'.json'),'folha da fase nova existe'); if(!ex(r.masks+'_head.json')) console.warn('AVISO (arte): falta '+r.masks+'_head.json (chapéu/óculos nessa fase)'); } } 
+  } finally { PU.DATA.on=false; }
+  assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'full'); assert.strictEqual(A.canSell('a34',ex),c.ok);
+  assert.strictEqual(A.skinCoverage('a34',()=>true).ok,true,'com as 8 versões pode vender'); assert.strictEqual(A.skinCoverage('a34',()=>false).missing.length,8);
+});
+
 console.log(`ok: ${n} testes`);

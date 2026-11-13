@@ -116,7 +116,24 @@ function sheetFor(S,host,state){ const sh=sheets(S,host), h=sh.hero, st=STATES.i
   return {hero:h,state:st,stage:ph,fallback:ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st}; }
 /* troca o herói do save (a criação chama; só 'kael' | 'kaia'). Só visual: atributos e FC iguais (os dois usam os mesmos itens e o mesmo Sys.stats). */
 function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='kael'&&hero!=='kaia') return false; S.hero=hero; return true; }
-const API={DATA,STATES,heroOf,setHero,sheets,sheetFor,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+/* SKINS × EVOLUÇÃO (ordem do dono: a skin NUNCA se perde quando o herói evolui). Skin e cosmético são do JOGADOR (S.skins, S.skinEq, S.sys.appearance,
+   S.look): o phaseUp não toca neles. O que muda com a fase é só A PASTA da folha (sheetFor). Cobertura por tipo:
+   - arma (w<era><r>, p5/p15/p25): desenhada na mão pela âncora de cada quadro → vale em todas as fases e nos dois heróis (precisa da arte da arma);
+   - camadas (chapéu da era, colete/botas por tinta nas máscaras, óculos, máscara, asa): usam as máscaras/âncoras POR FASE → valem nas 4 fases e nos 2 heróis;
+   - CORPO INTEIRO (roupa a<era><r>, p10/p20/p30): precisa de uma folha própria por fase e herói (<pasta>/<herói>_<estado>_skin_<id>). Sem as 8 versões
+     (4 fases × Kael/Kaia) ela NÃO pode ir à venda nem cair (canSell). skinCoverage(id, existe) diz o que falta. */
+const FULL_SKIN=id=>/^a\d\d$/.test(id)||['p10','p20','p30'].includes(id);
+const WEAPON_SKIN=id=>/^w\d\d$/.test(id)||['p5','p15','p25'].includes(id);
+/* {id, kind: weapon|full|layer, missing:[{hero, stage, file}], ok} — existe(caminho) diz se o arquivo existe (o teste/ferramenta passa fs.existsSync) */
+function skinCoverage(id,exists){ const has=typeof exists==='function'?exists:()=>false, out={id,kind:WEAPON_SKIN(id)?'weapon':FULL_SKIN(id)?'full':'layer',missing:[]};
+  if(out.kind==='full') for(const h of ['kael','kaia']) for(let st=0;st<4;st++){ const f='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'+h+'_idle_skin_'+id+'.json'; if(!has(f)) out.missing.push({hero:h,stage:st,file:f}); }
+  if(out.kind==='weapon'){ const m=/^w(\d)(\d)$/.exec(id), RK=['t0','raro','t1','mitico','t2']; if(m){ const f='assets/weapons/era'+m[1]+'_'+RK[+m[2]]+'.png'; if(!has(f)) out.missing.push({hero:'*',stage:'*',file:f}); } }
+  out.ok=!out.missing.length; return out; }
+const canSell=(id,exists)=>skinCoverage(id,exists).ok;
+/* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
+   desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
+function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
+const API={DATA,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
