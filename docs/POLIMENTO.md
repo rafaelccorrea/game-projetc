@@ -22,7 +22,7 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - [ ] P6 · Vitória · diz "Javali" quando o chefe é o Rex Furioso (nome do chefe errado) · Engenheiro
 - [ ] P7 · Tela de Montarias · a Serpe não está na lista (5 de 6) · Engenheiro
 - [ ] P8 · Instância · o texto de tempo esgotado é igual ao da derrota · Engenheiro
-- [ ] P9 · Oferta 24h · usa o ícone de Eventos; precisa de ícone próprio · Arte
+- [x] P9 · Oferta 24h · usa o ícone de Eventos; precisa de ícone próprio · Arte — FEITO: assets/icons/menu/offer.png (presente + cronômetro) e ícones dos eventos assets/icons/events/{worldboss,goldenhour,invasion,weekend,pethunt,forge}.png
 - [ ] P10 · Instâncias · tela ainda desligada (fluxo 24/26) · Engenheiro (painéis)
 
 ## Achados do QA (varredura de 13/11, aba 2, Modo teste nível 60; prints em reports/prints/)
