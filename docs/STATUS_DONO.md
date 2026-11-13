@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h15 · PARA VOCÊ VOTAR: ASA NAS COSTAS refeita** (página de aprovação, 6 prints): a pé parado, golpeando, asa demoníaca, e montado no lobo, grifo e serpe. A asa sai do ombro, atrás do tronco, e nada fica acima da cabeça. Montado, de perfil, aparece uma metade (a outra fica atrás do Kael). As fases adolescente/adulto/guerreiro vêm com as 4 fases (o engenheiro começou agora)
+
 - **03h05 · Sua ordem, Bem-vindo de volta:** ao voltar depois de ficar off, o jogo mostra tudo o que você ganhou no tempo fora antes de coletar: quanto tempo ficou fora, ouro, XP e quantos níveis subiu, itens com imagem e cor da raridade, e ração/pedras/fragmentos. Depois, "Coletar" com os números contando. Com o Servidor (P16 do polimento)
 - **03h05 · Polimento fino:** a Arte revisa quadro a quadro as 6 montarias (o braço atrás do cavalo) e depois o Kael e a Kaia a pé; todos os ícones de eventos e o da Oferta estão prontos
 
@@ -172,7 +174,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 ## A. O que eu preciso de você
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
-- [ ] VOTAR AGORA: cenários das eras 5 e 8 (página de aprovação)
+- [ ] VOTAR AGORA: cenários das eras 5 e 8 e a asa nas costas refeita (página de aprovação)
 - [ ] Próximos votos (quando chegarem, eu aviso): asa nas costas (refeita), Kaia adulta e guerreira V2 animadas
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
