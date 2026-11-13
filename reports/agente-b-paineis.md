@@ -934,3 +934,18 @@ Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o
 - Vitória/Derrota: `resHeroDown` agora chama o `heroDown(on)` do agente A (pedido A-20); o corpo antigo ficou só de reserva.
 - "FC +N": já estava preparado (some quando `NEXT_ON` e `fcNotice` existem). Passe com rolagem e Montarias: sem mudança, esperando o navegador.
 - `node --check` nos três arquivos; conflitos ok; fumaça 133 passos, 0 falhas.
+
+## Bloco 28 (sem navegador): resgate do Passe pelo `claimTier`, Correio ligado
+
+- PASSE, resgate de UM nível: `pClaimOne` (`js/screens2.js`) agora chama `Sys.pass.claimTier(S, Sys.host, trilha, nível)`. Com `ok:true`
+  segue o caminho de sempre (voo de moeda/gema, `statsChanged()`, aviso do item, redesenho guardando a rolagem). Com `ok:false` mostra o
+  motivo em texto curto (bloqueado, exige Premium, já resgatada, sem prêmio, erro; com `partial` avisa "Item guardado: sai quando o nível
+  liberar") e redesenha. O caminho antigo (que mexia no estado interno em volta do `claimAll`) ficou como `pClaimOneOld`, usado só se a
+  função não existir. "Resgatar tudo" continua no `claimAll`.
+  Conferido: `node --check`; fumaça 133 / 0 falhas; chamei o `claimTier` direto no módulo (1º resgate ok com +100 de ouro; repetir →
+  `resgatado`; nível 9 sem XP → `bloqueado`; premium sem Premium → `premium`). O teste antigo do subagente do Passe está desatualizado
+  (não carrega mais os módulos: o index mudou o formato da lista) e não serviu. Não visto no navegador.
+- `arena`, `events`, `tourney`: encontrei as três LIGADAS (mudança da coordenação, commit b430dfe); mantive.
+- CORREIO: `PANEL_ON.mail = true`. Por leitura: o item Correio do MENU é `soon:mail`, aparece com `fbUnl('mail')` (nível 7 na tabela
+  `FB_UNLOCK`) e com a tela registrada e não quebrada. ATENÇÃO para o engenheiro: `js/sys/mail.js` não está na lista de módulos do index
+  (busca por 'mail' na lista: nada); sem o módulo a tela abre no estado vazio dela. A carta de boas-vindas depende disso.

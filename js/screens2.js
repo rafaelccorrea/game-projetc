@@ -238,11 +238,20 @@ function pInfo(rw){ if(!rw) return {kind:'coin',img:'assets/ui/gem.png',txt:''};
 function pPending(){ const o=Sys.pass.ensure(S), t=Sys.pass.tier(S), out=[]; for(let i=1;i<=t;i++){ if(!o.free.includes(i)) out.push(['free',i]); if(o.premium&&!o.prem.includes(i)) out.push(['premium',i]); } return out; }
 /* resgata UM nível de UMA trilha. O módulo só tem claimAll: o jogo marca os outros níveis como já resgatados só durante a chamada e devolve o estado
    depois (nada é dado duas vezes: o nível pedido entra na lista de resgatados pelo próprio claimAll). */
-function pClaimOne(track,lv){ const o=Sys.pass.ensure(S), sf=o.free.slice(), sp=o.prem.slice(), all=[]; for(let i=1;i<=Sys.pass.DATA.tiers;i++) all.push(i);
+/* motivo do Sys.pass.claimTier quando ok:false, em texto curto para o jogador */
+const P_WHY={trilha:'Trilha inválida',nivel:'Este nível não existe no passe',bloqueado:'Ainda não liberou: suba o nível do passe',premium:'Exige o Passe Premium',resgatado:'Recompensa já resgatada',sem_premio:'Este nível não tem prêmio nesta trilha',erro:'Não foi possível resgatar agora. Tente de novo'};
+/* resgata UM nível de UMA trilha. Fonte: Sys.pass.claimTier (função própria do módulo: trata virada de temporada e erro no meio da entrega).
+   Devolve no formato do claimAll ({n, list}) para o pAfterClaim; se não resgatou, {n:0, why}. Sem a função (módulo antigo), cai no caminho de reserva. */
+function pClaimOne(track,lv){ if(typeof Sys.pass.claimTier==='function'){ let r=null; try{ r=Sys.pass.claimTier(S,Sys.host,track,lv); }catch(e){ r={ok:false,reason:'erro'}; }
+    if(r&&r.ok){ const rw=r.rewards||{}; return {n:1,list:[{track:r.track||track,tier:r.tier||lv,gems:rw.gems,gold:rw.gold,item:rw.item,held:rw.held,skin:rw.skin}]}; }
+    return {n:0,why:(r&&r.partial?'Item guardado: sai quando o nível liberar':P_WHY[r&&r.reason]||P_WHY.erro)}; }
+  return pClaimOneOld(track,lv); }
+/* RESERVA (só sem claimTier): reaproveita o claimAll marcando os outros níveis como resgatados durante a chamada */
+function pClaimOneOld(track,lv){ const o=Sys.pass.ensure(S), sf=o.free.slice(), sp=o.prem.slice(), all=[]; for(let i=1;i<=Sys.pass.DATA.tiers;i++) all.push(i);
   let res=null; try{ o.free=track==='free'?all.filter(i=>i!==lv||sf.includes(i)):all.slice(); o.prem=track==='premium'?all.filter(i=>i!==lv||sp.includes(i)):all.slice(); res=Sys.pass.claimAll(S,Sys.host); }
   finally{ const got=!!(res&&res.n); o.free=track==='free'&&got?sf.concat(lv).sort((a,b)=>a-b):sf; o.prem=track==='premium'&&got?sp.concat(lv).sort((a,b)=>a-b):sp; }
   return res; }
-function pAfterClaim(res,els){ if(!res||!res.n){ snd('ui_tap'); pToast('Nada novo para resgatar'); return; }
+function pAfterClaim(res,els){ if(!res||!res.n){ snd('ui_tap'); if(res&&res.why){ statsChanged(); XP.anim=false; render(); } pToast(res&&res.why?res.why:'Nada novo para resgatar'); return; }
   const items=[], held=[]; let k=0;
   for(const r of res.list){ if(r.item) items.push(iname(r.item)); if(r.held) held.push(r.held); if(r.skin){ const sk=SKIN(SEASON_SKIN); items.push(sk?sk.n:'Skin da temporada'); }
     const el=(els&&els[r.track+r.tier])||(pScrollOn()&&document.getElementById('xp_sc'))||document.getElementById('xp_all');   /* cartão fora da vista (lista rolada): o voo sai do meio da trilha */
