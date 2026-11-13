@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **12h · Checklist atualizado.** Próximo APK: sai quando o carregamento parar de acusar erro com internet lenta; vai com ícone A, abertura, logo animado, eventos, Kaia montada, sem Facebook. Arte: pets (2 de 9), skins, arco/bumerangue, Kaia montada. Créditos ~713
+
 - **11h40 · Você aprovou as vantagens do VIP** (docs/PROPOSTA_VIP.md): coleta automática, fusão automática, equipar o melhor sozinho, pular chefe vencido, mais Arena/Torre/Chefe Mundial, Forja automática, offline maior, mochila maior. Sem atributo nem diamante: grátis em 6 meses, VIP 10 em 4. Sendo ligado nas telas
 - **11h40 · Simulação de 6 meses com TODOS os itens novos:** fecha igual (grátis no dia 179, VIP 10 no dia 121), ~10 mil diamantes mantidos
 - **11h40 · Logo animado tocando na tela de título** (prints na página) · ícones sem fundo dos pets, montarias e asas novos prontos · Fusão pronta para seu voto
@@ -275,10 +277,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 **Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
 - [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
-- [ ] Ainda para votar: Fusão e Coleção (no Modo dono, botões "CHAVES PARA O VOTO"); Serafim refeito (quando chegar); tabela de vantagens do VIP (Sistemas montando)
+- [ ] Ainda para votar: Fusão (prints na página) · Coleção (no Modo dono) · Serafim refeito com 6 asas (2 versões) · Lobo das Sombras animado (padrão dos pets novos)
+- [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md) · como ganhar cada skin · VIP pelo total gasto
 
 **Créditos Higgsfield:**
-- [ ] Saldo ~887 cobre skins, pets, arco/bumerangue e Kaia montada. Para as 10 montarias novas com o Kael e a Kaia montados faltam ~280 (a Arte avisa quando parar)
+- [ ] Saldo ~713 (gastos: ultimates do arco/bumerangue, Kaia montada, 1º pet). Cobre o resto das skins e dos pets; para as 10 montarias novas montadas faltam ~280 (a Arte avisa quando parar)
 
 **Celular:**
 - [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -312,17 +315,17 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
 - [~] Skins novas no corpo padrão APROVADAS e sendo animadas: Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
-- [~] Kaia montada: pônei e cavalo prontos (sendo ligados); tigre, lobo, grifo e serpe em produção
+- [x] Kaia montada no pônei e no cavalo (no jogo) · [~] tigre, lobo, grifo e serpe em produção
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
 **Armas e poder**
 - [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
 - [~] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova, as 9 famílias APROVADAS e sendo ligadas
-- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas prontas; vídeos do Kael em produção; os da Kaia em seguida
+- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas e 4 ultimates prontas; poses do Kael e da Kaia em produção
 
 **Pets, montarias e asas**
 - [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
-- [~] APROVADOS: 9 pets novos (animação em seguida), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
+- [~] APROVADOS: 9 pets novos (Lobo das Sombras animado; os outros 8 em produção), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
 
 **Mundo**
 - [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
@@ -330,7 +333,9 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 
 **Online e loja**
 - [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
-- [~] Tamanho do app: 722 MB hoje → base de ~121 MB com Play Asset Delivery (em produção) · permissões de publicidade saindo do app
+- [~] Tamanho do app: plano pronto (base ~148 MB + pacotes por era) · [x] Facebook e permissões de publicidade fora · [x] ícone A e abertura no app
+- [x] Logo animado na tela de título · [x] carregamento de verdade (falta corrigir o aviso falso com internet lenta, bloqueio do APK) · [~] 60 FPS escrito, medir no S24
+- [~] Vantagens do VIP aprovadas, sendo ligadas nas telas
 - [ ] App assinado, teste interno, ficha da loja
 
 ## C. Regras que você decidiu (resumo)
