@@ -31,6 +31,10 @@ const DATA={
   // ouro/drop do jogo de hoje (fórmula do engenheiro por "fase antiga" 1-90): fase n da era e ≈ fase antiga e×10 + ⌈n/10⌉
   // PO 12/11 (reports/eras-7-8.md): começo das eras 7-8 suavizado — ouro ×1,5 nas fases 1-30 do Fácil (a parede de entrada ficava 3× a da era 2)
   entryGold:{eras:[7,8], diff:0, upTo:30, mult:1.5},
+  // PROPOSTA (simulação de 180 dias, reports/sim-180-dias.md): títulos, pet, montaria, guilda e VIP somam ×1,02 (era 1) a ×1,70 (era 8) na FC do jogador
+  // grátis típico; sem ajuste as paredes de FC somem (ele fica 1,5-2× acima da FC recomendada e só a trava de nível segura). fcScale multiplica a FC
+  // recomendada E os inimigos da era. DESLIGADO até o PO aprovar (on:false = a tabela da Revisão 2 exata).
+  fcScale:{on:false, mult:[1,1,1.08,1.2,1.3,1.35,1.45,1.55,1.7]},
   glow:0.9,                                          // o botão "Desafiar" brilha com 90% da fcRec (como na Revisão 1)
   waves:{short:[0,1], shortWaves:1},                 // R2.1: nas eras 0-1 a fase é 1 onda curta (~15-25 s); da era 2 em diante, fase normal (proposta)
 };
@@ -45,7 +49,8 @@ const valid=(e,d,n)=>okE(e)&&okD(d)&&okN(n);
 /* ---------- tabela (pura, vale ligada ou desligada: as telas e o servidor podem consultar) ---------- */
 const isRequired=(e,d)=>okE(e)&&okD(d)&&d<DATA.required[e];
 const kindOf=n=>n===DATA.senhor?'senhor':n===DATA.chefe?'chefe':null;
-function fcRec(e,d,n){ if(!valid(e,d,n)) return 0; return Math.round(DATA.f0[e]*Math.pow(DATA.step,d)*Math.pow(G[e],n-1)); }
+const scaleOf=e=>DATA.fcScale&&DATA.fcScale.on===true?num(DATA.fcScale.mult[e],1):1;
+function fcRec(e,d,n){ if(!valid(e,d,n)) return 0; return Math.round(DATA.f0[e]*Math.pow(DATA.step,d)*Math.pow(G[e],n-1)*scaleOf(e)); }
 /* nível para desafiar: nas exigidas sobe da entrada à saída da era ao longo de Fácil 1-100 → Médio → ...; na opcional = nível de saída da era */
 function lvlLock(e,d,n){ if(!valid(e,d,n)) return 0; const a=DATA.lvlEntry[e], b=DATA.lvlExit[e];
   if(!isRequired(e,d)) return b; const T=DATA.required[e]*DATA.perEra, i=d*DATA.perEra+n-1; return a+Math.round((b-a)*i/T); }
