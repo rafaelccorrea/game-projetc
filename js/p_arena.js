@@ -177,8 +177,9 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH();
    - ultimate: sem campo no registro, a ENERGIA é só visual (+22 por golpe dado, +12 por golpe levado, como no protótipo; em luta longa enche mais devagar) e, cheia, o PRÓXIMO golpe real
      daquele lado é mostrado como ultimate (o dano é o do registro). Se o registro trouxer k:'ult' (ou ult:true), vale o registro;
    - pet: sem golpe de pet no registro, o pet ataca JUNTO do dono (nos críticos e a cada 3º golpe), sem número próprio. Com k:'pet' vale o registro;
-   - aparência do adversário: opp.look {hero, mount:{id,stars}, pet:{base,stage,fly}, wing, aura}; sem ele (bots de hoje só têm skin de arma/roupa),
-     montaria, pet, asa e aura saem de uma conta fixa pelo id do adversário (só visual; o mesmo adversário tem sempre a mesma aparência).
+   - aparência do adversário: opp.look {hero, mount:{id,stars}, pet:{base|sprite,stage,fly}, wing, aura} é usado INTEIRO (sem mount = a pé). Sem ele (bots de hoje
+     só têm skin de arma/roupa) o robô ESPELHA o jogador: só tem montaria / pet / asa / aura se o jogador tiver (qual delas: conta fixa pelo id, só visual).
+   - prêmio da luta: caixas só para o que vier em r.rewards {gold, gems, chest}; sem ele, só pontos, barra e a linha do prêmio da liga.
    DESENHO: o MESMO código da batalha (window.drawHeroFull: montado com a folha da montaria, arma do item na mão, asa na âncora das costas de cada
    quadro, aura por estrela); o adversário é o mesmo desenho ESPELHADO pelo canvas, com a aparência dele e o corpo padrão. Pets desenhados aqui, por
    ÚLTIMO, no plano da frente, cada um preso à metade do dono (paPvPet): nunca cruzam. Ultimate = receita da batalha (faixa da largura do campo + 24,
@@ -249,7 +250,8 @@ const PV_CSS=`.pv{position:relative;flex:1;min-height:0;overflow:hidden;backgrou
 .pv-rw img{width:28px;height:28px;display:block;margin:0 auto;object-fit:contain}
 .pv-rw b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;white-space:nowrap}
 .pv-rw small{font-size:10px;color:#9aa6d6;font-weight:800}
-.pv-lg{margin:4px 0 14px;text-align:left}
+.pv-lg{margin:4px 0 10px;text-align:left}
+.pv-card p.pv-note{margin:0 0 12px;font-size:11px;color:#ffd27a}
 .pv-lg .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:900}
 .pv-lg .row span:last-child{color:#ffd25e;text-align:right}
 .pv-lgb{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:5px;position:relative}
@@ -287,33 +289,36 @@ function paPvMyLook(){ const L={hero:'kael',mount:null,wing:null,weapon:null,arm
   try{ const i=Sys.pet.battleInfo(S,Sys.host); if(i&&i.draw&&i.draw.base) L.pet={base:i.draw.base,stage:i.stage|0,fly:!!i.draw.fly}; }catch(e){}
   try{ const ws=typeof wSkin==='function'?wSkin():L.weapon; L.ult=paPvUlt(typeof wArm==='function'?wArm():ws,ws?ws.e:0); }catch(e){}
   return L; }
-/* aparência do ADVERSÁRIO: opp.look quando o provider mandar; senão a skin que o módulo dá + montaria/pet/asa/aura por conta fixa do id (só visual) */
-function paPvOppLook(opp){ const k=opp&&opp.look&&typeof opp.look==='object'?opp.look:null, h=paPvHash(opp&&opp.id), sk=(opp&&opp.skin)||{};
+/* aparência do ADVERSÁRIO (PO: cada um aparece como é): opp.look INTEIRO quando o provider mandar (sem mount = a pé; sem pet/asa/aura = sem).
+   Enquanto não vier, o robô nunca aparece mais equipado que o jogador (my): só tem montaria / pet / asa / aura se o jogador tiver; qual delas sai de uma
+   conta fixa pelo id (só visual). A arma e a roupa são a skin que o módulo dá. */
+function paPvOppLook(opp,my){ my=my||paPvMyLook(); const k=opp&&opp.look&&typeof opp.look==='object'?opp.look:null, h=paPvHash(opp&&opp.id), sk=(opp&&opp.skin)||{};
   const L={hero:k&&k.hero==='kaia'?'kaia':'kael',mount:null,wing:null,weapon:paPvSkin((k&&k.weapon)||sk.weapon)||paPvSkin('w00'),armor:paPvSkin((k&&k.armor)||sk.armor)||paPvSkin('a00'),aura:null,pet:null,ult:{sheet:null,name:'Ultimate'},me:false};
   const tbl=typeof MOUNT_TBL!=='undefined'?MOUNT_TBL:{};
   if(k){ if(k.mount&&tbl[k.mount.id]) L.mount={id:k.mount.id,stars:Math.max(0,Math.min(5,k.mount.stars|0))}; if(typeof k.wing==='string') L.wing=k.wing; if(typeof k.aura==='string') L.aura=k.aura.indexOf('/')>=0?k.aura:'assets/anim/aura/'+k.aura;
     if(k.pet&&(k.pet.base||k.pet.sprite)){ const st=Math.max(1,Math.min(3,k.pet.stage|0||1)); L.pet={base:k.pet.base||(k.pet.sprite+['','_mid','_evo'][st-1]),stage:st,fly:!!k.pet.fly}; } }
   else { let ids=[]; try{ ids=typeof mountIds==='function'?mountIds().map(m=>m.id):[]; }catch(e){ ids=[]; } if(!ids.length) ids=Object.keys(tbl).filter(id=>id!=='mythic');
-    if(ids.length) L.mount={id:ids[h%ids.length],stars:1+((h>>>4)%5)};
-    const pets=['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog'], sp=pets[(h>>>8)%pets.length], st=1+((h>>>12)%3); L.pet={base:sp+['','_mid','_evo'][st-1],stage:st,fly:sp==='era3_parrot'};
-    L.wing=((h>>>16)&1)?'demon':'angel';
-    const au=[4,7,10,13][(h>>>18)%4]; try{ if(typeof ART_ON!=='undefined'&&ART_ON['aura'+au]===true) L.aura='assets/anim/aura/aura'+au; }catch(e){} }
+    if(ids.length&&my.mount) L.mount={id:ids[h%ids.length],stars:1+((h>>>4)%5)};
+    const pets=['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog'], sp=pets[(h>>>8)%pets.length], st=1+((h>>>12)%3); if(my.pet) L.pet={base:sp+['','_mid','_evo'][st-1],stage:st,fly:sp==='era3_parrot'};
+    if(my.wing) L.wing=((h>>>16)&1)?'demon':'angel';
+    const au=[4,7,10,13][(h>>>18)%4]; try{ if(my.aura&&typeof ART_ON!=='undefined'&&ART_ON['aura'+au]===true) L.aura='assets/anim/aura/aura'+au; }catch(e){} }
   if(L.hero==='kaia'&&L.mount){ let ok=false; try{ ok=typeof mountArtOf==='function'&&mountArtOf('kaia',L.mount.id)===true; }catch(e){} if(!ok) L.hero='kael'; }   /* Kaia só monta onde há arte; senão o corpo padrão do Kael */
   try{ const ws=L.weapon||{e:0,r:0}; L.ult=paPvUlt({slot:'weapon',r:ws.r|0,e:ws.e|0},ws.e|0); }catch(e){}
   return L; }
 /* medidas da cena para uma tela de W x H px (base do protótipo: 390). f = escala pela largura; hs = encolhe os heróis se faltar altura.
-   gy = linha dos pés dos heróis; gyP = linha dos pés dos pets (plano da frente, mais baixo); K = lado do quadro do herói; x = pés do herói (do lado dele) */
+   gy = linha dos pés dos heróis; gyP = linha dos pés dos pets de quem está montado (plano da frente, mais baixo; a pé o pet fica 14 px abaixo dos pés do dono);
+   K = lado do quadro do herói; x = âncora do herói montado, xf = centro do herói a pé (do lado dele) */
 function paPvGeo(W,H){ W=Math.max(240,+W||390); H=Math.max(360,+H||640); const f=Math.max(0.6,Math.min(1.3,W/390)), feedTop=H-176, gyP=feedTop-8;
   const hs=Math.max(0.5,Math.min(1,(gyP-46*f-104)/(205*f))), gy=gyP-46*f*hs;
-  return {W,H,f,hs,gy,gyP,feedTop,K:125*f*hs,x:80*f,ax:110*f,hitX:120*f,hitY:gy-120*f*hs,ubTop:Math.max(96,gy-150*f*hs)}; }
+  return {W,H,f,hs,gy,gyP,feedTop,K:125*f*hs,x:80*f,xf:96*f,ax:110*f,hitX:120*f,hitY:gy-120*f*hs,ubTop:Math.max(96,gy-150*f*hs)}; }
 /* pet do lado i, em coordenadas do LADO DELE (0 = borda de trás do dono): {x centro, k escala, l/r meias larguras, gy, fly}. Preso à metade do dono. */
-function paPvPet(P,G,atk){ let m=null; try{ m=typeof petMetric==='function'?petMetric(P.base):null; }catch(e){ m=null; } if(!m) m={h:150,l:70,r:70};
+function paPvPet(P,G,atk,mounted){ let m=null; try{ m=typeof petMetric==='function'?petMetric(P.base):null; }catch(e){ m=null; } if(!m) m={h:150,l:70,r:70};
   let bh=G.K*0.62; try{ if(typeof heroBodyH==='function'&&typeof HS!=='undefined'&&HS>0) bh=heroBodyH()*G.K/HS; }catch(e){}
   const fr=[0.46,0.52,0.62][Math.max(0,Math.min(2,(P.stage|0)-1))], k=bh*fr/Math.max(20,m.h), l=m.l*k, r=m.r*k;
-  let x=(atk?114:82)*G.f; x=Math.max(x,2+l); x=Math.min(x,G.W/2-4-r);   /* nunca passa do meio da tela: os dois pets não se encostam */
-  return {x,k,l,r,gy:G.gyP,fly:P.fly?bh*0.12:0}; }
+  let x=mounted?(atk?114:82)*G.f:G.xf+0.45*G.K+(atk?18*G.f:0); x=Math.max(x,2+l); x=Math.min(x,G.W/2-4-r);   /* nunca passa do meio da tela: os dois pets não se encostam */
+  return {x,k,l,r,gy:mounted?G.gyP:G.gy+14*G.f*G.hs,fly:P.fly?bh*0.12:0}; }
 /* caixa do pet na TELA (lado 1 espelhado) */
-function paPvPetBox(i,pv,G,atk){ const P=pv.F[i].look.pet; if(!P) return null; const q=paPvPet(P,G,atk); return i===0?{l:q.x-q.l,r:q.x+q.r,gy:q.gy}:{l:G.W-(q.x+q.r),r:G.W-(q.x-q.l),gy:q.gy}; }
+function paPvPetBox(i,pv,G,atk){ const P=pv.F[i].look.pet; if(!P) return null; const q=paPvPet(P,G,atk,!!pv.F[i].look.mount); return i===0?{l:q.x-q.l,r:q.x+q.r,gy:q.gy}:{l:G.W-(q.x+q.r),r:G.W-(q.x-q.l),gy:q.gy}; }
 /* ROTEIRO: o registro na ordem, com hora. lag[s] = segundos do início do golpe ao acerto (montado 0,64; a pé 0,19) */
 function paPvScript(log,lag){ const n=log.length, gap=Math.max(0.7,Math.min(1.35,32/Math.max(1,n))), ek=Math.min(1,14/Math.max(1,n)), en=[0,0], cnt=[0,0], out=[]; let T=0.4;   /* ek: luta longa enche a energia mais devagar (cerca de 2 ultimates por lado) */
   for(let i=0;i<n;i++){ const e=log[i], s=e.s?1:0, pet=e.k==='pet'||e.pet===true, ult=!pet&&(e.k==='ult'||e.ult===true||(e.k==null&&e.ult==null&&en[s]>=100));
@@ -322,7 +327,7 @@ function paPvScript(log,lag){ const n=log.length, gap=Math.max(0.7,Math.min(1.35
       out.push({t:T+Math.min(pet?0.6:lag[s],gap-0.05),k:'hit',s,i,dmg:+e.dmg||0,crit:!!e.crit,ult:false,pet,hp:+e.hp||0,en:en.slice()}); T+=gap; } }
   return out; }
 function paPvStart(opp,r,myFc,maxA,maxB){ paPvFree(); const d=r.duel||{}, log=(Array.isArray(d.log)?d.log:Array.isArray(r.log)?r.log:[]).filter(e=>e&&typeof e==='object'&&(e.s===0||e.s===1));
-  const L=[paPvMyLook(),paPvOppLook(opp)], mk=l=>{ const m=!!l.mount; return {look:l,at:-9,dur:m?17/14:0.4,lag:m?0.64:0.19,act:null,shake:0,alpha:1,petT:-9,petDur:1}; }, F=[mk(L[0]),mk(L[1])];
+  const L0=paPvMyLook(), L=[L0,paPvOppLook(opp,L0)], mk=l=>{ const m=!!l.mount; return {look:l,at:-9,dur:m?17/14:0.4,lag:m?0.64:0.19,act:null,shake:0,alpha:1,petT:-9,petDur:1}; }, F=[mk(L[0]),mk(L[1])];
   if(d.hpLeftA>0&&d.hpA>0) maxA=d.hpLeftA/d.hpA; if(d.hpLeftB>0&&d.hpB>0) maxB=d.hpLeftB/d.hpB;   /* vida cheia = a do duelo (sobra ÷ fração); sem isso, a calculada antes da luta */
   XA2.pv={opp,r,myFc,log,max:[Math.max(1,maxA),Math.max(1,maxB)],hp:[Math.max(1,maxA),Math.max(1,maxB)],en:[0,0],dmg:[0,0],crits:0,used:[],F,script:paPvScript(log,[F[0].lag,F[1].lag]),i:0,
     clock:0,vsT:0,endT:0,phase:'vs',speed:XA2.pvSpeed||1,ULT:null,ub:null,FX:[],feed:[],loser:-1,rdy:false,last:0,off:null,geo:paPvGeo(390,640)}; }
@@ -347,8 +352,8 @@ function paPvApply(pv,ev,quiet){ const s=ev.s, A=pv.F[s], D=pv.F[1-s], G=pv.geo,
   /* acerto: os números do registro */
   pv.hp[1-s]=Math.max(0,ev.hp); pv.dmg[s]+=ev.dmg; if(ev.crit&&s===0) pv.crits++; pv.en[0]=ev.en[0]; pv.en[1]=ev.en[1]; pv.used.push(ev.i);
   if(quiet) return;
-  D.shake=ev.crit||ev.ult?1.4:0.8; const hx=1-s===0?G.hitX:G.W-G.hitX, dir=1-s===0?1:-1;
-  pv.FX.push({kind:'n',x:hx+(ev.pet?24*G.f:0)*dir,y:G.hitY+(ev.pet?70*G.f*G.hs:0),txt:paF(ev.dmg),crit:ev.crit||ev.ult,t:pv.clock}); pv.FX.push({kind:'s',x:hx,y:G.hitY+30*G.f*G.hs,t:pv.clock,s:(ev.i*1.7)%6.28});
+  D.shake=ev.crit||ev.ult?1.4:0.8; const dm=!!D.look.mount, lx=dm?G.hitX:G.xf+10*G.f, hy=dm?G.hitY:G.gy-G.K*0.78, hx=1-s===0?lx:G.W-lx, dir=1-s===0?1:-1;   /* número sobre quem levou o golpe (montado é mais alto) */
+  pv.FX.push({kind:'n',x:hx+(ev.pet?24*G.f:0)*dir,y:hy+(ev.pet?(dm?70:40)*G.f*G.hs:0),txt:paF(ev.dmg),crit:ev.crit||ev.ult,t:pv.clock}); pv.FX.push({kind:'s',x:hx,y:hy+30*G.f*G.hs,t:pv.clock,s:(ev.i*1.7)%6.28});
   if(ev.crit&&!ev.pet&&!ev.ult) paPvFeed(pv,(s===0?'Crítico seu: ':'Crítico dele: ')+paF(ev.dmg),'k');
   paSnd(ev.crit||ev.ult?'crit':'hit'); paPvHud(); }
 function paPvFire(pv,quiet){ while(pv.i<pv.script.length&&(quiet||pv.script[pv.i].t<=pv.clock)) paPvApply(pv,pv.script[pv.i++],quiet);
@@ -372,7 +377,7 @@ function paPvSkip(){ const pv=XA2.pv; if(!pv||pv.phase==='result') return; if(pv
 function paPvAura(g,base,cx,by,w,t){ if(!base||typeof sheetLoad!=='function') return; const s=sheetLoad(base,true); if(!s.ok) return; const M=s.meta, fi=Math.floor(t*(M.fps||12))%(M.frames||1), h=w*M.h/M.w;
   g.save(); g.globalAlpha=0.85; if(M.blend==='lighter') g.globalCompositeOperation='lighter'; g.drawImage(s.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,cx-w/2,by-h,w,h); g.restore(); }
 /* um lutador no LADO DELE (o adversário chega aqui com o canvas já espelhado): aura → asa, montaria, herói e arma (drawHeroFull) */
-function paPvFighter(g,i,pv,G){ const F=pv.F[i], L=F.look, t=pv.clock+i*0.37, hsNow=(typeof HS!=='undefined'&&HS>0)?HS:155, k=G.K/hsNow, x=G.x+(F.shake>0?(Math.random()-0.5)*8*F.shake*G.f:0);
+function paPvFighter(g,i,pv,G){ const F=pv.F[i], L=F.look, t=pv.clock+i*0.37, hsNow=(typeof HS!=='undefined'&&HS>0)?HS:155, k=G.K/hsNow, x=(L.mount?G.x:G.xf)+(F.shake>0?(Math.random()-0.5)*8*F.shake*G.f:0);
   if(L.aura){ const on=!!L.mount; paPvAura(g,L.aura,on?G.ax:G.x,G.gy+8*G.f*G.hs,G.K*(on?1.68:1.15),t); }
   if(typeof window.drawHeroFull!=='function') return false;
   const el=pv.clock-F.at; let act=null;
@@ -385,7 +390,7 @@ function paPvFighter(g,i,pv,G){ const F=pv.F[i], L=F.look, t=pv.clock+i*0.37, hs
 /* pet do lado i, por ÚLTIMO, no plano da frente (pés em gyP, sombra no chão dele) */
 function paPvPetDraw(g,i,pv,G){ const F=pv.F[i], P=F.look.pet; if(!P||typeof sheetLoad!=='function') return false; const dir=typeof PET_DIR!=='undefined'?PET_DIR:'assets/anim/pets/', el=pv.clock-F.petT;
   let atk=el>=0&&el<F.petDur, sh=atk?sheetLoad(dir+P.base+'_atk1',true):null; const idle=sheetLoad(dir+P.base+'_idle',true); if(!sh||!sh.ok){ sh=idle; atk=false; } if(!sh.ok) return false;
-  const M=sh.meta, n=M.frames||1, fps=M.fps||12, fi=atk?Math.min(n-1,Math.floor(el*fps)):Math.floor((pv.clock+i*0.4)*fps)%n, q=paPvPet(P,G,el>=0&&el<F.petDur);
+  const M=sh.meta, n=M.frames||1, fps=M.fps||12, fi=atk?Math.min(n-1,Math.floor(el*fps)):Math.floor((pv.clock+i*0.4)*fps)%n, q=paPvPet(P,G,el>=0&&el<F.petDur,!!F.look.mount);
   const ax=(M.padLeft!=null?M.padLeft:96)+128, fy=typeof M.feetY==='number'?M.feetY:307, fly=q.fly?q.fly*(1+0.1*Math.sin(pv.clock*3)):0;
   g.save(); g.globalAlpha=0.28; g.fillStyle='#05020e'; g.beginPath(); g.ellipse(q.x,q.gy+G.K*0.012,G.K*(fly?0.09:0.13),G.K*0.032,0,0,7); g.fill(); g.restore();
   g.drawImage(sh.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,q.x-ax*q.k,q.gy-fly-fy*q.k,M.w*q.k,M.h*q.k); return true; }
@@ -433,22 +438,21 @@ function paPvLoopOff(){ if(paPvRaf&&typeof cancelAnimationFrame==='function') ca
 function paPvLvl(){ try{ return Sys.level&&Sys.level.level?Sys.level.level(S):null; }catch(e){ return null; } }
 function paPvPortrait(i,pv,sz){ if(i===0&&typeof avatarTag==='function') return avatarTag(sz,'position:absolute;left:0;top:0;width:100%;height:100%;display:block','');
   const h=i===0?pv.F[0].look.hero:pv.F[1].look.hero; return `<img src="assets/hero/avatar/${h==='kaia'?'kaia':'kael'}_phase0.png" alt="">`; }
-/* prêmios da faixa: o que a LUTA creditou (r.rewards, se o módulo passar a dar) ou, sem isso, o prêmio da liga no fechamento da semana (Sys.arena.DATA.leagues) */
-function paPvPrize(pv,li){ const rw=pv.r.rewards&&typeof pv.r.rewards==='object'?pv.r.rewards:null; let gold=0, gems=0, chest=0, title='';
-  if(rw){ gold=+rw.gold||0; gems=+rw.gems||0; chest=Array.isArray(rw.chest)?rw.chest.length:(+rw.chest||0); title='Prêmio desta luta'; }
-  else { const pz=(li.league&&li.league.prize)||{}; let u=1; try{ u=Math.max(1,+(paH().goldUnit&&paH().goldUnit())||1); }catch(e){ u=1; } gold=pz.goldk?Math.round(pz.goldk*u):0; gems=pz.gems|0; chest=pz.chest|0;
-    title='Prêmio da liga '+li.league.name+' ao fechar a semana'+(li.rewardsOn?'':' · vale quando o ranking online abrir'); }
-  return {gold,gems,chest,title,plus:rw?'+':''}; }
-function paPvResultHTML(pv){ const r=pv.r, win=!!r.win, li=Sys.arena.leagueInfo(S,paH()), L=li.league, N=li.next, o=Sys.arena.ensure(S,paH()), pz=paPvPrize(pv,li), tm=paPvClock(pv.script.length?pv.script[pv.script.length-1].t:0);
+/* PRÊMIO DA LUTA (PO): só o que o Sys.arena.fight devolver em r.rewards {gold, gems, chest}; caixa só para o que veio e é > 0. Sem r.rewards não há caixa
+   nenhuma (a luta só credita pontos): fica a linha de aviso do prêmio da liga. chest pode vir como número ou lista de itens. */
+function paPvPrize(pv){ const rw=pv.r.rewards&&typeof pv.r.rewards==='object'?pv.r.rewards:null; if(!rw) return null; const out=[], num=v=>(typeof v==='number'&&isFinite(v)&&v>0)?v:0;
+  const gold=num(rw.gold), gems=num(rw.gems), chest=Array.isArray(rw.chest)?rw.chest.length:num(rw.chest===true?1:rw.chest);
+  if(gold) out.push({img:'coin',v:'+'+paF(gold),lb:'moedas'}); if(gems) out.push({img:'gem',v:'+'+paF(gems),lb:'gemas'}); if(chest) out.push({img:'chest',v:'+'+paF(chest),lb:chest>1?'baús':'baú'}); return out; }
+function paPvResultHTML(pv){ const r=pv.r, win=!!r.win, li=Sys.arena.leagueInfo(S,paH()), L=li.league, N=li.next, o=Sys.arena.ensure(S,paH()), pz=paPvPrize(pv), tm=paPvClock(pv.script.length?pv.script[pv.script.length-1].t:0);
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1, to=!win&&pv.hp[0]>0;
   const hint=li.zone==='down'?'cuidado: abaixo de '+paN(L.min)+' você cai':N?(li.toUp>0?'faltam '+paN(li.toUp)+' para '+N.name:'sobe para '+N.name+' no fechamento'):'liga mais alta';
   return `<div class="pv-ovl pv-res"><div class="pv-card" role="dialog" aria-label="${win?'Vitória':'Derrota'}"><h2 class="${win?'win':'lose'}">${win?'VITÓRIA':'DERROTA'}</h2>
     <p>${win?'Você venceu '+paEsc(pv.opp.name)+' em '+tm:to?'Tempo esgotado: '+paEsc(pv.opp.name)+' venceu':paEsc(pv.opp.name)+' venceu em '+tm}</p>
-    <div class="pv-rwt">${paEsc(pz.title)}</div>
-    <div class="pv-rw"><div><img src="assets/ui/coin.png" alt=""><b>${pz.plus}${paF(pz.gold)}</b><small>moedas</small></div><div><img src="assets/ui/gem.png" alt=""><b>${pz.plus}${paN(pz.gems)}</b><small>gemas</small></div><div><img src="assets/ui/chest.png" alt=""><b>${paN(pz.chest)}</b><small>baú da liga</small></div></div>
+    ${pz&&pz.length?`<div class="pv-rwt">Prêmio desta luta</div><div class="pv-rw" style="grid-template-columns:repeat(${pz.length},minmax(0,1fr))">${pz.map(x=>`<div><img src="assets/ui/${x.img}.png" alt=""><b>${x.v}</b><small>${x.lb}</small></div>`).join('')}</div>`:'<div style="height:12px"></div>'}
     <div class="pv-lg"><div class="row"><span>Liga ${paEsc(L.name)}</span><span>${r.delta>=0?'+':'−'}${paN(Math.abs(r.delta))} pontos</span></div>
       <div class="pv-lgb" role="progressbar" aria-label="Pontos de liga" aria-valuenow="${li.lp}"><i style="width:${Math.round(frac*100)}%"></i></div>
       <div class="row" style="margin-top:4px;color:#9aa6d6;font-weight:800"><span>${paN(li.lp)}${N?' / '+paN(N.min):''}</span><span>${paEsc(hint)}</span></div></div>
+    <p class="pv-note">Prêmio da liga ${paEsc(L.name)} ao fechar a semana${li.rewardsOn?'':' · vale quando o ranking online abrir'}</p>
     <div class="pv-acts"><button class="o" data-x="back">Voltar à arena</button><button class="g" data-x="again" ${o.attemptsLeft<=0?'disabled':''}>${o.attemptsLeft>0?'Lutar de novo · '+o.attemptsLeft:'Sem lutas hoje'}</button></div></div></div>`; }
 function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,d.H||640), li=Sys.arena.leagueInfo(S,paH()), o=Sys.arena.ensure(S,paH()), mx=paMaxTries(), lv=paPvLvl();
   const nm=[paMe()+(lv!=null?' · Nv '+lv:''),pv.opp.name], fc=[pv.myFc,pv.opp.fc], col=['#5ee7ff','#ff5d7a'];

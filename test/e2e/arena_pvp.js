@@ -30,7 +30,7 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   const drawList = () => { const L = []; sign = 1; stack.length = 0; G.setDrawTap(s => L.push({ s, m: sign < 0 })); try { G.inCtx(() => ev('paPvDraw')()); } catch (e) { errs.push('paPvDraw: ' + errStr(e)); } G.setDrawTap(null); return L; };
   const step = dt => { try { G.inCtx(() => ev('paPvStep(' + dt + ')')); } catch (e) { const s = 'paPvStep: ' + errStr(e); if (!errs.includes(s)) errs.push(s); } };
   const click = (x, extra) => { try { return G.inCtx(() => ev('paClick({dataset:' + JSON.stringify(Object.assign({ x }, extra || {})) + '})')); } catch (e) { errs.push('paClick ' + x + ': ' + errStr(e)); } };
-  const html = () => String(G.V.innerHTML || '');
+  const html = () => String(G.V.innerHTML || ''); const render0 = () => ev('render(); 1');
 
   /* preparo: sem a entrada, pet de chão + asa + montaria, Arena aberta */
   await until(() => ev("typeof PI!=='undefined'&&!!PI.el"), 40); try { if (ev("typeof PI!=='undefined'&&!!PI.el")) G.inCtx(() => ev('PI.finish()')); } catch (e) {}
@@ -72,7 +72,7 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
     return {myMount:a.mount&&a.mount.id, myW:a.weapon&&a.weapon.id, lkW:(wFamLook(lk.weapon)||lk.weapon).id, myWing:a.wing, myPet:a.pet&&a.pet.base, oppMount:b.mount&&b.mount.id, oppMountOk:!!(b.mount&&MOUNT_TBL[b.mount.id]), oppW:b.weapon&&b.weapon.id, oppSkinW:pv.opp.skin&&pv.opp.skin.weapon, oppPet:b.pet&&b.pet.base, oppWing:b.wing, oppHero:b.hero,
       det:JSON.stringify([b.mount,b.pet,b.wing,b.aura])===JSON.stringify([b2.mount,b2.pet,b2.wing,b2.aura])}; })()`);
   check('minha aparência = a do jogo (montaria, asa, pet, arma do item equipado)', looks.myMount === mt.id && looks.myWing === 'angel' && looks.myPet === pet.base && looks.myW === looks.lkW, JSON.stringify(looks));
-  check('adversário: montado, com pet e asa, arma = a skin que o módulo deu, corpo padrão', looks.oppMountOk && !!looks.oppPet && !!looks.oppWing && looks.oppW === looks.oppSkinW && looks.oppHero === 'kael', JSON.stringify(looks));
+  check('adversário (jogador com montaria, pet e asa): montado, com pet e asa, arma = a skin que o módulo deu, corpo padrão', looks.oppMountOk && !!looks.oppPet && !!looks.oppWing && looks.oppW === looks.oppSkinW && looks.oppHero === 'kael', JSON.stringify(looks));
   check('aparência do adversário é fixa para o mesmo adversário', looks.det);
 
   /* ---------- VS → luta (espera as folhas) ---------- */
@@ -128,9 +128,19 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   const res = ev(`(function(){ const pv=XA2.pv, o=Sys.arena.ensure(S,Sys.host), li=Sys.arena.leagueInfo(S,Sys.host); return {delta:pv.r.delta, lp:o.lp, lp0:__pre.lp, gold:S.gold===__pre.gold, gems:S.gems===__pre.gems, inv:S.inv.length===__pre.inv, left:o.attemptsLeft, league:li.league.name, on:li.rewardsOn, pz:JSON.stringify(li.league.prize)}; })()`);
   { const h = html(), sgn = res.delta >= 0 ? '+' : '−';
     check('resultado: pontos da liga = delta do módulo', h.indexOf('>' + sgn + Math.abs(res.delta) + ' pontos<') >= 0 && res.lp === Math.max(0, res.lp0 + res.delta), JSON.stringify(res));
-    check('resultado: a luta não credita moeda, gema nem item (e a tela não diz que creditou)', res.gold && res.gems && res.inv && /Prêmio da liga [^<]* ao fechar a semana/.test(h) && !/Prêmio desta luta/.test(h), JSON.stringify(res));
+    check('resultado: a luta não credita moeda, gema nem item e a tela NÃO mostra caixa de prêmio (sem r.rewards)', res.gold && res.gems && res.inv && !/class="pv-rw"/.test(h) && !/Prêmio desta luta/.test(h) && !/>moedas<|>gemas<|>baús?</.test(h), JSON.stringify(res));
+    check('resultado: linha de aviso do prêmio da liga ao fechar a semana', /class="pv-note">Prêmio da liga [^<]* ao fechar a semana/.test(h));
     check('resultado: aviso de que o prêmio da liga só vale com o ranking online (enquanto o módulo não entrega)', res.on || /vale quando o ranking online abrir/.test(h));
-    check('resultado: barra da liga, moedas, gemas e baú na tela', /class="pv-lgb"/.test(h) && />moedas</.test(h) && />gemas</.test(h) && />baú da liga</.test(h));
+    check('resultado: barra da liga na tela', /class="pv-lgb"/.test(h));
+    /* quando o módulo devolver r.rewards: exatamente o que veio, caixa só para o que é > 0, número abreviado pelo jogo */
+    const withRw = rw => { ev('XA2.pv.r.rewards=' + JSON.stringify(rw) + '; render(); 1'); const hh = html(); ev('delete XA2.pv.r.rewards; 1'); return hh; }, boxes = hh => (hh.match(/<small>(moedas|gemas|baús?)<\/small>/g) || []).map(x => x.replace(/<\/?small>/g, '')).join(',');
+    { const a = withRw({ gold: 18400 }), b = withRw({ gold: 1500000, gems: 12, chest: 1 }), c = withRw({ gold: 900, gems: 0, chest: 0 }), d = withRw({ gold: 0, gems: 0, chest: [{}, {}] }), e = withRw({});
+      check('r.rewards só com moedas: uma caixa, valor abreviado', boxes(a) === 'moedas' && a.indexOf('<b>+' + ev('paF(18400)') + '</b>') >= 0 && /Prêmio desta luta/.test(a), boxes(a));
+      check('r.rewards com moedas, gemas e baú: três caixas com o que veio', boxes(b) === 'moedas,gemas,baú' && b.indexOf('<b>+' + ev('paF(1500000)') + '</b>') >= 0 && b.indexOf('<b>+12</b>') >= 0 && b.indexOf('<b>+1</b>') >= 0 && !/1500000/.test(b), boxes(b) + ' ' + ev('paF(1500000)'));
+      check('r.rewards com gemas 0 e baú 0: só a caixa de moedas', boxes(c) === 'moedas', boxes(c));
+      check('r.rewards só com baú (lista de 2): só a caixa de baús', boxes(d) === 'baús' && d.indexOf('<b>+2</b>') >= 0, boxes(d));
+      check('r.rewards vazio: nenhuma caixa', boxes(e) === '' && !/class="pv-rw"/.test(e));
+      check('com r.rewards: sem undefined/NaN e a linha da liga continua', [a, b, c, d, e].every(x => !/undefined|NaN|\[object/.test(x) && /class="pv-note"/.test(x))); render0(); }
     check('resultado: Voltar e Lutar de novo com ação', /data-x="back"[^>]*>Voltar à arena</.test(h) && /data-x="again"[^>]*>(Lutar de novo · \d+|Sem lutas hoje)</.test(h) && h.indexOf('Lutar de novo · ' + res.left) >= 0, (h.match(/<button[^>]*data-x="again"[^>]*>[^<]*/) || [''])[0]);
     check('resultado sem undefined/NaN/[object', !/undefined|NaN|\[object/.test(h)); }
   const watched = { hp: fin.hp, dmg: fin.dmg, crits: fin.crits, win: fin.win };
@@ -165,10 +175,25 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   { const L = drawList(), i7 = L.findIndex(o => /aura7/.test(o.s)), i13 = L.findIndex(o => /aura13/.test(o.s)), m0 = L.findIndex(o => !o.m && RE.mount.test(o.s)), m1 = L.findIndex(o => o.m && RE.mount.test(o.s));
     check('aura: desenhada dos dois lados, ATRÁS de cada lutador, a do adversário espelhada', i7 >= 0 && i13 >= 0 && !L[i7].m && L[i13].m && i7 < m0 && i13 < m1, JSON.stringify([i7, m0, i13, m1])); petLast('com aura', L); }
   ev("(function(){ window.__mt=Sys.mount.ensure(S).eq; Sys.mount.ensure(S).eq=null; statsChanged(); refreshHero(); LKC.t=-1e9; XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); XA2.pv.phase='run'; })(); 1");
-  check('jogador sem montaria equipada: aparência verdadeira (a pé), golpe curto', ev('!XA2.pv.F[0].look.mount&&XA2.pv.F[0].dur<0.5&&!!XA2.pv.F[1].look.mount'));
+  check('jogador sem montaria: os DOIS a pé (o robô não aparece mais equipado que o jogador), golpe curto', ev('!XA2.pv.F[0].look.mount&&XA2.pv.F[0].dur<0.5&&!XA2.pv.F[1].look.mount&&XA2.pv.F[1].dur<0.5&&!!XA2.pv.F[1].look.pet&&!!XA2.pv.F[1].look.wing'));
   await until(() => { drawList(); return ev('XA2.pv.rdy===true'); }, 400);
-  { const L = drawList(); check('a pé: herói pelas folhas dele (sem folha de montaria do meu lado), adversário montado espelhado', L.some(o => !o.m && /anim\/(hyb|skins)\//.test(o.s)) && !L.some(o => !o.m && RE.mount.test(o.s)) && L.some(o => o.m && RE.mount.test(o.s)), L.filter(o => !o.m).map(o => o.s).slice(0, 6).join(' | ')); petLast('a pé', L);
-    for (let i = 0; i < 40; i++) step(0.05); const L2 = drawList(); petLast('a pé, em luta', L2); }
+  check('a pé x a pé: os dois desenhados', ev('XA2.pv.rdy===true'));
+  await until(() => ev("(function(){ const pv=XA2.pv; return [0,1].every(i=>sheetLoad(PET_DIR+pv.F[i].look.pet.base+'_idle',true).ok); })()"), 300);
+  { const L = drawList(), hero = /anim\/(hyb|skins)\//; check('a pé x a pé: herói pelas folhas dele dos dois lados (o adversário espelhado), nenhuma folha de montaria', L.some(o => !o.m && hero.test(o.s)) && L.some(o => o.m && hero.test(o.s)) && !L.some(o => RE.mount.test(o.s)), L.map(o => (o.m ? 'E:' : '') + o.s).slice(0, 8).join(' | ')); petLast('a pé x a pé', L);
+    check('a pé x a pé: asa dos dois', L.some(o => !o.m && RE.wing.test(o.s)) && L.some(o => o.m && RE.wing.test(o.s)));
+    let ult = false, ultBad = false, bad = 0; for (let i = 0; i < 1500 && ev("XA2.pv.phase==='run'"); i++) { step(0.05); if (i % 4 === 0) { const L2 = drawList(), P = sprites(L2), x = P[P.length - 2], y = P[P.length - 1]; if (!(x && y && RE.pet.test(x.s) && RE.pet.test(y.s) && !x.m && y.m)) bad++; const us = ev('XA2.pv.ULT?XA2.pv.ULT.side:-1'); for (const o of L2) if (RE.ult.test(o.s)) { ult = true; if ((us === 1) !== o.m) ultBad = true; } } }
+    check('a pé x a pé, luta inteira: pets por último em todos os quadros; ultimate na folha da batalha, espelhada só para o adversário', bad === 0 && ult && !ultBad, 'fora ' + bad + ' ult ' + ult + ' ' + ultBad); }
+  for (const [w, h] of [[288, 512], [360, 640], [384, 700], [412, 760]]) { const q = ev('(function(){ const pv=XA2.pv, G=paPvGeo(' + w + ',' + h + '), o={gy:G.gy, xf:G.xf, K:G.K, feed:G.feedTop, half:KAEL_W/2*G.K}; for(const atk of [false,true]){ const a=paPvPetBox(0,pv,G,atk), b=paPvPetBox(1,pv,G,atk); o["a"+(atk?1:0)]=[a.l,a.r,a.gy]; o["b"+(atk?1:0)]=[b.l,b.r,b.gy]; } return o; })()');
+    check(w + 'x' + h + ' a pé x a pé: herói inteiro na tela, pet à FRENTE dele (pés um pouco abaixo, acima do feed), cada um na sua metade, sem cruzar', q.xf - q.half >= 0 && q.a0[0] + (q.a0[1] - q.a0[0]) / 2 > q.xf && q.a0[2] > q.gy && q.a0[2] < q.gy + 24 && q.a0[2] < q.feed && q.a1[1] < w / 2 && q.b1[0] > w / 2 && q.a0[0] >= 0 && q.b0[1] <= w && q.a1[1] < q.b1[0] && q.gy - q.K > 60, JSON.stringify(q)); }
+  /* sem pet / sem asa: o robô também não tem */
+  ev("(function(){ window.__pe=Sys.pet.ensure(S).eq; window.__wg=S.eq.wing; Sys.pet.ensure(S).eq=null; delete S.eq.wing; statsChanged(); refreshHero(); LKC.t=-1e9; XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); XA2.pv.phase='run'; })(); 1");
+  check('jogador sem montaria, pet, asa e aura: o robô também aparece sem nenhum deles', ev("(function(){ const a=XA2.pv.F[0].look, b=XA2.pv.F[1].look; return !a.mount&&!a.pet&&!a.wing&&!a.aura&&!b.mount&&!b.pet&&!b.wing&&!b.aura&&!!b.weapon&&b.weapon.id===XA2.pv.opp.skin.weapon; })()"), ev('JSON.stringify([XA2.pv.F[0].look.pet,XA2.pv.F[0].look.wing,XA2.pv.F[1].look.pet,XA2.pv.F[1].look.wing])'));
+  { await until(() => { drawList(); return ev('XA2.pv.rdy===true'); }, 300); const L = drawList(); check('sem pet/asa: nada de pet, asa ou montaria no desenho; os dois heróis e as armas continuam', !L.some(o => RE.pet.test(o.s) || RE.wing.test(o.s) || RE.mount.test(o.s)) && L.some(o => !o.m && RE.weapon.test(o.s)) && L.some(o => o.m && RE.weapon.test(o.s)), L.map(o => (o.m ? 'E:' : '') + o.s).slice(0, 8).join(' | ')); for (let i = 0; i < 60; i++) step(0.05); drawList(); }
+  /* opp.look vindo do provider: usado inteiro, mesmo com o jogador sem nada (e sem mount = a pé, mesmo com o jogador montado) */
+  { const q = ev("(function(){ const my0=paPvMyLook(), full=paPvOppLook({id:'x',skin:{weapon:'w01',armor:'a01'},look:{hero:'kael',mount:{id:'horse',stars:3},pet:{sprite:'era2_dragon',stage:2},wing:'demon',aura:'aura7'}},my0), foot=paPvOppLook({id:'y',skin:{weapon:'w01'},look:{wing:'angel'}},{mount:{id:'wolf',stars:5},pet:{base:'p'},wing:'angel',aura:'a'}); return {full:[full.mount&&full.mount.id,full.mount&&full.mount.stars,full.pet&&full.pet.base,full.wing,full.aura].join('|'), foot:[!!foot.mount,!!foot.pet,foot.wing,!!foot.aura].join('|'), mine:!my0.mount&&!my0.pet}; })()");
+    check('opp.look do provider é usado inteiro (jogador sem nada, adversário completo)', q.mine && q.full === 'horse|3|era2_dragon_mid|demon|assets/anim/aura/aura7', JSON.stringify(q));
+    check('opp.look sem montaria/pet/aura = adversário a pé e sem eles, mesmo com o jogador equipado', q.foot === 'false|false|angel|false', q.foot); }
+  ev("(function(){ Sys.pet.ensure(S).eq=__pe; S.eq.wing=__wg; })(); 1");
   ev("(function(){ Sys.mount.equip(S,__mt); statsChanged(); refreshHero(); LKC.t=-1e9; })(); 1");
 
   /* ---------- medidas: 288, 360, 384, 412 ---------- */
