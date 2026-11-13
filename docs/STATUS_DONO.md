@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h · Textos da loja PRONTOS para o advogado (docs/loja/):** ficha da Play Store ("Eonbound: Heróis das Eras"), formulário de Segurança dos Dados, questionário de classificação etária, política de privacidade (LGPD + ECA Digital) e termos de uso. Faltam os dados da empresa e alguns pontos marcados para o advogado. Sem rolagem lateral na Mochila e na Nuvem; seleção de servidor pronta; P24 era o bônus de coleção da skin (sem perda). Curva de 180 dias continua igual
+
 - **20h45 · Servidor:** escolha de servidor na entrada FEITA (Login → Servidor → Prólogo; selo "S1 · Nova Era" e "Trocar servidor" no Título; quem já joga não é obrigado). Achado e corrigido um risco de PERDA DE SAVE (celular vazio baixa a nuvem; celular atrasado pergunta; o servidor recusa save que volta para trás). Filtro de nome mais forte contra palavrão disfarçado com números. Agora: rankings, guildas, chat, correio e leilão separados por servidor; depois a página de privacidade
 
 - **20h30 · Arte de graça pronta (4475394):** ícones dos 3 estágios do lobo, falcão e pantera; ícones das asas Anjo e Demoníaca. Kael Anjo sem asa: por código ficou bom de lado; giro e golpe vão ser refeitos sem asa (~10 créditos, autorizado), depois do Samurai e do Ciborgue
@@ -374,7 +376,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
 
 **Para a loja:**
-- [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
+- [ ] Para a loja: rascunhos prontos em docs/loja/ (ficha, dados, classificação etária, privacidade, termos). Você preenche: nome da empresa, CNPJ, e-mail de contato, endereço e encarregado de dados (LGPD); o advogado revisa os pontos marcados [ADVOGADO] (consentimento dos pais para menores de 13, arrependimento em compra digital, transferência internacional, prazos de guarda)
 
 **Já feito:**
 - [x] Firebase (login Google) criado · GOOGLE_CLIENT_ID e JWT_SECRET no seu Windows · máquina na AWS criada e instalada · Supabase criado
