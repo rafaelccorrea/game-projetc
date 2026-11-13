@@ -8,17 +8,23 @@
 
    PONTOS DE LIGAÇÃO (uma função cada):
      fcNeed(stage)            FC pedida da fase (FC real, a do heroFC). Ligada: recFc[stage-1]; depois da última, a última × afterLastGrowth por fase.
-     diffEnemy(stage,kind,b)  vida e dano do inimigo de FASE (mkEnemy do js/battle.js; nunca em instância). b = {hp,dmg} de hoje.
+     diffEnemy(stage,kind,b)  vida e dano do inimigo de FASE (mkEnemy do js/battle.js; nunca em instância). b = o de hoje (null no mkEnemy).
+     diffRef(fc,stage)        herói de referência da FC pedida (função pura do js/sys).
      diffStep(dt)             fúria do chefe (step do js/battle.js).
      diffHud(fc)              FC pedida colorida e aviso do teto de XP no HUD (fbTick do js/fullbattle.js).
      diffAsk()                cartão "Faltam X de FC" antes do chefe (bossTap do index.html). diffLoseRows(need): as ações na Derrota (js/screens2.js).
 
-   A CONTA DO CHEFE (diffBoss): o herói de referência é o herói de AGORA com ATQ, VIDA e DEF multiplicados por k = FC pedida ÷ FC dele (a FC do
-   Sys.fc é linear nesses três; crítico, velocidade e pet ficam os dele). Vida do chefe = dano que esse herói causa em killSecAt100 segundos de jogo,
-   somado por um ensaio do mesmo agendador da batalha (básico a cada intervalo, especial a cada s2Cooldown, ultimate com a energia cheia, pet).
-   Dano do chefe = o golpe que, depois da DEF de referência (fórmula do Sys.stats.hit), leva a VIDA de referência a zero em surviveSecAt100 segundos
-   (um golpe a cada atkEvery do chefe). Quem tem a FC pedida mata em ~32 s e aguentaria ~40 s; quem tem 70% precisaria de ~46 s e cai em ~28 s.
-   Comuns: commons.shareOfBoss da vida e do dano do chefe da fase ANTERIOR. Fúria: depois de furyAtSec segundos de luta, dano × furyDmgMult. */
+   A CONTA DO CHEFE (diffBoss; boss.fromRecOnly): sai SÓ da FC pedida da fase, nunca do herói do momento.
+     1. Herói de referência = diffRef(FC pedida, fase): função pura do js/sys. Hoje é o Sys.tower.statsFromFC(fc, 0) (metade da FC em ATQ, metade em
+        VIDA, crítico base, sem DEF nem velocidade). Quando a Sistemas entregar Sys.stats.refFromFc(fc, stage) com as proporções do jogador típico,
+        o diffRef passa a usá-la sozinho (PONTO DE LIGAÇÃO ÚNICO; ver o pedido no relatório).
+     2. DPS da FC pedida = ATQ de referência × (1 + crítico) × golpes em killSecAt100 segundos, contados por um ensaio do mesmo agendador da batalha
+        (básico a cada intervalo do Sys.stats, especial a cada s2Cooldown, ultimate com a energia cheia; energia e recarga começam do zero).
+     3. Onda do chefe inteira (boss.waveIncludesEscorts): vida do chefe = (killSecAt100 × DPS) ÷ (1 + escoltas × hpShareOfBoss), ou seja,
+        o total menos a vida das escoltas. Cada comum/escolta = hpShareOfBoss da vida e dmgShareOfBoss do dano do chefe da MESMA fase.
+     4. Dano do chefe: em surviveSecAt100 segundos, os golpes das escoltas (enquanto vivem; caem uma a uma no ritmo do DPS) mais os do chefe
+        (um a cada 1,15 s no resto do tempo), já descontada a DEF de referência pelo Sys.stats.hit, somam a VIDA de referência.
+   Fúria: furyAtSec segundos depois do primeiro inimigo da onda do chefe chegar ao lugar, o dano do chefe × furyDmgMult. */
 const DIFF = window.DIFF = { tbl: null, tier: { green: 1, yellow: typeof BOSS_GLOW_AT === 'number' ? BOSS_GLOW_AT : 0.9 },   /* LIMIAR DAS CORES (lugar único): verde >= green × pedida; amarelo >= yellow × pedida (o mesmo 90% do brilho do Desafiar); abaixo, vermelho */
   col: ['#5fd068', '#ffc94a', '#ff6b5a'], name: ['verde', 'amarelo', 'vermelho'], applied: false, card: null, memo: {} };
 const diffOn = () => window.DIFF_ON === true;
@@ -55,32 +61,36 @@ function diffUnits(T, o){ const dt = 0.02; let t = 0, u = 0, pu = 0, act = null,
       else if (cd2 <= 0){ cd2 = o.s2cd; act = { t: 0, rate: 1, dur: o.s2d, e: o.eSkill, hits: o.s2h.map(h => ({ t: h[0], m: o.s2m / o.s2h.length })) }; }
       else { atkT -= dt; if (atkT <= 0){ atkT = o.ivl; act = { t: 0, rate: o.s1i / o.ivl, dur: o.s1d, e: o.eHit * o.ivl / o.s1i, hits: [{ t: o.s1t, m: 1 }] }; } } } }
   return { u, pu }; }
-/* chefe da fase para o herói de agora: {hp, dmg, k, need, fc} ou null (sem tabela, sem módulos ou FC zero: fica o inimigo de hoje).
-   live = usa a energia e a recarga do momento (o chefe que vai nascer agora); senão começa do zero (comuns e conferência). */
-function diffBoss(stage, live){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys && Sys.stats && typeof Sys.stats.hit === 'function')) return null;
-  const st = heroStats(), fc = heroFC(), need = fcNeed(stage, 'boss'); if (!(fc > 0) || !(need > 0) || !(st.atk > 0) || !(st.hp > 0)) return null;
-  const kill = diffNum(T.boss.killSecAt100, 0), surv = diffNum(T.boss.surviveSecAt100, 0); if (!(kill > 0) || !(surv > 0)) return null;
-  const E = Math.min(SKN.length - 1, Math.max(0, (typeof wSkin === 'function' ? wSkin().e : 0) | 0)), ivl = (typeof Sys.stats.interval === 'function' ? Sys.stats.interval(st) : BAL.s1Interval) || BAL.s1Interval;
-  let petK = 0, petIvl = 2; try { const I = typeof petInfo === 'function' ? petInfo() : null; if (I && st.pet && st.pet.atk > 0){ petK = st.pet.atk * (I.hitMult || 1); petIvl = I.interval || 2; } } catch (e) {}
-  const en0 = live ? Math.max(0, Math.min(100, diffNum(B.energy, 0))) : 0, cd0 = live ? Math.max(0, diffNum(B.cd2, 0)) : 0;
-  const key = [stage, need, fc, st.atk, st.hp, st.def, st.critRate, st.critDmg, ivl, E, petK, en0.toFixed(0), cd0.toFixed(1)].join('|'); if (DIFF.memo[key]) return DIFF.memo[key];
-  const k = need / fc, crit = 1 + Math.max(0, Math.min(100, diffNum(st.critRate, 0))) / 100 * Math.max(0, diffNum(st.critDmg, 100)) / 100, bossEvery = 1.15;   /* atkEvery do chefe no mkEnemy */
-  const U = diffUnits(kill, { ivl, s1i: BAL.s1Interval, s1d: SWT, s1t: 0.19, s2cd: BAL.s2Cooldown, s2d: S2DUR[E] || 1, s2h: S2HITS[E] || [[0.5, 1]], s2m: BAL.s2Mult, s3d: ULT_DUR, s3h: ULT_HITS, s3m: BAL.s3Mult,
-    eHit: BAL.energyPerHit, eSkill: BAL.energyPerSkillHit, eHurt: BAL.energyPerHurt, hurtEvery: bossEvery, energy: en0, cd2: cd0, petK, petIvl });
-  const hp = Math.max(1, st.atk * k * (U.u * crit + U.pu));
-  /* golpe do chefe: depois da DEF de referência tem de valer VIDA de referência ÷ (surv ÷ intervalo do chefe). Busca pelo próprio Sys.stats.hit. */
-  const want = st.hp * k / (surv / bossEvery), def = Math.max(0, diffNum(st.def, 0)) * k, after = d => Sys.stats.hit({ atk: d, critRate: 0, critDmg: 0 }, 1, def, false).dmg;
-  let lo = want, hi = want; for (let i = 0; i < 60 && after(hi) < want; i++) hi *= 2; for (let i = 0; i < 50; i++){ const m = (lo + hi) / 2; if (after(m) < want) lo = m; else hi = m; }
-  const out = { hp, dmg: Math.max(1e-6, hi), k, need, fc, kill, surv }; const ks = Object.keys(DIFF.memo); if (ks.length > 24) DIFF.memo = {}; DIFF.memo[key] = out; return out; }
+/* HERÓI DE REFERÊNCIA: função pura da FC (e da fase). Uma função só; quando existir Sys.stats.refFromFc, é ela. */
+function diffRef(fc, stage){ try { const T = window.Sys && Sys.stats; if (T && typeof T.refFromFc === 'function'){ const r = T.refFromFc(fc, stage); if (r && r.atk > 0 && r.hp > 0) return r; }
+    const W = window.Sys && Sys.tower; if (W && typeof W.statsFromFC === 'function') return W.statsFromFC(fc, 0); } catch (e) {} return null; }
+/* chefe e comum da fase: {hp, dmg, chp, cdmg, need, ref, dps} ou null (sem tabela ou sem os módulos: fica o inimigo de hoje). Só depende da fase. */
+function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys && Sys.stats && typeof Sys.stats.hit === 'function')) return null;
+  const need = fcNeed(stage, 'boss'), key = stage + '|' + need; if (DIFF.memo[key] !== undefined) return DIFF.memo[key];
+  const kill = diffNum(T.boss.killSecAt100, 0), surv = diffNum(T.boss.surviveSecAt100, 0), ref = need > 0 && kill > 0 && surv > 0 ? diffRef(need, stage) : null; let out = null;
+  if (ref && ref.atk > 0 && ref.hp > 0){
+    const E = Math.max(0, Math.min(SKN.length - 1, S2DUR.length - 1, S2HITS.length - 1, eraOf(stage))), ivl = (typeof Sys.stats.interval === 'function' ? Sys.stats.interval(ref) : BAL.s1Interval) || BAL.s1Interval, bossEvery = 1.15;   /* atkEvery do chefe no mkEnemy */
+    const crit = 1 + Math.max(0, Math.min(100, diffNum(ref.critRate, 0))) / 100 * Math.max(0, diffNum(ref.critDmg, 100)) / 100;
+    const U = diffUnits(kill, { ivl, s1i: BAL.s1Interval, s1d: SWT, s1t: 0.19, s2cd: BAL.s2Cooldown, s2d: S2DUR[E] || 1, s2h: S2HITS[E] || [[0.5, 1]], s2m: BAL.s2Mult, s3d: ULT_DUR, s3h: ULT_HITS, s3m: BAL.s3Mult,
+      eHit: BAL.energyPerHit, eSkill: BAL.energyPerSkillHit, eHurt: BAL.energyPerHurt, hurtEvery: bossEvery, energy: 0, cd2: 0, petK: 0, petIvl: 2 });
+    const C = T.commons || {}, hs = Math.max(0, diffNum(C.hpShareOfBoss, diffNum(C.shareOfBoss, 0))), ds = Math.max(0, diffNum(C.dmgShareOfBoss, diffNum(C.shareOfBoss, 0)));
+    let nE = 0; if (T.boss.waveIncludesEscorts === true){ try { nE = waveSpec(stage, 5).filter(k => k !== 'boss').length; } catch (e) { nE = 0; } }
+    const total = ref.atk * crit * U.u, dps = total / kill, hp = Math.max(1, total / (1 + nE * hs)), tE = nE ? Math.min(surv, nE * hs * hp / dps) : 0;   /* tE = quando cai a última escolta */
+    let eHits = 0; for (let i = 1; i <= nE; i++) eHits += (tE * i / nE) / BAL.commonAtkInterval; const bHits = Math.max(1, (surv - tE) / bossEvery);
+    const def = Math.max(0, diffNum(ref.def, 0)), after = d => Sys.stats.hit({ atk: d, critRate: 0, critDmg: 0 }, 1, def, false).dmg, sum = d => bHits * after(d) + (ds > 0 ? eHits * after(d * ds) : 0), want = ref.hp;
+    let lo = 0, hi = want / bHits; for (let i = 0; i < 80 && sum(hi) < want; i++) hi *= 2; for (let i = 0; i < 60; i++){ const m = (lo + hi) / 2; if (sum(m) < want) lo = m; else hi = m; }
+    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg: hi * ds, hs, ds, need, ref, dps, kill, surv, escorts: nE }; }
+  if (Object.keys(DIFF.memo).length > 200) DIFF.memo = {}; DIFF.memo[key] = out; return out; }
 /* inimigo de FASE (mkEnemy). Devolve b (o de hoje) se a chave estiver desligada, em instância ou sem tabela. */
 function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 'undefined' && B.inst)) return b;
-  try { if (kind === 'boss'){ const x = diffBoss(stage, true); return x ? { hp: x.hp, dmg: x.dmg, diff: true } : b; }
-    const sh = diffNum(DIFF.tbl.commons && DIFF.tbl.commons.shareOfBoss, 0), x = sh > 0 ? diffBoss(Math.max(1, stage - 1), false) : null; return x ? { hp: Math.max(1, x.hp * sh), dmg: x.dmg * sh, diff: true } : b;
-  } catch (e) { return b; } }
-/* FÚRIA: o relógio corre desde que o chefe chegou ao lugar dele; passado o tempo, o dano dele multiplica (uma vez) e a tela avisa */
+  try { const x = diffBoss(stage); if (!x) return b; if (kind === 'boss') return { hp: x.hp, dmg: x.dmg, diff: true }; return x.hs > 0 && x.ds > 0 ? { hp: x.chp, dmg: x.cdmg, diff: true } : b; } catch (e) { return b; } }
+/* FÚRIA: o relógio (DIFF.ft) corre desde que o primeiro inimigo da onda do chefe chegou ao lugar dele; zera quando a onda recomeça ou acaba.
+   Passado o tempo, o dano do chefe multiplica (uma vez) e a tela avisa. */
 function diffStep(dt){ if (!diffOn() || !DIFF.tbl || B.inst) return; const T = DIFF.tbl.boss; if (!T) return; const at = diffNum(T.furyAtSec, 0), m = diffNum(T.furyDmgMult, 1); if (!(at > 0) || !(m > 1)) return;
-  for (const e of B.en){ if (!e.boss || !e.diff || e.dead || e.fury) continue; if (e.wasParked) e.dft = (e.dft || 0) + dt;
-    if (e.dft >= at){ e.fury = m; B.banner = { txt: 'FÚRIA DO CHEFE', sub: 'Dano x' + m, t: 0, dur: 1.8, col: '#ff5252' }; B.shake = Math.max(B.shake || 0, .5); try { snd('boss_appear'); } catch (er) {} DIFF.hk = null; } } }
+  if (S.wave !== 5 || B.deadT > 0 || (!B.en.length && B.toSpawn.length > 1)){ DIFF.ft = 0; return; }
+  if (DIFF.ft > 0 || B.en.some(e => e.wasParked)) DIFF.ft = (DIFF.ft || 0) + dt; if (!(DIFF.ft >= at)) return;
+  for (const e of B.en){ if (!e.boss || !e.diff || e.dead || e.fury) continue;
+    e.fury = m; B.banner = { txt: 'FÚRIA DO CHEFE', sub: 'Dano x' + m, t: 0, dur: 1.8, col: '#ff5252' }; B.shake = Math.max(B.shake || 0, .5); try { snd('boss_appear'); } catch (er) {} DIFF.hk = null; } }
 const diffFury = () => { try { return diffOn() && B.en.some(e => e.boss && e.fury > 1 && !e.dead); } catch (e) { return false; } };
 /* herói caiu numa onda comum com a FC abaixo da pedida: o aviso diz o que falta e onde ver o que fazer */
 function diffDeadMsg(){ if (!diffOn()) return ''; try { const need = fcNeed(S.stage), fc = heroFC(); if (fc >= need) return ''; return 'Derrotado: faltam ' + fcShow(Math.max(1, Math.ceil(need - fc))) + ' de FC. Toque em Desafiar para ver como ficar mais forte'; } catch (e) { return ''; } }

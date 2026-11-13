@@ -4,6 +4,7 @@
    (lida do arquivo, nenhum número fixo aqui), cores, cartão na Derrota e antes do chefe, botões, chefe 32 s/40 s na batalha de verdade, comuns,
    fúria, teto de XP, estrela da montaria, eras 7-8 nas duas combinações. "MEDIDA" = número informativo (não reprova): vai para o relatório. */
 const VERBOSE = process.argv.includes('-v');
+const MEDIDA = (process.argv.find(a => /^--medida=/.test(a)) || '').slice(9);   /* roteiro de medida (não é teste): --medida=tabela | novo[:segundos] | ondas:<fase> | senhores:<era>-<era>[:eras9] */
 const fs = require('fs'), path = require('path');
 const boot = require('./sandbox'), errStr = boot.errStr;
 const DT = 1 / 30;
@@ -31,7 +32,7 @@ async function game(search) { const loadErr = []; const G = boot({ realFetch: tr
   check('js/diff.js e js/sys/advice.js nas listas do index.html', G.lists.jsList.includes('diff') && G.lists.sysList.includes('advice') && G.lists.sysList.indexOf('advice') > G.lists.sysList.indexOf('fc'), G.lists.jsList.join(',') + ' / ' + G.lists.sysList.join(','));
   G.scale = null; G.frameErr = [];
   /* herói com os atributos do jogo × G.scale.k (ATQ, VIDA, DEF) a cada quadro; G.scale.atk0 = sem dano (mede só quanto aguenta) */
-  G.hero = () => { const h = ev('B.hero'), s = G.scale; if (!h || !s) return; const st = s.st; const r = h.maxhp > 0 ? h.hp / h.maxhp : 1; h.atk = s.atk0 ? 1e-9 : st.atk * s.k; h.maxhp = st.hp * s.k; h.def = (st.def || 0) * s.k; if (!s.set) { h.hp = h.maxhp; s.set = true; } else h.hp = Math.min(h.maxhp, r * h.maxhp); };
+  G.hero = () => { const h = ev('B.hero'), s = G.scale; if (!h || !s) return; const st = s.st; const r = h.maxhp > 0 ? h.hp / h.maxhp : 1; h.atk = (s.atk0 && ev('B.en').some(e => e.boss)) ? 1e-9 : st.atk * s.k;   /* atk0: para de bater quando o chefe entra (as escoltas caem normalmente) */ h.maxhp = st.hp * s.k; h.def = (st.def || 0) * s.k; if (s.fix) { h.critRate = st.critRate; h.critDmg = st.critDmg; h.aspd = st.aspd || 0; h.ivl = G.ev('Sys.stats.interval')(st); } if (!s.set) { h.hp = h.maxhp; s.set = true; } else h.hp = Math.min(h.maxhp, r * h.maxhp); };
   G.sandbox.__e2eFrame = dt => { const B = ev('B'); if (!B.paused) { G.hero(); ev('step')(dt); if (typeof G.sandbox.petStep === 'function') ev('petStep')(dt); } if (typeof G.sandbox.resTick === 'function') ev('resTick')(dt); ev('tickFx')(dt); };
   G.frame = async () => { try { inCtx(() => G.sandbox.__e2eFrame(DT)); } catch (e) { const s = errStr(e); if (!G.frameErr.includes(s)) G.frameErr.push(s); } try { inCtx(() => G.advance(DT * 1000)); } catch (e) {} if (++G.n % 30 === 0) await tick(); };
   G.n = 0; G.until = async (cond, secs) => { const n = Math.ceil(secs / DT); for (let i = 0; i < n; i++) { if (cond()) return true; await G.frame(); if (G.frameErr.length > 10) break; } return !!cond(); };
@@ -59,10 +60,26 @@ function widthChecks(label, html, s, W) { const m = html.match(/id="dfc_w"[^>]*w
   check(label + ': todo texto de uma linha tem corte (nada empurra a tela para o lado)', !bad.length, bad.join(' | '));
   check(label + ': sem rolagem', !/overflow(-x)?:(auto|scroll)/.test(html)); }
 
+/* ROTEIRO DE MEDIDA para a Sistemas (um pedaço por execução, para caber na memória e no tempo). Não é teste: só imprime. */
+async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.split(':'), what = parts[0], arg = parts[1] || ''; const P = t => console.log(t);
+  if (what === 'tabela') { G.start(1, 1); const fc = ev('heroFC()'), med = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'docs', 'balance.json'), 'utf8')).tower.fc_mediana_do_gratis_no_fim_de_cada_era;
+    P('jogador novo: FC ' + fc + ' · fase 1 pede ' + ev('fcNeed(1)') + ' (' + Math.round(100 * fc / ev('fcNeed(1)')) + '%)');
+    for (let e = 0; e < 9; e++) { const g = n => ev(`fcNeed(${e * 10 + n})`); P('era ' + e + ': f1 ' + g(1) + ' · f5 ' + g(5) + ' · f9 ' + g(9) + ' · Senhor ' + g(10) + ' (x' + (g(10) / g(9)).toFixed(2) + ' da f9) · mediana do grátis no fim da era ' + (med[e] || '-')); }
+    P('era 0, todas: ' + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => ev(`fcNeed(${n})`)).join(' ')); return; }
+  if (what === 'novo') { G.start(1, 1); ev('SCREENS_ON.bossResult=false'); let deaths = 0, bossLoss = 0, wasDead = false, st = 1; const t0 = ev('B.t'), log = [];
+    await G.until(() => { const d = ev('B.deadT') > 0; if (d && !wasDead) { deaths++; if (ev('S.wave') === 5) bossLoss++; } wasDead = d; if (!d && ev('S.farm') && ev('S.wave') !== 5) ev('challengeBoss()');
+      if (ev('S.stage') !== st) { st = ev('S.stage'); log.push('fase ' + (st - 1) + ' vencida aos ' + (ev('B.t') - t0).toFixed(0) + ' s (FC ' + ev('heroFC()') + ', nível ' + ev('Sys.level.level(S)') + ', quedas até aqui ' + deaths + ', no chefe ' + bossLoss + ')'); } return st > 6; }, +arg || 420);
+    log.forEach(P); P('fim: ' + (ev('B.t') - t0).toFixed(0) + ' s de jogo, fase ' + ev('S.stage') + ' onda ' + ev('S.wave') + ', FC ' + ev('heroFC()') + ' x pedida ' + ev('fcNeed(S.stage)') + ', nível ' + ev('Sys.level.level(S)') + ', quedas ' + deaths + ' (no chefe ' + bossLoss + ')'); return; }
+  if (what === 'ondas') { const s = +arg; for (const m of [1.2, 1, 0.9, 0.7]) { const c = await fight(s, 1, { mul: m }), b = await many(3, s, 5, { mul: m });
+      P('fase ' + s + ' · ' + Math.round(m * 100) + '% da FC · onda comum 1: ' + (c.res === 'win' ? 'vencida em ' + c.sec.toFixed(0) + ' s, sobra ' + Math.round(c.hp * 100) + '%' : c.res === 'dead' ? 'CAIU aos ' + c.sec.toFixed(0) + ' s' : 'não acabou em 150 s') + ' · onda do chefe: ' + show(b)); } return; }
+  if (what === 'senhores') { const ab = arg.split('-').map(Number); for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`); const at = await many(4, s, 5, { mul: 1 / wall }), full = await many(4, s, 5, { mul: 1 });
+      P('Senhor da era ' + e + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · chegando com a FC da fase 9 (' + Math.round(100 / wall) + '%): ' + show(at) + ', derrotas ' + (4 - at.wins) + '/4 · com 100%: ' + show(full) + ', derrotas ' + (4 - full.wins) + '/4'); } return; }
+  P('medida desconhecida: ' + MEDIDA); }
+
 (async () => {
   /* ======================= 1. CHAVE DESLIGADA ======================= */
   console.log('1. chave desligada');
-  const G = await game(), { ev } = G, D = fakeDom(G);
+  const G = await game(MEDIDA && /:eras9$/.test(MEDIDA) ? '?debug=1&fresh=1&skip=1&eras9=1' : undefined), { ev } = G, D = fakeDom(G);
   const F = code => { try { return ev(code); } finally { D.hook(false); } };   /* só as chamadas do js/diff.js criam elementos de mentira */
   check('tabela do balance.json lida pelo loadBalance (bloco dificuldade)', ev('!!DIFF.tbl') && ev('JSON.stringify(DIFF.tbl.recFc)') === JSON.stringify(FILE.recFc), 'DIFF.tbl=' + ev('!!DIFF.tbl'));
   check('arquivo traz a chave desligada (on:false)', FILE.on === false, String(FILE.on));
@@ -162,35 +179,41 @@ function widthChecks(label, html, s, W) { const m = html.match(/id="dfc_w"[^>]*w
 
   /* ======================= 5. CHEFE, COMUNS, FÚRIA ======================= */
   console.log('5. chefe, comuns e fúria (batalha de verdade, quadro a quadro)');
-  const share = FILE.commons.shareOfBoss, KILL = FILE.boss.killSecAt100, SURV = FILE.boss.surviveSecAt100, FAT = FILE.boss.furyAtSec, FM = FILE.boss.furyDmgMult;
-  G.start(1, 1);
-  for (const s of STAGES) { const b = JSON.parse(ev(`JSON.stringify(diffBoss(${s},false))`)), e = JSON.parse(enemy(G, s, 'boss')), p = JSON.parse(ev(`JSON.stringify(diffBoss(${Math.max(1, s - 1)},false))`)), c = JSON.parse(enemy(G, s, 'e0')), c1 = JSON.parse(enemy(G, s, 'e1'));
-    check('fase ' + s + ': chefe sai da FC pedida (k = pedida ÷ FC do herói)', e[3] === true && near(e[0], b.hp, 1e-9) && near(e[1], b.dmg, 1e-9) && near(b.k, FILE.recFc[s - 1] / ev('heroFC()'), 1e-9) && isFinite(e[0]) && e[0] > 0 && e[1] > 0, JSON.stringify(e));
-    check('fase ' + s + ': comuns = ' + share + ' × vida e dano do chefe da fase anterior', near(c[0], p.hp * share, 1e-9) && near(c[1], p.dmg * share, 1e-9) && c1[0] === c[0] && c1[1] === c[1], JSON.stringify(c) + ' x ' + JSON.stringify([p.hp * share, p.dmg * share])); }
-  { const st = JSON.parse(ev('JSON.stringify(heroStats())')), b = JSON.parse(ev('JSON.stringify(diffBoss(10,false))')), ref = ev(`Sys.fc.fcOfStats(Object.assign({},heroStats(),{atk:heroStats().atk*${b.k},hp:heroStats().hp*${b.k},hpNoPet:(heroStats().hpNoPet||heroStats().hp)*${b.k},def:heroStats().def*${b.k}}))`);
-    check('herói de referência (ATQ, VIDA e DEF × k) tem a FC pedida pelo Sys.fc', near(ref, b.need, 0.01), ref + ' x ' + b.need);
-    check('dano do chefe: depois da DEF, leva a VIDA de referência em surviveSecAt100', near(ev(`Sys.stats.hit({atk:${b.dmg},critRate:0,critDmg:0},1,${st.def * b.k},false).dmg`) * (SURV / 1.15), st.hp * b.k, 0.001)); }
-  /* luta real só contra o chefe (sem as escoltas): herói com k × os atributos */
-  async function duel(stage, kMul, atk0) { G.start(stage, 5); const st = JSON.parse(ev('JSON.stringify(heroStats())')), k = ev(`fcNeed(${stage})/heroFC()`) * kMul; G.scale = { st, k, atk0: !!atk0, set: false };
-    ev("B.en=[]; B.toSpawn=['boss']; B.waveN=1; B.spawnT=0.1; SCREENS_ON.bossResult=false"); let t0 = null, tFury = null, res = null; const t = () => ev('B.t');
-    let boss = null; await G.until(() => { const e = boss || ev('B.en[0]'); if (e && e.boss) boss = e; if (boss && boss.wasParked && t0 == null) t0 = t() - (boss.dft || 0); if (boss && boss.fury && tFury == null) tFury = t() - t0;
-      if (boss && boss.dead) { res = 'kill'; return true; } if (ev('B.deadT') > 0) { res = 'dead'; return true; } return false; }, 200);
-    const out = { res, sec: t0 != null ? t() - t0 : null, hpLeft: ev('B.hero.hp/B.hero.maxhp'), tFury }; G.scale = null; return out; }
-  if (process.env.DIFF_REPEAT) { for (const s of [10, 35, 70]) { const o = []; for (let i = 0; i < +process.env.DIFF_REPEAT; i++) o.push((await duel(s, 1, false)).sec.toFixed(1)); console.log('fase ' + s + ': ' + o.join(' ')); } process.exit(0); }
-  /* a sorte da luta (crítico de 12% no especial e na ultimate) espalha cada luta em uns ±15%: a regra dos 32 s é conferida na MÉDIA de 6 lutas */
-  for (const s of [10, 35]) { const runs = []; for (let i = 0; i < 6; i++) runs.push(await duel(s, 1, false)); const mean = runs.reduce((x, r) => x + (r.sec || 0), 0) / runs.length, a = runs[0];
-    check('fase ' + s + ': herói com exatamente a FC pedida mata o chefe em ' + KILL + ' s ±10% (média de 6 lutas) e vence todas', runs.every(r => r.res === 'kill') && near(mean, KILL, 0.10), runs.map(r => r.res + ' ' + (r.sec || 0).toFixed(1)).join(', '));
-    note('fase ' + s + ' com 100% da FC: média ' + mean.toFixed(1) + ' s (' + runs.map(r => (r.sec || 0).toFixed(1)).join(' ') + '), vida que sobra ' + runs.map(r => Math.round(r.hpLeft * 100) + '%').join(' '));
-    const b = await duel(s, 1, true); check('fase ' + s + ': sem bater, esse herói cairia em ~' + SURV + ' s (±12%)', b.res === 'dead' && near(b.sec, SURV, 0.12), JSON.stringify(b)); note('fase ' + s + ' com 100% da FC, sem bater: cai em ' + (b.sec || 0).toFixed(1) + ' s');
-    const c = await duel(s, 0.7, false); check('fase ' + s + ': com 70% da FC não mata', c.res === 'dead', JSON.stringify(c)); note('fase ' + s + ' com 70% da FC: ' + c.res + ' em ' + (c.sec || 0).toFixed(1) + ' s');
-    const d = await duel(s, 0.9, false); note('fase ' + s + ' com 90% da FC: ' + d.res + ' em ' + (d.sec || 0).toFixed(1) + ' s'); const e = await duel(s, 1.2, false); note('fase ' + s + ' com 120% da FC: ' + e.res + ' em ' + (e.sec || 0).toFixed(1) + ' s, vida que sobra ' + Math.round(e.hpLeft * 100) + '%'); }
+  const HS = FILE.commons.hpShareOfBoss, DS = FILE.commons.dmgShareOfBoss, KILL = FILE.boss.killSecAt100, SURV = FILE.boss.surviveSecAt100, FAT = FILE.boss.furyAtSec, FM = FILE.boss.furyDmgMult;
+  check('arquivo: chefe só pela FC pedida e onda com as escoltas', FILE.boss.fromRecOnly === true && FILE.boss.waveIncludesEscorts === true && HS > 0 && DS > 0);
+  G.start(1, 1); const en1 = STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#');
+  for (const s of STAGES) { const b = JSON.parse(ev(`JSON.stringify(diffBoss(${s}))`)), e = JSON.parse(enemy(G, s, 'boss')), c = JSON.parse(enemy(G, s, 'e0')), c1 = JSON.parse(enemy(G, s, 'e1'));
+    check('fase ' + s + ': chefe sai da FC pedida da fase', e[3] === true && e[0] === b.hp && e[1] === b.dmg && b.need === FILE.recFc[s - 1] && isFinite(e[0]) && e[0] > 0 && e[1] > 0, JSON.stringify(e));
+    check('fase ' + s + ': comuns = ' + HS + ' da vida e ' + DS + ' do dano do chefe da MESMA fase', near(c[0], b.hp * HS, 1e-9) && near(c[1], b.dmg * DS, 1e-9) && c1[0] === c[0] && c1[1] === c[1], JSON.stringify(c));
+    check('fase ' + s + ': onda inteira (chefe + ' + b.escorts + ' escoltas) = ' + KILL + ' s × DPS da FC pedida', b.escorts === 2 && near(b.hp * (1 + b.escorts * HS), KILL * b.dps, 1e-9));
+    check('fase ' + s + ': herói de referência tem a FC pedida pelo Sys.fc', near(ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`), b.need, 0.01), ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`) + ' x ' + b.need); }
+  G.start(1, 1); rich(G, 60); check('chefe e comuns NÃO dependem do herói do momento (herói forte = mesmos inimigos)', STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#') === en1 && ev('heroFC()') > 1000, String(ev('heroFC()')));
+  /* luta real. spec: {ref:true, mul} = herói de referência da FC pedida × mul; {mul} = herói do jogo (proporções de quem começa) com mul × a FC pedida; atk0 = sem bater */
+  async function fight(stage, wave, spec) { G.start(stage, wave); const need = ev(`fcNeed(${stage})`);
+    if (spec) { const st = spec.ref ? JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${stage}),${stage}))`)) : JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: (spec.ref ? 1 : need / ev('heroFC()')) * (spec.mul || 1), atk0: !!spec.atk0, fix: !!spec.ref, set: false }; }
+    ev('SCREENS_ON.bossResult=false'); let t0 = null, tFury = null, res = null, boss = null; const t = () => ev('B.t'), w0 = ev('S.wave');
+    await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.fury && tFury == null) tFury = t() - t0;
+      if (ev('B.deadT') > 0) { res = 'dead'; return true; } if (wave === 5 ? (boss && boss.dead) : ev('S.wave') !== w0) { res = 'win'; return true; } return false; }, 150);
+    const out = { res: res || 'tempo', sec: t0 != null ? t() - t0 : 0, hp: Math.max(0, ev('B.hero.hp/B.hero.maxhp')), tFury }; G.scale = null; return out; }
+  const many = async (n, stage, wave, spec) => { const r = []; for (let i = 0; i < n; i++) r.push(await fight(stage, wave, spec)); const w = r.filter(x => x.res === 'win'); return { runs: r, wins: w.length, n, mean: w.length ? w.reduce((a, x) => a + x.sec, 0) / w.length : 0, meanAll: r.reduce((a, x) => a + x.sec, 0) / n, hp: w.length ? w.reduce((a, x) => a + x.hp, 0) / w.length : 0 }; };
+  const show = m => m.wins + '/' + m.n + (m.wins ? ' em ' + m.mean.toFixed(0) + ' s, sobra ' + Math.round(m.hp * 100) + '%' : ' (cai aos ' + m.meanAll.toFixed(0) + ' s)');
+
+  if (MEDIDA) { await medidas({ G, ev, fight, many, show }); process.exit(0); }
+
+  /* a sorte da luta (crítico no especial e na ultimate) espalha cada luta em uns ±15%: a regra é conferida na MÉDIA de 4 lutas */
+  for (const s of [10, 35]) { const m = await many(4, s, 5, { ref: true });
+    check('fase ' + s + ': herói de referência (100% da FC pedida) vence a onda do chefe inteira em ~' + KILL + ' s (média de 4, ±15%)', m.wins === 4 && near(m.mean, KILL, 0.15), m.runs.map(r => r.res + ' ' + r.sec.toFixed(1)).join(', '));
+    const b = await fight(s, 5, { ref: true, atk0: true }); check('fase ' + s + ': sem bater no chefe, ele cairia em ~' + SURV + ' s (±12%)', b.res === 'dead' && near(b.sec, SURV, 0.12), JSON.stringify(b));
+    const c = await fight(s, 5, { ref: true, mul: 0.7 }); check('fase ' + s + ': com 70% da FC não vence', c.res === 'dead', JSON.stringify(c));
+    note('fase ' + s + ', herói de referência: 100% ' + show(m) + ' · sem bater cai aos ' + b.sec.toFixed(1) + ' s · 70% cai aos ' + c.sec.toFixed(1) + ' s'); }
   check('nenhuma exceção no laço da batalha', !G.frameErr.length, G.frameErr.slice(0, 3).join(' | '));
   /* fúria */
-  G.start(10, 5); { ev("B.en=[mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.banner=null"); ev(`diffStep(${FAT - 0.5})`); const before = ev('B.en[0].fury||0'); ev('diffStep(0.6)'); const bn = JSON.parse(ev('JSON.stringify(B.banner||{})'));
+  G.start(10, 5); { ev("B.en=[mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.banner=null; DIFF.ft=0"); ev(`diffStep(${FAT - 0.5})`); const before = ev('B.en[0].fury||0'); ev('diffStep(0.6)'); const bn = JSON.parse(ev('JSON.stringify(B.banner||{})'));
     check('fúria: nada antes de furyAtSec; depois, dano × furyDmgMult (uma vez)', before === 0 && ev('B.en[0].fury') === FM, before + ' → ' + ev('B.en[0].fury'));
     check('fúria: aviso na tela sem emoji', /FÚRIA/.test(bn.txt || '') && bn.sub === 'Dano x' + FM && !EMOJI.test((bn.txt || '') + bn.sub), JSON.stringify(bn));
     check('fúria: o HUD avisa', /fúria/.test(JSON.parse(ev('JSON.stringify(diffHudInfo(heroFC(),10))')).text));
-    const a = await duel(10, 1, true); check('fúria na luta real: entra aos ' + FAT + ' s de luta', a.tFury == null ? a.sec < FAT : near(a.tFury, FAT, 0.03), JSON.stringify(a)); }
+    ev("B.en=[]; B.toSpawn=['e0','e1','boss']; diffStep(0.1)"); check('fúria: o relógio zera quando a onda do chefe recomeça', ev('DIFF.ft') === 0);
+    const a = await fight(10, 5, { ref: true, mul: 3, atk0: true }); check('fúria na luta real: entra ' + FAT + ' s depois do primeiro inimigo da onda chegar', a.tFury != null && near(a.tFury, FAT, 0.03), JSON.stringify(a)); }
   /* o resto do jogo não muda */
   G.start(10, 1); { ev('B.inst={}'); const e = JSON.parse(enemy(G, 10, 'boss')), t = JSON.parse(today(G, 10, 'boss')), c = JSON.parse(enemy(G, 10, 'e0')), tc = JSON.parse(today(G, 10, 'e0')); ev('B.inst=null');
     check('instância: inimigos de hoje, sem fúria', e[0] === t[0] && e[1] === t[1] && e[3] === false && c[0] === tc[0] && c[1] === tc[1], JSON.stringify(e)); }
@@ -199,13 +222,6 @@ function widthChecks(label, html, s, W) { const m = html.match(/id="dfc_w"[^>]*w
   /* save antigo abaixo da parede: tem aviso */
   G.start(40, 1); { const msg = ev('diffDeadMsg()'), I = JSON.parse(ev('JSON.stringify(diffHudInfo(heroFC(),40))'));
     check('save com FC abaixo da pedida: HUD vermelho e aviso ao cair numa onda comum', I.tier === 2 && /^Derrotado: faltam .+ de FC\. Toque em Desafiar/.test(msg) && !EMOJI.test(msg), msg); }
-  /* MEDIDAS que o dono/Sistemas precisam ver antes de ligar */
-  { G.start(1, 1); note('jogador novo: FC ' + ev('heroFC()') + ' x FC pedida da fase 1 ' + ev('fcNeed(1)') + ' (' + Math.round(100 * ev('heroFC()/fcNeed(1)')) + '%)');
-    const k0 = ev('S.kills'); await G.until(() => ev('S.kills') > k0 + 2 || ev('B.deadT') > 0, 120); note('jogador novo na fase 1, ondas comuns, 120 s: ' + (ev('S.kills') - k0) + ' abates' + (ev('B.deadT') > 0 ? ', herói caiu' : ''));
-    for (const s of [10, 35]) { G.start(s, 1); const st = JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: ev(`fcNeed(${s})/heroFC()`), set: false }; const w0 = ev('S.wave'), t0 = ev('B.t'); const ok = await G.until(() => ev('S.wave') !== w0 || ev('B.deadT') > 0, 400);
-      note('fase ' + s + ', herói com 100% da FC pedida, onda comum 1 (' + ev('B.waveN') + ' inimigos): ' + (ev('B.deadT') > 0 ? 'herói CAIU aos ' : ok ? 'onda vencida em ' : 'não terminou em ') + (ev('B.t') - t0).toFixed(0) + ' s, vida ' + Math.round(100 * ev('B.hero.hp/B.hero.maxhp')) + '%'); G.scale = null; }
-    G.start(10, 5); const st = JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: ev('fcNeed(10)/heroFC()'), set: false }; ev('SCREENS_ON.bossResult=false'); const t0 = ev('B.t'); await G.until(() => ev('S.stage') > 10 || ev('B.deadT') > 0, 300);
-    note('fase 10, onda do chefe INTEIRA (2 escoltas + chefe), herói com 100% da FC: ' + (ev('S.stage') > 10 ? 'venceu em ' : 'CAIU aos ') + (ev('B.t') - t0).toFixed(0) + ' s'); G.scale = null; }
 
   /* ======================= 6. DESLIGAR DE NOVO ======================= */
   console.log('6. desligada de novo = idêntico');
