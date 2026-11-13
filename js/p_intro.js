@@ -206,7 +206,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   off:null,
   offline(){ if(this.off!==null) return this.off; this.off=false;
     try{ const s=G.S(), away=typeof AWAY==='number'&&isFinite(AWAY)?AWAY:0;   /* lastSeen no futuro (relógio mexido) dá AWAY negativo = sem tempo fora */
-      if(window.__noSave||s.tut<99||away<120||typeof BAL==='undefined') return false;
+      if(window.__noSave||(s.tut|0)<1||away<120||typeof BAL==='undefined') return false;   /* tutorial pela metade não segura mais o tempo fora (QA no S24); só quem nem passou do 1º balão */
       const cap=BAL.offlineCapHours*3600, t=Math.min(away,cap), perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,s.stage-1));
       let om=1; try{ om=Math.max(1,Sys.vip.perks(s).offlineMult||1); }catch(e){}
       const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
