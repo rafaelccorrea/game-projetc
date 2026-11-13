@@ -26,7 +26,7 @@ Comparação do catálogo do código com os arquivos em `assets/` (pastas de rep
 - Fundo estático de reserva das eras 7 e 8: renomear era7_ref/era8_ref e cadastrar
 
 ## Novo (achado na Derrota)
-- Montaria sem cavaleiro, parada (1 folha por montaria, 16): para a montaria ficar em cena na Derrota. A orçar.
+- Montaria sem cavaleiro, parada (1 por montaria, 16): ~5-7 créditos cada, ~80-110 + 20% de refação. Até lá: imagem limpa da montaria (a do Códex) com respiração por código. Tirar o cavaleiro das folhas por código foi testado e deixa remendo (descartado)
 - Asa na morte: conferir a âncora das costas nas folhas de morte (por código, 0 crédito).
 
 ## Opcional
