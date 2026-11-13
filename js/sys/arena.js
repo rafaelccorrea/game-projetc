@@ -18,7 +18,16 @@ const DATA={
   attemptsPerDay:3,   // dono (13/11): grátis 3; VIP soma (+2 no VIP 4, +3 no VIP 8: Sys.vip.conv arenaAdd)
   opponentsShown:3, refreshPerDay:1,
   startPoints:1000, winBase:20, lossBase:10, kRange:[0.5,2], minPoints:0,
-  oppSpread:0.10,                       // adversários da lista: FC do jogador ±10% (pedido do PO)
+  oppSpread:0.10,
+  /* PRÊMIO POR LUTA (PO, 13/11, dentro da curva de 180 dias): moedas sempre (× ouro de um abate da fase), 1 gema na 1ª VITÓRIA do dia (≤ ~180 no
+     total, cabe nos ~10 mil), 1 baú de toque (Sys.chest, respeita o teto diário dele) ao completar as 3 lutas do dia. O prêmio da liga continua no fim da semana. */
+  fightRewards:{goldkWin:40, goldkLoss:20, gemsFirstWin:1, chestAt:3},
+  /* LUTA PvP (tela 23): mesmo dano médio do Sys.tower.duel, dividido em golpe do herói (k:'hit') e do pet (k:'pet', a cada 2 golpes, com a parte de ATQ
+     que o pet dá); ULTIMATE de verdade (k:'ult'): energia +25 por golpe dado e +10 por golpe levado, cheia em 100 = próximo golpe do herói ×3.
+     Os dois lados têm as mesmas regras (adversário = cópia na FC dele), então a luta continua justa. O Servidor precisa da MESMA conta (game-rules.ts). */
+  pvp:{petEvery:2, enHit:25, enHurt:10, enFull:100, ultMult:3, maxRounds:40, logMax:200},
+  /* APARÊNCIA DOS ROBÔS pelo NÍVEL (PO): a pé abaixo do 38; pet a partir do 20; asa do 50; aura do 30. Jogador real usa a aparência real (Servidor). */
+  botLook:{mountFrom:38, petFrom:20, wingFrom:50, auraFrom:30, levelSpread:2},                       // adversários da lista: FC do jogador ±10% (pedido do PO)
   bots:{count:49, spread:0.4, weekGain:[60,420]},   // ranking: 49 bots + o jogador; FC ±40% e pontos que sobem ao longo da semana
   rewardsVsBots:false,
   rewards:[                             // por posição final (prontos para o ranking online)
@@ -119,20 +128,52 @@ function grant(S,host,b){ const out={}, sys=root.Sys||{};
   return out;
 }
 
+/* ---------------- luta PvP (golpe, pet, ultimate) ---------------- */
+const defRedOf=(def,atk)=>{ const T=root.Sys&&root.Sys.stats; if(T&&typeof T.defReduction==='function') return T.defReduction(def,atk);
+  const d=Math.max(0,num(def,0)); return Math.min(0.75,d/(d+2*Math.max(1e-9,num(atk,0)))); };
+/* A e B = {atk, hp, def, critRate, critDmg, aspd, petFrac (0..1 = parte do ATQ que vem do pet)}. {win, rounds, hpA, hpB, log:[{s, k, dmg, crit, hp, en}], timeout} */
+function duelPvp(A,B,seed){ const D=DATA.pvp, rng=mulberry(seed>>>0), P=[A,B], max=[Math.max(1,num(A.hp,1)),Math.max(1,num(B.hp,1))], hp=max.slice(), en=[0,0], turn=[0,0], log=[]; let r=0, w=-1;
+  const push=e=>{ if(log.length<D.logMax) log.push(e); };
+  for(r=1;r<=D.maxRounds&&w<0;r++) for(let s=0;s<2&&w<0;s++){ const a=P[s], d=P[1-s], pf=clamp(num(a.petFrac,0),0,0.9), base=Math.max(0,num(a.atk,0))*(1+Math.max(0,num(a.aspd,0))/100), red=1-defRedOf(d.def,a.atk);
+    turn[s]++;
+    const crit=rng()*100<clamp(num(a.critRate,12),0,100), ult=en[s]>=D.enFull, var_=0.9+rng()*0.2;
+    let dmg=base*(1-pf)*(crit?1+num(a.critDmg,100)/100:1)*var_*red*(ult?D.ultMult:1);
+    if(ult) en[s]=0; else en[s]=Math.min(D.enFull,en[s]+D.enHit);
+    hp[1-s]-=dmg; en[1-s]=Math.min(D.enFull,en[1-s]+D.enHurt); push({s,k:ult?'ult':'hit',dmg,crit,hp:Math.max(0,hp[1-s]),en:en[s]});
+    if(hp[1-s]<=0){ w=s; break; }
+    if(pf>0&&turn[s]%D.petEvery===0){ const pd=base*pf*D.petEvery*(0.9+rng()*0.2)*red; hp[1-s]-=pd; push({s,k:'pet',dmg:pd,crit:false,hp:Math.max(0,hp[1-s]),en:en[s]}); if(hp[1-s]<=0) w=s; } }
+  return {win:w===0,rounds:Math.min(r-1,D.maxRounds),hpA:Math.max(0,hp[0])/max[0],hpB:Math.max(0,hp[1])/max[1],log,timeout:w<0}; }
+/* parte do ATQ que vem do pet (o Sys.tower.playerStats soma o golpe do pet no ATQ: atk × (1 + pet.atk)) */
+function petFracOf(S,host){ const F=root.Sys&&root.Sys.fc; try{ if(F&&typeof F.stats==='function'){ const p=(F.stats(S,host)||{}).pet||{}; const k=Math.max(0,num(p.atk,0)); return k/(1+k); } }catch(e){} return 0; }
+const levelOf=host=>Math.max(1,int0(host&&host.level&&host.level()));
+const PET_POOL=[[20,0,'era0_mammoth',false],[20,0,'pet_shadowwolf',false],[35,1,'era1_sphinx',false],[35,2,'era2_dragon',true],[35,2,'pet_falcon',true],[45,2,'pet_panther',false],
+  [55,3,'era3_parrot',true],[60,4,'era4_mechdog',false],[100,7,'era7_cerberus',false],[110,8,'era8_pegasus',true]];
+/* aparência do robô pelo nível (e a era do jogador): {hero, mount:{id,stars}|null, pet:{base,stage,fly}|null, wing|null, aura|null} */
+function botLook(rng,lvl,era){ const B=DATA.botLook, L=Math.max(1,int0(lvl)), out={hero:rng()<0.5?'kael':'kaia',mount:null,pet:null,wing:null,aura:null};
+  if(L>=B.mountFrom){ const ids=L>=100?['griffin','wyvern','mythic']:L>=85?['griffin','wyvern']:L>=60?['wolf','horse']:['horse','pony'];
+    out.mount={id:ids[Math.floor(rng()*ids.length)],stars:clamp(1+Math.floor((L-B.mountFrom)/16),1,5)}; }
+  if(L>=B.petFrom){ const pool=PET_POOL.filter(p=>L>=p[0]&&int0(era)>=p[1]); const p=pool.length?pool[Math.floor(rng()*pool.length)]:null;
+    if(p){ const st=L<45?1:L<75?2:3; out.pet={base:p[2]+['','_mid','_evo'][st-1],stage:st,fly:p[3]}; } }
+  if(L>=B.wingFrom) out.wing=rng()<0.5?'angel':'demon';
+  if(L>=B.auraFrom&&rng()<0.6) out.aura=L>=100?'aura13':L>=80?'aura10':L>=55?'aura7':'aura4';
+  return out; }
+
 /* ---------------- provider LOCAL (bots). Mesma assinatura do futuro servidor. ---------------- */
 const localProvider={
   bots:true,
   /* adversários da lista: FC do jogador ±10%, fixos no dia (trocam ao gastar a troca) */
   listOpponents(S,host,n){ const o=ensure(S,host), fc=playerFC(S,host), rng=mulberry(hash('arena-opp',o.week,o.day,o.refreshes)), out=[];
     for(let i=0;i<(n||DATA.opponentsShown);i++){ const k=1+(rng()*2-1)*DATA.oppSpread, f=Math.max(1,Math.round(fc*k));
-      out.push({id:`bot-${o.week}-${o.day}-${o.refreshes}-${i}`,name:name(rng),fc:f,skin:skin(rng,eraOf(host)),points:Math.round(o.points+(rng()*2-1)*80),bot:true}); }
+      const lv=Math.max(1,levelOf(host)+Math.round((rng()*2-1)*DATA.botLook.levelSpread)), id=`bot-${o.week}-${o.day}-${o.refreshes}-${i}`;
+      out.push({id,name:name(rng),fc:f,skin:skin(rng,eraOf(host)),points:Math.round(o.points+(rng()*2-1)*80),bot:true,level:lv,look:botLook(mulberry(hash('arena-look',id)),lv,eraOf(host))}); }
     return out; },
   reportResult(S,host,opp,win,delta){ return {ok:true}; },     // local: nada a enviar (antigo; o servidor usa fight)
   /* decide a luta: a "cópia" do jogador na FC do adversário (luta justa: Sys.tower.scaledFoe), duelo com seed fixa da semana/luta */
   fight(S,host,opp){ const o=S.sys.arena, W=root.Sys&&root.Sys.tower; if(!(W&&W.duel&&W.scaledFoe&&W.playerStats)) return {ok:false,reason:'module'};
-    const me=W.playerStats(S,host), foe=W.scaledFoe(me,opp.fc), seed=hash('arena-fight',o.week,o.fights,opp.id), d=W.duel(me,foe,seed);
+    const me=W.playerStats(S,host), foe=W.scaledFoe(me,opp.fc), seed=hash('arena-fight',o.week,o.fights,opp.id), pf=petFracOf(S,host);
+    me.petFrac=pf; foe.petFrac=opp.look?(opp.look.pet?pf:0):pf; const d=duelPvp(me,foe,seed);
     const k=clamp(opp.fc/Math.max(1,me.fc),DATA.kRange[0],DATA.kRange[1]);
-    return {ok:true,win:d.win,delta:Math.round(d.win?DATA.winBase*k:-DATA.lossBase*k),seed,duel:d}; },
+    return {ok:true,win:d.win,delta:Math.round(d.win?DATA.winBase*k:-DATA.lossBase*k),seed,duel:d,log:d.log}; },
   /* ranking da semana. kind 'arena' (pontos) ou 'fc' (maior FC da semana). {list:[{rank,name,value,me,bot}], me:{rank,value}, bots:true} */
   getRanking(S,host,opt){ opt=opt||{}; const o=S.sys&&S.sys.arena||{}, wk=opt.week||o.week||weekKey(nowOf(host)), kind=opt.kind==='fc'?'fc':'arena';
     const base=num(o.botBase&&o.botBase.fc,playerFC(S,host)), frac=opt.final?1:weekFrac(nowOf(host)), rng=mulberry(hash('arena-rank',wk)), rows=[];
@@ -166,12 +207,26 @@ function fight(S,host,oppId){
   o.attemptsLeft--; o.fights++; if(r.win) o.wins++; o.points=r.points!=null?Math.max(DATA.minPoints,Math.floor(r.points)):Math.max(DATA.minPoints,o.points+r.delta);
   o.lp=Math.max(0,o.lp+r.delta);   // pontos de LIGA andam junto (acumulam)
   o.last={opp:opp.name,win:r.win,delta:r.delta,ts:nowOf(host)};
-  return {ok:true,win:r.win,delta:r.delta,points:o.points,lp:o.lp,league:o.league,opp,duel:r.duel||null,seed:r.seed,log:r.log||null};
+  const rewards=fightRewards(S,host,o,r);
+  return {ok:true,win:r.win,delta:r.delta,points:o.points,lp:o.lp,league:o.league,opp,duel:r.duel||null,seed:r.seed,log:r.log||(r.duel&&r.duel.log)||null,rewards};
 }
+/* prêmio da luta: se o provider (servidor) mandar r.rewards, vale o dele; senão a conta local. Credita pelo host. {gold, gems, chest} */
+function fightRewards(S,host,o,r){ const R=DATA.fightRewards, dk=dayKey(nowOf(host));
+  if(o.rwDay!==dk){ o.rwDay=dk; o.rwFights=0; o.rwWin=0; }
+  o.rwFights=int0(o.rwFights)+1;
+  let gold, gems, chest=0;
+  if(r.rewards&&typeof r.rewards==='object'){ gold=int0(r.rewards.gold); gems=int0(r.rewards.gems); chest=int0(r.rewards.chest); }
+  else { const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)); gold=Math.round(unit*(r.win?R.goldkWin:R.goldkLoss));
+    gems=r.win&&!o.rwWin?R.gemsFirstWin:0; chest=o.rwFights===R.chestAt?1:0; }
+  if(r.win) o.rwWin=1;
+  if(gold&&host&&host.addGold) host.addGold(gold);
+  if(gems&&host&&host.addGems) host.addGems(gems);
+  if(chest){ const C=root.Sys&&root.Sys.chest; let got=0; try{ if(C&&C.addCharge&&C.need){ const x=C.addCharge(S,C.need()*chest,host); got=int0(x&&x.gained); } }catch(e){ got=0; } chest=got; }
+  return {gold,gems,chest}; }
 const ranking=(S,host,kind)=>{ ensure(S,host); return provider.getRanking(S,host,{kind}); };
 const weekInfo=(S,host)=>provider.weekInfo(S,host);
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,leagueInfo,lgOf,ensure,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
+const API={DATA,duelPvp,botLook,leagueInfo,lgOf,ensure,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
 root.Sys=root.Sys||{}; root.Sys.arena=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
