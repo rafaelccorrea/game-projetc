@@ -24,7 +24,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.63,
-   "behind": true,
+   "behind": false,
    "src": "f020.png"
   },
   {
@@ -37,7 +37,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.68,
-   "behind": true,
+   "behind": false,
    "src": "f022.png"
   },
   {
@@ -50,7 +50,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.78,
-   "behind": true,
+   "behind": false,
    "src": "f023.png"
   },
   {
@@ -63,7 +63,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.78,
-   "behind": true,
+   "behind": false,
    "src": "f024.png"
   },
   {
@@ -193,7 +193,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 4.08,
-   "behind": true,
+   "behind": false,
    "src": "f044.png"
   },
   {
@@ -206,7 +206,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 4.08,
-   "behind": true,
+   "behind": false,
    "src": "f045.png"
   },
   {
@@ -219,7 +219,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.78,
-   "behind": true,
+   "behind": false,
    "src": "f047.png"
   },
   {
@@ -232,7 +232,7 @@
    "f0": -5.4,
    "f1": 5.4,
    "hw": 3.68,
-   "behind": true,
+   "behind": false,
    "src": "f049.png"
   }
  ],

@@ -24,7 +24,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 3.69,
-   "behind": true,
+   "behind": false,
    "src": "f020.png"
   },
   {
@@ -37,7 +37,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 3.69,
-   "behind": true,
+   "behind": false,
    "src": "f022.png"
   },
   {
@@ -50,7 +50,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 3.74,
-   "behind": true,
+   "behind": false,
    "src": "f023.png"
   },
   {
@@ -193,7 +193,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 4.63,
-   "behind": true,
+   "behind": false,
    "src": "f051.png"
   },
   {
@@ -219,7 +219,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 3.74,
-   "behind": true,
+   "behind": false,
    "src": "f055.png"
   },
   {
@@ -232,7 +232,7 @@
    "f0": -5.41,
    "f1": 5.41,
    "hw": 3.79,
-   "behind": true,
+   "behind": false,
    "src": "f057.png"
   }
  ],
