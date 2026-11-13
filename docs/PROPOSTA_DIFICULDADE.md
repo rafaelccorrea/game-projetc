@@ -208,6 +208,6 @@ Resultado:
 
 Pedido do PO; o dono quer a evolução como caminho para vencer a parede. Hoje (tela 17b), evoluir só libera níveis.
 - **Regra nova:** com `Sys.pet.setStageMult(true)`, a parte do pet vale ×0,8 no filhote, ×0,9 no adulto e ×1 no evoluído.
-- **O pet evoluído no topo fica igual ao de hoje.** Cada evolução soma +11 a +12,5% na parte do pet, cerca de +2% de FC na hora.
+- **O pet evoluído no topo fica igual ao de hoje.** Cada evolução soma +11 a +12,5% na parte do pet, de +0,4% (pet baixo) a ~2% (pet perto do topo) de FC na hora.
 - **Curva de 180 dias refeita:** mesmos fins (grátis no dia 180, VIP 5 no 139, VIP 10 no 121); quem não forja nem evolui o pet trava na fase 60.
 - **Números:** as FC pedidas mudaram pouco (estão no balance.json). A chave fica no bloco `dificuldade` como `petStageMult` e liga junto com as outras.

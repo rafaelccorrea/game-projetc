@@ -70,7 +70,7 @@ const DATA={
   // ração por toque (barra parcial, 25 por toque); "Redefinir nível" mantém estrelas E estágio. ids do save não mudam.
   v17:{on:false, stageReq:[1,30,60], stageCap:[30,60,90], tapFood:25,
     // EVOLUIR DÁ PODER NA HORA (dificuldade com paredes, PO 13/11): parte do pet × [0,8 · 0,9 · 1,0] pelo estágio. O evoluído no topo fica IGUAL ao de hoje;
-    // cada evolução soma +11 a +12,5% na parte do pet (~+2% de FC). Desligado até o QA medir (setStageMult(true), junto com a chave de dificuldade).
+    // cada evolução soma +11 a +12,5% na parte do pet (+0,4% a +2% de FC: pouco com o pet baixo, ~2% com o pet perto do topo). Desligado até o QA medir (setStageMult(true), junto com a chave de dificuldade).
     stageMult:{on:false, m:[0.8,0.9,1]},
     rarW:[0.348,0.494,0.651,0.819,1.0,4/3],   // p máx = 0,25·rarW → p/(1+p) = 8,0/11,0/14,0/17,0/20,0/25,0% da FC total
     species:{wolf:{name:'Mamute',r:0,era:0,sprite:'era0_mammoth'}, owl:{name:'Esfinge',r:1,era:1,sprite:'era1_sphinx'},

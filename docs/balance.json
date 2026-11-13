@@ -1493,7 +1493,7 @@
         0.9,
         1
       ],
-      "_uso": "Sys.pet.setStageMult(true) junto com a chave: evoluir o pet dá poder na hora (parte do pet x0,8 filhote, x0,9 adulto, x1 evoluído = igual ao de hoje). ~+2% de FC por evolução."
+      "_uso": "Sys.pet.setStageMult(true) junto com a chave: evoluir o pet dá poder na hora (parte do pet x0,8 filhote, x0,9 adulto, x1 evoluído = igual ao de hoje). +0,4% a +2% de FC por evolução (cresce com o nível e as estrelas do pet)."
     }
   }
 }
