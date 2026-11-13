@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h20 · Kael SAMURAI PRONTO** (8 animações + retrato, 36 créditos; já aparece no Perfil para você ver). Ciborgue em produção; saldo 125. **Páginas públicas no ar como rascunho** (fora dos buscadores até o advogado aprovar): /privacidade, /termos e /excluir-conta em https://15-229-249-157.sslip.io. Arena separada por servidor no ar. Botão "Excluir conta" no jogo (a Play exige) sendo feito pela Sistemas
+
 - **21h · Textos da loja PRONTOS para o advogado (docs/loja/):** ficha da Play Store ("Eonbound: Heróis das Eras"), formulário de Segurança dos Dados, questionário de classificação etária, política de privacidade (LGPD + ECA Digital) e termos de uso. Faltam os dados da empresa e alguns pontos marcados para o advogado. Sem rolagem lateral na Mochila e na Nuvem; seleção de servidor pronta; P24 era o bônus de coleção da skin (sem perda). Curva de 180 dias continua igual
 
 - **20h45 · Servidor:** escolha de servidor na entrada FEITA (Login → Servidor → Prólogo; selo "S1 · Nova Era" e "Trocar servidor" no Título; quem já joga não é obrigado). Achado e corrigido um risco de PERDA DE SAVE (celular vazio baixa a nuvem; celular atrasado pergunta; o servidor recusa save que volta para trás). Filtro de nome mais forte contra palavrão disfarçado com números. Agora: rankings, guildas, chat, correio e leilão separados por servidor; depois a página de privacidade
