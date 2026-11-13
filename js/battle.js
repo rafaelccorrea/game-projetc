@@ -896,6 +896,7 @@ function heroPose(a,gun,t){
 /* SUBIR DE NÍVEL (aprovado): folha assets/anim/fx/levelup (quadros, fps, pés e âncora do .json), tocada UMA vez sobre o Kael, pés na linha do chão,
    na mesma escala do quadro do herói. B.lvfx = {t} é ligado em js/farm.js quando o nível sobe. */
 const LVUP='assets/anim/fx/levelup_fx_low';   /* P21: versão com o "NÍVEL +1" a 150 px dos pés (a levelup_fx punha o texto na altura da barra de vida do herói, que é HTML e fica por cima do canvas) */
+const LVUP_TXT={x0:137,y0:160};   /* canto de cima/esquerda do "NÍVEL +1" no quadro da levelup_fx_low (medido nos pixels, quadros 8 a 21: x 137..306, y 160..197); o .json pode trazer "text":{x0,y0} */
 const LVUP_OLD_FX='assets/anim/fx/levelup_fx';   /* Engenheiro 4 (dono): versão SÓ-EFEITO (22 quadros, 448x384, pés em (224, 352)), por cima do herói desenhado, em qualquer herói/skin e montado. A folha antiga (levelup, com o Kael garoto desenhado) saiu de uso. */
 /* A folha levelup TRAZ O KAEL GAROTO A PÉ desenhado (visto: por cima do herói montado/adolescente aparecia um segundo Kael criança com espada). Ela só vale quando o
    herói na tela É esse (Kael, fase 0, a pé). Nos outros casos (fases 1 a 3, montado, Kaia): efeito por código (coluna de luz + anel no chão), na escala do herói,
@@ -911,8 +912,14 @@ function drawLevelUp(){ const f=B.lvfx; if(!f) return;
   const sh=sheetLoad(LVUP,true); if(sh.fail){ const t=B.at-f.t0; if(t<0||t>=1.1){ B.lvfx=null; return; } drawLevelUpCode(t,1.1); return; }   /* arquivo faltando: efeito por código (reserva) */
   if(!sh.ok) return;
   const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
-  const mo=!!heroLook().mount&&typeof heroRise==='function'&&heroRise()>0, k=HS/256*(typeof phaseK==='function'?phaseK():1)*(mo?1.3:1);   /* na escala do herói; montado, maior (cobre herói + montaria) e centrado na sela */
-  ctx.drawImage(sh.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,HX+(mo?HS*0.1:0)-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
+  const mo=!!heroLook().mount&&typeof heroRise==='function'&&heroRise()>0, k0=HS/256*(typeof phaseK==='function'?phaseK():1), ax=M.anchorX||M.w/2, fyv=M.feetY||M.h, tb=M.text||LVUP_TXT, th=fyv-tb.y0, tl=ax-tb.x0;
+  let k=k0*(mo?1.3:1), cx=HX+(mo?HS*0.1:0);   /* na escala do herói; montado, maior (cobre herói + montaria) e centrado na sela */
+  /* Engenheiro 17 (P21/P25): a barra de vida e a coluna de ícones são HTML, sempre por cima do canvas; o texto da folha não pode cair atrás delas.
+     (1) montado: a folha ×1,3 punha o topo do texto na altura das barras (que ficam logo acima da cabeça): a escala cai até o topo do texto ficar abaixo da cabeça;
+     (2) tela curta (16:9): a coluna esquerda (Equip./Invocar/Loja/Passe) desce até a altura do texto: o efeito anda para a direita até o texto livrar a coluna. */
+  if(mo){ const top=heroBodyH()+heroRise()-4; if(th*k>top) k=Math.max(k0,top/th); }
+  { const C=typeof FB_COL!=='undefined'?FB_COL:null; if(C&&C.r>0&&GY-th*k<C.b){ const d=C.r+2-(cx-tl*k); if(d>0) cx+=Math.min(HS*0.25,d); } }
+  ctx.drawImage(sh.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,cx-ax*k,GY-fyv*k,M.w*k,M.h*k); }
 const WING_DRAW=true;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js): a ASA é desenhada lá dentro, presa à âncora das costas de cada quadro
@@ -1381,7 +1388,8 @@ function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1
   { let rdy=false; try{ rdy=fullReady(HFULL); }catch(e){ rdy=true; } if(!rdy&&!lookWait('full',(st.skin||'')+'|'+(HFULL.mount&&HFULL.mount.id||'')+'|'+(HFULL.wing||'')+'|'+(S.hero||''))){ if(typeof FORM!=='undefined') FORM.ov=ov0; return false; } }
   c2.save(); c2.translate(x-HX*k,y-GY*k); c2.scale(k,k); ctx=c2;
   try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running, m0=HM.mount; B.res=null; B.deadT=0; B.running=!!st.walking; HM.mount=HFULL.mount;   /* Engenheiro 14 (dono: pet SEMPRE NA FRENTE): o pet é o ÚLTIMO desenho (depois da asa, da montaria, do herói e da arma) e a posição dele segue a montaria DESTE desenho (antes seguia a da batalha, HM.mount: herói a pé com pet longe, ou montado com o pet em cima da montaria) */
-      try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; HM.mount=m0; } } }
+      const a0=PETK.act; PETK.act=null;   /* Engenheiro 17: o pet desta vitrine fica parado/andando (state.walking); antes mostrava o quadro do golpe que a batalha tinha em andamento (congelado com a Vitória aberta) */
+      try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; HM.mount=m0; PETK.act=a0; } } }
   catch(e){ if(!window.__hfErr){ window.__hfErr=1; console.error('drawHeroFull',e); } }
   finally{ ctx=old; c2.restore(); if(typeof FORM!=='undefined') FORM.ov=ov0; } return true; }
 window.drawHeroFull=drawHeroFull;

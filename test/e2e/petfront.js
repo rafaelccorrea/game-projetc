@@ -6,6 +6,7 @@
      3. drawHeroFull (Arena, Troca de era, Título, Aparência) COM e SEM montaria: mesma ordem
      4. posição: o pet fica À FRENTE (x > x do herói) e NÃO acima da linha do chão (dy >= 0); no drawHeroFull o deslocamento segue a montaria DESTE desenho
         (state.mount), não a da batalha (HM.mount)
+     5. Vitória e Derrota abertas (B.res), com e sem montaria: o pet continua desenhado, por último, PARADO (nunca o quadro congelado do golpe)
    Só lê arquivos do jogo, nunca grava. Sai com código 1 se algo falhar. */
 const VERBOSE = process.argv.includes('-v');
 const boot = require('./sandbox'), errStr = boot.errStr;
@@ -33,6 +34,26 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
     X.drawPet = function () { try { pos = ev('({dx:petX()-HX, mo:!!petMO(), dy:petTbl().dy+(petMO()?petMO().dy:0)})'); } catch (e) {} return p0.apply(this, arguments); };
     G.setDrawTap(s => L.push(s)); try { ret = G.inCtx(() => X.drawHeroFull(cv.getContext('2d'), 195, 600, 1, state)); } catch (e) { errs.push('drawHeroFull: ' + errStr(e)); } G.setDrawTap(null); X.drawPet = p0; return { L, pos, ret }; };
 
+  /* VITÓRIA / DERROTA (P4/P13, Engenheiro 17): com o resultado aberto (B.res) o pet continua desenhado, por ÚLTIMO, e PARADO: o golpe que estava em andamento
+     não fica congelado num quadro do ataque. Atrás da Troca de era (tela cheia) ele não é desenhado (exceção escrita no drawPet). must = o que tem de vir antes
+     do pet na Vitória (montaria ou herói); na Derrota o Kael cai a pé (folha da morte, anim/hyb ou anim/skins) e a montaria sai de cena. */
+  const petSt = (L, st) => L.some(s => RE.pet.test(s) && new RegExp('_' + st + '\\.').test(s));
+  const resCase = async (tag, must) => {
+    ev("window.__pfS={r:B.res,a:PETK.act,run:B.running,d:B.deadT,db:B.deadBoss}; B.res=null; B.running=false; PETK.act={t:0.2,dur:1,hitT:0.5,e:null,done:true}; 1");
+    try {
+      let L = battleList(); check(tag + ': controle, fora do resultado o golpe em andamento aparece (folha _atk1)', petSt(L, 'atk1'), 'sem _atk1: o teste não enxergaria o defeito');
+      ev("B.res={mode:'win'}; 1"); L = battleList(); order(tag + ' VITÓRIA', L, must, ['hero', 'wing', 'weapon']);
+      check(tag + ' VITÓRIA: pet parado (folha _idle), sem quadro do golpe', petSt(L, 'idle') && !petSt(L, 'atk1'), L.filter(s => RE.pet.test(s)).join(', '));
+      const pos = ev('({dx:petX()-HX, dy:petTbl().dy+(petMO()?petMO().dy:0)})'); check(tag + ' VITÓRIA: pet à frente e não acima do chão', pos.dx > 0 && pos.dy >= 0, JSON.stringify(pos));
+      const f = fullList({ t: 0.3 }); order(tag + ' drawHeroFull com a Vitória aberta', f.L, must, ['hero', 'wing', 'weapon']); check(tag + ' drawHeroFull com a Vitória aberta: pet parado', petSt(f.L, 'idle') && !petSt(f.L, 'atk1'), f.L.filter(s => RE.pet.test(s)).join(', '));
+      check(tag + ': o golpe guardado do pet continua o mesmo depois do drawHeroFull', ev('!!PETK.act&&PETK.act.t===0.2'));
+      ev("B.res={mode:'era'}; 1"); L = battleList(); check(tag + ' Troca de era: pet não desenhado (a tela cobre tudo)', first(L, RE.pet) < 0, 'pet em ' + first(L, RE.pet));
+      ev("B.res={mode:'lose'}; heroDown(true); 1"); await until(() => ev('ART_ON.kael_die!==true||dieSheet().ok'), 400);
+      L = battleList(); const die = L.findIndex(s => /_die_body/.test(s)), p = first(L, RE.pet);
+      check(tag + ' DERROTA: o pet foi desenhado', p >= 0, 'nenhuma folha anim/pets'); check(tag + ' DERROTA: herói caído pela folha da morte', die >= 0, 'sem _die_body entre ' + L.length + ' desenhos');
+      check(tag + ' DERROTA: pet DEPOIS do herói caído', p > die && die >= 0, 'pet ' + p + ' · morte ' + die); check(tag + ' DERROTA: pet parado (folha _idle)', petSt(L, 'idle') && !petSt(L, 'atk1'), L.filter(s => RE.pet.test(s)).join(', '));
+    } finally { ev("(function(){ const o=window.__pfS; heroDown(false); B.res=o.r; PETK.act=o.a; B.running=o.run; B.deadT=o.d; B.deadBoss=o.db; })(); 1"); } };
+
   /* preparo: sem a entrada, batalha parada num quadro calmo, pet + asa equipados */
   await until(() => ev("typeof PI!=='undefined'&&!!PI.el"), 40); try { if (ev("typeof PI!=='undefined'&&!!PI.el")) G.inCtx(() => ev('PI.finish()')); } catch (e) {}
   const pet = ev(`(function(){ S.tut=99; S.welcome=true; const L=Sys.level.ensure(S); L.lvl=50; L.xp=0; S.stage=3; S.best=12; S.wave=1; S.farm=false;
@@ -52,6 +73,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
     const f = fullList({ t: 0.3 }); check('drawHeroFull SEM montaria: desenhou (true)', f.ret === true, 'devolveu ' + f.ret); order('drawHeroFull SEM montaria', f.L, ['hero'], ['wing', 'weapon']);
     check('drawHeroFull SEM montaria: pet à frente e não acima do chão', !!f.pos && f.pos.dx > 0 && f.pos.dy >= 0 && f.pos.mo === false, JSON.stringify(f.pos)); }
   const foot = fullList({ t: 0.3 }).pos;
+  await resCase('SEM montaria', ['hero']);
 
   /* ---------- 1. COM montaria ---------- */
   const mt = ev(`(function(){ Sys.mount.DATA.on=true; Sys.mount.DATA.visual=true; const ids=Object.keys(MOUNT_TBL), id=ids.includes('wolf')?'wolf':ids[0]; Sys.mount.add(S,Sys.host,id); const e=Sys.mount.equip(S,id); const lk=mountLook(); return {id, e:!!e, look:lk&&lk.id}; })()`);
@@ -67,7 +89,8 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
     const hm = ev('HM.mount&&HM.mount.id'); check('HM.mount da batalha intacto depois do drawHeroFull', hm === mt.id, 'HM.mount=' + hm);
     const h = (() => { ev('window.__pfM=HM.mount; HM.mount=null; 1'); try { return fullList({ t: 0.3 }); } finally { ev('HM.mount=window.__pfM; 1'); } })();
     check('drawHeroFull montado com a batalha A PÉ: pet na posição MONTADA', !!h.pos && h.pos.mo === true && Math.abs(h.pos.dx - f.pos.dx) < 0.01, JSON.stringify(h.pos) + ' · montado ' + JSON.stringify(f.pos)); }
+  await resCase('COM montaria', ['mount']);
   check('nenhuma exceção no desenho', !errs.length && !ev('!!window.__hfErr'), errs.slice(0, 4).join(' | '));
-  console.log(fail ? '\n' + fail + ' FALHA(S) de ' + n + ' (pet na frente)' : '\nPET NA FRENTE OK (' + n + ' verificações): batalha e drawHeroFull, com e sem montaria');
+  console.log(fail ? '\n' + fail + ' FALHA(S) de ' + n + ' (pet na frente)' : '\nPET NA FRENTE OK (' + n + ' verificações): batalha, Vitória, Derrota e drawHeroFull, com e sem montaria');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('ERRO NO TESTE:', e && e.stack || e); process.exit(1); });

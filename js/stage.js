@@ -322,6 +322,12 @@ function drawHeroPistol(H, E){
    (não há folha da montaria sem o Kael: ele cai a pé e a montaria sai de cena) e com pet (o pet para). Chave: ART_ON.kael_die. */
 /* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
 function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) return s; return sheetLoad(HERO_DIR + 'kael_die_body', true); }   /* a pasta que o sheetFor devolver (herói e skin); sem o módulo, a do Kael */
+/* Engenheiro 17 (nada flutua): quanto a arma DEITADA (girada a1) desce abaixo do próprio centro, em px do sprite, medido nos pixels opacos (alfa > 40, passo 2),
+   UMA vez por arma (guardado no sprite; só roda na morte). Conferido nas 55 armas do meta.json: a arma encosta no chão (1 a 2 px acima) e em nenhum instante da queda
+   passa da linha. Sem leitura de pixels (canvas sem dado): vale a caixa girada, como antes. */
+function wLieH(w0, a1){ if (w0._lieA === a1) return w0._lie; const s = Math.sin(a1), c = Math.cos(a1); let hh = (Math.abs(w0.w * s) + Math.abs(w0.h * c)) / 2;
+  try { const d = w0.c.getContext('2d').getImageData(0, 0, w0.w, w0.h).data; let mb = -1e9; for (let j = 0; j < w0.h; j += 2) for (let i = 0; i < w0.w; i += 2) if (d[(j * w0.w + i) * 4 + 3] > 40){ const y = (i - w0.w / 2) * s + (j - w0.h / 2) * c; if (y > mb) mb = y; } if (mb > 0) hh = Math.min(hh, mb + 1); } catch (e) {}
+  w0._lieA = a1; w0._lie = hh; return hh; }
 function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
   const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
@@ -330,7 +336,7 @@ function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().he
   const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
   /* P20: a arma termina DEITADA conforme o ângulo nativo dela (meta.json: espada 90 = gira 90°, como antes; pistola 0 = já está deitada) e o ponto mais baixo para em fy-2: nada abaixo do chão */
   const wm = ws ? (J('assets/weapons/meta.json')[wKey(ws)] || {}) : {}, a1 = (typeof wm.angle === 'number' ? wm.angle : (wm.type === 'gun' ? 0 : 90)) * Math.PI / 180;
-  if (w0){ const kk = 256 * 0.5 * (ws.wk && wm.scale > 0 ? wm.scale : 1) / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, hh = (Math.abs(dw * Math.sin(a1)) + Math.abs(dh * Math.cos(a1))) / 2, y = (fy - 112) + (110 - hh) * e2, ang = -0.3 + (a1 + 0.3) * e2;
+  if (w0){ const kk = 256 * 0.5 * (ws.wk && wm.scale > 0 ? wm.scale : 1) / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, hh = wLieH(w0, a1) * kk, y = (fy - 112) + (110 - hh) * e2, ang = -0.3 + (a1 + 0.3) * e2;   /* Engenheiro 17: hh = ponto OPACO mais baixo da arma deitada (antes: meia altura da caixa girada; arma desenhada em diagonal, ângulo 14 a 64, parava 11 a 51 px ACIMA do chão, flutuando) */
     ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha; dspr(skinSpr(w0, ws.r), -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
   { const L = layNow(H); ctx.drawImage(layBody(sh, L), sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); } ctx.restore();
   if (H.main){ B.tipW = null; const imp = (M.impact && M.impact.body) || 16;
