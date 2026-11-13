@@ -34,4 +34,7 @@ t('prêmio por luta: ouro sempre, 1 gema na 1ª vitória do dia, baú na 3ª lut
 t('provider com rewards (servidor): vale o dele',()=>{ const h=makeHost({level:40,eraMax:2}), S={}; const old=A.getProvider();
   A.setProvider(Object.assign({},A.localProvider,{fight:(S2,h2,opp)=>({ok:true,win:true,delta:10,rewards:{gold:7,gems:0,chest:0}})}));
   try{ const L=A.opponents(S,h); const r=A.fight(S,h,L[0].id); assert.deepStrictEqual(r.rewards,{gold:7,gems:0,chest:0}); assert.strictEqual(h.gold,7); } finally{ A.setProvider(old); } });
+t('servidor manda gold:null + goldk: o jogo calcula pelo goldUnit e credita uma vez',()=>{ const h=makeHost({level:40,eraMax:2,unit:4}), S={}; const old=A.getProvider();
+  A.setProvider(Object.assign({},A.localProvider,{fight:()=>({ok:true,win:true,delta:10,rewards:{gold:null,goldk:40,gems:1,chest:0}})}));
+  try{ const L=A.opponents(S,h); const r=A.fight(S,h,L[0].id); assert.strictEqual(r.rewards.gold,160); assert.strictEqual(h.gold,160); assert.strictEqual(h.gems,1); } finally{ A.setProvider(old); } });
 console.log(n+' testes ok');

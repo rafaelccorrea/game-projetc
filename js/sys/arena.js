@@ -215,7 +215,7 @@ function fightRewards(S,host,o,r){ const R=DATA.fightRewards, dk=dayKey(nowOf(ho
   if(o.rwDay!==dk){ o.rwDay=dk; o.rwFights=0; o.rwWin=0; }
   o.rwFights=int0(o.rwFights)+1;
   let gold, gems, chest=0;
-  if(r.rewards&&typeof r.rewards==='object'){ gold=int0(r.rewards.gold); gems=int0(r.rewards.gems); chest=int0(r.rewards.chest); }
+  if(r.rewards&&typeof r.rewards==='object'){ const gu=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)); gold=r.rewards.gold==null?Math.round(gu*num(r.rewards.goldk,r.win?R.goldkWin:R.goldkLoss)):int0(r.rewards.gold); gems=int0(r.rewards.gems); chest=int0(r.rewards.chest); }
   else { const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)); gold=Math.round(unit*(r.win?R.goldkWin:R.goldkLoss));
     gems=r.win&&!o.rwWin?R.gemsFirstWin:0; chest=o.rwFights===R.chestAt?1:0; }
   if(r.win) o.rwWin=1;
