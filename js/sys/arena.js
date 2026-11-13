@@ -29,6 +29,19 @@ const DATA={
     {from:11, to:50,  gems:50,  stones:15, prism:1},
     {from:51, to:1e9, stones:8},
   ],
+  // LIGAS (tela 23, protótipo aprovado): pontos de LIGA (lp) acumulam de semana a semana (os pontos da semana, do ranking, zeram em 1000).
+  // Fecha toda semana (virada da semana): lp ≥ mínimo da próxima = SOBE; lp < mínimo da sua = CAI. Prêmio = o da liga em que fechou, entregue só
+  // quando o ranking online abrir (rewardsVsBots, como o resto). 💎 por semana só online e só nas ligas altas (conta no reports/sys-e2-api.md §5m).
+  // goldk = × ouro de um abate da fase; chest = baú do Sys.chest; prism = fragmentos do Prismático (só com a v4); frame/title = visual.
+  leagues:[
+    {id:'bronze',  name:'Bronze',  min:0,    c1:'#d08a4a',c2:'#6a3a14',c3:'#ffd2a3', prize:{goldk:200}},
+    {id:'silver',  name:'Prata',   min:600,  c1:'#d6dde8',c2:'#5a6270',c3:'#ffffff', prize:{goldk:300,gems:10}},
+    {id:'gold',    name:'Ouro',    min:1200, c1:'#ffc94a',c2:'#8a4f0c',c3:'#fff3c4', prize:{gems:20,chest:1}},
+    {id:'platinum',name:'Platina', min:1600, c1:'#5fe0d0',c2:'#136a63',c3:'#e0fffb', prize:{gems:30,chest:1,prism:1}},
+    {id:'diamond', name:'Diamante',min:2100, c1:'#6ab8ff',c2:'#1d4a8a',c3:'#e6f4ff', prize:{gems:40,chest:2,prism:3}, wing:true},
+    {id:'master',  name:'Mestre',  min:2700, c1:'#c97cff',c2:'#4a1f8a',c3:'#ffd0ff', prize:{gems:60,chest:3,prism:5,frame:true}, wing:true, crown:true},
+    {id:'legend',  name:'Lenda',   min:3400, c1:'#ff5a7a',c2:'#6a0f24',c3:'#ffe07a', prize:{gems:80,chest:3,prism:10,title:true}, wing:true, crown:true, rainbow:true},
+  ],
   names:{pre:['Kael','Nara','Ícaro','Yara','Odin','Selene','Brutus','Iara','Ragnar','Cauã','Hera','Tita','Bento','Aurora','Zéfiro','Tupã'],
          suf:['do Vale','da Pedra','do Bronze','Rubro','de Ferro','do Vento','Sombrio','Dourado','das Eras','do Norte']},
 };
@@ -57,6 +70,7 @@ function ensure(S,host){
   o.v=1; o.points=Math.max(DATA.minPoints,num(o.points,DATA.startPoints)); o.fights=int0(o.fights); o.wins=int0(o.wins);
   o.attemptsLeft=clamp(int0(num(o.attemptsLeft,DATA.attemptsPerDay)),0,DATA.attemptsPerDay);
   o.refreshLeft=clamp(int0(num(o.refreshLeft,DATA.refreshPerDay)),0,DATA.refreshPerDay); o.refreshes=int0(o.refreshes);
+  o.lp=Math.max(0,Math.floor(num(o.lp,0))); o.league=clamp(int0(o.league),0,DATA.leagues.length-1);   // ligas (save antigo: Bronze, 0)
   o.bestRank=int0(o.bestRank); if(typeof o.week!=='string') o.week=''; if(typeof o.day!=='string') o.day='';
   if(!o.botBase||typeof o.botBase!=='object') o.botBase=null;
   if(host){ const t=nowOf(host), wk=weekKey(t), dk=dayKey(t);
@@ -71,8 +85,23 @@ function closeWeek(S,host,o){
   const allowed=DATA.rewardsVsBots||!rk.bots, band=DATA.rewards.find(b=>me.rank>=b.from&&me.rank<=b.to)||null;
   o.lastWeek={week:o.week,rank:me.rank,points:o.points,reward:allowed&&band?grant(S,host,band):null,rewardsOff:!allowed};
   if(!o.bestRank||me.rank<o.bestRank) o.bestRank=me.rank;
+  closeLeague(S,host,o,allowed);
   const T=root.Sys&&root.Sys.titles; if(T&&T.check) T.check(S,host);
 }
+/* fecha a liga da semana: sobe/fica/cai pelas linhas; prêmio da liga em que fechou (só se permitido) */
+const lgOf=lp=>{ let k=0; DATA.leagues.forEach((L,i)=>{ if(lp>=L.min) k=i; }); return k; };
+function closeLeague(S,host,o,allowed){ const from=o.league, L=DATA.leagues, nx=L[from+1];
+  let to=from; if(nx&&o.lp>=nx.min) to=lgOf(o.lp); else if(o.lp<L[from].min) to=lgOf(o.lp);
+  o.lastLeague={week:o.week,from,to,lp:o.lp,move:to>from?'up':to<from?'down':'stay',prize:allowed?grantLeague(S,host,L[from].prize):null,rewardsOff:!allowed}; o.league=to; }
+function grantLeague(S,host,pz){ const out=grant(S,host,{gems:pz.gems,prism:pz.prism}), sys=root.Sys||{};
+  if(pz.goldk&&host&&host.addGold){ out.gold=Math.round(pz.goldk*Math.max(1,num(host.goldUnit&&host.goldUnit(),1))); host.addGold(out.gold); }
+  if(pz.chest&&host&&host.addItem){ out.chest=[];   // baú = 1 item de baú por baú (Sys.loot.rollItem, portões de raridade valem)
+    for(let i=0;i<pz.chest;i++){ let it=null; if(sys.loot&&sys.loot.rollItem){ try{ it=sys.loot.rollItem(host,{source:'chest'}); }catch(e){ it=null; } } if(it){ host.addItem(it); out.chest.push(it); } } }
+  if(pz.frame) out.frame=true; if(pz.title) out.title=true; return out; }
+/* para a tela: {idx, league, next, prev, lp, upAt, downAt, toUp, zone: up|stay|down, msLeft, last} */
+function leagueInfo(S,host){ const o=ensure(S,host), L=DATA.leagues, i=o.league, nx=L[i+1]||null, cur=L[i];
+  const zone=nx&&o.lp>=nx.min?'up':o.lp<cur.min?'down':'stay', wi=weekInfo(S,host);
+  return {idx:i,league:cur,next:nx,prev:L[i-1]||null,lp:o.lp,upAt:nx?nx.min:null,downAt:cur.min,toUp:nx?Math.max(0,nx.min-o.lp):0,zone,msLeft:wi.msLeft,last:o.lastLeague||null,rewardsOn:DATA.rewardsVsBots||!(provider.bots)}; }
 function grant(S,host,b){ const out={}, sys=root.Sys||{};
   if(b.prism&&sys.pet&&sys.pet.DATA&&sys.pet.DATA.v4===true&&sys.pet.DATA.v3===true){ sys.pet.addFragments(S,'prism',b.prism,host); out.prism=b.prism; }
   if(b.gems&&host&&host.addGems){ host.addGems(b.gems); out.gems=b.gems; }
@@ -116,7 +145,10 @@ const setProvider=p=>{ provider=p&&typeof p.getRanking==='function'?p:localProvi
 const getProvider=()=>provider;
 
 /* ---------------- ações ---------------- */
-function opponents(S,host){ ensure(S,host); return provider.listOpponents(S,host,DATA.opponentsShown); }
+/* lista de adversários + prévia para a tela: pontos se vencer/perder (mesma conta da luta) e a dificuldade (Sys.tower.difficulty) */
+function opponents(S,host){ ensure(S,host); const me=playerFC(S,host), W=root.Sys&&root.Sys.tower;
+  return provider.listOpponents(S,host,DATA.opponentsShown).map(x=>{ const k=clamp(x.fc/Math.max(1,me),DATA.kRange[0],DATA.kRange[1]);
+    return Object.assign({},x,{winPts:Math.round(DATA.winBase*k),losePts:Math.round(DATA.lossBase*k),diff:W&&W.difficulty?W.difficulty(me,x.fc):null}); }); }
 function refresh(S,host){ const o=ensure(S,host); if(o.refreshLeft<=0) return {ok:false,reason:'refresh'}; o.refreshLeft--; o.refreshes++; return {ok:true,list:opponents(S,host)}; }
 /* luta contra o adversário oppId da lista atual. {ok, reason:'tries'|'opp', win, delta, points, duel} */
 function fight(S,host,oppId){
@@ -126,13 +158,14 @@ function fight(S,host,oppId){
   const r=typeof provider.fight==='function'?provider.fight(S,host,opp):localProvider.fight(S,host,opp); if(!r||!r.ok) return {ok:false,reason:(r&&r.reason)||'module'};
   if(typeof provider.fight!=='function'&&provider.reportResult) provider.reportResult(S,host,opp,r.win,r.delta);
   o.attemptsLeft--; o.fights++; if(r.win) o.wins++; o.points=r.points!=null?Math.max(DATA.minPoints,Math.floor(r.points)):Math.max(DATA.minPoints,o.points+r.delta);
+  o.lp=Math.max(0,o.lp+r.delta);   // pontos de LIGA andam junto (acumulam)
   o.last={opp:opp.name,win:r.win,delta:r.delta,ts:nowOf(host)};
-  return {ok:true,win:r.win,delta:r.delta,points:o.points,opp,duel:r.duel||null,seed:r.seed,log:r.log||null};
+  return {ok:true,win:r.win,delta:r.delta,points:o.points,lp:o.lp,league:o.league,opp,duel:r.duel||null,seed:r.seed,log:r.log||null};
 }
 const ranking=(S,host,kind)=>{ ensure(S,host); return provider.getRanking(S,host,{kind}); };
 const weekInfo=(S,host)=>provider.weekInfo(S,host);
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
+const API={DATA,leagueInfo,lgOf,ensure,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
 root.Sys=root.Sys||{}; root.Sys.arena=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

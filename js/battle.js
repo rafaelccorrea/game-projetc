@@ -40,10 +40,11 @@ function loadBalance(){
 }
 
 const SKN=[['Golpe Sísmico','Fúria do Mamute'],['Estocada Tripla','Ira do Olimpo'],['Corte Giratório','Lâmina do Dragão'],
-  ['Tiro Duplo','Salva de Canhões'],['Rajada a Vapor','Tempestade Tesla'],['Rajada Tática','Ataque Aéreo'],['Corte de Plasma','Colapso do Vazio']];
+  ['Tiro Duplo','Salva de Canhões'],['Rajada a Vapor','Tempestade Tesla'],['Rajada Tática','Ataque Aéreo'],['Corte de Plasma','Colapso do Vazio'],
+  ['Garra Sombria','Portão do Submundo'],['Lâmina Celeste','Juízo Celestial']];   /* eras 7 (Submundo) e 8 (Celestial): nomes PROVISÓRIOS, a confirmar com o PO; folhas era7_ult / era8_ult */
 const S2HITS=[[[.55,1]],[[.2,1],[.45,1],[.7,1]],[[.3,1],[.55,1],[.8,1]],[[.15,1],[.5,1]],
-  [[.15,1],[.31,1],[.47,1],[.63,1],[.79,1]],[[.1,1],[.24,1],[.38,1],[.52,1],[.66,1],[.8,1]],[[.4,1],[.6,1]]];
-const S2DUR=[.95,.95,1.05,.8,1,1,.95];
+  [[.15,1],[.31,1],[.47,1],[.63,1],[.79,1]],[[.1,1],[.24,1],[.38,1],[.52,1],[.66,1],[.8,1]],[[.4,1],[.6,1]],[[.4,1],[.6,1]],[[.3,1],[.55,1],[.8,1]]];   // eras 7 e 8: provisório (iguais às 6 e 2)
+const S2DUR=[.95,.95,1.05,.8,1,1,.95,.95,1.05];
 const ULT_HITS=[[.8,.125],[1.05,.125],[1.3,.125],[1.55,.125],[1.9,.5]], ULT_DUR=2.4;
 
 const BOSS_FALL_DUR=1.4;   // chefe tombando (sem folha de morte ligada)
@@ -241,15 +242,19 @@ const waitingN = () => B.toSpawn.length+Math.max(0,B.en.length-MAXVIS);
 /* ---------- habilidades ---------- */
 const engaged = () => !!(B.hero&&B.deadT<=0&&target());
 function addEnergy(n){ const b=B.energy; B.energy=Math.min(100,b+n); if(b<100&&B.energy>=100){ snd('ult_ready'); vib(30); } }
+/* ULTIMATE POR ARMA (v0.12.9, atrás de NEXT_ON): habilidade, ícone, nome e efeito vêm SEMPRE da era da arma na mão (wSkin = heroLook), nunca da era da
+   fase. O efeito por RARIDADE é do módulo (só visual): Sys.stats.skillFx(arma, 's1'|'s2'|'s3') → {color, size, shake, flash, ...}. Sem o módulo, nada muda. */
+function skFx(ws,type){ if(!NEXT_ON) return null; try{ return (window.Sys&&Sys.stats&&typeof Sys.stats.skillFx==='function')?Sys.stats.skillFx(ws,type):null; }catch(e){ return null; } }
 function startAct(type){
-  const ws=wSkin(), E=ws.e, gun=wIsGun(ws), a={type,t:0,era:E,gun,col:fxCol(),hits:[],ev:[],dur:SWT}, lag=gun?0.09:0;
+  const ws=wSkin(), E=Math.min(SKN.length-1,ws.e), gun=wIsGun(ws), a={type,t:0,era:E,gun,col:fxCol(),hits:[],ev:[],dur:SWT}, lag=gun?0.09:0;
+  { const fx=skFx(ws,type); if(fx){ a.fx=fx; if(typeof fx.color==='string'&&fx.color) a.col=fx.color; } }
   if(type==='s1'){ { const tr=typeof heroTrailSheet==='function'?heroTrailSheet(ws):null; if(tr) a.trail=tr; }   /* golpe básico da era 2: folha composta com o rastro (s1-era2_t<tier>, aprovada) */
     a.hits.push({s:gun?0.03:0.19,t:(gun?0.03:0.19)+lag,m:1,i:0}); a.rate=B.hero&&B.hero.ivl>0?BAL.s1Interval/B.hero.ivl:1; }   // velocidade de ataque: o golpe básico inteiro toca mais rápido
   else if(type==='s2'){ const hs=S2HITS[E], sp=typeof heroSpinSheet==='function'?heroSpinSheet(ws):null, kd=sp?(sp.meta.frames/(sp.meta.fps||12))/S2DUR[E]:1; a.dur=S2DUR[E]*kd; if(sp) a.spin=sp;   /* Corte Giratório: a folha toca inteira (17 quadros a 12 fps) e os acertos acompanham */
     hs.forEach((h,i)=>a.hits.push({s:h[0]*kd,t:h[0]*kd+lag,m:BAL.s2Mult/hs.length,i,n:hs.length})); B.cd2=BAL.s2Cooldown;
     B.banner={txt:SKN[E][0],sub:'',t:0,dur:.9,col:a.col,small:true}; }
   else { a.dur=ULT_DUR; ULT_HITS.forEach((h,i)=>{ a.hits.push({s:h[0],t:h[0],m:BAL.s3Mult*h[1],i,fin:i===4}); a.ev.push({t:h[0]-0.3,i,fin:i===4,pre:true}); });
-    ptrack('ult'); B.energy=0; B.slow=0.5; B.banner={txt:SKN[E][1]+'!',pill:true,t:0,dur:1.8,col:a.col}; S.ultTip=1; B.shake=Math.max(B.shake,.6); vib(40); ultStart(a); }
+    ptrack('ult'); B.energy=0; B.slow=0.5; B.banner={txt:SKN[E][1]+'!',pill:true,t:0,dur:1.8,col:a.col}; S.ultTip=1; B.shake=Math.max(B.shake,.6*(a.fx&&a.fx.shake>0?a.fx.shake:1)); vib(40); ultStart(a); }
   if(gun&&type!=='s3') a.hits.forEach(h=>a.ev.push({t:h.s,h}));
   B.act=a; snd(`era${E}_${type}`);
   if(typeof tutEvent==='function') tutEvent(type);

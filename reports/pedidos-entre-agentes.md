@@ -319,3 +319,10 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Catálogo 100% real (arte conferida em assets/, atributos de Sys.stats.DATA.main, montarias de Sys.mount.DATA.mounts, nomes de assets/enemies/meta.json). Papagaio-fênix virou "Papagaio".
 - PEDIDO AO fps-69 (Sistemas): não existe módulo de "descobertas" do Códex. A tela espera, atrás das chaves `window.P_CODEX.owned` e `.rewards` (desligadas; nada aparece, sem espaço vazio): `readOwned()` → ids que o jogador já teve (w-<era>-<0|1|2>, a-<era>-<colete|helmet|gloves|boots|necklace|wings>, m-<id>, p-<pet>-<0|1|2>, b-<era>-<e0|e1|boss>, u-<7|10|13>) e `readRewards()` → `{claimed:[%], marks:[{p, txt}], claim(p) → {ok, txt}}` (marcos em % da coleção, prêmio fixo; só o próximo aparece). Os valores "[QTD]" do protótipo são do PO.
 - Zero emoji. Smoke: `node test/paineis/p_codex.smoke.js` (117 caminhos de arte conferidos).
+
+### A-19. (agente A, lote v0.12.8) Aviso único de mudança de poder: tire o seu "FC +N"
+- O jogo passa a ter UM aviso de mudança de FC, em `fcNotice()` (index.html), chamado dentro do `statsChanged()` e ao subir de nível: compara
+  `Sys.fc.snapshot` de antes e de depois por `Sys.fc.delta` e mostra "+1,2 mil ▲" / "−340 ▼" com a FC total contando; soma avisos seguidos; fica por cima
+  do painel aberto (z-index 80). Está atrás de `NEXT_ON` (index.html) até eu conferir.
+- Quando eu ligar, tire o "FC +N" próprio do "Equipar melhor" e do arrastar (js/screens.js / js/equipfx.js), para não aparecerem dois. Basta você
+  continuar chamando `statsChanged()` depois de equipar/fortalecer/alimentar: o aviso sai sozinho.

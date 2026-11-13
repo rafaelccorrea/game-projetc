@@ -97,6 +97,7 @@ function sysBootE2(){
   delete S.pass; delete S.daily; Sys.pass.refresh(S, Sys.host);
   Sys.practice.ensure(S); Sys.titles.ensure(S); Sys.titles.check(S, Sys.host, { silent: true });
   if (DEBUG && QP.has('stones')) Sys.practice.addStones(S, +QP.get('stones') || 0, Sys.host);
+  { const dk = (typeof Sys !== 'undefined' && Sys.pass && typeof Sys.pass.dayKey === 'function') ? Sys.pass.dayKey(Date.now()) : new Date().toDateString(); if (S.loginDay !== dk){ S.loginDay = dk; ptrack('login'); } }   // login do dia (conquistas; o passe ignora o evento)
   if (typeof mountBoot === 'function') mountBoot();   // pacote de montarias (js/mountfx.js)
   if (typeof petBoot === 'function') petBoot();   // pacote de pets (js/petfx.js): liga o módulo e choca o ovo do nível 20 se o jogador já passou dele
 }
@@ -108,7 +109,8 @@ function onLevelUp(lv){
   B.banner = { txt: 'Nível ' + lv.to + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };   // "Nível X!" como no canvas
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
   B.lvfx = { t0: B.at }; sheetLoad('assets/anim/fx/levelup', true);
-  if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
+  if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20
+  if (typeof fcNotice === 'function') fcNotice();   // subir de nível muda a FC: o aviso de poder mostra a diferença   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
   if (view !== 'battle' && typeof softRender === 'function') softRender();
 }
 /* abate na campanha: ouro, XP, gema, item e materiais pelo Sys.loot; carga do baú pelo Sys.chest */

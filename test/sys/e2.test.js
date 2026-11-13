@@ -818,4 +818,17 @@ t('FC +/−: snapshot/delta/measure (Sys.fc) e Sys.stats.powerDelta; efeito das 
   assert.ok(fx.every(x=>x.dmgMult===1),'nunca mexe no dano'); assert.strictEqual(T.skillFx(4,'s1').size,1); assert.strictEqual(T.skillFx(9,'s3').r,5); assert.strictEqual(T.skillFx(null).r,0);
 });
 
+t('arena: ligas (tela 23) — pontos de liga acumulam, fechamento semanal sobe/fica/cai, prêmio só com ranking online; prévia de pontos no adversário',()=>{
+  const AR=require('../../js/sys/arena.js'), W=require('../../js/sys/tower.js'), F=require('../../js/sys/fc.js');
+  const S=newS(), h=makeHost({eraMax:2}); h.t=new Date(2026,10,10,10).getTime();   // segunda
+  const L=AR.DATA.leagues; assert.strictEqual(L.length,7); assert.ok(L.every((x,i)=>i===0||x.min>L[i-1].min)); assert.strictEqual(AR.lgOf(1300),2); assert.strictEqual(AR.lgOf(0),0);
+  let li=AR.leagueInfo(S,h); assert.deepStrictEqual([li.idx,li.lp,li.upAt,li.zone,li.rewardsOn],[0,0,600,'stay',false]);
+  const ops=AR.opponents(S,h); assert.strictEqual(ops.length,3); assert.ok(ops.every(o=>o.winPts>0&&o.losePts>0));
+  const o=AR.ensure(S,h); o.lp=700; h.t+=7*864e5; AR.ensure(S,h); assert.deepStrictEqual([o.league,o.lastLeague.move,o.lastLeague.prize,o.lastLeague.rewardsOff],[1,'up',null,true],'sobe para Prata, sem prêmio contra bots');
+  o.lp=500; h.t+=7*864e5; AR.ensure(S,h); assert.deepStrictEqual([o.league,o.lastLeague.move],[0,'down']);
+  o.lp=2200; h.t+=7*864e5; AR.ensure(S,h); assert.strictEqual(o.league,4,'pula direto para Diamante');
+  o.lp=2000; assert.strictEqual(AR.leagueInfo(S,h).zone,'down');
+  const S2={best:1,sys:{arena:{lp:'x',league:99}}}; AR.ensure(S2,h); assert.deepStrictEqual([S2.sys.arena.lp,S2.sys.arena.league],[0,6]);
+});
+
 console.log(`ok: ${n} testes`);

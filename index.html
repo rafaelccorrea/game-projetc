@@ -507,7 +507,26 @@ const heroFC = () => (window.Sys&&Sys.fc&&Sys.stats&&Sys.host)?Sys.fc.compute(S,
 let REC_FC=[1440,12300,395000,13900000,829000000,34300000000,1540000000000]; const REC_FC0=264, BOSS_GLOW_AT=0.9;   // o botão "Desafiar" brilha com a FC em 90% da recomendada
 function recFC(stage){ const e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1, a=e>0?REC_FC[e-1]:REC_FC0, b=REC_FC[e]; return Math.round(a*Math.pow(b/a,inEra/STAGES_PER_ERA)); }
 /* chamar depois de QUALQUER troca de item ou skin, melhoria ou desmonte: recalcula na hora (sem cache), grava a FC da semana (ranking) e salva */
-function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+/* MUDANÇA DE PODER NA TELA (ordem do dono; lote v0.12.8, atrás de NEXT_ON): função ÚNICA, chamada no ponto por onde tudo passa (statsChanged e o
+   subir de nível). Guarda o Sys.fc.snapshot anterior, compara com o novo por Sys.fc.delta e, se a diferença não for 0, mostra um aviso grande
+   ("+1,2 mil ▲" verde / "−340 ▼" vermelho: delta.text e delta.color) com a FC total contando até o valor novo. Fica por cima da tela onde a mudança
+   aconteceu (painel aberto ou batalha). Avisos seguidos SOMAM (a base é o retrato de antes do primeiro). Não dispara na carga do jogo nem na troca de
+   save: só fica armado alguns segundos depois do boot (FCN.armed). O "FC +N" do Equipar melhor/arrastar (agente B) deve sair: pedido A-19. */
+const FCN={snap:null,base:null,until:0,armed:false,el:null,raf:0};
+function fcNotice(){ if(!NEXT_ON||!window.Sys||!Sys.fc||typeof Sys.fc.snapshot!=='function'||typeof Sys.fc.delta!=='function'||!Sys.host) return;
+  let now=null; try{ now=Sys.fc.snapshot(S,Sys.host); }catch(e){ return; } const prev=FCN.snap; FCN.snap=now; if(!prev||!FCN.armed) return;
+  const t=Date.now(); if(t>FCN.until||!FCN.base) FCN.base=prev;   /* aviso ainda na tela: soma em cima da mesma base */
+  let d=null; try{ d=Sys.fc.delta(FCN.base,now); }catch(e){ return; } if(!d||!d.diff){ if(FCN.el&&t<FCN.until&&d&&!d.diff){ FCN.el.style.display='none'; FCN.until=0; } return; }
+  let el=FCN.el; if(!el){ el=FCN.el=document.createElement('div'); el.id='fcnote'; el.setAttribute('role','status'); el.setAttribute('aria-live','polite');
+    el.style.cssText="position:fixed;left:50%;top:calc(var(--fbsafe,0px) + 132px);transform:translateX(-50%);z-index:80;pointer-events:none;text-align:center;padding:8px 16px 9px;border-radius:16px;background:rgba(22,16,12,.92);border:2px solid #4a3a2b;font-family:'Lilita One',Nunito,system-ui,sans-serif;white-space:nowrap";
+    el.innerHTML='<div id="fcn_d" style="font-size:26px;line-height:1"></div><div id="fcn_t" style="margin-top:3px;font:900 12px Nunito,system-ui,sans-serif;color:#f6ecdf"></div>'; document.body.appendChild(el); }
+  const f=typeof gNum==='function'?gNum:fmt, up=d.diff>0; el.style.display='block'; el.style.borderColor=d.color||(up?'#5fd068':'#ff6b6b');
+  const dd=document.getElementById('fcn_d'), tt=document.getElementById('fcn_t'); dd.textContent=(d.text||((up?'+':'−')+f(Math.abs(d.diff))))+(up?' ▲':' ▼'); dd.style.color=d.color||(up?'#5fd068':'#ff6b6b');
+  FCN.until=t+2600; const from=d.before, to=d.after, t0=performance.now(); cancelAnimationFrame(FCN.raf);
+  const step=()=>{ const k=Math.min(1,(performance.now()-t0)/700), v=from+(to-from)*(1-Math.pow(1-k,3)); tt.textContent='FC '+f(Math.round(v)); if(k<1) FCN.raf=requestAnimationFrame(step); }; step();
+  clearTimeout(FCN.hide); FCN.hide=setTimeout(()=>{ if(Date.now()>=FCN.until-50){ el.style.display='none'; FCN.base=null; } },2650); }
+setTimeout(()=>{ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.snapshot==='function'&&Sys.host) FCN.snap=Sys.fc.snapshot(S,Sys.host); }catch(e){} FCN.armed=true; },4000);   // na carga do jogo e na troca de save não avisa
+function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); fcNotice(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
 function roll(key){
   const tot=RAR.reduce((s,r)=>s+r[key],0); let x=Math.random()*tot;
   for(let i=0;i<RAR.length;i++){ x-=RAR[i][key]; if(x<=0) return i; } return 0;
@@ -613,7 +632,8 @@ const PASS_OK = () => !!(window.Sys&&Sys.pass&&Sys.host);
 /* evento de missão: kill · boss · ult · chest · instance · forge · summon · upgrade */
 function ptrack(ev,n){ const v=n==null?1:n;
   if(PASS_OK()){ try{ Sys.pass.track(S,Sys.host,ev,v); }catch(e){} }
-  if(window.Sys&&Sys.events&&typeof Sys.events.track==='function'){ try{ Sys.events.track(S,Sys.host,ev,v); }catch(e){} }   /* missões do Festival (módulo desligado por chave: a chamada não faz nada até ligarem) */
+  if(window.Sys&&Sys.events&&typeof Sys.events.track==='function'){ try{ Sys.events.track(S,Sys.host,ev,v); }catch(e){} }
+  if(window.Sys&&Sys.achievements&&typeof Sys.achievements.track==='function'){ try{ Sys.achievements.track(S,Sys.host,ev,v); }catch(e){} }   /* conquistas (módulo desligado por chave: não faz nada até ligarem) */   /* missões do Festival (módulo desligado por chave: a chamada não faz nada até ligarem) */
 }
 /* pedras de forja coletadas (Sys.loot.todayCount) e baús abertos (S.sys.chest.opened): os módulos não avisam, então o jogo compara os contadores */
 function passSync(){ if(!PASS_OK()||!Sys.loot||!Sys.chest) return;
@@ -695,7 +715,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
