@@ -37,4 +37,14 @@ t('virada de temporada: nível da temporada que acabou não é pago',()=>{
   h.t=S.sys.pass.season.end+1000;                                            // a temporada virou com a tela aberta
   assert.strictEqual(P.claimTier(S,h,'free',2).reason,'bloqueado'); assert.strictEqual(S.sys.pass.xp,0); assert.deepStrictEqual(S.sys.pass.free,[]);
 });
+t('nível 25 premium: Arma Épica + 30 pedras de forja + 5 Essências + 10 fragmentos de montaria (guardados sem montaria, entram na 1ª)',()=>{
+  require('../../js/sys/mount.js');
+  const S={}, h=host({level:60}); P.addXp(S,2500); P.setPremium(S,true);
+  const L=globalThis.Sys.loot; L.ensure(S);
+  const r=P.claimTier(S,h,'premium',25); assert.ok(r.ok&&r.rewards.item&&r.rewards.item.slot==='weapon'&&r.rewards.item.r===2);
+  assert.strictEqual(S.sys.loot.mat.forge,30); assert.strictEqual(S.sys.loot.mat.essence,5);
+  assert.strictEqual(S.sys.pass.mfrag,10, 'sem montaria: guardados');
+  const M=globalThis.Sys.mount; M.ensure(S); const was=M.DATA.on; M.DATA.on=true; M.add(S,h,'wolf'); assert.strictEqual(P.releaseMountFrags(S),10); assert.strictEqual(S.sys.pass.mfrag,0);
+  assert.ok(M.ensure(S).owned.wolf.frags>=10||M.ensure(S).owned.wolf.stars>1); M.DATA.on=was;
+});
 console.log(n+' testes ok');

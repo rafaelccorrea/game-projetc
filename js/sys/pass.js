@@ -18,10 +18,12 @@ const DATA={
   ],
   // Premium: Raro nos primeiros, Épico no meio (inclui a asa), Lendário no fim, mais 💎 e a skin da temporada.
   // season:true = ITEM DA TEMPORADA (PO): entregue NA HORA na melhor raridade permitida e EVOLUI sozinho até a raridade-alvo quando o portão abrir.
+  // Nível 25 (decisão do dono: roupas-skin saíram de venda): em vez da Casaca da Temporada, Arma Épica garantida (respeita o portão; senão fica guardada)
+  // + 30 pedras de forja + 5 Essências + 10 fragmentos de montaria (= 1 cópia repetida; vão para a montaria equipada, ou esperam a 1ª montaria).
   premium:[
     {item:{slot:'weapon',r:1}},{gems:15},{item:{slot:'armor',r:1}},{gems:15},{item:{slot:'hat',r:1}},{gems:15},{item:{slot:'gloves',r:1}},{gems:20},{item:{slot:'boots',r:1}},{gems:20},
     {item:{slot:'necklace',r:2}},{gems:20},{item:{slot:'weapon',r:2}},{gems:20},{item:{slot:'armor',r:2}},{gems:25},{item:{slot:'wing',r:2}},{gems:25},{item:{slot:'hat',r:2}},{gems:25},
-    {item:{slot:'gloves',r:2}},{gems:25},{item:{slot:'boots',r:2}},{gems:30},{skin:'season'},{gems:30},{item:{slot:'armor',r:4,season:true}},{gems:30},{gems:40},{item:{slot:'weapon',r:4,season:true}},
+    {item:{slot:'gloves',r:2}},{gems:25},{item:{slot:'boots',r:2}},{gems:30},{item:{slot:'weapon',r:2},mat:{forge:30,essence:5},mountFrags:10},{gems:30},{item:{slot:'armor',r:4,season:true}},{gems:30},{gems:40},{item:{slot:'weapon',r:4,season:true}},
   ],
   // MISSÕES (XP do passe = pxp). Diárias: todas = 70 + bônus 20 = 90/dia. Semanais: 190/semana (segunda a domingo).
   // Grátis todo dia: nível 30 no dia 27; perdendo 1 dia por semana: dia 29; premium (+25%): dia ~21.
@@ -149,8 +151,16 @@ function canReceive(host,spec){
   if(spec.slot==='wing'){ const lv=host&&typeof host.level==='function'?num(host.level(),Infinity):Infinity; if(lv<num(L.DATA.wing.minLevel,50)||spec.r<num(L.DATA.wing.minR,2)) return false; }
   return true;
 }
+/* materiais (pelo Sys.loot.grantBundle: forge, essence...) e fragmentos de montaria (montaria equipada; sem montaria, guardados até a 1ª) */
+function giveExtras(S,host,rw,out){
+  if(rw.mat&&typeof rw.mat==='object'){ const L=Loot(), m={}; for(const k in rw.mat) if(int0(rw.mat[k])) m[k]=int0(rw.mat[k]); if(Object.keys(m).length){ if(L&&L.grantBundle) L.grantBundle(S,host,m); out.mat=m; } }
+  const mf=int0(rw.mountFrags); if(mf){ const o=ensure(S); o.mfrag=int0(o.mfrag)+mf; releaseMountFrags(S); out.mountFrags=mf; } }
+function releaseMountFrags(S){ const o=ensure(S), n=int0(o.mfrag); if(!n) return 0; const M=root.Sys&&root.Sys.mount; let id=null;
+  try{ const mo=M&&M.ensure?M.ensure(S):null; id=mo&&mo.eq?mo.eq:(mo&&mo.owned?Object.keys(mo.owned)[0]:null); }catch(e){ id=null; }
+  if(!id||!M.addFragments) return 0; const r=M.addFragments(S,id,n); if(r&&r.added>0){ o.mfrag=0; return n; } return 0; }
 function giveReward(S,host,rw){
   const out={gems:0,gold:0,item:null,held:null,skin:null};
+  giveExtras(S,host,rw,out);
   if(rw.gems){ out.gems=rw.gems; if(host.addGems) host.addGems(rw.gems); }
   if(rw.goldk){ const u=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)); out.gold=Math.round(rw.goldk*u); if(host.addGold) host.addGold(out.gold); }
   if(rw.skin){ out.skin=rw.skin; if(host.addSkin) host.addSkin(rw.skin); }
@@ -206,6 +216,7 @@ function claimTier(S,host,trk,t){
     if(plan.skin){ if(host&&host.addSkin) host.addSkin(plan.skin); out.skin=plan.skin; gave++; }
     if(plan.gold){ if(host&&host.addGold) host.addGold(plan.gold); out.gold=plan.gold; gave++; }
     if(plan.gems){ if(host&&host.addGems) host.addGems(plan.gems); out.gems=plan.gems; gave++; }
+    if(rw.mat||rw.mountFrags){ giveExtras(S,host,rw,out); gave++; }
   }catch(e){
     if(!gave){ const i=got.indexOf(t); if(i>=0) got.splice(i,1); return {ok:false,reason:'erro'}; }
     if(plan.item&&!out.item){ o.held.push({slot:plan.item.slot,r:plan.item.season?int0(plan.item.targetR):plan.item.r}); out.held={slot:plan.item.slot,r:plan.item.r,needLevel:1}; }
@@ -217,9 +228,11 @@ function claimTier(S,host,trk,t){
 function releaseHeld(S,host){
   const o=ensure(S), out=[];
   o.held=o.held.filter(h=>{ if(canReceive(host,h)){ const it=makeItem(host,h); if(host.addItem) host.addItem(it); out.push(it); return false; } return true; });
+  releaseMountFrags(S);
   if(host&&typeof host.items==='function') evolveSeason(S,host);   // no level up, também evolui os Itens da Temporada (se o jogo expuser host.items)
   return out;
 }
+/* fragmentos de montaria guardados entram quando o jogador tiver montaria (o jogo pode chamar ao ganhar a 1ª) */
 const held=S=>ensure(S).held.map(h=>({slot:h.slot,r:h.r,needLevel:needLevel(h)}));
 /* raridade permitida agora para um item da temporada (arma não tem Mítica no lançamento) */
 function seasonR(host,spec){ const L=Loot(); let r=clamp(int0(spec.r),0,4); if(L&&L.maxAllowedR) r=Math.min(r,L.maxAllowedR(host)); if(spec.slot==='weapon'&&r===3) r=2; return r; }
@@ -243,7 +256,7 @@ function alerts(S,host){ const o=refresh(S,host), t=tier(S), L=list(S,host); let
   return n; }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,refresh,season,tier,progress,addXp,setPremium,track,list,claimMission,reward,claimAll,claimTier,releaseHeld,evolveSeason,held,alerts,bonus,dayKey,weekKey};
+const API={DATA,ensure,refresh,season,tier,progress,addXp,setPremium,track,list,claimMission,reward,claimAll,claimTier,releaseHeld,releaseMountFrags,evolveSeason,held,alerts,bonus,dayKey,weekKey};
 root.Sys=root.Sys||{}; root.Sys.pass=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

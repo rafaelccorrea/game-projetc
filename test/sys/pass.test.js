@@ -16,7 +16,8 @@ t('tabelas: 30 níveis nas duas trilhas; grátis termina em Épico; premium Raro
   assert.deepStrictEqual(P.reward('free',30),{item:{slot:'weapon',r:2}});
   assert.ok(P.DATA.free.filter(x=>x.item).slice(0,-1).every(x=>x.item.r===0&&x.item.slot!=='wing'));
   const pr=P.DATA.premium.filter(x=>x.item).map(x=>x.item.r); assert.deepStrictEqual(pr.slice(0,5),[1,1,1,1,1]); assert.strictEqual(pr[pr.length-1],4);
-  assert.ok(P.DATA.premium.some(x=>x.skin==='season')); assert.ok(P.DATA.premium.some(x=>x.item&&x.item.slot==='wing'&&x.item.r>=2));
+  assert.ok(!P.DATA.premium.some(x=>x.skin));   /* roupas-skin saíram de venda (dono): nenhuma no passe */
+  { const r25=P.DATA.premium[24]; assert.ok(r25.item&&r25.item.r===2&&r25.mat.forge===30&&r25.mat.essence===5&&r25.mountFrags===10); } assert.ok(P.DATA.premium.some(x=>x.item&&x.item.slot==='wing'&&x.item.r>=2));
   const gems=tr=>P.DATA[tr].reduce((s,x)=>s+(x.gems||0),0); assert.ok(gems('free')<gems('premium')/3,'grátis com poucos 💎');
 });
 
