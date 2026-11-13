@@ -170,6 +170,7 @@ function grantReward(S,host,type,L,kills){
   return {gold:p.gold,gems:p.gems,items,forge:p.forge,food:p.food,essence:p.essence||0,egg,hatched};
 }
 /* resultado da batalha: result = {win, kills}. Na Mina de Ouro vence quem fizer >= minKills abates. */
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (fps-69, Sys.newDrops; desligado até a arte)
 function finish(S,host,id,result){
   const o=refresh(S,host), a=o.active;
   if(!a||a.id!==id) return {ok:false,reason:'sem_entrada'};
@@ -178,11 +179,13 @@ function finish(S,host,id,result){
   o.active=null;
   if(!win){ if(DATA.consumeOnFail&&o.keys[a.type]>0) o.keys[a.type]--; return {ok:true,win:false,type:a.type,level:a.level,reward:{gold:0,gems:0,items:[]},keys:o.keys[a.type]}; }
   o.keys[a.type]=Math.max(0,o.keys[a.type]-1); o.runs++;
+  const first=num(o.best[a.type],-1)<a.level;   // 1ª vitória neste nível
   o.best[a.type]=Math.max(num(o.best[a.type],-1),a.level);
   if(T.mode==='rush') o.bestKills[a.type+'@'+a.level]=Math.max(num(o.bestKills[a.type+'@'+a.level],0),kills);
   const reward=grantReward(S,host,a.type,a.level,kills);
   giveXp(S,host,a.level,reward);
   if(a.type==='boss'){ const Lo=root.Sys&&root.Sys.loot; if(Lo&&Lo.prismBoss) reward.prism=Lo.prismBoss(S,host,levelInfo(a.level).era); }   // Prismático: chefe da era 8+ (fps-e2)
+  if(a.type==='gear'||a.type==='boss') reward.newDrops=ND(S,host,'inst:win',{type:a.type,diff:a.level,first});
   return {ok:true,win:true,type:a.type,level:a.level,kills,reward,keys:o.keys[a.type]};
 }
 function abort(S){ const o=ensure(S); o.active=null; }

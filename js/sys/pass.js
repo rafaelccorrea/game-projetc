@@ -123,6 +123,7 @@ function list(S,host){
   const daily=DATA.daily.filter(open).map(m=>row(o.d,m)), weekly=DATA.weekly.filter(open).map(m=>row(o.w,m));
   return {daily,weekly,bonus:{...DATA.dailyBonus,ready:daily.every(m=>m.claimed),claimed:o.d.bonus}};
 }
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (fps-69, Sys.newDrops; desligado até a arte)
 /* resgata uma missão (ou 'bonus'): dá 💎 e XP do passe. Devolve {ok, gems, xp, tier} ou {ok:false, reason} */
 function claimMission(S,host,id){
   const o=refresh(S,host), L=list(S,host);
@@ -131,7 +132,8 @@ function claimMission(S,host,id){
   else { const r=L.daily.find(x=>x.id===id)||L.weekly.find(x=>x.id===id); if(!r) return {ok:false,reason:'id'}; if(!r.done) return {ok:false,reason:'incompleto'}; if(r.claimed) return {ok:false,reason:'resgatado'};
     B=DATA.daily.some(x=>x.id===id)?o.d:o.w; B.c.push(id); m=r; }
   if(m.gems&&host&&host.addGems) host.addGems(m.gems);
-  const x=addXp(S,m.pxp); return {ok:true,gems:m.gems||0,xp:x.gained,tier:x.to,tierUp:x.to>x.from};
+  const x=addXp(S,m.pxp); const nd=id==='bonus'?ND(S,host,'missions:daily',{}):null;   // todas as diárias feitas
+  return {ok:true,gems:m.gems||0,xp:x.gained,tier:x.to,tierUp:x.to>x.from,newDrops:nd};
 }
 
 /* ---------------- recompensas ---------------- */

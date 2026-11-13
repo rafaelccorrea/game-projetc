@@ -278,7 +278,8 @@ const ORIGIN_OF={drop:'drop',boss:'boss',chest:'chest',arsenal:'instance',eraBos
 function wtTag(it,host,rng){ if(!it||it.slot!=='weapon') return it; const St=root.Sys&&root.Sys.stats;
   try{ if(St&&typeof St.rollWeaponType==='function') it.wt=St.rollWeaponType(it,{level:levelOf(host),era:it.e},rng); }catch(e){} return it; }
 function wingTag(it,diff){ if(!it||it.slot!=='wing') return it; const St=root.Sys&&root.Sys.stats;
-  try{ if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
+  const N=root.Sys&&root.Sys.newDrops;   // modelo da asa: Sys.newDrops.wingTypeForDrop (Mariposa sombria quando liberada); senão anjo/demônio do Sys.stats
+  try{ const w=N&&typeof N.wingTypeForDrop==='function'?N.wingTypeForDrop(it.e,it.r,diff):null; if(w) it.wing=w; else if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
 function rollItem(host,opts){
   opts=opts||{}; const rng=rngOf(host), em=eraMaxOf(host);
   const e=opts.era!=null?clamp(Math.floor(num(opts.era,em)),0,99):rollEra(rng,em);
@@ -485,6 +486,7 @@ function stageWin(S,host,w){
 }
 /* sorteia o saque de um abate (atualiza a garantia do ovo; NÃO entrega: ver grant/onKill) */
 /* bônus do evento com horário ativo (Sys.schedule.perks). Sem o módulo ou sem evento: tudo 0. Nunca negativo. */
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (fps-69, Sys.newDrops; desligado até a arte)
 function schedPerks(S,host){ const z={goldPct:0,dropPct:0,forgePct:0,foodPct:0,petFragPct:0}; const Sc=root.Sys&&root.Sys.schedule;
   try{ const p=Sc&&typeof Sc.perks==='function'?Sc.perks(S,host):null; if(p&&typeof p==='object') for(const k in z) z[k]=Math.max(0,num(p[k],0)); }catch(e){} return z; }
 function rollKill(S,host,enemy){
@@ -508,7 +510,8 @@ function rollKill(S,host,enemy){
     else eggs.push(c); }
   const xpKill=Math.round(xpFor(enemy,host,cls)*(1+vip.xpPct/100));   // VIP +XP nos orbes (XP de instância/missão/offline: Sys.level)
   const xp=Math.round(xpKill*rm), xpExtra=xp-xpKill;                  // ×2 com retorno: a parte extra vai SEM teto (v9)
-  const res={cls,gold,gems,items,forge,food,eggs,held,xp,xpKill,xpExtra,essence,rested:rest,event:(ev.goldPct||ev.dropPct||ev.forgePct||ev.foodPct)?ev:null,x:enemy&&num(enemy.x,null),y:enemy&&num(enemy.y,null)};   // rested: abate em dobro (retorno)
+  const nd=cls==='eraBoss'?ND(S,host,'boss:era',{era:eraOfEnemy(enemy,host),diff:d}):null;   // fim da era: drop dos itens novos
+  const res={cls,gold,gems,items,forge,food,eggs,held,xp,xpKill,xpExtra,essence,rested:rest,newDrops:nd,event:(ev.goldPct||ev.dropPct||ev.forgePct||ev.foodPct)?ev:null,x:enemy&&num(enemy.x,null),y:enemy&&num(enemy.y,null)};   // rested: abate em dobro (retorno)
   res.pickups=pickups(res,{coins:T.coins,orbs:DATA.xp.orbs[cls],rng});
   return res;
 }

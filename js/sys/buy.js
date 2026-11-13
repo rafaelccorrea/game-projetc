@@ -55,6 +55,7 @@
   /** compra um produto do catálogo do servidor. Resolve {ok, status, reason, applied} */
   async function purchase(S, host, productId) {
     if (!ready()) return { ok: false, reason: 'soon' };
+    if (!available(productId)) return { ok: false, reason: 'unavailable' };
     const N = net(), B = bridge();
     try {
       const can = await N.canBuy(productId);
@@ -71,7 +72,7 @@
   }
 
   /* ---------- aplicar uma entrega (contrato §7 "Como o jogo aplica cada entrega") ---------- */
-  function applyGrants(S, host, grants, revoke) {
+  function applyGrants(S, host, grants, revoke, ref) {
     const sign = revoke ? -1 : 1, X = Sys(), o = ensure(S), out = [];
     for (const g of grants || []) {
       if (!g || typeof g !== 'object') continue;
@@ -98,7 +99,10 @@
       } else if (g.kind === 'mount') {
         /* montaria comprada inteira (Mecha de guerra): Sys.mount.add. Estorno: a compra fica marcada no servidor (GET /entitlements); a montaria
            não é tirada da mão do jogador aqui (decisão de produto pendente; o servidor já não conta como comprada) */
-        if (!revoke && g.mountId && X.mount && X.mount.add) { const r = X.mount.add(S, host, g.mountId); out.push({ kind: 'mount', id: g.mountId, ok: !!(r && r.ok !== false) }); }
+        if (!revoke && g.mountId) { const N = X.newDrops; let r = null;
+          if (N && N.grantProduct) r = N.grantProduct(S, host, 'mount_' + g.mountId, ref || g.mountId);   // fps-69: idempotente pelo pedido; 2ª compra = 10 fragmentos
+          else if (X.mount && X.mount.add) r = X.mount.add(S, host, g.mountId);
+          out.push({ kind: 'mount', id: g.mountId, ok: !!(r && r.ok !== false), r }); }
         else if (revoke) out.push({ kind: 'mount', id: g.mountId, revoke: true });
       } else if (g.kind === 'monthly_card') out.push({ kind: 'card' });   // só mostra; o resgate diário é POST /purchases/monthly-card/claim
     }
@@ -112,7 +116,7 @@
     for (const d of Array.isArray(list) ? list : []) {
       if (!d || typeof d.id !== 'string') continue;
       if (!o.applied.includes(d.id)) {
-        const got = applyGrants(S, host, d.grants, !!d.revoke);
+        const got = applyGrants(S, host, d.grants, !!d.revoke, d.id);
         o.applied.push(d.id); o.applied = o.applied.slice(-DATA.keepApplied);
         try { if (host && host.save) host.save(); else if (typeof root.save === 'function') root.save(); } catch (e) {}
         done.push({ id: d.id, revoke: !!d.revoke, got });
@@ -124,6 +128,9 @@
 
   /** produto do catálogo pelo id (ou null) e o preço em texto pt-BR ("R$ 49,90") */
   const product = id => DATA.products.find(p => p.id === id) || null;
+  /** à venda AGORA? montaria só quando o Sys.newDrops diz que ela está liberada (Sys.mount.add recusa montaria com a chave desligada) */
+  const available = id => { const p = product(id); if (!p) return false; if (p.kind !== 'mount') return true;
+    try { const N = Sys().newDrops, s = N && N.shop ? N.shop() : []; const x = s.find(q => q.productId === id); return !!(x && x.on); } catch (e) { return false; } };
   const priceText = id => { const p = product(id); return p ? 'R$ ' + p.brl.toFixed(2).replace('.', ',') : ''; };
-  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText };
+  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available };
 });
