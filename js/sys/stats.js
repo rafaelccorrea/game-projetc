@@ -319,7 +319,7 @@ function canFuse(S,host,items){ const F=Q().fusion;
   if(!qOn()) return {ok:false,reason:'off'};
   if(!Array.isArray(items)||items.length!==F.count||new Set(items.map(x=>x&&x.id)).size!==F.count) return {ok:false,reason:'count'};
   const a=items[0], st=qualityStars(qpOf(a));
-  for(const x of items) if(!x||x.slot!==a.slot||int0(x.e)!==int0(a.e)||int0(x.r)!==int0(a.r)||qualityStars(qpOf(x))!==st) return {ok:false,reason:'different'};
+  for(const x of items) if(!x||x.slot!==a.slot||int0(x.e)!==int0(a.e)||int0(x.r)!==int0(a.r)||qualityStars(qpOf(x))!==st||(a.slot==='weapon'&&weaponType(x)!==weaponType(a))) return {ok:false,reason:'different'};   // arma: mesma família (arco só com arco)
   if(st>=Q().stars.length) return {ok:false,reason:'max'};
   const gold=F.goldPerLevel1*upgradeCost({lvl:1,r:a.r,e:a.e}).gold;
   if(host&&typeof host.canSpendGold==='function'&&!host.canSpendGold(gold)) return {ok:false,reason:'money',gold};

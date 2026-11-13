@@ -27,13 +27,29 @@ const DATA={
     {id:'griffin', name:'Grifo dourado',    r:2},   // ÉPICO também (dono); arte: assets/mounts/mount_griffin_ref.png
     {id:'mythic',  name:'Tigre de cristal', r:3},   // PO 12/11 (arte: kael_mythic_*); o dono ainda pode trocar pela serpe verde no voto. tbd:true tira de add()
     {id:'wyvern',  name:'Serpe dourada',    r:4},
+    // ===== 10 MONTARIAS NOVAS (dono, 13/11; nw:true = atrás da chave DATA.newOn até a arte chegar). Mesmo padrão: % de ATK e Vida pela raridade
+    // (maxPct 4,5 / 6,5 / 9 / 12%), estrelas e aura iguais. Fontes SEM sorteio pago: oferta/loja direta, VIP, evento, torneio, arena, guilda e
+    // FRAGMENTOS (hatchFrags: juntando os fragmentos ganhos numa fonte fixa, a montaria nasce sozinha). Nenhuma dá diamante: a meta de ~10 mil fica.
+    {id:'raptor',     name:'Raptor de guerra',         r:1, nw:true, hatchFrags:60,  src:['Torre: andar 50 (montaria inteira)','Baús da atividade diária: 1 fragmento/dia (60 = nasce)']},
+    {id:'scorpion',   name:'Escorpião gigante',        r:2, nw:true, hatchFrags:100, src:['Trilha de evento (faixa de topo): 20 fragmentos por evento','Chefe Mundial: fragmentos para quem passa de 5% da vida']},
+    {id:'panther',    name:'Pantera sombria',          r:2, nw:true, hatchFrags:100, src:['Arena: fim de temporada a partir do Ouro (10 fragmentos; Platina+ 20)']},
+    {id:'hellhorse',  name:'Cavalo infernal',          r:3, nw:true, hatchFrags:200, minEra:7, src:['Chefe da era 7 (Submundo): 2 fragmentos por dia','Evento do Submundo']},
+    {id:'unicorn',    name:'Unicórnio de guerra',      r:3, nw:true, hatchFrags:200, src:['Guilda: baú semanal (5 fragmentos) e loja da guilda por contribuição']},
+    {id:'icewolf',    name:'Lobo de gelo',             r:3, nw:true, hatchFrags:200, src:['Torneio de Fim de Semana: top 100 (10), top 10 (25)']},
+    {id:'phoenixm',   name:'Fênix gigante',            r:4, nw:true, hatchFrags:400, src:['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)']},
+    {id:'blackdragon',name:'Dragão negro',             r:4, nw:true, hatchFrags:400, src:['Torneio: top 3 da temporada (inteiro); top 10 (50 fragmentos)']},
+    {id:'celtiger',   name:'Tigre de guerra celestial',r:4, nw:true, hatchFrags:400, minEra:8, src:['Chefe da era 8 (Celestial): 2 fragmentos por dia','Guerra de guildas: capital (40 por temporada)']},
+    {id:'mecha',      name:'Mecha de guerra',          r:4, nw:true, hatchFrags:400, src:['Loja: compra direta (proposta R$ 49,90), inteira — sem sorteio']},
   ],
+  newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
+  newReady:{},
 };
 const BY={}; for(const m of DATA.mounts) BY[m.id]=m;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const ON=()=>DATA.on===true;
+const live=m=>!!m&&(!m.nw||DATA.newOn===true||DATA.newReady[m.id]===true);   // montaria nova só com a chave (ou liberada uma a uma)
 const playerLevel=(S,host)=>{ const L=root.Sys&&root.Sys.level; if(L&&L.level) return L.level(S); return int0(host&&host.level&&host.level())||1; };
 
 const keepObj=(old,e)=>{ if(old&&typeof old==='object'&&!Array.isArray(old)){ for(const k of Object.keys(old)) delete old[k]; return Object.assign(old,e); } return e; };   // ensure atualiza NO LUGAR: quem segurou a ficha (x=o.owned[id]) continua gravando no save
@@ -53,13 +69,15 @@ function pctOf(id,lvl,stars){ const m=BY[id]; if(!m) return 0; const L=DATA.lvlM
   return Math.round(DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))*1000)/1000; }
 function starUp(x){ while(x.stars<DATA.maxStars&&x.frags>=DATA.starCost[x.stars-1]){ x.frags-=DATA.starCost[x.stars-1]; x.stars++; } }
 /* ganha uma montaria (oferta, passe, loja, evento). Repetida = 10 fragmentos. A primeira entra equipada se não houver outra melhor. */
-function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; if(m.tbd) return {ok:false,reason:'tbd'}; const o=ensure(S), x=o.owned[id];
+function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; if(m.tbd) return {ok:false,reason:'tbd'}; if(!live(m)) return {ok:false,reason:'off'}; const o=ensure(S), x=o.owned[id];
   if(x){ const a=addFragments(S,id,DATA.dupFrags); return {ok:true,id,isNew:false,frags:DATA.dupFrags,stars:a.stars}; }
   o.owned[id]={stars:1,frags:0,lvl:1,gold:0}; const sv=o.stored[id]||0; delete o.stored[id]; if(sv) addFragments(S,id,sv);
   if(!o.eq||pctOf(id,1,o.owned[id].stars)>pctOf(o.eq,o.owned[o.eq].lvl,o.owned[o.eq].stars)) o.eq=id;
   return {ok:true,id,isNew:true,stars:o.owned[id].stars,equipped:o.eq===id}; }
-function addFragments(S,id,n){ const k=int0(n); if(!k||!BY[id]) return {added:0,stars:0}; const o=ensure(S), x=o.owned[id];
-  if(!x){ o.stored[id]=(o.stored[id]||0)+k; return {added:k,stored:true,stars:0}; } x.frags+=k; const s0=x.stars; starUp(x); return {added:k,stars:x.stars,up:x.stars-s0}; }
+function addFragments(S,id,n,host){ const k=int0(n); if(!k||!BY[id]) return {added:0,stars:0}; const o=ensure(S), x=o.owned[id];
+  if(!x){ o.stored[id]=(o.stored[id]||0)+k; const m=BY[id], hf=int0(m.hatchFrags);   // montaria nova: juntou hatchFrags → nasce (o que passar vira estrela)
+    if(hf&&live(m)&&o.stored[id]>=hf){ const left=o.stored[id]-hf; delete o.stored[id]; const a=add(S,host,id); if(left) addFragments(S,id,left,host); return {added:k,hatched:true,stars:o.owned[id]?o.owned[id].stars:1,add:a}; }
+    return {added:k,stored:true,stars:0,need:hf?Math.max(0,hf-o.stored[id]):0}; } x.frags+=k; const s0=x.stars; starUp(x); return {added:k,stars:x.stars,up:x.stars-s0}; }
 function equip(S,id){ const o=ensure(S); if(id==null){ o.eq=null; return true; } if(!o.owned[id]) return false; o.eq=id; return true; }
 /* custo do próximo nível; {ok, reason: off|id|cap|max|money, gold, cap} */
 function upgradeCost(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!x) return {ok:false,reason:'id',gold:0};
@@ -83,7 +101,9 @@ function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0};
 /* para a batalha: o que desenhar (visual desligado até a arte existir) */
 const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return null; return {id:o.eq,name:BY[o.eq].name,rarity:BY[o.eq].r,visual:DATA.visual===true,sprite:'mount_'+o.eq,stars:o.owned[o.eq].stars,aura:auraOf(o.owned[o.eq].stars)}; };
 
-const API={DATA,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+/* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
+const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],maxPct:DATA.maxPct[m.r],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
+const API={DATA,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

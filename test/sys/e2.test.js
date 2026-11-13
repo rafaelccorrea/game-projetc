@@ -1015,4 +1015,19 @@ t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era d
   assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').ult.tier,'own'); assert.strictEqual(T.skillFx({wt:'club',r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').dmgMult,1,'só visual');
 });
 
+t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade, nascem por fragmentos de fonte fixa, evoluem pelos sistemas de hoje',()=>{
+  const P=require('../../js/sys/pet.js'), M=require('../../js/sys/mount.js'), h=makeHost({eraMax:8});
+  const NP=P.DATA.pets.filter(p=>p.nw), NM=M.DATA.mounts.filter(m=>m.nw);
+  assert.strictEqual(NP.length,9); assert.strictEqual(NM.length,10);
+  assert.deepStrictEqual(NP.map(p=>p.r),[1,1,2,2,2,3,3,4,4]); assert.deepStrictEqual(NM.map(m=>m.r),[1,2,2,3,3,3,4,4,4,4]);
+  for(const p of NP){ assert.ok(Math.abs(p.skill.hits.reduce((a,b)=>a+b,0)-1)<1e-9,'mesmo dano total: '+p.id); assert.ok(p.src.length&&p.hatchFrags>0); assert.ok(!P.avail(p,h),'desligado: '+p.id); }
+  for(const m of NM){ assert.ok(m.src.length&&m.hatchFrags>0); assert.ok(Math.abs(M.pctOf(m.id,60,5)-M.DATA.maxPct[m.r]*1.0)<1e-9,'mesmo teto da raridade: '+m.id); }
+  assert.ok(P.DATA.starterIds.includes('wolf')&&P.DATA.starterIds.includes('phoenix'));
+  // montaria: desligada não entra; ligada, nasce ao juntar os fragmentos e o que sobra vira estrela; aura pelas estrelas de hoje
+  const S={}; assert.strictEqual(M.add(S,h,'raptor').reason,'off'); assert.ok(M.addFragments(S,'raptor',30,h).stored);
+  M.DATA.newReady.raptor=true; try{ const r=M.addFragments(S,'raptor',40,h); assert.ok(r.hatched); assert.strictEqual(M.ensure(S).owned.raptor.stars,2,'60 nasce, 10 de sobra = 2★');
+    assert.strictEqual(M.add(S,h,'scorpion').reason,'off','uma a uma'); assert.ok(M.catalog().find(x=>x.id==='raptor').live); assert.ok(M.catalog().find(x=>x.id==='mecha').soon);
+  } finally { delete M.DATA.newReady.raptor; }
+});
+
 console.log(`ok: ${n} testes`);

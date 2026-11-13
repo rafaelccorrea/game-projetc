@@ -23,6 +23,29 @@ const DATA={
     // Prismático: raridade própria (5), NUNCA de ovo: nasce com 1.000 fragmentos (Revisão 5, dono) de fontes SEM sorteio (DATA.v4d.prism); não vende na loja.
     // Estrelas: 50/100/150/200 (+500 até o 5★, mesma proporção 1:2:3:4 dos outros pets).
     // Teto POR PET: 1/3 da FC do herói (= 25% da FC total). Ataques melhores: crítico até 14%, mediano até 7%.
+    // ===== 9 PETS NOVOS (dono, 13/11; nw:true = atrás da chave DATA.newPets até a arte chegar). Mesmo padrão dos de hoje: o poder sai SÓ da raridade
+    // (rarW: mesmo teto 8/11/14/17/20% da FC total por raridade) e o tipo reparte entre dano/vida (atk, def); skill = o JEITO do golpe do pet na
+    // batalha, com o MESMO dano total do golpe de hoje (hits somam 1; dot = dano em partes; area = dividido entre os da fila). Fontes SEM sorteio pago
+    // (ovo da raridade certa ou fragmentos de uma fonte fixa; hatchFrags = nasce sozinho). Nenhum dá diamante (meta ~10 mil intacta).
+    // Os de hoje (lobo, coruja, dragãozinho, golem de cristal, fênix…) passam a ser os INICIAIS grátis (starter:true abaixo, no setNew).
+    {id:'shadowwolf', name:'Lobo sombrio',        r:1, type:'atk', icon:'', nw:true, skill:{id:'dash',   hits:[1],              note:'avanço rápido até o inimigo da frente'},
+     hatchFrags:60,  src:['Instância Arsenal: ovo Raro do lobo sombrio na 1ª vitória de cada dificuldade','Baús da atividade: 2 fragmentos/dia']},
+    {id:'falcon',     name:'Falcão de guerra',    r:1, type:'atk', icon:'', nw:true, skill:{id:'ranged', hits:[1],              note:'mergulha de longe (acerta antes do inimigo encostar)'},
+     hatchFrags:60,  src:['Torre: andar 30 (ovo inteiro)','Missões diárias: 1 fragmento/dia']},
+    {id:'panther',    name:'Pantera espectral',   r:2, type:'atk', icon:'', nw:true, skill:{id:'blink',  hits:[1], crit:true,    note:'some e reaparece atrás do inimigo; usa a chance de crítico do pet'},
+     hatchFrags:100, src:['Arena: fim de temporada Ouro (15) / Platina+ (30 fragmentos)']},
+    {id:'scorpion',   name:'Escorpião rúnico',    r:2, type:'atk', icon:'', nw:true, skill:{id:'poison', hits:[0.4,0.3,0.3], dot:true, note:'picada + veneno em 3 partes (mesmo total)'},
+     hatchFrags:100, src:['Trilha de evento: 20 fragmentos na faixa de topo','Caça aos Pets (evento): fragmentos +50% valem para ele']},
+    {id:'crow',       name:'Corvo da tempestade', r:2, type:'atk', icon:'', nw:true, skill:{id:'chain',  hits:[0.5,0.3,0.2], area:true, note:'raio que pula em até 3 inimigos (o dano se divide)'},
+     hatchFrags:100, src:['Guilda: baú semanal (5 fragmentos)','Loja da guilda por contribuição']},
+    {id:'griffin',    name:'Grifo negro',         r:3, type:'atk', icon:'', nw:true, skill:{id:'dive',   hits:[1], area:true,    note:'mergulho em área (divide entre a fila)'},
+     hatchFrags:200, src:['Torre: andar 150 (ovo inteiro)','Chefe Mundial: fragmentos acima de 5% da vida']},
+    {id:'obsidian',   name:'Golem de obsidiana',  r:3, type:'def', icon:'', nw:true, skill:{id:'burst',  hits:[1], onHit:true,   note:'explode estilhaços quando o herói apanha (mesmo dano do golpe dele, no lugar do golpe)'},
+     hatchFrags:200, src:['Guerra de guildas: capital (40 por temporada)','Torneio de Fim de Semana: top 100 (20)']},
+    {id:'icedragon',  name:'Dragão de gelo',      r:4, type:'atk', icon:'', nw:true, skill:{id:'breath', hits:[1], area:true, slow:true, note:'sopro em área que congela (só visual + desacelera o avanço; dano dividido)'},
+     hatchFrags:400, src:['Torneio: top 10 da temporada (100 fragmentos), top 3 (inteiro)']},
+    {id:'wyvernpet',  name:'Serpe infernal',      r:4, type:'atk', icon:'', nw:true, minEra:7, skill:{id:'fireball', hits:[0.34,0.33,0.33], area:true, note:'3 bolas de fogo em área (dano dividido)'},
+     hatchFrags:400, src:['Chefe da era 7 (Submundo): 3 fragmentos por dia','VIP 9: inteira, uma vez']},
     {id:'prism',     name:'Prismático',      r:5, type:'prism',  icon:'💠', v4:true, noEgg:true, hatchFrags:1000, starCost:[50,100,150,200], capShare:1/3,
      attacks:{crit:{gain:7}, mid:{gain:4}}},
   ],
@@ -36,6 +59,8 @@ const DATA={
   },
   pMax:0.25, rarW:[0.40,0.55,0.70,0.85,1.00,4/3],   // [5] = Prismático (1,333: p máx 1/3 = 25% da FC total)
   v4:false,
+  newPets:false, newReady:{},   // liga os 9 novos (o engenheiro, quando a arte for aprovada; um a um com newReady[id]=true)
+  starterIds:['wolf','owl','drake','golem','phoenix','underworld','parrot','celestial'],   // os de hoje = iniciais GRÁTIS (o prismático continua à parte)
   // PET NO NÍVEL 20 (dono; PROPOSTA, chave DESLIGADA). Ligada: o pet abre no Nv 20; ao chegar, firstEgg dá 1 ovo GRÁTIS sorteado só entre as
   // 2 primeiras raridades (79% Básico, 21% Raro; nunca Lendário). Ovos ganhos ANTES do 1º ovo ficam guardados (o.pre) e chocam logo depois dele,
   // na ordem (o 1º pet é sempre o do ovo grátis). Fragmentos e ração de antes continuam guardados como hoje. Save com pet: já conta como feito.
@@ -107,7 +132,8 @@ const changed=host=>{ if(host&&typeof host.onChange==='function') host.onChange(
 const RNAME=['Básico','Raro','Épico','Mítico','Lendário','Prismático'];
 /* Revisão 4: pets novos só existem com v4 (e v3) ligadas, e só a partir da era deles (minEra) */
 const V4=()=>DATA.v4===true&&DATA.v3===true;
-const avail=(p,host)=>!(V17()&&p.removed)&&(!p.v17||V17())&&(!p.v4||V4())&&(!p.minEra||int0(host&&host.eraMax&&host.eraMax())>=p.minEra);   // v4 (Revisão 4) e v17 (tela 17b): só com a chave; minEra: só a partir da era
+const liveNew=p=>!p.nw||DATA.newPets===true||DATA.newReady[p.id]===true;
+const avail=(p,host)=>liveNew(p)&&!(V17()&&p.removed)&&(!p.v17||V17())&&(!p.v4||V4())&&(!p.minEra||int0(host&&host.eraMax&&host.eraMax())>=p.minEra);   // v4 (Revisão 4) e v17 (tela 17b): só com a chave; minEra: só a partir da era
 const eggPets=host=>DATA.pets.filter(p=>!p.noEgg&&avail(p,host));
 const maxR=host=>eggPets(host).reduce((m,p)=>Math.max(m,p.r),0);
 
@@ -187,7 +213,8 @@ function addFragments(S,id,n,host){
   const o=ensure(S), x=o.owned[id];
   if(!x){ o.stored[id]=(o.stored[id]||0)+k;
     // Prismático (v4): nasce sozinho ao juntar hatchFrags; o que sobrar vira estrela
-    if(def.hatchFrags&&V4()&&o.stored[id]>=def.hatchFrags){ const left=o.stored[id]-def.hatchFrags; delete o.stored[id];
+    if(def.hatchFrags&&(def.nw?liveNew(def):V4())&&o.stored[id]>=def.hatchFrags){   // pets novos: com a chave newPets/newReady
+      const left=o.stored[id]-def.hatchFrags; delete o.stored[id];
       o.owned[id]={stars:1,frags:left,lvl:1}; o.hatched++; const nx=o.owned[id]; starUp(nx,def); return {id,added:k,stored:false,hatched:true,stars:nx.stars,up:nx.stars-1}; }
     return {id,added:k,stored:true,stars:0,up:0,total:o.stored[id],need:def.hatchFrags||null}; }
   x.frags+=k; const s0=x.stars; starUp(x,def);
@@ -321,6 +348,7 @@ function setV17(on){ DATA.v17.on=!!on; const sp=DATA.v17.species;
   if(on) DATA.types.combat=DATA.v17.combat; else delete DATA.types.combat;
   for(const d of DATA.pets){ const o=ORIG.pets.find(x=>x.id===d.id), n=sp[d.id];
     if(on&&n){ d.name=n.name; d.r=n.r; d.sprite=n.sprite; d.homeEra=n.era; d.removed=!!n.removed; d.type='combat'; }
+    else if(on&&d.nw){ d.type='combat'; d.sprite='pet_'+d.id; }   // pet novo na 17b: combate (todos iguais), sprite assets/anim/pets/pet_<id>; estágios 30/60 e teto pelo sistema de hoje
     else if(o){ d.name=o.name; d.r=o.r; d.type=o.type; delete d.sprite; delete d.homeEra; delete d.removed; } }
   DATA.rarW=on?DATA.v17.rarW.slice():ORIG.rarW.slice(); return DATA.v17.on; }
 const stgOf=x=>V17()?clamp(int0(x&&x.stg),0,2):null;
