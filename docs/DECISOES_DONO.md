@@ -3,6 +3,11 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [x] **Votos nas telas V2.**
+    - Aprovadas: Perfil V5, Batalha, Equipamento, Forja, Pets, Montarias, Invocar, Loja, VIP, Passe, Fim das 9 eras, Guilda, Torneio do Poder e Torre (a Arena já estava aprovada).
+    - Reprovadas: Mapa das Eras ("nada moderno") e Correio ("creio que essa não é a melhor proposta"). A Sistemas traz 2 direções de cada.
+    - Asa Seráfica: **versão A**.
+    - O Engenheiro passa as telas aprovadas para o jogo, na ordem do PASSAGEM.md.
 - [~] **Plano dos 119 créditos do Higgsfield, APROVADO:**
     1. Obrigatório (~10): Kaia na Fênix, ícones das eras 7 e 8, aura da Forja do +16 ao +20, Asa Seráfica depois do voto.
     2. Tiro montado (~48): Kael e Kaia atirando nas 6 montarias.
