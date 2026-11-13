@@ -13,9 +13,9 @@ O VIP acelera e poupa toque. NÃO dá atributo, XP a mais nem diamante. As vanta
 | Equipar o melhor sozinho (quando o novo tem mais FC) | VIP 2 | aviso "item melhor" + 1 toque |
 | Desmontar sozinho os fracos (Básico/Raro, o jogador escolhe) | VIP 3 | "desmontar todos" manual |
 | Pular chefe já vencido (mesmo prêmio, na hora) | VIP 3 | luta inteira |
-| Entradas na Arena por dia: 5 / 6 | VIP 4 / VIP 8 | 3 |
+| Entradas na Arena por dia: 5 / 6 | VIP 4 / VIP 8 | 3 (decidido pelo dono) |
 | Forja automática até o nível escolhido (mesma chance e custo) | VIP 4 | 1 toque por tentativa |
-| Tentativas na Torre por dia: 4 / 5 | VIP 5 / VIP 10 | 3 |
+| Tentativas na Torre por dia: 4 / 5 | VIP 5 / VIP 10 | 3 (decidido pelo dono) |
 | Ataques no Chefe Mundial por janela: 3 | VIP 6 | 2 |
 | XP do Passe +10% / +15% / +20% (só o Passe) | VIP 7 / VIP 9 / VIP 10 | 0% |
 | Entrada extra nos eventos com horário (Invasão, Chefe Mundial) | VIP 8 | as da agenda |
