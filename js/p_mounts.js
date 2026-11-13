@@ -151,9 +151,29 @@ const mtSoon=d=>mtEmpty(d,`${MT_SHOE(96,'#6a5a48')}<span class="lil" style="font
 /* ---------- peças ---------- */
 /* o Kael montado dentro de uma caixa QUADRADA (janela MT_SHEET sobre o quadro de 512x352; patas na base). anim = folha andando; sil = silhueta.
    Sem folha da montaria: marcador neutro (ferradura), nunca um animal desenhado em código. */
+/* MATRIZ DA ARTE (item 1, PO): a tela mostrava a folha kael_<montaria>_idle_era2_t1, que tem a espada medieval PINTADA e é sempre o Kael.
+   Agora: (a) VITRINE da montaria que o jogador tem = o desenho do próprio jogo (window.drawHeroFull: herói ATUAL, folha _body sem arma + a arma EQUIPADA no grip,
+   aura por estrela), num canvas; (b) miniaturas e silhueta = a folha _body (sem arma pintada) do herói atual. Sem folha montada desse herói nessa montaria
+   (mountPrefix devolve null) ou sem o desenho do jogo: vale a folha do Kael, como antes. mtBase(id) = caminho da folha parada usada por (b). */
+const mtHeroPre=id=>{ try{ if(typeof mountPrefix==='function'){ const p=mountPrefix(id); if(p) return p; } }catch(e){} return 'kael_'; };
+const mtBase=id=>MT_SHEET.dir+mtHeroPre(id)+mtFile(id)+'_idle_body';
+const mtCanRide=id=>{ try{ return typeof window.drawHeroFull==='function'&&typeof MOUNT_TBL!=='undefined'&&!!MOUNT_TBL[id]&&typeof mountPrefix==='function'&&!!mountPrefix(id)&&typeof HS==='number'&&HS>0; }catch(e){ return false; } };
+const mtHeroN=()=>{ try{ return S.hero==='kaia'?'Kaia':'Kael'; }catch(e){ return 'Kael'; } };
+/* enquadramento do canvas = a MESMA janela da folha (MT_SHEET: x0, y0, box sobre a célula de 512x352): pés na base, herói a 26% da largura.
+   Na folha montada o herói está a 0,6 da escala da folha a pé (xf.sc do .json), daí o 0,6. */
+const MT_RIDE={fx:(70.4+128*0.6-68)/304,fy:(339-36)/304,k:256*0.6/304};
+let mtRaf=0, mtT0=0;
+function mtRideLoop(ts){ mtRaf=0; const c=typeof document!=='undefined'?document.getElementById('mt_rc'):null; if(!c||typeof view==='undefined'||view!=='mounts'){ mtT0=0; return; }
+  try{ const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, h=c.clientHeight; if(w&&h){ if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+      if(!mtT0) mtT0=ts; const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height);
+      const id=c.dataset.id, st=Math.max(1,Math.min(5,Number(c.dataset.st)||1));
+      window.drawHeroFull(x,c.width*MT_RIDE.fx,c.height*MT_RIDE.fy,c.width*MT_RIDE.k/HS,{t:(ts-mtT0)/1000,mount:{id,stars:st},pet:false}); } }catch(e){}
+  mtRaf=requestAnimationFrame(mtRideLoop); }
+function mtRideStart(){ try{ if(!mtRaf&&typeof requestAnimationFrame==='function'&&typeof document!=='undefined'&&document.getElementById('mt_rc')) mtRaf=requestAnimationFrame(mtRideLoop); }catch(e){} }
+function mtRide(id,stars,alt){ return `<canvas id="mt_rc" data-id="${esc2(id)}" data-st="${stars|0}" role="img" aria-label="${esc2(alt)}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`; }
 function mtSprite(id,anim,sil,alt){ const F=MT_SHEET, lab=alt?`role="img" aria-label="${esc2(alt)}"`:'aria-hidden="true"';
   if(!MT_ART[id]) return `<span ${lab} style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;opacity:${sil?0.5:1}">${MT_SHOE('70%',sil?'#120c08':'#8a7a68')}</span>`;
-  return `<div ${lab} class="${sil?'mt-sil':''}" style="position:absolute;left:${(-F.x0/F.box*100).toFixed(2)}%;top:${(-F.y0/F.box*100).toFixed(2)}%;width:${(F.w/F.box*100).toFixed(2)}%;height:${(F.h/F.box*100).toFixed(2)}%;${xSheetBg(F.dir+'kael_'+mtFile(id)+'_idle_era2_t1.png',xSheetMeta(F.dir+'kael_'+mtFile(id)+'_idle_era2_t1',{frames:F.frames,cols:F.cols,fps:F.fps}),{still:!anim})}"></div>`; }   /* tira OU grade: xSheetBg/xSheetMeta (js/screens.js) leem o .json real; F.cols é só a reserva */
+  return `<div ${lab} class="${sil?'mt-sil':''}" style="position:absolute;left:${(-F.x0/F.box*100).toFixed(2)}%;top:${(-F.y0/F.box*100).toFixed(2)}%;width:${(F.w/F.box*100).toFixed(2)}%;height:${(F.h/F.box*100).toFixed(2)}%;${xSheetBg(mtBase(id)+'.png',xSheetMeta(mtBase(id),{frames:F.frames,cols:F.cols,fps:F.fps}),{still:!anim})}"></div>`; }   /* tira OU grade: xSheetBg/xSheetMeta (js/screens.js) leem o .json real; F.cols é só a reserva */
 /* aura pelo que o módulo diz da estrela (glow 0-3, smoke, particles): brilho → fumaça → raios, chama, anéis e partículas */
 function mtAura(a,c){ if(!a) return ''; const g=a.glow|0, rgb=mtRgb(c); let h='';
   if(g>=1) h+=`<span class="mt-glow" style="width:${g>=2?110:84}%;height:${g>=2?70:42}%;background:radial-gradient(ellipse at 50% 70%,rgba(${rgb},${g>=2?0.75:0.5}) 0%,rgba(${rgb},0) 70%)"></span>`;
@@ -204,9 +224,9 @@ function scrMounts(){
         <div style="position:absolute;left:50%;bottom:10%;width:${box}px;height:${box}px;margin-left:-${box/2}px">
           ${mtAura(aura,rc)}
           <span class="mt-shd" aria-hidden="true" style="bottom:-2%;width:70%;height:8%"></span>
-          <div class="mt-breathe" style="position:absolute;inset:0">${mtSprite(id,true,false,'Kael montado: '+name)}</div>
+          <div class="mt-breathe" style="position:absolute;inset:0">${mtCanRide(id)?mtRide(id,vs,mtHeroN()+' com a arma equipada, montando: '+name):mtSprite(id,true,false,mtHeroN()+' montando: '+name)}</div>
         </div>
-        <span class="mt-seal"><i></i>${XMT.view?'Prévia da aura com '+mtStars(vs):isEq?'Na batalha: Kael montado':'Prévia do Kael montado'}</span>`
+        <span class="mt-seal"><i></i>${XMT.view?'Prévia da aura com '+mtStars(vs):isEq?'Na batalha: '+mtHeroN()+' montando':'Prévia: '+mtHeroN()+' montando'}</span>`
         :`<div class="mt-crestBig" style="position:absolute;left:50%;bottom:10%;width:${box}px;height:${box}px;margin-left:-${box/2}px">${mtSprite(id,false,true,name+' (silhueta, ainda não é sua)')}</div>
         <span class="mt-seal"><i></i>Ainda não é sua</span>`}
         ${burst?'<span class="mt-burst" aria-hidden="true"></span>':''}
@@ -306,7 +326,7 @@ function scrMounts(){
 
   V.innerHTML=xWrap(d,'mt-root '+(XMT.anim?'mt-in':''),`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
     <div id="mt_scroll" class="x-scroll" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:6px 10px 10px">${stage}${info}${tabs}${panel}</div>${foot}</div>`);
-  XMT.anim=false; XMT.pin=false;
+  XMT.anim=false; XMT.pin=false; mtRideStart();
   if(y0){ const sc=document.getElementById('mt_scroll'); if(sc) sc.scrollTop=y0; }
 }
 
@@ -345,7 +365,7 @@ function mtClick(b,ev){
 
 if(!('mounts' in PANEL_ON)) PANEL_ON.mounts=false;
 /* imagens que a tela mostra: a folha parada de cada montaria da lista que tem arte (as mesmas do mtSprite) */
-function mtUrls(){ try{ return mtIds().filter(id=>MT_ART[id]).map(id=>MT_SHEET.dir+'kael_'+mtFile(id)+'_idle_era2_t1.png'); }catch(e){ return []; } }
+function mtUrls(){ try{ return mtIds().filter(id=>MT_ART[id]).map(id=>mtBase(id)+'.png'); }catch(e){ return []; } }
 Panels.add('mounts',{title:'Montarias',render:function(){ if(typeof xGate==='function'&&xGate(mtUrls())) return; return scrMounts.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return mtClick.apply(this,arguments); },
   /* 4x por segundo: só redesenha quando muda o que o botão de subir nível mostra (ouro que entrou, nível do jogador que subiu) */
   tick(){ if(XMT.sig===null||!mtReady()||typeof view==='undefined'||view!=='mounts') return;
