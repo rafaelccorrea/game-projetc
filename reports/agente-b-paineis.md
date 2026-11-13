@@ -831,3 +831,22 @@ Fechei a aba sem conferir nada. Não é meu arquivo e não mexi.
   lista interna. Continua valendo o bloqueio do `setView` do index (B-24). ATENÇÃO: o commit `25c5cb5` de outra sessão pegou o arquivo
   pela metade (botão desenhado sem o tratador do toque); a árvore de trabalho está completa: o próximo commit tem de incluir o resto.
   Cópia final guardada na pasta de rascunho do subagente (`passe/screens2.final.js`). Não visto rodando.
+
+## Bloco 23: tela 10 VITÓRIA / DERROTA DO CHEFE refeita contra o protótipo aprovado. Escrita, NÃO vista; chave do agente A desligada
+
+Só a seção 10 e o CSS `#res` / `q-*` de `js/screens2.js` (subagente; conferi `node --check`, que o Passe com rolagem continua no arquivo,
+e a fumaça sem falha). Abre só com `SCREENS_ON.bossResult` (index.html); conferência: `?debug=1&res=1` e `dbgResult('win' | 'lose')`.
+- VITÓRIA: a tela espera a morte aprovada do chefe terminar (não segura mais o corpo); depois baú no lugar do chefe, estouro, moedas
+  voando ao contador, letreiro, cartões um a um (moedas com gemas, XP, item de maior raridade com a moldura única), botão "Continuar"
+  (segue sozinho em 4 s; qualquer toque cancela) e "Pular".
+- DERROTA: "O chefe foi mais forte", sua FC x recomendada com "Faltam X de FC", 3 caminhos lado a lado (Forja só se a tela estiver ligada
+  e liberada; Invocar só no nível 3; Equipamento sempre), "Modo farm" como botão PRINCIPAL (entra sozinho em 10 s) e "Tentar de novo".
+- O HUD da batalha some enquanto a tela está aberta (CSS meu `body.resui #fbhud`); sem emoji; sem AUTO/MANUAL.
+- Diferenças conscientes: gemas dentro do cartão de moedas (o protótipo não tem gemas); contagem no "Continuar" (o jogo é automático);
+  o golpe final em câmera lenta com "CRÍTICO!" do protótipo é cena do canvas (agente A).
+- PARA O AGENTE A (pedido B-25): ligar `SCREENS_ON.bossResult`; avaliar o Kael caído na derrota (a tela põe `B.deadT = 0.8` e
+  `B.deadBoss = true` ao abrir e devolve ao fechar, sem editar `battle.js`); o `holdC` do `battle.js` ficou sem uso; o aviso reserva de
+  `waveClear` ainda tem emoji.
+- Limites conhecidos (teste do subagente): em 360x584 a vitória com 4 cartões cobre 21 px do Kael; em 320x500 "Tentar de novo" fica com
+  41 px. De 360x640 a 430x900 passa.
+- A ver no navegador: baú e moedas na posição do chefe; animações; o Kael caído; o HUD sumindo e voltando.

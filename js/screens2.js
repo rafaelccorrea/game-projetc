@@ -112,33 +112,86 @@ const Y_STONE=s=>`<svg class="y-stone" width="${s}" height="${s}" viewBox="0 0 2
 .r-card:active,.r-tbtn:active{transform:scale(.96)}
 .r-lockp{animation:rlockp 2s ease-in-out infinite}
 @keyframes rlockp{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-/* ---- 10 Resultado do chefe ---- */
-#res{position:absolute;inset:0;z-index:20;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;animation:yfade .25s ease-out both}
+/* ---- 10 Resultado do chefe (docs/proto/ResultadoChefe.dc.html, versão aprovada) ---- */
+/* a tela cobre a batalha inteira: o HUD da batalha (z-index 30) some enquanto ela está aberta, como já acontece com os painéis em tela cheia */
+body.resui #fbhud{visibility:hidden}body.resui #fbhud *,body.resui #fbhud *::after{animation-play-state:paused!important}
+#res{position:absolute;inset:0;z-index:40;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 #res .rw{position:absolute;left:0;top:0;width:390px;transform-origin:0 0}
-#res button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:inherit}
+#res button{font-family:Nunito,system-ui,sans-serif;cursor:pointer;color:inherit;margin:0}
 #res .lil{font-family:'Lilita One',Nunito,sans-serif;font-weight:400}
-#res .q-rays{animation:yspin 14s linear infinite}
-#res .q-banner{animation:qban .7s cubic-bezier(.2,1.6,.4,1) both}
-@keyframes qban{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
-#res .q-shake{animation:qshk .6s ease-out both}
-@keyframes qshk{0%{opacity:0;transform:scale(1.3)}30%{opacity:1;transform:scale(1) translateX(-8px)}50%{transform:translateX(7px)}70%{transform:translateX(-4px)}100%{transform:none}}
-#res .q-popin{animation:qpi .45s cubic-bezier(.2,1.6,.4,1) both}
-@keyframes qpi{0%{opacity:0;transform:scale(.3) rotate(-8deg)}100%{opacity:1;transform:none}}
-#res .q-fly{animation:qfl .6s ease-in both}
-@keyframes qfl{0%{transform:none;opacity:1}100%{transform:translateY(-260px) scale(.4);opacity:0}}
+#res .q-veil{position:absolute;inset:0;pointer-events:none;animation:yfade .5s ease-out both}
+#res .q-dark{position:absolute;inset:0;pointer-events:none;animation:yfade .8s ease-out both}
+#res .q-fx{position:absolute;inset:0;pointer-events:none}
+#res .q-lbox{position:absolute;left:0;right:0;height:46px;background:#000;animation:qlbox 1.7s ease-in-out both}
+@keyframes qlbox{0%{transform:scaleY(0)}12%,80%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+#res .q-vign{position:absolute;inset:0;animation:qvign 1.7s ease-in-out both}
+@keyframes qvign{0%{opacity:0}12%,80%{opacity:1}100%{opacity:0}}
+#res .q-flash{position:absolute;inset:0;animation:qflash .9s ease-out both}
+@keyframes qflash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+#res .q-glow{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,224,122,.85),rgba(255,201,74,0) 65%);animation:qglw 1s ease-in-out infinite}
+@keyframes qglw{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.15);opacity:1}}
+#res .q-chin{transform-origin:50% 100%;animation:qchin .5s cubic-bezier(.2,1.6,.4,1) both,qwig .18s .55s ease-in-out infinite alternate}
+@keyframes qchin{0%{transform:scale(0,.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes qwig{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+#res .q-chbo{transform-origin:50% 100%;animation:qchbo .5s ease-out both}
+@keyframes qchbo{0%{transform:scale(1);opacity:1;filter:brightness(1)}35%{transform:scale(1.35,1.2);filter:brightness(2.6)}100%{transform:scale(1.7);opacity:0;filter:brightness(3)}}
+#res .q-ring{position:absolute;border-radius:50%;border:6px solid #ffe07a;box-shadow:0 0 30px #ffc94a,inset 0 0 20px #ffc94a;animation:qring .7s ease-out both}
+@keyframes qring{0%{transform:scale(.1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+#res .q-coin{position:absolute;width:24px;height:24px}
+#res .q-cb{animation:qcb .8s cubic-bezier(.3,.6,.5,1) both}
+@keyframes qcb{0%{transform:translate(calc(var(--dx) * -1),-26px) scale(.3);opacity:0}10%{opacity:1}45%{transform:translate(calc(var(--dx) * -.45),var(--h)) scale(1.1)}80%{transform:translate(0,0) scale(1)}89%{transform:translate(0,-10px)}100%{transform:translate(0,0)}}
+#res .q-cf{animation:qcf .65s cubic-bezier(.55,0,.8,.4) both}
+@keyframes qcf{0%{transform:translate(0,0) scale(1);opacity:1}85%{opacity:.5}100%{transform:translate(var(--tx),var(--ty)) scale(.75);opacity:0}}
+#res .q-cspin{animation:qcspin .7s linear infinite}
+@keyframes qcspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.25)}}
+#res .q-bma{animation:qbma .25s ease-out}#res .q-bmb{animation:qbmb .25s ease-out}
+@keyframes qbma{50%{transform:scale(1.18);box-shadow:0 0 18px rgba(255,201,74,.9)}}
+@keyframes qbmb{50%{transform:scale(1.18);box-shadow:0 0 18px rgba(255,201,74,.9)}}
+#res .q-rays{position:absolute;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.35) 0deg 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 20%,transparent 68%);mask:radial-gradient(circle,#000 20%,transparent 68%);animation:yspin 14s linear infinite}
+#res .q-title{animation:qtitle .8s cubic-bezier(.2,1.5,.4,1) both,qglowt 2s .8s ease-in-out infinite}
+@keyframes qtitle{0%{transform:scale(2.6);opacity:0;letter-spacing:14px}100%{transform:none;opacity:1;letter-spacing:2px}}
+@keyframes qglowt{0%,100%{text-shadow:0 5px 0 #6a3a08,0 0 10px rgba(255,201,74,.5)}50%{text-shadow:0 5px 0 #6a3a08,0 0 30px rgba(255,201,74,1),0 0 60px rgba(255,140,40,.7)}}
+#res .q-sub{animation:qrise .5s .5s ease-out both}
+@keyframes qrise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#res .q-conf{position:absolute;top:-16px;width:8px;height:14px;border-radius:2px;animation:qcnf linear infinite;opacity:0}
+@keyframes qcnf{0%{opacity:0;transform:translateY(0) rotate(0)}8%{opacity:1}100%{opacity:0;transform:translateY(700px) rotate(620deg)}}
+#res .q-card{animation:qcard .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes qcard{0%{transform:translateX(70px) scale(.9);opacity:0}100%{transform:none;opacity:1}}
+#res .q-cup{animation:qcup .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes qcup{0%{transform:translateY(40px) scale(.85);opacity:0}100%{transform:none;opacity:1}}
 #res .q-myth{animation:qmy 1.4s ease-in-out infinite}
 @keyframes qmy{0%,100%{box-shadow:0 0 10px var(--rc),inset 0 0 10px rgba(255,255,255,.08)}50%{box-shadow:0 0 28px var(--rc),inset 0 0 18px rgba(255,255,255,.18)}}
 #res .q-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:qsh 2.6s ease-in-out infinite;pointer-events:none}
 @keyframes qsh{0%,40%{background-position:150% 0}100%{background-position:-60% 0}}
-#res .q-conf{position:absolute;top:-16px;width:8px;height:14px;border-radius:2px;animation:qcf linear infinite;opacity:0}
-@keyframes qcf{0%{opacity:0;transform:translateY(0) rotate(0)}10%{opacity:1}100%{opacity:0;transform:translateY(520px) rotate(540deg)}}
-#res .q-slot{border:2px dashed rgba(201,185,162,.35);border-radius:14px;box-sizing:border-box}
-#res .q-fcbar{animation:qfcb 1s ease-out .4s both;transform-origin:0 50%}
+#res .q-wob{animation:qwob 1.6s ease-in-out infinite}
+@keyframes qwob{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.1)}}
+#res .q-new{animation:qnew 1.1s ease-in-out infinite}
+@keyframes qnew{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+#res .q-xpf{transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+#res .q-fcbar{animation:qfcb 1s cubic-bezier(.2,.8,.2,1) .6s both;transform-origin:0 50%}
 @keyframes qfcb{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-#res .q-cardin{animation:qci .4s ease-out both}
-@keyframes qci{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
-#res .q-auto{position:absolute;left:0;bottom:0;height:5px;background:rgba(42,20,3,.55);border-radius:0 3px 3px 0}
-#res .q-auto.d{background:#c9b9a2}
+/* botões: a entrada usa "backwards" (não "both") para o :active continuar valendo depois que a animação termina */
+#res .q-go{animation:qpi .45s cubic-bezier(.2,1.6,.4,1) backwards,qpulse 1.4s .45s ease-in-out infinite}
+@keyframes qpi{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:none}}
+@keyframes qpulse{0%,100%{box-shadow:0 6px 0 #8a4f0c,0 0 0 rgba(255,201,74,0)}50%{box-shadow:0 6px 0 #8a4f0c,0 0 30px rgba(255,201,74,.95)}}
+#res .q-skip:active{transform:scale(.95)}
+#res .q-farm{animation:qcup .5s 1.7s cubic-bezier(.2,1.3,.4,1) backwards,qpulse 1.4s 2.2s ease-in-out infinite}
+#res .q-red{animation:qcup .5s 1.82s cubic-bezier(.2,1.3,.4,1) backwards,qred 2s 2.4s ease-in-out infinite}
+#res .q-red:active{transform:scale(.97)}
+@keyframes qred{0%,100%{border-color:#7a2a20}50%{border-color:#ff7a6e}}
+#res .q-lose{animation:qlose .6s .2s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes qlose{0%{opacity:0;transform:scale(1.4)}60%{opacity:1;transform:scale(.97)}100%{transform:none}}
+#res .q-orbs{position:absolute;width:44px;height:44px;transform:scaleY(.38);pointer-events:none;animation:yfade .4s .3s ease-out both}
+#res .q-orb{position:absolute;left:16px;top:16px;width:12px;height:12px;animation:qorb 1.1s linear infinite}
+@keyframes qorb{from{transform:rotate(0deg) translateX(18px) rotate(0deg)}to{transform:rotate(360deg) translateX(18px) rotate(-360deg)}}
+#res .q-path{animation:qcup .5s cubic-bezier(.2,1.3,.4,1) backwards}
+#res .q-path:active{transform:scale(.96)}
+#res .q-picon{animation:qpicon 2.4s ease-in-out infinite}
+@keyframes qpicon{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(-4deg)}}
+#res .q-fspin{animation:yspin 2.2s linear infinite}
+#res .q-pfx{animation:qpfx 2s ease-in-out infinite}
+@keyframes qpfx{0%,100%{opacity:.75}50%{opacity:1}}
+#res .q-auto{position:absolute;left:0;bottom:0;height:5px;background:rgba(42,20,3,.55);border-radius:0 3px 3px 0;pointer-events:none}
 `; document.head.appendChild(st); })();
 
 /* voo de um ícone até o topo (moedas, gemas, avatar) e pulo do contador */
@@ -452,119 +505,213 @@ function rClick(b){ const a=b.dataset.x, P=Sys.practice, T=Sys.titles;
     if(T.setFeatured(S,id)){ snd('claim'); XR.fresh=null; rAfter(null,'','Destaque: '+t.name+' (x'+T.DATA.featuredMult+')'); } }
 }
 
-/* ======================================================================= 10 VITÓRIA / DERROTA DO CHEFE (DESLIGADA: SCREENS_ON.bossResult = false) =======================================================================
-   O dono REPROVOU esta tela depois de ela estar escrita: nada daqui aparece no jogo. Conferência só em debug (?debug=1&res=1).
-   Abre por cima da batalha (que fica esperando: step() não anda com B.res). Os personagens são os da própria batalha, na linha do chão do jogo:
-   o herói parado e o chefe caído (vitória) ou de pé (derrota). O saque JÁ foi creditado no abate (Sys.loot.onKill): a tela só mostra.
-   O jogo é só automático: a tela não trava o jogo. Vitória: depois de revelar tudo, coleta sozinha em 2,5 s e segue em 1,5 s. Derrota: volta a farmar
-   sozinha em 10 s. Qualquer toque na tela cancela a contagem. */
-const RES={el:null,t:0,step:0,collected:false,auto:-1,tiles:[],item:null,o:null};
-const RES_AUTO_COLLECT=2.5, RES_AUTO_NEXT=1.5, RES_AUTO_FARM=10;
+/* ======================================================================= 10 VITÓRIA / DERROTA DO CHEFE (chave SCREENS_ON.bossResult, index.html) =======================================================================
+   Fonte APROVADA pelo dono: docs/proto/ResultadoChefe.dc.html (versão refeita). A tela abre POR CIMA da batalha (que espera: step() não anda com
+   B.res) e não redesenha ninguém: o chefe e o Kael são os do canvas. O HUD da batalha some enquanto ela está aberta (body.resui, CSS no topo).
+   VITÓRIA: a morte aprovada do chefe toca INTEIRA no canvas (a tela não segura mais o corpo: ele some no fim da folha, como no protótipo); só
+   depois vêm o baú no lugar do chefe, as moedas até o contador, o letreiro, os cartões um a um e o "Continuar". "Pular" (ou um toque fora dos
+   botões) mostra tudo na hora. O saque JÁ foi creditado no abate (Sys.loot.onKill): a tela só mostra o que veio em o.loot.
+   DERROTA: título, FC sua x recomendada, 3 caminhos (Forja, Equipamento, Invocar: caminho não liberado NÃO aparece), "Modo farm" (botão
+   principal, com a contagem) e "Tentar de novo".
+   O jogo é só automático: a tela nunca trava o jogo. Vitória: segue sozinha RES_AUTO_NEXT s depois de o "Continuar" aparecer. Derrota: entra no
+   modo farm sozinha RES_AUTO_FARM s depois de os botões aparecerem. Qualquer toque na tela cancela a contagem. */
+const RES={el:null,mode:'',o:null,t:0,ev:[],ei:0,end:false,auto:-1,autoOn:true,cards:[],geo:null,lay:null,gain:0,g0:0,cnt:-1,bt:0,bm:false,xpAt:-1,conf:false,fc:0,rec:0,fcK:-1,sub:''};
+const RES_AUTO_NEXT=4, RES_AUTO_FARM=10, RES_LOSE_BTN=1.7, RES_LOSE_PATH=1.1, RES_LOSE_H=392, RES_DEATH_MAX=3;
+/* moedas do baú (protótipo): [desvio x do pouso em relação ao baú, altura do arco, y do pouso em relação à linha do chão] */
+const RES_COINS=[[-150,-150,-16],[-122,-190,-20],[-96,-130,-12],[-70,-210,-18],[-44,-160,-14],[-18,-230,-20],[14,-180,-12],[40,-140,-18],[62,-200,-14],[80,-120,-20],[-134,-110,-10],[-58,-240,-16]];
+const RES_CONF=[[22,'#ffc94a',3.2,0],[64,'#4aa3ff',3.8,.5],[108,'#ff4d6d',3,.2],[150,'#5fd068',3.6,1.1],[196,'#ffe07a',3.3,.7],[238,'#b45cff',3.9,.3],[282,'#ffc94a',3.1,1.4],[322,'#4aa3ff',3.5,.9],[362,'#ff4d6d',3.4,.1]];
+const Q_STAR='M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7z';
+const Q_ESS='<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l7 10-7 10-7-10z" fill="#c9a4ff" stroke="#3a1f6a" stroke-width="1.6" stroke-linejoin="round"></path><path d="M12 2l-2.5 10L12 22" fill="none" stroke="#fff" stroke-width="1.2" opacity=".6"></path></svg>';
+const Q_CHEV=s=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg>`;
+const resEl=id=>document.getElementById(id);
+function resAdd(id,html){ const el=resEl(id); if(el) el.insertAdjacentHTML('beforeend',html); }
 function resBoss(mode){ let e=null; if(mode==='win'){ for(const c of B.corpses) if(c.e.boss) e=c.e; } else e=B.en.find(x=>x.boss)||null; return e; }
+/* medidas na base de 390: linha do chão, lado do quadro do Kael, x do Kael e do chefe. Sem medida real do canvas vale a tela inteira (batalha em tela cheia). */
+function resGeo(boss){ const app=resEl('app'), W=app.clientWidth||390, H=app.clientHeight||844, s=W/390, Hb=H/s; let cw=W, ct=0, cl=0;
+  try{ const cr=cv.getBoundingClientRect(), ar=app.getBoundingClientRect(); if(cr.width>W*0.5){ cw=cr.width; ct=cr.top-ar.top; cl=cr.left-ar.left; } }catch(er){}
+  const k=cw/LW, X=x=>(cl+x*k)/s;
+  return {s,Hb,feet:(ct+GY*k)/s,hs:HS*k/s,hx:X(HX),bx:Math.max(70,Math.min(320,X(boss&&boss.x>0?boss.x:LW*0.77)))}; }
+/* o bloco de cima nunca cobre o Kael: se faltar altura ele sobe (arranjo compacto) e encolhe a partir do topo.
+   Vitória: letreiro em 108 e cartões em 232 (protótipo); compacto = contador de moedas na linha do topo, letreiro em 58, cartões em 154.
+   Derrota: bloco em 74 (protótipo) ou 64; o limite é o Kael CAÍDO (o chefe fica atrás do escuro, como no protótipo). */
+function resLay(mode,G,cardsH){
+  if(mode==='win'){ const avail=G.feet-G.hs*0.92-4, compact=232+cardsH>avail, top=compact?154:232;
+    return {compact,top,f:compact?Math.max(0.72,Math.min(1,(avail-top)/Math.max(1,cardsH))):1,tt:compact?58:108,th:compact?92:110,cx:compact?292:30,cy:compact?35:86}; }
+  const avail=G.feet-G.hs*0.55-10, fit=74+RES_LOSE_H<=avail, top=fit?74:64;
+  return {compact:!fit,top,f:fit?1:Math.max(0.7,Math.min(1,(avail-top)/RES_LOSE_H)),low:G.Hb-156<G.feet+6}; }
+const resCardsH=()=>RES.cards.reduce((a,c)=>a+c.h,0)+8*Math.max(0,RES.cards.length-1);
+/* DERROTA: o Kael fica caído e visível enquanto a tela está aberta (protótipo). O canvas desenha o herói tombado e a cena escura sem letreiro
+   quando B.deadT > 0 com B.deadBoss ligado (js/battle.js: HM.deadP e o véu da derrota); com B.res o step() não anda, então o valor fica parado em
+   0,8 (deadP = 0,5: tombado, ainda opaco). resClose devolve os dois campos antes de recomeçar a luta. */
+function resHeroDown(on){ B.deadT=on?0.8:0; B.deadBoss=!!on; }
+const resEggR=x=>Math.max(0,Math.min(4,(x&&typeof x==='object'?(x.r!=null?x.r:(x.egg&&x.egg.r)):x)|0));
+/* cartões da vitória, na ordem do protótipo: moedas (com as gemas da fase), XP, extras (ovos, pedras, essência: só se vieram) e o item de maior raridade */
+function resLoot(o){ const L=o.loot||{}, n=v=>Math.max(0,Math.round(+v||0)), cards=[], gold=n(L.gold), gems=n(o.gems)+n(L.gems), xp=n(L.xp);
+  if(gold||gems) cards.push({k:'gold',h:62,gold,gems});
+  if(xp){ let lv='', f1=1, f0=1, up=false; try{ const p=Sys.level.progress(S); up=!!(L.levelUp&&L.levelUp.to>L.levelUp.from); lv='Nv. '+p.lvl; f1=p.max?1:Math.max(0,Math.min(1,p.frac)); f0=p.max?1:up?0:Math.max(0,f1-(p.need?xp/p.need:0)); }catch(er){}
+    cards.push({k:'xp',h:62,xp,lv,f0,f1,up}); }
+  const ex=[], egg=(g,note)=>{ if(g&&typeof g==='object'&&g.ok===false) return; const r=resEggR(g); ex.push({ic:Y_EGG(22,RC[r]||'#e8e2d8'),r,tx:'Ovo '+RN(r),note}); };
+  for(const g of Array.isArray(L.eggs)?L.eggs:[]) egg(g,'');
+  for(const hd of Array.isArray(L.held)?L.held:[]) egg(hd,hd&&hd.needLevel?'guardado até o nível '+hd.needLevel:'guardado');
+  if(n(L.forge)) ex.push({ic:Y_STONE(20),tx:'+'+gNum(n(L.forge))+(n(L.forge)===1?' pedra de forja':' pedras de forja')});
+  if(n(L.essence)) ex.push({ic:Q_ESS,tx:'+'+gNum(n(L.essence))+' de essência'});
+  if(ex.length) cards.push({k:'extra',h:46,ex});
+  const its=Array.isArray(L.items)?L.items.filter(x=>x&&SLOT[x.slot]):[];
+  if(its.length){ const it0=its.slice().sort((a,b)=>b.r-a.r)[0], ni=normItem(it0), mine=S.inv.filter(x=>x.slot===it0.slot&&x.r===it0.r&&x.e===it0.e).pop(), eq=mine&&S.eq[mine.slot]===mine.id; let sw=0; try{ if(mine&&!eq) sw=Sys.fc.itemFC(S,Sys.host,mine).swap; }catch(er){}
+    cards.push({k:'item',h:100,r:ni.r,slot:ni.slot,e:ni.e,nm:iname(ni),sub:SLOT[ni.slot].n+' · '+ERAS[ni.e].n,st:eq?'Equipado':sw>0.5?'Melhor que o seu':'',more:its.length-1}); }
+  return cards; }
+/* HTML de um cartão (fast = sem a animação de entrada e com a barra de XP já no valor final: "Pular") */
+function resCardHtml(c,fast){ const cls=fast?'':'q-card', base='flex:none;box-sizing:border-box;display:flex;align-items:center;background:rgba(29,22,17,.95)';
+  if(c.k==='gold'){ const g='+'+gNum(c.gold);
+    return `<div class="${cls}" style="${base};height:62px;border-radius:16px;border:2px solid #ffc94a;box-shadow:0 0 18px rgba(255,201,74,.35);gap:10px;padding:0 14px">
+      <img class="q-cspin" src="assets/ui/coin.png" alt="" style="width:40px;height:40px;flex:none;object-fit:contain">
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:${g.length>8?19:24}px;color:#ffe07a;white-space:nowrap">${g}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap">Moedas de ouro</span></span>
+      ${c.gems?`<span role="img" aria-label="Mais ${gNum(c.gems)} gemas" style="flex:none;height:32px;padding:0 9px 0 5px;border-radius:16px;background:#16110d;border:2px solid #4aa3ff;display:flex;align-items:center;gap:4px;box-sizing:border-box"><img src="assets/ui/gem.png" alt="" style="width:20px;height:20px;object-fit:contain"><span class="lil" style="font-size:16px;color:#9fd0ff">+${gNum(c.gems)}</span></span>`:''}
+      <span style="flex:none;font-size:12px;font-weight:900;color:#c9b9a2;text-align:right;line-height:1.2">Total<br><span style="color:#f6ecdf;font-size:14px">${gNum(S.gold)}</span></span></div>`; }
+  if(c.k==='xp'){ const p0=Math.round((fast?c.f1:c.f0)*100), p1=Math.round(c.f1*100), x='+'+gNum(c.xp)+' XP';
+    return `<div class="${cls}" style="${base};height:62px;border-radius:16px;border:2px solid #5fd068;gap:12px;padding:0 14px">
+      <svg class="q-wob" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" style="flex:none"><circle cx="20" cy="20" r="18" fill="#1f4a22" stroke="#5fd068" stroke-width="3"></circle><path d="M20 8l3.4 7.6 8.1.7-6.2 5.3 1.9 8-7.2-4.4-7.2 4.4 1.9-8-6.2-5.3 8.1-.7z" fill="#c4f27a"></path></svg>
+      <span style="min-width:78px;flex:none;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:${x.length>8?19:24}px;color:#9be89f;white-space:nowrap">${x}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">Kael</span></span>
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="display:flex;justify-content:space-between;gap:6px;font-size:12px;font-weight:900;white-space:nowrap"><span>${esc2(c.lv)}${c.up?' <span style="color:#ffe07a">Subiu de nível</span>':''}</span><span id="res_xpt" style="color:#9be89f">${p0}%</span></span>
+        <span role="progressbar" aria-label="XP do nível" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p1}" style="height:10px;border-radius:5px;background:#0e0a07;border:1px solid #2f5a32;overflow:hidden;display:block"><span class="q-xpf" id="res_xpf" style="display:block;height:100%;width:${p0}%;background:linear-gradient(90deg,#5fd068,#c4f27a)"></span></span></span></div>`; }
+  if(c.k==='extra') return `<div class="${cls}" style="${base};height:46px;border-radius:14px;border:2px solid #4a3a2b;gap:12px;padding:0 12px;overflow:hidden">${c.ex.map(x=>`<span style="flex:none;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:900;white-space:nowrap">${x.ic}<span>${x.r!=null?xRarName(x.r,x.tx):esc2(x.tx)}${x.note?` <span style="color:#c9b9a2;font-weight:800">${esc2(x.note)}</span>`:''}</span></span>`).join('')}</div>`;
+  /* item ganho: moldura e nome pelo componente único de raridade (xRar / xRarBox / xRarName, js/screens.js) */
+  const q=xRar(c.r,'xr-s'), col=q.c, img=`<img class="q-wob" src="${slotIcon(c.slot,c.e)}" alt="" style="width:54px;height:54px;object-fit:contain">`;
+  const box=q.on?xRarBox(c.r,img,72):`<div style="width:72px;height:72px;flex:none;border-radius:14px;background:radial-gradient(circle,${col}99,#16110d 72%);border:3px solid ${col};display:flex;align-items:center;justify-content:center;box-sizing:border-box">${img}</div>`;
+  return `<div class="${cls}" style="position:relative;height:100px;flex:none;border-radius:16px;overflow:hidden">
+    <div class="${c.r>=3?'q-myth':''}" style="position:absolute;inset:0;border-radius:16px;--rc:${col};background:linear-gradient(90deg,${col}52,rgba(29,22,17,.96) 62%);border:3px solid ${col};box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 12px">${box}
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:900;color:${q.t};letter-spacing:1px;white-space:nowrap">ITEM · ${esc2(RN(c.r).toUpperCase())}${c.more>0?' · MAIS '+c.more:''}</span>
+        <span class="lil" style="font-size:22px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${xRarName(c.r,c.nm)}</span>
+        <span style="font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(c.sub)}${c.st?` · <span style="color:#5fd068">${c.st}</span>`:''}</span></div>
+      <span class="q-new" style="flex:none;align-self:flex-start;margin-top:10px;padding:3px 8px;border-radius:8px;background:${col};color:${c.r===0||c.r===4?'#2a1403':'#fff'};font-size:11px;font-weight:900">NOVO</span></div><span class="q-shine"></span></div>`; }
+function resTitleHtml(){ const Y=RES.lay;
+  return `<div class="q-rays" aria-hidden="true" style="left:35px;top:${Y.th/2-160}px;width:320px;height:320px"></div>
+    <h1 class="q-title lil" style="position:relative;margin:0;font-size:${Y.compact?50:60}px;line-height:1;color:#ffc94a;letter-spacing:2px;text-shadow:0 5px 0 #6a3a08,0 0 10px rgba(255,201,74,.5)">VITÓRIA!</h1>
+    <span class="q-sub" style="position:relative;margin-top:8px;padding:0 12px;font-size:14px;font-weight:900;text-shadow:0 2px 4px #000;text-align:center">${RES.sub}</span>`; }
+/* botões da vitória: "Pular" enquanto a apresentação roda; "Continuar" (único botão do protótipo) no fim, com a barra fina da contagem automática */
+function resActHtml(end){
+  return end?`<button class="y-gold q-go lil" data-q="next" style="position:absolute;left:24px;right:24px;bottom:24px;height:64px;border-radius:18px;font-size:28px;display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden">Continuar${Q_CHEV(24)}<i class="q-auto" id="res_au" style="width:0"></i></button>`
+    :`<button class="q-skip lil" data-q="skip" aria-label="Pular a apresentação" style="position:absolute;right:16px;bottom:30px;height:44px;padding:0 16px;border-radius:14px;border:2px solid #4a3a2b;background:rgba(29,22,17,.88);color:#f6ecdf;font-size:17px;display:flex;align-items:center;gap:6px">Pular<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M13 5 L22 12 L13 19 Z"></path></svg></button>`; }
+/* os 3 caminhos da derrota, com a regra de liberação: o que ainda não liberou NÃO aparece. Equipamento existe desde o nível 1. */
+function resPaths(){ const p=[]; let fg=false, sm=true;
+  try{ fg=!!(window.Panels&&Panels.on('forge')&&xUnlocked('forge')); }catch(er){ fg=false; }
+  try{ sm=(typeof PANEL_V2!=='undefined'&&PANEL_V2.gate===false)?true:typeof fbUnl==='function'?!!fbUnl('summon'):xUnlocked('summon'); }catch(er){ sm=true; }
+  if(fg) p.push({id:'forge',bd:'#ff9a3c',rgb:'255,154,60',ic:'forge',t1:'Forja',t2:'Melhore a arma'});
+  p.push({id:'gear',bd:'#4aa3ff',rgb:'74,163,255',ic:'equipment',t1:'Equipamento',t2:'Use o melhor'});
+  if(sm) p.push({id:'summon',bd:'#b45cff',rgb:'180,92,255',ic:'summon',t1:'Invocar',t2:'Novos itens'});
+  return p; }
+function resLoseHtml(Y,bname,lord){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4,Math.min(100,Math.round(fc/Math.max(1,rec)*100))), miss=Math.max(0,Math.ceil(rec-fc));
+  const paths=resPaths().map((p,i)=>`<button class="q-path" data-q="${p.id}" aria-label="${p.t1}: ${p.t2}" style="flex:1;min-width:0;border-radius:16px;border:2px solid ${p.bd};background:linear-gradient(180deg,#3a2c1f,#241a12);color:#f6ecdf;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px;box-sizing:border-box;animation-delay:${(RES_LOSE_PATH+i*0.15).toFixed(2)}s">
+      <span style="width:64px;height:64px;flex:none;border-radius:50%;background:radial-gradient(circle,rgba(${p.rgb},.45),rgba(22,17,13,.9) 70%);display:flex;align-items:center;justify-content:center"><img class="q-picon" src="assets/icons/menu/${p.ic}.png" alt="" style="width:54px;height:54px;object-fit:contain;animation-delay:${(i*0.5).toFixed(1)}s"></span>
+      <span class="lil" style="font-size:18px;line-height:1.1">${p.t1}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2;text-align:center;line-height:1.15">${p.t2}</span><span class="q-pfx" style="font-size:12px;font-weight:900;color:#5fd068;animation-delay:${(i*0.5).toFixed(1)}s">+FC</span></button>`).join('');
+  return `<div id="res_p" style="position:absolute;left:16px;right:16px;top:${Y.top}px;display:flex;flex-direction:column;transform-origin:50% 0;transform:scale(${Y.f.toFixed(3)})">
+    <div class="q-lose" style="height:82px;flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center"><h1 class="lil" style="margin:0;font-size:34px;line-height:1.05;color:#ff8a7e;text-shadow:0 4px 0 #4a0d08,0 0 22px rgba(255,90,78,.55);white-space:nowrap">O chefe foi mais forte</h1>
+      <span style="font-size:14px;line-height:1.15;font-weight:800;color:#e8dccb">Fique mais forte e volte para vencer ${lord?'o Senhor da Era':'o chefe'}${bname?' '+bname:''}.</span></div>
+    <div class="q-cup" style="flex:none;animation-delay:.6s;padding:12px 14px;border-radius:18px;background:rgba(29,22,17,.96);border:2px solid #4a3a2b;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end"><span style="display:flex;flex-direction:column;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">SUA FC</span><span class="lil" id="res_fc" style="font-size:26px;color:#ffc94a">0</span></span>
+        <span style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">RECOMENDADA</span><span class="lil" style="font-size:26px;color:#f6ecdf">${gNum(rec)}</span></span></div>
+      <div role="progressbar" aria-label="Sua FC é ${pct}% da recomendada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" style="position:relative;height:18px;border-radius:9px;background:#0e0a07;border:1px solid #6a4a1a;overflow:hidden"><div class="q-fcbar" style="width:${pct}%;height:100%;border-radius:9px;background:linear-gradient(90deg,#c0301f,#f2a826 70%,#ffe07a)"></div><span class="q-shine" style="width:${pct}%"></span></div>
+      <span style="font-size:13px;line-height:1.2;font-weight:800;color:${miss>0?'#ffb3a8':'#9be89f'}">${miss>0?`Faltam <span style="color:#fff;font-weight:900">${gNum(miss)} de FC</span> para a recomendada`:'Sua FC já alcança a recomendada: tente de novo'}</span></div>
+    <span class="q-cup lil" style="flex:none;margin:12px 2px 8px;font-size:20px;line-height:24px;color:#ffc94a;text-shadow:0 2px 0 #000;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
+    <div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div></div>`; }
+/* botões da derrota: "Modo farm" é o PRINCIPAL (com a contagem); "Tentar de novo" embaixo. low = tela baixa: os dois encolhem para não encostar no Kael */
+function resLoseBtns(low){
+  return `<button class="y-gold q-farm" data-q="farm" style="position:absolute;left:20px;right:20px;bottom:${low?74:90}px;height:${low?58:66}px;border-radius:18px;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box;text-align:left">
+      <svg class="q-fspin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M21 12a9 9 0 0 1-15.5 6.2"></path><polyline points="3 20 5.5 18.2 7 21"></polyline><path d="M3 12a9 9 0 0 1 15.5-6.2"></path><polyline points="21 4 18.5 5.8 17 3"></polyline></svg>
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:25px">Modo farm</span><span style="font-size:12px;font-weight:900">Continua farmando automático</span></span>
+      <span id="res_cd" aria-live="polite" class="lil" style="flex:none;min-width:44px;height:36px;padding:0 8px;border-radius:12px;background:rgba(42,20,3,.85);color:#ffe07a;font-size:17px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${RES_AUTO_FARM}s</span></button>
+    <button class="q-red lil" data-q="retry" style="position:absolute;left:20px;right:20px;bottom:${low?16:22}px;height:${low?50:56}px;border-radius:16px;border:2px solid #7a2a20;background:rgba(29,22,17,.95);color:#f6ecdf;font-size:21px;display:flex;align-items:center;justify-content:center;gap:10px;box-sizing:border-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8a7e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>Tentar de novo</button>`; }
 function resOpen(mode,o,force){
-  if(B.res||!SCREENS_ON.bossResult) return false; o=o||{};   /* tela REPROVADA pelo dono: fica desligada (SCREENS_ON.bossResult, index.html) */
+  if(B.res||!SCREENS_ON.bossResult) return false; o=o||{};   /* a tela só abre com a chave ligada (SCREENS_ON.bossResult, index.html) */
   if(!force&&(view!=='battle'||window.__noRes||(typeof tutOn==='function'&&tutOn())||B.paused||(typeof modal!=='undefined'&&modal.style.display==='flex'))) return false;
-  const app=document.getElementById('app'), boss=resBoss(mode), stage=o.stage||S.stage, e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1;
-  const bname=boss?boss.kindName:(mode==='win'?'O chefe':'o chefe'), lord=boss&&boss.eraBoss;
+  mode=mode==='lose'?'lose':'win';
+  const app=resEl('app'), boss=resBoss(mode), stage=o.stage||S.stage, e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1, bname=boss&&boss.kindName?esc2(boss.kindName):'', lord=!!(boss&&boss.eraBoss), G=resGeo(boss);
+  /* d = quanto falta da morte aprovada do chefe (folha *_die do canvas): nada da tela entra na cena antes disso, e a tela NÃO segura o corpo */
+  let d=0; if(mode==='win') for(const c of B.corpses) if(c.e.boss) d=Math.max(d,(c.life||0.6)-c.t); d=Math.max(0,Math.min(RES_DEATH_MAX,d));
   B.res={mode}; B.act=null; B.banner=null; B.running=false; B.swing=0; B.eshots=[]; B.slow=0; document.body.classList.add('resui');
-  if(mode==='win') for(const c of B.corpses) if(c.e.boss) c.e.holdC=true;
-  RES.t=0; RES.step=0; RES.collected=false; RES.auto=-1; RES.o=o; RES.mode=mode; RES.autoOn=true;   /* o jogo é só automático (ordem do dono): a contagem sempre roda; o toque na tela ainda a cancela */ RES.done=false;
-  const s=app.clientWidth/390, Hb=app.clientHeight/s, cr=cv.getBoundingClientRect(), ar=app.getBoundingClientRect(), k=cr.width/LW;
-  const feet=(cr.top-ar.top+GY*k)/s, btop=feet-((boss&&boss.dh)||180)*k/s;   // linha do chão e topo do chefe, na base de 390
-  let h=`<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,5,.86) 0%,rgba(10,7,5,.6) ${(btop/Hb*100-6).toFixed(1)}%,rgba(10,7,5,.08) ${(btop/Hb*100+4).toFixed(1)}%,rgba(10,7,5,.08) ${(feet/Hb*100+1).toFixed(1)}%,rgba(10,7,5,.92) ${(feet/Hb*100+9).toFixed(1)}%,rgba(10,7,5,.97) 100%)"></div>
-    ${mode==='lose'?'<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(120,10,10,.25),rgba(40,0,0,.55))"></div>':''}
-    <div class="rw" id="res_w" style="height:${Hb.toFixed(1)}px;transform:scale(${s.toFixed(4)})">
-    <div style="position:absolute;top:12px;left:14px;right:12px;display:flex;flex-direction:column"><span class="lil" style="font-size:20px;text-shadow:0 2px 0 #000">${ERAS[e].n} · ${e+1}-${inEra}</span><span style="font-size:11px;font-weight:900;color:#ffb3a8">${lord?'SENHOR DA ERA':'CHEFE'} · ${esc2(bname)}</span></div>`;
+  if(mode==='lose') resHeroDown(true);
+  Object.assign(RES,{mode,o,t:0,ev:[],ei:0,end:false,auto:-1,autoOn:true,cards:[],geo:G,lay:null,gain:0,g0:0,cnt:-1,bt:0,bm:false,xpAt:-1,conf:false,fc:0,rec:0,fcK:-1,sub:''});
+  const top=`<div style="position:absolute;top:10px;left:14px;right:${mode==='win'?134:14}px;height:50px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;pointer-events:none"><span class="lil" style="font-size:18px;text-shadow:0 2px 0 #000;white-space:nowrap">${ERAS[e].n} ${e+1}-${inEra}</span><span style="font-size:11px;font-weight:900;color:#ffb3a8;white-space:nowrap;text-shadow:0 1px 2px #000">${lord?'SENHOR DA ERA':'CHEFE'}${bname?' · '+bname:''}</span></div>`;
+  let h;
   if(mode==='win'){
-    const L=o.loot||{}, tiles=[{k:'gold',v:L.gold||0,lb:'Moedas',bd:'#ffc94a',c:'#ffe07a',snd:'coin'},{k:'gem',v:(o.gems||0)+(L.gems||0),lb:'Gemas',bd:'#4aa3ff',c:'#9fd0ff',snd:'gem'},{k:'xp',v:L.xp||0,lb:'XP',bd:'#5fd068',c:'#9be89f',snd:'claim'}];
-    for(const r of L.eggs||[]) tiles.push({k:'egg',r,lb:'Ovo '+RN(r),bd:RC[r]||'#e8e2d8',c:RC[r]||'#e8e2d8',snd:'claim'});
-    for(const hd of L.held||[]) tiles.push({k:'egg',r:hd.r,held:true,lb:'guardado · Nv. '+hd.needLevel,bd:RC[hd.r]||'#e8e2d8',c:RC[hd.r]||'#e8e2d8',snd:'claim'});
-    const its=L.items||[], it0=its.length?its.slice().sort((a,b)=>b.r-a.r)[0]:null; let item=null;
-    if(it0){ const nm=iname(normItem(it0)), mine=S.inv.filter(x=>x.slot===it0.slot&&x.r===it0.r&&x.e===it0.e).pop(), eq=mine&&S.eq[mine.slot]===mine.id; let sw=0; try{ if(mine&&!eq) sw=Sys.fc.itemFC(S,Sys.host,mine).swap; }catch(er){}
-      item={r:it0.r,slot:it0.slot,e:it0.e,nm,sub:SLOT[it0.slot].n+' · '+ERAS[it0.e].n+' · Nv 1',st:eq?'Equipado':sw>0.5?'Melhor que o seu':'',more:its.length-1}; }
-    RES.tiles=tiles; RES.item=item; RES.total=tiles.length+(item?1:0);
-    /* tempos (s) em que cada recompensa aparece: 0,7 · 1,15 · 1,6 · ... e o item 0,7 s depois da última */
-    RES.times=tiles.map((_,i)=>0.7+0.45*i); if(item) RES.times.push(RES.times[RES.times.length-1]+0.7);
-    const sub=o.newEra>=0?'Nova era liberada: '+ERAS[o.newEra].n:esc2(bname)+' derrotado · Fase '+(eraOf(stage+1)+1)+'-'+(((stage)%STAGES_PER_ERA)+1)+' liberada';
-    const conf=[[30,'#ffc94a',3.2,.3],[84,'#4aa3ff',3.8,.9],[140,'#ff4d6d',3,.1],[200,'#5fd068',3.6,1.4],[252,'#ffc94a',3.3,.6],[306,'#b45cff',3.9,1.1],[356,'#ffe07a',3.1,.4]].map(c=>`<span class="q-conf" style="left:${c[0]}px;background:${c[1]};animation-duration:${c[2]}s;animation-delay:${c[3]}s"></span>`).join('');
-    h+=`${conf}<div style="position:absolute;top:46px;left:0;right:0;height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div class="q-rays" aria-hidden="true" style="position:absolute;left:75px;top:-66px;width:240px;height:240px;border-radius:50%;background:repeating-conic-gradient(rgba(255,201,74,.28) 0deg 10deg,rgba(255,201,74,0) 10deg 24deg);-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%)"></div>
-        <div class="q-banner" style="position:relative;display:flex;flex-direction:column;align-items:center"><div style="padding:4px 30px 8px;border-radius:14px;background:linear-gradient(180deg,#ffe07a,#f2a826);box-shadow:0 6px 0 #8a4f0c,0 0 30px rgba(255,201,74,.6)"><span class="lil" style="font-size:46px;color:#2a1403;letter-spacing:2px;line-height:1.1">VITÓRIA!</span></div>
-          <span style="margin-top:12px;font-size:15px;font-weight:900;text-shadow:0 2px 4px #000;text-align:center">${sub}</span></div></div>
-      <div id="res_p" style="position:absolute;top:160px;left:16px;right:16px;padding:12px;border-radius:20px;background:rgba(29,22,17,.94);border:2px solid #4a3a2b;display:flex;flex-direction:column;gap:8px;transform-origin:50% 0;box-sizing:border-box">
-        <div style="display:flex;justify-content:space-between;align-items:center"><span class="lil" style="font-size:18px;color:#ffc94a">Recompensas</span><span id="res_n" style="font-size:12px;font-weight:800;color:#c9b9a2">0 de ${RES.total}</span></div>
-        <div style="display:flex;gap:8px">${tiles.map((_,i)=>`<div class="q-slot" id="res_s${i}" style="flex:1;min-width:0;height:92px;position:relative"></div>`).join('')}</div>
-        ${item?`<div class="q-slot" id="res_s${tiles.length}" style="height:86px;position:relative"></div>`:''}</div>
-      <div id="res_a" style="position:absolute;left:24px;right:24px;bottom:22px;display:flex;flex-direction:column;gap:12px;align-items:stretch"></div>`;
+    const cards=RES.cards=resLoot(o), Y=RES.lay=resLay('win',G,resCardsH());
+    RES.gain=cards.length&&cards[0].k==='gold'?cards[0].gold:0; RES.g0=Math.max(0,S.gold-RES.gain);
+    RES.sub=o.newEra>=0&&ERAS[o.newEra]?'Nova era liberada: '+ERAS[o.newEra].n:(bname||'Chefe')+' derrotado · Fase '+(eraOf(stage+1)+1)+'-'+((stage%STAGES_PER_ERA)+1)+' liberada';
+    /* linha do tempo (s), nos tempos do protótipo contados a partir do fim da morte do chefe: clarão · baú +0,15 · baú estoura +0,7 · letreiro +0,9 ·
+       moedas voam +1,7 · cartões +3,3 / +3,9 / +4,6 (+0,7 cada um a mais) · "Continuar" 0,8 s depois do último cartão */
+    const ev=RES.ev; if(d>0.3) ev.push([d-0.3,'flash']); ev.push([d+0.15,'chest'],[d+0.7,'boom'],[d+0.9,'title'],[d+1.7,'fly']);
+    let tc=d+3.3; cards.forEach((c,i)=>{ ev.push([tc,'card',i]); tc+=i===0?0.6:0.7; }); ev.push([cards.length?tc+0.1:d+2.6,'end']);
+    const a=(G.feet-G.hs*0.92-12)/G.Hb*100, b=(G.feet+17)/G.Hb*100, bxp=(G.bx/3.9).toFixed(0), byp=(G.feet/G.Hb*100-8).toFixed(0);
+    h=`<div class="q-veil" style="background:linear-gradient(180deg,rgba(10,7,5,.78) 0%,rgba(10,7,5,.45) ${(a*0.65).toFixed(1)}%,rgba(10,7,5,.05) ${a.toFixed(1)}%,rgba(10,7,5,.1) ${b.toFixed(1)}%,rgba(10,7,5,.9) 100%)"></div>
+    <div class="rw" id="res_w" style="height:${G.Hb.toFixed(1)}px;transform:scale(${G.s.toFixed(4)})">
+      <div class="q-fx" id="res_fx">${d>0.5?`<div class="q-vign" style="background:radial-gradient(ellipse at ${bxp}% ${byp}%,transparent 30%,rgba(0,0,0,.75) 100%);animation-duration:${d.toFixed(2)}s"></div><div class="q-lbox" style="top:0;transform-origin:50% 0;animation-duration:${d.toFixed(2)}s"></div><div class="q-lbox" style="bottom:0;transform-origin:50% 100%;animation-duration:${d.toFixed(2)}s"></div>`:''}</div>
+      <div class="q-fx" id="res_cf"></div>${top}
+      <div id="res_cc" class="q-bmb" role="status" aria-label="Moedas" style="position:absolute;${Y.compact?'right:12px;top:17px':'left:12px;top:68px'};height:36px;padding:0 12px 0 4px;border-radius:18px;background:rgba(14,10,7,.88);border:2px solid #6a4a1a;display:flex;align-items:center;gap:6px;box-sizing:border-box"><img src="assets/ui/coin.png" alt="" style="width:28px;height:28px;object-fit:contain"><span class="lil" id="res_ct" style="font-size:18px;color:#ffe07a">${gNum(RES.g0)}</span></div>
+      <div id="res_tt" style="position:absolute;left:0;right:0;top:${Y.tt}px;height:${Y.th}px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="res_p" style="position:absolute;left:16px;right:16px;top:${Y.top}px;display:flex;flex-direction:column;gap:8px;transform-origin:50% 0;transform:scale(${Y.f.toFixed(3)})"></div>
+      <div id="res_a" style="position:absolute;left:0;right:0;bottom:0;height:0">${resActHtml(false)}</div></div>`;
   } else {
-    const fc=heroFC(), rec=recFC(stage), pct=Math.max(4,Math.min(100,Math.round(fc/rec*100))); let best=''; try{ const O=Sys.loot.summonOdds(Sys.host); best=RN(O.best); }catch(er){}
-    const card=(act,dl,ic,t1,t2)=>`<button class="q-cardin" data-q="${act}" style="min-height:56px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;display:flex;align-items:center;gap:12px;padding:6px 10px;box-sizing:border-box;animation-delay:${dl}s;text-align:left">${ic}<span style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:900">${t1}</span><span style="font-size:11px;font-weight:700;color:#c9b9a2">${t2}</span></span><span style="font-size:12px;font-weight:900;color:#5fd068">+FC</span></button>`;
-    const box=(bd,inner)=>`<span style="width:44px;height:44px;flex:none;border-radius:12px;background:#16110d;border:2px solid ${bd};color:${bd};display:flex;align-items:center;justify-content:center">${inner}</span>`;
-    h+=`<div class="q-shake" style="position:absolute;top:50px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:4px"><span class="lil" style="font-size:48px;line-height:1.1;color:#ff7a6e;text-shadow:0 4px 0 #4a0d08,0 0 24px rgba(255,90,78,.6)">Derrota</span>
-        <span style="font-size:15px;font-weight:900;text-shadow:0 2px 4px #000;text-align:center;padding:0 16px">Faltou força. ${lord?'O Senhor da Era':'O chefe'} ${esc2(bname)} resistiu.</span></div>
-      <div id="res_p" style="position:absolute;top:142px;left:16px;right:16px;padding:12px;border-radius:20px;background:rgba(29,22,17,.95);border:2px solid #4a3a2b;display:flex;flex-direction:column;gap:8px;transform-origin:50% 0;box-sizing:border-box">
-        <div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900"><span>Sua FC <span style="color:#ffc94a">${gNum(fc)}</span></span><span style="color:#c9b9a2">Recomendada ${gNum(rec)}</span></div>
-          <div style="position:relative;height:12px;border-radius:6px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden"><div class="q-fcbar" style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f2a826,#ffe07a)"></div></div></div>
-        <span class="lil" style="font-size:18px;color:#ffc94a;margin-top:2px">Como ficar mais forte</span>
-        ${card('weapon',.3,box('#4aa3ff',`<img src="${slotIcon('weapon',S.eraMax)}" alt="" style="width:34px;height:34px;object-fit:contain">`),'Melhorar a arma','Equip. · use suas moedas')}
-        ${card('best',.45,box('#5fd068','<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 12 9 15 12"></polyline><line x1="12" y1="9" x2="12" y2="16"></line></svg>'),'Equipar o melhor','Equip. · troca pelos itens mais fortes')}
-        ${card('summon',.6,box('#b45cff','<img class="y-bob" src="assets/ui/chest.png" alt="" style="width:36px;height:32px;object-fit:contain">'),'Invocar itens','Invocar · '+(best?'itens até '+best:'itens novos')+', em ouro')}</div>
-      <div id="res_a" style="position:absolute;left:24px;right:24px;bottom:22px;display:flex;flex-direction:column;gap:12px">
-        <button class="y-gold y-pulse lil" data-q="retry" style="height:64px;border-radius:18px;font-size:28px;display:flex;align-items:center;justify-content:center;gap:10px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>Tentar de novo</button>
-        <button data-q="farm" style="position:relative;overflow:hidden;height:52px;border-radius:16px;border:2px solid #4a3a2b;background:rgba(29,22,17,.92);color:#f6ecdf;font-size:15px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15">Farmar ondas<span style="font-size:11px;font-weight:700;color:#c9b9a2">repete as ondas 1-4 e junta moedas</span><i class="q-auto d" id="res_au" style="width:0"></i></button></div>`;
-    RES.total=0; RES.times=[]; RES.tiles=[]; RES.item=null;
+    RES.fc=heroFC(); RES.rec=recFC(stage); const Y=RES.lay=resLay('lose',G,0), kx=G.hx-G.hs*0.4, star=dl=>`<svg class="q-orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${dl}s"><path d="${Q_STAR}" fill="#ffe07a"></path></svg>`;
+    /* escuro por cima do chefe, mais leve em volta do Kael caído (o canvas já escurece a cena enquanto o herói está no chão) */
+    h=`<div class="q-dark" style="background:radial-gradient(ellipse at ${(kx/3.9).toFixed(0)}% ${((G.feet-G.hs*0.15)/G.Hb*100).toFixed(0)}%,rgba(20,6,4,.12) 0%,rgba(12,5,4,.72) 45%,rgba(6,3,2,.88) 100%)"></div>
+    <div class="rw" id="res_w" style="height:${G.Hb.toFixed(1)}px;transform:scale(${G.s.toFixed(4)})">${top}
+      <div class="q-orbs" aria-hidden="true" style="left:${(G.hx-G.hs*0.72-22).toFixed(1)}px;top:${(G.feet-G.hs*0.25-22).toFixed(1)}px">${star(0)}${star(-.37)}${star(-.74)}</div>
+      ${resLoseHtml(Y,bname,lord)}
+      <div id="res_a" style="position:absolute;left:0;right:0;bottom:0;height:0">${resLoseBtns(Y.low)}</div></div>`;
   }
-  const el=document.createElement('div'); el.id='res'; el.setAttribute('role','dialog'); el.setAttribute('aria-label',mode==='win'?'Vitória sobre o chefe':'Derrota para o chefe'); el.innerHTML=h+'</div>';
+  const el=document.createElement('div'); el.id='res'; el.setAttribute('role','dialog'); el.setAttribute('aria-label',mode==='win'?'Vitória sobre o chefe':'Derrota para o chefe'); el.innerHTML=h;
   app.appendChild(el); RES.el=el;
-  el.addEventListener('pointerdown',()=>{ RES.autoOn=false; const a=document.getElementById('res_au'); if(a) a.style.width='0'; });   // tocou: a tela espera o jogador
-  el.addEventListener('click',ev=>{ const b=ev.target.closest('[data-q]'); if(b) resAct(b.dataset.q); });
-  /* o painel nunca cobre o chefe: se faltar altura, encolhe a partir do topo */
-  { const p=document.getElementById('res_p'); if(p){ const top=parseFloat(p.style.top), lim=btop-10, hh=p.offsetHeight; if(top+hh>lim){ const f=Math.max(0.72,(lim-top)/hh); p.style.transform=`scale(${f.toFixed(3)})`; } } }
-  if(mode==='win') resActions(); else snd('defeat');
-  if(mode==='win') for(let i=0;i<24;i++) emit({x:HX+(Math.random()-.5)*60,y:GY-Math.random()*HS*0.9,vx:(Math.random()-.5)*50,vy:-50-Math.random()*90,g:0,t:0,life:1+Math.random()*.6,col:Math.random()<.6?'#ffc94a':'#fff3c4',sz:2+Math.random()*3,glow:true});
+  el.addEventListener('pointerdown',()=>{ RES.autoOn=false; const a=resEl('res_au'); if(a) a.style.width='0'; const c=resEl('res_cd'); if(c) c.style.display='none'; });   // tocou: a tela espera o jogador
+  el.addEventListener('click',ev=>{ const b=ev.target.closest('[data-q]'); if(b) resAct(b.dataset.q); else if(RES.mode==='win'&&!RES.end) resAct('skip'); });   // toque fora dos botões durante a apresentação = Pular
   return true;
 }
-function resTile(i){ const el=document.getElementById('res_s'+i); if(!el||el.firstChild) return; const T=RES.tiles[i];
-  if(T){ const ic=T.k==='gold'?'<img class="y-flip" src="assets/ui/coin.png" alt="" style="width:40px;height:40px;object-fit:contain">':T.k==='gem'?'<img class="y-bob" src="assets/ui/gem.png" alt="" style="width:38px;height:38px;object-fit:contain">':T.k==='xp'?`<span class="y-bob" style="display:flex">${Y_ORB(38)}</span>`:`<span class="y-bob" style="display:flex">${Y_EGG(38,T.c)}</span>`;
-    el.innerHTML=`<div class="q-popin q-t" style="position:absolute;inset:-2px;border-radius:14px;background:#33271d;border:2px solid ${T.bd};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">${ic}
-      <span class="lil" style="font-size:${T.k==='egg'?15:20}px;color:${T.c};white-space:nowrap">${T.k==='egg'?(T.held?'Ovo '+RN(T.r):'+1'):'+'+kf(T.v)+(T.k==='xp'?' XP':'')}</span><span style="font-size:${T.held?9.5:11}px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(T.lb)}</span></div>`; snd(T.snd); }
-  else if(RES.item){ const I=RES.item, c=RC[I.r];
-    el.innerHTML=`<div class="q-popin q-t" style="position:absolute;inset:-2px;border-radius:14px;overflow:hidden"><div class="${I.r>=2?'q-myth':''}" style="position:absolute;inset:0;border-radius:14px;--rc:${c};background:linear-gradient(90deg,${c}47,#33271d 60%);border:2px solid ${c};display:flex;align-items:center;gap:12px;padding:0 12px;box-sizing:border-box">
-        <div style="width:64px;height:64px;flex:none;border-radius:12px;background:radial-gradient(circle,${c}8c,#16110d 70%);border:2px solid ${c};display:flex;align-items:center;justify-content:center;box-sizing:border-box"><img class="y-bob" src="${slotIcon(I.slot,I.e)}" alt="" style="width:50px;height:50px;object-fit:contain"></div>
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;font-weight:900;color:${c};letter-spacing:1px">ITEM GARANTIDO · ${RN(I.r).toUpperCase()}${I.more>0?' · +'+I.more:''}</span><span class="lil" style="font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(I.nm)}</span>
-          <span style="font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(I.sub)}${I.st?` · <span style="color:#5fd068">${I.st}</span>`:''}</span></div></div><span class="q-shine"></span></div>`; snd(I.r>=3?'legendary':'upgrade'); }
-  const n=document.getElementById('res_n'); if(n) n.textContent=RES.step+' de '+RES.total; }
-function resActions(){ const a=document.getElementById('res_a'); if(!a) return; const done=RES.step>=RES.total;
-  a.innerHTML=!RES.collected?`<button class="y-gold lil ${done?'y-pulse':''}" data-q="collect" style="position:relative;overflow:hidden;height:64px;border-radius:18px;font-size:28px;letter-spacing:1px">${done?'Coletar':'Mostrar tudo'}<i class="q-auto" id="res_au" style="width:0"></i></button>
-      <button data-q="next" style="height:52px;border-radius:16px;border:2px solid #4a3a2b;background:rgba(29,22,17,.92);color:#f6ecdf;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px">Próxima fase<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg></button>`
-    :`<div class="q-popin" role="status" style="height:64px;border-radius:18px;border:2px solid #5fd068;background:rgba(29,22,17,.92);color:#9be89f;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">${Y_CHK(22,'currentColor')}Prêmios guardados</div>
-      <button class="y-gold y-pulse lil" data-q="next" style="position:relative;overflow:hidden;height:56px;border-radius:18px;font-size:24px;display:flex;align-items:center;justify-content:center;gap:8px">Próxima fase<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"></polyline></svg><i class="q-auto" id="res_au" style="width:0"></i></button>`; }
-function resCollect(){ if(RES.collected) return; RES.collected=true; RES.auto=-1; snd('claim'); setTimeout(()=>snd('coin'),250); vib(30);
-  if(RES.el) RES.el.querySelectorAll('.q-t').forEach(t=>{ t.classList.remove('q-popin'); t.classList.add('q-fly'); });
-  const n=document.getElementById('res_n'); if(n) n.textContent='Guardado'; resActions(); }
-function resAct(q){ if(!B.res) return;
-  if(q==='collect'){ if(RES.step<RES.total){ snd('ui_tap'); while(RES.step<RES.total){ RES.step++; resTile(RES.step-1); } RES.done=true; RES.auto=-1; resActions(); } else resCollect(); }
-  else if(q==='next'){ snd('ui_tap'); resClose('next'); }
-  else if(q==='retry'){ snd('ui_tap'); resClose('retry'); }
-  else if(q==='farm'){ snd('ui_tap'); resClose('farm'); }
-  else if(q==='weapon'||q==='best'||q==='summon'){ snd('ui_tap'); resClose('farm');
-    if(q==='summon') setView('summon');
-    else { if(q==='weapon'&&S.eq.weapon!=null&&itemOf(S.eq.weapon)) XG.sel=S.eq.weapon; setView('gear'); if(q==='weapon'){ if(S.eq.weapon!=null&&itemOf(S.eq.weapon)){ XG.sel=S.eq.weapon; XG.sheetIn=true; render(); XG.sheetIn=false; } } else gClick({dataset:{x:'best'}}); } }
+/* um passo da linha do tempo da vitória (fast = veio do "Pular": sem som nem efeito de cena) */
+function resEvent(n,i,fast){ const G=RES.geo, Y=RES.lay, bx=G.bx, ft=G.feet;
+  if(n==='flash'){ if(!fast) resAdd('res_fx',`<div class="q-flash" style="background:radial-gradient(circle at ${(bx/3.9).toFixed(0)}% ${(ft/G.Hb*100-8).toFixed(0)}%,#fff 0%,#fff4c8 45%,rgba(255,233,168,.9) 100%)"></div>`); }
+  else if(n==='chest'){ if(fast) return; resAdd('res_fx',`<div class="q-glow" id="res_gl" style="left:${(bx-80).toFixed(1)}px;top:${(ft-118).toFixed(1)}px;width:160px;height:140px"></div><img id="res_ch" class="q-chin" src="assets/ui/chest.png" alt="Baú do chefe" style="position:absolute;left:${(bx-55).toFixed(1)}px;top:${(ft-96).toFixed(1)}px;width:110px;height:98px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,201,74,.7))">`); snd('summon'); }
+  else if(n==='boom'){ resConf(); if(fast) return; const ch=resEl('res_ch'); if(ch) ch.className='q-chbo';
+    let hc=`<div class="q-ring" style="left:${(bx-40).toFixed(1)}px;top:${(ft-83).toFixed(1)}px;width:80px;height:80px"></div>`;
+    if(RES.gain>0) RES_COINS.forEach((c,j)=>{ const lx=Math.max(20,Math.min(370,bx+c[0])), ty=ft+c[2];
+      hc+=`<div class="q-coin q-cb" style="left:${(lx-12).toFixed(1)}px;top:${ty.toFixed(1)}px;--dx:${(lx-bx).toFixed(1)}px;--h:${c[1]}px;--tx:${(Y.cx-lx).toFixed(1)}px;--ty:${(Y.cy-12-ty).toFixed(1)}px;animation-delay:${(j*0.025).toFixed(3)}s"><img class="q-cspin" src="assets/ui/coin.png" alt="" style="width:24px;height:24px;object-fit:contain;display:block;animation-delay:${(-j*0.09).toFixed(2)}s"></div>`; });
+    resAdd('res_fx',hc); snd('claim'); snd('coin'); vib(30); }
+  else if(n==='title'){ const t=resEl('res_tt'); if(t&&!t.firstChild) t.innerHTML=resTitleHtml(); if(fast) return; snd('legendary');
+    for(let j=0;j<24;j++) emit({x:HX+(Math.random()-.5)*60,y:GY-Math.random()*HS*0.9,vx:(Math.random()-.5)*50,vy:-50-Math.random()*90,g:0,t:0,life:1+Math.random()*.6,col:Math.random()<.6?'#ffc94a':'#fff3c4',sz:2+Math.random()*3,glow:true}); }
+  else if(n==='fly'){ if(fast) return; const gl=resEl('res_gl'), ch=resEl('res_ch'); if(gl) gl.remove(); if(ch) ch.remove();
+    if(RES.gain>0){ if(RES.el) RES.el.querySelectorAll('.q-coin').forEach((c,j)=>{ c.classList.remove('q-cb'); c.classList.add('q-cf'); c.style.animationDelay=(j*0.06).toFixed(2)+'s'; }); RES.cnt=RES.t+0.65; snd('coin'); } }
+  else if(n==='card'){ const c=RES.cards[i]; if(!c) return; resAdd('res_p',resCardHtml(c,fast)); if(fast) return;
+    if(c.k==='xp'){ RES.xpAt=RES.t+0.3; snd('upgrade'); } else if(c.k==='item') { snd(c.r>=3?'legendary':'upgrade'); vib(50); } else snd(c.k==='gold'?'coin':'gem'); }
+  else if(n==='end'){ RES.end=true; RES.auto=0; RES.cnt=-1; resConf(); const fx=resEl('res_fx'), ct=resEl('res_ct'), a=resEl('res_a'); if(fx) fx.innerHTML=''; if(ct) ct.textContent=gNum(S.gold); if(a) a.innerHTML=resActHtml(true); if(!fast) snd('ui_tap'); }
 }
-/* fecha a tela: 'next' (vitória) · 'retry' = Desafiar chefe · 'farm' / 'close' = volta a farmar as ondas 1 a 4 */
+function resConf(){ if(RES.conf) return; RES.conf=true; resAdd('res_cf',RES_CONF.map(c=>`<span class="q-conf" style="left:${c[0]}px;background:${c[1]};animation-duration:${c[2]}s;animation-delay:${c[3]}s"></span>`).join('')); }
+function resXp(){ const c=RES.cards.find(x=>x.k==='xp'), f=resEl('res_xpf'), t=resEl('res_xpt'); if(!c) return; const p=Math.round(c.f1*100)+'%'; if(f) f.style.width=p; if(t) t.textContent=p; }
+/* "Pular": mostra o letreiro, todos os cartões e o "Continuar" na hora (o que ainda não tinha entrado entra sem animação) */
+function resSkip(){ if(RES.mode!=='win'||RES.end) return; snd('ui_tap'); RES.xpAt=-1; resXp();
+  while(RES.ei<RES.ev.length){ const e=RES.ev[RES.ei++]; resEvent(e[1],e[2],true); } }
+function resAct(q){ if(!B.res||!RES.el) return;
+  if(RES.mode==='win'){ if(q==='skip') resSkip(); else if(q==='next'&&RES.end){ snd('claim'); resClose('next'); } return; }
+  if(q==='farm'||q==='retry'){ if(RES.t<RES_LOSE_BTN) return; snd('ui_tap'); resClose(q); }   // antes de o botão aparecer o toque não vale
+  else if(q==='forge'||q==='gear'||q==='summon'){ if(RES.t<RES_LOSE_PATH) return; snd('ui_tap'); resClose('farm');   // o jogo segue no modo farm atrás da tela aberta
+    if(q==='forge'){ if(!(window.Screens&&Screens.open('forge'))) setView('gear'); } else setView(q); }
+}
+/* fecha a tela: 'next' (vitória: a batalha segue na fase nova) · 'retry' = desafia o chefe de novo · 'farm' / 'close' = modo farm (repete as ondas 1 a 4) */
 function resClose(how){ const r=B.res; if(!r) return; B.res=null; document.body.classList.remove('resui'); if(RES.el){ RES.el.remove(); RES.el=null; }
-  for(const c of B.corpses) if(c.e.holdC){ c.e.holdC=false; c.t=Math.max(c.t,(c.life||0.6)*0.8); }
-  if(r.mode==='lose'){ S.wave=1; startBattle(); if(how==='retry'&&challengeBoss()) toast('Desafiando o chefe!'); }
+  if(r.mode==='lose'){ resHeroDown(false); if(how!=='retry') S.farm=true; S.wave=1; startBattle(); if(how==='retry'&&challengeBoss()) toast('Desafiando o chefe!'); }
   save(); hud(); }
-/* relógio da tela (tempo real, chamado pelo loop): revela as recompensas uma a uma e conta o fechamento automático no AUTO */
-function resTick(dt){ if(!B.res||!RES.el) return; RES.t+=dt;
+/* relógio da tela (tempo real, chamado pelo laço do jogo): anda a linha do tempo da vitória, o contador de moedas, a barra de XP e as contagens automáticas */
+function resTick(dt){ if(!B.res||!RES.el) return; RES.t+=dt; const t=RES.t;
   if(RES.mode==='win'){
-    while(RES.step<RES.total&&RES.t>=RES.times[RES.step]){ RES.step++; resTile(RES.step-1); if(RES.step>=RES.total){ RES.done=true; RES.auto=-1; resActions(); } }
-    if(RES.step>=RES.total&&RES.autoOn){ if(RES.auto<0) RES.auto=0; RES.auto+=dt; const lim=RES.collected?RES_AUTO_NEXT:RES_AUTO_COLLECT, a=document.getElementById('res_au'); if(a) a.style.width=Math.min(100,RES.auto/lim*100)+'%';
-      if(RES.auto>=lim){ if(!RES.collected) resCollect(); else resClose('next'); } } }
-  else if(RES.autoOn){ if(RES.auto<0) RES.auto=0; RES.auto+=dt; const a=document.getElementById('res_au'); if(a) a.style.width=Math.min(100,RES.auto/RES_AUTO_FARM*100)+'%'; if(RES.auto>=RES_AUTO_FARM) resClose('farm'); }
+    while(RES.ei<RES.ev.length&&t>=RES.ev[RES.ei][0]){ const e=RES.ev[RES.ei++]; resEvent(e[1],e[2],false); }
+    if(RES.cnt>=0&&t>=RES.cnt){ const k=Math.min(1,(t-RES.cnt)/0.8), c=resEl('res_ct'); if(c) c.textContent=gNum(RES.g0+(S.gold-RES.g0)*k);
+      if(t-RES.bt>=0.07){ RES.bt=t; RES.bm=!RES.bm; const p=resEl('res_cc'); if(p) p.className=RES.bm?'q-bma':'q-bmb'; } if(k>=1) RES.cnt=-1; }
+    if(RES.xpAt>=0&&t>=RES.xpAt){ RES.xpAt=-1; resXp(); }
+    if(RES.end&&RES.autoOn){ RES.auto=Math.max(0,RES.auto)+dt; const a=resEl('res_au'); if(a) a.style.width=Math.min(100,RES.auto/RES_AUTO_NEXT*100).toFixed(1)+'%'; if(RES.auto>=RES_AUTO_NEXT) resClose('next'); } }
+  else if(RES.mode==='lose'){
+    if(t>=0.6&&RES.fcK<1){ RES.fcK=Math.min(1,(t-0.6)/0.9); const f=resEl('res_fc'); if(f) f.textContent=gNum(RES.fc*RES.fcK); }   // a FC sobe de 0 até o valor (protótipo)
+    if(t>=RES_LOSE_BTN&&RES.autoOn){ RES.auto=Math.max(0,RES.auto)+dt; const left=RES_AUTO_FARM-RES.auto, c=resEl('res_cd'); if(c) c.textContent=Math.max(0,Math.ceil(left))+'s'; if(left<=0) resClose('farm'); } }
 }
-addEventListener('resize',()=>{ if(B.res&&RES.el){ const app=document.getElementById('app'), w=document.getElementById('res_w'), s=app.clientWidth/390; if(w){ w.style.transform=`scale(${s.toFixed(4)})`; w.style.height=(app.clientHeight/s).toFixed(1)+'px'; } } });
+addEventListener('resize',()=>{ if(!B.res||!RES.el||!RES.geo||!RES.lay) return; const w=resEl('res_w'), p=resEl('res_p'); if(!w) return;
+  const G=resGeo(null), Y=RES.lay; G.bx=RES.geo.bx; RES.geo=G; w.style.transform=`scale(${G.s.toFixed(4)})`; w.style.height=G.Hb.toFixed(1)+'px';
+  if(p){ const win=RES.mode==='win', hh=win?resCardsH():RES_LOSE_H, avail=G.feet-G.hs*(win?0.92:0.55)-(win?4:10); Y.f=Y.top+hh>avail?Math.max(win?0.72:0.7,Math.min(1,(avail-Y.top)/Math.max(1,hh))):1; p.style.transform=`scale(${Y.f.toFixed(3)})`; } });
 /* debug: abre a tela 10 sem lutar. dbgResult('win') | dbgResult('lose') */
 window.dbgResult=function(mode){ if(!DEBUG) return; if(mode==='lose') return resOpen('lose',{stage:S.stage},true);
-  return resOpen('win',{stage:Math.max(1,S.stage-1),gems:10,newEra:-1,loot:{gold:1860,gems:0,xp:33,items:[{slot:'weapon',r:2,e:eraOf(S.stage),subs:[]}],eggs:[],held:[{r:3,needLevel:70}]}},true); };
+  return resOpen('win',{stage:Math.max(1,S.stage-1),gems:10,newEra:-1,loot:{gold:1860,gems:0,xp:33,items:[{slot:'weapon',r:3,e:eraOf(S.stage),subs:[]}],eggs:[],held:[{r:3,needLevel:70}]}},true); };
