@@ -87,6 +87,7 @@ function scrMail(){
 }
 /* resumo do que o Sys.loot.grantBundle entregou (inclui o que ficou guardado por nível) */
 function maGot(g){ if(!g) return 'Recompensa recebida'; const a=[]; if(g.gold) a.push(maFmt(g.gold)+' moedas'); if(g.gems) a.push(g.gems+' gemas'); for(const k in MA_MAT) if(g[k]) a.push(g[k]+' '+MA_MAT[k].toLowerCase()); if(g.items&&g.items.length) a.push(g.items.length+(g.items.length>1?' itens':' item')); if(g.eggs&&g.eggs.length) a.push(g.eggs.length+(g.eggs.length>1?' ovos':' ovo'));
+  if(Array.isArray(g.newDrops)&&g.newDrops.length) a.push(g.newDrops.length+(g.newDrops.length>1?' prêmios novos':' prêmio novo'));   /* carta do servidor com entregas novas (Sys.newDrops.grant; gancho do Servidor no Sys.mail) */
   const held=(g.heldItems||[]).length+(g.heldEggs||[]).length; if(held) a.push(held+' guardado'+(held>1?'s':'')+' até o nível certo'); return a.join(' · ')||'Recompensa recebida'; }
 function maClick(b){
   const a=b.dataset.x; if(a==='back'){ maSnd('ui_tap'); if(window.Screens&&Screens.close) Screens.close(); return; }
@@ -94,7 +95,7 @@ function maClick(b){
   if(a==='tab'){ XMA.tab=parseInt(b.dataset.i,10)||0; maSnd('ui_tap'); render(); return; }
   if(a==='open'){ maSnd('ui_tap'); M.read(S,Sys.host,id); XMA.open=id; maChanged(); render(); return; }
   if(a==='close'){ maSnd('ui_tap'); XMA.open=null; render(); return; }
-  if(a==='claim'){ const r=M.claim(S,Sys.host,id); if(!r||!r.ok){ maSnd('ui_tap'); maToast(r&&r.reason==='resgatado'?'Os anexos desta carta já foram coletados':'Não foi possível coletar agora'); render(); return; } maSnd('claim'); maChanged(); maToast('Coletado: '+maGot(r.got)); render(); return; }
+  if(a==='claim'){ const r=M.claim(S,Sys.host,id); if(!r||!r.ok){ maSnd('ui_tap'); maToast(r&&r.reason==='resgatado'?'Os anexos desta carta já foram coletados':r&&r.reason==='novos_desligado'?'Prêmio disponível quando os itens novos forem liberados':'Não foi possível coletar agora'); render(); return; } maSnd('claim'); maChanged(); maToast('Coletado: '+maGot(r.got)); render(); return; }
   if(a==='del'){ const ok=M.remove(S,Sys.host,id); if(!ok){ maSnd('ui_tap'); maToast('Colete os anexos antes de apagar esta carta'); return; } maSnd('ui_tap'); XMA.open=null; maChanged(); render(); return; }
   if(a==='all'){ maSnd('ui_tap'); const r=M.claimAll(S,Sys.host); if(!r||!r.n){ maToast('Nenhum anexo para coletar'); return; } maSnd('claim'); maChanged(); maToast(r.n+(r.n>1?' cartas coletadas':' carta coletada')); render(); return; }
   if(a==='delread'){ maSnd('ui_tap'); if(!maList().some(m=>m.read&&!maPend(m))){ maToast('Não há cartas lidas para apagar'); return; } XMA.conf=true; render(); return; }
