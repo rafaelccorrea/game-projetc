@@ -1,0 +1,38 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ícones por raridade</title>
+<style>body{margin:0;background:#15110e;color:#eee;font:14px system-ui}h1{font-size:17px;margin:12px 16px 4px}p{margin:4px 16px;color:#b9ad9f;max-width:760px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px}.bar a{color:#e8dccb;background:#2a221c;padding:6px 10px;border-radius:6px;text-decoration:none}.bar a.on{background:#c98a3a;color:#fff}
+.g{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:8px 16px;max-width:760px}.c{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:#b9ad9f}
+canvas{width:100%;max-width:120px;aspect-ratio:1}</style></head><body>
+<h1>Ícones de peça por raridade (opção C, só código)</h1>
+<p>Moldura e brilho na cor da raridade (as mesmas do js/rarity.js), tinta leve na cor sobre o desenho, contorno brilhante e gema no canto (assets/icons/rarity/gem_1..4.png; Básico sem gema). O ícone de hoje (assets/icons/slots/era&lt;N&gt;_&lt;peça&gt;.png) não muda: tudo é desenhado por cima, na hora.</p>
+<div class="bar" id="eras"></div><div class="g" id="g"></div>
+<script>
+/* ===== função de referência para o jogo (copiar): rarIconCanvas(img, r, lado) → canvas pronto (cache por img+r recomendado) =====
+   r = 0 Básico · 1 Raro · 2 Épico · 3 Mítico · 4 Lendário. gems[r] = Image de assets/icons/rarity/gem_<r>.png (r >= 1). */
+const RAR_C = ['#e8e2d8', '#4aa3ff', '#b07cff', '#ff5a5a', '#ffc94a'], RAR_TINT = [0, .10, .14, .18, .22], RAR_ICGLOW = [0, 5, 7, 9, 12];
+function rarIconCanvas(img, r, S, gems){
+  const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), col = RAR_C[r];
+  const k = Math.min(S / img.width, S / img.height), w = img.width * k, h = img.height * k, x = (S - w) / 2, y = (S - h) / 2;
+  const tmp = document.createElement('canvas'); tmp.width = tmp.height = S; const t = tmp.getContext('2d'); t.drawImage(img, x, y, w, h);
+  if (RAR_TINT[r]){ const d = t.getImageData(0, 0, S, S), p = d.data, n = parseInt(col.slice(1), 16), cr = n >> 16, cg = (n >> 8) & 255, cb = n & 255, tt = RAR_TINT[r];
+    for (let i = 0; i < p.length; i += 4){ if (!p[i + 3]) continue; const l = (p[i] * .3 + p[i + 1] * .59 + p[i + 2] * .11) / 255;   // Uint8ClampedArray: já trava em 0..255
+      p[i] = p[i] * (1 - tt) + cr * l * tt * 1.6; p[i + 1] = p[i + 1] * (1 - tt) + cg * l * tt * 1.6; p[i + 2] = p[i + 2] * (1 - tt) + cb * l * tt * 1.6; }
+    t.putImageData(d, 0, 0); }
+  if (RAR_ICGLOW[r]){ g.save(); g.shadowColor = col; g.shadowBlur = RAR_ICGLOW[r] * 1.4; g.drawImage(tmp, 0, 0); g.drawImage(tmp, 0, 0); g.restore(); }   // contorno brilhante
+  g.drawImage(tmp, 0, 0);
+  if (r > 0 && gems && gems[r]){ const gs = Math.round(S * .34); g.drawImage(gems[r], Math.round(S * .64), Math.round(S * .64), gs, gs); }
+  return c; }
+/* ===== fim da função de referência ===== */
+const Q = new URLSearchParams(location.search), E = +(Q.get('e') || 0), R = '../../', P = [['helmet', 'chapéu'], ['vest', 'colete'], ['gloves', 'luvas'], ['boots', 'botas'], ['necklace', 'colar']], N = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'];
+const L = s => new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = s; });
+const bar = document.getElementById('eras'); for (let e = 0; e <= 8; e++){ const a = document.createElement('a'); a.textContent = 'era ' + e; a.href = '?e=' + e; if (e === E) a.className = 'on'; bar.appendChild(a); }
+(async () => { const gems = [null]; for (let r = 1; r <= 4; r++) gems.push(await L(R + 'assets/icons/rarity/gem_' + r + '.png'));
+  const G = document.getElementById('g');
+  for (const [p, lab] of P){ const img = await L(R + 'assets/icons/slots/era' + E + '_' + p + '.png'); if (!img) continue;
+    for (let r = 0; r < 5; r++){ const cell = document.createElement('div'); cell.className = 'c';
+      const box = document.createElement('canvas'); box.width = box.height = 240; const b = box.getContext('2d'), col = RAR_C[r];
+      const gr = b.createRadialGradient(120, 92, 4, 120, 120, 150); gr.addColorStop(0, col + '38'); gr.addColorStop(.75, '#120d0a'); b.fillStyle = gr;
+      b.beginPath(); b.roundRect(6, 6, 228, 228, 52); b.fill(); b.lineWidth = 7; b.strokeStyle = col; b.shadowColor = col; b.shadowBlur = r ? 10 + r * 3 : 3; b.stroke(); b.shadowBlur = 0;
+      b.drawImage(rarIconCanvas(img, r, 176, gems), 32, 32);
+      cell.appendChild(box); cell.appendChild(document.createTextNode(lab + ' · ' + N[r])); G.appendChild(cell); } } })();
+</script></body></html>
