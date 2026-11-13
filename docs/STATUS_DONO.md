@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **02h40 · Sua regra das skins:** a skin nunca se perde quando o Kael/Kaia evolui. A skin é do jogador, não da fase: ao evoluir, troca para a versão dela na fase nova. Os acessórios em camadas (chapéu, colete, botas, óculos, máscara) já funcionam nas 4 fases; skin de corpo inteiro só vai à venda com as 4 versões. Sistemas confere a regra, a Arte lista o que falta em cada fase, o engenheiro aplica nas 4 fases (com print: skin no nível 34 → evolui no 35 com a mesma skin)
+- **02h40 · Login Google:** plugin instalado no app; vai no próximo APK (funciona quando o servidor estiver no ar)
+
 - **02h30 · Servidor:** login com Google pronto no jogo (sem precisar de arquivo do Firebase); PAINEL DE MODERAÇÃO pronto: fila de denúncias, ficha do jogador, apagar mensagem, silenciar, banir, desfazer, registro de tudo, e o calendário de eventos (só você altera), com login por senha + código do autenticador. Agora: guilda online
 - **02h30 · Engenheiro (e825ab7, no GitHub):** Vitória/Derrota com chefe real LIGADA · Troca de era de verdade · Instância (vitória, derrota, tempo) · carta de boas-vindas · pet não encosta mais no inimigo. Agora: asa nas costas → Kael nas 4 fases → pet/montaria em todas as telas → APK
 - **02h30 · Sua ordem: eventos por horário** (tal hora abre tal evento, ícone pulsando com o nome e o tempo). Sistemas está montando a agenda (ex.: Chefe Mundial 12h e 20h, Hora do Ouro 19-20h, Invasão 21h), que eu trago para você aprovar
