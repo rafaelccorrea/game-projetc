@@ -831,4 +831,23 @@ t('arena: ligas (tela 23) — pontos de liga acumulam, fechamento semanal sobe/f
   const S2={best:1,sys:{arena:{lp:'x',league:99}}}; AR.ensure(S2,h); assert.deepStrictEqual([S2.sys.arena.lp,S2.sys.arena.league],[0,6]);
 });
 
+t('evento: trilha por pontos GANHOS (saldo + loja, nunca diminui) e chefe com vida pessoal local, 2 ataques/dia, dano dos atributos, pontos por faixa',()=>{
+  const X=require('../../js/sys/evtrail.js'), E=require('../../js/sys/events.js'), L=require('../../js/sys/loot.js'); require('../../js/sys/fc.js'); require('../../js/sys/stats.js');
+  const S=newS(), h=makeHost({eraMax:2}); h.t=new Date(2026,10,22,10).getTime();   // Festival ativo (20/11 a 04/12)
+  assert.deepStrictEqual(X.trail(S,h,'festival_eras'),{on:false}); assert.strictEqual(X.attack(S,h,'festival_eras').reason,'off');
+  X.DATA.on=true; E.DATA.enabled=true; try{
+    const ev=E.DATA.events[0]; E.ensure(S); S.sys.events.festival_eras={pts:180,rep:0,p:{},c:[],buys:{}};
+    let tr=X.trail(S,h,'festival_eras'); assert.strictEqual(tr.earned,180); assert.deepStrictEqual(tr.milestones.filter(m=>m.reached).map(m=>m.at),[50,100,150]);
+    const g0=h.gold; assert.ok(X.claimTrail(S,h,'festival_eras',50).ok&&h.gold>g0); assert.strictEqual(X.claimTrail(S,h,'festival_eras',50).reason,'done'); assert.strictEqual(X.claimTrail(S,h,'festival_eras',200).reason,'points');
+    assert.ok(E.buy(S,h,'festival_eras','s_skin_w').ok); assert.strictEqual(X.earned(S,'festival_eras'),180,'gastar na loja não tira da trilha');
+    const b=X.boss(S,h,'festival_eras'); assert.ok(b.on&&!b.online&&b.hpMax>0&&b.hp===b.hpMax&&b.attemptsLeft===2&&b.nextDamage>0);
+    const p0=S.sys.events.festival_eras.pts, a1=X.attack(S,h,'festival_eras'); assert.ok(a1.ok&&a1.dmg===b.nextDamage&&a1.pts>=10); assert.strictEqual(S.sys.events.festival_eras.pts,p0+a1.pts,'pontos do chefe no saldo do evento');
+    X.attack(S,h,'festival_eras'); assert.strictEqual(X.attack(S,h,'festival_eras').reason,'tries'); h.t+=864e5; assert.strictEqual(X.boss(S,h,'festival_eras').attemptsLeft,2,'novo dia');
+    X.ensure(S).festival_eras.dmg=X.boss(S,h,'festival_eras').hpMax-1; const k=X.attack(S,h,'festival_eras'); assert.ok(k.killed&&k.pts>=X.DATA.events.default.boss.killBonus); assert.strictEqual(X.attack(S,h,'festival_eras').reason,'dead');
+    h.t=new Date(2026,11,10).getTime(); assert.strictEqual(X.attack(S,h,'festival_eras').reason,'closed');
+    X.setProvider({online:true,boss:()=>({hp:5e9,hpMax:1e10}),attack:(S_,h_,id,d)=>({ok:true,hp:5e9-d,killed:false})}); h.t=new Date(2026,10,25,10).getTime();
+    const ob=X.boss(S,h,'festival_eras'); assert.ok(ob.online&&ob.hpMax===1e10); assert.ok(X.attack(S,h,'festival_eras').ok,'online: vida compartilhada');
+  } finally { X.DATA.on=false; E.DATA.enabled=false; X.setProvider(null); }
+});
+
 console.log(`ok: ${n} testes`);
