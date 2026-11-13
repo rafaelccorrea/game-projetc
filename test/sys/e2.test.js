@@ -850,4 +850,18 @@ t('evento: trilha por pontos GANHOS (saldo + loja, nunca diminui) e chefe com vi
   } finally { X.DATA.on=false; E.DATA.enabled=false; X.setProvider(null); }
 });
 
+t('guilda: membros (espelho do servidor, saneados), permissões por cargo, contribuição semanal e ranking local, barra de XP',()=>{
+  const G=require('../../js/sys/guild.js'), L=require('../../js/sys/level.js'); const S=newS(), h=makeHost({eraMax:3}); h.t=new Date(2026,10,12,10).getTime();
+  G.DATA.on=true; try{ L.ensure(S).lvl=40; G.setProvider({online:true,status:()=>({open:true})});
+    assert.strictEqual(G.can(S,'kick'),false,'sem guilda não pode nada'); assert.strictEqual(G.addContribution(S,h,'checkin').reason,'not_member');
+    G.applyServer(S,{id:'g1',name:'Lobos',role:'officer',xp:2600,joinedAt:h.t,members:[{id:1,name:'Ana',role:'leader',lvl:50,fc:9e5,online:true,contrib:300},{id:2,name:'Você',role:'officer',lvl:40,fc:5e5,contrib:100,me:true},{id:3,name:'Bia',role:'xx',lvl:30,fc:4e5,contrib:500},null,{name:'sem id'}]});
+    const m=G.members(S); assert.strictEqual(m.count,3); assert.deepStrictEqual(m.list.map(x=>x.name),['Ana','Você','Bia'],'cargo antes da contribuição'); assert.strictEqual(m.list[2].role,'member'); assert.strictEqual(m.online,1);
+    assert.ok(G.can(S,'kick')&&G.can(S,'lineup')&&!G.can(S,'promote')&&!G.can(S,'rename'),'oficial'); assert.strictEqual(G.xpBar(S).level,3);
+    const r=G.addContribution(S,h,'donate_gold_l'); assert.deepStrictEqual([r.ok,r.xp,r.weekPts],[true,60,60]); assert.strictEqual(G.addContribution(S,h,'nada').reason,'kind');
+    assert.strictEqual(G.contribRanking(S)[0].name,'Bia'); assert.strictEqual(G.contribRanking(S).find(x=>x.me).contrib,160);
+    h.t+=7*864e5; assert.strictEqual(G.addContribution(S,h,'checkin').weekPts,5,'semana nova zera a minha contribuição');
+    G.applyServer(S,null,h); assert.deepStrictEqual([G.members(S).count,G.xpBar(S).level],[0,1],'saiu: sem membros');
+  } finally { G.DATA.on=false; G.setProvider(null); }
+});
+
 console.log(`ok: ${n} testes`);

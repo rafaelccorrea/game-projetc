@@ -11,7 +11,13 @@ const DATA={
   on:false,
   create:{goldk:8000},                                    // ouro de ~8 h de farm (goldk × ouro de um abate da fase); sem 💎
   members:{base:20, perLevel:2, max:30},                  // 20 no nível 1, +2 por nível, até 30
-  roles:['leader','officer','member'], maxOfficers:4,
+  roles:['leader','officer','member'], maxOfficers:4, roleName:{leader:'Líder',officer:'Oficial',member:'Membro'},
+  // PERMISSÕES por cargo (spec §1): quem pode o quê
+  perms:{accept:['leader','officer'], kick:['leader','officer'], promote:['leader'], transfer:['leader'], rename:['leader'], lineup:['leader','officer'],
+    declare:['leader','officer'], banner:['leader','officer'], request:['leader','officer','member'], donate:['leader','officer','member'], boss:['leader','officer','member'],
+    checkin:['leader','officer','member'], shop:['leader','officer','member']},
+  // CONTRIBUIÇÃO (spec §5): XP da guilda que cada ação do membro rende (a mesma tabela das doações/check-in; chefe por faixa de dano, missão semanal)
+  contrib:{donate_gold_s:20, donate_gold_l:60, donate_gems:80, checkin:5, boss:30, mission:40, item:15},
   xpLevel:{base:1000, growth:1.6, maxLevel:10},           // XP para ir do nível n ao n+1 = 1.000 × 1,6^(n−1)
   leave:{cooldownH:24, sameGuildDays:7, leaderAbsentDays:7},
   // ESTANDARTES: o único poder (FC) da guilda; teto liberado aos poucos pelo nível (nível 10 = teto)
@@ -72,10 +78,14 @@ function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.guild.ensur
   o.level=clamp(int0(o.level)||1,1,DATA.xpLevel.maxLevel); o.joinedAt=int0(o.joinedAt); o.leftAt=int0(o.leftAt); o.lastGuild=typeof o.lastGuild==='string'?o.lastGuild:'';
   const b=(o.banners&&typeof o.banners==='object')?o.banners:{}; o.banners={}; for(const k of BK) o.banners[k]=clamp(num(b[k],0),0,bannerCap(k,o.level));
   o.territories=Array.isArray(o.territories)?o.territories.filter(t=>t&&typeof t==='object').slice(0,DATA.territory.regions*DATA.territory.perRegion+1).map(t=>({region:clamp(int0(t.region),0,8),capital:t.capital===true})):[];
-  o.coin=int0(o.coin);
+  o.coin=int0(o.coin); o.xp=int0(o.xp);
+  // membros (espelho do servidor): [{id, name, role, lvl, fc, online, contrib (semana), lastSeen}] — até 30, saneados
+  o.members=Array.isArray(o.members)?o.members.filter(m=>m&&typeof m==='object'&&m.id!=null).slice(0,DATA.members.max).map(m=>({id:String(m.id),name:String(m.name||'').slice(0,24),
+    role:DATA.roles.includes(m.role)?m.role:'member',lvl:clamp(int0(m.lvl)||1,1,200),fc:int0(m.fc),online:m.online===true,contrib:int0(m.contrib),lastSeen:int0(m.lastSeen),me:m.me===true})):[];
+  const ct=(o.contrib&&typeof o.contrib==='object')?o.contrib:{}; o.contrib={week:typeof ct.week==='string'?ct.week:'',pts:int0(ct.pts),total:int0(ct.total),log:Array.isArray(ct.log)?ct.log.filter(x=>x&&typeof x.k==='string').slice(-30).map(x=>({k:x.k,n:int0(x.n),t:int0(x.t)})):[]};
   const tr=(o.trade&&typeof o.trade==='object')?o.trade:{}; o.trade={day:typeof tr.day==='string'?tr.day:'',gave:int0(tr.gave),got:int0(tr.got),pairs:Array.isArray(tr.pairs)?tr.pairs.filter(x=>typeof x==='string').slice(0,10):[]};
   const dn=(o.daily&&typeof o.daily==='object')?o.daily:{}; o.daily={day:typeof dn.day==='string'?dn.day:'',done:Array.isArray(dn.done)?dn.done.filter(x=>typeof x==='string'):[]};
-  if(!o.id){ o.banners={}; for(const k of BK) o.banners[k]=0; o.territories=[]; }   // sem guilda: sem estandartes nem territórios
+  if(!o.id){ o.members=[]; o.xp=0; o.banners={}; for(const k of BK) o.banners[k]=0; o.territories=[]; }   // sem guilda: sem estandartes nem territórios
   return o; }
 const inGuild=S=>!!ensure(S).id;
 
@@ -91,6 +101,7 @@ function setProvider(p){ provider=p&&typeof p==='object'?Object.assign({},closed
 function applyServer(S,data,host){ const o=ensure(S); if(!data||typeof data!=='object'||!data.id){ if(o.id){ o.lastGuild=o.id; o.leftAt=int0(data&&data.leftAt)||nowOf(host); } o.id=null; ensure(S); return {ok:true,inGuild:false}; }
   o.id=String(data.id); o.name=String(data.name||''); o.role=data.role; o.level=data.xp!=null?levelOfXp(data.xp).level:int0(data.level)||1; o.joinedAt=int0(data.joinedAt)||o.joinedAt;
   o.banners=Object.assign({},data.banners||{}); o.territories=Array.isArray(data.territories)?data.territories:[]; if(data.coin!=null) o.coin=int0(data.coin);
+  if(data.xp!=null) o.xp=int0(data.xp); if(Array.isArray(data.members)) o.members=data.members;
   ensure(S); return {ok:true,inGuild:true}; }
 
 /* ---------- para as telas ---------- */
@@ -137,7 +148,24 @@ function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0};
 function perks(S){ const z={goldPct:0,xpPct:0,dropPct:0,foodPct:0}; if(!S||!ON()) return z; const o=ensure(S); if(!o.id) return z; const t=territoryBonus(o.territories);
   return {goldPct:o.banners.gold+t.gold,xpPct:t.xp,dropPct:t.drop,foodPct:o.banners.food}; }
 
-const API={DATA,territoryPoints,canAttackCapital,seasonPhase,xpToNext,levelOfXp,memberCap,bannerCap,territoryBonus,canAttackRegion,tourneyReward,createCost,goldBackOf,
+/* ---------------- membros, cargos, contribuição (local agora; servidor manda a lista real em applyServer) ---------------- */
+const can=(S,action)=>{ const o=ensure(S), P=DATA.perms[action]; return !!(o.id&&P&&P.includes(o.role)); };
+/* lista para a tela: membros ordenados por cargo e contribuição da semana; {list, count, cap, online} */
+function members(S){ const o=ensure(S), ord={leader:0,officer:1,member:2};
+  const list=o.members.slice().sort((a,b)=>(ord[a.role]-ord[b.role])||(b.contrib-a.contrib)||(b.fc-a.fc)).map(m=>Object.assign({},m,{roleName:DATA.roleName[m.role]}));
+  return {list,count:list.length,cap:memberCap(o.level),online:list.filter(m=>m.online).length}; }
+/* ranking local da guilda (contribuição da semana): [{rank, id, name, contrib, me}] */
+function contribRanking(S){ return ensure(S).members.slice().sort((a,b)=>b.contrib-a.contrib||b.fc-a.fc).map((m,i)=>({rank:i+1,id:m.id,name:m.name,contrib:m.contrib,me:m.me})); }
+const weekOf=host=>{ const C=root.Sys&&root.Sys.clock, t=nowOf(host); if(C&&C.weekKey) return C.weekKey(t); const d=new Date(t); d.setHours(0,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+/* registra a contribuição do jogador (o servidor confirma e soma na guilda). {ok, reason: off|not_member|kind, xp, weekPts} */
+function addContribution(S,host,kind,n){ if(!ON()) return {ok:false,reason:'off'}; const o=ensure(S); if(!o.id) return {ok:false,reason:'not_member'};
+  const per=DATA.contrib[kind]; if(per==null) return {ok:false,reason:'kind'}; const k=Math.max(1,int0(n==null?1:n)), xp=per*k, wk=weekOf(host);
+  if(o.contrib.week!==wk){ o.contrib.week=wk; o.contrib.pts=0; } o.contrib.pts+=xp; o.contrib.total+=xp; o.contrib.log.push({k:kind,n:xp,t:nowOf(host)}); if(o.contrib.log.length>30) o.contrib.log.shift();
+  const me=o.members.find(m=>m.me); if(me) me.contrib+=xp;
+  return {ok:true,xp,weekPts:o.contrib.pts}; }
+/* barra de nível da guilda pelo XP (o servidor manda o XP; local = 0): {level, into, need, frac, max} */
+function xpBar(S){ const o=ensure(S), L=levelOfXp(o.xp); return {level:L.level,into:L.into,need:L.need,frac:L.need?L.into/L.need:1,max:L.level>=DATA.xpLevel.maxLevel}; }
+const API={DATA,can,members,contribRanking,addContribution,xpBar,territoryPoints,canAttackCapital,seasonPhase,xpToNext,levelOfXp,memberCap,bannerCap,territoryBonus,canAttackRegion,tourneyReward,createCost,goldBackOf,
   ensure,inGuild,setProvider,applyServer,status,canCreate,canJoin,cooldownLeft,itemTradable,canDonate,received,markDonated,bonus,perks,
   get provider(){ return provider; }};
 root.Sys=root.Sys||{}; root.Sys.guild=API;
