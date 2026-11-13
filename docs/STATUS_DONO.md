@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **04h35 · KAEL CRESCENDO LIGADO (242462f, visto no navegador):** as 4 fases com pés no chão, arma na mão e asa nas costas; o save do nível 60 mostra "Kael evoluiu: Adulto!" uma vez só, sem perder nada (poder igual). Prints na página de aprovação. Antes do APK ainda faltam: as skins em camadas desenhadas na batalha, o pet na Vitória, os cenários 5-8 e o avatar por fase
+- **04h35 · Dois buracos de arte achados:** (a) MONTADO, o Kael adolescente/adulto/guerreiro aparece como garoto (as folhas de montaria só têm o garoto); a Arte está calculando o custo para você decidir; (b) a MORTE do adolescente/adulto/guerreiro mostrava o garoto: aprovei a correção (~14 créditos)
+- **04h35 · PARA VOCÊ VOTAR:** prévia das skins de roupa em camadas (8 skins nas 4 fases, Kael e Kaia) e as 4 fases do Kael no jogo
+
 - **04h20 · PARA VOCÊ VOTAR: Kaia adulta e guerreira V2 animadas** (página de aprovação, 8 animações de cada fase, corpo e rosto de mulher adulta). Avisos da Arte: no golpe da adulta a espada passa do topo em 2 quadros; no giro a espada some atrás do corpo de costas. Créditos: saldo ~237
 - **04h20 · Achado da Arte:** as folhas do Kael crescendo estavam com um desvio de 96 px (ele pularia ao golpear); a Arte corrige pelo código antes do APK
 
