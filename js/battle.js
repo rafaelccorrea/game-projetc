@@ -398,7 +398,10 @@ function waveClear(){
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
     /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
-    if(won===ERAS.length*STAGES_PER_ERA&&window.Panels&&typeof Panels.on==='function'&&Panels.on('end9')){ const eo={stage:won,gems:10,essence:loot&&loot.essence||0}; if(shown) B.endPend=eo; else { try{ shown=Panels.open('end9',eo)!==false; }catch(er){ console.error('end9',er); } } }
+    /* Sys.erasEnd (Sistemas, chave desligada = {ok:false}): na fase 90 entrega os prêmios do fim das 9 eras (uma vez) e a tela os mostra; acima da 90, marco a cada 10 fases e pedras astrais, num aviso curto */
+    let ee=null; try{ if(window.Sys&&Sys.erasEnd&&typeof Sys.erasEnd.onStageClear==='function') ee=Sys.erasEnd.onStageClear(S,Sys.host,won); }catch(er){ console.error('erasEnd',er); }
+    if(ee&&ee.ok&&ee.mark&&typeof toast==='function'){ try{ toast((ee.mark.name||'Marco')+' alcançado'+(ee.stones>0?': +'+ee.stones+' pedras astrais':'')); }catch(er){} }
+    if(won===ERAS.length*STAGES_PER_ERA&&window.Panels&&typeof Panels.on==='function'&&Panels.on('end9')){ const eo={stage:won,gems:10,essence:loot&&loot.essence||0}; if(ee&&ee.ok&&ee.final){ if(ee.final.prizes) eo.prizes=ee.final.prizes; if(ee.final.milestone) eo.milestone=ee.final.milestone; } if(shown) B.endPend=eo; else { try{ shown=Panels.open('end9',eo)!==false; }catch(er){ console.error('end9',er); } } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
     if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ challengeBoss(); return; } }   /* a cura é a do próprio desafio (bossChallengeHeal): antes somava 8% e depois enchia a vida */

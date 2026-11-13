@@ -453,7 +453,7 @@ function xRarName(x,txt){ const q=xRar(x); return q.on?`<span class="xr-n" data-
 function xRarBox(x,inner,size,extra){ const q=xRar(x), s=size||58; if(!q.on) return '';
   return `<span class="${q.cls.trim()}"${q.at} style="position:relative;display:flex;align-items:center;justify-content:center;width:${s}px;height:${s}px;flex:none;border-radius:${Math.round(s*0.24)}px;box-sizing:border-box;overflow:hidden;${extra||''}">${inner||''}</span>`; }
 const forgeLv=slot=>(window.Sys&&Sys.forge)?Sys.forge.level(S,slot):0;
-const forgeMult=slot=>(window.Sys&&Sys.forge)?Sys.forge.mult(S,slot):0;
+const forgeMult=slot=>{ try{ if(window.Sys&&Sys.erasEnd&&typeof Sys.erasEnd.forgeMult==='function') return Sys.erasEnd.forgeMult(S,slot); }catch(e){} return (window.Sys&&Sys.forge)?Sys.forge.mult(S,slot):0; };   /* Forja Astral (Sistemas 8071455): sem nível astral no espaço devolve o Sys.forge.mult de sempre */
 const canEq=it=>Sys.stats.canEquip(it,plv());
 const eqItem=slot=>S.eq[slot]!=null?itemOf(S.eq[slot]):null;
 /* redesenho pedido de fora (onda vencida, baú, nível): nas telas cheias só redesenha se nada estiver animando */

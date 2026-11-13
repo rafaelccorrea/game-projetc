@@ -100,6 +100,7 @@ function sysBoot(){
   try { window.__migrated = sysMigrate(); Sys.loot.ensure(S); Sys.chest.ensure(S); Sys.level.ensure(S); if (DEBUG && window.__plv > 1){ const o = Sys.level.ensure(S); o.lvl = Math.min(100, window.__plv | 0); o.xp = 0; } Sys.loot.flushPending(S, Sys.host);
     if (typeof vaOfflineSync === 'function') vaOfflineSync();   // VIP: teto de horas do ganho offline (itens do Sys.loot.offline)
     if (SYS_E2) sysBootE2();
+    try { if (Sys.erasEnd && typeof Sys.erasEnd.sync === 'function') Sys.erasEnd.sync(S, Sys.host); } catch (e) { console.error('erasEnd', e); }   /* Fim das 9 eras e marcos (Sistemas 8071455; chave desligada = não faz nada): quem já passou da fase 90 recebe uma vez só */
     const el = document.getElementById('chestbox'); if (el) Sys.chest.render(el, S, Sys.host, { overlay: document.getElementById('app') });
   } catch (e) { console.error('sysBoot', e); }
 }
