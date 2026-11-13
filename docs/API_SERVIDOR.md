@@ -130,6 +130,9 @@ Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do se
   - luta contra bot gasta tentativa e não dá ponto;
   - conta marcada (`save_review`/`cheater`) ou banida não aparece para os outros;
   - o servidor não completa o ranking com bots (`bots: false`).
+- **IMPLEMENTADO (2026-11-12, fps-server):** todas as rotas acima + `GET /arena/status` (`{week, day, attemptsLeft, refreshLeft, points}`), atrás de `ARENA_ON=1` no ambiente
+  (desligado = 404 e o jogo segue com o provider local). Fechamento da semana a cada 10 min (idempotente) e prêmio pelo correio (§8, `source: "arena"`).
+  Recusa do retrato: `422 snapshot_mismatch` com `details: {reason: "fc", serverFc, sentFc}`. Placar em memória até o PgArenaStore.
 - Erros: `400 no_snapshot`, `400 bad_request` (`reason: "self"`), `429 arena_limit` (`reason: "refresh"` ou com `retryAfterMs` até a meia-noite), `400 week_open` (fechamento).
 
 ## 5. CHAT (WebSocket) — ponto 5
