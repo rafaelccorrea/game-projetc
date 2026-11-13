@@ -99,6 +99,26 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
           check(tag + ' DERROTA (respiração): mesmo lugar e mesma largura o tempo todo, tamanho válido', g.a.every(q => q.w === g.a[0].w && q.cx === g.a[0].cx && q.w > 0 && q.h > 0), JSON.stringify(g.a[0])); }
         const f2 = fullList({ t: 0.3, deadP: 0.9 }), a2 = first(f2.L, RE.ref), b = f2.L.findIndex(s => /_die_body/.test(s)), c = first(f2.L, RE.pet);
         check(tag + ' drawHeroFull {deadP 0,9}: montaria parada → herói caído → pet; nenhuma folha montada', a2 >= 0 && a2 < b && b < c && last(f2.L, RE.mount) < 0, 'imagem ' + a2 + ' · morte ' + b + ' · pet ' + c + ' · folha ' + last(f2.L, RE.mount));
+        /* ORIENTAÇÃO e ENCAIXE NA CENA, as 6 montarias: a transformação final não espelha a arte (todas olham para a direita no arquivo, como a montada) e a
+           montaria parada cabe inteira com margem >= 6 px de tela a 288, 360 e 390 de largura (a cena lógica tem sempre LW de largura; a tela só escala) */
+        { const all = ev('(function(){ const out={}; for(const k in MOUNT_TBL){ const H=Object.assign({},HM,{mount:{id:k,stars:1},t:10}); const g=mountStillGeo(H); out[k]={face:MOUNT_REF[k]&&MOUNT_REF[k].face, xs:g.xs, flip:g.flip, l:g.cx-g.w/2, r:g.cx+g.w/2, gy:g.gy}; } return {m:out, LW:LW, GY:GY, edge:MOUNT_STILL_EDGE}; })()');
+          for (const k in all.m) { const q = all.m[k];
+            check('montaria parada ' + k + ': olha para a DIREITA (arte virada para a direita, desenho sem espelhar)', q.face === 'R' && q.flip === false && q.xs > 0, JSON.stringify(q));
+            check('montaria parada ' + k + ': inteira na cena com margem (>= 6 px de tela a 288, 360 e 390), patas no chão', [288, 360, 390].every(W => q.l * W / all.LW >= 6 && (all.LW - q.r) * W / all.LW >= 6) && q.gy === all.GY, 'x ' + q.l.toFixed(1) + '..' + q.r.toFixed(1) + ' de ' + all.LW); }
+          const fit = ev('(function(){ const E=MOUNT_STILL_EDGE, a=mountStillFit(66,174), b=mountStillFit(100,400), c=mountStillFit(320,100), d=mountStillFit(150,120); return {a:[a.cx-a.w/2,a.w], b:[b.cx-b.w/2,b.cx+b.w/2,b.w], c:[c.cx+c.w/2,c.w], d:[d.cx,d.w], E:E, LW:LW}; })()');
+          check('montaria parada: saía pela borda esquerda → empurrada para dentro, mesma largura', Math.abs(fit.a[0] - fit.E) < 1e-9 && fit.a[1] === 174, JSON.stringify(fit));
+          check('montaria parada: mais larga que a cena → reduzida até caber com margem dos dois lados', Math.abs(fit.b[0] - fit.E) < 1e-9 && Math.abs(fit.b[1] - (fit.LW - fit.E)) < 1e-9 && fit.b[2] < 400, JSON.stringify(fit));
+          check('montaria parada: saía pela direita → empurrada para dentro; quem já cabe não muda', Math.abs(fit.c[0] - (fit.LW - fit.E)) < 1e-9 && fit.c[1] === 100 && fit.d[0] === 150 && fit.d[1] === 120, JSON.stringify(fit));
+          check('montaria parada: flip só para arte virada para a esquerda (face L espelha)', ev("(function(){ const R=MOUNT_REF[HM.mount.id], f0=R.face; R.face='L'; try{ const g=mountStillGeo(Object.assign({},HM,{t:10})); return g.flip===true&&g.xs<0; } finally { R.face=f0; } })()"));
+          check(tag + ' DERROTA: imagem da montaria em uso carregada de novo depois da conferência das 6', await until(() => ev('mountStill(HM.mount.id).ok'), 120)); }
+        /* IMAGEM AINDA CARREGANDO no instante da queda: a montaria NÃO sai correndo virada para a esquerda; a folha parada espera no lugar e o fade começa quando a imagem chega */
+        ev('window.__pfS2=MOUNT_STILL[HM.mount.id]; MOUNT_STILL[HM.mount.id]={c:null,ok:false,fail:false,bb:null}; HM._md=null; 1');
+        try { E = at(1.5); check(tag + ' DERROTA com a imagem CARREGANDO: folha montada parada no lugar (sem corrida, sem imagem ainda), antes do herói caído', E.some(s => idle.test(s)) && !E.some(s => run.test(s)) && first(E, RE.ref) < 0 && last(E, RE.mount) < dieI(E) && ev("HM._md.mode==='still'"), E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', ') || 'nada da montaria');
+          E = at(0.8); check(tag + ' DERROTA com a imagem CARREGANDO: continua esperando (nunca some, nunca sai correndo)', E.some(s => idle.test(s)) && !E.some(s => run.test(s)), E.filter(s => RE.mount.test(s)).join(', ') || 'nada da montaria');
+          ev('MOUNT_STILL[HM.mount.id]=window.__pfS2; 1'); E = at(0.8); check(tag + ' DERROTA, a imagem CHEGOU: o fade cruzado começa nesse instante (imagem + folha parada juntas)', first(E, RE.ref) >= 0 && E.some(s => idle.test(s)) && ev('HM._md.tr!=null'), E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', '));
+          ev('HM._md.tr=HM.t-1; 1'); E = at(0.8); check(tag + ' DERROTA, a imagem CHEGOU: terminado o fade só a imagem parada', first(E, RE.ref) >= 0 && last(E, RE.mount) < 0, E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', '));
+          ev('MOUNT_STILL[HM.mount.id]={c:null,ok:false,fail:true,bb:null}; HM._md=null; 1'); E = at(1.5); check(tag + ' DERROTA com a imagem que FALHOU: reserva (sai correndo)', E.some(s => run.test(s)) && first(E, RE.ref) < 0 && ev("HM._md.mode==='exit'"), E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', '));
+        } finally { ev('MOUNT_STILL[HM.mount.id]=window.__pfS2; HM._md=null; B.deadT=0.8; 1'); }
         /* RESERVA: montaria sem imagem (ou que não carregou) sai correndo, como antes */
         ev('window.__pfR=MOUNT_REF[HM.mount.id]; delete MOUNT_REF[HM.mount.id]; HM._md=null; 1');
         try { E = at(1.5); const mi = E.findIndex(s => run.test(s));
@@ -186,7 +206,19 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       ev('dbgHatchAt(null)'); check(tag + ' debug dbgHatchAt(null): solta', ev('!HATCH.cur&&!HATCH.q.length&&DBGFX.hatch===null'));
       r = ev('dbgLvUp(0.5)'); for (let i = 0; i < 12; i++) await tick(); battleList();
       check(tag + ' debug dbgLvUp(0,5): letreiro disparado e parado em 0,5 s', ev('!!B.lvfx&&Math.abs(B.at-B.lvfx.t0-0.5)<0.06'), JSON.stringify(r) + ' · ' + ev('B.lvfx?B.at-B.lvfx.t0:null'));
-      ev('dbgLvUp(null)'); check(tag + ' debug dbgLvUp(null): solta', ev('DBGFX.lv===null')); r = ev('dbgLvUp()'); check(tag + ' debug dbgLvUp(): dispara como numa subida real (efeito + faixa "Nível N!")', ev('!!B.lvfx&&!!B.banner&&/^Nível /.test(B.banner.txt)&&DBGFX.lv===null'), JSON.stringify(r));
+      ev('dbgLvUp(null)'); check(tag + ' debug dbgLvUp(null): solta', ev('DBGFX.lv===null'));
+      /* dbgWing / dbgMount */
+      { const w0 = ev('S.eq.wing'), m0 = ev('HM.mount&&HM.mount.id'), s0 = ev('(function(){ try{ const o=Sys.mount.ensure(S); return o.owned[o.eq].stars|0; }catch(e){ return 1; } })()');
+        check(tag + ' debug: dbgWing e dbgMount existem', ev("typeof window.dbgWing==='function'&&typeof window.dbgMount==='function'"));
+        let q = ev('dbgWing()'); check(tag + ' debug dbgWing(): lista os ids e a asa equipada', Array.isArray(q.ids) && q.ids.includes('angel') && q.ids.includes('demon') && q.equipada === 'angel', JSON.stringify(q));
+        q = ev("dbgWing('demon')"); await until(() => ev("(function(){ draw(); return HM.wing==='demon'; })()"), 200); check(tag + " debug dbgWing('demon'): item de asa equipado e o herói passa a desenhar a asa demoníaca", q.equipada === 'demon' && ev("HM.wing==='demon'&&itemOf(S.eq.wing).slot==='wing'"), JSON.stringify(q) + ' · HM.wing=' + ev('HM.wing'));
+        const n1 = ev('S.inv.length'); ev("dbgWing('demon')"); check(tag + ' debug dbgWing repetido: reusa o item (não enche a mochila)', ev('S.inv.length') === n1);
+        q = ev('dbgWing(null)'); await until(() => ev('(function(){ draw(); return !HM.wing; })()'), 200); check(tag + ' debug dbgWing(null): tira a asa', q.semAsa === true && ev('S.eq.wing==null&&!HM.wing'), 'HM.wing=' + ev('HM.wing'));
+        ev("dbgWing('angel'); S.eq.wing=" + JSON.stringify(w0) + "; statsChanged(); 1"); await until(() => ev("(function(){ draw(); return HM.wing==='angel'&&wingReady('angel'); })()"), 200);
+        q = ev('dbgMount()'); check(tag + ' debug dbgMount(): lista os ids da tabela', Array.isArray(q.ids) && q.ids.length === ev('Object.keys(MOUNT_TBL).length'), JSON.stringify(q));
+        q = ev("dbgMount('" + m0 + "', 5)"); check(tag + ' debug dbgMount(id, 5): montado com 5 estrelas e diz o estado da imagem parada', q.estrelas === 5 && q.montado === true && ['ok', 'carregando'].includes(q.imagemParada) && ev('mountLook().stars') === 5, JSON.stringify(q));
+        q = ev('dbgMount(null)'); check(tag + ' debug dbgMount(null): desmonta', q.desmontado === true && ev('!mountLook()'));
+        ev("dbgMount('" + m0 + "', " + s0 + ")"); await until(() => ev('(function(){ draw(); return !!HM.mount&&mountReady(HM.mount.id)&&fullReady(HM); })()'), 300); check(tag + ' debug: montaria e asa devolvidas', ev("!!HM.mount&&HM.mount.id==='" + m0 + "'&&HM.wing==='angel'"), ev('JSON.stringify({m:HM.mount&&HM.mount.id,w:HM.wing})')); } r = ev('dbgLvUp()'); check(tag + ' debug dbgLvUp(): dispara como numa subida real (efeito + faixa "Nível N!")', ev('!!B.lvfx&&!!B.banner&&/^Nível /.test(B.banner.txt)&&DBGFX.lv===null'), JSON.stringify(r));
     } finally { ev('(function(){ try{ dbgDieAt(null); dbgHatchAt(null); dbgLvUp(null); }catch(e){} const s=window.__pfG; B.lvfx=null; B.banner=null; B.res=s.r; B.deadT=s.d; B.deadBoss=s.db; B.running=s.run; B.paused=s.p; })(); 1'); } };
 
   /* ASA NA MORTE (PO): a asa-item acompanha o corpo caindo e deitado, pela âncora "back" da folha da morte em uso */
@@ -253,6 +285,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
   const mt = ev(`(function(){ Sys.mount.DATA.on=true; Sys.mount.DATA.visual=true; const ids=Object.keys(MOUNT_TBL), id=ids.includes('wolf')?'wolf':ids[0]; Sys.mount.add(S,Sys.host,id); const e=Sys.mount.equip(S,id); const lk=mountLook(); return {id, e:!!e, look:lk&&lk.id}; })()`);
   check('montaria equipada: ' + mt.id, mt.e && mt.look === mt.id, JSON.stringify(mt));
   await until(() => ev("(function(){ HATCH.q.length=0; HATCH.cur=null; return !!petInfo()&&petReady(PETK.base)&&!!HM.mount&&mountReady(HM.mount.id)&&fullReady(HM); })()"), 400);
+  check('batalha COM montaria: herói montado pronto para o desenho', ev('(function(){ draw(); return !!HM.mount&&!!mountPrefix(HM.mount.id)&&mountReady(HM.mount.id)&&HM.deadP<0; })()'), ev('JSON.stringify({m:HM.mount,pre:HM.mount&&mountPrefix(HM.mount.id),rdy:HM.mount&&mountReady(HM.mount.id),hero:S.hero,F:heroForm(),dead:HM.deadP,deadT:B.deadT,res:!!B.res,evo:typeof evoHidesHero==="function"&&evoHidesHero()})'));
   { const L = battleList(); order('batalha COM montaria', L, ['mount'], ['hero', 'wing', 'weapon']); if (VERBOSE) console.log('    ' + L.filter(s => Object.values(RE).some(r => r.test(s))).join('\n    '));
     const f = fullList({ t: 0.3 }); check('drawHeroFull COM montaria: desenhou (true)', f.ret === true, 'devolveu ' + f.ret); order('drawHeroFull COM montaria', f.L, ['mount'], ['hero', 'wing', 'weapon']);
     check('drawHeroFull COM montaria: pet mais à frente e mais abaixo que a pé', !!f.pos && !!foot && f.pos.mo === true && f.pos.dx > foot.dx && f.pos.dy > foot.dy, 'montado ' + JSON.stringify(f.pos) + ' · a pé ' + JSON.stringify(foot));

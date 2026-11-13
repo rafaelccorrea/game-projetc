@@ -143,7 +143,10 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
    PESO: os arquivos têm 1 a 4 MB (956 a 1901 px). A imagem só é pedida quando a montaria ENTRA EM CENA (1º desenho montado), é reduzida UMA vez para um canvas de
    MOUNT_STILL_W px de largura e o arquivo grande é solto; só a da montaria em uso fica na memória. Montaria sem imagem na tabela, ou imagem que não chegou
    até a queda: vale a saída correndo (drawMountExit). O caminho é escolhido UMA vez por queda (não troca no meio). */
-const MOUNT_REF = { pony: { f: 'mount_pony_ref' }, horse: { f: 'mount_horse_ref' }, wolf: { f: 'mount_wolf_ref' }, griffin: { f: 'mount_griffin_ref' }, mythic: { f: 'mount_mythic_opt_tiger' }, wyvern: { f: 'mount_wyvern_ref' } };   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
+/* face = para onde a cabeça aponta NO ARQUIVO ('R' direita, 'L' esquerda). Conferido abrindo as 6 imagens (13/11): TODAS olham para a DIREITA, como a montaria
+   na batalha, então nenhuma é espelhada. Arte nova virada para a esquerda: face 'L' (o desenho espelha). rs = ajuste de tamanho (padrão 1). */
+const MOUNT_REF = { pony: { f: 'mount_pony_ref', face: 'R' }, horse: { f: 'mount_horse_ref', face: 'R' }, wolf: { f: 'mount_wolf_ref', face: 'R' }, griffin: { f: 'mount_griffin_ref', face: 'R' }, mythic: { f: 'mount_mythic_opt_tiger', face: 'R' }, wyvern: { f: 'mount_wyvern_ref', face: 'R' } };   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
+const MOUNT_STILL_EDGE = 8;   /* margem mínima da montaria parada até as bordas da cena, em px lógicos (a cena tem sempre LW = 330 de largura lógica: 8 px lógicos = 7 px de tela a 288, 8,7 a 360, 9,5 a 390) */
 const MOUNT_STILL = {}, MOUNT_STILL_W = 384, MOUNT_XFADE = 0.3, MOUNT_BREATH = 2.6, MOUNT_BREATH_K = 0.015;
 function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k in MOUNT_STILL) delete MOUNT_STILL[k];   /* só a da montaria em uso */
   o = MOUNT_STILL[id] = { c: null, ok: false, fail: false, bb: null }; const R = MOUNT_REF[id]; if (!R){ o.fail = true; return o; }
@@ -157,21 +160,34 @@ function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k 
     im.src = 'assets/mounts/' + R.f + '.png'; } catch (e) { o.fail = true; } return o; }
 /* respiração: 1 ± MOUNT_BREATH_K na altura (a largura compensa um terço), sempre a partir da base */
 const mountBreath = t => { const b = Math.sin(t * 2 * Math.PI / MOUNT_BREATH); return { sx: 1 - MOUNT_BREATH_K * b / 3, sy: 1 + MOUNT_BREATH_K * b }; };
-/* onde e de que tamanho a imagem parada é desenhada: { cx, gy (linha das patas), s (px lógicos por px do canvas reduzido), w, h, sx, sy (respiração) } */
+/* a montaria parada cabe INTEIRA na cena, com margem: primeiro reduz a largura se for maior que a cena, depois empurra para dentro (para a direita se saía pela
+   borda esquerda; ela fica atrás do herói caído, que é desenhado por cima). Conta pura: { cx, w }. */
+function mountStillFit(cx, w){ const mx = LW - 2 * MOUNT_STILL_EDGE; if (w > mx) w = mx; cx = Math.max(MOUNT_STILL_EDGE + w / 2, Math.min(LW - MOUNT_STILL_EDGE - w / 2, cx)); return { cx, w }; }
+/* onde e de que tamanho a imagem parada é desenhada: { cx, gy (linha das patas), s (px lógicos por px do canvas reduzido), w, h, sx, sy (respiração), flip,
+   xs (escala final em x: > 0 = como no arquivo; < 0 = espelhada), dx (quanto o encaixe na cena a deslocou; a sombra e a aura vão junto) } */
 function mountStillGeo(H){ const mo = H.mount, o = mountStill(mo.id), T = MOUNT_TBL[mo.id], R = MOUNT_REF[mo.id] || {}, k = HS / 256, sh = mountSheet(mo.id, 'idle'); let w = HS * 0.9, cx = H.x + HS * 0.12;
   if (sh.ok){ let b = null; try { b = enBounds(sh)[0]; } catch (e) {} if (b && b.r > b.l){ const ax = (sh.meta.padLeft || 0) + 128; w = (b.r - b.l) * k; cx = H.x + ((b.l + b.r) / 2 - ax + T.dx) * k; } }   /* mesmo lugar e mesma largura da montaria na folha parada */
-  w *= R.rs > 0 ? R.rs : 1; const bb = o.bb || { l: 0, r: 1, t: 0, b: 1 }, s = w / Math.max(1, bb.r - bb.l), br = mountBreath(H.t);
-  return { cx, gy: H.gy, s, w, h: (bb.b - bb.t) * s, sx: br.sx, sy: br.sy, flip: !!R.flip }; }
-/* caminho desta queda: 'still' (fica, imagem parada) | 'exit' (sai correndo) | null (sem montaria). Decidido no começo da queda e mantido até o fim. */
+  w *= R.rs > 0 ? R.rs : 1; const cx0 = cx, F = mountStillFit(cx, w); cx = F.cx; w = F.w;
+  const bb = o.bb || { l: 0, r: 1, t: 0, b: 1 }, s = w / Math.max(1, bb.r - bb.l), br = mountBreath(H.t), flip = R.face === 'L';   /* a montaria da batalha olha para a DIREITA: só espelha a arte que olha para a esquerda */
+  return { cx, gy: H.gy, s, w, h: (bb.b - bb.t) * s, sx: br.sx, sy: br.sy, flip, xs: (flip ? -1 : 1) * s * br.sx, dx: cx - cx0 }; }
+/* caminho desta queda: 'still' (fica, imagem parada) | 'exit' (sai correndo, ESPELHADA, para a esquerda) | null (sem montaria). Decidido no começo da queda.
+   'exit' agora só para montaria SEM imagem na tabela ou cuja imagem FALHOU. Imagem ainda CARREGANDO no instante da queda NÃO vira saída correndo (era o único
+   caminho que desenhava a montaria virada para a esquerda e saindo pela borda esquerda): a folha montada parada (sem o cavaleiro) fica no lugar até a imagem
+   chegar e o fade cruzado começa nesse instante. */
 function mountDieMode(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !mountPrefix(mo.id) || !mountReady(mo.id)){ H._md = null; return null; }
-  let d = H._md; if (!d || d.id !== mo.id || H.deadP < d.p - 0.2) d = H._md = { id: mo.id, mode: (MOUNT_REF[mo.id] && mountStill(mo.id).ok) ? 'still' : 'exit', p: H.deadP }; d.p = H.deadP; return d.mode; }
+  let d = H._md; if (!d || d.id !== mo.id || H.deadP < d.p - 0.2){ const o = MOUNT_REF[mo.id] ? mountStill(mo.id) : null; d = H._md = { id: mo.id, mode: (o && !o.fail) ? 'still' : 'exit', p: H.deadP, ready0: !!(o && o.ok), tr: null }; } d.p = H.deadP; return d.mode; }
 /* chamado pelo drawHeroDie (js/stage.js) ANTES do corpo caído */
 function drawMountDead(H){ const mode = mountDieMode(H); if (!mode) return false; if (mode === 'exit') return drawMountExit(H);
-  const mo = H.mount, o = mountStill(mo.id), T = MOUNT_TBL[mo.id], k = HS / 256, G = mountStillGeo(H), u = Math.max(0, Math.min(1, Math.max(0, H.deadP) * 1.6 / MOUNT_XFADE)), bb = o.bb;
-  ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(H.x + HS * 0.12, G.gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas no chão (a mesma da folha montada)
-  { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN), pu = 0.5 + 0.2 * Math.sin(H.t * 2.4); ctx.save(); ctx.globalAlpha = Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, H.x + HS * 0.15 - r, G.gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: continua, atrás
-  ctx.save(); ctx.globalAlpha = u; ctx.translate(G.cx, G.gy); ctx.scale((G.flip ? -1 : 1) * G.s * G.sx, G.s * G.sy); ctx.drawImage(o.c, -(bb.l + bb.r) / 2, -bb.b); ctx.restore();   /* base (borda opaca de baixo) na linha do chão; a respiração estica para cima */
-  if (u < 1){ const F = mountCutFrame(mo.id, 'idle', H.t); ctx.save(); ctx.globalAlpha = 1 - u; ctx.translate(H.x - (F.pad + 128 - T.dx) * k, G.gy - (F.fy - T.dy) * k); ctx.scale(k, k); ctx.drawImage(F.c, 0, 0); ctx.restore(); }   /* fade cruzado: a folha montada (sem o cavaleiro) some no mesmo lugar */
+  const mo = H.mount, o = mountStill(mo.id), T = MOUNT_TBL[mo.id], k = HS / 256, d = H._md;
+  if (o.fail){ d.mode = 'exit'; return drawMountExit(H); }   /* a imagem falhou no meio da espera: reserva */
+  const cut = a => { const F = mountCutFrame(mo.id, 'idle', H.t); ctx.save(); ctx.globalAlpha = a; ctx.translate(H.x - (F.pad + 128 - T.dx) * k, H.gy - (F.fy - T.dy) * k); ctx.scale(k, k); ctx.drawImage(F.c, 0, 0); ctx.restore(); };   /* folha montada parada, sem o cavaleiro, no lugar e virada como estava */
+  const shadow = dx => { ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(H.x + HS * 0.12 + dx, H.gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore(); };   // sombra das patas no chão (a mesma da folha montada)
+  if (!o.ok){ shadow(0); cut(1); return true; }   /* imagem ainda carregando: espera no lugar, sem piscar nem virar */
+  let u; if (d.ready0) u = Math.max(0, H.deadP) * 1.6 / MOUNT_XFADE; else { if (d.tr == null) d.tr = H.t; u = (H.t - d.tr) / MOUNT_XFADE; } u = Math.max(0, Math.min(1, u));
+  const G = mountStillGeo(H), bb = o.bb; shadow(G.dx * u);
+  { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN), pu = 0.5 + 0.2 * Math.sin(H.t * 2.4); ctx.save(); ctx.globalAlpha = Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, H.x + HS * 0.15 + G.dx * u - r, G.gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: continua, atrás
+  ctx.save(); ctx.globalAlpha = u; ctx.translate(G.cx, G.gy); ctx.scale(G.xs, G.s * G.sy); ctx.drawImage(o.c, -(bb.l + bb.r) / 2, -bb.b); ctx.restore();   /* base (borda opaca de baixo) na linha do chão; a respiração estica para cima; xs > 0 = cabeça para a direita */
+  if (u < 1) cut(1 - u);   /* fade cruzado: a folha montada (sem o cavaleiro) some no mesmo lugar */
   return true; }
 function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
   const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id]; if (H.main && MOUNT_REF[id]) mountStill(id);   /* a montaria entrou em cena: pede a imagem dela sozinha (Derrota), uma vez */
@@ -232,3 +248,12 @@ const mountIds = () => mountOk() ? Sys.mount.DATA.mounts.filter(m => MOUNT_TBL[m
 function mountGive(id){ if (!mountOk() || !MOUNT_TBL[id]) return { ok: false, reason: 'off' }; let r = null; try { r = Sys.mount.add(S, Sys.host, id); Sys.mount.equip(S, id); } catch (e) { console.error('mount.add', e); } if (typeof statsChanged === 'function') statsChanged(); return r; }
 function mountStar(d){ if (!mountOk()) return 0; try { const o = Sys.mount.ensure(S); if (!o.eq || !o.owned[o.eq]) return 0; const x = o.owned[o.eq]; x.stars = Math.max(1, Math.min(5, (x.stars | 0) + (d || 1))); if (typeof statsChanged === 'function') statsChanged(); return x.stars; } catch (e) { return 0; } }
 function mountOff(){ if (!mountOk()) return; try { Sys.mount.equip(S, null); } catch (e) {} if (typeof statsChanged === 'function') statsChanged(); }
+/* GANCHO DE DEBUG DO QA (só com ?debug=1): window.dbgMount(id, estrelas) dá e monta a montaria (id da MOUNT_TBL) com as estrelas pedidas (1 a 5; padrão: as
+   que ela já tem); dbgMount() lista os ids; dbgMount(null) desmonta. Por baixo usa o que já existia aqui e continua valendo no console: mountGive(id),
+   mountStar(+1 / -1) e mountOff(). Devolve também o estado da imagem parada da Derrota (ok / carregando / falhou). */
+if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMount = function (id, stars){ if (!mountOk()) return { erro: 'montarias desligadas' };
+    if (id === null){ mountOff(); if (typeof heroChanged === 'function') heroChanged(); return { desmontado: true }; }
+    if (id === undefined || !MOUNT_TBL[id]) return { erro: 'id de montaria desconhecido', ids: Object.keys(MOUNT_TBL) };
+    mountGive(id); let st = 0; try { const o = Sys.mount.ensure(S), x = o.owned[id]; if (x){ if (typeof stars === 'number' && isFinite(stars)) x.stars = Math.max(1, Math.min(5, stars | 0)); st = x.stars | 0; } } catch (e) {}
+    if (typeof statsChanged === 'function') statsChanged(); if (typeof heroChanged === 'function') heroChanged(); const o = MOUNT_REF[id] ? mountStill(id) : null;
+    return { id, estrelas: st, montado: !!mountLook(), imagemParada: !o ? 'sem imagem' : o.ok ? 'ok' : o.fail ? 'falhou' : 'carregando' }; }; }

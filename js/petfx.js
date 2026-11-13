@@ -162,6 +162,9 @@ function petGiveEgg(r){ if (!petOk()) return null; let x = null; try { x = Sys.p
                             0 a 1,4 treme · 1,4 a 2,4 racha · 2,1 a 3,1 luz · 2,4 a 3,1 o filhote salta · 3,1+ filhote no lugar final. Não espera a vaga abrir:
                             aparece na hora, no lugar que o jogo escolheria (o inimigo recua em ~1 s). Sem argumentos lista os ids. dbgHatchAt(null) solta.
                             Com o id do pet EQUIPADO mostra o caso do 1º ovo (ovo no lugar do pet).
+     dbgWing(id)            equipa um ITEM de asa desse tipo (cria o item na mochila se não houver; para as asas novas liga a arte dela só nesta sessão):
+                            'angel', 'demon', 'phoenix', 'ice', ... dbgWing() lista os ids e qual está equipada; dbgWing(null) tira a asa.
+     dbgMount(id, estrelas) (js/mountfx.js) dá e monta a montaria; dbgMount() lista; dbgMount(null) desmonta.
      dbgLvUp([t])           dispara o letreiro "NÍVEL +1" como numa subida real (efeito sobre o herói, faixa "Nível N!" e som). Com t (segundos, 0 a ~2) o efeito
                             fica parado nesse instante; dbgLvUp(null) solta. */
 function dbgFxTick(){ const D = typeof DBGFX !== 'undefined' ? DBGFX : null; if (!D) return;
@@ -172,7 +175,7 @@ if (typeof DBGFX !== 'undefined' && DBGFX){ const D = DBGFX, num = (v, a, b, d) 
   window.dbgDieAt = function (t, boss){ if (t == null){ if (D.die != null){ D.die = null; B.deadT = 0; B.deadBoss = false; if (B.hero) B.hero.hp = B.hero.maxhp; } return { solto: true }; }
     if (B.res) return { erro: 'feche a tela de resultado antes' };
     D.die = num(t, 0, 1.6, 0); B.deadT = Math.max(0.05, 1.6 - D.die); B.deadBoss = !!boss; B.act = null; B.dieDustW = 0; B.dieDustB = 0;
-    const p = petInfo() ? petPos() : null; return { t: D.die, montaria: HM.mount ? ((HM._md && HM._md.mode) || (MOUNT_REF[HM.mount.id] && mountStill(HM.mount.id).ok ? 'still' : 'exit')) : null, pet: p && { x: Math.round(p.x), chao: Math.round(p.gy) }, petDestino: p ? Math.round(petDieX()) : null }; };
+    const p = petInfo() ? petPos() : null; return { t: D.die, montaria: HM.mount ? (function(){ const o = MOUNT_REF[HM.mount.id] ? mountStill(HM.mount.id) : null; return (!o || o.fail) ? 'exit' : 'still'; })() : null, imagemParada: HM.mount ? (function(){ const o = MOUNT_REF[HM.mount.id] ? mountStill(HM.mount.id) : null; return !o ? 'sem imagem' : o.ok ? 'ok' : o.fail ? 'falhou' : 'carregando'; })() : null, pet: p && { x: Math.round(p.x), chao: Math.round(p.gy) }, petDestino: p ? Math.round(petDieX()) : null }; };
   window.dbgHatchAt = function (pet, r, t){ if (pet === null){ D.hatch = null; HATCH.cur = null; HATCH.q.length = 0; return { solto: true }; }
     if (!petOk()) return { erro: 'pets desligados' }; const sp = (Sys.pet.DATA.v17 && Sys.pet.DATA.v17.species) || {};
     if (pet === undefined || !sp[pet]) return { erro: 'id de pet desconhecido', ids: Object.keys(sp) };
@@ -182,3 +185,12 @@ if (typeof DBGFX !== 'undefined' && DBGFX){ const D = DBGFX, num = (v, a, b, d) 
     let lv = 0; try { lv = Sys.level.ensure(S).lvl | 0; } catch (e) {}
     B.lvfx = { t0: B.at }; sheetLoad(LVUP, true); snd('upgrade'); B.banner = { txt: 'Nível ' + lv + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };
     D.lv = (typeof t === 'number' && isFinite(t)) ? Math.max(0, t) : null; if (D.lv != null) B.lvfx.t0 = B.at - D.lv; return { nivel: lv, congelado: D.lv }; }; }
+if (typeof DBGFX !== 'undefined' && DBGFX){
+  window.dbgWing = function (id){ const ST = window.Sys && Sys.stats, WT = (ST && ST.DATA && ST.DATA.wingTypes) || {}, done = () => { if (typeof statsChanged === 'function') statsChanged(); if (typeof refreshHero === 'function') refreshHero(); if (typeof heroChanged === 'function') heroChanged(); };
+    const cur = () => { try { const it = S.eq && S.eq.wing != null ? itemOf(S.eq.wing) : null; return it ? (ST && typeof ST.wingOf === 'function' ? ST.wingOf(it) : it.wing) || null : null; } catch (e) { return null; } };
+    if (id === null){ S.eq.wing = null; done(); return { semAsa: true }; }
+    if (id === undefined || !WT[id]) return { erro: id === undefined ? 'passe o id' : 'id de asa desconhecido', ids: Object.keys(WT), equipada: cur() };
+    try { if (WT[id].nw && ST.DATA.newWingReady) ST.DATA.newWingReady[id] = true; } catch (e) {}   /* asa nova: liga a arte dela (só nesta sessão de debug) */
+    let it = null; try { it = S.inv.find(x => x && x.slot === 'wing' && x.wing === id); } catch (e) {}
+    if (!it){ const n0 = S.nextId; addItemToBag({ slot: 'wing', r: 3, e: 0, wing: id }); it = S.inv.find(x => x && x.id === n0) || S.inv.filter(x => x && x.slot === 'wing').pop(); }
+    if (!it) return { erro: 'não consegui criar o item de asa' }; S.eq.wing = it.id; done(); return { id, item: it.id, equipada: cur() }; }; }
