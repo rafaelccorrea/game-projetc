@@ -34,6 +34,6 @@ t('fontes: é a arma inicial (index.html newState), cai na era 0 (Básico é a r
   const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'); assert.ok(/const w=\{id:1,slot:'weapon',r:0,e:0,lvl:1/.test(html),'arma inicial');
   assert.deepStrictEqual(LT.DATA.summon.rarWeights.slice(0,1),[50]); assert.ok(LT.DATA.summon.rarWeights[0]===Math.max(...LT.DATA.summon.rarWeights)); });
 t('Códex: a clava Básica (e a Rara) marca o item w-0-0',()=>{ const S={inv:[Object.assign({},CLAVA)],sys:{}}; assert.ok(CX.catalog().some(c=>c.id==='w-0-0')); assert.ok(CX.scan?[...CX.scan(S)].includes('w-0-0'):true); });
-t('nome na tela: ERAS[0].w[0] (index.html). ATENÇÃO: hoje é "Graveto Afiado", e a arte e a família são de clava (decisão de texto com o PO)',()=>{
-  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'); const m=/w:\['([^']+)','([^']+)'/.exec(html); assert.ok(m); assert.strictEqual(m[1],'Graveto Afiado'); });
+t('nome na tela: ERAS[0].w[0] (index.html) = "Clava de Pedra" (nomes aprovados pelo dono em 14/11, docs/NOMES_ARMAS.md: o nome bate com o desenho)',()=>{
+  const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8'); const m=/w:\['([^']+)','([^']+)'/.exec(html); assert.ok(m); assert.strictEqual(m[1],'Clava de Pedra'); });
 console.log(n+' testes ok');
