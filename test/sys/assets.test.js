@@ -63,4 +63,10 @@ t('pré-carga da cena (P27): sceneSet com herói/arma/ultimate/montaria/asa/era/
     S.hero='kaia'; assert.ok(A.sceneSet(S,h).groups.hero.every(p=>p.startsWith('assets/anim/hyb/kaia/'))); assert.strictEqual(A.sceneSet(S,h).groups.mount.length>0,A.mountedArt('kaia','wolf')===true,'Kaia montada só quando a folha existe (mountedArt)'); assert.ok(A.sceneSet(S,h).groups.mount.every(p=>p.startsWith('assets/anim/mounts/kaia_wolf_')));
   } finally { A.setManifest(null); }
 });
+t('ícone da peça por nível de raridade (tierIcon): t0 Básico/Raro, t1 Épico/Mítico, t2 Lendário; sem a arte da era, o de hoje',()=>{
+  const f=path.join(__dirname,'../../assets/manifest.json'); if(!fs.existsSync(f)) return; A.setManifest(JSON.parse(fs.readFileSync(f,'utf8')));
+  try{ const u='assets/icons/slots/era0_helmet.png'; assert.strictEqual(A.tierIcon(u,0),u); assert.strictEqual(A.tierIcon(u,1),u); assert.strictEqual(A.tierIcon(u,2),'assets/icons/slots/era0_helmet_t1.png'); assert.strictEqual(A.tierIcon(u,4),'assets/icons/slots/era0_helmet_t2.png');
+    assert.strictEqual(A.tierIcon('assets/icons/slots/era0_weapon.png',4),'assets/icons/slots/era0_weapon.png','arma não'); assert.strictEqual(A.tierIcon('assets/icons/slots/era8_vest.png',4).endsWith('era8_vest.png')||fs.existsSync(path.join(__dirname,'../../assets/icons/slots/era8_vest_t2.png')),true);
+  } finally { A.setManifest(null); } assert.strictEqual(A.tierIcon('assets/icons/slots/era0_helmet.png',4),'assets/icons/slots/era0_helmet.png','sem manifesto: o de hoje');
+});
 console.log(`ok: ${n} testes`);

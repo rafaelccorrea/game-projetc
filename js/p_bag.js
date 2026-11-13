@@ -38,10 +38,12 @@ const bSvgStar=(on,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria
 function bStarRow(n,max,s){ let h=''; for(let i=1;i<=max;i++) h+=bSvgStar(i<=n,s); return `<span role="img" aria-label="${n} de ${max} estrelas" style="display:inline-flex;gap:1px">${h}</span>`; }
 
 /* ---------- imagem de cada coisa ---------- */
+/* ícone da peça pelo nível da raridade (Sys.assets.tierIcon: t0/t1/t2 quando a Arte já entregou a era) */
+const bTierIco=it=>{ const u=bTry(()=>slotIcon(it.slot,ieraV(it)),'assets/ui/chest.png'); return bTry(()=>window.Sys.assets.tierIcon(u,it.r),u); };
 function bItemImg(it){ const wt=bTry(()=>Sys.stats.weaponType(it),null);
   if(it.slot==='weapon'&&(wt==='bow'||wt==='boomerang')) return 'assets/weapons/'+wt+'_'+B_RNAME[Math.min(5,it.r|0)]+'.png';
   if(it.slot==='wing'){ const w=bTry(()=>Sys.stats.wingOf(it),'angel'); if(w&&w!=='angel'&&w!=='demon') return 'assets/icons/wings/wing_'+w+'.png'; }
-  return bTry(()=>typeof xRarIcoUrl==='function'?xRarIcoUrl(slotIcon(it.slot,ieraV(it)),it.r,46):slotIcon(it.slot,ieraV(it)),'assets/ui/chest.png'); }   // ícone da peça por raridade (PANEL_V2.rarIcons; desligado = o de hoje)
+  return bTry(()=>typeof xRarIcoUrl==='function'?xRarIcoUrl(bTierIco(it),it.r,46):bTierIco(it),'assets/ui/chest.png'); }   // ícone da peça por raridade (PANEL_V2.rarIcons; desligado = o de hoje)
 function bPetImg(id){ if(B_PET_ART[id]) return 'assets/icons/pets/'+B_PET_ART[id]+'.png';
   const P=bSys().pet, d=bTry(()=>P.DATA.pets.find(p=>p.id===id),null), sp=d&&d.sprite, st=bTry(()=>P.stage(S,id).index|0,0);
   return sp?'assets/icons/pets/'+sp+['_ref','_mid','_evo'][Math.max(0,Math.min(2,st))]+'.png':'assets/icons/menu/pets.png'; }

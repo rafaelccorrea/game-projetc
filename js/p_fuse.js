@@ -96,7 +96,9 @@ function uPlan(items){ const c=Sys.stats.canFuse(S,Sys.host,items); if(c.ok||c.r
 const uWhy=(c,items)=>c.reason==='money'?'Ouro insuficiente':c.reason==='max'?'5 estrelas não funde':c.reason==='different'?((items&&items.length&&new Set(items.map(uFam)).size>1)?'Famílias diferentes':'Itens diferentes'):c.reason==='off'?'Em breve':'Escolha 3 itens';
 
 /* ---------- miniatura do item (moldura da raridade do js/screens.js) ---------- */
-function uThumb(it,s){ const q=xRar(it), img=`<img src="${typeof xRarIco==='function'?xRarIco(slotIcon(it.slot,ieraV(it)),it.r,Math.round(s*.78)):slotIcon(it.slot,ieraV(it))}" alt="" style="width:${Math.round(s*.78)}px;height:${Math.round(s*.78)}px;object-fit:contain">`;
+/* ícone da peça pelo nível da raridade (Sys.assets.tierIcon) */
+const uTierIco=it=>{ const u=slotIcon(it.slot,ieraV(it)); try{ return Sys.assets.tierIcon(u,it.r); }catch(e){ return u; } };
+function uThumb(it,s){ const q=xRar(it), img=`<img src="${typeof xRarIco==='function'?xRarIco(uTierIco(it),it.r,Math.round(s*.78)):uTierIco(it)}" alt="" style="width:${Math.round(s*.78)}px;height:${Math.round(s*.78)}px;object-fit:contain">`;
   return `<span${q.on?' class="'+q.cls.trim()+'"'+q.at:''} style="position:relative;width:${s}px;height:${s}px;flex:none;border-radius:${Math.round(s*.24)}px;${q.on?'':'border:2px solid '+RC[it.r|0]+';background:radial-gradient(circle at 50% 40%,#3a2c1f,#16110d);'}display:flex;align-items:center;justify-content:center;box-sizing:border-box">${img}</span>`; }
 const uEqTag=`<span style="position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);padding:0 5px;border-radius:7px;background:#5fd068;color:#0d2410;font-size:9px;font-weight:900;line-height:14px;white-space:nowrap">Equipado</span>`;
 
