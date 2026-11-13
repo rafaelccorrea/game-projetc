@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **01h35 · Banco de dados criado no Supabase (sua ordem):** projeto "eonbound" na organização next (Pro, +US$ 10/mês), região São Paulo, Postgres Micro, API pública desligada (só o nosso servidor acessa) e proteção por linha ligada. Falta você colocar o endereço do banco (DATABASE_URL) na variável de ambiente; o Servidor está preparando o passo a passo
+- **01h30 · QA entregou:** aba Aparência (modo Itens/Skin, esconder peça), Mapa das Eras ligado à curva das 100 fases, Leilão conferido (regras batem), conserto do resultado da Instância. O engenheiro liga
+
 - **01h20 · Sistemas:** inimigos mais fortes por era LIGADOS (calendário de 6 meses confirmado). Testes automáticos da batalha real: Troca de era OK; Vitória/Derrota com chefe OK; Instância funciona, mas com 2 defeitos já com o engenheiro (o resultado não aparece; ao morrer mostra a mensagem da batalha normal)
 
 - **01h10 · QA com fila nova (sem pausa):** aba Aparência no Equipamento (saiu da fila do engenheiro para andar em paralelo) → ligar o Mapa das Eras à curva das 100 fases → conferir o Leilão → conferir no navegador cada tela que o engenheiro ligar (Instâncias, Vitória/Derrota, missão guia, Correio, Oferta)
@@ -152,6 +155,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Próximos votos (quando chegarem, eu aviso): asa no Kael montado (refeita), Kaia adulta e guerreira V2 animadas, cenários das eras 5 e 8
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
+- [~] Banco de desenvolvimento: Supabase criado; falta você pôr o DATABASE_URL na variável de ambiente (passo a passo a caminho)
 - [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
 - [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
@@ -170,7 +174,7 @@ Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo,
 - [~] Correio (carta de boas-vindas entrando) · Instâncias (2 defeitos sendo corrigidos) · missão guia na batalha
 - [x] Troca de era real e Vitória/Derrota com chefe real (testadas pelo laço da batalha)
 - [~] Mapa das Eras (escrito; o QA liga à curva das 100 fases × 4 dificuldades)
-- [~] Aba Aparência no Equipamento (QA fazendo agora)
+- [~] Aba Aparência no Equipamento (escrita pelo QA; o engenheiro liga)
 - [~] Leilão (só ouro, preço fixo, 18+; QA conferindo) · Oferta de 1ª compra (pronta; por enquanto só no Modo dono)
 
 **Poder (FC) e habilidades**
