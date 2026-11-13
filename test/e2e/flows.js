@@ -278,7 +278,7 @@ async function flowHeroFull() {
   if (era) { await G.until(() => ev('typeof PE!=="undefined"&&PE.step==="final"'), 30); try { G.inCtx(() => X.Panels.defs.era.close()); } catch (e) { G.frameErr.push('era.close: ' + errStr(e)); } await G.run(3); }
   const who = callersOf(G, 'drawHeroFull');
   check('drawHeroFull chamado na vitória e na troca de era (vitória ' + nWin + 'x, total ' + calls.n + 'x)', calls.n > 0,
-    'nenhuma chamada: hoje só ' + (who.join(', ') || 'ninguém') + ' chama drawHeroFull; a batalha, a Vitória e a Troca de era desenham pelo draw() → drawHero(HM) + drawPet() (' + lineOf(G, 'js/battle.js', /drawHero\(HM\); drawLevelUp\(\)/) + ')');
+    'nenhuma chamada: hoje só ' + (who.join(', ') || 'ninguém') + ' chama drawHeroFull; a batalha, a Vitória e a Troca de era desenham pelo draw() → drawHero(HM) + drawPet() (' + lineOf(G, 'js/battle.js', /drawHero\(HM\); drawLevelUp\(\)/) + ')', true);   // EM CONFERÊNCIA: pet, montaria e asa APARECEM (checado acima); o engenheiro decide se essas telas passam pelo drawHeroFull
   const hfErr = ev('!!window.__hfErr') || G.consoleErrs.some(m => /drawHeroFull/.test(m));
   check('drawHeroFull / desenho sem exceção', !hfErr && !G.frameErr.length, (hfErr ? 'drawHeroFull pegou erro: ' + G.consoleErrs.filter(m => /drawHeroFull/.test(m)).join(' | ') + ' ' : '') + G.frameErr.slice(0, 4).join(' | '));
   check('canvas da batalha recebeu o pet (pets/)', has(d, /anim\/pets\//), 'nenhuma folha de pet desenhada');
