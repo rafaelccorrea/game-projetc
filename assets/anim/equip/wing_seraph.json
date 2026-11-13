@@ -1,21 +1,21 @@
 {
- "cut": 254,
+ "cut": 255,
  "L": {
   "root": [
-   0.995,
-   0.6
+   0.996,
+   0.649
   ],
-  "w": 201,
+  "w": 230,
   "h": 440
  },
  "R": {
   "root": [
    0,
-   0.6
+   0.65
   ],
-  "w": 201,
+  "w": 230,
   "h": 440
  },
- "note": "serafim: 3 asas por lado num PNG só (L/R); raiz na base da asa do meio",
- "fit": 0.79
+ "note": "serafim: 6 asas = 3 pares; as 3 asas de cada lado saem da MESMA raiz (ornamento dourado) num PNG só (L/R)",
+ "fit": 0.74
 }
