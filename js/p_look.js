@@ -29,11 +29,10 @@ const plChanged=()=>{ try{ if(typeof statsChanged==='function') statsChanged(); 
 function plHero(){ try{ const A=window.Sys&&Sys.appearance; const h=A&&A.heroOf?A.heroOf(S):(S&&S.hero); return h==='kaia'?'kaia':'kael'; }catch(e){ return 'kael'; } }
 /* skins fixas do herói atual: [] se o módulo ainda não tem a API (a tela fica só com a padrão) */
 function plFixed(hero){ try{ const A=window.Sys&&Sys.appearance; if(!A||typeof A.fixedSkins!=='function') return []; const l=A.fixedSkins(S,Sys.host); return (Array.isArray(l)?l:[]).filter(x=>x&&x.id&&(!x.hero||x.hero===hero)); }catch(e){ return []; } }
-function plMounted(){ try{ return !!(window.Sys&&Sys.mount&&Sys.mount.ensure&&Sys.mount.ensure(S).eq); }catch(e){ return false; } }
 function plDraw(ts){ XLK.raf=0; const cs=document.querySelectorAll?document.querySelectorAll('canvas[data-plsk]'):[]; if(!cs.length) return; if(!XLK.t0) XLK.t0=ts||0;
   if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; }
-  const hs=(typeof HS==='number'&&HS>0)?HS:155, mounted=plMounted();
-  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*(mounted?0.42:0.45),h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk}); }catch(e){ XLK.err=1; plFallback(); return; } }
+  const hs=(typeof HS==='number'&&HS>0)?HS:155;   /* a vitrine mostra o herói A PÉ e sem pet: com montaria a skin não apareceria (P21) */
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk,mount:false,pet:false}); }catch(e){ XLK.err=1; plFallback(); return; } }
   if(typeof requestAnimationFrame==='function') XLK.raf=requestAnimationFrame(plDraw); }
 /* reserva: o Kael parado no lugar de cada canvas */
 function plFallback(){ try{ const cs=document.querySelectorAll('canvas[data-plsk]'); for(const cv of cs){ cv.style.display='none'; const fb=cv.nextElementSibling; if(fb) fb.style.display='block'; } }catch(e){} }
