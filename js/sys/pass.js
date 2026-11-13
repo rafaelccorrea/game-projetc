@@ -105,8 +105,11 @@ function refresh(S,host){
 const tier=S=>Math.min(DATA.tiers,Math.floor(ensure(S).xp/DATA.xpPerTier));
 function progress(S){ const o=ensure(S), t=tier(S); return {tier:t,xp:o.xp,inTier:t>=DATA.tiers?DATA.xpPerTier:o.xp%DATA.xpPerTier,per:DATA.xpPerTier,max:t>=DATA.tiers,premium:o.premium}; }
 /* soma XP do passe (já com o +25% do premium). Devolve {gained, from, to}. */
+/* XP a mais do VIP de conveniência (aprovado pelo dono, 13/11): Sys.vip.conv(S,'passXp').value em % (VIP 7 +10%, VIP 9 +15%, VIP 10 +20%; grátis e VIP 0-6 = 0).
+   Só no Passe (o nível do jogador não muda). Soma ao bônus do Premium (porcentagens somadas, não multiplicadas). */
+const vipPassXpPct=S=>{ try{ const V=root.Sys&&root.Sys.vip, c=V&&V.conv?V.conv(S,'passXp'):null; return Math.max(0,Number(c&&c.value)||0); }catch(e){ return 0; } };
 function addXp(S,n){
-  const o=ensure(S), from=tier(S), k=Math.round(int0(n)*(o.premium?1+DATA.premiumXpPct/100:1));
+  const o=ensure(S), from=tier(S), k=Math.round(int0(n)*(1+(o.premium?DATA.premiumXpPct:0)/100+vipPassXpPct(S)/100));
   o.xp=Math.min(maxXp(),o.xp+k); return {gained:k,from,to:tier(S)};
 }
 /* premium = compra direta (o jogo chama depois do pagamento) */

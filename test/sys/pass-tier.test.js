@@ -61,4 +61,12 @@ t('último nível premium: entrega a skin Lendária do passe só quando o dono e
   const S3={}; P.addXp(S3,P.DATA.tiers*P.DATA.xpPerTier); P.setPremium(S3,true); P.claimAll(S3,h); assert.strictEqual(got.length,2, 'claimAll também entrega');
   delete globalThis.Sys.appearance;
 });
+t('XP do Passe a mais pelo VIP de conveniência (só o Passe; soma ao Premium)',()=>{
+  const old=globalThis.Sys.vip; let pct=0; globalThis.Sys.vip={conv:(S,id)=>id==='passXp'?{value:pct}:null};
+  const S={}; assert.strictEqual(P.addXp(S,100).gained,100);                                      // grátis / VIP 0-6
+  pct=10; assert.strictEqual(P.addXp({},100).gained,110);                                          // VIP 7
+  pct=20; const S2={}; P.setPremium(S2,true); assert.strictEqual(P.addXp(S2,100).gained,145);     // VIP 10 + Premium 25%: 100 × 1,45
+  globalThis.Sys.vip={conv:()=>{ throw new Error('x'); }}; assert.strictEqual(P.addXp({},100).gained,100);
+  if(old) globalThis.Sys.vip=old; else delete globalThis.Sys.vip;
+});
 console.log(n+' testes ok');
