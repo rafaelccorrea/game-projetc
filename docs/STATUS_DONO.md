@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **05h40 · Sua decisão: o herói NÃO cresce mais.** A skin padrão é o garoto (Kael) e a menina (Kaia), em qualquer nível, que já têm montarias, pistolas, morte e asas prontas. O adulto e o guerreiro já feitos viram as 4 primeiras SKINS FIXAS: Kael Cavaleiro, Kael Guerreiro Lendário, Kaia Cavaleira, Kaia Guerreira Lendária (Sistemas propõe como ganhar e o preço). O adulto montado fica parado (só as 2 guias, 4 créditos)
+- **05h40 · Servidor na AWS CRIADO:** máquina eonbound-server (t4g.small, São Paulo, ~US$ 23/mês), acesso só pelo seu PC, site/API público. Falta: colocar o código (repositório privado) e o banco
+
 - **05h · Sua decisão FINAL sobre skins:** nada de combinação de peças. O Kael e a Kaia de hoje são as SKINS PADRÃO. Mais à frente, com mais crédito, skins FIXAS com arte própria (cavaleiro de armadura, cavaleiro das trevas etc.). Por enquanto a Loja vende só skins de arma; a aba Aparência vira uma vitrine de skins
 - **05h · PARA VOCÊ VOTAR:** as 2 guias do ADULTO MONTADO no lobo (Kael e Kaia) antes dos vídeos (~165 créditos)
 - **05h · Polimento:** o braço saindo de trás do cavalo e outros defeitos no golpe das 6 montarias foram limpos quadro a quadro, sem gastar crédito (P15). Avatar por fase pronto (8 retratos). Tela de Fusão pronta (desligada até o voto)
@@ -238,7 +241,7 @@ Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo,
 - [x] Subir de nível novo · pistola e revólver · 45 armas por raridade com brilho
 - [x] Morte nova do Kael (a pé e montado)
 - [x] Asas por item, nas costas (a pé e montado) APROVADAS por você
-- [~] Kael crescendo: adulto e guerreiro V2 APROVADOS, sendo ligados; tamanho por fase na tela; evolução adolescente→adulto e adulto→guerreiro sendo animada
+- [x] Kael crescendo CANCELADO por você: garoto/menina = skin padrão; adulto e guerreiro viraram skins fixas
 - [~] Kaia adulta e guerreira V2 sendo animadas (vão para o seu voto) · [ ] Kaia jogável na Criação (hoje "chega em breve")
 - [ ] Auras maligna e celestial (Submundo e Celestial)
 
