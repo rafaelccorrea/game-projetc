@@ -69,6 +69,9 @@ const DATA={
   // bônus LINEAR no nível (0,4 → 1 do Nv 1 ao 90, sem salto no estágio) e máximo por raridade 8/11/14/17/20/25% da FC TOTAL;
   // ração por toque (barra parcial, 25 por toque); "Redefinir nível" mantém estrelas E estágio. ids do save não mudam.
   v17:{on:false, stageReq:[1,30,60], stageCap:[30,60,90], tapFood:25,
+    // EVOLUIR DÁ PODER NA HORA (dificuldade com paredes, PO 13/11): parte do pet × [0,8 · 0,9 · 1,0] pelo estágio. O evoluído no topo fica IGUAL ao de hoje;
+    // cada evolução soma +11 a +12,5% na parte do pet (~+2% de FC). Desligado até o QA medir (setStageMult(true), junto com a chave de dificuldade).
+    stageMult:{on:false, m:[0.8,0.9,1]},
     rarW:[0.348,0.494,0.651,0.819,1.0,4/3],   // p máx = 0,25·rarW → p/(1+p) = 8,0/11,0/14,0/17,0/20,0/25,0% da FC total
     species:{wolf:{name:'Mamute',r:0,era:0,sprite:'era0_mammoth'}, owl:{name:'Esfinge',r:1,era:1,sprite:'era1_sphinx'},
       drake:{name:'Dragão',r:2,era:2,sprite:'era2_dragon'}, parrot:{name:'Papagaio-fênix',r:2,era:3,sprite:'era3_parrot'},
@@ -173,16 +176,17 @@ const V3=()=>DATA.v3===true;
 const maxLvlNow=()=>V3()?DATA.v3d.maxLvl:DATA.maxLvl;
 /* estágio pelo nível do pet (v3) */
 function stageFor(lvl){ let s=DATA.v3d.stages[0]; for(const x of DATA.v3d.stages) if(lvl>=x.from) s=x; return s; }
-function share(def,lvl,stars){
+function share(def,lvl,stars,stg){
   const V=DATA.v3d, R=DATA.pMax*DATA.rarW[clamp(def.r,0,DATA.rarW.length-1)]*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars));
-  if(V17()){ const l=clamp(lvl,1,V.maxLvl); return R*(V.lvlMin+(1-V.lvlMin)*(l-1)/(V.maxLvl-1)); }   // 17b: linear 0,4 → 1, sem salto no estágio
+  if(V17()){ const l=clamp(lvl,1,V.maxLvl), SM=DATA.v17.stageMult, sm=SM&&SM.on===true?num(SM.m[clamp(int0(stg),0,SM.m.length-1)],1):1; return R*(V.lvlMin+(1-V.lvlMin)*(l-1)/(V.maxLvl-1))*sm; }   // 17b: linear 0,4 → 1, sem salto no estágio
   if(V3()){ const l=clamp(lvl,1,V.maxLvl), L=V.lvlMin+(V.lvlTop-V.lvlMin)*(l-1)/(V.maxLvl-1); return R*L*stageFor(l).mult; }   // Nv 90 evoluído: L×1,5 = 1
   const L=DATA.lvlMin+(1-DATA.lvlMin)*(clamp(lvl,1,DATA.maxLvl)-1)/(DATA.maxLvl-1);
   return R*L;
 }
 /* nível de um pet: v3 = do próprio pet; v2 = do espaço (compartilhado) */
 const levelOf=(S,id)=>{ const o=ensure(S), x=o.owned[id]; return V3()?(x?(x.lvl||1):1):o.lvl; };
-const pOf=(S,id)=>{ const o=ensure(S), x=o.owned[id]; return x&&BY[id]?share(BY[id],levelOf(S,id),x.stars):0; };
+const pOf=(S,id)=>{ const o=ensure(S), x=o.owned[id]; return x&&BY[id]?share(BY[id],levelOf(S,id),x.stars,stgOf(x)):0; };
+const setStageMult=on=>{ DATA.v17.stageMult.on=!!on; return DATA.v17.stageMult.on; };
 /* ===== 3 ataques (v3): chances por qualidade, multiplicador médio e sorteio ===== */
 const quality=(stars,lvl)=>0.5*(clamp(stars,1,DATA.maxStars)-1)/(DATA.maxStars-1)+0.5*(clamp(lvl,1,DATA.v3d.maxLvl)-1)/(DATA.v3d.maxLvl-1);
 function attackOdds(stars,lvl,id){ const A=DATA.v3d.attacks, P=(BY[id]&&BY[id].attacks)||{}, q=quality(stars,lvl);
@@ -482,7 +486,7 @@ function render(el,S,host,opt){
     render(el,S,host,opt); };
 }
 
-const API={DATA,battleTable:()=>JSON.parse(JSON.stringify(PET_BATTLE)),ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
+const API={DATA,setStageMult,battleTable:()=>JSON.parse(JSON.stringify(PET_BATTLE)),ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
 root.Sys=root.Sys||{}; root.Sys.pet=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

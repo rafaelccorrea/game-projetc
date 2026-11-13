@@ -19,7 +19,10 @@ function baseFc(L,e,r,forge,qp){ const S={sys:{level:{lvl:L,xp:0},forge:{lv:{}}}
   const eq={}; for(const s of ST.DATA.slots){ if(s==='wing'&&(L<50||r<2)) continue; eq[s]={slot:s,e,r:s==='weapon'&&r===3?2:r,lvl:L,subs:[],qp,wing:'angel'}; }
   const h={equipped:()=>eq,eraMax:()=>e,level:()=>L,atk:()=>0,hp:()=>0,now:()=>0}; return Math.round(FC.compute(S,h)); }
 const titlesPct=d=>{ let a=0; for(const t of TI.DATA.titles) a+=(t.bonus&&t.bonus.atkPct)||0; return a*Math.min(0.7,d/180*0.7); };
-const petShare=(L,e,lazy)=>L<20?0:[0.08,0.11,0.11,0.14,0.17,0.17,0.17,0.17,0.20][e]*Math.min(1,(L-20)/40+0.3)*(lazy?0.45:1);   // sem evoluir: pet no 1º estágio
+/* pet: parte da FC pela era; com a evolução valendo na hora (Sys.pet.setStageMult): x0,8 filhote, x0,9 adulto (pet Nv 30), x1 evoluído (pet Nv 60).
+   O ativo evolui quando o pet chega lá (~nível 40 e 70 do jogador); o preguiçoso não evolui (fica no filhote) e alimenta pouco. */
+const petStageM=(L,lazy)=>lazy?0.8:L<40?0.8:L<70?0.9:1;
+const petShare=(L,e,lazy)=>L<20?0:[0.08,0.11,0.11,0.14,0.17,0.17,0.17,0.17,0.20][e]*Math.min(1,(L-20)/40+0.3)*(lazy?0.45:1)*petStageM(L,lazy);   // sem evoluir: pet no 1º estágio
 const mountPct=(L,d,pay,lazy)=>{ if(!pay&&L<38) return 0; const id=pay?'wolf':(L>=85?'griffin':'horse'), st=lazy?1:Math.min(5,1+Math.floor((pay?d:Math.max(0,d-20))/25)); return MO.pctOf(id,Math.min(60,Math.floor(L/2)),st); };
 const guildPct=d=>Math.min(5,d<12?0:(d-12)/90*5);
 // FC do jogador por dia (sem trava de fase: a XP do dia não depende de passar de fase; ver ressalva no relatório)
