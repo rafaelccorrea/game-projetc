@@ -102,7 +102,14 @@ function pgClick(b){
   if(a==='raise'){ const o=G.ensure(S); pgToast(o.role==='leader'||o.role==='officer'?'Subir estandarte usa o XP da guilda, que vem do servidor: em breve':'Só o líder e os oficiais sobem estandartes'); return; }
   if(a==='leave'){ XGD.confirm=true; render(); return; }
   if(a==='leaveno'){ XGD.confirm=false; render(); return; }
-  if(a==='leave2'){ XGD.confirm=false; let r=null; try{ r=G.provider&&G.provider.leave?G.provider.leave(S,Sys.host):null; }catch(e){}
+  if(a==='leave2'){ XGD.confirm=false;
+    /* ONLINE (Sys.guildNet ligado e iniciado; chave do dono, desligada hoje): a saída é uma Promise do servidor; o refresh dela já limpa a guilda do save */
+    const GN=window.Sys&&Sys.guildNet, gs=GN&&GN.state?GN.state():null;
+    if(gs&&gs.on&&gs.started&&typeof GN.leave==='function'){ if(XGD.busy) return; XGD.busy=true; pgToast('Saindo da guilda…'); render();
+      const WHY={leader_must_transfer:'Passe a liderança antes de sair',not_in_guild:'Você não está numa guilda',net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
+      const end=r=>{ XGD.busy=false; if(r&&r.ok){ try{ if(typeof statsChanged==='function') statsChanged(); }catch(e){} pgToast('Você saiu da guilda'); } else pgToast(WHY[r&&r.reason]||'Não foi possível sair agora'); try{ if(window.Screens&&Screens.current&&Screens.current()==='guild') render(); }catch(e){} };
+      let pr=null; try{ pr=GN.leave(S,Sys.host); }catch(e){} Promise.resolve(pr).then(end,()=>end(null)); return; }
+    let r=null; try{ r=G.provider&&G.provider.leave?G.provider.leave(S,Sys.host):null; }catch(e){}
     if(r&&r.ok){ try{ G.applyServer(S,{leftAt:(Sys.host&&Sys.host.now&&Sys.host.now())||Date.now()},Sys.host); }catch(e){} try{ if(typeof statsChanged==='function') statsChanged(); }catch(e){} pgToast('Você saiu da guilda'); }
     else pgToast(r&&r.reason==='server'||!r?'Sair da guilda depende do servidor: em breve':'Não foi possível sair agora'); render(); return; }
 }
