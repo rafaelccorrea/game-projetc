@@ -337,3 +337,34 @@ Combinado com a Sistemas (13/11). Desligado até o dono aprovar o pós-eras (`ba
 - `GET /v1/poseras/me` → `{stage, minStage, seal:{week}|null}` (`stage` = maior fase anotada; 0 se nunca passou da 90).
 - **Prêmio** (fechamento a cada 30 min, idempotente): 1º 50 💎, 2º-10º 30, 11º-100º 15, pelo correio (`att:{gems}`, `source:'poseras'`).
 - **Selo do 1º:** só visual e só no servidor: `seal:true` na linha do campeão e `seal:{week}` no `/me` dele, durante a semana seguinte. Nenhuma chave nova no save nem no `Sys.loot.grantBundle`.
+
+## 14. FONTES DE PRÊMIO × SERVIDOR (varredura de 13/11; fontes do js/sys/newdrops.js, offer.js e buy.js)
+Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e entrega (sem servidor). Ordem: nível em que a fonte abre.
+**Contrato proposto para os prêmios do servidor** (em combinação com a Sistemas): o anexo do correio leva `newDrops: {src, ctx}` (ex.: `{src:'tourney:weekend', ctx:{rank:7}}`). No resgate, o jogo chama `Sys.newDrops.grant(S, host, src, ctx)`, e a tabela de prêmios continua só no newdrops.js. O servidor só decide QUEM ganha e em que posição.
+
+| Fonte (nível) | Quem decide | Rota no servidor | Existe? | Testada? | Entrega pelo correio? |
+|---|---|---|---|---|---|
+| Missões, atividade, instância, chefe de era, trilha de evento (`missions:daily`, `activity:full`, `inst:win`, `boss:era`, `evtrail:top`) | jogo | — | não precisa | — | não (na hora) |
+| Torre (`tower:floor`: falcão 30, raptor 50, grifo 150, asa 120/140/160) | jogo | — | não precisa | — | não |
+| Invasão da Era, baú de topo (`invasion:top`, nv 18) | **indefinido**: ninguém chama no jogo; "topo" de quê? | — | **não** | — | — |
+| Chefe Mundial (nv 24): faixa de dano e ≥5% da vida | jogo ("cada um contra o seu") | — | não precisa | — | não |
+| Chefe Mundial: topo do mês (`monthTop`, asa Fênix) | servidor (ranking do mês) | — | **não** | — | — |
+| Torneio de Fim de Semana (nv 28): ranking próprio, top 100 (`tourney:weekend`) e prêmio por posição | servidor | — | **não** | — | — |
+| Arena: ranking semanal e prêmio por faixa | servidor | `GET /ranking`, fechamento semanal | sim | sim (arena.test) | sim |
+| Arena: liga de fim de temporada (`arena:season`) | jogo, com o delta das lutas do servidor | `POST /arena/fight` | sim | sim | não (o jogo entrega a liga) |
+| Torneio da temporada, top 10 (`tourney:season`) | **indefinido**: ninguém chama no jogo; qual ranking? | — | **não** | — | — |
+| Guilda: baú semanal (item + materiais) | servidor | Torneio do Poder, `payWeek` | sim | sim (tourney.test) | sim |
+| Guilda: baú semanal, fragmentos novos (`guild:weekly`: corvo, unicórnio) | servidor | — | **não** (o baú não leva) | — | — |
+| Guerra de guildas: Capital (`guild:capital`, 40 por temporada) | servidor (dono da Capital no fim da temporada) | — | **não** | — | — |
+| Eventos: calendário | servidor | `GET /events` | sim | sim (services.test) | — |
+| Eventos: pontos e loja de pontos | jogo | — | não precisa | — | — |
+| VIP 7 skin, VIP 8 Fênix, VIP 9 serpe (`vip:level`) | jogo, com os pontos VIP das compras | entregas `vip_points` | sim | sim | entregas (§7) |
+| Loja: Mecha, skins (`shop:product`), pacotes, cartão, passe | servidor | `POST /purchases/google` + entregas | sim | sim (services/delivery.test) | entregas (§7) |
+| Oferta de boas-vindas (offer.js) | servidor | `first_offer` (`deliveredBy:'offer'`) | sim | sim | entregas (§7) |
+
+**A fazer, nesta ordem:**
+1. Torneio de Fim de Semana (nv 28).
+2. Guilda: fragmentos do baú semanal e Capital por temporada.
+3. Chefe Mundial: topo do mês (precisa definir como medir o dano, sem confiar no aparelho).
+
+Os dois indefinidos (Invasão: topo; Torneio da temporada) dependem da Sistemas dizer o ranking. Tudo atrás de chave.
