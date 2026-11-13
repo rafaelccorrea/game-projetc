@@ -8,6 +8,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **01h · Seus votos:**
+  - APROVADO: Kael adulto e guerreiro V2 (as 14 animações) · cenários das eras 6 e 7 · prints: só o Kael, com pet, no lobo sem asa, morte nova montado, FC no painel. O engenheiro liga as fases V2 e os cenários 6 e 7
+  - REPROVADO: a asa no Kael MONTADO (as 6 montarias): "asa não encaixa de forma adequada". Correção: a Arte gera o ponto das costas em cada quadro das montarias, e o engenheiro prende a asa nas escápulas acompanhando o galope. Os prints voltam para o seu voto
+- **00h55 · Cenário da era 5 (Moderna) com o acabamento:** cancela que sobe e desce, hélice girando, letreiros piscando, pedestres e trânsito nos dois sentidos. Vai para o seu voto junto com a era 8 e a Kaia V2
+
 - **00h50 · Arte corrigiu pelo código, sem gastar créditos (8070d32):** a mancha escura atrás da cabeça do Kael no lobo sumiu; no pônei, cavalo e tigre a arma desceu de 46° para 22° e não cobre mais o rosto (conferido com a maça e a espada). Falta só o pet encostando no inimigo (engenheiro)
 
 - **00h40 · PARA VOCÊ VOTAR (página de aprovação):** 12 prints do jogo rodando (só o Kael, com pet, nas 6 montarias, lobo + pet + asa, grifo com aura de 5 estrelas, morte nova, FC no painel); o Kael adulto e guerreiro V2 animados (7 animações cada, com a pistola na mão); os cenários vivos das eras 6 (Futurista) e 7 (Submundo)
