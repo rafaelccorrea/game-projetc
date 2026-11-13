@@ -148,7 +148,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
     this.draw(); if(c.componentDidMount){ try{ c.componentDidMount(); }catch(e){ console.error(e); } } return true; },
   /* navegação: os links do protótipo (href="X.dc.html") passam por aqui e a regra do fluxo decide a próxima tela */
   nav(target){ const nw=G.isNew(), id=this.id;
-    if(id==='TituloV2B'){ this.show(nw?'Login':'BemVindo'); return; }                                   /* PO: o Bem-vindo aparece em toda volta (com o ganho offline quando houver) */                       /* JOGAR / Continuar como */
+    if(id==='TituloV2B'){ if(nw){ this.show('Login'); return; } if(this.offline()){ this.show('BemVindo'); return; } this.finish(); return; }   /* REGRA DO DONO: Bem-vindo SÓ com tempo fora REAL (>= 120 s, relógio no passado) e ganho > 0 (PI.offline); conta/save novo ou volta rápida entra direto no jogo */
     if(id==='Login'){ this.show(target==='TituloV2B'?'TituloV2B':'Prologo'); return; }        /* convidado ou conta conectada → Prólogo */
     if(id==='Prologo'){ this.show('CriarJogador'); return; }                                   /* "Começar" do fim do Prólogo */
     if(id==='NomeJogador'){ if(target==='BatalhaTelaCheiaV2'){ const n=this.cur&&this.cur.state&&this.cur.state.nick; if(n) this.commitNew(n); this.finish(); } return; }   /* Continuar: grava herói + nome */
@@ -176,7 +176,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
      Calcula UMA vez (os itens sorteados são os mesmos que serão entregues); null = nada a receber (o Bem-vindo não aparece). */
   off:null,
   offline(){ if(this.off!==null) return this.off; this.off=false;
-    try{ const s=G.S(), away=typeof AWAY!=='undefined'?AWAY:0;
+    try{ const s=G.S(), away=typeof AWAY==='number'&&isFinite(AWAY)?AWAY:0;   /* lastSeen no futuro (relógio mexido) dá AWAY negativo = sem tempo fora */
       if(window.__noSave||s.tut<99||away<120||typeof BAL==='undefined') return false;
       const cap=BAL.offlineCapHours*3600, t=Math.min(away,cap), perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,s.stage-1));
       let om=1; try{ om=Math.max(1,Sys.vip.perks(s).offlineMult||1); }catch(e){}
