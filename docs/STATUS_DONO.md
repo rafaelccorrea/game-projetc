@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **20h · Peças com 3 desenhos PRONTAS nas 9 eras** (104 créditos; 4 acima do aprovado por refações feitas antes do aviso). Folhas: assets/icons/slots/_amostra_era0..8_niveis.png; sendo ligadas no jogo. Saldo 169: Samurai e Ciborgue em produção, depois a Fênix Gigante montada. **Para fechar TODA a arte com folga: ~800 créditos** (9 montarias ~315, 6 pets ~270, skins com asa própria sem a asa embutida ~50-70, ícones ~15, folga ~20%)
+
 - **19h40 · LEVANTAMENTO DA ARTE QUE FALTA** (docs/LEVANTAMENTO_ARTE.md): obrigatório = Samurai e Ciborgue (em produção), 10 montarias novas montadas (~280-350 créditos), 6 pets novos animados (~255-270), voto na Asa Serafim. Completo: as outras skins, 6 montarias, 11 pets, 9 asas, 55 armas, todas as ultimates, inimigos e cenários das 9 eras, ícones (34 títulos prontos). Saldo ~173: dá Samurai, Ciborgue, peças e 2 montarias (Fênix e Dragão Negro); para o resto, comprar ~500-550
 
 - **19h · Suas regras novas, passadas a todos:** pet SEMPRE na frente (da montaria e do herói); tudo que muda no personagem atualiza na hora em todas as telas; nunca rolagem para o lado. **Perfil V5** no mesmo link (herói sempre à vista, tocou-trocou, todas as skins do Kael e da Kaia, asas nas costas, 11 pets animados). **v0.13.0:** sai sem esperar o online, com a TELA DE SELEÇÃO DE SERVIDOR ligada (S1 · Nova Era); o online entra na seguinte (o CORS do servidor já foi corrigido). **Arte:** Samurai e Ciborgue retomados como prioridade; ícones dos 34 títulos aprovados (~20 créditos); peças com 3 desenhos seguindo (~86)
