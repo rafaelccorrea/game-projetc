@@ -19,15 +19,17 @@ const plSnd=n=>{ try{ if(typeof snd==='function') snd(n); }catch(e){} };
 /* herói atual ('kaia' ou Kael) e fase (0-3) só se os módulos existirem; sem dado, não inventa */
 function plHero(){ try{ const A=window.Sys&&Sys.appearance; const h=A&&A.heroOf?A.heroOf(S):(S&&S.hero); return h==='kaia'?'kaia':'kael'; }catch(e){ return 'kael'; } }
 function plPhase(){ try{ const PU=window.Sys&&Sys.phaseUp; if(PU&&PU.DATA&&PU.DATA.on===true&&PU.current){ const n=PU.current(S); return Number.isInteger(n)?n:null; } }catch(e){} return null; }
+/* montado? (a montaria alarga o desenho para a esquerda) */
+function plMounted(){ try{ return !!(window.Sys&&Sys.mount&&Sys.mount.ensure&&Sys.mount.ensure(S).eq); }catch(e){ return false; } }
 function plDraw(ts){ XLK.raf=0; const cv=document.getElementById('pl_cv'); if(!cv||!cv.getContext) return; if(!XLK.t0) XLK.t0=ts||0;
-  if(typeof window.drawHeroFull==='function'&&!XLK.err){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.5,h*0.9,h/300,{vitrine:true,t:((ts||0)-XLK.t0)/1000}); XLK.drawn++; }catch(e){ XLK.err=1; plFallback(); return; } }
+  if(typeof window.drawHeroFull==='function'&&!XLK.err){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); const hs=(typeof HS==='number'&&HS>0)?HS:155, mounted=plMounted(); window.drawHeroFull(c2,w*(mounted?0.42:0.45),h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000});   /* padrão da Arena: scale = altura·0,62/HS; x = 0,45 (0,42 montado); y = linha dos PÉS; t em segundos */ XLK.drawn++; }catch(e){ XLK.err=1; plFallback(); return; } }
   else { plFallback(); return; }
   if(typeof requestAnimationFrame==='function') XLK.raf=requestAnimationFrame(plDraw); }
 /* reserva: o Kael parado no lugar do canvas */
 function plFallback(){ const cv=document.getElementById('pl_cv'); if(!cv||!cv.parentNode) return; try{ cv.style.display='none'; const fb=document.getElementById('pl_fb'); if(fb) fb.style.display='block'; }catch(e){} }
 function plStop(){ if(XLK.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(XLK.raf); XLK.raf=0; }
 function scrLook(){
-  plInject(); const d=xDims(PL_MINH), hero=plHero(), name=hero==='kaia'?'Kaia':'Kael', ph=plPhase();
+  plInject(); const d=xDims(PL_MINH), hero=plHero(), name=hero==='kaia'?'Kaia':'Kael', de=hero==='kaia'?'da':'do', pa=hero==='kaia'?'a':'o', ph=plPhase();
   const hasFull=typeof window.drawHeroFull==='function'&&!XLK.err;
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px">
     <div class="pl-in" style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;background:radial-gradient(ellipse at 50% 75%,#3a2c4a,#1d1611);border:2px solid #5fd068;box-sizing:border-box">
@@ -35,11 +37,11 @@ function scrLook(){
         <canvas id="pl_cv" width="520" height="520" style="position:absolute;inset:0;width:100%;height:100%;${hasFull?'':'display:none'}"></canvas>
         <div id="pl_fb" style="position:absolute;inset:0;${hasFull?'display:none':'display:block'}"><div class="pl-kid" style="position:absolute;inset:0"></div></div></div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center"><b style="font-family:'Lilita One',sans-serif;font-size:22px;color:#f6ecdf">${name} · skin padrão</b><span style="padding:3px 10px;border-radius:10px;background:#1f3a22;border:2px solid #5fd068;color:#9ff0a8;font-size:12px;font-weight:900">EQUIPADA</span></div>
-      <span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;line-height:1.3">${ph!=null?'Fase '+(ph+1)+' do herói · ':''}Você usa a skin padrão do ${name}. Ela evolui junto com você.</span></div>
+      <span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;line-height:1.3">${ph!=null?'Fase '+(ph+1)+' do herói · ':''}Você usa a skin padrão ${de} ${name}. Ela evolui junto com você.</span></div>
     <div role="note" style="flex:none;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;border-radius:16px;border:2px dashed #6b5843;background:#1d1611;text-align:center;box-sizing:border-box">
       <span aria-hidden="true" style="width:34px;height:26px;border-radius:6px;background:#8a6a3a;border:3px solid #4a3a2b;box-sizing:border-box"></span>
       <b style="font-family:'Lilita One',sans-serif;font-size:18px;color:#f6ecdf">Novas skins em breve</b>
-      <span style="font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.3">Skins com arte própria para o ${name} chegam numa próxima versão.</span></div>
+      <span style="font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.3">Skins com arte própria para ${pa} ${name} chegam numa próxima versão.</span></div>
     <button data-x="back" style="flex:none;min-height:54px;border-radius:14px;border:2px solid #6b5843;background:#33271d;color:#f6ecdf;font-family:'Lilita One',sans-serif;font-size:18px">Voltar</button></div>`);
   plStop(); if(hasFull&&typeof requestAnimationFrame==='function') XLK.raf=requestAnimationFrame(plDraw);
 }
