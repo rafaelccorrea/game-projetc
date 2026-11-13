@@ -3,6 +3,8 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Todas as recomendações do doc "Legend of Mushroom × Eonbound" aprovadas** ("vai checando tudo"), P1, P2 e P3. O PO marca no doc do dono cada item pronto (https://claude.ai/artifact/N5zUQUBWF34oiQstVfKTP8) · Sistemas + Engenheiro + Servidor, em multiagentes
+- [~] **"faça TUDO em multiagentes! URGENTE!"** · todas as sessões abrindo subagentes em paralelo
 - [~] **Fogueira V2 reprovada** ("muito simples! tem que se encaixar na tela inicial de batalha!"). A Fogueira não é uma tela separada: fica fixa embaixo, no centro da tela de batalha, como a lâmpada do Legend of Mushroom. O cartão "novo × atual" abre por cima sem pausar a luta, e o automático forja ali mesmo · Sistemas refaz (v3) sobre a Batalha V2 → Engenheiro
 - [~] **Fogueira das Eras (tipo as lâmpadas do Legend of Mushroom): fazer o protótipo.**
     - O nível dela é independente da era do jogador ("pode ir para a medieval com a fogueira inicial").
