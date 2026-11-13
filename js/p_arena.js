@@ -169,12 +169,12 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH();
   if(a==='back'){ paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; render(); return; }
 }
 /* ================= LUTA PvP (Tela 23 · protótipo APROVADO docs/proto/ArenaPvP.html) =================
-   Chave: window.PA_PVP2 (?debug=1&pvp2=0|1 troca). Desligada = a luta antiga acima.
+   Chave: window.PA_PVP2, LIGADA por padrão (?debug=1&pvp2=0 desliga para comparar). Desligada = a luta antiga acima.
    A LUTA SEGUE O REGISTRO: paPvScript transforma o duel.log do Sys.arena.fight ({s, dmg, crit, hp} por golpe, na ordem) num roteiro com hora marcada;
    paPvStep anda o relógio (x1/x2/x4) e aplica cada golpe na ordem; Pular aplica o resto de uma vez (mesma vida final, mesmo vencedor: r.win do módulo).
    Nada é sorteado aqui e nenhum número é criado: dano, crítico e vida são os do registro.
    O QUE O REGISTRO AINDA NÃO TRAZ (pedido a Sistemas no relatório) e como a tela se vira até lá, sem inventar número:
-   - ultimate: sem campo no registro, a ENERGIA é só visual (+22 por golpe dado, +12 por golpe levado, como no protótipo) e, cheia, o PRÓXIMO golpe real
+   - ultimate: sem campo no registro, a ENERGIA é só visual (+22 por golpe dado, +12 por golpe levado, como no protótipo; em luta longa enche mais devagar) e, cheia, o PRÓXIMO golpe real
      daquele lado é mostrado como ultimate (o dano é o do registro). Se o registro trouxer k:'ult' (ou ult:true), vale o registro;
    - pet: sem golpe de pet no registro, o pet ataca JUNTO do dono (nos críticos e a cada 3º golpe), sem número próprio. Com k:'pet' vale o registro;
    - aparência do adversário: opp.look {hero, mount:{id,stars}, pet:{base,stage,fly}, wing, aura}; sem ele (bots de hoje só têm skin de arma/roupa),
@@ -183,7 +183,7 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH();
    quadro, aura por estrela); o adversário é o mesmo desenho ESPELHADO pelo canvas, com a aparência dele e o corpo padrão. Pets desenhados aqui, por
    ÚLTIMO, no plano da frente, cada um preso à metade do dono (paPvPet): nunca cruzam. Ultimate = receita da batalha (faixa da largura do campo + 24,
    apoiada 9% da largura abaixo dos pés, espelhada para o adversário, escurecimento leve). */
-window.PA_PVP2=(function(){ let on=typeof window.PA_PVP2==='boolean'?window.PA_PVP2:false; try{ if(typeof DEBUG!=='undefined'&&DEBUG&&typeof QP!=='undefined'){ const q=QP.get('pvp2'); if(q==='1') on=true; else if(q==='0') on=false; } }catch(e){} return on; })();
+window.PA_PVP2=(function(){ let on=typeof window.PA_PVP2==='boolean'?window.PA_PVP2:true;   /* tela aprovada pelo dono: nasce LIGADA */ try{ if(typeof DEBUG!=='undefined'&&DEBUG&&typeof QP!=='undefined'){ const q=QP.get('pvp2'); if(q==='1') on=true; else if(q==='0') on=false; } }catch(e){} return on; })();
 const PV_CSS=`.pv{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(120% 60% at 50% 40%,#2a0f2e,#0b1030 70%);color:#eef1ff;font-family:Nunito,system-ui,sans-serif}
 .pv *{box-sizing:border-box}
 .pv button{font-family:Nunito,system-ui,sans-serif;color:inherit}
@@ -315,10 +315,10 @@ function paPvPet(P,G,atk){ let m=null; try{ m=typeof petMetric==='function'?petM
 /* caixa do pet na TELA (lado 1 espelhado) */
 function paPvPetBox(i,pv,G,atk){ const P=pv.F[i].look.pet; if(!P) return null; const q=paPvPet(P,G,atk); return i===0?{l:q.x-q.l,r:q.x+q.r,gy:q.gy}:{l:G.W-(q.x+q.r),r:G.W-(q.x-q.l),gy:q.gy}; }
 /* ROTEIRO: o registro na ordem, com hora. lag[s] = segundos do início do golpe ao acerto (montado 0,64; a pé 0,19) */
-function paPvScript(log,lag){ const n=log.length, gap=Math.max(0.7,Math.min(1.35,32/Math.max(1,n))), en=[0,0], cnt=[0,0], out=[]; let T=0.4;
+function paPvScript(log,lag){ const n=log.length, gap=Math.max(0.7,Math.min(1.35,32/Math.max(1,n))), ek=Math.min(1,14/Math.max(1,n)), en=[0,0], cnt=[0,0], out=[]; let T=0.4;   /* ek: luta longa enche a energia mais devagar (cerca de 2 ultimates por lado) */
   for(let i=0;i<n;i++){ const e=log[i], s=e.s?1:0, pet=e.k==='pet'||e.pet===true, ult=!pet&&(e.k==='ult'||e.ult===true||(e.k==null&&e.ult==null&&en[s]>=100));
     if(ult){ en[s]=0; out.push({t:T,k:'ult',s,i}); out.push({t:T+PV_ULT_HIT,k:'hit',s,i,dmg:+e.dmg||0,crit:!!e.crit,ult:true,pet:false,hp:+e.hp||0,en:en.slice()}); T+=PV_ULT_DUR+0.4; }
-    else { cnt[s]++; out.push({t:T,k:'atk',s,i,pet:pet||!!e.crit||cnt[s]%3===0,solo:pet}); en[s]=Math.min(100,en[s]+22); en[1-s]=Math.min(100,en[1-s]+12);
+    else { cnt[s]++; out.push({t:T,k:'atk',s,i,pet:pet||!!e.crit||cnt[s]%3===0,solo:pet}); en[s]=Math.min(100,en[s]+22*ek); en[1-s]=Math.min(100,en[1-s]+12*ek);
       out.push({t:T+Math.min(pet?0.6:lag[s],gap-0.05),k:'hit',s,i,dmg:+e.dmg||0,crit:!!e.crit,ult:false,pet,hp:+e.hp||0,en:en.slice()}); T+=gap; } }
   return out; }
 function paPvStart(opp,r,myFc,maxA,maxB){ paPvFree(); const d=r.duel||{}, log=(Array.isArray(d.log)?d.log:Array.isArray(r.log)?r.log:[]).filter(e=>e&&typeof e==='object'&&(e.s===0||e.s===1));
@@ -335,7 +335,7 @@ const paPvUbHTML=pv=>pv.ub?`<div><small>ULTIMATE · ${pv.ub.s===0?'SUA':'ADVERS�
 /* barras e contadores direto no DOM (sem redesenhar a tela a cada golpe) */
 function paPvHud(){ const pv=XA2.pv; if(!pv) return; const set=(id,fn)=>{ const e=paPvEl(id); if(e) try{ fn(e); }catch(er){} };
   for(let i=0;i<2;i++){ const p=paPvPct(pv.hp[i],pv.max[i]), w=p.toFixed(1)+'%'; set('pa_hp'+i,e=>{ e.style.width=w; }); set('pa_lg'+i,e=>{ e.style.width=w; }); set('pa_ht'+i,e=>{ e.textContent=paF(pv.hp[i]); });
-    set('pa_hb'+i,e=>{ e.className='pv-bar'+(p<30?' low':''); }); set('pa_en'+i,e=>{ e.style.width=pv.en[i]+'%'; }); set('pa_eb'+i,e=>{ e.className='pv-en'+(pv.en[i]>=100?' full':''); }); }
+    set('pa_hb'+i,e=>{ e.className='pv-bar'+(p<30?' low':''); }); set('pa_en'+i,e=>{ e.style.width=pv.en[i].toFixed(1)+'%'; }); set('pa_eb'+i,e=>{ e.className='pv-en'+(pv.en[i]>=100?' full':''); }); }
   set('pa_d0',e=>{ e.textContent=paF(pv.dmg[0]); }); set('pa_d1',e=>{ e.textContent=paF(pv.dmg[1]); }); set('pa_cr',e=>{ e.textContent=String(pv.crits); }); set('pa_tm',e=>{ e.textContent=paPvClock(pv.clock); }); }
 function paPvFeed(pv,t,c){ pv.feed.unshift({t,c:c||''}); if(pv.feed.length>2) pv.feed.length=2; const e=paPvEl('pa_feed'); if(e) try{ e.innerHTML=paPvFeedHTML(pv); }catch(er){} }
 function paPvUb(pv,ub){ pv.ub=ub; const e=paPvEl('pa_ub'); if(e) try{ e.innerHTML=paPvUbHTML(pv); }catch(er){} }
@@ -455,7 +455,7 @@ function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,
   let bg=''; try{ if(typeof bgPath==='function'&&typeof B!=='undefined') bg=bgPath(B.dispEra!=null?B.dispEra:0); }catch(e){ bg=''; }
   const pl=i=>{ const p=paPvPct(pv.hp[i],pv.max[i]); return `<div class="pv-pl${i?' r':''}" style="--c:${col[i]}"><div class="pv-av" aria-hidden="true">${paPvPortrait(i,pv,46)}</div><div class="pv-pi"><div class="pv-pn">${paEsc(nm[i])}</div><div class="pv-pf">FC ${paFC(fc[i])}</div>
     <div class="pv-bar${p<30?' low':''}" id="pa_hb${i}" role="progressbar" aria-label="Vida de ${paEsc(i?pv.opp.name:paMe())}"><i class="lag" id="pa_lg${i}" style="width:${p.toFixed(1)}%"></i><i class="hp" id="pa_hp${i}" style="width:${p.toFixed(1)}%"></i><b id="pa_ht${i}">${paF(pv.hp[i])}</b></div>
-    <div class="pv-en${pv.en[i]>=100?' full':''}" id="pa_eb${i}" role="progressbar" aria-label="Energia"><i id="pa_en${i}" style="width:${pv.en[i]}%"></i></div></div></div>`; };
+    <div class="pv-en${pv.en[i]>=100?' full':''}" id="pa_eb${i}" role="progressbar" aria-label="Energia"><i id="pa_en${i}" style="width:${pv.en[i].toFixed(1)}%"></i></div></div></div>`; };
   const vsc=i=>`<div class="pv-vsc${i?' r':''}" style="--c:${col[i]}"><div class="pv-bigav">${paPvPortrait(i,pv,110)}</div><b>${paEsc(i?pv.opp.name:paMe())}</b><span>FC ${paFC(fc[i])}</span></div>`;
   const ov=pv.phase==='vs'?`<div class="pv-ovl pv-vs" role="status" aria-label="${paEsc(paMe())} contra ${paEsc(pv.opp.name)}"><div class="pv-vsrow">${vsc(0)}<div class="pv-bigvs">VS</div>${vsc(1)}</div><div style="font-weight:900;color:#9aa6d6;font-size:13px;text-align:center">Liga ${paEsc(li.league.name)} · luta automática</div></div>`
     :pv.phase==='result'?paPvResultHTML(pv):'';
@@ -468,7 +468,7 @@ function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,
     <div class="pv-ub" id="pa_ub" style="top:${Math.round(G.ubTop)}px">${paPvUbHTML(pv)}</div>
     <div class="pv-feed" id="pa_feed" aria-live="polite" style="top:${Math.round(G.feedTop)}px">${paPvFeedHTML(pv)}</div>
     <div class="pv-info"><div><small>Dano seu</small><b id="pa_d0">${paF(pv.dmg[0])}</b></div><div><small>Críticos</small><b id="pa_cr">${pv.crits}</b></div><div><small>Dano dele</small><b id="pa_d1">${paF(pv.dmg[1])}</b></div></div>
-    <div class="pv-ctr">${sp(1)}${sp(2)}${sp(4)}<button class="skip" data-x="skip">Pular</button></div>
+    ${pv.phase==='result'?'':`<div class="pv-ctr">${sp(1)}${sp(2)}${sp(4)}<button class="skip" data-x="skip">Pular</button></div>`}
     ${ov}</div>`; }
 Panels.add('arena',{title:'Arena',render:scrArena,click:paClick,
   busy(){ return XA2.view==='fight'; },
