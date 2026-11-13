@@ -461,10 +461,10 @@ const DEBUG=/[?&]debug=1/.test(location.search);
 const SCREENS_ON={bossResult:!(DEBUG&&/[?&]res=0/.test(location.search)), progress:true,   /* Engenheiro 2 (v0.12.8, Bloco B): tela 10 LIGADA por padrão (QA: "pode ligar"; vista no jogo real: morte do chefe inteira, cartões = saque, Continuar, derrota, Modo farm em 10 s, Tentar de novo, Senhor da Era → Troca de era). Em debug, ?res=0 desliga. */
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search),
   evHud:!(DEBUG&&/[?&]ev=0/.test(location.search))};   /* evHud = eventos com horário no HUD da batalha (js/evhud.js, Engenheiro 6): ícone pulsando com nome, bônus e contagem, faixa e aviso de 10 min. LIGADA por padrão (decisão do PO/dono, 13/11: o bônus do evento já vale no abate, e bônus sem aviso não pode); só desliga em debug com ?ev=0 */   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.9';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.13.0';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 /* ONLINE (Engenheiro 12; camada do Servidor: js/sys/net.js + online.js; ligação: js/onlineboot.js). CHAVE ÚNICA: ONLINE_ON. false = DESLIGADO (nada é chamado).
    true = sessão de convidado, save na nuvem e login Google na abertura (nunca no Modo dono). Em debug: ?debug=1&online=1 liga só nesta carga. Pagamento real segue à parte (Sys.buy.DATA.on). */
-const ONLINE_BASE='https://15-229-249-157.sslip.io/v1', ONLINE_ON=false;
+const ONLINE_BASE='https://15-229-249-157.sslip.io/v1', ONLINE_ON=true;
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
