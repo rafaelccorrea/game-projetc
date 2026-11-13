@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h · v0.12.7 FECHADA e conferida no navegador (11a2139, no GitHub):** pet ao lado do Kael, as duas asas por item, Kael montado no lobo e no grifo (pônei, cavalo e tigre entraram, ainda não vistos a olho); jogador novo e save antigo funcionando. A Serpe V2 e os 3 ajustes finos (pet nas patas, asa x grifo, aura) entram na v0.12.8
+- **22h · Celular:** você pediu ao engenheiro para instalar; a v0.12.7 está sendo instalada no S24. Atenção: o app de teste está com ~640 MB porque leva TODA a arte; antes da loja precisa do "carregar só a arte em uso"
+- **22h · Próximo (v0.12.8):** ligar no jogo, tela por tela, tudo o que já está escrito: Arena, Eventos, Torneio, Mapa, Perfil, Passe com rolagem, missão guia, Guilda, Códex, Correio, Chat, Missões, Torre, Troca de era, Instâncias, Vitória/Derrota
+
 - **21h55 · Telas ESCRITAS e salvas no GitHub (86890ff), ainda não ligadas no jogo:**
   - Sistemas: Arena (7 ligas Bronze→Lenda, luta animada, resultado), Eventos (loja e missões funcionando; Trilha e Chefe em breve, regra sendo escrita), Torneio do Poder (9 regiões + Capital)
   - QA: Perfil e Coleção; Torre e Ranking conferidos no navegador
