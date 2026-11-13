@@ -34,6 +34,11 @@ const paEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;
 const paN=v=>Math.round(v||0).toLocaleString('pt-BR');
 /* FC na escala de EXIBIÇÃO do dono (Sys.fc.viewText; só visual): jogador e adversários na mesma escala. Dano da luta segue real (paF). */
 const paFC=v=>{ try{ if(window.Sys&&Sys.fc&&Sys.fc.viewText) return Sys.fc.viewText(v); }catch(e){} return paF(v); };
+/* VIP de conveniência (Sys.vip.conv 'arenaAdd'): o máximo do dia = grátis (DATA.attemptsPerDay, 3) + o do VIP; quem não tem vê o bônus trancado */
+const paConv=()=>{ try{ return window.Sys&&Sys.vip&&Sys.vip.conv?Sys.vip.conv(S,'arenaAdd'):null; }catch(e){ return null; } };
+const paMaxTries=()=>{ const c=paConv(); return Sys.arena.DATA.attemptsPerDay+(c&&c.value>0?c.value:0); };
+function paVipChip(){ const c=paConv(); if(!c||c.value>0) return ''; let add=2; try{ add=(Sys.vip.DATA.conv.find(x=>x.id==='arenaAdd').val||[])[c.need]||2; }catch(e){}
+  return ` <span aria-label="Lutas extras com VIP ${c.need}: mais ${add}" style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;padding:1px 7px;border-radius:8px;background:#2a1f16;border:1px solid #6b5843;color:#c9b9a2;font-size:10px;font-weight:900;white-space:nowrap"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="3" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>VIP ${c.need}: +${add}</span>`; }
 function paF(v){ try{ if(typeof kf==='function') return kf(v); }catch(e){} return paN(v); }
 const paIc=(n,z)=>'<img src="assets/ui/'+n+'.png" alt="" style="width:'+(z||14)+'px;height:'+(z||14)+'px;vertical-align:-2px;object-fit:contain">';
 const paToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
@@ -64,7 +69,7 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
       <span style="font-size:11px;font-weight:800;color:#fff">${paN(li.lp)} pts${N?' / '+paN(N.min):''} · ${paEsc(zoneTxt)}</span></div>
     <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:10px;font-weight:800;color:${L.c3}">Fecha em</span><span id="pa_week" role="timer" style="font-family:'Lilita One',sans-serif;font-size:14px;color:#fff">${paClock(li.msLeft)}</span></div></div>`;
   const fights=`<div style="flex:none;height:46px;display:flex;align-items:center;gap:8px">
-    <span style="flex:1;min-width:0;font-size:13px;font-weight:900">Lutas hoje <span style="color:#ffe07a">${o.attemptsLeft}/${Sys.arena.DATA.attemptsPerDay}</span> <span style="font-size:11px;color:#c9b9a2;font-weight:800">· recarrega em <span id="pa_day">${paClock(paDayLeft())}</span></span></span>
+    <span style="flex:1;min-width:0;font-size:13px;font-weight:900">Lutas hoje <span style="color:#ffe07a">${o.attemptsLeft}/${paMaxTries()}</span> <span style="font-size:11px;color:#c9b9a2;font-weight:800">· recarrega em <span id="pa_day">${paClock(paDayLeft())}</span></span>${paVipChip()}</span>
     <button data-x="refresh" class="pa-btn" style="padding:0 12px" aria-label="Trocar adversários (${o.refreshLeft} grátis hoje)">Trocar <span style="color:#ffe07a">${o.refreshLeft}</span></button></div>`;
   const dcol={easy:'#5fd068',even:'#ffc94a',hard:'#ff9a3c',nope:'#ff5a5a'};
   const list=ops.map((p,i)=>{ const on=i===XA2.sel, d=p.diff||{id:'even',txt:''};

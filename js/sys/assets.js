@@ -13,8 +13,9 @@ const DATA={
   // o que NÃO vai para o app (mesma regra da cópia do www: fontes brutas, pastas começadas por _, rascunhos)
   // referências de APROVAÇÃO das pastas new/ (grandes) e as guias ficam fora do APK; a Coleção usa só os *_ref_prev.png (pequenos).
   // FICAM no APK os _ref que as telas desenham: assets/pets/<espécie>_ref.png (1º estágio na tela de Pets) e assets/mounts/mount_<id>_ref.png (Códex).
-  // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo).
-  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
+  // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo). EXCEÇÃO: o fundo da tela de carregamento
+  // (splash_loading.webp e a reserva .jpg, a659e6d) é a 1ª coisa que o jogador vê: vai no core (pacote base). A PNG 1080x1920 fica só no Android.
+  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\/(?!splash(\/splash_loading\.(webp|jpg))?$)/,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
@@ -117,6 +118,8 @@ function eraFiles(all,e){ return all.filter(p=>p.startsWith('assets/bg/v2/era'+e
 function sceneSet(S,host,opt){ const all=allFiles(), has=new Set(all), T=SYS().stats, A=SYS().appearance, missing=[], G={hero:[],weapon:[],ult:[],mount:[],pet:[],wing:[],era:[],enemies:[],icons:[]};
   const add=(g,p)=>{ if(has.has(p)) G[g].push(p); else missing.push(p); }, addPrefix=(g,pre,filt)=>{ for(const p of all) if(p.startsWith(pre)&&isImg(p)&&!excluded(p)&&(!filt||filt(p))) G[g].push(p); };
   const e=sceneEra(S,host,opt), w=equippedOf(S,host,'weapon');
+  // CORTE (engenheiro): só o que a CENA mostra. opt.full=true devolve tudo como antes (máscaras, todas as estrelas da montaria, atk2/atk3, cenário vivo)
+  const full=!!(opt&&opt.full); let needMasks=full; try{ if(!full&&A&&A.layers) needMasks=A.layers(S,host).some(l=>l&&(l.source==='cos'||l.layer==='hat'||l.layer==='mask'||l.layer==='glasses')); }catch(x){}
   // arma: família e era da ARTE (nunca a do mapa)
   let artEra=w?int0(w.look!=null?w.look:w.e):0, wt=null, style='melee';
   try{ if(T&&w){ wt=T.weaponType(w); const W=T.DATA.weaponTypes[wt]; if(W&&W.artEra!=null) artEra=W.artEra; style=T.weaponStyle?T.weaponStyle(w):style; } }catch(x){}
@@ -127,15 +130,17 @@ function sceneSet(S,host,opt){ const all=allFiles(), has=new Set(all), T=SYS().s
   let dir='assets/anim/hyb/'+(heroOf(S)==='kaia'?'kaia':'R')+'/'; try{ if(A&&A.sheets) dir=A.sheets(S,host).dir; }catch(x){}
   const tint=/_era(\d)_/; addPrefix('hero',dir,p=>{ const sub=p.slice(dir.length), sd=(/^([a-z]+)\//.exec(sub)||[])[1];   // subpastas de ARMA: pistol/gun (de fogo) e bow/boomerang (a família) só se for a arma na mão
     if(sd==='pistol'||sd==='gun') return style==='gun'&&(!tint.test(p)||+tint.exec(p)[1]===artEra); if(sd&&sd!=='masks') return sd===wt;
+    if(sd==='masks'&&!needMasks) return false;   // máscaras só com chapéu/óculos/máscara visível
     if(tint.test(p)) return +tint.exec(p)[1]===artEra; return true; });
-  // montaria equipada (folha montada só do Kael)
-  try{ const M=SYS().mount, mo=M&&M.ensure?M.ensure(S):null; if(mo&&mo.eq) addPrefix('mount','assets/anim/mounts/'+heroOf(S)+'_'+mo.eq+'_',p=>!tint.test(p)||+tint.exec(p)[1]===artEra); }catch(x){}
-  // pet equipado: pacote do sprite no estágio
-  try{ const P=SYS().pet, b=P&&P.battleInfo?P.battleInfo(S,host):null, sp=b&&b.draw&&b.draw.sprite; if(sp&&MAN){ const pk=MAN.packs['pet:'+sp+':'+Math.max(0,int0(b.stage)-1)]; if(pk) for(const p of pk.files) G.pet.push(p); else missing.push('pet:'+sp); } }catch(x){}
+  // montaria equipada (folha do herói); das variantes de estrela (_<n>star) só a das estrelas atuais
+  try{ const M=SYS().mount, mo=M&&M.ensure?M.ensure(S):null; if(mo&&mo.eq){ const st=int0(mo.owned&&mo.owned[mo.eq]&&mo.owned[mo.eq].stars)||1;
+    addPrefix('mount','assets/anim/mounts/'+heroOf(S)+'_'+mo.eq+'_',p=>{ const m=/_(\d)star\./.exec(p); if(m&&!full) return +m[1]===st; return !tint.test(p)||+tint.exec(p)[1]===artEra; }); } }catch(x){}
+  // pet equipado: pacote do sprite no estágio (sem os ataques extras atk2/atk3, que carregam depois)
+  try{ const P=SYS().pet, b=P&&P.battleInfo?P.battleInfo(S,host):null, sp=b&&b.draw&&b.draw.sprite; if(sp&&MAN){ const pk=MAN.packs['pet:'+sp+':'+Math.max(0,int0(b.stage)-1)]; if(pk) for(const p of pk.files) if(full||!/_atk[23]\./.test(p)) G.pet.push(p); else{} ; if(!pk) missing.push('pet:'+sp); } }catch(x){}
   // asa equipada
   try{ const wi=equippedOf(S,host,'wing'), k=wi&&T&&T.wingOf?T.wingOf(wi):null; if(k){ add('wing','assets/anim/equip/wing_'+k+'_L.png'); add('wing','assets/anim/equip/wing_'+k+'_R.png'); add('wing','assets/anim/equip/wing_'+k+'.json'); } }catch(x){}
   // cenário e inimigos da era da cena; ícones
-  G.era=eraFiles(all,e); if(has.has('assets/bg/meta.json')) G.era.push('assets/bg/meta.json');
+  G.era=full?eraFiles(all,e):eraFiles(all,e).filter(p=>!p.startsWith('assets/bg/v2/')); if(has.has('assets/bg/meta.json')) G.era.push('assets/bg/meta.json');   // camadas do cenário vivo (bg/v2): o EonScene carrega
   if(MAN&&MAN.packs['enemy:'+e]) G.enemies=MAN.packs['enemy:'+e].files.filter(isImg).slice(); if(has.has('assets/enemies/meta.json')) G.enemies.push('assets/enemies/meta.json');
   addPrefix('icons','assets/ui/'); addPrefix('icons','assets/icons/');
   const files=[...new Set(Object.values(G).flat())];
