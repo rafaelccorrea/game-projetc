@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **10h50 · Checklist atualizado** (A, B, C e D em dia). Engenheiro: carregamento de verdade → 60 FPS → ligar o que você aprovou → ícone A e abertura → APK. Servidor: logo animado na tela de título. Arte: 5 agentes nas skins, asas, arco/bumerangue e Kaia montada
+
 - **10h40 · Você aprovou como ganhar as skins novas:** Ninja (Kael e Kaia) na Oferta de 1ª compra · Anjo (Kael e Kaia) no fim do Passe Premium · Demônio/Demônia grátis no VIP 7 · Paladino (Kael) e Arlequina (Kaia) a R$ 24,90 · Ciborgue (Kael) a R$ 39,90 · Samurai (Kael) no top 10 do Torneio. Nada de sorteio
 - **10h40 · Arte com 5 agentes:** asas (Serafim sendo refeito com 6 asas), as 10 skins, arco/bumerangue, Kaia montada; os 9 pets em seguida. As 10 montarias novas montadas (~280 créditos) não cabem no saldo atual
 
@@ -261,12 +263,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## A. O que eu preciso de você (revisado em 13/11, 09h)
 
-**Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19). Cada aprovação libera a produção na hora:
-- [ ] 8 skins do Kael no corpo do garoto (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Bobo da Corte, Pirata, Ciborgue). Escolha 5
-- [ ] 5 skins da Kaia: sendo refeitas com rosto e roupa menos infantis (corpo de menina). Chegam em seguida
-- [ ] 9 pets novos · 10 montarias novas · 8 asas novas
-- [ ] 8 ultimates Lendárias novas (clava, gládio, pólvora, revólver, fuzil, plasma, infernal, celeste) + amostra da espada
-- [ ] Guias do arco, do bumerangue e da Kaia montada
+**Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
+- [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
+- [ ] Ainda para votar: Fusão e Coleção (no Modo dono, botões "CHAVES PARA O VOTO"); Serafim refeito (quando chegar); tabela de vantagens do VIP (Sistemas montando)
+
+**Créditos Higgsfield:**
+- [ ] Saldo ~887 cobre skins, pets, arco/bumerangue e Kaia montada. Para as 10 montarias novas com o Kael e a Kaia montados faltam ~280 (a Arte avisa quando parar)
 
 **Celular:**
 - [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -275,7 +277,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
 - [ ] Domínio para o servidor (ex.: api.seudominio.com.br → IP 15.229.249.157) + um e-mail para o certificado HTTPS
 - [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
-- [ ] Play Console: cadastrar os 10 produtos de compra (lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
+- [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
 
 **Para a loja:**
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
@@ -294,23 +296,23 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 - [x] Telas de entrada: Título B, Login, Prólogo com o avô, Criação (Kael ou Kaia), Nome, Bem-vindo de volta detalhado
 - [x] Aparência (vitrine com a skin padrão + "Novas skins em breve")
 - [~] Mapa das Eras (100 fases × 4 dificuldades) · Fusão · Coleção (pets, montarias, asas novos) · Leilão · Oferta de 1ª compra (só no Modo dono até as compras existirem)
-- [~] Eventos com horário na tela (ícone pulsando) · brilho do item caído por raridade
+- [x] Eventos com horário na tela (ícone pulsando, faixa, aviso) e bônus valendo · [~] brilho do item caído por raridade (pronto, desligado)
 
 **Herói e skins**
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
-- [~] Skins novas no corpo padrão (8 do Kael, 5 da Kaia): referências para voto; depois ~36 créditos cada
-- [~] Kaia montada nas 6 montarias: em produção
+- [~] Skins novas no corpo padrão APROVADAS e sendo animadas: Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
+- [~] Kaia montada: pônei e cavalo prontos (sendo ligados); tigre, lobo, grifo e serpe em produção
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
 **Armas e poder**
 - [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
-- [~] Ultimate por raridade: Mítica = a de hoje reforçada (pronta); Lendária = animação nova (9 famílias prontas, esperando voto)
+- [~] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova, as 9 famílias APROVADAS e sendo ligadas
 - [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas prontas; vídeos do Kael em produção; os da Kaia em seguida
 
 **Pets, montarias e asas**
 - [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
-- [~] 9 pets novos, 10 montarias novas, 8 asas novas: referências para voto; dados prontos (como ganhar aprovado: Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
+- [~] APROVADOS: 9 pets novos (animação em seguida), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
 
 **Mundo**
 - [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
