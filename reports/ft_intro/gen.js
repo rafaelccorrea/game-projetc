@@ -70,6 +70,8 @@ const PATCH = [
   ['BemVindo', /\s*<a class="tip" href="Forja\.dc\.html" onClick="\{\{tap\}\}" aria-label="Dica[\s\S]*?<\/a>/, '', 'dica "+6 → +7" era exemplo'],
   ['BemVindo', /(<div class="rw" style="animation-delay: \.2s">[\s\S]*?BAÚS DE ABATE[\s\S]*?<\/div>\s*<\/div>\s*<\/div>)/, '<sc-if value="{{hasChest}}">$1</sc-if>', 'baú do tempo fora: sem contagem no Sys (some quando é 0)'],
   ['BemVindo', /var NOME = 'Kael_BR';\s*var GOLD0 = 48200;\s*var SC = \{[\s\S]*?\n\};/, "var NOME = PI.g.name();\nvar GOLD0 = (PI.g.S().gold || 0);\nvar SC = { short: PI.offline() || { away: '0min', hrs: 0, capH: 8, gold: 0, xp: 0, xpFrom: 0, xpLv: 0, lv: PI.g.level(), chests: 0, items: [], more: 0, ret: false, retGold: 0, retXp: 0 } };", 'dados reais'],
+  ['BemVindo', '>Teto: 8 h</span>', '>Teto: {{capH}} h</span>', 'teto do VIP no texto (BAL.offlineCapHours: 8/10/12/14 h)'],
+  ['BemVindo', 'aria-valuemax="8" aria-valuenow="{{capNow}}"', 'aria-valuemax="{{capH}}" aria-valuenow="{{capNow}}"', 'teto do VIP na barra'],
   ['BemVindo', 'var lv = 34 + c.lvGain;', 'var lv = d.lv + c.lvGain;', 'nível real'],
   ['BemVindo', "hudLv: s.phase === 'done' ? lv : 34,", "hudLv: s.phase === 'done' ? lv : d.lv, hasChest: d.chests > 0,", 'nível real'],
   ['BemVindo', 'var capPct = Math.min(100, d.hrs / 8 * 100);', 'var capPct = Math.min(100, d.hrs / d.capH * 100);', 'teto real (BAL.offlineCapHours)'],
