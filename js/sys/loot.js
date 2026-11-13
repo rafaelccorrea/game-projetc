@@ -280,6 +280,11 @@ function wtTag(it,host,rng){ if(!it||it.slot!=='weapon') return it; const St=roo
 function wingTag(it,diff){ if(!it||it.slot!=='wing') return it; const St=root.Sys&&root.Sys.stats;
   const N=root.Sys&&root.Sys.newDrops;   // modelo da asa: Sys.newDrops.wingTypeForDrop (Mariposa sombria quando liberada); senão anjo/demônio do Sys.stats
   try{ const w=N&&typeof N.wingTypeForDrop==='function'?N.wingTypeForDrop(it.e,it.r,diff):null; if(w) it.wing=w; else if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
+/* ANTI-REPETIÇÃO NO CHEFE (pedido do dono via PO/fps-69: "numa fase, o mesmo item sempre dropa no chefe"). Só muda a ORDEM do sorteio:
+   com source 'boss' e sem espaço dado, re-sorteia o espaço (até 6 vezes, com os MESMOS pesos) se for igual ao último ou se a dupla espaço+raridade
+   já saiu 2 vezes nos últimos 5. Pesos, raridade e portão não mudam. Memória só da sessão (não vai ao save). */
+const BOSS_HIST=[], BOSS_KEEP=5, BOSS_TRIES=6;
+const bossRepeat=(slot,r)=>{ const last=BOSS_HIST[BOSS_HIST.length-1]; if(last&&last.slot===slot) return true; return BOSS_HIST.filter(h=>h.slot===slot&&h.r===r).length>=2; };
 function rollItem(host,opts){
   opts=opts||{}; const rng=rngOf(host), em=eraMaxOf(host);
   const e=opts.era!=null?clamp(Math.floor(num(opts.era,em)),0,99):rollEra(rng,em);
@@ -287,9 +292,12 @@ function rollItem(host,opts){
   if(num(opts.topBoost,1)>1&&!Array.isArray(opts.rarWeights)) opts=Object.assign({},opts,{rarWeights:topWeights(rarWeights(em,opts.boost),cap,opts.topBoost)});   // dificuldade: mais teto
   const x=rollRarityEx(rng,em,opts);
   const r0=Math.min(x.r,cap);                                   // raridade já com o portão, para decidir se a asa é possível
-  const slot=DATA.slots.includes(opts.slot)?opts.slot:rollSlot(rng,host,r0,opts.source);
+  const given=DATA.slots.includes(opts.slot), boss=opts.source==='boss'&&!given;
+  let slot=given?opts.slot:rollSlot(rng,host,r0,opts.source);
+  if(boss) for(let k=0;k<BOSS_TRIES&&bossRepeat(slot,r0);k++) slot=rollSlot(rng,host,r0,opts.source);
   let r=launchFix(slot,x.r,opts.minR,x.up);
   if(r>cap) r=launchFix(slot,cap,0,false);                      // portão: cai para a maior permitida (e arma não vira Mítica)
+  if(boss){ BOSS_HIST.push({slot,r:r0}); if(BOSS_HIST.length>BOSS_KEEP) BOSS_HIST.shift(); }
   if(slot==='wing') r=Math.max(r,Math.min(DATA.wing.minR,maxDropR()));   // asa forçada: nunca abaixo de Épica
   const it={slot,r,e,subs:rollSubs(rng,r,slot),origin:opts.origin||ORIGIN_OF[opts.source]||'drop'}; let qp=qualityOf(rng);
   if(qp!=null) for(let k=1;k<Math.max(1,int0(opts.qBest));k++) qp=Math.max(qp,qualityOf(rng));   // dificuldade: melhor de N (Difícil 2, Hell 3)
