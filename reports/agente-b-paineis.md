@@ -1216,4 +1216,8 @@ desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP 
   ("Este código é do servidor S1. Troque para o S1 para importar."); sem o campo realm vale como S1; o exportado leva o `S.realm`.
 - Testes novos (5): carga, compras ×3, cópia de segurança × servidor. Fumaça 390 e 288: 186 OK, 0 FALHA (segue o timer do p_intro); `smoke.js` sem
   falha; `run.js` TUDO OK (160); `flows.js` "fluxos duros OK" (rodado antes da mudança do p_cfg, que ele não toca).
+- CARTÃO MENSAL pelo `Sys.buy.cardStatusLive` / `cardClaim` (mesmas chamadas no Modo dono e no real, tratadas como assíncronas): estado em `XCARD`
+  (consulta vale 30 s; compra e resgate pedem de novo). Em espera: "Conferindo..." / "Resgatando..." (sem toque duplo); falha na consulta: "Tentar de
+  novo" (não oferece comprar sem saber o estado); "Resgatado hoje" e dias restantes do módulo; recusas claimed / no_card / soon / sem conexão com
+  aviso curto; sem `cardStatusLive` usa `cardStatus`. Com `ready()` falso a Loja segue idêntica. Teste novo "compras: Cartão Mensal…".
 - Largura 288 (nota antiga, resolvida pelo QA: 5 por linha, 1 px de folga): a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.

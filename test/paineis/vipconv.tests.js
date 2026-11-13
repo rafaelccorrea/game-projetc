@@ -181,7 +181,10 @@ var VIPCONV_TESTS=(function(){
     if(__jsFiles.indexOf('p_realm.js')>=0&&!__realmConflict){ if(__loadList.indexOf('p_realm')<0) throw new Error('p_realm existe, sem conflito, e está fora da lista'); if(__on0.realm!==false) throw new Error('PANEL_ON.realm não nasceu desligada'); if(!Panels.defs.realm) throw new Error('painel realm não registrou'); }    return __loadList.length+' arquivos, todos no disco; bag desligada; p_realm '+(__loadList.indexOf('p_realm')>=0?'na lista':'fora da lista'+(__jsFiles.indexOf('p_realm.js')>=0?' (existe, mas '+(__realmConflict?'colide: '+__realmConflict:'aguardando')+')':' (arquivo não existe)')); };
 
   /* ---------- COMPRAS PELO Sys.buy ---------- */
-  function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, calls=[]; let out, err=null, res={ok:true,status:'granted',applied:[{got:[{kind:'gems',n:120}]}]};
+  function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, l0=B.cardStatusLive, k0=B.cardClaim, calls=[]; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false;
+    B.cardStatusLive=function(){ return {active:false,daysLeft:0,claimedToday:false}; };
+    try{ return withBuy0(ready,fn,calls); } finally { B.cardStatusLive=l0; B.cardClaim=k0; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false; } }
+  function withBuy0(ready,fn,calls){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus; let out, err=null, res={ok:true,status:'granted',applied:[{got:[{kind:'gems',n:120}]}]};
     const g0=PANEL_V2.gate, cf0=XP.cf, t0=XH.tab; XBUY.busy=null;
     try{ B.ready=function(){ return ready; }; B.simulated=function(){ return ready; }; B.cardStatus=function(){ return {active:false,daysLeft:0,claimedToday:false,simulated:ready}; };
       B.purchase=function(S0,h,id){ calls.push(id); const r=res; return {then:function(f){ f(r); }}; };
@@ -219,6 +222,31 @@ var VIPCONV_TESTS=(function(){
         setRes({ok:true,status:'granted',applied:[]}); calls.length=0; pClick({dataset:{x:'buyprem'}}); if(calls.join()!==pp.id||XP.cf||XP.toast!=='Passe Premium ativado') throw new Error('ok: popup '+XP.cf+', aviso '+XP.toast);
         out='preço '+price+'; purchase("'+pp.id+'"); cancelado mantém o popup; ok fecha e avisa'; }catch(e){ err=e; }
       o.premium=pr0; XP.toast=''; if(err) throw err; return out; }); };
+  T['compras: Cartão Mensal pelo cardStatusLive e cardClaim (espera, resgate, recusas)']=function(){
+    if(!(Sys.buy&&Sys.buy.ready)) return 'Sys.buy não carregado'; const mc=Sys.buy.DATA.products.find(p=>p.kind==='monthly_card'); if(!mc) return 'catálogo sem cartão mensal';
+    return withBuy(true,function(calls,setRes){ const B=Sys.buy; let stCalls=0, pend=null, claims=0, cpend=null;
+      const later=box=>({then:function(f){ box.f=f; }}); const card=h=>{ const i=h.indexOf('data-card="'); return i<0?'':h.slice(i,h.indexOf('</div>',i)); };
+      /* 1) resposta ainda não chegou: botão em espera, sem comprar nem resgatar; uma consulta só */
+      const b1={}; B.cardStatusLive=function(){ stCalls++; return later(b1); }; let c=card(bad0(shopGem())); if(c.indexOf('data-x="cardwait"')<0||c.indexOf('Conferindo...')<0||/data-x="(buy|cardclaim)"/.test(c)) throw new Error('sem espera na consulta: '+c.slice(-160));
+      shopGem(); if(stCalls!==1) throw new Error('consultas em paralelo: '+stCalls); hClick({dataset:{x:'cardwait'}}); if(calls.length) throw new Error('toque na espera comprou');
+      /* 2) chega "ativo, 12 dias, não resgatado" → redesenha sozinho com Resgatar */
+      b1.f({active:true,daysLeft:12,claimedToday:false}); c=card(bad0(V_TEST.innerHTML)); if(c.indexOf('Ativo: 12 dias restantes')<0||c.indexOf('data-x="cardclaim"')<0||c.indexOf('Resgatar +'+mc.daily)<0) throw new Error('ativo: '+c.slice(-200));
+      /* 3) resgate pendente: "Resgatando...", segundo toque não chama de novo; ok → "Resgatado hoje" e o aviso */
+      const b2={}; B.cardClaim=function(){ claims++; return later(b2); }; B.cardStatusLive=function(){ stCalls++; return {active:true,daysLeft:12,claimedToday:true}; };
+      hClick({dataset:{x:'cardclaim'}}); c=card(V_TEST.innerHTML); if(c.indexOf('Resgatando...')<0||c.indexOf('data-x="cardclaim"')>=0) throw new Error('sem espera no resgate'); hClick({dataset:{x:'cardclaim'}}); if(claims!==1) throw new Error('toque duplo resgatou '+claims+'x');
+      b2.f({ok:true,gems:mc.daily}); c=card(bad0(V_TEST.innerHTML)); if(c.indexOf('Resgatado hoje')<0||XCARD.claim) throw new Error('depois do resgate: '+c.slice(-160));
+      hClick({dataset:{x:'cardclaim'}}); if(claims!==1) throw new Error('resgatou de novo no mesmo dia');
+      /* 4) recusas: claimed, no_card (vira compra), soon */
+      const refuse=(st,reason)=>{ XCARD.st=null; XCARD.at=0; B.cardStatusLive=function(){ return st; }; B.cardClaim=function(){ claims++; if(reason==='claimed') st.claimedToday=true;   /* o servidor já tinha o resgate de hoje: a consulta seguinte diz isso */ return {ok:false,reason:reason}; }; shopGem(); hClick({dataset:{x:'cardclaim'}}); return card(V_TEST.innerHTML); };
+      c=refuse({active:true,daysLeft:3,claimedToday:false},'claimed'); if(c.indexOf('Resgatado hoje')<0) throw new Error('recusa claimed não marcou');
+      B.cardStatusLive=function(){ return {active:false,daysLeft:0,claimedToday:false}; }; XCARD.st={active:true,daysLeft:1,claimedToday:false}; XCARD.at=Date.now(); B.cardClaim=function(){ return {ok:false,reason:'no_card'}; }; shopGem(); hClick({dataset:{x:'cardclaim'}}); c=card(V_TEST.innerHTML);
+      if(c.indexOf('data-x="buy" data-id="'+mc.id+'"')<0||c.indexOf('1 dia restante')>=0) throw new Error('no_card não voltou à compra: '+c.slice(-160));
+      /* 5) consulta falha → "Tentar de novo" (não oferece compra); tentar de novo consulta outra vez; sem cardStatusLive usa cardStatus */
+      XCARD.st=null; XCARD.at=0; let n5=0; B.cardStatusLive=function(){ n5++; return {then:function(f,g){ g(new Error('x')); }}; }; c=card(bad0(shopGem())); if(c.indexOf('data-x="cardretry"')<0||/data-x="buy"/.test(c)) throw new Error('falha na consulta: '+c.slice(-160));
+      shopGem(); if(n5!==1) throw new Error('consulta repetida sozinha depois do erro'); B.cardStatusLive=function(){ n5++; return {active:true,daysLeft:1,claimedToday:true}; }; hClick({dataset:{x:'cardretry'}}); c=card(V_TEST.innerHTML); if(n5!==2||c.indexOf('Ativo: 1 dia restante')<0||c.indexOf('Resgatado hoje')<0) throw new Error('tentar de novo: '+c.slice(-160));
+      XCARD.st=null; XCARD.at=0; B.cardStatusLive=undefined; B.cardStatus=function(){ return {active:true,daysLeft:7,claimedToday:false}; }; c=card(shopGem()); if(c.indexOf('Ativo: 7 dias restantes')<0) throw new Error('reserva cardStatus');
+      return 'espera na consulta e no resgate; sem toque duplo; ok marca "Resgatado hoje"; claimed/no_card/falha tratados; reserva sem cardStatusLive'; }); };
+
   /* ---------- CONFIGURAÇÕES: código de progresso × servidor (achado A2 do QA) ---------- */
   T['cópia de segurança: código só entra no servidor em que foi exportado']=function(){
     if(typeof cParse!=='function') return 'p_cfg não carregado';

@@ -45,6 +45,18 @@ function xBuyMsg(r,p){ const nm=(p&&p.name)||'item';
   if(r&&r.ok){ let g=0; try{ for(const a of r.applied||[]) for(const x of (a&&a.got)||[]) if(x&&x.kind==='gems'&&x.n>0) g+=x.n; }catch(e){} return 'Compra concluída: '+nm+(g?' · +'+n0(g)+' diamantes':''); }
   const w=r&&r.reason; return w==='cancelled'?'Compra cancelada':w==='soon'?'Pagamento em breve: nada é cobrado agora':w==='owned'?'Você já tem: '+nm
     :w==='pending'?'Pagamento pendente: a entrega chega quando for aprovado':w==='offline'?'Sem conexão: tente de novo':'Compra não concluída'; }
+/* valor ou promessa: chama ok(valor) (ou fail) uma vez; valor comum é entregue na hora */
+function xThen(v,ok,fail){ if(v&&typeof v.then==='function') v.then(ok,fail||(()=>ok(null))); else ok(v); }
+/* CARTÃO MENSAL: estado guardado da última consulta. st = {active, daysLeft, claimedToday} | {err:true} | null (ainda não chegou);
+   load = consulta em curso; claim = resgate em curso. A consulta vale 30 s; compra ou resgate zera o prazo. Mesmas chamadas no Modo dono e no real. */
+const XCARD={st:null,at:0,load:false,claim:false};
+function xCardLoad(force){ if(XCARD.load) return; if(!force&&XCARD.st&&!XCARD.st.err&&Date.now()-XCARD.at<30000) return; if(!force&&XCARD.st&&XCARD.st.err) return;   /* erro: só consulta de novo no "Tentar de novo" */
+  let B=null, fn=null; try{ B=Sys.buy; fn=typeof B.cardStatusLive==='function'?B.cardStatusLive:typeof B.cardStatus==='function'?B.cardStatus:null; }catch(e){ fn=null; }
+  if(!fn){ XCARD.st={err:true}; XCARD.at=Date.now(); return; }
+  XCARD.load=true; let sync=true; const fin=st=>{ XCARD.load=false; XCARD.at=Date.now();
+    XCARD.st=st&&typeof st==='object'?{active:!!st.active,daysLeft:Math.max(0,Math.floor(+st.daysLeft||0)),claimedToday:!!st.claimedToday}:{err:true};
+    if(!sync){ try{ if(view==='shop'&&XH.tab==='gem') render(); }catch(e){} } };   /* resposta que chega depois: redesenha a aba (na hora, quem desenha é quem chamou) */
+  try{ xThen(fn.call(B,S,Sys.host),fin,()=>fin(null)); }catch(e){ fin(null); } sync=false; }
 /* compra um produto e chama done(resultado, produto) uma vez; uma compra por vez (o segundo toque não vale enquanto a primeira não voltar) */
 function xBuy(id,done){ if(XBUY.busy) return false; let p=null; try{ p=Sys.buy.product(id); }catch(e){ p=null; }
   if(!p||!xBuyReady()){ done({ok:false,reason:'soon'},p); return true; }
@@ -849,11 +861,17 @@ function scrShop(){
     /* COMPRA LIGADA (Sys.buy.ready(): hoje só o Modo dono, simulada): os pacotes e o Cartão Mensal vêm do catálogo do Sys.buy, com o preço do módulo.
        Desligada: os 4 cartões "Em breve" de sempre (o trecho de baixo, sem mudança). */
     const bReady=xBuyReady(), bSim=bReady&&xBuySim(), gP=bReady?xBuyProds('gems'):[], mCard=bReady?xBuyProds('monthly_card')[0]:null, tileH=small?104:132;
-    let cardSt=null; if(mCard&&bSim){ try{ cardSt=Sys.buy.cardStatus(S,Sys.host); }catch(e){ cardSt=null; } }
-    const cardOn=!!(cardSt&&cardSt.active), cardH=!mCard?'':`<div data-card="${esc2(mCard.id)}" style="min-height:60px;border-radius:14px;border:2px solid #4aa3ff;background:linear-gradient(90deg,#1f2c44,#1d1611);padding:6px 8px 6px 12px;display:flex;align-items:center;gap:8px;box-sizing:border-box">
+    /* CARTÃO MENSAL: estado por Sys.buy.cardStatusLive (assíncrono; no real vem do servidor, no Modo dono é local) guardado em XCARD; enquanto a
+       resposta não chega o botão fica em espera ("Conferindo..."); falha na consulta = "Tentar de novo" (nunca oferece comprar sem saber o estado) */
+    if(mCard) xCardLoad(false);
+    const cardSt=mCard?XCARD.st:null, cardOn=!!(cardSt&&cardSt.active), cardWait=!!mCard&&(!cardSt||XCARD.claim), cardErr=!!(cardSt&&cardSt.err);
+    const cOff='border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2', cBtn='flex:none;min-width:96px;height:44px;padding:0 10px;border-radius:12px;font-size:14px;line-height:1.05;';
+    const cardH=!mCard?'':`<div data-card="${esc2(mCard.id)}" style="min-height:60px;border-radius:14px;border:2px solid #4aa3ff;background:linear-gradient(90deg,#1f2c44,#1d1611);padding:6px 8px 6px 12px;display:flex;align-items:center;gap:8px;box-sizing:border-box">
           <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2"><span class="lil" style="font-size:16px;color:#9fd0ff">${esc2(mCard.name)}</span>
-            <span style="font-size:12px;font-weight:800;color:#c9b9a2">${cardOn?'Ativo: '+cardSt.daysLeft+(cardSt.daysLeft===1?' dia restante':' dias restantes')+' · '+n0(mCard.daily)+' diamantes por dia':n0(mCard.gems)+' diamantes na hora e '+n0(mCard.daily)+' por dia durante '+n0(mCard.days)+' dias'}</span></span>
-          ${cardOn?`<button data-x="cardclaim" class="lil ${cardSt.claimedToday?'':'x-gold'}" aria-disabled="${cardSt.claimedToday?'true':'false'}" style="flex:none;min-width:96px;height:44px;padding:0 10px;border-radius:12px;font-size:14px;line-height:1.05;${cardSt.claimedToday?'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2':''}">${cardSt.claimedToday?'Resgatado hoje':'Resgatar +'+n0(mCard.daily)}</button>`
+            <span style="font-size:12px;font-weight:800;color:#c9b9a2">${cardErr?'Não deu para conferir o cartão agora.':cardOn?'Ativo: '+(cardSt.daysLeft|0)+((cardSt.daysLeft|0)===1?' dia restante':' dias restantes')+' · '+n0(mCard.daily)+' diamantes por dia':n0(mCard.gems)+' diamantes na hora e '+n0(mCard.daily)+' por dia durante '+n0(mCard.days)+' dias'}</span></span>
+          ${cardWait?`<button data-x="cardwait" class="lil" aria-disabled="true" aria-busy="true" style="${cBtn}${cOff}">${XCARD.claim?'Resgatando...':'Conferindo...'}</button>`
+            :cardErr?`<button data-x="cardretry" class="lil" style="${cBtn}border:2px solid #4aa3ff;background:#33271d;color:#9fd0ff">Tentar de novo</button>`
+            :cardOn?`<button data-x="cardclaim" class="lil ${cardSt.claimedToday?'':'x-gold'}" aria-disabled="${cardSt.claimedToday?'true':'false'}" style="${cBtn}${cardSt.claimedToday?cOff:''}">${cardSt.claimedToday?'Resgatado hoje':'Resgatar +'+n0(mCard.daily)}</button>`
             :`<button data-x="buy" data-id="${esc2(mCard.id)}" class="x-gold lil" aria-label="Comprar ${esc2(mCard.name)}: ${esc2(xBuyPrice(mCard.id))}" style="flex:none;min-width:96px;height:44px;padding:0 10px;border-radius:12px;font-size:15px;white-space:nowrap">${esc2(xBuyPrice(mCard.id))}</button>`}</div>`;
     const bundles=gP.length?gP.map((p,i)=>{ const top=i===gP.length-1, k=Math.min(3,Math.floor(i*4/gP.length));
         return `<button class="x-tile" data-x="buy" data-id="${esc2(p.id)}" aria-label="Comprar ${esc2(p.name)}: ${esc2(xBuyPrice(p.id))}" style="border-radius:14px;border:2px solid ${top?'#ffc94a':'#4aa3ff'};background:linear-gradient(180deg,#2b3a52 0%,#1d1611 70%);color:#f6ecdf;padding:${small?4:8}px;display:flex;flex-direction:column;align-items:center;gap:${small?1:4}px;min-width:0">
@@ -958,10 +976,17 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='vip'){ snd('ui_tap'); if(typeof scrVip==='function'&&window.Screens) Screens.open('vip'); else hToast('Clube VIP: em breve'); }   /* tela 18 (VIP): entra no item 3 */
   else if(a==='iap'){ snd('ui_tap'); hToast('Pagamento em breve: nada é cobrado agora'); }
   /* compra pelo Sys.buy (os botões só existem com Sys.buy.ready() verdadeiro): a entrega é do módulo; aqui o aviso do retorno e o redesenho */
-  else if(a==='buy'){ snd('ui_tap'); xBuy(String(b.dataset.id||''),(r,p)=>{ if(r&&r.ok) snd('gem'); if(view==='shop') render(); hToast(xBuyMsg(r,p)); }); }
-  else if(a==='cardclaim'){ snd('ui_tap'); let r=null; try{ r=Sys.buy.cardClaim(S,Sys.host); }catch(e){ r=null; }
-    if(r&&r.ok){ statsChanged(); snd('gem'); render(); hToast('Cartão Mensal: +'+n0(r.gems)+' diamantes de hoje'); }
-    else hToast(r&&r.reason==='claimed'?'Já resgatado hoje: volte amanhã':r&&r.reason==='no_card'?'O Cartão Mensal não está ativo':'Não deu para resgatar agora'); }
+  else if(a==='buy'){ snd('ui_tap'); xBuy(String(b.dataset.id||''),(r,p)=>{ if(r&&r.ok){ snd('gem'); if(p&&p.kind==='monthly_card'){ XCARD.st=null; XCARD.at=0; } } if(view==='shop') render(); hToast(xBuyMsg(r,p)); }); }   /* cartão comprado: o estado é consultado de novo */
+  else if(a==='cardwait'){ snd('ui_tap'); hToast(XCARD.claim?'Resgatando: aguarde':'Conferindo o Cartão Mensal: aguarde'); }
+  else if(a==='cardretry'){ snd('ui_tap'); XCARD.st=null; XCARD.at=0; render(); }
+  else if(a==='cardclaim'){ snd('ui_tap'); const st=XCARD.st; if(XCARD.claim) return;   /* resposta pendente: o segundo toque não vale */
+    if(st&&st.claimedToday){ hToast('Já resgatado hoje: volte amanhã'); return; }
+    XCARD.claim=true; render(); const fin=r=>{ XCARD.claim=false; const cur=XCARD.st&&!XCARD.st.err?XCARD.st:null; let msg;
+      if(r&&r.ok){ if(cur) cur.claimedToday=true; try{ statsChanged(); }catch(e){} snd('gem'); msg='Cartão Mensal: +'+n0(r.gems||0)+' diamantes de hoje'; }
+      else { const w=r&&r.reason; if(w==='claimed'&&cur) cur.claimedToday=true; if(w==='no_card'&&cur) cur.active=false;
+        msg=w==='claimed'?'Já resgatado hoje: volte amanhã':w==='no_card'?'O Cartão Mensal não está ativo':w==='soon'?'Pagamento em breve: nada é cobrado agora':w==='offline'?'Sem conexão: tente de novo':'Não deu para resgatar agora'; }
+      XCARD.at=0; if(view==='shop') render(); hToast(msg); };   /* at=0: o próximo desenho confere o estado de novo (dias restantes do servidor) */
+    try{ xThen(Sys.buy.cardClaim(S,Sys.host),fin,()=>fin(null)); }catch(e){ fin(null); } }
   else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+fcTxt(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p||!xCanSell(sk.id)) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
