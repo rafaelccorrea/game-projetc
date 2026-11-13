@@ -48,24 +48,37 @@ function rarInit(){ if (!RAR_ON()) return; const app = document.getElementById('
   rarDecorate(app); }
 
 /* ---------- drop no chão da batalha ---------- */
-function rarSnd(r){ if (!RAR_ON() || !S.set.sound) return;
-  if (r === 2) snd('gem');
-  else if (r === 3){ const g = window.GameAudio; if (g && g.sfx){ try { g.sfx('legendary', { rate: 0.89 }); } catch (e) {} } else snd('legendary'); } }   // Lendário (4): o addItemToBag já toca 'legendary'
+/* TABELA ÚNICA (Engenheiro 6, v0.12.9): o efeito do drop sai de Sys.stats.dropFx(r) (js/sys/stats.js, de Sistemas): {color, glow, particles, beam, pulse,
+   sound:{id, rate}, prism}. Sem o módulo vale a tabela daqui (reserva = os mesmos números de antes, só até o Lendário). Básico→Lendário desenham
+   EXATAMENTE como antes (mesma cor, mesmo feixe de 62 px do Mítico para cima, mesmas partículas a partir do Épico); o Divino (r 5) é o acréscimo:
+   feixe ARCO-ÍRIS (prism), mais largo, com mais partículas. Como a tabela é lida:
+   color → cor de tudo · beam (px lógicos; 0 = sem feixe) → altura do feixe · particles (0 = sem; < 10 = ritmo do Épico; >= 10 = ritmo do Mítico e
+   do Lendário; acima de 16 cresce na proporção) → partículas subindo · prism → feixe e partículas em arco-íris · sound → rarSnd. */
+const RAR_FXC = {};
+function rarFx(r){ r = Math.max(0, r | 0); if (RAR_FXC[r]) return RAR_FXC[r]; let f = null;
+  try { if (window.Sys && Sys.stats && typeof Sys.stats.dropFx === 'function'){ const x = Sys.stats.dropFx(r); if (x && typeof x.color === 'string') f = x; } } catch (e) {}
+  if (!f){ const k = Math.min(4, r); f = { r: k, color: RAR_C[k], glow: RAR_GLOW[k], particles: k >= 3 ? 10 : k === 2 ? 6 : 0, beam: k >= 3 ? 62 : 0, pulse: k >= 3 ? 1.6 : 0, sound: k === 2 ? { id: 'gem', rate: 1 } : k === 3 ? { id: 'legendary', rate: 0.9 } : k === 4 ? { id: 'legendary', rate: 1 } : null, prism: false }; }
+  return RAR_FXC[r] = f; }
+/* som do drop pela tabela. Lendário para cima não toca aqui: o addItemToBag (js/farm.js) já toca 'legendary' em todo item r >= 4 (tocar de novo dobraria) */
+function rarSnd(r){ if (!RAR_ON() || !S.set.sound) return; const f = rarFx(r), sd = f.sound; if (!sd || (f.r | 0) >= 4) return;
+  const g = window.GameAudio; if (sd.rate && sd.rate !== 1 && g && g.sfx){ try { g.sfx(sd.id, { rate: sd.rate }); } catch (e) {} } else snd(sd.id); }
 /* chamado com o contexto já transladado para o ponto do drop (q.x, q.y); s = tamanho; ph = fase da animação. st 0 pulando · 1 no chão · 2 voando para a mochila */
-function rarDrop(q, p, s, ph){ const r = Math.max(0, Math.min(4, p.r | 0)), c = RAR_C[r], ground = q.st < 2, pulse = 0.5 + 0.5 * Math.sin(ph);
-  if (ground && r >= 3){ const H = 62 * PX, w = (r === 4 ? 9 : 7) * s, gy = (GY - q.y);   // FEIXE: do chão (GY) para cima, mais claro no meio, some no topo
+function rarDrop(q, p, s, ph){ const f = rarFx(p.r), r = f.r | 0, c = f.color, ground = q.st < 2, pulse = 0.5 + 0.5 * Math.sin(ph);
+  if (ground && f.beam > 0){ const H = f.beam * PX, w = (r >= 5 ? 11 : r === 4 ? 9 : 7) * s, gy = (GY - q.y);   // FEIXE: do chão (GY) para cima, mais claro no meio, some no topo
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createLinearGradient(0, gy, 0, gy - H); g.addColorStop(0, c); g.addColorStop(0.55, c + '88'); g.addColorStop(1, c + '00');
+    const g = ctx.createLinearGradient(0, gy, 0, gy - H);
+    if (f.prism){ const N = 6; for (let i = 0; i <= N; i++){ const k = i / N; g.addColorStop(k, 'hsla(' + Math.round((k * 300 + ph * 14) % 360) + ',100%,62%,' + (1 - k * k).toFixed(2) + ')'); } }   // Divino: as cores do arco-íris sobem pelo feixe
+    else { g.addColorStop(0, c); g.addColorStop(0.55, c + '88'); g.addColorStop(1, c + '00'); }
     ctx.globalAlpha = 0.55 + 0.25 * pulse; ctx.fillStyle = g; ctx.fillRect(-w, gy - H, w * 2, H);
     const g2 = ctx.createLinearGradient(0, gy, 0, gy - H); g2.addColorStop(0, '#ffffff'); g2.addColorStop(0.5, '#ffffff66'); g2.addColorStop(1, '#ffffff00');
     ctx.globalAlpha = 0.6 + 0.3 * pulse; ctx.fillStyle = g2; ctx.fillRect(-w * 0.3, gy - H, w * 0.6, H);
     ctx.restore();
     ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(0, gy, w * 1.6, 2.4, 0, 0, 7); ctx.fill(); ctx.restore(); }
-  drawGlow(c, 0, -2, (11 + 2.5 * r + 2 * pulse) * s, 0.55 + 0.1 * r);                               // brilho na cor da raridade (todos)
-  if (ground && r >= 2 && Math.random() < (r >= 3 ? 0.35 : 0.2)) emit({ x: q.x + (Math.random() - .5) * 12, y: q.y - 2, vx: (Math.random() - .5) * 10, vy: -26 - Math.random() * 34, g: 0, t: 0, life: 0.7 + Math.random() * 0.3, col: c, sz: 2 + Math.random() * 1.5, glow: true });   // partículas subindo (Épico+)
+  drawGlow(c, 0, -2, (11 + 2.5 * r + 2 * pulse) * s, Math.min(1, 0.55 + 0.1 * r));                               // brilho na cor da raridade (todos)
+  if (ground && f.particles > 0 && Math.random() < (f.particles >= 10 ? 0.35 * Math.max(1, f.particles / 16) : 0.2)) emit({ x: q.x + (Math.random() - .5) * 12, y: q.y - 2, vx: (Math.random() - .5) * 10, vy: -26 - Math.random() * 34, g: 0, t: 0, life: 0.7 + Math.random() * 0.3, col: f.prism ? 'hsl(' + Math.floor(Math.random() * 360) + ',100%,70%)' : c, sz: 2 + Math.random() * 1.5, glow: true });   // partículas subindo (Épico+)
   ctx.fillStyle = '#2a211a'; ctx.strokeStyle = c; ctx.lineWidth = 2.2; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-6 * s, -8 * s, 12 * s, 12 * s, 3); else ctx.rect(-6 * s, -8 * s, 12 * s, 12 * s); ctx.fill(); ctx.stroke();   // o item: caixinha com a borda na cor
   ctx.fillStyle = c; ctx.fillRect(-1.2 * s, -6 * s, 2.4 * s, 8 * s); ctx.fillRect(-3.5 * s, -0.5 * s, 7 * s, 1.8 * s);
 }
-/* debug: solta no chão um drop de cada raridade pedida (sem dar item). dbgDrops([0,1,2,3,4]) */
+/* debug: solta no chão um drop de cada raridade pedida (sem dar item). dbgDrops([0,1,2,3,4,5]) (5 = Divino, só o efeito) */
 window.dbgDrops = function(list){ if (!DEBUG || typeof PK === 'undefined') return; (list || [0, 1, 2, 3, 4]).forEach((r, i) => { PK.list.push({ p: { type: 'item', value: 1, r, to: 'bag', big: r >= 3 }, x: HX + 70 + i * 34, y: GY - 6, vx: 0, vy: 0, t: 0, st: 1, rt: 0, ft: 0, sx: 0, sy: 0, rest: 9999, sd: i }); rarSnd(r); }); return PK.list.length; };
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', rarInit); else setTimeout(rarInit, 0);

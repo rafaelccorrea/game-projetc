@@ -39,6 +39,34 @@ const TB = [
   { g: 'Armas de fogo e nível', c: [gun(3, 'Pistola (era 3)'), gun(4, 'Revólver (era 4)'), gun(5, 'Pistola (era 5)'), gun(6, 'Pistola (era 6)'),
     { t: 'Subir de nível', s: [['Nível +1', [KI, A + 'fx/levelup'], { once: 1 }]] }] },
 ];
+/* ================= CHAVES PARA O VOTO DO DONO (Engenheiro 6, v0.12.9) =================
+   Tudo que espera voto fica DESLIGADO no jogo. Aqui, SÓ no Modo dono, cada coisa ganha um botão liga/desliga com o estado escrito no botão.
+   A escolha fica no save do Modo dono (S.ownerKeys, chave eras_owner_v1; o save real nunca é lido nem escrito aqui) e é reaplicada quando o Modo dono
+   abre de novo. Fora do Modo dono nada disto roda: sair do Modo dono recarrega a página e cada chave nasce no padrão do arquivo dela.
+   Tabela: k (id) · t (rótulo) · get() (estado real, lido do módulo dono) · set(on) (escreve no módulo dono, só em memória). Chave cujo módulo não
+   está carregado não ganha botão (get devolve null). */
+const KST = () => Sys.stats.DATA;
+const OWNER_KEYS = [
+  { k: 'fuse', t: 'Fusão', get: () => (window.Panels && Panels.defs && Panels.defs.fuse && KST().quality) ? (Panels.on('fuse') && KST().quality.on === true) : null,
+    set: on => { KST().quality.on = on; if (on) Panels.enable('fuse'); else PANEL_ON.fuse = false; } },   /* PANEL_ON.fuse + Sys.stats.DATA.quality.on andam juntas; a entrada aparece na Forja */
+  { k: 'wings', t: 'Asas novas', get: () => (KST().wingTypes && 'newWings' in KST()) ? KST().newWings === true : null, set: on => { KST().newWings = on; } },
+  { k: 'bow', t: 'Arco e Bumerangue', get: () => { const W = KST().weaponTypes; return W && W.bow && W.boomerang ? (W.bow.on === true && W.boomerang.on === true) : null; },
+    set: on => { KST().weaponTypes.bow.on = on; KST().weaponTypes.boomerang.on = on; } },
+  /* Ultimates lendárias: a chave é da batalha (js/battle.js, Engenheiro 5), combinada pelo nome window.ULT_LEGEND_ON. Lê o nome como a batalha lê; escreve em
+     window.ULT_LEGEND_ON. Enquanto a batalha declarar a chave como constante, a escrita não pega: o botão continua mostrando o estado REAL e avisa. */
+  { k: 'ult', t: 'Ultimates lendárias', get: () => { try { return typeof ULT_LEGEND_ON !== 'undefined' ? ULT_LEGEND_ON === true : window.ULT_LEGEND_ON === true; } catch (e) { return window.ULT_LEGEND_ON === true; } },
+    set: on => { try { window.ULT_LEGEND_ON = on; } catch (e) {} } },
+  { k: 'pets', t: 'Pets e montarias novos', get: () => (Sys.pet && Sys.mount && 'newPets' in Sys.pet.DATA && 'newOn' in Sys.mount.DATA) ? (Sys.pet.DATA.newPets === true && Sys.mount.DATA.newOn === true) : null,
+    set: on => { Sys.pet.DATA.newPets = on; Sys.mount.DATA.newOn = on; } },
+  { k: 'drops', t: 'Entregas dos itens novos', get: () => (Sys.newDrops && Sys.newDrops.DATA) ? Sys.newDrops.DATA.on === true : null, set: on => { Sys.newDrops.DATA.on = on; } },
+  /* o HUD dos eventos com horário (SCREENS_ON.evHud) saiu daqui: ligado por padrão por decisão do PO/dono (13/11) */
+];
+const keyGet = K => { try { return K.get(); } catch (e) { return null; } };
+function keySet(K, on){ try { K.set(!!on); } catch (e) { console.error('chave ' + K.k, e); } return keyGet(K) === !!on; }
+/* reaplica as escolhas guardadas no save do Modo dono (só com OWNER_MODE; chamada uma vez, na carga) */
+function keysBoot(){ if (!OWNER_MODE) return; const o = S.ownerKeys; if (!o || typeof o !== 'object') return; for (const K of OWNER_KEYS) if (typeof o[K.k] === 'boolean' && keyGet(K) !== null && keyGet(K) !== o[K.k]) keySet(K, o[K.k]); }
+const WING_NEW = ['phoenix', 'ice', 'shadow', 'storm', 'mechanical', 'bone', 'seraph', 'darkmoth'];
+const WING_SHORT = { phoenix: 'Fênix', ice: 'Gelo', shadow: 'Sombra', storm: 'Tempestade', mechanical: 'Mecânicas', bone: 'Ossos', seraph: 'Serafim', darkmoth: 'Mariposa' };
 const UI = { open: null, st: 0, layers: null, raf: 0, t0: 0, tok: 0 };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function loadLayer(L){ const png = typeof L === 'string' ? L + '.png' : L.png, json = typeof L === 'string' ? L + '.json' : L.json;
@@ -88,7 +116,12 @@ function ownerHtml(){
   return `<div style="padding:12px;border-radius:16px;background:#241b14;border:2px solid #ffc94a;margin-bottom:12px"><div style="font:400 18px 'Lilita One',Nunito,sans-serif;color:#ffc94a">Modo dono ligado</div>
     <div style="font-size:12.5px;color:#c9b9a2;margin:4px 0 10px">Este é o jogo de teste. Todas as telas que existem estão liberadas.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('hero_kael', 'Herói: Kael')}${b('hero_kaia', 'Herói: Kaia')}${b('scn7', 'Cenário: Submundo')}${b('scn8', 'Cenário: Celestial')}${b('scn', 'Cenário da era atual')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
-    ${typeof mountOk === 'function' && mountOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">MONTARIAS</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' + mountIds().map(m => b('mt_' + m.id, m.name)).join('') + b('mtstar', 'Estrela +1') + b('mtstar0', 'Estrela -1') + b('mtoff', 'Desmontar') + '</div>' : ''}
+    ${typeof mountOk === 'function' && mountOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">MONTARIAS</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + mountIds().map(m => b('mt_' + m.id, m.name)).join('') + b('mtstar', 'Estrela +1') + b('mtstar0', 'Estrela -1') + b('mtoff', 'Desmontar') + '</div>' : ''}
+    <div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:12px 0 2px">CHAVES PARA O VOTO</div>
+    <div style="font-size:12px;color:#c9b9a2;margin:0 0 6px">Liga e desliga o que ainda espera o seu voto. Vale só neste jogo de teste; ao sair do modo dono tudo volta ao padrão.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${OWNER_KEYS.map(K => { const v = keyGet(K); return v === null ? '' : `<button data-o="key_${K.k}" aria-pressed="${v}" style="${btn};min-height:52px;line-height:1.15;${v ? 'background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border-color:#8a4f0c' : ''}">${K.t}<br><span style="font-size:11.5px">${v ? 'LIGADA' : 'DESLIGADA'}</span></button>`; }).join('')}</div>
+    ${KST().wingTypes ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">ASAS NOVAS (ganhar e equipar)</div><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">' + WING_NEW.filter(w => KST().wingTypes[w]).map(w => `<button data-o="wg_${w}" aria-label="${esc(KST().wingTypes[w].name)}: ganhar e equipar" style="${btn}">${WING_SHORT[w]}</button>`).join('') + '</div>' : ''}
+    ${KST().weaponTypes && KST().weaponTypes.bow ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">ARMAS NOVAS (ganhar e equipar)</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' + b('wt_bow', 'Arco e flecha') + b('wt_boomerang', 'Bumerangue') + '</div>' : ''}
     <button data-o="exit" style="${btn};width:100%;margin-top:10px">Sair do modo dono (volta ao seu jogo)</button></div>`; }
 function paint(){ const el = document.getElementById('apv'); if (!el) return;
   if (UI.open){ const card = TB[UI.open[0]].c[UI.open[1]], L = UI.layers;
@@ -108,6 +141,17 @@ function ownerAct(k){
   else if (k === 'wingangel' || k === 'wingdemon'){ const w = k === 'wingangel' ? 'angel' : 'demon';   /* as duas asas são ITENS distintos (item.wing) */
     try { let it = S.inv.find(i => i.slot === 'wing' && i.wing === w); if (!it){ Sys.host.addItem({ slot: 'wing', r: 2, e: Math.min(6, S.eraMax | 0), lvl: 1, wing: w }); it = S.inv[S.inv.length - 1]; if (it && it.slot === 'wing' && it.wing !== w) it.wing = w; }
       if (it && it.slot === 'wing'){ S.eq.wing = it.id; toast(w === 'angel' ? 'Asa de anjo equipada' : 'Asa demoníaca equipada'); } } catch (e) { toast('Não deu para criar a asa'); } }
+  else if (k.indexOf('key_') === 0){ const K = OWNER_KEYS.find(x => x.k === k.slice(4)), cur = K ? keyGet(K) : null; if (cur === null){ toast('Chave indisponível'); return; }   /* Engenheiro 6: chaves para o voto (só Modo dono; guardadas em S.ownerKeys do save de teste) */
+    const want = !cur, ok = keySet(K, want); if (!S.ownerKeys || typeof S.ownerKeys !== 'object') S.ownerKeys = {};
+    if (ok){ S.ownerKeys[K.k] = want; toast(K.t + ': ' + (want ? 'ligada' : 'desligada')); } else toast(K.t + ': a chave ainda é fixa no arquivo da batalha');
+    if (typeof refreshHero === 'function') refreshHero(); if (typeof preloadAssets === 'function') preloadAssets(); statsChanged(); if (typeof fbLayout === 'function') fbLayout(); paint(); return; }
+  else if (k.indexOf('wg_') === 0){ const w = k.slice(3), W = KST().wingTypes && KST().wingTypes[w]; if (!W){ toast('Asa indisponível'); return; }   /* as 8 asas novas: item de asa com o modelo (item.wing), na raridade em que o modelo cai */
+    try { let it = S.inv.find(i => i.slot === 'wing' && i.wing === w); if (!it){ const n0 = S.nextId; Sys.host.addItem({ slot: 'wing', r: Math.min(4, W.r | 0), e: Math.min(6, S.eraMax | 0), lvl: 1, wing: w }); it = S.inv.find(i => i.id === n0 && i.slot === 'wing'); if (it && it.wing !== w) it.wing = w; }
+      if (it){ S.eq.wing = it.id; if (typeof preloadAssets === 'function') preloadAssets(); toast(W.name + ' equipada' + (KST().newWings === true ? '' : '. Ligue a chave Asas novas para ver o desenho')); } else toast('Não deu para criar a asa (mochila cheia)'); } catch (e) { toast('Não deu para criar a asa'); } }
+  else if (k.indexOf('wt_') === 0){ const t = k.slice(3), W = KST().weaponTypes && KST().weaponTypes[t]; if (!W){ toast('Arma indisponível'); return; }   /* arco e bumerangue: arma com a família gravada (item.wt), na raridade e no nível da arma equipada */
+    try { const cur = S.eq.weapon != null ? itemOf(S.eq.weapon) : null; let it = S.inv.find(i => i.slot === 'weapon' && i.wt === t);
+      if (!it){ const n0 = S.nextId; Sys.host.addItem({ slot: 'weapon', r: cur ? cur.r | 0 : 2, e: Math.max(W.fromEra | 0, Math.min(6, cur ? cur.e | 0 : S.eraMax | 0)), lvl: 1, wt: t }); it = S.inv.find(i => i.id === n0 && i.slot === 'weapon'); if (it){ it.wt = t; it.lvl = Math.max(1, cur ? cur.lvl | 0 : 1); } }
+      if (it){ S.eq.weapon = it.id; if (typeof refreshHero === 'function') refreshHero(); if (typeof preloadAssets === 'function') preloadAssets(); toast(W.name + ' equipado' + (W.on === true ? '' : '. Ligue a chave Arco e Bumerangue para ver o golpe')); } else toast('Não deu para criar a arma (mochila cheia)'); } catch (e) { toast('Não deu para criar a arma'); } }
   else if (k.indexOf('mt_') === 0){ const r = mountGive(k.slice(3)); toast(r && r.ok === false ? 'Montaria indisponível' : 'Montaria equipada'); }
   else if (k === 'mtstar' || k === 'mtstar0'){ const n = mountStar(k === 'mtstar' ? 1 : -1); toast(n ? n + ' estrela(s)' : 'Sem montaria equipada'); }
   else if (k === 'mtoff'){ mountOff(); toast('A pé'); }
@@ -131,6 +175,7 @@ function onClick(ev){ const b = ev.target.closest('button'); if (!b) return; snd
 Screens.register('artprev', { title: 'Teste',
   render(el){ if (document.getElementById('apv')) return; el.innerHTML = '<div id="apv" style="padding:12px;height:100%;box-sizing:border-box;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:Nunito,system-ui,sans-serif"></div>'; document.getElementById('apv').addEventListener('click', onClick); paint(); },
   onOpen(){ UI.open = null; }, onClose(){ freeLayers(); UI.open = null; } });
+keysBoot();   /* Modo dono: reaplica as chaves do voto guardadas no save de teste */
 /* item do MENU, fora da regra de nível (sem entrada em FB_UNLOCK) */
 if (typeof FB_DROP !== 'undefined') FB_DROP.push({ id: 'artprev', icon: 'settings', label: 'Teste', act: 'soon:artprev', tag: OWNER_MODE ? 'Dono' : 'Arte' });
 /* selo fixo "MODO DONO" no topo, o tempo todo */

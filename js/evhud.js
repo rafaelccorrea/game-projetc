@@ -1,7 +1,9 @@
 'use strict';
-/* ================= EVENTOS COM HORÁRIO NO HUD DA BATALHA (Engenheiro 6, v0.12.9) — ATRÁS DA CHAVE SCREENS_ON.evHud (index.html) =================
-   Chave DESLIGADA por padrão: com ela desligada este arquivo só define funções, o ícone não é desenhado e nada muda no jogo.
-   Para conferir: ?debug=1&ev=1, ou o botão "Eventos com horário" do Modo dono (js/artprev.js).
+/* ================= EVENTOS COM HORÁRIO NO HUD DA BATALHA (Engenheiro 6, v0.12.9) — CHAVE SCREENS_ON.evHud (index.html) =================
+   Chave LIGADA por padrão (decisão do PO/dono, 13/11: o bônus do evento já vale no abate pelo Sys.loot, e bônus sem aviso não pode).
+   Desliga só em debug com ?debug=1&ev=0: aí este arquivo só define funções, o ícone não é desenhado e nada muda no jogo.
+   BÔNUS NO RÓTULO: entre o nome e a contagem vai o bônus do evento aberto ("Ouro ×2", "Drop +50%"), lido dos perks que o Sys.schedule.active devolve
+   (os mesmos números que o Sys.loot aplica e devolve em res.event); evento sem bônus (Chefe Mundial) não mostra a linha. Nenhum número é daqui.
    Fonte ÚNICA de regra e de hora: Sys.schedule (js/sys/schedule.js, de Sistemas). Aqui NÃO há conta de fuso: a hora "até HH:MM" sai do
    Sys.schedule._br(instante) (minuto do dia em Brasília, do próprio módulo) e a contagem sai do msLeft/msToStart que o módulo devolve.
    (a) ÍCONE: entrada 'event' no FB_MENU (coluna direita, abaixo do Baú). Só existe enquanto há evento aberto que o nível do jogador permite;
@@ -39,6 +41,9 @@ const evhLvOk = a => (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || fbLvl(
 function evhCount(ms){ const s = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? evhP2(h) + ':' : '') + evhP2(m) + ':' + evhP2(s % 60); }
 /* "HH:MM" de Brasília pelo módulo; se o instante cai em outro dia (torneio de fim de semana), o dia da semana vai junto */
 function evhHM(t, ref){ const b = Sys.schedule._br(t), r = Sys.schedule._br(ref), hm = evhP2(Math.floor(b.min / 60)) + ':' + evhP2(b.min % 60); return b.dayStart !== r.dayStart ? EVH_DAY[b.day] + ' ' + hm : hm; }
+/* bônus do evento em texto curto, só com os números do módulo: múltiplo inteiro de 100% vira "×N"; o resto, "+N%" */
+const EVH_PERK = [['goldPct', 'Ouro'], ['dropPct', 'Drop'], ['foodPct', 'Ração'], ['forgePct', 'Pedras'], ['arenaPct', 'Arena'], ['petFragPct', 'Frag. de pet']];
+function evhPerk(a){ const p = a && a.perks; if (!p) return ''; const out = []; for (const [k, n] of EVH_PERK){ const v = +p[k]; if (v > 0) out.push(n + (v % 100 === 0 ? ' ×' + (1 + v / 100) : ' +' + String(v).replace('.', ',') + '%')); } return out.slice(0, 2).join(' · '); }
 const evhShown = () => EVH.shown;
 /* a tela de Eventos está pronta e liberada para este jogador? (mesmas regras do MENU) */
 const evhCanOpen = () => !!(Screens.reg && Screens.reg.events && !Screens.reg.events.broken && fbPanelOn('events') && fbUnl('events'));
@@ -53,6 +58,7 @@ function evhCss(){ const st = document.createElement('style'); st.textContent = 
 #fbm_event .fb-ib::after{box-shadow:0 0 18px 5px rgba(255,201,74,.95);animation-duration:1.1s}
 #fbm_event .fb-lb{align-self:flex-end;display:flex;flex-direction:column;align-items:flex-end;gap:1px;width:96px;margin-top:2px;white-space:normal;text-align:right}
 #fb_evn{font-size:10.5px;line-height:12px}   /* nome inteiro, alinhado à direita, em até 2 linhas (Torneio de Fim de Semana) */
+#fb_evp{font-size:10.5px;line-height:12px;color:#ffe07a}#fb_evp:empty{display:none}
 #fb_evt{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:13px;line-height:14px;color:#ffe07a;letter-spacing:.02em}
 #fb_evband{position:absolute;left:182px;top:246px;transform:translateX(-50%);z-index:5;display:none;align-items:center;gap:7px;max-width:214px;padding:5px 12px 5px 6px;border-radius:16px;box-sizing:border-box;background:rgba(22,16,12,.9);border:1px solid rgba(255,201,74,.75);box-shadow:0 6px 16px rgba(0,0,0,.45);color:#fff}
 #fb_evband.on{display:flex;animation:evhin .28s cubic-bezier(.2,.9,.25,1) both}
@@ -67,7 +73,7 @@ function evhCss(){ const st = document.createElement('style'); st.textContent = 
 `; document.head.appendChild(st); }
 /* monta as duas linhas do rótulo (nome + contagem) e a faixa, uma vez, depois que o HUD existe */
 function evhMount(){ if (document.getElementById('fb_evband')) return true; const w = document.getElementById('fb_w'), lb = document.getElementById('fbl_event'); if (!w || !lb) return false;
-  lb.innerHTML = '<span id="fb_evn"></span><span id="fb_evt"></span>';
+  lb.innerHTML = '<span id="fb_evn"></span><span id="fb_evp"></span><span id="fb_evt"></span>';
   const d = document.createElement('div'); d.id = 'fb_evband'; d.setAttribute('role', 'status'); d.setAttribute('aria-live', 'polite'); d.style.pointerEvents = 'none';
   d.innerHTML = '<img id="fb_evbi" alt=""><div style="min-width:0"><div class="m" id="fb_evbm"></div><div class="t" id="fb_evbt"></div></div>'; w.appendChild(d); return true; }
 function evhBandHide(now){ const d = document.getElementById('fb_evband'); if (d && EVH.band){ d.classList.remove('on'); d.classList.add('out'); setTimeout(() => { if (!EVH.band) d.classList.remove('out'); }, 360); } EVH.band = null; EVH.bandUntil = now + 600; }
@@ -89,8 +95,8 @@ function evhTick(){
   const on = act.length > 0; if (EVH.shown !== on){ EVH.shown = on; fbLayout(); }
   if (on){ const a = act[Math.floor(now / 4000) % act.length]; EVH.cur = a;
     { const u = evhIcon(a); if (FBK.evIc !== u){ FBK.evIc = u; const im = document.querySelector('#fbm_event .fb-ico'); if (im) im.src = u; } }
-    fbSet('fb_evn', a.name); fbSet('fb_evt', evhCount(a.msLeft));
-    if (FBK.evAl !== a.id){ FBK.evAl = a.id; const b = document.getElementById('fbm_event'); if (b) b.setAttribute('aria-label', 'Evento aberto: ' + a.name + '. Abrir Eventos'); } }
+    fbSet('fb_evn', a.name); fbSet('fb_evp', evhPerk(a)); fbSet('fb_evt', evhCount(a.msLeft));
+    if (FBK.evAl !== a.id){ FBK.evAl = a.id; const b = document.getElementById('fbm_event'); if (b) b.setAttribute('aria-label', 'Evento aberto: ' + a.name + (evhPerk(a) ? ', ' + evhPerk(a) : '') + '. Abrir Eventos'); } }
   else EVH.cur = null;
   /* faixa: evento que abriu (uma vez por janela) e aviso de 10 min (uma vez por janela) entram na fila */
   for (const a of act) if (!seen.b[a.key]){ evhMark('b', a.key, t); seen.n[a.key] = 1; EVH.q.push({ kind: 'b', a }); }

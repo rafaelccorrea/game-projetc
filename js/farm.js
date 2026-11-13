@@ -13,7 +13,7 @@ function normItem(o){ const slot = SLOT[o.slot] ? o.slot : 'armor', r = Math.max
   /* Item da Temporada do passe (premium 27 e 30): season, targetR e seasonEnd precisam ficar no item, senão o Sys.pass.evolveSeason não o acha; look = era da aparência */
   if (o.season){ it.season = true; if (Number.isInteger(o.targetR)) it.targetR = o.targetR; if (o.seasonEnd != null) it.seasonEnd = o.seasonEnd; }
   if (Number.isInteger(o.look)) it.look = o.look;
-  if (o.wing === 'angel' || o.wing === 'demon') it.wing = o.wing;   // tipo da asa: a aparência é a do item
+  if (o.wing === 'angel' || o.wing === 'demon' || (typeof o.wing === 'string' && window.Sys && Sys.stats && Sys.stats.DATA.wingTypes && Sys.stats.DATA.wingTypes[o.wing])) it.wing = o.wing;   // tipo da asa: a aparência é a do item. Engenheiro 6: vale qualquer modelo da tabela Sys.stats.DATA.wingTypes (as 8 asas novas não perdem o tipo ao entrar na mochila; o desenho segue atrás da chave newWings)
   if (o.offer === true) it.offer = true;   // arma da oferta de 1ª compra: acompanha o nível e a era do jogador até o nível 25
   if (o.gotAt != null) it.gotAt = o.gotAt;
   if (typeof o.origin === 'string') it.origin = o.origin;   // origem do item (shop, gift, offer...): sem efeito visível; o servidor confere depois
@@ -111,6 +111,7 @@ function onLevelUp(lv){
   { const av = document.getElementById('fb_av'); if (av){ av.classList.remove('fb-cbump'); void av.offsetWidth; av.classList.add('fb-cbump'); } }
   B.lvfx = { t0: B.at }; sheetLoad(LVUP, true);
   if (typeof petLevel === 'function') petLevel(false);   // ovo do nível 20
+  try { if (window.Sys && Sys.newDrops && Sys.newDrops.DATA.on === true && typeof Sys.newDrops.releaseHeld === 'function') Sys.newDrops.releaseHeld(S, Sys.host); } catch (e) { console.error('newDrops.releaseHeld', e); }   /* Engenheiro 6: asas novas guardadas abaixo do nível das asas saem ao subir de nível; INERTE com Sys.newDrops.DATA.on desligada */
   if (typeof phaseCheck === 'function') phaseCheck(false);   // Kael por fase: níveis 22, 35 e 70
   if (typeof fcNotice === 'function') fcNotice();   // subir de nível muda a FC: o aviso de poder mostra a diferença   // animação aprovada de subir de nível (desenhada em js/battle.js, drawLevelUp)
   if (view !== 'battle' && typeof softRender === 'function') softRender();
