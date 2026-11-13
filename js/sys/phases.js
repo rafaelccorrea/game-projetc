@@ -11,7 +11,7 @@
 const DATA={
   on:false, perEra:100, eras:9, diffs:4, step:3,
   diffName:['Fácil','Médio','Difícil','Hell'],
-  required:[1,1,2,2,3,3,4,4,3],                     // dificuldades EXIGIDAS por era para liberar a próxima (era 8: o Hell é fim de jogo)
+  required:[1,1,2,2,3,3,4,4,3],                     // dificuldades EXIGIDAS por era para liberar a próxima (era 8: o Hell é para depois das 9 eras)
   eraName:['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'],
   // FC recomendada: f0 = Fácil fase 1, f100 = Fácil fase 100 (cresce geométrico entre elas); cada dificuldade = ×3 (degrau fixo)
   f0:  [311,1858,28435,1223694,28142164,537667962,18172296395,1027196806009,39756852025890],

@@ -5,21 +5,12 @@
 // Uso: node tools/sim-chefe.js
 'use strict';
 const R=p=>require(process.cwd()+'/js/sys/'+p+'.js');
-const FG=R('forge'), ST=R('stats'), FC=R('fc'), TW=R('tower');
+globalThis.Sys=globalThis.Sys||{}; const FG=R('forge'), ST=R('stats'), FC=R('fc'), TW=R('tower');
 ST.setEra9(true);
 const BAL=JSON.parse(require('fs').readFileSync(process.cwd()+'/docs/balance.json','utf8')).dificuldade;
 const REC=BAL.pacoteFim.recFc;
-const LV=[8,10,11,12,12,13,13,14,14,15,15,15,16,16,17,17,18,18,18,20,20,21,22,23,24,25,25,26,27,31,31,31,32,33,35,36,37,39,40,44,44,46,49,51,53,56,58,60,63,68,68,71,74,75,77,79,80,81,82,83,85,86,87,88,89,90,91,92,93,95,95,96,97,98,99,100,101,102,103,104,105,106,107,108,110,110,111,112,112,113];
-const capR=(L,e)=>L>=105&&e>=7?5:L>=85&&e>=5?4:L>=70&&e>=4?3:L>=25?2:L>=10?1:0, forgeAt=e=>Math.min(15,Math.round(2+1.6*e));
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-/* rascunho de Sys.stats.refFromFc(fc, stage): atributos do jogador grátis típico da fase, escalados para fcOfStats = fc */
-function refFromFc(fc,stage){ const st=Math.max(1,stage|0), e=clamp(Math.floor((st-1)/10),0,8), L=LV[Math.min(st,90)-1], f=((st-1)%10)/9, r=capR(L,e);
-  const forge=Math.round(forgeAt(Math.max(0,e-1))+(forgeAt(e)-forgeAt(Math.max(0,e-1)))*f);
-  const S={sys:{level:{lvl:L,xp:0},forge:{lv:{}}}}; for(const s of ST.DATA.slots) S.sys.forge.lv[s]=forge;
-  const eq={}; for(const s of ST.DATA.slots){ if(s==='wing'&&(L<50||r<2)) continue; eq[s]={slot:s,e,r:s==='weapon'&&r===3?2:r,lvl:L,subs:[],qp:4000,wing:'angel'}; }
-  const h={equipped:()=>eq,eraMax:()=>e,level:()=>L,atk:()=>0,hp:()=>0,now:()=>0}, s0=FC.stats(S,h);
-  const b={atk:+s0.atk||0,hp:+s0.hp||0,def:+s0.def||0,critRate:+(s0.critRate??s0.crit??12),critDmg:+(s0.critDmg??100),aspd:+(s0.aspd||0)};
-  const k=fc/FC.fcOfStats(Object.assign({},b,{pet:{atk:0,heal:0}})); return {atk:b.atk*k,hp:b.hp*k,def:b.def*k,critRate:b.critRate,critDmg:b.critDmg,aspd:b.aspd}; }
+/* herói de referência = Sys.stats.refFromFc (js/sys/stats.js): o jogador grátis típico da fase, escalado para a FC pedida */
+function refFromFc(fc,stage){ return ST.refFromFc(fc,stage); }   /* a função do jogo (js/sys/stats.js) */
 function oldRef(fc){ const s=TW.statsFromFC(fc,0); return {atk:s.atk,hp:s.hp,def:s.def||0,critRate:s.critRate??12,critDmg:s.critDmg??100,aspd:s.aspd||0}; }
 /* DPS esperado (golpe a cada 0,8 s / (1+vel.), crítico, golpe forte x3 a cada 6 s) e vida efetiva (DEF reduz o dano levado, como o jogo) */
 const dpsOf=s=>s.atk*(1+s.critRate/100*s.critDmg/100)*(1+s.aspd/100)/0.8+s.atk*3/6;

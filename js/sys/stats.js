@@ -17,7 +17,7 @@ const DATA={
   wing:{minLevel:50, minR:2},                       // a asa abre no nível 50 e só existe Épica ou acima
   // ASA = ITEM PRÓPRIO (dono via engenheiro, 12/11): item.wing diz QUAL asa é; a aparência NÃO muda por raridade nem por era (o poder sim, como
   // qualquer item). Artes aprovadas: anjo e demoníaca (assets/anim/equip/wing_<id>). De onde cai = PROPOSTA ao PO (wingForDrop):
-  // anjo nas eras 0-6 e 8 (a 1ª asa, no Nv 50, e a do Celestial); demoníaca na era 7 (Submundo) e no Hell de qualquer era (fim de jogo).
+  // anjo nas eras 0-6 e 8 (a 1ª asa, no Nv 50, e a do Celestial); demoníaca na era 7 (Submundo) e no Hell de qualquer era (depois das 9 eras).
   // EFEITO DAS HABILIDADES PELA RARIDADE DA ARMA (dono via PO, 12/11): a ultimate/s1/s2 é a da ERA DA ARMA (9 famílias = as 9 ultimates animadas,
   // heroLook do engenheiro); a RARIDADE muda só a FORÇA VISUAL. SÓ VISUAL — nenhum multiplicador de dano: a raridade já entra no ATK do item
   // (rarPct) e a regra de coerência (dano sai dos atributos; teto por golpe s1 1× / s2 3× / s3 5× final, 10× total) fica intacta.
@@ -462,7 +462,28 @@ function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA
   return (neg?'−':'')+out; }
 /* efeito do item caído no chão pela raridade (o engenheiro desenha; tabela única): dropFx(item|r) → {r, name, color, glow, particles, beam, pulse, sound, prism} */
 const dropFx=w=>{ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.dropFx.length-1); return Object.assign({},DATA.dropFx[r],{sound:DATA.dropFx[r].sound?Object.assign({},DATA.dropFx[r].sound):null}); };
-const API={DATA,goLive,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+/* HERÓI DE REFERÊNCIA DA DIFICULDADE (13/11, depois da medida do Engenheiro: com o herói metade ATQ/metade VIDA, 100% da FC perdia todo Senhor).
+   refFromFc(fc, stage) → atributos do jogador GRÁTIS TÍPICO daquela fase (nível típico, equipamento da era da fase na raridade e Forja típicas, 7 espaços,
+   asa só com Nv 50 e raridade ≥2), escalados para Sys.fc.fcOfStats = fc (sem pet). Devolve {atk,hp,def,critRate,critDmg,aspd,level,era,rarity,forge,scale}.
+   Função pura: sempre disponível. A CHAVE (DATA.refFc.on, setRefFc) só diz ao js/diff.js se deve usá-la no lugar do statsFromFC; desligada = nada muda.
+   Nível típico por fase: tools/sim-paredes.js --levels (grátis ativo). Depois da 90: +1 nível a cada 3 fases, até 120. Medida: node tools/sim-chefe.js */
+DATA.refFc={on:false,
+  lv:[8,10,11,12,12,13,13,14,14,15,15,15,16,16,17,17,18,18,18,20,20,21,22,23,24,25,25,26,27,31,31,31,32,33,35,36,37,39,40,44,44,46,49,51,53,56,58,60,63,68,68,71,74,75,77,79,80,81,82,83,85,86,87,88,89,90,91,92,93,95,95,96,97,98,99,100,101,102,103,104,105,106,107,108,110,110,111,112,112,113],
+  qp:4000};
+const refRar=(L,e)=>L>=105&&e>=7?5:L>=85&&e>=5?4:L>=70&&e>=4?3:L>=25?2:L>=10?1:0, refForge=e=>Math.min(15,Math.round(2+1.6*e));
+function setRefFc(on){ DATA.refFc.on=!!on; return DATA.refFc.on; }
+const refFcOn=()=>DATA.refFc.on===true;
+function refFromFc(fc,stage){ const F=root.Sys&&root.Sys.fc, R=DATA.refFc, LV=R.lv; if(!F||typeof F.stats!=='function'||typeof F.fcOfStats!=='function') return null;
+  const st=Math.max(1,Math.floor(num(stage,1))||1), e=clamp(Math.floor((st-1)/10),0,Math.min(8,DATA.maxEra)), L=st<=LV.length?LV[st-1]:Math.min(120,LV[LV.length-1]+Math.floor((st-LV.length)/3));
+  const f=((st-1)%10)/9, r=Math.min(refRar(L,e),MAXR()), forge=Math.round(refForge(Math.max(0,e-1))+(refForge(e)-refForge(Math.max(0,e-1)))*f);
+  const S={sys:{level:{lvl:L,xp:0},forge:{lv:{}}}}; for(const s of DATA.slots) S.sys.forge.lv[s]=forge;
+  const eq={}; for(const s of DATA.slots){ if(s==='wing'&&(L<50||r<2)) continue; eq[s]={slot:s,e,r:s==='weapon'&&r===3?2:r,lvl:L,subs:[],qp:R.qp,wing:'angel'}; }
+  const h={equipped:()=>eq,eraMax:()=>e,level:()=>L,atk:()=>0,hp:()=>0,now:()=>0};
+  let s0; try{ s0=F.stats(S,h)||{}; }catch(err){ return null; }
+  const b={atk:num(s0.atk,0),hp:num(s0.hp,0),def:num(s0.def,0),critRate:num(s0.critRate!=null?s0.critRate:s0.crit,12),critDmg:num(s0.critDmg,100),aspd:num(s0.aspd,0)};
+  const f0=F.fcOfStats(Object.assign({},b,{pet:{atk:0,heal:0}})), k=f0>0?Math.max(0,num(fc,0))/f0:1;
+  return {atk:b.atk*k,hp:b.hp*k,def:b.def*k,critRate:b.critRate,critDmg:b.critDmg,aspd:b.aspd,level:L,era:e,rarity:r,forge,scale:k}; }
+const API={DATA,refFromFc,setRefFc,refFcOn,goLive,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
