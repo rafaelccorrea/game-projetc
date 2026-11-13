@@ -1,0 +1,91 @@
+[
+ {
+  "name": "mSign",
+  "tile": 0,
+  "kind": "bright",
+  "rect": [
+   196,
+   186,
+   334,
+   302
+  ]
+ },
+ {
+  "name": "mTowerP",
+  "tile": 0,
+  "kind": "pink",
+  "rect": [
+   420,
+   40,
+   672,
+   562
+  ]
+ },
+ {
+  "name": "mCanopy",
+  "tile": 0,
+  "kind": "pink",
+  "rect": [
+   702,
+   282,
+   1006,
+   322
+  ]
+ },
+ {
+  "name": "mBoard",
+  "tile": 0,
+  "kind": "cyan",
+  "rect": [
+   1032,
+   108,
+   1334,
+   300
+  ],
+  "maxW": 300
+ },
+ {
+  "name": "mPanelL",
+  "tile": 1,
+  "kind": "cyan",
+  "rect": [
+   66,
+   414,
+   146,
+   562
+  ]
+ },
+ {
+  "name": "mPanelR",
+  "tile": 1,
+  "kind": "cyan",
+  "rect": [
+   292,
+   426,
+   358,
+   542
+  ]
+ },
+ {
+  "name": "mTubes",
+  "tile": 1,
+  "kind": "pink",
+  "rect": [
+   832,
+   342,
+   988,
+   394
+  ]
+ },
+ {
+  "name": "mCoils",
+  "tile": 1,
+  "kind": "cyan",
+  "rect": [
+   1080,
+   228,
+   1294,
+   398
+  ]
+ }
+]

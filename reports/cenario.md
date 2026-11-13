@@ -637,3 +637,66 @@ Pronto e guardado, ainda NÃO ligado: `test/bg/tools/scene.era5r2.wip.js` (SHA `
 que balançam e na frente do mid, virada suave em pacer/hopper) e os sprites `rotordisc`, `txtA/txtB`, `adA/adB`, `boom`, `fan`,
 `walkerA/B/C` (`tools/build5b.js`). Falta: apagar a cancela pintada do midA (a gravação falhou), ligar tudo no `mkmeta5.js`,
 comparar eras 0-4 pixel a pixel e conferir no navegador.
+
+---
+
+# Era 6 (Futurista, cidade neon à noite) — mesmo padrão das eras 4 e 5 (fps-75)
+
+**Ver:** http://localhost:8080/test/bg/preview?era=6 · instantes lado a lado: `http://localhost:8080/test/bg/sheet?era=6&t=3,9,15,21&w=330&line=1`
+**Pasta:** `assets/bg/v2/era6/` (59 arquivos, ~1,4 MB) · **contrato:** `assets/bg/v2/era6/meta.json` (mesmo formato da era 5)
+**Scripts:** `test/bg/tools/build6.js`, `test/bg/tools/mkmeta6.js`, `test/bg/tools/info.era6.json`, `test/bg/tools/masks6.json`
+(`node mkmeta6.js --info tools/info.era6.json <saída>` refaz o meta: conferido, sai idêntico). Em `test/bg/preview.html` mudou só a dica de URL (cita `6`).
+**Créditos:** 16 (8 gerações Nano Banana 2, 2K, a 2; nenhuma regeração; céu procedural). Saldo da conta ao fechar: 295,15 (as outras baixas são das sessões de vídeo).
+
+**`scene.js` NÃO mudou** (SHA-1 `5b725460ae70667db764598823f7ff729eee8b99`, o liberado na era 5). A era 6 sai só com dados no meta, usando blocos que já
+existiam (actors sky/far/mid com parts e smoke, rotors com flap, props com tilt, fx flow/glow/plume/embers, sunRays, roadside lantern/pacer/hopper/critter/vent/sway).
+Por isso as eras 0 a 5 não precisam de nova comparação pixel a pixel: o módulo e os arquivos delas não foram tocados.
+
+## Camadas
+`sky.webp` (procedural: indigo → violeta → bruma rosa, com 150 estrelas; ladrilho de 1024 px) · `far.webp` (skyline neon com via elevada de ponta a ponta;
+ESPELHADO; base some na bruma) · `midA.webp` (lojinha de lámen com placa holográfica, torre de vidro com fitas rosa/ciano, eletroposto, painel holográfico em
+treliça, guarita com mastro) + `midB.webp` (ponto de ônibus de vidro translúcido com 2 painéis, oficina de robôs, quiosque com tubos rosa e máquinas, subestação com
+2 bobinas, torre de comunicação; versões `_lo`) · `ground.webp` (calçada de placas violeta, guia com fita ciano, pista lisa com grade fina e 2 linhas rosa em 0,828–0,846,
+guia, calçada; pés em 0,78 na pista) · `decals.webp` (20: tampa com anel, escotilha, grade, 2 poças com reflexo neon, placa rachada, rachadura, chapa, parafusos,
+célula de energia, cabo, lata, placa de circuito, panfleto holográfico, copo, sucata, caco de cristal, folhas, chip, marca de derrapagem).
+
+## 26 elementos animados
+céu estrelado derivando · nuvens violeta em 2 velocidades · NAVE-MÃE fixa no alto balançando com 3 fachos de luz pulsando · trânsito voador alto (ônibus,
+caminhão e 2 carros, cada um na sua faixa e velocidade, com exaustão dos jatos) · pássaros-robô (6 quadros) · trem maglev e 4 carros flutuantes na via elevada ·
+luzes piscando nas agulhas distantes · bruma · drone de entrega com 2 hélices batendo · trânsito voador atrás dos prédios (5 veículos, aparecem nos vãos) ·
+antena parabólica girando na plataforma da guarita · braço robótico balançando no telhado da oficina · neon da placa respirando, pulso de luz descendo nas fitas
+da torre, fita do eletroposto e tubos do quiosque piscando · holograma com linhas de varredura · painéis do ponto pulsando · bobinas pulsando + 3 arcos elétricos
+em clarão + faíscas · janelas, oficina, máquinas e luzes das torres · vapor com contorno no telhado do lámen e da oficina · postes âmbar com brilho · cão-robô
+(senta, anda, volta) · pássaro-robô pulando entre 2 pilaretes de recarga · gato-robô (cauda/cabeça) · respiro de vapor em baforadas · lixeira-robô e palmeira
+balançando · partículas de luz · samambaia e capim alienígenas na frente · poeira dos passos.
+
+## Como foi feito
+1. far · 2. mid A · 3. chão · 4. folha de bichos/céu (nuvens, planeta, lua, pássaro-robô em 7 poses, cão-robô 4 passos + sentado, antena, gato-robô) · 5. folha de
+veículos (trem, nave-mãe, 4 carros flutuantes, ônibus, caminhão, drone + hélice) · 6. folha de objetos de rua/primeiro plano · 7. mid B (ref. mid A) · 8. decalques (ref. chão).
+Referências: o mid A aprovado da era 5 (estilo) + `assets/map/era6.jpg` (tema e cores). **Fundo VERDE #00FF00** em vez de magenta (a arte é rosa/roxo neon):
+`build6.js` tem `keyGreen`/`safeKey` próprios. Neon piscando sem pintar nada à mão: as máscaras de `flow` são os próprios pixels de neon da arte (rosa ou ciano vivo)
+recortados por retângulo (`masks6.json`).
+Armadilhas: vidro do ponto veio verde opaco (recolorido para vidro azulado translúcido, sem tocar os 2 painéis); placas da calçada têm juntas inclinadas
+(perspectiva): o ladrilho do chão é um período exato (1825 px) com a emenda escolhida no meio de uma placa e fusão de 70 px; a pista foi remapeada na vertical para
+as linhas rosa caírem como a faixa amarela da era 5; a fusão de componentes juntava poste + samambaia e pássaro em pé + bicando (dilatação menor / divisão por coluna vazia).
+Flâmulas e anel holográfico da folha 1 vieram vazados (verde por dentro): não usados. Moto da folha de veículos não usada.
+
+## Conferido no Chrome (aba única, fechada no fim)
+`sheet` em t = 3 · 9 · 15 · 21 (com `line=1`) · 27 · 34 · 41 · 48 e pares 41/41,3 (antena), 48/48,4 (braço), 22,6/22,75 (bobinas); `preview?era=6` rodando
+(1º quadro 96 ms, completo 863 ms com `nocache`, 33 fps na aba de automação); sem erro de console.
+- Pés na pista, sombra na linha de 0,78; linhas rosa abaixo dos pés; decalques sem sobreposição.
+- Trem e carros com a base no tabuleiro da via elevada; carros do alto passam atrás da skyline; veículos de trás aparecem nos vãos e somem atrás dos prédios.
+- Emenda do chão conferida em recorte (`seam_ground`): sem junta dupla.
+- **Custo por quadro** (dpr 2, desenho + leitura de 1 pixel, quadros em salto, rodadas alternadas, máquina muito carregada): mediana era 1 = 71,6 ms, era 4 = 71,7,
+  era 5 = 56,3, **era 6 = 64,5** (p90 98). Primeira versão dava ~127 ms: tirei o neon ciano da torre (máscara grande), encurtei os fachos da nave e deixei a
+  exaustão só nos veículos do alto. Valor absoluto não é fps.
+NÃO conferido: emenda do far espelhado em instante calculado; giro da antena em zoom de 3 instantes; ida/volta completa do cão e do pássaro-robô com a rolagem
+parada; botão "Ver ANTES"; celular.
+
+## Defeitos que o dono pode notar
+- Nave-mãe e planeta ficam PARADOS no alto (só balançam ~3 px); os fachos pulsam mas não se mexem. Os jatos da nave são pintados.
+- Carros têm "rodas" brilhantes (são os pés do jato) e os jatos são pintados; a exaustão por código é discreta. Táxi e viatura trazem a palavra TAXI / POLICE.
+- Todos os veículos andam para a direita (o módulo não espelha actors); na via elevada todos têm a mesma velocidade.
+- Arcos elétricos são 3 ziguezagues fixos que piscam; o braço robótico só balança (não pega nada).
+- Restou uma borda esverdeada fina à esquerda do painel esquerdo do ponto de ônibus; a treliça do painel holográfico tem uns fios esverdeados.
+- Pássaros-robô do céu passam na frente da nave-mãe. Herói ainda com a roupa da era 2.
