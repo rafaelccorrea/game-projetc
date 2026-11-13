@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **01h10 · QA com fila nova (sem pausa):** aba Aparência no Equipamento (saiu da fila do engenheiro para andar em paralelo) → ligar o Mapa das Eras à curva das 100 fases → conferir o Leilão → conferir no navegador cada tela que o engenheiro ligar (Instâncias, Vitória/Derrota, missão guia, Correio, Oferta)
+
 - **01h · Seus votos:**
   - APROVADO: Kael adulto e guerreiro V2 (as 14 animações) · cenários das eras 6 e 7 · prints: só o Kael, com pet, no lobo sem asa, morte nova montado, FC no painel. O engenheiro liga as fases V2 e os cenários 6 e 7
   - REPROVADO: a asa no Kael MONTADO (as 6 montarias): "asa não encaixa de forma adequada". Correção: a Arte gera o ponto das costas em cada quadro das montarias, e o engenheiro prende a asa nas escápulas acompanhando o galope. Os prints voltam para o seu voto
