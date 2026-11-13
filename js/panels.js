@@ -56,7 +56,10 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
         return s0(v); }; } },
   /* ROTA ÚNICA: Panels.open(nome, o) e Screens.open(nome, o) abrem a MESMA tela. Panels.open só confere a chave (desligada = false, nada abre) e
      entrega ao Screens.open, que troca a tela (setView) e chama onOpen. Overlays (era, result) abrem pela função open da própria tela. */
-  open(name,o){ if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{};
+  /* TELAS V2 APROVADAS PELO DONO (passagem dos protótipos docs/proto/v2): cada uma nasce num arquivo novo e DESLIGADA (PANEL_ON.<nome>2 = false). Com a chave dela
+     ligada (no código, ou ?debug=1&painel=forge2 para conferir), TODO lugar do jogo que abre a tela antiga abre a nova; desligada, nada muda. */
+  v2:{forge:'forge2',pets:'pets2'},
+  open(name,o){ { const n2=this.v2[name]; if(n2&&PANEL_ON[n2]&&this.defs[n2]) name=n2; } if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{};
     /* VOLTAR PARA ONDE VEIO: quem abre passando {from:'<tela>'} (ex.: o botão Missões do Passe) recebe o jogador de volta nessa tela ao fechar */
     this.back=this.back||{}; this.back[name]=(o&&typeof o.from==='string')?o.from:null; if(this.back[name]) this.hookClose();
     if(window.Screens&&typeof Screens.open==='function'){ if(typeof Screens.register==='function'&&!(Screens.reg&&Screens.reg[name])) this.enable(name); return Screens.open(name,o||{})!==false; }
