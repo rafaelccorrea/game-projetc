@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **02h20 · PARA VOCÊ VOTAR (página de aprovação):** cenários vivos da era 5 (Moderna, com o acabamento) e da era 8 (Celestial). Com eles, as 9 eras ficam com cenário vivo. Créditos: saldo ~275
+
 - **02h10 · Kael crescendo (você está no nível 60 e não evoluiu):** a versão do seu celular (v0.12.7) ainda não tem as fases ligadas. Prioridade 2 do engenheiro, logo depois da asa nas costas: liga as 4 fases (garoto, adolescente 22, adulto 35, guerreiro 70) com o adulto e o guerreiro V2 que você aprovou. No seu save do nível 60, ao abrir o jogo, o Kael evolui direto para adulto, com a animação de evolução uma vez só. Vai no próximo APK, junto com a asa corrigida
 
 - **02h · POLIMENTO (sua ordem):** o QA virou caçador de bugzinhos visuais (varre tela por tela com print); a Arte abriu um agente só de polimento de imagem; o engenheiro corrige o que é código. Fila em `docs/POLIMENTO.md`. Prioridade 1: a ASA em cima da cabeça → vai para as costas (a pé e montado). Depois: arma flutuando na montaria, imagem de arma que não aparece, pet sumindo na vitória, Oferta mostrando o lobo e o pet com imagem
@@ -158,7 +160,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 ## A. O que eu preciso de você
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
-- [ ] Próximos votos (quando chegarem, eu aviso): asa no Kael montado (refeita), Kaia adulta e guerreira V2 animadas, cenários das eras 5 e 8
+- [ ] VOTAR AGORA: cenários das eras 5 e 8 (página de aprovação)
+- [ ] Próximos votos (quando chegarem, eu aviso): asa nas costas (refeita), Kaia adulta e guerreira V2 animadas
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
 - [~] Banco de desenvolvimento: Supabase criado; falta você seguir o passo a passo na parte AGORA (02h) e pôr as 3 variáveis de ambiente
