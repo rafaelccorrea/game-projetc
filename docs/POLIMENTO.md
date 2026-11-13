@@ -88,3 +88,13 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [ ] P20 · Morte com pistola (todos os heróis) · a arma passa abaixo da linha do chão no meio da queda · Arte/Engenheiro
 - [ ] P21 · Subir de nível a pé · o texto "NÍVEL +1" cai atrás da barra de vida · Engenheiro/Arte
 - [ ] P22 · Kaia montada · não existe arte montada da menina: hoje ela aparece a pé e a montaria some · Arte (Kaia menina montada nas 6 montarias)
+
+### PASSADA FINAL antes do APK (QA, aba 2, 13/11; Modo dono, FC ×31)
+- [x] Herói SEM fases: Título, batalha, cabeçalho, Perfil, Troca de era com o GAROTO (save nível 60/20), com montaria, asa e pet; FC consistente no cabeçalho, Perfil, Torre ("Você") e Mapa (64,5 mil igual).
+- [x] Vitrine a PÉ: padrão (garoto), Kael Cavaleiro (armadura) e Guerreiro Lendário (armadura ornada) desenhados cada um com a SUA skin; Equipar/EQUIPADA/Mítico/Lendário/bônus ok; atalhos do Modo dono "Skin:" e "Herói:" mudam a FC e o equipado (324→344→353→326).
+- [ ] P21 · Vitrine MONTADA · com montaria equipada (mountArt:false) os 3 cartões mostram o MESMO garoto na montaria; a skin (armadura) não aparece montada e a equipada (Cavaleiro) fica igual à padrão; print pol_16 (montado) × pol_17 (a pé) · confirmar a decisão (se for assim, a vitrine deveria desenhar a pé) · Engenheiro/PO
+- [ ] P22 · Título · o logo "EONBOUND" aparece cortado/coberto pelo anel do relógio em quadros da animação (letras "ND" escondidas ou o "D" deslocado fora do anel); print pol_18 · Servidor (p_intro)
+- [ ] P23 · Modo dono > Teste · sobraram os botões da era das fases: "Garoto (atual)", "Fase 1: adolescente", "Fase 2: adulto", "Fase 3: guerreiro", "Evolução de fase", "Kaia adolescente/adulta/guerreira" · Engenheiro (tirar)
+- [ ] P24 · Skin padrão depois de equipar e voltar: FC 324 → 326 (+2) · conferir se é arredondamento ou perda (FC sem perda) · Sistemas
+- Kaia: a pé com asa/pet/pistola ok na batalha; montada aparece A PÉ (aceito pelo PO neste APK). Ultimate "Fúria do Mamute!" ok.
+- NÃO conferido nesta passada: efeito "NÍVEL +1" ao subir de nível (o botão de teste só mostrou "Chat liberado"), Passe nível 25 com o pacote novo, Loja/Vitória/Instâncias/6 montarias/slots de novo, FC dentro do Equipamento e da Derrota.
