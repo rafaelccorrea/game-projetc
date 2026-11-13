@@ -131,6 +131,9 @@ def.click(btn('skip')); assert(X('XA2.view') === 'result'); def.click(btn('back'
   def.click(btn('back')); out.push('luta online: placar FC 260 x FC 320, resultado −12 pontos (o do servidor, igual à previsão da lista)');
   // provider local de volta: a lista é a de antes, caractere por caractere (fora os relógios)
   NET.stop(); T.playerStats = ps0; assert(X('paNet()') === null); const oo = A.ensure(g.S, host); oo.attemptsLeft = 3; oo.lp = lp1; oo.points = pts1; def.onOpen(); def.render();
+  // online LIGADO mas sem sessão (QA: 429 no /auth/guest): o lobby local avisa que é treino; com a chave desligada volta ao texto de sempre
+  if (NET.DATA && NET.DATA.on === true){ assert(/Sem ligação com o servidor agora: lutas de treino/.test(H()), 'online ligado e parado: faltou o aviso de treino'); NET.DATA.on = false; def.render(); out.push('online ligado sem sessão: aviso de treino no lobby'); }
+  assert(!/Sem ligação com o servidor/.test(H()), 'aviso de treino com a chave desligada');
   assert.strictEqual(noClock(H()), local0, 'com o provider local o lobby mudou'); assert.deepStrictEqual(X('paOpps()'), A.opponents(g.S, host)); out.push('provider local: lobby idêntico ao de antes');
   def.onClose(); F.DATA.viewOn = view0; delete g.Sys.net;
   console.log('p_arena.smoke OK\n- ' + out.join('\n- '));
