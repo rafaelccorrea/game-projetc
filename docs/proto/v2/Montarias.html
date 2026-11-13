@@ -1,0 +1,616 @@
+<title>Eonbound Montarias V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Perfil V5, Pets V2, Equipamento V2 e Invocar V2.
+   Montarias V2: o herói fica SEMPRE à vista no topo, MONTADO na montaria escolhida (folhas montadas do Perfil V5: arma na mão, asa nas costas), com a aura
+   da montaria pelas estrelas desenhada no canvas, e o pet SEMPRE NA FRENTE. Regras = js/sys/mount.js (com a regra nova starFlat). Nada sorteado por dinheiro. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:380px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(-20deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 24%,rgba(255,210,94,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 28%,var(--night) 42%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.55)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:236px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:236px}
+.who{position:absolute;z-index:3;left:12px;top:4px;display:flex;align-items:center;gap:6px;height:26px;padding:0 4px 0 10px;border-radius:13px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:calc(100% - 150px);overflow:hidden}
+.who span{overflow:hidden;text-overflow:ellipsis;min-width:0;padding-right:6px}
+.who i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.who.pv{background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22));border-color:var(--gold);color:var(--gold)}
+.who.pv i{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.who button{flex:none;height:20px;padding:0 9px;border-radius:10px;border:0;background:var(--gold);color:var(--ink);font-weight:900;font-size:11px}
+/* Montado / A pé (igual ao Perfil V5, aqui no canto de cima para não cobrir a cabeça da montaria) */
+.mode{position:absolute;z-index:3;right:10px;top:4px;display:flex;gap:2px;padding:2px;border-radius:13px;background:rgba(5,8,28,.72);border:1px solid var(--line)}
+.mode button{border:0;background:none;height:24px;padding:0 9px;border-radius:10px;font-weight:900;font-size:11px;color:var(--muted)}
+.mode button[aria-pressed="true"]{background:#3d4fb8;color:#fff}
+.note{position:absolute;z-index:3;left:12px;top:36px;padding:3px 9px;border-radius:11px;background:var(--glass);border:1px solid var(--line2);font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+.note b{color:var(--gold)}
+
+.fcrow{position:relative;z-index:3;display:flex;align-items:center;gap:8px;margin:2px 12px 0;padding:4px 8px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5)}
+.fcb{flex:1;min-width:0}
+.fcb small{display:block;font-size:9px;letter-spacing:1.2px;color:var(--gold);font-weight:900}
+.fcb b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:10px;font-weight:900;color:var(--muted);text-align:right;white-space:nowrap}
+.chip b{color:var(--text);font-size:12px}
+.chip .pg{color:var(--green)}
+
+.bt{flex:none;min-width:76px;height:38px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green);cursor:default}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f;box-shadow:0 3px 0 #164e8c}
+.bt.grn{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b;box-shadow:0 3px 0 #0d6b40}
+.bt:disabled{opacity:.55;cursor:default;transform:none}
+.bt svg{width:14px;height:14px;flex:none}
+.bt.two{flex-direction:column;gap:0;line-height:1.1}
+.bt.two span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.bt.two small{font-size:10px;font-weight:900;opacity:.9;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.bt.two small.g{color:#0a5c32;opacity:1}
+
+/* faixa da montaria escolhida */
+.det{position:relative;z-index:3;margin:6px 12px 0;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.dt{display:flex;gap:9px;align-items:center;min-width:0}
+.th{flex:none;width:46px;height:40px;border-radius:11px;border:2px solid var(--rc);background:#0c1238 no-repeat center/contain}
+.dt .di{flex:1;min-width:0}
+.pvt{display:inline-block;font-size:9px;font-weight:900;letter-spacing:1px;padding:1px 6px;border-radius:6px;background:var(--gold);color:var(--ink);vertical-align:2px;margin-right:4px}
+.pvt.eq{background:var(--green);color:#043018}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stars{flex:none;display:flex;gap:1px}
+.stars svg{width:13px;height:13px}
+.lvb{margin-top:6px;position:relative;height:20px;border-radius:10px;background:rgba(5,8,28,.6);border:1px solid var(--line);overflow:hidden}
+.lvb>i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#22c47a,#7dffb8);border-radius:10px;transition:width .25s}
+.lvb>i.cap{background:linear-gradient(90deg,#f4a52a,#ffe58a)}
+.lvb>i.fr{background:linear-gradient(90deg,#7a54d8,#c3a3ff)}
+.lvb span{position:relative;display:flex;justify-content:space-between;gap:6px;padding:0 9px;line-height:18px;font-size:11px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
+.lvb span em{font-style:normal;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cmp{display:flex;align-items:center;gap:6px;margin-top:6px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
+.cmp small{font-size:9px;letter-spacing:1px;color:var(--muted);flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp .a{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.cmp .b{font-family:var(--fd);font-weight:400;font-size:17px;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.cmp .b.p{color:var(--cyan)}
+.cmp svg{width:14px;height:14px;flex:none}
+.cmp .d{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.up{color:var(--green)} .dn2{color:var(--red)} .eq0{color:var(--muted)}
+.acts{display:flex;gap:6px;margin-top:7px}
+.acts .bt{flex:1 1 0;min-width:0;height:40px;font-size:12px;padding:0 6px}
+.src{margin-top:6px;font-size:11px;font-weight:800;color:var(--muted);line-height:1.4}
+.src b{color:var(--gold)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 20px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.pan{border-radius:16px;background:var(--glass);border:1px solid var(--line);padding:10px;margin-bottom:8px;min-width:0}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:0 0 7px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.sec span:first-child{flex:none}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec b{color:var(--text)}
+.hint{font-size:11px;color:var(--muted);margin:7px 0 0;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+
+/* grade de montarias */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cell{position:relative;min-width:0;border-radius:12px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 30%,#1a2366),#0c1238 78%);padding:0 0 4px;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
+.cell.sel{outline:3px solid var(--gold);outline-offset:1px}
+.cell .pi{width:100%;aspect-ratio:1/.8;background:no-repeat center 70%/86% auto}
+.cell.lk .pi{filter:grayscale(1) brightness(.55)}
+.cell .cn{font-size:10px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:13px}
+.cell .cs{font-size:9px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:12px;color:var(--muted)}
+.cell .cs.r{color:var(--rc)}
+.cell .bdg{position:absolute;left:3px;top:3px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:4px;letter-spacing:.3px;line-height:10px;background:var(--green);color:#043018}
+.cell .bdg.ev{left:auto;right:3px;background:var(--gold);color:var(--ink)}
+.cell .bdg.nw{background:var(--violet);color:#160733}
+.cell .lki{position:absolute;right:4px;top:4px;width:14px;height:14px}
+.cell .ss{display:flex;justify-content:center;gap:0;line-height:10px}
+.cell .ss svg{width:9px;height:9px}
+.cell .fb{display:block;height:4px;margin:2px 6px 0;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}
+.cell .fb i{display:block;height:100%;background:linear-gradient(90deg,#7a54d8,#c3a3ff)}
+
+/* estrelas e aura */
+.st5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.sc{min-width:0;border-radius:11px;border:1px solid var(--line2);background:rgba(5,8,28,.5);padding:5px 2px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;overflow:hidden}
+.sc[aria-pressed="true"]{border:2px solid var(--gold)}
+.sc.no{opacity:.62}
+.sc b{font-size:12px;font-weight:900;color:var(--gold)}
+.sc i{display:block;width:26px;height:26px;border-radius:50%;margin:1px 0}
+.sc small{font-size:9px;font-weight:900;text-align:center;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.sc small.v{color:var(--text)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;padding:4px 0;border-top:1px solid rgba(130,150,255,.15);min-width:0}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--muted);flex:none}
+.kv span:last-child{text-align:right;min-width:0}
+.kv .g{color:var(--green)}
+
+.flash{position:absolute;left:0;right:0;top:54px;height:250px;z-index:30;pointer-events:none;background:radial-gradient(circle at 55% 62%,rgba(255,250,225,.9),color-mix(in srgb,var(--rc) 45%,transparent) 30%,transparent 62%);animation:flash .9s ease-out forwards}
+.mbn{position:absolute;left:0;right:0;top:96px;z-index:31;text-align:center;pointer-events:none;font-family:var(--fd);font-size:30px;letter-spacing:1.5px;color:var(--rc);text-shadow:0 0 22px var(--rc),0 3px 0 rgba(0,0,0,.55);animation:mbn 1.5s ease-out forwards;padding:0 12px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.fcfly{position:absolute;z-index:40;left:50%;top:214px;transform:translateX(-50%);font-family:var(--fd);font-size:26px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap}
+.fcfly.up{color:var(--green)} .fcfly.dn{color:var(--red)}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@keyframes flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+@keyframes mbn{0%{opacity:0;transform:scale(.4)}18%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="760"></canvas>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">MONTARIAS</div>
+          <div class="cur" aria-label="Ouro"><img src="a/coin.png" alt=""><span id="gold">0</span></div>
+          <div class="cur" aria-label="Diamantes"><img src="a/gem.png" alt=""><span id="gems">0</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="472" role="img" aria-label="Seu herói montado na montaria escolhida, com a aura das estrelas, e o pet na frente"></canvas>
+          <div class="who" id="who"><i></i><span>Kael</span></div>
+          <div class="mode" role="group" aria-label="Como mostrar o herói"><button data-mode="ride" aria-pressed="true">Montado</button><button data-mode="foot" aria-pressed="false">A pé</button></div>
+          <div id="over"></div>
+        </div>
+        <div class="fcrow">
+          <div class="fcb"><small>PODER (FC)</small><b id="fc">0</b></div>
+          <div class="chip" id="chip"></div>
+        </div>
+        <div id="det"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Montarias (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">O herói fica sempre no topo, montado na montaria escolhida, com a arma na mão e o pet na frente. Tocou numa montaria sua: o herói monta nela na hora. Tocou numa que você não tem: ela aparece no herói como prévia, com o jeito de conseguir. A aura cresce com as estrelas (sem aura, brilho, fumaça, partículas). Subir nível custa ouro (teto = nível do jogador ÷ 2); subir estrela usa fragmentos e mostra o poder ganho em verde. Nada é sorteado por dinheiro.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Jogador" style="margin-top:8px"><button data-pl="40" aria-pressed="true">Jogador nível 40</button><button data-pl="all" aria-pressed="false">Tudo liberado</button></div>
+      <div class="seg" style="margin-top:8px"><button data-sim="frag">+10 fragmentos na montaria da faixa</button></div>
+      <p class="sub" style="margin-top:8px">"Jogador nível 40": fase 35 (Era da Pólvora), 3 montarias, teto de nível 20 (o Pônei já está no teto; o Lobo tem fragmentos para subir de estrela). "Tudo liberado": nível 120, fase 90, as 16 montarias, teto 60. A FC sem montaria e o estoque de ouro e diamantes são exemplos; a % de ATK e VIDA, o custo em ouro, o teto, as estrelas, a aura e as fontes vêm do código (js/sys/mount.js, js/sys/newdrops.js, js/sys/buy.js, js/battle.js). O botão de fragmentos simula uma cópia repetida (+10).</p>
+    </div>
+    <div class="box">
+      <h2>Como funciona</h2>
+      <ul>
+        <li>A montaria dá % de ATK e % de VIDA (os dois iguais). No Nv 60 e 5★, sem o pacote: 3 / 4,5 / 6,5 / 9 / 12% (Básico a Lendário)</li>
+        <li>Pacote de dificuldade (aprovado pelo dono): cada estrela acima da 1ª soma +2 / +2,25 / +2,5 / +2,75 / +3% de ATK e VIDA pela raridade, fora do fator de nível. Os números da tela já usam essa regra</li>
+        <li>Nível 1 a 60 com ouro; teto = nível do jogador ÷ 2. Ouro do Nv N ao N+1 = 20 × ouro de um abate da fase × (1 + 0,05 × (N−1)) × (1 + 0,5 × raridade)</li>
+        <li>Estrelas: 10 / 20 / 30 / 40 fragmentos (2★ a 5★); montaria repetida = 10 fragmentos</li>
+        <li>Aura pelas estrelas (só visual): 1★ sem aura, 2★ e 3★ brilho leve, 4★ aura com fumaça, 5★ aura forte com fumaça e partículas</li>
+        <li>As 10 novas nascem sozinhas ao juntar os fragmentos (60 / 100 / 200 / 400 pela raridade); o Mecha é compra direta inteira. Sem sorteio pago</li>
+        <li>Arte montada pronta: Pônei, Cavalo, Lobo, Grifo, Tigre de cristal e Serpe (Kael e Kaia, as folhas do Perfil V5). As 10 novas aparecem paradas atrás do herói até a arte montada chegar</li>
+        <li>As folhas montadas já vêm com a espada da Medieval na mão; por isso a arma equipada nos dois exemplos é essa mesma espada (a pé ela é desenhada no punho, como no jogo)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: aura mais forte no 5★, montaria maior no palco"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- REGRAS DO JOGO (copiadas de js/sys/mount.js; não inventar) ----------
+   DATA.maxPct [3 4,5 6,5 9 12] · maxLvl 60 · lvlMin 0,4 (Nv 1) → 1 (Nv 60), linear · starBase 0,75 + starStep 0,05 × estrelas · maxStars 5
+   starFlat.pct [2 2,25 2,5 2,75 3] por estrela acima da 1ª (pacote de dificuldade; docs/balance.json dificuldade.mountStarFlat on:true) · starCost [10,20,30,40] · dupFrags 10
+   cost {goldK 20, growth 0,05, rarCost 0,5} × host.goldUnit() = ouro de 1 abate comum da fase (js/farm.js: ceil(goldBase 4 × goldGrowth 1,15^(fase−1) × commonGoldMult 0,32), js/battle.js BAL)
+   lvlCap = piso(nível do jogador ÷ 2), 1..60 · aura por estrela (DATA.aura) · cor da aura por estrela (js/mountfx.js MOUNT_AURA) · arte montada = js/mountfx.js MOUNT_TBL */
+const R={maxPct:[3,4.5,6.5,9,12],maxLvl:60,lvlMin:0.4,starBase:0.75,starStep:0.05,maxStars:5,starFlat:[2,2.25,2.5,2.75,3],starCost:[10,20,30,40],dupFrags:10,
+  cost:{goldK:20,growth:0.05,rarCost:0.5},bal:{goldBase:4,goldGrowth:1.15,commonGoldMult:0.32}};
+const AURA=[{id:'none',name:'Sem aura',glow:0,smoke:false,particles:false},{id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},{id:'glow',name:'Brilho leve',glow:1,smoke:false,particles:false},
+  {id:'aura_smoke',name:'Aura com fumaça',glow:2,smoke:true,particles:false},{id:'aura_full',name:'Aura forte com fumaça e partículas',glow:3,smoke:true,particles:true}];
+const AURA_S=['Sem aura','Brilho','Brilho','Fumaça','Partículas'];
+const MAURA=[null,'rgba(200,230,255,','rgba(120,200,255,','rgba(120,200,255,','rgba(190,140,255,','rgba(255,214,120,'];
+const RIDE={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1};   /* MOUNT_TBL do js/mountfx.js */
+const RN=['Básico','Raro','Épico','Mítico','Lendário'];
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434'];
+const ERAN=['Pré-História','Antiguidade','Medieval','Era da Pólvora','Era Industrial','Era Moderna','Era Futurista','Submundo','Celestial'];
+/* catálogo do Sys.mount (nomes, raridade, hatchFrags, src e minEra do código). As 6 primeiras não têm src no mount.js: as fontes vêm de reports/spec-oferta-montaria.md §2 e js/sys/offer.js */
+const MOUNTS=[
+ {id:'pony',name:'Pônei',r:0,ic:'pony',src:['Loja: compra direta por preço fixo em diamantes (Básico)'],go:'Loja'},
+ {id:'horse',name:'Cavalo de guerra',r:1,ic:'horse',src:['Loja: compra direta por preço fixo em diamantes (Raro)'],go:'Loja'},
+ {id:'wolf',name:'Lobo de guerra',r:2,ic:'wolf',src:['Oferta de 1ª compra (vem com a arma Épica e a skin)'],go:'Oferta'},
+ {id:'griffin',name:'Grifo dourado',r:2,ic:'griffin',src:['Passe: trilha premium (1 montaria por temporada)'],go:'Passe'},
+ {id:'mythic',name:'Tigre de cristal',r:3,ic:'mythic',src:['Eventos: loja de pontos'],go:'Eventos'},
+ {id:'wyvern',name:'Serpe dourada',r:4,ic:'wyvern',src:['Eventos: loja de pontos'],go:'Eventos'},
+ {id:'raptor',name:'Raptor de guerra',r:1,ic:'war_raptor',nw:1,hatch:60,src:['Torre: andar 50 (montaria inteira)','Baús da atividade diária: 1 fragmento/dia (60 = nasce)'],go:'Torre'},
+ {id:'scorpion',name:'Escorpião gigante',r:2,ic:'giant_scorpion',nw:1,hatch:100,src:['Trilha de evento (faixa de topo): 20 fragmentos por evento','Chefe Mundial: fragmentos para quem passa de 5% da vida'],go:'Eventos'},
+ {id:'panther',name:'Pantera sombria',r:2,ic:'shadow_panther',nw:1,hatch:100,src:['Arena: fim de temporada a partir do Ouro (10 fragmentos; Platina+ 20)'],go:'Arena'},
+ {id:'hellhorse',name:'Cavalo infernal',r:3,ic:'infernal_horse',nw:1,hatch:200,minEra:7,src:['Chefe da era 7 (Submundo): 2 fragmentos por dia','Evento do Submundo'],go:'Mapa das Eras'},
+ {id:'unicorn',name:'Unicórnio de guerra',r:3,ic:'war_unicorn',nw:1,hatch:200,src:['Guilda: baú semanal (5 fragmentos) e loja da guilda por contribuição'],go:'Guilda'},
+ {id:'icewolf',name:'Lobo de gelo',r:3,ic:'ice_wolf',nw:1,hatch:200,src:['Torneio de Fim de Semana: top 100 (10), top 10 (25)'],go:'Torneio'},
+ {id:'phoenixm',name:'Fênix gigante',r:4,ic:'giant_phoenix',nw:1,hatch:400,src:['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)'],go:'VIP'},
+ {id:'blackdragon',name:'Dragão negro',r:4,ic:'black_dragon',nw:1,hatch:400,src:['Torneio: top 3 da temporada (inteiro); top 10 (50 fragmentos)'],go:'Torneio'},
+ {id:'celtiger',name:'Tigre de guerra celestial',r:4,ic:'celestial_tiger',nw:1,hatch:400,minEra:8,src:['Chefe da era 8 (Celestial): 2 fragmentos por dia','Guerra de guildas: capital (40 por temporada)'],go:'Mapa das Eras'},
+ {id:'mecha',name:'Mecha de guerra',r:4,ic:'war_mecha',nw:1,hatch:400,src:['Loja: compra direta, inteira, R$ 49,90 (sem sorteio)'],go:'Loja'}];
+const BY={}; MOUNTS.forEach(m=>BY[m.id]=m);
+/* onde caem os pés em cada ícone 256x256 (medido: última linha opaca) */
+const FEET={pony:232,horse:238,wolf:218,griffin:238,mythic:228,wyvern:236,war_raptor:242,giant_scorpion:242,shadow_panther:222,infernal_horse:242,war_unicorn:242,ice_wolf:234,giant_phoenix:242,black_dragon:242,celestial_tiger:242,war_mecha:218};
+const icon=m=>'a/m_'+m.ic+'.png';
+const FRAG_SRC='Passe: 10 fragmentos na trilha · Baú de diamante da atividade (100 pontos): 1 por dia · Loja da guilda: 5 por 60 brasões (2 por semana) · montaria repetida: 10';
+
+/* ---------- contas (pctOf, upgradeCost, lvlCap do mount.js) ---------- */
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function pctOf(id,lvl,stars,flat){ const m=BY[id]; if(!m) return 0; const L=R.lvlMin+(1-R.lvlMin)*(clamp(lvl,1,R.maxLvl)-1)/(R.maxLvl-1);
+  const fl=flat===false?0:(clamp(stars,1,R.maxStars)-1)*R.starFlat[m.r];
+  return Math.round((R.maxPct[m.r]*L*(R.starBase+R.starStep*clamp(stars,1,R.maxStars))+fl)*1000)/1000; }
+const goldUnit=st=>Math.max(1,Math.ceil(R.bal.goldBase*Math.pow(R.bal.goldGrowth,st-1)*R.bal.commonGoldMult));
+const lvlCost=(id,lvl)=>{ const C=R.cost, m=BY[id]; return Math.ceil(C.goldK*goldUnit(P.stage)*(1+C.growth*(lvl-1))*(1+m.r*C.rarCost)); };
+const lvlCap=()=>clamp(Math.floor(P.lvl/2),1,R.maxLvl);
+const starNeed=x=>x.stars<R.maxStars?R.starCost[x.stars-1]:0;
+const auraOf=st=>AURA[clamp(st|0||1,1,5)-1];
+const live=m=>!m.minEra||P.era>=m.minEra;
+/* FC: ATK e VIDA valem metade da FC cada; a montaria soma a mesma % nos dois, então FC = FC sem montaria × (1 + %/100) */
+const fcWithPct=p=>P.baseFC*(1+p/100);
+const fcNow=()=>{ const x=S.eq&&S.own[S.eq]; return fcWithPct(x?pctOf(S.eq,x.lvl,x.stars):0); };
+const fcWith=(id,x)=>fcWithPct(pctOf(id,x.lvl,x.stars));
+function canLvl(id){ const x=S.own[id]; if(!x) return 'id'; if(x.lvl>=R.maxLvl) return 'max'; if(x.lvl>=lvlCap()) return 'cap'; if(S.gold<lvlCost(id,x.lvl)) return 'money'; return ''; }
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtFC=v=>v>=1e9?(v/1e9).toFixed(2).replace('.',',')+' bi':v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' mi':v>=1e4?(v/1000).toFixed(1).replace('.',',')+' mil':n(v);
+const fmtD=v=>Math.abs(v)>=1e4?fmtFC(Math.abs(v)):n(Math.abs(v));
+const pc=v=>'+'+v.toFixed(1).replace('.',',')+'%';
+const pcd=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1).replace('.',',')+'%';
+const SV={go:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="#9aa6d6"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>'};
+const star=on=>`<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z" fill="${on?'#ffd25e':'rgba(255,255,255,.12)'}" stroke="${on?'#9a5a10':'rgba(160,180,255,.4)'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+const stars=k=>{ let h=''; for(let i=1;i<=5;i++) h+=star(i<=k); return h; };
+
+/* ---------- os dois jogadores do Simular (FC sem montaria, ouro e diamantes = exemplo; o resto pelas regras) ---------- */
+const PL={
+ 40:{lvl:40,stage:35,era:3,baseFC:148000,gold:420000,gems:2350,wing:null,pet:'a/pp_era2_dragon_mid.png',eq:'wolf',
+   own:{pony:{lvl:20,stars:3,frags:12},horse:{lvl:8,stars:1,frags:4},wolf:{lvl:14,stars:2,frags:24}},
+   stored:{griffin:0,raptor:23,scorpion:10,unicorn:15,icewolf:0,panther:0}},
+ all:{lvl:120,stage:90,era:8,baseFC:8420000,gold:2400000000,gems:18400,wing:'angel',pet:'a/pp_era8_pegasus_evo.png',eq:'wyvern',
+   own:{pony:{lvl:60,stars:5,frags:0},horse:{lvl:60,stars:5,frags:0},wolf:{lvl:52,stars:4,frags:31},griffin:{lvl:45,stars:3,frags:8},mythic:{lvl:60,stars:4,frags:40},
+     wyvern:{lvl:58,stars:5,frags:0},raptor:{lvl:30,stars:2,frags:6},scorpion:{lvl:20,stars:1,frags:3},panther:{lvl:41,stars:3,frags:12},hellhorse:{lvl:60,stars:2,frags:9},
+     unicorn:{lvl:33,stars:1,frags:5},icewolf:{lvl:25,stars:2,frags:14},phoenixm:{lvl:60,stars:3,frags:22},blackdragon:{lvl:50,stars:4,frags:18},celtiger:{lvl:12,stars:1,frags:2},mecha:{lvl:1,stars:1,frags:0}},stored:{}}};
+let P=PL[40];
+let S=null;
+function reset(key){ P=PL[key]; S={key,hero:S?S.hero:'kael',mode:'ride',own:JSON.parse(JSON.stringify(P.own)),stored:{...P.stored},eq:P.eq,gold:P.gold,pv:null,apv:null,undo:null,last:null,fx:null}; }
+
+/* ---------- dados medidos dos arquivos do jogo (iguais ao Pets V2 / Equipamento V2 / Perfil V5) ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"type":"melee","grip":[0.385,0.741],"angle":62}},
+"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]}}};
+/* âncoras das costas no herói MONTADO (Perfil V5 AN.ride, no espaço do quadro 512x352; as folhas aqui são cópias pela metade, 256x176 por quadro, e o desenho
+   escala o quadro de volta para 512 antes de aplicar k, então as âncoras continuam as mesmas) */
+const AN_RIDE={"kael_horse":{"x":160.9,"y":139,"a":34.7,"s":0.654},"kael_wolf":{"x":162.4,"y":172,"a":26.4,"s":0.654},"kael_pony":{"x":161.5,"y":155,"a":35.3,"s":0.654},"kael_griffin":{"x":161.7,"y":175,"a":16.9,"s":0.654},"kael_wyvern":{"x":159.5,"y":139,"a":5.4,"s":0.654},"kael_mythic":{"x":161.3,"y":141,"a":18.9,"s":0.654},"kaia_horse":{"x":165.5,"y":139,"a":34.7,"s":0.654},"kaia_wolf":{"x":164.7,"y":173,"a":26.4,"s":0.654},"kaia_pony":{"x":165.8,"y":156,"a":35.3,"s":0.654},"kaia_griffin":{"x":166.3,"y":176,"a":16.9,"s":0.654},"kaia_wyvern":{"x":164.8,"y":141,"a":5.4,"s":0.654},"kaia_mythic":{"x":165.9,"y":141,"a":18.9,"s":0.654}};
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1}};
+const WEAPON={key:'era2_t1',r:0};
+
+/* ---------- PALCO EM CANVAS ---------- */
+const IM={};
+/* imagens do palco como <img> DE VERDADE na página (no host publicado, new Image() não chega ao canvas), escondidas fora da tela */
+const STG_EL=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG_EL.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function wSpr(key){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key]; return {c:im,w:W.w,h:W.h,pad:0}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; return -(G.ang-wang)*Math.PI/180; }
+const GY=222, HK=0.8, RK=300/512, RHX=205, FHX=168, MCX=262, MW=196, PCX_R=132, PCX_F=96, KP=145/512;
+function wings(x,ax,ay,b,k,t){ const WA=P.wing&&WING_AN[P.wing]; if(!WA||!b) return; const Li=img('a/wg_'+P.wing+'_L.png'), Ri=img('a/wg_'+P.wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* herói A PÉ: corpo sem arma + a arma equipada no punho de cada quadro (receita do Pets V2 / Invocar V2), asa nas costas */
+function drawHeroFoot(x,t,hx){
+  const W=D.W[WEAPON.key], B=D.B[S.hero], sh=img('a/body_'+S.hero+'.png');
+  if(!ok(sh)) return;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=hx-(B.pad+128)*k, y0=GY-(S.hero==='kael'?242:B.fy)*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*B.w,0,B.w,B.h,0,0,B.w,B.h);
+  const ws=W?wSpr(WEAPON.key):null; let drawW=null;
+  if(ws){ const grip=W.grip, kk=256*0.5/Math.max(W.w,W.h);
+    const dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW();
+      fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=B.neck&&B.neck[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+
+/* AURA DA MONTARIA pelas estrelas (DATA.aura + cores do MOUNT_AURA): brilho em volta do contorno (sombra de uma cópia fora da tela, como o jogo),
+   fumaça subindo do chão (4★ e 5★) e partículas (5★). Cresce a cada estrela. Tudo preso ao chão da montaria. */
+const SEED=[]; for(let i=0;i<40;i++) SEED.push([((i*7919)%997)/997,((i*104729)%991)/991,((i*1299709)%983)/983]);
+function halo(x,drawFn,col,blur){ const OFF=1200; x.save(); x.shadowColor=col; x.shadowBlur=blur; x.shadowOffsetX=OFF*2; x.shadowOffsetY=0; x.translate(-OFF,0); drawFn(); x.restore(); }
+function auraBack(x,t,st,cx,w,h,drawFn){ const A=auraOf(st), col=MAURA[st]; if(!A||!col) return;
+  const pu=0.5+0.2*Math.sin(t*2.4);
+  if(A.glow>0){ /* luz no chão, maior com as estrelas */ const r=w*(0.45+0.05*st), g=x.createRadialGradient(cx,GY,4,cx,GY,r); g.addColorStop(0,col+(0.18+0.07*A.glow)*pu*2+')'); g.addColorStop(1,col+'0)');
+    x.fillStyle=g; x.beginPath(); x.ellipse(cx,GY,r,r*0.2,0,0,7); x.fill(); }
+  if(A.smoke){ const N=A.glow>=3?16:10, sc=st>=5?'rgba(255,196,120,':'rgba(160,120,220,';
+    for(let i=0;i<N;i++){ const s=SEED[i], p=(t*(0.18+0.1*s[2])+s[0])%1, px=cx+(s[1]-0.5)*w*0.95+Math.sin(t*0.8+i)*6, py=GY+4-p*h*0.62, r=8+p*(18+6*A.glow);
+      const a=Math.sin(Math.PI*p)*(A.glow>=3?0.26:0.2); const g=x.createRadialGradient(px,py,1,px,py,r); g.addColorStop(0,sc+a.toFixed(3)+')'); g.addColorStop(1,sc+'0)');
+      x.fillStyle=g; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); } }
+  if(A.glow>0&&drawFn){ const blur=[0,10,22,30][A.glow]+(st===3?6:0), al=[0,.55,.8,.95][A.glow]+(st===3?.12:0);
+    halo(x,drawFn,col+Math.min(1,al*pu*1.6).toFixed(2)+')',blur); if(A.glow>=3) halo(x,drawFn,col+'0.55)',12); } }
+function auraFront(x,t,st,cx,w,h){ const A=auraOf(st), col=MAURA[st]; if(!A||!A.particles||!col) return;
+  x.save(); x.globalCompositeOperation='lighter';
+  for(let i=0;i<22;i++){ const s=SEED[i+12], p=(t*(0.22+0.12*s[2])+s[0])%1, px=cx+(s[1]-0.5)*w+Math.sin(t*2+i)*4, py=GY+2-p*h*0.85, r=1.2+2.2*(1-p)*s[2]+0.6;
+    x.fillStyle=(i%3?'rgba(255,226,140,':'rgba(255,255,230,')+(Math.sin(Math.PI*p)*0.9).toFixed(3)+')'; x.beginPath(); x.arc(px,py,r,0,7); x.fill();
+    if(i%4===0){ x.strokeStyle=x.fillStyle; x.lineWidth=0.8; x.beginPath(); x.moveTo(px-r*2.2,py); x.lineTo(px+r*2.2,py); x.moveTo(px,py-r*2.2); x.lineTo(px,py+r*2.2); x.stroke(); } }
+  x.restore(); }
+
+/* o que vai para o palco: a prévia (S.pv), senão a montaria em uso; S.apv = prévia de estrela (aura) tocada no painel */
+function look(){ const id=S.pv||S.eq, m=BY[id], x=m&&S.own[id];
+  let st=x?x.stars:1; if(S.apv&&S.apv.id===id) st=S.apv.st;
+  const f=S.fx&&S.fx.id===id&&(performance.now()-S.fx.t)<700?S.fx:null; if(f&&!S.apv) st=f.from;
+  const ride=!!(m&&RIDE[id]&&S.mode==='ride');
+  return {m,st,ride,owned:!!x}; }
+function draw(t){
+  if(!S||!S.own) return;
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,236);
+  const L=look(), m=L.m, cx=L.ride?RHX+18:MCX;
+  try{ /* chão */ const g=x.createRadialGradient(200,GY,10,200,GY,150); g.addColorStop(0,'rgba(94,231,255,.3)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(200,GY,150,22,0,0,7); x.fill();
+    x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(200,GY,126,16,0,0,7); x.stroke(); x.setLineDash([]); }catch(err){ stgErr('o chão',err); }
+  if(L.ride){
+    /* MONTADO (receita do Perfil V5): folha montada rd_/rda_ (12 quadros), asa na âncora das costas, aura atrás */
+    const k=RK, ox=RHX-256*k+18, oy=GY-339*k, H=img('a/'+(S.hero==='kael'?'rd_':'rda_')+m.id+'.png'), anc=AN_RIDE[S.hero+'_'+m.id];
+    const fi=((Math.floor(t*12)%12)+12)%12;
+    const body=()=>{ if(ok(H)){ const fw=H.naturalWidth/12, fh=H.naturalHeight; x.drawImage(H,fi*fw,0,fw,fh,ox,oy,512*k,352*k); } };
+    try{ x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(cx-10,GY+2,96,10,0,0,7); x.fill(); x.restore(); }catch(err){ stgErr('a sombra',err); }
+    try{ if(ok(H)) auraBack(x,t,L.st,cx,300,206,body); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a aura',err); }
+    try{ if(anc) wings(x,ox+anc.x*k,oy+anc.y*k,anc,k,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a asa',err); }
+    try{ body(); }catch(err){ stgErr('o herói montado',err); }
+    try{ auraFront(x,t,L.st,cx,300,206); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('as partículas',err); }
+  } else {
+    /* A PÉ, ou montaria sem arte montada: a montaria PARADA atrás do herói (pés no chão), o herói a pé na frente dela */
+    if(m){ const I=img(icon(m)), s=MW/256, fy=FEET[m.ic]||240, br=1+0.012*Math.sin(t*2.2);
+      const body=()=>{ if(ok(I)){ x.save(); x.translate(MCX,GY+4); x.scale(1,br); x.drawImage(I,-MW/2,-fy*s,MW,MW); x.restore(); } };
+      try{ x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(MCX,GY+3,74,9,0,0,7); x.fill(); x.restore(); }catch(err){ stgErr('a sombra',err); }
+      try{ if(ok(I)) auraBack(x,t,L.st,MCX,MW,MW*0.9,body); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a aura',err); }
+      try{ body(); }catch(err){ stgErr('a montaria',err); }
+      try{ auraFront(x,t,L.st,MCX,MW,MW*0.9); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('as partículas',err); } }
+    try{ drawHeroFoot(x,t,FHX); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  }
+  /* PET SEMPRE NA FRENTE (regra do dono): depois do herói e da montaria, à frente e no chão (quadro 512x352, pés em 307) */
+  try{ const I=img(P.pet); if(ok(I)){ const fw=I.naturalWidth/12, fh=I.naturalHeight, fi=((Math.floor(t*12)%12)+12)%12, cxp=L.ride?PCX_R:PCX_F;
+      x.drawImage(I,fi*fw,0,fw,fh,cxp-224*KP,GY+8-307*KP,512*KP,352*KP); } }catch(err){ stgErr('o pet',err); }
+}
+function hexA(h,a){ const v=parseInt(h.slice(1),16); return `rgba(${v>>16&255},${v>>8&255},${v&255},${Math.min(1,Math.max(0,a)).toFixed(3)})`; }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- topo ---------- */
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+function renderTop(){
+  $('#gold').textContent=fmtFC(S.gold); $('#gems').textContent=n(P.gems); $('#fc').textContent=fmtFC(fcNow());
+  const w=$('#who'), L=look();
+  if(S.pv){ w.className='who pv'; w.innerHTML=`<i></i><span>Prévia: ${BY[S.pv].name}</span><button data-x="sair">Sair</button>`; }
+  else if(S.apv){ w.className='who pv'; w.innerHTML=`<i></i><span>Prévia da aura: ${S.apv.st}★</span><button data-x="sair">Sair</button>`; }
+  else { const m=S.eq&&BY[S.eq], x=m&&S.own[S.eq]; w.className='who'; w.innerHTML=`<i></i><span>${hn()} · Nível ${P.lvl}${m?' · '+m.name+' '+x.stars+'★':''}</span>`; }
+  let note='';
+  if(L.m&&!RIDE[L.m.id]) note=`${L.m.name}: <b>arte montada em produção</b> (por enquanto ela fica parada atrás do herói)`;
+  else if(L.m&&S.mode==='foot') note=`A pé: a montaria fica parada atrás do herói`;
+  $('#over').innerHTML=note?`<div class="note">${note}</div>`:'';
+  document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===S.mode));
+  const ownN=Object.keys(S.own).length, ready=Object.keys(S.own).filter(id=>{ const x=S.own[id]; return x.stars<5&&x.frags>=starNeed(x); }).length;
+  const x=S.eq&&S.own[S.eq], p=x?pctOf(S.eq,x.lvl,x.stars):0;
+  $('#chip').innerHTML=`<span>Montarias <b>${ownN}/${MOUNTS.length}</b></span><span>${ready?`<span class="pg">${ready} pronta${ready>1?'s':''} para subir estrela</span>`:'ATK e VIDA '+pc(p)}</span>`; }
+
+/* ---------- faixa da montaria: nível com o teto, % ATK/VIDA agora → depois, FC antes → depois, Subir nível, Subir estrela ---------- */
+function cmpHTML(label,a,b){ const df=b-a, cls=Math.abs(df)<1?'eq0':df>0?'up':'dn2', tx=Math.abs(df)<1?'igual':(df>0?'▲ +':'▼ −')+fmtD(df);
+  return `<div class="cmp"><small>${label}</small><span class="a">${fmtFC(a)}</span>${SV.go}<span class="b">${fmtFC(b)}</span><span class="d ${cls}">${tx}</span></div>`; }
+function pctHTML(label,a,b){ const df=b-a, cls=Math.abs(df)<0.05?'eq0':df>0?'up':'dn2';
+  return `<div class="cmp"><small>${label}</small><span class="a">${pc(a)}</span>${SV.go}<span class="b p">${pc(b)}</span><span class="d ${cls}">${Math.abs(df)<0.05?'igual':(df>0?'▲ ':'▼ ')+pcd(df)}</span></div>`; }
+function lvlBar(id,x){ const cap=lvlCap(), why=canLvl(id); let right, w, cls='';
+  if(x.lvl>=R.maxLvl){ right='máximo'; w=100; cls='cap'; }
+  else if(why==='cap'){ right='teto: jogador Nv '+((x.lvl+1)*2)+' libera o próximo'; w=100; cls='cap'; }
+  else { right='próximo: '+fmtFC(lvlCost(id,x.lvl))+' de ouro'; w=x.lvl/cap*100; }
+  return `<div class="lvb" aria-label="Nível ${x.lvl} de ${cap}"><i class="${cls}" style="width:${w.toFixed(1)}%"></i><span><b>Nv ${x.lvl}/${cap}</b><em>${cls?'— ':''}${right}</em></span></div>`; }
+function renderDet(){ const d0=$('#det'), id=S.pv||S.eq, m=BY[id]; if(!m){ d0.innerHTML=''; return; }
+  const x=S.own[id];
+  if(!x){ /* prévia de montaria que você não tem */
+    const nx={lvl:1,stars:1}, sv=S.stored[id]||0, lockE=!live(m);
+    const fr=m.hatch?`<div class="lvb" aria-label="${sv} de ${m.hatch} fragmentos"><i class="fr" style="width:${Math.min(100,sv/m.hatch*100).toFixed(1)}%"></i><span><b>${n(sv)}/${n(m.hatch)} fragmentos</b><em>nasce sozinha ao completar</em></span></div>`:'';
+    const how=m.src.join(' · ')+(lockE?` · chega na <b>era ${m.minEra} (${ERAN[m.minEra]})</b>`:'')+(!m.hatch&&sv?` · <b>${sv}</b> fragmentos guardados (entram quando ela chegar)`:'');
+    d0.innerHTML=`<div class="det" style="--rc:${RC[m.r]}">
+      <div class="dt"><span class="th" style="background-image:url(${icon(m)})"></span><div class="di"><div class="dn"><span class="pvt">PRÉVIA</span>${m.name} <span class="rar">${RN[m.r]}</span></div><div class="dh">você ainda não tem · até ${pc(pctOf(id,60,5))} de ATK e VIDA (Nv 60, 5★)</div></div></div>
+      ${fr}${cmpHTML('FC AGORA → COM ELA (NV 1, 1★)',fcNow(),fcWith(id,nx))}
+      <p class="src">Como conseguir: ${how}. Sem sorteio pago.</p>
+      <div class="acts"><button class="bt off" data-x="sair">Sair</button><button class="bt blue" data-go="${m.go}">Ir: ${m.go}</button></div></div>`; return; }
+  const why=canLvl(id), need=starNeed(x), p0=pctOf(id,x.lvl,x.stars), cost=x.lvl<R.maxLvl?lvlCost(id,x.lvl):0;
+  const canStar=need&&x.frags>=need, nextSt=Math.min(5,x.stars+1);
+  let pcmp, cmp;
+  if(S.last&&S.last.id===id){ pcmp=pctHTML('ATK E VIDA · '+S.last.what.toUpperCase(),S.last.pa,S.last.pb); cmp=cmpHTML('FC ANTES → DEPOIS',S.last.a,S.last.b); }
+  else if(S.apv&&S.apv.id===id&&S.apv.st!==x.stars){ const xs={...x,stars:S.apv.st}; pcmp=pctHTML(`ATK E VIDA · ${x.stars}★ → ${S.apv.st}★`,p0,pctOf(id,x.lvl,S.apv.st)); cmp=cmpHTML(`FC ANTES → COM ${S.apv.st}★`,fcNow(),fcWith(id,xs)); }
+  else if(need){ const xs={...x,stars:nextSt}; pcmp=pctHTML(`ATK E VIDA · ${x.stars}★ → ${nextSt}★`,p0,pctOf(id,x.lvl,nextSt)); cmp=cmpHTML('FC ANTES → DEPOIS DA ESTRELA',fcNow(),fcWith(id,xs)); }
+  else if(x.lvl<lvlCap()){ const xs={...x,lvl:x.lvl+1}; pcmp=pctHTML(`ATK E VIDA · NV ${x.lvl} → ${x.lvl+1}`,p0,pctOf(id,x.lvl+1,x.stars)); cmp=cmpHTML('FC ANTES → DEPOIS DO NÍVEL',fcNow(),fcWith(id,xs)); }
+  else { pcmp=pctHTML('ATK E VIDA AGORA',p0,p0); cmp=cmpHTML('FC AGORA',fcNow(),fcNow()); }
+  const gL=x.lvl<R.maxLvl?fcWith(id,{...x,lvl:x.lvl+1})-fcNow():0, gS=need?fcWith(id,{...x,stars:nextSt})-fcNow():0;
+  const lvB=why==='max'?`<button class="bt off two" disabled><span>Subir nível</span><small>nível máximo</small></button>`
+    :why==='cap'?`<button class="bt off two" disabled><span>Subir nível</span><small>teto: jogador Nv ${(x.lvl+1)*2}</small></button>`
+    :`<button class="bt two" data-x="lvl" ${why==='money'?'aria-disabled="true"':''}><span>Subir nível · +${fmtD(gL)} FC</span><small>${fmtFC(cost)} de ouro${why==='money'?' (falta ouro)':''}</small></button>`;
+  const stB=!need?`<button class="bt on two" disabled><span>5★ máximo</span><small>${AURA_S[4]}</small></button>`
+    :canStar?`<button class="bt grn two" data-x="star"><span>Subir estrela</span><small>${need} frag. · <b>+${fmtD(gS)} FC</b></small></button>`
+    :`<button class="bt off two" disabled><span>Subir estrela</span><small>${x.frags}/${need} frag. · +${fmtD(gS)} FC</small></button>`;
+  const eqB=S.undo&&S.own[S.undo]?`<button class="bt off two" data-x="undo"><span>Desfazer</span><small>volta ${BY[S.undo].name}</small></button>`:`<span class="bt on two"><span>Usando</span><small>${RIDE[id]?'montado':'arte em produção'}</small></span>`;
+  d0.innerHTML=`<div class="det" style="--rc:${RC[m.r]}">
+    <div class="dt"><span class="th" style="background-image:url(${icon(m)})"></span><div class="di"><div class="dn"><span class="pvt eq">USANDO</span>${m.name} <span class="rar">${RN[m.r]}</span></div><div class="dh">${need?x.frags+'/'+need+' fragmentos':'5★ máximo'} · aura: ${auraOf(x.stars).name}</div></div><span class="stars" aria-label="${x.stars} de 5 estrelas">${stars(x.stars)}</span></div>
+    ${lvlBar(id,x)}${pcmp}${cmp}
+    <div class="acts">${lvB}${stB}${eqB}</div></div>`; }
+
+/* ---------- corpo: grade, estrelas e aura, nível, como conseguir ---------- */
+function cellHTML(m){ const x=S.own[m.id], sel=(S.pv||S.eq)===m.id, eq=S.eq===m.id;
+  if(x){ const rd=x.stars<5&&x.frags>=starNeed(x);
+    return `<button class="cell ${sel?'sel':''}" style="--rc:${RC[m.r]}" data-m="${m.id}" aria-label="${m.name}, ${RN[m.r]}, nível ${x.lvl}, ${x.stars} estrelas${eq?', em uso':''}">
+    <span class="pi" style="background-image:url(${icon(m)})"></span>${eq?'<span class="bdg">USANDO</span>':''}${rd?'<span class="bdg ev">ESTRELA</span>':''}
+    <span class="cn">${m.name}</span><span class="cs r">Nv ${x.lvl} · ${RN[m.r]}</span><span class="ss">${stars(x.stars)}</span></button>`; }
+  const sv=S.stored[m.id]||0, lockE=!live(m);
+  const s=lockE?'Era '+m.minEra+' · '+ERAN[m.minEra]:m.hatch&&m.id!=='mecha'&&m.id!=='phoenixm'?`${n(sv)}/${n(m.hatch)} frag.`:m.go;
+  const bar=m.hatch&&!lockE&&m.id!=='mecha'&&m.id!=='phoenixm'?`<span class="fb"><i style="width:${Math.min(100,sv/m.hatch*100).toFixed(1)}%"></i></span>`:'';
+  return `<button class="cell lk ${sel?'sel':''}" style="--rc:${RC[m.r]}" data-m="${m.id}" aria-label="${m.name}, ${RN[m.r]}, você não tem. Tocar para ver no herói">
+    <span class="pi" style="background-image:url(${icon(m)})"></span>${m.nw?'<span class="bdg nw">NOVA</span>':''}<span class="lki">${SV.lock}</span>
+    <span class="cn">${m.name}</span><span class="cs r">${RN[m.r]}</span><span class="cs">${s}</span>${bar}</button>`; }
+function gridHTML(){ const ownN=Object.keys(S.own).length;
+  return `<div class="pan"><div class="sec"><span>Montarias</span><span><b>${ownN}/${MOUNTS.length}</b> · toque para montar ou ver</span></div><div class="grid">${MOUNTS.map(cellHTML).join('')}</div>
+    <p class="hint">Só uma montaria por vez dá o bônus (a que você usa). <b>NOVA</b> = entra no jogo quando a arte dela for aprovada.</p></div>`; }
+function starsHTML(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return ''; const x=S.own[id], lv=x?x.lvl:1, cur=S.apv&&S.apv.id===id?S.apv.st:(x?x.stars:1);
+  const cards=[1,2,3,4,5].map(s=>{ const A=auraOf(s), col=MAURA[s], reached=x&&s<=x.stars;
+    const dot=A.glow?`background:radial-gradient(circle,${col}0.95) 0,${col}0.35) ${30+10*A.glow}%,transparent 72%)${A.smoke?`,radial-gradient(circle at 50% 80%,rgba(170,130,230,.6),transparent 60%)`:''}`:'background:rgba(255,255,255,.06);border:1px dashed rgba(160,180,255,.35)';
+    return `<button class="sc ${reached||!x?'':'no'}" data-st="${s}" aria-pressed="${cur===s}" aria-label="${s} estrelas: ${A.name}. Ver no herói"><b>${s}★</b><i style="${dot}"></i><small>${AURA_S[s-1]}</small><small class="v">${pc(pctOf(id,lv,s))}</small></button>`; }).join('');
+  const fl=R.starFlat[m.r].toString().replace('.',','), noP=pctOf(id,lv,cur,false), wP=pctOf(id,lv,cur);
+  return `<div class="pan"><div class="sec"><span>Estrelas e aura</span><span>${m.name} · Nv ${lv} · toque para ver</span></div><div class="st5">${cards}</div>
+    <p class="hint">% de ATK e VIDA no Nv ${lv} com o <b>pacote de dificuldade</b>: +${fl}% por estrela acima da 1ª (${RN[m.r]}). Em ${cur}★: ${pc(wP)} (sem o pacote seria ${pc(noP)}).</p>
+    <div class="kv"><span>Custo</span><span>${R.starCost.join(' / ')} fragmentos (2★ a 5★)</span></div>
+    <div class="kv"><span>Fragmentos</span><span>${FRAG_SRC}</span></div></div>`; }
+function levelHTML(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return ''; const x=S.own[id], lv=x?x.lvl:1, gu=goldUnit(P.stage);
+  return `<div class="pan"><div class="sec"><span>Nível</span><span>teto agora: Nv ${lvlCap()} (jogador Nv ${P.lvl} ÷ 2)</span></div>
+    <div class="kv"><span>Ouro de 1 abate</span><span>${n(gu)} (fase ${P.stage})</span></div>
+    <div class="kv"><span>Nv ${lv} → ${Math.min(60,lv+1)}</span><span>${lv<60?n(lvlCost(id,lv))+' de ouro':'máximo'}</span></div>
+    <div class="kv"><span>Conta</span><span>20 × ${n(gu)} × (1 + 0,05 × ${lv-1}) × (1 + 0,5 × ${m.r})</span></div>
+    <div class="kv"><span>Nv 1 → Nv 60</span><span>${pc(pctOf(id,1,x?x.stars:1))} → ${pc(pctOf(id,60,x?x.stars:1))} de ATK e VIDA (${x?x.stars:1}★)</span></div></div>`; }
+function howHTML(){ return `<div class="pan"><div class="sec"><span>Como conseguir</span><span>nada sorteado por dinheiro</span></div>
+  ${MOUNTS.filter(m=>!S.own[m.id]).slice(0,8).map(m=>`<div class="kv"><span>${m.name}</span><span>${m.src[0]}</span></div>`).join('')||'<div class="kv"><span>Todas</span><span>você já tem as 16 montarias</span></div>'}
+  <p class="hint">Montaria repetida vira <b>10 fragmentos</b>. Fragmentos do Passe sem montaria ficam guardados e entram na 1ª.</p></div>`; }
+function renderBody(top){ const b=$('#body'), y=b.scrollTop; b.innerHTML=gridHTML()+starsHTML()+levelHTML()+howHTML(); b.scrollTop=top?0:y; }
+function full(top){ renderTop(); renderDet(); renderBody(top); }
+
+/* ---------- ações ---------- */
+function tapMount(id){ const m=BY[id]; if(!m) return; S.apv=null;
+  if(S.own[id]){ S.pv=null; S.mode='ride';
+    if(S.eq!==id){ const before=fcNow(), prev=S.eq, x0=S.own[prev], pa=x0?pctOf(prev,x0.lvl,x0.stars):0; S.eq=id; S.undo=prev; const x=S.own[id];
+      S.last={id,what:'trocou',a:before,b:fcNow(),pa,pb:pctOf(id,x.lvl,x.stars)}; full(false); fcFly(fcNow()-before); toast(hn()+(RIDE[id]?' montou: ':' usa: ')+m.name); }
+    else { S.last=null; full(false); } return; }
+  if(S.pv===id){ S.pv=null; full(false); return; }
+  S.pv=id; S.last=null; full(false); toast('Prévia: '+m.name+(RIDE[id]?' no herói':' (arte montada em produção)')); }
+function lvlUp(){ const id=S.eq, x=S.own[id], m=BY[id]; if(!x) return; const why=canLvl(id);
+  if(why){ toast(why==='money'?'Falta ouro: '+fmtFC(lvlCost(id,x.lvl))+' para o próximo nível':why==='cap'?'Teto: o jogador precisa do Nv '+((x.lvl+1)*2):'Nível máximo'); return; }
+  const before=fcNow(), pa=pctOf(id,x.lvl,x.stars), c=lvlCost(id,x.lvl); S.gold-=c; x.lvl++;
+  S.last={id,what:'Nv '+x.lvl,a:before,b:fcNow(),pa,pb:pctOf(id,x.lvl,x.stars)}; S.undo=null; full(false); fcFly(fcNow()-before); toast(m.name+' subiu para o Nv '+x.lvl+' (−'+fmtFC(c)+' de ouro)'); }
+function starUp(){ const id=S.eq, x=S.own[id], m=BY[id]; if(!x) return; const need=starNeed(x); if(!need||x.frags<need) return;
+  const before=fcNow(), pa=pctOf(id,x.lvl,x.stars), a0=auraOf(x.stars), from=x.stars; x.frags-=need; x.stars++; const a1=auraOf(x.stars);
+  S.last={id,what:x.stars+'★',a:before,b:fcNow(),pa,pb:pctOf(id,x.lvl,x.stars)}; S.undo=null; S.apv=null; S.fx={id,from,t:performance.now()};
+  const f=document.createElement('div'); f.className='flash'; f.style.setProperty('--rc',RC[m.r]); scr.appendChild(f); setTimeout(()=>f.remove(),950);
+  setTimeout(()=>{ const b=document.createElement('div'); b.className='mbn'; b.style.setProperty('--rc',RC[m.r]); b.textContent=x.stars+'★'+(a1.name!==a0.name?' · '+AURA_S[x.stars-1].toUpperCase():''); scr.appendChild(b); setTimeout(()=>b.remove(),1550); },450);
+  full(false); setTimeout(()=>fcFly(fcNow()-before),600); toast(m.name+' agora tem '+x.stars+'★'+(a1.name!==a0.name?' · aura: '+a1.name:'')); }
+function undo(){ const p=S.undo; if(!p||!S.own[p]) return; const before=fcNow(), x0=S.own[S.eq], pa=pctOf(S.eq,x0.lvl,x0.stars); S.eq=p; S.undo=null; const x=S.own[p];
+  S.last={id:p,what:'voltou',a:before,b:fcNow(),pa,pb:pctOf(p,x.lvl,x.stars)}; full(false); fcFly(fcNow()-before); toast('Voltou: '+BY[p].name); }
+/* Simular: +10 fragmentos (montaria repetida) na montaria da faixa; nova que junta hatchFrags nasce sozinha (addFragments do mount.js) */
+function giveFrags(){ const id=S.pv||S.eq, m=BY[id]; if(!m) return; const x=S.own[id];
+  if(x){ if(x.stars>=5){ toast(m.name+' já está em 5★'); return; } x.frags+=R.dupFrags; S.last=null; full(false); toast('+10 fragmentos: '+m.name+' ('+x.frags+'/'+starNeed(x)+')'); return; }
+  S.stored[id]=(S.stored[id]||0)+R.dupFrags;
+  if(m.hatch&&live(m)&&S.stored[id]>=m.hatch){ const left=S.stored[id]-m.hatch; delete S.stored[id]; S.own[id]={lvl:1,stars:1,frags:left};
+    /* add() do mount.js: entra em uso só se não houver outra melhor */
+    const cur=S.eq&&S.own[S.eq], better=!cur||pctOf(id,1,1)>pctOf(S.eq,cur.lvl,cur.stars);
+    const f=document.createElement('div'); f.className='flash'; f.style.setProperty('--rc',RC[m.r]); scr.appendChild(f); setTimeout(()=>f.remove(),950);
+    S.pv=null;
+    if(better){ const before=fcNow(); S.undo=S.eq; S.eq=id; S.mode='ride'; S.last={id,what:'nasceu',a:before,b:fcNow(),pa:0,pb:pctOf(id,1,1)}; full(false); fcFly(fcNow()-before); toast(m.name+' nasceu e já está em uso'); }
+    else { S.last=null; full(false); toast(m.name+' nasceu: está na grade, toque para montar'); }
+    return; }
+  full(false); toast('+10 fragmentos guardados: '+m.name+(m.hatch?' ('+S.stored[id]+'/'+m.hatch+')':'')); }
+
+/* ---------- comum ---------- */
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar para Montarias"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>No jogo, este botão abre a tela <b>${where}</b>.</p><p>O voltar traz de volta para Montarias.</p><button class="bt" data-x="navback" style="height:46px;min-width:200px">Voltar para Montarias</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ document.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+function fcFly(d){ if(Math.abs(d)<1) return; const o=document.createElement('div'); o.className='fcfly '+(d>0?'up':'dn'); o.textContent=(d>0?'▲ +':'▼ −')+fmtD(d)+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; const d=b.dataset;
+  if(d.m){ tapMount(d.m); return; }
+  if(d.st){ const id=S.pv||S.eq, x=S.own[id], s=+d.st; S.last=null;
+    S.apv=(x&&!S.pv&&s===x.stars)||(S.apv&&S.apv.id===id&&S.apv.st===s)?null:{id,st:s}; full(false); return; }
+  if(d.mode){ S.mode=d.mode; full(false); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.x==='sair'){ S.pv=null; S.apv=null; full(false); return; }
+  if(d.x==='lvl'){ lvlUp(); return; }
+  if(d.x==='star'){ starUp(); return; }
+  if(d.x==='undo'){ undo(); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(false); }
+  if(b.dataset.pl){ reset(b.dataset.pl); document.querySelectorAll('[data-pl]').forEach(x=>x.setAttribute('aria-pressed',x===b)); document.querySelectorAll('.flash,.mbn,.toast').forEach(x=>x.remove()); full(true); }
+  if(b.dataset.sim==='frag') giveFrags(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brilho subindo atrás do herói */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const W=780,H=760,Pp=[]; for(let i=0;i<36;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?45:200,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,74%,${.25+.55*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+reset('40'); full(true);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-montarias-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Montarias V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
