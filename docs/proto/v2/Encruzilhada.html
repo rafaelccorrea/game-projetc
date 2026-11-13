@@ -1,0 +1,364 @@
+<title>Eonbound Encruzilhada</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Encruzilhada das Eras (js/sys/crossroads.js, desligado). Sobre o PRINT REAL da batalha de hoje (a/v5_hoje.png, v0.13.3): à esquerda o print puro,
+   à direita a mesma tela com só o que é novo: a janela de escolha depois da vitória, o selo "Encruzilhada" embaixo da barra da fase e o botão
+   "Bênçãos" na lateral direita (área livre x>=300, y 390-640). Mesmo padrão de página da Fogueira V5 / Derrota. */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --glass:rgba(22,16,12,.74); --gl:rgba(255,236,200,.16); --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg.col button{flex:1 1 100%;text-align:left}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45}
+.stl b{color:var(--gold)}
+.offs{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.5}
+.offs li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(130,150,255,.14);min-width:0}
+.offs li span{min-width:0;overflow-wrap:anywhere}
+.offs li.cur{color:var(--gold);font-weight:900}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:390px}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+/* selo: encruzilhada aberta e não escolhida (embaixo da barra da fase) */
+.xbadge{position:absolute;z-index:6;left:96px;top:122px;height:40px;padding:0 12px 0 5px;border-radius:20px;background:var(--glass);border:1.5px solid var(--g2);display:flex;align-items:center;gap:6px;box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);animation:xb 1.4s ease-in-out infinite;max-width:230px}
+.xbadge svg{width:30px;height:30px;flex:none}
+.xbadge b{font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2);white-space:nowrap;line-height:1}
+.xbadge small{display:block;font-size:10px;font-weight:900;color:var(--cream);white-space:nowrap;line-height:1.1}
+.xbadge[hidden]{display:none}
+@keyframes xb{50%{box-shadow:0 0 0 3px rgba(255,201,74,.35),0 0 18px rgba(255,201,74,.6)}}
+/* botão Bênçãos (lateral direita, área livre) */
+.bb{position:absolute;z-index:6;left:326px;top:404px;width:58px;height:74px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.bb[hidden]{display:none}
+.bb .r{position:relative;width:52px;height:52px;border-radius:50%;background:var(--glass);border:2px solid var(--g2);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.bb .r svg{width:34px;height:34px}
+.bb .lbl{font-size:10.5px;line-height:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000;white-space:nowrap}
+.bb .ct{position:absolute;right:-5px;top:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border:2px solid #1a110b;font-style:normal;font-size:12px;font-weight:900;display:grid;place-items:center}
+.bb .ct.ex{background:linear-gradient(180deg,#ff9a4a,#d8461a);color:#fff}
+.bb.bump .r{animation:bump .45s ease-out}
+@keyframes bump{40%{transform:scale(1.18)}}
+/* lista das bênçãos da era (toque no botão) */
+.bl{position:absolute;z-index:12;right:68px;top:362px;width:250px;max-height:420px;overflow-y:auto;overflow-x:hidden;border-radius:16px;background:rgba(29,22,17,.95);border:1.5px solid var(--gl);padding:8px 9px 9px;box-shadow:0 10px 26px rgba(0,0,0,.55);animation:fcin .18s ease-out;scrollbar-width:none}
+@keyframes fcin{from{opacity:0;transform:translateY(-6px)}}
+.bl h3{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 0 4px;font-family:var(--fd);font-weight:400;font-size:17px;color:var(--g2)}
+.bl h3 span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl h3 small{display:block;font-family:var(--fb);font-size:10px;font-weight:900;color:var(--mut2)}
+.x{flex:none;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,236,200,.25);background:rgba(255,236,200,.06);font-size:20px;font-weight:900;padding:0;color:var(--cream)}
+.brow{display:flex;align-items:center;gap:7px;padding:5px 2px;border-top:1px solid rgba(255,236,200,.1);min-width:0}
+.brow svg{width:28px;height:28px;flex:none}
+.brow .tx{flex:1;min-width:0}
+.brow .tx b{display:block;font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .tx small{display:block;font-size:9.5px;font-weight:800;color:var(--mut2)}
+.brow .v{flex:none;font-family:var(--fd);font-size:15px;color:#7fe07a;white-space:nowrap}
+.brow.gone{animation:gone .9s ease-in forwards}
+@keyframes gone{0%{opacity:1}35%{opacity:1;filter:grayscale(1) brightness(1.6)}100%{opacity:0;transform:translateX(30px) scale(.8);filter:grayscale(1)}}
+.bpend{display:flex;align-items:center;gap:6px;margin:2px 0 4px;padding:5px 6px;border-radius:11px;background:rgba(255,201,74,.12);border:1px solid rgba(255,201,74,.5)}
+.bpend span{flex:1;min-width:0;font-size:11px;font-weight:900;line-height:1.2}
+.bpend button{flex:none;height:40px;padding:0 10px;border:0;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-weight:900;font-size:12px;box-shadow:0 3px 0 #9a5a10}
+.bend{margin-top:6px;padding:6px 7px;border-radius:10px;background:rgba(0,0,0,.35);font-size:10.5px;font-weight:900;line-height:1.35;color:var(--cream)}
+.bend em{font-style:normal;color:var(--g2)}
+.bnone{font-size:11px;font-weight:800;color:var(--mut2);padding:6px 2px}
+/* janela da encruzilhada: por cima da luta, que continua visível atrás */
+.dim{position:absolute;inset:0;z-index:20;background:rgba(6,4,2,.58);animation:fade .2s ease-out}
+@keyframes fade{from{opacity:0}}
+.xm{position:absolute;z-index:21;left:10px;right:10px;top:150px;border-radius:20px;background:linear-gradient(180deg,rgba(42,30,20,.97),rgba(26,18,12,.97));border:2px solid var(--g2);padding:10px 10px 11px;box-shadow:0 14px 40px rgba(0,0,0,.6);animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+.xh{display:flex;align-items:center;gap:8px;min-width:0}
+.xh svg{width:46px;height:46px;flex:none}
+.xh div{min-width:0}
+.xh b{display:block;font-family:var(--fd);font-weight:400;font-size:23px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xh small{display:block;font-size:11.5px;font-weight:900;color:var(--cream)}
+/* a REGRA, bem visível */
+.xr{margin-top:8px;border-radius:14px;background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2);padding:7px 9px 8px}
+.xr .t{display:flex;align-items:center;gap:7px}
+.xr .t svg{width:26px;height:26px;flex:none}
+.xr .t b{font-family:var(--fd);font-weight:400;font-size:21px;color:#fff;text-shadow:0 2px 0 #000;line-height:1}
+.xr p{margin:4px 0 0;font-size:11.5px;font-weight:900;line-height:1.3;color:var(--cream)}
+.xr p em{font-style:normal;color:var(--g2)}
+.trk{position:relative;height:30px;margin:8px 14px 0 6px}
+.trk .bar{position:absolute;left:0;right:0;top:11px;height:8px;border-radius:4px;background:rgba(0,0,0,.5)}
+.trk .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#ffb04a,#ffe07a)}
+.trk .pt{position:absolute;top:7px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#3a2508;border:2px solid #b8945a}
+.trk .pt.done{background:#7a5a20;border-color:#ffe07a}
+.trk .pt.now{top:3px;width:24px;height:24px;margin-left:-12px;background:var(--g2);border-color:#fff;box-shadow:0 0 10px rgba(255,201,74,.9)}
+.trk .boss{position:absolute;right:-14px;top:0;width:30px;height:30px}
+.trkl{display:flex;justify-content:space-between;gap:6px;margin-top:1px;font-size:9.5px;font-weight:900;color:var(--mut2)}
+.trkl span:last-child{color:#ff9f9f;text-align:right}
+.xcs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px}
+.xc{position:relative;border-radius:15px;background:rgba(0,0,0,.35);border:2px solid #6a5a48;padding:8px 6px 7px;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;transition:border-color .15s,opacity .15s}
+.xc .ib{width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#5a4026,#21170f 75%);border:2px solid #8a6a40;display:grid;place-items:center}
+.xc .ib svg{width:42px;height:42px}
+.xc b{margin-top:5px;font-size:12.5px;font-weight:900;line-height:1.15;min-height:29px;display:flex;align-items:center}
+.xc .fx{font-family:var(--fd);font-size:20px;line-height:1.05;color:#7fe07a;text-shadow:0 2px 0 #000;margin-top:2px;min-height:42px;display:flex;align-items:center}
+.xc small{font-size:10px;font-weight:800;color:var(--mut2);line-height:1.25;min-height:25px}
+.xc .until{margin-top:4px;font-size:9.5px;font-weight:900;color:var(--g2);white-space:nowrap}
+.xc button{margin-top:6px;width:100%;height:44px;border:0;border-radius:13px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:var(--fd);font-size:18px;box-shadow:0 3px 0 #9a5a10}
+.xc.sel{border-color:var(--g2);box-shadow:0 0 16px rgba(255,201,74,.55)}
+.xc.off{opacity:.38}
+.xf{margin-top:9px;font-size:10.5px;font-weight:900;line-height:1.35;color:var(--mut2);text-align:center}
+.xf b{color:var(--cream)}
+.xbt{display:flex;gap:6px;margin-top:7px}
+.xbt button{flex:1;min-width:0;height:44px;border-radius:13px;font-weight:900;font-size:13px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xbt .o{background:rgba(255,236,200,.06);border:1px solid rgba(255,236,200,.25);color:var(--cream)}
+.xbt .g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1d5a1c}
+.xq{margin-top:8px;border-radius:12px;background:rgba(0,0,0,.4);padding:7px 8px;font-size:12px;font-weight:900;text-align:center;line-height:1.3}
+.xq em{font-style:normal;color:var(--g2)}
+.toast{position:absolute;left:50%;top:236px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.95);border:1px solid rgba(255,236,200,.25);font-weight:900;font-size:12px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out}
+.banner{position:absolute;left:0;right:0;top:300px;z-index:30;text-align:center;pointer-events:none;animation:ban 2.2s ease-out both}
+.banner div{display:inline-block;max-width:94%;padding:7px 22px;font-family:var(--fd);font-size:22px;color:#fff;background:linear-gradient(90deg,transparent,rgba(160,40,30,.92) 18%,rgba(160,40,30,.92) 82%,transparent);text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner small{display:block;font-family:var(--fb);font-size:11px;font-weight:900;color:#fff3e0}
+@keyframes ban{0%{opacity:0;transform:scaleX(.2)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption>Hoje<small>print real do jogo (v0.13.3, batalha)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" src="a/v5_hoje.png" alt="Tela de batalha do jogo hoje: HUD em cima com a barra da fase, Equip. e Loja à esquerda, Menu e Baú à direita, golpes embaixo à direita e x1/x2/x4 embaixo à esquerda"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption>Com a Encruzilhada<small>a mesma tela; só a janela, o selo e o botão Bênçãos são novos</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <img class="shot" src="a/v5_hoje.png" alt="">
+    <button class="xbadge" id="xbadge" data-act="badge" hidden></button>
+    <button class="bb" id="bb" data-act="list" hidden></button>
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Encruzilhada das Eras</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">À esquerda, o <b>print real da batalha de hoje</b>. À direita, <b>a mesma tela</b> com só três coisas novas: a <b>janela da Encruzilhada</b> depois de vencer a fase (a luta fica visível atrás, escurecida), o <b>selo "Encruzilhada"</b> embaixo da barra da fase quando ela fica esperando, e o botão <b>Bênçãos</b> na lateral direita (área livre, abaixo do Baú) com a lista da era. O resto do HUD não muda. O print é da fase 1-1; a fase simulada aparece na janela e na linha abaixo.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Curva de fases"><button data-curve="10" aria-pressed="true">Hoje: 10 fases por era (fase 5)</button><button data-curve="100" aria-pressed="false">Futura: 100 por era (10, 20 ... 90)</button></div>
+      <div class="seg" role="group" aria-label="Save" style="margin-top:8px"><button data-save="A" aria-pressed="true">Save A</button><button data-save="B" aria-pressed="false">Save B</button><button data-save="C" aria-pressed="false">Save C</button></div>
+      <div class="seg col" style="margin-top:8px">
+        <button data-sim="next">Vencer a próxima fase</button>
+        <button data-sim="point">Ir até a próxima encruzilhada e vencer</button>
+        <button data-sim="reopen">Sair e voltar (abre as mesmas 2)</button>
+        <button data-sim="boss">Vencer o Senhor da Era (fim da era)</button>
+        <button data-sim="reset">Recomeçar este save</button>
+      </div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Mesmas 2 sempre, diferentes por save</h2>
+      <ul class="offs" id="offs"></ul>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/crossroads.js, desligado)</h2>
+      <ul>
+        <li>Na curva de hoje (10 fases por era) abre na <b>fase 5</b>; na de 100 fases, nas fases <b>10, 20 ... 90</b>. Nunca na última fase da era</li>
+        <li>Escolha <b>1 de 2</b> bênçãos. A bênção <b>vale até o fim da era</b>: ao vencer o Senhor da Era e entrar na era seguinte, as bênçãos apagam e começa uma coleção nova</li>
+        <li>As 2 ofertas vêm da semente do save + a fase: sair, voltar ou reiniciar o app mostra <b>sempre as mesmas</b>. Sem rolar de novo, sem gemas, nada pago</li>
+        <li>Escolha <b>definitiva</b>. "Escolher depois" deixa a encruzilhada esperando no selo, sem prazo, enquanto a era for a atual</li>
+        <li>12 bênçãos: ATK +3%, Vida +4%, Crítico +1,5, Dano recebido -2%, Ouro +8%, XP +6%, Brasa +1 por pote (uma vez por era), Combo +4, Contra-ataque +4, Esquiva +2, Atordoar +1,5, Roubo de vida +1,5</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: cartões maiores, selo em outro lugar"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), lay=$('#lay'), xbadge=$('#xbadge'), bb=$('#bb');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>String(Math.round(v*10)/10).replace('.',',');
+
+/* ===== regras: cópia fiel de js/sys/crossroads.js (pool, semente, where, offers, choose, active) ===== */
+const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
+const POOL=[
+  {id:'furia',   name:'Fúria da Era',          text:'+3% de ATK',                  lab:'ATK',           v:3,   u:'%'},
+  {id:'vigor',   name:'Vigor Antigo',          text:'+4% de Vida',                 lab:'Vida',          v:4,   u:'%'},
+  {id:'olhar',   name:'Olhar Certeiro',        text:'+1,5 de chance de crítico',   lab:'Crítico',       v:1.5, u:''},
+  {id:'escudo',  name:'Escudo dos Ancestrais', text:'+2% de redução de dano',      lab:'Dano recebido', v:-2,  u:'%'},
+  {id:'tesouro', name:'Trilha do Tesouro',     text:'+8% de ouro',                 lab:'Ouro',          v:8,   u:'%'},
+  {id:'saber',   name:'Saber das Eras',        text:'+6% de XP',                   lab:'XP',            v:6,   u:'%'},
+  {id:'brasa',   name:'Brasa Viva',            text:'+1 Brasa por pote de abates', lab:'Brasa',         v:1,   u:' por pote', once:true},
+  {id:'combo',   name:'Golpe Duplo',           text:'+4 de Combo',                 lab:'Combo',         v:4,   u:''},
+  {id:'contra',  name:'Resposta Rápida',       text:'+4 de Contra-ataque',         lab:'Contra-ataque', v:4,   u:''},
+  {id:'esquiva', name:'Passo Leve',            text:'+2 de Esquiva',               lab:'Esquiva',       v:2,   u:''},
+  {id:'atordoa', name:'Pancada Firme',         text:'+1,5 de Atordoar',            lab:'Atordoar',      v:1.5, u:''},
+  {id:'roubo',   name:'Sede de Batalha',       text:'+1,5 de Roubo de vida',       lab:'Roubo de vida', v:1.5, u:''},
+];
+const BY={}; for(const b of POOL) BY[b.id]=b;
+const fxOf=(b,k)=>{ const v=b.v*(k||1); return b.lab+' '+(v<0?'-':'+')+nf(Math.abs(v))+b.u; };
+function hash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const ST={perEra:10,save:'A',saves:{},open:null,sel:null,list:false,gone:null};
+const everyOf=pe=>pe>=20?10:5;
+function where(stage){ const pe=ST.perEra; if(stage<1) return null; const era=Math.floor((stage-1)/pe), n=((stage-1)%pe)+1; return {era,n,key:era+':'+n,point:n%everyOf(pe)===0&&n<pe,last:n===pe}; }
+const lbl=w=>(w.era+1)+'-'+w.n;
+function newSave(id){ return {id,seed:hash('save-'+id+'|eonbound'),era:0,picks:{},open:[],won:everyOf(ST.perEra)-1}; }
+const S=()=>ST.saves[ST.save]||(ST.saves[ST.save]=newSave(ST.save));
+function offers(o,stage){ const w=where(stage); if(!w||!w.point||o.picks[w.key]) return [];
+  const used=new Set(Object.values(o.picks).filter(p=>p.era===w.era&&BY[p.id].once).map(p=>p.id)), a=POOL.filter(b=>!used.has(b.id));
+  const rng=mulberry(hash(o.seed+'|'+w.key));
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a.slice(0,2); }
+function active(o){ return Object.keys(o.picks).filter(k=>o.picks[k].era===o.era).sort((a,b)=>+a.split(':')[1]-+b.split(':')[1]).map(k=>Object.assign({key:k},BY[o.picks[k].id])); }
+const openStages=o=>o.open.map(k=>{ const [e,n]=k.split(':').map(Number); return e*ST.perEra+n; });
+
+/* ===== ícones desenhados no código ===== */
+const SV=(b,inner)=>'<svg class="ic" viewBox="0 0 48 48" aria-hidden="true">'+inner+'</svg>';
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const ICON={
+  furia:'<path d="M33 5h10v10L23 35l-10-10z" fill="#e8eef8" '+K+'/><path d="M33 5L18 30" stroke="#9ab" stroke-width="2"/><path d="M11 23l14 14-4 4-4-4-6 6-4-4 6-6-4-4z" fill="#d9952f" '+K+'/>',
+  vigor:'<path d="M24 42S6 31 6 18a9 9 0 0118-3 9 9 0 0118 3c0 13-18 24-18 24z" fill="#ff5a6e" '+K+'/><path d="M13 17a4 4 0 014-4" stroke="#ffd0d6" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  olhar:'<circle cx="24" cy="24" r="17" fill="#3a1a10" '+K+'/><circle cx="24" cy="24" r="13" fill="none" stroke="#ffd25e" stroke-width="4"/><circle cx="24" cy="24" r="6" fill="none" stroke="#ff6b4a" stroke-width="4"/><circle cx="24" cy="24" r="2" fill="#fff"/>',
+  escudo:'<path d="M24 4l16 6v12c0 11-7 18-16 22C15 40 8 33 8 22V10z" fill="#6fb6ff" '+K+'/><path d="M24 10l10 4v8c0 7-4 12-10 15z" fill="#bfe0ff"/>',
+  tesouro:'<circle cx="24" cy="25" r="17" fill="#ffc94a" '+K+'/><circle cx="24" cy="25" r="11" fill="none" stroke="#c07a12" stroke-width="3"/><path d="M24 17l2.4 5 5.4.6-4 3.8 1.1 5.4L24 29l-4.9 2.8 1.1-5.4-4-3.8 5.4-.6z" fill="#fff1b0"/>',
+  saber:'<path d="M5 11c7-3 13-2 19 2v28c-6-4-12-5-19-2z" fill="#a98bff" '+K+'/><path d="M43 11c-7-3-13-2-19 2v28c6-4 12-5 19-2z" fill="#c9b4ff" '+K+'/><path d="M10 18c3-1 6-1 9 1M10 24c3-1 6-1 9 1M29 19c3-2 6-2 9-1M29 25c3-2 6-2 9-1" stroke="#3a2a7a" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  brasa:'<path d="M24 3c3 8 13 12 13 25a13 13 0 01-26 0c0-7 3-10 6-13 1 5 3 7 6 7-2-7 0-13 1-19z" fill="#ff7a2a" '+K+'/><path d="M24 24c2 4 6 6 6 11a6 6 0 01-12 0c0-3 2-5 3-6 1 2 2 3 3 3-1-3 0-5 0-8z" fill="#ffe07a"/>',
+  combo:'<path d="M8 36L30 8" stroke="#1a110b" stroke-width="9" stroke-linecap="round"/><path d="M18 42L40 14" stroke="#1a110b" stroke-width="9" stroke-linecap="round"/><path d="M8 36L30 8" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M18 42L40 14" stroke="#ffd25e" stroke-width="5" stroke-linecap="round"/>',
+  contra:'<path d="M38 17H14l7-8" fill="none" stroke="#1a110b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 31h24l-7 8" fill="none" stroke="#1a110b" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 17H14l7-8" fill="none" stroke="#7fe07a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 31h24l-7 8" fill="none" stroke="#ff9f6a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>',
+  esquiva:'<path d="M6 17h24a5 5 0 10-5-5M6 25h32a5 5 0 11-5 5M6 33h16" fill="none" stroke="#1a110b" stroke-width="8" stroke-linecap="round"/><path d="M6 17h24a5 5 0 10-5-5M6 25h32a5 5 0 11-5 5M6 33h16" fill="none" stroke="#9fe8ff" stroke-width="4" stroke-linecap="round"/>',
+  atordoa:'<path d="M24 4l4 12 13-2-9 10 8 11-13-4-5 12-3-13-13-1 11-7-6-12 11 7z" fill="#ffd25e" '+K+'/><circle cx="24" cy="24" r="4" fill="#fff"/>',
+  roubo:'<path d="M24 4C18 15 11 22 11 30a13 13 0 0026 0c0-8-7-15-13-26z" fill="#e0304a" '+K+'/><path d="M24 25v12M18 31h12" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+};
+const CROSS=SV(0,'<rect x="21" y="6" width="6" height="38" rx="2" fill="#8a5a2a" '+K+'/><path d="M8 10h22l6 5-6 5H8z" fill="#ffc94a" '+K+'/><path d="M40 22H18l-6 5 6 5h22z" fill="#e8b46a" '+K+'/><path d="M13 15h12M22 27h13" stroke="#6a3a10" stroke-width="2" stroke-linecap="round"/><path d="M14 44h20" stroke="#1a110b" stroke-width="3" stroke-linecap="round"/>');
+const GLASS=SV(0,'<path d="M13 5h22M13 43h22" stroke="#ffc94a" stroke-width="4" stroke-linecap="round"/><path d="M15 6c0 10 7 12 7 18s-7 8-7 18h18c0-10-7-12-7-18s7-8 7-18z" fill="#3a2508" stroke="#ffc94a" stroke-width="2.6" stroke-linejoin="round"/><path d="M18 40c1-5 4-7 6-8 2 1 5 3 6 8z" fill="#ffe07a"/><path d="M19 12h10l-5 7z" fill="#ffe07a"/>');
+const CROWN=SV(0,'<circle cx="24" cy="26" r="18" fill="#5a1a14" '+K+'/><path d="M11 32l-2-15 8 7 7-11 7 11 8-7-2 15z" fill="#ffc94a" '+K+'/><circle cx="24" cy="27" r="3" fill="#ff5a6e"/>');
+const ico=id=>SV(0,ICON[id]||'');
+
+/* ===== desenho ===== */
+function rangeTxt(era){ const pe=ST.perEra; return (era+1)+'-'+pe; }
+function renderHud(){ const o=S(), act=active(o), pend=o.open.length;
+  if(pend){ const w=where(openStages(o)[0]); xbadge.hidden=false; xbadge.setAttribute('aria-label','Encruzilhada da fase '+lbl(w)+' esperando: toque para escolher');
+    xbadge.innerHTML=CROSS+'<span><b>Encruzilhada</b><small>fase '+lbl(w)+' · escolha 1 de 2</small></span>'; }
+  else { xbadge.hidden=true; xbadge.innerHTML=''; }
+  const show=act.length||pend||ST.gone; bb.hidden=!show;
+  bb.setAttribute('aria-label','Bênçãos da era: '+act.length+' ativa(s)'+(pend?', 1 encruzilhada esperando':''));
+  bb.innerHTML='<span class="r">'+CROSS+(pend?'<em class="ct ex">!</em>':act.length?'<em class="ct">'+act.length+'</em>':'')+'</span><span class="lbl">Bênçãos</span>'; }
+
+function trackHtml(w){ const pe=ST.perEra, ev=everyOf(pe); let pts='';
+  for(let n=ev;n<pe;n+=ev){ const c=n===w.n?'now':n<w.n?'done':''; pts+='<i class="pt '+c+'" style="left:'+(n/pe*100)+'%"></i>'; }
+  return '<div class="trk" aria-hidden="true"><div class="bar"><i style="width:'+(w.n/pe*100)+'%"></i></div>'+pts+'<span class="boss">'+CROWN+'</span></div>'+
+    '<div class="trkl"><span>Agora: fase '+lbl(w)+'</span><span>Fase '+rangeTxt(w.era)+': Senhor da Era</span></div>'; }
+
+function renderLayer(){ const o=S(); let h='';
+  if(ST.open!=null){ const stage=ST.open, w=where(stage), of=offers(o,stage), next=ERA[w.era+1];
+    const cards=of.map(b=>'<div class="xc'+(ST.sel?(ST.sel===b.id?' sel':' off'):'')+'"><span class="ib">'+ico(b.id)+'</span><b>'+esc(b.name)+'</b><span class="fx">'+esc(fxOf(b))+'</span><small>'+esc(b.text)+'</small><span class="until">até o fim da era</span>'+
+      (ST.sel?'':'<button data-act="pick" data-id="'+b.id+'" aria-label="Escolher '+esc(b.name)+': '+esc(fxOf(b))+', vale até o fim da era">Escolher</button>')+'</div>').join('');
+    const foot=ST.sel?('<div class="xq">Ficar com <em>'+esc(BY[ST.sel].name)+'</em> ('+esc(fxOf(BY[ST.sel]))+') até vencer o Senhor da Era?<br>Não dá para trocar depois.</div><div class="xbt"><button class="o" data-act="back">Voltar</button><button class="g" data-act="confirm">Confirmar</button></div>')
+      :('<div class="xf"><b>Escolha definitiva.</b> Estas 2 são sempre as mesmas nesta encruzilhada: não há sortear de novo.</div><div class="xbt"><button class="o" data-act="later">Escolher depois</button></div>');
+    h+='<div class="dim"></div><div class="xm" role="dialog" aria-label="Encruzilhada das Eras">'+
+      '<div class="xh">'+CROSS+'<div><b>Encruzilhada das Eras</b><small>Fase '+lbl(w)+' vencida · escolha 1 de 2 bênçãos</small></div></div>'+
+      '<div class="xr"><div class="t">'+GLASS+'<b>Vale até o fim da era</b></div><p>Acaba ao vencer o <em>Senhor da Era</em> (fase '+rangeTxt(w.era)+')'+(next?'. Na '+esc(next)+' começa uma coleção nova.':'.')+'</p>'+trackHtml(w)+'</div>'+
+      '<div class="xcs">'+cards+'</div>'+foot+'</div>'; }
+  if(ST.list||ST.gone){ const g=ST.gone, act=g?g.rows:active(o), era=g?g.era:o.era, pend=g?[]:openStages(o);
+    const agg={}; for(const b of act){ (agg[b.id]=agg[b.id]||{b,k:0}).k++; }
+    const rows=Object.values(agg).map(({b,k},i)=>'<div class="brow'+(g?' gone':'')+'" style="'+(g?'animation-delay:'+(i*0.12)+'s':'')+'">'+ico(b.id)+'<span class="tx"><b>'+esc(b.name)+(k>1?' ×'+k:'')+'</b><small>'+esc(b.text)+(k>1?' cada':'')+'</small></span><span class="v">'+esc(fxOf(b,k))+'</span></div>').join('');
+    const p=pend.map(st=>'<div class="bpend"><span>Encruzilhada da fase '+lbl(where(st))+' esperando</span><button data-act="badge">Escolher</button></div>').join('');
+    h+='<div class="bl" role="dialog" aria-label="Bênçãos da era"><h3><span>Bênçãos da era<small>'+esc(ERA[era])+' · '+act.length+' escolhida(s)</small></span>'+(g?'':'<button class="x" data-act="close" aria-label="Fechar">×</button>')+'</h3>'+p+
+      (rows||'<div class="bnone">Nenhuma bênção escolhida nesta era ainda.</div>')+
+      '<div class="bend">'+(g?'<em>Senhor da Era vencido:</em> as bênçãos da '+esc(ERA[era])+' acabaram.':'Valem até o fim da era: acabam ao vencer o <em>Senhor da Era</em> (fase '+rangeTxt(era)+').')+'</div></div>'; }
+  lay.innerHTML=h; }
+
+function renderSide(){ const o=S(), w=where(o.won), act=active(o);
+  $('#stl').innerHTML='Save <b>'+ST.save+'</b> · última fase vencida: <b>'+(w?lbl(w):'nenhuma')+'</b> ('+esc(ERA[o.era])+') · bênçãos ativas: <b>'+act.length+'</b>'+(o.open.length?' · <b>encruzilhada esperando</b>':'');
+  const pe=ST.perEra, ev=everyOf(pe), first=o.era*pe+ev, wf=where(first);
+  $('#offs').innerHTML=['A','B','C'].map(id=>{ const s=ST.saves[id]||newSave(id), of=offers(Object.assign({},s,{picks:{}}),first);
+    return '<li class="'+(id===ST.save?'cur':'')+'"><span>Save '+id+', fase '+lbl(wf)+'</span><span>'+of.map(b=>esc(fxOf(b))).join(' ou ')+'</span></li>'; }).join('')+
+    '<li><span style="color:var(--muted);font-weight:700">Abrir de novo, sair e voltar ou reiniciar o app: as mesmas duas.</span></li>'; }
+function render(){ renderHud(); renderLayer(); renderSide(); }
+function draw(t){ /* nada em canvas: a tela é o print + HTML */ return t; }
+
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2600); }
+function banner(t,s){ scr.querySelectorAll('.banner').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='banner'; d.innerHTML='<div>'+esc(t)+'<small>'+esc(s)+'</small></div>'; scr.appendChild(d); setTimeout(()=>d.remove(),2300); }
+
+/* ===== ações ===== */
+function win(stage){ const o=S(), w=where(stage); if(!w) return; ST.open=null; ST.sel=null; ST.list=false; ST.gone=null; o.won=stage;
+  if(w.last){ /* Senhor da Era: a era nova apaga as bênçãos e as encruzilhadas abertas da anterior */
+    const rows=active(o), era=o.era;
+    if(era>=ERA.length-1){ Object.assign(o,newSave(o.id),{won:0}); banner('Fim das 9 eras','as bênçãos da Celestial acabaram'); toast('No protótipo, o save recomeça na Pré-História'); render(); return; }
+    o.era=w.era+1; o.open=o.open.filter(k=>+k.split(':')[0]>=o.era);
+    banner('Senhor da Era vencido!','Era nova: '+ERA[o.era]);
+    if(rows.length){ ST.gone={rows,era}; render(); setTimeout(()=>{ ST.gone=null; render(); },1700); toast('As bênçãos da '+ERA[era]+' acabaram. Na '+ERA[o.era]+' começa uma coleção nova'); }
+    else { render(); toast('Era nova: '+ERA[o.era]+'. Nenhuma bênção para apagar'); }
+    return; }
+  if(w.point&&!o.picks[w.key]){ if(!o.open.includes(w.key)) o.open.push(w.key); ST.open=stage; render(); return; }
+  render(); toast('Fase '+lbl(w)+' vencida'); }
+function nextPoint(o){ const pe=ST.perEra, ev=everyOf(pe); for(let s=o.won+1;s<o.won+pe+1;s++){ const w=where(s); if(w.point) return s; } return o.won+ev; }
+function choose(id){ const o=S(), stage=ST.open; if(stage==null) return false; const w=where(stage);
+  if(o.picks[w.key]||!offers(o,stage).some(b=>b.id===id)) return false;
+  o.picks[w.key]={id,era:w.era}; o.open=o.open.filter(k=>k!==w.key); ST.open=null; ST.sel=null;
+  render(); bb.classList.add('bump'); setTimeout(()=>bb.classList.remove('bump'),500);
+  toast(BY[id].name+' ativa: '+fxOf(BY[id])+' até o fim da '+ERA[w.era]); return true; }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const a=b.dataset.act, o=S();
+  if(a==='pick'){ ST.sel=b.dataset.id; renderLayer(); }
+  else if(a==='back'){ ST.sel=null; renderLayer(); }
+  else if(a==='confirm'){ if(ST.sel) choose(ST.sel); }
+  else if(a==='later'){ ST.open=null; ST.sel=null; render(); toast('A encruzilhada fica esperando no selo, sem prazo, até o fim da era'); }
+  else if(a==='badge'){ const st=openStages(o)[0]; if(st!=null){ ST.list=false; ST.open=st; ST.sel=null; render(); } }
+  else if(a==='list'){ ST.list=!ST.list; renderLayer(); }
+  else if(a==='close'){ ST.list=false; renderLayer(); } });
+
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.curve){ ST.perEra=+d.curve; ST.saves={}; ST.open=null; ST.sel=null; ST.list=false; ST.gone=null; document.querySelectorAll('[data-curve]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); }
+  else if(d.save){ ST.save=d.save; ST.open=null; ST.sel=null; ST.list=false; ST.gone=null; document.querySelectorAll('[data-save]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); const o=S(); if(o.open.length){ toast('Save '+d.save+': encruzilhada esperando no selo'); } }
+  else if(d.sim==='next') win(S().won+1);
+  else if(d.sim==='point'){ const o=S(), s=nextPoint(o); o.won=s-1; win(s); }
+  else if(d.sim==='boss'){ const o=S(), pe=ST.perEra, end=(o.era+1)*pe; o.won=end-1; win(end); }
+  else if(d.sim==='reopen'){ const o=S(), st=openStages(o)[0];
+    if(st==null){ toast('Nenhuma encruzilhada esperando neste save'); return; }
+    const before=offers(o,st).map(x=>x.id).join(','); ST.open=null; ST.sel=null; render(); ST.open=st; render();
+    const after=offers(o,st).map(x=>x.id).join(','); toast(before===after?'Abriu de novo: as mesmas 2 bênçãos':'ERRO: mudou'); }
+  else if(d.sim==='reset'){ ST.saves[ST.save]=newSave(ST.save); ST.open=null; ST.sel=null; ST.list=false; ST.gone=null; render(); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&(ST.list)){ ST.list=false; renderLayer(); } });
+
+render();
+window.__encruzilhadaTeste={ST,S,where,offers:(st)=>offers(S(),st),active:()=>active(S()),win,choose,render,hash,everyOf,POOL};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-encruzilhada';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Encruzilhada das Eras',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
