@@ -348,7 +348,7 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 | Torre (`tower:floor`: falcão 30, raptor 50, grifo 150, asa 120/140/160) | jogo | — | não precisa | — | não |
 | Invasão da Era, baú de topo (`invasion:top`, nv 18) | **indefinido**: ninguém chama no jogo; "topo" de quê? | — | **não** | — | — |
 | Chefe Mundial (nv 24): faixa de dano e ≥5% da vida | jogo ("cada um contra o seu") | — | não precisa | — | não |
-| Chefe Mundial: topo do mês (`monthTop`, asa Fênix) | servidor (ranking do mês) | — | **não** | — | — |
+| Chefe Mundial: topo do mês (`monthTop`, asa Fênix) | servidor (dano medido no servidor; desenho em §14.1) | `GET /worldboss?month=`, `POST /worldboss/hit` (WORLDBOSS_ON) | **sim** (fps-server, números PROVISÓRIOS) | sim (worldboss.test, memória e pg) | sim: `att.newDrops {src:'worldboss', ctx:{monthTop:true, rank}}` |
 | Torneio de Fim de Semana (nv 28): ranking próprio, top 100 (`tourney:weekend`) e prêmio por posição | servidor | `GET /weekend?week=` → {week, startsAt, endsAt, open, closed, arenaPct, me:{rank,points}, list:[{rank,id,name,points}]}; fechamento automático (WEEKEND_ON) | **sim** (fps-server, 13/11) | sim (weekend.test, memória e pg) | sim: `att.newDrops` (o jogo precisa resgatar essa chave); pedras/prismático por posição quando houver tabela |
 | Arena: ranking semanal e prêmio por faixa | servidor | `GET /ranking`, fechamento semanal | sim | sim (arena.test) | sim |
 | Arena: liga de fim de temporada (`arena:season`) | jogo, com o delta das lutas do servidor | `POST /arena/fight` | sim | sim | não (o jogo entrega a liga) |
@@ -368,3 +368,21 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 3. Chefe Mundial: topo do mês (precisa definir como medir o dano, sem confiar no aparelho).
 
 Os dois indefinidos (Invasão: topo; Torneio da temporada) dependem da Sistemas dizer o ranking. Tudo atrás de chave.
+
+### 14.1 Chefe Mundial: topo do mês (desenho do Servidor, 13/11; **para a Sistemas revisar**)
+O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`worldboss` com `frac`), "cada um contra o seu". Só o que precisa ser JUSTO entre jogadores é medido no servidor: o ranking do mês e o prêmio do topo (`ctx.monthTop`).
+- **Golpe (`POST /v1/worldboss/hit`):** o servidor luta com o MESMO motor da Arena.
+  - Lado do herói: o retrato da arena do jogador (`POST /arena/snapshot`, conferido contra o teto por dia de conta).
+  - Lado do chefe: o chefe do mês. A luta é `Sys.tower.duel` do jogo (cópia fixada em `game-sys/`).
+  - Semente = hash no servidor de (servidor, mês, jogador, dia, nº do golpe). O aparelho não manda dano nenhum; recebe `{damage, seed, rounds, log, myDamage, hitsLeft, month}` para animar.
+- **Chefe do mês:** atributos FIXOS, iguais para todos.
+  - São as proporções do retrato honesto da arena (atk 100, vida 600, def 10, crít 12%/100%), escaladas para a FC do chefe com `Sys.tower.scaledFoe`.
+  - A vida é um poço que não acaba (10⁶ × ATK do herói): o golpe dura até o fim da luta (40 rodadas ou o herói cair). Dano = o que saiu do poço. Mais FC dá mais dano; o herói fraco cai antes.
+- **Golpes:** N por dia de Brasília (429 `daily_limit` com o tempo até a virada). Não depende da janela das 12h/20h do jogo.
+- **Ranking (`GET /v1/worldboss`):** por servidor e por mês (Brasília). Soma do dano; empate = quem chegou primeiro. Conta marcada, banida ou excluída fica fora. Resposta: `{month, closesAt, closed, boss:{fc, atk, def, critRate, critDmg, provisional:true}, hitsPerDay, hitsLeft, top, me:{damage, rank}, list:[{rank, id, name, damage}]}`.
+- **Fechamento:** no 1º dia do mês seguinte, o top N de cada servidor recebe pelo correio `att.newDrops = {src:'worldboss', ctx:{monthTop:true, rank}}`. É a fonte `worldboss` que o newdrops.js já tem, com `monthTop`. Uma vez só (`server_paid`).
+- **NÚMEROS PROVISÓRIOS** (por ambiente, até a Sistemas calibrar):
+  - FC do chefe `WORLDBOSS_FC` = 10⁹;
+  - golpes por dia `WORLDBOSS_HITS_PER_DAY` = 4;
+  - tamanho do topo `WORLDBOSS_TOP` = 10.
+  - Perguntas à Sistemas: a FC do chefe deve mudar a cada mês, ou por era do jogador? O topo é por servidor inteiro ou por faixa de era (hoje o VIP de era alta sempre ganha)?
