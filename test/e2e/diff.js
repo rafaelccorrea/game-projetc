@@ -42,7 +42,7 @@ async function game(search) { const loadErr = []; const G = boot({ realFetch: tr
   return G; }
 /* inimigo de hoje, pela fórmula do mkEnemy escrita aqui de novo (BAL do jogo já com o balance.json) */
 const today = (G, stage, kind) => G.ev(`(function(){ const stage=${stage}, kind='${kind}', era=eraOf(stage), boss=kind==='boss', eraBoss=boss&&stage%STAGES_PER_ERA===0, ease=BAL.earlyEase[stage-1]||1, em=BAL.eraMult[era]||1;
-  return JSON.stringify([em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult), em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult)]); })()`);
+  return JSON.stringify([em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult), em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult)*((boss?BAL.earlyBossDmg:BAL.earlyDmg)[stage-1]||1)]); })()`);   /* regra de 14/11: multiplicador só de DANO por fase (BAL.earlyDmg nos comuns, BAL.earlyBossDmg no chefe) e earlyEase (só vida) vindos do balance.json, lidos do BAL do jogo */
 const enemy = (G, stage, kind) => G.ev(`(function(){ const e=mkEnemy(${stage},'${kind}'); return JSON.stringify([e.maxhp,e.dmg,e.hp,'diff' in e,e.fury||0]); })()`);
 /* save com pet filhote equipado (1º estágio): devolve a FC */
 const cubFc = G => G.ev(`(function(){ __e2eReplace(JSON.parse(__e2eBase)); const o=Sys.pet.ensure(S), p=Sys.pet.DATA.pets[0]; o.owned[p.id]={stars:1,lvl:10,frags:0,stg:0}; o.eq=p.id; Sys.pet.ensure(S); try{ statsChanged(); }catch(e){} return heroFC(); })()`);
@@ -101,6 +101,8 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   check('tabela do balance.json lida pelo loadBalance (bloco dificuldade)', ev('!!DIFF.tbl') && ev('JSON.stringify(DIFF.tbl.recFc)') === JSON.stringify(FILE.recFc), 'DIFF.tbl=' + ev('!!DIFF.tbl'));
   check('arquivo traz a chave desligada (on:false)', FILE.on === false, String(FILE.on));
   check('DIFF_ON desligada e módulos intactos', ev('diffOn()') === false && ev('Sys.advice.DATA.on') === false && ev('Sys.level.killCap(S,Sys.host).on') === false && ev('Sys.mount.DATA.starFlat.on') === false);
+  check('referência de FC nova (Sys.stats.refFcOn) desligada com a chave desligada', ev('Sys.stats.refFcOn()') === false, String(ev('Sys.stats.refFcOn()')));
+  check('BAL do jogo traz as tabelas do começo (earlyEase só de vida, todos >= 1; earlyDmg e earlyBossDmg de dano)', ev('Array.isArray(BAL.earlyEase)&&BAL.earlyEase.length>0&&BAL.earlyEase.every(v=>typeof v==="number"&&v>=1)&&Array.isArray(BAL.earlyDmg)&&BAL.earlyDmg.length>0&&Array.isArray(BAL.earlyBossDmg)&&BAL.earlyBossDmg.length>0&&BAL.earlyDmg.concat(BAL.earlyBossDmg).every(v=>typeof v==="number"&&v>0)'), ev('JSON.stringify([BAL.earlyEase.length,BAL.earlyDmg,BAL.earlyBossDmg])'));
   const cub0 = cubFc(G); check('pet: evoluir ainda não dá FC (setStageMult desligado)', ev('Sys.pet.DATA.v17.stageMult.on') === false && cub0 > 0, String(cub0));
   G.start(1, 1); const off0 = snapOff(G);
   for (const s of STAGES) { check('fase ' + s + ': FC pedida = recFC de hoje', ev(`fcNeed(${s})`) === ev(`recFC(${s})`), ev(`fcNeed(${s})`) + ' x ' + ev(`recFC(${s})`));
@@ -124,6 +126,7 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   /* ======================= 3. LIGADA: módulos, HUD, cores ======================= */
   console.log('3. ligada: módulos, HUD e cores');
   check('Sys.advice ligado junto', ev('Sys.advice.DATA.on') === true);
+  check('referência de FC nova ligada junto (Sys.stats.setRefFc pelo diffApply)', ev('Sys.stats.refFcOn()') === true, String(ev('Sys.stats.refFcOn()')));
   check('teto de XP de abate conforme o arquivo', ev('Sys.level.killCap(S,Sys.host).on') === (FILE.killXpCap.on === true));
   check('estágio do pet (setStageMult) conforme o arquivo', ev('Sys.pet.DATA.v17.stageMult.on') === (FILE.petStageMult.on === true) && FILE.petStageMult.on === true, String(ev('Sys.pet.DATA.v17.stageMult.on')));
   check('estrela da montaria conforme o arquivo', ev('Sys.mount.DATA.starFlat.on') === (FILE.mountStarFlat.on === true));
@@ -196,58 +199,85 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
 
   /* ======================= 5. CHEFE, COMUNS, FÚRIA ======================= */
   console.log('5. chefe, comuns e fúria (batalha de verdade, quadro a quadro)');
-  const HS = FILE.commons.hpShareOfBoss, DS = FILE.commons.dmgShareOfBoss, KILL = FILE.boss.killSecAt100, SURV = FILE.boss.surviveSecAt100, FAT = FILE.boss.furyAtSec, FM = FILE.boss.furyDmgMult;
-  check('arquivo: chefe só pela FC pedida e onda com as escoltas', FILE.boss.fromRecOnly === true && FILE.boss.waveIncludesEscorts === true && HS > 0 && DS > 0);
+  const HS = FILE.commons.hpShareOfBoss, DS = FILE.commons.dmgShareOfBoss, PDS = FILE.commons.dmgPostDefShareOfBoss > 0 ? FILE.commons.dmgPostDefShareOfBoss : 0, FM = FILE.boss.furyDmgMult, FROM_BOSS = FILE.boss.furyFrom === 'boss';
+  /* killSecAt100, surviveSecAt100, escortSec e furyAtSec: número (todas as eras) OU lista com um valor por era (lista curta: o último vale para as eras seguintes).
+     Regra escrita aqui de novo (não chama o diffByEra do jogo): KILL(fase), SURV(fase), FAT(fase) e ESC(fase, escoltas) = o que vale naquela fase. */
+  const byEra = (v, s) => { if (!Array.isArray(v)) return v; if (!v.length) return undefined; return v[Math.max(0, Math.min(v.length - 1, ev(`eraOf(${s})`)))]; };
+  const KILL = s => byEra(FILE.boss.killSecAt100, s), SURV = s => byEra(FILE.boss.surviveSecAt100, s), FAT = s => byEra(FILE.boss.furyAtSec, s);
+  /* fase das escoltas (boss.escortSec): vale o tempo do arquivo, limitado a 90% do killSec e do surviveSec; sem o campo (ou sem escoltas) = 0 = conta antiga */
+  const ESC = (s, nE) => { const v = byEra(FILE.boss.escortSec, s); return nE && typeof v === 'number' && isFinite(v) && v > 0 ? Math.min(v, KILL(s) * 0.9, SURV(s) * 0.9) : 0; };
+  const numOrEras = v => (typeof v === 'number' && v > 0) || (Array.isArray(v) && v.length === 9 && v.every(x => typeof x === 'number' && x > 0));
+  check('arquivo: chefe só pela FC pedida e onda com as escoltas', FILE.boss.fromRecOnly === true && FILE.boss.waveIncludesEscorts === true && HS > 0 && (PDS > 0 || DS > 0));
+  check('arquivo: killSecAt100, surviveSecAt100 e furyAtSec = número ou lista de 9 eras; escortSec idem (ou ausente); furyFrom ausente ou "boss"', numOrEras(FILE.boss.killSecAt100) && numOrEras(FILE.boss.surviveSecAt100) && numOrEras(FILE.boss.furyAtSec) && (FILE.boss.escortSec === undefined || numOrEras(FILE.boss.escortSec)) && (FILE.boss.furyFrom === undefined || FROM_BOSS), JSON.stringify([FILE.boss.killSecAt100, FILE.boss.surviveSecAt100, FILE.boss.furyAtSec, FILE.boss.escortSec, FILE.boss.furyFrom]));
   G.start(1, 1); const en1 = STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#');
-  for (const s of STAGES) { const b = JSON.parse(ev(`JSON.stringify(diffBoss(${s}))`)), e = JSON.parse(enemy(G, s, 'boss')), c = JSON.parse(enemy(G, s, 'e0')), c1 = JSON.parse(enemy(G, s, 'e1'));
+  for (const s of STAGES) { const b = JSON.parse(ev(`JSON.stringify(diffBoss(${s}))`)), e = JSON.parse(enemy(G, s, 'boss')), c = JSON.parse(enemy(G, s, 'e0')), c1 = JSON.parse(enemy(G, s, 'e1')), kill = KILL(s), es = ESC(s, b.escorts);
     check('fase ' + s + ': chefe sai da FC pedida da fase', e[3] === true && e[0] === b.hp && e[1] === b.dmg && b.need === FILE.recFc[s - 1] && isFinite(e[0]) && e[0] > 0 && e[1] > 0, JSON.stringify(e));
-    check('fase ' + s + ': comuns = ' + HS + ' da vida e ' + DS + ' do dano do chefe da MESMA fase', near(c[0], b.hp * HS, 1e-9) && near(c[1], b.dmg * DS, 1e-9) && c1[0] === c[0] && c1[1] === c[1], JSON.stringify(c));
-    check('fase ' + s + ': onda inteira (chefe + ' + b.escorts + ' escoltas) = ' + KILL + ' s × DPS da FC pedida', b.escorts === 2 && near(b.hp * (1 + b.escorts * HS), KILL * b.dps, 1e-9));
-    check('fase ' + s + ': herói de referência tem a FC pedida pelo Sys.fc', near(ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`), b.need, 0.01), ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`) + ' x ' + b.need); }
+    if (PDS > 0) {   /* regra de 14/11 (commons.dmgPostDefShareOfBoss): o golpe do comum, DEPOIS da DEF do herói de referência, = essa parte do golpe do chefe da mesma fase (também depois da DEF) */
+      const pd = JSON.parse(ev(`(function(){ const ref=diffRef(fcNeed(${s}),${s}), def=Math.max(0,+ref.def||0), after=d=>Sys.stats.hit({atk:d,critRate:0,critDmg:0},1,def,false).dmg; return JSON.stringify([after(${c[1]}),after(${e[1]}),def]); })()`));
+      check('fase ' + s + ': comuns = ' + HS + ' da vida do chefe e, depois da DEF de referência, ' + PDS + ' do golpe do chefe da MESMA fase', near(c[0], b.hp * HS, 1e-9) && pd[1] > 0 && near(pd[0], pd[1] * PDS, 1e-6) && c[1] > 0 && isFinite(c[1]) && c1[0] === c[0] && c1[1] === c[1], JSON.stringify(c) + ' · depois da DEF ' + pd[2] + ': comum ' + pd[0] + ' x chefe ' + pd[1] + ' (razão ' + (pd[0] / pd[1]) + ')'); }
+    else check('fase ' + s + ': comuns = ' + HS + ' da vida e ' + DS + ' do dano do chefe da MESMA fase', near(c[0], b.hp * HS, 1e-9) && near(c[1], b.dmg * DS, 1e-9) && c1[0] === c[0] && c1[1] === c[1], JSON.stringify(c));
+    /* com escortSec: as escoltas tomam esse tempo e a vida do chefe = DPS × (killSec − escortSec); sem o campo: chefe + escoltas = killSec × DPS */
+    if (es > 0) check('fase ' + s + ': onda inteira (chefe + ' + b.escorts + ' escoltas) = ' + kill + ' s da era: ' + es + ' s de escoltas + chefe com (' + kill + ' − ' + es + ') s × DPS da FC pedida', b.escorts === 2 && b.kill === kill && b.surv === SURV(s) && b.tE === es && near(b.hp, (kill - es) * b.dps, 1e-9), JSON.stringify([b.escorts, b.kill, b.surv, b.tE, b.hp, b.dps]));
+    else check('fase ' + s + ': onda inteira (chefe + ' + b.escorts + ' escoltas) = ' + kill + ' s × DPS da FC pedida', b.escorts === 2 && b.kill === kill && b.surv === SURV(s) && near(b.hp * (1 + b.escorts * HS), kill * b.dps, 1e-9), JSON.stringify([b.escorts, b.kill, b.surv, b.tE, b.hp, b.dps]));
+    check('fase ' + s + ': herói de referência tem a FC pedida pelo Sys.fc (e é o Sys.stats.refFromFc, ligado junto com a chave)', near(ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`), b.need, 0.01) && ev('Sys.stats.refFcOn()') === true && ev(`JSON.stringify(diffRef(fcNeed(${s}),${s}))===JSON.stringify(Sys.stats.refFromFc(fcNeed(${s}),${s}))`), ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`) + ' x ' + b.need); }
   G.start(1, 1); rich(G, 60); check('chefe e comuns NÃO dependem do herói do momento (herói forte = mesmos inimigos)', STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#') === en1 && ev('heroFC()') > 1000, String(ev('heroFC()')));
   /* luta real. spec: {ref:true, mul} = herói de referência da FC pedida × mul; {mul} = herói do jogo (proporções de quem começa) com mul × a FC pedida; atk0 = sem bater */
   async function fight(stage, wave, spec) { G.start(stage, wave); if (spec && spec.arma) ev(`(function(){ addItemToBag({slot:'weapon',r:0,e:eraOf(${stage})}); const it=S.inv.filter(x=>x.slot==='weapon').pop(); if(it) S.eq.weapon=it.id; statsChanged(); refreshHero(); startBattle(); return 1; })()`);   /* spec.arma: luta com a arma da ERA DA FASE (o save novo do teste usa a clava da era 0 em qualquer fase) */
     const need = ev(`fcNeed(${stage})`);
     if (spec) { const st = spec.ref ? JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${stage})*${spec.fcm || 1},${stage}))`)) : JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: (spec.ref ? 1 : need / ev('heroFC()')) * (spec.mul || 1), atk0: !!spec.atk0, fix: !!spec.ref, set: false }; }
-    ev('SCREENS_ON.bossResult=false'); let t0 = null, tFury = null, res = null, boss = null; const t = () => ev('B.t'), w0 = ev('S.wave');
-    await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.fury && tFury == null) tFury = t() - t0;
-      if (ev('B.deadT') > 0) { res = 'dead'; return true; } if (wave === 5 ? (boss && boss.dead) : ev('S.wave') !== w0) { res = 'win'; return true; } return false; }, 150);
-    const out = { res: res || 'tempo', sec: t0 != null ? t() - t0 : 0, hp: Math.max(0, ev('B.hero.hp/B.hero.maxhp')), tFury }; G.scale = null; return out; }
+    ev('SCREENS_ON.bossResult=false'); let t0 = null, tFury = null, tBoss = null, res = null, boss = null; const t = () => ev('B.t'), w0 = ev('S.wave');
+    /* spec.noFury: a fúria fica sem efeito SÓ nesta luta (multiplicador 1 na tabela viva, devolvido no fim), para medir quanto o dano normal do chefe deixa aguentar */
+    const fm0 = ev('DIFF.tbl&&DIFF.tbl.boss?DIFF.tbl.boss.furyDmgMult:null'); if (spec && spec.noFury) ev('DIFF.tbl.boss.furyDmgMult=1');
+    try { await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.wasParked && tBoss == null) tBoss = t() - t0; if (boss && boss.fury && tFury == null) tFury = t() - t0;
+      if (ev('B.deadT') > 0) { res = 'dead'; return true; } if (wave === 5 ? (boss && boss.dead) : ev('S.wave') !== w0) { res = 'win'; return true; } return false; }, 150); }
+    finally { if (spec && spec.noFury) ev(`DIFF.tbl.boss.furyDmgMult=${JSON.stringify(fm0)}`); }
+    /* tBoss = quando o chefe parou no lugar dele (s depois do primeiro inimigo da onda); escoltas = quantas ainda estavam vivas no fim */
+    const out = { res: res || 'tempo', sec: t0 != null ? t() - t0 : 0, hp: Math.max(0, ev('B.hero.hp/B.hero.maxhp')), tFury, tBoss, escoltas: ev('B.en.filter(e=>!e.boss&&!e.dead).length') }; G.scale = null; return out; }
   const many = async (n, stage, wave, spec) => { const r = []; for (let i = 0; i < n; i++) r.push(await fight(stage, wave, spec)); const w = r.filter(x => x.res === 'win'); return { runs: r, wins: w.length, n, mean: w.length ? w.reduce((a, x) => a + x.sec, 0) / w.length : 0, meanAll: r.reduce((a, x) => a + x.sec, 0) / n, hp: w.length ? w.reduce((a, x) => a + x.hp, 0) / w.length : 0 }; };
   const show = m => m.wins + '/' + m.n + (m.wins ? ' em ' + m.mean.toFixed(0) + ' s, sobra ' + Math.round(m.hp * 100) + '%' : ' (cai aos ' + m.meanAll.toFixed(0) + ' s)');
 
   if (MEDIDA) { await medidas({ G, ev, fight, many, show }); process.exit(0); }
 
   /* a sorte da luta (crítico no especial e na ultimate) espalha cada luta em uns ±15%: a regra é conferida na MÉDIA de 4 lutas */
-  for (const s of [10, 35]) { const m = await many(4, s, 5, { ref: true });
-    check('fase ' + s + ': herói de referência (100% da FC pedida) vence a onda do chefe inteira em ~' + KILL + ' s (média de 4, ±15%)', m.wins === 4 && near(m.mean, KILL, 0.15), m.runs.map(r => r.res + ' ' + r.sec.toFixed(1)).join(', '));
-    const b = await fight(s, 5, { ref: true, atk0: true }); check('fase ' + s + ': sem bater no chefe, ele cairia em ~' + SURV + ' s (±12%)', b.res === 'dead' && near(b.sec, SURV, 0.12), JSON.stringify(b));
+  for (const s of [10, 35]) { const m = await many(4, s, 5, { ref: true }), K = KILL(s), SV = SURV(s), FA = FAT(s);
+    check('fase ' + s + ': herói de referência (100% da FC pedida) vence a onda do chefe inteira em ~' + K + ' s (média de 4, ±15%)', m.wins === 4 && near(m.mean, K, 0.15), m.runs.map(r => r.res + ' ' + r.sec.toFixed(1)).join(', '));
+    /* surviveSecAt100 é a conta do dano NORMAL do chefe. Com furyFrom 'boss' e a fúria da era antes disso (escoltas + furyAtSec < surviveSec), na luta de verdade a fúria
+       chega primeiro: (1) sem a fúria, o herói sem bater aguenta ~surviveSec; (2) com a fúria ligada, ele cai depois dela e nunca depois de ~surviveSec */
+    const b0 = await fight(s, 5, { ref: true, atk0: true, noFury: true }); check('fase ' + s + ': sem bater no chefe e sem a fúria, ele cairia em ~' + SV + ' s (±12%)', b0.res === 'dead' && b0.tFury == null && near(b0.sec, SV, 0.12), JSON.stringify(b0));
+    const b = await fight(s, 5, { ref: true, atk0: true }); check('fase ' + s + ': sem bater no chefe, com a fúria (aos ' + FA + ' s ' + (FROM_BOSS ? 'do chefe parado' : 'da onda') + '), cai depois dela e não passa de ~' + SV + ' s (+12%)', b.res === 'dead' && b.sec <= SV * 1.12 && (b.tFury == null ? near(b.sec, SV, 0.12) : b.sec >= b.tFury && near(b.tFury - (FROM_BOSS ? b.tBoss : 0), FA, 0.03)), JSON.stringify(b));
     const c = await fight(s, 5, { ref: true, mul: 0.7 }); check('fase ' + s + ': com 70% da FC não vence', c.res === 'dead', JSON.stringify(c));
-    note('fase ' + s + ', herói de referência: 100% ' + show(m) + ' · sem bater cai aos ' + b.sec.toFixed(1) + ' s · 70% cai aos ' + c.sec.toFixed(1) + ' s'); }
+    note('fase ' + s + ', herói de referência: 100% ' + show(m) + ' · sem bater e sem fúria cai aos ' + b0.sec.toFixed(1) + ' s (chefe no lugar aos ' + (b0.tBoss == null ? '-' : b0.tBoss.toFixed(1)) + ' s, escoltas vivas no fim ' + b0.escoltas + ') · sem bater com fúria cai aos ' + b.sec.toFixed(1) + ' s (fúria aos ' + (b.tFury == null ? '-' : b.tFury.toFixed(1)) + ' s) · 70% cai aos ' + c.sec.toFixed(1) + ' s'); }
   check('nenhuma exceção no laço da batalha', !G.frameErr.length, G.frameErr.slice(0, 3).join(' | '));
   /* fúria */
-  G.start(10, 5); { ev("B.en=[mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.banner=null; DIFF.ft=0"); ev(`diffStep(${FAT - 0.5})`); const before = ev('B.en[0].fury||0'); ev('diffStep(0.6)'); const bn = JSON.parse(ev('JSON.stringify(B.banner||{})'));
+  G.start(10, 5); { const FAT10 = FAT(10), K60 = KILL(60), S60 = SURV(60), KN = KILL(10), SN = SURV(10);   /* fúria e tempos da era da fase (lista por era resolvida aqui) */
+    ev("B.en=[mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.banner=null; DIFF.ft=0"); ev(`diffStep(${FAT10 - 0.5})`); const before = ev('B.en[0].fury||0'); ev('diffStep(0.6)'); const bn = JSON.parse(ev('JSON.stringify(B.banner||{})'));
     check('fúria: nada antes de furyAtSec; depois, dano × furyDmgMult (uma vez)', before === 0 && ev('B.en[0].fury') === FM, before + ' → ' + ev('B.en[0].fury'));
     check('fúria: aviso na tela sem emoji', /FÚRIA/.test(bn.txt || '') && bn.sub === 'Dano x' + FM && !EMOJI.test((bn.txt || '') + bn.sub), JSON.stringify(bn));
     check('fúria: o HUD avisa', /fúria/.test(JSON.parse(ev('JSON.stringify(diffHudInfo(heroFC(),10))')).text));
-    /* opções novas da Sistemas, DESLIGADAS por padrão (campo ausente na tabela = tudo como antes; os testes acima provam o padrão) */
-    { const base = JSON.parse(ev("(function(){ DIFF.memo={}; const x=diffBoss(60); return JSON.stringify({hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec,n:x.escorts}); })()"));
-      check('opção escortSec ausente: conta de antes (tE = vida das escoltas ÷ DPS)', base.es === 0 && base.n > 0 && base.tE > 0 && base.tE < 10, JSON.stringify(base));
-      const withEs = JSON.parse(ev("(function(){ DIFF.tbl.boss.escortSec=15; DIFF.memo={}; const x=diffBoss(60); const r={hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec}; DIFF.tbl.boss.escortSec=[5,5,5,5,5,12,5,5,5]; DIFF.memo={}; r.byEra=diffBoss(60).tE; r.byEra0=diffBoss(10).tE; delete DIFF.tbl.boss.escortSec; DIFF.memo={}; r.back=diffBoss(60).hp; return JSON.stringify(r); })()"));
-      check('opção escortSec = 15: vida do chefe = DPS × (killSec − 15), chefe bate mais forte (menos tempo de duelo para os mesmos ' + SURV + ' s)', withEs.tE === 15 && near(withEs.hp, withEs.dps * (KILL - 15), 1e-6) && withEs.dmg > base.dmg, JSON.stringify(withEs));
-      check('opção escortSec por era (lista) e volta ao padrão ao tirar o campo', withEs.byEra === 12 && withEs.byEra0 === 5 && near(withEs.back, base.hp, 1e-9), JSON.stringify(withEs));
-      const pe = JSON.parse(ev(`(function(){ const B0=DIFF.tbl.boss, k0=B0.killSecAt100, s0=B0.surviveSecAt100, f0=B0.furyAtSec, o={}; DIFF.memo={}; o.base10=diffBoss(10).hp; o.base60=diffBoss(60).hp; o.dps60=diffBoss(60).dps;
-        B0.killSecAt100=[k0,k0,k0,k0,k0,k0+8]; B0.surviveSecAt100=[s0,s0,s0,s0,s0,s0+6]; DIFF.memo={}; const a=diffBoss(10), b=diffBoss(60), c=diffBoss(90); o.a=[a.kill,a.surv,a.hp]; o.b=[b.kill,b.surv,b.hp,b.dmg]; o.c=[c.kill,c.surv];
+    /* opções da Sistemas (escortSec, listas por era, furyFrom): o arquivo agora pode trazê-las LIGADAS. Cada bloco guarda o valor vivo da tabela, prova o campo ausente
+       (conta de antes), prova o campo com valores do teste e devolve o valor vivo no fim (conferido: o chefe volta a ser o do arquivo). */
+    { const live = JSON.parse(ev("(function(){ DIFF.memo={}; const x=diffBoss(60), y=diffBoss(10); return JSON.stringify({hp:x.hp,dmg:x.dmg,hp10:y.hp,dmg10:y.dmg}); })()"));
+      const base = JSON.parse(ev("(function(){ window.__es0=DIFF.tbl.boss.escortSec; window.__esHad='escortSec' in DIFF.tbl.boss; delete DIFF.tbl.boss.escortSec; DIFF.memo={}; const x=diffBoss(60); return JSON.stringify({hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec,n:x.escorts}); })()"));
+      check('opção escortSec ausente: conta de antes (tE = vida das escoltas ÷ DPS; chefe + escoltas = killSec × DPS)', base.es === 0 && base.n > 0 && base.tE > 0 && base.tE < 10 && base.kill === K60 && near(base.tE, base.n * HS * base.hp / base.dps, 1e-9) && near(base.hp * (1 + base.n * HS), K60 * base.dps, 1e-9), JSON.stringify(base));
+      const withEs = JSON.parse(ev("(function(){ DIFF.tbl.boss.escortSec=15; DIFF.memo={}; const x=diffBoss(60); const r={hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec}; DIFF.tbl.boss.escortSec=[5,5,5,5,5,12,5,5,5]; DIFF.memo={}; r.byEra=diffBoss(60).tE; r.byEra0=diffBoss(10).tE; delete DIFF.tbl.boss.escortSec; DIFF.memo={}; r.back=diffBoss(60).hp; if(window.__esHad) DIFF.tbl.boss.escortSec=window.__es0; DIFF.memo={}; r.live=diffBoss(60).hp; r.liveDmg=diffBoss(60).dmg; return JSON.stringify(r); })()"));
+      check('opção escortSec = 15: vida do chefe = DPS × (killSec − 15), chefe bate mais forte (menos tempo de duelo para os mesmos ' + S60 + ' s)', withEs.tE === 15 && withEs.kill === K60 && near(withEs.hp, withEs.dps * (K60 - 15), 1e-6) && withEs.dmg > base.dmg, JSON.stringify(withEs));
+      check('opção escortSec por era (lista), volta ao padrão ao tirar o campo e ao chefe do arquivo ao devolver o valor vivo', withEs.byEra === 12 && withEs.byEra0 === 5 && near(withEs.back, base.hp, 1e-9) && near(withEs.live, live.hp, 1e-9) && near(withEs.liveDmg, live.dmg, 1e-9), JSON.stringify(withEs) + ' vivo ' + JSON.stringify(live));
+      /* número (o da era 0 do arquivo) para todas as eras; depois a lista de 6 posições com +8 s e +6 s na era 5 */
+      const pe = JSON.parse(ev(`(function(){ const B0=DIFF.tbl.boss, k0=B0.killSecAt100, s0=B0.surviveSecAt100, f0=B0.furyAtSec, kn=${KN}, sn=${SN}, o={};
+        B0.killSecAt100=kn; B0.surviveSecAt100=sn; DIFF.memo={}; { const x=diffBoss(10), y=diffBoss(60), z=diffBoss(90); o.base10=x.hp; o.base60=y.hp; o.dps60=y.dps; o.num=[x.kill,x.surv,y.kill,y.surv,z.kill,z.surv]; }
+        B0.killSecAt100=[kn,kn,kn,kn,kn,kn+8]; B0.surviveSecAt100=[sn,sn,sn,sn,sn,sn+6]; DIFF.memo={}; const a=diffBoss(10), b=diffBoss(60), c=diffBoss(90); o.a=[a.kill,a.surv,a.hp]; o.b=[b.kill,b.surv,b.hp,b.dmg]; o.c=[c.kill,c.surv];
         o.pick=[diffByEra(7,60), diffByEra([1,2,3],10), diffByEra([1,2,3],30), diffByEra([1,2,3],90), diffByEra([],10)];
-        B0.killSecAt100=k0; B0.surviveSecAt100=s0; B0.furyAtSec=f0; DIFF.memo={}; o.back=diffBoss(60).hp; return JSON.stringify(o); })()`));
-      check('opção por era: killSecAt100 e surviveSecAt100 como lista mudam só a era da posição (era 0 igual; era 5 com +8 s e +6 s; lista curta: a última vale para as eras seguintes); número continua valendo', near(pe.a[2], pe.base10, 1e-9) && pe.a[0] === KILL && pe.b[0] === KILL + 8 && pe.b[1] === SURV + 6 && pe.b[2] > pe.base60 && pe.c[0] === KILL + 8 && pe.c[1] === SURV + 6 && pe.pick[0] === 7 && pe.pick[1] === 1 && pe.pick[2] === 3 && pe.pick[3] === 3 && pe.pick[4] == null && near(pe.back, pe.base60, 1e-9), JSON.stringify(pe));
-      const fb = JSON.parse(ev(`(function(){ const o={}; DIFF.tbl.boss.furyFrom='boss'; B.banner=null;
-        B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT + 5}); o.soEscolta=[DIFF.ft, B.en[1].fury||0];
-        B.en[1].wasParked=true; diffStep(${FAT - 0.5}); o.antes=B.en[1].fury||0; diffStep(0.6); o.depois=B.en[1].fury||0;
-        delete DIFF.tbl.boss.furyFrom; B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT + 5}); o.padrao=B.en[1].fury||0; B.banner=null; DIFF.ft=0; return JSON.stringify(o); })()`));
-      check("opção furyFrom 'boss': só a escolta no lugar não gasta o relógio; conta do chefe parado; sem o campo conta da 1ª escolta", fb.soEscolta[0] === 0 && fb.soEscolta[1] === 0 && fb.antes === 0 && fb.depois === FM && fb.padrao === FM, JSON.stringify(fb)); }
+        B0.killSecAt100=k0; B0.surviveSecAt100=s0; B0.furyAtSec=f0; DIFF.memo={}; o.back=diffBoss(60).hp; o.back10=diffBoss(10).hp; return JSON.stringify(o); })()`));
+      check('opção por era: killSecAt100 e surviveSecAt100 como lista mudam só a era da posição (era 0 igual; era 5 com +8 s e +6 s; lista curta: a última vale para as eras seguintes); número continua valendo; devolvido o valor vivo, o chefe é o do arquivo', pe.num.join() === [KN, SN, KN, SN, KN, SN].join() && near(pe.a[2], pe.base10, 1e-9) && pe.a[0] === KN && pe.a[1] === SN && pe.b[0] === KN + 8 && pe.b[1] === SN + 6 && pe.b[2] > pe.base60 && pe.c[0] === KN + 8 && pe.c[1] === SN + 6 && pe.pick[0] === 7 && pe.pick[1] === 1 && pe.pick[2] === 3 && pe.pick[3] === 3 && pe.pick[4] == null && near(pe.back, live.hp, 1e-9) && near(pe.back10, live.hp10, 1e-9), JSON.stringify(pe) + ' vivo ' + JSON.stringify(live));
+      const fb = JSON.parse(ev(`(function(){ const o={}, T=DIFF.tbl.boss, had='furyFrom' in T, ff0=T.furyFrom; T.furyFrom='boss'; B.banner=null;
+        B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT10 + 5}); o.soEscolta=[DIFF.ft, B.en[1].fury||0];
+        B.en[1].wasParked=true; diffStep(${FAT10 - 0.5}); o.antes=B.en[1].fury||0; diffStep(0.6); o.depois=B.en[1].fury||0;
+        delete T.furyFrom; B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT10 + 5}); o.padrao=B.en[1].fury||0; B.banner=null; DIFF.ft=0;
+        if(had) T.furyFrom=ff0; o.volta=T.furyFrom===undefined?null:T.furyFrom; return JSON.stringify(o); })()`));
+      check("opção furyFrom 'boss': só a escolta no lugar não gasta o relógio; conta do chefe parado; sem o campo conta da 1ª escolta; o valor do arquivo volta no fim", fb.soEscolta[0] === 0 && fb.soEscolta[1] === 0 && fb.antes === 0 && fb.depois === FM && fb.padrao === FM && fb.volta === (FILE.boss.furyFrom === undefined ? null : FILE.boss.furyFrom), JSON.stringify(fb)); }
     ev("B.en=[]; B.toSpawn=['e0','e1','boss']; diffStep(0.1)"); check('fúria: o relógio zera quando a onda do chefe recomeça', ev('DIFF.ft') === 0);
-    const a = await fight(10, 5, { ref: true, mul: 3, atk0: true }); check('fúria na luta real: entra ' + FAT + ' s depois do primeiro inimigo da onda chegar', a.tFury != null && near(a.tFury, FAT, 0.03), JSON.stringify(a)); }
+    /* regra viva: com furyFrom 'boss' o relógio conta desde que o CHEFE parou no lugar dele; sem o campo, desde o primeiro inimigo da onda */
+    const a = await fight(10, 5, { ref: true, mul: 3, atk0: true }); check('fúria na luta real: entra ' + FAT10 + ' s depois ' + (FROM_BOSS ? 'do chefe parar no lugar dele' : 'do primeiro inimigo da onda chegar'), a.tFury != null && (!FROM_BOSS || a.tBoss != null) && near(a.tFury - (FROM_BOSS ? a.tBoss : 0), FAT10, 0.03), JSON.stringify(a)); }
   /* o resto do jogo não muda */
   G.start(10, 1); { ev('B.inst={}'); const e = JSON.parse(enemy(G, 10, 'boss')), t = JSON.parse(today(G, 10, 'boss')), c = JSON.parse(enemy(G, 10, 'e0')), tc = JSON.parse(today(G, 10, 'e0')); ev('B.inst=null');
     check('instância: inimigos de hoje, sem fúria', e[0] === t[0] && e[1] === t[1] && e[3] === false && c[0] === tc[0] && c[1] === tc[1], JSON.stringify(e)); }
@@ -262,14 +292,16 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   ev('diffSet(false)'); G.start(1, 1);
   check('inimigos das fases 1, 10, 35 e 70 e FC pedida idênticos aos do começo', snapOff(G) === off0);
   check('save com pet filhote: FC idêntica à de hoje', ev('Sys.pet.DATA.v17.stageMult.on') === false && cubFc(G) === cub0, cubFc(G) + ' x ' + cub0); G.start(1, 1);
-  check('módulos de volta: advice, teto de XP e estrela desligados', ev('Sys.advice.DATA.on') === false && ev('Sys.level.killCap(S,Sys.host).on') === false && ev('Sys.mount.DATA.starFlat.on') === false);
+  check('módulos de volta: advice, referência de FC nova, teto de XP e estrela desligados', ev('Sys.advice.DATA.on') === false && ev('Sys.stats.refFcOn()') === false &&ev('Sys.level.killCap(S,Sys.host).on') === false && ev('Sys.mount.DATA.starFlat.on') === false);
   G.start(5, 1);
   ev("SCREENS_ON.bossResult=true; resOpen('lose',{stage:S.stage},true)"); { const h = String(ev('RES.el.innerHTML')); let i = 0; while (i < h.length && h[i] === loseOff[i]) i++; check('Derrota idêntica à do começo', h === loseOff, 'difere em ' + i + ': ' + loseOff.slice(i - 60, i + 60) + ' ||| ' + h.slice(i - 60, i + 60)); } ev("resClose('farm')");
   F('diffHud(heroFC())'); check('HUD limpo', !D.reg.dfh && !D.reg.dfc);
 
   /* ======================= 7. ERAS 7-8 nas duas combinações ======================= */
   console.log('7. eras 7-8 (chave própria) × dificuldade');
-  check('eras 7-8 desligadas + dificuldade ligada: 70 fases, última com a FC da tabela', ev('ERAS.length') === 7 && (ev('diffSet(true)'), ev('fcNeed(70)') === FILE.recFc[69]) && JSON.parse(enemy(G, 70, 'boss'))[3] === true); ev('diffSet(false)');
+  /* a chave das eras 7-8 (ERA9_KEY, js/eras9.js) foi LIGADA em 14/11: o jogo sem ?eras9=1 tem as eras que a chave viva mandar (9 ligada, 7 desligada) */
+  { const e9on = ev('ERA9.on') === true, nEras = ev('ERAS.length'); ev('diffSet(true)'); const f70 = ev('fcNeed(70)'), b70 = JSON.parse(enemy(G, 70, 'boss')); ev('diffSet(false)');
+    check('jogo sem ?eras9=1 (eras 7-8 ' + (e9on ? 'ligadas' : 'desligadas') + ' pela chave ERA9) + dificuldade ligada: ' + (e9on ? 9 : 7) + ' eras, fase 70 com a FC da tabela e chefe pela dificuldade', nEras === (e9on ? 9 : 7) && ev('ERA9_KEY') === e9on && f70 === FILE.recFc[69] && b70[3] === true && isFinite(b70[0]) && b70[0] > 0 && b70[1] > 0, 'eras ' + nEras + ' · ERA9_KEY ' + ev('ERA9_KEY') + ' · ERA9.on ' + e9on + ' · fcNeed(70) ' + f70 + ' x ' + FILE.recFc[69] + ' · chefe ' + JSON.stringify(b70)); }
   const G9 = await game('?debug=1&fresh=1&skip=1&eras9=1'), e9 = G9.ev; G9.start(1, 1);
   check('eras 7-8 ligadas + dificuldade desligada: fases 75 e 90 com o inimigo de hoje', e9('ERAS.length') === 9 && [75, 90].every(s => KINDS.every(k => { const e = JSON.parse(enemy(G9, s, k)), t = JSON.parse(today(G9, s, k)); return e[0] === t[0] && e[1] === t[1] && e[3] === false; })) && e9('fcNeed(75)') === e9('recFC(75)'));
   e9('diffSet(true)');
