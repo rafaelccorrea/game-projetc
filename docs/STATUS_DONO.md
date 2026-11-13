@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **06h20 · PARA VOCÊ VOTAR: amostra das ultimates da ESPADA** (a de hoje, a Lendária reforçada pelo código e a Mítica nova). Aprovando, sai o mesmo para os outros 8 tipos de arma (~54 créditos)
+- **06h20 · Skins novas (sua ordem):** no tamanho do garoto, completas, sem combinação. A Arte faz 8 imagens de referência do Kael (~16 créditos): Demônio, Anjo, Paladino Solar, Bobo da Corte, Ninja das Sombras, Pirata, Samurai, Ciborgue. Você escolhe 5 para animar (~38 cada); uma vai na Oferta de 1ª compra e uma Lendária no fim do Passe. A Kaia ganha as dela quando houver mais crédito
+- **06h20 · Arco e flecha e bumerangue:** custo calculado pela Arte: completo ~200 (não cabe); médio ~104 (pose própria a pé, montado e projétil pelo código, ultimates); barato ~48 (arco usa a pose da pistola, bumerangue usa o golpe da espada). Esperando a sua escolha
+
 - **06h · Servidor na AWS instalado e protegido (Servidor):** roda com um usuário sem permissões especiais, reinicia sozinho, só a API fica exposta (o resto responde 404), chave de login nova gerada no próprio servidor. Testado lá (login de convidado OK). Está PARADO esperando o banco. Para ligar faltam 3 coisas suas: (1) a senha do banco Supabase; (2) o certificado do Supabase; (3) um domínio para o HTTPS (o Servidor roda o certificado gratuito, se você quiser). Passo a passo: fps-server/deploy/LEIA-ME.md
 - **06h · Sua decisão sobre ultimates:** cada TIPO DE ARMA (não a era) tem 3 níveis: Básica até Épica = a de hoje; Lendária = a de hoje reforçada pelo código; Mítica = animação nova própria (~60 créditos). A Arte faz primeiro uma amostra com a espada para você ver. Arco e flecha e bumerangue: a Arte está calculando o custo
 
