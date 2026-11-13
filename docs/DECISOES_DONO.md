@@ -3,6 +3,7 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Fogueira V5, como o dono descreveu.** Mantém exatamente o layout da batalha que está no jogo hoje. Mudam só duas coisas: a Fogueira entra no centro da fileira dos 3 botões de ataque, e o ×1/×2/×4 vai para a lateral direita · Sistemas faz o protótipo sobre um print real → Engenheiro
 - [~] **Fogueira V3 reprovada.** Palavras do dono: "a tela tem que lembrar sempre a tela inteira… metade da tela… poluída pela fogueira… encaixar a fogueira basicamente na tela que tem hoje"
     - A batalha de hoje continua em tela cheia; a Fogueira vira um botão compacto no HUD
     - O cartão de comparação só aparece ao tocar
