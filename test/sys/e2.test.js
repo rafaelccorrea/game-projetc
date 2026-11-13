@@ -864,4 +864,18 @@ t('guilda: membros (espelho do servidor, saneados), permissões por cargo, contr
   } finally { G.DATA.on=false; G.setProvider(null); }
 });
 
+t('fases do herói (Sys.phaseUp): gatilho nos níveis 22/35/70, uma fase por vez, nomes por herói, animação (0→1 própria, resto fallback), pasta das folhas acompanha',()=>{
+  const PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), A=require('../../js/sys/appearance.js'); const S={hero:'kaia'}, h=makeHost();
+  assert.strictEqual(PU.current(S),0); assert.strictEqual(PU.evolve(S,h).reason,'off'); assert.strictEqual(PU.next(S,h),null);
+  PU.DATA.on=true; try{
+    L.ensure(S).lvl=21; let p=PU.pending(S,h); assert.ok(!p.ready&&p.next.needLevel===22&&p.next.missing.level===1); assert.strictEqual(PU.evolve(S,h).reason,'level');
+    L.ensure(S).lvl=80; assert.strictEqual(PU.pendingCount(S,h),3,'save antigo: 3 fases pendentes, nada aplicado sozinho'); assert.strictEqual(PU.current(S),0);
+    p=PU.pending(S,h); assert.deepStrictEqual([p.ready,p.from,p.to,p.fromName,p.toName,p.anim.sheet,p.anim.fallback],[true,0,1,'Menina','Adolescente','assets/anim/fx/evolve_0_1',false]);
+    assert.ok(PU.evolve(S,h).ok); assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase1/'); assert.strictEqual(PU.pending(S,h).anim.fallback,true);
+    PU.evolve(S,h); const e=PU.evolve(S,h); assert.deepStrictEqual([e.to,e.name],[3,'Guerreira lendária']); assert.strictEqual(PU.evolve(S,h).reason,'max'); assert.strictEqual(L.ensure(S).stg,3,'Sys.level em dia');
+    assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase3/'); assert.strictEqual(PU.nameOf({},3),'Guerreiro lendário');
+    PU.DATA.useFc=true; const S2={}; L.ensure(S2).lvl=30; assert.strictEqual(PU.pending(S2,h).next.missing.fc>0,true,'com a trava de FC ligada, FC baixa segura');
+  } finally { PU.DATA.on=false; PU.DATA.useFc=false; }
+});
+
 console.log(`ok: ${n} testes`);

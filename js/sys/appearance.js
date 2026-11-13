@@ -102,7 +102,8 @@ const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // vis
    sheets(S,host) → {hero, stage, dir:'assets/anim/hyb/<pasta>/', prefix:'kael_'|'kaia_', masks:'<dir>masks/'} (docs/ARTE_LIGAR.md §5 e §9b) */
 const HERO_DIRS={kael:['R','phase1','phase2','phase3'],kaia:['kaia','kaia_phase1','kaia_phase2','kaia_phase3']};
 const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
-function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level; let st=0; try{ if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) st=clamp(int0(g.stage),0,3); } }catch(e){}
+function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level, PU=root.Sys&&root.Sys.phaseUp; let st=0;
+  try{ if(PU&&PU.DATA&&PU.DATA.on===true) st=clamp(int0(PU.current(S)),0,3); else if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) st=clamp(int0(g.stage),0,3); } }catch(e){}   // Sys.phaseUp (níveis 22/35/70) manda quando ligado
   const dir='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'; return {hero:h,stage:st,dir,prefix:h+'_',masks:dir+'masks/'}; }
 const API={DATA,heroOf,sheets,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
