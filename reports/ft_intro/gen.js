@@ -97,6 +97,12 @@ const PATCH = [
   ['BemVindo', /(<!-- tempo fora com teto -->[\s\S]*?)(\s*<!-- bônus de retorno)/, '<sc-if value="{{hasGain}}">$1</sc-if><sc-if value="{{noGain}}"><div class="pi-nogain">Seu herói descansou e está pronto. Vamos continuar a jornada!</div></sc-if>$2', 'sem ganho: sem a área de recompensas'],
   ['BemVindo', 'aria-label="Coletar recompensas">Coletar<small>{{colSub}}</small>', 'aria-label="{{colTxt}}">{{colTxt}}<sc-if value="{{hasGain}}"><small>{{colSub}}</small></sc-if>', 'botão: Coletar ou Continuar'],
   ['BemVindo', "hudGold: fmt(hudGold), hasMore:", "hudGold: fmt(hudGold), hasGain: d.gold > 0, noGain: !(d.gold > 0), colTxt: d.gold > 0 ? 'Coletar' : 'Continuar', hasMore:", 'flags do ganho'],
+  // ORDEM DO DONO (Bem-vindo detalhado): Nv antes → depois, itens com a arte e a cor da raridade, e TUDO o que o tempo fora gera (baú, pedras, ração)
+  ['BemVindo', '<span class="{{lvCls}}">Nv. {{lvTxt}}</span>', '<sc-if value="{{upOn}}"><span class="pi-lvfrom">Nv {{lvFrom}} →</span></sc-if><span class="{{lvCls}}">Nv. {{lvTxt}}</span>', 'níveis: de → para'],
+  ['BemVindo', /(<div class="rw" style="flex: none; flex-direction: column; align-items: stretch; gap: 5px; animation-delay: \.4s">[\s\S]*?\+\{\{moreN\}\}<\/span><\/sc-if>\s*<\/div>\s*<\/div>)/, '<sc-if value="{{hasItems}}">$1</sc-if><sc-if value="{{hasExtras}}"><div class="rw pi-extras" style="flex: none; animation-delay: .5s"><sc-for list="{{extras}}" as="x"><span class="pi-ex" role="img" aria-label="{{x.aria}}"><img src="{{x.icon}}" alt=""><span><b>+{{x.txt}}</b><small>{{x.label}}</small></span></span></sc-for></div></sc-if>', 'itens só quando há; recursos extras com ícone'],
+  ['BemVindo', "hudGold: fmt(hudGold), hasGain:", "hudGold: fmt(hudGold), lvFrom: d.lv, hasItems: d.items.length > 0, hasExtras: (d.extras || []).length > 0, extras: (d.extras || []).map(function (x) { return { icon: x.icon, label: x.label, txt: fmt(x.n), aria: '+' + x.n + ' ' + x.label }; }), hasGain:", 'valores do resumo real'],
+  ['BemVindo', '<div style="flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 7px">', '<div style="flex: none; display: grid; grid-template-columns: {{rwCols}}; gap: 7px">', 'ouro ocupa a linha toda quando não há o cartão do baú'],
+  ['BemVindo', "hudGold: fmt(hudGold), lvFrom:", "hudGold: fmt(hudGold), rwCols: d.chests > 0 ? '1fr 1fr' : '1fr', lvFrom:", 'colunas'],
 ];
 
 function slice(s, a, b, from = 0) { const i = s.indexOf(a, from); if (i < 0) return null; const j = s.indexOf(b, i + a.length); return j < 0 ? null : [i + a.length, j]; }

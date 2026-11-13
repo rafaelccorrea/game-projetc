@@ -141,16 +141,26 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
       let o=null; try{ if(window.Sys&&Sys.loot&&Sys.host) o=Sys.loot.offline(s,Sys.host,t); }catch(e){}
       /* XP: roda o Sys.level.onOffline numa CÓPIA do save (nada muda no save até o Coletar) */
-      let xp=0,lv0=G.level(),frac0=0,per=0;
+      let xp=0,lv0=G.level(),lv1=lv0,frac0=0,per=0; const extras=[];
       try{ if(Sys.level&&Sys.level.onOffline&&Sys.level.progress){ const c=JSON.parse(JSON.stringify(s)), quiet=Object.create(Sys.host); for(const k of ['addGold','addGems','addItem','toast','onChange','onLevel','levelUp','snd']) quiet[k]=()=>{};
         const p0=Sys.level.progress(s); frac0=p0&&p0.need?p0.xp/p0.need:0; per=p0&&p0.need?1/p0.need:0; const x0=Sys.level.ensure(c).xp; const r=Sys.level.onOffline(c,quiet,t); const p1=Sys.level.progress(c);
         xp=Math.max(0,Math.round((r&&r.gained)||0));
         /* a barra do protótipo anda em "níveis": xpFrom + xp·xpLv = níveis ganhos + fração final (resultado real do Sys.level na cópia) */
-        const gain=(p1.lvl-p0.lvl)+(p1.need?p1.xp/p1.need:0)-frac0; per=xp>0?gain/xp:0; } }catch(e){}
+        const gain=(p1.lvl-p0.lvl)+(p1.need?p1.xp/p1.need:0)-frac0; per=xp>0?gain/xp:0; lv1=p1.lvl;
+        /* o resto que o tempo fora gera, na MESMA cópia (os números são os que o Coletar entrega) */
+        const X=Sys; let n=0;
+        try{ if(o&&X.chest&&X.chest.onKills){ const r=X.chest.onKills(c,o.kills,quiet); n=r&&r.gained|0; if(n>0) extras.push({key:'chest',n,label:n>1?'baús de abate':'baú de abate',icon:'assets/ui/chest.png'}); } }catch(e){}
+        try{ if(X.practice&&X.practice.onOffline){ n=X.practice.onOffline(c,quiet,t)|0; if(n>0) extras.push({key:'stones',n,label:'pedras de treino',icon:PI_ICON.stones}); } }catch(e){}
+        try{ if(X.pet&&X.pet.onOffline){ n=X.pet.onOffline(c,quiet,t)|0; if(n>0) extras.push({key:'food',n,label:'ração de pet',icon:PI_ICON.food}); } }catch(e){}
+        if(o){ for(const [k,lb,ic] of [['forge','pedras de forja',PI_ICON.forge],['food','ração de pet',PI_ICON.food],['gems','gemas','assets/ui/gem.png']]){ const v=o[k]|0; if(v>0){ const ex=extras.find(x=>x.key===k); if(ex) ex.n+=v; else extras.push({key:k,n:v,label:lb,icon:ic}); } }
+          if(Array.isArray(o.eggs)&&o.eggs.length) extras.push({key:'eggs',n:o.eggs.length,label:o.eggs.length>1?'ovos':'ovo',icon:PI_ICON.egg}); }
+      } }catch(e){}
       const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60), items=(o&&o.items||[]);
-      const icon=it=>it.slot==='weapon'?'assets/icons/menu/equipment.png':'assets/icons/menu/forge.png';
+      /* arte REAL do item: o ícone aprovado do espaço na era do visual (o mesmo da mochila) */
+      const icon=it=>{ try{ if(typeof slotIcon==='function') return slotIcon(it.slot,it.look!=null?it.look:it.e); }catch(e){} return it.slot==='weapon'?'assets/icons/menu/equipment.png':'assets/icons/menu/forge.png'; };
+      const label=it=>{ try{ const n=Sys.loot&&Sys.loot.itemName&&Sys.loot.itemName(it); if(n) return n; }catch(e){} return it.slot==='weapon'?'Arma':'Equipamento'; };
       this.off={sec:t,away:(hh?hh+'h ':'')+mm+'min',hrs:t/3600,capH:BAL.offlineCapHours,gold,xp,xpFrom:frac0,xpLv:per,lv:lv0,chests:0,
-        items:items.slice(0,6).map(it=>[Math.max(0,Math.min(4,it.r|0)),icon(it),it.slot==='weapon'?'Arma':'Equipamento']),more:Math.max(0,items.length-6),ret:false,retGold:0,retXp:0,o,dropRate:(()=>{ try{ return Math.round(Sys.loot.DATA.offline.itemRate*100); }catch(e){ return 10; } })()};
+        items:items.slice(0,6).map(it=>[Math.max(0,Math.min(4,it.r|0)),icon(it),label(it)]),lvTo:lv1,extras,more:Math.max(0,items.length-6),ret:false,retGold:0,retXp:0,o,dropRate:(()=>{ try{ return Math.round(Sys.loot.DATA.offline.itemRate*100); }catch(e){ return 10; } })()};
     }catch(e){ console.error('[intro] offline',e); this.off=false; }
     return this.off; },
   /* Coletar: entrega como o modal antigo (idempotente) */
@@ -158,7 +168,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   claimOffline(){ const d=this.offline(); if(!d||this.claimed) return; this.claimed=true; const s=G.S();
     try{ s.gold+=d.gold;
       if(typeof SYS_ON!=='undefined'&&SYS_ON){ try{ if(d.o) Sys.loot.grant(s,Sys.host,d.o); if(d.o&&Sys.chest&&Sys.chest.onKills) Sys.chest.onKills(s,d.o.kills,Sys.host);
-        const lr=Sys.level.onOffline(s,Sys.host,d.sec); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); if(Sys.practice&&Sys.practice.onOffline) Sys.practice.onOffline(s,Sys.host,d.sec); }catch(e){ console.error('[intro] offline grant',e); } }
+        const lr=Sys.level.onOffline(s,Sys.host,d.sec); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); if(Sys.practice&&Sys.practice.onOffline) Sys.practice.onOffline(s,Sys.host,d.sec); if(Sys.pet&&Sys.pet.onOffline) Sys.pet.onOffline(s,Sys.host,d.sec); }catch(e){ console.error('[intro] offline grant',e); } }
       if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){ console.error(e); } },
   /* escolhas do jogador novo (gravadas só no fim, no Nome; até lá nada muda no save) */
   pick:{hero:'',name:''},
@@ -170,7 +180,21 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   google(){ const N=Sys.net; return N.googleSignIn(N.hasSession&&N.hasSession()?'link':'login').then(p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; }); },
 };
 window.PIntro=PI;
-const PI_CSS=`#pin .pi-toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:99;padding:10px 18px;border-radius:14px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;color:#f6ecdf;font:900 14px Nunito,system-ui,sans-serif;white-space:nowrap;animation:pi_t .25s ease-out both}
+const piSvg=(b)=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+b+'</svg>');
+const PI_ICON={
+  stones:piSvg('<path d="M10 44 L20 22 L40 16 L54 30 L50 48 L28 54 Z" fill="#8fb6d9" stroke="#2a4360" stroke-width="3"/><path d="M20 22 L30 36 L54 30 M30 36 L28 54" fill="none" stroke="#2a4360" stroke-width="2"/>'),
+  forge:piSvg('<path d="M12 46 L22 20 L44 14 L54 34 L46 50 L24 54 Z" fill="#ff9a3a" stroke="#6a2a08" stroke-width="3"/><path d="M22 20 L32 34 L54 34" fill="none" stroke="#6a2a08" stroke-width="2"/>'),
+  food:piSvg('<path d="M14 36 C14 22 28 14 40 16 C52 18 56 30 50 40 C44 50 26 54 18 46 Z" fill="#c9783a" stroke="#5a2e10" stroke-width="3"/><path d="M44 18 L54 8 M50 22 L58 14" stroke="#f1e2c8" stroke-width="5" stroke-linecap="round"/>'),
+  egg:piSvg('<path d="M32 6 C46 6 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 18 6 32 6 Z" fill="#f4e6c8" stroke="#6a5a3a" stroke-width="3"/><path d="M18 34 L26 28 L32 34 L40 28 L48 34" fill="none" stroke="#c9a86a" stroke-width="3"/>'),
+};
+const PI_CSS=`#pin .pi-lvfrom{font:900 13px Nunito,system-ui,sans-serif;color:#c9b9a2;margin-right:4px;white-space:nowrap}
+#pin .pi-BemVindo .num{white-space:nowrap}
+#pin .pi-extras{display:flex;flex-wrap:wrap;gap:6px;padding:8px}
+#pin .pi-ex{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:12px;background:rgba(14,10,7,.55);border:1px solid #4a3a2b}
+#pin .pi-ex img{width:28px;height:28px;object-fit:contain}
+#pin .pi-ex b{display:block;font:400 17px 'Lilita One',sans-serif;color:#fff;line-height:1}
+#pin .pi-ex small{display:block;font:800 11px Nunito,system-ui,sans-serif;color:#c9b9a2}
+#pin .pi-toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:99;padding:10px 18px;border-radius:14px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;color:#f6ecdf;font:900 14px Nunito,system-ui,sans-serif;white-space:nowrap;animation:pi_t .25s ease-out both}
 #pin .pi-logoB{display:flex;flex-direction:column;align-items:center;gap:8px;animation:pi_float 3.6s ease-in-out infinite}
 #pin .pi-logoB span{font-family:'Lilita One',sans-serif;font-size:56px;line-height:1;letter-spacing:1px;color:transparent;background-image:linear-gradient(180deg,#ffffff 0%,#d2f8ff 30%,#4ad8ff 52%,#1a5fd0 68%,#7fe8ff 86%,#e8fdff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:1.5px #08224d;filter:drop-shadow(0 0 6px rgba(74,216,255,.9)) drop-shadow(0 0 18px rgba(60,140,255,.7)) drop-shadow(0 4px 8px rgba(0,0,0,.7))}
 #pin .pi-logoB i{font-style:normal;color:#bff4ff;font-weight:900;font-size:12px;letter-spacing:5px;text-shadow:0 0 8px rgba(74,216,255,.9)}
