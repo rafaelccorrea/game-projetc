@@ -3,6 +3,10 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Nomes das armas pela família** nas 9 eras (ex.: era 0 é tudo clava). A Sistemas monta a tabela "nome atual → novo" e o dono vê antes de aplicar
+- [~] **Arma Mítica liberada** (sai a regra do lançamento que a trocava por Épica) · Sistemas
+- [~] **Ligar itens novos de prêmio (newDrops) e skins (skinsOn)** na próxima versão · Sistemas + Engenheiro
+- [x] **Tiro montado**: por enquanto, quem está montado com arma de fogo ataca com o golpe de espada; fica anotado na matriz
 - [~] **Arte item por item até 100%** ("faça uma arma: a arma e todos os processos dela, na mão de todos os personagens, de todas as skins, com todos os efeitos; aí vai pro próximo"). O que conta como pronto, por tipo: docs/ARTE_PRONTO.md. A situação de cada item fica em docs/ARTE_MATRIZ.md (a Arte monta). O próximo item só abre quando o atual está 100%, visto na tela · Arte + rafae-47 + Engenheiro + QA
 - [~] **Arte: animar por completo o que JÁ existe antes de criar coisa nova** ("prioridade não é criar as coisas novas e sim animar o que já temos por completo"). Montarias e pets novos ficam para depois. Primeiro vêm: os golpes dos pets nos estágios médio e evoluído (hoje só 1 golpe), a Kaia na Fênix, o Mecha montado (está à venda), os ícones de golpe das eras 7 e 8, os inimigos das eras 7 e 8 ligados e as limpezas do Ciborgue · Arte confirma a lista, rafae-47 faz pelo caminho grátis, Engenheiro faz a ligação
 - [~] **Acabar as eras NÃO é o fim do jogo** ("acabar as eras não quer dizer que o jogo acabou"): fase 90 = "fim das 9 eras"; depois disso vêm as fases sem fim (+3% por fase) e metas que seguem forçando evolução (marcos a cada 10 fases, ranking, Forja/pet/montaria, Torneio e Arena) · Sistemas propõe o pós-eras e ajusta textos/tela
