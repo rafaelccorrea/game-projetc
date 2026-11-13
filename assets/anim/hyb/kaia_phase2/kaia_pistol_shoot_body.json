@@ -504,5 +504,31 @@
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
- "gripNote": "P19 (13/11): grip = centro do punho (hand do kaia_pistol_shoot_era5_t0), igual ao Kael R/garota; antes ficava no centro da arma do vídeo"
+ "gripNote": "P19 (13/11): grip = centro do punho (hand do kaia_pistol_shoot_era5_t0), igual ao Kael R/garota; antes ficava no centro da arma do vídeo",
+ "neck": [
+  88,
+  89,
+  89,
+  89,
+  87,
+  87,
+  87,
+  89,
+  89,
+  89,
+  87,
+  86,
+  86,
+  88,
+  88,
+  87,
+  87,
+  87,
+  87,
+  88,
+  88,
+  87,
+  87,
+  88
+ ]
 }

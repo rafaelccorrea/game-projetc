@@ -363,5 +363,24 @@
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "neck": [
+  134,
+  134,
+  134,
+  134,
+  131,
+  131,
+  131,
+  131,
+  131,
+  131,
+  132,
+  132,
+  134,
+  138,
+  134,
+  138,
+  132
+ ]
 }

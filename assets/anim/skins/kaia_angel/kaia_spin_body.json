@@ -366,5 +366,24 @@
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "dropped": [],
- "gripfdy": true
+ "gripfdy": true,
+ "neck": [
+  142,
+  143,
+  143,
+  141,
+  141,
+  144,
+  144,
+  141,
+  133,
+  148,
+  142,
+  140,
+  144,
+  146,
+  142,
+  141,
+  141
+ ]
 }
