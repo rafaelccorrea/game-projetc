@@ -8,6 +8,14 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h10 · Na batalha (v0.12.8, visto no navegador):**
+  - [x] Cenário vivo da era 4 (Industrial) ligado
+  - [x] Serpe V2 com o Kael sentado, a asa mais alta e destacada, o pet à frente sem cobrir as patas
+  - [x] Morte nova do Kael (cai de joelho, a arma cai, a tela escurece), também montado e com pet
+  - [~] Ainda por ver: inimigo sem parar, ultimate pela raridade, pônei/cavalo/tigre andando
+- **23h10 · Correio:** vai ser ligado com uma carta local "Bem-vindo a Eonbound" (sem prêmio); prêmios de verdade só com o servidor
+- **23h10 · Lote 2 de telas sendo conferido pelo QA:** Arena, Eventos, Torneio e as telas de entrada (logo corrigido para tela estreita)
+
 - **23h · Telas de entrada ESCRITAS (Servidor, 68653bd):** Título com o logo B, Login (convidado e Google), Prólogo com o avô, Criação (Kael/Kaia), Nome do jogador, Bem-vindo de volta. Sem Apple, porque o lançamento é só Android. Próximo: entram no jogo no próximo lote
 - **23h · Sistemas entregou:** frases prontas do Chat (40, sem texto livre, anti-spam, denúncia), descobertas do Códex (117, prêmios sem diamante), Guilda (cargos, contribuição, ranking), gatilhos do Kael/Kaia crescendo (níveis 22/35/70); o Torneio não mostra mais guildas de exemplo. Próximo: Correio, regras do Leilão, balanço das eras 7 e 8, testes automáticos dos lotes
 - **23h · Arte:** acrescentadas à fila as animações de evolução adolescente→adulto e adulto→guerreiro
