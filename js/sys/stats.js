@@ -53,6 +53,7 @@ const DATA={
   // REGRA DO DROP (a arma não muda com a era): cada arma que cai sorteia a família — arco 15% (Nv 30+, a partir da era 2) e bumerangue 15% (Nv 45+,
   // a partir da era 3), só os ligados; o resto é a família da ARTE do item que caiu (era do drop). Depois de gravada em it.wt, nunca muda (inclusive na transformação).
   // sword_legend ENTREGUE pela Arte (12/11, 49 quadros, lighter) e EM VOTAÇÃO do dono: marcar ownReady.sword=true só depois da aprovação (regra: nada entra sem o dono)
+  ownDelivered:['sword','club','gladius','flintlock'],   // folhas próprias ENTREGUES pela Arte e em voto (13/11); o ownReady só depois do OK do dono
   ownReady:{},   // família → true quando a Arte entregar a folha própria do Lendário (assets/anim/ult/<família>_legend.png + .json)
   skillFx:[
     {r:0,name:'Básico',  color:'#e8e2d8',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
