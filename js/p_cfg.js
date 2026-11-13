@@ -275,7 +275,8 @@ function cPageAccount(){
       <div class="c-cbody">
         <div class="c-row" style="padding:0 6px;animation-delay:.1s">
           <span style="position:relative;width:46px;height:46px;flex:none;border-radius:12px;border:2px solid #ffc94a;background:#33271d;overflow:hidden;box-sizing:border-box">
-            <span class="kidle ${t?'t'+t:''}" role="img" aria-label="Kael" style="position:absolute;left:-20px;top:-8px;width:84px;height:84px;display:block"></span></span>
+            ${typeof avatarTag==='function'?avatarTag(42,'position:absolute;left:0;top:0',S.hero==='kaia'?'Kaia':'Kael')   /* retrato da fase e do herói (js/avatar.js); sem ele, o de antes */
+              :`<span class="kidle ${t?'t'+t:''}" role="img" aria-label="Kael" style="position:absolute;left:-20px;top:-8px;width:84px;height:84px;display:block"></span>`}</span>
           <span class="c-rl"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(S.name||'Kael')}${lv?' · Nv. '+n0(lv):''}</b><small>ID do jogador</small><span style="font-size:12px;font-weight:900;color:#8a7a66">em breve</span></span>
           <span class="c-dis" data-x="soon" style="flex:none;display:flex"><button class="c-sb" disabled aria-disabled="true" aria-label="Copiar o ID do jogador, em breve" style="flex:none;width:88px;height:44px;font-size:13px">${cI(C_IC.copy,16,'currentColor',2.4)}Copiar</button></span>
         </div>

@@ -129,7 +129,9 @@ function scrForge(){
 
   /* ----- modos ----- */
   const modes=[['forge','Fortalecer +N'],['level','Nível']].map(m=>{ const on=XF.mode===m[0];
-    return `<button data-x="mode" data-m="${m[0]}" aria-pressed="${on}" style="flex:1;height:${tc44}px;border-radius:11px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:14px;font-weight:900;padding:0;white-space:nowrap">${m[1]}</button>`; }).join('');
+    return `<button data-x="mode" data-m="${m[0]}" aria-pressed="${on}" style="flex:1;height:${tc44}px;border-radius:11px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:14px;font-weight:900;padding:0;white-space:nowrap">${m[1]}</button>`; }).join('')
+    /* FUSÃO (js/p_fuse.js, de Sistemas): terceira opção da fileira, SÓ com PANEL_ON.fuse ligada e a tela registrada; abre a tela e volta para a Forja */
+    +(window.Panels&&Panels.defs&&Panels.defs.fuse&&Panels.on('fuse')?`<button data-x="fuse" aria-label="Fusão: juntar 3 itens iguais. Abrir" style="flex:1;height:${tc44}px;border-radius:11px;border:0;background:transparent;color:#c9b9a2;font-size:14px;font-weight:900;padding:0;white-space:nowrap">Fusão</button>`:'');
 
   /* ----- espaço escolhido (grande, no palco) ----- */
   const plusBg=t=>t===0?'#33271d':F_TC[t], plusFg=t=>t===0?'#f6ecdf':t===4?'#2a1403':'#0e0a07';
@@ -299,6 +301,7 @@ function fClick(b,ev){
   const a=b.dataset.x;
   if(a==='gate'){ snd('ui_tap'); Screens.open('gear'); return; }      /* a Forja é subtela do Equipamento (decisão do PO) */
   if(XF.busy) return;                                   /* martelando: o toque não vale */
+  if(a==='fuse'){ snd('ui_tap'); fStop(); if(!(window.Panels&&Panels.open('fuse',{from:'forge'}))) render(); return; }   /* Fusão (só aparece com a chave ligada) */
   if(a==='mode'){ const m=b.dataset.m==='level'?'level':'forge'; snd('ui_tap'); if(m===XF.mode) return; fStop(); XF.mode=m; XF.cardIn=true; render(); }
   else if(a==='slot'){ const s=b.dataset.slot; snd('ui_tap');
     if(s==='wing'&&!fWingOpen()){ fToast('Asa: libera no nível '+fWingLv()+' (você está no '+plv()+')'); return; }

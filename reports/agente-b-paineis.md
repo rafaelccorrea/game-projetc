@@ -1040,3 +1040,34 @@ ACHADO: o `js/sys/appearance.js` do disco já mudou (roupa-skin = combinação d
 roupas (a00..a74) e p10/p20/p30; logo, hoje o filtro não esconde nada depois que a lista carrega. Só esconde se faltar arquivo.
 Não mexi: Passe (dá a p10 no nível 25), Oferta (desligada), saque/invocação (Sistemas).
 `node --check`, conflitos, `run.js` "TUDO OK" (141), `flows.js` "fluxos duros OK", fumaça sem falha. Não visto no navegador.
+
+## Bloco 34 (sem navegador): retrato do herói pela fase (js/avatar.js)
+
+Arquivo novo `js/avatar.js` (carregado pela lista do fim de `js/screens.js`, antes de `equipfx`). API global:
+`avatarFor(S,size)` (canvas pintado, que se repinta sozinho), `avatarTag(size,css,alt)` (HTML `<canvas data-av>` para telas de texto; o arquivo
+pinta todo `canvas[data-av]` que entra na página), `avatarUrl(S,size)`, `avatarRefresh()`, evento `avatarready` / `avatarOnReady(fn)`,
+`avatarInfo()` (para conferência).
+- Folha: `Sys.appearance.sheetFor(S,Sys.host,'idle')`, quadro 0; cabeça pela âncora `head[0]` do `<masks>_head.json`, conferida nos pixels.
+- Recorte: quadrado de 2,8 × (âncora.y − topo da figura), cache por herói, fase, camadas e tamanho.
+- Reserva: Kael parado da pasta R (o retrato de antes); antes dela, um busto desenhado. Repinta quando as imagens chegam e a cada 1 s se algo mudou.
+- Camadas: usa `window.drawHeroFull` (já existe em `js/battle.js`) e só aceita o resultado se cobrir ≥ 85% da silhueta da folha; senão fica a folha.
+  Hoje o desenho do engenheiro NÃO desenha chapéu, óculos nem máscara (não há uso de hats/cos em battle.js/stage.js): o retrato sai sem eles.
+- Trocados (meus): `js/p_cfg.js` (conta, 42 px) e `js/screens.js` (cartão Aparência/Skin do Equipamento, 34 px); sem o avatar.js vale o de antes.
+- Teste: `node test/paineis/avatar.crop.js . [saida.png]` roda a função de localização nas 8 folhas reais. Resultado em
+  `reports/prints/avatar_recortes_8.png` (visto por mim: rosto certo nas 4 fases de Kael e Kaia).
+ACHADO (Arte): `assets/anim/hyb/kaia/masks/kaia_idle_head.json` dá x=245 numa célula de 256 (fora da figura; está 96 px à direita). O avatar corrige sozinho.
+NÃO visto no navegador: o caminho pelo drawHeroFull, a repintura e o tamanho dentro das molduras.
+
+## Bloco 35 (sem navegador): avatar pelos retratos da Arte + tela de Fusão carregada
+
+AVATAR (substitui o desenho do bloco 34): `js/avatar.js` agora usa os 8 retratos de `assets/hero/avatar/` (`avatars.json`), fase por
+`Sys.phaseUp.current(S)` (sem ele, a do `sheetFor`), herói por `S.hero`, e desenha por cima as peças de cabeça que
+`Sys.appearance.layers(S,Sys.host)` devolve: chapéu (`hat` ou `era` → `hats.json`), óculos e máscara (`cos` ou `id` → `cos.json`), com
+translate · rotate · scale(s/res) · drawImage(-pivot). O "ocultar" vem do próprio `layers`. Saiu a dependência do `drawHeroFull`.
+Reserva: carregando = retrato de antes (Kael da pasta R) ou busto desenhado; retrato faltando = recorte da folha parada (sem peças).
+`node test/paineis/avatar.crop.js . reports/prints/avatar_recortes_8.png`: 8 retratos, âncoras e 16 peças caem em cima da cabeça; folha de
+conferência vista por mim (chapéus e óculos no lugar nas 4 fases dos dois heróis).
+Limites: `hideHair` do hats.json não é aplicado (o cabelo aparece por baixo do elmo); nada visto no navegador (repintura, tamanho nas molduras).
+
+FUSÃO: `p_fuse` na lista de carga (`js/screens.js`), `PANEL_ON.fuse=false` (`js/panels.js`), e na Forja (`js/p_forge.js`) uma terceira opção
+"Fusão" na fileira de modos, que só aparece com a chave ligada e abre `Panels.open('fuse',{from:'forge'})`. Conflitos de nomes do p_fuse: nenhum.
