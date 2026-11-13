@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **11h · CARREGAMENTO DE VERDADE pronto (cabf4d0, visto no navegador com rede lenta):** a barra anda de verdade (69 de 69 arquivos) e o jogo só aparece completo. Antes ele abria com 10 dos 54 arquivos ainda carregando, que era o que você viu. Troca de era sem quadro quebrado. Os 60 FPS estão escritos; a medida sai no S24 na instalação
+- **11h · PARA VOCÊ VOTAR:** Serafim refeito com 6 asas (duas versões: com e sem ornamento)
+
 - **10h50 · Checklist atualizado** (A, B, C e D em dia). Engenheiro: carregamento de verdade → 60 FPS → ligar o que você aprovou → ícone A e abertura → APK. Servidor: logo animado na tela de título. Arte: 5 agentes nas skins, asas, arco/bumerangue e Kaia montada
 
 - **10h40 · Você aprovou como ganhar as skins novas:** Ninja (Kael e Kaia) na Oferta de 1ª compra · Anjo (Kael e Kaia) no fim do Passe Premium · Demônio/Demônia grátis no VIP 7 · Paladino (Kael) e Arlequina (Kaia) a R$ 24,90 · Ciborgue (Kael) a R$ 39,90 · Samurai (Kael) no top 10 do Torneio. Nada de sorteio
