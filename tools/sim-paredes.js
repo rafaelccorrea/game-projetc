@@ -14,7 +14,14 @@ const capKill=(raw,e)=>{ const t=KILL[e]; return Math.min(raw,t)+CAP.mid*Math.ma
 const VT=VIP.DATA.table, X=LV.DATA.xpToNext;
 function dayXp(e,L,o){ const v=o.vip||0, xpP=1+(VT.xp9[v]||0)/100, speed=v>=5&&L>=40?4:(v>=1||L>=15)?2:1;
   return capKill(KILL[e]*(L<15?1:Math.min(speed,4)/2),e)*xpP+(M.offline+M.missions+M.inst*(v>=1?1.5:1))*(1+e)*xpP; }
-const capR=(L,e)=>L>=105&&e>=7?5:L>=85&&e>=5?4:L>=70&&e>=4?3:L>=25?2:L>=10?1:0, forgeAt=e=>Math.min(15,Math.round(2+1.6*e));
+/* PACOTE DO FIM (--late, dono 13/11: paredes das eras 5-8 em 3-5 dias): Forja +16 a +20, Divino mais cedo (Torre/evento, Nv 95 na era 6), títulos das eras 5-8,
+   montaria 6 e 7 estrelas, pet Nv 91-120. Sem sorteio pago e sem compra de poder. */
+const LATE=process.argv.includes('--late');
+if(LATE){ FG.DATA.max=20; FG.DATA.bonus.push(1.05,1.17,1.29,1.41,1.53); }
+const lateTitles=d=>LATE?Math.max(0,Math.min(8,(d-50)/125*8))*3:0;   // 8 títulos de +3% ATQ e VIDA entre o dia 50 e o 175
+const lateMount=(d,lazy)=>LATE&&!lazy?(d>=100?2.75:0)+(d>=150?2.75:0):0;   // 6ª e 7ª estrelas (+2,75% cada)
+const latePet=(L,lazy)=>LATE&&!lazy&&L>=100?1+0.25*Math.min(1,(L-100)/20):1;   // pet Nv 91-120: parte do pet até +25%
+const capR=(L,e)=>LATE&&L>=95&&e>=6?5:L>=105&&e>=7?5:L>=85&&e>=5?4:L>=70&&e>=4?3:L>=25?2:L>=10?1:0, forgeAt=e=>LATE?Math.min(20,Math.round(2+1.6*e+(e>=5?(e-4)*0.9:0))):Math.min(15,Math.round(2+1.6*e));
 function baseFc(L,e,r,forge,qp){ const S={sys:{level:{lvl:L,xp:0},forge:{lv:{}}}}; for(const s of ST.DATA.slots) S.sys.forge.lv[s]=forge;
   const eq={}; for(const s of ST.DATA.slots){ if(s==='wing'&&(L<50||r<2)) continue; eq[s]={slot:s,e,r:s==='weapon'&&r===3?2:r,lvl:L,subs:[],qp,wing:'angel'}; }
   const h={equipped:()=>eq,eraMax:()=>e,level:()=>L,atk:()=>0,hp:()=>0,now:()=>0}; return Math.round(FC.compute(S,h)); }
@@ -35,15 +42,15 @@ function fcNow(o,LS,t,eCap){ const i=Math.min(LS.length-1,Math.round(t/STEP)), L
   const e=eCap, f=Math.max(0,Math.min(1,(L-LIN[e])/Math.max(1,LOUT[e]-LIN[e])));
   const r=o.lazy?Math.min(capR(L,e),2):capR(L,e);
   const forge=o.lazy?0:Math.round(forgeAt(Math.max(0,e-1))+(forgeAt(e)-forgeAt(Math.max(0,e-1)))*f);
-  const pct=1+(titlesPct(d)+mountPct(L,d,!!o.vip,o.lazy)+guildPct(d)+(VT.atk[o.vip||0]||0))/100;
-  const v=baseFc(L,e,r,forge,o.vip?6000:4000)*pct/(1-petShare(L,e,o.lazy)); memo.set(key,v); return v; }
+  const pct=1+(titlesPct(d)+lateTitles(d)+lateMount(d,o.lazy)+mountPct(L,d,!!o.vip,o.lazy)+guildPct(d)+(VT.atk[o.vip||0]||0))/100;
+  const v=baseFc(L,e,r,forge,o.vip?6000:4000)*pct/(1-Math.min(0.3,petShare(L,e,o.lazy)*latePet(L,o.lazy))); memo.set(key,v); return v; }
 function curve(o){ const LS=levels(o); return {o,LS,at:(t,eCap)=>fcNow(o,LS,t,eCap),L:t=>LS[Math.min(LS.length-1,Math.round(t/STEP))]}; }
 function curveOld(o){ let L=1,xp=0; const out=[0];
   for(let d=1;d<=400;d++){ xp+=dayXp(eraOfLevel(L),L,o); while(L<120&&xp>=X[L-1]){ xp-=X[L-1]; L++; }
     const e=eraOfLevel(L), f=(L-LIN[e])/Math.max(1,LOUT[e]-LIN[e]);
     const r=o.lazy?Math.min(capR(L,e),2):capR(L,e);                                       // preguiçoso: não troca para raridade alta (não funde)
     const forge=o.lazy?0:Math.round(forgeAt(Math.max(0,e-1))+(forgeAt(e)-forgeAt(Math.max(0,e-1)))*f);
-    const pct=1+(titlesPct(d)+mountPct(L,d,!!o.vip,o.lazy)+guildPct(d)+(VT.atk[o.vip||0]||0))/100;
+    const pct=1+(titlesPct(d)+lateTitles(d)+lateMount(d,o.lazy)+mountPct(L,d,!!o.vip,o.lazy)+guildPct(d)+(VT.atk[o.vip||0]||0))/100;
     out.push({d,L,e,fc:baseFc(L,e,r,forge,o.vip?6000:4000)*pct/(1-petShare(L,e,o.lazy))}); }
   return out; }
 const free=curve({}), vip5=curve({vip:5}), vip10=curve({vip:10}), lazy=curve({lazy:true});
@@ -56,7 +63,7 @@ const WB=[0.1,1,2,2.5,3,3,3,3,3], WM=[0,0,0.5,1,1,1.5,1.5,1.5,1.5];
    Senhor da Era: pede 1,2× a FC com que o grátis CHEGA nele; chefe do meio: 1,1×. As outras fases seguem o calendário (dia-alvo × c). c é ajustado para o
    grátis terminar no dia ~180. O tempo de cada parede SAI do crescimento da FC (não é mais escolhido). */
 /* razão por era: o 1º Senhor é suave (jogador novo), cresce até 1,15 da era 2 em diante (chegar com 87% = ~1 em 4 vence) */
-const WR_BOSS=[1.06,1.1,1.15,1.15,1.15,1.15,1.15,1.15,1.15], WR_MID=1.07;
+const WR_BOSS=LATE?[1.06,1.1,1.15,1.15,1.15,1.1,1.1,1.1,1.1]:[1.06,1.1,1.15,1.15,1.15,1.15,1.15,1.15,1.15], WR_MID=LATE?1.05:1.07;
 function buildPlan(c){ const out=[]; let t=0, now=0;
   for(let e=0;e<9;e++){ const D=(END[e]-(e?END[e-1]:0))*c;
     for(let s=1;s<=10;s++){ t+=D/10; const wall=s===10?'Senhor da Era':(s===5&&e>=2)?'chefe do meio':''; let rec=fcAt(free,t,e);

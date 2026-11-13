@@ -237,3 +237,34 @@ Simulação refeita:
 - **(b)** dar mais fontes de FC nas eras finais. Exemplos: a Forja passar do +15, raridade Divino mais cedo, títulos das eras 7-8.
 
 Decisão do dono. Os números estão no balance.json (bloco `dificuldade`, `on:false`).
+
+### Pacote do fim (eras 5-8), simulado, NÃO ligado (13/11)
+
+O dono quer mais fontes de FC no fim, para as paredes das eras 5-8 voltarem a 3-5 dias. Simulação: `node tools/sim-paredes.js --late --game`.
+
+**O que entra no pacote:** nada é sorteio pago nem compra de poder.
+- Forja +16 a +20: cada nível +0,12 no multiplicador (o mesmo passo do fim de hoje). Teto 18 na era 7 e 20 na era 8, com custo crescente.
+- Arma Divina mais cedo: pela Torre ou por evento, a partir do Nv 95 na era 6 (hoje é Nv 105 na era 7).
+- 8 títulos novos das eras 5-8, de +3% ATQ e VIDA cada.
+- Montaria com 6ª e 7ª estrelas, de +2,75% cada.
+- Pet do Nv 91 ao 120: a parte do pet vai até +25%.
+- O Senhor das eras 5-8 pede 1,1× a FC com que o grátis chega (chegar com 91% ≈ metade das lutas vence; continua difícil). O chefe do meio pede 1,05×.
+
+Espera no Senhor da Era (grátis · VIP 5 · VIP 10):
+
+| Era | Sem o pacote (grátis) | Com o pacote |
+|---|---|---|
+| 5 | 6,3 d | 3,0 · 3,3 · 2,9 d |
+| 6 | 12 d | 4,8 · 3,9 · 2,3 d |
+| 7 | 7,4 d | **7,4** · 3,3 · 2,9 d |
+| 8 | 5,3 d | 5,0 · 7,1 · 9,3 d |
+
+**Fins:** grátis no dia 178, VIP 5 no 143 e VIP 10 no **127** (meta ~121). Quem não forja nem evolui o pet trava na fase 61.
+
+**O que falta:**
+- **Era 7 (7,4 d):** na era 7 nada novo abre enquanto o jogador espera, e o nível sobe devagar com o teto de XP.
+- **VIP 10 no dia 127, e não no 121.**
+
+**Testado e descartado:** subir o teto de XP de abate das eras 7-8. O grátis chega ao Nv 120 mais cedo, a FC para de crescer e a parede da era 8 vai a 12 dias.
+
+**Próximo passo possível:** uma fonte DIÁRIA nas eras 7-8, que cresce enquanto o jogador espera. Exemplos: pedra de Forja extra por dia nas eras 7-8, ou um "treino de era" com teto diário. Com ela, a era 7 cai para ~4-5 dias. Essa escolha é do dono.
