@@ -19,6 +19,7 @@ t('classify: cada tipo de arte no seu pacote; fontes brutas fora',()=>{
   assert.strictEqual(C('assets/weapons/era4_mitico.png'),'era:4'); assert.strictEqual(C('assets/anim/ult/era8_ult.png'),'era:8'); assert.strictEqual(C('assets/bg/era1.png'),'era:1');
   assert.strictEqual(C('assets/anim/look_preview/kael_phase3_idle_look_b.png'),'preview'); assert.strictEqual(C('assets/ui/coin.png'),'core'); assert.strictEqual(C('js/battle.js'),'core');
   assert.ok(A.excluded('assets/anim/hyb/phase3/_reprovado/x.png')&&A.excluded('assets/hero/phases/kaia/kaia_phase1_src.png')&&A.excluded('assets/anim/rig/src/a.png')&&!A.excluded('assets/ui/coin.png'));
+  assert.ok(A.excluded('assets/weapons/meta.json.bak_bow')&&A.excluded('assets/weapons/meta.json.bak_p27')&&A.excluded('assets/x/a.png.bak')&&!A.excluded('assets/weapons/meta.json')&&!A.excluded('assets/ui/bakery.png'),'backups .bak* (com sufixo) ficam fora do APK');
 });
 t('desligado: nada muda',()=>{ assert.deepStrictEqual(A.needed({},makeHost()),{on:false}); assert.deepStrictEqual(A.plan({},makeHost(),[]),{on:false}); });
 t('needed/plan: herói e fase, era atual + próxima, pistola, montaria e pet equipados; plano baixa o que falta e apaga o que sobra',()=>{

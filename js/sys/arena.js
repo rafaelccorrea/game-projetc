@@ -62,7 +62,9 @@ const playerFC=(S,host)=>{ const F=root.Sys&&root.Sys.fc; return F&&F.compute?Ma
 const weekMaxFC=(S,host)=>{ const F=root.Sys&&root.Sys.fc; const m=F&&F.weekMax?F.weekMax(S,host):0; return Math.max(m,playerFC(S,host)); };
 const name=rng=>`${DATA.names.pre[Math.floor(rng()*DATA.names.pre.length)]} ${DATA.names.suf[Math.floor(rng()*DATA.names.suf.length)]}`;
 const skin=(rng,era)=>({weapon:`w${era}${[0,1,2,4][Math.floor(rng()*4)]}`, armor:`a${era}${Math.floor(rng()*5)}`});
-const eraOf=host=>clamp(int0(host&&host.eraMax&&host.eraMax()),0,6);
+/* era máxima vem do Sys.stats (6 no jogo de 7 eras; 8 com as eras 7-8 ligadas pelo setEra9) */
+const maxEraNow=()=>{ const T=root.Sys&&root.Sys.stats; const m=T&&T.DATA&&+T.DATA.maxEra; return m>=6?m:6; };
+const eraOf=host=>clamp(int0(host&&host.eraMax&&host.eraMax()),0,maxEraNow());
 
 /* ---------------- estado ---------------- */
 function ensure(S,host){

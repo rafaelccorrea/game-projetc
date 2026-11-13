@@ -42,6 +42,12 @@ const DATA={
   v9off:null,
 };
 DATA.v9off={maxLevel:DATA.maxLevel, xpToNext:DATA.xpToNext};
+/* NÍVEL 120 SEM MEXER NAS ERAS 0-6 (regra do dono: nível máximo 120; pedido do Engenheiro para as eras 7-8 jogáveis).
+   setCap120(true): só estende a tabela de hoje. Níveis 1-100 IGUAIS (a curva validada no jogo real), 101-120 continuam o mesmo passo do fim da
+   tabela (+1137 por nível, ~1,03 mi de XP no total, quase o mesmo que de 1 a 100). Sem teto diário de abate e sem estágios do Kael (o herói não cresce).
+   Número PROVISÓRIO: o tempo das eras 7-8 no jogo real precisa ser medido pelo QA, como foi feito na v7.3. setV9 (curva inteira nova) continua separado. */
+DATA.cap120={on:false, maxLevel:120, xpToNext:(()=>{ const o=DATA.v9off.xpToNext, n=o.length, st=o[n-1]-o[n-2], t=o.slice(); while(t.length<119) t.push(t[t.length-1]+st); return t; })()};
+function setCap120(on){ if(DATA.v9.on) return false; const src=on?DATA.cap120:DATA.v9off; DATA.cap120.on=!!on; DATA.maxLevel=src.maxLevel; DATA.xpToNext=src.xpToNext; return DATA.cap120.on; }
 /* liga/desliga a curva das 9 eras (só troca tabelas; o save não muda: quem está no 100 continua no 100 e volta a subir) */
 function setV9(on){ const src=on?DATA.v9:DATA.v9off; DATA.v9.on=!!on; DATA.maxLevel=src.maxLevel; DATA.xpToNext=src.xpToNext; return DATA.v9.on; }
 const V9=()=>DATA.v9.on===true;
@@ -123,7 +129,7 @@ function stage(S,host){ const o=ensure(S), T=DATA.v9.stages; if(!V9()) return {o
   return {on:true,stage:st,id:T[st].id,name:T[st].name,ready:!!nx&&lv>=nx.lvl&&fc>=nx.fc,
     next:nx?{stage:st+1,id:nx.id,name:nx.name,lvl:nx.lvl,fc:nx.fc,needLvl:Math.max(0,nx.lvl-lv),needFc:Math.max(0,Math.ceil(nx.fc-fc))}:null}; }
 function evolve(S,host){ const s0=stage(S,host); if(!s0.ready) return {ok:false,reason:s0.on?'need':'off',stage:s0.stage}; ensure(S).stg=s0.stage+1; return {ok:true,from:s0.stage,stage:s0.stage+1}; }
-const API={DATA,setV9,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
+const API={DATA,setV9,setCap120,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
 root.Sys=root.Sys||{}; root.Sys.level=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
