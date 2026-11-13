@@ -71,7 +71,8 @@ function levelForPoints(p){ let l=0; for(let i=1;i<=DATA.maxLevel;i++) if(int0(p
 function addPoints(S,n){ if(!S||typeof S!=='object') return null; const from=level(S), pts=pointsOf(S)+int0(n), to=Math.max(from,levelForPoints(pts));
   store(S,to,pts); prismMax(S); return {points:pts,from,to,levels:to-from}; }
 /* Revisão 5: VIP no máximo → 500 fragmentos do Prismático uma vez (Sys.pet decide; só com a v4 ligada) */
-function prismMax(S,host){ const P=root.Sys&&root.Sys.pet; return P&&P.prismVipMax?P.prismVipMax(S,host):null; }
+function prismMax(S,host){ const N=root.Sys&&root.Sys.newDrops; try{ if(N&&N.grant) N.grant(S,host,'vip:level',{level:level(S)}); }catch(e){}   // itens novos: VIP 8 Fênix gigante, VIP 9 Serpe infernal (uma vez)
+  const P=root.Sys&&root.Sys.pet; return P&&P.prismVipMax?P.prismVipMax(S,host):null; }
 /* barra de progresso da tela: {level, points, next, needTotal, missing, frac, max} */
 function progress(S){ const l=level(S), p=pointsOf(S), max=l>=DATA.maxLevel, nt=max?0:int0(DATA.points[l+1]), base=int0(DATA.points[l]);
   return {level:l, points:p, next:max?null:l+1, needTotal:nt, missing:max?0:Math.max(0,nt-p), frac:max?1:clamp((p-base)/Math.max(1,nt-base),0,1), max}; }

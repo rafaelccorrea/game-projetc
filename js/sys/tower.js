@@ -152,6 +152,7 @@ const V17=()=>{ const P=PETM(); return !!(P&&P.DATA&&P.DATA.v17&&P.DATA.v17.on==
 const t100Egg=()=>V17()?{r:2,source:'tower100',choice:PETM().DATA.v17.tower100.slice()}:{r:4,source:'tower100',pet:'phoenix'};
 const t100Pet=S=>{ try{ return S&&PETM()?PETM().ensure(S).t100||'':''; }catch(e){ return ''; } };
 /* entrega cada prêmio pelo módulo dono; se o módulo não estiver carregado, zera o campo (a tela não promete o que não entrega) */
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (Sys.newDrops, chave própria)
 function grantRewards(S,host,rw){
   const sys=root.Sys||{};
   if(rw.gold&&host.addGold) host.addGold(rw.gold); if(rw.gems&&host.addGems) host.addGems(rw.gems);
@@ -175,7 +176,7 @@ function fight(S,host){
   if(o.lossesLeft<=0) return {ok:false,reason:'tries',floor:f};
   const opp=opponent(f), me=playerStats(S,host), d=duel(me,scaledFoe(me,opp.fc),hash('fight',f,o.fights)); o.fights++;
   const res={ok:true,win:d.win,floor:f,opp,me,duel:d,rewards:null};
-  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host,S));
+  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host,S)); res.newDrops=ND(S,host,'tower:floor',{floor:f});
     const T=root.Sys&&root.Sys.titles; if(T&&T.check) T.check(S,host);
   } else o.lossesLeft--;
   o.last={floor:f,win:d.win,rounds:d.rounds,hp:Math.round((d.win?d.hpA:d.hpB)*100),ts:nowOf(host),name:opp.name};

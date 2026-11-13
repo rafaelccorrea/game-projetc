@@ -47,10 +47,11 @@ function give(S,host,rw){ const out={}, s=SYS(), unit=Math.max(1,num(host&&host.
   if(rw.gems&&host&&host.addGems){ host.addGems(rw.gems); out.gems=rw.gems; }
   return out; }
 /* abre o baú do marco `at`. {ok, reason: off|id|points|done, got} */
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (Sys.newDrops, chave própria)
 function claim(S,host,at){ if(!ON()) return {ok:false,reason:'off'}; const m=DATA.milestones.find(x=>x.at===int0(at)); if(!m) return {ok:false,reason:'id'};
   const o=ensure(S,host); if(o.got.includes(m.at)) return {ok:false,reason:'done'}; if(points(S,host)<m.at) return {ok:false,reason:'points',need:m.at};
   o.got.push(m.at); const got=give(S,host,m.reward);
-  if(m.at>=DATA.max){ const Ac=SYS().achievements; if(Ac&&Ac.track) Ac.track(S,host,'activity100',1); }   // conquista "Dedicado": dias com a atividade completa
+  if(m.at>=DATA.max){ const Ac=SYS().achievements; if(Ac&&Ac.track) Ac.track(S,host,'activity100',1); got.newDrops=ND(S,host,'activity:full',{}); }   // conquista "Dedicado": dias com a atividade completa
   return {ok:true,at:m.at,got}; }
 function claimAll(S,host){ const st=status(S,host); if(!st.on) return []; return st.milestones.filter(m=>m.reached&&!m.claimed).map(m=>claim(S,host,m.at)); }
 /* conta para o PO: prêmio de um dia completo (100 pontos) */

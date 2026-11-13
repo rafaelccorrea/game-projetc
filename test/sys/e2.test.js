@@ -1044,10 +1044,32 @@ t('8 asas novas (dono): item de asa no mesmo padrão (atributo do item), atrás 
 t('passe nível 25: os 10 fragmentos de montaria entram na equipada (viram estrela: 1★ → 2★) e, sem montaria, entram sozinhos na 1ª (Sys.mount.add)',()=>{
   const M=require('../../js/sys/mount.js'), P=require('../../js/sys/pass.js'); globalThis.Sys.mount=M; globalThis.Sys.pass=P; const h=makeHost({level:40});
   try{ const S=newS(); M.add(S,h,'wolf'); P.setPremium(S,true); P.addXp(S,1e7); const c=P.claimTier(S,h,'premium',25);
-    assert.ok(c.ok,JSON.stringify(c)); assert.strictEqual(c.rewards.mountFrags,10); assert.strictEqual(M.ensure(S).owned.wolf.stars,2,'10 fragmentos = 1 estrela (o contador volta a 0)');
+    assert.ok(c.ok,JSON.stringify(c)); { const mf=c.rewards.mountFrags; assert.strictEqual(typeof mf==='object'?mf.n:mf,10); } assert.strictEqual(M.ensure(S).owned.wolf.stars,2,'10 fragmentos = 1 estrela (o contador volta a 0)');
     const T=newS(); P.setPremium(T,true); P.addXp(T,1e7); P.claimTier(T,h,'premium',25); assert.strictEqual(P.ensure(T).mfrag,10,'guardados sem montaria');
     const a=M.add(T,h,'pony'); assert.strictEqual(a.passFrags,10); assert.strictEqual(P.ensure(T).mfrag,0); assert.strictEqual(M.ensure(T).owned.pony.stars,2);
   } finally { delete globalThis.Sys.pass; }
+});
+
+t('Sys.newDrops (itens novos aprovados): desligado não dá nada; ligado entrega pela fonte, uma vez nos marcos, por dia nos diários, repetido = 10, asa guardada abaixo do Nv 50',()=>{
+  const N=require('../../js/sys/newdrops.js'), P=require('../../js/sys/pet.js'), M=require('../../js/sys/mount.js'), T=require('../../js/sys/stats.js'), V=require('../../js/sys/vip.js');
+  Object.assign(globalThis.Sys,{pet:P,mount:M,stats:T,newDrops:N}); const items=[]; const h=makeHost({level:60,eraMax:4}); h.addItem=it=>items.push(it);
+  const Lv=require('../../js/sys/level.js'), lv=(X,n)=>{ Lv.ensure(X).lvl=n; return X; }; const S=lv(newS(),60); assert.strictEqual(N.grant(S,h,'tower:floor',{floor:30}).reason,'off');
+  N.DATA.on=true; P.DATA.newPets=true; M.DATA.newOn=true; T.DATA.newWings=true;
+  try{
+    const a=N.grant(S,h,'tower:floor',{floor:30}); assert.ok(a.got[0].hatched,'falcão inteiro'); assert.ok(P.ensure(S).owned.falcon);
+    assert.strictEqual(N.grant(S,h,'tower:floor',{floor:30}).got.length,0,'marco uma vez só');
+    N.grant(S,h,'arena:season',{league:3}); assert.strictEqual(P.ensure(S).stored.panther,30); assert.strictEqual(M.ensure(S).stored.panther,20);
+    N.grant(S,h,'activity:full',{}); N.grant(S,h,'activity:full',{}); assert.strictEqual(P.ensure(S).stored.shadowwolf,2,'por dia');
+    V.setLevel(S,9); assert.ok(M.ensure(S).owned.phoenixm,'VIP 8: Fênix gigante'); assert.ok(P.ensure(S).owned.wyvernpet,'VIP 9: Serpe infernal');
+    N.grant(S,h,'shop:product',{productId:'mount_mecha',orderId:'o1'}); assert.ok(M.ensure(S).owned.mecha); const st=M.ensure(S).owned.mecha.stars;
+    N.grant(S,h,'shop:product',{productId:'mount_mecha',orderId:'o2'}); assert.strictEqual(M.ensure(S).owned.mecha.stars,st+1,'repetida = 10 fragmentos (1 estrela)');
+    N.grant(S,h,'tower:floor',{floor:120}); const w=items.find(i=>i.wing==='storm'); assert.ok(w&&w.slot==='wing'&&w.r===3&&w.subs,'asa da tempestade como item');
+    const L=lv(newS(),30), hl=makeHost({level:30,eraMax:4}); hl.addItem=it=>items.push(it); assert.ok(N.grant(L,hl,'arena:season',{league:4}).got.find(g=>g.kind==='wing').held);
+    assert.strictEqual(N.releaseHeld(L,makeHost({level:30})).length,0); lv(L,55); const lh=makeHost({level:55,eraMax:4}); lh.addItem=it=>items.push(it); assert.strictEqual(N.releaseHeld(L,lh).length,1);
+    assert.strictEqual(N.wingTypeForDrop(3,1,0),'darkmoth'); assert.strictEqual(N.wingTypeForDrop(1,1,0),'angel');
+    assert.ok(N.shop()[0].priceBRL===49.9&&N.shop()[0].on); assert.ok(N.table().length>=30);
+    const g=lv(newS(),60); assert.strictEqual(T.DATA.wingTypes.seraph.r,4); N.grant(g,h,'tourney:season',{rank:1}); assert.ok(items.some(i=>i.wing==='seraph')); assert.ok(P.ensure(g).owned.icedragon&&M.ensure(g).owned.blackdragon);
+  } finally { N.DATA.on=false; P.DATA.newPets=false; M.DATA.newOn=false; T.DATA.newWings=false; }
 });
 
 console.log(`ok: ${n} testes`);

@@ -91,9 +91,10 @@ function closeWeek(S,host,o){
 }
 /* fecha a liga da semana: sobe/fica/cai pelas linhas; prêmio da liga em que fechou (só se permitido) */
 const lgOf=lp=>{ let k=0; DATA.leagues.forEach((L,i)=>{ if(lp>=L.min) k=i; }); return k; };
+const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (Sys.newDrops, chave própria)
 function closeLeague(S,host,o,allowed){ const from=o.league, L=DATA.leagues, nx=L[from+1];
   let to=from; if(nx&&o.lp>=nx.min) to=lgOf(o.lp); else if(o.lp<L[from].min) to=lgOf(o.lp);
-  o.lastLeague={week:o.week,from,to,lp:o.lp,move:to>from?'up':to<from?'down':'stay',prize:allowed?grantLeague(S,host,L[from].prize):null,rewardsOff:!allowed}; o.league=to; }
+  o.lastLeague={week:o.week,from,to,lp:o.lp,move:to>from?'up':to<from?'down':'stay',prize:allowed?grantLeague(S,host,L[from].prize):null,rewardsOff:!allowed}; if(allowed) o.lastLeague.newDrops=ND(S,host,'arena:season',{league:from}); o.league=to; }
 function grantLeague(S,host,pz){ const out=grant(S,host,{gems:pz.gems,prism:pz.prism}), sys=root.Sys||{};
   if(pz.goldk&&host&&host.addGold){ out.gold=Math.round(pz.goldk*Math.max(1,num(host.goldUnit&&host.goldUnit(),1))); host.addGold(out.gold); }
   if(pz.chest&&host&&host.addItem){ out.chest=[];   // baú = 1 item de baú por baú (Sys.loot.rollItem, portões de raridade valem)
