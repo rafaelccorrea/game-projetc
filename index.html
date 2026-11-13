@@ -219,6 +219,14 @@ html,body{background:#0a0807}
 /* Engenheiro 7 (ordem do PO): FUNDO = a imagem de abertura do Android (opção A aprovada), cobrindo a tela e centrada, para a passagem da abertura ao jogo ficar
    sem emenda; até decodificar, a cor #140C34 (nunca branco). O logo já está na imagem: logo solto, travessia das eras, rótulo da era e Kael correndo saem. */
 #loading.lsplash{background:#140C34 url(assets/mobile/splash/splash_loading.jpg) center/cover no-repeat;background-image:image-set(url(assets/mobile/splash/splash_loading.webp) type("image/webp"),url(assets/mobile/splash/splash_loading.jpg) type("image/jpeg"))}
+/* QA no S24 (tela 9:19,5): a arte da abertura é 9:16 com o logo quase de borda a borda; com 'cover' numa tela mais ALTA que 9:16 a imagem crescia pela altura e o
+   logo era CORTADO nas duas laterais. Em tela mais alta que a arte, a imagem passa a caber pela LARGURA (logo inteiro) e as faixas de cima e de baixo se fundem
+   com a cor de fundo por um degradê. Em tela 9:16 ou mais larga continua 'cover', como antes. */
+@media (max-aspect-ratio:9/16){
+  #loading.lsplash{background-color:#0a061c;background-position:center,center,center;background-repeat:no-repeat;background-size:100% 100%,100% 100%,100% auto;
+    background-image:linear-gradient(180deg,#0a061c 0%,#0a061c 5%,rgba(10,6,28,0) 17%),linear-gradient(0deg,#0a061c 0%,#0a061c 5%,rgba(10,6,28,0) 17%),url(assets/mobile/splash/splash_loading.jpg);
+    background-image:linear-gradient(180deg,#0a061c 0%,#0a061c 5%,rgba(10,6,28,0) 17%),linear-gradient(0deg,#0a061c 0%,#0a061c 5%,rgba(10,6,28,0) 17%),image-set(url(assets/mobile/splash/splash_loading.webp) type("image/webp"),url(assets/mobile/splash/splash_loading.jpg) type("image/jpeg"))}
+}
 #loading.lsplash .lbg,#loading.lsplash .lpillw,#loading.lsplash .llogo,#loading.lsplash .lsh,#loading.lsplash #lrun{display:none}
 #loading.lsplash .lshade{background:linear-gradient(180deg,rgba(10,6,28,0) 0%,rgba(10,6,28,0) 64%,rgba(10,6,28,.8) 84%,rgba(10,6,28,.92) 100%)}
 #loading.lsplash #lver{color:#cfc6ea}
