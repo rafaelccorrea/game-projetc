@@ -14,7 +14,7 @@ const LOAD_RUN = 'assets/anim/hyb/kael_run_body.png';   // corrida aprovada SEM 
 const LD = { scn: [], el: null, total: 0, done: 0, shown: 0, t0: 0, fin: false, era: -1, tip: -1, bg: [], closed: false };
 
 /* tarefas só desta tela (fundos da travessia, áudio): contam na barra; nunca viram falha */
-function loadTrack(p){ PRE().track(Promise.resolve(p).then(() => true, () => true)); }
+function loadTrack(p, label){ PRE().track(PRE().limit(Promise.resolve(p), 20000).then(() => true, () => true), label || 'enfeite'); }   /* enfeite da própria tela: no máximo 20 s na barra, nunca falha */
 function loadImgP(path){ return PRE().get(path).p.then(e => e.ok ? e.img : null); }
 
 /* ================= LISTA DA CENA (Engenheiro 5; ordem do dono: tudo carregado ANTES de aparecer) =================
@@ -54,8 +54,12 @@ function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = 
      (carregam logo depois, em segundo plano). Sys.assets.nextEraSet(S, host) → era seguinte. */
   const later = [];
   try { const A = window.Sys && Sys.assets, okf = f => typeof f === 'string' && /\.(png|jpg|jpeg|webp|json)$/i.test(f), cur = eraOf(S.stage);
-    if (A && LD.man){ let R = null, groups = ['hero', 'weapon', 'ult', 'mount', 'pet', 'wing', 'era', 'enemies'];
-      if (part === 'era'){ groups = ['era', 'enemies']; R = (era === cur + 1 && typeof A.nextEraSet === 'function') ? A.nextEraSet(S, Sys.host) : (typeof A.sceneSet === 'function' ? A.sceneSet(S, Sys.host, { era }) : null); }
+    /* Engenheiro 7 (medido com save equipado, era 1: o módulo devolvia 367 arquivos, 174 nos grupos que bloqueavam): SÓ O QUE É DA CENA bloqueia. Do módulo entram
+       inteiros os grupos em que ele e o jogo dizem o mesmo (weapon, ult, wing, enemies: 0 arquivo a mais). NÃO entram: hero (60 a mais que a batalha não desenha:
+       máscaras, pistola sem arma de fogo, chapéus/cabelos), mount (folhas _3star/_5star: a aura por estrela é por código), pet (atk2/atk3 sem uso na batalha) e
+       era com cenário vivo (as 46 camadas já são carregadas pelo EonScene: seria decodificar duas vezes). Esses saem da lista do próprio jogo, acima. */
+    if (A && LD.man){ let R = null, groups = ['weapon', 'ult', 'wing', 'enemies']; if (!sceneGet(era)) groups.push('era');
+      if (part === 'era'){ groups = sceneGet(era) ? ['enemies'] : ['era', 'enemies']; R = (era === cur + 1 && typeof A.nextEraSet === 'function') ? A.nextEraSet(S, Sys.host) : (typeof A.sceneSet === 'function' ? A.sceneSet(S, Sys.host, { era }) : null); }
       else if (typeof A.sceneSet === 'function') R = A.sceneSet(S, Sys.host, { era });
       if (Array.isArray(R)) R.filter(okf).forEach(add);
       else if (R && R.groups){ for (const g of groups) (R.groups[g] || []).filter(okf).forEach(add); if (part !== 'era') (R.groups.icons || []).filter(okf).forEach(f => { if (urls.indexOf(f) < 0) later.push(f); });
@@ -67,7 +71,8 @@ function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = 
   return { urls, tasks, later }; }
 /* manifesto de pacotes (assets/manifest.json) para o Sys.assets: uma vez, dentro da barra; falhou = segue só com a lista do jogo */
 function loadManifest(){ if (LD.manP) return LD.manP; const A = window.Sys && Sys.assets; if (!A || typeof A.setManifest !== 'function' || typeof A.sceneSet !== 'function') return LD.manP = Promise.resolve(false);
-  return LD.manP = PRE().limit(PRE().get('assets/manifest.json').p.then(e => { if (e.ok){ try { LD.man = !!A.setManifest(e.data); } catch (er) { LD.man = false; } } PRE().drop('assets/manifest.json'); return LD.man; }), 15000); }
+  /* sem prazo por tempo total (Engenheiro 7): o pedido termina sozinho (pronto, ou falha depois das tentativas com a rede parada: js/preload.js) */
+  return LD.manP = PRE().get('assets/manifest.json').p.then(e => { if (e.ok){ try { LD.man = !!A.setManifest(e.data); } catch (er) { LD.man = false; } } PRE().drop('assets/manifest.json'); return LD.man; }, () => false); }
 /* asa: as metades (ou a imagem única); o .json diz qual. Enquanto o .json não chega, pede as duas metades (anjo, demônio e as 8 novas são par L/R) */
 function wingList(kind){ const M = PRE().json('assets/anim/equip/wing_' + kind + '.json'), b = 'assets/anim/equip/wing_' + kind; if (M && M.single){ wingPart(kind, ''); return [b + '.png']; } wingPart(kind, 'L'); wingPart(kind, 'R'); return [b + '_L.png', b + '_R.png']; }
 /* imagens que já estão na tela do jogo (cabeçalho, menu, botões): <img> visíveis e fundos em CSS dentro de #app, fora desta tela de carregamento. Uma varredura só. */
@@ -80,13 +85,15 @@ function sceneQueue(old){ if (old){ const era = eraOf(S.stage), ae = SKIN(S.skin
     heroPreload(ae.e).forEach(loadTrack); [wPng(we), hp('hero', ae.e, tierOf(ae.r))].forEach(p => { IMG(p); PRE().track(p); }); EN_IDS(era).forEach(k => { enPreload(k).forEach(loadTrack); IMG(`assets/enemies/${k}.png`); PRE().track(`assets/enemies/${k}.png`); });
     const sc = sceneGet(era); if (sc) loadTrack(sc.ready); return; }
   const L = sceneList(); L.urls.forEach(u => PRE().track(u)); L.tasks.forEach(t => PRE().track(t.p, t.label)); LD.list = L;
-  if (L.later && L.later.length) setTimeout(() => { PRE().ready(L.later, { timeout: 120000 }); }, 1500); }   /* resto dos ícones: em segundo plano, depois da cena (as telas esperam por PRE().ready) */
+  if (DEBUG) console.info('Cena: ' + L.urls.length + ' arquivos + ' + L.tasks.length + ' tarefas bloqueiam; ' + L.later.length + ' ícones depois; manifesto de Sistemas ' + (LD.man ? 'carregado' : 'AUSENTE (lista só do jogo)'));
+  LD.later = L.later || []; }   /* resto dos ícones: em segundo plano, SÓ DEPOIS de a cena fechar (loadLater, chamado quando a barra chega ao fim): antes entravam 1,5 s depois e disputavam a fila com a cena */
+function loadLater(){ const L = LD.later; LD.later = null; if (L && L.length) PRE().ready(L, { timeout: 600000 }); }
 
 /* ---------- TROCA DE ERA e TROCA DE EQUIPAMENTO: pré-carga em segundo plano ----------
    eraReady(era) → true quando cenário, inimigos e chefe da era estão decodificados; a 1ª chamada dispara a carga (o jogo chama para a PRÓXIMA era a partir da
    fase 8 e segura a entrada na era nova enquanto for false; js/battle.js). Falha ou 25 s sem resposta = libera com a reserva de sempre (nunca trava). Só a era
    atual e a próxima ficam na memória: sceneTrim solta os cenários vivos das outras. */
-const ERA_P = {}, LOAD_MAX_S = 60;
+const ERA_P = {}, LOAD_STALL_S = 15;
 function eraReady(era){ if (era < 0 || era >= ERAS.length) return true; let o = ERA_P[era]; if (!o){ o = ERA_P[era] = { ok: false }; const go = () => { let L; try { L = sceneList({ era, part: 'era' }); } catch (e) { console.error('eraReady', e); o.ok = true; return; }
       Promise.all([PRE().ready(L.urls, { timeout: 25000 }), PRE().all(L.tasks.map(t => t.p), 25000)]).then(r => { o.ok = true; if (r[0] && r[0].failed.length) console.warn('Preload: era ' + era + ' entra com reserva para', r[0].failed); }, () => { o.ok = true; }); };
     loadManifest().then(go, go); }
@@ -107,28 +114,32 @@ function initLoading(){
   /* --- fila real de pré-carregamento (Engenheiro 5): a lista da PRIMEIRA CENA sai de sceneList(); cada arquivo conta na barra --- */
   PRE().reset(); LD.old = DEBUG && QP.get('carga') === 'antiga';   /* ?debug=1&carga=antiga: só a lista de antes e a fuga dos 15 s (para comparar o defeito); nunca para o jogador */
   const era = eraOf(S.stage);
-  /* um erro aqui NUNCA deixa a barra parada: registra no console e entra pela lista antiga; o tempo-limite geral (LOAD_MAX_S, no loadTick) fecha a barra de qualquer jeito */
+  /* um erro aqui NUNCA deixa a barra parada: registra no console e entra pela lista antiga; o cão de guarda abaixo libera a tela se o laço da barra morrer */
   const queue = () => { try { sceneQueue(LD.old); } catch (er) { console.error('Carregamento: a lista da cena falhou; entrando pelo caminho antigo', er); try { sceneQueue(true); } catch (e2) { console.error(e2); } } };
   if (LD.old) queue(); else { let done; PRE().track(new Promise(ok => { done = ok; }), 'manifesto'); loadManifest().then(queue, queue).then(() => done(true)); }   /* 1º o manifesto (Sys.assets.sceneSet precisa dele), depois a lista */
   ['assets/brand/title_bg.png', 'assets/brand/logo.png'].forEach(p => PRE().track(p));
-  ['assets/audio/manifest.json', 'assets/audio/music/title.mp3', `assets/audio/music/era${era}.mp3`].forEach(p => loadTrack(fetch(p).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null)));   // aquece o cache do navegador (a decodificação é do GameAudio, depois do 1º toque)
+  ['assets/audio/manifest.json', 'assets/audio/music/title.mp3', `assets/audio/music/era${era}.mp3`].forEach(p => loadTrack(fetch(p).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null), 'som ' + p));   // aquece o cache do navegador (a decodificação é do GameAudio, depois do 1º toque)
   /* fundos das 7 eras desta própria tela (o chão de cada um cai na linha dos pés: 78% da altura) */
   const bgMeta = fetch('assets/bg/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
   /* linha dos pés da tela de carregamento: 658 de 844 (jogo de hoje) ou 640 com a 04b ligada (mesma linha da batalha em tela cheia) */
   const LOAD_FEET = 640;
   if (LOAD_FEET !== 658){ const lr = document.getElementById('lrun'); if (lr) lr.style.top = (507 - (658 - LOAD_FEET)) + 'px'; }
-  LOAD_ERAS.forEach((n, i) => { const d = document.getElementById('lbg' + i), path = `assets/bg/era${i}.png`;
+  /* Engenheiro 7 (ordem do PO): com o fundo de abertura (classe lsplash no #loading, index.html) NÃO há travessia: nenhum cenário das 7 eras é criado só para
+     enfeitar esta tela (medido: os 7 cenários vivos seguravam a barra de 5 a 17 s com todos os arquivos da cena prontos em 2,4 s) nem a corrida do Kael. */
+  LD.splash = el.classList.contains('lsplash');
+  if (LD.splash) document.getElementById('lstep').textContent = 'Carregando…';
+  if (!LD.splash) LOAD_ERAS.forEach((n, i) => { const d = document.getElementById('lbg' + i), path = `assets/bg/era${i}.png`;
     if (sceneOn(i) && d){   // era com cenário novo aprovado (sceneV2): a própria cena viva, com o chão do meta na linha dos pés (658 de 844)
       const base = `assets/bg/v2/era${i}/`;
       loadTrack(fetch(base + 'meta.json').then(r => r.json()).then(meta => { const c = document.createElement('canvas'); c.className = 'lbg lscn'; c.id = 'lbg' + i;
           const w = Math.ceil(d.parentNode.clientWidth) || 390, h = Math.round(LOAD_FEET / (meta.groundY || 0.78)); c.style.width = w + 'px'; c.style.height = h + 'px'; d.replaceWith(c);
           return EonScene.create(c, { base, meta, hero: false, running: true, autoStart: false, width: w, height: h, dpr: Math.min(2, window.devicePixelRatio || 1) }); })
-        .then(api => { LD.scn[i] = api; return api.ready; }).then(() => { LD.bg[i] = true; }).catch(() => {}));
+        .then(api => { LD.scn[i] = api; return api.ready; }).then(() => { LD.bg[i] = true; }).catch(() => {}), 'travessia: cenário vivo ' + i);
       return; }
     loadTrack(Promise.all([loadImgP(path), bgMeta]).then(([im, m]) => { if (!im || !d) return;
       const g = (m['era' + i] || {}).groundY || 0.72, pw = 1100 * im.naturalWidth / im.naturalHeight;
       d.style.backgroundImage = `url(${path})`; d.style.setProperty('--pw', pw.toFixed(1)); d.style.setProperty('--py', (LOAD_FEET - g * 1100).toFixed(1)); d.style.animationDuration = (pw / 241).toFixed(2) + 's'; LD.bg[i] = true; })); });
-  loadTrack(loadImgP(LOAD_RUN).then(im => { if (im) document.getElementById('lrun').classList.add('ok'); }));
+  if (!LD.splash) loadTrack(loadImgP(LOAD_RUN).then(im => { if (im) document.getElementById('lrun').classList.add('ok'); }), 'travessia: corrida');
 
   /* "Toque para continuar": o toque fecha a tela e NÃO pode atravessar para o botão que está embaixo (no APK abria Configurações). O clique que o
      navegador gera logo depois do pointerup é engolido por 500 ms. */
@@ -138,15 +149,24 @@ function initLoading(){
   el.addEventListener('keydown', ev => { if (LD.fin && (ev.key === 'Enter' || ev.key === ' ')) closeLoading(); });
   requestAnimationFrame(loadTick);
   /* cão de guarda: se o próprio laço da barra morrer por um erro, a tela libera o toque sozinha depois do tempo-limite geral */
-  setTimeout(() => { if (!LD.fin && !LD.closed && !LD.failUI){ console.warn('Carregamento: cão de guarda liberou a tela'); LD.fin = true; try { document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); } catch (e) {} } }, (LOAD_MAX_S + 6) * 1000);
+  const dog = () => { if (LD.fin || LD.closed) return;   /* só age se o LAÇO morreu: página visível e nenhum loadTick há mais de 20 s */
+    if (document.hidden || !LD.lastT || performance.now() - LD.lastT < 20000){ setTimeout(dog, 5000); return; }
+    console.warn('Carregamento: cão de guarda liberou a tela'); LD.fin = true; try { document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); } catch (e) {} };
+  LD.lastT = performance.now(); setTimeout(dog, 5000);
 }
 function loadTick(now){
   if (LD.closed) return;
+  /* Engenheiro 7 (decisão do PO): NADA estoura por tempo total. Enquanto houver progresso a barra continua, por mais lenta que a rede esteja. O aviso
+     "Confira a conexão" só aparece (a) quando NADA progrediu por LOAD_STALL_S s com arquivos ainda pendentes (some sozinho se o progresso voltar) ou (b) quando
+     tudo terminou e algum arquivo falhou de verdade (erro do servidor / arquivo inexistente depois das tentativas). Página escondida não conta (Preload.idle). */
+  LD.lastT = performance.now();
   const el = LD.el, minDur = Math.max(0.3, +(DEBUG && QP.get('ldur')) || 2.4), el_s = (now - LD.t0) / 1000;
-  const PG = PRE().progress; let real = PG.total ? PG.done / PG.total : 1; if (LD.old && el_s > 15) real = 1;   /* progresso REAL: arquivos prontos ÷ total. Cada arquivo tem tempo-limite e 3 tentativas (js/preload.js): a barra sempre chega ao fim */
-  if (el_s > LOAD_MAX_S && !LD.failUI && !LD.skipFail){ LD.skipFail = true; console.warn('Carregamento: tempo-limite geral de ' + LOAD_MAX_S + ' s; entrando com o que carregou', PG); }   /* nunca fica preso */
-  if (LD.skipFail) real = 1;
-  if (PG.total && PG.done >= PG.total && PG.failed.length && !LD.skipFail && !LD.old){ loadFail(PG); requestAnimationFrame(loadTick); return; }   /* faltou arquivo: para e oferece "Tentar de novo" */
+  const PG = PRE().progress, pend = PG.total - PG.done, idle = +PRE().idle || 0; let real = PG.total ? PG.done / PG.total : 1; if (LD.old && el_s > 15) real = 1;   /* progresso REAL: arquivos prontos ÷ total */
+  if (LD.skipFail) real = 1; else if (LD.retrying) real = Math.min(real, 0.99);
+  if (!LD.skipFail && !LD.old && !LD.retrying){
+    if (LD.failUI && LD.failUI.stall && (pend <= 0 || idle < 3000)) loadFailOff();                                                   /* o progresso voltou: o aviso sai sozinho */
+    if (PG.total && pend <= 0 && PG.failed.length){ loadFail(PG, false); requestAnimationFrame(loadTick); return; }                  /* faltou arquivo: para e oferece "Tentar de novo" */
+    if (pend > 0 && idle > LOAD_STALL_S * 1000 && !LD.failUI) loadFail(PG, true); }                                                   /* rede parada: avisa, e a carga continua por trás */
   document.getElementById('lstep').dataset.n = PG.done + '/' + PG.total;
   const cap = Math.min(1, el_s / minDur);                                                        // duração mínima: dá tempo de ver a travessia
   LD.shown = Math.max(LD.shown, Math.min(real, cap));
@@ -154,33 +174,38 @@ function loadTick(now){
   const pe = Math.max(0, Math.min(6, eraOf(S.stage))), p = Math.floor(LD.shown * 100), ei = Math.min(pe, Math.floor(LD.shown * (pe + 1)));
   document.getElementById('lbar').style.width = p + '%'; document.getElementById('lbarw').setAttribute('aria-valuenow', p);
   document.getElementById('lpct').textContent = p + '%';
-  if (ei !== LD.era || !LD.bgOn){ LD.era = ei; LD.bgOn = !!LD.bg[ei];
+  if (LD.splash){ if (LD.era !== 0){ LD.era = 0; document.getElementById('lstep').textContent = 'Carregando…'; } }
+  else if (ei !== LD.era || !LD.bgOn){ LD.era = ei; LD.bgOn = !!LD.bg[ei];
     for (let i = 0; i < 7; i++){ const on = i === ei && LD.bg[i]; document.getElementById('lbg' + i).style.opacity = on ? 1 : 0; const a = LD.scn[i]; if (a){ if (on) a.start(); else a.stop(); } }
     const pill = document.getElementById('lpill'), tx = LOAD_ERAS[ei]; if (pill.textContent !== tx){ pill.textContent = tx; pill.classList.remove('erapill'); void pill.offsetWidth; pill.classList.add('erapill'); }
     document.getElementById('lstep').textContent = `Atravessando a ${LOAD_ERAS[ei]}…`; }
   const ti = Math.floor(Math.max(p / 26, el_s / 3.5)) % LOAD_TIPS.length;
   if (ti !== LD.tip && p < 100){ LD.tip = ti; const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }
-  if (p >= 100 && !LD.fin){ LD.fin = true; document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); el.setAttribute('tabindex', '0'); try { el.focus({ preventScroll: true }); } catch (e) {} }
+  if (p >= 100 && !LD.fin){ LD.fin = true; loadLater(); LD.finMs = Math.round(now - LD.t0); if (DEBUG) console.info('Carregamento: pronto em ' + (LD.finMs / 1000).toFixed(1) + ' s (' + PG.done + '/' + PG.total + ', falhas ' + PG.failed.length + ')');
+document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); el.setAttribute('tabindex', '0'); try { el.focus({ preventScroll: true }); } catch (e) {} }
   requestAnimationFrame(loadTick);
 }
 /* arquivos que não vieram depois das tentativas automáticas: aviso claro + "Tentar de novo" (recarrega só os que faltam) + "Continuar mesmo assim"
    (entra com a reserva de sempre para esses arquivos; a lista fica no console). Nunca trava para sempre. */
-function loadFail(PG){ if (LD.failUI) return; const foot = LD.el.querySelector('.lfoot'), box = document.createElement('div'); LD.failUI = box; box.id = 'lfail';
+function loadFailOff(){ const box = LD.failUI; if (!box) return; box.remove(); LD.failUI = null; const tip = document.getElementById('ltip'); if (tip) tip.style.display = ''; LD.era = -1; }   /* LD.era = -1: o texto "Atravessando..." volta no próximo quadro */
+function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySelector('.lfoot'), box = document.createElement('div'); LD.failUI = box; box.id = 'lfail'; box.stall = !!stall;
   box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;width:100%';
-  const n = PG.failed.length, bt = 'min-height:44px;padding:0 18px;border-radius:12px;font:800 15px Nunito,system-ui,sans-serif;cursor:pointer;';
-  box.innerHTML = '<p style="margin:0;font-size:13px;font-weight:800;color:#ffd7a8;text-align:center">' + (n === 1 ? '1 arquivo não carregou.' : n + ' arquivos não carregaram.') + ' Confira a conexão.</p>' +
-    '<div style="display:flex;gap:10px"><button type="button" id="lretry" style="' + bt + 'border:2px solid #7a4a12;background:#ffc94a;color:#3a2206">Tentar de novo</button>' +
+  const n = stall ? PG.total - PG.done : PG.failed.length, bt = 'min-height:44px;padding:0 18px;border-radius:12px;font:800 15px Nunito,system-ui,sans-serif;cursor:pointer;';
+  box.innerHTML = '<p style="margin:0;font-size:13px;font-weight:800;color:#ffd7a8;text-align:center">' + (stall ? 'O carregamento parou.' : n === 1 ? '1 arquivo não carregou.' : n + ' arquivos não carregaram.') + ' Confira a conexão.</p>' +
+    '<div style="display:flex;gap:10px"><button type="button" id="lretry" style="' + bt + 'flex:0 0 auto;white-space:nowrap;border:2px solid #7a4a12;background:#ffc94a;color:#3a2206">Tentar de novo</button>' +
     '<button type="button" id="lskip" style="' + bt + 'border:2px solid #6a5a48;background:#2a2019;color:#f6ecdf">Continuar mesmo assim</button></div>';
   document.getElementById('lstep').textContent = 'Faltam ' + n + ' de ' + PG.total + ' arquivos'; const tip = document.getElementById('ltip'); if (tip) tip.style.display = 'none'; foot.appendChild(box);
-  console.warn('Carregamento: arquivos que faltaram', PG.failed);
+  console.warn(stall ? 'Carregamento: nada progrediu por ' + LOAD_STALL_S + ' s; pendentes: ' + n : 'Carregamento: arquivos que faltaram', PG.failed);
   const off = ev => ev.stopPropagation();
   box.querySelector('#lretry').addEventListener('pointerup', off); box.querySelector('#lskip').addEventListener('pointerup', off);
-  box.querySelector('#lretry').addEventListener('click', () => { box.remove(); LD.failUI = null; if (tip) tip.style.display = ''; document.getElementById('lstep').textContent = 'Tentando de novo…';
+  box.querySelector('#lretry').addEventListener('click', () => { const wasStall = box.stall; loadFailOff(); document.getElementById('lstep').textContent = 'Tentando de novo…';
+    if (wasStall){ PRE().retry(); PRE().track(Promise.resolve(true), 'nova tentativa'); return; }   /* rede parada: os pedidos pendentes seguem (cada um se refaz sozinho); a tarefa vazia marca progresso e dá mais LOAD_STALL_S s antes de avisar de novo */
     /* só o que falhou: solta as folhas/imagens marcadas com falha nos caches do jogo e pede de novo pela mesma lista */
     for (const k in SHEETS) if (SHEETS[k].fail) delete SHEETS[k]; for (const k in IMGS) if (IMGS[k].fail) delete IMGS[k]; for (const k in JSONS) if (JSONS[k] && !Object.keys(JSONS[k]).length) delete JSONS[k]; for (const k in WING_IMG) if (!WING_IMG[k].ok) delete WING_IMG[k];
     for (const k in SCN.list) if (SCN.list[k].fail) delete SCN.list[k];
-    PRE().retry().then(() => { PRE().reset(); sceneQueue(false); }); });
-  box.querySelector('#lskip').addEventListener('click', () => { box.remove(); LD.failUI = null; LD.skipFail = true; }); }
+    LD.retrying = true; const again = () => { PRE().reset(); try { sceneQueue(false); } catch (er) { console.error(er); } LD.retrying = false; };   /* enquanto refaz, o laço não reabre o aviso com a conta do lote anterior */
+    PRE().retry().then(again, again); });
+  box.querySelector('#lskip').addEventListener('click', () => { loadFailOff(); LD.skipFail = true; }); }
 function closeLoading(){
   if (LD.closed) return; LD.closed = true; const el = LD.el;
   el.classList.add('out'); setTimeout(() => { LD.scn.forEach(a => { try { a && a.stop(); } catch (e) {} }); el.remove(); }, 480);

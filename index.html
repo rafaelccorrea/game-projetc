@@ -216,6 +216,12 @@ html,body{background:#0a0807}
 #loading.done #lgo{display:flex}
 #loading.done{cursor:pointer}
 #lver{position:absolute;left:0;right:0;bottom:10px;margin:0;text-align:center;font-size:11px;font-weight:700;color:#b9a993}
+/* Engenheiro 7 (ordem do PO): FUNDO = a imagem de abertura do Android (opção A aprovada), cobrindo a tela e centrada, para a passagem da abertura ao jogo ficar
+   sem emenda; até decodificar, a cor #140C34 (nunca branco). O logo já está na imagem: logo solto, travessia das eras, rótulo da era e Kael correndo saem. */
+#loading.lsplash{background:#140C34 url(assets/mobile/splash/splash_1080x1920.png) center/cover no-repeat}
+#loading.lsplash .lbg,#loading.lsplash .lpillw,#loading.lsplash .llogo,#loading.lsplash .lsh,#loading.lsplash #lrun{display:none}
+#loading.lsplash .lshade{background:linear-gradient(180deg,rgba(10,6,28,0) 0%,rgba(10,6,28,0) 64%,rgba(10,6,28,.8) 84%,rgba(10,6,28,.92) 100%)}
+#loading.lsplash #lver{color:#cfc6ea}
 
 /* ===== V5 (rodada 7): GEOMETRIA DO PROTÓTIPO. Tela 390x844: topo (HUD) 0..64 · CAMPO 64..768 (704) · abas 768..844. O #stage É o campo. ===== */
 #app{--navh:calc(76px + env(safe-area-inset-bottom));--hudh:calc(64px + env(safe-area-inset-top))}
@@ -281,7 +287,7 @@ body.full #toast{top:calc(var(--hudh) + 150px);max-width:210px;font-size:13px}
     <div class="ver" id="ver"></div>
   </div>
 </div>
-<div id="loading" role="dialog" aria-label="Carregando">
+<div id="loading" class="lsplash" role="dialog" aria-label="Carregando">
 <div class="lwrap">
   <div class="lbg" id="lbg0"></div><div class="lbg" id="lbg1"></div><div class="lbg" id="lbg2"></div><div class="lbg" id="lbg3"></div><div class="lbg" id="lbg4"></div><div class="lbg" id="lbg5"></div><div class="lbg" id="lbg6"></div>
   <div class="lpillw"><span id="lpill" class="erapill">Pré-História</span></div>
@@ -507,7 +513,7 @@ function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'), sid=S.skinEq.wea
   const mount=typeof mountLook==='function'?mountLook():null;   /* montaria equipada (js/mountfx.js): {id, stars, aura} ou null */
   return {armor:a, weapon:w||SKIN('w00'), wing, mount}; }
 /* asa do item → arte (função única, isolada): assets/anim/equip/wing_<id>.json + _L/_R.png */
-function wingArt(it){ let w=null; try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.wingOf==='function') w=Sys.stats.wingOf(it); }catch(e){} if(w!=='angel'&&w!=='demon') w=(it&&(it.wing==='angel'||it.wing==='demon'))?it.wing:'demon'; return w; }
+function wingArt(it){ let w=null; try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.wingOf==='function') w=Sys.stats.wingOf(it); }catch(e){} if(typeof w!=='string'||!/^[a-z][a-z0-9_]*$/.test(w)) w=(it&&(it.wing==='angel'||it.wing==='demon'))?it.wing:'demon'; return w; }   /* Engenheiro 7: aceita QUALQUER id que o Sys.stats.wingOf devolver (asa nova desligada ele já devolve anjo/demônio) */
 /* ATRIBUTOS DO HERÓI: PONTO ÚNICO. Nenhuma conta aqui: Sys.fc.stats (js/sys/fc.js + stats.js) devolve ATK, HP, DEF, chance de crítico,
    dano crítico e velocidade de ataque já com os 7 espaços, o nível do item, o fortalecimento do espaço, o nível do jogador, skin, coleção e VIP.
    Nível do item, custos e melhoria: Sys.stats (upgradeCost / canUpgrade / upgrade / planUpgrade / upgradeTo). Desmontar: Sys.loot.dismantle. */
@@ -736,9 +742,9 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule','newdrops'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
-document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c58')+'"><\/script>');   /* módulo EonScene, carregado como está */
-['preload','battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule','newdrops','assets'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c59')+'"><\/script>');   /* módulo EonScene, carregado como está */
+['preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"
