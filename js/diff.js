@@ -66,9 +66,12 @@ function diffUnits(T, o){ const dt = 0.02; let t = 0, u = 0, pu = 0, act = null,
 function diffRef(fc, stage){ try { const T = window.Sys && Sys.stats; if (T && typeof T.refFromFc === 'function' && typeof T.refFcOn === 'function' && T.refFcOn() === true){ const r = T.refFromFc(fc, stage); if (r && r.atk > 0 && r.hp > 0) return r; }
     const W = window.Sys && Sys.tower; if (W && typeof W.statsFromFC === 'function') return W.statsFromFC(fc, 0); } catch (e) {} return null; }
 /* chefe e comum da fase: {hp, dmg, chp, cdmg, need, ref, dps} ou null (sem tabela ou sem os módulos: fica o inimigo de hoje). Só depende da fase. */
+/* valor da tabela que pode ser um número (vale para todas as eras) OU uma lista com um valor por era (Sistemas: o tempo de matar o chefe muda com a família de
+   arma da era). Lista mais curta que as eras: a última posição vale para as eras seguintes. */
+function diffByEra(v, stage){ if (!Array.isArray(v)) return v; if (!v.length) return undefined; let e = 0; try { e = eraOf(Math.max(1, stage | 0)); } catch (er) { e = 0; } return v[Math.max(0, Math.min(v.length - 1, e))]; }
 function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys && Sys.stats && typeof Sys.stats.hit === 'function')) return null;
   const need = fcNeed(stage, 'boss'), key = stage + '|' + need; if (DIFF.memo[key] !== undefined) return DIFF.memo[key];
-  const kill = diffNum(T.boss.killSecAt100, 0), surv = diffNum(T.boss.surviveSecAt100, 0), ref = need > 0 && kill > 0 && surv > 0 ? diffRef(need, stage) : null; let out = null;
+  const kill = diffNum(diffByEra(T.boss.killSecAt100, stage), 0), surv = diffNum(diffByEra(T.boss.surviveSecAt100, stage), 0), ref = need > 0 && kill > 0 && surv > 0 ? diffRef(need, stage) : null; let out = null;
   if (ref && ref.atk > 0 && ref.hp > 0){
     const E = Math.max(0, Math.min(SKN.length - 1, S2DUR.length - 1, S2HITS.length - 1, eraOf(stage))), ivl = (typeof Sys.stats.interval === 'function' ? Sys.stats.interval(ref) : BAL.s1Interval) || BAL.s1Interval, bossEvery = 1.15;   /* atkEvery do chefe no mkEnemy */
     const crit = 1 + Math.max(0, Math.min(100, diffNum(ref.critRate, 0))) / 100 * Math.max(0, diffNum(ref.critDmg, 100)) / 100;
@@ -79,7 +82,7 @@ function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys 
     /* (b) TEMPO DAS ESCOLTAS MEDIDO (Sistemas, depois da medida na batalha real: a fase das escoltas leva ~15 s, e não os ~5 s da conta "escoltas ÷ DPS", porque
        elas chegam uma de cada vez e há caminhada). Se a tabela trouxer boss.escortSec (número, ou lista por era), tE = esse tempo e a vida do chefe = DPS ×
        (killSec − tE): os segundos de kill/survive passam a valer com a fase das escoltas no tamanho real. Sem o campo: a conta de antes, sem mudar nada. */
-    const total = ref.atk * crit * U.u, dps = total / kill, esRaw = Array.isArray(T.boss.escortSec) ? T.boss.escortSec[Math.max(0, Math.min(T.boss.escortSec.length - 1, eraOf(stage)))] : T.boss.escortSec,
+    const total = ref.atk * crit * U.u, dps = total / kill, esRaw = diffByEra(T.boss.escortSec, stage),
       es = nE && typeof esRaw === 'number' && isFinite(esRaw) && esRaw > 0 ? Math.min(esRaw, kill * 0.9, surv * 0.9) : 0;
     const hp = es ? Math.max(1, dps * (kill - es)) : Math.max(1, total / (1 + nE * hs)), tE = es ? es : nE ? Math.min(surv, nE * hs * hp / dps) : 0;   /* tE = quando cai a última escolta */
     let eHits = 0; for (let i = 1; i <= nE; i++) eHits += (tE * i / nE) / BAL.commonAtkInterval; const bHits = Math.max(1, (surv - tE) / bossEvery);
@@ -92,7 +95,7 @@ function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 
   try { const x = diffBoss(stage); if (!x) return b; if (kind === 'boss') return { hp: x.hp, dmg: x.dmg, diff: true }; return x.hs > 0 && x.ds > 0 ? { hp: x.chp, dmg: x.cdmg, diff: true } : b; } catch (e) { return b; } }
 /* FÚRIA: o relógio (DIFF.ft) corre desde que o primeiro inimigo da onda do chefe chegou ao lugar dele; zera quando a onda recomeça ou acaba.
    Passado o tempo, o dano do chefe multiplica (uma vez) e a tela avisa. */
-function diffStep(dt){ if (!diffOn() || !DIFF.tbl || B.inst) return; const T = DIFF.tbl.boss; if (!T) return; const at = diffNum(T.furyAtSec, 0), m = diffNum(T.furyDmgMult, 1); if (!(at > 0) || !(m > 1)) return;
+function diffStep(dt){ if (!diffOn() || !DIFF.tbl || B.inst) return; const T = DIFF.tbl.boss; if (!T) return; const at = diffNum(diffByEra(T.furyAtSec, S.stage), 0), m = diffNum(T.furyDmgMult, 1); if (!(at > 0) || !(m > 1)) return;   /* furyAtSec também aceita lista por era */
   if (S.wave !== 5 || B.deadT > 0 || (!B.en.length && B.toSpawn.length > 1)){ DIFF.ft = 0; return; }
   /* (a) de onde conta a fúria (Sistemas): boss.furyFrom === 'boss' = desde que o CHEFE parou no lugar dele (a fase das escoltas não gasta o relógio);
      sem o campo = desde o primeiro inimigo da onda, como antes */
