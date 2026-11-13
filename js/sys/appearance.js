@@ -72,7 +72,9 @@ function layers(S,host){ const o=look(S), eq=host&&typeof host.equipped==='funct
   const wSkin=chosenSkin(S,'weapon'), wItem=eq.weapon, weapon=wSkin?{layer:'weapon',key:DATA.skinKey(wSkin),source:'skin',id:wSkin}
     :wItem?{layer:'weapon',key:DATA.itemKey('weapon',visualEra(wItem),clamp(int0(wItem.r),0,5)),source:'item',era:visualEra(wItem),r:clamp(int0(wItem.r),0,5)}:{layer:'weapon',key:DATA.skinKey('w00'),source:'skin',id:'w00'};
   const outfit=chosenSkin(S,'armor');
-  if(o.mode==='skin'&&outfit){ out.push({layer:'skin',key:DATA.skinKey(outfit),source:'skin',id:outfit}); out.push(weapon); return out; }
+  if(o.mode==='skin'&&outfit){ const c=comboOf(outfit);   // DONO 12/11: a skin de roupa é uma COMBINAÇÃO de camadas (vale nas 4 fases e nos 2 heróis pelas máscaras de cada fase)
+    if(c){ const lay=comboLayers(outfit,c,o); out.splice(0,0,...lay.filter(l=>l.layer==='aura')); out.push(...lay.filter(l=>l.layer!=='aura')); out.push(weapon); return out; }
+    out.push({layer:'skin',key:DATA.skinKey(outfit),source:'skin',id:outfit}); out.push(weapon); return out; }
   for(const L of DATA.layerOrder){ if(L==='base'||L==='weapon'||L==='wing') continue; if(o.hidden[L]) continue;
     if(DATA.cosCats.includes(L)){ const id=o.cos.eq[L]; if(id) out.push({layer:L,key:DATA.cosKey(id),source:'cos',id}); continue; }
     const it=eq[L]; if(it) out.push({layer:L,key:DATA.itemKey(L,visualEra(it),clamp(int0(it.r),0,5)),source:'item',era:visualEra(it),r:clamp(int0(it.r),0,5)}); }
@@ -116,6 +118,28 @@ function sheetFor(S,host,state){ const sh=sheets(S,host), h=sh.hero, st=STATES.i
   return {hero:h,state:st,stage:ph,fallback:ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st}; }
 /* troca o herói do save (a criação chama; só 'kael' | 'kaia'). Só visual: atributos e FC iguais (os dois usam os mesmos itens e o mesmo Sys.stats). */
 function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='kael'&&hero!=='kaia') return false; S.hero=hero; return true; }
+/* ROUPA-SKIN = COMBINAÇÃO DE CAMADAS (decisão do dono, 12/11): cada skin de roupa (a<era><r>, 35, e p10/p20/p30 do passe) mantém id, nome e preço, mas
+   em vez de um corpo inteiro é chapéu + tinta de colete e botas (nas máscaras R/B de cada fase) + óculos/máscara + aura nas Lendárias. Peças da Arte:
+   chapéus por era (assets/anim/equip/hats/hat_<eraN>.png), cosméticos (assets/anim/equip/cos/<id>.png), auras (assets/anim/aura/<id>), tintas abaixo
+   (formato da página de aparência da Arte: [R, G, B, ganho]). Save antigo com roupa-skin: MESMA id, passa a desenhar a combinação sozinho. */
+const MATERIALS={couro:[150,105,65,1.0],couro_escuro:[95,60,40,0.9],bronze:[200,130,70,1.15],ferro:[180,190,205,1.15],prata:[215,220,230,1.25],
+  ouro:[240,190,70,1.35],cristal:[110,200,255,1.45],obsidiana:[120,70,160,1.0],rubi:[210,40,60,1.2],esmeralda:[60,190,110,1.2]};
+const RAR_MAT=[['couro','couro'],['couro_escuro','couro'],['bronze','couro_escuro'],['ferro','ferro'],['ouro','ouro']];   // [colete, botas] pela raridade
+const PASS_COMBO={p10:{hat:'era3',vest:'rubi',boots:'couro_escuro',mask:'carnival'},      // Casaca da Temporada
+  p20:{hat:'era5',vest:'ouro',boots:'ouro',glasses:'visor',aura:'aura10'},                    // Traje Elite Solar
+  p30:{hat:'era8',vest:'ouro',boots:'obsidiana',aura:'aura13'}};                              // Imperador das Eras
+/* combinação da skin de roupa id → {hat, vest, boots, glasses, mask, aura} ou null (não é roupa-skin) */
+function comboOf(id){ if(PASS_COMBO[id]) return Object.assign({hat:null,vest:null,boots:null,glasses:null,mask:null,aura:null},PASS_COMBO[id]);
+  const m=/^a(\d)(\d)$/.exec(String(id||'')); if(!m) return null; const e=+m[1], r=Math.min(4,+m[2]); let [vest,boots]=RAR_MAT[r];
+  if(e===6&&r>=3) vest='cristal'; if(e===5&&r===3) boots='obsidiana'; if(e===1&&r===4) boots='bronze';   // sabor da era nas raras de cima
+  return {hat:r>=1?'era'+e:null,vest,boots,glasses:r>=2&&e>=4?(e===6?'visor':'goggles'):null,mask:null,aura:r>=4?'aura10':null}; }
+/* camadas da combinação (respeita o que o jogador ocultou; óculos/máscara PRÓPRIOS do jogador vencem os da skin) */
+function comboLayers(id,c,o){ const out=[], hid=(o&&o.hidden)||{}, own=(o&&o.cos&&o.cos.eq)||{}, tint=(layer,mat)=>({layer,key:'tint/'+layer+'/'+mat,source:'skin',id,mat,tint:MATERIALS[mat]});
+  if(c.aura) out.push({layer:'aura',key:'aura/'+c.aura,source:'skin',id,aura:c.aura,sheet:'assets/anim/aura/'+c.aura});
+  if(c.boots&&!hid.boots) out.push(tint('boots',c.boots)); if(c.vest&&!hid.armor) out.push(tint('armor',c.vest));
+  if(c.hat&&!hid.hat) out.push({layer:'hat',key:'hat/'+c.hat,source:'skin',id,hat:c.hat});
+  for(const cat of ['glasses','mask']){ if(hid[cat]) continue; const mine=own[cat], pick=mine||c[cat]; if(pick) out.push({layer:cat,key:DATA.cosKey(pick),source:mine?'cos':'skin',id:mine||id,cos:pick}); }
+  return out; }
 /* SKINS × EVOLUÇÃO (ordem do dono: a skin NUNCA se perde quando o herói evolui). Skin e cosmético são do JOGADOR (S.skins, S.skinEq, S.sys.appearance,
    S.look): o phaseUp não toca neles. O que muda com a fase é só A PASTA da folha (sheetFor). Cobertura por tipo:
    - arma (w<era><r>, p5/p15/p25): desenhada na mão pela âncora de cada quadro → vale em todas as fases e nos dois heróis (precisa da arte da arma);
@@ -125,15 +149,17 @@ function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='k
 const FULL_SKIN=id=>/^a\d\d$/.test(id)||['p10','p20','p30'].includes(id);
 const WEAPON_SKIN=id=>/^w\d\d$/.test(id)||['p5','p15','p25'].includes(id);
 /* {id, kind: weapon|full|layer, missing:[{hero, stage, file}], ok} — existe(caminho) diz se o arquivo existe (o teste/ferramenta passa fs.existsSync) */
-function skinCoverage(id,exists){ const has=typeof exists==='function'?exists:()=>false, out={id,kind:WEAPON_SKIN(id)?'weapon':FULL_SKIN(id)?'full':'layer',missing:[]};
-  if(out.kind==='full') for(const h of ['kael','kaia']) for(let st=0;st<4;st++){ const f='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'+h+'_idle_skin_'+id+'.json'; if(!has(f)) out.missing.push({hero:h,stage:st,file:f}); }
+function skinCoverage(id,exists){ const has=typeof exists==='function'?exists:()=>false, c=FULL_SKIN(id)?comboOf(id):null, out={id,kind:WEAPON_SKIN(id)?'weapon':c?'combo':'layer',missing:[],combo:c};
+  // roupa-skin = combinação (dono): vale nas 4 fases × 2 heróis pelas máscaras; precisa só que cada PEÇA exista
+  if(c){ const need=[]; if(c.hat) need.push('assets/anim/equip/hats/hat_'+c.hat+'.png'); for(const k of ['glasses','mask']) if(c[k]) need.push('assets/anim/equip/cos/'+c[k]+'.png'); if(c.aura) need.push('assets/anim/aura/'+c.aura+'.png');
+    for(const f of need) if(!has(f)) out.missing.push({hero:'*',stage:'*',file:f}); for(const k of ['vest','boots']) if(c[k]&&!MATERIALS[c[k]]) out.missing.push({hero:'*',stage:'*',file:'tinta:'+c[k]}); }
   if(out.kind==='weapon'){ const m=/^w(\d)(\d)$/.exec(id), RK=['t0','raro','t1','mitico','t2']; if(m){ const f='assets/weapons/era'+m[1]+'_'+RK[+m[2]]+'.png'; if(!has(f)) out.missing.push({hero:'*',stage:'*',file:f}); } }
   out.ok=!out.missing.length; return out; }
 const canSell=(id,exists)=>skinCoverage(id,exists).ok;
 /* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
    desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
 function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
-const API={DATA,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+const API={DATA,MATERIALS,comboOf,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

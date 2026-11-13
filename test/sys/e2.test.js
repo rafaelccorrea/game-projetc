@@ -639,11 +639,11 @@ t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), o
   assert.ok(AP.addCosmetic(S,'goggles').ok); assert.ok(AP.equipCosmetic(S,'glasses','goggles')); assert.ok(!AP.equipCosmetic(S,'mask','goggles'));
   assert.ok(AP.layers(S,h).some(l=>l.layer==='glasses'&&l.key==='cos/goggles'));
   AP.setMode(S,'skin'); assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'modo skin sem skin escolhida = itens');
-  S.skinEq.armor='a31'; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','skin','weapon'],'skin completa esconde as peças');
+  S.skinEq.armor='a31'; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'roupa-skin = combinação (dono 12/11): tinta e os óculos do jogador; o chapéu foi ocultado acima e a combinação respeita');
   assert.deepStrictEqual(AP.bonus(),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0},'só visual');
   assert.strictEqual(AP.look({look:'lixo'}).mode,'items');
   // asa: atrás do corpo, nos dois modos, com olho para ocultar; skin de asa vence o item
-  eq.wing={slot:'wing',e:3,r:2}; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['wing','base','skin','weapon'],'asa também no modo skin');
+  eq.wing={slot:'wing',e:3,r:2}; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer)[0],'wing','asa também no modo skin (atrás de tudo)');
   AP.setSkin(S,'wing','wing_angel'); assert.strictEqual(AP.layers(S,h)[0].key,'skin/wing_angel'); AP.setLookHidden(S,'wing',true); assert.ok(!AP.layers(S,h).some(l=>l.layer==='wing'));
 });
 
@@ -931,8 +931,21 @@ t('skins × evolução: a skin equipada sobrevive à troca de fase (21→22, 34�
         assert.strictEqual(JSON.stringify([S.skins,S.skinEq,A.look(S).cos]),before,'skin/cosmético intactos na fase '+st); assert.strictEqual(A.layers(S,h).map(l=>l.key).join('|'),lay0,'mesmas camadas');
         const r=A.sheetFor(S,h,'idle'); assert.strictEqual(r.stage,st); assert.ok(ex(r.body+'.json'),'folha da fase nova existe'); if(!ex(r.masks+'_head.json')) console.warn('AVISO (arte): falta '+r.masks+'_head.json (chapéu/óculos nessa fase)'); } } 
   } finally { PU.DATA.on=false; }
-  assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'full'); assert.strictEqual(A.canSell('a34',ex),c.ok);
-  assert.strictEqual(A.skinCoverage('a34',()=>true).ok,true,'com as 8 versões pode vender'); assert.strictEqual(A.skinCoverage('a34',()=>false).missing.length,8);
+  assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'combo'); assert.strictEqual(A.canSell('a34',ex),true,'combinação completa: pode vender');
+  assert.ok(A.skinCoverage('a34',()=>false).missing.length>=2,'sem as peças (chapéu, aura) não vende');
+});
+
+t('roupa-skin = combinação (dono): 38 skins com chapéu + tinta de colete/botas + óculos/máscara + aura; todas vendáveis; save antigo desenha a combinação em qualquer fase',()=>{
+  const A=require('../../js/sys/appearance.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const ex=f=>fs.existsSync(path.join(__dirname,'../..',f));
+  const ids=[]; for(let e=0;e<7;e++) for(let r=0;r<5;r++) ids.push('a'+e+r); ids.push('p10','p20','p30'); assert.ok(ids.every(id=>A.canSell(id,ex)),'as 38 vendáveis');
+  assert.deepStrictEqual(A.comboOf('a00'),{hat:null,vest:'couro',boots:'couro',glasses:null,mask:null,aura:null}); assert.strictEqual(A.comboOf('a64').glasses,'visor'); assert.strictEqual(A.comboOf('p10').mask,'carnival'); assert.strictEqual(A.comboOf('w12'),null);
+  for(const id of ids){ const c=A.comboOf(id); for(const k of ['vest','boots']) assert.ok(A.MATERIALS[c[k]],id+' '+k); }
+  // save ANTIGO: roupa-skin equipada no modo skin → agora vira camadas (nada de corpo inteiro), igual em todas as fases e nos dois heróis
+  PU.DATA.on=true; try{ for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero,skins:['w00','a00','a54'],skinEq:{weapon:'w00',armor:'a54'}}; A.setMode(S,'skin'); L.ensure(S).lvl=120; PU.ensure(S).stg=st;
+      const lay=A.layers(S,makeHost()); assert.ok(!lay.some(l=>l.layer==='skin'),'sem corpo inteiro'); const by=k=>lay.find(l=>l.layer===k);
+      assert.deepStrictEqual([by('hat').hat,by('armor').mat,by('boots').mat,by('glasses').cos,by('aura').aura,lay[0].layer],['era5','ouro','ouro','goggles','aura10','aura']);
+      A.setLookHidden(S,'hat',true); assert.ok(!A.layers(S,makeHost()).some(l=>l.layer==='hat'),'ocultar o chapéu vale na combinação'); A.addCosmetic(S,'ninja'); A.equipCosmetic(S,'mask','ninja');
+      assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; }
 });
 
 console.log(`ok: ${n} testes`);
