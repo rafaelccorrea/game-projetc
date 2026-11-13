@@ -6,6 +6,10 @@
    Só as folhas da montaria em uso são carregadas. Chave geral: MOUNTS_ON. */
 const MOUNTS_ON = true;
 const MOUNT_DIR = 'assets/anim/mounts/';
+/* NOME DO ARQUIVO quando ele não é o id do Sys.mount (levantamento da Arte, item 5b): a Fênix gigante é 'phoenixm' no módulo (para não colidir com o pet
+   'phoenix') e as folhas são kael_giant_phoenix_*. mountFile(id) é o ÚNICO lugar que traduz; quem monta caminho de folha de montaria passa por ele. */
+const MOUNT_FILE = { phoenixm: 'giant_phoenix' };
+const mountFile = id => MOUNT_FILE[id] || id;
 /* TABELA DE AJUSTE, um conjunto de números por montaria (px da célula de 256 do herói; escala HS/256):
    dx, dy = deslocamento do quadro montado · wx, wy = quanto as COSTAS do Kael andam em relação ao Kael a pé (para a asa) · sh = largura da sombra (× HS) */
 const MOUNT_TBL = {
@@ -16,7 +20,11 @@ const MOUNT_TBL = {
   wolf:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.70, pdy: 9 },
   griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, pdx3: 0.66, wings: true, wx2: -14, wy2: 26 },   /* pdx3 = pet EVOLUÍDO (estágio 3, maior): menos à frente, senão a asa dele encosta no inimigo da frente · 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
   mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10 },
-  wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 10 },   /* Engenheiro 2: wy2 26 → 10 (na serpe a sela já é alta: com 26 a asa do Kael ficava solta acima da cabeça) · Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
+  wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 10 },
+  /* Fênix gigante (VIP 8): montaria NOVA, atrás da chave do Sys.mount (DATA.newOn / newReady.phoenixm, desligada até o voto do dono). A linha só deixa o desenho
+     pronto: mountIds() e a batalha só a mostram quando o módulo disser que ela está ligada. Números iguais aos do grifo (mesma célula e mesma sela alta);
+     wx2/wy2 A MEDIR na tela quando a chave for ligada no modo de teste (dbgMount('phoenixm')). */
+  phoenixm:{ dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, pdx3: 0.66, wings: true, wx2: -14, wy2: 26 },   /* Engenheiro 2: wy2 26 → 10 (na serpe a sela já é alta: com 26 a asa do Kael ficava solta acima da cabeça) · Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
 };
 const mountOk = () => MOUNTS_ON && typeof Sys !== 'undefined' && !!Sys.mount;
 function mountBoot(){ if (!mountOk()) return; try { Sys.mount.DATA.on = true; Sys.mount.DATA.visual = true; Sys.mount.ensure(S); } catch (e) { console.error('mountBoot', e); } }
@@ -41,12 +49,12 @@ function mountManLoad(){ if (MOUNT_MAN.asked) return; MOUNT_MAN.asked = true; fe
 const MOUNT_ART_C = {};
 function mountArtOf(h, id){ const ck = h + '|' + id, c = MOUNT_ART_C[ck]; if (c !== undefined) return c;
   const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { const r = A.mountedArt(h, id); if (r === true || r === false) MOUNT_ART_C[ck] = r; return r; } catch (e) { return null; } }
-  if (!MOUNT_MAN.packs){ mountManLoad(); return null; } const pk = MOUNT_MAN.packs['mount:' + id], b = MOUNT_DIR + h + '_' + id; return !!(pk && Array.isArray(pk.files) && pk.files.some(p => p === b + '_idle_body.png' || p === b + '_run_body.png')); }
+  if (!MOUNT_MAN.packs){ mountManLoad(); return null; } const pk = MOUNT_MAN.packs['mount:' + id] || MOUNT_MAN.packs['mount:' + mountFile(id)], b = MOUNT_DIR + h + '_' + mountFile(id); return !!(pk && Array.isArray(pk.files) && pk.files.some(p => p === b + '_idle_body.png' || p === b + '_run_body.png')); }
 function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'; if (h === 'kael') return MOUNT_HERO.kael;
   if (id == null){ try { const i = Sys.mount.battleInfo(S); id = i && i.id; } catch (e) { id = null; } }
   return id != null && mountArtOf(h, id) === true ? MOUNT_HERO[h] : null; }
 function mountLook(){ if (!mountOk()) return null; try { const i = Sys.mount.battleInfo(S); return i && i.visual && MOUNT_TBL[i.id] && mountPrefix(i.id) ? { id: i.id, stars: i.stars | 0, aura: i.aura } : null; } catch (e) { return null; } }
-const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix(id) || 'kael_') + id + '_' + st + '_body');
+const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix(id) || 'kael_') + mountFile(id) + '_' + st + '_body');
 function mountReady(id){ let ok = true; for (const st of ['idle', 'run', 'attack']) if (!mountSheet(id, st).ok) ok = false; return ok; }
 /* medidas da folha parada (uma vez por montaria): quanto o Kael SOBE (linha do pescoço) e até onde a montaria vai à FRENTE (borda opaca direita) */
 const MOUNT_M = {};
@@ -145,7 +153,7 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
    até a queda: vale a saída correndo (drawMountExit). O caminho é escolhido UMA vez por queda (não troca no meio). */
 /* face = para onde a cabeça aponta NO ARQUIVO ('R' direita, 'L' esquerda). Conferido abrindo as 6 imagens (13/11): TODAS olham para a DIREITA, como a montaria
    na batalha, então nenhuma é espelhada. Arte nova virada para a esquerda: face 'L' (o desenho espelha). rs = ajuste de tamanho (padrão 1). */
-const MOUNT_REF = { pony: { f: 'mount_pony_ref', face: 'R' }, horse: { f: 'mount_horse_ref', face: 'R' }, wolf: { f: 'mount_wolf_ref', face: 'R' }, griffin: { f: 'mount_griffin_ref', face: 'R' }, mythic: { f: 'mount_mythic_opt_tiger', face: 'R' }, wyvern: { f: 'mount_wyvern_ref', face: 'R' } };   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
+const MOUNT_REF = { pony: { f: 'mount_pony_ref', face: 'R' }, horse: { f: 'mount_horse_ref', face: 'R' }, wolf: { f: 'mount_wolf_ref', face: 'R' }, griffin: { f: 'mount_griffin_ref', face: 'R' }, mythic: { f: 'mount_mythic_opt_tiger', face: 'R' }, wyvern: { f: 'mount_wyvern_ref', face: 'R' } };   /* Fênix gigante (phoenixm): SEM imagem parada no app (assets/mounts/new/ não vai no pacote): na Derrota vale a reserva (drawMountExit) até a Arte entregar assets/mounts/mount_giant_phoenix_ref.png */   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
 const MOUNT_STILL_EDGE = 8;   /* margem mínima da montaria parada até as bordas da cena, em px lógicos (a cena tem sempre LW = 330 de largura lógica: 8 px lógicos = 7 px de tela a 288, 8,7 a 360, 9,5 a 390) */
 const MOUNT_STILL = {}, MOUNT_STILL_W = 384, MOUNT_XFADE = 0.3, MOUNT_BREATH = 2.6, MOUNT_BREATH_K = 0.015;
 function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k in MOUNT_STILL) delete MOUNT_STILL[k];   /* só a da montaria em uso */
@@ -244,7 +252,7 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
     if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 1.2, B.tipW.x + 6)); B.reach += (rc - B.reach) * 0.2; } }
   return true; }
 /* modo dono / depuração: ganhar e montar uma montaria; estrelas */
-const mountIds = () => mountOk() ? Sys.mount.DATA.mounts.filter(m => MOUNT_TBL[m.id]) : [];   // só as montarias LIGADAS (com arte aprovada na tabela)
+const mountIds = () => mountOk() ? Sys.mount.DATA.mounts.filter(m => MOUNT_TBL[m.id] && (typeof Sys.mount.live !== 'function' || Sys.mount.live(m))) : [];   /* montaria NOVA (nw) só entra quando o módulo a liga */   // só as montarias LIGADAS (com arte aprovada na tabela)
 function mountGive(id){ if (!mountOk() || !MOUNT_TBL[id]) return { ok: false, reason: 'off' }; let r = null; try { r = Sys.mount.add(S, Sys.host, id); Sys.mount.equip(S, id); } catch (e) { console.error('mount.add', e); } if (typeof statsChanged === 'function') statsChanged(); return r; }
 function mountStar(d){ if (!mountOk()) return 0; try { const o = Sys.mount.ensure(S); if (!o.eq || !o.owned[o.eq]) return 0; const x = o.owned[o.eq]; x.stars = Math.max(1, Math.min(5, (x.stars | 0) + (d || 1))); if (typeof statsChanged === 'function') statsChanged(); return x.stars; } catch (e) { return 0; } }
 function mountOff(){ if (!mountOk()) return; try { Sys.mount.equip(S, null); } catch (e) {} if (typeof statsChanged === 'function') statsChanged(); }
@@ -254,6 +262,7 @@ function mountOff(){ if (!mountOk()) return; try { Sys.mount.equip(S, null); } c
 if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMount = function (id, stars){ if (!mountOk()) return { erro: 'montarias desligadas' };
     if (id === null){ mountOff(); if (typeof heroChanged === 'function') heroChanged(); return { desmontado: true }; }
     if (id === undefined || !MOUNT_TBL[id]) return { erro: 'id de montaria desconhecido', ids: Object.keys(MOUNT_TBL) };
+    try { const m = Sys.mount.DATA.mounts.find(x => x.id === id); if (m && m.nw && Sys.mount.DATA.newReady) Sys.mount.DATA.newReady[id] = true; } catch (e) {}   /* montaria NOVA (Fênix): no modo de teste liga só ela, só nesta sessão (não grava) */
     mountGive(id); let st = 0; try { const o = Sys.mount.ensure(S), x = o.owned[id]; if (x){ if (typeof stars === 'number' && isFinite(stars)) x.stars = Math.max(1, Math.min(5, stars | 0)); st = x.stars | 0; } } catch (e) {}
     if (typeof statsChanged === 'function') statsChanged(); if (typeof heroChanged === 'function') heroChanged(); const o = MOUNT_REF[id] ? mountStill(id) : null;
     return { id, estrelas: st, montado: !!mountLook(), imagemParada: !o ? 'sem imagem' : o.ok ? 'ok' : o.fail ? 'falhou' : 'carregando' }; }; }

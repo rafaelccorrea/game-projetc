@@ -18,7 +18,9 @@ const MT_OFF=[];   /* era ['wyvern'] (serpe reprovada). A-22: o engenheiro relig
    As referências de assets/mounts (1,1 a 4,2 MB, paradas) NÃO são usadas. Só a folha da montaria em exibição é pedida no palco;
    MT_TILE_ART: false (padrão) = cartões da Coleção com marcador neutro (ferradura na cor da raridade), nenhum arquivo a mais;
    true = cartões com o 1º quadro das mesmas folhas (as 5 juntas somam ~8,7 MB: só ligar quando a Arte entregar miniaturas leves). */
-const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1};   /* wyvern: assets/anim/mounts/kael_wyvern_idle_era2_t1.png (existe; enquadramento NÃO medido) */
+const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1,phoenixm:1};   /* phoenixm: folhas kael_giant_phoenix_* (nome do arquivo ≠ id: mtFile); só aparece quando o Sys.mount ligar a montaria nova */
+const mtFile=id=>{ try{ return typeof mountFile==='function'?mountFile(id):id; }catch(e){ return id; } };
+/* wyvern: assets/anim/mounts/kael_wyvern_idle_era2_t1.png (existe; enquadramento NÃO medido) */
 const MT_SHEET={dir:'assets/anim/mounts/',frames:12,cols:6,fps:12,w:512,h:352,x0:68,y0:36,box:304};   /* cols:6 = folha em GRADE (3072x704, 6 × 2) desde o lote b691560; w/h são da CÉLULA */
 const MT_TILE_ART=false;
 
@@ -151,7 +153,7 @@ const mtSoon=d=>mtEmpty(d,`${MT_SHOE(96,'#6a5a48')}<span class="lil" style="font
    Sem folha da montaria: marcador neutro (ferradura), nunca um animal desenhado em código. */
 function mtSprite(id,anim,sil,alt){ const F=MT_SHEET, lab=alt?`role="img" aria-label="${esc2(alt)}"`:'aria-hidden="true"';
   if(!MT_ART[id]) return `<span ${lab} style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;opacity:${sil?0.5:1}">${MT_SHOE('70%',sil?'#120c08':'#8a7a68')}</span>`;
-  return `<div ${lab} class="${sil?'mt-sil':''}" style="position:absolute;left:${(-F.x0/F.box*100).toFixed(2)}%;top:${(-F.y0/F.box*100).toFixed(2)}%;width:${(F.w/F.box*100).toFixed(2)}%;height:${(F.h/F.box*100).toFixed(2)}%;${xSheetBg(F.dir+'kael_'+id+'_idle_era2_t1.png',xSheetMeta(F.dir+'kael_'+id+'_idle_era2_t1',{frames:F.frames,cols:F.cols,fps:F.fps}),{still:!anim})}"></div>`; }   /* tira OU grade: xSheetBg/xSheetMeta (js/screens.js) leem o .json real; F.cols é só a reserva */
+  return `<div ${lab} class="${sil?'mt-sil':''}" style="position:absolute;left:${(-F.x0/F.box*100).toFixed(2)}%;top:${(-F.y0/F.box*100).toFixed(2)}%;width:${(F.w/F.box*100).toFixed(2)}%;height:${(F.h/F.box*100).toFixed(2)}%;${xSheetBg(F.dir+'kael_'+mtFile(id)+'_idle_era2_t1.png',xSheetMeta(F.dir+'kael_'+mtFile(id)+'_idle_era2_t1',{frames:F.frames,cols:F.cols,fps:F.fps}),{still:!anim})}"></div>`; }   /* tira OU grade: xSheetBg/xSheetMeta (js/screens.js) leem o .json real; F.cols é só a reserva */
 /* aura pelo que o módulo diz da estrela (glow 0-3, smoke, particles): brilho → fumaça → raios, chama, anéis e partículas */
 function mtAura(a,c){ if(!a) return ''; const g=a.glow|0, rgb=mtRgb(c); let h='';
   if(g>=1) h+=`<span class="mt-glow" style="width:${g>=2?110:84}%;height:${g>=2?70:42}%;background:radial-gradient(ellipse at 50% 70%,rgba(${rgb},${g>=2?0.75:0.5}) 0%,rgba(${rgb},0) 70%)"></span>`;
@@ -343,7 +345,7 @@ function mtClick(b,ev){
 
 if(!('mounts' in PANEL_ON)) PANEL_ON.mounts=false;
 /* imagens que a tela mostra: a folha parada de cada montaria da lista que tem arte (as mesmas do mtSprite) */
-function mtUrls(){ try{ return mtIds().filter(id=>MT_ART[id]).map(id=>MT_SHEET.dir+'kael_'+id+'_idle_era2_t1.png'); }catch(e){ return []; } }
+function mtUrls(){ try{ return mtIds().filter(id=>MT_ART[id]).map(id=>MT_SHEET.dir+'kael_'+mtFile(id)+'_idle_era2_t1.png'); }catch(e){ return []; } }
 Panels.add('mounts',{title:'Montarias',render:function(){ if(typeof xGate==='function'&&xGate(mtUrls())) return; return scrMounts.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return mtClick.apply(this,arguments); },
   /* 4x por segundo: só redesenha quando muda o que o botão de subir nível mostra (ouro que entrou, nível do jogador que subiu) */
   tick(){ if(XMT.sig===null||!mtReady()||typeof view==='undefined'||view!=='mounts') return;

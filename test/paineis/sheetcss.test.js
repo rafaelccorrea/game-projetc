@@ -54,11 +54,12 @@ function checkDyn(file, base, fb, label) { const p = png(base + '.png'), j = jso
   if (r.frames !== m.frames || r.cols !== m.cols) why.push('RESERVA da tela (' + r.cols + ' colunas, ' + r.frames + ' quadros) ≠ .json (' + m.cols + ', ' + m.frames + '): atualize XSH_TAB/MT_SHEET no código');
   rows.push([file, base + '.png', p.w + 'x' + p.h, 'ajudante: ' + css.kind, (j.cols > 0 ? j.cols + ' × ' + m.rows : 'tira ' + j.frames), why.length ? 'QUEBRADO' : 'ok']);
   say(file, label + ' ' + base + ' (' + css.kind + ', ' + m.cols + ' × ' + m.rows + ')', !why.length, why.join('; ')); }
-/* Montarias: ids com arte (MT_ART) e a reserva MT_SHEET */
+/* Montarias: ids com arte (MT_ART) e a reserva MT_SHEET. O nome do arquivo pode não ser o id (MOUNT_FILE do js/mountfx.js: phoenixm → giant_phoenix) */
+const MFILE = (() => { const m = /const MOUNT_FILE = \{([^}]*)\}/.exec(read('js/mountfx.js')), o = {}; if (m) for (const kv of m[1].split(',')) { const q = /(\w+)\s*:\s*'([^']+)'/.exec(kv); if (q) o[q[1]] = q[2]; } return o; })(), mfile = id => MFILE[id] || id;
 { const s = read('js/p_mounts.js'), ma = /const MT_ART=\{([^}]*)\}/.exec(s), ms = /const MT_SHEET=\{([^}]*)\}/.exec(s); const ids = ma ? ma[1].split(',').map(x => x.split(':')[0].trim()).filter(Boolean) : [];
   const num = k => { const q = new RegExp('\\b' + k + ':(\\d+)').exec(ms ? ms[1] : ''); return q ? +q[1] : 0; }, fb = { frames: num('frames'), cols: num('cols'), fps: num('fps') };
   say('js/p_mounts.js', 'usa o ajudante xSheetBg', /xSheetBg\(/.test(s) && !/idle_era2_t1\.png\) 0 0\/\$\{F\.frames\*100\}% 100%/.test(s), 'a tela voltou a desenhar a folha como tira fixa');
-  for (const id of ids) { const base = 'assets/anim/mounts/kael_' + id + '_idle_era2_t1'; checkDyn('js/p_mounts.js', base, fb, 'montaria'); const j = json(base + '.json'); if (j && (j.w !== num('w') || j.h !== num('h'))) say('js/p_mounts.js', 'célula de ' + id, false, 'MT_SHEET ' + num('w') + 'x' + num('h') + ' ≠ .json ' + j.w + 'x' + j.h); } }
+  for (const id of ids) { const base = 'assets/anim/mounts/kael_' + mfile(id) + '_idle_era2_t1'; checkDyn('js/p_mounts.js', base, fb, 'montaria'); const j = json(base + '.json'); if (j && (j.w !== num('w') || j.h !== num('h'))) say('js/p_mounts.js', 'célula de ' + id, false, 'MT_SHEET ' + num('w') + 'x' + num('h') + ' ≠ .json ' + j.w + 'x' + j.h); } }
 /* Pets: todas as folhas da tabela PT_SH */
 { const s = read('js/p_pets.js'), blk = /const PT_SH=\{([\s\S]*?)\};/.exec(s), pre = ['', 'mid_', 'evo_'];
   say('js/p_pets.js', 'usa o ajudante xSheetBg', /xSheetBg\(/.test(s) && !/0 0\/\$\{F\.frames\*100\}% 100%/.test(s), 'a tela voltou a desenhar a folha como tira fixa');
@@ -76,7 +77,7 @@ function checkDyn(file, base, fb, label) { const p = png(base + '.png'), j = jso
 
 /* ---------- C) classes com a imagem vinda de outro ponto ---------- */
 { const s = read('js/p_offer.js'), m = /\.of-ride\{[^}]*background-size:\s*(\d+)00%\s+100%/.exec(s); const ids = ['wolf', 'pony', 'horse', 'griffin', 'mythic', 'wyvern'];
-  if (m) for (const id of ids) { const base = 'assets/anim/mounts/kael_' + id + '_idle_era2_t1', j = json(base + '.json'), p = png(base + '.png'); if (!j || !p) continue; const grid = j.cols > 0 && j.cols < j.frames;
+  if (m) for (const id of ids) { const base = 'assets/anim/mounts/kael_' + mfile(id) + '_idle_era2_t1', j = json(base + '.json'), p = png(base + '.png'); if (!j || !p) continue; const grid = j.cols > 0 && j.cols < j.frames;
       rows.push(['js/p_offer.js (.of-ride)', base + '.png', p.w + 'x' + p.h, 'tira ' + m[1], grid ? j.cols + ' × ' + Math.ceil(j.frames / j.cols) : 'tira ' + j.frames, grid ? 'QUEBRADO' : 'ok']);
       say('js/p_offer.js', '.of-ride desenha ' + base + ' como tira de ' + m[1], !grid, 'a folha é GRADE ' + j.cols + ' × ' + Math.ceil(j.frames / j.cols) + ' (PNG ' + p.w + 'x' + p.h + ')'); if (grid) break; } }
 
