@@ -1,0 +1,39 @@
+# Força-tarefa: finalizar tudo (ordem do dono, 13/11/2026 à noite)
+
+> "faça força tarefa pra finalizar tudo que falta" · "lança multi agentes onde for necessário"
+
+Cada sessão pode e deve abrir subagentes para dividir o próprio trabalho, um processo pesado por vez no PC, com commit e push por item. Ordem de prioridade abaixo; quem termina o seu bloco pega o próximo livre.
+
+## P0: o que o dono sente jogando (antes de tudo)
+| # | Item | Quem |
+|---|---|---|
+| 1 | Inimigos dando só 1 de dano | Engenheiro + Sistemas |
+| 2 | Vida volta cheia ao vencer o chefe | Engenheiro + Sistemas |
+| 3 | Começo mais duro (sem alívio nas fases 1-3, presente menor) | Sistemas → Engenheiro |
+| 4 | Itens caindo no chão com ímã; Épico+ espera o toque | Engenheiro |
+| 5 | Calibração da dificuldade (100% vence ~5/6, 90% ~metade) e ligar | Sistemas |
+
+## P1: Fogueira das Eras (tipo lâmpada)
+| 6 | Protótipo V2 para o voto (link único) | Sistemas |
+| 7 | Módulo js/sys (níveis, chances, Brasas, auto, desmontar, desfazer) | Sistemas |
+| 8 | Tela, toque para forjar, cartão novo × seu, automático, desmontar rápido | Engenheiro |
+| 9 | Intro jogável de até 60 s | Engenheiro |
+| 10 | 9 visuais da Fogueira (depois do voto) | Arte |
+
+## P2: telas aprovadas para o jogo (ordem do PASSAGEM.md)
+| 11 | Batalha → Equipamento + Mochila → Forja → Pets → Montarias → Invocar → Loja → VIP → Passe → Fim das 9 eras → Perfil → Guilda → Torneio → Torre | Engenheiro (com subagentes) + Sistemas |
+| 12 | Refazer Mapa das Eras e Correio na direção que o dono escolher | Sistemas |
+
+## P3: online no app
+| 13 | Ligar Arena → Guilda → Torneio no jogo, com luta real de teste | Engenheiro + QA + Servidor |
+| 14 | Compras da Play (plugin de cobrança), quando o dono aprovar e configurar | Engenheiro + Servidor |
+
+## P4: arte (um item por vez até 100%)
+| 15 | Golpe, giro e pistola das 9 skins na coreografia do padrão | Arte + PO (Higgsfield) |
+| 16 | Tiro montado (6 montarias, Kael e Kaia) | Arte + PO |
+| 17 | Montaria parada para a Derrota (6) | Arte + PO |
+
+## P5: conferência e entrega
+| 18 | QA na tela: eras 7-8, Fênix, Seráfica, Kael Anjo, Ciborgue, Clava, pets, correções do S24 | QA |
+| 19 | Próxima APK com tudo e instalar no S24 assim que o dono pedir | Engenheiro / PO |
+| 20 | Checklist de arte e STATUS_DONO atualizados | PO |
