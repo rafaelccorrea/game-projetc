@@ -35,11 +35,12 @@
   const emit = () => { try { W.dispatchEvent(new CustomEvent('onlineboot', { detail: state() })); } catch (e) {} };
   const owner = () => { try { if (typeof OWNER_MODE !== 'undefined' && OWNER_MODE === true) return true; return typeof SAVE_KEY === 'string' && /^eras_owner_v1(@|$)/.test(SAVE_KEY); } catch (e) { return true; } };
 
+  const HOLD = 'eon_online_hold';
   /* a chave: ONLINE_ON do index.html; em debug ?online=1 liga e ?online=0 desliga */
   function wanted() { let on = false; try { on = typeof ONLINE_ON !== 'undefined' && ONLINE_ON === true; } catch (e) {} const q = qp('online'); if (q === '1') on = true; else if (q === '0') on = false; return on; }
   function baseUrl() { let b = ''; try { b = typeof ONLINE_BASE === 'string' ? ONLINE_BASE : ''; } catch (e) {} return qp('onlinebase') || b; }
   /* motivo para NÃO ligar mesmo com a chave ligada ('' = pode) */
-  function blocked() { if (owner()) return 'owner'; if (W.REALM_MISMATCH) return 'realm'; if (W.__noSave) return 'nosave';
+  function blocked() { if (owner()) return 'owner'; if (W.REALM_MISMATCH) return 'realm'; if (W.__noSave) return 'nosave'; if (LS.get(HOLD)) return 'hold';   /* hold: conta excluída com o save mantido (accountDeleted) */
     const N = X().net, O = X().online; if (!N || !N.DATA || !O || !O.DATA || typeof O.boot !== 'function') return 'module'; if (!baseUrl()) return 'base'; return ''; }
 
   /* O JOGO JÁ COMEÇOU? (trava: uma vez verdadeiro, fica). Começou = o jogador tocou em JOGAR: título escondido ou batalha sem pausa. */
@@ -204,13 +205,18 @@
        qualquer outro erro ou cancelamento → {ok:false, reason} ('cancelled', 'google_unavailable', 'offline'...). Nunca trava nem lança. */
   function google() { if (ST.gP) return ST.gP;
     const run = async () => {
-      if (!ST.on) return { ok: false, reason: ST.why || 'off' };
-      const N = X().net;
+      /* conta excluída com o save mantido (hold): entrar com o Google é o jogador "entrando de novo". As chaves ligam só para o pedido; o hold só sai
+         se o login/vínculo der certo (senão tudo volta a ficar desligado). */
+      const held = !ST.on && ST.why === 'hold';
+      if (!ST.on && !held) return { ok: false, reason: ST.why || 'off' };
+      const N = X().net, O = X().online;
+      if (held) { let v = '0'; try { v = VERSION; } catch (e) {} N.DATA.base = baseUrl(); N.DATA.on = true; N.init({ storage: { get: LS.get, set: LS.set }, clientVersion: v }); }
+      const lift = () => { if (held) { LS.del(HOLD); O.DATA.on = true; ST.on = true; ST.why = ''; watchPlay(); } }, drop = r => { if (held) N.DATA.on = false; return r; };
       try { await N.googleSignIn('login'); }
-      catch (e) { const c = code(e); if (c !== 'not_linked') return { ok: false, reason: c };
-        try { if (!N.hasSession()) await N.ensureSession(); const p = await (e && e.idToken ? N.googleSignIn('link', { idToken: e.idToken }) : N.googleSignIn('link')); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
-        catch (e2) { const c2 = code(e2); return c2 === 'link_taken' ? { ok: false, reason: 'link_taken', other: (e2.details && e2.details.otherPlayer) || null } : { ok: false, reason: c2 }; } }
-      const r = await reboot(); let pl = null; try { pl = N.player(); } catch (e) {}
+      catch (e) { const c = code(e); if (c !== 'not_linked') return drop({ ok: false, reason: c });
+        try { if (!N.hasSession()) await N.ensureSession(); const p = await (e && e.idToken ? N.googleSignIn('link', { idToken: e.idToken }) : N.googleSignIn('link')); lift(); if (held) runBoot(); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
+        catch (e2) { const c2 = code(e2); return drop(c2 === 'link_taken' ? { ok: false, reason: 'link_taken', other: (e2.details && e2.details.otherPlayer) || null } : { ok: false, reason: c2 }); } }
+      lift(); const r = await reboot(); let pl = null; try { pl = N.player(); } catch (e) {}
       return { ok: true, action: 'login', save: r.action, pending: !!ST.pending, player: pl, boot: r }; };
     const fin = () => { ST.gP = null; };
     ST.gP = run().then(r => { fin(); return r; }, e => { fin(); dbg('google falhou', e); return { ok: false, reason: code(e) }; });
@@ -239,7 +245,47 @@
     return add; }
   try { setInterval(() => { try { playTick(); } catch (e) {} }, 1000); } catch (e) {}
 
+  /* ---------- CONTA EXCLUÍDA (tela do Sistemas: js/delacct.js, depois de Sys.net.deleteAccount() dar certo) ----------
+     accountDeleted({localSave:'erase'|'keep', until, delayMs}) → {ok:true, localSave, reloadInMs} | {ok:false, reason, step}
+       1) ANTES de tudo: bloqueia as gravações (window.__noSave), a trava interna e desliga o online desta página (nenhum pedido, nenhuma subida agendada).
+       2) apaga do aparelho o que é da CONTA: a sessão do Sys.net de TODOS os servidores ('eon.net', 'eon.net@sN': guardam o id do aparelho; se ficasse,
+          a próxima abertura entraria como convidado na MESMA conta e o servidor cancelaria a exclusão), o save da nuvem pendente do servidor atual
+          ('eon_cloud_pending@<realm>') e 'eon_cloud_reload'.
+       3) 'erase': apaga o save de JOGADOR do servidor atual (Realm.key(Realm.id(), false)) e a marca 'eon_realm_seen'. Nunca a chave do Modo dono nem o save
+          de outro servidor. 'keep': o save fica e o aparelho ganha a marca 'eon_online_hold': enquanto ela existir o online NÃO liga na abertura
+          (state().why = 'hold': nenhum convidado novo é criado e o save não sobe sozinho). A marca sai quando o jogador ENTRA de novo: OnlineBoot.google()
+          (login ou vínculo com sucesso) ou OnlineBoot.resume() (botão "voltar a jogar online": cria convidado novo e sobe o save).
+       4) recarrega no Título (mesmo caminho do Realm.set) depois de delayMs (padrão 2500 ms: a tela mostra "Pedido enviado"; 0 = na hora).
+     Modo dono: não faz nada → {ok:false, reason:'owner'}. Erro em algum passo: para ali (não apaga o resto), libera as gravações locais de novo (o online
+     continua desligado nesta página) e devolve {ok:false, reason:'storage', step}. */
+  function accountDeleted(opts) { opts = opts || {};
+    if (owner()) return { ok: false, reason: 'owner' };
+    const keep = opts.localSave === 'keep', was = W.__noSave, rm = k => { try { W.localStorage.removeItem(k); return W.localStorage.getItem(k) == null; } catch (e) { return false; } };
+    W.__noSave = true; ST.reloading = true; ST.on = false; ST.why = 'deleted'; ST.pending = null; beatOff();
+    try { const O = X().online, N = X().net; if (O) { if (typeof O._reset === 'function') O._reset(); if (O.DATA) O.DATA.on = false; } if (N && N.DATA) N.DATA.on = false; } catch (e) {}
+    const failAt = step => { W.__noSave = was; ST.reloading = false; dbg('accountDeleted parou em', step); return { ok: false, reason: 'storage', step }; };
+    let playerKey = ''; try { playerKey = W.Realm.key(W.Realm.id(), false); } catch (e) { return failAt('realm'); }
+    if (!playerKey || /^eras_owner_v1/.test(playerKey)) return failAt('realm');
+    /* 2) o que é da conta */
+    const sk = []; try { const b = (X().net && X().net.DATA && X().net.DATA.storageKey) || 'eon.net', L = W.localStorage; sk.push(b);
+      if (typeof L.length === 'number' && typeof L.key === 'function') { for (let i = 0; i < L.length; i++) { const k = L.key(i); if (k && k.indexOf(b + '@') === 0 && sk.indexOf(k) < 0) sk.push(k); } }
+      else for (let i = 2; i <= 60; i++) sk.push(b + '@s' + i); } catch (e) { return failAt('session'); }
+    for (const k of sk) if (!rm(k)) return failAt('session');
+    if (!rm(pendKey())) return failAt('pending');
+    if (!rm('eon_cloud_reload')) return failAt('reload');
+    /* 3) o save do aparelho */
+    if (keep) { if (!LS.set(HOLD, JSON.stringify({ at: Date.now(), until: +opts.until || 0 }))) return failAt('hold'); }
+    else { if (!rm(playerKey)) return failAt('save'); if (!rm('eon_realm_seen')) return failAt('seen'); rm(HOLD); }
+    /* 4) Título */
+    const ms = opts.delayMs == null ? 2500 : Math.max(0, +opts.delayMs || 0), go = () => { try { location.href = location.pathname + location.search; } catch (e) {} };
+    if (ms) setTimeout(go, ms); else go();
+    emit(); return { ok: true, localSave: keep ? 'keep' : 'erase', reloadInMs: ms }; }
+  /* depois do 'keep': o jogador pede para voltar ao online sem o Google → sai a marca e o online liga (convidado novo; o save do aparelho sobe) */
+  function resume() { if (owner() || ST.reloading) return Promise.resolve({ ok: false, reason: owner() ? 'owner' : 'nosave' });
+    LS.del(HOLD); if (ST.on) return (ST.bootP || Promise.resolve()).then(result);
+    ST.called = false; start(); return ST.on && ST.bootP ? ST.bootP.then(result) : Promise.resolve({ ok: false, reason: ST.why || 'off' }); }
+
   function state() { return { on: ST.on, why: ST.why, booted: ST.booted, booting: ST.booting, lastAction: ST.lastAction, pending: !!ST.pending, choosing: ST.choosing, started: ST.game }; }
 
-  W.OnlineBoot = { start, wait, reboot, google, saved, state, applyPending, summary, playTick, _st: ST, _pt: PT };
+  W.OnlineBoot = { start, wait, reboot, google, saved, state, applyPending, accountDeleted, resume, summary, playTick, _st: ST, _pt: PT };
 })(window);

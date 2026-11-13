@@ -50,6 +50,7 @@ function mkServer(o) {
         sv.cloud = { version: cur + 1, updatedAt: Date.now(), deviceId: body.deviceId, summary: body.summary, save: body.save }; return Promise.resolve(resp(200, { version: cur + 1, updatedAt: sv.cloud.updatedAt })); }
       case 'POST /auth/login/google': if (sv.google === 'ok') sv.pid = 'g1'; return Promise.resolve(sv.google === 'ok' ? resp(200, sess('g1')) : err(404, 'not_linked'));
       case 'POST /auth/link/google': return Promise.resolve(sv.link === 'ok' ? resp(200, { id: 'p1', ageBand: '18+', linked: ['google'] }) : err(409, 'link_taken', { otherPlayer: { level: 12, era: 1, updatedAt: 111 } }));
+      case 'DELETE /me': return Promise.resolve(resp(202, { ok: true }));
       case 'GET /mail': return Promise.resolve(resp(200, { items: [] }));
       default: return Promise.resolve(err(404, 'not_found')); } };
   sv.keys = () => sv.calls.map(c => c.key); sv.count = k => sv.calls.filter(c => c.key === k).length; sv.last = k => sv.calls.filter(c => c.key === k).pop();
@@ -386,6 +387,62 @@ const SK = 'eras_proto_v2';
       check('12. ...e o jogo segue sem erro, com o save local gravando', loc.gold === 9 && !g.reloaded() && g.timerErr.length === 0, JSON.stringify(g.timerErr));
       const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
       check('12. ...e na abertura seguinte a regressão vira a pergunta (tela Nuvem × Aparelho), sem subir', g2.st().choosing && sv.count('PUT /save') === 1 && sv.cloud.version === 5, JSON.stringify(g2.st()) + ' ' + sv.keys().join(',')); } }
+
+  /* ============ 13. EXCLUIR CONTA (tela js/delacct.js → OnlineBoot.accountDeleted) ============ */
+  sec('13. Excluir conta');
+  { const S2 = JSON.stringify(mk({ gold: 22, name: 'NoS2', realm: 's2' })), OWN = JSON.stringify(mk({ gold: 50, name: 'Dono' })), OWN2 = JSON.stringify(mk({ gold: 51, realm: 's2' }));
+    const base = () => ({ [SK]: JSON.stringify(mk()), 'eras_proto_v2@s2': S2, eras_owner_v1: OWN, 'eras_owner_v1@s2': OWN2, 'eon.net@s2': netMem({ deviceId: 'dev-1' }), eon_realm_seen: '1', 'eon_cloud_pending@s1': JSON.stringify({ realm: 's1', at: 1, save: mk({ gold: 7, realm: 's1' }) }) });
+    const open = async (extra, search) => { const sv = mkServer(); const st = Object.assign(base(), extra || {}); delete st['eon_cloud_pending@s1']; const g = game({ search: search || '?debug=1&online=1&skip=1', server: sv, storage: st }); await g.settle();
+      g.ls.setItem('eon_cloud_pending@s1', base()['eon_cloud_pending@s1']); g.ls.setItem('eon_cloud_reload', '1|1'); return g; };
+    const del = async g => { const r = await g.promise('Sys.net.deleteAccount()')(); return r; };
+    check('13. o index carrega a tela (js/delacct.js na lista, depois do onlineboot) e ela existe', (() => { const g = game({ search: '?debug=1&online=0&skip=1', storage: { [SK]: JSON.stringify(mk()) } }); const L = g.G.lists.jsList; return L.indexOf('delacct') > L.indexOf('onlineboot') && L.indexOf('onlineboot') >= 0 && g.ev('typeof window.DeleteAccount') !== 'undefined' && !g.loadErr.length; })(), '');
+    /* ---- erase ---- */
+    { const g = await open(); const sv = g.sv; check('13. (preparo) sessão do convidado guardada e save subindo', !!g.ls.getItem('eon.net') && g.st().booted && sv.count('PUT /save') >= 1, sv.keys().join(','));
+      g.ev('S.gold=4000; save()');   /* há uma subida agendada */
+      const d = await del(g); check('13. Sys.net.deleteAccount() deu certo (DELETE /me)', d && d.v && d.v.ok === true && sv.count('DELETE /me') === 1, JSON.stringify(d));
+      const n0 = sv.calls.length, r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',until:Date.now()+30*86400000}))"));
+      check('13. erase: devolve ok e BLOQUEIA as gravações na hora (window.__noSave)', r.ok === true && r.localSave === 'erase' && g.ev('window.__noSave') === true, JSON.stringify(r));
+      check('13. erase: apaga o save de JOGADOR do servidor atual e a marca eon_realm_seen', g.ls.getItem(SK) == null && g.ls.getItem('eon_realm_seen') == null, String(g.ls.getItem(SK)).slice(0, 40));
+      check('13. erase: apaga o que é da conta: sessão (eon.net e eon.net@s2), pendente da nuvem do servidor atual e eon_cloud_reload', g.ls.getItem('eon.net') == null && g.ls.getItem('eon.net@s2') == null && g.ls.getItem('eon_cloud_pending@s1') == null && g.ls.getItem('eon_cloud_reload') == null, Object.keys(g.snap()).join(','));
+      check('13. erase: NADA do Modo dono nem o save de outro servidor é tocado (byte a byte)', g.ls.getItem('eras_owner_v1') === OWN && g.ls.getItem('eras_owner_v1@s2') === OWN2 && g.ls.getItem('eras_proto_v2@s2') === S2, '');
+      check('13. erase: não deixa a marca de "não subir" (o aparelho recomeça do zero)', g.ls.getItem('eon_online_hold') == null, '');
+      check('13. a tela ainda mostra "Pedido enviado": a recarga vem depois de 2,5 s', !g.reloaded() && r.reloadInMs === 2500, String(r.reloadInMs));
+      g.ev('S.gold=5000; save(); save()'); await g.adv(130000);
+      check('13. depois: NENHUMA gravação (a chave do save continua apagada) e NENHUMA chamada ao servidor (nem a subida que estava agendada)', g.ls.getItem(SK) == null && sv.calls.length === n0, sv.keys().slice(n0).join(','));
+      check('13. recarrega no Título', g.reloaded(), g.G.sandbox.location.href);
+      const rb = await g.promise('OnlineBoot.reboot()')(); check('13. reboot() depois da exclusão não chama nada', rb && rb.v && rb.v.ok === false && sv.calls.length === n0, JSON.stringify(rb));
+      /* abertura seguinte: jogador novo */
+      const sv2 = mkServer(), g2 = game({ search: '?debug=1&online=1', server: sv2, storage: g.snap() }); await g2.settle();
+      check('13. erase, abertura seguinte: save novo (sem nome, fase 1) e convidado NOVO (outro id de aparelho: não reabre a conta excluída)', !g2.ev('S.name') && g2.ev('S.stage') === 1 && sv2.count('POST /auth/guest') === 1 && sv2.last('POST /auth/guest').body.deviceId !== 'dev-1' && !!sv2.last('POST /auth/guest').body.deviceId, JSON.stringify(sv2.last('POST /auth/guest') && sv2.last('POST /auth/guest').body)); }
+    { const g = await open(); await del(g); const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))"));
+      check('13. delayMs: 0 recarrega na hora', r.ok && g.reloaded(), JSON.stringify(r)); }
+    /* ---- keep ---- */
+    { const g = await open(); const sv = g.sv; await del(g); const n0 = sv.calls.length, loc = g.ls.getItem(SK), r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'keep',until:123}))"));
+      check('13. keep: devolve ok, bloqueia as gravações desta página e MANTÉM o save do aparelho e a marca do servidor', r.ok && r.localSave === 'keep' && g.ev('window.__noSave') === true && g.ls.getItem(SK) === loc && JSON.parse(loc).name === 'Velho' && g.ls.getItem('eon_realm_seen') === '1', JSON.stringify(r));
+      check('13. keep: apaga a sessão, o pendente e eon_cloud_reload; deixa a marca eon_online_hold', g.ls.getItem('eon.net') == null && g.ls.getItem('eon.net@s2') == null && g.ls.getItem('eon_cloud_pending@s1') == null && g.ls.getItem('eon_cloud_reload') == null && !!g.ls.getItem('eon_online_hold'), Object.keys(g.snap()).join(','));
+      check('13. keep: nada do Modo dono nem de outro servidor é tocado', g.ls.getItem('eras_owner_v1') === OWN && g.ls.getItem('eras_owner_v1@s2') === OWN2 && g.ls.getItem('eras_proto_v2@s2') === S2, '');
+      await g.adv(3000); check('13. keep: recarrega no Título, sem nenhuma chamada ao servidor', g.reloaded() && sv.calls.length === n0, sv.keys().slice(n0).join(','));
+      const sv2 = mkServer(), g2 = game({ search: '?debug=1&online=1&skip=1', server: sv2, storage: g.snap() }); await g2.settle(); g2.ev('S.gold=4321; save(); save()'); await g2.adv(130000); const st2 = g2.st();
+      check('13. keep, abertura seguinte: joga com o save mantido e o online NÃO liga (why = hold): nenhum convidado novo, o save NÃO sobe sozinho', g2.ev('S.name') === 'Velho' && st2.on === false && st2.why === 'hold' && sv2.calls.length === 0 && g2.stored().gold === 4321 && g2.ls.getItem('eon.net') == null, JSON.stringify(st2) + ' ' + sv2.keys().join(','));
+      const g3 = game({ search: '?debug=1&online=1&skip=1', server: sv2, storage: g2.snap() }); await g3.settle(); const rr = await g3.promise('OnlineBoot.resume()')(120);
+      check('13. keep: OnlineBoot.resume() (o jogador pede para voltar ao online): sai a marca, convidado NOVO e o save sobe', rr && rr.v && rr.v.ok === true && g3.ls.getItem('eon_online_hold') == null && sv2.count('POST /auth/guest') === 1 && sv2.last('POST /auth/guest').body.deviceId !== 'dev-1' && sv2.cloud && sv2.cloud.save.name === 'Velho' && g3.st().on, JSON.stringify(rr) + ' ' + sv2.keys().join(','));
+      const sv4 = mkServer({ google: 'ok' }), g4 = game({ search: '?debug=1&online=1&skip=1', server: sv4, storage: g2.snap() }); await g4.settle(); cap(g4); g4.G.sandbox.Capacitor.Plugins.SocialLogin.login = async () => { throw new Error('user cancelled'); };
+      const c1 = await g4.promise('OnlineBoot.google()')(60);
+      check('13. keep: Google cancelado com a marca: continua em hold, nenhum pedido', c1 && c1.v && c1.v.ok === false && c1.v.reason === 'cancelled' && !!g4.ls.getItem('eon_online_hold') && sv4.calls.length === 0 && g4.ev('Sys.net.DATA.on') === false, JSON.stringify(c1) + ' ' + sv4.keys().join(','));
+      cap(g4); const c2 = await g4.promise('OnlineBoot.google()')(120);
+      check('13. keep: entrar com o Google (o jogador ENTROU de novo): sai a marca e o online liga', c2 && c2.v && c2.v.ok === true && c2.v.action === 'login' && g4.ls.getItem('eon_online_hold') == null && g4.st().on && sv4.count('POST /auth/login/google') === 1, JSON.stringify(c2) + ' ' + sv4.keys().join(',')); }
+    /* ---- Modo dono e erro ---- */
+    { const sv = mkServer(), st = Object.assign(base(), { eon_owner_mode: '1' }), g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: st }); await g.settle(); const before = JSON.stringify(g.snap());
+      const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))")); g.ev('S.gold=60; save()');
+      check('13. MODO DONO: recusa {ok:false, reason: owner}; nada apagado, nada bloqueado, sem recarga', r.ok === false && r.reason === 'owner' && !g.ev('!!window.__noSave') && !g.reloaded() && g.ls.getItem(SK) === JSON.parse(before)[SK] && g.ls.getItem('eras_proto_v2@s2') === S2 && g.ls.getItem('eon_realm_seen') === '1' && g.stored().gold === 60 && sv.calls.length === 0, JSON.stringify(r));
+      check('13. MODO DONO: a tela nem abre (DeleteAccount.open() devolve false)', g.ev('DeleteAccount.open()') === false, ''); }
+    { const g = await open(); await del(g); const ls = g.ls, ri = ls.removeItem; ls.removeItem = k => { if (k === 'eon_cloud_pending@s1') throw new Error('disco'); ri(k); };
+      const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))")); ls.removeItem = ri; g.ev('S.gold=77; save()');
+      check('13. erro no meio (não conseguiu apagar o pendente): para ali, devolve o motivo e NÃO apaga o resto (save e marca ficam)', r.ok === false && r.reason === 'storage' && r.step === 'pending' && g.ls.getItem(SK) != null && g.ls.getItem('eon_realm_seen') === '1' && !g.reloaded(), JSON.stringify(r));
+      check('13. ...e o jogo local volta a gravar; o online segue desligado nesta página', g.stored().gold === 77 && g.st().on === false && !g.ev('!!window.__noSave'), JSON.stringify(g.st())); }
+    { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 888, name: 'NuvemS2', realm: 's2' })) }), g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: { eon_realm: 's2', eras_proto_v2: JSON.stringify(mk({ realm: 's1' })), 'eras_proto_v2@s2': S2, 'eon.net': netMem() } }); await g.settle();
+      const s1 = g.ls.getItem('eras_proto_v2'); const r = JSON.parse(g.ev("JSON.stringify(OnlineBoot.accountDeleted({localSave:'erase',delayMs:0}))"));
+      check('13. no servidor s2: apaga só eras_proto_v2@s2 e o pendente @s2; o save do s1 fica; as sessões (eon.net e eon.net@s2) saem', r.ok && g.ls.getItem('eras_proto_v2@s2') == null && g.ls.getItem('eras_proto_v2') === s1 && g.ls.getItem('eon_cloud_pending@s2') == null && g.ls.getItem('eon.net') == null && g.ls.getItem('eon.net@s2') == null, JSON.stringify(r) + ' ' + Object.keys(g.snap()).join(',')); } }
 
   check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
