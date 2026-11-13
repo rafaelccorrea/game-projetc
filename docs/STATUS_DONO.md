@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **10h20 · Seus votos:** APROVADOS: skins do Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e da Kaia (Arlequina, Ninja, Demoníaca, Angelical); os 9 pets; as 10 montarias; 7 asas; as 9 ultimates Lendárias; o ícone A e a abertura; os eventos na batalha; as guias do arco/bumerangue/Kaia montada. REPROVADOS: Bobo e Pirata do Kael, Princesa da Kaia, Serafim ("3 asas errado", vai ser refeito com 6). Tudo aprovado entrou em produção
+- **10h20 · Créditos:** animar tudo o que você aprovou custa ~1.000 (10 skins ~360, 9 pets ~360, 10 montarias ~280); o saldo é ~887. A Arte para quando faltar ~60 e me avisa o que sobrou
+- **10h20 · Logo animado PRONTO:** entrada de 2 s (cristais se juntam, letras cristalizam, explosão de luz) + repetição de 3 s sem pulo; letras exatamente as aprovadas. Vai para a tela de título agora
+
 - **10h · No Modo dono:** botões "CHAVES PARA O VOTO" para você ligar e testar cada novidade antes de aprovar (Fusão, asas novas, arco/bumerangue, ultimates lendárias, pets e montarias novos) · brilho do item caído por raridade pronto (desligado) · telas com imagem esperam carregar antes de mostrar
 - **10h · Kaia menina montada:** pônei e cavalo prontos e sendo ligados; tigre, lobo, grifo e serpe em produção
 - **10h · PARA VOCÊ VOTAR:** ícone do app (A, B ou C) e tela de abertura · eventos com horário na batalha (já ligados) · skins, pets, montarias, asas e ultimates
