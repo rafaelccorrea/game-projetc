@@ -47,3 +47,8 @@ O PO tinha passado ao dono: montaria ~45, skin ~40, pet ~50, arma 2-12, asa 2-6.
 Notas:
 - Os números do Kling são créditos grátis, não dinheiro: o custo real é o **tempo** (dias de fila) e o risco de laço sem quadro final (Flash).
 - Toda conta acima assume 1 job de teste confirmando o preço antes do lote. Se o preço medido do primeiro job for diferente, refazer esta tabela e avisar o PO.
+
+## Atenção ao custo do seedance_2_0 (medido em 14/11)
+- Sempre com `mode: "fast"` e `generate_audio: false`: 480p, 4 s = **4 créditos**. Sem esses dois parâmetros, o MESMO vídeo custa **12**.
+- O seedance_2_0 aceita `VIDEO_REFERENCES` (vídeo de referência de movimento) junto com quadro inicial = final. Esse é o caminho barato para "skin nova a partir do vídeo do padrão": monte a referência da folha padrão com `node C:\Users\rafae\AppData\Local\Temp\tools\motionref\mkref.js <hyb/R ou hyb/kaia>/<herói>_<estado>_body <saída.mp4>` (custo 0: fundo verde, bastão magenta no grip, pausa no início e no fim).
+- O motion transfer dedicado (`hf_mult_motion_control`) custa **28 por vídeo**: não usar no lote.
