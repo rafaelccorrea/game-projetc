@@ -59,7 +59,7 @@ const DATA={
   },
   pMax:0.25, rarW:[0.40,0.55,0.70,0.85,1.00,4/3],   // [5] = Prismático (1,333: p máx 1/3 = 25% da FC total)
   v4:false,
-  newPets:false, newReady:{shadowwolf:true},   // ARTE ENTREGUE e pet aprovado pelo dono: liga um a um (shadowwolf: ba0789b)   // liga os 9 novos (o engenheiro, quando a arte for aprovada; um a um com newReady[id]=true)
+  newPets:false, newReady:{shadowwolf:true,falcon:true},   // ARTE ENTREGUE e pet aprovado pelo dono: liga um a um (shadowwolf: ba0789b)   // liga os 9 novos (o engenheiro, quando a arte for aprovada; um a um com newReady[id]=true)
   starterIds:['wolf','owl','drake','golem','phoenix','underworld','parrot','celestial'],   // os de hoje = iniciais GRÁTIS (o prismático continua à parte)
   // PET NO NÍVEL 20 (dono; PROPOSTA, chave DESLIGADA). Ligada: o pet abre no Nv 20; ao chegar, firstEgg dá 1 ovo GRÁTIS sorteado só entre as
   // 2 primeiras raridades (79% Básico, 21% Raro; nunca Lendário). Ovos ganhos ANTES do 1º ovo ficam guardados (o.pre) e chocam logo depois dele,
