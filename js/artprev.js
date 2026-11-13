@@ -31,9 +31,8 @@ const TB = [
     { t: 'Aura maligna', s: [['No Kael', [A + 'aura/aura_evil', KI]]] }, { t: 'Aura celestial', s: [['No Kael', [A + 'aura/aura_holy', KI]]] },
     { t: 'Auras de forja', s: [['+4', [A + 'aura/aura4', KI]], ['+7', [A + 'aura/aura7', KI]], ['+10', [A + 'aura/aura10', KI]], ['+13', [A + 'aura/aura13', KI]]] } ] },
   { g: 'Kael', c: [
-    { t: 'Kael (padrão)', s: [['Parado', [KI]], ['Correndo', [kael('run')]], ['Golpe', [R + 'kael_attack_wide_era2_t1']], ['Giro', [R + 'kael_spin_era2_t0']], ['Morte', [R + 'kael_die_body'], { once: 1 }]] },
-    fase(2, 'Skin: Kael Cavaleiro'), fase(3, 'Skin: Kael Guerreiro Lendário') ] },
-  { g: 'Kaia', c: [kaiaF(0, 'Kaia (padrão)'), kaiaF(2, 'Skin: Kaia Cavaleira'), kaiaF(3, 'Skin: Kaia Guerreira Lendária')] },
+    { t: 'Kael (padrão)', s: [['Parado', [KI]], ['Correndo', [kael('run')]], ['Golpe', [R + 'kael_attack_wide_era2_t1']], ['Giro', [R + 'kael_spin_era2_t0']], ['Morte', [R + 'kael_die_body'], { once: 1 }]] }, ] },
+  { g: 'Kaia', c: [kaiaF(0, 'Kaia (padrão)')] },
   { g: 'Pets', c: [pet('era0_mammoth', 'Mamute'), pet('era1_sphinx', 'Esfinge'), pet('era2_dragon', 'Dragão'), pet('era3_parrot', 'Papagaio'), pet('era4_mechdog', 'Cão mecânico'),
     { t: 'Ovo chocando', egg: { egg: 'assets/pets/pet_egg.png', pet: PT + 'era0_mammoth_idle' } }] },
   { g: 'Montarias', c: [mount('wolf', 'Kael no lobo'), mount('griffin', 'Kael no grifo')] },
@@ -88,7 +87,7 @@ function ownerHtml(){
   const b = (k, t) => `<button data-o="${k}" style="${btn}">${t}</button>`;
   return `<div style="padding:12px;border-radius:16px;background:#241b14;border:2px solid #ffc94a;margin-bottom:12px"><div style="font:400 18px 'Lilita One',Nunito,sans-serif;color:#ffc94a">Modo dono ligado</div>
     <div style="font-size:12.5px;color:#c9b9a2;margin:4px 0 10px">Este é o jogo de teste. Todas as telas que existem estão liberadas.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('hero_kael', 'Herói: Kael')}${b('hero_kaia', 'Herói: Kaia')}${b('fx_default', 'Skin: Padrão')}${b('fx_knight', 'Skin: Cavaleiro')}${b('fx_legend', 'Skin: Guerreiro Lendário')}${b('scn7', 'Cenário: Submundo')}${b('scn8', 'Cenário: Celestial')}${b('scn', 'Cenário da era atual')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${b('lv20', 'Ir para o nível 20')}${b('lv32', 'Ir para o nível 32')}${b('lv50', 'Ir para o nível 50')}${b('lv70', 'Ir para o nível 70')}${b('wingangel', 'Asa de anjo')}${b('wingdemon', 'Asa demoníaca')}${typeof petOk === 'function' && petOk() ? b('egg', 'Ganhar ovo') : ''}${b('era', 'Avançar era')}${b('hero_kael', 'Herói: Kael')}${b('hero_kaia', 'Herói: Kaia')}${b('scn7', 'Cenário: Submundo')}${b('scn8', 'Cenário: Celestial')}${b('scn', 'Cenário da era atual')}${b('stones', '+500 pedras de forja')}${b('gold', '+1 milhão de ouro')}${b('gems', '+5.000 gemas')}</div>
     ${typeof mountOk === 'function' && mountOk() ? '<div style="font:900 12px Nunito,sans-serif;color:#c9b9a2;margin:10px 0 6px">MONTARIAS</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' + mountIds().map(m => b('mt_' + m.id, m.name)).join('') + b('mtstar', 'Estrela +1') + b('mtstar0', 'Estrela -1') + b('mtoff', 'Desmontar') + '</div>' : ''}
     <button data-o="exit" style="${btn};width:100%;margin-top:10px">Sair do modo dono (volta ao seu jogo)</button></div>`; }
 function paint(){ const el = document.getElementById('apv'); if (!el) return;
