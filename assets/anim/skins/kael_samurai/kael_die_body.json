@@ -157,116 +157,116 @@
    "ok": true
   },
   {
-   "x": 209.9,
-   "y": 162,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 211.4,
-   "y": 163,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 213.7,
-   "y": 165,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 214,
-   "y": 171,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 215,
-   "y": 175,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 219.7,
-   "y": 189,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 219.7,
-   "y": 194,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 219.1,
-   "y": 195,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 216,
-   "y": 195,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 208.3,
-   "y": 202,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 198.2,
-   "y": 210,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 174.8,
-   "y": 225,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 174.8,
-   "y": 232,
-   "ang": 0,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 165.1,
-   "y": 232,
-   "ang": 0,
-   "s": 1,
-   "ok": false
-  },
-  {
-   "x": 198.7,
-   "y": 178,
-   "ang": -0.7,
-   "s": 1,
-   "ok": false
-  },
-  {
-   "x": 209.9,
-   "y": 159,
+   "x": 210.9,
+   "y": 160,
    "ang": -0.9,
    "s": 1,
-   "ok": false
+   "ok": true
+  },
+  {
+   "x": 210.9,
+   "y": 161,
+   "ang": 0.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 211.9,
+   "y": 162.5,
+   "ang": 2.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 213.4,
+   "y": 165,
+   "ang": 4.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 214.4,
+   "y": 169,
+   "ang": 6.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 215.9,
+   "y": 180,
+   "ang": 7.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 215.9,
+   "y": 188.5,
+   "ang": 6.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 215.9,
+   "y": 186.5,
+   "ang": 6.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 214.9,
+   "y": 188,
+   "ang": 5.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 209.9,
+   "y": 195,
+   "ang": 4.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 203,
+   "y": 192,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 200,
+   "y": 195,
+   "ang": -25,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 225,
+   "y": 165,
+   "ang": -45,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 245,
+   "y": 160,
+   "ang": -51,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 232,
+   "y": 158,
+   "ang": -60,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 232,
+   "y": 158,
+   "ang": -60,
+   "s": 1,
+   "ok": true
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
