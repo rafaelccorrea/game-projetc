@@ -889,4 +889,17 @@ t('eras 7-8 (Sys.eras): mesmo formato do ERAS do jogo, arte existente, só com a
   } finally { T.setEra9(false); }
 });
 
+t('Kaia jogável: setHero, FC idêntica ao Kael, folha de cada estado em cada fase existe (garota sem giro/morte/pistola cai na fase 1, marcada)',()=>{
+  const A=require('../../js/sys/appearance.js'), F=require('../../js/sys/fc.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path');
+  const eq={weapon:{slot:'weapon',e:2,r:2,lvl:30},armor:{slot:'armor',e:2,r:2,lvl:30}}, h=makeHost(); h.equipped=()=>eq;
+  const K={}, Y={}; assert.ok(A.setHero(K,'kael')&&A.setHero(Y,'kaia')); assert.strictEqual(A.setHero(Y,'xx'),false); assert.strictEqual(Y.hero,'kaia');
+  L.ensure(K).lvl=30; L.ensure(Y).lvl=30; assert.strictEqual(F.compute(K,h),F.compute(Y,h),'mesma FC'); assert.deepStrictEqual(F.snapshot(K,h),F.snapshot(Y,h));
+  const root=path.join(__dirname,'../..'); PU.DATA.on=true; try{
+    for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero}; L.ensure(S).lvl=120; PU.ensure(S).stg=st;
+      for(const state of A.STATES){ const r=A.sheetFor(S,h,state); assert.ok(fs.existsSync(path.join(root,r.body+'.json')),'falta '+r.body);
+        if(hero==='kaia'&&st===0&&['spin','die','pistol_idle'].includes(state)) assert.ok(r.fallback&&r.stage===1,'garota: '+state+' da fase 1'); } }
+    const g={hero:'kaia'}; assert.strictEqual(A.sheetFor(g,h,'idle').fallback,false);
+  } finally { PU.DATA.on=false; }
+});
+
 console.log(`ok: ${n} testes`);

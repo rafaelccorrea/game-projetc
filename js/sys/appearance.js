@@ -105,7 +105,18 @@ const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
 function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level, PU=root.Sys&&root.Sys.phaseUp; let st=0;
   try{ if(PU&&PU.DATA&&PU.DATA.on===true) st=clamp(int0(PU.current(S)),0,3); else if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) st=clamp(int0(g.stage),0,3); } }catch(e){}   // Sys.phaseUp (níveis 22/35/70) manda quando ligado
   const dir='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'; return {hero:h,stage:st,dir,prefix:h+'_',masks:dir+'masks/'}; }
-const API={DATA,heroOf,sheets,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+/* KAIA JOGÁVEL: estados de animação que a batalha toca e onde cada um existe. A Kaia garota (fase 0) só tem run/idle/attack: giro, morte e pistola
+   caem na FASE MAIS PRÓXIMA que tem o estado (kaia_phase1), com fallback:true (pedir a arte que falta à fps-75). O Kael garoto tem todos. */
+const STATES=['run','idle','attack','spin','die','pistol_idle','pistol_run','pistol_shoot'];
+const HAS={kaia:{0:['run','idle','attack']}};   // o que falta em cada fase (o resto existe em todas: conferido no disco em 12/11)
+function sheetFor(S,host,state){ const sh=sheets(S,host), h=sh.hero, st=STATES.includes(state)?state:'idle';
+  const has=ph=>{ const L=HAS[h]&&HAS[h][ph]; return !L||L.includes(st); };
+  let ph=sh.stage; if(!has(ph)){ for(let k=1;k<4;k++){ if(ph+k<=3&&has(ph+k)){ ph=ph+k; break; } if(ph-k>=0&&has(ph-k)){ ph=ph-k; break; } } }
+  const dir='assets/anim/hyb/'+HERO_DIRS[h][ph]+'/';
+  return {hero:h,state:st,stage:ph,fallback:ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st}; }
+/* troca o herói do save (a criação chama; só 'kael' | 'kaia'). Só visual: atributos e FC iguais (os dois usam os mesmos itens e o mesmo Sys.stats). */
+function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='kael'&&hero!=='kaia') return false; S.hero=hero; return true; }
+const API={DATA,STATES,heroOf,setHero,sheets,sheetFor,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
