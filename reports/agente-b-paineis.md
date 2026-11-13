@@ -1137,3 +1137,18 @@ contra a decisão de não ter fases, não vem destes arquivos.
 
 `'p_colecao'` no fim da lista de carga do `js/screens.js`; `PANEL_ON.colecao=false` em `js/panels.js`. Sem item no MENU nem entrada em outra tela.
 Conflitos de nomes: nenhum; `run.js` "TUDO OK" (148); `flows.js` "fluxos duros OK"; a fumaça registra e desenha a tela (só no teste, com a chave ligada lá).
+
+## Bloco 42 (sem navegador): espera de imagens, cartão do Mecha, VIP → Loja → VIP
+
+- CARGA: `'p_wait'` logo depois de `'panels'` (antes das telas) e `'p_shopmecha'` no fim da lista do `js/screens.js`; `PANEL_ON.shopmecha=false`.
+- ESPERA (`xGate(urls)` no `js/screens.js`): chama o `pGate` do QA só com as imagens que existem no `assets/manifest.json` (arquivo que falta não trava
+  a tela); sem o p_wait ou sem a lista ainda, segue como antes. Aplicado em: Loja (abas de skin: cartões da página, prévia e cartão do topo; aba de gemas:
+  arte do Mecha quando o cartão existe), Montarias (`mtUrls`: folha parada de cada montaria da lista), Pets (`ptUrls`: ovo, 1º estágio da lista e o pet
+  escolhido no estágio da vitrine). Forja e Equipamento ficaram sem espera: a Forja usa a folha do Kael que o cabeçalho já carregou e o Equipamento
+  desenha o herói no canvas do engenheiro.
+- MECHA: `shMechaCard()` no topo da aba de gemas; o clique vai para o `click` do cartão. Chave desligada = `null` = Loja idêntica (coberto na fumaça).
+- VIP → LOJA → VIP: o `Screens.close` envolvido no `js/panels.js` lê `window.SHOP_RETURN` ao fechar a Loja, reabre o painel marcado e limpa a marca;
+  o `scrTick` limpa a marca se o jogador saiu da Loja por outro caminho.
+- `js/screens2.js`: o resgate do Passe agora recebe `mountFrags` como objeto (`{n, stored}` / `{n, id, up}`), o módulo mudou; `pExtras` lê os dois formatos.
+- CORREÇÃO PEQUENA em arquivo do QA (`js/p_wait.js`, aviso B-29): o esqueleto ia para `window.V`, que não existe no jogo.
+- Fumaça: 5 testes novos (esqueleto com imagem carregando e tela depois; só arquivos existentes; Mecha desligado idêntico; Mecha ligado; volta ao VIP).

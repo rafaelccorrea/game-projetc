@@ -323,6 +323,7 @@ const eqItem=slot=>S.eq[slot]!=null?itemOf(S.eq[slot]):null;
 function softRender(){ if(!FULL_VIEWS[view]){ render(); return; }
   if(view==='summon'&&XS.phase!=='idle') return; if(view==='gear'&&(XG.tw||XG.cf||XG.fly||XG.drag)) return; if(view==='shop'&&(XH.sel||XH.cf)) return; if(view==='pass'&&XP.cf) return; if(view==='prog'&&XR.busy) return; { const pd=window.Panels&&Panels.cur(); if(pd&&pd.busy&&pd.busy()) return; } render(); }
 function scrTick(){   // 4x por segundo (updHudExtra): relógios das telas
+  if(window.SHOP_RETURN&&view!=='shop'&&view!==window.SHOP_RETURN) window.SHOP_RETURN=null;   /* VIP → Loja → VIP: a marca só vale enquanto a Loja está aberta */
   if(FULL_VIEWS[view]) xHeadTick(); { const pd=window.Panels&&Panels.cur(); if(pd){ if(pd.tick) pd.tick(); return; } }
   if(view==='summon'){ const el=document.getElementById('xs_free'); if(el) el.textContent=midnightLeft(); else if(XS.phase==='idle'&&!document.getElementById('xs_freebtn')&&Sys.loot.summonFreeLeft(S,Sys.host)>0) render(); }
   else if(view==='shop'){ if(S.shop&&S.shop.date!==todayKey()){ render(); return; } const el=document.getElementById('xh_cd'); if(el) el.textContent=midnightLeft(); }
@@ -678,13 +679,20 @@ const xFileHas=p=>XSELL.set?XSELL.set.has(p):String(p).indexOf('assets/weapons/'
 function xCanSell(id){ if(!xSellOn()) return true; xSellLoad(); try{ return !!Sys.appearance.canSell(id,xFileHas); }catch(e){ return true; } }
 /* o Passe ainda entrega skin? (Sys.pass.DATA: algum nível com .skin). Hoje não: o nível 25 virou arma + materiais; a skin do passe sai da Loja. */
 function xPassSkin(){ try{ const D=Sys.pass.DATA; return (D.premium||[]).concat(D.free||[]).some(r=>r&&r.skin); }catch(e){ return false; } }
+/* ESPERA DE IMAGENS (ordem do dono: tela com arte só mostra o conteúdo com as imagens prontas; js/p_wait.js do QA). xGate(urls) = pGate só com as
+   imagens que EXISTEM (lista do assets/manifest.json, a mesma do filtro de venda): arquivo que falta não trava a tela (ela já tem reserva para
+   imagem ausente). Sem o p_wait, ou enquanto a lista de arquivos não chegou: false (a tela segue como antes). true = o esqueleto está na tela e o
+   render volta sozinho. */
+function xGate(urls){ try{ if(typeof pGate!=='function') return false; if(!XSELL.set){ xSellLoad(); return false; } const l=[]; for(const u of urls||[]) if(typeof u==='string'&&u&&XSELL.set.has(u)&&l.indexOf(u)<0) l.push(u); return l.length?!!pGate(l):false; }catch(e){ return false; } }
+/* imagem que o skinArt usa para uma skin (o mesmo caminho, para a espera) */
+const xSkinUrl=sk=>!sk?'':sk.slot==='weapon'?'assets/weapons/'+(typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r))+'.png':sk.e===2?'assets/anim/hyb/R/kael_idle_era2_t'+tierOf(sk.r)+'.png':'assets/hero/era'+sk.e+'_t'+tierOf(sk.r)+'.png';
 const xSkinShow=sk=>S.skins.includes(sk.id)||S.skinEq[sk.slot]===sk.id||xCanSell(sk.id);
 /* ROUPA-SKIN INATIVA (decisão final do dono): Sys.appearance.outfitStatus(id) → {outfit, active, note}. A roupa que o jogador JÁ tem continua aparecendo
    na coleção, com a nota do módulo ("nova skin em breve") e SEM botão de equipar; nada sai do save. Skin de arma: nota vazia, tudo como antes.
    Sem outfitStatus no módulo: nota vazia (comportamento de antes). */
 function xOutfitNote(id){ try{ const M=window.Sys&&Sys.appearance; if(!M||typeof M.outfitStatus!=='function') return ''; const o=M.outfitStatus(id); if(!o||!o.outfit||o.active) return '';
     const t=String(o.note||'nova skin em breve'); return t.charAt(0).toUpperCase()+t.slice(1); }catch(e){ return ''; } }
-try{ if(xSellOn()) xSellLoad(); }catch(e){}   /* lê a lista de arquivos já na carga, para a Loja não abrir com as roupas escondidas e mostrá-las um instante depois */
+try{ xSellLoad(); }catch(e){}   /* lê a lista de arquivos já na carga, para a Loja não abrir com as roupas escondidas e mostrá-las um instante depois */
 const hList=tab=>SKINS.filter(s=>s.slot===(tab==='hero'?'armor':'weapon')&&(!s.pass||(s.id===SEASON_SKIN&&xPassSkin())||S.skins.includes(s.id))&&xSkinShow(s)).sort((a,b)=>(a.pass?1:0)-(b.pass?1:0)||a.e-b.e||a.r-b.r);
 function hStatus(sk){ const eq=S.skinEq[sk.slot]===sk.id, own=S.skins.includes(sk.id), locked=!own&&!sk.pass&&sk.e>S.eraMax; return {eq,own:own&&!eq,pass:!own&&!!sk.pass,locked,buy:!own&&!sk.pass&&!locked&&xCanSell(sk.id)}; }
 const skinArt=(sk,sz,op,cls)=>sk.slot==='weapon'?`<img class="${cls||''}" src="assets/weapons/${typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`
@@ -706,6 +714,7 @@ function scrShop(){
   let body='';
   if(tab==='hero'||tab==='weapon'){
     const list=hList(tab), pages=Math.max(1,Math.ceil(list.length/PER)); XH.page[tab]=Math.max(0,Math.min(XH.page[tab],pages-1)); const pg=XH.page[tab]; XH.pages=pages;
+    if(xGate(list.slice(pg*PER,pg*PER+PER).concat(XH.sel?[SKIN(XH.sel)]:[]).map(xSkinUrl).concat([xSkinUrl(hFeat(tab))]))) return;   /* imagens desta página ainda carregando: esqueleto (p_wait) */
     const feat=hFeat(tab), fs=feat?hStatus(feat):{}, fw=!!feat&&feat.slot==='weapon', owned=list.filter(s=>S.skins.includes(s.id)).length;
     /* cartão de skin: mesma moldura dos itens (xRar); a borda passa de 2 para 3 px e o respiro perde 1 px, o miolo fica do mesmo tamanho; bloqueada = sem pulso */
     const tiles=list.slice(pg*PER,pg*PER+PER).map(sk=>{ const st=hStatus(sk), off=(st.eq||st.own)?xOutfitNote(sk.id):'', c=RC[sk.r], op=st.locked?0.45:1, q=xRar(sk.r,st.locked?'xr-s':'');
@@ -748,7 +757,9 @@ function scrShop(){
         ${i===3?'<span class="x-tshine"></span>':''}<div class="x-bob" style="height:${small?30:46}px;display:flex;align-items:flex-end;justify-content:center;animation-duration:2.6s">${Array.from({length:i+1},()=>`<img src="assets/ui/gem.png" alt="" style="width:${(small?20:30)+i*4}px;height:${(small?20:30)+i*4}px;object-fit:contain;margin:0 -6px">`).join('')}</div>
         <span style="font-size:13px;font-weight:900">${n}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">compra com dinheiro real</span>
         <span class="x-gold lil" style="height:28px;min-width:96px;border-radius:10px;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #8a4f0c">Em breve</span></button>`).join('');
-    body=`<div class="x-feat" style="flex:none;display:flex;flex-direction:column;gap:8px">
+    let mc=null; try{ mc=typeof shMechaCard==='function'?shMechaCard():null; }catch(e){ mc=null; } XH.mc=mc;
+    if(mc&&xGate(['assets/mounts/new/war_mecha_ref_prev.png'])) return;
+    body=(mc&&mc.html?`<div style="flex:none">${mc.html}</div>`:'')+`<div class="x-feat" style="flex:none;display:flex;flex-direction:column;gap:8px">
         <span class="lil" style="font-size:17px">Comprar gemas</span>
         <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,${small?104:132}px);gap:8px">${bundles}</div>
         <span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;margin-top:${small?0:6}px;line-height:1.35">Só pacotes de gemas, compra direta: você vê quanto recebe antes de pagar. Nada de sorteio pago. Pagamento em breve.</span>
@@ -826,6 +837,8 @@ function hConfirm(){ const cf=XH.cf; let name='', cost=0, have=0, coin=false, li
       <div style="display:flex;gap:8px"><button data-x="cfno" class="lil" style="flex:1;height:50px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:18px;padding:0">Cancelar</button>
         ${ok?'<button class="x-gold lil" data-x="cfyes" style="flex:1.3;height:50px;border-radius:14px;font-size:18px;padding:0">Confirmar</button>':coin?'':'<button class="x-green lil" data-x="gogems" style="flex:1.3;height:50px;border-radius:14px;font-size:18px;padding:0">Ver gemas</button>'}</div></div></div>`; }
 function hClick(b){ const a=b.dataset.x;
+  if(typeof pWaitClick==='function'&&pWaitClick(b)) return;   /* botões do esqueleto de espera (Tentar de novo / Continuar assim) */
+  if(XH.tab==='gem'&&XH.mc&&typeof XH.mc.click==='function'){ let done=false; try{ done=XH.mc.click(b)===true; }catch(e){} if(done) return; }   /* cartão do Mecha */
   if(a==='tab'){ if(b.dataset.t!=='item'&&!xUnlocked('gemShop')) return; snd('ui_tap'); XH.tab=b.dataset.t; XH.anim=true; render(); }
   else if(a==='pg'){ const k=XH.tab, p=XH.page[k]+(+b.dataset.d); if(p>=0&&p<(XH.pages||1)){ snd('ui_tap'); XH.page[k]=p; XH.anim=true; render(); } }
   else if(a==='skin'){ snd('ui_tap'); XH.sel=b.dataset.id; XH.cf=null; XH.burst=false; XH.popIn=true; render(); XH.popIn=false; }
@@ -855,6 +868,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['avatar','equipfx','panels','p_forge','p_fuse','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['avatar','equipfx','panels','p_wait','p_forge','p_fuse','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao','p_shopmecha']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();

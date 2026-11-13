@@ -17,6 +17,7 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   offer:false,   /* só no Modo dono até existir compra real (PO) */  auction:true,   /* demonstração "Em breve: abre com o online" (PO); conferida pelo QA */    /* esperam pagamento / servidor */
   arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false,
   colecao:false,   /* Coleção (js/p_colecao.js, do QA): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
+  shopmecha:false,   /* cartão do Mecha de Guerra na Loja (js/p_shopmecha.js, do QA): DESLIGADA até a arte ser aprovada pelo dono */
   fuse:false   /* Fusão (js/p_fuse.js, de Sistemas): DESLIGADA; só liga junto com Sys.stats.DATA.quality.on (qualidade/fusão é da v0.13, sem voto ainda) */},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
@@ -27,7 +28,7 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(window.Screens&&typeof Screens.register==='function'){ try{ Screens.register(name,{title:d.title,render:d.render,onOpen:d.onOpen,onClose:d.onClose}); }catch(e){} }
     if(typeof FULLV!=='undefined') FULLV[name]=1; if(typeof FULL_VIEWS!=='undefined') FULL_VIEWS[name]=1;
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
-    if(d.parent) this.hookClose();
+    if(d.parent||name==='vip') this.hookClose();   /* vip: a volta VIP → Loja → VIP passa pelo Screens.close envolvido abaixo */
     if(name==='cfg') this.hookCfg();
     if(name==='pets'&&this.defs.eggpick&&!PANEL_ON.eggpick) this.enable('eggpick');   /* a escolha de ovo (pedido A-15) liga junto com a tela de Pets */
     this.hook(); return true; },
@@ -38,7 +39,11 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   hookCfg(){ if(this.cfgHooked||typeof openSettings!=='function') return; this.cfgHooked=true; const P=this, o0=openSettings;
     openSettings=function(confirmReset){ if(confirmReset||!P.on('cfg')) return o0(confirmReset); if(!P.open('cfg')) return o0(confirmReset); }; },
   hookClose(){ if(this.closeHooked||!window.Screens||typeof Screens.close!=='function') return; this.closeHooked=true; const P=this, c0=Screens.close.bind(Screens);
-    Screens.close=function(){ const cur=P.cur(); const bt=cur&&P.back&&P.back[cur.name]; if(bt&&typeof setView==='function'){ P.back[cur.name]=null; if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(bt); return; }
+    Screens.close=function(){
+      /* VIP → LOJA → VIP: o botão "Ir à Loja" do VIP deixa window.SHOP_RETURN='vip'. A Loja não é painel: ao fechar, se a marca existir, reabre o painel
+         marcado e limpa a marca (uma vez só). Marca velha é limpa pelo scrTick do js/screens.js. */
+      try{ if(typeof view!=='undefined'&&view==='shop'&&window.SHOP_RETURN){ const to=String(window.SHOP_RETURN); window.SHOP_RETURN=null; if(P.on(to)&&P.open(to)) return; } }catch(e){}
+      const cur=P.cur(); const bt=cur&&P.back&&P.back[cur.name]; if(bt&&typeof setView==='function'){ P.back[cur.name]=null; if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(bt); return; }
       if(cur&&cur.parent&&typeof setView==='function'){ if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(cur.parent); return; } return c0(); }; },
   hook(){ if(this.hooked) return; this.hooked=true; const P=this;
     if(typeof render==='function'&&!(window.Screens&&typeof Screens.register==='function')){ const r0=render; render=function(){ const d=P.defs[view]; if(d&&P.on(view)&&!d.overlay) return d.render(); return r0(); }; }

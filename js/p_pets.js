@@ -622,7 +622,10 @@ function ptClick(b,ev){
 }
 
 if(!('pets' in PANEL_ON)) PANEL_ON.pets=false;
-Panels.add('pets',{title:'Pets',render:scrPets,click:ptClick,
+/* imagens que a tela mostra agora: o ovo, o desenho de cada pet da lista (1º estágio) e o do pet escolhido no estágio que está na vitrine */
+function ptUrls(){ const u=['assets/pets/pet_egg.png']; try{ if(!ptReady()) return u; const list=ptList(); for(const d of list){ const a=ptArt(d); if(a&&a.sprite) u.push('assets/pets/'+a.sprite+'_'+PT_FILE[0]+'.png'); }
+    const def=list.find(p=>p.id===XPT.sel), a=def?ptArt(def):null; if(a&&a.sprite) u.push('assets/pets/'+a.sprite+'_'+PT_FILE[Math.max(0,Math.min(2,XPT.vw|0))]+'.png'); }catch(e){} return u; }
+Panels.add('pets',{title:'Pets',render:function(){ if(typeof xGate==='function'&&xGate(ptUrls())) return; return scrPets.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return ptClick.apply(this,arguments); },
   /* 4x por segundo: ataque de demonstração a cada ~2,4 s (só efeito no palco, sem redesenhar) e a ração do topo */
   tick(){ if(!ptReady()||ptHidden()||XPT.hatch||XPT.evo||XPT.confirm||XPT.choice) return; const o=ptSave(), el=document.getElementById('pt_food');
     if(el){ const t=gNum(o.food); if(el.textContent!==t) el.textContent=t; }

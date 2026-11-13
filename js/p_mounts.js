@@ -342,7 +342,9 @@ function mtClick(b,ev){
 }
 
 if(!('mounts' in PANEL_ON)) PANEL_ON.mounts=false;
-Panels.add('mounts',{title:'Montarias',render:scrMounts,click:mtClick,
+/* imagens que a tela mostra: a folha parada de cada montaria da lista que tem arte (as mesmas do mtSprite) */
+function mtUrls(){ try{ return mtIds().filter(id=>MT_ART[id]).map(id=>MT_SHEET.dir+'kael_'+id+'_idle_era2_t1.png'); }catch(e){ return []; } }
+Panels.add('mounts',{title:'Montarias',render:function(){ if(typeof xGate==='function'&&xGate(mtUrls())) return; return scrMounts.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return mtClick.apply(this,arguments); },
   /* 4x por segundo: só redesenha quando muda o que o botão de subir nível mostra (ouro que entrou, nível do jogador que subiu) */
   tick(){ if(XMT.sig===null||!mtReady()||typeof view==='undefined'||view!=='mounts') return;
     const id=XMT.sel, inf=id?mtInfo(id):null; if(!inf||!inf.owned) return;

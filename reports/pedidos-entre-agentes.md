@@ -439,3 +439,14 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - PARA O QA (js/p_inst.js): no tempo esgotado a tela diz só "Não foi dessa vez" (igual à derrota); "1 abates" no singular.
 - PARA A ARTE (via PO): ícone do HUD da "Oferta 24h" (uso o de Eventos, provisório).
 - PARA O QA (js/p_guide.js): o aviso do prêmio ("120 moedas") aparece por cima da própria barra da missão guia.
+
+### B-29. (Agente B) Avisos de correção pequena e achados, depois de carregar o js/p_wait.js
+- PARA O QA (js/p_wait.js, corrigi, 1 função): `pGate` escrevia o esqueleto e a tela de falha em `window.V`, que não existe no jogo (`const V` do
+  index.html não vira `window.V`). Efeito: `pGate` devolvia true, a tela NÃO desenhava e nada aparecia; se uma imagem falhasse, a tela ficava presa.
+  Troquei `pwPut(window.V, …)` por `pwPut(pwV(), …)` (acha o `V` do jogo, depois `window.V`, depois `#view`). Os dois testes do QA continuam passando.
+- PARA O QA (js/p_wait.js, NÃO mexi): "Continuar assim" só vale para UM desenho (`PW.skip` é limpo logo depois do `render()`); no redesenho seguinte
+  (qualquer toque ou o relógio da tela) o `pGate` espera de novo a mesma imagem que falhou. Nas minhas telas isso não acontece com arquivo que falta
+  (só peço arquivos que estão no `assets/manifest.json`), mas acontece nas telas que chamam `pGate` direto (VIP, Perfil, Torre, Coleção).
+- PARA SISTEMAS / ENGENHEIRO (risco no APK): `Sys.assets` exclui `*_ref.png` do pacote (`js/sys/assets.js:16`) e o `assets/manifest.json` não lista
+  nenhum. A tela de Pets desenha o 1º estágio de cada pet com `assets/pets/<espécie>_ref.png` (8 arquivos). Se o APK for montado por essa lista, os
+  pets no 1º estágio saem sem imagem. Ou a regra abre exceção para `assets/pets/`, ou a Arte renomeia e eu troco o sufixo.

@@ -238,7 +238,8 @@ function pExtras(rw){ const ex=[], m=(rw&&rw.mat&&typeof rw.mat==='object')?rw.m
   if(q(m.forge)) ex.push({k:'forge',n:q(m.forge),ic:s=>Y_STONE(s),nm:q(m.forge)===1?'pedra de forja':'pedras de forja'});
   if(q(m.essence)) ex.push({k:'essence',n:q(m.essence),ic:s=>pIcSz(Q_ESS,s),nm:q(m.essence)===1?'Essência':'Essências'});
   if(q(m.food)) ex.push({k:'food',n:q(m.food),ic:s=>pIcSz(Q_FOOD,s),nm:'de ração de pet'});
-  if(q(rw&&rw.mountFrags)) ex.push({k:'mfrag',n:q(rw.mountFrags),ic:s=>P_FRAG(s),nm:q(rw.mountFrags)===1?'fragmento de montaria':'fragmentos de montaria'});
+  { const mf=rw&&rw.mountFrags, o=mf&&typeof mf==='object'?mf:null, k=q(o?o.n:mf);   /* tabela do prêmio: número; resgate: {n, id, stars, up} ou {n, stored:true} */
+    if(k) ex.push({k:'mfrag',n:k,ic:s=>P_FRAG(s),nm:(k===1?'fragmento de montaria':'fragmentos de montaria')+(o&&o.stored?' (guardados até a 1ª montaria)':o&&o.up?' (estrela nova na montaria)':'')}); }
   return ex; }
 const pExTxt=ex=>ex&&ex.length?ex.map(x=>', '+gNum(x.n)+' '+x.nm).join(''):'';   /* para o aria-label e o aviso */
 const pExHtml=(ex,s,fs)=>ex&&ex.length?`<span aria-hidden="true" style="display:flex;align-items:center;gap:${s>14?8:5}px;flex-wrap:nowrap;font-size:${fs||10}px;font-weight:900;color:#f6ecdf;white-space:nowrap">${ex.map(x=>`<span style="display:flex;align-items:center;gap:2px">${x.ic(s||13)}${gNum(x.n)}</span>`).join('')}</span>`:'';

@@ -47,6 +47,9 @@ function pwFailView(n){ pwCss();
     +'<button data-x="pw-retry" style="min-height:48px;padding:0 22px;border:0;border-radius:12px;font-weight:900;font-size:15px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 4px 0 #8a4f0c">Tentar de novo</button>'
     +'<button data-x="pw-go" style="min-height:44px;padding:0 18px;border-radius:12px;font-weight:900;font-size:14px;background:#33271d;color:#f6ecdf;border:2px solid #6b5843">Continuar assim</button></div>'; }
 function pwPut(el,html){ try{ if(el) el.innerHTML=html; }catch(e){} }
+/* CORREÇÃO PEQUENA DO AGENTE B (aviso em reports/pedidos-entre-agentes.md, B-29): no jogo o V é `const V` do index.html, que NÃO vira window.V; com
+   window.V o esqueleto e a tela de falha não apareciam e a tela ficava sem desenhar. pwV() acha o V nos dois jeitos (e, por último, o #view). */
+function pwV(){ try{ if(typeof V!=='undefined'&&V) return V; }catch(e){} try{ if(window.V) return window.V; }catch(e){} try{ return document.getElementById('view'); }catch(e){} return null; }
 /* elemento qualquer */
 function pWait(el,urls,o){ o=o||{}; const list=pwUrls(urls), timeout=o.timeout>0?o.timeout:PW_TIMEOUT, tok=++PW.tok; if(el) el.__pwTok=tok;
   const fin=r=>{ if(el&&el.__pwTok!==tok) return; try{ if(typeof o.onReady==='function') o.onReady(r); }catch(e){} };
@@ -57,11 +60,11 @@ function pWait(el,urls,o){ o=o||{}; const list=pwUrls(urls), timeout=o.timeout>0
   return true; }
 /* tela inteira (V): chamar no começo do render. true = esqueleto na tela (render volta sozinho); false = pode desenhar */
 function pGate(urls,o){ o=o||{}; const list=pwUrls(urls); if(pwAllReady(list)||PW.skip===list.join('|')) return false;
-  const key=list.join('|'); if(PW.busy===key) return true; if(PW.fail&&PW.fail.key===key) { pwPut(window.V,pwFailView(PW.fail.n)); return true; }
-  PW.busy=key; const tok=++PW.tok; pwPut(window.V,pwSkeleton(o.label));
+  const key=list.join('|'); if(PW.busy===key) return true; if(PW.fail&&PW.fail.key===key) { pwPut(pwV(),pwFailView(PW.fail.n)); return true; }
+  PW.busy=key; const tok=++PW.tok; pwPut(pwV(),pwSkeleton(o.label));
   pwLoad(list,o.timeout>0?o.timeout:PW_TIMEOUT).then(r=>{ if(PW.busy!==key||PW.tok!==tok) return; PW.busy=null;
     if(r.ok){ PW.fail=null; try{ if(typeof render==='function') render(); }catch(e){} return; }
-    PW.fail={key,n:r.failed.length,list}; pwPut(window.V,pwFailView(r.failed.length)); });
+    PW.fail={key,n:r.failed.length,list}; pwPut(pwV(),pwFailView(r.failed.length)); });
   return true; }
 /* cliques do esqueleto: devolve true quando tratou */
 function pWaitClick(b){ const a=b&&b.dataset&&b.dataset.x; if(a!=='pw-retry'&&a!=='pw-go') return false;
