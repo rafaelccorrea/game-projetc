@@ -247,6 +247,43 @@ var VIPCONV_TESTS=(function(){
       out='6 células dentro da largura em '+W+' px; cartão da Loja quebra "espaço · era"'; }catch(e){ err=e; }
     view=v0; XH.tab='hero'; if(err) throw err; return out; };
 
+  /* ---------- PASSE EM TELA ESTREITA (QA 288 px) e rótulos dos espaços do Equipamento ---------- */
+  T['passe: cabeçalho e cartões cabem na largura (estimativa por linha)']=function(){ const W=Math.min(V_TEST.clientWidth,600), v0=view, g0=PANEL_V2.gate, cf0=XP.cf; let err=null, out='';
+    try{ PANEL_V2.gate=false; passTab='pass'; XP.cf=false; view='pass'; render(); const h=bad0(V_TEST.innerHTML), hW=W-24-4-92-16, tw=s=>{ const m=s.match(/font-size:([0-9.]+)px[^>]*>([^<]+)</); return m?xTxtEm(m[2])*(+m[1]):0; };
+      if(h.indexOf('class="p-hdr"')<0) return 'Passe trancado no save do teste';
+      if(/class="p-hdr" style="[^"]*[^-]height:92px/.test(h)) throw new Error('cabeçalho ainda com altura fixa');
+      const row=n=>{ const m=h.match(new RegExp('data-phl="'+n+'"[^>]*>([\\s\\S]*?)</div>')); return m?m[1]:null; }, r1=row(1), r2=row(2), r3=row(3), x=h.match(/<span data-phl="4"[^>]*>[^<]*</);
+      if(!r1||!r3||!x) throw new Error('linhas do cabeçalho não encontradas');
+      const sp=s=>(s.match(/<span[^>]*font-size:[0-9.]+px[^>]*>[^<]+</g)||[]).map(tw), clk=14+3, close=/<button data-x="close" aria-label="Fechar o Passe" style/.test(h)?38:0;
+      const nar=!!r2, w1=sp(r1)[0]+(nar?close:6+clk+sp(r1)[1]+close), w3=sp(r3).reduce((a,b)=>a+b,0)+16+(sp(r3).length>1?8:0), w4=tw(x[0]);
+      if(w1>hW+0.5) throw new Error('linha do título: '+w1.toFixed(0)+' px em '+hW+' ('+W+' px)');
+      if(nar){ const a=sp(r2); if(a[0]>hW||clk+a[1]>hW) throw new Error('linha jogador/prazo não cabe nem quebrada'); }
+      if(sp(r3)[0]+16>hW+0.5) throw new Error('selo do nível: '+(sp(r3)[0]+16).toFixed(0)+' px em '+hW);
+      if(w4>hW+0.5&&w4>hW*2) throw new Error('texto do XP não cabe em duas linhas');
+      if(/data-phl="4"[^>]*white-space:nowrap/.test(h)||/data-phl="4"[^>]*ellipsis/.test(h)) throw new Error('texto do XP sem quebra');
+      /* cartões: texto do nome com a palavra mais longa dentro da coluna em tela estreita */
+      const txW=(W-24-44-12)/2-16-(W<340?30:46), cards=h.match(/<button class="p-card[\s\S]*?<\/button>/g)||[]; let worst=0, wt='';
+      for(const c of cards){ const m=c.match(/<span style="(font-size:[0-9.]+px;font-weight:900;line-height:1\.0?[15][^"]*)">(?:<span[^>]*>)?([^<]+)</); if(!m) continue; const px=+m[1].match(/font-size:([0-9.]+)/)[1];
+        if(W<340&&/nowrap|ellipsis/.test(m[1])) throw new Error('nome do prêmio com reticências em tela estreita');
+        for(const wd of m[2].split(/\s+/)){ const w=xTxtEm(wd)*px; if(w>worst){ worst=w; wt=wd+' '+px+'px'; } } }
+      if(W<340&&worst>txW+0.5) throw new Error('palavra "'+wt+'" com '+worst.toFixed(0)+' px numa coluna de '+txW.toFixed(0));
+      out=W+' px: coluna '+hW+'; título '+w1.toFixed(0)+(nar?' (estreito: prazo na linha do jogador)':' (com o prazo)')+'; selo '+(sp(r3)[0]+16).toFixed(0)+'; XP '+w4.toFixed(0)+'; cartão: texto '+txW.toFixed(0)+', maior palavra '+worst.toFixed(0)+' ('+wt+')';
+    }catch(e){ err=e; } PANEL_V2.gate=g0; XP.cf=cf0; view=v0; if(err) throw err; return out; };
+  T['equipamento: rótulos dos 7 espaços inteiros (altura do bloco e acima dos vizinhos)']=function(){ const v0=view; let err=null, out='';
+    try{ XG.sel=null; XG.tw=null; XG.cf=null; view='gear'; render(); const h=bad0(V_TEST.innerHTML), lb=h.match(/<span data-slotlbl="[a-z]+"[^>]*>/g)||[];
+      if(lb.length<6) throw new Error(lb.length+' rótulos de espaço'); for(const s of lb) if(!/position:relative;z-index:2;font-size:10px;line-height:11px/.test(s)) throw new Error('rótulo sem z-index/altura: '+s.slice(0,80));
+      const d=xFit(680,614), vit=d.real?Math.max(236,Math.min(292,Math.round(0.34*(d.H+56)))):292, step=92/292*vit, block=58+2+11; if(d.real&&block>step) throw new Error('bloco do espaço ('+block+' px) maior que o passo ('+step.toFixed(1)+' px)');
+      out=lb.length+' rótulos; bloco '+block+' px, passo entre espaços '+step.toFixed(1)+' px'; }catch(e){ err=e; } view=v0; if(err) throw err; return out; };
+
+  T['eventos: nome do evento uma vez só (banner) e o selo do estado no banner']=function(){ const v0=view; let err=null, out='';
+    try{ if(!(window.Panels&&Panels.defs.events&&Panels.on('events'))) return 'painel de eventos desligado'; view='events'; render(); const h=bad0(V_TEST.innerHTML);
+      if(h.indexOf('class="pz-ban"')<0) return 'tela de eventos sem banner neste save (sem evento)';
+      const nm=(h.match(/class="pz-btitle">([^<]+)</)||[])[1]; if(!nm) throw new Error('banner sem o nome do evento');
+      const many=(h.match(/data-x="ev"/g)||[]).length; if(many===1) throw new Error('fileira de eventos desenhada com um evento só');
+      const n=h.split('>'+nm+'<').length-1; if(many<2&&n!==1) throw new Error('"'+nm+'" aparece '+n+' vezes no texto da tela');
+      const tg=h.match(/data-bst="(on|gr|soon)"[^>]*><span class="pz-tag (on|gr|soon)"[^>]*>(ATIVO|CARÊNCIA|EM BREVE)</); if(!tg) throw new Error('banner sem o selo do estado');
+      out='"'+nm+'" '+n+' vez; selo "'+tg[3]+'" no banner; fileira '+(many?'com '+many+' eventos':'não desenhada'); }catch(e){ err=e; } view=v0; if(err) throw err; return out; };
+
   /* ---------- COMPRAS PELO Sys.buy ---------- */
   function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, l0=B.cardStatusLive, k0=B.cardClaim, calls=[]; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false;
     B.cardStatusLive=function(){ return {active:false,daysLeft:0,claimedToday:false}; };

@@ -137,6 +137,7 @@ function cResetDo(){ window.__noSave=true; try{ localStorage.removeItem(SAVE_KEY
 .c-tab.sel .c-ti svg{animation:c-tib 1.8s ease-in-out infinite}
 @keyframes c-tib{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 .c-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:6px 10px 10px;display:flex;flex-direction:column;gap:10px}
+.c-scroll::after{content:"";flex:none;height:18px}   /* folga de rolagem no fim: alguns WebViews ignoram o padding de baixo de um rolador flex e a última linha (dica do x4) parava colada/sob a barra "Salvo automaticamente" */
 .c-card{flex:none;border-radius:16px;background:linear-gradient(180deg,rgba(48,36,24,.97),rgba(30,22,15,.97));border:2px solid #5a4632;box-shadow:inset 0 1px 0 rgba(255,230,180,.12),0 4px 0 rgba(0,0,0,.35);overflow:hidden}
 .c-cards .c-card{animation:c-cardIn .5s cubic-bezier(.2,1.3,.4,1) both}
 @keyframes c-cardIn{0%{opacity:0;transform:translateX(50px) scale(.94)}100%{opacity:1;transform:none}}

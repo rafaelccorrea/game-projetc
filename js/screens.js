@@ -461,7 +461,7 @@ function scrGear(){
     if(slot==='wing'&&!wingOpen) return `<div style="position:absolute;${pos};width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
       <button class="x-slot" data-x="wing" data-slot="wing" aria-label="Asa, bloqueado, libera no nível ${Sys.stats.DATA.wing.minLevel}" style="position:relative;width:58px;height:58px;border-radius:14px;border:2px dashed #8a7458;background:rgba(14,10,7,.82);color:#e8dccb;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
         ${SVG_LOCK(22)}<span style="font-size:9px;font-weight:900;line-height:1.05">Nível ${Sys.stats.DATA.wing.minLevel}</span></button>
-      <span style="font-size:10px;font-weight:900;color:#e8dccb;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">Asa</span></div>`;
+      <span style="position:relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#e8dccb;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">Asa</span></div>`;
     const c=it?RC[it.r]:'#8a7458', q=xRar(it);   /* equipado = moldura da raridade (xRar); vazio = tracejado neutro */
     return `<div style="position:absolute;${pos};width:58px;display:flex;flex-direction:column;align-items:center;gap:2px">
       <div class="${XG.filter===slot?'x-selring':''} ${XG.land&&XG.land[slot]?'x-land':''}" data-slotbox="${slot}" style="position:relative;width:58px;height:58px;border-radius:14px">${XG.land&&XG.land[slot]?'<span class="x-landring" aria-hidden="true"></span>':''}
@@ -471,7 +471,7 @@ function scrGear(){
           <span style="position:absolute;left:0;right:0;bottom:0;height:16px;background:rgba(0,0,0,.72);font-size:10px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:16px">${it?'Nv.'+it.lvl:'vazio'}</span></button>
         <span class="x-plus lil" style="position:absolute;top:-7px;right:-8px;padding:1px 5px;border-radius:8px;background:#2a1403;border:2px solid #ffc94a;color:#ffc94a;font-size:12px;line-height:14px">+${forgeLv(slot)}</span>
       </div>
-      <span style="font-size:10px;font-weight:900;color:#f6ecdf;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>`; }).join('');
+      <span data-slotlbl="${slot}" style="position:relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#f6ecdf;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>`; }).join('');   /* rótulo do espaço: 11 px de altura (bloco de 71 px; os espaços ficam a 74 px ou mais um do outro) e ACIMA do brilho/da moldura do espaço de baixo e do herói (z-index), para nunca aparecer cortado */
   /* skin */
   const sa=SKIN(S.skinEq.armor), sr=sa?sa.r:0   /* só a roupa: a skin de arma saiu (decisão do dono: a arma é a do item equipado; S.skinEq.weapon é ignorado) */, SD=Sys.skin.detail(S), tier=tierOf(sa?sa.r:0), skinAdj=['Básica','Rara','Épica','Mítica','Lendária'][sr]||RN(sr), lookOn=!!(window.Panels&&Panels.on('look')&&!(window.Screens&&Screens.reg&&Screens.reg.look&&Screens.reg.look.broken));   /* aba Aparência (tela do QA, js/p_look.js) */
   const stW=d.real?d.Wb:390, stNar=stW<340, stCell=(stW-24-18-10)/3;   /* cartão de poder: margem 12+12, respiro 8+8 e borda 1+1, 2 vãos de 5 px, 3 colunas */
