@@ -159,7 +159,7 @@ function auPageBuy(d){
   const chip=(k,label,svg,aria)=>{ const on=XA.slot===k; return `<button class="au-sl ${on?'sel':''}" data-x="slot" data-k="${k}" aria-pressed="${on}" aria-label="Espaço: ${esc2(aria)}">${svg(on)}<span>${esc2(label)}</span></button>`; };
   const chips=chip(-1,'Todos',on=>auSlotSvg('', 'currentColor',on?'rgba(255,201,74,.25)':'none'),'todos')
     +sl.map((s,i)=>chip(i,AU_SL[s].n,on=>auSlotSvg(s,'currentColor',on?'rgba(255,201,74,.25)':'none'),auSlotN(s))).join('');
-  const parts=[]; if(XA.era>=0) parts.push(auEraN(XA.era)); if(XA.rar>=0) parts.push(auRarN(XA.rar)); if(sm&&XA.star>0) parts.push(XA.star+'★ ou mais');
+  const parts=[]; if(XA.era>=0) parts.push(auEraN(XA.era)); if(XA.rar>=0) parts.push(auRarN(XA.rar)); if(sm&&XA.star>0) parts.push(XA.star+(XA.star===1?' estrela':' estrelas')+' ou mais');
   const cards=auExamples(auCols(d)*2).map((x,j)=>{ const nm=auName(x), r=x.r;
     return `<button class="au-card ${r>=2?'hi':''}" data-x="det" data-i="${j}" aria-label="Cartão de exemplo: ${esc2(nm)}, ${esc2(auRarN(r))}. Sem vendedor, preço nem prazo: abre com o online" style="${auVars(r)};animation-delay:${(j*0.06).toFixed(2)}s,${(0.4+j*0.06).toFixed(2)}s">
       <span class="au-ictop">${auIcBox(auImg(x.slot,x.e),r>=3)}
@@ -186,7 +186,7 @@ function auPageSell(d){
     return auOff(`<button class="au-card ${r>=2?'hi':''}" disabled aria-disabled="true" data-act="1" aria-label="${esc2(nm)}, ${esc2(auRarN(r))}, nível ${n0(lv)}. Anunciar: abre com o online" style="flex:1;${auVars(r)};animation-delay:${(j*0.06).toFixed(2)}s,${(0.4+j*0.06).toFixed(2)}s">
       <span class="au-ictop">${auIcBox(auImg(it.slot,auEraOf(it)),false)}
         <span style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px"><span class="au-rp" style="background:${RC[r]}">${esc2(auRarN(r))}</span>
-          ${st?`<span class="au-stars" aria-hidden="true"><span style="color:#ffc94a">${'★'.repeat(st)}</span><span style="color:#4a3a2b">${'★'.repeat(Math.max(0,sm-st))}</span></span>`:''}
+          ${st?`<span class="au-stars" aria-hidden="true"><span style="color:#ffc94a">${'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg>'.repeat(st)}</span><span style="color:#4a3a2b">${'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg>'.repeat(Math.max(0,sm-st))}</span></span>`:''}
           ${use?'<span class="au-st">Em uso</span>':''}</span></span>
       <span class="au-nm au-ol">${esc2(nm)}</span>
       <span class="au-sub">${esc2(AU_SL[it.slot].n)} · ${esc2(auEraN(auEraOf(it)))}</span>
@@ -200,7 +200,7 @@ function auPageSell(d){
       :'<div class="au-empty">Sua mochila está vazia. Os itens que você ganhar aparecem aqui.</div>'}
     ${auOff(`<div class="au-box au-up" style="flex:1;min-width:0">
       <span class="au-lbl">2. Preço</span>
-      ${seg('Moeda',sb(COIN_I(20)+'Ouro','Preço em ouro: abre com o online')+sb('Moeda do leilão','Preço na moeda do leilão: abre com o online'))}
+      <span class="au-note" style="display:flex;align-items:center;gap:5px">${COIN_I(18)} Preço fixo em ouro: você define, quem comprar paga esse valor (sem lances)</span>
       <div class="au-step">
         <button class="au-ghost" disabled aria-disabled="true" data-act="1" aria-label="Diminuir preço: abre com o online" style="width:48px;height:48px;padding:0;font-size:24px">−</button>
         <input type="text" value="—" disabled aria-disabled="true" readonly aria-label="Preço de venda: abre com o online">
@@ -246,7 +246,7 @@ function auSheet(d){
   const xb=lb=>`<button class="au-ghost" data-x="shx" aria-label="${lb}" style="padding:0;width:44px;flex:none">${AU_X}</button>`;
   if(s==='filt'){ const eras=auEras(), sm=auStarMax();
     const ch=(x,v,label,on,cc,aria)=>`<button class="au-chip ${on?'sel':''}" data-x="${x}" data-v="${v}" aria-pressed="${on}" ${aria?'aria-label="'+esc2(aria)+'"':''} style="${cc?'--cc:'+cc:''}">${esc2(label)}</button>`;
-    let st=''; for(let n=0;n<=sm;n++) st+=ch('fstar',n,n===0?'Todas':n+'★',XA.star===n,'',n===0?'Qualquer estrela':n+' estrelas ou mais');
+    let st=''; for(let n=0;n<=sm;n++) st+=ch('fstar',n,n===0?'Todas':String(n),XA.star===n,'',n===0?'Qualquer estrela':n+' estrelas ou mais');
     return wrap('Filtros',`<div style="display:flex;align-items:center;gap:8px"><span class="lil au-ol" style="flex:1;font-size:22px">Filtros</span>${xb('Fechar filtros')}</div>
       <span class="au-lbl">Era</span>
       <div class="au-chips">${ch('fera',-1,'Todas',XA.era<0)}${eras.map((n,i)=>ch('fera',i,n,XA.era===i)).join('')}</div>
@@ -270,11 +270,9 @@ function auSheet(d){
       <span class="au-note">Este é um cartão de exemplo: não existe lote, vendedor nem preço. A compra só vale quando o leilão online abrir.</span>
       ${auOff('<button class="au-gold" disabled aria-disabled="true" data-act="1" aria-label="Comprar: abre com o online"><span style="position:relative;z-index:1">Comprar · abre com o online</span></button>','padding-bottom:6px',true)}`,RC[r]); }
   if(s==='rules'){ const rules=[
-      ['Preço em ouro ou na moeda do leilão. Nunca diamante nem dinheiro real.','#5fd068'],
-      ['Taxa do leilão, prazos e limites: a definir com o online.','#ffc94a'],
-      ['Ao anunciar, o item sai da sua coleção. Se não vender no prazo, volta.','#ffc94a'],
-      ['Item vendido vai para o comprador no nível inicial.','#ffc94a'],
-      ['Pets, skins e VIP não entram no leilão.','#ff8a7a'],
+      ...((()=>{ try{ if(window.Sys&&Sys.auction&&Sys.auction.rulesText) return Sys.auction.rulesText().map((t,i)=>[t,i===0?'#5fd068':'#ffc94a']); }catch(e){} return [['Preço fixo, só em ouro. Nunca diamante nem dinheiro real.','#5fd068']]; })()),
+      ['Preço FIXO: quem anuncia define o valor; não há lances.','#5fd068'],
+      ...((window.Sys&&Sys.auction&&Sys.auction.rulesText)?[]:[['Ao anunciar, o item sai da sua coleção. Se não vender no prazo, volta.','#ffc94a'],['Item vendido vai para o comprador no nível inicial.','#ffc94a'],['Pets, skins e VIP não entram no leilão.','#ff8a7a']]),   // sem o módulo: as regras antigas
       ['Precisa do servidor: abre junto com o online.','#8cc8ff']];
     return wrap('Regras do leilão',`<div style="display:flex;align-items:center;gap:8px"><span class="lil au-ol" style="flex:1;font-size:22px">Regras do leilão</span>${xb('Fechar regras')}</div>
       ${rules.map((r,i)=>`<span class="au-rl" style="animation-delay:${(i*0.05).toFixed(2)}s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${r[1]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>${esc2(r[0])}</span>`).join('')}
@@ -293,14 +291,13 @@ function scrAuction(){
     ?auOff('<button class="au-gold" disabled aria-disabled="true" data-act="1" aria-label="Anunciar: abre com o online"><span style="position:relative;z-index:1">Anunciar · abre com o online</span></button>','flex:1;padding-bottom:6px',true)
     :`<div style="flex:1;min-width:0;min-height:48px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 14px;padding:4px 8px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b;font-weight:900;font-size:14px;box-sizing:border-box">
         <span style="display:flex;align-items:center;gap:5px" aria-label="Seu ouro">${auCoin(22)}<span id="au_gold">${auGold()}</span></span>
-        <span style="display:flex;align-items:center;gap:5px;color:#c9b9a2" aria-label="Moeda do leilão: a definir com o online">Moeda do leilão —</span>
         <span style="font-size:11px;color:#c9b9a2">sem diamante · sem dinheiro real</span></div>`;
   V.innerHTML=xWrap(d,XA.anim?'au-in':'',`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 14%,#1f3048 0%,#1d1611 45%,#16110d 80%)">
     <div style="flex:none;display:flex;flex-direction:column;gap:7px;padding:8px 12px 0">
       <div class="au-soon" role="note">${AU_WIFI}
         <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.15;position:relative;z-index:1">
           <span class="au-ol" style="font-size:${small?13:15}px;font-weight:900">${AU_SOON}</span>
-          <span style="font-size:11px;font-weight:800;color:#cfe7ff">Demonstração: lances e vendas só valem quando o leilão online abrir.</span></span>
+          <span style="font-size:11px;font-weight:800;color:#cfe7ff">Demonstração: compras e vendas só valem quando o leilão online abrir.</span></span>
         <button class="au-ghost" data-x="rules" style="position:relative;z-index:1;flex:none">Regras</button></div>
       <div class="au-tabs" role="tablist" aria-label="Seções do leilão">${tabs}</div></div>
     <div id="au_sc" class="x-scroll ${XA.cards?'au-new':''}" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:7px;padding:7px 12px 8px;box-sizing:border-box">${body}</div>
