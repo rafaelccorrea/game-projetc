@@ -90,4 +90,4 @@ function clClick(b){
   if(a==='back'){ clSnd('ui_tap'); if(window.Screens&&Screens.close) Screens.close(); return; }
   if(a==='tab'){ XCL.tab=parseInt(b.dataset.i,10)||0; clSnd('ui_tap'); render(); return; }
 }
-Panels.add('colecao',{title:'Coleção',render:function(){ if(typeof pGate==='function'&&pGate(clUrls())) return; return scrColecao.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return clClick.apply(this,arguments); },onOpen(){ XCL.tab=0; },onClose(){}});
+Panels.add('colecao',{title:'Coleção',render:function(){ if(typeof pwGate==='function'&&pwGate(clUrls())) return; return scrColecao.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return clClick.apply(this,arguments); },onOpen(){ XCL.tab=0; },onClose(){}});

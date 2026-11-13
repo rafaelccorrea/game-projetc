@@ -73,4 +73,6 @@ function pWaitClick(b){ const a=b&&b.dataset&&b.dataset.x; if(a!=='pw-retry'&&a!
   if(a==='pw-go'&&f){ for(const u of (f.list||[])) PW.done[u]=1; }   /* "Continuar assim": as urls que falharam são dispensadas de vez (nenhum redesenho espera por elas de novo); a tela usa a reserva que já tem */
   try{ if(typeof render==='function') render(); }catch(e){} PW.skip=null; return true; }
 /* Preload.has()/PW.done verdadeiros para todas as urls: a tela desenha direto (pGate false), sem esqueleto */
-window.pGate=pGate; window.pWait=pWait; window.pWaitClick=pWaitClick;
+/* as telas chamam pwGate: com o xGate do js/screens.js (só espera arquivos que existem no assets/manifest.json) quando houver, senão o pGate direto */
+function pwGate(urls,o){ if(typeof xGate==='function') return xGate(urls,o); return pGate(urls,o); }
+window.pwGate=pwGate; window.pGate=pGate; window.pWait=pWait; window.pWaitClick=pWaitClick;

@@ -138,7 +138,7 @@ function vClick(b,ev){
   else if(a==='closecf'){ snd('ui_tap'); XV.cf=false; render(); }
 }
 
-Panels.add('vip',{title:'Clube VIP',render:function(){ if(typeof pGate==='function'&&pGate(['assets/anim/hyb/R/kael_idle_era2_t0.png','assets/anim/aura/aura13.png'])) return; return scrVip.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return vClick.apply(this,arguments); },
+Panels.add('vip',{title:'Clube VIP',render:function(){ if(typeof pwGate==='function'&&pwGate(['assets/anim/hyb/R/kael_idle_era2_t0.png','assets/anim/aura/aura13.png'])) return; return scrVip.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return vClick.apply(this,arguments); },
   tick(){ if(XV.cf||!vOk()) return; if(XV.sig&&vSig()!==XV.sig) render(); },
   busy(){ return false; },
   onOpen(){ const c=vCur(); XV.sel=c>=vMax()?vMax():vClamp(c+1); XV.cf=false; XV.anim=true;
