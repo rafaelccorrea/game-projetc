@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h20 · Eventos completos (Sistemas, 17eedb2, conferido no navegador):** Trilha com 8 marcos (prêmios sem diamante, moldura no último) e o Chefe do evento "Devorador do Tempo" (2 ataques por dia, vida compartilhada quando abrir o online). Próximo de Sistemas: frases prontas do Chat, Correio, descobertas do Códex, membros da Guilda e gatilhos do Kael crescendo
+- **22h15 · Navegador:** 3 abas liberadas: Engenheiro, QA e rodízio de Sistemas/Servidor/Arte
+
 - **22h10 · Sistemas entregou e salvou (c2334f0), pronto para o engenheiro ligar:**
   - Curva das 9 eras: 100 fases × 4 dificuldades para o Mapa (FC recomendada, nível-trava, chefes)
   - Qualidade (estrelas), fusão e item adormecido
