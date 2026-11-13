@@ -765,6 +765,8 @@ function sysBootB(){ if(!window.Sys||!Sys.host) return;
   try{ if(OWNER_MODE&&Sys.offer&&Sys.offer.DATA) Sys.offer.DATA.on=true; }catch(e){}
   codexSync(); }
 loadBalance(); versionCheck();
+/* SERVIDORES (achado A3 do QA): save de OUTRO servidor nesta chave não é carregado e nada é gravado (window.__noSave): o jogador tem de SABER, senão joga um save novo que nunca fica. */
+if(window.REALM_MISMATCH){ const m='Save de outro servidor ('+String(window.REALM_MISMATCH.save||'').toUpperCase()+') neste aparelho. O progresso desta sessão NÃO será gravado.'; setTimeout(()=>{ try{ toast(m); }catch(e){} },1500); setInterval(()=>{ try{ toast(m); }catch(e){} },60000); }
 sysBoot(); sysBootB(); if(typeof phaseBoot==='function') phaseBoot(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
 if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px'; document.getElementById('app').style.width='min(900px,100dvw)'; resize(); }
 if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
