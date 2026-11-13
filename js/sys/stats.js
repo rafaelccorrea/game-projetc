@@ -45,13 +45,14 @@ const DATA={
     // ARCO E BUMERANGUE (APROVADOS pelo dono, 12/11; on:false só até a Arte entregar a versão média). Mesmo ATK da espada, mesmos secundários e
     // raridades (Básico→Lendário + Divino); o tipo muda só o JEITO de bater, com o MESMO dano total por golpe (coerência). reach = alcance relativo à
     // espada (1 = encosta) · pierce = inimigos da fila que o golpe atravessa (o dano se divide entre os acertos, não soma). ult:null = a Arte escolhe a base.
-    bow:       {on:false, approved:true, name:'Arco e flecha', artEra:null, style:'ranged', reach:2.2, pierce:1, ult:null,
+    bow:       {on:false, approved:true, name:'Arco e flecha', artEra:null, style:'ranged', reach:2.2, pierce:1, ult:'assets/anim/ult/bow_base',
                 unlockLevel:30, fromEra:2, dropPct:15, hits:{s1:[1], s2:[0.34,0.33,0.33]}, note:'atira de longe (acerta antes do inimigo encostar); s2 = 3 flechas; mesmo dano total'},
-    boomerang: {on:false, approved:true, name:'Bumerangue',    artEra:null, style:'return', reach:1.8, pierce:2, ult:null,
+    boomerang: {on:false, approved:true, name:'Bumerangue',    artEra:null, style:'return', reach:1.8, pierce:2, ult:'assets/anim/ult/boomerang_base',
                 unlockLevel:45, fromEra:3, dropPct:15, hits:{s1:[0.5,0.5], s2:[0.25,0.25,0.25,0.25]}, note:'vai e volta: acerta na ida e na volta (2 × 50%), atravessa 2 da fila; mesmo dano total'},
   },
   // REGRA DO DROP (a arma não muda com a era): cada arma que cai sorteia a família — arco 15% (Nv 30+, a partir da era 2) e bumerangue 15% (Nv 45+,
   // a partir da era 3), só os ligados; o resto é a família da ARTE do item que caiu (era do drop). Depois de gravada em it.wt, nunca muda (inclusive na transformação).
+  // sword_legend ENTREGUE pela Arte (12/11, 49 quadros, lighter) e EM VOTAÇÃO do dono: marcar ownReady.sword=true só depois da aprovação (regra: nada entra sem o dono)
   ownReady:{},   // família → true quando a Arte entregar a folha própria do Lendário (assets/anim/ult/<família>_legend.png + .json)
   skillFx:[
     {r:0,name:'Básico',  color:'#e8e2d8',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
