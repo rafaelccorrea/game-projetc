@@ -38,3 +38,11 @@ Implementação: `fps-server` commit af8ebbb (migração `007_servidores`). Cont
 Inserir uma linha em `realms`, por exemplo `('s2','S2','Segunda Era','new',true,<ms da abertura>,2)`. Antes de abrir o S2 é preciso:
 1. a fase 2 da tabela acima (filtros por `realm` nas listas do mundo);
 2. desligar `recommended` no S1, se for o caso.
+
+## Lista de limpeza antes do lançamento público
+Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao público (pelo painel de moderação ou por script do servidor):
+| Quando | Conta | Criada por | Observação |
+|---|---|---|---|
+| 13/11/2026 | convidado "Viajante5696" (S1) | `fps-server/scripts/smoke-real.mjs` | teste automático contra o servidor real (cada execução cria **1** convidado novo "Viajante…" com save de nível 1) |
+
+Regra: toda nova execução do `smoke-real.mjs` em produção acrescenta uma linha aqui. Na limpeza, também conferir e apagar convidados de nível 1 sem compras criados pelo teste do QA.
