@@ -229,10 +229,25 @@ const P_MICON={kill:'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4',boss:'M12
 const P_GO={summon:'summon',upgrade:'gear'};
 const pEvOf=id=>{ const D=Sys.pass.DATA, m=D.daily.concat(D.weekly).find(x=>x.id===id); return m?m.k:'kill'; };
 function pToast(msg){ XP.toast=msg; XP.toastT=Date.now(); const el=document.getElementById('xp_toast'); if(el) el.innerHTML=`<div style="position:absolute;left:24px;right:24px;bottom:112px;z-index:40;display:flex;justify-content:center;pointer-events:none"><span class="y-toast" role="status" style="padding:10px 16px;border-radius:12px;background:#12261a;border:2px solid #5fd068;color:#e6fbe7;font-size:14px;font-weight:900;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.6)">${esc2(msg)}</span></div>`; }
-/* o que cada nível dá, para desenhar: {kind:'coin'|'eq'|'skin', ...} */
+/* PACOTE DE UM NÍVEL (Sys.pass: rw.mat = {forge, essence, ...} e rw.mountFrags): nada de número fixo aqui, tudo vem do prêmio que o módulo devolve.
+   Ícones = os que o jogo já usa: pedra de forja (Y_STONE, a mesma das missões e da Vitória), essência e ração (Q_ESS / Q_FOOD da Vitória) e o
+   fragmento de montaria (a mesma forma da tela de Montarias). */
+const P_FRAG=s=>`<span aria-hidden="true" style="display:inline-block;width:${Math.round(s*0.86)}px;height:${s}px;flex:none;clip-path:polygon(50% 0,100% 30%,80% 100%,20% 100%,0 30%);background:linear-gradient(180deg,#fff3c4,#ffc94a)"></span>`;
+const pIcSz=(svg,s)=>String(svg).replace('width="20" height="20"','width="'+s+'" height="'+s+'" style="flex:none"');
+function pExtras(rw){ const ex=[], m=(rw&&rw.mat&&typeof rw.mat==='object')?rw.mat:{}, q=v=>Math.max(0,Math.round(+v||0));
+  if(q(m.forge)) ex.push({k:'forge',n:q(m.forge),ic:s=>Y_STONE(s),nm:q(m.forge)===1?'pedra de forja':'pedras de forja'});
+  if(q(m.essence)) ex.push({k:'essence',n:q(m.essence),ic:s=>pIcSz(Q_ESS,s),nm:q(m.essence)===1?'Essência':'Essências'});
+  if(q(m.food)) ex.push({k:'food',n:q(m.food),ic:s=>pIcSz(Q_FOOD,s),nm:'de ração de pet'});
+  if(q(rw&&rw.mountFrags)) ex.push({k:'mfrag',n:q(rw.mountFrags),ic:s=>P_FRAG(s),nm:q(rw.mountFrags)===1?'fragmento de montaria':'fragmentos de montaria'});
+  return ex; }
+const pExTxt=ex=>ex&&ex.length?ex.map(x=>', '+gNum(x.n)+' '+x.nm).join(''):'';   /* para o aria-label e o aviso */
+const pExHtml=(ex,s,fs)=>ex&&ex.length?`<span aria-hidden="true" style="display:flex;align-items:center;gap:${s>14?8:5}px;flex-wrap:nowrap;font-size:${fs||10}px;font-weight:900;color:#f6ecdf;white-space:nowrap">${ex.map(x=>`<span style="display:flex;align-items:center;gap:2px">${x.ic(s||13)}${gNum(x.n)}</span>`).join('')}</span>`:'';
+/* o nível Premium que entrega o pacote (hoje o 25): o primeiro que traz materiais ou fragmentos. null = módulo antigo (aí vale a vitrine de antes). */
+function pBig(){ try{ const L=Sys.pass.DATA.premium||[]; for(let i=0;i<L.length;i++){ const rw=L[i]; if(rw&&(rw.mat||rw.mountFrags)) return {lv:i+1,rw}; } }catch(e){} return null; }
+/* o que cada nível dá, para desenhar: {kind:'coin'|'eq'|'skin', ...}; ex = pacote que vem junto do item */
 function pInfo(rw){ if(!rw) return {kind:'coin',img:'assets/ui/gem.png',txt:''};
   if(rw.skin){ const sk=SKIN(SEASON_SKIN); return {kind:'skin',r:sk?sk.r:3,rc:RC[sk?sk.r:3],tag:RN(sk?sk.r:3)+' · Skin',txt:sk?sk.n:'Skin da temporada'}; }   /* r = raridade, para a moldura única (xRar do js/screens.js) */
-  if(rw.item){ const it=rw.item, r=it.season?4:it.r; return {kind:'eq',slot:it.slot,r,rc:RC[r],tag:it.season?'Item da Temporada':RN(r)+' · '+SLOT[it.slot].n,txt:it.season?SLOT[it.slot].n+' · evolui até Lendário':iname({slot:it.slot,r:it.r,e:S.eraMax})}; }
+  if(rw.item){ const it=rw.item, r=it.season?4:it.r; return {ex:pExtras(rw),kind:'eq',slot:it.slot,r,rc:RC[r],tag:it.season?'Item da Temporada':RN(r)+' · '+SLOT[it.slot].n,txt:it.season?SLOT[it.slot].n+' · evolui até Lendário':iname({slot:it.slot,r:it.r,e:S.eraMax})}; }
   if(rw.gems) return {kind:'coin',img:'assets/ui/gem.png',fly:'gem',txt:rw.gems+' diamantes'};
   return {kind:'coin',img:'assets/ui/coin.png',fly:'gold',txt:kf((rw.goldk||0)*Sys.host.goldUnit())+' moedas'}; }
 function pPending(){ const o=Sys.pass.ensure(S), t=Sys.pass.tier(S), out=[]; for(let i=1;i<=t;i++){ if(!o.free.includes(i)) out.push(['free',i]); if(o.premium&&!o.prem.includes(i)) out.push(['premium',i]); } return out; }
@@ -243,7 +258,7 @@ const P_WHY={trilha:'Trilha inválida',nivel:'Este nível não existe no passe',
 /* resgata UM nível de UMA trilha. Fonte: Sys.pass.claimTier (função própria do módulo: trata virada de temporada e erro no meio da entrega).
    Devolve no formato do claimAll ({n, list}) para o pAfterClaim; se não resgatou, {n:0, why}. Sem a função (módulo antigo), cai no caminho de reserva. */
 function pClaimOne(track,lv){ if(typeof Sys.pass.claimTier==='function'){ let r=null; try{ r=Sys.pass.claimTier(S,Sys.host,track,lv); }catch(e){ r={ok:false,reason:'erro'}; }
-    if(r&&r.ok){ const rw=r.rewards||{}; return {n:1,list:[{track:r.track||track,tier:r.tier||lv,gems:rw.gems,gold:rw.gold,item:rw.item,held:rw.held,skin:rw.skin}]}; }
+    if(r&&r.ok){ const rw=r.rewards||{}; return {n:1,list:[{track:r.track||track,tier:r.tier||lv,gems:rw.gems,gold:rw.gold,item:rw.item,held:rw.held,skin:rw.skin,mat:rw.mat,mountFrags:rw.mountFrags}]}; }
     return {n:0,why:(r&&r.partial?'Item guardado: sai quando o nível liberar':P_WHY[r&&r.reason]||P_WHY.erro)}; }
   return pClaimOneOld(track,lv); }
 /* RESERVA (só sem claimTier): reaproveita o claimAll marcando os outros níveis como resgatados durante a chamada */
@@ -252,13 +267,14 @@ function pClaimOneOld(track,lv){ const o=Sys.pass.ensure(S), sf=o.free.slice(), 
   finally{ const got=!!(res&&res.n); o.free=track==='free'&&got?sf.concat(lv).sort((a,b)=>a-b):sf; o.prem=track==='premium'&&got?sp.concat(lv).sort((a,b)=>a-b):sp; }
   return res; }
 function pAfterClaim(res,els){ if(!res||!res.n){ snd('ui_tap'); if(res&&res.why){ statsChanged(); XP.anim=false; render(); } pToast(res&&res.why?res.why:'Nada novo para resgatar'); return; }
-  const items=[], held=[]; let k=0;
+  const items=[], held=[]; let k=0, exT='';
   for(const r of res.list){ if(r.item) items.push(iname(r.item)); if(r.held) held.push(r.held); if(r.skin){ const sk=SKIN(SEASON_SKIN); items.push(sk?sk.n:'Skin da temporada'); }
+    if(r.mat||r.mountFrags) exT+=pExTxt(pExtras(r)).replace(/, /g,' · +');   /* pacote do nível: pedras, essências, fragmentos */
     const el=(els&&els[r.track+r.tier])||(pScrollOn()&&document.getElementById('xp_sc'))||document.getElementById('xp_all');   /* cartão fora da vista (lista rolada): o voo sai do meio da trilha */
-    if(k<8){ if(r.gems) yFly(el,'gem',k*90); if(r.gold) yFly(el,'gold',k*90+60); if(r.item||r.skin||r.held) yFly(el,'item',k*90); k++; } }
+    if(k<8){ if(r.gems) yFly(el,'gem',k*90); if(r.gold) yFly(el,'gold',k*90+60); if(r.item||r.skin||r.held||r.mat||r.mountFrags) yFly(el,'item',k*90); k++; } }
   snd('claim'); if(res.list.some(r=>r.gold)) setTimeout(()=>snd('coin'),250); statsChanged(); XP.anim=false; render();
   const hTxt=held.length?(held.length===1?'Item guardado: sai no nível '+held[0].needLevel:held.length+' itens guardados até o nível liberar'):'';
-  pToast(res.n===1?(items.length?items[0]+' (veja em Equip.)':hTxt||'Recompensa resgatada'):'Resgatou '+res.n+' recompensas'+(items.length?' · '+items.length+(items.length>1?' itens':' item'):'')+(hTxt?' · '+hTxt:'')); }
+  pToast(res.n===1?(items.length?items[0]+' (veja em Equip.)'+exT:hTxt?hTxt+exT:exT?exT.replace(/^ · /,''):'Recompensa resgatada'):'Resgatou '+res.n+' recompensas'+(items.length?' · '+items.length+(items.length>1?' itens':' item'):'')+(hTxt?' · '+hTxt:'')); }
 function pRenew(mt){ const d=new Date(); if(mt==='d'){ const m=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)-d, h=Math.floor(m/3600000); return h>=1?'Renova em '+h+'h':'Renova em '+Math.max(1,Math.ceil(m/60000))+'min'; }
   const wd=(d.getDay()+6)%7, days=7-wd, m=new Date(d.getFullYear(),d.getMonth(),d.getDate()+days)-d, dd=Math.floor(m/86400000); return dd>=1?'Renova em '+dd+'d':'Renova em '+Math.max(1,Math.floor(m/3600000))+'h'; }
 function passTick(){ const el=document.getElementById('xp_renew'); if(el){ const t=pRenew(XP.mt); if(el.textContent!==t) el.textContent=t; } }
@@ -270,7 +286,7 @@ function scrPass(){
   if(passTab==='mis'&&window.Panels&&Panels.on('missions')&&window.Screens&&Screens.reg&&Screens.reg.missions&&!Screens.reg.missions.broken){ passTab='pass'; V.innerHTML=''; setTimeout(()=>{ if(typeof view!=='undefined'&&view==='pass') Panels.open('missions',{tab:XP.mt==='w'?'weekly':'daily'}); },0); return; }   /* antes do nível do Passe (18) o painel é só MISSÕES: sem cabeçalho da temporada, sem aba de recompensas, sem Premium */
   const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
-  const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0;
+  const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0, big=pBig(), bigI=big?pInfo(big.rw):null;
   const seg=on=>on?'background:linear-gradient(180deg,#b07cff,#6a3cff);color:#fff':'background:transparent;color:#c9b9a2';
   /* SC = trilha contínua com rolagem (padrão). A lista que rola tem id xp_sc (a trilha no Passe; o miolo inteiro nas Missões): a tela redesenha inteira a cada toque,
      então o scrollTop é guardado aqui e devolvido no fim (igual ao xg_sc do Equipamento). "first" = abertura ou troca de modo: aí a trilha vai para o nível atual. */
@@ -291,13 +307,13 @@ function scrPass(){
       const fDone=o.free.includes(lv), fCan=reached&&!fDone, fFut=!reached, pDone=o.prem.includes(lv), pCan=prem&&reached&&!pDone, pFut=prem&&!reached, pLock=!prem;
       const fOp=fDone?.6:fFut?.85:1, pOp=pLock||pDone?.6:1, cur=lv===CUR;
       rows+=`<div class="p-row${SC&&!reached?' p-fut':''}" data-lv="${lv}" style="${SC?'position:relative;':''}height:${P_ROWH}px;flex:none;display:grid;grid-template-columns:1fr 44px 1fr;gap:6px">
-        <button class="p-card ${fCan?'p-can':''}" data-x="claim" data-t="free" data-lv="${lv}" id="xp_free${lv}" aria-label="Nível do passe ${lv}, grátis: ${esc2(fi.tag?fi.tag+', ':'')}${esc2(fi.txt)}${fCan?', resgatar':fDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;border-radius:14px;border:2px solid ${fCan?'#ffc94a':fi.kind==='eq'?fi.rc+'99':'#4a3a2b'};background:${fCan?'linear-gradient(180deg,#4a361f,#241b14)':'#1d1611'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0;opacity:${fOp}">
-          ${cell(fi,1)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">${fi.tag?`<span style="font-size:9px;font-weight:900;color:${fi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(fi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1">${rwName(fi)}</span>${state(fCan,fDone,fFut,lv)}</span></button>
+        <button class="p-card ${fCan?'p-can':''}" data-x="claim" data-t="free" data-lv="${lv}" id="xp_free${lv}" aria-label="Nível do passe ${lv}, grátis: ${esc2(fi.tag?fi.tag+', ':'')}${esc2(fi.txt+pExTxt(fi.ex))}${fCan?', resgatar':fDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;border-radius:14px;border:2px solid ${fCan?'#ffc94a':fi.kind==='eq'?fi.rc+'99':'#4a3a2b'};background:${fCan?'linear-gradient(180deg,#4a361f,#241b14)':'#1d1611'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0;opacity:${fOp}">
+          ${cell(fi,1)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">${fi.tag&&!(fi.ex&&fi.ex.length)?`<span style="font-size:9px;font-weight:900;color:${fi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(fi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1${fi.ex&&fi.ex.length?';white-space:nowrap;overflow:hidden;text-overflow:ellipsis':''}">${rwName(fi)}</span>${pExHtml(fi.ex)}${state(fCan,fDone,fFut,lv)}</span></button>
         <div style="position:relative;display:flex;align-items:center;justify-content:center">
           ${SC?'':`<span style="position:absolute;left:20px;top:-3px;width:4px;height:38px;background:${lv===1?'transparent':reached?'#b07cff':'#4a3a2b'}"></span><span style="position:absolute;left:20px;top:35px;width:4px;height:38px;background:${lv===T?'transparent':lv+1<=CUR?'#b07cff':'#4a3a2b'}"></span>`}
           <span class="lil${SC&&cur?' p-curn':''}" style="position:relative;width:40px;height:40px;border-radius:50%;border:3px solid ${reached?'#b07cff':'#4a3a2b'};background:${cur?'linear-gradient(180deg,#b07cff,#6a3cff)':reached?'#2e1f4a':'#1d1611'};color:${cur?'#fff':reached?'#d9b3ff':'#c9b9a2'};font-size:17px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${lv}${cur?'<span class="p-cur"></span>':''}</span></div>
-        <button class="p-card ${pCan?'p-can':''}" data-x="claim" data-t="premium" data-lv="${lv}" id="xp_premium${lv}" aria-label="Nível do passe ${lv}, premium: ${esc2(pi.tag?pi.tag+', ':'')}${esc2(pi.txt)}${pLock?', exige Premium':pCan?', resgatar':pDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;overflow:hidden;border-radius:14px;border:2px solid ${pCan?'#ffc94a':pi.kind==='coin'?'#5a3f8a':pi.rc};background:${pi.kind==='coin'?'linear-gradient(180deg,#2a2038,#1d1611)':'linear-gradient(180deg,#3a2a55,#1d1611)'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0">
-          ${cell(pi,pOp)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;opacity:${pOp}">${pi.tag?`<span style="font-size:9px;font-weight:900;color:${pi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(pi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1">${rwName(pi)}</span>${state(pCan,pDone,pFut,lv)}</span>
+        <button class="p-card ${pCan?'p-can':''}" data-x="claim" data-t="premium" data-lv="${lv}" id="xp_premium${lv}" aria-label="Nível do passe ${lv}, premium: ${esc2(pi.tag?pi.tag+', ':'')}${esc2(pi.txt+pExTxt(pi.ex))}${pLock?', exige Premium':pCan?', resgatar':pDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;overflow:hidden;border-radius:14px;border:2px solid ${pCan?'#ffc94a':pi.kind==='coin'?'#5a3f8a':pi.rc};background:${pi.kind==='coin'?'linear-gradient(180deg,#2a2038,#1d1611)':'linear-gradient(180deg,#3a2a55,#1d1611)'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0">
+          ${cell(pi,pOp)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;opacity:${pOp}">${pi.tag&&!(pi.ex&&pi.ex.length)?`<span style="font-size:9px;font-weight:900;color:${pi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(pi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1${pi.ex&&pi.ex.length?';white-space:nowrap;overflow:hidden;text-overflow:ellipsis':''}">${rwName(pi)}</span>${pExHtml(pi.ex)}${state(pCan,pDone,pFut,lv)}</span>
           ${pLock?`<span style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#0e0a07;border:2px solid #8a4dff;display:flex;align-items:center;justify-content:center">${SVG_LOCK(13,'#e6d4ff')}</span>`:''}</button></div>`; }
     const pend=pPending(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===pg?22:8}px;height:8px;border-radius:4px;background:${i===pg?'#b07cff':i*PER+1<=CUR?'#6a4a9a':'#4a3a2b'};transition:width .25s"></span>`).join('');
     /* legenda das trilhas: com rolagem fica presa no topo da lista (p-thd, 44 px); paginado, é a linha de 38 px de antes */
@@ -363,7 +379,11 @@ function scrPass(){
   V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div ${SC&&!isMs?'':`class="x-scroll"${SC?' id="xp_sc"':''} `}style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;box-sizing:border-box;${SC&&!isMs?'overflow:hidden;':''}background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
     <div class="p-hdr" style="${passOk?'':'display:none!important;'}height:92px;flex:none;position:relative;display:flex;border-radius:16px;border:2px solid #8a4dff;background:linear-gradient(120deg,#2e1f4a 0%,#1d1611 70%);overflow:hidden">
       <div style="position:relative;width:92px;flex:none;overflow:hidden"><div class="p-aura"></div><div class="p-ped" style="left:18px;top:76px;width:56px;height:12px"></div>
-        <div class="kidle ${skT?'t'+skT:''} p-glow" role="img" aria-label="Skin da temporada, prêmio Premium do nível 25 do passe" style="position:absolute;left:6px;top:6px;width:80px;height:80px"></div></div>
+        ${big?`<div role="img" aria-label="Prêmio do nível ${big.lv} do passe Premium: ${esc2(bigI.tag||'')}${esc2(pExTxt(bigI.ex))}" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:5px 2px 6px;box-sizing:border-box">
+            <span style="font-size:9px;font-weight:900;color:#e6d4ff;white-space:nowrap;letter-spacing:.2px">Prêmio Nv. ${big.lv}</span>
+            ${bigI.kind==='eq'?`<img class="p-glow" src="${slotIcon(bigI.slot,S.eraMax)}" alt="" style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 6px ${bigI.rc})">`:''}
+            ${pExHtml(bigI.ex,12,9)}</div>`
+          :`<div class="kidle ${skT?'t'+skT:''} p-glow" role="img" aria-label="Skin da temporada, prêmio Premium do passe" style="position:absolute;left:6px;top:6px;width:80px;height:80px"></div>`}</div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px 12px 6px 4px">
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px"><span class="lil" style="font-size:18px;line-height:1.05;white-space:nowrap">Temporada Solar</span>
           <span style="flex:none;display:flex;align-items:center;gap:3px;font-size:12px;font-weight:900;color:#e8dccb">${Y_CLOCK}${days} dia${days===1?'':'s'}
@@ -381,7 +401,7 @@ function scrPass(){
         <span class="lil" style="font-size:22px;text-align:center">Ativar Passe Premium</span>
         <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:#16110d;border:1px solid #4a3a2b;font-size:13px;font-weight:800">
           <span>Equipamentos melhores: Raro e Épico ao longo do passe e 2 Itens da Temporada (níveis 27 e 30) que evoluem até Lendário</span>
-          <span>Skin da temporada no nível 25 do passe</span><span>Mais diamantes nos outros níveis e +${P.DATA.premiumXpPct}% de XP do passe</span>
+          ${big?`<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>No nível ${big.lv} do passe:</span>${bigI.kind==='eq'?`<span style="display:flex;align-items:center;gap:3px;color:${bigI.rc}"><img src="${slotIcon(bigI.slot,S.eraMax)}" alt="" style="width:20px;height:20px;object-fit:contain">${esc2(bigI.tag||'')}</span>`:''}${pExHtml(bigI.ex,16,13)}</span>`:'<span>Skin da temporada no passe</span>'}<span>Mais diamantes nos outros níveis e +${P.DATA.premiumXpPct}% de XP do passe</span>
           <span style="font-size:12px;color:#c9b9a2">Compra direta pela loja do aparelho (Google Play / App Store), sem sorteio. Níveis já alcançados ficam prontos para resgatar.</span>
           <span role="note" style="padding:6px 8px;border-radius:8px;background:#3a2c1f;border:1px solid #ffc94a;color:#ffe07a;font-size:12px;font-weight:900;text-align:center">Pagamento em breve: a compra ainda não está disponível.</span></div>
         <button class="lil" data-x="cfno" style="height:50px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:18px;padding:0">Fechar</button></div></div>`:''}`);

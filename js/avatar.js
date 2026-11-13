@@ -1,8 +1,8 @@
-/* js/avatar.js (agente B) — RETRATO DO HERÓI (ordem do dono: o avatar segue a FASE, o HERÓI e as camadas de cabeça; não fica com rosto de criança).
+/* js/avatar.js (agente B) — RETRATO DO HERÓI (decisão final do dono: não há fases; o avatar é o retrato da SKIN EQUIPADA do herói).
    BASE: os 8 retratos prontos da Arte em assets/hero/avatar/ (<kael|kaia>_phase<0..3>.png, 256×256, fundo transparente) + avatars.json
-   (por retrato, a âncora "head" {x, y, ang, s} em pixels do retrato). Fase = Sys.phaseUp.current(S) (sem ele, a fase do Sys.appearance.sheetFor);
-   herói = S.hero ('kaia' ou Kael).
-   CAMADAS DE CABEÇA (DESLIGADAS pela chave AVATAR_PIECES, decisão final do dono: o avatar é só o rosto da fase; o texto abaixo vale se religar): o que Sys.appearance.layers(S, Sys.host) devolver, na ordem dele (o "ocultar" já vem aplicado lá):
+   (por retrato, a âncora "head" {x, y, ang, s} em pixels do retrato). Qual retrato: Sys.appearance.avatarKey(S, host) (ver keyOf); sem a função,
+   o padrão do herói: kael_phase0 (garoto) / kaia_phase0 (menina), por S.hero. A reserva pela folha parada usa o que o Sys.appearance.sheetFor devolver.
+   CAMADAS DE CABEÇA (DESLIGADAS pela chave AVATAR_PIECES, decisão final do dono: o avatar é só o rosto do retrato; o texto abaixo vale se religar): o que Sys.appearance.layers(S, Sys.host) devolver, na ordem dele (o "ocultar" já vem aplicado lá):
      {layer:'hat', hat:'era3'} ou {layer:'hat', era:3} → assets/anim/equip/hats/hats.json (hats['era3']);
      {layer:'glasses'|'mask', cos:'visor'} ou {source:'cos', id:'visor'} → assets/anim/equip/cos/cos.json (items['visor']).
    Desenho de cada peça: translate(head.x, head.y) · rotate(head.ang graus) · scale(head.s / res) · drawImage(png, -pivot.x, -pivot.y).
@@ -66,8 +66,12 @@ function reserve(px){ const k='res|'+px, e=cache.get(k); if(e) return {e,key:k};
 function meta(){ if(META.st) return; META.st=1; Promise.all([getJson(AV.DIR+'avatars.json'),AVATAR_PIECES?getJson(AV.HATS+'hats.json'):Promise.resolve(null),AVATAR_PIECES?getJson(AV.COS+'cos.json'):Promise.resolve(null)]).then(a=>{
   META.av=a[0]&&a[0].items?a[0]:null; META.hats=(a[1]&&a[1].hats)||{}; META.cos=(a[2]&&a[2].items)||{}; META.st=META.av?2:3; fire('meta'); }); }
 function pic(url){ let o=imgs[url]; if(o) return o; o=imgs[url]={st:0,img:null}; getImg(url).then(i=>{ o.img=i; o.st=i?1:2; fire(url); }); return o; }
-function phaseOf(sv){ let p=null; try{ if(W.Sys&&Sys.phaseUp&&typeof Sys.phaseUp.current==='function') p=Sys.phaseUp.current(sv); }catch(e){ p=null; }
-  if(typeof p!=='number'||!(p>=0)){ const sh=sheetFor(sv); p=sh?sh.stage:0; } return Math.max(0,Math.min(3,p|0)); }
+/* QUAL RETRATO (decisão final do dono: NÃO há mais fases; o padrão é o garoto/a menina para sempre e o adulto e o guerreiro são SKINS equipáveis):
+   Sys.appearance.avatarKey(S, host) → 'kael_phase0' | 'kael_phase2' | … (o retrato da skin equipada), quando o módulo tiver a função e a chave existir no
+   avatars.json; senão, o retrato padrão do herói (kael_phase0 / kaia_phase0). Não lê mais Sys.phaseUp. */
+function keyOf(sv,items){ const def=(sv&&sv.hero==='kaia'?'kaia':'kael')+'_phase0'; let k=null; items=items||(META.av&&META.av.items)||null;
+  try{ const M=W.Sys&&Sys.appearance; if(M&&typeof M.avatarKey==='function') k=M.avatarKey(sv,Sys.host); }catch(e){ k=null; }
+  return typeof k==='string'&&items&&items[k]?k:def; }
 /* peças de cabeça do herói, na ordem do módulo: [{k, url, m:{pivot, res}}] (m = entrada do hats.json / cos.json) */
 function headLayers(sv){ const out=[]; if(!AVATAR_PIECES) return out; let L=[]; try{ L=Sys.appearance.layers(sv,Sys.host)||[]; }catch(e){ L=[]; }
   for(const l of L){ if(!l) continue;
@@ -85,7 +89,7 @@ function fromSheet(sv,px){ const sh=sheetFor(sv); if(!sh) return reserve(px); co
 let bM=null;   /* a mesma resposta vale por 150 ms (vários retratos na mesma tela não refazem a conta); zera quando uma imagem chega */
 function best(sv,px){ const now=Date.now(); if(bM&&bM.sv===sv&&bM.px===px&&now-bM.t<150) return bM.r; const r=best0(sv,px); bM={sv,px,t:now,r}; return r; }
 function best0(sv,px){ if(!sv) return reserve(px); meta(); if(META.st<2) return reserve(px); if(META.st===3) return fromSheet(sv,px);
-  const id=(sv.hero==='kaia'?'kaia':'kael')+'_phase'+phaseOf(sv), it=META.av.items[id]; if(!it||!it.file) return fromSheet(sv,px);
+  const id=keyOf(sv), it=META.av.items[id]; if(!it||!it.file) return fromSheet(sv,px);
   const P=pic(AV.DIR+it.file); if(P.st===0) return reserve(px); if(P.st===2) return fromSheet(sv,px);
   /* peças: a que ainda está carregando fica de fora por enquanto (o retrato é refeito quando ela chega); a que falta fica de fora de vez */
   const parts=[]; let pend=0; for(const h of headLayers(sv)){ const I=pic(h.url); if(I.st===1) parts.push({k:h.k,m:h.m,img:I.img}); else if(I.st===0) pend++; }
@@ -110,6 +114,7 @@ W.avatarUrl=function(sv,size){ try{ const px=Math.max(8,Math.round((+size>0?+siz
 W.avatarRefresh=repaint;
 W.avatarOnReady=function(fn){ if(typeof fn==='function') cbs.push(fn); };
 W.avatarLocate=locate;
+W.avatarKeyOf=keyOf;   /* (S, itens do avatars.json) → chave do retrato; para o teste e o QA */
 W.avatarInfo=function(){ const o={}; for(const k in res){ const r=res[k]; o[k]={st:r.st,hx:r.hx,hy:r.hy,hh:r.hh,note:r.note}; } const im={}; for(const k in imgs) im[k]=imgs[k].st;
   return {meta:META.st,imagens:im,folhas:o,retratos:Array.from(cache.entries()).map(e=>e[0]+' ['+e[1].src+']')}; };   /* para o QA conferir */
 

@@ -1105,3 +1105,25 @@ Equipamento (FC do painel de atributos e a contagem animada, linhas "antes → d
 nível" do item, selo "FC +N" do Equipar melhor), aviso "Equipada: … · FC" da Loja; `js/screens2.js` (Derrota: "SUA FC" contando,
 "RECOMENDADA", "Faltam N de FC"); `js/p_pets.js` ("Soma à FC"). Nenhuma conta mudou (gBest, "melhor que o seu", % da barra, brilho).
 A fumaça confere que o Equipamento mostra exatamente `Sys.fc.viewText(heroFC())`. A tabela da varredura foi entregue à coordenação.
+
+## Bloco 39 (sem navegador): Passe nível 25 (pacote novo) e avatar pela skin equipada
+
+PASSE. Nada fixo na tela: `pBig()` acha no `Sys.pass.DATA.premium` o nível que traz `mat`/`mountFrags` (hoje o 25) e `pExtras(rw)` lê as quantidades.
+- `js/screens2.js`: cartão da trilha mostra a arma (ícone do espaço na moldura da raridade) + pedra de forja, essência e fragmento com a quantidade
+  (com pacote, a etiqueta "Épico · Arma" sai para caber em 70 px; o nome fica em uma linha); `aria-label` com o pacote por extenso; resgate passa
+  `mat`/`mountFrags` e o aviso diz o que entrou; a vitrine do cabeçalho virou "Prêmio Nv. 25" (arma + 3 ícones com quantidade); o texto do Premium
+  mostra "No nível 25 do passe:" com os mesmos ícones. Módulo antigo (sem pacote): vitrine de antes.
+- Ícones: pedra de forja = `Y_STONE` (missões/Vitória), essência = `Q_ESS` (Vitória), fragmento = a forma da tela de Montarias, arma = `slotIcon`.
+- `js/screens.js`: a skin do passe só entra na aba da Loja se o `Sys.pass` ainda entregar skin (`xPassSkin()`, hoje falso): a prévia "Ganhe no Passe"
+  sumiu. Quem já tem a p10 continua vendo na coleção (com a nota de roupa inativa).
+- Fumaça: 4 testes novos (pacote = dados do módulo, vitrine, texto do Premium, resgate + aviso, Loja sem a skin do passe). Achado: a fumaça antiga
+  desenhava o Passe com 0 caracteres (portão de nível); os testes novos abrem com `PANEL_V2.gate=false`.
+- PARA O QA (`js/p_pass.js:45`, `pwBody`): o ramo `rw.skin` não acontece mais; falta desenhar `rw.mat` (`forge`, `essence`) e `rw.mountFrags` do nível 25
+  (hoje a célula mostra só "Arma Épico").
+
+AVATAR. `js/avatar.js` não lê mais `Sys.phaseUp`: o retrato é `Sys.appearance.avatarKey(S, host)` quando a função existir e a chave estiver no
+`avatars.json`; senão `kael_phase0` / `kaia_phase0` por `S.hero`. O módulo do disco já tem `avatarKey` (conferido: as chaves que ele devolve existem no avatars.json).
+`test/paineis/avatar.crop.js` ganhou o bloco 0 (8 casos de escolha do retrato).
+
+`node test/e2e/flows.js`: fluxo 4 "FASES DO HERÓI" FALHA (16/33): o `js/sys/phaseup.js` do disco está desligado ("reason: off"); é o teste das fases
+contra a decisão de não ter fases, não vem destes arquivos.

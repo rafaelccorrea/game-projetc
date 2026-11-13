@@ -676,6 +676,8 @@ function xSellLoad(){ if(XSELL.st||typeof fetch!=='function') return; XSELL.st=1
     XSELL.set=st; XSELL.st=2; if(typeof view!=='undefined'&&view==='shop'&&typeof render==='function') render(); }).catch(()=>{}); }catch(e){} }
 const xFileHas=p=>XSELL.set?XSELL.set.has(p):String(p).indexOf('assets/weapons/')===0;
 function xCanSell(id){ if(!xSellOn()) return true; xSellLoad(); try{ return !!Sys.appearance.canSell(id,xFileHas); }catch(e){ return true; } }
+/* o Passe ainda entrega skin? (Sys.pass.DATA: algum nível com .skin). Hoje não: o nível 25 virou arma + materiais; a skin do passe sai da Loja. */
+function xPassSkin(){ try{ const D=Sys.pass.DATA; return (D.premium||[]).concat(D.free||[]).some(r=>r&&r.skin); }catch(e){ return false; } }
 const xSkinShow=sk=>S.skins.includes(sk.id)||S.skinEq[sk.slot]===sk.id||xCanSell(sk.id);
 /* ROUPA-SKIN INATIVA (decisão final do dono): Sys.appearance.outfitStatus(id) → {outfit, active, note}. A roupa que o jogador JÁ tem continua aparecendo
    na coleção, com a nota do módulo ("nova skin em breve") e SEM botão de equipar; nada sai do save. Skin de arma: nota vazia, tudo como antes.
@@ -683,7 +685,7 @@ const xSkinShow=sk=>S.skins.includes(sk.id)||S.skinEq[sk.slot]===sk.id||xCanSell
 function xOutfitNote(id){ try{ const M=window.Sys&&Sys.appearance; if(!M||typeof M.outfitStatus!=='function') return ''; const o=M.outfitStatus(id); if(!o||!o.outfit||o.active) return '';
     const t=String(o.note||'nova skin em breve'); return t.charAt(0).toUpperCase()+t.slice(1); }catch(e){ return ''; } }
 try{ if(xSellOn()) xSellLoad(); }catch(e){}   /* lê a lista de arquivos já na carga, para a Loja não abrir com as roupas escondidas e mostrá-las um instante depois */
-const hList=tab=>SKINS.filter(s=>s.slot===(tab==='hero'?'armor':'weapon')&&(!s.pass||s.id===SEASON_SKIN||S.skins.includes(s.id))&&xSkinShow(s)).sort((a,b)=>(a.pass?1:0)-(b.pass?1:0)||a.e-b.e||a.r-b.r);
+const hList=tab=>SKINS.filter(s=>s.slot===(tab==='hero'?'armor':'weapon')&&(!s.pass||(s.id===SEASON_SKIN&&xPassSkin())||S.skins.includes(s.id))&&xSkinShow(s)).sort((a,b)=>(a.pass?1:0)-(b.pass?1:0)||a.e-b.e||a.r-b.r);
 function hStatus(sk){ const eq=S.skinEq[sk.slot]===sk.id, own=S.skins.includes(sk.id), locked=!own&&!sk.pass&&sk.e>S.eraMax; return {eq,own:own&&!eq,pass:!own&&!!sk.pass,locked,buy:!own&&!sk.pass&&!locked&&xCanSell(sk.id)}; }
 const skinArt=(sk,sz,op,cls)=>sk.slot==='weapon'?`<img class="${cls||''}" src="assets/weapons/${typeof wKey==='function'?wKey(sk):'era'+sk.e+'_t'+tierOf(sk.r)}.png" alt="" style="position:relative;width:${sz}px;height:${sz}px;object-fit:contain;opacity:${op}">`
   :sk.e===2?`<span class="kidle ${tierOf(sk.r)?'t'+tierOf(sk.r):''}" aria-hidden="true" style="position:relative;display:block;width:${sz}px;height:${sz}px;opacity:${op}"></span>`
@@ -787,7 +789,7 @@ function scrShop(){
 }
 function shopItem(o){ const it={id:'shop'+o.slot+o.r+o.e,slot:o.slot,r:o.r,e:o.e,lvl:1,gold:0,subs:Array.isArray(o.subs)?o.subs:[]}; if(!Array.isArray(o.subs)){ Sys.stats.ensureSubs(it); o.subs=it.subs; } return it; }
 function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } const st=hStatus(sk), off=(st.eq||st.own)?xOutfitNote(sk.id):'', c=RC[sk.r], q=xRar(sk.r,'xr-s'), hero=sk.slot==='armor'?sk:SKIN(S.skinEq.armor), weap=sk.slot==='weapon'?sk:SKIN(S.skinEq.weapon), SK=Sys.skin.DATA;
-  const passLv=Object.keys(PASS_SKIN_AT).find(k=>PASS_SKIN_AT[k]===sk.id);
+  const passLv=xPassSkin()?Object.keys(PASS_SKIN_AT).find(k=>PASS_SKIN_AT[k]===sk.id):null;
   return `<div class="x-scrim" style="position:absolute;inset:0;z-index:20;background:rgba(8,6,4,.82);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
     <div class="${XH.popIn?'x-pop':''}${q.cls}"${q.at} role="dialog" aria-label="Prévia: ${esc2(sk.n)}" style="width:358px;max-height:100%;border-radius:20px;${q.on?'':`border:3px solid ${c};`}background:#1d1611;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 30px ${c}88">
       <div style="display:flex;align-items:center;gap:8px;padding:10px 10px 6px 16px;flex:none"><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span class="lil" style="font-size:24px;line-height:1.1${q.on?';color:'+q.t:''}">${esc2(sk.n)}</span>
@@ -807,6 +809,7 @@ function hPreview(){ const sk=SKIN(XH.sel); if(!sk){ XH.sel=null; return ''; } c
         :st.own?'<button class="x-green lil" data-x="skequip" style="flex:1;height:54px;border-radius:16px;font-size:22px;padding:0">Equipar</button>'
         :st.eq?'<div class="lil" style="flex:1;height:54px;border-radius:16px;border:2px solid #5fd068;background:#12261a;color:#c8f5cb;font-size:20px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5fd068" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg>Equipada</div>'
         :st.locked?`<div style="flex:1;height:54px;border-radius:16px;border:2px solid #4a3a2b;background:#2a211a;color:#e8dccb;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box">${SVG_LOCK(20)}Libera na ${ERAS[sk.e].n}</div>`
+        :!passLv?''   /* o passe não entrega mais esta skin: sem botão */
         :`<button data-x="gopass" class="x-gold lil" style="flex:1;height:54px;border-radius:16px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:6px"><img src="assets/ui/pass.png" alt="" style="width:30px;height:30px;object-fit:contain">Ganhe no Passe · Nv. ${passLv||''}</button>`}
       </div></div></div>`; }
 function hConfirm(){ const cf=XH.cf; let name='', cost=0, have=0, coin=false, lines='', rr=0, box='';   /* rr = raridade (nome na cor); box = o item na moldura da raridade (só com PANEL_V2.rar) */

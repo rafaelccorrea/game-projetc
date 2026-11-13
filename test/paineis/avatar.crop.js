@@ -31,9 +31,17 @@ const K=+(/K:([\d.]+)/.exec(src)||[])[1], DY=+(/DY:([\d.]+)/.exec(src)||[])[1], 
 const T=96, tiles=[]; let bad=0; const BG=(tx,ty)=>{ const dx=tx-T/2+.5, dy=ty-T/2+.5; return dx*dx+dy*dy<=T*T/4?[74,58,43]:[20,16,12]; };
 const say=(ok,txt)=>{ if(!ok) bad++; console.log((ok?'OK    ':'FALHA ')+txt); };
 
+console.log('--- 0. qual retrato (sem fases: skin equipada pelo Sys.appearance.avatarKey; sem a função, o padrão do herói)');
+{ const IT=J('assets/hero/avatar/avatars.json').items, K=win.avatarKeyOf, eq=(a,b,t)=>say(a===b,t+' → '+a+(a===b?'':' (esperado '+b+')'));
+  say(typeof K==='function','avatarKeyOf existe'); say(!/phaseUp\s*\.\s*current|Sys\.phaseUp\s*&&/.test(src),'o avatar.js não lê mais Sys.phaseUp');
+  delete win.Sys; eq(K({hero:'kael'},IT),'kael_phase0','sem módulo, Kael'); eq(K({hero:'kaia'},IT),'kaia_phase0','sem módulo, Kaia'); eq(K({},IT),'kael_phase0','sem herói no save');
+  global.Sys=win.Sys={host:{},appearance:{},phaseUp:{current:()=>3}}; eq(K({hero:'kael'},IT),'kael_phase0','módulo sem avatarKey (phaseUp diz 3: ignorado)');
+  Sys.appearance.avatarKey=(s)=>s.hero==='kaia'?'kaia_phase3':'kael_phase2'; eq(K({hero:'kael'},IT),'kael_phase2','avatarKey: Kael Cavaleiro'); eq(K({hero:'kaia'},IT),'kaia_phase3','avatarKey: Kaia Guerreira Lendária');
+  Sys.appearance.avatarKey=()=>'nao_existe'; eq(K({hero:'kaia'},IT),'kaia_phase0','avatarKey com chave fora do avatars.json'); Sys.appearance.avatarKey=()=>{ throw new Error('x'); }; eq(K({hero:'kael'},IT),'kael_phase0','avatarKey com erro');
+  delete win.Sys; delete global.Sys; }
 console.log('--- 1. retratos da Arte + peças de cabeça');
 const PIECES=/const AVATAR_PIECES=true/.test(src);   // chave do js/avatar.js: desligada (decisão do dono) = só o rosto; as peças nem são lidas
-console.log('    peças de cabeça: '+(PIECES?'LIGADAS':'desligadas (AVATAR_PIECES=false): só o rosto da fase'));
+console.log('    peças de cabeça: '+(PIECES?'LIGADAS':'desligadas (AVATAR_PIECES=false): só o rosto do retrato'));
 // com a chave desligada, toda leitura de hats.json / cos.json tem de estar atrás dela, e a lista de peças tem de sair vazia antes de consultar o módulo
 for(const f of ['hats.json','cos.json']){ const all=src.split("'"+f+"'").length-1, gated=src.split("AVATAR_PIECES?getJson(AV."+(f==='hats.json'?'HATS':'COS')+"+'"+f+"')").length-1;
   say(all===gated,'leitura de '+f+' só atrás da chave AVATAR_PIECES ('+gated+' de '+all+')'); }
