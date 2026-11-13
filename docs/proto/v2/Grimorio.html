@@ -1,0 +1,1109 @@
+<title>Eonbound Grimório V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* GRIMÓRIO DAS ERAS + GOLPES ESPECIAIS (V2): cópia da Batalha V2 aprovada (cena, HUD, fit, img(), voto) + fileira das 3 magias no HUD,
+   faixa da magia lançada, nomes dos golpes no número de dano e a tela do Grimório em tela cheia (overlay dentro do aparelho). Números de js/sys/grimoire.js e js/sys/strikes.js.
+   Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Equipamento V2 / Montarias V2.
+   Batalha V2: a tela principal. Cenário da era 2 (Medieval) em canvas, herói das folhas reais com a ARMA EQUIPADA NA MÃO (corpo sem arma + arma no grip de
+   cada quadro, como js/stage.js), asa nas costas, pet na frente; inimigos das folhas reais chegando pela direita, sempre com os pés na linha do chão.
+   HUD: topo (fase, onda, ouro, gemas), chip FC x FC pedida, barra do chefe com o relógio da FÚRIA, 3 golpes + energia, x1/x2, automático e Desafiar.
+   Dificuldade nova (docs/balance.json, bloco "dificuldade"): FC pedida por fase, paredes, comuns 10%/5% do chefe, fúria aos 40 s (x4) e o cartão "Faltam X de FC". */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg.col button{flex:1 1 100%;text-align:left}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night)}
+#cv{position:absolute;left:0;top:0;width:390px;height:844px}
+/* topo */
+.r1{position:absolute;z-index:5;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:6px}
+.me{display:flex;align-items:center;gap:7px;min-width:0;height:42px;padding:0 12px 0 3px;border-radius:21px;background:rgba(5,8,28,.66);border:1px solid var(--line);margin-right:auto}
+.me img{flex:none;width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cyan);background:#0c1238}
+.me div{min-width:0}
+.me b{display:block;font-weight:900;font-size:13px;line-height:1.1;white-space:nowrap}
+.me small{display:block;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.66);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none;white-space:nowrap}
+.cur img{width:22px;height:22px}
+.cur.bump{animation:bump .35s ease-out}
+@keyframes bump{40%{transform:scale(1.14);box-shadow:0 0 14px rgba(255,210,94,.9)}}
+.stp{position:absolute;z-index:5;left:50%;top:58px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;padding:4px 16px 5px;border-radius:14px;background:rgba(5,8,28,.66);border:1px solid var(--line2);white-space:nowrap}
+.stp b{font-family:var(--fd);font-weight:400;font-size:19px;line-height:1.15;letter-spacing:.5px;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+.wv{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--muted)}
+.dots{display:flex;gap:4px;align-items:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25)}
+.dots i.d{background:var(--gold);border-color:var(--gold)}
+.dots i.c{background:var(--cyan);border-color:#fff;box-shadow:0 0 8px var(--cyan)}
+.dots i.b{width:12px;height:12px;border-radius:3px;transform:rotate(45deg);border-color:#ff8a8a}
+.dots i.b.c{background:var(--red);box-shadow:0 0 10px var(--red)}
+.wv .fm{color:var(--gold)}
+.fcc{position:absolute;z-index:5;left:50%;top:112px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:30px;padding:0 4px 0 11px;border-radius:15px;background:rgba(5,8,28,.8);border:1.5px solid var(--tc);font-weight:900;font-size:12px;white-space:nowrap;max-width:366px}
+.fcc .k{color:var(--muted);font-size:10px;letter-spacing:.8px}
+.fcc b{font-variant-numeric:tabular-nums}
+.fcc .me2{color:var(--tc)}
+.fcc .p{min-width:46px;height:22px;padding:0 6px;border-radius:11px;background:var(--tc);color:#07101f;display:grid;place-items:center;font-size:12px}
+.fcc.fury{animation:fpulse .6s ease-in-out infinite alternate}
+@keyframes fpulse{to{box-shadow:0 0 16px rgba(255,80,80,.9)}}
+/* barra do chefe */
+.bossp{position:absolute;z-index:5;left:12px;right:12px;top:150px;padding:6px 10px 8px;border-radius:14px;background:rgba(24,6,18,.8);border:1.5px solid rgba(255,107,107,.5);animation:rin .25s ease-out}
+.bossp[hidden]{display:none}
+.bh{display:flex;align-items:center;gap:6px;min-width:0}
+.bh .tag{flex:none;font-size:9px;font-weight:900;letter-spacing:1px;padding:2px 6px;border-radius:6px;background:rgba(255,107,107,.18);color:#ffb0b0}
+.bh .nm{flex:1;min-width:0;font-family:var(--fd);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tmr{flex:none;display:flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;background:rgba(5,8,28,.7);border:1px solid var(--line2);font-size:11px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tmr svg{width:12px;height:12px}
+.tmr.warn{border-color:var(--gold);color:var(--gold)}
+.tmr.fury{background:#c62828;border-color:#ff8a8a;color:#fff;animation:fpulse .5s ease-in-out infinite alternate}
+.bbar{position:relative;height:14px;margin-top:5px;border-radius:7px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.18);overflow:hidden}
+.bbar i{position:absolute;top:0;bottom:0;left:0}
+.bbar i.lag{background:#fff;opacity:.5;transition:width .9s ease-in .2s}
+.bbar i.f{background:linear-gradient(180deg,#ff8a6a,#d8322a);transition:width .2s}
+.bbar b{position:absolute;inset:0;display:grid;place-items:center;font-size:9px;font-weight:900;text-shadow:0 1px 0 #000;font-variant-numeric:tabular-nums}
+.bossp.fury{border-color:#ff5252;background:rgba(60,4,10,.85);animation:fpulse .5s ease-in-out infinite alternate}
+.bossp.fury .nm{color:#ff8a8a}
+.bossp.fury .bbar i.f{background:linear-gradient(180deg,#ff5252,#8a0010)}
+/* faixa central (onda, chefe, fúria, fase vencida) */
+.banner{position:absolute;z-index:7;left:0;right:0;top:250px;text-align:center;pointer-events:none;animation:ban 1.9s ease-out both}
+.banner div{display:inline-block;max-width:94%;padding:7px 22px;font-family:var(--fd);font-size:24px;color:#fff;background:linear-gradient(90deg,transparent,var(--bc,rgba(61,79,184,.88)) 18%,var(--bc,rgba(61,79,184,.88)) 82%,transparent);text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner small{display:block;font-family:var(--fb);font-size:11px;font-weight:900;letter-spacing:1px;color:#e7e9ff}
+@keyframes ban{0%{opacity:0;transform:scaleX(.2)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+/* base: vida, energia, golpes e controles */
+.bot{position:absolute;z-index:5;left:0;right:0;bottom:0;padding:22px 12px max(14px,env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(11,16,48,0),rgba(11,16,48,.88) 16%,#0b1030 46%)}
+.bars{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:10px}
+.bl{display:flex;justify-content:space-between;gap:6px;font-size:9px;font-weight:900;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
+.bl b{color:var(--text);letter-spacing:0;font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{position:relative;height:12px;border-radius:6px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:0}
+.bar i.lag{background:#fff;opacity:.5;transition:width .9s ease-in .2s}
+.bar.hp i.f{background:linear-gradient(180deg,#7dffb0,#1fbf6c);transition:width .2s}
+.bar.hp.low i.f{background:linear-gradient(180deg,#ff8a8a,#e23b4b)}
+.bar.en i.f{background:linear-gradient(90deg,#5ee7ff,#a97bff);transition:width .3s}
+.bar.en.full{box-shadow:0 0 10px #a97bff}
+.skills{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin-top:10px}
+.sk{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;padding:0;width:80px}
+.sk .ib{position:relative;width:56px;height:56px;border-radius:50%;overflow:hidden;border:3px solid #6a7ac8;background:#0c1238;box-shadow:0 6px 14px rgba(0,0,0,.45)}
+.sk.ult .ib{width:64px;height:64px;border-color:#7a5ab8}
+.sk .ib img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sk .cd{position:absolute;left:0;right:0;top:0;height:0;background:rgba(5,8,28,.74)}
+.sk .ct{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-family:var(--fd);font-size:17px;text-shadow:0 2px 0 #000,0 0 6px #000}
+.sk .lb{font-size:10px;font-weight:900;color:var(--muted);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis}
+.sk.rdy .ib{border-color:#5ee7ff;box-shadow:0 0 14px rgba(94,231,255,.8)}
+.sk.ult.rdy .ib{border-color:#d07bff;animation:ur 1.2s ease-in-out infinite}
+.sk.ult.rdy .lb{color:#e3c8ff}
+@keyframes ur{0%,100%{box-shadow:0 0 10px rgba(208,123,255,.6)}50%{box-shadow:0 0 30px rgba(208,123,255,1)}}
+.sk.man .ib{outline:2px dashed rgba(255,210,94,.6);outline-offset:2px}
+.ctr{display:flex;gap:6px;margin-top:10px;align-items:stretch;height:50px}
+.ctr>button,.spd{border-radius:14px;border:1px solid var(--line2);background:var(--glass);font-weight:900}
+.bag{position:relative;flex:none;width:50px;padding:0;display:grid;place-items:center}
+.bag img{width:34px;height:34px}
+.bag em{position:absolute;right:-3px;top:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--rose);color:#fff;font-style:normal;font-size:10px;font-weight:900;display:grid;place-items:center}
+.bag em[hidden]{display:none}
+.bag.bump{animation:bump .35s ease-out}
+.spd{flex:none;display:flex;padding:3px;gap:2px;background:rgba(5,8,28,.75)}
+.spd button{width:36px;border:0;border-radius:10px;background:none;font-weight:900;font-size:14px;color:var(--muted)}
+.spd button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff}
+.auto{flex:none;width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0}
+.auto small{font-size:9px;letter-spacing:1px;color:var(--muted)}
+.auto b{font-size:12px}
+.auto[aria-pressed="true"]{border-color:var(--green);background:rgba(94,240,160,.1)}
+.auto[aria-pressed="true"] b{color:var(--green)}
+.chal{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px;line-height:1.1}
+.chal b{font-family:var(--fd);font-weight:400;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chal small{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chal.dim{background:rgba(255,255,255,.05);color:var(--muted)}
+.chal.dim small{color:#ff9a9a}
+.chal.glow{border:0;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;animation:cglow 1.3s ease-in-out infinite}
+.chal.glow small{color:#5a3300}
+@keyframes cglow{50%{box-shadow:0 3px 0 #9a5a10,0 0 22px rgba(255,210,94,.95)}}
+.chal.on{background:rgba(255,107,107,.12);border-color:var(--red);color:#ffc0c0}
+.chal:active,.bag:active,.auto:active{transform:translateY(2px)}
+/* cartões */
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.62);display:flex;align-items:center;animation:fade .2s}
+.card{margin:auto 14px;width:100%;max-height:92%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:14px 14px 14px;animation:up .28s ease-out;scrollbar-width:none}
+.card h2{font-family:var(--fd);font-weight:400;font-size:36px;line-height:1;margin:0;text-align:center}
+.card h2.lose{color:#ff9aa8;text-shadow:0 3px 0 #5a0010}
+.card h2.win{color:var(--gold);text-shadow:0 3px 0 #7a4a00,0 0 24px rgba(255,210,94,.6)}
+.card .cp{margin:4px 0 0;text-align:center;color:var(--muted);font-size:12px;font-weight:800}
+.card h3{font-family:var(--fd);font-weight:400;font-size:24px;line-height:1.1;margin:10px 0 0;color:#ff8a7e;text-shadow:0 2px 0 #4a0d08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card h3.okk{color:var(--green);text-shadow:0 2px 0 #053019}
+.need{font-size:12.5px;font-weight:800;color:#dfe4ff;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.need b{color:var(--gold)}
+.meter{position:relative;height:10px;margin:8px 0 14px;border-radius:5px;background:rgba(255,255,255,.1)}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--tc)}
+.meter u{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;text-decoration:none}
+.meter u span{position:absolute;top:13px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:900;color:var(--muted);white-space:nowrap}
+.adv{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.arow{display:flex;align-items:center;gap:8px;min-height:50px;padding:6px 6px 6px 8px;border-radius:14px;background:rgba(5,8,28,.55);border:1px solid var(--line);min-width:0}
+.arow .ai{flex:none;width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 50% 35%,#2a3a8a,#0c1238);display:grid;place-items:center;overflow:hidden}
+.arow .ai img{width:32px;height:32px;object-fit:contain}
+.arow .ai svg{width:20px;height:20px}
+.arow .at{flex:1;min-width:0}
+.arow .at b{display:block;font-size:13px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .at small{display:block;font-size:10.5px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .g{flex:none;font-size:13px;font-weight:900;color:var(--green);white-space:nowrap;font-variant-numeric:tabular-nums}
+.arow .go{flex:none;width:52px;height:38px;border-radius:11px;border:0;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.arow .go b{font-family:var(--fd);font-weight:400;font-size:16px}
+.arow .go small{font-size:8.5px;font-weight:900}
+.arow .go:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.tip{margin:8px 0 0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.4}
+.tip b{color:var(--green)}
+.macts{display:flex;gap:8px;margin-top:12px}
+.macts button{flex:1;min-width:0;height:48px;border-radius:14px;font-family:var(--fd);font-weight:400;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 8px}
+.macts .o{background:rgba(255,255,255,.06);border:1px solid var(--line2)}
+.macts .r{flex:1.4;border:2px solid #7a2a20;background:linear-gradient(180deg,#ff6a50,#c0301f);color:#fff}
+.macts .g{flex:1.4;border:0;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10}
+.rw{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+.rw div{border-radius:14px;background:rgba(5,8,28,.55);border:1px solid var(--line);padding:8px 4px;min-width:0;text-align:center}
+.rw img{width:30px;height:30px;display:block;margin:0 auto;object-fit:contain}
+.rw b{display:block;font-family:var(--fd);font-weight:400;font-size:17px;white-space:nowrap}
+.rw small{font-size:10px;color:var(--muted);font-weight:800;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{position:absolute;inset:0;z-index:30;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.nav .top{display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb img{width:96px;height:96px;object-fit:contain}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.navb .bt{width:100%;max-width:300px;height:48px;border-radius:14px;font-weight:900;font-size:15px}
+.bt.g{border:0;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10}
+.bt.o{background:rgba(255,255,255,.06);border:1px solid var(--line2)}
+.ultban{position:absolute;left:0;right:0;top:330px;z-index:8;text-align:center;pointer-events:none;animation:ban 1.4s ease-out both}
+.ultban div{display:inline-block;padding:8px 22px;font-family:var(--fd);font-size:24px;color:#fff;background:linear-gradient(90deg,transparent,rgba(169,123,255,.88),transparent);text-shadow:0 2px 0 #000;white-space:nowrap}
+.ultban small{display:block;font-family:var(--fb);font-size:11px;font-weight:900;color:#e7dcff;letter-spacing:1px}
+.toast{position:absolute;left:50%;top:214px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.fcfly{position:absolute;z-index:40;left:50%;top:140px;transform:translateX(-50%);font-family:var(--fd);font-size:26px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap;color:var(--green)}
+@keyframes rin{from{opacity:.001;transform:translateY(-6px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+/* ===== GRIMÓRIO + GOLPES (o que esta tela acrescenta à Batalha V2; o resto é cópia fiel) ===== */
+/* fileira das 3 magias no HUD: logo acima das barras de vida/energia, dentro da base (nada do HUD sai) */
+.gr{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.grl{flex:1;min-width:0;height:46px;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border-radius:14px;border:1px solid var(--line2);background:rgba(5,8,28,.72);text-align:left}
+.grl svg{flex:none;width:30px;height:30px}
+.grl span{min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.grl b{font-size:11px;font-weight:900;letter-spacing:.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grl small{font-size:9.5px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grl:active{transform:translateY(2px)}
+.spi{position:relative;flex:none;width:46px;height:46px;border:0;border-radius:50%;padding:0;background:none}
+.spi>span{position:absolute;inset:3px;display:block}
+.spi>span svg{display:block;width:40px;height:40px}
+.spi svg.rg{position:absolute;left:0;top:0;width:46px;height:46px;transform:rotate(-90deg);pointer-events:none}
+.spi .rg circle{fill:none;stroke-width:3.5}
+.spi .rg .bg{stroke:rgba(255,255,255,.16)}
+.spi .rg .fg{stroke:var(--ec,#5ee7ff);stroke-linecap:round;stroke-dasharray:132}
+.spi em{position:absolute;inset:3px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--fd);font-size:16px;background:rgba(5,8,28,.55);text-shadow:0 2px 0 #000}
+.spi em:empty{display:none}
+.spi.rdy>span{filter:drop-shadow(0 0 6px var(--ec,#5ee7ff))}
+.spi.cast{animation:spc .45s ease-out}
+.spi.off .rg{opacity:.4}
+@keyframes spc{40%{transform:scale(1.2)}}
+i.emp{display:block;width:100%;height:100%;border-radius:50%;border:2px dashed rgba(160,180,255,.45);background:rgba(5,8,28,.5)}
+/* faixa da magia lançada (esquerda, acima da cabeça do herói) */
+.spq{position:absolute;z-index:8;left:10px;top:308px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;pointer-events:none;max-width:72%}
+.spq>div{display:flex;align-items:center;gap:6px;min-height:34px;padding:2px 14px 2px 3px;border-radius:17px;background:linear-gradient(90deg,var(--ec,#3d4fb8),rgba(5,8,28,.88) 85%);border:1px solid rgba(255,255,255,.35);font-weight:900;font-size:13px;line-height:1.05;white-space:nowrap;animation:spin2 1.6s ease-out both;text-shadow:0 1px 0 #000,0 0 4px #000}
+.spq>div svg{width:28px;height:28px;flex:none}
+.spq small{display:block;font-size:9px;letter-spacing:1px;opacity:.9}
+@keyframes spin2{0%{opacity:0;transform:translateX(-24px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+/* tela do Grimório (tela cheia, como as outras telas do menu) */
+.grim{position:absolute;inset:0;z-index:30;background:linear-gradient(180deg,#1d1656,#0b1030 45%);display:flex;flex-direction:column;animation:slide .28s ease-out}
+.grim .top{display:flex;align-items:center;gap:8px;padding:12px 14px 6px}
+.ink{flex:none;display:flex;align-items:center;gap:5px;height:34px;padding:0 11px 0 4px;border-radius:17px;background:rgba(5,8,28,.72);border:1px solid var(--line2);font-weight:900;font-size:13px;font-variant-numeric:tabular-nums}
+.ink svg{width:26px;height:26px}
+.gsc{flex:1;min-height:0;overflow-y:auto;padding:0 14px 22px;scrollbar-width:none}
+.prov{font-size:11px;font-weight:800;color:var(--muted);margin:2px 0 10px;line-height:1.4}
+.gsc h5{margin:14px 0 6px;font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.gsc h5 small{display:block;text-transform:none;letter-spacing:0;font-size:11px;color:#c9d0f5;margin-top:1px}
+.bon{border-radius:16px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:2px 10px 10px}
+.bon h5{margin-top:8px}
+.b4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.b4 div{border-radius:12px;background:rgba(255,255,255,.05);padding:7px 2px;text-align:center;min-width:0}
+.b4 b{display:block;font-family:var(--fd);font-weight:400;font-size:18px;color:var(--green);white-space:nowrap}
+.b4 small{display:block;font-size:10px;font-weight:900;color:var(--muted)}
+.b4 .z b{color:#6c76a8}
+.bnote{margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--muted);line-height:1.4}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.tabs button[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.hint{margin:6px 0 0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.4}
+.slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.slot{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:104px;padding:8px 4px;border-radius:14px;border:1.5px dashed rgba(160,180,255,.4);background:rgba(5,8,28,.5);min-width:0}
+.slot svg,.slot i.emp{width:46px;height:46px;flex:none}
+.slot b{font-size:11.5px;font-weight:900;line-height:1.15;text-align:center;overflow-wrap:anywhere}
+.slot small{font-size:10px;font-weight:800;color:var(--muted)}
+.slot.sel{border:2px solid var(--gold);background:rgba(255,210,94,.08);box-shadow:0 0 12px rgba(255,210,94,.35)}
+.era{margin-top:12px}
+.era h4{display:flex;align-items:center;gap:7px;margin:0 0 6px;font-family:var(--fd);font-weight:400;font-size:16px;letter-spacing:.4px}
+.era h4 i{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 6px rgba(255,255,255,.3)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.spc{display:flex;align-items:center;gap:8px;min-height:66px;padding:8px;border-radius:14px;background:rgba(5,8,28,.55);border:1px solid var(--line);text-align:left;min-width:0}
+.spc svg{flex:none;width:44px;height:44px}
+.spc .t{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.spc b{font-size:12.5px;font-weight:900;line-height:1.15;overflow-wrap:anywhere}
+.spc small{font-size:10px;font-weight:800;color:var(--muted);line-height:1.25}
+.spc .tg{display:flex;flex-wrap:wrap;gap:3px}
+.spc .tg i{font-style:normal;font-size:9px;font-weight:900;padding:1px 5px;border-radius:6px;background:rgba(94,231,255,.14);color:#aeefff}
+.spc .tg i.up{background:rgba(94,240,160,.18);color:var(--green)}
+.spc.lock{background:rgba(255,255,255,.03);border-style:dashed}
+.spc.lock b{color:#b5bce0}
+.spc.on{border-color:var(--gold)}
+.spc:active,.slot:active{transform:translateY(2px)}
+.src{margin-top:14px;border-radius:16px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:2px 12px 12px}
+.src ul{margin:0;padding-left:16px;font-size:12px;line-height:1.5;font-weight:700}
+.src li b{color:var(--gold)}
+.src p{margin:8px 0 0;font-size:12px;font-weight:800;line-height:1.45;color:#dfe4ff}
+.src p b{color:var(--green)}
+/* detalhe da magia (folha de baixo, dentro do Grimório) */
+.gsh{position:absolute;inset:0;z-index:2;background:rgba(3,5,18,.66);display:flex;align-items:flex-end;animation:fade .2s}
+.sh{width:100%;max-height:90%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#25226e,#0f1540);border-top:1px solid var(--line2);padding:14px 16px 18px;animation:up .28s ease-out;scrollbar-width:none}
+.shh{display:flex;align-items:center;gap:10px}
+.shh svg{flex:none;width:64px;height:64px}
+.shh div{flex:1;min-width:0}
+.shh h3{margin:0;font-family:var(--fd);font-weight:400;font-size:22px;line-height:1.1}
+.shh p{margin:2px 0 0;font-size:11.5px;font-weight:800;color:var(--muted)}
+.lvc{flex:none;align-self:flex-start;padding:4px 9px;border-radius:10px;background:rgba(255,210,94,.15);color:var(--gold);font-weight:900;font-size:12px;white-space:nowrap}
+.lvc.no{background:rgba(255,255,255,.07);color:var(--muted)}
+.dsc{margin:10px 0 0;font-size:13px;font-weight:700;line-height:1.45;color:#dfe4ff}
+.rows{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.rw2{display:flex;gap:8px;align-items:baseline;padding:7px 10px;border-radius:12px;background:rgba(5,8,28,.5);border:1px solid var(--line);font-size:12.5px;font-weight:800;line-height:1.35}
+.rw2 span{flex:none;width:84px;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.rw2 div{flex:1;min-width:0}
+.rw2 em{font-style:normal;color:var(--green)}
+.prg{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prg div{min-width:0}
+.prg small{display:flex;justify-content:space-between;font-size:10px;font-weight:900;color:var(--muted);letter-spacing:.6px}
+.prg small b{color:var(--text);font-variant-numeric:tabular-nums}
+.prg i{display:block;position:relative;height:10px;margin-top:3px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden}
+.prg i u{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#5ee7ff,#a97bff)}
+.prg i.okb u{background:linear-gradient(90deg,#7dffb0,#1fbf6c)}
+.how{margin-top:10px;padding:8px 12px;border-radius:12px;background:rgba(255,210,94,.07);border:1px solid rgba(255,210,94,.3)}
+.how b{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+.how p,.how ul{margin:3px 0 0;font-size:12.5px;font-weight:700;line-height:1.45}
+.how ul{padding-left:16px}
+.sha{display:flex;gap:8px;margin-top:12px}
+.sha button{flex:1;min-width:0;min-height:48px;border-radius:14px;font-weight:900;font-size:13.5px;line-height:1.15;padding:4px 8px}
+.sha .g{border:0;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10}
+.sha .o{background:rgba(255,255,255,.06);border:1px solid var(--line2)}
+.sha .b{border:0;background:linear-gradient(180deg,#5ee7ff,#3a7bd5);color:#04142a;box-shadow:0 3px 0 #1d4680}
+.sha button:active{transform:translateY(2px)}
+/* painel ao lado: contadores */
+.cnt{display:flex;flex-wrap:wrap;gap:6px}
+.cnt span{font-size:12.5px;font-weight:900;padding:5px 9px;border-radius:9px;background:#0b1030;border:1px solid var(--line);white-space:nowrap}
+.cnt span i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <canvas id="cv" width="780" height="1688" role="img" aria-label="Batalha: seu herói com a arma equipada na mão, asa e pet na frente, contra os inimigos da era que chegam pela direita; as 3 magias do Grimório saem sozinhas e os golpes especiais aparecem com nome"></canvas>
+        <div class="r1">
+          <div class="me"><img id="av" src="a/kael_phase0.png" alt=""><div><b id="hn">Kael</b><small>Nível 27 · Medieval</small></div></div>
+          <div class="cur" id="goldc"><img src="a/coin.png" alt=""><span id="gold">0</span></div>
+          <div class="cur" id="gemc"><img src="a/gem.png" alt=""><span id="gems">0</span></div>
+        </div>
+        <div class="stp"><b id="stN">Era 2 · Fase 2-7</b><div class="wv"><div class="dots" id="dots"></div><span id="stW">Onda 3/5</span></div></div>
+        <div class="fcc" id="fcc" role="img" aria-label=""></div>
+        <div class="bossp" id="bossp" hidden>
+          <div class="bh"><span class="tag" id="btag">CHEFE</span><span class="nm" id="bnm">Dragão Real</span><span class="tmr" id="btm"></span></div>
+          <div class="bbar"><i class="lag" id="bhl"></i><i class="f" id="bhb"></i><b id="bht"></b></div>
+        </div>
+        <div class="bot">
+          <div class="gr" id="gr">
+            <button class="grl" data-act="grim" aria-label="Magias equipadas. Abrir o Grimório"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 7c4-2 7-2 10 0v17c-3-2-6-2-10 0z" fill="#3d2a7a" stroke="#c9a8ff" stroke-width="1.8" stroke-linejoin="round"/><path d="M25 7c-4-2-7-2-10 0v17c3-2 6-2 10 0z" fill="#4b3394" stroke="#c9a8ff" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 12l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.3 1.3.4-2.6-1.9-1.8 2.7-.4z" fill="#ffd25e"/></svg><span><b id="grm">MAGIAS · FASES</b><small id="grs">lançam sozinhas</small></span></button>
+            <button class="spi" data-act="sp" data-i="0" id="sp0"><span id="sp0i"></span><svg class="rg" viewBox="0 0 46 46" aria-hidden="true"><circle class="bg" cx="23" cy="23" r="21"/><circle class="fg" id="sp0r" cx="23" cy="23" r="21"/></svg><em id="sp0t"></em></button>
+            <button class="spi" data-act="sp" data-i="1" id="sp1"><span id="sp1i"></span><svg class="rg" viewBox="0 0 46 46" aria-hidden="true"><circle class="bg" cx="23" cy="23" r="21"/><circle class="fg" id="sp1r" cx="23" cy="23" r="21"/></svg><em id="sp1t"></em></button>
+            <button class="spi" data-act="sp" data-i="2" id="sp2"><span id="sp2i"></span><svg class="rg" viewBox="0 0 46 46" aria-hidden="true"><circle class="bg" cx="23" cy="23" r="21"/><circle class="fg" id="sp2r" cx="23" cy="23" r="21"/></svg><em id="sp2t"></em></button>
+          </div>
+          <div class="bars">
+            <div><div class="bl"><span>VIDA</span><b id="hpt"></b></div><div class="bar hp" id="hpw"><i class="lag" id="hpl"></i><i class="f" id="hpb"></i></div></div>
+            <div><div class="bl"><span>ENERGIA</span><b id="ent"></b></div><div class="bar en" id="enw"><i class="f" id="enb"></i></div></div>
+          </div>
+          <div class="skills">
+            <button class="sk" data-act="s1" aria-label="Ataque básico, automático"><span class="ib"><img src="a/sk2_s1.png" alt=""></span><span class="lb">Básico</span></button>
+            <button class="sk" data-act="s2" id="s2b" aria-label="Especial: Corte Giratório"><span class="ib"><img src="a/sk2_s2.png" alt=""><i class="cd" id="s2c"></i><em class="ct" id="s2t"></em></span><span class="lb">Giratório</span></button>
+            <button class="sk ult" data-act="s3" id="s3b" aria-label="Ultimate: Lâmina do Dragão"><span class="ib"><img src="a/sk2_s3.png" alt=""><i class="cd" id="s3c"></i><em class="ct" id="s3t"></em></span><span class="lb">Ultimate</span></button>
+          </div>
+          <div class="ctr">
+            <button class="bag" data-act="bag" id="bagb" aria-label="Mochila"><img src="a/chest.png" alt=""><em id="bagn" hidden>0</em></button>
+            <div class="spd" role="group" aria-label="Velocidade"><button data-spd="1" aria-pressed="true">x1</button><button data-spd="2" aria-pressed="false">x2</button></div>
+            <button class="auto" data-act="auto" id="autob" aria-pressed="true"><small>AUTO</small><b id="autot">Ligado</b></button>
+            <button class="chal" data-act="chal" id="chal"><b id="chalb">Desafiar o chefe</b><small id="chals"></small></button>
+          </div>
+        </div>
+        <div class="spq" id="spq" aria-hidden="true"></div>
+        <div id="ov"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Grimório das Eras + golpes especiais (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">Duas partes no mesmo aparelho, e a tela nunca se divide. A <b>batalha</b> é a mesma da Batalha V2 aprovada, em tela cheia, com só duas coisas a mais: a fileira das 3 magias equipadas logo acima das barras de vida e energia (cada ícone tem o anel da recarga; quando o anel fecha, a magia sai sozinha, com efeito na cena e o nome numa faixa à esquerda) e o nome do golpe especial em cima do número de dano. O <b>Grimório</b> abre em tela cheia: no jogo, pelo menu; aqui, pelo botão MAGIAS da fileira ou pelo botão Grimório abaixo.</p>
+    <div class="box">
+      <h2>Ver</h2>
+      <div class="seg" role="group" aria-label="Tela"><button data-view="bat" aria-pressed="true">Batalha</button><button data-view="grim" aria-pressed="false">Grimório</button></div>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Golpes especiais"><button data-demo="0" aria-pressed="true">Golpes no ritmo do jogo</button><button data-demo="1" aria-pressed="false">Demonstração (chance exagerada)</button></div>
+      <div class="seg" role="group" aria-label="Jogador" style="margin-top:8px"><button data-pl="era2" aria-pressed="true">Jogador na Era 2 (4 magias)</button><button data-pl="all" aria-pressed="false">Depois das 9 eras (18 magias)</button></div>
+      <div class="seg" role="group" aria-label="Herói" style="margin-top:8px"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg col" role="group" aria-label="Situação" style="margin-top:8px">
+        <button data-scn="normal" aria-pressed="true">Fase normal (passa)</button>
+        <button data-scn="wall" aria-pressed="false">Senhor da Era com 87% da FC (parede)</button>
+        <button data-scn="strong" aria-pressed="false">Com 120% da FC</button>
+      </div>
+      <p class="sub" style="margin-top:8px;font-size:13px">"Demonstração" sobe a chance dos golpes (Combo 35%, Contra-ataque 30%, Esquiva 30%, Atordoar 15%) para você ver os cinco nomes em poucos segundos; no ritmo do jogo eles saem pelos valores dos itens da cena. "Depois das 9 eras" mostra o Grimório completo e os conjuntos com magias de todas as eras (a cena continua a da Era 2). Na onda do chefe, o jogo troca sozinho para o conjunto Chefe.</p>
+    </div>
+    <div class="box">
+      <h2>Na luta agora</h2>
+      <div class="cnt" id="cnt"></div>
+    </div>
+    <div class="box">
+      <h2>Golpes especiais nos itens</h2>
+      <ul id="stkl"></ul>
+    </div>
+    <div class="box">
+      <h2>Grimório das Eras</h2>
+      <ul>
+        <li><b>18 magias</b>, 2 por era. O herói leva <b>3</b> e elas são lançadas sozinhas quando a recarga termina. Dano de no máximo <b>3× o ATQ</b> (a mesma regra da habilidade especial)</li>
+        <li>Aprende: 1ª magia da era ao vencer o <b>Senhor da Era</b> pela 1ª vez; 2ª magia ao vencer o <b>chefe da fase 50</b></li>
+        <li>Subir até o <b>Nível 10</b>: páginas <b>1, 2, 3, 4, 5, 6, 8, 10, 12</b> e tinta <b>10, 20, 40, 60, 90, 130, 180, 240, 320</b> por nível. A cada nível: efeito +4%, recarga −2%</li>
+        <li>Bônus por ter, por magia: ATQ ou Vida <b>+0,4%</b> (+0,08 por nível), DEF <b>+0,3%</b> (+0,06), Crítico <b>+0,2 pt</b> (+0,04). Vale mesmo fora das 3</li>
+        <li>Conjuntos <b>Fases</b> (ondas), <b>Chefe</b> (chefe, Senhor da Era, Chefe Mundial) e <b>Arena</b> (Arena e Torneio). Conjunto vazio usa o de Fases</li>
+        <li><b>Nada à venda</b>: páginas e tinta só jogando, em quantidade fixa. Nenhum sorteio</li>
+        <li>Ícones <b>provisórios</b>, desenhados no código na cor da era; a Arte faz os definitivos</li>
+        <li>No jogo, as duas chaves estão desligadas (Sys.grimoire e Sys.strikes, on:false) até o seu voto e o QA</li>
+      </ul>
+    </div>
+<div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: botões maiores, relógio da fúria mais visível"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais ao Equipamento V2 / Montarias V2) ----------
+   W: caixa opaca da arma era2_t1 (Lâmina Rúnica, Épico) + grip/angle do assets/weapons/meta.json. B: grip por quadro [x,y,ang,ux,uy,f0,f1,hw,behind], costas, pescoço. */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},
+"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]}}};
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1}};
+const HEROES={kael:{name:'Kael',av:'a/kael_phase0.png',wing:'angel'},kaia:{name:'Kaia',av:'a/kaia_phase0.png',wing:'demon'}};
+const WEAPON={key:'era2_t1',r:2};   /* Lâmina Rúnica (Épico), a arma equipada do Equipamento V2 */
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'];
+
+/* ---------- jogo: números de docs/balance.json e js/battle.js ---------- */
+const VIEWK=31;   /* Sys.fc.VIEW.k: a FC da tela é a FC do jogo × 31 */
+const REC2=[147000,156000,164000,173000,185000,394000,394000,413000,433000,498000];   /* dificuldade.recFc[20..29] = Fases 2-1 a 2-10 (escala do jogo) */
+const DIF={furyAt:40,furyMult:4,hpShare:0.1,dmgShare:0.05,glowAt:0.9};   /* dificuldade.boss / commons; BOSS_GLOW_AT do index.html */
+const BAL={s1Interval:0.8,s2Cooldown:6,s3Mult:10,energyPerHit:4,energyPerSkillHit:2,energyPerHurt:3,critChance:0.12,critMult:2,goldBase:4,goldGrowth:1.15,commonGoldMult:0.32,bossGoldMult:5,commonDrop:0.035};
+const S2HITS=[0.3,0.55,0.8], S2DUR=1.05, ULT_HITS=[[0.8,0.125],[1.05,0.125],[1.3,0.125],[1.55,0.125],[1.9,0.5]];   /* era 2: Corte Giratório (3 golpes) e Lâmina do Dragão */
+const SKN=['Corte Giratório','Lâmina do Dragão'];
+const needOf=st=>REC2[st-21]*VIEWK;
+const inEra=st=>st-20;
+const goldOf=(st,boss)=>Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,st-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
+function waveSpec(stage,wave){ if(wave===5) return ['e0','e1','boss']; const n=Math.min(7,3+Math.floor(inEra(stage)/3)+(wave>=3?1:0)), a=[]; for(let i=0;i<n;i++) a.push((i+stage+wave)%2?'e1':'e0'); return a; }
+/* simulação do protótipo (no jogo, Sys.stats/Sys.fc): vida do chefe = 20% da FC pedida; o golpe do herói cresce com (FC/pedida)^2,5 e a vida com ^0,3,
+   calibrado para: com 100% da FC a onda do chefe cai em ~32 s; com 87%, a fúria dos 40 s chega antes e derruba o herói; com 120%, ~20 s. */
+const SIM={bossHp:0.2,heroHp:0.09,atk:0.0122,bossDmg:0.025,atkExp:2.5,hpExp:0.3};
+/* inimigos da era 2 (assets/enemies/meta.json): folhas reais, pés no feetY (243) da célula de 256; as de golpe são cópias a 75% (s) */
+const EN={e0:{name:'Goblin',run:'e0_run',atk:'e0_atk',hitF:6,cell:148,every:1.2},e1:{name:'Esqueleto Guerreiro',run:'e1_run',atk:'e1_atk',hitF:8,cell:150,every:1.2},boss:{name:'Dragão Real',run:'boss_run',atk:'boss_atk',hitF:8,cell:214,every:1.15}};
+const SH={e0_run:{u:'a/en2_e0_run.png',n:8,w:256,h:256,pad:0,fy:243,s:1},e1_run:{u:'a/en2_e1_run.png',n:8,w:256,h:256,pad:0,fy:243,s:1},boss_run:{u:'a/en2_boss_run.png',n:8,w:544,h:256,pad:192,fy:243,s:1},
+  e0_atk:{u:'a/en2_e0_attack.png',n:12,w:480,h:256,pad:128,fy:243,s:0.75},e1_atk:{u:'a/en2_e1_attack.png',n:12,w:480,h:256,pad:128,fy:243,s:0.75},boss_atk:{u:'a/en2_boss_attack.png',n:14,w:544,h:256,pad:192,fy:243,s:0.75}};
+const SCN={normal:{stage:27,wave:3,fc:12.9e6},wall:{stage:30,wave:5,ratio:0.87},strong:{stage:30,wave:5,ratio:1.2}};
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+function fmtF(v){ v=Math.max(0,v); if(v>=1e6) return (v/1e6).toFixed(1).replace('.',',')+' mi'; if(v>=1e3){ const k=v/1e3; return (k>=100?String(Math.round(k)):k.toFixed(1).replace('.',','))+' mil'; } return String(Math.round(v)); }
+const fmtG=v=>v>=1e6?fmtF(v):n(v);
+const fmtFC=v=>v>=1e5?(Math.max(0,v)/1e6).toFixed(1).replace(".",",")+" mi":fmtF(v);   /* FC da tela em milhões (0,9 mi), como o cartão do jogo */
+const mmss=s=>{ s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rng(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+
+/* ---------- PALCO: imagens como <img> DE VERDADE na página, escondidas fora da tela (no host publicado, new Image() não chega ao canvas) ---------- */
+const IM={}, IMS={};
+const STG_EL=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG_EL.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+['a/bg_era2.png','a/body_kael.png','a/body_kaia.png','a/wh_era2_t1.png','a/wg_angel_L.png','a/wg_angel_R.png','a/wg_demon_L.png','a/wg_demon_R.png','a/pt_pet_shadowwolf_idle.png','a/coin.png','a/gem.png','a/era2_helmet.png','a/era2_vest_t1.png','a/ult_era2.png'].concat(Object.values(SH).map(s=>s.u)).forEach(img);
+
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo: GLOWB/TINT) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; return -(G.ang-wang)*Math.PI/180; }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+function wings(x,ax,ay,b,k,t,wing){ const WA=WING_AN[wing]; if(!WA||!b) return; const Li=img('a/wg_'+wing+'_L.png'), Ri=img('a/wg_'+wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+
+/* ---------- cena ---------- */
+const GY=560, HX=116, HK=0.8, KP=118/512, PCX=84, BGK=718/1073;   /* linha do chão = 0,78 da altura do fundo da era 2 (assets/bg/meta.json groundY) */
+const SLOTS=[226,278,330], BSLOTS=[212,254], BOSSX=[300,256];   /* centros dos pés: comuns (o 3º ao fundo, 0,9) e onda do chefe */
+let G=null, SPEED=1, AUTO=true;
+
+function reset(scn){ const C=SCN[scn], hero=G?G.hero:'kael';
+  G={scn,hero,stage:C.stage,wave:C.wave,fc:C.fc||Math.round(needOf(C.stage)*C.ratio),fc0:0,farm:false,en:[],queue:[],pend:[],fx:[],fly:[],
+    heroHp:0,heroMax:1,heroLag:1,energy:40,cd2:2.5,s1T:0.4,petT:1.6,clock:0,spawnT:0.2,bossClock:null,fury:false,travel:0,bgOff:120,
+    swingT:-9,s2T:-9,petAtkT:-9,hurtT:-9,dead:false,deadT:0,over:null,lastKill:-9,ult:null,shake:0,gold:486000,gems:251,bag:0,done:{},R:rng(20261113),paused:false,fightT0:0,eid:0};
+  G.fc0=G.fc; G.sp=[]; G.spMode=null; G.casts=[]; G.spFx=[]; G.spN=0; G.stkN={combo:0,counter:0,stun:0,dodge:0,lifesteal:0}; G.shield=null; G.buff={}; G.lsT=-9; G.lsAcc=0;
+  closeAll(); if(GR.open) G.paused=true; startWave(); }
+const pOf=()=>G.fc/needOf(G.stage);
+const heroMaxOf=()=>needOf(G.stage)*SIM.heroHp*Math.pow(pOf(),SIM.hpExp);
+const atkOf=()=>needOf(G.stage)*SIM.bossHp*SIM.atk*Math.pow(pOf(),SIM.atkExp);
+function startWave(){ G.queue=waveSpec(G.stage,G.wave); G.en=[]; G.pend=[]; G.spawnT=0.25; G.bossClock=null; G.fury=false; G.heroMax=heroMaxOf(); G.heroHp=G.heroMax; G.heroLag=1; G.fightT0=G.clock;
+  if(G.wave===5){ const lord=inEra(G.stage)===10, mid=inEra(G.stage)===5;
+    banner(lord?'Senhor da Era':mid?'Chefe do meio':'Onda do chefe',EN.boss.name+' · fúria aos '+DIF.furyAt+' s (dano x'+DIF.furyMult+')','rgba(198,40,40,.9)'); }
+  else banner('Onda '+G.wave+(G.farm?' de 4':' de 5'),G.farm?'Farmando a Fase 2-'+inEra(G.stage):'Era 2 · Fase 2-'+inEra(G.stage)); syncSpells(); }
+function spawn(k){ const boss=k==='boss', B=needOf(G.stage)*SIM.bossHp, bd=needOf(G.stage)*SIM.heroHp*SIM.bossDmg, hp=boss?B:B*DIF.hpShare;
+  G.en.push({id:G.eid++,k,boss,hp,max:hp,dmg:boss?bd:bd*DIF.dmgShare,x:440,tx:440,st:'run',stT:0,atkT:0.5+G.R()*0.6,hitDone:true,dead:false,deadT:0,hurtT:-9,seed:G.R()*5,lag:1,idx:0}); }
+function alive(){ return G.en.filter(e=>!e.dead); }
+function front(){ return alive()[0]||null; }
+function later(dt,f){ G.pend.push({at:G.clock+dt,f}); }
+function layout(){ const A=alive(), bw=G.wave===5; let ci=0; const others=A.filter(e=>!e.boss).length;
+  for(const e of A){ if(e.boss){ e.tx=BOSSX[others?0:1]; e.idx=others?2:0; e.back=false; } else { e.tx=bw?BSLOTS[Math.min(1,ci)]:SLOTS[Math.min(2,ci)]; e.idx=ci; e.back=!bw&&ci===2; ci++; } } }
+
+function step(dt){ if(!G||G.paused) return; G.clock+=dt; const c=G.clock;
+  for(let i=0;i<G.pend.length;i++){ const p=G.pend[i]; if(c>=p.at){ G.pend.splice(i--,1); try{ p.f(); }catch(e){} } }
+  stepFly(); G.shake=Math.max(0,G.shake-dt*2);
+  G.heroLag+= (Math.max(0,G.heroHp/G.heroMax)-G.heroLag)*Math.min(1,dt*1.6);
+  for(const e of G.en) e.lag+=(Math.max(0,e.hp/e.max)-e.lag)*Math.min(1,dt*1.6);
+  if(G.travel>0){ G.travel-=dt; G.bgOff+=dt*60; if(G.travel<=0){ G.travel=0; startWave(); } return; }
+  if(G.dead){ if(!G.over&&c-G.deadT>1.4) showLose(); return; }
+  if(G.over) return;
+  G.spawnT-=dt; if(G.queue.length&&G.spawnT<=0&&alive().length<3){ spawn(G.queue.shift()); G.spawnT=G.wave===5?0.35:0.5; }
+  layout();
+  for(const e of G.en){ if(e.dead) continue;
+    if(e.x>e.tx+0.5){ e.x=Math.max(e.tx,e.x-140*dt); if(e.st!=='atk') e.st='run'; }
+    else { e.x=e.tx; if(e.st==='run'){ e.st='idle'; if(G.wave===5&&G.bossClock==null) G.bossClock=0; } } }
+  if(G.wave===5&&G.bossClock!=null){ G.bossClock+=dt; const b=G.en.find(e=>e.boss&&!e.dead);
+    if(b&&!G.fury&&G.bossClock>=DIF.furyAt){ G.fury=true; G.shake=0.8; banner('FÚRIA DO CHEFE','Dano x'+DIF.furyMult,'rgba(198,40,40,.95)'); } }
+  for(const e of alive()){ if(e.st==='run'||(e.stunU||0)>c) continue; const K=EN[e.k], A=SH[K.atk];   /* atordoado: parado, sem golpe */
+    if(e.boss||e.idx<2) e.atkT-=dt;   /* o relógio do golpe corre também durante a animação: um golpe a cada K.every s */
+    if(e.st==='atk'){ e.stT+=dt; if(!e.hitDone&&e.stT>=K.hitF/12){ e.hitDone=true; hurtHero(e); } if(e.stT>=A.n/12) e.st='idle'; }
+    if(e.st!=='atk'&&e.atkT<=0&&(e.boss||e.idx<2)){ e.atkT=K.every; e.st='atk'; e.stT=0; e.hitDone=false; } }
+  heroAct(dt);
+  if(!G.queue.length&&G.en.length&&G.en.every(e=>e.dead)&&c-G.lastKill>0.8&&!G.dead) waveClear();
+}
+function heroAct(dt){ G.s1T-=dt; G.cd2=Math.max(0,G.cd2-dt); G.petT-=dt; stepSpells(dt); const tg=front(); if(!tg||tg.x>380) return;
+  if(G.s1T<=0){ G.s1T=BAL.s1Interval/(1+buffVal('aspd')/100); G.swingT=G.clock; later(0.16,()=>{ const f=front(); if(f) hit(f,atkOf(),'s1'); }); }
+  if(AUTO&&G.cd2<=0) castS2();
+  if(AUTO&&G.energy>=100&&!G.ult) castUlt();
+  if(G.petT<=0){ G.petT=3.2; G.petAtkT=G.clock; later(0.32,()=>{ const f=front(); if(f) hit(f,atkOf()*0.25,'pet'); }); } }
+function castS2(){ if(G.cd2>0||G.dead) return false; G.cd2=BAL.s2Cooldown; G.s2T=G.clock; for(const h of S2HITS) later(h,()=>{ for(const e of alive()) if(e.x<392) hit(e,atkOf(),'s2'); }); return true; }
+function castUlt(){ if(G.energy<100||G.ult||G.dead) return false; G.energy=0; G.ult={t:G.clock};
+  const b=document.createElement('div'); b.className='ultban'; b.innerHTML='<div><small>ULTIMATE</small>'+SKN[1]+'</div>'; scr.appendChild(b); setTimeout(()=>b.remove(),1500);
+  for(const [at,fr] of ULT_HITS) later(at,()=>{ for(const e of alive()) hit(e,atkOf()*BAL.s3Mult*fr,'ult'); }); return true; }
+/* golpe do herói: igual à Batalha V2 + golpes especiais (Sys.strikes.onHeroHit: combo só no básico, atordoar e roubo de vida) */
+function hit(e,d,kind){ if(e.dead||G.dead) return; const crit=kind==='s1'&&G.R()<BAL.critChance; d*=(crit?BAL.critMult:1)*(0.92+0.16*G.R());
+  e.hp-=d; e.hurtT=G.clock; G.energy=Math.min(100,G.energy+(kind==='s1'?BAL.energyPerHit:kind==='s2'?BAL.energyPerSkillHit:0));
+  const hx=e.x+(e.boss?26:0)+(G.R()-0.5)*18, hy=GY-(e.boss?170:118)-(kind==='pet'?-40:0);
+  const labs=crit?[{text:'CRÍTICO',color:'#ffb347'}]:[];
+  if(kind==='s1'||kind==='s2'||kind==='combo') for(const L of strikeHit(e,d,kind)) labs.push(L);
+  const col=kind==='ult'?'#e7c6ff':kind==='s2'?'#ff9a3a':kind==='combo'?SD.color.combo:kind==='counter'?SD.color.counter:crit?'#ffe07a':kind==='pet'?'#b9c6ff':'#ffffff';
+  G.fx.push({k:'n',x:hx,y:hy,txt:fmtF(d),col,big:crit||kind==='ult',labs,t:G.clock});
+  if(kind==='s1'||kind==='pet'||kind==='combo'||kind==='counter') G.fx.push({k:'sl',x:e.x-(e.boss?0:10),y:GY-(e.boss?110:70),t:G.clock,col:kind==='pet'?'#b9c6ff':kind==='combo'?SD.color.combo:kind==='counter'?SD.color.counter:RC[WEAPON.r]});
+  G.fx.push({k:'sp',x:hx,y:hy+40,t:G.clock,s:G.R()*6});
+  if(e.hp<=0) kill(e); }
+/* herói apanhou: Sys.strikes.onHeroHurt (esquiva zera o dano; o contra-ataque sai mesmo na esquiva) + escudo das magias */
+function hurtHero(e){ if(G.dead||e.dead) return; const m=(G.fury&&e.boss)?DIF.furyMult:1, R=rates(), c=G.clock, labs=[]; let d=e.dmg*m*(0.9+0.2*G.R());
+  if(G.R()*100<R.dodge+buffVal('dodge')){ d=0; labs.push(lab('dodge')); G.stkN.dodge++; }
+  if(R.counter>0&&G.R()*100<R.counter){ labs.push(lab('counter')); G.stkN.counter++; later(0.12,()=>{ G.swingT=G.clock; later(0.14,()=>{ const f=!e.dead?e:front(); if(f) hit(f,atkOf()*SD.counterMult,'counter'); }); }); }
+  let abs=0; if(d>0&&G.shield&&G.shield.until>c&&G.shield.amt>0){ abs=Math.min(d,G.shield.amt); G.shield.amt-=abs; d-=abs; }
+  G.energy=Math.min(100,G.energy+BAL.energyPerHurt);
+  if(d>0){ G.heroHp-=d; G.hurtT=c; if(e.boss) G.shake=Math.max(G.shake,m>1?0.5:0.2); }
+  if(abs>0&&d<=0&&!labs.length) labs.push({text:'ESCUDO',color:G.shield.col});
+  if(d>0||labs.length) G.fx.push({k:'n',x:HX-6+(G.R()-0.5)*20,y:GY-178,txt:d>0?'−'+fmtF(d):'',col:m>1?'#ff4f4f':'#ff8a8a',big:m>1&&d>0,labs,t:c});
+  if(G.heroHp<=0){ G.heroHp=0; G.dead=true; G.deadT=c; G.pend=[]; G.ult=null; } }
+function kill(e){ e.dead=true; e.deadT=G.clock; e.hp=0; G.lastKill=G.clock; const g=goldOf(G.stage,e.boss), N=e.boss?8:3, ex=e.x+(e.boss?26:0), ey=GY-(e.boss?100:60);
+  for(let i=0;i<N;i++) G.fly.push({k:'gold',u:'a/coin.png',x0:ex+(G.R()-0.5)*40,y0:ey+(G.R()-0.5)*30,t:G.clock+i*0.05,dur:0.85,val:i===N-1?g-Math.floor(g/N)*(N-1):Math.floor(g/N),pop:G.R()});
+  if(e.boss||G.R()<BAL.commonDrop) G.fly.push({k:'item',u:e.boss?'a/era2_vest_t1.png':'a/era2_helmet.png',x0:ex,y0:ey-20,t:G.clock+0.2,dur:1.1,val:1,pop:0.5,name:e.boss?'Armadura de Placas [Épico · Armadura]':'Elmo de Ferro [Raro · Chapéu]'});
+  if(e.boss&&alive().length===0) G.fury=false; }
+function waveClear(){ if(G.wave===5){ stageWin(); return; } G.wave=(G.farm&&G.wave>=4)?1:G.wave+1; G.travel=0.9; G.en=[]; }
+function stageWin(){ const lord=inEra(G.stage)===10, gems=lord?40:10, secs=G.clock-G.fightT0; G.en=[];
+  G.fly.push({k:'gem',u:'a/gem.png',x0:HX+40,y0:GY-200,t:G.clock+0.3,dur:1,val:gems,pop:0.5});
+  if(lord){ G.over='win'; banner('Senhor da Era vencido!','+40 gemas · Era 3 liberada','rgba(200,140,20,.92)'); setTimeout(()=>{ if(G&&G.over==='win') showWin(secs); },1500); return; }
+  banner('Fase 2-'+inEra(G.stage)+' vencida!','+10 gemas','rgba(200,140,20,.92)'); G.stage++; G.wave=1; G.farm=false; G.travel=1.6; }
+function stepFly(){ const c=G.clock; G.fly=G.fly.filter(f=>{ if(c-f.t<f.dur) return true;
+    if(f.k==='gold'){ G.gold+=f.val; bump('#goldc'); } else if(f.k==='gem'){ G.gems+=f.val; bump('#gemc'); } else if(f.k==='item'){ G.bag++; bump('#bagb'); toast('Drop: '+f.name); }
+    return false; }); }
+
+/* ---------- ações do jogador ---------- */
+function challenge(){ G.farm=false; G.over=null; G.dead=false; G.wave=5; G.en=[]; G.queue=[]; G.pend=[]; G.travel=0.6; toast('Desafiando o chefe!'); }
+function tapChallenge(){ if(G.over||G.dead) return; if(G.wave===5&&!G.farm&&!G.travel){ toast('Você já está enfrentando o chefe'); return; }
+  if(G.fc<needOf(G.stage)){ openCard('ask'); return; } challenge(); }
+function farm(){ closeAll(); G.farm=true; G.over=null; G.dead=false; G.wave=1; G.en=[]; G.queue=[]; G.pend=[]; G.travel=0.6; toast('Farmando a Fase 2-'+inEra(G.stage)+': ouro, itens e XP'); }
+function retry(){ closeAll(); G.over=null; G.dead=false; G.farm=false; G.wave=5; G.en=[]; G.queue=[]; G.pend=[]; G.travel=0.6; toast('Desafiando o chefe de novo'); }
+
+/* ---------- conselho (Sys.advice, filtrado pelo js/diff.js: no máximo 3, nada de compra ou invocação) ---------- */
+const ADV=[
+ {id:'pet',k:0.12,label:'Evoluir o pet (estágio 2)',sub:'Lobo das Sombras · grátis',dest:'Pets',img:'a/shadow_wolf.png',scrT:'PETS',what:'evolui o <b>Lobo das Sombras</b> para o estágio 2'},
+ {id:'forge',k:0.105,label:'Forjar a arma +1 (Forja +8)',sub:'Lâmina Rúnica · 38,4 mil de ouro',dest:'Forja',img:'a/forge.png',scrT:'FORJA',what:'leva a <b>Lâmina Rúnica</b> da Forja +7 para +8'},
+ {id:'level',k:0.067,label:'Subir para o Nível 28',sub:'falta 35% da barra · lutando',dest:'Lutar',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="#5ef0a0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 11l6-6 6 6"/></svg>',last:true}];
+function advice(){ const fc=G.fc0; return ADV.filter(a=>!G.done[a.id]).map(a=>({...a,gain:Math.round(fc*a.k)})).sort((a,b)=>(!!a.last-!!b.last)||(b.gain-a.gain)).slice(0,3); }
+let CARD=null;
+function cardHTML(kind){ const need=needOf(G.stage), fc=G.fc, miss=Math.max(0,Math.ceil(need-fc)), p=fc/need, tc=tierCol(p), acts=miss>0?advice():[];
+  const lord=inEra(G.stage)===10, who=lord?'o Senhor da Era':'o chefe';
+  let h='';
+  if(kind==='lose') h+=`<h2 class="lose">DERROTA</h2><p class="cp">${esc(EN.boss.name)} venceu aos ${mmss(G.deadT-G.fightT0)}${G.lostFury?' · em FÚRIA (dano x'+DIF.furyMult+')':''}</p>`;
+  h+=miss>0?`<h3>Faltam ${fmtFC(miss)} de FC</h3>`:`<h3 class="okk">FC suficiente</h3>`;
+  h+=`<div class="need">Sua FC: <b>${fmtFC(fc)}</b> · ${who} pede <b style="color:#fff">${fmtFC(need)}</b> (${Math.round(p*100)}%)</div>`;
+  h+=`<div class="meter" style="--tc:${tc}"><i style="width:${Math.min(100,p*100/1.1).toFixed(1)}%"></i><u style="left:${(90/1.1).toFixed(1)}%"><span>90%</span></u><u style="left:${(100/1.1).toFixed(1)}%"><span>100%</span></u></div>`;
+  if(acts.length){ h+=`<div class="adv">`+acts.map((a,i)=>`<div class="arow"><span class="ai">${a.img?`<img src="${a.img}" alt="">`:a.svg}</span><span class="at"><b>${esc(a.label)}</b><small>${esc(a.sub)}</small></span><span class="g">+${fmtFC(a.gain)}</span><button class="go" data-adv="${i}" aria-label="${esc(a.label)}: +${fmtFC(a.gain)} de FC. Ir para ${a.dest}"><b>Ir</b><small>${a.dest}</small></button></div>`).join('')+`</div>`;
+    const ready=acts.filter(a=>!a.last), sum=ready.reduce((s,a)=>s+a.gain,0);
+    h+=`<p class="tip">${ready.length>1&&sum>=miss?`Fazendo as ${ready.length===2?'duas':ready.length} primeiras: <b>+${fmtFC(sum)}</b>, você passa da FC pedida.`:'Ouro, itens e XP da fase também sobem a FC.'} Sem compra e sem invocação: só o que você já pode fazer.</p>`; }
+  else if(miss>0) h+=`<p class="tip">Continue lutando: ouro, itens e XP aumentam a FC.</p>`;
+  else h+=`<p class="tip">Com a FC pedida, ${who} cai em ~32 s, antes da fúria dos ${DIF.furyAt} s.</p>`;
+  if(kind==='lose') h+=`<div class="macts"><button class="o" data-c="farm">Farmar a fase</button><button class="${miss>0?'r':'g'}" data-c="retry">Tentar de novo</button></div>`;
+  else h+=`<div class="macts"><button class="o" data-c="later">Agora não</button><button class="${miss>0?'r':'g'}" data-c="anyway">${miss>0?'Desafiar assim mesmo':'Desafiar o chefe'}</button></div>`;
+  return h; }
+function openCard(kind){ closeCard(); CARD={kind}; const s=document.createElement('div'); s.className='shade'; s.id='shade'; s.dataset.kind=kind;
+  s.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-label="${kind==='lose'?'Derrota':'FC pedida pelo chefe'}">${cardHTML(kind)}</div>`; $('#ov').appendChild(s);
+  s.addEventListener('click',e=>{ if(e.target===s&&kind==='ask') closeCard(); }); }
+function closeCard(){ const s=$('#shade'); if(s) s.remove(); CARD=null; }
+function showLose(){ G.over='lose'; G.lostFury=G.fury; G.fury=false; openCard('lose'); }
+function showWin(secs){ closeCard(); const s=document.createElement('div'); s.className='shade'; s.id='shade';
+  s.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-label="Vitória"><h2 class="win">VITÓRIA</h2><p class="cp">Senhor da Era ${esc(EN.boss.name)} vencido em ${mmss(secs)}${secs<DIF.furyAt?', antes da fúria':''}</p>
+   <div class="rw"><div><img src="a/gem.png" alt=""><b>+40</b><small>gemas</small></div><div><img src="a/coin.png" alt=""><b>+${n(goldOf(30,true))}</b><small>ouro do chefe</small></div><div><img src="a/era2_vest_t1.png" alt=""><b>Épico</b><small>Armadura de Placas</small></div></div>
+   <p class="tip" style="text-align:center">Era 3 liberada: <b style="color:var(--gold)">Era da Pólvora</b>. A FC pedida da Fase 3-1 sai da mesma tabela (dificuldade.recFc).</p>
+   <div class="macts"><button class="o" data-c="again">Ver de novo</button><button class="g" data-c="next">Ir para a Era 3</button></div></div>`;
+  $('#ov').appendChild(s); }
+function openNav(a){ G.paused=true; const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-n="back" aria-label="Voltar à batalha"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${a.scrT}</div></div>
+   <div class="navb"><img src="${a.img}" alt=""><p>No jogo, o Ir abre a tela <b>${a.dest}</b> já no lugar certo: ${a.what}.</p><p>Ganho: <b style="color:var(--green)">+${fmtFC(a.gain)} de FC</b>.</p>
+   <button class="bt g" data-n="do" data-id="${a.id}" data-g="${a.gain}">Fazer e voltar · +${fmtFC(a.gain)} FC</button><button class="bt o" data-n="back">Voltar sem fazer</button></div>`;
+  scr.appendChild(d); }
+function closeNav(){ const d=$('#nav'); if(d) d.remove(); if(G) G.paused=GR.open; }
+function closeAll(){ closeCard(); const d=$('#nav'); if(d) d.remove(); if(G) G.paused=GR.open; }
+function goAdv(i){ const acts=advice(), a=acts[i]; if(!a) return; const kind=CARD&&CARD.kind;
+  if(a.id==='level'){ if(kind==='lose') farm(); else closeCard(); toast('Lutar: a XP de abate enche a barra do nível'); return; }
+  openNav(a); }
+function doAdv(id,g){ const kind=CARD&&CARD.kind; G.done[id]=1; G.fc+=g; closeNav(); fcFly(g); toast((id==='pet'?'Pet evoluído':'Arma na Forja +8')+' · +'+fmtFC(g)+' FC'); G.heroMax=heroMaxOf();
+  if(kind) openCard(kind); }
+
+/* ---------- desenho ---------- */
+function tierCol(p){ return p>=1?'#5ef0a0':p>=DIF.glowAt?'#ffd25e':'#ff6b6b'; }
+function drawBg(x){ const I=img('a/bg_era2.png'); const w=1600*BGK, h=718;
+  if(ok(I)){ const off=((G.bgOff%(2*w))+2*w)%(2*w); const i0=Math.floor(off/w)-1;
+    for(let i=i0;i<i0+4;i++){ const px=i*w-off; if(px>390||px+w<0) continue; x.save(); if(((i%2)+2)%2===1){ x.translate(px+w,0); x.scale(-1,1); x.drawImage(I,0,0,w,h); } else x.drawImage(I,px,0,w,h); x.restore(); } }
+  else { x.fillStyle='#1a2a4a'; x.fillRect(0,0,390,h); }
+  const g=x.createLinearGradient(0,0,0,240); g.addColorStop(0,'rgba(11,16,48,.75)'); g.addColorStop(1,'rgba(11,16,48,0)'); x.fillStyle=g; x.fillRect(0,0,390,240);
+  x.fillStyle='#0b1030'; x.fillRect(0,h,390,844-h); }
+function drawHero(x,t){ const B=D.B[G.hero], sh=img('a/body_'+G.hero+'.png'); if(!ok(sh)) return;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], Gp={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  /* golpe: avanço curto e a lâmina girando NO PUNHO (a mão segura o cabo o tempo todo) */
+  const u=(G.clock-G.swingT)/0.32; let lx=0, sw=0;
+  if(u>=0&&u<1&&!G.dead){ lx=Math.sin(Math.PI*u)*24; sw=u<0.3?-0.7*(u/0.3):u<0.6?-0.7+2.1*((u-0.3)/0.3):1.4*(1-(u-0.6)/0.4); }
+  const s2u=(G.clock-G.s2T)/S2DUR; if(s2u>=0&&s2u<1&&!G.dead) sw+=Math.sin(s2u*Math.PI*3)*0.9;
+  const hx=HX+lx, x0=hx-(B.pad+128)*k, y0=GY-(G.hero==='kael'?242:B.fy)*k;
+  x.save(); x.globalAlpha=.32; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  x.save();
+  if(G.dead){ const d=Math.min(1,(G.clock-G.deadT)/0.6); x.globalAlpha=1-0.55*d; x.translate(hx,GY); x.rotate(-0.45*d); x.translate(-hx,-GY); }
+  if(G.clock-G.hurtT<0.12) x.filter='brightness(1.9) saturate(.5)';
+  wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t,HEROES[G.hero].wing);
+  x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*B.w,0,B.w,B.h,0,0,B.w,B.h);
+  const W=D.W[WEAPON.key], ws=wSpr(WEAPON.key,WEAPON.r); let drawW=null;
+  if(ws){ const grip=W.grip, kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,Gp)+sw;
+    drawW=()=>{ x.save(); x.translate(Gp.x,Gp.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=Gp.behind||Math.cos(Gp.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,Gp,body,-12,12,(G.hero==='kael'?Gp.hw:Math.min(Gp.hw,6))+5);
+      const nk=B.neck&&B.neck[fi]; if(nk&&Math.abs(sw)<0.3){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function drawPet(x,t){ const I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) return; const fw=I.naturalWidth/12, fh=I.naturalHeight, fi=((Math.floor(t*12)%12)+12)%12;
+  const u=(G.clock-G.petAtkT)/0.6, lx=(u>=0&&u<1)?Math.sin(Math.PI*u)*42:0, cx=PCX+lx;
+  x.save(); x.globalAlpha=.28; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(cx+6,GY+12,30,6,0,0,7); x.fill(); x.restore();
+  x.drawImage(I,fi*fw,0,fw,fh,cx-224*KP,GY+12-307*KP,512*KP,352*KP); }
+function drawEnemy(x,e,t){ const K=EN[e.k]; let S,fi;
+  if(!e.dead&&e.st==='run'){ S=SH[K.run]; fi=((Math.floor((t+e.seed)*12)%S.n)+S.n)%S.n; }
+  else if(!e.dead&&e.st==='atk'){ S=SH[K.atk]; fi=Math.min(S.n-1,Math.max(0,Math.floor(e.stT*12))); }
+  else { S=SH[K.atk]; fi=0; }
+  const I=img(S.u), k=K.cell*(e.back?0.9:1)/256, bx=e.x+(e.boss?26:0);
+  x.save(); x.globalAlpha=e.dead?Math.max(0,.28*(1-(G.clock-e.deadT)/0.7)):.28; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(bx,GY+2,e.boss?66:36,e.boss?10:7,0,0,7); x.fill(); x.restore();
+  if(!ok(I)) return;
+  x.save(); x.translate(e.x,GY);
+  if(e.dead){ const d=Math.min(1,(G.clock-e.deadT)/0.7); x.globalAlpha=1-d; x.rotate(0.35*d); }
+  else if(e.st==='idle') x.scale(1,1+0.018*Math.sin(t*3+e.seed));
+  if(!e.dead&&G.clock-e.hurtT<0.1) x.filter='brightness(2.3)';
+  if(e.boss&&G.fury&&!e.dead){ x.shadowColor='rgba(255,40,40,.9)'; x.shadowBlur=18; }
+  x.drawImage(I,fi*S.w*S.s,0,S.w*S.s,S.h*S.s,-(S.pad+128)*k,-S.fy*k,S.w*k,S.h*k);
+  x.restore();
+  if(!e.boss&&!e.dead&&e.hp<e.max){ const w=46, yy=GY-K.cell*(e.back?0.9:1)*0.86; x.fillStyle='rgba(0,0,0,.6)'; x.fillRect(e.x-w/2,yy,w,5); x.fillStyle='rgba(255,255,255,.55)'; x.fillRect(e.x-w/2,yy,w*e.lag,5); x.fillStyle='#ff5a5a'; x.fillRect(e.x-w/2,yy,w*Math.max(0,e.hp/e.max),5); } }
+function drawFx(x){ const c=G.clock;
+  /* Corte Giratório: anel em volta do herói */
+  const s2u=(c-G.s2T)/S2DUR; if(s2u>=0&&s2u<1){ x.save(); x.globalCompositeOperation='lighter'; for(let i=0;i<3;i++){ const r=40+i*26+s2u*60; x.strokeStyle=`rgba(255,${170-i*30},80,${(1-s2u)*.7})`; x.lineWidth=5-i; x.beginPath(); x.ellipse(HX+60,GY-70,r*1.3,r*.45,0,s2u*12+i,s2u*12+i+4.2); x.stroke(); } x.restore(); }
+  G.fx=G.fx.filter(o=>{ const t=c-o.t; if(t>1.1||t<0) return t<0;
+    if(o.k==='n'){ x.save(); x.globalAlpha=1-Math.max(0,t-.6)/.5; x.textAlign='center'; x.lineWidth=4; x.lineJoin='round'; x.strokeStyle='#000'; const y=o.y-t*48;
+      if(o.txt){ x.font=`400 ${o.big?28:20}px "Lilita One",Impact,sans-serif`; x.strokeText(o.txt,o.x,y); x.fillStyle=o.col; x.fillText(o.txt,o.x,y); }
+      /* nome do golpe especial (cor do Sys.strikes) em cima do número; sem número (esquiva), o nome fica maior */
+      let ly=o.txt?y-23:y; for(const L of (o.labs||[])){ x.font=`400 ${o.txt?15:20}px "Lilita One",Impact,sans-serif`; x.strokeText(L.text,o.x,ly); x.fillStyle=L.color; x.fillText(L.text,o.x,ly); ly-=o.txt?17:22; }
+      x.restore(); }
+    else if(o.k==='sl'){ if(t>.22) return false; const a=1-t/.22; x.save(); x.globalCompositeOperation='lighter'; x.strokeStyle=o.col; x.globalAlpha=a; x.lineWidth=6*a+1; x.beginPath(); x.arc(o.x-30,o.y,46,-1.1,0.9); x.stroke(); x.strokeStyle='#fff'; x.lineWidth=2; x.beginPath(); x.arc(o.x-30,o.y,46,-0.9,0.7); x.stroke(); x.restore(); }
+    else { if(t>.5) return false; x.save(); x.globalCompositeOperation='lighter'; for(let i=0;i<9;i++){ const a=i/9*6.28+o.s, r=t*110; x.fillStyle=`rgba(255,${200-i*8},120,${1-t*2})`; x.beginPath(); x.arc(o.x+Math.cos(a)*r,o.y+Math.sin(a)*r*.6,3*(1-t*2)+1,0,7); x.fill(); } x.restore(); }
+    return true; });
+  /* ouro, gemas e itens voando para o topo / mochila (posição real dos chips no HUD) */
+  for(const f of G.fly){ const t=c-f.t; if(t<0) continue; const u=Math.min(1,t/f.dur), T=target(f.k), I=img(f.u); if(!ok(I)) continue;
+    let px,py; if(u<0.3){ const v=u/0.3; px=f.x0+(f.pop-0.5)*40*v; py=f.y0-50*Math.sin(v*Math.PI/2); } else { const v=(u-0.3)/0.7, e2=v*v, sx=f.x0+(f.pop-0.5)*40, sy=f.y0-50; px=sx+(T.x-sx)*e2; py=sy+(T.y-sy)*e2-Math.sin(v*Math.PI)*40; }
+    const s=f.k==='item'?34:f.k==='gem'?24:18; x.drawImage(I,px-s/2,py-s/2,s,s); } }
+const TG={};
+function target(k){ const id=k==='gold'?'#goldc':k==='gem'?'#gemc':'#bagb', el=$(id); if(!el) return {x:300,y:24};
+  let x=0,y=0,o=el; while(o&&o!==scr&&o.offsetParent!==undefined){ x+=o.offsetLeft||0; y+=o.offsetTop||0; o=o.offsetParent; }
+  const r={x:x+(el.offsetWidth||0)/2,y:y+(el.offsetHeight||0)/2}; if(!(r.x>0)) return {x:k==='item'?37:300,y:k==='item'?800:24}; return r; }
+function drawUlt(x){ if(!G.ult) return; const t=G.clock-G.ult.t, fi=Math.floor(t*12); if(fi>=49||t<0){ G.ult=null; return; }
+  x.save(); x.fillStyle=`rgba(5,0,20,${Math.min(.25,t)})`; x.fillRect(0,0,390,844); const U=img('a/ult_era2.png');
+  if(ok(U)){ x.globalCompositeOperation='lighter'; const w=414, h=w*216/384; x.drawImage(U,(fi%8)*384,Math.floor(fi/8)*216,384,216,-12,GY+35-h,w,h); } x.restore(); }
+function drawFury(x,t){ if(!G.fury) return; const a=0.22+0.1*Math.sin(t*8); const g=x.createRadialGradient(195,420,120,195,420,470); g.addColorStop(0,'rgba(255,0,0,0)'); g.addColorStop(1,`rgba(200,0,20,${a.toFixed(3)})`); x.fillStyle=g; x.fillRect(0,0,390,844); }
+
+let lastT=null;
+function draw(t){
+  if(!G||!G.en) return;
+  const dt=lastT==null?0:Math.min(0.05,Math.max(0,t-lastT)); lastT=t;
+  try{ step(dt*SPEED); }catch(err){ stgErr('a luta',err); }
+  const c=$('#cv'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,844);
+  const sk=G.shake>0?(Math.random()-.5)*10*G.shake:0;
+  try{ drawBg(x); }catch(err){ x.setTransform(2,0,0,2,0,0); stgErr('o cenário',err); }
+  x.setTransform(2,0,0,2,sk*2,0);
+  try{ for(const e of [...G.en].sort((a,b)=>b.x-a.x)) drawEnemy(x,e,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os inimigos',err); }
+  try{ drawHero(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  /* PET SEMPRE NA FRENTE (regra do dono): depois do herói, à frente e no chão */
+  try{ drawPet(x,t); }catch(err){ stgErr('o pet',err); }
+  try{ drawSpells(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('as magias',err); }
+  x.setTransform(2,0,0,2,0,0);
+  try{ drawUlt(x); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a ultimate',err); }
+  try{ drawFury(x,t); }catch(err){ stgErr('a fúria',err); }
+  try{ drawFx(x); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os efeitos',err); }
+  try{ hud(); }catch(err){ stgErr('o HUD',err); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- HUD (só escreve no DOM o que mudou) ---------- */
+const HC={};
+function setH(id,prop,v){ const k=id+'|'+prop; if(HC[k]===v) return; HC[k]=v; const el=document.getElementById(id); if(!el) return; if(prop==='text') el.textContent=v; else if(prop==='html') el.innerHTML=v; else if(prop==='class') el.className=v; else if(prop==='hidden') el.hidden=v; else if(prop.indexOf('style.--')===0) el.style.setProperty(prop.slice(6),v); else if(prop.indexOf('style.')===0) el.style[prop.slice(6)]=v; else el.setAttribute(prop,v); }
+const CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>';
+function hud(){ const need=needOf(G.stage), p=G.fc/need, pc=Math.round(p*100), tc=tierCol(p), ie=inEra(G.stage), lord=ie===10, mid=ie===5;
+  setH('hn','text',HEROES[G.hero].name); setH('av','src',HEROES[G.hero].av);
+  setH('gold','text',fmtG(G.gold)); setH('gems','text',n(G.gems));
+  setH('stN','text','Era 2 · Fase 2-'+ie);
+  const nw=G.farm?4:5; setH('dots','html',Array.from({length:nw},(_,i)=>`<i class="${i+1<G.wave?'d':''}${i+1===G.wave?' c':''}${!G.farm&&i===4?' b':''}"></i>`).join(''));
+  setH('stW','html',G.farm?`<span class="fm">Farmando</span> · onda ${G.wave}/4`:'Onda '+G.wave+'/5');
+  const fury=G.fury&&G.wave===5;
+  setH('fcc','style.--tc',fury?'#ff5252':tc); setH('fcc','class','fcc'+(fury?' fury':''));
+  setH('fcc','html',fury?`<span class="me2">Chefe em fúria: dano x${DIF.furyMult}</span><span class="p">${pc}%</span>`:`<span class="k">FC</span><b class="me2">${fmtFC(G.fc)}</b><span class="k">${G.wave===5?(lord?'SENHOR PEDE':'CHEFE PEDE'):'PEDIDA'}</span><b>${fmtFC(need)}</b><span class="p">${pc}%</span>`);
+  setH('fcc','aria-label','Sua FC '+fmtFC(G.fc)+'; FC pedida '+fmtFC(need)+'; '+pc+'%'+(p>=1?' (suficiente)':p>=DIF.glowAt?' (um pouco abaixo)':' (bem abaixo)'));
+  /* chefe */
+  const b=G.wave===5&&!G.travel?G.en.find(e=>e.boss):null, showB=!!(b&&(!b.dead||G.clock-b.deadT<1));
+  setH('bossp','hidden',!showB);
+  if(showB){ setH('btag','text',lord?'SENHOR DA ERA':mid?'CHEFE DO MEIO':'CHEFE'); setH('bnm','text',EN.boss.name);
+    const hpP=Math.max(0,b.hp/b.max)*100; setH('bhb','style.width',hpP.toFixed(1)+'%'); setH('bhl','style.width',(b.lag*100).toFixed(1)+'%'); setH('bht','text',fmtF(Math.max(0,b.hp))+' / '+fmtF(b.max));
+    const left=DIF.furyAt-(G.bossClock||0);
+    setH('bossp','class','bossp'+(G.fury?' fury':''));
+    setH('btm','class','tmr'+(G.fury?' fury':left<=10?' warn':''));
+    setH('btm','html',G.fury?'FÚRIA · dano x'+DIF.furyMult:CLOCK+'Fúria em '+mmss(left)); }
+  /* herói */
+  const hp=Math.max(0,G.heroHp/G.heroMax);
+  setH('hpb','style.width',(hp*100).toFixed(1)+'%'); setH('hpl','style.width',(Math.max(hp,G.heroLag)*100).toFixed(1)+'%'); setH('hpw','class','bar hp'+(hp<0.3?' low':'')); setH('hpt','text',fmtF(G.heroHp)+' / '+fmtF(G.heroMax));
+  const en=Math.floor(G.energy), rdy=G.energy>=100;
+  setH('enb','style.width',Math.min(100,en)+'%'); setH('enw','class','bar en'+(rdy?' full':'')); setH('ent','text',rdy?'PRONTA':en+'%');
+  const cdp=Math.ceil(G.cd2/BAL.s2Cooldown*20)*5; setH('s2c','style.height',cdp+'%'); setH('s2t','text',G.cd2>0?String(Math.ceil(G.cd2)):'');
+  setH('s2b','class','sk'+(G.cd2<=0?' rdy':'')+(AUTO?'':' man'));
+  setH('s3c','style.height',(100-Math.min(100,en))+'%'); setH('s3t','text',rdy?'':en+'%'); setH('s3b','class','sk ult'+(rdy?' rdy':'')+(AUTO?'':' man'));
+  /* Desafiar: sempre visível; brilha com 90% da pedida */
+  const onBoss=G.wave===5&&!G.farm;
+  setH('chal','class','chal '+(onBoss?'on':p>=DIF.glowAt?'glow':'dim'));
+  setH('chalb','text',onBoss?(lord?'Senhor da Era':'Chefe na arena'):'Desafiar o chefe');
+  setH('chals','text',onBoss?(G.fury?'em fúria: dano x'+DIF.furyMult:'fúria aos '+DIF.furyAt+' s'):('FC '+pc+'% da pedida'+(p<DIF.glowAt?' · faltam '+fmtFC(need-G.fc):'')));
+  setH('bagn','text',String(G.bag)); setH('bagn','hidden',!G.bag); hudGrim(); }
+
+/* ---------- comum ---------- */
+function banner(t,sub,col){ const o=document.createElement('div'); o.className='banner'; if(col) o.style.setProperty('--bc',col); o.innerHTML=`<div>${esc(t)}${sub?`<small>${esc(sub)}</small>`:''}</div>`; scr.appendChild(o); setTimeout(()=>o.remove(),1950); }
+function toast(t){ scr.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),2000); }
+function fcFly(d){ const o=document.createElement('div'); o.className='fcfly'; o.textContent='+'+fmtFC(d)+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+function bump(sel){ const el=$(sel); if(!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button');
+  if(!b){ if(e.target&&e.target.dataset&&e.target.dataset.g==='shade'&&GR.open){ GR.sel=null; renderGrim(); } return; }
+  if(!G) return; const d=b.dataset; if(grimClick(d)) return;
+  if(d.adv!=null){ goAdv(+d.adv); return; }
+  if(d.n==='do'){ doAdv(d.id,+d.g); return; }
+  if(d.n==='back'){ closeNav(); return; }
+  if(d.c==='farm'){ farm(); return; }
+  if(d.c==='retry'){ retry(); return; }
+  if(d.c==='later'){ closeCard(); return; }
+  if(d.c==='anyway'){ closeCard(); challenge(); return; }
+  if(d.c==='again'){ reset(G.scn); return; }
+  if(d.c==='next'){ reset(G.scn); toast('No jogo, a batalha segue na Fase 3-1 (Era da Pólvora); aqui a cena recomeça'); return; }
+  if(d.spd){ SPEED=+d.spd; document.querySelectorAll('[data-spd]').forEach(x=>x.setAttribute('aria-pressed',x===b)); return; }
+  if(d.act==='auto'){ AUTO=!AUTO; b.setAttribute('aria-pressed',AUTO); $('#autot').textContent=AUTO?'Ligado':'Desligado'; toast(AUTO?'Automático: especial e ultimate disparam sozinhos':'Manual: toque no especial e na ultimate'); return; }
+  if(d.act==='chal'){ tapChallenge(); return; }
+  if(d.act==='s1'){ toast('O ataque básico é automático'); return; }
+  if(d.act==='s2'){ if(AUTO){ toast('No automático, o especial dispara sozinho quando recarrega'); return; } if(G.cd2>0){ toast('Recarregando: '+Math.ceil(G.cd2)+' s'); return; } if(!front()){ toast('Sem inimigo por perto'); return; } castS2(); return; }
+  if(d.act==='s3'){ if(AUTO){ toast('No automático, a ultimate dispara sozinha quando a energia enche'); return; } if(G.energy<100){ toast('Energia em '+Math.floor(G.energy)+'%'); return; } if(!front()){ toast('Sem inimigo por perto'); return; } castUlt(); return; }
+  if(d.act==='bag'){ toast(G.bag?G.bag+(G.bag===1?' item novo':' itens novos')+' na mochila (Equipamento)':'Os itens que caem vão para a mochila'); G.bag=0; return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ G.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); }
+  if(b.dataset.scn){ document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x===b)); reset(b.dataset.scn); } sideClick(b); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&GR.open){ if(GR.sel){ GR.sel=null; renderGrim(); } else closeGrim(); return; } if(e.key==='Escape'){ if($('#nav')) closeNav(); else if(CARD&&CARD.kind==='ask') closeCard(); } });
+
+/* ==================== GRIMÓRIO DAS ERAS + GOLPES ESPECIAIS ====================
+   Números COPIADOS de js/sys/grimoire.js e js/sys/strikes.js (DATA). Nada aqui é inventado: se a Sistemas mudar lá, muda aqui. */
+const S_=(id,era,name,kind,cd,fx,pk,desc)=>({id,era,name,kind,cd,fx,passive:pk,desc});
+const GD={
+  eraName:['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'],
+  slots:3, modes:['fases','arena','chefe'], modeName:{fases:'Fases',arena:'Arena',chefe:'Chefe'}, maxLv:10,
+  pages:[1,2,3,4,5,6,8,10,12], ink:[10,20,40,60,90,130,180,240,320],
+  dmgStep:0.04, fxStep:0.04, cdStep:0.02, dmgCap:3,
+  passive:{atkPct:[0.4,0.08], hpPct:[0.4,0.08], defPct:[0.3,0.06], critPct:[0.2,0.04]},
+  spells:[
+    S_('rollingStone',0,'Pedra Rolante','dmg',10,{mult:2.0,hits:[1],area:true},'atkPct','Uma pedra enorme rola pela fila e acerta todos (dano dividido).'),
+    S_('ancestralFire',0,'Fogueira Ancestral','heal',16,{pct:12},'hpPct','O herói se aquece na fogueira e recupera vida.'),
+    S_('bronzePhalanx',1,'Falange de Bronze','shield',18,{pct:15,sec:5},'defPct','Escudos de bronze formam uma parede que segura o dano.'),
+    S_('minotaurSpear',1,'Lança do Minotauro','dmg',12,{mult:2.5,hits:[1]},'atkPct','Uma lança pesada num único inimigo.'),
+    S_('knightCharge',2,'Investida do Cavaleiro','dmg',14,{mult:2.0,hits:[1],stun:1},'critPct','Avança com o escudo e atordoa o inimigo da frente.'),
+    S_('royalBreath',2,'Sopro do Dragão Real','dmg',15,{mult:2.4,hits:[0.34,0.33,0.33],area:true},'atkPct','Três baforadas de fogo na fila (dano dividido).'),
+    S_('cannonball',3,'Bala de Canhão','dmg',18,{mult:3.0,hits:[1]},'atkPct','Um tiro de canhão no inimigo da frente.'),
+    S_('ghostFog',3,'Névoa do Capitão Fantasma','buff',20,{key:'dodge',val:20,sec:4},'hpPct','Uma névoa fantasma: o herói esquiva mais por alguns segundos.'),
+    S_('gearSpin',4,'Engrenagem Giratória','dmg',10,{mult:1.8,hits:[0.34,0.33,0.33],area:true},'critPct','Uma engrenagem gira pela fila e volta.'),
+    S_('steamBoiler',4,'Caldeira a Vapor','buff',18,{key:'aspd',val:15,sec:5},'hpPct','Vapor nas juntas: o herói ataca mais rápido.'),
+    S_('droneRain',5,'Chuva de Drones','dmg',14,{mult:2.2,hits:[0.25,0.25,0.25,0.25],area:true},'atkPct','Quatro drones mergulham na fila (dano dividido).'),
+    S_('medKit',5,'Kit Médico','heal',20,{pct:15},'hpPct','Um kit de primeiros socorros recupera vida.'),
+    S_('plasmaRay',6,'Raio de Plasma','dmg',14,{mult:2.8,hits:[1]},'critPct','Um raio de plasma num único inimigo.'),
+    S_('ionShield',6,'Escudo de Íons','shield',22,{pct:20,sec:5},'defPct','Um escudo de energia segura o dano.'),
+    S_('underChains',7,'Correntes do Submundo','dmg',18,{mult:1.2,hits:[1],area:true,stun:1.2},'defPct','Correntes prendem a fila inteira por um instante.'),
+    S_('infernalFlame',7,'Chama Infernal','dmg',16,{mult:2.6,hits:[0.34,0.33,0.33],area:true},'atkPct','Uma onda de fogo em três partes na fila.'),
+    S_('judgeBlessing',8,'Bênção do Juiz','heal',22,{pct:18},'hpPct','Uma luz do céu recupera muita vida.'),
+    S_('lightLance',8,'Lança de Luz','dmg',16,{mult:3.0,hits:[0.5,0.5]},'hpPct','Duas lanças de luz no inimigo da frente.'),
+  ],
+  learn:{A:'1ª vitória sobre o Senhor da Era',B:'1ª vitória sobre o chefe da fase 50 da era'},
+  grants:{eraLord:{learn:'A',ink:20},eraLordRepeat:{pages:'A',n:1,daily:1},chief50:{learn:'B',ink:10},instance:{pagesEra:'B',n:1,ink:5},tower:{ink:15},daily:{ink:5},event:{pick:true,n:3}},
+};
+const SD={   /* js/sys/strikes.js DATA */
+  battle:{combo:'COMBO',counter:'CONTRA-ATAQUE',stun:'ATORDOADO',dodge:'ESQUIVA',lifesteal:'ROUBO DE VIDA'},
+  name:{combo:'Combo',counter:'Contra-ataque',stun:'Atordoar',dodge:'Esquiva',lifesteal:'Roubo de vida'},
+  color:{combo:'#ffb030',counter:'#ff5a4a',stun:'#c78bff',dodge:'#7fd8ff',lifesteal:'#5fd068'},
+  range:{combo:[3,6],counter:[3,6],stun:[1,2],dodge:[1.5,3],lifesteal:[1,2.5]}, rar:[0,1,1.4,1.9,2.5,3.2], eraStep:0.12,
+  cap:{combo:50,counter:50,stun:20,dodge:30,lifesteal:20}, bossCap:{combo:50,counter:50,stun:10,dodge:20,lifesteal:10},
+  comboMult:0.5, counterMult:0.6, stunSec:1.0, stunSecBoss:0.5, stunImmuneSec:3, stunImmuneSecBoss:4,
+};
+const KEYS=['combo','counter','stun','dodge','lifesteal'];
+const RNAME=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
+/* itens equipados da cena (os mesmos do Equipamento V2) com os golpes que o Sys.strikes sortearia (q = qualidade 0..1) */
+const STK_ITEMS=[
+  {slot:'Arma',name:'Lâmina Rúnica',r:2,e:2,stk:[{k:'combo',q:0.6}]},
+  {slot:'Armadura',name:'Armadura de Placas',r:2,e:2,stk:[{k:'dodge',q:0.5}]},
+  {slot:'Luvas',name:'Luvas de Malha',r:2,e:2,stk:[{k:'counter',q:0.4}]},
+  {slot:'Chapéu',name:'Elmo de Ferro',r:1,e:2,stk:[{k:'stun',q:0.5}]},
+  {slot:'Colar',name:'Colar do Torneio',r:1,e:2,stk:[{k:'lifesteal',q:0.5}]},
+  {slot:'Botas',name:'Botas de Couro',r:1,e:2,stk:[{k:'dodge',q:0.3}]}];
+const stkValue=(s,it)=>{ const f=SD.range[s.k]; return (f[0]+s.q*(f[1]-f[0]))*SD.rar[it.r]*(1+SD.eraStep*it.e); };
+const STK_RAW=(()=>{ const o={combo:0,counter:0,stun:0,dodge:0,lifesteal:0}; for(const it of STK_ITEMS) for(const s of it.stk) o[s.k]+=stkValue(s,it); return o; })();
+const DEMO_R={combo:35,counter:30,stun:15,dodge:30,lifesteal:STK_RAW.lifesteal};
+let DEMO=false;
+function rates(){ if(DEMO) return DEMO_R; const cap=(G&&G.wave===5&&!G.farm)?SD.bossCap:SD.cap, o={}; for(const k of KEYS) o[k]=Math.min(STK_RAW[k],cap[k]); return o; }
+const lab=k=>({k,text:SD.battle[k],color:SD.color[k]});
+/* golpe do herói acertou (Sys.strikes.onHeroHit) */
+function strikeHit(e,d,kind){ const R=rates(), c=G.clock, L=[];
+  if(kind==='s1'&&R.combo>0&&G.R()*100<R.combo){ L.push(lab('combo')); G.stkN.combo++;
+    later(0.2,()=>{ G.swingT=G.clock; later(0.14,()=>{ const f=!e.dead?e:front(); if(f) hit(f,atkOf()*SD.comboMult,'combo'); }); }); }
+  if(R.stun>0&&e.hp>0&&c>=(e.immU||0)&&G.R()*100<R.stun){ const sec=e.boss?SD.stunSecBoss:SD.stunSec; e.stunU=c+sec; e.immU=c+sec+(e.boss?SD.stunImmuneSecBoss:SD.stunImmuneSec); L.push(lab('stun')); G.stkN.stun++; }
+  if(R.lifesteal>0&&d>0){ const h=d*R.lifesteal/100; G.heroHp=Math.min(G.heroMax,G.heroHp+h); G.lsAcc+=h;
+    /* o nome sai no máximo a cada 3,5 s (1,5 s na demonstração) para não cobrir a luta; a cura vale em todo golpe */
+    if(c-G.lsT>=(DEMO?1.5:3.5)){ G.lsT=c; L.push(lab('lifesteal')); G.stkN.lifesteal++; G.fx.push({k:'n',x:HX-2,y:GY-150,txt:'+'+fmtF(G.lsAcc),col:SD.color.lifesteal,labs:[],t:c}); G.lsAcc=0; } }
+  return L; }
+
+/* ---------- Grimório: regras (cópia de js/sys/grimoire.js) ---------- */
+const ERA_COL=['#a8794a','#e0b040','#d64a4a','#2fa7a0','#8a8f9c','#3f8cff','#22c7d8','#9b3fd9','#f0d860'];
+const IDX={}; GD.spells.forEach((s,i)=>{ IDX[s.id]=i; });
+const spell=id=>GD.spells[IDX[id]]||null;
+const clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt1=v=>(Math.round(v*10)/10).toFixed(1).replace('.',',');
+const PNAME={atkPct:'ATQ',hpPct:'Vida',defPct:'DEF',critPct:'Crítico'};
+const KNAME={dmg:'Dano',heal:'Cura',shield:'Escudo',buff:'Reforço'};
+function stat(sp,lv){ lv=clampN(lv|0||1,1,GD.maxLv); const f=sp.fx, k=lv-1, o={type:sp.kind,cd:Math.round(sp.cd*(1-GD.cdStep*k)*10)/10};
+  if(sp.kind==='dmg'){ o.mult=Math.min(GD.dmgCap,f.mult*(1+GD.dmgStep*k)); o.hits=f.hits.slice(); o.area=!!f.area; if(f.stun) o.stun=f.stun; }
+  else if(sp.kind==='heal') o.pct=f.pct*(1+GD.fxStep*k);
+  else if(sp.kind==='shield'){ o.pct=f.pct*(1+GD.fxStep*k); o.sec=f.sec; }
+  else if(sp.kind==='buff'){ o.key=f.key; o.val=f.val*(1+GD.fxStep*k); o.sec=f.sec; }
+  return o; }
+function passiveOf(sp,lv){ const P=GD.passive[sp.passive]; if(!P||!lv) return 0; return P[0]+P[1]*(clampN(lv,1,GD.maxLv)-1); }
+function effectText(sp,st){ switch(st.type){
+  case 'dmg': return `Dano ${fmt1(st.mult*100)}% do ATQ${st.hits.length>1?` em ${st.hits.length} golpes`:''}${st.area?' na fila':''}${st.stun?`, atordoa ${fmt1(st.stun)} s`:''}`;
+  case 'heal': return `Cura ${fmt1(st.pct)}% da vida`;
+  case 'shield': return `Escudo de ${fmt1(st.pct)}% da vida por ${st.sec} s`;
+  case 'buff': return `${st.key==='dodge'?'Esquiva':'Vel. de ataque'} +${fmt1(st.val)}% por ${st.sec} s`; } return ''; }
+const letterOf=sp=>GD.spells.filter(x=>x.era===sp.era)[0].id===sp.id?'A':'B';
+const passText=(sp,lv)=>`${PNAME[sp.passive]} +${fmt1(passiveOf(sp,lv))}${sp.passive==='critPct'?' pt':'%'}`;
+function levelCost(id){ const x=GR.own[id]; if(!x||x.lv>=GD.maxLv) return null; return {pages:GD.pages[x.lv-1],ink:GD.ink[x.lv-1]}; }
+function canLevel(id){ const x=GR.own[id]; if(!spell(id)) return {ok:false,reason:'spell'}; if(!x) return {ok:false,reason:'notOwned'};
+  if(x.lv>=GD.maxLv) return {ok:false,reason:'max'}; const c=levelCost(id);
+  if(x.pages<c.pages) return {ok:false,reason:'pages',cost:c}; if(GR.ink<c.ink) return {ok:false,reason:'ink',cost:c}; return {ok:true,cost:c}; }
+function levelUp(id){ const c=canLevel(id); if(!c.ok) return c; const x=GR.own[id]; x.pages-=c.cost.pages; GR.ink-=c.cost.ink; x.lv++; syncSpells(); return {ok:true,id,lv:x.lv,cost:c.cost}; }
+function equip(mode,i,id){ if(!GD.modes.includes(mode)) return {ok:false,reason:'mode'}; i=i|0; if(i>=GD.slots) return {ok:false,reason:'slot'};
+  const a=GR.sets[mode].slice(); while(a.length<GD.slots) a.push(null);
+  if(id==null){ a[i]=null; } else { if(!GR.own[id]) return {ok:false,reason:'notOwned'}; const j=a.indexOf(id); if(j>=0) a[j]=a[i]; a[i]=id; }
+  GR.sets[mode]=a.filter(Boolean); syncSpells(); return {ok:true,mode,set:GR.sets[mode].slice()}; }
+function bonus(own){ own=own||GR.own; const b={atkPct:0,hpPct:0,defPct:0,critPct:0}; for(const id in own){ const sp=spell(id); if(sp) b[sp.passive]+=passiveOf(sp,own[id].lv); } return b; }
+function loadout(m){ let ids=GR.sets[m]; if(!ids.length&&m!=='fases') ids=GR.sets.fases;
+  return ids.filter(id=>GR.own[id]).map(id=>{ const sp=spell(id), lv=GR.own[id].lv, st=stat(sp,lv); return {id,sp,lv,st,text:effectText(sp,st)}; }); }
+const MAXB=bonus(Object.fromEntries(GD.spells.map(s=>[s.id,{lv:GD.maxLv}])));
+
+/* jogadores de exemplo: na Era 2 (venceu os Senhores das Eras 0 e 1 e os chefes da fase 50 delas) e depois das 9 eras */
+const LV_ALL=[10,8,7,9,6,7,5,4,6,5,4,3,3,2,2,1,1,1], PG_ALL=[0,4,3,2,5,1,0,3,2,4,1,2,3,1,0,1,2,0];
+const PLAYERS={
+  era2:{ink:85,own:{rollingStone:{lv:3,pages:3},ancestralFire:{lv:2,pages:2},bronzePhalanx:{lv:2,pages:0},minotaurSpear:{lv:4,pages:1}},
+    sets:{fases:['rollingStone','minotaurSpear','ancestralFire'],arena:['minotaurSpear','bronzePhalanx','rollingStone'],chefe:['ancestralFire','bronzePhalanx','minotaurSpear']}},
+  all:{ink:640,own:Object.fromEntries(GD.spells.map((s,i)=>[s.id,{lv:LV_ALL[i],pages:PG_ALL[i]}])),
+    sets:{fases:['droneRain','infernalFlame','royalBreath'],arena:['plasmaRay','ghostFog','medKit'],chefe:['judgeBlessing','ionShield','lightLance']}}};
+let GEL=null;
+const GR={pl:'era2',ink:0,own:{},sets:{fases:[],arena:[],chefe:[]},mode:'fases',slot:0,sel:null,open:false};
+function setPlayer(k){ const P=PLAYERS[k]||PLAYERS.era2; GR.pl=k; GR.ink=P.ink; GR.own=JSON.parse(JSON.stringify(P.own)); GR.sets=JSON.parse(JSON.stringify(P.sets)); GR.sel=null; GR.slot=0;
+  if(G){ G.sp=[]; G.spMode=null; syncSpells(); } renderGrim(); }
+setPlayer('era2');
+
+/* ---------- ícones provisórios (Arte): círculo na cor da era + símbolo simples ---------- */
+const GLY={
+  rollingStone:'<circle cx="20" cy="20" r="9"/><path d="M15 17l4 3-2 4M24 14l-2 5 4 2M8 31h24"/>',
+  ancestralFire:'<path d="M20 8c3 5 8 7 8 14a8 8 0 01-16 0c0-4 3-6 3-9 2 2 3 3 3 5 1-3 0-6 2-10z"/>',
+  bronzePhalanx:'<path d="M20 8l11 4v8c0 7-5 11-11 13-6-2-11-6-11-13v-8z"/><path d="M20 12v18M12 19h16"/>',
+  minotaurSpear:'<path d="M10 30L27 13M13 23l4 4"/><path d="M24 9h7v7z" fill="currentColor"/>',
+  knightCharge:'<path d="M15 10l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9v-6z"/><path d="M25 21h8M29 17l4 4-4 4"/>',
+  royalBreath:'<path d="M7 20h7M7 14c4 0 6 2 8 2M7 26c4 0 6-2 8-2"/><path d="M18 20c3-6 9-6 14-4-2 1-3 2-3 4s1 3 3 4c-5 2-11 2-14-4z"/>',
+  cannonball:'<circle cx="18" cy="23" r="9"/><path d="M24 16l4-4M28 12l3-1M28 12l1-3"/>',
+  ghostFog:'<path d="M7 14c3-2 5 2 8 0s5 2 8 0 5 2 8 0M7 20c3-2 5 2 8 0s5 2 8 0 5 2 8 0M7 26c3-2 5 2 8 0s5 2 8 0 5 2 8 0"/>',
+  gearSpin:'<circle cx="20" cy="20" r="4"/><circle cx="20" cy="20" r="9"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4M11 11l3 3M26 26l3 3M11 29l3-3M26 14l3-3"/>',
+  steamBoiler:'<rect x="11" y="18" width="18" height="13" rx="3"/><path d="M15 14c0-3 3-3 3-6M22 14c0-3 3-3 3-6M15 24h10"/>',
+  droneRain:'<path d="M13 12h14M16 12v3h8v-3"/><circle cx="11" cy="11" r="2.5"/><circle cx="29" cy="11" r="2.5"/><path d="M14 21v4M20 20v6M26 21v4M17 29v3M23 29v3"/>',
+  medKit:'<rect x="9" y="13" width="22" height="17" rx="3"/><path d="M20 17v9M15.5 21.5h9M16 13v-3h8v3"/>',
+  plasmaRay:'<path d="M22 7L12 22h7l-2 11 11-16h-7z"/>',
+  ionShield:'<path d="M20 7l11 6.5v13L20 33 9 26.5v-13z"/><path d="M20 13l6 3.5v7L20 27l-6-3.5v-7z"/>',
+  underChains:'<g transform="rotate(-30 20 20)"><rect x="6" y="16" width="14" height="8" rx="4"/><rect x="20" y="16" width="14" height="8" rx="4"/></g>',
+  infernalFlame:'<path d="M11 31c-3-2-2-6 0-9 2 3 4 5 2 9zM20 31c-4-3-3-9 0-15 3 6 4 12 0 15zM29 31c-2-4 0-6 0-9 2 3 3 6 0 9z"/>',
+  judgeBlessing:'<circle cx="20" cy="20" r="6"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4M11 11l3 3M26 26l3 3M11 29l3-3M26 14l3-3"/>',
+  lightLance:'<path d="M8 30L26 12M14 33l18-18"/><path d="M21 11h6v6M27 14h6v6"/>'};
+const lightCol=c=>{ const v=parseInt(c.slice(1),16), r=v>>16, g=(v>>8)&255, b=v&255; return (0.299*r+0.587*g+0.114*b)>170; };
+const darken=(c,k)=>{ const v=parseInt(c.slice(1),16); const f=x=>Math.round(x*(1-k)).toString(16).padStart(2,'0'); return '#'+f(v>>16)+f((v>>8)&255)+f(v&255); };
+function ico(id,locked){ const sp=spell(id), c=locked?'#3a4266':ERA_COL[sp.era], gc=locked?'#8d96c0':lightCol(c)?'#2a1a06':'#ffffff';
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19.5" fill="${darken(c,0.5)}"/><circle cx="20" cy="20" r="16.5" fill="${c}"/><ellipse cx="20" cy="12" rx="11" ry="5.5" fill="#fff" opacity=".2"/>`+
+    `<g fill="none" stroke="${gc}" color="${gc}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${GLY[id]||''}</g>`+
+    (locked?`<circle cx="31" cy="31" r="7.5" fill="#0b1030" stroke="#8d96c0" stroke-width="1.5"/><path d="M28 30.5h6v5h-6zM29.3 30.5v-1.8a1.7 1.7 0 013.4 0v1.8" fill="none" stroke="#c9d0f5" stroke-width="1.4" stroke-linejoin="round"/>`:'')+`</svg>`; }
+const INK='<svg viewBox="0 0 26 26" aria-hidden="true"><path d="M13 3c3 5 7 8 7 13a7 7 0 01-14 0c0-5 4-8 7-13z" fill="#5a3fd0" stroke="#c9b8ff" stroke-width="1.6"/><ellipse cx="10.5" cy="15" rx="2" ry="3" fill="#fff" opacity=".35"/></svg>';
+const BACK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+
+/* ---------- magias na batalha ---------- */
+const battleMode=()=>(G.wave===5&&!G.farm)?'chefe':'fases';
+function syncSpells(){ if(!G) return; const m=battleMode(), L=loadout(m), old={}; (G.sp||[]).forEach(s=>{ old[s.id]=s; });
+  G.sp=L.map((o,i)=>{ const p=old[o.id]; return {...o,left:p?Math.min(p.left,o.st.cd):Math.min(o.st.cd,1.5+i*2.2),castT:p?p.castT:-9}; });
+  if(G.spMode&&G.spMode!==m) toast('Magias: o jogo trocou para o conjunto '+GD.modeName[m]); G.spMode=m; }
+function buffVal(k){ const b=G.buff&&G.buff[k]; return b&&b.until>G.clock?b.val:0; }
+function stepSpells(dt){ if(!G.sp) return; const tg=front();
+  for(const s of G.sp){ s.left=Math.max(0,s.left-dt); if(s.left<=0&&tg&&tg.x<=380&&!G.dead) castSpell(s); } }
+function castSpell(s){ const st=s.st, col=ERA_COL[s.sp.era], c=G.clock, f0=front(); s.left=st.cd; s.castT=c; G.casts.push({id:s.id,t:c,cd:st.cd}); G.spN++;
+  spellPill(s);
+  G.spFx.push({id:s.id,type:st.type,area:!!st.area,n:st.hits?st.hits.length:1,col,t:c,tx:f0?f0.x+(f0.boss?26:0):300,ty:f0&&f0.boss?GY-150:GY-90});
+  if(st.type==='dmg') st.hits.forEach((fr,i)=>later(0.3+i*0.18,()=>{ const tg=st.area?alive().filter(e=>e.x<392):[front()].filter(Boolean); if(!tg.length) return;
+      const tot=atkOf()*st.mult*fr; for(const e of tg) spellHit(e,st.area?tot/tg.length:tot,col,st,i===0); }));
+  else if(st.type==='heal'){ const h=G.heroMax*st.pct/100; G.heroHp=Math.min(G.heroMax,G.heroHp+h); G.fx.push({k:'n',x:HX,y:GY-160,txt:'+'+fmtF(h),col:'#7dffb0',labs:[{text:'CURA',color:'#7dffb0'}],t:c}); }
+  else if(st.type==='shield') G.shield={amt:G.heroMax*st.pct/100,until:c+st.sec,col};
+  else if(st.type==='buff') G.buff[st.key]={val:st.val,until:c+st.sec,col}; }
+function spellHit(e,d,col,st,first){ if(e.dead||G.dead) return; d*=(0.92+0.16*G.R()); e.hp-=d; e.hurtT=G.clock; const labs=[];
+  if(st.stun&&first&&e.hp>0&&G.clock>=(e.immU||0)){ const sec=e.boss?st.stun/2:st.stun; e.stunU=G.clock+sec; e.immU=G.clock+sec+(e.boss?SD.stunImmuneSecBoss:SD.stunImmuneSec); labs.push(lab('stun')); }
+  const hx=e.x+(e.boss?26:0)+(G.R()-0.5)*18, hy=GY-(e.boss?170:118);
+  G.fx.push({k:'n',x:hx,y:hy,txt:fmtF(d),col,big:false,labs,t:G.clock}); G.fx.push({k:'sp',x:hx,y:hy+40,t:G.clock,s:G.R()*6});
+  if(e.hp<=0) kill(e); }
+function spellPill(s){ const q=$('#spq'); if(!q) return; while(q.children&&q.children.length>1&&q.firstElementChild) q.firstElementChild.remove();
+  const o=document.createElement('div'); o.style.setProperty('--ec',ERA_COL[s.sp.era]); o.innerHTML=ico(s.id)+`<span><small>MAGIA · NÍVEL ${s.lv}</small>${esc(s.sp.name)}</span>`; q.appendChild(o); setTimeout(()=>o.remove(),1650); }
+function star(x,cx,cy,r){ x.beginPath(); for(let i=0;i<8;i++){ const a=i*Math.PI/4, rr=i%2?r*0.4:r; x.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr); } x.closePath(); x.fill(); }
+function drawSpells(x,t){ const c=G.clock;
+  if(G.shield&&G.shield.until>c&&G.shield.amt>0){ const a=Math.min(1,(G.shield.until-c)/0.4); x.save(); x.fillStyle=G.shield.col; x.globalAlpha=a*(0.16+0.06*Math.sin(t*6)); x.beginPath(); x.ellipse(HX,GY-82,64,96,0,0,7); x.fill();
+    x.globalAlpha=a*0.85; x.strokeStyle=G.shield.col; x.lineWidth=3; x.stroke(); x.globalAlpha=a*0.5; x.strokeStyle='#fff'; x.lineWidth=1.5; x.beginPath(); x.ellipse(HX,GY-82,58,90,0,3.6,5.2); x.stroke(); x.restore(); }
+  for(const k in G.buff){ const b=G.buff[k]; if(!(b.until>c)) continue; x.save(); x.globalCompositeOperation='lighter'; x.strokeStyle=b.col; x.lineWidth=3;
+    for(let i=0;i<2;i++){ const u=(t*1.2+i*0.5)%1; x.globalAlpha=(1-u)*0.9; x.beginPath(); x.ellipse(HX,GY,30+u*40,8+u*10,0,0,7); x.stroke(); } x.restore(); }
+  for(const e of alive()){ if(!((e.stunU||0)>c)) continue; const K=EN[e.k], hy=GY-K.cell*(e.back?0.9:1)*0.92, bx=e.x+(e.boss?26:0);
+    x.save(); x.fillStyle=SD.color.stun; x.strokeStyle='#fff'; for(let i=0;i<3;i++){ const a=t*5+i*2.09; star(x,bx+Math.cos(a)*22,hy+Math.sin(a)*6,6); } x.restore(); }
+  G.spFx=G.spFx.filter(f=>{ const u=c-f.t; if(u<0) return true; const end=f.type==='dmg'?0.3+f.n*0.18+0.35:0.9; if(u>end) return false;
+    x.save(); x.globalCompositeOperation='lighter'; x.fillStyle=f.col; x.strokeStyle=f.col;
+    if(f.type==='dmg'&&!f.area){ if(u<0.3){ const v=u/0.3, px=HX+40+(f.tx-HX-40)*v, py=GY-110+(f.ty-GY+110)*v-Math.sin(v*Math.PI)*34;
+        x.globalAlpha=0.35; x.beginPath(); x.arc(px,py,20,0,7); x.fill(); x.globalAlpha=1; x.beginPath(); x.arc(px,py,9,0,7); x.fill(); x.fillStyle='#fff'; x.beginPath(); x.arc(px,py,4,0,7); x.fill(); }
+      else { const v=(u-0.3)/(end-0.3); for(let i=0;i<2;i++){ x.globalAlpha=(1-v)*(i?0.5:0.9); x.lineWidth=5-i*2; x.beginPath(); x.arc(f.tx,f.ty,18+v*50+i*12,0,7); x.stroke(); } } }
+    else if(f.type==='dmg'){ const v=Math.min(1,u/end), px=HX+30+(410-HX-30)*v;
+      x.globalAlpha=0.28*(1-v*0.6); x.fillRect(px-22,GY-170,44,176); x.globalAlpha=0.9*(1-v*0.5); x.lineWidth=4; x.beginPath(); x.moveTo(px,GY-176); x.quadraticCurveTo(px+26,GY-88,px,GY+4); x.stroke();
+      x.fillStyle='#fff'; x.globalAlpha=0.7*(1-v); for(let i=0;i<5;i++){ x.beginPath(); x.arc(px-6+Math.sin(u*20+i)*10,GY-150+i*34,2.5,0,7); x.fill(); } }
+    else if(f.type==='heal'){ const v=u/end; for(let i=0;i<10;i++){ const px=HX-36+i*8, py=GY-20-((v*140+i*23)%150); x.globalAlpha=(1-v)*0.9; x.beginPath(); x.arc(px,py,3.5,0,7); x.fill(); }
+      x.globalAlpha=(1-v)*0.35; x.beginPath(); x.ellipse(HX,GY-4,46,12,0,0,7); x.fill(); }
+    else { const v=u/end; x.globalAlpha=(1-v)*0.9; x.lineWidth=4; x.beginPath(); x.ellipse(HX,GY-82,30+v*50,46+v*60,0,0,7); x.stroke(); }
+    x.restore(); return true; }); }
+
+/* ---------- HUD das magias + contadores do painel ---------- */
+function hudGrim(){ const m=G.spMode||'fases', emp=!GR.sets[m].length&&m!=='fases';
+  setH('grm','text','MAGIAS · '+GD.modeName[m].toUpperCase()); setH('grs','text',emp?'Chefe vazio: usa as de Fases':'sozinhas · toque: Grimório');
+  for(let i=0;i<3;i++){ const s=G.sp[i], id='sp'+i;
+    if(!s){ setH(id+'i','html','<i class="emp"></i>'); setH(id+'r','style.strokeDashoffset','132'); setH(id+'t','text',''); setH(id,'class','spi off'); setH(id,'aria-label','Espaço de magia vazio'); continue; }
+    setH(id,'style.--ec',ERA_COL[s.sp.era]); setH(id+'i','html',ico(s.id));
+    setH(id+'r','style.strokeDashoffset',(132*s.left/s.st.cd).toFixed(1));
+    setH(id+'t','text',s.left>0?String(Math.ceil(s.left)):'');
+    setH(id,'class','spi'+(s.left<=0?' rdy':'')+(G.clock-s.castT<0.45?' cast':''));
+    setH(id,'aria-label',s.sp.name+', nível '+s.lv+(s.left>0?', recarga '+Math.ceil(s.left)+' s':', pronta')); }
+  setH('cnt','html',KEYS.map(k=>`<span><i style="background:${SD.color[k]}"></i>${SD.battle[k]} ${G.stkN[k]}</span>`).join('')+`<span>Magias lançadas ${G.spN}</span>`); }
+function sideLists(){ const el=$('#stkl'); if(!el) return; const R={}; for(const k of KEYS) R[k]=Math.min(STK_RAW[k],SD.cap[k]);
+  el.innerHTML=`<li>Itens da cena (exemplo, valores da fórmula do Sys.strikes): `+STK_ITEMS.map(it=>`${esc(it.name)} [${RNAME[it.r]}]: <b>${it.stk.map(s=>SD.name[s.k]+' +'+fmt1(stkValue(s,it))+'%').join(', ')}</b>`).join(' · ')+`</li>`+
+   `<li>Soma na luta: `+KEYS.map(k=>`<b style="color:${SD.color[k]}">${SD.battle[k]} ${fmt1(R[k])}%</b>`).join(' · ')+`</li>`+
+   `<li>COMBO: golpe extra de <b>50%</b> do básico, só no básico. CONTRA-ATAQUE: revide de <b>60%</b> ao apanhar (sai mesmo na esquiva). ATORDOADO: inimigo parado <b>1 s</b> (chefe 0,5 s) e depois imune por 3 s (chefe 4 s). ESQUIVA: não perde vida. ROUBO DE VIDA: cada golpe cura uma parte do dano</li>`+
+   `<li>Tetos da soma: Combo 50%, Contra 50%, Atordoar <b>20%</b> (chefe e Arena <b>10%</b>), Esquiva <b>30%</b> (chefe e Arena <b>20%</b>), Roubo 20% (chefe e Arena 10%)</li>`+
+   `<li>Básico não tem golpe; Raro, Épico e Mítico têm 1; Lendário e Divino têm 2. Vêm só nos itens que caem jogando</li>`+
+   `<li>O nome do ROUBO DE VIDA aparece no máximo a cada 3,5 s para não cobrir a luta (a cura vale em todo golpe); a Engenharia pode ajustar</li>`; }
+
+/* ---------- tela do Grimório ---------- */
+
+const MODE_HINT={fases:'Usado nas ondas das fases. Se Chefe ou Arena estiverem vazios, a luta usa este.',arena:'Usado na Arena e no Torneio.',chefe:'Usado contra chefe, Senhor da Era e Chefe Mundial.'};
+function srcList(){ const g=GD.grants; return [
+  `<b>Senhor da Era</b>, 1ª vitória: aprende a 1ª magia da era + ${g.eraLord.ink} de tinta`,
+  `<b>Senhor da Era</b> de novo: ${g.eraLordRepeat.n} página da 1ª magia, ${g.eraLordRepeat.daily} por era por dia`,
+  `<b>Chefe da fase 50</b>, 1ª vitória: aprende a 2ª magia + ${g.chief50.ink} de tinta`,
+  `<b>Instância diária</b> vencida: ${g.instance.n} página da 2ª magia + ${g.instance.ink} de tinta`,
+  `<b>Torre</b>: ${g.tower.ink} de tinta a cada 10 andares`,
+  `<b>Missões diárias</b> completas: ${g.daily.ink} de tinta`,
+  `<b>Eventos</b>: ${g.event.n} páginas fixas da magia que o evento diz`]; }
+function cardHTMLg(sp){ const x=GR.own[sp.id], sel=GR.sel===sp.id?' on':'';
+  if(!x) return `<button class="spc lock${sel}" data-sp="${sp.id}" aria-label="${esc(sp.name)}, ainda não aprendida. Como ganhar: ${esc(GD.learn[letterOf(sp)])}">${ico(sp.id,true)}<span class="t"><b>${esc(sp.name)}</b><small>${esc(GD.learn[letterOf(sp)])}</small></span></button>`;
+  const st=stat(sp,x.lv), ins=GD.modes.filter(k=>GR.sets[k].includes(sp.id)), c=canLevel(sp.id);
+  return `<button class="spc${sel}" data-sp="${sp.id}" aria-label="${esc(sp.name)}, nível ${x.lv}">${ico(sp.id)}<span class="t"><b>${esc(sp.name)}</b><small>Nv ${x.lv} · ${KNAME[sp.kind]} · ${fmt1(st.cd)} s</small>${ins.length||c.ok?`<span class="tg">${ins.map(k=>`<i>${GD.modeName[k]}</i>`).join('')}${c.ok?'<i class="up">Pode subir</i>':''}</span>`:''}</span></button>`; }
+function grimHTML(){ const b=bonus(), nOwn=Object.keys(GR.own).length, m=GR.mode, set=GR.sets[m];
+  let h=`<div class="top"><button class="back" data-g="back" aria-label="Voltar à batalha">${BACK}</button><div class="ttl">GRIMÓRIO DAS ERAS</div><div class="ink" role="img" aria-label="Tinta: ${GR.ink}">${INK}<b>${n(GR.ink)}</b></div></div><div class="gsc">`;
+  h+=`<p class="prov">Cada era ensina 2 magias. O herói leva 3 na luta e elas saem sozinhas quando a recarga termina. Ícones provisórios (Arte).</p>`;
+  h+=`<section class="bon"><h5>Bônus por ter<small>${nOwn} de ${GD.spells.length} aprendidas · vale para sempre, mesmo fora das 3</small></h5><div class="b4">`+
+    [['atkPct','ATQ'],['hpPct','Vida'],['defPct','DEF'],['critPct','Crítico']].map(([k,l])=>`<div class="${b[k]>0?'':'z'}"><b>+${fmt1(b[k])}${k==='critPct'?'':'%'}</b><small>${l}${k==='critPct'?' (pts)':''}</small></div>`).join('')+
+    `</div><p class="bnote">Com as 18 no nível 10: ATQ +${fmt1(MAXB.atkPct)}%, Vida +${fmt1(MAXB.hpPct)}%, DEF +${fmt1(MAXB.defPct)}%, Crítico +${fmt1(MAXB.critPct)} pts (cerca de +7% de FC).</p></section>`;
+  h+=`<h5>Conjuntos de luta</h5><div class="tabs" role="tablist" aria-label="Conjunto">`+GD.modes.map(k=>`<button role="tab" data-mode="${k}" aria-selected="${k===m}">${GD.modeName[k]}</button>`).join('')+`</div>`;
+  h+=`<p class="hint">${MODE_HINT[m]}</p><div class="slots">`+[0,1,2].map(i=>{ const id=set[i], sp=id&&spell(id);
+    return `<button class="slot${i===GR.slot?' sel':''}" data-slot="${i}" aria-pressed="${i===GR.slot}" aria-label="Espaço ${i+1} do conjunto ${GD.modeName[m]}${sp?': '+esc(sp.name):', vazio'}">${sp?ico(id):'<i class="emp"></i>'}<b>${sp?esc(sp.name):'Vazio'}</b><small>${sp?'Nv '+GR.own[id].lv:'Espaço '+(i+1)}</small></button>`; }).join('')+`</div>`;
+  h+=`<p class="hint">Escolha um espaço (borda dourada) e toque numa magia para colocar ou trocar.</p>`;
+  h+=`<h5>Magias por era</h5>`;
+  for(let e=0;e<GD.eraName.length;e++) h+=`<div class="era"><h4><i style="background:${ERA_COL[e]}"></i>Era ${e} · ${GD.eraName[e]}</h4><div class="cards">`+GD.spells.filter(s=>s.era===e).map(cardHTMLg).join('')+`</div></div>`;
+  h+=`<section class="src"><h5>De onde vêm páginas e tinta</h5><ul>`+srcList().map(s=>`<li>${s}</li>`).join('')+`</ul><p><b>Nada à venda.</b> Sem loja, sem diamante e sem sorteio: páginas e tinta vêm só jogando, sempre na mesma quantidade.</p></section></div>`;
+  if(GR.sel) h+=sheetHTML(GR.sel);
+  return h; }
+function reasonText(c){ if(c.reason==='pages') return `Faltam ${c.cost.pages-GR.own[GR.sel].pages} página(s)`; if(c.reason==='ink') return `Faltam ${c.cost.ink-GR.ink} de tinta`; if(c.reason==='max') return 'Nível máximo'; if(c.reason==='notOwned') return 'Ainda não aprendida'; return 'Não dá agora'; }
+function sheetHTML(id){ const sp=spell(id), x=GR.own[id], lv=x?x.lv:1, st=stat(sp,lv), nx=x&&lv<GD.maxLv?stat(sp,lv+1):null, cost=x?levelCost(id):null, c=x?canLevel(id):{ok:false,reason:'notOwned'}, L=letterOf(sp), m=GR.mode;
+  let h=`<div class="gsh" data-g="shade"><div class="sh" role="dialog" aria-modal="true" aria-label="${esc(sp.name)}">`;
+  h+=`<div class="shh">${ico(id,!x)}<div><h3>${esc(sp.name)}</h3><p>Era ${sp.era} · ${GD.eraName[sp.era]} · ${L==='A'?'1ª':'2ª'} magia da era · ícone provisório</p></div><span class="lvc${x?'':' no'}">${x?'Nv '+lv+'/'+GD.maxLv:'Bloqueada'}</span></div>`;
+  h+=`<p class="dsc">${esc(sp.desc)}</p><div class="rows">`;
+  h+=`<div class="rw2"><span>Efeito${x?' Nv '+lv:''}</span><div>${effectText(sp,st)}</div></div>`;
+  if(nx) h+=`<div class="rw2"><span>No Nv ${lv+1}</span><div><em>${effectText(sp,nx)}</em></div></div>`;
+  h+=`<div class="rw2"><span>Recarga</span><div>${fmt1(st.cd)} s${nx&&nx.cd!==st.cd?` <em>→ ${fmt1(nx.cd)} s</em>`:''}</div></div>`;
+  h+=`<div class="rw2"><span>Bônus por ter</span><div>${passText(sp,lv)}${nx?` <em>→ ${passText(sp,lv+1)}</em>`:''}${x?'':' (ao aprender)'}</div></div></div>`;
+  if(x){ if(cost){ const pp=Math.min(1,x.pages/cost.pages), ip=Math.min(1,GR.ink/cost.ink);
+      h+=`<div class="prg"><div><small>PÁGINAS <b>${x.pages}/${cost.pages}</b></small><i class="${pp>=1?'okb':''}"><u style="width:${(pp*100).toFixed(0)}%"></u></i></div><div><small>TINTA <b>${n(GR.ink)}/${cost.ink}</b></small><i class="${ip>=1?'okb':''}"><u style="width:${(ip*100).toFixed(0)}%"></u></i></div></div>`; }
+    const at=GR.sets[m].indexOf(id), cur=GR.sets[m][GR.slot], curN=cur&&cur!==id?spell(cur).name:'';
+    h+=`<div class="sha"><button class="${c.ok?'g':'o'}" data-g="up">${c.ok?'Subir para o Nv '+(lv+1):reasonText(c)}</button>`;
+    h+=at===GR.slot?`<button class="o" data-g="uneq">Tirar do conjunto ${GD.modeName[m]}</button>`:`<button class="b" data-g="eq">${at>=0?'Mover':'Colocar'} no espaço ${GR.slot+1} · ${GD.modeName[m]}${curN?' (troca com '+esc(curN)+')':''}</button>`;
+    h+=`</div>`; }
+  else h+=`<div class="how"><b>Como ganhar</b><p>${esc(GD.learn[L])} (+${L==='A'?GD.grants.eraLord.ink:GD.grants.chief50.ink} de tinta). Ela já entra no Grimório no nível 1.</p></div>`;
+  h+=`<div class="how"><b>Páginas desta magia</b><ul>${L==='A'?`<li>Senhor da Era ${sp.era} de novo: ${GD.grants.eraLordRepeat.n} página por dia</li>`:`<li>Instância diária da era vencida: ${GD.grants.instance.n} página + ${GD.grants.instance.ink} de tinta</li>`}<li>Eventos que trazem esta magia: ${GD.grants.event.n} páginas fixas</li><li>Tinta: Torre, missões diárias e instâncias. Nada se compra</li></ul></div>`;
+  if(!x) h+=`<div class="sha"><button class="o" data-g="up">Ainda não aprendida</button></div>`;
+  h+=`<div class="sha"><button class="o" data-g="close">Fechar</button></div></div></div>`;
+  return h; }
+function renderGrim(){ if(!GEL||!GR.open) return; const sc=GEL.querySelector('.gsc'), keep=sc?sc.scrollTop:0; GEL.innerHTML=grimHTML(); const s2=GEL.querySelector('.gsc'); if(s2) s2.scrollTop=keep; }
+function openGrim(){ if(GR.open) return; GR.open=true; GR.sel=null; if(G) G.paused=true; const d=document.createElement('div'); d.className='grim'; d.id='grim'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Grimório das Eras');
+  scr.appendChild(d); GEL=d; renderGrim(); markSide(); }
+function closeGrim(){ if(!GR.open) return; GR.open=false; GR.sel=null; if(GEL) GEL.remove(); GEL=null; if(G){ G.paused=false; syncSpells(); } markSide(); }
+function grimClick(d){
+  if(d.act==='grim'){ openGrim(); return true; }
+  if(d.act==='sp'){ const s=G.sp[+d.i]; if(!s){ toast('Espaço vazio: coloque uma magia no Grimório'); return true; } toast(s.sp.name+' · '+s.text+' · recarga '+fmt1(s.st.cd)+' s'); return true; }
+  if(!GR.open) return false;
+  if(d.g==='back'){ closeGrim(); return true; }
+  if(d.g==='close'){ GR.sel=null; renderGrim(); return true; }
+  if(d.mode){ GR.mode=d.mode; renderGrim(); return true; }
+  if(d.slot!=null){ GR.slot=clampN(+d.slot,0,2); renderGrim(); return true; }
+  if(d.sp){ GR.sel=d.sp; renderGrim(); return true; }
+  if(d.g==='up'){ const id=GR.sel, sp=spell(id); if(!sp) return true; const r=levelUp(id);
+    toast(r.ok?`${sp.name} subiu para o nível ${r.lv} · bônus ${passText(sp,r.lv)}`:reasonText(r)); renderGrim(); return true; }
+  if(d.g==='eq'){ const id=GR.sel, r=equip(GR.mode,GR.slot,id); toast(r.ok?`${spell(id).name} no conjunto ${GD.modeName[GR.mode]}`:'Aprenda a magia primeiro'); renderGrim(); return true; }
+  if(d.g==='uneq'){ const i=GR.sets[GR.mode].indexOf(GR.sel); if(i>=0){ equip(GR.mode,i,null); toast(spell(GR.sel).name+' saiu do conjunto '+GD.modeName[GR.mode]); } renderGrim(); return true; }
+  return false; }
+function markSide(){ const pr=(sel,f)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute('aria-pressed',String(f(x))));
+  pr('[data-view]',x=>(x.dataset.view==='grim')===GR.open); pr('[data-pl]',x=>x.dataset.pl===GR.pl); pr('[data-demo]',x=>(x.dataset.demo==='1')===DEMO); }
+function sideClick(b){ const d=b.dataset;
+  if(d.view){ if(d.view==='grim') openGrim(); else closeGrim(); }
+  if(d.pl){ setPlayer(d.pl); markSide(); toast(d.pl==='all'?'Jogador depois das 9 eras: 18 magias':'Jogador na Era 2: 4 magias'); }
+  if(d.demo!=null){ DEMO=d.demo==='1'; if(G) G.lsT=-9; markSide(); toast(DEMO?'Demonstração: golpes com chance exagerada':'Golpes no ritmo do jogo'); } }
+sideLists();
+
+reset('normal');
+window.__batalhaTeste={get G(){ return G; },reset,step,tapChallenge,goAdv,doAdv,needOf,goldOf};
+window.__grimorioTeste={get G(){ return G; },get GR(){ return GR; },get DEMO(){ return DEMO; },GD,SD,STK_RAW,reset,step,rates,stat,effectText,bonus,loadout,levelUp,canLevel,equip,openGrim,closeGrim,setPlayer,grimHTML,sheetHTML};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-grimorio-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Grimório das Eras + golpes (V2)',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
