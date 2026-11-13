@@ -3,6 +3,12 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **"instala, e sim liga tudo!"**
+    - Instalar a v0.13.2 no S24 · Engenheiro + QA
+    - Ligar na próxima versão: eras 7 e 8, Asa Seráfica, skins e itens novos de prêmio · Engenheiro + Sistemas
+    - Dificuldade e eras finais: ligam assim que a calibração fechar · Sistemas
+    - Online (Arena, Guilda, Torneio): depende do SSH
+- [x] **Kael Anjo refeita sem asa** ("a skin que já tem asas tem que ser refeita"): teste com vídeo de referência de movimento (4 créditos) · Arte
 - [x] **Votos nas telas V2.**
     - Aprovadas: Perfil V5, Batalha, Equipamento, Forja, Pets, Montarias, Invocar, Loja, VIP, Passe, Fim das 9 eras, Guilda, Torneio do Poder e Torre (a Arena já estava aprovada).
     - Reprovadas: Mapa das Eras ("nada moderno") e Correio ("creio que essa não é a melhor proposta"). A Sistemas traz 2 direções de cada.
