@@ -4,8 +4,10 @@
 As 6 sessões escrevem telas AO MESMO TEMPO. O engenheiro só liga e confere.
 
 ## REGRAS DE SEGURANÇA (depois da perda de 12/11, 21h: um `git checkout -- .` apagou o trabalho não salvo de todas as sessões)
-- **(a) NENHUMA sessão roda comando de git que altere arquivos**: nada de checkout, restore, reset, stash, clean, rebase, pull ou merge. Pode usar só status, diff e log. Para desfazer, edite o próprio arquivo. Quem faz commit é só o fps-c8 (Engenheiro); o push é do PO.
-- **(b) O fps-c8 commita a cada passada de agente e a cada tela entregue**, não só a cada versão. A perda máxima passa a ser de minutos.
+- **(a) NENHUMA sessão roda comando de git que DESCARTE trabalho**: nada de checkout, restore, reset, stash, clean, rebase, pull ou merge.
+- **(b) ORDEM DO DONO: TODO MUNDO COMMITA E SOBE.** Terminou um pedaço (arquivo, tela, módulo, correção), commite NA HORA só os SEUS arquivos e suba:
+  `git add <seus arquivos>` (nunca `git add .` nem `-a`) → `git commit -m "<sessão>: <o quê>"` → `git push origin master:main`.
+  Se der "index.lock", espere alguns segundos e tente de novo. A perda máxima é de minutos. O fps-c8 continua fechando as versões.
 - Não editar arquivo de outra sessão. Se precisar mudar algo nele, peça ao dono do arquivo.
 
 ## Regras para todos (contrato igual ao js/p_vip.js)

@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h25 · Seus votos (conferidos na página):** você APROVOU as 4 Fases adultas V2 (Kael e Kaia, adulto e guerreiro) e a Serpe V2. Não há nada pendente na página: 107 aprovados. Ainda falta corrigir a pistola do Kael guerreiro ("arma não está na mão"), que você reprovou
+  - Arte: começa agora as animações do adulto e do guerreiro (Kael e Kaia)
+  - Engenheiro: liga a Serpe V2
+- **21h25 · Nova regra (sua ordem):** TODA sessão commita e sobe para o GitHub na hora em que termina cada pedaço, sem esperar a versão
+- **21h20 · QA entregou 4 telas escritas:** Códex, Correio, Chat e Guilda, mais a Torre inteira refeita e a Troca de era sem ultimate. Ainda não foram ligadas nem vistas rodando. Agora o QA pega Mapa das Eras e Perfil (a Arte voltou para a animação)
+
 - **21h10 · Sistemas entregou (refeito depois do acidente, 42 testes):** a conta do FC que sobe/desce (o engenheiro liga na v0.12.8); a tabela de raridade da ultimate (só visual, o dano continua dos atributos); a regra da Atividade de hoje (baús em 20/40/60/80/100, sem diamante); 33 Conquistas em 5 grupos (diamante só no último nível, ~200 no jogo inteiro, total ~10,2 mil em 6 meses). Agora: telas Arena, Eventos, Torneio
 - **21h10 · Servidor:** asa como item próprio refeita; começou as telas de entrada
 - **21h10 · Sua ordem:** o QA não testa nada no aplicativo até TODAS as telas, montarias e pets estarem prontos; só escreve telas
