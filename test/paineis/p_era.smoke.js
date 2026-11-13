@@ -52,6 +52,19 @@ const tick = () => new Promise(r => setImmediate(r));
   assert(!window.PEra.state.el.innerHTML.includes('Recompensa'), 'sem recompensa inventada'); assert(!window.PEra.state.el.innerHTML.includes('Essência'), 'sem Essência inventada'); def.close(); out.push('sem arma antiga/sem recompensa: cartões e linhas não aparecem');
   // 5) Essência só quando informada
   wEra = 1; def.open({ from: 1, to: 2, gems: 0, essence: 2 }); await tick(); await tick(); await tick(); window.PEra.go(window.PEra.state.steps.indexOf('reward')); assert(window.PEra.state.el.innerHTML.includes('+2 Essência da Era')); def.close(); out.push('Essência só se informada: ok');
+  // 5b) HERÓI por drawHeroFull (fase, montaria, asa, pet): canvas transparente com folga, laço enquanto aberto, reserva sem a função e com erro, para ao fechar
+  { const rafs = []; g.requestAnimationFrame = f => { rafs.push(f); return rafs.length; }; g.cancelAnimationFrame = () => { rafs.length = 0; };
+    const calls = []; g.HS = 150; const c2 = { clearRect() {} }; let boom = false; g.drawHeroFull = (c, x, y, sc, st) => { if (boom) throw new Error('boom'); calls.push({ x, y, sc, st }); };
+    const fakeCanvas = html => { const m = html.match(/<canvas data-pehf="([\d.]+)" data-fx="([\d.]+)" data-fy="([\d.]+)" width="(\d+)" height="(\d+)"[^>]*style="[^"]*width:([\d.]+)px/); return m ? { dataset: { pehf: m[1], fx: m[2], fy: m[3] }, width: +m[4], height: +m[5], style: { width: m[6] + 'px' }, getContext: () => c2 } : null; };
+    def.open({ from: 1, to: 2, gems: 0 }); await tick(); await tick(); await tick(); const st = window.PEra.state; st.el.querySelectorAll = () => { const f = fakeCanvas(st.el.innerHTML); return f ? [f] : []; };
+    window.PEra.go(1); assert.strictEqual(st.step, 'portal'); const html = st.el.innerHTML; assert(/<canvas data-pehf=/.test(html), 'portal: herói é um canvas'); assert(!/kael_run_body/.test(html), 'sem a folha do Kael quando drawHeroFull existe');
+    assert(rafs.length >= 1, 'laço agendado'); rafs.shift()(1000); assert(calls.length === 1, 'chamou drawHeroFull'); const k = calls[0]; assert(k.x > 0 && k.y > 0 && k.sc > 0 && k.st && k.st.walking === true && Math.abs(k.st.t - 1) < 0.01, 'unidades: x,y(pés),scale,{t em s, walking}'); assert(rafs.length >= 1, 'laço continua');
+    out.push('herói por drawHeroFull: canvas com folga, laço, unidades (x, pés, scale, t, walking)');
+    window.PEra.close(); assert.strictEqual(rafs.length, 0, 'fechar para o laço'); out.push('laço para ao fechar');
+    boom = true; def.open({ from: 1, to: 2, gems: 0 }); await tick(); await tick(); await tick(); const st2 = window.PEra.state; st2.el.querySelectorAll = () => { const f = fakeCanvas(st2.el.innerHTML); return f ? [f] : []; }; window.PEra.go(1); rafs.shift()(2000);
+    assert(!/<canvas data-pehf=/.test(st2.el.innerHTML) && /kael_run_body/.test(st2.el.innerHTML), 'erro: volta para a folha do Kael'); window.PEra.close(); out.push('drawHeroFull com erro: reserva (folha do Kael)');
+    delete g.drawHeroFull; def.open({ from: 1, to: 2, gems: 0 }); await tick(); await tick(); await tick(); window.PEra.go(1); assert(/kael_run_body/.test(window.PEra.state.el.innerHTML) && !/<canvas data-pehf=/.test(window.PEra.state.el.innerHTML), 'sem a função: folha do Kael'); window.PEra.close(); out.push('sem drawHeroFull: reserva');
+    assert(!/\p{Extended_Pictographic}/u.test(fs.readFileSync(path.join(R, 'js/p_era.js'), 'utf8')), 'sem emoji no arquivo'); out.push('sem emoji em js/p_era.js'); }
   // 6) botões sempre com data-e
   def.open({ from: 1, to: 2, gems: 30 }); await tick(); await tick(); await tick(); for (let i = 0; i < window.PEra.state.steps.length; i++) { window.PEra.go(i); const bt = window.PEra.state.el.innerHTML.match(/<button[^>]*>/g) || []; assert(bt.every(b => /data-e="/.test(b)), 'botão sem ação em ' + window.PEra.state.step); } def.close();
   console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

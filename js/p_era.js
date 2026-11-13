@@ -73,6 +73,18 @@ const peRunBase=(n,k)=>n===2?`assets/anim/era2_${k}_run`:`assets/anim/hyb/enemy/
 function peSprite(base,hPx,cx,gy,cls,extra){ const j=PE.meta[base+'.json']; if(!j||!j.frames||!j.w||!j.h) return '';
   const k=hPx/j.h, w=j.w*k, fy=(typeof j.feetY==='number'?j.feetY:j.h*0.94)*k, n=j.frames;
   return `<div class="${cls||'pe-sh'}" role="img" aria-hidden="true" style="position:absolute;left:${(cx-w/2).toFixed(1)}px;top:${(gy-fy).toFixed(1)}px;width:${w.toFixed(1)}px;height:${hPx.toFixed(1)}px;background-image:url(${base}.png);background-size:${n*100}% 100%;--n:${n};--d:${(n/(j.fps||12)).toFixed(3)}s;${extra||''}"></div>`; }
+/* HERÓI: window.drawHeroFull(ctx, x(centro), y(PÉS), scale(multiplicador do HS da batalha), {t em segundos, walking}) desenha fase, montaria, asa, aura e pet (ordem do dono: nada some).
+   Canvas transparente com folga (2,4x de largura e 1,9x de altura do quadro) para o herói montado não cortar; pés em 0,9 da altura; laço enquanto o overlay está aberto.
+   Reserva: sem a função (ou se ela der erro) volta a folha do Kael correndo (peSprite). */
+function peMounted(){ try{ return !!(window.Sys&&Sys.mount&&Sys.mount.ensure&&Sys.mount.ensure(S).eq); }catch(e){ return false; } }
+function peHero(hPx,cx,gy,cls,extra){ if(typeof window.drawHeroFull!=='function'||PE.hfErr) return peSprite('assets/anim/hyb/R/kael_run_body',hPx,cx,gy,cls,extra);
+  const w=hPx*2.4, h=hPx*1.9, fx=w*(peMounted()?0.42:0.45), fy=h*0.9, r=Math.min(2,(typeof devicePixelRatio==='number'&&devicePixelRatio)||1);
+  return `<canvas data-pehf="${hPx.toFixed(1)}" data-fx="${fx.toFixed(1)}" data-fy="${fy.toFixed(1)}" width="${Math.round(w*r)}" height="${Math.round(h*r)}" role="img" aria-label="Kael" style="position:absolute;left:${(cx-fx).toFixed(1)}px;top:${(gy-fy).toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;pointer-events:none"></canvas>`; }
+function peLoop(ts){ PE.raf=0; if(!PE.open||!PE.el) return; const cs=PE.el.querySelectorAll?PE.el.querySelectorAll('canvas[data-pehf]'):[]; const hs=(typeof HS==='number'&&HS>0)?HS:155;
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), r=cv.width/(parseFloat(cv.style.width)||cv.width||1), hp=parseFloat(cv.dataset.pehf)||176; c2.clearRect(0,0,cv.width,cv.height);
+      window.drawHeroFull(c2,parseFloat(cv.dataset.fx)*r,parseFloat(cv.dataset.fy)*r,hp/hs*r,{t:(ts||0)/1000,walking:true}); }catch(e){ PE.hfErr=1; if(PE.open) peFrame(); return; } }
+  if(cs.length&&typeof requestAnimationFrame==='function') PE.raf=requestAnimationFrame(peLoop); }
+function peLoopStart(){ if(PE.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(PE.raf); PE.raf=0; if(typeof requestAnimationFrame==='function') PE.raf=requestAnimationFrame(peLoop); }
 function peStatic(src,hPx,cx,gy){ const w=hPx; return `<img alt="" src="${src}" style="position:absolute;left:${(cx-w/2).toFixed(1)}px;top:${(gy-hPx).toFixed(1)}px;height:${hPx.toFixed(1)}px;width:auto;max-width:none">`; }
 
 /* passos desta abertura: a lista depende do que o jogo informou e do que o jogador tem */
@@ -92,9 +104,9 @@ function peFrame(){ const o=PE.o, W=PE.el.clientWidth||390, H=PE.el.clientHeight
   const runBase='assets/anim/hyb/R/kael_run_body';
   if(sk==='portal'){ const px=W*0.56; stage+=`<div class="pe-portal" aria-hidden="true" style="left:${px.toFixed(0)}px;top:${(gyA-244*u).toFixed(0)}px;width:${(160*u).toFixed(0)}px;height:${(250*u).toFixed(0)}px;box-shadow:0 0 60px 20px rgba(255,201,74,.55)"><div class="pe-swirl"></div><div class="pe-core"></div></div>`
       +[[236,440],[350,500],[250,620],[340,640]].map((p,i)=>`<span class="pe-spark" style="left:${(p[0]*u).toFixed(0)}px;top:${(gyA-(658-p[1])*u).toFixed(0)}px;animation-delay:${(i*.4).toFixed(1)}s"></span>`).join('')
-      +`<div class="pe-toportal" style="--tx:${(W*0.5).toFixed(0)}px;position:absolute;left:0;top:0;width:100%;height:100%">${peSprite(runBase,176*u,W*0.25,gyA,'pe-sh','--d:.667s')}</div>`; }
-  if(sk==='flash') stage+='<div class="pe-flash"></div>'+peSprite(runBase,176*u,W*0.3,gyB,'pe-sh','--d:.667s');
-  if(onNew&&sk!=='flash'&&sk!=='final') stage+=`<div class="pe-runin" style="position:absolute;inset:0">${peSprite(runBase,176*u,W*0.3,gyB,'pe-sh','--d:.667s')}</div>`;
+      +`<div class="pe-toportal" style="--tx:${(W*0.5).toFixed(0)}px;position:absolute;left:0;top:0;width:100%;height:100%">${peHero(176*u,W*0.25,gyA,'pe-sh','--d:.667s')}</div>`; }
+  if(sk==='flash') stage+='<div class="pe-flash"></div>'+peHero(176*u,W*0.3,gyB,'pe-sh','--d:.667s');
+  if(onNew&&sk!=='flash'&&sk!=='final') stage+=`<div class="pe-runin" style="position:absolute;inset:0">${peHero(176*u,W*0.3,gyB,'pe-sh','--d:.667s')}</div>`;
   if(sk==='title') stage+=`<div style="position:absolute;left:0;right:0;top:${(70*u).toFixed(0)}px;height:${(150*u).toFixed(0)}px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="pe-rays" aria-hidden="true" style="left:${(W/2-150*u).toFixed(0)}px;top:${(-75*u).toFixed(0)}px;width:${(300*u).toFixed(0)}px;height:${(300*u).toFixed(0)}px"></div><span style="position:relative;font-size:14px;font-weight:900;letter-spacing:3px;text-shadow:0 2px 4px #000">NOVA ERA LIBERADA</span><span class="pe-title pe-lil" style="position:relative;font-size:${Math.min(42,Math.max(26,W/(String(et?et.n:'').length+8)*1.35)).toFixed(0)}px;color:#ffc94a;white-space:nowrap">ERA ${t+1} · ${peEsc(et?et.n.toUpperCase():'')}</span></div>`;
   const card=(bd,glow,top,inner)=>`<div class="pe-card" role="group" style="position:absolute;left:${(20*u).toFixed(0)}px;right:${(20*u).toFixed(0)}px;top:${(top*u).toFixed(0)}px;padding:12px;border-radius:18px;background:rgba(29,22,17,.94);border:2px solid ${bd};${glow?`box-shadow:0 0 24px ${glow};`:''}box-sizing:border-box;display:flex;flex-direction:column;gap:8px">${inner}</div>`;
   if(sk==='foe'){ const names=peFoes(t), base=peRunBase(t,'e0'), sp=peSprite(base,106*u,0,106*u,'pe-sh','');
@@ -110,10 +122,10 @@ function peFrame(){ const o=PE.o, W=PE.el.clientWidth||390, H=PE.el.clientHeight
   const bgNew=`assets/bg/era${t}.png`, bgOld=`assets/bg/era${f}.png`;
   PE.el.innerHTML=`<div class="pe-bg" style="background-image:url(${bgOld});opacity:${onNew?0:1}"></div><div class="pe-bg" style="background-image:url(${bgNew});opacity:${onNew?1:0}"></div><div class="pe-shade"></div>${stage}${skip}`; }
 
-function peGo(i){ clearTimeout(PE.timer); PE.i=Math.max(0,Math.min(PE.steps.length-1,i)); PE.step=PE.steps[PE.i]; peFrame();
+function peGo(i){ clearTimeout(PE.timer); PE.i=Math.max(0,Math.min(PE.steps.length-1,i)); PE.step=PE.steps[PE.i]; peFrame(); peLoopStart();
   if(PE.step!=='final'&&PE_MS[PE.step]) PE.timer=setTimeout(()=>{ if(PE.open) peGo(PE.i+1); },PE_MS[PE.step]);
   try{ if(typeof snd==='function') snd(PE.step==='flash'?'claim':PE.step==='title'?'gem':'ui_tap'); }catch(e){} }
-function peClose(){ if(!PE.open) return; PE.open=false; clearTimeout(PE.timer); if(PE.el&&PE.el.parentNode) PE.el.parentNode.removeChild(PE.el); PE.el=null;
+function peClose(){ if(!PE.open) return; PE.open=false; clearTimeout(PE.timer); if(PE.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(PE.raf); PE.raf=0; PE.hfErr=0; if(PE.el&&PE.el.parentNode) PE.el.parentNode.removeChild(PE.el); PE.el=null;
   try{ if(typeof B!=='undefined'&&B.res&&B.res.mode==='era'){ B.res=null; B.running=true; } }catch(e){}
   try{ document.body&&document.body.classList.remove('resui'); }catch(e){}
   const cb=PE.o&&PE.o.onDone; PE.o=null; if(typeof cb==='function'){ try{ cb(); }catch(e){} } }
