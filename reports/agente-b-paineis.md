@@ -999,3 +999,13 @@ Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o
   Com a Aparência ligada, o atalho do cartão para a Loja deixa de existir (o protótipo põe a coleção de skins dentro do painel).
 - Não fiz o desenho do herói em camadas (é do engenheiro).
 - `node --check`; conflitos ok; `node test/e2e/run.js` "TUDO OK"; fumaça sem falha. Não visto no navegador.
+
+## Bloco 31 (sem navegador): Loja em 288 px, cartão OFERTA/DESTAQUE cortado (achado do QA)
+
+Só `js/screens.js` (`scrShop`). Com menos de 340 px de largura de conteúdo: a coluna da arte passa de 168 para 104 px (corta as laterais
+vazias; o herói fica no centro), a linha "OFERTA · Skin de herói" e a do relógio quebram linha em vez de cortar, o nome cai para 19 px e
+pode quebrar, a etiqueta de raridade/era quebra, o relógio fica com 16 px, e o cartão cresce em altura (mínimo 196) em vez de cortar.
+De 340 px para cima o HTML dos textos é o mesmo de antes (as mudanças são todas condicionadas à tela estreita; a única diferença é uma
+caixa interna de 168 px em volta da arte, na mesma posição).
+`node --check`, conflitos e `node test/e2e/run.js` ("TUDO OK", 140) passam; fumaça sem falha em 288x500 e 390x788. Não visto no navegador:
+a conta dá ~146 px para os textos em 288; o QA precisa confirmar que nada corta.
