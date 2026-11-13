@@ -349,7 +349,7 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 | Invasão da Era, baú de topo (`invasion:top`, nv 18) | **indefinido**: ninguém chama no jogo; "topo" de quê? | — | **não** | — | — |
 | Chefe Mundial (nv 24): faixa de dano e ≥5% da vida | jogo ("cada um contra o seu") | — | não precisa | — | não |
 | Chefe Mundial: topo do mês (`monthTop`, asa Fênix) | servidor (ranking do mês) | — | **não** | — | — |
-| Torneio de Fim de Semana (nv 28): ranking próprio, top 100 (`tourney:weekend`) e prêmio por posição | servidor | — | **não** | — | — |
+| Torneio de Fim de Semana (nv 28): ranking próprio, top 100 (`tourney:weekend`) e prêmio por posição | servidor | `GET /weekend?week=` → {week, startsAt, endsAt, open, closed, arenaPct, me:{rank,points}, list:[{rank,id,name,points}]}; fechamento automático (WEEKEND_ON) | **sim** (fps-server, 13/11) | sim (weekend.test, memória e pg) | sim: `att.newDrops` (o jogo precisa resgatar essa chave); pedras/prismático por posição quando houver tabela |
 | Arena: ranking semanal e prêmio por faixa | servidor | `GET /ranking`, fechamento semanal | sim | sim (arena.test) | sim |
 | Arena: liga de fim de temporada (`arena:season`) | jogo, com o delta das lutas do servidor | `POST /arena/fight` | sim | sim | não (o jogo entrega a liga) |
 | Torneio da temporada, top 10 (`tourney:season`) | **indefinido**: ninguém chama no jogo; qual ranking? | — | **não** | — | — |
