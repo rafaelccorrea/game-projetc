@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h45 · TELAS = PRIORIDADE (sua ordem):** a Sistemas assumiu os protótipos das telas refeitas no padrão aprovado (Perfil/Arena), nesta ordem: Equipamento (com Mochila), Loja, Invocar, Passe, Pets, Montarias, Forja, VIP, Batalha e a tela de fim das 9 eras. Eu publico cada uma para o seu voto. **Eras 7 e 8 jogáveis** prontas no código (desligadas): falta só a Arte fazer 6 ícones de golpe; depois do Juiz Celestial o jogo segue em fases sem fim com uma tela de celebração
+
 - **23h30 · Você APROVOU a Tela 23 · Luta PvP da Arena.** O Engenheiro troca a luta atual da Arena por ela, seguindo os golpes de verdade da luta; o QA confere em 3 tamanhos de tela
 
 - **23h20 · Servidor:** conta de convidado só nasce quando o jogador toca em JOGAR ou entra com Google; convidados vazios sem acesso há 30 dias são apagados sozinhos. ACHADO E CORRIGIDO: a exclusão definitiva 30 dias depois do pedido nunca rodava; agora apaga de verdade (ficam só registros de compra e de moderação, com o número da conta; o texto jurídico vai dizer isso). Luta PvP: pets separados e ultimate do tamanho da batalha (mesmo link)
