@@ -155,3 +155,19 @@ Abre oficialmente só depois que a Clava Básica fechar com o QA (PO, 14/11). Te
 | Nomes na tela (`index.html:359`) | ⚠ Básico **"Lança de Bronze"** com arte de gládio (mesma conversa dos nomes); Raro "Gládio" ✓; Épico "Falcata de Ferro" ✓ (espada curta); Mítico "Xifos Espartano" ✓; Lendário "Lâmina de Aquiles" ✓ |
 
 **Do lado de sistema: pronto.** Pendências: o nome do Básico e a arma Mítica (decisões do dono).
+
+## Itens 16 a 68: armas das eras 2 a 8 (adiantado)
+
+Teste: `test/sys/item-armas.test.js` (306 verificações, as 45 armas). Em todas: arte no disco com grip, família certa, ultimate da era pronta (Básico a Épico base, Mítico base reforçada, Lendário com a folha própria da família ligada no boot), efeito por raridade, atributo crescente, drop e Invocação.
+
+| Família (era) | Ultimate própria do Lendário | Pendências de sistema |
+|---|---|---|
+| Espada (2) | ✓ `sword_legend` | Mítico ⏸ (regra do lançamento) |
+| Pederneira (3), pistola | ✓ `flintlock_legend` | Mítico ⏸; nomes de arma longa com arte de pistola: "Mosquete", "Arcabuz Raro" (conferir com a Arte) |
+| Revólver (4) | ✓ `revolver_legend` | Mítico ⏸; nomes de outras armas: "Rifle de Repetição", "Carabina", "Metralhadora Gatling", "Canhão de Tesla" (conferir com a Arte) |
+| Fuzil (5) | ✓ `rifle_legend` | Mítico ⏸; Básico "Pistola 9mm" com arte de fuzil; "Minigun", "Railgun" (conferir) |
+| Plasma (6) | ✓ `plasma_legend` | Mítico ⏸; **nome contra o estilo**: Raro "Espada de Plasma" ATIRA (`gunAtR0`), Épico "Rifle de Íons" e Mítico "Canhão de Antimatéria" são LÂMINA |
+| Infernal (7) | ✓ `infernal_legend` | Mítico ⏸; **Códex não tem a era 7** |
+| Celeste (8) | ✓ `celestial_legend` | Mítico ⏸; Básico "Lança de Luz" (conferir com a arte); **Códex não tem a era 8** |
+
+**Lacuna de sistema encontrada: o Códex só cobre 7 eras.** `js/sys/codex.js:23` tem `eras:7`, e a tela usa `Math.min(7, ERAS.length)` (`js/p_codex.js:56`). As armas e armaduras das eras 7 e 8 nunca entram na coleção. Proposta (Sistemas + Engenheiro): com as eras 7-8 ligadas, `eras:9`, com +6 casas de arma e +12 de armadura (os "melhores inimigos" das eras 7-8 também, +6). Muda o total do Códex; os marcos já resgatados ficam.
