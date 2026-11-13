@@ -23,7 +23,10 @@ function rarOf(id){
   if(typeof id!=='string') return -1; if(id in DATA.passR) return DATA.passR[id];
   const m=/^[a-z]+(\d)(\d)$/.exec(id); return m?clamp(+m[2],0,4):-1;   // padrão <letra(s)><era><raridade>: w23, a12, h04...
 }
-const equippedIds=S=>{ const e=S&&S.skinEq; return e&&typeof e==='object'?Object.values(e).filter(x=>typeof x==='string'):[]; };
+/* DONO (13/11, via PO): a arma na mão é SEMPRE o item equipado; a skin de arma não sobrepõe mais. O espaço weapon do S.skinEq é IGNORADO
+   (save antigo não é apagado nem migrado): sai do bônus de "equipada" e do detail. As skins de arma possuídas CONTINUAM na coleção (ninguém perde poder). */
+DATA.ignoredSlots=['weapon'];
+const equippedIds=S=>{ const e=S&&S.skinEq; if(!e||typeof e!=='object') return []; return Object.keys(e).filter(k=>!DATA.ignoredSlots.includes(k)).map(k=>e[k]).filter(x=>typeof x==='string'); };
 const ownedCount=S=>Array.isArray(S&&S.skins)?new Set(S.skins.filter(x=>typeof x==='string')).size:0;
 const minorIds=S=>{ const a=S&&S.sys&&S.sys.appearance&&S.sys.appearance.skin; if(!a||typeof a!=='object') return [];
   return DATA.minorSlots.map(s=>a[s]).filter(x=>typeof x==='string'); };
@@ -41,7 +44,7 @@ function bonus(S){ const p=Math.round((equippedPct(S)+collectionPct(S))*1e6)/1e6
    {total, equipped, collection, owned, cap, slots:[{slot, id, r, pct}]} — tudo em pontos %, o mesmo valor para ATK e HP */
 function detail(S){
   const e=S&&S.skinEq&&typeof S.skinEq==='object'?S.skinEq:{}, slots=[];
-  for(const slot of Object.keys(e)){ const id=e[slot]; if(typeof id!=='string') continue; const r=rarOf(id); slots.push({slot,id,r,pct:r>=0?DATA.equippedPct[r]:0}); }
+  for(const slot of Object.keys(e)){ const id=e[slot]; if(typeof id!=='string'||DATA.ignoredSlots.includes(slot)) continue; const r=rarOf(id); slots.push({slot,id,r,pct:r>=0?DATA.equippedPct[r]:0}); }
   const a=S&&S.sys&&S.sys.appearance&&S.sys.appearance.skin||{};
   for(const slot of DATA.minorSlots){ const id=a[slot]; if(typeof id!=='string') continue; const r=rarOf(id); slots.push({slot,id,r,pct:r>=0?DATA.minorPct[r]:0}); }
   const eq=equippedPct(S), col=collectionPct(S), rnd=v=>Math.round(v*1e6)/1e6;

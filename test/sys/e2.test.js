@@ -229,8 +229,9 @@ t('fc: 6 atributos, FC deste item (real e no nível do jogador), troca e ranking
 });
 t('skin dá poder (equipada por raridade + coleção com teto) e VIP (bônus e perks, offline em dobro)',()=>{
   const SK=require('../../js/sys/skin.js'), V=require('../../js/sys/vip.js');
-  const S={skinEq:{weapon:'w04',armor:'a12'},skins:['w04','a12']}; near(SK.bonus(S).atkPct,10+5+1);
-  const d=SK.detail(S); near(d.total,16); near(d.equipped,15); near(d.collection,1); assert.strictEqual(d.slots.length,2); assert.strictEqual(d.slots[0].pct,10);
+  // dono 13/11: skin de ARMA não conta como equipada (a arma na mão é o item); continua na coleção
+  const S={skinEq:{weapon:'w04',armor:'a12'},skins:['w04','a12']}; near(SK.bonus(S).atkPct,5+1);
+  const d=SK.detail(S); near(d.total,6); near(d.equipped,5); near(d.collection,1); assert.strictEqual(d.slots.length,1); assert.strictEqual(d.slots[0].slot,'armor'); assert.strictEqual(d.slots[0].pct,5);
   // PO: skins dos outros 5 espaços dão +1/+1,5/+2/+3/+4% (lidas do Sys.appearance), e contam no mesmo teto de coleção
   const Sm={skinEq:{},skins:[],sys:{appearance:{skin:{hat:'h04',boots:'b12'}}}}; near(SK.equippedPct(Sm),4+2);   // h04 = Lendário (+4), b12 = Épico (+2)
   Sm.sys.appearance.skin.gloves='g01'; near(SK.equippedPct(Sm),4+2+1.5);   // g01 = Raro (+1,5) assert.strictEqual(SK.detail(Sm).slots.length,2);

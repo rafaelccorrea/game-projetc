@@ -61,7 +61,8 @@ function setLookHidden(S,key,on){ if(!DATA.lookHideable.includes(key)) return fa
 function addCosmetic(S,id){ if(!COS[id]) return {ok:false,reason:'id'}; const o=look(S); if(o.cos.owned.includes(id)) return {ok:false,reason:'owned'}; o.cos.owned.push(id); return {ok:true,id}; }
 function equipCosmetic(S,cat,id){ if(!DATA.cosCats.includes(cat)) return false; const o=look(S); if(id==null){ delete o.cos.eq[cat]; return true; }
   if(!o.cos.owned.includes(id)||COS[id].cat!==cat) return false; o.cos.eq[cat]=id; return true; }
-const chosenSkin=(S,k)=>{ const id=S&&S.skinEq&&S.skinEq[k]; return typeof id==='string'&&!DATA.starterSkins.includes(id)?id:null; };
+const chosenSkin=(S,k)=>{ if(k==='weapon') return null;   /* dono 13/11: a arma na mão é sempre o item equipado (skin de arma não sobrepõe) */
+  const id=S&&S.skinEq&&S.skinEq[k]; return typeof id==='string'&&!DATA.starterSkins.includes(id)?id:null; };
 /* CAMADAS PARA DESENHAR, de baixo para cima: [{layer, key, source:'base'|'item'|'skin'|'cos', era, r, id}]. Ocultos e o que não aparece já saem da lista.
    Modo 'skin' COM skin de roupa escolhida: base + a skin completa + a arma (skin de arma ou item). Sem skin escolhida, o modo 'skin' cai no 'items'. */
 function layers(S,host){ const o=look(S), eq=host&&typeof host.equipped==='function'?(host.equipped()||{}):{}, out=[];
