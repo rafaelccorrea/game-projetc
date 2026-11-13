@@ -1,0 +1,9 @@
+{
+ "frames": 8,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "sheet": "assets/anim/skins/kael_samurai/pistol/kael_pistol_run_era5_t0.png",
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura. Pintar: cor = luminância × tinta do material."
+}

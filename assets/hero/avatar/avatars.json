@@ -145,6 +145,15 @@
     "ang": 2.5,
     "s": 0.6933
    }
+  },
+  "kael_samurai": {
+   "file": "kael_samurai.png",
+   "head": {
+    "x": 128,
+    "y": 96.7,
+    "ang": 2.5,
+    "s": 0.6933
+   }
   }
  }
 }
