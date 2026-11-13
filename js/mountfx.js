@@ -25,20 +25,22 @@ function mountBoot(){ if (!mountOk()) return; try { Sys.mount.DATA.on = true; Sy
    a Kaia aparece A PÉ e a montaria não é desenhada na batalha (o bônus da montaria no Sys.mount continua valendo). Quando a Arte entregar kaia_<montaria>_*,
    basta pôr kaia: 'kaia_' aqui. */
 /* Engenheiro 6 (v0.12.9): KAIA MONTADA, POR MONTARIA E POR EXISTÊNCIA DO ARQUIVO. O Kael tem folha de todas as montarias da tabela. A Kaia só monta nas
-   montarias cuja arte existe (lote 1: pony e horse): a lista sai de assets/manifest.json (gerado por tools/asset-manifest.js; só tem arquivo que
-   existe), lido UMA vez e só quando o herói é a Kaia. Vale a montaria que tiver kaia_<id>_{idle,run,attack}_body .png e .json (6 arquivos).
-   As que faltam (tigre, lobo, grifo, serpe) nunca são pedidas (sem 404) e ligam SOZINHAS quando os arquivos entrarem no manifesto. Enquanto o
-   manifesto não chegou, ou para montaria sem arte: a Kaia fica a pé, como antes (bônus valendo).
+   montarias cuja arte existe (lote 1: pony e horse). FONTE ÚNICA de "existe arte montada": Sys.assets.mountedArt(herói, montaria) (Sistemas; lê o
+   assets/manifest.json que o carregamento entrega ao módulo, js/loading.js loadManifest). true = monta com kaia_; false (sem arte: tigre, lobo,
+   grifo, serpe) ou null (manifesto ainda não carregado / módulo ausente) = a Kaia fica a pé, como antes (bônus valendo). As que faltam nunca são
+   pedidas (sem 404) e ligam SOZINHAS quando os arquivos entrarem no manifesto. A pré-carga usa o mesmo caminho (mountSheet → mountPrefix).
    mountPrefix(id) → prefixo da folha desse herói nessa montaria, ou null (a pé). Sem id = a montaria equipada. */
 const MOUNT_HERO = { kael: 'kael_', kaia: 'kaia_' };
-const MOUNT_HAVE = { kaia: null, asked: false };   // kaia: {id:1} das montarias com arte da Kaia (null = manifesto ainda não lido)
-function mountHaveLoad(){ if (MOUNT_HAVE.asked) return; MOUNT_HAVE.asked = true;
-  fetch('assets/manifest.json').then(r => r.ok ? r.json() : null).then(m => { const n = {}, ok = {}; if (m && m.packs) for (const p in m.packs) for (const f of m.packs[p].files || []){ const x = /^assets\/anim\/mounts\/kaia_([a-z0-9]+)_(idle|run|attack)_body\.(png|json)$/.exec(f); if (x) n[x[1]] = (n[x[1]] || 0) + 1; }
-    for (const id in n) if (n[id] >= 6) ok[id] = 1; MOUNT_HAVE.kaia = ok; }).catch(() => { MOUNT_HAVE.kaia = {}; }); }
+/* RESERVA enquanto o js/sys/assets.js NÃO está na lista de módulos do index.html (hoje não está: Sys.assets não existe no jogo): o mesmo manifesto, lido
+   UMA vez e só com a Kaia, com a MESMA regra do mountedArt (pacote 'mount:<id>' com <herói>_<id>_idle_body.png ou _run_body.png). Com o módulo
+   carregado esta reserva nunca roda. */
+const MOUNT_MAN = { packs: null, asked: false };
+function mountManLoad(){ if (MOUNT_MAN.asked) return; MOUNT_MAN.asked = true; fetch('assets/manifest.json').then(r => r.ok ? r.json() : null).then(m => { MOUNT_MAN.packs = (m && m.packs) || {}; }).catch(() => { MOUNT_MAN.packs = {}; }); }
+function mountArtOf(h, id){ const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { return A.mountedArt(h, id); } catch (e) { return null; } }
+  if (!MOUNT_MAN.packs){ mountManLoad(); return null; } const pk = MOUNT_MAN.packs['mount:' + id], b = MOUNT_DIR + h + '_' + id; return !!(pk && Array.isArray(pk.files) && pk.files.some(p => p === b + '_idle_body.png' || p === b + '_run_body.png')); }
 function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'; if (h === 'kael') return MOUNT_HERO.kael;
-  if (!MOUNT_HAVE.kaia){ mountHaveLoad(); return null; }
   if (id == null){ try { const i = Sys.mount.battleInfo(S); id = i && i.id; } catch (e) { id = null; } }
-  return id != null && MOUNT_HAVE.kaia[id] ? MOUNT_HERO.kaia : null; }
+  return id != null && mountArtOf(h, id) === true ? MOUNT_HERO[h] : null; }
 function mountLook(){ if (!mountOk()) return null; try { const i = Sys.mount.battleInfo(S); return i && i.visual && MOUNT_TBL[i.id] && mountPrefix(i.id) ? { id: i.id, stars: i.stars | 0, aura: i.aura } : null; } catch (e) { return null; } }
 const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix(id) || 'kael_') + id + '_' + st + '_body');
 function mountReady(id){ let ok = true; for (const st of ['idle', 'run', 'attack']) if (!mountSheet(id, st).ok) ok = false; return ok; }
