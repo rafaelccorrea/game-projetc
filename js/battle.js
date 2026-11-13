@@ -377,6 +377,7 @@ function killEnemy(e){
   burst(e.x,y,e.col,e.boss?22:10); ring(e.x,y,'#ffffff',e.boss?40:26); B.corpses.push({e,x:e.x,t:0,life:enSheet(e,'die')?shDur(enSheet(e,'die'),EN_DIE_DUR):(e.boss&&SCREENS_ON.bossResult)?BOSS_FALL_DUR:0.6}); if(e.boss&&SCREENS_ON.bossResult) for(let i=0;i<3;i++) dust(e.x-30+i*30,GY-2,3,'#c8b496'); snd('enemy_die'); if(e.boss) snd('coin');
 }
 function heroDown(on){ if(on){ B.deadT=0.8; B.deadBoss=true; } else { B.deadT=0; B.deadBoss=false; } }   // tela 10 (derrota): deixa o Kael caído / devolve
+const WAVE_GAP=0.3;   /* segundos entre o fim de uma onda comum e a entrada da próxima */
 function waveClear(){
   const h=B.hero;
   if(typeof petWave==='function') petWave();
@@ -401,7 +402,8 @@ function waveClear(){
     if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ challengeBoss(); return; } }   /* a cura é a do próprio desafio (bossChallengeHeal): antes somava 8% e depois enchia a vida */
   else S.wave++;
   if(!bossWon) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.waveHeal));   /* depois do chefe a fase nova começa com a vida que sobrou */
-  B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=1.2; B.waveT=1.2; preloadAssets(); save();
+  { const gap=(bossWon||S.wave===5)?1.2:WAVE_GAP;   /* B4 (polimento da batalha): entre ondas comuns o próximo inimigo entra logo, sem 1,2 s de palco vazio; a entrada do chefe e a fase nova mantêm a pausa */
+    B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=gap; B.waveT=gap; } preloadAssets(); save();
   if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); }
 }
 /* "Desafiar chefe": chama a onda do chefe da fase atual (com a vida cheia), no farm ou fora dele (fora do farm só antecipa a onda 5). Também é o "Tentar de novo" da derrota. */
@@ -413,7 +415,7 @@ function hitEnemy(e,mult,a,h){
   else { crit=Math.random()<BAL.critChance; d=hero.atk*mult*(crit?BAL.critMult:1)*(0.9+Math.random()*0.2); }
   const ex=eX(e), ey=eY(e), fin=h&&h.fin, k=a.type==='s3'?(fin?3:2):a.type==='s2'?2:crit?1:0;
   e.hp-=d; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }   // a folha de dano toca inteira, no fps do .json
-  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2||crit?1:0);
+  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2?1:crit?3:0);
   { const fx=a.fx, pm=fx&&fx.particles>0?fx.particles:1, lite=a.type==='s3'?1:0.5;   /* s1 e s2: metade do reforço */
     burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,Math.round((crit||fin?8:3)*(1+(pm-1)*lite)));
     if(fx&&fin){ const sz=fx.size>0?fx.size:1; ring(ex-6,ey,a.col,34*sz); if(sz>1) ring(ex-6,ey,'#ffffff',22*sz); B.shake=Math.max(B.shake,.5*(fx.shake>0?fx.shake:1)); if(fx.flash) B.flash=Math.max(B.flash||0,0.28); } }
@@ -621,7 +623,7 @@ function step(dt){
   if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.inst){ instEnd(false); return; } if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
       /* TELA 10 (derrota): o chefe fica de pé e o herói volta a ficar parado até o jogador escolher; sem a tela, entra direto no farm */
       if(typeof resOpen==='function'&&resOpen('lose',{stage:S.stage})){ h.hp=h.maxhp; return; }
-      toast('Derrotado pelo chefe: farmando a fase. Toque em Desafiar para tentar de novo'); }
+      toast('Derrotado pelo chefe: juntando força. Desafiar acende quando a sua FC chegar perto'); }
     S.wave=1; startBattle(); if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); } } return; }
   // surgimento "aos poucos"
   if(B.waveT>0) B.waveT-=dt;
@@ -1217,7 +1219,7 @@ function draw(){
   for(const r of B.rings){ const k=r.t/0.45; ctx.globalAlpha=Math.max(0,1-k); ctx.strokeStyle=r.col; ctx.lineWidth=3*(1-k)+1; ctx.beginPath(); ctx.arc(r.x,r.y,6+r.max*easeOut(Math.min(1,k)),0,7); ctx.stroke(); }
   ctx.globalAlpha=1; ctx.textAlign='center';
   for(const f of B.fx){ const k=f.t, pop=1+0.6*Math.max(0,1-k*7); ctx.globalAlpha=Math.max(0,1-k*k);
-    ctx.font=`${LILITA()?'400':'900'} ${Math.round((f.big===2?34:f.big?21:15)*pop)}px ${LILITA()?'"Lilita One",':''}system-ui`; const yy=f.y-easeOut(k)*(f.big===2?54:40), xx=Math.max(24,Math.min(LW-24,f.x));
+    ctx.font=`${LILITA()?'400':'900'} ${Math.round((f.big===2?34:f.big===3?23:f.big?21:15)*pop)}px ${LILITA()?'"Lilita One",':''}system-ui`; const yy=f.y-easeOut(k)*(f.big===2?54:40), xx=Math.max(24,Math.min(LW-24,f.x));
     ctx.lineWidth=f.big===2?6:4; ctx.lineJoin='round'; ctx.strokeStyle='#000'; ctx.strokeText(f.txt,xx,yy); ctx.fillStyle=f.col; ctx.fillText(f.txt,xx,yy); }
   ctx.globalAlpha=1;
   ctx.restore();

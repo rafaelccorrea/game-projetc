@@ -602,7 +602,7 @@ const dropEra = () => (S.eraMax>0 && Math.random()<0.3) ? S.eraMax-1 : S.eraMax;
 /* FC NA TELA (Engenheiro 4; ordem do dono): PONTO ÚNICO de exibição da FC nos arquivos da batalha. Passa pela escala visual do Sys.fc (viewText; só exibição:
    contas e comparações usam a FC real; ATK/Vida/DEF e dano não escalam). Sem o módulo, a formatação de antes. */
 function fcShow(fc){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return Sys.fc.viewText(fc); }catch(e){} return (typeof gNum==='function'?gNum:fmt)(fc); }
-const fmt = n => n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.floor(n)+'';
+const fmt = n => n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.floor(n)+'';
 
 /* ================= TOAST ================= */
 let toastT;
