@@ -1698,5 +1698,44 @@
         "era8MidFreeDays": 9.5
       }
     }
+  },
+  "fimDasEras": {
+    "_o_que": "Prêmios por vencer o Juiz Celestial (Senhor da era 8, fase 90), uma vez por personagem. PROPOSTA (protótipo docs/proto/v2/FimDasEras.html), DESLIGADA até o dono aprovar. Nada sorteado, nada à venda.",
+    "on": false,
+    "trigger": {
+      "stage": 90,
+      "eraBoss": true,
+      "once": true
+    },
+    "title": {
+      "id": "legend9",
+      "name": "Lenda das 9 Eras",
+      "rarity": 5,
+      "bonus": {
+        "atkPct": 3,
+        "hpPct": 3
+      },
+      "_nota": "o título Senhor das Eras já existe (fase 70); o final tem nome próprio"
+    },
+    "frame": {
+      "id": "nine_eras",
+      "name": "Nove Eras",
+      "visualOnly": true
+    },
+    "aura": {
+      "id": "light_of_eras",
+      "name": "Luz das Eras",
+      "visualOnly": true
+    },
+    "gems": 300,
+    "_gems": "uma vez, só no fim: ~3% da meta de ~10 mil diamantes em 180 dias; cabe porque chega no dia ~178 (grátis) / ~118 (VIP 10)",
+    "mail": {
+      "subject": "As 9 eras concluídas",
+      "body": "Você venceu o Juiz Celestial. A jornada continua nas fases sem fim."
+    },
+    "endless": {
+      "growthPerStage": 1.03,
+      "_uso": "depois da fase 90, FC pedida = a da 90 × 1,03 por fase (dificuldade.afterLastGrowth)"
+    }
   }
 }
