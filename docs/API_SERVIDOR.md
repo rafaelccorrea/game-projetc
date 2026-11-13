@@ -220,6 +220,9 @@ endereço com número, links e domínios, @ de redes sociais, números longos). 
 - `POST /purchases/apple` — `{ "transactionId" }` → igual (App Store Server API).
 - `GET /entitlements` → `{ "vip": { "points", "level" }, "passPremium": { "season", "active" }, "skins": [...], "purchasedGems": 0 }`.
 - Reembolso e estorno: notificações da loja (Google RTDN, Apple Server Notifications v2) em `/webhooks/*`. O servidor tira o que foi dado ou marca saldo devedor.
+- **Lançamento na Play (fps-server, 13/11):** tudo atrás de `BILLING_ON=1` (sem a chave: `POST /purchases/google` e o webhook respondem 404, nada é creditado).
+  Recibo de um produto mandado como outro → `409 product_mismatch`. Reembolso (RTDN ou varredura de 6 h) tira o que foi dado e marca a conta `refunded` (ficha do painel).
+  Reconhecer/consumir atrasado: rotina de 10 min. O que o dono configura no Play Console: `fps-server/docs/google-play-setup.md`.
 - Regras duras: 💎 nunca compra VIP nem Passe Premium; nenhum sorteio pago. O servidor recusa produto que não estiver no catálogo (`products`).
 
 ## 8. Correio do servidor
