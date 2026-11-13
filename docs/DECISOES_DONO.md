@@ -4,6 +4,8 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
 
 ## 14/11/2026 (madrugada)
 - [?] **Votar no link das telas: Grimório V3 e Derrota com prêmio pelo dano** · protótipos da Sistemas; o Engenheiro só liga depois do voto
+- [?] **Encruzilhada das Eras: bênção vale até o fim da era (como no doc) ou é permanente?** Hoje segue o doc. Mudança pequena se for permanente · dono decide
+- [~] **As 14 recomendações do doc de idle: todas prontas no módulo**, desligadas e com testes (74d0956). Cada uma liga depois do voto no protótipo da tela · Sistemas → Engenheiro
 - [?] **Perfil: nome com espaço?** O protótipo recusa "Maria Clara" (só "MariaClara"). Recomendação do PO: aceitar um espaço entre palavras · dono decide
 - [?] **Perfil: moldura Ouro a partir do VIP 3 ou do VIP 7?** O protótipo diz VIP 3; a tabela do VIP diz VIP 7. Recomendação do PO: seguir a tabela do VIP (7) · dono decide
 - [~] **As 14 recomendações dos idles parecidos aprovadas** ("vai checando tudo"), de docs/IDLE_PARECIDOS.md. O PO marca no doc do dono cada item pronto · Sistemas + Engenheiro + Servidor
