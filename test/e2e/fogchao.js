@@ -41,6 +41,15 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   let drew = true; try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
   ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'}],200)"); step(G, 2); try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
   check('desenho do item esperando (anel e etiqueta) sem erro', drew && ev('pkHeld().length===1&&pkHeld()[0].up===true'));
+  /* BRASAS: com o módulo desligado nada entra; ligado, o pote de 20 abates dá 1, o chefe e a fase dão as do módulo, e cada Brasa creditada vira um desenho que voa */
+  check('Sys.bonfire carregado pelo jogo e DESLIGADO', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)&&Sys.bonfire.DATA.on===false'));
+  ev('PK.list.length=0; 1'); check('módulo desligado: fogBrasa não credita nem desenha', ev("fogBrasa('boss',1,200)") === 0 && ev('PK.list.length') === 0);
+  const br = JSON.parse(ev("(function(){ const F=Sys.bonfire; F.DATA.on=true; const o=F.ensure(S); o.bra=0; o.pot=0; const out={}; let k=0; for(let i=0;i<19;i++) k+=fogBrasa('kill',1,200); out.k19=k; out.k20=fogBrasa('kill',1,200); out.bra1=o.bra; out.boss=fogBrasa('boss',1,200); out.stage=fogBrasa('stage',1); out.bra=o.bra; out.pk=PK.list.filter(q=>q.p.type==='brasa').length; out.sum=PK.list.filter(q=>q.p.type==='brasa').reduce((a,q)=>a+q.p.value,0); out.venda=fogBrasa('shop',5,200); F.DATA.on=false; return JSON.stringify(Object.assign(out,{B:F.DATA.brasas})); })()"));
+  check('pote: 19 abates não dão Brasa, o 20º dá 1', br.k19 === 0 && br.k20 === 1 && br.bra1 === 1, JSON.stringify(br));
+  check('chefe e fase dão as Brasas do módulo (' + br.B.boss + ' e ' + br.B.stage + ')', br.boss === br.B.boss && br.stage === br.B.stage && br.bra === 1 + br.B.boss + br.B.stage, JSON.stringify(br));
+  check('cada Brasa creditada é desenhada (soma dos desenhos = Brasas ganhas)', br.pk >= 3 && br.sum === br.bra, JSON.stringify(br));
+  check('fonte que não existe (venda) devolve 0: Brasa nunca é vendida', br.venda === 0);
+  let drew2 = true; try { G.inCtx(() => ev('drawPicks')()); step(G, 3); } catch (e) { drew2 = false; console.log(String(e && e.message)); } check('Brasas desenhadas e recolhidas sem erro', drew2 && ev("PK.list.filter(q=>q.p.type==='brasa').length") === 0);
   console.log(fail ? fail + ' FALHA(S) de ' + n + ' (item no chão)' : 'FOGUEIRA · ITEM NO CHÃO OK (' + n + ' verificações): desligada = como hoje; ligada = Épico ou melhor espera o toque');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e && e.stack || e); process.exit(1); });

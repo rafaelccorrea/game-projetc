@@ -385,7 +385,7 @@ function waveClear(){
   const bossWon=S.wave===5;
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
-    S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem'); if(typeof codexSync==='function') codexSync();   /* códex: fase vencida */
+    S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem'); if(typeof fogBrasa==='function') fogBrasa('stage',1);   /* Fogueira: Brasas da fase vencida (só com o módulo ligado) */ if(typeof codexSync==='function') codexSync();   /* códex: fase vencida */
     const ne=eraOf(S.stage), newEra=ne>oldEra&&ne>S.eraMax;
     if(newEra){ S.eraMax=ne; S.gems+=30; }
     /* TELA 10 (vitória): abre por cima da batalha; se não puder abrir (outra tela aberta, tutorial), vale o aviso curto de antes */

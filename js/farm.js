@@ -132,6 +132,7 @@ function farmKill(e, y){
   let r = null;
   try { r = Sys.loot.onKill(S, Sys.host, { gold: e.gold, boss: e.boss, eraBoss: e.eraBoss, era: eraOf(S.stage), stage: S.stage, x: e.x, y });
     Sys.chest.onKill(S, { boss: e.boss, eraBoss: e.eraBoss }, Sys.host);
+    fogBrasa('kill', 1, e.x); if (e.boss) fogBrasa('boss', 1, e.x);   /* Fogueira: pote de abates e Brasas do chefe (só com o Sys.bonfire ligado) */
     if (SYS_E2){ const en = { boss: !!e.boss, eraBoss: !!e.eraBoss }; const st = Sys.practice.onKill(S, Sys.host, en); if (st > 0 && typeof progStone === 'function') progStone(st);
       const fresh = Sys.titles.onKill(S, Sys.host, en); if (fresh && fresh.length){ refreshHero(); if (typeof progFresh === 'function') progFresh(fresh); } }
     } catch (err) { console.error('farmKill', err); }
@@ -160,6 +161,12 @@ const PK_TO = { gold: 'gold', gems: 'gems', level: 'lvb', bag: 'tabgear' };
 const FOGUEIRA_ON = false;
 const fogOn = () => FOGUEIRA_ON || (typeof DEBUG !== 'undefined' && DEBUG && /[?&]fogueira=1/.test(location.search));
 const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
+/* BRASAS DA FOGUEIRA (regra e números do Sys.bonfire, da Sistemas: pote de 20 abates = 1, fase +3, chefe +5; NUNCA à venda). O jogo só avisa o módulo e desenha as
+   Brasas que ele creditou: cada uma pula do inimigo e voa para a Fogueira (por enquanto o destino é o botão da mochila, até a Fogueira V3 existir na tela de batalha).
+   Com o módulo desligado (Sys.bonfire.DATA.on false, hoje) não faz nada. Devolve quantas Brasas entraram. */
+function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || F.DATA.on !== true || typeof F.addBrasas !== 'function') return 0; got = F.addBrasas(S, src, n) | 0; } catch (e) { return 0; }
+  if (got > 0){ try { const px = typeof x === 'number' ? x : (typeof HX === 'number' ? HX + 40 : 120); spawnPicks(Array.from({ length: Math.min(got, 8) }, (_, i) => ({ type: 'brasa', value: i === 0 ? got - Math.min(got, 8) + 1 : 1, to: 'bag', delay: i * 0.06 })), px); } catch (e) {} }
+  return got; }
 const pkHolds = p => fogOn() && p && p.type === 'item' && (p.r | 0) >= PK_HOLD_R;
 const pkHeld = () => PK.list.filter(q => q.hold && q.st === 1 && !q.done);
 /* o item que caiu é melhor que o equipado? (a peça já está na mochila: procura a mais nova igual e pergunta à FC; equipada sozinha = era melhor) */
@@ -196,7 +203,7 @@ function tickPicks(dt){
   }
   PK.list = PK.list.filter(q => !q.done);
 }
-const PK_COL = { essence: '#c9a4ff', gold: '#ffc94a', gem: '#6fd3ff', xp: '#6fe3ff', forge: '#ff9a4a', food: '#d8b070', egg: '#ffe9c8' };
+const PK_COL = { essence: '#c9a4ff', gold: '#ffc94a', gem: '#6fd3ff', xp: '#6fe3ff', forge: '#ff9a4a', food: '#d8b070', egg: '#ffe9c8', brasa: '#ff6a2a' };
 function drawPicks(){
   const t = B.at;
   for (const q of PK.list){ if (q.t < 0) continue; const p = q.p, s = p.big ? 1.4 : 1, ph = t * 9 + q.sd;
