@@ -361,7 +361,7 @@ const HX=196, GY=222, HK=0.8;   /* centro dos pés, linha do chão e escala do q
 function drawHero(x,t){
   const wi=byId(S.eq.weapon), gun=isGun(wi), bid=S.hero+(gun?'_p':''), B=D.B[bid], sheet=img('a/body_'+bid+'.png');
   if(!ok(sheet)) return;
-  const fi=Math.floor(t*B.fps)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
   /* Kael padrão = drawHeroAnim (pés em 242 do quadro de 256); Kaia e pistola = folhas com padLeft/feetY do .json */
   const x0=HX-(B.pad+128)*k, y0=GY-((S.hero==='kael'&&!gun)?242:B.fy)*k;
   /* sombra presa ao chão */
@@ -409,7 +409,7 @@ function draw(t){
   const P=img('a/pt_pet_shadowwolf_idle.png'); if(ok(P)){ const kp=150/512, cx=126; x.drawImage(P,fi*512,0,512,352,cx-224*kp,GY+8-307*kp,512*kp,352*kp); }
 }
 let t0=performance.now();
-(function loop(now){ if(!document.hidden) draw((now-t0)/1000); requestAnimationFrame(loop); })(t0);
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
 
 /* ---------- topo: ouro, FC, espaços em volta do herói ---------- */
 function betterIn(slot){ const cur=fcEq(S.eq); return S.inv.filter(i=>i.slot===slot&&!isEq(i)&&usable(i)&&fcEq(withIt(i))>cur+0.5).length; }
