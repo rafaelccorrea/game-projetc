@@ -1,0 +1,451 @@
+<title>Eonbound Pequenos 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Três pequenas mudanças, cada uma com o seu voto. Regra do dono: sempre em cima do PRINT REAL da tela de hoje (390x844, captura 2x), só o que é novo
+   por cima. "Hoje" (print puro) ao lado de "Com a mudança".
+   1) Selo "Fraco contra" na batalha (js/sys/affinity.js, Sys.affinity.warn)   → decisoes/tela-fraco-contra
+   2) Cartão "Vai sair" da fusão no Equipamento (js/sys/fusion.js, preview/apply) → decisoes/tela-fusao-vai-sair
+   3) Abas dos conjuntos Fases/Arena/Chefe no Equipamento (js/sys/loadouts.js)  → decisoes/tela-conjuntos
+   Todos os módulos estão DESLIGADOS no jogo. Imagens só de docs/proto/v2/a/. */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.top{max-width:1240px;margin:0 auto;padding:20px 16px 0}
+.top h1{font-family:var(--fd);font-weight:400;font-size:30px;margin:0;letter-spacing:.5px}
+.top p{color:var(--muted);font-size:14px;line-height:1.5;margin:6px 0 0}
+.sech{max-width:1240px;margin:26px auto 0;padding:0 16px;font-family:var(--fd);font-weight:400;font-size:24px;color:var(--gold);border-top:1px solid var(--line);padding-top:18px}
+.page{display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h2.t{font-family:var(--fd);font-weight:400;font-size:24px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h3{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.lbl{font-size:12px;font-weight:800;color:var(--muted);margin:10px 0 4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:13px;padding:6px 8px}
+.seg.era button{flex:1 1 30%}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.tbl th{font-size:10.5px;color:var(--muted);text-align:left;font-weight:900;padding:3px 3px}
+.tbl td{padding:4px 3px;border-top:1px solid var(--line);font-weight:800;overflow-wrap:anywhere}
+.tbl tr.on td{background:rgba(255,210,94,.12);color:var(--gold)}
+.tbl .g{color:var(--green)} .tbl .r{color:#ff9a9a}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto;max-width:100%}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:390px}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+
+/* ===== dentro do aparelho (coordenadas da tela 390x844) ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+.toast{position:absolute;left:50%;z-index:60;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.95);border:1px solid rgba(255,236,200,.25);font-weight:900;font-size:12px;max-width:92%;text-align:center;pointer-events:none;color:#f6ecdf}
+
+/* 1) selo Fraco contra: logo abaixo da barra da fase (x 82, y 122), à esquerda do Desafiar; nada em x>=300 entre y 390 e 640 */
+.aff{position:absolute;left:82px;top:122px;max-width:236px;height:24px;display:flex;align-items:center;gap:5px;padding:0 10px 0 4px;border-radius:12px;border:2px solid;font:900 11.5px Nunito,sans-serif;white-space:nowrap;overflow:visible;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.aff::before{content:'';position:absolute;left:-4px;right:-4px;top:-9px;bottom:-9px}
+.aff .ic{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex:none}
+.aff .ic svg{width:12px;height:12px}
+.aff.good{background:linear-gradient(180deg,#1f5a32,#143d22);border-color:#5ef0a0;color:#d9ffe6}
+.aff.good .ic{background:#5ef0a0}
+.aff.bad{background:linear-gradient(180deg,#6a1f22,#4a1416);border-color:#ff7b7b;color:#ffe0e0}
+.aff.bad .ic{background:#ff7b7b}
+.aff.neutral{background:linear-gradient(180deg,#3a3026,#261e17);border-color:#a8977f;color:#efe3d0}
+.aff.neutral .ic{background:#a8977f}
+.afftip{position:absolute;left:82px;top:152px;width:236px;padding:9px 11px;border-radius:14px;background:rgba(26,18,12,.96);border:2px solid #ffc94a;font-size:11.5px;font-weight:800;line-height:1.35;z-index:20}
+.afftip b{color:#ffc94a}
+.afftip p{margin:0 0 5px}
+.afftip .x{display:block;margin-top:4px;font-size:10.5px;color:#c9b8a2}
+.afftip::before{content:'';position:absolute;left:22px;top:-8px;border:7px solid transparent;border-top:0;border-bottom-color:#ffc94a}
+
+/* tiles de item (iguais aos da mochila de hoje: fundo escuro, borda clara, faixa "Nv.1") */
+.tile{position:absolute;width:58px;height:58px;border-radius:11px;background:#2b211a;border:3px solid #efe6d2;overflow:hidden;padding:0}
+.tile img{position:absolute;left:7px;top:2px;width:38px;height:38px;object-fit:contain}
+.tile .nv{position:absolute;left:0;right:0;bottom:0;height:17px;background:#140f0b;font:900 10.5px Nunito,sans-serif;line-height:17px;text-align:center;color:#fff}
+.tile .st{position:absolute;right:3px;top:2px;font-size:9px;color:#ffd25e;letter-spacing:-1px;text-shadow:0 1px 0 #000}
+.tile.raro{border-color:#4aa3ff;background:#1b2740}
+.tile.sel{outline:3px solid #5ee7ff;outline-offset:1px}
+.tile .n{position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#5ee7ff;color:#05202a;font:900 10px Nunito,sans-serif;line-height:16px;text-align:center}
+.hit{position:absolute;width:58px;height:58px;border:0;background:transparent;border-radius:11px;padding:0}
+.hit.sel{outline:3px solid #5ee7ff;outline-offset:1px}
+.hit .n{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;background:#5ee7ff;color:#05202a;font:900 11px Nunito,sans-serif;line-height:18px;text-align:center}
+
+/* 2) cartão Vai sair da fusão */
+.dim{position:absolute;left:0;right:0;background:rgba(0,0,0,.55);z-index:10}
+.fz{position:absolute;left:14px;right:14px;top:150px;z-index:12;border-radius:18px;background:linear-gradient(180deg,#2e2219,#1e1712);border:2px solid #ffc94a;padding:10px 12px 12px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+.fz h4{margin:0;font:400 20px 'Lilita One',Impact,sans-serif;color:#ffc94a;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.fz h4 small{font:900 10.5px Nunito,sans-serif;color:#c9b8a2}
+.fz .row{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px}
+.fz .in{position:relative;width:58px;height:58px;flex:none}
+.fz .in .tile,.fz .res .tile{left:0;top:0}
+.fz .pk{position:relative;width:58px;height:58px;flex:none;border:0;background:transparent;padding:0}
+.fz .pk .tile{left:0;top:0}
+.fz .pk.on .tile{outline:3px solid #7dffb8;outline-offset:1px}
+.fz .pk .ck{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font:900 9.5px Nunito,sans-serif;color:#7dffb8;white-space:nowrap}
+.fz .arr{font:400 22px 'Lilita One',Impact,sans-serif;color:#ffc94a}
+.fz .res{position:relative;width:66px;height:66px;flex:none;border-radius:14px;background:radial-gradient(circle,#5a4520,#2a1f16);display:grid;place-items:center}
+.fz .res .tile{position:relative}
+.fz .res .tag{position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);font:900 9.5px Nunito,sans-serif;color:#ffc94a;white-space:nowrap}
+.fz .ls{margin:20px 0 0;padding:0;list-style:none;font-size:12px;font-weight:800;line-height:1.45}
+.fz .ls li::before{content:'• ';color:#ffc94a}
+.fz .gar{margin-top:7px;padding:5px 8px;border-radius:10px;background:rgba(94,240,160,.12);border:1px solid rgba(94,240,160,.45);color:#bdfdd8;font-size:11.5px;font-weight:900;text-align:center}
+.fz .hint{margin-top:7px;padding:5px 8px;border-radius:10px;background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.45);color:#c8f6ff;font-size:11.5px;font-weight:900;text-align:center}
+.fz .cost{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:8px;font:400 17px 'Lilita One',Impact,sans-serif;color:#ffe9b0}
+.fz .cost img{width:20px;height:20px}
+.fz .cost.poor{color:#ff9a9a}
+.fz .bt{display:flex;gap:8px;margin-top:9px}
+.fz .bt button{flex:1;min-height:44px;border-radius:13px;font:400 18px 'Lilita One',Impact,sans-serif;letter-spacing:.5px}
+.fz .no{background:#3a2c20;border:2px solid #6a5a48;color:#e8d9c2}
+.fz .ok{background:linear-gradient(180deg,#ffe07a,#f2a826);border:0;color:#2a1403;box-shadow:0 2px 0 #9a5a10}
+.fz .ok.off{background:#4a3c30;color:#8a7a66;box-shadow:none}
+
+/* 3) conjuntos: abas no céu (y 140-180, x 78-312), Salvar/Usar no céu da direita, auto no céu da esquerda, magias no chão (y 318-342) */
+.ldtabs{position:absolute;left:78px;top:140px;width:234px;height:40px;display:flex;gap:3px;padding:3px;border-radius:14px;background:rgba(20,14,10,.82);border:2px solid #6a5a48}
+.ldtabs button{flex:1;border:0;border-radius:10px;background:transparent;color:#d8c8b0;font:400 15px 'Lilita One',Impact,sans-serif;letter-spacing:.3px;position:relative;padding:0}
+.ldtabs button.on{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403}
+.ldtabs button .u{position:absolute;left:50%;top:-9px;transform:translateX(-50%);font:900 8.5px Nunito,sans-serif;background:#5ef0a0;color:#05301b;border-radius:6px;padding:0 4px;line-height:12px;white-space:nowrap}
+.ldtabs button .e{display:block;font:800 8px Nunito,sans-serif;opacity:.8;line-height:8px}
+.ldact{position:absolute;left:234px;width:78px;height:40px;border-radius:12px;font:400 15px 'Lilita One',Impact,sans-serif}
+.ldact.sv{top:57px;background:#3a2c20;border:2px solid #c9a46a;color:#ffe9b0}
+.ldact.us{top:98px;background:linear-gradient(180deg,#7dffb8,#22c47a);border:0;color:#05301b;box-shadow:0 2px 0 #0f6a3e}
+.ldact.us.off{background:#3a3128;color:#8a7a66;box-shadow:none}
+.ldauto{position:absolute;left:78px;top:57px;width:84px;height:66px;border-radius:12px;background:rgba(20,14,10,.82);border:2px solid #6a5a48;padding:4px 5px;text-align:left;font:800 9px/1.2 Nunito,sans-serif;color:#e8d9c2}
+.ldauto .sw{display:inline-block;width:26px;height:14px;border-radius:7px;background:#5a4a3a;position:relative;vertical-align:middle;margin-right:3px}
+.ldauto .sw::after{content:'';position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#e8d9c2}
+.ldauto.on .sw{background:#22c47a}
+.ldauto.on .sw::after{left:14px}
+.ldauto b{font:400 12px 'Lilita One',Impact,sans-serif;color:#ffc94a;vertical-align:middle}
+.ldspl{position:absolute;left:76px;top:318px;width:238px;display:flex;gap:4px}
+.ldspl span{flex:1;min-width:0;height:22px;border-radius:11px;background:rgba(20,14,10,.85);border:1px solid #9a7ad6;color:#e6dcff;font:900 9.5px/20px Nunito,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 5px}
+.ldspl span.v{border-style:dashed;border-color:#6a5a48;color:#8a7a66}
+.ldspl i{position:absolute;left:0;top:-13px;font:900 9px Nunito,sans-serif;font-style:normal;color:#e6dcff;text-shadow:0 1px 2px #000}
+.slot{position:absolute;width:58px;height:58px;border-radius:12px;background:#2b211a;border:3px solid #efe6d2;overflow:hidden}
+.slot img{position:absolute;left:8px;top:2px;width:36px;height:36px;object-fit:contain}
+.slot .nv{position:absolute;left:0;right:0;bottom:0;height:17px;background:#140f0b;font:900 11px Nunito,sans-serif;line-height:17px;text-align:center;color:#fff}
+.slot.pv{border:3px dashed #5ee7ff}
+.plus{position:absolute;width:30px;height:19px;border-radius:9px;background:#2b211a;border:2px solid #ffc94a;color:#ffc94a;font:900 11px/15px Nunito,sans-serif;text-align:center}
+.ldnote{position:absolute;left:78px;top:183px;font:900 9.5px Nunito,sans-serif;color:#c8f6ff;text-shadow:0 1px 2px #000;width:92px;line-height:1.2}
+</style>
+
+<header class="top">
+  <h1>Pequenos 3: três votos</h1>
+  <p>Três mudanças pequenas, cada uma com o seu voto. Todas em cima do <b>print real de hoje</b>: à esquerda a tela como está, ao lado a mesma tela só com o que é novo. Os módulos já existem e estão <b>desligados</b> no jogo.</p>
+  <p id="stgdiag" style="font-size:12px">Palco: pronto</p>
+</header>
+
+<!-- ============ 1) Selo Fraco contra ============ -->
+<h2 class="sech">1 · Selo "Fraco contra" na batalha</h2>
+<div class="page">
+  <figure class="cmpd"><figcaption>Hoje<small>print real da batalha (Pré-História 1-1)</small></figcaption>
+    <div class="devwrap" id="devwrapA0"><div class="dev" id="devA0"><div class="scr"><img class="shot" src="a/v5_hoje.png" alt="Batalha hoje: barra da fase Pré-História 1-1 com Desafiar, herói com a clava à esquerda e o tigre-dentes-de-sabre à direita"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption>Com o selo<small>a mesma tela; só o selo abaixo da barra da fase é novo</small></figcaption>
+    <div class="devwrap" id="devwrapA1"><div class="dev" id="devA1"><div class="scr" id="scrA">
+      <img class="shot" src="a/v5_hoje.png" alt="">
+      <div id="affZone"></div>
+    </div></div></div>
+  </figure>
+  <aside class="side" id="sideA">
+    <h2 class="t">Selo "Fraco contra"</h2>
+    <p class="sub">Um selo pequeno logo abaixo da barra da fase, à esquerda do Desafiar. <b>Verde</b> quando o seu estilo bate mais forte nos inimigos da era, <b>vermelho</b> quando eles resistem, cinza quando é normal. Tocar no selo abre a explicação curta. Não cobre nenhum botão nem a área da luta.</p>
+    <div class="box">
+      <h3>Simular</h3>
+      <div class="lbl">Era da fase (o fundo continua o print da Pré-História; só o selo muda)</div>
+      <div class="seg era" role="group" aria-label="Era" id="eraSeg"></div>
+      <div class="lbl">Seu estilo</div>
+      <div class="seg" role="group" aria-label="Estilo do herói">
+        <button data-sty="auto" aria-pressed="true">Pela arma (Clava: Lâmina)</button>
+        <button data-sty="shot" aria-pressed="false">Disparo</button>
+        <button data-sty="arcane" aria-pressed="false">Arcano (caminho Nv 30)</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Tabela das 9 eras (proposta, o QA calibra)</h3>
+      <table class="tbl"><thead><tr><th style="width:34%">Era</th><th>Fraca contra +15%</th><th>Resiste a −10%</th><th>Arma da era</th></tr></thead><tbody id="affTable"></tbody></table>
+    </div>
+    <div class="box">
+      <h3>Regras (js/sys/affinity.js, desligado)</h3>
+      <ul>
+        <li>3 estilos: <b>Lâmina</b> (corpo a corpo), <b>Disparo</b> (pólvora, revólver, fuzil, arco, bumerangue) e <b>Arcano</b> (só pelo caminho de luta do Nv 30)</li>
+        <li>Estilo do herói = o caminho escolhido; sem caminho, o da arma equipada</li>
+        <li>Inimigo fraco contra o seu estilo: <b>+15%</b> no seu dano. Inimigo que resiste: <b>−10%</b>. O resto: normal</li>
+        <li>Justiça: uma era <b>nunca</b> resiste à arma que cai nela. Cada estilo é forte em 3 eras</li>
+        <li>Nada pago, nada sorteado. Desligado: o selo some e o dano fica igual</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Seu voto: selo Fraco contra</h3>
+      <div class="vote"><button class="vbtn ok" id="vOkA">Aprovar</button><button class="vbtn no" id="vNoA">Reprovar</button></div>
+      <label for="notaA" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="notaA" placeholder="Ex.: selo maior, só mostrar quando for vermelho"></textarea>
+      <div class="vst" id="vstA">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ 2) Fusão: cartão Vai sair ============ -->
+<h2 class="sech">2 · Fusão com o cartão "Vai sair"</h2>
+<div class="page">
+  <figure class="cmpd"><figcaption>Hoje<small>print real do Equipamento</small></figcaption>
+    <div class="devwrap" id="devwrapB0"><div class="dev" id="devB0"><div class="scr"><img class="shot" src="a/eq_hoje.png" alt="Equipamento hoje: os espaços em volta do herói, Força de Combate, atributos, a mochila com a clava e o colete, e o botão Equipar melhor"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption>Com o "Vai sair"<small>a mesma tela; a mochila com 3 clavas iguais e o cartão por cima</small></figcaption>
+    <div class="devwrap" id="devwrapB1"><div class="dev" id="devB1"><div class="scr" id="scrB">
+      <img class="shot" src="a/eq_hoje.png" alt="">
+      <div id="bagZone"></div>
+      <div id="fzZone"></div>
+    </div></div></div>
+  </figure>
+  <aside class="side" id="sideB">
+    <h2 class="t">Fusão: você vê o que vai sair</h2>
+    <p class="sub">Toque em <b>3 itens iguais</b> na mochila (no aparelho ao lado, as 3 clavas). Abre um cartão pequeno com os 3 itens, a seta e <b>o item exato que vai sair</b>. O custo é só em ouro. Fundir entrega exatamente o item mostrado: <b>resultado garantido</b>, nada é sorteado.</p>
+    <div class="box">
+      <h3>Simular</h3>
+      <div class="lbl">Modo da fusão</div>
+      <div class="seg" role="group" aria-label="Modo da fusão">
+        <button data-bmode="star" aria-pressed="true">+1 estrela (já existe)</button>
+        <button data-bmode="rarity" aria-pressed="false">Raridade seguinte (proposta)</button>
+      </div>
+      <div class="lbl">Atalhos</div>
+      <div class="seg">
+        <button data-bpre="1">Selecionar as 3 clavas</button>
+        <button data-bpoor="1" aria-pressed="false">Sem ouro suficiente</button>
+        <button data-breset="1">Recomeçar</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Regras (js/sys/fusion.js, desligado)</h3>
+      <ul>
+        <li><b>+1 estrela</b>: 3 iguais (mesma peça, era, raridade e estrelas; arma da mesma família) viram 1 com <b>+1 estrela</b>. Custo = 3 × a 1ª melhoria do item (Clava Básico da Pré-História: <b>75 ouro</b>)</li>
+        <li><b>Raridade seguinte (proposta)</b>: 3 da mesma raridade viram 1 da raridade seguinte. <b>Você escolhe qual dos 3 mantém a aparência</b>, a família e os secundários. O secundário que falta vem fixo pelos 3 itens: a prévia já mostra. Teto: Mítico (Lendário e Divino só caindo). Custo = 5 × a 1ª melhoria do item novo (Clava Raro: <b>200 ouro</b>)</li>
+        <li>Só ouro. Se um dos 3 está equipado, o novo fica equipado no lugar</li>
+        <li>Se algo muda entre a prévia e o toque em Fundir, nada acontece (a prévia é refeita)</li>
+        <li>O ouro no topo do print (6) é o do print; na simulação o ouro dá, a não ser no atalho "Sem ouro suficiente"</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Seu voto: cartão Vai sair</h3>
+      <div class="vote"><button class="vbtn ok" id="vOkB">Aprovar</button><button class="vbtn no" id="vNoB">Reprovar</button></div>
+      <label for="notaB" class="vst">Comentário (opcional): o que mudar. Diga também se quer o modo de raridade</label>
+      <textarea id="notaB" placeholder="Ex.: aprovo só o +1 estrela"></textarea>
+      <div class="vst" id="vstB">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ 3) Conjuntos ============ -->
+<h2 class="sech">3 · Conjuntos Fases / Arena / Chefe</h2>
+<div class="page">
+  <figure class="cmpd"><figcaption>Hoje<small>print real do Equipamento</small></figcaption>
+    <div class="devwrap" id="devwrapC0"><div class="dev" id="devC0"><div class="scr"><img class="shot" src="a/eq_hoje.png" alt="Equipamento hoje, sem conjuntos"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption>Com os conjuntos<small>a mesma tela; abas e botões só no céu, magias no chão</small></figcaption>
+    <div class="devwrap" id="devwrapC1"><div class="dev" id="devC1"><div class="scr" id="scrC">
+      <img class="shot" src="a/eq_hoje.png" alt="">
+      <div id="ldZone"></div>
+    </div></div></div>
+  </figure>
+  <aside class="side" id="sideC">
+    <h2 class="t">Conjuntos salvos</h2>
+    <p class="sub">Três abas no céu da tela: <b>Fases</b>, <b>Arena</b> e <b>Chefe</b>. Tocar numa aba mostra nos espaços as peças daquele conjunto (borda azul tracejada = prévia). <b>Usar</b> veste o conjunto num toque, de graça. <b>Salvar</b> guarda o que está vestido agora na aba aberta. Embaixo, as 3 magias do Grimório daquele modo.</p>
+    <div class="box">
+      <h3>Simular</h3>
+      <div class="seg">
+        <button data-cpre="arena">Ver a aba Arena</button>
+        <button data-cpre="chefe">Ver a aba Chefe (vazia)</button>
+        <button data-creset="1">Recomeçar</button>
+      </div>
+    </div>
+    <div class="box">
+      <h3>Regras (js/sys/loadouts.js, desligado)</h3>
+      <ul>
+        <li>Cada conjunto guarda as <b>7 peças</b> (com a asa), o <b>pet</b> e a <b>montaria</b>. As magias vêm do Grimório, que já tem um conjunto por modo</li>
+        <li>Usar pula a peça que não existe mais (vendida, desmontada, fundida) ou que ainda não pode; espaço vazio no conjunto <b>não tira</b> a peça do herói</li>
+        <li><b>Troca sozinho antes da luta</b>: opção do jogador, desligada no começo. Arena e Torneio usam Arena; chefe, Senhor da Era e Chefe Mundial usam Chefe; o resto, Fases</li>
+        <li>Trocar é grátis e sem limite. Nada pago, nada sorteado</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Seu voto: conjuntos</h3>
+      <div class="vote"><button class="vbtn ok" id="vOkC">Aprovar</button><button class="vbtn no" id="vNoC">Reprovar</button></div>
+      <label for="notaC" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="notaC" placeholder="Ex.: abas embaixo da Força de Combate"></textarea>
+      <div class="vst" id="vstC">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const DEVS=['A0','A1','B0','B1','C0','C1'];
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390;
+  for(const k of DEVS){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+function toast(scrSel,top,t){ const scr=$(scrSel); scr.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.style.top=top+'px'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),2400); }
+function press(sel,b){ document.querySelectorAll(sel).forEach(x=>x.setAttribute('aria-pressed',String(x===b))); }
+
+/* ================= 1) Sys.affinity (mesma tabela do js/sys/affinity.js) ================= */
+const AFF={weak:0.15,resist:-0.10,styles:{blade:'Lâmina',shot:'Disparo',arcane:'Arcano'},
+  eraStyle:['blade','blade','blade','shot','shot','shot','blade','blade','blade'],
+  eras:[{n:'Pré-História',weak:'blade',resist:null},{n:'Antiguidade',weak:'arcane',resist:'shot'},{n:'Medieval',weak:'shot',resist:'arcane'},
+    {n:'Era da Pólvora',weak:'arcane',resist:'blade'},{n:'Industrial',weak:'blade',resist:'arcane'},{n:'Moderna',weak:'arcane',resist:'blade'},
+    {n:'Futurista',weak:'shot',resist:null},{n:'Submundo',weak:'shot',resist:'arcane'},{n:'Celestial',weak:'blade',resist:'shot'}]};
+const A={era:0,sty:'auto',tip:false};
+const pct=v=>(v>0?'+':'−')+Math.round(Math.abs(v)*100)+'%';
+/* = Sys.affinity.warn com a chave ligada */
+function affWarn(){ const e=AFF.eras[A.era], s=A.sty==='auto'?'blade':A.sty, N=AFF.styles;
+  const m=s===e.weak?1+AFF.weak:s===e.resist?1+AFF.resist:1, tone=m>1?'good':m<1?'bad':'neutral';
+  const tip=tone==='good'?`Seu estilo (${N[s]}) acerta ${pct(AFF.weak)} aqui`:tone==='bad'?`Os inimigos resistem a ${N[s]}: ${pct(AFF.resist)} no seu dano`:'';
+  return {eraName:e.n,weakAgainst:N[e.weak],resists:e.resist?N[e.resist]:null,mine:N[s],mult:m,tone,tip}; }
+const ICUP='<svg viewBox="0 0 12 12"><path d="M6 2l4 5H7.5v3h-3V7H2z" fill="#0b2a16"/></svg>', ICDN='<svg viewBox="0 0 12 12"><path d="M6 10L2 5h2.5V2h3v3H10z" fill="#3a0b0b"/></svg>', ICI='<svg viewBox="0 0 12 12"><rect x="5" y="5" width="2" height="5" fill="#261e17"/><rect x="5" y="2" width="2" height="2" fill="#261e17"/></svg>';
+function renderA(){ const w=affWarn();
+  const txt=w.tone==='good'?`Forte contra: ${w.eraName} · ${pct(AFF.weak)}`:w.tone==='bad'?`Resistem a: ${w.mine} · ${pct(AFF.resist)}`:`Fraco contra: ${w.weakAgainst}`;
+  const ic=w.tone==='good'?ICUP:w.tone==='bad'?ICDN:ICI;
+  const general=`Cada era é fraca contra um estilo (${pct(AFF.weak)}) e pode resistir a outro (${pct(AFF.resist)}). Nenhuma era resiste à arma que cai nela.`;
+  const head=w.tone==='neutral'?`<p>${w.eraName} é fraca contra <b>${w.weakAgainst}</b>. Seu estilo (<b>${w.mine}</b>) dá dano normal aqui.</p>`:`<p><b>${w.tip}.</b></p>`;
+  const tip=A.tip?`<div class="afftip" role="status">${head}<p>${general}</p><span class="x">Tabela completa no Códex · toque no selo para fechar</span></div>`:'';
+  $('#affZone').innerHTML=`<button class="aff ${w.tone}" data-aff="tip" aria-expanded="${A.tip}" aria-label="${txt}. Toque para ver a explicação"><span class="ic">${ic}</span>${txt}</button>${tip}`;
+  $('#affTable').innerHTML=AFF.eras.map((e,i)=>`<tr class="${i===A.era?'on':''}"><td>${e.n}</td><td class="g">${AFF.styles[e.weak]}</td><td class="r">${e.resist?AFF.styles[e.resist]:'—'}</td><td>${AFF.styles[AFF.eraStyle[i]]}</td></tr>`).join('');
+  return {txt,tone:w.tone}; }
+$('#eraSeg').innerHTML=AFF.eras.map((e,i)=>`<button data-era="${i}" aria-pressed="${i===0}">${e.n}</button>`).join('');
+$('#scrA').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.aff){ A.tip=!A.tip; renderA(); } });
+$('#sideA').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.era!=null){ A.era=+b.dataset.era; press('[data-era]',b); renderA(); }
+  if(b.dataset.sty){ A.sty=b.dataset.sty; press('[data-sty]',b); renderA(); } });
+renderA();
+
+/* ================= 2) Sys.fusion: cartão Vai sair ================= */
+/* mochila do print: clava (x 12, equipada) e colete (x 89). Na simulação entram mais 2 clavas iguais em x 166 e x 243 (linha y 558, passo 77). */
+const BAG=[{id:'c1',x:12, img:'a/ic_era0_t0.png',eq:true, sub:'Crítico +3%',inPrint:true},
+           {id:'v1',x:89, img:null,               eq:false,sub:'',inPrint:true,other:true},
+           {id:'c2',x:166,img:'a/ic_era0_t2.png',eq:false,sub:'ATK +4%'},
+           {id:'c3',x:243,img:'a/ic_era0_t0.png',eq:false,sub:'Vel. de Ataque +2%'}];
+const FZ={star:{gold:75,from:'1 estrela',to:'2 estrelas'},rarity:{gold:200,extra:'HP +3%'}};   // = Sys.stats.upgradeCost({lvl:1,r,e:0}).gold × 3 (estrela) ou × 5 do Raro (raridade)
+const B={sel:[],mode:'star',pick:null,poor:false,done:null};
+const stars=n=>'★'.repeat(n);
+function tileHTML(it,o){ o=o||{}; return `<div class="tile${o.raro?' raro':''}${o.sel?' sel':''}"${o.style?` style="${o.style}"`:''}><img src="${it.img}" alt=""><span class="st">${stars(o.st||1)}</span><span class="nv">Nv.1</span></div>`; }
+function fzPreview(){ const items=B.sel.map(id=>BAG.find(x=>x.id===id)); if(B.mode==='star'){
+    const best=items.find(x=>x.eq)||items[0];
+    return {ok:!B.poor,gold:FZ.star.gold,img:best.img,st:2,raro:false,title:'Clava · 2 estrelas',
+      lines:['Sai: Arma Básico com 2 estrelas (de 1 para 2)','Nível 1 · os 3 itens somem','Fica equipado no lugar do atual',`Secundário: ${best.sub} (do melhor dos 3)`]}; }
+  const pick=items.find(x=>x.id===B.pick);
+  if(!pick) return {ok:false,needPick:true,gold:FZ.rarity.gold,img:null,title:'Clava · Raro',lines:['Sai: Arma Raro (de Básico para Raro)','Nível 1 · os 3 itens somem','Fica equipado no lugar do atual']};
+  return {ok:!B.poor,gold:FZ.rarity.gold,img:pick.img,st:1,raro:true,title:'Clava · Raro',
+    lines:['Sai: Arma Raro (de Básico para Raro)','Nível 1 · os 3 itens somem','Fica equipado no lugar do atual',`Secundários: ${pick.sub} (do escolhido) + ${FZ.rarity.extra} (fixo pelos 3 itens)`]}; }
+function renderB(){ let bag='';
+  if(B.done){ bag+=tileHTML({img:B.done.img},{st:B.done.st,raro:B.done.raro,style:'left:12px;top:558px'});
+    bag+=`<div class="slot" style="left:322px;top:64px${B.done.raro?';border-color:#4aa3ff;background:#1b2740':''}"><img src="${B.done.img}" alt=""><span class="nv">Nv.1</span></div>`;
+    bag+=`<button class="hit" style="left:12px;top:558px" data-bag="done" aria-label="Clava nova, equipada"></button>`;
+    $('#bagZone').innerHTML=bag; $('#fzZone').innerHTML=''; return {open:false}; }
+  for(const it of BAG){ const si=B.sel.indexOf(it.id);
+    if(!it.inPrint) bag+=tileHTML(it,{style:`left:${it.x}px;top:558px`});
+    bag+=`<button class="hit${si>=0?' sel':''}" style="left:${it.x}px;top:558px" data-bag="${it.id}" aria-pressed="${si>=0}" aria-label="${it.other?'Colete':'Clava'} Nv.1">${si>=0?`<span class="n">${si+1}</span>`:''}</button>`; }
+  $('#bagZone').innerHTML=bag;
+  if(B.sel.length<3){ $('#fzZone').innerHTML=''; return {open:false}; }
+  const p=fzPreview(), items=B.sel.map(id=>BAG.find(x=>x.id===id));
+  const ins=items.map(it=>B.mode==='rarity'
+    ?`<button class="pk${B.pick===it.id?' on':''}" data-pick="${it.id}" aria-pressed="${B.pick===it.id}" aria-label="Manter a aparência desta clava (${it.sub})">${tileHTML(it)}${B.pick===it.id?'<span class="ck">mantém</span>':''}</button>`
+    :`<div class="in">${tileHTML(it)}</div>`).join('');
+  const res=p.img?`<div class="res">${tileHTML({img:p.img},{st:p.st,raro:p.raro})}<span class="tag">vai sair</span></div>`:`<div class="res" style="font:900 22px Nunito,sans-serif;color:#c9b8a2">?<span class="tag">escolha</span></div>`;
+  const hint=B.mode==='rarity'?`<div class="hint">${p.needPick?'Escolha qual manter a aparência: toque numa das 3':'Aparência, família e secundário da clava escolhida'}</div>`:'';
+  const okLbl=p.needPick?'Escolha 1':B.poor?'Falta ouro':'Fundir';
+  $('#fzZone').innerHTML=`<div class="dim" style="top:0;height:552px"></div><div class="dim" style="top:624px;bottom:0"></div>
+    <div class="fz" role="dialog" aria-label="Fusão: vai sair"><h4>Vai sair <small>${B.mode==='star'?'3 iguais → +1 estrela':'3 iguais → raridade seguinte'}</small></h4>
+    <div class="row">${ins}<span class="arr">→</span>${res}</div>
+    <ul class="ls"><li><b>${p.title}</b></li>${p.lines.map(l=>`<li>${l}</li>`).join('')}</ul>${hint}
+    <div class="gar">Resultado garantido: você recebe exatamente este item</div>
+    <div class="cost${B.poor?' poor':''}"><img src="a/coin.png" alt="">Custo: ${p.gold} ouro${B.poor?' (falta ouro)':''}</div>
+    <div class="bt"><button class="no" data-fz="no">Cancelar</button><button class="ok${p.ok?'':' off'}" data-fz="ok" aria-disabled="${!p.ok}">${okLbl}</button></div></div>`;
+  return {open:true,preview:p}; }
+$('#scrB').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.bag){ if(d.bag==='done'){ toast('#scrB',500,'Clava nova, já equipada'); return; }
+    const it=BAG.find(x=>x.id===d.bag); if(it.other){ toast('#scrB',500,'Só 3 iguais: mesma peça, era, raridade e estrelas'); return; }
+    const i=B.sel.indexOf(it.id); if(i>=0) B.sel.splice(i,1); else if(B.sel.length<3) B.sel.push(it.id); B.pick=null; renderB(); }
+  if(d.pick){ B.pick=d.pick; renderB(); }
+  if(d.fz==='no'){ B.sel=[]; B.pick=null; renderB(); toast('#scrB',500,'Nada mudou'); }
+  if(d.fz==='ok'){ const p=fzPreview(); if(p.needPick){ toast('#scrB',130,'Escolha qual clava mantém a aparência'); return; }
+    if(!p.ok){ toast('#scrB',130,'Falta ouro: nada foi gasto'); return; }
+    B.done={img:p.img,st:p.st,raro:p.raro}; B.sel=[]; B.pick=null; renderB(); toast('#scrB',500,'Recebeu exatamente o item da prévia: '+p.title); } });
+$('#sideB').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.bmode){ B.mode=d.bmode; B.pick=null; press('[data-bmode]',b); renderB(); }
+  if(d.bpre){ B.done=null; B.sel=['c1','c2','c3']; B.pick=null; renderB(); }
+  if(d.bpoor){ B.poor=!B.poor; document.querySelectorAll('[data-bpoor]').forEach(x=>x.setAttribute('aria-pressed',String(B.poor))); renderB(); }
+  if(d.breset){ B.sel=[]; B.pick=null; B.done=null; renderB(); } });
+renderB();
+
+/* ================= 3) Sys.loadouts: abas dos conjuntos ================= */
+/* espaços do print (x,y do quadrado 58x58): elmo/colete/botas à esquerda, arma/luvas/colar à direita; a asa (trancada, Nv 50) não muda */
+const SLOT={hat:[10,64],weapon:[322,64],armor:[10,155],gloves:[322,155],boots:[10,245],necklace:[322,245]};
+const SLOTN={hat:'Elmo',weapon:'Arma',armor:'Colete',gloves:'Luvas',boots:'Botas',necklace:'Colar'};
+/* img null = a peça que já está no print (clava Nv.1 e colete Nv.1) */
+const BASE={weapon:{img:null},armor:{img:null}};
+const SETS0={fases:{gear:{weapon:{img:null},armor:{img:null}},spells:['Pedra Rolante Nv 2','Fogueira Ancestral Nv 1',null]},
+  arena:{gear:{weapon:{img:'a/ic_era0_t2.png',lv:4,up:2},hat:{img:'a/era0_helmet_t2.png',lv:3,up:1},gloves:{img:'a/era1_gloves.png',lv:2,up:0}},spells:['Fogueira Ancestral Nv 1','Pedra Rolante Nv 2',null]},
+  chefe:null};
+const MSPL={fases:['Pedra Rolante Nv 2','Fogueira Ancestral Nv 1',null],arena:['Fogueira Ancestral Nv 1','Pedra Rolante Nv 2',null],chefe:['Pedra Rolante Nv 2',null,null]};   // = Sys.grimoire.loadout(S, modo)
+const MODES=['fases','arena','chefe'], MNAME={fases:'Fases',arena:'Arena',chefe:'Chefe'};
+const C={tab:'fases',use:'fases',auto:false,sets:null,eq:null};
+function cReset(){ C.tab='fases'; C.use='fases'; C.auto=false; C.sets=JSON.parse(JSON.stringify(SETS0)); C.eq=JSON.parse(JSON.stringify(BASE)); }
+cReset();
+/* o que o herói veste se usar o conjunto m: espaço vazio no conjunto NÃO tira a peça */
+const wearWith=m=>{ const s=C.sets[m]; return s?Object.assign({},C.eq,JSON.parse(JSON.stringify(s.gear))):C.eq; };
+function renderC(){ const prev=C.tab!==C.use, set=C.sets[C.tab], show=prev?(set?wearWith(C.tab):C.eq):C.eq; let h='';
+  for(const s of Object.keys(SLOT)){ const g=show[s]; if(!g||!g.img) continue; const [x,y]=SLOT[s];
+    h+=`<div class="slot${prev?' pv':''}" style="left:${x}px;top:${y}px"><img src="${g.img}" alt="${SLOTN[s]}"><span class="nv">Nv.${g.lv||1}</span></div><span class="plus" style="left:${x+38}px;top:${y-6}px">+${g.up||0}</span>`; }
+  h+=`<button class="ldauto${C.auto?' on':''}" data-auto="1" aria-pressed="${C.auto}"><span class="sw"></span><b>Auto</b><br>Troca sozinho antes da luta (opcional)</button>`;
+  h+=`<button class="ldact sv" data-act="save" aria-label="Salvar o que está vestido no conjunto ${MNAME[C.tab]}">Salvar</button>`;
+  const canUse=!!set&&prev;
+  h+=`<button class="ldact us${canUse?'':' off'}" data-act="use" aria-disabled="${!canUse}" aria-label="Usar o conjunto ${MNAME[C.tab]}">${!set?'Vazio':prev?'Usar':'Em uso'}</button>`;
+  h+=`<div class="ldtabs" role="tablist">${MODES.map(m=>`<button role="tab" data-tab="${m}" class="${m===C.tab?'on':''}" aria-selected="${m===C.tab}">${C.use===m?'<span class="u">em uso</span>':''}${MNAME[m]}${C.sets[m]?'':'<span class="e">vazio</span>'}</button>`).join('')}</div>`;
+  if(prev) h+=`<div class="ldnote">${set?'Prévia: toque Usar para vestir':'Vazio: vista as peças e toque Salvar'}</div>`;
+  const sp=MSPL[C.tab];
+  h+=`<div class="ldspl"><i>Magias do Grimório · ${MNAME[C.tab]}</i>${sp.map(n=>n?`<span>${n}</span>`:'<span class="v">vazio</span>').join('')}</div>`;
+  $('#ldZone').innerHTML=h; return {tab:C.tab,use:C.use,prev,shown:Object.keys(show).filter(k=>show[k]&&show[k].img).length}; }
+$('#scrC').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.tab){ C.tab=d.tab; renderC(); }
+  if(d.auto){ C.auto=!C.auto; renderC(); toast('#scrC',200,C.auto?'Ligado: antes de cada luta veste o conjunto do modo':'Desligado: troca só quando você tocar'); }
+  if(d.act==='save'){ C.sets[C.tab]={gear:JSON.parse(JSON.stringify(C.eq))}; C.use=C.tab; renderC(); toast('#scrC',200,'Salvo em '+MNAME[C.tab]+': o que está vestido agora'); }
+  if(d.act==='use'){ const set=C.sets[C.tab]; if(!set){ toast('#scrC',200,'Conjunto vazio: vista as peças e toque Salvar'); return; } if(C.tab===C.use) return;
+    C.eq=wearWith(C.tab); C.use=C.tab; renderC(); toast('#scrC',200,'Vestiu o conjunto '+MNAME[C.tab]+' (grátis)'); } });
+$('#sideC').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.cpre){ C.tab=d.cpre; renderC(); }
+  if(d.creset){ cReset(); renderC(); } });
+renderC();
+function draw(){ renderA(); renderB(); renderC(); }
+window.__pequenos3={A,B,C,renderA,renderB,renderC};
+
+/* ================= votos (um por mudança) ================= */
+function setupVote(k,DOC,tela){ (async()=>{ const st=$('#vst'+k);
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota'+k).value.trim(),tela,em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk'+k).onclick=()=>vote('aprovado'); $('#vNo'+k).onclick=()=>vote('reprovado'); })(); }
+setupVote('A','decisoes/tela-fraco-contra','Selo Fraco contra na batalha');
+setupVote('B','decisoes/tela-fusao-vai-sair','Fusão com o cartão Vai sair');
+setupVote('C','decisoes/tela-conjuntos','Conjuntos Fases / Arena / Chefe');
+</script>
