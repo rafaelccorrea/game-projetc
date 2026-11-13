@@ -116,7 +116,7 @@ W.avatarFor=function(sv,size){ size=+size>0?+size:48; const c=document.createEle
 W.avatarTag=function(size,css,alt){ size=+size>0?+size:48; const px=Math.round(size*dpr());
   return '<canvas data-av="'+size+'" width="'+px+'" height="'+px+'" '+(alt?'role="img" aria-label="'+String(alt).replace(/[&<>"]/g,'')+'"':'aria-hidden="true"')+' style="width:'+size+'px;height:'+size+'px;display:block;'+(css||'')+'"></canvas>'; };
 W.avatarUrl=function(sv,size){ try{ const px=Math.max(8,Math.round((+size>0?+size:48)*dpr())), b=best(sv||gS(),px); if(!b.ok) return ''; if(!b.e.url) b.e.url=b.e.canvas.toDataURL('image/png'); return b.e.url; }catch(e){ return ''; } };
-W.avatarRefresh=repaint;
+W.avatarRefresh=function(){ bM=null; repaint(); };   /* Engenheiro 15: quem pede o retrato de novo (herói/skin mudou: heroChanged) não recebe a resposta guardada dos últimos 150 ms */
 W.avatarOnReady=function(fn){ if(typeof fn==='function') cbs.push(fn); };
 W.avatarLocate=locate;
 W.avatarKeyOf=keyOf;   /* (S, itens do avatars.json) → chave do retrato; para o teste e o QA */

@@ -321,7 +321,7 @@ const evtEra=()=>{ try{ return Math.max(0,Math.min(6,(S.era|0))); }catch(e){ ret
 /* como cada recompensa aparece: ícone, rótulo (só o que o módulo sabe) e cor da moldura */
 function evtLook(x){ const w=x.reward||{};
   if(w.skin) return {lab:'Skin',r:4,ic:`<span class="pz-skf"><span class="pz-kid" style="filter:hue-rotate(${EVT_SKHUE[w.skin]||'250deg'}) saturate(1.3)"></span></span>`};
-  if(Array.isArray(w.items)&&w.items[0]){ const it=w.items[0], r=Math.max(0,Math.min(4,it.r|0)); return {lab:evtRar(r),r,ic:`<img class="pz-bob" src="assets/icons/slots/era${evtEra()}_${evtEsc(it.slot)}.png" alt="">`}; }
+  if(Array.isArray(w.items)&&w.items[0]){ const it=w.items[0], r=Math.max(0,Math.min(4,it.r|0)); return {lab:evtRar(r),r,ic:`<img class="pz-bob" src="${evtEsc(typeof xTierIco==='function'?xTierIco('assets/icons/slots/era'+evtEra()+'_'+it.slot+'.png',r):'assets/icons/slots/era'+evtEra()+'_'+it.slot+'.png')}" alt="">`}; }   /* peça no desenho da raridade (t0/t1/t2) */
   if(w.petFrags) return {lab:'Prismático',r:5,ic:EVT_FRAG};
   if(w.essence) return {lab:'Material',r:-1,ic:evtSvgIc('ess')};
   if(w.forge) return {lab:'Material',r:-1,ic:evtSvgIc('stone')};

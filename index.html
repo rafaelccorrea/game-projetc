@@ -335,7 +335,10 @@ const ICON={
 /* ÍCONES APROVADOS (icon-eraN_<slot>, 49 arquivos em assets/icons/slots): um por espaço e por era do VISUAL do item. O marcador SVG acima fica só
    para o espaço VAZIO (não há item para mostrar). */
 const SLOT_FILE={weapon:'weapon',armor:'vest',hat:'helmet',gloves:'gloves',boots:'boots',necklace:'necklace',wing:'wings'};
-const slotIcon=(slot,e)=>SLOT_FILE[slot]?'assets/icons/slots/era'+Math.max(0,Math.min(8,e|0))+'_'+SLOT_FILE[slot]+'.png':ICON.armor;
+/* 3º parâmetro OPCIONAL r (raridade): peça em 3 desenhos (t0 Básico/Raro, _t1 Épico/Mítico, _t2 Lendário/Divino) pelo Sys.assets.tierIcon (js/sys/assets.js), que
+   só troca quando o arquivo está no manifesto. Sem r, sem o módulo ou sem o arquivo: o ícone de sempre. Arma e asa não mudam. */
+const slotIcon=(slot,e,r)=>{ if(!SLOT_FILE[slot]) return ICON.armor; const u='assets/icons/slots/era'+Math.max(0,Math.min(8,e|0))+'_'+SLOT_FILE[slot]+'.png';
+  if(r==null) return u; try{ return (window.Sys&&Sys.assets&&typeof Sys.assets.tierIcon==='function')?Sys.assets.tierIcon(u,r):u; }catch(er){ return u; } };
 /* nomes dos 5 espaços novos: era 2 = os do protótipo; as outras eras ainda não têm nome próprio (pendência para o PO): "Elmo de Bronze" etc. */
 const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do Dragão','Coroa Sagrada'], gloves:['Luvas de Couro','Manoplas de Aço','Manoplas Rúnicas','Garras do Dragão','Mãos Sagradas'],
   boots:['Botas de Couro','Grevas de Aço','Botas Rúnicas','Botas do Dragão','Passos Sagrados'], necklace:['Cordão de Osso','Colar de Prata','Amuleto Rúnico','Presa do Dragão','Relicário Sagrado'] };
@@ -567,7 +570,20 @@ setTimeout(()=>{ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.snapshot==='function'
 /* CÓDEX: registra o que o jogador já teve/viu (grava mesmo com a chave do módulo desligada; sem prêmio). Chamado depois de drop, equipar, ovo, evolução, montaria, forja e fase vencida. */
 function codexSync(){ try{ if(window.Sys&&Sys.codex&&typeof Sys.codex.sync==='function'&&Sys.host) Sys.codex.sync(S,Sys.host); }catch(e){} }
 function statsChanged(){ try{ if(window.Sys&&Sys.pass&&typeof Sys.pass.releaseMountFrags==='function') Sys.pass.releaseMountFrags(S); }catch(e){}   /* fragmentos de montaria do Passe guardados: entram quando existir a 1ª montaria */
-  heroClass(); if(typeof refreshHero==='function') refreshHero(); fcNotice(); codexSync(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+  heroClass(); heroChanged(); if(typeof refreshHero==='function') refreshHero(); fcNotice(); codexSync(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+/* AVISO ÚNICO DE MUDANÇA DO PERSONAGEM (Engenheiro 15; regra do dono: skin, arma, montaria, pet, asa, aura, retrato ou título mudou → o herói muda NA HORA em
+   todas as telas, sem sair e voltar). Quem muda o personagem chama heroChanged() (o statsChanged já chama; quem não passa por ele chama direto). Ele vence na
+   hora as memórias curtas do desenho (aparência 200 ms: LKC, js/battle.js; forma/skin fixa 200 ms: FORM, js/stage.js; camadas 250 ms: LAYN; pet 0,5 s: PETK,
+   js/petfx.js; retrato 150 ms + 1 s: js/avatar.js) e dispara o evento 'herochange' no window para a tela aberta que guarda desenho PARADO refazer o dela
+   (js/p_look.js). Não troca nenhuma regra de espera: a arma, a skin, a montaria e o pet novos continuam entrando só com a arte carregada. */
+function heroChanged(){
+  try{ if(typeof LKC!=='undefined') LKC.t=-1e9; }catch(e){}
+  try{ if(typeof LAYN!=='undefined') LAYN.t=-1e9; }catch(e){}
+  try{ if(typeof PETK!=='undefined') PETK.infoT=0; }catch(e){}
+  try{ if(typeof formRefresh==='function') formRefresh(); }catch(e){}
+  try{ if(typeof avatarRefresh==='function') avatarRefresh(); }catch(e){}
+  try{ window.dispatchEvent(new CustomEvent('herochange')); }catch(e){} }
+window.heroChanged=heroChanged;
 function roll(key){
   const tot=RAR.reduce((s,r)=>s+r[key],0); let x=Math.random()*tot;
   for(let i=0;i<RAR.length;i++){ x-=RAR[i][key]; if(x<=0) return i; } return 0;

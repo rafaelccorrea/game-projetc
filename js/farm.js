@@ -43,7 +43,7 @@ function addItemToBag(o){ setTimeout(()=>{ if(typeof codexSync==='function') cod
   /* VIP (conveniências ligadas): TROCAR o equipado sozinho é do VIP 2 com a preferência ligada (vaEquipAllowed, js/vipauto.js); espaço vazio equipa sempre.
      Sem isso o item fica na mochila e o aviso diz "Item melhor" (o jogador equipa em Equip.). Chave desligada: equipa para todos, como antes. */
   const hint = better; if (better && typeof vaEquipAllowed === 'function' && !vaEquipAllowed(it)) better = false;
-  if (better){ S.eq[it.slot] = it.id; refreshHero(); try { Sys.fc.record(S, Sys.host); } catch (e) {} }
+  if (better){ S.eq[it.slot] = it.id; if (typeof heroChanged === 'function') heroChanged(); refreshHero(); try { Sys.fc.record(S, Sys.host); } catch (e) {} }
   if (PULLING) PULLING.push({ r: it.r, slot: it.slot, e: it.e, name: nm, pity: !!o.pity, eq: better });
   else dropToast((better ? 'Equipou ' : hint ? 'Item melhor: ' : 'Drop: ') + nm + ' [' + RAR[it.r].n + ' · ' + SLOT[it.slot].n + ']');
   if (typeof vaFuseSoon === 'function') vaFuseSoon();   // VIP: fusão automática (inerte enquanto a Fusão estiver desligada)
@@ -71,7 +71,7 @@ Sys.host = {
   now: () => Date.now(), rng: Math.random, toast: m => toast(String(m).replace(/ Liberou:.*$/, '').replace(/^🎖️\s*/, '')),   // sem anunciar funções que ainda não estão ligadas
   // opcionais de interface
   itemName: it => iname(normItem(it)), rarName: r => RAR[r] ? RAR[r].n : '', rarColor: r => RAR[r] ? RAR[r].c : '#fff',
-  thumb: it => (it && SLOT[it.slot]) ? slotIcon(it.slot, Number.isInteger(it.look) ? it.look : it.e) : ICON.armor,   // ícone aprovado do espaço na era do item
+  thumb: it => { if (!(it && SLOT[it.slot])) return ICON.armor; const u = slotIcon(it.slot, Number.isInteger(it.look) ? it.look : it.e); try { return Sys.assets.tierIcon(u, it.r); } catch (e) { return u; } },   // ícone aprovado do espaço na era do item, no desenho da raridade (t0/t1/t2: Sys.assets.tierIcon)
   sfx: n => snd(n), fmt: n => fmt(n),
   onChange: () => { save(); hud(); if (view !== 'battle'){ if (typeof softRender === 'function') softRender(); else render(); } },
 };

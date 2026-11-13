@@ -370,8 +370,13 @@ function xriGet(src,r,px){ r=Math.min(4,r|0); if(!XRI.on()||r<1||typeof src!=='s
   else if(e.st===0) e.w=w;
   if(XRI.q.length&&!XRI.busy){ XRI.busy=true; XRI.sched(xriStep); }
   return e; }
-const xRarIcoUrl=(src,r,px)=>{ const e=xriGet(src,r,px); return e&&e.st===1?e.u:src; };
-const xRarIco=(src,r,px)=>{ const e=xriGet(src,r,px); return !e||e.st===-1?src:e.st===1?e.u:src+'" data-ric="'+e.id; };
+/* ÍCONE DA PEÇA EM 3 DESENHOS (Arte, 9 eras): Básico/Raro = era<N>_<peça>.png (t0), Épico/Mítico = _t1, Lendário/Divino = _t2. PONTO ÚNICO: Sys.assets.tierIcon
+   (js/sys/assets.js, de Sistemas), que só troca chapéu, colete, luvas, botas e colar e só quando o arquivo está no assets/manifest.json (sem a combinação ou
+   sem o manifesto carregado: o t0, nunca um 404). Arma, asa e o resto ficam como estão. xRarIco / xRarIcoUrl passam por aqui ANTES da pintura da opção C,
+   então toda tela que já usa uma das duas mostra o desenho certo (a moldura, o brilho e a gema vão por cima; com a opção C desligada vale só o desenho). */
+const xTierIco=(src,r)=>{ try{ const A=window.Sys&&Sys.assets; return A&&typeof A.tierIcon==='function'?A.tierIcon(src,r):src; }catch(e){ return src; } };
+const xRarIcoUrl=(src,r,px)=>{ src=xTierIco(src,r); const e=xriGet(src,r,px); return e&&e.st===1?e.u:src; };
+const xRarIco=(src,r,px)=>{ src=xTierIco(src,r); const e=xriGet(src,r,px); return !e||e.st===-1?src:e.st===1?e.u:src+'" data-ric="'+e.id; };
 const itemIcon=(it,sz,extra)=>`<img src="${xRarIco(slotIcon(it.slot,ieraV(it)),it.r,sz)}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;${extra||''}">`;
 /* ---------- RARIDADE: UM COMPONENTE para todas as telas dos painéis (chave PANEL_V2.rar) ----------
    MOLDURA = classe .xr + .xr<0..4> + atributo data-rar: borda de 3 px na cor, fundo radial com o tom da raridade, brilho em volta (cresce com a

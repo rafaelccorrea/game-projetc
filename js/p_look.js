@@ -113,4 +113,8 @@ function plClick(b){
     if(!ok){ plToast('Não foi possível trocar de herói'); return; } try{ if(typeof formRefresh==='function') formRefresh(); if(typeof preloadAssets==='function') preloadAssets(); if(typeof avatarRefresh==='function') avatarRefresh(); }catch(e){} XLK.open=null; plToast('Herói: '+(next==='kaia'?'Kaia':'Kael')); plChanged(); render(); return; }
   if(a==='equip'){ plEquipId(b.dataset.id); return; }
 }
+/* Engenheiro 15: o herói mudou por fora com a vitrine aberta (item melhor equipado sozinho, Modo dono): os quadros PARADOS da grade guardavam a arma antiga até
+   a tela ser reaberta. O aviso único (heroChanged, index.html) dispara 'herochange': a grade é refeita sem redesenhar a tela (o destaque já é animado). */
+function plHeroChanged(){ try{ if(typeof view==='undefined'||view!=='look'||!document.querySelectorAll) return; for(const cv of document.querySelectorAll('canvas[data-plsk]:not([data-live])')) cv.__painted=0; XLK.n=0; if(!XLK.tm) plStills(); }catch(e){} }
+if(typeof window!=='undefined'&&typeof window.addEventListener==='function') window.addEventListener('herochange',plHeroChanged);
 Panels.add('look',{title:'Aparência',render:scrLook,click:plClick,onOpen(){ XLK.t0=0; XLK.err=0; XLK.open=null; XLK.mount=false; },onClose(){ plStop(); XLK.open=null; } });

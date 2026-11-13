@@ -1377,7 +1377,8 @@ function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1
      no quadro seguinte (devolve true quando desenhou). Arquivo que não vem em 12 s: desenha com a reserva. */
   { let rdy=false; try{ rdy=fullReady(HFULL); }catch(e){ rdy=true; } if(!rdy&&!lookWait('full',(st.skin||'')+'|'+(HFULL.mount&&HFULL.mount.id||'')+'|'+(HFULL.wing||'')+'|'+(S.hero||''))){ if(typeof FORM!=='undefined') FORM.ov=ov0; return false; } }
   c2.save(); c2.translate(x-HX*k,y-GY*k); c2.scale(k,k); ctx=c2;
-  try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running; B.res=null; B.deadT=0; B.running=!!st.walking; try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; } } }
+  try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running, m0=HM.mount; B.res=null; B.deadT=0; B.running=!!st.walking; HM.mount=HFULL.mount;   /* Engenheiro 14 (dono: pet SEMPRE NA FRENTE): o pet é o ÚLTIMO desenho (depois da asa, da montaria, do herói e da arma) e a posição dele segue a montaria DESTE desenho (antes seguia a da batalha, HM.mount: herói a pé com pet longe, ou montado com o pet em cima da montaria) */
+      try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; HM.mount=m0; } } }
   catch(e){ if(!window.__hfErr){ window.__hfErr=1; console.error('drawHeroFull',e); } }
   finally{ ctx=old; c2.restore(); if(typeof FORM!=='undefined') FORM.ov=ov0; } return true; }
 window.drawHeroFull=drawHeroFull;

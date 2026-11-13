@@ -100,4 +100,24 @@ var RARICON_TESTS=(function(){
     if(xRarIco(b,2,40).indexOf('blob:teste/')!==0) throw new Error('a fila travou depois da falha'); if(XRI.busy||XRI.q.length||env.pend.length) throw new Error('fila presa');
     return '2 falhas com o ícone de hoje, o seguinte pintado'; }); };
 
+  /* ---------- PEÇA EM 3 DESENHOS (t0 / _t1 / _t2): Sys.assets.tierIcon por trás do slotIcon(slot, era, r) e do xRarIco ---------- */
+  T['3 desenhos: 9 eras × 5 peças × raridade seguem o mapeamento e existem em disco']=function(){
+    if(typeof __manifest==='undefined'||typeof __slotFiles==='undefined') return 'smoke sem o manifesto/lista de ícones';
+    const A=window.Sys&&Sys.assets; if(!(A&&typeof A.tierIcon==='function'&&typeof A.setManifest==='function')) throw new Error('Sys.assets.tierIcon não carregou');
+    const base='assets/icons/slots/', had=A.tierIcon(base+'era0_helmet.png',4)!==base+'era0_helmet.png', on0=PANEL_V2.rarIcons, disk=new Set(__slotFiles); let err=null, out='', n=0;
+    try{ A.setManifest(null); if(slotIcon('hat',0,4)!==base+'era0_helmet.png') throw new Error('sem manifesto não devolveu o t0: '+slotIcon('hat',0,4));
+      A.setManifest(__manifest); PANEL_V2.rarIcons=false; const P={hat:'helmet',armor:'vest',gloves:'gloves',boots:'boots',necklace:'necklace'}, TR=[0,0,1,1,2,2];
+      for(let e=0;e<=8;e++) for(const sl in P) for(let r=0;r<=5;r++){ const t=TR[r], want=base+'era'+e+'_'+P[sl]+(t?'_t'+t:'')+'.png', got=slotIcon(sl,e,r); n++;
+        if(got!==want) throw new Error('era '+e+' '+sl+' r'+r+': '+got+' (esperado '+want+')'); if(!disk.has(got.slice(base.length))) throw new Error('arquivo fora do disco: '+got);
+        if(slotIcon(sl,e)!==base+'era'+e+'_'+P[sl]+'.png') throw new Error('sem a raridade o ícone mudou');
+        if(xRarIcoUrl(slotIcon(sl,e),r,40)!==want||xRarIco(slotIcon(sl,e),r,40)!==want) throw new Error('xRarIco não segue o mapeamento: '+xRarIcoUrl(slotIcon(sl,e),r,40));
+        if(xTierIco(got,r)!==got||xRarIcoUrl(got,r,40)!==got) throw new Error('aplicar duas vezes mudou o endereço: '+xTierIco(got,r)); }
+      for(let e=0;e<=8;e++) for(const sl of ['weapon','wing']) for(const r of [0,2,4]){ if(slotIcon(sl,e,r)!==slotIcon(sl,e)) throw new Error(sl+' mudou com a raridade'); if(!disk.has(slotIcon(sl,e).slice(base.length))) throw new Error('fora do disco: '+slotIcon(sl,e)); }
+      const it={slot:'hat',r:4,e:3,look:3,lvl:1}; if(itemIcon(it,40).indexOf(base+'era3_helmet_t2.png')<0) throw new Error('itemIcon do Lendário sem o _t2: '+itemIcon(it,40));
+      if(Sys.host&&typeof Sys.host.thumb==='function'&&Sys.host.thumb({slot:'boots',r:2,e:1})!==base+'era1_boots_t1.png') throw new Error('thumb do baú: '+Sys.host.thumb({slot:'boots',r:2,e:1}));
+      PANEL_V2.rarIcons=true; const m=xRarIco(slotIcon('hat',2),4,40); if(m.indexOf(base+'era2_helmet_t2.png" data-ric="')!==0) throw new Error('opção C ligada: a pintura não parte do _t2: '+m);
+      out=n+' combinações no mapeamento e em disco; arma e asa iguais; aplicar duas vezes não muda; opção C pinta por cima do desenho certo';
+    }catch(e){ err=e; }
+    PANEL_V2.rarIcons=on0; if(!had) A.setManifest(null); XRI.c={}; XRI.q=[]; XRI.busy=false; XRI.n=0; XRI.seq=0; if(err) throw err; return out; };
+
   return T; })();

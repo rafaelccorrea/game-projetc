@@ -1290,3 +1290,13 @@ no `heroLook` e no `wItemNow`; a prévia da Aparência usa o mesmo caminho da ba
   espera `PANEL_ON.realm` ligada; `smoke.js`: o detector de escopo próprio do p_realm ignora o comentário de cabeçalho (o arquivo novo começa com comentário).
 - Resultados: `run.js` TUDO OK (162); `owner_all.js` OK (79); `realm.js` sem falha dura, 1 achado antigo (g: importar código de outro servidor); fumaça 360, 390
   e 288: 199 OK, 0 FALHA (segue o timer do p_intro); `conflitos.js`: p_realm acusa mount/card/load (falso alarme: arquivo em escopo próprio).
+
+## Bloco 49 (Painéis 3, sem navegador): ícone de peça em 3 desenhos (t0 / _t1 / _t2)
+
+Resolvedor ÚNICO = `Sys.assets.tierIcon(url, r)` de Sistemas (não criei outro). `js/screens.js`: `xTierIco` (só a guarda) entra em `xRarIco` / `xRarIcoUrl` antes da
+pintura da opção C, então todas as telas que já passavam por elas (Equipamento, comparação, Loja, Invocar, Passe, Vitória, Forja, Oferta, Leilão, fantasma do
+arrasto) mostram o desenho da raridade. `index.html:338`: `slotIcon(slot, era, r)` com o 3º parâmetro opcional. `js/farm.js:74`: `thumb` do baú/entrega passa a
+raridade. `js/p_events.js:324`: prêmio de item do evento. Aplicar duas vezes é inofensivo (endereço já `_t1` não casa com a regra do módulo).
+ACHADO para Sistemas: os t0 estão no pacote `core` e os `_t1/_t2` nos pacotes `era:N` do manifesto; o `tierIcon` só confere o manifesto, não a instalação do pacote.
+Teste novo (fumaça): 270 combinações (9 eras × 5 peças × 6 raridades) no mapeamento e em disco. Fumaça 390/360/288: 200 OK, 0 FALHA; `run.js` 162; `flows.js`
+"fluxos duros OK"; `owner_all.js` 79; `test/sys/assets.test.js` 7.
