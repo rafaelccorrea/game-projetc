@@ -8,6 +8,13 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h20 · v0.12.8, lote 2 LIGADO NO JOGO (conferido pelo QA no navegador, no GitHub):**
+  - [x] Arena (ligas, luta animada, resultado; prêmios valem com o online) · Eventos (loja com compra direta) · Torneio (28 territórios, sem dados inventados) · Montarias (equipar, subir nível, estrelas e aura; FC "+155 ▲") · Correio (carta de boas-vindas entrando)
+  - [x] Menu no nível 60 com tudo: Forja, Pets, Torre, Ranking, Missões, VIP, Arena, Guilda, Torneio, Códex, Chat, Eventos, Config.
+  - [ ] Telas de entrada: NÃO ligadas ainda. Defeitos voltaram ao Servidor: o filtro de nome deixa passar palavrão com números, "Google" sem "em breve", o avô não aparece no Prólogo, o Bem-vindo de volta não aparece
+  - [ ] Ícone do Torneio sendo refeito (estava parecido com o do Ranking) · Serpe entra na tela de Montarias
+  - [ ] Ainda desligadas: Instâncias, Vitória/Derrota, missão guia, Mapa, Oferta, Leilão
+
 - **23h10 · Na batalha (v0.12.8, visto no navegador):**
   - [x] Cenário vivo da era 4 (Industrial) ligado
   - [x] Serpe V2 com o Kael sentado, a asa mais alta e destacada, o pet à frente sem cobrir as patas
