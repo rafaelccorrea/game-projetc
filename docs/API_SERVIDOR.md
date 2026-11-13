@@ -387,3 +387,28 @@ O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`wo
   - `WORLDBOSS_FC_BY_ERA` = (vazio: usa a FC do jogador);
   - `WORLDBOSS_HITS_PER_DAY` = 4;
   - `WORLDBOSS_TOP` = 10.
+
+## 15. FOGUEIRA E LADRÃO DE BRASAS (lado do servidor; força-tarefa P1 e docs/LOM_VS_EONBOUND.md rec. 3 e 5)
+**Fogueira no save (§3.4, só marca; fps-server 24e5906).** O servidor lê `S.sys.bonfire = {lv, xp, bra, pot, got, off?}` no próprio save:
+- `bonfire_bra_over`: estoque `bra` acima de 300, ou pote `pot` ≥ 20;
+- `bonfire_lv_over`: nível fora de 1-60;
+- `bonfire_lv_jump`: o nível subiu mais de 2 + 40 por dia real entre dois saves;
+- `bonfire_got_jump`: `got` (total de Brasas que ENTRARAM, só sobe; Sistemas 0c7e42a) subiu mais de 300 + 2.500 por dia real (luta automática o dia todo);
+- **Brasas do tempo fora:** `off = {day, n}` (dia de Brasília e Brasas que o tempo fora deu nesse dia). `bonfire_off_over` se `n` > 40. Quem grava `off` é o jogo (Sistemas), quando ligar o offline da Fogueira.
+- Números PROVISÓRIOS (Sistemas). Quando "só abate novo dá Brasa" ligar, o teto de `got` cai.
+
+**Ladrão de Brasas (instância diária; atrás de `THIEF_ON`, migração 019).** As ENTRADAS do dia são contadas no servidor. Brasas só jogando: sem chave paga, sem anúncio.
+- `GET /v1/thief` → `{day, perDay, entriesLeft, batch, fireLevel, lastReward, canSweep, run:{runId, endsAt}|null, resetsInMs, provisional:true}`.
+- `POST /v1/thief/enter` → `{runId, seed, startsAt, endsAt, maxBrasas, entriesLeft}`. Gasta 1 entrada; sem entrada: 429 `daily_limit` (com o tempo até a virada de Brasília).
+- `POST /v1/thief/finish {runId, score}` → `{brasas, score, maxBrasas, total}`.
+  - `score` = fração do saco que o jogador soltou nos 45 s (0..1). Brasas = arredonda(`score` × lote); no máximo 1 lote por entrada.
+  - Uma vez por corrida (409 `already_finished`); antes de 5 s, 409 `too_fast`; depois de 3 min, 409 `expired` (a entrada foi gasta).
+- `POST /v1/thief/sweep` → `{brasas, entriesLeft, total}`: "Varrer o último". Gasta 1 entrada e repete o último prêmio. Sem corrida jogada antes: 409 `nothing_to_sweep`.
+- **Lote** = pelo NÍVEL da Fogueira no último save do jogador (`S.sys.bonfire.lv`):
+
+  | Nível da Fogueira | 1-3 | 4-6 | 7-9 | 10-19 | 20-34 | 35-49 | 50-60 |
+  |---|---|---|---|---|---|---|---|
+  | Lote (Brasas) | 1 | 2 | 4 | 5 | 6 | 8 | 10 |
+
+  Provisório; a Sistemas calibra. Entradas por dia: `THIEF_PER_DAY` (padrão 2).
+- **No jogo:** o prêmio do `finish` e do `sweep` entra pelo `Sys.bonfire.addBrasas` (conta no `got`, então cabe no teto do save).
