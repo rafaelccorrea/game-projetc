@@ -8,15 +8,16 @@ function run(extra){ const mk=()=>({id:'',children:[],innerHTML:'',addEventListe
 const txt=b=>(b.children[0]?b.children[0].innerHTML:'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
 (async()=>{ let n=0; const ok=(c,m)=>{ assert.ok(c,m); n++; };
   { const {ctx}=run({OWNER_MODE:true}); ok(ctx.DeleteAccount.open()===false,'Modo dono recusa'); }
-  { const {ctx,body}=run({}); ctx.DeleteAccount.open(); ok(/Precisa de internet/.test(txt(body)),'sem Sys.net: precisa de internet'); }
-  { let called=0, gone=null; const {ctx,body}=run({Sys:{net:{deleteAccount:()=>{ called++; return Promise.resolve({ok:true}); },hasSession:()=>true}},OnlineBoot:{accountDeleted:o=>{ gone=o; }}});
+  { const {ctx,body}=run({}); ctx.DeleteAccount.open(); ok(/página de exclusão/.test(txt(body)),'sem Sys.net (online desligado): link da página'); }
+  { let called=0, gone=null; const {ctx,body}=run({Sys:{net:{deleteAccount:()=>{ called++; return Promise.resolve({ok:true,until:Date.UTC(2026,11,13,12)}); },hasSession:()=>true}},OnlineBoot:{accountDeleted:o=>{ gone=o; }}});
     ctx.DeleteAccount.open(); const t1=txt(body); ok(/30 dias/.test(t1)&&/Compras não são reembolsadas/.test(t1)&&/TODOS os servidores/.test(t1)&&/também será apagado/.test(t1),'1º passo explica (texto do PO)');
     ok(/excluir-conta/.test(body.children[0].innerHTML),'link da página de exclusão');
     ctx.DeleteAccount._act('next'); ok(/digite EXCLUIR/.test(txt(body)),'2º passo pede EXCLUIR');
     ctx.DeleteAccount._act('go','excluo'); ok(called===0,'palavra errada não envia');
-    ctx.DeleteAccount._act('go','excluir'); await new Promise(r=>setTimeout(r,5)); ok(called===1,'EXCLUIR envia'); ok(gone&&gone.localSave==='erase','avisa o OnlineBoot (apagar o local)'); ok(/30 dias/.test(txt(body)),'pedido enviado'); }
+    ctx.DeleteAccount._act('go','excluir'); await new Promise(r=>setTimeout(r,5)); ok(called===1,'EXCLUIR envia'); ok(gone&&gone.localSave==='erase','avisa o OnlineBoot (apagar o local)'); ok(txt(body).includes('13/12/2026')&&/cancelada/.test(txt(body)),'pedido enviado com a data'); }
   { let gone=false; const {ctx,body}=run({Sys:{net:{deleteAccount:()=>Promise.reject({code:'offline'}),hasSession:()=>true}},OnlineBoot:{accountDeleted:()=>{ gone=true; }}});
     ctx.DeleteAccount.open(); ctx.DeleteAccount._act('next'); ctx.DeleteAccount._act('go','EXCLUIR'); await new Promise(r=>setTimeout(r,5));
-    ok(!gone&&/Nada foi apagado/.test(txt(body)),'falha: nada apagado'); }
+    ok(!gone&&/nada foi apagado/i.test(txt(body))&&/internet/.test(txt(body)),'offline: nada apagado, tente com internet'); }
   { const {ctx,body}=run({}); ctx.DeleteAccount.DATA.localSave='keep'; ctx.Sys={net:{deleteAccount:()=>Promise.resolve(),hasSession:()=>true}}; ctx.DeleteAccount.open(); ok(/jogo sem conta/.test(txt(body)),'opção B: texto de manter'); }
+  { const {ctx,body}=run({Sys:{net:{deleteAccount:()=>Promise.reject({code:'no_session'}),hasSession:()=>false}}}); ctx.DeleteAccount.open(); ok(/página de exclusão/.test(txt(body)),'sem sessão: link da página'); }
   console.log('ok: '+n+' verificações'); })().catch(e=>{ console.error('FALHOU:',e.message); process.exit(1); });

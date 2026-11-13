@@ -20,7 +20,10 @@ const DATA={
      type:'Para confirmar, digite EXCLUIR:',
      offline:'Precisa de internet para excluir a conta. Conecte-se e tente de novo.',
      fail:'Não deu para excluir agora. Nada foi apagado. Tente de novo mais tarde.',
-     sent:'Pedido enviado. A sua conta será apagada em 30 dias.'}
+     noNet:'Sem conexão: nada foi apagado. Tente de novo com internet.',
+     noSession:'Você não está conectado a uma conta online. Para pedir a exclusão, use a página de exclusão.',
+     sent:'Pedido enviado. A sua conta será apagada em 30 dias.',
+     sentAt:'Pedido enviado. A sua conta será apagada em %D. Se você entrar de novo antes disso, a exclusão é cancelada.'}
 };
 const dTry=(f,d)=>{ try{ const v=f(); return v==null?d:v; }catch(e){ return d; } };
 const dEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -48,21 +51,25 @@ function draw(){ if(!U.el) return; const T=DATA.t, local=DATA.localSave==='keep'
     <label for="da_in" style="font-size:13px;font-weight:800">${dEsc(T.type)}</label>
     <input id="da_in" class="da-in" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" value="${dEsc(U.typed)}" aria-label="Digite EXCLUIR para confirmar">
     <button class="da-btn da-red" data-da="go" ${ok&&!U.busy?'':'disabled'}>${U.busy?'Enviando...':'Excluir minha conta'}</button><button class="da-btn da-off" data-da="close" ${U.busy?'disabled':''}>Cancelar</button>`; }
-  else body=`<span style="font-size:14px;font-weight:900;line-height:1.4;color:${U.err?'#ff8a7a':'#f6ecdf'}">${dEsc(U.msg)}</span><button class="da-btn da-off" data-da="close">Fechar</button>`;
+  else body=`<span style="font-size:14px;font-weight:900;line-height:1.4;color:${U.err?'#ff8a7a':'#f6ecdf'}">${dEsc(U.msg)}</span>${U.link?`<a href="${dEsc(DATA.page)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:900;color:#8cc8ff;overflow-wrap:anywhere">${dEsc(T.link)}</a>`:''}<button class="da-btn da-off" data-da="close">Fechar</button>`;
   U.el.innerHTML=`<div class="da-box" role="dialog" aria-modal="true" aria-labelledby="da_t"><span id="da_t" class="lil" style="font-size:21px;color:#ff8a6a;text-align:center">${dEsc(T.title)}</span>${body}</div>`;
   const inp=U.el.querySelector&&U.el.querySelector('#da_in'); if(inp&&inp.addEventListener){ inp.addEventListener('input',()=>{ const pos=inp.selectionStart; U.typed=inp.value; draw(); const n=U.el.querySelector('#da_in'); if(n&&n.focus){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} } }); } }
 function close(){ if(U.busy) return; if(U.el&&U.el.parentNode) U.el.parentNode.removeChild(U.el); U.el=null; U.step='info'; U.typed=''; U.msg=''; U.err=false; }
-function show(msg,err){ U.step='msg'; U.msg=msg; U.err=!!err; U.busy=false; draw(); }
+function show(msg,err,link){ U.step='msg'; U.msg=msg; U.err=!!err; U.link=!!link; U.busy=false; draw(); }
+const dDate=ms=>{ try{ return new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}); }catch(e){ return ''; } };
 function send(){ if(U.busy) return; if(!online()){ show(DATA.t.offline,true); return; } U.busy=true; draw();
   let done=false; const timer=setTimeout(()=>{ if(!done){ done=true; show(DATA.t.fail,true); } },DATA.timeoutMs);
   let p; try{ p=Promise.resolve(window.Sys.net.deleteAccount()); }catch(e){ p=Promise.reject(e); }
-  p.then(()=>{ if(done) return; done=true; clearTimeout(timer); U.busy=false;
-      const OB=window.OnlineBoot; if(OB&&typeof OB.accountDeleted==='function'){ show(DATA.t.sent,false); try{ OB.accountDeleted({localSave:DATA.localSave}); }catch(e){} } else show(DATA.t.sent,false); },
-    ()=>{ if(done) return; done=true; clearTimeout(timer); show(DATA.t.fail,true); }); }
+  p.then(r=>{ if(done) return; done=true; clearTimeout(timer); U.busy=false; const until=r&&+r.until>0?+r.until:0, msg=until?DATA.t.sentAt.replace('%D',dDate(until)):DATA.t.sent;
+      show(msg,false); const OB=window.OnlineBoot; if(OB&&typeof OB.accountDeleted==='function'){ try{ OB.accountDeleted({localSave:DATA.localSave,until}); }catch(e){} } },
+    e=>{ if(done) return; done=true; clearTimeout(timer); const c=e&&e.code;
+      if(c==='offline'||c==='timeout') show(DATA.t.noNet,true); else if(c==='no_session') show(DATA.t.noSession,true,true); else show(DATA.t.fail,true); }); }
 function onClick(ev){ const b=ev.target&&ev.target.closest?ev.target.closest('[data-da]'):null; if(!b) return; const a=b.getAttribute?b.getAttribute('data-da'):(b.dataset||{}).da;
   if(b.disabled) return; dSnd('ui_tap');
   if(a==='close') close(); else if(a==='next'){ if(!online()){ show(DATA.t.offline,true); return; } U.step='confirm'; draw(); } else if(a==='go'){ if(U.typed.trim().toUpperCase()===DATA.word) send(); } }
 function open(){ if(owner()) return false; css(); close(); U.el=document.createElement('div'); U.el.id='da_root'; U.el.addEventListener('click',onClick); document.body.appendChild(U.el);
+  const N=window.Sys&&window.Sys.net, noSess=!!N&&dTry(()=>typeof N.hasSession==='function'&&!N.hasSession(),false);
+  if(noSess||!N){ show(DATA.t.noSession,true,true); return true; }
   if(!online()){ show(DATA.t.offline,true); return true; } U.step='info'; draw(); return true; }
 const _act=(a,typed)=>{ if(typed!=null){ U.typed=typed; draw(); } onClick({target:{closest:()=>({getAttribute:()=>a,disabled:false})}}); };   // só para testes
 window.DeleteAccount={open,close,DATA,_state:U,_act};
