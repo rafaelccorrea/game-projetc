@@ -248,7 +248,8 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
     try{ if(window.Sys&&Sys.appearance&&Sys.appearance.setHero&&Sys.appearance.setHero(s,v)){ ch(); return v; } }catch(e){} s.hero=v; ch(); return v; },
   commitNew(name){ const s=G.S(); this.setHero(this.pick.hero); s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
   /* login: convidado = local (e, com o Sys.net ligado, sessão de convidado no servidor sem travar o jogo); Google: em breve */
-  guest(){ const s=G.S(); s.acct='guest'; try{ if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },
+  /* JOGAR como convidado: é AQUI que o convidado nasce no servidor (PO 13/11). Com o OnlineBoot novo, play() libera a criação e refaz o boot; sem ele, o caminho antigo. */
+  guest(){ const s=G.S(); s.acct='guest'; try{ const OB=window.OnlineBoot; if(OB&&typeof OB.play==='function'){ OB.play(); return; } if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },
   /* LOGIN GOOGLE pela camada online do jogo (js/onlineboot.js da fps-c8): ela faz o login, vincula ao convidado quando a conta não tem personagem
      neste servidor e refaz o boot (save da nuvem). Sem o online ligado (OnlineBoot.state().on falso) o botão diz "em breve". */
   googleReady(){ try{ const OB=window.OnlineBoot; if(OB&&OB.state&&!OB.state().on) return false; return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },

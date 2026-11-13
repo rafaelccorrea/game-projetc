@@ -49,6 +49,13 @@ function fakeNet(o) {
     const r = await O.boot({}, {}, {}); assert.strictEqual(r.saveFailed, true);
     assert.strictEqual(O.saved({}), false); assert.ok(Sys.net.calls.includes('dirty')); assert.ok(!Sys.net.calls.includes('push'));
   });
+  await t('PO 13/11: mayCreate()===false passa {create:false} ao Sys.net; sem sessão = no_session e nada mais roda', async () => {
+    O._reset(); O.DATA.on = true; let opt = 'x';
+    Sys.net = fakeNet({ ensureSession: async o => { opt = o; throw Object.assign(new Error('x'), { code: 'no_session' }); } }); Sys.buy = null; Sys.mail = null;
+    assert.deepStrictEqual(await O.boot({}, {}, { mayCreate: () => false }), { ok: false, reason: 'no_session' }); assert.deepStrictEqual(opt, { create: false });
+    assert.ok(!Sys.net.calls.includes('push'));
+    Sys.net = fakeNet({ ensureSession: async o => { opt = o; } }); await O.boot({}, {}, { mayCreate: () => true }); assert.strictEqual(opt, undefined, 'liberado: cria como sempre');
+  });
   await t('offline na sessão: não trava e não tenta o resto', async () => {
     O._reset(); O.DATA.on = true; Sys.net = fakeNet({ ensureSession: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } });
     assert.deepStrictEqual(await O.boot({}, {}, {}), { ok: false, reason: 'offline' });

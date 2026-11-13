@@ -90,10 +90,13 @@ function refresh(){
 }
 
 /* ---------- conta ---------- */
-/* abre a sessão: renova se houver refresh; senão entra como convidado (o mesmo aparelho volta à mesma conta). birthDate 'AAAA-MM' (tela neutra). */
+/* abre a sessão: renova se houver refresh; senão entra como convidado (o mesmo aparelho volta à mesma conta). birthDate 'AAAA-MM' (tela neutra).
+   {create:false}: só renova; sem sessão lança 'no_session' e NÃO cria convidado (decisão do PO 13/11: o convidado nasce no servidor só quando o jogador
+   toca em JOGAR ou entra com o Google; nunca só por abrir o app, nem logo depois de excluir a conta). */
 async function ensureSession(o){
   o=o||{};
   if(ST.mem.refresh){ try{ return await refresh(); }catch(e){ if(e.code==='offline'||e.code==='net_off') throw e; } }
+  if(o.create===false) throw fail('no_session');
   const body={deviceId:ST.mem.deviceId,platform:ST.platform,clientVersion:ST.clientVersion,realm:realm()};
   if(o.birthDate) body.birthDate=o.birthDate;
   return takeSession(await raw('POST','/auth/guest',body,false));
@@ -135,7 +138,9 @@ const hasSession=()=>!!ST.mem.refresh;
 /* EXCLUSÃO DA CONTA (Play Store/LGPD): DELETE /me → 202. O servidor apaga em 30 dias e REVOGA todas as sessões; aqui a sessão local também sai.
    Resolve {ok:true, until:<ms em que a exclusão se completa>}. Entrar de novo antes disso cancela o pedido (o login devolve a conta). Rejeita como as outras
    chamadas: e.code 'offline' | 'timeout' | 'no_session' | 'token_invalid' | 'server'... */
-async function deleteAccount(){ await call('DELETE','/me'); dropSession(); delete ST.mem.player; delete ST.mem.save; persist(); return {ok:true,until:serverNow()+30*86400000}; }
+/* depois de excluir: aparelho ganha outro deviceId. Senão o próximo convidado deste aparelho cairia na conta excluída e CANCELARIA a exclusão sem o jogador
+   pedir (entrar com o Google continua cancelando, como o aviso diz). */
+async function deleteAccount(){ await call('DELETE','/me'); dropSession(); delete ST.mem.player; delete ST.mem.save; ST.mem.deviceId=uuid(); persist(); return {ok:true,until:serverNow()+30*86400000}; }
 
 /* ---------- relógio ---------- */
 /* agora no relógio do servidor (a última resposta trouxe x-server-time); sem servidor = relógio do aparelho */

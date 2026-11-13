@@ -234,3 +234,18 @@ test('excluir conta: DELETE /me, a sessão local sai e devolve quando a exclusã
   assert.equal(r.ok, true); assert.ok(r.until > Date.now() + 29 * 86400000); assert.equal(net.hasSession(), false);
   assert.equal(JSON.parse(st.m['eon.net']).access, undefined); assert.ok(f.calls.some(c => c.key === 'DELETE /me'));
 });
+
+test('PO 13/11: ensureSession({create:false}) só renova; sem sessão lança no_session sem pedir convidado', async () => {
+  const { f } = boot({ 'POST /auth/guest': () => [200, session(1)], 'POST /auth/refresh': () => [200, session(2)] });
+  await assert.rejects(net.ensureSession({ create: false }), e => e.code === 'no_session');
+  assert.equal(f.calls.length, 0, 'nenhum pedido: o convidado só nasce no JOGAR');
+  await net.ensureSession(); assert.equal(f.calls[0].key, 'POST /auth/guest');
+  await net.ensureSession({ create: false }); assert.equal(f.calls[1].key, 'POST /auth/refresh', 'com sessão, renova normalmente');
+});
+
+test('excluir conta troca o deviceId: o próximo convidado do aparelho é conta NOVA (não cancela a exclusão sozinho)', async () => {
+  const seen = [];
+  boot({ 'POST /auth/guest': b => { seen.push(b.deviceId); return [200, session(seen.length)]; }, 'DELETE /me': () => [204, null] });
+  await net.ensureSession(); await net.deleteAccount(); await net.ensureSession();
+  assert.equal(seen.length, 2); assert.notEqual(seen[0], seen[1]); assert.match(seen[1], /^[0-9a-f-]{36}$/i);
+});

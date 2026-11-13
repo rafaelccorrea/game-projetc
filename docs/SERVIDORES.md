@@ -54,7 +54,11 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (5ª execução, depois da fase 2 de guildas/chat) | idem |
 | 13/11/2026 04:41 (Brasília) | convidado "CorvoDourado" (conta Viajante2150, S1, Nv. 1, v0.12.9) | QA no navegador, origem 127.0.0.6:8080 | teste da tela de entrada; sem compras |
 | 13/11/2026 10:02 (Brasília) | convidado "LoboDasEras61" (conta Viajante4010, S1, Nv. 1, v0.13.0) | QA no navegador, origem 127.0.0.5:8080 | teste da tela de entrada; sem compras |
+| 13/11/2026 10:24 (Brasília) | convidado "Viajante6288" (S1, sem nome, Nv. 1) | criado sozinho pelo boot logo depois do teste de Excluir conta do QA (origem .7) | defeito corrigido: convidado só nasce no JOGAR |
+| 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (6ª execução, limpeza de contas) | idem às outras execuções |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
+
+**Limpeza automática (fps-server a3653c6):** a cada 6 h o servidor apaga de vez (1) as contas com exclusão pedida há 30 dias e (2) os convidados vazios (só aparelho, Nv. ≤ 1 e fase ≤ 1, sem compra/cartão/entrega) sem acesso há 30 dias (`PURGE_GUEST_DAYS`, 0 desliga). Os convidados de teste desta lista saem sozinhos 30 dias depois do último acesso; a conferência à mão antes do lançamento continua.
 
 Regra: toda nova execução do `smoke-real.mjs` em produção acrescenta uma linha aqui. Na limpeza, também conferir e apagar convidados de nível 1 sem compras criados pelo teste do QA.

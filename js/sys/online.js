@@ -28,7 +28,9 @@
     const N = X().net, out = { ok: true, save: null, deliveries: 0, mail: 0, errors: [] };
     N.DATA.on = true; if (DATA.base) N.DATA.base = DATA.base;
     N.init({ storage: hooks.storage || ls(), clientVersion: hooks.clientVersion || '0' });
-    try { await N.ensureSession(); } catch (e) { note('session', e.code); return { ok: false, reason: e.code || 'session' }; }
+    /* hooks.mayCreate() === false: sem sessão não cria convidado (o jogador ainda não tocou em JOGAR); volta {ok:false, reason:'no_session'} sem pedido */
+    const create = !(typeof hooks.mayCreate === 'function' && hooks.mayCreate() === false);
+    try { await N.ensureSession(create ? undefined : { create: false }); } catch (e) { note('session', e.code); return { ok: false, reason: e.code || 'session' }; }
     clockSync(host);   // agenda (Sys.schedule) e afins passam a usar a hora do servidor
     /* save na nuvem (contrato §3.3): sobe, não faz nada, baixa, ou pergunta */
     try {
