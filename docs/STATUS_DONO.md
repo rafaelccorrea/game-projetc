@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h55 · Oferta de primeira compra pronta (Servidor, 780655a):** R$ 29,90 com a arma, o Lobo de guerra, 300 gemas e ouro. Enquanto a Play não estiver configurada, o botão diz "Pagamento em breve"; testada até "COMPRADO" com uma Play de teste. Entra no próximo lote junto com as telas de entrada
+
 - **23h45 · Telas de entrada corrigidas (Servidor, 2d7f76b):** o filtro de nome barra palavrão com números; o botão Google diz "em breve"; o avô aparece no Prólogo; o Bem-vindo de volta aparece toda vez. O QA reconfere e o engenheiro liga no próximo lote. Também pronto: a carta de boas-vindas do Correio e a compra pelo Google Play preparada (desligada até o servidor). Próximo do Servidor: Oferta de primeira compra
 
 - **23h35 · Créditos:** para terminar TODA a arte que falta (animações do adulto e do guerreiro, cenários das eras 7 e 8, evolução adolescente→adulto e adulto→guerreiro) a Arte estima ~80-115 créditos. Cabe no saldo de ~295 e sobram ~180. O cenário da era 6 já está no GitHub; o da era 7 começou
