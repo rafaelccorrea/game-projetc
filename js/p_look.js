@@ -22,6 +22,9 @@ const plEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;
 function plInject(){ if(typeof document==='undefined'||!document.head||document.getElementById('pl_css')) return; const st=document.createElement('style'); st.id='pl_css'; st.textContent=PL_CSS; document.head.appendChild(st); }
 const plSnd=n=>{ try{ if(typeof snd==='function') snd(n); }catch(e){} };
 const plToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
+const plRar=r=>{ try{ return (typeof RAR!=='undefined'&&RAR[r])?{n:RAR[r].n,c:RAR[r].c}:null; }catch(e){ return null; } };
+/* como obter: com a chave de obtenção desligada (soon) a tela diz só "Em breve" (o texto "how" do módulo ainda traz preço de proposta); com ela ligada, o "how" */
+const plHow=sk=>sk.soon?'Em breve: ainda não dá para obter':(sk.how||'Ainda não disponível');
 const plChanged=()=>{ try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){} };
 function plHero(){ try{ const A=window.Sys&&Sys.appearance; const h=A&&A.heroOf?A.heroOf(S):(S&&S.hero); return h==='kaia'?'kaia':'kael'; }catch(e){ return 'kael'; } }
 /* skins fixas do herói atual: [] se o módulo ainda não tem a API (a tela fica só com a padrão) */
@@ -36,18 +39,18 @@ function plDraw(ts){ XLK.raf=0; const cs=document.querySelectorAll?document.quer
 function plFallback(){ try{ const cs=document.querySelectorAll('canvas[data-plsk]'); for(const cv of cs){ cv.style.display='none'; const fb=cv.nextElementSibling; if(fb) fb.style.display='block'; } }catch(e){} }
 function plStop(){ if(XLK.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(XLK.raf); XLK.raf=0; }
 /* um cartão de skin: herói, nome, selo, e Equipar ou como obter */
-function plCard(sk,hasFull,i){ const eq=!!sk.equipped, size=hasFull?'':'display:none';
-  const act=eq?'':(sk.owned?`<button data-x="equip" data-id="${plEsc(sk.id)}" class="pl-btn" aria-label="Equipar ${plEsc(sk.name)}">Equipar</button>`:`<span style="font-size:12px;font-weight:800;color:#ffd27a;text-align:center;line-height:1.3">${plEsc(sk.how||'Ainda não disponível')}</span>`);
-  return `<div class="pl-in" style="animation-delay:${i*.06}s;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;background:radial-gradient(ellipse at 50% 75%,#3a2c4a,#1d1611);border:2px solid ${eq?'#5fd068':sk.owned?'#8a6a3a':'#4a3a2b'};box-sizing:border-box;opacity:${sk.owned||eq?1:.85}">
+function plCard(sk,hasFull,i){ const eq=!!sk.equipped, size=hasFull?'':'display:none', rar=sk.r>=0?plRar(sk.r):null;
+  const act=eq?'':(sk.owned?`<button data-x="equip" data-id="${plEsc(sk.id)}" class="pl-btn" aria-label="Equipar ${plEsc(sk.name)}">Equipar</button>`:`<span style="font-size:12px;font-weight:800;color:#ffd27a;text-align:center;line-height:1.3">${plEsc(plHow(sk))}</span>`);
+  return `<div class="pl-in" style="animation-delay:${i*.06}s;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border-radius:16px;background:radial-gradient(ellipse at 50% 75%,#3a2c4a,#1d1611);border:2px solid ${eq?'#5fd068':rar?rar.c:sk.owned?'#8a6a3a':'#4a3a2b'};box-sizing:border-box;opacity:${sk.owned||eq?1:.85}">
     <div role="img" aria-label="${plEsc(sk.name)}${eq?', equipada':''}" style="position:relative;width:min(100%,220px);aspect-ratio:1/1">
       <canvas data-plsk="${plEsc(sk.id)}" width="440" height="440" style="position:absolute;inset:0;width:100%;height:100%;${size}"></canvas>
       <div style="position:absolute;inset:0;${hasFull?'display:none':'display:block'}"><div class="pl-kid" style="position:absolute;inset:0"></div></div></div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center"><b style="font-family:'Lilita One',sans-serif;font-size:20px;color:#f6ecdf">${plEsc(sk.name)}</b>${eq?'<span style="padding:3px 10px;border-radius:10px;background:#1f3a22;border:2px solid #5fd068;color:#9ff0a8;font-size:12px;font-weight:900">EQUIPADA</span>':''}</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center"><b style="font-family:'Lilita One',sans-serif;font-size:20px;color:#f6ecdf">${plEsc(sk.name)}</b>${rar?`<span style="padding:3px 10px;border-radius:10px;background:#16110d;border:2px solid ${rar.c};color:${rar.c};font-size:12px;font-weight:900">${plEsc(rar.n)}</span>`:''}${eq?'<span style="padding:3px 10px;border-radius:10px;background:#1f3a22;border:2px solid #5fd068;color:#9ff0a8;font-size:12px;font-weight:900">EQUIPADA</span>':''}</div>
     ${sk.bonus?`<span style="font-size:12px;font-weight:800;color:#9ff0a8">${plEsc(sk.bonus)}</span>`:''}${act}</div>`; }
 function scrLook(){
   plInject(); const d=xDims(PL_MINH), hero=plHero(), name=hero==='kaia'?'Kaia':'Kael', pa=hero==='kaia'?'a':'o';
   const fixed=plFixed(hero), anyEq=fixed.some(x=>x.equipped), hasFull=typeof window.drawHeroFull==='function'&&!XLK.err;
-  const cards=[{id:'default',name:name+' · skin padrão',owned:true,equipped:!anyEq,how:'',bonus:''}].concat(fixed.map(x=>({id:x.id,name:x.name||x.id,owned:!!x.owned,equipped:!!x.equipped,how:x.how||'',bonus:x.bonus||''})));
+  const cards=[{id:'default',name:name+' · skin padrão',owned:true,equipped:!anyEq,how:'',bonus:''}].concat(fixed.map(x=>({id:x.id,name:x.name||x.id,owned:!!x.owned,equipped:!!x.equipped,how:x.how||'',bonus:x.bonus||'',soon:!!x.soon,r:Number.isInteger(x.r)?x.r:-1})));
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 2px 12px">
     ${cards.map((c,i)=>plCard(c,hasFull,i)).join('')}
     <div role="note" style="flex:none;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px;border-radius:16px;border:2px dashed #6b5843;background:#1d1611;text-align:center;box-sizing:border-box">
@@ -62,8 +65,8 @@ function plClick(b){
   if(a==='back'){ plSnd('ui_tap'); plStop(); if(window.Screens&&Screens.close) Screens.close(); return; }
   if(a==='equip'){ const id=b.dataset.id, A=window.Sys&&Sys.appearance; plSnd('ui_tap'); if(!A||typeof A.equipFixed!=='function'){ plToast('Skins fixas ainda não estão disponíveis'); return; }
     if(id==='default'){ let r0=false; try{ r0=A.equipFixed(S,null); }catch(e){ r0=false; } if(r0===false||(r0&&r0.ok===false)){ plToast('Não foi possível voltar ao padrão'); return; } plChanged(); plToast('Equipada: skin padrão'); render(); return; }
-    const sk=plFixed(plHero()).find(x=>x.id===id); if(!sk){ plToast('Esta skin não está disponível'); return; } if(!sk.owned){ plToast(sk.how||'Você ainda não tem esta skin'); return; }
-    let r=false; try{ r=A.equipFixed(S,id); }catch(e){ r=false; } if(r===false||(r&&r.ok===false)){ plToast('Não foi possível equipar agora'); return; }
+    const sk=plFixed(plHero()).find(x=>x.id===id); if(!sk){ plToast('Esta skin não está disponível'); return; } if(!sk.owned){ plToast(sk.soon?'Em breve: ainda não dá para obter esta skin':(sk.how||'Você ainda não tem esta skin')); return; }
+    let r=false; try{ r=A.equipFixed(S,id); }catch(e){ r=false; } if(r===false||(r&&r.ok===false)){ plToast(r&&r.reason==='owned'?'Você ainda não tem esta skin':r&&r.reason==='hero'?'Esta skin é de outro herói':'Não foi possível equipar agora'); return; }
     plChanged(); plToast('Equipada: '+(sk.name||id)); render(); }
 }
 Panels.add('look',{title:'Aparência',render:scrLook,click:plClick,onOpen(){ XLK.t0=0; XLK.err=0; },onClose(){ plStop(); } });
