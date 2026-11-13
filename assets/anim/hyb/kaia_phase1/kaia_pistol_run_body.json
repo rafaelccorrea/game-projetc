@@ -116,5 +116,64 @@
    "src": "f051.png"
   }
  ],
- "shiftFix96": true
+ "shiftFix96": true,
+ "back": [
+  {
+   "x": 190.5,
+   "y": 144,
+   "ang": 9.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.5,
+   "y": 144,
+   "ang": 5.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.5,
+   "y": 144,
+   "ang": 5.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.8,
+   "y": 141,
+   "ang": 5.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.8,
+   "y": 141,
+   "ang": 7.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.8,
+   "y": 142,
+   "ang": 6.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 191.1,
+   "y": 142,
+   "ang": 9.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 190.2,
+   "y": 142,
+   "ang": 9.6,
+   "s": 1,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
 }

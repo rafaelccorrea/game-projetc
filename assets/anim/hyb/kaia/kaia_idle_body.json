@@ -163,5 +163,92 @@
    "behind": false,
    "src": "f089.png"
   }
- ]
+ ],
+ "back": [
+  {
+   "x": 110.2,
+   "y": 161,
+   "ang": -14.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.5,
+   "y": 162,
+   "ang": -14.1,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 108.1,
+   "y": 162,
+   "ang": -9.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.5,
+   "y": 162,
+   "ang": -9.9,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.4,
+   "y": 161,
+   "ang": -10.2,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.4,
+   "y": 161,
+   "ang": -10.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 108.4,
+   "y": 161,
+   "ang": -12.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 108.4,
+   "y": 162,
+   "ang": -12.8,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 108.9,
+   "y": 162,
+   "ang": -12.6,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 109.8,
+   "y": 162,
+   "ang": -9.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.2,
+   "y": 161,
+   "ang": -9.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 110.7,
+   "y": 161,
+   "ang": -10,
+   "s": 1,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
 }

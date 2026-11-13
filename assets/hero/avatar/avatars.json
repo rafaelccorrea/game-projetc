@@ -1,0 +1,78 @@
+{
+ "size": 256,
+ "note": "retrato = quadro 0 do parado (corpo sem arma); head = âncora no retrato: translate(x,y) rotate(ang) scale(s/res) drawImage(chapéu,-pivot.x,-pivot.y)",
+ "items": {
+  "kael_phase0": {
+   "file": "kael_phase0.png",
+   "head": {
+    "x": 128,
+    "y": 96.7,
+    "ang": 2.5,
+    "s": 0.6933
+   }
+  },
+  "kael_phase1": {
+   "file": "kael_phase1.png",
+   "head": {
+    "x": 127.3,
+    "y": 96.2,
+    "ang": 0,
+    "s": 0.6942
+   }
+  },
+  "kael_phase2": {
+   "file": "kael_phase2.png",
+   "head": {
+    "x": 128,
+    "y": 97.4,
+    "ang": 0,
+    "s": 0.6957
+   }
+  },
+  "kael_phase3": {
+   "file": "kael_phase3.png",
+   "head": {
+    "x": 128,
+    "y": 96,
+    "ang": 0,
+    "s": 0.6933
+   }
+  },
+  "kaia_phase0": {
+   "file": "kaia_phase0.png",
+   "head": {
+    "x": 127.2,
+    "y": 96.6,
+    "ang": -0.5,
+    "s": 0.6927
+   }
+  },
+  "kaia_phase1": {
+   "file": "kaia_phase1.png",
+   "head": {
+    "x": 127.2,
+    "y": 96.6,
+    "ang": 2.5,
+    "s": 0.6951
+   }
+  },
+  "kaia_phase2": {
+   "file": "kaia_phase2.png",
+   "head": {
+    "x": 127.2,
+    "y": 95.8,
+    "ang": -1.5,
+    "s": 0.6919
+   }
+  },
+  "kaia_phase3": {
+   "file": "kaia_phase3.png",
+   "head": {
+    "x": 127.2,
+    "y": 96.2,
+    "ang": -17.5,
+    "s": 0.6917
+   }
+  }
+ }
+}
