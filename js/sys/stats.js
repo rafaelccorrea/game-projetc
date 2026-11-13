@@ -208,7 +208,8 @@ const upgradeCap=pl=>pl==null?DATA.maxItemLevel:Math.min(DATA.maxItemLevel,Math.
 const eraNowOf=host=>clamp(int0(host&&host.eraMax&&host.eraMax()),0,99);
 function isDormant(it,host){ return DATA.futureEra.on===true&&!!it&&!!host&&typeof host.eraMax==='function'&&int0(it.e)>eraNowOf(host); }
 /* para a tela: "Adormecido · acorda na era X" */
-function dormantInfo(it,host){ if(!isDormant(it,host)) return {dormant:false}; const e=int0(it.e); return {dormant:true,wakeEra:e,label:'Adormecido · acorda na era '+e}; }
+function dormantInfo(it,host){ if(!isDormant(it,host)) return {dormant:false}; const e=int0(it.e); const P=root.Sys&&root.Sys.phases, nm=P&&P.DATA&&P.DATA.eraName&&P.DATA.eraName[e];   // nome da era para o jogador (o número interno começa do 0)
+  return {dormant:true,wakeEra:e,eraName:nm||null,label:'Adormecido · acorda na era '+(nm||e+1)}; }
 function dormantView(it,host){ if(!isDormant(it,host)) return it; const F=DATA.futureEra;
   return Object.assign({},it,{e:Math.min(int0(it.e),eraNowOf(host)+F.maxAhead),lvl:F.dormantLevel,look:Number.isInteger(it.look)?it.look:int0(it.e)}); }
 /* soma dos atributos dos itens equipados (só espaços abertos e itens válidos para o espaço) */

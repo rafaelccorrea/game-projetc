@@ -294,7 +294,7 @@ t('item de era futura "adormecido": rende como 1 era à frente, no Nv 1, não so
   const h=makeHost({eraMax:2}), w={slot:'weapon',e:4,r:2,lvl:26,subs:[]};
   assert.ok(!ST.isDormant(w,h)); FE.on=true;
   try{
-    assert.ok(ST.isDormant(w,h)); assert.strictEqual(ST.dormantInfo(w,h).label,'Adormecido · acorda na era 4'); const v=ST.dormantView(w,h); assert.strictEqual(v.e,3); assert.strictEqual(v.lvl,1); assert.strictEqual(v.look,4,'o visual continua o da era 4');
+    assert.ok(ST.isDormant(w,h)); assert.ok(/^Adormecido · acorda na era (5|Industrial)$/.test(ST.dormantInfo(w,h).label),'nome da era ou número contado do 1'); assert.strictEqual(ST.dormantInfo(w,h).wakeEra,4); const v=ST.dormantView(w,h); assert.strictEqual(v.e,3); assert.strictEqual(v.lvl,1); assert.strictEqual(v.look,4,'o visual continua o da era 4');
     assert.strictEqual(w.e,4,'o item guardado não muda'); assert.strictEqual(ST.canUpgrade({},h,w).reason,'dormant'); assert.strictEqual(ST.planUpgrade({},h,w,'gold').reason,'dormant');
     // ritmo: com a arma era 4 adormecida, o jogador da era 2 sobe no máximo 1 fase a mais
     const REC=[1440,12300,395000,13900000,829000000,34300000000,1540000000000], rec=st=>{ const e=Math.min(6,Math.floor((st-1)/10)), i=((st-1)%10)+1, a=e>0?REC[e-1]:264; return a*Math.pow(REC[e]/a,i/10); };
