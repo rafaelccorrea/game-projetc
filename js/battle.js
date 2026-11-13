@@ -41,7 +41,7 @@ function loadBalance(){
 
 const SKN=[['Golpe Sísmico','Fúria do Mamute'],['Estocada Tripla','Ira do Olimpo'],['Corte Giratório','Lâmina do Dragão'],
   ['Tiro Duplo','Salva de Canhões'],['Rajada a Vapor','Tempestade Tesla'],['Rajada Tática','Ataque Aéreo'],['Corte de Plasma','Colapso do Vazio'],
-  ['Garra Sombria','Portão do Submundo'],['Lâmina Celeste','Juízo Celestial']];   /* eras 7 (Submundo) e 8 (Celestial): nomes PROVISÓRIOS, a confirmar com o PO; folhas era7_ult / era8_ult */
+  ['Garra Sombria','Portão do Submundo'],['Lâmina Celeste','Juízo Celestial']];   /* eras 7 (Submundo) e 8 (Celestial): nomes APROVADOS pelo PO; folhas era7_ult / era8_ult */
 const S2HITS=[[[.55,1]],[[.2,1],[.45,1],[.7,1]],[[.3,1],[.55,1],[.8,1]],[[.15,1],[.5,1]],
   [[.15,1],[.31,1],[.47,1],[.63,1],[.79,1]],[[.1,1],[.24,1],[.38,1],[.52,1],[.66,1],[.8,1]],[[.4,1],[.6,1]],[[.4,1],[.6,1]],[[.3,1],[.55,1],[.8,1]]];   // eras 7 e 8: provisório (iguais às 6 e 2)
 const S2DUR=[.95,.95,1.05,.8,1,1,.95,.95,1.05];
@@ -274,6 +274,7 @@ function killEnemy(e){
   else { S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y); }   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
   burst(e.x,y,e.col,e.boss?22:10); ring(e.x,y,'#ffffff',e.boss?40:26); B.corpses.push({e,x:e.x,t:0,life:enSheet(e,'die')?shDur(enSheet(e,'die'),EN_DIE_DUR):(e.boss&&SCREENS_ON.bossResult)?BOSS_FALL_DUR:0.6}); if(e.boss&&SCREENS_ON.bossResult) for(let i=0;i<3;i++) dust(e.x-30+i*30,GY-2,3,'#c8b496'); snd('enemy_die'); if(e.boss) snd('coin');
 }
+function heroDown(on){ if(on){ B.deadT=0.8; B.deadBoss=true; } else { B.deadT=0; B.deadBoss=false; } }   // tela 10 (derrota): deixa o Kael caído / devolve
 function waveClear(){
   const h=B.hero;
   if(typeof petWave==='function') petWave();
@@ -288,7 +289,7 @@ function waveClear(){
     /* TROCA DE ERA (pedido Q-2): tela nova em overlay (js/p_era.js), só com PANEL_ON.era ligada pelo agente B; se não abrir, vale o fluxo de sempre */
     let eraShown=false; if(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era')){ try{ eraShown=Panels.open('era',{from:oldEra,to:ne,boss:(ERAS[oldEra]&&ERAS[oldEra].lord)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}})!==false; }catch(er){ console.error('era',er); eraShown=false; } }
     const shown=eraShown||(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
-    if(!shown) toast(newEra?`🌟 NOVA ERA: ${ERAS[ne].icon} ${ERAS[ne].n}! +40💎`:`Fase ${S.stage-1} vencida! +10💎`);
+    if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
     if(S.set.autoBoss&&heroFC()>=recFC(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
   else S.wave++;
@@ -306,7 +307,10 @@ function hitEnemy(e,mult,a,h){
   const ex=eX(e), ey=eY(e), fin=h&&h.fin, k=a.type==='s3'?(fin?3:2):a.type==='s2'?2:crit?1:0;
   e.hp-=d; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }   // a folha de dano toca inteira, no fps do .json
   floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2||crit?1:0);
-  burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,crit||fin?8:3);
+  { const fx=a.fx, pm=fx&&fx.particles>0?fx.particles:1, lite=a.type==='s3'?1:0.5;   /* s1 e s2: metade do reforço */
+    burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,Math.round((crit||fin?8:3)*(1+(pm-1)*lite)));
+    if(fx&&fin){ const sz=fx.size>0?fx.size:1; ring(ex-6,ey,a.col,34*sz); if(sz>1) ring(ex-6,ey,'#ffffff',22*sz); B.shake=Math.max(B.shake,.5*(fx.shake>0?fx.shake:1)); if(fx.flash) B.flash=Math.max(B.flash||0,0.28); } }
+  if(false) burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,crit||fin?8:3);
   const hs=fxSpr(crit?'crit':'hit',a.col); if(hs) wfx(fnSpr,crit?0.25:0.16,{spr:hs,x:ex-6,y:ey,size:HS*(crit?0.8:0.5),rot:Math.random()*6.28,layer:1});
   else wfx(fnHit,crit?0.3:0.2,{x:ex-6,y:ey,r:crit?40:24,n:crit?11:7,col:a.col==='#ffffff'?(crit?'#ffd23f':'#ffe9c8'):a.col,rot:Math.random()*6.28,layer:1});
   if(crit){ ring(ex-10,ey,'#ffd23f'); }
@@ -991,6 +995,7 @@ function draw(){
     if(bn.sub){ ctx.font='800 10px system-ui'; ctx.fillStyle='#fff'; ctx.fillText(bn.sub,0,-10); }
     ctx.font=`900 ${bn.small?14:22}px system-ui`; ctx.lineWidth=bn.small?4:5; ctx.strokeStyle='#000'; ctx.fillStyle=bn.col==='#ffffff'&&!bn.small?'#ffd75e':bn.col; ctx.strokeText(bn.txt,0,bn.sub?12:6); ctx.fillText(bn.txt,0,bn.sub?12:6);
     ctx.restore(); } }
+  if(B.flash>0){ ctx.save(); ctx.globalAlpha=Math.min(0.55,B.flash*2.2); ctx.fillStyle='#fff'; ctx.fillRect(0,0,LW,LH); ctx.restore(); B.flash=Math.max(0,B.flash-1/60); }   // clarão do golpe final (Mítico e Lendário)
   if(B.deadT>0){ { const quiet=B.deadBoss&&SCREENS_ON.bossResult; ctx.fillStyle=quiet?`rgba(0,0,0,${Math.min(.6,(1.6-B.deadT)*.6)})`:'#000a'; ctx.fillRect(0,0,LW,LH); if(!quiet){ ctx.fillStyle='#ff6b6b'; ctx.font='800 26px system-ui'; ctx.textAlign='center'; ctx.fillText('DERROTADO',LW/2,GY-90); } } }   /* tela 10 ligada: chefe sem o letreiro (a tela 10 de derrota abre em seguida) */
   const tr=B.tr;
   if(tr){

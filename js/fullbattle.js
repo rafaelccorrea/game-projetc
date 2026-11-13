@@ -102,6 +102,7 @@ body.fb.full #view{top:calc(var(--fbtop,126px) + var(--fbhead,62px));bottom:0;z-
 #fbsheet{top:0;height:calc(var(--fbsafe,0px) + 56px);padding:var(--fbsafe,0px) 10px 0;border-radius:0;border-top:0;border-bottom:2px solid #4a3a2b;background:#1d1611;box-shadow:none;animation:fbfade .18s ease-out both}
 #fbsheet .rw{height:56px;margin:0;gap:5px;justify-content:flex-start}
 #fbsheet .tt{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fbsheet.tight .tt{font-size:16px}#fbsheet.tight2 .cur{display:none}   /* título que não cabe: encolhe a fonte; se ainda faltar, somem as pílulas de moedas e gemas */
 #fbsheet #fb_x{width:auto;min-width:44px;height:44px;padding:0 8px 0 3px;border-radius:14px;gap:2px;font:900 13px Nunito,system-ui,sans-serif}
 #fbsheet .cur{display:flex;align-items:center;gap:2px;height:32px;padding:0 6px 0 3px;border-radius:999px;background:#0e0a07;border:1px solid #4a3a2b;color:#f6ecdf;font:900 13px Nunito,system-ui,sans-serif;flex:none}
 #fbsheet .cur img{width:22px;height:22px;object-fit:contain}
@@ -130,18 +131,26 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
 const FB_DROP = [
   { id: 'forge',    icon: 'forge',     label: 'Forja',      act: 'soon:forge' },
   { id: 'pets',     icon: 'pets',      label: 'Pets',       act: 'soon:pets' },
-  { id: 'mount',    icon: 'pets',      label: 'Montarias',  act: 'soon:mounts' },   /* tela 33 (js/p_mounts.js, agente B): aparece no nível 38 quando a tela 'mounts' estiver registrada; ícone PROVISÓRIO (o de Pets) */
+  { id: 'mount',    icon: 'mounts',    label: 'Montarias',  act: 'soon:mounts' },   /* tela 33 (js/p_mounts.js, agente B): aparece no nível 38 quando a tela 'mounts' estiver registrada; ícone PROVISÓRIO (o de Pets) */
   { id: 'tower',    icon: 'tower',     label: 'Torre',      act: 'soon:tower' },
   { id: 'inst',     icon: 'instances', label: 'Instâncias', act: 'soon:inst' },
   { id: 'rank',     icon: 'ranking',   label: 'Ranking',    act: 'soon:rank' },
   { id: 'missions', icon: 'missions',  label: 'Missões',    act: 'missions', alerts: () => missionAlerts() },
   { id: 'vip',      icon: 'vip',       label: 'VIP',        act: 'soon:vip' },
+  /* v0.12.8, lote de telas (agente B / QA). Ícones PROVISÓRIOS onde a Arte ainda não entregou: arena e torneio = ranking; guilda = eventos; códex = missões;
+     chat = correio; mapa = torre; montarias = pets. Códex, Chat e Mapa NÃO têm nível definido: ficam atrás de `key` (só com NEXT_ON) até o PO dizer. */
+  { id: 'arena',    icon: 'arena',     label: 'Arena',      act: 'soon:arena' },
+  { id: 'guild',    icon: 'guild',     label: 'Guilda',     act: 'soon:guild' },
+  { id: 'tourney',  icon: 'tourney',   label: 'Torneio',    act: 'soon:tourney' },
+  { id: 'codex',    icon: 'codex',     label: 'Códex',      act: 'soon:codex' },   /* nível 12 (PO) */
+  { id: 'chat',     icon: 'chat',      label: 'Chat',       act: 'soon:chat' },   /* nível 16 (PO) */
+  { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map' },   /* Mapa das Eras: nível 1 (PO) */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },
   { id: 'events',   icon: 'events',    label: 'Eventos',    act: 'soon:events' },
   { id: 'cfg',      icon: 'settings',  label: 'Config.',    act: 'cfg' },
   /* LEILÃO (PO): pronto e DESLIGADO (on:false) até o agente B ver a tela rodando. Ícone provisório = o da Loja com um martelinho desenhado por código
      (hammer:true), até a arte chegar. tag = SELO de texto opcional do item (campo novo, vale para qualquer entrada). */
-  { id: 'auction',  icon: 'shop',      label: 'Leilão',     act: 'soon:auction', tag: 'Em breve', hammer: true, on: false },
+  { id: 'auction',  icon: 'auction',   label: 'Leilão',     act: 'soon:auction' },   /* ícone aprovado (assets/icons/menu/auction.png); aparece no nível 45 com a tela registrada e ligada */
 ];
 const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="position:absolute;right:-3px;bottom:-3px;filter:drop-shadow(0 1px 1px #000)"><rect x="10" y="9" width="4" height="13" rx="1.5" fill="#8a5a2b" stroke="#2a1403" stroke-width="1" transform="rotate(-40 12 12)"/><rect x="3" y="3" width="13" height="7" rx="2" fill="#ffc94a" stroke="#2a1403" stroke-width="1.2" transform="rotate(-40 12 12)"/></svg>';
 /* ============ LIBERAÇÃO POR NÍVEL (regra do dono, níveis confirmados pelo PO; reports/liberacao-por-nivel.md) ============
@@ -149,7 +158,7 @@ const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="
    Ao liberar, o ícone aparece UMA vez com o selo "NOVO!" e um balão curto; um por vez, em fila; S.unl guarda o que já foi anunciado.
    Trocar o nível = trocar 1 número aqui. (O Sys.level.isUnlocked só conhece as chaves do módulo: practice, forge, instances, tower, arena, pet;
    as outras ainda não estão lá, por isso a tabela fica aqui e a conta usa Sys.level.level(S).) Sem entrada na tabela = desde o início. */
-const FB_UNLOCK = { missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
+const FB_UNLOCK = { map: 1, codex: 12, chat: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
 const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
 const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
 /* SAVE ANTIGO NÃO PERDE ACESSO (PO, v0.12.4): quem já jogava antes da liberação por nível continua vendo o que já usava, em qualquer nível.
@@ -160,7 +169,9 @@ function fbLegacy(){ try { if (S.bornV === undefined) S.bornV = ((S.kills | 0) >
     if (S.bornV === 'old' && !S.unlKeep){ S.unlKeep = {}; if (!S.unl || typeof S.unl !== 'object') S.unl = {}; for (const id of FB_KEEP_OLD){ S.unlKeep[id] = 1; S.unl[id] = 1; } save(); } } catch (e) {} }
 const fbLvU = id => { try { const u = Sys.level.unlockLevel(id); return u > 1 ? u : (FB_UNLOCK[id] || u || 1); } catch (e) { return FB_UNLOCK[id] || 1; } };   /* chave que o módulo não conhece devolve 1: aí vale a reserva (senão 'inst' e 'rank' liberariam no nível 1) */   // fonte única: Sys.level.DATA.unlock (fps-e2); FB_UNLOCK fica só de reserva
 const fbUnl = id => (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || !!(S.unlKeep && S.unlKeep[id]) || !(FB_UNLOCK[id] && fbLvU(id) > fbLvl());   // MODO DONO (app de teste): tudo que tem tela aparece, sem regra de nível
-const fbHasScreen = m => m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)] && !Screens.reg[m.act.slice(5)].broken);
+/* tela pronta = REGISTRADA (Screens.register / Panels.add), não quebrada e, se for um painel do agente B, com a chave PANEL_ON ligada */
+const fbPanelOn = k => !(window.Panels && Panels.defs && Panels.defs[k] && typeof Panels.on === 'function' && !Panels.on(k));
+const fbHasScreen = m => (m.key !== true || (typeof NEXT_ON !== 'undefined' && NEXT_ON)) && (m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)] && !Screens.reg[m.act.slice(5)].broken && fbPanelOn(m.act.slice(5))));
 const fbShown = m => m.on !== false && fbUnl(m.id) && fbHasScreen(m);
 const FBN = { id: null, el: null, until: 0 };
 function fbNovoTick(){ if (view !== 'battle' || B.paused || document.getElementById('fbdrop') || (typeof tutOn === 'function' && tutOn() && !(typeof tutWait !== 'undefined' && tutWait))) return; const now = Date.now(); if (FBN.until > now) return;
@@ -188,7 +199,7 @@ function fbBuild(){
   const B0 = 844;   // posições "de baixo" do protótipo viram distância até o fundo da tela
   const bot = top => `top:calc(100% - ${B0 - top}px)`;
   el.innerHTML = `<div class="shade"></div><div class="fbw" id="fb_w">
-  <button data-fb="gear" id="fb_av" aria-label="Kael: nível e força. Abrir Equipamento" style="position:absolute;left:6px;top:10px;width:68px;height:90px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center">
+  <button data-fb="avatar" id="fb_av" aria-label="Kael: nível e força. Abrir Equipamento" style="position:absolute;left:6px;top:10px;width:68px;height:90px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center">
     <span id="fb_ring" style="position:relative;width:58px;height:58px;border-radius:50%;background:conic-gradient(#5ff0cf 0deg,rgba(255,255,255,.16) 0);display:block;box-shadow:0 4px 14px rgba(0,0,0,.45)">
       <span style="position:absolute;left:4px;top:4px;width:50px;height:50px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#4a3a2b,#1d1611);display:block"><span class="kidle" id="fb_kid" style="position:absolute;left:-20px;top:-6px;width:90px;height:90px;display:block"></span></span>
       <span class="lil" id="fb_lv" style="position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);height:18px;padding:0 7px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:12px;line-height:18px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">Nv. 1</span></span>
@@ -238,11 +249,12 @@ function fbAct(a, b){
   if (b && b.dataset && b.dataset.drop) fbMenuClose();
   if (a.indexOf('soon:') === 0){ const k = a.slice(5); if (Screens.reg && Screens.reg[k]){ snd('ui_tap'); Screens.open(k); return; } fbSoon(k); return; }   // tela registrada (Screens.register) abre; sem registro, "Em breve"
   snd('ui_tap');
-  if (a === 'gear' || a === 'summon' || a === 'shop') setView(a);
+  if (a === 'avatar'){ if (window.Panels && Panels.defs && Panels.defs.profile && Panels.on('profile') && fbUnl('profile')) Panels.open('profile'); else setView('gear'); }   // avatar: Perfil quando a tela estiver ligada (nível 10); senão Equipamento
+  else if (a === 'gear' || a === 'summon' || a === 'shop') setView(a);
   else if (a === 'shopitem'){ if (typeof XH !== 'undefined') XH.tab = 'item'; setView('shop'); }
   else if (a === 'shopgem'){ if (!fbUnl('shopgem')){ toast('Loja de gemas: libera no nível ' + FB_UNLOCK.shopgem); return; } if (typeof XH !== 'undefined') XH.tab = 'gem'; setView('shop'); }
-  else if (a === 'missions') Screens.open('pass', { tab: 'missions' });
-  else if (a === 'pass') Screens.open('pass', { tab: 'rewards' });
+  else if (a === 'missions'){ if (window.Panels && Panels.defs && Panels.defs.missions && Panels.on('missions')) Panels.open('missions'); else Screens.open('pass', { tab: 'missions' }); }   // tela nova de Missões quando ligada; senão a aba antiga do Passe
+  else if (a === 'pass'){ if (window.Panels && Panels.defs && Panels.defs.passv2 && Panels.on('passv2')) Panels.open('passv2'); else Screens.open('pass', { tab: 'rewards' }); }   // Passe com rolagem (escolhido) quando ligado
   else if (a === 'cfg') openSettings(false);
   else if (a === 'music'){ toggleSound(); toast(S.set.sound ? 'Som ligado' : 'Som desligado'); }
   else if (a === 'boss') bossTap();          // mesma regra do botão antigo (brilho, FC que falta, 2º toque)
@@ -277,6 +289,7 @@ function fbLayout(){ const app = document.getElementById('app'), w = document.ge
   app.style.setProperty('--fbtop', Math.max(0, H - FB_SHEET_H * Math.min(s, H / 844 > 1 ? s : s)).toFixed(0) + 'px'); app.style.setProperty('--fbhead', (FB_HEAD * Math.min(1.2, s)).toFixed(0) + 'px'); }
 function fbTick(){
   if (!document.getElementById('fbhud')) return; const f = typeof gNum === 'function' ? gNum : fmt, kf2 = typeof kf === 'function' ? kf : fmt;
+  if (typeof NEXT_ON !== 'undefined' && NEXT_ON && window.PGuide && window.Panels && typeof Panels.on === 'function' && Panels.on('guidehud')){ try { if (!FBK.pg){ const host = document.getElementById('fb_w'); if (host){ PGuide.mount(host); FBK.pg = 1; } } if (FBK.pg) PGuide.update(); } catch (e) { console.error('PGuide', e); FBK.pg = 2; } }
   fbSet('fb_gold', kf2(S.gold)); fbSet('fb_gems', String(S.gems)); fbSet('fbp_gold', kf2(S.gold)); fbSet('fbp_gems', String(S.gems)); fbSet('fb_fc', 'FC ' + f(heroFC()));
   try { const h = Sys.level.hud(S), deg = Math.round((h.max ? 1 : h.frac) * 360); fbSet('fb_lv', h.text); if (FBK.ring !== deg){ FBK.ring = deg; document.getElementById('fb_ring').style.background = `conic-gradient(#5ff0cf ${deg}deg,rgba(255,255,255,.16) 0)`; } } catch (e) {}
   { const sk = SKIN(S.skinEq.armor), t = sk ? tierOf(sk.r) : 0, c = 'kidle' + (t ? ' t' + t : ''); if (FBK.kid !== c){ FBK.kid = c; document.getElementById('fb_kid').className = c; } }
@@ -330,7 +343,8 @@ function fbFast(){ const h = B.hero; if (!h || !document.getElementById('fbhud')
         left = Math.max(8, Math.min(ar.width - bw - 8, left)); top = Math.max(8, top);
         bub.style.setProperty('top', top + 'px', 'important'); bub.style.setProperty('left', left + 'px', 'important'); bub.style.setProperty('right', 'auto', 'important'); bub.style.setProperty('transform', 'none', 'important'); }
       else if (bub && FBK.tutPos !== q){ ['top', 'left', 'right', 'transform'].forEach(pp => bub.style.removeProperty(pp)); } FBK.tutPos = q; } }
-  { const t = FB_TITLES[view] || (Screens.reg && Screens.reg[view] && Screens.reg[view].title) || ''; fbSet('fb_tt', view === 'pass' && typeof passTab !== 'undefined' && passTab === 'mis' ? 'Missões' : t); }
+  { const t = FB_TITLES[view] || (Screens.reg && Screens.reg[view] && Screens.reg[view].title) || ''; if (fbSet('fb_tt', view === 'pass' && typeof passTab !== 'undefined' && passTab === 'mis' ? 'Missões' : t) || FBK.ttw !== document.getElementById('app').clientWidth){ FBK.ttw = document.getElementById('app').clientWidth;
+      const sh = document.getElementById('fbsheet'), tt = document.getElementById('fb_tt'); if (sh && tt){ sh.classList.remove('tight', 'tight2'); if (tt.scrollWidth > tt.clientWidth + 1){ sh.classList.add('tight'); if (tt.scrollWidth > tt.clientWidth + 1) sh.classList.add('tight2'); } } } }   /* o título nunca fica cortado em tela estreita */
 }
 /* TUTORIAL na 04b: os passos apontam para as abas e os botões antigos (escondidos). Aqui o alvo de cada passo é trocado pelo equivalente novo. */
 /* textos curtos (uma linha) dos 5 passos na 04b */

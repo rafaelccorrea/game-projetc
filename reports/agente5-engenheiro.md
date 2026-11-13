@@ -1454,3 +1454,41 @@ Visto (390x844): carga sem erro; batalha, arma na mão, inimigos, abates; save d
 Corrigido: o atalho "Ir para o nível 20/32/50/70" do Modo dono não chocava o ovo (pulava o caminho normal de subir de nível): agora chama `petLevel`.
 Anotado, não corrigido (estético): com grifo o pet fica bem à frente e perto do inimigo da frente; o save real cresce de 1.920 para 2.190 caracteres ao ser aberto nesta versão (campos novos: marcador de save antigo, estado dos módulos novos, dia do login).
 Não visto: animação do ovo chocando nesta passada (o pet já apareceu chocado na recarga); drop de item; level up a olho (só o nível subir); tutorial até o fim; 360x640; pônei, cavalo, tigre; Prévia da arte; APK.
+
+## v0.12.8 — preparada SEM navegador (2026-11-12); `NEXT_ON` continua false
+
+ATIVO no disco (não atrás de `NEXT_ON`), nunca visto rodando:
+- MENU do lote de telas (`FB_DROP`, js/fullbattle.js): Arena, Guilda, Torneio, Leilão (ícone aprovado `auction.png`), além dos que já existiam (Forja, Pets, Montarias, Torre, Instâncias, Ranking, VIP, Correio, Eventos, Missões, Config.). Cada um só aparece com a tela REGISTRADA, não quebrada, com a chave `PANEL_ON` do agente B ligada (`fbPanelOn`) e no nível da tabela (Torre 15, Instâncias 14, Ranking/Arena 28, Eventos 24, Guilda 32, Montarias 38, Torneio 40, Leilão 45, Correio 7). Hoje as chaves novas estão desligadas: nada muda no MENU.
+- Rotas: avatar do cabeçalho abre o Perfil quando `PANEL_ON.profile` estiver ligada e o nível for 10+ (senão Equipamento); `missions` abre a tela nova quando ligada (senão a aba antiga do Passe); `pass` abre o `passv2` quando ligado. `Screens.open(nome)` recusa painel desligado, igual ao `Panels.open`.
+- Título do cabeçalho dos painéis: se não couber, a fonte cai para 16 px; se ainda faltar, somem as pílulas de moedas e gemas.
+- Aviso reserva da vitória sem emoji; `heroDown(on)` em js/battle.js para a tela 10 deixar o Kael caído (pedido A-20).
+- Serpe dourada de volta à tabela de montarias (`MOUNT_TBL.wyvern`, com asas). Grifo e tigre: pet de 0,86 para 0,74 (na fumaça ficou perto demais do inimigo).
+- Versão v0.12.8 nos três arquivos.
+
+ATRÁS DE `NEXT_ON`:
+- Códex, Chat e Mapa no MENU (não têm nível definido: `key: true`). Preciso do nível do PO.
+- Módulos `clock`, `offer`, `appearance`, `phases`, `events`, `guild`, `guide` carregados antes do `fc`.
+- Missão guia: `PGuide.mount(#fb_w)` + `PGuide.update()` no HUD quando `PANEL_ON.guidehud` estiver ligada; `Sys.guide.onEvent` no `ptrack`.
+- Efeito por raridade completo (`Sys.stats.skillFx`): cor, partículas multiplicadas (metade do reforço em s1/s2), anel maior e tremor no golpe final, clarão branco na tela quando `flash` (Mítico/Lendário).
+- Já estavam: luta da instância, morte nova, inimigo parado, era 4 viva, aviso de poder.
+
+ÍCONES QUE FALTAM (uso provisório entre parênteses): Arena (ranking), Guilda (eventos), Torneio (ranking), Códex (missões), Chat (correio), Mapa das Eras (torre), Montarias (pets), Perfil (sem ícone: é o avatar).
+
+Incertezas: a assinatura de `Sys.guide.onEvent` e a ordem exata de carga dos módulos novos não foram conferidas rodando; `Screens.reg` para painel desligado depende de como o `Panels.add` registra (protegi dos dois lados).
+
+## v0.12.8, conferência no navegador: itens 1 e 2 FECHADOS; `NEXT_ON = true` (2026-11-12)
+
+Item 1 (carga com os módulos novos):
+- `clock`, `offer`, `appearance`, `phases`, `events`, `guild`, `guide`, `activity`, `achievements`, `pet`, `mount` carregados antes do `fc`; zero erro no console.
+- FC de um save de nível 12: 938 com todos os módulos e 938 sem eles.
+- Jogador novo sem debug até o fim do tutorial (Invocar no nível 3), zero erro.
+- Corrigido: `Sys.guide.onEvent` era chamado com a assinatura errada; a do módulo é `(S, tipo, n)`.
+
+Item 2 (mudança de poder na tela, `fcNotice`):
+- Não dispara na carga. Item melhor que entra e equipa sozinho: "+269 ▲". Trocar por item pior: "−269 ▼" vermelho. Voltar ao mesmo valor: o aviso some. Duas montarias seguidas: um aviso só com a soma ("+22 ▲"). Subir de nível: "+66 ▲" (no jogador novo: +60 e +61). Total contando até o valor novo. Aparece por cima do painel aberto (print `v0128_aviso_poder_no_painel.png`).
+- Corrigido 1: o aviso só saía pelo `statsChanged`; item que equipa sozinho, pet e montaria não avisavam. Agora o `hud()` também chama (4x por segundo).
+- Corrigido 2: com isso o aviso se reabria sem parar; agora só age quando a FC mudou desde a última leitura.
+
+Também nesta passada: 7 ícones novos do MENU (arena, guild, tourney, codex, chat, map, mounts) na tabela; níveis do PO para Mapa 1, Códex 12 e Chat 16 (saíram de trás do `NEXT_ON`; dependem só da chave `PANEL_ON`); nomes das habilidades das eras 7 e 8 marcados como aprovados.
+
+NÃO conferido ainda (itens 3 a 6 e pendências): montarias (serpe, pônei, cavalo, tigre; correr, golpe, morte; os 3 ajustes; prints); morte nova do Kael; inimigo parado; era 4 viva e desempenho; efeito da ultimate por raridade; instância, Troca de era, Vitória/Derrota; aviso de poder no Equipar melhor de verdade, na Forja e ao entrar/sair do Modo dono; aviso duplicado com o "FC +N" do agente B; os 7 ícones novos carregando na tela (as telas estão desligadas); missão guia; 360x640. O teste de jogador novo usou o mesmo armazenamento do navegador que a aba do QA: guardei e devolvi o save no fim, mas a aba dela pode ter gravado por cima no meio.

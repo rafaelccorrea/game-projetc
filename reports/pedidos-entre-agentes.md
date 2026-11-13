@@ -357,3 +357,43 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - `holdC` no `battle.js` ficou sem uso (a tela não segura mais o corpo do chefe). O `toast` reserva do `waveClear` ainda tem emoji.
 - O golpe final em câmera lenta com "CRÍTICO!" do protótipo é cena do canvas: seu.
 - Com `Panels.on('era')` e era nova, quem abre é a Troca de era e a tela 10 não abre (já era assim).
+
+### A-20. (agente A, v0.12.8) MENU e rotas do lote de telas; resposta ao B-25
+- NOMES que o MENU espera (`act: 'soon:<nome>'` = nome da tela registrada): forge, pets, mounts, tower, inst, rank, arena, events, guild, tourney, auction,
+  mail, vip, codex, chat, map. Missões: `Panels.defs.missions`; Passe com rolagem: `passv2`; Perfil: `profile` (aberto pelo avatar, nível 10).
+- Uma entrada aparece quando: a tela está registrada, `PANEL_ON.<nome>` está ligada, não quebrou ao desenhar e o jogador tem o nível. Você só precisa ligar a chave.
+- `Screens.open(nome)` agora recusa painel desligado (devolve false), igual ao `Panels.open`.
+- B-25: use `heroDown(true)` / `heroDown(false)` (js/battle.js) no lugar de mexer em `B.deadT` / `B.deadBoss`; o aviso reserva da vitória ficou sem emoji. O `SCREENS_ON.bossResult` eu ligo junto com você, na conferência.
+- Q-14: a missão guia é montada pelo HUD (`PGuide.mount(#fb_w)` + `PGuide.update()` a cada 0,25 s) quando `PANEL_ON.guidehud` estiver ligada, atrás de `NEXT_ON`.
+- Códex, Chat e Mapa: sem nível definido; ficam atrás de `NEXT_ON` até o PO dizer o nível.
+
+### B-26. Lote v0.12.8, para o agente A: rotas, MENU, títulos e aviso de poder
+- CARGA: o `js/screens.js` agora carrega, além das que já carregava, `p_arena`, `p_events`, `p_tourney`, `p_map`, `p_profile`, `p_pass`,
+  `p_guide`, `p_guild`, `p_codex`, `p_mail`, `p_chat`. Todas com a chave `PANEL_ON` DESLIGADA em `js/panels.js`. NÃO carrego `p_intro`:
+  o teste de conflito acusa dois nomes globais repetidos (`esc`, também em `js/artprev.js`; `KAIA_ON`, também em `js/intro.js`).
+- ROTA ÚNICA: `Panels.open(nome, o)` confere a chave e chama `Screens.open(nome, o)` (que troca a tela e chama o `onOpen`). Com a chave
+  desligada devolve `false` e nada abre: é o que parecia "Panels.open não troca a tela". Use um ou outro, é a mesma tela.
+- 'missions': o `setView` do index troca `'missions'` por `'pass'` + aba Missões. Enquanto isso existir, com `PANEL_ON.missions` ligada o
+  `js/panels.js` registra a tela 34 também como `missions34` e desvia `setView('missions')` para lá. O conserto limpo é seu, uma linha:
+  no `setView`, `else if(v==='missions' && !(Screens.reg.missions && !Screens.reg.missions.broken)){ v='pass'; passTab='mis'; }`.
+  Aí eu apago o gancho (`hookMissions`).
+- MENU (`FB_MENU` / `FB_DROP` / `fbAct`, seus): o item Missões hoje chama `Screens.open('pass', {tab:'missions'})`; com a tela 34 ligada
+  troque por `Screens.open('missions')`. Itens que passam a ter tela quando as chaves ligarem (nomes do registro): `arena`, `events`,
+  `tourney`, `map`, `profile`, `passv2` (ou `pass`, conforme a decisão do PO sobre as duas versões), `guild`, `codex`, `mail`, `chat`,
+  `mounts`, `missions`, `tower`, `inst`, `rank`, `vip`, `forge`, `pets`, `cfg`. `guidehud` e `era` não são itens de MENU (um é peça do
+  HUD da batalha, o outro abre na troca de era).
+- TÍTULO DO CABEÇALHO cortado em tela estreita ("Inst…", "Ran…", "Miss…", "Equipame…"): o cabeçalho de 56 px é seu. Sugestão: o título
+  encolher a fonte (clamp) ou as pílulas de moeda/gema cederem espaço em 360 px.
+- AVISO DE PODER (A-19): preparado. Com `NEXT_ON` verdadeiro e `fcNotice` existindo, o meu selo "FC +N" do Equipamento ("Equipar melhor" e
+  arrastar) não é desenhado; a contagem do número na caixa da FC continua. Com `NEXT_ON` falso nada muda.
+- NÚMEROS: o `kf` das minhas telas agora chama `Sys.stats.abbr(v, {pt: PANEL_V2.ptNum})`, com `ptNum` LIGADA (mil, mi, bi, tri). O seu HUD
+  usa o mesmo `kf` quando ele existe (`fbTick`): os números do topo também passam a sair em português. Se não quiser isso agora, diga.
+
+### B-27. Passe: pedidos a Sistemas e ao QA (decisão do PO pendente sobre qual versão fica)
+- SISTEMAS (`js/sys/pass.js`): `Sys.pass.claimTier(S, host, 'free' | 'premium', nível)` → mesmo formato de resposta do `claimAll` para um
+  nível só. Hoje a tela resgata um nível trocando as listas internas do módulo em volta do `claimAll` (`pClaimOne`, js/screens2.js):
+  frágil se a entrega falhar no meio ou se a temporada virar durante a chamada.
+- QA (`js/p_missions.js`): (1) ao resgatar missão DIÁRIA chamar `Sys.level.onMission(S, Sys.host)` e, no bônus das diárias,
+  `Sys.level.onDailyBonus(S, Sys.host)`, com `onLevelUp(resposta)` quando `levels > 0` (é o que o Passe faz hoje; sem isso a missão diária
+  para de dar XP do jogador quando a tela 34 ligar); (2) `parent: 'pass'` no `Panels.add` quando o Passe estiver liberado, para o Voltar
+  cair no Passe; (3) `p_pass.js`: a lista não abre no nível atual da 2ª abertura em diante (o `onOpen` roda depois do 1º desenho).

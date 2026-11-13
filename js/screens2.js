@@ -255,7 +255,10 @@ function pRenew(mt){ const d=new Date(); if(mt==='d'){ const m=new Date(d.getFul
 function passTick(){ const el=document.getElementById('xp_renew'); if(el){ const t=pRenew(XP.mt); if(el.textContent!==t) el.textContent=t; } }
 function scrPass(){
   if(!PASS_OK()){ V.innerHTML=''; return; }
-  const passOk=xUnlocked('pass'); if(!passOk) passTab='mis';   /* antes do nível do Passe (18) o painel é só MISSÕES: sem cabeçalho da temporada, sem aba de recompensas, sem Premium */
+  const passOk=xUnlocked('pass'); if(!passOk) passTab='mis';
+  /* TELA 34 ligada: a lista de missões de dentro do Passe não aparece mais; qualquer caminho que peça Missões (aba antiga, Screens.open('pass',{tab:'missions'}),
+     jogador abaixo do nível do Passe) vai para a tela nova. O Passe fica só com a trilha de prêmios e o XP. */
+  if(passTab==='mis'&&window.Panels&&Panels.on('missions')&&window.Screens&&Screens.reg&&Screens.reg.missions&&!Screens.reg.missions.broken){ passTab='pass'; V.innerHTML=''; setTimeout(()=>{ if(typeof view!=='undefined'&&view==='pass') Panels.open('missions',{tab:XP.mt==='w'?'weekly':'daily'}); },0); return; }   /* antes do nível do Passe (18) o painel é só MISSÕES: sem cabeçalho da temporada, sem aba de recompensas, sem Premium */
   const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
   const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0;

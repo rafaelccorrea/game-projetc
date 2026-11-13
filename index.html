@@ -333,7 +333,7 @@ const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do D
   boots:['Botas de Couro','Grevas de Aço','Botas Rúnicas','Botas do Dragão','Passos Sagrados'], necklace:['Cordão de Osso','Colar de Prata','Amuleto Rúnico','Presa do Dragão','Relicário Sagrado'] };
 const INOUN={hat:'Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asas'}, ERA_MAT=['de Osso','de Bronze','de Aço','da Pólvora','a Vapor','de Kevlar','de Plasma'];
 const WSHAPE=['club','spear','sword','musket','rifle','rifle','energy'];
-const NEXT_ON=false;   /* LOTE v0.12.8 (escrito, ainda NÃO visto rodando): cenário vivo da era 4, morte nova do Kael, inimigo parado animado e luta da instância. Trocar para true na conferência. */
+const NEXT_ON=true;   /* LOTE v0.12.8 (escrito, ainda NÃO visto rodando): cenário vivo da era 4, morte nova do Kael, inimigo parado animado e luta da instância. Trocar para true na conferência. */
 const ERAS=[
  {n:'Pré-História',icon:'🦴',sceneV2:true,sky:['#5aa7d6','#f2c37a'],mtn:'#7a5c3d',gr:'#5a6b2e',gr2:'#7a8a3e',sun:'#fff3c4',
   w:['Graveto Afiado','Clava de Pedra','Lança de Sílex','Machado de Osso','Presa de Mamute'],
@@ -434,7 +434,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
    Em debug, ?res=1 liga só para conferência. */
 const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
-const VERSION='v0.12.7';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+const VERSION='v0.12.8';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
@@ -515,6 +515,7 @@ function recFC(stage){ const e=eraOf(stage), inEra=((stage-1)%STAGES_PER_ERA)+1,
 const FCN={snap:null,base:null,until:0,armed:false,el:null,raf:0};
 function fcNotice(){ if(!NEXT_ON||!window.Sys||!Sys.fc||typeof Sys.fc.snapshot!=='function'||typeof Sys.fc.delta!=='function'||!Sys.host) return;
   let now=null; try{ now=Sys.fc.snapshot(S,Sys.host); }catch(e){ return; } const prev=FCN.snap; FCN.snap=now; if(!prev||!FCN.armed) return;
+  try{ if(!Sys.fc.delta(prev,now).diff) return; }catch(e){ return; }   /* nada mudou desde a última leitura: não reabre nem estica o aviso (a função roda 4x por segundo no hud) */
   const t=Date.now(); if(t>FCN.until||!FCN.base) FCN.base=prev;   /* aviso ainda na tela: soma em cima da mesma base */
   let d=null; try{ d=Sys.fc.delta(FCN.base,now); }catch(e){ return; } if(!d||!d.diff){ if(FCN.el&&t<FCN.until&&d&&!d.diff){ FCN.el.style.display='none'; FCN.until=0; } return; }
   let el=FCN.el; if(!el){ el=FCN.el=document.createElement('div'); el.id='fcnote'; el.setAttribute('role','status'); el.setAttribute('aria-live','polite');
@@ -542,7 +543,7 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 /* batalha: js/battle.js · reserva: js/fallback.js · tutorial/áudio/offline: js/meta.js */
 /* v0.12.2: o layout antigo (HUD de cima, abas de baixo, colunas e botões de habilidade em DOM) foi APAGADO (decisão do PO). O HUD é o da tela cheia
    (js/fullbattle.js). Cópia do código antigo: docs/arquivo/layout-antigo-v0.12.1/ e git 68b1e16. */
-function hud(){ updHudExtra(); hudSys(); syncSpeed(); fbTick(); }
+function hud(){ updHudExtra(); hudSys(); syncSpeed(); fbTick(); fcNotice(); }   /* fcNotice aqui também (4x por segundo): pega a mudança de poder de QUALQUER caminho (item que entra e equipa sozinho, pet, montaria, prática), não só do statsChanged */
 
 /* ================= UI ================= */
 let view='battle';
@@ -609,6 +610,7 @@ const Screens={
   reg:{},
   register(name,def){ if(!name||FULLV[name]&&!this.reg[name]) return false; this.reg[name]=def||{}; FULLV[name]=1; return true; },
   open(name,o){ o=o||{};
+    if(this.reg[name]&&window.Panels&&Panels.defs&&Panels.defs[name]&&typeof Panels.on==='function'&&!Panels.on(name)) return false;   /* painel desligado: Screens.open e Panels.open dão no mesmo (não abre) */
     if(this.reg[name]){ const d=this.reg[name]; setView(name); if(typeof d.onOpen==='function'){ try{ d.onOpen(o); }catch(e){ console.error('Screens.onOpen',e); } } return true; }
     if(name==='pass'||name==='missions'){ passTab=(name==='missions'||o.tab==='missions'||o.tab==='mis')?'mis':'pass'; setView('pass'); }
     else if(name==='progress'||name==='prog'){ if(!SCREENS_ON.progress) return false; if(typeof XR!=='undefined'){ XR.tab=o.tab==='titles'?'tit':'prac'; XR.back=view==='prog'?XR.back:view; } setView('prog'); }
@@ -633,6 +635,7 @@ const PASS_OK = () => !!(window.Sys&&Sys.pass&&Sys.host);
 function ptrack(ev,n){ const v=n==null?1:n;
   if(PASS_OK()){ try{ Sys.pass.track(S,Sys.host,ev,v); }catch(e){} }
   if(window.Sys&&Sys.events&&typeof Sys.events.track==='function'){ try{ Sys.events.track(S,Sys.host,ev,v); }catch(e){} }
+  if(NEXT_ON&&window.Sys&&Sys.guide&&typeof Sys.guide.onEvent==='function'){ try{ Sys.guide.onEvent(S,ev,v);   /* assinatura do módulo: (S, tipo, n) */ }catch(e){} }   /* missão guia: os mesmos eventos do passe */
   if(window.Sys&&Sys.achievements&&typeof Sys.achievements.track==='function'){ try{ Sys.achievements.track(S,Sys.host,ev,v); }catch(e){} }   /* conquistas (módulo desligado por chave: não faz nada até ligarem) */   /* missões do Festival (módulo desligado por chave: a chamada não faz nada até ligarem) */
 }
 /* pedras de forja coletadas (Sys.loot.todayCount) e baús abertos (S.sys.chest.opened): os módulos não avisam, então o jogo compara os contadores */
@@ -715,7 +718,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements','fc'].forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['fc']).forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>

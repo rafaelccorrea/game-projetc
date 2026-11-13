@@ -902,3 +902,21 @@ RECOMENDAÇÃO: ficar com a MINHA (dentro da tela `pass`, `js/screens2.js`) como
   `PANEL_V2`; o botão Missões reconhece a tela 34 também pelo nome provisório `missions34`.
 - Ficam para depois da decisão do PO: tirar os números escritos à mão; apagar a lista de Missões interna, as páginas antigas, o apelido
   'missions' e o `p_pass.js`.
+
+## Bloco 26 (lote v0.12.8): chaves LIGADAS a pedido da coordenação (conferidas pelo QA na aba dele; eu NÃO vi rodando)
+
+`js/panels.js`, ligadas agora: `tower`, `era`, `missions`, `profile`, `codex`, `guild`, `chat`. Já estavam: `forge`, `cfg`, `vip`, `pets`, `rank`.
+Continuam desligadas: `mail` (espera a chave do módulo), `inst` (espera a luta), `mounts` e `result` (minhas, não vistas), `offer`,
+`auction`, `arena`, `events`, `tourney`, `map`, `passv2`, `guidehud`; `eggpick` liga sozinha com `pets`.
+
+Conferido por leitura:
+(a) MENU do agente A: cada item só aparece com `fbUnl(id)` (tabela `FB_UNLOCK`: tower 15, missions 2, codex 12, guild 32, chat 16) e com
+    a tela registrada e não quebrada; o Perfil abre pelo avatar com `fbUnl('profile')` (nível 10), senão o avatar leva ao Equipamento.
+(b) 'missions': o item do MENU chama `Panels.open('missions')` → `Screens.open` → tela 34 (pelo gancho provisório `missions34`, porque o
+    `setView` do index ainda troca 'missions' por 'pass'). O botão "Missões" do meu Passe abre a mesma tela. NOVO: com a tela 34 ligada,
+    a lista antiga de missões dentro do Passe não aparece mais em caminho nenhum: se alguém pedir a aba Missões do Passe (chamadas
+    antigas, ou jogador abaixo do nível 18), o Passe redireciona para a tela 34. O Passe fica só com a trilha.
+    O `p_missions.js` já chama `Sys.level.onMission` / `onDailyBonus` (o defeito do XP do jogador foi tratado pelo QA).
+(c) `node --check` em screens.js, screens2.js, panels.js e em todos os `p_*.js`: ok. `conflitos.js` nas 21 telas carregadas: nenhum conflito.
+    Fumaça: 133 passos, 0 falhas (390x788).
+Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o gancho `missions34` nunca rodaram numa tela de verdade.

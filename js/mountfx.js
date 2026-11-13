@@ -14,10 +14,9 @@ const MOUNT_TBL = {
   pony:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.34, pdx: 0.55, pdy: 9 },
   horse:   { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.40, pdx: 0.66, pdy: 9 },
   wolf:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.70, pdy: 9 },
-  griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.86, pdy: 10, wings: true, wx2: -14, wy2: 26 },
-  mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.86, pdy: 10 },
-  /* wyvern (Serpe dourada): REPROVADA pelo dono (o Kael não senta direito). Fora da tabela = não liga em lugar nenhum; volta quando a Arte corrigir:
-     wyvern: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44 }, */
+  griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 26 },   /* 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
+  mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10 },
+  wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 26 },   /* Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
 };
 const mountOk = () => MOUNTS_ON && typeof Sys !== 'undefined' && !!Sys.mount;
 function mountBoot(){ if (!mountOk()) return; try { Sys.mount.DATA.on = true; Sys.mount.DATA.visual = true; Sys.mount.ensure(S); } catch (e) { console.error('mountBoot', e); } }

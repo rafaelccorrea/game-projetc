@@ -5,7 +5,7 @@
    - Qualquer erro aqui dentro cai para a rede normal: o SW nunca pode quebrar o jogo.
    - Não intercepta: outros domínios, métodos diferentes de GET, pedidos parciais (Range, comuns em áudio) e ?debug=1. */
 'use strict';
-const VERSION = 'v0.12.7';                      // <- aumente a cada publicação que troque arquivos em assets/
+const VERSION = 'v0.12.8';                      // <- aumente a cada publicação que troque arquivos em assets/
 const STATIC_CACHE = 'eonbound-static-' + VERSION;   // assets/ (cache primeiro)
 const PAGE_CACHE = 'eonbound-page-' + VERSION;       // index.html, js, json (rede primeiro)
 const PRECACHE = [                          // pequeno de propósito; o resto entra no cache conforme o jogo pede
