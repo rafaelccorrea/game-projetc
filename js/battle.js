@@ -777,9 +777,11 @@ function fxSpr(name,col){
 const WFIX={};
 const hp = (kind,e,t) => `assets/${kind}/era${e}_t${t}.png`;
 const EN_IDS = era => [`era${era}_e0`,`era${era}_e1`,`era${era}_boss`];
+/* FUNDO ESTÁTICO DE RESERVA (quando o cenário vivo não carrega): assets/bg/era<N>.png; nas eras 7 e 8 o arquivo em disco é era<N>_ref.png (linha do chão em assets/bg/meta.json) */
+const BG_FILE={7:'era7_ref',8:'era8_ref'}, bgPath = era => 'assets/bg/'+(BG_FILE[era]||'era'+era)+'.png';
 function preloadEra(era){
   if(era<0||era>=ERAS.length) return;
-  if(sceneOn(era)) sceneGet(era); else if(!BGS['assets/bg/era'+era+'.png']) IMG(`assets/bg/era${era}.png`); EN_IDS(era).forEach(k=>{ SPR(`assets/enemies/${k}.png`,'enemy'); enPreload(k); });
+  if(sceneOn(era)) sceneGet(era); else if(!BGS[bgPath(era)]) IMG(bgPath(era)); EN_IDS(era).forEach(k=>{ SPR(`assets/enemies/${k}.png`,'enemy'); enPreload(k); });
 }
 function preloadAssets(){
   J('assets/hero/anchors.json'); J('assets/weapons/meta.json'); J('assets/enemies/meta.json'); J('assets/bg/meta.json'); J('assets/fx/meta.json');
@@ -851,7 +853,7 @@ function drawWfx(layer){
 /* ---------- desenho ---------- */
 const BGS={};
 function bgImg(era){
-  const k='assets/bg/era'+era+'.png'; if(BGS[k]) return BGS[k];
+  const k=bgPath(era); if(BGS[k]) return BGS[k];
   const im=IMG(k); if(!im) return null;
   const w=Math.min(1280,im.naturalWidth), h=Math.round(w*im.naturalHeight/im.naturalWidth);
   const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h);
@@ -981,7 +983,7 @@ const EN_RUN={era2_e0:1,era2_e1:1};
 const EN_DIR='assets/anim/hyb/enemy/';
 /* PARA LIGAR UMA ERA NOVA: acrescente o número em EN_ANIM_ERAS (os 12 arquivos <chave>_<run|attack|hurt|die>.png/.json em EN_DIR). Exceção de caminho
    em EN_ANIM_PATH. Se um arquivo faltar ou falhar, aquele estado cai no comportamento sem folha (desliza / avanço curto com inclinação / tomba). */
-const EN_ANIM_ERAS=[0,1,2,3,4,5,6];   // as 7 eras aprovadas (docs/ARTE_APROVADA.md)
+const EN_ANIM_ERAS=[0,1,2,3,4,5,6,7,8];   // as 7 eras aprovadas (docs/ARTE_APROVADA.md) + eras 7 (Submundo) e 8 (Celestial): 12 folhas por era conferidas em disco (test/e2e/eras78.js). Só aparecem quando a tabela ERAS ganhar as eras 7-8 (Sys.eras.extra)
 /* ===== CHAVES DE ARTE (ordem do dono): só fica LIGADO o que ele aprovou. Para ligar um conjunto depois do voto, troque false por true AQUI.
    enemy_<estado>_era<N>: folhas dos inimigos (comuns e chefe da era; o chefe da era 2 tem chave própria na corrida).
    ult_era<N>: ultimate animada (assets/anim/ult). Desligado = provisório aprovado em código (desliza sem quique, ataque no lugar com até 12 px
@@ -1007,7 +1009,8 @@ for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']) for(const st of
 /* QUADRO DO GOLPE/TIRO de cada folha de ataque (contando do 0; medido pela dona da arte: a arma ou o tiro chega mais longe para a esquerda).
    O dano e o projétil saem nesse quadro; a folha toca no fps do .json (12), dentro do intervalo de ataque do balanceamento (que não muda). */
 const EN_HIT_FRAME={ era0_e0:6, era0_e1:6, era0_boss:5, era1_e0:4, era1_e1:6, era1_boss:8, era2_e0:6, era2_e1:8, era2_boss:8, era3_e0:2, era3_e1:1, era3_boss:4,
-  era4_e0:8, era4_e1:5, era4_boss:9, era5_e0:3, era5_e1:3, era5_boss:4, era6_e0:5, era6_e1:5, era6_boss:5 };
+  era4_e0:8, era4_e1:5, era4_boss:9, era5_e0:3, era5_e1:3, era5_boss:4, era6_e0:5, era6_e1:5, era6_boss:5,
+  era7_e0:2, era7_e1:4, era7_boss:8, era8_e0:2, era8_e1:6, era8_boss:6 };   /* eras 7-8: medido nas folhas (1º quadro em que a parte opaca chega mais à esquerda; o mesmo cálculo devolve os valores das eras 5 e 6) */
 const shDur=(sh,def)=>sh&&sh.meta&&sh.meta.frames?sh.meta.frames/(sh.meta.fps||12):def;   // duração real da folha (quadros ÷ fps do .json)
 const enOn=(key,st)=>ART_ON[key+'_'+st]===true;
 const EN_ANIM_PATH={ era2_e0:{run:'assets/anim/era2_e0_run'}, era2_e1:{run:'assets/anim/era2_e1_run'} };
@@ -1121,7 +1124,7 @@ function drawBG(){
   const img=bgImg(era);
   ctx.fillStyle='#14110f'; ctx.fillRect(0,0,LW,LH);
   if(!img){ drawBGOld(); return; }
-  for(const k in BGM) if(k!==String(era)){ delete BGM[k]; delete BGS['assets/bg/era'+k+'.png']; }   // libera a era anterior
+  for(const k in BGM) if(k!==String(era)){ delete BGM[k]; delete BGS[bgPath(k)]; }   // libera a era anterior
   const gm=(J('assets/bg/meta.json')['era'+era]||{}).groundY||0.72, g0=gm+0.05, ar=img.width/img.height;
   const h=GY/g0, w=Math.round(h*ar), m=bgMirror(img,era), off=B.cam%(2*w);
   for(let i=0,x=-off;x<LW;i++,x+=w) ctx.drawImage(i%2?m:img,x,0,w+1,h);

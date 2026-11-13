@@ -26,7 +26,7 @@ function loadImgP(path){ return PRE().get(path).p.then(e => e.ok ? e.img : null)
 function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = opt.era != null ? opt.era : eraOf(S.stage), urls = [], tasks = [], add = u => { if (u && urls.indexOf(u) < 0) urls.push(u); };
   const sheet = s => { if (s && s.base){ add(s.base + '.png'); add(s.base + '.json'); } };
   if (part !== 'hero'){   /* ---- era: cenário, inimigos e chefe ---- */
-    const sc = sceneGet(era); if (sc) tasks.push({ label: 'cenário vivo da era ' + era, p: Promise.resolve(sc.ready).then(() => !sc.fail && !!sc.api && Promise.resolve(sc.api.ready).then(() => true)) }); else { IMG(`assets/bg/era${era}.png`); add(`assets/bg/era${era}.png`); }
+    const sc = sceneGet(era); if (sc) tasks.push({ label: 'cenário vivo da era ' + era, p: Promise.resolve(sc.ready).then(() => !sc.fail && !!sc.api && Promise.resolve(sc.api.ready).then(() => true)) }); else { IMG(bgPath(era)); add(bgPath(era)); }
     if (era < ERAS.length) EN_IDS(era).forEach(k => { add(`assets/enemies/${k}.png`); IMG(`assets/enemies/${k}.png`); enPreload(k); const T = ENEMY_SETS[k]; if (T) for (const st in T) if (enOn(k, st)) sheet(sheetLoad(T[st], true)); }); }
   if (part !== 'era'){    /* ---- herói, arma, montaria, pet, asa, efeitos ---- */
     ['assets/hero/anchors.json', 'assets/weapons/meta.json', 'assets/enemies/meta.json', 'assets/bg/meta.json', 'assets/fx/meta.json'].forEach(p => { J(p); add(p); });

@@ -5,5 +5,7 @@
 "era3_e0":{"name":"Pirata"},"era3_e1":{"name":"Casaca Vermelha"},"era3_boss":{"name":"Capitão Fantasma"},
 "era4_e0":{"name":"Autômato de Latão"},"era4_e1":{"name":"Aranha Mecânica"},"era4_boss":{"name":"Golem a Vapor"},
 "era5_e0":{"name":"Drone Armado"},"era5_e1":{"name":"Mercenário"},"era5_boss":{"name":"Tanque-Robô"},
-"era6_e0":{"name":"Alienígena"},"era6_e1":{"name":"Ciborgue"},"era6_boss":{"name":"Devorador Cósmico"}
+"era6_e0":{"name":"Alienígena"},"era6_e1":{"name":"Ciborgue"},"era6_boss":{"name":"Devorador Cósmico"},
+"era7_e0":{"name":"Diabrete"},"era7_e1":{"name":"Cão Infernal"},"era7_boss":{"name":"Demônio Ceifador"},
+"era8_e0":{"name":"Guardião Alado"},"era8_e1":{"name":"Golem Rúnico"},"era8_boss":{"name":"Arcanjo"}
 }
