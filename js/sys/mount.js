@@ -39,7 +39,7 @@ const DATA={
     {id:'phoenixm',   name:'Fênix gigante',            r:4, nw:true, hatchFrags:400, src:['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)']},
     {id:'blackdragon',name:'Dragão negro',             r:4, nw:true, hatchFrags:400, src:['Torneio: top 3 da temporada (inteiro); top 10 (50 fragmentos)']},
     {id:'celtiger',   name:'Tigre de guerra celestial',r:4, nw:true, hatchFrags:400, minEra:8, src:['Chefe da era 8 (Celestial): 2 fragmentos por dia','Guerra de guildas: capital (40 por temporada)']},
-    {id:'mecha',      name:'Mecha de guerra',          r:4, nw:true, hatchFrags:400, src:['Loja: compra direta (proposta R$ 49,90), inteira — sem sorteio']},
+    {id:'mecha',      name:'Mecha de guerra',          r:4, nw:true, hatchFrags:400, src:['Loja: compra direta, inteira (sem sorteio)']},
   ],
   newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
   newReady:{},

@@ -116,9 +116,9 @@ DATA.fixedGrant=false;
    vitrine, não se obtém (nem no Modo dono) e, se estava equipada num save, o herói volta ao padrão (continua na coleção, sem perda). */
 DATA.skinScale=1;
 const FIXED=[
-  {id:'kael_knight', off:true, name:'Kael Cavaleiro',          hero:'kael', dir:'phase2',      r:3, scale:1, avatar:'kael_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kael_knight', off:true, name:'Kael Cavaleiro',          hero:'kael', dir:'phase2',      r:3, scale:1, avatar:'kael_phase2', mountArt:false, how:'Loja: compra direta ou VIP 6'},
   {id:'kael_legend', off:true, name:'Kael Guerreiro Lendário', hero:'kael', dir:'phase3',      r:4, scale:1, avatar:'kael_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
-  {id:'kaia_knight', off:true, name:'Kaia Cavaleira',          hero:'kaia', dir:'kaia_phase2', r:3, scale:1, avatar:'kaia_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kaia_knight', off:true, name:'Kaia Cavaleira',          hero:'kaia', dir:'kaia_phase2', r:3, scale:1, avatar:'kaia_phase2', mountArt:false, how:'Loja: compra direta ou VIP 6'},
   {id:'kaia_legend', off:true, name:'Kaia Guerreira Lendária', hero:'kaia', dir:'kaia_phase3', r:4, scale:1, avatar:'kaia_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
 ];
 /* SKINS NOVAS NO TAMANHO DO GAROTO (dono, 12/11; 5 a escolher entre Demônio, Anjo, Paladino, Bobo da corte, Ninja, Pirata, Samurai, Ciborgue): mesmas
@@ -139,11 +139,11 @@ DATA.offerSkin={kael:'kael_ninja',kaia:'kaia_ninja'}; DATA.passSkin={kael:'kael_
 for(const k of [
   {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward']},
   {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass']},
-  {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta R$ 24,90', sources:['reward','shop'], product:'skin_kael_paladin', priceBRL:24.90},
+  {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_paladin'},
   {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer']},
   {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada', sources:['reward']},
-  {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta R$ 39,90', sources:['reward','shop'], product:'skin_kael_cyborg', priceBRL:39.90},
-  {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta R$ 24,90', sources:['reward','shop'], product:'skin_kaia_harlequin', priceBRL:24.90},
+  {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_cyborg'},
+  {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kaia_harlequin'},
   {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra', sources:['offer']},
   {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward']},
   {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass']},
@@ -243,8 +243,9 @@ const outfitStatus=id=>FULL_SKIN(id)?{outfit:true,active:DATA.outfitCombosOn===t
 /* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
    desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
 function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
-/* loja: skins de compra direta (produtos do Play: 'skin_' + id = skin_kael_paladin, skin_kaia_harlequin, skin_kael_cyborg) */
-const skinProducts=S=>FIXED.filter(k=>k.product&&k.off!==true).map(k=>({productId:k.product,id:k.id,name:k.name,hero:k.hero,priceBRL:k.priceBRL,on:DATA.skinsOn===true,art:k.art!==false,owned:!!(S&&fixedState(S).owned.includes(k.id)),available:!S||fitsHero(k,heroOf(S))}));
+/* loja: skins de compra direta (produtos do Play: 'skin_' + id = skin_kael_paladin, skin_kaia_harlequin, skin_kael_cyborg). SEM preço aqui:
+   o preço da tela vem do Sys.buy.priceText(productId) (servidor/Play), e só quando a venda valer. */
+const skinProducts=S=>FIXED.filter(k=>k.product&&k.off!==true).map(k=>({productId:k.product,id:k.id,name:k.name,hero:k.hero,on:DATA.skinsOn===true,art:k.art!==false,owned:!!(S&&fixedState(S).owned.includes(k.id)),available:!S||fitsHero(k,heroOf(S))}));
 const API={DATA,FIXED,addFixed,skinProducts,fixedSkins,grantFixed,equipFixed,fixedEquipped,fixedPct,avatarKey,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;

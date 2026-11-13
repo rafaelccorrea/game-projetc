@@ -1068,7 +1068,7 @@ t('Sys.newDrops (itens novos aprovados): desligado não dá nada; ligado entrega
     const L=lv(newS(),30), hl=makeHost({level:30,eraMax:4}); hl.addItem=it=>items.push(it); assert.ok(N.grant(L,hl,'arena:season',{league:4}).got.find(g=>g.kind==='wing').held);
     assert.strictEqual(N.releaseHeld(L,makeHost({level:30})).length,0); lv(L,55); const lh=makeHost({level:55,eraMax:4}); lh.addItem=it=>items.push(it); assert.strictEqual(N.releaseHeld(L,lh).length,1);
     assert.strictEqual(N.wingTypeForDrop(3,1,0),'darkmoth'); assert.strictEqual(N.wingTypeForDrop(1,1,0),'angel');
-    assert.ok(N.shop()[0].priceBRL===49.9&&N.shop()[0].on); assert.ok(N.table().length>=30);
+    assert.ok(N.shop()[0].productId==='mount_mecha'&&N.shop()[0].on&&N.shop()[0].priceBRL===undefined,'sem preço no módulo (vem do Sys.buy)'); assert.ok(N.table().length>=30);
     const g=lv(newS(),120); assert.strictEqual(T.DATA.wingTypes.seraph.r,4);
     const low=lv(newS(),30), hlow=makeHost({level:30,eraMax:2}); const gx=N.grant(low,hlow,'tourney:season',{rank:2}).got.find(x=>x.kind==='pet'); assert.ok(gx.gated&&gx.stored&&!P.ensure(low).owned.icedragon,'portão de raridade: Lendário guardado no Nv 30');
     lv(low,120); N.releaseHeld(low,makeHost({level:120,eraMax:8})); assert.ok(P.ensure(low).owned.icedragon,'nasce quando o portão abre'); N.grant(g,h,'tourney:season',{rank:1}); assert.ok(items.some(i=>i.wing==='seraph')); assert.ok(P.ensure(g).owned.icedragon&&M.ensure(g).owned.blackdragon);

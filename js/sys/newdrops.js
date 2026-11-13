@@ -50,7 +50,7 @@ const DATA={
                       {when:c=>c.productId==='skin_kael_cyborg', skin:{kael:'kael_cyborg'}, any:true}],
   },
   // loja: compra DIRETA (Sys.buy entrega pelo servidor; aqui só o catálogo e a entrega local)
-  shop:[{productId:'mount_mecha', name:'Mecha de guerra', kind:'mount', id:'mecha', priceBRL:49.90}],
+  shop:[{productId:'mount_mecha', name:'Mecha de guerra', kind:'mount', id:'mecha'}],   // preço: Sys.buy.priceText(productId), nunca aqui
   dupFrags:10,
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;

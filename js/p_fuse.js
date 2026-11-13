@@ -77,7 +77,10 @@ function uStop(){ clearTimeout(XU.t1); XU.busy=false; XU.fx=null; }
 const uTouch=d=>Math.max(44,Math.ceil(44/(d.s||1)-1e-6));
 
 /* ---------- grupos de itens iguais (espaço, era de poder, raridade, estrelas) ---------- */
-const uKey=it=>it.slot+'|'+(it.e|0)+'|'+(it.r|0)+'|'+uSt(it);
+/* F5 (QA): arma agrupa também pela FAMÍLIA (Sys.stats.weaponType = it.wt): 3 iguais = mesma família (o canFuse exige) */
+const uFam=it=>{ if(!it||it.slot!=='weapon') return ''; try{ return Sys.stats.weaponType(it)||''; }catch(e){ return ''; } };
+const uFamName=it=>{ const k=uFam(it); if(!k) return ''; try{ return Sys.stats.DATA.weaponTypes[k].name||''; }catch(e){ return ''; } };
+const uKey=it=>it.slot+'|'+(it.e|0)+'|'+(it.r|0)+'|'+uSt(it)+'|'+uFam(it);
 function uGroups(){ const G={}; if(!uQOn()) return [];
   for(const it of (S.inv||[])){ if(!it||!SLOT[it.slot]) continue; const st=uSt(it); if(st>=uMaxSt()) continue;   /* 5 estrelas não funde */
     const k=uKey(it); (G[k]=G[k]||{k,slot:it.slot,e:it.e|0,r:it.r|0,st,items:[]}).items.push(it); }
@@ -90,7 +93,7 @@ function uPicked(){ return XU.pick.map(id=>itemOf(id)).filter(Boolean); }
 /* prévia: o próprio canFuse; com ouro insuficiente, de novo com um host que não barra o ouro (só para mostrar o resultado) */
 function uPlan(items){ const c=Sys.stats.canFuse(S,Sys.host,items); if(c.ok||c.reason!=='money') return {c,res:c.result||null,gold:c.gold};
   const p=Sys.stats.canFuse(S,Object.assign({},Sys.host,{canSpendGold:()=>true}),items); return {c,res:p.result||null,gold:c.gold!=null?c.gold:p.gold}; }
-const uWhy=c=>c.reason==='money'?'Ouro insuficiente':c.reason==='max'?'5 estrelas não funde':c.reason==='different'?'Itens diferentes':c.reason==='off'?'Em breve':'Escolha 3 itens';
+const uWhy=(c,items)=>c.reason==='money'?'Ouro insuficiente':c.reason==='max'?'5 estrelas não funde':c.reason==='different'?((items&&items.length&&new Set(items.map(uFam)).size>1)?'Famílias diferentes':'Itens diferentes'):c.reason==='off'?'Em breve':'Escolha 3 itens';
 
 /* ---------- miniatura do item (moldura da raridade do js/screens.js) ---------- */
 function uThumb(it,s){ const q=xRar(it), img=`<img src="${slotIcon(it.slot,ieraV(it))}" alt="" style="width:${Math.round(s*.78)}px;height:${Math.round(s*.78)}px;object-fit:contain">`;
@@ -117,7 +120,7 @@ function uList(d){ const G=uGroups();
       <span class="lil" style="position:absolute;top:4px;right:6px;font-size:14px;color:#ffc94a">×${g.items.length}</span>
       ${uStars(g.st,12)}
       <span style="max-width:100%;font-size:11px;font-weight:900;color:${xRarT(it)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(nm)}</span>
-      <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(SLOT[g.slot].n)} · ${esc2(uEraName(g.e))}</span></button>`; }).join('');
+      <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(uFamName(it)||SLOT[g.slot].n)} · ${esc2(uEraName(g.e))}</span></button>`; }).join('');
   return `<div style="margin:0 12px;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.25">3 itens iguais viram 1 com +1 estrela. Toque num grupo.</div>
     <div role="list" aria-label="Grupos que podem fundir" style="margin:0 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">${cells}</div>`; }
 
@@ -142,7 +145,7 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
     if(R){ let sw=0; try{ sw=Sys.fc.itemFC(S,Sys.host,R).swap; }catch(e){ sw=0; } const dl=Sys.fc&&Sys.fc.delta?Sys.fc.delta(0,sw):null, ba=uBA(sw);
       fcRow=`<div style="display:flex;flex-direction:column;gap:1px;font-size:12px;font-weight:900"><span style="color:#c9b9a2">${anyEq?'FC depois de fundir (fica equipado)':'FC se equipar o resultado'}</span>
         <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>${esc2(ba.b)}</span>${U_ARROW.replace(/22/g,'16')}<span class="lil" style="font-size:16px;color:${dl?dl.color:'#c9b9a2'}">${esc2(ba.a)}</span><span style="color:${dl?dl.color:'#c9b9a2'}">(${dl&&dl.text?esc2(dl.text):'sem mudança'})</span></span></div>`; }
-    const label=XU.busy?'Fundindo...':c.ok?'Fundir':uWhy(c);
+    const label=XU.busy?'Fundindo...':c.ok?'Fundir':uWhy(c,picked);
     card=`<div style="${U_CARD}">
       ${R?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${uStars(c.fromStars||g.st,16)}${U_ARROW}${uStars(R?uSt(R):g.st+1,18)}</div>
       <div style="display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:900">
@@ -150,7 +153,7 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
         <div style="display:flex;justify-content:space-between"><span style="color:#c9b9a2">Nível (o maior dos 3)</span><span>Nv. ${R.lvl}</span></div>
         ${fcRow}</div>
       <span style="font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">O ouro investido dos 3 fica no resultado; visual e secundários vêm do de maior qualidade.${anyEq?' O resultado entra equipado no lugar.':''}</span>`
-      :`<span style="font-size:13px;font-weight:800;color:#c9b9a2">${esc2(uWhy(c))}</span>`}
+      :`<span style="font-size:13px;font-weight:800;color:#c9b9a2">${esc2(uWhy(c,picked))}</span>`}
       <div style="display:flex;align-items:center;gap:10px">
         <div style="display:flex;flex-direction:column;line-height:1.15;width:112px;flex:none">
           <span style="font-size:11px;font-weight:800;color:#c9b9a2">Custo</span>
@@ -159,7 +162,7 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
         <button class="lil ${okGo?'fu-gold fu-pulse':''}" data-x="fuse" aria-disabled="${!okGo}" aria-label="${esc2(label)}" style="flex:1;height:56px;border-radius:16px;font-size:${label.length>14?17:21}px;padding:0;${okGo?'':U_OFF}">${esc2(label)}</button></div></div>`; }
   else card=`<div style="${U_CARD};align-items:center;text-align:center"><span style="font-size:13px;font-weight:800;color:#c9b9a2">Escolha mais ${need-picked.length} ${need-picked.length===1?'item':'itens'} na lista abaixo.</span></div>`;
   const it0=g.items[0];
-  return `<div style="display:flex;align-items:center;gap:8px;margin-right:12px">${back.replace('align-self:flex-start;','flex:none;')}<div style="min-width:0;display:flex;flex-direction:column;line-height:1.2"><span style="font-size:13px;font-weight:900;color:${xRarT(it0)};overflow-wrap:anywhere">${esc2(iname(it0))}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">${esc2(SLOT[g.slot].n)} · ${esc2(RN(g.r))} · ${esc2(uEraName(g.e))}</span></div></div>
+  return `<div style="display:flex;align-items:center;gap:8px;margin-right:12px">${back.replace('align-self:flex-start;','flex:none;')}<div style="min-width:0;display:flex;flex-direction:column;line-height:1.2"><span style="font-size:13px;font-weight:900;color:${xRarT(it0)};overflow-wrap:anywhere">${esc2(iname(it0))}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">${esc2(uFamName(it0)?SLOT[g.slot].n+' · '+uFamName(it0):SLOT[g.slot].n)} · ${esc2(RN(g.r))} · ${esc2(uEraName(g.e))}</span></div></div>
     ${stage}${card}
     <div style="margin:0 12px;font-size:12px;font-weight:900;color:#c9b9a2">Itens iguais (${g.items.length}) · toque para pôr ou tirar da vaga</div>
     <div role="group" aria-label="Itens do grupo" style="margin:0 12px;display:flex;flex-wrap:wrap;gap:6px">${pool}</div>`; }
@@ -240,7 +243,7 @@ function uMake(res,best){ let it; try{ it=typeof normItem==='function'?normItem(
   it.id=S.nextId++; it.gotAt=Date.now(); it.nw=1; try{ Sys.stats.ensureSubs(it); }catch(e){} return it; }
 function uFuse(){
   const items=uPicked(), H=Sys.host, c=Sys.stats.canFuse(S,H,items);
-  if(!c.ok){ snd('ui_tap'); uToast(c.reason==='money'?needMsg('gold',c.gold):c.reason==='max'?'5 estrelas não funde':c.reason==='off'?'A fusão abre em breve':c.reason==='different'?'Os 3 precisam ser iguais':'Escolha 3 itens'); return; }
+  if(!c.ok){ snd('ui_tap'); uToast(c.reason==='money'?needMsg('gold',c.gold):c.reason==='max'?'5 estrelas não funde':c.reason==='off'?'A fusão abre em breve':c.reason==='different'?(new Set(items.map(uFam)).size>1?'Os 3 precisam ser da mesma família':'Os 3 precisam ser iguais'):'Escolha 3 itens'); return; }
   const slot=items[0].slot, wasEq=items.some(uIsEq), best=items.slice().sort((x,y)=>uQp(y)-uQp(x))[0]; let made=null, rr=null;
   const run=()=>{ const r=Sys.stats.fuse(S,H,items); rr=r; if(!r||!r.ok) return r;
     const it=uMake(r.result,best), gone=r.consumed||items.map(x=>x.id);
