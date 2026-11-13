@@ -5,12 +5,12 @@
    perks(S,host) → multiplicadores ativos (ouro, drop, ração, forja, pontos de arena) para os módulos donos lerem, como o VIP.
    RELÓGIO: local = relógio do aparelho com TRAVA (nunca volta: se o relógio andar para trás, vale o maior já visto; adiantar abre o evento, mas a
    entrada fica registrada pela janela e não repete). Com servidor: setServerTime(msDoServidor, host) e a hora passa a ser a do servidor.
-   Prêmios SEM diamante. Números = PROPOSTA para o dono aprovar. CHAVE DESLIGADA (DATA.on=false). Estado: S.sys.schedule. Sem DOM. */
+   Prêmios SEM diamante. Agenda APROVADA pelo dono (12/11). Chave DATA.on (ligada). Estado: S.sys.schedule. Sem DOM. */
 (function(root){
 'use strict';
 const ALL=[0,1,2,3,4,5,6];   // getDay(): 0 = domingo
 const DATA={
-  on:false, tzOffsetMin:-180, noticeMin:10, backTolerMin:2,
+  on:true, tzOffsetMin:-180, noticeMin:10, backTolerMin:2,   // LIGADO: o dono aprovou a agenda de 6 eventos como proposta (12/11)
   events:[
     {id:'world_boss', name:'Chefe Mundial', icon:'boss', level:24, days:ALL, at:[[12,0],[20,0]], durMin:30, entries:2,
      what:'Um chefe gigante para todos atacarem juntos (online); por enquanto, cada um contra o seu. 2 ataques por janela.',

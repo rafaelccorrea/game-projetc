@@ -7,7 +7,7 @@ let n=0; const t=(name,fn)=>{ try{ fn(); n++; }catch(e){ console.error('FALHOU:'
 const BRT=(y,mo,d,h,mi)=>Date.UTC(y,mo-1,d,h+3,mi||0);   // hora de Brasília (UTC−3) → ms UTC
 const host=ms=>{ const h=makeHost(); h.t=ms; h.level=()=>40; return h; };
 
-t('desligado: nada abre',()=>{ assert.deepStrictEqual(SC.active({},host(BRT(2026,11,13,12,5))),[]); assert.strictEqual(SC.next({},host(Date.now())),null); assert.strictEqual(SC.canEnter({},host(0),'world_boss').reason,'off'); });
+t('desligado: nada abre',()=>{ SC.DATA.on=false; assert.deepStrictEqual(SC.active({},host(BRT(2026,11,13,12,5))),[]); assert.strictEqual(SC.next({},host(Date.now())),null); assert.strictEqual(SC.canEnter({},host(0),'world_boss').reason,'off'); });
 SC.DATA.on=true;
 t('janelas em Brasília: Chefe Mundial às 12h e 20h (30 min), Hora de Ouro 19-20h, fim de semana sáb 10h → dom 22h',()=>{
   const S={}; let h=host(BRT(2026,11,13,12,10));   // sexta 12:10
