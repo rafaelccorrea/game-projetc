@@ -80,7 +80,7 @@ function addXp(S,n,host,src){
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }
   if(o.lvl>=DATA.maxLevel) o.xp=0;
   const unlocked=Object.keys(DATA.unlock).filter(f=>f!=='pet'&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl);
-  if(o.lvl>from&&host&&host.toast) host.toast(`⭐ Nível ${o.lvl}!${unlocked.length?' Liberou: '+unlocked.map(f=>DATA.unlockName[f]||f).join(', '):''}`);
+  if(o.lvl>from&&host&&host.toast) host.toast(`Nível ${o.lvl}!${unlocked.length?' Liberou: '+unlocked.map(f=>DATA.unlockName[f]||f).join(', '):''}`);
   return {gained:k,levels:o.lvl-from,from,to:o.lvl,unlocked};
 }
 const eraMul=host=>1+DATA.xp.eraScale*eraMaxOf(host);

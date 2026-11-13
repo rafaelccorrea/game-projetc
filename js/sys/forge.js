@@ -130,7 +130,7 @@ function render(el,S,host,opt){
   el.onclick=ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b||b.disabled) return;
     if(b.dataset.pg){ el.__sysForgePage=pg+Number(b.dataset.pg); render(el,S,host,opt); return; }
     const r=attempt(S,host,b.dataset.slot); if(!r.ok) return;
-    el.__sysForgeMsg=r.success?`✅ ${DATA.slotName[r.slot]} +${r.lv}!`:`❌ Falhou (${r.chance}%). Próxima: ${chance(S,r.slot)}%`;
+    el.__sysForgeMsg=r.success?`${DATA.slotName[r.slot]} +${r.lv}!`:`Falhou (${r.chance}%). Próxima: ${chance(S,r.slot)}%`;
     if(host&&host.toast) host.toast(el.__sysForgeMsg); changed(host); render(el,S,host,opt); };
 }
 

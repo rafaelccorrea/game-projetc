@@ -437,7 +437,7 @@ function render(el,S,host,opt){
     <div class="sys-pet-msg">${esc(msg)||'O nível é do espaço: trocar de pet não perde a ração investida.'}</div>
   </div>`;
   el.onclick=ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b||b.disabled) return;
-    if(b.dataset.feed){ const r=feed(S,host,1); if(r.ok){ el.__sysPetMsg=`🍖 Nível do pet ${r.lvl}`; changed(host); } }
+    if(b.dataset.feed){ const r=feed(S,host,1); if(r.ok){ el.__sysPetMsg=`Nível do pet ${r.lvl}`; changed(host); } }
     else if(b.dataset.gc){ const seq=['auto','golem','phoenix']; setGolemChoice(S,seq[(seq.indexOf(o.golemChoice)+1)%3]); changed(host); }
     else if(b.dataset.id&&equip(S,b.dataset.id)){ el.__sysPetMsg=`${BY[b.dataset.id].icon} ${BY[b.dataset.id].name} equipado`; changed(host); }
     render(el,S,host,opt); };

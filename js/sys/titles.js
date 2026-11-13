@@ -150,7 +150,7 @@ function check(S,host,opt){
   for(const t of DATA.titles){ if(o.unlocked[t.id]) continue; if(progress(S,host,t).done){ o.unlocked[t.id]=nowOf(host); fresh.push(t); } }
   if(fresh.length){
     if(!o.featured){ const best=fresh.filter(t=>!t.cosmetic).pop()||fresh[fresh.length-1]; o.featured=best.id; }
-    if(!silent&&host&&host.toast) host.toast(fresh.length===1?`🎖️ Novo título: ${fresh[0].name}`:`🎖️ ${fresh.length} novos títulos!`);
+    if(!silent&&host&&host.toast) host.toast(fresh.length===1?`Novo título: ${fresh[0].name}`:`${fresh.length} novos títulos!`);
   }
   return fresh;
 }
@@ -205,7 +205,7 @@ function render(el,S,host,opt){
   </div>`;
   el.onclick=ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b||b.disabled) return;
     if(b.dataset.pg){ el.__sysTitPage=pg+Number(b.dataset.pg); render(el,S,host,opt); return; }
-    if(b.dataset.id&&o.featured!==b.dataset.id&&setFeatured(S,b.dataset.id)){ if(host&&host.toast) host.toast(`★ Destaque: ${BY[b.dataset.id].name}`); changed(host); render(el,S,host,opt); } };
+    if(b.dataset.id&&o.featured!==b.dataset.id&&setFeatured(S,b.dataset.id)){ if(host&&host.toast) host.toast(`Destaque: ${BY[b.dataset.id].name}`); changed(host); render(el,S,host,opt); } };
 }
 
 const API={DATA,ensure,current,progress,need,seenWeapons,check,setFeatured,isUnlocked,featured,onKill,onWaveClear,onBossKill:onWaveClear,bonus,bonusText,condLabel,advice,render};

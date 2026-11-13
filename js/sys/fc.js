@@ -7,7 +7,8 @@
 
 /* ---------------- dados (balanceamento) ---------------- */
 const DATA={
-  wAtk:5,          // peso do ATK na FC (no jogo o HP base é ~5x o ATK: 100 x 5 + 8 x 40 por raridade)
+  viewOn:false,    // escala de EXIBIÇÃO da FC (×VIEW.k); desligada = FC real na tela. O engenheiro liga quando todas as telas usarem viewText
+  wAtk:5,         // peso do ATK na FC (no jogo o HP base é ~5x o ATK: 100 x 5 + 8 x 40 por raridade)
   wHp:1,           // peso do HP
   wDef:5,          // peso da DEF plana na parte de vida (colete Básico era 0: 4 DEF ≈ 20 de HP). PROVISÓRIO: a v7 calibra.
   baseCrit:12,     // chance de crítico do próprio jogo, em pontos % (BAL.critChance = 0.12)
@@ -42,8 +43,12 @@ const sysRoot=()=>root.Sys||{};
 /* ESCALA DE EXIBIÇÃO DA FC (ordem do dono: o jogador SENTE o poder crescer rápido; Nv 20 ≈ 700 mil). SÓ VISUAL: o equilíbrio, a curva, as lutas e as
    comparações usam a FC real. Constante ÚNICA (não cresce com o nível) para que jogador × recomendado × ranking × inimigo fiquem na MESMA escala.
    Toda tela que mostra FC usa view()/viewText(); o +/− do delta já sai na escala. Atributos (ATK/Vida) seguem reais. */
+/* CHAVE ÚNICA Sys.fc.DATA.viewOn (pedido do engenheiro): desligada, view() devolve a FC REAL e nada muda na tela; cada sessão troca as suas telas
+   para viewText() sem efeito visível e o engenheiro liga tudo de uma vez quando a varredura fechar. Abreviação = Sys.stats.abbr (K/M/B, ou
+   mil/mi/bi com a chave ptNum): o MESMO padrão de moedas e dano. */
 const VIEW={k:31};
-const view=fc=>Math.round(num(fc,0)*VIEW.k);
+const viewK=()=>DATA.viewOn===true?VIEW.k:1;
+const view=fc=>Math.round(num(fc,0)*viewK());
 const viewText=fc=>fmt(view(fc));
 function fmt(n){ const T=sysRoot().stats; if(T&&typeof T.abbr==='function') return T.abbr(n).replace('−','-');
   n=num(n,0); const a=Math.abs(n), s=n<0?'-':'';

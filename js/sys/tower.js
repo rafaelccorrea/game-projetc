@@ -212,8 +212,8 @@ function render(el,S,host,opt){
   el.onclick=ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b||b.disabled) return;
     const r=fight(S,host); if(!r.ok) return;
     const rw=r.rewards||{}, h=rw.hatched;
-    el.__sysTowMsg=r.win?`✅ Andar ${r.floor} vencido!${rw.gems?` +${rw.gems}💎`:''}${h?(h.isNew?` Novo pet: ${h.name}!`:` ${h.name} repetido: +${h.frags} fragmentos`):''}`
-      :`❌ Derrota no andar ${r.floor} (inimigo com ${Math.round(r.duel.hpB*100)}% de vida)`;
+    el.__sysTowMsg=r.win?`Andar ${r.floor} vencido!${rw.gems?` +${rw.gems} diamantes`:''}${h?(h.isNew?` Novo pet: ${h.name}!`:` ${h.name} repetido: +${h.frags} fragmentos`):''}`
+      :`Derrota no andar ${r.floor} (inimigo com ${Math.round(r.duel.hpB*100)}% de vida)`;
     if(host&&host.toast) host.toast(el.__sysTowMsg); changed(host); render(el,S,host,opt); };
 }
 
