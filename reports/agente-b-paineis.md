@@ -1159,3 +1159,33 @@ Conflitos de nomes: nenhum; `run.js` "TUDO OK" (148); `flows.js` "fluxos duros O
 que existe e a âncora: Kael = `R/kael_idle_era2_t0.png` + `R/kael_idle_body.json`; Kaia = `kaia/kaia_idle_body.png` + `kaia/kaia_idle_body.json`
 (a reserva passou a ser do herói do save, não mais sempre o Kael). `need()` aceita os caminhos declarados em vez de deduzir `<base>.json`.
 `test/paineis/avatar.crop.js`: confere que todo caminho escrito no avatar.js existe em disco e que a folha da reserva bate com a grade do .json.
+
+## Bloco 44 (Painéis 2, sem navegador): telas das conveniências do VIP
+
+Regra seguida: nenhum nível de VIP nem valor escrito à mão; tudo vem de `Sys.vip.conv(S,id)` / `convTable()` / `VipAuto.state(S)`. Com `Sys.vip.DATA.convOn`
+desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP sobe com o total gasto na Loja." e o caminho é "Ir à Loja".
+`autoEquip` NÃO tem interruptor nem cadeado (decisão do dono: equipar o melhor sozinho é de todos); o id é ignorado.
+
+- MOCHILA (`js/screens.js`): `xBagMax()` = `bagMax()` com reserva em `BAG_MAX`; usado no contador do Equipamento e na recusa de compra da Loja
+  (os dois únicos usos). Ao lado do contador, chip trancado com o próximo degrau (`xBagNext()`: "VIP 1: +20", depois "VIP 6: +40", some no maior);
+  o toque explica pelo aviso do Equipamento.
+- AUTOMÁTICO (`js/screens.js`, lugar único: Equipamento, linha "Automático" abaixo do paginador da mochila): mostra "N ligados" / "desligado" ou o
+  cadeado com o menor "VIP n" quando tudo está trancado. Abre um quadro (`gAuto`) com "Desmanchar ao pegar: Básico" e "Raro" (autoSell0/autoSell1) e
+  "Fundir 3 iguais sozinho" (só com `VipAuto.state(S).autoFuse.available`). Cada toque chama `VipAuto.setPref`; recusa por nível mostra o `lockText`
+  e a explicação dentro do quadro; `reason:'off'` e outros motivos têm aviso curto. Linha de ajuda: "O desmanche vale só para itens novos e nunca
+  toca no equipado." Com algo trancado: "Ir à Loja" (aba de gemas quando liberada). O quadro fecha ao sair do Equipamento (`scrTick`).
+- FORJA AUTOMÁTICA (`js/p_forge.js`, cartão "Fortalecer +N"): seletor de alvo (− / +N / +, de n+1 até o teto da era) e "Forjar até +N". Repete o
+  MESMO `fForge` do botão comum (mesmo `Sys.forge.attempt`, custos, sons, avisos, gravação), um passo por vez (martelo 0,45 s + 0,55 s de resultado),
+  mostra "Forjando até +N · agora +n · tentativas, acertos" com "Parar"; no fim um resumo (motivo, +de → +até, tentativas, acertos, pedras e ouro).
+  Para ao chegar no alvo (nunca passa), sem pedra, sem ouro, no teto, ou no "Parar"; os outros toques não valem enquanto roda. Sem o nível: linha
+  trancada "Forjar até o nível escolhido" + cadeado com o `lockText`; o toque só explica.
+- TETO DO OFFLINE: nenhum arquivo meu mostra "8 h" nem o teto (varredura feita); nada a trocar.
+- Testes novos: `test/paineis/vipconv.tests.js` (9 testes, carregado pelo `smoke.js`): contador e chip por nível, Loja recusa pelo `bagMax`,
+  trancado não liga, liga/desliga pelo `setPref`, sem `autoEquip`, "Ir à Loja", forja trancada não forja, alvo entre mínimo e teto, laço até o alvo
+  com o resumo batendo com o `Sys.forge` (tentativas, pedras, ouro), Parar, falta de pedra.
+- ACHADO que não é meu: `smoke_all.js` sai com código 1 por "ERRO em timer: this.root.style.setProperty is not a function" (`js/p_intro.js:142`,
+  `boot` → `open` → `fit` no DOM falso do teste); acontece igual sem os meus testes (conferido com uma cópia sem a linha nova).
+- Resultados: `node --check` nos arquivos editados OK; `conflitos.js js/p_*.js` sem conflito; `run.js` "TUDO OK (154 verificações)"; `smoke.js` 390: 162 OK,
+  0 falha; `smoke_all.js` 390 e 288: 169 OK, 0 FALHA, mais o erro de timer do p_intro acima; `flows.js`: fluxos 1, 2, 3 e 5 OK, fluxo 4 FALHA (35/36,
+  "vitrine: as 10 skins aprovadas em breve (sem arte)"): vem da skin Kaia Arlequina com arte (commit 6e7a137, `Sys.appearance`), não destes arquivos.
+- Largura 288: a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.

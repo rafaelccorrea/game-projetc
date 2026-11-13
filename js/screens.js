@@ -7,6 +7,7 @@
 const RC=['#e8e2d8','#4aa3ff','#b07cff','#ff5a5a','#ffc94a'], RT=['#3a352e','#1c3550','#35234f','#4f1f1f','#4f3a12'];
 const RN=i=>RAR[i]?RAR[i].n:'';
 const BAG_MAX=60, FULL_VIEWS={gear:1,summon:1,shop:1,pass:1,prog:1};
+const xBagMax=()=>typeof bagMax==='function'?bagMax():BAG_MAX;   /* limite da mochila com o bônus do VIP (js/vipauto.js); BAG_MAX é só a base/reserva */
 /* CHAVES POR TELA (agente B, painéis iguais ao protótipo): false = volta ao comportamento anterior daquela parte, sem mexer no resto.
    fit = encolher a tela até caber o arranjo completo do protótipo (2 fileiras de mochila, 2 de skins, 5 níveis do passe) em vez de cortar linhas;
    real = LAYOUT NOVO dos protótipos convertidos (v0.12.2): tamanho real (sem escala), largura até 600 px centrada, o conteúdo ROLA quando falta altura
@@ -324,6 +325,7 @@ function softRender(){ if(!FULL_VIEWS[view]){ render(); return; }
   if(view==='summon'&&XS.phase!=='idle') return; if(view==='gear'&&(XG.tw||XG.cf||XG.fly||XG.drag)) return; if(view==='shop'&&(XH.sel||XH.cf)) return; if(view==='pass'&&XP.cf) return; if(view==='prog'&&XR.busy) return; { const pd=window.Panels&&Panels.cur(); if(pd&&pd.busy&&pd.busy()) return; } render(); }
 function scrTick(){   // 4x por segundo (updHudExtra): relógios das telas
   if(window.SHOP_RETURN&&view!=='shop'&&view!==window.SHOP_RETURN) window.SHOP_RETURN=null;   /* VIP → Loja → VIP: a marca só vale enquanto a Loja está aberta */
+  if(XG.auto&&view!=='gear'){ XG.auto=false; XG.autoMsg=''; }   /* o bloco "Automático" não fica aberto para a próxima visita ao Equipamento */
   if(FULL_VIEWS[view]) xHeadTick(); { const pd=window.Panels&&Panels.cur(); if(pd){ if(pd.tick) pd.tick(); return; } }
   if(view==='summon'){ const el=document.getElementById('xs_free'); if(el) el.textContent=midnightLeft(); else if(XS.phase==='idle'&&!document.getElementById('xs_freebtn')&&Sys.loot.summonFreeLeft(S,Sys.host)>0) render(); }
   else if(view==='shop'){ if(S.shop&&S.shop.date!==todayKey()){ render(); return; } const el=document.getElementById('xh_cd'); if(el) el.textContent=midnightLeft(); }
@@ -396,6 +398,8 @@ function scrGear(){
     ||`<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:58px;font-size:13px;font-weight:800;color:#c9b9a2">Nenhum item neste espaço ainda. Invoque ou derrote chefes.</div>`;
   const best=gBest(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XG.page?22:8}px;height:8px;border-radius:4px;background:${i===XG.page?'#ffc94a':'#4a3a2b'};transition:width .2s"></span>`).join('');
   const selIt=XG.sel!=null?itemOf(XG.sel):null; if(XG.sel!=null&&!selIt) XG.sel=null;
+  /* conveniências do VIP: chip do próximo bônus de mochila e a entrada "Automático" (trancada mostra o menor "VIP n" que falta; ligada conta as preferências) */
+  const bagNext=xBagNext(), autoRows=gAutoRows(), autoOn=autoRows?autoRows.filter(r=>r.on).length:0, autoLock=autoRows&&autoRows.every(r=>r.locked)?autoRows.slice().sort((a,b)=>a.need-b.need)[0].lockText:'';
   const sc0=document.getElementById('xg_sc'), scTop=sc0?sc0.scrollTop:0, gain=tw&&tw.big&&tw.to.fc>tw.from.fc+0.5&&!(typeof NEXT_ON!=='undefined'&&NEXT_ON&&typeof fcNotice==='function')?tw.to.fc-tw.from.fc:0;   /* com o aviso único de poder do index (fcNotice, pedido A-19) o meu "FC +N" sai */
   V.innerHTML=xWrap(d,XG.anim?'x-in':'',`
     <div ${d.real?'class="x-scroll" id="xg_sc" style="flex:1;min-height:0;display:flex;flex-direction:column"':'style="display:contents"'}>
@@ -426,7 +430,7 @@ function scrGear(){
     <div style="${d.real?'flex:1 0 auto':'flex:1;min-height:0'};margin-top:8px;display:flex;flex-direction:column;gap:6px;padding:8px 12px 8px;background:#1d1611;border-top:2px solid #4a3a2b;border-radius:18px 18px 0 0;box-sizing:border-box">
       <div style="min-height:${d.real?44:40}px;flex:none;display:flex;align-items:center;gap:8px">
         <div style="flex:1;display:flex;flex-direction:column;line-height:1.1;min-width:0;overflow:hidden"><span class="lil" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${XG.filter==='all'?'Todos os itens':'Itens: '+SLOT[XG.filter].n}</span>
-          <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Mochila ${S.inv.length}/${BAG_MAX}${d.real&&PANEL_V2.equipDrag?' · arraste o item até o espaço':''}</span></div>
+          <span style="display:flex;align-items:center;gap:5px;min-width:0"><span style="flex:none;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Mochila ${S.inv.length}/${xBagMax()}</span>${bagNext?`<button data-x="bagvip" aria-label="Mochila maior, trancado: ${esc2(bagNext.text)} espaços. Toque para saber mais" style="flex:none;display:flex;align-items:center;gap:3px;height:18px;padding:0 6px;border-radius:9px;border:1px solid #8a7458;background:#33271d;color:#ffc94a;font-size:9.5px;font-weight:900;white-space:nowrap">${SVG_LOCK(10,'#ffc94a')}${esc2(bagNext.text)}</button>`:''}${d.real&&PANEL_V2.equipDrag?'<span style="flex:1;min-width:0;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">· arraste o item até o espaço</span>':''}</span></div>
         ${XG.filter!=='all'?'<button data-x="all" style="height:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:12px;font-weight:900;flex:none">Ver todos</button>':''}
         <button data-x="prog" ${SCREENS_ON.progress&&xUnlocked('practice')?'':'hidden'} aria-label="Progresso: práticas e títulos" style="position:relative;width:44px;height:44px;padding:0;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;flex:none;display:flex;align-items:center;justify-content:center"><svg class="x-medal" width="18" height="21" viewBox="0 0 24 28" aria-hidden="true"><path d="M7 1h10l-3 8h-4z" fill="#ff5a4e"></path><circle cx="12" cy="17" r="8" fill="#ffc94a" stroke="#8a4f0c" stroke-width="1.6"></circle></svg>${typeof progAlert==='function'&&progAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':''}</button>
         ${window.Panels&&Panels.on('forge')&&xUnlocked('forge')&&!(window.Screens&&Screens.reg&&Screens.reg.forge&&Screens.reg.forge.broken)?'<button data-x="forge" aria-label="Forja: fortalecer os espaços" class="lil" style="position:relative;height:44px;min-width:44px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#ffc94a;font-size:13px;flex:none">Forja'+(typeof forgeAlert==='function'&&forgeAlert()?'<span aria-hidden="true" style="position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></span>':'')+'</button>':''}
@@ -435,12 +439,18 @@ function scrGear(){
       </div>
       <div data-bag="1" style="flex:none;height:${rows*58+(rows-1)*8}px;display:grid;grid-template-columns:repeat(5,58px);grid-auto-rows:58px;justify-content:space-between;row-gap:8px;align-content:start">${cells}</div>
       ${xPager('pg',XG.page,pages)}
+      ${autoRows?`<button data-x="auto" aria-label="Automático: desmanchar itens sozinho ao pegar.${autoLock?'Trancado: '+esc2(autoLock):autoOn?autoOn+(autoOn===1?' ligado':' ligados'):'tudo desligado'}. Abrir" style="min-height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;text-align:left;box-sizing:border-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 4 21 9 16 9"></polyline></svg>
+        <span class="lil" style="flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Automático</span>
+        ${autoLock?`<span style="flex:none;display:flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:12px;border:1px solid #8a7458;background:#241a12;color:#ffc94a;font-size:11px;font-weight:900;white-space:nowrap">${SVG_LOCK(12,'#ffc94a')}${esc2(autoLock)}</span>`
+          :`<span style="flex:none;font-size:11px;font-weight:900;color:${autoOn?'#7ef08a':'#c9b9a2'};white-space:nowrap">${autoOn?autoOn+(autoOn===1?' ligado':' ligados'):'desligado'}</span>`}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><polyline points="9 18 15 12 9 6"></polyline></svg></button>`:''}
     </div>
     </div>
     ${d.real?`<div style="flex:none;display:flex;padding:8px 12px 10px;background:#1d1611;border-top:1px solid #4a3a2b;box-sizing:border-box">${best.n>0
       ?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" aria-label="Equipar melhor: troca ${best.n} ${best.n===1?'item':'itens'} pelo de maior FC em cada espaço" style="flex:1;height:56px;border-radius:16px;padding:0 14px;font-size:21px;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:8px">${SVG_UP(20)}EQUIPAR MELHOR<span style="min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#2a1403;color:#ffe07a;font-family:Nunito,system-ui,sans-serif;font-size:13px;font-weight:900;letter-spacing:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${best.n}</span></button>`
       :'<button data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: já está com o melhor" style="flex:1;height:56px;border-radius:16px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;padding:0 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15"><span class="lil" style="font-size:19px;letter-spacing:.5px">EQUIPAR MELHOR</span><span style="font-size:11px;font-weight:800">Já está com o melhor</span></button>'}</div>`:''}
-    ${selIt?gSheet(selIt,H,now,shown):''}${XG.cf?gConfirm():''}`);
+    ${selIt?gSheet(selIt,H,now,shown):''}${XG.cf?gConfirm():''}${XG.auto?gAuto():''}`);
   { const sc1=document.getElementById('xg_sc'); if(sc1&&scTop) sc1.scrollTop=scTop; }
   XG.anim=false; XG.pages=pages; XG.best=best;
   if(XG.toast&&Date.now()-XG.toastT<1500){ const m=XG.toast; gToast(m); }
@@ -522,10 +532,52 @@ function gConfirm(){ const it=itemOf(XG.cf); if(!it){ XG.cf=null; return ''; } c
         <button data-x="cfgold" class="lil ${pg.ok?'x-gold':''}" style="flex:1.1;height:50px;border-radius:14px;font-size:16px;padding:0;${pg.ok?'':'border:0;background:#33271d;color:#8a7a68'}">Pagar ouro</button>
         <button data-x="cfgem" class="lil" style="flex:1.1;height:50px;border-radius:14px;border:0;font-size:16px;padding:0;background:${pd.ok?'linear-gradient(180deg,#9fd0ff,#4a8fe0)':'#33271d'};color:${pd.ok?'#0a1a33':'#8a7a68'}">Diamante</button>
       </div></div></div>`; }
+/* ---------- CONVENIÊNCIAS DO VIP no Equipamento (tabela: Sys.vip.conv/convTable; preferências: window.VipAuto, js/vipauto.js) ----------
+   Nenhum número escrito aqui: nível que libera, texto "VIP n" e valores vêm do módulo. Com a chave Sys.vip.DATA.convOn desligada nada disto aparece. */
+function xVipConvOn(){ try{ return !!(window.Sys&&Sys.vip&&Sys.vip.DATA&&Sys.vip.DATA.convOn===true&&typeof Sys.vip.conv==='function'); }catch(e){ return false; } }
+const X_VIP_HOW='O VIP sobe com o total gasto na Loja.';
+/* próximo degrau do bônus de mochila acima do nível atual: {vip, add, text:'VIP 1: +20'}; null = já está no maior (ou chave desligada) */
+function xBagNext(){ try{ if(!xVipConvOn()||typeof Sys.vip.convTable!=='function') return null; const row=Sys.vip.convTable().find(x=>x.id==='bag'), cur=+Sys.vip.conv(S,'bag').value||0, lv=Sys.vip.level(S);
+    if(!row||!Array.isArray(row.values)) return null; for(let i=lv+1;i<row.values.length;i++) if(row.values[i]>cur) return {vip:i,add:row.values[i],text:'VIP '+i+': +'+row.values[i]}; }catch(e){} return null; }
+/* interruptores do bloco "Automático": [{k (chave do VipAuto.setPref), label, locked, lockText, need, on}]; null = sem o módulo/chave (o bloco não existe).
+   A Fusão só entra quando VipAuto.state(S).autoFuse.available (a Fusão ainda não foi votada). */
+function gAutoRows(){ try{ if(!xVipConvOn()||!window.VipAuto||typeof VipAuto.state!=='function'||typeof VipAuto.setPref!=='function') return null; const st=VipAuto.state(S); if(!st||!st.autoSell) return null;
+    /* 'autoEquip' NÃO entra (decisão do dono: equipar o melhor sozinho é de todos, não é vantagem de VIP); o id é ignorado mesmo que o módulo ainda o liste */
+    const sp=st.autoSell.pref||{}, L=[{k:'autoSell0',c:st.autoSell,p:!!sp[0],label:'Desmanchar ao pegar: '+RN(0)},{k:'autoSell1',c:st.autoSell,p:!!sp[1],label:'Desmanchar ao pegar: '+RN(1)}];
+    if(st.autoFuse&&st.autoFuse.available) L.push({k:'autoFuse',c:st.autoFuse,p:!!st.autoFuse.pref,label:'Fundir 3 iguais sozinho'});
+    return L.map(r=>({k:r.k,label:r.label,locked:!r.c.on,lockText:r.c.lockText||'VIP',need:+r.c.need||0,on:!!r.c.on&&r.p})); }catch(e){ return null; } }
+function gAuto(){ const rows=gAutoRows(); if(!rows){ XG.auto=false; return ''; } const anyLock=rows.some(r=>r.locked);
+  const row=r=>`<button data-x="autosw" data-k="${r.k}" role="switch" aria-checked="${r.on?'true':'false'}" aria-label="${esc2(r.label)}${r.locked?', trancado: '+esc2(r.lockText):r.on?', ligado':', desligado'}" style="width:100%;min-height:48px;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;border:1px solid ${r.on?'#5fd068':'#4a3a2b'};background:#16110d;color:#f6ecdf;text-align:left;box-sizing:border-box">
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:13px;font-weight:900">${esc2(r.label)}</span>
+        <span style="font-size:11px;font-weight:800;color:${r.locked?'#c9b9a2':r.on?'#7ef08a':'#c9b9a2'}">${r.locked?'Trancado':r.on?'Ligado':'Desligado'}</span></span>
+      ${r.locked?`<span style="flex:none;display:flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:13px;border:1px solid #8a7458;background:#33271d;color:#ffc94a;font-size:12px;font-weight:900;white-space:nowrap">${SVG_LOCK(14,'#ffc94a')}${esc2(r.lockText)}</span>`
+        :`<span aria-hidden="true" style="flex:none;position:relative;width:46px;height:26px;border-radius:13px;background:${r.on?'#5fd068':'#4a3a2b'};border:1px solid #16110d;box-sizing:border-box"><span style="position:absolute;top:2px;left:${r.on?22:2}px;width:20px;height:20px;border-radius:50%;background:#f6ecdf;transition:left .15s"></span></span>`}</button>`;
+  return `<div class="x-scrim" style="position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box"><button data-x="autox" aria-label="Fechar" style="position:absolute;inset:0;border:0;padding:0;background:rgba(8,6,4,.7)"></button>
+    <div class="x-pop" role="dialog" aria-label="Automático" style="position:relative;width:100%;max-width:330px;max-height:100%;overflow-y:auto;border-radius:18px;border:3px solid #ffc94a;background:#241b14;padding:14px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.7)">
+      <div style="display:flex;align-items:center;gap:8px"><span class="lil" style="flex:1;min-width:0;font-size:20px">Automático</span>
+        <button data-x="autox" aria-label="Fechar" style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center">${SVG_X}</button></div>
+      ${rows.map(row).join('')}
+      <span style="font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">O desmanche vale só para itens novos e nunca toca no equipado.</span>
+      <span id="xg_automsg" role="status" style="font-size:12px;font-weight:900;color:#ffc94a;line-height:1.25;${XG.autoMsg?'':'display:none'}">${esc2(XG.autoMsg||'')}</span>
+      ${anyLock?`<div style="display:flex;align-items:center;gap:8px"><span style="flex:1;min-width:0;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">${X_VIP_HOW}</span>
+        <button data-x="autoshop" class="x-gold lil" style="flex:none;height:44px;padding:0 14px;border-radius:12px;font-size:15px;white-space:nowrap">Ir à Loja</button></div>`:''}
+    </div></div>`; }
+/* toque num interruptor: quem decide é o VipAuto.setPref (sem o nível devolve {ok:false, lockText}: a tela só explica, nada liga) */
+function gAutoToggle(k){ const rows=gAutoRows(), r=rows&&rows.find(x=>x.k===k); if(!r) return;
+  let res=null; try{ res=VipAuto.setPref(S,k,!r.on); }catch(e){ res=null; }
+  if(res&&res.ok){ snd('ui_tap'); XG.autoMsg=''; }
+  else { snd('ui_tap'); XG.autoMsg=res&&res.lockText?res.lockText+': '+r.label+' libera no '+res.lockText+'. '+X_VIP_HOW
+      :res&&res.reason==='off'?'A Fusão ainda não está disponível.':'Não deu para mudar agora. Tente de novo.'; }
+  render(); }
 function gClick(b){
   if(XG.fly||XG.drag||Date.now()<(XG.noClick||0)) return;   /* itens voando, arrasto em curso ou recém-solto: o toque não vale */
   const a=b.dataset.x, it=XG.sel!=null?itemOf(XG.sel):null, lv=plv();
-  if(a==='slot'){ snd('ui_tap'); const s=b.dataset.slot; XG.filter=XG.filter===s?'all':s; XG.page=0; XG.anim=true; render(); }
+  if(a==='auto'){ snd('ui_tap'); if(gAutoRows()){ XG.auto=true; XG.autoMsg=''; render(); } }
+  else if(a==='autox'){ snd('ui_tap'); XG.auto=false; XG.autoMsg=''; render(); }
+  else if(a==='autosw'){ gAutoToggle(b.dataset.k); }
+  else if(a==='autoshop'){ snd('ui_tap'); XG.auto=false; XG.autoMsg=''; try{ if(xUnlocked('gemShop')) XH.tab='gem'; }catch(e){} setView('shop'); }
+  else if(a==='bagvip'){ snd('ui_tap'); const n=xBagNext(); if(n) gToast('Mochila com +'+n.add+' espaços no VIP '+n.vip+'. '+X_VIP_HOW); }
+  else if(a==='slot'){ snd('ui_tap'); const s=b.dataset.slot; XG.filter=XG.filter===s?'all':s; XG.page=0; XG.anim=true; render(); }
   else if(a==='wing'){ snd('ui_tap'); gToast(`Asa: libera no nível ${Sys.stats.DATA.wing.minLevel} (você está no ${lv})`); }
   else if(a==='all'){ snd('ui_tap'); XG.filter='all'; XG.page=0; XG.anim=true; render(); }
   else if(a==='pg'){ const p=XG.page+(+b.dataset.d); if(p>=0&&p<(XG.pages||1)){ snd('ui_tap'); XG.page=p; XG.anim=true; render(); } }
@@ -853,7 +905,7 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+fcTxt(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p||!xCanSell(sk.id)) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
-    else { const o=S.shop.offers[cf.i]; if(!o||o.sold||S.gold<o.price) return; if(S.inv.length>=BAG_MAX){ XH.cf=null; render(); hToast('Mochila cheia: desmonte itens em Equip.'); return; }
+    else { const o=S.shop.offers[cf.i]; if(!o||o.sold||S.gold<o.price) return; if(S.inv.length>=xBagMax()){ XH.cf=null; render(); hToast('Mochila cheia: desmonte itens em Equip.'); return; }
       S.gold-=o.price; o.sold=true; XH.cf=null; const was=PULLING; PULLING=[]; let got; try{ addItemToBag({slot:o.slot,r:o.r,e:o.e,subs:o.subs,origin:'shop'}); got=PULLING[0]; }finally{ PULLING=was; }
       statsChanged(); snd('coin'); render(); hToast(got&&got.eq?'Comprado e equipado: '+got.name:'Comprado: '+(got?got.name:'item')+' (na mochila)'); } }
 }

@@ -94,7 +94,30 @@ const fMaxLvl=()=>Sys.stats.DATA.maxItemLevel;
 function fToastHtml(msg){ return `<div class="f-toast" role="status" style="position:absolute;left:0;right:0;top:150px;display:flex;justify-content:center;pointer-events:none;z-index:6"><span style="padding:8px 16px;border-radius:12px;background:rgba(14,10,7,.94);border:2px solid #ff8a5c;font-size:14px;font-weight:900;color:#f6ecdf;box-shadow:0 0 16px rgba(255,138,92,.45);max-width:250px;text-align:center;line-height:1.2">${esc2(msg)}</span></div>`; }
 function fToast(msg){ XF.toast=msg; XF.toastT=Date.now(); const el=document.getElementById('f_toast'); if(el) el.innerHTML=fToastHtml(msg); }
 function fOn(){ return typeof view!=='undefined'&&view==='forge'; }
-function fStop(){ clearTimeout(XF.t1); clearTimeout(XF.t2); XF.busy=false; XF.fx=null; }
+function fStop(){ clearTimeout(XF.t1); clearTimeout(XF.t2); clearTimeout(XF.t3); XF.busy=false; XF.fx=null; XF.auto=null; }
+/* ---------- FORJA AUTOMÁTICA (conveniência do VIP 'autoForge': Sys.vip.conv; nível e texto "VIP n" vêm do módulo) ----------
+   Repete a MESMA tentativa do botão "Fortalecer" (fForge: Sys.forge.attempt, mesmos custos, sons e avisos), uma por passo com pausa, até o alvo
+   escolhido, até faltar pedra/ouro, até o teto, ou até o jogador tocar em "Parar". Nunca passa do alvo. Sem o nível de VIP nada roda: só explica.
+   XF.auto = {slot, goal, from, to, tries, wins, stones, gold, run, why}; com run=false é o resumo mostrado no cartão. */
+const fAutoConv=()=>{ try{ if(!(Sys.vip&&Sys.vip.DATA&&Sys.vip.DATA.convOn===true&&typeof Sys.vip.conv==='function')) return null; return Sys.vip.conv(S,'autoForge')||null; }catch(e){ return null; } };
+const fGoalMax=()=>Math.min(fD().max,fCap());
+function fGoal(sl){ const n=Sys.forge.level(S,sl), mx=fGoalMax(); let g=XF.goal|0; if(!(g>n)) g=n+1; return Math.min(g,mx); }
+const fPl=(n,a,b)=>n0(n)+' '+(n===1?a:b);
+function fAutoEnd(why,quiet){ const A=XF.auto; if(!A) return; clearTimeout(XF.t3); A.run=false; A.why=why; A.to=Sys.forge.level(S,A.slot); if(!quiet&&fOn()&&!XF.busy) render(); }
+function fAutoStart(){ const cv=fAutoConv(), sl=XF.slot; if(!cv) return;
+  if(!cv.on){ snd('ui_tap'); fToast('Forja automática: libera no '+cv.lockText+'. O VIP sobe com o total gasto na Loja.'); return; }
+  const n=Sys.forge.level(S,sl), goal=fGoal(sl); XF.auto=null;
+  if(!(goal>n)){ fForge(); return; }                    /* no máximo ou no teto: o mesmo aviso do botão comum */
+  XF.auto={slot:sl,goal,from:n,to:n,tries:0,wins:0,stones:0,gold:0,run:true,why:''}; fAutoStep(); }
+function fAutoStep(){ const A=XF.auto; if(!A||!A.run) return;
+  if(!fOn()||XF.slot!==A.slot||XF.mode!=='forge'){ fAutoEnd('stop'); return; }
+  if(Sys.forge.level(S,A.slot)>=A.goal){ fAutoEnd('goal'); return; }
+  const cv=fAutoConv(); if(!cv||!cv.on){ fAutoEnd('stop'); return; }
+  const o=fForge({ tried(r){ A.tries++; if(r.success) A.wins++; A.stones+=r.stones||0; A.gold+=r.gold||0; },
+    /* depois do resultado: decide se há próximo passo (sem redesenhar: quem desenha é o fFire logo em seguida) */
+    after(){ if(XF.auto!==A||!A.run) return false; if(Sys.forge.level(S,A.slot)>=A.goal){ fAutoEnd('goal',true); return false; }
+      const c=Sys.forge.canTry(S,Sys.host,A.slot); if(!c.ok){ fAutoEnd(c.reason,true); return false; } return true; } });
+  if(o&&o.stop){ if(A.tries) fAutoEnd(o.stop); else XF.auto=null; } }   /* recusa já no primeiro passo: o aviso comum explicou; não há resumo de zero tentativas */
 /* mostra o resultado (clarão, faixa, tremor) por 1,6 s, como o protótipo */
 function fFire(fx,big,small){ clearTimeout(XF.t2); XF.fx=fx; XF.big=big||''; XF.small=small||''; if(fOn()) render();
   XF.t2=setTimeout(()=>{ XF.fx=null; if(fOn()) render(); },1600); }
@@ -215,12 +238,29 @@ function scrForge(){
   let card='';
   if(XF.mode==='forge'){
     /* ----- cartão: fortalecer ----- */
-    const ch=c.chance, okGo=c.ok&&!XF.busy, pityRoom=Math.max(1,100-base), pityPct=stop?0:Math.min(100,Math.round(pity/pityRoom*100)), pity0=stop?0:Math.min(100,Math.round(XF.pity0/pityRoom*100));
+    const AU=XF.auto&&XF.auto.slot===sl?XF.auto:null, run=!!(AU&&AU.run), cv=fAutoConv(), goal=stop?n:fGoal(sl);
+    const ch=c.chance, okGo=c.ok&&!XF.busy&&!run, pityRoom=Math.max(1,100-base), pityPct=stop?0:Math.min(100,Math.round(pity/pityRoom*100)), pity0=stop?0:Math.min(100,Math.round(XF.pity0/pityRoom*100));
     const fails=Math.round(pity/Math.max(1,FD.pityPerFail)), curCol=selT===0?'#f6ecdf':F_TC[selT], nT=fTier(n+1), nextCol=stop?'#c9b9a2':nT===0?'#f6ecdf':F_TC[nT];
     let nextCap=null; for(let e=fEraNow()+1;e<FD.capByEra.length;e++) if(FD.capByEra[e]>cap){ nextCap={p:FD.capByEra[e],era:fEraName(e)}; break; }
     const capHint=cap<MAX&&nextCap?'Teto '+fEraName(fEraNow())+' +'+cap+'; +'+nextCap.p+' na '+nextCap.era+'.':'';
     const lackSt=!stop&&stones<c.stones, lackG=!stop&&S.gold<c.gold;
-    const label=XF.busy?'Forjando...':atMax?'Máximo +'+MAX:atCap?'Teto da era':c.reason==='stones'?'Faltam pedras':c.reason==='gold'?'Falta ouro':'Fortalecer';
+    /* forja automática: rodando = progresso + Parar; parada = resumo; depois o seletor de alvo + "Forjar até +N" (ou a linha trancada com "VIP n") */
+    const stepB=(dd,lb,off)=>`<button data-x="goal" data-d="${dd}" aria-label="${lb}" aria-disabled="${off}" class="lil" style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:${off?'#8a7a68':'#f6ecdf'};font-size:22px;line-height:1;padding:0">${dd<0?'−':'+'}</button>`;
+    const AWHY={goal:'Chegou ao alvo',max:'Chegou ao máximo',cap:'Parou no teto da era',stones:'Parou: faltaram pedras',gold:'Parou: faltou ouro',stop:'Parada por você'};
+    const autoH=!cv?'':run?`<div role="status" style="display:flex;align-items:center;gap:10px;padding:6px 6px 6px 10px;border-radius:12px;background:#0e0a07;border:1px solid #ffc94a">
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2"><span style="font-size:12px;font-weight:900">Forjando até +${AU.goal} · agora +${n}</span>
+          <span id="f_autop" style="font-size:11px;font-weight:800;color:#c9b9a2">${fPl(AU.tries,'tentativa','tentativas')}, ${fPl(AU.wins,'acerto','acertos')}</span></span>
+        <button data-x="autostop" class="lil" style="flex:none;height:44px;padding:0 16px;border-radius:12px;border:2px solid #ff8a5c;background:#33271d;color:#ffb3a8;font-size:16px">Parar</button></div>`
+      :(AU?`<div id="f_autosum" role="status" style="display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-radius:12px;background:#0e0a07;border:1px solid #5fd068;line-height:1.2">
+        <span style="font-size:12px;font-weight:900;color:#f6ecdf">Forja automática: ${AWHY[AU.why]||'Parou'} · +${AU.from} → +${AU.to}</span>
+        <span style="font-size:11px;font-weight:800;color:#c9b9a2">${fPl(AU.tries,'tentativa','tentativas')}, ${fPl(AU.wins,'acerto','acertos')} · gasto: ${fPl(AU.stones,'pedra','pedras')}${AU.gold?' e '+kf(AU.gold)+' de ouro':''}</span></div>`:'')
+      +(!cv.on?`<button data-x="autogo" aria-label="Forja automática até o nível escolhido, trancada: ${esc2(cv.lockText)}. Toque para saber mais" style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;text-align:left;box-sizing:border-box">
+          <span class="lil" style="flex:1;min-width:0;font-size:14px;line-height:1.1">Forjar até o nível escolhido</span>
+          <span style="flex:none;display:flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:13px;border:1px solid #8a7458;background:#241a12;color:#ffc94a;font-size:12px;font-weight:900;white-space:nowrap">${SVG_LOCK(14,'#ffc94a')}${esc2(cv.lockText)}</span></button>`
+        :stop?'':`<div role="group" aria-label="Forja automática" style="display:flex;align-items:center;gap:6px">
+          ${stepB(-1,'Alvo menor',goal<=n+1)}<span class="lil" id="f_goal" role="status" aria-label="Alvo: mais ${goal}" style="min-width:40px;flex:none;text-align:center;font-size:20px;color:#ffc94a">+${goal}</span>${stepB(1,'Alvo maior',goal>=fGoalMax())}
+          <button data-x="autogo" id="f_autogo" class="lil" aria-disabled="${!c.ok}" style="flex:1;min-width:0;height:44px;border-radius:12px;padding:0 4px;font-size:15px;line-height:1.05;${c.ok&&!XF.busy?'border:2px solid #ffc94a;background:#3a2c1f;color:#ffc94a':btnOff}">Forjar até +${goal}</button></div>`);
+    const label=XF.busy||run?'Forjando...':atMax?'Máximo +'+MAX:atCap?'Teto da era':c.reason==='stones'?'Faltam pedras':c.reason==='gold'?'Falta ouro':'Fortalecer';
     card=`<div class="${cardCls}" style="${cardSt}">
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px">
         <span class="lil" style="font-size:30px;color:${curCol};text-shadow:0 2px 0 #000">+${n}</span>${F_ARROW}
@@ -245,7 +285,8 @@ function scrForge(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2">Custo por tentativa</span>
           <span class="lil" style="display:flex;align-items:center;gap:4px;font-size:20px;color:${lackSt?'#ff5a4e':'#f6ecdf'};white-space:nowrap">${F_HAMMER(18)}${stop?'—':n0(c.stones)+' / '+kf(stones)}</span>
           <span style="display:flex;align-items:center;gap:3px;font-size:12px;font-weight:900;color:${lackG?'#ff5a4e':'#c9b9a2'};white-space:nowrap">${COIN_I(14)}${stop?'—':kf(c.gold)}</span></div>
-        <button class="lil ${okGo?'f-gold f-pulse':''}" data-x="forge" id="f_go" aria-disabled="${!okGo}" style="flex:1;height:56px;border-radius:16px;font-size:21px;padding:0;${okGo?'':btnOff}">${label}</button></div></div>`;
+        <button class="lil ${okGo?'f-gold f-pulse':''}" data-x="forge" id="f_go" aria-disabled="${!okGo}" style="flex:1;height:56px;border-radius:16px;font-size:21px;padding:0;${okGo?'':btnOff}">${label}</button></div>
+      ${autoH}</div>`;
   } else {
     /* ----- cartão: nível do item equipado (Sys.stats) ----- */
     const ML=fMaxLvl();
@@ -300,7 +341,13 @@ function fSig(){ if(fLocked()) return 'gate'; try{ const c=Sys.forge.canTry(S,Sy
 function fClick(b,ev){
   const a=b.dataset.x;
   if(a==='gate'){ snd('ui_tap'); Screens.open('gear'); return; }      /* a Forja é subtela do Equipamento (decisão do PO) */
-  if(XF.busy) return;                                   /* martelando: o toque não vale */
+  if(a==='autostop'){ snd('ui_tap'); if(XF.auto&&XF.auto.run) fAutoEnd('stop'); return; }   /* vale mesmo martelando: a tentativa em curso (já cobrada) termina e nenhuma outra começa */
+  if(XF.busy||(XF.auto&&XF.auto.run)) return;           /* martelando ou forja automática rodando: o toque não vale (só o "Parar") */
+  if(a==='autogo'){ fAutoStart(); return; }
+  if(a==='goal'){ snd('ui_tap'); const sl=XF.slot, n=Sys.forge.level(S,sl), mx=fGoalMax(), g=fGoal(sl)+(+b.dataset.d<0?-1:1);
+    if(g<=n){ fToast('Alvo mínimo: +'+(n+1)); return; } if(g>mx){ fToast(mx>=fD().max?'Alvo máximo: +'+mx:'Teto da '+fEraName(fEraNow())+': +'+mx); return; }
+    XF.goal=g; XF.auto=null; render(); return; }
+  if(a==='forge') XF.auto=null;                          /* tentativa comum: o resumo da automática sai */
   if(a==='fuse'){ snd('ui_tap'); fStop(); if(!(window.Panels&&Panels.open('fuse',{from:'forge'}))) render(); return; }   /* Fusão (só aparece com a chave ligada) */
   if(a==='mode'){ const m=b.dataset.m==='level'?'level':'forge'; snd('ui_tap'); if(m===XF.mode) return; fStop(); XF.mode=m; XF.cardIn=true; render(); }
   else if(a==='slot'){ const s=b.dataset.slot; snd('ui_tap');
@@ -311,7 +358,8 @@ function fClick(b,ev){
   else if(a==='lvup') fLevelUp();
 }
 /* uma tentativa: o Sys.forge decide, cobra pedras e ouro e guarda a garantia; a tela só anima (0,7 s de martelo e depois o resultado) */
-function fForge(){
+/* hook (só a forja automática passa): {tried(r), after()}; devolve {stop:motivo} quando a tentativa não aconteceu, {r} quando aconteceu */
+function fForge(hook){
   const sl=XF.slot, FD=fD(), c=Sys.forge.canTry(S,Sys.host,sl);
   if(!c.ok){ snd('ui_tap');
     fToast(c.reason==='max'?SLOT[sl].n+' já está no máximo: +'+FD.max
@@ -319,17 +367,20 @@ function fForge(){
       :c.reason==='stones'?'Pedras de Forja insuficientes: faltam '+n0(Math.max(1,c.stones-fStones()))+'. Elas caem de chefes e inimigos e vêm ao desmontar itens.'
       :c.reason==='gold'?needMsg('gold',c.gold)
       :c.reason==='locked'?'Forja: libera no nível '+fGateLv():'Não dá para fortalecer este espaço agora');
-    return; }
+    return {stop:c.reason||'no'}; }
   const n0lv=Sys.forge.level(S,sl), t0=fTier(n0lv); XF.pity0=fPity(sl);
   const r=Sys.forge.attempt(S,Sys.host,sl);
-  if(!r.ok){ snd('ui_tap'); fToast(r.reason==='gold'?needMsg('gold',c.gold):'Não dá para fortalecer este espaço agora'); render(); return; }
+  if(!r.ok){ snd('ui_tap'); fToast(r.reason==='gold'?needMsg('gold',c.gold):'Não dá para fortalecer este espaço agora'); render(); return {stop:r.reason||'no'}; }
   /* o resultado já está no save (pedras e ouro gastos; +N se acertou): grava agora, mesmo que o jogador saia antes do fim da animação */
   if(r.success) statsChanged(); else { save(); hud(); }
+  if(hook) hook.tried(r);
   snd('ui_tap'); clearTimeout(XF.t1); clearTimeout(XF.t2); XF.busy=true; XF.prev=null; XF.fx=null; render();
-  XF.t1=setTimeout(()=>{ XF.busy=false;
+  XF.t1=setTimeout(()=>{ XF.busy=false; const more=hook?hook.after():false;
     if(r.success){ snd('claim'); vib(40); const nt=fTier(r.lv);
       fFire('ok','+'+r.lv+'!',sl==='weapon'&&nt!==t0?'Nova aura: '+fAuras()[nt].name:fStatName(sl)+' do espaço +'+fPct(FD.bonus[r.lv])+'%'); }
-    else { snd('ui_tap'); fFire('fail'); } },700);
+    else { snd('ui_tap'); fFire('fail'); }
+    if(more){ clearTimeout(XF.t3); XF.t3=setTimeout(fAutoStep,550); } },hook?450:700);   /* automática: martelo mais curto e 0,55 s de resultado antes do próximo passo */
+  return {r};
 }
 /* nível do item equipado: as mesmas chamadas da tela de Equipamento (gClick 'upgold') */
 function fLevelUp(){
@@ -344,7 +395,7 @@ function fLevelUp(){
 }
 
 Panels.add('forge',{title:'Forja',parent:'gear',render:scrForge,click:fClick,
-  tick(){ if(XF.busy||XF.fx) return; const el=document.getElementById('f_stones');
+  tick(){ if(XF.busy||XF.fx||(XF.auto&&XF.auto.run)) return; const el=document.getElementById('f_stones');
     if(el){ let t=''; try{ t=kf(fStones()); }catch(e){ return; } if(el.textContent!==t) el.textContent=t; }
     if(XF.sig&&fSig()!==XF.sig&&fOn()) render(); },
   busy(){ return XF.busy||!!XF.fx; },
