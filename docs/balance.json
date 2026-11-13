@@ -386,9 +386,11 @@
       12500000,
       362000000,
       10500000000,
-      302000000000
+      302000000000,
+      8730000000000,
+      252000000000000
     ],
-    "fc_como_foi_calculada": "v8: FC RECOMENDADA medida no JOGO REAL (reports/calibracao.md) para as eras 0, 1 e 2: FC com que o chefe cai no desafio feito quando o botao brilha (90%). Eras 3 a 6: EXTRAPOLACAO (x28,9 por era = 1,4^10), NAO medida.",
+    "fc_como_foi_calculada": "Eras 7 e 8 (13/11, fps-69): mesma extrapolacao x28,9 por era a partir da era 6 (8,73 tri e 252 tri), NAO medida no jogo real. v8: FC RECOMENDADA medida no JOGO REAL (reports/calibracao.md) para as eras 0, 1 e 2: FC com que o chefe cai no desafio feito quando o botao brilha (90%). Eras 3 a 6: EXTRAPOLACAO (x28,9 por era = 1,4^10), NAO medida.",
     "fc_mudanca_em_relacao_ao_v7": "+16%, 0%, -15%, -1%, +2%, +32%, +58%: trocar as âncoras das eras 0, 2, 5 e 6."
   },
   "chest": {
