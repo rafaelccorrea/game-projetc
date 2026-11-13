@@ -1119,4 +1119,12 @@ t('chefe sem repetição (dono: "o mesmo item sempre dropa no chefe"): nunca o m
   const d=[]; for(let i=0;i<300;i++) d.push(L.rollItem(h,{minR:1,source:'drop'}).slot); assert.ok(d.slice(1).some((s,i)=>s===d[i]),'só o chefe: o drop comum continua livre');
 });
 
+t('P24 (FC 324 → 326 ao voltar à skin padrão): é o bônus de COLEÇÃO da skin ganha (+0,5%), não perda nem arredondamento; equipar e voltar não muda nada',()=>{
+  const K=require('../../js/sys/skin.js'), A=require('../../js/sys/appearance.js'); const S={hero:'kaia'};
+  const b0=K.bonus(S).atkPct; A.grantFixed(S,'kaia_harlequin',{owner:true}); const b1=K.bonus(S).atkPct; assert.ok(Math.abs(b1-b0-K.DATA.collectionPer)<1e-9,'ganhar a skin: +coleção');
+  A.equipFixed(S,'kaia_harlequin'); const b2=K.bonus(S).atkPct; assert.ok(b2>b1,'equipada soma');
+  A.equipFixed(S,null); assert.strictEqual(K.bonus(S).atkPct,b1,'voltar ao padrão: exatamente o de antes de equipar');
+  for(let i=0;i<5;i++){ A.equipFixed(S,'kaia_harlequin'); A.equipFixed(S,null); } assert.strictEqual(K.bonus(S).atkPct,b1,'sem deriva');
+});
+
 console.log(`ok: ${n} testes`);
