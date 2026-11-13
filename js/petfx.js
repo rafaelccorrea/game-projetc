@@ -27,7 +27,13 @@ function petK(){ const I = PETK.info; if (!I) return HS / 256 * 0.5; const m = p
 /* até onde o pet passa da borda do corpo do Kael (px lógicos): o inimigo da frente guarda a folga a partir daí; o pet não se mistura com ele */
 function petFront(){ const I = PETK.info; if (!I || !PETK.base) return 0; const m = petMetric(PETK.base); if (!m) return 0; return Math.max(0, petX() + m.r * petK() - HERO_EDGE, hatchReserve() - HERO_EDGE); }   /* com ovo chocando à frente do pet, a folga do inimigo conta a partir do OVO (hatchReserve) */   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
 const PET_BACK = 0.34;   // o pet fica ATRÁS do Kael, meio corpo para a esquerda (o Kael está a ~60 px da borda: mais que isso sai da tela)
-const PETK = { id: null, info: null, base: '', t: 0, atkT: 0, act: null, infoT: 0 };
+const PETK = { id: null, info: null, base: '', t: 0, atkT: 0, act: null, infoT: 0, ov: null };
+/* PET TROCÁVEL NO DESENHO (pedido da Sistemas para o StageKit; drawHeroFull com state.pet = {base, stage 1-3, fly}): troca o pet SÓ durante um desenho e devolve
+   uma função que desfaz. Não toca no save nem no pet da batalha (PETK.info/base voltam iguais). base = sprite + '' | '_mid' | '_evo' (formato do heroSnapshot). */
+function petOvSet(p){ if (!p || typeof p.base !== 'string' || !/^[a-z0-9_]{1,40}$/.test(p.base)) return null; const s0 = { info: PETK.info, base: PETK.base, ov: PETK.ov };
+  const m = /^(.*?)(_mid|_evo)?$/.exec(p.base), stage = Math.max(1, Math.min(3, (p.stage | 0) || (m[2] === '_evo' ? 3 : m[2] === '_mid' ? 2 : 1)));
+  const I = { id: m[1], stage, interval: 0, hitMult: 0, draw: { base: p.base, sprite: m[1], fly: !!p.fly } }; PETK.ov = I; PETK.info = I; PETK.base = p.base;
+  return () => { PETK.info = s0.info; PETK.base = s0.base; PETK.ov = s0.ov; }; }
 const HATCH = { q: [], cur: null, egg: null };
 const petOk = () => PETS_ON && typeof Sys !== 'undefined' && !!Sys.pet;
 function petBoot(){ if (!petOk()) return;
@@ -47,7 +53,7 @@ function petNotice(list){ if (!petOk() || !Array.isArray(list)) return; if (type
     else if (x.held && x.gated) toast('Ovo de ' + (x.name || 'pet raro') + ' guardado até você liberar essa raridade');
     else if (x.held) toast('Ovo guardado');
     else if (x.pet) petHatchQueue(x, false); } }
-function petInfo(){ if (!petOk()) return null; if (B.at - PETK.infoT > 0.5 || !PETK.infoT){ PETK.infoT = B.at || 0.001; let i = null; try { i = Sys.pet.battleInfo(S, Sys.host); } catch (e) { i = null; }
+function petInfo(){ if (PETK.ov) return PETK.ov; if (!petOk()) return null; if (B.at - PETK.infoT > 0.5 || !PETK.infoT){ PETK.infoT = B.at || 0.001; let i = null; try { i = Sys.pet.battleInfo(S, Sys.host); } catch (e) { i = null; }
     const old = PETK.info; PETK.info = i && i.draw && i.draw.base ? i : null; const b = PETK.info ? PETK.info.draw.base : '';
     if (b !== PETK.base){   /* Engenheiro 5: pet NOVO (ou estágio novo) só entra com as folhas dele decodificadas; até lá o anterior continua na tela (o pet nunca some) */
       if (b && PETK.base && old && !petReady(b) && !(typeof lookWait === 'function' && lookWait('pet', b))){ PETK.info = old; PETK.infoT = B.at - 0.4; }

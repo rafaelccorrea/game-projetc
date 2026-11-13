@@ -1381,10 +1381,16 @@ function loop(now){
    batalha, em qualquer canvas. (x, y) = ponto dos pés no canvas de destino; scale = 1 → tamanho da batalha (HS px lógicos de quadro).
    state (tudo opcional): { t, walking, act, deadP, pet (false esconde), mount (false esconde / {id, stars}), wing (false / 'angel' | 'demon'), weapon (skin), armor (skin),
    skin (id de skin fixa ou 'default': desenha essa skin em vez da equipada; vitrine da Aparência),
+   hero ('kael' | 'kaia': desenha esse corpo em vez do do save; só durante este desenho) · pet ({base, stage 1-3, fly}: desenha esse pet em vez do equipado; formato do heroSnapshot),
    layers (lista do Sys.appearance.layers: tinta de colete/botas, chapéu, óculos, máscara e aura da roupa-skin; sem o campo valem as do save; [] = nenhuma) }.
    drawHeroLayers(canvas, layers, dt): vitrine da Aparência (pedido Q-15): encaixa o herói completo no canvas; 'layers' (Sys.appearance.layers) define asa e arma visíveis. */
 const HFULL={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false};
-function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1, lk=heroLook(), old=ctx;
+function drawHeroFull(c2,x,y,scale,state){ const st=state||{}; const hv=(st.hero==='kaia'||st.hero==='kael')&&typeof S!=='undefined'&&S&&(S.hero==='kaia'?'kaia':'kael')!==st.hero;
+  if(!hv) return drawHeroFull0(c2,x,y,scale,st);
+  /* state.hero: o corpo é lido do save em vários pontos (forma, montaria, folhas); troca S.hero só durante este desenho e solta o cache da forma (200 ms) na ida e na volta */
+  const h0=S.hero; S.hero=st.hero; if(typeof FORM!=='undefined') FORM.t=-1e9;
+  try{ return drawHeroFull0(c2,x,y,scale,st); } finally{ S.hero=h0; if(typeof FORM!=='undefined') FORM.t=-1e9; } }
+function drawHeroFull0(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1, lk=heroLook(), old=ctx;
   HFULL.x=HX; HFULL.gy=GY; HFULL.t=st.t!=null?st.t:B.at; HFULL.sk=st.armor||SKIN(S.skinEq.armor); HFULL.ws=st.weapon||wFamLook(lk.weapon)||wSkin(); HFULL.walking=!!st.walking; HFULL.deadP=st.deadP!=null?st.deadP:-1; HFULL.act=st.act||null;
   HFULL.wing=st.wing===false?null:(st.wing||wingNow(lk)); HFULL.mount=st.mount===false?null:(st.mount||lk.mount);
   HFULL.lay=(st.layers!==undefined&&typeof layParse==='function')?layParse(st.layers):undefined;   /* camadas da roupa-skin: as passadas (Sys.appearance.layers) ou, sem elas, as do save */
@@ -1394,8 +1400,8 @@ function drawHeroFull(c2,x,y,scale,state){ const st=state||{}, k=scale>0?scale:1
   { let rdy=false; try{ rdy=fullReady(HFULL); }catch(e){ rdy=true; } if(!rdy&&!lookWait('full',(st.skin||'')+'|'+(HFULL.mount&&HFULL.mount.id||'')+'|'+(HFULL.wing||'')+'|'+(S.hero||''))){ if(typeof FORM!=='undefined') FORM.ov=ov0; return false; } }
   c2.save(); c2.translate(x-HX*k,y-GY*k); c2.scale(k,k); ctx=c2;
   try{ drawHero(HFULL); if(st.pet!==false&&typeof drawPet==='function'){ const r0=B.res, d0=B.deadT, run0=B.running, m0=HM.mount; B.res=null; B.deadT=0; B.running=!!st.walking; HM.mount=HFULL.mount;   /* Engenheiro 14 (dono: pet SEMPRE NA FRENTE): o pet é o ÚLTIMO desenho (depois da asa, da montaria, do herói e da arma) e a posição dele segue a montaria DESTE desenho (antes seguia a da batalha, HM.mount: herói a pé com pet longe, ou montado com o pet em cima da montaria) */
-      const a0=PETK.act; PETK.act=null;   /* Engenheiro 17: o pet desta vitrine fica parado/andando (state.walking); antes mostrava o quadro do golpe que a batalha tinha em andamento (congelado com a Vitória aberta) */
-      try{ drawPet(); }finally{ B.res=r0; B.deadT=d0; B.running=run0; HM.mount=m0; PETK.act=a0; } } }
+      const a0=PETK.act; PETK.act=null; const pov=(st.pet&&typeof st.pet==='object'&&typeof petOvSet==='function')?petOvSet(st.pet):null;   /* Engenheiro 17: o pet desta vitrine fica parado/andando (state.walking); antes mostrava o quadro do golpe que a batalha tinha em andamento (congelado com a Vitória aberta) */
+      try{ drawPet(); }finally{ if(pov) pov(); B.res=r0; B.deadT=d0; B.running=run0; HM.mount=m0; PETK.act=a0; } } }
   catch(e){ if(!window.__hfErr){ window.__hfErr=1; console.error('drawHeroFull',e); } }
   finally{ ctx=old; c2.restore(); if(typeof FORM!=='undefined') FORM.ov=ov0; } return true; }
 window.drawHeroFull=drawHeroFull;
