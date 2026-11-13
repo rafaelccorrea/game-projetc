@@ -54,6 +54,14 @@ function world(dels) {
     assert.strictEqual((await B.sync(S, host)).length, 0); assert.deepStrictEqual(added, ['mecha']);
     delete globalThis.Sys.mount;
   });
+  await t('skin à venda (fixa do Sys.appearance): grantFixed com source shop, uma vez', async () => {
+    const dels = [{ id: 's1', grants: [{ kind: 'skin', skinId: 'kael_paladin' }] }];
+    const { S, host } = world(dels); B.DATA.on = true; const got = [];
+    globalThis.Sys.appearance = { FIXED: [{ id: 'kael_paladin' }], grantFixed: (S2, id, o) => { got.push([id, o.source]); return { ok: true }; } };
+    const r = await B.sync(S, host); assert.deepStrictEqual(got, [['kael_paladin', 'shop']]); assert.strictEqual(r[0].got[0].fixed, true); assert.deepStrictEqual(S.skins, []);
+    assert.strictEqual(B.priceText('skin_kael_cyborg'), 'R$ 39,90');
+    delete globalThis.Sys.appearance;
+  });
   await t('estorno (revoke): tira 💎 até zero, a skin e o passe', async () => {
     const dels = [{ id: 'g', grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] },
       { id: 'r', revoke: true, grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] }];

@@ -20,8 +20,13 @@ Todos são **produtos no app** (não são assinaturas). O Play pede que o app j�
 | `pass_premium` | Passe Premium (temporada) | R$ 24,90 | consumível | Trilha premium da temporada atual (30 dias) |
 | `first_offer` | Oferta do Guardião | R$ 29,90 | consumível | Arma Épica 3★ + Lobo de guerra + 300 💎 + ouro (só 1ª compra, 24 h) |
 | `mount_mecha` | Mecha de Guerra | R$ 49,90 | consumível* | Montaria Lendária Mecha de guerra, inteira |
+| `skin_kael_paladin` | Kael Paladino | R$ 24,90 | consumível* | Skin Kael Paladino (só Kael) |
+| `skin_kaia_harlequin` | Kaia Arlequina | R$ 24,90 | consumível* | Skin Kaia Arlequina (só Kaia) |
+| `skin_kael_cyborg` | Kael Ciborgue | R$ 39,90 | consumível* | Skin Kael Ciborgue (só Kael) |
 
-\* No Play todos são criados como produto no app; quem decide "uma vez por conta" é o **servidor** (a Oferta e o Mecha só podem ser comprados uma vez; o Passe uma vez por temporada).
+\* No Play todos são criados como produto no app; quem decide "uma vez por conta" é o **servidor** (a Oferta, o Mecha e cada skin só podem ser comprados uma vez; o Passe uma vez por temporada).
+
+**Total: 13 produtos** (6 de diamantes, Cartão Mensal, Passe Premium, Oferta do Guardião, Mecha de Guerra e 3 skins).
 
 ## VIP
 O VIP **não é um produto**: pela regra do dono, os pontos VIP são o valor pago em reais (R$ 1 = 1 ponto) e vêm de **qualquer** compra acima. Os níveis sobem
@@ -30,8 +35,7 @@ Se o dono quiser vender **níveis de VIP diretamente** (ex.: "VIP 3 por R$ X"), 
 "VIP = reais gastos" (cada pacote daria os pontos que faltam para o nível). Até lá, o botão "Comprar VIP" da tela VIP deve abrir a Loja.
 
 ## Skins
-As roupas-skin saíram de venda (decisão do dono). O catálogo continua aceitando `skin_<id>` para quando o dono liberar alguma (preços por raridade
-R$ 9,90 / 14,90 / 19,90 / 24,90 / 29,90), mas nenhuma está na lista para cadastrar agora.
+Três skins estão à venda por decisão do dono (tabela acima), compra direta e uma por conta. As outras continuam fora de venda.
 
 ## Depois de cadastrar
 1. Play Console → **Configuração** → **Acesso à API** → vincular o projeto Google Cloud e criar a **conta de serviço** com permissão de "Ver dados financeiros" e "Gerenciar pedidos". O JSON dela vai **só** para o ambiente do servidor (`GOOGLE_PLAY_SA_JSON`), nunca por mensagem.

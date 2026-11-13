@@ -33,6 +33,9 @@
       { id: 'pass_premium', kind: 'pass_premium', name: 'Passe Premium', brl: 24.90, oncePerSeason: true },
       { id: 'first_offer', kind: 'offer', name: 'Oferta do Guardião', brl: 29.90, once: true },
       { id: 'mount_mecha', kind: 'mount', name: 'Mecha de Guerra', brl: 49.90, mountId: 'mecha', once: true },
+      { id: 'skin_kael_paladin', kind: 'skin', name: 'Kael Paladino', brl: 24.90, skinId: 'kael_paladin', hero: 'kael', once: true },
+      { id: 'skin_kaia_harlequin', kind: 'skin', name: 'Kaia Arlequina', brl: 24.90, skinId: 'kaia_harlequin', hero: 'kaia', once: true },
+      { id: 'skin_kael_cyborg', kind: 'skin', name: 'Kael Ciborgue', brl: 39.90, skinId: 'kael_cyborg', hero: 'kael', once: true },
     ],
   };
   const Sys = () => root.Sys || {};
@@ -93,9 +96,12 @@
         if (X.pass && X.pass.setPremium) { X.pass.setPremium(S, !revoke); out.push({ kind: 'pass', on: !revoke, season: g.season || null }); }
       } else if (g.kind === 'skin') {
         if (!g.skinId) continue;
-        if (!revoke) { if (host && host.addSkin) host.addSkin(g.skinId); else { S.skins = Array.isArray(S.skins) ? S.skins : []; if (!S.skins.includes(g.skinId)) S.skins.push(g.skinId); } }
+        /* skin FIXA do Sys.appearance (as 3 à venda): grantFixed com source 'shop'; skin antiga (lista do jogo): host.addSkin */
+        const A = X.appearance; let fx = null;
+        if (!revoke) { try { if (A && A.grantFixed && A.FIXED && A.FIXED.some(f => f.id === g.skinId)) fx = A.grantFixed(S, g.skinId, { source: 'shop' }); } catch (e) { fx = null; }
+          if (!fx) { if (host && host.addSkin) host.addSkin(g.skinId); else { S.skins = Array.isArray(S.skins) ? S.skins : []; if (!S.skins.includes(g.skinId)) S.skins.push(g.skinId); } } }
         else if (Array.isArray(S.skins)) S.skins = S.skins.filter(k => k !== g.skinId);
-        out.push({ kind: 'skin', id: g.skinId, on: !revoke });
+        out.push({ kind: 'skin', id: g.skinId, on: !revoke, fixed: !!fx, ok: fx ? fx.ok !== false : true, reason: fx && fx.reason });
       } else if (g.kind === 'mount') {
         /* montaria comprada inteira (Mecha de guerra): Sys.mount.add. Estorno: a compra fica marcada no servidor (GET /entitlements); a montaria
            não é tirada da mão do jogador aqui (decisão de produto pendente; o servidor já não conta como comprada) */
