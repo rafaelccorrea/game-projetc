@@ -150,3 +150,18 @@ test('login Google: sem plugin = google_unavailable; com plugin manda só o idTo
   await assert.rejects(net.googleSignIn('login'), e => e.code === 'cancelled');
   delete globalThis.Capacitor;
 });
+
+test('MODO DONO: o save do dono nunca sobe nem desce da nuvem e as entregas reais não caem nele (nenhuma chamada sai)', async () => {
+  const { f } = boot({ 'GET /save/head': b => [200, { version: 3 }], 'PUT /save': b => [200, { version: 4 }], 'GET /save': b => [200, { version: 3, save: {} }],
+    'GET /purchases/deliveries': b => [200, [{ id: 'd1', grants: [] }]] });
+  net.DATA.ownerForce = true;
+  try {
+    assert.deepEqual(await net.push({ gold: 1 }, {}), { action: 'none', owner: true });
+    assert.deepEqual(await net.sync({ gold: 1 }, {}), { action: 'none', owner: true });
+    assert.equal(await net.pull(), null);
+    assert.deepEqual(await net.chooseSide('device', { gold: 1 }, {}), { action: 'none', owner: true });
+    assert.deepEqual(await net.deliveries(), []);
+    await net.ackDelivery('d1');
+    assert.equal(f.calls.length, 0);
+  } finally { net.DATA.ownerForce = false; }
+});

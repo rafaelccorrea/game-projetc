@@ -87,5 +87,28 @@ function world(dels) {
     assert.deepStrictEqual(await B.purchase(S, host, 'gems_60'), { ok: false, reason: 'cancelled' });
     delete globalThis.Capacitor;
   });
+  await t('MODO DONO: compra SIMULADA nunca chama a ponte do Google nem o servidor; entrega = a do servidor (dobro na 1ª, VIP = reais)', async () => {
+    const S = { gems: 0, skins: [] }, host = { simConfirm: false, addGems: x => { S.gems += x; }, addSkin: id => S.skins.push(id), save: () => {} };
+    const boom = () => { throw new Error('não podia chamar'); };
+    globalThis.Capacitor = { Plugins: { EonBilling: { purchase: boom } } };
+    const oldNet = globalThis.Sys.net; globalThis.Sys.net = { DATA: { on: true }, canBuy: boom, accountId: boom, verifyGoogle: boom, deliveries: boom, ackDelivery: boom };
+    const vipAdds = []; globalThis.Sys.vip = { addPoints: (S2, n) => vipAdds.push(n) };
+    globalThis.Sys.pass = { ensure: () => ({ premium: S.prem === true }), setPremium: (S2, on) => { S.prem = on; } };
+    B.DATA.on = false; B.DATA.simForce = true;
+    try {
+      assert.strictEqual(B.simulated(), true); assert.strictEqual(B.ready(), true);
+      let r = await B.purchase(S, host, 'gems_60'); assert.strictEqual(r.ok, true); assert.strictEqual(r.simulated, true); assert.strictEqual(S.gems, 120);   // dobro na 1ª
+      r = await B.purchase(S, host, 'gems_60'); assert.strictEqual(S.gems, 180);                                                                           // depois, normal
+      assert.deepStrictEqual(vipAdds, [4, 5]);                                                // R$ 4,90 + R$ 4,90 = R$ 9,80 → 4 + 5 pontos (centavos somados como no servidor)
+      assert.ok(B.ensure(S).applied.every(id => id.startsWith('sim:gems_60:')));
+      r = await B.purchase(S, host, 'pass_premium'); assert.strictEqual(S.prem, true);
+      assert.strictEqual((await B.purchase(S, host, 'pass_premium')).reason, 'owned');
+      assert.strictEqual((await B.purchase(S, host, 'first_offer')).reason, 'not_eligible');  // a oferta é só para quem nunca comprou
+      r = await B.purchase(S, host, 'monthly_card'); assert.strictEqual(S.gems, 480);
+      const c = B.cardClaim(S, host); assert.strictEqual(c.gems, 60); assert.strictEqual(B.cardClaim(S, host).reason, 'claimed');
+      assert.strictEqual((await B.purchase(S, host, 'nada')).reason, 'unavailable');
+    } finally { B.DATA.simForce = false; delete globalThis.Capacitor; globalThis.Sys.net = oldNet; delete globalThis.Sys.vip; delete globalThis.Sys.pass; }
+    assert.strictEqual(B.simulated(), false); assert.strictEqual((await B.purchase(S, host, 'gems_60')).reason, 'soon');   // fora do Modo dono: nada
+  });
   console.log(n + ' testes ok');
 })().catch(e => { console.error(e); process.exit(1); });

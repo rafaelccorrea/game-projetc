@@ -7,7 +7,11 @@
    Ponte nativa esperada (plugin do APK, a definir pelo agente do APK): window.Capacitor.Plugins[DATA.plugin].purchase({productId, accountId})
    → {purchaseToken, orderId} (accountId = setObfuscatedAccountId, que o servidor confere). Cancelado pelo jogador → reason 'cancelled'.
    Entrega SEM duplicar: o id de cada entrega aplicada vai para S.sys.buy.applied antes do ack; se o app fechar entre gravar e confirmar,
-   na próxima abertura a entrega volta da lista, é reconhecida pelo id e só recebe o ack (não é aplicada de novo). */
+   na próxima abertura a entrega volta da lista, é reconhecida pelo id e só recebe o ack (não é aplicada de novo).
+   COMPRA SIMULADA (pedido do dono, 13/11): SÓ no Modo dono (OWNER_MODE do app de teste E save separado 'eras_owner_v1'; o app do jogador nunca
+   entra aqui). purchase() não chama Google nem servidor: mostra "COMPRA SIMULADA — nada é cobrado", monta as MESMAS entregas que o servidor daria
+   (fps-server catalog.ts + PurchaseCore.resolveGrants: 💎 em dobro na 1ª compra do pacote, pontos VIP = reais gastos, passe da temporada) e aplica
+   pelo MESMO applyGrants, com id 'sim:...' em S.sys.buy.applied (o caminho de verdade, só sem a cobrança). */
 (function (root, factory) {
   const api = factory(root);
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -17,6 +21,8 @@
   const DATA = {
     on: false,
     plugin: 'EonBilling',          // nome do plugin Capacitor de cobrança (o agente do APK confirma)
+    simForce: false,               // só testes: força o modo simulado sem OWNER_MODE (nunca ligar no jogo)
+    ownerSaveKey: 'eras_owner_v1', // a simulação exige o save SEPARADO do Modo dono
     keepApplied: 200,
     /* produto da loja → oferta local (o pacote da 1ª compra é entregue pelo Sys.offer.grant, com a arma da era do jogador) */
     offerProduct: 'first_offer',
@@ -52,11 +58,91 @@
   const net = () => { const N = Sys().net; return N && N.DATA && N.DATA.on ? N : null; };
   const bridge = () => { try { const P = root.Capacitor && root.Capacitor.Plugins; const b = P && P[DATA.plugin]; return b && typeof b.purchase === 'function' ? b : null; } catch (e) { return null; } };
 
-  /** a tela pergunta antes de mostrar o botão: true = cobrança de verdade; false = "Pagamento em breve" */
-  function ready() { const N = net(); return !!(DATA.on && N && bridge() && (!N.hasSession || N.hasSession())); }
+  /* ---------- MODO DONO: compra simulada ---------- */
+  /** true só no app de teste com o Modo dono ligado E o save separado (as duas travas; o save real nunca é tocado) */
+  function simulated() {
+    if (DATA.simForce === true) return true;
+    try { return typeof OWNER_MODE !== 'undefined' && OWNER_MODE === true && typeof SAVE_KEY !== 'undefined' && SAVE_KEY === DATA.ownerSaveKey; } catch (e) { return false; }   // eslint-disable-line no-undef
+  }
+  function simState(S) { const o = ensure(S); let z = o.sim; if (!z || typeof z !== 'object') z = o.sim = {};
+    z.cents = int0(z.cents); z.n = int0(z.n); if (!z.bought || typeof z.bought !== 'object') z.bought = {}; if (!Array.isArray(z.log)) z.log = [];
+    if (!z.card || typeof z.card !== 'object') z.card = { until: 0, last: '' }; return z; }
+  const dayKey = ms => { const C = Sys().clock; if (C && C.dayKey) return C.dayKey(ms); const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  const nowOf = host => { const t = host && host.now && host.now(); return typeof t === 'number' && isFinite(t) ? t : Date.now(); };
+  /** as entregas que o SERVIDOR daria para este produto (mesma regra do catalog.ts + resolveGrants) */
+  function simGrants(S, p) {
+    const z = simState(S), first = (z.bought[p.id] | 0) === 0, cents = Math.round(p.brl * 100), g = [];
+    if (p.kind === 'gems') g.push({ kind: 'gems', amount: p.gems * (p.firstDouble && first ? 2 : 1), firstDouble: !!(p.firstDouble && first) });
+    else if (p.kind === 'monthly_card') { g.push({ kind: 'gems', amount: p.gems }); g.push({ kind: 'monthly_card', days: p.days, daily: p.daily }); }
+    else if (p.kind === 'pass_premium') g.push({ kind: 'pass_premium', season: 'current' });
+    else if (p.kind === 'offer') { g.push({ kind: 'bundle', att: { offer: 'first_offer' } }); g.push({ kind: 'gems', amount: 300, deliveredBy: 'offer' }); }
+    else if (p.kind === 'mount') g.push({ kind: 'mount', mountId: p.mountId });
+    else if (p.kind === 'skin') g.push({ kind: 'skin', skinId: p.skinId });
+    const pts = Math.floor((z.cents + cents) / 100) - Math.floor(z.cents / 100);   // VIP = reais gastos (centavos somados, como o servidor)
+    if (pts > 0) g.push({ kind: 'vip_points', amount: pts });
+    return { grants: g, cents };
+  }
+  /** pode comprar de novo? (as travas do servidor: oferta só antes de qualquer compra, Mecha/skin uma vez, passe uma vez na temporada) */
+  function simCheck(S, p) {
+    const z = simState(S), X = Sys();
+    if (p.once && (z.bought[p.id] | 0) > 0) return 'owned';
+    if (p.kind === 'offer' && Object.keys(z.bought).some(k => (z.bought[k] | 0) > 0)) return 'not_eligible';
+    if (p.kind === 'pass_premium') { try { const o = X.pass && X.pass.ensure ? X.pass.ensure(S) : null; if (o && o.premium) return 'owned'; } catch (e) {} }
+    if (p.kind === 'skin') { try { const A = X.appearance, x = A && A.skinProducts ? A.skinProducts(S).find(q => q.productId === p.id) : null; if (x && x.owned) return 'owned'; if (x && x.available === false) return 'wrong_hero'; } catch (e) {} }
+    return '';
+  }
+  /** confirmação na tela (só no navegador; sem DOM, ex. testes ou servidor, segue direto) */
+  function simConfirm(p) {
+    const D = root.document; if (!D || !D.body || typeof D.createElement !== 'function') return Promise.resolve(true);
+    return new Promise(res => {
+      const v = D.createElement('div'); v.setAttribute('role', 'alertdialog'); v.setAttribute('aria-label', 'Compra simulada');
+      v.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,6,4,.82);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;font-family:Nunito,system-ui,sans-serif';
+      const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      v.innerHTML = '<div style="max-width:320px;width:100%;background:#241b14;border:2px solid #ffcf4a;border-radius:18px;padding:18px;color:#f6ecdf;text-align:center;display:flex;flex-direction:column;gap:10px">'
+        + '<b style="font-family:Lilita One,sans-serif;font-size:22px;color:#ffcf4a">COMPRA SIMULADA</b>'
+        + '<span style="font-size:15px;font-weight:800">' + esc(p.name) + ' · ' + esc(priceText(p.id)) + '</span>'
+        + '<span style="font-size:13px;font-weight:700;color:#e8dccb">Modo dono: nada é cobrado. A entrega é a mesma que o servidor daria, no save de teste.</span>'
+        + '<div style="display:flex;gap:8px;margin-top:4px"><button data-k="0" style="flex:1;min-height:48px;border-radius:14px;border:2px solid #4a3a2b;background:#3a2c20;color:#f6ecdf;font:900 15px Nunito,sans-serif">Cancelar</button>'
+        + '<button data-k="1" style="flex:1;min-height:48px;border-radius:14px;border:0;background:linear-gradient(#ffd75e,#f0a92a);color:#3a2408;font:900 15px Nunito,sans-serif">Comprar (simulado)</button></div></div>';
+      const done = ok => { try { v.remove(); } catch (e) {} res(ok); };
+      v.addEventListener('click', e => { const b = e.target && e.target.closest ? e.target.closest('button[data-k]') : null; if (b) done(b.getAttribute('data-k') === '1'); else if (e.target === v) done(false); });
+      D.body.appendChild(v); try { v.querySelector('button[data-k="1"]').focus(); } catch (e) {}
+    });
+  }
+  async function simPurchase(S, host, p) {
+    const why = simCheck(S, p); if (why) return { ok: false, reason: why, simulated: true };
+    if (!(host && host.simConfirm === false) && !(await simConfirm(p))) return { ok: false, reason: 'cancelled', simulated: true };
+    const z = simState(S), { grants, cents } = simGrants(S, p), id = 'sim:' + p.id + ':' + (++z.n);
+    const got = applyGrants(S, host, grants, false, id), o = ensure(S);
+    if (p.kind === 'monthly_card') { const now = nowOf(host); z.card.until = Math.max(now, z.card.until) + p.days * 86400000; }
+    z.cents += cents; z.bought[p.id] = (z.bought[p.id] | 0) + 1; z.log.push({ id, p: p.id, at: nowOf(host) }); z.log = z.log.slice(-50);
+    o.applied.push(id); o.applied = o.applied.slice(-DATA.keepApplied);
+    try { if (host && host.save) host.save(); else if (typeof root.save === 'function') root.save(); } catch (e) {}
+    return { ok: true, status: 'granted', simulated: true, applied: [{ id, revoke: false, got }] };
+  }
+  /** Cartão Mensal simulado: 60 💎 por dia enquanto valer (no jogo de verdade é POST /purchases/monthly-card/claim) */
+  function cardStatus(S, host) { const z = simState(S), now = nowOf(host); return { active: z.card.until > now, daysLeft: Math.max(0, Math.ceil((z.card.until - now) / 86400000)), claimedToday: z.card.last === dayKey(now), simulated: simulated() }; }
+  function cardClaim(S, host) {
+    if (!simulated()) return { ok: false, reason: 'soon' };
+    const st = cardStatus(S, host); if (!st.active) return { ok: false, reason: 'no_card' }; if (st.claimedToday) return { ok: false, reason: 'claimed' };
+    const p = product('monthly_card'), z = simState(S); z.card.last = dayKey(nowOf(host)); if (host && host.addGems) host.addGems(p.daily); else S.gems = int0(S.gems) + p.daily;
+    try { if (host && host.save) host.save(); } catch (e) {} return { ok: true, gems: p.daily, simulated: true };
+  }
+  /** atalho do Modo dono: põe o VIP no nível n (pontos = o mínimo do nível; os benefícios ligam como no jogo) */
+  function simVip(S, n) {
+    if (!simulated()) return { ok: false, reason: 'soon' };
+    const V = Sys().vip; if (!V || !V.DATA || !V.setLevel) return { ok: false, reason: 'no_vip' };
+    const l = Math.max(0, Math.min(V.DATA.maxLevel, int0(n))), pts = int0(V.DATA.points[l]);
+    if (!S.sys || typeof S.sys !== 'object') S.sys = {}; S.sys.vip = Object.assign({}, S.sys.vip, { points: pts }); V.setLevel(S, l);
+    return { ok: true, level: l, points: pts, simulated: true };
+  }
+
+  /** a tela pergunta antes de mostrar o botão: true = cobrança de verdade (ou a SIMULADA do Modo dono); false = "Pagamento em breve" */
+  function ready() { if (simulated()) return true; const N = net(); return !!(DATA.on && N && bridge() && (!N.hasSession || N.hasSession())); }
 
   /** compra um produto do catálogo do servidor. Resolve {ok, status, reason, applied} */
   async function purchase(S, host, productId) {
+    if (simulated()) { const p = product(productId); if (!p) return { ok: false, reason: 'unavailable' }; return simPurchase(S, host, p); }
     if (!ready()) return { ok: false, reason: 'soon' };
     if (!available(productId, S)) return { ok: false, reason: 'unavailable' };
     const N = net(), B = bridge();
@@ -143,5 +229,5 @@
     if (p.kind !== 'mount') return true;
     try { const N = Sys().newDrops, s = N && N.shop ? N.shop() : []; const x = s.find(q => q.productId === id); return !!(x && x.on); } catch (e) { return false; } };
   const priceText = id => { const p = product(id); return p ? 'R$ ' + p.brl.toFixed(2).replace('.', ',') : ''; };
-  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available };
+  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available, simulated, simVip, cardStatus, cardClaim };
 });

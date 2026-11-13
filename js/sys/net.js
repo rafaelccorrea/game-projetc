@@ -124,13 +124,19 @@ const time=()=>raw('GET','/time',null,false);
 const saveMeta=()=>Object.assign({version:0,dirty:false},ST.mem.save||{});
 function markDirty(){ ST.mem.save=Object.assign(saveMeta(),{dirty:true}); persist(); }
 function setMeta(version,dirty){ ST.mem.save={version,dirty:!!dirty}; persist(); }
+/* MODO DONO (app de teste, save separado 'eras_owner_v1'): o save do dono NUNCA sobe nem desce da nuvem (senão o save cheio de itens liberados
+   cobriria o da conta real) e as entregas de compra REAIS não caem no save de teste. push/pull/sync/chooseSide/restore e as entregas não tocam em nada. */
+const ownerMode=()=>{ if(DATA.ownerForce===true) return true; try{ return typeof OWNER_MODE!=='undefined'&&OWNER_MODE===true; }catch(e){ return false; } };   // eslint-disable-line no-undef
+const OWNER_SKIP={action:'none',owner:true};
 async function head(){ try{ return await call('GET','/save/head'); }catch(e){ if(e.code==='not_found') return null; throw e; } }
 async function pull(){
+  if(ownerMode()) return null;
   try{ const r=await call('GET','/save'); setMeta(r.version,false); return r; }
   catch(e){ if(e.code==='not_found') return null; throw e; }
 }
 /* sobe o S. 409 save_conflict: rejeita com details.cloud (a tela decide com chooseSide). */
 async function push(S,summary){
+  if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta();
   let r;
   try{ r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
@@ -149,6 +155,7 @@ async function push(S,summary){
    'pulled'  = nuvem mais nova e o aparelho não mudou: já baixou (r.save = o S novo; a camada troca o S local);
    'choose'  = os DOIS mudaram: a tela mostra os resumos (device × cloud) e chama chooseSide('device'|'cloud'). Nunca há fusão. */
 async function sync(S,summary){
+  if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta(), h=await head();
   if(!h){ const r=await push(S,summary); return {action:'push',version:r.version}; }
   if(h.version===m.version){
@@ -161,12 +168,13 @@ async function sync(S,summary){
 const num=v=>(typeof v==='number'&&isFinite(v))?v:0;
 /* escolha da tela no conflito. 'device' sobe o S por cima (a versão da nuvem vai para o histórico); 'cloud' baixa. */
 async function chooseSide(side,S,summary){
+  if(ownerMode()) return Object.assign({},OWNER_SKIP);
   if(side==='cloud'){ const r=await pull(); return {action:'pulled',version:r.version,save:r.save,summary:r.summary}; }
   const h=await head(); setMeta(h?h.version:0,true);
   const r=await push(S,summary); return {action:'push',version:r.version};
 }
 const history=()=>call('GET','/save/history');
-const restore=version=>call('POST','/save/restore',{version}).then(r=>{ setMeta(r.version,false); return r; });
+const restore=version=>ownerMode()?Promise.resolve(Object.assign({},OWNER_SKIP)):call('POST','/save/restore',{version}).then(r=>{ setMeta(r.version,false); return r; });
 
 /* ---------- compras (§7) ---------- */
 /* antes de abrir a compra: o id que vai em BillingFlowParams.setObfuscatedAccountId (o servidor confere que a compra é desta conta) */
@@ -177,8 +185,8 @@ const canBuy=productId=>call('GET','/purchases/can-buy?productId='+encodeURIComp
 const verifyGoogle=p=>call('POST','/purchases/google',{productId:p.productId,purchaseToken:p.purchaseToken,orderId:p.orderId||null});
 /* ENTREGAS: o jogo aplica SÓ o que vem daqui (o grants da resposta da compra é informativo), grava o save e confirma com ackDelivery(id).
    Chamar ao abrir o jogo e depois de cada compra. revoke:true = estorno (tirar o que der: 💎 até 0, VIP, skin, passe). */
-const deliveries=()=>call('GET','/purchases/deliveries');
-const ackDelivery=id=>call('POST','/purchases/deliveries/'+encodeURIComponent(id)+'/ack');
+const deliveries=()=>ownerMode()?Promise.resolve([]):call('GET','/purchases/deliveries');
+const ackDelivery=id=>ownerMode()?Promise.resolve(Object.assign({},OWNER_SKIP)):call('POST','/purchases/deliveries/'+encodeURIComponent(id)+'/ack');
 const entitlements=()=>call('GET','/entitlements');
 const offers=()=>call('GET','/offers');
 const claimMonthlyCard=()=>call('POST','/purchases/monthly-card/claim');
