@@ -55,3 +55,25 @@ Ordem: os 3 pets que estão fechando agora. Depois, item por item, na ordem que 
 | Regra (nada / leve / forte) | ✓ `js/sys/pet.js` `PET_BATTLE` (f636e23); `test/e2e/petaura.js` (79) e `e2.test` ok |
 | Arte | ✓ todas existem em `assets/anim/aura` (aura4, aura7, aura10, aura13, aura_evil, aura_holy): nada falta para a Arte |
 | Visto na tela | ✗ falta o QA ver |
+
+---
+
+## Arma 1: Clava Básica (`era0_t0`), primeiro item da ARTE_MATRIZ
+
+| Linha | Estado | Onde |
+|---|---|---|
+| Arte que o sistema lê | ✓ ícone e mão `assets/weapons/era0_t0.png`, grip no `assets/weapons/meta.json`; ultimate `assets/anim/ult/era0_ult` (png + json) | teste |
+| Família e golpe | ✓ Clava, corpo a corpo, arte da era 0 | `js/sys/stats.js:36` |
+| Ultimate | ✓ folha-base `era0_ult` pronta (Básico a Épico usam a base; Mítico reforça por código; Lendário `club_legend`) | `Sys.stats.ultOf` |
+| Efeito por raridade (3 golpes) | ✓ Básico: sem brilho, dano x1 | `Sys.stats.skillFx` |
+| Atributo | ✓ ATK principal, cresce com o nível e a Forja; o Básico é o menor das 5 | `Sys.stats.mainOf` |
+| Forja +0..+15 | ✓ chance, pedras, teto por era (era 0: +6) | `js/sys/forge.js:14` |
+| Aura da Forja | ✓ +4 azul, +7 roxa, +10 chamas, +13 dourada | `js/sys/forge.js:22` |
+| Forja +16..+20 | ⏸ `Sys.forge.setForge20(true)`: teto 20 (era 7 +18, era 8 +20), bônus 1,05 a 1,53, chance 5/5/4/4/3, pedras 28 a 45 (números do `balance.json` pacoteFim). Desligado até a medida do Engenheiro. A aura de +16 a +20 fica a dourada: não há arte de aura nova; se o dono quiser uma, é pedido de Arte | `js/sys/forge.js:28` |
+| Fontes | ✓ arma inicial do jogador · drop da era 0 (Básico é a raridade mais comum) · Invocação (peso 50 de 100) | `index.html:438`, `index.html:314`, `js/sys/loot.js:141` |
+| Preço | ✓ não se vende; melhoria só com ouro (`Sys.stats.upgradeCost`) | — |
+| Códex | ✓ marca `w-0-0` (Básico e Raro) | `js/sys/codex.js` |
+| **Texto (nome)** | ✗ **na tela o item se chama "Graveto Afiado"** (`index.html:352`, `ERAS[0].w[0]`), mas a arte e a família são de clava. Decisão do PO/dono: trocar para "Clava Básica"/outro nome, ou manter | `index.html:352` |
+| Teste | ✓ `test/sys/item-era0_t0.test.js` (9): arte no disco, família, ultimate, efeito, atributo, Forja hoje e +16..+20, aura, fontes, Códex, nome | — |
+
+**Do lado de sistema, a Clava Básica fecha com 1 decisão pendente: o nome.** O resto da linha (N1 telas montadas e N3 conferência na tela) é do Engenheiro e do QA, como a Arte anotou.

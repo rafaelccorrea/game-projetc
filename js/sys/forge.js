@@ -22,7 +22,12 @@ const DATA={
   auras:[{from:0,id:'none',name:'Sem aura',col:''},{from:4,id:'blue',name:'Aura azul',col:'#4aa3ff'},{from:7,id:'purple',name:'Aura roxa',col:'#b45cff'},
          {from:10,id:'flame',name:'Chamas vermelhas',col:'#ff4d3d'},{from:13,id:'gold',name:'Dourada com raios',col:'#ffd23f'}],
   maxStones:1e9,
+  // FORJA +16 A +20 (pacote das últimas eras, dono 13/11; docs/balance.json dificuldade.pacoteFim.forge): DESLIGADO até a medida do Engenheiro.
+  // setForge20(true) sobe o teto para 20 e libera +18 na era 7 e +20 na era 8; desligar volta a tudo de antes. A aura de +13 a +20 continua a dourada
+  // (não há arte de aura nova para +16; se o dono quiser uma, é pedido de Arte). Desligar com alguém acima de +15 corta o save para +15 (contrato do ensure: teto = DATA.max).
+  f20:{on:false, max:20, bonus:[1.05,1.17,1.29,1.41,1.53], chance:[5,5,4,4,3], stones:[28,32,36,40,45], capByEra:[6,6,9,9,12,12,15,18,20]},
 };
+const BASE15={max:15, bonus:15+1, chance:15, stones:15, capByEra:7};
 
 /* ---------------- utilidades ---------------- */
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -49,11 +54,17 @@ function ensure(S){
 }
 
 const capOf=host=>DATA.capByEra[clamp(eraMaxOf(host),0,DATA.capByEra.length-1)];
-const level=(S,slot)=>isSlot(slot)?ensure(S).lv[slot]:0;
+/* Forja +16 a +20: liga e desliga sem duplicar */
+function setForge20(on){ const F=DATA.f20; F.on=!!on; DATA.max=F.on?F.max:BASE15.max; DATA.bonus.length=BASE15.bonus; DATA.chance.length=BASE15.chance; DATA.stones.length=BASE15.stones; DATA.capByEra.length=BASE15.capByEra;
+  if(F.on){ DATA.bonus.push(...F.bonus); DATA.chance.push(...F.chance); DATA.stones.push(...F.stones); DATA.capByEra.push(...F.capByEra.slice(BASE15.capByEra)); } return F.on; }
+const forge20On=()=>DATA.f20.on===true;
+/* nível que VALE agora (o save pode guardar +16..+20 com a chave desligada) */
+const eff=n=>Math.min(int0(n),DATA.max);
+const level=(S,slot)=>isSlot(slot)?eff(ensure(S).lv[slot]):0;
 /* multiplicador do espaço: o engenheiro aplica em heroStats() → poder × (1 + mult). Não é bonus() de Sys. */
-const mult=(S,slot)=>isSlot(slot)?DATA.bonus[ensure(S).lv[slot]]:0;
+const mult=(S,slot)=>isSlot(slot)?DATA.bonus[eff(ensure(S).lv[slot])]:0;
 /* chance da PRÓXIMA tentativa (base + garantia acumulada), em % (0..100) */
-function chance(S,slot){ const o=ensure(S), n=o.lv[slot]; if(n>=DATA.max) return 0; return clamp(DATA.chance[n]+o.pity[slot],0,100); }
+function chance(S,slot){ const o=ensure(S), n=eff(o.lv[slot]); if(n>=DATA.max) return 0; return clamp(DATA.chance[n]+o.pity[slot],0,100); }
 function goldCost(host){ const u=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)); return Math.round(DATA.goldPerTryKills*u); }
 /* desbloqueio pelo nível do jogador (Sys.level); sem o Sys.level carregado, fica liberado. As pedras caem antes e ficam guardadas. */
 const LV=()=>root.Sys&&root.Sys.level;
@@ -63,7 +74,7 @@ const LOCK='<svg class="sys-lock-ic" viewBox="0 0 24 24" width="40" height="40" 
 /* {ok, reason:'slot'|'locked'|'max'|'cap'|'stones'|'gold', stones, gold, chance} */
 function canTry(S,host,slot){
   if(!isSlot(slot)) return {ok:false,reason:'slot',stones:0,gold:0,chance:0};
-  const o=ensure(S), n=o.lv[slot], st=n<DATA.max?DATA.stones[n]:0, g=goldCost(host), ch=chance(S,slot);
+  const o=ensure(S), n=eff(o.lv[slot]), st=n<DATA.max?DATA.stones[n]:0, g=goldCost(host), ch=chance(S,slot);
   const r={ok:false,reason:'',stones:st,gold:g,chance:ch};
   if(locked(S)){ r.reason='locked'; return r; }
   if(n>=DATA.max){ r.reason='max'; return r; }
@@ -83,7 +94,7 @@ function attempt(S,host,slot){
   return {ok:true,reason:'',success,slot,lv:o.lv[slot],chance:c.chance,roll,pity:o.pity[slot],stones:c.stones,gold:typeof (host&&host.spendGold)==='function'?c.gold:0};
 }
 /* pior caso de tentativas para o próximo nível com a garantia (para a tela: "garantido em até N") */
-function worstTries(S,slot){ const o=ensure(S), n=o.lv[slot]; if(n>=DATA.max) return 0; return Math.max(1,Math.ceil((100-chance(S,slot))/DATA.pityPerFail)+1); }
+function worstTries(S,slot){ const o=ensure(S), n=eff(o.lv[slot]); if(n>=DATA.max) return 0; return Math.max(1,Math.ceil((100-chance(S,slot))/DATA.pityPerFail)+1); }
 
 function addStones(S,n,host){
   const k=int0(n); if(!k) return 0; const o=ensure(S), before=o.stones;
@@ -111,7 +122,7 @@ function render(el,S,host,opt){
   // linhas por página pela altura real (cabeçalho ~40, aura ~34, aviso ~20; pager ~48 só se não couber tudo)
   const N=DATA.slots.length, rowH=num(opt.rowH,60), body=num(el.clientHeight,0)-94;
   const per=body<=0||N*rowH<=body?N:clamp(Math.floor((body-48)/rowH),1,N), pages=Math.ceil(N/per), pg=clamp(int0(el.__sysForgePage),0,pages-1); el.__sysForgePage=pg;
-  const row=s=>{ const n=o.lv[s], c=canTry(S,host,s), top=n>=DATA.max, atCap=n>=cap;
+  const row=s=>{ const n=eff(o.lv[s]), c=canTry(S,host,s), top=n>=DATA.max, atCap=n>=cap;
     const pityW=top?0:Math.round(o.pity[s]/Math.max(1,100-DATA.chance[n])*100);
     return `<div class="sys-card sys-forge-row">
       <span class="sys-forge-nm"><b>${DATA.slotName[s]}</b><span class="sys-forge-lv">+${n}</span></span>
@@ -134,7 +145,7 @@ function render(el,S,host,opt){
     if(host&&host.toast) host.toast(el.__sysForgeMsg); changed(host); render(el,S,host,opt); };
 }
 
-const API={DATA,ensure,capOf,level,mult,chance,canTry,attempt,worstTries,addStones,aura,bonus,advice,render,_goldCost:goldCost};
+const API={DATA,setForge20,forge20On,ensure,capOf,level,mult,chance,canTry,attempt,worstTries,addStones,aura,bonus,advice,render,_goldCost:goldCost};
 root.Sys=root.Sys||{}; root.Sys.forge=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
