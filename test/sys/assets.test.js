@@ -7,8 +7,11 @@ let n=0; const t=(name,fn)=>{ try{ fn(); n++; }catch(e){ console.error('FALHOU:'
 
 t('classify: cada tipo de arte no seu pacote; fontes brutas fora',()=>{
   const C=A.classify;
-  assert.strictEqual(C('assets/anim/hyb/R/kael_idle_body.png'),'hero:kael:0'); assert.strictEqual(C('assets/anim/hyb/phase2/kael_run_era2_t1.png'),'hero:kael:2');
-  assert.strictEqual(C('assets/anim/hyb/kaia/kaia_idle_body.png'),'hero:kaia:0'); assert.strictEqual(C('assets/anim/hyb/kaia_phase3/masks/kaia_idle_head.json'),'hero:kaia:3');
+  assert.strictEqual(C('assets/anim/hyb/R/kael_idle_body.png'),'hero:kael:0'); assert.strictEqual(C('assets/anim/hyb/phase2/kael_run_era2_t1.png'),'retired','fases 1-3 aposentadas');
+  assert.strictEqual(C('assets/anim/hyb/kaia/kaia_idle_body.png'),'hero:kaia:0'); assert.strictEqual(C('assets/anim/hyb/kaia_phase3/masks/kaia_idle_head.json'),'retired');
+  assert.strictEqual(C('assets/map/era3.jpg'),'era:3'); assert.strictEqual(C('assets/map/world.jpg'),'core'); assert.ok(!A.excluded('assets/map/world.jpg'),'o mapa entra no app');
+  assert.strictEqual(C('assets/anim/skins/kael_demon/kael_idle_body.png'),'skin:kael_demon'); assert.strictEqual(C('assets/anim/mounts/kaia_pony_run_body.png'),'mount:pony');
+  assert.strictEqual(A.deliveryOf('core'),'base'); assert.strictEqual(A.deliveryOf('aura'),'fast'); assert.strictEqual(A.deliveryOf('retired'),'none'); assert.strictEqual(A.deliveryOf('mount:wolf'),'demand'); assert.ok(!A.DATA.fastFollow().some(p=>p.startsWith('hero:')),'fast-follow sem herói');
   assert.strictEqual(C('assets/anim/hyb/R/pistol/kael_pistol_idle_era5_t0.png'),'gun:5'); assert.strictEqual(C('assets/anim/hyb/R/gun/kael_gun_shoot_era3_t2.png'),'gun:3');
   assert.strictEqual(C('assets/anim/hyb/enemy/era7_boss_attack.png'),'enemy:7'); assert.strictEqual(C('assets/enemies/era2_e0.png'),'enemy:2');
   assert.strictEqual(C('assets/anim/mounts/kael_wolf_idle_3star.png'),'mount:wolf'); assert.strictEqual(C('assets/anim/pets/era7_cerberus_mid_atk1.png'),'pet:era7_cerberus:1');
@@ -57,7 +60,7 @@ t('pré-carga da cena (P27): sceneSet com herói/arma/ultimate/montaria/asa/era/
     assert.ok(G.mount.length&&G.mount.every(p=>p.startsWith('assets/anim/mounts/kael_wolf_'))); assert.ok(G.wing.includes('assets/anim/equip/wing_angel_L.png'));
     assert.ok(G.era.some(p=>p.startsWith('assets/bg/v2/era5/')||p==='assets/bg/era5.png'),'fundo da era 5'); assert.ok(G.enemies.length); assert.strictEqual(new Set(r.files).size,r.files.length);
     const n=A.nextEraSet(S,h); assert.strictEqual(n.era,6); assert.ok(n.groups.era.some(p=>p.startsWith('assets/bg/v2/era6/'))&&n.groups.enemies.length);
-    S.hero='kaia'; assert.ok(A.sceneSet(S,h).groups.hero.every(p=>p.startsWith('assets/anim/hyb/kaia/'))); assert.strictEqual(A.sceneSet(S,h).groups.mount.length,0,'Kaia sem folha montada');
+    S.hero='kaia'; assert.ok(A.sceneSet(S,h).groups.hero.every(p=>p.startsWith('assets/anim/hyb/kaia/'))); assert.strictEqual(A.sceneSet(S,h).groups.mount.length>0,A.mountedArt('kaia','wolf')===true,'Kaia montada só quando a folha existe (mountedArt)'); assert.ok(A.sceneSet(S,h).groups.mount.every(p=>p.startsWith('assets/anim/mounts/kaia_wolf_')));
   } finally { A.setManifest(null); }
 });
 console.log(`ok: ${n} testes`);

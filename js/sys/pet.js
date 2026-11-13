@@ -59,7 +59,7 @@ const DATA={
   },
   pMax:0.25, rarW:[0.40,0.55,0.70,0.85,1.00,4/3],   // [5] = Prismático (1,333: p máx 1/3 = 25% da FC total)
   v4:false,
-  newPets:false, newReady:{},   // liga os 9 novos (o engenheiro, quando a arte for aprovada; um a um com newReady[id]=true)
+  newPets:false, newReady:{shadowwolf:true},   // ARTE ENTREGUE e pet aprovado pelo dono: liga um a um (shadowwolf: ba0789b)   // liga os 9 novos (o engenheiro, quando a arte for aprovada; um a um com newReady[id]=true)
   starterIds:['wolf','owl','drake','golem','phoenix','underworld','parrot','celestial'],   // os de hoje = iniciais GRÁTIS (o prismático continua à parte)
   // PET NO NÍVEL 20 (dono; PROPOSTA, chave DESLIGADA). Ligada: o pet abre no Nv 20; ao chegar, firstEgg dá 1 ovo GRÁTIS sorteado só entre as
   // 2 primeiras raridades (79% Básico, 21% Raro; nunca Lendário). Ovos ganhos ANTES do 1º ovo ficam guardados (o.pre) e chocam logo depois dele,
@@ -399,6 +399,16 @@ const PET_BATTLE={
   era7_cerberus:{dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'fire',glow:2},  aura:['aura4','aura7','aura_evil']},   // Submundo: fogo, aura maligna
   era8_pegasus: {dx:0.43,dy:4,h:[0.50,0.57,0.66],fly:0,    fx:{color:'#ffe07a',hit:'light',glow:2}, aura:['aura4','aura10','aura_holy']},  // Celestial: luz, aura celestial
   prism_fox:    {dx:0.42,dy:5,h:[0.42,0.49,0.58],fly:0,    fx:{color:'#c9a0ff',hit:'prism',glow:3,prism:true}, aura:['aura7','aura10','aura13']},   // Divino: arco-íris
+  // 9 pets novos (sprite 'pet_'+id na 17b). Os que voam: falcão, corvo, grifo, dragão de gelo, serpe. hit = efeito da habilidade (skill do pet)
+  pet_shadowwolf:{dx:0.42,dy:5,h:[0.44,0.50,0.60],fly:0,    fx:{color:'#7a5cff',hit:'dash'},   aura:[null,'aura4','aura7']},
+  pet_falcon:    {dx:0.44,dy:0,h:[0.38,0.44,0.54],fly:0.15, fx:{color:'#d8b47a',hit:'feather'},aura:[null,'aura4','aura7']},
+  pet_panther:   {dx:0.42,dy:5,h:[0.44,0.50,0.60],fly:0,    fx:{color:'#b07cff',hit:'blink'},  aura:[null,'aura4','aura7']},
+  pet_scorpion:  {dx:0.42,dy:6,h:[0.40,0.46,0.56],fly:0,    fx:{color:'#7fe07a',hit:'poison'}, aura:[null,'aura4','aura7']},
+  pet_crow:      {dx:0.44,dy:0,h:[0.38,0.44,0.54],fly:0.15, fx:{color:'#8cc8ff',hit:'spark'},  aura:[null,'aura4','aura7']},
+  pet_griffin:   {dx:0.43,dy:0,h:[0.48,0.55,0.65],fly:0.12, fx:{color:'#3a2a24',hit:'impact',glow:1}, aura:['aura4','aura7','aura10']},
+  pet_obsidian:  {dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'impact',glow:1}, aura:['aura4','aura7','aura10']},
+  pet_icedragon: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#9ae6ff',hit:'ice',glow:2},    aura:['aura4','aura10','aura13']},
+  pet_wyvernpet: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#ff6a2a',hit:'fire',glow:2},   aura:['aura4','aura7','aura_evil']},
 };
 function drawOf(sprite,idx){ const st=clamp(int0(idx),0,2), base=sprite+(['','_mid','_evo'][st]), extra=st===0&&PET_EXTRA.includes(sprite)?['atk2','atk3']:[], B=PET_BATTLE[sprite]||PET_BATTLE.era0_mammoth;
   return {sprite,base,stageSuffix:base.slice(sprite.length),sheets:['run','idle','atk1'].concat(extra).map(k=>base+'_'+k),extra:extra.map(k=>base+'_'+k),

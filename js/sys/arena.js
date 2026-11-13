@@ -69,14 +69,14 @@ function ensure(S,host){
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.arena; if(!o||typeof o!=='object') o=S.sys.arena={};
   o.v=1; o.points=Math.max(DATA.minPoints,num(o.points,DATA.startPoints)); o.fights=int0(o.fights); o.wins=int0(o.wins);
-  o.attemptsLeft=clamp(int0(num(o.attemptsLeft,DATA.attemptsPerDay)),0,DATA.attemptsPerDay);
+  const maxA=DATA.attemptsPerDay+vipAdd(S,'arenaAdd'); o.attemptsLeft=clamp(int0(num(o.attemptsLeft,maxA)),0,maxA);
   o.refreshLeft=clamp(int0(num(o.refreshLeft,DATA.refreshPerDay)),0,DATA.refreshPerDay); o.refreshes=int0(o.refreshes);
   o.lp=Math.max(0,Math.floor(num(o.lp,0))); o.league=clamp(int0(o.league),0,DATA.leagues.length-1);   // ligas (save antigo: Bronze, 0)
   o.bestRank=int0(o.bestRank); if(typeof o.week!=='string') o.week=''; if(typeof o.day!=='string') o.day='';
   if(!o.botBase||typeof o.botBase!=='object') o.botBase=null;
   if(host){ const t=nowOf(host), wk=weekKey(t), dk=dayKey(t);
     if(o.week!==wk){ if(o.week) closeWeek(S,host,o); o.week=wk; o.points=DATA.startPoints; o.botBase={fc:weekMaxFC(S,host)}; }
-    if(o.day!==dk){ o.day=dk; o.attemptsLeft=DATA.attemptsPerDay; o.refreshLeft=DATA.refreshPerDay; o.refreshes=0; }
+    if(o.day!==dk){ o.day=dk; o.attemptsLeft=DATA.attemptsPerDay+vipAdd(S,'arenaAdd'); o.refreshLeft=DATA.refreshPerDay; o.refreshes=0; }
     if(!o.botBase) o.botBase={fc:weekMaxFC(S,host)}; }
   return o;
 }
@@ -91,6 +91,7 @@ function closeWeek(S,host,o){
 }
 /* fecha a liga da semana: sobe/fica/cai pelas linhas; prêmio da liga em que fechou (só se permitido) */
 const lgOf=lp=>{ let k=0; DATA.leagues.forEach((L,i)=>{ if(lp>=L.min) k=i; }); return k; };
+const vipAdd=(S,k)=>{ const V=root.Sys&&root.Sys.vip; try{ return V&&V.conv?Math.max(0,Math.floor(+V.conv(S)[k]||0)):0; }catch(e){ return 0; } };   // VIP de conveniência (Sys.vip.conv)
 const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (Sys.newDrops, chave própria)
 function closeLeague(S,host,o,allowed){ const from=o.league, L=DATA.leagues, nx=L[from+1];
   let to=from; if(nx&&o.lp>=nx.min) to=lgOf(o.lp); else if(o.lp<L[from].min) to=lgOf(o.lp);

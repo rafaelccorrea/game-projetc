@@ -32,7 +32,7 @@ const DATA={
   },
   // VIP DE CONVENIÊNCIA (ordem do dono, 13/11; PROPOSTA, chave convOn DESLIGADA). Acelera e poupa toque; NÃO dá atributo, XP a mais nem diamante
   // (o que já existia na tabela acima continua igual). v = nível de VIP que libera; free = o que o jogador grátis tem. Cada módulo lê conv(S).
-  convOn:false,
+  convOn:true,   // APROVADO pelo dono (13/11) como na tabela; arena/torre/eventos: o VIP SOMA ao que o grátis já tem hoje (não tira do grátis)
   conv:[
     {id:'autoCollect', name:'Coleta automática (baús do dia, missões feitas e correio sem item)', v:1, free:'toca um a um'},
     {id:'bag',         name:'Espaços extras na mochila', v:1, val:[0,20,20,20,20,20,40,40,40,40,40], free:'60 espaços'},
@@ -41,10 +41,10 @@ const DATA={
     {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:2, free:'aviso "item melhor" + 1 toque'},
     {id:'autoSell',    name:'Desmontar sozinho itens fracos (Básico/Raro, o jogador escolhe)', v:3, free:'"desmontar todos" manual'},
     {id:'skipBoss',    name:'Pular chefe já vencido (resultado na hora, mesmo prêmio)', v:3, free:'luta inteira (até x2/x4)'},
-    {id:'arena',       name:'Entradas de arena por dia', v:4, val:[3,3,3,3,5,5,5,5,6,6,6], free:'3 por dia'},
+    {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'as de hoje (Sys.arena.DATA.attemptsPerDay)'},
     {id:'autoForge',   name:'Forja automática até o nível escolhido (mesma chance e custo; para no ouro ou nas pedras)', v:4, free:'1 toque por tentativa'},
-    {id:'tower',       name:'Tentativas da torre por dia', v:5, val:[3,3,3,3,3,4,4,4,4,4,5], free:'3 por dia'},
-    {id:'bossTries',   name:'Ataques no Chefe Mundial por janela', v:6, val:[2,2,2,2,2,2,3,3,3,3,3], free:'2 por janela'},
+    {id:'towerAdd',    name:'Tentativas (derrotas) da torre a mais por dia', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'as de hoje (Sys.tower.DATA.lossesPerDay)'},
+    {id:'bossAdd',     name:'Ataques a mais no Chefe Mundial por janela', v:6, val:[0,0,0,0,0,0,1,1,1,1,1], free:'2 por janela'},
     {id:'passXp',      name:'XP do Passe a mais (só o Passe; o nível do jogador não muda)', v:7, val:[0,0,0,0,0,0,0,10,10,15,20], unit:'%', free:'0%'},
     {id:'eventTries',  name:'Entrada extra nos eventos com hora (Invasão, Chefe Mundial)', v:8, val:[0,0,0,0,0,0,0,0,1,1,1], free:'as da agenda'},
   ],
@@ -127,8 +127,10 @@ function levelInfo(n){ const d=DATA.levels[clamp(int0(n),0,DATA.maxLevel)];
     chestPerDay:DATA.chestBase+d.perks.chestCapAdd, offlineMult:d.perks.offlineMult, speedTier:d.spd, frame:d.perks.frame, vipSkin:d.perks.vipSkin, aura:d.perks.aura}; }
 /* conveniências do VIP: {on, level, autoCollect:bool, bag:n, offlineH:n, autoFuse, autoEquip, autoSell, skipBoss, arena:n, autoForge, tower:n, bossTries:n, passXp:%, eventTries:n}
    Desligado (convOn=false): tudo no valor do grátis (val[0] ou false), para os módulos lerem sem condição. */
-function conv(S){ const l=level(S), on=DATA.convOn===true, out={on,level:on?l:0};
-  for(const c of DATA.conv) out[c.id]=c.val?num(c.val[on?l:0],c.val[0]):(on&&l>=c.v); return out; }
+function conv(S,id){ const l=level(S), on=DATA.convOn===true;
+  if(id!=null){ const c=DATA.conv.find(x=>x.id===id); if(!c) return null; const value=c.val?num(c.val[on?l:0],c.val[0]):(on&&l>=c.v);
+    return {id,on:on&&l>=c.v,need:c.v,value,name:c.name,free:c.free,lockText:'VIP '+c.v}; }   // conv(S, 'autoCollect') → {on, need, value, lockText}
+  const out={on,level:on?l:0}; for(const c of DATA.conv) out[c.id]=c.val?num(c.val[on?l:0],c.val[0]):(on&&l>=c.v); return out; }
 /* tabela legível para o dono: benefício · VIP que libera · o que o grátis tem · valor por nível */
 const convTable=()=>DATA.conv.map(c=>({id:c.id,name:c.name,vip:c.v,free:c.free,values:c.val?c.val.slice():null,unit:c.unit||''}));
 const API={conv,convTable,DATA,level,active,setLevel,setActive,addPoints,levelForPoints,progress,levelInfo,perks,mult,maxSpeed,speedMax,bonus};

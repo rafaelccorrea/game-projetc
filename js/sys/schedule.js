@@ -60,7 +60,9 @@ const lvl=(S,host)=>{ const L=root.Sys&&root.Sys.level; return L&&L.level?L.leve
 /* pode entrar? {ok, reason: off|id|level|closed|entries, left} — eventos sem entrada (bônus) só precisam do nível e da janela aberta */
 function canEnter(S,host,id){ if(!ON()) return {ok:false,reason:'off'}; const ev=BY[id]; if(!ev) return {ok:false,reason:'id'};
   if(lvl(S,host)<ev.level) return {ok:false,reason:'level',needLevel:ev.level}; const a=active(S,host).find(x=>x.id===id); if(!a) return {ok:false,reason:'closed',next:upcoming(S,host,20).find(x=>x.id===id)||null};
-  if(!ev.entries) return {ok:true,left:Infinity,key:a.key}; const used=int0(ensure(S).entered[a.key]); return used>=ev.entries?{ok:false,reason:'entries',left:0}:{ok:true,left:ev.entries-used,key:a.key}; }
+  if(!ev.entries) return {ok:true,left:Infinity,key:a.key}; const cap=entriesOf(S,ev), used=int0(ensure(S).entered[a.key]); return used>=cap?{ok:false,reason:'entries',left:0}:{ok:true,left:cap-used,key:a.key}; }
+/* entradas por janela + VIP de conveniência (Sys.vip.conv: bossAdd no Chefe Mundial, eventTries nos outros com entrada) */
+function entriesOf(S,ev){ const V=root.Sys&&root.Sys.vip; let add=0; try{ const c=V&&V.conv?V.conv(S):null; if(c) add=int0(ev.id==='world_boss'?c.bossAdd:0)+int0(c.eventTries); }catch(e){} return ev.entries+add; }
 function enter(S,host,id){ const c=canEnter(S,host,id); if(!c.ok) return c; const o=ensure(S); if(BY[id].entries){ o.entered[c.key]=int0(o.entered[c.key])+1;
     const keep=Object.keys(o.entered).sort((a,b)=>+b.split('@')[1]-+a.split('@')[1]).slice(0,40); const n={}; for(const k of keep) n[k]=o.entered[k]; o.entered=n; }
   return {ok:true,id,left:BY[id].entries?c.left-1:Infinity}; }
@@ -71,7 +73,7 @@ function perks(S,host){ const z={goldPct:0,dropPct:0,foodPct:0,forgePct:0,arenaP
 function agendaText(){ const D=['dom','seg','ter','qua','qui','sex','sáb'], hm=([h,m])=>String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
   return DATA.events.map(e=>({id:e.id,name:e.name,days:e.days.length===7?'todo dia':e.days.map(d=>D[d]).join(', '),at:e.at.map(hm).join(' e '),dur:e.durMin>=120?Math.round(e.durMin/60)+' h':e.durMin+' min',level:e.level,entries:e.entries||'livre',what:e.what,prize:e.prize})); }
 
-const API={DATA,ensure,now,setServerTime,active,upcoming,next,notices,canEnter,enter,perks,agendaText,_br:br};
+const API={DATA,entriesOf,ensure,now,setServerTime,active,upcoming,next,notices,canEnter,enter,perks,agendaText,_br:br};
 root.Sys=root.Sys||{}; root.Sys.schedule=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

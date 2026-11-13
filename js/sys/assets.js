@@ -14,13 +14,15 @@ const DATA={
   // referências de APROVAÇÃO das pastas new/ (grandes) e as guias ficam fora do APK; a Coleção usa só os *_ref_prev.png (pequenos).
   // FICAM no APK os _ref que as telas desenham: assets/pets/<espécie>_ref.png (1º estágio na tela de Pets) e assets/mounts/mount_<id>_ref.png (Códex).
   // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo).
-  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/map\//,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
+  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\//,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/bg\/v2\/era5\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i],
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
-  basePacks:()=>['core','aura','era:0','era:1','enemy:0','enemy:1','hero:kael:0','hero:kaia:0'],
+  basePacks:()=>['core','era:0','era:1','enemy:0','enemy:1','hero:kael:0','hero:kaia:0'],   // aura saiu para o fast-follow (só item Lendário mostra; PLANO_PACOTES)
   // Play Asset Delivery: install-time = base; fast-follow = próxima fase do herói e eras 2-3; on-demand = o resto
-  fastFollow:hero=>['hero:'+hero+':1','era:2','era:3','enemy:2','enemy:3'],
+  fastFollow:()=>['aura','era:2','era:3','enemy:2','enemy:3','gun:3'],   // PLANO_PACOTES: sem depender do herói (a Play não sabe o herói na instalação)
+  // GRUPO DE ENTREGA por pacote (fonte única; o script da compilação lê do manifesto): base | fast | demand | none (fora do app)
+  noneIds:['preview','retired'],
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
@@ -35,13 +37,15 @@ function classify(p0){ const p=norm(p0); let m;
   if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma
   if((m=/^assets\/anim\/hyb\/(phase([123])|kaia_phase([123])|kaia|R)\//.exec(p))){
     if(/\/(pistol|gun)\/.*_era(\d)_/.test(p)) return 'gun:'+/_era(\d)_/.exec(p)[1];
-    const hero=m[1].startsWith('kaia')?'kaia':'kael', ph=m[2]||m[3]||'0'; return 'hero:'+hero+':'+ph; }
+    const hero=m[1].startsWith('kaia')?'kaia':'kael', ph=m[2]||m[3]||'0'; return ph==='0'?'hero:'+hero+':0':'retired'; }   // fases 1-3: sem uso (herói sem crescimento, skins adultas fora)
   if((m=/^assets\/anim\/hyb\/enemy\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/enemies\/era(\d)_/.exec(p))) return 'enemy:'+m[1];
   if((m=/^assets\/anim\/hyb\/kael_[a-z_]+_era(\d)_/.exec(p))) return 'hero:kael:0';
   if((m=/^assets\/anim\/mounts\/(?:kael|kaia)_([a-z]+)_/.exec(p))) return 'mount:'+m[1];   // folha montada do Kael e da Kaia (Kaia lote 1: pônei e cavalo)
   if((m=/^assets\/(anim\/)?mounts\/(?:mount_)?([a-z]+)[_.]/.exec(p))) return 'mount:'+m[2];
   if((m=/^assets\/anim\/pets\/([a-z0-9]+_[a-z]+?)(_mid|_evo)?_(run|idle|atk\d)/.exec(p))) return 'pet:'+m[1]+':'+(m[2]==='_mid'?1:m[2]==='_evo'?2:0);
+  if((m=/^assets\/map\/era(\d)\./.exec(p))) return 'era:'+m[1];   // arte da era no mapa (o mundo e o relógio ficam no core)
+  if((m=/^assets\/anim\/skins\/([a-z0-9_]+)\//.exec(p))) return 'skin:'+m[1];   // skin fixa nova (corpo padrão): só quem tem a skin baixa
   if(/^assets\/anim\/aura\//.test(p)) return 'aura';
   if(/^assets\/anim\/fx\/(kaia_)?evolve_/.test(p)) return 'retired';   // evolução do herói aposentada (dono: o herói não cresce); fora do APK base
   if((m=/^assets\/anim\/ult\/(?:weapon\/)?([a-z]+)_(legend|legendary|mythic)\./.exec(p))) return 'ult:'+m[1];   // ultimate Lendária própria por família (só quem tem a arma)
@@ -89,8 +93,10 @@ const packOf=path=>classify(path);
 const PATHS={};
 function setPackPath(id,dir){ if(typeof id!=='string') return false; if(dir==null){ delete PATHS[id]; return true; } PATHS[id]=String(dir).replace(/\/+$/,'')+'/'; return true; }
 function url(p0){ const p=norm(p0), d=PATHS[classify(p)]; return d?d+p:p0; }
-const installed=()=>{ const base=DATA.basePacks(); return [...new Set(base.concat(Object.keys(PATHS)))].sort(); };
-const isReady=p=>{ const id=classify(p); return DATA.basePacks().includes(id)||!!PATHS[id]||!ON(); };   // desligado: tudo está no APK, como hoje
+let INST=null;   // lista de pacotes instalados vinda do plugin (EonPacks.status); null = só o setPackPath
+const setInstalled=ids=>{ INST=Array.isArray(ids)?ids.filter(x=>typeof x==='string'):null; return INST?INST.length:0; };
+const installed=()=>{ const base=DATA.basePacks(); return [...new Set(base.concat(Object.keys(PATHS),INST||[]))].sort(); };
+const isReady=p=>{ const id=classify(p); return DATA.basePacks().includes(id)||!!PATHS[id]||!!(INST&&INST.includes(id))||!ON(); };   // desligado: tudo está no APK, como hoje
 
 /* ---------------- PRÉ-CARGA DA CENA (P27, dono: a tela de carregamento espera TODAS as imagens da 1ª cena) ----------------
    sceneSet(S, host, opt) → {files:[caminhos .png/.webp/.json], groups:{hero, weapon, ult, mount, pet, wing, era, enemies, icons}, missing:[]}
@@ -140,7 +146,10 @@ function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1,
   return {era:e,files:[...G.era,...G.enemies],groups:G,count:G.era.length+G.enemies.length}; }
 /* existe folha MONTADA deste herói nesta montaria? (fonte única para o desenho e a pré-carga) true/false pelo manifesto; null sem manifesto */
 const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs['mount:'+id]; return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
-const API={DATA,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
+/* (1) grupo de entrega e nome do asset pack do Play de um pacote */
+const deliveryOf=id=>DATA.basePacks().includes(id)?'base':DATA.noneIds.includes(id)?'none':DATA.fastFollow().includes(id)?'fast':'demand';
+const apackOf=id=>String(id).replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+const API={DATA,deliveryOf,apackOf,setInstalled,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

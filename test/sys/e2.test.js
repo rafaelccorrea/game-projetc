@@ -1022,7 +1022,7 @@ t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade
   const NP=P.DATA.pets.filter(p=>p.nw), NM=M.DATA.mounts.filter(m=>m.nw);
   assert.strictEqual(NP.length,9); assert.strictEqual(NM.length,10);
   assert.deepStrictEqual(NP.map(p=>p.r),[1,1,2,2,2,3,3,4,4]); assert.deepStrictEqual(NM.map(m=>m.r),[1,2,2,3,3,3,4,4,4,4]);
-  for(const p of NP){ assert.ok(Math.abs(p.skill.hits.reduce((a,b)=>a+b,0)-1)<1e-9,'mesmo dano total: '+p.id); assert.ok(p.src.length&&p.hatchFrags>0); assert.ok(!P.avail(p,h),'desligado: '+p.id); }
+  for(const p of NP){ assert.ok(Math.abs(p.skill.hits.reduce((a,b)=>a+b,0)-1)<1e-9,'mesmo dano total: '+p.id); assert.ok(p.src.length&&p.hatchFrags>0); assert.strictEqual(P.avail(p,h),P.DATA.newReady[p.id]===true,'só liga com a arte (newReady): '+p.id); }
   for(const m of NM){ assert.ok(m.src.length&&m.hatchFrags>0); assert.ok(Math.abs(M.pctOf(m.id,60,5)-M.DATA.maxPct[m.r]*1.0)<1e-9,'mesmo teto da raridade: '+m.id); }
   assert.ok(P.DATA.starterIds.includes('wolf')&&P.DATA.starterIds.includes('phoenix'));
   // montaria: desligada não entra; ligada, nasce ao juntar os fragmentos e o que sobra vira estrela; aura pelas estrelas de hoje

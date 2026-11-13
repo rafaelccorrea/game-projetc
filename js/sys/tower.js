@@ -53,10 +53,10 @@ function ensure(S,host){
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.tower; if(!o||typeof o!=='object') o=S.sys.tower={};
   o.v=1; o.best=int0(o.best); o.points=int0(o.points); o.fights=int0(o.fights);
-  o.lossesLeft=clamp(int0(num(o.lossesLeft,DATA.lossesPerDay)),0,DATA.lossesPerDay);
+  const maxL=DATA.lossesPerDay+vipAdd(S,'towerAdd'); o.lossesLeft=clamp(int0(num(o.lossesLeft,maxL)),0,maxL);
   if(typeof o.day!=='string') o.day='';
   if(!o.last||typeof o.last!=='object') o.last=null;
-  if(host){ const k=dayKey(nowOf(host)); if(o.day!==k){ o.day=k; o.lossesLeft=DATA.lossesPerDay; } }   // virada de dia
+  if(host){ const k=dayKey(nowOf(host)); if(o.day!==k){ o.day=k; o.lossesLeft=DATA.lossesPerDay+vipAdd(S,'towerAdd'); } }   // virada de dia (+ VIP de conveniência)
   return o;
 }
 const nextFloor=S=>ensure(S).best+1;
@@ -152,6 +152,7 @@ const V17=()=>{ const P=PETM(); return !!(P&&P.DATA&&P.DATA.v17&&P.DATA.v17.on==
 const t100Egg=()=>V17()?{r:2,source:'tower100',choice:PETM().DATA.v17.tower100.slice()}:{r:4,source:'tower100',pet:'phoenix'};
 const t100Pet=S=>{ try{ return S&&PETM()?PETM().ensure(S).t100||'':''; }catch(e){ return ''; } };
 /* entrega cada prêmio pelo módulo dono; se o módulo não estiver carregado, zera o campo (a tela não promete o que não entrega) */
+const vipAdd=(S,k)=>{ const V=root.Sys&&root.Sys.vip; try{ return V&&V.conv?Math.max(0,Math.floor(+V.conv(S)[k]||0)):0; }catch(e){ return 0; } };   // VIP de conveniência (Sys.vip.conv)
 const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (Sys.newDrops, chave própria)
 function grantRewards(S,host,rw){
   const sys=root.Sys||{};
@@ -188,7 +189,7 @@ function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0};
   for(const k in DATA.perFloor) b[k]+=o.best*DATA.perFloor[k]; return b; }
 function advice(S,host){ const o=ensure(S,host), f=o.best+1, me=playerStats(S,host), ofc=floorFC(f);
   const dif=difficulty(me.fc,ofc);
-  return [{id:'tower.next',icon:'🗼',label:`Torre: andar ${f} (${dif.txt.toLowerCase()})`,delta:{...DATA.perFloor},cost:`${o.lossesLeft}/${DATA.lossesPerDay} tentativas`,
+  return [{id:'tower.next',icon:'🗼',label:`Torre: andar ${f} (${dif.txt.toLowerCase()})`,delta:{...DATA.perFloor},cost:`${o.lossesLeft}/${DATA.lossesPerDay+vipAdd(S,'towerAdd')} tentativas`,
     ready:o.lossesLeft>0&&(dif.id==='easy'||dif.id==='even'),tab:'tower'}]; }
 
 /* ---------------- UI (opcional) ---------------- */
