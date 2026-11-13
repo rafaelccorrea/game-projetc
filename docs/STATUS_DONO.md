@@ -8,6 +8,14 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h10 · Sistemas entregou e salvou (c2334f0), pronto para o engenheiro ligar:**
+  - Curva das 9 eras: 100 fases × 4 dificuldades para o Mapa (FC recomendada, nível-trava, chefes)
+  - Qualidade (estrelas), fusão e item adormecido
+  - Números abreviados até o quintilhão (antes parava em "2157 tri")
+  - Prismático por 1.000 fragmentos
+  - Prêmios da Arena por liga: diamante só da Platina para cima (5 a 40 por semana). Total de diamantes de graça em 6 meses ≈ 10,3 mil
+  - Agora: Trilha e Chefe do evento
+
 - **22h · v0.12.7 FECHADA e conferida no navegador (11a2139, no GitHub):** pet ao lado do Kael, as duas asas por item, Kael montado no lobo e no grifo (pônei, cavalo e tigre entraram, ainda não vistos a olho); jogador novo e save antigo funcionando. A Serpe V2 e os 3 ajustes finos (pet nas patas, asa x grifo, aura) entram na v0.12.8
 - **22h · Celular:** você pediu ao engenheiro para instalar; a v0.12.7 está sendo instalada no S24. Atenção: o app de teste está com ~640 MB porque leva TODA a arte; antes da loja precisa do "carregar só a arte em uso"
 - **22h · Próximo (v0.12.8):** ligar no jogo, tela por tela, tudo o que já está escrito: Arena, Eventos, Torneio, Mapa, Perfil, Passe com rolagem, missão guia, Guilda, Códex, Correio, Chat, Missões, Torre, Troca de era, Instâncias, Vitória/Derrota
