@@ -1,0 +1,9 @@
+[
+ {"name": "mFallL", "src": "far",  "kind": "gold",  "rect": [118, 172, 172, 402]},
+ {"name": "mFallR", "src": "far",  "kind": "gold",  "rect": [1292, 182, 1352, 402]},
+ {"name": "mWater", "src": "midA", "kind": "water", "rect": [1068, 188, 1262, 470]},
+ {"name": "mDome",  "src": "midA", "kind": "gold",  "rect": [80, 90, 382, 236]},
+ {"name": "mGate",  "src": "midB", "kind": "gold",  "rect": [44, 22, 382, 525]},
+ {"name": "mOrb",   "src": "midB", "kind": "gold",  "rect": [1296, 66, 1562, 330]},
+ {"name": "mRainb", "src": "midB", "kind": "all",   "rect": [962, 245, 1312, 418], "maxW": 350}
+]

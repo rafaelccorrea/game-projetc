@@ -791,3 +791,48 @@ texto do letreiro e do outdoor é em pontos (fonte 5x7), não pintado à mão.
 
 **Nota para o commit:** o `.gitignore` do projeto ignora `*.png` e `*.webp`; das pastas `assets/bg/v2/eraN/` só o `meta.json` está no git. As imagens das
 eras 5 (midA, midA_lo, boom etc.), 6 e 7 e as prévias precisam de `git add -f` (ou seguem pelo caminho que o time já usa para essas imagens).
+
+---
+
+# Era 8 (Celestial) — mesmo padrão das eras 4 a 7 (fps-75)
+
+**Ver:** http://localhost:8080/test/bg/preview?era=8 · instantes lado a lado: `http://localhost:8080/test/bg/sheet?era=8&t=3,9,15,21&w=330&line=1`
+**Pasta:** `assets/bg/v2/era8/` (53 arquivos, ~1,65 MB + prévia de 0,33 MB) · **contrato:** `assets/bg/v2/era8/meta.json`
+**Prévia animada para o voto:** `assets/bg/v2/era8/preview_sheet.png` (12 quadros 234x415, 8 fps, 333 KB) + `preview_sheet.json`.
+**Scripts:** `test/bg/tools/build8.js`, `mkmeta8.js`, `info.era8.json`, `masks8.json`, `cut8.json`, `bands8.json` (`node mkmeta8.js --info tools/info.era8.json <saída>`: idêntico).
+**Créditos:** 16 (8 gerações Nano Banana 2 2K; nenhuma regeração). Saldo ao fechar: 275,15.
+**`scene.js`:** não mudou por causa desta era (continua o da rodada 2 da era 5, SHA `d5665703…`). A era 8 usa só blocos que já existiam.
+
+## Camadas
+`sky.webp` (procedural: azul claro → creme → dourado, com veios claros) · `far.webp` (palácio de cúpulas douradas e templos sobre montanhas de nuvem, 2 cascatas
+douradas, mar de nuvens; ESPELHADO) · `midA.webp` (gazebo, anjo com trombeta, árvore dourada, chafariz de 3 bacias com água azul translúcida, torre do sino) +
+`midB.webp` (portão dourado, templo, harpa gigante, ponte arco-íris, orbe dourado) · `ground.webp` (nuvem com florzinhas, friso dourado, lajes de mármore com
+juntas douradas em 0,697–0,909, friso, nuvem; pés em 0,78) · `decals.webp` (20: penas branca e dourada, estrela, auréola, pétalas, moedas, rachadura, poça de
+luz, folha, flor, runa, pergaminho, gema, sininho, folhas, lasca de mármore, nuvenzinha, trombeta, pedrinhas, ramo de oliveira).
+
+## 26 elementos animados
+céu derivando · nuvens de borda dourada em 2 velocidades · sol fixo com 5 raios pulsando · baleia celeste nadando · PÉGASO batendo 2 asas · fênix com rastro de
+brilho · pombas · ouro escorrendo nas cascatas · navio dourado navegando no mar de nuvens · bruma · QUERUBIM batendo as asinhas atrás das estruturas · SINO
+balançando na torre · água descendo no chafariz + brilhos · brilho correndo na cúpula e no portão, orbe pulsando, arco-íris cintilando · folhas douradas caindo da
+árvore · brilho na trombeta · postes com orbe de luz · braseiros com chamas DOURADAS em quadros · cordeiro (senta, anda, vira e volta) · pomba pulando entre 2
+colunas · gato com asas · fonte pequena borrifando · sino no poste e arbusto balançando · brilhos dourados · lírios, capim e tufo de nuvem na frente · poeira dos passos.
+
+## Como foi feito
+Referências: mid A da era 6 (layout + fundo verde) e as próprias gerações (mid B, decalques, folhas) + `assets/map/era8.jpg` (tema). Asas do pégaso e do querubim
+geradas separadas do corpo (mesmo truque da serpe da era 7). Água do chafariz veio verde (fundo atravessando): recolorida para azul translúcido; halo do orbe veio
+verde: virou amarelo. O sino é recortado (atrás dele o arco é vazado) e balança pela alça. Um anjo "fantasma" semitransparente acima da estátua foi apagado.
+Armadilha: a linha de base do mid B era achada cedo demais (as nuvens da base cobrem quase a largura toda) e cortava o pé das estruturas; a busca passou a
+começar em 88% da altura.
+
+## Conferido no Chrome (aba única, fechada no fim)
+`sheet` em t = 3 · 9 · 15 · 21 (com `line=1`) e uma vista sem o plano médio em t = 1 · 4 · 7 (navio com o casco no mar de nuvens, pégaso com as asas, querubim);
+sem erro de console. Custo por quadro (dpr 2, mesmo método, máquina carregada): mediana era 1 = 89,3 ms, era 5 = 90,2, **era 8 = 89,7**: equivalente.
+NÃO conferido: `preview?era=8` interativo (o "Ver ANTES" deve dar erro: só existe `assets/bg/era8_ref.png`); emendas do far e do chão em tela (só `seam_ground`);
+balanço do sino em par de instantes; ciclo do cordeiro e da pomba; celular.
+
+## Defeitos que o dono pode notar
+- O far é quase todo nuvem branca; com a bruma clara, o palácio fica pálido e o mar de nuvens se confunde com o chão de nuvem.
+- Sol e raios ficam parados no canto (raios pulsam); a baleia passa atrás do palácio e às vezes some.
+- As asas "viram" para baixo do ombro no meio do ciclo (achatamento em cosseno); o querubim passa muito tempo atrás das estruturas.
+- O decalque de rachadura veio com um quadrado de mármore em volta (cor quase igual à da estrada; peso baixo no sorteio).
+- Brilho dos braseiros é laranja (cor fixa no módulo para fogo) sobre chama dourada. Herói ainda com a roupa da era 2.
