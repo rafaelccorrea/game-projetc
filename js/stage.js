@@ -145,11 +145,12 @@ function sheetLoad(base, noNeck){
 }
 const SHEET = base => { const s = sheetLoad(base); return s.ok ? s : null; };
 /* linha do pescoço por quadro (primeiro pixel vermelho do cachecol): a cabeça é redesenhada por cima da lâmina */
+const NECK_OLD = typeof DEBUG !== 'undefined' && DEBUG && /[?&]neck=0/.test(location.search);   /* ?debug=1&neck=0: ignora o "neck" do .json (procura antiga pelo vermelho), para comparar antes e depois */
 function neckRows(s){
   const n = s.meta.frames, fw = s.meta.w, fh = s.meta.h, out = [];
   /* LINHA DO PESCOÇO GRAVADA NA FOLHA (aviso da Arte, 454ceb8): a procura abaixo acha o cachecol VERMELHO; skin sem cachecol vermelho (Ciborgue) caía nos 30% da
      altura e a arma desenhada ao vivo cobria o queixo e a boca. Se o .json trouxer "neck": [y por quadro, em px da célula], vale ele (e a folha nem é lida ponto a ponto). */
-  if (Array.isArray(s.meta.neck) && s.meta.neck.length >= n && s.meta.neck.slice(0, n).every(v => typeof v === 'number' && v >= 0 && v <= fh)) return s.meta.neck.slice(0, n).map(v => Math.round(v));
+  if (!NECK_OLD && Array.isArray(s.meta.neck) && s.meta.neck.length >= n && s.meta.neck.slice(0, n).every(v => typeof v === 'number' && v >= 0 && v <= fh)) return s.meta.neck.slice(0, n).map(v => Math.round(v));
   try { const c = document.createElement('canvas'); c.width = s.img.naturalWidth; c.height = Math.max(fh, s.img.naturalHeight || fh); const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(s.img, 0, 0);
     for (let i = 0; i < n; i++){ const d = g.getImageData(sheetSX(s.meta, i), sheetSY(s.meta, i), fw, fh).data; let top = Math.round(fh * 0.3);
       scan: for (let y = 0; y < fh; y++) for (let x = 0; x < fw; x++){ const k = (y * fw + x) * 4; if (d[k + 3] > 200 && d[k] > 140 && d[k + 1] < 70 && d[k + 2] < 70){ top = y; break scan; } }
