@@ -26,7 +26,10 @@ Implementação: `fps-server` commit af8ebbb (migração `007_servidores`). Cont
 | Arena (adversários, ranking, prêmio semanal) | **Feito (fase 2, fps-server cb29c07):** só o mesmo servidor; posição e prêmio dentro de cada servidor. |
 | Guildas (lista, entrada, ranking) | **Feito (fase 2, cfb4707, migração 008):** a guilda é do servidor do criador. Nomes continuam únicos entre servidores. |
 | Chat Mundial/Era | **Feito (fase 2, cfb4707):** fora do S1 o canal é guardado com prefixo (`s2|world`); o jogo continua vendo `world`/`era:N`. |
-| Correio para todos, leilão, Chefe Mundial/eventos, torneio de territórios | **Falta (antes de abrir o S2).** Hoje estão desligados. |
+| Correio para todos | **Feito (fase 2, migração 010):** aviso para todos pode ter `realm` (só aquele servidor recebe e resgata); sem `realm`, todos os servidores. Ainda não há rota da equipe que mande aviso para todos. |
+| Leilão | **Feito (fase 2):** o anúncio é do servidor do vendedor; quem é de outro servidor não vê nem compra (404); a mediana de preço (alerta de preço fora do normal) é por servidor. Carteira e itens já eram por personagem. |
+| Chefe Mundial / eventos | **Nada a separar hoje:** o Chefe Mundial é evento LOCAL do jogo (`Sys.schedule`, horário fixo); o servidor não guarda vida nem ranking compartilhado. Se um Chefe Mundial compartilhado entrar no servidor, nasce por servidor. Os eventos do servidor (horários) valem iguais para todos os servidores. |
+| Torneio de territórios (guilda §10.3) | **Falta:** ainda não existe no servidor; nasce por servidor quando for feito. |
 
 ## No jogo (combinado com a fps-c8 e a fps-69)
 - **Save local:** a fps-c8 fez um save por servidor (a7f3431). O S1 fica na chave de hoje (`eras_proto_v2`); os outros em `eras_proto_v2@sN`. O Modo dono segue o mesmo padrão (`eras_owner_v1`, `eras_owner_v1@sN`).
