@@ -147,7 +147,7 @@ if(process.argv.includes('--levels')){ const p=play(free); const lv=plan.map((pl
 //  - título de marco: +1% ATQ e VIDA a cada marco (100 a 150).
 if(process.argv.includes('--pos')){
   const POS_TRAIN=+((process.argv.find(a=>a.startsWith('--postrain='))||'--postrain=1.5').split('=')[1]), POS_WALL=+((process.argv.find(a=>a.startsWith('--poswall='))||'--poswall=1.04').split('=')[1]);
-  const LAST=150, GROW=BALJ.dificuldade.afterLastGrowth||1.03;
+  const LAST=process.argv.includes('--limits')?999:150, GROW=BALJ.dificuldade.afterLastGrowth||1.03;
   FG.DATA.max=25; while(FG.DATA.bonus.length<26) FG.DATA.bonus.push(FG.DATA.bonus[FG.DATA.bonus.length-1]+0.12);
   const fb=k=>baseFc(120,8,5,20+k,4000)/baseFc(120,8,5,20,4000);
   const recPos=s=>plan[89].rec*Math.pow(GROW,s-90)*(s%10===0?POS_WALL:1);
@@ -160,7 +160,7 @@ if(process.argv.includes('--pos')){
       return fcAt(C,t,8)*train*fb(m)*pet*(1+m/100); };
     let s=91, t=tEnd; const at={}; let maxWait=0, last=tEnd;
     while(s<=LAST&&t<tEnd+600){ if(fcPos(t,s-1)>=recPos(s)){ at[s]=t; maxWait=Math.max(maxWait,t-last); last=t; s++; } else t+=0.05; }
-    return {tEnd,at,maxWait,fcEnd:fcAt(C,tEnd,8),trainEnd:Math.min(1+TRAIN_CAP/100,Math.pow(1+TRAIN_DAY/100,Math.max(0,tEnd-C.LS.t100)))}; }
+    return {fcPos,tEnd,at,maxWait,fcEnd:fcAt(C,tEnd,8),trainEnd:Math.min(1+TRAIN_CAP/100,Math.pow(1+TRAIN_DAY/100,Math.max(0,tEnd-C.LS.t100)))}; }
   console.log('\n## PÓS-ERAS: dia em que chega (vence) a fase · treino acima do teto +'+POS_TRAIN+'%/dia · marco x'+POS_WALL+' · fases sem fim x'+GROW+'/fase');
   console.log('| Jogador | Dia em que termina as 9 eras | Treino no fim das eras | Fase 100 | Fase 110 | Fase 120 | Fase 150 | Maior espera numa fase |');
   console.log('|---|---|---|---|---|---|---|---|');
@@ -168,4 +168,13 @@ if(process.argv.includes('--pos')){
     const dd=s=>r.at[s]!=null?'dia '+Math.ceil(r.at[s]):'depois do dia '+Math.ceil(r.tEnd+600);
     console.log('| '+nm+' | '+Math.ceil(r.tEnd)+' | x'+r.trainEnd.toFixed(2).replace('.',',')+' | '+dd(100)+' | '+dd(110)+' | '+dd(120)+' | '+dd(150)+' | '+f1(r.maxWait)+' |'); }
   console.log('Forja Astral +21..+25 vs +20: '+[1,2,3,4,5].map(k=>'+'+(20+k)+' x'+fb(k).toFixed(3)).join(' · ')+' · pet share Nv120 '+(ps*1.25).toFixed(3));
+  /* --limits (pedido do Servidor fps-6f, 13/11): teto por dia de conta do jogador MAIS RÁPIDO (VIP 10 ativo), dias 0..400, NA ESCALA DO JOGO
+     (FC da simulação × kEra, a mesma conversão do --game). O servidor põe a folga de 20%. maxStage = fase mais alta já ABERTA (vencidas + 1).
+     maxGemsTotal: null (a simulação não modela diamantes; ver a mensagem ao Servidor). */
+  if(process.argv.includes('--limits')){ const C=vip10, P0=P.vip10, r=posPlay(C,P0), out=[]; let best=0;
+    const stageAt=d=>{ let n=0; for(let j=0;j<90;j++) if(P0.pass[j]!=null&&P0.pass[j]<=d) n=j+1; if(n===90&&r) for(const k in r.at) if(r.at[k]<=d) n=Math.max(n,+k); return n; };
+    for(let d=0;d<=400;d++){ const won=stageAt(d), open=won+1, e=Math.min(8,Math.floor(Math.max(0,open-1)/10)), L=C.L(d);
+      const fcSim=won>=90&&r?r.fcPos(Math.max(d,r.tEnd),won):fcAt(C,d,e), fc=fcSim*kEra[e]; best=Math.max(best,fc);
+      out.push({day:d,maxLevel:L,maxEra:e,maxStage:open,maxFc:Number(best.toPrecision(4)),maxGemsTotal:null}); }
+    console.log('LIMITS '+JSON.stringify(out)); }
 }
