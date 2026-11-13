@@ -42,7 +42,7 @@ Cada sessão pode e deve abrir subagentes para dividir o próprio trabalho, um p
 | # | Item | Situação |
 |---|---|---|
 | 1-2 | Dano 1 dos inimigos; cura cheia no chefe | Corrigidos no código (a54c87b); a Sistemas sobe o dano do comum e fecha a calibração |
-| 3, 5 | Começo mais duro e calibração | Sistemas em andamento |
+| 3, 5 | Começo mais duro e calibração | Números da Sistemas prontos (balance.json no main, 0a7dc35): golpe do comum 2-3% da vida nas fases 1-8, sem "-1"; chefe 3,6-4,3%; herói chega ao chefe com 60-100%. **Falta o Engenheiro ligar** (mkEnemy, presente +50 gemas, setRefFc). Depois: remedir fases 9-10 e as 9 eras |
 | 4 | Itens no chão com ímã | Feito, desligado (e5dd11b); o QA achou 2 defeitos, que estão sendo corrigidos |
 | 6-9 | Fogueira | V3 e V4 reprovadas; V5 no layout de hoje (botão no centro da barra de baixo) sendo feita. Regras e servidor prontos, desligados |
 | 10 | Arte da Fogueira | 9 estágios em rascunho, esperando o voto do dono |
