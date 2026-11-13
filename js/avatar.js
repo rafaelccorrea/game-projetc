@@ -2,7 +2,7 @@
    BASE: os 8 retratos prontos da Arte em assets/hero/avatar/ (<kael|kaia>_phase<0..3>.png, 256×256, fundo transparente) + avatars.json
    (por retrato, a âncora "head" {x, y, ang, s} em pixels do retrato). Fase = Sys.phaseUp.current(S) (sem ele, a fase do Sys.appearance.sheetFor);
    herói = S.hero ('kaia' ou Kael).
-   CAMADAS DE CABEÇA: o que Sys.appearance.layers(S, Sys.host) devolver, na ordem dele (o "ocultar" já vem aplicado lá):
+   CAMADAS DE CABEÇA (DESLIGADAS pela chave AVATAR_PIECES, decisão final do dono: o avatar é só o rosto da fase; o texto abaixo vale se religar): o que Sys.appearance.layers(S, Sys.host) devolver, na ordem dele (o "ocultar" já vem aplicado lá):
      {layer:'hat', hat:'era3'} ou {layer:'hat', era:3} → assets/anim/equip/hats/hats.json (hats['era3']);
      {layer:'glasses'|'mask', cos:'visor'} ou {source:'cos', id:'visor'} → assets/anim/equip/cos/cos.json (items['visor']).
    Desenho de cada peça: translate(head.x, head.y) · rotate(head.ang graus) · scale(head.s / res) · drawImage(png, -pivot.x, -pivot.y).
@@ -21,6 +21,9 @@
 const W=typeof window!=='undefined'?window:null; if(!W||typeof document==='undefined') return;
 const AV={K:2.8,DY:0.08,MIN:64,PADS:[96,-96],RES:'assets/anim/hyb/R/kael_idle_era2_t0',RES_HEAD:'assets/anim/hyb/R/masks/kael_idle_head.json',
   DIR:'assets/hero/avatar/',HATS:'assets/anim/equip/hats/',COS:'assets/anim/equip/cos/'};
+/* PEÇAS DE CABEÇA (chapéu, óculos, máscara) por cima do retrato. DECISÃO FINAL DO DONO: o avatar é SÓ o rosto da fase, sem peça nenhuma → false.
+   Desligada: não lê hats.json nem cos.json, não carrega imagem de peça e não consulta Sys.appearance.layers. O código fica para o futuro (true religa). */
+const AVATAR_PIECES=false;
 const res={}, cache=new Map(), live=[], cbs=[], imgs={}, META={st:0,av:null,hats:null,cos:null};
 const dpr=()=>Math.min(W.devicePixelRatio||1,2);
 const mk=(w,h)=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; };
@@ -60,13 +63,13 @@ function bust(px){ const c=mk(px,px), x=c.getContext('2d'); x.fillStyle='#6b5843
 function reserve(px){ const k='res|'+px, e=cache.get(k); if(e) return {e,key:k}; const r=need(AV.RES,AV.RES_HEAD); if(r.st===1) return {e:build(k,r,null,null,px),key:k};
   const kb='bust|'+px; let eb=cache.get(kb); if(!eb){ eb=bust(px); cache.set(kb,eb); } return {e:eb,key:kb}; }
 /* ---------- retratos prontos da Arte + camadas de cabeça ---------- */
-function meta(){ if(META.st) return; META.st=1; Promise.all([getJson(AV.DIR+'avatars.json'),getJson(AV.HATS+'hats.json'),getJson(AV.COS+'cos.json')]).then(a=>{
+function meta(){ if(META.st) return; META.st=1; Promise.all([getJson(AV.DIR+'avatars.json'),AVATAR_PIECES?getJson(AV.HATS+'hats.json'):Promise.resolve(null),AVATAR_PIECES?getJson(AV.COS+'cos.json'):Promise.resolve(null)]).then(a=>{
   META.av=a[0]&&a[0].items?a[0]:null; META.hats=(a[1]&&a[1].hats)||{}; META.cos=(a[2]&&a[2].items)||{}; META.st=META.av?2:3; fire('meta'); }); }
 function pic(url){ let o=imgs[url]; if(o) return o; o=imgs[url]={st:0,img:null}; getImg(url).then(i=>{ o.img=i; o.st=i?1:2; fire(url); }); return o; }
 function phaseOf(sv){ let p=null; try{ if(W.Sys&&Sys.phaseUp&&typeof Sys.phaseUp.current==='function') p=Sys.phaseUp.current(sv); }catch(e){ p=null; }
   if(typeof p!=='number'||!(p>=0)){ const sh=sheetFor(sv); p=sh?sh.stage:0; } return Math.max(0,Math.min(3,p|0)); }
 /* peças de cabeça do herói, na ordem do módulo: [{k, url, m:{pivot, res}}] (m = entrada do hats.json / cos.json) */
-function headLayers(sv){ const out=[]; let L=[]; try{ L=Sys.appearance.layers(sv,Sys.host)||[]; }catch(e){ L=[]; }
+function headLayers(sv){ const out=[]; if(!AVATAR_PIECES) return out; let L=[]; try{ L=Sys.appearance.layers(sv,Sys.host)||[]; }catch(e){ L=[]; }
   for(const l of L){ if(!l) continue;
     if(l.layer==='hat'){ const id=l.hat||(l.era!=null?'era'+l.era:null), m=id&&META.hats[id]; if(m&&m.file) out.push({k:'hat/'+id,url:AV.HATS+m.file,m}); }
     else if(l.layer==='glasses'||l.layer==='mask'){ const id=l.cos||(l.source==='cos'?l.id:null), m=id&&META.cos[id]; if(m&&m.file) out.push({k:l.layer+'/'+id,url:AV.COS+m.file,m}); } }

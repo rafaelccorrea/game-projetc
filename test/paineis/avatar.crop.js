@@ -32,7 +32,13 @@ const T=96, tiles=[]; let bad=0; const BG=(tx,ty)=>{ const dx=tx-T/2+.5, dy=ty-T
 const say=(ok,txt)=>{ if(!ok) bad++; console.log((ok?'OK    ':'FALHA ')+txt); };
 
 console.log('--- 1. retratos da Arte + peças de cabeça');
-const AVJ=J('assets/hero/avatar/avatars.json'), HATS=J('assets/anim/equip/hats/hats.json').hats, COS=J('assets/anim/equip/cos/cos.json').items, SZ=AVJ.size||256;
+const PIECES=/const AVATAR_PIECES=true/.test(src);   // chave do js/avatar.js: desligada (decisão do dono) = só o rosto; as peças nem são lidas
+console.log('    peças de cabeça: '+(PIECES?'LIGADAS':'desligadas (AVATAR_PIECES=false): só o rosto da fase'));
+// com a chave desligada, toda leitura de hats.json / cos.json tem de estar atrás dela, e a lista de peças tem de sair vazia antes de consultar o módulo
+for(const f of ['hats.json','cos.json']){ const all=src.split("'"+f+"'").length-1, gated=src.split("AVATAR_PIECES?getJson(AV."+(f==='hats.json'?'HATS':'COS')+"+'"+f+"')").length-1;
+  say(all===gated,'leitura de '+f+' só atrás da chave AVATAR_PIECES ('+gated+' de '+all+')'); }
+say(src.indexOf('function headLayers(sv){ const out=[]; if(!AVATAR_PIECES) return out;')>=0,'headLayers devolve vazio com a chave desligada (não consulta Sys.appearance.layers nem carrega imagem de peça)');
+const AVJ=J('assets/hero/avatar/avatars.json'), HATS=PIECES?J('assets/anim/equip/hats/hats.json').hats:{}, COS=PIECES?J('assets/anim/equip/cos/cos.json').items:{}, SZ=AVJ.size||256;
 const hatIds=Object.keys(HATS), cosIds=Object.keys(COS); let pi=0;
 for(const hero of ['kael','kaia']) for(let ph=0;ph<4;ph++){ const id=hero+'_phase'+ph, it=AVJ.items[id];
   if(!it){ say(false,id+': falta no avatars.json'); continue; }
@@ -40,7 +46,7 @@ for(const hero of ['kael','kaia']) for(let ph=0;ph<4;ph++){ const id=hero+'_phas
   const h=it.head||{}, okA=im.w===SZ&&im.h===SZ&&typeof h.x==='number'&&typeof h.y==='number'&&h.s>0&&im.rgba(h.x,h.y)[3]>128;
   say(okA,id+': '+im.w+'x'+im.h+', âncora '+h.x+','+h.y+' ang '+h.ang+' s '+h.s+(okA?' (em cima da figura)':' (âncora fora da figura ou tamanho errado)'));
   // peças: um chapéu e um cosmético diferentes por retrato, para a folha de conferência mostrar todos
-  const parts=[{m:HATS[hatIds[pi%hatIds.length]],dir:'assets/anim/equip/hats/',k:hatIds[pi%hatIds.length]},{m:COS[cosIds[pi%cosIds.length]],dir:'assets/anim/equip/cos/',k:cosIds[pi%cosIds.length]}]; pi++;
+  const parts=PIECES?[{m:HATS[hatIds[pi%hatIds.length]],dir:'assets/anim/equip/hats/',k:hatIds[pi%hatIds.length]},{m:COS[cosIds[pi%cosIds.length]],dir:'assets/anim/equip/cos/',k:cosIds[pi%cosIds.length]}]:[]; pi++;
   const ang=(h.ang||0)*Math.PI/180, ca=Math.cos(ang), sa=Math.sin(ang);
   for(const p of parts){ p.im=readPng(path.join(root,p.dir,p.m.file)); p.k2=(h.s||1)/(p.m.res||1); p.pv=p.m.pivot||{x:0,y:0};
     // ponto do retrato → ponto da peça (inverso de translate·rotate·scale·drawImage(-pivot))
@@ -65,6 +71,6 @@ for(const hero in DIRS) DIRS[hero].forEach((d,stg)=>{ const base=path.join('asse
   say(pct>=25&&pct<=92,hero+' fase '+stg+' ('+d+'): âncora json '+(a0?a0.x+','+a0.y:'-')+' → usada '+Math.round(L.hx)+','+Math.round(L.hy)+' ['+L.note+']; recorte '+Math.round(c)+' px; figura '+pct+'%');
   tiles.push(tile); });
 if(outFile){ const W=T*4, H=T*Math.ceil(tiles.length/4), img=Buffer.alloc(W*H*4); tiles.forEach((t,i)=>{ const cx=(i%4)*T, cy=Math.floor(i/4)*T; for(let y=0;y<T;y++) t.copy(img,((cy+y)*W+cx)*4,y*T*4,(y+1)*T*4); }); writePng(outFile,W,H,img);
-  console.log('folha de conferência: '+outFile+' (linhas 1-2: retratos Kael/Kaia fases 0-3 com peças; linhas 3-4: recorte da reserva)'); }
+  console.log('folha de conferência: '+outFile+' (linhas 1-2: retratos Kael/Kaia fases 0-3'+(PIECES?' com peças':'')+'; linhas 3-4: recorte da reserva)'); }
 console.log(bad?bad+' verificação(ões) com FALHA':'avatar OK');
 process.exit(bad?1:0);

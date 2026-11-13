@@ -1071,3 +1071,10 @@ Limites: `hideHair` do hats.json não é aplicado (o cabelo aparece por baixo do
 
 FUSÃO: `p_fuse` na lista de carga (`js/screens.js`), `PANEL_ON.fuse=false` (`js/panels.js`), e na Forja (`js/p_forge.js`) uma terceira opção
 "Fusão" na fileira de modos, que só aparece com a chave ligada e abre `Panels.open('fuse',{from:'forge'})`. Conflitos de nomes do p_fuse: nenhum.
+
+## Bloco 36 (sem navegador): avatar só com o rosto da fase (decisão final do dono)
+
+`js/avatar.js`: chave `AVATAR_PIECES=false`. Desligada: não lê `hats.json` nem `cos.json`, não carrega imagem de peça e não consulta
+`Sys.appearance.layers`; o retrato é só o da Arte para a fase e o herói. O código das peças ficou (true religa).
+`test/paineis/avatar.crop.js` lê a chave: desligada, confere os 8 retratos, a reserva e que as leituras das peças estão atrás da chave.
+`reports/prints/avatar_recortes_8.png` refeito sem peças. `node --check`, `run.js` "TUDO OK" (145), fumaça sem falha nova.
