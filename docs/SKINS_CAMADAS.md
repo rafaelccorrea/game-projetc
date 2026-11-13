@@ -80,17 +80,25 @@ Notas de combinação (sugestões para a fps-69, ele decide):
 
 Precisa por estado: `masks/<herói>_<estado>_mask.png` (+ .json), `_head.json` (chapéu/óculos/máscara), `_hair.png` (chapéus hideHair). Asa não é usada pelos combos.
 
-| versão | estado | lacunas |
+| versão | estado | situação (atualizada 12/11, depois das correções do PO) |
 |---|---|---|
-| Kael R / phase1 / phase2 / phase3 | 8 estados | arquivos completos; head ok em 100% dos quadros |
-| Kael phase3 (guerreiro) | idle/run | **colete quase não pinta**: máscara R com ~7 mil px (o ataque tem 42 mil) — a tinta mal aparece no idle/corrida |
-| Kael phase2 (adulto) | todos | colete pinta braços/quadril/pernas; **o peitoral cinza não está na máscara R** (peito não muda de cor) |
-| Kaia menina (`kaia/`) | run/idle/attack | **cabelo sobra** com chapéu hideHair (pedaços do rabo de cavalo atrás); spin/die/pistola: sem folha (outro agente fazendo) |
-| Kaia adolescente | 8 estados | completo; mesma sobra de cabelo com hideHair |
-| Kaia adulta (`kaia_phase2`) | 8 estados | **botas sem máscara** (canal B com ~100 px): a tinta das botas não aparece; peitoral fora da máscara R |
-| Kaia guerreira (`kaia_phase3`) | pistol_run/pistol_shoot | sem `_head.json`/`_hair.png` (outro agente terminando agora; não mexi) |
-| Kaia (todas) | — | `_body.json` sem `back` (só importa para ASA; os combos não usam asa) |
-| Kaia adulta/guerreira | hideHair | o rabo de cavalo fica visível sob o elmo (aceitável? decisão do PO) |
+| Kael R / phase1 | 8 estados | completo |
+| Kael phase2 / phase3 | 8 estados | **colete refeito cobrindo o peitoral** (máscara R 2-4× maior); âncora do chapéu corrigida; cabelo refeito para a âncora nova |
+| Kaia menina () | run/idle/attack | **máscara de cabelo refeita** (ruivo/acaju entra, região maior atrás, dilata 2-3 px): sumiram os fios atrás do elmo. Os outros estados são do outro agente |
+| Kaia adolescente | 8 estados | **máscara de cabelo refeita** (igual à menina) |
+| Kaia adulta / guerreira | 8 estados | **colete cobre o peitoral; botas de metal pintáveis** (B 7-26 mil px); âncora do chapéu corrigida; cabelo refeito. Rabo de cavalo fora do elmo: ACEITO pelo PO |
+| Kaia menina | pistol_shoot | sem  no _body.json (só importa para asa) |
+
+### Correções feitas por código (12/11, decisões do PO; sem crédito)
+- **Colete/botas (phase2, phase3, kaia_phase2, kaia_phase3, 8 estados cada)**:  com o cachecol procurado mais alto (env novas no gearmask.js:
+  ; o padrão 0.42-0.70 era do garoto chibi e jogava o pescoço para a cintura no adulto) + ;
+  guerreiros e Kaia adulta/guerreira com  (todo pixel não pele/não capa da faixa do tronco: pega os painéis azuis do guerreiro); Kaia com .
+  Script: . Backup: . Formato do .json igual (conferido).
+- **Cabelo da Kaia menina/adolescente**:  (cópia do hairmask.js; ). Backup em .
+- **Chapéu no adulto/guerreiro**: medido, o chapéu NÃO estava menor que a cabeça (largura da cabeça/s: garoto 254, Kael adulto 180, Kaia adulta 228: o chapéu já
+  era proporcionalmente mais largo). O defeito era a ALTURA: a âncora ficava baixa e a aba cobria os olhos (óculos na boca). Correção ():
+  âncora sobe 30 unidades do chapéu na direção do topo da cabeça em todos os quadros; Kael phase2/3 também s×1,12; Kaia adulta/guerreira s×1,0 (já grande).
+  Campo  no json; original em . As máscaras de cabelo das 4 pastas foram refeitas (hairmask.js) para a âncora nova.
 
 ## Prévia
 `reports/prints/skins_camadas_preview.png` — a00, a11, a22, a33, a44, a53, a64, p30 · idle quadro 0 · 8 versões. Ferramenta: `Temp/tools/skc_preview.js`

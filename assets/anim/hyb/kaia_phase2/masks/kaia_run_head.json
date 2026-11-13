@@ -4,68 +4,73 @@
  "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro",
  "head": [
   {
-   "x": 222,
-   "y": 57,
+   "x": 218.3,
+   "y": 45.1,
    "ang": -17.5,
    "s": 0.4154,
    "e": 181,
    "ok": true
   },
   {
-   "x": 213,
-   "y": 52,
+   "x": 209.6,
+   "y": 41.2,
    "ang": -17.5,
    "s": 0.3788,
    "e": 171,
    "ok": true
   },
   {
-   "x": 216,
-   "y": 52,
+   "x": 212.6,
+   "y": 41.2,
    "ang": -17.5,
    "s": 0.3788,
    "e": 172,
    "ok": true
   },
   {
-   "x": 214,
-   "y": 55,
+   "x": 210.6,
+   "y": 44.2,
    "ang": -17.5,
    "s": 0.3788,
    "e": 173,
    "ok": true
   },
   {
-   "x": 222,
-   "y": 53,
+   "x": 219,
+   "y": 42,
    "ang": -15.5,
    "s": 0.3788,
    "e": 175,
    "ok": true
   },
   {
-   "x": 213,
-   "y": 52,
+   "x": 209.5,
+   "y": 41,
    "ang": -17.5,
    "s": 0.3846,
    "e": 171,
    "ok": true
   },
   {
-   "x": 213,
-   "y": 56,
+   "x": 209.5,
+   "y": 45,
    "ang": -17.5,
    "s": 0.3846,
    "e": 172,
    "ok": true
   },
   {
-   "x": 214,
-   "y": 57,
+   "x": 210.6,
+   "y": 46.2,
    "ang": -17.5,
    "s": 0.3788,
    "e": 174,
    "ok": true
   }
- ]
+ ],
+ "skcFix": {
+  "up": 30,
+  "k": 1,
+  "note": "fps-75 12/11: âncora subida 30 unid. do chapéu e s×1 (aba acima dos olhos, como no garoto); original em masks/_bak_skc/"
+ }
 }

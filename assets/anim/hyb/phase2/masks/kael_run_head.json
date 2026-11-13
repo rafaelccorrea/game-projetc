@@ -5,68 +5,73 @@
  "head": [
   {
    "x": 246,
-   "y": 44,
+   "y": 36.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 246,
-   "y": 43,
+   "y": 35.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 245,
-   "y": 45,
+   "y": 37.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 244,
-   "y": 40,
+   "y": 32.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 246,
-   "y": 45,
+   "y": 37.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 246,
-   "y": 43,
+   "y": 35.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 245,
-   "y": 45,
+   "y": 37.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   },
   {
    "x": 245,
-   "y": 39,
+   "y": 31.5,
    "ang": 0,
-   "s": 0.25,
+   "s": 0.28,
    "e": 0,
    "ok": true
   }
  ],
- "shiftFix96": true
+ "shiftFix96": true,
+ "skcFix": {
+  "up": 30,
+  "k": 1.12,
+  "note": "fps-75 12/11: âncora subida 30 unid. do chapéu e s×1.12 (aba acima dos olhos, como no garoto); original em masks/_bak_skc/"
+ }
 }
