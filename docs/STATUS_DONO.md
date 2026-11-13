@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **07h55 · PARA VOCÊ VOTAR (leva 1):** 5 skins do Kael no mesmo corpo do garoto (Demônio, Anjo, Paladino Solar, Ninja, Samurai) e as guias do arco, do bumerangue e da Kaia montada no lobo. A leva 2 (Bobo, Pirata, Ciborgue e as 5 da Kaia) e os 9 pets chegam em seguida
+- **07h55 · Montarias novas escolhidas (10):** Raptor de Guerra · Escorpião Gigante · Pantera Sombria · Cavalo Infernal · Unicórnio de Guerra · Lobo do Gelo · Fênix Gigante · Dragão Negro · Tigre de Guerra Celestial · Mecha de Guerra. Primeiro as referências para seu voto
+- **07h55 · Habilidades das armas novas:** arco (Chuva de Flechas; Lendária: Flecha Celestial) e bumerangue (Ciclone de Lâminas; Lendária: Tempestade de Bumerangues). Sistemas monta a tabela para você aprovar. Créditos: ~1.070
+
 - **07h40 · Sua decisão FINAL sobre skins:** toda skin nova usa EXATAMENTE o corpo do garoto/menina padrão (mesmo tamanho, mesmos movimentos); só muda roupa, cabelo e rosto, com expressão menos infantil. Assim o engenheiro não precisa encaixar nada, e montaria, asa e arma funcionam sozinhas. As 4 skins adultas (Cavaleiro/Lendário) SAEM do jogo (código guardado e desligado)
 - **07h40 · Créditos:** você comprou mais 1.000. A Arte segue a fila: referências das skins (mesmo corpo) → referências dos 9 pets → guias do arco/bumerangue → guia da Kaia montada → vídeos conforme você aprovar
 
