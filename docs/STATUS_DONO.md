@@ -8,6 +8,17 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h40 · PARA VOCÊ VOTAR (página de aprovação):** 12 prints do jogo rodando (só o Kael, com pet, nas 6 montarias, lobo + pet + asa, grifo com aura de 5 estrelas, morte nova, FC no painel); o Kael adulto e guerreiro V2 animados (7 animações cada, com a pistola na mão); os cenários vivos das eras 6 (Futurista) e 7 (Submundo)
+- **00h40 · Batalha da v0.12.8 conferida no navegador (85d3c4e, no GitHub):**
+  - [x] Morte nova do Kael, a pé e montado
+  - [x] Inimigo sem ficar parado entre golpes (eras 0-6)
+  - [x] Ultimate pela raridade: Básico cinza, Épico roxo, Lendário dourado com anéis e clarão
+  - [x] As 6 montarias (pônei, cavalo, tigre, lobo, grifo, serpe) paradas, correndo e golpeando, com aura por estrela visível; pet à frente sem cobrir as patas; asa do Kael destacada
+  - [x] FC que sobe/desce no "Equipar melhor" e na Forja · cenário Industrial ligado · sem emojis
+  - [ ] Ajustes: o pet ainda encosta no inimigo; resíduo escuro atrás da cabeça no lobo; a maça cobre a boca do Kael no pônei/cavalo/tigre (Arte)
+- **00h40 · Sua decisão:** inimigos mais fortes por era (de ×1,08 na era 2 até ×1,70 no Celestial) para o equipamento voltar a importar; calendário de 6 meses mantido
+- **00h40 · Servidor:** arena, ranking e eventos online prontos (desligados até o servidor subir). Agora: chat online de frases prontas, painel de moderação, guilda e leilão online
+
 - **00h20 · Jogo pronto para conversar com o servidor (Servidor, dff83e0):** ao abrir, faz login, puxa o save da nuvem, as entregas de compra e o correio; depois de cada save, sobe para a nuvem. Tudo desligado e pronto: falta só o servidor no ar, que depende do seu acesso à AWS, ao banco, ao ID do Google e à conta do Play Console. Agora o Servidor faz arena, ranking e eventos online
 
 - **00h15 · Tamanho do app resolvido no papel (Sistemas):** dos 657 MB, 646 são arte. Com o carregamento sob demanda, o jogador novo instala ~121 MB (meta era <150): Kael e Kaia na fase inicial, eras 0-1. Logo depois baixa ~49 MB (eras 2-3) e o resto só quando precisa (eras 4-8, fases adultas, cada montaria e pet). Decisão do PO: entrega pelo próprio Google Play (Play Asset Delivery), sem depender do nosso servidor. O engenheiro liga antes da versão de loja
