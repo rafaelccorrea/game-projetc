@@ -86,4 +86,52 @@ assert(!/\.pv-pn\{[^}]*(ellipsis|overflow:hidden)/.test(X('PV_CSS')), 'nome do p
 // 7) chave desligada = luta antiga
 dims = { Wb: 390, H: 656 }; def.click(btn('back')); g.PA_PVP2 = false; A.ensure(g.S, host).attemptsLeft = 3; def.click(btn('fight')); assert(X('XA2.view') === 'fight' && X('XA2.pv') === null && !/class="pv"/.test(H()), 'chave desligada devia abrir a luta antiga');
 def.click(btn('skip')); assert(X('XA2.view') === 'result'); def.click(btn('back')); def.onClose(); g.PA_PVP2 = true; out.push('chave desligada: luta antiga intacta');
-console.log('p_arena.smoke OK\n- ' + out.join('\n- '));
+// 8) ARENA ONLINE: o Sys.arenaNet REAL (js/sys/arenanet.js) com uma rede de mentira (Sys.net._call). Servidor: adversários com FC 320 e 280; retrato com FC 260.
+//    A tela mostra 320 e 280 como vieram (sem a escala de exibição), compara com a FC do RETRATO (o número do POST /arena/snapshot), não com a FC local, e o
+//    resultado mostra os pontos que o servidor devolveu. Com o provider local a lista volta a ser exatamente a de antes.
+(async () => {
+  const T = g.Sys.tower, F = g.Sys.fc, view0 = F.DATA.viewOn; F.DATA.viewOn = true;   // escala de exibição LIGADA: é ela que transformava 320 em 9,9 mil
+  const scaled320 = F.viewText(320), scaled280 = F.viewText(280); assert(scaled320 !== '320' && scaled280 !== '280', 'a escala de exibição não está agindo no teste');
+  const rows = () => H().split('<button data-x="sel"').slice(1), noClock = s => s.replace(/(\d+d )?\d\d:\d\d:\d\d/g, 'T');
+  g.PA_PVP2 = true; A.ensure(g.S, host).attemptsLeft = 3; def.onOpen(); def.render(); const local0 = noClock(H()), localFc = F.compute(g.S, host), lo = A.opponents(g.S, host);
+  assert(rows().length === 3 && rows().every((r, i) => r.includes('FC ' + F.viewText(lo[i].fc) + ' ·') && r.includes('>+' + lo[i].winPts + '<') && r.includes('>−' + lo[i].losePts + '<')) && /Cópias de jogadores/.test(H()), 'lobby local diferente do Sys.arena.opponents');
+  require(path.join(R, 'js/sys/arenanet.js')); const NET = g.Sys.arenaNet; NET._reset(); NET.DATA.on = true;
+  const ps0 = T.playerStats; let snapFc = 260; T.playerStats = (S, h) => Object.assign(ps0(S, h), { fc: snapFc });
+  assert(localFc > 1000 && localFc !== 260, 'a FC local do teste tem de ser bem diferente da do retrato: ' + localFc);
+  const posts = [], o = A.ensure(g.S, host), srvLog = [{ s: 0, k: 'hit', dmg: 10, crit: false, hp: 90, en: 25 }, { s: 1, k: 'hit', dmg: 200, crit: true, hp: 0, en: 25 }];
+  const list = [{ id: 'u1', name: 'Rival <b>x', fc: 320, bot: false, level: 5, look: null, points: 1000 }, { id: 'u2', name: 'Iara de Ferro', fc: 280, bot: true, level: 5, look: null, points: 1000 }, { id: 'u3', name: 'Ragnar do Vento', fc: 280, bot: false, level: 5, look: null, points: 1000 }];
+  g.Sys.net = { serverNow: () => Date.now(), _call: async (m, p, b) => { posts.push([m, p, b]);
+    if (p === '/arena/snapshot') return { ok: true }; if (p.startsWith('/arena/opponents')) return list; if (p === '/arena/week') return { week: o.week, start: Date.now() - 1000, end: Date.now() + 86400000 };
+    if (p === '/arena/status') return { week: o.week, day: o.day, attemptsLeft: o.attemptsLeft, refreshLeft: o.refreshLeft, points: o.points };
+    if (p.startsWith('/ranking')) return { kind: 'arena', week: o.week, list: [], me: { rank: null, value: 0 }, bots: false };
+    if (p === '/arena/fight') return { ok: true, win: false, delta: -12, points: o.points - 12, seed: 1, attemptsLeft: o.attemptsLeft - 1, rounds: 1, log: srvLog, opp: { id: 'u1', name: 'Rival <b>x', fc: 320, level: 5, look: null, bot: false }, rewards: { gold: null, goldk: 20, gems: 0, chest: 0 } };
+    throw Object.assign(new Error('404'), { code: 'not_found' }); } };
+  const st = await NET.start(g.S, host); assert(st.ok === true && NET.state().started === true, 'o Sys.arenaNet não iniciou: ' + JSON.stringify(st));
+  const sent = posts.find(x => x[1] === '/arena/snapshot')[2].fc; assert.strictEqual(sent, 260, 'retrato enviado');
+  def.onOpen(); def.render(); let rw = rows(); assert.strictEqual(rw.length, 3);
+  assert(rw[0].includes('FC 320 ·') && rw[1].includes('FC 280 ·') && rw[2].includes('FC 280 ·'), 'a FC do adversário não é a do servidor'); assert(!H().includes(scaled320) && !H().includes(scaled280), 'a FC do servidor saiu reescalada');
+  assert.strictEqual(X('paSrvFc()'), sent, 'a FC "sua" do lobby tem de ser a do retrato enviado'); assert(H().includes('sua FC na Arena: 260') && !/Cópias de jogadores/.test(H()), 'rodapé online');
+  const kr = A.DATA.kRange, K = fc => Math.max(kr[0], Math.min(kr[1], fc / sent)), W1 = Math.round(A.DATA.winBase * K(320)), L1 = Math.round(A.DATA.lossBase * K(320)), W3 = Math.round(A.DATA.winBase * K(280)), L3 = Math.round(A.DATA.lossBase * K(280));
+  assert.deepStrictEqual([W1, L1, W3, L3], [25, 12, 22, 11]); const bug = A.opponents(g.S, host)[0];
+  assert(bug.winPts !== W1 && bug.losePts !== L1 && bug.diff.txt !== T.difficulty(260, 320).txt, 'o teste não reproduz o defeito (conta pela FC local): ' + JSON.stringify([bug.winPts, bug.losePts, bug.diff]));
+  assert(rw[0].includes('>+25<') && rw[0].includes('>−12<') && rw[0].includes('>' + T.difficulty(260, 320).txt + '<') && !rw[0].includes('>' + bug.diff.txt + '<') && !rw[0].includes('>+' + bug.winPts + '<'), 'previsão/dificuldade de 260 x 320: ' + rw[0]);
+  assert(rw[2].includes('>+22<') && rw[2].includes('>−11<') && rw[2].includes('>' + T.difficulty(260, 280).txt + '<'), 'previsão/dificuldade de 260 x 280');
+  assert(rw[1].includes('>sem pontos<') && !/>[+−]\d+</.test(rw[1]) && rw[1].includes('>' + T.difficulty(260, 280).txt + '<'), 'robô online: sem número de ponto');
+  assert(H().includes('Rival &lt;b&gt;x') && !H().includes('Rival <b>x'), 'nome do servidor sem escape'); assert(!/undefined|NaN|\[object/.test(H()) && !/\p{Extended_Pictographic}/u.test(H()));
+  out.push('online: FC 320/280 como o servidor mandou (não ' + scaled320 + '), retrato 260 (FC local ' + Math.round(localFc) + '): ' + T.difficulty(260, 320).txt + ' +25/−12 e ' + T.difficulty(260, 280).txt + ' +22/−11; robô sem pontos; pela FC local sairia ' + bug.diff.txt + ' +' + bug.winPts + '/−' + bug.losePts);
+  // sem a FC do retrato: nenhum número inventado
+  snapFc = 0; def.render(); rw = rows(); assert(rw[0].includes('FC 320') && rw[0].includes('>Vitória: sobe<') && rw[0].includes('>Derrota: desce<') && !/>[+−]\d+</.test(rw[0]) && !H().includes('sua FC na Arena') && !/undefined|NaN/.test(H()), 'sem retrato tem de sair o texto sem número'); snapFc = 260;
+  out.push('online sem FC do retrato: "Vitória: sobe / Derrota: desce", sem número');
+  // a luta real: o resultado mostra o delta do servidor (o mesmo que a lista previu) e o placar usa 260 x 320
+  def.render(); const lp1 = o.lp, pts1 = o.points; def.click(btn('sel', { i: '0' })); def.click(btn('fight')); assert(X('XA2.wait') && /Procurando adversário/.test(H()), 'faltou o véu de espera');
+  for (let i = 0; i < 20 && X('XA2.wait'); i++) await new Promise(r => setTimeout(r, 5));
+  pv = X('XA2.pv'); assert(pv && pv.net === true && pv.phase === 'vs' && pv.myFc === 260 && pv.opp.fc === 320, 'a luta online não abriu com as FCs do servidor'); def.render();
+  assert(H().includes('<span>FC 260</span>') && H().includes('<span>FC 320</span>') && !H().includes(scaled320), 'VS online: FC fora da escala do servidor');
+  def.click(btn('skip')); assert(X('XA2.view') === 'result' && />DERROTA</.test(H()) && H().includes('>−12 pontos<'), 'o resultado não mostra os pontos do servidor'); assert(o.lp === Math.max(0, lp1 - 12) && o.points === pts1 - 12, 'pontos aplicados diferentes dos do servidor');
+  def.click(btn('back')); out.push('luta online: placar FC 260 x FC 320, resultado −12 pontos (o do servidor, igual à previsão da lista)');
+  // provider local de volta: a lista é a de antes, caractere por caractere (fora os relógios)
+  NET.stop(); T.playerStats = ps0; assert(X('paNet()') === null); const oo = A.ensure(g.S, host); oo.attemptsLeft = 3; oo.lp = lp1; oo.points = pts1; def.onOpen(); def.render();
+  assert.strictEqual(noClock(H()), local0, 'com o provider local o lobby mudou'); assert.deepStrictEqual(X('paOpps()'), A.opponents(g.S, host)); out.push('provider local: lobby idêntico ao de antes');
+  def.onClose(); F.DATA.viewOn = view0; delete g.Sys.net;
+  console.log('p_arena.smoke OK\n- ' + out.join('\n- '));
+})().catch(e => { console.error(e); process.exit(1); });

@@ -62,7 +62,7 @@ function paPrize(pz){ const out=[]; if(pz.goldk) out.push(paIc('coin')+' ouro');
   if(pz.prism) out.push(pz.prism+' frag. Prismático'); if(pz.frame) out.push('moldura'); if(pz.title) out.push('título'); return out.join(' · '); }
 
 /* ---------- ARENA (aba 0): liga, lutas do dia, adversários ---------- */
-function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ensure(S,h), ops=Sys.arena.opponents(S,h), L=li.league, N=li.next;
+function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ensure(S,h), ops=paOpps(), L=li.league, N=li.next, net=!!paNet(), sfc=net?paSrvFc():0;
   XA2.sel=Math.max(0,Math.min(XA2.sel,ops.length-1));
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1;
   const zoneTxt=li.zone==='up'?'Acima da linha: sobe para '+N.name+' no fechamento':li.zone==='down'?'Abaixo do mínimo: cai no fechamento':N?'Faltam '+paN(li.toUp)+' pts para subir para '+N.name:'Liga mais alta';
@@ -77,15 +77,19 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
     <span style="flex:1;min-width:0;font-size:13px;font-weight:900">Lutas hoje <span style="color:#ffe07a">${o.attemptsLeft}/${paMaxTries()}</span> <span style="font-size:11px;color:#c9b9a2;font-weight:800">· recarrega em <span id="pa_day">${paClock(paDayLeft())}</span></span>${paVipChip()}</span>
     <button data-x="refresh" class="pa-btn" style="padding:0 12px" aria-busy="${!!XA2.refBusy}" aria-label="Trocar adversários (${o.refreshLeft} grátis hoje)">${XA2.refBusy?'Trocando':'Trocar'} <span style="color:#ffe07a">${o.refreshLeft}</span></button></div>`;
   const dcol={easy:'#5fd068',even:'#ffc94a',hard:'#ff9a3c',nope:'#ff5a5a'};
-  const list=ops.map((p,i)=>{ const on=i===XA2.sel, d=p.diff||{id:'even',txt:''};
-    return `<button data-x="sel" data-i="${i}" aria-pressed="${on}" aria-label="${paEsc(p.name)}, FC ${paFC(p.fc)}, ${paEsc(d.txt)}" class="pa-in" style="position:relative;animation-delay:${i*.06}s;flex:none;height:72px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:14px;background:${on?'#3a2c1f':'#1d1611'};border:2px solid ${on?'#ffc94a':'#4a3a2b'};color:#f6ecdf;text-align:left;width:100%">
+  const list=ops.map((p,i)=>{ const on=i===XA2.sel, d=p.diff||(p.net?{id:'',txt:''}:{id:'even',txt:''}), fcT=paFCx(p.fc,p.net);
+    const ptsA=p.winPts!=null&&p.losePts!=null?'vitória mais '+p.winPts+', derrota menos '+p.losePts+' pontos':p.noPts?'sem pontos':'vitória sobe, derrota desce';
+    const pts=p.winPts!=null&&p.losePts!=null?`<span style="color:#5fd068;font-size:16px">+${paEsc(p.winPts)}</span><span style="color:#ff6b6b;font-size:13px">−${paEsc(p.losePts)}</span><span style="font-size:10px;color:#c9b9a2;font-family:inherit;font-weight:800">pts</span>`
+      :p.noPts?`<span style="font-size:11px;color:#c9b9a2;font-family:Nunito,system-ui,sans-serif;font-weight:800">sem pontos</span>`
+      :`<span style="font-size:11px;color:#5fd068;font-family:Nunito,system-ui,sans-serif;font-weight:800">Vitória: sobe</span><span style="font-size:11px;color:#ff6b6b;font-family:Nunito,system-ui,sans-serif;font-weight:800;margin-top:2px">Derrota: desce</span>`;
+    return `<button data-x="sel" data-i="${i}" aria-pressed="${on}" aria-label="${paEsc(p.name)}, FC ${paEsc(fcT)}${p.net?(d.txt?', '+paEsc(d.txt):'')+', '+ptsA:', '+paEsc(d.txt)}" class="pa-in" style="position:relative;animation-delay:${i*.06}s;flex:none;height:72px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:14px;background:${on?'#3a2c1f':'#1d1611'};border:2px solid ${on?'#ffc94a':'#4a3a2b'};color:#f6ecdf;text-align:left;width:100%">
       <span aria-hidden="true" style="flex:none;width:54px;height:54px;border-radius:12px;overflow:hidden;position:relative;background:#2a1f16;border:2px solid ${dcol[d.id]||'#6b5843'}"><span style="position:absolute;left:-13px;top:-6px;width:80px;height:80px;display:block;transform:scaleX(-1)"><span class="pa-kid" style="position:absolute;inset:0;display:block"></span></span></span>
       <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(p.name)}</span>
-        <span style="font-size:12px;font-weight:800;color:#c9b9a2">FC ${paFC(p.fc)} · <span style="color:${dcol[d.id]||'#c9b9a2'}">${paEsc(d.txt)}</span></span></span>
-      <span style="flex:none;display:flex;flex-direction:column;align-items:flex-end;font-family:'Lilita One',sans-serif;line-height:1.05"><span style="color:#5fd068;font-size:16px">+${p.winPts}</span><span style="color:#ff6b6b;font-size:13px">−${p.losePts}</span><span style="font-size:10px;color:#c9b9a2;font-family:inherit;font-weight:800">pts</span></span>
+        <span style="font-size:12px;font-weight:800;color:#c9b9a2">FC ${paEsc(fcT)}${d.txt?` · <span style="color:${dcol[d.id]||'#c9b9a2'}">${paEsc(d.txt)}</span>`:''}</span></span>
+      <span style="flex:none;display:flex;flex-direction:column;align-items:flex-end;font-family:'Lilita One',sans-serif;line-height:1.05">${pts}</span>
       ${on?`<span style="position:absolute;right:8px;top:-7px;font-size:9px;font-weight:900;color:#2a1403;background:#ffc94a;border-radius:6px;padding:1px 5px">ESCOLHIDO</span>`:''}</button>`; }).join('');
   return card+fights+`<div role="list" aria-label="Adversários" style="flex:none;display:flex;flex-direction:column;gap:6px">${list}</div>
-    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Cópias de jogadores com FC até ±10% da sua · luta automática · prêmios valem quando o ranking online abrir</span>`; }
+    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">${net?'Adversários e pontos do servidor'+(sfc>0?' · sua FC na Arena: '+paEsc(paN(sfc)):'')+' · luta automática':'Cópias de jogadores com FC até ±10% da sua · luta automática · prêmios valem quando o ranking online abrir'}</span>`; }
 /* ---------- LIGAS (aba 1) ---------- */
 function paLeagues(){ const li=Sys.arena.leagueInfo(S,paH()), A=Sys.arena.DATA.leagues;
   const rows=A.map((L,i)=>{ const me=i===li.idx, nx=A[i+1];
@@ -113,9 +117,9 @@ function paFightView(){ const F=XA2.fight, log=(F.r.duel&&F.r.duel.log)||[], st=
   const bar=(v,c)=>`<div style="height:12px;border-radius:7px;background:#140e08;border:2px solid #4a3a2b;overflow:hidden"><div class="pa-hp" style="height:100%;width:${Math.max(0,Math.round(v*100))}%;background:${c}"></div></div>`;
   const dmg=cur?`<span class="pa-dmg${cur.crit?' c':''}" style="${cur.s===0?'right:12%':'left:12%'};top:30%">${cur.crit?'CRÍTICO ':''}−${paF(cur.dmg)}</span>`:'';
   return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
-    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · ${paEsc(paMe())}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFC(F.myFc)}</span>${bar(hpA,'#5fd068')}</div>
+    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · ${paEsc(paMe())}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFCx(F.myFc,F.net)}</span>${bar(hpA,'#5fd068')}</div>
       <span class="pa-vs" style="font-family:'Lilita One',sans-serif;font-size:28px;color:#ffe07a;text-shadow:0 2px 0 #6a3a08">VS</span>
-      <div style="flex:1;min-width:0;text-align:right"><span style="font-weight:900;font-size:13px">${paEsc(F.opp.name)}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFC(F.opp.fc)}</span>${bar(hpB,'#ff5a5a')}</div></div>
+      <div style="flex:1;min-width:0;text-align:right"><span style="font-weight:900;font-size:13px">${paEsc(F.opp.name)}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFCx(F.opp.fc,F.net)}</span>${bar(hpB,'#ff5a5a')}</div></div>
     <div style="flex:1;min-height:220px;position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#3a2a18,#1a120b 70%);border:2px solid #4a3a2b">
       <div style="position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(180deg,#5a4026,#2a1c10)"></div>
       ${typeof window.drawHeroFull==='function'?`<canvas id="pa_me" width="256" height="256" role="img" aria-label="${paEsc(paMe())}" class="${cur&&cur.s===1?'pa-hit':''}" style="position:absolute;left:2%;bottom:46px;width:46%;aspect-ratio:1"></canvas>`
@@ -127,7 +131,7 @@ function paResult(){ const F=XA2.fight, r=F.r, li=Sys.arena.leagueInfo(S,paH()),
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1, o=Sys.arena.ensure(S,paH());
   return `<div class="pa-in" style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center">
     <span style="font-family:'Lilita One',sans-serif;font-size:44px;line-height:1;color:${win?'#ffe07a':'#ff6b6b'};text-shadow:0 3px 0 ${win?'#8a4f0c':'#5a0f0f'}">${win?'VITÓRIA!':'DERROTA'}</span>
-    <span style="font-size:13px;font-weight:800;color:#c9b9a2">contra ${paEsc(F.opp.name)} · FC ${paFC(F.opp.fc)}</span>
+    <span style="font-size:13px;font-weight:800;color:#c9b9a2">contra ${paEsc(F.opp.name)} · FC ${paFCx(F.opp.fc,F.net)}</span>
     <div style="display:flex;align-items:center;gap:8px">${paShield(L,44)}<span style="font-family:'Lilita One',sans-serif;font-size:26px;color:${r.delta>=0?'#5fd068':'#ff6b6b'}">${r.delta>=0?'+':'−'}${Math.abs(r.delta)}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">pontos de arena</span></div>
     <div style="width:86%"><div role="progressbar" aria-label="Pontos de liga" style="height:12px;border-radius:7px;background:#140e08;border:2px solid #4a3a2b;overflow:hidden"><div style="height:100%;width:${Math.round(frac*100)}%;background:${L.c1}"></div></div>
       <span style="font-size:11px;font-weight:800;color:#f6ecdf">Liga ${paEsc(L.name)} · ${paN(li.lp)}${N?' / '+paN(N.min):''} pts</span></div>
@@ -166,7 +170,7 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(
     let p=null; try{ p=paNet().refresh(S,h); }catch(e){ p=null; } Promise.resolve(p||{ok:false,reason:'offline'}).then(fin,()=>fin({ok:false,reason:'offline'})); return; }
   if(a==='refresh'){ const r=Sys.arena.refresh(S,h); if(!r.ok){ paToast('Sem trocas grátis hoje'); return; } XA2.sel=0; paSnd('ui_tap'); render(); return; }
   if(a==='pvspd'){ const v=parseInt(b.dataset.v,10); if(XA2.pv&&(v===1||v===2||v===4)&&v!==XA2.pv.speed){ XA2.pv.speed=XA2.pvSpeed=v; paSnd('ui_tap'); render(); } return; }
-  if(a==='fight'||a==='again'){ const ops=Sys.arena.opponents(S,h), prev=XA2.pv&&XA2.pv.opp, opp=(a==='again'&&prev&&ops.find(o=>o.id===prev.id))||ops[a==='again'&&!XA2.pv?0:XA2.sel]; if(!opp) return; const myFc=paMyFc(), W=Sys.tower;
+  if(a==='fight'||a==='again'){ const ops=paOpps(), prev=XA2.pv&&XA2.pv.opp, opp=(a==='again'&&prev&&ops.find(o=>o.id===prev.id))||ops[a==='again'&&!XA2.pv?0:XA2.sel]; if(!opp) return; const myFc=paMyFc(), W=Sys.tower;
     let maxA=1, maxB=1; try{ const me=W.playerStats(S,h), foe=W.scaledFoe(me,opp.fc); maxA=Math.max(1,me.hp); maxB=Math.max(1,foe.hp); }catch(e){}
     if(paNet()){ paNetFight(opp,myFc,maxA,maxB); return; }   /* Arena online: a luta é decidida no servidor (Promise) */
     const r=Sys.arena.fight(S,h,opp.id); if(!r.ok){ paToast(r.reason==='tries'?'Sem lutas hoje: recarrega à meia-noite':'Luta indisponível agora'); return; }
@@ -189,6 +193,20 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(
    - RANKING: ao abrir a aba, Sys.arenaNet.loadRanking('arena') e redesenha quando chega (o de FC, 'fc', é da tela de Ranking, js/p_rank.js).
    - FOTO: Sys.arenaNet.snapshot(S, host) ao abrir a Arena e a cada evento 'herochange' do window (ele mesmo limita a frequência). */
 const paNet=()=>{ try{ const N=window.Sys&&Sys.arenaNet; return N&&typeof N.state==='function'&&N.state().started===true?N:null; }catch(e){ return null; } };
+/* LOBBY ONLINE (correção da 1ª luta real): com a Arena online iniciada, a FC do adversário é a do servidor SEM a escala de exibição (paFCx) e a FC "sua"
+   é a do RETRATO (POST /arena/snapshot): o Sys.arenaNet.snapshot manda Sys.tower.playerStats(S,host).fc, a mesma leitura daqui; se um dia o módulo expuser
+   o número enviado (state().snapFc), vale o dele. Dificuldade = Sys.tower.difficulty(retrato, FC do servidor). Pontos = a conta do módulo (a mesma que o
+   servidor carrega: base × clamp(FC dele / FC do retrato, kRange)) com as constantes de Sys.arena.DATA; contra robô o contrato (§4) diz que não há ponto.
+   Sem a FC do retrato não há número: sai "Vitória: sobe / Derrota: desce". O Sys.arena.opponents compara com a FC LOCAL (Sys.fc.compute), por isso aqui
+   esses três campos são refeitos. Sem a Arena online, paOpps devolve o Sys.arena.opponents intacto. */
+function paSrvFc(){ const N=paNet(); if(!N) return 0; try{ const v=+N.state().snapFc; if(v>0&&isFinite(v)) return v; }catch(e){}
+  try{ const v=+Sys.tower.playerStats(S,paH()).fc; return v>0&&isFinite(v)?v:0; }catch(e){ return 0; } }
+function paOpps(){ const ops=Sys.arena.opponents(S,paH()); if(!paNet()) return ops; const me=paSrvFc(), D=Sys.arena.DATA, W=Sys.tower, kr=D.kRange||[0.5,2];
+  return ops.map(p=>{ const q=Object.assign({},p,{net:true,winPts:null,losePts:null,diff:null,noPts:p.bot===true}), fc=+p.fc;
+    if(me>0&&fc>0&&isFinite(fc)){ try{ q.diff=W&&W.difficulty?W.difficulty(me,fc):null; }catch(e){ q.diff=null; }
+      if(!q.noPts&&D.winBase>0&&D.lossBase>0){ const k=Math.max(kr[0],Math.min(kr[1],fc/Math.max(1,me))); q.winPts=Math.round(D.winBase*k); q.losePts=Math.round(D.lossBase*k); } }
+    return q; }); }
+const paFCx=(v,net)=>net?paN(v):paFC(v);   /* online: o número do servidor como veio (inteiro, sem a escala de exibição); local: como sempre */
 function paNetMsg(reason,dflt){ const r=String(reason||''); if(r==='tries'||r==='arena_limit') return 'Sem lutas hoje: recarrega à meia-noite'; if(r==='busy') return 'Luta em andamento: aguarde';
   if(r==='opp'||r==='not_found') return 'Esse adversário saiu da lista: troque os adversários'; if(r==='refresh') return 'Sem trocas grátis hoje'; if(r==='no_snapshot'||r==='snapshot_mismatch') return 'Seu herói ainda não foi enviado ao servidor: tente de novo em instantes';
   if(/offline|net|network|timeout|fetch|unreachable/i.test(r)) return 'Sem conexão: tente de novo'; return dflt||'Luta indisponível agora'; }
@@ -202,8 +220,9 @@ function paNetFight(opp,myFc,maxA,maxB){ const N=paNet(); if(!N||XA2.wait) retur
     paNetStopWait(); if(!r||!r.ok){ paToast(paNetMsg(r&&r.reason)); XA2.view='lobby'; try{ render(); }catch(e){} return; }
     try{ if(typeof save==='function') save(); }catch(e){}
     const sv=r.oppServer&&typeof r.oppServer==='object'?r.oppServer:null, o2=Object.assign({},opp); if(sv){ for(const k of ['name','fc','level','look']) if(sv[k]!=null) o2[k]=sv[k]; }   /* o adversário como o servidor lutou (aparência e nível da foto dele) */
-    XA2.fight={opp:o2,r,myFc,maxA,maxB}; XA2.step=0; XA2.view='fight'; paSnd('ui_tap');
-    if(window.PA_PVP2===true){ paStop(); paPvStart(o2,r,myFc,maxA,maxB); render(); } else { XA2.pv=null; render(); paPlay(); } };
+    const sFc=paSrvFc(); if(sFc>0) myFc=sFc;   /* placar da luta online: a FC do retrato (a que o servidor usou), na escala do servidor como a do adversário */
+    XA2.fight={opp:o2,r,myFc,maxA,maxB,net:true}; XA2.step=0; XA2.view='fight'; paSnd('ui_tap');
+    if(window.PA_PVP2===true){ paStop(); paPvStart(o2,r,myFc,maxA,maxB); if(XA2.pv) XA2.pv.net=true; render(); } else { XA2.pv=null; render(); paPlay(); } };
   let p=null; try{ p=N.fight(S,paH(),opp.id); }catch(e){ p=null; }
   Promise.resolve(p||{ok:false,reason:'offline'}).then(done,()=>done({ok:false,reason:'offline'}));
   try{ XA2.waitT=setTimeout(()=>{ XA2.waitT=0; if(XA2.wait&&XA2.wait.tok===tok){ XA2.wait=null; paToast('O servidor demorou para responder: tente de novo'); XA2.view='lobby'; try{ render(); }catch(e){} } },20000); }catch(e){}
@@ -598,12 +617,12 @@ function paPvResultHTML(pv){ const r=pv.r, win=!!r.win, li=Sys.arena.leagueInfo(
     <p class="pv-note">Prêmio da liga ${paEsc(L.name)} ao fechar a semana${li.rewardsOn?'':' · vale quando o ranking online abrir'}</p>
     <div class="pv-acts"><button class="o" data-x="back">Voltar à arena</button><button class="g${o.attemptsLeft>0?'':' off'}" data-x="again" aria-disabled="${o.attemptsLeft<=0}">${o.attemptsLeft>0?'Lutar de novo · '+o.attemptsLeft:'Sem lutas hoje'}</button></div></div></div>`; }
 function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,d.H||640), li=Sys.arena.leagueInfo(S,paH()), o=Sys.arena.ensure(S,paH()), mx=paMaxTries(), lv=paPvLvl(), fn=o.rwFights>0?Math.floor(o.rwFights):Math.max(1,mx-o.attemptsLeft);   /* nº da luta de hoje: contador do módulo (rwFights); sem ele, máximo − restantes. No Modo dono as tentativas são repostas, então pode passar do máximo: aí sai só "Luta N de hoje" */
-  const olv=+pv.opp.level>0?Math.floor(+pv.opp.level):null, nm=[paMe()+(lv!=null?' ·\u00a0Nv\u00a0'+lv:''),pv.opp.name+(olv!=null?' ·\u00a0Nv\u00a0'+olv:'')],   /* espaços que não quebram: "· Nv 69" fica junto e a quebra cai antes do "·" */ fc=[pv.myFc,pv.opp.fc], col=['#5ee7ff','#ff5d7a'], nf=paPvNameFit(nm,G.W), fcs=Math.min(paPvFit('FC '+paFC(fc[0]),nf.avail,10,7),paPvFit('FC '+paFC(fc[1]),nf.avail,10,7));
+  const olv=+pv.opp.level>0?Math.floor(+pv.opp.level):null, nm=[paMe()+(lv!=null?' ·\u00a0Nv\u00a0'+lv:''),pv.opp.name+(olv!=null?' ·\u00a0Nv\u00a0'+olv:'')],   /* espaços que não quebram: "· Nv 69" fica junto e a quebra cai antes do "·" */ fc=[pv.myFc,pv.opp.fc], col=['#5ee7ff','#ff5d7a'], nf=paPvNameFit(nm,G.W), fcs=Math.min(paPvFit('FC '+paFCx(fc[0],pv.net),nf.avail,10,7),paPvFit('FC '+paFCx(fc[1],pv.net),nf.avail,10,7));
   let bg=''; try{ if(typeof bgPath==='function'&&typeof B!=='undefined') bg=bgPath(B.dispEra!=null?B.dispEra:0); }catch(e){ bg=''; }
-  const pl=i=>{ const p=paPvPct(pv.hp[i],pv.max[i]); return `<div class="pv-pl${i?' r':''}" style="--c:${col[i]}"><div class="pv-av" aria-hidden="true">${paPvPortrait(i,pv,46)}</div><div class="pv-pi"><div class="pv-pn${nf.two?' w2':''}" style="font-size:${nf.fs}px"><span>${paEsc(nm[i])}</span></div><div class="pv-pf" style="font-size:${fcs}px">FC ${paFC(fc[i])}</div>
+  const pl=i=>{ const p=paPvPct(pv.hp[i],pv.max[i]); return `<div class="pv-pl${i?' r':''}" style="--c:${col[i]}"><div class="pv-av" aria-hidden="true">${paPvPortrait(i,pv,46)}</div><div class="pv-pi"><div class="pv-pn${nf.two?' w2':''}" style="font-size:${nf.fs}px"><span>${paEsc(nm[i])}</span></div><div class="pv-pf" style="font-size:${fcs}px">FC ${paFCx(fc[i],pv.net)}</div>
     <div class="pv-bar${p<30?' low':''}" id="pa_hb${i}" role="progressbar" aria-label="Vida de ${paEsc(i?pv.opp.name:paMe())}"><i class="lag" id="pa_lg${i}" style="width:${(pv.lagPct?Math.max(p,pv.lagPct[i]):p).toFixed(1)}%${pv.lagPct?';transition:none':''}"></i><i class="hp" id="pa_hp${i}" style="width:${p.toFixed(1)}%"></i><b id="pa_ht${i}">${paF(pv.hp[i])}</b></div>
     <div class="pv-en${pv.en[i]>=100?' full':''}" id="pa_eb${i}" role="progressbar" aria-label="Energia"><i id="pa_en${i}" style="width:${pv.en[i].toFixed(1)}%"></i></div></div></div>`; };
-  const vsa=i=>`<div class="pv-vsc${i?' r':''}" style="--c:${col[i]}"><div class="pv-bigav">${paPvPortrait(i,pv,110)}</div></div>`, vsn=i=>`<div class="pv-vsc n${i?' r':''}"><b>${paEsc(i?pv.opp.name:paMe())}</b><span>FC ${paFC(fc[i])}</span></div>`;   /* retratos na 1ª linha da grade (sempre alinhados); nomes na 2ª, com quantas linhas precisarem */
+  const vsa=i=>`<div class="pv-vsc${i?' r':''}" style="--c:${col[i]}"><div class="pv-bigav">${paPvPortrait(i,pv,110)}</div></div>`, vsn=i=>`<div class="pv-vsc n${i?' r':''}"><b>${paEsc(i?pv.opp.name:paMe())}</b><span>FC ${paFCx(fc[i],pv.net)}</span></div>`;   /* retratos na 1ª linha da grade (sempre alinhados); nomes na 2ª, com quantas linhas precisarem */
   const ov=pv.phase==='vs'?`<div class="pv-ovl pv-vs" role="status" aria-label="${paEsc(paMe())} contra ${paEsc(pv.opp.name)}"><div class="pv-vsrow">${vsa(0)}<div class="pv-bigvs">VS</div>${vsa(1)}${vsn(0)}<div></div>${vsn(1)}</div><div style="font-weight:900;color:#9aa6d6;font-size:13px;text-align:center">Liga ${paEsc(li.league.name)} · luta automática</div></div>`
     :pv.phase==='result'?paPvResultHTML(pv):'';
   const sp=v=>`<button data-x="pvspd" data-v="${v}" aria-pressed="${pv.speed===v}" aria-label="Velocidade ${v} vezes">x${v}</button>`;
