@@ -1,6 +1,7 @@
 // Gera assets/bg/v2/era5/meta.json a partir de work/info.json (saida do build5.js).
 // uso: node mkmeta5.js <pastaTrabalho> <pastaSaida>     (ou: node mkmeta5.js --info tools/info.era5.json <pastaSaida>)
 // Era 5 (Moderna): usa os blocos opcionais do scene.js (rotors com flap, actors nos slots far e mid com tile/parts/flap, roadside pacer/hopper, fx flow/glow/plume).
+// Rodada 2: pecas strip (disco do rotor), actors flip (transito nos dois sentidos), rotors swing e na frente do mid (cancela, helice do ar-condicionado), pacer com turn (pedestres), textos em pontos (letreiro e outdoor).
 const fs = require('fs');
 const infoFile = process.argv[2] === '--info' ? process.argv[3] : process.argv[2] + '/work/info.json';
 const info = JSON.parse(fs.readFileSync(infoFile, 'utf8'));
@@ -20,6 +21,8 @@ const RUIN_TOP = [P(655, 80)], RUBBLE = [P(600, 562)], DINER_WIN = [P(1075, 530)
 // ---- far: fracoes do arquivo far.webp
 const DECK = 0.5596, BEACON = [{ x: 0.3274, y: 0.06 }], FAR_SMOKE = [{ x: 0.2526, y: 0.118 }, { x: 0.697, y: 0.31 }];
 const deckY = r4(farTop + DECK * FARH), ROADY = 0.592;
+// ---- rodada 2: eixo da cancela (topo da caixa) e ponta da cancela pintada (apagada do midA pelo build5b); painel do outdoor (previa de 1584)
+const BOOM_A = [1478.5, 554], BOOM_B = [1546.5, 359], BOOM_UP = Math.atan2(BOOM_B[1] - BOOM_A[1], BOOM_B[0] - BOOM_A[0]), BOOM_L = Math.hypot(BOOM_B[0] - BOOM_A[0], BOOM_B[1] - BOOM_A[1]), BOARD = [983, 138, 1296, 330];
 // ---- fumaca com contorno: o mesmo plume duas vezes (mesma semente = mesmas posicoes). 1o passe: discos um pouco maiores na cor do traco; 2o passe: os 2 tons por cima.
 const OUTL = '#2e3440', RIM = 0.0023;
 const pair = (id, base, fillC, alphaO, fadeO, rim) => [
@@ -30,6 +33,7 @@ const A = l => [l, []], B = l => [[], l];
 // ---- veiculos: rodas medidas pelo build (centro e raio em px do recorte); a roda-sprite gira por cima da roda pintada, no periodo da velocidade
 const veh = (name, w, speed) => { const v = info.veh[name], big = name === 'truck' || name === 'jeep'; return { w, h: r4(hOf(name, w)), parts: v.wheels.map((q, k) => ({ sprite: big ? 'wheelT' : 'wheel', x: r4(q[0] / v.px[0]), y: r4(q[1] / v.px[1]), w: r4(2 * q[2] * 1.03 / v.px[0]), period: r3(2 * Math.PI * q[2] / v.px[0] * w / speed), phase: r3(k * 1.9 % 6.28) })) }; };
 const car = (id, name, slot, x, w, baseY, parallax, speed, loop) => { const v = veh(name, w, speed); return { id, slot, sprite: name, x, y: r4(baseY - v.h), w, parallax, drift: -speed, loop, parts: v.parts }; };
+const carL = (id, name, slot, x, w, baseY, parallax, speed, loop) => Object.assign(car(id, name, slot, x, w, baseY, parallax, -speed, loop), { flip: true });   // sentido contrario: corpo espelhado, anda para a esquerda (as rodas giram ao contrario sozinhas)
 const FS = 0.07, MS = 0.17;   // velocidade (SH/s) em relacao a camada: viaduto / rua de tras
 const lampRect = k => [r4((LAMP[k][0] - LAMPR) / PW), r4((LAMP[k][1] - LAMPR) / PH), r4(2 * LAMPR / PW), r4(2 * LAMPR / PH)];
 // semaforo: laco de 9 s em 90 quadros. alfa = base*(1+pulse*sin(2pi*fase*ciclos)), limitado a 0..1 pelo canvas. Com 1/4 de ciclo o seno so cresce (degrau): VERDE aceso com fase < 0,30;
@@ -60,15 +64,19 @@ const m = {
   spacing: 'Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.',
   farFill: { color: 'rgba(0,0,0,0)', nota: 'transparente nesta era: atras da cidade fica a bruma clara do ceu' },
   rotors: [
+    { id: 'cancela', sprite: 'boom', layer: 'mid', tile: 0, front: true, x: r4(BOOM_A[0] / PW), y: r4(BOOM_A[1] / PH), w: r4(BOOM_L * 520 / 262 / PW), ang: r4(BOOM_UP / 2), swing: r4(-BOOM_UP / 2), hold: 3, period: 9, phase: 0 },
+    { id: 'helice_ar_condicionado', sprite: 'fan', layer: 'mid', tile: 1, front: true, x: r4(FAN.x / PW), y: r4(FAN.y / PH), w: r4(2 * FAN.r * 96 / 92 / PW), period: -0.45 },
     { id: 'antena_radar', sprite: 'dish', layer: 'mid', tile: 1, flap: true, ang: 1.5708, x: r4(MAST.x / PW), y: r4((MAST.y + 5) / PH - 0.085 / 2 / MID.height), w: r4(0.085 / midW), period: 5, phase: 0.4 }
   ],
-  rotorsNota: 'Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; so vale para a camada far). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).',
+  rotorsNota: 'Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; front no mid vale a partir da rodada 2). swing: balanca entre ang - swing e ang + swing (seno limitado por hold: para nas pontas). CANCELA: haste listrada com o eixo no centro do sprite, sobe (angulo da cancela pintada original) e desce (horizontal) a cada 9 s, parando nas pontas. HELICE do ar-condicionado girando na frente da grade. flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).',
   actors: [
     car('viaduto_sedan', 'sedan', 'far', 0.3, 0.063, deckY, 0.06, FS, 3.2), car('viaduto_onibus', 'bus', 'far', 1.0, 0.14, deckY, 0.06, FS, 3.2), car('viaduto_taxi', 'taxi', 'far', 1.9, 0.063, deckY, 0.06, FS, 3.2), car('viaduto_caminhao', 'truck', 'far', 2.45, 0.1, deckY, 0.06, FS, 3.2), car('viaduto_jipe', 'jeep', 'far', 2.9, 0.055, deckY, 0.06, FS, 3.2),
+    carL('viaduto_volta_taxi', 'taxi', 'far', 0.8, 0.058, r4(deckY - 0.004), 0.06, FS * 1.3, 3.6), carL('viaduto_volta_onibus', 'bus', 'far', 2.4, 0.13, r4(deckY - 0.004), 0.06, FS * 1.3, 3.6),
     { id: 'helicoptero', slot: 'far', sprite: 'heli', x: 0.4, y: 0.022, w: hel.w, parallax: 0.03, drift: -0.05, loop: 2.6, bob: 0.006, bobF: 0.9, parts: [
-      { sprite: 'rotor', x: 0.655, y: 0.065, w: r4(1.08 * S.rotor[0] / S.rotor[1]), period: 0.3, flap: true, ang: 1.5708 },
+      { sprite: 'rotordisc', strip: true, x: 0.655, y: 0.065, w: 1.05, period: 1, phase: 0 },
       { sprite: 'trotor', x: 0.022, y: 0.17, w: 0.085, period: 0.22 }] },
     { id: 'rua_de_tras', slot: 'mid', sprite: 'backroad', tile: true, x: 0, y: r4(ROADY - 0.02), w: 0.36, parallax: 0.38, drift: 0, loop: 0.36 },
+    carL('rua_volta_sedan', 'sedan', 'mid', 1.4, 0.23, r4(ROADY - 0.012), 0.38, MS, 6.2), carL('rua_volta_jipe', 'jeep', 'mid', 4.2, 0.19, r4(ROADY - 0.012), 0.38, MS, 6.2),
     car('rua_caminhao', 'truck', 'mid', 0, 0.4, ROADY, 0.38, MS, 5.6), car('rua_jipe', 'jeep', 'mid', 0.62, 0.2, ROADY, 0.38, MS, 5.6), car('rua_onibus', 'bus', 'mid', 2.0, 0.5, ROADY, 0.38, MS, 5.6), car('rua_taxi', 'taxi', 'mid', 3.3, 0.25, ROADY, 0.38, MS, 5.6), car('rua_sedan', 'sedan', 'mid', 4.4, 0.25, ROADY, 0.38, MS, 5.6)
   ],
   actorsNota: 'Sprites que cruzam a cena (x, y, w em SH; deslocamento = scroll*parallax + t*drift; da a volta a cada loop SH), com pecas presas (x, y = centro em fracao do corpo; w = fracao da largura do corpo; period = s por volta; flap = peca vista de lado, achata em cosseno no angulo ang). slot far = depois da camada far: TRANSITO DO VIADUTO (5 veiculos, todos na mesma velocidade para nunca se atravessarem; a base das rodas fica na pista, logo atras da mureta) e HELICOPTERO (rotor principal de perfil batendo, rotor de cauda girando, sobe e desce de leve). slot mid = antes da camada mid: RUA DE TRAS (tile: true = faixa de guia + asfalto repetida, presa aos predios) e 5 veiculos que passam por tras dos predios e aparecem nos vaos, com a base das rodas no asfalto; rodas-sprite girando no periodo da velocidade.',
@@ -81,6 +89,10 @@ const m = {
       { id: 'holofote_guarita', type: 'glow', layer: 'mid', anchors: A(SEARCH), radius: 0.035, alpha: 0.32, pulse: 2.2, rgb: ['245,250,255', '190,220,255', '120,170,255'] },
       { id: 'vitrine_lanchonete', type: 'glow', layer: 'mid', anchors: B(DINER_WIN), radius: 0.07, alpha: 0.16, pulse: 1.7, rgb: ['255,226,150', '255,190,90', '255,150,40'] }
     ], lights, [
+      { id: 'letreiro_LANCHES', type: 'flow', layer: 'mid', tile: 1, mask: 'txtA', rect: [r4(SIGN[0] / PW), r4(SIGN[1] / PH), r4(SIGN[2] / PW), r4(SIGN[3] / PH)], rgb: '225,25,110', blend: 'source-over', loop: 6.4, frames: 64, maxScale: 2, bands: [], base: 1, pulse: 25, pulseCycles: 1, nota: 'texto em pontos LANCHES aceso na 1a metade do laco' },
+      { id: 'letreiro_ABERTO', type: 'flow', layer: 'mid', tile: 1, mask: 'txtB', rect: [r4(SIGN[0] / PW), r4(SIGN[1] / PH), r4(SIGN[2] / PW), r4(SIGN[3] / PH)], rgb: '225,25,110', blend: 'source-over', loop: 6.4, frames: 64, maxScale: 2, bands: [], base: 1, pulse: -25, pulseCycles: 1, nota: 'texto em pontos ABERTO aceso na 2a metade do laco' },
+      { id: 'outdoor_ALISTE_SE', type: 'flow', layer: 'mid', tile: 0, mask: 'adA', rect: [r4(BOARD[0] / PW), r4(BOARD[1] / PH), r4((BOARD[2] - BOARD[0]) / PW), r4((BOARD[3] - BOARD[1]) / PH)], rgb: '58,66,88', blend: 'source-over', loop: 10, frames: 40, maxScale: 1.5, bands: [], base: 0.85, pulse: 25, pulseCycles: 1, nota: 'cartaz pintado no outdoor: ALISTE-SE + estrela; troca a cada 5 s' },
+      { id: 'outdoor_ZONA_SEGURA', type: 'flow', layer: 'mid', tile: 0, mask: 'adB', rect: [r4(BOARD[0] / PW), r4(BOARD[1] / PH), r4((BOARD[2] - BOARD[0]) / PW), r4((BOARD[3] - BOARD[1]) / PH)], rgb: '150,40,36', blend: 'source-over', loop: 10, frames: 40, maxScale: 1.5, bands: [], base: 0.85, pulse: -25, pulseCycles: 1, nota: 'cartaz ZONA SEGURA + seta' },
       { id: 'letreiro_lanchonete', type: 'flow', layer: 'mid', tile: 1, mask: 'signmask', rect: [r4(SIGN[0] / PW), r4(SIGN[1] / PH), r4(SIGN[2] / PW), r4(SIGN[3] / PH)], rgb: '255,70,150', blend: 'lighter', loop: 3.2, frames: 48, maxScale: 2, bands: [], base: 0.42, pulse: 1.25, pulseCycles: 4, nota: 'painel do letreiro piscando em rosa (4 piscadas a cada 3,2 s)' }
     ],
     pair('fumaca_ruinas', { layer: 'mid', anchors: B(RUIN_TOP), n: 8, life: 5.2, rise: 0.2, wind: -0.12, spread: 0.035, wobble: 0.014, r0: 0.012, grow: 0.034, fadeIn: 0.06, seed: 71 }, SMOKE, 0.86, 0.8),
@@ -105,8 +117,11 @@ const m = {
     pool: [
       { type: 'sprite', sprite: 'lamp', h: [0.3, 0.315], weight: 4 },
       { type: 'fire', sprite: 'barrel', h: [0.1, 0.106], weight: 2, fire: { y: 0.93, size: 0.6, glow: 2.0, glowAlpha: 0.1, sparks: { n: 8, life: 1.5, spread: 0.5, wobble: 0.3, wind: 0.55, rise: 2.6, radius: 0.036 } } },
-      { type: 'pacer', sprite: 'dog', h: [0.085, 0.09], weight: 3, span: 0.1, walk: { dist: 0.09, period: 7, split: [0.3, 0.5, 0.8], sit: 1, steps: 8 } },
-      { type: 'hopper', sprite: 'pigeonsit', h: [r4(0.072 * info.pigeon.frame[1] / info.pigeon.bollardH), r4(0.076 * info.pigeon.frame[1] / info.pigeon.bollardH)], weight: 2, span: 0.13, hop: { post: 'bollardP', dx: 0.13, period: 5, flight: 0.7, fly: 'pigeon', size: 0.056, height: 0.04, cx: 0.5, cy: r4(info.pigeon.cy) } },
+      { type: 'pacer', sprite: 'dog', h: [0.085, 0.09], weight: 3, span: 0.1, walk: { dist: 0.09, period: 7, split: [0.3, 0.5, 0.8], sit: 1, steps: 8, turn: 0.3, pause: 0.5 } },
+      { type: 'pacer', sprite: 'walkerA', h: [0.18, 0.19], weight: 2, span: 0.14, walk: { dist: 0.14, period: 10, split: [0.18, 0.5, 0.68], sit: 1, steps: 12, turn: 0.35, pause: 0.6 } },
+      { type: 'pacer', sprite: 'walkerB', h: [0.18, 0.19], weight: 2, span: 0.14, walk: { dist: 0.12, period: 9, split: [0.2, 0.5, 0.7], sit: 1, steps: 10, turn: 0.35, pause: 0.5 } },
+      { type: 'pacer', sprite: 'walkerC', h: [0.19, 0.2], weight: 1, span: 0.14, walk: { dist: 0.16, period: 11, split: [0.15, 0.5, 0.65], sit: 1, steps: 14, turn: 0.3, pause: 0.7 } },
+      { type: 'hopper', sprite: 'pigeonsit', h: [r4(0.072 * info.pigeon.frame[1] / info.pigeon.bollardH), r4(0.076 * info.pigeon.frame[1] / info.pigeon.bollardH)], weight: 2, span: 0.13, hop: { post: 'bollardP', dx: 0.13, period: 5, flight: 0.7, turn: 0.25, fly: 'pigeon', size: 0.056, height: 0.04, cx: 0.5, cy: r4(info.pigeon.cy) } },
       { type: 'sprite', sprite: 'hydrant', h: [0.078, 0.084], weight: 1 }, { type: 'sprite', sprite: 'bin', h: [0.082, 0.088], weight: 1 }, { type: 'sprite', sprite: 'vbox', h: [0.098, 0.104], weight: 1 }, { type: 'sprite', sprite: 'vbox2', h: [0.118, 0.124], weight: 1 },
       { type: 'sprite', sprite: 'bench', h: [0.084, 0.09], weight: 1 }, { type: 'sprite', sprite: 'bike', h: [0.108, 0.114], weight: 1 }, { type: 'sprite', sprite: 'mailbox', h: [0.108, 0.114], weight: 1 }, { type: 'sprite', sprite: 'barrier', h: [0.074, 0.08], weight: 1 },
       { type: 'sprite', sprite: 'signpole', h: [0.2, 0.21], weight: 1 }, { type: 'sprite', sprite: 'sawhorse', h: [0.084, 0.09], weight: 1 }]
@@ -138,8 +153,8 @@ const m = {
   rnd: 'rnd(i,seed,k): x=imul(i|0,0x9E3779B1)^imul(seed*31+k+1,0x85EBCA6B); x^=x>>>15; x=imul(x,0x2C1B3C6D); x^=x>>>12; x=imul(x,0x297A2D39); x^=x>>>15; return (x>>>0)/2^32',
   sprites: {
     cloud1: 'cloud1.webp', cloud2: 'cloud2.webp', cloud3: 'cloud3.webp', pigeon: { file: 'pigeon.webp', frames: 6, fps: 12 }, flame: { file: 'flame.webp', frames: 4, fps: 10 },
-    heli: 'heli.webp', rotor: 'rotor.webp', trotor: 'trotor.webp', bus: 'bus.webp', truck: 'truck.webp', sedan: 'sedan.webp', taxi: 'taxi.webp', jeep: 'jeep.webp', wheel: 'wheel.webp', wheelT: 'wheelT.webp', backroad: 'backroad.webp',
-    dish: 'dish.webp', lampmask: 'lampmask.webp', signmask: 'signmask.webp', flagR: 'flagR.webp',
+    heli: 'heli.webp', rotordisc: { file: 'rotordisc.webp', frames: 3, fps: 24 }, trotor: 'trotor.webp', bus: 'bus.webp', truck: 'truck.webp', sedan: 'sedan.webp', taxi: 'taxi.webp', jeep: 'jeep.webp', wheel: 'wheel.webp', wheelT: 'wheelT.webp', backroad: 'backroad.webp',
+    dish: 'dish.webp', boom: 'boom.webp', fan: 'fan.webp', txtA: 'txtA.webp', txtB: 'txtB.webp', adA: 'adA.webp', adB: 'adB.webp', walkerA: { file: 'walkerA.webp', frames: 5, fps: 1 }, walkerB: { file: 'walkerB.webp', frames: 5, fps: 1 }, walkerC: { file: 'walkerC.webp', frames: 5, fps: 1 }, lampmask: 'lampmask.webp', signmask: 'signmask.webp', flagR: 'flagR.webp',
     lamp: 'lamp.webp', barrel: 'barrel.webp', dog: { file: 'dog.webp', frames: 5, fps: 2 }, pigeonsit: { file: 'pigeonsit.webp', frames: 2, fps: 0.9 }, bollardP: 'bollardP.webp',
     hydrant: 'hydrant.webp', bin: 'bin.webp', vbox: 'vbox.webp', vbox2: 'vbox2.webp', bench: 'bench.webp', bike: 'bike.webp', mailbox: 'mailbox.webp', barrier: 'barrier.webp', signpole: 'signpole.webp', sawhorse: 'sawhorse.webp',
     weeds: 'weeds.webp', drygrass: 'drygrass.webp', rubble: 'rubble.webp', cones: 'cones.webp', sandbags: 'sandbags.webp', drum: 'drum.webp'
@@ -161,6 +176,8 @@ const m = {
     { id: 'tambor_em_chamas', tipo: 'tambor com 3 chamas em quadros, brilho e faiscas' },
     { id: 'cachorro', tipo: 'cachorro vira-lata: senta, anda alguns passos (ciclo de 4 poses), senta e volta' },
     { id: 'pombo_nos_pilaretes', tipo: 'pombo que pula de um pilarete a outro batendo asas, pousa e bica' },
+    { id: 'cancela', tipo: 'cancela da guarita subindo e descendo' }, { id: 'helice_ar', tipo: 'helice do ar-condicionado girando' }, { id: 'textos', tipo: 'letreiro alterna LANCHES / ABERTO; outdoor alterna ALISTE-SE / ZONA SEGURA' },
+    { id: 'pedestres', tipo: '3 pedestres (civil de mochila, capa amarela, soldado) andando e voltando na calcada, virando no fim' }, { id: 'transito_2_sentidos', tipo: 'taxi e onibus voltando no viaduto, sedan e jipe voltando na rua de tras' },
     { id: 'poeira', tipo: 'poeira clara flutuando e piscando' }, { id: 'primeiro_plano', tipo: 'ervas e capim seco balancando na frente' }, { id: 'poeira_passos', tipo: 'poeirinha nos pes do heroi' }]
 };
 let s = JSON.stringify(m, null, 1);

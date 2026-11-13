@@ -120,9 +120,11 @@
  "spacing": "Distancia minima (decals.minGap, roadside.minGap, fg.minGap, em SH): cada candidato tem caixa [x0,x1,y0,y1] e prioridade rnd(i,seed,6). Um candidato so e desenhado se nenhum outro candidato cuja caixa, aumentada de minGap, encoste na dele tiver prioridade maior. Vale entre todos os grupos de decalques juntos; em roadside e fg a caixa e so horizontal. Deterministico por celula: nao depende da rolagem. reach = quanto olhar alem da tela (SH) para achar vizinhos.",
  "farFill": {"color": "rgba(0,0,0,0)", "nota": "transparente nesta era: atras da cidade fica a bruma clara do ceu"},
  "rotors": [
+  {"id": "cancela", "sprite": "boom", "layer": "mid", "tile": 0, "front": true, "x": 0.9334, "y": 0.8683, "w": 0.2588, "ang": -0.6176, "swing": 0.6176, "hold": 3, "period": 9, "phase": 0},
+  {"id": "helice_ar_condicionado", "sprite": "fan", "layer": "mid", "tile": 1, "front": true, "x": 0.7441, "y": 0.5942, "w": 0.03, "period": -0.45},
   {"id": "antena_radar", "sprite": "dish", "layer": "mid", "tile": 1, "flap": true, "ang": 1.5708, "x": 0.9335, "y": 0.0995, "w": 0.0537, "period": 5, "phase": 0.4}
  ],
- "rotorsNota": "Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; so vale para a camada far). flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).",
+ "rotorsNota": "Sprites girando presos a uma camada (x, y = fracao do arquivo; w = fracao da largura do arquivo; period = s por volta; phase em rad; front = depois da camada; front no mid vale a partir da rodada 2). swing: balanca entre ang - swing e ang + swing (seno limitado por hold: para nas pontas). CANCELA: haste listrada com o eixo no centro do sprite, sobe (angulo da cancela pintada original) e desce (horizontal) a cada 9 s, parando nas pontas. HELICE do ar-condicionado girando na frente da grade. flap: true = giro em torno do eixo vertical visto de lado: o sprite fica no angulo ang e achata em cosseno (passa por zero e espelha). ANTENA DE RADAR no mastro da estacao (1 volta em 5 s; o sprite esta guardado deitado e ang = 90 graus o poe em pe).",
  "actors": [
   {
    "id": "viaduto_sedan",
@@ -201,6 +203,38 @@
    ]
   },
   {
+   "id": "viaduto_volta_taxi",
+   "slot": "far",
+   "sprite": "taxi",
+   "x": 0.8,
+   "y": 0.315,
+   "w": 0.058,
+   "parallax": 0.06,
+   "drift": 0.09100000000000001,
+   "loop": 3.6,
+   "parts": [
+    {"sprite": "wheel", "x": 0.2159, "y": 0.8113, "w": 0.1694, "period": -0.329, "phase": 0},
+    {"sprite": "wheel", "x": 0.7959, "y": 0.8146, "w": 0.1694, "period": -0.329, "phase": 1.9}
+   ],
+   "flip": true
+  },
+  {
+   "id": "viaduto_volta_onibus",
+   "slot": "far",
+   "sprite": "bus",
+   "x": 2.4,
+   "y": 0.2992,
+   "w": 0.13,
+   "parallax": 0.06,
+   "drift": 0.09100000000000001,
+   "loop": 3.6,
+   "parts": [
+    {"sprite": "wheel", "x": 0.2785, "y": 0.8476, "w": 0.0992, "period": -0.432, "phase": 0},
+    {"sprite": "wheel", "x": 0.7331, "y": 0.8476, "w": 0.0992, "period": -0.432, "phase": 1.9}
+   ],
+   "flip": true
+  },
+  {
    "id": "helicoptero",
    "slot": "far",
    "sprite": "heli",
@@ -213,11 +247,43 @@
    "bob": 0.006,
    "bobF": 0.9,
    "parts": [
-    {"sprite": "rotor", "x": 0.655, "y": 0.065, "w": 0.0587, "period": 0.3, "flap": true, "ang": 1.5708},
+    {"sprite": "rotordisc", "strip": true, "x": 0.655, "y": 0.065, "w": 1.05, "period": 1, "phase": 0},
     {"sprite": "trotor", "x": 0.022, "y": 0.17, "w": 0.085, "period": 0.22}
    ]
   },
   {"id": "rua_de_tras", "slot": "mid", "sprite": "backroad", "tile": true, "x": 0, "y": 0.572, "w": 0.36, "parallax": 0.38, "drift": 0, "loop": 0.36},
+  {
+   "id": "rua_volta_sedan",
+   "slot": "mid",
+   "sprite": "sedan",
+   "x": 1.4,
+   "y": 0.4928,
+   "w": 0.23,
+   "parallax": 0.38,
+   "drift": 0.17,
+   "loop": 6.2,
+   "parts": [
+    {"sprite": "wheel", "x": 0.2236, "y": 0.7932, "w": 0.1614, "period": -0.666, "phase": 0},
+    {"sprite": "wheel", "x": 0.8034, "y": 0.7932, "w": 0.1614, "period": -0.666, "phase": 1.9}
+   ],
+   "flip": true
+  },
+  {
+   "id": "rua_volta_jipe",
+   "slot": "mid",
+   "sprite": "jeep",
+   "x": 4.2,
+   "y": 0.4798,
+   "w": 0.19,
+   "parallax": 0.38,
+   "drift": 0.17,
+   "loop": 6.2,
+   "parts": [
+    {"sprite": "wheelT", "x": 0.2424, "y": 0.7872, "w": 0.2313, "period": -0.789, "phase": 0},
+    {"sprite": "wheelT", "x": 0.8271, "y": 0.7872, "w": 0.2313, "period": -0.789, "phase": 1.9}
+   ],
+   "flip": true
+  },
   {
    "id": "rua_caminhao",
    "slot": "mid",
@@ -466,6 +532,78 @@
    "pulseCycles": 0.25
   },
   {
+   "id": "letreiro_LANCHES",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "txtA",
+   "rect": [0.6301, 0.5255, 0.069, 0.082],
+   "rgb": "225,25,110",
+   "blend": "source-over",
+   "loop": 6.4,
+   "frames": 64,
+   "maxScale": 2,
+   "bands": [],
+   "base": 1,
+   "pulse": 25,
+   "pulseCycles": 1,
+   "nota": "texto em pontos LANCHES aceso na 1a metade do laco"
+  },
+  {
+   "id": "letreiro_ABERTO",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 1,
+   "mask": "txtB",
+   "rect": [0.6301, 0.5255, 0.069, 0.082],
+   "rgb": "225,25,110",
+   "blend": "source-over",
+   "loop": 6.4,
+   "frames": 64,
+   "maxScale": 2,
+   "bands": [],
+   "base": 1,
+   "pulse": -25,
+   "pulseCycles": 1,
+   "nota": "texto em pontos ABERTO aceso na 2a metade do laco"
+  },
+  {
+   "id": "outdoor_ALISTE_SE",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 0,
+   "mask": "adA",
+   "rect": [0.6206, 0.2163, 0.1976, 0.3009],
+   "rgb": "58,66,88",
+   "blend": "source-over",
+   "loop": 10,
+   "frames": 40,
+   "maxScale": 1.5,
+   "bands": [],
+   "base": 0.85,
+   "pulse": 25,
+   "pulseCycles": 1,
+   "nota": "cartaz pintado no outdoor: ALISTE-SE + estrela; troca a cada 5 s"
+  },
+  {
+   "id": "outdoor_ZONA_SEGURA",
+   "type": "flow",
+   "layer": "mid",
+   "tile": 0,
+   "mask": "adB",
+   "rect": [0.6206, 0.2163, 0.1976, 0.3009],
+   "rgb": "150,40,36",
+   "blend": "source-over",
+   "loop": 10,
+   "frames": 40,
+   "maxScale": 1.5,
+   "bands": [],
+   "base": 0.85,
+   "pulse": -25,
+   "pulseCycles": 1,
+   "nota": "cartaz ZONA SEGURA + seta"
+  },
+  {
    "id": "letreiro_lanchonete",
    "type": "flow",
    "layer": "mid",
@@ -687,7 +825,57 @@
      "period": 7,
      "split": [0.3, 0.5, 0.8],
      "sit": 1,
-     "steps": 8
+     "steps": 8,
+     "turn": 0.3,
+     "pause": 0.5
+    }
+   },
+   {
+    "type": "pacer",
+    "sprite": "walkerA",
+    "h": [0.18, 0.19],
+    "weight": 2,
+    "span": 0.14,
+    "walk": {
+     "dist": 0.14,
+     "period": 10,
+     "split": [0.18, 0.5, 0.68],
+     "sit": 1,
+     "steps": 12,
+     "turn": 0.35,
+     "pause": 0.6
+    }
+   },
+   {
+    "type": "pacer",
+    "sprite": "walkerB",
+    "h": [0.18, 0.19],
+    "weight": 2,
+    "span": 0.14,
+    "walk": {
+     "dist": 0.12,
+     "period": 9,
+     "split": [0.2, 0.5, 0.7],
+     "sit": 1,
+     "steps": 10,
+     "turn": 0.35,
+     "pause": 0.5
+    }
+   },
+   {
+    "type": "pacer",
+    "sprite": "walkerC",
+    "h": [0.19, 0.2],
+    "weight": 1,
+    "span": 0.14,
+    "walk": {
+     "dist": 0.16,
+     "period": 11,
+     "split": [0.15, 0.5, 0.65],
+     "sit": 1,
+     "steps": 14,
+     "turn": 0.3,
+     "pause": 0.7
     }
    },
    {
@@ -696,7 +884,7 @@
     "h": [0.1082, 0.1143],
     "weight": 2,
     "span": 0.13,
-    "hop": {"post": "bollardP", "dx": 0.13, "period": 5, "flight": 0.7, "fly": "pigeon", "size": 0.056, "height": 0.04, "cx": 0.5, "cy": 0.1886}
+    "hop": {"post": "bollardP", "dx": 0.13, "period": 5, "flight": 0.7, "turn": 0.25, "fly": "pigeon", "size": 0.056, "height": 0.04, "cx": 0.5, "cy": 0.1886}
    },
    {
     "type": "sprite",
@@ -973,7 +1161,7 @@
   "pigeon": {"file": "pigeon.webp", "frames": 6, "fps": 12},
   "flame": {"file": "flame.webp", "frames": 4, "fps": 10},
   "heli": "heli.webp",
-  "rotor": "rotor.webp",
+  "rotordisc": {"file": "rotordisc.webp", "frames": 3, "fps": 24},
   "trotor": "trotor.webp",
   "bus": "bus.webp",
   "truck": "truck.webp",
@@ -984,6 +1172,15 @@
   "wheelT": "wheelT.webp",
   "backroad": "backroad.webp",
   "dish": "dish.webp",
+  "boom": "boom.webp",
+  "fan": "fan.webp",
+  "txtA": "txtA.webp",
+  "txtB": "txtB.webp",
+  "adA": "adA.webp",
+  "adB": "adB.webp",
+  "walkerA": {"file": "walkerA.webp", "frames": 5, "fps": 1},
+  "walkerB": {"file": "walkerB.webp", "frames": 5, "fps": 1},
+  "walkerC": {"file": "walkerC.webp", "frames": 5, "fps": 1},
   "lampmask": "lampmask.webp",
   "signmask": "signmask.webp",
   "flagR": "flagR.webp",
@@ -1029,6 +1226,11 @@
   {"id": "tambor_em_chamas", "tipo": "tambor com 3 chamas em quadros, brilho e faiscas"},
   {"id": "cachorro", "tipo": "cachorro vira-lata: senta, anda alguns passos (ciclo de 4 poses), senta e volta"},
   {"id": "pombo_nos_pilaretes", "tipo": "pombo que pula de um pilarete a outro batendo asas, pousa e bica"},
+  {"id": "cancela", "tipo": "cancela da guarita subindo e descendo"},
+  {"id": "helice_ar", "tipo": "helice do ar-condicionado girando"},
+  {"id": "textos", "tipo": "letreiro alterna LANCHES / ABERTO; outdoor alterna ALISTE-SE / ZONA SEGURA"},
+  {"id": "pedestres", "tipo": "3 pedestres (civil de mochila, capa amarela, soldado) andando e voltando na calcada, virando no fim"},
+  {"id": "transito_2_sentidos", "tipo": "taxi e onibus voltando no viaduto, sedan e jipe voltando na rua de tras"},
   {"id": "poeira", "tipo": "poeira clara flutuando e piscando"},
   {"id": "primeiro_plano", "tipo": "ervas e capim seco balancando na frente"},
   {"id": "poeira_passos", "tipo": "poeirinha nos pes do heroi"}

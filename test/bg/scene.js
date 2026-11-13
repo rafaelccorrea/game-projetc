@@ -4,7 +4,7 @@
    fx[] (flow | glow | plume | embers presos a uma camada), roadside fire/critter/vent/sway (era 0 em diante),
    props[] (sprites soltos presos a uma camada, com bob/tilt/kick/flags; era 3 em diante),
    rotors[] (sprites girando presos a uma camada), actors[] (sprites que cruzam a cena com pecas girando), roadside.sameTypeGap e
-   folhas de quadros em objetos da beira, actors com tile/rod/smoke, beira pacer/hopper (era 4 em diante); slot far de actors, flap com ang em pecas e em rotors (era 5 em diante).
+   folhas de quadros em objetos da beira, actors com tile/rod/smoke, beira pacer/hopper (era 4 em diante); slot far de actors, flap com ang em pecas e em rotors, pecas strip, actors flip, rotors swing e na frente do mid, turn em pacer/hopper (era 5 em diante).
    Quem não está no meta não é desenhado: a era 2 roda exatamente como foi aprovada.
 
    Uso:
@@ -159,16 +159,18 @@
              w (fracao da largura do corpo), period, phase, flap (true = helice vista de lado: achata em cos), back (true = atras do corpo)}]. */
         function spinImg(im, cx, cy, w, ang, sy) { var h = w * im.height / im.width; g.save(); g.translate(cx, cy); g.rotate(ang); if (sy != null) g.scale(1, sy); g.drawImage(im, -w / 2, -h / 2, w, h); g.restore(); }
         function drawRotors(id, front) { if (!M.rotors) return; var L = LAY[id]; M.rotors.forEach(function (R) { if (R.layer !== id || !!R.front !== front) return; var im = sp(R.sprite); if (!im) return;
-            tiles(L, function (i, x, flip, G, k) { if (k !== (R.tile || 0) || !L.imgs[k]) return; var w = R.w * G.w, cx = x + (flip ? 1 - R.x : R.x) * G.w, cy = G.y + R.y * G.h; if (cx < -w || cx > W + w) return; if (R.flap) spinImg(im, cx, cy, w, R.ang || 0, Math.cos(PI2 * T / R.period + (R.phase || 0))); else spinImg(im, cx, cy, w, (flip ? -1 : 1) * (PI2 * T / R.period + (R.phase || 0))); }); }); }
+            tiles(L, function (i, x, flip, G, k) { if (k !== (R.tile || 0) || !L.imgs[k]) return; var w = R.w * G.w, cx = x + (flip ? 1 - R.x : R.x) * G.w, cy = G.y + R.y * G.h; if (cx < -w || cx > W + w) return; if (R.flap) spinImg(im, cx, cy, w, R.ang || 0, Math.cos(PI2 * T / R.period + (R.phase || 0))); else if (R.swing) spinImg(im, cx, cy, w, (flip ? -1 : 1) * ((R.ang || 0) + R.swing * Math.max(-1, Math.min(1, (R.hold || 1) * Math.sin(PI2 * T / R.period + (R.phase || 0)))))); else spinImg(im, cx, cy, w, (flip ? -1 : 1) * (PI2 * T / R.period + (R.phase || 0))); }); }); }
         function drawActors(slot) { if (!M.actors) return; M.actors.forEach(function (A) { if (A.slot !== slot) return; var im = sp(A.sprite); if (!im) return;
             var w = A.w * SH, h = w * im.height / im.width, x = mod((A.x - scroll * A.parallax - T * A.drift) * SH + w, A.loop * SH) - w, y = A.y * SH + Math.sin(T * (A.bobF || 0) + A.x * 7) * (A.bob || 0) * SH; if (x > W || x + w < 0) return;
             if (A.tile) { for (var xx = x; xx < W; xx += A.loop * SH) g.drawImage(im, xx, y, w + 0.6, h); return; }   /* tile: faixa repetida a cada loop (ex.: trilho sob o trem; era 4 em diante) */
+            if (A.flip) { g.save(); g.translate(2 * x + w, 0); g.scale(-1, 1); }   /* flip: corpo e pecas espelhados (as rodas passam a girar para o outro lado) */
             function part(P) { var a = PI2 * T / P.period + (P.phase || 0);
               if (P.rod) { var rx = Math.cos(a) * P.r * w, ry = Math.sin(a) * P.r * w, ax = x + P.x * w + rx, ay = y + P.y * h + ry, bx = x + P.x2 * w + rx, by = y + P.y2 * h + (P.slide ? 0 : ry);   /* rod: haste entre dois pinos de manivela (ou ate a cruzeta, slide), em fase com as rodas */
                 g.save(); g.lineCap = 'round'; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.strokeStyle = P.dark || '#231a1c'; g.lineWidth = P.w * w * 1.9; g.stroke(); g.strokeStyle = P.light || '#a39aa1'; g.lineWidth = P.w * w; g.stroke(); g.restore(); return; }
-              var pi = sp(P.sprite); if (!pi) return; if (P.flap) spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, P.ang || 0, Math.cos(a)); else spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, a); }
+              var pi = sp(P.sprite); if (!pi) return;
+              if (P.strip) { var qs = S[P.sprite], sfw = pi.width / qs.frames, spw = P.w * w, sph = spw * pi.height / sfw; g.drawImage(pi, (Math.floor(T * qs.fps + (P.phase || 0)) % qs.frames) * sfw, 0, sfw, pi.height, x + P.x * w - spw / 2, y + P.y * h - sph / 2, spw, sph); return; }   /* strip: peca em quadros, sem girar (disco de rotor) */ if (P.flap) spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, P.ang || 0, Math.cos(a)); else spinImg(pi, x + P.x * w, y + P.y * h, P.w * w, a); }
             (A.parts || []).forEach(function (P) { if (P.back) part(P); }); g.drawImage(im, x, y, w, h); (A.parts || []).forEach(function (P) { if (!P.back) part(P); });
-            (A.smoke || []).forEach(function (P) { plume(P, x + P.x * w, y + P.y * h, 5); }); }); }   /* smoke: plumes presos ao corpo (wind negativo = fica para tras) */
+            (A.smoke || []).forEach(function (P) { plume(P, x + P.x * w, y + P.y * h, 5); }); if (A.flip) g.restore(); }); }   /* smoke: plumes presos ao corpo (wind negativo = fica para tras) */
 
         /* ---- céu: nuvens, pássaros, raios ---- */
         function drawClouds() { M.clouds.groups.forEach(function (G) { g.globalAlpha = G.alpha; G.items.forEach(function (c) { var im = sp(c.s); if (!im) return; var w = c.w * SH, h = w * im.height / im.width, per = G.period * SH; var x = mod((c.x - scroll * G.parallax - T * G.drift) * SH + w, per) - w; g.drawImage(im, x, c.y * SH + Math.sin(T * 0.25 + c.x * 7) * 0.004 * SH, w, h); }); }); g.globalAlpha = 1; }
@@ -222,12 +224,15 @@
            sit (n. de quadros sentado, no inicio da folha), steps}; os quadros restantes da folha alternam a cada passo; volta espelhado. */
         function pacer(s, it, x, by, w, h, ph) { var K = it.walk, F = fN(it), fw = s.width / F, c = mod(T + ph * 2.3, K.period) / K.period, q = K.split, d = 0, fl = false, v, fr = Math.floor(T * S[it.sprite].fps + ph) % K.sit;
           if (c >= q[0] && c < q[1]) { v = (c - q[0]) / (q[1] - q[0]); d = v; fr = K.sit + Math.floor(v * K.steps) % (F - K.sit); } else if (c >= q[1] && c < q[2]) { d = 1; fl = true; } else if (c >= q[2]) { v = (c - q[2]) / (1 - q[2]); d = 1 - v; fl = true; fr = K.sit + Math.floor(v * K.steps) % (F - K.sit); }
-          g.save(); g.translate(x + d * K.dist * SH, by); if (fl) g.scale(-1, 1); g.drawImage(s, fr * fw, 0, fw, s.height, -w / 2, -h, w, h); g.restore(); }
+          var fx = fl ? -1 : 1, tt; if (K.turn) { if (c < q[0]) { tt = c * K.period; fx = tt < K.pause ? -1 : tt < K.pause + K.turn ? -Math.cos(Math.PI * (tt - K.pause) / K.turn) : 1; } else if (c >= q[1] && c < q[2]) { tt = (c - q[1]) * K.period; fx = tt < K.pause ? 1 : tt < K.pause + K.turn ? Math.cos(Math.PI * (tt - K.pause) / K.turn) : -1; } }   /* turn: chega, espera pause s e vira achatando em cosseno (turn s) */
+          g.save(); g.translate(x + d * K.dist * SH, by); if (K.turn) g.scale(fx || 0.001, 1); else if (fl) g.scale(-1, 1); g.drawImage(s, fr * fw, 0, fw, s.height, -w / 2, -h, w, h); g.restore(); }
         /* hopper: ave que pula de um poleiro a outro. hop {post (sprite do poleiro, mesmo enquadramento da ave), dx (SH), period, flight (s), fly (folha de voo),
            size (lado do quadro de voo, SH), height (altura do arco, SH), cx, cy (centro da ave pousada, fracao do quadro)} */
         function hopper(s, it, x, by, w, h, ph) { var K = it.hop, post = sp(K.post), fly = S[K.fly], dx = K.dx * SH, c = mod(T + ph * 1.9, K.period), t1 = K.period / 2 - K.flight, u = -1, at = 0, dir = 1;
           if (c < t1) at = 0; else if (c < K.period / 2) u = (c - t1) / K.flight; else if (c < K.period - K.flight) at = 1; else { u = (c - K.period + K.flight) / K.flight; dir = -1; }
           if (post) { g.drawImage(post, x - w / 2, by - h, w, h); g.drawImage(post, x - w / 2 + dx, by - h, w, h); }
+          if ((u < 0 || !fly || !fly.img) && K.turn) { var tq = at ? c - K.period / 2 : c, ts = t1 / 2, sg = at ? 1 : -1, hx = tq < ts ? sg : tq < ts + K.turn ? sg * Math.cos(Math.PI * (tq - ts) / K.turn) : -sg;   /* turn: pousa virada para onde voou e vira no meio do descanso */
+            g.save(); g.translate(x - w / 2 + K.cx * w + at * dx, 0); g.scale(hx || 0.001, 1); g.drawImage(s, fX(it, s, ph), 0, s.width / fN(it), s.height, -K.cx * w, by - h, w, h); g.restore(); return; }
           if (u < 0 || !fly || !fly.img) { g.drawImage(s, fX(it, s, ph), 0, s.width / fN(it), s.height, x - w / 2 + at * dx, by - h, w, h); return; }
           var e = u * u * (3 - 2 * u), p = dir > 0 ? e : 1 - e, fz = K.size * SH, fw = fly.img.width / fly.frames, fr = Math.floor(T * fly.fps) % fly.frames;
           g.save(); g.translate(x - w / 2 + K.cx * w + p * dx, by - h + K.cy * h - Math.sin(Math.PI * u) * K.height * SH); if (dir < 0) g.scale(-1, 1); g.drawImage(fly.img, fr * fw, 0, fw, fly.img.height, -fz / 2, -fz / 2, fz, fz); g.restore(); }
@@ -267,7 +272,7 @@
           drawLayer(LAY.sky); drawClouds(); drawActors('sky'); drawBirds();
           if (LAY.far.imgs[0]) { drawProps('far', false); drawLayer(LAY.far); drawActors('far'); drawProps('far', true); drawRotors('far', true); g.fillStyle = M.farFill.color; g.fillRect(0, LAY.far.bottom * SH - 1, W, (LAY.ground.top - LAY.far.bottom) * SH + 3); drawFx('far'); drawHaze(); drawFog(M.fog[0]); }
           drawRays();
-          drawMill(); drawActors('mid'); drawRotors('mid', false); drawProps('mid', false); drawLayer(LAY.mid); drawProps('mid', true); drawTowerFlags(); drawForge(); drawSmoke(); drawFx('mid'); if (LAY.far.imgs[0]) drawFog(M.fog[1]);
+          drawMill(); drawActors('mid'); drawRotors('mid', false); drawProps('mid', false); drawLayer(LAY.mid); drawRotors('mid', true); drawProps('mid', true); drawTowerFlags(); drawForge(); drawSmoke(); drawFx('mid'); if (LAY.far.imgs[0]) drawFog(M.fog[1]);
           drawProps('ground', false); drawLayer(LAY.ground); drawProps('ground', true); drawDecals(); drawRoadside();
           if (o.hero !== false) drawHero();
           drawMotes(); drawFg();

@@ -758,3 +758,36 @@ emenda do chão só pelo recorte `seam_ground`; ciclo completo do diabrete e do 
 - A estrutura grande da caveira, o trono e a árvore são parados; a lua de sangue fica parada no alto.
 - Conferido em recorte: o lugar de onde a gaiola saiu no mid B ficou limpo (sem resto).
 - Herói ainda com a roupa da era 2.
+
+---
+
+## Era 5 — rodada 2 (acabamento): concluída por fps-75 (0 crédito)
+
+**`scene.js` mudou** (blocos opcionais que já estavam prontos em `tools/scene.era5r2.wip.js`): peças `strip` (peça em quadros, sem girar), actors `flip`
+(corpo e peças espelhados), rotors `swing` (balança entre ang ± swing, para nas pontas com `hold`) e rotors `front` também depois do mid, pacer/hopper com `turn`
+(vira achatando em cosseno). SHA-1 `5b725460…` → **`d566570331e4e27cd0af92408e33edb6fb2fe60d`**; cópia anterior em `test/bg/tools/scene.pre-era5r2.js`.
+**ATENÇÃO, engenheiro:** subir o `?v=` do `scene.js` no jogo (com o módulo antigo a era 5 nova abre sem cancela, hélice, disco do rotor e pedestres virando).
+
+**Prova (eras 0, 1, 2, 3, 4, 6 e 7):** módulo anterior (`scene.pre-era5r2.js`) e novo na mesma página, mesma semente de `Math.random`, canvas 390x692 a dpr 2
+(4,3 milhões de canais, ~100% não nulos) em t = 3, 27, 48 e 75 s: **0 canais diferentes nas 7 eras, nos 4 instantes**. Observação de método: cada instante é
+desenhado 2 vezes antes da leitura; na primeira leitura logo depois do carregamento apareceram diferenças esparsas também entre dois desenhos do MESMO módulo
+(decodificação de imagem ainda terminando), por isso a medida vale do 2º desenho.
+
+O que entrou na era 5 (`tools/mkmeta5.js`; `tools/build5b.js boom` rodado uma vez sobre `midA.webp`):
+1. Cancela pintada apagada do `midA` (9.297 px) e trocada pela haste `boom` girando no eixo do topo da caixa: sobe e desce a cada 9 s, parando nas pontas.
+2. Hélice do ar-condicionado girando na frente da grade (`fan`, rotor front no mid).
+3. Rotor principal do helicóptero = disco translúcido em 3 quadros (`rotordisc`, peça strip); `rotor.webp` saiu.
+4. Letreiro da lanchonete alterna LANCHES / ABERTO em pontos rosa (sobre o painel que continua piscando); outdoor alterna ALISTE-SE (com estrela) / ZONA SEGURA (com seta).
+5. 3 pedestres (civil de mochila, capa amarela, soldado) andando e voltando na calçada, virando no fim (pacer com turn); cachorro e pombo também viram suave.
+6. Trânsito nos dois sentidos: táxi e ônibus voltando no viaduto, sedan e jipe voltando na rua de trás (actors flip, faixa um pouco mais alta e desenhada antes).
+Prévia animada para o voto: `assets/bg/v2/era5/preview_sheet.png` (12 quadros 234x415, 8 fps, 319 KB) + `preview_sheet.json`.
+
+Conferido no Chrome (aba única, fechada): `sheet` t = 3 · 9 · 15 · 21; cancela em 3 voltas do cenário (t = 9 / 39,32 / 69,64: subida, abaixada, levantada);
+letreiro com LANCHES legível (o texto branco da 1ª tentativa sumia no painel claro: virou rosa); outdoor com ZONA SEGURA; pedestre de capa andando; disco do
+rotor e hélice do ar-condicionado em t = 56 / 56,03; sem erro de console. Custo por quadro (dpr 2, mesmo método): era 1 = 43,9 ms, era 4 = 48,3, era 5 = 44,1.
+NÃO conferido: o cartaz ALISTE-SE em tela (os 3 instantes caíram em ZONA SEGURA); a virada dos pedestres em sequência; carros espelhados de perto; "Ver ANTES".
+Defeitos que ficaram: pedestres são vetoriais (traço mais simples que a arte); sobram 2 tracinhos escuros da cancela antiga junto ao eixo (ficam sob a haste);
+texto do letreiro e do outdoor é em pontos (fonte 5x7), não pintado à mão.
+
+**Nota para o commit:** o `.gitignore` do projeto ignora `*.png` e `*.webp`; das pastas `assets/bg/v2/eraN/` só o `meta.json` está no git. As imagens das
+eras 5 (midA, midA_lo, boom etc.), 6 e 7 e as prévias precisam de `git add -f` (ou seguem pelo caminho que o time já usa para essas imagens).
