@@ -1,0 +1,32 @@
+{
+ "frames": 5,
+ "w": 128,
+ "h": 32,
+ "byRarity": [
+  "basico",
+  "raro",
+  "epico",
+  "mitico",
+  "lendario"
+ ],
+ "pivot": [
+  64,
+  16
+ ],
+ "tip": [
+  124,
+  16
+ ],
+ "note": "1 quadro por raridade (0 Básico .. 4 Lendário; Divino usa o 4). Desenhar girado na direção do voo (atan2(vy,vx)); pivô no centro. Arco: sai do nock da arma (meta.json bow_*.nock), arco suave.",
+ "speed": 900,
+ "speedUnit": "px/s na escala da folha do herói (256 = altura do quadro)",
+ "arc": {
+  "gravity": 600,
+  "launchDeg": 8
+ },
+ "scale": 0.55,
+ "trail": {
+  "len": 3,
+  "alpha": 0.35
+ }
+}

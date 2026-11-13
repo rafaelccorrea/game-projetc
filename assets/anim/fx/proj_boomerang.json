@@ -1,0 +1,28 @@
+{
+ "files": [
+  "proj_boomerang_basico",
+  "proj_boomerang_raro",
+  "proj_boomerang_epico",
+  "proj_boomerang_mitico",
+  "proj_boomerang_lendario"
+ ],
+ "frames": 8,
+ "w": 160,
+ "h": 160,
+ "pivot": [
+  80,
+  80
+ ],
+ "fps": 24,
+ "spin": "anti-horário, 1 volta a cada 8 quadros (3 voltas/s a 24 fps)",
+ "note": "Vai e volta: sai da mão (meta.json boomerang_*.grip), voa reto até o alcance (reach 1.8 da espada) acertando até 2 da fila, e volta em arco elíptico até a mão; o herói faz a pegada no fim da folha de lançar.",
+ "speed": 700,
+ "speedUnit": "px/s na escala da folha do herói",
+ "path": {
+  "type": "ellipse",
+  "outRx": 1,
+  "ry": 0.18,
+  "note": "x vai de 0 a reach e volta; y sobe até ry×reach no meio da ida e desce na volta"
+ },
+ "scale": 0.5
+}
