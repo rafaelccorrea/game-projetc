@@ -61,7 +61,9 @@ function give(S,host,rw){ const L=SYS().loot, b=Object.assign({},rw); delete b.f
 function claimTrail(S,host,id,at){ if(!ON()) return {ok:false,reason:'off'}; const m=cfg(id).trail.find(x=>x.at===int0(at)); if(!m) return {ok:false,reason:'id'};
   const E=SYS().events, ev=evDef(id); if(!E||!ev||!E.DATA.enabled||!['ativo','loja'].includes(E.phase(ev,host))) return {ok:false,reason:'closed'};
   const s=st(S,id); if(s.got.includes(m.at)) return {ok:false,reason:'done'}; if(earned(S,id)<m.at) return {ok:false,reason:'points',need:m.at};
-  s.got.push(m.at); return {ok:true,at:m.at,got:give(S,host,m.reward)}; }
+  s.got.push(m.at); const out={ok:true,at:m.at,got:give(S,host,m.reward)};
+  const top=Math.max(...cfg(id).trail.map(x=>x.at)); if(m.at===top){ const N=SYS().newDrops; try{ if(N&&N.grant) out.newDrops=N.grant(S,host,'evtrail:top',{event:id}); }catch(e){} }   // faixa de topo = último marco da trilha (itens novos)
+  return out; }
 
 /* ---------------- CHEFE ---------------- */
 let provider=null;   // servidor: {online:true, boss(S,host,id) → {hp, hpMax}, attack(S,host,id,dmg) → {ok, hp, killed}}

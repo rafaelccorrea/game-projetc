@@ -114,6 +114,10 @@ module.exports = function boot(opt) {
   /* "novo" = o S exatamente como o jogo deixa depois de carregar com ?debug=1&fresh=1 (newState + correções do index + sysBoot) */
   sandbox.__e2eBase = hasState ? ev('JSON.stringify(S)') : '{}';
   const freshState = () => ev('__e2eReplace(JSON.parse(__e2eBase)); 1');
+  /* pré-carregador: no sandbox as imagens nunca terminam; com o contrato do engenheiro (Preload.ready/has) as telas desenham direto.
+     opt.preload === false mantém o do jogo (para testar o esqueleto "Carregando a imagem"). */
+  if (opt.preload !== false) { const P0 = sandbox.Preload; sandbox.Preload = Object.assign(Object.create(P0 && typeof P0 === 'object' ? P0 : null), { ready: async () => ({ ok: true, failed: [] }), has: () => true, e2eStub: true });
+    if (!sandbox.Preload.get) sandbox.Preload.get = () => null; }   // o resto do Preload do jogo (get…) continua o dele
 
   return { ROOT, W, H, rd, errStr, sandbox, draws, setDrawTap: f => { drawTap = f; }, mkCanvas, bootSrc: bootSrc || '', html, V, document, mkStub, styleObj, cls, inCtx, ev, flush, advance, vnow: () => vnow, timers: Q, consoleErrs, hasState, freshState,
     lists: { sysList, sysExtra, sysOrder, jsList, panList, pUnlisted } };
