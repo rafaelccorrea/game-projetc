@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h · TELA 23 LUTA PvP DA ARENA para o seu voto:** https://claude.ai/artifact/8D4uaHp6fDizBUikuEeDcr (VS, os dois montados frente a frente com a arte real, pets na frente, asas, auras, dano e crítico, energia, ultimate em tela cheia, resultado com pontos da liga e prêmios; x1/x2/x4 e Pular). Aprovada, vira a luta da Arena no jogo
+
 - **22h40 · AUDITORIA DE RESPONSIVIDADE (seu pedido):** o QA vai abrir TODAS as telas em 5 tamanhos (320, 360, 384 = seu S24, 412 e tablet 768) e checar sozinho: rolagem para o lado, texto cortado, letra pequena, botão pequeno, coisa fora da tela ou atrás do entalhe, sobreposição e contraste. Eu monto uma página com os prints e distribuo as correções
 
 - **22h30 · Checklist revisado inteiro** (seções A, B, C e D abaixo). O principal: APK v0.13.0 pronta com online, esperando o cabo + "pode instalar"; voto no Perfil versão 5; créditos para fechar a arte ~700
