@@ -146,7 +146,8 @@ for(const k of [
    dir:'assets/anim/skins/kael_solar_paladin', avatar:'kael_solar_paladin', art:true, families:[]},   // ARTE ENTREGUE (9d920e7; pasta da Arte 'kael_solar_paladin', id e produto continuam kael_paladin)
   {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer'],
    dir:'assets/anim/skins/kael_ninja', avatar:'kael_ninja', art:true, families:[]},   // ARTE ENTREGUE (6133650); arco/bumerangue por código
-  {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada', sources:['reward']},
+  {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada', sources:['reward'],
+   dir:'assets/anim/skins/kael_samurai', avatar:'kael_samurai', art:true, families:[]},
   {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_cyborg'},
   {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kaia_harlequin',
    dir:'assets/anim/skins/kaia_harlequin', avatar:'kaia_harlequin', art:true, families:[]},   // ARTE ENTREGUE (f5a3615): 8 animações + masks + back; sem bow/ e boomerang/
