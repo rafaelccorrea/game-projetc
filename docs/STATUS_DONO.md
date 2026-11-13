@@ -8,6 +8,15 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **23h30 · Sua decisão:** Leilão com PREÇO FIXO (só ouro, anônimo, 18+). A tela vai ser ajustada (sai "moeda do leilão" e "lances")
+- **23h30 · Sistemas entregou (fe7a7e1, 23 suítes de teste OK):**
+  - Correio completo (tipos, validade, resgate uma vez só)
+  - Regras do Leilão: taxa de anúncio 1-3% e de venda 10%, limites por dia, preço entre 0,5× e 5× do valor do item, item comprado com dinheiro nunca entra
+  - Eras 7 (Submundo) e 8 (Celestial) com inimigos, chefes e números; ouro ×1,5 no começo delas, para não travar
+  - Teste automático que abre as 23 telas e aperta todos os botões: tudo OK
+  - Próximo: carregar só a arte em uso, para o app sair de 657 MB e ficar abaixo de 150 MB
+- **23h30 · Arte:** ícone novo do Torneio (bandeira de guerra num castelo sobre o mapa) e o cenário vivo da era 6 (Futurista) prontos; seguindo para a era 7. Saldo de créditos: ~295
+
 - **23h20 · v0.12.8, lote 2 LIGADO NO JOGO (conferido pelo QA no navegador, no GitHub):**
   - [x] Arena (ligas, luta animada, resultado; prêmios valem com o online) · Eventos (loja com compra direta) · Torneio (28 territórios, sem dados inventados) · Montarias (equipar, subir nível, estrelas e aura; FC "+155 ▲") · Correio (carta de boas-vindas entrando)
   - [x] Menu no nível 60 com tudo: Forja, Pets, Torre, Ranking, Missões, VIP, Arena, Guilda, Torneio, Códex, Chat, Eventos, Config.
