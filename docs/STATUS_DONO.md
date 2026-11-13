@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h05 · Sua ordem, Bem-vindo de volta:** ao voltar depois de ficar off, o jogo mostra tudo o que você ganhou no tempo fora antes de coletar: quanto tempo ficou fora, ouro, XP e quantos níveis subiu, itens com imagem e cor da raridade, e ração/pedras/fragmentos. Depois, "Coletar" com os números contando. Com o Servidor (P16 do polimento)
+- **03h05 · Polimento fino:** a Arte revisa quadro a quadro as 6 montarias (o braço atrás do cavalo) e depois o Kael e a Kaia a pé; todos os ícones de eventos e o da Oferta estão prontos
+
 - **02h55 · Você APROVOU a agenda de eventos (horário de Brasília, sem diamante):** Chefe Mundial todo dia 12h e 20h · Hora de Ouro 19h · Invasão da Era 21h · Torneio de Fim de Semana (sáb 10h a dom 22h) · Caça aos Pets qua e dom 18h · Bênção da Forja ter e qui 13h. Regra pronta (Sistemas); ícones prontos (Arte, falta só o da Forja); o engenheiro liga o ícone pulsando com nome e contagem, a faixa "aberto até HH:MM" e o aviso 10 min antes, depois do próximo APK
 
 - **02h40 · Sua regra das skins:** a skin nunca se perde quando o Kael/Kaia evolui. A skin é do jogador, não da fase: ao evoluir, troca para a versão dela na fase nova. Os acessórios em camadas (chapéu, colete, botas, óculos, máscara) já funcionam nas 4 fases; skin de corpo inteiro só vai à venda com as 4 versões. Sistemas confere a regra, a Arte lista o que falta em cada fase, o engenheiro aplica nas 4 fases (com print: skin no nível 34 → evolui no 35 com a mesma skin)

@@ -39,3 +39,4 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - Nada de parte do corpo sobrando, duplicada, cortada ou atrás de onde não deveria (braço, perna, arma, cabelo, asa).
 - Nada piscando entre os quadros e nenhum resto de recorte (verde, magenta, contorno escuro).
 - A arma sempre na mão, a asa sempre nas costas, os pés e as patas sempre no chão.
+- [ ] P16 · Bem-vindo de volta (ganho offline) · mostrar TUDO que ganhou no tempo fora antes de coletar: tempo fora, ouro, XP e níveis subidos (Nv 58 → 60), itens por raridade com imagem, ração/pedras/fragmentos com ícone; botão Coletar com os números contando · Servidor (p_intro)
