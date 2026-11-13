@@ -36,4 +36,12 @@ t('manifesto real (se gerado): APK base com os dois heróis < 150 MB e todo arqu
     const root=path.join(__dirname,'../..'); let miss=0; for(const id in m.packs) for(const x of m.packs[id].files) if(!fs.existsSync(path.join(root,x))) miss++; assert.ok(miss<=5,miss+' arquivos do manifesto sumiram (rode node tools/asset-manifest.js)');
   } finally { A.setManifest(null); }
 });
+t('resolvedor único (Play Asset Delivery): url() aponta para o pack baixado ou fica no caminho original',()=>{
+  const p='assets/anim/mounts/kael_wolf_idle_3star.png'; assert.strictEqual(A.url(p),p); assert.ok(A.isReady(p),'desligado: tudo no APK');
+  A.DATA.on=true; try{ assert.ok(!A.isReady(p)); assert.ok(A.isReady('assets/ui/coin.png'),'base');
+    A.setPackPath('mount:wolf','https://localhost/_capacitor_file_/data/packs/mount_wolf/'); assert.strictEqual(A.url(p),'https://localhost/_capacitor_file_/data/packs/mount_wolf/'+p); assert.ok(A.isReady(p));
+    assert.ok(A.installed().includes('mount:wolf')&&A.installed().includes('hero:kaia:0')); assert.strictEqual(A.url('assets/ui/coin.png'),'assets/ui/coin.png');
+    A.setPackPath('mount:wolf',null); assert.strictEqual(A.url(p),p);
+  } finally { A.DATA.on=false; }
+});
 console.log(`ok: ${n} testes`);

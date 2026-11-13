@@ -76,8 +76,16 @@ function plan(S,host,installed){ const n=needed(S,host); if(!n.on) return {on:fa
 function firstBoot(hero){ const h=hero==='kaia'?'kaia':'kael', packs=DATA.basePacks(h); const bytes=packs.reduce((t,p)=>t+packBytes(p),0); return {packs,bytes,mb:Math.round(bytes/1048576*10)/10}; }
 /* pacote de um caminho pedido pelo jogo (para o carregador saber o que baixar antes de desenhar) */
 const packOf=path=>classify(path);
+/* RESOLVEDOR ÚNICO (decisão do PO: Play Asset Delivery; sugestão da fps-6f): o plugin nativo, ao terminar de baixar um pack fast-follow/on-demand,
+   registra onde ele ficou (setPackPath(pacote, urlDaPasta), já convertida com Capacitor.convertFileSrc). url(caminhoOriginal) devolve o arquivo no
+   pack baixado OU o caminho original (APK base, navegador, testes: tudo segue como hoje). isReady(caminho) diz se dá para desenhar já. */
+const PATHS={};
+function setPackPath(id,dir){ if(typeof id!=='string') return false; if(dir==null){ delete PATHS[id]; return true; } PATHS[id]=String(dir).replace(/\/+$/,'')+'/'; return true; }
+function url(p0){ const p=norm(p0), d=PATHS[classify(p)]; return d?d+p:p0; }
+const installed=()=>{ const base=DATA.basePacks(); return [...new Set(base.concat(Object.keys(PATHS)))].sort(); };
+const isReady=p=>{ const id=classify(p); return DATA.basePacks().includes(id)||!!PATHS[id]||!ON(); };   // desligado: tudo está no APK, como hoje
 
-const API={DATA,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf};
+const API={DATA,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
