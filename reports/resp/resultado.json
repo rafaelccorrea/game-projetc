@@ -1,0 +1,304 @@
+{
+ "gerado": "2026-11-13T13:31:25.961Z",
+ "origem": "http://127.0.0.4:8080",
+ "tamanhos": [
+  [
+   360,
+   780
+  ]
+ ],
+ "resultados": [
+  {
+   "tela": "batalha",
+   "w": 360,
+   "h": 780,
+   "print": "reports/resp/batalha_360.png",
+   "defeitos": [
+    {
+     "tipo": "barra-de-status",
+     "el": "span#fb_ring \"Nv. 1\"",
+     "detalhe": "topo a 9px (área do entalhe)"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span#fb_lv \"Nv. 1\"",
+     "detalhe": "35x17"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "button#fb_goldp \"999 bi+\"",
+     "detalhe": "100x35"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "button#fb_gemp \"999000000050+\"",
+     "detalhe": "151x35"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "button#fb_mus",
+     "detalhe": "35x35"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "3x5"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "3x5"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "3x11"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.fb-mgrid",
+     "detalhe": "20x20"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "8x8"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "8x8"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "8x8"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "i",
+     "detalhe": "8x8"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.fb-lb \"Menu\"",
+     "detalhe": "10.5px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span \"1/5\"",
+     "detalhe": "10.0px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.fb-novo \"NOVO!\"",
+     "detalhe": "9.5px"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.fb-novo \"NOVO!\"",
+     "detalhe": "42x14"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "img",
+     "detalhe": "30x28"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span",
+     "detalhe": "24x4"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span#fb_chp",
+     "detalhe": "24x4"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span#fb_bc \"3\"",
+     "detalhe": "18x18"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span#fbl_chest \"Baú cheio\"",
+     "detalhe": "10.5px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span#fbl_offer \"23h 59min\"",
+     "detalhe": "10.5px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.fb-lb \"Básico\"",
+     "detalhe": "10.5px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span#fb_s2n \"Sísmico\"",
+     "detalhe": "10.5px"
+    }
+   ]
+  },
+  {
+   "tela": "tela_cfg",
+   "w": 360,
+   "h": 780,
+   "print": "reports/resp/tela_cfg_360.png",
+   "defeitos": [
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.c-knob",
+     "detalhe": "24x24"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.c-knob",
+     "detalhe": "24x24"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.c-knob",
+     "detalhe": "24x24"
+    },
+    {
+     "tipo": "barra-de-status",
+     "el": "button#fb_x \"Voltar\"",
+     "detalhe": "topo a 6px (área do entalhe)"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "polyline",
+     "detalhe": "5x10"
+    }
+   ]
+  },
+  {
+   "tela": "tela_vip",
+   "w": 360,
+   "h": 780,
+   "print": "reports/resp/tela_vip_360.png",
+   "defeitos": [
+    {
+     "tipo": "fora-da-tela",
+     "el": "div.pv-rays",
+     "detalhe": "left -60 right 258 (largura 360)"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span \"x1 (x2 no nível 15)\"",
+     "detalhe": "10.0px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.pv-new \"NOVO\"",
+     "detalhe": "9.0px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.pv-new \"NOVO\"",
+     "detalhe": "9.0px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.pv-new \"NOVO\"",
+     "detalhe": "9.0px"
+    },
+    {
+     "tipo": "letra-pequena",
+     "el": "span.pv-new \"NOVO\"",
+     "detalhe": "9.0px"
+    },
+    {
+     "tipo": "barra-de-status",
+     "el": "button#fb_x \"Voltar\"",
+     "detalhe": "topo a 6px (área do entalhe)"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "polyline",
+     "detalhe": "5x10"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"Ouro e XP\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"—\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"—\"",
+     "detalhe": "cobre span \"Ir à Loja\" (85% do menor)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"+10%NOVO\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span.pv-new \"NOVO\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (100%)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"Entradas de instância/dia po\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (36%)"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "span \"+1NOVO\"",
+     "detalhe": "cobre button.pv-gold \"Ir à LojaCada compra soma po\" (36%)"
+    }
+   ]
+  },
+  {
+   "tela": "derrota",
+   "w": 360,
+   "h": 780,
+   "print": "reports/resp/derrota_360.png",
+   "defeitos": [
+    {
+     "tipo": "fora-da-tela",
+     "el": "div.q-orbs",
+     "detalhe": "left -38 right 3 (largura 360)"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "polyline",
+     "detalhe": "5x4"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "polyline",
+     "detalhe": "5x4"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span.lil \"Modo farm\"",
+     "detalhe": "173x22"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "span \"Continua farmando automático\"",
+     "detalhe": "173x10"
+    },
+    {
+     "tipo": "botao-pequeno",
+     "el": "polyline",
+     "detalhe": "4x4"
+    },
+    {
+     "tipo": "sobreposicao",
+     "el": "div#toast \"Forja: deixe seus itens mais\"",
+     "detalhe": "cobre span \"RECOMENDADA\" (33%)"
+    }
+   ]
+  }
+ ]
+}
