@@ -29,7 +29,9 @@ function dropToast(msg){ if (view === 'shop') return; toast(msg); }
    A garantia da invocação é do Sys.loot.summon (o item vem com pity:true); a do jogo (S.pity) foi retirada. */
 function addItemToBag(o){ setTimeout(()=>{ if(typeof codexSync==='function') codexSync(); },0);   /* códex: item novo na mochila (drop, invocação, prêmio) */
   const it = normItem(o); it.id = S.nextId++; if (it.gotAt == null) it.gotAt = Date.now(); try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; const nm = iname(it);
-  if (S.inv.length >= BAG_MAX){   /* MOCHILA CHEIA: sai o item MAIS FRACO que não está equipado (FC do item no nível atual, Sys.fc.itemFC().fc); o novo só é descartado se for ele o mais fraco */
+  /* VIP (js/vipauto.js): desmanche automático das raridades que o JOGADOR marcou (só Básico/Raro; nunca item melhor que o equipado nem de prêmio): o item nem entra */
+  if (typeof vaAutoSell === 'function'){ const ds = vaAutoSell(it, o); if (ds){ if (PULLING) PULLING.push({ r: it.r, slot: it.slot, e: it.e, name: nm, pity: !!o.pity, dism: true }); else dropToast(ds.msg); return; } }
+  if (S.inv.length >= (typeof bagMax === 'function' ? bagMax() : BAG_MAX)){   /* limite com o bônus do VIP (bagMax, js/vipauto.js). MOCHILA CHEIA: sai o item MAIS FRACO que não está equipado (FC do item no nível atual, Sys.fc.itemFC().fc); o novo só é descartado se for ele o mais fraco */
     const fcOf = x => { try { return Sys.fc.itemFC(S, Sys.host, x).fc; } catch (e) { return 0; } };
     let weak = null, wf = Infinity; for (const x of S.inv){ if (S.eq[x.slot] === x.id) continue; const f = fcOf(x); if (f < wf){ wf = f; weak = x; } }
     const out = (!weak || fcOf(it) <= wf) ? it : weak; let d = null; try { d = Sys.loot.dismantle(S, Sys.host, out); } catch (e) {}
@@ -38,9 +40,13 @@ function addItemToBag(o){ setTimeout(()=>{ if(typeof codexSync==='function') cod
     S.inv = S.inv.filter(x => x.id !== out.id); if (!PULLING) dropToast(msg); else PULLING.bagMsg = msg; }
   S.inv.push(it);
   let better = false; try { better = Sys.stats.canEquip(it, Sys.level.level(S)) && Sys.fc.itemFC(S, Sys.host, it).swap > 0; } catch (e) {}
+  /* VIP (conveniências ligadas): TROCAR o equipado sozinho é do VIP 2 com a preferência ligada (vaEquipAllowed, js/vipauto.js); espaço vazio equipa sempre.
+     Sem isso o item fica na mochila e o aviso diz "Item melhor" (o jogador equipa em Equip.). Chave desligada: equipa para todos, como antes. */
+  const hint = better; if (better && typeof vaEquipAllowed === 'function' && !vaEquipAllowed(it)) better = false;
   if (better){ S.eq[it.slot] = it.id; refreshHero(); try { Sys.fc.record(S, Sys.host); } catch (e) {} }
   if (PULLING) PULLING.push({ r: it.r, slot: it.slot, e: it.e, name: nm, pity: !!o.pity, eq: better });
-  else dropToast(better ? 'Equipou ' + nm + ' [' + RAR[it.r].n + ' · ' + SLOT[it.slot].n + ']' : 'Drop: ' + nm + ' [' + RAR[it.r].n + ' · ' + SLOT[it.slot].n + ']');
+  else dropToast((better ? 'Equipou ' : hint ? 'Item melhor: ' : 'Drop: ') + nm + ' [' + RAR[it.r].n + ' · ' + SLOT[it.slot].n + ']');
+  if (typeof vaFuseSoon === 'function') vaFuseSoon();   // VIP: fusão automática (inerte enquanto a Fusão estiver desligada)
   if (it.r >= 4) snd('legendary');
   if (view === 'gear' && typeof softRender === 'function') softRender();
 }
@@ -84,6 +90,7 @@ function sysMigrate(){
 function sysBoot(){
   if (!SYS_ON) return;
   try { window.__migrated = sysMigrate(); Sys.loot.ensure(S); Sys.chest.ensure(S); Sys.level.ensure(S); if (DEBUG && window.__plv > 1){ const o = Sys.level.ensure(S); o.lvl = Math.min(100, window.__plv | 0); o.xp = 0; } Sys.loot.flushPending(S, Sys.host);
+    if (typeof vaOfflineSync === 'function') vaOfflineSync();   // VIP: teto de horas do ganho offline (itens do Sys.loot.offline)
     if (SYS_E2) sysBootE2();
     const el = document.getElementById('chestbox'); if (el) Sys.chest.render(el, S, Sys.host, { overlay: document.getElementById('app') });
   } catch (e) { console.error('sysBoot', e); }

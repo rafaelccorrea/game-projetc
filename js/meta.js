@@ -64,6 +64,7 @@ function onPlay(){
 function afterIntro(){
   if(!S.welcome) showWelcome();
   else if(!showOffline()&&S.tut<99) startTut();
+  if(typeof vaCollectSoon==='function') vaCollectSoon(2500);   // VIP 1: coleta automática ao abrir o jogo (js/vipauto.js; um aviso só)
 }
 function showWelcome(){
   if(S.welcome) return;   /* o presente entra UMA vez (recarregar não dá de novo: S.welcome vai no save) */
@@ -83,13 +84,14 @@ function toastHtml(html,ms){ const t=document.getElementById('toast'); if(!t) re
 /* ---------- ganhos offline: moedas por tempo fora, com teto ---------- */
 function showOffline(){
   if(window.__noSave||S.tut<99||AWAY<120||window.__offDone) return false; window.__offDone=true;
-  const cap=BAL.offlineCapHours*3600, t=Math.min(AWAY,cap);
+  const capH=typeof offlineCapH==='function'?offlineCapH():BAL.offlineCapHours, cap=capH*3600, t=Math.min(AWAY,cap);   // teto com o VIP (8 h; 10/12/14 h: js/vipauto.js)
+  if(typeof vaOfflineSync==='function') vaOfflineSync();
   const perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,S.stage-1));
   let om=1; try{ om=Math.max(1,Sys.vip.perks(S).offlineMult||1); }catch(e){}   // VIP: ouro offline em dobro (número do Sys.vip)
   const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
   const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60);
   mbox.innerHTML=`<h3>Enquanto você esteve fora</h3>
-    <div>Seu guerreiro continuou lutando por <b>${hh?hh+'h ':''}${mm}min</b>${AWAY>cap?` (teto de ${BAL.offlineCapHours}h)`:''}.</div>
+    <div>Seu guerreiro continuou lutando por <b>${hh?hh+'h ':''}${mm}min</b>${AWAY>cap?` (teto de ${capH}h)`:''}.</div>
     <div class="card" style="margin-top:10px;text-align:center;font-size:20px"><b>+${fmt(gold)}</b> ${COIN()}</div>
     <div class="row"><button class="btn grow" id="m_go">Resgatar</button></div>`;
   modal.style.display='flex';
