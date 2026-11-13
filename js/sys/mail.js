@@ -11,14 +11,24 @@ const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const Loot=()=>root.Sys&&root.Sys.loot;
 const hasAtt=m=>!!(m.att&&typeof m.att==='object'&&Object.keys(m.att).length);
+/* TIPO e REMETENTE (Q-10, autorizado pela fps-6f): type ∈ TYPES; a caixa do servidor manda `source` (arena, ranking, compensacao, equipe, evento, guilda...)
+   e o jogo aceita os dois: type explícito vence; senão vem do source (SOURCE_TYPE); sem nada: 'reward' com anexo, 'system' sem. Formato do servidor
+   (fps-server mail-core, contrato §8): {id, title, body, att, createdAt, expiresAt, source, ref}; id pode ser número (local) ou texto (servidor). */
+const TYPES=['system','reward','guild','event'];
+const SOURCE_TYPE={arena:'reward',ranking:'reward',torneio:'reward',passe:'reward',compensacao:'system',equipe:'system',sistema:'system',evento:'event',event:'event',guilda:'guild',guild:'guild'};
+const FROM={system:'Equipe Eonbound',reward:'Prêmios',guild:'Guilda',event:'Eventos'};
+const typeOf=(t,src,att)=>TYPES.includes(t)?t:(SOURCE_TYPE[String(src||'').toLowerCase()]||(att&&typeof att==='object'&&Object.keys(att).length?'reward':'system'));
+const okId=id=>Number.isInteger(id)||(typeof id==='string'&&id.length>0&&id.length<=80);
 
 function ensure(S){
   if(!S||typeof S!=='object') throw new Error('Sys.mail.ensure: save inválido');
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.mail; if(!o||typeof o!=='object') o=S.sys.mail={};
   o.v=1; o.seq=int0(o.seq); if(!Array.isArray(o.list)) o.list=[];
-  o.list=o.list.filter(m=>m&&Number.isInteger(m.id)&&typeof m.title==='string').map(m=>({id:m.id,title:m.title,body:String(m.body||''),att:m.att&&typeof m.att==='object'?m.att:null,
-    at:num(m.at,0),exp:num(m.exp,0),read:!!m.read,claimed:!!m.claimed}));
+  o.done=Array.isArray(o.done)?o.done.filter(okId).slice(-300):[];   // resgate IDEMPOTENTE pela carta (id): reimportar do servidor não paga de novo
+  o.list=o.list.filter(m=>m&&okId(m.id)&&typeof m.title==='string').map(m=>{ const att=m.att&&typeof m.att==='object'?m.att:null, type=typeOf(m.type,m.source,att);
+    return {id:m.id,title:m.title,body:String(m.body||''),att,at:num(m.at,0),exp:num(m.exp,0),read:!!m.read,claimed:!!m.claimed||o.done.includes(m.id),
+      type,source:typeof m.source==='string'?m.source:'',from:typeof m.from==='string'&&m.from?m.from.slice(0,40):FROM[type],ref:m.ref!=null?String(m.ref).slice(0,80):''}; });
   return o;
 }
 /* tira as vencidas (com ou sem anexo: o anexo não resgatado se perde, como avisado na tela) */
@@ -27,21 +37,30 @@ function purge(S,host){ const o=ensure(S), now=nowOf(host); o.list=o.list.filter
 function send(S,host,msg){
   if(!DATA.enabled) return 0;
   const o=purge(S,host); msg=msg||{}; const now=nowOf(host), days=Math.max(1,num(msg.days,DATA.expireDays));
-  const m={id:++o.seq,title:String(msg.title||'Mensagem'),body:String(msg.body||''),att:msg.att&&typeof msg.att==='object'?msg.att:null,at:now,exp:now+days*DAY,read:false,claimed:false};
+  const att=msg.att&&typeof msg.att==='object'?msg.att:null, type=typeOf(msg.type,msg.source,att), exp=num(msg.expiresAt,0)>now?num(msg.expiresAt,0):now+days*DAY;
+  const m={id:++o.seq,title:String(msg.title||'Mensagem'),body:String(msg.body||''),att,at:now,exp,read:false,claimed:false,
+    type,source:typeof msg.source==='string'?msg.source:'',from:typeof msg.from==='string'&&msg.from?msg.from.slice(0,40):FROM[type],ref:msg.ref!=null?String(msg.ref).slice(0,80):''};
   o.list.push(m);
   while(o.list.length>DATA.max){ const i=o.list.findIndex(x=>x.claimed||!hasAtt(x)); o.list.splice(i>=0?i:0,1); }
   return m.id;
 }
 /* caixa de entrada, mais nova primeiro: [{id, title, body, att, at, exp, daysLeft, read, claimed, hasAtt}] */
 function inbox(S,host){ const o=purge(S,host), now=nowOf(host);
-  return o.list.slice().sort((a,b)=>b.at-a.at||b.id-a.id).map(m=>({...m,hasAtt:hasAtt(m),daysLeft:Math.max(0,Math.ceil((m.exp-now)/DAY))})); }
+  return o.list.slice().sort((a,b)=>b.at-a.at||String(b.id).localeCompare(String(a.id))).map(m=>({...m,hasAtt:hasAtt(m),createdAt:m.at,expiresAt:m.exp,daysLeft:Math.max(0,Math.ceil((m.exp-now)/DAY))})); }
+/* CAIXA DO SERVIDOR → jogo: [{id, title, body, att, createdAt, expiresAt, source, ref, type?, from?, claimed?}] (mesmo formato do mail-core). Junta sem duplicar
+   (pelo id); carta que o servidor diz resgatada, ou já resgatada aqui, não paga de novo. Devolve quantas entraram. */
+function receive(S,host,list){ if(!DATA.enabled||!Array.isArray(list)) return 0; const o=purge(S,host), now=nowOf(host); let n=0;
+  for(const x of list){ if(!x||!okId(x.id)||o.list.some(m=>m.id===x.id)) continue; const att=x.att&&typeof x.att==='object'?x.att:null, exp=num(x.expiresAt,0)||now+DATA.expireDays*DAY; if(exp<=now) continue;
+    const type=typeOf(x.type,x.source,att); if(x.claimed===true&&!o.done.includes(x.id)) o.done.push(x.id);
+    o.list.push({id:x.id,title:String(x.title||'Mensagem'),body:String(x.body||''),att,at:num(x.createdAt,now),exp,read:false,claimed:o.done.includes(x.id),type,source:typeof x.source==='string'?x.source:'',from:typeof x.from==='string'&&x.from?x.from.slice(0,40):FROM[type],ref:x.ref!=null?String(x.ref).slice(0,80):''}); n++; }
+  while(o.list.length>DATA.max){ const i=o.list.findIndex(x=>x.claimed||!hasAtt(x)); o.list.splice(i>=0?i:0,1); } return n; }
 function read(S,host,id){ const m=purge(S,host).list.find(x=>x.id===id); if(m) m.read=true; return !!m; }
 /* resgata o anexo de uma mensagem → {ok, got} ou {ok:false, reason:'id'|'sem_anexo'|'resgatado'} */
 function claim(S,host,id){
   if(!DATA.enabled) return OFF;
-  const m=purge(S,host).list.find(x=>x.id===id); if(!m) return {ok:false,reason:'id'};
-  if(!hasAtt(m)) return {ok:false,reason:'sem_anexo'}; if(m.claimed) return {ok:false,reason:'resgatado'};
-  const L=Loot(); m.claimed=true; m.read=true;
+  const o=purge(S,host), m=o.list.find(x=>x.id===id); if(!m) return {ok:false,reason:'id'};   // uma leitura só da caixa: o ensure recria as cartas
+  if(!hasAtt(m)) return {ok:false,reason:'sem_anexo'}; if(m.claimed||o.done.includes(m.id)){ m.claimed=true; return {ok:false,reason:'resgatado'}; }
+  const L=Loot(); m.claimed=true; m.read=true; o.done.push(m.id); if(o.done.length>300) o.done.shift();
   if(L&&L.grantBundle) return {ok:true,got:L.grantBundle(S,host,m.att)};
   // reserva sem Sys.loot: só ouro e gemas (o resto exige o loot carregado)
   const gold=int0(m.att.gold), gems=int0(m.att.gems);
@@ -54,7 +73,7 @@ function remove(S,host,id){ const o=purge(S,host), i=o.list.findIndex(x=>x.id===
 function unread(S,host){ return inbox(S,host).filter(m=>!m.read||(m.hasAtt&&!m.claimed)).length; }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,send,inbox,read,claim,claimAll,remove,unread,bonus};
+const API={DATA,TYPES,ensure,send,receive,inbox,read,claim,claimAll,remove,unread,bonus};
 root.Sys=root.Sys||{}; root.Sys.mail=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
