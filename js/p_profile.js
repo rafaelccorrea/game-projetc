@@ -31,6 +31,8 @@ const pr2Ok=()=>!!(window.Sys&&Sys.titles&&Sys.titles.DATA&&Sys.titles.progress)
 const pr2Esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function pr2Fmt(v){ try{ if(typeof kf==='function') return kf(v); }catch(e){} return String(Math.round(v||0)); }
 /* o texto de condição do módulo traz uma estrela (símbolo gráfico): a tela mostra "estrelas" (regra: sem emoji/símbolo) */
+/* retrato do herói na fase e com chapéu/óculos/máscara (js/avatar.js); sem o arquivo, o Kael parado de antes */
+const pr2Av=sz=>typeof avatarTag==='function'?avatarTag(sz,'position:absolute;left:0;top:0','Seu retrato'):'<div class="pr2-kid" style="position:absolute;left:-8px;top:-8px;width:112px;height:112px"></div>';
 const pr2Txt=x=>String(x==null?'':x).replace(/\s*★/g,' estrelas');
 const pr2N=v=>Math.round(v||0).toLocaleString('pt-BR');
 function pr2Inject(){ if(typeof document==='undefined'||!document.head||document.getElementById('pr2_css')) return; const st=document.createElement('style'); st.id='pr2_css'; st.textContent=PR_CSS; document.head.appendChild(st); }
@@ -49,7 +51,7 @@ function pr2Rows(){ const T=Sys.titles, o=T.ensure(S), feat=T.featured(S), out=T
 function pr2Card(I,show){ const feat=Sys.titles.featured(S), tt=show?show.name:(feat?feat.name:'Sem título');
   const chip=(l,v)=>`<span style="display:flex;flex-direction:column;align-items:center;line-height:1.1;min-width:0"><span style="font-size:10px;font-weight:800;color:#c9b9a2">${l}</span><span style="font-family:'Lilita One',sans-serif;font-size:16px;color:#ffe07a;white-space:nowrap">${v}</span></span>`;
   return `<div style="flex:none;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,#3a2810,#1d1611);border:2px solid #8a6a3a;box-sizing:border-box">
-    <div aria-hidden="true" style="flex:none;width:96px;height:96px;border-radius:14px;background:#16110d;border:2px solid #4a3a2b;position:relative;overflow:hidden"><div class="pr2-kid" style="position:absolute;left:-8px;top:-8px;width:112px;height:112px"></div></div>
+    <div aria-hidden="true" style="flex:none;width:96px;height:96px;border-radius:14px;background:#16110d;border:2px solid #4a3a2b;position:relative;overflow:hidden">${pr2Av(92)}</div>
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font-family:'Lilita One',sans-serif;font-size:22px;line-height:1">Kael</span>
       <span style="font-size:13px;font-weight:900;color:#ffe07a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" aria-label="Título">${pr2Esc(tt)}${show?' <small style="color:#c9b9a2">(prévia)</small>':''}</span>
       <div style="display:flex;flex-wrap:wrap;gap:4px 14px;justify-content:space-between">${chip('Nível',I.lvl==null?'—':I.lvl)}${chip('FC',I.fc==null?'—':pr2Fmt(I.fc))}${chip('Era',pr2Esc(pr2Era(I.era)))}${I.vip?chip('VIP',I.vip):''}</div></div></div>`; }
