@@ -12,7 +12,7 @@
 (function(root){
 'use strict';
 
-const DATA={ on:false };
+const DATA={ on:true };   // ONLINE LIGADO (dono: 'liga tudo', 14/11; servidor em produção e roteiro de ponta a ponta do Servidor ok). Sem servidor ou com 404 o jogo segue no estado local
 const SYS=()=>root.Sys||{};
 const call=(m,p,b)=>{ const n=SYS().net; if(!n||typeof n._call!=='function') return Promise.reject(Object.assign(new Error('net'),{code:'net_off'})); return n._call(m,p,b); };
 const ST={ started:false, mine:null, banners:null, err:null, at:0 };

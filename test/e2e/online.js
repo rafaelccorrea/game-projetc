@@ -496,10 +496,10 @@ const SK = 'eras_proto_v2';
   /* 15. MÓDULOS ONLINE OPCIONAIS (Sys.arenaNet / Sys.guildNet / Sys.tourneyNet): carregados pelo index.html, chaves DESLIGADAS; o arranque só chama o start de quem
      tem a própria chave ligada, uma vez, depois do boot dar certo; o start que falha não derruba nada */
   { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
-    check('15. módulos online carregados; Arena ligada, Guilda e Torneio desligados', g.ev("!!(Sys.arenaNet&&Sys.guildNet&&Sys.tourneyNet)&&Sys.arenaNet.DATA.on===true&&Sys.guildNet.DATA.on===false&&Sys.tourneyNet.DATA.on===false"));   /* Arena ligada desde 14/11; Guilda e Torneio seguem desligados */
+    check('15. módulos online carregados; Arena, Guilda e Torneio ligados', g.ev("!!(Sys.arenaNet&&Sys.guildNet&&Sys.tourneyNet)&&Sys.arenaNet.DATA.on===true&&Sys.guildNet.DATA.on===true&&Sys.tourneyNet.DATA.on===true"));   /* Arena ligada desde 14/11; Guilda e Torneio seguem desligados */
     g.ev("window.__st={a:0,g:0}; Sys.arenaNet.__s=Sys.arenaNet.start; Sys.guildNet.__s=Sys.guildNet.start; Sys.arenaNet.start=function(){ __st.a++; return Promise.resolve({ok:true}); }; Sys.guildNet.start=function(){ __st.g++; throw new Error('quebrou'); }; 1");
     const r1 = await g.promise('OnlineBoot.play()')(80); await g.settle();
-    check('15. arranque: chama o start só de quem tem a chave ligada (Arena sim, Guilda não)', g.st().booted && g.ev('__st.a') === 1 && g.ev('__st.g') === 0, JSON.stringify(g.ev('__st'))); }
+    check('15. arranque: chama o start da Arena e da Guilda uma vez; o da Guilda quebra de propósito e não derruba o arranque', g.st().booted && g.ev('__st.a') === 1 && g.ev('__st.g') === 1, JSON.stringify(g.ev('__st'))); }
   { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
     g.ev("window.__st={a:0,g:0}; Sys.arenaNet.DATA.on=true; Sys.guildNet.DATA.on=true; Sys.arenaNet.start=function(){ __st.a++; return Promise.resolve({ok:true}); }; Sys.guildNet.start=function(){ __st.g++; throw new Error('quebrou'); }; 1");
     const r2 = await g.promise('OnlineBoot.play()')(80); await g.settle();
