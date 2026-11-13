@@ -21,6 +21,10 @@ const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
 const kf=v=>{ v=Math.max(0,v||0); try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v,{pt:!!PANEL_V2.ptNum}); }catch(e){}   /* fonte única dos números abreviados (o corpo abaixo é só reserva: parava em tri) */ const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
   return v>=1e12?f(v/1e12,U[0]):v>=1e9?f(v/1e9,U[1]):v>=1e6?f(v/1e6,U[2]):v>=1e3?f(v/1e3,U[3]):String(Math.floor(v)); };
 const gNum=v=>v>=1e7?kf(v):n0(v);
+/* FC NA TELA (ordem do dono): a FC é MOSTRADA na escala do Sys.fc (view = FC × 31, só visual; texto já abreviado pelo módulo). PONTO ÚNICO das minhas telas:
+   todo número de FC escrito na tela (total, diferença "FC +N", recomendada, o que falta) passa por aqui. Contas e comparações continuam com a FC real.
+   Sem Sys.fc.viewText: a formatação de antes. */
+function fcTxt(fc){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return Sys.fc.viewText(fc); }catch(e){} return gNum(fc); }
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const COIN_I=(s)=>`<img src="assets/ui/coin.png" alt="moedas" style="width:${s}px;height:${s}px;object-fit:contain">`;
 const GEM_I=(s)=>`<img src="assets/ui/gem.png" alt="gemas" style="width:${s}px;height:${s}px;object-fit:contain">`;
@@ -329,7 +333,7 @@ function midnightLeft(){ const d=new Date(), m=new Date(d.getFullYear(),d.getMon
 const XG={filter:'all',page:0,sel:null,tw:null,twI:0,toast:'',toastT:0,anim:true,cf:null,upfx:false};
 const GK=['atk','hp','def','crit','cd','vel','fc'], GL={atk:'ATK',hp:'HP',def:'DEF',crit:'Chance Crítica',cd:'Dano Crítico',vel:'Vel. de Ataque',fc:'FC'};
 const GSLOT_POS={hat:[10,8],armor:[10,100],boots:[10,192],weapon:[322,8],gloves:[322,100],necklace:[322,192],wing:[166,6]};
-const gFmt=(k,v)=>k==='atk'||k==='hp'||k==='def'||k==='fc'?gNum(v):k==='vel'?v.toFixed(2).replace('.',',')+'/s':k==='cd'?'+'+p1(v):p1(v);
+const gFmt=(k,v)=>k==='fc'?fcTxt(v):k==='atk'||k==='hp'||k==='def'?gNum(v):k==='vel'?v.toFixed(2).replace('.',',')+'/s':k==='cd'?'+'+p1(v):p1(v);
 function gSnap(opts){ const st=opts?Sys.fc.stats(S,Sys.host,opts):heroStats(); return {atk:st.atk,hp:st.hp,def:st.def,crit:st.critRate,cd:st.critDmg,vel:1/Sys.stats.interval(st),fc:Sys.fc.fcOfStats(st)}; }
 function itemLines(it){ const st=Sys.stats.itemStats(it,Sys.stats.itemLevel(it,plv()),forgeMult(it.slot)), out=[];
   for(const [k,lb,pc] of [['atk','ATK +',0],['hp','HP +',0],['def','DEF +',0],['critRate','Crít. +',1],['critDmg','Dano Crít. +',1],['aspd','Vel. +',1],['atkPct','ATK +',1],['hpPct','HP +',1],['defPct','DEF +',1]])
@@ -403,11 +407,11 @@ function scrGear(){
       ${auraN?'<div class="x-aura" aria-hidden="true" style="left:111px;top:64px;width:168px;height:210px;background-image:url(assets/anim/aura/aura'+auraN+'.png)"></div>':''}<canvas id="gkc" role="img" aria-label="Kael com a arma equipada" style="position:absolute;left:61px;top:110px;width:268px;height:168px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));pointer-events:none"></canvas>
       ${XG.upfx?'<div class="x-upfx" aria-hidden="true" style="position:absolute;left:115px;top:110px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,250,220,.9) 0%,rgba(255,201,74,.5) 40%,rgba(255,201,74,0) 70%)"></div>':''}
       ${d.real?'</div>':''}${slotsH}<div id="xg_toast"></div>${d.real?'':'</div>'}
-      ${gain&&d.real?`<div class="x-gainp" aria-hidden="true" style="position:absolute;left:0;right:0;bottom:64px;display:flex;justify-content:center;z-index:5;pointer-events:none"><span class="lil" style="padding:4px 12px;border-radius:12px;background:rgba(14,10,7,.88);border:2px solid #5fd068;font-size:22px;color:#7ef08a;text-shadow:0 2px 0 #0d2410;box-shadow:0 0 18px rgba(95,208,104,.6);white-space:nowrap">FC +${gNum(gain)}</span></div>`:''}
+      ${gain&&d.real?`<div class="x-gainp" aria-hidden="true" style="position:absolute;left:0;right:0;bottom:64px;display:flex;justify-content:center;z-index:5;pointer-events:none"><span class="lil" style="padding:4px 12px;border-radius:12px;background:rgba(14,10,7,.88);border:2px solid #5fd068;font-size:22px;color:#7ef08a;text-shadow:0 2px 0 #0d2410;box-shadow:0 0 18px rgba(95,208,104,.6);white-space:nowrap">FC +${fcTxt(gain)}</span></div>`:''}
     </div>
     <div style="height:140px;flex:none;margin:8px 12px 0;padding:8px;border-radius:16px;background:#1d1611;border:1px solid #4a3a2b;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
       <div style="height:46px;flex:none;display:flex;gap:6px">
-        <div class="x-fcbox ${tw&&tw.big&&!d.real?'x-fcboxUp':''}" id="xg_fcbox" style="flex:1;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:12px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box;min-width:0">${gain&&!d.real?'<span class="x-fcgain" aria-hidden="true">+'+gNum(gain)+'</span>':''}
+        <div class="x-fcbox ${tw&&tw.big&&!d.real?'x-fcboxUp':''}" id="xg_fcbox" style="flex:1;display:flex;align-items:center;gap:6px;padding:0 8px;border-radius:12px;background:linear-gradient(180deg,#3a2c1f,#241a12);border:2px solid #ffc94a;box-sizing:border-box;min-width:0">${gain&&!d.real?'<span class="x-fcgain" aria-hidden="true">+'+fcTxt(gain)+'</span>':''}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
           <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span style="font-size:9px;font-weight:900;color:#c9b9a2;letter-spacing:${d.Wb<380?0:1}px;white-space:nowrap">FORÇA DE COMBATE</span>
             <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
@@ -446,7 +450,7 @@ function gSheet(it,H,now,shown){
   const after=isEq?now:gSnap({item:it}), ifc=Sys.fc.itemFC(S,Sys.host,it), small=H<690, rh=small?23:26;
   const plan=!atCap?Sys.stats.planUpgrade(S,Sys.host,it,'gold'):null;
   const diffs=GK.map(k=>{ const df=after[k]-now[k], eps=k==='vel'?0.004:(k==='atk'||k==='hp'||k==='def'||k==='fc'?0.5:0.05), up=df>eps, dn=df<-eps;
-    const dt=k==='atk'||k==='hp'||k==='def'||k==='fc'?gNum(Math.abs(df)):k==='vel'?Math.abs(df).toFixed(2).replace('.',','):p1(Math.abs(df));
+    const dt=k==='fc'?fcTxt(Math.abs(df)):k==='atk'||k==='hp'||k==='def'?gNum(Math.abs(df)):k==='vel'?Math.abs(df).toFixed(2).replace('.',','):p1(Math.abs(df));
     return `<div style="height:${rh}px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:10px;background:${k==='fc'?'#2a2015':'#0e0a07'};border:1px solid #4a3a2b">
       <span style="font-size:12px;font-weight:800;color:#c9b9a2;width:92px">${GL[k]}</span>
       <span style="font-size:13px;font-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span style="color:#c9b9a2">→</span> ${gFmt(k,after[k])}</span>
@@ -487,8 +491,8 @@ function gSheet(it,H,now,shown){
         <span class="lil" style="font-size:14px">${isEq?'Upar':'Equipar e upar'} até o meu nível (${plan.to})</span>${COIN_I(14)}${kf(plan.gold)}</button>`:''}
     </div>
     ${!isEq?`<div style="flex:none;height:${small?34:40}px;display:flex;gap:6px">
-      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#2a2015;border:1px solid #4a3a2b"><span style="font-size:11px;font-weight:800;color:#c9b9a2">FC agora</span><span class="lil" style="font-size:15px">${gNum(ifc.fc)}</span></div>
-      <div class="x-newcard" style="flex:1.25;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#1f3a22;border:1px solid #5fd068"><span style="font-size:11px;font-weight:800;color:#b8f0bd">FC no seu nível (${cap})</span><span class="lil" style="font-size:15px;color:#7ef08a">${gNum(ifc.atPlayerLevel)}</span></div></div>`:''}
+      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#2a2015;border:1px solid #4a3a2b"><span style="font-size:11px;font-weight:800;color:#c9b9a2">FC agora</span><span class="lil" style="font-size:15px">${fcTxt(ifc.fc)}</span></div>
+      <div class="x-newcard" style="flex:1.25;display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-radius:10px;background:#1f3a22;border:1px solid #5fd068"><span style="font-size:11px;font-weight:800;color:#b8f0bd">FC no seu nível (${cap})</span><span class="lil" style="font-size:15px;color:#7ef08a">${fcTxt(ifc.atPlayerLevel)}</span></div></div>`:''}
     <div style="display:flex;flex-direction:column;gap:3px">${diffs}</div>
     <div style="flex:1"></div>
     <div style="display:flex;gap:10px">
@@ -830,7 +834,7 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='gopass'){ snd('ui_tap'); if(!xUnlocked('pass')){ hToast('Skin do Passe da temporada'); return; } XH.sel=null; setView('pass'); }
   else if(a==='vip'){ snd('ui_tap'); if(typeof scrVip==='function'&&window.Screens) Screens.open('vip'); else hToast('Clube VIP: em breve'); }   /* tela 18 (VIP): entra no item 3 */
   else if(a==='iap'){ snd('ui_tap'); hToast('Pagamento em breve: nada é cobrado agora'); }
-  else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+gNum(heroFC())); }
+  else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+fcTxt(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p||!xCanSell(sk.id)) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
     else { const o=S.shop.offers[cf.i]; if(!o||o.sold||S.gold<o.price) return; if(S.inv.length>=BAG_MAX){ XH.cf=null; render(); hToast('Mochila cheia: desmonte itens em Equip.'); return; }

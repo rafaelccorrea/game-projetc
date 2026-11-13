@@ -51,6 +51,7 @@ scr('gear'); scr('gear',"XG.filter='weapon'");
 T('gBest',"JSON.stringify({n:gBest().n})");
 T('equipar melhor (sem voo)',"(function(){ XG.filter='all'; const b=gBest(); if(!b.n) return 'nada a melhorar'; const fc0=heroFC(); PANEL_V2.equipFly=false; gClick({dataset:{x:'best'}}); PANEL_V2.equipFly=true; return 'FC '+Math.round(fc0)+' → '+Math.round(heroFC())+'; sobra '+gBest().n+'; html '+V_TEST.innerHTML.length; })()");
 scr('gear',"XG.tw=null");
+T('FC na escala de exibição (Sys.fc.viewText)',"(function(){ const fc=heroFC(), t=fcTxt(fc); if(!(Sys.fc&&Sys.fc.viewText)) return 'módulo sem viewText: formatação de antes ('+t+')'; if(t!==Sys.fc.viewText(fc)) throw new Error('fcTxt não usa viewText'); XG.tw=null; XG.sel=null; view='gear'; render(); const m=V_TEST.innerHTML.match(/id=\"xg_s_fc\"[^>]*>([^<]*)</); if(!m||m[1].trim()!==t) throw new Error('Equipamento mostra \"'+(m&&m[1])+'\", esperado \"'+t+'\"'); return 'FC real '+Math.round(fc)+' → na tela '+t; })()");
 T('botão apagado',"/Já está com<br>o melhor/.test(V_TEST.innerHTML)");
 T('comparação',"(function(){ const it=S.inv.find(x=>S.eq[x.slot]!==x.id)||S.inv[0]; XG.sel=it.id; view='gear'; render(); const h=V_TEST.innerHTML; XG.sel=null; return /undefined|NaN/.test(h)?'SUSPEITO '+h.match(/.{50}(undefined|NaN).{30}/)[0]:h.length+' chars'; })()");
 T('gFlyBest sem animate',"(function(){ const it=S.inv.find(x=>S.eq[x.slot]===x.id); if(it) delete S.eq[it.slot]; const b=gBest(); gFlyBest(b); return 'n='+b.n+' fly='+JSON.stringify(XG.fly)+' sobra '+gBest().n; })()");

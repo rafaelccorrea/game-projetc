@@ -1097,3 +1097,11 @@ PASSE × p10 (não mexi; decisão do PO): `index.html:410` (`SEASON_SKIN='p10'`,
 Acréscimo ao bloco 37 (achado do QA): o cartão OFERTA/DESTAQUE só mostra skin do espaço da aba. Na aba "Skins herói" sem roupa à venda o
 cartão some e entra "Novas skins em breve" no lugar; a skin em uso continua na lista com a nota. Skin de arma só no cartão da aba "Skins arma".
 A fumaça falha se a aba do herói mostrar cartão de arma. `PANEL_ON.look` (ligada pela coordenação) não foi tocada.
+
+## Bloco 38 (sem navegador): FC mostrada na escala do Sys.fc (view × 31)
+
+`js/screens.js`: função única `fcTxt(fc)` = `Sys.fc.viewText(fc)` (sem o módulo: formatação de antes). Passam por ela, só na EXIBIÇÃO:
+Equipamento (FC do painel de atributos e a contagem animada, linhas "antes → depois" e a diferença da comparação, "FC agora" e "FC no seu
+nível" do item, selo "FC +N" do Equipar melhor), aviso "Equipada: … · FC" da Loja; `js/screens2.js` (Derrota: "SUA FC" contando,
+"RECOMENDADA", "Faltam N de FC"); `js/p_pets.js` ("Soma à FC"). Nenhuma conta mudou (gBest, "melhor que o seu", % da barra, brilho).
+A fumaça confere que o Equipamento mostra exatamente `Sys.fc.viewText(heroFC())`. A tabela da varredura foi entregue à coordenação.

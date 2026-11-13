@@ -626,9 +626,9 @@ function resLoseHtml(Y,bname,lord){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4
       <span style="font-size:14px;line-height:1.15;font-weight:800;color:#e8dccb">Fique mais forte e volte para vencer ${lord?'o Senhor da Era':'o chefe'}${bname?' '+bname:''}.</span></div>
     <div class="q-cup" style="flex:none;animation-delay:.6s;padding:12px 14px;border-radius:18px;background:rgba(29,22,17,.96);border:2px solid #4a3a2b;display:flex;flex-direction:column;gap:8px;box-sizing:border-box">
       <div style="display:flex;justify-content:space-between;align-items:flex-end"><span style="display:flex;flex-direction:column;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">SUA FC</span><span class="lil" id="res_fc" style="font-size:26px;color:#ffc94a">0</span></span>
-        <span style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">RECOMENDADA</span><span class="lil" style="font-size:26px;color:#f6ecdf">${gNum(rec)}</span></span></div>
+        <span style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">RECOMENDADA</span><span class="lil" style="font-size:26px;color:#f6ecdf">${fcTxt(rec)}</span></span></div>
       <div role="progressbar" aria-label="Sua FC é ${pct}% da recomendada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" style="position:relative;height:18px;border-radius:9px;background:#0e0a07;border:1px solid #6a4a1a;overflow:hidden"><div class="q-fcbar" style="width:${pct}%;height:100%;border-radius:9px;background:linear-gradient(90deg,#c0301f,#f2a826 70%,#ffe07a)"></div><span class="q-shine" style="width:${pct}%"></span></div>
-      <span style="font-size:13px;line-height:1.2;font-weight:800;color:${miss>0?'#ffb3a8':'#9be89f'}">${miss>0?`Faltam <span style="color:#fff;font-weight:900">${gNum(miss)} de FC</span> para a recomendada`:'Sua FC já alcança a recomendada: tente de novo'}</span></div>
+      <span style="font-size:13px;line-height:1.2;font-weight:800;color:${miss>0?'#ffb3a8':'#9be89f'}">${miss>0?`Faltam <span style="color:#fff;font-weight:900">${fcTxt(miss)} de FC</span> para a recomendada`:'Sua FC já alcança a recomendada: tente de novo'}</span></div>
     <span class="q-cup lil" style="flex:none;margin:12px 2px 8px;font-size:20px;line-height:24px;color:#ffc94a;text-shadow:0 2px 0 #000;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
     <div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div></div>`; }
 /* botões da derrota: "Modo farm" é o PRINCIPAL (com a contagem); "Tentar de novo" embaixo. low = tela baixa: os dois encolhem para não encostar no Kael */
@@ -723,7 +723,7 @@ function resTick(dt){ if(!B.res||!RES.el) return; RES.t+=dt; const t=RES.t;
     if(RES.xpAt>=0&&t>=RES.xpAt){ RES.xpAt=-1; resXp(); }
     if(RES.end&&RES.autoOn){ RES.auto=Math.max(0,RES.auto)+dt; const a=resEl('res_au'); if(a) a.style.width=Math.min(100,RES.auto/RES_AUTO_NEXT*100).toFixed(1)+'%'; if(RES.auto>=RES_AUTO_NEXT) resClose('next'); } }
   else if(RES.mode==='lose'){
-    if(t>=0.6&&RES.fcK<1){ RES.fcK=Math.min(1,(t-0.6)/0.9); const f=resEl('res_fc'); if(f) f.textContent=gNum(RES.fc*RES.fcK); }   // a FC sobe de 0 até o valor (protótipo)
+    if(t>=0.6&&RES.fcK<1){ RES.fcK=Math.min(1,(t-0.6)/0.9); const f=resEl('res_fc'); if(f) f.textContent=fcTxt(RES.fc*RES.fcK); }   // a FC sobe de 0 até o valor (protótipo)
     if(t>=RES_LOSE_BTN&&RES.autoOn){ RES.auto=Math.max(0,RES.auto)+dt; const left=RES_AUTO_FARM-RES.auto, c=resEl('res_cd'); if(c) c.textContent=Math.max(0,Math.ceil(left))+'s'; if(left<=0) resClose('farm'); } }
 }
 addEventListener('resize',()=>{ if(!B.res||!RES.el||!RES.geo||!RES.lay) return; const w=resEl('res_w'), p=resEl('res_p'); if(!w) return;

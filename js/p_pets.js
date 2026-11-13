@@ -390,7 +390,7 @@ function scrPets(){
     return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
       <div style="flex:none;display:flex;gap:4px">
         ${cell('Bônus na FC',`<span style="color:#7ef08a">+${p1(sh.now||0)}</span> <span style="font-size:10px;color:#c9b9a2">máx ${p1(sh.max||0)}</span>`)}
-        ${cell('Soma à FC',`<span style="color:#ffe07a">${owned?'+'+kf(fcAdd)+' FC':'—'}</span>`)}
+        ${cell('Soma à FC',`<span style="color:#ffe07a">${owned?'+'+(typeof fcTxt==='function'?fcTxt(fcAdd):kf(fcAdd))+' FC':'—'}</span>`)}
         ${cell(esc2(eraName||'Pet'),art.fly?'Voa':'Terrestre')}
       </div>
       <div role="img" aria-label="Prévia na batalha: Kael parado e ${esc2(def.name)} atrás dele, no chão" style="position:relative;flex:none;height:${pvH}px;border-radius:12px;overflow:hidden;border:1px solid #4a3a2b;background:#7fb3d9">
