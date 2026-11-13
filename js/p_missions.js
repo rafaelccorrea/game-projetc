@@ -82,16 +82,19 @@ function scrMissions(){
     <div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px">${XMI.tab==='daily'&&mActOn()?mActBlock():''}${list}</div>
     <div style="flex:none;padding:6px 2px;padding-bottom:max(10px,env(safe-area-inset-bottom))"><button data-x="all" class="pm-btn${all?'':' go'}" style="width:100%;min-height:54px;font-size:18px;font-family:'Lilita One',sans-serif">${XMI.tab==='guide'?'Resgatar a missão da vez':'Resgatar tudo'}${all?' ('+all+')':''}</button></div>`);
 }
+/* XP do JOGADOR: missão diária e bônus das diárias dão XP (Sys.level), como o resgate do Passe antigo (js/screens2.js 'mclaim'); a semanal não dá */
+function mPlayerXp(id){ try{ const P=Sys.pass, daily=id==='bonus'||(P.DATA&&P.DATA.daily||[]).some(x=>x.id===id); if(!daily||!Sys.level) return null;
+    const lr=id==='bonus'?Sys.level.onDailyBonus(S,Sys.host):Sys.level.onMission(S,Sys.host); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); return lr; }catch(e){ return null; } }
 function mClaim(src,id){ let r;
   if(src==='guide'){ r=Sys.guide.claim(S,Sys.host); if(!r||!r.ok) return null; return {txt:mGuideRw(r.got&&typeof r.got==='object'?r.got:null)||'Recompensa recebida'}; }
   if(src==='ach'){ const a=(mAch()||[]).find(x=>x.id===id); r=a&&a.claim?a.claim():null; return r&&r.ok?{txt:r.txt||'Recompensa recebida'}:null; }
-  r=Sys.pass.claimMission(S,Sys.host,id); if(!r||!r.ok) return null; return {txt:[r.gems?'+'+r.gems+' gemas':'', r.xp?'+'+r.xp+' XP do Passe':'', r.tierUp?'Passe subiu de nível':''].filter(Boolean).join(' · ')}; }
+  r=Sys.pass.claimMission(S,Sys.host,id); if(!r||!r.ok) return null; mPlayerXp(id); return {txt:[r.gems?'+'+r.gems+' gemas':'', r.xp?'+'+r.xp+' XP do Passe':'', r.tierUp?'Passe subiu de nível':''].filter(Boolean).join(' · ')}; }
 function miClick(b){
   const a=b.dataset.x; if(!mOk()) return;
   if(a==='tab'){ XMI.tab=b.dataset.t; mSnd('ui_tap'); render(); return; }
   if(a==='claim'){ const r=mClaim(b.dataset.src,b.dataset.id); if(!r){ mSnd('ui_tap'); miToast('Esta missão ainda não pode ser resgatada'); render(); return; } mSnd('claim'); mChanged(); miToast(r.txt); render(); return; }
   if(a==='mark'){ const A=mActOn()?mActivity():null; const r=A&&A.claim?A.claim(b.dataset.id):null; if(!r||!r.ok){ mSnd('ui_tap'); miToast('Este baú ainda não pode ser resgatado'); return; } mSnd('claim'); mChanged(); miToast(r.txt||'Baú resgatado'); render(); return; }
-  if(a==='all'){ mSnd('ui_tap'); let n=0, gems=0, xp=0; const tryOne=(src,id)=>{ const r=src==='guide'?null:Sys.pass.claimMission(S,Sys.host,id); if(r&&r.ok){ n++; gems+=r.gems||0; xp+=r.xp||0; } };
+  if(a==='all'){ mSnd('ui_tap'); let n=0, gems=0, xp=0; const tryOne=(src,id)=>{ const r=src==='guide'?null:Sys.pass.claimMission(S,Sys.host,id); if(r&&r.ok){ mPlayerXp(id); n++; gems+=r.gems||0; xp+=r.xp||0; } };
     if(XMI.tab==='guide'){ const r=Sys.guide.claim(S,Sys.host); if(r&&r.ok) n++; }
     else if(XMI.tab==='ach'){ for(const a of (mAch()||[])) if(!a.claimed&&a.cur>=a.need&&a.claim){ const r=a.claim(); if(r&&r.ok) n++; } }
     else { const P=Sys.pass.list(S,Sys.host), L=XMI.tab==='daily'?P.daily:P.weekly; for(const m of L) if(m.done&&!m.claimed) tryOne('pass',m.id); if(XMI.tab==='daily'){ const B=Sys.pass.list(S,Sys.host).bonus; if(B.ready&&!B.claimed) tryOne('pass','bonus'); } }   /* o bônus só fica pronto depois de resgatar as diárias: relê */

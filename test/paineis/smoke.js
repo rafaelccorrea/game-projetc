@@ -36,7 +36,7 @@ const scripts=[]; html.replace(/<script>([\s\S]*?)<\/script>/g,(m,c)=>{ scripts.
 console.log('scripts embutidos:',scripts.length,scripts.map(s=>s.length).join(','));
 const main=scripts.reduce((a,b)=>b.length>a.length?b:a,'');
 let ok=run(main,'index.html#main');
-const sysList=(html.match(/\[([^\]]*'loot'[^\]]*)\]\.forEach\(n=>document\.write\('<script src="js\/sys\//)||[])[1], jsList=(html.match(/\[([^\]]*'battle'[^\]]*)\]\.forEach\(n=>document\.write\('<script src="js\//)||[])[1];
+const sysList=(function(){ const m=html.match(/\[([^\]]*'loot'[^\]]*)\]/); if(!m) return ''; let l=m[1]; if(l.indexOf("'fc'")<0) l+=",'fc'"; return l; })()   /* lista de módulos do index (a parte atrás de NEXT_ON não entra; 'fc' é sempre o último) */, jsList=(html.match(/\[([^\]]*'battle'[^\]]*)\]\.forEach\(n=>document\.write\('<script src="js\//)||[])[1];
 const names=l=>(l||'').split(',').map(x=>x.trim().replace(/'/g,'')).filter(Boolean);
 console.log('sys:',names(sysList).join(' '),'| js:',names(jsList).join(' '));
 for(const n of names(sysList)) run(fs.readFileSync(path.join(ROOT,'js/sys',n+'.js'),'utf8'),'sys/'+n+'.js');

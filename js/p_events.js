@@ -9,11 +9,16 @@
    Arte real: assets/icons/menu/events.png, assets/map/world.jpg, assets/map/clock_*.png e clock_shards, Kael (assets/anim/hyb/R), auras (assets/anim/aura),
    chefe (assets/enemies/era6_boss.png), colar (assets/icons/slots), moeda (assets/ui/coin.png). Pedras, essência, ração e fragmento: os SVG do protótipo. Sem emoji.
    DIFERENÇAS CONSCIENTES em relação ao protótipo (para não mostrar dado falso):
-   - TRILHA DE RECOMPENSAS: o Sys.events não tem marcos nem "pontos ganhos" separados do saldo. A aba mostra o mapa, o caminho e o Kael na largada
-     com o aviso "Em breve" (sem marcos, sem números). O Relógio do Festival aparece apagado;
-   - CHEFE DO EVENTO: vida coletiva depende do servidor. A aba mostra o palco do chefe e "Em breve: abre com o online" (sem vida, dano nem tentativas);
-   - PONTOS: uma caixa só (o saldo do Sys.events, com o nome dos pontos do evento), sem "Ganhos (trilha)";
-   - a tela abre na aba LOJA (a única com conteúdo real ao lado das missões); a ordem das abas é a do protótipo;
+   TRILHA e CHEFE: Sys.evtrail (js/sys/evtrail.js; chave Sys.evtrail.DATA.on). trail(S, host, id) / claimTrail(S, host, id, at) e boss(S, host, id) / attack(S, host, id).
+     Com o evento aberto, a tela lê o módulo; em prévia (evento futuro ou Sys.events desligado) lê só Sys.evtrail.DATA.events (sem progresso, sem criar estado).
+   - TRILHA: marcos e "ganhos" do Sys.evtrail (8 marcos no módulo; o protótipo tinha 9: as posições em serpente são geradas para quantos houver).
+     O Kael anda pelo caminho até os pontos ganhos (para no meio do trecho, nunca em cima do marco). Cada marco alcançado é um botão de resgate,
+     e a lista embaixo do mapa diz o prêmio em texto. O Relógio do Festival (9 pedaços) não tem regra no módulo: só aparece apagado no "Em breve";
+     Sys.evtrail DESLIGADO: a aba mostra o mapa, o caminho e o Kael na largada com o aviso "Em breve" (sem marcos, sem números);
+   - CHEFE: vida, ataques do dia, dano e pontos do Sys.evtrail. Sem servidor a vida é só do jogador (aviso pequeno). O botão fixo vira "Atacar".
+     Sys.evtrail DESLIGADO: palco do chefe e "Em breve: abre com o online";
+   - PONTOS: o saldo do Sys.events; com o Sys.evtrail ligado, a caixa também mostra "Ganhos (trilha)" como no protótipo;
+   - a tela abre na aba TRILHA com o Sys.evtrail ligado (como o protótipo); desligado, abre na LOJA (a única com conteúdo real);
    - LOJA: vitrine = a primeira skin do Sys.events ainda não comprada (são duas skins); o resto em páginas de 3. Sem "LENDÁRIO" nem raridade inventada:
      raridade só aparece onde o módulo a tem (o colar, r do item; fragmento = Prismático); materiais dizem "Material", ouro diz "Ouro";
    - missões: as do Sys.events (uma vez cada, valem pelo evento todo). Na carência (fase 'loja') o Sys.events ainda deixa resgatar as completas: a tela segue o módulo;
@@ -21,7 +26,8 @@
      e só mostra "Começa em" com o módulo ligado (desligado, a data não é promessa);
    - sem evento nenhum por abrir: estado vazio "Nenhum evento agora".
    PEDIDO ao engenheiro: incluir 'p_events' na lista de scripts de js/screens.js:823 (não editei) e, para conferir, ligar com ?debug=1&painel=events. */
-const XEVT={ev:null,tab:2,mPage:0,sPage:0,mis:false,buy:null,sig:'',sec:'',hd:'',anim:true};
+const XEVT={ev:null,tab:2,mPage:0,sPage:0,mis:false,buy:null,sig:'',sec:'',hd:'',anim:true,
+  mk:0,mkTo:0,mkEv:null,mkDir:1,mv:null,hit:null,hitT:null};   /* mk = posição do Kael na trilha (em trechos), hit = último ataque ao chefe */
 const EVT_MINH=640, EVT_SPER=3, EVT_MPER=4;
 /* cara de cada evento (só visual; regras e números são do Sys.events). Evento sem tema usa o do Festival. */
 const EVT_TH={
@@ -201,6 +207,36 @@ const EVT_CSS=`.pz{position:relative;flex:1;min-height:0;display:flex;flex-direc
 @keyframes pzfade{from{opacity:0}to{opacity:1}}
 .pz-sheet{width:100%;max-width:520px;max-height:92%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:14px 14px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:pzsu .35s cubic-bezier(.2,1.2,.4,1) both}
 @keyframes pzsu{from{transform:translateY(100%)}to{transform:none}}
+.pz-krun{background-image:url(assets/anim/hyb/R/kael_run_era2_t0.png);background-size:800% 100%;background-repeat:no-repeat;animation:pzsh .66s steps(8,jump-none) infinite}
+.pz-katk{background-image:url(assets/anim/hyb/R/kael_attack_era2_t0.png);background-size:1700% 100%;background-repeat:no-repeat;animation:pzsh 1s steps(17,jump-none) both}
+.pz-mk .pz-fl{position:absolute;inset:0}
+.pz-mk .pz-shd{position:absolute;left:24%;right:24%;bottom:1%;height:9%;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.6),transparent 70%)}
+.pz-prog{filter:drop-shadow(0 0 4px rgba(255,201,74,.95))}
+.pz-ndr{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;background:repeating-conic-gradient(var(--rg) 0deg 9deg,transparent 9deg 24deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 68%);mask:radial-gradient(circle,#000 22%,transparent 68%);animation:pzspin 9s linear infinite;pointer-events:none}
+.pz-nd{position:absolute;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;border:3px solid var(--rc);background:radial-gradient(circle at 50% 35%,#5a4632,#140e0a);display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 10px var(--rg);z-index:2}
+.pz-nd.big{width:60px;height:60px;margin:-30px 0 0 -30px;border-width:4px}
+.pz-nd.go{animation:pzndp 1.1s ease-in-out infinite}
+@keyframes pzndp{0%,100%{transform:scale(1);box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 6px var(--rg)}50%{transform:scale(1.12);box-shadow:0 4px 0 rgba(0,0,0,.55),0 0 22px var(--rc)}}
+.pz-nd.done .pz-ni{filter:saturate(.35) brightness(.7)}
+.pz-nd.lock .pz-ni{filter:grayscale(.5) brightness(.6)}
+.pz-ni{position:relative;width:70%;height:70%;display:flex;align-items:center;justify-content:center}
+.pz-ni img,.pz-ni svg{width:100%;height:100%;object-fit:contain}
+.pz-npt{position:absolute;left:50%;top:100%;transform:translate(-50%,3px);min-width:30px;padding:0 5px;border-radius:7px;background:rgba(14,10,7,.92);border:1px solid var(--rc);font-size:10.5px;font-weight:900;line-height:15px;color:#fff;white-space:nowrap}
+.pz-nck{position:absolute;right:-5px;top:-5px;width:20px;height:20px;border-radius:50%;background:#3fae3c;border:2px solid #0d2410;display:flex;align-items:center;justify-content:center}
+.pz-nbg{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:#ff3b30;border:2px solid #fff;color:#fff;font-size:12px;font-weight:900;line-height:16px;text-align:center;animation:pzdp 1.2s ease-in-out infinite}
+.pz-ms{min-height:48px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:4px 6px 4px 10px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b}
+.pz-ms.go{border-color:#5fd068;background:linear-gradient(90deg,#1f3a1f,#1d1611)}
+.pz-ms.done{opacity:.62}
+.pz-hbar{position:relative;height:20px;border-radius:10px;background:#0e0a07;border:2px solid #000;overflow:hidden}
+.pz-hbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(180deg,#ff9a8a,#c0392b);transition:width .4s ease-out}
+.pz-hbar b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000;white-space:nowrap}
+.pz-hbar .pz-mkr{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.75)}
+.pz-pip{width:15px;height:15px;border-radius:50%;border:2px solid #000;background:#33271d;display:inline-block}
+.pz-pip.on{background:radial-gradient(circle at 35% 35%,#fff3c4,var(--ta) 50%,#3a1a04);animation:pztp 1.6s ease-in-out infinite}
+.pz-bhit{animation:pzbhit .35s ease-out}
+@keyframes pzbhit{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(8px)}100%{filter:none;transform:none}}
+.pz-bdp{position:absolute;right:18%;top:22%;font-family:'Lilita One',sans-serif;line-height:1;white-space:nowrap;z-index:5;animation:pzbdp 1.4s ease-out both;pointer-events:none;text-shadow:0 3px 0 #3a0d0a,0 0 10px #000}
+@keyframes pzbdp{0%{opacity:0;transform:scale(.4)}15%{opacity:1;transform:scale(1.3)}30%{transform:scale(1)}80%{opacity:1;transform:translateY(-24px)}100%{opacity:0;transform:translateY(-36px)}}
 @media (prefers-reduced-motion:reduce){.pz *,.pz *::after{animation:none!important}}`;
 
 /* ---------- leituras do Sys.events isoladas (reserva segura se o módulo não estiver carregado) ---------- */
@@ -239,11 +275,45 @@ function evtModel(){
     shop=(cur.ev.shop||[]).filter(x=>!x.needs||(x.needs==='prism'&&pr)).map(x=>({id:x.id,txt:x.txt,cost:x.cost,limit:x.limit,bought:0,canBuy:false,reward:x.reward})); }
   const ready=mis.filter(m=>m.done&&!m.claimed), readySum=ready.reduce((a,m)=>a+(m.pts|0),0);
   const skins=shop.filter(x=>x.reward&&x.reward.skin), vit=skins.find(x=>x.bought<x.limit)||skins[0]||null, grid=shop.filter(x=>x!==vit);
-  return {on,evs,cur,mis,shop,ready,readySum,vit,grid,canMis:cur.live,shopOpen:cur.live};
+  /* trilha e chefe (Sys.evtrail): lidos do módulo com o evento aberto; prévia = só as regras do DATA (sem criar estado) */
+  let tr=null, bs=null; const cf=etOn()?etCfg(cur.ev.id):null;
+  if(cf){
+    if(cur.live){ try{ tr=Sys.evtrail.trail(S,host,cur.ev.id); }catch(e){ tr=null; } try{ bs=Sys.evtrail.boss(S,host,cur.ev.id); }catch(e){ bs=null; } }
+    else { tr={on:true,earned:0,next:(cf.trail||[])[0]||null,milestones:(cf.trail||[]).map(m=>({at:m.at,name:m.name,reward:Object.assign({},m.reward),reached:false,claimed:false})),ready:0};
+      bs=cf.boss?{on:true,online:false,open:false,name:cf.boss.name,art:cf.boss.art,hp:0,hpMax:0,attemptsLeft:0,killed:false,myDamage:0,bossPts:0,nextDamage:0,nextPts:0}:null; }
+    if(tr&&(!tr.on||!Array.isArray(tr.milestones))) tr=null; if(bs&&!bs.on) bs=null;
+    if(bs) bs.max=(cf.boss&&cf.boss.attemptsPerDay)|0; }
+  return {on,evs,cur,mis,shop,ready,readySum,vit,grid,canMis:cur.live,shopOpen:cur.live,tr,bs};
 }
+/* Sys.evtrail ligado? e a configuração do evento (o que não estiver lá usa 'default', igual ao módulo) */
+const etOn=()=>!!(window.Sys&&Sys.evtrail&&Sys.evtrail.DATA&&Sys.evtrail.DATA.on===true&&Sys.evtrail.trail&&Sys.evtrail.boss);
+const etCfg=id=>{ const E=(Sys.evtrail.DATA&&Sys.evtrail.DATA.events)||{}; return E[id]||E.default||null; };
+const evtAbbr=v=>{ try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v); }catch(e){} try{ if(typeof kf==='function') return kf(v); }catch(e){} return evtN(v); };
+/* texto do prêmio de um marco */
+function etRw(rw){ const a=[]; if(!rw) return ''; if(rw.goldk) a.push('Ouro'); if(rw.forge) a.push(rw.forge+' Pedras de forja'); if(rw.food) a.push(rw.food+' Ração'); if(rw.essence) a.push(rw.essence+' Essência'); if(rw.frame) a.push('Moldura do evento'); return a.join(' · '); }
+const EVT_FRAME='<svg class="pz-bob" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#ffe07a" stroke-width="2.6"></rect><rect x="7" y="7" width="10" height="10" rx="2" fill="#8a4dff" stroke="#fff3c4" stroke-width="1.2"></rect><circle cx="3.5" cy="3.5" r="1.8" fill="#ffc94a"></circle><circle cx="20.5" cy="20.5" r="1.8" fill="#ffc94a"></circle></svg>';
+function etIc(rw){ rw=rw||{}; if(rw.frame) return EVT_FRAME; if(rw.essence) return evtSvgIc('ess'); if(rw.forge) return evtSvgIc('stone'); if(rw.food) return evtSvgIc('food'); return '<img class="pz-cspin" src="assets/ui/coin.png" alt="">'; }
+/* posições dos marcos no mini-mapa: serpente de baixo para cima, 3 por linha (a do protótipo para 9 marcos) */
+function etPos(n){ const rows=Math.max(1,Math.ceil(n/3)), out=[];
+  for(let i=0;i<n;i++){ const r=Math.floor(i/3), k=i%3, y=rows===1?53:81-r*(56/(rows-1)); out.push([r%2?[75,48,21][k]:[27,53,82][k],+y.toFixed(1)]); } return out; }
+/* onde o Kael fica (em "trechos": 0 = largada, i = marco i). Para no meio do trecho, nunca em cima de um marco */
+function etF(tr){ const P=[0].concat(tr.milestones.map(m=>m.at)), e=tr.earned|0;
+  for(let i=0;i<P.length-1;i++) if(e<P[i+1]){ const t=(e-P[i])/Math.max(1,P[i+1]-P[i]); return i+Math.max(.42,Math.min(.58,t)); }
+  return Math.max(0,P.length-1.5); }
+function etAt(CO,f){ const i=Math.max(0,Math.min(CO.length-2,Math.floor(f))), t=Math.max(0,Math.min(1,f-i)), a=CO[i], b=CO[i+1]||a; return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]; }
+const etReduced=()=>{ try{ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; } };
+/* o Kael corre pelo caminho (passa pelas curvas) até a posição nova; mexe só no elemento, sem redesenhar a tela */
+function etRun(CO){ if(XEVT.mv) return; XEVT.mv=setInterval(()=>{ const d=XEVT.mkTo-XEVT.mk;
+    const el=typeof document!=='undefined'&&document.getElementById?document.getElementById('pz_mk'):null;
+    if(Math.abs(d)<.05||!el){ XEVT.mk=XEVT.mkTo; clearInterval(XEVT.mv); XEVT.mv=null; if(el){ const p=etAt(CO,XEVT.mk); el.style.left=p[0].toFixed(2)+'%'; el.style.top=p[1].toFixed(2)+'%'; const sp=el.querySelector&&el.querySelector('.pz-sp'); if(sp) sp.className='pz-sp pz-kid'; } return; }
+    const a=etAt(CO,XEVT.mk); XEVT.mk+=Math.sign(d)*Math.min(Math.abs(d),.05); const b=etAt(CO,XEVT.mk); if(b[0]<a[0]-.01) XEVT.mkDir=-1; else if(b[0]>a[0]+.01) XEVT.mkDir=1;
+    el.style.left=b[0].toFixed(2)+'%'; el.style.top=b[1].toFixed(2)+'%'; const fl=el.querySelector&&el.querySelector('.pz-fl'); if(fl) fl.style.transform=XEVT.mkDir<0?'scaleX(-1)':'none';
+    const sp=el.querySelector&&el.querySelector('.pz-sp'); if(sp&&sp.className.indexOf('pz-krun')<0) sp.className='pz-sp pz-krun'; },40); }
+function etStop(){ if(XEVT.mv){ clearInterval(XEVT.mv); XEVT.mv=null; XEVT.mk=XEVT.mkTo; } if(XEVT.hitT){ clearTimeout(XEVT.hitT); XEVT.hitT=null; } }
 /* assinatura do que muda por fora (fase, pontos, progresso, compras): o tick redesenha só quando ela muda */
 function evtSig(M){ if(!M) return 'x'; if(!M.cur) return 'vazio|'+M.on; const c=M.cur;
-  return [M.on,M.evs.map(x=>x.ev.id+':'+x.st).join(','),c.pts,M.mis.map(m=>m.p+(m.claimed?'c':'')).join(','),M.shop.map(x=>x.bought+(x.canBuy?'+':'')).join(',')].join('|'); }
+  return [M.on,M.evs.map(x=>x.ev.id+':'+x.st).join(','),c.pts,M.mis.map(m=>m.p+(m.claimed?'c':'')).join(','),M.shop.map(x=>x.bought+(x.canBuy?'+':'')).join(','),
+    M.tr?M.tr.earned+':'+M.tr.milestones.map(m=>(m.reached?1:0)+(m.claimed?'c':'')).join(''):'-',M.bs?[M.bs.hp,M.bs.hpMax,M.bs.attemptsLeft,M.bs.killed,M.bs.open,M.bs.online].join(':'):'-'].join('|'); }
 
 /* ---------- pedaços de desenho ---------- */
 const evtTok=(f,z)=>`<svg ${z?'width="'+z+'" height="'+z+'"':'class="pz-tok" width="32" height="32"'} viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="${f}" stroke="#fff3c4" stroke-width="1.7"></circle><path d="M12 5.5 L13.9 9.6 L18.3 10 L15 13 L16 17.4 L12 15.1 L8 17.4 L9 13 L5.7 10 L10.1 9.6 Z" fill="#ffe07a" stroke="#6a3a08" stroke-width=".9" stroke-linejoin="round"></path></svg>`;
@@ -279,7 +349,32 @@ function evtBanner(M,th){ const c=M.cur, ev=c.ev, days=Math.round((evtMs(ev.end)
       <span class="pz-timer" role="timer" aria-label="${evtEsc(aria)}"><svg class="pz-hg" width="15" height="20" viewBox="0 0 12 16" aria-hidden="true"><path d="M1 1 H11 M1 15 H11" stroke="#c77a12" stroke-width="1.6" stroke-linecap="round"></path><path d="M2.2 1.5 C2.2 5.5 5.2 6.6 5.6 8 C5.2 9.4 2.2 10.5 2.2 14.5 H9.8 C9.8 10.5 6.8 9.4 6.4 8 C6.8 6.6 9.8 5.5 9.8 1.5 Z" fill="rgba(255,240,200,0.12)" stroke="#ffe07a" stroke-width="0.9"></path><path class="pz-sT" d="M3.4 3.2 H8.6 C8 5.6 6.4 6.6 6 7.4 C5.6 6.6 4 5.6 3.4 3.2 Z" fill="#ffc94a"></path><path class="pz-sB" d="M3 14 C3.4 11.6 5.2 10.6 6 10.4 C6.8 10.6 8.6 11.6 9 14 Z" fill="#ffc94a"></path></svg>
         <span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><span style="font-size:10px;font-weight:800;color:#e8dccb;white-space:nowrap">${lbl}</span><span class="pz-lil" style="font-size:16px;color:#ffe07a;font-variant-numeric:tabular-nums;white-space:nowrap">${clk}</span></span></span></div></div>`; }
 
-function evtTrail(M,th){ const pre=!M.cur.live, path=[EVT_START].concat(EVT_NODES).map(c=>c[0]+','+c[1]).join(' ');
+/* TRILHA com o Sys.evtrail: mapa, caminho, marcos (botões de resgate), Kael andando pelos pontos ganhos e a lista dos prêmios */
+function etTrail(M,th){ const T=M.tr, c=M.cur, pre=!c.live, n=T.milestones.length, NP=etPos(n), CO=[EVT_START].concat(NP), last=n-1;
+  const to=pre?.5:etF(T); if(XEVT.mkEv!==c.ev.id||etReduced()||pre){ etStop(); XEVT.mk=to; XEVT.mkEv=c.ev.id; } XEVT.mkTo=to;
+  const moving=Math.abs(XEVT.mkTo-XEVT.mk)>.001, mk=XEVT.mk, mp=etAt(CO,mk);
+  const seg=Math.min(CO.length-2,Math.floor(mk)), dir=moving?XEVT.mkDir:(CO[seg+1]&&CO[seg+1][0]<CO[seg][0]?-1:1); if(!moving) XEVT.mkDir=dir;
+  const all=CO.map(p=>p[0]+','+p[1]).join(' '), done=[]; for(let k=0;k<=Math.min(Math.floor(mk),CO.length-1);k++) done.push(CO[k][0]+','+CO[k][1]); done.push(mp[0].toFixed(2)+','+mp[1].toFixed(2));
+  const nx=T.next, hint=pre?'Começa em breve · veja os prêmios':nx?'Próximo marco: '+(nx.name||'')+' em '+evtN(nx.at-T.earned)+' pts':'Trilha completa!';
+  const nodes=T.milestones.map((m,i)=>{ const big=!!(m.reward&&m.reward.frame)||i===last, go=m.reached&&!m.claimed, rc=big?'#ffb21e':th.a, rg=big?'rgba(255,178,30,.75)':'rgba(176,124,255,.6)', p=NP[i];
+    const st=m.claimed?'resgatado':go?'pronto para resgatar':pre?'prévia':'faltam '+Math.max(0,m.at-T.earned)+' pontos';
+    return `${big?`<span class="pz-ndr" style="left:${p[0]}%;top:${p[1]}%;--rg:${rg}"></span>`:''}<button data-x="node" data-at="${m.at}" class="pz-nd${big?' big':''}${go?' go':m.claimed?' done':m.reached?'':' lock'}" aria-label="${evtEsc(m.name)}: ${evtEsc(etRw(m.reward))}, marco de ${m.at} pontos, ${st}" style="left:${p[0]}%;top:${p[1]}%;--rc:${rc};--rg:${rg};animation-delay:${(i*.09).toFixed(2)}s">
+      <span class="pz-ni" aria-hidden="true">${etIc(m.reward)}</span><span class="pz-npt">${evtN(m.at)}</span>
+      ${m.claimed?'<span class="pz-nck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>':''}${go?'<span class="pz-nbg" aria-hidden="true">!</span>':''}</button>`; }).join('');
+  const list=T.milestones.map(m=>{ const go=m.reached&&!m.claimed;
+    return `<div class="pz-ms${go?' go':m.claimed?' done':''}"><span style="min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:13px;font-weight:900">${evtEsc(m.name)} <span style="color:#c9b9a2;font-weight:800">· ${evtN(m.at)} pts</span></span><span style="font-size:11.5px;font-weight:800;color:#e8dccb">${evtEsc(etRw(m.reward))}</span></span>
+      <button data-x="node" data-at="${m.at}" class="pz-cl ${m.claimed?'ok':go?'go':'wait'}" aria-label="${evtEsc(m.name)}: ${m.claimed?'resgatado':go?'resgatar '+evtEsc(etRw(m.reward)):'faltam '+Math.max(0,m.at-T.earned)+' pontos'}"><span style="font-size:13px">${m.claimed?'resgatado':go?'Resgatar':pre?'prévia':'faltam '+evtN(Math.max(0,m.at-T.earned))}</span></button></div>`; }).join('');
+  const html=`<div class="pz-shards" role="status" aria-label="${evtEsc(hint)}"><span style="flex:1;font-size:11.5px;font-weight:900;color:#e8dccb">${evtEsc(hint)}</span>${pre?'<span class="pz-chip" style="border-color:#4aa3ff;color:#cfe6ff">prévia</span>':''}</div>
+    <div class="pz-trail" style="--ta:${th.a};--fog:${th.fog}">
+    <div class="pz-map" style="background-image:url(${th.map});filter:${th.mapF}${pre?' grayscale(.4) brightness(.8)':''}"></div><div class="pz-fog"></div><div class="pz-vg"></div>
+    <svg class="pz-pth" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${all}" fill="none" stroke="rgba(14,8,4,.78)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline><polyline class="pz-dash" points="${all}" fill="none" stroke="rgba(255,240,210,.55)" stroke-width="3" stroke-dasharray="4 10" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>${pre?'':`<polyline class="pz-prog" points="${done.join(' ')}" fill="none" stroke="#ffc94a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>`}</svg>
+    <span class="pz-flag" style="left:${EVT_START[0]}%;top:${EVT_START[1]}%"><svg width="4" height="30" aria-hidden="true"><rect width="3" height="30" fill="#2a180a"></rect></svg><i></i></span>
+    ${nodes}
+    ${pre?'':`<div id="pz_mk" class="pz-mk" style="left:${mp[0].toFixed(2)}%;top:${mp[1].toFixed(2)}%" role="img" aria-label="Você: ${T.earned} pontos ganhos na trilha"><span class="pz-shd"></span><div class="pz-fl" style="transform:${dir<0?'scaleX(-1)':'none'}"><div class="pz-sp ${moving?'pz-krun':'pz-kid'}" style="position:absolute;inset:0"></div></div><span class="pz-mkTag">VOCÊ</span></div>`}</div>
+    <div style="flex:none;display:flex;flex-direction:column;gap:4px" role="list" aria-label="Prêmios da trilha">${list}</div>`;
+  if(moving&&!pre) setTimeout(()=>etRun(CO),0);
+  return html; }
+function evtTrail(M,th){ if(M.tr) return etTrail(M,th); const pre=!M.cur.live, path=[EVT_START].concat(EVT_NODES).map(c=>c[0]+','+c[1]).join(' ');
   const shards=th.shards?`<div class="pz-shards" role="img" aria-label="Relógio do Festival: pedaços apagados, a trilha chega em breve"><span class="pz-clk" aria-hidden="true"></span><span style="font-size:11.5px;font-weight:900;color:#ffe07a;white-space:nowrap">Relógio do Festival</span><span style="flex:1"></span>${Array.from({length:9},(_,i)=>`<span class="pz-sh" aria-hidden="true" style="background-image:url(assets/map/clock_shards/shard_${i}.png)"></span>`).join('')}</div>`:'';
   return `${shards}<div class="pz-trail" style="--ta:${th.a};--fog:${th.fog}">
     <div class="pz-map" style="background-image:url(${th.map});filter:${th.mapF} grayscale(.35) brightness(.8)"></div><div class="pz-fog"></div><div class="pz-vg"></div>
@@ -288,7 +383,27 @@ function evtTrail(M,th){ const pre=!M.cur.live, path=[EVT_START].concat(EVT_NODE
     <div class="pz-mk" style="left:${EVT_START[0]+9}%;top:${EVT_START[1]}%" role="img" aria-label="Você, na largada da trilha"><div class="pz-kid" style="position:absolute;inset:0"></div><span class="pz-mkTag">VOCÊ</span></div>
     <div class="pz-card" role="note"><span class="pz-lil pz-ol" style="font-size:19px">Trilha de recompensas</span><span class="pz-chip" style="border-color:#4aa3ff;color:#cfe6ff">Em breve</span><span style="font-size:12px;font-weight:800;color:#e8dccb;line-height:1.25">Os pontos do evento vão levar o Kael pelo mapa até os prêmios.${pre?'':' Por enquanto, gaste-os na loja.'}</span></div></div>`; }
 
-function evtBoss(M,th){ const B=th.boss;
+/* CHEFE com o Sys.evtrail: palco (arte do módulo), vida, ataques do dia, dano total e o resultado do último ataque */
+function etBoss(M,th){ const b=M.bs, B=th.boss, c=M.cur, pre=!c.live, img=b.art?'assets/enemies/'+evtEsc(b.art)+'.png':B.img, nm=b.name||B.n;
+  const hit=XEVT.hit&&XEVT.hit.ev===c.ev.id&&Date.now()-XEVT.hit.t<1400?XEVT.hit:null;
+  const emb=[0,1,2,3,4,5].map(i=>`<span class="pz-emb" style="right:${8+i*7}%;bottom:${12+(i*11)%30}%;animation-delay:${(-i*.4).toFixed(1)}s"></span>`).join('');
+  const pct=b.hpMax>0?Math.max(0,Math.min(100,b.hp/b.hpMax*100)):0, max=b.max||0;
+  const stage=`<div class="pz-boss" style="--ta:${th.a};--fog:${B.fog};--bc:${B.c};--mc:${B.mist}">
+    <div class="pz-map" style="background-image:url(${th.map});filter:${B.mapF}"></div><div class="pz-fog"></div><div class="pz-mist"></div><div class="pz-flr"></div>${emb}
+    <div class="pz-bfig" role="img" aria-label="${evtEsc(nm)}, chefe do evento${b.killed?', derrotado':''}"><span class="pz-rune"></span><div class="pz-au10" style="filter:hue-rotate(${B.hue}) saturate(1.4)"></div><div class="${hit?'pz-bhit':''}" style="position:absolute;inset:0"><div class="pz-bimg" style="background-image:url(${img})${b.killed?';filter:grayscale(.8) brightness(.55)':''}"></div></div></div>
+    <div class="pz-kfig" aria-hidden="true"><div class="pz-au13"></div><div class="${hit?'pz-katk':'pz-kid'}" style="position:absolute;inset:0"></div></div>
+    ${hit?`<span class="pz-bdp" role="status" style="color:${hit.killed?'#ffd23a':'#fff'};font-size:${hit.killed?34:28}px">-${evtEsc(evtAbbr(hit.dmg))}<span style="display:block;font-size:18px;color:#7ef08a;margin-top:4px">+${hit.pts} pts</span></span>`:''}
+    <div style="position:absolute;left:10px;top:8px;right:10px;z-index:4;display:flex;flex-direction:column;line-height:1.1"><span style="font-size:10.5px;font-weight:900;color:${B.c};letter-spacing:1px;text-shadow:0 1px 2px #000">CHEFE DO EVENTO</span><span class="pz-lil pz-ol" style="font-size:21px">${evtEsc(nm)}</span></div></div>`;
+  if(pre) return stage+`<div class="pz-lock" role="note">O chefe aparece com o evento ativo</div>`;
+  const pips=Array.from({length:max},(_,i)=>`<span class="pz-pip${b.open&&!b.killed&&i<b.attemptsLeft?' on':''}"></span>`).join('');
+  return stage+`<div style="flex:none;display:flex;flex-direction:column;gap:5px">
+    <span style="display:flex;justify-content:space-between;gap:6px;font-size:11.5px;font-weight:900;color:#e8dccb"><span>Vida do chefe</span><span style="color:#c9b9a2">${b.online?'compartilhada com todos':'só a sua'}</span></span>
+    <div class="pz-hbar" role="progressbar" aria-label="Vida do chefe" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><i style="width:${pct.toFixed(1)}%"></i><span class="pz-mkr" style="left:25%"></span><span class="pz-mkr" style="left:50%"></span><span class="pz-mkr" style="left:75%"></span><b>${b.killed?'Chefe derrotado!':evtEsc(evtAbbr(b.hp))+' / '+evtEsc(evtAbbr(b.hpMax))+' ('+Math.round(pct)+'%)'}</b></div>
+    ${b.online?'':'<span class="pz-note" style="font-size:11px">Vida compartilhada com todos quando o online abrir · por enquanto, só a sua</span>'}
+    ${b.open&&!b.killed&&b.attemptsLeft>0?`<div style="display:flex;flex-wrap:wrap;gap:4px"><span class="pz-chip" style="border-color:#3fae3c;color:#b8f5bd">Próximo ataque: +${b.nextPts|0} pts</span><span class="pz-chip">dano ${evtEsc(evtAbbr(b.nextDamage))}</span></div>`:''}
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px"><span style="font-size:12px;font-weight:900">Seu dano total: <span style="color:#ffe07a">${evtEsc(evtAbbr(b.myDamage))}</span>${b.bossPts?` <span style="color:#c9b9a2">· ${evtN(b.bossPts)} pts</span>`:''}</span>
+      <span style="display:flex;align-items:center;gap:6px;--ta:${th.a}"><span style="font-size:11px;font-weight:900;color:#c9b9a2">Ataques hoje ${b.attemptsLeft}/${max}</span>${pips}</span></div></div>`; }
+function evtBoss(M,th){ if(M.bs) return etBoss(M,th); const B=th.boss;
   const emb=[0,1,2,3,4,5].map(i=>`<span class="pz-emb" style="right:${8+i*7}%;bottom:${12+(i*11)%30}%;animation-delay:${(-i*.4).toFixed(1)}s"></span>`).join('');
   return `<div class="pz-boss" style="--ta:${th.a};--fog:${B.fog};--bc:${B.c};--mc:${B.mist}">
     <div class="pz-map" style="background-image:url(${th.map});filter:${B.mapF}"></div><div class="pz-fog"></div><div class="pz-mist"></div><div class="pz-flr"></div>${emb}
@@ -340,7 +455,13 @@ function evtBuySheet(M){ const x=M.shop.find(y=>y.id===XEVT.buy); if(!x){ XEVT.b
     <div style="display:flex;gap:8px"><button data-x="buyno" class="pz-ghost" style="flex:1;min-height:52px">Cancelar</button><button data-x="buyok" class="pz-gold" style="flex:1.4;min-height:52px"><span style="position:relative;z-index:1">Pagar ${evtN(x.cost)}</span></button></div></div></div>`; }
 
 /* botão fixo do rodapé: a ação depende da aba (igual ao protótipo, trocando o que ainda não existe pelas missões) */
-function evtFoot(M){ const c=M.cur;
+function evtFoot(M){ const c=M.cur, b=M.bs;
+  if(XEVT.tab===1&&b){ const max=b.max||0;
+    if(!c.live||!b.open) return {a:'attack',cls:'off',lbl:'O chefe aparece com o evento ativo'};
+    if(b.killed) return {a:'attack',cls:'off',lbl:'Chefe derrotado!'};
+    if(b.attemptsLeft<=0) return {a:'attack',cls:'off',lbl:'Volte amanhã'};
+    return {a:'attack',cls:'pulse',lbl:'Atacar · '+b.attemptsLeft+'/'+max}; }
+  if(XEVT.tab===0&&M.tr&&c.live&&M.tr.ready>0) return {a:'trall',cls:'pulse',lbl:'Resgatar trilha · '+M.tr.ready+(M.tr.ready>1?' prêmios':' prêmio')};
   if(XEVT.tab===2&&M.vit&&M.vit.canBuy) return {a:'buy',id:M.vit.id,cls:'pulse',lbl:'Comprar '+evtSkinName(M.vit)+' · '+evtN(M.vit.cost)};
   if(M.readySum>0) return {a:'misall',cls:'pulse',lbl:'Resgatar missões · +'+evtN(M.readySum)+' pts'};
   if(XEVT.tab===2&&c.live) return {a:'misopen',cls:'',lbl:'Ganhar mais pontos'};
@@ -355,10 +476,10 @@ function scrEvents(){
   if(!c.live&&XEVT.buy) XEVT.buy=null;
   const evs=`<div class="pz-evs" role="tablist" aria-label="Eventos">${M.evs.map((x,i)=>`<button data-x="ev" data-id="${evtEsc(x.ev.id)}" class="pz-ev pz-inR" role="tab" aria-selected="${x===c}" aria-label="${evtEsc(x.ev.name)}, ${tag[x.st].toLowerCase()}" style="animation-delay:${i*.06}s"><img src="assets/icons/menu/events.png" alt=""><span style="min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.1"><span style="font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${evtEsc(x.ev.name)}</span><span><span class="pz-tag ${x.st}">${tag[x.st]}</span></span></span></button>`).join('')}</div>`;
   const nReady=M.ready.length;
-  const pts=`<div class="pz-pts" style="--t1:${th.t1};--ta:${th.a}"><div class="pz-pbox" role="group" aria-label="${evtEsc(c.ev.points||'Pontos do evento')}: ${c.pts}">${evtTok(th.tok)}<span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${evtEsc(c.ev.points||'Pontos do evento')} · saldo</small><b class="pz-lil pz-ol" style="font-size:22px;color:#ffe07a">${evtN(c.pts)}</b></span></div>
+  const pts=`<div class="pz-pts" style="--t1:${th.t1};--ta:${th.a}"><div class="pz-pbox" role="group" aria-label="${evtEsc(c.ev.points||'Pontos do evento')}: ${c.pts}">${evtTok(th.tok)}<span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${evtEsc(c.ev.points||'Pontos do evento')} · saldo</small><b class="pz-lil pz-ol" style="font-size:22px;color:#ffe07a">${evtN(c.pts)}</b></span>${M.tr?`<span style="width:1px;align-self:stretch;background:rgba(255,236,200,.18)"></span><span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap">Ganhos (trilha)</small><b class="pz-lil pz-ol" style="font-size:22px;color:#fff">${evtN(M.tr.earned)}</b></span>`:''}</div>
     <button data-x="misopen" class="pz-mbtn${M.readySum>0?' go':''}" aria-label="Abrir missões do evento${nReady?', '+nReady+' prontas':''}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 H20 M9 12 H20 M9 18 H20"></path><polyline points="3 6 4.5 7.5 7 5"></polyline><polyline points="3 12 4.5 13.5 7 11"></polyline><polyline points="3 18 4.5 19.5 7 17"></polyline></svg>Missões${nReady?`<span class="pz-dot" style="top:-6px;right:-6px">${nReady}</span>`:''}</button></div>`;
   const vDot=M.vit&&M.vit.canBuy?1:0;
-  const tabs=`<div class="pz-tabs" role="tablist" aria-label="Seções do evento">${[['Trilha',0,0,1],['Chefe',1,0,1],['Loja',2,vDot,0]].map(t=>`<button data-x="tab" data-i="${t[1]}" class="pz-tab" role="tab" aria-selected="${XEVT.tab===t[1]}">${t[0]}${t[3]?'<span class="pz-soon">em breve</span>':''}${t[2]?`<span class="pz-dot">${t[2]}</span>`:''}</button>`).join('')}</div>`;
+  const tabs=`<div class="pz-tabs" role="tablist" aria-label="Seções do evento">${[['Trilha',0,M.tr&&c.live?M.tr.ready:0,M.tr?0:1],['Chefe',1,M.bs&&c.live&&M.bs.open&&!M.bs.killed?M.bs.attemptsLeft:0,M.bs?0:1],['Loja',2,vDot,0]].map(t=>`<button data-x="tab" data-i="${t[1]}" class="pz-tab" role="tab" aria-selected="${XEVT.tab===t[1]}">${t[0]}${t[3]?'<span class="pz-soon">em breve</span>':''}${t[2]?`<span class="pz-dot">${t[2]}</span>`:''}</button>`).join('')}</div>`;
   const body=XEVT.tab===0?evtTrail(M,th):XEVT.tab===1?evtBoss(M,th):evtShop(M,th);
   const F=evtFoot(M);
   V.innerHTML=xWrap(d,XEVT.anim?'f-in':'',`<div class="pz"><div id="pz_scroll" class="x-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:8px 12px 6px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 18%,#2e2040 0%,#1d1611 45%,#16110d 80%)">
@@ -385,7 +506,35 @@ function evtTryBuy(M,id){ const x=M.shop.find(y=>y.id===id); if(!x) return;
   if(x.bought>=x.limit){ evtSnd('ui_tap'); evtToast('Limite do evento atingido'); return; }
   if(M.cur.pts<x.cost){ evtSnd('ui_tap'); evtToast('Faltam '+evtN(x.cost-M.cur.pts)+' pontos. Faça as missões do evento'); return; }
   evtSnd('ui_tap'); XEVT.buy=id; render(); }
-function evtClick(b){
+/* ---------- trilha e chefe (só pelo Sys.evtrail) ---------- */
+const ET_WHY={off:'A trilha chega em breve',id:'Marco indisponível',done:'Prêmio já resgatado',closed:'O evento já fechou',tries:'Volte amanhã',dead:'Chefe derrotado!'};
+const etGotTxt=g=>{ const t=evtGot(g); return (g&&g.frame?(t?t+' · ':'')+'moldura do evento':t); };
+function etNode(M,at){ const T=M.tr; if(!T) return; const m=T.milestones.find(x=>x.at===at); if(!m) return;
+  if(!M.cur.live){ evtSnd('ui_tap'); evtToast(m.name+' · '+evtN(m.at)+' pts (prévia)'); return; }
+  if(m.claimed){ evtSnd('ui_tap'); evtToast(m.name+': já resgatado'); return; }
+  if(!m.reached){ evtSnd('ui_tap'); evtToast(m.name+': faltam '+evtN(m.at-T.earned)+' pontos'); return; }
+  let r=null; try{ r=Sys.evtrail.claimTrail(S,evtHost(),M.cur.ev.id,m.at); }catch(e){ r=null; }
+  if(r&&r.ok){ const g=etGotTxt(r.got); evtSnd(m.reward&&m.reward.frame?'legendary':'claim'); evtChanged(); evtToast(m.name+' foi para a sua mochila'+(g?' · '+g:'')); }
+  else { evtSnd('ui_tap'); evtToast(r&&r.reason==='points'?m.name+': faltam '+evtN(m.at-T.earned)+' pontos':(r&&ET_WHY[r.reason])||'Resgate indisponível agora'); }
+  render(); }
+function etClaimAll(M){ const T=M.tr; if(!T||!M.cur.live) return; let n=0, big=false, why='';
+  for(const m of T.milestones){ if(!m.reached||m.claimed) continue; let r=null; try{ r=Sys.evtrail.claimTrail(S,evtHost(),M.cur.ev.id,m.at); }catch(e){ r=null; }
+    if(r&&r.ok){ n++; if(m.reward&&m.reward.frame) big=true; } else if(r&&!why) why=ET_WHY[r.reason]||''; }
+  if(n){ evtSnd(big?'legendary':'claim'); evtChanged(); evtToast(n+(n>1?' prêmios da trilha resgatados':' prêmio da trilha resgatado')); } else { evtSnd('ui_tap'); if(why) evtToast(why); }
+  render(); }
+function etAttack(M){ const b=M.bs; if(!b) return;
+  if(!M.cur.live||!b.open){ evtSnd('ui_tap'); evtToast('O chefe aparece com o evento ativo'); return; }
+  let r=null; try{ r=Sys.evtrail.attack(S,evtHost(),M.cur.ev.id); }catch(e){ r=null; }
+  if(!r||!r.ok){ evtSnd('ui_tap'); evtToast((r&&r.reason==='closed'?'O chefe aparece com o evento ativo':r&&ET_WHY[r.reason])||'Ataque indisponível agora'); render(); return; }
+  evtSnd('hit'); evtChanged(); XEVT.hit={ev:M.cur.ev.id,dmg:r.dmg,pts:r.pts,killed:!!r.killed,t:Date.now()};
+  evtToast('Dano '+evtAbbr(r.dmg)+' · +'+evtN(r.pts)+' pontos do evento'+(r.killed?' · Chefe derrotado!':''));
+  if(XEVT.hitT) clearTimeout(XEVT.hitT);
+  XEVT.hitT=setTimeout(()=>{ XEVT.hitT=null; try{ if(window.Panels&&Panels.cur&&Panels.cur()===Panels.defs.events) render(); }catch(e){} },1450);
+  render(); }
+/* mantém a rolagem depois de atacar/resgatar (o render troca o conteúdo e voltava ao topo); troca de aba/evento continua no topo */
+function evtClick(b){ const a=b&&b.dataset&&b.dataset.x, keep=a&&a!=='tab'&&a!=='ev'; let sc=null, top=0; try{ sc=V.querySelector('.x-scroll'); top=sc?sc.scrollTop:0; }catch(e){}
+  const r=evtClick0(b); if(keep){ try{ const s2=V.querySelector('.x-scroll'); if(s2) s2.scrollTop=top; }catch(e){} } return r; }
+function evtClick0(b){
   const a=b.dataset.x; if(!evtOk()) return; const M=evtModel(); if(!M.cur) return;
   if(a==='ev'){ const id=b.dataset.id; if(id&&id!==XEVT.ev){ evtSnd('ui_tap'); XEVT.ev=id; XEVT.mPage=0; XEVT.sPage=0; XEVT.buy=null; XEVT.mis=false; render(); } return; }
   if(a==='tab'){ const i=parseInt(b.dataset.i,10); if(i>=0&&i<=2&&i!==XEVT.tab){ evtSnd('ui_tap'); XEVT.tab=i; render(); } return; }
@@ -398,6 +547,9 @@ function evtClick(b){
     if(!m.done){ evtSnd('ui_tap'); evtToast('Faltam '+evtN(m.need-m.p)+' para concluir'); return; }
     evtClaim(M,[m.id]); render(); return; }
   if(a==='misall'||(a==='foot'&&b.dataset.a==='misall')){ if(!M.ready.length){ evtSnd('ui_tap'); return; } evtClaim(M,M.ready.map(m=>m.id)); XEVT.mis=false; render(); return; }
+  if(a==='node'){ etNode(M,parseInt(b.dataset.at,10)); return; }
+  if(a==='foot'&&b.dataset.a==='trall'){ etClaimAll(M); return; }
+  if(a==='foot'&&b.dataset.a==='attack'){ etAttack(M); return; }
   if(a==='foot'){ if(b.dataset.a==='buy') evtTryBuy(M,b.dataset.id); else { evtSnd('ui_tap'); XEVT.mis=true; XEVT.mPage=0; render(); } return; }
   if(a==='buy'){ evtTryBuy(M,b.dataset.id); return; }
   if(a==='buyno'){ evtSnd('ui_tap'); XEVT.buy=null; render(); return; }
@@ -413,5 +565,6 @@ Panels.add('events',{title:'Eventos',render:scrEvents,click:evtClick,
       if(M.cur&&M.cur.endsAt){ const k=evtClock(M.cur.endsAt-evtNow()); if(k.sec!==XEVT.sec){ XEVT.sec=k.sec; const el=document.getElementById('pz_sec'); if(el) el.textContent=k.sec; }
         if(k.head!==XEVT.hd){ XEVT.hd=k.head; const eh=document.getElementById('pz_hd'); if(eh) eh.textContent=k.head; } } }catch(e){} },
   busy(){ return false; },
-  onOpen(o){ XEVT.tab=2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.anim=true; if(o&&o.event) XEVT.ev=o.event; if(o&&o.missions) XEVT.mis=true; },
-  onClose(){ XEVT.mis=false; XEVT.buy=null; } });
+  onOpen(o){ etStop(); XEVT.tab=etOn()?0:2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; XEVT.mkEv=null; XEVT.anim=true;
+    if(o&&o.event) XEVT.ev=o.event; if(o&&o.missions) XEVT.mis=true; if(o&&(o.tab===0||o.tab===1||o.tab===2)) XEVT.tab=o.tab; },
+  onClose(){ etStop(); XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; } });

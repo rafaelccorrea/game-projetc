@@ -25,6 +25,11 @@ let bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 4 && bt.every(b 
 const o = g.S.sys.pass; const d0 = L0.daily[0]; const id0 = d0.id; const k0 = (P.DATA.daily.find(x => x.id === id0)).k; def.click(btn('claim', { id: id0, src: 'pass' })); assert(toasts.some(t => /não pode ser resgatada/.test(t)), 'não deixa resgatar incompleta');
 P.track(g.S, host, k0, d0.need); def.render(); has('Resgatar'); def.click(btn('claim', { id: id0, src: 'pass' })); assert(changed >= 1); assert(P.list(g.S, host).daily.find(m => m.id === id0).claimed, 'ficou resgatada'); has('Feito'); out.push('resgatar: só quando pronta; marca Feito; statsChanged');
 def.click(btn('claim', { id: id0, src: 'pass' })); out.push('resgatar de novo: avisa e não duplica');
+// 2b) B-27: diária dá XP do JOGADOR (Sys.level), como no Passe antigo
+{ const L = g.Sys.level; let calls = []; const o1 = L.onMission, o2 = L.onDailyBonus; L.onMission = (...a) => { calls.push('m'); return { levels: 0 }; }; L.onDailyBonus = (...a) => { calls.push('b'); return { levels: 0 }; };
+  const L3 = P.list(g.S, host); const w = L3.weekly[0]; const d1 = L3.daily.find(m => !m.claimed); const k1 = P.DATA.daily.find(x => x.id === d1.id).k; P.track(g.S, host, k1, d1.need); def.render(); def.click(btn('claim', { id: d1.id, src: 'pass' })); assert.deepStrictEqual(calls, ['m'], 'diária dá XP do jogador');
+  const kw = P.DATA.weekly.find(x => x.id === w.id).k; P.track(g.S, host, kw, w.need); calls = []; def.click(btn('tab', { t: 'weekly' })); def.click(btn('claim', { id: w.id, src: 'pass' })); assert.deepStrictEqual(calls, [], 'semanal não dá XP do jogador'); def.click(btn('tab', { t: 'daily' }));
+  L.onMission = o1; L.onDailyBonus = o2; out.push('XP do jogador: diária e bônus dão, semanal não (igual ao Passe antigo)'); }
 // 3) resgatar tudo (diárias) inclui o bônus quando as 6 fecham
 P.list(g.S, host).daily.forEach(m => { const k = P.DATA.daily.find(x => x.id === m.id).k; P.track(g.S, host, k, m.need); }); def.render(); def.click(btn('all')); const L2 = P.list(g.S, host); assert(L2.daily.every(m => m.claimed), 'todas'); assert(L2.bonus.claimed, 'bônus junto'); out.push('Resgatar tudo: diárias e bônus');
 def.click(btn('all')); assert(toasts.some(t => /Nenhuma missão pronta/.test(t))); out.push('Resgatar tudo sem nada pronto: avisa');

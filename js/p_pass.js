@@ -83,4 +83,5 @@ function pwClick(b){
   if(a==='all'){ const r=Sys.pass.claimAll(S,Sys.host); if(!r||!r.n){ pwSnd('ui_tap'); pwToast('Nenhuma recompensa pronta para resgatar'); return; } pwSnd('claim'); pwChanged(); pwToast('Resgatado: '+pwGot(r)); render(); return; }
   if(a==='tier'){ if(typeof Sys.pass.claimTier!=='function') return; const t=parseInt(b.dataset.t,10), r=Sys.pass.claimTier(S,Sys.host,b.dataset.track,t); if(!r||r.ok===false){ pwSnd('ui_tap'); pwToast('Esta recompensa ainda não pode ser resgatada'); render(); return; } pwSnd('claim'); pwChanged(); pwToast('Resgatado: '+(pwGot({n:1,list:[r]})||'recompensa')); render(); return; }
 }
-Panels.add('passv2',{title:'Passe',render:scrPass2,click:pwClick,busy(){ return XPW.dlg; },onOpen(){ XPW.center=true; XPW.keep=0; XPW.dlg=false; },onClose(){ XPW.dlg=false; } });
+/* APOSENTADO (decisão do engenheiro): o Passe com rolagem vive em js/screens2.js ('pass'). Este painel só se registra com window.P_PASSV2_ON=true (uso de teste). */
+if(window.P_PASSV2_ON) Panels.add('passv2',{title:'Passe',render:scrPass2,click:pwClick,busy(){ return XPW.dlg; },onOpen(){ XPW.center=true; XPW.keep=0; XPW.dlg=false; },onClose(){ XPW.dlg=false; } });
