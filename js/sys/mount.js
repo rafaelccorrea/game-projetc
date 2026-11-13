@@ -50,7 +50,7 @@ const DATA={
     {id:'mecha',      name:'Mecha de guerra',          r:4, nw:true, hatchFrags:400, src:['Loja: compra direta, inteira (sem sorteio)']},
   ],
   newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
-  newReady:{},
+  newReady:{phoenixm:true},   // Fênix gigante LIGADA (dono, 14/11, 'liga tudo'): arte completa (Kael e Kaia montados, imagem parada da Derrota, ícone); as outras 9 seguem desligadas
 };
 const BY={}; for(const m of DATA.mounts) BY[m.id]=m;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
