@@ -1278,3 +1278,15 @@ no `heroLook` e no `wItemNow`; a prévia da Aparência usa o mesmo caminho da ba
 - De outros donos (só listado): `js/p_bag.js:72` e `:158` (overflow-x:auto), `index.html:48` (`.chips`, sem uso achado), roladores verticais sem travar o x em
   `index.html:30`, `js/cloudchoice.js:23`, `js/p_bag.js:142`, `js/artprev.js:306`, `js/p_look.js:73`, `js/p_map.js:136`.
 - PARTE 2 (pendente, precisa de navegador): texto `white-space:nowrap` em fileiras flex que pode CORTAR em 288 a 360 px (não rola, mas corta).
+
+## Bloco 48 (Painéis 3, sem navegador): seleção de servidor LIGADA (APK v0.13.0)
+
+- `js/panels.js`: `PANEL_ON.realm=true` (comentário acertado) e `Panels.close()` novo: o `js/p_realm.js` de Sistemas chama `Panels.close()` no Voltar e ao tocar
+  no servidor atual, e esse método não existia (o toque não fazia nada). Fecha pela mesma rota do Voltar (`Screens.close`, que devolve à tela de origem).
+- `js/p_cfg.js`: linha "Servidor" no cartão Conta (aba da conta), logo abaixo do retrato: selo do `realmBadge()` + botão "Trocar servidor" (`data-x="realm"` →
+  `Panels.open('realm',{from:'cfg'})`; o Voltar devolve às Configurações). Sem `realmBadge` (ou com erro nele) a linha não aparece; painel desligado: selo sem botão.
+- Sem item no MENU. Modo dono (`js/artprev.js`, chave "Escolha de servidor"): não precisou de mudança; `owner_all.js` passa (79) com a chave nascendo ligada.
+- Testes: `vipconv.tests.js` ganhou 2 ("servidor: painel ligado, abre e fecha, sem item no MENU" e "servidor: linha nas Configurações…") e o teste "carga" agora
+  espera `PANEL_ON.realm` ligada; `smoke.js`: o detector de escopo próprio do p_realm ignora o comentário de cabeçalho (o arquivo novo começa com comentário).
+- Resultados: `run.js` TUDO OK (162); `owner_all.js` OK (79); `realm.js` sem falha dura, 1 achado antigo (g: importar código de outro servidor); fumaça 360, 390
+  e 288: 199 OK, 0 FALHA (segue o timer do p_intro); `conflitos.js`: p_realm acusa mount/card/load (falso alarme: arquivo em escopo próprio).

@@ -75,6 +75,13 @@ function cParse(txt){ const t=String(txt==null?'':txt).replace(/\s+/g,'');
    Código antigo, sem o campo realm, vale como S1. */
 const cRealmNow=()=>{ try{ const r=window.Realm&&typeof Realm.id==='function'?Realm.id():''; return /^s[0-9]{1,3}$/.test(r||'')?r:'s1'; }catch(e){ return 's1'; } };
 const cRealmOf=o=>(o&&typeof o.realm==='string'&&/^s[0-9]{1,3}$/.test(o.realm))?o.realm:'s1';
+/* LINHA "SERVIDOR" (cartão Conta): o selo vem do realmBadge() do js/p_realm.js ("S1 · Nova Era") e o botão abre o painel 'realm' (Panels.open; o Voltar
+   devolve às Configurações). Sem realmBadge (arquivo não carregado) ou sem o selo: a linha não aparece. Painel desligado: selo sem botão. */
+function cRealmBadge(){ try{ if(typeof window.realmBadge!=='function') return ''; const t=window.realmBadge(); return typeof t==='string'?t.trim():''; }catch(e){ return ''; } }
+function cRealmRow(){ const t=cRealmBadge(); if(!t) return ''; const can=!!(window.Panels&&Panels.on('realm'));
+  return `<div class="c-row" data-row="realm" style="animation-delay:.14s">${cI(C_IC.globe,24,'#ffc94a',2.3)}
+          <span class="c-rl"><b>Servidor</b><small style="overflow-wrap:anywhere">${esc2(t)}</small></span>
+          ${can?`<button class="c-dark" data-x="realm" aria-label="Trocar servidor. Atual: ${esc2(t)}" style="width:96px;min-height:44px;flex:none;margin-right:4px;border-radius:12px;font-size:13px;font-weight:900;line-height:1.1;padding:2px 4px;box-sizing:border-box">Trocar servidor</button>`:''}</div>`; }
 function cRealmMsg(o){ const from=cRealmOf(o); if(from===cRealmNow()) return ''; const nm=from.toUpperCase(); return 'Este código é do servidor '+nm+'. Troque para o '+nm+' para importar.'; }
 /* grava o save importado e recarrega, do mesmo jeito que o "Apagar tudo": __noSave antes, para o save de saída não escrever por cima */
 function cImportDo(){ const o=XC.src; if(!o) return false; const prev=window.__noSave; let ok=false;
@@ -287,7 +294,7 @@ function cPageAccount(){
               :`<span class="kidle ${t?'t'+t:''}" role="img" aria-label="Kael" style="position:absolute;left:-20px;top:-8px;width:84px;height:84px;display:block"></span>`}</span>
           <span class="c-rl"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(S.name||'Kael')}${lv?' · Nv. '+n0(lv):''}</b><small>ID do jogador</small><span style="font-size:12px;font-weight:900;color:#8a7a66">em breve</span></span>
           <span class="c-dis" data-x="soon" style="flex:none;display:flex"><button class="c-sb" disabled aria-disabled="true" aria-label="Copiar o ID do jogador, em breve" style="flex:none;width:88px;height:44px;font-size:13px">${cI(C_IC.copy,16,'currentColor',2.4)}Copiar</button></span>
-        </div>
+        </div>${cRealmRow()}
         <div class="c-row c-dis" data-x="soon" aria-disabled="true" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px;animation-delay:.18s">
           <span style="font-size:13px;font-weight:900;color:#e8dccb">Vincular conta <span style="color:#c9b9a2;font-weight:700">· salva o progresso na nuvem</span> ${C_SOON}</span>
           <div style="display:flex;gap:6px">${link('Google')}${link('Apple')}</div>
@@ -435,6 +442,7 @@ function cClick(b,ev){
   else if(a==='exp'){ snd('ui_tap'); const c=cExport(); if(!c){ cSay('Não deu para gerar o código agora'); return; } XC.code=c; XC.copied=false; XC.dlg='exp'; render(); }
   else if(a==='imp'){ snd('ui_tap'); XC.err=''; XC.src=null; XC.dlg='imp'; render(); }
   else if(a==='rst'){ snd('ui_tap'); XC.dlg='rst'; render(); }
+  else if(a==='realm'){ snd('ui_tap'); let ok=false; try{ ok=!!(window.Panels&&Panels.open('realm',{from:'cfg'})); }catch(e){ ok=false; } if(!ok) cSay('Troca de servidor indisponível agora'); }
 }
 
 Panels.add('cfg',{title:'Configurações',render:scrCfg,click:cClick,

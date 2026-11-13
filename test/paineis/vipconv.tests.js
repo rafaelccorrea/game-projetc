@@ -176,9 +176,37 @@ var VIPCONV_TESTS=(function(){
   T['carga: p_bag na lista e desligada; lista só com arquivos que existem']=function(){
     if(typeof __loadList==='undefined') return 'smoke sem a lista de carga'; const miss=__loadList.filter(n=>__jsFiles.indexOf(n+'.js')<0); if(miss.length) throw new Error('na lista e fora do disco: '+miss.join(','));
     if(__loadList.indexOf('p_bag')<0) throw new Error('p_bag fora da lista'); if(__loadList.indexOf('p_bag')!==__loadList.indexOf('p_fuse')+1) throw new Error('p_bag não está junto do p_fuse');
-    if(__on0.bag!==false) throw new Error('PANEL_ON.bag nasceu ligada'); if(!Panels.defs.bag) throw new Error('painel bag não registrou'); if(__on0.realm) throw new Error('PANEL_ON.realm nasceu ligada');
+    if(__on0.bag!==false) throw new Error('PANEL_ON.bag nasceu ligada'); if(!Panels.defs.bag) throw new Error('painel bag não registrou'); if(__on0.realm!==true) throw new Error('PANEL_ON.realm não nasceu ligada (decisão do dono: seleção de servidor ligada)');
     if(__loadList.indexOf('p_realm')>=0&&__realmConflict) throw new Error('p_realm na lista com nomes em conflito');
-    if(__jsFiles.indexOf('p_realm.js')>=0&&!__realmConflict){ if(__loadList.indexOf('p_realm')<0) throw new Error('p_realm existe, sem conflito, e está fora da lista'); if(__on0.realm!==false) throw new Error('PANEL_ON.realm não nasceu desligada'); if(!Panels.defs.realm) throw new Error('painel realm não registrou'); }    return __loadList.length+' arquivos, todos no disco; bag desligada; p_realm '+(__loadList.indexOf('p_realm')>=0?'na lista':'fora da lista'+(__jsFiles.indexOf('p_realm.js')>=0?' (existe, mas '+(__realmConflict?'colide: '+__realmConflict:'aguardando')+')':' (arquivo não existe)')); };
+    if(__jsFiles.indexOf('p_realm.js')>=0&&!__realmConflict){ if(__loadList.indexOf('p_realm')<0) throw new Error('p_realm existe, sem conflito, e está fora da lista'); if(!Panels.defs.realm) throw new Error('painel realm não registrou'); }    return __loadList.length+' arquivos, todos no disco; bag desligada; p_realm '+(__loadList.indexOf('p_realm')>=0?'na lista':'fora da lista'+(__jsFiles.indexOf('p_realm.js')>=0?' (existe, mas '+(__realmConflict?'colide: '+__realmConflict:'aguardando')+')':' (arquivo não existe)')); };
+
+  /* ---------- SELEÇÃO DE SERVIDOR LIGADA (PANEL_ON.realm; linha "Servidor" das Configurações) ---------- */
+  const cfgAcc=()=>{ XC.dlg=null; XC.page=2; view='cfg'; render(); let h=V_TEST.innerHTML; if(h.indexOf('aria-label="Conta"')<0){ for(let i=0;i<3&&h.indexOf('aria-label="Conta"')<0;i++){ XC.page=i; render(); h=V_TEST.innerHTML; } } return h; };
+  /* o DOM falso do teste não tem style.setProperty (o setView do index usa no #app): entra só aqui, para abrir e fechar pela rota real */
+  /* o setView real marca a animação de entrada das telas cheias (XG/XS/XH/XP.anim): devolvida no fim para não mudar o 1º desenho dos testes seguintes */
+  const animSave=()=>({g:XG.anim,s:XS.anim,h:XH.anim,p:XP.anim}), animBack=a=>{ XG.anim=a.g; XS.anim=a.s; XH.anim=a.h; XP.anim=a.p; };
+  const domFix=()=>{ try{ const st=document.getElementById('app').style; if(typeof st.setProperty!=='function') st.setProperty=function(){}; }catch(e){} };
+  T['servidor: painel ligado, abre e fecha, sem item no MENU']=function(){ const v0=view, an=animSave(); let err=null, out=''; domFix();
+    try{ if(!Panels.defs.realm) throw new Error('painel realm não registrou'); if(!Panels.on('realm')) throw new Error('painel realm desligado');
+      if(typeof FB_DROP!=='undefined'&&FB_DROP.some(x=>x&&(x.id==='realm'||/realm/.test(String(x.act||''))))) throw new Error('item de servidor no MENU');
+      view='battle'; if(!Panels.open('realm',{})) throw new Error('Panels.open devolveu false'); if(view!=='realm') throw new Error('view='+view+' depois de abrir'); render(); const h=bad0(V_TEST.innerHTML);
+      if(h.indexOf('data-x="pick"')<0) throw new Error('lista de servidores vazia'); if(h.indexOf(realmBadge())<0) throw new Error('o servidor atual ('+realmBadge()+') não aparece na lista');
+      if(/overflow-x:\s*(auto|scroll)|overflow:\s*(auto|scroll)|scroll-snap|grid-auto-flow:\s*column/.test(h)) throw new Error('rolagem horizontal declarada na tela');
+      if(typeof Panels.close!=='function') throw new Error('Panels.close não existe (o p_realm chama no Voltar)'); if(h.indexOf('data-x="back"')<0) throw new Error('tela sem o Voltar');
+      Panels.defs.realm.click({dataset:{x:'back'}}); if(view==='realm') throw new Error('o Voltar da tela não fechou');
+      Panels.open('realm',{}); Screens.close(); if(view==='realm') throw new Error('não fechou'); out='abre com '+(h.match(/data-x="pick"/g)||[]).length+' servidor(es), selo "'+realmBadge()+'", fecha para '+view; }catch(e){ err=e; }
+    view=v0; animBack(an); if(err) throw err; return out; };
+  T['servidor: linha nas Configurações com o selo e o botão Trocar servidor']=function(){ const v0=view, rb0=window.realmBadge, on0=PANEL_ON.realm, o0=Panels.open, x0={dlg:XC.dlg,page:XC.page}, an=animSave(); let err=null, out=''; domFix();
+    try{ if(typeof rb0!=='function') throw new Error('realmBadge não existe'); const t=rb0(); let h=bad0(cfgAcc());
+      if(h.indexOf('data-row="realm"')<0) throw new Error('linha Servidor fora do cartão Conta'); if(h.indexOf('<b>Servidor</b>')<0||h.indexOf(t)<0) throw new Error('linha sem o rótulo ou sem o selo "'+t+'"');
+      if(!/data-x="realm"[^>]*>Trocar servidor</.test(h)) throw new Error('botão Trocar servidor ausente');
+      const got=[]; Panels.open=function(nm,o){ got.push(nm+':'+(o&&o.from)); return true; }; cClick({dataset:{x:'realm'}}); Panels.open=o0; if(got.join()!=='realm:cfg') throw new Error('o botão abriu: '+got.join());
+      view='cfg'; if(!Panels.open('realm',{from:'cfg'})||view!=='realm') throw new Error('não abriu de verdade'); Screens.close(); if(view!=='cfg') throw new Error('o Voltar levou a '+view+', não às Configurações');
+      PANEL_ON.realm=false; h=cfgAcc(); if(h.indexOf('data-row="realm"')<0||h.indexOf('data-x="realm"')>=0) throw new Error('painel desligado: esperado o selo sem o botão'); PANEL_ON.realm=on0;
+      window.realmBadge=undefined; h=cfgAcc(); if(h.indexOf('data-row="realm"')>=0) throw new Error('sem realmBadge a linha continua na tela'); window.realmBadge=rb0;
+      window.realmBadge=function(){ throw new Error('x'); }; h=bad0(cfgAcc()); if(h.indexOf('data-row="realm"')>=0) throw new Error('realmBadge com erro: a linha apareceu'); out='selo "'+t+'", botão abre realm e o Voltar devolve às Configurações; sem realmBadge a linha some';
+    }catch(e){ err=e; }
+    window.realmBadge=rb0; PANEL_ON.realm=on0; Panels.open=o0; XC.dlg=x0.dlg; XC.page=x0.page; view=v0; animBack(an); if(err) throw err; return out; };
 
   /* ---------- COMPRAS PELO Sys.buy ---------- */
   function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, l0=B.cardStatusLive, k0=B.cardClaim, calls=[]; XCARD.st=null; XCARD.at=0; XCARD.load=false; XCARD.claim=false;

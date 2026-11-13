@@ -19,7 +19,7 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   colecao:false,   /* Coleção (js/p_colecao.js, do QA): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
   shopmecha:false,   /* cartão do Mecha de Guerra na Loja (js/p_shopmecha.js, do QA): DESLIGADA até a arte ser aprovada pelo dono */
   bag:false,   /* Mochila nova (js/p_bag.js, de Sistemas): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
-  realm:false,   /* escolha de servidor (js/p_realm.js, do Servidor): carregada e DESLIGADA; sem item no MENU. O arquivo roda em escopo próprio (os nomes XR e rClick dele não chegam ao js/screens2.js) */
+  realm:true,   /* escolha de servidor (js/p_realm.js, de Sistemas): LIGADA (decisão do dono, para a APK v0.13.0). Sem item no MENU: entra pela linha "Servidor" das Configurações (js/p_cfg.js) e pelo passo do Título (js/p_intro.js, RealmUI.mount). O arquivo roda em escopo próprio (os nomes XR e rClick dele não chegam ao js/screens2.js) */
   fuse:false   /* Fusão (js/p_fuse.js, de Sistemas): DESLIGADA; só liga junto com Sys.stats.DATA.quality.on (qualidade/fusão é da v0.13, sem voto ainda) */},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
@@ -61,4 +61,6 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     this.back=this.back||{}; this.back[name]=(o&&typeof o.from==='string')?o.from:null; if(this.back[name]) this.hookClose();
     if(window.Screens&&typeof Screens.open==='function'){ if(typeof Screens.register==='function'&&!(Screens.reg&&Screens.reg[name])) this.enable(name); return Screens.open(name,o||{})!==false; }
     setView(name); return true; },
+  /* fecha o painel aberto (o js/p_realm.js chama Panels.close() no Voltar e ao tocar no servidor atual): mesma rota do Voltar (Screens.close, que devolve à tela de origem) */
+  close(){ if(!this.cur()) return false; try{ if(window.Screens&&typeof Screens.close==='function'){ Screens.close(); return true; } if(typeof setView==='function'){ setView('battle'); return true; } }catch(e){} return false; },
   cur(){ const d=this.defs[typeof view!=='undefined'?view:'']; return d&&this.on(d.name)&&!d.overlay?d:null; } };
