@@ -268,3 +268,33 @@ Espera no Senhor da Era (grátis · VIP 5 · VIP 10):
 **Testado e descartado:** subir o teto de XP de abate das eras 7-8. O grátis chega ao Nv 120 mais cedo, a FC para de crescer e a parede da era 8 vai a 12 dias.
 
 **Próximo passo possível:** uma fonte DIÁRIA nas eras 7-8, que cresce enquanto o jogador espera. Exemplos: pedra de Forja extra por dia nas eras 7-8, ou um "treino de era" com teto diário. Com ela, a era 7 cai para ~4-5 dias. Essa escolha é do dono.
+
+### Pacote do fim + TREINO DE ERA (opção b do dono), simulado, NÃO ligado
+
+**O que entra no pacote:** sem sorteio pago e sem compra de poder.
+- Forja +16 a +20.
+- Arma Divina mais cedo, pela Torre ou por evento (Nv 95 na era 6).
+- **8 títulos novos, 2 por era a partir da era 5**, ganhos pelo progresso, de +3% ATQ e VIDA cada.
+- **Montaria com 6ª estrela na era 7 e 7ª na era 8**, com fragmentos ganhos jogando (o dono aprovou), de +2,75% cada.
+- Pet até o Nv 120.
+- **Treino de era:** abre no Nv 90 (eras 7-8), **1 treino por dia**. Cada dia treinado multiplica a FC por 1,02, até +200%.
+- O Senhor das eras 5-8 pede 1,1× a FC com que o grátis chega; o chefe do meio pede 1,05×.
+
+**Por que pelo progresso e por percentual:**
+- Fonte presa ao dia do calendário favorece o grátis, que chega depois, e atrasa o VIP. Títulos e estrelas pelo progresso fazem o VIP ganhar antes.
+- Bônus somado dilui no fim do jogo. O treino em percentual composto mantém ~2% de crescimento por dia enquanto o jogador está na parede.
+
+Espera no Senhor da Era:
+
+| Era | Grátis | VIP 5 | VIP 10 |
+|---|---|---|---|
+| 5 | 3,0 d | 4,8 d | 4,2 d |
+| 6 | 4,8 d | 5,9 d | 4,5 d |
+| 7 | 4,0 d | 3,4 d | 4,1 d |
+| 8 | 5,0 d | 3,5 d | 3,0 d |
+
+**Fins:** grátis no dia 178, VIP 5 no 136 e **VIP 10 no 118** (meta ~121). Quem não forja nem evolui o pet trava na fase 60.
+
+**Fica de fora da meta:** o chefe do meio da era 8 segura o grátis por 9,5 dias.
+
+Os números estão no balance.json (`dificuldade.pacoteFim`, `on:false`).
