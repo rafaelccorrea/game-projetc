@@ -76,3 +76,10 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [x] P16 lobo COM ARMA · CORRIGIDO: a espada agora está NA MÃO nos quadros 1, 3, 5 e 9 (sem haste preta solta); só sobram listras verticais fracas na armadura (mesmo resto do P12) · print reports/prints/pol_12_folhas_com_arma_pos_limpeza_ok.png
 - [x] P17 cavalo COM ARMA · CORRIGIDO: quadro 7 sem a ponta de lança sobrando (espada + arco de golpe só); quadros 6 ok; grifo 12, tigre 9 e serpe 9 também ok
 - [ ] P20 · Título (p_intro, Servidor) · o herói montado (Kael na serpe) é desenhado dentro de um canvas retangular com BORDA VISÍVEL (caixa mais clara, cantos duros) e fica CORTADO em cima (a cabeça/arma encosta no topo da caixa); com montaria o desenho precisa de mais folga ou o canvas maior; print reports/prints/pol_13_titulo_heroi_cortado_e_retangulo.png · Servidor (p_intro) + Engenheiro (escala do drawHeroFull)
+
+## Arte (fps-75), 13/11: ícones e auditoria de skins
+- [x] Ícones por código (estilo dos slots, 256 px, transparentes): assets/icons/weapons/<wKey>.png (45 armas), assets/icons/slots/era7_weapon.png e era8_weapon.png, assets/icons/mounts/<id>.png (6), assets/icons/pets/<pet>_<ref|mid|evo>.png + pet_egg.png. O engenheiro liga nas telas (slotIcon prende em era 6).
+- [ ] Faltam ícones de colete/botas/luvas/colar/elmo/asa das eras 7-8 (12). Precisa de arte nova. · Arte (crédito, aguardando o PO)
+- [x] Auditoria skin × fase a pé: Kael R/1/2/3 e Kaia base/1/2/3 completos (head/hair/mask nos 8 estados).
+- [ ] Montado: sem head.json e sem máscara, então chapéu/óculos/colete/botas somem ao montar; dá para fazer por código (Arte) e o engenheiro liga. As folhas montadas só existem com o Kael criança (sem fases e sem Kaia): precisa de crédito ou de teste de troca de cabeça. · lista enviada ao PO
+- [ ] P15 parte 3 (folhas a pé, varredura quadro a quadro) · ainda não feita
