@@ -8,7 +8,7 @@ Para o dono seguir depois de instalar. Em cada passo: **o que fazer** e **o que 
 
 3. **Criar o herói.** Passe o prólogo (pode tocar em "Pular"), escolha Kael ou Kaia e aceite o nome sugerido. O jogo começa direto. **Não** deve aparecer "Bem-vindo de volta" nesta primeira vez.
 
-4. **Jogar 2 minutos.** Deixe o herói lutar. Você deve ver o herói e o pet na frente dele, o ouro subindo e o poder (FC) aparecendo no canto. Nada deve piscar, sumir ou ficar parado.
+4. **Jogar 2 minutos.** Deixe o herói lutar. Você deve ver o herói lutando (o pet só aparece depois que você ganhar o primeiro), o ouro subindo e o poder (FC) aparecendo no canto. Nada deve piscar, sumir ou ficar parado.
 
 5. **Fechar e abrir de novo.** Feche o app, espere uns 3 minutos e abra. O "Bem-vindo de volta" só deve aparecer se você ficou fora mais de 2 minutos **e** ganhou algo (ouro, itens). Toque em "Coletar".
 
