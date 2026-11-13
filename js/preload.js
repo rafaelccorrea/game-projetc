@@ -17,7 +17,8 @@
   /* CHAVE ÚNICA (ordem do PO, 13/11 01h50): PRELOAD_NEW = false por padrão → caminho de carga ANTIGO (imagem pronta no onload, sem decode(), sem fila; a tela de
      carregamento usa a lista de antes e libera em 15 s: js/loading.js). O pré-carregador novo só liga com ?debug=1&carga=nova, até passar nos quatro casos
      (save novo, save antigo que volta, rede lenta, aba em segundo plano). */
-  const NEW = DBG && QS.get('carga') === 'nova'; W.PRELOAD_NEW = NEW;
+  /* 13/11 (QA: "pode ligar: sim", 4 casos com o save de nível 61; decisão do PO): o caminho NOVO é o PADRÃO; ?debug=1&carga=antiga volta ao antigo para comparar. */
+  const NEW = !(DBG && QS.get('carga') === 'antiga'); W.PRELOAD_NEW = NEW;
   const FILE_MS = 12000, TRIES = 3, LIST_MS = 30000, PAR = 8, STALL_MS = 15000, TASK_MS = 38000, DECODE_MS = 1500;
   /* &falha=<trecho da URL> (só debug): os arquivos cuja URL contém o trecho falham na 1ª rodada (as 3 tentativas) e carregam no "Tentar de novo"; &falhas=N = falham N rodadas */
   const FAIL = DBG ? (QS.get('falha') || '') : '', FAILN = Math.max(1, +QS.get('falhas') || 1), HANG = DBG ? (QS.get('trava') || '') : '';
