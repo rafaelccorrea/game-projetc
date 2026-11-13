@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **16h15 · Servidor:** VÁRIOS SERVIDORES prontos no banco e no jogo (S1 · Nova Era; personagem por servidor; save de outro servidor é recusado). Antes de abrir o S2 falta separar por servidor os rankings, guildas, chat e Chefe Mundial (no lançamento só existe o S1). Bem-vindo na conta nova CORRIGIDO (0842447, teste do QA passa). Agora: tela inicial animada. O online liga assim que você rodar o script do banco
+
 - **16h · Para você ver/votar agora:** TELA 21 PERFIL REFEITA (https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc), funcionando como no jogo, com o voto na própria página. Página de aprovação da arte: https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19 · Canvas das telas antigas: https://claude.ai/artifact/PkyVkM4ZUtaob6Nursh6ba
 - **16h · Modo dono: LIBERAR TUDO e RECURSOS INFINITOS prontos no código (734d28f; o QA confere no navegador).** No jogo: MENU → Teste → Modo dono. Mochila nova e escolha de servidor prontas (57a9f48), esperando o print para o voto. Compra simulada pronta (9b342c6)
 - **16h · Seus 4 pontos da v0.12.9 em correção:** força-tarefa de desempenho (medindo os piores quadros antes de corrigir), tela inicial animada, Bem-vindo que aparecia na conta nova, arma de pedra com quadros de revólver (varredura de todas as armas × poses). Atenção: desinstalar apaga o save do celular; na próxima, instale por cima
