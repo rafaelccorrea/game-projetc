@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14h05 · Sua ordem:** a Arte termina só o que já começou (Angelical da Kaia, Paladino e Ninja do Kael, e a Pantera Espectral se já estiver em andamento). O resto fica para a próxima parte: Samurai e Ciborgue do Kael, os outros pets e as 10 montarias novas montadas
+
 - **14h · APK v0.12.9 SENDO GERADO** (o QA aprovou). Leva: carregamento novo (abre em ~5 s), ícone A e abertura, logo animado, 60 FPS, eventos na batalha, Kaia montada nas 6, vantagens do VIP (mochila, forja automática, desmontar sozinho etc.), 9 ultimates Lendárias, 7 asas novas, Lobo das Sombras e Falcão, sem Facebook. Quando ficar pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
 
 - **13h50 · Checklist atualizado.** Carregamento novo ligado (bloqueio resolvido). APK: falta só conferir e ligar as 9 ultimates Lendárias e as 7 asas. Skins animadas: 3 de 10. Pets: 2 de 9. Créditos ~459 (vai precisar de mais para terminar tudo)
