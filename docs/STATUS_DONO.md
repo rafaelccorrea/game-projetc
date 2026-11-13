@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13h40 · Bloqueio do APK RESOLVIDO:** o carregamento novo passou nos 4 testes (normal 6 s, internet lenta 9 s, muito lenta 15 s, segundo plano) e está ligado. O próximo APK sai assim que as 9 ultimates Lendárias e as 7 asas forem conferidas e ligadas (falta pouco). Leva: carregamento novo, fundo da abertura, 60 quadros por segundo, eventos na batalha, Kaia montada nas 6, vantagens do VIP, ícone A, logo animado, sem Facebook
+- **13h40 · Skins animadas:** Arlequina e Ninja da Kaia prontas (na página para você ver); Demoníaca em produção. Créditos ~469
+
 - **13h20 · Checklist atualizado.** Jogo abrindo e conferido pelo QA (34 quadros por segundo no PC cheio, sem travar). Bloqueio do APK: só o carregamento novo passar nos 4 testes. Arte (3 agentes): skins, pets, arco/bumerangue. Créditos ~527
 
 - **13h · Desempenho:** o PC estava sobrecarregado (CPU 83%, 2,6 GB livres; uma página do jogo presa em laço com 1,1 GB). Todas as sessões fecharam navegadores e testes parados; Arte em 3 agentes; compilação do Android pausada. O carregamento antigo volta como padrão até o novo passar nos 4 testes
