@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **15h20 · Seus 3 pedidos para o Modo dono, já distribuídos:** (1) Engenheiro: botão LIBERAR TUDO (todas as skins, armas de cada família em cada raridade, pets nos 3 estágios, montarias 1-5★, asas); (2) Servidor: COMPRA SIMULADA (VIP, diamantes, Passe, Oferta, skins pagas; nada é cobrado e o save real não muda); (3) Sistemas: tela de MOCHILA nova com abas, raridade, Forja e detalhe do item. O QA confere cada um no navegador; entram na próxima APK
+
 - **15h10 · v0.12.9 INSTALADA no seu S24** (por cima, save mantido: Nv. 13, FC 92,1 mil). Abre em 0,77 s; memória menor que a v0.12.7 (626 MB); tela fluida (mediana 12 ms por quadro). Ainda não conferido no aparelho: carregamento novo, abertura, Kaia, asas, ultimates, VIP, eventos, som; o limite de 60 FPS do jogo falta medir pelo contador interno
 
 - **15h · Checklist atualizado.** APK v0.12.9 pronto para instalar (ligue o cabo e escreva "pode instalar" na janela do Engenheiro). Arte fechou a rodada (8 skins, 3 pets novos, Kaia montada nas 6, arco/bumerangue, ultimates, asas) e está parada; o resto fica para a próxima parte (~610 créditos; saldo ~313)
