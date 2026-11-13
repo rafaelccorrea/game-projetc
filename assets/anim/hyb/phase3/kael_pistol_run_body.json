@@ -15,12 +15,12 @@
  },
  "xf": {
   "sc": 0.5145833333333333,
-  "ox": 163.05208333333334,
+  "ox": 67.052,
   "oy": -13.77708333333328
  },
  "grip": [
   {
-   "x": 369.61,
+   "x": 273.61,
    "y": 61.35,
    "fdy": 9,
    "ang": 3.01,
@@ -33,7 +33,7 @@
    "src": "f033.png"
   },
   {
-   "x": 372.69,
+   "x": 276.69,
    "y": 65.01,
    "fdy": 6,
    "ang": 2.69,
@@ -46,7 +46,7 @@
    "src": "f037.png"
   },
   {
-   "x": 367.39,
+   "x": 271.39,
    "y": 61.61,
    "fdy": 11,
    "ang": 2.94,
@@ -59,7 +59,7 @@
    "src": "f041.png"
   },
   {
-   "x": 368.22,
+   "x": 272.22,
    "y": 64.08,
    "fdy": 3,
    "ang": 3.15,
@@ -72,7 +72,7 @@
    "src": "f045.png"
   },
   {
-   "x": 370.48,
+   "x": 274.48,
    "y": 60.27,
    "fdy": 8,
    "ang": 3.38,
@@ -85,7 +85,7 @@
    "src": "f049.png"
   },
   {
-   "x": 368.73,
+   "x": 272.73,
    "y": 63.51,
    "fdy": 7,
    "ang": 3.43,
@@ -98,7 +98,7 @@
    "src": "f053.png"
   },
   {
-   "x": 365.9,
+   "x": 269.9,
    "y": 61.09,
    "fdy": 11,
    "ang": 2.37,
@@ -111,7 +111,7 @@
    "src": "f057.png"
   },
   {
-   "x": 368.27,
+   "x": 272.27,
    "y": 63.93,
    "fdy": 3,
    "ang": 2.99,
@@ -126,61 +126,62 @@
  ],
  "back": [
   {
-   "x": 277.6,
+   "x": 181.6,
    "y": 79,
    "ang": 18.3,
    "s": 1,
    "ok": true
   },
   {
-   "x": 277.6,
+   "x": 181.6,
    "y": 80,
    "ang": 18.3,
    "s": 1,
    "ok": true
   },
   {
-   "x": 275.9,
+   "x": 179.9,
    "y": 79,
    "ang": 15.4,
    "s": 1,
    "ok": true
   },
   {
-   "x": 275.9,
+   "x": 179.9,
    "y": 78,
    "ang": 15.4,
    "s": 1,
    "ok": true
   },
   {
-   "x": 278.4,
+   "x": 182.4,
    "y": 78,
    "ang": 18.8,
    "s": 1,
    "ok": true
   },
   {
-   "x": 278.4,
+   "x": 182.4,
    "y": 80,
    "ang": 18.8,
    "s": 1,
    "ok": true
   },
   {
-   "x": 275.9,
+   "x": 179.9,
    "y": 80,
    "ang": 17,
    "s": 1,
    "ok": true
   },
   {
-   "x": 275.9,
+   "x": 179.9,
    "y": 80,
    "ang": 17,
    "s": 1,
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "shiftFix96": true
 }

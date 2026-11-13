@@ -7,5 +7,6 @@
  "padRight": 96,
  "feetY": 243,
  "weapon": "era2_t1",
- "note": "fase adulto V2 (112%); pés em x=padLeft+128"
+ "note": "fase adulto V2 (112%); pés em x=padLeft+128",
+ "shiftFix96": true
 }

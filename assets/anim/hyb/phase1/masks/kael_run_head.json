@@ -4,7 +4,7 @@
  "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro",
  "head": [
   {
-   "x": 340,
+   "x": 244,
    "y": 77,
    "ang": -0.5,
    "s": 0.5103,
@@ -12,7 +12,7 @@
    "ok": true
   },
   {
-   "x": 340,
+   "x": 244,
    "y": 75,
    "ang": 0.5,
    "s": 0.518,
@@ -20,7 +20,7 @@
    "ok": true
   },
   {
-   "x": 341,
+   "x": 245,
    "y": 77,
    "ang": 2.5,
    "s": 0.5103,
@@ -28,7 +28,7 @@
    "ok": true
   },
   {
-   "x": 340,
+   "x": 244,
    "y": 74,
    "ang": -0.5,
    "s": 0.5103,
@@ -36,7 +36,7 @@
    "ok": true
   },
   {
-   "x": 340,
+   "x": 244,
    "y": 77,
    "ang": 0.5,
    "s": 0.518,
@@ -44,7 +44,7 @@
    "ok": true
   },
   {
-   "x": 341,
+   "x": 245,
    "y": 79,
    "ang": 0.5,
    "s": 0.5103,
@@ -52,7 +52,7 @@
    "ok": true
   },
   {
-   "x": 341,
+   "x": 245,
    "y": 78,
    "ang": 1.5,
    "s": 0.5103,
@@ -60,12 +60,13 @@
    "ok": true
   },
   {
-   "x": 341,
+   "x": 245,
    "y": 79,
    "ang": 2.5,
    "s": 0.518,
    "e": 81,
    "ok": true
   }
- ]
+ ],
+ "shiftFix96": true
 }

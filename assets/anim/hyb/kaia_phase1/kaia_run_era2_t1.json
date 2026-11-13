@@ -7,5 +7,6 @@
  "padRight": 96,
  "feetY": 243,
  "note": "fase adolescente (106%); pés em x=padLeft+128",
- "weapon": "era2_t1"
+ "weapon": "era2_t1",
+ "shiftFix96": true
 }
