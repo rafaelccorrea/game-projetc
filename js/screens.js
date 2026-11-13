@@ -1116,6 +1116,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['avatar','equipfx','panels','p_wait','p_forge','p_forge2','p_fuse','p_bag','p_realm','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao','p_shopmecha']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['avatar','equipfx','panels','p_wait','p_forge','p_forge2','p_fuse','p_bag','p_realm','p_cfg','p_vip','p_era','p_tower','p_pets','p_pets2','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao','p_shopmecha']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();
