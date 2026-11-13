@@ -68,11 +68,34 @@ function petStep(dt){ const I = petInfo(); if (!I || B.deadT > 0 || B.res) retur
     if (a.t >= a.dur) PETK.act = null; return; }
   if (PETK.atkT < (I.interval || 2)) return; const e = target(); if (!e || e.x > LW - 10) return;
   PETK.atkT = 0; const sh = petSheet('atk1'), dur = sh && sh.ok ? sh.meta.frames / (sh.meta.fps || 12) : 0.6; PETK.act = { t: 0, dur, hitT: dur * 0.5, e, done: false }; }
+/* GOLPE PRÓPRIO DE CADA PET (PO: item completo). O Sys.pet diz a COR e o TIPO do impacto de cada espécie (I.draw.fx = {color, hit, glow}; tabela PET_BATTLE do
+   js/sys/pet.js) e a batalha não lia: todo pet batia com o mesmo estouro azul. PET_HIT = uma receita por tipo, só com as peças que já existem (burst = partículas,
+   ring = anel, dust = poeira): sem folha nova e sem custo por quadro além das partículas do golpe. Tipo que a tabela não conhece (pet que vier) = 'impact' na
+   cor dele. Sem draw.fx (formato antigo) = o estouro azul de antes. Crítico: mantém o anel dourado por cima. ?debug=1&petfx=0 volta ao estouro de antes.
+   (x, y) = ponto do impacto no inimigo · px = onde o pet está · c = cor do pet · n = partículas (mais no crítico) · r = raio do anel */
+const PET_HIT_ON = !(typeof DEBUG !== 'undefined' && DEBUG && /[?&]petfx=0/.test(location.search));
+const PET_HIT = {
+  impact:  (x, y, c, n, r) => { burst(x - 4, y + 4, c, n); ring(x - 6, y, c, r); },
+  fire:    (x, y, c, n, r) => { burst(x - 4, y + 4, c, n + 2, 1.25); burst(x - 2, y, '#ffd27a', 3, 0.8); ring(x - 6, y, c, r); },
+  ice:     (x, y, c, n, r) => { burst(x - 4, y + 2, c, n, 0.9); burst(x - 4, y - 6, '#ffffff', 3, 0.6); ring(x - 6, y, c, r + 6); },
+  spark:   (x, y, c, n, r) => { burst(x - 4, y, '#ffffff', 3, 1.7); burst(x - 4, y + 2, c, n + 1, 1.6); ring(x - 6, y, c, r - 4); },
+  sand:    (x, y, c, n, r) => { burst(x - 4, y + 8, c, n + 3, 0.7); dust(x - 6, y + 14, 4, c); ring(x - 6, y + 4, c, r); },
+  feather: (x, y, c, n, r) => { burst(x - 4, y - 8, c, n + 1, 0.8); burst(x, y - 12, '#ffffff', 2, 0.5); ring(x - 6, y - 4, c, r); },
+  poison:  (x, y, c, n, r) => { burst(x - 4, y + 4, c, n + 1, 0.6); ring(x - 6, y, c, r - 6); ring(x - 6, y, c, r + 8); },
+  light:   (x, y, c, n, r) => { burst(x - 4, y, c, n, 1.1); ring(x - 6, y, '#ffffff', r - 4); ring(x - 6, y, c, r + 12); },
+  prism:   (x, y, c, n, r) => { for (const q of ['#ff8ad8', '#8ff5ff', '#ffe07a']) burst(x - 4, y + 2, q, Math.max(2, Math.round(n / 2)), 1.1); ring(x - 6, y, c, r + 4); },
+  dash:    (x, y, c, n, r, px) => { const d = Math.max(0, x - px); for (let i = 1; i <= 3; i++) burst(px + d * i / 4, y + 6, c, 2, 0.5); burst(x - 4, y + 4, c, n, 1.2); ring(x - 6, y, c, r); },   /* rastro do pet até o inimigo */
+  blink:   (x, y, c, n, r, px, py) => { ring(px, py, c, 16); burst(x + 10, y + 2, c, n + 1, 1.1); ring(x + 8, y, c, r); },   /* some de onde está e reaparece ATRÁS do inimigo */
+};
+function petHitFx(I, ex, ey, big){ const f = PET_HIT_ON && I && I.draw && I.draw.fx; const n = big ? 7 : 4, r = big ? 30 : 20;
+  if (!f || typeof f.color !== 'string' || !f.color){ burst(ex - 4, ey + 4, '#9af0ff', n); ring(ex - 6, ey, big ? '#ffd23f' : '#9af0ff', r); return 'antigo'; }
+  const kind = PET_HIT[f.hit] ? f.hit : 'impact'; let px = ex - 40, py = ey; try { const p = petPos(); px = p.x; py = p.gy - HS * 0.12; } catch (er) {}
+  PET_HIT[kind](ex, ey, f.color, n + Math.min(3, f.glow | 0), r, px, py); if (big) ring(ex - 6, ey, '#ffd23f', r + 4); return kind; }
 function petHit(e, I){ let st = null, roll = null; try { st = heroStats(); roll = Sys.pet.rollAttack(S, I.id); } catch (er) {}
   const pa = st && st.pet ? st.pet.atk : 0; if (!(pa > 0)) return; const d = st.atk * pa * (I.hitMult || 1) * (roll && roll.mult ? roll.mult : 1); if (!(d > 0)) return;
   const ex = eX(e), ey = eY(e), big = roll && roll.type === 'crit';
   e.hp -= d; e.hit = 0.12; floatText(ex + 10, e.boss ? GY - (e.dh || 150) - 20 : GY - (e.dh || 90) - 6, fmt(d), big ? '#ffd23f' : '#9af0ff', big ? 1 : 0);
-  burst(ex - 4, ey + 4, '#9af0ff', big ? 7 : 4); ring(ex - 6, ey, big ? '#ffd23f' : '#9af0ff', big ? 30 : 20);   // impacto por código, na altura do inimigo
+  petHitFx(I, ex, ey, big);   // impacto por código, na altura do inimigo, na cor e no tipo do pet
   if (window.__stay && e.hp <= 0) e.hp = e.maxhp; if (e.hp <= 0) killEnemy(e); }
 /* cura por onda (pets de cura): st.hp × st.pet.heal */
 function petWave(){ const I = petInfo(); if (!I || !B.hero) return; let st = null; try { st = heroStats(); } catch (e) {} const ph = st && st.pet ? st.pet.heal : 0; if (!(ph > 0)) return;

@@ -53,6 +53,15 @@ const RE = { pet: /anim\/pets\//, aura: /anim\/aura\// };
     }
   }
   check('cobriu estágios com e sem aura', withAura >= 3 && without >= 2, 'com ' + withAura + ' · sem ' + without + ' · vistos ' + seen);
+  /* GOLPE PRÓPRIO DO PET (petHitFx): todo tipo que o Sys.pet declara tem receita; cada um solta partículas e anel na COR do pet; tipo desconhecido cai no impacto;
+     sem draw.fx vale o estouro azul de antes; o crítico acrescenta o anel dourado */
+  { const kinds = ev("(function(){ const B0=Sys.pet.battleTable(), s={}; for(const k in B0) s[B0[k].fx.hit]=1; return Object.keys(s); })()"), have = ev('Object.keys(PET_HIT)');
+    check('golpe do pet: todo tipo do módulo tem receita (' + kinds.join(', ') + ')', kinds.every(k => have.includes(k)), 'sem receita: ' + kinds.filter(k => !have.includes(k)).join(', '));
+    for (const k of have.concat(['tipo_que_nao_existe'])) { const r = ev("(function(){ B.parts.length=0; B.rings.length=0; const I={draw:{fx:{color:'#12ab34',hit:'" + k + "',glow:1}}}; const got=petHitFx(I,200,150,false); const cols={}; for(const p of B.parts) cols[p.col]=1; const rc=B.rings.map(q=>q.col); return {got, parts:B.parts.length, rings:B.rings.length, mine:!!cols['#12ab34']||rc.includes('#12ab34'), ringMine:rc.includes('#12ab34'), gold:rc.includes('#ffd23f'), nan:B.parts.some(p=>!isFinite(p.x)||!isFinite(p.y))||B.rings.some(q=>!isFinite(q.x)||!isFinite(q.y)||!(q.max>0))}; })()");
+      check('golpe ' + k + ': partículas e anel na cor do pet, sem coordenada inválida', r.parts >= 4 && r.rings >= 1 && r.mine && !r.nan && !r.gold && r.got === (have.includes(k) ? k : 'impact'), JSON.stringify(r)); }
+    const crit = ev("(function(){ B.parts.length=0; B.rings.length=0; petHitFx({draw:{fx:{color:'#12ab34',hit:'fire'}}},200,150,true); return B.rings.map(q=>q.col); })()"); check('golpe crítico: anel dourado por cima', crit.includes('#ffd23f') && crit.includes('#12ab34'), crit.join(','));
+    const old = ev("(function(){ B.parts.length=0; B.rings.length=0; const g=petHitFx({draw:{}},200,150,false); return {g, ring:B.rings.map(q=>q.col), n:B.parts.length}; })()"); check('sem draw.fx: estouro azul de antes', old.g === 'antigo' && old.ring.length === 1 && old.ring[0] === '#9af0ff' && old.n >= 1, JSON.stringify(old));
+    ev('B.parts.length=0; B.rings.length=0; 1'); }
   check('nenhuma exceção no desenho', !errs.length, errs.slice(0, 3).join(' | '));
   console.log(fail ? fail + ' FALHA(S) de ' + n + ' (aura do pet)' : 'AURA DO PET OK (' + n + ' verificações): aura do estágio atrás do pet, base nos pés, sem aura onde o módulo não dá');
   process.exit(fail ? 1 : 0);
