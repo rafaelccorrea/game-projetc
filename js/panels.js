@@ -13,7 +13,7 @@
 const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas por mim no navegador */
   tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true, intro:false,   /* telas iniciais do Servidor (js/p_intro.js, arquivo GERADO): desligada */   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
   mail:true,   /* conferida pelo QA; carta local de boas-vindas (Sys.mail.welcomeOnce, o engenheiro liga o módulo no boot) */     /* espera Sys.mail.DATA.enabled (Servidor) */  inst:false,   /* espera a luta da instância (agente A) */
-  mounts:false,result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
+  mounts:true,   /* conferida pelo QA no navegador (equipar, nível, aura, batalha) */  result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,auction:false,   /* esperam pagamento / servidor */
   arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
