@@ -115,3 +115,10 @@ Por quê não mexe: o calendário é pelo XP, e nada novo dá XP; pets novos seg
 o grátis típico tem a mesma raridade de pet de antes; asas e arco/bumerangue usam o atributo do item (mesmo padrão); montaria é a única que adianta
 (Pantera sombria Épica pela arena ~dia 75, Lobo de gelo Mítico pelo torneio de fim de semana ~dia 150): +2 a +2,5 pontos de % de ATK/Vida nesse período.
 VIP de conveniência (proposta, Sys.vip.DATA.conv): nenhum benefício dá XP, atributo ou diamante → não entra na simulação.
+
+## Depois das mudanças de 13/11 (skin de arma fora do bônus de equipada; raridade e ícones dos títulos; Arena/Torre grátis 3; VIP de conveniência; anti-repetição do chefe)
+`node tools/sim-180-dias.js --scale --new`: grátis termina no dia **179**, VIP 5 no **140**, VIP 10 no **121**; 0 dias abaixo de 90% da FC recomendada; diamantes iguais.
+- A simulação não conta o bônus das skins (a curva fecha sem ele): tirar a skin de arma do bônus de equipada só reduz a FC de quem tinha uma, então não atrasa ninguém.
+- Títulos: a raridade e o ícone são só visuais (o bônus de cada título não mudou).
+- Arena/Torre com 3 tentativas grátis: não dão XP; o prêmio da torre é fixo por andar e a arena só dá diamante da Platina para cima, com teto semanal.
+- Anti-repetição do chefe: só muda a ordem do sorteio (pesos e portão iguais).
