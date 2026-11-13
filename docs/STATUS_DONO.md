@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **02h45 · UM LINK SÓ PARA TODAS AS TELAS: https://claude.ai/artifact/6AUcyib9p4Z3Qe16Pk6BEb** (Perfil, Luta PvP da Arena, Equipamento, Loja, Invocar; cada uma abre numa página com o voto, e o índice mostra o que já foi aprovado). As próximas telas entram neste mesmo link. **Bug da Arena corrigido** (d3d14c0): ao Pular no meio da ultimate o golpe e o pet continuavam atrás do resultado; agora tudo para e a vida fica no valor final; o QA confere e a v0.13.1 sai
+
 - **02h20 · TELA INVOCAR REFEITA para o seu voto:** https://claude.ai/artifact/KP94DtwMgMCd8rCHnoQsLe (só ouro ganho jogando + 1 grátis por dia, chances e garantia à vista, cartas saindo do chão com brilho por raridade, prévia no herói). Equipamento corrigido (mesmo link). Pet agora dá FC ao evoluir (+2% por estágio). Bug da Arena confirmado como a luta PvP seguindo depois do fim: em correção; a batalha das fases continua rendendo escondida durante a Arena (sua decisão)
 
 - **02h · TELA DE EQUIPAMENTO REFEITA para o seu voto:** https://claude.ai/artifact/L95m2uAwaAewKue4iBBe32 (herói com a arma na mão, asa e pet na frente; 7 peças em volta; tocou-trocou com FC antes e depois; mochila com 8 abas). **Bug da Arena** (a luta continuava depois do fim): corrigido no protótipo e em correção no jogo, entra na v0.13.1. Kaia Angelical não tem asa pintada (era uma marcação errada no código, em correção)
@@ -395,7 +397,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] APK v0.13.0 PRONTA (com online): ligue o cabo e escreva "pode instalar" na janela do Engenheiro (instalação nova; daqui em diante instale sempre por cima, sem desinstalar)
 
 **Votar:**
-- [ ] Tela 21 Perfil versão 5: https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc (voto na própria página)
+- [ ] VOTAR AS TELAS, tudo num link só: https://claude.ai/artifact/6AUcyib9p4Z3Qe16Pk6BEb (Perfil, Equipamento, Loja, Invocar esperando; Arena já aprovada)
 - [ ] Página de aprovação (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19): Fusão · Coleção · Asa Serafim refeita (2 versões) · tela de carregamento nova · skins e pets animados · poses do arco e do bumerangue
 - [ ] Próximas telas para refazer: me diga a ordem
 
