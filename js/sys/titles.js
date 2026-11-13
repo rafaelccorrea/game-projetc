@@ -208,7 +208,18 @@ function render(el,S,host,opt){
     if(b.dataset.id&&o.featured!==b.dataset.id&&setFeatured(S,b.dataset.id)){ if(host&&host.toast) host.toast(`Destaque: ${BY[b.dataset.id].name}`); changed(host); render(el,S,host,opt); } };
 }
 
-const API={DATA,ensure,current,progress,need,seenWeapons,check,setFeatured,isUnlocked,featured,onKill,onWaveClear,onBossKill:onWaveClear,bonus,bonusText,condLabel,advice,render};
+/* RARIDADE DO TÍTULO (Arte, aprovado pelo PO 13/11; 0 Comum, 1 Raro, 2 Épico, 3 Mítico, 4 Lendário, 5 Divino). Campo t.r do TÍTULO (não confundir com
+   o r de dentro do cond, que é a raridade do pet/item pedido). Ícone: assets/icons/titles/<id>.png (256 px, sem moldura; moldura e brilho na cor de r por código). */
+DATA.titleR={stage10:0,pet1:0,mount1:0,prac50:0,tow10:0,skin10:0,
+  stage30:1,era2:1,boss10:1,kill1k:1,arena10:1,weap7:1,hairAll:1,eyesAll:1,hatsAll:1,
+  stage50:2,era4:2,tow25:2,prac200:2,pet3:2,skin25:2,
+  stage70:3,era6:3,boss50:3,tow50:3,arena3:3,mountAll:3,
+  kill10k:4,weapAll:4,petAll:4,phoenix5:4,skinAll:4,
+  tow100:5,arena1:5};
+DATA.titleRName=['Comum','Raro','Épico','Mítico','Lendário','Divino'];
+for(const t of DATA.titles){ t.r=DATA.titleR[t.id]!=null?DATA.titleR[t.id]:0; t.icon='assets/icons/titles/'+t.id+'.png'; }
+const titleRarity=id=>{ const t=DATA.titles.find(x=>x.id===id); return t?{r:t.r,name:DATA.titleRName[t.r],icon:t.icon}:null; };
+const API={DATA,titleRarity,ensure,current,progress,need,seenWeapons,check,setFeatured,isUnlocked,featured,onKill,onWaveClear,onBossKill:onWaveClear,bonus,bonusText,condLabel,advice,render};
 root.Sys=root.Sys||{}; root.Sys.titles=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
