@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **01h10 · Dificuldade pronta no código** (desligada até o QA medir): 90 FC pedidas, paredes, montaria +2,5% por estrela, teto diário de XP de abate. Simulação: grátis fecha no dia 180 (29 dias em paredes), VIP 5 no 139, VIP 10 no 121; quem não forja nem evolui o pet trava na fase 61. Ajustando a era 5 para o VIP também parar. **Arena:** ultimate e golpe do pet de verdade; prêmio por luta (moedas sempre, 1 gema na 1ª vitória do dia, baú na 3ª luta); robôs com aparência pelo nível
+
 - **00h50 · Você APROVOU a dificuldade nova:** cada fase pede uma FC (com 80% você perde sempre, com 90% vence metade); parede de 1 a 3 dias no chefe de cada era; grátis fecha as 9 eras em ~6 meses, VIP 10 em ~4; quem não forja nem evolui o pet trava na era 5. Montaria passa a valer +2 a 3% de FC por estrela; teto diário de XP de abate ligado. Aviso "faltam X de FC" com botões. **Arena PvP nova ligada no código** (o QA confere na tela), com prêmio por luta
 
 - **00h30 · DIFICULDADE (sua decisão):** o jogo não pode deixar passar fácil. A Sistemas está fazendo a proposta: FC recomendada por fase e chefe (abaixo dela fica muito difícil), paredes de 1 a 3 dias no chefe de cada era, tabela de onde vem o FC (raridade, Forja, pet, montaria, coleção), aviso do que fazer quando travar, simulação de 180 dias com paredes. Te mostro antes de ligar
