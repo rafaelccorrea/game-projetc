@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **18h20 · SERVIDOR NO AR COM O BANCO** (você rodou o script; https://15-229-249-157.sslip.io/health responde OK). Agora: teste automático contra o servidor real, conferência do QA de login + save, e o online vai na v0.13.0. Desempenho em 5 min no navegador: pior quadro 15 ms (antes 85), nenhuma travada, memória 144 MB
+
 - **17h50 · DESEMPENHO, resultado de 95 s (navegador):** pior quadro 18 ms (antes 85), nenhuma travada acima de 50 ms (antes 2), memória das imagens 139 MB (limite 150). Falta o teste de 5 min e, depois, medir no S24. **APK v0.13.0:** sai assim que o teste de 5 min passar, com tudo o que estiver conferido; o online vai junto se você rodar o script do banco antes, senão entra na seguinte
 
 - **17h30 · Você APROVOU:** desenho das peças por raridade, opção de 3 desenhos + cor (~100 créditos); a Arte começa e manda amostra de 1 era antes do resto. A parte por código (moldura, brilho e gema por raridade) JÁ está pronta (d5069c6)
@@ -352,7 +354,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] APK v0.12.9 instalado no S24 (save mantido). Jogue e me diga o que achar
 
 **Servidor (para ligar o online):**
-- [ ] Senha do banco: (a) Supabase → seu projeto → botão Connect → aba Session pooler → copiar a URI e trocar [YOUR-PASSWORD] pela senha; Project Settings → Database → SSL Configuration → Download certificate. (b) Abrir o PowerShell e rodar: powershell -ExecutionPolicy Bypass -File C:UsersafaeDesktopps-serverdeploydefinir-banco.ps1 (c) Colar a URI (não aparece na tela), Enter no certificado. No fim aparece PRONTO
+- [x] Senha do banco: feito por você (servidor no ar com o banco)
 - [x] Domínio: não precisa agora (usamos 15-229-249-157.sslip.io com HTTPS; troca quando você tiver um)
 - [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
 - [ ] Play Console: cadastrar os 13 produtos de compra (6 pacotes de diamantes, cartão mensal, Passe Premium, Oferta do Guardião, Mecha R$ 49,90, Paladino e Arlequina R$ 24,90, Ciborgue R$ 39,90; lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
