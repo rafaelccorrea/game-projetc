@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h40 · AUDITORIA DE RESPONSIVIDADE (seu pedido):** o QA vai abrir TODAS as telas em 5 tamanhos (320, 360, 384 = seu S24, 412 e tablet 768) e checar sozinho: rolagem para o lado, texto cortado, letra pequena, botão pequeno, coisa fora da tela ou atrás do entalhe, sobreposição e contraste. Eu monto uma página com os prints e distribuo as correções
+
 - **22h30 · Checklist revisado inteiro** (seções A, B, C e D abaixo). O principal: APK v0.13.0 pronta com online, esperando o cabo + "pode instalar"; voto no Perfil versão 5; créditos para fechar a arte ~700
 
 - **22h · APK v0.13.0 PRONTA** (C:\Users\rafae\Desktop\fps-android\Eonbound-debug-v0.13.0.apk, 1,08 GB), COM ONLINE LIGADO (o QA passou os 6 testes contra o servidor real), escolha de servidor, desempenho novo, arma sempre a equipada, pet na frente, peças em 3 desenhos, Modo dono completo. Para instalar: celular no cabo e escreva "pode instalar" na janela do Engenheiro. Ainda não visto no aparelho: login Google e desempenho no S24
