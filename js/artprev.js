@@ -63,6 +63,8 @@ const OWNER_KEYS = [
   { k: 'bag', t: 'Mochila nova', get: () => (window.Panels && Panels.defs && Panels.defs.bag) ? Panels.on('bag') : null, set: on => { if (on) Panels.enable('bag'); else PANEL_ON.bag = false; } },
   /* Escolha de servidor (js/p_realm.js, de Sistemas; painel 'realm', chave PANEL_ON.realm): mesmo jeito da Mochila nova */
   { k: 'realm', t: 'Escolha de servidor', get: () => (window.Panels && Panels.defs && Panels.defs.realm) ? Panels.on('realm') : null, set: on => { if (on) Panels.enable('realm'); else PANEL_ON.realm = false; } },
+  /* Ícones de peça por raridade, "opção C" (PANEL_V2.rarIcons, js/screens.js; vale na hora). Só visual, para o voto: o LIBERAR TUDO NÃO liga. redraw = redesenha a tela aberta ao trocar. */
+  { k: 'rarico', t: 'Ícones por raridade (opção C)', redraw: true, get: () => (typeof PANEL_V2 !== 'undefined' && PANEL_V2 && 'rarIcons' in PANEL_V2) ? PANEL_V2.rarIcons === true : null, set: on => { PANEL_V2.rarIcons = on; } },
   /* o HUD dos eventos com horário (SCREENS_ON.evHud) saiu daqui: ligado por padrão por decisão do PO/dono (13/11) */
 ];
 const keyGet = K => { try { return K.get(); } catch (e) { return null; } };
@@ -270,7 +272,9 @@ function ownerAct(k){
   else if (k.indexOf('key_') === 0){ const K = OWNER_KEYS.find(x => x.k === k.slice(4)), cur = K ? keyGet(K) : null; if (cur === null){ toast('Chave indisponível'); return; }   /* Engenheiro 6: chaves para o voto (só Modo dono; guardadas em S.ownerKeys do save de teste) */
     const want = !cur, ok = keySet(K, want); if (!S.ownerKeys || typeof S.ownerKeys !== 'object') S.ownerKeys = {};
     if (ok){ S.ownerKeys[K.k] = want; toast(K.t + ': ' + (want ? 'ligada' : 'desligada')); } else toast(K.t + ': a chave ainda é fixa no arquivo da batalha');
-    if (typeof refreshHero === 'function') refreshHero(); if (typeof preloadAssets === 'function') preloadAssets(); statsChanged(); if (typeof fbLayout === 'function') fbLayout(); paint(); return; }
+    if (typeof refreshHero === 'function') refreshHero(); if (typeof preloadAssets === 'function') preloadAssets(); statsChanged(); if (typeof fbLayout === 'function') fbLayout();
+    if (ok && K.redraw && typeof render === 'function'){ try { render(); } catch (e) {} }   /* chave só de visual: redesenha a tela aberta */
+    paint(); return; }
   else if (k.indexOf('wg_') === 0){ const w = k.slice(3), W = KST().wingTypes && KST().wingTypes[w]; if (!W){ toast('Asa indisponível'); return; }   /* as 8 asas novas: item de asa com o modelo (item.wing), na raridade em que o modelo cai */
     try { let it = S.inv.find(i => i.slot === 'wing' && i.wing === w); if (!it){ const n0 = S.nextId; Sys.host.addItem({ slot: 'wing', r: Math.min(4, W.r | 0), e: Math.min(6, S.eraMax | 0), lvl: 1, wing: w }); it = S.inv.find(i => i.id === n0 && i.slot === 'wing'); if (it && it.wing !== w) it.wing = w; }
       if (it){ S.eq.wing = it.id; if (typeof preloadAssets === 'function') preloadAssets(); toast(W.name + ' equipada' + (KST().newWings === true ? '' : '. Ligue a chave Asas novas para ver o desenho')); } else toast('Não deu para criar a asa (mochila cheia)'); } catch (e) { toast('Não deu para criar a asa'); } }
