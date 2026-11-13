@@ -354,8 +354,8 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 | Arena: liga de fim de temporada (`arena:season`) | jogo, com o delta das lutas do servidor | `POST /arena/fight` | sim | sim | não (o jogo entrega a liga) |
 | Torneio da temporada, top 10 (`tourney:season`) | **indefinido**: ninguém chama no jogo; qual ranking? | — | **não** | — | — |
 | Guilda: baú semanal (item + materiais) | servidor | Torneio do Poder, `payWeek` | sim | sim (tourney.test) | sim |
-| Guilda: baú semanal, fragmentos novos (`guild:weekly`: corvo, unicórnio) | servidor | — | **não** (o baú não leva) | — | — |
-| Guerra de guildas: Capital (`guild:capital`, 40 por temporada) | servidor (dono da Capital no fim da temporada) | — | **não** | — | — |
+| Guilda: baú semanal, fragmentos novos (`guild:weekly`: corvo, unicórnio) | servidor | Torneio do Poder, `payWeek` (NEWDROPS_ON) | **sim** (fps-server 1ad866e) | sim (tourney.test) | sim: `att.newDrops {src:'guild:weekly'}` no baú |
+| Guerra de guildas: Capital (`guild:capital`, 40 por temporada) | servidor (a temporada do Torneio do Poder é semanal: dono da Capital na hora dos prêmios de domingo) | Torneio do Poder, `payWeek` (NEWDROPS_ON) | **sim** (fps-server 1ad866e) | sim (tourney.test) | sim: `att.newDrops {src:'guild:capital'}` a cada membro |
 | Eventos: calendário | servidor | `GET /events` | sim | sim (services.test) | — |
 | Eventos: pontos e loja de pontos | jogo | — | não precisa | — | — |
 | VIP 7 skin, VIP 8 Fênix, VIP 9 serpe (`vip:level`) | jogo, com os pontos VIP das compras | entregas `vip_points` | sim | sim | entregas (§7) |
