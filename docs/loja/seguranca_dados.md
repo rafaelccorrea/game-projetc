@@ -7,7 +7,7 @@
 |---|---|
 | O app coleta ou compartilha algum dos tipos de dados exigidos? | **Sim** (coleta; não compartilha) |
 | Todos os dados do usuário coletados são criptografados em trânsito? | **Sim** (HTTPS/WSS) |
-| Vocês oferecem uma forma de os usuários pedirem a exclusão dos dados? | **Sim**: no próprio jogo (Configurações → Excluir conta; apaga em 30 dias) e pelo link [URL DA PÁGINA DE EXCLUSÃO] |
+| Vocês oferecem uma forma de os usuários pedirem a exclusão dos dados? | **Sim**: no próprio jogo (Configurações › Conta › Excluir conta — em breve no app) e pela página https://15-229-249-157.sslip.io/excluir-conta [TROCAR PELO DOMÍNIO DEFINITIVO]; apaga em 30 dias (conta, personagens de todos os servidores, save e histórico, chat, correio, rankings e guilda) |
 | O app segue a Política de Famílias? | **Sim** (o jogo tem jogadores menores; ver iarc.md) |
 | Os dados são compartilhados com terceiros? | **Não**. Os processadores que guardam os dados em nome da empresa (hospedagem do servidor; Google para o login e as compras) não contam como compartilhamento, mas devem estar no contrato e na política. |
 
@@ -27,6 +27,6 @@
 
 ## Práticas de segurança (para a seção "Práticas")
 - Dados em trânsito: criptografados (HTTPS/WSS).
-- Exclusão: o jogador pede no jogo; a conta e o save são apagados em 30 dias (entrar no prazo cancela). Compras: o registro do recibo pode ser mantido pelo prazo legal/fiscal [CONFIRMAR COM O ADVOGADO].
+- Exclusão: o jogador pede no jogo ou pela página de exclusão; a conta, os personagens de TODOS os servidores, o save (com o histórico de 5 versões), o chat, o correio, os rankings e a guilda são apagados em 30 dias (entrar no prazo cancela). Compras: o registro do recibo pode ser mantido pelo prazo legal/fiscal [CONFIRMAR COM O ADVOGADO].
 - Menores: faixa etária pela data de nascimento; menor de 13 ou sem idade = chat só com frases prontas, sem e-mail, sem leilão e sem trocas. Trocas e leilão só 18+.
 - Revisão independente de segurança: **Não** (por enquanto).

@@ -39,7 +39,7 @@ O chat usa **frases prontas**. Denúncias são analisadas pela equipe. Podemos s
 - O jogo pode mudar, receber atualizações, ficar fora do ar para manutenção ou ter servidores encerrados, com aviso no jogo sempre que possível.
 
 ## 7. Exclusão da conta
-Você pode excluir a conta no jogo (Configurações → Excluir conta). Ela é apagada em até 30 dias; entrar de novo nesse prazo cancela a exclusão. Itens e compras da conta excluída não podem ser recuperados depois do prazo.
+Você pode excluir a conta no jogo (Configurações › Conta › Excluir conta) ou na página de exclusão. Ela é apagada em até 30 dias, com os personagens de todos os servidores; entrar de novo nesse prazo cancela a exclusão. Itens e compras da conta excluída não podem ser recuperados depois do prazo.
 
 ## 8. Propriedade intelectual
 O jogo, os personagens, a arte, as músicas e os textos são da **[EMPRESA]** ou licenciados para ela.

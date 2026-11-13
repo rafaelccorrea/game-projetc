@@ -39,12 +39,12 @@ O Eonbound pode ser jogado por crianças e adolescentes, por isso tratamos os da
 
 ## 5. Com quem os dados são compartilhados
 **Não vendemos nem compartilhamos** os seus dados com anunciantes ou terceiros. Usamos prestadores que tratam dados **em nosso nome** e sob contrato:
-- hospedagem do servidor e do banco de dados: **[PROVEDOR DE HOSPEDAGEM, PAÍS]**;
+- hospedagem do servidor: **Amazon Web Services (AWS), região São Paulo (Brasil)**; banco de dados: **Supabase (Postgres), região [CONFIRMAR: São Paulo, sa-east-1]**;
 - Google (login opcional e pagamentos pelo Google Play), conforme a política do Google.
 Podemos fornecer dados se uma lei ou ordem judicial exigir.
 
 ## 6. Transferência internacional
-[ADVOGADO/EMPRESA: informar se o servidor ou algum prestador fica fora do Brasil e a garantia usada, art. 33 da LGPD.]
+Os servidores do jogo ficam no Brasil (AWS São Paulo; o banco no Supabase, região [CONFIRMAR]). Se o banco ficar no Brasil, a única transferência internacional é a do **Google** (login opcional e pagamentos do Google Play), feita conforme a política do Google. [ADVOGADO: confirmar a garantia do art. 33 da LGPD para o Google e, se o banco ficar fora do Brasil, para o Supabase.]
 
 ## 7. Por quanto tempo guardamos
 - Conta e progresso: enquanto a conta existir. Se você pedir a exclusão, apagamos em **até 30 dias** (entrar de novo nesse prazo cancela o pedido).
@@ -55,7 +55,7 @@ Podemos fornecer dados se uma lei ou ordem judicial exigir.
 
 ## 8. Seus direitos
 Você (ou o seu responsável) pode: confirmar se tratamos seus dados, acessar, corrigir, pedir a portabilidade, pedir a exclusão, revogar o consentimento e reclamar à **ANPD** (art. 18 da LGPD).
-- **Excluir a conta:** no jogo, em Configurações → Excluir conta, ou pelo contato do item 1.
+- **Excluir a conta:** no jogo, em Configurações › Conta › Excluir conta (em breve no app), na página https://15-229-249-157.sslip.io/excluir-conta [TROCAR PELO DOMÍNIO DEFINITIVO] ou pelo contato do item 1. Apagamos a conta e os personagens de **todos os servidores**, o progresso e o histórico, o chat, o correio, os rankings e a guilda. Ficam só o recibo das compras e os registros de moderação, pelo prazo legal [ADVOGADO].
 - Outros pedidos: **[E-MAIL DE PRIVACIDADE]**. Respondemos em até **15 dias**.
 
 ## 9. Segurança
