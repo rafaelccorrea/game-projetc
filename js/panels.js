@@ -22,6 +22,12 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   realm:true,   /* escolha de servidor (js/p_realm.js, de Sistemas): LIGADA (decisão do dono, para a APK v0.13.0). Sem item no MENU: entra pela linha "Servidor" das Configurações (js/p_cfg.js) e pelo passo do Título (js/p_intro.js, RealmUI.mount). O arquivo roda em escopo próprio (os nomes XR e rClick dele não chegam ao js/screens2.js) */
   fuse:false   /* Fusão (js/p_fuse.js, de Sistemas): DESLIGADA; só liga junto com Sys.stats.DATA.quality.on (qualidade/fusão é da v0.13, sem voto ainda) */},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
+/* FUNDO DAS TELAS V2: o cenário da ERA ATUAL do jogador (o mesmo arquivo da batalha, assets/bg/era<N>.png; eras 7-8: era7_ref / era8_ref), escurecido por cima.
+   xEraBg(a0, a1) devolve o valor de `background` em CSS (a0 = escuro no topo, a1 = escuro na base, 0 a 1); xEraBgUrl() devolve o caminho da imagem (para a tela
+   pedir a carga antes de desenhar). Sem a tabela de eras, cai numa cor escura. */
+function xEraBgUrl(){ try{ const e=Math.max(0,Math.min(ERAS.length-1,eraOf(Math.max(1,S.stage|0)))); return typeof bgPath==='function'?bgPath(e):'assets/bg/era'+e+'.png'; }catch(e){ return ''; } }
+function xEraBg(a0,a1){ const u=xEraBgUrl(), t=typeof a0==='number'?a0:0.55, b=typeof a1==='number'?a1:0.82; return (u?'linear-gradient(180deg,rgba(13,10,8,'+t+'),rgba(13,10,8,'+b+')),url('+u+') center top/cover no-repeat,':'')+'#16110d'; }
+window.xEraBg=xEraBg; window.xEraBgUrl=xEraBgUrl;
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   add(name,def){ def.name=name; this.defs[name]=def; if(PANEL_ON[name]) this.enable(name); return def; },
   on(name){ return !!PANEL_ON[name]&&!!this.defs[name]; },

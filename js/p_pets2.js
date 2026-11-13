@@ -266,7 +266,7 @@ function pRender(){
   const who=pv&&!pv.soon?(()=>{ const pd=pDef(pv.id); return `<div class="p2-who pv"><i></i><span>Prévia: ${esc2(pd.name)}${o.owned[pd.id]?' '+esc2(SN[pClamp(pv.stg|0,0,2)]):''}</span><button data-x="sair" aria-label="Sair da prévia">Sair</button></div>`; })()
     :`<div class="p2-who"><i></i><span>${esc2(pHeroN())}${pLvl()>0?' · Nível '+n0(pLvl()):''}${eqDef?' · '+esc2(eqDef.name)+' '+esc2(SN[pStgOf(eqDef.id)]):''}</span></div>`;
   const fxAge=XP.fx?now-XP.fx.t:1e9, flyAge=XP.fly?now-XP.fly.t:1e9, tAge=XP.toast?now-XP.toastT:1e9;
-  const stage=`<div class="p2-stage" style="height:${stH}px">
+  const stage=`<div class="p2-stage" style="height:${stH}px;background:${typeof xEraBg==='function'?xEraBg(0.45,0.85):'#16110d'}">
       ${canDraw?`<canvas id="p2_cv" role="img" aria-label="${esc2(alt)}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`
         :sp?`<img src="${pImg(sp.def,sp.stg)}" alt="${esc2(sp.def.name+', '+SN[sp.stg])}" style="position:absolute;left:50%;bottom:8%;height:74%;transform:translateX(-50%);object-fit:contain">`:''}
       ${who}

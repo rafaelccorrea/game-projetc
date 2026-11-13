@@ -317,7 +317,7 @@ function loop(ts){ X.raf=0; let c=null; try{ c=document.getElementById('f2_stc')
 function loopStart(){ try{ if(!X.raf&&typeof requestAnimationFrame==='function'&&document.getElementById('f2_stc')) X.raf=requestAnimationFrame(loop); }catch(e){} }
 
 /* ================= HTML ================= */
-function gateHtml(){ return '<div class="f2"><div class="f2-bg"></div><div class="f2-gate" role="dialog" aria-label="Forja bloqueada"><span class="lil" style="font-size:26px;position:relative">Forja</span>'
+function gateHtml(){ return '<div class="f2"><div class="f2-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.5,0.9):'#16110d')+'"></div><div class="f2-gate" role="dialog" aria-label="Forja bloqueada"><span class="lil" style="font-size:26px;position:relative">Forja</span>'
   +'<span style="position:relative;padding:6px 14px;border-radius:999px;border:2px solid var(--gold);color:var(--gold);font-size:15px;font-weight:900">Libera no nível '+gateLv()+'</span>'
   +'<span class="f2-msg" style="position:relative">Você está no nível '+esc2(call(plv)||1)+'. Continue lutando para liberar. Você tem '+n0(stonesNow())+' pedras de forja guardadas.</span>'
   +'<button class="f2-bt" data-x="back" style="position:relative;flex:none;min-height:48px;padding:0 26px;font-size:15px"><span>Voltar ao Equipamento</span></button></div></div>'; }
@@ -469,7 +469,7 @@ function draw(){
   else if(X.tab==='fuse'){ const G=groups(); if(!G.some(o=>o.k===X.gkey)) X.gkey=G.length?G[0].k:null; det=detFuse(narrow,G); body=bodyFuse(G); }
   else { det=detForge(narrow); body=bodyForge(); }
   const fly=X.fly&&now()-X.fly.t<1600?'<div class="f2-fly" style="top:'+(SH+14)+'px;animation-delay:'+(X.fly.t-now())+'ms">'+esc2(X.fly.txt)+'</div>':'';
-  V.innerHTML=xWrap(d,'','<div class="f2'+(X.anim?' f2-in':'')+'"><div class="f2-bg"></div>'
+  V.innerHTML=xWrap(d,'','<div class="f2'+(X.anim?' f2-in':'')+'"><div class="f2-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.5,0.9):'#16110d')+'"></div>'
     +stageHtml(SH)+fcRowHtml()+tabsHtml()
     +'<div id="f2_scroll" class="f2-scroll x-scroll">'+det+body+'</div>'
     +banHtml(X.ban,SH-24)+banHtml(X.ban2,SH-90)   /* a 2ª faixa ("Nova aura") nasce 0,7 s depois: hora no futuro = atraso positivo da animação */
