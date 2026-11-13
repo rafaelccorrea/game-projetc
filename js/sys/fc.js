@@ -82,6 +82,8 @@ function stats(S,host,opts){ opts=opts||{}; const b=total(S,opts), x=opts.extra|
   else { const atk0=Math.max(0,num(host&&host.atk&&host.atk(),0)+pct.atk), hp0=Math.max(0,num(host&&host.hp&&host.hp(),0)+pct.hp);
     a={atk:atk0*Math.max(0,1+b.atkPct/100), hp:hp0*Math.max(0,1+(b.hpPct+b.petBond)/100), hpNoPet:hp0*Math.max(0,1+b.hpPct/100), def:0,
        critRate:clamp(DATA.baseCrit+b.critPct,0,DATA.maxCrit), critDmg:(DATA.critMult-1)*100, aspd:0}; }
+  // GOLPES ESPECIAIS (Sys.strikes, chave desligada): só com a chave ligada o campo strikes existe; desligada, nada muda (parts igual byte a byte)
+  const K=sysRoot().strikes; if(K&&typeof K.on==='function'&&K.on()&&typeof K.totals==='function'){ try{ const t=K.totals(S,host,opts.item?{item:opts.item,remove:!!opts.remove}:null); if(t) a.strikes=t; }catch(e){} }
   return Object.assign(a,{ crit:a.critRate, goldMult:Math.max(0,1+b.goldPct/100), flat:b.fc, bonus:b,
     // para a batalha: golpe do pet = ATK final x pet.atk x 2,0/0,8 a cada 2 s; cura por onda = HP x pet.heal
     pet:{atk:Math.max(0,b.petAtk/100), heal:Math.max(0,b.petHp/100)} }); }
@@ -90,8 +92,9 @@ function stats(S,host,opts){ opts=opts||{}; const b=total(S,opts), x=opts.extra|
    parteATK = ATK × wAtk × (1 + chance crít × dano crít) × (1 + vel. de ataque); parteVida = HP × wHp + DEF × wDef;
    pet = parteATK × dano do pet + vida que o pet deu + parteVida × cura, travado em maxPetShare do herói. */
 function parts(st){ const cr=clamp(num(st.critRate,num(st.crit,0)),0,100)/100, cd=Math.max(0,num(st.critDmg,(DATA.critMult-1)*100))/100, sp=Math.max(0,num(st.aspd,0))/100;
-  const a=Math.max(0,num(st.atk,0))*DATA.wAtk*(1+cr*cd)*(1+sp), d=Math.max(0,num(st.def,0))*DATA.wDef;
-  const hAll=Math.max(0,num(st.hp,0))*DATA.wHp+d, h=num(st.hpNoPet,num(st.hp,0))*DATA.wHp+d, p=st.pet||{atk:0,heal:0};
+  let a=Math.max(0,num(st.atk,0))*DATA.wAtk*(1+cr*cd)*(1+sp), d=Math.max(0,num(st.def,0))*DATA.wDef;
+  let hAll=Math.max(0,num(st.hp,0))*DATA.wHp+d, h=num(st.hpNoPet,num(st.hp,0))*DATA.wHp+d; const p=st.pet||{atk:0,heal:0};
+  if(st.strikes){ const K=sysRoot().strikes, f=K&&typeof K.fcFactor==='function'?K.fcFactor(st.strikes):{atk:1,hp:1}; a*=f.atk; hAll*=f.hp; h*=f.hp; }   // golpes especiais (só ligado)
   // pet = golpe (parte de ATK) + vínculo (HP que o pet deu) + cura (sobre o HP com vínculo), tudo travado em maxPetShare do herói
   const cap=st.bonus&&st.bonus.petCap>0?st.bonus.petCap:DATA.maxPetShare;   // teto POR PET (Revisão 4)
   const pet=Math.min(cap*(a+h),a*num(p.atk,0)+(hAll-h)+hAll*num(p.heal,0));

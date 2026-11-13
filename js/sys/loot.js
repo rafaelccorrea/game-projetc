@@ -278,6 +278,8 @@ const ORIGIN_OF={drop:'drop',boss:'boss',chest:'chest',arsenal:'instance',eraBos
 /* ARMA (fps-e2, ordem do dono): família gravada ao criar (arco/bumerangue com as chances e portões do Sys.stats; senão a da arte). Sem o stats, o migrateItem deduz. */
 function wtTag(it,host,rng){ if(!it||it.slot!=='weapon') return it; const St=root.Sys&&root.Sys.stats;
   try{ if(St&&typeof St.rollWeaponType==='function') it.wt=St.rollWeaponType(it,{level:levelOf(host),era:it.e},rng); }catch(e){} return it; }
+/* GOLPES ESPECIAIS (Sys.strikes, chave desligada): só ligada grava it.stk e gasta sorte; desligada (ou sem o módulo) o item sai byte a byte igual */
+function stkTag(it,rng){ const K=root.Sys&&root.Sys.strikes; try{ if(K&&typeof K.on==='function'&&K.on()&&typeof K.tag==='function') K.tag(it,rng); }catch(e){} return it; }
 function wingTag(it,diff){ if(!it||it.slot!=='wing') return it; const St=root.Sys&&root.Sys.stats;
   const N=root.Sys&&root.Sys.newDrops;   // modelo da asa: Sys.newDrops.wingTypeForDrop (Mariposa sombria quando liberada); senão anjo/demônio do Sys.stats
   try{ const w=N&&typeof N.wingTypeForDrop==='function'?N.wingTypeForDrop(it.e,it.r,diff):null; if(w) it.wing=w; else if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
@@ -304,7 +306,7 @@ function rollItem(host,opts){
   if(qp!=null) for(let k=1;k<Math.max(1,int0(opts.qBest));k++) qp=Math.max(qp,qualityOf(rng));   // dificuldade: melhor de N (Difícil 2, Hell 3)
   if(qp!=null) it.qp=qp;
   wtTag(it,host,rng);
-  return wingTag(it,opts.diff!=null?opts.diff:diffOf(null,host));
+  return stkTag(wingTag(it,opts.diff!=null?opts.diff:diffOf(null,host)),rng);
 }
 /* ---------------- invocação por ouro ---------------- */
 function summonCost(host,n){
@@ -351,7 +353,7 @@ function summon(S,host,n,opts){
 }
 /* o item como o jogo recebe (host.addItem). Nível é do ITEM (1-100, teto = nível do jogador); item novo nasce no 1, sem ouro investido.
    gold = ouro investido em melhorias (nome do stats.js da fps-e2, que soma a cada melhoria por ouro; diamante NÃO entra). */
-const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; if(it.origin) o.origin=it.origin; return o; };
+const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; if(it.origin) o.origin=it.origin; if(Array.isArray(it.stk)) o.stk=it.stk.map(x=>({k:x.k,q:x.q})); return o; };
 /* ---------------- entrega de PACOTE (correio, login diário, eventos) ----------------
    bundle = {gold?, goldk? (× ouro de um abate), gems?, essence?, forge?, food?, xp?, skin?, items?:[{slot, r, e?}], eggs?:[r]}
    Regras únicas: item acima do portão (ou asa sem nível 50 / abaixo de Épica) fica GUARDADO e sai na era da liberação; ovo acima do portão fica GUARDADO
@@ -359,7 +361,7 @@ const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.su
 function canHold(host,spec){ if(spec.r>maxAllowedR(host)) return false; if(spec.slot==='wing'&&!wingOk(host,spec.r)) return false; return true; }
 function makeFixedItem(host,spec){ const rng=rngOf(host); let r=clamp(int0(spec.r),0,maxDropR()); if(spec.slot==='weapon'&&r===DATA.launch.mythicR) r--;
   const e=spec.e!=null?clamp(int0(spec.e),0,99):eraMaxOf(host); const it={slot:spec.slot,r,e,lvl:1,gold:0,subs:rollSubs(rng,r,spec.slot),origin:spec.origin||'reward'};
-  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; wtTag(it,host,rng); return wingTag(it,spec.diff!=null?spec.diff:diffOf(null,host)); }
+  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; wtTag(it,host,rng); return stkTag(wingTag(it,spec.diff!=null?spec.diff:diffOf(null,host)),rng); }
 function grantBundle(S,host,b){
   const o=ensure(S), out={gold:0,gems:0,items:[],heldItems:[],eggs:[],heldEggs:[],skin:null}; if(!b||typeof b!=='object') return out;
   const gold=int0(b.gold)+Math.round(num(b.goldk,0)*goldUnitOf(host)); if(gold){ out.gold=gold; if(host.addGold) host.addGold(gold); }

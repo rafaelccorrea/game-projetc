@@ -182,3 +182,49 @@ Origem: `docs/LOM_VS_EONBOUND.md` seç. 5 (itens 2, 3 e 5). Números do Ladrão 
 | `Sys.thief` (Ladrão de Brasas) | Instância diária: 2 entradas grátis por dia (Brasília), 45 s; prêmio = até 1 lote pelo nível da Fogueira, `finish {score 0..1}` (arredonda; score 1 vence o nível); **Repetir** (`sweep`) dá o lote cheio do melhor nível vencido e gasta 1 entrada. Brasas por `Sys.bonfire.addBrasas(S,'thief',n)` | `DATA.on:false` (precisa também do `Sys.bonfire` ligado) | `test/sys/thief.test.js` (8) |
 
 Falta do Engenheiro: carregar `js/sys/thief.js` na lista de módulos; passar `{stage,maxStage}` no `fogBrasa('kill')` do `js/farm.js`; chamar `Sys.bonfire.offline` uma vez na volta ao jogo e preencher `gold/xp/items/stones` do resumo com o offline que já existe; tela do Ladrão.
+
+---
+
+## Propostas do LoM aprovadas pelo dono: Golpes especiais nos itens · Grimório das Eras (Sistemas, 13/11)
+
+Origem: `docs/LOM_VS_EONBOUND.md` §5 itens 1 e 4, §4 B1 e B7. Explicação para o dono: `docs/PROPOSTA_GOLPES_GRIMORIO.md`. **As duas chaves estão DESLIGADAS**; desligadas, o jogo fica byte a byte igual (drop, FC e batalha, com teste).
+
+### Golpes especiais (`js/sys/strikes.js`, `Sys.strikes`)
+
+| Linha | Estado |
+|---|---|
+| O que é | 5 golpes que vêm no item e aparecem com nome na luta: **COMBO**, **CONTRA-ATAQUE**, **ATORDOADO**, **ESQUIVA**, **ROUBO DE VIDA** (cor fixa em `DATA.color`) |
+| Chave | ⏸ `Sys.strikes.DATA.on=false` · liga com `Sys.strikes.setOn(true)` |
+| Formato no item | `it.stk=[{k,q}]` (igual aos secundários). Básico 0, Raro/Épico/Mítico 1, Lendário/Divino 2. Lista por espaço em `DATA.pool` |
+| Quem sorteia | ✓ `Sys.loot.rollItem` e `makeFixedItem` chamam `stkTag` (só ligado; desligado não gasta sorte) · `itemOut` leva o `stk` para o inventário · item antigo: `ensureItem` gera com semente pelo id |
+| Valor | `(mín + q·(máx−mín)) × raridade × (1 + 0,12·era)`; faixa da Rara: Combo 3-6%, Contra 3-6%, Atordoar 1-2%, Esquiva 1,5-3%, Roubo 1-2,5% |
+| Tetos | Normal: Combo 50, Contra 50, Atordoar 20, Esquiva 30, Roubo 20 · **Chefe/Senhor/Arena**: Atordoar 10 (0,5 s, imune 4 s), Esquiva 20, Roubo 10 |
+| FC | ✓ só ligado: `Sys.fc.stats` põe `strikes` e `Sys.fc.parts` multiplica a parte de ATQ por `1 + 0,4·combo + 0,25·contra + 0,5·atordoar` e a de Vida por `1/(1−esquiva) × (1 + 1,5·roubo)` |
+| Testes | `test/sys/strikes.test.js` (10): desligado = drop e FC idênticos com e sem o módulo; sorteio por espaço/raridade; tetos; resolvedores; FC sobe ligado |
+
+**O que o Engenheiro chama (na batalha, quando ligar):**
+1. `const P=Sys.strikes.profile(S,host)` ao entrar na luta e a cada troca de item.
+2. A cada golpe do herói que acerta: `const r=Sys.strikes.onHeroHit(S,{profile:P,kind:'s1'|'s2'|'s3',dmg,boss,pvp,isCombo,now,immuneUntil:inimigo.imune},rng)`.
+   `r.combo` → mais um golpe de `r.comboMult` (50%) do básico com `isCombo:true` · `r.stun` → inimigo parado `r.stunSec` s e `inimigo.imune=r.immuneUntil` · `r.lifesteal` → cura essa vida.
+3. Quando o herói vai apanhar: `const h=Sys.strikes.onHeroHurt(S,{profile:P,dmg,boss,pvp},rng)` → usar `h.dmg` (0 na esquiva); `h.counter` → golpe de `h.counterMult` (60%) do básico.
+4. Mostrar cada `r.labels`/`h.labels` (`{text, color}`) com o `floatText` (B1). Na tela do item: `Sys.strikes.describe(item)` → `[{text:'Combo +3,2%', color}]`.
+5. Carregar `js/sys/strikes.js` depois de `stats.js` e antes de `loot.js`/`fc.js` serem usados. Desligado, todos os resolvedores devolvem "nada" sem gastar sorte.
+
+### Grimório das Eras (`js/sys/grimoire.js`, `Sys.grimoire`)
+
+| Linha | Estado |
+|---|---|
+| O que é | 18 magias (2 por era), 3 equipadas lançando sozinhas com recarga; cada magia aprendida dá bônus permanente pequeno; conjuntos Fases / Arena / Chefe |
+| Chave | ⏸ `Sys.grimoire.DATA.on=false` · `setOn(true)` |
+| Aprender | 1ª magia da era = 1ª vitória sobre o Senhor da Era · 2ª = 1ª vitória sobre o chefe da fase 50 da era |
+| Subir (1 → 10) | páginas repetidas da mesma magia (1,2,3,4,5,6,8,10,12) + tinta (10 … 320). Fontes FIXAS em `DATA.grants`; loja/diamante/oferta/pacote **recusados** (`DATA.forbidden`) |
+| Efeito | dano ≤ 3× o ATQ no total (regra de coerência, como o s2), +4%/nível até o teto; cura/escudo/bônus +4%/nível; recarga −2%/nível |
+| Bônus por ter | ATQ/Vida +0,4% (+0,08/nível), DEF +0,3%, Crítico +0,2 pt. As 18 no nível 10: ATQ +6,7%, Vida +6,7%, DEF +2,5%, Crítico +1,7 pt (FC ~+7%, só depois de muito jogo). Entra sozinho na FC (`bonus(S)`), zero desligado |
+| Testes | `test/sys/grimoire.test.js` (11): catálogo, coerência de dano, desligado = FC igual, aprender, teto diário, sem compra, níveis, bônus, conjuntos, save torto, view |
+
+**O que o Engenheiro chama:**
+1. Carregar `js/sys/grimoire.js` (o `Sys.fc` soma o `bonus` sozinho).
+2. Vitórias: `Sys.grimoire.grant(S,host,'eraLord',{era})` (1ª do Senhor), `'eraLordRepeat'` (de novo), `'chief50'` (1ª do chefe da fase 50), `'instance'` (cada instância diária), `'tower'` (a cada 10 andares), `'daily'` (missões), `'event',{id}` (prêmio fixo de evento).
+3. Batalha: `Sys.grimoire.loadout(S, Sys.grimoire.modeFor({boss,pvp}))` → até 3 `{id,name,cd,effect,text}`; lançar cada uma quando a recarga zerar (ícone com anel de recarga, B7). Atordoar de magia usa a mesma imunidade do `Sys.strikes`.
+4. Tela: `Sys.grimoire.view(S,host)` (9 eras × 2, nível, páginas, custo, `canLevel`, bônus, conjuntos) · `levelUp(S,id,host)` · `equip(S,modo,posição,id)` · `setPreset(S,modo,[ids])`.
+5. **Falta**: tela do Grimório (protótipo pela Arte/PO antes) e os ícones das 18 magias (Arte).
