@@ -487,21 +487,26 @@ if(OWNER_MODE) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{offer:true});
 /* DEBUG OFICIAL DO SENHOR DA ERA (pedido do QA): ?debug=1&fresh=1&lord=<era 0..6> põe o save na fase <era*10+10>, onda 5 (Senhor da Era), com o herói
    forte o bastante para vencer e SEM __stay (o chefe morre de verdade, a fase avança e a era troca). O reforço é refeito a cada 0,2 s (ver o fim do arquivo). */
 if(DEBUG&&QP.has('lord')){ QP.set('era',QP.get('lord')); QP.set('eb','1'); window.__lord=true; }
+/* DEBUG: arma de teste = um ITEM de arma da era/raridade pedida, criado (uma vez; depois reaproveitado) e EQUIPADO. Decisão do dono: a arma na mão é sempre a
+   do item equipado; os atalhos ?era=N&wr=R / dbgSet não gravam mais S.skinEq.weapon. Só é chamada em DEBUG, com __noSave. Nível = o da arma que estava equipada. */
+function dbgWeapon(e,r){ e=Math.max(0,Math.min(8,e|0)); r=Math.max(0,Math.min(4,r|0)); const cur=S.inv.find(i=>i.id===S.eq.weapon); let it=S.inv.find(i=>i.slot==='weapon'&&i.origin==='debug');
+  if(!it){ S.nextId=Math.max(S.nextId|0,S.inv.reduce((m,i)=>Math.max(m,i.id|0),0)+1); it={id:S.nextId++,slot:'weapon',lvl:Math.max(1,cur?cur.lvl|0:1),gold:0,subs:[],origin:'debug'}; S.inv.push(it); }
+  it.r=r; it.e=e; it.look=e; delete it.wt; S.eq.weapon=it.id; return it; }
 if(DEBUG&&(QP.has('era')||QP.has('wr')||QP.has('ar')||QP.has('gold'))){
   window.__noSave=true; S.tut=99; S.welcome=true; S.set.auto=true;
   const era=+(QP.get('era')||eraOf(S.stage));
   S.stage=era*STAGES_PER_ERA+1+(QP.has('eb')?9:0); S.wave=(QP.has('boss')||QP.has('eb'))?5:(+QP.get('wave')||1); S.eraMax=Math.max(S.eraMax,era); S.best=Math.max(S.best,S.stage);
   if(QP.has('plv')) window.__plv=+QP.get('plv');   /* nível do jogador de teste (aplicado no boot) */
   const wr=+(QP.get('wr')||0), ar=+(QP.get('ar')||0), we=+(QP.get('we')||era), ae=+(QP.get('ae')||era);
-  ['w'+we+wr,'a'+ae+ar].forEach(id=>{ if(!S.skins.includes(id)) S.skins.push(id); });
-  S.skinEq.weapon='w'+we+wr; S.skinEq.armor='a'+ae+ar;
+  if(!S.skins.includes('a'+ae+ar)) S.skins.push('a'+ae+ar);
+  S.skinEq.armor='a'+ae+ar; dbgWeapon(we,wr);   /* arma: ITEM da era/raridade equipado (o desenho sai pelo caminho real); S.skinEq.weapon não é mais gravado */
   S.gold=+(QP.get('gold')||50000); S.gems=Math.max(S.gems,500);
   if(QP.has('stay')) window.__stay=true;
 }
 // debug: troca era/skins/chefe ao vivo (sem recarregar)
 window.dbgSet=function(era,wr,ar,mode){ if(!DEBUG) return; window.__noSave=true; window.__stay=true;
   S.eraMax=Math.max(S.eraMax,era); S.stage=era*STAGES_PER_ERA+1+(mode==='eb'?9:0); S.wave=(mode==='boss'||mode==='eb')?5:1; S.best=Math.max(S.best,S.stage);
-  ['w'+era+wr,'a'+era+ar].forEach(id=>{ if(!S.skins.includes(id)) S.skins.push(id); }); S.skinEq.weapon='w'+era+wr; S.skinEq.armor='a'+era+ar;
+  if(!S.skins.includes('a'+era+ar)) S.skins.push('a'+era+ar); S.skinEq.armor='a'+era+ar; dbgWeapon(era,wr); if(typeof statsChanged==='function') statsChanged();
   B.dispEra=era; B.tr=null; B.deadT=0; B.corpses=[]; B.act=null; B.eshots=[]; startWave(0); if(mode==='boss'||mode==='eb') B.toSpawn=['boss'];   /* chefe sozinho, de frente */
   while(B.toSpawn.length) B.en.push(mkEnemy(S.stage,B.toSpawn.shift())); placeNow(); };
 window.dbgSkill=function(n){ if(!DEBUG) return; if(n===2) B.cd2=0; if(n===3) B.energy=100; return useSkill(n); };
@@ -515,9 +520,10 @@ const itemOf = id => S.inv.find(i=>i.id===id);
    A skin inicial 'w00', com que todo save nasce, conta como "nenhuma skin escolhida" (decisão do coordenador): ela não esconde o item.
    Não usa Sys.appearance.of: lá qualquer S.skinEq.weapon (inclusive a inicial) vence o item, o que deixaria tudo como antes. A regra é a mesma, com
    essa exceção. Devolve objetos de SKINS (mesma arte: assets/weapons/era<E>_t<tier>.png). */
-function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'), sid=S.skinEq.weapon; let w=null;
-  if(sid&&sid!=='w00') w=SKIN(sid);
-  if(!w){ const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(6,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
+/* DECISÃO DO DONO (opção A): a arma na mão é SEMPRE a do item equipado. S.skinEq.weapon (skin de arma de save antigo) é IGNORADO no desenho; o campo fica
+   no save como está (nada é apagado nem migrado). */
+function heroLook(){ const a=SKIN(S.skinEq.armor)||SKIN('a00'); let w=null;
+  { const it=S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null; if(it){ const e=Math.max(0,Math.min(6,Number.isInteger(it.look)?it.look:(it.e|0))); w=SKIN('w'+e+Math.max(0,Math.min(4,it.r|0))); } }
   /* ASA (v0.12.4): skin de asa escolhida (Sys.appearance) > item equipado no espaço de asa > nada. Arte: anjo (Épico ou acima) ou demoníaca. */
   /* ASA (v0.12.7, dono): cada asa é um ITEM; aparece a asa EQUIPADA (item.wing = 'angel' | 'demon', lido por Sys.stats.wingOf, que resolve itens antigos).
      Não muda por raridade nem por era. Se um dia houver skin de asa escolhida (Sys.appearance), ela vence. hidden.wing esconde. */
@@ -603,7 +609,7 @@ function render(){
 V.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-a]'); if(!b) return; const a=b.dataset.a;
   if(a==='skinera'){ if(b.dataset.e==='pass'){ skinEra='pass'; render(); return; } const e=+b.dataset.e; if(e<=S.eraMax){ skinEra=e; render(); } return; }
-  if(a==='skin'){ const s=SKIN(b.dataset.id); S.skinEq[s.slot]=s.id; pvSkin[s.slot]=null; snd('ui_tap'); preloadAssets(); statsChanged(); }
+  if(a==='skin'){ const s=SKIN(b.dataset.id); if(!s||s.slot==='weapon') return;   /* skin de arma não se equipa mais (a arma é a do item) */ S.skinEq[s.slot]=s.id; pvSkin[s.slot]=null; snd('ui_tap'); preloadAssets(); statsChanged(); }
   else if(a==='pv'){ const s=SKIN(b.dataset.id); pvSkin[s.slot]=s.id; snd('ui_tap'); render(); return; }
   else return;
   save(); render(); hud();

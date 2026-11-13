@@ -51,7 +51,7 @@ function drawWeapon(ws){
   ctx.restore();
 }
 function drawHeroOld(){
-  const gy=GY, x=HX, sk=SKIN(S.skinEq.armor), ws=SKIN(S.skinEq.weapon), ae=sk.e;
+  const gy=GY, x=HX, sk=SKIN(S.skinEq.armor), ws=heroLook().weapon   /* arma do item equipado (S.skinEq.weapon é ignorado) */, ae=sk.e;
   const bob=Math.sin(B.t*(B.enemy&&B.enemy.x>175?10:3))*1.5;
   ctx.save(); ctx.translate(x,gy+bob);
   if(B.deadT>0){ ctx.rotate(-1.4); ctx.translate(-10,10); }

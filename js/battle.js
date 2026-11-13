@@ -76,7 +76,7 @@ function lookReady(w){ if(!SPR(wPng(w),'weapon')) return false; const pe=typeof 
    {wk: chave do meta.json e do PNG (bow_epico...), wt, style 'ranged'|'return', fam: a entrada do módulo (reach, pierce, hits), e: era de reserva
    (fromEra) para nome, som, ícone e efeitos em código}. Com a família desligada nada disto é criado (um teste por quadro). */
 const WARM={}, W_FKEY=['basico','raro','epico','mitico','lendario'];
-function wItemNow(){ const sid=S.skinEq&&S.skinEq.weapon; if(sid&&sid!=='w00'&&SKIN(sid)) return null; return (S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null)||null; }
+function wItemNow(){ return (S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null)||null; }   /* decisão do dono: vale SEMPRE o item equipado (S.skinEq.weapon é ignorado) */
 function wFamLook(w){ const it=wItemNow(); if(!it||!(window.Sys&&Sys.stats&&typeof Sys.stats.weaponType==='function')) return w;
   try{ const t=Sys.stats.weaponType(it), W=Sys.stats.DATA.weaponTypes[t]; if(!W) return w; const r=Math.max(0,Math.min(4,it.r|0));
     if(W.artEra!=null) return SKIN('w'+W.artEra+r)||w;

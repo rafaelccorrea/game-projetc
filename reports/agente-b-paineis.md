@@ -1249,3 +1249,22 @@ Para conferir: `?debug=1&rarico=1`. Desligada, o HTML das telas é o de antes (t
   `js/p_chat.js` × `js/cloudchoice.js` (não é desta peça); `run.js` "TUDO OK (162 verificações)"; `flows.js` "fluxos duros OK"; `smoke.js` 390 e 288:
   187 OK, 0 FALHA; `smoke_all.js` 390 e 288: 194 OK, 0 FALHA (segue o erro de timer do p_intro, código 1).
 - LIMITES (sem navegador): a pintura real (canvas, toBlob, blob: com `#`) não rodou aqui; o teste usa canvas falso. O QA confere no navegador.
+
+## Bloco 46 (Painéis 3, sem navegador): arma na mão = SEMPRE o item equipado (decisão do dono, opção A)
+
+Causa do "revólver saindo da clava": `S.skinEq.weapon` (skin de arma escolhida na Loja ou gravada pelos atalhos `?era=N` / `dbgSet`) vencia o item equipado
+no `heroLook` e no `wItemNow`; a prévia da Aparência usa o mesmo caminho da batalha, então mostrava a mesma coisa.
+
+- `index.html`: `heroLook` não lê mais `S.skinEq.weapon` (campo ignorado; nada é apagado nem migrado); atalhos `?era/wr/we` e `dbgSet` criam e equipam um ITEM
+  de arma (`dbgWeapon(e,r)`, `origin:'debug'`, reaproveitado) em vez de gravar a skin; a ação antiga `data-a="skin"` recusa skin de arma. Armadura igual.
+- `js/battle.js:79`: só a linha do `wItemNow` (devolve sempre o item equipado).
+- `js/screens.js`: aba "Skins arma" fora da Loja (quem chega nela cai em "Skins herói"), `skequip` e a compra recusam skin de arma, a prévia da roupa mostra
+  a arma do item, o rótulo "Skin <raridade>" do Equipamento olha só a roupa. Os ramos de arma de `hList/hFeat/skinArt/hPreview` ficaram sem uso (não apaguei
+  sem navegador). `js/ui.js` (painel antigo de skins, desligado): era inicial e arma mostrada pelo item, sem fileira nem "Usar" de arma. `js/fallback.js:54`: item.
+- PODER: o `Sys.skin` (js/sys/skin.js, de Sistemas) AINDA conta a skin de arma: `equippedIds` (:26) soma/usa todo `S.skinEq` no `majorPct` (:31), o `detail` (:43)
+  lista o espaço weapon, e a coleção (`ownedCount`, :27) conta as skins de arma possuídas. Não editei.
+- Testes: `test/e2e/weapons.js` ganhou o bloco D (5 provas); na fumaça, o teste "skin de arma possuída continua equipável" virou "aba Skins arma saiu; skin de
+  arma não equipa nem compra" + "arma na mão = item equipado"; `raricon.tests.js` ajustado porque a chave `rarIcons` passou a nascer LIGADA (commit 2a4adeb).
+- Resultados: `run.js` TUDO OK (162); `flows.js` "fluxos duros OK"; `weapons.js` A e C coerentes + "D OK"; `sheetgrid.js` TUDO OK (398); `welcome.js` e
+  `preload.js` passam; fumaça 390 e 288: 195 OK, 0 FALHA (segue o timer do p_intro). `owner_all.js`: 2 FALHAS de 79, as duas da chave "Ícones por raridade"
+  (testes 3 e 4 ainda esperam a chave desligada por padrão; vem do commit 2a4adeb, não desta peça).

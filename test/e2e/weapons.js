@@ -46,5 +46,25 @@ const mis = (tag, it, v) => { const why = []; if (v.iconKey !== v.drawKey) why.p
   if (bad.filter(b => /^B /.test(b.tag)).length > 12) console.log('  … mais ' + (bad.filter(b => /^B /.test(b.tag)).length - 12) + ' casos B iguais');
   const hard = bad.filter(b => !/^B /.test(b.tag)); fail = hard.length;
   console.log(fail ? '\n' + fail + ' ITEM(NS) INCOERENTE(S) em A/C (caminhos reais: família da própria era e save antigo migrado)' : '\nA e C COERENTES (família da própria era e save antigo migrado)' + (bad.length ? '; B mostra o risco de um wt de outra família (' + bad.length + ' casos)' : ''));
+  /* D) DECISÃO DO DONO (opção A): a arma na mão é SEMPRE a do item equipado; S.skinEq.weapon é ignorado no desenho e continua no save.
+        D1 skin de arma w50 gravada + clava equipada → desenha a clava (heroLook, wFamLook, wItemNow e o drawHeroFull da Aparência)
+        D2 atalho ?era=5&wr=2 → não grava S.skinEq.weapon; cria e equipa um ITEM da era 5 e o desenho sai dele
+        D3 save antigo com skinEq.weapon='w50' → carrega, desenha a arma do item e o campo continua lá (na memória e no que é gravado) */
+  { const dBad = [], D = (nm, ok, det) => { if (!ok) dBad.push(nm + (det ? ' → ' + det : '')); if (VERBOSE || !ok) console.log('  ' + (ok ? 'ok   ' : 'FALHA ') + 'D ' + nm + (det ? ' · ' + det : '')); };
+    const look = `(function(){ const it=S.eq.weapon!=null?itemOf(S.eq.weapon):null, lk=heroLook().weapon, fam=wFamLook(lk); let full=null; try{ const fake=new Proxy(function(){},{get:(t,k)=>fake,apply:()=>fake,set:()=>true}); drawHeroFull(fake,100,180,1,{t:0.3,skin:'default',mount:false,pet:false}); full=HFULL.ws?wKey(HFULL.ws):null; }catch(e){ full='erro '+e.message; }
+      return {skinEq:S.skinEq.weapon, has:Object.prototype.hasOwnProperty.call(S.skinEq,'weapon'), item:it?{e:it.e,r:it.r,look:it.look,origin:it.origin||null}:null, lookKey:wKey(lk), drawKey:wKey(fam), fullKey:full, pistolEra:pistolEra(fam), same:wItemNow()===it}; })()`;
+    const g1 = game(); g1.ev(`(function(){ const it={slot:'weapon',r:0,e:0,lvl:1,gold:0,subs:[],look:0}; it.id=S.nextId++; S.inv.push(it); S.eq.weapon=it.id; if(!S.skins.includes('w50')) S.skins.push('w50'); S.skinEq.weapon='w50'; })()`);
+    const a = g1.ev(look); D('D1 skin w50 + clava equipada desenha a clava', a.lookKey === 'era0_t0' && a.drawKey === 'era0_t0' && a.fullKey === 'era0_t0' && a.pistolEra < 0 && a.same && a.skinEq === 'w50', JSON.stringify(a));
+    const g2 = game(null, '?debug=1&skip=1&era=5&wr=2'), b = g2.ev(look), want = g2.ev(`wKey(SKIN('w52'))`);
+    D('D2 ?era=5&wr=2 equipa um ITEM da era 5 e não grava a skin de arma', b.skinEq === 'w00' && b.item && b.item.e === 5 && b.item.r === 2 && b.item.origin === 'debug' && b.lookKey === want && b.drawKey === want && b.fullKey === want && b.pistolEra === 5, JSON.stringify(b) + ' esperado ' + want);
+    const d2 = g2.ev(`(function(){ dbgWeapon(3,1); dbgWeapon(0,0); return {n:S.inv.filter(i=>i.origin==='debug').length, key:wKey(wFamLook(heroLook().weapon))}; })()`);
+    D('D2 o atalho reaproveita o mesmo item de teste', d2.n === 1 && d2.key === 'era0_t0', JSON.stringify(d2));
+    const old = { gold: 100, gems: 30, stage: 5, wave: 1, best: 5, eraMax: 5, nextId: 3, name: 'Antigo', hero: 'kael', tut: 99, welcome: true, kills: 40, inv: [{ id: 1, slot: 'weapon', r: 0, e: 0, lvl: 1, gold: 0, subs: [] }, { id: 2, slot: 'armor', r: 0, e: 0, lvl: 1, gold: 0, subs: [] }], eq: { weapon: 1, armor: 2 }, skins: ['w00', 'a00', 'w50'], skinEq: { weapon: 'w50', armor: 'a00' }, lastSeen: Date.now() - 1000 };
+    const g3 = game({ eras_proto_v2: JSON.stringify(old) }, '?debug=1'), c = g3.ev(look);
+    D('D3 save antigo com skinEq.weapon=w50: carrega, desenha a clava, o campo fica', c.skinEq === 'w50' && c.has && c.lookKey === 'era0_t0' && c.drawKey === 'era0_t0' && c.fullKey === 'era0_t0' && c.pistolEra < 0, JSON.stringify(c));
+    const st = g3.ev(`(function(){ try{ save(); }catch(e){ return 'erro '+e.message; } const j=localStorage.getItem(SAVE_KEY); try{ const o=JSON.parse(j); return {weapon:o.skinEq&&o.skinEq.weapon, owns:Array.isArray(o.skins)&&o.skins.includes('w50')}; }catch(e){ return 'sem save gravado'; } })()`);
+    D('D3 o save gravado depois da carga mantém skinEq.weapon e a skin na coleção', st && st.weapon === 'w50' && st.owns === true, JSON.stringify(st));
+    console.log(dBad.length ? dBad.length + ' FALHA(S) em D (arma sempre do item equipado)' : 'D OK: a arma desenhada é sempre a do item equipado (skin de arma ignorada, atalho ?era= por item, save antigo intacto)');
+    fail += dBad.length; }
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('ERRO NO TESTE:', e && e.stack || e); process.exit(1); });
