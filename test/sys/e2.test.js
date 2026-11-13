@@ -902,4 +902,23 @@ t('Kaia jogável: setHero, FC idêntica ao Kael, folha de cada estado em cada fa
   } finally { PU.DATA.on=false; }
 });
 
+t('pets novos na batalha: os 8 com posição/altura/efeito/aura por estágio (auras existem no disco); Cérbero fogo, Pégaso luz, Raposa arco-íris',()=>{
+  const P=require('../../js/sys/pet.js'), fs=require('fs'), path=require('path'); const T=P.battleTable();
+  for(const sp of ['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog','era7_cerberus','era8_pegasus','prism_fox']){ const b=T[sp]; assert.ok(b&&b.h.length===3&&b.aura.length===3&&b.fx.color,sp);
+    for(const a of b.aura) if(a) assert.ok(fs.existsSync(path.join(__dirname,'../../assets/anim/aura/'+a+'.png')),'aura '+a); }
+  assert.deepStrictEqual([T.era7_cerberus.fx.hit,T.era8_pegasus.fx.hit,T.prism_fox.fx.hit,T.prism_fox.fx.prism],['fire','light','prism',true]); assert.strictEqual(T.era8_pegasus.fly,0,'o Pégaso anda');
+  const v3=P.DATA.v3; P.DATA.v3=true; P.setV17(true); try{ const S=newS(), h=makeHost({level:120,eraMax:8}); require('../../js/sys/level.js').ensure(S).lvl=120;
+    P.ensure(S).owned.celestial={stars:1,frags:0,lvl:60,stg:2}; P.ensure(S).eq='celestial'; const d=P.battleInfo(S,h).draw;
+    assert.strictEqual(d.base,'era8_pegasus_evo'); assert.deepStrictEqual([d.layout.h,d.aura.id,d.fx.color],[0.66,'aura_holy','#ffe07a']);
+  } finally { P.setV17(false); P.DATA.v3=v3; }
+});
+t('ovo do Nv 20: 10 mil sorteios dão 79% Básico / 21% Raro (±1,5), nunca acima de Raro',()=>{
+  const P=require('../../js/sys/pet.js'), L=require('../../js/sys/level.js'), {seeded}=require('./_host.js'); const v3=P.DATA.v3, v20=P.DATA.v20.on;
+  P.DATA.v3=true; P.DATA.v20.on=true; P.setV17(true); const cnt=[0,0,0,0,0,0]; const rng=seeded(20261112);
+  try{ for(let i=0;i<10000;i++){ const S=newS(), h=makeHost({level:25,eraMax:2}); h.rng=rng; L.ensure(S).lvl=25; const r=P.firstEgg(S,h); assert.ok(r.ok,'ovo '+i); cnt[r.rarity]++; }
+    const b=cnt[0]/100, r=cnt[1]/100; assert.ok(Math.abs(b-79)<=1.5&&Math.abs(r-21)<=1.5,'Básico '+b+'% Raro '+r+'%'); assert.strictEqual(cnt.slice(2).reduce((a,x)=>a+x,0),0,'nada acima de Raro');
+    assert.deepStrictEqual(P.firstEggOdds().map(x=>x.pct),[79,21]);
+  } finally { P.setV17(false); P.DATA.v3=v3; P.DATA.v20.on=v20; }
+});
+
 console.log(`ok: ${n} testes`);

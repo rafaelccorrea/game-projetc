@@ -359,9 +359,23 @@ function battleInfo(S,host){ const o=ensure(S); if(locked(S)||!o.eq||!o.owned[o.
     // Célula 512×352, pés em y 307, 12 fps. atk2/atk3 só existem no FILHOTE dos 5 pets antigos (opcionais). fly = papagaio (sombra por código).
     draw:V17()&&d.sprite?drawOf(d.sprite,idx):{sprite:'pet_'+d.id+'_s'+(idx+1),behind:'hero'}}; }
 const PET_EXTRA=['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog'];
-function drawOf(sprite,idx){ const base=sprite+(['','_mid','_evo'][clamp(int0(idx),0,2)]), extra=idx===0&&PET_EXTRA.includes(sprite)?['atk2','atk3']:[];
+/* TABELA DE BATALHA dos 8 pets (fonte única; o PET_TBL do js/petfx.js tinha só os 5 antigos): posição ao lado do Kael (dx = fração da largura do
+   corpo dele; dy px), altura por estágio (fração da altura do Kael), voo (fly = quanto paira, só o papagaio: o Pégaso anda, como na arte aprovada),
+   cor do golpe e efeito (fx), AURA por estágio (assets/anim/aura/<id>; null = sem). Os 5 antigos repetem os números do petfx para nada mudar. */
+const PET_BATTLE={
+  era0_mammoth: {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#d8b47a',hit:'impact'}, aura:[null,null,'aura4']},
+  era1_sphinx:  {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#ffd27a',hit:'sand'},   aura:[null,null,'aura4']},
+  era2_dragon:  {dx:0.42,dy:5,h:[0.48,0.54,0.64],fly:0,    fx:{color:'#ff7a3a',hit:'fire'},   aura:[null,'aura4','aura7']},
+  era3_parrot:  {dx:0.44,dy:0,h:[0.40,0.46,0.56],fly:0.13, fx:{color:'#ff5a3a',hit:'feather'},aura:[null,'aura4','aura7']},
+  era4_mechdog: {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#8cc8ff',hit:'spark'},  aura:[null,'aura4','aura7']},
+  era7_cerberus:{dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'fire',glow:2},  aura:['aura4','aura7','aura_evil']},   // Submundo: fogo, aura maligna
+  era8_pegasus: {dx:0.43,dy:4,h:[0.50,0.57,0.66],fly:0,    fx:{color:'#ffe07a',hit:'light',glow:2}, aura:['aura4','aura10','aura_holy']},  // Celestial: luz, aura celestial
+  prism_fox:    {dx:0.42,dy:5,h:[0.42,0.49,0.58],fly:0,    fx:{color:'#c9a0ff',hit:'prism',glow:3,prism:true}, aura:['aura7','aura10','aura13']},   // Divino: arco-íris
+};
+function drawOf(sprite,idx){ const st=clamp(int0(idx),0,2), base=sprite+(['','_mid','_evo'][st]), extra=st===0&&PET_EXTRA.includes(sprite)?['atk2','atk3']:[], B=PET_BATTLE[sprite]||PET_BATTLE.era0_mammoth;
   return {sprite,base,stageSuffix:base.slice(sprite.length),sheets:['run','idle','atk1'].concat(extra).map(k=>base+'_'+k),extra:extra.map(k=>base+'_'+k),
-    cell:{w:512,h:352,feetY:307,fps:12},fly:sprite==='era3_parrot',behind:'hero'}; }
+    cell:{w:512,h:352,feetY:307,fps:12},fly:B.fly>0,behind:'hero',
+    layout:{dx:B.dx,dy:B.dy,h:B.h[st],hAll:B.h.slice(),fly:B.fly},fx:Object.assign({},B.fx),aura:B.aura[st]?{id:B.aura[st],sheet:'assets/anim/aura/'+B.aura[st]}:null}; }
 const LOCK='<svg class="sys-lock-ic" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="15.4" r="1.6" fill="#0008"/></svg>';   // cadeado desenhado (sem emoji, pedido do PO)
 /* alimentar: sobe o nível do ESPAÇO (vale para todos os pets). {ok, n, spent, reason:'locked'|'cap'|'food'|'max'} */
 /* v3: alimenta UM pet (id; padrão = o equipado). v2: o nível do espaço. */
@@ -429,7 +443,7 @@ function render(el,S,host,opt){
     render(el,S,host,opt); };
 }
 
-const API={DATA,ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
+const API={DATA,battleTable:()=>JSON.parse(JSON.stringify(PET_BATTLE)),ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
 root.Sys=root.Sys||{}; root.Sys.pet=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
