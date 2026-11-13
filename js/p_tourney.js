@@ -209,7 +209,7 @@ function tBattle(){ const G=tG(), N=G.DATA.tourney.size, Z=G.DATA.season||{}, dn
 
 function tRank(){ const G=tG(), RC=['#ffc94a','#e8e2d8','#e8a26a','#4aa3ff','#8a7a68'], P=G.DATA.rankPoints||{regionBase:1,capital:15};
   const bands=G.DATA.tourney.rewards.map((b,k)=>{ const t=b.from===b.to?b.from+'º':b.from+'º-'+b.to+'º', rw=G.tourneyReward(b.from), parts=[];
-    if(rw.coin) parts.push(rw.coin+' '+tEsc(G.DATA.coin||'Brasões')); if(rw.prism) parts.push(rw.prism+' frag. Prismático'); if(rw.frame) parts.push('moldura');
+    if(rw.coin){ const cn=G.DATA.coin||'Brasão'; parts.push(rw.coin+' '+tEsc(rw.coin===1?cn:(cn==='Brasão'?'Brasões':cn))); } if(rw.prism) parts.push(rw.prism+' frag. Prismático'); if(rw.frame) parts.push('moldura');
     return `<div style="flex:none;min-height:44px;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;background:#1d1611;border:1px solid #4a3a2b"><span style="width:56px;font-family:'Lilita One',sans-serif;color:${RC[k]||'#c9b9a2'}">${t}</span><span style="flex:1;font-size:12px;font-weight:800">${parts.join(' · ')||'—'}</span></div>`; }).join('');
   return `<div class="pt-in" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">
     <div role="note" style="flex:none;padding:10px 12px;border-radius:14px;background:#1d1611;border:2px dashed #8a6a3a;text-align:center"><span style="font-family:'Lilita One',sans-serif;font-size:18px;color:#ffe07a">Ranking de guildas</span><br><span style="font-size:12px;font-weight:800;color:#c9b9a2">Abre com as guildas online · pontos: região da era e = ${P.regionBase}+e, Capital = ${P.capital}</span></div>
