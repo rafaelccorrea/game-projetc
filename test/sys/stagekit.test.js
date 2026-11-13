@@ -35,8 +35,10 @@ function checkSheet(rel,kind,opt){ opt=opt||{}; const jf=path.join(ROOT,rel+'.js
   const img=readPng(pf), cols=M.cols||M.frames, rows=Math.ceil(M.frames/cols);
   t(rel+' grade',()=>{ assert.ok(img.w>=cols*M.w&&img.h>=rows*M.h,`imagem ${img.w}x${img.h} < ${cols}x${rows} quadros de ${M.w}x${M.h}`); });
   const tolFeet=opt.tolFeet||4;
+  /* pet que VOA: o jogo (js/petfx.js drawPet) o sobe heroBodyH × fly; na folha isso é fly ÷ h[estágio] × altura opaca do pet (petK = heroBodyH × h ÷ altura) */
+  let rise=0; if(opt.fly){ let a=1e9,z=-1; for(let f=0;f<M.frames;f++){ const B=frameBox(img,M,f); if(B.maxY<0) continue; a=Math.min(a,B.minY); z=Math.max(z,B.maxY); } rise=opt.fly.fly/opt.fly.h*(z-a); }
   for(let f=0;f<M.frames;f++){ const B=frameBox(img,M,f); if(B.maxY<0) continue;
-    if(opt.fly) t(`${rel} q${f} não afunda no chão`,()=>{ assert.ok(B.maxY<=M.feetY+tolFeet,`ponto mais baixo ${B.maxY} abaixo do chão ${M.feetY}`); });
+    if(opt.fly) t(`${rel} q${f} não afunda no chão`,()=>{ assert.ok(B.maxY-rise<=M.feetY+tolFeet,`ponto mais baixo ${B.maxY} − subida ${rise.toFixed(1)} abaixo do chão ${M.feetY}`); });
     else t(`${rel} q${f} pés no chão`,()=>{ assert.ok(Math.abs(B.maxY-M.feetY)<=tolFeet,`ponto mais baixo ${B.maxY} ≠ feetY ${M.feetY} (±${tolFeet})`); });
     if(kind!=='pet'&&Array.isArray(M.grip)&&M.grip[f]&&M.grip[f].hw>0){ const g=M.grip[f], gy=g.y+(g.fdy||0)*0;
       t(`${rel} q${f} mão no grip`,()=>{ assert.ok(near(img,B.sx,B.sy,g.x,gy,6),`sem desenho a 6 px do grip (${g.x},${gy})`); }); }
@@ -50,7 +52,10 @@ for(const a of ['idle','attack','run']) checkSheet('assets/anim/hyb/kaia/kaia_'+
 for(const a of ['idle','run','shoot']) checkSheet('assets/anim/hyb/R/kael_pistol_'+a+'_body','hero',{tolFeet:a==='idle'?4:6});
 for(const d of fs.readdirSync(path.join(ROOT,'assets/anim/skins'))){ if(d.startsWith('_')) continue; const h=d.split('_')[0]; for(const a of ['idle','attack']) checkSheet(`assets/anim/skins/${d}/${h}_${a}_body`,'hero'); }
 for(const h of ['kael','kaia']) for(const m of ['pony','horse','wolf','griffin','mythic','wyvern']) checkSheet(`assets/anim/mounts/${h}_${m}_idle_body`,'mount');
-for(const f of fs.readdirSync(path.join(ROOT,'assets/anim/pets'))){ if(!/_idle\.json$/.test(f)) continue; checkSheet('assets/anim/pets/'+f.replace(/\.json$/,''),'pet',{fly:/parrot|falcon|dragon|sphinx|pegasus/.test(f)}); }
+/* tabela de desenho dos pets do jogo (fly e altura por estágio): Sys.pet.battleTable() */
+const PT=(()=>{ try{ globalThis.Sys=globalThis.Sys||{}; return require('../../js/sys/pet.js').battleTable(); }catch(e){ return {}; } })();
+for(const f of fs.readdirSync(path.join(ROOT,'assets/anim/pets'))){ if(!/_idle\.json$/.test(f)) continue; const base=f.replace(/_idle\.json$/,''), stg=/_evo$/.test(base)?2:/_mid$/.test(base)?1:0, sp=base.replace(/_(mid|evo)$/,''), T=PT[sp];
+  checkSheet('assets/anim/pets/'+f.replace(/\.json$/,''),'pet',T&&T.fly>0?{fly:{fly:T.fly,h:(T.h&&T.h[stg])||0.5}}:{}); }
 /* Kael Anjo: com item de asa o jogo usa a pasta _nowing → precisa ter TODOS os arquivos da pasta normal */
 t('Kael Anjo: pasta _nowing completa',()=>{ const A=fs.readdirSync(path.join(ROOT,'assets/anim/skins/kael_angel')).filter(f=>!f.startsWith('_')), B=new Set(fs.readdirSync(path.join(ROOT,'assets/anim/skins/kael_angel_nowing'))); const miss=A.filter(f=>!B.has(f)); assert.ok(!miss.length,'faltam '+miss.slice(0,5).join(', ')); });
 /* StageKit: a ordem de desenho é a do drawHeroFull (pet por último); o kit só traduz o look e devolve o que a rota não sabe trocar */
@@ -59,7 +64,8 @@ t('StageKit.toState: look do heroSnapshot → state do drawHeroFull',()=>{ const
 t('StageKit desligado por padrão',()=>{ assert.strictEqual(SK.DATA.on,false); });
 
 /* ACHADOS CONHECIDOS da arte (avisados à Arte e ao Engenheiro em 13/11): aparecem como AVISO e não quebram o teste; achado NOVO quebra */
-const KNOWN=[/kael_pistol_shoot_body q\d+ mão no grip/,/pet_falcon.* não afunda no chão/,/kael_cyborg\/kael_attack_body q\d+ mão no grip/,/kael_demon\/kael_attack_body q5 mão no grip/,/era3_parrot.* não afunda no chão/];
+/* papagaio e falcão saíram (13/11): com a subida real dos voadores (fly ÷ h × altura) nenhum quadro afunda no chão */
+const KNOWN=[/kael_pistol_shoot_body q\d+ mão no grip/,/kael_cyborg\/kael_attack_body q\d+ mão no grip/,/kael_demon\/kael_attack_body q5 mão no grip/];
 const known=fails.filter(x=>KNOWN.some(r=>r.test(x))); for(const k of known) fails.splice(fails.indexOf(k),1);
 if(known.length){ const by={}; for(const k of known){ const kk=k.replace(/ q\d+ /,' qN ').replace(/:.*/,''); by[kk]=(by[kk]||0)+1; } console.log('AVISOS (achados conhecidos da arte): '+Object.entries(by).map(([k,v])=>v+'× '+k).join(' · ')); }
 console.log(n+' verificações ok'+(notes.length?' · '+notes.length+' folhas ausentes':''));
