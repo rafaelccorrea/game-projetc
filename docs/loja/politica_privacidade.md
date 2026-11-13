@@ -47,7 +47,7 @@ Podemos fornecer dados se uma lei ou ordem judicial exigir.
 Os servidores do jogo ficam no Brasil (AWS São Paulo; o banco no Supabase, região [CONFIRMAR]). Se o banco ficar no Brasil, a única transferência internacional é a do **Google** (login opcional e pagamentos do Google Play), feita conforme a política do Google. [ADVOGADO: confirmar a garantia do art. 33 da LGPD para o Google e, se o banco ficar fora do Brasil, para o Supabase.]
 
 ## 7. Por quanto tempo guardamos
-- Conta e progresso: enquanto a conta existir. Se você pedir a exclusão, apagamos em **até 30 dias** (entrar de novo nesse prazo cancela o pedido).
+- Conta e progresso: enquanto a conta existir. Se você pedir a exclusão, apagamos de verdade em **até 30 dias** (entrar de novo nesse prazo cancela o pedido). Depois disso, só ficam os registros de compra e de moderação, **apenas com o número da conta**, pelo prazo legal [ADVOGADO: confirmar os prazos].
 - Histórico do chat: **até 24 horas** no canal; mensagens bloqueadas pelo filtro e denunciadas ficam no registro de moderação por **[PRAZO]**.
 - Versões anteriores do save (para você desfazer uma escolha errada): as **5 últimas**.
 - Recibos de compra: pelo prazo exigido pela lei fiscal e de consumo **[PRAZO]**.
@@ -55,7 +55,7 @@ Os servidores do jogo ficam no Brasil (AWS São Paulo; o banco no Supabase, regi
 
 ## 8. Seus direitos
 Você (ou o seu responsável) pode: confirmar se tratamos seus dados, acessar, corrigir, pedir a portabilidade, pedir a exclusão, revogar o consentimento e reclamar à **ANPD** (art. 18 da LGPD).
-- **Excluir a conta:** no jogo, em Configurações › Conta › Excluir conta (em breve no app), na página https://15-229-249-157.sslip.io/excluir-conta [TROCAR PELO DOMÍNIO DEFINITIVO] ou pelo contato do item 1. Apagamos a conta e os personagens de **todos os servidores**, o progresso e o histórico, o chat, o correio, os rankings e a guilda. Ficam só o recibo das compras e os registros de moderação, pelo prazo legal [ADVOGADO].
+- **Excluir a conta:** no jogo, em Configurações › Conta › Excluir conta (em breve no app), na página https://15-229-249-157.sslip.io/excluir-conta [TROCAR PELO DOMÍNIO DEFINITIVO] ou pelo contato do item 1. Apagamos a conta e os personagens de **todos os servidores**, o save (e as cópias dele), o retrato do personagem na Arena, a participação na guilda (se você liderava, a liderança passa para outro membro), as mensagens e os bloqueios do chat, o correio e os rankings. Pelo jogo, o save do aparelho também é apagado. **Guardamos só** os registros de compra e de moderação, **apenas com o número da conta**, pelo prazo legal [ADVOGADO: confirmar prazos e base legal, art. 16 da LGPD].
 - Outros pedidos: **[E-MAIL DE PRIVACIDADE]**. Respondemos em até **15 dias**.
 
 ## 9. Segurança
