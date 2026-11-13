@@ -122,21 +122,23 @@ function scrVip(){
   V.innerHTML=xWrap(d,XV.anim?'f-in':'',`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
     <div id="pv_scroll" class="x-scroll" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:6px 0 8px;box-sizing:border-box;overflow-y:auto">
       <span style="flex:none;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.15">Sobe acumulando compras na loja</span>${stage}${carousel}${vUniqueCard(L)}${table}</div>
-    <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box"><button data-x="buy" class="pv-gold pv-cta" style="position:relative;overflow:hidden;width:100%;height:58px;border-radius:16px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="pv-shine"></span><span style="font-family:'Lilita One',sans-serif;font-size:22px">Comprar VIP</span><span style="font-size:11px;font-weight:900;color:#5a330a">Pagamento em breve</span></button></div>${dlg}</div>`);
+    <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box"><button data-x="buy" class="pv-gold pv-cta" style="position:relative;overflow:hidden;width:100%;height:58px;border-radius:16px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="pv-shine"></span><span style="font-family:'Lilita One',sans-serif;font-size:22px">Ir à Loja</span><span style="font-size:11px;font-weight:900;color:#5a330a">Cada compra soma pontos VIP</span></button></div>${dlg}</div>`);
   XV.anim=false; XV.sig=vSig();
 }
 /* assinatura do que muda por fora (compra, nível): o tick redesenha só quando ela muda */
 function vSig(){ try{ const P=Sys.vip.progress(S); return [P.level,P.points].join('|'); }catch(e){ return ''; } }
+/* O VIP vem do TOTAL gasto em qualquer compra (decisão do dono): o botão abre a LOJA (aba de gemas quando existe), sem preço de VIP. Volta: window.SHOP_RETURN='vip' (a Loja lê ao fechar). */
+function vShop(){ try{ if(typeof XH!=='undefined'&&XH&&typeof xUnlocked==='function'&&xUnlocked('gemShop')) XH.tab='gem'; }catch(e){} window.SHOP_RETURN='vip'; try{ if(window.Screens&&Screens.open&&Screens.open('shop')!==false) return; }catch(e){} try{ if(typeof setView==='function') setView('shop'); }catch(e){} }
 function vGo(n){ const m=vMax(), t=Math.max(1,Math.min(m,n)); if(t===XV.sel) return; snd('ui_tap'); XV.sel=t; render(); }
 function vClick(b,ev){
   const a=b.dataset.x;
   if(a==='prev') vGo(XV.sel-1);
   else if(a==='next') vGo(XV.sel+1);
-  else if(a==='buy'){ snd('claim'); XV.cf=true; render(); }
+  else if(a==='buy'){ snd('ui_tap'); vShop(); }
   else if(a==='closecf'){ snd('ui_tap'); XV.cf=false; render(); }
 }
 
-Panels.add('vip',{title:'Clube VIP',render:scrVip,click:vClick,
+Panels.add('vip',{title:'Clube VIP',render:function(){ if(typeof pGate==='function'&&pGate(['assets/anim/hyb/R/kael_idle_era2_t0.png','assets/anim/aura/aura13.png'])) return; return scrVip.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return vClick.apply(this,arguments); },
   tick(){ if(XV.cf||!vOk()) return; if(XV.sig&&vSig()!==XV.sig) render(); },
   busy(){ return false; },
   onOpen(){ const c=vCur(); XV.sel=c>=vMax()?vMax():vClamp(c+1); XV.cf=false; XV.anim=true;

@@ -72,6 +72,10 @@ function clWings(){
   const nw=T.wingCatalog().filter(w=>w.r!=null).map(w=>({id:w.id,name:w.name,r:w.r,own:false,live:!!w.live,src:w.src,note:w.rarest?'A asa mais rara do jogo.':''}));
   return clHead('Asas novas ('+nw.length+')','Cada asa é um item de equipamento; a força vem da raridade, da era e da Forja.')+nw.map(x=>clCard('wings',x)).join('');
 }
+/* imagens da aba aberta (o invólucro p_wait.js espera todas antes de desenhar) */
+function clUrls(){ const u=[]; try{ if(XCL.tab===0){ const P=Sys.pet; if(P&&P.DATA) for(const p of P.DATA.pets) if(p.nw&&CL_ART.pets[p.id]) u.push('assets/pets/new/'+CL_ART.pets[p.id]+'_ref_prev.png'); }
+    else if(XCL.tab===1){ const M=Sys.mount; if(M&&M.DATA) for(const m of M.DATA.mounts) if(m.nw&&CL_ART.mounts[m.id]) u.push('assets/mounts/new/'+CL_ART.mounts[m.id]+'_ref_prev.png'); }
+    else { const T=Sys.stats; if(T&&T.wingCatalog) for(const w of T.wingCatalog()) if(w.r!=null) u.push('assets/anim/equip/new/wing_'+w.id+'_ref_prev.png'); } }catch(e){} return u; }
 function scrColecao(){
   const d=xDims(520); const fn=[clPets,clMounts,clWings][XCL.tab]||clPets; let body=null;
   try{ body=fn(); }catch(e){ body=null; }
@@ -86,4 +90,4 @@ function clClick(b){
   if(a==='back'){ clSnd('ui_tap'); if(window.Screens&&Screens.close) Screens.close(); return; }
   if(a==='tab'){ XCL.tab=parseInt(b.dataset.i,10)||0; clSnd('ui_tap'); render(); return; }
 }
-Panels.add('colecao',{title:'Coleção',render:scrColecao,click:clClick,onOpen(){ XCL.tab=0; },onClose(){}});
+Panels.add('colecao',{title:'Coleção',render:function(){ if(typeof pGate==='function'&&pGate(clUrls())) return; return scrColecao.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return clClick.apply(this,arguments); },onOpen(){ XCL.tab=0; },onClose(){}});

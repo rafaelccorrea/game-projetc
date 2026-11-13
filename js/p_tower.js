@@ -137,7 +137,7 @@ function twClick(b,ev){
     try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){}   /* a vitória/derrota e os prêmios JÁ estão no save: grava agora, mesmo que o jogador saia antes do fim da animação */
     snd('ui_tap'); tPlay(r); }
 }
-Panels.add('tower',{title:'Torre',render:scrTower,click:twClick,
+Panels.add('tower',{title:'Torre',render:function(){ if(typeof pGate==='function'&&pGate(['assets/anim/hyb/R/kael_idle_era2_t0.png'])) return; return scrTower.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return twClick.apply(this,arguments); },
   tick(){ },
   busy(){ return XTW.busy; },
   onOpen(){ tStop(); XTW.cam=0; XTW.last=null; XTW.from=null; },

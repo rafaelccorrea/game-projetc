@@ -25,7 +25,7 @@ const out = [];
 
 // 1) sem VIP: abre no VIP 1, "Sem VIP", seta anterior escondida, sem aura nem moldura animada, texto real de pontos
 g.S.sys = {}; def.onOpen(); def.render(); html = g.V.innerHTML;
-has('Sem VIP'); has('VIP 1'); has('Falta 1 ponto VIP'.replace('1 pontos', '1 pontos')); has('Comprar VIP'); has('Pagamento em breve');
+has('Sem VIP'); has('VIP 1'); has('Falta 1 ponto VIP'.replace('1 pontos', '1 pontos')); has('Ir à Loja'); has('Cada compra soma pontos VIP'); assert(!/Comprar VIP|Pagamento em breve|R\$/.test(html), 'sem preço nem compra de VIP');
 has('data-x="prev"'); assert(/data-x="prev"[^>]*visibility:hidden/.test(html), 'seta anterior escondida no VIP 1');
 not('class="pv-aura"'); not('class="pv-frame"'); not('[VALOR]'); not('PROPOSTA');
 out.push('sem VIP: ok');
@@ -43,9 +43,9 @@ out.push('tabela do VIP 5 vem do Sys.vip: ok');
 
 // 4) comprar abre o aviso (nada é cobrado), Entendi fecha
 const vipBefore = JSON.stringify(g.S.sys.vip || null);
-def.click(btn('buy'), {}); html = g.V.innerHTML; has('role="alertdialog"'); has('Entendi'); assert(snds.includes('claim'), 'som de claim');
+g.shopOpened = []; g.Screens = { open: n => { g.shopOpened.push(n); return true; } }; def.click(btn('buy'), {}); assert.deepStrictEqual(g.shopOpened, ['shop'], 'o botão leva à Loja'); assert.strictEqual(window.SHOP_RETURN, 'vip', 'pede volta ao VIP');
 assert.strictEqual(JSON.stringify(g.S.sys.vip || null), vipBefore, 'comprar não altera o save');
-def.click(btn('closecf'), {}); html = g.V.innerHTML; not('role="alertdialog"');
+html = g.V.innerHTML; not('role="alertdialog"');
 out.push('compra em breve (aviso, sem cobrança): ok');
 
 // 5) VIP real: nível 3 com pontos → "SEU NÍVEL VIP 3", abre já no 4, "(você)" no 3
