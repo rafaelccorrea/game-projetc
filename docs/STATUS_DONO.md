@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h35 · Medidas no S24:** batalha a 120 quadros/s (105 com lobo + pet + asa); abre em 0,5 s; memória até ~800 MB com tudo; app de 657 MB (precisa diminuir antes da loja)
+- **22h35 · INCIDENTE no seu celular:** um script de teste de outra sessão se conectou por engano ao seu celular e tirou o jogo da tela ("Página da Web não disponível"). O save NÃO foi alterado, mas o aviso de ganho offline (2h52, +9,8 mil moedas) sumiu antes de você resgatar. Regra nova: nenhum script toca no celular; os acessos ao aparelho foram removidos. Falta você decidir se repomos as 9,8 mil moedas
+
 - **22h25 · v0.12.7 INSTALADA no seu S24** (por cima, seu save mantido). Para ver o novo: MENU → "Teste" abre o Modo dono (save separado, atalhos de nível 20/32/50/70, montarias, asas) e a Prévia da arte; ao sair, seu save real volta. No print do celular: Kael montado no lobo com a asa de anjo e a arma na mão, a Esfinge à frente no chão, as barras acima do Kael
 - **22h25 · Decisões do PO:** Mapa das Eras liberado desde o nível 1, Códex no 12, Chat no 16; nomes das habilidades das eras 7 e 8 mantidos; a Arte faz 7 ícones de menu que faltam (Arena, Guilda, Torneio, Códex, Chat, Mapa, Montarias)
 - **22h25 · v0.12.8 começou:** ligar as telas escritas, uma por uma, conferindo no navegador

@@ -15,6 +15,7 @@ As 6 sessões escrevem telas AO MESMO TEMPO. O engenheiro só liga e confere.
 - **Aba 2: QA**, que confere tela por tela contra o protótipo e manda as diferenças ao fps-c8
 - **Aba 3: rodízio** entre Sistemas, Servidor e Arte, cada um para conferir o que escreveu. Anote aqui embaixo quem está usando e libere ao terminar (feche a aba)
 - Cada sessão cria a SUA aba (não usa a de outra), usa `localhost:8080/?debug=1&painel=<nome>` e o **Modo dono** (save separado), e nunca mexe no save real
+- **CELULAR DO DONO: proibido para scripts.** Script de teste só se conecta ao navegador que a própria sessão abriu, nunca às portas de depuração do aparelho (incidente das 22h30: o app do dono foi desviado e ele perdeu o ganho offline). Só o Engenheiro mexe no celular, e só quando o dono pede
 - Aba 3 em uso por: (livre)
 
 ## Regras para todos (contrato igual ao js/p_vip.js)
