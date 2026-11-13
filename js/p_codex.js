@@ -32,7 +32,10 @@ function cdxPets(){ let on=[]; try{ const C=window.Sys&&Sys.codex; on=C&&typeof 
   return K_PETS.concat(on.map(id=>K_PETS_NEW.find(p=>p.id===id)).filter(Boolean)); }   /* na ordem que o módulo devolve = a do catalog() */
 const K_MART={pony:'mount_pony_ref',horse:'mount_horse_ref',wolf:'mount_wolf_ref',griffin:'mount_griffin_ref',mythic:'mount_mythic_opt_tiger',wyvern:'mount_wyvern_ref'};
 const K_MFALL=[{id:'pony',name:'Pônei',r:0},{id:'horse',name:'Cavalo de guerra',r:1},{id:'wolf',name:'Lobo de guerra',r:2},{id:'griffin',name:'Grifo dourado',r:2},{id:'mythic',name:'Tigre de cristal',r:3},{id:'wyvern',name:'Serpe dourada',r:4}];
-const K_MHOW={pony:['Loja','shop'],horse:['Passe da temporada','pass'],wolf:['Oferta de primeira compra','offer'],griffin:['Eventos','events'],mythic:['Eventos','events'],wyvern:['Loja','shop']};
+const K_MHOW={pony:['Loja','shop'],horse:['Passe da temporada','pass'],wolf:['Oferta de primeira compra','offer'],griffin:['Eventos','events'],mythic:['Eventos','events'],wyvern:['Loja','shop'],phoenixm:['VIP 8','vip']};
+/* MONTARIAS NOVAS no Códex: entram no FIM (depois da serpe), cada uma só quando o Sys.mount a liga (live). Hoje: a Fênix gigante. Mesma regra do catálogo da Sistemas (DATA.mountNew), para a tela ficar igual ao Sys.codex.catalog(). */
+const K_MART_NEW={phoenixm:'mount_giant_phoenix_ref'};
+const cdxMountArt=m=>{ if(K_MART[m.id]) return K_MART[m.id]; const f=K_MART_NEW[m.id]; if(!f) return null; try{ return window.Sys&&Sys.mount&&typeof Sys.mount.live==='function'&&Sys.mount.live(m)?f:null; }catch(e){ return null; } };
 const K_CSS=`.pk-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:pkk 1s steps(12,jump-none) infinite}
 @keyframes pkk{from{background-position:0 0}to{background-position:100% 0}}
 .pk-au{background-size:1600% 100%;background-repeat:no-repeat;mix-blend-mode:screen;animation:pka 1.333s steps(16,jump-none) infinite}
@@ -66,7 +69,7 @@ function cdxItems(){
   const main=(window.Sys&&Sys.stats&&Sys.stats.DATA&&Sys.stats.DATA.main)||null;
   for(let e=0;e<eras;e++) for(const sl of K_SLOTS){ const m=main&&main[sl[2]]; const attr=m?Object.keys(m).map(k=>K_STAT[k]||k).join(' e '):'';
     A.push({id:'a-'+e+'-'+sl[0],cat:'eq',era:e,r:0,n:sl[0]==='vest'?(()=>{ try{ return ERAS[e].a[0]; }catch(x){ return 'Colete'; } })():sl[1]+' '+cdxEra(e),label:sl[1],art:cdxImg('assets/icons/slots/era'+e+'_'+sl[0]+'.png','ic'),sub2:sl[1],attr,how:'Baús da era '+cdxEra(e),go:'gear',goN:'Equipamento'}); }
-  for(const m of ((window.Sys&&Sys.mount&&Sys.mount.DATA&&Sys.mount.DATA.mounts)||K_MFALL)){ const f=K_MART[m.id]; if(!f) continue; const pct=(()=>{ try{ return Sys.mount.DATA.maxPct[m.r]; }catch(e){ return null; } })(), h=K_MHOW[m.id]||['Em breve',''];
+  for(const m of ((window.Sys&&Sys.mount&&Sys.mount.DATA&&Sys.mount.DATA.mounts)||K_MFALL)){ const f=cdxMountArt(m); if(!f) continue; const pct=(()=>{ try{ return Sys.mount.DATA.maxPct[m.r]; }catch(e){ return null; } })(), h=K_MHOW[m.id]||['Em breve',''];
     A.push({id:'m-'+m.id,cat:'mnt',era:-2,r:m.r,n:m.name,art:cdxImg('assets/mounts/'+f+'.png','stand'),attr:pct!=null?'Ataque e Vida até +'+String(pct).replace('.',',')+'%':'',how:h[0],go:h[1],goN:h[0]}); }
   for(const p of cdxPets()) for(let s=0;s<3;s++) A.push({id:'p-'+p.id+'-'+s,cat:'pet',era:p.era,en:p.en,r:p.r,n:p.n,label:K_STG[s],art:cdxImg('assets/pets/'+p.f+'_'+K_STGF[s]+'.png','stand'),sub2:K_STG[s],attr:'Golpe: '+p.atk[s],how:s===0?(p.how||'Ovo da '+cdxEra(p.era)):'Evolua o pet',go:'pets',goN:'Pets',grp:p.id});
   const M=XK.meta; let eb=eras; for(let e=0;e<eb;e++) for(const k of ['e0','e1','boss']){ const nm=(typeof era9Name==='function'&&era9Name('era'+e+'_'+k))||(M&&M['era'+e+'_'+k]&&M['era'+e+'_'+k].name); if(!nm) continue;   /* chefes das eras 7-8: nome do dono (js/eras9.js) */ const boss=k==='boss';
