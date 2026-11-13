@@ -1,0 +1,36 @@
+# piloto v2 (sem folhas lidas por CSS em passos; mamute só atk1/atk2): folhas da 1ª cena (Kael padrão era 0) > 4096 px; irmã = "png json-da-mãe"
+hyb/R/kael_attack_trail_era2_t0.png
+hyb/R/kael_attack_trail_era2_t1.png
+hyb/R/kael_attack_trail_era2_t2.png
+hyb/R/kael_attack_wide_era2_t0.png
+hyb/R/kael_attack_wide_era2_t1.png
+hyb/R/kael_attack_wide_era2_t2.png
+hyb/R/kael_die_body.png
+hyb/R/kael_spin_body.png
+hyb/R/kael_spin_era2_t0.png
+hyb/R/kael_spin_era2_t1.png
+hyb/R/kael_spin_era2_t2.png
+hyb/R/masks/kael_attack_mask.png
+hyb/R/masks/kael_die_mask.png
+hyb/R/masks/kael_spin_mask.png
+hyb/enemy/era0_boss_attack.png
+hyb/enemy/era0_boss_die.png
+hyb/enemy/era0_boss_hurt.png
+hyb/enemy/era0_boss_run.png
+hyb/enemy/era0_e0_attack.png
+hyb/enemy/era0_e0_die.png
+hyb/enemy/era0_e0_hurt.png
+hyb/enemy/era0_e1_attack.png
+hyb/enemy/era0_e1_die.png
+hyb/enemy/era0_e1_hurt.png
+fx/evolve_0_1.png
+fx/evolve_0_1_fx.png
+fx/levelup.png
+fx/levelup_fx.png
+fx/levelup_fx_low.png
+fx/levelup_fx_notext.png
+pets/era0_mammoth_atk1.png
+pets/era0_mammoth_atk2.png
+hyb/R/masks/kael_attack_hair.png hyb/R/masks/kael_attack_mask.json
+hyb/R/masks/kael_die_hair.png hyb/R/masks/kael_die_mask.json
+hyb/R/masks/kael_spin_hair.png hyb/R/masks/kael_spin_mask.json
