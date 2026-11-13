@@ -17,6 +17,7 @@ let n=0; const t=(name,fn)=>{ fn(); n++; console.log('ok -',name); };
 const ITENS=[
   {e:0,r:0,fam:'club',nome:'Graveto Afiado',ult:'base',codex:'w-0-0'},
   {e:0,r:1,fam:'club',nome:'Clava de Pedra',ult:'base',codex:'w-0-0'},
+  {e:0,r:2,fam:'club',nome:'Lança de Sílex',ult:'base',codex:'w-0-1'},   // nome de lança, arte de clava: decisão de texto com o PO
 ];
 for(const I of ITENS){ const it={slot:'weapon',e:I.e,r:I.r,lvl:1,gold:0,subs:[]}, key='era'+I.e+'_'+RKEY[I.r];
   t(key+' ('+RNAME[I.r]+'): arte no disco (ícone/mão + grip no meta.json) e ultimate da era',()=>{

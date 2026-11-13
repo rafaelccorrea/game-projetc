@@ -93,3 +93,17 @@ Igual à Básica em Forja, aura e ultimate (folha-base `era0_ult`). Teste: `test
 | Nome na tela | ✓ "Clava de Pedra" (`index.html:352`), bate com a arte |
 
 **Fechada do lado de sistema, sem pendência.**
+
+## Arma 3: Clava Épica (`era0_t1`)
+
+| Linha | Estado |
+|---|---|
+| Arte que o sistema lê | ✓ `assets/weapons/era0_t1.png` + grip |
+| Família / ultimate | ✓ Clava / base `era0_ult` |
+| Efeito Épico | ✓ brilho 1, partículas ×1,25, dano igual |
+| Atributo | ✓ acima do Raro; 2 secundários |
+| Fontes | ✓ drop da era 0 (6% das quedas, mais o que seria Mítico: a arma Mítica vira Épica no lançamento, `js/sys/loot.js:36`) · Invocação (peso 14) |
+| Códex | ✓ `w-0-1` (junta Épico e Mítico) |
+| **Nome na tela** | ✗ **"Lança de Sílex"** (`index.html:352`), mas a arte é de clava. Mesma decisão do nome da Básica |
+
+**Fechada do lado de sistema, com 1 pendência: o nome.**
