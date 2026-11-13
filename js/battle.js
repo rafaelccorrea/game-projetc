@@ -508,8 +508,8 @@ function fxArtGo(A,x,y,layer,ex){ const im=IMG(fxPng(A)); if(!im) return false;
    No boot, com os módulos js/sys já carregados (vêm antes deste arquivo), Sys.stats.goLive('ults') marca as 9 aprovadas (idempotente). */
 window.ULT_LEGEND_ON=!(DEBUG&&typeof QP!=='undefined'&&QP.get('ultlend')==='0');   /* chave em window; lida a cada uso */
 try{ if(window.ULT_LEGEND_ON===true&&typeof Sys!=='undefined'&&Sys&&Sys.stats&&typeof Sys.stats.goLive==='function') Sys.stats.goLive('ults'); }catch(e){ console.error('goLive ults',e); }
-/* 7 ASAS NOVAS aprovadas (fênix, gelo, sombra, tempestade, mecânica, ossos, mariposa sombria; vistas a pé e montado, Kael e Kaia): ligadas no boot.
-   A de serafim (reprovada) não está em DATA.wingsApproved: segue desenhando a de anjo/demônio. */
+/* 8 ASAS NOVAS aprovadas (fênix, gelo, sombra, tempestade, mecânica, ossos, mariposa sombria e a SERÁFICA, versão A votada pelo dono em 14/11): ligadas no boot.
+   A lista é a DATA.wingsApproved do js/sys/stats.js. */
 try{ if(typeof Sys!=='undefined'&&Sys&&Sys.stats&&typeof Sys.stats.goLive==='function') Sys.stats.goLive('wings'); }catch(e){ console.error('goLive wings',e); }
 const ULT_ARTS={};
 const ultArtOf = sheet => ULT_ARTS[sheet]||(ULT_ARTS[sheet]={sheet,meta:true,dur:2.5});

@@ -1038,7 +1038,7 @@ t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade
 t('8 asas novas (dono): item de asa no mesmo padrão (atributo do item), atrás da chave, brilho pela raridade + Forja',()=>{
   const T=require('../../js/sys/stats.js'), W=T.DATA.wingTypes, nw=Object.keys(W).filter(k=>W[k].nw);
   assert.strictEqual(nw.length,8); assert.ok(nw.every(k=>W[k].src.length&&Number.isInteger(W[k].r))); assert.ok(W.seraph.rarest);
-  assert.strictEqual(T.wingOf({slot:'wing',wing:'seraph',e:0}),'angel','desligada: desenha a de hoje');
+  assert.strictEqual(T.wingOf({slot:'wing',wing:'seraph',e:0}),'angel','desligada: desenha a de hoje'); assert.ok(T.DATA.wingsApproved.includes('seraph'),'Seráfica aprovada pelo dono (versão A, 14/11)');
   T.DATA.newWingReady.ice=true; try{ assert.strictEqual(T.wingOf({slot:'wing',wing:'ice'}),'ice'); } finally { delete T.DATA.newWingReady.ice; }
   const g0=T.wingGlow({slot:'wing',r:1},0), g1=T.wingGlow({slot:'wing',r:1},15); assert.ok(g1.glow>g0.glow); assert.strictEqual(g0.particles,false); assert.strictEqual(g1.particles,true);
   assert.strictEqual(T.wingCatalog().filter(x=>x.soon).length,8);

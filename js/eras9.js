@@ -19,7 +19,7 @@
 const ERA9_KEY = false;
 /* ARTE QUE FALTA EM assets/ (conferido em disco): os ícones dos 3 botões de golpe da batalha para a ARMA das eras 7 e 8 (js/fullbattle.js lê
    assets/icons/era<era da arma>_s<1|2|3>.png). Sem eles o botão mostra imagem quebrada assim que o jogador equipa uma arma dessas eras. */
-const ERA9_MISSING = ['assets/icons/era7_s1.png', 'assets/icons/era7_s2.png', 'assets/icons/era7_s3.png', 'assets/icons/era8_s1.png', 'assets/icons/era8_s2.png', 'assets/icons/era8_s3.png'];
+const ERA9_MISSING = [];   /* 14/11: a Arte entregou os 6 ícones (assets/icons/era7_s1..3 e era8_s1..3, 9b94ead). Não falta mais arte obrigatória; a ERA9_KEY continua desligada só por decisão (ligar é voto do dono, pelo PO) */
 
 /* NOMES DOS CHEFES DAS ERAS 7 E 8 (escolha do dono). ÚNICO LUGAR: batalha, Vitória, Troca de era, Mapa das Eras e Códex leem daqui (era9Name / era9Boss).
    O chefe da era é um só (mesma arte nas 10 fases); na fase 10 ele é o Senhor da Era. Por já ser nome próprio, aparece sem "Chefe" / "Senhor da Era" na frente. */

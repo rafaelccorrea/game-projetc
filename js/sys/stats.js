@@ -58,7 +58,7 @@ const DATA={
   // refeita: fica desligada). As viradas ficam PRONTAS e só são feitas quando o engenheiro disser que o desenho na batalha está visto:
   // Sys.stats.goLive('ults') liga ownReady das aprovadas; Sys.stats.goLive('wings') liga newWingReady das aprovadas. (Nada liga sozinho.)
   ownApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
-  wingsApproved:['phoenix','ice','shadow','storm','mechanical','bone','darkmoth'],
+  wingsApproved:['phoenix','ice','shadow','storm','mechanical','bone','darkmoth','seraph'],   // seraph: dono votou a versão A (14/11; Arte conferiu em todas as skins, montada e na morte: 4b6c357)
   // FOLHA-BASE aprovada por família (Básico→Mítico): as 9 das eras 0-8 (as eras 7 e 8, ult-era7-anim/ult-era8-anim, aprovadas pelo dono em 12/11).
   // Arco e bumerangue (bow_base/boomerang_base) estão no disco SEM voto: até o voto, ultOf devolve sheet null (ultimate por código) e baseReady:false.
   baseApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
