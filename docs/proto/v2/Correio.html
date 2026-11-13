@@ -1,0 +1,442 @@
+<title>Eonbound Correio V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP V2. Correio V2: herói sempre à vista no topo; ao resgatar, os prêmios voam até ele. Regras: js/sys/mail.js; rota: docs/API_SERVIDOR.md §8. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:360px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(255,210,94,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 26%,var(--night) 40%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.5);display:flex;align-items:center;gap:6px}
+.ttl img{width:28px;height:28px;flex:none}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+.sr{position:absolute;left:-9999px}
+
+.stage{position:relative;z-index:2;height:216px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:216px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
+.who i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
+.who span{overflow:hidden;text-overflow:ellipsis}
+.prevb{position:absolute;z-index:3;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:13px;background:rgba(255,107,154,.2);border:1px solid var(--rose);font-size:11px;font-weight:900;color:#ffd6e2;white-space:nowrap;max-width:94%;overflow:hidden}
+.prevb span{overflow:hidden;text-overflow:ellipsis}
+.prevb button{flex:none;border:0;border-radius:9px;background:rgba(255,255,255,.14);height:22px;padding:0 8px;font-weight:900;font-size:11px}
+.note{position:absolute;z-index:3;left:12px;right:12px;bottom:2px;text-align:center;font-size:10px;font-weight:800;color:#cdeffd;background:rgba(5,8,28,.7);border-radius:9px;padding:3px 8px;line-height:1.3}
+.note b{color:var(--gold)}
+
+.bt{flex:none;min-width:76px;height:36px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green)}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.rose{background:linear-gradient(180deg,#ff9fbe,#e0477a);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
+.bt img{width:18px;height:18px}
+.bt svg{width:13px;height:13px}
+
+/* faixa de detalhe da prévia (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;display:flex;gap:9px;align-items:center;margin:6px 12px 0;padding:7px 9px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.det .di0{flex:none;width:44px;height:44px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.det .di0 img{position:absolute;inset:4%;width:92%;height:92%;object-fit:contain}
+.det .di{flex:1;min-width:0}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dg{font-size:11px;color:var(--green);font-weight:800;line-height:1.3}
+.dh{font-size:11px;color:var(--muted);font-weight:800;line-height:1.3}
+.dh b{color:var(--gold)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 14px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:10px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right}
+.sec b{color:var(--gold)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.rule{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.45);font-size:11.5px;font-weight:800;color:#cdeffd;line-height:1.4;margin:0 0 4px}
+.rule svg{width:18px;height:18px;flex:none;margin-top:1px}
+.rule b{color:#fff}
+
+/* cartão do nível atual */
+.vipc{border-radius:18px;padding:10px;margin-bottom:8px;background:linear-gradient(160deg,rgba(255,210,94,.22),rgba(24,33,86,.92) 55%);border:2px solid rgba(255,210,94,.65)}
+.viph{display:flex;align-items:center;gap:10px}
+.viph img{width:52px;height:52px;flex:none}
+.viph .big{font-family:var(--fd);font-weight:400;font-size:34px;line-height:1;color:var(--gold);text-shadow:0 0 16px rgba(255,210,94,.6)}
+.viph .t{flex:1;min-width:0}
+.viph small{display:block;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.viph small b{color:var(--text)}
+.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#ffe58a,#f4a52a)}
+.prog{font-size:12px;font-weight:900;margin-top:5px;display:flex;justify-content:space-between;gap:8px}
+.prog span:last-child{color:var(--gold);flex:none}
+
+/* prêmios do VIP (4 cartões, sem rolagem para o lado) */
+.rw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.rc{position:relative;border-radius:14px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 30%,#1a2366),#0c1238);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.rc .art{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.rc .nm{font-size:10px;font-weight:900;text-align:center;line-height:1.15;min-height:24px;display:flex;align-items:center;justify-content:center}
+.rc .st{width:100%;min-height:20px;border-radius:7px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.1;padding:2px}
+.rc .st.own{background:rgba(94,240,160,.15);color:var(--green)}
+.rc .st.lock{background:rgba(255,255,255,.07);color:var(--gold)}
+.rc .ey{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:7px;background:rgba(5,8,28,.8);display:grid;place-items:center;color:#ffd6e2}
+.rc .ey svg{width:13px;height:13px}
+.rc.pv{box-shadow:0 0 0 3px var(--rose),0 0 14px rgba(255,107,154,.5)}
+
+/* seletor de nível 0-10 (grade que quebra em 2 linhas) */
+.lvls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:6px}
+.lv{position:relative;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:900;font-size:13px;color:var(--muted);padding:0;min-width:0}
+.lv small{font-size:9px;display:block;line-height:1}
+.lv.got{color:var(--text)}
+.lv.me{border:2px solid var(--gold);color:var(--gold)}
+.lv[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.lv .rd{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--rose)}
+.lvcap{grid-column:span 1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.2}
+
+/* nível escolhido */
+.lvh{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 70%);border:1px solid rgba(255,210,94,.5)}
+.lvh b{font-family:var(--fd);font-weight:400;font-size:22px;color:var(--gold);flex:none}
+.lvh span{flex:1;min-width:0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.lvh span em{font-style:normal;color:var(--text)}
+.pk{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;min-width:0}
+.pk>img{width:34px;height:34px;object-fit:contain;flex:none}
+.pk span{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3}
+.pk span small{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.pk em{font-style:normal;font-weight:900;font-size:12px;color:var(--gold);flex:none;text-align:right;max-width:46%}
+.pk .bt{height:30px;min-width:0;font-size:11px;padding:0 8px}
+.pk.nw{border-color:rgba(94,240,160,.5)}
+.pill{flex:none;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.pill.on{background:rgba(94,240,160,.15);color:var(--green)}
+.pill.off{background:rgba(255,255,255,.07);color:var(--muted)}
+
+/* tabela acumulada: Benefício | Grátis | VIP N */
+.tbl{border-radius:14px;border:1px solid var(--line);overflow:hidden;background:rgba(5,8,28,.45)}
+.tr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);align-items:center;border-bottom:1px solid rgba(130,150,255,.15);min-height:34px}
+.tr:last-child{border-bottom:0}
+.tr>span{padding:5px 7px;font-size:11px;font-weight:800;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.tr>span:nth-child(2){color:var(--muted);text-align:center}
+.tr>span:nth-child(3){text-align:center;background:rgba(255,210,94,.07);height:100%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.tr.hd{min-height:28px;background:rgba(61,79,184,.35)}
+.tr.hd>span{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.tr .up{color:var(--gold)}
+.tr .no{color:var(--muted)}
+
+/* rodapé fixo: só leva à Loja */
+.foot{position:relative;z-index:5;flex:none;padding:8px 12px 14px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%);display:flex;flex-direction:column;gap:4px}
+.foot .bt{width:100%;height:48px;font-size:15px}
+.foot small{text-align:center;font-size:10px;font-weight:800;color:var(--muted)}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+/* ===== CORREIO (acrescentado ao padrão da VIP V2) ===== */
+.stage{height:150px}
+#stc{height:150px}
+.flt{position:relative;z-index:3;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:4px 12px 0}
+.flt button{position:relative;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:11px;color:var(--muted);padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flt button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.flt i{position:absolute;right:3px;top:3px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--rose);color:#fff;font-size:9px;font-style:normal;line-height:14px;font-weight:900}
+.lt{display:block;width:100%;text-align:left;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;padding:0;overflow:hidden}
+.lt.unr{border-color:rgba(94,231,255,.6)}
+.lt.op{border:2px solid var(--gold)}
+.lh{display:flex;align-items:center;gap:8px;padding:7px 9px;min-width:0}
+.lic{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;position:relative}
+.lic svg{width:24px;height:24px}
+.lic.reward{background:rgba(255,210,94,.18)}.lic.guild{background:rgba(94,231,255,.16)}.lic.event{background:rgba(169,123,255,.18)}.lic.system{background:rgba(255,255,255,.08)}
+.lic .dot{position:absolute;right:-2px;top:-2px;width:10px;height:10px;border-radius:50%;background:var(--cyan);border:2px solid var(--night)}
+.lh .mi{flex:1;min-width:0}
+.lh .mi b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt:not(.unr) .lh .mi b{color:#c9d0f0}
+.lh .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lh .mi small em{font-style:normal;color:#ff9f9f}
+.atr{flex:none;display:flex;align-items:center;gap:2px}
+.atr img{width:20px;height:20px;object-fit:contain}
+.atr .ok{font-size:10px;font-weight:900;color:var(--green)}
+.lb{padding:0 10px 10px}
+.lb p{margin:0 0 8px;font-size:12px;font-weight:700;line-height:1.45;color:#dfe5ff}
+.att{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:8px}
+.ai{position:relative;border-radius:11px;background:rgba(5,8,28,.55);border:2px solid var(--rc,var(--line2));padding:4px 2px 3px;text-align:center;min-width:0}
+.ai img{width:34px;height:34px;object-fit:contain;display:block;margin:0 auto}
+.ai b{display:block;font-size:10.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai small{display:block;font-size:8.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai.got{opacity:.45}
+.lb .row{display:flex;gap:6px}
+.lb .row .bt{flex:1;height:38px;font-size:13px;min-width:0}
+.lb .note2{font-size:10.5px;color:var(--muted);font-weight:800;margin-top:6px;line-height:1.35}
+.empty{text-align:center;padding:30px 20px;color:var(--muted);font-weight:800;font-size:13px;line-height:1.5}
+.foot2{position:relative;z-index:5;flex:none;display:flex;gap:6px;padding:8px 12px 14px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%)}
+.foot2 .bt{flex:1;height:46px;font-size:14px;min-width:0}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <div class="top">
+          <button class="back" data-go="Menu" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">Correio</div>
+          <div class="cur"><img src="a/coin.png" alt=""><span id="gold">0</span><span class="sr">ouro</span></div>
+          <div class="cur"><img src="a/gem.png" alt=""><span id="gems">0</span><span class="sr">diamantes</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="300" role="img" aria-label="Seu herói com a arma na mão, a asa e o pet na frente; ao resgatar, os prêmios voam até ele"></canvas>
+          <div class="who" id="who"><i></i><span>Kael</span></div>
+        </div>
+        <div class="flt" role="group" aria-label="Filtro" id="flt"></div>
+        <div class="body" id="body"></div>
+        <div class="foot2" id="foot"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Correio (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">O herói fica no topo; ao resgatar, cada prêmio voa até ele e o número sobe. Filtros por tipo (Prêmios, Guilda, Eventos, Sistema) com o total não lido. Toque numa carta para abrir: texto, anexos e "Resgatar". "Resgatar tudo" pega todos os anexos de uma vez. Só dá para apagar carta sem anexo pendente. Cada carta vence em 30 dias; o anexo não resgatado se perde (o aviso fica vermelho nos últimos 3 dias).</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Caixa" style="margin-top:8px"><button data-scn="full" aria-pressed="true">Caixa cheia</button><button data-scn="first" aria-pressed="false">Primeiro dia</button><button data-scn="empty" aria-pressed="false">Vazia</button></div>
+      <p class="sub" style="margin-top:8px">Caixa cheia: prêmios da Arena, do Torneio, baú de território, chefe da guilda, evento, marco das fases sem fim e um aviso da equipe. Primeiro dia: só a carta de boas-vindas (sem anexo), como hoje sem servidor.</p>
+    </div>
+    <div class="box">
+      <h2>De onde vem cada coisa</h2>
+      <ul>
+        <li>Regras: js/sys/mail.js (tipos system, reward, guild, event; remetente pelo tipo; 30 dias; até 100 cartas; resgate idempotente pela carta; apagar só sem anexo pendente)</li>
+        <li>Rota: docs/API_SERVIDOR.md §8 (GET /mail, POST /mail/{id}/claim); a entrega é o Sys.loot.grantBundle (item acima do seu portão fica guardado)</li>
+        <li>Cartas de exemplo com os prêmios reais das telas: Arena, Torneio do Poder (Brasões e fragmentos do Prismático), baú de território, chefe da guilda, marco 100 (posEras, PROPOSTA)</li>
+        <li>Carta de boas-vindas: o texto do jogo (Sys.mail WELCOME)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: anexos maiores, filtro só de prêmios"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais à Loja V2): W = arma Lâmina Rúnica (assets/weapons/meta.json), B = corpo sem arma de cada skin ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"n":12,"fps":12,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"fy":242},"kaia":{"n":12,"fps":12,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243},"kael_demon":{"n":12,"fps":12,"g":[[117.58,207.42,42.99,0.7314,-0.6819,-1.92,1.92,3.64,0],[117.75,207.85,42.88,0.7328,-0.6804,-5.41,5.41,3.69,0],[117.62,208.26,42.27,0.74,-0.6726,-5.41,5.41,3.69,0],[120.15,205.33,41.5,0.7489,-0.6627,-5.41,5.41,3.69,0],[121.81,202.96,41.63,0.7475,-0.6643,-8.41,8.41,3.74,0],[121.94,202.75,42.42,0.7382,-0.6746,-5.41,5.41,3.69,0],[122.01,203.26,43,0.7313,-0.682,-5.41,5.41,3.69,0],[122.45,203.53,42.85,0.7332,-0.6801,-8.51,8.51,3.69,0],[122.32,204.03,42.17,0.7412,-0.6713,-8.71,8.71,3.69,0],[122.26,203.24,41.44,0.7496,-0.6618,-5.41,5.41,3.69,0],[122.39,202.34,41.8,0.7455,-0.6665,-5.41,5.41,3.69,0],[125.98,199.14,42.62,0.7358,-0.6772,-9.79,9.79,3.69,0]],"back":{"x":95.8,"y":161,"a":0,"s":1},"fy":242},"kaia_demon":{"n":12,"fps":12,"g":[[114.75,196.04,40.81,0.7569,-0.6536,-11.6,11.6,4.05,0],[114.74,196.7,40.93,0.7555,-0.6552,-11.71,11.71,4.05,0],[114.69,196.24,40.61,0.7591,-0.6509,-11.43,11.43,4.05,0],[115.3,196.17,40.46,0.7609,-0.6489,-10.55,10.55,4.05,0],[115.4,196.45,40.62,0.759,-0.6511,-10.38,10.38,4.11,0],[115.77,195.69,40.96,0.7551,-0.6556,-10.27,10.27,4.05,0],[115.57,196.56,40.73,0.7578,-0.6524,-10.27,10.27,4.11,0],[114.64,196.74,40.41,0.7614,-0.6483,-11.43,11.43,4.11,0],[114.7,195.98,40.73,0.7578,-0.6524,-11.6,11.6,4.11,0],[114.85,195.6,40.97,0.755,-0.6557,-11.6,11.6,4.05,0],[111.95,199.79,40.64,0.7588,-0.6514,-5.44,5.44,4.11,0],[119.75,193.33,40.4,0.7615,-0.6482,-4.66,4.66,4.11,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243}}};
+
+/* ---------- CORREIO: js/sys/mail.js (tipos, remetente, prazo) ---------- */
+const FROM={system:'Equipe Eonbound',reward:'Prêmios',guild:'Guilda',event:'Eventos'};
+const TN={all:'Todas',reward:'Prêmios',guild:'Guilda',event:'Eventos',system:'Sistema'};
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'], RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
+/* anexo → peças da tela (o grantBundle do jogo entrega cada uma) */
+const AT={gold:['a/coin.png','Ouro'],gems:['a/gem.png','Diamantes'],forge:['a/forge.png','Pedras de forja'],food:['a/pets.png','Ração'],essence:['a/chest.png','Essência'],stones:['a/forge.png','Pedras de treino'],prism:['a/pp_prism_fox.png','Fragm. Prismático'],mfrag:['a/m_horse.png','Fragm. montaria']};
+function pieces(att){ const out=[]; for(const k of Object.keys(att)){ if(k==='item'){ const it=att.item; out.push({img:it.img,b:RN[it.r],s:it.name,rc:RC[it.r],k}); continue; }
+  if(k==='title'){ out.push({img:'a/ic_vip.png',b:'Título',s:att.title,rc:RC[4],k}); continue; }
+  const a=AT[k]; if(a) out.push({img:a[0],b:k==='gold'?ab(att[k]):'×'+n(att[k]),s:a[1],k}); } return out; }
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',').replace(/,0+$/,'');
+const ab=v=>v>=1e9?dec(v/1e9,2)+' bi':v>=1e6?dec(v/1e6,1)+' mi':v>=1e4?dec(v/1e3,1)+' mil':n(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SV={reward:'<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="12" rx="2" fill="#ffd25e" stroke="#9a5a10" stroke-width="1.5"/><path d="M3 9h18v4H3z" fill="#f4a52a"/><path d="M12 9v12" stroke="#9a5a10" stroke-width="2"/><path d="M12 9c-2-4-6-4-6-1.5S10 9 12 9c2 0 6 1 6-1.5S14 5 12 9z" fill="#ff6b9a"/></svg>',
+ guild:'<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5.5-3.6 9.3-8 11-4.4-1.7-8-5.5-8-11V5z" fill="#5ee7ff" stroke="#16306e" stroke-width="1.6"/><path d="M12 6.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff6d6"/></svg>',
+ event:'<svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.3 6.6.5-5 4.4 1.6 6.5L12 16.2 6.2 19.7l1.6-6.5-5-4.4 6.6-.5z" fill="#a97bff" stroke="#3a1a6e" stroke-width="1.3"/></svg>',
+ system:'<svg viewBox="0 0 24 24" fill="none" stroke="#dfe5ff" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 6.5L12 13l8.5-6.5"/></svg>'};
+
+/* ---------- cartas de EXEMPLO (formato do mail-core: id, title, body, att, createdAt, expiresAt, source → type) ---------- */
+const DAY=86400000, NOW=Date.UTC(2026,10,16,15);
+function seed(kind){ if(kind==='empty') return [];
+  const W={id:'welcome',type:'system',title:'Bem-vindo a Eonbound',body:'Que bom ter você aqui, viajante! Aqui chegam avisos da equipe e, quando o jogo estiver online, os prêmios de ranking, arena e eventos.',att:null,age:0.1,left:30,read:kind!=='first'};
+  if(kind==='first') return [W];
+  const L=[
+   {id:'m1',type:'reward',title:'Arena: prêmio da semana (14º lugar)',body:'Sua posição final na Arena da semana passada foi 14º. Obrigado pelas lutas!',att:{gems:80,gold:4.2e6,forge:6},age:0.4,left:29},
+   {id:'m2',type:'reward',title:'Torneio do Poder: 3º lugar',body:'A Ordem do Alvorecer ficou em 3º no Torneio do Poder. Prêmio para quem estava escalado. Os Brasões já estão na guilda.',att:{prism:2},age:0.5,left:29},
+   {id:'m3',type:'guild',title:'Baú de território (3 territórios)',body:'Um item para cada território da sua guilda, na raridade mais alta que você pode receber, mais materiais.',att:{item:{name:'Couraça Industrial',r:4,img:'a/era4_vest_t2.png'},forge:6,food:90,essence:3},age:0.6,left:29},
+   {id:'m4',type:'guild',title:'Chefe da guilda derrubado',body:'A guilda derrubou o chefe da semana. Prêmio para todos os membros.',att:{forge:5,food:50,essence:2},age:2,left:28},
+   {id:'m5',type:'event',title:'Invasão: prêmio de participação',body:'Você ajudou a defender a cidade na Invasão de sábado.',att:{essence:2,stones:5},age:27.5,left:2},
+   {id:'m6',type:'reward',title:'Marco da fase 100',body:'Você venceu a fase 100. Próximo marco: fase 110.',att:{title:'Marco 100',gems:30},age:3,left:27},
+   {id:'m7',type:'system',title:'Manutenção de quinta: compensação',body:'O servidor ficou fora do ar por 40 minutos na quinta. Obrigado pela paciência.',att:{gems:50},age:4,left:26},
+   {id:'m8',type:'system',title:'Novidades da versão 0.13',body:'Eras 7 e 8, montarias até 7 estrelas e o Torneio do Poder. Bom jogo!',att:null,age:5,left:25,read:true}];
+  return [...L,W]; }
+
+/* ---------- estado ---------- */
+let S={hero:'kael'}, flt='all', openId=null;
+function reset(kind){ const hero=S.hero||'kael';
+  S={hero,kind,skin:'def',wing:'angel',weapon:['era2_t1',2,'Lâmina Rúnica'],gold:18.6e6,gems:640,box:seed(kind).map(m=>Object.assign({read:false,claimed:false},m)),fly:[],fx:[]}; openId=null; }
+const hasAtt=m=>!!(m.att&&Object.keys(m.att).length);
+const pending=m=>hasAtt(m)&&!m.claimed;
+const unreadOf=m=>!m.read||pending(m);
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+
+/* ---------- PALCO ---------- */
+const IM={}, IMS={};
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+/* linha do pescoço por quadro (js/stage.js neckRows): a cabeça é redesenhada por cima da lâmina */
+const NECK={};
+function neckOf(u,im,nf){ if(NECK[u]) return NECK[u]; const fw=im.naturalWidth/nf, fh=im.naturalHeight, fs=fw/256, out=[];
+  try{ const W=Math.round(fw), c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=fh; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+    for(let i=0;i<nf;i++){ const d=g.getImageData(Math.round(i*fw),0,W,fh).data; let top=Math.round(fh*.3);
+      scan: for(let y=0;y<fh;y++) for(let x=0;x<W;x++){ const k=(y*W+x)*4; if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){ top=y; break scan; } }
+      out.push(top/fs); } }
+  catch(e){ out.length=0; for(let i=0;i<nf;i++) out.push(77); }
+  return NECK[u]=out; }
+const AN_RIDE={kael_phoenix:{x:163.6,y:141,a:16.5,s:0.654}};   /* mediana de back[] em assets/anim/mounts/kael_giant_phoenix_idle_body.json */
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+const sheetOf=sk=>sk==='def'?'a/body_'+S.hero+'.png':'a/body_'+S.hero+'_demon.png';
+function look(){ const L={skin:S.skin,mount:null,pet:'wolf',aura:false}; const R=S.pv; if(!R) return L;
+  if(R.id==='demon') L.skin='demon'; else if(R.id==='phoenix') L.mount='phoenix'; else if(R.id==='wyvern') L.pet='wyvern'; else if(R.id==='aura') L.aura=true; else if(R.id==='prism') L.pet='prism';
+  return L; }
+function wings(x,ax,ay,b,k,t){ const WA=WING_AN[S.wing]; if(!WA||!b) return; const Li=img('a/wg_'+S.wing+'_L.png'), Ri=img('a/wg_'+S.wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* herói A PÉ: corpo sem arma + a arma equipada no punho de cada quadro; asa nas costas (a skin Demônio já traz a asa na arte, ela vence o item) */
+function drawHero(x,t,L,hx){
+  const sid=L.skin==='def'?S.hero:S.hero+'_demon', B=D.B[sid], url=sheetOf(L.skin), sh=img(url); if(!B||!ok(sh)) return;
+  const fw=sh.naturalWidth/B.n, fh=sh.naturalHeight, fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=hx-128*k, y0=GY-B.fy*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  if(L.skin==='def'&&B.back) wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*fw,0,fw,fh,0,0,256,256);
+  const wk=S.weapon[0], W=D.W[wk], ws=W?wSpr(wk,S.weapon[1]):null; let drawW=null;
+  if(ws){ const grip=W.grip||[0.5,0.78], kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=neckOf(url,sh,B.n)[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,256,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+const GY=134, HK=0.52, HX=195, PCX=140;
+function drawPet(x,t){ const I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) return; const fi=((Math.floor(t*12)%12)+12)%12, fw=I.naturalWidth/12, fh=I.naturalHeight, kp=100/512;
+  x.drawImage(I,fi*fw,0,fw,fh,PCX-224*kp,GY+6-307*kp,512*kp,352*kp); }
+/* prêmios voando até o herói: saem de baixo (da carta) num arco e somem no peito dele */
+function drawFly(x,t){ S.fly=S.fly.filter(p=>t-p.t<1.1+p.d); for(const p of S.fly){ const u=Math.max(0,Math.min(1,(t-p.t-p.d)/0.9)); if(u<=0) continue; const im=img(p.img); if(!ok(im)) continue;
+    const sx=p.x0, sy=170, ex=HX, ey=GY-60, cx=(sx+ex)/2, cy=Math.min(sy,ey)-70, k=1-u, xx=k*k*sx+2*k*u*cx+u*u*ex, yy=k*k*sy+2*k*u*cy+u*u*ey, s=26*(1-u*0.5);
+    x.save(); x.globalAlpha=u>0.85?(1-u)/0.15:1; x.drawImage(im,xx-s/2,yy-s/2,s,s); x.restore(); } }
+function drawFx(x,t){ S.fx=S.fx.filter(p=>t-p.t<1.3); for(const p of S.fx){ const a=(t-p.t)/1.3; x.save(); x.globalAlpha=1-a; x.font='900 14px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle=p.c; x.strokeText(p.s,p.x,p.y-a*28); x.fillText(p.s,p.x,p.y-a*28); x.restore(); } }
+function draw(t){ if(!S.box) return; S.t=t; const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,150);
+  try{ const g=x.createRadialGradient(HX,GY,10,HX,GY,150); g.addColorStop(0,'rgba(255,210,94,.25)'); g.addColorStop(1,'rgba(255,210,94,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,150,14,0,0,7); x.fill(); }catch(err){ stgErr('o chão',err); }
+  try{ drawHero(x,t,{skin:'def'},HX); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  try{ drawPet(x,t); }catch(err){ stgErr('o pet',err); }
+  try{ drawFly(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os prêmios',err); }
+  try{ drawFx(x,t); }catch(err){ stgErr('os números',err); } }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- telas ---------- */
+function renderTop(){ $('#gold').textContent=ab(S.gold); $('#gems').textContent=n(S.gems); $('#who span').textContent=hn(); }
+function renderFlt(){ $('#flt').innerHTML=Object.keys(TN).map(k=>{ const c=S.box.filter(m=>(k==='all'||m.type===k)&&unreadOf(m)).length; return `<button data-flt="${k}" aria-pressed="${flt===k}">${TN[k]}${c?'<i>'+c+'</i>':''}</button>`; }).join(''); }
+function letter(m){ const op=openId===m.id, pcs=hasAtt(m)?pieces(m.att):[], warn=m.left<=3;
+  const atr=hasAtt(m)?(m.claimed?'<span class="atr"><span class="ok">Resgatado</span></span>':'<span class="atr">'+pcs.slice(0,3).map(p=>`<img src="${p.img}" alt="">`).join('')+(pcs.length>3?'<span class="ok" style="color:var(--muted)">+'+(pcs.length-3)+'</span>':'')+'</span>'):'';
+  let body=''; if(op){ body=`<div class="lb"><p>${esc(m.body)}</p>${pcs.length?'<div class="att">'+pcs.map(p=>`<div class="ai ${m.claimed?'got':''}" style="${p.rc?'--rc:'+p.rc:''}"><img src="${p.img}" alt=""><b>${esc(p.b)}</b><small>${esc(p.s)}</small></div>`).join('')+'</div>':''}
+    <div class="row">${pending(m)?`<button class="bt" data-claim="${m.id}">Resgatar</button>`:`<button class="bt rose" data-del="${m.id}">Apagar</button>`}</div>
+    <div class="note2">De: ${esc(FROM[m.type])} · chegou ${m.age<1?'hoje':'há '+Math.floor(m.age)+' dia'+(Math.floor(m.age)===1?'':'s')} · vence em ${m.left} dia${m.left===1?'':'s'}${pending(m)?'; depois disso o anexo se perde':''}${m.att&&m.att.item?'. Item acima do seu portão fica guardado até você poder usar':''}</div></div>`; }
+  return `<div class="lt ${unreadOf(m)?'unr':''} ${op?'op':''}"><button class="lh" data-open="${m.id}" style="width:100%;border:0;background:none;text-align:left" aria-expanded="${op}"><span class="lic ${m.type}">${SV[m.type]}${unreadOf(m)?'<span class="dot"></span>':''}</span><span class="mi"><b>${esc(m.title)}</b><small>${esc(FROM[m.type])} · ${warn&&pending(m)?'<em>vence em '+m.left+' dia'+(m.left===1?'':'s')+'</em>':'vence em '+m.left+' dias'}</small></span>${atr}</button>${body}</div>`; }
+function renderBody(keep){ const b=$('#body'), sc=b.scrollTop, L=S.box.filter(m=>flt==='all'||m.type===flt);
+  b.innerHTML=L.length?L.map(letter).join('')+`<p class="hint" style="margin-top:6px">${S.box.length} de 100 cartas. Cartas vencem em 30 dias.</p>`:`<div class="empty">${S.box.length?'Nenhuma carta deste tipo.':'Sua caixa está vazia.<br>Prêmios de Arena, Torneio, guilda e eventos chegam aqui.'}</div>`;
+  b.scrollTop=keep?sc:0; }
+function renderFoot(){ const p=S.box.filter(pending).length, rd=S.box.filter(m=>!pending(m)&&m.read).length;
+  $('#foot').innerHTML=`<button class="bt off" data-act="delread" ${rd?'':'disabled'}>Apagar lidas${rd?' ('+rd+')':''}</button><button class="bt ${p?'':'off'}" data-act="all" ${p?'':'disabled'}>Resgatar tudo${p?' ('+p+')':''}</button>`; }
+function full(keep){ renderTop(); renderFlt(); renderBody(keep); renderFoot(); }
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2000); }
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${esc(where)}</div></div><div class="navb"><p>No jogo, volta para <b>${esc(where)}</b>.</p><button class="bt" data-x="navback" style="height:44px;min-width:200px">Voltar para o Correio</button></div>`; scr.appendChild(d); }
+
+/* ---------- ações (Sys.mail.claim / claimAll / remove; no servidor POST /mail/{id}/claim) ---------- */
+function claim(m,delay){ if(!pending(m)) return false; m.claimed=true; m.read=true; const a=m.att;
+  if(a.gold) S.gold+=a.gold; if(a.gems) S.gems+=a.gems;
+  pieces(a).forEach((p,i)=>S.fly.push({img:p.img,x0:60+((i*67)%270),t:S.t||0,d:(delay||0)+i*0.12}));
+  setTimeout(()=>{ S.fx.push({s:a.gems?'+'+a.gems+' diamantes':a.gold?'+'+ab(a.gold)+' ouro':'Resgatado!',c:'#5ef0a0',x:HX,y:GY-120,t:S.t||0}); renderTop(); },700);
+  return true; }
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.flt){ flt=d.flt; openId=null; full(false); return; }
+  if(d.open){ const m=S.box.find(x=>x.id===d.open); openId=openId===d.open?null:d.open; if(m) m.read=true; full(true); return; }
+  if(d.claim){ const m=S.box.find(x=>x.id===d.claim); if(claim(m)) toast('Resgatado: '+m.title); full(true); return; }
+  if(d.del){ const m=S.box.find(x=>x.id===d.del); if(!m) return; if(pending(m)){ toast('Resgate o anexo antes de apagar'); return; } S.box=S.box.filter(x=>x!==m); openId=null; toast('Carta apagada'); full(true); return; }
+  if(d.act==='all'){ const P=S.box.filter(pending); P.forEach((m,i)=>claim(m,i*0.25)); toast(P.length+' anexos resgatados'); full(true); return; }
+  if(d.act==='delread'){ const k=S.box.filter(m=>!pending(m)&&m.read).length; S.box=S.box.filter(m=>pending(m)||!m.read); openId=null; toast(k+' cartas apagadas'); full(true); return; } });
+function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scn===S.kind)); }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.hero){ S.hero=d.hero; syncSide(); full(true); } else if(d.scn){ reset(d.scn); flt='all'; syncSide(); full(false); } });
+S.hero='kael'; reset('full'); full(false);
+setTimeout(()=>{ for(const h of ['kael','kaia']) img('a/body_'+h+'.png'); for(const k in AT) img(AT[k][0]); img('a/era4_vest_t2.png'); img('a/ic_vip.png'); },600);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-correio-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Correio V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
