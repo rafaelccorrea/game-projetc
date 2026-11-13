@@ -55,8 +55,8 @@ function rkStep(p,pos,x,h,aura,delay){ const stepY=212-h, nm=rkEsc(p.me?'Você':
     <div aria-hidden="true" style="position:absolute;left:${x+12}px;top:${stepY+6-110}px;width:88px;height:110px"><div class="pr-aura" style="position:absolute;inset:0;background-image:url(assets/anim/aura/${aura}.png)"></div></div>
     <div role="img" aria-label="${nm}, posição ${pos}" style="position:absolute;left:${x+12}px;top:${stepY+2-84}px;width:88px;height:88px"><div class="pr-kid" style="position:absolute;inset:0"></div></div>
     <div style="position:absolute;left:${x}px;top:${stepY}px;width:112px;height:${h}px;border-radius:10px 10px 0 0;background:${pos===1?'linear-gradient(180deg,#ffe07a,#c77a12)':pos===2?'linear-gradient(180deg,#d8dbe3,#8a8f9c)':'linear-gradient(180deg,#e0a46a,#8a4f22)'};border:2px solid ${pos===1?'#fff0a8':pos===2?'#f6f7fa':'#ffd2a3'};border-bottom:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding-top:4px;color:#2a1403">
-      <span style="font-family:'Lilita One',sans-serif;font-size:20px;line-height:1;text-shadow:0 1px 0 rgba(255,255,255,.4)">${pos}</span>
-      <span style="font-size:11px;font-weight:900;max-width:104px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nm}</span>
+      <span style="font-family:'Lilita One',sans-serif;font-size:20px;line-height:1.2;text-shadow:0 1px 0 rgba(255,255,255,.4)">${pos}</span>
+      <span style="font-size:11px;font-weight:900;max-width:104px;line-height:1.15;overflow-wrap:anywhere;text-align:center">${nm}</span>
       <span style="font-family:'Lilita One',sans-serif;font-size:14px;color:#3a1a06">${rkEsc(R_TABS[XRK.tab].fmt(p.value))}</span></div></div>`; }
 function rkPodium(D,K){ K=K||1; const L=D.list, p1=L[0], p2=L[1], p3=L[2]; if(!p1||!p2||!p3) return '';
   return `<div style="position:relative;height:${Math.round(212*K)}px;flex:none;overflow:hidden;border-radius:16px;background:linear-gradient(180deg,rgba(58,40,16,.6),rgba(22,17,13,.2))"><div style="position:absolute;left:0;top:0;width:390px;height:212px;transform:scale(${K});transform-origin:0 0">
@@ -73,7 +73,7 @@ function rkRow(r,i){ const mine=!!r.me;
   return `<div class="pr-row" style="animation-delay:${i*.04}s;height:46px;flex:none;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:${mine?'#3a2c1f':'#1d1611'};border:${mine?'2px solid #ffc94a':'1px solid #4a3a2b'};box-sizing:border-box">
     <span style="width:30px;font-family:'Lilita One',sans-serif;font-size:16px;color:#c9b9a2;text-align:center">${r.rank}</span>
     <span aria-hidden="true" style="flex:none;width:34px;height:34px;border-radius:50%;overflow:hidden;position:relative;background:#2a1f16;border:2px solid ${mine?'#ffc94a':'#6b5843'};box-sizing:border-box">${mine?rkAv(30,'<span class="pr-kid" style="position:absolute;left:-13px;top:-3px;width:58px;height:58px;display:block"></span>'):'<span class="pr-kid" style="position:absolute;left:-13px;top:-3px;width:58px;height:58px;display:block"></span>'}</span>
-    <span style="flex:1;min-width:0;font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rkEsc(mine?'Você · Kael':r.name)}</span>
+    <span style="flex:1;min-width:0;font-size:14px;font-weight:900;line-height:1.15;overflow-wrap:anywhere">${rkEsc(mine?'Você · Kael':r.name)}</span>
     <span style="font-family:'Lilita One',sans-serif;font-size:15px;color:#ffe07a;white-space:nowrap">${rkEsc(R_TABS[XRK.tab].fmt(r.value))}</span></div>`; }
 function rkGap(D){ if(!D.list) return 'Seu valor real; a colocação aparece com o online'; const me=D.me, above=D.list[me.rank-2];
   if(!above) return 'Você está em 1º lugar'; return 'Faltam '+rkEsc(R_TABS[XRK.tab].fmt(Math.max(0,above.value-me.value)).replace(/^FC |^Andar |^Passe |^Nv\. /,''))+' para o '+(me.rank-1)+'º lugar'; }

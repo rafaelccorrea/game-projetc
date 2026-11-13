@@ -10,6 +10,9 @@
    todos os cartões mostram o herói equipado (pedido ao engenheiro). Reserva do desenho: o Kael parado de assets/anim/hyb/R. Zero emoji, nenhum botão sem ação.
    Pedido Q-15 (reports/pedidos-entre-agentes.md): carregar este script e ligar PANEL_ON.look; a entrada é o cartão do Equipamento (Panels.open('look')), o Voltar volta ao Equipamento. */
 const XLK={raf:0,t0:0,err:0,open:null,mount:false,tm:0};
+/* skins que trazem asa PRÓPRIA desenhada: no cartão e no destaque o desenho sai com wing:false (só a asa da skin), senão a asa-item equipada soma e aparece asa DUPLA. Para o Kael Anjo o catálogo tem noWingDir; a Kaia Angelical ainda não tem a variante sem asa: por isso a lista aqui. Acrescentar o id de skin nova que tenha asa própria. */
+const PL_OWNWING={kael_angel:1,kaia_angel:1};
+const plWingOff=id=>PL_OWNWING[id]===1;
 const PL_MINH=520;
 const PL_CSS=`.pl-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:plk 1s steps(12,jump-none) infinite}
 @keyframes plk{from{background-position:0 0}to{background-position:100% 0}}
@@ -32,7 +35,7 @@ function plFixed(hero){ try{ const A=window.Sys&&Sys.appearance; if(!A||typeof A
 function plDraw(ts){ XLK.raf=0; const cs=document.querySelectorAll?document.querySelectorAll('canvas[data-plsk][data-live]'):[]; if(!cs.length) return; if(!XLK.t0) XLK.t0=ts||0;
   if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; }
   const hs=(typeof HS==='number'&&HS>0)?HS:155;   /* a vitrine mostra o herói A PÉ e sem pet: com montaria a skin não apareceria (P21) */
-  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk,mount:cv.dataset.mounted==='1'?undefined:false,pet:false}); }catch(e){ XLK.err=1; plFallback(); return; } }
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:((ts||0)-XLK.t0)/1000,skin:cv.dataset.plsk,mount:cv.dataset.mounted==='1'?undefined:false,pet:false,wing:plWingOff(cv.dataset.plsk)?false:undefined}); }catch(e){ XLK.err=1; plFallback(); return; } }
   if(typeof requestAnimationFrame==='function') XLK.raf=requestAnimationFrame(plDraw); }
 /* reserva: o Kael parado no lugar de cada canvas */
 function plFallback(){ try{ const cs=document.querySelectorAll('canvas[data-plsk]'); for(const cv of cs){ cv.style.display='none'; const fb=cv.nextElementSibling; if(fb) fb.style.display='block'; } }catch(e){} }
@@ -42,7 +45,7 @@ function plNoPrice(s){ return String(s).replace(/ *R[$] *[0-9.,]+/g,'').replace(
 /* GRADE: quadro PARADO (um desenho só por cartão, nada de laço de animação: desempenho); tenta de novo algumas vezes porque a folha pode ainda estar carregando */
 function plStills(){ XLK.tm=0; const cs=document.querySelectorAll?document.querySelectorAll('canvas[data-plsk]:not([data-live])'):[]; if(!cs.length) return;
   if(typeof window.drawHeroFull!=='function'||XLK.err){ plFallback(); return; } const hs=(typeof HS==='number'&&HS>0)?HS:155; let miss=0;
-  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; if(cv.__painted) continue; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:0.35,skin:cv.dataset.plsk,mount:false,pet:false});
+  for(const cv of cs){ try{ const c2=cv.getContext('2d'), w=cv.width, h=cv.height; if(cv.__painted) continue; c2.clearRect(0,0,w,h); window.drawHeroFull(c2,w*0.45,h*0.93,h*0.62/hs,{t:0.35,skin:cv.dataset.plsk,mount:false,pet:false,wing:plWingOff(cv.dataset.plsk)?false:undefined});
       let ok=true; try{ if(c2.getImageData){ const d=c2.getImageData(Math.floor(w*0.3),Math.floor(h*0.25),Math.floor(w*0.4),Math.floor(h*0.6)).data; ok=false; for(let i=3;i<d.length;i+=16) if(d[i]>0){ ok=true; break; } } }catch(e){ ok=true; }
       if(ok) cv.__painted=1; else miss++; }catch(e){ XLK.err=1; plFallback(); return; } }
   XLK.n=(XLK.n||0)+1; if(miss&&XLK.n<20&&typeof setTimeout==='function') XLK.tm=setTimeout(plStills,600); }   /* a folha de cada skin carrega sob demanda: repete a cada 0,6 s (até ~12 s) só nos cartões ainda vazios; o quadro pronto não é redesenhado */
