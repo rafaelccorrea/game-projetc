@@ -100,7 +100,8 @@ function eraReady(era){ if (era < 0 || era >= ERAS.length) return true; let o = 
   return o.ok; }
 /* solta os cenários vivos que não são da era atual nem da próxima (memória; o celular chegou a ~800 MB) */
 function sceneTrim(){ const cur = eraOf(S.stage); for (const k in SCN.list){ const e = +k, s = SCN.list[k]; if (e === cur || e === cur + 1 || e === SCN.force || s === SCN.cur || (B.dispEra === e)) continue;
-    try { if (s.api) s.api.stop(); } catch (er) {} try { s.cv.width = s.cv.height = 1; s.cv.remove(); } catch (er) {} delete SCN.list[k]; delete ERA_P[k]; } }
+    s.dead = true; try { if (s.api){ if (typeof s.api.release === 'function') s.api.release(); else s.api.stop(); } } catch (er) {}   /* Engenheiro 10: cena DESCARTADA solta os bitmaps fixados (api.release do scene.js, b1a3981); a cena guardada (era atual e a próxima) só para (stop) */
+    try { s.cv.width = s.cv.height = 1; s.cv.remove(); } catch (er) {} delete SCN.list[k]; delete ERA_P[k]; } }
 
 function initLoading(){
   const el = LD.el = document.getElementById('loading'); if (!el) return;
@@ -223,7 +224,7 @@ function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySel
   box.querySelector('#lskip').addEventListener('click', () => { loadFailOff(); LD.skipFail = true; }); }
 function closeLoading(){
   if (LD.closed) return; LD.closed = true; const el = LD.el;
-  el.classList.add('out'); setTimeout(() => { LD.scn.forEach(a => { try { a && a.stop(); } catch (e) {} }); el.remove(); }, 480);
+  el.classList.add('out'); setTimeout(() => { LD.scn.forEach(a => { try { if (a) (a.release || a.stop).call(a); } catch (e) {} }); el.remove(); }, 480);   /* cenas da tela de carregamento: descartadas → soltam os bitmaps */
   if (typeof unlockAudio === 'function') unlockAudio();        // 1º toque: destrava o som e entra o tema do título
   if (typeof music === 'function') music('title');
 }

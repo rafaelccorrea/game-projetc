@@ -432,7 +432,9 @@ function shotFx(a,strong,list){
 function actEvent(a,v){
   if(v.pre){ ultPre(a,v); return; }
   if(v.rg){ rgEvent(a,v); return; }
-  const list=a.type==='s2'?nearest(3):nearest(1); v.h.tg=list; shotFx(a,a.type==='s2',list);
+  const list=a.type==='s2'?nearest(3):nearest(1); v.h.tg=list;
+  if(!wIsGun(wSkin())) return;   /* Engenheiro 10: a ação nasceu com arma de fogo (a.gun) e a arma na mão foi trocada no meio dela (equipar o melhor sozinho, drop): sem isto o resto da ação soltava traçante, cápsula e fumaça de TIRO da ponta da clava/espada. O dano segue igual. */
+  shotFx(a,a.type==='s2',list);
   if(a.type==='s2'&&a.era===6&&list[0]) wfx(fnWave,0.2,{x0:HX+50,x1:list[0].x,y:eY(list[0]),r:26,col:a.col,layer:1});
 }
 function skillHit(a,h){
@@ -664,7 +666,12 @@ const ERA_HOLD_MAX=20;
 const IMGS={};
 function IMG(path){
   let o=IMGS[path];
-  if(!o){ const e=PRE().get(path); o=IMGS[path]={img:e.img,ok:e.ok,fail:e.fail,p:e.p}; if(!e.ok) e.p.then(()=>{ o.img=e.img; o.ok=e.ok; o.fail=e.fail; }); }   /* Engenheiro 5: cache único do Preload; ok = DECODIFICADA */
+  if(!o){ const e=PRE().get(path); o=IMGS[path]={img:e.img,ok:e.ok,fail:e.fail,p:e.p};   /* Engenheiro 5: cache único do Preload; ok = DECODIFICADA */
+    /* Engenheiro 10: folhas grandes de efeito (ultimate, subir de nível, efeitos em folha) ganham o PINO de decodificação (Preload.pin): a imagem só fica ok com o
+       bitmap pronto, para o 1º quadro da ultimate não decodificar 3072x1512 dentro do desenho */
+    const big=/assets\/(anim\/(ult|fx)|fx)\//.test(path)&&typeof PRE().pin==='function'&&PRE().pinOk;
+    const pin=()=>big&&e.ok?PRE().pin(path).then(bm=>{ if(bm&&IMGS[path]===o) o.img=bm; },()=>{}):Promise.resolve();
+    if(e.ok){ if(big) pin(); } else { o.p=e.p.then(()=>pin()).then(()=>{ if(!o.img) o.img=e.img; o.ok=e.ok; o.fail=e.fail; return e; }); } }
   return o.ok?o.img:null;
 }
 const JSONS={};
@@ -889,7 +896,7 @@ function drawLevelUp(){ const f=B.lvfx; if(!f) return;
   if(!sh.ok) return;
   const M=sh.meta, fi=Math.floor((B.at-f.t0)*(M.fps||12)); if(fi<0||fi>=M.frames){ B.lvfx=null; return; }
   const mo=!!heroLook().mount&&typeof heroRise==='function'&&heroRise()>0, k=HS/256*(typeof phaseK==='function'?phaseK():1)*(mo?1.3:1);   /* na escala do herói; montado, maior (cobre herói + montaria) e centrado na sela */
-  ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX+(mo?HS*0.1:0)-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
+  ctx.drawImage(sh.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,HX+(mo?HS*0.1:0)-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
 const WING_DRAW=true;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
   if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js): a ASA é desenhada lá dentro, presa à âncora das costas de cada quadro
@@ -1003,7 +1010,7 @@ function enPreload(key){ const T=ENEMY_SETS[key], out=[]; if(T) for(const k in T
 const EN_BB_C=document.createElement('canvas'), EN_CTX={e:null,ox:0,walk:false,st:''};
 function enBounds(sh){ if(sh.bb) return sh.bb; const M=sh.meta, n=M.frames, W=M.w, H=M.h, out=[];
   try{ EN_BB_C.width=W; EN_BB_C.height=H; const g=EN_BB_C.getContext('2d',{willReadFrequently:true});
-    for(let i=0;i<n;i++){ g.clearRect(0,0,W,H); g.drawImage(sh.img,i*W,0,W,H,0,0,W,H); const d=g.getImageData(0,0,W,H).data; let l=W,r=-1,t=H,b=-1;
+    for(let i=0;i<n;i++){ g.clearRect(0,0,W,H); g.drawImage(sh.img,sheetSX(M,i),sheetSY(M,i),W,H,0,0,W,H); const d=g.getImageData(0,0,W,H).data; let l=W,r=-1,t=H,b=-1;
       for(let y=0;y<H;y++){ const row=y*W*4+3; for(let x=y&1;x<W;x+=2) if(d[row+x*4]>40){ if(x<l) l=x; if(x>r) r=x; if(y<t) t=y; if(y>b) b=y; } }
       out.push(r<0?null:{l:Math.max(0,l-1),r:Math.min(W,r+2),t,b:b+1}); } }catch(er){ for(let i=out.length;i<n;i++) out.push(null); }
   /* sola: se a folha INTEIRA assenta abaixo do feetY (todo quadro desce), o erro é da âncora da folha: sobe um valor FIXO (o menor excesso entre os
@@ -1037,7 +1044,7 @@ function enFrame(sh,u,spr,F,loopT){ const M=sh.meta, n=M.frames, fi=loopT!=null?
      morte. Só o quadro listado no campo opcional "feetDy" do .json da folha ({"<quadro>": px da célula; negativo = sobe, positivo = desce}) é deslocado,
      na escala do inimigo. Hoje: era3_boss_attack e era3_boss_hurt (cauda do Capitão Fantasma). */
   { const fd=M.feetDy&&M.feetDy[fi]; dy=typeof fd==='number'?fd*k:0; if(b&&window.__probe2&&C.e) window.__probe2(C.e,C.st,C.ox+x0+b.l*k,C.ox+x0+b.r*k,(fy-b.t)*k-dy,(b.b-1-fy)*k+dy,C.ox,dy); }
-  ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,x0,-fy*k+dy,M.w*k,M.h*k); }
+  ctx.drawImage(sh.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,x0,-fy*k+dy,M.w*k,M.h*k); }
 const EN_STRIDE={era0_e0:0.42,era0_e1:0.73,era0_boss:1.01, era1_e0:0.55,era1_e1:0.45,era1_boss:0.56, era2_e0:0.89,era2_e1:0.94,era2_boss:0.40,
   era3_e0:0.54,era3_e1:0.66,era3_boss:0.35, era4_e0:0.38,era4_e1:0.45,era4_boss:0.35, era5_e0:0.5,era5_e1:0.40,era5_boss:0.5, era6_e0:0.21,era6_e1:0.68,era6_boss:0.35};   // medidas da fps-ff (2026-11-12) pelo contato da sola; era1_e0/e1, era3_boss e era5_boss são estimativa; era5_e0 (drone) paira, valor livre   // lado-do-quadro por segundo, medido na folha: o pé de apoio recua ~19 px (Goblin) e ~20 px (Esqueleto) por quadro de 256 a 12 fps
 function drawEnemyAt(e,x,deadP){
@@ -1288,21 +1295,49 @@ function fpsWindow(now){ const el=now-FP.w0; if(el<2000) return; const avg=FP.wf
     if(FP.low>=2&&FP.q<2){ FP.q++; FP.low=0; FP.high=0; fpsApply(); } else if(FP.high>=5&&FP.q>0){ FP.q--; FP.high=0; FP.low=0; fpsApply(); } }
   FP.w0=now; FP.wf=0; FP.work=0; FP.worst=0; }
 function fpsApply(){ try{ if(typeof sceneQuality==='function') sceneQuality(FP.q>=2?0.7:1); }catch(e){} if(DEBUG) console.log('qualidade adaptativa: degrau '+FP.q); }
+/* ===== PERFIL DE PICOS (Engenheiro 10; SÓ com ?debug=1&pf=1: fora disso PF é null e nada é medido) =====
+   Por quadro: tempo de step / tickFx / draw / prévias / hud / save. Guarda os 20 PIORES quadros (trabalho do jogo) com o que estava acontecendo, as tarefas
+   longas do navegador (> 50 ms, PerformanceObserver), cada drawImage acima de 1,5 ms (decodificação na 1ª vez de uma folha) e cada save(). Ler: __pf.report(). */
+const PF=(DEBUG&&typeof QP!=='undefined'&&QP.get('pf')==='1')?{n:0,sum:0,max:0,o8:0,o16:0,o33:0,o50:0,gap50:0,gapMax:0,worst:[],tags:[],seg:{step:0,fx:0,draw:0,prev:0,hud:0,save:0},segMax:{step:0,fx:0,draw:0,prev:0,hud:0,save:0},long:[],saves:{n:0,sum:0,max:0,bytes:0},slow:{},init:false}:null;
+function pfTag(s){ if(PF&&PF.tags.length<12) PF.tags.push(s); }
+function pfInit(){ PF.init=true;
+  try{ const P=CanvasRenderingContext2D.prototype, o=P.drawImage; P.drawImage=function(im){ const t=performance.now(); const r=o.apply(this,arguments); const d=performance.now()-t;
+      if(d>1.5){ const nm=(im&&im.src)?im.src.replace(/^.*\/assets\//,''):(im&&im.width?'canvas '+im.width+'x'+im.height:'?'); pfTag('drawImage '+nm+' '+d.toFixed(1)+'ms'); const q=PF.slow[nm]||(PF.slow[nm]={n:0,max:0}); q.n++; if(d>q.max) q.max=Math.round(d*10)/10; } return r; }; }catch(e){}
+  try{ const s0=save; save=function(){ const t=performance.now(); const r=s0.apply(this,arguments); const d=performance.now()-t; PF.saves.n++; PF.saves.sum+=d; if(d>PF.saves.max) PF.saves.max=d; if(d>0.5) pfTag('save '+d.toFixed(1)+'ms'); return r; }; }catch(e){}
+  PF.fn={}; for(const nm of ['updHudExtra','hudSys','syncSpeed','fbTick','fcNotice','startWave','preloadAssets','statsChanged','render','refreshHero','codexSync','petStep','resTick','fbLayout','layoutHorde','lootTick','evhTick']){ try{ const f0=window[nm]; if(typeof f0!=='function') continue; const q=PF.fn[nm]={n:0,sum:0,max:0};
+      window[nm]=function(){ const t=performance.now(); const r=f0.apply(this,arguments); const d=performance.now()-t; q.n++; q.sum+=d; if(d>q.max) q.max=d; if(d>2) pfTag(nm+' '+d.toFixed(1)+'ms'); return r; }; }catch(e){} }
+  try{ new PerformanceObserver(l=>{ for(const e of l.getEntries()){ if(PF.long.length<60) PF.long.push({ms:Math.round(e.duration),at:Math.round(e.startTime),stg:S.stage+'-'+S.wave,act:B.act?B.act.type:'',hid:document.hidden}); } }).observe({entryTypes:['longtask']}); }catch(e){}
+  window.__pf={ raw:PF, reset(){ PF.n=PF.sum=PF.max=PF.o8=PF.o16=PF.o33=PF.o50=PF.gap50=PF.gapMax=0; PF.worst=[]; PF.long=[]; PF.slow={}; PF.saves={n:0,sum:0,max:0,bytes:0}; for(const k in PF.seg){ PF.seg[k]=0; PF.segMax[k]=0; } for(const k in PF.fn){ PF.fn[k].n=0; PF.fn[k].sum=0; PF.fn[k].max=0; } },
+    report(){ const r1=v=>Math.round(v*100)/100, sg={}, sm={}; for(const k in PF.seg){ sg[k]=r1(PF.seg[k]/Math.max(1,PF.n)); sm[k]=r1(PF.segMax[k]); }
+      return {quadros:PF.n,mediaMs:r1(PF.sum/Math.max(1,PF.n)),piorMs:r1(PF.max),acima8:PF.o8,acima16:PF.o16,acima33:PF.o33,acima50:PF.o50,intervaloAcima50:PF.gap50,intervaloMax:Math.round(PF.gapMax),mediaPorParte:sg,piorPorParte:sm,
+        saves:{n:PF.saves.n,mediaMs:r1(PF.saves.sum/Math.max(1,PF.saves.n)),piorMs:r1(PF.saves.max)},funcoes:Object.keys(PF.fn).filter(k=>PF.fn[k].n).map(k=>k+' n'+PF.fn[k].n+' média '+r1(PF.fn[k].sum/PF.fn[k].n)+' pior '+r1(PF.fn[k].max)).join(' · '),
+        pinos:(()=>{ try{ const P=PRE(); return {n:P.pins(),MB:r1(P.pinBytes()/1048576),picoMB:r1(P.pinPeak()/1048576),cortesPeloTeto:typeof PINS!=='undefined'?PINS.cut:0}; }catch(e){ return null; } })(),jsHeapMB:(performance.memory?Math.round(performance.memory.usedJSHeapSize/1048576):null),tarefasLongas:PF.long,drawLento:PF.slow,piores:PF.worst.map(w=>w.ms+'ms ['+w.seg+'] '+w.st+(w.tags.length?' | '+w.tags.join('; '):''))}; } }; }
+function pfEnd(gap,a,b,c,d,e,f,g){ const tot=g-a; PF.n++; PF.sum+=tot; if(tot>PF.max) PF.max=tot; if(tot>8) PF.o8++; if(tot>16.7) PF.o16++; if(tot>33) PF.o33++; if(tot>50) PF.o50++;
+  if(!document.hidden&&gap<1000){ if(gap>50) PF.gap50++; if(gap>PF.gapMax) PF.gapMax=gap; }
+  const v=[b-a,c-b,d-c,e-d,f-e,g-f], K=['step','fx','draw','prev','hud','save']; for(let i=0;i<6;i++){ PF.seg[K[i]]+=v[i]; if(v[i]>PF.segMax[K[i]]) PF.segMax[K[i]]=v[i]; }
+  const W=PF.worst; if(tot>4&&(W.length<20||tot>W[W.length-1].ms)){ let st=''; try{ st='fase '+S.stage+'-'+S.wave+' t'+Math.round(B.at)+' ato:'+(B.act?B.act.type:'-')+' inim:'+B.en.length+' part:'+B.parts.length+' wfx:'+B.wfx.length+(B.tr?' TROCA-ERA':'')+(B.lvfx?' NIVEL':'')+(B.deadT>0?' MORTE':'')+(B.res?' RESULTADO':'')+(typeof view!=='undefined'&&view!=='battle'?' tela:'+view:''); }catch(er){}
+    W.push({ms:Math.round(tot*10)/10,seg:K.map((k,i)=>k+' '+v[i].toFixed(1)).filter((s,i)=>v[i]>=0.5).join(', '),st,tags:PF.tags.slice()}); W.sort((x,y)=>y.ms-x.ms); if(W.length>20) W.length=20; }
+  PF.tags.length=0; }
 function loop(now){
   { const d=now-FP.lastRaw; FP.lastRaw=now; if(d>2&&d<60){ FP.raw.push(d); if(FP.raw.length>=40){ let sm=0; for(let i=0;i<40;i++) sm+=FP.raw[i]; const hz=40000/sm; FP.raw.length=0;   /* Engenheiro 7: taxa pela MÉDIA dos 40 intervalos, não pelo quartil baixo: em tela de 60 Hz com quadros irregulares (8 ms / 25 ms alternados, PC ou celular carregado) o quartil dava "120 Hz" e o jogo passava a desenhar 1 a cada 2 (30 por segundo). A média nunca passa da taxa real; com quadros perdidos ela só erra para MENOS (sem pular quadro) */ if(hz>30&&hz<400){ FP.hz=hz; FP.n=FPS_FREE?1:Math.max(1,Math.floor(hz/60+0.15)); } } }
     if(++FP.i<FP.n){ requestAnimationFrame(loop); return; } FP.i=0; }   /* tela de 120/144 Hz: pula as chamadas do meio (nada é calculado nem desenhado nelas) */
-  const w0=performance.now();
+  const w0=performance.now(), pfGap=now-last; let pA=0,pB=0,pC=0,pD=0,pE=0; if(PF&&!PF.init) pfInit();
   const rdt=(DEBUG&&window.__frz)?0:Math.min(0.1,(now-last)/1000); { const ms=now-last; if(ms<1000){ FP.wf++; if(ms>FP.worst) FP.worst=ms; } if(!FP.w0) FP.w0=now; } last=now; B.fdt=rdt; B.fk=Math.min(1,rdt*60);
   let dt=rdt; if(B.slow>0){ B.slow-=rdt; dt=rdt*0.3; }
   /* um erro num quadro NUNCA pode matar o laço do jogo (antes, uma exceção no desenho parava tudo para sempre: o requestAnimationFrame ficava no fim) */
   try{
   if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
-  tickFx(dt); draw();
+  if(PF) pA=performance.now();
+  tickFx(dt); if(PF) pB=performance.now(); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
+  if(PF) pC=performance.now();
   drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
+  if(PF) pD=performance.now();
   hudT+=rdt; if(hudT>0.25){ hudT=0; hud(); }
+  if(PF) pE=performance.now();
   saveT+=rdt; if(saveT>5){ saveT=0; save(); }
+  if(PF) pfEnd(pfGap,w0,pA||w0,pB||pA||w0,pC||w0,pD||w0,pE||w0,performance.now());
   if(FPS_PESO){ const t=performance.now(); while(performance.now()-t<14){} }   /* só teste (?debug=1&peso=1): carga artificial */
   FP.work+=performance.now()-w0; fpsWindow(now);
   requestAnimationFrame(loop);

@@ -80,7 +80,7 @@ function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era
   const dieK = (B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true) ? Math.min(1, (1 - B.deadT / 1.6) * 3.2) : 0, backX = HX - HS * KAEL_W * PET_BACK * 1.5;
   const px0 = petX(), px = px0 + (backX - px0) * dieK * dieK * (3 - 2 * dieK), gy = GY + T.dy + (petMO() ? petMO().dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
-  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
+  ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */
 function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q.shift(); h.t0 = B.at; HATCH.cur = h; snd('claim');
     if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); }
@@ -94,7 +94,7 @@ function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length
   if (T >= 2.1 && T < 3.1){ const p = T - 2.1; drawGlow('#ffffff', cx, gy - eh * 0.5, HS * (0.3 + 1.4 * p), Math.max(0, 1 - p)); drawGlow(col, cx, gy - eh * 0.5, HS * (0.5 + 1.0 * p), Math.max(0, 0.8 - p)); }
   if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx;
     if (sh && sh.ok){ const M = sh.meta, k = heroBodyH() * 0.46 / Math.max(20, (petMetric(h.sprite) || { h: 150 }).h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-      ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
+      ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
     if (!h.said){ h.said = true; B.banner = { txt: h.name + ' · ' + (RAR[h.r] ? RAR[h.r].n : ''), pill: true, bg: 'rgba(29,22,17,.92)', bd: col, sh: '#0e0a07', t: 0, dur: 2.4, col }; }   // nome e raridade na faixa de aviso do jogo (fora das barras do Kael)
   }
 }

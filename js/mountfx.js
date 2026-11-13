@@ -63,6 +63,19 @@ function mountWingOff(H){ const mo = H.mount; if (!mo || !mountReady(mo.id)) ret
 /* deslocamento do pet nesta montaria (tabela) */
 function mountPetOff(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return null; const T = MOUNT_TBL[mo.id]; const st3 = typeof PETK !== 'undefined' && PETK.info && (PETK.info.stage | 0) >= 3; return { dx: (st3 && T.pdx3) || T.pdx || 0.62, dy: T.pdy || 9 }; }
 const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,200,255,', 'rgba(190,140,255,', 'rgba(255,214,120,'];   // visível já em 1 estrela; mais forte a cada estrela
+const MOUNT_GLOW_OFF = typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('mglow') === '0';
+const MGLOW = new Map(), MGLOW_MAX = 90, MGLOW_K = 0.25, MHALO = {};
+function mountHalo(st){ let c = MHALO[st]; if (c !== undefined) return c; const col = MOUNT_AURA[st]; if (!col) return MHALO[st] = null;
+  try { c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 64 * 0.125, 64, 64, 64);
+    g.addColorStop(0, col + Math.min(0.95, (0.22 + 0.15 * st) * 1.1).toFixed(2) + ')'); g.addColorStop(0.55, col + '0.33)'); g.addColorStop(1, col + '0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); } catch (e) { c = null; }
+  return MHALO[st] = c; }
+function mountGlow(sh, fi, stN, FW, FH, k){ const key = sh.base + '|' + fi + '|' + stN; let c = MGLOW.get(key); if (c !== undefined) return c;
+  try { const blur = Math.max(1, (6 + 2.4 * stN) / Math.max(0.2, k) * MGLOW_K), pad = Math.ceil(blur * 2) + 2, OFF = 4096;
+    c = document.createElement('canvas'); c.width = Math.ceil(FW * MGLOW_K) + pad * 2; c.height = Math.ceil(FH * MGLOW_K) + pad * 2; c._pad = pad; const g = c.getContext('2d');
+    g.shadowColor = MOUNT_AURA[stN] + (0.7 + 0.06 * stN).toFixed(2) + ')'; g.shadowBlur = blur; g.shadowOffsetX = OFF;   /* o corpo é desenhado fora do canvas: só a sombra cai dentro */
+    for (let i = 0, n = stN >= 5 ? 3 : 2; i < n; i++) g.drawImage(sh.img, sheetSX(sh.meta, fi), sheetSY(sh.meta, fi), FW, FH, pad - OFF, pad, FW * MGLOW_K, FH * MGLOW_K); } catch (e) { c = null; }
+  MGLOW.set(key, c); if (MGLOW.size > MGLOW_MAX){ const k0 = MGLOW.keys().next().value, v = MGLOW.get(k0); if (v) v.width = v.height = 1; MGLOW.delete(k0); }
+  return c; }
 function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
   const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
@@ -76,16 +89,23 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.12, gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas no chão
   if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
   { const c = MOUNT_AURA[Math.max(0, Math.min(5, H.mount.stars | 0))]; if (c && H.deadP < 0){ const pu = 0.5 + 0.2 * Math.sin(t * 2.4), gx0 = ox + HS * 0.15, gy0 = gy - HS * 0.45, r = HS * (0.75 + 0.06 * (H.mount.stars | 0));   // aura por estrela (código), ATRÁS do sprite
-      const g = ctx.createRadialGradient(gx0, gy0, HS * 0.1, gx0, gy0, r); g.addColorStop(0, c + Math.min(0.95, (0.22 + 0.15 * (H.mount.stars | 0)) * (0.75 + pu * 0.5)).toFixed(2) + ')'); g.addColorStop(0.55, c + (0.3 * pu + 0.12).toFixed(2) + ')'); g.addColorStop(1, c + '0)');   /* v0.12.8: mais forte (quase não aparecia) */ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.fillRect(gx0 - r, gy0 - r, r * 2, r * 2);
+      /* Engenheiro 10 (desempenho): o halo era um createRadialGradient + toFixed POR QUADRO; agora é um desenho pronto por estrela (no pulso máximo) e o pulso entra pela transparência */
+      const hc = MOUNT_GLOW_OFF ? null : mountHalo(Math.max(0, Math.min(5, H.mount.stars | 0))); ctx.save();
+      if (hc){ ctx.globalAlpha = alpha * Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, gx0 - r, gy0 - r, r * 2, r * 2); ctx.globalAlpha = alpha; }
+      else { const g = ctx.createRadialGradient(gx0, gy0, HS * 0.1, gx0, gy0, r); g.addColorStop(0, c + Math.min(0.95, (0.22 + 0.15 * (H.mount.stars | 0)) * (0.75 + pu * 0.5)).toFixed(2) + ')'); g.addColorStop(0.55, c + (0.3 * pu + 0.12).toFixed(2) + ')'); g.addColorStop(1, c + '0)');   /* v0.12.8: mais forte (quase não aparecia) */ ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.fillRect(gx0 - r, gy0 - r, r * 2, r * 2); }
       if ((H.mount.stars | 0) >= 4){ ctx.fillStyle = c + '0.30)'; for (let i = 0; i < 6; i++){ const ph = (t * 0.5 + i / 6) % 1, sx = ox - HS * 0.28 + i * HS * 0.16 + Math.sin(t * 1.3 + i) * 4; ctx.globalAlpha = alpha * (1 - ph) * ((H.mount.stars | 0) >= 5 ? 0.9 : 0.6); ctx.beginPath(); ctx.ellipse(sx, gy - 2 - ph * HS * 0.16, HS * (0.07 + 0.06 * ph), HS * (0.035 + 0.03 * ph), 0, 0, 7); ctx.fill(); } }   // fumaça nas patas (4 e 5 estrelas)
       ctx.restore(); } }
   if (typeof drawWingsAt === 'function') drawWingsAt(H, sh, fi, ox - (pad + 128 - T.dx) * k, gy - (fy - T.dy) * k, k, !a);   /* asa nas COSTAS do Kael montado: âncora "back" da folha, quadro a quadro, na escala dele na sela */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.translate(-(pad + 128 - T.dx) * k, -(fy - T.dy) * k); ctx.scale(k, k);          // espaço do quadro (0..512); patas em feetY na linha do chão
-  const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const bsx = sheetSX(M, fi), bsy = sheetSY(M, fi), body = () => ctx.drawImage(sh.img, bsx, bsy, FW, FH, 0, 0, FW, FH);
   /* Engenheiro 2: CONTORNO DE LUZ da aura por estrela, colado na silhueta da montaria (o halo de trás sumia em cima do cenário claro): 1 estrela = fino e claro; 5 = largo e dourado */
   const stN = H.deadP < 0 ? Math.max(0, Math.min(5, H.mount.stars | 0)) : 0, glowC = MOUNT_AURA[stN];
-  const body0 = !glowC ? body : () => { let dp = 1; try { dp = Math.abs(ctx.getTransform().a) / k; } catch (e) {} ctx.save(); ctx.shadowColor = glowC + (0.7 + 0.06 * stN).toFixed(2) + ')'; ctx.shadowBlur = (6 + 2.4 * stN) * dp * (0.85 + 0.15 * Math.sin(t * 2.4)); body(); body(); if (stN >= 5) body(); ctx.restore(); };
+  /* Engenheiro 10 (desempenho): o contorno era o corpo desenhado 2 a 3 vezes com shadowBlur A CADA QUADRO (desfoque de 512x352, caro no celular). Agora o contorno
+     de cada quadro é desenhado UMA vez num canvas pequeno (1/4 da célula, só a sombra) e reaproveitado; por quadro: 1 drawImage do contorno + 1 do corpo. O pulso
+     entra pela transparência. ?debug=1&mglow=0 volta ao caminho antigo (comparação). */
+  const gcv = (glowC && !MOUNT_GLOW_OFF) ? mountGlow(sh, fi, stN, FW, FH, k) : null;
+  const body0 = !glowC ? body : gcv ? () => { const ga = ctx.globalAlpha; ctx.globalAlpha = ga * (0.85 + 0.15 * Math.sin(t * 2.4)); ctx.drawImage(gcv, -gcv._pad / MGLOW_K, -gcv._pad / MGLOW_K, gcv.width / MGLOW_K, gcv.height / MGLOW_K); ctx.globalAlpha = ga; body(); } : () => { let dp = 1; try { dp = Math.abs(ctx.getTransform().a) / k; } catch (e) {} ctx.save(); ctx.shadowColor = glowC + (0.7 + 0.06 * stN).toFixed(2) + ')'; ctx.shadowBlur = (6 + 2.4 * stN) * dp * (0.85 + 0.15 * Math.sin(t * 2.4)); body(); body(); if (stN >= 5) body(); ctx.restore(); };
   const wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, w0 = SPR(wPng(ws), 'weapon'), gun = wm.type === 'gun';
   let tip = { x: G.x + 40, y: G.y - 40 }, drawW = null;
   if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 / w0.h);

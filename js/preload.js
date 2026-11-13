@@ -74,6 +74,23 @@
     return all(es.map(e => e.p), opt && opt.timeout).then(() => { const failed = es.filter(e => !e.ok).map(e => e.url); return { ok: !failed.length, failed }; }, () => ({ ok: false, failed: L })); }
   function retry(urls) { const L = (urls || [...C.keys()]).filter(u => { const e = C.get(u); return e && e.fail; }); L.forEach(u => load(C.get(u))); return ready(L); }
   function drop(url) { const e = C.get(url); if (e && (e.ok || e.fail)){ C.delete(url); return true; } return false; }
+  /* PINO DE DECODIFICAÇÃO (Engenheiro 10; queixa do dono: travadas na batalha). Medido: uma folha grande já "pronta" (img.decode()) volta a ser decodificada pelo
+     navegador NO MEIO DO drawImage quando ele descarta o bitmap (montaria atacando: 60 a 78 ms num quadro; 62 ms a ultimate lendária). Preload.pin(url) baixa o
+     arquivo de novo do cache como blob e cria um ImageBitmap FORA do quadro (createImageBitmap(blob) decodifica em outra linha de execução; medido: maior pausa
+     12 a 15 ms contra 49 ms do createImageBitmap(img)). O bitmap fica decodificado enquanto alguém o segurar: quem desenha troca a imagem por ele.
+     pin(url) → Promise<ImageBitmap|null> (null = sem suporte, falha ou tempo-limite: vale a imagem comum) · unpin(url) solta a referência daqui.
+     O bitmap leva naturalWidth/naturalHeight/src como a imagem. ?debug=1&pin=0 desliga (comparação). */
+  const PINS = new Map(), PIN_OK = typeof createImageBitmap === 'function' && typeof fetch === 'function' && !(DBG && QS.get('pin') === '0');
+  function pin(url) { if (!PIN_OK) return Promise.resolve(null); let p = PINS.get(url); if (p) return p;
+    p = limit(fetch(real(url)).then(r => r.ok ? r.blob() : null).then(b => b ? createImageBitmap(b) : null), 8000)
+      .then(bm => { if (!bm || bm === true || PINS.get(url) !== p){ if (bm && bm !== true){ try { bm.close(); } catch (e) {} } if (PINS.get(url) === p) PINS.delete(url); return null; }
+        try { bm.naturalWidth = bm.width; bm.naturalHeight = bm.height; bm.src = url; bm.complete = true; } catch (e) {}
+        PINV.set(url, bm); pinTotal += bm.width * bm.height * 4; if (pinTotal > pinPeak) pinPeak = pinTotal; return bm; }, () => { PINS.delete(url); return null; });
+    PINS.set(url, p); return p; }
+  /* MEMÓRIA (condição do PO): bytes fixados = largura × altura × 4 de cada bitmap; quem fixa cuida do teto (js/stage.js, PIN_MAX_MB). unpin(url, true) fecha o bitmap
+     (libera na hora; só para folha que ninguém desenha há pelo menos 15 s); unpin(url) só solta a referência. */
+  const PINV = new Map(); let pinTotal = 0, pinPeak = 0;
+  function unpin(url, close) { const bm = PINV.get(url); if (bm){ pinTotal -= bm.width * bm.height * 4; PINV.delete(url); if (close){ try { bm.close(); } catch (e) {} } } return PINS.delete(url); }
   /* lote da tela de carregamento: progresso REAL = prontos ÷ total */
   const B = { done: 0, total: 0, failed: [], gen: 0, open: [] };   /* open = nomes do que ainda não terminou (arquivo ou tarefa): vai no aviso de "parou" */
   /* arquivo: termina quando o carregador dele termina (as tentativas e a regra de "parado" são do load). Tarefa (cenário vivo, fontes): só é abandonada depois
@@ -84,6 +101,6 @@
     const t0 = performance.now(); p.then(v => { if (g !== B.gen) return; B.done++; prog(); { const i = B.open.indexOf(name); if (i >= 0) B.open.splice(i, 1); } if (!v) B.failed.push(name); if (DBG) TL.push([name, Math.round(t0), Math.round(performance.now())]); }); }
   const TL = [];   /* só debug: [nome, entrou, terminou] em ms da página (Preload.timeline) */
   const reset = () => { B.gen++; B.done = 0; B.total = 0; B.failed = []; B.open = []; prog(); };
-  W.Preload = { ready, has, get, image, json, retry, drop, track, reset, all, limit, get progress() { return { done: B.done, total: B.total, failed: B.failed.slice() }; },
+  W.Preload = { ready, has, get, image, json, retry, drop, track, reset, all, limit, pin, unpin, pinOk: PIN_OK, pins: () => PINV.size, pinBytes: () => pinTotal, pinPeak: () => pinPeak, pinList: () => [...PINV].map(([u, b]) => [u, b.width, b.height]), get progress() { return { done: B.done, total: B.total, failed: B.failed.slice() }; },
     get idle() { return idle(); }, get pending() { return B.open.slice(); }, get live() { return live(); }, timeline: TL, stallMs: STALL_MS, slow: SLOW, cold: !!COLD, size: () => C.size };
 })(window);
