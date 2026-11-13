@@ -74,7 +74,23 @@ const DATA={
     {r:3,name:'Mítico',  color:'#ff5a5a',glow:13,particles:10,beam:62,pulse:1.6,sound:{id:'legendary',rate:0.9}},
     {r:4,name:'Lendário',color:'#ffc94a',glow:16,particles:16,beam:62,pulse:1.6,sound:{id:'legendary',rate:1}},
     {r:5,name:'Divino',  color:'#7ff6ff',glow:20,particles:24,beam:62,pulse:1.2,sound:{id:'legendary',rate:1.1},prism:true}],   // Divino: feixe arco-íris
-  wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'}}, wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
+  wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'},
+    // 8 ASAS NOVAS (dono, 13/11; nw:true = atrás da chave DATA.newWings, ou uma a uma com newWingReady[id], até a arte). Cada uma é um ITEM de asa
+    // (slot wing) como a de anjo/demônio: o ATRIBUTO sai da raridade, era e nível do item (mesmo padrão); o tipo é o visual. r = raridade com que esse
+    // modelo cai (o item nasce nela). Fontes SEM sorteio pago; nenhuma dá diamante. Brilho: wingGlow(item, nívelDaForja) pela raridade + Forja +0..+15.
+    moth:     {name:'Mariposa sombria',   nw:true, r:1, src:['Chefes de fase a partir da era 2 (no lugar da asa de anjo Rara)']},
+    bone:     {name:'Asa de ossos',       nw:true, r:2, src:['Chefes da era 7 (Submundo) e Instância Chefe de Era']},
+    mech:     {name:'Asas mecânicas',     nw:true, r:2, src:['Instância Arsenal (dificuldade Difícil+): 1ª vitória']},
+    shadow:   {name:'Asa de sombra',      nw:true, r:3, src:['Arena: fim de temporada Diamante+']},
+    ice:      {name:'Asa de gelo',        nw:true, r:3, src:['Evento Invasão da Era: baú de topo (1 por semana)']},
+    storm:    {name:'Asa da tempestade',  nw:true, r:3, src:['Torre: andares 120, 140 e 160']},
+    phoenixw: {name:'Asa de fênix',       nw:true, r:4, src:['Torneio: top 10 da temporada','Chefe Mundial: faixa de topo do mês']},
+    seraph:   {name:'Asa de serafim (6 asas)', nw:true, r:4, rarest:true, src:['Torneio: top 1 da temporada','Chefe da era 8 no Hell (1ª vitória)']},   // a mais rara; Divino (r 5) quando a curva de 9 eras ligar
+  },
+  newWings:false, newWingReady:{},
+  // brilho da asa: base pela raridade (paleta do Equipamento) + Forja (+0,1 por nível, até +1,5 no +15); partículas a partir do Mítico ou do +10
+  wingGlow:{base:[0,0.3,0.6,1.0,1.4,1.8], perForge:0.1, particlesFromR:3, particlesFromForge:10},
+  wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
   eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
   maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
   rarFlat:[1,1.7,3,5.5,10,18],                      // planos × raridade (mesmo RAR.m do jogo); [5] = DIVINO (×1,8, só com era9.on)
@@ -389,7 +405,12 @@ function upgradeTo(S,host,item,currency,toLvl){
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // atributos não são módulo de bônus (o fc.js chama compute)
 /* qual asa é o item: item.wing se válido; item antigo sem o campo = pela regra de drop da era dele (determinístico, não sorteia) */
 const wingForDrop=(era,diff)=>{ const W=DATA.wingDrop; return (W.demonEras.includes(int0(era))||int0(diff)>=W.demonDiff)?'demon':W.default; };
-const wingOf=it=>it&&it.slot==='wing'?(DATA.wingTypes[it.wing]?it.wing:wingForDrop(it.e,it.diff)):null;
+const wingLive=id=>{ const W=DATA.wingTypes[id]; return !!W&&(!W.nw||DATA.newWings===true||DATA.newWingReady[id]===true); };
+const wingOf=it=>it&&it.slot==='wing'?(wingLive(it.wing)?it.wing:wingForDrop(it.e,it.diff)):null;   // asa nova desligada: desenha a de anjo/demônio (o item e o atributo não mudam)
+/* brilho da asa para o engenheiro: {glow, color, particles} pela raridade do item + nível da Forja da asa (Sys.forge lv.wing, 0..15) */
+function wingGlow(it,forgeLv){ const G=DATA.wingGlow, r=clamp(int0(it&&it.r),0,G.base.length-1), f=clamp(int0(forgeLv),0,15), fx=DATA.dropFx[Math.min(r,DATA.dropFx.length-1)];
+  return {wing:wingOf(it),glow:Math.round((G.base[r]+G.perForge*f)*100)/100,color:fx&&fx.color,particles:r>=G.particlesFromR||f>=G.particlesFromForge,prism:r>=5}; }
+const wingCatalog=()=>Object.keys(DATA.wingTypes).map(id=>{ const W=DATA.wingTypes[id]; return {id,name:W.name,r:W.r==null?null:W.r,live:wingLive(id),soon:!wingLive(id),src:(W.src||[]).slice(),rarest:!!W.rarest}; });
 const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
 /* efeito visual da habilidade pela arma na mão: skillFx(arma|raridade, 's1'|'s2'|'s3') → {r, color, tint, particles, size, glow, shake, trail, flash, prism,
    dmgMult:1}. s1/s2 usam a mesma cor/tinta com menos força (size 1 e metade do excesso de partículas); dmgMult é sempre 1 (só visual). */
@@ -422,7 +443,7 @@ function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA
   return (neg?'−':'')+out; }
 /* efeito do item caído no chão pela raridade (o engenheiro desenha; tabela única): dropFx(item|r) → {r, name, color, glow, particles, beam, pulse, sound, prism} */
 const dropFx=w=>{ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.dropFx.length-1); return Object.assign({},DATA.dropFx[r],{sound:DATA.dropFx[r].sound?Object.assign({},DATA.dropFx[r].sound):null}); };
-const API={DATA,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+const API={DATA,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
