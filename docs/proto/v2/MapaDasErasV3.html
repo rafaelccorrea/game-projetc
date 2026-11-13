@@ -1,0 +1,523 @@
+<title>Eonbound Mapa das Eras V3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP/Batalha V2.
+   Mapa das Eras V3 = direção A escolhida pelo dono (docs/proto/v2/DirecoesMapaCorreio.html): o cenário da era em tela cheia com 3 camadas em parallax,
+   a trilha luminosa sobe pela tela com as 10 fases, o Senhor da Era no topo, o herói de pé na fase atual e o cartão de vidro embaixo (próxima fase, FC, Lutar).
+   Números e nomes: os mesmos do Mapa das Eras V2 (docs/balance.json dificuldade.pacoteFim.recFc e posEras, propostas desligadas). */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.side .sub b{color:var(--text)}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night)}
+.sr{position:absolute;left:-9999px}
+/* cenário: 3 camadas (céu, meio, frente) que andam em velocidades diferentes ao rolar a trilha */
+.scene{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.scene.swap{animation:eraIn .6s ease-out}
+.ly{position:absolute;left:0;width:390px;will-change:transform;pointer-events:none}
+.ly>div,.ly>svg{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.fade{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 30%);mask-image:linear-gradient(180deg,transparent 0,#000 30%)}
+.shade{position:absolute;inset:0;background:radial-gradient(120% 60% at 50% 45%,rgba(11,16,48,0) 40%,rgba(11,16,48,.55) 100%),linear-gradient(180deg,rgba(11,16,48,.8) 0,rgba(11,16,48,.1) 20%,rgba(11,16,48,0) 60%,rgba(11,16,48,.75) 90%)}
+.front{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}
+/* trilha (a rolagem por dentro é o ponto da tela) */
+.trail{position:absolute;inset:0;z-index:2;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.trail::-webkit-scrollbar{display:none}
+.track{position:relative;width:390px;overflow:hidden}
+.track>svg{position:absolute;left:0;top:0;width:390px;pointer-events:none}
+.seg-d{stroke:var(--gold);stroke-width:5;fill:none;stroke-linecap:round}
+.seg-g{stroke:#ffcf5a;stroke-width:16;fill:none;opacity:.35;stroke-linecap:round}
+.seg-n{stroke:#fff;stroke-width:3;fill:none;stroke-dasharray:2 10;stroke-linecap:round;opacity:.55}
+.seg-a{stroke:#fff6c8;stroke-width:5;fill:none;stroke-dasharray:10 14;stroke-linecap:round;animation:flow 1s linear infinite}
+.nd{position:absolute;z-index:1;width:68px;height:46px;margin:-23px 0 0 -34px;border-radius:50%;border:0;padding:12px 0 0;background:radial-gradient(ellipse at 50% 30%,#4a5cc8,#141c4a 72%);box-shadow:0 0 0 2px rgba(255,255,255,.28),0 6px 0 #070a1f,0 12px 18px rgba(0,0,0,.5);font-family:var(--fd);font-size:17px;line-height:1;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;gap:3px;font-variant-numeric:tabular-nums}
+.nd svg{width:14px;height:14px;flex:none}
+.nd.done{background:radial-gradient(ellipse at 50% 30%,#46dc92,#0f5a3a 74%);box-shadow:0 0 0 2px #7dffb8,0 6px 0 #06301e,0 12px 18px rgba(0,0,0,.5)}
+.nd.now{background:radial-gradient(ellipse at 50% 30%,#fff0a8,#d58a14 76%);color:#2a1403;text-shadow:none;box-shadow:0 0 0 3px #fff3c4,0 0 26px 8px rgba(255,210,94,.6),0 6px 0 #6a3a06}
+.nd.now::after{content:"";position:absolute;inset:-9px -12px;border-radius:50%;border:2px solid var(--gold);animation:ring 1.6s ease-out infinite;pointer-events:none}
+.nd.lock{background:radial-gradient(ellipse at 50% 30%,#2a3160,#0a0e2a 74%);color:#aab3dc;box-shadow:0 0 0 2px rgba(255,255,255,.14),0 6px 0 #05061a,0 12px 18px rgba(0,0,0,.45)}
+.nd.mid{box-shadow:0 0 0 3px var(--rose),0 6px 0 #4a0a22,0 12px 18px rgba(0,0,0,.5)}
+.nd.lord{width:90px;height:58px;margin:-29px 0 0 -45px;font-size:19px}
+.nd.lord.lock{background:radial-gradient(ellipse at 50% 30%,#7a2030,#2a0712 74%);color:#ffd0d8;box-shadow:0 0 0 3px #ff6b6b,0 0 22px 4px rgba(255,80,80,.45),0 7px 0 #2a0510}
+.nd[aria-pressed="true"]{outline:3px solid var(--cyan);outline-offset:6px}
+.nd.pop{animation:pop .6s ease-out}
+.tag{position:absolute;z-index:2;margin-top:-12px;height:24px;padding:0 9px;border-radius:12px;background:rgba(5,8,28,.74);border:1px solid var(--line2);font-size:11px;font-weight:900;white-space:nowrap;display:flex;align-items:center;gap:4px;pointer-events:none;font-variant-numeric:tabular-nums}
+.tag.done{color:var(--green);border-color:rgba(94,240,160,.5)}
+.tag.now{color:var(--gold);border-color:var(--gold)}
+.tag.mid{color:#ffc0d3;border-color:rgba(255,107,154,.6)}
+.hc{position:absolute;z-index:1;width:170px;height:130px;pointer-events:none;transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1)}
+.hc.jump{transition:none}
+.bc{position:absolute;z-index:1;left:85px;width:220px;height:210px;pointer-events:none}
+.bban{position:absolute;z-index:2;left:50%;transform:translateX(-50%);min-width:210px;max-width:330px;padding:6px 14px 7px;border-radius:14px;text-align:center;background:linear-gradient(180deg,rgba(90,10,24,.85),rgba(24,6,18,.88));border:1.5px solid rgba(255,107,107,.65);box-shadow:0 0 24px rgba(255,80,80,.3);pointer-events:none}
+.bban small{display:block;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;font-weight:900;color:#ffb3c4}
+.bban b{display:block;font-family:var(--fd);font-weight:400;font-size:19px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bban span{display:block;font-size:11px;font-weight:800;color:#ffd6e2}
+.bban.won{background:linear-gradient(180deg,rgba(10,70,44,.85),rgba(6,24,18,.88));border-color:rgba(94,240,160,.6);box-shadow:none}
+.bban.won small,.bban.won span{color:#b6ffd6}
+.bban.mk{background:linear-gradient(180deg,rgba(20,70,90,.85),rgba(6,18,34,.9));border-color:var(--cyan);box-shadow:0 0 24px rgba(94,231,255,.3)}
+.bban.mk small,.bban.mk span{color:#cdeffd}
+.cont{position:absolute;z-index:2;left:50%;transform:translateX(-50%);font-size:11px;font-weight:900;color:#cdeffd;background:rgba(5,8,28,.7);border:1px solid rgba(94,231,255,.45);border-radius:12px;padding:5px 12px;white-space:nowrap;pointer-events:none}
+
+/* topo fixo */
+.top{position:absolute;z-index:6;left:0;right:0;top:0;display:flex;align-items:center;gap:8px;padding:12px 14px 0}
+.back{width:44px;height:44px;border-radius:14px;border:1px solid var(--line2);background:rgba(5,8,28,.6);display:grid;place-items:center;flex:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.45),0 0 18px rgba(255,210,94,.5)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+.ersw{position:absolute;z-index:6;left:12px;right:12px;top:64px;display:flex;align-items:center;gap:8px}
+.arr{flex:none;width:44px;height:48px;border-radius:14px;border:1px solid var(--line2);background:rgba(5,8,28,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:grid;place-items:center;padding:0}
+.arr svg{width:20px;height:20px}
+.arr:disabled{opacity:.3;cursor:default}
+.ern{flex:1;min-width:0;height:48px;border-radius:15px;background:rgba(5,8,28,.55);border:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px}
+.ern b{font-family:var(--fd);font-weight:400;font-size:19px;line-height:1.1;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.ern small{font-size:11px;color:var(--muted);font-weight:800;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ern small b{display:inline;font-family:var(--fb);font-size:11px;color:var(--gold);text-shadow:none}
+.dots{position:absolute;z-index:6;top:120px;left:0;right:0;display:flex;justify-content:center;gap:5px;pointer-events:none}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28);box-shadow:0 0 0 1px rgba(5,8,28,.5)}
+.dots i.done{background:rgba(94,240,160,.75)}
+.dots i.here{background:var(--gold)}
+.dots i.on{width:18px;border-radius:4px;box-shadow:0 0 0 2px #fff}
+
+/* cartão de vidro embaixo */
+.card{position:absolute;z-index:6;left:10px;right:10px;bottom:12px;border-radius:22px;padding:11px 12px 12px;background:linear-gradient(160deg,rgba(255,255,255,.17),rgba(255,255,255,.05) 60%);-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3);border:1px solid rgba(255,255,255,.34);box-shadow:0 14px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3);animation:rin .25s ease-out}
+.card.lk{background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03) 60%)}
+.ch{display:flex;align-items:flex-start;gap:8px}
+.ch .t{flex:1;min-width:0}
+.ck{display:block;font-size:10px;letter-spacing:1.3px;text-transform:uppercase;font-weight:900;color:var(--gold)}
+.ck.done{color:var(--green)}.ck.lock{color:var(--muted)}.ck.lord{color:#ffb3c4}
+.ch .t b{display:block;font-family:var(--fd);font-weight:400;font-size:21px;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch .t small{display:block;font-size:11px;font-weight:800;color:#d6dcff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dif{flex:none;font-size:10px;font-weight:900;padding:3px 8px;border-radius:8px;white-space:nowrap;margin-top:2px}
+.dif.easy{background:rgba(94,240,160,.2);color:var(--green)}.dif.even{background:rgba(255,210,94,.2);color:var(--gold)}.dif.hard{background:rgba(255,164,52,.22);color:#ffb86b}.dif.nope{background:rgba(255,107,107,.22);color:#ff9f9f}
+.dif.gone{background:rgba(94,240,160,.15);color:var(--green)}
+.gain{margin-top:5px;font-size:11px;font-weight:800;color:#cdeffd;line-height:1.35}
+.gain b{color:var(--gold)}
+.fcr{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}
+.fcr span{border-radius:11px;background:rgba(5,8,28,.5);padding:5px 9px;font-size:10px;font-weight:900;color:#c3cbf0;line-height:1.2}
+.fcr span b{display:block;font-size:16px;color:var(--text);font-variant-numeric:tabular-nums}
+.fcr span.ok b{color:var(--green)}.fcr span.no b{color:#ff9f9f}
+.fbar{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin-top:7px}
+.fbar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#ff9f9f,#ffd25e 64%,#5ef0a0 80%)}
+.fbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;border-radius:1px}
+.fbar.lbl{height:auto;background:none;margin-top:2px;display:flex;justify-content:space-between;font-size:9.5px;font-weight:800;color:var(--muted)}
+.row{display:flex;gap:6px;margin-top:9px}
+.bt{flex:1;min-width:0;height:44px;padding:0 10px;border-radius:13px;border:0;font-weight:900;font-size:14px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.big{height:52px;font-family:var(--fd);font-weight:400;font-size:22px;letter-spacing:1px}
+.bt.big svg{width:20px;height:20px}
+.bt.off{background:rgba(255,255,255,.08);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.ghost{background:rgba(5,8,28,.55);color:var(--text);box-shadow:none;border:1px solid var(--line2)}
+.res{margin-top:7px;font-size:12px;font-weight:800;line-height:1.35}
+.res.w{color:var(--green)}.res.l{color:#ffb3c4}
+.adv{display:flex;gap:5px;margin-top:6px}
+.adv .bt{height:40px;font-size:12px;padding:0 4px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.nav .top{position:relative}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.navb .bt{flex:none;width:220px}
+.toast{position:absolute;left:50%;top:140px;z-index:40;transform:translateX(-50%);padding:9px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(8px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes eraIn{from{opacity:0;filter:brightness(2.2) blur(6px)}}
+@keyframes ring{from{opacity:.9;transform:scale(.8)}to{opacity:0;transform:scale(1.35)}}
+@keyframes flow{to{stroke-dashoffset:-24}}
+@keyframes pop{30%{transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}.hc{transition:none}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="scene" id="scene" aria-hidden="true">
+          <div class="ly" id="lSky"></div>
+          <div class="ly" id="lMid"></div>
+          <div class="shade"></div>
+        </div>
+        <div class="trail" id="trail" aria-label="Trilha das fases da era: role para cima até o Senhor da Era">
+          <div class="track" id="track">
+            <svg id="path" aria-hidden="true"></svg>
+            <canvas class="bc" id="bc" width="440" height="420" role="img" aria-label="Senhor da Era no topo da trilha"></canvas>
+            <div class="bban" id="bban"></div>
+            <div id="nodes"></div>
+            <canvas class="hc" id="hc" width="340" height="260" role="img" aria-label="Seu herói de pé na fase atual, com a arma na mão"></canvas>
+          </div>
+        </div>
+        <div class="front" aria-hidden="true"><div class="ly" id="lFront"></div></div>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar para a batalha"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">Mapa das Eras</div>
+          <div class="cur"><img src="a/gem.png" alt=""><span id="gems">0</span><span class="sr">diamantes</span></div>
+        </div>
+        <div class="ersw">
+          <button class="arr" id="ePrev" data-era="prev" aria-label="Era anterior"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ern" id="ern" aria-live="polite"></div>
+          <button class="arr" id="eNext" data-era="next" aria-label="Próxima era"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+        <div class="card" id="card" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Mapa das Eras (versão 3, direção A)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">A tela inteira é o <b>cenário da era</b>, em 3 camadas que andam em velocidades diferentes quando você rola (céu devagar, cenário no meio, silhuetas da frente mais rápido). A <b>trilha luminosa</b> sobe com as 10 fases; o <b>Senhor da Era</b> espera no topo. O <b>herói fica de pé na fase atual</b>, com a arma na mão. Embaixo, o <b>cartão de vidro</b>: próxima fase, FC pedida contra a sua e "Lutar". Toque numa fase para ver os dados dela; as setas trocam de era (9 eras e as fases sem fim). Ao abrir, a trilha rola sozinha até a fase atual.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Momento" style="margin-top:8px"><button data-scn="s27" aria-pressed="false">Fase 27</button><button data-scn="s30" aria-pressed="false">Fase 30</button><button data-scn="s47" aria-pressed="true">Fase 47</button><button data-scn="s90" aria-pressed="false">Fase 90</button><button data-scn="s118" aria-pressed="false">Fase 118</button></div>
+      <div class="seg" role="group" aria-label="Resultado da luta" style="margin-top:8px"><button data-force="" aria-pressed="true">Pela chance</button><button data-force="win" aria-pressed="false">Sempre vence</button><button data-force="lose" aria-pressed="false">Sempre perde</button></div>
+      <p class="sub" style="margin-top:8px;font-size:13px">Fase 27: era Medieval com 106% (Fácil). Fase 30: diante do Senhor da era Medieval (Dragão Real) com 98%; vencer abre a Era da Pólvora com a troca de cenário. Fase 47: era Industrial com 96% (Difícil). Fase 90: Juiz Celestial com 102%; vencer leva às fases sem fim. Fase 118: fases sem fim, a 2 do marco 120. "Lutar" sorteia pela chance da sua FC (80% nunca, 90% metade, 100% quase sempre), ou force o resultado acima.</p>
+    </div>
+    <div class="box">
+      <h2>De onde vem cada coisa</h2>
+      <ul>
+        <li>FC pedida das 90 fases: docs/balance.json dificuldade.pacoteFim.recFc (proposta desligada, escala do jogo), a mesma do Mapa V2</li>
+        <li>Depois da 90: a da fase 90 × 1,03 por fase; nos marcos (100, 110...) × 1,04 (posEras, desligado)</li>
+        <li>Chance: régua do Sys.tower.difficulty (≥ 1,05 Fácil, 0,97 Equilibrado, 0,9 Difícil)</li>
+        <li>Cenário: Medieval = bg_era2 (céu desfocado, cenário, pinheiros desenhados na frente); Celestial e fases sem fim = camadas do jogo era8 (céu, longe, nuvens desenhadas). As outras eras ainda não têm arte de cenário aqui: céu, montanhas e silhuetas desenhados em código com as cores da era (index.html ERAS / js/sys/eras.js). PROVISÓRIO</li>
+        <li>Senhor no topo: arte real só da Medieval (Dragão Real, en2_boss, o mesmo da Batalha V2) e da Celestial (Juiz Celestial, boss_era8). Nas outras, a silhueta escura até a arte existir. Herói: corpo sem arma + Lâmina Rúnica no punho de cada quadro, igual ao Mapa V2</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: trilha mais larga, Senhor maior"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos (iguais ao Mapa V2 / Loja V2): W = arma Lâmina Rúnica (assets/weapons/meta.json), B = corpo sem arma de cada herói, punho por quadro ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"n":12,"fps":12,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"fy":242},"kaia":{"n":12,"fps":12,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243}}};
+
+/* ---------- DADOS (copiados do Mapa V2; não inventar) ---------- */
+const REC=[210,272,352,455,589,762,986,1280,1650,1750,15800,15800,17200,17200,18200,18200,19300,19300,19300,21400,147000,156000,164000,173000,182000,236000,307000,399000,433000,498000,7590000,8290000,8680000,9070000,9870000,10300000,10700000,11900000,12500000,14400000,164000000,177000000,198000000,238000000,254000000,279000000,297000000,316000000,362000000,416000000,3840000000,4990000000,6490000000,8030000000,8480000000,9630000000,9900000000,10200000000,10500000000,11600000000,216000000000,228000000000,235000000000,242000000000,268000000000,276000000000,285000000000,293000000000,302000000000,332000000000,3440000000000,3840000000000,4280000000000,4670000000000,5200000000000,5780000000000,6560000000000,7830000000000,8730000000000,9730000000000,204000000000000,210000000000000,216000000000000,223000000000000,234000000000000,237000000000000,244000000000000,251000000000000,252000000000000,281000000000000];
+const GROW=1.03, MWALL=1.04;
+const recOf=s=>s<=90?REC[s-1]:REC[89]*Math.pow(GROW,s-90)*(s%10===0?MWALL:1);
+/* cores do cenário: index.html ERAS (0-6) e js/sys/eras.js ERAS78 (7-8). Senhor da Medieval = Dragão Real, o nome da arte aprovada (Batalha V2, assets/enemies era2 boss) */
+const ERAS=[
+ {n:'Pré-História',boss:'Javali',sky:['#5aa7d6','#f2c37a'],mtn:'#7a5c3d',gr:'#5a6b2e',sun:'#fff3c4',sil:'rock'},
+ {n:'Antiguidade',boss:'Minotauro',sky:['#e9c46a','#f4a261'],mtn:'#b08968',gr:'#c2a15a',sun:'#fff0b0',sil:'column'},
+ {n:'Medieval',boss:'Dragão Real',sky:['#3a2a52','#c0714a'],mtn:'#4a2f3a',gr:'#2d3b22',sun:'#ffe9b0',sil:'pine',art:'era2'},
+ {n:'Era da Pólvora',boss:'Capitão Fantasma',sky:['#2f4858','#d98e5f'],mtn:'#3e4a52',gr:'#3b4a30',sun:'#ffd9a0',sil:'mast'},
+ {n:'Era Industrial',boss:'Golem a Vapor',sky:['#4b4237','#c9a46a'],mtn:'#4a443c',gr:'#3a3630',sun:'#e8d9b0',sil:'chimney'},
+ {n:'Era Moderna',boss:'Tanque Robô',sky:['#223a5e','#7aa6c9'],mtn:'#34425a',gr:'#2e3a2e',sun:'#f4f4f4',sil:'tower'},
+ {n:'Era Futurista',boss:'Devorador',sky:['#0b0b2e','#5b2a8a'],mtn:'#1b1b4a',gr:'#15153a',sun:'#9ad8ff',sil:'crystal'},
+ {n:'Submundo',boss:'Senhor do Submundo',sky:['#2a0a0a','#8a1a0a'],mtn:'#3a0f0a',gr:'#2a1410',sun:'#ff6a2a',sil:'spike'},
+ {n:'Celestial',boss:'Juiz Celestial',sky:['#bfe3ff','#fff4d0'],mtn:'#d8e4f0',gr:'#e8eef6',sun:'#fffbe0',sil:'cloud',art:'era8'}];
+const ROM=['I','II','III','IV','V','VI','VII','VIII','IX'];
+const MARK={gems:30,frames:{100:'Além das Eras',150:'Sem Fim'},astral:{100:21,110:22,120:23,130:24,140:25},bonusUntil:150};
+const diffOf=k=>k>=1.05?['easy','Fácil']:k>=0.97?['even','Equilibrado']:k>=0.9?['hard','Difícil']:['nope','Muito difícil'];
+const winP=k=>Math.max(0,Math.min(1,(k-0.8)/0.2));
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',').replace(/,0+$/,'');
+const ab=v=>v>=1e15?dec(v/1e15,2)+' qua':v>=1e12?dec(v/1e12,1)+' tri':v>=1e9?dec(v/1e9,2)+' bi':v>=1e6?dec(v/1e6,1)+' mi':v>=1e4?dec(v/1e3,1)+' mil':n(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eraOf=s=>Math.min(8,Math.floor((s-1)/10));
+const inEra=s=>((s-1)%10)+1;
+const IC={check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 10V8a5 5 0 0110 0v2h1a1 1 0 011 1v9a1 1 0 01-1 1H6a1 1 0 01-1-1v-9a1 1 0 011-1zm2 0h6V8a3 3 0 00-6 0z"/></svg>',
+  crown:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>',
+  sword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4H20v5.5L9 20.5 3.5 15z"/><path d="M6 13l5 5M3 21l3-3"/></svg>'};
+
+/* ---------- geometria da trilha (coordenadas da trilha, 390 de largura) ---------- */
+const TOPY=520, STEP=132, BOT=270, TH=TOPY+9*STEP+BOT, M=TH-844;   /* altura da trilha 1978, rolagem máxima 1134 */
+const XS=[195,118,205,278,200,112,170,272,226,195];                 /* x de cada uma das 10 fases (de baixo para cima) */
+const ny=i=>TOPY+(9-i)*STEP;
+const PF={sky:0.06,mid:0.22,front:1.25};                           /* velocidades do parallax (a trilha anda a 1) */
+
+/* ---------- estado ---------- */
+const SCN={s27:{stage:27,k:1.06,gems:900},s30:{stage:30,k:0.98,gems:1200},s47:{stage:47,k:0.96,gems:1840},s90:{stage:90,k:1.02,gems:6120},s118:{stage:118,k:0.985,gems:8890}};
+let S={hero:'kael',force:''};
+const curView=()=>S.stage>90?9:eraOf(S.stage);
+function reset(key){ const c=SCN[key]; S={hero:S.hero||'kael',force:S.force||'',scn:key,weapon:['era2_t1',2,'Lâmina Rúnica'],stage:c.stage,fc:recOf(c.stage)*c.k,gems:c.gems,res:null,view:0,sel:c.stage}; S.view=curView(); }
+/* as 10 fases mostradas numa vista: eras 0-8 = 10 fases; 9 = o bloco atual das fases sem fim (o topo é o marco) */
+function block(v){ if(v<9) return v*10+1; const s=Math.max(91,S.stage); return Math.floor((s-91)/10)*10+91; }
+const stOf=s=>s<S.stage?'done':s===S.stage?'now':'lock';
+function stageName(s){ if(s>90) return s%10===0?'Marco da fase '+s:'Fase sem fim '+s; const e=eraOf(s), k=inEra(s); return k===10?'Senhor: '+ERAS[e].boss:k===5&&e>=2?'Chefe do meio · fase '+s:'Fase '+s; }
+const isLord=s=>s<=90&&inEra(s)===10, isMid=s=>s<=90&&inEra(s)===5&&eraOf(s)>=2, isMark=s=>s>90&&s%10===0;
+function markTxt(m){ const g=['título <b>Marco '+m+'</b>'+(m<=MARK.bonusUntil?' (+1% ATQ e VIDA)':''),'<b>'+MARK.gems+' diamantes</b>']; if(MARK.astral[m]) g.push('Forja Astral <b>+'+MARK.astral[m]+'</b>'); if(MARK.frames[m]) g.push('moldura <b>'+MARK.frames[m]+'</b>'); return g.join(', '); }
+
+/* ---------- imagens: <img> de verdade na página (nunca new Image()) ---------- */
+const IM={}, IMS={};
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+
+/* ---------- cenário em 3 camadas ---------- */
+function rng(seed){ let a=seed*2654435761>>>0; return ()=>{ a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
+const LH=k=>Math.round(844+PF[k]*M);
+function mountains(e,h){ const E=ERAS[e], r=rng(e+7); let far='M0 '+h, near='M0 '+h; const b1=h*0.56, b2=h*0.7;
+  for(let x=0;x<=390;x+=26){ far+=' L'+x+' '+Math.round(b1-20-r()*110); } far+=' L390 '+h+' Z';
+  for(let x=0;x<=390;x+=34){ near+=' L'+x+' '+Math.round(b2-10-r()*70); } near+=' L390 '+h+' Z';
+  return `<svg viewBox="0 0 390 ${h}" preserveAspectRatio="none"><defs><linearGradient id="gm${e}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${E.mtn}"/><stop offset="1" stop-color="${E.gr}"/></linearGradient></defs>
+    <path d="${far}" fill="${E.mtn}" opacity=".75"/><path d="${near}" fill="url(#gm${e})"/><rect x="0" y="${Math.round(h*0.82)}" width="390" height="${h}" fill="${E.gr}"/></svg>`; }
+/* silhuetas da frente, desenhadas na borda esquerda (a direita é espelhada) */
+function sil(kind,y,s,r){ const w=v=>Math.round(v*s), xo=-6+Math.round(r()*14);
+  switch(kind){
+    case 'pine': return `<path d="M${xo} ${y} L${xo+w(36)} ${y-w(70)} L${xo+w(72)} ${y} Z M${xo+w(6)} ${y-w(45)} L${xo+w(36)} ${y-w(110)} L${xo+w(66)} ${y-w(45)} Z M${xo+w(14)} ${y-w(88)} L${xo+w(36)} ${y-w(145)} L${xo+w(58)} ${y-w(88)} Z"/><rect x="${xo+w(31)}" y="${y}" width="${w(10)}" height="${w(18)}"/>`;
+    case 'rock': return `<path d="M-10 ${y} Q${w(10)} ${y-w(95)} ${w(46)} ${y-w(70)} Q${w(78)} ${y-w(40)} ${w(70)} ${y} Z"/>`;
+    case 'column': return `<rect x="${xo+w(8)}" y="${y-w(170)}" width="${w(30)}" height="${w(170)}"/><rect x="${xo}" y="${y-w(182)}" width="${w(46)}" height="${w(14)}"/><path d="M${xo+w(4)} ${y-w(182)} L${xo+w(18)} ${y-w(200)} L${xo+w(30)} ${y-w(186)} L${xo+w(42)} ${y-w(196)} L${xo+w(46)} ${y-w(182)} Z"/>`;
+    case 'mast': return `<rect x="${xo+w(22)}" y="${y-w(230)}" width="${w(6)}" height="${w(230)}"/><path d="M${xo+w(28)} ${y-w(210)} Q${xo+w(70)} ${y-w(170)} ${xo+w(28)} ${y-w(120)} Z M${xo+w(28)} ${y-w(110)} Q${xo+w(64)} ${y-w(80)} ${xo+w(28)} ${y-w(40)} Z"/><rect x="${xo}" y="${y-w(222)}" width="${w(50)}" height="${w(4)}"/>`;
+    case 'chimney': return `<rect x="${xo+w(6)}" y="${y-w(210)}" width="${w(28)}" height="${w(210)}"/><rect x="${xo}" y="${y-w(220)}" width="${w(40)}" height="${w(12)}"/><circle cx="${xo+w(24)}" cy="${y-w(245)}" r="${w(16)}" opacity=".35"/><circle cx="${xo+w(42)}" cy="${y-w(275)}" r="${w(22)}" opacity=".22"/>`;
+    case 'tower': { let o=`<rect x="${xo-4}" y="${y-w(250)}" width="${w(62)}" height="${w(250)}"/>`; for(let j=0;j<6;j++) for(let i=0;i<2;i++) if(r()<0.55) o+=`<rect x="${xo+w(10+i*24)}" y="${y-w(230-j*36)}" width="${w(10)}" height="${w(14)}" fill="#ffe9a0" opacity=".45"/>`; return o; }
+    case 'crystal': return `<path d="M${xo} ${y} L${xo+w(14)} ${y-w(150)} L${xo+w(30)} ${y} Z M${xo+w(20)} ${y} L${xo+w(44)} ${y-w(96)} L${xo+w(60)} ${y} Z"/><path d="M${xo+w(14)} ${y-w(150)} L${xo+w(18)} ${y-w(20)}" stroke="#9ad8ff" stroke-width="2" opacity=".6"/>`;
+    case 'spike': return `<path d="M${xo} ${y} L${xo+w(10)} ${y-w(160)} L${xo+w(22)} ${y} Z M${xo+w(18)} ${y} L${xo+w(32)} ${y-w(110)} L${xo+w(46)} ${y} Z M${xo+w(40)} ${y} L${xo+w(52)} ${y-w(60)} L${xo+w(64)} ${y} Z"/>`;
+    default: return `<g fill="#fff" opacity=".55"><circle cx="${w(10)}" cy="${y-w(30)}" r="${w(34)}"/><circle cx="${w(46)}" cy="${y-w(20)}" r="${w(26)}"/><circle cx="${w(-6)}" cy="${y+w(6)}" r="${w(30)}"/></g>`; } }
+function frontSvg(v){ const e=Math.min(8,v), E=ERAS[e], h=LH('front'), r=rng(31+v); let L='', R='';
+  const kind=E.sil, fill=kind==='cloud'?'#ffffff':'#060a22';
+  for(let y=200;y<h;y+=200+Math.round(r()*90)){ L+=sil(kind,y,0.8+r()*0.4,r); }
+  for(let y=300;y<h;y+=200+Math.round(r()*90)){ R+=sil(kind,y,0.8+r()*0.4,r); }
+  return `<svg viewBox="0 0 390 ${h}"><g fill="${fill}" stroke="${E.sun}" stroke-opacity="${kind==='cloud'?0:.3}" stroke-width="1.5" opacity="${kind==='cloud'?.8:.94}">${L}<g transform="translate(390 0) scale(-1 1)">${R}</g></g></svg>`; }
+function paintScene(v){ const e=Math.min(8,v), E=ERAS[e], sky=$('#lSky'), mid=$('#lMid'), fr=$('#lFront'), gold=v===9?';filter:hue-rotate(-22deg) saturate(1.35)':'';
+  for(const [el,k] of [[sky,'sky'],[mid,'mid'],[fr,'front']]){ el.style.height=LH(k)+'px'; el.style.top=(-PF[k]*M)+'px'; }
+  if(E.art==='era2'){ img('a/bg_era2.png');
+    sky.innerHTML=`<div style="background:linear-gradient(180deg,#0b1030 0%,rgba(11,16,48,.35) 50%,rgba(11,16,48,0) 80%),url(a/bg_era2.png) 50% 6%/auto 150% no-repeat;filter:blur(5px) brightness(.85) saturate(1.1)"></div>`;
+    mid.innerHTML=`<div class="fade" style="background:url(a/bg_era2.png) 78% 100%/auto 74% no-repeat"></div>`; }
+  else if(E.art==='era8'){ img('a/bg8_sky.webp'); img('a/bg8_far.webp');
+    sky.innerHTML=`<div style="background:linear-gradient(180deg,rgba(11,16,48,.75),rgba(11,16,48,0) 45%),url(a/bg8_sky.webp) 0 0/auto 100% repeat-x${gold}"></div>`;
+    mid.innerHTML=`<div class="fade" style="background:url(a/bg8_far.webp) 30% 100%/auto 66% no-repeat${gold}"></div>`; }
+  else { const r=rng(e+3); let st=''; for(let i=0;i<40;i++) st+=`<circle cx="${Math.round(r()*390)}" cy="${Math.round(r()*LH('sky')*0.45)}" r="${(r()*1.4+0.4).toFixed(1)}" fill="#fff" opacity="${(r()*0.6+0.2).toFixed(2)}"/>`;
+    sky.innerHTML=`<div style="background:radial-gradient(60% 18% at 70% 78%,${E.sun}88,transparent 70%),linear-gradient(180deg,#070a1f 0%,${E.sky[0]} 42%,${E.sky[1]} 86%)"></div><svg viewBox="0 0 390 ${LH('sky')}" preserveAspectRatio="none">${st}</svg>`;
+    mid.innerHTML=mountains(e,LH('mid')); }
+  fr.innerHTML=frontSvg(v); }
+function parallax(){ const st=Math.max(0,Math.min(M,$('#trail').scrollTop||0));
+  for(const [id,k] of [['#lSky','sky'],['#lMid','mid'],['#lFront','front']]) $(id).style.transform='translate3d(0,'+(PF[k]*(M-st)).toFixed(1)+'px,0)';
+  S.st=st; }
+$('#trail').addEventListener('scroll',parallax,{passive:true});
+
+/* ---------- trilha ---------- */
+function renderTrail(){ const v=S.view, a=block(v), cv=curView(), lockedView=v>cv||(v===9&&S.stage<=90);
+  $('#track').style.height=TH+'px'; const P=$('#path'); P.setAttribute('viewBox','0 0 390 '+TH); P.style.height=TH+'px';
+  let segs='', pts=[[195,TH-120]]; for(let i=0;i<10;i++) pts.push([XS[i],ny(i)]);
+  for(let i=1;i<pts.length;i++){ const [x1,y1]=pts[i-1], [x2,y2]=pts[i], d=`M${x1} ${y1} C${x1} ${y1-66} ${x2} ${y2+66} ${x2} ${y2}`, s=a+i-1, st=lockedView?'lock':stOf(s);
+    segs+=st==='lock'?`<path class="seg-n" d="${d}"/>`:st==='now'?`<path class="seg-g" d="${d}"/><path class="seg-a" d="${d}"/>`:`<path class="seg-g" d="${d}"/><path class="seg-d" d="${d}"/>`; }
+  P.innerHTML=segs;
+  let h=''; for(let i=0;i<10;i++){ const s=a+i, st=lockedView?'lock':stOf(s), x=XS[i], y=ny(i), lord=i===9, mid=isMid(s);
+    const cls=st+(lord?' lord':'')+(mid?' mid':'')+(S.pop===s?' pop':'');
+    const ico=st==='done'?IC.check:st==='lock'?(lord?IC.crown:IC.lock):lord?IC.crown:'';
+    const lab=stageName(s)+(st==='done'?', vencida':st==='now'?', fase atual':', fechada');
+    h+=`<button class="nd ${cls}" style="left:${x}px;top:${y}px" data-st="${s}" aria-pressed="${S.sel===s}" aria-label="${esc(lab)}">${ico}<span>${s}</span></button>`;
+    if(!lord){ const right=x<=195, pos=right?`left:${x+44}px`:`right:${390-x+44}px`;
+      h+=`<span class="tag ${st==='lock'?'':st} ${mid&&st==='lock'?'mid':''}" style="${pos};top:${y}px">${st==='done'?'vencida':(mid?'Chefe · ':'')+'FC '+ab(recOf(s))}</span>`; } }
+  if(v===9&&S.stage>90) h+=`<span class="cont" style="top:${ny(9)-470}px">A jornada continua: novo bloco a cada marco</span>`;
+  $('#nodes').innerHTML=h;
+  /* Senhor (ou marco) no topo */
+  const top=a+9, bb=$('#bban'); $('#bc').style.top=(TOPY-380)+'px'; bb.style.top=(TOPY-166)+'px';
+  if(v===9){ bb.className='bban mk'; bb.innerHTML=`<small>Marco no topo</small><b>Marco ${top}</b><span>FC ${ab(recOf(top))} · ${MARK.gems} diamantes${MARK.astral[top]?' · Forja Astral +'+MARK.astral[top]:''}</span>`; }
+  else { const won=S.stage>top; bb.className='bban'+(won?' won':''); bb.innerHTML=`<small>${won?'Senhor vencido':'Senhor da Era'}</small><b>${esc(ERAS[v].boss)}</b><span>${won?'A era '+ROM[v]+' está completa':'FC pedida '+ab(recOf(top))}</span>`; }
+  placeHero(); }
+const heroHere=()=>S.view===curView()&&!(S.view===9&&S.stage<=90);
+function placeHero(){ const hc=$('#hc'); if(!heroHere()){ hc.style.display='none'; return; } hc.style.display='';
+  const i=S.stage-block(S.view); hc.style.left=(XS[i]-85)+'px'; hc.style.top=(ny(i)-14-122)+'px'; }
+
+/* ---------- topo: seletor de era ---------- */
+function renderTop(){ $('#gems').textContent=n(S.gems); const v=S.view, cv=curView(), a=block(v);
+  let sub; if(v===9) sub=S.stage>90?`Fases sem fim · fases ${a}-${a+9} · você na <b>${S.stage}</b>`:'Fases sem fim · abrem depois da fase 90';
+  else { const won=Math.max(0,Math.min(10,S.stage-a)); sub=`Era ${ROM[v]} de IX · `+(v<cv?'<b>completa</b>':v>cv?'fechada':`<b>${won} de 10</b> vencidas`); }
+  $('#ern').innerHTML=`<b>${v===9?'Além das Eras':esc(ERAS[v].n)}</b><small>${sub}</small>`;
+  $('#ePrev').disabled=v<=0; $('#eNext').disabled=v>=9;
+  let d=''; for(let i=0;i<10;i++) d+=`<i class="${i<cv?'done':i===cv?'here':''} ${i===v?'on':''}"></i>`; $('#dots').innerHTML=d; }
+
+/* ---------- cartão de vidro ---------- */
+function renderCard(){ const v=S.view, cv=curView(), s=S.sel, need=recOf(s), k=S.fc/need, d=diffOf(k), lockedView=v>cv||(v===9&&S.stage<=90), st=lockedView?'lock':stOf(s);
+  const c=$('#card'); c.className='card'+(st==='lock'?' lk':'');
+  const kick=st==='done'?['done','Vencida']:st==='lock'?['lock',lockedView?'Era fechada':'Fechada']:isLord(s)?['lord','Senhor da Era · luta final']:isMark(s)?['','Próximo marco']:['','Próxima fase'];
+  const sub=s<=90?ERAS[eraOf(s)].n+' · fase '+inEra(s)+' de 10':'Fases sem fim · a jornada continua';
+  let gain=''; if(isLord(s)) gain=s===90?'Vencer completa as <b>9 eras</b>: o jogo continua nas fases sem fim.':'Vencer abre a <b>'+esc(ERAS[eraOf(s)+1].n)+'</b>.';
+  else if(isMark(s)) gain='Prêmio do marco: '+markTxt(s)+'.'; else if(isMid(s)) gain='Chefe do meio da era: mais vida e golpe mais forte.';
+  if(st==='lock') gain=lockedView?(v===9?'Depois do Juiz Celestial (fase 90) vêm as <b>fases sem fim</b>: a FC pedida sobe 3% por fase e, a cada 10, um marco com título, diamantes e a Forja Astral.':'Vença o <b>Senhor da '+esc(ERAS[v-1].n)+'</b> (fase '+(v*10)+') para abrir esta era.'):'Vença a <b>fase '+S.stage+'</b> antes. '+gain;
+  const pct=Math.round(k*100), w=Math.max(2,Math.min(100,k/1.25*100));
+  let btn; if(st==='now') btn=`<button class="bt big ${k>=0.8?'':'off'}" data-act="fight">${IC.sword}Lutar</button>`;
+  else btn=`<button class="bt ghost" data-act="cur">Ir para a fase atual (${S.stage})</button>`;
+  let res=''; const R=S.res; if(R&&s===S.stage&&st==='now'){ res=R.win?`<div class="res w">${esc(R.txt)}</div>`:`<div class="res l">${esc(R.txt)}</div><div class="adv"><button class="bt off" data-go="Forja">Forja</button><button class="bt off" data-go="Pets">Pet</button><button class="bt off" data-go="Equipamento">Equipamento</button></div>`; }
+  c.innerHTML=`<div class="ch"><div class="t"><span class="ck ${kick[0]}">${kick[1]}</span><b>${esc(stageName(s))}</b><small>${esc(sub)}</small></div><span class="dif ${st==='done'?'gone':d[0]}">${st==='done'?'Vencida':d[1]}</span></div>
+    ${gain?`<div class="gain">${gain}</div>`:''}
+    <div class="fcr"><span>FC pedida<b>${ab(need)}</b></span><span class="${k>=1?'ok':'no'}">Sua FC (${pct}%)<b>${ab(S.fc)}</b></span></div>
+    <div class="fbar" role="img" aria-label="Sua FC é ${pct}% da pedida"><i style="width:${w.toFixed(1)}%"></i><em style="left:64%"></em><em style="left:80%"></em></div>
+    <div class="fbar lbl"><span>80%: não vence</span><span>100%: vence quase sempre</span></div>
+    <div class="row">${btn}</div>${res}`; }
+
+function full(){ renderTop(); renderTrail(); renderCard(); }
+
+/* rolagem suave até uma fase (ao abrir, ao trocar de era, depois de vencer) */
+const RM=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function targetOf(s){ const i=Math.max(0,Math.min(9,s-block(S.view))); return i===9?0:Math.max(0,Math.min(M,ny(i)-400)); }
+function scrollToStage(s,instant){ const tr=$('#trail'), top=targetOf(s);
+  if(!instant&&typeof tr.scrollTo==='function') tr.scrollTo({top,behavior:RM()?'auto':'smooth'}); else tr.scrollTop=top;
+  S.target=top; parallax(); }
+function defSel(v){ const cv=curView(), a=block(v); if(v===cv&&!(v===9&&S.stage<=90)) return S.stage; return v<cv?a+9:a; }
+function setView(v,anim){ S.view=Math.max(0,Math.min(9,v)); S.sel=defSel(S.view); S.pop=null; paintScene(S.view);
+  const hc=$('#hc'); hc.classList.add('jump'); full();
+  const sc=$('#scene'); if(anim){ sc.classList.remove('swap'); void sc.offsetWidth; sc.classList.add('swap'); }
+  $('#trail').scrollTop=M; parallax(); setTimeout(()=>{ hc.classList.remove('jump'); scrollToStage(S.sel); },60); }
+
+/* ---------- herói (igual ao Mapa V2: corpo sem arma + arma no punho de cada quadro + asa nas costas) ---------- */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+const NECK={};
+function neckOf(u,im,nf){ if(NECK[u]) return NECK[u]; const fw=im.naturalWidth/nf, fh=im.naturalHeight, fs=fw/256, out=[];
+  try{ const W=Math.round(fw), c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=fh; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+    for(let i=0;i<nf;i++){ const d=g.getImageData(Math.round(i*fw),0,W,fh).data; let top=Math.round(fh*.3);
+      scan: for(let y=0;y<fh;y++) for(let x=0;x<W;x++){ const k=(y*W+x)*4; if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){ top=y; break scan; } }
+      out.push(top/fs); } }
+  catch(e){ out.length=0; for(let i=0;i<nf;i++) out.push(77); }
+  return NECK[u]=out; }
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+function wings(x,ax,ay,b,k,t){ const WA=WING_AN.angel; const Li=img('a/wg_angel_L.png'), Ri=img('a/wg_angel_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+const GY=122, HX=85, HK=0.42;
+function drawHero(x,t){
+  const B=D.B[S.hero], url='a/body_'+S.hero+'.png', sh=img(url); if(!B||!ok(sh)) return;
+  const fw=sh.naturalWidth/B.n, fh=sh.naturalHeight, fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=HX-128*k, y0=GY-B.fy*k;
+  x.save(); x.globalAlpha=.35; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(HX-2,GY+1,24,6,0,0,7); x.fill(); x.restore();
+  if(B.back) wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*fw,0,fw,fh,0,0,256,256);
+  const wk=S.weapon[0], W=D.W[wk], ws=W?wSpr(wk,S.weapon[1]):null; let drawW=null;
+  if(ws){ const grip=W.grip||[0.5,0.78], kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=neckOf(url,sh,B.n)[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,256,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+
+/* ---------- Senhor no topo: arte real (Medieval, Celestial) ou silhueta até a arte existir; marco nas fases sem fim ---------- */
+function drawBoss(x,t){ const v=S.view, e=Math.min(8,v), E=ERAS[e], top=block(v)+9, won=v<9&&S.stage>top;
+  const g=x.createRadialGradient(110,140,8,110,140,110); g.addColorStop(0,won?'rgba(94,240,160,.3)':v===9?'rgba(94,231,255,.4)':'rgba(255,90,90,.42)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,220,210);
+  x.save(); if(won){ x.filter='grayscale(1) brightness(.75)'; x.globalAlpha=.75; }
+  const bob=Math.sin(t*2)*3;
+  if(v===2){ const sh=img('a/en2_boss_run.png'); if(ok(sh)){ const fi=Math.floor(t*8)%8, kk=0.78; x.drawImage(sh,fi*544,0,544,256,110-272*kk,204-243*kk,544*kk,256*kk); } }
+  else if(v===8){ const im=img('a/boss_era8.png'); if(ok(im)) x.drawImage(im,12,4+bob,196,196); }
+  else if(v===9){ x.translate(110,110+bob); x.strokeStyle='#5ee7ff'; x.lineWidth=5; x.shadowColor='#5ee7ff'; x.shadowBlur=18; x.beginPath(); x.arc(0,0,62,0,7); x.stroke();
+    x.shadowBlur=0; x.lineWidth=2; x.globalAlpha=.6; x.beginPath(); x.arc(0,0,74,t%7,(t%7)+4.4); x.stroke(); x.globalAlpha=1;
+    x.fillStyle='#eaffff'; x.font='400 40px "Lilita One",Impact,sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(top),0,4); }
+  else { /* silhueta escura com a luz da era por trás */ x.translate(0,bob); x.fillStyle='#05071a'; x.shadowColor=E.sun; x.shadowBlur=22;
+    x.beginPath(); x.moveTo(48,200); x.quadraticCurveTo(40,120,74,104); x.quadraticCurveTo(110,88,146,104); x.quadraticCurveTo(180,120,172,200); x.closePath(); x.fill();
+    x.beginPath(); x.arc(110,78,30,0,7); x.fill(); x.beginPath(); x.moveTo(84,62); x.lineTo(70,30); x.lineTo(96,52); x.moveTo(136,62); x.lineTo(150,30); x.lineTo(124,52); x.fill();
+    x.shadowBlur=10; x.shadowColor='#ff3030'; x.fillStyle='#ff5a5a'; x.fillRect(96,74,9,4); x.fillRect(115,74,9,4); }
+  x.restore(); }
+
+function draw(t){ if(!S.weapon) return; S.t=t;
+  try{ const c=$('#bc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,220,210); drawBoss(x,t); }catch(err){ stgErr('o Senhor',err); }
+  if(!heroHere()) return;
+  try{ const c=$('#hc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,170,130); drawHero(x,t); }catch(err){ stgErr('o herói',err); } }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- ações (simuladas) ---------- */
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2400); S.lastToast=t; }
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${esc(where)}</div></div><div class="navb"><p>No jogo, abre a tela <b>${esc(where)}</b>.</p><button class="bt" data-x="navback">Voltar para o Mapa</button></div>`; scr.appendChild(d); S.nav=where; }
+function fight(){ const s=S.stage, need=recOf(s), k=S.fc/need, w=S.force==='win'?true:S.force==='lose'?false:Math.random()<winP(k), v0=curView(), b0=block(9);
+  if(w){ S.stage++; S.sel=S.stage; S.pop=S.stage; S.res={win:true,txt:'Vitória na fase '+s+'! Agora: '+stageName(S.stage)+'.'};
+    if(s===90){ S.res.txt='Juiz Celestial vencido: as 9 eras estão completas. A jornada continua nas fases sem fim.'; toast('Fim das 9 eras! A jornada continua'); }
+    else if(isLord(s)){ S.res.txt='Senhor '+ERAS[eraOf(s)].boss+' vencido! A '+ERAS[eraOf(s)+1].n+' está aberta.'; toast('Era '+ROM[eraOf(s)+1]+' aberta: '+ERAS[eraOf(s)+1].n); }
+    if(isMark(s)){ S.gems+=MARK.gems; const g='Marco '+s+': título'+(s<=MARK.bonusUntil?' (+1% ATQ e VIDA)':'')+', '+MARK.gems+' diamantes'+(MARK.astral[s]?', Forja Astral +'+MARK.astral[s]:'')+(MARK.frames[s]?', moldura '+MARK.frames[s]:''); S.res.txt=g; toast(g); if(s<=MARK.bonusUntil) S.fc*=1.01; }
+    S.fc*=1.004;
+    if(curView()!==v0||(v0===9&&block(9)!==b0)){ full(); setTimeout(()=>{ const r=S.res; setView(curView(),true); S.res=r; renderCard(); },900); return; }
+    full(); scrollToStage(S.stage); }
+  else { const miss=need-S.fc; S.res={win:false,txt:'Derrota. '+(miss>0?'Faltam '+ab(miss)+' de FC ('+Math.round(k*100)+'% da pedida).':'Por pouco: com 100% da FC você vence quase sempre.')+' Fortaleça o herói:'}; renderCard(); } }
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); S.nav=null; return; }
+  if(d.go){ go(d.go); return; }
+  if(d.act==='fight'){ if(S.view!==curView()||S.sel!==S.stage) return; if(S.fc/recOf(S.stage)<0.8){ toast('Com menos de 80% da FC pedida não dá para vencer'); return; } fight(); return; }
+  if(d.act==='cur'){ if(S.view!==curView()) setView(curView(),true); else { S.sel=S.stage; renderTrail(); renderCard(); scrollToStage(S.stage); } return; }
+  if(d.era){ setView(S.view+(d.era==='next'?1:-1),true); return; }
+  if(d.st){ const s=+d.st; S.sel=s; S.pop=null; renderTrail(); renderCard(); scrollToStage(s); return; } });
+function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scn===S.scn)); document.querySelectorAll('[data-force]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.force===S.force)); }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.hero){ S.hero=d.hero; syncSide(); }
+  else if(d.scn){ reset(d.scn); syncSide(); setView(S.view,true); }
+  else if(d.force!=null){ S.force=d.force; syncSide(); } });
+
+/* ---------- ponte de teste ---------- */
+window.__mapaTeste={
+  state:()=>({hero:S.hero,stage:S.stage,view:S.view,cur:curView(),sel:S.sel,fc:S.fc,need:recOf(S.stage),gems:S.gems,res:S.res&&{win:S.res.win,txt:S.res.txt},force:S.force,scroll:S.st,target:S.target,heroVisible:heroHere(),nav:S.nav||null,toast:S.lastToast||null}),
+  layers:()=>({sky:$('#lSky').style.transform,mid:$('#lMid').style.transform,front:$('#lFront').style.transform}),
+  scroll:v=>{ $('#trail').scrollTop=v; parallax(); return S.st; },
+  geom:{TH,M,TOPY,STEP,XS:XS.slice()},
+  select:s=>{ S.sel=s; S.pop=null; renderTrail(); renderCard(); scrollToStage(s); }, era:v=>setView(v,true), fight:f=>{ const o=S.force; S.force=f||o; fight(); S.force=o; },
+  scn:k=>{ reset(k); syncSide(); setView(S.view,true); }, hero:h=>{ S.hero=h; syncSide(); }, force:f=>{ S.force=f||''; syncSide(); }
+};
+
+S.hero='kael'; reset('s47'); setView(S.view,false);
+setTimeout(()=>{ for(const h of ['kael','kaia']) img('a/body_'+h+'.png'); img('a/wh_era2_t1.png'); img('a/wg_angel_L.png'); img('a/wg_angel_R.png'); img('a/en2_boss_run.png'); img('a/boss_era8.png'); },300);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-mapa-eras-v3';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Mapa das Eras V3 (direção A)',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
