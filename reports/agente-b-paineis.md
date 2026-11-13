@@ -1026,3 +1026,17 @@ Testes: `node --check` nos 4 arquivos; conflitos: nenhum; `node test/e2e/run.js`
 `js/battle.js` (mudança do engenheiro ainda não commitada) agora guarda a Troca de era em `B.eraPend` e só abre depois de fechar a
 Vitória; o teste ainda espera `Panels.open('era')` direto e encontra `B.res.mode="win"`. É o teste (ou a ordem) que o engenheiro precisa acertar.
 Nada disto foi visto no navegador.
+
+## Bloco 33 (sem navegador): Loja filtra as skins por Sys.appearance.canSell
+
+Só `js/screens.js`. `xCanSell(id)` chama `Sys.appearance.canSell(id, existe)`; `existe` consulta a lista de arquivos do `assets/manifest.json`
+(lida uma vez, na carga). Enquanto a lista não chega, ou se falhar: arte de arma existe, o resto não. Sem o módulo: tudo como antes.
+- Lista das abas "Skins herói"/"Skins arma": só aparece a skin vendável, a que o jogador já tem e a que está em uso.
+- Compra: `hStatus.buy`, o botão de comprar e a confirmação recusam a skin que `canSell` recusa.
+- Cartão OFERTA/DESTAQUE: skin do dia e melhor à venda passam pelo filtro; na aba do herói sem nada à venda entra a skin de arma; sem
+  nada, a skin em uso ("Na coleção"); sem nem isso, o cartão some.
+- Aba sem nenhuma skin: "Novas skins em breve".
+ACHADO: o `js/sys/appearance.js` do disco já mudou (roupa-skin = combinação de camadas). Com o manifest de hoje `canSell` ACEITA as 40
+roupas (a00..a74) e p10/p20/p30; logo, hoje o filtro não esconde nada depois que a lista carrega. Só esconde se faltar arquivo.
+Não mexi: Passe (dá a p10 no nível 25), Oferta (desligada), saque/invocação (Sistemas).
+`node --check`, conflitos, `run.js` "TUDO OK" (141), `flows.js` "fluxos duros OK", fumaça sem falha. Não visto no navegador.
