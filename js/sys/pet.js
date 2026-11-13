@@ -394,26 +394,26 @@ function battleInfo(S,host){ const o=ensure(S); if(locked(S)||!o.eq||!o.owned[o.
 const PET_EXTRA=['era0_mammoth','era1_sphinx','era2_dragon','era3_parrot','era4_mechdog'];
 /* TABELA DE BATALHA dos 8 pets (fonte única; o PET_TBL do js/petfx.js tinha só os 5 antigos): posição ao lado do Kael (dx = fração da largura do
    corpo dele; dy px), altura por estágio (fração da altura do Kael), voo (fly = quanto paira, só o papagaio: o Pégaso anda, como na arte aprovada),
-   cor do golpe e efeito (fx), AURA por estágio (assets/anim/aura/<id>; null = sem). Os 5 antigos repetem os números do petfx para nada mudar. */
+   cor do golpe e efeito (fx), AURA por estágio (assets/anim/aura/<id>; null = sem). REGRA DO DONO (sempre evolução, 14/11, via PO): TODOS os pets sem aura no básico, aura leve no médio e forte no evoluído. Os 5 antigos repetem os números do petfx para nada mudar. */
 const PET_BATTLE={
-  era0_mammoth: {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#d8b47a',hit:'impact'}, aura:[null,null,'aura4']},
-  era1_sphinx:  {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#ffd27a',hit:'sand'},   aura:[null,null,'aura4']},
+  era0_mammoth: {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#d8b47a',hit:'impact'}, aura:[null,'aura4','aura7']},
+  era1_sphinx:  {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#ffd27a',hit:'sand'},   aura:[null,'aura4','aura7']},
   era2_dragon:  {dx:0.42,dy:5,h:[0.48,0.54,0.64],fly:0,    fx:{color:'#ff7a3a',hit:'fire'},   aura:[null,'aura4','aura7']},
   era3_parrot:  {dx:0.44,dy:0,h:[0.40,0.46,0.56],fly:0.13, fx:{color:'#ff5a3a',hit:'feather'},aura:[null,'aura4','aura7']},
   era4_mechdog: {dx:0.42,dy:5,h:[0.46,0.52,0.62],fly:0,    fx:{color:'#8cc8ff',hit:'spark'},  aura:[null,'aura4','aura7']},
-  era7_cerberus:{dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'fire',glow:2},  aura:['aura4','aura7','aura_evil']},   // Submundo: fogo, aura maligna
-  era8_pegasus: {dx:0.43,dy:4,h:[0.50,0.57,0.66],fly:0,    fx:{color:'#ffe07a',hit:'light',glow:2}, aura:['aura4','aura10','aura_holy']},  // Celestial: luz, aura celestial
-  prism_fox:    {dx:0.42,dy:5,h:[0.42,0.49,0.58],fly:0,    fx:{color:'#c9a0ff',hit:'prism',glow:3,prism:true}, aura:['aura7','aura10','aura13']},   // Divino: arco-íris
+  era7_cerberus:{dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'fire',glow:2},  aura:[null,'aura7','aura_evil']},   // Submundo: fogo, aura maligna
+  era8_pegasus: {dx:0.43,dy:4,h:[0.50,0.57,0.66],fly:0,    fx:{color:'#ffe07a',hit:'light',glow:2}, aura:[null,'aura10','aura_holy']},  // Celestial: luz, aura celestial
+  prism_fox:    {dx:0.42,dy:5,h:[0.42,0.49,0.58],fly:0,    fx:{color:'#c9a0ff',hit:'prism',glow:3,prism:true}, aura:[null,'aura10','aura13']},   // Divino: arco-íris
   // 9 pets novos (sprite 'pet_'+id na 17b). Os que voam: falcão, corvo, grifo, dragão de gelo, serpe. hit = efeito da habilidade (skill do pet)
   pet_shadowwolf:{dx:0.42,dy:5,h:[0.44,0.50,0.60],fly:0,    fx:{color:'#7a5cff',hit:'dash'},   aura:[null,'aura4','aura7']},
   pet_falcon:    {dx:0.44,dy:0,h:[0.38,0.44,0.54],fly:0.15, fx:{color:'#d8b47a',hit:'feather'},aura:[null,'aura4','aura7']},
   pet_panther:   {dx:0.42,dy:5,h:[0.44,0.50,0.60],fly:0,    fx:{color:'#b07cff',hit:'blink'},  aura:[null,'aura4','aura7']},
   pet_scorpion:  {dx:0.42,dy:6,h:[0.40,0.46,0.56],fly:0,    fx:{color:'#7fe07a',hit:'poison'}, aura:[null,'aura4','aura7']},
   pet_crow:      {dx:0.44,dy:0,h:[0.38,0.44,0.54],fly:0.15, fx:{color:'#8cc8ff',hit:'spark'},  aura:[null,'aura4','aura7']},
-  pet_griffin:   {dx:0.43,dy:0,h:[0.48,0.55,0.65],fly:0.12, fx:{color:'#3a2a24',hit:'impact',glow:1}, aura:['aura4','aura7','aura10']},
-  pet_obsidian:  {dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'impact',glow:1}, aura:['aura4','aura7','aura10']},
-  pet_icedragon: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#9ae6ff',hit:'ice',glow:2},    aura:['aura4','aura10','aura13']},
-  pet_wyvernpet: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#ff6a2a',hit:'fire',glow:2},   aura:['aura4','aura7','aura_evil']},
+  pet_griffin:   {dx:0.43,dy:0,h:[0.48,0.55,0.65],fly:0.12, fx:{color:'#3a2a24',hit:'impact',glow:1}, aura:[null,'aura7','aura10']},
+  pet_obsidian:  {dx:0.42,dy:5,h:[0.48,0.55,0.65],fly:0,    fx:{color:'#ff5a1a',hit:'impact',glow:1}, aura:[null,'aura7','aura10']},
+  pet_icedragon: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#9ae6ff',hit:'ice',glow:2},    aura:[null,'aura10','aura13']},
+  pet_wyvernpet: {dx:0.43,dy:0,h:[0.50,0.57,0.66],fly:0.12, fx:{color:'#ff6a2a',hit:'fire',glow:2},   aura:[null,'aura7','aura_evil']},
 };
 function drawOf(sprite,idx){ const st=clamp(int0(idx),0,2), base=sprite+(['','_mid','_evo'][st]), extra=st===0&&PET_EXTRA.includes(sprite)?['atk2','atk3']:[], B=PET_BATTLE[sprite]||PET_BATTLE.era0_mammoth;
   return {sprite,base,stageSuffix:base.slice(sprite.length),sheets:['run','idle','atk1'].concat(extra).map(k=>base+'_'+k),extra:extra.map(k=>base+'_'+k),

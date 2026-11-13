@@ -14,6 +14,11 @@ const DATA={
   // DIFICULDADE COM PAREDES (dono aprovou 13/11): cada estrela acima da 1ª soma +2 a +3% de ATK e VIDA (pela raridade), fora do fator de nível.
   // Desligado até o QA medir no jogo real (liga junto com a chave de dificuldade: setStarFlat(true)). 5★ = +8 a +12%.
   starFlat:{on:false, pct:[2,2.25,2.5,2.75,3]}, starCost:[10,20,30,40], dupFrags:10,
+  // 6ª E 7ª ESTRELAS (dono aprovou 13/11; docs/balance.json dificuldade.pacoteFim.mountStars): DESLIGADO, liga com o pacote das últimas eras
+  // (setStars7(true)), depois da medida do Engenheiro. Fragmentos 50 e 60; com o starFlat cada estrela soma +2 a +3% (+2,75% no Lendário, como a simulação).
+  // Aura 6 e 7 só visual (o Engenheiro pinta no MOUNT_AURA de js/mountfx.js). O save guarda até 7 estrelas mesmo com a chave desligada (vale até 5).
+  stars7:{on:false, max:7, starCost:[50,60], aura:[{stars:6,id:'aura_hell',name:'Aura do Submundo',glow:4,smoke:true,particles:true},
+    {stars:7,id:'aura_celestial',name:'Aura Celestial',glow:5,smoke:true,particles:true}]},
   // ouro do nível N ao N+1 = goldK × ouro de um abate da fase × (1 + growth·(N−1)) × (1 + raridade·rarCost): acompanha a economia da fase
   cost:{goldK:20, growth:0.05, rarCost:0.5},
   // ESTÁGIO VISUAL por estrela (dono via PO; SÓ visual, os atributos não mudam): o engenheiro desenha pela chave id
@@ -61,7 +66,7 @@ function ensure(S){
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.mount; if(!o||typeof o!=='object') o=S.sys.mount={};
   o.v=1; const ow=(o.owned&&typeof o.owned==='object'&&!Array.isArray(o.owned))?o.owned:{}; o.owned={};
-  for(const id in ow) if(BY[id]){ const x=ow[id]||{}; o.owned[id]=keepObj(ow[id],{stars:clamp(int0(x.stars)||1,1,DATA.maxStars),frags:int0(x.frags),lvl:clamp(int0(x.lvl)||1,1,DATA.maxLvl),gold:int0(x.gold)}); }
+  for(const id in ow) if(BY[id]){ const x=ow[id]||{}; o.owned[id]=keepObj(ow[id],{stars:clamp(int0(x.stars)||1,1,DATA.stars7.max),frags:int0(x.frags),lvl:clamp(int0(x.lvl)||1,1,DATA.maxLvl),gold:int0(x.gold)}); }
   const st=(o.stored&&typeof o.stored==='object')?o.stored:{}; o.stored={}; for(const id in st) if(BY[id]&&!o.owned[id]&&int0(st[id])>0) o.stored[id]=int0(st[id]);
   if(!BY[o.eq]||!o.owned[o.eq]) o.eq=null;
   return o;
@@ -72,6 +77,10 @@ function pctOf(id,lvl,stars){ const m=BY[id]; if(!m) return 0; const L=DATA.lvlM
   const fl=DATA.starFlat&&DATA.starFlat.on===true?(clamp(stars,1,DATA.maxStars)-1)*num(DATA.starFlat.pct[clamp(m.r,0,DATA.starFlat.pct.length-1)],0):0;
   return Math.round((DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))+fl)*1000)/1000; }
 const setStarFlat=on=>{ DATA.starFlat.on=!!on; return DATA.starFlat.on; };
+/* 6ª e 7ª estrelas: liga/desliga sem duplicar (teto, custo e aura voltam ao de 5 estrelas ao desligar) */
+function setStars7(on){ const X=DATA.stars7; X.on=!!on; DATA.maxStars=X.on?X.max:5; DATA.starCost.length=4; DATA.aura.length=5;
+  if(X.on){ DATA.starCost.push(...X.starCost); DATA.aura.push(...X.aura.map(a=>Object.assign({},a))); } return X.on; }
+const stars7On=()=>DATA.stars7.on===true;
 function starUp(x){ while(x.stars<DATA.maxStars&&x.frags>=DATA.starCost[x.stars-1]){ x.frags-=DATA.starCost[x.stars-1]; x.stars++; } }
 /* ganha uma montaria (oferta, passe, loja, evento). Repetida = 10 fragmentos. A primeira entra equipada se não houver outra melhor. */
 function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; if(m.tbd) return {ok:false,reason:'tbd'}; if(!live(m)) return {ok:false,reason:'off'}; const o=ensure(S), x=o.owned[id];
@@ -109,7 +118,7 @@ const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return
 
 /* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
 const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],maxPct:DATA.maxPct[m.r],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
-const API={DATA,setStarFlat,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const API={DATA,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

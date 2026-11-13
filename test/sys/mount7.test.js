@@ -1,0 +1,21 @@
+// node test/sys/mount7.test.js — montaria 6ª e 7ª estrelas (Sys.mount.setStars7): desligada nada muda; ligada até 7, custo 50/60, aura 6/7; save nunca perde estrela
+'use strict';
+const assert=require('assert');
+globalThis.Sys={};
+const M=require('../../js/sys/mount.js');
+let n=0; const t=(name,fn)=>{ fn(); n++; console.log('ok -',name); };
+const snap=()=>JSON.stringify({max:M.DATA.maxStars,cost:M.DATA.starCost,aura:M.DATA.aura.map(a=>a.id)});
+const OFF0=snap();
+t('desligada por padrão: 5 estrelas, custo 10/20/30/40, 5 auras',()=>{ assert.strictEqual(M.stars7On(),false); assert.deepStrictEqual(JSON.parse(OFF0),{max:5,cost:[10,20,30,40],aura:['none','glow','glow','aura_smoke','aura_full']}); });
+t('ligar: 7 estrelas, custo 50 e 60, aura do Submundo e Celestial; ligar de novo não duplica',()=>{ M.setStars7(true); M.setStars7(true);
+  assert.strictEqual(M.DATA.maxStars,7); assert.deepStrictEqual(M.DATA.starCost,[10,20,30,40,50,60]); assert.deepStrictEqual(M.DATA.aura.map(a=>a.stars),[1,2,3,4,5,6,7]);
+  assert.strictEqual(M.auraOf(7).id,'aura_celestial'); assert.strictEqual(M.auraOf(6).id,'aura_hell'); });
+t('fragmentos levam até 7 estrelas (150 até a 5ª, +50, +60)',()=>{ const S={}; M.ensure(S).owned.horse={stars:1,frags:0,lvl:1,gold:0}; M.addFragments(S,'horse',100); assert.strictEqual(S.sys.mount.owned.horse.stars,5);
+  M.addFragments(S,'horse',49); assert.strictEqual(S.sys.mount.owned.horse.stars,5); M.addFragments(S,'horse',1); assert.strictEqual(S.sys.mount.owned.horse.stars,6);
+  M.addFragments(S,'horse',60); assert.strictEqual(S.sys.mount.owned.horse.stars,7); M.addFragments(S,'horse',500); assert.strictEqual(S.sys.mount.owned.horse.stars,7); });
+t('com o starFlat, cada estrela a mais soma o mesmo +% da raridade (Lendário +3% por estrela)',()=>{ M.setStarFlat(true); const id=M.DATA.mounts.find(m=>m.r===4).id;
+  const d65=M.pctOf(id,60,6)-M.pctOf(id,60,5), d76=M.pctOf(id,60,7)-M.pctOf(id,60,6); assert.ok(Math.abs(d65-d76)<1e-9); assert.ok(d65>3&&d65<4,'+'+d65); M.setStarFlat(false); });
+t('desligar volta a tudo de antes; o save mantém 7 estrelas e o atributo vale o de 5',()=>{ const S={}; M.ensure(S).owned.horse={stars:7,frags:0,lvl:60,gold:0};
+  M.setStars7(false); assert.strictEqual(snap(),OFF0); M.ensure(S); assert.strictEqual(S.sys.mount.owned.horse.stars,7,'não perde a estrela');
+  assert.strictEqual(M.pctOf('horse',60,7),M.pctOf('horse',60,5)); assert.strictEqual(M.auraOf(7).id,'aura_full'); });
+console.log(n+' testes ok');
