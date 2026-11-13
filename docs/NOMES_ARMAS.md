@@ -1,65 +1,64 @@
-# Nomes das 45 armas: renomear pela família (decisão do dono, 14/11/2026)
+# Nomes das 45 armas (decisão do dono, 14/11/2026): PROPOSTA final, conferida pela Arte
 
-Regra do dono: o nome tem de bater com a FAMÍLIA da arma, que é o que a arte mostra, nas 9 eras. Esta é a PROPOSTA para o PO mostrar ao dono **antes de aplicar**.
+Regra do dono: o nome tem de bater com a arma. A Arte conferiu as 45 imagens (`assets/weapons/era<N>_{t0,raro,t1,mitico,t2}.png`). Alguns desenhos não são da família que a era sugere: na era 0 há um machado e uma lâmina curva; na era 4, bacamartes a vapor; na era 8, um cetro. Por isso a proposta segue **o que o desenho mostra**, mantendo o tema da era.
 
-**Antes de ir ao dono, a Arte confere a coluna "a arte mostra"**: o que cada imagem desenha (`assets/weapons/era<N>_{t0,raro,t1,mitico,t2}.png`).
-
-**Onde se aplica depois do OK:**
+**Onde aplicar, depois do OK do dono:**
 - eras 0 a 6: `index.html` `ERAS[e].w` (Engenheiro);
 - eras 7 e 8: `js/sys/eras.js` `w` (Sistemas).
 
-**Padrão:** família + material/época crescendo com a raridade (Básico → Lendário), curto, sem nome próprio de outra arma.
-✓ = o nome atual já bate e fica.
+✓ = fica como está.
 
-| Era · família | Raridade | Nome atual | Proposto | A arte mostra (Arte confere) |
+| Era | Raridade | O desenho (Arte) | Nome atual | **Proposto** |
 |---|---|---|---|---|
-| 0 · Clava | Básico | Graveto Afiado | **Clava de Madeira** | clava |
-| | Raro | Clava de Pedra | Clava de Pedra ✓ | clava |
-| | Épico | Lança de Sílex | **Clava de Sílex** | clava |
-| | Mítico | Machado de Osso | **Clava de Osso** | clava |
-| | Lendário | Presa de Mamute | **Clava de Presa de Mamute** | clava |
-| 1 · Gládio | Básico | Lança de Bronze | **Gládio de Bronze** | gládio |
-| | Raro | Gládio | **Gládio de Ferro** | gládio |
-| | Épico | Falcata de Ferro | **Gládio de Legionário** | gládio |
-| | Mítico | Xifos Espartano | **Gládio Espartano** | gládio |
-| | Lendário | Lâmina de Aquiles | **Gládio de Aquiles** | gládio |
-| 2 · Espada | Básico | Espada Enferrujada | Espada Enferrujada ✓ | espada |
-| | Raro | Espada de Aço | Espada de Aço ✓ | espada |
-| | Épico | Lâmina Rúnica | **Espada Rúnica** | espada |
-| | Mítico | Espada do Dragão | Espada do Dragão ✓ | espada |
-| | Lendário | Excalibur | Excalibur ✓ | espada |
-| 3 · Pistola de pederneira | Básico | Pistola de Pederneira | Pistola de Pederneira ✓ | pistola |
-| | Raro | Mosquete | **Pistola de Duelo** | ? (mosquete = arma longa) |
-| | Épico | Arcabuz Raro | **Pistola de Corsário** | ? |
-| | Mítico | Bacamarte Real | **Pistola Real** | ? |
-| | Lendário | Canhão de Mão Dourado | **Pistola Dourada do Almirante** | ? |
-| 4 · Revólver | Básico | Revólver a Vapor | Revólver a Vapor ✓ | revólver |
-| | Raro | Rifle de Repetição | **Revólver de Latão** | ? |
-| | Épico | Carabina Steampunk | **Revólver Steampunk** | ? |
-| | Mítico | Metralhadora Gatling | **Revólver Rotativo** | ? |
-| | Lendário | Canhão de Tesla | **Revólver de Tesla** | ? |
-| 5 · Fuzil | Básico | Pistola 9mm | **Fuzil Leve** | ? (pistola?) |
-| | Raro | Fuzil de Assalto | Fuzil de Assalto ✓ | fuzil |
-| | Épico | Fuzil de Precisão | Fuzil de Precisão ✓ | fuzil |
-| | Mítico | Minigun | **Fuzil Pesado** | ? |
-| | Lendário | Railgun Protótipo | **Fuzil Railgun** | ? |
-| 6 · Plasma | Básico (atira) | Blaster Básico | **Blaster de Plasma** | arma de fogo |
-| | Raro (atira) | Espada de Plasma | **Pistola de Íons** | arma de fogo (o jogo atira) |
-| | Épico (lâmina) | Rifle de Íons | **Lâmina de Plasma** | lâmina (o jogo corta) |
-| | Mítico (lâmina) | Canhão de Antimatéria | **Lâmina de Antimatéria** | lâmina |
-| | Lendário (lâmina) | Lâmina do Vazio | Lâmina do Vazio ✓ | lâmina |
-| 7 · Infernal | Básico | Tridente de Brasa | ? | **Arte: qual o formato?** |
-| | Raro | Foice Sombria | ? | ? |
-| | Épico | Lâmina Infernal | Lâmina Infernal ✓ (se for lâmina) | ? |
-| | Mítico | Garra do Abismo | ? | ? |
-| | Lendário | Ceifadora do Submundo | ? | ? |
-| 8 · Celeste | Básico | Lança de Luz | **Lâmina de Luz** (se for lâmina) | ? |
-| | Raro | Espada Alada | Espada Alada ✓ | ? |
-| | Épico | Lâmina Celeste | Lâmina Celeste ✓ | ? |
-| | Mítico | Gládio do Firmamento | **Lâmina do Firmamento** | ? |
-| | Lendário | Juízo do Arcanjo | Juízo do Arcanjo ✓ (nome próprio, lâmina) | ? |
+| 0 | Básico | clava de pedra amarrada num pau | Graveto Afiado | **Clava de Pedra** |
+| | Raro | machado de pedra lascada | Clava de Pedra | **Machado de Pedra Lascada** |
+| | Épico | clava de osso | Lança de Sílex | **Clava de Osso** |
+| | Mítico | clava de osso entalhada com pedras turquesa | Machado de Osso | **Clava de Osso Turquesa** |
+| | Lendário | lâmina curva de ouro com runas | Presa de Mamute | **Presa Dourada Rúnica** |
+| 1 | Básico | gládio curto de bronze | Lança de Bronze | **Gládio de Bronze** |
+| | Raro | gládio curto de bronze | Gládio | **Gládio de Bronze Polido** |
+| | Épico | espada curta de aço com gema vermelha | Falcata de Ferro | **Gládio de Aço Rubi** |
+| | Mítico | espada com guarda de asas douradas | Xifos Espartano | **Espada da Guarda Alada** |
+| | Lendário | espada dourada com asas brancas | Lâmina de Aquiles | Lâmina de Aquiles ✓ |
+| 2 | Básico | adaga/espada curta enferrujada | Espada Enferrujada | Espada Enferrujada ✓ |
+| | Raro | espada curta de aço | Espada de Aço | Espada de Aço ✓ |
+| | Épico | espada longa azulada | Lâmina Rúnica | **Espada Longa Azul** |
+| | Mítico | espada de cristal azul brilhante | Espada do Dragão | **Espada de Cristal** |
+| | Lendário | espada dourada fina com guarda de asas | Excalibur | Excalibur ✓ |
+| 3 | Básico | pistola de pederneira de madeira | Pistola de Pederneira | Pistola de Pederneira ✓ |
+| | Raro | pistola de madeira com latão | Mosquete | **Pistola de Latão** |
+| | Épico | pistola de madrepérola lilás | Arcabuz Raro | **Pistola de Madrepérola** |
+| | Mítico | pistola prateada ornamentada | Bacamarte Real | **Pistola de Prata Real** |
+| | Lendário | pistola de ouro com rubis | Canhão de Mão Dourado | **Pistola Dourada do Almirante** |
+| 4 | Básico | revólver de latão | Revólver a Vapor | Revólver a Vapor ✓ |
+| | Raro | revólver de latão com cabo de marfim | Rifle de Repetição | **Revólver de Marfim** |
+| | Épico | arma steampunk de cano largo com manômetro | Carabina Steampunk | **Bacamarte a Vapor** |
+| | Mítico | a mesma, com raios azuis | Metralhadora Gatling | **Bacamarte Elétrico** |
+| | Lendário | pistola steampunk com bobina tesla | Canhão de Tesla | **Pistola de Tesla** |
+| 5 | Básico | pistola semiautomática preta | Pistola 9mm | Pistola 9mm ✓ |
+| | Raro | pistola tática com mira e lanterna | Fuzil de Assalto | **Pistola Tática** |
+| | Épico | fuzil de assalto verde com luneta | Fuzil de Precisão | **Fuzil de Assalto** |
+| | Mítico | fuzil futurista branco e ciano | Minigun | **Fuzil Futurista** |
+| | Lendário | fuzil de energia dourado e roxo | Railgun Protótipo | Railgun Protótipo ✓ |
+| 6 | Básico (atira) | pistola de plasma branca e azul | Blaster Básico | **Blaster de Plasma** |
+| | Raro (atira) | pistola de plasma de boca larga | Espada de Plasma | **Pistola de Plasma** |
+| | Épico (lâmina) | lâmina de energia verde | Rifle de Íons | **Lâmina de Plasma** |
+| | Mítico (lâmina) | lâmina de energia ciano | Canhão de Antimatéria | **Lâmina de Íons** |
+| | Lendário (lâmina) | lâmina de energia roxa escura | Lâmina do Vazio | Lâmina do Vazio ✓ |
+| 7 | Básico | foice de osso | Tridente de Brasa | **Foice de Osso** |
+| | Raro | foice de osso com lâmina enferrujada e dourada | Foice Sombria | Foice Sombria ✓ |
+| | Épico | espada de lava | Lâmina Infernal | Lâmina Infernal ✓ |
+| | Mítico | espada de obsidiana com rachaduras de lava | Garra do Abismo | **Espada de Obsidiana** |
+| | Lendário | tridente infernal preto e roxo | Ceifadora do Submundo | **Tridente do Submundo** |
+| 8 | Básico | lança celeste branca com asas | Lança de Luz | Lança de Luz ✓ |
+| | Raro | espada larga celeste de cristal | Espada Alada | **Espada de Cristal Celeste** |
+| | Épico | espada galáxia azul | Lâmina Celeste | **Espada Galáxia** |
+| | Mítico | espada galáxia com guarda de fênix dourada | Gládio do Firmamento | **Espada da Fênix Celeste** |
+| | Lendário | cetro solar dourado com um sol na ponta | Juízo do Arcanjo | **Cetro do Sol** |
 
-**Notas:**
-- Era 6: o estilo vem do código. Básico e Raro ATIRAM (`gunAtR0` em `js/sys/stats.js`); do Épico para cima é LÂMINA. O nome segue o que o jogador vê acontecer.
-- Eras 7 e 8: as famílias "infernal" e "celeste" são corpo a corpo. Falta a Arte dizer o formato de cada imagem (tridente, foice, garra?). Se as 5 forem lâminas, o padrão é "Lâmina ...".
-- O Códex, o Equipamento e a Forja leem esses mesmos nomes, então a troca vale em todas as telas de uma vez.
+**Resumo:** 30 trocas, 15 ficam.
+
+**Notas para o dono e o PO:**
+- A família no código (o que define golpe e ultimate) não muda: por exemplo, o "Machado de Pedra Lascada" continua golpeando como clava. Só o nome muda.
+- Se o dono preferir que o desenho siga a família (o Raro da era 0 virar clava, o Lendário da era 8 virar espada), é pedido de Arte, e os nomes da coluna "atual" voltam a servir com ajuste.
+- O Códex, o Equipamento e a Forja leem esses nomes: a troca vale em todas as telas de uma vez.
