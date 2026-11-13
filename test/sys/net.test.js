@@ -140,7 +140,7 @@ test('login Google: sem plugin = google_unavailable; com plugin manda só o idTo
   assert.equal(net.googleReady(), false);
   await assert.rejects(net.googleSignIn('login'), e => e.code === 'google_unavailable');
   let inits = 0;
-  globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async o => { inits++; assert.equal(o.google.webClientId, net.DATA.googleClientId); }, login: async () => ({ provider: 'google', result: { idToken: 'gtok' } }) } } };
+  globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async o => { inits++; assert.equal(o.google.webClientId, net.DATA.googleClientId); }, login: async o => { assert.deepEqual(o, { provider: 'google', options: {} }, 'sem scopes (BridgeActivity padrão recusa)'); return { provider: 'google', result: { idToken: 'gtok' } }; } } } };
   assert.equal(net.googleReady(), true);
   const p = await net.googleSignIn('login');
   const c = f.calls.at(-1); assert.equal(c.key, 'POST /auth/login/google'); assert.equal(c.body.idToken, 'gtok'); assert.ok(c.body.deviceId);
