@@ -182,7 +182,9 @@ function view(S,host){ const o=ensure(S), si=stageOf(o.lv); return {on:ON(),lv:o
   perTap:perTap(o.lv),nextTap:nextTap(o.lv),unlock:nextUnlock(o.lv),best:o.best,stage:DATA.stages[si],next:DATA.stages[si+1]||null,
   odds:odds(o.lv,capOf(host)),stars:starsAvg(o.lv),cost:upCost(o.lv,host),auto:Object.assign({},o.auto),autoLevel:DATA.auto.level,recent:o.recent.slice()}; }
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,xpNeed,stageOf,weights,odds,starsAvg,upCost,refundOf,addBrasas,killCounts,offline,perTap,tap,nextUnlock,nextTap,forge,levelUp,isLocked,lock,dismantle,quick,recover,makeRoom,autoRun,setAuto,view,bonus};
+/* gastar Brasas fora da Fogueira (Fogueira da Guilda): tira do estoque, nunca mexe no got (o que entrou). true só se havia o bastante. */
+function spendBrasas(S,n,src){ if(!ON()) return false; const o=ensure(S), k=Math.max(0,int0(n)); if(!k||o.bra<k) return false; o.bra-=k; return true; }
+const API={DATA,ensure,spendBrasas,xpNeed,stageOf,weights,odds,starsAvg,upCost,refundOf,addBrasas,killCounts,offline,perTap,tap,nextUnlock,nextTap,forge,levelUp,isLocked,lock,dismantle,quick,recover,makeRoom,autoRun,setAuto,view,bonus};
 root.Sys=root.Sys||{}; root.Sys.bonfire=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

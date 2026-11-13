@@ -79,4 +79,5 @@ t('offline: 1 Brasa a cada 18 min, teto de 12 h e 40 por dia, menos de 5 min nã
   o.bra=299; h.t+=24*3600*1000; r=BF.offline(S,h,3600); assert.ok(r.brasas===1&&r.full,'estoque cheio'); }));
 t('offline desligado: nada entra, resumo vazio',()=>{ const S={}; const r=BF.offline(S,host(),3600); assert.ok(!r.on&&r.brasas===0); });
 t('fonte thief (Ladrão de Brasas): entra pela quantia e conta no got',()=>on(()=>{ const S={}; assert.strictEqual(BF.addBrasas(S,'thief',12),12); assert.strictEqual(BF.ensure(S).got,12); }));
+t('spendBrasas: tira do estoque, não mexe no got, recusa sem saldo e desligada',()=>{ const S={}; assert.strictEqual(BF.spendBrasas(S,1),false,'desligada'); on(()=>{ BF.addBrasas(S,'stage'); const o=BF.ensure(S), g=o.got; assert.strictEqual(BF.spendBrasas(S,2,'guildFire'),true); assert.strictEqual(o.bra,1); assert.strictEqual(o.got,g); assert.strictEqual(BF.spendBrasas(S,5),false); assert.strictEqual(o.bra,1); }); });
 console.log(n+' testes ok');
