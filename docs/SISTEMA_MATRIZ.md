@@ -228,3 +228,27 @@ Origem: `docs/LOM_VS_EONBOUND.md` §5 itens 1 e 4, §4 B1 e B7. Explicação par
 3. Batalha: `Sys.grimoire.loadout(S, Sys.grimoire.modeFor({boss,pvp}))` → até 3 `{id,name,cd,effect,text}`; lançar cada uma quando a recarga zerar (ícone com anel de recarga, B7). Atordoar de magia usa a mesma imunidade do `Sys.strikes`.
 4. Tela: `Sys.grimoire.view(S,host)` (9 eras × 2, nível, páginas, custo, `canLevel`, bônus, conjuntos) · `levelUp(S,id,host)` · `equip(S,modo,posição,id)` · `setPreset(S,modo,[ids])`.
 5. **Falta**: tela do Grimório (protótipo pela Arte/PO antes) e os ícones das 18 magias (Arte).
+
+### Derrota que rende (`js/sys/bossloss.js`, `Sys.bossLoss`)
+
+Item 4 (P1) do `docs/IDLE_PARECIDOS.md`, aprovado pelo dono em 13/11.
+
+| Linha | Estado |
+|---|---|
+| O que é | Perder para o chefe dá um prêmio pequeno pelo dano feito (ouro, XP e Pedra de Forja) e até 3 dicas grátis com botão Ir. **Nunca** oferta paga nessa tela |
+| Chave | ⏸ `Sys.bossLoss.DATA.on=false` · liga com `Sys.bossLoss.setOn(true)`. Desligado: devolve `{on:false,...}`, não credita e não mexe no save |
+| Conta | prêmio = vitória × 30% × fração da vida tirada × redutor do dia. Vitória (ouro) = 4 × 1,15^(fase−1) × 5 (a mesma do `mkEnemy` do js/battle.js e do docs/balance.json); vitória (XP) = `Sys.loot.xpFor` de chefe |
+| Pedra de Forja | 1 (o chefe vencido dá 1-2), só com 50%+ de dano e só na 1ª derrota premiada da fase no dia |
+| Contra farm | abaixo de 10% de dano não rende (e não gasta a vez) · por fase e por dia: 1ª 100%, 2ª 50%, 3ª 25%, da 4ª em diante nada (`capped:true`) · no máximo 15 derrotas premiadas por dia. Perder 3 vezes a 99% rende < 0,52 de UMA vitória |
+| Nunca | gemas (`reward.gems` sempre 0), loja, oferta, VIP, pacote, invocação, sorteio, baú |
+| Dicas | `Sys.advice.all` numa CÓPIA do save (ranking por ganho de FC, a conta do HUD), filtro igual ao `diffAdvice` do js/diff.js (`^(buy|shop|summon)`) + lista proibida (`DATA.forbidden`) + só destinos `gear, forge, pet, mount, titles, hero`. Até 3 |
+| Exemplos (60% de dano, 1ª derrota) | fase 5: 6 ouro e 7 XP · fase 10: 12 ouro, 8 XP, 1 pedra · fase 30: 207 ouro, 11 XP · fase 50: 3.392 ouro, 13 XP |
+| Save | `S.sys.bossLoss = {v, day, n:{fase:derrotas}, total, gold, xp, stones}` (dia pelo `Sys.clock.dayKey`, como o Sys.loot) |
+| Testes | `test/sys/bossloss.test.js` (10): desligado, conta do ouro, proporção e teto de 30%, menos de 10%, 100/50/25/0 e dia seguinte, teto de 15, peek, dicas reais, dicas proibidas filtradas, save torto |
+
+**O que o Engenheiro chama (na Derrota contra o chefe, uma vez):**
+1. Carregar `js/sys/bossloss.js` depois de `loot.js`, `level.js`, `forge.js` e `advice.js`.
+2. `const r=Sys.bossLoss.onDefeat(S,Sys.host,{stage,dmgDone,bossMaxHp,era,eraBoss})` (`dmgDone` = vida máxima − vida que sobrou no chefe). Já credita: ouro por `host.addGold`, XP por `Sys.level.addXp(S,n,host,'bossLoss')`, pedra por `Sys.forge.addStones`; chama `host.onChange`.
+3. Mostrar `r.text` ("Você tirou 62% da vida do chefe."), `r.reward` (`gold`, `xp`, `stones`; zero = não mostrar) e as `r.tips` `[{id,kind,label,gain,gainText,dest,ready}]`: o Ir abre `dest` pela mesma rota do `DIFF_ROUTE` (o filtro de tela existente/trancada continua do lado do Engenheiro).
+4. Opcional: `Sys.bossLoss.peek(S,host,opts)` mostra quanto renderia sem creditar (`left` = derrotas premiadas que ainda restam na fase hoje).
+5. **Falta**: ligar na tela da Derrota (Engenheiro) e aprovação do dono na tela.
