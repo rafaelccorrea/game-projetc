@@ -15,7 +15,7 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   mail:false,   /* espera Sys.mail.DATA.enabled (Servidor) */  inst:false,   /* espera a luta da instância (agente A) */
   mounts:false,result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,auction:false,   /* esperam pagamento / servidor */
-  arena:false,events:false,tourney:false,map:false,passv2:false,guidehud:false},window.PANEL_ON||{});
+  arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   add(name,def){ def.name=name; this.defs[name]=def; if(PANEL_ON[name]) this.enable(name); return def; },
