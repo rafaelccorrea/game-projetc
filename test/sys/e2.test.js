@@ -878,4 +878,15 @@ t('fases do herói (Sys.phaseUp): gatilho nos níveis 22/35/70, uma fase por vez
   } finally { PU.DATA.on=false; PU.DATA.useFc=false; }
 });
 
+t('eras 7-8 (Sys.eras): mesmo formato do ERAS do jogo, arte existente, só com a curva de 9 eras ligada; cartão da fase com números abreviados',()=>{
+  const E=require('../../js/sys/eras.js'), T=require('../../js/sys/stats.js'), P=require('../../js/sys/phases.js'), fs=require('fs'), path=require('path');
+  assert.deepStrictEqual(E.extra(),[],'curva desligada: nada'); const all=E.all78(); assert.deepStrictEqual(all.map(x=>x.n),['Submundo','Celestial']);
+  for(const x of all){ for(const k of ['w','a','ws','as','wp','ap']) assert.strictEqual(x[k].length,5,x.n+' '+k); assert.strictEqual(x.en.length,3); assert.strictEqual(x.icon,'','sem emoji');
+    for(const en of x.en) assert.ok(fs.existsSync(path.join(__dirname,'../../assets/enemies/'+en.art+'.png')),'arte '+en.art); }
+  T.setEra9(true); try{ assert.strictEqual(E.extra().length,2);
+    const c=E.stageCard(8,2,100); assert.strictEqual(c.boss.name,'Juiz Celestial'); assert.strictEqual(c.boss.kind,'senhor'); assert.ok(/T$|Qa$/.test(c.fcText),'abreviado: '+c.fcText);
+    assert.strictEqual(E.stageCard(7,0,3).common.name,'Cão Infernal'); assert.strictEqual(E.stageCard(6,0,1),null);
+  } finally { T.setEra9(false); }
+});
+
 console.log(`ok: ${n} testes`);
