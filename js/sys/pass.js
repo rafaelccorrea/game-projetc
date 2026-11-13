@@ -176,6 +176,43 @@ function claimAll(S,host){
   o.free.sort((a,b)=>a-b); o.prem.sort((a,b)=>a-b);
   return {n:out.length,list:out};
 }
+/* RESGATA UM NÍVEL de uma trilha (pedido B-27: a tela com rolagem resgata nível a nível, sem mexer no estado interno).
+   claimTier(S, host, 'free'|'premium', nível) → {ok:true, track, tier, rewards:{gems,gold,item,held,skin}} ou {ok:false, reason}
+   reason: 'trilha' | 'nivel' (fora de 1..tiers) | 'bloqueado' (nível ainda não alcançado) | 'premium' (trilha premium sem o premium) | 'resgatado' | 'sem_premio'.
+   Seguro contra os 2 casos do B-27:
+   - VIRADA DE TEMPORADA: a temporada é conferida (e virada, se for o caso) ANTES de qualquer checagem; nível da temporada que acabou não é pago;
+   - ERRO NO MEIO DA ENTREGA: tudo o que pode falhar (criar o item, portões, unidade de ouro) é preparado ANTES de marcar; depois marca e entrega.
+     Se a entrega falhar sem ter dado nada, a marca é desfeita (dá para tentar de novo); se já deu parte, o nível fica resgatado e o item que
+     faltou vai para os GUARDADOS (sai no próximo releaseHeld) — nunca em dobro, nunca perdido. */
+function claimTier(S,host,trk,t){
+  if(trk!=='free'&&trk!=='premium') return {ok:false,reason:'trilha'};
+  if(!Number.isInteger(t)||t<1||t>DATA.tiers) return {ok:false,reason:'nivel'};
+  season(S,host); const o=ensure(S);
+  if(t>tier(S)) return {ok:false,reason:'bloqueado'};
+  if(trk==='premium'&&!o.premium) return {ok:false,reason:'premium'};
+  const got=trk==='free'?o.free:o.prem; if(got.includes(t)) return {ok:false,reason:'resgatado'};
+  const rw=reward(trk,t); if(!rw) return {ok:false,reason:'sem_premio'};
+  /* 1) preparar (sem mudar nada) */
+  const plan={gems:int0(rw.gems),gold:0,skin:rw.skin||null,item:null,held:null};
+  if(rw.goldk){ plan.gold=Math.round(rw.goldk*Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1))); }
+  if(rw.item&&rw.item.season){ const it=makeItem(host,{slot:rw.item.slot,r:seasonR(host,rw.item)}); it.season=true; it.targetR=rw.item.r; it.seasonEnd=o.season.end; plan.item=it; }
+  else if(rw.item){ if(canReceive(host,rw.item)) plan.item=makeItem(host,rw.item); else plan.held={slot:rw.item.slot,r:rw.item.r}; }
+  /* 2) marcar e entregar */
+  got.push(t); got.sort((a,b)=>a-b);
+  const out={gems:0,gold:0,item:null,held:null,skin:null}; let gave=0;
+  try{
+    if(plan.held){ o.held.push(plan.held); out.held={...plan.held,needLevel:needLevel(plan.held)}; gave++; }
+    if(plan.item){ if(host&&host.addItem) host.addItem(plan.item); out.item=plan.item; gave++; }
+    if(plan.skin){ if(host&&host.addSkin) host.addSkin(plan.skin); out.skin=plan.skin; gave++; }
+    if(plan.gold){ if(host&&host.addGold) host.addGold(plan.gold); out.gold=plan.gold; gave++; }
+    if(plan.gems){ if(host&&host.addGems) host.addGems(plan.gems); out.gems=plan.gems; gave++; }
+  }catch(e){
+    if(!gave){ const i=got.indexOf(t); if(i>=0) got.splice(i,1); return {ok:false,reason:'erro'}; }
+    if(plan.item&&!out.item){ o.held.push({slot:plan.item.slot,r:plan.item.season?int0(plan.item.targetR):plan.item.r}); out.held={slot:plan.item.slot,r:plan.item.r,needLevel:1}; }
+    return {ok:true,track:trk,tier:t,rewards:out,partial:true};
+  }
+  return {ok:true,track:trk,tier:t,rewards:out};
+}
 /* itens guardados saem quando o portão abre (chamar no level up; o Sys.loot.onLevelUp também chama). Era decidida AGORA. */
 function releaseHeld(S,host){
   const o=ensure(S), out=[];
@@ -206,7 +243,7 @@ function alerts(S,host){ const o=refresh(S,host), t=tier(S), L=list(S,host); let
   return n; }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,refresh,season,tier,progress,addXp,setPremium,track,list,claimMission,reward,claimAll,releaseHeld,evolveSeason,held,alerts,bonus,dayKey,weekKey};
+const API={DATA,ensure,refresh,season,tier,progress,addXp,setPremium,track,list,claimMission,reward,claimAll,claimTier,releaseHeld,evolveSeason,held,alerts,bonus,dayKey,weekKey};
 root.Sys=root.Sys||{}; root.Sys.pass=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
