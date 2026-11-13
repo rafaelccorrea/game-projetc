@@ -1,0 +1,21 @@
+{
+ "cut": 254,
+ "L": {
+  "root": [
+   0.995,
+   0.6
+  ],
+  "w": 201,
+  "h": 440
+ },
+ "R": {
+  "root": [
+   0,
+   0.6
+  ],
+  "w": 201,
+  "h": 440
+ },
+ "note": "serafim: 3 asas por lado num PNG só (L/R); raiz na base da asa do meio",
+ "fit": 0.79
+}
