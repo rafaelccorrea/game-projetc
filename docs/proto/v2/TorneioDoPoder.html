@@ -1,0 +1,587 @@
+<title>Eonbound Torneio do Poder V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP V2. Torneio do Poder V2: seu herói sempre à vista no palco; ao ver uma batalha, os dois lutadores de cada duelo frente a frente, tocados pelo registro de golpes do servidor. Regras: js/sys/guild.js DATA (season, territory, rankPoints, capitalMinEra, tourney) e js/sys/tower.js duelCarry; rotas: docs/API_SERVIDOR.md §10.3. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:360px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(255,210,94,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 26%,var(--night) 40%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.5);display:flex;align-items:center;gap:6px}
+.ttl img{width:28px;height:28px;flex:none}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+.sr{position:absolute;left:-9999px}
+
+.stage{position:relative;z-index:2;height:216px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:216px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
+.who i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
+.who span{overflow:hidden;text-overflow:ellipsis}
+.prevb{position:absolute;z-index:3;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:13px;background:rgba(255,107,154,.2);border:1px solid var(--rose);font-size:11px;font-weight:900;color:#ffd6e2;white-space:nowrap;max-width:94%;overflow:hidden}
+.prevb span{overflow:hidden;text-overflow:ellipsis}
+.prevb button{flex:none;border:0;border-radius:9px;background:rgba(255,255,255,.14);height:22px;padding:0 8px;font-weight:900;font-size:11px}
+.note{position:absolute;z-index:3;left:12px;right:12px;bottom:2px;text-align:center;font-size:10px;font-weight:800;color:#cdeffd;background:rgba(5,8,28,.7);border-radius:9px;padding:3px 8px;line-height:1.3}
+.note b{color:var(--gold)}
+
+.bt{flex:none;min-width:76px;height:36px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green)}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.rose{background:linear-gradient(180deg,#ff9fbe,#e0477a);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
+.bt img{width:18px;height:18px}
+.bt svg{width:13px;height:13px}
+
+/* faixa de detalhe da prévia (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;display:flex;gap:9px;align-items:center;margin:6px 12px 0;padding:7px 9px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.det .di0{flex:none;width:44px;height:44px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.det .di0 img{position:absolute;inset:4%;width:92%;height:92%;object-fit:contain}
+.det .di{flex:1;min-width:0}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dg{font-size:11px;color:var(--green);font-weight:800;line-height:1.3}
+.dh{font-size:11px;color:var(--muted);font-weight:800;line-height:1.3}
+.dh b{color:var(--gold)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 14px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:10px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right}
+.sec b{color:var(--gold)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.rule{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.45);font-size:11.5px;font-weight:800;color:#cdeffd;line-height:1.4;margin:0 0 4px}
+.rule svg{width:18px;height:18px;flex:none;margin-top:1px}
+.rule b{color:#fff}
+
+/* cartão do nível atual */
+.vipc{border-radius:18px;padding:10px;margin-bottom:8px;background:linear-gradient(160deg,rgba(255,210,94,.22),rgba(24,33,86,.92) 55%);border:2px solid rgba(255,210,94,.65)}
+.viph{display:flex;align-items:center;gap:10px}
+.viph img{width:52px;height:52px;flex:none}
+.viph .big{font-family:var(--fd);font-weight:400;font-size:34px;line-height:1;color:var(--gold);text-shadow:0 0 16px rgba(255,210,94,.6)}
+.viph .t{flex:1;min-width:0}
+.viph small{display:block;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.viph small b{color:var(--text)}
+.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#ffe58a,#f4a52a)}
+.prog{font-size:12px;font-weight:900;margin-top:5px;display:flex;justify-content:space-between;gap:8px}
+.prog span:last-child{color:var(--gold);flex:none}
+
+/* prêmios do VIP (4 cartões, sem rolagem para o lado) */
+.rw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.rc{position:relative;border-radius:14px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 30%,#1a2366),#0c1238);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.rc .art{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.rc .nm{font-size:10px;font-weight:900;text-align:center;line-height:1.15;min-height:24px;display:flex;align-items:center;justify-content:center}
+.rc .st{width:100%;min-height:20px;border-radius:7px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.1;padding:2px}
+.rc .st.own{background:rgba(94,240,160,.15);color:var(--green)}
+.rc .st.lock{background:rgba(255,255,255,.07);color:var(--gold)}
+.rc .ey{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:7px;background:rgba(5,8,28,.8);display:grid;place-items:center;color:#ffd6e2}
+.rc .ey svg{width:13px;height:13px}
+.rc.pv{box-shadow:0 0 0 3px var(--rose),0 0 14px rgba(255,107,154,.5)}
+
+/* seletor de nível 0-10 (grade que quebra em 2 linhas) */
+.lvls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:6px}
+.lv{position:relative;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:900;font-size:13px;color:var(--muted);padding:0;min-width:0}
+.lv small{font-size:9px;display:block;line-height:1}
+.lv.got{color:var(--text)}
+.lv.me{border:2px solid var(--gold);color:var(--gold)}
+.lv[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.lv .rd{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--rose)}
+.lvcap{grid-column:span 1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.2}
+
+/* nível escolhido */
+.lvh{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 70%);border:1px solid rgba(255,210,94,.5)}
+.lvh b{font-family:var(--fd);font-weight:400;font-size:22px;color:var(--gold);flex:none}
+.lvh span{flex:1;min-width:0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.lvh span em{font-style:normal;color:var(--text)}
+.pk{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;min-width:0}
+.pk>img{width:34px;height:34px;object-fit:contain;flex:none}
+.pk span{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3}
+.pk span small{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.pk em{font-style:normal;font-weight:900;font-size:12px;color:var(--gold);flex:none;text-align:right;max-width:46%}
+.pk .bt{height:30px;min-width:0;font-size:11px;padding:0 8px}
+.pk.nw{border-color:rgba(94,240,160,.5)}
+.pill{flex:none;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.pill.on{background:rgba(94,240,160,.15);color:var(--green)}
+.pill.off{background:rgba(255,255,255,.07);color:var(--muted)}
+
+/* tabela acumulada: Benefício | Grátis | VIP N */
+.tbl{border-radius:14px;border:1px solid var(--line);overflow:hidden;background:rgba(5,8,28,.45)}
+.tr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);align-items:center;border-bottom:1px solid rgba(130,150,255,.15);min-height:34px}
+.tr:last-child{border-bottom:0}
+.tr>span{padding:5px 7px;font-size:11px;font-weight:800;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.tr>span:nth-child(2){color:var(--muted);text-align:center}
+.tr>span:nth-child(3){text-align:center;background:rgba(255,210,94,.07);height:100%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.tr.hd{min-height:28px;background:rgba(61,79,184,.35)}
+.tr.hd>span{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.tr .up{color:var(--gold)}
+.tr .no{color:var(--muted)}
+
+/* rodapé fixo: só leva à Loja */
+.foot{position:relative;z-index:5;flex:none;padding:8px 12px 14px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%);display:flex;flex-direction:column;gap:4px}
+.foot .bt{width:100%;height:48px;font-size:15px}
+.foot small{text-align:center;font-size:10px;font-weight:800;color:var(--muted)}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+/* ===== TORNEIO (acrescentado ao padrão da VIP V2) ===== */
+.stage{height:196px}
+#stc{height:196px}
+.ph{flex:none;font-size:10px;font-weight:900;padding:3px 8px;border-radius:9px;background:rgba(255,210,94,.18);color:var(--gold);white-space:nowrap}
+.hpw{position:absolute;z-index:3;top:6px;width:150px;min-width:0}
+.hpw.l{left:10px}.hpw.r{right:10px;text-align:right}
+.hpw b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hpw small{display:block;font-size:9.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hpb{height:8px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden;margin-top:3px;border:1px solid rgba(255,255,255,.15)}
+.hpb i{display:block;height:100%;background:linear-gradient(90deg,#5ef0a0,#22c47a);transition:width .2s}
+.hpw.r .hpb i{background:linear-gradient(90deg,#ff9f9f,#ff6b6b);margin-left:auto}
+.ctl{position:absolute;z-index:3;left:50%;bottom:4px;transform:translateX(-50%);display:flex;gap:4px}
+.ctl button{height:26px;padding:0 9px;border-radius:9px;border:1px solid var(--line2);background:rgba(5,8,28,.78);font-weight:900;font-size:11px;white-space:nowrap}
+.ctl button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.qs{position:absolute;z-index:3;top:50px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:900;padding:2px 8px;border-radius:8px;background:rgba(5,8,28,.7);white-space:nowrap}
+.tabs{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:6px 12px 0}
+.tab{position:relative;height:36px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:12px;color:var(--muted);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.tab .rd{position:absolute;right:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--rose)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin:2px 0 8px}
+.week span{border-radius:7px;padding:4px 0;text-align:center;font-size:9.5px;font-weight:900;background:rgba(255,255,255,.05);color:var(--muted);line-height:1.15}
+.week span.now{background:rgba(255,210,94,.2);color:var(--gold);outline:1px solid var(--gold)}
+.mapk,.map{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.mapk{margin-bottom:2px}
+.mapk span{font-size:8.5px;font-weight:900;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden}
+.tt{position:relative;height:34px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);font-size:10px;font-weight:900;color:rgba(255,255,255,.6);padding:0}
+.tt.mine{background:rgba(94,240,160,.32);border-color:var(--green);color:#eafff3}
+.tt.sel{outline:3px solid #fff;outline-offset:1px;z-index:1}
+.tt .sw{position:absolute;right:1px;top:1px;width:12px;height:12px}
+.tt.cap{grid-column:1/-1;height:32px;font-size:11px;letter-spacing:.6px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10px;font-weight:800;color:var(--muted);margin:6px 0 8px}
+.leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.tdet{border-radius:14px;padding:9px;background:var(--glass);border:1px solid var(--line2);margin-bottom:6px}
+.tdet h3{margin:0 0 4px;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.tdet h3 span{font-size:11px;color:var(--muted);flex:none}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;padding:3px 0;border-top:1px solid rgba(130,150,255,.13)}
+.kv:first-of-type{border-top:0}
+.kv span:first-child{color:var(--muted);flex:none}
+.kv span:last-child{text-align:right;min-width:0}
+.big2{display:flex;gap:6px;margin-top:8px}
+.big2 .bt{flex:1;height:40px;font-size:13px;min-width:0}
+.err{margin-top:6px;font-size:11px;font-weight:800;color:#ffb3c4;line-height:1.35}
+.lu{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px;min-width:0;width:100%;text-align:left}
+.lu.on{border-color:var(--green);background:rgba(94,240,160,.1)}
+.lu.lock{opacity:.55}
+.lu .ck{flex:none;width:22px;height:22px;border-radius:7px;border:2px solid var(--line2);display:grid;place-items:center}
+.lu.on .ck{background:var(--green);border-color:var(--green)}
+.lu .ck svg{width:14px;height:14px}
+.lu .av{flex:none;width:32px;height:32px;border-radius:9px;background:#1a2366 no-repeat center 15%/150% auto;border:1px solid var(--line2)}
+.lu .mi{flex:1;min-width:0}
+.lu .mi b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lu .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lu .fc{flex:none;font-size:12px;font-weight:900;color:var(--gold);text-align:right}
+.lu .fc small{display:block;font-size:9px;color:var(--muted)}
+.pos{flex:none;width:20px;font-size:11px;font-weight:900;color:var(--green);text-align:center}
+.slot{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+.slot button{height:34px;border-radius:10px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:12px}
+.slot button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.lsum{border-radius:14px;padding:8px 10px;background:linear-gradient(160deg,rgba(94,240,160,.14),rgba(24,33,86,.9) 60%);border:1px solid rgba(94,240,160,.45);margin-bottom:6px}
+.lsum .row{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:900}
+.lsum .row span:last-child{color:var(--gold)}
+.lsum small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;margin-top:3px;line-height:1.35}
+.stick{position:sticky;bottom:-14px;z-index:2;padding:8px 0 6px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 35%);display:flex;gap:6px}
+.stick .bt{flex:1;height:42px;font-size:13px;min-width:0}
+.bat{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;min-width:0}
+.bat .mi{flex:1;min-width:0}
+.bat .mi b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bat .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bat .bt{height:30px;min-width:0;font-size:11px;padding:0 8px}
+.won{color:var(--green)}.lost{color:#ff9f9f}
+.rk{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:4px;min-width:0}
+.rk.me{border-color:var(--gold);background:rgba(255,210,94,.1)}
+.rk .n{flex:none;width:26px;font-family:var(--fd);font-size:17px;color:var(--muted);text-align:center}
+.rk .n.top{color:var(--gold)}
+.rk .mi{flex:1;min-width:0;font-size:12.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk em{flex:none;font-style:normal;font-size:12px;font-weight:900;color:var(--gold)}
+.rw2{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;font-size:11px;font-weight:800;padding:4px 0;border-top:1px solid rgba(130,150,255,.14)}
+.rw2:first-of-type{border-top:0}
+.rw2 span:last-child{color:var(--gold);text-align:right}
+.cn{display:inline-flex;align-items:center;gap:3px}
+.cn svg{width:13px;height:13px}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <div class="top">
+          <button class="back" data-go="Guilda" aria-label="Voltar para a Guilda"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">Torneio do Poder</div>
+          <span class="ph" id="ph"></span>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="392" role="img" aria-label="Seu herói com a arma na mão e o pet na frente; ao ver uma batalha, os dois lutadores de cada duelo aparecem frente a frente com as barras de vida"></canvas>
+          <div id="ov"></div>
+        </div>
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Torneio do Poder (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">A guerra semanal das guildas. 4 abas: <b>Mapa</b> dos 28 territórios (declarar ataque), <b>Escalação</b> dos 15 (para o Engenheiro: o seletor do setLineup, com FC de cada um, trava às 19h e quem tem menos de 24 h na guilda bloqueado), <b>Batalhas</b> (a luta animada pelo registro dos duelos, rei da colina) e <b>Ranking</b>. O seu herói fica sempre à vista no palco.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Cargo" style="margin-top:8px"><button data-role="officer" aria-pressed="true">Líder ou oficial</button><button data-role="member" aria-pressed="false">Membro</button></div>
+      <div class="seg" role="group" aria-label="Momento da semana" style="margin-top:8px"><button data-day="mon" aria-pressed="true">Segunda</button><button data-day="fri18" aria-pressed="false">Sexta 18h</button><button data-day="fri19" aria-pressed="false">Sexta 19h</button><button data-day="fri21" aria-pressed="false">Sexta 21h</button><button data-day="sun" aria-pressed="false">Domingo</button></div>
+      <p class="sub" style="margin-top:8px">Segunda: declarar ataques e montar a escalação. Sexta 18h: escalação ainda aberta (trava em 1 h). Sexta 19h: travada. Sexta 21h: a batalha de sexta já saiu. Domingo: prêmios. Membro só vê; quem escala e declara é líder ou oficial.</p>
+    </div>
+    <div class="box">
+      <h2>De onde vem cada coisa</h2>
+      <ul>
+        <li>Regras: js/sys/guild.js DATA.season (seg-qui declarar, até 2 ataques por dia, sex e sáb 20h, domingo prêmios), territory, rankPoints, capitalMinEra 8, tourney (15, prêmios)</li>
+        <li>Rotas: docs/API_SERVIDOR.md §10.3 (GET /tourney, POST /tourney/declare e os erros, GET/PUT /tourney/lineup, GET /tourney/battles com o registro de cada duelo, GET /tourney/ranking)</li>
+        <li>Luta: a mesma conta do Sys.tower.duelCarry (golpes alternados, crítico, defesa, 40 rodadas; o vencedor segue com a vida que sobrou; empate no tempo fica com o defensor)</li>
+        <li>Mediana de era: a dos escalados; precisa ser maior ou igual à era da região (Capital: era 8)</li>
+        <li>Guildas, membros, FC e o resultado das batalhas são EXEMPLO; no jogo vêm do servidor</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: mapa maior, luta mais rápida"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais à Loja V2): W = arma Lâmina Rúnica (assets/weapons/meta.json), B = corpo sem arma de cada skin ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"n":12,"fps":12,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"fy":242},"kaia":{"n":12,"fps":12,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243},"kael_demon":{"n":12,"fps":12,"g":[[117.58,207.42,42.99,0.7314,-0.6819,-1.92,1.92,3.64,0],[117.75,207.85,42.88,0.7328,-0.6804,-5.41,5.41,3.69,0],[117.62,208.26,42.27,0.74,-0.6726,-5.41,5.41,3.69,0],[120.15,205.33,41.5,0.7489,-0.6627,-5.41,5.41,3.69,0],[121.81,202.96,41.63,0.7475,-0.6643,-8.41,8.41,3.74,0],[121.94,202.75,42.42,0.7382,-0.6746,-5.41,5.41,3.69,0],[122.01,203.26,43,0.7313,-0.682,-5.41,5.41,3.69,0],[122.45,203.53,42.85,0.7332,-0.6801,-8.51,8.51,3.69,0],[122.32,204.03,42.17,0.7412,-0.6713,-8.71,8.71,3.69,0],[122.26,203.24,41.44,0.7496,-0.6618,-5.41,5.41,3.69,0],[122.39,202.34,41.8,0.7455,-0.6665,-5.41,5.41,3.69,0],[125.98,199.14,42.62,0.7358,-0.6772,-9.79,9.79,3.69,0]],"back":{"x":95.8,"y":161,"a":0,"s":1},"fy":242},"kaia_demon":{"n":12,"fps":12,"g":[[114.75,196.04,40.81,0.7569,-0.6536,-11.6,11.6,4.05,0],[114.74,196.7,40.93,0.7555,-0.6552,-11.71,11.71,4.05,0],[114.69,196.24,40.61,0.7591,-0.6509,-11.43,11.43,4.05,0],[115.3,196.17,40.46,0.7609,-0.6489,-10.55,10.55,4.05,0],[115.4,196.45,40.62,0.759,-0.6511,-10.38,10.38,4.11,0],[115.77,195.69,40.96,0.7551,-0.6556,-10.27,10.27,4.05,0],[115.57,196.56,40.73,0.7578,-0.6524,-10.27,10.27,4.11,0],[114.64,196.74,40.41,0.7614,-0.6483,-11.43,11.43,4.11,0],[114.7,195.98,40.73,0.7578,-0.6524,-11.6,11.6,4.11,0],[114.85,195.6,40.97,0.755,-0.6557,-11.6,11.6,4.05,0],[111.95,199.79,40.64,0.7588,-0.6514,-5.44,5.44,4.11,0],[119.75,193.33,40.4,0.7615,-0.6482,-4.66,4.66,4.11,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243}}};
+
+/* ---------- TORNEIO: js/sys/guild.js DATA (season, territory, rankPoints, capitalMinEra, tourney) e js/sys/tower.js DATA.duel, copiados ---------- */
+const T={size:15, attacksPerDay:2, capitalMinEra:8, territory:{per:{gold:2,xp:1,drop:1},capitalMult:3,cap:{gold:10,xp:5,drop:5}},
+  rewards:[{from:1,to:1,coin:300,prism:3,frame:true},{from:2,to:3,coin:200,prism:2},{from:4,to:10,coin:120,prism:1},{from:11,to:50,coin:60,prism:0}],
+  chest:{forge:2,food:30,essence:1}};
+const DU={maxRounds:40,baseCritDmg:100,defK:2,maxDefRed:0.75};
+function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const defRed=(def,atk)=>{ const d=Math.max(0,def); return Math.min(DU.maxDefRed,d/(d+DU.defK*Math.max(1e-9,atk))); };
+/* Sys.tower.duel / duelCarry: alternado, A começa; vida inicial absoluta (rei da colina); empate no tempo = timeout */
+function duel(A,B,seed,hpA0,hpB0){ const rng=mulberry(seed>>>0), max=[A.hp,B.hp], P=[A,B], log=[]; let r=0, w=-1; const hp=[hpA0!=null?hpA0:max[0],hpB0!=null?hpB0:max[1]];
+  for(r=1;r<=DU.maxRounds&&w<0;r++) for(let s=0;s<2&&w<0;s++){ const a=P[s], d=P[1-s], crit=rng()*100<a.critRate;
+    const dmg=a.atk*(1+a.aspd/100)*(crit?1+a.critDmg/100:1)*(0.9+rng()*0.2)*(1-defRed(d.def,a.atk)); hp[1-s]-=dmg; if(log.length<80) log.push({s,dmg,crit,hp:Math.max(0,hp[1-s])}); if(hp[1-s]<=0) w=s; }
+  return {win:w===0,hpLeftA:Math.max(0,hp[0]),hpLeftB:Math.max(0,hp[1]),log,timeout:w<0}; }
+const statsOf=fc=>{ const atk=fc/11.5; return {atk,hp:atk*6.2,def:atk*0.18,critRate:18,critDmg:120,aspd:12,fc}; };   /* EXEMPLO de atributos a partir da FC */
+function territoryBonus(list){ const o={gold:0,xp:0,drop:0}; for(const t of list){ const m=t.capital?T.territory.capitalMult:1; for(const k in o) o[k]+=T.territory.per[k]*m; } for(const k in o) o[k]=Math.min(T.territory.cap[k],o[k]); return o; }
+const tPoints=t=>t.capital?15:1+t.region;
+const median=a=>{ const s=a.slice().sort((x,y)=>x-y); if(!s.length) return 0; return s.length%2?s[(s.length-1)/2]:(s[s.length/2-1]+s[s.length/2])/2; };
+const rewardOf=p=>T.rewards.find(r=>p>=r.from&&p<=r.to)||null;
+
+/* ---------- formatos ---------- */
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',').replace(/,0+$/,'');
+const ab=v=>v>=1e12?dec(v/1e12,1)+' tri':v>=1e9?dec(v/1e9,2)+' bi':v>=1e6?dec(v/1e6,1)+' mi':v>=1e4?dec(v/1e3,1)+' mil':n(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'];
+const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'], ERS=['Pré','Ant','Med','Pól','Ind','Mod','Fut','Sub','Cel'];
+const SV={ck:'<svg viewBox="0 0 24 24" fill="none" stroke="#05301b" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>',
+ sw:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M14.5 3.5l6 6-9 9-3-3zM5 19l3-3"/></svg>',
+ coin:'<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5.5-3.6 9.3-8 11-4.4-1.7-8-5.5-8-11V5z" fill="#5ee7ff" stroke="#16306e" stroke-width="1.6"/></svg>'};
+
+/* ---------- guildas e membros de EXEMPLO ---------- */
+const GU={me:{name:'Ordem do Alvorecer',c:'#5ef0a0'},g1:{name:'Lâmina Rubra',c:'#ff6b6b'},g2:{name:'Véu Roxo',c:'#a97bff'},g3:{name:'Clã do Sol',c:'#ffa434'}};
+const OWN0={r4t2:'me',r5t1:'me',r5t3:'me',r0t1:'g1',r1t2:'g2',r3t1:'g3',r3t3:'g1',r4t1:'g2',r5t2:'g1',r6t2:'g2',r6t1:'g1',r7t1:'g3',r8t2:'g1',capital:'g1'};
+const NAMES=['Brasa Velha','Lua de Prata','Corvo Rubro','Tita Ventania','Dente de Sabre','Escudo Torto','Raio Manso','Pena Negra','Guri do Norte','Rocha Viva','Faísca','Martelo Gentil','Sombra Mansa','Trovão Miúdo','Rosa de Ferro','Lince Calmo','Gelo Fino','Asa Partida','Sol Poente','Foice Leve','Pedra Azul','Vento Sul','Chama Quieta','Garra Fria','Neblina','Bico de Aço','Lenha Seca'];
+const AVS=['a/av_kael_ninja.png','a/av_kaia_ninja.png','a/av_kael_angel.png','a/av_kaia_angel.png','a/av_kael_cyborg.png','a/av_kaia_harlequin.png','a/av_kael_demon.png','a/av_kaia_demon.png','a/av_kael_solar_paladin.png'];
+const eraOfFc=fc=>fc>=4.6e9?6:fc>=2.2e9?5:4;
+function seedMembers(){ let s=11; const r=()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; }, out=[];
+  NAMES.forEach((nm,i)=>{ const fc=Math.round((0.9+r()*5.2)*1e9); out.push({id:'m'+i,name:nm,fc,era:eraOfFc(fc),lvl:Math.round(60+fc/1e9*4),av:AVS[i%AVS.length],joinedAt:i===6?105:i===19?92:-(200+Math.round(r()*900))}); });
+  out.push({id:'me',name:'Você',fc:4.21e9,era:5,lvl:71,av:'',joinedAt:-640,me:true}); return out; }
+function rivalLineup(seed,base){ let s=seed; const r=()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff; }; const out=[];
+  for(let i=0;i<T.size;i++){ const fc=Math.round(base*(0.55+r()*0.9)*1e9); out.push({id:'x'+seed+'_'+i,name:NAMES[(i*7+seed)%NAMES.length],fc,era:eraOfFc(fc),av:AVS[(i+seed)%AVS.length]}); } return out.sort((a,b)=>b.fc-a.fc); }
+
+/* ---------- estado ---------- */
+const DAYS={mon:{sh:'Segunda',lbl:'Segunda · declarar',phase:'declare',wd:0},fri18:{sh:'Sexta 18h',lbl:'Sexta 18h · escalação aberta',phase:'battle',wd:4,h:18},fri19:{sh:'Sexta 19h',lbl:'Sexta 19h · travada',phase:'battle',wd:4,h:19},fri21:{sh:'Sexta 21h',lbl:'Sexta 21h · resultado',phase:'battle',wd:4,h:21},sun:{sh:'Domingo',lbl:'Domingo · prêmios',phase:'prize',wd:6}};
+let S={hero:'kael'}, tab='map';
+function reset(){ const hero=S.hero||'kael', role=S.role||'officer', day=S.day||'mon';
+  S={hero,role,day,skin:'def',wing:'angel',weapon:['era2_t1',2,'Lâmina Rúnica'],members:seedMembers(),own:Object.assign({},OWN0),sel:'r6t2',slot:'d5',
+    attacks:[{id:'r6t1',slot:'d6',att:'g2'},{id:'r5t2',slot:'d5',att:'g3'}],decl:[{id:'r6t2',slot:'d5',day:0}],declToday:1,lineups:{d5:[],d6:[]},saved:{d5:false,d6:false},
+    battles:[],replay:null,fx:[],t:0};
+  /* escalação de sexta já montada pelo líder (os 15 de maior FC liberados) */
+  S.lineups.d5=best15(); S.saved.d5=true; }
+const can=()=>S.role==='officer';
+const dayI=()=>DAYS[S.day];
+const locked=slot=>{ const d=dayI(); if(slot==='d5') return d.wd>4||(d.wd===4&&d.h>=19); return d.wd>5; };
+/* liberado para a escalação: na guilda desde 24 h antes da trava (19h do dia da batalha). Na segunda, faltam ~4 dias para a trava de sexta. */
+/* horas da semana: segunda 0h = 0. joinedAt = hora em que entrou na guilda (negativo = antes desta semana). Trava: sexta 19h = 115, sábado 19h = 139. */
+const nowAbs=()=>{ const d=dayI(); return d.wd*24+(d.h!=null?d.h:10); };
+const lockAbs=slot=>(slot==='d5'?4:5)*24+19;
+const hoursToLock=slot=>lockAbs(slot)-nowAbs();
+const present=m=>m.joinedAt<=nowAbs();
+const eligibleFor=(m,slot)=>m.joinedAt<=lockAbs(slot)-24;
+const eligible=m=>eligibleFor(m,S.slot);
+const inGuildH=m=>nowAbs()-m.joinedAt;
+function best15(){ return S.members.filter(m=>present(m)&&eligible(m)).sort((a,b)=>b.fc-a.fc).slice(0,T.size).map(m=>m.id); }
+const memOf=id=>S.members.find(m=>m.id===id);
+const lineupEras=slot=>S.lineups[slot].map(id=>memOf(id)).filter(Boolean).map(m=>m.era);
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+
+/* ---------- PALCO ---------- */
+const IM={}, IMS={};
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+/* linha do pescoço por quadro (js/stage.js neckRows): a cabeça é redesenhada por cima da lâmina */
+const NECK={};
+function neckOf(u,im,nf){ if(NECK[u]) return NECK[u]; const fw=im.naturalWidth/nf, fh=im.naturalHeight, fs=fw/256, out=[];
+  try{ const W=Math.round(fw), c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=fh; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+    for(let i=0;i<nf;i++){ const d=g.getImageData(Math.round(i*fw),0,W,fh).data; let top=Math.round(fh*.3);
+      scan: for(let y=0;y<fh;y++) for(let x=0;x<W;x++){ const k=(y*W+x)*4; if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){ top=y; break scan; } }
+      out.push(top/fs); } }
+  catch(e){ out.length=0; for(let i=0;i<nf;i++) out.push(77); }
+  return NECK[u]=out; }
+const AN_RIDE={kael_phoenix:{x:163.6,y:141,a:16.5,s:0.654}};   /* mediana de back[] em assets/anim/mounts/kael_giant_phoenix_idle_body.json */
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+const sheetOf=sk=>sk==='def'?'a/body_'+S.hero+'.png':'a/body_'+S.hero+'_demon.png';
+function look(){ const L={skin:S.skin,mount:null,pet:'wolf',aura:false}; const R=S.pv; if(!R) return L;
+  if(R.id==='demon') L.skin='demon'; else if(R.id==='phoenix') L.mount='phoenix'; else if(R.id==='wyvern') L.pet='wyvern'; else if(R.id==='aura') L.aura=true; else if(R.id==='prism') L.pet='prism';
+  return L; }
+function wings(x,ax,ay,b,k,t){ const WA=WING_AN[S.wing]; if(!WA||!b) return; const Li=img('a/wg_'+S.wing+'_L.png'), Ri=img('a/wg_'+S.wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* herói A PÉ: corpo sem arma + a arma equipada no punho de cada quadro; asa nas costas (a skin Demônio já traz a asa na arte, ela vence o item) */
+function drawHero(x,t,L,hx){
+  const sid=L.skin==='def'?S.hero:S.hero+'_demon', B=D.B[sid], url=sheetOf(L.skin), sh=img(url); if(!B||!ok(sh)) return;
+  const fw=sh.naturalWidth/B.n, fh=sh.naturalHeight, fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=hx-128*k, y0=GY-B.fy*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  if(L.skin==='def'&&B.back) wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*fw,0,fw,fh,0,0,256,256);
+  const wk=S.weapon[0], W=D.W[wk], ws=W?wSpr(wk,S.weapon[1]):null; let drawW=null;
+  if(ws){ const grip=W.grip||[0.5,0.78], kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=neckOf(url,sh,B.n)[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,256,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+const GY=176, HK=0.6, LX=110, RX=280, PCX=56;
+let HX=LX;
+function withHero(h,fn){ const keep=S.hero; S.hero=h; try{ fn(); } finally{ S.hero=keep; } }
+/* um lutador: o corpo do herói (Kael/Kaia, skin padrão ou Demônio) com a arma na mão; espelhado à direita; avança um pouco ao bater */
+function fighter(x,t,hero,skin,cx,mirror,lunge,hurt){ withHero(hero,()=>{ x.save(); if(mirror){ x.translate(cx*2,0); x.scale(-1,1); }
+  const dx=lunge*12; if(hurt>0){ x.globalAlpha=0.65+0.35*Math.cos(hurt*40); } drawHero(x,t,{skin},cx+dx); x.restore(); }); }
+function drawPet(x,t){ const I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) return; const fi=((Math.floor(t*12)%12)+12)%12, fw=I.naturalWidth/12, fh=I.naturalHeight, kp=110/512;
+  x.drawImage(I,fi*fw,0,fw,fh,PCX-224*kp,GY+6-307*kp,512*kp,352*kp); }
+function drawFx(x,t){ S.fx=S.fx.filter(p=>t-p.t<1.1); for(const p of S.fx){ const a=(t-p.t)/1.1; x.save(); x.globalAlpha=1-a; x.font='900 '+(p.big?16:13)+'px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle=p.c; x.strokeText(p.s,p.x,p.y-a*30); x.fillText(p.s,p.x,p.y-a*30); x.restore(); } }
+function draw(t){ if(!S.members) return; S.t=t; const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,196);
+  try{ const g=x.createRadialGradient(195,GY,10,195,GY,190); g.addColorStop(0,'rgba(255,210,94,.22)'); g.addColorStop(1,'rgba(255,210,94,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(195,GY,190,18,0,0,7); x.fill(); }catch(err){ stgErr('o chão',err); }
+  const R=S.replay;
+  if(R){ try{ stepReplay(t); }catch(err){ stgErr('a luta',err); }
+    const D=R.duels[R.i]; if(D){ const e=R.e, la=e&&e.s===0?Math.max(0,1-(t-e.t)*5):0, lb=e&&e.s===1?Math.max(0,1-(t-e.t)*5):0, ha=e&&e.s===1?Math.max(0,0.3-(t-e.t)):0, hb=e&&e.s===0?Math.max(0,0.3-(t-e.t)):0;
+      try{ fighter(x,t,D.aMine?S.hero:(S.hero==='kael'?'kaia':'kael'),D.aMine?'def':'demon',LX,false,la,ha); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o lutador da esquerda',err); }
+      try{ fighter(x,t,D.bMine?S.hero:(S.hero==='kael'?'kaia':'kael'),D.bMine?'def':'demon',RX,true,lb,hb); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o lutador da direita',err); } } }
+  else { try{ drawHero(x,t,{skin:'def'},170); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+    try{ drawPet(x,t); }catch(err){ stgErr('o pet',err); } }
+  try{ drawFx(x,t); }catch(err){ stgErr('os números',err); } }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- BATALHA (rei da colina, como o servidor: fila por FC, o vencedor segue com a vida que sobrou, empate no tempo = defensor) ---------- */
+function runBattle(terr,att,def,seed){ const A=att.map(m=>({m,s:statsOf(m.fc)})), B=def.map(m=>({m,s:statsOf(m.fc)})), duels=[]; let i=0, j=0, hpA=null, hpB=null, k=0;
+  while(i<A.length&&j<B.length){ const r=duel(A[i].s,B[j].s,seed+(k++)*7919,hpA,hpB); duels.push({a:A[i].m,b:B[j].m,hpA0:hpA==null?A[i].s.hp:hpA,hpB0:hpB==null?B[j].s.hp:hpB,maxA:A[i].s.hp,maxB:B[j].s.hp,win:r.win,timeout:r.timeout,log:r.log,hpLeftA:r.hpLeftA,hpLeftB:r.hpLeftB});
+    if(r.win){ hpA=r.hpLeftA; hpB=null; j++; } else { hpB=r.timeout?r.hpLeftB:r.hpLeftB; hpA=null; i++; } }
+  const winAtt=j>=B.length&&B.length>0||(!B.length&&A.length>0); return {terr,duels,winAtt,reason:!B.length?(A.length?'walkover':'empty'):'fight'}; }
+function makeBattles(){ const mine=S.lineups.d5.map(memOf).filter(Boolean).sort((a,b)=>b.fc-a.fc), out=[];
+  const b1=runBattle('r6t2',mine,rivalLineup(5,3.0),101); b1.att='me'; b1.def='g2'; out.push(b1);
+  const b2=runBattle('r5t2',rivalLineup(9,2.6),mine,202); b2.att='g3'; b2.def='me'; out.push(b2);
+  const b3=runBattle('r3t1',rivalLineup(13,2.2),rivalLineup(17,2.4),303); b3.att='g1'; b3.def='g3'; out.push(b3);
+  return out; }
+function startReplay(bi){ const b=S.battles[bi]; if(!b||!b.duels.length) return; const aMine=b.att==='me', bMine=b.def==='me';
+  S.replay={b,bi,i:0,k:0,next:S.t+0.6,speed:S.replay?S.replay.speed:1,e:null,duels:b.duels.map(d=>Object.assign({},d,{aMine,bMine})),hp:[b.duels[0].hpA0,b.duels[0].hpB0],done:false}; renderOv(); }
+function stepReplay(t){ const R=S.replay; if(!R||R.done||t<R.next) return; const D=R.duels[R.i];
+  if(R.k<D.log.length){ const e=D.log[R.k++]; R.e={s:e.s,t}; R.hp[1-e.s]=e.hp; fx((e.crit?'Crítico! ':'')+'-'+ab(e.dmg),e.crit?'#ffe58a':'#fff',e.s===0?RX:LX,GY-120,e.crit); R.next=t+0.42/R.speed; }
+  else { R.i++; R.k=0; R.e=null; if(R.i>=R.duels.length){ R.done=true; renderOv(); return; } const N=R.duels[R.i]; R.hp=[N.hpA0,N.hpB0]; R.next=t+0.9/R.speed; }
+  renderOv(); }
+function fx(s,c,xx,yy,big){ S.fx.push({s,c,x:xx,y:yy,t:S.t||0,big}); }
+function renderOv(){ const o=$('#ov'), R=S.replay; if(!R){ o.innerHTML=''; return; } const b=R.b, D=R.duels[Math.min(R.i,R.duels.length-1)];
+  const pa=Math.max(0,R.hp[0]/D.maxA*100), pb=Math.max(0,R.hp[1]/D.maxB*100), na=GU[b.att].name, nb=b.def?GU[b.def].name:'Sem dono';
+  o.innerHTML=`<div class="hpw l"><b>${esc(D.a.name)}</b><small>${esc(na)} · FC ${ab(D.a.fc)}</small><div class="hpb"><i style="width:${pa.toFixed(1)}%"></i></div></div>
+    <div class="hpw r"><b>${esc(D.b.name)}</b><small>${esc(nb)} · FC ${ab(D.b.fc)}</small><div class="hpb"><i style="width:${pb.toFixed(1)}%"></i></div></div>
+    <div class="qs">${R.done?(b.winAtt?esc(na)+' toma o território':esc(nb)+' segura o território'):'Duelo '+(R.i+1)+' de '+R.duels.length}</div>
+    <div class="ctl"><button data-spd="1" aria-pressed="${R.speed===1}">x1</button><button data-spd="4" aria-pressed="${R.speed===4}">x4</button>${R.done?'<button data-rp="again">Ver de novo</button>':'<button data-rp="skip">Pular</button>'}<button data-rp="close">Fechar</button></div>`; }
+
+/* ---------- telas ---------- */
+function renderTop(){ $('#ph').textContent=dayI().sh; }
+const TABS=[['map','Mapa'],['lineup','Escalação'],['battles','Batalhas'],['rank','Ranking']];
+function renderTabs(){ const d={lineup:can()&&!S.saved[S.slot]&&!locked(S.slot),battles:S.day==='fri21'||S.day==='sun'};
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${d[k]?'<i class="rd"></i>':''}</button>`).join(''); }
+function weekStrip(){ const days=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'], ph=['declarar','declarar','declarar','declarar','20h','20h','prêmios'];
+  return `<div class="week">${days.map((d,i)=>`<span class="${i===dayI().wd?'now':''}">${d}<br>${ph[i]}</span>`).join('')}</div>`; }
+function tileOf(id){ if(id==='capital') return {id,region:8,capital:true,k:0}; const m=/^r(\d)t(\d)$/.exec(id); return {id,region:+m[1],capital:false,k:+m[2]}; }
+function declErr(id,slot){ const t=tileOf(id), o=S.own[id];
+  if(dayI().phase!=='declare') return ['tourney_phase','Ataque só se declara de segunda a quinta.'];
+  if(o==='me') return ['own_territory','Este território já é de vocês.'];
+  if(S.declToday>=T.attacksPerDay) return ['daily_limit','Já foram os 2 ataques de hoje. Amanhã tem mais 2.'];
+  if(S.decl.some(d=>d.id===id&&d.slot===slot)) return ['territory_busy','Vocês já atacam este território nesse dia.'];
+  if(S.attacks.some(a=>a.id===id&&a.slot===slot)) return ['territory_busy','Outra guilda já ataca este território nesse dia.'];
+  if(o&&[...S.decl,...S.attacks].some(a=>a.slot===slot&&a.id!==id&&S.own[a.id]===o)) return ['defender_busy',GU[o].name+' já defende outro território nesse dia (uma defesa por dia).'];
+  const med=median(lineupEras('d5').length?lineupEras('d5'):S.members.slice().sort((a,b)=>b.fc-a.fc).slice(0,T.size).map(m=>m.era)), need=t.capital?T.capitalMinEra:t.region;
+  if(med<need) return ['era_too_low','A mediana de era dos seus 15 de maior FC é '+dec(med,1)+'. Para '+(t.capital?'a Capital':'a região '+ERA[t.region])+' precisa ser '+need+' ou mais.'];
+  return null; }
+function pMap(){ const sel=S.sel?tileOf(S.sel):null; let cells='';
+  for(let k=1;k<=3;k++) for(let e=0;e<9;e++){ const id='r'+e+'t'+k, o=S.own[id], atk=[...S.decl.map(d=>Object.assign({att:'me'},d)),...S.attacks].some(a=>a.id===id);
+    cells+=`<button class="tt ${o==='me'?'mine':''} ${S.sel===id?'sel':''}" data-tile="${id}" style="${o&&o!=='me'?'background:'+GU[o].c+'40;border-color:'+GU[o].c:''}" aria-label="${ERA[e]}, território ${k}${o?', de '+GU[o].name:', sem dono'}${atk?', com ataque marcado':''}">${k}${atk?'<span class="sw">'+SV.sw+'</span>':''}</button>`; }
+  const oc=S.own.capital; cells+=`<button class="tt cap ${S.sel==='capital'?'sel':''}" data-tile="capital" style="${oc?'background:'+GU[oc].c+'40;border-color:'+GU[oc].c:''}">CAPITAL${oc?' · '+GU[oc].name:''}</button>`;
+  const mineList=Object.entries(S.own).filter(([,g])=>g==='me').map(([id])=>tileOf(id)), tb=territoryBonus(mineList), pts=mineList.reduce((a,t)=>a+tPoints(t),0);
+  let det=''; if(sel){ const o=S.own[sel.id], when=[...S.decl.map(d=>Object.assign({att:'me'},d)),...S.attacks].filter(a=>a.id===sel.id);
+    const e5=declErr(sel.id,'d5'), e6=declErr(sel.id,'d6');
+    det=`<div class="tdet"><h3>${sel.capital?'Capital':ERA[sel.region]+' · território '+sel.k}<span>${sel.capital?'15 pontos':(1+sel.region)+' ponto'+(sel.region?'s':'')}</span></h3>
+      <div class="kv"><span>Dono</span><span>${o?esc(GU[o].name):'Sem dono'}</span></div>
+      <div class="kv"><span>Bônus para o dono</span><span>${sel.capital?'ouro +6%, XP +3%, drop +3%':'ouro +2%, XP +1%, drop +1%'}</span></div>
+      <div class="kv"><span>Pede mediana de era</span><span>${sel.capital?T.capitalMinEra+' (só Celestial)':sel.region+' ou mais'}</span></div>
+      ${when.length?when.map(a=>`<div class="kv"><span>Ataque marcado</span><span>${esc(GU[a.att].name)} · ${a.slot==='d5'?'sexta':'sábado'} 20h</span></div>`).join(''):''}
+      ${can()&&o!=='me'?`<div class="big2"><button class="bt ${e5?'off':''}" data-decl="d5">Atacar sexta 20h</button><button class="bt ${e6?'off':''}" data-decl="d6">Atacar sábado 20h</button></div>${e5&&e6&&e5[0]===e6[0]?'<div class="err">'+e5[1]+'</div>':(e5?'<div class="err">Sexta: '+e5[1]+'</div>':'')+(e6?'<div class="err">Sábado: '+e6[1]+'</div>':'')}`:''}
+      ${!can()&&o!=='me'?'<div class="err" style="color:var(--muted)">Só líder e oficiais declaram ataque.</div>':''}</div>`; }
+  return weekStrip()+`<div class="mapk">${ERS.map(e=>`<span>${e}</span>`).join('')}</div><div class="map">${cells}</div>
+    <div class="leg">${Object.values(GU).map(g=>`<span><i style="background:${g.c}"></i>${esc(g.name)}${g===GU.me?' (vocês)':''}</span>`).join('')}<span><i style="background:rgba(255,255,255,.12)"></i>Sem dono</span></div>
+    ${det}
+    <div class="pk"><span>Seus ${mineList.length} territórios · ${pts} pontos<small>Hoje: ${S.declToday}/${T.attacksPerDay} ataques declarados. Domingo: 1 baú por território para cada membro</small></span><em>Ouro +${tb.gold}%<br>XP +${tb.xp}% · Drop +${tb.drop}%</em></div>`; }
+function pLineup(){ const L=S.lineups[S.slot], lk=locked(S.slot), h=hoursToLock(S.slot), eras=lineupEras(S.slot), med=median(eras), fcSum=L.map(memOf).filter(Boolean).reduce((a,m)=>a+m.fc,0);
+  const list=S.members.filter(present).sort((a,b)=>b.fc-a.fc), pos={}; L.map(memOf).filter(Boolean).sort((a,b)=>b.fc-a.fc).forEach((m,i)=>pos[m.id]=i+1);
+  const lockTxt=lk?'Travada às 19h. Trocar de equipamento agora não muda a batalha.':h>48?'Trava '+(S.slot==='d5'?'sexta':'sábado')+' às 19h (1 h antes da luta)':'Trava em '+Math.max(1,Math.round(h))+' h, às 19h';
+  return `<div class="slot" role="group" aria-label="Dia da batalha"><button data-slot="d5" aria-pressed="${S.slot==='d5'}">Sexta 20h</button><button data-slot="d6" aria-pressed="${S.slot==='d6'}">Sábado 20h</button></div>
+   <div class="lsum"><div class="row"><span>Escalados ${L.length}/${T.size}</span><span>FC somada ${ab(fcSum)}</span></div>
+     <div class="row" style="margin-top:3px"><span>Mediana de era: ${eras.length?dec(med,1)+' ('+ERA[Math.floor(med)]+')':'—'}</span><span>${S.saved[S.slot]?'Salva':'Não salva'}</span></div>
+     <small>${lockTxt}. A fila luta em ordem de FC (o 1º abre). Só entra quem está na guilda desde 24 h antes da trava.${eras.length?' Com esta mediana dá para atacar até a região '+ERA[Math.min(8,Math.floor(med))]+'.':''}</small></div>
+   ${!can()?'<div class="rule"><svg viewBox="0 0 24 24" fill="none" stroke="#5ee7ff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.5v.5"/></svg><span>Só <b>líder e oficiais</b> escalam. Você está '+(L.includes('me')?'<b>escalado</b> na posição '+pos.me:'fora da escalação')+'.</span></div>':''}`+
+   list.map(m=>{ const on=L.includes(m.id), el=eligible(m), dis=lk||!can()||(!el&&!on)||(!on&&L.length>=T.size), av=m.me?(S.hero==='kael'?'a/kael_phase0.png':'a/kaia_phase0.png'):m.av;
+     return `<button class="lu ${on?'on':''} ${!el?'lock':''}" data-pick="${m.id}" ${dis?'aria-disabled="true"':''} aria-pressed="${on}"><span class="ck">${on?SV.ck:!el?SV.lock:''}</span>${on?'<span class="pos">'+pos[m.id]+'º</span>':''}<span class="av" style="background-image:url(${av})"></span><span class="mi"><b>${esc(m.name)}${m.me?' (você)':''}</b><small>${!el?'Na guilda há '+inGuildH(m)+' h · '+(S.slot==='d5'&&eligibleFor(m,'d6')?'pode no sábado':'menos de 24 h antes da trava'):'Nv '+m.lvl+' · era '+ERS[m.era]}</small></span><span class="fc">${ab(m.fc)}<small>FC</small></span></button>`; }).join('')+
+   (can()&&!lk?`<div class="stick"><button class="bt off" data-lu="clear">Limpar</button><button class="bt off" data-lu="best">Os 15 de maior FC</button><button class="bt ${S.saved[S.slot]?'off':''}" data-lu="save">${S.saved[S.slot]?'Salva':'Salvar'}</button></div>`:''); }
+function pBattles(){ if(!(S.day==='fri21'||S.day==='sun')) return weekStrip()+`<div class="tdet"><h3>Batalhas de sexta e sábado, às 20h</h3><div class="kv"><span>Agora</span><span>${esc(dayI().lbl)}</span></div><div class="kv"><span>Ataques de vocês</span><span>${S.decl.length}</span></div><div class="kv"><span>Ataques contra vocês</span><span>${S.attacks.length}</span></div><p class="hint" style="margin:6px 0 0">Mude no painel para "Sexta 21h" para ver a luta animada.</p></div>`;
+  if(!S.battles.length) S.battles=makeBattles();
+  return `<div class="sec"><span>Sexta, 20h</span><span>toque para ver a luta</span></div>`+S.battles.map((b,i)=>{ const t=tileOf(b.terr), A=GU[b.att].name, Dn=b.def?GU[b.def].name:'Sem dono', meWin=(b.att==='me'&&b.winAtt)||(b.def==='me'&&!b.winAtt), meIn=b.att==='me'||b.def==='me';
+    return `<div class="bat"><span class="mi"><b>${t.capital?'Capital':ERA[t.region]+' '+t.k}: ${esc(A)} × ${esc(Dn)}</b><small class="${meIn?(meWin?'won':'lost'):''}">${b.winAtt?esc(A)+' tomou':esc(Dn)+' segurou'} · ${b.duels.length} duelos${meIn?(meWin?' · vitória de vocês':' · derrota de vocês'):''}</small></span><button class="bt" data-watch="${i}">Ver luta</button></div>`; }).join('')+
+    `<p class="hint">Cada duelo é o registro de golpes que o servidor manda (log do duelCarry); a tela só toca. O vencedor segue com a vida que sobrou contra o próximo da fila.</p>`; }
+function pRank(){ const kind=S.rk||'tournament', L=kind==='tournament'?[['Lâmina Rubra',7],['Véu Roxo',5],['Ordem do Alvorecer',4],['Clã do Sol',3],['Guarda de Ébano',3],['Filhos do Trovão',2],['Rosa Negra',2],['Os Errantes',1]]:[['Lâmina Rubra',42],['Véu Roxo',24],['Ordem do Alvorecer',17],['Clã do Sol',13],['Guarda de Ébano',9],['Filhos do Trovão',6]];
+  return `<div class="slot" role="group" aria-label="Ranking"><button data-rk="tournament" aria-pressed="${kind==='tournament'}">Vitórias</button><button data-rk="territory" aria-pressed="${kind==='territory'}">Territórios</button></div>`+
+   L.map((r,i)=>`<div class="rk ${r[0]==='Ordem do Alvorecer'?'me':''}"><span class="n ${i<3?'top':''}">${i+1}</span><span class="mi">${esc(r[0])}</span><em>${r[1]} ${kind==='tournament'?(r[1]===1?'vitória':'vitórias'):'pontos'}</em></div>`).join('')+
+   `<div class="sec"><span>Prêmios do torneio (domingo)</span><span>para quem estava escalado</span></div><div class="tdet">`+T.rewards.map(r=>`<div class="rw2"><span>${r.from===r.to?r.from+'º':r.from+'º a '+r.to+'º'}</span><span><span class="cn">${SV.coin}${r.coin} Brasões</span>${r.prism?' · '+r.prism+' fragmentos do Prismático':''}${r.frame?' · moldura':''}</span></div>`).join('')+`</div>
+   <p class="hint">Só guilda com pelo menos 1 vitória na semana. Mais: 1 baú por território para cada membro da guilda dona (1 item da raridade mais alta que você pode receber + ${T.chest.forge} forja, ${T.chest.food} ração, ${T.chest.essence} Essência).</p>`; }
+function renderBody(keep){ const b=$('#body'), sc=b.scrollTop; b.innerHTML={map:pMap,lineup:pLineup,battles:pBattles,rank:pRank}[tab](); b.scrollTop=keep?sc:0; }
+function full(keep){ renderTop(); renderTabs(); renderBody(keep); renderOv(); }
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2000); }
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${esc(where)}</div></div><div class="navb"><p>No jogo, volta para a tela <b>${esc(where)}</b>.</p><button class="bt" data-x="navback" style="height:44px;min-width:200px">Voltar para o Torneio</button></div>`; scr.appendChild(d); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.tab){ tab=d.tab; if(tab!=='battles'){ S.replay=null; } full(false); return; }
+  if(d.tile){ S.sel=d.tile; renderBody(true); return; }
+  if(d.decl){ const er=declErr(S.sel,d.decl); if(er){ toast(er[1]||er[0]); return; } S.decl.push({id:S.sel,slot:d.decl,day:dayI().wd}); S.declToday++; toast('Ataque marcado: '+(d.decl==='d5'?'sexta':'sábado')+' às 20h'); full(true); return; }
+  if(d.slot){ S.slot=d.slot; full(false); return; }
+  if(d.pick){ if(b.getAttribute&&b.getAttribute('aria-disabled')==='true'){ const m=memOf(d.pick); if(locked(S.slot)) toast('Escalação travada às 19h'); else if(!can()) toast('Só líder e oficiais escalam'); else if(m&&!eligible(m)) toast(m.name+' está na guilda há '+inGuildH(m)+' h: precisa de 24 h antes da trava'+(S.slot==='d5'&&eligibleFor(m,'d6')?' (pode no sábado)':'')); else toast('Já são 15. Tire alguém antes'); return; }
+    const L=S.lineups[S.slot], i=L.indexOf(d.pick); if(i>=0) L.splice(i,1); else if(L.length<T.size) L.push(d.pick); S.saved[S.slot]=false; full(true); return; }
+  if(d.lu==='clear'){ S.lineups[S.slot]=[]; S.saved[S.slot]=false; full(true); return; }
+  if(d.lu==='best'){ S.lineups[S.slot]=best15(); S.saved[S.slot]=false; full(true); return; }
+  if(d.lu==='save'){ if(!S.lineups[S.slot].length){ toast('Escale pelo menos 1'); return; } S.saved[S.slot]=true; toast('Escalação de '+(S.slot==='d5'?'sexta':'sábado')+' salva ('+S.lineups[S.slot].length+'/15)'); full(true); return; }
+  if(d.watch!=null){ startReplay(+d.watch); return; }
+  if(d.spd){ if(S.replay){ S.replay.speed=+d.spd; renderOv(); } return; }
+  if(d.rp==='skip'){ const R=S.replay; if(R){ R.i=R.duels.length-1; const D=R.duels[R.i]; R.k=D.log.length; R.hp=[D.hpLeftA,D.hpLeftB]; R.done=true; renderOv(); } return; }
+  if(d.rp==='again'){ startReplay(S.replay.bi); return; }
+  if(d.rp==='close'){ S.replay=null; renderOv(); return; }
+  if(d.rk){ S.rk=d.rk; renderBody(false); return; } });
+function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-role]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.role===S.role)); document.querySelectorAll('[data-day]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.day===S.day)); }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.hero){ S.hero=d.hero; syncSide(); full(true); }
+  else if(d.role){ S.role=d.role; syncSide(); full(true); }
+  else if(d.day){ S.day=d.day; S.replay=null; S.battles=[]; S.declToday=d.day==='mon'?1:0; for(const k of ['d5','d6']) S.lineups[k]=S.lineups[k].filter(id=>{ const m=memOf(id); return m&&present(m); }); if(d.day==='fri21'||d.day==='sun') tab='battles'; syncSide(); full(false); } });
+S.hero='kael'; S.role='officer'; S.day='mon'; reset(); full(false);
+setTimeout(()=>{ for(const h of ['kael','kaia']){ img('a/body_'+h+'.png'); img('a/body_'+h+'_demon.png'); } },600);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-torneio-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Torneio do Poder V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
