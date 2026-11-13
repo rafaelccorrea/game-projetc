@@ -74,6 +74,12 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
       P('fase ' + s + ' · ' + Math.round(m * 100) + '% da FC · onda comum 1: ' + (c.res === 'win' ? 'vencida em ' + c.sec.toFixed(0) + ' s, sobra ' + Math.round(c.hp * 100) + '%' : c.res === 'dead' ? 'CAIU aos ' + c.sec.toFixed(0) + ' s' : 'não acabou em 150 s') + ' · onda do chefe: ' + show(b)); } return; }
   if (what === 'senhores') { const ab = arg.split('-').map(Number); for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`); const at = await many(4, s, 5, { mul: 1 / wall }), full = await many(4, s, 5, { mul: 1 });
       P('Senhor da era ' + e + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · chegando com a FC da fase 9 (' + Math.round(100 / wall) + '%): ' + show(at) + ', derrotas ' + (4 - at.wins) + '/4 · com 100%: ' + show(full) + ', derrotas ' + (4 - full.wins) + '/4'); } return; }
+  /* senhoresref:<era>-<era>[:eras9] = o mesmo, com o HERÓI DE REFERÊNCIA novo (Sys.stats.refFromFc, chave ligada só nesta medida): o chefe é derivado dele e quem luta é ele,
+     com 100%, 90% e 80% da FC pedida e chegando com a FC da fase anterior. 6 lutas por caso. */
+  if (what === 'senhoresref') { const on = ev('Sys.stats.setRefFc(true)'); P('referência nova ligada: ' + on); const ab = arg.split('-').map(Number);
+    for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`), r = {}; for (const m of [1, 0.9, 0.8, 1 / wall]) r[m] = await many(6, s, 5, { ref: true, fcm: m });
+      const f = m => show(r[m]) + ', derrotas ' + (6 - r[m].wins) + '/6';
+      P('Senhor da era ' + e + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · 100%: ' + f(1) + ' · 90%: ' + f(0.9) + ' · 80%: ' + f(0.8) + ' · com a FC da fase anterior (' + Math.round(100 / wall) + '%): ' + f(1 / wall)); } return; }
   P('medida desconhecida: ' + MEDIDA); }
 
 (async () => {
@@ -190,7 +196,7 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   G.start(1, 1); rich(G, 60); check('chefe e comuns NÃO dependem do herói do momento (herói forte = mesmos inimigos)', STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#') === en1 && ev('heroFC()') > 1000, String(ev('heroFC()')));
   /* luta real. spec: {ref:true, mul} = herói de referência da FC pedida × mul; {mul} = herói do jogo (proporções de quem começa) com mul × a FC pedida; atk0 = sem bater */
   async function fight(stage, wave, spec) { G.start(stage, wave); const need = ev(`fcNeed(${stage})`);
-    if (spec) { const st = spec.ref ? JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${stage}),${stage}))`)) : JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: (spec.ref ? 1 : need / ev('heroFC()')) * (spec.mul || 1), atk0: !!spec.atk0, fix: !!spec.ref, set: false }; }
+    if (spec) { const st = spec.ref ? JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${stage})*${spec.fcm || 1},${stage}))`)) : JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: (spec.ref ? 1 : need / ev('heroFC()')) * (spec.mul || 1), atk0: !!spec.atk0, fix: !!spec.ref, set: false }; }
     ev('SCREENS_ON.bossResult=false'); let t0 = null, tFury = null, res = null, boss = null; const t = () => ev('B.t'), w0 = ev('S.wave');
     await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.fury && tFury == null) tFury = t() - t0;
       if (ev('B.deadT') > 0) { res = 'dead'; return true; } if (wave === 5 ? (boss && boss.dead) : ev('S.wave') !== w0) { res = 'win'; return true; } return false; }, 150);

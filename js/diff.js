@@ -61,8 +61,9 @@ function diffUnits(T, o){ const dt = 0.02; let t = 0, u = 0, pu = 0, act = null,
       else if (cd2 <= 0){ cd2 = o.s2cd; act = { t: 0, rate: 1, dur: o.s2d, e: o.eSkill, hits: o.s2h.map(h => ({ t: h[0], m: o.s2m / o.s2h.length })) }; }
       else { atkT -= dt; if (atkT <= 0){ atkT = o.ivl; act = { t: 0, rate: o.s1i / o.ivl, dur: o.s1d, e: o.eHit * o.ivl / o.s1i, hits: [{ t: o.s1t, m: 1 }] }; } } } }
   return { u, pu }; }
-/* HERÓI DE REFERÊNCIA: função pura da FC (e da fase). Uma função só; quando existir Sys.stats.refFromFc, é ela. */
-function diffRef(fc, stage){ try { const T = window.Sys && Sys.stats; if (T && typeof T.refFromFc === 'function'){ const r = T.refFromFc(fc, stage); if (r && r.atk > 0 && r.hp > 0) return r; }
+/* HERÓI DE REFERÊNCIA: função pura da FC (e da fase). Com a chave da Sistemas ligada (Sys.stats.refFcOn(), 9830ac0) é o Sys.stats.refFromFc(fc, fase): o jogador grátis
+   típico da fase (nível, equipamento da era, DEF e crítico). Chave desligada (hoje) = Sys.tower.statsFromFC, como antes: nada muda. */
+function diffRef(fc, stage){ try { const T = window.Sys && Sys.stats; if (T && typeof T.refFromFc === 'function' && typeof T.refFcOn === 'function' && T.refFcOn() === true){ const r = T.refFromFc(fc, stage); if (r && r.atk > 0 && r.hp > 0) return r; }
     const W = window.Sys && Sys.tower; if (W && typeof W.statsFromFC === 'function') return W.statsFromFC(fc, 0); } catch (e) {} return null; }
 /* chefe e comum da fase: {hp, dmg, chp, cdmg, need, ref, dps} ou null (sem tabela ou sem os módulos: fica o inimigo de hoje). Só depende da fase. */
 function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys && Sys.stats && typeof Sys.stats.hit === 'function')) return null;
