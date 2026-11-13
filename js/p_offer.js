@@ -22,7 +22,7 @@
    - estado a mais, que o módulo modela e o protótipo não: quem já fez outra compra (reason 'not_first_purchase') vê "Oferta indisponível";
    - sem os botões "PROTÓTIPO" (pular tempo, reiniciar). */
 if(!('offer' in PANEL_ON)) PANEL_ON.offer=false;
-const XO={anim:true,dlg:false,sig:''};
+const XO={anim:true,dlg:false,sig:'',busy:false};   /* dlg: false | 'soon' | 'pending' | 'erro' (Sys.buy) */
 
 /* ---------- chamadas ao Sys ISOLADAS (valor de reserva seguro; o que falta no módulo está anotado em cada uma) ---------- */
 const ofM=()=>(typeof Sys!=='undefined'&&Sys&&Sys.offer)||null;
@@ -121,13 +121,19 @@ function ofSoon(d){
     <span style="font-size:14px;font-weight:800;color:#d9c4f2;line-height:1.3;max-width:300px">A oferta de primeira compra ainda não está disponível nesta versão do jogo. Nada é cobrado por aqui.</span></div>`);
 }
 /* ---------- aviso do botão de comprar (PO): nada é cobrado, nada é entregue, nada muda no save ---------- */
+/* textos do aviso por situação (compra pelo Sys.buy, js/sys/buy.js): 'soon' = sem Google Play/servidor ainda; 'pending' = pagamento pendente
+   (boleto/aprovação): a entrega chega sozinha quando o Google confirmar; 'erro' = não deu certo (nada foi cobrado pelo jogo). */
+const OF_DLG={soon:['Pagamento em breve','A compra com dinheiro ainda não está disponível nesta versão do jogo.','Nada foi cobrado e nada foi entregue.'],
+  pending:['Pagamento pendente','O Google Play ainda está confirmando o pagamento. Os itens chegam sozinhos assim que ele aprovar.','Você não precisa comprar de novo.'],
+  erro:['Não deu certo','A compra não foi concluída. Confira a conexão e tente de novo.','Se algo foi cobrado, os itens chegam na próxima abertura do jogo.']};
 function ofDialog(){
+  const T=OF_DLG[XO.dlg]||OF_DLG.soon;
   return `<div class="of-dim" data-x="payok" style="position:absolute;inset:0;z-index:20;background:rgba(8,5,14,.78);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box">
     <div class="of-dlg" data-x="noop" role="dialog" aria-modal="true" aria-labelledby="of_pt" style="width:100%;max-width:340px;border-radius:20px;border:2px solid #b07cff;background:linear-gradient(180deg,#2a1840,#170e24);box-shadow:0 0 30px rgba(176,124,255,.5),0 18px 40px rgba(0,0,0,.6);padding:18px 16px 16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
       <span style="width:56px;height:56px;border-radius:50%;border:2px solid #b07cff;background:#1d1030;color:#ffe07a;display:flex;align-items:center;justify-content:center">${OF_CLOCK(30,2.4)}</span>
-      <span id="of_pt" class="lil" style="font-size:24px;line-height:1.1;color:#fff">Pagamento em breve</span>
-      <span style="font-size:14px;font-weight:800;color:#e2d4f2;line-height:1.3">A compra com dinheiro ainda não está disponível nesta versão do jogo.</span>
-      <span style="font-size:13px;font-weight:900;color:#a8f0ae;line-height:1.3">Nada foi cobrado e nada foi entregue.</span>
+      <span id="of_pt" class="lil" style="font-size:24px;line-height:1.1;color:#fff">${T[0]}</span>
+      <span style="font-size:14px;font-weight:800;color:#e2d4f2;line-height:1.3">${T[1]}</span>
+      <span style="font-size:13px;font-weight:900;color:#a8f0ae;line-height:1.3">${T[2]}</span>
       <button class="of-gold lil" data-x="payok" style="margin-top:4px;width:100%;height:52px;border-radius:16px;padding:0;font-size:21px">Entendi</button></div></div>`;
 }
 
@@ -168,7 +174,7 @@ function scrOffer(){
           <img class="of-wimg" src="${wIcon}" alt="${esc2(W.name)}" style="width:60px;height:60px;object-fit:contain"><span class="of-sheen"></span></div>
         <div style="width:62px;height:8px;background:#6a5a7e;border-radius:3px 3px 0 0;margin-top:2px"></div>
         <div style="width:50px;height:${pedH}px;background:linear-gradient(90deg,#3c3150,#5d4f72 50%,#3c3150);display:flex;align-items:flex-start;justify-content:center;padding-top:${pedH>=22?4:1}px;box-sizing:border-box">
-          ${W.stars>0?`<span style="font-size:9.5px;font-weight:900;color:#ffe07a;white-space:nowrap;line-height:12px">${W.stars}★</span>`:''}</div>
+          ${W.stars>0?`<span style="font-size:9.5px;font-weight:900;color:#ffe07a;white-space:nowrap;line-height:12px">${W.stars}<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-1px;margin-left:1px"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg></span>`:''}</div>
         <div style="width:68px;height:7px;background:#4c4060;border-radius:3px 3px 0 0"></div></div>
       ${done?`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none">
         <span class="of-stamp lil" style="padding:4px 18px;border-radius:12px;border:4px solid #5fd068;background:rgba(13,36,16,.82);color:#a8f0ae;font-size:${d.Wb<350?28:34}px;letter-spacing:2px;box-shadow:0 0 24px rgba(95,208,104,.6)">COMPRADO</span></div>`:''}
@@ -208,7 +214,7 @@ function scrOffer(){
   const bar=live?`<div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:2px 6px;font-weight:900;text-align:center">
         <span style="font-size:13px;color:#c9b9d9">Pacote exclusivo · compra única${price?' ·':''}</span>
         ${price?`<span class="of-gtext lil" style="font-size:24px;line-height:1;white-space:nowrap">${price}</span>`:''}</div>
-      <button class="of-gold of-cta lil" data-x="buy" id="of_buy" style="${btnSt};font-size:${d.Wb<350?21:23}px"><span class="of-sheen"></span>Comprar${price?' '+price:''}</button>`
+      <button class="of-gold of-cta lil" data-x="buy" id="of_buy" style="${btnSt};font-size:${d.Wb<350?21:23}px"><span class="of-sheen"></span>${XO.busy?'Processando...':'Comprar'+(price?' '+price:'')}</button>`
     :done?`<button class="of-green lil" data-x="gear" style="${btnSt};font-size:22px">Ver no Equipamento</button>`
     :`<button class="of-grey lil" data-x="shop" style="${btnSt};box-sizing:border-box;border:2px solid #6b5f7a;background:#2a2433;color:#e6dcf0;font-size:${d.Wb<350?18:20}px">Ver outras ofertas na Loja</button>`;
   const note=o.kind==='used'?'Esta oferta vale só para a primeira compra, e a sua conta já tem uma compra.'
@@ -237,10 +243,21 @@ function ofClick(b,ev){
   if(a==='noop') return;                                   /* toque dentro do aviso: não fecha */
   if(a==='payok'){ if(!XO.dlg) return; snd('ui_tap'); XO.dlg=false; render(); return; }
   if(XO.dlg) return;
-  if(a==='buy'){ snd('ui_tap');
-    /* PAGAMENTO EM BREVE (PO): só abre o aviso. Não chama Sys.offer.grant nem markPurchase, não cobra, não entrega, não grava nada. */
-    if(ofState().kind==='live') XO.dlg=true;
-    render(); }
+  if(a==='buy'){ if(XO.busy) return; snd('ui_tap');
+    if(ofState().kind!=='live'){ render(); return; }
+    /* COMPRA (Sys.buy): sem Google Play/servidor = aviso "Pagamento em breve" (nada é cobrado, nada muda no save).
+       Com eles: cobra pela loja, o SERVIDOR confere o recibo e a entrega vem pela lista de entregas (Sys.buy.sync → Sys.offer.grant).
+       A tela nunca entrega por conta própria. */
+    const SB=window.Sys&&Sys.buy;
+    if(!SB||!SB.ready()){ XO.dlg='soon'; render(); return; }
+    XO.busy=true; render();
+    SB.purchase(S,Sys.host,SB.DATA.offerProduct).then(r=>{ XO.busy=false;
+      if(r.ok){ try{ save(); hud(); }catch(e){} }                         /* a oferta já foi entregue pelo Sys.buy.sync: a tela vira "comprado" sozinha */
+      else if(r.reason==='pending') XO.dlg='pending';
+      else if(r.reason==='soon') XO.dlg='soon';
+      else if(r.reason!=='cancelled') XO.dlg='erro';                   /* cancelado pelo jogador: volta à tela sem aviso */
+      render(); }).catch(()=>{ XO.busy=false; XO.dlg='erro'; render(); });
+  }
   else if(a==='gear'){ snd('ui_tap'); Screens.open('gear'); }
   else if(a==='shop'){ snd('ui_tap'); Screens.open('shop'); }
 }
@@ -252,5 +269,5 @@ Panels.add('offer',{title:'Oferta',render:scrOffer,click:ofClick,
       put('of_hh',t.hh); put('of_mm',t.mm); put('of_ss',t.ss); }
     if(XO.sig&&ofSig(o)!==XO.sig&&ofOn()) render(); },
   busy(){ return false; },
-  onOpen(o){ XO.anim=true; XO.dlg=false; },
+  onOpen(o){ XO.anim=true; XO.dlg=false; XO.busy=false; },
   onClose(){ XO.dlg=false; } });
