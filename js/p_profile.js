@@ -29,7 +29,7 @@ const pr2Read=(k,fn)=>{ try{ const p=window.P_PROFILE; if(!p||!p[k]||typeof p[fn
 const pr2Frames=()=>pr2Read('frames','readFrames'), pr2Auras=()=>pr2Read('auras','readAuras'), pr2Wings=()=>pr2Read('wings','readWings'), pr2Stats=()=>pr2Read('stats','readStats');
 const pr2Ok=()=>!!(window.Sys&&Sys.titles&&Sys.titles.DATA&&Sys.titles.progress);
 const pr2Esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function pr2Fmt(v){ try{ if(typeof kf==='function') return kf(v); }catch(e){} return String(Math.round(v||0)); }
+function pr2Fmt(v){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return String(Sys.fc.viewText(v)); }catch(e){} /* FC na escala visual (só FC passa por aqui) */ try{ if(typeof kf==='function') return kf(v); }catch(e){} return String(Math.round(v||0)); }
 /* o texto de condição do módulo traz uma estrela (símbolo gráfico): a tela mostra "estrelas" (regra: sem emoji/símbolo) */
 /* retrato do herói na fase e com chapéu/óculos/máscara (js/avatar.js); sem o arquivo, o Kael parado de antes */
 const pr2Av=sz=>typeof avatarTag==='function'?avatarTag(sz,'position:absolute;left:0;top:0','Seu retrato'):'<div class="pr2-kid" style="position:absolute;left:-8px;top:-8px;width:112px;height:112px"></div>';

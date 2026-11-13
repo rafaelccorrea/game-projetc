@@ -12,7 +12,9 @@
    Pedido Q-5 (reports/pedidos-entre-agentes.md): carregar este script e ligar PANEL_ON.rank (a Torre já abre o ranking quando Panels.on('rank')). */
 const XRK={tab:0,page:0,sec:-1};
 const R_MINH=620, R_PER=5;
-const R_TABS=[{k:'fc',label:'Força',hint:'Maior FC da semana',fmt:v=>'FC '+rkFmt(v)},{k:'lvl',label:'Nível',hint:'Seu nível de jogador',fmt:v=>'Nv. '+v},{k:'tower',label:'Torre',hint:'Andar mais alto vencido',fmt:v=>'Andar '+v},{k:'arena',label:'Arena',hint:'Pontos de arena da semana',fmt:v=>rkN(v)+' pts'},{k:'pass',label:'Passe',hint:'Nível do Passe da temporada',fmt:v=>'Passe '+v}];
+/* FC na escala visual (Sys.fc.viewText): vale para a FC do jogador, dos bots e para a diferença de FC */
+const rkFc=v=>{ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='function') return String(Sys.fc.viewText(v)); }catch(e){} return rkFmt(v); };
+const R_TABS=[{k:'fc',label:'Força',hint:'Maior FC da semana',fmt:v=>'FC '+rkFc(v)},{k:'lvl',label:'Nível',hint:'Seu nível de jogador',fmt:v=>'Nv. '+v},{k:'tower',label:'Torre',hint:'Andar mais alto vencido',fmt:v=>'Andar '+v},{k:'arena',label:'Arena',hint:'Pontos de arena da semana',fmt:v=>rkN(v)+' pts'},{k:'pass',label:'Passe',hint:'Nível do Passe da temporada',fmt:v=>'Passe '+v}];
 const R_CSS=`.pr-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:prk 1s steps(12,jump-none) infinite}
 @keyframes prk{from{background-position:0 0}to{background-position:100% 0}}
 .pr-aura{background-size:1600% 100%;background-repeat:no-repeat;mix-blend-mode:screen;animation:pra 1.333s steps(16,jump-none) infinite}

@@ -29,6 +29,8 @@ def.click(btn('tab', 3)); has('pts'); def.click(btn('tab', 2)); has('Ranking de 
 def.click(btn('tab', 0)); def.click(btn('me')); assert(toasts.length >= 0); out.push('botão "Sua posição" responde');
 // 5) relógio: tick só troca os segundos
 els.pr_sec = mkEl('pr_sec'); def.render(); const s0 = els.pr_sec.textContent; def.tick(); out.push('tick do relógio sem redesenhar');
+// 5b) FC na escala visual: com Sys.fc.viewText, toda FC exibida (jogador, bots, diferença) passa por ela; sem ela, formatação atual
+g.Sys.fc = g.Sys.fc || {}; const vt0 = g.Sys.fc.viewText; g.Sys.fc.viewText = v => 'V' + Math.round(v); def.click(btn('tab', 0)); def.render(); assert(/FC V[0-9]+/.test(H()), 'FC pela viewText'); assert(!/FC [0-9]+K|FC [0-9]+,[0-9] ?K/.test(H()), 'sem FC real formatada'); g.Sys.fc.viewText = vt0; def.render(); assert(!/FC V[0-9]+/.test(H()), 'sem viewText: formatação atual'); out.push('FC na escala visual: passa por Sys.fc.viewText (e reserva sem ela)');
 // 6) módulo ausente
 const ar = g.Sys.arena; delete g.Sys.arena; def.render(); has('indisponível'); g.Sys.arena = ar; out.push('sem Sys.arena: aviso');
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');
