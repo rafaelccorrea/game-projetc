@@ -1,0 +1,35 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Logo animado</title>
+<style>
+:root{--bg:#0b0d16;--fg:#e8f6ff;--mut:#8aa3b8}
+body{margin:0;background:var(--bg);color:var(--fg);font:600 14px/1.4 system-ui,sans-serif}
+main{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:16px}
+.stage{position:relative;width:390px;max-width:100%;height:560px;border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#1b2a4a 0%,#0d1222 55%,#07080d 100%)}
+.stage::before{content:"";position:absolute;inset:0;background:url(../../../assets/brand/title_bg.png) center/cover;opacity:.35}
+.stage video,.stage canvas{position:absolute;left:50%;top:40px;transform:translateX(-50%);width:380px;max-width:100%}
+.cap{position:absolute;left:0;right:0;bottom:10px;text-align:center;color:var(--mut);font-size:12px}
+button{margin:0 4px;padding:6px 12px;border-radius:8px;border:1px solid #2c4a66;background:#13243a;color:var(--fg);cursor:pointer}
+p{text-align:center;color:var(--mut);margin:8px 16px}
+</style></head><body>
+<p>Logo B Cristal animado: entrada 1x e depois loop para sempre. <button id="again">Repetir entrada</button></p>
+<main>
+<div class="stage"><video id="v" muted playsinline preload="auto"></video><div class="cap">webm VP9 com alfa (assets/brand/logo_anim.webm)</div></div>
+<div class="stage"><canvas id="c" width="384" height="256"></canvas><div class="cap">reserva: folha 384x256, 12 fps (assets/brand/logo_anim.png)</div></div>
+</main>
+<script>
+const B='../../../assets/brand/';
+fetch(B+'logo_anim.json',{cache:'no-cache'}).then(r=>r.json()).then(cfg=>{
+  const v=document.getElementById('v'); v.src=B+cfg.src;
+  const tick=()=>{ if(v.duration&&v.currentTime>=v.duration-0.04){ v.currentTime=cfg.loopStart; v.play(); } v.requestVideoFrameCallback?v.requestVideoFrameCallback(tick):requestAnimationFrame(tick); };
+  v.addEventListener('ended',()=>{ v.currentTime=cfg.loopStart; v.play(); });
+  v.play().then(tick);
+  document.getElementById('again').onclick=()=>{ v.currentTime=0; v.play(); start=performance.now(); };
+});
+let start=performance.now();
+fetch(B+'logo_anim_sheet.json',{cache:'no-cache'}).then(r=>r.json()).then(s=>{
+  const img=new Image(); img.src=B+s.src; const c=document.getElementById('c'), g=c.getContext('2d');
+  img.onload=()=>{ const draw=()=>{ const n=Math.floor((performance.now()-start)/1000*s.fps); let f;
+      if(n<=s.intro[1]) f=n; else { const L=s.loop[1]-s.loop[0]+1; f=s.loop[0]+((n-s.intro[1]-1)%L); }
+      g.clearRect(0,0,c.width,c.height); g.drawImage(img,(f%s.cols)*s.w,Math.floor(f/s.cols)*s.h,s.w,s.h,0,0,s.w,s.h); requestAnimationFrame(draw); }; draw(); };
+});
+</script></body></html>
