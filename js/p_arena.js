@@ -32,6 +32,8 @@ const A_CSS=`.pa-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.pn
 const paOk=()=>!!(window.Sys&&Sys.arena&&Sys.arena.leagueInfo&&Sys.arena.opponents&&Sys.arena.fight);
 const paEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const paN=v=>Math.round(v||0).toLocaleString('pt-BR');
+/* FC na escala de EXIBIÇÃO do dono (Sys.fc.viewText; só visual): jogador e adversários na mesma escala. Dano da luta segue real (paF). */
+const paFC=v=>{ try{ if(window.Sys&&Sys.fc&&Sys.fc.viewText) return Sys.fc.viewText(v); }catch(e){} return paF(v); };
 function paF(v){ try{ if(typeof kf==='function') return kf(v); }catch(e){} return paN(v); }
 const paIc=(n,z)=>'<img src="assets/ui/'+n+'.png" alt="" style="width:'+(z||14)+'px;height:'+(z||14)+'px;vertical-align:-2px;object-fit:contain">';
 const paToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
@@ -69,7 +71,7 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
     return `<button data-x="sel" data-i="${i}" aria-pressed="${on}" aria-label="${paEsc(p.name)}, FC ${paN(p.fc)}, ${paEsc(d.txt)}" class="pa-in" style="position:relative;animation-delay:${i*.06}s;flex:none;height:72px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:14px;background:${on?'#3a2c1f':'#1d1611'};border:2px solid ${on?'#ffc94a':'#4a3a2b'};color:#f6ecdf;text-align:left;width:100%">
       <span aria-hidden="true" style="flex:none;width:54px;height:54px;border-radius:12px;overflow:hidden;position:relative;background:#2a1f16;border:2px solid ${dcol[d.id]||'#6b5843'}"><span style="position:absolute;left:-13px;top:-6px;width:80px;height:80px;display:block;transform:scaleX(-1)"><span class="pa-kid" style="position:absolute;inset:0;display:block"></span></span></span>
       <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(p.name)}</span>
-        <span style="font-size:12px;font-weight:800;color:#c9b9a2">FC ${paF(p.fc)} · <span style="color:${dcol[d.id]||'#c9b9a2'}">${paEsc(d.txt)}</span></span></span>
+        <span style="font-size:12px;font-weight:800;color:#c9b9a2">FC ${paFC(p.fc)} · <span style="color:${dcol[d.id]||'#c9b9a2'}">${paEsc(d.txt)}</span></span></span>
       <span style="flex:none;display:flex;flex-direction:column;align-items:flex-end;font-family:'Lilita One',sans-serif;line-height:1.05"><span style="color:#5fd068;font-size:16px">+${p.winPts}</span><span style="color:#ff6b6b;font-size:13px">−${p.losePts}</span><span style="font-size:10px;color:#c9b9a2;font-family:inherit;font-weight:800">pts</span></span>
       ${on?`<span style="position:absolute;right:8px;top:-7px;font-size:9px;font-weight:900;color:#2a1403;background:#ffc94a;border-radius:6px;padding:1px 5px">ESCOLHIDO</span>`:''}</button>`; }).join('');
   return card+fights+`<div role="list" aria-label="Adversários" style="flex:none;display:flex;flex-direction:column;gap:6px">${list}</div>
@@ -99,9 +101,9 @@ function paFightView(){ const F=XA2.fight, log=(F.r.duel&&F.r.duel.log)||[], st=
   const bar=(v,c)=>`<div style="height:12px;border-radius:7px;background:#140e08;border:2px solid #4a3a2b;overflow:hidden"><div class="pa-hp" style="height:100%;width:${Math.max(0,Math.round(v*100))}%;background:${c}"></div></div>`;
   const dmg=cur?`<span class="pa-dmg${cur.crit?' c':''}" style="${cur.s===0?'right:12%':'left:12%'};top:30%">${cur.crit?'CRÍTICO ':''}−${paF(cur.dmg)}</span>`:'';
   return `<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px">
-    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · ${paEsc(paMe())}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paF(F.myFc)}</span>${bar(hpA,'#5fd068')}</div>
+    <div style="flex:none;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><span style="font-weight:900;font-size:13px">Você · ${paEsc(paMe())}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFC(F.myFc)}</span>${bar(hpA,'#5fd068')}</div>
       <span class="pa-vs" style="font-family:'Lilita One',sans-serif;font-size:28px;color:#ffe07a;text-shadow:0 2px 0 #6a3a08">VS</span>
-      <div style="flex:1;min-width:0;text-align:right"><span style="font-weight:900;font-size:13px">${paEsc(F.opp.name)}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paF(F.opp.fc)}</span>${bar(hpB,'#ff5a5a')}</div></div>
+      <div style="flex:1;min-width:0;text-align:right"><span style="font-weight:900;font-size:13px">${paEsc(F.opp.name)}</span><br><span style="font-size:11px;color:#c9b9a2;font-weight:800">FC ${paFC(F.opp.fc)}</span>${bar(hpB,'#ff5a5a')}</div></div>
     <div style="flex:1;min-height:220px;position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#3a2a18,#1a120b 70%);border:2px solid #4a3a2b">
       <div style="position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(180deg,#5a4026,#2a1c10)"></div>
       ${typeof window.drawHeroFull==='function'?`<canvas id="pa_me" width="256" height="256" role="img" aria-label="${paEsc(paMe())}" class="${cur&&cur.s===1?'pa-hit':''}" style="position:absolute;left:2%;bottom:46px;width:46%;aspect-ratio:1"></canvas>`
@@ -113,7 +115,7 @@ function paResult(){ const F=XA2.fight, r=F.r, li=Sys.arena.leagueInfo(S,paH()),
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1, o=Sys.arena.ensure(S,paH());
   return `<div class="pa-in" style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center">
     <span style="font-family:'Lilita One',sans-serif;font-size:44px;line-height:1;color:${win?'#ffe07a':'#ff6b6b'};text-shadow:0 3px 0 ${win?'#8a4f0c':'#5a0f0f'}">${win?'VITÓRIA!':'DERROTA'}</span>
-    <span style="font-size:13px;font-weight:800;color:#c9b9a2">contra ${paEsc(F.opp.name)} · FC ${paF(F.opp.fc)}</span>
+    <span style="font-size:13px;font-weight:800;color:#c9b9a2">contra ${paEsc(F.opp.name)} · FC ${paFC(F.opp.fc)}</span>
     <div style="display:flex;align-items:center;gap:8px">${paShield(L,44)}<span style="font-family:'Lilita One',sans-serif;font-size:26px;color:${r.delta>=0?'#5fd068':'#ff6b6b'}">${r.delta>=0?'+':'−'}${Math.abs(r.delta)}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">pontos de arena</span></div>
     <div style="width:86%"><div role="progressbar" aria-label="Pontos de liga" style="height:12px;border-radius:7px;background:#140e08;border:2px solid #4a3a2b;overflow:hidden"><div style="height:100%;width:${Math.round(frac*100)}%;background:${L.c1}"></div></div>
       <span style="font-size:11px;font-weight:800;color:#f6ecdf">Liga ${paEsc(L.name)} · ${paN(li.lp)}${N?' / '+paN(N.min):''} pts</span></div>

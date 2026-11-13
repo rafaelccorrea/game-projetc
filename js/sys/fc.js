@@ -39,6 +39,12 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const zero=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0,petAtk:0,petHp:0,petBond:0,petCap:0});
 const sysRoot=()=>root.Sys||{};
 /* números: o formatador único Sys.stats.abbr (vírgula, até o quintilhão, sufixos em português com a chave ptNum); sem ele, o antigo abaixo */
+/* ESCALA DE EXIBIÇÃO DA FC (ordem do dono: o jogador SENTE o poder crescer rápido; Nv 20 ≈ 700 mil). SÓ VISUAL: o equilíbrio, a curva, as lutas e as
+   comparações usam a FC real. Constante ÚNICA (não cresce com o nível) para que jogador × recomendado × ranking × inimigo fiquem na MESMA escala.
+   Toda tela que mostra FC usa view()/viewText(); o +/− do delta já sai na escala. Atributos (ATK/Vida) seguem reais. */
+const VIEW={k:31};
+const view=fc=>Math.round(num(fc,0)*VIEW.k);
+const viewText=fc=>fmt(view(fc));
 function fmt(n){ const T=sysRoot().stats; if(T&&typeof T.abbr==='function') return T.abbr(n).replace('−','-');
   n=num(n,0); const a=Math.abs(n), s=n<0?'-':'';
   return s+(a>=1e12?(a/1e12).toFixed(1)+'T':a>=1e9?(a/1e9).toFixed(1)+'B':a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(1)+'k':Math.floor(a)+''); }
@@ -117,7 +123,7 @@ function itemFC(S,host,item){
   const empty=compute(S,host,{item,remove:true}), as=compute(S,host,{item}), top=Math.max(Math.max(1,Math.floor(num(item.lvl,1))),pl==null?100:Math.min(100,pl));
   return {fc:as-empty, atPlayerLevel:compute(S,host,{item,atLevel:top})-empty, level:Math.max(1,Math.floor(num(item.lvl,1))), playerLevel:pl, swap:as-compute(S,host)};
 }
-const hud=(S,host)=>'FC '+fmt(compute(S,host));
+const hud=(S,host)=>'FC '+viewText(compute(S,host));
 /* VARIAÇÃO DE PODER (dono via PO: mostrar +/− de FC em TUDO que mexe no poder: título, item, pet, montaria, asa, forja, fusão, estandarte...).
    Uso: const a=Sys.fc.snapshot(S,host); …ação…; const d=Sys.fc.delta(a, Sys.fc.snapshot(S,host)); ou, de uma vez, Sys.fc.measure(S,host,()=>ação).
    delta aceita snapshot ou número. {before, after, diff, pct, sign:'up'|'down'|'same', text:'+1,2 mil'|'−340'|'', color, stats:{atk,hp,def,critRate,critDmg,aspd}}.
@@ -126,7 +132,7 @@ const SNAP_KEYS=['atk','hp','def','critRate','critDmg','aspd'];
 function snapshot(S,host){ const st=stats(S,host), o={fc:fcOfStats(st)}; for(const k of SNAP_KEYS) o[k]=num(st[k],0); return o; }
 function delta(a,b){ const A=typeof a==='number'?{fc:a}:(a||{fc:0}), B=typeof b==='number'?{fc:b}:(b||{fc:0}), before=num(A.fc,0), after=num(B.fc,0), diff=after-before;
   const sign=diff>0?'up':diff<0?'down':'same', st={}; for(const k of SNAP_KEYS) if(A[k]!=null&&B[k]!=null) st[k]=num(B[k],0)-num(A[k],0);
-  return {before,after,diff,pct:before>0?Math.round(diff/before*10000)/100:0,sign,text:diff>0?'+'+fmt(diff):diff<0?'−'+fmt(-diff):'',color:diff>0?'#5fd068':diff<0?'#ff6b6b':'#c9b9a2',stats:st}; }
+  return {before,after,diff,pct:before>0?Math.round(diff/before*10000)/100:0,sign,text:diff>0?'+'+viewText(diff):diff<0?'−'+viewText(-diff):'',viewBefore:view(before),viewAfter:view(after),viewDiff:view(diff),color:diff>0?'#5fd068':diff<0?'#ff6b6b':'#c9b9a2',stats:st}; }
 function measure(S,host,fn){ const a=snapshot(S,host); const result=typeof fn==='function'?fn():undefined; return {result,delta:delta(a,snapshot(S,host))}; }
 
 /* RANKING (regra F): cada troca de item/skin grava a FC atual; o ranking semanal usa a MAIOR FC registrada na semana (segunda a domingo,
@@ -150,13 +156,13 @@ function render(el,S,host,opt){
   const adv=advice(S,host), pages=Math.max(1,Math.ceil(adv.length/PER)), pg=clamp(Math.floor(num(el.__sysFcPage,0)),0,pages-1);
   el.__sysFcPage=pg;
   const row=(k,v)=>`<div class="sys-fc-stat"><span>${k}</span><b>${v}</b></div>`;
-  const brk=breakdown(S,host).slice(0,4).map(s=>`<span class="sys-fc-src">${esc(s.icon)} ${esc(s.label)} <b>+${fmt(s.fc)}</b></span>`).join('');
+  const brk=breakdown(S,host).slice(0,4).map(s=>`<span class="sys-fc-src">${esc(s.icon)} ${esc(s.label)} <b>+${viewText(s.fc)}</b></span>`).join('');
   const list=adv.slice(pg*PER,pg*PER+PER).map(a=>`<button class="sys-fc-adv${a.ready?' ready':''}" data-tab="${esc(a.tab)}">
       <span class="sys-fc-ai">${esc(a.icon)}</span><span class="sys-fc-at">${esc(a.label)}${a.cost?`<small>${esc(a.cost)}</small>`:''}</span>
-      <span class="sys-fc-ag">${a.gain>0?'+'+fmt(a.gain)+' FC':''}</span></button>`).join('')
+      <span class="sys-fc-ag">${a.gain>0?'+'+viewText(a.gain)+' FC':''}</span></button>`).join('')
     || DATA.guide.map(g=>`<button class="sys-fc-adv" data-tab="${esc(g.tab)}"><span class="sys-fc-ai">${g.icon}</span><span class="sys-fc-at">${esc(g.label)}</span><span class="sys-fc-ag">›</span></button>`).slice(0,PER).join('');
   el.innerHTML=`<div class="sys-fc">
-    <div class="sys-fc-top"><div class="sys-fc-big"><small>Força de combate</small><b>${fmt(fc)}</b></div>
+    <div class="sys-fc-top"><div class="sys-fc-big"><small>Força de combate</small><b>${viewText(fc)}</b></div>
       <div class="sys-fc-stats">${row('ATK',fmt(st.atk))}${row('HP',fmt(st.hp))}${row('DEF',fmt(st.def))}${row('Crítico',num(st.critRate,0).toFixed(1)+'%')}${row('Dano crít.','+'+Math.round(num(st.critDmg,0))+'%')}${row('Vel. ataque','+'+Math.round(num(st.aspd,0))+'%')}</div></div>
     ${brk?`<div class="sys-fc-srcs">${brk}</div>`:''}
     <div class="sys-fc-h">Como ficar mais forte</div>
@@ -168,7 +174,7 @@ function render(el,S,host,opt){
     if(b.dataset.tab&&host&&typeof host.goTab==='function') host.goTab(b.dataset.tab); };
 }
 
-const API={DATA,KEYS,snapshot,delta,measure,modules,sources,total,stats,parts,fcOfStats,compute,breakdown,advice,hud,record,weekMax,weekKey,itemFC,render,fmt,
+const API={DATA,VIEW,view,viewText,KEYS,snapshot,delta,measure,modules,sources,total,stats,parts,fcOfStats,compute,breakdown,advice,hud,record,weekMax,weekKey,itemFC,render,fmt,
   bonus:()=>zero()};   // o próprio fc não soma nada (é ignorado em modules())
 root.Sys=root.Sys||{}; root.Sys.fc=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;

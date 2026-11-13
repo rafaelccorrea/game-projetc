@@ -36,7 +36,7 @@ const senhorName=e=>SENHOR[e]||null;
 /* resumo de uma fase para a tela/mapa: nome da era, inimigos com arte e os números do Sys.phases (vida, dano, DEF com o formato abreviado) */
 function stageCard(e,d,n){ const P=root.Sys&&root.Sys.phases, T=root.Sys&&root.Sys.stats, E=ERAS78[e-7]; if(!E||!P) return null;
   const ab=v=>T&&T.abbr?T.abbr(v):String(v), c=P.enemy(e,d,n,'common'), b=P.enemy(e,d,n,'boss');
-  return {era:e,eraName:E.n,stage:n,diff:d,fcRec:c.fcRec,fcText:ab(c.fcRec),common:{name:E.en[n%2].n,art:E.en[n%2].art,hp:ab(c.hp),dmg:ab(c.dmg),def:ab(c.def)},
+  return {era:e,eraName:E.n,stage:n,diff:d,fcRec:c.fcRec,fcText:(root.Sys&&root.Sys.fc&&root.Sys.fc.viewText)?root.Sys.fc.viewText(c.fcRec):ab(c.fcRec),common:{name:E.en[n%2].n,art:E.en[n%2].art,hp:ab(c.hp),dmg:ab(c.dmg),def:ab(c.def)},
     boss:{name:b.kind==='senhor'?SENHOR[e]:E.en[2].n,art:E.en[2].art,kind:b.kind,hp:ab(b.hp),dmg:ab(b.dmg),def:ab(b.def)}}; }
 
 const API={ERAS78,SENHOR,LOAD_NAMES,extra,all78,senhorName,stageCard};

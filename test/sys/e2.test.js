@@ -971,4 +971,12 @@ t('fases na carga: save antigo no Nv 60 entra adulto direto (catchUp), camadas m
   assert.ok(d.every((x,i)=>i===0||x.glow>d[i-1].glow)); assert.strictEqual(T.dropFx({r:4}).color,'#ffc94a','paleta do Equipamento');
 });
 
+t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante única (comparações iguais); delta na mesma escala; lutas usam a real',()=>{
+  const F=require('../../js/sys/fc.js'); require('../../js/sys/stats.js');
+  assert.ok(Math.abs(F.view(22599)-700000)<10000,'Nv 20: '+F.viewText(22599)); assert.strictEqual(F.viewText(22599),'701K');
+  const me=50000, rec=60000; assert.strictEqual(F.view(me)<F.view(rec),me<rec); assert.ok(Math.abs(F.view(me)/F.view(rec)-me/rec)<1e-3,'razão preservada');
+  const d=F.delta(1000,1200); assert.strictEqual(d.diff,200,'diff real'); assert.strictEqual(d.viewDiff,F.view(200)); assert.strictEqual(d.text,'+'+F.viewText(200));
+  assert.ok(F.hud({best:1,inv:[]},makeHost()).startsWith('FC '));
+});
+
 console.log(`ok: ${n} testes`);
