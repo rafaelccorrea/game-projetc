@@ -87,7 +87,8 @@ function scrMail(){
 }
 /* resumo do que o Sys.loot.grantBundle entregou (inclui o que ficou guardado por nível) */
 function maGot(g){ if(!g) return 'Recompensa recebida'; const a=[]; if(g.gold) a.push(maFmt(g.gold)+' moedas'); if(g.gems) a.push(g.gems+' gemas'); for(const k in MA_MAT) if(g[k]) a.push(g[k]+' '+MA_MAT[k].toLowerCase()); if(g.items&&g.items.length) a.push(g.items.length+(g.items.length>1?' itens':' item')); if(g.eggs&&g.eggs.length) a.push(g.eggs.length+(g.eggs.length>1?' ovos':' ovo'));
-  if(Array.isArray(g.newDrops)&&g.newDrops.length) a.push(g.newDrops.length+(g.newDrops.length>1?' prêmios novos':' prêmio novo'));   /* carta do servidor com entregas novas (Sys.newDrops.grant; gancho do Servidor no Sys.mail) */
+  if(Array.isArray(g.newDrops)&&g.newDrops.length){ const nm=d=>{ try{ if(!d) return ''; if(d.kind==='pet'||d.kind==='mount'){ const L=d.kind==='pet'?Sys.pet.DATA.pets:Sys.mount.DATA.mounts, x=L.find(q=>q.id===d.id); if(!x) return ''; return x.name+(d.whole||d.hatched?'':d.frags?' ('+d.frags+(d.frags>1?' fragmentos':' fragmento')+')':''); } if(d.kind==='wing') return (d.item&&d.item.name)||'asa'; if(d.kind==='skin') return 'visual novo'; }catch(e){} return ''; };
+    const ns=g.newDrops.map(nm).filter(Boolean); a.push(ns.length===g.newDrops.length&&ns.length<=2?ns.join(' · '):g.newDrops.length+(g.newDrops.length>1?' prêmios novos':' prêmio novo')); }   /* carta do servidor com entregas novas (Sys.newDrops.grant; gancho do Servidor no Sys.mail) */
   const held=(g.heldItems||[]).length+(g.heldEggs||[]).length; if(held) a.push(held+' guardado'+(held>1?'s':'')+' até o nível certo'); return a.join(' · ')||'Recompensa recebida'; }
 function maClick(b){
   const a=b.dataset.x; if(a==='back'){ maSnd('ui_tap'); if(window.Screens&&Screens.close) Screens.close(); return; }
