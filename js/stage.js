@@ -369,7 +369,11 @@ function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().he
     if (p >= 1 && !B.dieDustW){ B.dieDustW = 1; dust(ox + HS * 0.45, gy - 2, 3, '#c8b496'); }
     if (fi >= imp && !B.dieDustB){ B.dieDustB = 1; dust(ox + HS * 0.1, gy - 2, 5, '#c8b496'); dust(ox - HS * 0.1, gy - 2, 3, '#c8b496'); } }
   return true; }
+/* GANCHOS DE DEBUG DO QA (só existem com DEBUG verdadeiro, ?debug=1; sem ele DBGFX é null e nenhuma função window.dbg* é criada). As funções estão no fim do
+   js/petfx.js (dbgDieAt, dbgHatchAt, dbgLvUp), com a documentação. Aqui só o estado e o instante congelado da queda no desenho do herói. */
+const DBGFX = (typeof DEBUG !== 'undefined' && DEBUG) ? { die: null, hatch: null, lv: null } : null;
 function drawHeroAnim(H){
+  if (DBGFX && DBGFX.die != null && H.main) H.deadP = DBGFX.die / 1.6;   /* dbgDieAt(t): a queda fica parada exatamente no instante t */
   if (H.deadP >= 0 && ART_ON.kael_die === true){ if (drawHeroDie(H)) return true; } else if (H.main && H.deadP < 0){ B.dieDustW = 0; B.dieDustB = 0; }
   if (H.main && typeof evoHidesHero === 'function' && evoHidesHero()) return true;   /* evolução 0→1 com folha própria: o herói é o da folha */
   if (H.mount && typeof drawHeroMounted === 'function' && drawHeroMounted(H)) return true;   // Kael MONTADO (js/mountfx.js); sem as folhas carregadas, segue a pé

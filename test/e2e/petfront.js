@@ -12,6 +12,7 @@
         recortada, desenhada ANTES do herói caído, só durante MOUNT_EXIT s; depois nenhuma folha de montaria; nunca o ícone parado); a asa segue sem desenho
      7. CHOCAGEM DE OVO: o pet equipado continua desenhado e o ovo fica AO LADO dele, à frente, dentro da tela, sem encostar no herói; só o pet que ainda
         está dentro do próprio ovo (1º ovo) espera nascer
+     9. GANCHOS DE DEBUG do QA (dbgDieAt, dbgHatchAt, dbgLvUp): existem com ?debug=1, congelam o instante pedido e soltam
      8. APARÊNCIA (js/p_look.js): destaque (a pé e montado) e grade desenham o pet, por último
    Só lê arquivos do jogo, nunca grava. Sai com código 1 se algo falhar. */
 const VERBOSE = process.argv.includes('-v');
@@ -65,6 +66,11 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       check(tag + ' DERROTA: a arma caída foi medida', dp.wl != null && dp.wr > dp.wl, JSON.stringify(dp));
       check(tag + ' DERROTA: a caixa do pet não cruza a do herói caído + arma', apart(dp), JSON.stringify(dp));
       check(tag + ' DERROTA: pet além da arma, do lado do inimigo, inteiro na tela', dp.pl >= dp.wr && dp.pr <= dp.LW && dp.x > dp.hx, JSON.stringify(dp));
+      /* inimigo que ficou em cena (visto pelo QA: o pet ia para cima do tigre). Conta pura do petDieX com um inimigo posto à mão. */
+      for (const [nm, off, side] of [['com folga depois do pet', dp.pr - dp.r + 8, 'frente'], ['colado na arma (sem vaga)', 10, 'pés']]) {
+        const q = ev('(function(){ const en0=B.en, c=dieClear(HM); B.en=[{x:c.r+' + off + '+35,dw:70,dead:false,sw:0,idx:0,key:"era0_e0"}]; try{ const m=petMetric(PETK.base)||{l:70,r:70}, k=petK(), x=petDieX(); return {x:x, pl:x-m.l*k, pr:x+m.r*k, el:enemyLeft(), l:c.l, r:c.r, wl:c.wl, wr:c.wr, hx:HX, LW:LW}; } finally { B.en=en0; } })()');
+        check(tag + ' DERROTA, inimigo ' + nm + ': pet do lado d' + (side === 'frente' ? 'a frente' : 'os pés') + ', sem tocar o inimigo', q.pr <= q.el && (side === 'frente' ? q.pl >= q.r : q.x < q.hx), JSON.stringify(q));
+        check(tag + ' DERROTA, inimigo ' + nm + ': pet não cruza a arma caída e fica na tela', (q.pl >= q.wr || q.pr <= q.wl) && q.pl >= 0 && q.pr <= q.LW, JSON.stringify(q)); }
       { const xs = [1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 0.8].map(d => { ev('B.deadT=' + d + '; 1'); return ev('petPos().x'); }); ev('B.deadT=0.8; 1');   /* deslize: começa onde estava, vai sem pulo, termina no lugar */
         const step = Math.max(...xs.slice(1).map((v, i) => Math.abs(v - xs[i]))), mono = xs.every((v, i) => !i || (v - xs[i - 1]) * (xs[xs.length - 1] - xs[0]) >= -1e-9);
         check(tag + ' DERROTA: o pet DESLIZA (começa na posição de vivo, sem teleporte, sem ir e voltar)', Math.abs(xs[0] - dp.px) < 0.01 && Math.abs(xs[xs.length - 1] - dp.tx) < 0.01 && mono && step < Math.abs(dp.tx - dp.px) * 0.6 + 0.01, xs.map(v => v.toFixed(1)).join(' → ')); }
@@ -91,29 +97,30 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
   const hatchCase = async tag => {
     const o = ev(`(function(){ const sp=Sys.pet.DATA.v17.species||{}, me=PETK.info.id; let other=null; for(const k in sp){ if(k!==me&&sp[k]&&sp[k].sprite){ other={pet:k,sprite:sp[k].sprite}; break; } }
       window.__pfH={r:B.res,p:B.paused,run:B.running}; B.res=null; B.paused=false; B.running=false; view='battle'; HATCH.q.length=0; HATCH.cur=null; try{ if(!B.en.length) startBattle(); placeNow(); }catch(e){} return {me, mySprite:(sp[me]||{}).sprite||null, other}; })()`);
-    const start = async (h, T) => { ev('HATCH.q.length=0; HATCH.cur=null; HATCH.q.push(' + JSON.stringify(Object.assign({ name: 'Teste', r: 1, first: false, dup: false }, h)) + '); 1'); battleList(); await until(() => ev('!!HATCH.egg&&HATCH.egg.complete'), 60); ev('if(!HATCH.cur){ HATCH.cur=HATCH.q.shift(); } HATCH.cur.t0=B.at-' + T + '; 1'); return battleList(); };
+    const start = async (h, T) => { ev('HATCH.q.length=0; HATCH.cur=null; HATCH.q.push(' + JSON.stringify(Object.assign({ name: 'Teste', r: 1, first: false, dup: false }, h)) + '); 1'); battleList(); await until(() => ev('!!HATCH.egg&&HATCH.egg.complete'), 60); ev('if(!HATCH.cur){ hatchStart(HATCH.q.shift()); } HATCH.cur.t0=B.at-' + T + '; 1'); return battleList(); };
     const mine = L => L.filter(s => RE.pet.test(s) && s.includes(ev('PETK.base')));
     try {
       check(tag + ' CHOCAGEM: há outra espécie para chocar', !!o.other, JSON.stringify(o));
-      let L = await start(o.other, 1.0); const g = ev('(function(){ const h=hatchSet(HATCH.cur), m=petMetric(PETK.base)||{l:70,r:70}, k=petK(); let el=1e9, n=0; for(const e of B.en) if(!e.dead&&e.x<WAITX-1){ n++; el=Math.min(el,eX(e)-(e.dw||70)*0.5); } return {side:h.side, l:h.x-h.ew/2, r:h.x+h.ew/2, ew:h.ew, min:HS*HATCH_EW_MIN, pl:petX()-m.l*k, pr:petX()+m.r*k, hl:HX-HS*KAEL_W/2, hr:HX+HS*KAEL_W/2, el:el, n:n, LW:LW, cur:!!HATCH.cur}; })()');
-      const far = (a0, a1, b0, b1) => a1 <= b0 || a0 >= b1;
+      /* VAGA do ovo/recém-nascido (conta pura do hatchPlace; não depende de onde o inimigo está: quem abre o espaço é o inimigo, pela reserva) */
+      const far = (a0, a1, b0, b1) => a1 <= b0 + 0.05 || a0 >= b1 - 0.05, H = JSON.stringify({ pet: o.other.pet, sprite: o.other.sprite, dup: false });
+      const q = ev('(function(){ const h=' + H + ', p=hatchPlace(h), m=petMetric(PETK.base)||{l:70,r:70}, k=petK(), mo=!!petMO(); return {side:p.side, l:p.x-p.sw/2, r:p.x+p.sw/2, x:p.x, ew:p.ew, sw:p.sw, nb:hatchNbW(h), nbk:hatchNbK(h), nbk0:heroBodyH()*0.46/Math.max(20,(petMetric(h.sprite)||{h:150}).h), min:HS*HATCH_EW_MIN, full:HS*HATCH_EW, edge:HATCH_EDGE, pl:petX()-m.l*k, pr:petX()+m.r*k, hl:HX-HS*(mo?0.45:KAEL_W/2), hr:HX+HS*KAEL_W/2, mo:mo, LW:LW}; })()');
+      check(tag + ' CHOCAGEM: vaga dentro da tela COM MARGEM (nunca colada na borda)', q.l >= q.edge - 0.05 && q.r <= q.LW - q.edge + 0.05, JSON.stringify(q));
+      check(tag + ' CHOCAGEM: recém-nascido no tamanho normal de filhote e cabe na vaga', Math.abs(q.nbk - q.nbk0) < 1e-9 && q.nb <= q.sw + 0.05, JSON.stringify(q));
+      check(tag + ' CHOCAGEM: ovo entre o mínimo e o cheio, dentro da vaga', q.ew >= q.min - 0.05 && q.ew <= q.full + 0.05 && q.ew <= q.sw + 0.05, JSON.stringify(q));
+      check(tag + ' CHOCAGEM: a vaga não cobre o pet equipado', far(q.l, q.r, q.pl, q.pr), JSON.stringify(q));
+      check(tag + ' CHOCAGEM: a vaga não cobre o herói' + (q.mo ? ' nem a montaria' : ''), far(q.l, q.r, q.hl, q.hr), JSON.stringify(q));
+      check(tag + ' CHOCAGEM: vaga À FRENTE do pet (nunca atrás do herói colada na borda esquerda)', q.side === 'front' || q.l >= q.edge, JSON.stringify(q));
+      /* reserva: com ovo na vez, a folga do inimigo da frente conta a partir da vaga; sem ovo, volta ao normal */
+      { const r = ev('(function(){ const q0=HATCH.q.slice(), c0=HATCH.cur; HATCH.cur=null; HATCH.q.length=0; const e0=heroEdge(); HATCH.q.push(' + H + '); const e1=heroEdge(), h=HATCH.q[0], right=h.side==="front"?h.x+h.sw/2:0; HATCH.q.length=0; const e2=heroEdge(); for(const x of q0) HATCH.q.push(x); HATCH.cur=c0; return {e0:e0,e1:e1,e2:e2,right:right,side:h.side}; })()');
+        check(tag + ' CHOCAGEM: com ovo na vez o inimigo da frente guarda a folga a partir da vaga', r.side !== 'front' || (r.e1 >= r.right - 0.05 && r.e1 > r.e0), JSON.stringify(r)); check(tag + ' CHOCAGEM: sem ovo a folga volta ao normal', Math.abs(r.e2 - r.e0) < 0.01, JSON.stringify(r)); }
+      /* espera: com inimigo DENTRO da vaga o ovo não aparece (não cobre ninguém); vaga livre → aparece; depois de HATCH_WAIT s aparece de qualquer jeito */
+      { const w = ev('(function(){ const en0=B.en; HATCH.cur=null; HATCH.q.length=0; HATCH.q.push(' + H + '); const h=hatchSet(HATCH.q[0]), E={x:h.x+35-4,dw:70,dead:false,sw:0,idx:0,key:"era0_e0"}; B.en=[E]; const out={side:h.side};'
+          + ' try{ drawHatch(); out.wait=!HATCH.cur&&HATCH.q.length===1; E.x=h.x+h.sw/2+35+2; drawHatch(); out.go=!!HATCH.cur&&HATCH.cur.x===h.x; HATCH.cur=null; HATCH.q.push(' + H + '); const h2=hatchSet(HATCH.q[0]); E.x=h2.x+35-4; drawHatch(); out.wait2=!HATCH.cur; h2.w0=B.at-HATCH_WAIT-0.1; drawHatch(); out.timeout=!!HATCH.cur; } finally { B.en=en0; HATCH.cur=null; HATCH.q.length=0; } return out; })()');
+        if (w.side === 'front') { check(tag + ' CHOCAGEM: inimigo dentro da vaga → o ovo ESPERA (não cobre o inimigo)', w.wait && w.wait2, JSON.stringify(w)); check(tag + ' CHOCAGEM: vaga livre → o ovo aparece, no lugar escolhido', w.go, JSON.stringify(w)); check(tag + ' CHOCAGEM: a espera tem limite (a fila nunca trava)', w.timeout, JSON.stringify(w)); } }
+      let L = await start(o.other, 1.0); const g = ev('({cur:!!HATCH.cur, x:HATCH.cur&&HATCH.cur.x})');
       check(tag + ' CHOCAGEM: o ovo está chocando', g.cur && first(L, RE.egg) >= 0, 'sem pet_egg entre ' + L.length + ' desenhos');
-      /* lugar do ovo com o inimigo da frente em várias distâncias (conta pura do hatchPlace, com um inimigo posto à mão): colado na folga normal da batalha
-         (heroEdge + HERO_GAP), mais perto, longe e sem inimigo. O ovo nunca cobre o pet nem o corpo do herói, fica na tela e no chão; só encosta em alguém quando a folga crua
-         dos dois lados é menor que o ovo mínimo (HATCH_EW_TINY), que aqui tem de ser exceção declarada: lado com mais folga e tamanho mínimo. */
-      for (const [nm, dx] of [['na folga normal da batalha', 'heroEdge()+HERO_GAP'], ['a 6 px (no meio do golpe)', 'heroEdge()+6'], ['longe', 'LW-40'], ['sem inimigo', null]]) {
-        const q = ev('(function(){ const en0=B.en; B.en=' + (dx ? '[{x:(' + dx + ')+35,dw:70,dead:false,sw:0,idx:0,key:"era0_e0"}]' : '[]') + '; try{ const p=hatchPlace({pet:"__outro",dup:false}), m=petMetric(PETK.base)||{l:70,r:70}, k=petK(); let el=LW; for(const e of B.en) el=Math.min(el,eX(e)-(e.dw||70)*0.5); const hl=HX-HS*(petMO()?0.45:KAEL_W/2);'
-          + ' return {side:p.side, l:+(p.x-p.ew/2).toFixed(1), r:+(p.x+p.ew/2).toFixed(1), ew:+p.ew.toFixed(1), min:+(HS*HATCH_EW_TINY).toFixed(1), pl:+(petX()-m.l*k).toFixed(1), pr:+(petX()+m.r*k).toFixed(1), hl:+hl.toFixed(1), hr:+(HX+HS*KAEL_W/2).toFixed(1), el:+el.toFixed(1), ra:+(el-(petX()+m.r*k)).toFixed(1), rb:+(hl-2).toFixed(1), LW:LW}; } finally { B.en=en0; } })()');
-        const t2 = tag + ' CHOCAGEM, inimigo ' + nm, tight = q.ra < q.min && q.rb < q.min;
-        check(t2 + ': ovo na tela, não menor que o mínimo', q.l >= 0 && q.r <= q.LW && q.ew >= q.min - 0.05, JSON.stringify(q));
-        check(t2 + ': ovo não cobre o pet', far(q.l, q.r, q.pl, q.pr), JSON.stringify(q));
-        if (!tight) { check(t2 + ': ovo NÃO cobre o inimigo da frente', q.r <= q.el + 0.05, JSON.stringify(q)); check(t2 + ': ovo não cobre o herói (nem a montaria atrás dele)', q.side === 'front' ? q.l >= q.hr - 0.05 || q.l >= q.pr : q.r <= q.hl + 0.05, JSON.stringify(q)); }
-        else check(t2 + ': sem folga em nenhum lado → menos folga que o ovo mínimo nos dois lados → lado com mais folga, tamanho mínimo (exceção declarada)', Math.abs(q.ew - q.min) < 0.06 && (q.side === 'front') === (q.ra >= q.rb), JSON.stringify(q)); }
       check(tag + ' CHOCAGEM: o pet equipado CONTINUA desenhado', mine(L).length > 0, L.filter(s => RE.pet.test(s)).join(', ') || 'nenhuma folha anim/pets');
-      check(tag + ' CHOCAGEM: o ovo NÃO cobre o inimigo da frente', g.r <= g.el, JSON.stringify(g));
-      check(tag + ' CHOCAGEM: o ovo não cobre o pet', far(g.l, g.r, g.pl, g.pr), JSON.stringify(g));
-      check(tag + ' CHOCAGEM: o ovo não cobre o corpo do herói', far(g.l, g.r, g.hl, g.hr), JSON.stringify(g));
-      check(tag + ' CHOCAGEM: ovo inteiro dentro da tela e não menor que o mínimo', g.l >= 0 && g.r <= g.LW && g.ew >= g.min - 0.01, JSON.stringify(g));
+      check(tag + ' CHOCAGEM: o ovo é desenhado na vaga calculada', Math.abs(g.x - q.x) < 0.01, g.x + ' · ' + q.x);
       { const x0 = ev('HATCH.cur.x'); ev('for(const e of B.en) e.x-=20; 1'); battleList(); const x1 = ev('HATCH.cur.x'); ev('for(const e of B.en) e.x+=20; 1'); check(tag + ' CHOCAGEM: o ovo não muda de lugar quando o inimigo se mexe', x0 === x1, x0 + ' → ' + x1); }
       ev('HATCH.cur.t0=B.at-3.6; 1'); L = battleList(); check(tag + ' CHOCAGEM: depois de nascer o filhote, o pet equipado segue desenhado', mine(L).length > 0, L.filter(s => RE.pet.test(s)).join(', '));
       /* o próprio pet equipado dentro do ovo (1º ovo): espera nascer no lugar dele; repetido (dup) não esconde ninguém */
@@ -142,6 +149,30 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
             check(tag + ': pet não cruza o herói deitado, fica na tela, pés no chão', (b.pl >= b.r || b.pr <= b.l) && b.pl >= 0 && b.pr <= b.LW && b.gy >= b.GY, JSON.stringify(b)); } } }
     } finally { ev("(function(){ const o=window.__pfD; S.hero=o.h; formRefresh(); HM.ws=o.ws; HM.x=o.x; B.deadT=o.d; HM.mount=o.m; const p=Sys.pet.ensure(S); p.owned[p.eq].stg=o.stg; PETK.infoT=0; })(); 1");
       await until(() => ev("(function(){ PETK.infoT=0; return formRefresh().hero==='kael'&&!!petInfo()&&petReady(PETK.base)&&fullReady(HM); })()"), 500); check('caixas: herói devolvido (Kael)', ev("heroForm().hero==='kael'")); } };
+
+  /* GANCHOS DE DEBUG DO QA (window.dbgDieAt / dbgHatchAt / dbgLvUp; só com ?debug=1, que é como este teste carrega o jogo) */
+  const dbgCase = async tag => { const sev = ev("window.__pfG={r:B.res,d:B.deadT,db:B.deadBoss,run:B.running,p:B.paused}; B.res=null; B.paused=false; view='battle'; HATCH.q.length=0; HATCH.cur=null; 1");
+    try {
+      check(tag + ' debug: os três ganchos existem', ev("typeof window.dbgDieAt==='function'&&typeof window.dbgHatchAt==='function'&&typeof window.dbgLvUp==='function'"));
+      const mounted = ev('!!HM.mount'), a0 = ev('petX()');
+      let r = ev('dbgDieAt(0.2)'); for (let i = 0; i < 12; i++) await tick(); let L = battleList(); const mid = ev('({d:B.deadT, res:!!B.res, x:petPos().x, to:petDieX(), hp:B.hero&&B.hero.hp})');
+      check(tag + ' debug dbgDieAt(0,2): fica congelado (12 quadros depois: mesma queda, sem resultado, fase não recomeça)', Math.abs(mid.d - 1.4) < 0.06 && !mid.res && L.some(s => /_die_body/.test(s)), JSON.stringify(mid) + ' · ' + JSON.stringify(r));
+      check(tag + ' debug dbgDieAt(0,2): pet no MEIO do deslize, desenhado depois do herói caído', (mid.x - a0) * (mid.to - mid.x) > 0 && first(L, RE.pet) > L.findIndex(s => /_die_body/.test(s)), 'de ' + a0.toFixed(1) + ' · agora ' + mid.x.toFixed(1) + ' · destino ' + mid.to.toFixed(1));
+      if (mounted) check(tag + ' debug dbgDieAt(0,2): montaria SAINDO (folha de corrida), antes do herói caído', L.findIndex(s => /_run_body/.test(s) && RE.mount.test(s)) >= 0 && L.findIndex(s => /_run_body/.test(s) && RE.mount.test(s)) < L.findIndex(s => /_die_body/.test(s)), L.filter(s => RE.mount.test(s)).join(', ') || 'nenhuma folha de montaria');
+      ev('dbgDieAt(1.6)'); for (let i = 0; i < 6; i++) await tick(); L = battleList(); const end = ev('({d:B.deadT, res:!!B.res, x:petPos().x, to:petDieX()})');
+      check(tag + ' debug dbgDieAt(1,6): fim da queda parado (sem montaria, pet no destino, sem resultado)', last(L, RE.mount) < 0 && Math.abs(end.x - end.to) < 0.01 && end.d > 0 && !end.res, JSON.stringify(end));
+      ev('dbgDieAt(null)'); check(tag + ' debug dbgDieAt(null): solta (herói de pé, vida cheia)', ev('B.deadT===0&&DBGFX.die===null&&(!B.hero||B.hero.hp===B.hero.maxhp)'));
+      const other = ev("(function(){ const sp=Sys.pet.DATA.v17.species||{}, me=PETK.info.id; for(const k in sp) if(k!==me&&sp[k]&&sp[k].sprite) return {pet:k,sprite:sp[k].sprite}; return null; })()");
+      check(tag + ' debug dbgHatchAt(): sem id devolve a lista de ids', ev('(function(){ const r=dbgHatchAt(); return !!r.erro&&Array.isArray(r.ids)&&r.ids.length>0&&!HATCH.cur; })()'));
+      r = ev("dbgHatchAt('" + other.pet + "',2,1)"); await until(() => ev('!!HATCH.egg&&HATCH.egg.complete'), 60); for (let i = 0; i < 12; i++) await tick(); L = battleList();
+      check(tag + ' debug dbgHatchAt(pet,2,1): ovo parado no instante 1 s, no lugar escolhido, pet equipado desenhado', ev('!!HATCH.cur&&Math.abs(B.at-HATCH.cur.t0-1)<0.06&&HATCH.cur.r===2') && first(L, RE.egg) >= 0 && L.some(s => RE.pet.test(s) && s.includes(ev('PETK.base'))), JSON.stringify(r));
+      ev("dbgHatchAt('" + other.pet + "',2,4)"); await until(() => ev("sheetLoad(PET_DIR+'" + other.sprite + "_idle',true).ok"), 200); for (let i = 0; i < 4; i++) await tick(); L = battleList();
+      check(tag + ' debug dbgHatchAt(pet,2,4): recém-nascido no lugar final (sem ovo), pet equipado desenhado', first(L, RE.egg) < 0 && L.some(s => RE.pet.test(s) && s.includes(other.sprite)) && L.some(s => RE.pet.test(s) && s.includes(ev('PETK.base'))), L.filter(s => RE.pet.test(s)).join(', '));
+      ev('dbgHatchAt(null)'); check(tag + ' debug dbgHatchAt(null): solta', ev('!HATCH.cur&&!HATCH.q.length&&DBGFX.hatch===null'));
+      r = ev('dbgLvUp(0.5)'); for (let i = 0; i < 12; i++) await tick(); battleList();
+      check(tag + ' debug dbgLvUp(0,5): letreiro disparado e parado em 0,5 s', ev('!!B.lvfx&&Math.abs(B.at-B.lvfx.t0-0.5)<0.06'), JSON.stringify(r) + ' · ' + ev('B.lvfx?B.at-B.lvfx.t0:null'));
+      ev('dbgLvUp(null)'); check(tag + ' debug dbgLvUp(null): solta', ev('DBGFX.lv===null')); r = ev('dbgLvUp()'); check(tag + ' debug dbgLvUp(): dispara como numa subida real (efeito + faixa "Nível N!")', ev('!!B.lvfx&&!!B.banner&&/^Nível /.test(B.banner.txt)&&DBGFX.lv===null'), JSON.stringify(r));
+    } finally { ev('(function(){ try{ dbgDieAt(null); dbgHatchAt(null); dbgLvUp(null); }catch(e){} const s=window.__pfG; B.lvfx=null; B.banner=null; B.res=s.r; B.deadT=s.d; B.deadBoss=s.db; B.running=s.run; B.paused=s.p; })(); 1'); } };
 
   /* preparo: sem a entrada, batalha parada num quadro calmo, pet + asa equipados */
   await until(() => ev("typeof PI!=='undefined'&&!!PI.el"), 40); try { if (ev("typeof PI!=='undefined'&&!!PI.el")) G.inCtx(() => ev('PI.finish()')); } catch (e) {}
@@ -182,6 +213,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
     check('drawHeroFull montado com a batalha A PÉ: pet na posição MONTADA', !!h.pos && h.pos.mo === true && Math.abs(h.pos.dx - f.pos.dx) < 0.01, JSON.stringify(h.pos) + ' · montado ' + JSON.stringify(f.pos)); }
   await resCase('COM montaria', ['mount']);
   await hatchCase('COM montaria'); lookCase('COM montaria', false); lookCase('COM montaria', true);
+  await dbgCase('COM montaria');
   check('nenhuma exceção no desenho', !errs.length && !ev('!!window.__hfErr'), errs.slice(0, 4).join(' | '));
   console.log(fail ? '\n' + fail + ' FALHA(S) de ' + n + ' (pet na frente)' : '\nPET NA FRENTE OK (' + n + ' verificações): batalha, Vitória, Derrota (pet à frente, montaria sai correndo), chocagem de ovo, Aparência e drawHeroFull, com e sem montaria');
   process.exit(fail ? 1 : 0);

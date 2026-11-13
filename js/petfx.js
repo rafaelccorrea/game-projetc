@@ -25,7 +25,7 @@ function petMetric(base){ let m = PET_M[base]; if (m) return m; const sh = sheet
   try { const b = enBounds(sh)[0]; if (b){ h = Math.max(20, b.b - b.t); r = Math.max(10, b.r - ax); l = Math.max(10, ax - b.l); } } catch (e) {} return PET_M[base] = { h, r, l }; }   /* l = meia largura opaca para TRÁS (Derrota: caixa do pet) */
 function petK(){ const I = PETK.info; if (!I) return HS / 256 * 0.5; const m = petMetric(PETK.base), T = petTbl(), f = T.h[Math.max(0, Math.min(2, (I.stage | 0) - 1))] || 0.5; return m ? heroBodyH() * f / m.h : HS / 256 * 0.5; }
 /* até onde o pet passa da borda do corpo do Kael (px lógicos): o inimigo da frente guarda a folga a partir daí; o pet não se mistura com ele */
-function petFront(){ const I = PETK.info; if (!I || !PETK.base) return 0; const m = petMetric(PETK.base); if (!m) return 0; return Math.max(0, petX() + m.r * petK() - HERO_EDGE); }   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
+function petFront(){ const I = PETK.info; if (!I || !PETK.base) return 0; const m = petMetric(PETK.base); if (!m) return 0; return Math.max(0, petX() + m.r * petK() - HERO_EDGE, hatchReserve() - HERO_EDGE); }   /* com ovo chocando à frente do pet, a folga do inimigo conta a partir do OVO (hatchReserve) */   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
 const PET_BACK = 0.34;   // o pet fica ATRÁS do Kael, meio corpo para a esquerda (o Kael está a ~60 px da borda: mais que isso sai da tela)
 const PETK = { id: null, info: null, base: '', t: 0, atkT: 0, act: null, infoT: 0 };
 const HATCH = { q: [], cur: null, egg: null };
@@ -81,45 +81,61 @@ function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era
   const pp = petPos(), px = pp.x, gy = pp.gy, fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
-/* DERROTA: onde o pet fica para NÃO TAMPAR o herói caído nem a arma caída (visto pelo QA: no lugar de sempre ele ficava em cima do peito do herói e cobria a arma).
-   dieClear (js/stage.js) dá a caixa do corpo deitado + arma no chão. 1ª escolha: logo ALÉM da arma/cabeça, do lado do inimigo (o pet segue À FRENTE), se o pet
-   inteiro couber na tela; senão do lado oposto, junto aos pés do herói. A caixa do pet = meia largura opaca da folha parada (petMetric l / r) × escala. */
-const PET_DIE_GAP = 4;
+/* DERROTA: onde o pet fica para NÃO TAMPAR o herói caído nem a arma caída (visto pelo QA: no lugar de sempre ele ficava em cima do peito do herói e cobria a arma)
+   NEM ENCOSTAR no inimigo que ficou em cena (visto pelo QA: além da arma ele ficou em cima do tigre da borda direita). dieClear (js/stage.js) dá a caixa do corpo
+   deitado + arma no chão; a dos inimigos vivos na tela é eX ± dw/2. 1ª escolha: logo ALÉM da arma/cabeça, do lado do inimigo, se o pet inteiro couber ENTRE a arma
+   e o inimigo mais próximo (e na tela); senão do lado oposto, junto aos pés do herói (lá o espaço até a borda é curto: o pet pode ficar por cima da ponta do
+   cachecol/dos pés, nunca do tronco, do rosto nem da arma). A caixa do pet = meia largura opaca da folha parada (petMetric l / r) × escala. */
+const PET_DIE_GAP = 4, PET_DIE_EDGE = 4;
+function enemyLeft(){ let el = LW; try { for (const e of B.en) if (!e.dead && eX(e) - (e.dw || 70) * 0.5 < LW) el = Math.min(el, eX(e) - (e.dw || 70) * 0.5); } catch (er) {} return el; }   /* borda esquerda do inimigo vivo mais próximo (LW = nenhum na tela) */
 function petDieX(){ const c = dieClear(HM), m = (PETK.base && petMetric(PETK.base)) || { l: 70, r: 70 }, k = petK(), fr = c.r + PET_DIE_GAP + m.l * k;
-  if (fr + m.r * k <= LW - 2) return fr; return Math.max(m.l * k + 2, c.l - PET_DIE_GAP - m.r * k); }
+  if (fr + m.r * k <= Math.min(LW - PET_DIE_EDGE, enemyLeft() - PET_DIE_GAP)) return fr; return Math.max(m.l * k + PET_DIE_EDGE, c.l - PET_DIE_GAP - m.r * k); }
+/* fração da queda (0 → 1 em 1,6 s); com o gancho de debug dbgDieAt, o instante congelado */
+const dieP = () => (typeof DBGFX !== 'undefined' && DBGFX && DBGFX.die != null) ? DBGFX.die / 1.6 : 1 - B.deadT / 1.6;
 /* posição do pet no desenho: x = centro (À FRENTE do herói: petX), gy = linha dos pés (o chão + os px "levemente à frente" da tabela). Na Derrota (morte nova) vai
    de onde estava até o petDieX num deslize curto e suave (primeiros ~0,5 s da queda; sem teleporte) e, se havia montaria (que sai de cena), volta junto para a
    altura de quem está a pé. Fora da batalha (drawHeroFull zera B.deadT) vale sempre a posição normal. */
 function petPos(){ const T = petTbl(), mo = petMO(); let x = petX(), e = 0;
-  if (B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true && typeof dieClear === 'function'){ const d = Math.max(0, Math.min(1, (1 - B.deadT / 1.6) * 3.2)); e = d * d * (3 - 2 * d); x += (petDieX() - x) * e; }
+  if (B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true && typeof dieClear === 'function'){ const d = Math.max(0, Math.min(1, dieP() * 3.2)); e = d * d * (3 - 2 * d); x += (petDieX() - x) * e; }
   return { x, gy: GY + T.dy + (mo ? mo.dy * (1 - e) : 0) }; }
-/* CHOCAGEM (regra do dono: o pet nunca some): o pet equipado continua desenhado e o ovo aparece AO LADO dele, no chão, dentro da tela, sem cobrir o herói, o pet
-   nem o INIMIGO DA FRENTE (visto pelo QA: à direita do pet o ovo de tamanho cheio cobria o inimigo). hatchPlace escolhe o lugar UMA vez, quando o ovo aparece
-   (não anda atrás de inimigo que se mexe):
-     1. entre o pet e o inimigo mais próximo (caixa: eX ± dw/2), se couber; o ovo encolhe até HATCH_EW_MIN para caber na folga;
-     2. senão do outro lado, junto ao herói, atrás dele (sem cobri-lo), também encolhendo até o mínimo;
-     3. sem espaço em nenhum dos dois (montado: a montaria ocupa as costas e o pet fica perto do inimigo): vai para o lado com MAIS folga, SEM respiro, encolhendo
-        até HATCH_EW_TINY para caber encostado; só com menos que isso de folga (inimigo no meio do golpe) ele encosta alguns px em alguém.
+/* CHOCAGEM (regra do dono: o pet nunca some): o pet equipado continua desenhado e o ovo aparece AO LADO dele, no chão, dentro da tela (nunca colado na borda:
+   HATCH_EDGE), sem cobrir o herói, o pet nem o inimigo da frente; o recém-nascido salta e termina NO MESMO lugar do ovo, no tamanho normal de filhote.
+   Visto pelo QA: (1) à direita do pet o ovo cheio cobria o inimigo; (2) a correção anterior encolhia o ovo e, montado, jogava ovo e filhote para trás do herói,
+   colados na borda esquerda. Regra atual (hatchPlace escolhe o lugar UMA vez, quando o ovo entra na vez; não anda atrás de ninguém):
+     1. À FRENTE do pet, numa VAGA do tamanho do maior entre o ovo e o recém-nascido. Quem abre o espaço é o inimigo: enquanto há ovo na vez ou chocando, a folga
+        do inimigo da frente conta a partir da borda da vaga (hatchReserve → petFront → heroEdge do js/battle.js: o mesmo caminho que já afasta o inimigo quando
+        o pet evolui). O ovo só COMEÇA a aparecer quando a vaga está livre (ou depois de HATCH_WAIT s, para nunca travar a fila). O ovo usa o tamanho cheio se a
+        vaga ainda deixa um inimigo inteiro na tela; senão encolhe até HATCH_EW_MIN.
+     2. Sem vaga à frente (montado: a montaria empurra o pet para perto da borda direita) e com vaga inteira ATRÁS do herói, com margem da borda: atrás.
+     3. Sem vaga em nenhum dos dois: à frente mesmo, no tamanho mínimo, dentro da tela com margem; o inimigo recua o que o hordeFit conseguir (pode sobrar toque).
    Única exceção ao "ao lado": quando o pet que está no ovo É o equipado (1º ovo do nível 20: ele entra equipado na hora), ele ainda não nasceu; o ovo fica no
    lugar do pet e o pet só passa a ser desenhado quando termina de saltar do ovo (HATCH_BORN). Nada some: ele nasce ali. */
-const HATCH_EW = 0.5, HATCH_EW_MIN = 0.24, HATCH_EW_TINY = 0.16, HATCH_GAP = 4;   // largura do ovo cheia, mínima e mínima no aperto (× HS) · respiro (px)
-function hatchPlace(h){ const full = HS * HATCH_EW, mn = HS * HATCH_EW_MIN; if (!PETK.info || hatchOwn(h)) return { x: petX(), ew: full, side: 'pet' };
-  const m = (PETK.base && petMetric(PETK.base)) || { l: 70, r: 70 }, pr = petX() + m.r * petK(); let el = LW - 2;
-  try { for (const e of B.en) if (!e.dead && e.x < WAITX - 1) el = Math.min(el, eX(e) - (e.dw || 70) * 0.5); } catch (er) {}   /* borda esquerda do inimigo mais próximo */
-  const hl = HX - HS * (petMO() ? 0.45 : KAEL_W / 2), ra = el - pr - 2 * HATCH_GAP, rb = hl - HATCH_GAP - 2;   /* hl = borda de trás do herói (montado: a garupa da montaria); ra / rb = folga à frente / atrás */
-  if (ra >= mn){ const ew = Math.min(full, ra); return { x: Math.min(LW - 2 - ew / 2, pr + HATCH_GAP + ew / 2), ew, side: 'front' }; }
-  if (rb >= mn){ const ew = Math.min(full, rb); return { x: Math.max(2 + ew / 2, hl - HATCH_GAP - ew / 2), ew, side: 'back' }; }
-  const fa = el - pr, fb = hl - 2, tiny = HS * HATCH_EW_TINY;   /* aperto: folga crua (sem respiro) de cada lado */
-  if (fa >= fb){ const ew = Math.max(tiny, Math.min(mn, fa)); return { x: Math.min(LW - 2 - ew / 2, pr + ew / 2), ew, side: 'front' }; }
-  const ew = Math.max(tiny, Math.min(mn, fb)); return { x: Math.max(2 + ew / 2, hl - ew / 2), ew, side: 'back' }; }
-function hatchSet(h){ if (h && h.x == null){ const p = hatchPlace(h); h.x = p.x; h.ew = p.ew; h.side = p.side; } return h; }
+const HATCH_EW = 0.5, HATCH_EW_MIN = 0.24, HATCH_GAP = 4, HATCH_EDGE = 8, HATCH_WAIT = 3, HATCH_NB = 0.46;   // largura do ovo cheia e mínima (× HS) · respiro (px) · margem da borda (px) · espera máx. pela vaga (s) · altura do recém-nascido (× corpo do herói)
+/* escala e largura do recém-nascido (filhote): as mesmas do desenho do salto */
+function hatchNbK(h){ return heroBodyH() * HATCH_NB / Math.max(20, ((h && h.sprite && petMetric(h.sprite)) || { h: 150 }).h); }
+function hatchNbW(h){ const m = (h && h.sprite && petMetric(h.sprite)) || { l: 70, r: 70 }; return 2 * Math.max(m.l || 70, m.r) * hatchNbK(h); }
+function hatchPlace(h){ const full = HS * HATCH_EW, mn = HS * HATCH_EW_MIN; if (!PETK.info || hatchOwn(h)) return { x: petX(), ew: full, sw: full, side: 'pet' };
+  const m = (PETK.base && petMetric(PETK.base)) || { l: 70, r: 70 }, pr = petX() + m.r * petK(), nb = hatchNbW(h), need = Math.max(mn, nb);
+  const hl = HX - HS * (petMO() ? 0.45 : KAEL_W / 2);   /* borda de trás do herói (montado: a garupa da montaria) */
+  const fmax = LW - HATCH_EDGE - 70 - HERO_GAP - pr - HATCH_GAP, bmax = hl - HATCH_GAP - HATCH_EDGE;   /* vaga máxima à frente (deixando um inimigo de 70 px + a folga dele na tela) e atrás */
+  const front = sw => ({ x: Math.min(LW - HATCH_EDGE - sw / 2, pr + HATCH_GAP + sw / 2), ew: Math.max(mn, Math.min(full, sw)), sw, side: 'front' });
+  if (fmax >= need) return front(Math.max(need, Math.min(full, fmax)));
+  if (bmax >= need){ const sw = Math.max(need, Math.min(full, bmax)); return { x: hl - HATCH_GAP - sw / 2, ew: Math.max(mn, Math.min(full, sw)), sw, side: 'back' }; }
+  return front(need); }
+/* borda direita da vaga do ovo que está na vez ou chocando À FRENTE do pet (0 = nada a reservar): o inimigo da frente guarda a folga a partir daqui */
+function hatchReserve(){ const h = HATCH.cur || HATCH.q[0]; if (!h || !PETK.info || hatchOwn(h)) return 0; hatchSet(h); return h.side === 'front' ? h.x + h.sw / 2 : 0; }
+/* a vaga está livre? (nenhum inimigo vivo dentro dela) */
+function hatchFree(h){ hatchSet(h); return h.side !== 'front' || enemyLeft() >= h.x + h.sw / 2 - 0.5; }
+function hatchStart(h){ h.t0 = B.at; HATCH.cur = h; snd('claim'); if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); return hatchSet(h); }
+function hatchSet(h){ if (h && h.x == null){ const p = hatchPlace(h); h.x = p.x; h.ew = p.ew; h.sw = p.sw; h.side = p.side; } return h; }
 const HATCH_BORN = 3.1;
 const hatchOwn = h => !!h && !h.dup && !!PETK.info && PETK.info.id === h.pet;
 function hatchHidesPet(){ const h = HATCH.cur; return !!h && hatchOwn(h) && B.at - h.t0 < HATCH_BORN; }
 const hatchX = h => hatchSet(h).x;
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */
-function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q.shift(); h.t0 = B.at; HATCH.cur = h; snd('claim');
-    if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); }
+function drawHatch(){ dbgFxTick(); if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q[0]; if (h.w0 == null) h.w0 = B.at;
+    if (!hatchFree(h) && B.at - h.w0 < HATCH_WAIT) return;   /* a vaga à frente do pet ainda tem inimigo: ele está recuando (hatchReserve); o ovo espera, sem cobrir ninguém */
+    HATCH.q.shift(); hatchStart(h); }
   const h = hatchSet(HATCH.cur), T = B.at - h.t0, cx = h.x, gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
   if (T > 5.2){ HATCH.cur = null; return; }
   const ew = h.ew, eh = eg && eg.naturalWidth ? ew * eg.naturalHeight / eg.naturalWidth : ew * 1.25;
@@ -129,10 +145,40 @@ function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length
     ctx.restore(); }
   if (T >= 2.1 && T < 3.1){ const p = T - 2.1; drawGlow('#ffffff', cx, gy - eh * 0.5, HS * (0.3 + 1.4 * p), Math.max(0, 1 - p)); drawGlow(col, cx, gy - eh * 0.5, HS * (0.5 + 1.0 * p), Math.max(0, 0.8 - p)); }
   if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx;
-    if (sh && sh.ok && !(hatchOwn(h) && T >= HATCH_BORN)){ const M = sh.meta, k = heroBodyH() * 0.46 / Math.max(20, (petMetric(h.sprite) || { h: 150 }).h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
+    if (sh && sh.ok && !(hatchOwn(h) && T >= HATCH_BORN)){ const M = sh.meta, k = hatchNbK(h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
       ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
     if (!h.said){ h.said = true; B.banner = { txt: h.name + ' · ' + (RAR[h.r] ? RAR[h.r].n : ''), pill: true, bg: 'rgba(29,22,17,.92)', bd: col, sh: '#0e0a07', t: 0, dur: 2.4, col }; }   // nome e raridade na faixa de aviso do jogo (fora das barras do Kael)
   }
 }
 /* debug / modo dono: ganhar um ovo agora (raridade opcional) */
 function petGiveEgg(r){ if (!petOk()) return null; let x = null; try { x = Sys.pet.addEgg(S, Sys.host, r != null ? { r, source: 'test' } : { source: 'test' }); } catch (e) { console.error('addEgg', e); } petNotice([x]); if (typeof refreshHero === 'function') refreshHero(); save(); return x; }
+/* ================= GANCHOS DE DEBUG PARA O QA (só com ?debug=1: sem DEBUG, DBGFX é null e nada abaixo é criado) =================
+   A captura de tela leva centenas de ms; estes ganchos CONGELAM um instante da animação até serem soltos. Todos devolvem um objeto com o que foi posto na tela.
+     dbgDieAt(t[, chefe])   põe o herói na Derrota e para a queda no instante t, em segundos (0 a 1,6). 0 a 0,5 = montaria saindo; 0 a 0,5 = pet deslizando;
+                            0 a 0,7 = arma caindo; 1,4+ = herói deitado. A tela de resultado NÃO abre e a fase não recomeça enquanto estiver congelado; funciona
+                            no Modo dono (a vida recomposta não levanta o herói). chefe = true: véu escuro da derrota para o chefe em vez do "DERROTADO".
+                            dbgDieAt(null) solta: herói de pé, vida cheia, batalha segue. (Chamar com a tela de resultado fechada.)
+     dbgHatchAt(pet, r, t)  põe um ovo desse pet (id da espécie; r = raridade 0 a 4, opcional) e para a chocagem no instante t, em segundos (0 a 5,1; padrão 1):
+                            0 a 1,4 treme · 1,4 a 2,4 racha · 2,1 a 3,1 luz · 2,4 a 3,1 o filhote salta · 3,1+ filhote no lugar final. Não espera a vaga abrir:
+                            aparece na hora, no lugar que o jogo escolheria (o inimigo recua em ~1 s). Sem argumentos lista os ids. dbgHatchAt(null) solta.
+                            Com o id do pet EQUIPADO mostra o caso do 1º ovo (ovo no lugar do pet).
+     dbgLvUp([t])           dispara o letreiro "NÍVEL +1" como numa subida real (efeito sobre o herói, faixa "Nível N!" e som). Com t (segundos, 0 a ~2) o efeito
+                            fica parado nesse instante; dbgLvUp(null) solta. */
+function dbgFxTick(){ const D = typeof DBGFX !== 'undefined' ? DBGFX : null; if (!D) return;
+  if (D.die != null){ B.deadT = Math.max(0.05, 1.6 - D.die); B.act = null; if (B.eshots && B.eshots.length) B.eshots.length = 0; }
+  if (D.lv != null) B.lvfx = { t0: B.at - D.lv };
+  if (D.hatch != null && HATCH.cur) HATCH.cur.t0 = B.at - D.hatch; }
+if (typeof DBGFX !== 'undefined' && DBGFX){ const D = DBGFX, num = (v, a, b, d) => Math.max(a, Math.min(b, (typeof v === 'number' && isFinite(v)) ? v : d));
+  window.dbgDieAt = function (t, boss){ if (t == null){ if (D.die != null){ D.die = null; B.deadT = 0; B.deadBoss = false; if (B.hero) B.hero.hp = B.hero.maxhp; } return { solto: true }; }
+    if (B.res) return { erro: 'feche a tela de resultado antes' };
+    D.die = num(t, 0, 1.6, 0); B.deadT = Math.max(0.05, 1.6 - D.die); B.deadBoss = !!boss; B.act = null; B.dieDustW = 0; B.dieDustB = 0;
+    const p = petInfo() ? petPos() : null; return { t: D.die, montariaSaindo: !!(HM.mount && D.die < MOUNT_EXIT), pet: p && { x: Math.round(p.x), chao: Math.round(p.gy) }, petDestino: p ? Math.round(petDieX()) : null }; };
+  window.dbgHatchAt = function (pet, r, t){ if (pet === null){ D.hatch = null; HATCH.cur = null; HATCH.q.length = 0; return { solto: true }; }
+    if (!petOk()) return { erro: 'pets desligados' }; const sp = (Sys.pet.DATA.v17 && Sys.pet.DATA.v17.species) || {};
+    if (pet === undefined || !sp[pet]) return { erro: 'id de pet desconhecido', ids: Object.keys(sp) };
+    HATCH.q.length = 0; HATCH.cur = null; petHatchQueue({ pet, r: r != null ? r : null }, false); const h = HATCH.q.shift(); if (!h) return { erro: 'não enfileirou' };
+    hatchStart(h); D.hatch = num(t, 0, 5.1, 1); h.t0 = B.at - D.hatch; return { t: D.hatch, pet: h.pet, nome: h.name, lado: h.side, ovoX: Math.round(h.x), ovoLargura: Math.round(h.ew), vaga: Math.round(h.sw) }; };
+  window.dbgLvUp = function (t){ if (t === null){ D.lv = null; return { solto: true }; }
+    let lv = 0; try { lv = Sys.level.ensure(S).lvl | 0; } catch (e) {}
+    B.lvfx = { t0: B.at }; sheetLoad(LVUP, true); snd('upgrade'); B.banner = { txt: 'Nível ' + lv + '!', pill: true, bg: 'rgba(14,60,52,.9)', bd: '#5ff0cf', sh: '#063a30', t: 0, dur: 2.2, col: '#5ff0cf' };
+    D.lv = (typeof t === 'number' && isFinite(t)) ? Math.max(0, t) : null; if (D.lv != null) B.lvfx.t0 = B.at - D.lv; return { nivel: lv, congelado: D.lv }; }; }
