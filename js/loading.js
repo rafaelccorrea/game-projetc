@@ -114,6 +114,7 @@ function initLoading(){
 
   /* --- fila real de pré-carregamento (Engenheiro 5): a lista da PRIMEIRA CENA sai de sceneList(); cada arquivo conta na barra --- */
   PRE().reset(); LD.old = window.PRELOAD_NEW !== true || (DEBUG && QP.get('carga') === 'antiga');   /* PADRÃO = caminho ANTIGO (ordem do PO); o novo só com ?debug=1&carga=nova (chave window.PRELOAD_NEW, js/preload.js) */
+  try { const OB = window.OnlineBoot; if (OB && OB.state().on) PRE().track(OB.wait(4000), 'online'); } catch (e) {}   /* Engenheiro 12: a barra espera o online (sessão + save da nuvem) no máximo 4 s; desligado = nenhuma tarefa a mais (js/onlineboot.js) */
   if (LD.old) loadManifest();   /* fora da barra: só para o Sys.assets.mountedArt (Kaia montada) */   /* ?debug=1&carga=antiga: só a lista de antes e a fuga dos 15 s (para comparar o defeito); nunca para o jogador */
   const era = eraOf(S.stage);
   /* um erro aqui NUNCA deixa a barra parada: registra no console e entra pela lista antiga; o cão de guarda abaixo libera a tela se o laço da barra morrer */

@@ -440,7 +440,8 @@ function load(){ try{ const j=localStorage.getItem(SAVE_KEY); if(j){ const o=JSO
       S=o; if(!S.realm) S.realm=REALM; return; } }catch(e){} S=newState(); S.realm=REALM; }
 window.Realm={ id:()=>REALM, key:(id,owner)=>realmKey(/^s[0-9]{1,3}$/.test(id||'')?id:'s1',owner===undefined?OWNER_MODE:!!owner),
   set(id){ if(!/^s[0-9]{1,3}$/.test(id||'')||id===REALM) return false; try{ save(); localStorage.setItem('eon_realm',id); }catch(e){ return false; } window.__noSave=true; location.href=location.pathname+location.search; return true; } };
-function save(){ if(window.__noSave||(typeof B!=='undefined'&&B&&B.inst)) return;   /* durante a luta da instância a fase em memória é a da instância: não grava */ S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){} }
+function save(){ if(window.__noSave||(typeof B!=='undefined'&&B&&B.inst)) return;   /* durante a luta da instância a fase em memória é a da instância: não grava */ S.lastSeen=Date.now(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){}
+  try{ if(!OWNER_MODE&&window.OnlineBoot) OnlineBoot.saved(S); }catch(e){} }   /* Engenheiro 12: save na nuvem (js/onlineboot.js → Sys.online.saved); desligado não faz nada; nunca impede a gravação local */
 load();
 /* Engenheiro 4: herói escolhido na <body> (classe kaia): as miniaturas .kidle e a corrida do carregamento mostram a Kaia para quem joga de Kaia (um ponto só, vale para todas as telas) */
 function heroClass(){ try{ document.body.classList.toggle('kaia',S.hero==='kaia'); }catch(e){} }
@@ -458,6 +459,9 @@ const SCREENS_ON={bossResult:!(DEBUG&&/[?&]res=0/.test(location.search)), progre
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search),
   evHud:!(DEBUG&&/[?&]ev=0/.test(location.search))};   /* evHud = eventos com horário no HUD da batalha (js/evhud.js, Engenheiro 6): ícone pulsando com nome, bônus e contagem, faixa e aviso de 10 min. LIGADA por padrão (decisão do PO/dono, 13/11: o bônus do evento já vale no abate, e bônus sem aviso não pode); só desliga em debug com ?ev=0 */   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
 const VERSION='v0.12.9';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
+/* ONLINE (Engenheiro 12; camada do Servidor: js/sys/net.js + online.js; ligação: js/onlineboot.js). CHAVE ÚNICA: ONLINE_ON. false = DESLIGADO (nada é chamado).
+   true = sessão de convidado, save na nuvem e login Google na abertura (nunca no Modo dono). Em debug: ?debug=1&online=1 liga só nesta carga. Pagamento real segue à parte (Sys.buy.DATA.on). */
+const ONLINE_BASE='https://15-229-249-157.sslip.io/v1', ONLINE_ON=false;
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
 delete S.set.auto2; delete S.set.autoUlt;
 if(S.set.vib===undefined) S.set.vib=true;
@@ -753,7 +757,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
 ['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule','newdrops','assets'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c60')+'"><\/script>');   /* módulo EonScene, carregado como está */
-['preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
+['preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','evhud','artprev','intro','meta','cloudchoice','onlineboot','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"
@@ -769,6 +773,7 @@ loadBalance(); versionCheck();
 if(window.REALM_MISMATCH){ const m='Save de outro servidor ('+String(window.REALM_MISMATCH.save||'').toUpperCase()+') neste aparelho. O progresso desta sessão NÃO será gravado.'; setTimeout(()=>{ try{ toast(m); }catch(e){} },1500); setInterval(()=>{ try{ toast(m); }catch(e){} },60000); }
 sysBoot(); sysBootB(); if(typeof phaseBoot==='function') phaseBoot(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
 if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px'; document.getElementById('app').style.width='min(900px,100dvw)'; resize(); }
+try{ if(window.OnlineBoot) OnlineBoot.start(); }catch(e){ if(DEBUG) console.error(e); }   /* Engenheiro 12: online na abertura (desligado por ONLINE_ON); a tela de carregamento espera até 4 s (tarefa "online") */
 if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
 if(DEBUG&&window.__lord) setInterval(()=>{ const h=B.hero, e=B.en[0]; if(h&&e){ h.atk=Math.max(h.atk,e.maxhp/(e.boss?12:3)); h.maxhp=Math.max(h.maxhp,e.dmg*400); h.hp=h.maxhp; } },200);   /* ?lord=<era>: herói forte, sem stay */
 if(DEBUG&&QP.has('skip')){ document.getElementById('title').style.display='none'; B.paused=false; if(!S.name){ S.name='Kael'; S.hero='kael'; } if(S.tut<99) startTut(); }
