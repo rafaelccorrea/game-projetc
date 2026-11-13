@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **09h30 · Prioridade 1 do engenheiro: CARREGAMENTO DE VERDADE.** A tela de carregamento só fecha com todas as imagens da cena prontas (herói, montaria, pet, asa, cenário, inimigos, arma, ícones), com barra de progresso real; o mesmo na troca de era e ao equipar. Depois: o jogo travado em 60 quadros por segundo, estável (hoje roda a 120 no S24 e esquenta à toa), com qualidade automática em celular fraco
+- **09h30 · Mobile:** a Arte está fazendo 3 opções de ícone do app (o "E" de cristal, o Kael diante do portal, um brasão), o splash do Android e a tela de abertura; depois a arte da ficha da loja. O logo animado também está em produção
+- **09h30 · Sua decisão:** VIP vem do total gasto (R$ 1 = 1 ponto); o "Comprar VIP" abre a Loja. Lista dos 10 produtos para você cadastrar no Play Console: reports/play-console-produtos.md (6 pacotes de diamantes, cartão mensal, passe premium, oferta do Guardião, Mecha). A tabela de vantagens do VIP (fundir automático, ×4, mais Arena etc.) está sendo montada por Sistemas
+
 - **09h · Checklist revisado inteiro** (seções A, B, C e D abaixo estão em dia). Kaia: fica com corpo de menina; as 5 skins dela estão sendo refeitas com rosto e roupa menos infantis. Gasto com versões adultas desde o início: ~236 créditos registrados (a maior parte foi o "Kael crescendo" que você aprovou e depois cancelou; ~26 foram erro meu nas referências maduras). Créditos agora: ~993
 
 - **08h40 · TODO MUNDO COM FILA (ninguém parado):**
@@ -259,7 +263,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
 - [ ] Domínio para o servidor (ex.: api.seudominio.com.br → IP 15.229.249.157) + um e-mail para o certificado HTTPS
 - [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
-- [ ] Play Console: cadastrar os produtos de compra (o Servidor vai mandar a lista) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
+- [ ] Play Console: cadastrar os 10 produtos de compra (lista em reports/play-console-produtos.md) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
 
 **Para a loja:**
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
