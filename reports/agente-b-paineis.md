@@ -1127,3 +1127,8 @@ AVATAR. `js/avatar.js` não lê mais `Sys.phaseUp`: o retrato é `Sys.appearance
 
 `node test/e2e/flows.js`: fluxo 4 "FASES DO HERÓI" FALHA (16/33): o `js/sys/phaseup.js` do disco está desligado ("reason: off"); é o teste das fases
 contra a decisão de não ter fases, não vem destes arquivos.
+
+## Bloco 40 (sem navegador): Pets sem a célula "Bônus na FC +N%"
+
+`js/p_pets.js`: saiu a célula da porcentagem (decisão do PO); ficam "Soma à FC" (por `fcTxt`) e a do tipo do pet, que dividem a fileira
+(as células são `flex:1`, não sobra buraco). Nenhuma conta mudou. `node --check`, `run.js` "TUDO OK", fumaça em 390 e 288 sem falha.

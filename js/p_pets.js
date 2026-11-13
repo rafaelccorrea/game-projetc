@@ -389,7 +389,7 @@ function scrPets(){
   const det=()=>{ const bpH=[44,54,62][vw], pvH=Math.round(Math.max(88,Math.min(132,W*0.27)));
     return `<div class="${pin}" style="display:flex;flex-direction:column;gap:6px">
       <div style="flex:none;display:flex;gap:4px">
-        ${cell('Bônus na FC',`<span style="color:#7ef08a">+${p1(sh.now||0)}</span> <span style="font-size:10px;color:#c9b9a2">máx ${p1(sh.max||0)}</span>`)}
+        ${''   /* a célula "Bônus na FC +N%" saiu (decisão do PO: confundia com o valor de FC); fica só "Soma à FC". As células são flex:1: as duas que restam dividem a largura. */}
         ${cell('Soma à FC',`<span style="color:#ffe07a">${owned?'+'+(typeof fcTxt==='function'?fcTxt(fcAdd):kf(fcAdd))+' FC':'—'}</span>`)}
         ${cell(esc2(eraName||'Pet'),art.fly?'Voa':'Terrestre')}
       </div>
