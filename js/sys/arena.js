@@ -15,7 +15,8 @@
 'use strict';
 const DATA={
   label:'Arena', icon:'⚔️',
-  attemptsPerDay:5, opponentsShown:3, refreshPerDay:1,
+  attemptsPerDay:3,   // dono (13/11): grátis 3; VIP soma (+2 no VIP 4, +3 no VIP 8: Sys.vip.conv arenaAdd)
+  opponentsShown:3, refreshPerDay:1,
   startPoints:1000, winBase:20, lossBase:10, kRange:[0.5,2], minPoints:0,
   oppSpread:0.10,                       // adversários da lista: FC do jogador ±10% (pedido do PO)
   bots:{count:49, spread:0.4, weekGain:[60,420]},   // ranking: 49 bots + o jogador; FC ±40% e pontos que sobem ao longo da semana

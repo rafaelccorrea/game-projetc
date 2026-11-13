@@ -32,18 +32,18 @@ const DATA={
   },
   // VIP DE CONVENIÊNCIA (ordem do dono, 13/11; PROPOSTA, chave convOn DESLIGADA). Acelera e poupa toque; NÃO dá atributo, XP a mais nem diamante
   // (o que já existia na tabela acima continua igual). v = nível de VIP que libera; free = o que o jogador grátis tem. Cada módulo lê conv(S).
-  convOn:true,   // APROVADO pelo dono (13/11) como na tabela; arena/torre/eventos: o VIP SOMA ao que o grátis já tem hoje (não tira do grátis)
+  convOn:true,   // APROVADO pelo dono (13/11) como na tabela; arena/torre: grátis 3 (dono), o VIP soma
   conv:[
     {id:'autoCollect', name:'Coleta automática (baús do dia, missões feitas e correio sem item)', v:1, free:'toca um a um'},
     {id:'bag',         name:'Espaços extras na mochila', v:1, val:[0,20,20,20,20,20,40,40,40,40,40], free:'60 espaços'},
     {id:'offlineH',    name:'Horas máximas de ganho offline', v:1, val:[8,10,10,10,10,12,12,12,12,12,14], free:'8 h'},
-    {id:'autoFuse',    name:'Fusão automática (junta 3 iguais sozinha; nunca o equipado nem 5★)', v:2, free:'fusão manual na Forja'},
+    {id:'autoFuse',    name:'Fusão automática (junta 3 iguais sozinha; nunca o equipado nem item de 5 estrelas)', v:2, free:'fusão manual na Forja'},
     {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:2, free:'aviso "item melhor" + 1 toque'},
     {id:'autoSell',    name:'Desmontar sozinho itens fracos (Básico/Raro, o jogador escolhe)', v:3, free:'"desmontar todos" manual'},
     {id:'skipBoss',    name:'Pular chefe já vencido (resultado na hora, mesmo prêmio)', v:3, free:'luta inteira (até x2/x4)'},
-    {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'as de hoje (Sys.arena.DATA.attemptsPerDay)'},
+    {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'3 por dia'},
     {id:'autoForge',   name:'Forja automática até o nível escolhido (mesma chance e custo; para no ouro ou nas pedras)', v:4, free:'1 toque por tentativa'},
-    {id:'towerAdd',    name:'Tentativas (derrotas) da torre a mais por dia', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'as de hoje (Sys.tower.DATA.lossesPerDay)'},
+    {id:'towerAdd',    name:'Tentativas (derrotas) da torre a mais por dia', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'3 por dia'},
     {id:'bossAdd',     name:'Ataques a mais no Chefe Mundial por janela', v:6, val:[0,0,0,0,0,0,1,1,1,1,1], free:'2 por janela'},
     {id:'passXp',      name:'XP do Passe a mais (só o Passe; o nível do jogador não muda)', v:7, val:[0,0,0,0,0,0,0,10,10,15,20], unit:'%', free:'0%'},
     {id:'eventTries',  name:'Entrada extra nos eventos com hora (Invasão, Chefe Mundial)', v:8, val:[0,0,0,0,0,0,0,0,1,1,1], free:'as da agenda'},

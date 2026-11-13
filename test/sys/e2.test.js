@@ -128,7 +128,7 @@ t('tower: âncoras v7.1 no andar de chefe, fantasma com a mesma FC, determinismo
   for(let f=1;f<=120;f++) assert.ok(!/^w\d3$/.test(W.opponent(f).skin.weapon),'sem arma Mítica no lançamento');
   const S=newS(), h=makeHost(); let wins=0; for(let i=0;i<40;i++){ const r=W.fight(S,h); if(!r.ok) break; if(r.win) wins++; }
   const o=W.ensure(S,h); assert.strictEqual(o.lossesLeft,0); assert.strictEqual(o.best,wins); assert.ok(wins>3);
-  assert.strictEqual(W.fight(S,h).reason,'tries'); h.t+=86400000; W.ensure(S,h); assert.strictEqual(o.lossesLeft,5);
+  assert.strictEqual(W.fight(S,h).reason,'tries'); h.t+=86400000; W.ensure(S,h); assert.strictEqual(o.lossesLeft,W.DATA.lossesPerDay,"virada de dia: as do grátis (3)");
 });
 t('tower: prêmios v5.1 (ovos, fênix no 100, fragmentos 101-110, forja, pedras) entregues pelos módulos',()=>{
   const rw=f=>W.rewardsFor(f,makeHost());
@@ -346,18 +346,18 @@ t('luta justa: o adversário-cópia tem a FC pedida e a chance depende só da ra
   const r1=rate(1); assert.ok(r1>0.35&&r1<0.8,'FC igual ≈ metade ('+r1+')'); assert.ok(rate(0.9)>0.95); assert.ok(rate(1.12)<0.05);
   assert.strictEqual(W.difficulty(100,100).id,'even'); assert.strictEqual(W.difficulty(110,100).id,'easy'); assert.strictEqual(W.difficulty(80,100).id,'nope');
 });
-t('arena: 5 lutas/dia, pontos, adversários ±10%, ranking da semana, virada e prêmio desligado contra bots',()=>{
+t('arena: 3 lutas/dia (grátis), pontos, adversários ±10%, ranking da semana, virada e prêmio desligado contra bots',()=>{
   const A=require('../../js/sys/arena.js'); const h=makeHost(); h.equipped=()=>({weapon:{slot:'weapon',e:0,r:0,lvl:5},armor:{slot:'armor',e:0,r:0,lvl:5}});
   const S={}, fc=F.compute(S,h), ops=A.opponents(S,h); assert.strictEqual(ops.length,3);
   for(const o of ops) assert.ok(o.fc>=fc*0.9-1&&o.fc<=fc*1.1+1,'±10%');
   assert.deepStrictEqual(A.opponents(S,h).map(o=>o.id),ops.map(o=>o.id),'a lista fica fixa no dia');
-  let n=0; for(let i=0;i<7;i++){ const r=A.fight(S,h,A.opponents(S,h)[0].id); if(r.ok) n++; else assert.strictEqual(r.reason,'tries'); } assert.strictEqual(n,5);
+  let n=0; for(let i=0;i<7;i++){ const r=A.fight(S,h,A.opponents(S,h)[0].id); if(r.ok) n++; else assert.strictEqual(r.reason,'tries'); } assert.strictEqual(n,A.DATA.attemptsPerDay,'grátis 3 por dia (dono)');
   assert.strictEqual(A.fight(S,h,'nada').reason,'tries'); const o=A.ensure(S,h); assert.ok(o.points!==1000);
   assert.ok(A.refresh(S,h).ok); assert.strictEqual(A.refresh(S,h).reason,'refresh');
   const rk=A.ranking(S,h,'arena'); assert.strictEqual(rk.list.length,50); assert.ok(rk.list.some(x=>x.me)); assert.ok(rk.bots);
   const rf=A.ranking(S,h,'fc'); assert.strictEqual(rf.me.value,Math.max(F.weekMax(S,h),F.compute(S,h)));
   assert.deepStrictEqual(A.ranking(S,h,'fc').list.map(x=>x.value),rf.list.map(x=>x.value),'bots fixos na semana');
-  h.t+=86400000; A.ensure(S,h); assert.strictEqual(A.ensure(S,h).attemptsLeft,5,'virada do dia');
+  h.t+=86400000; A.ensure(S,h); assert.strictEqual(A.ensure(S,h).attemptsLeft,A.DATA.attemptsPerDay,'virada do dia');
   const gems0=h.gems; h.t+=7*86400000; A.ensure(S,h); const lw=S.sys.arena.lastWeek;
   assert.ok(lw&&lw.rank>=1&&lw.rewardsOff&&lw.reward===null,'contra bots: sem prêmio'); assert.strictEqual(h.gems,gems0);
   assert.strictEqual(S.sys.arena.points,1000); assert.ok(S.sys.arena.bestRank>=1);
@@ -1073,6 +1073,15 @@ t('Sys.newDrops (itens novos aprovados): desligado não dá nada; ligado entrega
     const low=lv(newS(),30), hlow=makeHost({level:30,eraMax:2}); const gx=N.grant(low,hlow,'tourney:season',{rank:2}).got.find(x=>x.kind==='pet'); assert.ok(gx.gated&&gx.stored&&!P.ensure(low).owned.icedragon,'portão de raridade: Lendário guardado no Nv 30');
     lv(low,120); N.releaseHeld(low,makeHost({level:120,eraMax:8})); assert.ok(P.ensure(low).owned.icedragon,'nasce quando o portão abre'); N.grant(g,h,'tourney:season',{rank:1}); assert.ok(items.some(i=>i.wing==='seraph')); assert.ok(P.ensure(g).owned.icedragon&&M.ensure(g).owned.blackdragon);
   } finally { N.DATA.on=false; P.DATA.newPets=false; M.DATA.newOn=false; T.DATA.newWings=false; }
+});
+
+t('guilda: chefe, loja e missões (fonte única com o servidor): sem diamante, loja só por Brasão, sem os pets/montarias do baú semanal',()=>{
+  const Gd=require('../../js/sys/guild.js').DATA, all=JSON.stringify({b:Gd.boss,s:Gd.shop,m:Gd.missions});
+  assert.ok(Gd.boss&&Gd.shop.length&&Gd.missions.length); assert.ok(!/gems|diamond/i.test(all),'nada de diamante');
+  assert.ok(Gd.shop.every(x=>x.cost>0&&x.weekly>0&&x.give&&!x.give.gems&&!x.give.pet&&!x.give.mount),'só Brasão, sem pet/montaria inteira');
+  assert.ok(!/crow|unicorn/.test(all),'Corvo e Unicórnio só no baú semanal');
+  const weekCost=Gd.shop.reduce((t,x)=>t+x.cost*x.weekly,0); assert.ok(weekCost>=400&&weekCost<=600,'loja inteira ~505 Brasões/semana: '+weekCost);
+  assert.ok(Gd.boss.bands.every((b,i,a)=>!i||b.minRatio>a[i-1].minRatio));
 });
 
 console.log(`ok: ${n} testes`);

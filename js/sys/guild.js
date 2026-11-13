@@ -34,6 +34,23 @@ const DATA={
   // não fixa: 8 = só quem já está no Celestial). Baú semanal por território, por membro (spec §3): 1 item da raridade-teto da era DO MEMBRO + materiais.
   rankPoints:{regionBase:1, capital:15}, capitalMinEra:8,
   weeklyChest:{item:'topRarity', mats:{forge:2, food:30, essence:1}},
+  // CHEFE, LOJA E MISSÕES DA GUILDA (números do fps-6f, 13/11; FONTE ÚNICA: o servidor fps-server src/core/guild/guild-extras-data.ts lê estes).
+  // Regras: loja só por BRASÃO (contribuição), sem diamante e sem sorteio; nada dá diamante. mountFrags = montaria atual (como no Passe).
+  // Corvo da tempestade e Unicórnio de guerra NÃO estão na loja: saem só do baú semanal (Sys.newDrops 'guild:weekly').
+  // Chefe: vida = Σ ATK dos membros × hpPerAtk × (1 + levelStep·(nível−1)), mínimo minHp; golpe = duelo (Sys.tower.duel) contra o chefe a power da FC;
+  // faixa = dano ÷ ATK do jogador; coin = Brasões; o resto pelo correio. Conta semanal: entram ~35 (check-in) + até 560 (doações) + ~210 (chefe); a loja custa ~505.
+  boss:{hitsPerDay:2, hpPerAtk:240, levelStep:0.1, minHp:50000, power:0.8,
+    bands:[{minRatio:0,coin:5},{minRatio:10,coin:10,forge:1},{minRatio:25,coin:15,forge:2,food:20},{minRatio:40,coin:20,forge:3,food:40,essence:1}],
+    kill:{xp:300,coin:30,forge:5,food:50,essence:2}},
+  shop:[{id:'forge10',name:'10 pedras de forja',cost:20,weekly:5,minLevel:1,give:{forge:10}},
+    {id:'food100',name:'100 de ração',cost:15,weekly:5,minLevel:1,give:{food:100}},
+    {id:'essence2',name:'2 Essências',cost:40,weekly:3,minLevel:2,give:{essence:2}},
+    {id:'stones5',name:'5 pedras de treino',cost:30,weekly:3,minLevel:3,give:{stones:5}},
+    {id:'mfrag5',name:'5 fragmentos de montaria',cost:60,weekly:2,minLevel:4,give:{mountFrags:5}}],
+  missions:[{id:'donations150',name:'150 doações',counter:'donations',target:150,xp:400,coin:30},
+    {id:'checkins100',name:'100 check-ins',counter:'checkins',target:100,xp:300,coin:20},
+    {id:'bossHits150',name:'150 golpes no chefe',counter:'bossHits',target:150,xp:300,coin:20},
+    {id:'bossDown',name:'Derrubar o chefe',counter:'bossDown',target:1,xp:500,coin:40}],
   // PRÊMIOS do ranking do torneio (por membro que lutou ou estava escalado), sem sorteio
   tourney:{size:15, rewards:[{from:1,to:1,coin:300,prism:3,frame:true},{from:2,to:3,coin:200,prism:2},{from:4,to:10,coin:120,prism:1},{from:11,to:50,coin:60,prism:0}]},
   donate:[{id:'gold_s',goldk:60,coin:10,xp:20},{id:'gold_l',goldk:240,coin:30,xp:60},{id:'gems',gems:50,coin:40,xp:80}],   // 1 de cada por dia

@@ -12,7 +12,7 @@ const DATA={
   // Interpolação geométrica entre âncoras; depois da última, o crescimento do último trecho continua.
   anchors:[[1,150],[15,1440],[30,12300],[45,395000],[60,13900000],[75,829000000],[90,34300000000],[105,1540000000000]],   // v7.1 (simulador no ritmo real da build)
   bossEvery:10, bossFcMult:1.3,     // chefe a cada 10 andares (dono, confirmado via PO; era 5), com +30% de FC sobre a curva
-  lossesPerDay:5,
+  lossesPerDay:3,   // dono (13/11): grátis 3 derrotas/dia; VIP soma (+1 no VIP 5, +2 no VIP 10: Sys.vip.conv towerAdd)
   perFloor:{atkPct:0.2, hpPct:0.2}, // bônus permanente por andar vencido (melhor andar)
   // chefe a cada 10 (metade dos chefes): o prêmio POR CHEFE dobrou para o total da torre ficar igual (até o andar 105: 185 → 295 💎 e
   // 18 → 36 pedras de forja, como era com chefe a cada 5). bossGems = 10 + andar/5; forja = 4 por chefe a partir do 20.
