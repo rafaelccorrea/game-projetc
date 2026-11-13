@@ -36,7 +36,11 @@ const MOUNT_HERO = { kael: 'kael_', kaia: 'kaia_' };
    carregado esta reserva nunca roda. */
 const MOUNT_MAN = { packs: null, asked: false };
 function mountManLoad(){ if (MOUNT_MAN.asked) return; MOUNT_MAN.asked = true; fetch('assets/manifest.json').then(r => r.ok ? r.json() : null).then(m => { MOUNT_MAN.packs = (m && m.packs) || {}; }).catch(() => { MOUNT_MAN.packs = {}; }); }
-function mountArtOf(h, id){ const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { return A.mountedArt(h, id); } catch (e) { return null; } }
+/* Engenheiro 7 (desempenho): a resposta do manifesto (true/false) fica guardada por herói+montaria: com a Kaia o mountPrefix roda várias vezes por quadro e
+   cada consulta varria os arquivos do pacote. null (manifesto ainda não chegou) NÃO é guardado. */
+const MOUNT_ART_C = {};
+function mountArtOf(h, id){ const ck = h + '|' + id, c = MOUNT_ART_C[ck]; if (c !== undefined) return c;
+  const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { const r = A.mountedArt(h, id); if (r === true || r === false) MOUNT_ART_C[ck] = r; return r; } catch (e) { return null; } }
   if (!MOUNT_MAN.packs){ mountManLoad(); return null; } const pk = MOUNT_MAN.packs['mount:' + id], b = MOUNT_DIR + h + '_' + id; return !!(pk && Array.isArray(pk.files) && pk.files.some(p => p === b + '_idle_body.png' || p === b + '_run_body.png')); }
 function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'; if (h === 'kael') return MOUNT_HERO.kael;
   if (id == null){ try { const i = Sys.mount.battleInfo(S); id = i && i.id; } catch (e) { id = null; } }

@@ -85,7 +85,15 @@ function wFamLook(w){ const it=wItemNow(); if(!it||!(window.Sys&&Sys.stats&&type
   }catch(e){ return w; } }
 /* o que vai para o Sys.stats (ultOf/skillFx): o ITEM equipado (família e raridade de verdade, Divino inclusive); com skin de arma escolhida, a skin */
 const wArm = () => wItemNow()||wSkin();
-const wSkin = () => { const w=wFamLook(heroLook().weapon); if(w!==HLK.cur){ if(HLK.req!==w){ HLK.req=w; HLK.t0=performance.now(); }
+/* DESEMPENHO (Engenheiro 7): a aparência do herói (heroLook: 3 buscas em SKINS, 2 em S.inv, Sys.stats.wingOf, Sys.mount.battleInfo) era refeita a CADA chamada
+   de wSkin()/draw(), várias vezes por quadro. lookNow() guarda o resultado por ESTADO (espaços de arma/asa, skins, herói, montaria e estrelas, asa escondida) e
+   por no máximo 200 ms (mesma folga do heroForm e do petInfo: item transformado no mesmo espaço aparece em até 0,2 s). SÓ LEITURA: quem altera o objeto
+   devolvido (vitrine) continua chamando heroLook(). */
+const LKC={v:null,t:-1e9,k:''}; let WS_LK=null, WS_W=null;
+function lookNow(){ const now=performance.now(); let k=''; try{ const e=S.eq||{}, q=S.skinEq||{}, y=S.sys||{}, m=y.mount, ap=y.appearance;
+    k=e.weapon+'|'+e.wing+'|'+q.weapon+'|'+q.armor+'|'+S.hero+'|'+(m?m.eq+':'+(m.owned&&m.owned[m.eq]?m.owned[m.eq].stars|0:0):'')+'|'+(ap?(ap.skin&&ap.skin.wing)+':'+(ap.hidden&&ap.hidden.wing):''); }catch(er){ k=''; }
+  if(LKC.v&&k&&k===LKC.k&&now-LKC.t<200&&now>=LKC.t) return LKC.v; LKC.k=k; LKC.t=now; return LKC.v=heroLook(); }
+const wSkin = () => { const lk=lookNow(); let w; if(lk===WS_LK) w=WS_W; else { w=wFamLook(lk.weapon); WS_LK=lk; WS_W=w; } if(w!==HLK.cur){ if(HLK.req!==w){ HLK.req=w; HLK.t0=performance.now(); }
     if(!HLK.cur||lookReady(w)||performance.now()-HLK.t0>4000) HLK.cur=w; } return HLK.cur; };   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
 const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
 /* POSE PELA FAMÍLIA: Sys.stats.weaponStyle (melee | gun | ranged | return); sem o módulo, o tipo do meta.json da arma (conferido: os dois dizem o mesmo nas 35 armas de era) */
@@ -1111,9 +1119,9 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=heroLook(), wg=wingNow(lk), mo=lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=lookNow(), wg=wingNow(lk), mo=lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
     if(!wg||wg===HM.wing||typeof wingReady!=='function'||wingReady(wg)||lookWait('wing',wg)) HM.wing=wg;
-    if(!mo||typeof mountReady!=='function'||mountReady(mo.id)||lookWait('mount',mo.id)) HM.mount=mo; } { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+    if(!mo||(HM.mount&&HM.mount.id===mo.id)||typeof mountReady!=='function'||mountReady(mo.id)||lookWait('mount',mo.id)) HM.mount=mo; }   /* mesma montaria que já está no desenho: sem conferir as 3 folhas de novo a cada quadro */ { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
   { const he=heroEdge(); if(B.heK!=null&&Math.abs(he-B.heK)>1&&B.deadT<=0&&!B.res){ try{ layoutHorde(); }catch(e){} } B.heK=he; }
   const ultOn=!!(B.act&&B.act.type==='s3');
@@ -1264,7 +1272,7 @@ function fpsWindow(now){ const el=now-FP.w0; if(el<2000) return; const avg=FP.wf
   FP.w0=now; FP.wf=0; FP.work=0; FP.worst=0; }
 function fpsApply(){ try{ if(typeof sceneQuality==='function') sceneQuality(FP.q>=2?0.7:1); }catch(e){} if(DEBUG) console.log('qualidade adaptativa: degrau '+FP.q); }
 function loop(now){
-  { const d=now-FP.lastRaw; FP.lastRaw=now; if(d>2&&d<60){ FP.raw.push(d); if(FP.raw.length>=40){ FP.raw.sort((a,b)=>a-b); const hz=1000/FP.raw[8]; FP.raw.length=0; if(hz>30&&hz<400){ FP.hz=hz; FP.n=FPS_FREE?1:Math.max(1,Math.floor(hz/60+0.15)); } } }
+  { const d=now-FP.lastRaw; FP.lastRaw=now; if(d>2&&d<60){ FP.raw.push(d); if(FP.raw.length>=40){ let sm=0; for(let i=0;i<40;i++) sm+=FP.raw[i]; const hz=40000/sm; FP.raw.length=0;   /* Engenheiro 7: taxa pela MÉDIA dos 40 intervalos, não pelo quartil baixo: em tela de 60 Hz com quadros irregulares (8 ms / 25 ms alternados, PC ou celular carregado) o quartil dava "120 Hz" e o jogo passava a desenhar 1 a cada 2 (30 por segundo). A média nunca passa da taxa real; com quadros perdidos ela só erra para MENOS (sem pular quadro) */ if(hz>30&&hz<400){ FP.hz=hz; FP.n=FPS_FREE?1:Math.max(1,Math.floor(hz/60+0.15)); } } }
     if(++FP.i<FP.n){ requestAnimationFrame(loop); return; } FP.i=0; }   /* tela de 120/144 Hz: pula as chamadas do meio (nada é calculado nem desenhado nelas) */
   const w0=performance.now();
   const rdt=(DEBUG&&window.__frz)?0:Math.min(0.1,(now-last)/1000); { const ms=now-last; if(ms<1000){ FP.wf++; if(ms>FP.worst) FP.worst=ms; } if(!FP.w0) FP.w0=now; } last=now; B.fdt=rdt; B.fk=Math.min(1,rdt*60);

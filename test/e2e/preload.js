@@ -58,12 +58,12 @@ async function scenario(name, opts, limitS, expect) {
   out.push('       · ' + name + ': ' + pg.done + '/' + pg.total + ' arquivos, ' + (t === false ? 'não terminou' : t.toFixed(1) + ' s virtuais') + ', ' + size + ' no cache');
 }
 (async () => {
-  const R = await returningSave();
-  await scenario('JOGADOR QUE VOLTA (Nv 61, lobo + asa + pet, 3 h offline)', { search: '?debug=1', storage: { [R.key]: R.json } }, 60, (G) => {
+  const R = await returningSave(), X = process.argv.includes('--nova') ? '&carga=nova' : '';   /* Engenheiro 7: `node test/e2e/preload.js --nova` roda os 4 cenários no pré-carregador NOVO (chave PRELOAD_NEW) */
+  await scenario('JOGADOR QUE VOLTA (Nv 61, lobo + asa + pet, 3 h offline)', { search: '?debug=1' + X, storage: { [R.key]: R.json } }, 60, (G) => {
     check('JOGADOR QUE VOLTA: o save voltou com nível 61, lobo equipado e asa', G.ev('Sys.level.level(S)') === 61 && G.ev("Sys.mount.ensure(S).eq") === 'wolf' && !!G.ev('S.eq&&S.eq.wing'), 'nível ' + G.ev('Sys.level.level(S)') + ' montaria ' + G.ev("Sys.mount.ensure(S).eq")); });
-  await scenario('SAVE NOVO', { search: '?debug=1&fresh=1' }, 60);
-  await scenario('REDE LENTA 250 ms por arquivo (jogador que volta)', { search: '?debug=1&lento=250&frio=1', storage: { [R.key]: R.json } }, 90);
-  await scenario('REDE LENTA 800 ms por arquivo (jogador que volta)', { search: '?debug=1&lento=800&frio=1', storage: { [R.key]: R.json } }, 150);
+  await scenario('SAVE NOVO', { search: '?debug=1&fresh=1' + X }, 60);
+  await scenario('REDE LENTA 250 ms por arquivo (jogador que volta)', { search: '?debug=1&lento=250&frio=1' + X, storage: { [R.key]: R.json } }, 90);
+  await scenario('REDE LENTA 800 ms por arquivo (jogador que volta)', { search: '?debug=1&lento=800&frio=1' + X, storage: { [R.key]: R.json } }, 150);
   console.log('\n' + out.filter(l => /·/.test(l)).join('\n'));
   console.log(fail ? '\n' + fail + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nPRÉ-CARREGADOR: TODAS AS VERIFICAÇÕES PASSARAM');
   process.exit(fail ? 1 : 0);
