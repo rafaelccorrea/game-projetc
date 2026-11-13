@@ -211,6 +211,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Login com Google: Firebase criado e configurado
 - [ ] Google na versão da loja: no Play Console → Testar e lançar → Integridade do app → Assinatura do app, copie a SHA-1 e cadastre no Firebase → Configurações do projeto → app Android → "Adicionar impressão digital"
 - [ ] Variável de ambiente GOOGLE_CLIENT_ID = 108430697904-opm26965n34smlrrnlq1kha8bobb17b5.apps.googleusercontent.com (não é segredo; junto com as do Supabase)
+- [ ] GitHub: o repositório privado "eonbound-server" foi criado, mas a chave de acesso do GitHub neste PC só enxerga alguns repositórios. Em github.com → Settings → Developer settings → Personal access tokens (fine-grained) → o token em uso → adicione o repositório eonbound-server (Contents: leitura e escrita)
+- [ ] Domínio para o servidor (ex.: api.eonbound.com.br): o Android só aceita conexão segura (HTTPS), que precisa de um domínio apontando para o IP 15.229.249.157
+- [ ] Senha do banco Supabase (DATABASE_URL): seguir o passo a passo das 02h
+- [x] Máquina na AWS criada (t4g.small, São Paulo); Node e nginx instalados; código copiado
 - [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
 - [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
