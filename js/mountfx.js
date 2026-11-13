@@ -56,6 +56,15 @@ function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero ===
 function mountLook(){ if (!mountOk()) return null; try { const i = Sys.mount.battleInfo(S); return i && i.visual && MOUNT_TBL[i.id] && mountPrefix(i.id) ? { id: i.id, stars: i.stars | 0, aura: i.aura } : null; } catch (e) { return null; } }
 const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix(id) || 'kael_') + mountFile(id) + '_' + st + '_body');
 function mountReady(id){ let ok = true; for (const st of ['idle', 'run', 'attack']) if (!mountSheet(id, st).ok) ok = false; return ok; }
+/* TIRO MONTADO (dono aprovou; PO 14/11). Hoje o herói montado com ARMA DE FOGO faz o golpe de espada (folha _attack). Com a folha própria
+   <herói>_<montaria>_shoot_body (.png + .json, mesma célula e mesmos campos das outras: grip por quadro, back, feetY), a ação com arma de fogo (act.gun) usa
+   o estado 'shoot'. CHAVE MOUNT_SHOOT_ON: desligada até as folhas da Arte chegarem e o dono votar (?debug=1&mshoot=1 liga para conferir).
+   Vale POR MONTARIA E POR HERÓI: sem a folha (ainda carregando, ou não existe) fica o golpe de espada, como hoje; nunca segura a batalha.
+   mountShootState(id, act) → 'shoot' | 'attack' é o ÚNICO lugar que decide. */
+const MOUNT_SHOOT_ON = false;
+const mountShootOn = () => MOUNT_SHOOT_ON || (typeof DEBUG !== 'undefined' && DEBUG && /[?&]mshoot=1/.test(location.search));
+function mountShootState(id, a){ if (!a || !a.gun || a.type === 's3' || !mountShootOn()) return 'attack'; let sh = null; try { sh = mountSheet(id, 'shoot'); } catch (e) { sh = null; }
+  return sh && sh.ok && sh.meta && Array.isArray(sh.meta.grip) && sh.meta.grip.length >= (sh.meta.frames || 1) ? 'shoot' : 'attack'; }
 /* medidas da folha parada (uma vez por montaria): quanto o Kael SOBE (linha do pescoço) e até onde a montaria vai à FRENTE (borda opaca direita) */
 const MOUNT_M = {};
 function mountMetrics(id0){ const id = id0, key = (mountPrefix(id0) || '') + id0; let m = MOUNT_M[key]; if (m) return m; const sh = mountSheet(id, 'idle'); if (!sh.ok) return null; const M = sh.meta, fy = typeof M.feetY === 'number' ? M.feetY : 339, ax = (M.padLeft || 0) + 128;
@@ -201,7 +210,7 @@ function drawMountDead(H){ const mode = mountDieMode(H); if (!mode) return false
   return true; }
 function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
   const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id]; if (H.main && MOUNT_REF[id]) mountStill(id);   /* a montaria entrou em cena: pede a imagem dela sozinha (Derrota), uma vez */
-  const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
+  const a = H.deadP >= 0 ? null : H.act, st = a ? mountShootState(id, a) : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
   let fi = a ? Math.min(n - 1, Math.floor(a.t / Math.max(0.01, a.dur) * n)) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
   if (Array.isArray(M.skip) && M.skip.indexOf(fi) >= 0){ let p = fi - 1; while (p >= 0 && M.skip.indexOf(p) >= 0) p--; if (p < 0){ p = fi + 1; while (p < n && M.skip.indexOf(p) >= 0) p++; } if (p >= 0 && p < n) fi = p; }   /* quadro com artefato (campo "skip" da Arte): usa o quadro limpo mais próximo, de preferência o anterior, com o grip e o back dele */
   const G = M.grip[fi] || M.grip[0], k = HS / 256, gy = H.gy, ws = H.ws;

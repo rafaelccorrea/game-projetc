@@ -39,7 +39,7 @@ function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = 
     { const t = heroCompTier(ae, ws); if (t >= 0) for (const st of ['run', 'idle', 'attack']){ const u = HERO_DIR + 'kael_' + (st === 'attack' ? 'attack_wide' : st) + '_era2_t' + t + '.png'; IMG(u); add(u); } }
     { const au = auraBase(); if (au) sheet(sheetLoad(au, true)); }
     add(wPng(ws)); IMG(wPng(ws)); { const h0 = hp('hero', ae.e, tierOf(ae.r)); add(h0); IMG(h0); }
-    { const mo = opt.mount !== undefined ? opt.mount : lk.mount; if (mo && mo.id && typeof mountSheet === 'function') for (const st of ['idle', 'run', 'attack']) sheet(mountSheet(mo.id, st)); }
+    { const mo = opt.mount !== undefined ? opt.mount : lk.mount; if (mo && mo.id && typeof mountSheet === 'function') for (const st of ['idle', 'run', 'attack']) sheet(mountSheet(mo.id, st)); try { if (typeof mountShootOn === 'function' && mountShootOn() && typeof wIsGun === 'function' && wIsGun(wSkin())) mountSheet(mo.id, 'shoot'); } catch (e) {} }   /* tiro montado (chave): pede a folha sem prender a carga (pode não existir ainda) */
     { const b = opt.pet !== undefined ? opt.pet : (typeof petInfo === 'function' && (PETK.infoT = 0, petInfo()) ? PETK.base : ''); if (b) for (const st of ['idle', 'run', 'atk1']) sheet(sheetLoad(PET_DIR + b + '_' + st, true)); }
     { const wg = opt.wing !== undefined ? opt.wing : wingNow(lk); if (wg){ const j = 'assets/anim/equip/wing_' + wg + '.json'; J(j); add(j); wingList(wg).forEach(add); } }
     { const E = Math.min(SKN.length - 1, ws.e), P = ultPlan(wArm(), E, true); if (P){ IMG(P.sheet + '.png'); J(P.sheet + '.json'); add(P.sheet + '.png'); add(P.sheet + '.json'); }
