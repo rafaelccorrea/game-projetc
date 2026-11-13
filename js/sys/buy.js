@@ -58,7 +58,7 @@
   /** compra um produto do catálogo do servidor. Resolve {ok, status, reason, applied} */
   async function purchase(S, host, productId) {
     if (!ready()) return { ok: false, reason: 'soon' };
-    if (!available(productId)) return { ok: false, reason: 'unavailable' };
+    if (!available(productId, S)) return { ok: false, reason: 'unavailable' };
     const N = net(), B = bridge();
     try {
       const can = await N.canBuy(productId);
@@ -134,8 +134,13 @@
 
   /** produto do catálogo pelo id (ou null) e o preço em texto pt-BR ("R$ 49,90") */
   const product = id => DATA.products.find(p => p.id === id) || null;
-  /** à venda AGORA? montaria só quando o Sys.newDrops diz que ela está liberada (Sys.mount.add recusa montaria com a chave desligada) */
-  const available = id => { const p = product(id); if (!p) return false; if (p.kind !== 'mount') return true;
+  /** à venda AGORA? montaria só quando o Sys.newDrops diz que ela está liberada (Sys.mount.add recusa montaria com a chave desligada);
+      skin só com a venda ligada (Sys.appearance.DATA.skinsOn), a ARTE pronta (sem arte ela entra na coleção mas não equipa) e, com o save S,
+      do herói certo e ainda não comprada */
+  const available = (id, S) => { const p = product(id); if (!p) return false;
+    if (p.kind === 'skin') { try { const A = Sys().appearance, x = A && A.skinProducts ? A.skinProducts(S).find(q => q.productId === id) : null;
+      return !!(x && x.on && x.art && x.available && !x.owned); } catch (e) { return false; } }
+    if (p.kind !== 'mount') return true;
     try { const N = Sys().newDrops, s = N && N.shop ? N.shop() : []; const x = s.find(q => q.productId === id); return !!(x && x.on); } catch (e) { return false; } };
   const priceText = id => { const p = product(id); return p ? 'R$ ' + p.brl.toFixed(2).replace('.', ',') : ''; };
   return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available };

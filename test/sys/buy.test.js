@@ -62,6 +62,14 @@ function world(dels) {
     assert.strictEqual(B.priceText('skin_kael_cyborg'), 'R$ 39,90');
     delete globalThis.Sys.appearance;
   });
+  await t('skin só à venda com venda ligada, arte pronta, herói certo e não comprada', async () => {
+    const row = o => Object.assign({ productId: 'skin_kael_paladin', on: true, art: true, available: true, owned: false }, o);
+    let r = row({}); globalThis.Sys.appearance = { skinProducts: () => [r] };
+    assert.strictEqual(B.available('skin_kael_paladin', {}), true);
+    for (const o of [{ on: false }, { art: false }, { available: false }, { owned: true }]) { r = row(o); assert.strictEqual(B.available('skin_kael_paladin', {}), false, JSON.stringify(o)); }
+    assert.strictEqual(B.available('skin_kael_cyborg', {}), false);   // fora da lista do Sys.appearance
+    delete globalThis.Sys.appearance; assert.strictEqual(B.available('skin_kael_paladin', {}), false);
+  });
   await t('estorno (revoke): tira 💎 até zero, a skin e o passe', async () => {
     const dels = [{ id: 'g', grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] },
       { id: 'r', revoke: true, grants: [{ kind: 'gems', amount: 500 }, { kind: 'skin', skinId: 'k1' }, { kind: 'pass_premium' }] }];
