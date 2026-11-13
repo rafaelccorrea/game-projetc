@@ -324,7 +324,7 @@ function drawHeroPistol(H, E){
 }
 /* MORTE NOVA DO KAEL (aprovada, v0.12.8): folha assets/anim/hyb/R/kael_die_body (448x256, padLeft 96, pés em feetY; 18 quadros a 12 fps; o último,
    deitado, segura). Cai de joelho e de bruços; a arma cai por código ao lado; poeira ao bater no chão; a tela escurece (battle.js). Vale montado
-   (não há folha da montaria sem o Kael: ele cai a pé e a montaria SAI DE CENA correndo para trás em ~0,5 s: drawMountExit, js/mountfx.js) e com pet (o pet fica à frente,
+   (não há folha da montaria sem o Kael: ele cai a pé e a montaria FICA parada atrás dele, respirando, com a imagem dela sozinha: drawMountDead, js/mountfx.js; sem imagem, sai correndo) e com pet (o pet fica à frente,
    parado). Chave: ART_ON.kael_die.
    ASA NA MORTE: continua SEM desenho (drawWingsAt sai com H.deadP >= 0), de propósito. As folhas da morte trazem a âncora "back", mas ela é medida automática e
    não acompanha o corpo deitado: no último quadro (o que fica a Derrota inteira) a âncora da folha padrão está em y = 164 da célula, a altura do ombro de quem está
@@ -354,7 +354,7 @@ function dieClear(H){ const sh = dieSheet(), k = HS / 256 * phaseK(), b = sh.ok 
   if (w0){ const wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, a1 = (typeof wm.angle === 'number' ? wm.angle : (wm.type === 'gun' ? 0 : 90)) * Math.PI / 180, kk = 256 * 0.5 * (ws.wk && wm.scale > 0 ? wm.scale : 1) / Math.max(w0.w, w0.h);
     const hw = (Math.abs(w0.w * kk * Math.cos(a1)) + Math.abs(w0.h * kk * Math.sin(a1))) / 2, cx = DIE_WX + DIE_WRUN; wl = cx - hw; wr = cx + hw; l = Math.min(l, wl); r = Math.max(r, wr); }
   return { l: H.x + l * k, r: H.x + r * k, wl: wl == null ? null : H.x + wl * k, wr: wr == null ? null : H.x + wr * k }; }
-function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; if (H.mount && typeof drawMountExit === 'function') drawMountExit(H);   /* a montaria sai correndo para trás e some em ~0,5 s (até haver arte dela sem cavaleiro); desenhada ANTES do herói caído */ const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
+function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; if (H.mount && typeof drawMountDead === 'function') drawMountDead(H);   /* a montaria FICA: parada atrás do herói caído, respirando (sem imagem dela sozinha: sai correndo); desenhada ANTES do herói caído */ const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
   const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);

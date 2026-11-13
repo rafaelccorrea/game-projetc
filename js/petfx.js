@@ -154,7 +154,7 @@ function drawHatch(){ dbgFxTick(); if (!petOk()) return; if (!HATCH.cur){ if (!H
 function petGiveEgg(r){ if (!petOk()) return null; let x = null; try { x = Sys.pet.addEgg(S, Sys.host, r != null ? { r, source: 'test' } : { source: 'test' }); } catch (e) { console.error('addEgg', e); } petNotice([x]); if (typeof refreshHero === 'function') refreshHero(); save(); return x; }
 /* ================= GANCHOS DE DEBUG PARA O QA (só com ?debug=1: sem DEBUG, DBGFX é null e nada abaixo é criado) =================
    A captura de tela leva centenas de ms; estes ganchos CONGELAM um instante da animação até serem soltos. Todos devolvem um objeto com o que foi posto na tela.
-     dbgDieAt(t[, chefe])   põe o herói na Derrota e para a queda no instante t, em segundos (0 a 1,6). 0 a 0,5 = montaria saindo; 0 a 0,5 = pet deslizando;
+     dbgDieAt(t[, chefe])   põe o herói na Derrota e para a queda no instante t, em segundos (0 a 1,6). 0 a 0,3 = fade cruzado da montaria (folha montada → imagem parada, que fica respirando); 0 a 0,5 = pet deslizando;
                             0 a 0,7 = arma caindo; 1,4+ = herói deitado. A tela de resultado NÃO abre e a fase não recomeça enquanto estiver congelado; funciona
                             no Modo dono (a vida recomposta não levanta o herói). chefe = true: véu escuro da derrota para o chefe em vez do "DERROTADO".
                             dbgDieAt(null) solta: herói de pé, vida cheia, batalha segue. (Chamar com a tela de resultado fechada.)
@@ -172,7 +172,7 @@ if (typeof DBGFX !== 'undefined' && DBGFX){ const D = DBGFX, num = (v, a, b, d) 
   window.dbgDieAt = function (t, boss){ if (t == null){ if (D.die != null){ D.die = null; B.deadT = 0; B.deadBoss = false; if (B.hero) B.hero.hp = B.hero.maxhp; } return { solto: true }; }
     if (B.res) return { erro: 'feche a tela de resultado antes' };
     D.die = num(t, 0, 1.6, 0); B.deadT = Math.max(0.05, 1.6 - D.die); B.deadBoss = !!boss; B.act = null; B.dieDustW = 0; B.dieDustB = 0;
-    const p = petInfo() ? petPos() : null; return { t: D.die, montariaSaindo: !!(HM.mount && D.die < MOUNT_EXIT), pet: p && { x: Math.round(p.x), chao: Math.round(p.gy) }, petDestino: p ? Math.round(petDieX()) : null }; };
+    const p = petInfo() ? petPos() : null; return { t: D.die, montaria: HM.mount ? ((HM._md && HM._md.mode) || (MOUNT_REF[HM.mount.id] && mountStill(HM.mount.id).ok ? 'still' : 'exit')) : null, pet: p && { x: Math.round(p.x), chao: Math.round(p.gy) }, petDestino: p ? Math.round(petDieX()) : null }; };
   window.dbgHatchAt = function (pet, r, t){ if (pet === null){ D.hatch = null; HATCH.cur = null; HATCH.q.length = 0; return { solto: true }; }
     if (!petOk()) return { erro: 'pets desligados' }; const sp = (Sys.pet.DATA.v17 && Sys.pet.DATA.v17.species) || {};
     if (pet === undefined || !sp[pet]) return { erro: 'id de pet desconhecido', ids: Object.keys(sp) };

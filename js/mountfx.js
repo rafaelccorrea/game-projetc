@@ -97,7 +97,9 @@ function mountGearHead(M, fi, V){ if (!V || !(V.hHat || V.glasses || V.mask)) re
     ctx.save(); ctx.translate(a.x, a.y); ctx.rotate((a.ang || 0) * Math.PI / 180); ctx.scale(s, s); ctx.drawImage(im.img, -def.pivot.x, -def.pivot.y); ctx.restore(); };
   if (V.hHat) one(layHat(V.hHat), 'assets/anim/equip/hats/');
   if (V.glasses || V.mask){ const ci = J('assets/anim/equip/cos/cos.json').items || {}; if (V.glasses) one(ci[V.glasses], 'assets/anim/equip/cos/'); if (V.mask) one(ci[V.mask], 'assets/anim/equip/cos/'); } }
-/* DERROTA: A MONTARIA SAI DE CENA CORRENDO (decisão do dono/PO; o ícone parado de contorno branco foi REPROVADO: "nada parado"). Até a Arte entregar folha da
+/* DERROTA, DECISÃO ATUAL DO PO: A MONTARIA FICA, parada ATRÁS do herói caído (drawMountDead → mountStill*, mais abaixo). O que segue (SAÍDA CORRENDO) é agora
+   só a RESERVA: vale para montaria sem imagem em MOUNT_REF ou cuja imagem não carregou a tempo. O recorte do cavaleiro (mountCutFrame) serve aos dois caminhos.
+   SAÍDA CORRENDO (decisão anterior; o ícone parado de contorno branco foi REPROVADO: "nada parado"). Até a Arte entregar folha da
    montaria SEM cavaleiro, quando o herói cai (a pé, pela folha da morte) a montaria dá meia-volta e corre para trás: quadros da folha de CORRIDA montada,
    espelhados, deslizando para a esquerda e sumindo em MOUNT_EXIT segundos. Patas na linha do chão o tempo todo (mesmo feetY da folha), sombra e aura por estrela
    deslizam e somem junto; sem contorno. A transparência só desce (sem piscar) e, terminado o tempo, nada mais é desenhado.
@@ -111,13 +113,11 @@ const MOUNT_EXIT = 0.5, MOUNT_SEAT = 12, MOUNT_EXIT_SOFT = 10, MOUNT_EXIT_RUN = 
 let MOUNT_EXIT_CV = null;
 const mountExitU = H => Math.max(0, H.deadP) * 1.6 / MOUNT_EXIT;   /* 0 → 1 ao longo da saída (deadP = 1 - B.deadT/1,6: 1,6 s de queda) */
 /* chamado pelo drawHeroDie (js/stage.js) ANTES do corpo caído. Devolve true enquanto desenha a saída; false depois que ela terminou (ou sem montaria). */
-function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !mountPrefix(mo.id) || !mountReady(mo.id)) return false; const u = mountExitU(H); if (!(u < 1)) return false;
-  const T = MOUNT_TBL[mo.id], sh = mountSheet(mo.id, 'run'), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, k = HS / 256, gy = H.gy;
-  let fi = Math.floor(H.t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
+/* quadro da folha montada (estado st) SEM o cavaleiro acima da sela, num canvas à parte (um só, reaproveitado): { c, M, T, pad, fy } */
+function mountCutFrame(id, st, t){ const T = MOUNT_TBL[id], sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h;
+  let fi = Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
   if (Array.isArray(M.skip) && M.skip.indexOf(fi) >= 0){ let p = fi - 1; while (p >= 0 && M.skip.indexOf(p) >= 0) p--; if (p < 0){ p = fi + 1; while (p < n && M.skip.indexOf(p) >= 0) p++; } if (p >= 0 && p < n) fi = p; }
   const G = M.grip[fi] || M.grip[0], seat = Math.max(MOUNT_EXIT_SOFT, Math.min(FH - 1, Math.round(G.y + (typeof T.seat === 'number' ? T.seat : MOUNT_SEAT)))), cutx = Math.max(0, Math.min(FW - 1, Math.round(G.x + 8))), sx = sheetSX(M, fi), sy = sheetSY(M, fi);
-  const a = Math.min(1, (1 - u) * 1.8), cx = H.x + HS * 0.12 - u * u * HS * MOUNT_EXIT_RUN;   /* some só na 2ª metade; arranca devagar e acelera (u²) */
-  /* quadro recortado num canvas à parte (um só, reaproveitado) */
   const c = MOUNT_EXIT_CV || (MOUNT_EXIT_CV = document.createElement('canvas')); if (c.width !== FW || c.height !== FH){ c.width = FW; c.height = FH; } const g = c.getContext('2d');
   g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, FW, FH);
   g.drawImage(sh.img, sx, sy + seat - MOUNT_EXIT_SOFT, cutx, MOUNT_EXIT_SOFT, 0, seat - MOUNT_EXIT_SOFT, cutx, MOUNT_EXIT_SOFT);   // faixa do esfumado, logo acima da sela, atrás do corte
@@ -125,12 +125,56 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
   g.globalCompositeOperation = 'source-over';
   g.drawImage(sh.img, sx, sy + seat, FW, FH - seat, 0, seat, FW, FH - seat);                // abaixo da sela: corpo, patas e cauda
   g.drawImage(sh.img, sx + cutx, sy, FW - cutx, seat, cutx, 0, FW - cutx, seat);            // à frente do cavaleiro: pescoço e cabeça da montaria
+  return { c, M, T, pad: M.padLeft || 0, fy: typeof M.feetY === 'number' ? M.feetY : 339 }; }
+function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !mountPrefix(mo.id) || !mountReady(mo.id)) return false; const u = mountExitU(H); if (!(u < 1)) return false;
+  const F = mountCutFrame(mo.id, 'run', H.t), T = F.T, k = HS / 256, gy = H.gy;
+  const a = Math.min(1, (1 - u) * 1.8), cx = H.x + HS * 0.12 - u * u * HS * MOUNT_EXIT_RUN;   /* some só na 2ª metade; arranca devagar e acelera (u²) */
   ctx.save(); ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(cx, gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas, no chão, junto
   { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN); ctx.save(); ctx.globalAlpha = a * 0.75; ctx.drawImage(hc, cx - r, gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: vai e some com a montaria
-  ctx.save(); ctx.globalAlpha = a; ctx.translate(cx, gy); ctx.scale(-k, k); ctx.drawImage(c, -(pad + 128 - T.dx + 0.12 * 256), -(fy - T.dy)); ctx.restore();   /* espelhada em torno do centro dela (o da sombra): virou e corre para trás */
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(cx, gy); ctx.scale(-k, k); ctx.drawImage(F.c, -(F.pad + 128 - T.dx + 0.12 * 256), -(F.fy - T.dy)); ctx.restore();   /* espelhada em torno do centro dela (o da sombra): virou e corre para trás */
+  return true; }
+/* ===== DERROTA: A MONTARIA FICA (decisão do PO) =====
+   Parada ATRÁS do herói caído, com a imagem LIMPA dela sozinha que o Códex já usa (assets/mounts/<arquivo>.png: fundo transparente, sem contorno de adesivo),
+   virada para a direita como na batalha (as 6 artes já olham para a direita; flip: true espelha se alguma vier ao contrário), RESPIRANDO por código (a altura
+   varia MOUNT_BREATH_K a partir da BASE, período MOUNT_BREATH s: as patas não saem da linha do chão) e com a sombra no chão; a aura por estrela continua atrás.
+   Patas no chão: a borda opaca de baixo da imagem (medida uma vez) assenta em gy. Mesmo lugar e mesma largura da montaria na folha parada (rs ajusta o tamanho
+   por montaria, se a arte de 3/4 parecer maior/menor que a de perfil). TRANSIÇÃO sem teleporte: nos primeiros MOUNT_XFADE s a folha montada parada (sem o
+   cavaleiro: mountCutFrame) some enquanto a imagem entra, no mesmo lugar (fade cruzado).
+   PESO: os arquivos têm 1 a 4 MB (956 a 1901 px). A imagem só é pedida quando a montaria ENTRA EM CENA (1º desenho montado), é reduzida UMA vez para um canvas de
+   MOUNT_STILL_W px de largura e o arquivo grande é solto; só a da montaria em uso fica na memória. Montaria sem imagem na tabela, ou imagem que não chegou
+   até a queda: vale a saída correndo (drawMountExit). O caminho é escolhido UMA vez por queda (não troca no meio). */
+const MOUNT_REF = { pony: { f: 'mount_pony_ref' }, horse: { f: 'mount_horse_ref' }, wolf: { f: 'mount_wolf_ref' }, griffin: { f: 'mount_griffin_ref' }, mythic: { f: 'mount_mythic_opt_tiger' }, wyvern: { f: 'mount_wyvern_ref' } };   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
+const MOUNT_STILL = {}, MOUNT_STILL_W = 384, MOUNT_XFADE = 0.3, MOUNT_BREATH = 2.6, MOUNT_BREATH_K = 0.015;
+function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k in MOUNT_STILL) delete MOUNT_STILL[k];   /* só a da montaria em uso */
+  o = MOUNT_STILL[id] = { c: null, ok: false, fail: false, bb: null }; const R = MOUNT_REF[id]; if (!R){ o.fail = true; return o; }
+  try { const im = new Image(); im.onerror = () => { o.fail = true; };
+    im.onload = () => { try { const w = im.naturalWidth, h = im.naturalHeight; if (!(w > 0 && h > 0)){ o.fail = true; return; }
+        const s = Math.min(1, MOUNT_STILL_W / w), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s)); const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0, w, h, 0, 0, c.width, c.height);
+        let bb = { l: 0, r: c.width, t: 0, b: c.height };
+        try { const d = g.getImageData(0, 0, c.width, c.height).data, W = c.width, Hh = c.height; let l = W, r = -1, t = Hh, b = -1; for (let y = 0; y < Hh; y++){ const row = y * W * 4 + 3; for (let x = 0; x < W; x++) if (d[row + x * 4] > 140){ if (x < l) l = x; if (x > r) r = x; if (y < t) t = y; if (y > b) b = y; } }
+          if (r > l && b > t) bb = { l, r: r + 1, t, b: b + 1 }; } catch (e) {}
+        o.c = c; o.bb = bb; o.ok = true; } catch (e) { o.fail = true; } };
+    im.src = 'assets/mounts/' + R.f + '.png'; } catch (e) { o.fail = true; } return o; }
+/* respiração: 1 ± MOUNT_BREATH_K na altura (a largura compensa um terço), sempre a partir da base */
+const mountBreath = t => { const b = Math.sin(t * 2 * Math.PI / MOUNT_BREATH); return { sx: 1 - MOUNT_BREATH_K * b / 3, sy: 1 + MOUNT_BREATH_K * b }; };
+/* onde e de que tamanho a imagem parada é desenhada: { cx, gy (linha das patas), s (px lógicos por px do canvas reduzido), w, h, sx, sy (respiração) } */
+function mountStillGeo(H){ const mo = H.mount, o = mountStill(mo.id), T = MOUNT_TBL[mo.id], R = MOUNT_REF[mo.id] || {}, k = HS / 256, sh = mountSheet(mo.id, 'idle'); let w = HS * 0.9, cx = H.x + HS * 0.12;
+  if (sh.ok){ let b = null; try { b = enBounds(sh)[0]; } catch (e) {} if (b && b.r > b.l){ const ax = (sh.meta.padLeft || 0) + 128; w = (b.r - b.l) * k; cx = H.x + ((b.l + b.r) / 2 - ax + T.dx) * k; } }   /* mesmo lugar e mesma largura da montaria na folha parada */
+  w *= R.rs > 0 ? R.rs : 1; const bb = o.bb || { l: 0, r: 1, t: 0, b: 1 }, s = w / Math.max(1, bb.r - bb.l), br = mountBreath(H.t);
+  return { cx, gy: H.gy, s, w, h: (bb.b - bb.t) * s, sx: br.sx, sy: br.sy, flip: !!R.flip }; }
+/* caminho desta queda: 'still' (fica, imagem parada) | 'exit' (sai correndo) | null (sem montaria). Decidido no começo da queda e mantido até o fim. */
+function mountDieMode(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !mountPrefix(mo.id) || !mountReady(mo.id)){ H._md = null; return null; }
+  let d = H._md; if (!d || d.id !== mo.id || H.deadP < d.p - 0.2) d = H._md = { id: mo.id, mode: (MOUNT_REF[mo.id] && mountStill(mo.id).ok) ? 'still' : 'exit', p: H.deadP }; d.p = H.deadP; return d.mode; }
+/* chamado pelo drawHeroDie (js/stage.js) ANTES do corpo caído */
+function drawMountDead(H){ const mode = mountDieMode(H); if (!mode) return false; if (mode === 'exit') return drawMountExit(H);
+  const mo = H.mount, o = mountStill(mo.id), T = MOUNT_TBL[mo.id], k = HS / 256, G = mountStillGeo(H), u = Math.max(0, Math.min(1, Math.max(0, H.deadP) * 1.6 / MOUNT_XFADE)), bb = o.bb;
+  ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(H.x + HS * 0.12, G.gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas no chão (a mesma da folha montada)
+  { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN), pu = 0.5 + 0.2 * Math.sin(H.t * 2.4); ctx.save(); ctx.globalAlpha = Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, H.x + HS * 0.15 - r, G.gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: continua, atrás
+  ctx.save(); ctx.globalAlpha = u; ctx.translate(G.cx, G.gy); ctx.scale((G.flip ? -1 : 1) * G.s * G.sx, G.s * G.sy); ctx.drawImage(o.c, -(bb.l + bb.r) / 2, -bb.b); ctx.restore();   /* base (borda opaca de baixo) na linha do chão; a respiração estica para cima */
+  if (u < 1){ const F = mountCutFrame(mo.id, 'idle', H.t); ctx.save(); ctx.globalAlpha = 1 - u; ctx.translate(H.x - (F.pad + 128 - T.dx) * k, G.gy - (F.fy - T.dy) * k); ctx.scale(k, k); ctx.drawImage(F.c, 0, 0); ctx.restore(); }   /* fade cruzado: a folha montada (sem o cavaleiro) some no mesmo lugar */
   return true; }
 function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
-  const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
+  const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id]; if (H.main && MOUNT_REF[id]) mountStill(id);   /* a montaria entrou em cena: pede a imagem dela sozinha (Derrota), uma vez */
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
   let fi = a ? Math.min(n - 1, Math.floor(a.t / Math.max(0.01, a.dur) * n)) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
   if (Array.isArray(M.skip) && M.skip.indexOf(fi) >= 0){ let p = fi - 1; while (p >= 0 && M.skip.indexOf(p) >= 0) p--; if (p < 0){ p = fi + 1; while (p < n && M.skip.indexOf(p) >= 0) p++; } if (p >= 0 && p < n) fi = p; }   /* quadro com artefato (campo "skip" da Arte): usa o quadro limpo mais próximo, de preferência o anterior, com o grip e o back dele */

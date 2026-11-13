@@ -8,8 +8,8 @@
         (state.mount), não a da batalha (HM.mount)
      5. Vitória e Derrota abertas (B.res), com e sem montaria: o pet continua desenhado, por último, PARADO (nunca o quadro congelado do golpe)
      6. DERROTA (regra do dono, 13/11): o pet fica parado, por último, pés no chão, e desliza para ALÉM da arma caída (não tampa o herói nem a arma: caixas
-        conferidas nas eras 0, 2 e 3, pet de estágio 1 e 3, Kael e Kaia); a montaria SAI DE CENA correndo para trás (folha de corrida
-        recortada, desenhada ANTES do herói caído, só durante MOUNT_EXIT s; depois nenhuma folha de montaria; nunca o ícone parado); a asa segue sem desenho
+        conferidas nas eras 0, 2 e 3, pet de estágio 1 e 3, Kael e Kaia); a montaria FICA parada ATRÁS do herói caído (imagem dela sozinha, assets/mounts/mount_*,
+        respirando com as patas no chão; entra em fade cruzado com a folha montada; nunca o ícone de contorno branco); sem imagem, sai correndo; a asa segue sem desenho
      7. CHOCAGEM DE OVO: o pet equipado continua desenhado e o ovo fica AO LADO dele, à frente, dentro da tela, sem encostar no herói; só o pet que ainda
         está dentro do próprio ovo (1º ovo) espera nascer
      9. GANCHOS DE DEBUG do QA (dbgDieAt, dbgHatchAt, dbgLvUp): existem com ?debug=1, congelam o instante pedido e soltam
@@ -19,7 +19,7 @@ const VERBOSE = process.argv.includes('-v');
 const boot = require('./sandbox'), errStr = boot.errStr;
 let fail = 0, n = 0;
 const check = (name, ok, det) => { n++; if (!ok) fail++; if (VERBOSE || !ok) console.log('  ' + (ok ? 'ok    ' : 'FALHA ') + name + (det && (!ok || VERBOSE) ? ' · ' + det : '')); };
-const RE = { park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /wing/, weapon: /assets\/weapons\// };
+const RE = { ref: /assets\/mounts\/mount_/, park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /wing/, weapon: /assets\/weapons\// };
 const first = (L, re) => L.findIndex(s => re.test(s));
 const last = (L, re) => { for (let i = L.length - 1; i >= 0; i--) if (re.test(L[i])) return i; return -1; };
 /* o pet vem depois de TODAS as partes pedidas (must = tem de existir no desenho; also = se existir, também fica antes do pet) */
@@ -43,7 +43,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
 
   /* VITÓRIA / DERROTA (P4/P13, Engenheiro 17): com o resultado aberto (B.res) o pet continua desenhado, por ÚLTIMO, e PARADO: o golpe que estava em andamento
      não fica congelado num quadro do ataque. Atrás da Troca de era (tela cheia) ele não é desenhado (exceção escrita no drawPet). must = o que tem de vir antes
-     do pet na Vitória (montaria ou herói); na Derrota o Kael cai a pé (folha da morte, anim/hyb ou anim/skins), a montaria sai de cena correndo para trás (cerca de 0,5 s) e o pet fica à frente. */
+     do pet na Vitória (montaria ou herói); na Derrota o Kael cai a pé (folha da morte, anim/hyb ou anim/skins), a montaria fica parada atrás dele (imagem dela sozinha, respirando) e o pet fica à frente. */
   const petSt = (L, st) => L.some(s => RE.pet.test(s) && new RegExp('_' + st + '\\.').test(s));
   const resCase = async (tag, must) => {
     ev("window.__pfS={r:B.res,a:PETK.act,run:B.running,d:B.deadT,db:B.deadBoss}; B.res=null; B.running=false; PETK.act={t:0.2,dur:1,hitT:0.5,e:null,done:true}; 1");
@@ -77,20 +77,33 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       check(tag + ' DERROTA: asa não é desenhada (sem âncora confiável no corpo deitado ficaria solta no ar)', last(L, RE.wing) < 0, 'asa em ' + last(L, RE.wing));
       check(tag + ' DERROTA: nenhuma folha MONTADA (herói não fica montado morto)', last(L, RE.mount) < 0, 'folha montada em ' + last(L, RE.mount));
       check(tag + ' DERROTA: nenhum ícone parado de montaria (reprovado pelo dono)', first(L, RE.park) < 0, 'ícone em ' + first(L, RE.park));
-      if (must.includes('mount')) { const id = ev('HM.mount.id'), run = new RegExp('anim/mounts/[a-z]+_' + id + '_run_body'), at = d => { ev('B.deadT=' + d + '; 1'); return battleList(); };
-        check(tag + ' DERROTA: a saída da montaria dura de 0,4 a 0,6 s', ev('MOUNT_EXIT>=0.4&&MOUNT_EXIT<=0.6'), 'MOUNT_EXIT=' + ev('MOUNT_EXIT'));
-        let E = at(1.5); const mi = E.findIndex(s => run.test(s)), d2 = E.findIndex(s => /_die_body/.test(s)), p2 = first(E, RE.pet);   /* 0,1 s depois da queda */
-        check(tag + ' DERROTA (saída): a montaria é desenhada pela folha de CORRIDA', mi >= 0, E.filter(s => RE.mount.test(s)).join(', ') || 'nenhuma folha de montaria');
-        check(tag + ' DERROTA (saída): só a folha de corrida (nunca parada/golpe: herói não fica montado morto)', E.filter(s => RE.mount.test(s)).every(s => run.test(s)), E.filter(s => RE.mount.test(s)).join(', '));
-        check(tag + ' DERROTA (saída): ordem montaria saindo → herói caído → pet', mi >= 0 && mi < d2 && d2 < p2, 'montaria ' + mi + ' · morte ' + d2 + ' · pet ' + p2);
-        check(tag + ' DERROTA (saída): pet parado, à frente, sem ícone', petSt(E, 'idle') && first(E, RE.park) < 0 && ev('petPos().x>HX'), E.filter(s => RE.pet.test(s)).join(', '));
-        E = at(1.6 - ev('MOUNT_EXIT') - 0.05); check(tag + ' DERROTA: terminada a saída a montaria deixa de ser desenhada', last(E, RE.mount) < 0 && first(E, RE.park) < 0, 'montaria em ' + last(E, RE.mount));
-        check(tag + ' DERROTA: terminada a saída o pet segue desenhado, depois do herói caído', first(E, RE.pet) > E.findIndex(s => /_die_body/.test(s)) && E.findIndex(s => /_die_body/.test(s)) >= 0, 'pet ' + first(E, RE.pet));
-        E = at(0.8); check(tag + ' DERROTA aberta (tela 10): sem montaria, herói caído, pet à frente', last(E, RE.mount) < 0 && first(E, RE.pet) > E.findIndex(s => /_die_body/.test(s)), 'montaria em ' + last(E, RE.mount));
-        const f2 = fullList({ t: 0.3, deadP: 0.9 }), b = f2.L.findIndex(s => /_die_body/.test(s)), c = first(f2.L, RE.pet);
-        check(tag + ' drawHeroFull {deadP 0,9}: sem montaria; herói caído → pet', last(f2.L, RE.mount) < 0 && first(f2.L, RE.park) < 0 && b >= 0 && b < c, 'morte ' + b + ' · pet ' + c + ' · montaria ' + last(f2.L, RE.mount));
-        const f3 = fullList({ t: 0.3, deadP: 0.05 }), a3 = f3.L.findIndex(s => run.test(s)), b3 = f3.L.findIndex(s => /_die_body/.test(s)), c3 = first(f3.L, RE.pet);
-        check(tag + ' drawHeroFull {deadP 0,05}: montaria saindo → herói caído → pet', a3 >= 0 && a3 < b3 && b3 < c3, 'montaria ' + a3 + ' · morte ' + b3 + ' · pet ' + c3); }
+      if (must.includes('mount')) { const id = ev('HM.mount.id'), run = new RegExp('anim/mounts/[a-z]+_' + id + '_run_body'), idle = new RegExp('anim/mounts/[a-z]+_' + id + '_idle_body'), at = d => { ev('B.deadT=' + d + '; 1'); return battleList(); }, dieI = E => E.findIndex(s => /_die_body/.test(s));
+        /* toda montaria da tabela tem imagem parada, o arquivo existe e está no manifesto (senão não vai para a APK) */
+        { const fsn = require('fs'), pth = require('path'), refs = ev('(function(){ const o={}; for(const k in MOUNT_TBL) o[k]=MOUNT_REF[k]?MOUNT_REF[k].f:null; return o; })()'), man = fsn.readFileSync(pth.join(G.ROOT, 'assets/manifest.json'), 'utf8');
+          for (const k in refs) { const f = refs[k] && 'assets/mounts/' + refs[k] + '.png'; check('montaria ' + k + ': imagem parada na tabela, no disco e no manifesto', !!f && fsn.existsSync(pth.join(G.ROOT, f)) && man.includes(f), String(f)); } }
+        check(tag + ' DERROTA: imagem parada da montaria carregada (pedida quando ela entrou em cena)', await until(() => ev('mountStill(HM.mount.id).ok'), 80), JSON.stringify(ev('(function(){ const o=mountStill(HM.mount.id); return {ok:o.ok,fail:o.fail}; })()')));
+        check(tag + ' DERROTA: imagem reduzida uma vez (largura <= MOUNT_STILL_W) e só a da montaria em uso na memória', ev('mountStill(HM.mount.id).c.width<=MOUNT_STILL_W&&Object.keys(MOUNT_STILL).length===1'), ev('mountStill(HM.mount.id).c.width') + ' px');
+        check(tag + ' DERROTA: fade cruzado curto (0,2 a 0,5 s)', ev('MOUNT_XFADE>=0.2&&MOUNT_XFADE<=0.5'), 'MOUNT_XFADE=' + ev('MOUNT_XFADE'));
+        ev('HM._md=null; 1'); let E = at(1.5);   /* 0,1 s depois da queda: no meio do fade cruzado */
+        check(tag + ' DERROTA (fade cruzado): imagem parada E folha montada parada desenhadas, as duas antes do herói caído', first(E, RE.ref) >= 0 && E.some(s => idle.test(s)) && last(E, RE.ref) < dieI(E) && last(E, RE.mount) < dieI(E), E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', ') || 'nada da montaria');
+        check(tag + ' DERROTA (fade cruzado): é a imagem desta montaria, sem folha de corrida nem ícone', (E[first(E, RE.ref)] || '').includes(ev('MOUNT_REF[HM.mount.id].f')) && !E.some(s => run.test(s)) && first(E, RE.park) < 0, E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', '));
+        check(tag + ' DERROTA (fade cruzado): pet depois do herói caído, parado', first(E, RE.pet) > dieI(E) && petSt(E, 'idle'), E.filter(s => RE.pet.test(s)).join(', '));
+        for (const d of [1.6 - ev('MOUNT_XFADE') - 0.05, 0.8]) { E = at(d); check(tag + ' DERROTA (deadT ' + d.toFixed(2) + '): a montaria FICA (imagem parada) → herói caído → pet; nenhuma folha montada', first(E, RE.ref) >= 0 && first(E, RE.ref) < dieI(E) && dieI(E) < first(E, RE.pet) && last(E, RE.mount) < 0 && first(E, RE.park) < 0, 'imagem ' + first(E, RE.ref) + ' · morte ' + dieI(E) + ' · pet ' + first(E, RE.pet) + ' · folha ' + last(E, RE.mount)); }
+        /* respiração: patas sempre no chão, altura varia 1 a 2%, período de 2 a 3 s, largura/lugar não mudam */
+        { const g = ev('(function(){ const H=Object.assign({},HM), out=[]; for(let i=0;i<=16;i++){ H.t=10+i*MOUNT_BREATH/16; const q=mountStillGeo(H); out.push({gy:q.gy,sy:q.sy,sx:q.sx,w:q.w,cx:q.cx,h:q.h}); } return {a:out, GY:GY, per:MOUNT_BREATH, hx:HX}; })()');
+          const sy = g.a.map(q => q.sy), amp = Math.max(...sy) - 1, lo = 1 - Math.min(...sy);
+          check(tag + ' DERROTA (respiração): patas sempre na linha do chão', g.a.every(q => q.gy === g.GY), JSON.stringify(g.a.map(q => q.gy)));
+          check(tag + ' DERROTA (respiração): altura sobe e desce de 1 a 2%, período de 2 a 3 s', amp >= 0.01 && amp <= 0.02 && lo >= 0.01 && lo <= 0.02 && g.per >= 2 && g.per <= 3 && Math.abs(sy[0] - sy[16]) < 1e-9, 'amp +' + amp.toFixed(4) + ' / -' + lo.toFixed(4) + ' · período ' + g.per);
+          check(tag + ' DERROTA (respiração): mesmo lugar e mesma largura o tempo todo, tamanho válido', g.a.every(q => q.w === g.a[0].w && q.cx === g.a[0].cx && q.w > 0 && q.h > 0), JSON.stringify(g.a[0])); }
+        const f2 = fullList({ t: 0.3, deadP: 0.9 }), a2 = first(f2.L, RE.ref), b = f2.L.findIndex(s => /_die_body/.test(s)), c = first(f2.L, RE.pet);
+        check(tag + ' drawHeroFull {deadP 0,9}: montaria parada → herói caído → pet; nenhuma folha montada', a2 >= 0 && a2 < b && b < c && last(f2.L, RE.mount) < 0, 'imagem ' + a2 + ' · morte ' + b + ' · pet ' + c + ' · folha ' + last(f2.L, RE.mount));
+        /* RESERVA: montaria sem imagem (ou que não carregou) sai correndo, como antes */
+        ev('window.__pfR=MOUNT_REF[HM.mount.id]; delete MOUNT_REF[HM.mount.id]; HM._md=null; 1');
+        try { E = at(1.5); const mi = E.findIndex(s => run.test(s));
+          check(tag + ' DERROTA sem imagem (reserva): sai correndo pela folha de CORRIDA, antes do herói caído; nenhuma imagem parada', mi >= 0 && mi < dieI(E) && dieI(E) < first(E, RE.pet) && first(E, RE.ref) < 0, E.filter(s => RE.ref.test(s) || RE.mount.test(s)).join(', ') || 'nada da montaria');
+          check(tag + ' DERROTA sem imagem (reserva): a saída dura de 0,4 a 0,6 s', ev('MOUNT_EXIT>=0.4&&MOUNT_EXIT<=0.6'), 'MOUNT_EXIT=' + ev('MOUNT_EXIT'));
+          E = at(1.6 - ev('MOUNT_EXIT') - 0.05); check(tag + ' DERROTA sem imagem (reserva): terminada a saída nada da montaria é desenhado; pet depois do herói caído', last(E, RE.mount) < 0 && first(E, RE.ref) < 0 && first(E, RE.pet) > dieI(E), 'montaria em ' + last(E, RE.mount));
+        } finally { ev('MOUNT_REF[HM.mount.id]=window.__pfR; HM._md=null; B.deadT=0.8; 1'); } }
     } finally { ev("(function(){ const o=window.__pfS; heroDown(false); B.res=o.r; PETK.act=o.a; B.running=o.run; B.deadT=o.d; B.deadBoss=o.db; })(); 1"); } };
 
   /* CHOCAGEM DE OVO (regra do dono: o pet nunca some). other = espécie diferente da equipada. O relógio do ovo é posto à mão (t0 = B.at - T). */
@@ -158,9 +171,9 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       let r = ev('dbgDieAt(0.2)'); for (let i = 0; i < 12; i++) await tick(); let L = battleList(); const mid = ev('({d:B.deadT, res:!!B.res, x:petPos().x, to:petDieX(), hp:B.hero&&B.hero.hp})');
       check(tag + ' debug dbgDieAt(0,2): fica congelado (12 quadros depois: mesma queda, sem resultado, fase não recomeça)', Math.abs(mid.d - 1.4) < 0.06 && !mid.res && L.some(s => /_die_body/.test(s)), JSON.stringify(mid) + ' · ' + JSON.stringify(r));
       check(tag + ' debug dbgDieAt(0,2): pet no MEIO do deslize, desenhado depois do herói caído', (mid.x - a0) * (mid.to - mid.x) > 0 && first(L, RE.pet) > L.findIndex(s => /_die_body/.test(s)), 'de ' + a0.toFixed(1) + ' · agora ' + mid.x.toFixed(1) + ' · destino ' + mid.to.toFixed(1));
-      if (mounted) check(tag + ' debug dbgDieAt(0,2): montaria SAINDO (folha de corrida), antes do herói caído', L.findIndex(s => /_run_body/.test(s) && RE.mount.test(s)) >= 0 && L.findIndex(s => /_run_body/.test(s) && RE.mount.test(s)) < L.findIndex(s => /_die_body/.test(s)), L.filter(s => RE.mount.test(s)).join(', ') || 'nenhuma folha de montaria');
+      if (mounted) check(tag + ' debug dbgDieAt(0,2): montaria no fade cruzado (imagem parada + folha montada parada), antes do herói caído', r.montaria === 'still' && first(L, RE.ref) >= 0 && L.some(s => /_idle_body/.test(s) && RE.mount.test(s)) && last(L, RE.ref) < L.findIndex(s => /_die_body/.test(s)), L.filter(s => RE.mount.test(s)).join(', ') || 'nenhuma folha de montaria');
       ev('dbgDieAt(1.6)'); for (let i = 0; i < 6; i++) await tick(); L = battleList(); const end = ev('({d:B.deadT, res:!!B.res, x:petPos().x, to:petDieX()})');
-      check(tag + ' debug dbgDieAt(1,6): fim da queda parado (sem montaria, pet no destino, sem resultado)', last(L, RE.mount) < 0 && Math.abs(end.x - end.to) < 0.01 && end.d > 0 && !end.res, JSON.stringify(end));
+      check(tag + ' debug dbgDieAt(1,6): fim da queda parado (montaria parada atrás, sem folha montada, pet no destino, sem resultado)', last(L, RE.mount) < 0 && (!mounted || first(L, RE.ref) >= 0) && Math.abs(end.x - end.to) < 0.01 && end.d > 0 && !end.res, JSON.stringify(end));
       ev('dbgDieAt(null)'); check(tag + ' debug dbgDieAt(null): solta (herói de pé, vida cheia)', ev('B.deadT===0&&DBGFX.die===null&&(!B.hero||B.hero.hp===B.hero.maxhp)'));
       const other = ev("(function(){ const sp=Sys.pet.DATA.v17.species||{}, me=PETK.info.id; for(const k in sp) if(k!==me&&sp[k]&&sp[k].sprite) return {pet:k,sprite:sp[k].sprite}; return null; })()");
       check(tag + ' debug dbgHatchAt(): sem id devolve a lista de ids', ev('(function(){ const r=dbgHatchAt(); return !!r.erro&&Array.isArray(r.ids)&&r.ids.length>0&&!HATCH.cur; })()'));
@@ -215,6 +228,6 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
   await hatchCase('COM montaria'); lookCase('COM montaria', false); lookCase('COM montaria', true);
   await dbgCase('COM montaria');
   check('nenhuma exceção no desenho', !errs.length && !ev('!!window.__hfErr'), errs.slice(0, 4).join(' | '));
-  console.log(fail ? '\n' + fail + ' FALHA(S) de ' + n + ' (pet na frente)' : '\nPET NA FRENTE OK (' + n + ' verificações): batalha, Vitória, Derrota (pet à frente, montaria sai correndo), chocagem de ovo, Aparência e drawHeroFull, com e sem montaria');
+  console.log(fail ? '\n' + fail + ' FALHA(S) de ' + n + ' (pet na frente)' : '\nPET NA FRENTE OK (' + n + ' verificações): batalha, Vitória, Derrota (pet à frente, montaria fica parada respirando), chocagem de ovo, Aparência e drawHeroFull, com e sem montaria');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('ERRO NO TESTE:', e && e.stack || e); process.exit(1); });
