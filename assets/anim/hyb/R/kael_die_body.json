@@ -140,5 +140,134 @@
    "w": 276,
    "cx": 262
   }
- ]
+ ],
+ "back": [
+  {
+   "x": 200.3,
+   "y": 164,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 170.1,
+   "y": 164,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 170.1,
+   "y": 168,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 188.9,
+   "y": 169,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 188.9,
+   "y": 169,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 158.2,
+   "y": 170,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 136.2,
+   "y": 173,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 136.2,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 214.9,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 215.8,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 215.8,
+   "y": 174,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 198.3,
+   "y": 169,
+   "ang": 15.2,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 192.1,
+   "y": 148,
+   "ang": 26.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 192.1,
+   "y": 148,
+   "ang": 26.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 173.3,
+   "y": 120,
+   "ang": -62.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 173.3,
+   "y": 120,
+   "ang": -62.7,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 196.1,
+   "y": 157,
+   "ang": 24.4,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 200.3,
+   "y": 164,
+   "ang": 24.4,
+   "s": 1,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
 }

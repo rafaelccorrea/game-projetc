@@ -131,5 +131,64 @@
    "src": "f090.png",
    "angFix": "46->22 (arma nao cobre o rosto)"
   }
- ]
+ ],
+ "back": [
+  {
+   "x": 161.4,
+   "y": 145,
+   "ang": 33.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 161.5,
+   "y": 141,
+   "ang": 24.9,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 161.5,
+   "y": 141,
+   "ang": 33.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 160.8,
+   "y": 145,
+   "ang": 31.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 160.8,
+   "y": 145,
+   "ang": 32.8,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 161.9,
+   "y": 141,
+   "ang": 31.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 161.9,
+   "y": 141,
+   "ang": 32.8,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 161.4,
+   "y": 145,
+   "ang": 22.4,
+   "s": 0.654,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
 }
