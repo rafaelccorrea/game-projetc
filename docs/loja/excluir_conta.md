@@ -24,7 +24,7 @@ Guardamos só estes registros, **apenas com o número da conta** (sem nome de pe
 
 Passado o prazo, esses registros também são apagados.
 
-As **cópias de segurança automáticas** do banco de dados (feitas pelo provedor, para recuperar o serviço em caso de falha) podem conter os seus dados por mais **alguns dias** [PRAZO DO PROVEDOR]; elas expiram e são apagadas sozinhas, e não são usadas para recuperar contas excluídas. [ADVOGADO: confirmar o texto]
+As **cópias de segurança automáticas** do banco de dados (feitas pelo provedor, para recuperar o serviço em caso de falha) podem conter os seus dados por **até 7 dias** (backups diários do provedor do banco de dados) [CONFIRMAR NO PAINEL]; elas expiram e são apagadas sozinhas, e não são usadas para recuperar contas excluídas. [ADVOGADO: confirmar o texto]
 
 ## Prazo
 A exclusão é concluída em **até 30 dias**. Se você entrar de novo na conta dentro desse prazo, o pedido é **cancelado** e a conta continua.
