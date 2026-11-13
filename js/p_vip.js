@@ -71,6 +71,16 @@ const V_ROWS=[
   ['aura','Aura VIP',i=>i.aura?'Sim':'—']];
 const V_KEY={spd:'speedTier',atk:'atkPct',gold:'goldXpPct',keys:'keys',chest:'chestPerDay',off:'offlineMult',frame:'frame',skin:'vipSkin',aura:'aura'};
 
+/* recompensa ÚNICA do nível: lida das fontes dos módulos (Sys.mount/Sys.pet: src "VIP n: inteira..."); nada escrito aqui */
+/* só item VIVO no módulo (a função do próprio módulo: Sys.mount.live / Sys.pet.avail); desligado = nada aparece e a tela fica igual à de antes */
+function vLive(M,kind,x){ try{ return kind==='Montaria'?(M.live?M.live(x)===true:false):(M.avail?M.avail(x,Sys.host)===true:false); }catch(e){ return false; } }
+function vUnique(n){ const out=[], re=new RegExp('VIP '+n+'(?![0-9])');
+  const scan=(M,kind)=>{ try{ const L=(M&&M.DATA&&(kind==='Montaria'?M.DATA.mounts:M.DATA.pets))||[]; for(const x of L) if(x.nw&&(x.src||[]).some(s=>re.test(s))&&vLive(M,kind,x)) out.push({kind,name:x.name,r:x.r}); }catch(e){} };
+  scan(window.Sys&&Sys.mount,'Montaria'); scan(window.Sys&&Sys.pet,'Pet'); return out; }
+function vUniqueCard(n){ const u=vUnique(n); if(!u.length) return '';
+  return '<div role="note" style="flex:none;margin:0 12px;padding:10px 12px;border-radius:14px;border:2px solid #ffc94a;background:linear-gradient(180deg,#3a2a12,#2a1d0f);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:900;color:#ffc94a;letter-spacing:1px">SÓ NO VIP '+n+'</span>'
+    +u.map(x=>'<span style="font-size:14px;font-weight:900;line-height:1.2">'+vEsc(x.kind+' '+(['Básico','Raro','Épico','Mítico','Lendário'][x.r]||'')+': '+x.name)+'</span>').join('')
+    +'<span style="font-size:11px;font-weight:800;color:#c9b9a2">Vem inteira, uma vez, ao chegar neste nível. Sem sorteio.</span></div>'; }
 function scrVip(){
   vInject();
   const d=xDims(V_MINH);
@@ -111,7 +121,7 @@ function scrVip(){
       <button data-x="closecf" class="pv-gold" style="width:180px;height:50px;border-radius:14px;font-family:'Lilita One',sans-serif;font-size:19px">Entendi</button></div></div>`:'';
   V.innerHTML=xWrap(d,XV.anim?'f-in':'',`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
     <div id="pv_scroll" class="x-scroll" style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:6px 0 8px;box-sizing:border-box;overflow-y:auto">
-      <span style="flex:none;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.15">Sobe acumulando compras na loja</span>${stage}${carousel}${table}</div>
+      <span style="flex:none;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.15">Sobe acumulando compras na loja</span>${stage}${carousel}${vUniqueCard(L)}${table}</div>
     <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box"><button data-x="buy" class="pv-gold pv-cta" style="position:relative;overflow:hidden;width:100%;height:58px;border-radius:16px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="pv-shine"></span><span style="font-family:'Lilita One',sans-serif;font-size:22px">Comprar VIP</span><span style="font-size:11px;font-weight:900;color:#5a330a">Pagamento em breve</span></button></div>${dlg}</div>`);
   XV.anim=false; XV.sig=vSig();
 }

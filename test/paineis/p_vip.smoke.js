@@ -62,4 +62,14 @@ def.onOpen(); def.render(); html = g.V.innerHTML; has('width:48px;height:48px');
 // nenhum botão sem data-x
 const bt = html.match(/<button[^>]*>/g) || []; assert(bt.every(b => /data-x="/.test(b)), 'todo botão tem ação');
 out.push('níveis 3/10, tick, sem Sys, alvos e ações: ok');
+// cartão "SÓ NO VIP n": só para item VIVO no módulo; tudo desligado = tela idêntica à de sem módulos
+{ const sel8 = () => { def.onOpen(); g.XV_SEL = 8; def.click(btn('next')); }; const goto = n => { def.onOpen(); let k = 0; while (!/VIP '+n+'(?!\d)/.test(g.V.innerHTML) && k++ < 12) { def.click(btn('next')); } def.render(); html = g.V.innerHTML; };
+  let liveM = false, liveP = false; const mm = [{ id: 'phoenixm', name: 'Fênix gigante', r: 4, nw: true, src: ['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)'] }], pp = [{ id: 'wyvernpet', name: 'Serpe infernal', r: 4, nw: true, src: ['Chefe da era 7', 'VIP 9: inteira, uma vez'] }];
+  const keepM = g.Sys.mount, keepP = g.Sys.pet; g.Sys.mount = { DATA: { mounts: mm }, live: m => liveM }; g.Sys.pet = { DATA: { pets: pp }, avail: p => liveP, prismVipMax() {} };
+  def.onOpen(); g.Sys.mount = undefined; g.Sys.pet = undefined; def.render(); const semModulos = g.V.innerHTML; g.Sys.mount = { DATA: { mounts: mm }, live: m => liveM }; g.Sys.pet = { DATA: { pets: pp }, avail: p => liveP, prismVipMax() {} };
+  const nav = n => { def.onOpen(); for (let k = 0; k < 12; k++) def.click(btn('prev')); for (let k = 0; k < 12 && !new RegExp('id="pv_sel"[^>]*>VIP ' + n + '(?![0-9])').test((def.render(), g.V.innerHTML)) ; k++) def.click(btn('next')); def.render(); return g.V.innerHTML; };
+  let h8 = nav(8); assert(!/SÓ NO VIP/.test(h8), 'desligado: sem cartão no VIP 8'); let h9 = nav(9); assert(!/SÓ NO VIP/.test(h9), 'desligado: sem cartão no VIP 9');
+  liveM = true; h8 = nav(8); assert(/SÓ NO VIP 8/.test(h8) && /Fênix gigante/.test(h8), 'montaria viva: cartão no VIP 8'); h9 = nav(9); assert(!/SÓ NO VIP/.test(h9), 'só a montaria viva: nada no VIP 9');
+  liveP = true; h9 = nav(9); assert(/SÓ NO VIP 9/.test(h9) && /Serpe infernal/.test(h9), 'pet vivo: cartão no VIP 9');
+  liveM = false; liveP = false; g.Sys.mount = keepM; g.Sys.pet = keepP; out.push('cartão SÓ NO VIP: só com item vivo; desligado a tela não muda'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM (' + bt.length + ' botões, todos com ação)');
