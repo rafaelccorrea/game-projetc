@@ -19,3 +19,8 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - [ ] P3 · Vários lugares · imagem de arma que não aparece · QA levanta onde; Engenheiro corrige
 - [ ] P4 · Vitória (e outras cenas) · o pet some; montaria/asa/aura também precisam aparecer · Engenheiro (drawHeroFull)
 - [ ] P5 · Todas as cenas · a asa fica atrás da cabeça em vez das costas · Engenheiro (âncora das costas da Arte)
+- [ ] P6 · Vitória · diz "Javali" quando o chefe é o Rex Furioso (nome do chefe errado) · Engenheiro
+- [ ] P7 · Tela de Montarias · a Serpe não está na lista (5 de 6) · Engenheiro
+- [ ] P8 · Instância · o texto de tempo esgotado é igual ao da derrota · Engenheiro
+- [ ] P9 · Oferta 24h · usa o ícone de Eventos; precisa de ícone próprio · Arte
+- [ ] P10 · Instâncias · tela ainda desligada (fluxo 24/26) · Engenheiro (painéis)
