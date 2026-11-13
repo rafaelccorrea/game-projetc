@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h50 · Você APROVOU a dificuldade nova:** cada fase pede uma FC (com 80% você perde sempre, com 90% vence metade); parede de 1 a 3 dias no chefe de cada era; grátis fecha as 9 eras em ~6 meses, VIP 10 em ~4; quem não forja nem evolui o pet trava na era 5. Montaria passa a valer +2 a 3% de FC por estrela; teto diário de XP de abate ligado. Aviso "faltam X de FC" com botões. **Arena PvP nova ligada no código** (o QA confere na tela), com prêmio por luta
+
 - **00h30 · DIFICULDADE (sua decisão):** o jogo não pode deixar passar fácil. A Sistemas está fazendo a proposta: FC recomendada por fase e chefe (abaixo dela fica muito difícil), paredes de 1 a 3 dias no chefe de cada era, tabela de onde vem o FC (raridade, Forja, pet, montaria, coleção), aviso do que fazer quando travar, simulação de 180 dias com paredes. Te mostro antes de ligar
 
 - **00h10 · Código do servidor no GitHub privado** (eonbound-server, 38 commits, sem nenhuma senha ou chave dentro; conferido que é privado). Páginas de privacidade e excluir conta atualizadas no ar (rascunho). A exclusão agora vale para a conta em todos os servidores

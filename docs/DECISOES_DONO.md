@@ -3,7 +3,7 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
-- [~] **Dificuldade força evolução** (não pode passar as eras fácil; abaixo da FC recomendada fica muito difícil; paredes de 1-3 dias no chefe de cada era; aviso do que fazer quando travar) · Sistemas faz a proposta com números (docs/PROPOSTA_DIFICULDADE.md) → dono aprova → Engenheiro liga no jogo; Servidor faz o módulo de dicas de FC
+- [~] **Dificuldade força evolução** (não pode passar as eras fácil; abaixo da FC recomendada fica muito difícil; paredes de 1-3 dias no chefe de cada era; aviso do que fazer quando travar) · APROVADA pelo dono (00h50): FC pedida por fase, paredes de 1-3 dias, montaria +2-3% por estrela, teto diário de XP de abate ligado. Sistemas fecha os números → Engenheiro liga atrás de chave → QA mede → APK
 - [~] **Telas são prioridade**: protótipos no padrão aprovado (Equipamento, Loja, Invocar, Passe, Pets, Montarias, Forja, VIP, Batalha, fim das 9 eras) · Sistemas → voto do dono
 - [~] **Luta PvP da Arena** (aprovada) · Engenheiro: LIGADA no código (f75739b), QA confere na tela. Decidido pelo PO: prêmio por luta (Sistemas credita), cada um aparece como é (robôs pelo nível), ultimate e golpe de pet marcados no registro da luta
 - [~] **APK v0.13.1 para testar no celular** quando a Arena acabar · Engenheiro
