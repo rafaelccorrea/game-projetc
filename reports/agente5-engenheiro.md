@@ -1966,6 +1966,12 @@ Arquivos: `js/stage.js`, `test/e2e/sheetgrid.js`.
 - APK v0.13.0 (da3632a, folhas em tira, sem cols): o caminho de desenho é o mesmo e sem `cols` não há como o quadro cair fora da imagem; por leitura o defeito NÃO existe nela. Não visto no aparelho.
 - Testes: `sheetgrid.js` 584 OK; `run.js` 163 OK; `petfront.js` 80 OK; `preload.js` passou; `eras78.js` 116 OK; `flows.js` "fluxos duros OK".
 
+### Engenheiro 13, caso do QA "Forja travou a aba no headless a 360x780, save novo" (só node; NÃO REPRODUZIDO; nenhum arquivo do jogo mudado)
+- Estado em que o `test/resp/audit.mjs` abre a tela: `?debug=1&fresh=1` COM `eon_owner_mode=1` (Modo dono em save novo: nível 1, 2 itens, 0 ouro, recursos infinitos ligados) e a Forja é a PRIMEIRA tela aberta depois da batalha (`Screens.open('forge')`, 1ª da lista `Screens.reg`; o `Panels.open('forge')` nem chega a rodar porque já está em `done`).
+- No sandbox de node (`test/e2e/sandbox.js`, limite de tempo do vm como detector de laço): Forja aberta com dono + save novo, save novo sem dono, sem itens e sem ouro, nível 12 com pedras infinitas; `Screens.open` e `Panels.open`; 50 renders seguidos, modo fundir, 6 s de temporizadores, 200 passos do jogo com a tela aberta, fechar e abrir a tela seguinte: tudo em 0 a 42 ms, nenhum erro, fila de temporizadores estável (12 a 18). No nível 1 a Forja desenha só o portão "Libera no nível 12" (1.690 caracteres: cadeado com animação CSS, 3 textos, 1 botão).
+- Por leitura: `js/p_forge.js` e `js/p_fuse.js` não têm `while`, `ResizeObserver`, `requestAnimationFrame` nem `setInterval`; os `setTimeout` (4) são limpos antes de rearmar; os dois `for` vão até +15 e até o nº de eras. `js/screens.js`, `js/panels.js`, `js/ui.js`, `js/fullbattle.js` não têm `while`. `js/sys/forge.js` não tem `while`.
+- O sandbox tem largura fixa de 390 e DOM de mentira: NÃO cobre layout real, CSS, nem o próprio script de verificação do QA rodando na página.
+
 ## Engenheiro 12 — online na abertura (2026-11-13): sessão de convidado, save na nuvem, login Google. DESLIGADO por `ONLINE_ON`
 
 Escrito e provado SEM navegador e SEM rede (servidor de mentira no teste). Nada visto no navegador nem contra o servidor real: é do QA.
