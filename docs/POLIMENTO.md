@@ -115,3 +115,12 @@ OK: Forja → Fusão (entrada aparece só com a chave); aba Fundir lista grupos 
 Defeitos (de tela, Sistemas): F1 as 3 vagas da fusão ficam cortadas (só a borda de cima aparece) com a altura útil de 543 px, no grupo aberto (pol_26): o jogador não vê o que está nas vagas; F2 a prévia mostra só a VARIAÇÃO de FC ("+1,1 mil" / "−3,8 mil" em vermelho se não equipar), não o antes → depois pedido; F3 nome do item acordado truncado ("Armadura de P…") ao lado do selo; F4 o resultado da fusão reaproveita o id do item equipado (o comentário do módulo diz id novo): conferir se algo guarda o id antigo.
 Não conferido: 390 px (a janela do teste não muda a largura do jogo, ficou em 288).
 - [ ] P27 · Abertura do jogo · carrega tudo estranho (imagens aparecendo tarde, quebradas); a tela de carregamento tem que esperar TODAS as imagens da primeira cena (herói, montaria, pet, asa, cenário, inimigos, arma, ícones) antes de mostrar o jogo; o mesmo na troca de era e ao equipar · Engenheiro (prioridade 1) + Sistemas (lista)
+
+## VARREDURA QUADRO A QUADRO (aba 2, pasta de trabalho depois de 06348bb, 13/11)
+Método: folha de contato com window.drawHeroFull (8 quadros por linha) com o estado real do save (herói, montaria, arma). Prints: pol_27 a pol_29.
+OK: Kael a pé andando e parado, com asa e sem, 8 quadros sem pulo nem corte; Kael montado no lobo, 8 quadros com aura azul, sem quadro vazio; Kaia a pé com asa, 8 quadros; Kaia montada (desenhada a pé, aceito pelo dono nesta versão); espada na mão, a pé e na montaria (aparece em parte dos quadros, o resto escondido atrás do corpo/lobo: esperado).
+Defeitos/dúvidas:
+P27 (baixa) a clava de pedra, a pé, é segurada na altura do queixo e cobre a parte de baixo do rosto em todos os quadros (pol_28, linha 1).
+P28 (a confirmar com o Engenheiro: é trabalho em andamento) ARCO e BUMERANGUE equipados: o herói aparece com a CLAVA de pedra, a pé e na montaria (pol_28 linhas 3 e 4, pol_29): falta a arte da arma na mão. Os dois engenheiros estão mexendo nisso agora, então só registro como defeito do APK se já estava em 06348bb.
+P29 a primeira vez que a Kaia é desenhada, o corpo sai VAZIO por ~1 s (a folha carrega sob demanda); no jogo isso pode virar a Kaia sumindo no primeiro quadro após trocar de herói: conferir se há pré-carga ao trocar/entrar com a Kaia.
+Não feito nesta passada: "Kael menino em cada nível" (o herói não cresce mais, decisão do dono: um corpo só) e as 4 armas iniciais completas na montaria (só espada/clava; arco/bumerangue sem arte, ver P28).
