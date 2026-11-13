@@ -994,17 +994,26 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
   F.DATA.viewOn=false;
 });
 
-t('ultimate por TIPO de arma + raridade (dono): nunca pela era do mapa; base → Lendário reforçada → Mítico própria (fallback até a arte); arco/bumerangue desligados',()=>{
+t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era do mapa; base → Mítico reforçada → Lendário/Divino própria; arco/bumerangue',()=>{
   const T=require('../../js/sys/stats.js'), D=T.DATA;
-  const a=T.ultOf({e:0,r:0}), b=T.ultOf({e:7,r:0}); assert.strictEqual(a.sheet,b.sheet,'mesma ultimate em qualquer era'); assert.strictEqual(a.tier,'base');
-  assert.ok(['base','base','base'].every((x,r)=>T.ultOf({e:1,r}).tier===x&&!T.ultOf({e:1,r}).boost));
-  const L=T.ultOf({e:1,r:4}); assert.strictEqual(L.tier,'legendary'); assert.strictEqual(L.sheet,a.sheet); assert.ok(L.boost.size>1);
-  const M=T.ultOf({e:1,r:3}); assert.strictEqual(M.tier,'mythic'); assert.strictEqual(M.fallback,true); assert.strictEqual(M.sheet,a.sheet,'sem arte mítica: base reforçada');
-  D.mythicReady.sword=true; try{ assert.strictEqual(T.ultOf({e:1,r:3}).sheet,D.weaponTypes.sword.mythic); } finally { delete D.mythicReady.sword; }
-  assert.strictEqual(T.ultOf({e:4,r:1}).type,'gun'); assert.strictEqual(T.ultOf({e:4,r:1,wt:'sword'}).type,'sword','tipo do item vence a regra antiga');
-  assert.strictEqual(T.weaponType({e:0,wt:'bow'}),'sword','arco desligado'); assert.strictEqual(T.weaponType({e:0},{weaponType:()=>'gun'}),'gun','host decide pelo meta.json');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'as 9 ultimates animadas em uso');
+  const it={slot:'weapon',e:2,r:0}; T.migrateItem(it); assert.strictEqual(it.wt,'sword','save antigo: família pela arte');
+  it.e=6; it.look=6; T.migrateItem(it); assert.strictEqual(it.wt,'sword','gravada, não muda com a era'); assert.strictEqual(T.ultOf(it).sheet,'assets/anim/ult/era2_ult');
+  assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',r}).tier),['base','base','base','boost','own','own']);
+  const M=T.ultOf({wt:'rifle',r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.ok(M.boost.size>1);
+  const L=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L.fallback,true); assert.strictEqual(L.sheet,'assets/anim/ult/era5_ult','sem a folha própria: base reforçada'); assert.ok(L.boost);
+  D.ownReady.rifle=true; try{ const L2=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L2.sheet,'assets/anim/ult/rifle_legend'); assert.strictEqual(L2.boost,null); } finally { delete D.ownReady.rifle; }
+  assert.strictEqual(T.weaponStyle({wt:'plasma',r:0}),'gun'); assert.strictEqual(T.weaponStyle({wt:'plasma',r:4}),'melee'); assert.strictEqual(T.weaponStyle({wt:'flintlock',r:4}),'gun');
+  // drop: arco/bumerangue desligados até a arte; ligados, 15% cada, com nível e era mínimos
+  assert.strictEqual(T.rollWeaponType({e:3},{level:99,era:3},()=>0),'flintlock','desligados');
+  const B=D.weaponTypes.bow, R=D.weaponTypes.boomerang; B.on=R.on=true; try{
+    assert.strictEqual(T.rollWeaponType({e:1},{level:99,era:1},()=>0),'gladius','arco só da era 2');
+    assert.strictEqual(T.rollWeaponType({e:2},{level:29,era:2},()=>0),'sword','arco só no Nv 30');
+    assert.strictEqual(T.rollWeaponType({e:4},{level:50,era:4},()=>0.1),'bow'); assert.strictEqual(T.rollWeaponType({e:4},{level:50,era:4},()=>0.2),'boomerang'); assert.strictEqual(T.rollWeaponType({e:4},{level:50,era:4},()=>0.31),'revolver');
+    assert.strictEqual(T.ultOf({wt:'bow',r:0}).style,'ranged'); assert.strictEqual(T.ultOf({wt:'boomerang',r:0}).style,'return');
+  } finally { B.on=R.on=false; }
   for(const k of ['bow','boomerang']){ const W=D.weaponTypes[k]; for(const h of ['s1','s2']) assert.ok(Math.abs(W.hits[h].reduce((x,y)=>x+y,0)-1)<1e-9,'mesmo dano total: '+k+' '+h); }
-  assert.strictEqual(T.skillFx({e:0,r:4},'s3').ult.tier,'legendary'); assert.strictEqual(T.skillFx({e:0,r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({e:0,r:4},'s3').dmgMult,1,'só visual');
+  assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').ult.tier,'own'); assert.strictEqual(T.skillFx({wt:'club',r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({wt:'club',r:4},'s3').dmgMult,1,'só visual');
 });
 
 console.log(`ok: ${n} testes`);
