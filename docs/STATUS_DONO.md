@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14h50 · APK v0.12.9 PRONTO** (971 MB, ícone A, sem Facebook, só permissões de internet e vibração). Para instalar: ligue o celular no cabo e escreva "pode instalar" na janela do Engenheiro (instala por cima, mantém seu save). Na instalação ele mede quadros por segundo, pior quadro e memória
+
 - **14h30 · Arte FECHOU o que tinha começado:** 8 skins prontas (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo, Paladino Solar, Ninja) e 3 pets novos (Lobo das Sombras, Falcão de Guerra, Pantera Espectral). Parado para a próxima parte: Samurai (2 guias e 3 vídeos já feitos, reaproveitados) e Ciborgue do Kael, 6 pets, 10 montarias novas montadas. Saldo ~313
 - **14h30 · APK v0.12.9 compilando;** o servidor do jogo no navegador do PC caiu por falta de memória e volta quando a compilação terminar
 
@@ -311,7 +313,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Saldo ~333 (fica ~250 depois de terminar o que já começou). A próxima parte (2 skins, 6 pets, 10 montarias montadas) custa ~620
 
 **Celular:**
-- [ ] APK v0.12.9 (sendo gerado): ligue o cabo e escreva "pode instalar" na janela do Engenheiro
+- [ ] APK v0.12.9 PRONTO: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
 
 **Servidor (para ligar o online):**
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
