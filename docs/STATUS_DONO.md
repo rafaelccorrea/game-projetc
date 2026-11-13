@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h25 · v0.12.7 INSTALADA no seu S24** (por cima, seu save mantido). Para ver o novo: MENU → "Teste" abre o Modo dono (save separado, atalhos de nível 20/32/50/70, montarias, asas) e a Prévia da arte; ao sair, seu save real volta. No print do celular: Kael montado no lobo com a asa de anjo e a arma na mão, a Esfinge à frente no chão, as barras acima do Kael
+- **22h25 · Decisões do PO:** Mapa das Eras liberado desde o nível 1, Códex no 12, Chat no 16; nomes das habilidades das eras 7 e 8 mantidos; a Arte faz 7 ícones de menu que faltam (Arena, Guilda, Torneio, Códex, Chat, Mapa, Montarias)
+- **22h25 · v0.12.8 começou:** ligar as telas escritas, uma por uma, conferindo no navegador
+
 - **22h20 · Eventos completos (Sistemas, 17eedb2, conferido no navegador):** Trilha com 8 marcos (prêmios sem diamante, moldura no último) e o Chefe do evento "Devorador do Tempo" (2 ataques por dia, vida compartilhada quando abrir o online). Próximo de Sistemas: frases prontas do Chat, Correio, descobertas do Códex, membros da Guilda e gatilhos do Kael crescendo
 - **22h15 · Navegador:** 3 abas liberadas: Engenheiro, QA e rodízio de Sistemas/Servidor/Arte
 
