@@ -125,7 +125,59 @@ function tRankList(K){ const L=K&&Array.isArray(K.list)?K.list:[];
   const tabs='<div role="tablist" aria-label="Tipo de ranking" style="flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px">'+['Torneio','Territórios'].map((t,i)=>'<button class="pt-tab" role="tab" data-x="rk" data-i="'+i+'" aria-selected="'+(XT.rk===i)+'">'+t+'</button>').join('')+'</div>';
   if(!L.length) return tabs+'<div role="note" style="flex:none;padding:10px 12px;border-radius:14px;background:#1d1611;border:2px dashed #8a6a3a;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2">'+(K?'Nenhuma guilda pontuou nesta semana ainda':'Carregando o ranking…')+'</div>';
   return tabs+'<div style="flex:none;display:flex;flex-direction:column;gap:4px">'+L.map(g=>'<div style="min-height:40px;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;background:'+(g.me?'rgba(255,201,74,.1)':'#1d1611')+';border:1px solid '+(g.me?'#ffc94a':'#4a3a2b')+'"><span style="flex:none;width:34px;font-family:\'Lilita One\',sans-serif;color:#ffe07a">'+tEsc(g.rank)+'º</span><span style="flex:1;min-width:0;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tEsc(g.name)+(g.me?' (sua)':'')+'</span><span style="flex:none;font-size:12px;font-weight:900;color:#c9b9a2;white-space:nowrap">'+(XT.rk===1?tEsc(g.points|0)+' pts':tEsc(g.wins|0)+(g.wins===1?' vitória':' vitórias'))+'</span></div>').join('')+'</div>'; }
-function tNetLoad(){ try{ const N=window.Sys&&Sys.tourneyNet; if(!N||!N.DATA||N.DATA.on!==true||typeof N.refresh!=='function') return; Promise.resolve(N.refresh({territory:true})).then(()=>{ try{ if(window.Screens&&Screens.current&&Screens.current()==='tourney') render(); }catch(e){} },()=>{}); }catch(e){} }
+function tNetLoad(){ try{ const N=window.Sys&&Sys.tourneyNet; if(!N||!N.DATA||N.DATA.on!==true||typeof N.refresh!=='function') return; Promise.resolve(N.refresh({territory:true})).then(()=>{ try{ if(typeof N.loadLineup==='function'){ N.loadLineup('d5').then(()=>{ if(XT.lu&&XT.lu.d5&&XT.lu.d5.saved) delete XT.lu.d5; },()=>{}); } }catch(e){} try{ const GN=window.Sys&&Sys.guildNet; if(GN&&GN.DATA&&GN.DATA.on===true&&GN.refresh&&!GN.mine()) GN.refresh(S,Sys.host).then(()=>{ try{ if(window.Screens&&Screens.current&&Screens.current()==='tourney') render(); }catch(e){} },()=>{}); }catch(e){} try{ if(window.Screens&&Screens.current&&Screens.current()==='tourney') render(); }catch(e){} },()=>{}); }catch(e){} }
+/* ---------- ESCALAÇÃO DOS LUTADORES (só ONLINE; protótipo docs/proto/v2/TorneioDoPoder.html, aba Escalação, da Sistemas b66d99e) ----------
+   Dia (sexta 'd5' / sábado 'd6') → resumo (escalados X/N, FC somada, mediana de era, salva ou não, trava) → um membro por linha em ordem de FC (marcação,
+   posição na fila, nome, nível, era, FC) → Limpar · Os N de maior FC · Salvar (PUT /tourney/lineup). Quem pode: my.canLineup (líder e oficiais); os demais só veem.
+   Trava: lockAt do servidor (19h do dia da luta). Só entra quem está na guilda desde 24 h antes da trava (joinedAt ≤ lockAt − 24 h). NENHUMA regra é decidida
+   aqui: a tela só evita o toque que o servidor recusaria e mostra o motivo; quem valida é o servidor (lineup_locked, member_too_new, bad_request).
+   Membros: Sys.guildNet.mine().members ({id, name, role, joinedAt, me} + fc, level e era QUANDO o servidor mandar: sem eles a linha mostra só o nome e a
+   ordem é a do servidor; "maior FC" e a mediana aparecem só com esses campos). */
+const T_LUWHY={lineup_locked:'Escalação travada às 19h',member_too_new:'Há escalado com menos de 24 h de guilda antes da trava',bad_request:'Escalação inválida: confira os escalados',forbidden:'Só o líder e os oficiais escalam',
+  net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
+const tNow=()=>{ try{ if(window.Sys&&Sys.host&&Sys.host.now) return Sys.host.now(); }catch(e){} return Date.now(); };
+const tSize=N=>{ let n=0; try{ n=N.state().size|0; }catch(e){} if(!(n>0)){ try{ n=tG().DATA.tourney.size|0; }catch(e){} } return n>0?n:15; };
+function tMembers(){ try{ const GN=window.Sys&&Sys.guildNet, m=GN&&GN.mine?GN.mine():null, L=m&&Array.isArray(m.members)?m.members.filter(x=>x&&x.id!=null):[];
+    const hasFc=L.some(x=>typeof x.fc==='number'); return {list:hasFc?L.slice().sort((a,b)=>(+b.fc||0)-(+a.fc||0)):L,hasFc}; }catch(e){ return {list:[],hasFc:false}; } }
+function tLockAt(N,slot){ try{ const l=N.lineup(slot); if(l&&l.lockAt>0) return +l.lockAt; const s=N.schedule().find(x=>x&&x.slot===slot); return s&&s.lockAt>0?+s.lockAt:0; }catch(e){ return 0; } }
+function tLocked(N,slot){ try{ const l=N.lineup(slot); if(l&&l.locked===true) return true; }catch(e){} const at=tLockAt(N,slot); return at>0&&tNow()>=at; }
+const tElig=(m,lockAt)=>!(lockAt>0&&typeof m.joinedAt==='number')||m.joinedAt<=lockAt-864e5;
+/* cópia de trabalho da escalação do dia (começa igual à do servidor; "salva" enquanto não muda) */
+function tLu(N,slot){ XT.lu=XT.lu||{}; let w=XT.lu[slot]; if(!w){ let base=[]; try{ const l=N.lineup(slot); base=l&&Array.isArray(l.members)?l.members.map(String):[]; }catch(e){} w=XT.lu[slot]={ids:base,saved:true}; } return w; }
+function tLineup(){ const N=tNet(), slot=XT.slot==='d6'?'d6':'d5', my=N.my()||{}, can=!!my.canLineup, size=tSize(N), lockAt=tLockAt(N,slot), lk=tLocked(N,slot), W=tLu(N,slot), M=tMembers(), by={}; for(const m of M.list) by[String(m.id)]=m;
+  const ids=W.ids.filter(id=>by[id]), picked=ids.map(id=>by[id]), ord=M.hasFc?picked.slice().sort((a,b)=>(+b.fc||0)-(+a.fc||0)):picked, pos={}; ord.forEach((m,i)=>{ pos[String(m.id)]=i+1; });
+  const eras=picked.map(m=>m.era).filter(e=>typeof e==='number').sort((a,b)=>a-b), med=eras.length?(eras.length%2?eras[(eras.length-1)/2]:(eras[eras.length/2-1]+eras[eras.length/2])/2):null, fcSum=picked.reduce((a,m)=>a+(+m.fc||0),0);
+  const h=lockAt>0?(lockAt-tNow())/36e5:null, day=slot==='d5'?'sexta':'sábado';
+  const lockTxt=lk?'Travada às 19h. Trocar de equipamento agora não muda a batalha':h==null?'Trava às 19h do dia da luta':h>48?'Trava '+day+' às 19h (1 h antes da luta)':'Trava em '+Math.max(1,Math.round(h))+' h, às 19h';
+  const seg='<div role="group" aria-label="Dia da batalha" style="flex:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px">'+[['d5','Sexta 20h'],['d6','Sábado 20h']].map(d=>'<button class="pt-tab" data-x="slot" data-k="'+d[0]+'" aria-pressed="'+(slot===d[0])+'" aria-selected="'+(slot===d[0])+'">'+d[1]+'</button>').join('')+'</div>';
+  const sum='<div style="flex:none;padding:8px 10px;border-radius:14px;background:#1d1611;border:1px solid #d9a441;line-height:1.3"><div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:900"><span>Escalados '+ids.length+'/'+size+'</span><span style="color:#ffe07a">'+(M.hasFc?'FC somada '+tEsc(tFC(fcSum)):'')+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:900;margin-top:3px"><span>'+(med!=null?'Mediana de era: '+tEsc(String(Math.round(med*10)/10).replace('.',','))+' ('+tEsc(tEra(Math.floor(med)))+')':'Mediana de era: sem dados')+'</span><span style="color:'+(W.saved?'#7ef08a':'#ffcfb8')+'">'+(W.saved?'Salva':'Não salva')+'</span></div>'
+    +'<span style="display:block;font-size:11px;font-weight:800;color:#c9b9a2;margin-top:4px">'+tEsc(lockTxt)+'. '+(M.hasFc?'A fila luta em ordem de FC (o 1º abre). ':'')+'Só entra quem está na guilda desde 24 h antes da trava.'+(med!=null?' Com esta mediana dá para atacar até a região '+tEsc(tEra(Math.min(tRegions()-1,Math.floor(med))))+'.':'')+'</span></div>';
+  const meId=String((M.list.find(m=>m.me)||{}).id), rule=can?'':'<div role="note" style="flex:none;padding:8px 10px;border-radius:12px;background:#13314f;border:1px solid #4aa3ff;font-size:12px;font-weight:800;line-height:1.3">Só o líder e os oficiais escalam. Você está '+(pos[meId]?'escalado na posição '+pos[meId]:'fora da escalação')+'.</div>';
+  const rows=M.list.length?M.list.map(m=>{ const id=String(m.id), on=ids.indexOf(id)>=0, el=tElig(m,lockAt), dis=lk||!can||(!el&&!on)||(!on&&ids.length>=size);
+      const sub=!el?'Menos de 24 h de guilda antes da trava':[typeof m.level==='number'?'Nv '+m.level:'',typeof m.era==='number'?tEra(m.era):''].filter(Boolean).join(' · ');
+      return '<button data-x="pick" data-id="'+tEsc(id)+'" aria-pressed="'+on+'"'+(dis?' aria-disabled="true"':'')+' style="flex:none;min-height:48px;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:12px;text-align:left;color:inherit;background:'+(on?'rgba(255,201,74,.12)':'#1d1611')+';border:1px solid '+(on?'#ffc94a':'#4a3a2b')+';opacity:'+(dis&&!on?0.6:1)+'">'
+        +'<span aria-hidden="true" style="flex:none;width:22px;height:22px;border-radius:7px;border:2px solid '+(on?'#ffc94a':'#6a5a48')+';background:'+(on?'#ffc94a':'transparent')+';display:flex;align-items:center;justify-content:center">'+(on?tIc('M5 12 L10 17 L19 7',14,'#2a1403'):!el?tIc('M6 11 V8 A6 6 0 0 1 18 8 V11 M5 11 H19 V21 H5 Z',12,'#c9b9a2'):'')+'</span>'
+        +(on?'<span style="flex:none;min-width:28px;font-family:\'Lilita One\',sans-serif;color:#ffe07a">'+pos[id]+'º</span>':'')
+        +'<span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tEsc(m.name||'?')+(m.me?' (você)':'')+'</span>'+(sub?'<span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tEsc(sub)+'</span>':'')+'</span>'
+        +(typeof m.fc==='number'?'<span style="flex:none;font-size:13px;font-weight:900;color:#ffe07a;white-space:nowrap">'+tEsc(tFC(m.fc))+' <span style="font-size:10px;color:#c9b9a2">FC</span></span>':'')+'</button>'; }).join('')
+    :'<div role="note" style="flex:none;padding:10px 12px;border-radius:14px;background:#1d1611;border:2px dashed #8a6a3a;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2">A lista de membros da guilda ainda não chegou</div>';
+  const bt=(k,t,gold)=>'<button data-x="lu" data-k="'+k+'" class="'+(gold?'pt-gold':'pt-gh')+'" style="flex:1;min-width:0;min-height:46px;font-size:13.5px;padding:0 6px">'+t+'</button>';
+  const bar=can&&!lk?'<div style="flex:none;display:flex;gap:6px;padding-top:2px">'+bt('clear','Limpar',false)+(M.hasFc?bt('best','Os '+size+' de maior FC',false):'')+bt('save',W.saved?'Salva':'Salvar',!W.saved)+'</div>':'';
+  return '<div class="pt-in" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:6px">'+seg+sum+rule+'<div class="x-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px">'+rows+'</div>'+bar+'</div>'; }
+function tLuClick(b){ const N=tNet(); if(!N) return; const a=b.dataset.x, slot=XT.slot==='d6'?'d6':'d5', W=tLu(N,slot), my=N.my()||{}, can=!!my.canLineup, size=tSize(N), lockAt=tLockAt(N,slot), lk=tLocked(N,slot), M=tMembers();
+  if(a==='slot'){ const k=b.dataset.k==='d6'?'d6':'d5'; if(k===XT.slot) return; XT.slot=k; try{ if(!N.lineup(k)||N.lineup(k).lockAt==null) Promise.resolve(N.loadLineup(k)).then(()=>{ if(XT.lu&&XT.lu[k]&&XT.lu[k].saved) delete XT.lu[k]; try{ if(window.Screens&&Screens.current&&Screens.current()==='tourney') render(); }catch(e){} },()=>{}); }catch(e){} render(); return; }
+  if(lk) return tSoon('Escalação travada às 19h'); if(!can) return tSoon('Só o líder e os oficiais escalam');
+  if(a==='pick'){ const id=String(b.dataset.id), m=M.list.find(x=>String(x.id)===id), i=W.ids.indexOf(id); if(!m) return;
+    if(i>=0){ W.ids.splice(i,1); W.saved=false; return render(); }
+    if(!tElig(m,lockAt)) return tSoon((m.name||'Este membro')+' entrou há menos de 24 h antes da trava'+(slot==='d5'&&tElig(m,tLockAt(N,'d6'))?' (pode no sábado)':''));
+    if(W.ids.length>=size) return tSoon('Já são '+size+'. Tire alguém antes'); W.ids.push(id); W.saved=false; return render(); }
+  if(a==='lu'){ const k=b.dataset.k;
+    if(k==='clear'){ W.ids=[]; W.saved=false; return render(); }
+    if(k==='best'){ if(!M.hasFc) return; W.ids=M.list.filter(m=>tElig(m,lockAt)).slice(0,size).map(m=>String(m.id)); W.saved=false; return render(); }
+    if(k==='save'){ if(W.saved||XT.busy) return; if(!W.ids.length) return tSoon('Escale pelo menos 1'); XT.busy=true; tSoon('Salvando a escalação…'); const n=W.ids.length, day=slot==='d5'?'sexta':'sábado';
+      const end=q=>{ XT.busy=false; if(q&&q.ok){ W.saved=true; if(Array.isArray(q.members)) W.ids=q.members.map(String); } XT.toast=q&&q.ok?'Escalação de '+day+' salva ('+n+'/'+size+')':(T_LUWHY[q&&q.reason]||'Não foi possível salvar agora'); XT.toastT=Date.now(); try{ if(window.Screens&&Screens.current&&Screens.current()==='tourney') render(); }catch(e){} };
+      let pr=null; try{ pr=N.setLineup(slot,W.ids.slice()); }catch(e){} Promise.resolve(pr).then(end,()=>end(null)); } } }
 const tLv=g=>{ const G=tG(); try{ return G.levelOfXp(g.xp).level; }catch(e){ return 1; } };
 function tEmb(c,sym,w,extra){ return `<span style="position:relative;display:block;flex:none;width:${w}px;aspect-ratio:48/56;filter:drop-shadow(0 0 4px ${c}) drop-shadow(0 2px 0 rgba(0,0,0,.6));${extra||''}"><svg viewBox="0 0 48 56" aria-hidden="true" style="width:100%;height:100%;display:block;overflow:visible"><path d="M24 1 L46 8.5 V27 C46 43 35 51 24 55 C13 51 2 43 2 27 V8.5 Z" fill="#2a1a0a"></path><path d="M24 4 L43 10.5 V27 C43 41 33.5 48.5 24 52 C14.5 48.5 5 41 5 27 V10.5 Z" fill="${c}" stroke="#ffe9b0" stroke-width="2"></path><g class="pt-sym"><path d="${T_SYM[sym%T_SYM.length]}" transform="translate(12 16)" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></span>`; }
 const T_SW='M4 3 L14 13 M20 3 L10 13 M5 17 L8 14 M19 17 L16 14', T_SH='M12 3 L20 6 V12 C20 17 16 20 12 21 C8 20 4 17 4 12 V6 Z', T_MAPI='M3 6 L9 3 L15 6 L21 3 V18 L15 21 L9 18 L3 21 Z M9 3 V18 M15 6 V21';
@@ -163,8 +215,9 @@ function tBanner(st){ const N=tNet();
     <span style="font-size:11px;font-weight:800;color:#cfe7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</span></span>
     ${Z?`<span role="timer" aria-label="${tEsc(Z.ph)}, temporada termina em ${tEsc(Z.left)}" style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-end;padding:3px 8px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;line-height:1.1;flex:none"><span style="font-size:10px;font-weight:800;color:#c9b9a2">${tEsc(Z.ph)}</span><span style="font-family:'Lilita One',sans-serif;font-size:14px;color:#ffe07a;font-variant-numeric:tabular-nums;white-space:nowrap">${tEsc(Z.left)}</span></span>`:''}</div>`; }
 function tTabs(){ const n=Object.keys(T_WARS).length;
-  const T=[['Mapa',T_MAPI,n],['Batalha',T_SW+' M3 21 L6 18 M21 21 L18 18',0],['Ranking','M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z',0]];
-  return `<div role="tablist" aria-label="Seções do torneio" style="flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b">${T.map((t,i)=>`<button class="pt-tab" role="tab" data-x="tab" data-i="${i}" aria-selected="${XT.tab===i}">${tIc(t[1],20)}${t[0]}${t[2]?`<span class="pt-dot" aria-label="${t[2]} regiões em guerra">${t[2]}</span>`:''}</button>`).join('')}</div>`; }
+  const T=[['Mapa',T_MAPI,n,0],['Batalha',T_SW+' M3 21 L6 18 M21 21 L18 18',0,1],['Ranking','M7 3 H17 V8 A5 5 0 0 1 7 8 Z M12 13 V17 M8 21 H16 M9 17 H15 V21 H9 Z',0,2]];
+  if(tNet()&&(tNet().my()||{}).guildId!=null) T.splice(1,0,['Escalação','M8 11 A3.5 3.5 0 1 0 8 4 A3.5 3.5 0 0 0 8 11 M2 20 C2 15 5 13.5 8 13.5 C11 13.5 14 15 14 20 M16 8 L18.5 10.5 L22 6',0,3]);   /* só online e com guilda: 2ª aba, como no protótipo; o número da aba (3) não muda o das outras */
+  return `<div role="tablist" aria-label="Seções do torneio" style="flex:none;display:grid;grid-template-columns:repeat(${T.length},minmax(0,1fr));gap:3px;padding:3px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b">${T.map(t=>`<button class="pt-tab" role="tab" data-x="tab" data-i="${t[3]}" aria-selected="${XT.tab===t[3]}"${T.length>3?' style="font-size:12px;gap:3px"':''}>${tIc(t[1],T.length>3?16:20)}${t[0]}${t[2]?`<span class="pt-dot" aria-label="${t[2]} regiões em guerra">${t[2]}</span>`:''}</button>`).join('')}</div>`; }
 
 function tFlag(x,y,side,c,sym,pips,title,owner,mine,war,sel,aria,act,z){
   const lx=side==='r'?'24px':'-122px';   // plaquinha estreita (98 px) para caber no mapa de 390 px sem cobrir as vizinhas
@@ -259,7 +312,8 @@ function scrTourney(){
   if(!tG()){ V.innerHTML=xWrap(d,'',`<div role="alert" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Torneio do Poder indisponível agora.</div>`); XT.sig='x'; return; }
   const st=tStatus(); tSync();
   const mp=typeof document!=='undefined'&&document.getElementById?document.getElementById('pt_map'):null; if(mp) XT.mapTop=mp.scrollTop;
-  const body=XT.tab===1?tBattle():XT.tab===2?tRank():tMap();
+  if(XT.tab===3&&!(tNet()&&(tNet().my()||{}).guildId!=null)) XT.tab=0;
+  const body=XT.tab===1?tBattle():XT.tab===2?tRank():XT.tab===3?tLineup():tMap();
   const sheet=XT.tab===0&&XT.sel>=0?tSheet(st):'';
   const toast=XT.toast?`<div role="status" class="pt-up" style="position:absolute;left:50%;top:58px;transform:translateX(-50%);z-index:40;max-width:92%;padding:8px 14px;border-radius:12px;background:#13314f;border:2px solid #4aa3ff;font-size:13px;font-weight:900;text-align:center;box-shadow:0 6px 16px rgba(0,0,0,.5)">${tEsc(XT.toast)}</div>`:'';
   V.innerHTML=xWrap(d,XT.anim?'f-in':'',`<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;padding:8px 12px max(10px,env(safe-area-inset-bottom));box-sizing:border-box;background:radial-gradient(ellipse at 50% 10%,#3a2414 0%,#1d1611 45%,#16110d 80%)">
@@ -273,11 +327,12 @@ function tSoon(t){ XT.toast=t||'Em breve: abre com o online'; XT.toastT=Date.now
 function tClick(b){
   const a=b.dataset.x, i=Number(b.dataset.i);
   if(a==='tab'){ if(XT.tab===i) return; tSnd('ui_tap'); XT.tab=i; XT.sel=-1; render(); }
+  else if(a==='slot'||a==='pick'||a==='lu'){ tSnd('ui_tap'); tLuClick(b); }
   else if(a==='reg'){ tSnd('ui_tap'); XT.sel=i; render(); }
   else if(a==='close'){ tSnd('ui_tap'); XT.sel=-1; render(); }
   else if(a==='act'){ tSnd('ui_tap'); const cap=XT.sel===99, r=cap?tRegions()-1:XT.sel, own=cap?T_CAPOWN:(T_OWN[XT.sel]||[])[i], mine=T_GU[own]&&T_GU[own].me;
     const N=tNet(); if(N){   /* ONLINE: Atacar = declarar (1º toque pede confirmação, 2º envia); Defender = escalação, que ainda não tem tela aprovada */
-      if(mine) return tSoon('A escalação dos lutadores abre em breve'); if(!tCanAtk(r)) return tSoon('Só o líder e os oficiais declaram ataques'); if(XT.busy) return;
+      if(mine){ XT.sel=-1; XT.tab=3; return render(); }   /* Defender = escalar os lutadores */ if(!tCanAtk(r)) return tSoon('Só o líder e os oficiais declaram ataques'); if(XT.busy) return;
       const tid=cap?'capital':'r'+XT.sel+'t'+(i+1), M=N.map().find(m=>m&&m.id===tid), used=((M&&M.attacks)||[]).map(x=>x&&x.slot), slot=['d5','d6'].find(k=>!used.includes(k)), day=slot==='d5'?'sexta':'sábado';
       if(!slot) return tSoon('Este território já tem ataque marcado para sexta e sábado');
       if(XT.ask!==tid+slot){ XT.ask=tid+slot; return tSoon('Atacar '+tTerrName(tid)+' na '+day+' às 20h? Toque em Atacar de novo para confirmar'); }
@@ -295,5 +350,5 @@ function tClick(b){
 Panels.add('tourney',{title:'Torneio do Poder',render:scrTourney,click:tClick,
   tick(){ if(!tG()) return; if(XT.toast&&Date.now()-XT.toastT>2600){ XT.toast=''; render(); return; } if(XT.sig&&tSig()!==XT.sig) render(); },
   busy(){ return false; },
-  onOpen(o){ XT.tab=o&&typeof o.tab==='number'?Math.max(0,Math.min(2,o.tab)):0; XT.sel=-1; XT.page=0; XT.toast=''; XT.anim=true; XT.mapTop=null; XT.ask=''; XT.busy=false; tNetLoad(); },
+  onOpen(o){ XT.lu={}; XT.slot='d5'; XT.tab=o&&typeof o.tab==='number'?Math.max(0,Math.min(2,o.tab)):0; XT.sel=-1; XT.page=0; XT.toast=''; XT.anim=true; XT.mapTop=null; XT.ask=''; XT.busy=false; tNetLoad(); },
   onClose(){ XT.sel=-1; XT.toast=''; } });
