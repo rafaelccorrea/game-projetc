@@ -193,7 +193,11 @@ const getProvider=()=>provider;
 
 /* ---------------- ações ---------------- */
 /* lista de adversários + prévia para a tela: pontos se vencer/perder (mesma conta da luta) e a dificuldade (Sys.tower.difficulty) */
-function opponents(S,host){ ensure(S,host); const me=playerFC(S,host), W=root.Sys&&root.Sys.tower;
+/* prévia de pontos e dificuldade para uma FC dada (a tela passa a FC do retrato, sem refazer a conta) */
+function deltaFor(S,fcMe,fcOpp){ const me=Math.max(1,Number(fcMe)||1), k=clamp((Number(fcOpp)||0)/me,DATA.kRange[0],DATA.kRange[1]), W=root.Sys&&root.Sys.tower;
+  return {winPts:Math.round(DATA.winBase*k),losePts:Math.round(DATA.lossBase*k),diff:W&&W.difficulty?W.difficulty(me,fcOpp):null}; }
+/* opponents(S,host[,fcMe]): fcMe = FC do retrato (opcional); sem ela, Sys.fc.compute */
+function opponents(S,host,fcMe){ ensure(S,host); const me=fcMe!=null?Math.max(1,Number(fcMe)||1):playerFC(S,host), W=root.Sys&&root.Sys.tower;
   return provider.listOpponents(S,host,DATA.opponentsShown).map(x=>{ const k=clamp(x.fc/Math.max(1,me),DATA.kRange[0],DATA.kRange[1]);
     return Object.assign({},x,{winPts:Math.round(DATA.winBase*k),losePts:Math.round(DATA.lossBase*k),diff:W&&W.difficulty?W.difficulty(me,x.fc):null}); }); }
 function refresh(S,host){ const o=ensure(S,host); if(o.refreshLeft<=0) return {ok:false,reason:'refresh'}; o.refreshLeft--; o.refreshes++; return {ok:true,list:opponents(S,host)}; }
@@ -226,7 +230,7 @@ function fightRewards(S,host,o,r){ const R=DATA.fightRewards, dk=dayKey(nowOf(ho
 const ranking=(S,host,kind)=>{ ensure(S,host); return provider.getRanking(S,host,{kind}); };
 const weekInfo=(S,host)=>provider.weekInfo(S,host);
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,duelPvp,botLook,leagueInfo,lgOf,ensure,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
+const API={DATA,duelPvp,botLook,leagueInfo,lgOf,ensure,deltaFor,opponents,refresh,fight,ranking,weekInfo,setProvider,getProvider,localProvider,bonus,_weekKey:weekKey};
 root.Sys=root.Sys||{}; root.Sys.arena=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

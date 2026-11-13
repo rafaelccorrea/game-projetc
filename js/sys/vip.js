@@ -42,7 +42,8 @@ const DATA={
     {id:'autoSell',    name:'Desmontar sozinho o que sobra, virando ouro (Básico/Raro, o jogador escolhe; nunca o equipado)', v:2, free:'"desmontar todos" manual'},   // dono 13/11: no lugar do equipar sozinho (que voltou a ser de todos)
     {id:'skipBoss',    name:'Pular chefe já vencido (resultado na hora, mesmo prêmio)', v:3, free:'luta inteira (até x2/x4)'},
     {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'3 por dia'},
-    {id:'autoForge',   name:'Forja automática até o nível escolhido (mesma chance e custo; para no ouro ou nas pedras)', v:4, free:'1 toque por tentativa'},
+    {id:'autoForge',   name:'Forjar até conseguir (até o nível escolhido; mesma chance e custo; para no ouro ou nas pedras)', v:0, free:'todos (dono: agora é do grátis)'},
+    {id:'bonfireInstant', name:'Fogueira: o automático solta o lote inteiro de uma vez (mesmas peças, chances e Brasas)', v:4, free:'uma peça por vez'},
     {id:'towerAdd',    name:'Tentativas (derrotas) da torre a mais por dia', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'3 por dia'},
     {id:'bossAdd',     name:'Ataques a mais no Chefe Mundial por janela', v:6, val:[0,0,0,0,0,0,1,1,1,1,1], free:'2 por janela'},
     {id:'passXp',      name:'XP do Passe a mais (só o Passe; o nível do jogador não muda)', v:7, val:[0,0,0,0,0,0,0,10,10,15,20], unit:'%', free:'0%'},

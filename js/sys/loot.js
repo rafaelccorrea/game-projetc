@@ -353,7 +353,7 @@ function summon(S,host,n,opts){
 }
 /* o item como o jogo recebe (host.addItem). Nível é do ITEM (1-100, teto = nível do jogador); item novo nasce no 1, sem ouro investido.
    gold = ouro investido em melhorias (nome do stats.js da fps-e2, que soma a cada melhoria por ouro; diamante NÃO entra). */
-const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; if(it.origin) o.origin=it.origin; if(Array.isArray(it.stk)) o.stk=it.stk.map(x=>({k:x.k,q:x.q})); return o; };
+const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.subs||[]).map(s=>({k:s.k,q:s.q}))}; if(it.qp!=null) o.qp=it.qp; if(it.origin) o.origin=it.origin; if(Array.isArray(it.stk)) o.stk=it.stk.map(x=>({k:x.k,q:x.q})); if(it.wing) o.wing=it.wing; return o; };   /* wing: o tipo da asa não se perde no drop (bug achado pelo Engenheiro) */
 /* ---------------- entrega de PACOTE (correio, login diário, eventos) ----------------
    bundle = {gold?, goldk? (× ouro de um abate), gems?, essence?, forge?, food?, xp?, skin?, items?:[{slot, r, e?}], eggs?:[r]}
    Regras únicas: item acima do portão (ou asa sem nível 50 / abaixo de Épica) fica GUARDADO e sai na era da liberação; ovo acima do portão fica GUARDADO
