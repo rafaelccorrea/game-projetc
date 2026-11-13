@@ -1,0 +1,10 @@
+KAIA NA FÊNIX GIGANTE — falta só baixar e processar (vídeos JÁ PAGOS, custo 0)
+Jobs seedance (13/11): idle 70dfffd9-06dd-49eb-b482-e52797698234 · run 743ceeba-ce88-4216-8daf-c4b599c398da · attack 3daa93f8-ade8-4014-8fcb-c88082b2a63e
+Guia usado: assets/hero/guides/kaia_giant_phoenix_guide.png. Kael pronto: f597b4b (mesmo formato do grifo, 512x352).
+Passos (pasta C:/Users/rafae/AppData/Local/Temp/tools):
+ 1. show_generation_by_ids com os 3 ids → pegar a url .mp4 de cada um (anotar em kaiamount/jobs.txt como "url kaia_phx_<st> <url>").
+ 2. para st em idle, run, attack: KEEP=1 node kaiamount/kmset.js giant_phoenix <st> <url>  e  bash kaiamount/postgen.sh kaia giant_phoenix <st>
+ 3. golpe: se aparecer faísca na ponta, node kaiamount/spark.js <folha _body> <quadros>; últimos 2 quadros do golpe no repouso 24° (setgrip) → kmrecompose.
+ 4. conferir: pinkcount.js = 0 em todas; node kaiamount/conf.js giant_phoenix (refaz _conferencia_giant_phoenix.png com Kael e Kaia).
+ 5. GRADE: as folhas novas saem em TIRA. Não converter (grade congelada até o OK da fps-c8). Se o lote das montarias já estiver aprovado, converter estas 4 (kaia idle/attack _body/_era2_t1) com grid/regrid.js e rodar test/paineis/sheetcss.test.js e test/e2e/sheetgrid.js antes do commit.
+ 6. commit com caminho explícito + push; avisar PO (folha de conferência) e Sistemas (kaia_giant_phoenix_* prontas).
