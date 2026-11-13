@@ -1037,6 +1037,7 @@ t('8 asas novas (dono): item de asa no mesmo padrão (atributo do item), atrás 
   T.DATA.newWingReady.ice=true; try{ assert.strictEqual(T.wingOf({slot:'wing',wing:'ice'}),'ice'); } finally { delete T.DATA.newWingReady.ice; }
   const g0=T.wingGlow({slot:'wing',r:1},0), g1=T.wingGlow({slot:'wing',r:1},15); assert.ok(g1.glow>g0.glow); assert.strictEqual(g0.particles,false); assert.strictEqual(g1.particles,true);
   assert.strictEqual(T.wingCatalog().filter(x=>x.soon).length,8);
+  const path=require('path'), fs=require('fs'), root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/equip/wing_angel_L.png'))) for(const k of nw){ for(const x of ['_L.png','_R.png','.json']) assert.ok(fs.existsSync(path.join(root,'assets/anim/equip/wing_'+k+x)),'falta wing_'+k+x); assert.ok(JSON.parse(fs.readFileSync(path.join(root,'assets/anim/equip/wing_'+k+'.json'),'utf8')).fit>0,'fit: '+k); }
 });
 
 console.log(`ok: ${n} testes`);

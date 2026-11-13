@@ -78,13 +78,13 @@ const DATA={
     // 8 ASAS NOVAS (dono, 13/11; nw:true = atrás da chave DATA.newWings, ou uma a uma com newWingReady[id], até a arte). Cada uma é um ITEM de asa
     // (slot wing) como a de anjo/demônio: o ATRIBUTO sai da raridade, era e nível do item (mesmo padrão); o tipo é o visual. r = raridade com que esse
     // modelo cai (o item nasce nela). Fontes SEM sorteio pago; nenhuma dá diamante. Brilho: wingGlow(item, nívelDaForja) pela raridade + Forja +0..+15.
-    moth:     {name:'Mariposa sombria',   nw:true, r:1, src:['Chefes de fase a partir da era 2 (no lugar da asa de anjo Rara)']},
+    darkmoth: {name:'Mariposa sombria',   nw:true, r:1, src:['Chefes de fase a partir da era 2 (no lugar da asa de anjo Rara)']},
     bone:     {name:'Asa de ossos',       nw:true, r:2, src:['Chefes da era 7 (Submundo) e Instância Chefe de Era']},
-    mech:     {name:'Asas mecânicas',     nw:true, r:2, src:['Instância Arsenal (dificuldade Difícil+): 1ª vitória']},
+    mechanical:{name:'Asas mecânicas',     nw:true, r:2, src:['Instância Arsenal (dificuldade Difícil+): 1ª vitória']},
     shadow:   {name:'Asa de sombra',      nw:true, r:3, src:['Arena: fim de temporada Diamante+']},
     ice:      {name:'Asa de gelo',        nw:true, r:3, src:['Evento Invasão da Era: baú de topo (1 por semana)']},
     storm:    {name:'Asa da tempestade',  nw:true, r:3, src:['Torre: andares 120, 140 e 160']},
-    phoenixw: {name:'Asa de fênix',       nw:true, r:4, src:['Torneio: top 10 da temporada','Chefe Mundial: faixa de topo do mês']},
+    phoenix:  {name:'Asa de fênix',       nw:true, r:4, src:['Torneio: top 10 da temporada','Chefe Mundial: faixa de topo do mês']},
     seraph:   {name:'Asa de serafim (6 asas)', nw:true, r:4, rarest:true, src:['Torneio: top 1 da temporada','Chefe da era 8 no Hell (1ª vitória)']},   // a mais rara; Divino (r 5) quando a curva de 9 eras ligar
   },
   newWings:false, newWingReady:{},
