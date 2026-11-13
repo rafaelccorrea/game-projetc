@@ -119,7 +119,7 @@ function scrVip(){
         ${hasAura?'<div class="pv-aura" aria-hidden="true" style="position:absolute;left:15px;top:3px;width:132px;height:165px"></div>':''}
         <div style="position:absolute;left:24px;top:158px;width:114px;height:22px;border-radius:50%;background:radial-gradient(ellipse at 50% 35%,#7a5a26 0%,#3a2810 60%,#1a120a 100%);border:2px solid #ffc94a;box-shadow:0 0 16px rgba(255,201,74,.6)"></div>
         <div style="position:absolute;left:44px;top:162px;width:74px;height:10px;border-radius:50%;background:rgba(0,0,0,.45)"></div>
-        <div class="pv-kid" role="img" aria-label="Kael${hasAura?' com a aura dourada VIP':''}" style="position:absolute;left:11px;top:35px;width:140px;height:140px"></div>
+        ${pvHeroOk()?`<canvas id="pv_hero" width="280" height="280" role="img" aria-label="${pvHeroName()}${hasAura?' com a aura dourada VIP':''}" style="position:absolute;left:11px;top:35px;width:140px;height:140px"></canvas>`:`<div class="pv-kid" role="img" aria-label="Kael${hasAura?' com a aura dourada VIP':''}" style="position:absolute;left:11px;top:35px;width:140px;height:140px"></div>`}
         <span class="pv-spark" style="left:18px;top:26px"></span><span class="pv-spark" style="left:136px;top:50px;animation-delay:.6s"></span><span class="pv-spark" style="left:30px;top:120px;animation-delay:1.2s"></span><span class="pv-spark" style="left:128px;top:132px;animation-delay:1.6s"></span>
       </div></div></div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center">
@@ -155,7 +155,16 @@ function vClick(b,ev){
   else if(a==='closecf'){ snd('ui_tap'); XV.cf=false; render(); }
 }
 
-Panels.add('vip',{title:'Clube VIP',render:function(){ if(typeof pwGate==='function'&&pwGate(['assets/anim/hyb/R/kael_idle_era2_t0.png','assets/anim/aura/aura13.png'])) return; return scrVip.apply(this,arguments); },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return vClick.apply(this,arguments); },
+/* VITRINE (QA no S24): a folha fixa kael_idle_era2_t0 mostrava sempre o Kael com a espada enferrujada. Agora é o desenho do próprio jogo num canvas
+   (window.drawHeroFull: herói ATUAL, skin e arma EQUIPADAS, a pé, sem pet); sem o desenho do jogo, vale a folha de antes. */
+const pvHeroOk=()=>{ try{ return typeof window.drawHeroFull==='function'&&typeof HS==='number'&&HS>0&&typeof requestAnimationFrame==='function'; }catch(e){ return false; } };
+const pvHeroName=()=>{ try{ return S.hero==='kaia'?'Kaia':'Kael'; }catch(e){ return 'Kael'; } };
+let pvRaf=0, pvT0=0;
+function pvHeroLoop(ts){ pvRaf=0; const c=typeof document!=='undefined'?document.getElementById('pv_hero'):null; if(!c||typeof view==='undefined'||view!=='vip'){ pvT0=0; return; }
+  try{ if(!pvT0) pvT0=ts; const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); window.drawHeroFull(x,c.width*0.5,c.height*242/256,c.height/HS,{t:(ts-pvT0)/1000,mount:false,pet:false,wing:false});   /* mesmo enquadramento da folha de antes: o quadro de 256 ocupa a caixa, pés em 242 */ }catch(e){}
+  pvRaf=requestAnimationFrame(pvHeroLoop); }
+function pvHeroStart(){ try{ if(!pvRaf&&pvHeroOk()&&document.getElementById('pv_hero')) pvRaf=requestAnimationFrame(pvHeroLoop); }catch(e){} }
+Panels.add('vip',{title:'Clube VIP',render:function(){ if(typeof pwGate==='function'&&pwGate(['assets/anim/hyb/R/kael_idle_era2_t0.png','assets/anim/aura/aura13.png'])) return; const r0=scrVip.apply(this,arguments); pvHeroStart(); return r0; },click:function(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return vClick.apply(this,arguments); },
   tick(){ if(XV.cf||!vOk()) return; if(XV.sig&&vSig()!==XV.sig) render(); },
   busy(){ return false; },
   onOpen(){ const c=vCur(); XV.sel=c>=vMax()?vMax():vClamp(c+1); XV.cf=false; XV.anim=true;
