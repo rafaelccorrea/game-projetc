@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13h · Desempenho:** o PC estava sobrecarregado (CPU 83%, 2,6 GB livres; uma página do jogo presa em laço com 1,1 GB). Todas as sessões fecharam navegadores e testes parados; Arte em 3 agentes; compilação do Android pausada. O carregamento antigo volta como padrão até o novo passar nos 4 testes
+- **13h · Você aprovou os números da guilda** (chefe, loja de Brasões, missões, estandartes)
+- **13h · Arte:** Kaia montada nas 6 montarias pronta (98 créditos); pets 2 de 9 (Lobo das Sombras e Falcão de Guerra); skins e arco/bumerangue seguem. Créditos: ~547
+
 - **12h40 · Checklist atualizado.** O BLOQUEIO do APK é o carregamento: anda bem com internet lenta, mas trava quando o app vai para segundo plano; o engenheiro parou o resto para corrigir. Servidor: guildas online completas (desligadas). Arte: pets e skins em produção, Kaia montada nas 6 montarias pronta
 
 - **12h15 · Sua decisão:** grátis 3 entradas por dia na Arena e 3 na Torre; VIP soma (Arena 5 no VIP 4 e 6 no VIP 8; Torre 4 no VIP 5 e 5 no VIP 10). Vantagens do VIP LIGADAS nos módulos; as automações nascem desligadas e nunca mexem em item equipado, travado ou de 5 estrelas
@@ -285,7 +289,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
 - [ ] Ainda para votar: Fusão (prints na página) · Coleção (no Modo dono) · Serafim refeito com 6 asas (2 versões) · Lobo das Sombras animado (padrão dos pets novos) · tela de carregamento nova com o fundo da abertura
 - [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md; grátis 3 na Arena e 3 na Torre) · como ganhar cada skin · VIP pelo total gasto
-- [ ] Em breve para votar: números das guildas online (chefe semanal, loja de Brasões, estandartes, missões)
+- [x] Números das guildas online aprovados
 
 **Créditos Higgsfield:**
 - [ ] Saldo ~713 (gastos: ultimates do arco/bumerangue, Kaia montada, 1º pet). Cobre o resto das skins e dos pets; para as 10 montarias novas montadas faltam ~280 (a Arte avisa quando parar)
