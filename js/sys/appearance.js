@@ -151,7 +151,8 @@ for(const k of [
    dir:'assets/anim/skins/kaia_ninja', avatar:'kaia_ninja', art:true, families:[]},   // ARTE ENTREGUE (ac9702c); arco/bumerangue por código
   {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward'],
    dir:'assets/anim/skins/kaia_demon', avatar:'kaia_demon', art:true, families:[]},   // ARTE ENTREGUE (f8c3421); arco/bumerangue por código
-  {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass']},
+  {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass'],
+   dir:'assets/anim/skins/kaia_angel', avatar:'kaia_angel', art:true, families:[]},   // ARTE ENTREGUE (565a16a); arco/bumerangue por código
 ]) FIXED.push(Object.assign({dir:null,avatar:null,mountArt:false,art:false,sources:[]},k));
 const FX={}; for(const k of FIXED) FX[k.id]=k;
 const dirOf=(k,h)=>k?(k.dir&&typeof k.dir==='object'?k.dir[h]||null:k.dir):null;
