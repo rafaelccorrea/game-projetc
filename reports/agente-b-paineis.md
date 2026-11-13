@@ -825,3 +825,9 @@ os dois batem com o commit); o texto exato dos blocos do relatório não foi afe
 PASSADA DE NAVEGADOR INTERROMPIDA: abri a aba para Montarias e Troca de era e o JOGO NÃO SOBE: `js/battle.js` (do agente A) está com
 erro de sintaxe na linha 180 ("Identifier 'EN_IDLE_N' has already been declared"), então `resize` não existe e nenhuma tela abre.
 Fechei a aba sem conferir nada. Não é meu arquivo e não mexi.
+- Passe com rolagem contínua REAPLICADO em `js/screens2.js` (subagente, só substituições pequenas). `node --check` ok; fumaça sem falha;
+  teste próprio dele, 72 passos em 4 medidas. Igual ao bloco 20, mais: o botão "Missões" só tenta a tela 34 quando ela está registrada,
+  não quebrada E ligada (`Panels.on('missions')`), pelo caminho do pedido Q-6 (`Panels.open('missions', {tab:'daily'})`); senão abre a
+  lista interna. Continua valendo o bloqueio do `setView` do index (B-24). ATENÇÃO: o commit `25c5cb5` de outra sessão pegou o arquivo
+  pela metade (botão desenhado sem o tratador do toque); a árvore de trabalho está completa: o próximo commit tem de incluir o resto.
+  Cópia final guardada na pasta de rascunho do subagente (`passe/screens2.final.js`). Não visto rodando.
