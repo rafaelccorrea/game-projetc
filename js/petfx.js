@@ -78,6 +78,15 @@ function petHit(e, I){ let st = null, roll = null; try { st = heroStats(); roll 
 function petWave(){ const I = petInfo(); if (!I || !B.hero) return; let st = null; try { st = heroStats(); } catch (e) {} const ph = st && st.pet ? st.pet.heal : 0; if (!(ph > 0)) return;
   const v = st.hp * ph, h = B.hero, b = h.hp; h.hp = Math.min(h.maxhp, h.hp + v); if (h.hp > b + 0.5) floatText(HX, GY - HS - 6, '+' + fmt(h.hp - b), '#7ee27a', 0); }
 /* desenho: atrás do Kael, pés na linha do chão; anda com o cenário, respira parado, golpeia no lugar */
+/* AURA DO PET POR ESTÁGIO (levantamento da Arte, item 2: a arte existe em assets/anim/aura e o Sys.pet já diz qual é, I.draw.aura = {id, sheet}; faltava desenhar).
+   Sai ATRÁS do pet, com a base nos pés dele (âncora [0.5, 1] da folha), largura pela caixa opaca do pet e a mistura da própria folha ("lighter").
+   Folha ainda carregando = sem aura neste quadro (nunca segura o pet). ?debug=1&petaura=0 desliga para comparar. petAuraBox() devolve a caixa (teste). */
+const PET_AURA_ON = !(typeof DEBUG !== 'undefined' && DEBUG && /[?&]petaura=0/.test(location.search)), PET_AURA_W = 1.45, PET_AURA_A = 0.8;
+function petAuraBox(I, px, base, k){ const a = PET_AURA_ON && I && I.draw && I.draw.aura; if (!a || !a.sheet) return null; const s = sheetLoad(a.sheet, true); if (!s || !s.ok) return null;
+  const M = s.meta, m = (PETK.base && petMetric(PETK.base)) || { l: 70, r: 70 }, w = (m.l + m.r) * k * PET_AURA_W, h = w * M.h / M.w, cx = px + (m.r - m.l) * k / 2;
+  return { s, M, x: cx - w / 2, y: base + HS * 0.02 - h, w, h, fi: Math.floor(B.at * (M.fps || 12)) % (M.frames || 1) }; }
+function drawPetAura(I, px, base, k){ const b = petAuraBox(I, px, base, k); if (!b) return false;
+  ctx.save(); ctx.globalAlpha = PET_AURA_A; if (b.M.blend === 'lighter') ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(b.s.img, sheetSX(b.M, b.fi), sheetSY(b.M, b.fi), b.M.w, b.M.h, b.x, b.y, b.w, b.h); ctx.restore(); return true; }
 function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era') || hatchHidesPet()) return;   /* ordem do dono: o pet NUNCA some (antes sumia na Vitória/Derrota e por até 5 s a cada ovo chocando); só não é desenhado atrás da Troca de era, que cobre a tela inteira, e enquanto ELE MESMO ainda está dentro do ovo (hatchHidesPet) */ const act = B.res ? null : PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');   /* Engenheiro 17 (P4/P13): com a Vitória/Derrota aberta o petStep para e o golpe em andamento ficava CONGELADO num quadro do ataque (pet no ar / fora do lugar a tela inteira); com resultado aberto o pet fica parado, respirando */
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
@@ -86,6 +95,7 @@ function drawPet(){ const I = petInfo(); if (!I || (B.res && B.res.mode === 'era
      e DESLIZA durante a queda até um lugar em que não tampa o herói caído nem a arma caída (petDieX). petPos() é a posição que o desenho usa (o teste confere por ela). */
   const pp = petPos(), px = pp.x, gy = pp.gy, fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
+  drawPetAura(I, px, gy - fly, k);   /* aura do estágio: depois da sombra, antes do corpo */
   ctx.drawImage(sh.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
 /* DERROTA: onde o pet fica para NÃO TAMPAR o herói caído nem a arma caída (visto pelo QA: no lugar de sempre ele ficava em cima do peito do herói e cobria a arma)
    NEM ENCOSTAR no inimigo que ficou em cena (visto pelo QA: além da arma ele ficou em cima do tigre da borda direita). dieClear (js/stage.js) dá a caixa do corpo
