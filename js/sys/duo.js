@@ -8,7 +8,7 @@
    - Meta DIÁRIA conjunta ("Juntos hoje"): os dois entram no dia e somam 300 abates. Missões SEMANAIS conjuntas (o doc: "juntos, 200 abates de chefe").
      O progresso é a SOMA dos dois; cada um resgata o próprio prêmio quando a soma chega. Prêmio = ouro (× ouro de um abate da fase) + Pedras de Forja.
      Nunca gemas, nunca sorteio, nunca loja.
-   - Sair: a dupla acaba para os dois; espera 24 h para vincular outro (contra troca de parceiro só para farmar). Bloquear: sai e aquele jogador não
+   - Sair: a dupla acaba para os dois; QUEM SAIU espera 24 h para vincular outro (quem ficou, não) (contra troca de parceiro só para farmar). Bloquear: sai e aquele jogador não
      pode mais convidar. Missão já resgatada na semana NÃO volta com parceiro novo (o resgate é por semana, não por dupla).
    PROVIDER trocável (como Sys.arena / Sys.guild): o padrão é LOCAL (sem servidor: tudo fica no save, o parceiro vem do que applyServer espelhou;
    offline o progresso do parceiro é o último recebido). O servidor (fps-6f) troca por setProvider(p) e espelha com applyServer(S, data).
@@ -25,6 +25,7 @@ const DATA={
   relinkMs:24*H,                        // depois de sair, espera para vincular outro
   msg:{cooldownMs:5000, perDay:30, repeatMax:2, inbox:20},
   counters:['kills','bossKills','stages','arenaWins'],
+  dayCap:{kills:20000,bossKills:150,stages:60,arenaWins:40},   // teto por dia de cada um (o mesmo do servidor, API_SERVIDOR §16): acima disso não conta
   // META DIÁRIA: os dois entram no dia (presença) e somam 300 abates. Prêmio igual para os dois.
   daily:{id:'daily',name:'Juntos hoje',counter:'kills',target:300,both:true,reward:{goldK:30,stones:1}},
   // MISSÕES SEMANAIS (soma dos dois). bothDays = dias da semana em que OS DOIS entraram.
@@ -186,7 +187,8 @@ function receive(S,host,idx,at){ if(!on()) return {ok:false,reason:'off'}; const
 /* ---------------- progresso conjunto ---------------- */
 /* o jogo avisa o que o jogador fez: kind ∈ DATA.counters. Conta só com dupla (e com a chave). */
 function track(S,host,kind,n){ if(!on()) return 0; if(!DATA.counters.includes(kind)) return 0; const o=S_(S,host); if(!o.partner) return 0; const k=Math.max(1,int0(n==null?1:n));
-  o.day.mine[kind]+=k; o.week.mine[kind]+=k; return k; }
+  const cap=int0(DATA.dayCap&&DATA.dayCap[kind])||Infinity, add=Math.max(0,Math.min(k,cap-o.day.mine[kind])); if(!add) return 0;
+  o.day.mine[kind]+=add; o.week.mine[kind]+=add; return add; }
 const bothDays=o=>o.week.days.filter(d=>o.week.pDays.includes(d)).length;
 const joint=(o,scope,counter)=>counter==='bothDays'?bothDays(o):(o[scope].mine[counter]||0)+(o[scope].partner[counter]||0);
 const today=(o)=>o.day.k;
@@ -212,7 +214,8 @@ function claim(S,host,id){ const g=gate(S,host); if(g) return g; const o=S_(S,ho
 /* ---------------- espelho do servidor ---------------- */
 /* data: {partner:{id,name,last}|null, partnerDay:{kills..}, partnerWeek:{..}, partnerPresent:bool, partnerDays:[dayKey], invites:[{id,name,at}], messages:[{idx,at}]} */
 function applyServer(S,host,data){ if(!on()) return {ok:false,reason:'off'}; const o=S_(S,host); if(!data||typeof data!=='object') return {ok:false,reason:'data'}; const t=nowOf(host);
-  if(data.partner===null){ if(o.partner) unpair(o,int0(data.leftAt)||t); }
+  /* a dupla acabou do outro lado: só QUEM SAIU espera 24 h (servidor, API_SERVIDOR §16); quem ficou pode vincular outro na hora. data.leftAt só vem quando fui eu que saí */
+  if(data.partner===null){ if(o.partner) unpair(o,int0(data.leftAt)||0); }
   else if(data.partner&&strId(data.partner.id)){ const id=strId(data.partner.id); if(o.blocked.includes(id)) return {ok:false,reason:'blocked'};
     if(!o.partner||o.partner.id!==id){ pair(o,data.partner,int0(data.partner.since)||t); roll(o,host); } o.partner.name=cleanName(data.partner.name||o.partner.name); o.partner.last=int0(data.partner.last); }
   if(o.partner){ if(data.partnerDay) o.day.partner=cnt(data.partnerDay); if(data.partnerWeek) o.week.partner=cnt(data.partnerWeek);

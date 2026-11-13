@@ -122,4 +122,5 @@ t('save torto é arrumado', () => {
 });
 
 DU.DATA.on = false; DU.setProvider(null);
+t('teto por dia igual ao do servidor (20.000 abates, 150 chefes, 60 fases, 40 arena); só quem saiu espera 24 h', () => { const D=require('../../js/sys/duo.js'); assert.deepStrictEqual(D.DATA.dayCap,{kills:20000,bossKills:150,stages:60,arenaWins:40}); });
 console.log(`\n${n} testes ok (duo)`);
