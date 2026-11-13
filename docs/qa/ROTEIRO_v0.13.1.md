@@ -50,3 +50,16 @@ Só instalar com o "pode instalar" do dono, e só a APK que o fps-c8 gerar com o
 
 ## Resultado a enviar
 "passou: passos ... / falhou: passos ... (o que vi, hora)". Defeito vai para a sessão dona da área (engenharia, servidor, arte, sistemas).
+
+---
+
+# Anexo para a v0.13.2 (só se o dono mandar gerar a APK com os itens de hoje)
+
+Esses itens NÃO estão na v0.13.1 (commit d17fbbc) e ninguém os viu na tela ainda. Fênix só existe em modo debug, não na APK. Mesmo critério: PASSOU / FALHOU, hora, captura.
+
+10. **Aura e golpe dos pets.** Batalha com pet médio e com pet evoluído: aura atrás do pet, base nos pés, sem cortar; golpe do pet visível. Falhou: aura flutuando, cortada ou cobrindo o herói.
+11. **Tela de Pets.** Lobo sombrio, Falcão de guerra e Pantera espectral na lista com imagem, 3 golpes e "como conseguir"; Cérbero, Pégaso e Raposa em "Em breve" (esperado). Conferir miniaturas, palco animado e os 3 estágios.
+12. **Montarias.** Vitrine é o desenho da batalha: herói certo (Kael e Kaia), arma equipada na mão (trocar a arma muda), pés na base do pedestal sem cortar, aura por estrela ao tocar nas estrelas, miniaturas sem a espada medieval pintada.
+13. **Arma sobre o rosto (pescoço).** Kaia base parada, correndo e golpeando: o rosto fica por cima da lâmina. Também Kael Ciborgue e Demônio, giro de costas e morte de uma skin: sem faixa do corpo cortada nem "tampa" de cabeça sobre a arma. Aparência (vitrine) com uma dessas skins.
+14. **Toque de 40 px.** Fechar do Passe, mochila maior (Equipamento), botão "Resgatar" e escolha de reino: tocáveis sem errar com o polegar.
+15. **Torneio.** Abre sem erro (a leitura pelo servidor ainda está desligada).
