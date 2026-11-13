@@ -10,7 +10,10 @@ const DATA={
   rarName:['Básico','Raro','Épico','Mítico','Lendário'],
   maxPct:[3,4.5,6.5,9,12],               // % de ATK e % de Vida no Nv 60 e 5★
   maxLvl:60, lvlMin:0.4,                  // fator do nível: 0,4 (Nv 1) → 1 (Nv 60), linear
-  starBase:0.75, starStep:0.05, maxStars:5, starCost:[10,20,30,40], dupFrags:10,
+  starBase:0.75, starStep:0.05, maxStars:5,
+  // DIFICULDADE COM PAREDES (dono aprovou 13/11): cada estrela acima da 1ª soma +2 a +3% de ATK e VIDA (pela raridade), fora do fator de nível.
+  // Desligado até o QA medir no jogo real (liga junto com a chave de dificuldade: setStarFlat(true)). 5★ = +8 a +12%.
+  starFlat:{on:false, pct:[2,2.25,2.5,2.75,3]}, starCost:[10,20,30,40], dupFrags:10,
   // ouro do nível N ao N+1 = goldK × ouro de um abate da fase × (1 + growth·(N−1)) × (1 + raridade·rarCost): acompanha a economia da fase
   cost:{goldK:20, growth:0.05, rarCost:0.5},
   // ESTÁGIO VISUAL por estrela (dono via PO; SÓ visual, os atributos não mudam): o engenheiro desenha pela chave id
@@ -66,7 +69,9 @@ function ensure(S){
 const lvlCap=(S,host)=>clamp(Math.floor(playerLevel(S,host)/2),1,DATA.maxLvl);
 /* % de ATK e de Vida de uma montaria (no nível e estrelas dela) */
 function pctOf(id,lvl,stars){ const m=BY[id]; if(!m) return 0; const L=DATA.lvlMin+(1-DATA.lvlMin)*(clamp(lvl,1,DATA.maxLvl)-1)/(DATA.maxLvl-1);
-  return Math.round(DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))*1000)/1000; }
+  const fl=DATA.starFlat&&DATA.starFlat.on===true?(clamp(stars,1,DATA.maxStars)-1)*num(DATA.starFlat.pct[clamp(m.r,0,DATA.starFlat.pct.length-1)],0):0;
+  return Math.round((DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))+fl)*1000)/1000; }
+const setStarFlat=on=>{ DATA.starFlat.on=!!on; return DATA.starFlat.on; };
 function starUp(x){ while(x.stars<DATA.maxStars&&x.frags>=DATA.starCost[x.stars-1]){ x.frags-=DATA.starCost[x.stars-1]; x.stars++; } }
 /* ganha uma montaria (oferta, passe, loja, evento). Repetida = 10 fragmentos. A primeira entra equipada se não houver outra melhor. */
 function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; if(m.tbd) return {ok:false,reason:'tbd'}; if(!live(m)) return {ok:false,reason:'off'}; const o=ensure(S), x=o.owned[id];
@@ -104,7 +109,7 @@ const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return
 
 /* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
 const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],maxPct:DATA.maxPct[m.r],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
-const API={DATA,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const API={DATA,setStarFlat,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

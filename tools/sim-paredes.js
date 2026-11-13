@@ -6,12 +6,12 @@
 'use strict';
 const R=p=>require(process.cwd()+'/js/sys/'+p+'.js');
 const FG=R('forge'), ST=R('stats'), FC=R('fc'), LV=R('level'), VIP=R('vip'), MO=R('mount'), TI=R('titles');
-ST.setEra9(true); LV.setV9(true);
+ST.setEra9(true); LV.setCap120(true); LV.setKillCap(true); MO.setStarFlat(true);   // como o dono aprovou: nível 120 (1-100 de hoje), teto de XP de abate, montaria +2-3% por estrela
 const LIN=[1,12,25,40,55,70,85,100,110], LOUT=[12,25,40,55,70,85,100,110,120];
 const eraOfLevel=L=>{ let e=0; for(let i=0;i<9;i++) if(L>=LIN[i]) e=i; return e; };
 const KILL=[3663,3180,3024,3934,3909,4854,4846,4842,5799], M={offline:160,missions:230,inst:320}, CAP={mid:0.3,over:0.1};
 const capKill=(raw,e)=>{ const t=KILL[e]; return Math.min(raw,t)+CAP.mid*Math.max(0,Math.min(raw,2*t)-t)+CAP.over*Math.max(0,raw-2*t); };
-const VT=VIP.DATA.table, X=LV.DATA.v9.xpToNext;
+const VT=VIP.DATA.table, X=LV.DATA.xpToNext;
 function dayXp(e,L,o){ const v=o.vip||0, xpP=1+(VT.xp9[v]||0)/100, speed=v>=5&&L>=40?4:(v>=1||L>=15)?2:1;
   return capKill(KILL[e]*(L<15?1:Math.min(speed,4)/2),e)*xpP+(M.offline+M.missions+M.inst*(v>=1?1.5:1))*(1+e)*xpP; }
 const capR=(L,e)=>L>=105&&e>=7?5:L>=85&&e>=5?4:L>=70&&e>=4?3:L>=25?2:L>=10?1:0, forgeAt=e=>Math.min(15,Math.round(2+1.6*e));
@@ -28,7 +28,8 @@ function levels(o){ let L=1,xp=0; const out=[]; for(let i=0;i<=400/STEP;i++){ ou
 const memo=new Map();
 function fcNow(o,LS,t,eCap){ const i=Math.min(LS.length-1,Math.round(t/STEP)), L=LS[i], d=Math.max(1,t), key=(o.vip||0)+'|'+(o.lazy?1:0)+'|'+L+'|'+eCap+'|'+Math.floor(d);
   if(memo.has(key)) return memo.get(key);
-  const eL=eraOfLevel(L), e=Math.min(eL,eCap), f=eL>e?1:(L-LIN[e])/Math.max(1,LOUT[e]-LIN[e]);
+  /* equipamento da era da FASE (cai dos inimigos dela), não do nível; a raridade continua presa ao nível (capR) */
+  const e=eCap, f=Math.max(0,Math.min(1,(L-LIN[e])/Math.max(1,LOUT[e]-LIN[e])));
   const r=o.lazy?Math.min(capR(L,e),2):capR(L,e);
   const forge=o.lazy?0:Math.round(forgeAt(Math.max(0,e-1))+(forgeAt(e)-forgeAt(Math.max(0,e-1)))*f);
   const pct=1+(titlesPct(d)+mountPct(L,d,!!o.vip,o.lazy)+guildPct(d)+(VT.atk[o.vip||0]||0))/100;
@@ -78,3 +79,6 @@ for(const e of [1,3,5,7,8]){ const day=END[e]-0.5, L=free.L(day), e2=e, f=(L-LIN
   const ps=petShare(L,e2,false), petEvo=Math.round((1/(1-ps)/(1/(1-ps*0.45/1))-1)*1000)/10;
   const m1=Math.round((MO.pctOf('horse',Math.min(60,Math.floor(L/2)),3)-MO.pctOf('horse',Math.min(60,Math.floor(L/2)),2))*10)/10;
   console.log('era '+e2+' (dia '+day+', Nv '+L+', raridade '+r+', Forja +'+fg+'): raridade +1 em tudo '+(rar==null?'—':'+'+rar+'%')+' · Forja +1 em tudo +'+f1_+'% · Forja +2 +'+f2+'% · qualidade 3★→4★ +'+q+'% · nível +1 +'+lv+'% · pet 1º→3º estágio +'+petEvo+'% · montaria +1★ +'+m1+'% · skin na coleção +0,5% · título +1 a +6%'); }
+
+// ---- saída para o docs/balance.json (bloco dificuldade): FC pedida das 90 fases, paredes e calendário ----
+if(process.argv.includes("--json")) console.log("JSON "+JSON.stringify({recFc:plan.map(p=>Number(p.rec.toPrecision(3))),wallBossDays:WB,wallMidDays:WM,eraEndDay:END}));

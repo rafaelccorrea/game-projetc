@@ -71,17 +71,22 @@ const level=S=>ensure(S).lvl;
 function progress(S){ const o=ensure(S), n=need(o.lvl); return {lvl:o.lvl,xp:o.xp,need:n,frac:n?o.xp/n:1,max:o.lvl>=DATA.maxLevel}; }
 
 /* soma XP e sobe de nível quantas vezes der. Devolve {gained, levels, from, to, unlocked:[funções novas]} */
+/* TETO DIÁRIO DA XP DE ABATE também fora do v9 (dono aprovou 13/11 com a dificuldade de paredes; depois do teto, ouro e itens seguem normais).
+   Desligado até o QA medir: setKillCap(true). Mesma tabela DATA.v9.kill. */
+const KC={on:false};
+const setKillCap=on=>{ KC.on=!!on; return KC.on; };
+const KCON=()=>V9()||KC.on===true;
 /* teto diário da XP de abate (v9): devolve quanto de n entra hoje. Estado: o.kd (dia), o.kx (XP de abate BRUTA do dia). */
 const dayKeyOf=host=>{ const t=num(host&&host.now&&host.now(),Date.now()), C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==='function') return C.dayKey(t); const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 function killCredit(S,host,n){ const K=DATA.v9.kill, o=ensure(S), dk=dayKeyOf(host); if(o.kd!==dk){ o.kd=dk; o.kx=0; }
   const t=num(K.T[clamp(eraMaxOf(host),0,K.T.length-1)],K.T[K.T.length-1])*vipXp(S), f=x=>Math.min(x,t)+K.mid*Math.max(0,Math.min(x,2*t)-t)+K.over*Math.max(0,x-2*t);
   const a=f(o.kx), b=f(o.kx+n); o.kx+=n; return Math.round(b-a); }
 /* quanto ainda entra cheio hoje (para a tela: "XP de abate cheia até ...") */
-function killCap(S,host){ if(!V9()) return {on:false}; const K=DATA.v9.kill, o=ensure(S), dk=dayKeyOf(host), raw=o.kd===dk?o.kx:0;
+function killCap(S,host){ if(!KCON()) return {on:false}; const K=DATA.v9.kill, o=ensure(S), dk=dayKeyOf(host), raw=o.kd===dk?o.kx:0;
   const t=Math.round(num(K.T[clamp(eraMaxOf(host),0,K.T.length-1)],0)*vipXp(S)); return {on:true,full:t,used:raw,left:Math.max(0,t-raw),rate:raw<t?1:raw<2*t?K.mid:K.over}; }
 /* src = 'kill' para a XP dos orbes de abate (passa pelo teto diário no v9); qualquer outro valor (ou nenhum) não tem teto */
 function addXp(S,n,host,src){
-  let k0=int0(n); if(V9()&&src==='kill'&&k0) k0=killCredit(S,host,k0);
+  let k0=int0(n); if(KCON()&&src==='kill'&&k0) k0=killCredit(S,host,k0);
   const k=k0, o=ensure(S), from=o.lvl; if(!k||o.lvl>=DATA.maxLevel) return {gained:0,levels:0,from,to:from,unlocked:[]};
   o.total+=k; o.xp+=k;
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }
@@ -129,7 +134,7 @@ function stage(S,host){ const o=ensure(S), T=DATA.v9.stages; if(!V9()) return {o
   return {on:true,stage:st,id:T[st].id,name:T[st].name,ready:!!nx&&lv>=nx.lvl&&fc>=nx.fc,
     next:nx?{stage:st+1,id:nx.id,name:nx.name,lvl:nx.lvl,fc:nx.fc,needLvl:Math.max(0,nx.lvl-lv),needFc:Math.max(0,Math.ceil(nx.fc-fc))}:null}; }
 function evolve(S,host){ const s0=stage(S,host); if(!s0.ready) return {ok:false,reason:s0.on?'need':'off',stage:s0.stage}; ensure(S).stg=s0.stage+1; return {ok:true,from:s0.stage,stage:s0.stage+1}; }
-const API={DATA,setV9,setCap120,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
+const API={DATA,setV9,setCap120,setKillCap,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
 root.Sys=root.Sys||{}; root.Sys.level=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

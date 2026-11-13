@@ -156,3 +156,36 @@ Depois de perder para o chefe, ou com o botão "Desafiar" apagado:
   andar mais rápido, então os números precisam ser medidos pelo QA antes de ligar.
 - **A luta é um modelo:** a curva de vitória (80% → 0%, 90% → 51%, 100% → ~100%) é o que se espera com ataque e vida subindo juntos, e bate com a
   calibração v8. Mesmo assim, precisa ser conferida com a luta real.
+
+## APROVADA (13/11) — números finais, ainda DESLIGADA
+
+O dono aprovou a proposta com dois acréscimos: montaria +2 a +3% por estrela, e o teto diário de XP de abate ligado (depois do teto, ouro e itens
+seguem normais). Simulação refeita com `node tools/sim-paredes.js --json`:
+- nível 120 com a curva 1-100 de hoje (`Sys.level.setCap120`);
+- teto de XP de abate (`Sys.level.setKillCap`);
+- montaria por estrela (`Sys.mount.setStarFlat`);
+- o equipamento vem da era da FASE onde o jogador está.
+
+| Perfil | Fim das 9 eras | Dias parado em parede | Dias abaixo de 90% da FC pedida |
+|---|---|---|---|
+| Grátis ativo | dia 180 | 29 | 7 |
+| VIP 5 | dia 139 | 19 | 18 |
+| VIP 10 | dia 121 | 17 | 14 |
+| Não forja nem evolui o pet | trava (só passa o Senhor da Era 5 no dia 207, para na fase 61) | 31 | 58 |
+
+**Paredes do grátis (Senhor da Era):** 1 dia (era 1), 2 (era 2), 2,7 (era 3) e 3 dias nas eras 4-8. O chefe do meio segura de 10 h a 2 dias.
+**Montaria +1★:** passa a dar +2,4 a +2,5% (antes +0,2%).
+
+**Exceção:** na era 5, o VIP 5 e o VIP 10 passam o Senhor da Era sem parar. Eles chegam ao nível 85 (raridade nova) antes. Nas outras eras eles param de 16 h a 3,5 dias.
+
+**Pet:** na tela de pets aprovada (17b), evoluir não dá poder na hora; libera mais níveis, e o ganho vem de alimentar depois. O Servidor mediu
+0 de FC ao evoluir, e isso é o esperado. A dica "o que fazer" mostra "alimentar" quando o pet está abaixo do teto do estágio.
+
+**Onde estão os números:** docs/balance.json, bloco `dificuldade`, com `on:false`:
+- `recFc`: as 90 FC pedidas;
+- `boss`: 32 s / 40 s e fúria ×4 aos 40 s;
+- `commons`: 50%;
+- `walls`: as paredes;
+- `killXpCap` e `mountStarFlat`: as duas regras do dono.
+
+Quem liga é o Engenheiro, depois que o QA medir no jogo real.
