@@ -59,6 +59,9 @@ const DATA={
   // Sys.stats.goLive('ults') liga ownReady das aprovadas; Sys.stats.goLive('wings') liga newWingReady das aprovadas. (Nada liga sozinho.)
   ownApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
   wingsApproved:['phoenix','ice','shadow','storm','mechanical','bone','darkmoth'],
+  // FOLHA-BASE aprovada por família (Básico→Mítico): as 7 de hoje (eras 0-6, aprovadas). Infernal (era7_ult) e celeste (era8_ult) estão no disco SEM
+  // voto, e arco/bumerangue (bow_base/boomerang_base) também: até o voto, ultOf devolve sheet null (o jogo desenha a ultimate por código) e baseReady:false.
+  baseApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma'],
   baseDelivered:['bow','boomerang'],   // folhas-base próprias entregues: bow_base (Chuva de Flechas), boomerang_base (Ciclone de Lâminas)
   ownReady:{},   // família → true quando a Arte entregar a folha própria do Lendário (assets/anim/ult/<família>_legend.png + .json)
   skillFx:[
@@ -438,8 +441,9 @@ function rollWeaponType(it,ctx,rnd){ const r=typeof rnd==='function'?rnd():Math.
 function weaponStyle(it){ const t=weaponType(it), W=DATA.weaponTypes[t]; return W.gunAtR0&&int0(it&&it.r)<=1?'gun':W.style; }
 /* ultimate da arma: {type, name, artEra, tier: base|boost|own, sheet, ownReady, fallback, boost} — só família + raridade */
 function ultOf(it){ const o=it&&typeof it==='object'?it:{r:it}, r=clamp(int0(o.r),0,DATA.ultTier.length-1), type=weaponType(o), W=DATA.weaponTypes[type], tier=DATA.ultTier[r];
-  const base=W.ult!==undefined?W.ult:(W.artEra!=null?'assets/anim/ult/era'+W.artEra+'_ult':null), ownSheet='assets/anim/ult/'+type+'_legend', ready=tier==='own'&&DATA.ownReady[type]===true;
-  return {type,name:W.name,artEra:W.artEra,style:weaponStyle(o),tier,sheet:ready?ownSheet:base,ownSheet,ownReady:ready,fallback:tier==='own'&&!ready,boost:tier==='base'||ready?null:Object.assign({},DATA.ultBoost)}; }
+  const base0=W.ult!==undefined?W.ult:(W.artEra!=null?'assets/anim/ult/era'+W.artEra+'_ult':null), baseReady=DATA.baseApproved.includes(type), base=baseReady?base0:null;   // base sem voto: ultimate por código
+  const ownSheet='assets/anim/ult/'+type+'_legend', ready=tier==='own'&&DATA.ownReady[type]===true;
+  return {type,name:W.name,artEra:W.artEra,style:weaponStyle(o),tier,sheet:ready?ownSheet:base,baseSheet:base0,baseReady,ownSheet,ownReady:ready,fallback:tier==='own'&&!ready,boost:tier==='base'||ready?null:Object.assign({},DATA.ultBoost)}; }
 function skillFx(w,kind,host){ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.skillFx.length-1), F=Object.assign({},DATA.skillFx[r],{dmgMult:1});
   if(kind==='s3'||kind==null) F.ult=ultOf(w);
   if(kind==='s1'||kind==='s2'){ F.particles=Math.round((1+(F.particles-1)/2)*100)/100; F.size=1; F.flash=false; F.shake=kind==='s2'?Math.min(F.shake,1.15):1; }

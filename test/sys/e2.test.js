@@ -997,11 +997,12 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
 
 t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era do mapa; base → Mítico reforçada → Lendário/Divino própria; arco/bumerangue',()=>{
   const T=require('../../js/sys/stats.js'), D=T.DATA;
-  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'as 9 ultimates animadas em uso');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).baseSheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'a folha-base de cada família');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6].map(e=>'assets/anim/ult/era'+e+'_ult').concat([null,null]),'infernal e celeste: base sem voto, ultimate por código');
   const it={slot:'weapon',e:2,r:0}; T.migrateItem(it); assert.strictEqual(it.wt,'sword','save antigo: família pela arte');
   it.e=6; it.look=6; T.migrateItem(it); assert.strictEqual(it.wt,'sword','gravada, não muda com a era'); assert.strictEqual(T.ultOf(it).sheet,'assets/anim/ult/era2_ult');
   assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',r}).tier),['base','base','base','boost','own','own']);
-  const M=T.ultOf({wt:'rifle',r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.ok(M.boost.size>1);
+  const M=T.ultOf({wt:'rifle',r:3}); assert.strictEqual(M.sheet,'assets/anim/ult/era5_ult'); assert.strictEqual(T.ultOf({wt:'bow',r:0}).sheet,null,'arco: base sem voto'); assert.ok(M.boost.size>1);
   const L=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L.fallback,true); assert.strictEqual(L.sheet,'assets/anim/ult/era5_ult','sem a folha própria: base reforçada'); assert.ok(L.boost);
   { const path=require('path'), fs=require('fs'), root=path.join(__dirname,'../..'); for(const k of D.ownDelivered) assert.ok(fs.existsSync(path.join(root,'assets/anim/ult/'+k+'_legend.json')),'entregue sem arquivo: '+k); assert.deepStrictEqual(Object.keys(D.ownReady),[],'nada ligado sem o voto do dono'); }
   D.ownReady.rifle=true; try{ const L2=T.ultOf({wt:'rifle',r:4}); assert.strictEqual(L2.sheet,'assets/anim/ult/rifle_legend'); assert.strictEqual(L2.boost,null); } finally { delete D.ownReady.rifle; }
