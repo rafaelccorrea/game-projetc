@@ -11,7 +11,7 @@ const PORT = 47000 + Math.floor(Math.random() * 1999);
 if (await fetch('http://127.0.0.1:' + PORT + '/json/version').then(() => true, () => false)) { console.log('porta em uso'); process.exit(3); }
 const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'qa-prof-'));
 const ch = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--remote-debugging-port=' + PORT, '--user-data-dir=' + prof, '--window-size=' + W + ',' + H, 'about:blank'], { stdio: 'ignore' });
-const bye = c => { try { ch.kill(); } catch (e) {} setTimeout(() => { try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) {} process.exit(c); }, 500); };
+const bye = c => { try { spawn('taskkill', ['/PID', String(ch.pid), '/T', '/F'], { stdio: 'ignore' }); } catch (e) {} try { ch.kill(); } catch (e) {} setTimeout(() => { try { fs.rmSync(prof, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch (e) {} process.exit(c); }, 2500); };
 setTimeout(() => { console.log('WATCHDOG 8 min'); bye(2); }, 8 * 60 * 1000);
 let ws, id = 0; const pend = {};
 for (let i = 0; i < 80 && !ws; i++) { try {
