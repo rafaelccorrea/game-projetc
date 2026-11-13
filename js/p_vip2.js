@@ -208,7 +208,7 @@ function vPrizes(){ const out=[], Y=window.Sys||{}, host=vHost(), h=vHero();
           gives:'Montaria · raridade '+vRN(def.r|0),what:rule.whole?'Montaria inteira':'Fragmentos da montaria',card:true}); }
       else if(rule.pet){ const P=Y.pet, def=P&&P.DATA&&(P.DATA.pets||[]).find(q=>q.id===rule.pet); if(!def) continue;
         const live=ndOn&&typeof P.avail==='function'&&P.avail(def,host)===true; let own=false; try{ own=!!P.ensure(S).owned[def.id]; }catch(e){}
-        out.push({key:'pet:'+def.id,kind:'pet',id:def.id,v,r:def.r|0,name:def.name,icon:def.sprite?'assets/pets/'+def.sprite+'_ref.png':vIcon('pets',def.id),own,live,canPv:live&&!!def.sprite,held:true,sprite:def.sprite||'',
+        out.push({key:'pet:'+def.id,kind:'pet',id:def.id,v,r:def.r|0,name:def.name,icon:vIcon('pets',def.id)||(def.sprite?'assets/pets/'+def.sprite+'_ref.png':null),own,live,canPv:live&&!!def.sprite,held:true,sprite:def.sprite||'',
           gives:'Pet · raridade '+vRN(def.r|0)+(def.skill&&def.skill.note?' · '+def.skill.note:''),what:rule.whole?'Pet inteiro':'Fragmentos do pet',card:true}); }
     }catch(e){} }
   /* aura do VIP: o primeiro nível em que o Sys.vip.levelInfo diz aura */
@@ -217,7 +217,7 @@ function vPrizes(){ const out=[], Y=window.Sys||{}, host=vHost(), h=vHero();
   /* fragmentos do Prismático no VIP máximo (Sys.pet.DATA.v4d.prism.vipMax; só entra no jogo com a Revisão 4 do pet) */
   try{ const P=Y.pet, pm=P&&P.DATA&&P.DATA.v4d&&P.DATA.v4d.prism&&P.DATA.v4d.prism.vipMax, def=pm&&(P.DATA.pets||[]).find(q=>q.id==='prism');
     if(pm&&def&&pm.level>=1&&pm.level<=vMax()){ const live=typeof P.avail==='function'&&P.avail(def,host)===true; let own=false; try{ const o=P.ensure(S); own=!!(o.prism&&o.prism.vipMax===true); }catch(e){}
-      out.push({key:'prism',kind:'prism',id:def.id,v:pm.level|0,r:def.r|0,name:def.name,icon:def.sprite?'assets/pets/'+def.sprite+'_ref.png':'assets/pets/pet_egg.png',own,live,canPv:live&&!!def.sprite,held:false,sprite:def.sprite||'',
+      out.push({key:'prism',kind:'prism',id:def.id,v:pm.level|0,r:def.r|0,name:def.name,icon:vIcon('pets',def.id)||(def.sprite?'assets/pets/'+def.sprite+'_ref.png':'assets/pets/pet_egg.png'),own,live,canPv:live&&!!def.sprite,held:false,sprite:def.sprite||'',
         gives:n0(pm.frags)+(def.hatchFrags?' dos '+n0(def.hatchFrags):'')+' fragmentos do pet '+def.name,what:'Fragmentos',card:false}); } }catch(e){}
   return out.sort((a,b)=>a.v-b.v); }
 const vRc=p=>V2_RC[vClamp(p.r|0,0,5)];
