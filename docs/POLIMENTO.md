@@ -40,3 +40,13 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 - Nada piscando entre os quadros e nenhum resto de recorte (verde, magenta, contorno escuro).
 - A arma sempre na mão, a asa sempre nas costas, os pés e as patas sempre no chão.
 - [ ] P16 · Bem-vindo de volta (ganho offline) · mostrar TUDO que ganhou no tempo fora antes de coletar: tempo fora, ouro, XP e níveis subidos (Nv 58 → 60), itens por raridade com imagem, ração/pedras/fragmentos com ícone; botão Coletar com os números contando · Servidor (p_intro)
+
+### Passada FINA, quadro a quadro, folhas das 6 montarias (QA, offline: folha de contato ampliada; ferramenta test/paineis fora do repo)
+Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_body.png foi aberta quadro a quadro. IDLE e RUN das 6 montarias: LIMPOS (sem sobra, sem piscada). Defeitos só nas folhas de ATAQUE (todas com 17 quadros), todos de IMAGEM (dono: Arte):
+- [ ] P10 · kael_horse_attack_body.png · quadros 2 e 6-7: braço/capa "fantasma" semitransparente borrado sobre o tronco/sela e a PONTA da lança flutuando atrás da garupa (sem cabo) = o "braço saindo de trás do cavalo" do P15; print reports/prints/pol_4_cavalo_ataque_borrao_e_ponta.png · Arte
+- [ ] P11 · kael_griffin_attack_body.png · quadro 2: borrão corrompido sobre olho/rosto e mão do Kael; quadro 12: faixa de traços horizontais picados na altura do antebraço/peito; print pol_5_grifo_ataque_borrao_rosto_e_tracos.png · Arte
+- [ ] P12 · kael_wolf_attack_body.png · quadros 1,3,5: linhas pretas riscadas (haste/guia do recorte) ao redor da mão e traços verticais sobre a armadura do lobo; quadros 9-12: franja/rastro borrado à direita da cabeça do lobo; print pol_6_lobo_ataque_tracos_pretos_e_rastro.png · Arte
+- [ ] P13 · kael_mythic_attack_body.png (Tigre de cristal) · quadros 7-12: faixa vertical CORROMPIDA (listras roxo/branco/verde) cobrindo o rosto/pescoço do tigre; quadros 2-3: borrão no tronco e um bloco preto flutuando na mão; print pol_7_tigre_ataque_faixa_corrompida_no_rosto.png · Arte
+- [ ] P14 · kael_pony_attack_body.png · quadros 7-13: mancha rosa/cinza semitransparente com borda picada sobre pescoço e crina · Arte (sem print ampliado ainda)
+- [ ] P15 · kael_wyvern_attack_body.png · quadros 8-10: mancha rosa translúcida sobre a cabeça da serpe (além do arco de golpe) · Arte (sem print ampliado ainda)
+- [ ] A VARRER: folhas kael_*_era2_t1 (com arma), pétalas 1-5 estrelas (idle_Nstar), Kael a pé nas 4 fases, pet; e CONFIRMAR NO JOGO se esses quadros aparecem (o jogo pode usar só parte dos 17 quadros).
