@@ -1,0 +1,620 @@
+<title>Eonbound Fogueira das Eras V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP V2. Fogueira das Eras V2 (PROPOSTA): nível próprio 1-60 independente da era, 9 estágios visuais pelo tema das eras, raridade e qualidade pelo nível; Brasas só jogando; cartão novo × o seu; mochila com desmontar rápido, cadeado e desfazer; introdução jogável curta. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:360px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(255,210,94,.16),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 26%,var(--night) 40%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.5);display:flex;align-items:center;gap:6px}
+.ttl img{width:28px;height:28px;flex:none}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+.sr{position:absolute;left:-9999px}
+
+.stage{position:relative;z-index:2;height:216px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:216px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
+.who i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex:none}
+.who span{overflow:hidden;text-overflow:ellipsis}
+.prevb{position:absolute;z-index:3;left:50%;top:34px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:13px;background:rgba(255,107,154,.2);border:1px solid var(--rose);font-size:11px;font-weight:900;color:#ffd6e2;white-space:nowrap;max-width:94%;overflow:hidden}
+.prevb span{overflow:hidden;text-overflow:ellipsis}
+.prevb button{flex:none;border:0;border-radius:9px;background:rgba(255,255,255,.14);height:22px;padding:0 8px;font-weight:900;font-size:11px}
+.note{position:absolute;z-index:3;left:12px;right:12px;bottom:2px;text-align:center;font-size:10px;font-weight:800;color:#cdeffd;background:rgba(5,8,28,.7);border-radius:9px;padding:3px 8px;line-height:1.3}
+.note b{color:var(--gold)}
+
+.bt{flex:none;min-width:76px;height:36px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green)}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.rose{background:linear-gradient(180deg,#ff9fbe,#e0477a);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
+.bt img{width:18px;height:18px}
+.bt svg{width:13px;height:13px}
+
+/* faixa de detalhe da prévia (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;display:flex;gap:9px;align-items:center;margin:6px 12px 0;padding:7px 9px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.det .di0{flex:none;width:44px;height:44px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.det .di0 img{position:absolute;inset:4%;width:92%;height:92%;object-fit:contain}
+.det .di{flex:1;min-width:0}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dg{font-size:11px;color:var(--green);font-weight:800;line-height:1.3}
+.dh{font-size:11px;color:var(--muted);font-weight:800;line-height:1.3}
+.dh b{color:var(--gold)}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 14px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:10px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right}
+.sec b{color:var(--gold)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.rule{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.45);font-size:11.5px;font-weight:800;color:#cdeffd;line-height:1.4;margin:0 0 4px}
+.rule svg{width:18px;height:18px;flex:none;margin-top:1px}
+.rule b{color:#fff}
+
+/* cartão do nível atual */
+.vipc{border-radius:18px;padding:10px;margin-bottom:8px;background:linear-gradient(160deg,rgba(255,210,94,.22),rgba(24,33,86,.92) 55%);border:2px solid rgba(255,210,94,.65)}
+.viph{display:flex;align-items:center;gap:10px}
+.viph img{width:52px;height:52px;flex:none}
+.viph .big{font-family:var(--fd);font-weight:400;font-size:34px;line-height:1;color:var(--gold);text-shadow:0 0 16px rgba(255,210,94,.6)}
+.viph .t{flex:1;min-width:0}
+.viph small{display:block;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.viph small b{color:var(--text)}
+.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#ffe58a,#f4a52a)}
+.prog{font-size:12px;font-weight:900;margin-top:5px;display:flex;justify-content:space-between;gap:8px}
+.prog span:last-child{color:var(--gold);flex:none}
+
+/* prêmios do VIP (4 cartões, sem rolagem para o lado) */
+.rw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.rc{position:relative;border-radius:14px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--rc) 30%,#1a2366),#0c1238);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.rc .art{width:100%;aspect-ratio:1;object-fit:contain;display:block}
+.rc .nm{font-size:10px;font-weight:900;text-align:center;line-height:1.15;min-height:24px;display:flex;align-items:center;justify-content:center}
+.rc .st{width:100%;min-height:20px;border-radius:7px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.1;padding:2px}
+.rc .st.own{background:rgba(94,240,160,.15);color:var(--green)}
+.rc .st.lock{background:rgba(255,255,255,.07);color:var(--gold)}
+.rc .ey{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:7px;background:rgba(5,8,28,.8);display:grid;place-items:center;color:#ffd6e2}
+.rc .ey svg{width:13px;height:13px}
+.rc.pv{box-shadow:0 0 0 3px var(--rose),0 0 14px rgba(255,107,154,.5)}
+
+/* seletor de nível 0-10 (grade que quebra em 2 linhas) */
+.lvls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:6px}
+.lv{position:relative;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:900;font-size:13px;color:var(--muted);padding:0;min-width:0}
+.lv small{font-size:9px;display:block;line-height:1}
+.lv.got{color:var(--text)}
+.lv.me{border:2px solid var(--gold);color:var(--gold)}
+.lv[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.lv .rd{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--rose)}
+.lvcap{grid-column:span 1;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.2}
+
+/* nível escolhido */
+.lvh{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 70%);border:1px solid rgba(255,210,94,.5)}
+.lvh b{font-family:var(--fd);font-weight:400;font-size:22px;color:var(--gold);flex:none}
+.lvh span{flex:1;min-width:0;font-size:11px;font-weight:800;color:var(--muted);line-height:1.35}
+.lvh span em{font-style:normal;color:var(--text)}
+.pk{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;min-width:0}
+.pk>img{width:34px;height:34px;object-fit:contain;flex:none}
+.pk span{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3}
+.pk span small{display:block;font-size:10px;color:var(--muted);font-weight:700}
+.pk em{font-style:normal;font-weight:900;font-size:12px;color:var(--gold);flex:none;text-align:right;max-width:46%}
+.pk .bt{height:30px;min-width:0;font-size:11px;padding:0 8px}
+.pk.nw{border-color:rgba(94,240,160,.5)}
+.pill{flex:none;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.pill.on{background:rgba(94,240,160,.15);color:var(--green)}
+.pill.off{background:rgba(255,255,255,.07);color:var(--muted)}
+
+/* tabela acumulada: Benefício | Grátis | VIP N */
+.tbl{border-radius:14px;border:1px solid var(--line);overflow:hidden;background:rgba(5,8,28,.45)}
+.tr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);align-items:center;border-bottom:1px solid rgba(130,150,255,.15);min-height:34px}
+.tr:last-child{border-bottom:0}
+.tr>span{padding:5px 7px;font-size:11px;font-weight:800;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.tr>span:nth-child(2){color:var(--muted);text-align:center}
+.tr>span:nth-child(3){text-align:center;background:rgba(255,210,94,.07);height:100%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.tr.hd{min-height:28px;background:rgba(61,79,184,.35)}
+.tr.hd>span{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.tr .up{color:var(--gold)}
+.tr .no{color:var(--muted)}
+
+/* rodapé fixo: só leva à Loja */
+.foot{position:relative;z-index:5;flex:none;padding:8px 12px 14px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%);display:flex;flex-direction:column;gap:4px}
+.foot .bt{width:100%;height:48px;font-size:15px}
+.foot small{text-align:center;font-size:10px;font-weight:800;color:var(--muted)}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+/* ===== FOGUEIRA (acrescentado ao padrão da VIP V2) ===== */
+.stage{height:220px}
+#stc{height:220px}
+.hint2{position:absolute;z-index:3;left:50%;bottom:6px;transform:translateX(-50%);font-size:11px;font-weight:900;padding:4px 10px;border-radius:10px;background:rgba(5,8,28,.78);border:1px solid var(--line2);white-space:nowrap}
+.tapzone{position:absolute;z-index:3;border:0;background:none;border-radius:50%;padding:0}
+.fpan{position:relative;z-index:3;margin:4px 12px 0;padding:9px 10px;border-radius:16px;background:linear-gradient(160deg,rgba(255,138,60,.22),rgba(24,33,86,.94) 60%);border:2px solid rgba(255,164,80,.6)}
+.frow{display:flex;align-items:center;gap:8px}
+.frow .lv{flex:none;text-align:center;font-weight:900;font-size:9.5px;color:var(--muted);line-height:1}
+.frow .lv b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;color:#ffb36b;line-height:1}
+.frow .mi{flex:1;min-width:0}
+.frow .mi b{display:block;font-size:14px}
+.frow .mi small{display:block;font-size:10.5px;color:var(--muted);font-weight:800;line-height:1.3}
+.odds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-top:6px}
+.odds span{border-radius:7px;padding:3px 0;text-align:center;font-size:9.5px;font-weight:900;background:rgba(5,8,28,.55);border:1px solid var(--rc,var(--line));line-height:1.15}
+.odds span small{display:block;font-size:8.5px;color:var(--muted)}
+.odds span.lock{opacity:.4}
+.big2{display:flex;gap:6px;margin-top:8px}
+.big2 .bt{flex:1;height:44px;font-size:14px;min-width:0}
+.brasa{display:inline-flex;align-items:center;gap:3px}
+.brasa svg{width:15px;height:15px}
+.card{position:absolute;inset:0;z-index:30;background:rgba(3,5,18,.72);display:flex;align-items:flex-end;justify-content:center;padding:0 10px 16px;animation:fade .2s ease-out}
+.card>div{width:100%;border-radius:20px;background:#141c4a;border:2px solid var(--rc,var(--line2));padding:12px;box-shadow:0 -6px 30px rgba(0,0,0,.5);animation:up .25s ease-out}
+.cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.it{border-radius:14px;padding:8px 6px;text-align:center;background:rgba(5,8,28,.55);border:2px solid var(--rc,var(--line));min-width:0}
+.it img{width:62px;height:62px;object-fit:contain;display:block;margin:0 auto 4px}
+.it b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it small{display:block;font-size:10px;font-weight:900;color:var(--rc,var(--muted))}
+.it em{display:block;font-style:normal;font-size:11px;font-weight:900;margin-top:3px}
+.it.empty{opacity:.55}
+.arrow{font-family:var(--fd);font-size:18px;color:var(--muted)}
+.delta{text-align:center;font-family:var(--fd);font-size:22px;margin:8px 0 2px}
+.delta.up{color:var(--green)}.delta.dn{color:#ff9f9f}
+.card .row{display:flex;gap:6px;margin-top:8px}
+.card .row .bt{flex:1;height:46px;font-size:14px;min-width:0}
+.card .note2{text-align:center;font-size:10.5px;color:var(--muted);font-weight:800;margin-top:6px}
+.sw2{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px;border-radius:12px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px;min-width:0}
+.sw2 span{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3}
+.sw2 span small{display:block;font-size:10.5px;color:var(--muted)}
+.tg{flex:none;width:46px;height:26px;border-radius:13px;border:0;background:rgba(255,255,255,.15);position:relative;padding:0}
+.tg::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.tg[aria-pressed="true"]{background:var(--green)}.tg[aria-pressed="true"]::after{left:23px}
+.seg2{display:flex;gap:4px;flex:none}
+.seg2 button{height:28px;min-width:34px;border-radius:9px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:11px;padding:0 6px}
+.seg2 button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.src{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font-size:11.5px;font-weight:800;padding:8px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--line)}
+.src span:nth-child(even){color:var(--gold);text-align:right}
+.bag{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:6px}
+.bi{position:relative;border-radius:11px;background:rgba(5,8,28,.55);border:2px solid var(--rc,var(--line));padding:3px 2px;text-align:center;min-width:0}
+.bi img{width:34px;height:34px;object-fit:contain;display:block;margin:0 auto}
+.bi small{display:block;font-size:8.5px;font-weight:900;white-space:nowrap;overflow:hidden}
+.bi .dl{color:#ff9f9f}.bi .du{color:var(--green)}
+.bi .lk{position:absolute;right:1px;top:1px;width:18px;height:18px;border-radius:6px;border:0;background:rgba(5,8,28,.8);padding:0;display:grid;place-items:center}
+.bi .lk svg{width:12px;height:12px}
+.bi.locked{box-shadow:0 0 0 2px var(--gold) inset}
+.qd{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.qd .bt{flex:1 1 140px;height:38px;font-size:11.5px;min-width:0;padding:0 6px}
+.lockbox{border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.04);border:1px dashed var(--line2);font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:6px}
+/* introdução */
+.intro{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end;background:linear-gradient(180deg,rgba(3,5,18,.15),rgba(3,5,18,.88) 60%);padding:18px 16px 22px;animation:fade .3s}
+.intro h2{font-family:var(--fd);font-weight:400;font-size:26px;margin:0 0 6px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.intro p{margin:0 0 14px;font-size:14px;font-weight:700;line-height:1.5;color:#e6ebff}
+.intro .row{display:flex;gap:8px}
+.intro .row .bt{flex:1;height:46px;font-size:15px}
+.intro .skip{position:absolute;right:14px;top:14px;height:32px;padding:0 12px;border-radius:11px;border:1px solid var(--line2);background:rgba(5,8,28,.7);font-weight:900;font-size:12px}
+.steps{position:absolute;z-index:6;left:14px;top:56px;display:flex;gap:4px}
+.steps i{width:22px;height:5px;border-radius:3px;background:rgba(255,255,255,.2)}
+.steps i.on{background:var(--gold)}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.3}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar para a batalha"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">Fogueira das Eras</div>
+          <div class="cur" title="Brasas"><span class="brasa" id="bIc"></span><span id="bra">0</span><span class="sr">Brasas</span></div>
+          <div class="cur"><img src="a/coin.png" alt=""><span id="gold">0</span><span class="sr">ouro</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="440" role="img" aria-label="Seu herói com a arma na mão e o pet na frente, ao lado da Fogueira das Eras; toque na fogueira para forjar um item"></canvas>
+          <button class="tapzone" id="tapF" aria-label="Alimentar a fogueira com 1 Brasa" style="left:220px;top:90px;width:110px;height:120px"></button>
+          <div id="ov"></div>
+        </div>
+        <div id="fp"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Fogueira das Eras (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">PROPOSTA, desligada até o voto do dono. A fogueira tem NÍVEL PRÓPRIO (1 a 60), independente da era: dá para chegar na Medieval com a fogueira de pedras. Ela evolui em 9 estágios com o tema das eras, e na evolução há um clarão e "A Fogueira evoluiu". O NÍVEL decide a raridade e a qualidade do que ela forja; a ERA da peça é a sua, sempre dentro dos portões. Cada Brasa = 1 item, no cartão "novo × o seu", com Equipar ou Desmontar. Forjar e desmontar enchem a barra; com ela cheia, sobe pagando ouro.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Momento" style="margin-top:8px"><button data-scn="intro" aria-pressed="false">Primeira vez</button><button data-scn="med" aria-pressed="true">Medieval, fogueira 3</button><button data-scn="near" aria-pressed="false">Prestes a evoluir</button><button data-scn="n60" aria-pressed="false">Fogueira 38, automático</button></div>
+      <p class="sub" style="margin-top:8px">Primeira vez: a introdução jogável (~60 s, pode pular). Medieval com a fogueira 3: o exemplo do dono, na era Medieval com a fogueira de pedras. Prestes a evoluir: nível 21 com a barra cheia; "Subir" leva à Caldeira a vapor, com o clarão. Fogueira 38: o Reator de plasma com o automático.</p>
+    </div>
+    <div class="box">
+      <h2>Proposta: estágios e chances</h2>
+      <ul>
+        <li>Estágios por nível: 1 Pedras, 5 Bronze, 10 Ferreiro, 16 Pólvora, 22 Vapor, 29 Elétrico, 36 Plasma, 44 Infernal, 52 Celestial (até o nível 60)</li>
+        <li>Chances pelo nível: Raro desde o 1 (8% + 1,2 por nível, até 35%), Épico do 8 (até 30%), Mítico do 20 (até 15%), Lendário do 35 (até 6%). O Básico nunca fica abaixo de 14%. O portão do jogador corta o que passar</li>
+        <li>Qualidade: média de estrelas = 1 + nível ÷ 15 (5 estrelas no 60)</li>
+        <li>Subir: XP de forjar (1 por Brasa) e de desmontar; barra = 10 + 3 × nível; custo em ouro = 1.500 × 1,17^(nível−1)</li>
+        <li>Automático no nível 10 (Forja de ferreiro): lote 1/3/5, equipar o melhor, desmontar abaixo do filtro. É de todos</li>
+        <li>Brasas só jogando: a cada 20 abates +1, fase +3, chefe +5, baú +5, missões do dia +20; guarda até 300. NUNCA à venda (sem pacote, loja, VIP ou anúncio)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Arte que falta (pela tabela de custos, docs/FLUXO_ARTE.md)</h2>
+      <ul>
+        <li>9 estágios × 1 imagem parada da fogueira (imagem-guia): grátis no Google AI Studio, ou ~2 créditos cada no Higgsfield = 18</li>
+        <li>9 laços animados de chama (vídeo → folha): Kling grátis 2.5 Turbo (2 por dia → ~5 dias, 0 crédito), ou Higgsfield seedance ~4 cada = 36</li>
+        <li>Clarão da evolução, faíscas, brilho e ícone de cada estágio: por CÓDIGO e recorte (0)</li>
+        <li>Total pelo caminho barato: 0 crédito (~5 dias). Pelo Higgsfield: ~54 créditos + 20% de refação ≈ 65. Hoje o palco usa placeholders desenhados em código</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: fogueira maior, automático mais cedo"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (iguais à Loja V2): W = arma Lâmina Rúnica (assets/weapons/meta.json), B = corpo sem arma de cada skin ---------- */
+const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"n":12,"fps":12,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"fy":242},"kaia":{"n":12,"fps":12,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243},"kael_demon":{"n":12,"fps":12,"g":[[117.58,207.42,42.99,0.7314,-0.6819,-1.92,1.92,3.64,0],[117.75,207.85,42.88,0.7328,-0.6804,-5.41,5.41,3.69,0],[117.62,208.26,42.27,0.74,-0.6726,-5.41,5.41,3.69,0],[120.15,205.33,41.5,0.7489,-0.6627,-5.41,5.41,3.69,0],[121.81,202.96,41.63,0.7475,-0.6643,-8.41,8.41,3.74,0],[121.94,202.75,42.42,0.7382,-0.6746,-5.41,5.41,3.69,0],[122.01,203.26,43,0.7313,-0.682,-5.41,5.41,3.69,0],[122.45,203.53,42.85,0.7332,-0.6801,-8.51,8.51,3.69,0],[122.32,204.03,42.17,0.7412,-0.6713,-8.71,8.71,3.69,0],[122.26,203.24,41.44,0.7496,-0.6618,-5.41,5.41,3.69,0],[122.39,202.34,41.8,0.7455,-0.6665,-5.41,5.41,3.69,0],[125.98,199.14,42.62,0.7358,-0.6772,-9.79,9.79,3.69,0]],"back":{"x":95.8,"y":161,"a":0,"s":1},"fy":242},"kaia_demon":{"n":12,"fps":12,"g":[[114.75,196.04,40.81,0.7569,-0.6536,-11.6,11.6,4.05,0],[114.74,196.7,40.93,0.7555,-0.6552,-11.71,11.71,4.05,0],[114.69,196.24,40.61,0.7591,-0.6509,-11.43,11.43,4.05,0],[115.3,196.17,40.46,0.7609,-0.6489,-10.55,10.55,4.05,0],[115.4,196.45,40.62,0.759,-0.6511,-10.38,10.38,4.11,0],[115.77,195.69,40.96,0.7551,-0.6556,-10.27,10.27,4.05,0],[115.57,196.56,40.73,0.7578,-0.6524,-10.27,10.27,4.11,0],[114.64,196.74,40.41,0.7614,-0.6483,-11.43,11.43,4.11,0],[114.7,195.98,40.73,0.7578,-0.6524,-11.6,11.6,4.11,0],[114.85,195.6,40.97,0.755,-0.6557,-11.6,11.6,4.05,0],[111.95,199.79,40.64,0.7588,-0.6514,-5.44,5.44,4.11,0],[119.75,193.33,40.4,0.7615,-0.6482,-4.66,4.66,4.11,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"fy":243}}};
+
+/* ---------- FOGUEIRA (PROPOSTA; nada disto existe no código ainda) ---------- */
+const RN=['Básico','Raro','Épico','Mítico','Lendário'], RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434'], RM=[1,1.7,3,5.5,10];
+/* pesos de raridade por nível da fogueira; o portão do jogador (cap) corta o que passar */
+/* NÍVEL DA FOGUEIRA (1-60), independente da era do jogador (dono, 14/11). 9 ESTÁGIOS pelo tema das eras; o estágio só muda o visual.
+   O que ela forja depende do NÍVEL: raridade e qualidade. A ERA da peça é a do jogador, sempre dentro dos portões (Sys.loot.maxAllowedR). */
+const STAGES=[
+ {from:1, name:'Fogueira de pedras',   era:'Pré-História', flame:['#ff5a1e','#ffaa32','#fff0aa'], base:'stones'},
+ {from:5, name:'Braseiro de bronze',   era:'Antiguidade',  flame:['#ff7a1e','#ffc84a','#fff6c8'], base:'bronze'},
+ {from:10,name:'Forja de ferreiro',    era:'Medieval',     flame:['#ff4a1e','#ff9a32','#ffe0a0'], base:'anvil'},
+ {from:16,name:'Fornalha de pólvora',  era:'Pólvora',      flame:['#e8321e','#ff8a2a','#ffd27a'], base:'furnace'},
+ {from:22,name:'Caldeira a vapor',     era:'Industrial',   flame:['#ff6a2a','#ffb04a','#ffffff'], base:'boiler'},
+ {from:29,name:'Forno elétrico',       era:'Moderna',      flame:['#2a8aff','#7ad0ff','#e8f8ff'], base:'electric'},
+ {from:36,name:'Reator de plasma',     era:'Futurista',    flame:['#8a4aff','#3ae8ff','#e8ffff'], base:'reactor'},
+ {from:44,name:'Forja infernal',       era:'Submundo',     flame:['#a01020','#ff3a1a','#ffb07a'], base:'infernal'},
+ {from:52,name:'Altar celestial',      era:'Celestial',    flame:['#ffd25e','#fff4c8','#ffffff'], base:'altar'}];
+const MAXF=60;
+const stageOf=lv=>{ let i=0; for(let k=0;k<STAGES.length;k++) if(lv>=STAGES[k].from) i=k; return i; };
+/* chances por nível (proposta): Raro desde o 1, Épico do 8, Mítico do 20, Lendário do 35 */
+function weights(lv){ const R=Math.min(35,8+lv*1.2), E=lv>=8?Math.min(30,(lv-7)*1.1):0, M=lv>=20?Math.min(15,(lv-19)*0.6):0, L=lv>=35?Math.min(6,(lv-34)*0.24):0; return [Math.max(14,100-R-E-M-L),R,E,M,L]; }
+/* qualidade (estrelas 1-5 da peça): média sobe com o nível */
+const starsAvg=lv=>Math.min(5,1+lv/15);
+function odds(lv,cap){ const w=weights(lv).map((x,r)=>r<=cap?x:0), t=w.reduce((a,b)=>a+b,0); return w.map(x=>x/t*100); }
+/* subir: a XP vem de forjar (1 por Brasa) e de desmontar; com a barra cheia, sobe pagando OURO */
+const upCost=lv=>Math.round(1500*Math.pow(1.17,lv-1));
+/* itens de EXEMPLO da era 2 (nomes do Sys.loot e da troca aprovada) */
+const SLOTS=[
+ {k:'weapon',n:'Arma',names:['Espada Enferrujada','Espada de Aço','Espada Longa Azul','Espada de Cristal','Excalibur'],img:r=>'a/iw_era2_'+['t0','raro','t1','mitico','t2'][r]+'.png',base:42},
+ {k:'armor',n:'Colete',names:['Gibão Acolchoado','Cota de Malha','Peitoral de Cavaleiro','Armadura Rúnica','Armadura do Rei Dragão'],img:r=>'a/era2_vest'+(r>=2?'_t1':'')+'.png',base:30},
+ {k:'hat',n:'Elmo',names:['Capuz de Lã','Elmo de Ferro','Elmo de Cavaleiro','Grande Elmo Rúnico','Coroa do Rei Dragão'],img:r=>'a/era2_helmet'+(r>=2?'_t1':'')+'.png',base:18},
+ {k:'gloves',n:'Luvas',names:['Luvas de Lã','Luvas de Cota','Manoplas de Ferro','Manoplas Rúnicas','Manoplas do Dragão'],img:r=>'a/era2_gloves'+(r>=2?'_t1':'')+'.png',base:16},
+ {k:'boots',n:'Botas',names:['Botas de Lã','Botas de Couro','Escarpes de Ferro','Escarpes Rúnicos','Botas do Paladino Solar'],img:r=>'a/era2_boots'+(r>=2?'_t1':'')+'.png',base:16},
+ {k:'necklace',n:'Colar',names:['Cordão de Ferro','Medalhão de Ferro','Relicário do Templário','Amuleto Rúnico','Graal Pendente'],img:r=>'a/era2_necklace'+(r>=2?'_t1':'')+'.png',base:14}];
+const slotOf=k=>SLOTS.find(s=>s.k===k);
+let SEQ=1;
+function mkItem(k,r,lvl,q,st){ const s=slotOf(k), stars=st||1; return {id:SEQ++,slot:k,r,lvl,stars,name:s.names[r],img:s.img(r),fc:Math.round(s.base*RM[r]*(1+lvl*0.08)*(q||1)*(0.8+stars*0.08)*10)}; }
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const dec=(v,d)=>v.toFixed(d).replace('.',',').replace(/,0+$/,'');
+const ab=v=>v>=1e6?dec(v/1e6,1)+' mi':v>=1e4?dec(v/1e3,1)+' mil':n(v);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SV={brasa:'<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 01-12 0c0-3 2-5 3-7 0 2 1 3 2 3-1-3 0-6 1-8z" fill="#ff8a3c" stroke="#7a2a06" stroke-width="1.3"/><path d="M12 11c.6 2 3 3 3 6a3 3 0 01-6 0c0-1.6 1-2.6 1.6-3.6.2 1 .7 1.6 1.4 1.6-.4-1.6 0-3 0-4z" fill="#ffe07a"/></svg>'};
+
+/* ---------- estado ---------- */
+const SCN={intro:{lvl:1,flv:1,bra:0,gold:1200,cap:1,first:true},
+  med:{lvl:26,flv:3,bra:30,gold:42000,cap:2,era:'Medieval'},
+  near:{lvl:45,flv:21,bra:60,gold:900000,cap:3,era:'Medieval',full:true},
+  n60:{lvl:62,flv:38,bra:220,gold:6.5e6,cap:3,auto:true,era:'Medieval'}};
+let S={hero:'kael'}, card=null;
+function reset(key){ const c=SCN[key], hero=S.hero||'kael';
+  S={hero,scn:key,skin:'def',wing:'angel',weapon:['era2_t1',2,'Espada Longa Azul'],lvl:c.lvl,flv:c.flv,fxp:0,bra:c.bra,gold:c.gold,cap:c.cap,
+    eq:{},bag:[],bagMax:30,undo:null,stones:0,era:c.era||'Pré-História',auto:{on:!!c.auto,batch:5,equip:true,sellBelow:2},evolve:null,ground:[],fx:[],flare:0,intro:c.first?{step:0,kills:0,en:[]}:null,log:[]};
+  const lv=Math.max(1,Math.round(c.lvl*0.9)); if(!c.first){ S.eq.weapon=mkItem('weapon',Math.min(2,c.cap),lv); S.eq.armor=mkItem('armor',1,lv); S.eq.hat=mkItem('hat',1,lv); S.eq.gloves=mkItem('gloves',0,lv); S.eq.boots=mkItem('boots',1,lv); S.eq.necklace=mkItem('necklace',0,lv); }
+  else { S.eq.weapon=mkItem('weapon',0,1,0.8); }
+  if(c.full) S.fxp=fxpNeed(S.flv);
+  if(!c.first){ const lv=Math.max(1,Math.round(c.lvl*0.9)); for(let i=0;i<9;i++){ const sl=SLOTS[i%SLOTS.length].k; S.bag.push(mkItem(sl,i%4===3?2:i%3===0?1:0,lv,0.8+Math.random()*0.3,1+(i%3))); } if(c.full) S.bag.push(mkItem('weapon',3,lv,1,4)); }
+  card=null; }
+const fcAll=()=>Object.values(S.eq).reduce((a,it)=>a+(it?it.fc:0),0)+S.lvl*60;
+const fxpNeed=lv=>10+lv*3;
+const hn=()=>S.hero==='kael'?'Kael':'Kaia';
+
+/* ---------- PALCO ---------- */
+const IM={}, IMS={};
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function stgErr(what,err){ const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar '+what+' ('+(err&&err.message||err)+')'; } }
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+/* linha do pescoço por quadro (js/stage.js neckRows): a cabeça é redesenhada por cima da lâmina */
+const NECK={};
+function neckOf(u,im,nf){ if(NECK[u]) return NECK[u]; const fw=im.naturalWidth/nf, fh=im.naturalHeight, fs=fw/256, out=[];
+  try{ const W=Math.round(fw), c=document.createElement('canvas'); c.width=im.naturalWidth; c.height=fh; const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+    for(let i=0;i<nf;i++){ const d=g.getImageData(Math.round(i*fw),0,W,fh).data; let top=Math.round(fh*.3);
+      scan: for(let y=0;y<fh;y++) for(let x=0;x<W;x++){ const k=(y*W+x)*4; if(d[k+3]>200&&d[k]>140&&d[k+1]<70&&d[k+2]<70){ top=y; break scan; } }
+      out.push(top/fs); } }
+  catch(e){ out.length=0; for(let i=0;i<nf;i++) out.push(77); }
+  return NECK[u]=out; }
+const AN_RIDE={kael_phoenix:{x:163.6,y:141,a:16.5,s:0.654}};   /* mediana de back[] em assets/anim/mounts/kael_giant_phoenix_idle_body.json */
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+const sheetOf=sk=>sk==='def'?'a/body_'+S.hero+'.png':'a/body_'+S.hero+'_demon.png';
+function look(){ const L={skin:S.skin,mount:null,pet:'wolf',aura:false}; const R=S.pv; if(!R) return L;
+  if(R.id==='demon') L.skin='demon'; else if(R.id==='phoenix') L.mount='phoenix'; else if(R.id==='wyvern') L.pet='wyvern'; else if(R.id==='aura') L.aura=true; else if(R.id==='prism') L.pet='prism';
+  return L; }
+function wings(x,ax,ay,b,k,t){ const WA=WING_AN[S.wing]; if(!WA||!b) return; const Li=img('a/wg_'+S.wing+'_L.png'), Ri=img('a/wg_'+S.wing+'_R.png');
+  if(!(ok(Li)&&ok(Ri))) return; const sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+  x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+  x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+  x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+  x.restore(); }
+/* herói A PÉ: corpo sem arma + a arma equipada no punho de cada quadro; asa nas costas (a skin Demônio já traz a asa na arte, ela vence o item) */
+function drawHero(x,t,L,hx){
+  const sid=L.skin==='def'?S.hero:S.hero+'_demon', B=D.B[sid], url=sheetOf(L.skin), sh=img(url); if(!B||!ok(sh)) return;
+  const fw=sh.naturalWidth/B.n, fh=sh.naturalHeight, fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  const x0=hx-128*k, y0=GY-B.fy*k;
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(hx-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  if(L.skin==='def'&&B.back) wings(x,x0+B.back.x*k,y0+B.back.y*k,B.back,k,t);
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sh,fi*fw,0,fw,fh,0,0,256,256);
+  const wk=S.weapon[0], W=D.W[wk], ws=W?wSpr(wk,S.weapon[1]):null; let drawW=null;
+  if(ws){ const grip=W.grip||[0.5,0.78], kk=256*0.5/Math.max(W.w,W.h), dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW(); fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);
+      const nk=neckOf(url,sh,B.n)[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,256,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+const GY=200, HK=0.62, HX=120, PCX=60, FX=275;
+function drawPet(x,t){ const I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) return; const fi=((Math.floor(t*12)%12)+12)%12, fw=I.naturalWidth/12, fh=I.naturalHeight, kp=112/512;
+  x.drawImage(I,fi*fw,0,fw,fh,PCX-224*kp,GY+6-307*kp,512*kp,352*kp); }
+/* FOGUEIRA POR ESTÁGIO, desenhada em código (PLACEHOLDER até a Arte entregar os 9 estágios): a base muda pelo tema da era, as chamas pela paleta;
+   brilha mais ao forjar e, na evolução, faz um clarão com o nome do estágio novo */
+function drawBase(x,t,st,cx,cy){ const b=st.base;
+  const stone=(rx,ry,c)=>{ x.fillStyle=c; x.beginPath(); x.ellipse(rx,ry,8,5,0,0,7); x.fill(); };
+  if(b==='stones'){ for(let i=0;i<9;i++){ const a=Math.PI+i*Math.PI/8; stone(cx+Math.cos(a)*38,cy+2-Math.sin(a)*6,i%2?'#6b6f7a':'#8a8e99'); }
+    x.save(); x.strokeStyle='#5a3216'; x.lineWidth=7; x.lineCap='round'; x.beginPath(); x.moveTo(cx-26,cy); x.lineTo(cx+20,cy-14); x.moveTo(cx+26,cy); x.lineTo(cx-20,cy-14); x.stroke(); x.restore(); }
+  else if(b==='bronze'){ x.fillStyle='#8a5a22'; x.fillRect(cx-4,cy-2,8,10); x.fillStyle='#c98a3a'; x.beginPath(); x.ellipse(cx,cy-6,40,12,0,0,Math.PI); x.fill(); x.strokeStyle='#ffd27a'; x.lineWidth=2; x.beginPath(); x.ellipse(cx,cy-6,40,6,0,0,7); x.stroke(); }
+  else if(b==='anvil'){ x.fillStyle='#4a4f5a'; x.fillRect(cx-40,cy-34,80,40); x.fillStyle='#2a2d34'; x.fillRect(cx-28,cy-26,56,24); x.fillStyle='#5a5f6a'; x.fillRect(cx+30,cy-6,26,8); x.fillRect(cx+38,cy-14,10,8); }
+  else if(b==='furnace'){ x.fillStyle='#3a3a3a'; x.beginPath(); x.moveTo(cx-38,cy+4); x.lineTo(cx-30,cy-44); x.lineTo(cx+30,cy-44); x.lineTo(cx+38,cy+4); x.fill(); x.fillStyle='#1a1a1a'; x.beginPath(); x.arc(cx,cy-14,16,Math.PI,0); x.fill(); x.fillStyle='#6a4a2a'; x.fillRect(cx-6,cy-60,12,18); }
+  else if(b==='boiler'){ x.fillStyle='#8a6a3a'; x.beginPath(); x.ellipse(cx,cy-24,34,30,0,0,7); x.fill(); x.strokeStyle='#ffd27a'; x.lineWidth=2; x.beginPath(); x.arc(cx+20,cy-40,7,0,7); x.stroke(); x.fillStyle='#5a4020'; x.fillRect(cx-4,cy-70,8,20);
+    x.save(); x.fillStyle='rgba(255,255,255,.5)'; for(let i=0;i<3;i++){ const p=((t*0.5+i/3)%1); x.globalAlpha=(1-p)*0.6; x.beginPath(); x.arc(cx+Math.sin(t+i)*5,cy-74-p*40,6+p*8,0,7); x.fill(); } x.restore(); }
+  else if(b==='electric'){ x.fillStyle='#d8dde6'; x.fillRect(cx-36,cy-46,72,50); x.fillStyle='#1a2a3a'; x.fillRect(cx-26,cy-38,52,30); x.fillStyle='#3ae8ff'; x.fillRect(cx+20,cy-44,8,4); }
+  else if(b==='reactor'){ x.strokeStyle='#8a4aff'; x.lineWidth=4; for(let i=0;i<2;i++){ x.beginPath(); x.ellipse(cx,cy-26,30+i*8,10+i*3,t*(i?-1:1),0,7); x.stroke(); } x.fillStyle='#2a2a4a'; x.fillRect(cx-30,cy-2,60,8); }
+  else if(b==='infernal'){ x.fillStyle='#2a0a0a'; x.beginPath(); x.moveTo(cx-40,cy+4); x.lineTo(cx-34,cy-30); x.lineTo(cx-24,cy-12); x.lineTo(cx-10,cy-40); x.lineTo(cx,cy-16); x.lineTo(cx+10,cy-40); x.lineTo(cx+24,cy-12); x.lineTo(cx+34,cy-30); x.lineTo(cx+40,cy+4); x.fill(); x.strokeStyle='#ff3a1a'; x.lineWidth=1.5; x.stroke(); }
+  else if(b==='altar'){ x.fillStyle='#f4f0e6'; x.fillRect(cx-40,cy-12,80,16); x.fillRect(cx-30,cy-24,60,12); x.fillStyle='#ffd25e'; x.fillRect(cx-40,cy-14,80,3);
+    x.save(); x.globalCompositeOperation='lighter'; x.strokeStyle='rgba(255,240,180,.5)'; x.lineWidth=2; x.beginPath(); x.arc(cx,cy-60,22+Math.sin(t*2)*2,0,7); x.stroke(); x.restore(); } }
+function drawFire(x,t){ const lit=!(S.intro&&S.intro.step<3), k=1+Math.min(1,S.flare)*0.7, cx=FX, cy=GY-4, st=STAGES[stageOf(S.flv)], fl=st.flame;
+  x.save(); x.globalAlpha=.35; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(cx,cy+6,48,8,0,0,7); x.fill(); x.restore();
+  drawBase(x,t,st,cx,cy);
+  if(!lit){ x.save(); x.fillStyle='rgba(180,180,190,.35)'; for(let i=0;i<4;i++){ const p=((t*0.3+i*0.25)%1); x.beginPath(); x.arc(cx+Math.sin(t+i)*6,cy-14-p*50,5+p*6,0,7); x.globalAlpha=(1-p)*0.4; x.fill(); } x.restore(); return; }
+  const fy=st.base==='anvil'||st.base==='furnace'||st.base==='electric'?cy-16:st.base==='boiler'?cy-10:st.base==='altar'?cy-24:cy, g=x.createRadialGradient(cx,fy-24,6,cx,fy-24,90*k); g.addColorStop(0,fl[1]+'73'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.beginPath(); x.arc(cx,fy-24,90*k,0,7); x.fill();
+  const flame=(w,h,c,ph)=>{ x.fillStyle=c; x.beginPath(); x.moveTo(cx-w,fy-4); for(let i=0;i<=8;i++){ const u=i/8, yy=fy-4-Math.sin(u*Math.PI)*h*(0.85+0.15*Math.sin(t*9+u*7+ph)); x.lineTo(cx-w+u*2*w, yy); } x.closePath(); x.fill(); };
+  x.save(); x.globalCompositeOperation='lighter'; x.globalAlpha=.8; flame(22*k,58*k,fl[0],0); x.globalAlpha=.85; flame(15*k,44*k,fl[1],1.7); x.globalAlpha=.95; flame(8*k,30*k,fl[2],3.1); x.globalAlpha=1;
+  for(let i=0;i<10;i++){ const s2=((i*7919)%997)/997, p=((t*0.7+s2)%1); x.fillStyle=fl[1]; x.globalAlpha=1-p; x.beginPath(); x.arc(cx-20+s2*40+Math.sin(t*3+i)*5,fy-30-p*90*k,1.4+1.5*(1-p),0,7); x.fill(); } x.restore();
+  /* evolução: clarão branco e anel que abre */
+  const E=S.evolve; if(E){ const a=(t-E.t); if(a<1.6){ x.save(); x.globalCompositeOperation='lighter'; x.fillStyle='rgba(255,255,240,'+Math.max(0,0.7-a*0.5).toFixed(3)+')'; x.fillRect(0,0,390,220);
+      x.strokeStyle='rgba(255,230,160,'+Math.max(0,1-a/1.6).toFixed(3)+')'; x.lineWidth=4; x.beginPath(); x.arc(cx,fy-30,20+a*140,0,7); x.stroke(); x.restore(); } } }
+/* item no chão: brilho na cor da raridade e etiqueta +FC se for melhor */
+function drawGround(x,t){ for(const g of S.ground){ const u=Math.min(1,(t-g.t)/0.6), sx=g.sx!=null?g.sx:FX, sy=g.sx!=null?GY-40:GY-60, ex=g.x, ey=GY-14, k2=1-u, px=k2*k2*sx+2*k2*u*((sx+ex)/2)+u*u*ex, py=k2*k2*sy+2*k2*u*(GY-140)+u*u*ey, im=img(g.it.img);
+    x.save(); x.globalCompositeOperation='lighter'; const gr=x.createRadialGradient(px,py,2,px,py,30); gr.addColorStop(0,RC[g.it.r]+'aa'); gr.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=gr; x.beginPath(); x.arc(px,py,30,0,7); x.fill();
+    if(g.it.r>=3){ x.fillStyle=RC[g.it.r]+'55'; x.fillRect(px-4,py-120,8,120); } x.restore();
+    if(ok(im)){ const bob=u>=1?Math.sin(t*3)*2:0; x.drawImage(im,px-17,py-17+bob,34,34); }
+    if(u>=1&&g.delta>0){ x.save(); x.font='900 12px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle='#5ef0a0'; x.strokeText('+FC',px,py-24); x.fillText('+FC',px,py-24); x.restore(); } } }
+/* introdução: lagartos da Pré-História (assets/enemies/era0_e0.png), andam até o herói e caem */
+function drawIntroEnemies(x,t){ const I=S.intro; if(!I) return; const L=img('a/en0_e0.png'); if(!ok(L)) return;
+  for(const e of I.en){ if(e.dead&&t-e.dt>0.5) continue; const a=e.dead?1-(t-e.dt)/0.5:1, sh=e.hit&&t-e.hit<0.15?Math.sin(t*90)*3:0;
+    x.save(); x.globalAlpha=Math.max(0,a); x.translate(e.x+sh,GY+4); x.drawImage(L,-36,-68,72,72); x.restore(); } }
+function drawFx(x,t){ S.fx=S.fx.filter(p=>t-p.t<1.2); for(const p of S.fx){ const a=(t-p.t)/1.2; x.save(); x.globalAlpha=1-a; x.font='900 '+(p.big?16:13)+'px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle=p.c; x.strokeText(p.s,p.x,p.y-a*30); x.fillText(p.s,p.x,p.y-a*30); x.restore(); } }
+let lastT=0;
+function draw(t){ if(!S.eq) return; const dt=Math.max(0,Math.min(0.1,t-lastT)); lastT=t; S.t=t; if(S.flare>0) S.flare=Math.max(0,S.flare-dt*1.5);
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,220);
+  try{ stepIntro(t); }catch(err){ stgErr('a introdução',err); }
+  try{ drawFire(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('a fogueira',err); }
+  try{ drawIntroEnemies(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('os lagartos',err); }
+  try{ drawHero(x,t,{skin:'def'},HX); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o herói',err); }
+  try{ drawPet(x,t); }catch(err){ stgErr('o pet',err); }
+  try{ drawGround(x,t); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); stgErr('o item no chão',err); }
+  try{ drawFx(x,t); }catch(err){ stgErr('os números',err); } }
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+function fx(s,c,xx,yy,big){ S.fx.push({s,c,x:xx,y:yy,t:S.t||0,big}); }
+
+/* ---------- forjar ---------- */
+function roll(){ const o=odds(S.flv,S.cap), u=Math.random()*100; let r=0, acc=0; for(let i=0;i<5;i++){ acc+=o[i]; if(u<acc){ r=i; break; } }
+  const k=SLOTS[Math.floor(Math.random()*SLOTS.length)].k, sa=starsAvg(S.flv), st=Math.max(1,Math.min(5,Math.round(sa+(Math.random()-0.5)*1.6))); return mkItem(k,r,Math.max(1,Math.round(S.lvl*0.9)),0.9+Math.random()*0.2,st); }
+function deltaOf(it){ const cur=S.eq[it.slot]; return it.fc-(cur?cur.fc:0); }
+function forge(){ if(S.bra<=0){ toast('Sem Brasas: elas vêm de abates, fases, chefes, baú e missões'); return; } if(card||S.ground.length) return;
+  S.bra--; addFxp(1); S.flare=1.3; const it=roll(); S.ground.push({it,t:S.t||0,x:205+Math.random()*30,delta:deltaOf(it)}); full(true);
+  setTimeout(()=>{ openCard(it); },650); }
+function openCard(it){ card=it; renderCard(); }
+function closeCard(){ card=null; S.ground=[]; renderCard(); full(true); }
+function equip(it){ const old=S.eq[it.slot], f0=fcAll(); S.eq[it.slot]=it; const df=fcAll()-f0; fx('FC '+(df>=0?'+':'')+ab(df),df>=0?'#5ef0a0':'#ff9f9f',HX,GY-140,true); if(old) dismantle(old,true); }
+/* DESMONTAR devolve: ouro (pela FC e raridade), pedras de forja (Épico+: raridade − 1), 1 Brasa (Mítico+), XP da fogueira (2 + 3 × raridade) */
+const refundOf=it=>({gold:Math.round(it.fc*3*(1+it.r)),stones:it.r>=2?it.r-1:0,bra:it.r>=3?1:0,xp:2+it.r*3});
+function dismantleMany(list,why){ if(!list.length) return null; const tot={gold:0,stones:0,bra:0,xp:0};
+  for(const it of list){ const r=refundOf(it); for(const k in tot) tot[k]+=r[k]; } S.gold+=tot.gold; S.stones+=tot.stones; S.bra+=tot.bra; addFxp(tot.xp);
+  S.undo={items:list.slice(),tot,why,t:S.t||0}; return tot; }
+function dismantle(it,silent){ const tot=dismantleMany([it],'um'); if(!silent&&tot) fx('+'+ab(tot.gold)+' ouro','#ffd25e',FX,GY-120); }
+const totTxt=t=>'+'+ab(t.gold)+' ouro'+(t.stones?', +'+t.stones+' pedras de forja':'')+(t.bra?', +'+t.bra+' Brasa'+(t.bra>1?'s':''):'');
+/* GUARDAR na mochila; cheia (30): desmonta sozinha a PIOR destrancada, com aviso */
+function keep(it){ S.bag.push(it); if(S.bag.length>S.bagMax){ const cand=S.bag.filter(x=>!x.lock&&x!==it).sort((a,b)=>a.fc-b.fc)[0]||S.bag.filter(x=>!x.lock)[0]; if(cand){ S.bag=S.bag.filter(x=>x!==cand); const t=dismantleMany([cand],'cheia'); toast('Mochila cheia: desmontei '+cand.name+' ('+totTxt(t)+')'); } } }
+/* DESMONTAR RÁPIDO em 1 toque: abaixo de uma raridade, ou tudo pior que o seu (FC menor que o equipado no mesmo espaço). Item trancado nunca. */
+function quick(mode,r){ const pick=S.bag.filter(it=>!it.lock&&(mode==='below'?it.r<r:deltaOf(it)<0)); if(!pick.length){ toast('Nada para desmontar'); return; }
+  S.bag=S.bag.filter(it=>!pick.includes(it)); const t=dismantleMany(pick,mode); toast('Desmontei '+pick.length+': '+totTxt(t)); full(true); }
+function undo(){ const U=S.undo; if(!U) return; S.gold-=U.tot.gold; S.stones-=U.tot.stones; S.bra=Math.max(0,S.bra-U.tot.bra); S.fxp=Math.max(0,S.fxp-U.tot.xp); for(const it of U.items) S.bag.push(it); S.undo=null; toast('Desfeito: '+U.items.length+' de volta à mochila'); full(true); }
+function addFxp(v){ if(S.flv>=MAXF) return; S.fxp=Math.min(fxpNeed(S.flv),S.fxp+v); }
+function levelUp(){ if(S.flv>=MAXF) return; if(S.fxp<fxpNeed(S.flv)){ toast('Forje mais para encher a barra (faltam '+(fxpNeed(S.flv)-S.fxp)+' de XP)'); return; } const c=upCost(S.flv); if(S.gold<c){ toast('Falta ouro'); return; }
+  const st0=stageOf(S.flv); S.gold-=c; S.fxp=0; S.flv++; S.flare=1; const st1=stageOf(S.flv);
+  if(st1!==st0){ S.flare=2.2; S.evolve={t:S.t||0,name:STAGES[st1].name}; toast('A Fogueira evoluiu: '+STAGES[st1].name+'!'); } else toast('Fogueira nível '+S.flv); full(true); }
+function autoRun(){ if(S.flv<10) return; const N=Math.min(S.auto.batch,S.bra); if(!N){ toast('Sem Brasas'); return; } let eq=0, sold=0, kept=0, best=-1;
+  for(let i=0;i<N;i++){ S.bra--; addFxp(1); const it=roll(); best=Math.max(best,it.r); if(S.auto.equip&&deltaOf(it)>0){ equip(it); eq++; } else if(it.r<S.auto.sellBelow){ dismantle(it,true); sold++; } else { keep(it); kept++; } }
+  S.flare=1.5; S.log.unshift({N,eq,sold,kept,best}); toast('Forjou '+N+': '+eq+' equipado'+(eq===1?'':'s')+', '+sold+' desmontado'+(sold===1?'':'s')+', '+kept+' guardado'+(kept===1?'':'s')); full(true); }
+
+/* ---------- telas ---------- */
+function renderTop(){ $('#bIc').innerHTML=SV.brasa; $('#bra').textContent=n(S.bra); $('#gold').textContent=ab(S.gold); }
+function renderFP(){ const o=odds(S.flv,S.cap), on=!(S.intro&&S.intro.step<3); if(!on){ $('#fp').innerHTML=''; return; }
+  const si=stageOf(S.flv), st=STAGES[si], nx=STAGES[si+1], need=fxpNeed(S.flv), fullBar=S.fxp>=need, top=S.flv>=MAXF;
+  $('#fp').innerHTML=`<div class="fpan"><div class="frow"><span class="lv">NÍVEL<b>${S.flv}</b></span><span class="mi"><b>${esc(st.name)}</b><small>estágio ${si+1} de 9 (tema ${esc(st.era)})${nx?' · evolui no nível '+nx.from+': '+esc(nx.name):' · estágio final'} · você está na era ${esc(S.era)}</small></span></div>
+    <div class="bar" style="margin-top:6px"><i style="width:${top?100:Math.min(100,S.fxp/need*100).toFixed(1)}%;background:linear-gradient(90deg,#ff8a3c,#ffe07a)"></i></div><div class="prog" style="font-size:10.5px"><span>XP da fogueira ${top?'máximo':S.fxp+'/'+need}</span><span>qualidade média ${dec(starsAvg(S.flv),1)} estrelas</span></div>
+    <div class="odds">${o.map((p,r)=>`<span class="${r>S.cap?'lock':''}" style="--rc:${RC[r]}">${RN[r]}<small>${r>S.cap?'portão':dec(p,p<10?1:0)+'%'}</small></span>`).join('')}</div>
+    <div class="big2"><button class="bt" data-act="forge" ${S.bra>0?'':'disabled'}>Forjar 1 <span class="brasa">${SV.brasa}</span></button>${S.flv>=10&&S.auto.on?`<button class="bt" data-act="auto">Automático ×${S.auto.batch}</button>`:`<button class="bt ${fullBar&&!top?'':'off'}" data-act="up">${top?'Nível máximo':fullBar?'Subir: '+ab(upCost(S.flv))+' de ouro':'Forje para encher'}</button>`}</div></div>`; }
+function renderBody(keep){ const b=$('#body'), sc=b.scrollTop; if(S.intro&&S.intro.step<3){ b.innerHTML='<p class="hint" style="text-align:center;margin-top:20px">Introdução: siga os passos no palco.</p>'; return; }
+  const autoBox=S.flv>=10?`<div class="sw2"><span>Automático<small>Forja em lote; equipa o que tiver mais FC; desmonta abaixo do filtro</small></span><button class="tg" data-tg="on" aria-pressed="${S.auto.on}" aria-label="Automático"></button></div>
+    <div class="sw2"><span>Por toque</span><span class="seg2">${[1,3,5].map(k=>`<button data-batch="${k}" aria-pressed="${S.auto.batch===k}">${k}</button>`).join('')}</span></div>
+    <div class="sw2"><span>Equipar o melhor sozinho</span><button class="tg" data-tg="equip" aria-pressed="${S.auto.equip}" aria-label="Equipar o melhor"></button></div>
+    <div class="sw2"><span>Desmontar abaixo de</span><span class="seg2">${[1,2,3].map(r=>`<button data-sell="${r}" aria-pressed="${S.auto.sellBelow===r}" style="color:${RC[r]}">${RN[r]}</button>`).join('')}</span></div>`
+    :`<div class="lockbox">Automático abre no nível 10 da fogueira (Forja de ferreiro) (faltam ${10-S.flv}). Até lá, cada toque mostra o item para você escolher.</div>`;
+  const LK='<svg viewBox="0 0 24 24" fill="none" stroke="#ffd25e" stroke-width="2.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>', UL='<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 017.5-2"/></svg>';
+  const bagH=`<div class="sec"><span>Mochila ${S.bag.length}/${S.bagMax}</span><span>cheia: desmonta a pior destrancada</span></div>
+    <div class="qd"><button class="bt off" data-q="worse">Desmontar os piores que o seu</button>${[1,2,3].map(r=>`<button class="bt off" data-q="below" data-r="${r}">Abaixo de ${RN[r]}</button>`).join('')}</div>
+    ${S.undo?`<div class="qd"><button class="bt" data-q="undo">Desfazer: ${S.undo.items.length} item${S.undo.items.length>1?'s':''} (${totTxt(S.undo.tot)})</button></div>`:''}
+    <div class="bag">${S.bag.map(it=>{ const d=deltaOf(it); return `<div class="bi ${it.lock?'locked':''}" style="--rc:${RC[it.r]}"><img src="${it.img}" alt=""><small>${'★'.repeat(it.stars||1)}</small><small class="${d>0?'du':'dl'}">${d>0?'+':''}${ab(d)}</small><button class="lk" data-lock="${it.id}" aria-pressed="${!!it.lock}" aria-label="${it.lock?'Destrancar':'Trancar'} ${esc(it.name)}">${it.lock?LK:UL}</button></div>`; }).join('')}</div>
+    <p class="hint">Cadeado: o item nunca é desmontado (nem no rápido, nem no automático, nem com a mochila cheia). Desmontar devolve ouro, XP da fogueira, pedras de forja (Épico+) e 1 Brasa (Mítico+). Você tem ${n(S.stones)} pedras de forja.</p>`;
+  b.innerHTML=bagH+`<div class="sec"><span>Automático</span><span>de todos, não é VIP</span></div>${autoBox}
+    ${S.flv>=10&&S.auto.on?`<div class="big2" style="margin-top:0"><button class="bt ${S.fxp>=fxpNeed(S.flv)?'':'off'}" data-act="up">Subir para o nível ${S.flv+1}: ${ab(upCost(S.flv))} de ouro</button></div>`:''}
+    <div class="sec"><span>Os 9 estágios</span><span>só o visual muda</span></div>
+    <div class="src">${STAGES.map((x,i)=>`<span style="${i===stageOf(S.flv)?'color:var(--gold)':''}">${i+1}. ${esc(x.name)}</span><span>nível ${x.from}</span>`).join('')}</div>
+    <div class="sec"><span>De onde vêm as Brasas</span><span>só jogando</span></div>
+    <div class="src"><span>A cada 20 abates</span><span>+1</span><span>Fase vencida</span><span>+3</span><span>Chefe</span><span>+5</span><span>Baú de toque</span><span>+5</span><span>Missões do dia</span><span>+20</span><span>Guarda no máximo</span><span>300</span></div>
+    <p class="hint" style="margin-top:8px">Brasa nunca é vendida: nem na loja, nem em pacote, nem no VIP. O nível da fogueira melhora as raridades até o portão do seu nível e da sua era.</p>`;
+  b.scrollTop=keep?sc:0; }
+function renderCard(){ const ov=document.getElementById('cardov'); if(ov) ov.remove(); if(!card) return; const it=card, cur=S.eq[it.slot], d=deltaOf(it), d2=document.createElement('div');
+  d2.className='card'; d2.id='cardov'; d2.style.setProperty('--rc',RC[it.r]);
+  d2.innerHTML=`<div><div class="cmp"><div class="it" style="--rc:${RC[it.r]}"><img src="${it.img}" alt=""><b>${esc(it.name)}</b><small>NOVO · ${RN[it.r]}</small><em>FC ${ab(it.fc)}</em></div><span class="arrow">×</span>
+    ${cur?`<div class="it" style="--rc:${RC[cur.r]}"><img src="${cur.img}" alt=""><b>${esc(cur.name)}</b><small>O SEU · ${RN[cur.r]}</small><em>FC ${ab(cur.fc)}</em></div>`:`<div class="it empty"><b>${esc(slotOf(it.slot).n)}</b><small>vazio</small></div>`}</div>
+    <div class="delta ${d>=0?'up':'dn'}">${d>=0?'+':''}${ab(d)} FC</div>
+    <div class="row"><button class="bt off" data-c="keep">Guardar</button><button class="bt off" data-c="sell">Desmontar (+${ab(Math.round(it.fc*3*(1+it.r)))} ouro)</button><button class="bt ${d>0?'':'off'}" data-c="equip">Equipar</button></div>
+    <div class="note2">${d>0?'Mais forte que o seu: equipe!':'O seu é melhor: desmonte para ganhar ouro e XP da fogueira'}</div></div>`;
+  scr.appendChild(d2); }
+function full(keep){ renderTop(); renderFP(); renderBody(keep); renderOv(); }
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2200); }
+function go(where){ const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${esc(where)}</div></div><div class="navb"><p>No jogo, volta para <b>${esc(where)}</b>.</p><button class="bt" data-x="navback" style="height:44px;min-width:200px">Voltar para a Fogueira</button></div>`; scr.appendChild(d); }
+
+/* ---------- INTRODUÇÃO JOGÁVEL (~60 s; pular em qualquer passo) ---------- */
+const STORY=[['O relógio quebrado','O seu avô guardava um relógio que atravessa as eras. Ele quebrou, e as peças caíram em 9 eras diferentes.'],['O portal','Cada era tem um Senhor que guarda uma peça. Comece pela Pré-História: os lagartos já vêm aí.']];
+function renderOv(){ const o=$('#ov'), I=S.intro; let h='';
+  if(I){ h+=`<div class="steps">${[0,1,2,3,4].map(i=>`<i class="${i<=I.step?'on':''}"></i>`).join('')}</div>`;
+    if(I.step===2&&!S.ground.length) h+=`<div class="hint2">A batalha é automática: o herói ataca sozinho</div>`;
+    if(I.step===2&&S.ground.length&&!card) h+=`<div class="hint2">Caiu um item! Toque nele para pegar</div>`;
+    if(I.step===3&&!card&&!S.ground.length) h+=`<div class="hint2">A fogueira acendeu: toque nela para forjar com 1 Brasa</div>`; }
+  else if(!card&&S.bra>0) h+=`<div class="hint2">Toque na fogueira para forjar</div>`;
+  o.innerHTML=h; renderIntro(); }
+function renderIntro(){ const old=document.getElementById('introov'); if(old) old.remove(); const I=S.intro; if(!I||I.step>1) return; const s=STORY[I.step], d=document.createElement('div'); d.className='intro'; d.id='introov';
+  d.innerHTML=`<button class="skip" data-i="skip">Pular</button><h2>${esc(s[0])}</h2><p>${esc(s[1])}</p><div class="row"><button class="bt" data-i="next">${I.step===1?'Começar':'Continuar'}</button></div>`; scr.appendChild(d); }
+function stepIntro(t){ const I=S.intro; if(!I||I.step!==2) return;
+  if(!I.en.length&&I.kills===0&&!I.spawned){ I.spawned=true; for(let i=0;i<3;i++) I.en.push({x:400+i*70,hp:1,dead:false,lt:t}); }
+  for(const e of I.en){ if(!e.dead){ e.x=Math.max(HX+70,e.x-(t-(e.lt||t))*40); } e.lt=t; }
+  if(!I.nextHit) I.nextHit=t+1.2;
+  if(t>=I.nextHit){ const e=I.en.find(e=>!e.dead&&e.x<=HX+140); if(e){ e.hit=t; e.hp-=0.5; fx('-'+(8+Math.floor(Math.random()*4)),'#fff',e.x,GY-80); if(e.hp<=0){ e.dead=true; e.dt=t; I.kills++;
+        if(I.kills===1){ const it=mkItem('weapon',1,1); S.ground.push({it,t,x:e.x-20,sx:e.x,delta:deltaOf(it),intro:true}); } } } I.nextHit=t+0.6; }
+  if(I.kills>=3&&!I.done2){ I.done2=true; } renderOvLite(); }
+let ovKey='';
+function renderOvLite(){ const k=S.intro?S.intro.step+'|'+S.ground.length+'|'+!!card:''; if(k!==ovKey){ ovKey=k; renderOv(); } }
+function introNext(){ const I=S.intro; if(!I) return; I.step++;
+  if(I.step===3){ S.bra+=3; S.flare=1.6; toast('A Fogueira das Eras acendeu! +3 Brasas'); }
+  if(I.step>=5){ endIntro(); return; } full(false); }
+function endIntro(){ S.intro=null; S.ground=[]; card=null; renderCard(); toast('Introdução feita. Fase 1!'); full(false); }
+
+/* ---------- cliques ---------- */
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.i==='skip'){ endIntro(); return; }
+  if(d.i==='next'){ introNext(); return; }
+  if(b.id==='tapF'){ const I=S.intro; if(I&&I.step<3) return; if(S.ground.length&&!card){ openCard(S.ground[0].it); return; } forge(); if(I&&I.step===3) I.forged=true; return; }
+  if(d.c){ const it=card; if(d.c==='equip'){ equip(it); } else if(d.c==='keep'){ keep(it); } else dismantle(it); const I=S.intro; closeCard();
+    if(I&&I.step===2){ introNext(); } else if(I&&I.step===3&&I.forged){ I.step=4; setTimeout(()=>{ if(S.intro&&S.intro.step===4){ endIntro(); } },900); full(false); }
+    return; }
+  if(d.act==='forge'){ forge(); if(S.intro&&S.intro.step===3) S.intro.forged=true; return; }
+  if(d.act==='up'){ levelUp(); return; }
+  if(d.act==='auto'){ autoRun(); return; }
+  if(d.tg){ S.auto[d.tg]=!S.auto[d.tg]; full(true); return; }
+  if(d.batch){ S.auto.batch=+d.batch; full(true); return; }
+  if(d.sell){ S.auto.sellBelow=+d.sell; full(true); return; }
+  if(d.q==='worse'){ quick('worse'); return; } if(d.q==='below'){ quick('below',+d.r); return; } if(d.q==='undo'){ undo(); return; }
+  if(d.lock){ const it=S.bag.find(x=>x.id===+d.lock); if(it){ it.lock=!it.lock; toast(it.lock?'Trancado: nunca será desmontado':'Destrancado'); full(true); } return; } });
+/* tocar no item caído (intro e normal): toque no palco perto do item abre o cartão */
+$('#stage').addEventListener('click',e=>{ if(e.target.closest('button')) return; if(S.ground.length&&!card){ openCard(S.ground[0].it); } });
+function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scn===S.scn)); }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.hero){ S.hero=d.hero; syncSide(); full(true); } else if(d.scn){ reset(d.scn); syncSide(); renderCard(); full(false); } });
+S.hero='kael'; reset('med'); full(false);
+setTimeout(()=>{ for(const h of ['kael','kaia']) img('a/body_'+h+'.png'); img('a/en0_e0.png'); for(const s of SLOTS) for(let r=0;r<5;r++) img(s.img(r)); },600);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-fogueira-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Fogueira das Eras V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
