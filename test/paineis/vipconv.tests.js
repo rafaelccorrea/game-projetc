@@ -82,7 +82,21 @@ var VIPCONV_TESTS=(function(){
     return forgeEnv(0,function(o){ render(); const h=bad(V_TEST.innerHTML), lt=Sys.vip.conv(S,'autoForge').lockText;
       if(h.indexOf('data-x="autogo"')<0) throw new Error('forja automática escondida'); if(h.indexOf(lt)<0) throw new Error('sem "'+lt+'"'); if(h.indexOf('data-x="goal"')>=0) throw new Error('seletor de alvo aparece trancado');
       const t0=o.tries, s0=o.stones; fc('autogo'); runAll(); if(o.tries!==t0||o.stones!==s0||XF.auto) throw new Error('forjou sem VIP');
-      if(String(XF.toast).indexOf(lt)<0||/R\$/.test(XF.toast)) throw new Error('aviso: '+XF.toast); return 'trancada com '+lt+'; aviso "'+XF.toast.slice(0,50)+'"'; }); };
+      /* E3: a explicação abre DENTRO da linha trancada; nenhum aviso flutuante (cobria o rótulo "Arma +0: Sem aura") */
+      if(XF.toast) throw new Error('aviso flutuante na forja trancada: '+XF.toast); const h2=bad(V_TEST.innerHTML), m=h2.match(/id="f_locktip"[^>]*>([^<]*)</);
+      if(!m||m[1].indexOf(lt)<0||m[1].indexOf('Loja')<0) throw new Error('linha trancada sem a explicação: '+(m&&m[1])); if(h2.indexOf('f-toast')>=0) throw new Error('aviso flutuante no HTML');
+      fc('autogo'); if(V_TEST.innerHTML.indexOf('id="f_locktip"')>=0) throw new Error('segundo toque não recolheu'); return 'trancada com '+lt+'; explicação na linha: "'+m[1].slice(0,50)+'"'; }); };
+
+  /* E1 + E2 (QA, 288 px): em tela estreita a FC aparece inteira (Aparência vira só o retrato de 46 px) e a linha do contador não tem texto cortado */
+  T['estreito: FC inteira e linha da mochila sem corte']=function(){
+    return withVip(0,function(){ const h=bad(gear()), W=V_TEST.clientWidth, slim=W<360, hint=h.indexOf('arraste o item até o espaço')>=0, chip=h.indexOf('data-x="bagvip"')>=0;
+      const m=h.match(/data-x="(?:look|goskins)"[^>]*style="width:(\d+)px/); if(!m) throw new Error('botão Aparência não achado'); const bw=+m[1];
+      const row=W-24-16-2-6, fcBox=row-bw, need=4+16+24+6+Math.max(90,String(fcTxt(heroFC())).length*15);   /* borda + respiro + raio + vão + o maior entre o rótulo (9 px) e o valor (Lilita 25 px, ~15 px por letra) */
+      if(slim){ if(bw!==46) throw new Error('Aparência com '+bw+' px em tela de '+W); if(fcBox<need) throw new Error('caixa da FC com '+fcBox+' px, precisa de '+need); if(hint) throw new Error('dica de arrastar na tela estreita (corta)');
+        if(/Coleção de skins/.test(h)&&!/display:none;flex-direction:column/.test(h)) throw new Error('texto da skin visível no botão estreito'); }
+      else { if(bw<168) throw new Error('largura normal mudou: Aparência com '+bw+' px'); if(chip&&hint) throw new Error('chip e dica na mesma linha (a dica corta)'); }
+      if(chip&&h.indexOf('flex-wrap:wrap')<0) throw new Error('linha do contador sem quebra');
+      if(!/aria-label="(Aparência|Skin equipada)/.test(h)) throw new Error('botão sem aria-label'); return W+' px: Aparência '+bw+' px, caixa da FC '+fcBox+' px (precisa '+need+'); chip='+chip+', dica='+hint; }); };
 
   T['forja automática: seletor de alvo respeita mínimo e teto']=function(){
     if(!xVipConvOn()) return 'sem a conveniência';

@@ -1188,4 +1188,11 @@ desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP 
 - Resultados: `node --check` nos arquivos editados OK; `conflitos.js js/p_*.js` sem conflito; `run.js` "TUDO OK (154 verificações)"; `smoke.js` 390: 162 OK,
   0 falha; `smoke_all.js` 390 e 288: 169 OK, 0 FALHA, mais o erro de timer do p_intro acima; `flows.js`: fluxos 1, 2, 3 e 5 OK, fluxo 4 FALHA (35/36,
   "vitrine: as 10 skins aprovadas em breve (sem arte)"): vem da skin Kaia Arlequina com arte (commit 6e7a137, `Sys.appearance`), não destes arquivos.
-- Largura 288: a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.
+- CORREÇÕES E1-E3 do QA (docs/POLIMENTO.md, prints pol_39 a pol_41), sem navegador:
+  E2: abaixo de 360 px (`fcSlim`) o botão Aparência vira só o retrato (46 px, olho no canto, texto completo no aria-label) e a caixa da FC fica com
+  194 px em 288 (antes 72); de 360 px para cima nada muda. E1: a linha do contador quebra (`flex-wrap`) e a dica "arraste o item até o espaço" sai
+  quando há chip ou a tela é estreita (era ela que cortava). E3: a forja trancada não usa mais o aviso flutuante; o toque abre a explicação dentro
+  da própria linha (`XF.lockTip`, segundo toque recolhe). Teste novo "estreito: FC inteira e linha da mochila sem corte" e o da forja trancada
+  refeito. `run.js` TUDO OK (154); `flows.js` "fluxos duros OK" (o fluxo 4 voltou a passar, 36/36); fumaça 390 e 288: 170 OK, 0 FALHA (segue o erro
+  de timer do p_intro). Para o QA: em 360 a 390 px a caixa da FC tem ~88 px úteis; um valor longo ("999,9 mil") pode não caber (já era assim).
+- Largura 288 (nota antiga, resolvida pelo QA: 5 por linha, 1 px de folga): a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.

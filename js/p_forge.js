@@ -94,7 +94,7 @@ const fMaxLvl=()=>Sys.stats.DATA.maxItemLevel;
 function fToastHtml(msg){ return `<div class="f-toast" role="status" style="position:absolute;left:0;right:0;top:150px;display:flex;justify-content:center;pointer-events:none;z-index:6"><span style="padding:8px 16px;border-radius:12px;background:rgba(14,10,7,.94);border:2px solid #ff8a5c;font-size:14px;font-weight:900;color:#f6ecdf;box-shadow:0 0 16px rgba(255,138,92,.45);max-width:250px;text-align:center;line-height:1.2">${esc2(msg)}</span></div>`; }
 function fToast(msg){ XF.toast=msg; XF.toastT=Date.now(); const el=document.getElementById('f_toast'); if(el) el.innerHTML=fToastHtml(msg); }
 function fOn(){ return typeof view!=='undefined'&&view==='forge'; }
-function fStop(){ clearTimeout(XF.t1); clearTimeout(XF.t2); clearTimeout(XF.t3); XF.busy=false; XF.fx=null; XF.auto=null; }
+function fStop(){ clearTimeout(XF.t1); clearTimeout(XF.t2); clearTimeout(XF.t3); XF.busy=false; XF.fx=null; XF.auto=null; XF.lockTip=false; }
 /* ---------- FORJA AUTOMÁTICA (conveniência do VIP 'autoForge': Sys.vip.conv; nível e texto "VIP n" vêm do módulo) ----------
    Repete a MESMA tentativa do botão "Fortalecer" (fForge: Sys.forge.attempt, mesmos custos, sons e avisos), uma por passo com pausa, até o alvo
    escolhido, até faltar pedra/ouro, até o teto, ou até o jogador tocar em "Parar". Nunca passa do alvo. Sem o nível de VIP nada roda: só explica.
@@ -105,7 +105,7 @@ function fGoal(sl){ const n=Sys.forge.level(S,sl), mx=fGoalMax(); let g=XF.goal|
 const fPl=(n,a,b)=>n0(n)+' '+(n===1?a:b);
 function fAutoEnd(why,quiet){ const A=XF.auto; if(!A) return; clearTimeout(XF.t3); A.run=false; A.why=why; A.to=Sys.forge.level(S,A.slot); if(!quiet&&fOn()&&!XF.busy) render(); }
 function fAutoStart(){ const cv=fAutoConv(), sl=XF.slot; if(!cv) return;
-  if(!cv.on){ snd('ui_tap'); fToast('Forja automática: libera no '+cv.lockText+'. O VIP sobe com o total gasto na Loja.'); return; }
+  if(!cv.on){ snd('ui_tap'); XF.lockTip=!XF.lockTip; render(); return; }   /* trancada: a explicação abre DENTRO da própria linha (o aviso flutuante cobria o rótulo da aura: defeito E3 do QA) */
   const n=Sys.forge.level(S,sl), goal=fGoal(sl); XF.auto=null;
   if(!(goal>n)){ fForge(); return; }                    /* no máximo ou no teto: o mesmo aviso do botão comum */
   XF.auto={slot:sl,goal,from:n,to:n,tries:0,wins:0,stones:0,gold:0,run:true,why:''}; fAutoStep(); }
@@ -254,8 +254,9 @@ function scrForge(){
       :(AU?`<div id="f_autosum" role="status" style="display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-radius:12px;background:#0e0a07;border:1px solid #5fd068;line-height:1.2">
         <span style="font-size:12px;font-weight:900;color:#f6ecdf">Forja automática: ${AWHY[AU.why]||'Parou'} · +${AU.from} → +${AU.to}</span>
         <span style="font-size:11px;font-weight:800;color:#c9b9a2">${fPl(AU.tries,'tentativa','tentativas')}, ${fPl(AU.wins,'acerto','acertos')} · gasto: ${fPl(AU.stones,'pedra','pedras')}${AU.gold?' e '+kf(AU.gold)+' de ouro':''}</span></div>`:'')
-      +(!cv.on?`<button data-x="autogo" aria-label="Forja automática até o nível escolhido, trancada: ${esc2(cv.lockText)}. Toque para saber mais" style="min-height:44px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;text-align:left;box-sizing:border-box">
-          <span class="lil" style="flex:1;min-width:0;font-size:14px;line-height:1.1">Forjar até o nível escolhido</span>
+      +(!cv.on?`<button data-x="autogo" aria-expanded="${XF.lockTip?'true':'false'}" aria-label="Forja automática até o nível escolhido, trancada: ${esc2(cv.lockText)}. Toque para saber mais" style="min-height:44px;display:flex;align-items:center;gap:8px;padding:${XF.lockTip?6:0}px 10px;border-radius:12px;border:2px solid ${XF.lockTip?'#8a7458':'#4a3a2b'};background:#33271d;color:#c9b9a2;text-align:left;box-sizing:border-box">
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span class="lil" style="font-size:14px;line-height:1.1">Forjar até o nível escolhido</span>
+            ${XF.lockTip?`<span id="f_locktip" role="status" style="font-size:11px;font-weight:800;color:#e8dccb;line-height:1.2">Forja automática: libera no ${esc2(cv.lockText)}. O VIP sobe com o total gasto na Loja.</span>`:''}</span>
           <span style="flex:none;display:flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:13px;border:1px solid #8a7458;background:#241a12;color:#ffc94a;font-size:12px;font-weight:900;white-space:nowrap">${SVG_LOCK(14,'#ffc94a')}${esc2(cv.lockText)}</span></button>`
         :stop?'':`<div role="group" aria-label="Forja automática" style="display:flex;align-items:center;gap:6px">
           ${stepB(-1,'Alvo menor',goal<=n+1)}<span class="lil" id="f_goal" role="status" aria-label="Alvo: mais ${goal}" style="min-width:40px;flex:none;text-align:center;font-size:20px;color:#ffc94a">+${goal}</span>${stepB(1,'Alvo maior',goal>=fGoalMax())}
