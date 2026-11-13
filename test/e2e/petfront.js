@@ -9,17 +9,19 @@
      5. Vitória e Derrota abertas (B.res), com e sem montaria: o pet continua desenhado, por último, PARADO (nunca o quadro congelado do golpe)
      6. DERROTA (regra do dono, 13/11): o pet fica parado, por último, pés no chão, e desliza para ALÉM da arma caída (não tampa o herói nem a arma: caixas
         conferidas nas eras 0, 2 e 3, pet de estágio 1 e 3, Kael e Kaia); a montaria FICA parada ATRÁS do herói caído (imagem dela sozinha, assets/mounts/mount_*,
-        respirando com as patas no chão; entra em fade cruzado com a folha montada; nunca o ícone de contorno branco); sem imagem, sai correndo; a asa segue sem desenho
+        respirando com as patas no chão; entra em fade cruzado com a folha montada; nunca o ícone de contorno branco); sem imagem, sai correndo; a asa acompanha o corpo caído (item 10)
      7. CHOCAGEM DE OVO: o pet equipado continua desenhado e o ovo fica AO LADO dele, à frente, dentro da tela, sem encostar no herói; só o pet que ainda
         está dentro do próprio ovo (1º ovo) espera nascer
      9. GANCHOS DE DEBUG do QA (dbgDieAt, dbgHatchAt, dbgLvUp): existem com ?debug=1, congelam o instante pedido e soltam
+    10. ASA NA MORTE: desenhada em todos os quadros da queda (Kael, Kaia e 2 skins), antes do corpo, recortada na linha do chão; nunca asa dupla (Kael Anjo:
+        pasta sem asa + asa do item; skins de asa própria: sem asa do item); folha sem âncora regravada (pastas de fase) ou com quadro não ok = sem asa
      8. APARÊNCIA (js/p_look.js): destaque (a pé e montado) e grade desenham o pet, por último
    Só lê arquivos do jogo, nunca grava. Sai com código 1 se algo falhar. */
 const VERBOSE = process.argv.includes('-v');
 const boot = require('./sandbox'), errStr = boot.errStr;
 let fail = 0, n = 0;
 const check = (name, ok, det) => { n++; if (!ok) fail++; if (VERBOSE || !ok) console.log('  ' + (ok ? 'ok    ' : 'FALHA ') + name + (det && (!ok || VERBOSE) ? ' · ' + det : '')); };
-const RE = { ref: /assets\/mounts\/mount_/, park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /wing/, weapon: /assets\/weapons\// };
+const RE = { ref: /assets\/mounts\/mount_/, park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /equip\/wing_/, weapon: /assets\/weapons\// };
 const first = (L, re) => L.findIndex(s => re.test(s));
 const last = (L, re) => { for (let i = L.length - 1; i >= 0; i--) if (re.test(L[i])) return i; return -1; };
 /* o pet vem depois de TODAS as partes pedidas (must = tem de existir no desenho; also = se existir, também fica antes do pet) */
@@ -74,7 +76,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       { const xs = [1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 0.8].map(d => { ev('B.deadT=' + d + '; 1'); return ev('petPos().x'); }); ev('B.deadT=0.8; 1');   /* deslize: começa onde estava, vai sem pulo, termina no lugar */
         const step = Math.max(...xs.slice(1).map((v, i) => Math.abs(v - xs[i]))), mono = xs.every((v, i) => !i || (v - xs[i - 1]) * (xs[xs.length - 1] - xs[0]) >= -1e-9);
         check(tag + ' DERROTA: o pet DESLIZA (começa na posição de vivo, sem teleporte, sem ir e voltar)', Math.abs(xs[0] - dp.px) < 0.01 && Math.abs(xs[xs.length - 1] - dp.tx) < 0.01 && mono && step < Math.abs(dp.tx - dp.px) * 0.6 + 0.01, xs.map(v => v.toFixed(1)).join(' → ')); }
-      check(tag + ' DERROTA: asa não é desenhada (sem âncora confiável no corpo deitado ficaria solta no ar)', last(L, RE.wing) < 0, 'asa em ' + last(L, RE.wing));
+      { const dI = L.findIndex(s => /_die_body/.test(s)); check(tag + ' DERROTA: a ASA é desenhada (âncora da folha da morte), antes do herói caído' + (must.includes('mount') ? ' e depois da montaria parada' : ''), first(L, RE.wing) >= 0 && last(L, RE.wing) < dI && (first(L, RE.ref) < 0 || last(L, RE.ref) < first(L, RE.wing)), 'asa ' + first(L, RE.wing) + '..' + last(L, RE.wing) + ' · morte ' + dI + ' · montaria ' + last(L, RE.ref)); }
       check(tag + ' DERROTA: nenhuma folha MONTADA (herói não fica montado morto)', last(L, RE.mount) < 0, 'folha montada em ' + last(L, RE.mount));
       check(tag + ' DERROTA: nenhum ícone parado de montaria (reprovado pelo dono)', first(L, RE.park) < 0, 'ícone em ' + first(L, RE.park));
       if (must.includes('mount')) { const id = ev('HM.mount.id'), run = new RegExp('anim/mounts/[a-z]+_' + id + '_run_body'), idle = new RegExp('anim/mounts/[a-z]+_' + id + '_idle_body'), at = d => { ev('B.deadT=' + d + '; 1'); return battleList(); }, dieI = E => E.findIndex(s => /_die_body/.test(s));
@@ -187,6 +189,42 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
       ev('dbgLvUp(null)'); check(tag + ' debug dbgLvUp(null): solta', ev('DBGFX.lv===null')); r = ev('dbgLvUp()'); check(tag + ' debug dbgLvUp(): dispara como numa subida real (efeito + faixa "Nível N!")', ev('!!B.lvfx&&!!B.banner&&/^Nível /.test(B.banner.txt)&&DBGFX.lv===null'), JSON.stringify(r));
     } finally { ev('(function(){ try{ dbgDieAt(null); dbgHatchAt(null); dbgLvUp(null); }catch(e){} const s=window.__pfG; B.lvfx=null; B.banner=null; B.res=s.r; B.deadT=s.d; B.deadBoss=s.db; B.running=s.run; B.paused=s.p; })(); 1'); } };
 
+  /* ASA NA MORTE (PO): a asa-item acompanha o corpo caindo e deitado, pela âncora "back" da folha da morte em uso */
+  const wingDie = async () => { ev("window.__pfW={h:S.hero,wing:S.eq.wing,d:B.deadT,db:B.deadBoss,r:B.res,run:B.running}; B.res=null; B.running=false; 1");
+    const setLook = async (hero, skin, dir) => { ev("(function(){ const A=Sys.appearance; A.setHero(S,'" + hero + "'); " + (skin ? "try{ A.grantFixed(S,'" + skin + "',{owner:true}); }catch(e){} A.equipFixed(S,'" + skin + "');" : 'A.equipFixed(S,null);') + ' formRefresh(); B.deadT=0; })(); 1');
+      return until(() => ev("(function(){ const F=formRefresh(); return F.hero==='" + hero + "'&&(F.skin||null)===" + (skin ? "'" + skin + "'" : 'null') + "&&dieSheet().ok&&dieSheet().base.indexOf('" + dir + "')>=0&&fullReady(HM)&&(!HM.wing||wingReady(HM.wing)); })()"), 600); };
+    const frame = fi => { ev('B.deadT=' + (1.6 - (fi + 0.5) / 12) + '; 1'); const L = battleList(), d = L.findIndex(s => /_die_body/.test(s)); return { n: L.filter(s => RE.wing.test(s)).length, before: d >= 0 && last(L, RE.wing) < d, die: d >= 0 }; };
+    try {
+      for (const [nm, hero, skin, dir] of [['Kael padrão', 'kael', null, 'hyb/R/'], ['Kaia padrão', 'kaia', null, 'hyb/kaia/'], ['skin Kael Ninja', 'kael', 'kael_ninja', 'skins/kael_ninja/'], ['skin Kaia Arlequina', 'kaia', 'kaia_harlequin', 'skins/kaia_harlequin/']]) {
+        const ok = await setLook(hero, skin, dir); check('asa na morte · ' + nm + ': herói/skin em cena com a folha da morte ' + dir, ok, ev('dieSheet().base') + ' · ' + JSON.stringify(ev('heroForm()')));
+        check('asa na morte · ' + nm + ': a folha em uso tem âncora para todos os quadros (dieWingOk)', ev('dieWingOk(dieSheet())&&HM.wing==="angel"'), ev('dieSheet().base') + ' · asa ' + ev('HM.wing'));
+        const bad = []; for (let fi = 0; fi < 18; fi++) { const f = frame(fi); if (!(f.die && f.n === 2 && f.before)) bad.push(fi + ':' + JSON.stringify(f)); }
+        check('asa na morte · ' + nm + ': asa (par E/D, uma só) desenhada ANTES do corpo nos 18 quadros da queda', !bad.length, bad.join(' '));
+        const c = ev('(function(){ const c=wingDieClip(HM); return {y:c.y, b:c.y+c.h, x:c.x, r:c.x+c.w, gy:HM.gy, GY:GY, LW:LW}; })()');
+        check('asa na morte · ' + nm + ': recorte termina exatamente na linha do chão (nada da asa abaixo) e cobre a tela toda', c.b === c.gy && c.gy === c.GY && c.x <= 0 && c.r >= c.LW && c.y <= 0, JSON.stringify(c)); }
+      /* nunca asa dupla */
+      let ok = await setLook('kael', 'kael_angel', 'skins/kael_angel_nowing/'); let f = frame(17);
+      check('asa na morte · Kael Anjo COM item de asa: corpo da pasta SEM asa + asa do item, uma só', ok && f.die && f.n === 2 && f.before, ev('dieSheet().base') + ' · ' + JSON.stringify(f));
+      ev('S.eq.wing=null; statsChanged(); 1'); ok = await setLook('kael', 'kael_angel', 'skins/kael_angel/'); await until(() => ev('!HM.wing'), 60); f = frame(17);
+      check('asa na morte · Kael Anjo SEM item de asa: só a asa pintada da skin (nenhuma asa de item)', ok && f.die && f.n === 0, ev('dieSheet().base') + ' · ' + JSON.stringify(f));
+      ev('S.eq.wing=window.__pfW.wing; statsChanged(); 1'); ok = await setLook('kaia', 'kaia_angel', 'skins/kaia_angel/'); await until(() => ev('HM.wing==="angel"'), 60); f = frame(17);
+      check('asa na morte · Kaia Angelical (asa própria pintada) com item de asa: sem asa do item na morte (nunca asa dupla)', ok && f.die && f.n === 0 && !ev('dieWingOk(dieSheet())'), ev('dieSheet().base') + ' · ' + JSON.stringify(f));
+      /* folha sem âncora regravada: sem asa, como antes */
+      { const kn = ev("(function(){ const A=Sys.appearance; A.setHero(S,'kael'); try{ A.grantFixed(S,'kael_knight',{owner:true}); }catch(e){} const r=A.equipFixed(S,'kael_knight'); return {ok:!!(r&&r.ok), reason:r&&r.reason, off:['assets/anim/hyb/phase1/kael_die_body','assets/anim/hyb/phase2/kael_die_body','assets/anim/hyb/phase3/kael_die_body','assets/anim/hyb/kaia_phase2/kaia_die_body','assets/anim/hyb/kaia_phase3/kaia_die_body'].every(b=>DIE_WING_OFF.test(b)), on:!DIE_WING_OFF.test('assets/anim/hyb/R/kael_die_body')&&!DIE_WING_OFF.test('assets/anim/skins/kael_angel_nowing/kael_die_body')}; })()");
+        check('asa na morte · folhas das pastas de FASE (âncora não regravada) ficam sem asa; as regravadas não', kn.off && kn.on, JSON.stringify(kn));
+        if (kn.ok) { ok = await setLook('kael', 'kael_knight', 'phase2/'); f = frame(17); check('asa na morte · Kael Cavaleiro (pasta de fase): sem asa na morte', ok && f.die && f.n === 0, ev('dieSheet().base') + ' · ' + JSON.stringify(f)); }
+        else console.log('  nota  Kael Cavaleiro não equipa (' + kn.reason + '): as pastas de fase não têm skin em uso hoje'); }
+      ok = await setLook('kael', null, 'hyb/R/'); ev('(function(){ const s=dieSheet(); window.__pfB=s.meta.back[5].ok; s.meta.back[5].ok=false; delete s._dw; })(); 1'); f = frame(17);
+      check('asa na morte · folha com um quadro ok:false: sem asa na morte', ok && f.die && f.n === 0, JSON.stringify(f));
+      ev('(function(){ const s=dieSheet(); s.meta.back[5].ok=window.__pfB; delete s._dw; })(); 1'); f = frame(17); check('asa na morte · âncora devolvida: a asa volta', f.n === 2, JSON.stringify(f));
+      /* quais folhas da morte ficam de fora (lista para a Arte) */
+      { const fsn = require('fs'), pth = require('path'), out = [], inn = []; const walk = d => { for (const e of fsn.readdirSync(d, { withFileTypes: true })) { if (e.name.startsWith('_') || e.name === 'enemy' || e.name === 'masks') continue; const p = pth.join(d, e.name); if (e.isDirectory()) walk(p); else if (/_die_body\.json$/.test(e.name)) { const j = JSON.parse(fsn.readFileSync(p, 'utf8')), rel = pth.relative(G.ROOT, p).replace(/\\/g, '/').replace(/\.json$/, ''); const okA = Array.isArray(j.back) && j.back.length >= j.frames && j.back.every(b => b && b.ok === true); (okA && !ev('DIE_WING_OFF.test(' + JSON.stringify(rel) + ')') ? inn : out).push(rel.replace('assets/anim/', '')); } } };
+        walk(pth.join(G.ROOT, 'assets/anim/hyb')); walk(pth.join(G.ROOT, 'assets/anim/skins'));
+        check('asa na morte · folhas COM asa: Kael, Kaia e as skins de assets/anim/skins sem asa própria (' + inn.length + ')', inn.includes('hyb/R/kael_die_body') && inn.includes('hyb/kaia/kaia_die_body') && inn.length >= 11, inn.join(', '));
+        console.log('  nota  folhas da morte SEM asa (fase não regravada ou asa própria): ' + out.join(', ')); }
+    } finally { ev("(function(){ const o=window.__pfW; try{ const A=Sys.appearance; A.setHero(S,'kaia'); A.equipFixed(S,null); A.setHero(S,'kael'); A.equipFixed(S,null); }catch(e){} S.hero=o.h; S.eq.wing=o.wing; statsChanged(); formRefresh(); B.deadT=o.d; B.deadBoss=o.db; B.res=o.r; B.running=o.run; })(); 1");
+      const back = await until(() => ev("(function(){ PETK.infoT=0; const F=formRefresh(); return F.hero==='kael'&&!F.skin&&HM.wing==='angel'&&wingReady('angel')&&!!petInfo()&&petReady(PETK.base)&&fullReady(HM); })()"), 600); check('asa na morte: herói, skin e asa devolvidos', back, JSON.stringify(ev('heroForm()'))); } };
+
   /* preparo: sem a entrada, batalha parada num quadro calmo, pet + asa equipados */
   await until(() => ev("typeof PI!=='undefined'&&!!PI.el"), 40); try { if (ev("typeof PI!=='undefined'&&!!PI.el")) G.inCtx(() => ev('PI.finish()')); } catch (e) {}
   const pet = ev(`(function(){ S.tut=99; S.welcome=true; const L=Sys.level.ensure(S); L.lvl=50; L.xp=0; S.stage=3; S.best=12; S.wave=1; S.farm=false;
@@ -209,6 +247,7 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
   await resCase('SEM montaria', ['hero']);
   await hatchCase('SEM montaria'); lookCase('SEM montaria', false);
   await dieBoxes();
+  await wingDie();
 
   /* ---------- 1. COM montaria ---------- */
   const mt = ev(`(function(){ Sys.mount.DATA.on=true; Sys.mount.DATA.visual=true; const ids=Object.keys(MOUNT_TBL), id=ids.includes('wolf')?'wolf':ids[0]; Sys.mount.add(S,Sys.host,id); const e=Sys.mount.equip(S,id); const lk=mountLook(); return {id, e:!!e, look:lk&&lk.id}; })()`);

@@ -232,15 +232,19 @@ function backAt(sh, fi, loop){ const M = sh && sh.meta; if (!M || !Array.isArray
     c = sh._bk = { mx: med(A.map(b => b.x)), sm: A.map((b, i) => { const p = nb(i, -1), q = nb(i, 1); return { x: med([p.x, b.x, q.x]), y: med([p.y, b.y, q.y]), ang: med([p.ang || 0, b.ang || 0, q.ang || 0]), s: b.s > 0 ? b.s : 1 }; }) }; }
   const b = c.sm[Math.max(0, Math.min(c.sm.length - 1, fi | 0))]; return loop ? { x: c.mx, y: b.y, ang: b.ang, s: b.s } : b; }
 /* ox0, oy0 = canto (0,0) da célula do quadro em px lógicos; kc = px lógicos por px da célula; loop = folha em laço */
-function drawWingsAt(H, sh, fi, ox0, oy0, kc, loop){ const kind = H.wing; if (!kind || H.deadP >= 0) return; const M = J('assets/anim/equip/wing_' + kind + '.json'); if (!M || !(M.single || M.L)) return;
+/* dead = true: chamada do drawHeroDie (asa na MORTE, presa à âncora "back" da folha da morte): a asa para de bater e é RECORTADA na linha do chão (deitado, metade
+   dela aponta para baixo e furaria o chão). Sem dead, com o herói morto (morte antiga, sem folha) continua sem asa, como sempre. */
+function drawWingsAt(H, sh, fi, ox0, oy0, kc, loop, dead){ const kind = H.wing; if (!kind || (H.deadP >= 0 && !dead)) return; const M = J('assets/anim/equip/wing_' + kind + '.json'); if (!M || !(M.single || M.L)) return;
   const b = backAt(sh, fi, loop); let ax, ay, ang, sc;
-  if (b){ ax = ox0 + b.x * kc; ay = oy0 + b.y * kc; ang = b.ang; sc = kc * WING_SCALE * b.s; H._wb = { dx: ax - H.x, dy: ay - H.gy, ang, sc }; }
+  if (b){ ax = ox0 + b.x * kc; ay = oy0 + b.y * kc; ang = b.ang; sc = kc * WING_SCALE * b.s; if (!dead) H._wb = { dx: ax - H.x, dy: ay - H.gy, ang, sc }; }
+  else if (dead) return;   /* morte sem âncora: nunca a última posição de pé (ficaria solta no ar) */
   else if (H._wb){ ax = H.x + H._wb.dx; ay = H.gy + H._wb.dy; ang = H._wb.ang; sc = H._wb.sc; }
   else { ax = H.x - HS * 0.10; ay = H.gy - HS * 0.31; ang = 0; sc = HS / 256 * WING_SCALE; }
   if (M.fit > 0) sc *= M.fit;   /* Engenheiro 5: asas novas (mais altas) trazem "fit" no .json (0,74 a 0,93); anjo e demônio não têm o campo (= 1). A raiz nas costas não muda */
-  const fl = 1 + 0.07 * Math.sin(H.t * 3.2), winged = !!(H.mount && typeof MOUNT_TBL !== 'undefined' && MOUNT_TBL[H.mount.id] && MOUNT_TBL[H.mount.id].wings);
-  ctx.save(); ctx.translate(ax, ay); ctx.rotate(ang * Math.PI / 180); ctx.scale(sc, sc); if (winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: contorno claro para a asa do Kael não se confundir com a dela
-  if (M.single){ const W = wingPart(kind, ''); if (W.ok){ ctx.rotate(0.05 * Math.sin(H.t * 3.2)); ctx.drawImage(W.img, -M.root[0] * M.w, -M.root[1] * M.h, M.w, M.h); } }
+  const fl = dead ? 1 : 1 + 0.07 * Math.sin(H.t * 3.2), winged = !dead && !!(H.mount && typeof MOUNT_TBL !== 'undefined' && MOUNT_TBL[H.mount.id] && MOUNT_TBL[H.mount.id].wings);
+  ctx.save(); if (dead){ const c = wingDieClip(H); ctx.beginPath(); ctx.rect(c.x, c.y, c.w, c.h); ctx.clip(); }   /* nada da asa abaixo da linha do chão */
+  ctx.translate(ax, ay); ctx.rotate(ang * Math.PI / 180); ctx.scale(sc, sc); if (winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: contorno claro para a asa do Kael não se confundir com a dela
+  if (M.single){ const W = wingPart(kind, ''); if (W.ok){ if (!dead) ctx.rotate(0.05 * Math.sin(H.t * 3.2)); ctx.drawImage(W.img, -M.root[0] * M.w, -M.root[1] * M.h, M.w, M.h); } }
   else { const L = wingPart(kind, 'L'), R = wingPart(kind, 'R');
     if (L.ok){ ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * M.L.w, -M.L.root[1] * M.L.h, M.L.w, M.L.h); ctx.restore(); }
     if (R.ok){ ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * M.R.w, -M.R.root[1] * M.R.h, M.R.w, M.R.h); ctx.restore(); } }
@@ -326,13 +330,22 @@ function drawHeroPistol(H, E){
    deitado, segura). Cai de joelho e de bruços; a arma cai por código ao lado; poeira ao bater no chão; a tela escurece (battle.js). Vale montado
    (não há folha da montaria sem o Kael: ele cai a pé e a montaria FICA parada atrás dele, respirando, com a imagem dela sozinha: drawMountDead, js/mountfx.js; sem imagem, sai correndo) e com pet (o pet fica à frente,
    parado). Chave: ART_ON.kael_die.
-   ASA NA MORTE: continua SEM desenho (drawWingsAt sai com H.deadP >= 0), de propósito. As folhas da morte trazem a âncora "back", mas ela é medida automática e
-   não acompanha o corpo deitado: no último quadro (o que fica a Derrota inteira) a âncora da folha padrão está em y = 164 da célula, a altura do ombro de quem está
-   EM PÉ, e o corpo deitado está em y 225 a 243; em phase2 ela volta a x do quadro 0; nas skins ninja/samurai/paladino/ciborgue/anjo os últimos quadros vêm ok=false
-   (estimados). Desenhada por essa âncora a asa ficaria SOLTA NO AR acima do corpo caído (quebra "nada flutua"). Para a asa ficar colada nas costas na morte a Arte
-   precisa entregar a âncora "back" conferida quadro a quadro nas folhas *_die_body (dado novo, não código). */
+   ASA NA MORTE (PO): a asa-item ACOMPANHA o corpo caindo e deitado. A Arte regravou a âncora "back" quadro a quadro (commit d47d92a) nas folhas da morte do
+   Kael (hyb/R), da Kaia (hyb/kaia) e das 11 skins de assets/anim/skins. O drawHeroDie chama drawWingsAt(..., dead = true) ANTES do corpo: mesma conta de pé
+   (âncora, ângulo do tronco, escala), sem bater, recortada na linha do chão. Ordem: montaria parada → asa → arma → corpo caído (o pet vem por último no draw()).
+   dieWingOk(sh) decide por FOLHA EM USO (dieSheet), uma vez por folha. Fica SEM asa na morte (como antes) quando:
+     · a folha não tem "back" para todos os quadros ou tem algum ok != true;
+     · a folha é das pastas de FASE (hyb/phase1|2|3, hyb/kaia_phase1|2|3): a Arte NÃO regravou essas; a âncora antiga é medida automática e não acompanha o corpo
+       deitado (a asa ficaria solta no ar), mesmo marcada ok. São as folhas das skins Kael/Kaia Cavaleiro (phase2) e Guerreiro Lendário (phase3);
+     · a folha é de skin com asa PRÓPRIA pintada no corpo (kael_angel, kaia_angel): nunca asa dupla. Com item de asa equipado o Kael Anjo usa a pasta SEM asa
+       (kael_angel_nowing, regra noWing do Sys.appearance.sheetFor), que tem âncora: aí a asa do item é desenhada, uma só. */
 /* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
 function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) return s; return sheetLoad(HERO_DIR + 'kael_die_body', true); }   /* a pasta que o sheetFor devolver (herói e skin); sem o módulo, a do Kael */
+const DIE_WING_OFF = /hyb\/(kaia_)?phase\d\/|skins\/(kael_angel|kaia_angel)\//;
+function dieWingOk(sh){ if (!sh || !sh.ok) return false; if (sh._dw !== undefined) return sh._dw; const M = sh.meta, A = M && M.back;
+  return sh._dw = !!(Array.isArray(A) && A.length >= (M.frames || 1) && A.every(b => b && b.ok === true && typeof b.x === 'number' && typeof b.y === 'number') && !DIE_WING_OFF.test(sh.base || '')); }
+/* recorte da asa na morte: tudo ACIMA da linha do chão do herói (px lógicos) */
+const wingDieClip = H => ({ x: H.x - 4096, y: H.gy - 4096, w: 8192, h: 4096 });
 /* Engenheiro 17 (nada flutua): quanto a arma DEITADA (girada a1) desce abaixo do próprio centro, em px do sprite, medido nos pixels opacos (alfa > 40, passo 2),
    UMA vez por arma (guardado no sprite; só roda na morte). Conferido nas 55 armas do meta.json: a arma encosta no chão (1 a 2 px acima) e em nenhum instante da queda
    passa da linha. Sem leitura de pixels (canvas sem dado): vale a caixa girada, como antes. */
@@ -357,6 +370,7 @@ function dieClear(H){ const sh = dieSheet(), k = HS / 256 * phaseK(), b = sh.ok 
 function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().hero !== 'kael'; if (H.mount && typeof drawMountDead === 'function') drawMountDead(H);   /* a montaria FICA: parada atrás do herói caído, respirando (sem imagem dela sozinha: sai correndo); desenhada ANTES do herói caído */ const PS = phaseK(), M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
   const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
+  if (H.wing && dieWingOk(sh)) drawWingsAt(H, sh, fi, ox - (pad + 128) * k, gy - fy * k, k, false, true);   /* asa nas costas do corpo que cai e deita (âncora back da folha da morte), ANTES do corpo; recortada no chão */
   ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);
   /* a arma cai por código: sai da mão, gira e deita no chão à frente */
   const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
