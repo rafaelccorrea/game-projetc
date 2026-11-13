@@ -58,7 +58,7 @@ function maRow(m,i){ const unread=!m.read, e=maExp(m), atts=maAtts(m.att);
   return `<button data-x="open" data-id="${m.id}" class="pa-row" aria-label="${unread?'Não lida. ':''}${maEsc(m.title)}. ${maEsc(maDate(m.at))}. ${maEsc(e.t)}" style="animation-delay:${i*.05}s;flex:none;min-height:68px;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:${unread?'#2a2016':'#1d1611'};border:2px solid ${unread?'#ffc94a':'#4a3a2b'};box-sizing:border-box;text-align:left;color:#f6ecdf;width:100%">
     ${maIcon(maPend(m))}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;line-height:1.15"><span style="font-size:14px;font-weight:${unread?900:700};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${maEsc(m.title)}</span>
       <span style="font-size:11px;font-weight:800;color:#c9b9a2">${maEsc(maDate(m.at))}</span>
-      ${atts.length?`<span style="display:flex;gap:4px;overflow:hidden">${atts.slice(0,4).map(x=>maChip(x,m.claimed)).join('')}</span>`:''}</span>
+      ${atts.length?`<span style="display:flex;flex-wrap:wrap;gap:4px">${atts.slice(0,3).map(x=>maChip(x,m.claimed)).join('')}</span>`:''}</span>
     <span style="flex:none;font-size:11px;font-weight:900;color:${e.c};text-align:right;max-width:76px">${maEsc(e.t)}</span></button>`; }
 function maOpenView(m){ const e=maExp(m), atts=maAtts(m.att), pend=maPend(m);
   return `<div role="dialog" aria-label="Carta: ${maEsc(m.title)}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px">

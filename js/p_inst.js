@@ -70,7 +70,7 @@ function scrInst(){
   const I=Sys.instances, st=I.status(S,Sys.host), nL=I.levelsUnlocked(Sys.host), rec=I.recommended(S,Sys.host); XI.min=iHm(st.resetMs);
   const cards=I.DATA.order.map(t=>iCard(t,st,nL,rec)).join('');
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:2px 2px 12px">
-    <div style="flex:none;min-height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:14px;background:#2a1f16;border:2px solid #4a3a2b;box-sizing:border-box"><b style="font-family:'Lilita One',sans-serif;font-size:20px;color:#f6ecdf;flex:1">Entradas hoje: ${st.total}/${st.totalMax}</b><span style="font-size:12px;font-weight:900;color:#c9b9a2">Renova em ${XI.min}</span></div>
+    <div style="flex:none;min-height:46px;display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:14px;background:#2a1f16;border:2px solid #4a3a2b;box-sizing:border-box"><b style="font-family:'Lilita One',sans-serif;font-size:clamp(15px,5vw,20px);white-space:nowrap;color:#f6ecdf;flex:1">Entradas hoje: ${st.total}/${st.totalMax}</b><span style="font-size:12px;font-weight:900;color:#c9b9a2">Renova em ${XI.min}</span></div>
     ${cards}</div>${XI.res?iResult(XI.res):''}`);
 }
 function iClick(b,ev){

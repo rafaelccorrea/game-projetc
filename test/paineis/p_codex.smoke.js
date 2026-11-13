@@ -19,9 +19,9 @@ const btn = (x, o) => ({ dataset: Object.assign({ x }, o || {}) }); const H = ()
 const tick = () => new Promise(r => setTimeout(r, 20));
 (async () => {
   // 1) álbum: 6 cartões, sem posse/%/marcos (chaves desligadas), sem emoji
-  def.onOpen(); def.render(); await tick(); def.render(); ['Armas', 'Armaduras', 'Pets', 'Montarias', 'Bestiário', 'Auras', 'Códex das Eras'].forEach(has);
+  def.onOpen(); def.render(); await tick(); def.render(); ['Armas', 'Armaduras', 'Pets', 'Montarias', 'Bestiário', 'Auras'].forEach(has);
   assert(!/\p{Extended_Pictographic}/u.test(H()), 'sem emoji'); assert(!/Tenho|Falta|%|\[QTD\]|em breve/i.test(H().replace(/<[^>]*>/g, ' ')), 'sem posse/porcentagem inventada'); assert(!/aria-label="[^"]*(tenho|falta|[0-9]%)/.test(H()), 'aria sem posse'); out.push('álbum: 6 cartões do catálogo real, sem posse nem % (chave desligada), zero emoji');
-  const bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 7 && bt.every(b => /data-x="/.test(b))); out.push(bt.length + ' botões, todos com ação');
+  const bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 6 && bt.every(b => /data-x="/.test(b))); out.push(bt.length + ' botões, todos com ação');
   // 2) todo caminho de arte do catálogo existe em assets/
   const srcs = new Set(); for (const k of ['arm', 'eq', 'pet', 'mnt', 'bes', 'aur']) { def.click(btn('cat', { k })); for (const m of H().matchAll(/src="(assets\/[^"]+)"/g)) srcs.add(m[1]); for (const m of H().matchAll(/url\((assets\/[^)]+)\)/g)) srcs.add(m[1]); }
   assert(srcs.size > 60, 'muita arte: ' + srcs.size); const miss = [...srcs].filter(s => !fs.existsSync(path.join(R, s))); assert(!miss.length, 'arte inexistente: ' + miss.join(', ')); out.push(srcs.size + ' arquivos de arte conferidos: todos existem');

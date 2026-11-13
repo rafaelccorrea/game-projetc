@@ -103,7 +103,7 @@ function scrCodex(){
   const inCat=XK.view==='cat', cat=K_CATS.find(c=>c.k===XK.cat);
   const head=`<div style="flex:none;display:flex;align-items:center;gap:8px;min-height:46px"><button data-x="back" aria-label="${inCat?'Voltar para o álbum':'Voltar'}" style="flex:none;width:46px;height:46px;border-radius:12px;border:2px solid #4a3a2b;background:#2a1f16;color:#f6ecdf;font-size:24px;font-weight:900;padding:0">‹</button><span role="heading" aria-level="1" style="font-family:'Lilita One',sans-serif;font-size:22px">${inCat?cat.n:'Códex das Eras'}</span></div>`;
   const sel=XK.sel?items.find(x=>x.id===XK.sel):null;
-  V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:4px 2px 8px;box-sizing:border-box">${head}${inCat?cdxCat(items,own):cdxAlbum(items,own,rw)}</div>${sel?cdxSheet(sel,own):''}`);
+  V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:4px 2px 8px;box-sizing:border-box">${inCat?head:''}${inCat?cdxCat(items,own):cdxAlbum(items,own,rw)}</div>${sel?cdxSheet(sel,own):''}`);
 }
 function cdxGo(g,n){ cdxSnd('ui_tap');
   if(g==='battle'){ if(window.Screens&&Screens.close) Screens.close(); return; }
