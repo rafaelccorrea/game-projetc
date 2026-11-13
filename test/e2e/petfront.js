@@ -21,7 +21,8 @@ const VERBOSE = process.argv.includes('-v');
 const boot = require('./sandbox'), errStr = boot.errStr;
 let fail = 0, n = 0;
 const check = (name, ok, det) => { n++; if (!ok) fail++; if (VERBOSE || !ok) console.log('  ' + (ok ? 'ok    ' : 'FALHA ') + name + (det && (!ok || VERBOSE) ? ' · ' + det : '')); };
-const RE = { ref: /assets\/mounts\/mount_/, park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /equip\/wing_/, weapon: /assets\/weapons\// };
+const RE = { ref: /assets\/mounts\/(still\/|mount_)/,   /* imagem parada da Derrota: pasta nova assets/mounts/still/ (Arte b934d3b); a antiga mount_*_ref fica aceita */
+ park: /icons\/mounts\//, egg: /pets\/pet_egg/, pet: /anim\/pets\//, mount: /anim\/mounts\//, hero: /anim\/hyb\//, wing: /equip\/wing_/, weapon: /assets\/weapons\// };
 const first = (L, re) => L.findIndex(s => re.test(s));
 const last = (L, re) => { for (let i = L.length - 1; i >= 0; i--) if (re.test(L[i])) return i; return -1; };
 /* o pet vem depois de TODAS as partes pedidas (must = tem de existir no desenho; also = se existir, também fica antes do pet) */

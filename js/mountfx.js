@@ -48,7 +48,10 @@ function mountManLoad(){ if (MOUNT_MAN.asked) return; MOUNT_MAN.asked = true; fe
    cada consulta varria os arquivos do pacote. null (manifesto ainda não chegou) NÃO é guardado. */
 const MOUNT_ART_C = {};
 function mountArtOf(h, id){ const ck = h + '|' + id, c = MOUNT_ART_C[ck]; if (c !== undefined) return c;
-  const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { const r = A.mountedArt(h, id); if (r === true || r === false) MOUNT_ART_C[ck] = r; return r; } catch (e) { return null; } }
+  /* QA (Kaia na Fênix a pé): o Sys.assets procura o pacote pelo ID do módulo (mount:phoenixm, kaia_phoenixm_*), mas os arquivos e o pacote usam o NOME DO ARQUIVO
+     (giant_phoenix; o pacote sai como mount:giant). Quando o id não acha, pergunta ao manifesto pelo arquivo. null (manifesto ainda não chegou) não é guardado. */
+  const A = window.Sys && Sys.assets; if (A && typeof A.mountedArt === 'function'){ try { let r = A.mountedArt(h, id); const f = mountFile(id);
+      if (r === false && f !== id && typeof A.packOf === 'function' && typeof A.filesOf === 'function'){ const file = MOUNT_DIR + h + '_' + f + '_idle_body.png', pk = A.packOf(file), L = pk ? A.filesOf(pk) : null; r = !!(L && L.indexOf(file) >= 0); }   /* pergunta ao manifesto pelo ARQUIVO (o pacote da Fênix chama-se mount:giant) */ if (r === true || r === false) MOUNT_ART_C[ck] = r; return r; } catch (e) { return null; } }
   if (!MOUNT_MAN.packs){ mountManLoad(); return null; } const pk = MOUNT_MAN.packs['mount:' + id] || MOUNT_MAN.packs['mount:' + mountFile(id)], b = MOUNT_DIR + h + '_' + mountFile(id); return !!(pk && Array.isArray(pk.files) && pk.files.some(p => p === b + '_idle_body.png' || p === b + '_run_body.png')); }
 function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'; if (h === 'kael') return MOUNT_HERO.kael;
   if (id == null){ try { const i = Sys.mount.battleInfo(S); id = i && i.id; } catch (e) { id = null; } }
@@ -164,7 +167,9 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
    até a queda: vale a saída correndo (drawMountExit). O caminho é escolhido UMA vez por queda (não troca no meio). */
 /* face = para onde a cabeça aponta NO ARQUIVO ('R' direita, 'L' esquerda). Conferido abrindo as 6 imagens (13/11): TODAS olham para a DIREITA, como a montaria
    na batalha, então nenhuma é espelhada. Arte nova virada para a esquerda: face 'L' (o desenho espelha). rs = ajuste de tamanho (padrão 1). */
-const MOUNT_REF = { pony: { f: 'mount_pony_ref', face: 'R' }, horse: { f: 'mount_horse_ref', face: 'R' }, wolf: { f: 'mount_wolf_ref', face: 'R' }, griffin: { f: 'mount_griffin_ref', face: 'R' }, mythic: { f: 'mount_mythic_opt_tiger', face: 'R' }, wyvern: { f: 'mount_wyvern_ref', face: 'R' }, phoenixm: { f: 'mount_giant_phoenix_ref', face: 'R' } };   /* Fênix: imagem parada da Arte (b48fff2) */   /* os mesmos arquivos do Códex (K_MART, js/p_codex.js) */
+/* MONTARIA PARADA DA DERROTA (dono via PO, Arte b934d3b): imagens próprias em assets/mounts/still/ (animal sozinho com a sela, olhando para a direita, recorte justo,
+   patas na borda de baixo), no lugar das imagens do Códex. A respiração continua por código. A chave é o id do módulo; o arquivo é o mountFile(id). */
+const MOUNT_REF = { pony: { f: 'still/pony', face: 'R' }, horse: { f: 'still/horse', face: 'R' }, wolf: { f: 'still/wolf', face: 'R' }, griffin: { f: 'still/griffin', face: 'R' }, mythic: { f: 'still/mythic', face: 'R' }, wyvern: { f: 'still/wyvern', face: 'R' }, phoenixm: { f: 'still/giant_phoenix', face: 'R' } };
 const MOUNT_STILL_EDGE = 8;   /* margem mínima da montaria parada até as bordas da cena, em px lógicos (a cena tem sempre LW = 330 de largura lógica: 8 px lógicos = 7 px de tela a 288, 8,7 a 360, 9,5 a 390) */
 const MOUNT_STILL = {}, MOUNT_STILL_W = 384, MOUNT_XFADE = 0.3, MOUNT_BREATH = 2.6, MOUNT_BREATH_K = 0.015;
 function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k in MOUNT_STILL) delete MOUNT_STILL[k];   /* só a da montaria em uso */

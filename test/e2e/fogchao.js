@@ -15,6 +15,7 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'},{type:'item',value:1,r:0,slot:'armor',e:0,to:'bag'}],200)"); step(G, 0.2);
   check('chave desligada: nenhum item marcado para esperar', ev('PK.list.length===2&&PK.list.every(q=>!q.hold)'), ev('JSON.stringify(PK.list.map(q=>q.hold))'));
   step(G, 3); check('chave desligada: tudo voou sozinho em 3 s', ev('PK.list.length') === 0, 'sobraram ' + ev('PK.list.length'));
+  check('sem o modo de conferência: Sys.bonfire carregado e DESLIGADO; fogBrasa não credita, não liga e não desenha', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)&&Sys.bonfire.DATA.on===false') && ev("fogBrasa('boss',1,200)") === 0 && ev('Sys.bonfire.DATA.on===false') && ev('PK.list.length') === 0);
   /* 2) chave ligada */
   G = await game('?debug=1&fresh=1&skip=1&fogueira=1'); ev = G.ev;
   check('chave ligada pelo parâmetro de conferência', ev('fogOn()===true&&FOGUEIRA_ON===false'));
@@ -32,6 +33,7 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   step(G, ev('PK_HOLD_S') + 2); check('sem toque, vai sozinho depois de ' + ev('PK_HOLD_S') + ' s', ev('PK.list.length') === 0, 'sobraram ' + ev('PK.list.length'));
   /* teto de itens esperando */
   ev("spawnPicks(Array.from({length:10},()=>({type:'item',value:1,r:2,slot:'weapon',e:0,to:'bag'})),200)"); step(G, 3);
+  { const xs = JSON.parse(ev('JSON.stringify(pkHeld().map(q=>Math.round(q.x)).sort((a,b)=>a-b))')); let gap = 1e9; for (let i = 1; i < xs.length; i++) gap = Math.min(gap, xs[i] - xs[i - 1]); check('itens que esperam não se sobrepõem (pelo menos ' + ev('PK_GAP') + ' px entre eles) e ficam na tela', xs.length >= 2 && gap >= ev('PK_GAP') - 1 && xs[0] >= 20 && xs[xs.length - 1] <= ev('LW') - 20, JSON.stringify(xs)); }
   check('no máximo ' + ev('PK_HOLD_MAX') + ' esperando; o excedente voa', ev('pkHeld().length') === ev('PK_HOLD_MAX') && ev('PK.list.length') === ev('PK_HOLD_MAX'), ev('pkHeld().length') + ' / ' + ev('PK.list.length'));
   ev('PK.list.length=0; 1');
   /* +FC: peça melhor que a equipada (equipada sozinha ao entrar na mochila) e peça pior */
@@ -42,8 +44,8 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'}],200)"); step(G, 2); try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
   check('desenho do item esperando (anel e etiqueta) sem erro', drew && ev('pkHeld().length===1&&pkHeld()[0].up===true'));
   /* BRASAS: com o módulo desligado nada entra; ligado, o pote de 20 abates dá 1, o chefe e a fase dão as do módulo, e cada Brasa creditada vira um desenho que voa */
-  check('Sys.bonfire carregado pelo jogo e DESLIGADO', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)&&Sys.bonfire.DATA.on===false'));
-  ev('PK.list.length=0; 1'); check('módulo desligado: fogBrasa não credita nem desenha', ev("fogBrasa('boss',1,200)") === 0 && ev('PK.list.length') === 0);
+  check('modo de conferência (?debug=1&fogueira=1): o módulo liga só nesta sessão na 1ª Brasa, para o QA ver', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)') && ev("(function(){ Sys.bonfire.DATA.on=false; const g=fogBrasa('boss',1,200); return g>0&&Sys.bonfire.DATA.on===true; })()"));
+  ev('PK.list.length=0; 1');
   const br = JSON.parse(ev("(function(){ const F=Sys.bonfire; F.DATA.on=true; const o=F.ensure(S); o.bra=0; o.pot=0; const out={}; let k=0; for(let i=0;i<19;i++) k+=fogBrasa('kill',1,200); out.k19=k; out.k20=fogBrasa('kill',1,200); out.bra1=o.bra; out.boss=fogBrasa('boss',1,200); out.stage=fogBrasa('stage',1); out.bra=o.bra; out.pk=PK.list.filter(q=>q.p.type==='brasa').length; out.sum=PK.list.filter(q=>q.p.type==='brasa').reduce((a,q)=>a+q.p.value,0); out.venda=fogBrasa('shop',5,200); F.DATA.on=false; return JSON.stringify(Object.assign(out,{B:F.DATA.brasas})); })()"));
   check('pote: 19 abates não dão Brasa, o 20º dá 1', br.k19 === 0 && br.k20 === 1 && br.bra1 === 1, JSON.stringify(br));
   check('chefe e fase dão as Brasas do módulo (' + br.B.boss + ' e ' + br.B.stage + ')', br.boss === br.B.boss && br.stage === br.B.stage && br.bra === 1 + br.B.boss + br.B.stage, JSON.stringify(br));

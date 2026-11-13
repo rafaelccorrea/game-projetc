@@ -172,7 +172,11 @@ const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
 /* BRASAS DA FOGUEIRA (regra e números do Sys.bonfire, da Sistemas: pote de 20 abates = 1, fase +3, chefe +5; NUNCA à venda). O jogo só avisa o módulo e desenha as
    Brasas que ele creditou: cada uma pula do inimigo e voa para a Fogueira (por enquanto o destino é o botão da mochila, até a Fogueira V3 existir na tela de batalha).
    Com o módulo desligado (Sys.bonfire.DATA.on false, hoje) não faz nada. Devolve quantas Brasas entraram. */
-function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || F.DATA.on !== true || typeof F.addBrasas !== 'function') return 0; got = F.addBrasas(S, src, n) | 0; } catch (e) { return 0; }
+function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || typeof F.addBrasas !== 'function') return 0;
+    if (F.DATA.on !== true && !FOGUEIRA_ON && fogOn()) F.DATA.on = true;   /* modo de conferência (?debug=1&fogueira=1): liga o módulo SÓ nesta sessão, para o QA ver as Brasas; nada é gravado na chave */
+    if (F.DATA.on !== true) return 0;
+    /* "só abate novo" (Sistemas c5e128c, aprovado pelo dono): o abate só enche o pote na maior fase já alcançada; o módulo decide com {stage, maxStage} */
+    got = (src === 'kill' ? F.addBrasas(S, src, n, { stage: S.stage, maxStage: S.best }) : F.addBrasas(S, src, n)) | 0; } catch (e) { return 0; }
   if (got > 0){ try { const px = typeof x === 'number' ? x : (typeof HX === 'number' ? HX + 40 : 120); spawnPicks(Array.from({ length: Math.min(got, 8) }, (_, i) => ({ type: 'brasa', value: i === 0 ? got - Math.min(got, 8) + 1 : 1, to: 'bag', delay: i * 0.06 })), px); } catch (e) {} }
   return got; }
 /* HOST DA FOGUEIRA: o Sys.host do jogo, trocando só a ENTRADA do item. O addItem comum (addItemToBag) equipa sozinho o que é melhor e desmonta com a mochila cheia;
@@ -182,6 +186,11 @@ function fogBagAdd(o){ if (!o || !SLOT[o.slot]) return null; const it = normItem
   try { o.id = it.id; } catch (e) {} setTimeout(() => { if (typeof codexSync === 'function') codexSync(); }, 0); return it; }
 const fogHost = () => Object.assign({}, Sys.host, { addItem: fogBagAdd });
 const pkHolds = p => fogOn() && p && p.type === 'item' && (p.r | 0) >= PK_HOLD_R;
+/* o item que vai esperar o toque pousa a pelo menos PK_GAP px dos outros que já esperam (QA: dois no mesmo ponto sobrepunham as etiquetas "+FC"): procura a vaga livre
+   mais perto, para a direita e para a esquerda, dentro da tela */
+const PK_GAP = 34, PK_HOLD_SCALE = 1.9;
+function pkSpread(q){ const others = PK.list.filter(o => o !== q && o.hold && o.st === 1 && !o.done), free = x => others.every(o => Math.abs(o.x - x) >= PK_GAP), lo = 20, hi = LW - 20; let x = Math.max(lo, Math.min(hi, q.x));
+  if (!free(x)){ for (let d = PK_GAP; d < LW; d += PK_GAP / 2){ if (x + d <= hi && free(x + d)){ x = x + d; break; } if (x - d >= lo && free(x - d)){ x = x - d; break; } } } q.x = x; }
 const pkHeld = () => PK.list.filter(q => q.hold && q.st === 1 && !q.done);
 /* o item que caiu é melhor que o equipado? (a peça já está na mochila: procura a mais nova igual e pergunta à FC; equipada sozinha = era melhor) */
 function pkBetter(p){ try { const it = S.inv.filter(x => x && x.slot === p.slot && x.r === p.r && x.e === p.e).pop(); if (!it) return false; if (S.eq && S.eq[it.slot] === it.id) return true; return Sys.fc.itemFC(S, Sys.host, it).swap > 0; } catch (e) { return false; } }
@@ -209,7 +218,7 @@ function tickPicks(dt){
   if (!PK.list.length) return; const run = B.running ? RUNV() * dt : 0;
   for (const q of PK.list){
     q.t += dt; if (q.t < 0) continue;
-    if (q.st === 0){ q.vy += 620 * dt; q.x += q.vx * dt - run; q.y += q.vy * dt; if (q.y >= GY - 6 && q.vy > 0){ q.y = GY - 6; q.st = 1; } }
+    if (q.st === 0){ q.vy += 620 * dt; q.x += q.vx * dt - run; q.y += q.vy * dt; if (q.y >= GY - 6 && q.vy > 0){ q.y = GY - 6; q.st = 1; if (q.hold) pkSpread(q); } }
     else if (q.st === 1 && q.hold){ q.rt += dt; q.x = Math.max(16, Math.min(LW - 16, q.x)); if (q.rt > PK_HOLD_S){ q.st = 2; q.sx = q.x; q.sy = q.y; } }   /* Épico ou melhor: espera o toque parado na tela; depois de PK_HOLD_S s vai sozinho */
     else if (q.st === 1){ q.rt += dt; q.x -= run; if (q.rt > q.rest || q.x < 6){ q.st = 2; q.sx = q.x; q.sy = q.y; } }
     else { q.ft += dt / 0.5; const k = Math.min(1, q.ft), e = k * k, T = pickTarget(q.p.to); q.x = q.sx + (T.x - q.sx) * e; q.y = q.sy + (T.y - q.sy) * e - Math.sin(Math.PI * k) * 26;
@@ -220,7 +229,7 @@ function tickPicks(dt){
 const PK_COL = { essence: '#c9a4ff', gold: '#ffc94a', gem: '#6fd3ff', xp: '#6fe3ff', forge: '#ff9a4a', food: '#d8b070', egg: '#ffe9c8', brasa: '#ff6a2a' };
 function drawPicks(){
   const t = B.at;
-  for (const q of PK.list){ if (q.t < 0) continue; const p = q.p, s = p.big ? 1.4 : 1, ph = t * 9 + q.sd;
+  for (const q of PK.list){ if (q.t < 0) continue; const p = q.p, s = (p.big ? 1.4 : 1) * (q.hold && q.st === 1 ? PK_HOLD_SCALE : 1), ph = t * 9 + q.sd;   /* o item que espera o toque é desenhado maior (QA: com ~12 px sumia entre os inimigos) */
     ctx.save(); ctx.translate(q.x, q.y);
     if (q.st === 1){ ctx.globalAlpha = 0.25; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, 5, 5 * s, 1.6, 0, 0, 7); ctx.fill(); ctx.globalAlpha = 1; if (!(p.type === 'item' && typeof RAR_ON === 'function' && RAR_ON())) ctx.translate(0, -2 - Math.abs(Math.sin(ph * 0.5)) * 2.5); }   // com a chave da raridade o item fica apoiado no chão
     if (p.type === 'gold'){ const w = Math.abs(Math.cos(ph)) * 4.6 * s + 0.9;                       // moeda girando
@@ -237,8 +246,8 @@ function drawPicks(){
     ctx.restore(); }
   /* item esperando o toque: anel pulsando na cor da raridade e a etiqueta "+FC" quando é melhor que o equipado */
   for (const q of PK.list){ if (!q.hold || q.st !== 1 || q.t < 0) continue; const c = RAR[q.p.r] ? RAR[q.p.r].c : '#fff', pu = 0.5 + 0.5 * Math.sin(t * 5 + q.sd);
-    ctx.save(); ctx.translate(q.x, q.y - 6); ctx.globalAlpha = 0.35 + 0.45 * pu; ctx.strokeStyle = c; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, 0, 13 + 3 * pu, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
-    if (q.up){ ctx.font = '900 10px system-ui'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('+FC', 0, -20); ctx.fillStyle = '#7ef08a'; ctx.fillText('+FC', 0, -20); }
+    ctx.save(); ctx.translate(q.x, q.y - 6); ctx.globalAlpha = 0.35 + 0.45 * pu; ctx.strokeStyle = c; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, 0, 19 + 3 * pu, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    if (q.up){ ctx.font = '900 10px system-ui'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('+FC', 0, -28); ctx.fillStyle = '#7ef08a'; ctx.fillText('+FC', 0, -28); }
     ctx.restore(); }
   if (!PK.G) return; PK.G.due(t);
   for (const b of PK.G.live()){ const to = b.type === 'gold' ? 'gold' : b.type === 'gem' ? 'gems' : b.type === 'xp' ? 'level' : 'bag', T = pickTarget(to), age = t - b.last, pop = 1 + 0.35 * Math.max(0, 1 - age * 6);

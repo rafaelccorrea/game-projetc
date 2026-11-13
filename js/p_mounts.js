@@ -262,7 +262,7 @@ function scrMounts(){
         <span style="display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:900"><span style="white-space:nowrap">Nível ${n0(lvl)} / ${n0(cap)}</span><span style="color:#c9b9a2;text-align:right">teto pelo nível do jogador (máx. ${n0(maxL)})</span></span>
         <span class="mt-bar" role="progressbar" aria-label="Nível da montaria" aria-valuemin="0" aria-valuemax="${cap}" aria-valuenow="${lvl}"><span class="mt-barF" style="width:${Math.min(100,Math.round(lvl/Math.max(1,cap)*100))}%;background:linear-gradient(90deg,#f2a826,#ffe07a)"></span></span>
       </div>
-      <span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.3">${owned?(isEq?'O Kael está montado: o bônus de ataque e vida já vale na batalha.':'Equipe para o Kael montar e o bônus valer na batalha.')+' A montaria não ataca sozinha.'
+      <span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.3">${owned?(isEq?(mtHeroN()==='Kaia'?'A Kaia':'O Kael')+' está montado'+(mtHeroN()==='Kaia'?'a':'')+': o bônus de ataque e vida já vale na batalha.':'Equipe para o Kael montar e o bônus valer na batalha.')+' A montaria não ataca sozinha.'
         :'Como conseguir: <b style="color:#f6ecdf">'+esc2(src.t)+'</b>. Nunca por sorteio.'}</span>
     </div>`;
 
