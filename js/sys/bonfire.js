@@ -45,7 +45,7 @@ const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 
 function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.bonfire.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.bonfire; if(!o||typeof o!=='object') o=S.sys.bonfire={}; o.v=1;
-  o.lv=clamp(int0(o.lv)||1,1,DATA.maxLevel); o.xp=clamp(int0(o.xp),0,xpNeed(o.lv)); o.bra=clamp(int0(o.bra),0,DATA.brasas.max); o.pot=clamp(int0(o.pot),0,DATA.brasas.potKills-1);
+  o.lv=clamp(int0(o.lv)||1,1,DATA.maxLevel); o.xp=clamp(int0(o.xp),0,xpNeed(o.lv)); o.bra=clamp(int0(o.bra),0,DATA.brasas.max); o.pot=clamp(int0(o.pot),0,DATA.brasas.potKills-1); o.got=Math.max(int0(o.got),0);   /* got: total de Brasas que já ENTRARAM (só sobe; o servidor confere o teto por dia) */
   o.locked=Array.isArray(o.locked)?o.locked.filter(x=>x!=null).map(String).slice(0,500):[];
   o.recent=Array.isArray(o.recent)?o.recent.filter(x=>x&&x.item&&typeof x.item==='object').slice(0,DATA.keep.n):[];
   const a=(o.auto&&typeof o.auto==='object')?o.auto:{}; o.auto={on:a.on===true,batch:DATA.auto.batches.includes(a.batch)?a.batch:1,equip:a.equip!==false,sellBelow:clamp(int0(a.sellBelow)||1,1,4)};
@@ -71,7 +71,7 @@ function refundOf(item){ const r=clamp(int0(item&&item.r),0,5), R=DATA.refund, T
 function addBrasas(S,src,n){ if(!ON()) return 0; const o=ensure(S), B=DATA.brasas; let add=0;
   if(src==='kill'){ o.pot+=Math.max(1,int0(n)||1); while(o.pot>=B.potKills){ o.pot-=B.potKills; add++; } }
   else if(B[src]>0) add=B[src]*Math.max(1,int0(n)||1); else return 0;
-  const before=o.bra; o.bra=Math.min(B.max,o.bra+add); return o.bra-before; }
+  const before=o.bra; o.bra=Math.min(B.max,o.bra+add); o.got+=o.bra-before; return o.bra-before; }
 
 /* ---------- forjar ---------- */
 function rollStars(rng,lv){ const a=starsAvg(lv), u=(rng?rng():Math.random())-0.5; return clamp(Math.round(a+u*1.6),1,5); }
@@ -102,7 +102,7 @@ function dismantle(S,host,list){ const o=ensure(S), eq=equippedIds(host), tot={g
     o.recent.unshift({item:it,ref:r,t:now}); }
   o.recent=o.recent.filter(x=>now-num(x.t,0)<DATA.keep.ms).slice(0,DATA.keep.n);
   if(tot.gold&&host&&host.addGold) host.addGold(tot.gold); const F=SYS().forge; if(tot.stones&&F&&F.addStones) F.addStones(S,tot.stones,host);
-  o.bra=Math.min(DATA.brasas.max,o.bra+tot.bra); addXp(o,tot.xp); return tot; }
+  { const b0=o.bra; o.bra=Math.min(DATA.brasas.max,o.bra+tot.bra); o.got+=o.bra-b0; } addXp(o,tot.xp); return tot; }
 /* desmontar rápido: {belowR} = tudo abaixo da raridade; {worse:true} = tudo com FC menor que o equipado (host.delta(item) < 0) */
 function quick(S,host,opt){ const op=opt||{}, eq=equippedIds(host);
   const pick=bagOf(host).filter(it=>it&&!isLocked(S,it)&&!eq.has(idOf(it))&&(op.worse?(host&&host.delta?num(host.delta(it),0)<0:false):int0(it.r)<int0(op.belowR)));
@@ -124,7 +124,7 @@ function autoRun(S,host){ if(!ON()) return {ok:false,reason:'off'}; const o=ensu
   for(let i=0;i<N;i++){ const f=forge(S,host); if(!f.ok) break; out.done++; const it=f.item;
     if(int0(it.r)>=DATA.auto.pauseFromR){ out.pause=it; break; }
     if(o.auto.equip&&host&&host.delta&&num(host.delta(it),0)>0&&host.equip){ host.addItem&&host.addItem(it); host.equip(it); out.equipped++; continue; }
-    if(int0(it.r)<o.auto.sellBelow){ const r=refundOf(it); if(host&&host.addGold&&r.gold) host.addGold(r.gold); const F=SYS().forge; if(r.stones&&F&&F.addStones) F.addStones(S,r.stones,host); o.bra=Math.min(DATA.brasas.max,o.bra+r.bra); addXp(o,r.xp); out.sold++; continue; }
+    if(int0(it.r)<o.auto.sellBelow){ const r=refundOf(it); if(host&&host.addGold&&r.gold) host.addGold(r.gold); const F=SYS().forge; if(r.stones&&F&&F.addStones) F.addStones(S,r.stones,host); { const b0=o.bra; o.bra=Math.min(DATA.brasas.max,o.bra+r.bra); o.got+=o.bra-b0; } addXp(o,r.xp); out.sold++; continue; }
     makeRoom(S,host); if(host&&host.addItem) host.addItem(it); out.kept++; }
   return out; }
 function setAuto(S,patch){ const o=ensure(S), p=patch||{}; if('on' in p) o.auto.on=!!p.on; if(DATA.auto.batches.includes(p.batch)) o.auto.batch=p.batch; if('equip' in p) o.auto.equip=!!p.equip; if(p.sellBelow!=null) o.auto.sellBelow=clamp(int0(p.sellBelow),1,4); return Object.assign({},o.auto); }

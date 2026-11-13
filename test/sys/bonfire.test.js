@@ -17,7 +17,8 @@ t('DESLIGADA por padrão: nada forja, Brasa não entra',()=>{ assert.strictEqual
 t('Brasas só jogando: pote de 20 abates = 1, fase +3, chefe +5, baú +5, missões +20, teto 300; fonte desconhecida (compra) não existe',()=>on(()=>{ const S={};
   assert.strictEqual(BF.addBrasas(S,'kill',19),0); assert.strictEqual(BF.addBrasas(S,'kill',1),1); assert.strictEqual(BF.addBrasas(S,'stage'),3); assert.strictEqual(BF.addBrasas(S,'boss'),5);
   assert.strictEqual(BF.addBrasas(S,'chest'),5); assert.strictEqual(BF.addBrasas(S,'missions'),20); for(const x of ['shop','vip','buy','ad','pack']) assert.strictEqual(BF.addBrasas(S,x,100),0,x);
-  BF.addBrasas(S,'missions',100); assert.strictEqual(BF.ensure(S).bra,300); }));
+  BF.addBrasas(S,'missions',100); assert.strictEqual(BF.ensure(S).bra,300);
+  const o=BF.ensure(S); assert.strictEqual(o.got,300,'got = o que entrou'); o.bra=0; BF.addBrasas(S,'stage'); assert.strictEqual(o.got,303,'got só sobe'); }));
 t('chances: nível 1 só Básico; Raro no 2, Épico no 8, Mítico no 20, Lendário no 35; portão corta o que passar; somam 100',()=>{
   assert.deepStrictEqual(BF.odds(1,4),[100,0,0,0,0]); assert.ok(BF.odds(2,4)[1]>0&&BF.odds(7,4)[2]===0&&BF.odds(8,4)[2]>0&&BF.odds(19,4)[3]===0&&BF.odds(20,4)[3]>0&&BF.odds(34,4)[4]===0&&BF.odds(35,4)[4]>0);
   for(const lv of [1,5,10,20,35,60]) for(const cap of [0,2,4]){ const o=BF.odds(lv,cap); assert.ok(Math.abs(o.reduce((a,b)=>a+b,0)-100)<0.05,lv+'/'+cap); o.forEach((p,r)=>{ if(r>cap) assert.strictEqual(p,0); }); }
