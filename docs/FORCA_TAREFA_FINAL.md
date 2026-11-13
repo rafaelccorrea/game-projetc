@@ -37,3 +37,20 @@ Cada sessão pode e deve abrir subagentes para dividir o próprio trabalho, um p
 | 18 | QA na tela: eras 7-8, Fênix, Seráfica, Kael Anjo, Ciborgue, Clava, pets, correções do S24 | QA |
 | 19 | Próxima APK com tudo e instalar no S24 assim que o dono pedir | Engenheiro / PO |
 | 20 | Checklist de arte e STATUS_DONO atualizados | PO |
+
+## Situação (13/11, 20h)
+| # | Item | Situação |
+|---|---|---|
+| 1-2 | Dano 1 dos inimigos; cura cheia no chefe | Corrigidos no código (a54c87b); a Sistemas sobe o dano do comum e fecha a calibração |
+| 3, 5 | Começo mais duro e calibração | Sistemas em andamento |
+| 4 | Itens no chão com ímã | Feito, desligado (e5dd11b); o QA achou 2 defeitos, que estão sendo corrigidos |
+| 6-9 | Fogueira | V3 e V4 reprovadas; V5 no layout de hoje (botão no centro da barra de baixo) sendo feita. Regras e servidor prontos, desligados |
+| 10 | Arte da Fogueira | 9 estágios em rascunho, esperando o voto do dono |
+| 11 | Telas aprovadas | No jogo, desligadas: Forja, Pets, Torre, Equipamento + Mochila. Em subagentes: Montarias, Loja, VIP, Passe, Fim das 9 eras, Perfil, Guilda, Torneio |
+| 12 | Mapa V3 e Correio V3 | Publicados para o voto do dono |
+| 13 | Online no app | Arena ligada e testada de verdade; Guilda e Torneio passaram no teste do servidor e ligam em seguida |
+| 14 | Compras da Play | Esperando a configuração do dono |
+| 15-17 | Arte | Kael Anjo pronta; 9 vídeos das skins do Kael e 33 do lote 2 em processamento; montaria parada feita de graça |
+| 18 | QA na tela | Lotes em andamento com 2 subagentes |
+| 19 | APK | v0.13.2 instalada no S24; a próxima sai depois da conferência do QA |
+| — | Recomendações do Legend of Mushroom | Aprovadas pelo dono; P1 com regras prontas, telas em andamento |
