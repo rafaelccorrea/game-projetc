@@ -60,6 +60,7 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 10:24 (Brasília) | convidado "Viajante6288" (S1, sem nome, Nv. 1) | criado sozinho pelo boot logo depois do teste de Excluir conta do QA (origem .7) | defeito corrigido: convidado só nasce no JOGAR |
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (6ª execução, limpeza de contas) | idem às outras execuções |
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (7ª execução, exclusão em todos os servidores) | idem |
+| 13/11/2026 ~12:05 (Brasília) | convidado "Viajante5501" (personagem "LoboRubro", S1) | QA no navegador, origem 127.0.0.8:8080 (reteste "convidado só no JOGAR", 749d943) | excluída pelo próprio teste; conferir no banco quando o SSH voltar |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
 
