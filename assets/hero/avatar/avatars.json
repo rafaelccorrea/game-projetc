@@ -118,6 +118,24 @@
     "ang": 0.5,
     "s": 0.6983
    }
+  },
+  "kael_solar_paladin": {
+   "file": "kael_solar_paladin.png",
+   "head": {
+    "x": 128,
+    "y": 96.7,
+    "ang": -0.5,
+    "s": 0.6983
+   }
+  },
+  "kaia_angel": {
+   "file": "kaia_angel.png",
+   "head": {
+    "x": 127.2,
+    "y": 96.6,
+    "ang": 0,
+    "s": 0.6929
+   }
   }
  }
 }
