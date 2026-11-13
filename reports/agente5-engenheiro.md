@@ -1492,3 +1492,22 @@ Item 2 (mudança de poder na tela, `fcNotice`):
 Também nesta passada: 7 ícones novos do MENU (arena, guild, tourney, codex, chat, map, mounts) na tabela; níveis do PO para Mapa 1, Códex 12 e Chat 16 (saíram de trás do `NEXT_ON`; dependem só da chave `PANEL_ON`); nomes das habilidades das eras 7 e 8 marcados como aprovados.
 
 NÃO conferido ainda (itens 3 a 6 e pendências): montarias (serpe, pônei, cavalo, tigre; correr, golpe, morte; os 3 ajustes; prints); morte nova do Kael; inimigo parado; era 4 viva e desempenho; efeito da ultimate por raridade; instância, Troca de era, Vitória/Derrota; aviso de poder no Equipar melhor de verdade, na Forja e ao entrar/sair do Modo dono; aviso duplicado com o "FC +N" do agente B; os 7 ícones novos carregando na tela (as telas estão desligadas); missão guia; 360x640. O teste de jogador novo usou o mesmo armazenamento do navegador que a aba do QA: guardei e devolvi o save no fim, mas a aba dela pode ter gravado por cima no meio.
+
+## v0.12.8, conferência no navegador, 2ª parte (parcial) (2026-11-12)
+
+Visto (390x844, era 4, `?debug=1&fresh=1`, nível 60), zero erro no console:
+- **Cenário vivo da era 4** ligado (fábrica em camadas).
+- **Serpe dourada V2** montada, 5 estrelas, com asa de anjo e pet (Esfinge): Kael sentado, arma na mão, asa do Kael mais alta e atrás com contorno claro, pet embaixo e à frente com as patas da frente da serpe visíveis, inimigo à direita. Print `v0128_serpe_asa_pet_era4.png`.
+- **Morte nova do Kael**, montado e com pet: cai de joelho, a arma cai ao lado, a tela escurece com "DERROTADO", a montaria sai de cena, o pet fica parado. Print `v0128_morte_nova_montado_com_pet.png`.
+- **Efeito por raridade** (valores lidos do módulo para a ultimate): partículas 1 / 1,2 / 1,5 / 1,9 / 2,4; tamanho do golpe final 1 / 1,05 / 1,1 / 1,2 / 1,3; tremor 1 / 1 / 1,1 / 1,2 / 1,3; clarão só em Mítico e Lendário.
+
+DESEMPENHO (estimativa, PC, aba em primeiro plano, 15 s, mesmo método), com TUDO ligado (serpe 5 estrelas + pet + asa + era 4 viva): desenho 3,31 ms por quadro em média (95% até 7,4 ms); 33,7 quadros/s nesta medida (a máquina oscila muito: não vale como número de celular); memória do JS 27 MB. O desenho custa o dobro da era 0 (1,6 ms), por causa do cenário vivo.
+
+Anotado, não corrigido: na morte montado as barras de vida continuam na altura da sela (o Kael já está no chão).
+
+NÃO conferido nesta parte (fica para a próxima passada): pônei, cavalo e tigre; lobo e grifo refeitos; correr e golpe montado; aura em 1 estrela; prints `v0127_*` refeitos; morte a pé; inimigo parado nas eras 0–6 e o pulo ao voltar ao golpe; a ultimate por raridade A OLHO (clarão, tremor em px); aviso de poder no "Equipar melhor" real, na Forja e ao entrar/sair do Modo dono; aviso duplicado com o agente B; Troca de era de verdade; luta da instância; missão guia; 360x640; desempenho da era 4 SEM montaria/pet/asa para comparar.
+
+### v0.12.8, nota de parada (2026-11-12)
+- Escrito e NÃO visto: na morte montado as barras de vida descem com o Kael (`heroRise()` devolve 0 enquanto `B.deadT > 0` com a morte nova ligada; o HUD já refaz a posição quando esse valor muda).
+- BLOCO A e BLOCO B do coordenador: NÃO iniciados nesta passada, fora a linha acima. Continuam abertos, na ordem dele: (1) morte a pé e conferir as barras; (2) inimigo parado nas eras 0–6; (3) ultimate por raridade a olho; (4) pônei, cavalo, tigre, lobo, grifo em movimento, aura 1 e 5 estrelas, prints `v0128_*`; (5) aviso de poder no Equipar melhor real, Forja e Modo dono; (6) custo do cenário da era 4 sozinho; (7) Troca de era; (8) luta da instância; (9) missão guia; (10) `setView('missions')` direto para a tela nova (B-26); (11) módulos chat, codex, phaseup, evtrail, name + provedores `P_CHAT` / `P_CODEX` + `Sys.codex.sync`.
+- Achados do QA ainda não tratados: retorno imediato ao tocar em Pets (leva ~1 s para abrir); tutorial de save novo esperar a tela aberta fechar.
