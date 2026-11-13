@@ -1,0 +1,547 @@
+<title>Eonbound Equipamento V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Perfil V5 aprovado.
+   Equipamento V2: o herói fica SEMPRE à vista no topo, com a ARMA EQUIPADA NA MÃO (corpo sem arma do jogo + a arma no grip de cada quadro, como js/stage.js),
+   asa nas costas e pet na frente. Tocou, trocou: a peça vai para o herói na hora e a faixa de detalhe mostra o antes e o depois. Nunca rolagem horizontal. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:380px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(94,231,255,.18),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 28%,var(--night) 42%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(94,231,255,.5)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:236px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:236px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap}
+.who i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.slot{position:absolute;z-index:3;width:50px;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:0}
+.slot .sb{position:relative;width:46px;height:46px;border-radius:13px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 38%,#1a2366),#0c1238);box-shadow:0 0 8px color-mix(in srgb,var(--rc) 45%,transparent);overflow:hidden}
+.slot .sb img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.slot .fg{position:absolute;right:1px;top:1px;padding:0 4px;border-radius:6px;background:rgba(5,8,28,.85);color:var(--gold);font-size:9px;font-weight:900;line-height:13px}
+.slot .sl{font-size:9px;font-weight:900;color:var(--muted);text-shadow:0 1px 0 #000;white-space:nowrap}
+.slot.on .sb{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(255,210,94,.6)}
+.slot.on .sl{color:var(--gold)}
+.slot .up{position:absolute;left:1px;top:1px;width:14px;height:14px;border-radius:5px;background:var(--green);display:grid;place-items:center}
+.slot .up svg{width:10px;height:10px}
+
+.fcrow{position:relative;z-index:3;display:flex;align-items:center;gap:8px;margin:2px 12px 0;padding:4px 8px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5)}
+.fcb{flex:1;min-width:0}
+.fcb small{display:block;font-size:9px;letter-spacing:1.2px;color:var(--gold);font-weight:900}
+.fcb b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fcb em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--green);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcb em.m{color:var(--muted)}
+.bt{flex:none;min-width:76px;height:38px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green);cursor:default}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f;box-shadow:0 3px 0 #164e8c}
+.bt.red{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a;box-shadow:none}
+.bt svg{width:14px;height:14px}
+
+/* faixa de detalhe e comparação (no lugar de janela por cima do herói) */
+.det{position:relative;z-index:3;margin:6px 12px 0;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);animation:rin .2s ease-out}
+.dt{display:flex;gap:9px;align-items:center}
+.dt .di0{flex:none;width:42px;height:42px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.dt .di0 img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.dt .di{flex:1;min-width:0}
+.dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh b{color:var(--gold)}
+.dx{flex:none;width:28px;height:28px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.05);display:grid;place-items:center;padding:0}
+.dx svg{width:12px;height:12px}
+.cmp{display:flex;align-items:center;gap:6px;margin-top:6px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
+.cmp small{font-size:9px;letter-spacing:1px;color:var(--muted);flex:none}
+.cmp .a{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp .b{font-family:var(--fd);font-weight:400;font-size:17px;color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp svg{width:14px;height:14px;flex:none}
+.cmp .d{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:var(--green)} .dn2{color:var(--red)} .eq0{color:var(--muted)}
+.sts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:5px}
+.sts div{border-radius:9px;background:rgba(5,8,28,.45);padding:4px 6px;min-width:0}
+.sts small{display:flex;justify-content:space-between;gap:3px;font-size:9px;font-weight:900;color:var(--muted);letter-spacing:.4px;white-space:nowrap}
+.sts b{display:block;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sts em{font-style:normal;font-size:9px;font-weight:900;letter-spacing:0;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.acts{display:flex;gap:6px;margin-top:7px}
+.acts .bt{flex:1 1 0;min-width:0;height:36px;font-size:11px;padding:0 6px}
+.acts .bt span{overflow:hidden;text-overflow:ellipsis}
+
+.tabs{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:6px 12px 0;padding:3px;border-radius:14px;background:rgba(5,8,28,.75);border:1px solid var(--line)}
+.tab{height:26px;border:0;border-radius:10px;background:none;font-weight:900;font-size:11px;color:var(--muted);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:7px 12px 20px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.filt{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+.fb{height:26px;padding:0 9px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:900;font-size:11px;color:var(--muted);white-space:nowrap}
+.fb[aria-pressed="true"]{border-color:var(--fc,var(--gold));color:var(--fc,var(--gold));background:rgba(255,210,94,.1)}
+.fb i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;background:var(--fc)}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:2px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right}
+.sec b{color:var(--text)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 7px;line-height:1.4}
+.hint b{color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.cell{position:relative;width:100%;aspect-ratio:1;border-radius:13px;border:2px solid color-mix(in srgb,var(--rc) 75%,transparent);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);padding:0;overflow:hidden}
+.cell img{position:absolute;inset:7%;width:86%;height:86%;object-fit:contain}
+.cell.lock img{filter:grayscale(.85) brightness(.5)}
+.cell.sel{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(255,210,94,.5)}
+.cell .eqb{position:absolute;left:2px;bottom:2px;font-size:8px;font-weight:900;padding:1px 4px;border-radius:5px;background:var(--green);color:#043018}
+.cell .lv{position:absolute;right:3px;bottom:2px;font-size:9px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 3px #000}
+.cell .ar{position:absolute;right:2px;top:2px;width:15px;height:15px;border-radius:5px;background:var(--green);display:grid;place-items:center;box-shadow:0 0 6px rgba(94,240,160,.7)}
+.cell .ar svg{width:11px;height:11px}
+.cell .lk{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:5px;background:rgba(5,8,28,.85);display:grid;place-items:center}
+.cell .lk svg{width:10px;height:10px}
+.cell .fg{position:absolute;left:2px;top:2px;padding:0 4px;border-radius:6px;background:rgba(5,8,28,.85);color:var(--gold);font-size:9px;font-weight:900;line-height:13px}
+.cname{font-size:9px;font-weight:900;text-align:center;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{padding:22px 14px;border-radius:14px;background:var(--glass);border:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;font-weight:800;line-height:1.4}
+.row{display:flex;gap:10px;align-items:center;padding:8px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px}
+.row img{flex:none;width:40px;height:40px;object-fit:contain}
+.row div{flex:1;min-width:0}
+.row b{display:block;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row small{display:block;font-size:11px;color:var(--muted);font-weight:700}
+.row strong{flex:none;font-family:var(--fd);font-weight:400;font-size:19px;font-variant-numeric:tabular-nums}
+
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.7);display:flex;align-items:center;animation:fade .2s}
+.modal{margin:auto 16px;width:100%;max-height:80%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;animation:up .25s ease-out}
+.modal h3{font-family:var(--fd);font-weight:400;font-size:22px;margin:0 0 8px}
+.modal p{margin:0 0 6px;font-size:13px;color:var(--muted);line-height:1.45}
+.modal p b{color:var(--text)}
+.mi{display:flex;gap:10px;align-items:center;padding:8px;border-radius:14px;background:rgba(5,8,28,.5);margin-bottom:10px}
+.mi .di0{flex:none;width:48px;height:48px;border-radius:12px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);position:relative;overflow:hidden}
+.mi .di0 img{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.gain{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+.gain span{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:9px;background:rgba(94,240,160,.12);color:var(--green);font-weight:900;font-size:12px}
+.gain img{width:18px;height:18px}
+.macts{display:flex;gap:8px;margin-top:12px}
+.macts .bt{flex:1;height:46px;font-size:14px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.fcfly{position:absolute;z-index:40;left:50%;top:214px;transform:translateX(-50%);font-family:var(--fd);font-size:26px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap}
+.fcfly.up{color:var(--green)} .fcfly.dn{color:var(--red)}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="760"></canvas>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">EQUIPAMENTO</div>
+          <div class="cur"><img src="a/coin.png" alt=""><span id="gold">0</span></div>
+          <div class="cur"><img src="a/gem.png" alt=""><span>251</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="472" role="img" aria-label="Seu herói com a arma equipada na mão, asa e pet"></canvas>
+          <div class="who" id="who"><i></i>Kael · Nível 13</div>
+          <div id="slots"></div>
+        </div>
+        <div class="fcrow">
+          <div class="fcb"><small>PODER (FC)</small><b id="fc">0</b><em id="fcsub"></em></div>
+          <button class="bt" id="best"><svg viewBox="0 0 24 24" fill="none" stroke="#1c1206" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>Melhor equipamento</button>
+        </div>
+        <div id="det"></div>
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Equipamento (versão 2)</h1>
+    <p class="sub">O herói fica sempre à vista no topo, com a arma equipada na mão, a asa nas costas e o pet na frente. As 7 peças ficam em volta dele. Tocou, trocou: a peça da mochila vai para o herói na hora, e a faixa mostra o FC de antes e de agora, atributo por atributo. Na mochila, a seta verde marca o que é melhor que o que você usa.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="O que o jogador tem" style="margin-top:8px"><button data-all="0" aria-pressed="true">Jogador nível 13</button><button data-all="1" aria-pressed="false">Tudo liberado</button></div>
+      <p class="sub" style="margin-top:8px">"Jogador nível 13": mochila de quem está na era 2; as peças da era 3 aparecem com cadeado (prévia do FC, sem trocar). "Tudo liberado" é o Modo dono: armas de fogo da era 3, arco, bumerangue, Divino e mais asas, sem limite de nível.</p>
+    </div>
+    <div class="box">
+      <h2>Como funciona</h2>
+      <ul>
+        <li>Toque numa peça da mochila: ela vai para o herói na hora e o FC sobe ou desce na tela</li>
+        <li>A faixa mostra FC antes e agora, e ATQ, VIDA, DEF e CRÍT em verde ou vermelho; "Voltar" desfaz</li>
+        <li>Peça com cadeado: só a prévia do FC, a troca libera no nível</li>
+        <li>A Forja fica no espaço (+N): vale para qualquer peça que você puser nele</li>
+        <li>Desmontar pede confirmação dentro do jogo e devolve ouro e pedras de forja</li>
+        <li>Sem sorteio pago: as peças vêm de inimigos, chefes e baús</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: peças maiores, FC mais em cima"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- dados medidos dos arquivos do jogo (gerados de assets/weapons/meta.json e dos .json dos corpos) ----------
+   W[chave]: caixa opaca da arma (fx,fy,fw,fh, igual ao SPR do jogo, limiar alfa 40) + grip/angle/len/muzzle/nock/scale do meta.json; o PNG a/wh_<chave>.png é o
+   recorte pré-renderizado com lado maior 300 (o mesmo que o jogo guarda em memória). B[corpo]: grip por quadro [x,y,ang,ux,uy,f0,f1,hw,behind], back (mediana),
+   linha do pescoço por quadro (cabeça por cima da lâmina). PS: escala da pistola da era 3 (pistol/<herói>_pistol_idle_era3_t0.json). */
+const D={"W":{"era0_t0":{"w":146,"h":300,"fx":0.32031,"fy":0.12891,"fw":0.35938,"fh":0.73828,"kb":43,"type":"melee","grip":[0.489,0.75],"angle":112,"len":0.621},"era0_t2":{"w":187,"h":300,"fx":0.26172,"fy":0.13281,"fw":0.46484,"fh":0.74609,"kb":69,"type":"melee","grip":[0.395,0.729],"angle":86,"len":0.671},"era1_t1":{"w":81,"h":300,"fx":0.38672,"fy":0.08203,"fw":0.22656,"fh":0.83594,"kb":28,"type":"melee","grip":[0.5,0.79],"angle":90,"len":0.708},"era1_mitico":{"w":227,"h":300,"fx":0.18359,"fy":0.08203,"fw":0.63281,"fh":0.83594,"kb":63,"type":"melee","grip":[0.5,0.79],"angle":90,"len":0.708},"era1_t2":{"w":270,"h":300,"fx":0.14453,"fy":0.10938,"fw":0.71094,"fh":0.78906,"kb":78,"type":"melee","grip":[0.5,0.765],"angle":90,"len":0.656},"era2_t0":{"w":95,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.82813,"kb":31,"type":"melee","grip":[0.496,0.78],"angle":90,"len":0.694},"era2_raro":{"w":92,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.85156,"kb":24,"type":"melee","grip":[0.496,0.78],"angle":90,"len":0.694},"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},"era2_mitico":{"w":186,"h":300,"fx":0.29297,"fy":0.125,"fw":0.47266,"fh":0.76172,"kb":55,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696},"era2_t2":{"w":199,"h":300,"fx":0.26953,"fy":0.16016,"fw":0.44141,"fh":0.66406,"kb":51,"type":"melee","grip":[0.362,0.705],"angle":57.5,"len":0.642},"era3_raro":{"w":300,"h":216,"fx":0.08203,"fy":0.19922,"fw":0.83594,"fh":0.60156,"kb":66,"type":"gun","grip":[0.19,0.63],"angle":5,"len":0.745,"muzzle":[0.895,0.39]},"era3_t1":{"w":300,"h":234,"fx":0.08594,"fy":0.1875,"fw":0.83984,"fh":0.65625,"kb":85,"type":"gun","grip":[0.205,0.65],"angle":14,"len":0.78,"muzzle":[0.88,0.29]},"era3_t2":{"w":300,"h":185,"fx":0.06641,"fy":0.25,"fw":0.86328,"fh":0.53125,"kb":64,"type":"gun","grip":[0.165,0.62],"angle":2,"len":0.773,"muzzle":[0.905,0.39]},"bow_raro":{"w":73,"h":300,"fx":0.39844,"fy":0.07813,"fw":0.20313,"fh":0.83984,"kb":22,"type":"bow","grip":[0.556,0.5],"angle":90,"len":0.839,"nock":[0.398,0.5],"scale":1},"boomerang_raro":{"w":300,"h":207,"fx":0.07813,"fy":0.21094,"fw":0.83984,"fh":0.57813,"kb":50,"type":"boomerang","grip":[0.149,0.721],"angle":61.6,"len":0.579,"center":[0.5,0.5],"scale":0.6}},"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]},"kael_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[313.81,133.99,4.26,0.9972,-0.0744,-4.57,4.57,3.43,0],[312.33,133.76,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.67,133.82,5.47,0.9955,-0.0953,-4.57,4.57,3.43,0],[310.33,136.05,4.75,0.9966,-0.0828,-4.57,4.57,3.43,0],[310.5,137.08,3.96,0.9976,-0.069,-4.57,4.57,3.43,0],[312.5,136.33,5.27,0.9958,-0.0918,-4.57,4.57,3.43,0],[310.44,135.82,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.04,135.53,5.54,0.9953,-0.0966,-4.57,4.57,3.43,0],[310.33,135.59,5.01,0.9962,-0.0873,-4.57,4.57,3.43,0],[311.01,136.68,3.9,0.9977,-0.0681,-4.57,4.57,3.43,0],[310.67,136.16,3.65,0.998,-0.0637,-4.57,4.57,3.43,0],[310.61,135.36,4.39,0.9971,-0.0766,-4.57,4.57,3.43,0]],"back":{"x":202.2,"y":166,"a":0,"s":1},"neck":null},"kaia_p":{"w":448,"h":256,"n":12,"fps":12,"pad":96,"fy":243,"g":[[320.22,152.93,2.73,0.9989,-0.0476,-4.43,4.43,3.32,0],[319.23,154.26,2.28,0.9992,-0.0398,-4.43,4.43,3.32,0],[320.34,154.2,2.06,0.9994,-0.0359,-4.43,4.43,3.32,0],[320.06,152.88,2.96,0.9987,-0.0516,-4.43,4.43,3.32,0],[319.23,151.44,3.49,0.9981,-0.0608,-4.43,4.43,3.32,0],[319.01,151.99,3.82,0.9978,-0.0666,-4.43,4.43,3.32,0],[320.5,153.21,2.75,0.9988,-0.0479,-4.43,4.43,3.32,0],[319.73,154.2,2.51,0.999,-0.0439,-4.43,4.43,3.32,0],[319.34,154.15,2.17,0.9993,-0.0378,-4.43,4.43,3.32,0],[320.11,152.88,3.08,0.9986,-0.0537,-4.43,4.43,3.32,0],[319.34,151.99,3.55,0.9981,-0.0619,-4.43,4.43,3.32,0],[319.39,153.32,2.69,0.9989,-0.0469,-4.43,4.43,3.32,0]],"back":{"x":202,"y":166,"a":13.9,"s":1},"neck":null}},"PS":{"kael":0.0751,"kaia":0.0591}};
+
+/* raridades do jogo (Básico → Divino), cores do Perfil V5 aprovado */
+const RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'];
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtK=v=>{ const k=v/1000; return (k>=100?Math.round(k):k.toFixed(1)).toString().replace('.',',')+' mil'; };
+const fmtF=v=>Math.abs(v)>=1000?fmtK(v):n(v);
+const fmtG=v=>v>=1e6?(v/1e6).toFixed(1).replace('.',',')+' mi':v>=1000?fmtK(v):n(v);
+const pct=v=>v.toFixed(1).replace('.',',')+'%';
+const SV={up:'<svg viewBox="0 0 24 24" fill="none" stroke="#043018" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V6M6 11l6-6 6 6"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="#c9d0f5"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ go:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+ hammer:'<svg viewBox="0 0 24 24" fill="none" stroke="#1c1206" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6zM11 7l-8 8 3 3 8-8"/></svg>',
+ undo:'<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4 12l5 5M4 12h11a5 5 0 010 10h-2"/></svg>'};
+
+/* ---------- espaços e peças ---------- */
+const SLOTS=[['weapon','Arma'],['hat','Chapéu'],['armor','Armadura'],['gloves','Luvas'],['necklace','Colar'],['boots','Botas'],['wing','Asa']];
+const SLN=Object.fromEntries(SLOTS);
+const SLOT_POS={weapon:[10,2],hat:[10,58],armor:[10,114],gloves:[10,170],necklace:[330,30],boots:[330,86],wing:[330,142]};
+const ICO_SLOT={armor:'vest',hat:'helmet',gloves:'gloves',boots:'boots',necklace:'necklace'};
+const ERAN=['Pré-História','Antiguidade','Medieval','Era da Pólvora'];
+const WKEY=['t0','raro','t1','mitico','t2','t2'];   /* arma por raridade, como wKey do jogo (Divino usa a arte do Lendário) */
+const TIER=[0,0,1,1,2,2];                            /* ícone da peça: _t1/_t2 pela raridade (Sys.assets.tierIcon) */
+const WINGN={angel:'Asa de anjo',demon:'Asa demoníaca',shadow:'Asa de sombra',bone:'Asa de ossos'};
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1},demon:{L:[0.996,0.665,227,179],R:[0,0.665,227,179],fit:1},bone:{L:[0.996,0.927,229,281],R:[0,0.927,230,281],fit:0.93},shadow:{L:[0.996,0.821,231,333],R:[0,0.821,229,335],fit:0.85}};
+/* id, espaço, era, raridade, nível, nome, extra; all:1 = só no Tudo liberado. Nomes das tabelas do jogo (index.html ERAS e js/sys/loot.js) */
+const ITEMS=[
+ {id:'w1',slot:'weapon',e:2,r:2,lvl:12,name:'Lâmina Rúnica'},
+ {id:'w2',slot:'weapon',e:2,r:1,lvl:13,name:'Espada de Aço'},
+ {id:'w3',slot:'weapon',e:1,r:3,lvl:11,name:'Xifos Espartano'},
+ {id:'w4',slot:'weapon',e:0,r:4,lvl:8,name:'Presa de Mamute'},
+ {id:'w5',slot:'weapon',e:2,r:0,lvl:13,name:'Espada Enferrujada'},
+ {id:'w6',slot:'weapon',e:1,r:2,lvl:9,name:'Falcata de Ferro'},
+ {id:'w7',slot:'weapon',e:3,r:1,lvl:16,name:'Mosquete',gun:1},
+ {id:'w8',slot:'weapon',e:2,r:3,lvl:15,name:'Espada do Dragão',all:1},
+ {id:'w9',slot:'weapon',e:2,r:4,lvl:18,name:'Excalibur',all:1},
+ {id:'w10',slot:'weapon',e:3,r:2,lvl:17,name:'Arcabuz Raro',gun:1,all:1},
+ {id:'w11',slot:'weapon',e:3,r:4,lvl:20,name:'Canhão de Mão Dourado',gun:1,all:1},
+ {id:'w12',slot:'weapon',e:1,r:5,lvl:20,name:'Lâmina de Aquiles',all:1},
+ {id:'w13',slot:'weapon',e:0,r:0,lvl:3,name:'Graveto Afiado',all:1},
+ {id:'w14',slot:'weapon',e:2,r:1,lvl:14,name:'Arco e flecha',wk:'bow_raro',wt:'bow',all:1},
+ {id:'w15',slot:'weapon',e:2,r:1,lvl:14,name:'Bumerangue',wk:'boomerang_raro',wt:'boomerang',all:1},
+ {id:'a1',slot:'armor',e:2,r:2,lvl:12,name:'Armadura de Placas'},
+ {id:'a2',slot:'armor',e:2,r:1,lvl:13,name:'Cota de Malha'},
+ {id:'a3',slot:'armor',e:1,r:3,lvl:10,name:'Armadura Hoplita'},
+ {id:'a4',slot:'armor',e:3,r:4,lvl:18,name:'Manto do Almirante',all:1},
+ {id:'h1',slot:'hat',e:2,r:1,lvl:12,name:'Elmo de Ferro'},
+ {id:'h2',slot:'hat',e:2,r:2,lvl:11,name:'Elmo de Cavaleiro'},
+ {id:'h3',slot:'hat',e:0,r:4,lvl:8,name:'Cocar do Xamã'},
+ {id:'h4',slot:'hat',e:3,r:3,lvl:16,name:'Bicorne do Comodoro',all:1},
+ {id:'g1',slot:'gloves',e:2,r:2,lvl:12,name:'Manoplas de Ferro'},
+ {id:'g2',slot:'gloves',e:1,r:1,lvl:9,name:'Luvas de Couro'},
+ {id:'g3',slot:'gloves',e:3,r:4,lvl:18,name:'Luvas do Capitão Fantasma',all:1},
+ {id:'b1',slot:'boots',e:1,r:3,lvl:10,name:'Grevas Espartanas'},
+ {id:'b2',slot:'boots',e:2,r:3,lvl:13,name:'Escarpes Rúnicos'},
+ {id:'b3',slot:'boots',e:2,r:0,lvl:13,name:'Botas de Lã'},
+ {id:'b4',slot:'boots',e:3,r:4,lvl:19,name:'Botas do Almirante',all:1},
+ {id:'n1',slot:'necklace',e:2,r:1,lvl:12,name:'Medalhão de Ferro'},
+ {id:'n2',slot:'necklace',e:2,r:2,lvl:12,name:'Relicário do Templário'},
+ {id:'n3',slot:'necklace',e:3,r:1,lvl:16,name:'Medalha de Bravura'},
+ {id:'n4',slot:'necklace',e:3,r:5,lvl:20,name:'Amuleto do Kraken',all:1},
+ {id:'s1',slot:'wing',e:2,r:2,lvl:12,wing:'angel'},
+ {id:'s2',slot:'wing',e:1,r:2,lvl:10,wing:'demon'},
+ {id:'s3',slot:'wing',e:3,r:3,lvl:16,wing:'shadow',all:1},
+ {id:'s4',slot:'wing',e:3,r:2,lvl:15,wing:'bone',all:1}];
+for(const it of ITEMS){ if(it.wing) it.name=WINGN[it.wing]; it.req=it.e>=3?16:0; }
+const EQ0={weapon:'w1',armor:'a1',hat:'h1',gloves:'g1',boots:'b1',necklace:'n1',wing:'s1'};
+const FORGE0={weapon:7,armor:5,hat:4,gloves:5,boots:3,necklace:4,wing:2};
+const wkey=it=>it.wk||('era'+it.e+'_'+WKEY[it.r]);
+const isGun=it=>!!it&&it.slot==='weapon'&&!it.wk&&D.W[wkey(it)]&&D.W[wkey(it)].type==='gun';
+function icon(it){ if(it.slot==='weapon') return it.wk?'a/wh_'+it.wk+'.png':'a/ic_'+wkey(it)+'.png';
+  if(it.slot==='wing') return 'a/wing_'+it.wing+'.png';
+  const t=TIER[it.r]; return 'a/era'+it.e+'_'+ICO_SLOT[it.slot]+(t?'_t'+t:'')+'.png'; }
+
+/* ---------- atributos e FC (modelo do protótipo: era × raridade × nível; a Forja do espaço multiplica) ---------- */
+const PROF={weapon:{atq:60,crit:.35},armor:{vida:520,def:22},hat:{vida:300,def:14},gloves:{atq:26,crit:.25},boots:{def:20,vida:200},necklace:{atq:18,crit:.3,vida:120},wing:{def:16,vida:180,atq:12}};
+const RM=[1,1.3,1.7,2.2,2.9,3.8];
+const BASE={atq:420,vida:5200,def:180,crit:5};
+function itemStats(it,fl){ const p=(1+.55*it.e)*RM[it.r]*(1+.05*it.lvl)*(it.wt==='bow'?.95:1)*(1+.06*(fl||0)), o={atq:0,vida:0,def:0,crit:0}; for(const k in PROF[it.slot]) o[k]=PROF[it.slot][k]*p; return o; }
+function totals(eq){ const t={...BASE}; for(const s in eq){ const it=byId(eq[s]); if(!it) continue; const st=itemStats(it,S.forge[s]); for(const k in t) t[k]+=st[k]; } return t; }
+const fcOf=t=>(t.atq*34+t.vida*2.8+t.def*22+t.crit*840)*0.87464;   /* calibrado: o mesmo FC do Perfil V5 (92,1 mil) com o equipamento inicial */
+const fcEq=eq=>fcOf(totals(eq));
+const withIt=(it)=>({...S.eq,[it.slot]:it.id});
+
+/* ---------- estado ---------- */
+let S={hero:'kael',all:false,inv:[],eq:{},forge:{},gold:0,stones:6,sel:null};
+let tab='weapon', slotF='all', rarF=-1, sortBy='fc';
+const byId=id=>S.inv.find(i=>i.id===id);
+const usable=it=>S.all||!it.req;
+const isEq=it=>S.eq[it.slot]===it.id;
+function reset(){ S.inv=ITEMS.filter(i=>S.all||!i.all).map(i=>({...i})); S.eq={...EQ0}; S.forge={...FORGE0}; S.gold=S.all?99900000:486000; S.stones=S.all?240:6; S.sel=null; }
+const BAGMAX=80;
+
+/* ---------- PALCO EM CANVAS (receita do jogo: js/stage.js drawHeroAnim / drawHeroPhase / drawHeroPistol) ---------- */
+const IM={};
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=new Image(); o.src=u; } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+/* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo: GLOWB/TINT; o Básico fica sem nada) */
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+/* giro da arma (wAngOf do jogo): eixo da mão do quadro menos o ângulo nativo da arma; o arco fica em pé (no máximo 18 graus) */
+function wAng(W,G,gun){ const wang=typeof W.angle==='number'?W.angle:(gun?0:90); let d=G.ang-wang; if(W.type==='bow'){ d=((d+180)%360+360)%360-180; d=Math.max(-18,Math.min(18,d)); } return -d*Math.PI/180; }
+const HX=196, GY=222, HK=0.8;   /* centro dos pés, linha do chão e escala do quadro de 256 (herói ~165 px de altura) */
+function drawHero(x,t){
+  const wi=byId(S.eq.weapon), gun=isGun(wi), bid=S.hero+(gun?'_p':''), B=D.B[bid], sheet=img('a/body_'+bid+'.png');
+  if(!ok(sheet)) return;
+  const fi=Math.floor(t*B.fps)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]}, k=HK;
+  /* Kael padrão = drawHeroAnim (pés em 242 do quadro de 256); Kaia e pistola = folhas com padLeft/feetY do .json */
+  const x0=HX-(B.pad+128)*k, y0=GY-((S.hero==='kael'&&!gun)?242:B.fy)*k;
+  /* sombra presa ao chão */
+  x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(HX-3,GY+2,34,8,0,0,7); x.fill(); x.restore();
+  /* asa: atrás do corpo, raiz na âncora das costas (back do .json), batendo */
+  const wg=byId(S.eq.wing), WA=wg&&WING_AN[wg.wing];
+  if(WA&&B.back){ const Li=img('a/wg_'+wg.wing+'_L.png'), Ri=img('a/wg_'+wg.wing+'_R.png');
+    if(ok(Li)&&ok(Ri)){ const b=B.back, ax=x0+b.x*k, ay=y0+b.y*k, sc=k*0.62*b.s*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+      x.save(); x.translate(ax,ay); x.rotate(b.a*Math.PI/180); x.scale(sc,sc);
+      x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+      x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+      x.restore(); } }
+  x.save(); x.translate(x0,y0); x.scale(k,k);   /* daqui em diante: espaço do quadro */
+  const body=()=>x.drawImage(sheet,fi*B.w,0,B.w,B.h,0,0,B.w,B.h);
+  const W=wi?D.W[wkey(wi)]:null, ws=W?wSpr(wkey(wi),wi.r):null;
+  if(gun){ /* PISTOLA (drawHeroPistol): corpo, arma no grip com a escala aprovada da era, dedos por cima do cabo */
+    body();
+    if(ws){ const S0=D.PS[S.hero]*1024, grip=W.grip||[0.2,0.65], wang=typeof W.angle==='number'?W.angle:0, ang=-(G.ang-wang)*Math.PI/180;
+      const dw=W.fw*S0, dh=W.fh*S0, gx=(grip[0]-W.fx)*S0, gy2=(grip[1]-W.fy)*S0;
+      x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore();
+      fingers(x,G,body,-5,5,G.hw+5); }
+  } else { /* corpo a corpo, arco e bumerangue (drawHeroAnim / drawHeroPhase) */
+    let drawW=null;
+    if(ws){ const grip=W.grip||[0.5,0.78]; let kk=256*0.5/Math.max(W.w,W.h); if(wi.wk&&W.scale>0) kk*=W.scale;
+      const dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G,false);
+      drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+    const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+    if(drawW&&behind){ drawW(); body(); }
+    else { body(); if(drawW){ drawW();
+        fingers(x,G,body,-12,12,(S.hero==='kael'?G.hw:Math.min(G.hw,6))+5);   /* dedos por cima do cabo */
+        const nk=B.neck&&B.neck[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }   /* cabeça por cima da lâmina */
+  }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+function draw(t){
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,236);
+  const fi=Math.floor(t*12)%12;
+  /* chão */
+  const g=x.createRadialGradient(HX,GY,10,HX,GY,130); g.addColorStop(0,'rgba(94,231,255,.35)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,130,20,0,0,7); x.fill();
+  x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(HX,GY,104,15,0,0,7); x.stroke(); x.setLineDash([]);
+  drawHero(x,t);
+  /* PET SEMPRE NA FRENTE (regra do dono): desenhado depois do herói, à frente e abaixo (folha 512x352, pés em 307) */
+  const P=img('a/pt_pet_shadowwolf_idle.png'); if(ok(P)){ const kp=150/512, cx=126; x.drawImage(P,fi*512,0,512,352,cx-224*kp,GY+8-307*kp,512*kp,352*kp); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw((now-t0)/1000); requestAnimationFrame(loop); })(t0);
+
+/* ---------- topo: ouro, FC, espaços em volta do herói ---------- */
+function betterIn(slot){ const cur=fcEq(S.eq); return S.inv.filter(i=>i.slot===slot&&!isEq(i)&&usable(i)&&fcEq(withIt(i))>cur+0.5).length; }
+function renderTop(){
+  $('#gold').textContent=fmtG(S.gold); $('#fc').textContent=fmtK(fcEq(S.eq));
+  const nb=SLOTS.reduce((a,[s])=>a+(betterIn(s)?1:0),0);
+  const sub=$('#fcsub'); sub.className=nb?'':'m'; sub.textContent=nb?(nb===1?'1 espaço tem peça melhor na mochila':nb+' espaços têm peça melhor na mochila'):'Você já usa o melhor que tem';
+  $('#who').innerHTML='<i></i>'+(S.hero==='kael'?'Kael':'Kaia')+(S.all?' · Modo dono':' · Nível 13');
+  const selIt=S.sel&&byId(S.sel.id);
+  $('#slots').innerHTML=SLOTS.map(([s,nm])=>{ const it=byId(S.eq[s]), p=SLOT_POS[s], up=betterIn(s);
+    return `<button class="slot ${selIt&&selIt.slot===s?'on':''}" data-slot="${s}" style="left:${p[0]}px;top:${p[1]}px;--rc:${it?RC[it.r]:'#55608f'}" aria-label="${nm}: ${it?it.name+', '+RN[it.r]+', Forja +'+S.forge[s]:'vazio'}"><span class="sb">${it?`<img src="${icon(it)}" alt="">`:''}${S.forge[s]?`<span class="fg">+${S.forge[s]}</span>`:''}${up?`<span class="up">${SV.up}</span>`:''}</span><span class="sl">${nm}</span></button>`; }).join(''); }
+
+/* ---------- faixa de detalhe: comparação FC e atributos (verde sobe, vermelho desce) ---------- */
+function statCells(a,b){ return [['ATQ','atq'],['VIDA','vida'],['DEF','def'],['CRÍT','crit']].map(([l,k])=>{ const d=b[k]-a[k], cr=k==='crit', f=v=>cr?pct(v):n(v), dd=cr?Math.abs(d)>=0.05:Math.abs(d)>=0.5;
+  return `<div><small>${l}<em class="${!dd?'eq0':d>0?'up':'dn2'}">${!dd?'igual':(d>0?'▲ +':'▼ −')+(cr?pct(Math.abs(d)):n(Math.abs(d)))}</em></small><b>${f(b[k])}</b></div>`; }).join(''); }
+function renderDet(){ const d=$('#det'), sel=S.sel, it=sel&&byId(sel.id); if(!it){ d.innerHTML=''; return; }
+  const eq=isEq(it), use=usable(it), c=RC[it.r];
+  let A,Bq,label,mode;
+  if(!eq){ A=S.eq; Bq=withIt(it); label='FC ATUAL → NOVA'; mode='pre'; }
+  else if(sel.prev&&byId(sel.prev)){ A={...S.eq,[it.slot]:sel.prev}; Bq=S.eq; label='FC ANTES → AGORA'; mode='swap'; }
+  else { const o={...S.eq}; delete o[it.slot]; A=o; Bq=S.eq; label='FC SEM → COM ELA'; mode='own'; }
+  const ta=totals(A), tb=totals(Bq), fa=fcOf(ta), fb=fcOf(tb), df=fb-fa;
+  const dcls=Math.abs(df)<1?'eq0':df>0?'up':'dn2';
+  const dtxt=Math.abs(df)<1?'igual':(df>0?'▲ +':'▼ −')+fmtF(Math.abs(df));
+  const fl=S.forge[it.slot], cost=forgeCost(fl);
+  const sub=`${SLN[it.slot]} · Nv. ${it.lvl} · ${ERAN[it.e]} · Forja +${fl}`+(eq?' · <b>usando</b>':use?'':` · <b>libera no nível ${it.req}</b>`);
+  const forgeB=fl>=15?`<button class="bt off" disabled><span>Forja +15 (máx.)</span></button>`:`<button class="bt" data-forge="${it.slot}">${SV.hammer}<span>Forjar +${fl+1} · ${fmtG(cost)}</span></button>`;
+  const disB=eq?`<button class="bt off" disabled><span>Em uso</span></button>`:`<button class="bt red" data-dis="${it.id}"><span>Desmontar</span></button>`;
+  const eqB=mode==='swap'?`<button class="bt off" data-undo="1">${SV.undo}<span>Voltar</span></button>`:eq?`<span class="bt on"><span>Usando</span></span>`:use?`<button class="bt blue" data-equip="${it.id}"><span>Equipar</span></button>`:`<button class="bt off" disabled><span>Nível ${it.req}</span></button>`;
+  d.innerHTML=`<div class="det" style="--rc:${c}">
+    <div class="dt"><span class="di0"><img src="${icon(it)}" alt=""></span><div class="di"><div class="dn">${it.name} <span class="rar">${RN[it.r]}</span></div><div class="dh">${sub}</div></div><button class="dx" data-x="close" aria-label="Fechar detalhe">${SV.x}</button></div>
+    <div class="cmp"><small>${label}</small><span class="a">${fmtK(fa)}</span>${SV.go}<span class="b">${fmtK(fb)}</span><span class="d ${dcls}">${dtxt}</span></div>
+    <div class="sts">${statCells(ta,tb)}</div>
+    <div class="acts">${forgeB}${disB}${eqB}</div></div>`; }
+const forgeCost=lv=>Math.round(6000*Math.pow(1.35,lv)/100)*100;
+
+/* ---------- mochila ---------- */
+const TABS=[['weapon','Armas'],['gear','Equipamento'],['wing','Asas'],['pets','Pets'],['mounts','Montarias'],['skins','Skins'],['mats','Materiais'],['cons','Consumíveis']];
+function renderTabs(){ $('#tabs').innerHTML=TABS.map(([k,l])=>`<button class="tab" role="tab" data-t="${k}" aria-selected="${tab===k}">${l}</button>`).join(''); }
+function listItems(){ let L=S.inv.filter(i=>tab==='weapon'?i.slot==='weapon':tab==='wing'?i.slot==='wing':i.slot!=='weapon'&&i.slot!=='wing');
+  if(tab==='gear'&&slotF!=='all') L=L.filter(i=>i.slot===slotF);
+  if(rarF>=0) L=L.filter(i=>i.r===rarF);
+  const fc=i=>fcEq(withIt(i))-fcEq(S.eq);
+  const by={fc:(a,b)=>fc(b)-fc(a),rar:(a,b)=>b.r-a.r||b.lvl-a.lvl,lvl:(a,b)=>b.lvl-a.lvl||b.r-a.r}[sortBy];
+  return L.sort((a,b)=>(isEq(b)-isEq(a))||by(a,b)); }
+function cellHTML(it){ const eq=isEq(it), use=usable(it), d=eq?0:fcEq(withIt(it))-fcEq(S.eq), sel=S.sel&&S.sel.id===it.id;
+  const tag=eq?`<span style="color:var(--gold)">Usando</span>`:Math.abs(d)<1?'igual':`<span class="${d>0?'up':'dn2'}">${d>0?'+':'−'}${fmtF(Math.abs(d))}</span>`;
+  return `<div><button class="cell ${use?'':'lock'} ${sel?'sel':''}" style="--rc:${RC[it.r]}" data-it="${it.id}" aria-label="${it.name}, ${RN[it.r]}, nível ${it.lvl}${eq?', usando':''}${use?'':', libera no nível '+it.req}"><img src="${icon(it)}" alt="" loading="lazy">${eq?'<span class="eqb">Usando</span>':''}${eq&&S.forge[it.slot]?`<span class="fg">+${S.forge[it.slot]}</span>`:''}<span class="lv">${it.lvl}</span>${!use?`<span class="lk">${SV.lock}</span>`:(!eq&&d>=1?`<span class="ar">${SV.up}</span>`:'')}</button><div class="cname">${tag}</div></div>`; }
+function renderItems(){ const all=S.inv.filter(i=>tab==='weapon'?i.slot==='weapon':tab==='wing'?i.slot==='wing':i.slot!=='weapon'&&i.slot!=='wing'), L=listItems();
+  let h='';
+  if(tab==='gear') h+=`<div class="filt" role="group" aria-label="Filtro por espaço">${[['all','Todas']].concat(SLOTS.filter(s=>s[0]!=='weapon'&&s[0]!=='wing')).map(([k,l])=>`<button class="fb" data-sf="${k}" aria-pressed="${slotF===k}">${l}</button>`).join('')}</div>`;
+  const rs=[...new Set(all.map(i=>i.r))].sort((a,b)=>a-b);
+  h+=`<div class="filt" role="group" aria-label="Filtro por raridade"><button class="fb" data-rf="-1" aria-pressed="${rarF<0}">Todas</button>${rs.map(r=>`<button class="fb" data-rf="${r}" aria-pressed="${rarF===r}" style="--fc:${RC[r]}"><i></i>${RN[r]}</button>`).join('')}</div>`;
+  h+=`<div class="sec"><span style="display:flex;gap:4px;letter-spacing:0;text-transform:none">${[['fc','FC'],['rar','Raridade'],['lvl','Nível']].map(([k,l])=>`<button class="fb" data-sort="${k}" aria-pressed="${sortBy===k}">${l}</button>`).join('')}</span><span>Mochila <b>${S.inv.length}/${BAGMAX}</b></span></div>`;
+  if(!S.sel) h+=`<p class="hint">Tocou, trocou: a peça vai para o herói na hora. O número embaixo é quanto o FC muda; a <b>seta verde</b> marca o que é melhor.</p>`;
+  h+=L.length?`<div class="grid">${L.map(cellHTML).join('')}</div>`:`<div class="empty">Nenhuma peça com esse filtro.</div>`;
+  return h; }
+function simpleGrid(list){ return `<div class="grid">${list.map(o=>`<div><button class="cell" style="--rc:${RC[o.r]}" data-info="${o.info}" aria-label="${o.name}"><img src="${o.img}" alt="" loading="lazy">${o.eq?'<span class="eqb">Usando</span>':''}</button><div class="cname" style="color:var(--text)">${o.name}</div></div>`).join('')}</div>`; }
+function rowsHTML(list){ return list.map(o=>`<div class="row"><img src="${o.img}" alt=""><div><b>${o.name}</b><small>${o.sub}</small></div><strong>${o.v}</strong></div>`).join(''); }
+function renderBody(top){ const b=$('#body'), y=b.scrollTop; let h='';
+  if(tab==='weapon'||tab==='gear'||tab==='wing') h=renderItems();
+  else if(tab==='pets') h=`<div class="sec"><span>Pets</span><span>o pet fica na frente do herói</span></div>`+simpleGrid([{name:'Lobo das Sombras',img:'a/shadow_wolf.png',r:2,eq:1,info:'Pets'},{name:'Mamute',img:'a/era0_mammoth_evo.png',r:0,info:'Pets'}]);
+  else if(tab==='mounts') h=`<div class="sec"><span>Montarias</span><span>na batalha, o herói vai montado</span></div>`+simpleGrid([{name:'Cavalo',img:'a/horse.png',r:0,eq:1,info:'Montarias'},{name:'Lobo',img:'a/wolf.png',r:1,info:'Montarias'}]);
+  else if(tab==='skins') h=`<div class="sec"><span>Skins</span><span>trocar no Perfil · Visual</span></div>`+simpleGrid(S.hero==='kael'?[{name:'Kael (padrão)',img:'a/kael_phase0.png',r:0,eq:1,info:'Perfil'}]:[{name:'Kaia (padrão)',img:'a/kaia_phase0.png',r:0,eq:1,info:'Perfil'}]);
+  else if(tab==='mats') h=rowsHTML([{img:'a/forge.png',name:'Pedras de forja',sub:'Vêm de Desmontar e dos chefes',v:n(S.stones)},{img:'a/pets.png',name:'Ração',sub:'Alimenta o pet',v:'42'},{img:'a/gem.png',name:'Essência da Era',sub:'Transforma peças para a sua era',v:'3'}]);
+  else h=rowsHTML([{img:'a/chest.png',name:'Baús guardados',sub:'Abra no botão do baú, na batalha',v:'2'}]);
+  b.innerHTML=h; if(!top) b.scrollTop=y; }
+
+/* ---------- ações ---------- */
+function equip(it,quiet){ if(!usable(it)){ toast('Libera no nível '+it.req); return; } const prev=S.eq[it.slot], before=fcEq(S.eq);
+  S.eq[it.slot]=it.id; S.sel={id:it.id,prev:prev!==it.id?prev:null};
+  const d=fcEq(S.eq)-before; full(false); fcFly(d); if(!quiet) toast(it.name+' equipada'); }
+function tapItem(id){ const it=byId(id); if(!it) return;
+  if(isEq(it)){ S.sel={id,prev:S.sel&&S.sel.id===id?S.sel.prev:null}; full(false); return; }
+  if(!usable(it)){ S.sel={id,prev:null}; full(false); toast('Prévia: libera no nível '+it.req); return; }
+  equip(it,true); toast(it.name+(it.slot==='weapon'?' na mão':' equipada')); }   /* REGRA DO DONO: tocou, trocou (sem botão para o que você tem) */
+function undo(){ const it=byId(S.sel.id), p=byId(S.sel.prev); if(!it||!p) return; const before=fcEq(S.eq); S.eq[it.slot]=p.id; S.sel={id:it.id,prev:null}; full(false); fcFly(fcEq(S.eq)-before); toast('Voltou: '+p.name); }
+function best(){ const before=fcEq(S.eq); let ch=0;
+  for(const [s] of SLOTS){ let bi=byId(S.eq[s]), bf=fcEq(S.eq); for(const it of S.inv){ if(it.slot!==s||!usable(it)) continue; const f=fcEq(withIt(it)); if(f>bf+0.5){ bf=f; bi=it; } } if(bi&&bi.id!==S.eq[s]){ S.eq[s]=bi.id; ch++; } }
+  const d=fcEq(S.eq)-before; S.sel=null; full(false);
+  if(ch){ fcFly(d); toast(ch+(ch===1?' peça trocada':' peças trocadas')+' · +'+fmtF(d)+' FC'); } else toast('Você já está com o melhor equipamento'); }
+function forge(slot){ const lv=S.forge[slot], c=forgeCost(lv); if(lv>=15) return; if(S.gold<c){ toast('Falta ouro: '+fmtG(c-S.gold)); return; }
+  const before=fcEq(S.eq); S.gold-=c; S.forge[slot]=lv+1; full(false); fcFly(fcEq(S.eq)-before); toast(SLN[slot]+' na Forja +'+(lv+1)); }
+const DISG=[200,450,900,1800,3600,7200], DISS=[0,1,2,4,10,10];
+function askDis(id){ const it=byId(id); if(!it||isEq(it)) return; const g=Math.round(DISG[it.r]*(1+it.lvl*.1)/10)*10, st=DISS[it.r];
+  modal(`<h3>Desmontar?</h3><div class="mi" style="--rc:${RC[it.r]}"><span class="di0"><img src="${icon(it)}" alt=""></span><div style="min-width:0"><div class="dn">${it.name}</div><div class="rar">${RN[it.r]} · Nv. ${it.lvl}</div></div></div>
+  <p>A peça some da mochila. Você recebe:</p><div class="gain"><span><img src="a/coin.png" alt="">+${n(g)} ouro</span>${st?`<span><img src="a/forge.png" alt="">+${st} ${st===1?'pedra':'pedras'} de forja</span>`:''}</div>
+  <p>Não dá para desfazer.</p><div class="macts"><button class="bt off" data-x="mclose" style="flex:.7">Cancelar</button><button class="bt red" data-disok="${id}" data-g="${g}" data-s="${st}">Desmontar</button></div>`); }
+function doDis(id,g,st){ const it=byId(id); closeModal(); if(!it) return; S.inv=S.inv.filter(i=>i.id!==id); S.gold+=g; S.stones+=st; S.sel=null; full(false); toast(it.name+' desmontada · +'+n(g)+' ouro'+(st?' · +'+st+' forja':'')); }
+function tapSlot(s){ tab=s==='weapon'?'weapon':s==='wing'?'wing':'gear'; slotF=tab==='gear'?s:'all'; rarF=-1; S.sel={id:S.eq[s],prev:null}; full(true); }
+
+/* ---------- comum ---------- */
+function modal(html){ closeModal(); const s=document.createElement('div'); s.className='shade'; s.id='shade'; s.innerHTML=`<div class="modal" role="dialog" aria-modal="true">${html}</div>`; scr.appendChild(s); s.addEventListener('click',e=>{ if(e.target===s) closeModal(); }); }
+function closeModal(){ const s=$('#shade'); if(s) s.remove(); }
+function go(where){ closeModal(); const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar ao Equipamento"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>No jogo, este botão abre a tela <b>${where}</b>.</p><p>O voltar traz de volta ao Equipamento, na mesma aba.</p><button class="bt" data-x="navback" style="height:46px;min-width:200px">Voltar ao Equipamento</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+function fcFly(d){ if(Math.abs(d)<1) return; const o=document.createElement('div'); o.className='fcfly '+(d>0?'up':'dn'); o.textContent=(d>0?'▲ +':'▼ −')+fmtF(Math.abs(d))+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+function full(top){ renderTop(); renderDet(); renderTabs(); renderBody(top); if(top) $('#body').scrollTop=0; }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; const d=b.dataset;
+  if(d.t){ tab=d.t; slotF='all'; rarF=-1; S.sel=null; full(true); return; }
+  if(d.slot){ tapSlot(d.slot); return; }
+  if(d.it){ tapItem(d.it); return; }
+  if(d.undo){ undo(); return; }
+  if(d.equip){ equip(byId(d.equip)); return; }
+  if(d.forge){ forge(d.forge); return; }
+  if(d.dis){ askDis(d.dis); return; }
+  if(d.disok){ doDis(d.disok,+d.g,+d.s); return; }
+  if(d.sf){ slotF=d.sf; renderBody(true); return; }
+  if(d.rf!=null){ rarF=+d.rf; renderBody(true); return; }
+  if(d.sort){ sortBy=d.sort; renderBody(false); return; }
+  if(d.info){ go(d.info); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.x==='close'){ S.sel=null; full(false); return; }
+  if(d.x==='mclose'){ closeModal(); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(b.id==='best'){ best(); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(false); }
+  if(b.dataset.all!=null){ S.all=b.dataset.all==='1'; reset(); tab='weapon'; slotF='all'; rarF=-1; document.querySelectorAll('[data-all]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(true); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brilho subindo atrás do herói */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const W=780,H=760,Pp=[]; for(let i=0;i<36;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?190:45,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,72%,${.25+.55*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+reset(); full(true);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-equipamento-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Equipamento V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>

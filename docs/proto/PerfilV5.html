@@ -1,0 +1,660 @@
+<title>Eonbound Perfil V3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto.
+   Perfil V5: o herói (com montaria, pet, asa e aura) fica SEMPRE à vista no topo; tocar num item mostra a prévia nele, sem janela por cima.
+   O palco é desenhado em canvas com a mesma receita do jogo (folhas reais, asa na âncora das costas). Nunca rolagem horizontal. Um visual só (escuro). */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --r-common:#a9b3c9; --r-rare:#4fa3ff; --r-epic:#b46bff; --r-leg:#ffa434; --r-myth:#ff4f6d; --r-div:#fff1a8;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box img{display:block;width:100%;border-radius:10px;margin-top:8px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:420px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(185deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 26%,rgba(94,231,255,.18),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 34%,var(--night) 50%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:420px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:23px;letter-spacing:1px;flex:1;min-width:0;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(94,231,255,.5)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:300px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:300px}
+.chip{position:absolute;z-index:3;display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;font-weight:900;font-size:11px;border:0}
+.srv{left:14px;top:4px;background:linear-gradient(90deg,rgba(94,231,255,.25),rgba(169,123,255,.25));border:1px solid rgba(94,231,255,.6)}
+.srv i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.vip{right:14px;top:4px;height:auto;padding:4px 9px 5px 5px;border-radius:13px;background:linear-gradient(180deg,rgba(255,226,140,.18),rgba(255,160,40,.12));border:1px solid rgba(255,210,94,.7);gap:6px;text-align:left}
+.vip .crown{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(180deg,#fff0a8,#ffae2e);color:var(--ink);font-family:var(--fd);font-size:15px;box-shadow:0 0 14px rgba(255,190,60,.6)}
+.vip small{display:block;font-size:9px;color:var(--gold);letter-spacing:.8px}
+.vip .vb{display:block;width:58px;height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin-top:3px;overflow:hidden}
+.vip .vb i{display:block;height:100%;width:30%;background:var(--gold)}
+.mode{position:absolute;z-index:3;right:12px;bottom:66px;display:flex;flex-direction:column;gap:4px;padding:3px;border-radius:13px;background:rgba(5,8,28,.72);border:1px solid var(--line)}
+.mode button{border:0;background:none;height:28px;padding:0 10px;border-radius:10px;font-weight:900;font-size:11px;color:var(--muted)}
+.mode button[aria-pressed="true"]{background:#3d4fb8;color:#fff}
+.prevb{position:absolute;z-index:3;left:50%;top:38px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 6px 4px 12px;border-radius:13px;background:rgba(255,107,154,.2);border:1px solid var(--rose);font-size:11px;font-weight:900;color:#ffd6e2;white-space:nowrap;max-width:94%}
+.prevb button{border:0;border-radius:9px;background:rgba(255,255,255,.14);height:22px;padding:0 8px;font-weight:900;font-size:11px}
+.note{position:absolute;z-index:3;left:50%;top:38px;transform:translateX(-50%);padding:4px 10px;border-radius:12px;background:var(--glass);border:1px solid var(--line2);font-size:11px;font-weight:800;color:var(--muted);white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+.idb{position:absolute;z-index:3;left:10px;right:10px;bottom:6px;display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:18px;background:linear-gradient(90deg,rgba(11,16,48,.92),rgba(11,16,48,.55));border:1px solid var(--line2)}
+.pfp{flex:none;width:48px;height:48px;border-radius:14px;position:relative;background:radial-gradient(circle at 50% 35%,#2b3a8a,#0e1438);overflow:hidden;border:0;padding:0}
+.pfp img{position:absolute;inset:-3px;width:54px;height:54px;object-fit:cover}
+.pfp .fr{position:absolute;inset:0;border-radius:14px;pointer-events:none}
+.idt{flex:1;min-width:0}
+.nm{display:flex;align-items:center;gap:6px;min-width:0}
+.nm b{font-family:var(--fd);font-weight:400;font-size:20px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pen{width:24px;height:24px;border-radius:8px;border:1px solid var(--line2);background:rgba(255,255,255,.06);display:grid;place-items:center;flex:none;padding:0}
+.pen svg{width:12px;height:12px}
+.tit{margin-top:4px;display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 9px 2px 7px;border-radius:9px;font-weight:900;font-size:12px;border:0;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 35%,transparent),transparent);border-left:3px solid var(--tc);color:var(--tc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tit img{width:16px;height:16px}
+.idr{flex:none;text-align:right;font-size:10px;color:var(--muted);font-weight:800;line-height:1.5}
+.copy{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:7px;height:22px;padding:0 7px;font-size:10px;font-weight:900}
+
+.stats{position:relative;z-index:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 12px 0}
+.st{border-radius:12px;padding:6px 9px;background:rgba(10,14,44,.78);border:1px solid var(--line);min-width:0;text-align:left}
+.st small{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.st b{display:block;font-family:var(--fd);font-weight:400;font-size:17px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st.fc b{color:var(--gold);text-shadow:0 0 12px rgba(255,210,94,.45)}
+.st em{display:block;font-style:normal;font-size:9px;color:var(--green);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xp{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:3px;overflow:hidden}
+.xp i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--cyan),var(--violet))}
+
+.tabs{position:relative;z-index:3;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:8px 12px 0;padding:3px;border-radius:14px;background:rgba(5,8,28,.75);border:1px solid var(--line)}
+.tab{height:34px;border:0;border-radius:11px;background:none;font-weight:900;font-size:12px;color:var(--muted);min-width:0}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.det{position:relative;z-index:3;margin:8px 12px 0;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 22%,#141c4a),#141c4a);border:1px solid color-mix(in srgb,var(--rc) 70%,transparent);display:flex;gap:10px;align-items:center;animation:rin .2s ease-out}
+.det img{flex:none;width:44px;height:44px;object-fit:contain}
+.det .di{flex:1;min-width:0}
+.det .dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.det .dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.det .dh b{color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chips button,.chips span{height:22px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:10px;font-weight:900;color:var(--muted);display:inline-flex;align-items:center}
+.chips button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:rgba(255,210,94,.1)}
+.chips span{color:var(--green);background:rgba(94,240,160,.1);border-color:transparent}
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 12px 20px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.filt{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.fb{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:900;font-size:11px;color:var(--muted);white-space:nowrap}
+.fb[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:rgba(255,210,94,.1)}
+.hint{font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.4}
+.hint b{color:var(--gold)}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:6px 0 6px;display:flex;justify-content:space-between;gap:8px}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:10px;text-align:right}
+
+.trow{display:flex;gap:9px;align-items:center;padding:8px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px;animation:rin .3s ease-out both}
+.trow.eq{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset,0 0 18px rgba(255,210,94,.25)}
+.trow.lock{opacity:.82}
+.crest{flex:none;width:44px;height:48px;position:relative;display:grid;place-items:center}
+.crest svg.sh{position:absolute;inset:0;width:100%;height:100%}
+.crest svg.ic{position:relative;width:20px;height:20px;margin-top:-3px}
+.trow.lock .crest{filter:grayscale(.85) brightness(.7)}
+.tinfo{flex:1;min-width:0}
+.tn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
+.tc{font-size:11px;color:var(--muted);margin-top:1px}
+.pb{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:4px;overflow:hidden}
+.pb i{display:block;height:100%;background:var(--rc);border-radius:2px}
+.bon{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.bon span{font-size:10px;font-weight:900;padding:1px 6px;border-radius:7px;background:rgba(94,240,160,.12);color:var(--green)}
+.bon span.x2{background:rgba(255,210,94,.15);color:var(--gold)}
+.bt{flex:none;min-width:76px;height:36px;padding:0 10px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
+.bt.on{background:rgba(94,240,160,.12);color:var(--green);box-shadow:none;border:2px solid var(--green)}
+.bt.off{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line)}
+.bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f;box-shadow:0 3px 0 #164e8c}
+
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.cell{position:relative;width:100%;aspect-ratio:1;border-radius:14px;border:2px solid color-mix(in srgb,var(--rc) 70%,transparent);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 35%,#1a2366),#0c1238);padding:0;overflow:hidden}
+.cell img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain}
+.cell.lock img{filter:grayscale(.85) brightness(.5)}
+.cell .lk{position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:5px;background:rgba(5,8,28,.85);display:grid;place-items:center}
+.cell .lk svg{width:10px;height:10px}
+.cell.sel{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(255,210,94,.5)}
+.cell.pv{box-shadow:0 0 0 3px var(--rose),0 0 16px rgba(255,107,154,.5)}
+.eqb{position:absolute;left:3px;bottom:3px;font-size:8px;font-weight:900;padding:1px 4px;border-radius:5px;background:var(--green);color:#043018}
+.stb{position:absolute;right:3px;bottom:2px;font-size:9px;font-weight:900;color:var(--gold);text-shadow:0 1px 0 #000}
+.cname{font-size:9px;font-weight:900;text-align:center;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.cname.own{color:var(--text)}
+.aw{position:relative;width:100%;aspect-ratio:4/5;border-radius:12px;overflow:hidden;background:#0a0f2e;border:2px solid var(--line);padding:0}
+.aw.sel{border-color:var(--gold);box-shadow:0 0 12px rgba(255,210,94,.5)}
+.aw.pv{border-color:var(--rose)}
+.aw canvas{position:absolute;inset:0;width:100%;height:100%}
+.aw.lock canvas{filter:grayscale(.6) brightness(.6)}
+
+.cover{border-radius:14px;padding:10px;background:linear-gradient(135deg,rgba(94,231,255,.12),rgba(169,123,255,.12));border:1px solid var(--line2);margin-bottom:8px}
+.cover h4{margin:0;font-size:12px;font-weight:900;display:flex;justify-content:space-between}
+.rbar{display:flex;height:9px;border-radius:5px;overflow:hidden;margin:7px 0 5px;background:rgba(255,255,255,.08)}
+.rbar i{display:block;height:100%}
+.rleg{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:10px;font-weight:800;color:var(--muted)}
+.rleg b{color:var(--text)}
+.rleg i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:3px}
+.cbon{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.cbon span{font-size:10px;font-weight:900;padding:2px 7px;border-radius:7px;background:rgba(94,240,160,.12);color:var(--green)}
+.cbon span.n{background:rgba(255,255,255,.06);color:var(--muted)}
+.card{border-radius:14px;background:var(--glass);border:1px solid var(--line);padding:10px;margin-bottom:8px}
+.card h4{margin:0 0 7px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;display:flex;align-items:center;gap:7px}
+.card h4 svg{width:15px;height:15px}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.kv div{border-radius:10px;background:rgba(5,8,28,.5);padding:7px 9px;min-width:0}
+.kv small{display:block;font-size:10px;color:var(--muted);font-weight:800;line-height:1.2}
+.kv b{display:block;font-family:var(--fd);font-weight:400;font-size:18px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kv em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--green)}
+.kv em.m{color:var(--muted)}
+.chart{display:flex;align-items:flex-end;gap:5px;height:84px;padding-top:6px}
+.chart div{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end}
+.chart i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--gold),#c97b18)}
+.chart div:last-child i{background:linear-gradient(180deg,#fff3b0,var(--gold));box-shadow:0 0 10px rgba(255,210,94,.6)}
+.chart span{font-size:9px;color:var(--muted);font-weight:800}
+.chart b{font-size:9px;font-weight:900}
+.split{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0}
+.split i{display:block;height:100%}
+.rec{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.rec:first-of-type{border-top:0}
+.rec span{flex:1;min-width:0;font-size:12px;font-weight:800}
+.rec span em{display:block;font-style:normal;font-size:10px;color:var(--muted);font-weight:700}
+.rec b{font-family:var(--fd);font-weight:400;font-size:17px;font-variant-numeric:tabular-nums}
+
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.7);display:flex;align-items:center;animation:fade .2s}
+.modal{margin:auto 16px;width:100%;max-height:80%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;animation:up .25s ease-out}
+.modal h3{font-family:var(--fd);font-weight:400;font-size:22px;margin:0 0 8px}
+.inp{width:100%;height:46px;border-radius:12px;border:2px solid var(--line2);background:#0a0f30;color:var(--text);padding:0 14px;font:900 17px var(--fb)}
+.inp.bad{border-color:var(--red)}
+.err{font-size:12px;color:var(--red);min-height:16px;margin-top:6px;font-weight:800}
+.acts{display:flex;gap:8px;margin-top:12px}
+.acts .bt{flex:1;height:46px;font-size:14px}
+.vlist{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.vlist div{display:flex;gap:8px;align-items:flex-start;font-size:12px;font-weight:800;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.05)}
+.vlist div.nx{opacity:.65}
+.vlist svg{width:15px;height:15px;flex:none;margin-top:1px}
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(94,231,255,.5))}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.fcfly{position:absolute;z-index:40;left:50%;top:250px;transform:translateX(-50%);font-family:var(--fd);font-size:24px;pointer-events:none;animation:fly 1.6s ease-out forwards;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap}
+.fcfly.up{color:var(--green)} .fcfly.dn{color:var(--red)}
+@keyframes rin{from{opacity:.001;transform:translateY(6px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="840"></canvas>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">PERFIL</div>
+          <div class="cur"><img src="a/coin.png" alt="">21,7 mil</div>
+          <div class="cur"><img src="a/gem.png" alt=""><span id="gems">251</span></div>
+        </div>
+        <div class="stage">
+          <canvas id="stc" width="780" height="600" role="img" aria-label="Seu herói com montaria, pet, asa e aura"></canvas>
+          <div class="chip srv"><i></i>S1 · Nova Era</div>
+          <button class="chip vip" id="vipchip" aria-label="Ver VIP"><span class="crown">2</span><span><small>VIP</small>R$ 30 de R$ 100<span class="vb"><i></i></span></span></button>
+          <div id="over"></div>
+          <div class="mode" role="group" aria-label="Como mostrar o herói"><button data-mode="ride" aria-pressed="true">Montado</button><button data-mode="foot" aria-pressed="false">A pé</button></div>
+          <div class="idb">
+            <button class="pfp" data-tab="vis" aria-label="Trocar retrato"><img id="pfpimg" src="a/kael_phase0.png" alt="Retrato"><span class="fr" id="pfpfr"></span></button>
+            <div class="idt">
+              <div class="nm"><b id="name">Kael</b><button class="pen" id="pen" aria-label="Trocar nome"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button></div>
+              <button class="tit" id="ftit" data-tab="tit"></button>
+            </div>
+            <div class="idr">ID <span id="pid">S1-48213</span><br><button class="copy" id="copy">Copiar</button></div>
+          </div>
+        </div>
+        <div class="stats">
+          <button class="st" data-tab="num"><small>Nível 13</small><b>62%</b><div class="xp"><i></i></div></button>
+          <button class="st fc" data-tab="num"><small>FC</small><b id="fc">92,1 mil</b><em>▲ 4,2 mil hoje</em></button>
+          <button class="st" data-go="Mapa das Eras"><small>Era 2 · Antiguidade</small><b>2-2</b><em style="color:var(--muted)">Normal</em></button>
+        </div>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" data-t="vis" aria-selected="true">Visual</button>
+          <button class="tab" role="tab" data-t="col" aria-selected="false">Coleção</button>
+          <button class="tab" role="tab" data-t="tit" aria-selected="false">Títulos</button>
+          <button class="tab" role="tab" data-t="num" aria-selected="false">Números</button>
+        </div>
+        <div id="det"></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela 21 · Perfil (versão 5)</h1>
+    <p class="sub">O herói fica SEMPRE à vista no topo, com montaria, pet (sempre na frente), asa e aura. Tocou, trocou: o que você tem vai para o herói na hora, sem botão; o que falta aparece como prévia no herói, com como ganhar e o botão Ir.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="O que o jogador tem" style="margin-top:8px"><button data-all="0" aria-pressed="false">Jogador nível 13</button><button data-all="1" aria-pressed="true">Tudo liberado</button></div>
+      <p class="sub" style="margin-top:8px">"Tudo liberado" é o Modo dono: todas as skins, montarias, pets, asas e auras para você testar.</p>
+    </div>
+    <div class="box">
+      <h2>O que mudou da versão 4</h2>
+      <ul>
+        <li>Herói sempre visível; a prévia acontece no herói, sem janela por cima</li>
+        <li>Todas as skins do Kael e da Kaia, com a arte animada</li>
+        <li>Kael e Kaia montados nas 6 montarias reais</li>
+        <li>Asas nas costas, desenhadas como no jogo (10 asas), batendo</li>
+        <li>Todos os 11 pets com animação nos 3 estágios</li>
+        <li>Sem rolagem para o lado em nenhuma parte</li>
+        <li>Títulos com o ícone desenhado de cada um (34 prontos) e moldura na cor da raridade</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: herói maior, outra cor no VIP"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+    <div class="box">
+      <h2>NOVO · Kael Samurai pronto (8 animações)</h2>
+      <p class="sub">Mesmo corpo do garoto. Já aparece na aba Visual (toque em Samurai). O Ciborgue está sendo feito.</p>
+      <img src="a/conf_samurai.png" alt="Kael Samurai: correndo, parado, golpe, giro, morte e pistola">
+    </div>
+    <div class="box">
+      <h2>Ícones dos títulos (amostra de 4)</h2>
+      <p class="sub">Desbravador, Caçador de Chefes, Guardião da Torre e Rei da Arena. A moldura muda com a raridade do título. Os outros 30 estão sendo feitos (~20 créditos) e entram no lugar do escudo desenhado na aba Títulos.</p>
+      <img src="a/titulos_amostra.png" alt="Ícones de 4 títulos">
+    </div>
+    <div class="box">
+      <h2>Amostra dos 3 desenhos por peça (era 3)</h2>
+      <p class="sub">Hoje · médio · topo. A Arte está refazendo o médio do colete, das botas e do colar para ficar mais diferente, e depois faz as outras 8 eras.</p>
+      <img src="a/amostra_era3.png" alt="Peças da era 3 em 3 níveis">
+    </div>
+    <div class="box">
+      <h2>Aparência no jogo (print real)</h2>
+      <img src="a/ap_kael.png" alt="Aparência do Kael com as skins">
+      <img src="a/ap_kaia.png" alt="Aparência da Kaia com as skins">
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+const RAR={c:['Comum','#a9b3c9'],r:['Raro','#4fa3ff'],e:['Épico','#b46bff'],l:['Lendário','#ffa434'],m:['Mítico','#ff4f6d'],d:['Divino','#fff1a8']};
+const ORD='crelmd';
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtK=v=>{ const k=v/1000; return (k>=100?Math.round(k):k.toFixed(1)).toString().replace('.',',')+' mil'; };
+const LOCK='<svg viewBox="0 0 24 24" fill="#c9d0f5"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>';
+const ICO={flag:'<path d="M5 21V4m0 0h11l-2 4 2 4H5"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',skull:'<path d="M12 3a7 7 0 00-4 12.7V19h8v-3.3A7 7 0 0012 3z"/><circle cx="9.5" cy="11" r="1.2"/><circle cx="14.5" cy="11" r="1.2"/>',
+ sword:'<path d="M14.5 4H20v5.5L9 20.5 3.5 15zM6 13l5 5M4 20l2-2"/>',horse:'<path d="M5 20l2-6 1-5 4-4 2 1 3 3-2 2-2-1-1 3 2 7"/>',paw:'<circle cx="7" cy="9" r="2"/><circle cx="12" cy="6.5" r="2"/><circle cx="17" cy="9" r="2"/><path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 3-4 0-4-3z"/>',
+ tower:'<path d="M7 21V9l-2-2V3h3v2h2V3h4v2h2V3h3v4l-2 2v12z"/><path d="M10 21v-4h4v4"/>',book:'<path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 5v16"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+ crown:'<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',coin:'<circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10h4a1.5 1.5 0 010 3h-3a1.5 1.5 0 000 3h4"/>',bolt:'<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',check:'<path d="M5 12l5 5 9-10"/>',go:'<path d="M5 12h14M13 6l6 6-6 6"/>'};
+const svgI=(k,c,w)=>`<svg viewBox="0 0 24 24" ${w?`width="${w}" height="${w}"`:''} fill="none" stroke="${c||'#fff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg>`;
+/* insígnia do título: escudo na cor da raridade, mais elaborado nas raridades altas */
+function crest(r,ic,id){ const c=RAR[r][1], lv=ORD.indexOf(r);
+  if(id) return `<span class="crest" style="width:48px;height:48px;border-radius:14px;background:radial-gradient(circle,color-mix(in srgb,${c} 30%,#0c1238),#0c1238);border:2px solid ${c};box-shadow:0 0 ${4+lv*3}px ${c}"><img src="a/ti/${id}.png" alt="" style="width:44px;height:44px;object-fit:contain"></span>`;
+  const wings=lv>=3?`<path d="M4 14 C1 10 2 6 5 5 C5 9 6 11 8 13Z M40 14 C43 10 42 6 39 5 C39 9 38 11 36 13Z" fill="${c}" opacity=".9"/>`:'';
+  const top=lv>=4?`<path d="M16 4 L19 0 L22 3 L25 0 L28 4Z" fill="${c}"/>`:'';
+  return `<span class="crest"><svg class="sh" viewBox="0 0 44 48">${wings}${top}<path d="M22 3 L38 9 V24 C38 34 31 41 22 45 C13 41 6 34 6 24 V9Z" fill="${c}" opacity=".28"/><path d="M22 3 L38 9 V24 C38 34 31 41 22 45 C13 41 6 34 6 24 V9Z" fill="none" stroke="${c}" stroke-width="${lv>=2?2.5:1.6}"/>${lv>=1?`<path d="M22 7 L34 12 V24 C34 32 29 37 22 41 C15 37 10 32 10 24 V12Z" fill="none" stroke="${c}" stroke-width="1" opacity=".6"/>`:''}</svg>${svgI(ic,'#fff').replace('<svg','<svg class="ic"')}</span>`; }
+
+/* ---------- âncoras reais (medianas do campo "back" das folhas, como o jogo) ---------- */
+const AN={"foot":{"kael_def":{"x":91.3,"y":162,"a":0,"s":1},"kaia_def":{"x":110.2,"y":162,"a":-10.2,"s":1},"kael_angel":{"x":88.7,"y":163,"a":0,"s":1},"kael_demon":{"x":95.8,"y":161,"a":0,"s":1},"kael_ninja":{"x":76.8,"y":161,"a":-16,"s":1},"kael_paladin":{"x":102.5,"y":162,"a":0,"s":1},"kael_samurai":{"x":115.9,"y":162,"a":0,"s":1},"kaia_harlequin":{"x":110.2,"y":162,"a":-10.2,"s":1},"kaia_ninja":{"x":110.2,"y":163,"a":-10.2,"s":1},"kaia_demon":{"x":110.2,"y":162,"a":-10.2,"s":1},"kaia_angel":{"x":111.4,"y":163,"a":-10.2,"s":1}},
+ "ride":{"kael_horse":{"x":160.9,"y":139,"a":34.7,"s":0.654},"kael_wolf":{"x":162.4,"y":172,"a":26.4,"s":0.654},"kael_pony":{"x":161.5,"y":155,"a":35.3,"s":0.654},"kael_griffin":{"x":161.7,"y":175,"a":16.9,"s":0.654},"kael_wyvern":{"x":159.5,"y":139,"a":5.4,"s":0.654},"kael_mythic":{"x":161.3,"y":141,"a":18.9,"s":0.654},"kaia_horse":{"x":165.5,"y":139,"a":34.7,"s":0.654},"kaia_wolf":{"x":164.7,"y":173,"a":26.4,"s":0.654},"kaia_pony":{"x":165.8,"y":156,"a":35.3,"s":0.654},"kaia_griffin":{"x":166.3,"y":176,"a":16.9,"s":0.654},"kaia_wyvern":{"x":164.8,"y":141,"a":5.4,"s":0.654},"kaia_mythic":{"x":165.9,"y":141,"a":18.9,"s":0.654}},
+ "wing":{"angel":{"L":[0.996,0.729,223,187],"R":[0,0.729,223,187],"fit":1},"demon":{"L":[0.996,0.665,227,179],"R":[0,0.665,227,179],"fit":1},"bone":{"L":[0.996,0.927,229,281],"R":[0,0.927,230,281],"fit":0.93},"darkmoth":{"L":[0.996,0.524,224,353],"R":[0,0.523,224,353],"fit":0.84},"ice":{"L":[0.996,0.873,225,358],"R":[0,0.873,225,358],"fit":0.83},"mechanical":{"L":[0.996,0.819,232,434],"R":[0,0.819,232,434],"fit":0.74},"phoenix":{"L":[0.996,0.664,227,427],"R":[0,0.669,227,432],"fit":0.75},"seraph":{"L":[0.996,0.649,230,440],"R":[0,0.65,230,440],"fit":0.74},"shadow":{"L":[0.996,0.821,231,333],"R":[0,0.821,229,335],"fit":0.85},"storm":{"L":[0.996,0.586,232,387],"R":[0,0.586,232,387],"fit":0.78}}};
+
+/* ---------- DADOS ---------- */
+const SKINS={
+ kael:[{id:'def',name:'Kael (padrão)',r:'c',own:1,how:'Skin inicial',sheet:'a/kael_idle.png',av:'kael_phase0'},
+  {id:'ninja',name:'Kael Ninja',r:'e',own:0,how:'Oferta de 1ª compra',go:'Oferta',sheet:'a/sk_ninja.png',av:'kael_ninja'},
+  {id:'angel',name:'Kael Anjo',r:'l',own:0,how:'Fim do Passe Premium',go:'Passe',sheet:'a/sk_angel.png',av:'kael_angel'},
+  {id:'demon',name:'Kael Demônio',r:'l',own:0,how:'Chegar ao VIP 7',go:'VIP',sheet:'a/sk_demon.png',av:'kael_demon'},
+  {id:'paladin',name:'Kael Paladino Solar',r:'m',own:0,how:'Loja: compra direta',go:'Loja',sheet:'a/sk_solar_paladin.png',av:'kael_solar_paladin'},
+  {id:'samurai',name:'Kael Samurai',r:'m',own:0,how:'Torneio: top 10 da temporada',go:'Torneio',sheet:'a/sk_samurai.png',av:'kael_samurai'},
+  {id:'cyborg',name:'Kael Ciborgue',r:'l',own:0,how:'Loja: compra direta',go:'Loja'}],
+ kaia:[{id:'def',name:'Kaia (padrão)',r:'c',own:1,how:'Skin inicial',sheet:'a/kaia_idle.png',av:'kaia_phase0'},
+  {id:'ninja',name:'Kaia Ninja',r:'e',own:0,how:'Oferta de 1ª compra',go:'Oferta',sheet:'a/ska_ninja.png',av:'kaia_ninja'},
+  {id:'angel',name:'Kaia Angelical',r:'l',own:0,how:'Fim do Passe Premium',go:'Passe',sheet:'a/ska_angel.png',av:'kaia_angel'},
+  {id:'demon',name:'Kaia Demoníaca',r:'l',own:0,how:'Chegar ao VIP 7',go:'VIP',sheet:'a/ska_demon.png',av:'kaia_demon'},
+  {id:'harlequin',name:'Kaia Arlequina',r:'e',own:0,how:'Loja: compra direta',go:'Loja',sheet:'a/ska_harlequin.png',av:'kaia_harlequin'}]};
+const MOUNTS=[
+ {id:'horse',name:'Cavalo',r:'c',own:1,star:3,how:'Grátis no começo',icon:'m_horse.png',ride:1},
+ {id:'wolf',name:'Lobo',r:'r',own:1,star:1,how:'Era 2',go:'Montarias',icon:'m_wolf.png',ride:1},
+ {id:'pony',name:'Pônei',r:'c',own:0,how:'Missões da semana',go:'Missões',icon:'m_pony.png',ride:1},
+ {id:'griffin',name:'Grifo',r:'e',own:0,how:'Era 4',go:'Mapa das Eras',icon:'m_griffin.png',ride:1},
+ {id:'wyvern',name:'Serpe',r:'l',own:0,how:'Era 6',go:'Mapa das Eras',icon:'m_wyvern.png',ride:1},
+ {id:'mythic',name:'Montaria Mítica',r:'m',own:0,how:'Era 8',go:'Mapa das Eras',icon:'m_mythic.png',ride:1},
+ {id:'raptor',name:'Raptor de Guerra',r:'e',own:0,how:'Passe nível 40',go:'Passe',icon:'m_war_raptor.png'},
+ {id:'scorp',name:'Escorpião Gigante',r:'e',own:0,how:'Arena: liga Prata',go:'Arena',icon:'m_giant_scorpion.png'},
+ {id:'panther',name:'Pantera Sombria',r:'e',own:0,how:'Evento Chefe',go:'Eventos',icon:'m_shadow_panther.png'},
+ {id:'infernal',name:'Cavalo Infernal',r:'l',own:0,how:'Torre andar 50',go:'Torre',icon:'m_infernal_horse.png'},
+ {id:'unicorn',name:'Unicórnio de Guerra',r:'l',own:0,how:'Oferta de 1ª compra',go:'Oferta',icon:'m_war_unicorn.png'},
+ {id:'icewolf',name:'Lobo do Gelo',r:'l',own:0,how:'Evento de inverno',go:'Eventos',icon:'m_ice_wolf.png'},
+ {id:'tiger',name:'Tigre Celestial',r:'m',own:0,how:'Torneio do Poder',go:'Torneio',icon:'m_celestial_tiger.png'},
+ {id:'dragon',name:'Dragão Negro',r:'m',own:0,how:'Loja da Guilda',go:'Guilda',icon:'m_black_dragon.png'},
+ {id:'phoenix',name:'Fênix Gigante',r:'d',own:0,how:'Chegar ao VIP 8',go:'VIP',icon:'m_giant_phoenix.png'},
+ {id:'mecha',name:'Mecha de Guerra',r:'d',own:0,how:'Loja: compra direta',go:'Loja',icon:'m_war_mecha.png'}];
+const PS=b=>['a/pt_'+b+'_idle.png','a/pt_'+b+'_mid_idle.png','a/pt_'+b+'_evo_idle.png'];
+const PETS=[
+ {id:'mammoth',name:'Mamute',r:'c',own:1,stage:2,how:'Grátis no começo',icon:'era0_mammoth_evo.png',st:PS('era0_mammoth')},
+ {id:'swolf',name:'Lobo das Sombras',r:'e',own:1,stage:1,how:'Ovo de chefe da era 2',go:'Pets',icon:'shadow_wolf.png',st:PS('pet_shadowwolf')},
+ {id:'sphinx',name:'Esfinge',r:'r',own:0,how:'Ovo da era 2',go:'Pets',icon:'era1_sphinx_evo.png',st:PS('era1_sphinx')},
+ {id:'dragon',name:'Dragão',r:'r',own:0,how:'Ovo da era 3',go:'Pets',icon:'era2_dragon_evo.png',st:PS('era2_dragon')},
+ {id:'parrot',name:'Papagaio',r:'r',own:0,how:'Ovo da era 4',go:'Pets',icon:'era3_parrot_evo.png',st:PS('era3_parrot')},
+ {id:'mech',name:'Cão Mecânico',r:'r',own:0,how:'Ovo da era 5',go:'Pets',icon:'era4_mechdog_evo.png',st:PS('era4_mechdog')},
+ {id:'falcon',name:'Falcão de Guerra',r:'e',own:0,how:'Passe nível 30',go:'Passe',icon:'war_falcon.png',st:PS('pet_falcon')},
+ {id:'panther',name:'Pantera Espectral',r:'e',own:0,how:'Evento Chefe',go:'Eventos',icon:'spectral_panther.png',st:PS('pet_panther')},
+ {id:'fox',name:'Raposa Prisma',r:'e',own:0,how:'Ovo da era 6',go:'Pets',icon:'prism_fox_evo.png',st:PS('prism_fox')},
+ {id:'cerb',name:'Cérbero',r:'l',own:0,how:'Ovo da era 7',go:'Pets',icon:'era7_cerberus_evo.png',st:PS('era7_cerberus')},
+ {id:'pegasus',name:'Pégaso',r:'m',own:0,how:'Ovo da era 8',go:'Pets',icon:'era8_pegasus_evo.png',st:PS('era8_pegasus')},
+ {id:'crow',name:'Corvo da Tempestade',r:'e',own:0,how:'Torre andar 40',go:'Torre',icon:'storm_crow.png'},
+ {id:'scorp',name:'Escorpião Rúnico',r:'l',own:0,how:'Arena: liga Ouro',go:'Arena',icon:'runic_scorpion.png'},
+ {id:'griffin',name:'Grifo Negro',r:'l',own:0,how:'Loja da Guilda',go:'Guilda',icon:'black_griffin.png'},
+ {id:'golem',name:'Golem de Obsidiana',r:'l',own:0,how:'Torneio',go:'Torneio',icon:'obsidian_golem.png'},
+ {id:'icedragon',name:'Dragão de Gelo',r:'m',own:0,how:'Evento de inverno',go:'Eventos',icon:'ice_dragon.png'},
+ {id:'wyvern',name:'Wyvern Infernal',r:'d',own:0,how:'Chegar ao VIP 9',go:'VIP',icon:'infernal_wyvern.png'}];
+const WINGS=[['angel','Asas de Anjo','e','Loja: Asas','Loja','wg_angel_R.png'],['demon','Asas Demoníacas','e','Loja: Asas','Loja','wg_demon_R.png'],['phoenix','Asas de Fênix','l','Evento','Eventos'],['ice','Asas de Gelo','e','Torre andar 30','Torre'],['shadow','Asas de Sombra','e','Arena','Arena'],['storm','Asas da Tempestade','l','Passe nível 50','Passe'],['mechanical','Asas Mecânicas','e','Era 5','Mapa das Eras'],['bone','Asas de Ossos','l','Era 7','Mapa das Eras'],['darkmoth','Mariposa Sombria','m','Loja da Guilda','Guilda'],['seraph','Serafim (6 asas)','d','Chegar ao VIP 10','VIP']]
+ .map(w=>({id:w[0],name:w[1],r:w[2],own:w[0]==='angel'?1:0,how:w[3],go:w[4],icon:w[5]||('wing_'+w[0]+'.png')}));
+const AURAS=[{id:'none',name:'Sem aura',r:'c',own:1,how:''},{id:'aura4',name:'Forja +4',r:'r',own:1,how:'Arma na Forja +4'},{id:'aura7',name:'Forja +7',r:'e',own:1,how:'Arma na Forja +7'},{id:'aura10',name:'Forja +10',r:'l',own:0,how:'Arma na Forja +10',go:'Forja'},{id:'aura13',name:'Forja +13',r:'m',own:0,how:'Arma na Forja +13',go:'Forja'},{id:'aura_holy',name:'Sagrada',r:'l',own:0,how:'Asas de Anjo na Forja +10',go:'Forja'},{id:'aura_evil',name:'Sombria',r:'l',own:0,how:'Asas Demoníacas na Forja +10',go:'Forja'}];
+const FRAMES=[['none','Simples','c',1,'Inicial','border:2px solid rgba(255,255,255,.25)'],['bronze','Bronze','r',1,'Nível 10','border:3px solid #d08a4c;box-shadow:inset 0 0 0 2px #6d3d16'],
+ ['prata','Prata','e',0,'Nível 30','border:3px solid #dfe7ff;box-shadow:inset 0 0 0 2px #7f8bb5,0 0 10px rgba(220,230,255,.5)'],['ouro','Ouro','l',0,'VIP 3','border:3px solid #ffd25e;box-shadow:inset 0 0 0 2px #a8661a,0 0 14px rgba(255,210,94,.7)'],
+ ['cristal','Cristal','m',0,'Top 10 da Arena','border:3px solid #5ee7ff;box-shadow:inset 0 0 0 2px #a97bff,0 0 16px rgba(94,231,255,.8)'],['eterna','Eterna','d',0,'Torneio do Poder','border:3px solid #fff1a8;box-shadow:inset 0 0 0 3px #ff9f2e,0 0 20px #ffd25e,0 0 34px rgba(255,159,46,.6)']];
+const P={stage:26,era:2,boss:14,kill:2480,tower:7,arena:0,prac:32,weap:4,mount:2,pet:2,skin:1};
+const BN={atkPct:'ATQ',hpPct:'VIDA',defPct:'DEF',critPct:'CRÍT',goldPct:'OURO'};
+const TITLES=[
+ ['stage10','Desbravador',{atkPct:1},'Chegar à fase 10','stage',10,'c','flag','Mapa das Eras'],['era2','Cavaleiro do Tempo',{hpPct:2},'Chegar à era 2','era',2,'r','clock','Mapa das Eras'],
+ ['boss10','Caçador de Chefes',{critPct:.5},'Derrotar 10 chefes','boss',10,'r','skull','Batalha'],['kill1k','Implacável',{goldPct:3},'Derrotar 1.000 inimigos','kill',1000,'r','sword','Batalha'],
+ ['mount1','Cavaleiro',{hpPct:2},'Ter 1 montaria','mount',1,'c','horse','Montarias'],['pet1','Amigo dos Bichos',{hpPct:1},'Ter 1 pet','pet',1,'c','paw','Pets'],
+ ['stage30','Veterano das Eras',{atkPct:2,hpPct:2},'Chegar à fase 30','stage',30,'r','flag','Mapa das Eras'],['tow10','Escalador',{defPct:1},'Andar 10 da Torre','tower',10,'r','tower','Torre'],
+ ['prac50','Disciplinado',{hpPct:3},'Fazer 50 práticas','prac',50,'r','book','Práticas'],['weap7','Armeiro',{atkPct:2},'Ter 7 armas diferentes','weap',7,'r','sword','Invocar'],
+ ['pet3','Domador',{hpPct:2},'Ter 3 pets','pet',3,'e','paw','Pets'],['era4','Mente Inventiva',{goldPct:4},'Chegar à era 4','era',4,'e','clock','Mapa das Eras'],
+ ['stage50','Conquistador',{atkPct:3,hpPct:3},'Chegar à fase 50','stage',50,'e','flag','Mapa das Eras'],['boss50','Matador de Titãs',{critPct:1.5},'Derrotar 50 chefes','boss',50,'e','skull','Batalha'],
+ ['tow25','Guardião da Torre',{defPct:2,hpPct:2},'Andar 25 da Torre','tower',25,'e','tower','Torre'],['arena10','Gladiador',{atkPct:2},'Ficar no top 10 da Arena','arena',1,'e','shield','Arena'],
+ ['skin10','Colecionador',{},'Ter 10 skins','skin',10,'e','star','Aparência'],['kill10k','Lenda da Horda',{goldPct:8},'Derrotar 10.000 inimigos','kill',10000,'l','sword','Batalha'],
+ ['era6','Viajante do Futuro',{critPct:1,goldPct:5},'Chegar à era 6','era',6,'l','clock','Mapa das Eras'],['stage70','Senhor das Eras',{atkPct:5,hpPct:5},'Chegar à fase 70','stage',70,'l','crown','Mapa das Eras'],
+ ['tow50','Senhor da Torre',{defPct:3,atkPct:3},'Andar 50 da Torre','tower',50,'l','tower','Torre'],['arena3','Campeão da Arena',{atkPct:4,critPct:1},'Ficar no top 3 da Arena','arena',1,'l','shield','Arena'],
+ ['mountAll','Senhor das Montarias',{hpPct:4,critPct:1},'Ter todas as montarias','mount',16,'l','horse','Montarias'],['weapAll','Arsenal Completo',{atkPct:5},'Ter todas as armas','weap',55,'m','sword','Invocar'],
+ ['petAll','Arca das Eras',{atkPct:2,hpPct:2},'Ter todos os pets','pet',17,'m','paw','Pets'],['arena1','Rei da Arena',{atkPct:6,critPct:2},'Ser o 1º da Arena','arena',1,'m','crown','Arena'],
+ ['tow100','Imortal',{defPct:5,atkPct:5,hpPct:5},'Andar 100 da Torre','tower',100,'d','crown','Torre']];
+/* raridade aprovada dos títulos (tabela da Arte/Sistemas) + ícone desenhado de cada título (assets/icons/titles/<id>.png) */
+const TR={c:'stage10 pet1 mount1 prac50 tow10 skin10',r:'stage30 era2 boss10 kill1k arena10 weap7',e:'stage50 era4 tow25 pet3',m:'stage70 era6 boss50 tow50 arena3 mountAll',l:'kill10k weapAll petAll',d:'tow100 arena1'};
+for(const [r,ids] of Object.entries(TR)) for(const id of ids.split(' ')){ const t=TITLES.find(x=>x[0]===id); if(t) t[6]=r; }
+const OWN13=new Set(['stage10','era2','boss10','kill1k','mount1','pet1']);
+const BASEFC=92100;
+
+let S={hero:'kael',all:true,mode:'ride',skin:'def',mount:'horse',pet:'swolf',wing:'angel',aura:'aura7',frame:'bronze',avatar:null,featured:'stage10',pv:null};
+let tab='vis', ttFilter='all', colTab='skin', colF='all';
+const own=it=>S.all||!!it.own;
+const ownT=id=>S.all||OWN13.has(id);
+const skinsH=()=>SKINS[S.hero];
+const curSkin=()=>skinsH().find(s=>s.id===S.skin)||skinsH()[0];
+function fcOf(){ let pct=0; for(const t of TITLES){ if(!ownT(t[0])) continue; const b=t[2], v=(b.atkPct||0)+(b.hpPct||0)+(b.defPct||0)+(b.critPct||0)*.8; pct+=v; if(t[0]===S.featured) pct+=v; } return BASEFC*(S.all?2.4:1)*(1+pct/100); }
+
+/* ---------- PALCO EM CANVAS (receita do jogo) ---------- */
+const IM={};
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=new Image(); o.src=u; } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+function look(){ /* o que desenhar: a prévia (S.pv) troca uma peça só */
+  const L={skin:S.skin,mount:S.mount,pet:S.pet,wing:S.wing,aura:S.aura,mode:S.mode,petStage:null,star:null};
+  if(S.det&&S.det.kind==='pet') L.petStage=S.detStage??null;
+  if(S.det&&S.det.kind==='mount') L.star=S.detStar??null;
+  if(S.pv){ const k=S.pv.kind; if(k==='skin'){ L.skin=S.pv.id; L.mode='foot'; } else if(k==='mount'){ L.mount=S.pv.id; L.mode='ride'; } else if(k==='pet'){ L.pet=S.pv.id; L.petStage=S.pv.stage; } else if(k==='wing'){ L.wing=S.pv.id; } else if(k==='aura'){ L.aura=S.pv.id; } }
+  return L; }
+const GY=262;
+function draw(t){
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,300);
+  const L=look(), sk=skinsH().find(s=>s.id===L.skin)||skinsH()[0], mo=MOUNTS.find(m=>m.id===L.mount), pe=PETS.find(p=>p.id===L.pet);
+  const ride=L.mode==='ride'&&mo&&mo.ride;
+  const fi=Math.floor(t*12)%12;
+  /* chão */
+  const g=x.createRadialGradient(200,GY,10,200,GY,150); g.addColorStop(0,'rgba(94,231,255,.35)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(200,GY,150,24,0,0,7); x.fill();
+  x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(200,GY,126,18,0,0,7); x.stroke(); x.setLineDash([]);
+  /* geometria do herói */
+  let k,ox,oy,sheet,anc;
+  if(ride){ k=360/512; ox=200-256*k+18; oy=GY-339*k; sheet='a/'+(S.hero==='kael'?'rd_':'rda_')+mo.id+'.png'; anc=AN.ride[S.hero+'_'+mo.id]; }
+  else { k=230/256; ox=200-128*k+4; oy=GY-240*k; sheet=sk.sheet; anc=AN.foot[S.hero+'_'+(sk.id==='paladin'?'paladin':sk.id)]||AN.foot[S.hero+'_def']; }
+  const heroCx=ride?218:204;
+  /* aura (16 quadros 256x320, âncora no pé, somada) */
+  if(L.aura!=='none'){ const A=img('a/au_'+L.aura+'.png'); if(ok(A)){ const w=ride?250:205, h=w*1.25, f=Math.floor(t*12)%16; x.save(); x.globalCompositeOperation='lighter'; x.drawImage(A,f*256,0,256,320,heroCx-w/2,GY+10-h,w,h); x.restore(); } }
+  /* asa: atrás do corpo, raiz na âncora das costas, batendo (escala x a partir da raiz) */
+  if(L.wing&&sheet&&anc){ const W=AN.wing[L.wing], Li=img('a/wg_'+L.wing+'_L.png'), Ri=img('a/wg_'+L.wing+'_R.png');
+    if(W&&ok(Li)&&ok(Ri)){ const ax=ox+anc.x*k, ay=oy+anc.y*k, sc=k*0.62*anc.s*W.fit, fl=1+0.07*Math.sin(t*3.2);
+      x.save(); x.translate(ax,ay); x.rotate(anc.a*Math.PI/180); x.scale(sc,sc);
+      x.save(); x.scale(fl,1); x.drawImage(Li,-W.L[0]*W.L[2],-W.L[1]*W.L[3],W.L[2],W.L[3]); x.restore();
+      x.save(); x.scale(fl,1); x.drawImage(Ri,-W.R[0]*W.R[2],-W.R[1]*W.R[3],W.R[2],W.R[3]); x.restore();
+      x.restore(); } }
+  /* herói */
+  if(sheet){ const H=img(sheet); if(ok(H)){ const fw=ride?512:256, fh=ride?352:256; x.drawImage(H,fi*fw,0,fw,fh,ox,oy,fw*k,fh*k); } }
+  else { x.fillStyle='rgba(24,33,86,.85)';
+    x.strokeStyle='rgba(160,180,255,.5)'; }
+  /* PET SEMPRE NA FRENTE (regra do dono): desenhado depois do herói e da montaria, um pouco à frente e abaixo (512x352, pés em 307) */
+  if(pe){ const st=pe.st; if(st){ const si=L.petStage!=null?L.petStage:(own(pe)?(pe.stage??(S.all?2:0)):0); const I=img(st[Math.min(si,st.length-1)]); if(ok(I)){ const kp=(ride?170:175)/512; const cx=ride?118:112, px=cx-224*kp, py=GY+10-307*kp; x.drawImage(I,fi*512,0,512,352,px,py,512*kp,352*kp); } }
+    else { const I=img('a/'+pe.icon); if(ok(I)) x.drawImage(I,ride?72:66,GY-80,90,90); } }
+  if(!sheet){ x.fillStyle='rgba(24,33,86,.85)'; x.strokeStyle='rgba(160,180,255,.5)'; x.beginPath(); x.roundRect(120,140,160,60,14); x.fill(); x.stroke(); x.fillStyle='#eef1ff'; x.font='900 13px Nunito'; x.textAlign='center'; x.fillText(sk.name,200,166); x.fillStyle='#9aa6d6'; x.font='800 11px Nunito'; x.fillText('arte na próxima parte',200,184); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw((now-t0)/1000); requestAnimationFrame(loop); })(t0);
+
+function renderOver(){ const L=look(), mo=MOUNTS.find(m=>m.id===L.mount), sk=skinsH().find(s=>s.id===L.skin);
+  let h='';
+  if(S.pv){ const it=pvItem(); h=`<div class="prevb">Prévia: ${it.name}<button data-x="endprev">Sair</button></div>`; }
+  else if(S.mode==='ride'&&mo&&!mo.ride) h=`<div class="note">${mo.name}: herói montado na próxima parte da arte</div>`;
+  else if(S.mode==='ride'&&sk&&sk.id!=='def') h=`<div class="note">Montado usa a roupa padrão (regra aprovada)</div>`;
+  $('#over').innerHTML=h;
+  const md=S.pv&&S.pv.kind==='mount'?'ride':S.mode;
+  document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===md)); }
+
+/* ---------- topo ---------- */
+function renderTop(){ const t=TITLES.find(x=>x[0]===S.featured), r=RAR[t[6]], el=$('#ftit'); el.style.setProperty('--tc',r[1]); el.innerHTML=`<img src="a/ti/${t[0]}.png" alt="">`+t[1];
+  $('#fc').textContent=fmtK(fcOf()); const av=S.avatar||curSkin().av||skinsH()[0].av; $('#pfpimg').src='a/'+av+'.png'; $('#pfpfr').setAttribute('style',FRAMES.find(f=>f[0]===S.frame)[5]); $('#name').textContent=S.hero==='kael'?'Kael':'Kaia'; }
+
+/* ---------- prévia + faixa de detalhe (sem janela por cima do herói) ---------- */
+const LISTS={skin:()=>skinsH(),mount:()=>MOUNTS,pet:()=>PETS,wing:()=>WINGS,aura:()=>AURAS};
+function pvItem(){ const r=S.pv||S.det; return r?LISTS[r.kind]().find(i=>i.id===r.id):null; }
+function isEq(kind,id){ return (kind==='skin'&&S.skin===id)||(kind==='mount'&&S.mount===id)||(kind==='pet'&&S.pet===id)||(kind==='wing'&&S.wing===id)||(kind==='aura'&&S.aura===id); }
+/* REGRA DO DONO: tudo que você tem troca o herói NA HORA ao tocar (sem botão Equipar). O que não tem vira prévia no herói, com "como ganhar".
+   Skin: o herói desce da montaria para a skin aparecer (montado usa a roupa padrão até a arte montada da skin). */
+function preview(kind,id){ const it=LISTS[kind]().find(i=>i.id===id); if(!it) return;
+  if(own(it)){ S.pv=null;
+    if(kind==='skin'){ S.skin=id; S.avatar=null; S.mode='foot'; } else if(kind==='mount'){ S.mount=id; S.mode='ride'; } else S[kind]=id;
+    S.det={kind,id}; renderTop(); renderOver(); renderDet(); render(false); toast(it.name+(kind==='aura'&&id==='none'?'':' equipado')); return; }
+  S.det=null; S.pv={kind,id,stage:kind==='pet'?0:null,star:kind==='mount'?1:null};
+  renderOver(); renderDet(); render(false); }
+function renderDet(){ const d=$('#det'); const R=S.pv||S.det; if(!R){ d.innerHTML=''; return; } const k=R.kind, it=pvItem(), r=RAR[it.r], o=own(it), eq=isEq(k,it.id);
+  const stg=S.pv?S.pv.stage:(S.detStage??(it.stage??2)), str=S.pv?S.pv.star:(S.detStar??(S.all?5:(it.star||1)));
+  let chips='';
+  if(k==='pet'&&it.st) chips=['Filhote','Adulto','Blindado'].map((e,j)=>`<button data-pst="${j}" aria-pressed="${stg===j}">${e}</button>`).join('')+`<span>+${2+stg*2}% VIDA</span>`;
+  else if(k==='pet') chips='<span>Animação na próxima parte</span>';
+  else if(k==='mount') chips=[1,2,3,4,5].map(s=>`<button data-mst="${s}" aria-pressed="${str===s}">${s}★</button>`).join('')+`<span>${['+2%','+4%','+7%','+11%','+16%'][str-1]} VIDA</span>`;
+  else if(k==='wing') chips=`<span>+${o?5:3}% DEF</span><span>Brilho cresce com a Forja</span>`;
+  else if(k==='skin') chips=`<span>+1% ATQ na coleção</span><span>Mesmo corpo do herói</span>`;
+  const icon=k==='skin'?(it.av?'a/'+it.av+'.png':''):k==='aura'?'':'a/'+it.icon;
+  const btn=o?`<span class="bt on" style="cursor:default">Usando</span>`:(it.go?`<button class="bt blue" data-go="${it.go}">Ir ${svgI('go','#04223f',13)}</button>`:'');
+  d.innerHTML=`<div class="det" style="--rc:${r[1]}">${icon?`<img src="${icon}" alt="">`:''}<div class="di"><div class="dn">${it.name} <span class="rar" style="--rc:${r[1]}">${r[0]}</span></div><div class="dh">${o?'Na sua coleção':`Como ganhar: <b>${it.how}</b>`}</div><div class="chips">${chips}</div></div>${btn}</div>`; }
+function equipPv(){ const k=S.pv.kind, it=pvItem(); if(k==='skin'){ S.skin=it.id; S.avatar=null; if(!MOUNTS.find(m=>m.id===S.mount).ride||1) S.mode=S.mode; } else if(k==='mount'){ S.mount=it.id; S.mode='ride'; } else if(k==='pet'){ S.pet=it.id; } else if(k==='wing'){ S.wing=it.id; } else if(k==='aura'){ S.aura=it.id; }
+  S.pv=null; renderTop(); renderOver(); renderDet(); render(false); toast(it.name+' equipado'); }
+
+/* ---------- Visual ---------- */
+function cellHTML(kind,it,label){ const o=own(it), eq=isEq(kind,it.id), pv=S.pv&&S.pv.kind===kind&&S.pv.id===it.id;
+  const src=kind==='skin'?(it.av?'a/'+it.av+'.png':''):'a/'+it.icon;
+  return `<div><button class="cell ${o?'':'lock'} ${eq?'sel':''} ${pv?'pv':''}" style="--rc:${RAR[it.r][1]}" data-pv="${kind}" data-id="${it.id}" aria-label="${it.name}">${src?`<img src="${src}" alt="" loading="lazy">`:`<span style="position:absolute;inset:0;display:grid;place-items:center;font-size:9px;font-weight:900;color:var(--muted)">Em breve</span>`}${o?'':`<span class="lk">${LOCK}</span>`}${eq?'<span class="eqb">Usando</span>':''}${kind==='mount'&&o&&!S.all?`<span class="stb">${it.star}★</span>`:''}</button><div class="cname ${o?'own':''}">${label||it.name}</div></div>`; }
+function auraCell(a){ const o=own(a), eq=S.aura===a.id, pv=S.pv&&S.pv.kind==='aura'&&S.pv.id===a.id;
+  return `<div><button class="aw ${o?'':'lock'} ${eq?'sel':''} ${pv?'pv':''}" data-pv="aura" data-id="${a.id}" aria-label="Aura ${a.name}">${a.id==='none'?'<span style="position:absolute;inset:0;display:grid;place-items:center;font-size:10px;font-weight:900;color:var(--muted)">Nenhuma</span>':`<canvas width="64" height="80" data-aura="${a.id}"></canvas>`}</button><div class="cname ${o?'own':''}">${o?a.name:a.how}</div></div>`; }
+function renderVis(){
+  const sk=skinsH();
+  let h=`<p class="hint">Tocou, trocou: o que você tem já vai para o herói na hora. O que falta aparece como <b>prévia</b>, com como ganhar.</p>`;
+  h+=`<div class="sec"><span>Skins · ${S.hero==='kael'?'Kael':'Kaia'}</span><span>${sk.filter(own).length}/${sk.length}</span></div><div class="grid">${sk.map(s=>cellHTML('skin',s,s.name.replace(/^(Kael|Kaia) /,'').replace(/[()]/g,''))).join('')}</div>`;
+  h+=`<div class="sec"><span>Montarias</span><span>${MOUNTS.filter(own).length}/${MOUNTS.length}</span></div><div class="grid">${MOUNTS.map(m=>cellHTML('mount',m)).join('')}</div>`;
+  h+=`<div class="sec"><span>Pets</span><span>${PETS.filter(own).length}/${PETS.length}</span></div><div class="grid">${PETS.map(p=>cellHTML('pet',p)).join('')}</div>`;
+  h+=`<div class="sec"><span>Asas</span><span>nas costas, batendo</span></div><div class="grid">${WINGS.map(w=>cellHTML('wing',w)).join('')}</div>`;
+  h+=`<div class="sec"><span>Aura</span><span>a mesma da batalha</span></div><div class="grid">${AURAS.map(auraCell).join('')}</div>`;
+  h+=`<div class="sec"><span>Retrato</span><span>pelas skins que você tem</span></div><div class="grid">${sk.filter(s=>s.av).map(s=>{ const o=own(s), av=S.avatar||curSkin().av; return `<div><button class="cell ${o?'':'lock'} ${av===s.av?'sel':''}" style="--rc:${RAR[s.r][1]}" data-av="${s.av}" aria-label="Retrato ${s.name}"><img src="a/${s.av}.png" alt="" style="inset:0;width:100%;height:100%;object-fit:cover">${o?'':`<span class="lk">${LOCK}</span>`}</button><div class="cname ${o?'own':''}">${s.name.replace(/^(Kael|Kaia) /,'')}</div></div>`; }).join('')}</div>`;
+  h+=`<div class="sec"><span>Moldura do retrato</span><span>${FRAMES.filter(f=>S.all||f[3]).length}/${FRAMES.length}</span></div><div class="grid">${FRAMES.map(f=>{ const o=S.all||f[3], av=S.avatar||curSkin().av; return `<div><button class="cell ${o?'':'lock'} ${S.frame===f[0]?'sel':''}" style="--rc:${RAR[f[2]][1]};border:0" data-frame="${f[0]}" aria-label="Moldura ${f[1]}"><img src="a/${av}.png" alt="" style="inset:0;width:100%;height:100%;object-fit:cover"><span style="position:absolute;inset:0;border-radius:14px;${f[5]}"></span></button><div class="cname ${o?'own':''}">${o?f[1]:f[4]}</div></div>`; }).join('')}</div>`;
+  return h; }
+/* miniaturas animadas das auras */
+function animAuras(t){ document.querySelectorAll('canvas[data-aura]').forEach(c=>{ const I=img('a/au_'+c.dataset.aura+'.png'); if(!ok(I)) return; const x=c.getContext('2d'); x.clearRect(0,0,64,80); x.globalCompositeOperation='lighter'; x.drawImage(I,(Math.floor(t*12)%16)*256,0,256,320,0,0,64,80); }); }
+(function al(now){ if(!document.hidden&&tab==='vis') animAuras(now/1000); requestAnimationFrame(al); })(0);
+
+/* ---------- Coleção ---------- */
+const COLS={skin:{l:'Skins',items:()=>skinsH(),bon:'+1% ATQ por skin'},pet:{l:'Pets',items:()=>PETS,bon:'+0,5% VIDA por pet'},mount:{l:'Montarias',items:()=>MOUNTS,bon:'+0,5% VIDA por montaria'},wing:{l:'Asas',items:()=>WINGS,bon:'+1% DEF por asa'}};
+function rarBar(items){ const tot=items.length; let bar='',leg=''; for(const k of ORD){ const all=items.filter(i=>i.r===k).length; if(!all) continue; const o=items.filter(i=>i.r===k&&own(i)).length; bar+=`<i style="width:${all/tot*100}%;background:${RAR[k][1]};opacity:${o?1:.28}"></i>`; leg+=`<span><i style="background:${RAR[k][1]}"></i>${RAR[k][0]} <b>${o}/${all}</b></span>`; } return `<div class="rbar">${bar}</div><div class="rleg">${leg}</div>`; }
+function renderCol(){
+  const all=[].concat(...Object.values(COLS).map(c=>c.items())), o=all.filter(own).length;
+  let h=`<div class="cover"><h4><span>Coleção total</span><span>${o}/${all.length}</span></h4>${rarBar(all)}<div class="cbon">${S.all?'<span>+7% ATQ</span><span>+16,5% VIDA</span><span>+10% DEF</span>':'<span>+1% ATQ</span><span>+2% VIDA</span><span>+1% DEF</span><span class="n">próximo: +1 pet = +0,5% VIDA</span>'}</div></div>`;
+  h+=`<div class="filt">${Object.entries(COLS).map(([k,c])=>`<button class="fb" data-ct="${k}" aria-pressed="${colTab===k}">${c.l} ${c.items().filter(own).length}/${c.items().length}</button>`).join('')}</div>`;
+  const c=COLS[colTab];
+  h+=`<div class="card" style="padding:9px 10px"><h4 style="margin:0">${c.l}: ${c.bon}</h4>${rarBar(c.items())}</div>`;
+  h+=`<div class="filt">${[['all','Todos'],['own','Tenho'],['lock','Falta']].map(([k,l])=>`<button class="fb" data-cf="${k}" aria-pressed="${colF===k}">${l}</button>`).join('')}</div><div class="grid">`;
+  c.items().filter(i=>colF==='all'||(colF==='own'?own(i):!own(i))).sort((a,b)=>(own(b)-own(a))||(ORD.indexOf(a.r)-ORD.indexOf(b.r))).forEach(it=>{ h+=cellHTML(colTab,it); });
+  return h+'</div>'; }
+
+/* ---------- Títulos ---------- */
+function renderTitles(){
+  const list=TITLES.filter(t=>ttFilter==='all'||(ttFilter==='own'?ownT(t[0]):!ownT(t[0]))).sort((a,b)=>(b[0]===S.featured)-(a[0]===S.featured)||(ownT(b[0])-ownT(a[0]))||(ORD.indexOf(a[6])-ORD.indexOf(b[6])));
+  const cnt=TITLES.filter(t=>ownT(t[0])).length;
+  let h=`<div class="filt">${[['all','Todos'],['own','Conquistados'],['lock','A conquistar']].map(([k,l])=>`<button class="fb" data-f="${k}" aria-pressed="${ttFilter===k}">${l}</button>`).join('')}</div>
+  <p class="hint">${cnt} de ${TITLES.length} conquistados. O título em destaque vale <b>em dobro</b>; os outros conquistados somam normal.</p>`;
+  list.forEach((t,i)=>{ const o=ownT(t[0]), eq=t[0]===S.featured, r=RAR[t[6]], p=Math.min(P[t[4]],t[5]), pct=Math.round(p/t[5]*100);
+    const bon=Object.entries(t[2]).map(([k,v])=>`<span class="${eq?'x2':''}">+${String(eq?v*2:v).replace('.',',')}% ${BN[k]}</span>`).join('')||'<span>Visual</span>';
+    h+=`<div class="trow ${eq?'eq':''} ${o?'':'lock'}" style="--rc:${r[1]};animation-delay:${Math.min(i,8)*25}ms">${crest(t[6],t[7],t[0])}
+      <div class="tinfo"><div class="tn">${t[1]}</div><div class="rar">${r[0]}</div><div class="tc">${t[3]}${o?'':` · ${n(p)}/${n(t[5])}`}</div>${o?'':`<div class="pb"><i style="width:${pct}%"></i></div>`}<div class="bon">${bon}</div></div>
+      ${eq?`<button class="bt on">Destaque</button>`:o?`<button class="bt" data-eq="${t[0]}">Destacar</button>`:`<button class="bt blue" data-go="${t[8]}" aria-label="Ir para ${t[8]}">Ir ${svgI('go','#04223f',13)}</button>`}</div>`; });
+  return h; }
+
+/* ---------- Números ---------- */
+function renderNum(){
+  const fc7=[61.2,66.8,71.5,79.9,84.3,87.9,92.1], src=[['Arma',41,'#ffa434'],['Equipamento',27,'#4fa3ff'],['Pet',9,'#5ef0a0'],['Montaria',8,'#5ee7ff'],['Títulos',6,'#ffd25e'],['Nível',9,'#a97bff']], max=Math.max(...fc7);
+  return `<div class="card"><h4>${svgI('bolt','var(--gold)')}Poder (FC)</h4>
+    <div class="chart">${fc7.map((v,i)=>`<div><b>${String(v).replace('.',',')}</b><i style="height:${v/max*56}px"></i><span>${['qua','qui','sex','sáb','dom','seg','hoje'][i]}</span></div>`).join('')}</div>
+    <div class="split">${src.map(s=>`<i style="width:${s[1]}%;background:${s[2]}"></i>`).join('')}</div>
+    <div class="rleg">${src.map(s=>`<span><i style="background:${s[2]}"></i>${s[0]} <b>${s[1]}%</b></span>`).join('')}</div>
+    <p class="hint" style="margin:7px 0 0">O que mais sobe o FC agora: <b>Forjar a arma</b> (+6,1 mil no +8).</p></div>
+  <div class="card"><h4>${svgI('sword','var(--cyan)')}Combate</h4><div class="kv">
+    <div><small>Inimigos derrotados</small><b>${n(P.kill)}</b><em>+312 hoje</em></div><div><small>Chefes</small><b>${P.boss}</b><em class="m">1 Senhor da Era</em></div>
+    <div><small>Maior dano num golpe</small><b>48,3 mil</b><em class="m">Ultimate · 12/11</em></div><div><small>Golpes críticos</small><b>18%</b><em>+2% com o título</em></div>
+    <div><small>Ultimates usadas</small><b>211</b><em class="m">1 a cada 9 s</em></div><div><small>Derrotas</small><b>9</b><em class="m">última na fase 2-2</em></div></div></div>
+  <div class="card"><h4>${svgI('flag','var(--green)')}Progresso</h4><div class="kv">
+    <div><small>Fase mais alta</small><b>2-2</b><em class="m">Antiguidade · Normal</em></div><div><small>Fases com 3 estrelas</small><b>18/40</b><em class="m">eras 1 e 2</em></div>
+    <div><small>Torre</small><b>Andar ${P.tower}</b><em>recorde de ontem</em></div><div><small>Arena</small><b>—</b><em class="m">abre no nível 15</em></div>
+    <div><small>Instâncias feitas</small><b>6</b><em class="m">Arsenal 4 · Ouro 2</em></div><div><small>Práticas</small><b>${P.prac}</b><em class="m">faltam 18 para o título</em></div></div></div>
+  <div class="card"><h4>${svgI('coin','var(--gold)')}Economia</h4><div class="kv">
+    <div><small>Ouro ganho</small><b>1,24 mi</b><em class="m">gasto 1,22 mi</em></div><div><small>Gemas ganhas</small><b>640</b><em class="m">gastas 389</em></div>
+    <div><small>Itens obtidos</small><b>186</b><em class="m">1 Épico</em></div><div><small>Itens desmontados</small><b>120</b><em class="m">+38 pedras</em></div></div></div>
+  <div class="card"><h4>${svgI('star','var(--violet)')}Recordes</h4>
+    <div class="rec"><span>Melhor sequência sem morrer<em>12/11 · era 2</em></span><b>148</b></div>
+    <div class="rec"><span>Chefe mais rápido<em>Guardião de Pedra</em></span><b>11 s</b></div>
+    <div class="rec"><span>Mais ouro num dia<em>12/11</em></span><b>412 mil</b></div></div>
+  <div class="card"><h4>${svgI('user','var(--muted)')}Conta</h4><div class="kv">
+    <div><small>Servidor</small><b>S1</b><em class="m">Nova Era</em></div><div><small>Conta criada</small><b>11/11</b><em class="m">2026</em></div>
+    <div><small>Tempo jogado</small><b>6 h 42</b><em class="m">3 dias seguidos</em></div><div><small>Login</small><b>Google</b><em>save na nuvem</em></div></div></div>`; }
+
+/* ---------- VIP / navegação / nome ---------- */
+function modal(html,center){ closeModal(); const s=document.createElement('div'); s.className='shade'; s.id='shade'; s.innerHTML=`<div class="modal" role="dialog">${html}</div>`; scr.appendChild(s); s.addEventListener('click',e=>{ if(e.target===s) closeModal(); }); }
+function closeModal(){ const s=$('#shade'); if(s) s.remove(); }
+function openVip(){ const cur=['Arena: +1 tentativa grátis por dia','Torre: +1 tentativa por dia','Mochila com 80 espaços','Ganho offline até 10 h','Desmontar sozinho o que for pior (vira ouro)'], nx=['Mochila com 100 espaços','Ganho offline até 12 h','Chefe Mundial: +1 entrada','Moldura Ouro no perfil'];
+  modal(`<div style="display:flex;gap:12px;align-items:center"><div style="width:58px;height:58px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(180deg,#fff0a8,#ffae2e);color:var(--ink);font-family:var(--fd);font-size:28px;flex:none">2</div><div style="flex:1;min-width:0"><h3 style="margin:0">VIP 2</h3><div class="tc">Pelo total gasto. Faltam <b style="color:var(--gold)">R$ 70</b> para o VIP 3</div><div class="pb" style="height:7px"><i style="width:30%;background:var(--gold)"></i></div></div></div>
+  <div class="sec" style="margin-top:12px"><span>Você tem agora</span></div><div class="vlist">${cur.map(c=>`<div>${svgI('check','var(--green)')}${c}</div>`).join('')}</div>
+  <div class="sec" style="margin-top:10px"><span>No VIP 3</span></div><div class="vlist">${nx.map(c=>`<div class="nx">${svgI('star','var(--gold)')}${c}</div>`).join('')}</div>
+  <div class="acts"><button class="bt off" data-x="close" style="flex:.6">Fechar</button><button class="bt" data-go="VIP">Ver todos os níveis</button></div>`); }
+const GOIMG={'Torre':'a/m_mythic.png','Passe':'a/wing_storm.png','VIP':'a/m_giant_phoenix.png','Loja':'a/gem.png','Oferta':'a/m_war_unicorn.png','Arena':'a/m_giant_scorpion.png','Eventos':'a/m_shadow_panther.png','Torneio':'a/m_celestial_tiger.png','Guilda':'a/m_black_dragon.png','Pets':'a/shadow_wolf.png','Montarias':'a/m_wolf.png','Mapa das Eras':'a/bg_era2.png','Forja':'a/coin.png','Invocar':'a/gem.png','Missões':'a/coin.png','Práticas':'a/coin.png','Aparência':'a/kael_ninja.png','Batalha':'a/kael_phase0.png'};
+function go(where){ closeModal(); const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar ao Perfil"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><img src="${GOIMG[where]||'a/coin.png'}" alt=""><p>No jogo, este botão abre a tela <b>${where}</b> já no lugar certo.</p><p>O voltar traz de volta ao Perfil, na mesma aba.</p><button class="bt" data-x="navback" style="height:46px;min-width:200px">Voltar ao Perfil</button></div>`;
+  scr.appendChild(d); }
+let renamed=false;
+function rename(){ modal(`<h3>Trocar nome</h3><input class="inp" id="nin" maxlength="14" value="${$('#name').textContent}" aria-label="Novo nome"><div class="err" id="nerr"></div>
+  <p class="hint" style="margin:4px 0 0">3 a 14 letras ou números. ${renamed?'Custa <b>200 gemas</b>.':'A primeira troca é <b>grátis</b>; depois custa 200 gemas.'}</p>
+  <div class="acts"><button class="bt off" data-x="close" style="flex:.6">Cancelar</button><button class="bt" id="nok">${renamed?'Trocar · 200':'Trocar grátis'}</button></div>`);
+  const i=$('#nin'); i.focus(); i.select();
+  $('#nok').onclick=()=>{ const v=i.value.trim(); let e=''; if(!/^[\p{L}\p{N}]{3,14}$/u.test(v)) e='Use de 3 a 14 letras ou números, sem espaço.'; else if(/admin|dono|eonbound/i.test(v)) e='Esse nome não pode ser usado.'; else if(renamed&&+$('#gems').textContent<200) e='Faltam gemas.';
+    if(e){ i.classList.add('bad'); $('#nerr').textContent=e; return; } if(renamed) $('#gems').textContent=+$('#gems').textContent-200; renamed=true; $('#name').textContent=v; closeModal(); toast('Nome trocado para '+v); }; }
+
+/* ---------- comum ---------- */
+function render(top=true){ const b=$('#body'), y=b.scrollTop; b.innerHTML= tab==='tit'?renderTitles(): tab==='vis'?renderVis(): tab==='col'?renderCol(): renderNum(); if(!top) b.scrollTop=y; document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.t===tab)); }
+function setTab(t){ tab=t; render(); $('#body').scrollTop=0; }
+function toast(t){ const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),1800); }
+function fcFly(d){ if(Math.abs(d)<1) return; const o=document.createElement('div'); o.className='fcfly '+(d>0?'up':'dn'); o.textContent=(d>0?'▲ +':'▼ −')+fmtK(Math.abs(d))+' FC'; scr.appendChild(o); setTimeout(()=>o.remove(),1700); }
+function full(){ renderTop(); renderOver(); renderDet(); render(); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.t){ setTab(d.t); return; }
+  if(d.tab){ setTab(d.tab); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+  if(d.x==='close'){ closeModal(); return; }
+  if(d.x==='endprev'){ S.pv=null; S.det=null; renderOver(); renderDet(); render(false); return; }
+  if(d.mode){ S.pv=null; S.mode=d.mode; renderOver(); renderDet(); render(false); return; }
+  if(d.pv){ preview(d.pv,d.id); return; }
+  if(d.pst){ if(S.pv) S.pv.stage=+d.pst; else S.detStage=+d.pst; renderDet(); return; }
+  if(d.mst){ if(S.pv) S.pv.star=+d.mst; else S.detStar=+d.mst; renderDet(); return; }
+  if(d.equip){ equipPv(); return; }
+  if(d.f){ ttFilter=d.f; render(); return; }
+  if(d.eq){ const before=fcOf(); S.featured=d.eq; renderTop(); render(false); fcFly(fcOf()-before); toast('Título em destaque: '+TITLES.find(t=>t[0]===S.featured)[1]); return; }
+  if(d.av){ const s=skinsH().find(x=>x.av===d.av); if(!own(s)){ toast('Como ganhar: '+s.how); return; } S.avatar=d.av; renderTop(); render(false); toast('Retrato trocado'); return; }
+  if(d.frame){ const f=FRAMES.find(x=>x[0]===d.frame); if(!(S.all||f[3])){ toast('Como ganhar: '+f[4]); return; } S.frame=f[0]; renderTop(); render(false); toast('Moldura '+f[1]); return; }
+  if(d.ct){ colTab=d.ct; colF='all'; render(); return; }
+  if(d.cf){ colF=d.cf; render(); return; }
+  if(b.id==='vipchip'){ openVip(); return; }
+  if(b.id==='pen'){ rename(); return; }
+  if(b.id==='copy'){ const tx=$('#pid').textContent, okk=()=>toast('ID copiado: '+tx); try{ navigator.clipboard.writeText(tx).then(okk,okk); }catch(x){ okk(); } return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; S.skin='def'; S.avatar=null; S.pv=null; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(); }
+  if(b.dataset.all!=null){ S.all=b.dataset.all==='1'; if(!S.all){ S.skin='def'; S.mount='horse'; S.pet='swolf'; S.wing='angel'; S.aura='aura7'; S.frame='bronze'; S.avatar=null; S.featured='stage10'; } S.pv=null; document.querySelectorAll('[data-all]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brilho subindo atrás do herói */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const W=780,H=840,Pp=[]; for(let i=0;i<40;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?190:45,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,72%,${.25+.55*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+full();
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-21-perfil-v5';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'21 Perfil V5',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
