@@ -163,17 +163,17 @@
    "src": "f041.png"
   },
   {
-   "x": 321.11,
-   "y": 134.83,
+   "x": 299.53,
+   "y": 147.92,
    "fdy": 1,
-   "ang": 8.61,
-   "ux": 0.9887376202534044,
-   "uy": -0.14965934082319998,
+   "ang": 0.9,
+   "ux": 0.999876281369973,
+   "uy": -0.015729652054469766,
    "f0": -3.84,
    "f1": 3.84,
    "hw": 2.88,
    "behind": false,
-   "src": "f045.png"
+   "src": "f043.png"
   },
   {
    "x": 297.47,
@@ -202,30 +202,30 @@
    "src": "f053.png"
   },
   {
-   "x": 316.7,
-   "y": 135.79,
+   "x": 297.23,
+   "y": 145.62,
    "fdy": 1,
-   "ang": 11.15,
-   "ux": 0.9811274447098461,
-   "uy": -0.19336219185023673,
+   "ang": 4.66,
+   "ux": 0.9967002505705597,
+   "uy": -0.08117025632941902,
    "f0": -3.84,
    "f1": 3.84,
    "hw": 2.88,
    "behind": false,
-   "src": "f057.png"
+   "src": "f055.png"
   },
   {
-   "x": 297.23,
-   "y": 144.47,
+   "x": 300.25,
+   "y": 141.26,
    "fdy": 1,
-   "ang": 6.77,
-   "ux": 0.9930265229825137,
-   "uy": -0.11789115595861818,
+   "ang": 10.32,
+   "ux": 0.9838086842280982,
+   "uy": -0.17922185368246293,
    "f0": -3.84,
    "f1": 3.84,
    "hw": 2.88,
    "behind": false,
-   "src": "f061.png"
+   "src": "f058.png"
   },
   {
    "x": 300.92,
@@ -331,5 +331,230 @@
    "behind": false,
    "src": "f093.png"
   }
+ ],
+ "shots": [
+  12,
+  15
+ ],
+ "back": [
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.1,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.2,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.4,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.8,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.8,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 14.9,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 14.7,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 14.9,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16.5,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16.5,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 16,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 15.5,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 14.9,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 14.8,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 10.5,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 10.5,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 11.6,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  },
+  {
+   "x": 202,
+   "y": 166,
+   "ang": 12.6,
+   "s": 1,
+   "ok": true,
+   "clampx": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "neck": [
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  143,
+  142,
+  142,
+  142,
+  143
  ]
 }

@@ -4,7 +4,7 @@
  "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. skins da Kaia: âncora pelo rosto (kaiaskin/headtrack.js)",
  "head": [
   {
-   "x": 235,
+   "x": 236,
    "y": 93,
    "ang": 0,
    "s": 0.452,
@@ -12,23 +12,7 @@
    "ok": true
   },
   {
-   "x": 234,
-   "y": 89,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 235,
-   "y": 89,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 235,
+   "x": 237,
    "y": 93,
    "ang": 0,
    "s": 0.452,
@@ -36,7 +20,15 @@
    "ok": true
   },
   {
-   "x": 235,
+   "x": 239,
+   "y": 95,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 238,
    "y": 92,
    "ang": 0,
    "s": 0.452,
@@ -44,23 +36,31 @@
    "ok": true
   },
   {
-   "x": 234,
-   "y": 93,
+   "x": 236,
+   "y": 92,
    "ang": 0,
    "s": 0.452,
    "e": 0,
    "ok": true
   },
   {
-   "x": 234,
-   "y": 89,
+   "x": 238,
+   "y": 92,
    "ang": 0,
    "s": 0.452,
    "e": 0,
    "ok": true
   },
   {
-   "x": 235,
+   "x": 240,
+   "y": 94,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 238,
    "y": 92,
    "ang": 0,
    "s": 0.452,
