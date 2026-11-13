@@ -372,7 +372,7 @@ function scrGear(){
       </div>
       <span style="font-size:10px;font-weight:900;color:#f6ecdf;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>`; }).join('');
   /* skin */
-  const sa=SKIN(S.skinEq.armor), sw=SKIN(S.skinEq.weapon), sr=Math.max(sa?sa.r:0,sw?sw.r:0), SD=Sys.skin.detail(S), tier=tierOf(sa?sa.r:0), skinAdj=['Básica','Rara','Épica','Mítica','Lendária'][sr]||RN(sr);
+  const sa=SKIN(S.skinEq.armor), sw=SKIN(S.skinEq.weapon), sr=Math.max(sa?sa.r:0,sw?sw.r:0), SD=Sys.skin.detail(S), tier=tierOf(sa?sa.r:0), skinAdj=['Básica','Rara','Épica','Mítica','Lendária'][sr]||RN(sr), lookOn=!!(window.Panels&&Panels.on('look')&&!(window.Screens&&Screens.reg&&Screens.reg.look&&Screens.reg.look.broken));   /* aba Aparência (tela do QA, js/p_look.js) */
   const stats=[['atk','atk'],['hp','hp'],['def','def'],['crit','crit'],['cd','cd'],['vel','vel']].map(([k,ic])=>{ let cls=''; if(tw){ const df=tw.to[k]-tw.from[k]; cls=df>0.001?'x-stUp':df<-0.001?'x-stDn':''; }
     return `<div class="${cls}" style="display:flex;align-items:center;gap:5px;padding:0 6px;border-radius:10px;background:#0e0a07;border:1px solid #4a3a2b;min-width:0">
       <img src="${STI[ic]}" alt="" style="width:18px;height:18px;flex:none"><div style="display:flex;flex-direction:column;line-height:1.05;min-width:0">
@@ -411,10 +411,10 @@ function scrGear(){
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
           <div style="display:flex;flex-direction:column;line-height:1;min-width:0"><span style="font-size:9px;font-weight:900;color:#c9b9a2;letter-spacing:${d.Wb<380?0:1}px;white-space:nowrap">FORÇA DE COMBATE</span>
             <span class="lil ${tw&&tw.to.fc>tw.from.fc?(tw.big&&!d.real?'x-fcBig':'x-fcUp'):''}" id="xg_s_fc" style="font-size:25px;color:#ffc94a;text-shadow:0 2px 0 #6a3a08;transform-origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>
-        <button data-x="goskins" aria-label="Skin equipada e coleção de skins: ir para a loja" style="width:${d.real?(d.Wb<380?168:204):168}px;flex:none;display:flex;align-items:center;gap:6px;padding:0 6px;border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
+        <button data-x="${lookOn?'look':'goskins'}" aria-label="${lookOn?'Aparência: skin '+skinAdj+', mais '+p1(SD.equipped)+' de ATK e HP; coleção de skins mais '+p1(SD.collection)+'. Abrir modo Itens ou Skin, ocultar peças e cosméticos':'Skin equipada e coleção de skins: ir para a loja'}" style="width:${d.real?(d.Wb<380?168:204):168}px;flex:none;display:flex;align-items:center;gap:6px;padding:0 6px;border-radius:12px;background:#33271d;border:2px solid ${RC[sr]};box-sizing:border-box;text-align:left">
           <span style="position:relative;width:34px;height:34px;flex:none;border-radius:9px;background:#1d1611;overflow:hidden"><span class="kidle ${tier?'t'+tier:''}" style="position:absolute;left:-12px;top:-4px;width:58px;height:58px;display:block"></span></span>
-          <span style="display:flex;flex-direction:column;line-height:1.15;min-width:0"><span style="font-size:${d.Wb<380?9.5:11}px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
-            <span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span></button>
+          <span style="display:flex;flex-direction:column;line-height:${lookOn?1.12:1.15};min-width:0;flex:1">${lookOn?'<span class="lil" style="display:flex;align-items:center;gap:4px;font-size:13px;color:#f6ecdf"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>Aparência</span>':''}<span style="font-size:${lookOn?10:(d.Wb<380?9.5:11)}px;font-weight:900;color:${sr===2?'#c9a3ff':RC[sr]};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Skin ${skinAdj} +${p1(SD.equipped)} ATK/HP</span>
+            <span style="font-size:${lookOn?9.5:10}px;font-weight:800;color:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span>${lookOn?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a3ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><polyline points="9 18 15 12 9 6"></polyline></svg>':''}</button>
       </div>
       <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr;gap:5px">${stats}</div>
     </div>
@@ -525,6 +525,7 @@ function gClick(b){
   else if(a==='all'){ snd('ui_tap'); XG.filter='all'; XG.page=0; XG.anim=true; render(); }
   else if(a==='pg'){ const p=XG.page+(+b.dataset.d); if(p>=0&&p<(XG.pages||1)){ snd('ui_tap'); XG.page=p; XG.anim=true; render(); } }
   else if(a==='prog'){ if(!xUnlocked('practice')) return; snd('ui_tap'); Screens.open('progress'); }
+  else if(a==='look'){ snd('ui_tap'); if(!(window.Panels&&Panels.open('look',{from:'gear'}))) gToast('Aparência: em breve'); }   /* volta ao Equipamento ao fechar */
   else if(a==='forge'){ if(!xUnlocked('forge')) return; snd('ui_tap'); if(window.Panels) Panels.open('forge'); }
   else if(a==='goskins'){ if(!xUnlocked('gemShop')){ snd('ui_tap'); gToast('Loja de skins: libera no nível '+xUnlockLv('gemShop')); return; }   /* loja de skins (gemas) só no nível 10 */ snd('ui_tap'); XH.tab='hero'; setView('shop'); }
   else if(a==='cell'){ snd('ui_tap'); const x=itemOf(+b.dataset.id); if(x){ delete x.nw; XG.sel=x.id; XG.sheetIn=true; render(); XG.sheetIn=false; if(typeof tutEvent==='function') tutEvent('view'); } }
@@ -820,6 +821,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();

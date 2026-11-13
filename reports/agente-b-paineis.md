@@ -989,3 +989,13 @@ Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o
    qualquer caminho para o Passe/Missões cai na tela 34, nunca na lista antiga.
 5. Com a batalha rodando atrás: a tela não reinicia animações a cada onda, o relógio da temporada anda, e resgatar missão diária na tela
    34 sobe o XP do JOGADOR (anel do avatar) além do XP do passe.
+
+## Bloco 30 (sem navegador): aba APARÊNCIA do Equipamento (tela do QA, `js/p_look.js`)
+
+- `p_look` na lista de carga do `js/screens.js`; `PANEL_ON.look` DESLIGADA. Encontrei `auction = true` (mudança da coordenação): mantive.
+- Entrada no Equipamento, onde o protótipo a desenha: o cartão da skin ao lado da caixa da FC vira o botão "Aparência" (ícone de olho,
+  "Skin <raridade> +X% ATK/HP", "Coleção de skins +Y%", seta). Abre `Panels.open('look', {from:'gear'})`: ao fechar, volta ao Equipamento.
+  Só aparece assim com a tela `look` ligada e não quebrada; desligada, o cartão continua como antes (leva à Loja de skins no nível 10).
+  Com a Aparência ligada, o atalho do cartão para a Loja deixa de existir (o protótipo põe a coleção de skins dentro do painel).
+- Não fiz o desenho do herói em camadas (é do engenheiro).
+- `node --check`; conflitos ok; `node test/e2e/run.js` "TUDO OK"; fumaça sem falha. Não visto no navegador.
