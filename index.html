@@ -723,7 +723,13 @@ function ensureShop(){
   const rnd=rngSeed(hash(k+'|'+S.eraMax)), rs=[0,0,1,1,2,2];
   /* estoque do dia montado pelo Sys.loot.rollItem ({source:'shop'}, com os portões de raridade); a vitrine mostra o item inteiro e a compra é direta, sem sorteio */
   const sh=Object.assign({},window.Sys&&Sys.host,{rng:rnd});
-  const offers=rs.map((r,i)=>{ let o; if(window.Sys&&Sys.loot){ const it=normItem(Sys.loot.rollItem(sh,{source:'shop',minR:r})); o={slot:it.slot,r:it.r,e:it.e,subs:it.subs}; } else o={slot:i%2?'armor':'weapon',r,e:(S.eraMax>0&&rnd()<.3)?S.eraMax-1:S.eraMax,subs:[]};
+  /* QA no S24: a Loja repetia o MESMO item no mesmo dia (cada oferta era sorteada sozinha). Agora cada oferta do dia é diferente das anteriores em espaço + raridade + era:
+     sorteia de novo (até 8 vezes, com o mesmo gerador do dia, então o estoque continua igual para o dia inteiro); se ainda repetir (jogador novo: tudo Básico da era 0, só 6
+     combinações), pede ao sorteio um ESPAÇO que ainda não saiu nessa raridade e era; só fica repetido se não sobrar espaço nenhum (nunca trava) */
+  const seen={}, roll=(r,i,slot,era)=>{ let o; if(window.Sys&&Sys.loot){ const q={source:'shop',minR:r}; if(slot){ q.slot=slot; q.era=era; } const it=normItem(Sys.loot.rollItem(sh,q)); o={slot:it.slot,r:it.r,e:it.e,subs:it.subs}; } else o={slot:i%2?'armor':'weapon',r,e:(S.eraMax>0&&rnd()<.3)?S.eraMax-1:S.eraMax,subs:[]}; return o; };
+  const offers=rs.map((r,i)=>{ let o=roll(r,i); for(let n=0;n<8&&seen[o.slot+'|'+o.r+'|'+o.e];n++) o=roll(r,i);
+    if(seen[o.slot+'|'+o.r+'|'+o.e]&&window.Sys&&Sys.loot){ const free=Object.keys(SLOT).filter(k=>k!=='wing'&&!seen[k+'|'+o.r+'|'+o.e]); if(free.length){ const o2=roll(r,i,free[Math.floor(rnd()*free.length)],o.e); if(!seen[o2.slot+'|'+o2.r+'|'+o2.e]) o=o2; } }
+    seen[o.slot+'|'+o.r+'|'+o.e]=1;
     return {slot:o.slot,r:o.r,e:o.e,subs:o.subs,price:itemPrice(o.r,o.e),sold:false}; });   /* o item inteiro fica na vitrine (espaço, era, raridade, secundários): compra direta, sem sorteio */
   const pool=SKINS.filter(x=>!x.pass&&x.e<=S.eraMax&&!S.skins.includes(x.id));
   const skins=[]; while(skins.length<4&&pool.length){ skins.push(pool.splice(Math.floor(rnd()*pool.length),1)[0].id); }
