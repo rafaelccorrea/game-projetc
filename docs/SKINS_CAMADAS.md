@@ -84,21 +84,21 @@ Precisa por estado: `masks/<herói>_<estado>_mask.png` (+ .json), `_head.json` (
 |---|---|---|
 | Kael R / phase1 | 8 estados | completo |
 | Kael phase2 / phase3 | 8 estados | **colete refeito cobrindo o peitoral** (máscara R 2-4× maior); âncora do chapéu corrigida; cabelo refeito para a âncora nova |
-| Kaia menina () | run/idle/attack | **máscara de cabelo refeita** (ruivo/acaju entra, região maior atrás, dilata 2-3 px): sumiram os fios atrás do elmo. Os outros estados são do outro agente |
+| Kaia menina (`kaia/`) | run/idle/attack | **máscara de cabelo refeita** (ruivo/acaju entra, região maior atrás, dilata 2-3 px): sumiram os fios atrás do elmo. Os outros estados são do outro agente |
 | Kaia adolescente | 8 estados | **máscara de cabelo refeita** (igual à menina) |
 | Kaia adulta / guerreira | 8 estados | **colete cobre o peitoral; botas de metal pintáveis** (B 7-26 mil px); âncora do chapéu corrigida; cabelo refeito. Rabo de cavalo fora do elmo: ACEITO pelo PO |
-| Kaia menina | pistol_shoot | sem  no _body.json (só importa para asa) |
+| Kaia menina | pistol_shoot | sem `back` no _body.json (só importa para asa) |
 
 ### Correções feitas por código (12/11, decisões do PO; sem crédito)
-- **Colete/botas (phase2, phase3, kaia_phase2, kaia_phase3, 8 estados cada)**:  com o cachecol procurado mais alto (env novas no gearmask.js:
-  ; o padrão 0.42-0.70 era do garoto chibi e jogava o pescoço para a cintura no adulto) + ;
-  guerreiros e Kaia adulta/guerreira com  (todo pixel não pele/não capa da faixa do tronco: pega os painéis azuis do guerreiro); Kaia com .
-  Script: . Backup: . Formato do .json igual (conferido).
-- **Cabelo da Kaia menina/adolescente**:  (cópia do hairmask.js; ). Backup em .
-- **Chapéu no adulto/guerreiro**: medido, o chapéu NÃO estava menor que a cabeça (largura da cabeça/s: garoto 254, Kael adulto 180, Kaia adulta 228: o chapéu já
-  era proporcionalmente mais largo). O defeito era a ALTURA: a âncora ficava baixa e a aba cobria os olhos (óculos na boca). Correção ():
+- **Colete/botas (phase2, phase3, kaia_phase2, kaia_phase3, 8 estados cada)**: `gearmask1.js` com o cachecol procurado mais alto (env novas no gearmask.js:
+  `NECKFROM/NECKTO/NECKDEF`; o padrão 0.42-0.70 era do garoto chibi e jogava o pescoço para a cintura no adulto) + `METALSAT=45 METALMAX=240`;
+  guerreiros e Kaia adulta/guerreira com `VESTALL=1` (todo pixel não pele/não capa da faixa do tronco: pega os painéis azuis do guerreiro); Kaia com `BOOTMETAL=1`.
+  Script: `Temp/tools/skc_vest.sh <pasta>`. Backup: `masks/_bak_skc/`. Formato do .json igual (conferido).
+- **Cabelo da Kaia menina/adolescente**: `Temp/tools/skc_hairmask.js` (cópia do hairmask.js; `BACKX=1.0 DIL=3`). Backup em `masks/_bak_skc/`.
+- **Chapéu no adulto/guerreiro**: medido, o chapéu NÃO estava menor que a cabeça (largura da cabeça ÷ s: garoto 254, Kael adulto 180, Kaia adulta 228 — o chapéu já
+  era proporcionalmente mais largo). O defeito era a ALTURA: a âncora ficava baixa e a aba cobria os olhos (óculos na boca). Correção (`Temp/tools/skc_headfix.js`):
   âncora sobe 30 unidades do chapéu na direção do topo da cabeça em todos os quadros; Kael phase2/3 também s×1,12; Kaia adulta/guerreira s×1,0 (já grande).
-  Campo  no json; original em . As máscaras de cabelo das 4 pastas foram refeitas (hairmask.js) para a âncora nova.
+  Campo `skcFix` no json; original em `masks/_bak_skc/`. As máscaras de cabelo das 4 pastas foram refeitas (hairmask.js) para a âncora nova.
 
 ## Prévia
 `reports/prints/skins_camadas_preview.png` — a00, a11, a22, a33, a44, a53, a64, p30 · idle quadro 0 · 8 versões. Ferramenta: `Temp/tools/skc_preview.js`
