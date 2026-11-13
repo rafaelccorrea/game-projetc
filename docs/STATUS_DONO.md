@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **04h10 · Avatar (sua ordem):** o rosto no topo e no Perfil vai acompanhar a fase (garoto, adolescente, adulto, guerreiro) e o herói, com chapéu e óculos. A Arte faz 8 retratos pelo código; o engenheiro troca em todos os lugares (topo, Perfil, ranking, guilda, chat). Entra junto com as 4 fases no próximo APK
+
 - **04h · Skins em camadas PRONTAS (regra, Sistemas):** as 38 skins mantêm nome e preço e viraram chapéu + cor do colete/botas + óculos/máscara (+ aura nas Lendárias). As do Passe: Casaca da Temporada = tricórnio + colete rubi + máscara de carnaval; Traje Elite Solar = chapéu militar + ouro + viseira + aura; Imperador das Eras = chapéu celestial + ouro e obsidiana + aura forte. Valem nas 4 fases e nos 2 heróis; podem voltar à Loja. Próximo de Sistemas: tela de Fusão, brilho do item caído por raridade, testes das 4 fases
 
 - **03h55 · QA reconferiu no navegador:** asa OK a pé e montado; arma na mão OK com o Kael montado; Serpe na tela de Montarias (6 de 6); Instâncias de ponta a ponta OK (o prêmio estava usando o nível Fácil; já corrigido). Ainda aberto: o pet sumindo na Vitória (próximo do engenheiro). Os cenários das eras 5-8 entram antes do APK; as eras 7 e 8 você vê pelo Modo dono até a curva das 9 eras ligar
