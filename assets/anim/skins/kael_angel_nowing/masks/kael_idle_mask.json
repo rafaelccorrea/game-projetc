@@ -4,6 +4,6 @@
  "w": 256,
  "h": 256,
  "padLeft": 0,
- "sheet": "assets/anim/skins/kael_angel/kael_idle_era2_t1.png",
+ "sheet": "assets/anim/skins/kael_angel_nowing/kael_idle_era2_t1.png",
  "note": "R = colete, B = botas (intensidade = força); alfa = cobertura. Pintar: cor = luminância × tinta do material."
 }
