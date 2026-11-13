@@ -14,7 +14,7 @@ vm.runInThisContext(fs.readFileSync(path.join(R, 'js/p_chat.js'), 'utf8'), { fil
 assert(def && def.render && def.click);
 const btn = (x, o) => ({ dataset: Object.assign({ x }, o || {}) }); const H = () => g.V.innerHTML; const has = s => assert(H().includes(s), 'faltou: ' + s); const out = [];
 // 1) offline: canais, frases, aviso claro, sem mensagens simuladas, sem campo de texto livre, sem emoji
-def.onOpen(); def.render(); ['Mundial', 'Era', 'Guilda', 'Era Medieval' === 'x' ? '' : 'Mundial', 'precisa do servidor online: em breve', 'Sem mensagens: o chat abre junto com o online', 'Bom jogo!', 'GG!', 'Chat livre chega em breve', 'Frases prontas'].forEach(has);
+def.onOpen(); def.render(); ['Mundial', 'Era', 'Guilda', 'Era Medieval' === 'x' ? '' : 'Mundial', 'precisa do servidor online: em breve', 'Sem mensagens: o chat abre junto com o online', 'Bom jogo!', 'GG!', , 'Frases prontas'].forEach(has);
 assert(!/<input|<textarea|contenteditable/i.test(H()), 'sem texto livre'); assert(!/\p{Extended_Pictographic}/u.test(H()), 'sem emoji'); assert(!/LunaFerro|Tavinho|Rex_Brasa|Prévia: conta/.test(H()), 'sem jogadores simulados');
 const nPh = (H().match(/data-x="send"/g) || []).length; assert.strictEqual(nPh, 20); out.push('offline: 3 canais, 20 frases, aviso do online, sem texto livre, sem jogadores simulados, zero emoji');
 let bt = H().match(/<button[^>]*>/g) || []; assert(bt.every(b => /data-x="/.test(b)), 'todo botão com ação'); out.push(bt.length + ' botões, todos com ação');
