@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h · APK v0.13.1 PRONTA NO CÓDIGO** (Arena nova sem o bug, conferida pelo QA em 4 tamanhos; pet na frente; montaria e asa na Derrota; Kaia Angelical com a asa do item; textos corrigidos), mas o PC tem só 1,5 GB livres e gerar a APK precisa de uns 4 GB. **Feche abas do Chrome (7 GB) e/ou o Cursor (5,5 GB)** e o Engenheiro gera em 4 minutos. **Pets refeita** entrou no link das telas. Dificuldade nova: o teste achou o jogador novo travando logo na fase 1; a Sistemas corrige antes de ligar
+
 - **02h45 · UM LINK SÓ PARA TODAS AS TELAS: https://claude.ai/artifact/6AUcyib9p4Z3Qe16Pk6BEb** (Perfil, Luta PvP da Arena, Equipamento, Loja, Invocar; cada uma abre numa página com o voto, e o índice mostra o que já foi aprovado). As próximas telas entram neste mesmo link. **Bug da Arena corrigido** (d3d14c0): ao Pular no meio da ultimate o golpe e o pet continuavam atrás do resultado; agora tudo para e a vida fica no valor final; o QA confere e a v0.13.1 sai
 
 - **02h20 · TELA INVOCAR REFEITA para o seu voto:** https://claude.ai/artifact/KP94DtwMgMCd8rCHnoQsLe (só ouro ganho jogando + 1 grátis por dia, chances e garantia à vista, cartas saindo do chão com brilho por raridade, prévia no herói). Equipamento corrigido (mesmo link). Pet agora dá FC ao evoluir (+2% por estágio). Bug da Arena confirmado como a luta PvP seguindo depois do fim: em correção; a batalha das fases continua rendendo escondida durante a Arena (sua decisão)
