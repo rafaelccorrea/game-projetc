@@ -52,6 +52,7 @@ function drawHeroMounted(H){ const id = H.mount.id; if (!mountReady(id)) return 
       const g = ctx.createRadialGradient(gx0, gy0, HS * 0.1, gx0, gy0, r); g.addColorStop(0, c + Math.min(0.95, (0.22 + 0.15 * (H.mount.stars | 0)) * (0.75 + pu * 0.5)).toFixed(2) + ')'); g.addColorStop(0.55, c + (0.3 * pu + 0.12).toFixed(2) + ')'); g.addColorStop(1, c + '0)');   /* v0.12.8: mais forte (quase não aparecia) */ ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.fillRect(gx0 - r, gy0 - r, r * 2, r * 2);
       if ((H.mount.stars | 0) >= 4){ ctx.fillStyle = c + '0.30)'; for (let i = 0; i < 6; i++){ const ph = (t * 0.5 + i / 6) % 1, sx = ox - HS * 0.28 + i * HS * 0.16 + Math.sin(t * 1.3 + i) * 4; ctx.globalAlpha = alpha * (1 - ph) * ((H.mount.stars | 0) >= 5 ? 0.9 : 0.6); ctx.beginPath(); ctx.ellipse(sx, gy - 2 - ph * HS * 0.16, HS * (0.07 + 0.06 * ph), HS * (0.035 + 0.03 * ph), 0, 0, 7); ctx.fill(); } }   // fumaça nas patas (4 e 5 estrelas)
       ctx.restore(); } }
+  if (typeof drawWingsAt === 'function') drawWingsAt(H, sh, fi, ox - (pad + 128 - T.dx) * k, gy - (fy - T.dy) * k, k, !a);   /* asa nas COSTAS do Kael montado: âncora "back" da folha, quadro a quadro, na escala dele na sela */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   ctx.translate(-(pad + 128 - T.dx) * k, -(fy - T.dy) * k); ctx.scale(k, k);          // espaço do quadro (0..512); patas em feetY na linha do chão
   const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);

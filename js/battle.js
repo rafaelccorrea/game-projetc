@@ -728,8 +728,9 @@ function drawLevelUp(){ const f=B.lvfx; if(!f) return; const sh=sheetLoad(LVUP,t
   const k=HS/256; ctx.drawImage(sh.img,fi*M.w,0,M.w,M.h,HX-(M.anchorX||M.w/2)*k,GY-(M.feetY||M.h)*k,M.w*k,M.h*k); }
 const WING_DRAW=true;   // asa equipada desenhada atrás do Kael: escrita, NUNCA vista rodando; desligada até a versão do Modo dono
 function drawHero(H){
-  if(WING_DRAW&&H.deadP<0&&typeof drawWings==='function') drawWings(H);   // asa equipada: ATRÁS do corpo
-  if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
+  if(drawHeroAnim(H)) return;   // folhas híbridas (js/stage.js): a ASA é desenhada lá dentro, presa à âncora das costas de cada quadro
+  if(WING_DRAW&&H.deadP<0&&typeof drawWings==='function') drawWings(H);   // reserva (sprite parado antigo)
+  if(false) return;   // folhas híbridas (js/stage.js); abaixo, o sprite parado antigo como reserva
   const sk=H.sk, ws=H.ws, key=heroKey(sk), t=H.t;
   const body0=SPR(hp('hero',sk.e,tierOf(sk.r)),'hero');
   if(!body0){ if(H.main) drawHeroOld(); return; }

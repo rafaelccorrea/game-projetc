@@ -1591,3 +1591,14 @@ Tudo visto no Chrome, `localhost:8080`, Modo dono (save separado), mais o save d
 ### Aberto (fila passada pelo coordenador, nesta ordem)
 1. ASA NAS COSTAS (âncora `back` + `root` das asas), a pé nas 4 fases e nas 6 montarias; prints `v0128_asa_*`. 2. `drawHeroFull` (pet/montaria/asa/aura nunca somem; Vitória, Troca de era, subir de nível) e `drawHeroLayers` para a Aparência. 3. P3/P1 (imagens de arma e da Oferta). 4. "Pular" do tutorial em save antigo. 5. Fases do Kael (`PHASES_ON`), cenários das eras 6 e 7, Kaia, pets novos.
 Serpe na tela de Montarias: depende do agente B (A-22).
+
+## Engenheiro 2 — ASA NAS COSTAS (2026-11-12; ordem do dono)
+
+Feito e visto (Chrome, `localhost:8080`, Modo dono, era 0): a asa agora é desenhada DENTRO do desenho do herói, presa à âncora `back` de cada quadro (Arte) com a raiz `root` do `wing_<tipo>.json`, antes do corpo: `drawWingsAt()` em `js/stage.js`, chamada pelo Kael a pé (corpo + arma, pistola, espera da pistola) e pelo Kael montado (`js/mountfx.js`). Par L/R (anjo, demônio) e asa única (`single`: dragão, energia; escrita, NÃO vista: o jogo ainda não dá essas asas).
+- A pé (garoto): parado, correndo e golpe, anjo e demônio: a raiz fica nas costas na altura do ombro, atrás do tronco; nada acima da cabeça.
+- Montado: lobo (parado, correndo, golpe), grifo (parado, correndo, golpe), serpe (parado, correndo, golpe), pônei (parado): a asa sai das costas do Kael, na escala dele na sela (0,65), inclinada com o tronco, e acompanha o corpo no golpe.
+- A âncora das folhas do garoto pula até 20 px em x de um quadro para o outro (medida automática): nas folhas em laço uso a mediana do x da folha e mediana de 3 quadros em y/ângulo; nos golpes, mediana de 3.
+- Prints: `v0128_asa_garoto_parado`, `v0128_asa_garoto_golpe`, `v0128_asa_garoto_demonio`, `v0128_asa_lobo`, `v0128_asa_grifo`, `v0128_asa_serpe` (recorte ampliado do canvas, fundo verde da lupa).
+- `MOUNT_TBL` wx/wy/wx2/wy2 e `mountWingOff` ficaram sem uso (a âncora substitui). Ícone da Oferta 24h trocado para `offer.png` (não visto na tela depois da troca).
+NÃO feito: asa nas fases 1, 2 e 3 a pé (as fases ainda não estão ligadas na batalha: entra com o item "Kael nas 4 fases"; a âncora dessas folhas já é lida pelo mesmo código); os 7 prints antigos reprovados com os MESMOS nomes; giro/rastro usam a última âncora (a folha composta não tem `back`).
+Achados: (1) montado de perfil só aparece UMA metade da asa na maior parte dos quadros (a outra fica atrás do Kael): é o esperado da receita, mas o dono precisa ver; (2) folhas do lobo parado/correndo AINDA mostram o risco escuro perto da cabeça do Kael nesta aba (pode ser cache de imagem do navegador: não confirmei); (3) "arma some montado no grifo/lobo" (QA): com espada das eras 0 e 2 a arma aparece na mão nos meus prints; não reproduzi; preciso saber qual arma estava equipada; (4) ângulo da maça em pônei/cavalo/tigre: não conferido.

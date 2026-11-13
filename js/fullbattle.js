@@ -126,8 +126,8 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
   { id: 'pass',   icon: 'pass',      label: 'Passe',   side: 'left',  x: 4, y: 370, big: true, act: 'pass',   prio: 4, hot: true, badge: 'fb_bp' },
   { id: 'chest',  icon: '',          label: 'Baú',     side: 'right', x: 7, y: 150, act: 'chest', prio: 5, chest: true, badge: 'fb_bc' },
   /* OFERTA 24h (pedido B-28; decisão do PO: SÓ no Modo dono até existir compra real). Aparece com a tela 'offer' ligada E a oferta valendo (Sys.offer.status);
-     o rótulo é o relógio; some ao comprar ou expirar. Ícone PROVISÓRIO (o de Eventos) até a Arte entregar o da oferta. */
-  { id: 'offer',  icon: 'events',    label: 'Oferta',  side: 'right', x: 7, y: 220, act: 'soon:offer', prio: 6, hot: true, show: () => fbOfferOn() },
+     o rótulo é o relógio; some ao comprar ou expirar. Ícone próprio da Arte (assets/icons/menu/offer.png). */
+  { id: 'offer',  icon: 'offer',     label: 'Oferta',  side: 'right', x: 7, y: 220, act: 'soon:offer', prio: 6, hot: true, show: () => fbOfferOn() },
   /* alerta "Evento" (prio 6, side right, y 220): só entra quando existir evento no jogo; hoje não há, então não é desenhado (Eventos fica no MENU, "Em breve") */
 ];
 /* itens do botão MENU (drop down), na ordem do protótipo. act 'soon:<chave>' = tela ainda não aprovada/feita: mostra "Em breve" */

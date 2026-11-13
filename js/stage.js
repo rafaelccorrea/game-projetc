@@ -107,7 +107,7 @@ function drawAura(ox, gy, t, alpha){ const b = auraBase(); if (!b) return; const
 function drawHeroSpin(H){ const a = H.act, sh = a.spin || a.trail, M = sh.meta, k = HS / 256, gy = H.gy, ox = H.x; let fi = Math.min(M.frames - 1, Math.max(0, Math.floor(a.t / a.dur * M.frames)));
   if (!a.spin){ const th = a.hits[0] ? a.hits[0].t : a.dur * 0.45; fi = a.t < th ? Math.min(TRAIL_HIT, Math.floor(a.t / th * TRAIL_HIT)) : Math.min(M.frames - 1, TRAIL_HIT + Math.floor((a.t - th) / Math.max(0.01, a.dur - th) * (M.frames - TRAIL_HIT))); }
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  drawAura(ox, gy, H.t, 1);
+  drawAura(ox, gy, H.t, 1); drawWingsAt(H, null, 0, 0, 0, 0, false);   /* giro/rastro: a folha composta não tem âncora; vale a última */
   const fy = typeof M.feetY === 'number' ? M.feetY : 243;
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, ox - ((M.padLeft || 0) + 128) * k, gy - fy * k, M.w * k, M.h * k);
   if (H.hurt > 0){ ctx.save(); ctx.globalAlpha = 0.25; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, ox - ((M.padLeft || 0) + 128) * k, gy - fy * k, M.w * k, M.h * k); ctx.restore(); }
@@ -132,18 +132,37 @@ function atkFrame(a, gun, K){
 
 /* pistola ainda carregando (só no primeiro instante do jogo: depois o wSkin segura a arma anterior): Kael parado da folha do corpo, sem a pose de tiro antiga */
 function drawHeroPistolWait(H){ const sh = SHEET(heroSet(H.sk.e).idle); if (!sh) return true; const M = sh.meta, k = HS / M.w, fi = Math.floor(H.t * (M.fps || 12)) % M.frames;
+  drawWingsAt(H, sh, fi, H.x - HS / 2, H.gy - HS * HERO_FOOT, k, true);
   ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore(); return true; }
 /* ASA NO KAEL (v0.12.4): duas metades (assets/anim/equip/wing_<anjo|demon>_L/R.png; raiz de cada uma no .json), ATRÁS do corpo, presas às costas,
    batendo de leve (escala em x a partir da raiz). Mesma escala do quadro do herói. H.wing = 'angel' | 'demon' (heroLook). */
 const WING_IMG = {};
-function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ o = WING_IMG[k] = { img: null, ok: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.src = 'assets/anim/equip/wing_' + kind + '_' + side + '.png'; } return o; }
-function drawWings(H){ const kind = H.wing; if (!kind) return; const M = J('assets/anim/equip/wing_' + kind + '.json'), L = wingPart(kind, 'L'), R = wingPart(kind, 'R'); if (!M || !M.L || !L.ok || !R.ok) return;
-  const mo = H.mount && typeof mountWingOff === 'function' ? mountWingOff(H) : null;   // montado: as costas do Kael sobem com a sela
-  const k = HS / 256 * 0.62, bx = H.x - HS * 0.07 + (mo ? mo.x : 0), by = H.gy - HS * 0.5 + (mo ? mo.y : 0), fl = 1 + 0.07 * Math.sin(H.t * 3.2);
-  ctx.save(); ctx.translate(bx, by); if (mo && mo.winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: a asa do Kael fica mais alta, mais atrás e com contorno claro (não some)
-  { const w = M.L.w * k, h = M.L.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * w, -M.L.root[1] * h, w, h); ctx.restore(); }
-  { const w = M.R.w * k, h = M.R.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * w, -M.R.root[1] * h, w, h); ctx.restore(); }
+function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ o = WING_IMG[k] = { img: null, ok: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.src = 'assets/anim/equip/wing_' + kind + (side ? '_' + side : '') + '.png'; } return o; }
+/* ASA NAS COSTAS (ordem do dono; Engenheiro 2). A raiz da asa (root do wing_<tipo>.json) vai na ÂNCORA DAS COSTAS de cada quadro: campo "back" dos
+   *_body.json (Arte): {x, y em px da célula, ang em graus (0 = tronco vertical, + = para a direita), s = escala do Kael na folha}. Receita da Arte:
+   translate(back) · rotate(ang) · scale(s × escala da asa) · drawImage(metade, -root.x·w, -root.y·h), ANTES do corpo. Par L/R (anjo, demônio) ou asa única
+   de perfil ("single": dragão, energia). A âncora das folhas do garoto e do adolescente treme de quadro para quadro (medida automática): nas folhas em laço
+   (parado, correndo) o x é a MEDIANA da folha e y/ângulo passam por mediana de 3 quadros; nos golpes, mediana de 3 em tudo. Sem âncora na folha (giro,
+   rastro) vale a última posição usada; sem nenhuma, a posição antiga. */
+const WING_SCALE = 0.62;
+function backAt(sh, fi, loop){ const M = sh && sh.meta; if (!M || !Array.isArray(M.back) || !M.back.length) return null; let c = sh._bk;
+  if (!c){ const A = M.back, n = A.length, med = a => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; }, nb = (i, d) => loop ? A[(i + d + n) % n] : A[Math.max(0, Math.min(n - 1, i + d))];
+    c = sh._bk = { mx: med(A.map(b => b.x)), sm: A.map((b, i) => { const p = nb(i, -1), q = nb(i, 1); return { x: med([p.x, b.x, q.x]), y: med([p.y, b.y, q.y]), ang: med([p.ang || 0, b.ang || 0, q.ang || 0]), s: b.s > 0 ? b.s : 1 }; }) }; }
+  const b = c.sm[Math.max(0, Math.min(c.sm.length - 1, fi | 0))]; return loop ? { x: c.mx, y: b.y, ang: b.ang, s: b.s } : b; }
+/* ox0, oy0 = canto (0,0) da célula do quadro em px lógicos; kc = px lógicos por px da célula; loop = folha em laço */
+function drawWingsAt(H, sh, fi, ox0, oy0, kc, loop){ const kind = H.wing; if (!kind || H.deadP >= 0) return; const M = J('assets/anim/equip/wing_' + kind + '.json'); if (!M || !(M.single || M.L)) return;
+  const b = backAt(sh, fi, loop); let ax, ay, ang, sc;
+  if (b){ ax = ox0 + b.x * kc; ay = oy0 + b.y * kc; ang = b.ang; sc = kc * WING_SCALE * b.s * (typeof WING_FIT !== 'undefined' && WING_FIT[kind] || 1); H._wb = { dx: ax - H.x, dy: ay - H.gy, ang, sc }; }
+  else if (H._wb){ ax = H.x + H._wb.dx; ay = H.gy + H._wb.dy; ang = H._wb.ang; sc = H._wb.sc; }
+  else { ax = H.x - HS * 0.10; ay = H.gy - HS * 0.31; ang = 0; sc = HS / 256 * WING_SCALE; }
+  const fl = 1 + 0.07 * Math.sin(H.t * 3.2), winged = !!(H.mount && typeof MOUNT_TBL !== 'undefined' && MOUNT_TBL[H.mount.id] && MOUNT_TBL[H.mount.id].wings);
+  ctx.save(); ctx.translate(ax, ay); ctx.rotate(ang * Math.PI / 180); ctx.scale(sc, sc); if (winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: contorno claro para a asa do Kael não se confundir com a dela
+  if (M.single){ const W = wingPart(kind, ''); if (W.ok){ ctx.rotate(0.05 * Math.sin(H.t * 3.2)); ctx.drawImage(W.img, -M.root[0] * M.w, -M.root[1] * M.h, M.w, M.h); } }
+  else { const L = wingPart(kind, 'L'), R = wingPart(kind, 'R');
+    if (L.ok){ ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * M.L.w, -M.L.root[1] * M.L.h, M.L.w, M.L.h); ctx.restore(); }
+    if (R.ok){ ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * M.R.w, -M.R.root[1] * M.R.h, M.R.w, M.R.h); ctx.restore(); } }
   ctx.restore(); }
+function drawWings(H){ drawWingsAt(H, null, 0, 0, 0, 0, false); }   // reserva (sprite parado antigo): última âncora ou a posição padrão
 const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; const HFLx = HFL.getContext('2d');
 /* H: {x,gy,t,sk,ws,walking,hurt,deadP,act,main}. Devolve false se as folhas ainda não carregaram (cai no sprite antigo). */
 /* KAEL EM FOLHA COMPOSTA (decisão do PO): com a skin de ROUPA e a de ARMA da era 2 no MESMO tier, a batalha usa a folha aprovada
@@ -179,6 +198,7 @@ function drawHeroPistol(H, E){
   if (H.deadP >= 0){ const p = H.deadP; rot = -1.45 * Math.min(1, p * 3.2); ox -= Math.min(1, p * 3) * 14; alpha = p > .55 ? Math.max(0.1, 1 - (p - .55) / .45) : 1; }
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
   if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
+  drawWingsAt(H, sh, fi, ox - (pad + 128) * k, gy - fy * k, k, !a);   /* asa nas costas (âncora da folha da pistola) */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, 0, -HS * .45, HS * (0.5 + 0.2 * Math.min(1, a.t)), 0.5 + 0.2 * Math.sin(t * 20));
   ctx.translate(-HS / 2 - pad * k, -fy * k); ctx.scale(k, k);          // espaço do quadro largo (0..448); a célula de 256 começa em padLeft
@@ -244,6 +264,7 @@ function drawHeroAnim(H){
   // sombra presa ao chão
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
   if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);   // aura de fortalecimento ATRÁS do herói, base no chão
+  drawWingsAt(H, sh, fi, ox - HS / 2, gy - HS * HERO_FOOT, k, !a);   /* asa nas costas, atrás do corpo */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   const T = tierOf(H.sk.r);
   if (T === 2){ const au = fxSpr('aura', RAR[H.sk.r].c), al = 0.45 + 0.15 * Math.sin(t * 3); if (au){ ctx.save(); ctx.globalAlpha = alpha * (al + .2); ctx.globalCompositeOperation = 'lighter'; ctx.translate(0, -HS * .45); ctx.rotate(t * 0.5); ctx.drawImage(au, -HS * .6, -HS * .6, HS * 1.2, HS * 1.2); ctx.restore(); } else drawGlow(RAR[H.sk.r].c, 0, -HS * .5, HS * .7, alpha * al); }
