@@ -127,57 +127,57 @@
  "skin": "kael_samurai",
  "back": [
   {
-   "x": 221.8,
-   "y": 160,
-   "ang": 21.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 218.4,
-   "y": 162,
+   "x": 204,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 221.8,
-   "y": 160,
-   "ang": 21.6,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 218.8,
-   "y": 162,
+   "x": 206.8,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 218.8,
-   "y": 162,
+   "x": 208.1,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 213.9,
-   "y": 162,
+   "x": 208.1,
+   "y": 165,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 213.9,
-   "y": 162,
+   "x": 201.4,
+   "y": 165,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 218.4,
-   "y": 162,
+   "x": 195.6,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 186.8,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 186.8,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
@@ -185,13 +185,13 @@
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "neck": [
-  138,
-  138,
-  138,
-  138,
-  138,
-  138,
-  138,
-  138
+  142,
+  142,
+  142,
+  141,
+  141,
+  142,
+  142,
+  142
  ]
 }

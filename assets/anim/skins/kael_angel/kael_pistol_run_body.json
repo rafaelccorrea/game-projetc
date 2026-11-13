@@ -127,71 +127,71 @@
  "skin": "kael_angel",
  "back": [
   {
-   "x": 186.3,
-   "y": 161,
-   "ang": -1.5,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 186.3,
-   "y": 161,
+   "x": 204,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 186.9,
-   "y": 163,
+   "x": 206.8,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 186.9,
-   "y": 163,
+   "x": 208.1,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 186.9,
-   "y": 163,
+   "x": 208.1,
+   "y": 165,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 187.1,
-   "y": 160,
-   "ang": -9.1,
+   "x": 201.4,
+   "y": 165,
+   "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 188.7,
-   "y": 160,
-   "ang": -9.1,
+   "x": 195.6,
+   "y": 166,
+   "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 188.7,
-   "y": 161,
-   "ang": -1.5,
+   "x": 186.8,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 186.8,
+   "y": 166,
+   "ang": 0,
    "s": 1,
    "ok": true
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "neck": [
-  137,
-  137,
-  139,
-  139,
-  139,
-  136,
-  136,
-  137
+  142,
+  142,
+  142,
+  141,
+  141,
+  142,
+  142,
+  142
  ]
 }

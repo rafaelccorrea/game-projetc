@@ -174,85 +174,85 @@
  "skin": "kael_cyborg",
  "back": [
   {
-   "x": 125.5,
-   "y": 161,
+   "x": 103.9,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 124.5,
-   "y": 161,
+   "x": 103.9,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 120.8,
-   "y": 157,
-   "ang": -4.1,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 124.5,
-   "y": 161,
+   "x": 90.7,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 120.9,
-   "y": 158,
-   "ang": -3.7,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 124.5,
-   "y": 161,
+   "x": 87.4,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 120.9,
-   "y": 158,
-   "ang": -3.7,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 125.5,
-   "y": 161,
+   "x": 87.4,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 120.8,
-   "y": 157,
-   "ang": -4.1,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 125.5,
-   "y": 161,
+   "x": 93,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 125.5,
-   "y": 161,
+   "x": 101.8,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 125.5,
-   "y": 161,
+   "x": 101.8,
+   "y": 162,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 91.3,
+   "y": 162,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 84.3,
+   "y": 162,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 82.3,
+   "y": 162,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 82.3,
+   "y": 162,
    "ang": 0,
    "s": 1,
    "ok": true
@@ -260,17 +260,17 @@
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "neck": [
-  137,
-  137,
-  133,
-  137,
-  134,
-  137,
-  134,
-  137,
-  133,
-  137,
-  137,
-  137
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138,
+  138
  ]
 }

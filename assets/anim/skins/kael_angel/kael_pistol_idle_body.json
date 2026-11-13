@@ -179,85 +179,85 @@
  "skin": "kael_angel",
  "back": [
   {
-   "x": 194.9,
-   "y": 163,
+   "x": 205.5,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 195.9,
-   "y": 163,
+   "x": 205.5,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 195.9,
-   "y": 163,
+   "x": 205.5,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 188.6,
-   "y": 163,
+   "x": 197.5,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 188.6,
-   "y": 163,
+   "x": 195.6,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 187.1,
-   "y": 162,
+   "x": 195.6,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 195.9,
-   "y": 162,
+   "x": 203,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 196.8,
-   "y": 163,
+   "x": 203,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 196.8,
-   "y": 163,
+   "x": 195.6,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 195.9,
-   "y": 163,
+   "x": 195.6,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 194.9,
-   "y": 163,
+   "x": 202.2,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 194.9,
-   "y": 163,
+   "x": 202.2,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
@@ -265,17 +265,17 @@
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "neck": [
-  139,
-  139,
-  139,
-  139,
-  139,
-  138,
-  138,
-  139,
-  139,
-  139,
-  139,
-  139
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142,
+  142
  ]
 }

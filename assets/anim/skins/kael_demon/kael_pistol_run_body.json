@@ -127,71 +127,71 @@
  "skin": "kael_demon",
  "back": [
   {
-   "x": 186.9,
-   "y": 160,
-   "ang": -9.2,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 186.9,
-   "y": 160,
-   "ang": -9.2,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 179.7,
-   "y": 160,
-   "ang": -4.9,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 179.7,
-   "y": 162,
-   "ang": -4.9,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 177.3,
-   "y": 163,
+   "x": 204,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 177.3,
-   "y": 162,
-   "ang": -3.4,
-   "s": 1,
-   "ok": true
-  },
-  {
-   "x": 176.7,
-   "y": 163,
+   "x": 206.8,
+   "y": 166,
    "ang": 0,
    "s": 1,
    "ok": true
   },
   {
-   "x": 176.7,
-   "y": 161,
-   "ang": -3.4,
+   "x": 208.1,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 208.1,
+   "y": 165,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 201.4,
+   "y": 165,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 195.6,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 186.8,
+   "y": 166,
+   "ang": 0,
+   "s": 1,
+   "ok": true
+  },
+  {
+   "x": 186.8,
+   "y": 166,
+   "ang": 0,
    "s": 1,
    "ok": true
   }
  ],
  "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
  "neck": [
-  136,
-  136,
-  136,
-  138,
-  139,
-  138,
-  139,
-  137
+  142,
+  142,
+  142,
+  141,
+  141,
+  142,
+  142,
+  142
  ]
 }
