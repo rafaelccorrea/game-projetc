@@ -164,7 +164,7 @@ function scrForge(){
       <div class="${fx==='fail'?'f-shake':fx?'f-bright':''}" style="position:relative;width:72px;height:72px">
         ${qB.on?'':'<span class="f-halo" style="background:#ffc94a"></span>'}
         <div${qB.on?' class="'+qB.cls.trim()+'"'+qB.at:''} role="img" aria-label="${esc2(SLOT[sl].n)}${it?': '+esc2(iname(it))+', '+RN(it.r)+', nível '+it.lvl:': vazio'}, mais ${n}" style="position:absolute;inset:0;border-radius:16px;${qB.on?'':'border:3px solid #ffc94a;background:radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611);'}overflow:hidden;box-sizing:border-box;text-align:center">
-          <img src="${it?slotIcon(sl,ieraV(it)):ICON[sl]}" alt="" style="width:58px;height:58px;object-fit:contain;margin-top:2px;${it?'':'opacity:.55'}">
+          <img src="${it?xRarIco(slotIcon(sl,ieraV(it)),it.r,58):ICON[sl]}" alt="" style="width:58px;height:58px;object-fit:contain;margin-top:2px;${it?'':'opacity:.55'}">
           <span class="f-sheen"></span>
           <span style="position:absolute;left:0;right:0;bottom:0;height:18px;background:rgba(0,0,0,.72);font-size:11px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:18px">${it?'Nv.'+it.lvl:'vazio'}</span></div>
         <span class="lil" style="position:absolute;top:-7px;right:-9px;min-width:30px;height:22px;padding:0 5px;border-radius:11px;background:${plusBg(selT)};border:2px solid #16110d;color:${plusFg(selT)};font-size:14px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">+${n}</span>
@@ -221,7 +221,7 @@ function scrForge(){
     const q=xRar(x);   /* com item: moldura da raridade; o escolhido ganha um anel dourado POR DENTRO da moldura (a cor da raridade continua visível). Vazio: como antes */
     return `<button class="f-mini" data-x="slot" data-slot="${s}" aria-pressed="${on}" aria-label="${esc2(nm)}${x?': '+esc2(iname(x)):': vazio'}, mais ${p}${on?', selecionado':''}" style="${miniBtn}">
         <span${q.on?' class="'+q.cls.trim()+'"'+q.at:''} style="position:relative;flex:1;min-width:0;max-width:58px;height:48px;border-radius:12px;${q.on?'':`border:${on?'3px solid #ffc94a':x?'2px solid '+RC[x.r]:'2px dashed #8a7458'};background:${on?'radial-gradient(circle at 50% 40%,#5a4631,#241a12)':'radial-gradient(circle at 50% 40%,#3a2c1f,#16110d)'};`}display:flex;align-items:center;justify-content:center;box-sizing:border-box${on&&!q.on?';box-shadow:0 0 10px rgba(255,201,74,.55)':''}">
-        ${q.on&&on?'<span aria-hidden="true" style="position:absolute;inset:0;border-radius:9px;border:2px solid #ffc94a;box-sizing:border-box;pointer-events:none"></span>':''}<img src="${x?slotIcon(s,ieraV(x)):ICON[s]}" alt="" style="width:30px;height:30px;object-fit:contain;${x?'':'opacity:.5'}">
+        ${q.on&&on?'<span aria-hidden="true" style="position:absolute;inset:0;border-radius:9px;border:2px solid #ffc94a;box-sizing:border-box;pointer-events:none"></span>':''}<img src="${x?xRarIco(slotIcon(s,ieraV(x)),x.r,30):ICON[s]}" alt="" style="width:30px;height:30px;object-fit:contain;${x?'':'opacity:.5'}">
         <span class="lil" style="position:absolute;top:-6px;right:-4px;min-width:22px;height:17px;padding:0 3px;border-radius:9px;background:${plusBg(t)};border:2px solid #16110d;color:${plusFg(t)};font-size:11px;line-height:13px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">+${p}</span></span></button>`; }).join('');
 
   /* ----- trilha +1 a +15 com o teto da era ----- */

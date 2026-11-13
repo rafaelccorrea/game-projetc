@@ -197,7 +197,7 @@ function scrOffer(){
         :`<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado ao lado da arma da oferta" style="position:absolute;left:31%;bottom:calc(18px - 4.7%);height:94%;aspect-ratio:1 / 1;transform:translateX(-50%);z-index:2"></div>`}
       <div style="position:absolute;left:72%;bottom:18px;width:76px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2">
         <div class="of-wglow" style="position:relative;width:72px;height:72px;border-radius:16px;border:3px solid ${wCol};background:radial-gradient(circle at 50% 45%,#7a45b8,#2a1640 78%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
-          <img class="of-wimg" src="${wIcon}" alt="${esc2(W.name)}" style="width:60px;height:60px;object-fit:contain"><span class="of-sheen"></span></div>
+          <img class="of-wimg" src="${xRarIco(wIcon,W.r,60)}" alt="${esc2(W.name)}" style="width:60px;height:60px;object-fit:contain"><span class="of-sheen"></span></div>
         <div style="width:62px;height:8px;background:#6a5a7e;border-radius:3px 3px 0 0;margin-top:2px"></div>
         <div style="width:50px;height:${pedH}px;background:linear-gradient(90deg,#3c3150,#5d4f72 50%,#3c3150);display:flex;align-items:flex-start;justify-content:center;padding-top:${pedH>=22?4:1}px;box-sizing:border-box">
           ${W.stars>0?`<span style="font-size:9.5px;font-weight:900;color:#ffe07a;white-space:nowrap;line-height:12px">${W.stars}<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-1px;margin-left:1px"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg></span>`:''}</div>
@@ -218,7 +218,7 @@ function scrOffer(){
       <div class="${cardCls}" style="padding:8px;display:flex;flex-direction:column;gap:4px;border-color:${wCol}">
         <div style="display:flex;gap:7px;align-items:center">
           <div class="of-wglow" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px solid ${wCol};background:radial-gradient(circle,#7a45b8,#2a1640 78%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
-            <img class="of-wimg" src="${wIcon}" alt="" style="width:40px;height:40px;object-fit:contain"></div>
+            <img class="of-wimg" src="${xRarIco(wIcon,W.r,40)}" alt="" style="width:40px;height:40px;object-fit:contain"></div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">${tag(wRar,wCol)}
             ${W.max>0?`<span role="img" aria-label="Qualidade ${W.stars} de ${W.max} estrelas" style="display:flex;gap:1px">${stars}</span>`:''}</div></div>
         <span class="lil" style="${nameSt}">${esc2(W.name)}</span>

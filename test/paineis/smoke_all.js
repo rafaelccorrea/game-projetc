@@ -100,6 +100,8 @@ if(!vm.runInContext('!!(Sys.buy&&Sys.buy.ready)',sandbox)) run(fs.readFileSync(p
 if(!sandbox.btoa){ sandbox.btoa=s=>Buffer.from(String(s),'binary').toString('base64'); sandbox.atob=s=>Buffer.from(String(s),'base64').toString('binary'); }   /* o vm não traz btoa/atob (código de cópia de segurança do p_cfg) */
 /* CONVENIÊNCIAS DO VIP nas telas (mochila pelo bagMax, bloco "Automático" do Equipamento, forja automática): os testes moram em vipconv.tests.js */
 if(run(fs.readFileSync(path.join(__dirname,'vipconv.tests.js'),'utf8'),'vipconv.tests.js')) for(const k of vm.runInContext('Object.keys(VIPCONV_TESTS)',sandbox)) T('vip · '+k,'VIPCONV_TESTS['+JSON.stringify(k)+']()');
+/* ÍCONE DE PEÇA POR RARIDADE, opção C (xRarIco, chave PANEL_V2.rarIcons): os testes moram em raricon.tests.js */
+if(run(fs.readFileSync(path.join(__dirname,'raricon.tests.js'),'utf8'),'raricon.tests.js')) for(const k of vm.runInContext('Object.keys(RARICON_TESTS)',sandbox)) T('ícone por raridade · '+k,'RARICON_TESTS['+JSON.stringify(k)+']()');
 T('portão de nível de volta',"PANEL_V2.gate=true; 'ok'");
 const cls=()=>{ const s=new Set(); return {add(...a){a.forEach(x=>s.add(x));},remove(...a){a.forEach(x=>s.delete(x));},toggle(c,on){ if(on===undefined) on=!s.has(c); on?s.add(c):s.delete(c); },contains(c){return s.has(c);},list:s}; };
 const POS={hat:[10,8],armor:[10,100],boots:[10,192],weapon:[322,8],gloves:[322,100],necklace:[322,192],wing:[166,6]};

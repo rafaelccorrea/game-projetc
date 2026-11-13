@@ -16,7 +16,10 @@ const xBagMax=()=>typeof bagMax==='function'?bagMax():BAG_MAX;   /* limite da mo
    equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo).
    rar = RARIDADE PELA BORDA E PELA COR com UM componente (xRar / classe .xr, mais abaixo) em todo lugar que mostra item nos painéis: mochila, espaços,
          comparação, Invocar, Loja, Passe e Forja. Desligada, cada tela volta a desenhar o item exatamente como antes (mesmo HTML). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:true,passScroll:true,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true},window.PANEL_V2||{});
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:true,passScroll:true,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true,rarIcons:false},window.PANEL_V2||{});
+/* rarIcons = ÍCONE DE PEÇA POR RARIDADE, "opção C" (xRarIco, mais abaixo): nasce DESLIGADA até o voto do dono. Ligar: PANEL_V2.rarIcons=true e redesenhar
+   (vale na hora, sem recarregar); para conferir: ?debug=1&rarico=1. Desligada, o HTML das telas é o mesmo de antes. */
+if(typeof DEBUG!=='undefined'&&DEBUG&&/[?&]rarico=1/.test(location.search)) PANEL_V2.rarIcons=true;
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
 const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
 const kf=v=>{ v=Math.max(0,v||0); try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v,{pt:!!PANEL_V2.ptNum}); }catch(e){}   /* fonte única dos números abreviados (o corpo abaixo é só reserva: parava em tri) */ const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
@@ -319,7 +322,57 @@ const xWrap=(d,cls,inner)=>d.real?`<div class="xs ${cls||''}" style="width:${d.W
   :`<div class="xs ${cls||''}" style="height:${d.H.toFixed(1)}px;transform:translateX(${d.ox.toFixed(1)}px) scale(${d.s.toFixed(4)})">${inner}</div>`;
 /* peças em coordenadas fixas do protótipo (vitrine do Kael, palco do baú) ficam numa caixa de 390 px centrada na largura real */
 const X390=h=>`position:absolute;left:50%;top:0;width:390px;height:${h}px;margin-left:-195px`;
-const itemIcon=(it,sz,extra)=>`<img src="${slotIcon(it.slot,ieraV(it))}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;${extra||''}">`;
+/* ---------- ÍCONE DE PEÇA POR RARIDADE, "opção C" (chave PANEL_V2.rarIcons; arte: assets/icons/rarity/gem_1..4.png) ----------
+   As 5 raridades de uma peça usam o mesmo arquivo (assets/icons/slots/era<N>_<peça>.png). Com a chave ligada o ícone sai pintado por código: tinta leve
+   na cor da raridade sobre a luminância (0/10/14/18/22%), contorno brilhante na cor e a gema no canto inferior direito (34% do lado). Básico não muda.
+   A pintura é a rarIconCanvas da prévia test/icons/rarity.html (o brilho, afinado lá para 176 px, acompanha o tamanho). Moldura e brilho do contêiner
+   continuam os do xRar / js/rarity.js.
+   USO (em todo <img> de peça com raridade):  <img src="${xRarIco(slotIcon(slot,era), r, ladoEmPxDeTela)}" ...>
+     xRarIco     → texto para DENTRO de src="...": o endereço pronto, ou o ícone de hoje + a marca data-ric (a troca acontece sozinha quando ficar pronto).
+     xRarIcoUrl  → só o endereço (pronto ou o de hoje), para quem escreve img.src direto (fantasma do arrasto).
+   CUSTO: a pintura (getImageData + shadowBlur) roda UMA vez por ícone + raridade + tamanho e vira um blob: URL guardado em XRI.c; os redesenhos só
+   leem o cache (um acesso a objeto por ícone). Pedidos novos entram numa fila que pinta UM por quadro (requestAnimationFrame), os do desenho mais
+   recente primeiro: abrir a mochila não pinta dezenas no mesmo quadro. Tamanho: lado × densidade da tela, arredondado para 96, 144 ou 192 px.
+   Enquanto o ícone ou a gema não carregou (ou se a pintura falhar: tenta de novo depois de 20 s) fica o ícone de hoje; ao ficar pronto só os <img>
+   marcados trocam de src (a tela não é redesenhada). O endereço leva "#assets/icons/slots/..." no fim para o rarDecorate do js/rarity.js
+   (img[src*="icons/slots"]) continuar achando o ícone. Teto de XRI.max combinações (acima disso, o ícone de hoje).
+   Os ganchos XRI.cv / img / url / sched existem para o teste sem navegador trocar por versões falsas. */
+const XRI={c:{},q:[],busy:false,n:0,seq:0,max:240,gem:[],TINT:[0,.10,.14,.18,.22],GLOW:[0,5,7,9,12],
+  on:()=>PANEL_V2.rarIcons===true,
+  cv(s){ const c=document.createElement('canvas'); c.width=c.height=s; return c; },
+  img(src,cb){ const i=new Image(); i.onload=()=>cb(i); i.onerror=()=>cb(null); i.src=src; },
+  url(c,cb){ try{ c.toBlob(b=>{ let u=null; try{ if(b) u=URL.createObjectURL(b); }catch(e){} cb(u); },'image/png'); }catch(e){ cb(null); } },
+  sched(fn){ requestAnimationFrame(fn); }};
+const xriSize=px=>Math.max(96,Math.min(192,Math.ceil((px||40)*Math.min(3,window.devicePixelRatio||1)/48)*48));
+function xriPaint(img,r,S,gem){ const c=XRI.cv(S), g=c.getContext('2d'), col=(typeof RAR_C!=='undefined'&&RAR_C[r])||RC[r], iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const k=Math.min(S/iw,S/ih), w=iw*k, h=ih*k, tmp=XRI.cv(S), t=tmp.getContext('2d'); t.drawImage(img,(S-w)/2,(S-h)/2,w,h);
+  const tt=XRI.TINT[r]; if(tt){ const d=t.getImageData(0,0,S,S), p=d.data, n=parseInt(col.slice(1),16), cr=n>>16, cg=(n>>8)&255, cb=n&255, a=1-tt;
+    for(let i=0;i<p.length;i+=4){ if(!p[i+3]) continue; const l=(p[i]*.3+p[i+1]*.59+p[i+2]*.11)/255*tt*1.6; p[i]=p[i]*a+cr*l; p[i+1]=p[i+1]*a+cg*l; p[i+2]=p[i+2]*a+cb*l; }   /* Uint8ClampedArray: já trava em 0..255 */
+    t.putImageData(d,0,0); }
+  const gl=XRI.GLOW[r]; if(gl){ g.save(); g.shadowColor=col; g.shadowBlur=gl*1.4*S/176; g.drawImage(tmp,0,0); g.drawImage(tmp,0,0); g.restore(); }   /* contorno brilhante */
+  g.drawImage(tmp,0,0);
+  if(gem){ const gs=Math.round(S*.34), gp=Math.round(S*.64); g.drawImage(gem,gp,gp,gs,gs); }
+  return c; }
+function xriGem(r,cb){ if(XRI.gem[r]){ cb(XRI.gem[r]); return; } XRI.img('assets/icons/rarity/gem_'+r+'.png',i=>{ if(i) XRI.gem[r]=i; cb(i); }); }
+function xriSwap(e){ try{ document.querySelectorAll('img[data-ric="'+e.id+'"]').forEach(im=>{ im.src=e.u; im.removeAttribute('data-ric'); }); }catch(er){} }
+function xriStep(){ let bi=-1; for(let i=0;i<XRI.q.length;i++) if(bi<0||XRI.q[i].w>XRI.q[bi].w) bi=i;   /* o desenho mais recente primeiro; dentro dele, a ordem da tela */
+  if(bi<0){ XRI.busy=false; return; } const e=XRI.q.splice(bi,1)[0];
+  const next=()=>{ if(XRI.q.length) XRI.sched(xriStep); else XRI.busy=false; }, fail=()=>{ e.st=-1; e.t=Date.now(); next(); };
+  xriGem(e.r,gem=>{ if(!gem){ fail(); return; }
+    XRI.img(e.src,im=>{ if(!im){ fail(); return; } let c=null; try{ c=xriPaint(im,e.r,e.s,gem); XRI.n++; }catch(er){ fail(); return; }
+      XRI.url(c,u=>{ if(!u){ fail(); return; } e.u=u+'#'+e.src; e.st=1;
+        try{ e.keep=new Image(); e.keep.src=e.u; }catch(er){}   /* segura a imagem decodificada: o próximo redesenho mostra na hora, sem piscar */
+        xriSwap(e); next(); }); }); }); }
+function xriGet(src,r,px){ r=Math.min(4,r|0); if(!XRI.on()||r<1||typeof src!=='string'||src.indexOf('icons/slots/')<0) return null;
+  const s=xriSize(px), k=src+'|'+r+'|'+s, w=Math.floor(Date.now()/250); let e=XRI.c[k];
+  if(!e){ if(XRI.seq>=XRI.max) return null; e=XRI.c[k]={id:++XRI.seq,src,r,s,st:0,u:null,w}; XRI.q.push(e); }
+  else if(e.st===-1&&Date.now()-e.t>20000){ e.st=0; e.w=w; XRI.q.push(e); }
+  else if(e.st===0) e.w=w;
+  if(XRI.q.length&&!XRI.busy){ XRI.busy=true; XRI.sched(xriStep); }
+  return e; }
+const xRarIcoUrl=(src,r,px)=>{ const e=xriGet(src,r,px); return e&&e.st===1?e.u:src; };
+const xRarIco=(src,r,px)=>{ const e=xriGet(src,r,px); return !e||e.st===-1?src:e.st===1?e.u:src+'" data-ric="'+e.id; };
+const itemIcon=(it,sz,extra)=>`<img src="${xRarIco(slotIcon(it.slot,ieraV(it)),it.r,sz)}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;${extra||''}">`;
 /* ---------- RARIDADE: UM COMPONENTE para todas as telas dos painéis (chave PANEL_V2.rar) ----------
    MOLDURA = classe .xr + .xr<0..4> + atributo data-rar: borda de 3 px na cor, fundo radial com o tom da raridade, brilho em volta (cresce com a
    raridade) e pulso em Mítico e Lendário. Sai no próprio modelo de HTML da tela (nenhum passe de DOM depois do render). Uso:
@@ -409,7 +462,7 @@ function scrGear(){
       <div class="${XG.filter===slot?'x-selring':''} ${XG.land&&XG.land[slot]?'x-land':''}" data-slotbox="${slot}" style="position:relative;width:58px;height:58px;border-radius:14px">${XG.land&&XG.land[slot]?'<span class="x-landring" aria-hidden="true"></span>':''}
         ${it&&it.r>=2&&!q.on?`<span class="x-halo" style="background:${c}"></span>`:''}
         <button class="x-slot${q.cls}" data-x="slot" data-slot="${slot}"${q.at} aria-label="${nm}${it?': '+esc2(iname(it))+', '+RN(it.r)+', item nível '+it.lvl:': vazio'}. Toque para ver os itens deste espaço" style="position:absolute;inset:0;border-radius:14px;${q.on?'':`border:${it?'3px solid '+c:'2px dashed #8a7458'};background:${it?'radial-gradient(circle at 50% 40%,#4a3a2b,#1d1611)':'rgba(14,10,7,.82)'};`}padding:0;overflow:hidden">
-          <img src="${it?slotIcon(slot,ieraV(it)):ICON[slot]}" alt="" class="${it?'':'x-emptyp'}" style="width:38px;height:38px;object-fit:contain;margin-top:-8px">
+          <img src="${it?xRarIco(slotIcon(slot,ieraV(it)),it.r,38):ICON[slot]}" alt="" class="${it?'':'x-emptyp'}" style="width:38px;height:38px;object-fit:contain;margin-top:-8px">
           <span style="position:absolute;left:0;right:0;bottom:0;height:16px;background:rgba(0,0,0,.72);font-size:10px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:16px">${it?'Nv.'+it.lvl:'vazio'}</span></button>
         <span class="x-plus lil" style="position:absolute;top:-7px;right:-8px;padding:1px 5px;border-radius:8px;background:#2a1403;border:2px solid #ffc94a;color:#ffc94a;font-size:12px;line-height:14px">+${forgeLv(slot)}</span>
       </div>
@@ -731,9 +784,9 @@ function sCard(k,i,shown){ const x10=XS.mode===10, w=x10?62:150, h=x10?92:210, i
   const q=xRar(k.r,k.r===4?'xr-s':'');
   if(k.r===4) return `<span class="x-lrays" style="width:${x10?150:340}px;height:${x10?150:340}px"></span>
     <div class="x-legcard${q.cls}"${q.at} style="position:absolute;inset:0;border-radius:12px;${q.on?'':'border:3px solid #ffc94a;'}background:radial-gradient(circle at 50% 35%,#8a5a12 0%,#3a2408 70%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
-      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain;filter:drop-shadow(0 0 8px #ffc94a)"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px;color:${q.on?q.t:'#fff'}">${esc2(k.name)}</span><span class="x-sheen2"></span></div>${tagH}${eqB}`;
+      <img src="${xRarIco(slotIcon(k.slot,k.e),k.r,im)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain;filter:drop-shadow(0 0 8px #ffc94a)"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px;color:${q.on?q.t:'#fff'}">${esc2(k.name)}</span><span class="x-sheen2"></span></div>${tagH}${eqB}`;
   return `<div class="x-cardin${q.cls}"${q.at} style="position:absolute;inset:0;border-radius:12px;${q.on?(k.pity?'box-shadow:0 0 18px 4px '+c+';':''):`border:3px solid ${c};background:radial-gradient(circle at 50% 35%,${c}44 0%,#1d1611 70%);box-shadow:${k.pity?'0 0 18px 4px '+c:k.r>=1?'0 0 '+(6+k.r*4)+'px '+c:'none'};`}overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-sizing:border-box">
-      <img src="${slotIcon(k.slot,k.e)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px${q.on?';color:'+q.t:''}">${esc2(k.name)}</span>
+      <img src="${xRarIco(slotIcon(k.slot,k.e),k.r,im)}" alt="" style="width:${im}px;height:${im}px;object-fit:contain"><span style="font-size:${fs}px;font-weight:900;text-align:center;line-height:1.05;padding:0 3px${q.on?';color:'+q.t:''}">${esc2(k.name)}</span>
       <span style="font-size:9px;font-weight:900;color:${c}">${k.dism?'Desmontado':RN(k.r)}</span>${k.r>=2?'<span class="x-sheen2"></span>':''}</div>${tagH}${eqB}`; }
 function sOverlay(full){ const el=document.getElementById('xs_over'); if(!el) return; const x10=XS.mode===10, tot=XS.res.length, all=XS.shown>=tot;
   let best=null; XS.res.slice(0,XS.shown).forEach(x=>{ if(!best||x.r>best.r) best=x; });

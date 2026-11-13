@@ -142,7 +142,8 @@ const auVars=r=>`--rc:${RC[r]};--rg:${AU_RG[r]};--rb:${AU_RB[r]}`;
 /* botão desabilitado: o toque cai no invólucro (data-x="soon") e só repete o aviso */
 const auOff=(inner,sty,keep)=>`<span class="au-dis ${keep?'au-keep':''}" data-x="soon" style="${sty||''}">${inner}</span>`;
 const auIcBox=(img,tw)=>`<span class="au-ic" aria-hidden="true"><span class="au-glow"></span>${img}${tw?'<span class="au-tw" style="left:8%;top:10%"></span><span class="au-tw" style="right:8%;bottom:14%;animation-delay:.8s"></span>':''}</span>`;
-const auImg=(slot,e)=>{ const u=auIcon(slot,e); return u?`<img src="${esc2(u)}" alt="">`:auSlotSvg(slot,'#f6ecdf'); };
+/* r = raridade: com PANEL_V2.rarIcons ligada o ícone sai pintado (xRarIco, js/screens.js); sem r ou com a chave desligada, o ícone de sempre */
+const auImg=(slot,e,r)=>{ const u=auIcon(slot,e); return u?`<img src="${typeof xRarIco==='function'?xRarIco(esc2(u),r,40):esc2(u)}" alt="">`:auSlotSvg(slot,'#f6ecdf'); };
 
 function auToastHtml(msg){ return `<div class="au-toast" role="status"><span>${esc2(msg)}</span></div>`; }
 function auSay(msg){ XA.toast=msg; XA.toastT=Date.now(); const el=document.getElementById('au_toast'); if(el) el.innerHTML=auToastHtml(msg); }
@@ -162,7 +163,7 @@ function auPageBuy(d){
   const parts=[]; if(XA.era>=0) parts.push(auEraN(XA.era)); if(XA.rar>=0) parts.push(auRarN(XA.rar)); if(sm&&XA.star>0) parts.push(XA.star+(XA.star===1?' estrela':' estrelas')+' ou mais');
   const cards=auExamples(auCols(d)*2).map((x,j)=>{ const nm=auName(x), r=x.r;
     return `<button class="au-card ${r>=2?'hi':''}" data-x="det" data-i="${j}" aria-label="Cartão de exemplo: ${esc2(nm)}, ${esc2(auRarN(r))}. Sem vendedor, preço nem prazo: abre com o online" style="${auVars(r)};animation-delay:${(j*0.06).toFixed(2)}s,${(0.4+j*0.06).toFixed(2)}s">
-      <span class="au-ictop">${auIcBox(auImg(x.slot,x.e),r>=3)}
+      <span class="au-ictop">${auIcBox(auImg(x.slot,x.e,r),r>=3)}
         <span style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px"><span class="au-rp" style="background:${RC[r]}">${esc2(auRarN(r))}</span>${AU_EXTAG}</span></span>
       <span class="au-nm au-ol">${esc2(nm)}</span>
       <span class="au-sub">${esc2(AU_SL[x.slot].n)} · ${esc2(auEraN(x.e))}</span>
@@ -184,7 +185,7 @@ function auPageSell(d){
   const bag=auBag(), per=auCols(d)*2, pages=Math.max(1,Math.ceil(bag.length/per)); XA.page=Math.max(0,Math.min(pages-1,XA.page|0));
   const cards=bag.slice(XA.page*per,XA.page*per+per).map((it,j)=>{ const r=auRar(it.r), nm=auName(it), st=auStarsOf(it), sm=auStarMax(), use=auInUse(it), lv=it.lvl||1;
     return auOff(`<button class="au-card ${r>=2?'hi':''}" disabled aria-disabled="true" data-act="1" aria-label="${esc2(nm)}, ${esc2(auRarN(r))}, nível ${n0(lv)}. Anunciar: abre com o online" style="flex:1;${auVars(r)};animation-delay:${(j*0.06).toFixed(2)}s,${(0.4+j*0.06).toFixed(2)}s">
-      <span class="au-ictop">${auIcBox(auImg(it.slot,auEraOf(it)),false)}
+      <span class="au-ictop">${auIcBox(auImg(it.slot,auEraOf(it),r),false)}
         <span style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px"><span class="au-rp" style="background:${RC[r]}">${esc2(auRarN(r))}</span>
           ${st?`<span class="au-stars" aria-hidden="true"><span style="color:#ffc94a">${'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg>'.repeat(st)}</span><span style="color:#4a3a2b">${'<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.4 7L12 17.6 5.8 21l1.4-7L2 9.3l7-.8z"></path></svg>'.repeat(Math.max(0,sm-st))}</span></span>`:''}
           ${use?'<span class="au-st">Em uso</span>':''}</span></span>
@@ -258,7 +259,7 @@ function auSheet(d){
         <button class="au-gold" data-x="shx" style="flex:1.4;min-height:52px"><span style="position:relative;z-index:1">Ver exemplos</span></button></div>`); }
   if(s==='det'){ const x=auExamples(auCols(d)*2)[XA.det]; if(!x) return ''; const r=x.r, nm=auName(x);
     return wrap('Detalhe do cartão de exemplo',`<div style="display:flex;align-items:center;gap:8px;${auVars(r)}">
-        ${auIcBox(auImg(x.slot,x.e),r>=3)}
+        ${auIcBox(auImg(x.slot,x.e,r),r>=3)}
         <span style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px">
           <span class="lil au-ol" style="font-size:20px;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis">${esc2(nm)}</span>
           <span class="au-sub" style="max-width:100%"><span style="color:${RC[r]}">${esc2(auRarN(r))}</span> · ${esc2(AU_SL[x.slot].n)} · ${esc2(auEraN(x.e))}</span>${AU_EXTAG}</span>

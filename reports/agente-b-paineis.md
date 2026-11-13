@@ -1221,3 +1221,31 @@ desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP 
   novo" (não oferece comprar sem saber o estado); "Resgatado hoje" e dias restantes do módulo; recusas claimed / no_card / soon / sem conexão com
   aviso curto; sem `cardStatusLive` usa `cardStatus`. Com `ready()` falso a Loja segue idêntica. Teste novo "compras: Cartão Mensal…".
 - Largura 288 (nota antiga, resolvida pelo QA: 5 por linha, 1 px de folga): a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.
+
+## Bloco 45 (Painéis 3, sem navegador): ícone de peça por raridade, "opção C"
+
+CHAVE: `PANEL_V2.rarIcons` (js/screens.js). Nasce `false`. Ligar: `PANEL_V2.rarIcons=true` e redesenhar (`render()`); vale na hora, sem recarregar.
+Para conferir: `?debug=1&rarico=1`. Desligada, o HTML das telas é o de antes (teste compara).
+
+- FUNÇÃO ÚNICA (`js/screens.js`, bloco `XRI`): `xRarIco(endereço, raridade, lado em px)` devolve o texto para dentro de `src="..."`; `xRarIcoUrl(...)`
+  devolve só o endereço (para `img.src` direto). A pintura (`xriPaint`) é a `rarIconCanvas` da prévia `test/icons/rarity.html`: tinta 0/10/14/18/22%,
+  contorno com shadowBlur 0/5/7/9/12 (× 1,4, proporcional ao tamanho; a prévia foi afinada em 176 px), gema `assets/icons/rarity/gem_<r>.png` no canto
+  inferior direito com 34% do lado. Básico não é tocado (nem entra no cache). Só endereços de `assets/icons/slots/` entram (arma com imagem própria fica fora).
+- CACHE E CUSTO: uma pintura por ícone + raridade + tamanho (tamanho = lado × densidade da tela, arredondado para 96, 144 ou 192 px), guardada como
+  `blob:` URL em `XRI.c`; os redesenhos só leem o cache. Pedidos novos vão para uma fila que pinta UM por quadro (`requestAnimationFrame`), os do desenho
+  mais recente primeiro; nada é pintado nem carregado dentro do desenho da tela. Enquanto não fica pronto, sai o ícone de hoje com a marca `data-ric`;
+  ao ficar pronto só esses `<img>` trocam de `src` (sem redesenhar a tela). Falha de imagem ou de gema: fica o ícone de hoje e tenta de novo depois de
+  20 s. Teto de 240 combinações (acima disso, o ícone de hoje). O endereço pronto termina em `#assets/icons/slots/...` para o `rarDecorate` do
+  `js/rarity.js` (`img[src*="icons/slots"]`) continuar achando o ícone.
+- ONDE ENTROU: Equipamento (7 espaços, mochila, comparação, fantasma do voo/arrasto em `js/equipfx.js`), Loja (itens em ouro e a confirmação), Invocar
+  (cartas), Passe (trilha, vitrine do nível grande, popup do Premium), prêmio de item da Vitória (`js/screens2.js`), Forja (espaço grande e a fileira,
+  `js/p_forge.js`), Oferta (`js/p_offer.js`, arma do pacote) e Leilão (`js/p_auction.js`, `auImg` ganhou o 3º parâmetro r).
+- FICOU DE FORA (arquivos de outros donos): `js/p_fuse.js` (`uThumb`) e `js/p_bag.js` (`bItemImg`): pedido no relatório ao coordenador.
+- Testes novos (7, `test/paineis/raricon.tests.js`, carregado pelo `smoke.js`): chave nasce desligada e nada entra na fila; desligada → ligada →
+  desligada com HTML idêntico em 6 telas (e Loja/Forja com peça forçada saem pintadas); nada pintado no quadro do desenho e uma pintura por quadro;
+  cada raridade com tinta, contorno crescente e a gema certa (Básico e arma com imagem própria intactos); cache reutilizado (0 pinturas em 5
+  redesenhos; 38 e 40 px dividem o ícone); troca só dos `<img>` marcados; falha de gema/ícone não trava a fila.
+- Resultados: `node --check` nos editados OK; `conflitos.js js/p_*.js`: só os conhecidos (XR/rClick do p_realm, falso alarme) e `cEsc` em
+  `js/p_chat.js` × `js/cloudchoice.js` (não é desta peça); `run.js` "TUDO OK (162 verificações)"; `flows.js` "fluxos duros OK"; `smoke.js` 390 e 288:
+  187 OK, 0 FALHA; `smoke_all.js` 390 e 288: 194 OK, 0 FALHA (segue o erro de timer do p_intro, código 1).
+- LIMITES (sem navegador): a pintura real (canvas, toBlob, blob: com `#`) não rodou aqui; o teste usa canvas falso. O QA confere no navegador.

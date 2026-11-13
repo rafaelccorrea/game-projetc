@@ -14,7 +14,7 @@ const gfxT=(x,y,s)=>'translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(s
 function gGhost(it,r,cls){ const g=document.createElement('div'), c=RC[it.r]||'#ffc94a'; g.className='x-ghost '+(cls||''); g.setAttribute('aria-hidden','true');
   g.style.width=r.width.toFixed(1)+'px'; g.style.height=r.height.toFixed(1)+'px'; g.style.borderColor=c; g.style.borderWidth=Math.max(2,r.width*3/58).toFixed(1)+'px';
   g.style.borderRadius=(r.width*14/58).toFixed(1)+'px'; g.style.background='radial-gradient(circle at 50% 38%,'+c+'55,#120d0a 75%)'; g.style.transform=gfxT(r.left,r.top,1);
-  const im=document.createElement('img'); im.alt=''; im.draggable=false; im.src=slotIcon(it.slot,ieraV(it)); g.appendChild(im);
+  const im=document.createElement('img'); im.alt=''; im.draggable=false; im.src=xRarIcoUrl(slotIcon(it.slot,ieraV(it)),it.r,58);   /* opção C: o mesmo ícone pintado da célula, se já estiver no cache */ g.appendChild(im);
   document.body.appendChild(g); GFX.ghosts.push(g); return g; }
 function gGhostKill(g){ if(!g) return; const i=GFX.ghosts.indexOf(g); if(i>=0) GFX.ghosts.splice(i,1); if(g.parentNode) g.parentNode.removeChild(g); }
 const gSlotBox=slot=>V.querySelector('[data-slotbox="'+slot+'"]')||V.querySelector('.x-slot[data-slot="'+slot+'"]');
