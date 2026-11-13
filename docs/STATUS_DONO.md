@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **02h30 · Servidor:** login com Google pronto no jogo (sem precisar de arquivo do Firebase); PAINEL DE MODERAÇÃO pronto: fila de denúncias, ficha do jogador, apagar mensagem, silenciar, banir, desfazer, registro de tudo, e o calendário de eventos (só você altera), com login por senha + código do autenticador. Agora: guilda online
+- **02h30 · Engenheiro (e825ab7, no GitHub):** Vitória/Derrota com chefe real LIGADA · Troca de era de verdade · Instância (vitória, derrota, tempo) · carta de boas-vindas · pet não encosta mais no inimigo. Agora: asa nas costas → Kael nas 4 fases → pet/montaria em todas as telas → APK
+- **02h30 · Sua ordem: eventos por horário** (tal hora abre tal evento, ícone pulsando com o nome e o tempo). Sistemas está montando a agenda (ex.: Chefe Mundial 12h e 20h, Hora do Ouro 19-20h, Invasão 21h), que eu trago para você aprovar
+
 - **02h20 · PARA VOCÊ VOTAR (página de aprovação):** cenários vivos da era 5 (Moderna, com o acabamento) e da era 8 (Celestial). Com eles, as 9 eras ficam com cenário vivo. Créditos: saldo ~275
 
 - **02h10 · Kael crescendo (você está no nível 60 e não evoluiu):** a versão do seu celular (v0.12.7) ainda não tem as fases ligadas. Prioridade 2 do engenheiro, logo depois da asa nas costas: liga as 4 fases (garoto, adolescente 22, adulto 35, guerreiro 70) com o adulto e o guerreiro V2 que você aprovou. No seu save do nível 60, ao abrir o jogo, o Kael evolui direto para adulto, com a animação de evolução uma vez só. Vai no próximo APK, junto com a asa corrigida
@@ -166,6 +170,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
 - [~] Banco de desenvolvimento: Supabase criado; falta você seguir o passo a passo na parte AGORA (02h) e pôr as 3 variáveis de ambiente
 - [x] Login com Google: Firebase criado e configurado
+- [ ] Google na versão da loja: no Play Console → Testar e lançar → Integridade do app → Assinatura do app, copie a SHA-1 e cadastre no Firebase → Configurações do projeto → app Android → "Adicionar impressão digital"
+- [ ] Variável de ambiente GOOGLE_CLIENT_ID = 108430697904-opm26965n34smlrrnlq1kha8bobb17b5.apps.googleusercontent.com (não é segredo; junto com as do Supabase)
 - [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
 - [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
