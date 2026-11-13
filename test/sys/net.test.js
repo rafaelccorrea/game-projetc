@@ -178,3 +178,23 @@ test('SERVIDOR: convidado manda o realm; sessão guardada por servidor (eon.net 
     assert.equal((await net.realms()).length, 2);
   } finally { net.DATA.realm = null; }
 });
+
+test('Google "auto": sem vínculo neste servidor, vincula ao convidado com o MESMO idToken (a janela abre UMA vez); conta nova zera a versão do save conhecida', async () => {
+  const sess = (id, n) => ({ accessToken: 'A' + n, refreshToken: 'R' + n, accessExpiresAt: 0, player: { id, ageBand: '18+', linked: [] } });
+  let logins = 0, linked = null;
+  const { f } = boot({ 'POST /auth/guest': () => [200, sess('guest', 1)], 'POST /auth/login/google': () => [404, { error: { code: 'not_linked' } }],
+    'POST /auth/link/google': b => { linked = b.idToken; return [200, { id: 'guest', linked: ['google'] }]; }, 'PUT /save': () => [200, { version: 7 }] });
+  globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async () => {}, login: async () => { logins++; return { result: { idToken: 'tok-1' } }; } } } };
+  try {
+    await net.ensureSession(); await net.push({}, {});
+    await net.googleSignIn('auto'); assert.equal(logins, 1); assert.equal(linked, 'tok-1');
+    await assert.rejects(net.googleSignIn('login'), e => e.code === 'not_linked' && e.idToken === 'tok-1');      // o chamador pode vincular sem abrir de novo
+    await net.googleSignIn('link', { idToken: 'tok-1' }); assert.equal(logins, 2);                                 // reusou o token: nenhuma janela nova
+  } finally { delete globalThis.Capacitor; }
+  // entrar em OUTRA conta zera a versão conhecida do save (era a do convidado)
+  boot({ 'POST /auth/guest': () => [200, sess('guest', 1)], 'POST /auth/login/google': () => [200, sess('conta-google', 2)], 'PUT /save': () => [200, { version: 7 }] });
+  globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async () => {}, login: async () => ({ result: { idToken: 'tok-2' } }) } } };
+  try { await net.ensureSession(); await net.push({}, {}); assert.equal(net.saveMeta().version, 7); await net.googleSignIn('login'); assert.equal(net.saveMeta().version, 0); }
+  finally { delete globalThis.Capacitor; }
+  void f;
+});

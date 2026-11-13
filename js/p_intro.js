@@ -225,9 +225,17 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   commitNew(name){ const s=G.S(); this.setHero(this.pick.hero); s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
   /* login: convidado = local (e, com o Sys.net ligado, sessão de convidado no servidor sem travar o jogo); Google: em breve */
   guest(){ const s=G.S(); s.acct='guest'; try{ if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },
-  googleReady(){ try{ return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },
+  /* LOGIN GOOGLE pela camada online do jogo (js/onlineboot.js da fps-c8): ela faz o login, vincula ao convidado quando a conta não tem personagem
+     neste servidor e refaz o boot (save da nuvem). Sem o online ligado (OnlineBoot.state().on falso) o botão diz "em breve". */
+  googleReady(){ try{ const OB=window.OnlineBoot; if(OB&&OB.state&&!OB.state().on) return false; return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },
   /* convidado já com sessão = VINCULA a conta atual ao Google (não perde nada); sem sessão = entra na conta do Google (aparelho novo) */
-  google(){ const N=Sys.net; return N.googleSignIn(N.hasSession&&N.hasSession()?'link':'login').then(p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; }); },
+  google(){ const OB=window.OnlineBoot, mark=p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; };
+    if(!OB||!OB.google){ const N=Sys.net; return N.googleSignIn('auto').then(mark); }   /* reserva: sem a camada online, só o Sys.net */
+    return OB.google().then(r=>{
+      if(r&&r.ok){ if(r.pending&&OB.applyPending){ PI.toast('Carregando o seu jogo da nuvem...'); setTimeout(()=>{ try{ OB.applyPending(); }catch(e){} },600); } return mark(r.player); }
+      const e=new Error(r&&r.reason||'erro'); e.code=r&&r.reason||'erro';
+      if(e.code==='link_taken'){ const o=r.other||{}; PI.toast('Esta conta Google já tem outro personagem'+(o.level?' (Nv. '+o.level+')':'')+'. Entre por ela na tela de Login.'); e.code='cancelled'; }
+      throw e; }); },
 };
 window.PIntro=PI;
 const piSvg=(b)=>'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+b+'</svg>');

@@ -34,6 +34,16 @@ function fakeNet(o) {
     let applied = null; const r = await O.boot({ a: 1 }, {}, { choose: async () => 'cloud', apply: s => { applied = s; } });
     assert.strictEqual(r.save, 'pulled'); assert.deepStrictEqual(applied, { from: 'cloud' }); assert.ok(Sys.net.calls.includes('choose:cloud'));
   });
+  await t('apply RECUSADO/PENDENTE (false): o S do jogo não é trocado e o correio vai para o S certo', async () => {
+    O._reset(); O.DATA.on = true; Sys.net = fakeNet({ sync: async () => ({ action: 'pulled', save: { from: 'cloud' } }) }); Sys.buy = null;
+    let into = null; Sys.mail = { DATA: { enabled: true }, receive: (S2) => { into = S2; return 1; } };
+    const S = { mine: 1 }, r = await O.boot(S, {}, { apply: () => false });
+    assert.strictEqual(r.pending, true); assert.strictEqual(into, S); Sys.mail = null;
+  });
+  await t('sem rede na abertura (sem boot): cada gravação ainda marca o aparelho como mudado', async () => {
+    O._reset(); O.DATA.on = true; Sys.net = fakeNet({ ensureSession: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } });
+    await O.boot({}, {}, {}); assert.strictEqual(O.saved({}), false); assert.ok(Sys.net.calls.includes('dirty'));
+  });
   await t('offline na sessão: não trava e não tenta o resto', async () => {
     O._reset(); O.DATA.on = true; Sys.net = fakeNet({ ensureSession: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } });
     assert.deepStrictEqual(await O.boot({}, {}, {}), { ok: false, reason: 'offline' });

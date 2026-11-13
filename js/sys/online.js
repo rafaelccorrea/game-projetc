@@ -35,7 +35,8 @@
       const sum = hooks.summary ? hooks.summary(S) : {};
       let r = await N.sync(S, sum);
       if (r.action === 'choose') { const side = hooks.choose ? await hooks.choose(r) : r.recommend; r = await N.chooseSide(side === 'cloud' ? 'cloud' : 'device', S, sum); }
-      if (r.action === 'pulled' && r.save && hooks.apply) { hooks.apply(r.save); S = st.S = r.save; }
+      /* o jogo pode RECUSAR (servidor errado) ou deixar PENDENTE (batalha já começou): apply === false → o S do jogo continua o mesmo */
+      if (r.action === 'pulled' && r.save && hooks.apply) { if (hooks.apply(r.save) !== false) S = st.S = r.save; else out.pending = true; }
       out.save = r.action;
     } catch (e) { out.errors.push('save:' + (e.code || 'erro')); note('save', e.code); }
     /* compras: aplica as entregas pendentes (inclusive as confirmadas pelo Google com o app fechado) */
@@ -50,8 +51,11 @@
   function clockSync(host) { try { const Sc = X().schedule, N = X().net; if (Sc && Sc.setServerTime && N && N.serverNow) Sc.setServerTime(N.serverNow(), host); } catch (e) {} }
   /* chamado depois de cada save() local: sobe com intervalo mínimo (o servidor também limita: SAVE_MIN_INTERVAL_SECONDS) */
   function saved(S) {
-    if (!ready() || !st.booted) return false;
-    const N = X().net; st.S = S || st.S; N.markDirty();
+    if (!ready()) return false;
+    const N = X().net;
+    /* sem boot (sem rede na abertura): ainda assim marca o aparelho como MUDADO, senão na próxima abertura a nuvem ganharia sem pergunta */
+    if (!st.booted) { try { if (N && N.markDirty && st.hooks) N.markDirty(); } catch (e) {} return false; }
+    st.S = S || st.S; N.markDirty();
     if (st.timer) return true;
     const wait = Math.max(0, st.last + DATA.pushEveryMs - Date.now());
     st.timer = setTimeout(async () => { st.timer = null; st.last = Date.now();

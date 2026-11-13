@@ -73,6 +73,9 @@ async function call(method,path,body){
   }
 }
 function takeSession(r){
+  /* OUTRA conta (ex.: convidado → conta Google): a versão do save que o aparelho conhecia era da conta anterior. Zera, senão o sync compara
+     com a versão errada e pode ignorar o save da conta nova (achado da fps-c8). */
+  const prev=ST.mem.player&&ST.mem.player.id, next=r&&r.player&&r.player.id; if(prev&&next&&prev!==next) delete ST.mem.save;
   ST.mem.access=r.accessToken; ST.mem.refresh=r.refreshToken; ST.mem.accessExpiresAt=r.accessExpiresAt; ST.mem.player=r.player||null; persist();
   return r.player;
 }
@@ -104,7 +107,16 @@ const realms=()=>raw('GET','/realms',null,!!(ST.mem&&ST.mem.access));
    Sem o plugin (navegador, APK sem ele): rejeita {code:'google_unavailable'} e a tela mantém "em breve". Cancelado pelo jogador: {code:'cancelled'}. */
 function googleReady(){ try{ const P=root.Capacitor&&root.Capacitor.Plugins; return !!(DATA.on&&DATA.googleClientId&&P&&P[DATA.googlePlugin]); }catch(e){ return false; } }
 let gInit=null;
-async function googleSignIn(mode){
+/* mode: 'login' | 'link' | 'auto' (login; sem vínculo neste servidor → vincula ao convidado atual com o MESMO idToken: a janela do Google abre UMA vez).
+   o.idToken: reusa um idToken já obtido (sem abrir a janela). No erro not_linked do 'login', e.idToken vem junto para o chamador vincular sem abrir de novo. */
+async function googleSignIn(mode,o){
+  let idToken=o&&o.idToken;
+  if(!idToken) idToken=await googleIdToken();
+  if(mode==='link') return linkGoogle({idToken});
+  try{ return await loginGoogle({idToken}); }
+  catch(e){ if(e&&e.code==='not_linked'){ if(mode==='auto') return linkGoogle({idToken}); e.idToken=idToken; } throw e; }
+}
+async function googleIdToken(){
   if(!googleReady()) throw fail('google_unavailable');
   const G=root.Capacitor.Plugins[DATA.googlePlugin];
   if(!gInit) gInit=G.initialize({google:{webClientId:DATA.googleClientId}});
@@ -113,7 +125,7 @@ async function googleSignIn(mode){
   catch(e){ const m=String(e&&(e.code||e.message)||''); throw fail(/cancel/i.test(m)?'cancelled':'google_error'); }
   const idToken=r&&r.result&&(r.result.idToken||(r.result.credential&&r.result.credential.idToken));
   if(!idToken) throw fail('google_error');
-  return mode==='link'?linkGoogle({idToken}):loginGoogle({idToken});
+  return idToken;
 }
 async function logout(){ const t=ST.mem.refresh; dropSession(); if(t){ try{ await raw('POST','/auth/logout',{refreshToken:t},false); }catch(e){} } }
 const me=()=>call('GET','/me');
