@@ -130,3 +130,23 @@ test('save marcado (422 save_implausible): o aparelho guarda a versão gravada e
   assert.equal(net.saveMeta().version, 1);
   assert.equal((await net.push({}, {})).version, 2);
 });
+
+test('login Google: sem plugin = google_unavailable; com plugin manda só o idToken (login ou vínculo); cancelado = cancelled', async () => {
+  const { f } = boot({
+    'POST /auth/guest': () => [200, session(1)],
+    'POST /auth/login/google': b => [200, session(5)],
+    'POST /auth/link/google': b => [200, { id: 'p1', ageBand: '18+', linked: ['google'] }],
+  });
+  assert.equal(net.googleReady(), false);
+  await assert.rejects(net.googleSignIn('login'), e => e.code === 'google_unavailable');
+  let inits = 0;
+  globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async o => { inits++; assert.equal(o.google.webClientId, net.DATA.googleClientId); }, login: async () => ({ provider: 'google', result: { idToken: 'gtok' } }) } } };
+  assert.equal(net.googleReady(), true);
+  const p = await net.googleSignIn('login');
+  const c = f.calls.at(-1); assert.equal(c.key, 'POST /auth/login/google'); assert.equal(c.body.idToken, 'gtok'); assert.ok(c.body.deviceId);
+  await net.googleSignIn('link');
+  assert.equal(f.calls.at(-1).key, 'POST /auth/link/google'); assert.deepEqual(Object.keys(f.calls.at(-1).body), ['idToken']); assert.equal(inits, 1);
+  globalThis.Capacitor.Plugins.SocialLogin.login = async () => { throw { code: 'USER_CANCELLED' }; };
+  await assert.rejects(net.googleSignIn('login'), e => e.code === 'cancelled');
+  delete globalThis.Capacitor;
+});

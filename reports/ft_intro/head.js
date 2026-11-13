@@ -165,7 +165,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   commitNew(name){ const s=G.S(); s.hero=this.pick.hero==='kaia'&&PI_KAIA?'kaia':'kael'; s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
   /* login: convidado = local (e, com o Sys.net ligado, sessão de convidado no servidor sem travar o jogo); Google: em breve */
   guest(){ const s=G.S(); s.acct='guest'; try{ if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },
-  googleReady(){ try{ return !!(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on&&Sys.net.DATA.googleClientId); }catch(e){ return false; } },
+  googleReady(){ try{ return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },
+  /* convidado já com sessão = VINCULA a conta atual ao Google (não perde nada); sem sessão = entra na conta do Google (aparelho novo) */
+  google(){ const N=Sys.net; return N.googleSignIn(N.hasSession&&N.hasSession()?'link':'login').then(p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; }); },
 };
 window.PIntro=PI;
 const PI_CSS=`#pin .pi-toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:99;padding:10px 18px;border-radius:14px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;color:#f6ecdf;font:900 14px Nunito,system-ui,sans-serif;white-space:nowrap;animation:pi_t .25s ease-out both}

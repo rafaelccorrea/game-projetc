@@ -18,6 +18,10 @@ const DATA={
   timeoutMs:10000,
   storageKey:'eon.net',
   saveFormat:1,
+  /* LOGIN GOOGLE: ID do cliente WEB do projeto Firebase/Google Cloud "eonbound" (público; o servidor confere o idToken contra ele: GOOGLE_CLIENT_ID).
+     No jogo é o serverClientId do plugin nativo. Vazio = o botão do Google mostra "em breve". */
+  googleClientId:'108430697904-opm26965n34smlrrnlq1kha8bobb17b5.apps.googleusercontent.com',
+  googlePlugin:'SocialLogin',   // @capgo/capacitor-social-login (Credential Manager do Android)
 };
 const ST={ fetch:null, storage:null, clientVersion:'0', platform:'android', mem:{}, offset:0, refreshing:null };
 
@@ -89,6 +93,21 @@ async function ensureSession(o){
 const linkGoogle=tok=>call('POST','/auth/link/google',tok).then(p=>{ ST.mem.player=p; persist(); return p; });
 /* aparelho novo: entra na conta vinculada ao Google (o save da nuvem vem depois, por sync) */
 async function loginGoogle(tok){ return takeSession(await raw('POST','/auth/login/google',Object.assign({deviceId:ST.mem.deviceId},tok),false)); }
+/* entra com o Google pelo plugin nativo e manda só o idToken ao servidor. mode 'login' = aparelho novo / conta vinculada; 'link' = vincula ao convidado atual.
+   Sem o plugin (navegador, APK sem ele): rejeita {code:'google_unavailable'} e a tela mantém "em breve". Cancelado pelo jogador: {code:'cancelled'}. */
+function googleReady(){ try{ const P=root.Capacitor&&root.Capacitor.Plugins; return !!(DATA.on&&DATA.googleClientId&&P&&P[DATA.googlePlugin]); }catch(e){ return false; } }
+let gInit=null;
+async function googleSignIn(mode){
+  if(!googleReady()) throw fail('google_unavailable');
+  const G=root.Capacitor.Plugins[DATA.googlePlugin];
+  if(!gInit) gInit=G.initialize({google:{webClientId:DATA.googleClientId}});
+  await gInit;
+  let r; try{ r=await G.login({provider:'google',options:{scopes:['email','profile']}}); }
+  catch(e){ const m=String(e&&(e.code||e.message)||''); throw fail(/cancel/i.test(m)?'cancelled':'google_error'); }
+  const idToken=r&&r.result&&(r.result.idToken||(r.result.credential&&r.result.credential.idToken));
+  if(!idToken) throw fail('google_error');
+  return mode==='link'?linkGoogle({idToken}):loginGoogle({idToken});
+}
 async function logout(){ const t=ST.mem.refresh; dropSession(); if(t){ try{ await raw('POST','/auth/logout',{refreshToken:t},false); }catch(e){} } }
 const me=()=>call('GET','/me');
 const player=()=>ST.mem.player||null;
@@ -171,7 +190,7 @@ const events=()=>call('GET','/events');
 
 function _reset(){ ST.fetch=null; ST.storage=null; ST.mem={}; ST.offset=0; ST.refreshing=null; }
 
-const API={DATA,init,ensureSession,linkGoogle,loginGoogle,logout,me,player,hasSession,deleteAccount,serverNow,time,
+const API={DATA,init,ensureSession,linkGoogle,loginGoogle,googleReady,googleSignIn,logout,me,player,hasSession,deleteAccount,serverNow,time,
   markDirty,saveMeta,head,pull,push,sync,chooseSide,history,restore,accountId,canBuy,verifyGoogle,deliveries,ackDelivery,entitlements,offers,claimMonthlyCard,
   mail,claimMail,events,_reset,_call:call};
 root.Sys=root.Sys||{}; root.Sys.net=API;
