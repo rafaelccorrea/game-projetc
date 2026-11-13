@@ -174,10 +174,10 @@ function drawLayers(g, st, t, cx, gy, k){ let done = true; k *= st.sc || 1;
     const fy = typeof M.feetY === 'number' ? M.feetY : Array.isArray(M.anchor) ? M.anchor[1] * M.h : M.h * 243 / 256;
     g.save(); if (M.blend === 'lighter') g.globalCompositeOperation = 'lighter';
     if (M.aura){ const gr = g.createRadialGradient(cx, gy - 60 * k, 4, cx, gy - 60 * k, 150 * k); gr.addColorStop(0, M.stars >= 5 ? 'rgba(255,214,120,.55)' : 'rgba(120,200,255,.45)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(cx - 160 * k, gy - 220 * k, 320 * k, 240 * k); }
-    g.drawImage(l.img, fi * M.w, 0, M.w, M.h, cx - ax * k, gy - fy * k, M.w * k, M.h * k); g.restore(); }
+    g.drawImage(l.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, cx - ax * k, gy - fy * k, M.w * k, M.h * k); g.restore(); }
   return done; }
 function drawEgg(g, E, t, cx, gy, k){ const T = t % 6, ew = 96 * k, eh = ew * E.egg.naturalHeight / E.egg.naturalWidth, M = E.pet.m;
-  const petAt = (y, a) => { const fi = Math.floor(t * (M.fps || 12)) % M.frames, ax = M.padLeft != null ? M.padLeft + 128 : M.w / 2, fy = typeof M.feetY === 'number' ? M.feetY : M.h; g.save(); g.globalAlpha = a; g.drawImage(E.pet.img, fi * M.w, 0, M.w, M.h, cx - ax * k, y - fy * k, M.w * k, M.h * k); g.restore(); };
+  const petAt = (y, a) => { const fi = Math.floor(t * (M.fps || 12)) % M.frames, ax = M.padLeft != null ? M.padLeft + 128 : M.w / 2, fy = typeof M.feetY === 'number' ? M.feetY : M.h; g.save(); g.globalAlpha = a; g.drawImage(E.pet.img, sheetSX(M, fi), sheetSY(M, fi), M.w, M.h, cx - ax * k, y - fy * k, M.w * k, M.h * k); g.restore(); };
   if (T < 2.6){ const sh = T < 1.6 ? Math.sin(T * 22) * 0.05 * (T / 1.6) : Math.sin(T * 40) * 0.09; g.save(); g.translate(cx, gy); g.rotate(sh); g.drawImage(E.egg, -ew / 2, -eh, ew, eh);   // treme cada vez mais
     if (T > 1.6){ g.strokeStyle = '#2a1403'; g.lineWidth = 2.2 * k; g.lineJoin = 'round'; const p = Math.min(1, (T - 1.6) / 0.8); g.beginPath(); g.moveTo(-ew * 0.28, -eh * 0.55);   // racha
         [[-0.12, -0.42], [-0.02, -0.6], [0.1, -0.44], [0.2, -0.62], [0.3, -0.5]].slice(0, Math.ceil(p * 5)).forEach(q => g.lineTo(q[0] * ew, q[1] * eh)); g.stroke(); }
