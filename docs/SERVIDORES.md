@@ -60,7 +60,10 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 10:24 (Brasília) | convidado "Viajante6288" (S1, sem nome, Nv. 1) | criado sozinho pelo boot logo depois do teste de Excluir conta do QA (origem .7) | defeito corrigido: convidado só nasce no JOGAR |
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (6ª execução, limpeza de contas) | idem às outras execuções |
 | 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (7ª execução, exclusão em todos os servidores) | idem |
-| 13/11/2026 ~12:05 (Brasília) | convidado "Viajante5501" (personagem "LoboRubro", S1) | QA no navegador, origem 127.0.0.8:8080 (reteste "convidado só no JOGAR", 749d943) | excluída pelo próprio teste; conferir no banco quando o SSH voltar |
+| 13/11/2026 10:06 (Brasília) | convidado "Viajante5673" (S1, sem nome, Nv. 1) | QA no navegador, origem 127.0.0.8:8080, ANTES da correção 749d943 (10:42): criado no boot | achado no log do nginx em 13/11 18:2x; não excluída |
+| 13/11/2026 13:10 (Brasília) | convidado "Viajante5501" (personagem "LoboRubro", S1) | QA no navegador, origem 127.0.0.8:8080 (reteste "convidado só no JOGAR", 749d943) | conferido no servidor: excluída 13:12, remoção 13/12, 0 sessões, nenhuma conta depois |
+| 13/11/2026 18:2x (Brasília) | +1 convidado "Viajante8359" (S1) | `smoke-real.mjs` (8ª execução, deploy dd1805b) | idem |
+| 13/11/2026 18:2x (Brasília) | +1 convidado "Viajante3322" (S1) | `release.sh --ligar` (conferência das chaves) | idem |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
 
