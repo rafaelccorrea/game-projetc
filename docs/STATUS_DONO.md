@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **16h50 · PERFIL VERSÃO 4 para o seu voto** (mesmo link: https://claude.ai/artifact/8r6KhRVoumeokt36ytbQLc): Kael montado nas 6 montarias reais, auras reais animadas, pet animado no estágio certo, prévia de skin no herói, "como ganhar" leva à tela, VIP com benefícios, Coleção e Números detalhados. Na mesma página: o print das 8 skins que já existem no jogo
+- **16h50 · Skins:** as 8 com arte EXISTEM no jogo (print real); não apareceram porque a v0.12.9 é anterior a elas e a entrega ao jogador está desligada até o seu voto. Na próxima APK: Modo dono → Liberar tudo → Aparência (com prévia e botão para trocar de herói)
+- **16h50 · Drop do chefe:** confirmado aleatório (200 chefes simulados); no nível 13 só sai Raro e só há 12 visuais (6 peças × 2 eras). Anti-repetição sendo ligado; proposta: o ícone da peça mudar com a raridade (Arte orça antes de gastar)
+- **16h50 · Desempenho:** 2 causas a mais achadas e corrigidas: o herói do Título continuava desenhando atrás da batalha; o cenário vivo redecodificava no meio do quadro. Causa grande: 757 folhas de animação largas demais para celular; vão ser reembaladas em grade, em lotes conferidos
+- **16h50 · Online:** falta ligar a camada online na abertura do jogo (achado do Engenheiro); o Servidor responde e liga. E falta você rodar o script do banco
+
 - **16h25 · Desempenho, achada a causa nº 1 das travadas:** o jogo em si gasta só 3 ms por quadro; as travadas (até 85 ms no navegador) vêm do aparelho redecodificar imagens grandes (folha do ataque do lobo durante a ultimate, chão do cenário) no meio do desenho. Correção escrita: manter essas imagens prontas na memória, com limite de memória para o S24. Depois: cabeçalho e aura da montaria. Mando os números do DEPOIS
 
 - **16h15 · Servidor:** VÁRIOS SERVIDORES prontos no banco e no jogo (S1 · Nova Era; personagem por servidor; save de outro servidor é recusado). Antes de abrir o S2 falta separar por servidor os rankings, guildas, chat e Chefe Mundial (no lançamento só existe o S1). Bem-vindo na conta nova CORRIGIDO (0842447, teste do QA passa). Agora: tela inicial animada. O online liga assim que você rodar o script do banco
