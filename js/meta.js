@@ -174,6 +174,6 @@ function tutEvent(ev){
   fetch('manifest.webmanifest',{method:'HEAD'}).then(r=>{ if(!r.ok) return; head('link',{rel:'manifest',href:'manifest.webmanifest'});
     return fetch('manifest.webmanifest').then(x=>x.json()).then(m=>{ const ic=(m.icons||[]).filter(i=>/png/.test(i.type||i.src)).sort((a,b)=>parseInt(b.sizes)-parseInt(a.sizes)).find(i=>parseInt(i.sizes)<=192)||(m.icons||[])[0];
       if(ic) head('link',{rel:'apple-touch-icon',href:ic.src}); }); }).catch(()=>{});
-  if('serviceWorker' in navigator && !window.Capacitor && !DEBUG && !window.__noSave && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))   // nunca em localhost: os assets ainda mudam
+  if('serviceWorker' in navigator && !window.Capacitor && !DEBUG && !window.__noSave && !/^(localhost|127\.\d+\.\d+\.\d+|\[::1\])$/.test(location.hostname))   // nunca em localhost: os assets ainda mudam
     fetch('sw.js',{method:'HEAD'}).then(r=>{ if(r.ok) navigator.serviceWorker.register('sw.js').catch(()=>{}); }).catch(()=>{});
 })();
