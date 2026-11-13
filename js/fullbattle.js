@@ -281,6 +281,7 @@ function fbTick(){
   { const sk = SKIN(S.skinEq.armor), t = sk ? tierOf(sk.r) : 0, c = 'kidle' + (t ? ' t' + t : ''); if (FBK.kid !== c){ FBK.kid = c; document.getElementById('fb_kid').className = c; } }
   const e = eraOf(S.stage), inEra = ((S.stage - 1) % STAGES_PER_ERA) + 1; if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
     else if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
+    else if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
     else if (fbSet('fb_stg', ERAS[e].n)){ const el = document.getElementById('fb_stg'); if (el && el.scrollWidth > el.clientWidth + 1){ el.textContent = FB_ERA_SHORT[e] || ERAS[e].n; FBK.fb_stg = ERAS[e].n; } }   /* nome inteiro; só se não couber entra a abreviação oficial da tabela */ fbSet('fb_stgx', (e + 1) + '-' + inEra);   // era com reticências se faltar largura; o número da fase nunca é cortado
   { const NW = S.farm ? 4 : 5, tot = Math.max(1, B.waveN || 1), left = B.en.length + B.toSpawn.length, pc = Math.round(100 * Math.max(0, Math.min(1, (tot - left) / tot))), k = S.wave + '|' + NW + '|' + pc;
     if (FBK.wv !== k){ FBK.wv = k; let h = ''; for (let i = 1; i <= NW; i++){ const boss = i === 5, cur = i === S.wave;

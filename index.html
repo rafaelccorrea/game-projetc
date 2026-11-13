@@ -560,7 +560,7 @@ function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.t
 /* "Desafiar" (PO): SEMPRE visível. Brilha com a FC ≥ 90% da recomendada; abaixo disso fica apagado e o toque mostra a FC que falta
    (um segundo toque em até 4 s desafia assim mesmo, para o jogador nunca ficar sem saída). Fora do farm, o toque só antecipa a onda do chefe. */
 let bossAskT=0;
-function bossTap(){ if(B.inst){ toast('Termine a instância primeiro'); return; } if(B.inst){ toast('Termine a instância primeiro'); return; }
+function bossTap(){ if(B.inst){ toast('Termine a instância primeiro'); return; } if(B.inst){ toast('Termine a instância primeiro'); return; } if(B.inst){ toast('Termine a instância primeiro'); return; }
   if(S.wave===5){ toast('Você já está enfrentando o chefe'); return; }
   const rec=recFC(S.stage), fc=heroFC(), f=typeof gNum==='function'?gNum:fmt;
   if(fc<BOSS_GLOW_AT*rec&&Date.now()-bossAskT>4000){ bossAskT=Date.now(); toast('Faltam '+f(Math.max(1,Math.ceil(rec-fc)))+' de FC (recomendada: '+f(rec)+'). Toque de novo para desafiar assim mesmo'); return; }

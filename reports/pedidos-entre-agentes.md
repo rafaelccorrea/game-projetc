@@ -285,3 +285,10 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Dados: Diárias/Semanais/bônus = `Sys.pass.list` + `Sys.pass.claimMission` (id ou 'bonus'); Guia = `Sys.guide.current/claim/list`, aba só aparece com `Sys.guide.DATA.on`. "Resgatar tudo" relê o bônus depois das diárias.
 - "Atividade de hoje x/100" (baús de marco) e aba "Conquistas": ENTRAM no lançamento (PO), atrás das chaves `P_MISSIONS.activity` e `P_MISSIONS.achievements` (desligadas; lidas de `mActivity()`/`mAch()`, que hoje devolvem null; contrato no topo do arquivo). Ligar quando a API de Sistemas chegar.
 - Chama `statsChanged()` ao resgatar. Zero emoji. Smoke: `node test/paineis/p_missions.smoke.js`.
+
+### Q-8. Chat com frases prontas (js/p_chat.js) — escrita pelo QA, NÃO vista rodando
+- Peça ao engenheiro: carregar `'p_chat'` na lista de scripts do js/screens.js e ligar `PANEL_ON.chat` (abrir pelo ícone/botão de chat da batalha; não há item no MENU).
+- Peça ao fps-69 (Sistemas): criar `Sys.chat` com as 20 frases prontas (hoje uma tabela de conteúdo no topo da tela, `C_PHRASES`, copiada do protótipo), regras (1 envio a cada 3 s, conta nova só lê na 1ª hora, menores só frases) e motivos de denúncia.
+- Sem servidor a tela abre, mostra canais e frases, e diz "O chat precisa do servidor online: em breve"; não há mensagens nem jogadores simulados e o envio só avisa. Não existe campo de texto livre (regra de menores).
+- A tela lê de um provedor opcional `window.P_CHAT` (contrato no cabeçalho do arquivo: online, messages(canal), send(canal, i), report, block, mute, cooldownMs, newLeftMs, guild). Quando o servidor chegar, basta definir isso.
+- Zero emoji; nomes globais com prefixo XCH/ch*/c* (XC e cClick já eram de p_cfg.js). Smoke: `node test/paineis/p_chat.smoke.js`.

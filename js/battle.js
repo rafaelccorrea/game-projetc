@@ -178,6 +178,7 @@ function hordeFit(vis){
 }
 const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
 const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
+const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
 const WAITX=LW+110;
 const EN_WALK=62, EN_STEP=120;   // px lógicos/s: entrada pela direita (constante, igual para todos) e passo de um slot para o outro (rápido, para ficar a maior parte do tempo parado e atacando)
 /* ATAQUE DOS INIMIGOS (regra do PO): todo inimigo parado no slot ataca, com cadência própria (atkEvery) e defasado dos outros.
@@ -272,6 +273,7 @@ function killEnemy(e){
 function waveClear(){
   const h=B.hero;
   if(typeof petWave==='function') petWave();
+  if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância
   if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância
   if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
@@ -799,6 +801,8 @@ const ART_ON={
   en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
   en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
+  kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
+  en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
   //   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
@@ -879,6 +883,7 @@ function drawEnemyAt(e,x,deadP){
   const shDie=dying?enSheet(e,'die'):null, shAtk=!dying&&e.sw>0?enSheet(e,'attack'):null, shHurt=!dying&&!shAtk&&e.hurtT>0?enSheet(e,'hurt'):null, shRun=walking?enSheet(e,'run'):null;
   const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
   const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
+  const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
   if(shAtk||shRun||shHurt) lean=0;                              // com folha o corpo não inclina (a folha já tem o movimento)
   let dark=0;
   if(dying){ if(shDie){ rot=0; alpha=deadP>0.8?Math.max(0,1-(deadP-0.8)/0.2):1; }
@@ -899,6 +904,7 @@ function drawEnemyAt(e,x,deadP){
     else if(shAtk) enFrame(shAtk,1-e.sw/(e.swD||EATK),spr,F);                          // ataque
     else if(shHurt) enFrame(shHurt,1-e.hurtT/(e.hurtD||EN_HURT_DUR),spr,F);                       // levando dano
     else if(shRun) enFrame(shRun,0,spr,F,e.wt);
+    else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando
     else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando
     else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando                                        // corrida (pés do quadro na linha do chão)
     else { ctx.scale(1,sy); if(dark>0) dspr(spr,-dw/2,-dh,dw,dh,'#0a0705',dark); else dspr(spr,-dw/2,-dh,dw,dh,'#fff',(!dying&&e.hit>0)?e.hit/0.12*0.85:0); }

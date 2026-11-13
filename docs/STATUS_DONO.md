@@ -6,6 +6,17 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 **Regra combinada:** o celular só recebe o jogo quando TUDO abaixo estiver `[x]`. Única coisa que fica para depois do lançamento: Bênção de equipamento.
 
+## AGORA (atualizado a cada entrega)
+
+- **21h · Força-tarefa de telas:** as 6 sessões escrevem telas ao mesmo tempo; o engenheiro só liga no jogo, em lotes (plano em `docs/FORCA_TAREFA_TELAS.md`)
+  - QA: Torre (refazendo), Códex, Correio, Chat, Guilda
+  - Sistemas: FC na tela (refazendo), Arena, Eventos, Torneio, Atividade/Conquistas
+  - Servidor: Título, Login, Prólogo, Criação, Nome, Bem-vindo
+  - Arte: Mapa das Eras, Perfil/Coleção
+  - Engenheiro: refazendo a v0.12.7 (montarias), depois liga tudo de uma vez
+- **21h · Acidente:** a sessão do QA rodou um comando que apagou o trabalho não salvo de todas as sessões depois da v0.12.6. Perdemos a v0.12.7 quase pronta (montarias, pet ao lado, asa por item) e alguns módulos; cada sessão está refazendo. O que já estava no GitHub não se perdeu. Nova regra: ninguém mais roda esse tipo de comando, e o engenheiro salva a cada entrega (a perda máxima passa a ser de minutos)
+- **21h · Página de aprovação:** Serpe V2 e as 4 fases adultas V2 (recortadas, sem fundo verde) já estão lá para o seu voto
+
 ---
 
 ## A. O que eu preciso de você

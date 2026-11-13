@@ -72,6 +72,14 @@ const Y_STONE=s=>`<svg class="y-stone" width="${s}" height="${s}" viewBox="0 0 2
 .p-slot{position:relative;width:40px;height:40px;flex:none;border-radius:10px;border:2px solid;box-sizing:border-box;display:flex;align-items:center;justify-content:center}
 .p-rglow{animation:prglow 1.8s ease-in-out infinite}
 @keyframes prglow{0%,100%{box-shadow:0 0 3px var(--rc)}50%{box-shadow:0 0 12px var(--rc)}}
+/* trilha contínua (PANEL_V2.passScroll): a lista rola sozinha, a legenda fica presa no topo dela, os níveis futuros ficam apagados. Sem scroll-behavior:smooth:
+   a tela redesenha inteira a cada toque e devolve o scrollTop na hora (com rolagem suave a lista "andaria" a cada resgate). */
+.p-trail{flex:1;min-height:0;position:relative;margin:0 -12px;padding:0 12px;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
+.p-thd{position:sticky;top:0;z-index:4;margin:0 -12px;padding:0 12px;background:rgba(27,21,34,.94);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-bottom:1px solid rgba(176,124,255,.28);box-shadow:0 6px 12px rgba(0,0,0,.35)}
+.p-row.p-fut{filter:saturate(.45) brightness(.62)}
+.p-curn{animation:pcurn 1.6s ease-in-out infinite}
+@keyframes pcurn{0%,100%{box-shadow:0 0 6px rgba(176,124,255,.6)}50%{box-shadow:0 0 18px rgba(176,124,255,1)}}
+.p-nav{transition:transform .12s}.p-nav:active{transform:scale(.98)}
 .p-lvup{animation:plvup .7s cubic-bezier(.2,1.5,.4,1)}
 @keyframes plvup{0%{transform:scale(1)}35%{transform:scale(1.35);filter:brightness(1.6)}100%{transform:scale(1)}}
 /* ---- 16 Práticas e Títulos ---- */
