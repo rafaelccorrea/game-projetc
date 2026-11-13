@@ -101,4 +101,12 @@ t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet 
     const rd=P.DATA.newReady.panther; P.DATA.newReady.panther=false; assert.deepStrictEqual(C.newPets(),['lobo','falcao']); P.DATA.newReady.panther=rd;
   } finally { N.DATA.on=on0; clean(); delete globalThis.Sys.newDrops; }
 });
+t('9 eras (dono 14/11): com as eras 7-8 ligadas, armas, armaduras e melhores inimigos do Submundo e do Celestial entram (+24); desligadas, 117 como antes',()=>{
+  clean(); const ST=require('../../js/sys/stats.js'); globalThis.Sys.stats=ST; const was=ST.DATA.era9.on;
+  try{ ST.setEra9(false); assert.strictEqual(C.catalog().length,117); assert.strictEqual(C.era9On(),false);
+    ST.setEra9(true); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,141); assert.strictEqual(C.era9On(),true);
+    for(const id of ['w-7-0','w-7-2','w-8-1','a-7-vest','a-8-wings','b-7-boss','b-8-e0']) assert.ok(cat.includes(id),id);
+    const S={inv:[{slot:'weapon',e:8,r:4,lvl:1,subs:[]},{slot:'armor',e:7,r:1,lvl:1,subs:[]}],sys:{}}; const sc=[...C.scan(S)]; assert.ok(sc.includes('w-8-2')&&sc.includes('a-7-vest'),sc.join(','));
+  } finally { ST.setEra9(was); delete globalThis.Sys.stats; clean(); }
+});
 console.log(n+' testes ok');

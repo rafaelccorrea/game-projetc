@@ -47,7 +47,12 @@ const SYS=()=>root.Sys||{};
 const obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:null;
 const ID_RE=/^(w|a|m|p|b|u)-[a-z0-9-]{1,30}$/;
 
-function eraCount(){ let n=DATA.eras; try{ if(typeof ERAS!=='undefined'&&Array.isArray(ERAS)) n=Math.min(DATA.eras,ERAS.length); }catch(e){} return n; }   // eslint-disable-line no-undef
+/* 9 ERAS (dono, 14/11): com as eras 7-8 ligadas (Sys.stats.setEra9), o Códex passa a 9 eras: armas, armaduras e melhores inimigos do Submundo e do Celestial.
+   Desligadas: 7, como antes. Os ids não mudam (w-<era>-<tier>, a-<era>-<espaço>, b-<era>-<tipo>); a casa nova entra na mesma ordem por era. */
+const era9On=()=>{ try{ const T=SYS().stats; return !!(T&&T.DATA&&T.DATA.era9&&T.DATA.era9.on===true); }catch(e){ return false; } };
+const erasMax=()=>era9On()?9:DATA.eras;
+const bestEras=()=>era9On()?9:DATA.bestEras;
+function eraCount(){ let n=erasMax(); try{ if(typeof ERAS!=='undefined'&&Array.isArray(ERAS)) n=Math.min(erasMax(),ERAS.length); }catch(e){} return n; }   // eslint-disable-line no-undef
 function mountIds(){ let L=null; try{ const M=SYS().mount; if(M&&M.DATA&&Array.isArray(M.DATA.mounts)) L=M.DATA.mounts.map(m=>m&&m.id); }catch(e){} if(!L) L=DATA.mountFall.slice();
   return L.filter(id=>DATA.mountArt.includes(id)); }
 /* pets novos que já dá para conseguir (ids da tela, na ordem do DATA.petNew) */
@@ -59,7 +64,7 @@ function catalog(){ const A=[], E=eraCount();
   for(let e=0;e<E;e++) for(const s of DATA.slots) A.push({id:'a-'+e+'-'+s[0],cat:'eq'});
   for(const m of mountIds()) A.push({id:'m-'+m,cat:'mnt'});
   for(const p of DATA.petOrder.concat(newPets())) for(let s=0;s<3;s++) A.push({id:'p-'+p+'-'+s,cat:'pet'});
-  for(let e=0;e<DATA.bestEras;e++) for(const k of DATA.bestKinds) A.push({id:'b-'+e+'-'+k,cat:'bes'});
+  for(let e=0;e<bestEras();e++) for(const k of DATA.bestKinds) A.push({id:'b-'+e+'-'+k,cat:'bes'});
   for(const n of DATA.auras) A.push({id:'u-'+n,cat:'aur'});
   return A; }
 
@@ -79,7 +84,7 @@ function scan(S){ const out=new Set(), E=eraCount(), sys=obj(S&&S.sys)||{};
     for(let s=0;s<=st;s++) out.add('p-'+c+'-'+s); } }catch(e){}
   try{ const ow=obj(obj(sys.mount)&&sys.mount.owned)||{}; for(const id in ow) if(DATA.mountArt.includes(id)) out.add('m-'+id); }catch(e){}
   try{ const lv=obj(obj(sys.forge)&&sys.forge.lv), w=lv?int0(lv.weapon):0; for(const n of DATA.auras) if(w>=n) out.add('u-'+n); }catch(e){}
-  try{ const mark=(e,boss)=>{ if(e<0||e>=DATA.bestEras) return; out.add('b-'+e+'-e0'); out.add('b-'+e+'-e1'); if(boss) out.add('b-'+e+'-boss'); };
+  try{ const mark=(e,boss)=>{ if(e<0||e>=bestEras()) return; out.add('b-'+e+'-e0'); out.add('b-'+e+'-e1'); if(boss) out.add('b-'+e+'-boss'); };
     const P=SYS().phases, ph=obj(sys.phases), best=ph&&obj(ph.best);
     if(P&&P.DATA&&P.DATA.on===true&&best){ const per=int0(P.DATA.perEra)||100, req=Array.isArray(P.DATA.required)?P.DATA.required:[];
       for(const k in best){ const e=parseInt(k,10), a=Array.isArray(best[k])?best[k]:[]; if(!(e>=0)||!a.some(x=>int0(x)>0)) continue;
@@ -121,7 +126,7 @@ function screenProvider(getS,getHost){ const s=()=>typeof getS==='function'?getS
       return {claimed:r.claimed,marks:r.marks.map(m=>({p:m.p,txt:m.txt})),claim(p){ const c=claim(s(),h(),p); return {ok:c.ok,txt:c.ok?c.txt:'',reason:c.reason}; }}; },
   }; }
 
-const API={newPets,DATA,ensure,catalog,scan,sync,owned,progress,rewards,claim,screenProvider};
+const API={newPets,era9On,DATA,ensure,catalog,scan,sync,owned,progress,rewards,claim,screenProvider};
 root.Sys=root.Sys||{}; root.Sys.codex=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
