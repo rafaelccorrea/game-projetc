@@ -44,6 +44,11 @@ function fakeNet(o) {
     O._reset(); O.DATA.on = true; Sys.net = fakeNet({ ensureSession: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } });
     await O.boot({}, {}, {}); assert.strictEqual(O.saved({}), false); assert.ok(Sys.net.calls.includes('dirty'));
   });
+  await t('sync da abertura FALHOU (cabeça/descida): nenhuma gravação sobe naquela abertura, só marca o aparelho como mudado', async () => {
+    O._reset(); O.DATA.on = true; Sys.net = fakeNet({ sync: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } }); Sys.buy = null; Sys.mail = null;
+    const r = await O.boot({}, {}, {}); assert.strictEqual(r.saveFailed, true);
+    assert.strictEqual(O.saved({}), false); assert.ok(Sys.net.calls.includes('dirty')); assert.ok(!Sys.net.calls.includes('push'));
+  });
   await t('offline na sessão: não trava e não tenta o resto', async () => {
     O._reset(); O.DATA.on = true; Sys.net = fakeNet({ ensureSession: async () => { throw Object.assign(new Error('x'), { code: 'offline' }); } });
     assert.deepStrictEqual(await O.boot({}, {}, {}), { ok: false, reason: 'offline' });

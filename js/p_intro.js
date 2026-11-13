@@ -228,7 +228,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       } }catch(e){}
       const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60), items=(o&&o.items||[]);
       /* arte REAL do item: o ícone aprovado do espaço na era do visual (o mesmo da mochila) */
-      const icon=it=>{ try{ if(typeof slotIcon==='function') return slotIcon(it.slot,it.look!=null?it.look:it.e); }catch(e){} return it.slot==='weapon'?'assets/icons/menu/equipment.png':'assets/icons/menu/forge.png'; };
+      const icon=it=>{ try{ if(typeof slotIcon==='function') return slotIcon(it.slot,it.look!=null?it.look:it.e,it.r); }   /* ícone pela raridade (t0/t1/t2) */catch(e){} return it.slot==='weapon'?'assets/icons/menu/equipment.png':'assets/icons/menu/forge.png'; };
       const label=it=>{ try{ const n=Sys.loot&&Sys.loot.itemName&&Sys.loot.itemName(it); if(n) return n; }catch(e){} return it.slot==='weapon'?'Arma':'Equipamento'; };
       this.off={sec:t,away:(hh?hh+'h ':'')+mm+'min',hrs:t/3600,capH:BAL.offlineCapHours,gold,xp,xpFrom:frac0,xpLv:per,lv:lv0,chests:0,
         items:items.slice(0,6).map(it=>[Math.max(0,Math.min(4,it.r|0)),icon(it),label(it)]),lvTo:lv1,extras,more:Math.max(0,items.length-6),ret:false,retGold:0,retXp:0,o,dropRate:(()=>{ try{ return Math.round(Sys.loot.DATA.offline.itemRate*100); }catch(e){ return 10; } })()};
@@ -244,7 +244,8 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   /* escolhas do jogador novo (gravadas só no fim, no Nome; até lá nada muda no save) */
   pick:{hero:'',name:''},
   /* herói escolhido na Criação: entra no save já (em memória) para o retrato do Nome mostrar quem foi escolhido; gravado no fim, com o nome */
-  setHero(h){ const s=G.S(), v=h==='kaia'&&PI_KAIA?'kaia':'kael'; try{ if(window.Sys&&Sys.appearance&&Sys.appearance.setHero&&Sys.appearance.setHero(s,v)) return v; }catch(e){} s.hero=v; return v; },
+  setHero(h){ const s=G.S(), v=h==='kaia'&&PI_KAIA?'kaia':'kael', ch=()=>{ try{ if(typeof heroChanged==='function') heroChanged(); }catch(e){} };   /* aviso único: retrato e telas trocam na hora */
+    try{ if(window.Sys&&Sys.appearance&&Sys.appearance.setHero&&Sys.appearance.setHero(s,v)){ ch(); return v; } }catch(e){} s.hero=v; ch(); return v; },
   commitNew(name){ const s=G.S(); this.setHero(this.pick.hero); s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
   /* login: convidado = local (e, com o Sys.net ligado, sessão de convidado no servidor sem travar o jogo); Google: em breve */
   guest(){ const s=G.S(); s.acct='guest'; try{ if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },

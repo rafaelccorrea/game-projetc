@@ -38,8 +38,8 @@
       if (r.action === 'choose') { const side = hooks.choose ? await hooks.choose(r) : r.recommend; r = await N.chooseSide(side === 'cloud' ? 'cloud' : 'device', S, sum); }
       /* o jogo pode RECUSAR (servidor errado) ou deixar PENDENTE (batalha já começou): apply === false → o S do jogo continua o mesmo */
       if (r.action === 'pulled' && r.save && hooks.apply) { if (hooks.apply(r.save) !== false) S = st.S = r.save; else out.pending = true; }
-      out.save = r.action;
-    } catch (e) { out.errors.push('save:' + (e.code || 'erro')); note('save', e.code); }
+      out.save = r.action; st.synced = true;
+    } catch (e) { out.errors.push('save:' + (e.code || 'erro')); note('save', e.code); out.saveFailed = true; st.synced = false; }   // sem comparar com a nuvem nesta abertura: NADA sobe (só marca o aparelho como mudado)
     /* compras: aplica as entregas pendentes (inclusive as confirmadas pelo Google com o app fechado) */
     try { if (X().buy && X().buy.DATA.on) out.deliveries = (await X().buy.sync(S, host)).length; } catch (e) { out.errors.push('buy:' + (e.code || 'erro')); }
     /* correio do servidor → caixa local (Sys.mail junta sem duplicar; o resgate continua idempotente pelo id) */
@@ -55,7 +55,7 @@
     if (!ready()) return false;
     const N = X().net;
     /* sem boot (sem rede na abertura): ainda assim marca o aparelho como MUDADO, senão na próxima abertura a nuvem ganharia sem pergunta */
-    if (!st.booted) { try { if (N && N.markDirty && st.hooks) N.markDirty(); } catch (e) {} return false; }
+    if (!st.booted || !st.synced) { try { if (N && N.markDirty && st.hooks) N.markDirty(); } catch (e) {} return false; }   // sync da abertura falhou: a próxima abertura compara e decide
     st.S = S || st.S; N.markDirty();
     if (st.timer) return true;
     const wait = Math.max(0, st.last + DATA.pushEveryMs - Date.now());
@@ -64,6 +64,6 @@
       catch (e) { note('push', e.code); if (e.code === 'save_conflict' && st.hooks && st.hooks.conflict) st.hooks.conflict(e.details); } }, wait);
     return true;
   }
-  function _reset() { if (st.timer) clearTimeout(st.timer); Object.assign(st, { booted: false, last: 0, timer: null, hooks: null, S: null, log: [] }); }
+  function _reset() { if (st.timer) clearTimeout(st.timer); Object.assign(st, { booted: false, synced: false, last: 0, timer: null, hooks: null, S: null, log: [] }); }
   return { DATA, ready, boot, saved, log: () => st.log.slice(), _reset };
 });
