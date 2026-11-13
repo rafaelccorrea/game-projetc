@@ -16,8 +16,8 @@
    - comprar abre "Pagamento em breve" (PO); por isso não há "Processando", itens voando nem entrega aqui. O estado "comprado" (carimbo, vistos,
      "Ver no Equipamento") só aparece quando o jogo/servidor já tiver chamado Sys.offer.grant;
    - nome da arma = o texto que o módulo devolve (contents.weapon); ícone = a arma da era atual do jogador (é a era em que ela chega);
-   - montaria: nome do Sys.mount; sem arte de interface em assets/mounts (só as referências *_ref.png, de 3 a 4 MB), fica o marcador neutro do
-     protótipo (névoa + ferradura), sem o rótulo "em breve a arte"; o bônus aparece como "até +X%" (X = teto do Sys.mount), não como valor inicial;
+   - montaria (POLIMENTO P1): arte REAL, o Kael montado no Lobo de guerra (assets/anim/mounts/kael_<id>_idle_era2_t1.png) na vitrine e no card;
+     sem a folha da montaria, volta o marcador neutro (névoa + ferradura). Nome do Sys.mount; o bônus aparece como "até +X%" (teto do Sys.mount);
    - ouro: o módulo guarda "goldk × ouro de um abate"; a tela mostra goldk × Sys.host.goldUnit() (ou "de N abates" se o jogo não der a unidade);
    - estado a mais, que o módulo modela e o protótipo não: quem já fez outra compra (reason 'not_first_purchase') vê "Oferta indisponível";
    - sem os botões "PROTÓTIPO" (pular tempo, reiniciar). */
@@ -45,7 +45,9 @@ function ofWeapon(o){ const M=ofM(), W=(M&&M.DATA&&M.DATA.weapon)||{}, r=ofNum(W
 function ofMount(o){ const M=ofM(), id=M&&M.DATA?M.DATA.mount:''; let inf=null, vis=false;
   try{ if(Sys.mount&&Sys.mount.info){ inf=Sys.mount.info(S,ofHost(),id); vis=!!(Sys.mount.DATA&&Sys.mount.DATA.visual===true); } }catch(e){ inf=null; }
   const nm=inf&&inf.name?inf.name:(typeof o.c.mount==='string'&&o.c.mount&&o.c.mount!==id?o.c.mount:'Montaria');
-  return {name:nm,rar:inf&&inf.rarityName?inf.rarityName:'',r:inf&&ofNum(inf.rarity)?inf.rarity:-1,pct:inf&&ofNum(inf.maxPct)?inf.maxPct:0,vis}; }
+  return {id:/^[a-z0-9_]+$/.test(id)?id:'',name:nm,rar:inf&&inf.rarityName?inf.rarityName:'',r:inf&&ofNum(inf.rarity)?inf.rarity:-1,pct:inf&&ofNum(inf.maxPct)?inf.maxPct:0,vis}; }
+/* POLIMENTO P1: arte REAL da montaria = o Kael montado (assets/anim/mounts/kael_<id>_idle_era2_t1.png, 12 quadros de 512x352, patas em 339) */
+const ofMountSheet=M=>M&&M.id?'assets/anim/mounts/kael_'+M.id+'_idle_era2_t1.png':'';
 /* FALTA NO MÓDULO: uma prévia do ouro entregue. A conta do grant é goldk × host.goldUnit(); sem a unidade, a tela diz "de N abates" */
 function ofGold(o){ const k=ofNum(o.c.goldk)?o.c.goldk:0, h=ofHost(); let u=0; try{ u=h&&h.goldUnit?+h.goldUnit():0; }catch(e){ u=0; }
   if(!(k>0)) return {big:'',small:''}; return ofNum(u)&&u>0?{big:kf(Math.round(k*Math.max(1,u))),small:'ouro'}:{big:'Ouro',small:'de '+n0(k)+' abates'}; }
@@ -86,6 +88,8 @@ function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return 
 @keyframes of-cardIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
 .of-got{border-color:#5fd068!important}
 .of-off{filter:grayscale(.85) brightness(.7)}
+.of-ride{background-repeat:no-repeat;background-size:1200% 100%;animation:of-rideK 1s steps(12,jump-none) infinite}
+@keyframes of-rideK{from{background-position:0 0}to{background-position:100% 0}}
 .of-mist{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 50% at 50% 60%,rgba(220,190,255,.55),rgba(176,124,255,.18) 55%,rgba(176,124,255,0) 75%);animation:of-mistK 2.8s ease-in-out infinite}
 @keyframes of-mistK{0%,100%{opacity:.6;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
 .of-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403!important;box-shadow:0 6px 0 #8a4f0c;border:0}
@@ -104,7 +108,7 @@ function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return 
 .of-dim{animation:of-fade .25s ease-out both}
 .of-soon{animation:of-soonK 2s ease-in-out infinite}
 @keyframes of-soonK{0%,100%{opacity:.75}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.of-gtext,.of-rays,.of-spark,.of-digS,.of-colon,.of-wglow,.of-wimg,.of-hshoe,.of-sheen,.of-star,.of-rarP,.of-mist,.of-cta,.of-soon{animation:none}}
+@media (prefers-reduced-motion:reduce){.of-gtext,.of-rays,.of-spark,.of-digS,.of-colon,.of-wglow,.of-wimg,.of-hshoe,.of-ride,.of-sheen,.of-star,.of-rarP,.of-mist,.of-cta,.of-soon{animation:none}}
 `; document.head.appendChild(st); })();
 
 const OF_BG='radial-gradient(130% 70% at 50% 0%,#3f2166 0%,#1e1230 52%,#140c1f 100%)';
@@ -168,7 +172,8 @@ function scrOffer(){
       <span class="of-spark" style="left:52%;top:30%;animation-delay:1s"></span><span class="of-spark" style="left:92%;top:56%;animation-delay:1.4s"></span>
       <div style="position:absolute;left:0;right:0;bottom:0;height:18px;background:linear-gradient(180deg,#4a2f6a,#24163a);border-top:2px solid rgba(220,190,255,.45)"></div>
       <div style="position:absolute;left:14%;width:34%;bottom:10px;height:14px;border-radius:50%;background:rgba(0,0,0,.45)"></div>
-      <div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado ao lado da arma da oferta" style="position:absolute;left:31%;bottom:calc(18px - 4.7%);height:94%;aspect-ratio:1 / 1;transform:translateX(-50%);z-index:2"></div>
+      ${ofMountSheet(M)?`<div class="of-ride" role="img" aria-label="Kael montado no ${esc2(M.name)}" style="position:absolute;left:34%;bottom:calc(18px - 3.6%);height:96%;aspect-ratio:512 / 352;transform:translateX(-50%);z-index:2;background-image:url(${ofMountSheet(M)})"></div>`
+        :`<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado ao lado da arma da oferta" style="position:absolute;left:31%;bottom:calc(18px - 4.7%);height:94%;aspect-ratio:1 / 1;transform:translateX(-50%);z-index:2"></div>`}
       <div style="position:absolute;left:72%;bottom:18px;width:76px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2">
         <div class="of-wglow" style="position:relative;width:72px;height:72px;border-radius:16px;border:3px solid ${wCol};background:radial-gradient(circle at 50% 45%,#7a45b8,#2a1640 78%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
           <img class="of-wimg" src="${wIcon}" alt="${esc2(W.name)}" style="width:60px;height:60px;object-fit:contain"><span class="of-sheen"></span></div>
@@ -199,8 +204,8 @@ function scrOffer(){
         <span style="${descSt}">Chega no seu nível e na sua era · atributos fixos, sem sorteio</span>${done?OF_GOT:''}</div>
       <div class="${cardCls}" style="padding:8px;display:flex;flex-direction:column;gap:4px;border-color:${mCol};animation-delay:.08s">
         <div style="display:flex;gap:7px;align-items:center">
-          <div class="of-wglow" role="img" aria-label="${esc2(M.name)}" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px dashed ${mCol};background:#1d1030;display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
-            <span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}</div>
+          <div class="of-wglow" role="img" aria-label="${esc2(M.name)}" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px ${ofMountSheet(M)?'solid':'dashed'} ${mCol};background:${ofMountSheet(M)?'radial-gradient(circle,#7a45b8,#2a1640 78%)':'#1d1030'};display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
+            ${ofMountSheet(M)?`<span class="of-ride" aria-hidden="true" style="position:absolute;left:50%;bottom:-2px;height:120%;aspect-ratio:512 / 352;transform:translateX(-42%);background-image:url(${ofMountSheet(M)})"></span>`:`<span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}`}</div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">${tag(M.rar,mCol)}
             <span style="font-size:10.5px;font-weight:900;color:#d9b3ff;white-space:nowrap">Montaria</span></div></div>
         <span class="lil" style="${nameSt}">${esc2(M.name)}</span>
