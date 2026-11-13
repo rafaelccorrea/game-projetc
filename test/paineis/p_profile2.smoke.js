@@ -13,9 +13,9 @@ const Sys = g.Sys, T = Sys.titles, A = Sys.appearance, M = Sys.mount, P = Sys.pe
 const ctx = new Proxy({}, { get: (t, k) => k in t ? t[k] : (k === 'createRadialGradient' || k === 'createLinearGradient') ? () => ({ addColorStop() {} }) : () => {}, set: (t, k, v) => { t[k] = v; return true; } });
 const mkEl = id => { const e = { id, children: [], style: {}, dataset: {}, _h: '', textContent: '', width: 0, height: 0, clientWidth: 390, clientHeight: 200, scrollTop: 0, setAttribute() {}, appendChild(c) { this.children.push(c); return c; }, getContext: () => ctx };
   Object.defineProperty(e, 'innerHTML', { get() { return this._h; }, set(v) { this._h = v; } }); return e; };
-const canvas = mkEl('p5_cv'), scroll = mkEl('p5_scroll');
+const canvas = mkEl('p5_cv'), scroll = mkEl('p5_scroll'), input = mkEl('p5_name'); input.value = '';
 g.V = { innerHTML: '' }; const H = () => g.V.innerHTML;
-g.document = { head: mkEl('head'), createElement: () => mkEl(''), getElementById: id => id === 'p5_cv' ? (/id="p5_cv"/.test(H()) ? canvas : null) : id === 'p5_scroll' ? (/id="p5_scroll"/.test(H()) ? scroll : null) : null };
+g.document = { head: mkEl('head'), createElement: () => mkEl(''), getElementById: id => id === 'p5_cv' ? (/id="p5_cv"/.test(H()) ? canvas : null) : id === 'p5_scroll' ? (/id="p5_scroll"/.test(H()) ? scroll : null) : id === 'p5_name' ? (/id="p5_name"/.test(H()) ? input : null) : null };
 let raf = []; g.requestAnimationFrame = f => { raf.push(f); return raf.length; }; g.cancelAnimationFrame = () => { raf = []; };
 
 /* ---------- o jogo de mentira (só o que a tela chama); a tabela de eras é a REAL ---------- */
@@ -142,6 +142,72 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   const t0 = Sys.titles; Sys.titles = null; try { open(); has('Perfil indisponível agora.'); assert.strictEqual(check('sem módulo'), 1); def.click(btn('tab', { t: 'tit' })); def.tick(); closed = 0; def.click(btn('back')); assert.strictEqual(closed, 1); } finally { Sys.titles = t0; }
   open(); assert(raf.length >= 1); def.onClose(); assert.strictEqual(raf.length, 0, 'fechar para o laço');
   out.push('Kaia com as skins dela; tick redesenha só quando muda; desenho do jogo com erro ou ausente vira retrato parado; Sys.titles ausente: aviso com Voltar'); }
+
+// 5b) QA lote 3: a faixa do item tocado só existe em Visual e Coleção; em tela baixa a identidade e os quadros rolam com o conteúdo
+{ advSave(); open(); def.click(btn('it', { k: 'skin', id: 'default' })); has('class="p5-det"'); tab('col'); has('class="p5-det"'); tab('tit'); not('class="p5-det'); tab('num'); not('class="p5-det'); tab('vis'); not('class="p5-det');
+  def.click(btn('it', { k: 'skin', id: 'kael_demon' })); has('class="p5-det pv"'); tab('num'); not('class="p5-det'); assert.strictEqual(frame().skin, undefined, 'sair para Números tira a prévia do herói'); check('faixa só no Visual');
+  const pos = s => H().indexOf(s), stH = () => +/class="p5-stage" style="height:(\d+)px"/.exec(H())[1];
+  dims = { H: 704, Wb: 390 }; open(); assert(pos('class="p5-idb"') < pos('class="p5-tabs"') && pos('class="p5-tabs"') < pos('id="p5_scroll"'), 'tela alta: identidade fixa acima das abas'); not('p5-top'); const hi = stH();
+  for (const [w, h] of [[320, 640], [320, 520]]) for (const t of ['vis', 'col', 'tit', 'num']) { dims = { H: h, Wb: w }; open({ tab: t }); assert(pos('class="p5-tabs"') < pos('id="p5_scroll"') && pos('id="p5_scroll"') < pos('class="p5-idb"') && pos('class="p5-idb"') < pos('class="p5-stats"'), 'tela baixa: identidade e quadros dentro da rolagem');
+    has('class="p5-top lo"'); assert(stH() < hi && stH() >= 120, 'palco menor'); assert(h - stH() - 64 >= (h >= 640 ? 220 : 180), 'sobra área para o conteúdo em ' + w + 'x' + h + ': ' + (h - stH() - 64)); check('baixa ' + h + ' ' + t); }
+  dims = {};
+  out.push('QA lote 3: faixa do item só em Visual e Coleção (sair para Títulos ou Números tira a prévia); em 320x640 e 320x520 o palco encolhe e identidade e quadros rolam com o conteúdo'); }
+
+// 5c) SISTEMAS DO PERFIL (Sys.profile + Sys.name reais): chave desligada = tela igual; ligada (só neste teste): nome, moldura, aura, retrato, gráfico e recordes
+{ const NEW = ['data-x="ren"', 'p5-pen', 'data-x="pf"', 'id="p5_name"', 'class="p5-fr"', 'Moldura do retrato', '>Aura<', '>Retrato<', 'FC em 7 dias', 'class="p5-ch"', '>Recordes<', 'class="p5-rec'];
+  const shots = () => ['vis', 'col', 'tit', 'num'].map(t => { advSave(); open({ tab: t }); return H(); });
+  const absent = shots(); assert(!Sys.profile, 'até aqui o módulo não estava carregado');
+  Sys.name = require(path.join(R, 'js/sys/name.js'));   /* em node o name.js entrega pelo module.exports (no navegador ele mesmo se põe em Sys.name) */
+  ['erasend', 'profile'].forEach(m => require(path.join(R, 'js/sys/' + m + '.js'))); const PR = Sys.profile; assert(PR && Sys.name && PR.DATA.on === false, 'Sys.profile carregado e DESLIGADO');
+  const off = shots(); assert.deepStrictEqual(off, absent, 'chave desligada: HTML idêntico ao de sem o módulo'); assert(!g.S.sys.profile, 'desligado: nada escrito no save');
+  for (const h of off) for (const s of NEW) assert(!h.includes(s), 'desligado não devia ter: ' + s);
+  for (const a of ['ren', 'renok', 'renx']) def.click(btn(a)); def.click(btn('pf', { k: 'frame', id: 'bronze' })); assert(!g.S.sys.profile); not('id="p5_name"');
+  const day = k => PR.dayKey(host.t - k * 86400000), prof = () => g.S.sys.profile, idb = () => H().slice(H().indexOf('class="p5-idb"'), H().indexOf('class="p5-stats"'));
+  PR.setOn(true);
+  try {
+    // --- trocar nome ---
+    const S = advSave(); S.gems = 250; open(); has('data-x="ren"'); has('aria-label="Trocar nome"'); not('id="p5_name"'); assert.strictEqual(prof().fc.length, 1, 'abrir o Perfil chama o sync (ponto de hoje do FC)'); check('ligado: visual');
+    def.click(btn('ren')); has('id="p5_name"'); has('value="Rafa_13"'); has('maxlength="' + Sys.name.DATA.max + '"'); has('Trocar grátis'); has('>Grátis<'); has('depois custa 200 diamantes'); not('role="dialog"'); check('campo do nome');
+    assert(H().indexOf('id="p5_name"') > H().indexOf('id="p5_scroll"'), 'o campo fica na área de conteúdo, não por cima do herói');
+    input.value = '  Lobo_Azul '; def.click(btn('renok')); assert.strictEqual(S.name, 'Lobo_Azul', 'a 1ª troca é grátis e vale na hora'); assert.strictEqual(S.gems, 250); assert.strictEqual(prof().renames, 1); has('>Lobo_Azul</div>'); has('Nome trocado para Lobo_Azul'); not('id="p5_name"'); check('nome grátis');
+    def.click(btn('ren')); has('Trocar · 200'); has('Custa <b>200 diamantes</b>'); check('campo pago');
+    for (const [bad, why] of [['Admin_Kael', 'Esse nome é reservado.'], ['MataPuta', 'Esse nome não é permitido.'], ['ab', 'Mínimo de 3'], ['', 'Digite um nome.'], ['zap998877665', 'Não use telefone, rede social ou e-mail no nome.'], ['Lobo_Azul', 'Esse já é o seu nome atual.'], ['<b>"x', 'Use só letras, números e _ (sem espaço).']]) {
+      input.value = bad; def.click(btn('renok')); assert.strictEqual(S.name, 'Lobo_Azul', 'nome recusado não troca: ' + bad); assert.strictEqual(S.gems, 250); has(g.esc2(why)); has('role="alert"'); has('class="p5-inp bad"'); not('Confirmar'); if (bad) has('value="' + g.esc2(bad) + '"'); check('recusa ' + bad); }
+    not('<b>"x'); assert.strictEqual(prof().renames, 1);
+    input.value = 'Kael_Novo'; def.click(btn('renok')); assert.strictEqual(S.name, 'Lobo_Azul', '1º toque quando custa: só pede a confirmação'); assert.strictEqual(S.gems, 250); has('Confirmar · 200'); has('Confirma? Saem 200 diamantes'); check('confirmação');
+    input.value = 'Kael_Dois'; def.click(btn('renok')); assert.strictEqual(S.name, 'Lobo_Azul', 'mudou o texto: confirma de novo'); has('o seu nome passa a ser Kael_Dois'); assert.strictEqual(S.gems, 250);
+    def.click(btn('renok')); assert.strictEqual(S.name, 'Kael_Dois'); assert.strictEqual(S.gems, 50, 'o módulo debitou 200'); assert.strictEqual(prof().renames, 2); has('>Kael_Dois</div>'); not('id="p5_name"'); check('nome pago');
+    def.click(btn('ren')); input.value = 'Sem_Gemas'; def.click(btn('renok')); has('Faltam diamantes.'); not('Confirmar'); assert.strictEqual(S.name, 'Kael_Dois'); assert.strictEqual(S.gems, 50); check('sem diamantes'); def.click(btn('renx')); not('id="p5_name"');
+    // --- moldura ---
+    open(); has('Moldura do retrato'); assert.strictEqual((body().match(/data-k="frame"/g) || []).length, PR.DATA.frames.length); assert(/class="p5-fr" style="border:2px solid rgba\(255,255,255,\.25\)"/.test(idb()), 'moldura Simples na identidade');
+    def.click(btn('pf', { k: 'frame', id: 'bronze' })); assert.strictEqual(prof().frame, 'bronze', 'Sys.profile.equip trocou a moldura (nível 13)'); assert(idb().includes('border:3px solid #d08a4c'), 'a moldura aparece na identidade'); has('Moldura Bronze em uso'); check('moldura');
+    def.click(btn('pf', { k: 'frame', id: 'ouro' })); assert.strictEqual(prof().frame, 'bronze', 'moldura que não tem não equipa'); has('Moldura Ouro. Como ganhar: VIP 3'); has('>VIP 3</div>'); check('moldura falta');
+    def.click(btn('pf', { k: 'frame', id: 'zzz' })); def.click(btn('pf', { k: 'x', id: 'bronze' })); assert.strictEqual(prof().frame, 'bronze');
+    // --- aura (o herói do palco não recebe aura: só o selo) ---
+    assert.strictEqual((body().match(/data-k="aura"/g) || []).length, PR.DATA.auras.length); not('class="p5-au"'); assert.strictEqual(PR.grant(S, 'light_of_eras'), true); def.render();
+    def.click(btn('pf', { k: 'aura', id: 'light_of_eras' })); assert.strictEqual(prof().aura, 'light_of_eras'); assert(idb().includes('Aura: <b>Luz das Eras</b>'), 'selo da aura na identidade'); has('selo no perfil'); assert.strictEqual(frame().aura, undefined); check('aura');
+    def.click(btn('pf', { k: 'aura', id: 'aura10' })); assert.strictEqual(prof().aura, 'light_of_eras', 'aura que não tem não equipa'); has('Aura Forja +10. Como ganhar: Arma na Forja +10'); check('aura falta');
+    def.click(btn('pf', { k: 'aura', id: 'light_of_eras' })); assert.strictEqual(prof().aura, null, 'tocar na aura em uso volta à da Forja'); has('Aura de volta à da Forja da arma'); not('class="p5-au"'); has('pela Forja da arma');
+    // --- retrato ---
+    const ports = PR.portraits(S, host), mine = ports.find(p => p.owned && p.skin), lock = ports.find(p => !p.owned && H().includes('data-k="avatar" data-id="' + p.avatar + '"')); assert(mine, 'o save tem o retrato de uma skin');
+    def.click(btn('pf', { k: 'avatar', id: mine.avatar })); assert.strictEqual(prof().avatar, mine.avatar); assert(idb().includes('assets/hero/avatar/' + mine.avatar + '.png'), 'o retrato escolhido aparece na identidade'); has('Retrato trocado'); check('retrato');
+    if (lock) { def.click(btn('pf', { k: 'avatar', id: lock.avatar })); assert.strictEqual(prof().avatar, mine.avatar, 'retrato que não tem não equipa'); assert(/Como ganhar: |ainda não é seu/.test(H())); check('retrato falta'); }
+    def.click(btn('it', { k: 'skin', id: 'kael_ninja' })); assert.strictEqual(prof().avatar, null, 'trocar de skin devolve o retrato ao da skin (protótipo)');
+    // --- gráfico do FC e recordes ---
+    open({ tab: 'num' }); has('FC em 7 dias'); has('O gráfico aparece depois de alguns dias de jogo.'); not('<svg class="p5-ch"'); has('>Recordes<'); has('class="p5-rec first"'); check('números com 1 ponto');
+    prof().fc = [{ d: day(3), fc: 61200 }, { d: day(1), fc: 70900 }].concat(prof().fc.filter(p => p.d === day(0))); open({ tab: 'num' }); const ch = PR.fcChart(S, host); assert.strictEqual(ch.days, 3);
+    has('<svg class="p5-ch"'); has('<polyline'); assert.strictEqual((H().match(/<circle /g) || []).length, 3, 'um ponto por dia com jogo'); has(g.esc2(Sys.fc.viewText(61200))); has(g.esc2(Sys.fc.viewText(ch.last))); has('>hoje<'); has(' em 3 dias com jogo'); not('O gráfico aparece depois'); check('gráfico');
+    assert(!/<text|<svg[^>]*\swidth="\d/.test(H().slice(H().indexOf('<svg class="p5-ch"'), H().indexOf('</svg>', H().indexOf('<svg class="p5-ch"')))), 'gráfico leve, sem largura fixa');
+    PR.record(S, 'hit', 48300, host, 'Ultimate'); PR.record(S, 'bossTime', 11, host, 'Guardião <b>'); def.render(); const recs = PR.records(S).filter(r => r.has); assert(recs.length >= 4);
+    assert.strictEqual((H().match(/class="p5-rec/g) || []).length, recs.length, 'só os recordes que o módulo guardou'); has('Maior dano num golpe'); has(g.n0(48300)); has('Ultimate'); has('>11 s<'); has('Guardião &lt;b&gt;'); not('Mais ouro num dia'); not('Melhor sequência sem morrer'); check('recordes');
+    // --- todos os botões, com o módulo ligado, em 320 e 390 ---
+    let taps = 0; for (const [w, h] of [[320, 520], [390, 704]]) for (const t of ['vis', 'num']) { dims = { H: h, Wb: w }; const mk = () => { advSave().gems = 500; PR.grant(g.S, 'light_of_eras'); open({ tab: t }); def.click(btn('ren')); input.value = 'Novo_' + w; }; mk(); const n = buttons().length; check('ligado ' + w + ' ' + t);
+        for (let i = 0; i < n; i++) { mk(); const b = buttons()[i]; if (!b) continue; try { def.click(b); taps++; } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } g.view = 'profile2'; check('ligado toque ' + b.dataset.x); } }
+    dims = {};
+    out.push('Sys.profile ligado em memória: nome grátis, nome pago em dois toques (200 debitados pelo módulo), 7 recusas com o motivo em texto e escapadas, sem diamantes; moldura, aura (selo) e retrato equipam só o que o jogador tem e mostram como ganhar; gráfico com 1 e com 3 pontos; recordes do módulo; ' + taps + ' toques em 320 e 390');
+  } finally { PR.setOn(false); dims = {}; }
+  advSave(); for (const t of ['vis', 'num']) { open({ tab: t }); for (const s of NEW) not(s); } def.click(btn('ren')); not('id="p5_name"');
+  out.push('Sys.profile desligado: HTML idêntico ao de sem o módulo nas 4 abas, nada escrito no save, nenhum elemento novo'); }
 
 // 6) larguras de 320 e 390 e tela baixa; todos os botões de todas as abas, save novo e avançado
 { let taps = 0; for (const [w, h] of [[320, 520], [390, 704]]) for (const mk of [() => { g.S = newSave(); }, () => { advSave(); }]) for (const t of ['vis', 'col', 'tit', 'num']) { mk(); dims = { H: h, Wb: w }; open({ tab: t }); const n = buttons().length; check(w + ' ' + t);
