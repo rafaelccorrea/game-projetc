@@ -8,6 +8,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **11h40 · Você aprovou as vantagens do VIP** (docs/PROPOSTA_VIP.md): coleta automática, fusão automática, equipar o melhor sozinho, pular chefe vencido, mais Arena/Torre/Chefe Mundial, Forja automática, offline maior, mochila maior. Sem atributo nem diamante: grátis em 6 meses, VIP 10 em 4. Sendo ligado nas telas
+- **11h40 · Simulação de 6 meses com TODOS os itens novos:** fecha igual (grátis no dia 179, VIP 10 no dia 121), ~10 mil diamantes mantidos
+- **11h40 · Logo animado tocando na tela de título** (prints na página) · ícones sem fundo dos pets, montarias e asas novos prontos · Fusão pronta para seu voto
+- **11h40 · Bloqueio do APK:** a tela de carregamento acusou erro de conexão com internet só lenta num save cheio; o engenheiro está corrigindo antes de gerar
+
 - **11h15 · Servidor:** as 3 skins à venda no catálogo (13 produtos para você cadastrar); LEILÃO online (só ouro, preço fixo, 18+, conta com 7 dias e Google vinculado, taxa de 10%, item comprado nunca entra) e GUILDAS online (criar, entrar, cargos, doação, check-in, chat da guilda) prontos e desligados até o servidor subir; 191 testes passam. Kit do Facebook removido do app
 
 - **11h · CARREGAMENTO DE VERDADE pronto (cabf4d0, visto no navegador com rede lenta):** a barra anda de verdade (69 de 69 arquivos) e o jogo só aparece completo. Antes ele abria com 10 dos 54 arquivos ainda carregando, que era o que você viu. Troca de era sem quadro quebrado. Os 60 FPS estão escritos; a medida sai no S24 na instalação
