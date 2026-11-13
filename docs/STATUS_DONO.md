@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14h15 · Arte, situação:** PRONTAS 6 skins (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo); terminando Paladino e Ninja do Kael e a Pantera Espectral (~70-90 créditos, saldo final ~250). EM ESPERA para a próxima parte (~620 créditos): Samurai e Ciborgue do Kael (~72), 6 pets (~270), 10 montarias novas montadas (~280)
+
 - **14h05 · Sua ordem:** a Arte termina só o que já começou (Angelical da Kaia, Paladino e Ninja do Kael, e a Pantera Espectral se já estiver em andamento). O resto fica para a próxima parte: Samurai e Ciborgue do Kael, os outros pets e as 10 montarias novas montadas
 
 - **14h · APK v0.12.9 SENDO GERADO** (o QA aprovou). Leva: carregamento novo (abre em ~5 s), ícone A e abertura, logo animado, 60 FPS, eventos na batalha, Kaia montada nas 6, vantagens do VIP (mochila, forja automática, desmontar sozinho etc.), 9 ultimates Lendárias, 7 asas novas, Lobo das Sombras e Falcão, sem Facebook. Quando ficar pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -303,7 +305,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Números das guildas online aprovados
 
 **Créditos Higgsfield:**
-- [ ] Saldo ~459. Faltam 7 skins (~280) e 7 pets (~310): ~590 no total, mais ~280 das 10 montarias novas montadas. Vai precisar de mais crédito (eu aviso antes de acabar)
+- [ ] Saldo ~333 (fica ~250 depois de terminar o que já começou). A próxima parte (2 skins, 6 pets, 10 montarias montadas) custa ~620
 
 **Celular:**
 - [ ] APK v0.12.9 (sendo gerado): ligue o cabo e escreva "pode instalar" na janela do Engenheiro
