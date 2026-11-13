@@ -949,3 +949,43 @@ Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o
 - CORREIO: `PANEL_ON.mail = true`. Por leitura: o item Correio do MENU é `soon:mail`, aparece com `fbUnl('mail')` (nível 7 na tabela
   `FB_UNLOCK`) e com a tela registrada e não quebrada. ATENÇÃO para o engenheiro: `js/sys/mail.js` não está na lista de módulos do index
   (busca por 'mail' na lista: nada); sem o módulo a tela abre no estado vazio dela. A carta de boas-vindas depende disso.
+
+## Bloco 29 (sem navegador): Oferta e Leilão carregados; listas de conferência para o QA
+
+- `p_offer` e `p_auction` na lista de carga do `js/screens.js`; chaves `offer` e `auction` DESLIGADAS. `conflitos.js js/p_*.js`: nenhum
+  conflito. `node test/e2e/run.js`: "TUDO OK (136 verificações)". Encontrei `mounts` e `intro` ligadas (mudança da coordenação): mantive.
+
+### O que falta para a OFERTA de primeira compra ligar
+1. Pagamento de verdade: o botão Comprar chama o `Sys.buy`; sem servidor/cobrança ele só abre "Pagamento em breve" (decisão anterior da
+   coordenação: não ligar tela cujo botão principal não entrega).
+2. O módulo `Sys.offer` carregado e com a chave dele ligada: hoje o index só carrega `offer` atrás de `NEXT_ON`; sem ele a tela mostra
+   "Oferta: em breve".
+3. Entrada: o ícone "Oferta 24h" do HUD da batalha (pedido B-28 ao engenheiro) e, se o PO quiser, a abertura sozinha no 1º acesso.
+4. Arte: a vitrine usa um marcador para a montaria; agora existem folhas do Kael montado no lobo (`assets/anim/mounts`): trocar o
+   marcador por ela (pequeno, faço quando for ligar).
+5. Uma passada de navegador minha ou do QA: a tela nunca foi vista rodando.
+
+### Para o QA conferir: VITÓRIA / DERROTA DO CHEFE (chave `SCREENS_ON.bossResult` do engenheiro; em debug `?debug=1&res=1`, `dbgResult('win')` e `dbgResult('lose')`)
+1. Vitória numa luta de verdade: a morte aprovada do chefe toca INTEIRA antes de qualquer coisa cobrir; depois baú no lugar do chefe,
+   estouro, moedas voando ao contador, letreiro, cartões um a um; nada por cima do Kael em 360x640 e 390x844.
+2. Cartões: moedas (com as gemas dentro), XP com nível e barra, item de maior raridade com a moldura e o nome na cor; os valores batem com
+   o que entrou no topo (o saque já foi creditado no abate: a tela só mostra).
+3. "Pular" e toque fora mostram tudo na hora; "Continuar" segue sozinho em 4 s e qualquer toque cancela a contagem; depois de fechar a
+   batalha segue (onda nova, HUD de volta, sem pausa presa).
+4. Derrota: Kael caído atrás da tela (`heroDown`), "O chefe foi mais forte", FC sua x recomendada com "Faltam X de FC"; os 3 caminhos:
+   Forja só no nível 12, Invocar só no nível 3, Equipamento sempre; cada um abre a tela certa e a derrota fecha.
+5. Derrota: "Modo farm" é o botão principal e entra sozinho em 10 s (voltando às ondas 1-4); "Tentar de novo" desafia o chefe de novo;
+   sem emoji, sem texto cortado; com era nova liberada quem abre é a Troca de era, não esta tela.
+
+### Para o QA conferir: PASSE COM ROLAGEM (nível 18 ou save antigo; `PANEL_V2.passScroll`)
+1. Abre já rolado no nível atual do passe (centralizado sob a legenda); a trilha rola do nível 1 ao último, com a legenda presa no topo e
+   "Resgatar tudo" / "Ativar Premium" fixos embaixo; sem páginas e sem aba Missões.
+2. Resgatar UM nível (trilha grátis): voo de moeda/gema até o cabeçalho, valor entra no topo, o cartão vira "Resgatado" e a lista NÃO pula;
+   tocar de novo → "Recompensa já resgatada"; nível futuro → "Libera no nível N do passe"; cartão premium sem Premium → diálogo
+   "Pagamento em breve" (nada cobrado; cabe em 360 de largura).
+3. "Resgatar tudo" com vários níveis prontos: tudo entra uma vez só (conferir ouro e gemas antes e depois); com a mochila cheia ou item
+   acima do nível, o aviso de "item guardado".
+4. Botão "Missões": abre a tela 34; o Voltar dela devolve ao Passe (aberta pelo MENU, devolve à batalha). Abaixo do nível 18 (save novo)
+   qualquer caminho para o Passe/Missões cai na tela 34, nunca na lista antiga.
+5. Com a batalha rodando atrás: a tela não reinicia animações a cada onda, o relógio da temporada anda, e resgatar missão diária na tela
+   34 sobe o XP do JOGADOR (anel do avatar) além do XP do passe.

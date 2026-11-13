@@ -397,3 +397,11 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
   `Sys.level.onDailyBonus(S, Sys.host)`, com `onLevelUp(resposta)` quando `levels > 0` (é o que o Passe faz hoje; sem isso a missão diária
   para de dar XP do jogador quando a tela 34 ligar); (2) `parent: 'pass'` no `Panels.add` quando o Passe estiver liberado, para o Voltar
   cair no Passe; (3) `p_pass.js`: a lista não abre no nível atual da 2ª abertura em diante (o `onOpen` roda depois do 1º desenho).
+
+### B-28. Para o engenheiro: ícone "Oferta 24h" no HUD da batalha (protótipo da batalha V2) e o que a Oferta precisa
+- Tela: `js/p_offer.js`, registro `offer`, chave `PANEL_ON.offer` (DESLIGADA; já está na lista de carga). Abre com `Panels.open('offer')`.
+- Ícone do HUD: mostrar só quando `window.Panels && Panels.on('offer')` E `Sys.offer.status(S, Sys.host)` disser que a oferta está valendo
+  (ativa, não comprada, não expirada); o relógio do ícone vem de `status().msLeft`; some ao comprar ou expirar. Sem emoji.
+- Para ligar faltam: o módulo `Sys.offer` carregado fora do `NEXT_ON` e com a chave dele ligada; o pagamento (`Sys.buy`) entregando de
+  verdade; a decisão do PO sobre abrir sozinha no 1º acesso.
+- Também seu: `js/sys/mail.js` não está na lista de módulos do index (o Correio está ligado e abre vazio sem o módulo).
