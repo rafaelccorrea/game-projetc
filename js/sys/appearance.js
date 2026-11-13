@@ -145,7 +145,8 @@ for(const k of [
   {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_cyborg'},
   {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kaia_harlequin',
    dir:'assets/anim/skins/kaia_harlequin', avatar:'kaia_harlequin', art:true, families:[]},   // ARTE ENTREGUE (f5a3615): 8 animações + masks + back; sem bow/ e boomerang/
-  {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra', sources:['offer']},
+  {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra', sources:['offer'],
+   dir:'assets/anim/skins/kaia_ninja', avatar:'kaia_ninja', art:true, families:[]},   // ARTE ENTREGUE (ac9702c); arco/bumerangue por código
   {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward']},
   {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass']},
 ]) FIXED.push(Object.assign({dir:null,avatar:null,mountArt:false,art:false,sources:[]},k));
