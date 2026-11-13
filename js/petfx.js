@@ -48,8 +48,12 @@ function petNotice(list){ if (!petOk() || !Array.isArray(list)) return; if (type
     else if (x.held) toast('Ovo guardado');
     else if (x.pet) petHatchQueue(x, false); } }
 function petInfo(){ if (!petOk()) return null; if (B.at - PETK.infoT > 0.5 || !PETK.infoT){ PETK.infoT = B.at || 0.001; let i = null; try { i = Sys.pet.battleInfo(S, Sys.host); } catch (e) { i = null; }
-    PETK.info = i && i.draw && i.draw.base ? i : null; const b = PETK.info ? PETK.info.draw.base : ''; if (b !== PETK.base){ PETK.base = b; PETK.act = null; PETK.atkT = 0; } }
+    const old = PETK.info; PETK.info = i && i.draw && i.draw.base ? i : null; const b = PETK.info ? PETK.info.draw.base : '';
+    if (b !== PETK.base){   /* Engenheiro 5: pet NOVO (ou estágio novo) só entra com as folhas dele decodificadas; até lá o anterior continua na tela (o pet nunca some) */
+      if (b && PETK.base && old && !petReady(b) && !(typeof lookWait === 'function' && lookWait('pet', b))){ PETK.info = old; PETK.infoT = B.at - 0.4; }
+      else { PETK.base = b; PETK.act = null; PETK.atkT = 0; } } }
   return PETK.info; }
+function petReady(base){ let ok = true; for (const st of ['idle', 'run', 'atk1']){ const s = sheetLoad(PET_DIR + base + '_' + st, true); if (!s.ok && !s.fail) ok = false; } return ok; }
 const petSheet = st => PETK.base ? sheetLoad(PET_DIR + PETK.base + '_' + st, true) : null;
 /* passo da batalha: o pet bate sozinho no inimigo da frente a cada info.interval segundos */
 function petStep(dt){ const I = petInfo(); if (!I || B.deadT > 0 || B.res) return; PETK.t += dt; PETK.atkT += dt;   /* o intervalo conta do INÍCIO de um golpe ao início do outro (a animação do golpe não soma) */

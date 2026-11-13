@@ -1702,3 +1702,77 @@ Arquivos mexidos: `index.html`, `js/stage.js`, `js/battle.js`, `js/farm.js`, `js
 - **P20 morte com pistola** (`js/stage.js` drawHeroDie): a arma termina deitada pelo ângulo nativo dela (meta.json; espada 90 = como antes, pistola 0 = deitada) e o ponto mais baixo para em fy-2. Visto Kael e Kaia, espada, pistola da era 3 e da era 5, em 3 momentos: nada abaixo da linha do chão (`v0128_morte_pistola_{kael,kaia}.jpg`). No fim a pistola fica quase toda atrás do corpo deitado.
 - **P21 "NÍVEL +1"** (`js/battle.js`): `drawLevelUp()` passou para depois das barras de vida e selos do canvas; como a barra de vida do herói é HTML (fica por cima do canvas), a folha virou `assets/anim/fx/levelup_fx_low` (arquivo conferido). Visto a pé e no lobo: texto inteiro visível, abaixo da barra (`v0128_levelup_texto.png`, `v0128_levelup_texto_montado.png`). Montado (efeito ×1,3) o texto passa por cima da cabeça do Kael.
 - `node --check`, `run.js` TUDO OK (145), `flows.js` fluxos duros OK. Aba fechada; save em memória; armazenamento com as mesmas 4 chaves.
+
+## Engenheiro 5 — v0.12.9 (2026-11-13)
+
+### ESTADO AO PARAR PARA O PRÉ-CARREGADOR (ordem urgente do dono)
+- Peças 1-3 ESCRITAS, testes passando (`node --check`, `run.js` TUDO OK 150, `flows.js` fluxos duros OK), NADA visto no navegador ainda. Arquivos: `js/battle.js`, `js/stage.js`, `js/mountfx.js`.
+- Peça 1 (ultimate pela família, `ultPlan`/`ultStart`): base por família e reforço do Mítico LIGADOS (não vistos); 9 lendárias atrás de `ULT_LEGEND_ON` (js/battle.js, DESLIGADA; `?debug=1&ultlend=1`). Peça 2 (asas novas: `wingNow` + `fit` do .json) atrás de `Sys.stats.DATA.newWings/newWingReady` (desligadas). Peça 3 (arco/bumerangue: `rgAct`, flecha e bumerangue por código) atrás de `DATA.weaponTypes.bow/boomerang.on` (false).
+- Com as chaves desligadas o caminho é o de antes, exceto: a arma na mão sai da família do item (`wFamLook`, igual à arte do item nas 9 famílias) e a ultimate sai de `Sys.stats.ultOf` (mesma folha da era da arma até o Épico; Mítico e Lendário ganham o reforço por código).
+- `ULT_LEGEND_ON` virou `window.ULT_LEGEND_ON` (pedido do Engenheiro 6), lida a cada uso, desligada por padrão. Ligada pelo botão no meio do jogo, a 1ª ultimate ainda pode sair em código (a folha própria carrega na troca de arma/`preloadAssets`).
+- ABERTO na peça 3 (achado do Engenheiro 6): com arco/bumerangue equipados pelo Modo dono o Kael aparece sem arma e os ícones de Básico/Ultimate ficam escuros. Não investigado.
+
+### PRÉ-CARREGADOR (ordem urgente do dono) — `js/preload.js` (novo), `js/loading.js`, `js/battle.js`, `js/stage.js`, `js/petfx.js`, `index.html` (só `'preload'` no começo da lista de scripts)
+- API fechada: `Preload.ready(urls, {timeout}) → Promise<{ok, failed[]}>` (nunca rejeita; padrão 30 s) e `Preload.has(url)`. Extras: `get`, `image`, `json`, `retry`, `drop`, `track`, `reset`, `progress`, `all`, `limit`. Imagem pronta = `img.decode()` (reserva: onload); 3 tentativas de 12 s por arquivo; falhou = aviso único no console e reserva.
+- UM cache: `sheetLoad`, `IMG`, `J` e a asa pegam a imagem do `Preload` (mesma instância). Exceções: o cenário vivo (`EonScene`, carregador próprio; entra na barra pela promessa `ready` dele) e os `<img>`/fundos CSS do DOM (o Preload decodifica uma cópia; o navegador reaproveita o cache HTTP). `PRE_MINI` no topo do `js/battle.js` NÃO é um segundo cache em uso: é a reserva que só entra se `window.Preload` faltar ou vier sem `get` (foi o que derrubou o jogo às 00:42 e o teste do painel de instância, cujo sandbox troca o `Preload` por um stub).
+- Lista única: `sceneList({era, part})` (js/loading.js). Fonte: `Sys.assets.sceneSet/nextEraSet` (com o manifesto carregado na barra) + o que o jogo pede pelos próprios carregadores. Grupos que bloqueiam: hero, weapon, ult, mount, pet, wing, era, enemies + ícones visíveis do DOM + fontes; o resto do grupo icons carrega depois, em segundo plano.
+- Barra = prontos ÷ total; "Tentar de novo" e "Continuar mesmo assim" quando falta arquivo (ESCRITO, não visto: não houve falha para provocar); tempo-limite geral de 60 s + cão de guarda.
+- Troca de era: `eraReady(era)` em segundo plano a partir da fase 8; a era nova só entra com cenário/inimigos/chefe prontos (segura até 20 s com "Carregando a próxima era"); `sceneTrim` solta os cenários das outras eras.
+- Equipar/trocar herói: asa, montaria, pet e herói novos só entram no desenho com as folhas decodificadas (12 s de paciência); `drawHeroFull` devolve `false` sem desenhar enquanto a folha pedida carrega (devolve `true` quando desenhou).
+- Teste: `?debug=1&lento=N` (atraso por arquivo, 6 em paralelo), `&frio=1` (carimbo na URL, sem cache), `&carga=antiga` (lista de antes, para comparar). O throttling do Chrome não está nas minhas ferramentas.
+- VISTO (`lento=250&frio=1`, jogador novo): barra andando de 1/69 a 69/69 em ~10 s, 0 falhas, 0 arquivo da lista sem decodificar ao liberar o toque; título e batalha inteiros (herói com arma, cenário, inimigo, cabeçalho). ANTES (`carga=antiga`, mesmas condições): a tela liberava com 10 dos 54 arquivos da cena ainda carregando (ícones do cabeçalho/menu, retrato, ícones das habilidades), e montaria/pet/asa/pistola nunca entravam na conta (leitura do código). Montaria (lobo) entrou no desenho só 5,6 s depois de equipar, asa 2,2 s, Kaia 1,5 s: nenhum quadro com folha faltando (medido por amostragem). Troca de era 0→1: nenhum quadro da era 1 antes de pronta. Prints `reports/prints/v0129_preload_{barra,primeira_cena,troca_era}.jpg`.
+- NÃO visto: primeira cena A FRIO com montaria/pet/asa já equipados (exigiria save gravado; só usei save em memória; vista a lista com eles e a troca em memória); pet (o módulo não devolveu pet no save de teste); o aviso "Carregando a próxima era" (a era carregou durante a luta do chefe); botões de falha; a lista com o `sceneSet` de Sistemas rendeu `later = 0` na medição (conferir se o manifesto entrou: `LD.man`).
+- INCIDENTE: por ~1 min o `js/battle.js` ficou no disco com erro de sintaxe (regex escrita por script de shell). Corrigido; daqui em diante só ferramenta de edição + `node --check` logo depois.
+
+### 60 QUADROS + QUALIDADE ADAPTATIVA — `js/battle.js` (laço), `js/stage.js` (`sceneQuality`)
+- Laço: 1 desenho a cada N chamadas do rAF, N = piso(Hz ÷ 60 + 0,15) (60 Hz → 1; 90 → 1; 120 → 2; 144 → 2 = 72; 240 → 4). `?debug=1&fps=120` tira o limite; `&peso=1` queima 14 ms por quadro. Medidor: `window.__fps` = "média (pior N ms, qD)"; `window.__fpsStat`.
+- Por delta de tempo: clarão do golpe final (`B.flash`) e os emissores por quadro da ultimate (`emit`) passaram a usar o tempo do quadro.
+- Qualidade: degrau 1 = metade das partículas; 2 = 1/4 e cenário vivo em resolução 0,7. Só desce com média < 55/60 do alvo E trabalho do jogo > 40% do orçamento.
+- NÃO MEDIDO: a aba deste PC recebia 29 a 44 quadros/s com o jogo usando 1,6 a 3,3 ms por quadro (máquina carregada), e a tela não é de 120 Hz. Nada sobre "mesma velocidade a 60 e a 120" nem sobre o degrau de qualidade foi visto. `sceneQuality(0,7)` nunca foi visto na tela.
+- O cenário vivo tem laço próprio em `test/bg/scene.js` (não é meu) e continua a 120 Hz. Linha pedida, no começo de `frame(now)`: `if (self.maxFps && now - last < 1000 / self.maxFps - 2) { raf = requestAnimationFrame(frame); return; }` (o `js/stage.js` já põe `api.maxFps = 60`).
+
+
+## Engenheiro 6 — v0.12.9: eventos com horário no HUD, drop por raridade em tabela única, chaves do voto no Modo dono (2026-11-13)
+
+Arquivos mexidos: `js/evhud.js` (NOVO), `js/fullbattle.js`, `js/rarity.js`, `js/artprev.js`, `js/farm.js`, `index.html` (3 pontos, nenhum no boot nem no carregamento: chave `evHud` no `SCREENS_ON`, `'evhud'` na lista de scripts, `'newdrops'` na lista de módulos js/sys). Navegador: uma aba minha em `127.0.0.3:8080/?debug=1&fresh=1&skip=1` (save em memória); para o Modo dono usei o save de teste dessa origem (`eras_owner_v1` + `eon_owner_mode`, criados e REMOVIDOS no fim; o armazenamento ficou com as mesmas 2 chaves do começo, `eras_proto_v2` com o mesmo tamanho). Aba fechada. Prints em `reports/prints/`.
+
+### 1) Eventos com horário no HUD (VISTO, 288 px e 390x844)
+- Chave `SCREENS_ON.evHud` (index.html): **LIGADA por padrão** (decisão do PO/dono durante a rodada: o bônus já vale no abate); desliga só em debug com `?ev=0`. Nasceu desligada e foi commitada assim (046bf14); a troca para ligada está no disco.
+- Regra e hora: só do `Sys.schedule` (active, notices, now, `_br` para o "até HH:MM"). Nenhuma conta de fuso no jogo.
+- Ícone: entrada `event` no `FB_MENU` (direita, abaixo do Baú; desce uma casa com a Oferta 24h na tela). Só existe com evento aberto que o nível permite. Pulsa (só transform/opacidade), mostra nome, bônus e contagem (`MM:SS`, `HH:MM:SS` a partir de 1 h); com dois abertos alterna a cada 4 s (visto: Caça aos Pets / Torneio de Fim de Semana, domingo 18h30). Bônus no rótulo lido dos `perks` do módulo: "Ouro ×2", "Drop +50%", "Ração ×2 · Frag. de pet +50%"; Chefe Mundial sem linha de bônus.
+- Faixa "Hora de Ouro / Evento aberto até 20:00": 5 s, sem toque, em y 246 da base (abaixo do aviso do jogo e do aviso de poder, acima do nome da habilidade e das barras de vida). Espera o tutorial, o MENU e o aviso do jogo saírem.
+- Aviso "Hora de Ouro / Começa em 10 min": mesma faixa, borda verde. Uma vez por janela (guardado em `S.evh`, podado; conferido que a segunda passada não repete).
+- Toque: abre Eventos pelo caminho do MENU (`fbAct('soon:events')`; visto `view = events` e a volta). Tela ainda bloqueada por nível: o toque diz o evento e o prêmio. Nível abaixo do evento: sem ícone. Fora de evento (relógio real e relógio de teste numa segunda às 15h): nada na tela.
+- Imagem só carregada: o ícone próprio do evento entra com `img.complete` e `naturalWidth > 0` (ou `Preload.ready([url])`); antes disso, `assets/icons/menu/events.png`.
+- Custo: 1 atualização por segundo, 0,07 ms cada (medido); nada por quadro.
+- Teste sem esperar o relógio (só DEBUG): `dbgEvClock('19:00')`, `dbgEvClock('18:30', 0)` (dia da semana), `dbgEvClock()` volta ao real. Não passa pelo save.
+- Prints: `v0129_evento_icone.png` (com o bônus), `v0129_evento_faixa.png`, `v0129_evento_aviso.png` (288 px), `v0129_evento_390.png`.
+- Perks: a conta está em `js/sys/loot.js` (não é meu; o Servidor aplicou no commit e590713). Em `js/farm.js` e `js/battle.js` não há conta de ouro/drop.
+- NÃO visto: o rótulo "+N" do ouro com o texto do evento (não mexi: o bônus aparece no ícone); o ícone caindo no MENU em tela muito curta (escrito: entra na lista do MENU como "Evento").
+
+### 2) Drop por raridade em tabela única (VISTO)
+- `rarFx(r)` em `js/rarity.js`: lê `Sys.stats.dropFx(r)`; sem o módulo, a tabela antiga. `rarDrop` e `rarSnd` só usam `rarFx`. A chave continua `SCREENS_ON.rarityFx` (desligada; `?rar=1`).
+- Básico→Lendário iguais a antes: conferido por número (cor, feixe, ritmo de partículas iguais nos 5) e por print lado a lado (`v0129_drop_raridades_antes.png` x `v0129_drop_raridades.png`).
+- Divino (r 5): feixe arco-íris mais largo, partículas coloridas, borda `#7ff6ff`. Visto com `dbgDrops([0,1,2,3,4,5])` (só o efeito, sem item).
+- Diferença consciente: o som do Mítico passa de rate 0,89 para 0,9 (valor da tabela). Lendário e Divino não tocam em `rarSnd` porque o `addItemToBag` já toca `legendary` em todo item r >= 4 (o Divino hoje soa como o Lendário; o rate 1,1 da tabela fica sem uso até decidirem).
+
+### 3) Modo dono: chaves para o voto (VISTO)
+- Bloco "CHAVES PARA O VOTO" na tela Teste, só com o Modo dono ligado; estado escrito no botão (LIGADA dourado / DESLIGADA). A escolha fica em `S.ownerKeys` do save do Modo dono e é reaplicada na carga (`keysBoot`); fora do Modo dono nada roda.
+- Chaves (todas DESLIGADAS por padrão): Fusão (`PANEL_ON.fuse` + `Sys.stats.DATA.quality.on`) · Asas novas (`Sys.stats.DATA.newWings`) · Arco e Bumerangue (`weaponTypes.bow.on` e `.boomerang.on`) · Ultimates lendárias (`window.ULT_LEGEND_ON`) · Pets e montarias novos (`Sys.pet.DATA.newPets` + `Sys.mount.DATA.newOn`) · Entregas dos itens novos (`Sys.newDrops.DATA.on`).
+- Atalhos: 8 asas novas (ganhar e equipar, na raridade do modelo) e Arco / Bumerangue (arma com `wt`, raridade e nível da arma equipada).
+- Visto: os 6 botões ligam e desligam o módulo dono (lido de volta do módulo); recarregar no Modo dono mantém; sair do Modo dono volta tudo ao padrão e `S.ownerKeys` não existe no save real; fora do Modo dono não há botão. Asa de fênix e Mariposa equipadas (`item.wing`), Arco e Bumerangue equipados (`weaponType` = bow / boomerang, estilo ranged); batalha seguiu sem erro no console. Print `v0129_modo_dono_chaves.png`.
+- ULTIMATES LENDÁRIAS NÃO LIGAM PELO BOTÃO: em `js/battle.js:475` a chave é `const ULT_LEGEND_ON=...` (constante do arquivo, não é `window`). O botão escreve `window.ULT_LEGEND_ON`, vê que o estado real não mudou e avisa "a chave ainda é fixa no arquivo da batalha". Pedido ao Engenheiro 5 abaixo.
+- Com o arco equipado a batalha roda, mas o Kael aparece sem arma e os ícones de Básico e Ultimate ficam escuros (desenho do outro engenheiro, ainda não pronto).
+- De passagem, no mesmo arquivo: a grade de montarias da tela Teste estourava a largura em 288 px (rolagem lateral); corrigida.
+
+### Outros
+- `js/farm.js`: `normItem` mantém `item.wing` de qualquer modelo de `Sys.stats.DATA.wingTypes` (antes só anjo/demônio: asa nova perdia o tipo ao entrar na mochila). `onLevelUp` chama `Sys.newDrops.releaseHeld(S, Sys.host)` só com `Sys.newDrops.DATA.on` ligada (inerte hoje).
+- `'newdrops'` carregado depois de `'schedule'`, antes do `'fc'`. FC do save igual com e sem o módulo (264 = 264 no save novo; 65,7 mil no nível 30 antes e depois).
+
+### Pedidos a outros donos
+- Engenheiro 5 (`js/battle.js:475`): trocar `const ULT_LEGEND_ON=DEBUG&&typeof QP!=='undefined'&&QP.get('ultlend')==='1';` por `window.ULT_LEGEND_ON=DEBUG&&typeof QP!=='undefined'&&QP.get('ultlend')==='1';` (o uso na linha 482 continua valendo; sem `const`, o nome passa a ler `window`).
+- Sistemas/Engenheiro 5: som do Divino (rate 1,1) x `addItemToBag` que já toca `legendary` em r >= 4: decidir quem toca.
+
+### Testes
+- `node --check` nos 5 arquivos meus: ok. `node test/e2e/run.js`: TUDO OK (153 verificações) com as peças 1, 2 e 3 no disco.
+- `node test/e2e/flows.js`: "fluxos duros OK" depois da peça 1. No fim da rodada falha em 5 fluxos por causa de `js/battle.js` em edição pelo Engenheiro 5 ("Invalid regular expression: /.json(?|$)/i", o arquivo não carrega no teste); não é de arquivo meu. Rodar de novo quando o battle.js fechar.

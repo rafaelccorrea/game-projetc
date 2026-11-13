@@ -15,7 +15,10 @@ const sceneOn = era => (!!(ERAS[era] && ERAS[era].sceneV2) || era === SCN.force)
 window.sceneForce = n => { SCN.force = (n == null || !((typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || DEBUG)) ? null : (n | 0); return SCN.force; };
 if (DEBUG && QP.has('scn')) SCN.force = +QP.get('scn') | 0;
 function sceneDims(s){ const st = document.getElementById('stage'); return { w: st.clientWidth, h: Math.round(st.clientHeight * GROUND_FRAC / s.gy) }; }
-function sceneFit(s){ const d = sceneDims(s); if (!d.w || !d.h) return; if (d.w === s.w && d.h === s.h) return; s.w = d.w; s.h = d.h; s.cv.style.width = d.w + 'px'; s.cv.style.height = d.h + 'px'; if (s.api){ s.api.resize(d.w, d.h); s.api.draw(); } }
+/* Engenheiro 5: QUALIDADE ADAPTATIVA (degrau 2 do js/battle.js): o cenário vivo é desenhado em resolução menor (0,7) e esticado pelo CSS no mesmo tamanho; nada some */
+let SCN_Q = 1;
+function sceneQuality(q){ q = q > 0 && q <= 1 ? q : 1; if (q === SCN_Q) return; SCN_Q = q; for (const k in SCN.list){ const s = SCN.list[k]; if (s.api && !s.fail){ s.w = 0; sceneFit(s); } } }
+function sceneFit(s){ const d = sceneDims(s); if (!d.w || !d.h) return; if (d.w === s.w && d.h === s.h) return; s.w = d.w; s.h = d.h; s.cv.style.width = d.w + 'px'; s.cv.style.height = d.h + 'px'; if (s.api){ s.api.resize(Math.round(d.w * SCN_Q), Math.round(d.h * SCN_Q)); s.cv.style.width = d.w + 'px'; s.cv.style.height = d.h + 'px'; s.api.draw(); } }
 function sceneGet(era){
   if (!sceneOn(era)) return null;
   let s = SCN.list[era]; if (s) return s.fail ? null : s;
@@ -38,7 +41,7 @@ function sceneFrame(era){
   if (SCN.cur !== use){
     if (SCN.cur){ SCN.cur.cv.style.display = 'none'; try { SCN.cur.api.stop(); } catch (e) {} }
     SCN.cur = use; SCN.tf = '';
-    if (use){ use.cv.style.display = 'block'; sceneFit(use); use.api.start(); }
+    if (use){ use.cv.style.display = 'block'; sceneFit(use); use.api.maxFps = (typeof FPS_FREE !== 'undefined' && FPS_FREE) ? 0 : 60;   /* limite de quadros do cenário: o EonScene (test/bg/scene.js, de outro dono) tem laço próprio; ele só respeita isto quando ganhar a linha pedida no relatório */ use.api.start(); }
   }
   if (!use) return null;
   const k = cv.clientWidth / LW, run = B.running && B.deadT <= 0 && !B.paused;
@@ -69,9 +72,10 @@ const SHEETS = {};
 function sheetLoad(base, noNeck){
   let s = SHEETS[base]; if (s) return s;
   s = SHEETS[base] = { base, img: null, meta: null, neck: null, ok: false, fail: false, p: null };
-  const pi = new Promise((ok, er) => { const im = new Image(); im.onload = () => { s.img = im; ok(); }; im.onerror = () => er(new Error('img ' + base)); im.src = base + '.png'; });
-  const pj = fetch(base + '.json').then(r => { if (!r.ok) throw new Error('json ' + base); return r.json(); }).then(j => { s.meta = j; });
-  s.p = Promise.all([pi, pj]).then(() => { s.neck = noNeck ? [] : neckRows(s); s.ok = true; return s; }).catch(() => { s.fail = true; return null; });
+  /* Engenheiro 5: imagem e .json vêm do cache único do Preload (js/preload.js): a folha só fica ok com a imagem DECODIFICADA e o .json interpretado (nunca pela metade) */
+  const ei = PRE().get(base + '.png'), ej = PRE().get(base + '.json');
+  const fin = () => { if (!ei.ok || !ej.ok){ s.fail = true; return null; } s.img = ei.img; s.meta = ej.data; s.neck = noNeck ? [] : neckRows(s); s.ok = true; return s; };
+  if (ei.ok && ej.ok){ fin(); s.p = Promise.resolve(s); } else s.p = Promise.all([ei.p, ej.p]).then(fin).catch(() => { s.fail = true; return null; });
   return s;
 }
 const SHEET = base => { const s = sheetLoad(base); return s.ok ? s : null; };
@@ -95,12 +99,12 @@ function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p
   return out; }
 /* ESPECIAL ANIMADO (Corte Giratório, era 2): folha composta (corpo + arma + rastro) assets/anim/hyb/R/kael_spin_era2_t<tier>, quadro 448x256,
    pés em x = padLeft + 128 e y = feetY (do .json). Só entra com a chave ART_ON['s2_era2_t<tier>'] ligada; senão vale o golpe por código. */
-function spinBase(ws){ if (!ws || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
+function spinBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
 /* GOLPE BÁSICO COM RASTRO (s1-era2_t<tier>, aprovado): folha composta assets/anim/hyb/R/kael_attack_trail_era2_t<tier> (17 quadros, 448x256,
    pés em x = padLeft + 128, y = feetY; golpe no quadro 6). Toca dentro da duração do golpe básico (o ritmo do balanceamento não muda): os quadros
    0-6 até o instante do acerto e os 7-16 na volta. Só com skin de arma da era 2 e a chave ART_ON['s1_era2_t<tier>']. */
 const TRAIL_HIT = 6;
-function trailBase(ws){ if (!ws || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
+function trailBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
 function heroTrailSheet(ws){ const b = trailBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 function heroSpinSheet(ws){ const b = spinBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 /* AURA DE FORTALECIMENTO (auras +4/+7/+10/+13 aprovadas): o nível vem do +N do espaço da ARMA no Sys.forge (Sys.forge.aura(S).id).
@@ -148,7 +152,9 @@ function drawHeroPistolWait(H){ { const F = heroForm(); if (F.hero !== 'kael' ||
 /* ASA NO KAEL (v0.12.4): duas metades (assets/anim/equip/wing_<anjo|demon>_L/R.png; raiz de cada uma no .json), ATRÁS do corpo, presas às costas,
    batendo de leve (escala em x a partir da raiz). Mesma escala do quadro do herói. H.wing = 'angel' | 'demon' (heroLook). */
 const WING_IMG = {};
-function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ o = WING_IMG[k] = { img: null, ok: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.src = 'assets/anim/equip/wing_' + kind + (side ? '_' + side : '') + '.png'; } return o; }
+function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ const e = PRE().get('assets/anim/equip/wing_' + kind + (side ? '_' + side : '') + '.png'); o = WING_IMG[k] = { img: e.img, ok: e.ok, p: e.p }; if (!e.ok) e.p.then(() => { o.img = e.img; o.ok = e.ok; }); } return o; }
+/* asa pronta para desenhar (json + as metades decodificadas); dispara a carga. Usado para só trocar a asa desenhada quando a nova estiver inteira. */
+function wingReady(kind){ if (!kind) return true; const M = J('assets/anim/equip/wing_' + kind + '.json'); if (!M || !(M.single || M.L)) return false; return M.single ? wingPart(kind, '').ok : (wingPart(kind, 'L').ok && wingPart(kind, 'R').ok); }
 /* ASA NAS COSTAS (ordem do dono; Engenheiro 2). A raiz da asa (root do wing_<tipo>.json) vai na ÂNCORA DAS COSTAS de cada quadro: campo "back" dos
    *_body.json (Arte): {x, y em px da célula, ang em graus (0 = tronco vertical, + = para a direita), s = escala do Kael na folha}. Receita da Arte:
    translate(back) · rotate(ang) · scale(s × escala da asa) · drawImage(metade, -root.x·w, -root.y·h), ANTES do corpo. Par L/R (anjo, demônio) ou asa única
@@ -163,9 +169,10 @@ function backAt(sh, fi, loop){ const M = sh && sh.meta; if (!M || !Array.isArray
 /* ox0, oy0 = canto (0,0) da célula do quadro em px lógicos; kc = px lógicos por px da célula; loop = folha em laço */
 function drawWingsAt(H, sh, fi, ox0, oy0, kc, loop){ const kind = H.wing; if (!kind || H.deadP >= 0) return; const M = J('assets/anim/equip/wing_' + kind + '.json'); if (!M || !(M.single || M.L)) return;
   const b = backAt(sh, fi, loop); let ax, ay, ang, sc;
-  if (b){ ax = ox0 + b.x * kc; ay = oy0 + b.y * kc; ang = b.ang; sc = kc * WING_SCALE * b.s * (typeof WING_FIT !== 'undefined' && WING_FIT[kind] || 1); H._wb = { dx: ax - H.x, dy: ay - H.gy, ang, sc }; }
+  if (b){ ax = ox0 + b.x * kc; ay = oy0 + b.y * kc; ang = b.ang; sc = kc * WING_SCALE * b.s; H._wb = { dx: ax - H.x, dy: ay - H.gy, ang, sc }; }
   else if (H._wb){ ax = H.x + H._wb.dx; ay = H.gy + H._wb.dy; ang = H._wb.ang; sc = H._wb.sc; }
   else { ax = H.x - HS * 0.10; ay = H.gy - HS * 0.31; ang = 0; sc = HS / 256 * WING_SCALE; }
+  if (M.fit > 0) sc *= M.fit;   /* Engenheiro 5: asas novas (mais altas) trazem "fit" no .json (0,74 a 0,93); anjo e demônio não têm o campo (= 1). A raiz nas costas não muda */
   const fl = 1 + 0.07 * Math.sin(H.t * 3.2), winged = !!(H.mount && typeof MOUNT_TBL !== 'undefined' && MOUNT_TBL[H.mount.id] && MOUNT_TBL[H.mount.id].wings);
   ctx.save(); ctx.translate(ax, ay); ctx.rotate(ang * Math.PI / 180); ctx.scale(sc, sc); if (winged){ ctx.shadowColor = 'rgba(255,255,255,.9)'; ctx.shadowBlur = 5; }   // montaria com asas: contorno claro para a asa do Kael não se confundir com a dela
   if (M.single){ const W = wingPart(kind, ''); if (W.ok){ ctx.rotate(0.05 * Math.sin(H.t * 3.2)); ctx.drawImage(W.img, -M.root[0] * M.w, -M.root[1] * M.h, M.w, M.h); } }
@@ -180,7 +187,7 @@ const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; cons
    assets/anim/hyb/R/kael_<run|idle|attack>_era2_t<tier>.png (corpo + roupa + arma num quadro só; mesmos quadros, fps e pés do .json do corpo, que é o
    .json do conjunto). Em qualquer outro caso (roupa ou arma de outra era, tiers diferentes) vale corpo + arma na mão. Chave: ART_ON.kael_hybR_t<tier>.
    A hyb-attack-era2_t* (assets/anim/hyb/, REPROVADA) nunca é usada: só a pasta R. */
-function heroCompTier(sk, ws){ if (!sk || !ws || sk.e !== 2 || ws.e !== 2 || ws.r % 2) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
+function heroCompTier(sk, ws){ if (!sk || !ws || ws.wk || sk.e !== 2 || ws.e !== 2 || ws.r % 2) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
 /* GOLPE: folha LARGA aprovada pelo PO como correção técnica (kael_attack_wide_era2_t<tier>: 17 quadros, 448x256, padLeft 96, pés em x = padLeft+128,
    feetY 243): a de 256 cortava a arma em alguns quadros. Parado e corrida continuam nas de 256. */
 const HERO_WIDE_PAD = 96, HERO_WIDE_W = 448;
@@ -255,7 +262,7 @@ function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return heroForm().he
   const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
   /* P20: a arma termina DEITADA conforme o ângulo nativo dela (meta.json: espada 90 = gira 90°, como antes; pistola 0 = já está deitada) e o ponto mais baixo para em fy-2: nada abaixo do chão */
   const wm = ws ? (J('assets/weapons/meta.json')[wKey(ws)] || {}) : {}, a1 = (typeof wm.angle === 'number' ? wm.angle : (wm.type === 'gun' ? 0 : 90)) * Math.PI / 180;
-  if (w0){ const kk = 256 * 0.5 / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, hh = (Math.abs(dw * Math.sin(a1)) + Math.abs(dh * Math.cos(a1))) / 2, y = (fy - 112) + (110 - hh) * e2, ang = -0.3 + (a1 + 0.3) * e2;
+  if (w0){ const kk = 256 * 0.5 * (ws.wk && wm.scale > 0 ? wm.scale : 1) / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, hh = (Math.abs(dw * Math.sin(a1)) + Math.abs(dh * Math.cos(a1))) / 2, y = (fy - 112) + (110 - hh) * e2, ang = -0.3 + (a1 + 0.3) * e2;
     ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha; dspr(skinSpr(w0, ws.r), -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
   { const L = layNow(H); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); } ctx.restore();
   if (H.main){ B.tipW = null; const imp = (M.impact && M.impact.body) || 16;
@@ -305,15 +312,17 @@ function drawHeroAnim(H){
   if (w0){
     const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]);
     let kk = FW * (gun ? 0.44 : 0.5) * (fx.s || 1) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, FW * 0.21 * (fx.s || 1) / w0.h);
+    if (ws.wk && wm.scale > 0) kk *= wm.scale;   /* arco / bumerangue: tamanho do meta.json */
     const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh;
     const wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90);
-    const ang = -(G.ang - wang) * Math.PI / 180 + (fx.rot || 0) + P.wang;
+    const ang = wAngOf(wm, G, gun) + (fx.rot || 0) + P.wang;
     let tx0, ty0;   // ponta (boca do cano / ponta da lâmina) no espaço da arma
     if (gun){ const mz = wm.muzzle; tx0 = mz ? ((mz[0] - w0.fx) / w0.fw) * dw - gx : dw - gx; ty0 = mz ? ((mz[1] - w0.fy) / w0.fh) * dh - gy2 : dh * 0.42 - gy2; }
     else { const ln = typeof wm.len === 'number' ? wm.len * (dw / w0.fw) : gy2, wa = wang * Math.PI / 180; tx0 = Math.cos(wa) * ln; ty0 = -Math.sin(wa) * ln; }
+    const sp = ws.wk ? wSpot(wm, w0, dw, dh, gx, gy2) : null; if (sp){ tx0 = sp[0]; ty0 = sp[1]; P.trail = 0; }   /* arco: a "ponta" é o nock (de onde a flecha sai); bumerangue: o pivô do giro */
     drawW = () => {
       ctx.save(); ctx.translate(G.x + (fx.dx || 0), G.y + (fx.dy || 0)); ctx.rotate(ang); if (gun) ctx.translate(-P.rec, 0);
-      dspr(wimg, -gx, -gy2, dw, dh);
+      dspr(wimg, -gx, -gy2, dw, dh); if (sp) wExtra(H, ws, a, tx0, ty0, dw * 0.9);
       if (gun){ if (P.flash > 0){ const mz = fxSpr('muzzle', a ? a.col : '#ffffff'), r = 26 + 16 * P.flash;
           if (mz){ ctx.globalAlpha = alpha * P.flash; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(mz, tx0 - 3, ty0 - r, r * 2, r * 2); }
           else { const c0 = a && a.col !== '#ffffff' ? a.col : '#ffd45a', L = r * (0.9 + 1.1 * P.flash);   // clarão em código: brilho + línguas de fogo que encolhem
@@ -330,6 +339,7 @@ function drawHeroAnim(H){
       if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 0.62, B.tipW.x + (gun ? 3 : 6))); B.reach += (rc - B.reach) * 0.2; } }
   }
   if (comp) drawW = null;   // a arma já está no quadro composto (a ponta B.tipW continua vindo da âncora da mão do .json)
+  if (H.main && ws.wk && boomOut()) drawW = null;   /* bumerangue no ar: some da mão (volta com ele) */
   const behind = !!G.behind || Math.cos(G.ang * Math.PI / 180) < -0.25;
   if (drawW && behind){ drawW(); body(); }
   else {
@@ -367,7 +377,11 @@ const formAsk = st => { const ov = FORM.ov; return ov != null ? Sys.appearance.s
 function heroForm(){ const now = performance.now(), ov = FORM.ov; if (ov == null && FORM.v && now - FORM.t < 200) return FORM.v; let hero = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael', stage = 0, ps = 1;
   if (formOk()){ try { const r = formAsk('idle'); if (r){ if (r.hero === 'kaia' || r.hero === 'kael') hero = r.hero; stage = formStage(r.dir); ps = (typeof r.scale === 'number' && r.scale > 0) ? r.scale : (PH_SCALE[stage] || 1); } } catch (e) {} }
   if (ov != null) return { hero, stage, ps };
-  const k = hero + '|' + stage + '|' + ps; if (k !== FORM.k){ FORM.k = k; if (FORM.v && typeof avatarRefresh === 'function'){ try { avatarRefresh(); } catch (e) {} } }   /* herói/skin mudou: retrato do cabeçalho */
+  const k = hero + '|' + stage + '|' + ps;
+  /* Engenheiro 5 (P29): TROCA DE HERÓI/SKIN só entra no desenho com as folhas do novo decodificadas; até lá fica o anterior, inteiro (no máximo 12 s) */
+  if (k !== FORM.k && FORM.v){ let rdy = true; try { rdy = (hero === 'kael' && stage === 0) ? ['idle', 'run', 'attack'].every(st => !!SHEET(heroSet(2)[st])) : phaseReady(stage); } catch (e) { rdy = true; }
+    if (!rdy && !(typeof lookWait === 'function' && lookWait('form', k))){ FORM.t = now - 150; return FORM.v; } }
+  if (k !== FORM.k){ FORM.k = k; if (FORM.v && typeof avatarRefresh === 'function'){ try { avatarRefresh(); } catch (e) {} } }   /* herói/skin mudou: retrato do cabeçalho */
   FORM.t = now; return FORM.v = { hero, stage, ps }; }
 function formRefresh(){ FORM.t = -1e9; return heroForm(); }
 const phasesOk = () => typeof PHASES_ON !== 'undefined' && PHASES_ON && typeof Sys !== 'undefined' && !!Sys.phaseUp && !!Sys.appearance && typeof Sys.appearance.sheetFor === 'function';
@@ -448,13 +462,16 @@ function drawHeroPhase(H, stage){ if (!phaseReady(stage)) return false;
   const wk = wKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(wPng(ws), 'weapon'), fx = WFIX[wk] || WFIX[heroKey(ws)] || {};
   let drawW = null, tip = { x: G.x + 40, y: G.y - 40 };
   if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) * (fx.s || 1) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 * (fx.s || 1) / w0.h);
-    const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh, wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90), ang = -(G.ang - wang) * Math.PI / 180;
+    if (ws.wk && wm.scale > 0) kk *= wm.scale;   /* arco / bumerangue: tamanho do meta.json */
+    const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh, wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90), ang = wAngOf(wm, G, gun);
     let tx0, ty0; if (gun){ const mz = wm.muzzle; tx0 = mz ? ((mz[0] - w0.fx) / w0.fw) * dw - gx : dw - gx; ty0 = mz ? ((mz[1] - w0.fy) / w0.fh) * dh - gy2 : dh * 0.42 - gy2; }
     else { const ln = typeof wm.len === 'number' ? wm.len * (dw / w0.fw) : gy2, wa = wang * Math.PI / 180; tx0 = Math.cos(wa) * ln; ty0 = -Math.sin(wa) * ln; }
+    const sp = ws.wk ? wSpot(wm, w0, dw, dh, gx, gy2) : null; if (sp){ tx0 = sp[0]; ty0 = sp[1]; }   /* arco: nock; bumerangue: pivô */
     const c = Math.cos(ang), s = Math.sin(ang); tip = { x: G.x + tx0 * c - ty0 * s, y: G.y + tx0 * s + ty0 * c };
-    drawW = () => { ctx.save(); ctx.translate(G.x + (fx.dx || 0), G.y + (fx.dy || 0)); ctx.rotate(ang); if (gun) ctx.translate(-P.rec, 0); dspr(wimg, -gx, -gy2, dw, dh);
+    drawW = () => { ctx.save(); ctx.translate(G.x + (fx.dx || 0), G.y + (fx.dy || 0)); ctx.rotate(ang); if (gun) ctx.translate(-P.rec, 0); dspr(wimg, -gx, -gy2, dw, dh); if (sp) wExtra(H, ws, a, tx0, ty0, dw * 0.9);
       if (gun && P.flash > 0){ const c0 = a && a.col !== '#ffffff' ? a.col : '#ffd45a'; drawGlow(c0, tx0 + 5, ty0, 26 + 16 * P.flash, P.flash); }
-      ctx.restore(); }; }
+      ctx.restore(); };
+    if (H.main && ws.wk && boomOut()) drawW = null; }   /* bumerangue no ar: some da mão */
   const behind = !!G.behind || Math.cos(G.ang * Math.PI / 180) < -0.25;
   if (drawW && behind){ drawW(); body(); }
   else { body(); if (drawW){ drawW();

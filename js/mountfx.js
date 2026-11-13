@@ -24,17 +24,30 @@ function mountBoot(){ if (!mountOk()) return; try { Sys.mount.DATA.on = true; Sy
 /* Engenheiro 4: só existem folhas montadas do KAEL (assets/anim/mounts/kael_<montaria>_*). Herói sem folha montada (Kaia): NÃO se desenha o Kael no lugar dela;
    a Kaia aparece A PÉ e a montaria não é desenhada na batalha (o bônus da montaria no Sys.mount continua valendo). Quando a Arte entregar kaia_<montaria>_*,
    basta pôr kaia: 'kaia_' aqui. */
-const MOUNT_HERO = { kael: 'kael_' };
-const mountPrefix = () => MOUNT_HERO[(typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'] || null;
-function mountLook(){ if (!mountOk() || !mountPrefix()) return null; try { const i = Sys.mount.battleInfo(S); return i && i.visual && MOUNT_TBL[i.id] ? { id: i.id, stars: i.stars | 0, aura: i.aura } : null; } catch (e) { return null; } }
-const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix() || 'kael_') + id + '_' + st + '_body');
+/* Engenheiro 6 (v0.12.9): KAIA MONTADA, POR MONTARIA E POR EXISTÊNCIA DO ARQUIVO. O Kael tem folha de todas as montarias da tabela. A Kaia só monta nas
+   montarias cuja arte existe (lote 1: pony e horse): a lista sai de assets/manifest.json (gerado por tools/asset-manifest.js; só tem arquivo que
+   existe), lido UMA vez e só quando o herói é a Kaia. Vale a montaria que tiver kaia_<id>_{idle,run,attack}_body .png e .json (6 arquivos).
+   As que faltam (tigre, lobo, grifo, serpe) nunca são pedidas (sem 404) e ligam SOZINHAS quando os arquivos entrarem no manifesto. Enquanto o
+   manifesto não chegou, ou para montaria sem arte: a Kaia fica a pé, como antes (bônus valendo).
+   mountPrefix(id) → prefixo da folha desse herói nessa montaria, ou null (a pé). Sem id = a montaria equipada. */
+const MOUNT_HERO = { kael: 'kael_', kaia: 'kaia_' };
+const MOUNT_HAVE = { kaia: null, asked: false };   // kaia: {id:1} das montarias com arte da Kaia (null = manifesto ainda não lido)
+function mountHaveLoad(){ if (MOUNT_HAVE.asked) return; MOUNT_HAVE.asked = true;
+  fetch('assets/manifest.json').then(r => r.ok ? r.json() : null).then(m => { const n = {}, ok = {}; if (m && m.packs) for (const p in m.packs) for (const f of m.packs[p].files || []){ const x = /^assets\/anim\/mounts\/kaia_([a-z0-9]+)_(idle|run|attack)_body\.(png|json)$/.exec(f); if (x) n[x[1]] = (n[x[1]] || 0) + 1; }
+    for (const id in n) if (n[id] >= 6) ok[id] = 1; MOUNT_HAVE.kaia = ok; }).catch(() => { MOUNT_HAVE.kaia = {}; }); }
+function mountPrefix(id){ const h = (typeof S !== 'undefined' && S && S.hero === 'kaia') ? 'kaia' : 'kael'; if (h === 'kael') return MOUNT_HERO.kael;
+  if (!MOUNT_HAVE.kaia){ mountHaveLoad(); return null; }
+  if (id == null){ try { const i = Sys.mount.battleInfo(S); id = i && i.id; } catch (e) { id = null; } }
+  return id != null && MOUNT_HAVE.kaia[id] ? MOUNT_HERO.kaia : null; }
+function mountLook(){ if (!mountOk()) return null; try { const i = Sys.mount.battleInfo(S); return i && i.visual && MOUNT_TBL[i.id] && mountPrefix(i.id) ? { id: i.id, stars: i.stars | 0, aura: i.aura } : null; } catch (e) { return null; } }
+const mountSheet = (id, st) => sheetLoad(MOUNT_DIR + (mountPrefix(id) || 'kael_') + id + '_' + st + '_body');
 function mountReady(id){ let ok = true; for (const st of ['idle', 'run', 'attack']) if (!mountSheet(id, st).ok) ok = false; return ok; }
 /* medidas da folha parada (uma vez por montaria): quanto o Kael SOBE (linha do pescoço) e até onde a montaria vai à FRENTE (borda opaca direita) */
 const MOUNT_M = {};
-function mountMetrics(id){ let m = MOUNT_M[id]; if (m) return m; const sh = mountSheet(id, 'idle'); if (!sh.ok) return null; const M = sh.meta, fy = typeof M.feetY === 'number' ? M.feetY : 339, ax = (M.padLeft || 0) + 128;
+function mountMetrics(id0){ const id = id0, key = (mountPrefix(id0) || '') + id0; let m = MOUNT_M[key]; if (m) return m; const sh = mountSheet(id, 'idle'); if (!sh.ok) return null; const M = sh.meta, fy = typeof M.feetY === 'number' ? M.feetY : 339, ax = (M.padLeft || 0) + 128;
   let right = 150, top = 200; try { const b = enBounds(sh)[0]; if (b){ right = b.r - ax; top = fy - b.t; } } catch (e) {}
   let rise = 60; try { const h0 = SHEET(heroSet(2).idle); if (h0 && sh.neck && sh.neck.length) rise = (fy - sh.neck[0]) - (HERO_FOOT * 256 - (h0.neck[0] || 76)); } catch (e) {}
-  return MOUNT_M[id] = { right, top, rise: Math.max(0, rise) }; }
+  return MOUNT_M[key] = { right, top, rise: Math.max(0, rise) }; }   /* medidas por herói + montaria (a folha da Kaia tem as dela) */
 /* quanto o Kael montado fica mais ALTO que a pé (px lógicos): as barras de vida/energia e a asa sobem junto */
 function heroRise(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return 0; if (typeof B !== 'undefined' && B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true) return 0;   /* morto: o Kael cai a pé (morte nova); as barras descem com ele */ const m = mountMetrics(mo.id); return m ? m.rise * HS / 256 : 0; }
 /* até onde a montaria passa da borda do corpo do Kael a pé, para a direita (px lógicos): o inimigo da frente guarda a folga a partir daí */
@@ -43,7 +56,7 @@ function mountWingOff(H){ const mo = H.mount; if (!mo || !mountReady(mo.id)) ret
 /* deslocamento do pet nesta montaria (tabela) */
 function mountPetOff(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return null; const T = MOUNT_TBL[mo.id]; const st3 = typeof PETK !== 'undefined' && PETK.info && (PETK.info.stage | 0) >= 3; return { dx: (st3 && T.pdx3) || T.pdx || 0.62, dy: T.pdy || 9 }; }
 const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,200,255,', 'rgba(190,140,255,', 'rgba(255,214,120,'];   // visível já em 1 estrela; mais forte a cada estrela
-function drawHeroMounted(H){ if (!mountPrefix()) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
+function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return false;   /* herói sem folha montada (Kaia): a pé, nunca o Kael no lugar (vale também para state.mount do drawHeroFull) */
   const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;
   let fi = a ? Math.min(n - 1, Math.floor(a.t / Math.max(0.01, a.dur) * n)) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
@@ -69,11 +82,14 @@ function drawHeroMounted(H){ if (!mountPrefix()) return false;   /* herói sem f
   const wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, w0 = SPR(wPng(ws), 'weapon'), gun = wm.type === 'gun';
   let tip = { x: G.x + 40, y: G.y - 40 }, drawW = null;
   if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 / w0.h);
-    const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh, wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90), ang = -(G.ang - wang) * Math.PI / 180;
+    if (ws.wk && wm.scale > 0) kk *= wm.scale;   /* Engenheiro 5: arco / bumerangue (tamanho do meta.json) */
+    const dw = w0.w * kk, dh = w0.h * kk, gx = ((grip[0] - w0.fx) / w0.fw) * dw, gy2 = ((grip[1] - w0.fy) / w0.fh) * dh, wang = typeof wm.angle === 'number' ? wm.angle : (gun ? 0 : 90), ang = typeof wAngOf === 'function' ? wAngOf(wm, G, gun) : -(G.ang - wang) * Math.PI / 180;
     let tx0, ty0; if (gun){ const mz = wm.muzzle; tx0 = mz ? ((mz[0] - w0.fx) / w0.fw) * dw - gx : dw - gx; ty0 = mz ? ((mz[1] - w0.fy) / w0.fh) * dh - gy2 : dh * 0.42 - gy2; }
     else { const ln = typeof wm.len === 'number' ? wm.len * (dw / w0.fw) : gy2, wa = wang * Math.PI / 180; tx0 = Math.cos(wa) * ln; ty0 = -Math.sin(wa) * ln; }
+    const sp = (ws.wk && typeof wSpot === 'function') ? wSpot(wm, w0, dw, dh, gx, gy2) : null; if (sp){ tx0 = sp[0]; ty0 = sp[1]; }   /* arco: nock (saída da flecha); bumerangue: pivô do giro */
     const c = Math.cos(ang), s = Math.sin(ang); tip = { x: G.x + tx0 * c - ty0 * s, y: G.y + tx0 * s + ty0 * c };
-    drawW = () => { ctx.save(); ctx.translate(G.x, G.y); ctx.rotate(ang); dspr(wimg, -gx, -gy2, dw, dh); ctx.restore(); }; }
+    drawW = () => { ctx.save(); ctx.translate(G.x, G.y); ctx.rotate(ang); dspr(wimg, -gx, -gy2, dw, dh); if (sp) wExtra(H, ws, a, tx0, ty0, dw * 0.9); ctx.restore(); };
+    if (H.main && ws.wk && typeof boomOut === 'function' && boomOut()) drawW = null; }   /* bumerangue no ar: some da mão (volta com ele) */
   if (drawW && G.behind){ drawW(); body0(); }
   else { body0(); if (drawW){ drawW();
       /* dedos por cima do cabo */
