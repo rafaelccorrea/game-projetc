@@ -96,7 +96,10 @@ function compOf(id){ if(clsCache[id]) return clsCache[id];
 const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON:PI_KAIA,
   dirty(){ if(this.raf) return; this.raf=requestAnimationFrame(()=>{ this.raf=0; this.draw(); }); },
   heroT:0, heroRaf:0, heroLast:0,
-  heroTick(ts){ this.heroRaf=0; if(!this.root) return; const cs=this.root.querySelectorAll('canvas[data-pi-hero]'); if(!cs.length){ this.heroLast=0; return; }
+  /* DESEMPENHO (reclamação nº 1 do dono): o herói é desenhado a no máximo 30 quadros/s, para quando o app vai para o fundo (document.hidden)
+     e o laço MORRE quando a entrada fecha (finish zera root e cancela o quadro): nada roda atrás da batalha. */
+  heroTick(ts){ this.heroRaf=0; if(!this.root||!this.el) return; const cs=this.root.querySelectorAll('canvas[data-pi-hero]'); if(!cs.length){ this.heroLast=0; return; }
+    if(document.hidden||(this.heroLast&&ts-this.heroLast<32)){ this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); return; }
     const dt=this.heroLast?Math.min(0.05,(ts-this.heroLast)/1000):0; this.heroLast=ts; this.heroT+=dt;
     for(const c of cs){ try{
       /* FOLGA (QA P20): o quadro do protótipo (F×F, pés em 95%) só cabe o herói a pé. Montado, com asa e aura, o conjunto é bem maior: o canvas cresce em volta
@@ -111,7 +114,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       const z=+c.dataset.piZoom||1, Fp=h/1.9;   /* F em pixels do canvas */
       /* data-pi-as: desenha OUTRO herói (cartão da Kaia na Criação) trocando S.hero só durante o desenho */
       const as=c.dataset.piAs, sv=G.S(), h0=sv.hero; if(as) sv.hero=as;
-      try{ drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false,...(c.dataset.piMount==='0'?{mount:false,wing:false}:{})}); }finally{ if(as) sv.hero=h0; } }catch(e){} }
+      try{ drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:this.id==='TituloV2B',...(c.dataset.piMount==='0'?{mount:false,wing:false}:{})}); }finally{ if(as) sv.hero=h0; } }catch(e){} }
     this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   /* LOGO ANIMADO. assets/brand/logo_anim.json:
        vídeo (recomendado, leve):  {"type":"video","src":"logo_anim.webm","w":720,"h":480,"loopStart":2.0}   (webm VP9 com alfa; loopStart = s onde começa o loop)
@@ -170,6 +173,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   toast(msg){ if(!this.el) return; const t=document.createElement('div'); t.className='pi-toast'; t.textContent=msg; this.el.appendChild(t); setTimeout(()=>t.remove(),2200); },
   /* fim do fluxo: grava o que foi escolhido e devolve o controle ao jogo */
   finish(){ const el=this.el; if(!el) return; if(this.cur&&this.cur.componentWillUnmount){ try{ this.cur.componentWillUnmount(); }catch(e){} }
+    if(this.heroRaf){ cancelAnimationFrame(this.heroRaf); this.heroRaf=0; } if(this.raf){ cancelAnimationFrame(this.raf); this.raf=0; } this.heroLast=0;
+    try{ for(const v of el.querySelectorAll('video')){ v.pause(); v.removeAttribute('src'); v.load(); } }catch(e){}   /* logo em vídeo: solta o decodificador */
+    this.root=null;   /* os laços (herói, logo em folha) conferem root: param no próximo quadro */
     this.cur=null; this.el=null; removeEventListener('resize',this._rs); el.style.transition='opacity .35s'; el.style.opacity='0';
     const d=this.done; this.done=null; setTimeout(()=>{ el.remove(); if(d) d(); },360); },
   /* TEMPO FORA (Bem-vindo de volta): mesmas contas do modal antigo (js/meta.js showOffline) + Sys.loot.offline (itens) + Sys.level (XP).
