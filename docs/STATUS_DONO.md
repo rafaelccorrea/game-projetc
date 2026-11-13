@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **18h35 · Online testado contra o servidor real: 18 de 18 OK** (servidor S1 Nova Era, conta de convidado, mesmo aparelho = mesma conta, save na nuvem com conflito, histórico, correio, sessão). Banco montado; o servidor religa sozinho se a máquina reiniciar. Sinal dado para o online ir na v0.13.0 depois da conferência do QA. Seguem desligados de propósito (esperam seu voto): arena online, chat, guildas, leilão e moderação; compras reais esperam os produtos no Play Console
+
 - **18h20 · SERVIDOR NO AR COM O BANCO** (você rodou o script; https://15-229-249-157.sslip.io/health responde OK). Agora: teste automático contra o servidor real, conferência do QA de login + save, e o online vai na v0.13.0. Desempenho em 5 min no navegador: pior quadro 15 ms (antes 85), nenhuma travada, memória 144 MB
 
 - **17h50 · DESEMPENHO, resultado de 95 s (navegador):** pior quadro 18 ms (antes 85), nenhuma travada acima de 50 ms (antes 2), memória das imagens 139 MB (limite 150). Falta o teste de 5 min e, depois, medir no S24. **APK v0.13.0:** sai assim que o teste de 5 min passar, com tudo o que estiver conferido; o online vai junto se você rodar o script do banco antes, senão entra na seguinte
