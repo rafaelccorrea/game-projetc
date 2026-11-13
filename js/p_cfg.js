@@ -171,7 +171,7 @@ function cResetDo(){ window.__noSave=true; try{ localStorage.removeItem(SAVE_KEY
 @keyframes c-popK{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 .c-saved{animation:c-savedK 2.4s ease-in-out infinite}
 @keyframes c-savedK{0%,100%{opacity:.7}50%{opacity:1}}
-.c-field{display:block;width:100%;height:118px;resize:none;margin:0;border-radius:14px;border:2px solid #4a3a2b;background:#0e0a07;color:#f6ecdf;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;line-height:1.25;padding:8px 10px;box-sizing:border-box;word-break:break-all;overflow-y:auto;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:pan-y}
+.c-field{display:block;width:100%;height:118px;resize:none;margin:0;border-radius:14px;border:2px solid #4a3a2b;background:#0e0a07;color:#f6ecdf;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;line-height:1.25;padding:8px 10px;box-sizing:border-box;word-break:break-all;overflow-y:auto;overflow-x:hidden;-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:pan-y}
 .c-soon{display:inline-block;vertical-align:middle;flex:none;padding:2px 6px;border-radius:999px;border:1px dashed #8a7458;background:rgba(14,10,7,.7);color:#e8dccb;font-family:Nunito,system-ui,sans-serif;font-size:9.5px;font-weight:900;letter-spacing:.5px;line-height:1.2;white-space:nowrap}
 .c-dis{opacity:.55;filter:grayscale(.7)}
 .c-dis button[disabled],.c-dis button[disabled]:active{cursor:default;transform:none;pointer-events:none}
@@ -319,7 +319,7 @@ function cDialog(){
   const d=XC.dlg; if(!d) return '';
   const box=(label,inner)=>`<button class="c-veil" data-x="dlgx" aria-label="Fechar" style="position:absolute;inset:0;z-index:39;border:0;padding:0;background:rgba(0,0,0,.7)"></button>
     <div class="c-pop" role="dialog" aria-modal="true" aria-label="${esc2(label)}" style="position:absolute;left:0;right:0;top:0;bottom:0;margin:auto;height:max-content;max-height:calc(100% - 16px);width:calc(100% - 40px);max-width:360px;z-index:40;border-radius:22px;padding:4px;background:linear-gradient(160deg,#9a8a74,#3a3028 30%,#7a6852 55%,#2a2018);box-sizing:border-box;display:flex;flex-direction:column">
-      <div style="flex:1;min-height:0;overflow-y:auto;border-radius:18px;background:#1d1611;padding:14px;display:flex;flex-direction:column;gap:10px">${inner}</div></div>`;
+      <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;border-radius:18px;background:#1d1611;padding:14px;display:flex;flex-direction:column;gap:10px">${inner}</div></div>`;
   const ttl=(k,col,t)=>`<div style="display:flex;align-items:center;gap:10px">${cI(C_IC[k],30,col,2.3)}<h3 class="lil" style="margin:0;flex:1;font-weight:400;font-size:22px;color:${col};line-height:1.1">${esc2(t)}</h3></div>`;
   const txt=t=>`<span style="font-size:13px;font-weight:800;color:#c9b9a2;line-height:1.3">${t}</span>`;
   const btnNo=(x,t)=>`<button class="c-dark" data-x="${x}" style="flex:1;height:52px;border-radius:14px;font-size:15px;font-weight:900;padding:0;box-sizing:border-box">${t}</button>`;

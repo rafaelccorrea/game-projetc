@@ -1268,3 +1268,13 @@ no `heroLook` e no `wItemNow`; a prévia da Aparência usa o mesmo caminho da ba
 - Resultados: `run.js` TUDO OK (162); `flows.js` "fluxos duros OK"; `weapons.js` A e C coerentes + "D OK"; `sheetgrid.js` TUDO OK (398); `welcome.js` e
   `preload.js` passam; fumaça 390 e 288: 195 OK, 0 FALHA (segue o timer do p_intro). `owner_all.js`: 2 FALHAS de 79, as duas da chave "Ícones por raridade"
   (testes 3 e 4 ainda esperam a chave desligada por padrão; vem do commit 2a4adeb, não desta peça).
+
+## Bloco 47 (Painéis 3, sem navegador): nunca rolagem horizontal, parte 1 (lista + Loja + roladores declarados)
+
+- Corrigido: `js/p_events.js` `.pz-evs` (fila de eventos rolava de lado: virou grade que quebra linha, mínimo 124 px por evento); `overflow-x:hidden` nos
+  roladores verticais que não travavam o eixo x: `js/screens.js` (quadro "Automático"), `js/p_cfg.js` (`.c-field` e o quadro da linha 322), `js/p_codex.js:77`,
+  `js/p_events.js` `.pz-sheet`, `js/p_mail.js:65`, `js/p_tourney.js:190`. Loja: abas com `min-width:0` (3 abas em flex, sem rolador).
+- Fumaça: 2 verificações ESTÁTICAS novas (código-fonte e HTML de 57 telas na largura do teste); não mede scrollWidth (sem motor de layout).
+- De outros donos (só listado): `js/p_bag.js:72` e `:158` (overflow-x:auto), `index.html:48` (`.chips`, sem uso achado), roladores verticais sem travar o x em
+  `index.html:30`, `js/cloudchoice.js:23`, `js/p_bag.js:142`, `js/artprev.js:306`, `js/p_look.js:73`, `js/p_map.js:136`.
+- PARTE 2 (pendente, precisa de navegador): texto `white-space:nowrap` em fileiras flex que pode CORTAR em 288 a 360 px (não rola, mas corta).

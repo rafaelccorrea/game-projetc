@@ -64,8 +64,7 @@ const EVT_CSS=`.pz{position:relative;flex:1;min-height:0;display:flex;flex-direc
 @keyframes pzinR{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
 .pz-inU{animation:pzinU .4s cubic-bezier(.2,1.2,.4,1) both}
 @keyframes pzinU{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
-.pz-evs{flex:none;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,1fr);gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.pz-evs::-webkit-scrollbar{display:none}
+.pz-evs{flex:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:6px;padding-bottom:2px}   /* regra do dono: nunca rolagem horizontal; os eventos quebram linha (2 por linha em 288 px) */
 .pz-ev{min-height:56px;display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:14px;border:2px solid #4a3a2b;background:#1d1611;text-align:left;min-width:0}
 .pz-ev[aria-selected="true"]{border-color:#ffc94a;background:#3a2c1f;box-shadow:inset 0 -3px 0 #ffc94a}
 .pz-ev img{width:30px;height:30px;object-fit:contain;flex:none}
@@ -205,7 +204,7 @@ const EVT_CSS=`.pz{position:relative;flex:1;min-height:0;display:flex;flex-direc
 .pz-cl.ok{background:transparent;color:#7ef08a!important}
 .pz-sbg{position:absolute;inset:0;z-index:50;background:rgba(8,5,3,.7);display:flex;align-items:flex-end;justify-content:center;animation:pzfade .25s both}
 @keyframes pzfade{from{opacity:0}to{opacity:1}}
-.pz-sheet{width:100%;max-width:520px;max-height:92%;overflow-y:auto;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:14px 14px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:pzsu .35s cubic-bezier(.2,1.2,.4,1) both}
+.pz-sheet{width:100%;max-width:520px;max-height:92%;overflow-y:auto;overflow-x:hidden;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#2c2017,#16110d);border:2px solid #ffc94a;border-bottom:0;padding:14px 14px max(16px,env(safe-area-inset-bottom));box-sizing:border-box;display:flex;flex-direction:column;gap:10px;animation:pzsu .35s cubic-bezier(.2,1.2,.4,1) both}
 @keyframes pzsu{from{transform:translateY(100%)}to{transform:none}}
 .pz-krun{background-image:url(assets/anim/hyb/R/kael_run_era2_t0.png);background-size:800% 100%;background-repeat:no-repeat;animation:pzsh .66s steps(8,jump-none) infinite}
 .pz-katk{background-image:url(assets/anim/hyb/R/kael_attack_era2_t0.png);background-size:1700% 100%;background-repeat:no-repeat;animation:pzsh 1s steps(17,jump-none) both}

@@ -50,7 +50,9 @@ var RARICON_TESTS=(function(){
       const o=S.shop&&S.shop.offers&&S.shop.offers[0]; if(o){ const r0=o.r; o.r=3; let h=''; try{ h=draw('loja de itens'); }finally{ o.r=r0; } if(h.indexOf('data-x="offer"')>=0){ if(!/data-ric|blob:teste/.test(h)) throw new Error('loja: oferta Mítica sem ícone pintado'); ch.push('loja (oferta forçada)'); } }
       const eqd=SLOTS7.map(s=>S.eq[s]!=null?itemOf(S.eq[s]):null).filter(Boolean); if(eqd.length){ const r0=eqd.map(x=>x.r); eqd.forEach(x=>{ x.r=4; }); let h=null; const L=Sys.level, u0=L&&L.isUnlocked; if(u0) L.isUnlocked=function(){ return true; };   /* a Forja do save de teste está atrás do portão de nível */
         try{ h=draw('forja'); }finally{ eqd.forEach((x,i)=>{ x.r=r0[i]; }); if(u0) L.isUnlocked=u0; } if(h!==null){ if(!/data-ric|blob:teste/.test(h)) throw new Error('forja: peça Lendária sem ícone pintado'); ch.push('forja (peça forçada)'); } } });
-    for(const k in VIEWS){ const h=draw(k); if(h!==a[k]) throw new Error(k+': HTML diferente depois de desligar'); }
+    /* relógios (a Loja mostra a contagem até a troca das ofertas) mudam entre dois desenhos: saem da comparação */
+    const nt=h=>h===null?h:h.replace(/\d+:\d\d(:\d\d)?/g,'#').replace(/\d+\s?(h|min|m|s)\b/g,'#');
+    for(const k in VIEWS){ const h=draw(k); if(nt(h)!==nt(a[k])){ let i=0; const x=nt(h)||'', y=nt(a[k])||''; while(i<x.length&&x[i]===y[i]) i++; throw new Error(k+': HTML diferente depois de desligar, em: '+x.slice(Math.max(0,i-40),i+60)+' ≠ '+y.slice(Math.max(0,i-40),i+60)); } }
     return 'igual nas '+Object.keys(VIEWS).length+' telas; ligada mudou: '+ch.join(', '); }); };
 
   T['ligada: nada pintado no quadro do desenho; um por quadro']=function(){ items(); return withOn(function(env){

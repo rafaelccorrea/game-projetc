@@ -62,7 +62,7 @@ function maRow(m,i){ const unread=!m.read, e=maExp(m), atts=maAtts(m.att);
     <span style="flex:none;font-size:11px;font-weight:900;color:${e.c};text-align:right;max-width:76px">${maEsc(e.t)}</span></button>`; }
 function maOpenView(m){ const e=maExp(m), atts=maAtts(m.att), pend=maPend(m);
   return `<div role="dialog" aria-label="Carta: ${maEsc(m.title)}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px">
-    <div class="pa-pop" style="width:100%;max-width:350px;max-height:92%;overflow-y:auto;border-radius:18px;background:#1d1611;border:3px solid #6b5843;padding:14px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
+    <div class="pa-pop" style="width:100%;max-width:350px;max-height:92%;overflow-y:auto;overflow-x:hidden;border-radius:18px;background:#1d1611;border:3px solid #6b5843;padding:14px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box">
       <div style="display:flex;align-items:center;gap:10px">${maIcon(false)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><b style="font-family:'Lilita One',sans-serif;font-size:18px">${maEsc(m.title)}</b><span style="font-size:11px;font-weight:800;color:#c9b9a2">${maEsc(maDate(m.at))}</span></span></div>
       ${m.body?`<p style="margin:0;font-size:14px;font-weight:700;color:#e8dccb;line-height:1.35;white-space:pre-wrap">${maEsc(m.body)}</p>`:''}
       ${atts.length?`<div><span style="font-size:12px;font-weight:900;color:#c9b9a2">Anexos</span><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${atts.map(x=>maChip(x,m.claimed)).join('')}</div></div>`:''}
