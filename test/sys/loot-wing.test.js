@@ -27,4 +27,10 @@ t('arma criada leva a família (it.wt) pelo Sys.stats.rollWeaponType; outros esp
   const f=L.grantBundle({},h,{items:[{slot:'weapon',r:1}]}); assert.ok(f.items[0]&&typeof f.items[0].wt==='string');
   assert.strictEqual(L.rollItem(h,{slot:'boots'}).wt,undefined);
 });
+t('grantBundle: mountFrags vai para a montaria; sem montaria fica guardado e entra na 1ª',()=>{
+  require('../../js/sys/pass.js'); require('../../js/sys/mount.js'); const M=globalThis.Sys.mount, was=M.DATA.on; M.DATA.on=true;
+  const h=makeHost({level:60}); const S={}; const r=L.grantBundle(S,h,{mountFrags:10}); assert.deepStrictEqual(r.mountFrags,{n:10,stored:true}); assert.strictEqual(S.sys.pass.mfrag,10);
+  const a=M.add(S,h,'wolf'); assert.strictEqual(a.passFrags,10); assert.strictEqual(S.sys.pass.mfrag,0);
+  const r2=L.grantBundle(S,h,{mountFrags:10}); assert.strictEqual(r2.mountFrags.id,'wolf'); assert.ok(r2.mountFrags.up>=0); M.DATA.on=was;
+});
 console.log(n+' testes ok');

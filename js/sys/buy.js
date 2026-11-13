@@ -20,6 +20,20 @@
     keepApplied: 200,
     /* produto da loja → oferta local (o pacote da 1ª compra é entregue pelo Sys.offer.grant, com a arma da era do jogador) */
     offerProduct: 'first_offer',
+    /* CATÁLOGO para as telas desenharem (MESMOS ids e preços do servidor: fps-server/src/core/purchases/catalog.ts; o servidor é quem vale).
+       Lista para o dono cadastrar no Play Console: reports/play-console-produtos.md. once = uma vez por conta (trava no servidor). */
+    products: [
+      { id: 'gems_60', kind: 'gems', name: '60 Diamantes', brl: 4.90, gems: 60, firstDouble: true },
+      { id: 'gems_130', kind: 'gems', name: '130 Diamantes', brl: 9.90, gems: 130, firstDouble: true },
+      { id: 'gems_350', kind: 'gems', name: '350 Diamantes', brl: 24.90, gems: 350, firstDouble: true },
+      { id: 'gems_750', kind: 'gems', name: '750 Diamantes', brl: 49.90, gems: 750, firstDouble: true },
+      { id: 'gems_1600', kind: 'gems', name: '1.600 Diamantes', brl: 99.90, gems: 1600, firstDouble: true },
+      { id: 'gems_3400', kind: 'gems', name: '3.400 Diamantes', brl: 199.90, gems: 3400, firstDouble: true },
+      { id: 'monthly_card', kind: 'monthly_card', name: 'Cartão Mensal', brl: 19.90, gems: 300, daily: 60, days: 30 },
+      { id: 'pass_premium', kind: 'pass_premium', name: 'Passe Premium', brl: 24.90, oncePerSeason: true },
+      { id: 'first_offer', kind: 'offer', name: 'Oferta do Guardião', brl: 29.90, once: true },
+      { id: 'mount_mecha', kind: 'mount', name: 'Mecha de Guerra', brl: 49.90, mountId: 'mecha', once: true },
+    ],
   };
   const Sys = () => root.Sys || {};
   const int0 = v => Math.max(0, Math.floor(typeof v === 'number' && isFinite(v) ? v : 0));
@@ -108,5 +122,8 @@
     return done;
   }
 
-  return { DATA, ensure, ready, purchase, sync, applyGrants };
+  /** produto do catálogo pelo id (ou null) e o preço em texto pt-BR ("R$ 49,90") */
+  const product = id => DATA.products.find(p => p.id === id) || null;
+  const priceText = id => { const p = product(id); return p ? 'R$ ' + p.brl.toFixed(2).replace('.', ',') : ''; };
+  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText };
 });
