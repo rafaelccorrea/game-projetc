@@ -74,12 +74,14 @@ const V_KEY={spd:'speedTier',atk:'atkPct',gold:'goldXpPct',keys:'keys',chest:'ch
 /* recompensa ÚNICA do nível: lida das fontes dos módulos (Sys.mount/Sys.pet: src "VIP n: inteira..."); nada escrito aqui */
 /* só item VIVO no módulo (a função do próprio módulo: Sys.mount.live / Sys.pet.avail); desligado = nada aparece e a tela fica igual à de antes */
 function vLive(M,kind,x){ try{ return kind==='Montaria'?(M.live?M.live(x)===true:false):(M.avail?M.avail(x,Sys.host)===true:false); }catch(e){ return false; } }
+/* ícone da Arte (assets/icons/{mounts,pets}/<id>.png); o id do módulo vira o nome do arquivo pela tabela CL_ART do p_colecao.js; sem ícone conhecido o cartão fica só com o texto */
+function vIcon(kind,id){ try{ const T=typeof CL_ART!=='undefined'?CL_ART:null; if(!T) return null; const a=kind==='Montaria'?T.mounts[id]:T.pets[id]; return a?'assets/icons/'+(kind==='Montaria'?'mounts':'pets')+'/'+a+'.png':null; }catch(e){ return null; } }
 function vUnique(n){ const out=[], re=new RegExp('VIP '+n+'(?![0-9])');
-  const scan=(M,kind)=>{ try{ const L=(M&&M.DATA&&(kind==='Montaria'?M.DATA.mounts:M.DATA.pets))||[]; for(const x of L) if(x.nw&&(x.src||[]).some(s=>re.test(s))&&vLive(M,kind,x)) out.push({kind,name:x.name,r:x.r}); }catch(e){} };
+  const scan=(M,kind)=>{ try{ const L=(M&&M.DATA&&(kind==='Montaria'?M.DATA.mounts:M.DATA.pets))||[]; for(const x of L) if(x.nw&&(x.src||[]).some(s=>re.test(s))&&vLive(M,kind,x)) out.push({kind,name:x.name,r:x.r,ic:vIcon(kind,x.id)}); }catch(e){} };
   scan(window.Sys&&Sys.mount,'Montaria'); scan(window.Sys&&Sys.pet,'Pet'); return out; }
 function vUniqueCard(n){ const u=vUnique(n); if(!u.length) return '';
   return '<div role="note" style="flex:none;margin:0 12px;padding:10px 12px;border-radius:14px;border:2px solid #ffc94a;background:linear-gradient(180deg,#3a2a12,#2a1d0f);display:flex;flex-direction:column;gap:4px"><span style="font-size:11px;font-weight:900;color:#ffc94a;letter-spacing:1px">SÓ NO VIP '+n+'</span>'
-    +u.map(x=>'<span style="font-size:14px;font-weight:900;line-height:1.2">'+vEsc(x.kind+' '+(['Básico','Raro','Épico','Mítico','Lendário'][x.r]||'')+': '+x.name)+'</span>').join('')
+    +u.map(x=>'<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:900;line-height:1.2">'+(x.ic?'<img src="'+x.ic+'" alt="" loading="lazy" decoding="async" onerror="this.hidden=true" style="flex:none;width:48px;height:48px;object-fit:contain">':'')+'<span style="min-width:0">'+vEsc(x.kind+' '+(['Básico','Raro','Épico','Mítico','Lendário'][x.r]||'')+': '+x.name)+'</span></span>').join('')
     +'<span style="font-size:11px;font-weight:800;color:#c9b9a2">Vem inteira, uma vez, ao chegar neste nível. Sem sorteio.</span></div>'; }
 function scrVip(){
   vInject();
@@ -107,7 +109,7 @@ function scrVip(){
       </div></div></div>
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center">
         <span style="font-size:11px;font-weight:900;color:#c9b9a2;letter-spacing:1px">SEU NÍVEL</span>
-        <div class="pv-badge" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:4px 14px 6px;border-radius:14px;background:linear-gradient(180deg,#ffe07a,#c9831a);box-shadow:0 4px 0 #6a3a08"><svg width="26" height="22" viewBox="0 0 40 28" aria-hidden="true"><path d="M3 24 6 6l9 9 5-13 5 13 9-9 3 18z" fill="#2a1403"></path></svg><span style="font-family:'Lilita One',sans-serif;font-size:${cur>=1?34:26}px;line-height:1;color:#2a1403;white-space:nowrap">${title}</span></div>
+        <div class="pv-badge" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:4px 10px 6px;border-radius:14px;background:linear-gradient(180deg,#ffe07a,#c9831a);box-shadow:0 4px 0 #6a3a08;max-width:100%;box-sizing:border-box;overflow:hidden">${cur>=1?'<svg width="22" height="18" viewBox="0 0 40 28" aria-hidden="true" style="flex:none"><path d="M3 24 6 6l9 9 5-13 5 13 9-9 3 18z" fill="#2a1403"></path></svg>':''}<span style="font-family:'Lilita One',sans-serif;font-size:${cur>=1?28:19}px;line-height:1;color:#2a1403;white-space:nowrap">${title}</span></div>
         ${P.max?'':`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900"><span>Até o VIP ${P.next}</span><span style="color:#ffc94a">${pct}%</span></div>`}
         <div role="progressbar" aria-label="Progresso até o próximo VIP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" style="height:14px;border-radius:7px;background:#0e0a07;border:1px solid #6a4a1a;overflow:hidden"><div class="pv-bar" style="width:${pct}%;height:100%;background:linear-gradient(90deg,#f2a826,#ffe07a)"></div></div>
         <span style="font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.2">${need}</span></div></div>`;

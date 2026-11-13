@@ -18,12 +18,12 @@ const btn = (x, o) => ({ dataset: Object.assign({ x }, o || {}) });
 def.onOpen(); def.render(); has('Pets novos (9)'); has('Lobo sombrio'); has('Serpe infernal'); has('VIP 9: inteira, uma vez'); has('Torre: andar 150'); has('Pets grátis do começo'); has('Como obter');
 assert((H().match(/Como obter/g) || []).length >= 9, 'cada pet novo tem Como obter');
 assert(!/undefined|NaN|\bnull\b/.test(H()), 'sem undefined/NaN/null'); assert(!/\p{Extended_Pictographic}/u.test(H()), 'sem emoji');
-has('Em breve'); has('assets/pets/new/shadow_wolf_ref_prev.png'); out.push('Pets: 9 novos + iniciais grátis, como obter, arte');
+has('Em breve'); has('assets/icons/pets/shadow_wolf.png'); has('data-old="assets/pets/new/shadow_wolf_ref_prev.png"'); out.push('Pets: 9 novos + iniciais grátis, como obter, arte');
 // Montarias: 10 novas, mecha em breve com o preço da proposta fora da tela (só "compra direta")
-def.click(btn('tab', { i: 1 })); has('Montarias novas (10)'); has('Fênix gigante'); has('VIP 8: inteira, uma vez'); has('Mecha de guerra'); has('Em breve (até as compras abrirem)'); has('assets/mounts/new/war_mecha_ref_prev.png');
+def.click(btn('tab', { i: 1 })); has('Montarias novas (10)'); has('Fênix gigante'); has('VIP 8: inteira, uma vez'); has('Mecha de guerra'); has('Em breve (até as compras abrirem)'); has('assets/icons/mounts/war_mecha.png');
 assert((H().match(/Como obter/g) || []).length >= 10); assert(!/undefined|NaN|\bnull\b/.test(H())); out.push('Montarias: 10 novas, mecha em breve');
 // Asas: 8 novas
-def.click(btn('tab', { i: 2 })); has('Asas novas (8)'); has('Mariposa sombria'); has('Asa de serafim'); has('A asa mais rara do jogo.'); has('assets/anim/equip/new/wing_seraph_ref_prev.png');
+def.click(btn('tab', { i: 2 })); has('Asas novas (8)'); has('Mariposa sombria'); has('Asa de serafim'); has('A asa mais rara do jogo.'); has('assets/icons/wings/wing_seraph.png');
 assert((H().match(/Como obter/g) || []).length >= 8); assert(!/undefined|NaN|\bnull\b/.test(H())); out.push('Asas: 8 novas, serafim a mais rara');
 // botões todos com ação; Voltar fecha
 const bt = H().match(/<button[^>]*>/g) || []; assert(bt.length && bt.every(b => /data-x="/.test(b)), 'todo botão com ação'); out.push(bt.length + ' botões, todos com ação');

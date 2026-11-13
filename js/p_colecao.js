@@ -20,13 +20,16 @@ const CL_RC=['#b8b8b8','#5aa0ff','#c27bff','#ff5a7a','#ffc94a','#7ff6ff'];
 const CL_RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
 const clRn=r=>{ const x=clRar(r); return (x&&x.n)||CL_RN[r]||''; };
 const clRc=r=>{ const x=clRar(r); return (x&&x.c)||CL_RC[r]||'#c9b9a2'; };
+/* ícones transparentes de 256 px (~26 KB) da Arte: assets/icons/{pets,mounts,wings}; reserva = a miniatura antiga *_ref_prev se o ícone não carregar */
+function clUrl(kind,id){
+  if(kind==='pets'&&CL_ART.pets[id]) return {ic:'assets/icons/pets/'+CL_ART.pets[id]+'.png',old:'assets/pets/new/'+CL_ART.pets[id]+'_ref_prev.png'};
+  if(kind==='mounts'&&CL_ART.mounts[id]) return {ic:'assets/icons/mounts/'+CL_ART.mounts[id]+'.png',old:'assets/mounts/new/'+CL_ART.mounts[id]+'_ref_prev.png'};
+  if(kind==='wings') return {ic:'assets/icons/wings/wing_'+id+'.png',old:'assets/anim/equip/new/wing_'+id+'_ref_prev.png'};
+  return null; }
 function clImg(kind,id,name){
-  let src='';
-  if(kind==='pets'&&CL_ART.pets[id]) src='assets/pets/new/'+CL_ART.pets[id]+'_ref_prev.png';
-  else if(kind==='mounts'&&CL_ART.mounts[id]) src='assets/mounts/new/'+CL_ART.mounts[id]+'_ref_prev.png';
-  else if(kind==='wings') src='assets/anim/equip/new/wing_'+id+'_ref_prev.png';
-  if(!src) return '<span aria-hidden="true" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;display:flex;align-items:center;justify-content:center;font-family:\'Lilita One\',sans-serif;font-size:30px;color:#6b5843">'+clEsc((name||'?').charAt(0))+'</span>';
-  return '<img src="'+src+'" alt="" loading="lazy" decoding="async" onerror="this.style.visibility=\'hidden\'" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;object-fit:contain">';
+  const u=clUrl(kind,id);
+  if(!u) return '<span aria-hidden="true" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;display:flex;align-items:center;justify-content:center;font-family:'+String.fromCharCode(39)+'Lilita One'+String.fromCharCode(39)+',sans-serif;font-size:30px;color:#6b5843">'+clEsc((name||'?').charAt(0))+'</span>';
+  return '<img src="'+u.ic+'" alt="" loading="lazy" decoding="async" data-old="'+u.old+'" onerror="if(!this.__f){this.__f=1;this.src=this.dataset.old}else{this.hidden=true}" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;object-fit:contain">';
 }
 function clState(own,live,extra){
   if(own) return {t:'Você tem',c:'#7ef08a'};
@@ -73,9 +76,9 @@ function clWings(){
   return clHead('Asas novas ('+nw.length+')','Cada asa é um item de equipamento; a força vem da raridade, da era e da Forja.')+nw.map(x=>clCard('wings',x)).join('');
 }
 /* imagens da aba aberta (o invólucro p_wait.js espera todas antes de desenhar) */
-function clUrls(){ const u=[]; try{ if(XCL.tab===0){ const P=Sys.pet; if(P&&P.DATA) for(const p of P.DATA.pets) if(p.nw&&CL_ART.pets[p.id]) u.push('assets/pets/new/'+CL_ART.pets[p.id]+'_ref_prev.png'); }
-    else if(XCL.tab===1){ const M=Sys.mount; if(M&&M.DATA) for(const m of M.DATA.mounts) if(m.nw&&CL_ART.mounts[m.id]) u.push('assets/mounts/new/'+CL_ART.mounts[m.id]+'_ref_prev.png'); }
-    else { const T=Sys.stats; if(T&&T.wingCatalog) for(const w of T.wingCatalog()) if(w.r!=null) u.push('assets/anim/equip/new/wing_'+w.id+'_ref_prev.png'); } }catch(e){} return u; }
+function clUrls(){ const u=[]; try{ if(XCL.tab===0){ const P=Sys.pet; if(P&&P.DATA) for(const p of P.DATA.pets) if(p.nw&&CL_ART.pets[p.id]) u.push(clUrl('pets',p.id).ic); }
+    else if(XCL.tab===1){ const M=Sys.mount; if(M&&M.DATA) for(const m of M.DATA.mounts) if(m.nw&&CL_ART.mounts[m.id]) u.push(clUrl('mounts',m.id).ic); }
+    else { const T=Sys.stats; if(T&&T.wingCatalog) for(const w of T.wingCatalog()) if(w.r!=null) u.push(clUrl('wings',w.id).ic); } }catch(e){} return u; }
 function scrColecao(){
   const d=xDims(520); const fn=[clPets,clMounts,clWings][XCL.tab]||clPets; let body=null;
   try{ body=fn(); }catch(e){ body=null; }

@@ -6,7 +6,7 @@
    não entrega: com a chave ligada e Sys.buy.ready() falso mostra "Em breve" e o aviso "Pagamento em breve", SEM preço; o preço (Sys.buy.priceText)
    só aparece quando a compra real está ligada (ready() verdadeiro). A chave só liga com a arte do Mecha aprovada pelo dono.
    Montaria que o jogador já tem: "Você tem", sem botão. Arte: assets/mounts/new/war_mecha_ref_prev.png (~300 KB; use pGate do p_wait.js nesta tela). */
-const SHM_ART='assets/mounts/new/war_mecha_ref_prev.png';
+const SHM_ART='assets/icons/mounts/war_mecha.png', SHM_OLD='assets/mounts/new/war_mecha_ref_prev.png';   /* ícone transparente da Arte; reserva = miniatura antiga */
 const shmEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function shmOn(){ try{ return !!(window.PANEL_ON&&window.PANEL_ON.shopmecha); }catch(e){ return false; } }
 function shmProduct(){ try{ return window.Sys&&Sys.buy&&Sys.buy.product?Sys.buy.product('mount_mecha'):null; }catch(e){ return null; } }
@@ -20,7 +20,7 @@ function shMechaCard(){
   const act=own?'<span style="font-size:13px;font-weight:900;color:#7ef08a">Você tem</span>'
     :'<button data-x="shm-buy" aria-label="'+shmEsc(ready?'Comprar '+m.name+' por '+price:m.name+': em breve')+'" style="min-height:48px;padding:0 18px;border:0;border-radius:12px;font-weight:900;font-size:15px;background:'+(ready?'linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 4px 0 #8a4f0c':'#3a3128;color:#c9b9a2')+'">'+(ready?shmEsc(price):'Em breve')+'</button>';
   const html='<div role="group" aria-label="'+shmEsc(p.name)+', '+shmEsc(rn)+'" style="display:flex;gap:10px;padding:10px;border-radius:14px;background:#1d1611;border:2px solid #ffc94a88;box-sizing:border-box">'
-    +'<img src="'+SHM_ART+'" alt="" loading="lazy" decoding="async" onerror="this.style.visibility=\'hidden\'" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;object-fit:contain">'
+    +'<img src="'+SHM_ART+'" alt="" loading="lazy" decoding="async" data-old="'+SHM_OLD+'" onerror="if(!this.__f){this.__f=1;this.src=this.dataset.old}else{this.hidden=true}" style="flex:none;width:84px;height:84px;border-radius:12px;background:#16110d;border:2px solid #4a3a2b;object-fit:contain">'
     +'<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;justify-content:center"><b style="font-family:\'Lilita One\',sans-serif;font-size:16px;line-height:1.1">'+shmEsc(p.name)+'</b>'
     +'<span style="font-size:12px;font-weight:900;color:#ffc94a">Montaria '+shmEsc(rn)+'</span><span style="font-size:12px;font-weight:700;color:#c9b9a2">Vem inteira, uma vez por conta. Sem sorteio.</span>'+act+'</div></div>';
   return {html,click:shMechaClick};
