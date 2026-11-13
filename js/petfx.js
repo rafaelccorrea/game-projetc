@@ -5,7 +5,26 @@
    st.hp × st.pet.heal. Arte: assets/anim/pets/<base>_{run,idle,atk1}.png/.json (célula 512x352, pés em feetY do .json, 12 fps), só do pet equipado.
    Chave geral: PETS_ON. Desligada, nada disto roda e o Sys.pet fica como veio (portões fechados). */
 const PETS_ON = true;
-const PET_DIR = 'assets/anim/pets/', PET_SCALE = [0.60, 0.74, 0.88];   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
+const PET_DIR = 'assets/anim/pets/', PET_SCALE = [0.60, 0.74, 0.88];
+/* v0.12.7 (ORDEM DO DONO): o pet fica AO LADO do Kael, um pouco À FRENTE, na mesma linha do chão, por cima da montaria; nada esconde nada.
+   TABELA de posição (um conjunto por pet; '_' = padrão): dx = centro do pet à frente do centro do Kael, em fração da LARGURA do corpo dele (0,35-0,45);
+   dy = px para baixo (levemente à frente); h = altura do pet em fração da altura do Kael por estágio (filhote, médio, evoluído: 0,45-0,55, estágio 3 até 0,65);
+   fly = quanto o voador paira acima do chão, em fração da altura do Kael (0,10-0,15). */
+const PET_TBL = { _: { dx: 0.42, dy: 5, h: [0.46, 0.52, 0.62], fly: 0.12 },
+  era0_mammoth: { dx: 0.42, dy: 5, h: [0.46, 0.52, 0.62] }, era1_sphinx: { dx: 0.42, dy: 5, h: [0.46, 0.52, 0.62] }, era2_dragon: { dx: 0.42, dy: 5, h: [0.48, 0.54, 0.64] },
+  era3_parrot: { dx: 0.44, dy: 0, h: [0.40, 0.46, 0.56], fly: 0.13 }, era4_mechdog: { dx: 0.42, dy: 5, h: [0.46, 0.52, 0.62] } };
+const KAEL_W = 0.56;   // largura do corpo do Kael ÷ lado do quadro (84 de 149 px)
+const petTbl = () => { const sp = PETK.info ? PETK.info.draw.sprite : ''; return Object.assign({}, PET_TBL._, PET_TBL[sp] || {}); };
+const PET_MOUNT = { dx: 0.62, dy: 9 };   // acréscimos quando há montaria: mais à frente (fração da largura do Kael) e mais para baixo (px)
+const petMounted = () => typeof HM !== 'undefined' && !!HM.mount && typeof mountReady === 'function' && mountReady(HM.mount.id);
+const petX = () => HX + HS * KAEL_W * (petTbl().dx + (petMounted() ? PET_MOUNT.dx : 0));
+/* medida da folha parada (uma vez por folha): altura e meia largura opacas, em px da célula */
+const PET_M = {};
+function petMetric(base){ let m = PET_M[base]; if (m) return m; const sh = sheetLoad(PET_DIR + base + '_idle', true); if (!sh.ok) return null; const M = sh.meta, ax = (M.padLeft != null ? M.padLeft : 96) + 128; let h = 150, r = 70;
+  try { const b = enBounds(sh)[0]; if (b){ h = Math.max(20, b.b - b.t); r = Math.max(10, b.r - ax); } } catch (e) {} return PET_M[base] = { h, r }; }
+function petK(){ const I = PETK.info; if (!I) return HS / 256 * 0.5; const m = petMetric(PETK.base), T = petTbl(), f = T.h[Math.max(0, Math.min(2, (I.stage | 0) - 1))] || 0.5; return m ? heroBodyH() * f / m.h : HS / 256 * 0.5; }
+/* até onde o pet passa da borda do corpo do Kael (px lógicos): o inimigo da frente guarda a folga a partir daí; o pet não se mistura com ele */
+function petFront(){ const I = PETK.info; if (!I || !PETK.base) return 0; const m = petMetric(PETK.base); if (!m) return 0; return Math.max(0, petX() + m.r * petK() - HERO_EDGE); }   // filhote, médio, evoluído: fração da escala do quadro do Kael (o filhote fica menor que ele)
 const PET_BACK = 0.34;   // o pet fica ATRÁS do Kael, meio corpo para a esquerda (o Kael está a ~60 px da borda: mais que isso sai da tela)
 const PETK = { id: null, info: null, base: '', t: 0, atkT: 0, act: null, infoT: 0 };
 const HATCH = { q: [], cur: null, egg: null };
@@ -51,14 +70,14 @@ function petWave(){ const I = petInfo(); if (!I || !B.hero) return; let st = nul
 function drawPet(){ const I = petInfo(); if (!I || B.res || HATCH.cur) return; const act = PETK.act, st = B.deadT > 0 ? 'idle' : act ? 'atk1' : (B.running ? 'run' : 'idle');
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
-  const k = HS / 256 * (PET_SCALE[Math.max(0, Math.min(2, (I.stage | 0) - 1))] || 0.6), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-  const px = HX - HS * PET_BACK, fly = I.draw.fly ? HS * (0.42 + 0.03 * Math.sin(B.at * 3)) : 0;
-  ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, GY + HS * 0.012, HS * (fly ? 0.1 : 0.15), HS * 0.035, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra no chão (quem voa: sombra menor)
-  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, GY - fly - fy * k, M.w * k, M.h * k); }
+  const T = petTbl(), k = petK(), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
+  const px = petX(), gy = GY + T.dy + (petMounted() ? PET_MOUNT.dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
+  ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
+  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */
 function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length || B.res || B.paused || view !== 'battle') return; const h = HATCH.q.shift(); h.t0 = B.at; HATCH.cur = h; snd('claim');
     if (!HATCH.egg){ HATCH.egg = new Image(); HATCH.egg.src = 'assets/pets/pet_egg.png'; } if (h.sprite) sheetLoad(PET_DIR + h.sprite + '_idle', true); }
-  const h = HATCH.cur, T = B.at - h.t0, cx = HX - HS * PET_BACK, gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
+  const h = HATCH.cur, T = B.at - h.t0, cx = petX(), gy = GY, eg = HATCH.egg, col = RAR[h.r] ? RAR[h.r].c : '#fff';
   if (T > 5.2){ HATCH.cur = null; return; }
   const ew = HS * 0.5, eh = eg && eg.naturalWidth ? ew * eg.naturalHeight / eg.naturalWidth : ew * 1.25;
   if (T < 2.4 && eg && eg.complete && eg.naturalWidth){ const sh = T < 1.4 ? Math.sin(T * 22) * 0.05 * (T / 1.4) : Math.sin(T * 40) * 0.1; ctx.save(); ctx.translate(cx, gy); ctx.rotate(sh); ctx.drawImage(eg, -ew / 2, -eh, ew, eh);
@@ -66,8 +85,8 @@ function drawHatch(){ if (!petOk()) return; if (!HATCH.cur){ if (!HATCH.q.length
       [[-0.12, -0.42], [-0.02, -0.6], [0.1, -0.44], [0.2, -0.62], [0.3, -0.5]].slice(0, Math.ceil(p * 5)).forEach(q => ctx.lineTo(q[0] * ew, q[1] * eh)); ctx.stroke(); }
     ctx.restore(); }
   if (T >= 2.1 && T < 3.1){ const p = T - 2.1; drawGlow('#ffffff', cx, gy - eh * 0.5, HS * (0.3 + 1.4 * p), Math.max(0, 1 - p)); drawGlow(col, cx, gy - eh * 0.5, HS * (0.5 + 1.0 * p), Math.max(0, 0.8 - p)); }
-  if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx - (cx - (HX - HS * PET_BACK)) * (T > 3.6 ? Math.min(1, (T - 3.6) / 1.2) : 0);
-    if (sh && sh.ok){ const M = sh.meta, k = HS / 256 * PET_SCALE[0], fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
+  if (T >= 2.4){ const sh = h.sprite ? sheetLoad(PET_DIR + h.sprite + '_idle', true) : null, p = Math.min(1, (T - 2.4) / 0.7), jump = Math.sin(p * Math.PI) * HS * 0.45, x = cx;
+    if (sh && sh.ok){ const M = sh.meta, k = heroBodyH() * 0.46 / Math.max(20, (petMetric(h.sprite) || { h: 150 }).h), fi = Math.floor(B.at * (M.fps || 12)) % M.frames, ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
       ctx.save(); ctx.globalAlpha = Math.min(1, p * 3); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, x - ax * k, gy - jump - fy * k, M.w * k, M.h * k); ctx.restore(); }
     if (!h.said){ h.said = true; B.banner = { txt: h.name + ' · ' + (RAR[h.r] ? RAR[h.r].n : ''), pill: true, bg: 'rgba(29,22,17,.92)', bd: col, sh: '#0e0a07', t: 0, dur: 2.4, col }; }   // nome e raridade na faixa de aviso do jogo (fora das barras do Kael)
   }

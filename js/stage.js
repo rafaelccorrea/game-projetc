@@ -84,7 +84,6 @@ function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p
   const ws = heroLook().weapon, sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
   { const pe = pistolEra(ws); if (pe >= 0) for (const st of ['idle', 'run', 'shoot']) out.push(pistolSheet(pe, st).p); }
   if (ART_ON.kael_die === true) out.push(sheetLoad(HERO_DIR + 'kael_die_body', true).p);
-  if (ART_ON.kael_die === true) out.push(sheetLoad(HERO_DIR + 'kael_die_body', true).p);
   { const tb = ws && trailBase(ws); if (tb) out.push(sheetLoad(tb, true).p); }
   const au = auraBase(); if (au) out.push(sheetLoad(au, true).p);
   return out; }
@@ -139,7 +138,8 @@ function drawHeroPistolWait(H){ const sh = SHEET(heroSet(H.sk.e).idle); if (!sh)
 const WING_IMG = {};
 function wingPart(kind, side){ const k = kind + side; let o = WING_IMG[k]; if (!o){ o = WING_IMG[k] = { img: null, ok: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.src = 'assets/anim/equip/wing_' + kind + '_' + side + '.png'; } return o; }
 function drawWings(H){ const kind = H.wing; if (!kind) return; const M = J('assets/anim/equip/wing_' + kind + '.json'), L = wingPart(kind, 'L'), R = wingPart(kind, 'R'); if (!M || !M.L || !L.ok || !R.ok) return;
-  const k = HS / 256 * 0.62, bx = H.x - HS * 0.07, by = H.gy - HS * 0.5, fl = 1 + 0.07 * Math.sin(H.t * 3.2);
+  const mo = H.mount && typeof mountWingOff === 'function' ? mountWingOff(H) : null;   // montado: as costas do Kael sobem com a sela
+  const k = HS / 256 * 0.62, bx = H.x - HS * 0.07 + (mo ? mo.x : 0), by = H.gy - HS * 0.5 + (mo ? mo.y : 0), fl = 1 + 0.07 * Math.sin(H.t * 3.2);
   ctx.save(); ctx.translate(bx, by);
   { const w = M.L.w * k, h = M.L.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(L.img, -M.L.root[0] * w, -M.L.root[1] * h, w, h); ctx.restore(); }
   { const w = M.R.w * k, h = M.R.h * k; ctx.save(); ctx.scale(fl, 1); ctx.drawImage(R.img, -M.R.root[0] * w, -M.R.root[1] * h, w, h); ctx.restore(); }
@@ -221,25 +221,9 @@ function drawHeroDie(H){ const sh = sheetLoad(HERO_DIR + 'kael_die_body', true);
     if (p >= 1 && !B.dieDustW){ B.dieDustW = 1; dust(ox + HS * 0.45, gy - 2, 3, '#c8b496'); }
     if (fi >= imp && !B.dieDustB){ B.dieDustB = 1; dust(ox + HS * 0.1, gy - 2, 5, '#c8b496'); dust(ox - HS * 0.1, gy - 2, 3, '#c8b496'); } }
   return true; }
-/* MORTE NOVA DO KAEL (aprovada, v0.12.8): folha assets/anim/hyb/R/kael_die_body (448x256, padLeft 96, pés em feetY; 18 quadros a 12 fps; o último,
-   deitado, segura). Cai de joelho e de bruços; a arma cai por código ao lado; poeira ao bater no chão; a tela escurece (battle.js). Vale montado
-   (não há folha da montaria sem o Kael: ele cai a pé e a montaria sai de cena) e com pet (o pet para). Chave: ART_ON.kael_die. */
-function drawHeroDie(H){ const sh = sheetLoad(HERO_DIR + 'kael_die_body', true); if (!sh.ok) return false; const M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256;
-  const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
-  ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);
-  /* a arma cai por código: sai da mão, gira e deita no chão à frente */
-  const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
-  if (w0){ const kk = 256 * 0.5 / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, y = (fy - 112) + (112 - 10) * e2, ang = -0.3 + (Math.PI / 2 + 0.3) * e2;
-    ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha; dspr(skinSpr(w0, ws.r), -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
-  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore();
-  if (H.main){ B.tipW = null; const imp = (M.impact && M.impact.body) || 16;
-    if (p >= 1 && !B.dieDustW){ B.dieDustW = 1; dust(ox + HS * 0.45, gy - 2, 3, '#c8b496'); }
-    if (fi >= imp && !B.dieDustB){ B.dieDustB = 1; dust(ox + HS * 0.1, gy - 2, 5, '#c8b496'); dust(ox - HS * 0.1, gy - 2, 3, '#c8b496'); } }
-  return true; }
 function drawHeroAnim(H){
   if (H.deadP >= 0 && ART_ON.kael_die === true){ if (drawHeroDie(H)) return true; } else if (H.main && H.deadP < 0){ B.dieDustW = 0; B.dieDustB = 0; }
-  if (H.deadP >= 0 && ART_ON.kael_die === true){ if (drawHeroDie(H)) return true; } else if (H.main && H.deadP < 0){ B.dieDustW = 0; B.dieDustB = 0; }
+  if (H.mount && typeof drawHeroMounted === 'function' && drawHeroMounted(H)) return true;   // Kael MONTADO (js/mountfx.js); sem as folhas carregadas, segue a pé
   { const pe = pistolEra(H.ws); if (pe >= 0) return drawHeroPistol(H, pe) || drawHeroPistolWait(H); }
   if (H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);
   const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;

@@ -292,3 +292,15 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - Sem servidor a tela abre, mostra canais e frases, e diz "O chat precisa do servidor online: em breve"; não há mensagens nem jogadores simulados e o envio só avisa. Não existe campo de texto livre (regra de menores).
 - A tela lê de um provedor opcional `window.P_CHAT` (contrato no cabeçalho do arquivo: online, messages(canal), send(canal, i), report, block, mute, cooldownMs, newLeftMs, guild). Quando o servidor chegar, basta definir isso.
 - Zero emoji; nomes globais com prefixo XCH/ch*/c* (XC e cClick já eram de p_cfg.js). Smoke: `node test/paineis/p_chat.smoke.js`.
+
+### Q-7. Guilda V2 (js/p_guild.js) — escrita pelo QA (fork), NÃO vista rodando
+- Peça ao engenheiro: carregar `'p_guild'` na lista de scripts do js/screens.js e ligar `PANEL_ON.guild` (MENU `soon:guild`, nível 32). Hoje `Sys.guild.DATA.on=false`: a tela mostra "Guildas: em breve" com as regras reais; ligando a chave sem servidor, "Em breve: abre com o online".
+- A tela só lê Sys.guild (status, ensure, DATA, perks, memberCap, bannerCap, createCost, canCreate, canJoin, provider.leave). Com guilda (espelho do servidor): nome, nível, cargo, vagas, Brasões, bônus de território, estandartes com tetos, territórios, regras de troca, prêmios do torneio. "Sair da guilda" (2 passos) chama `Sys.guild.provider.leave` e `statsChanged()` ao sair.
+- PEDIDO AO fps-69/Sistemas + servidor (nada disto existe em Sys.guild; a tela NÃO mostra e diz "em breve"): lista de membros (nome, cargo, Nv, FC, online, contribuição), chat com frases prontas, chefe da semana e ranking de dano, "na guilda agora", mural de pedidos/doar item, missões da semana, loja de Brasões, XP atual da guilda (barra de nível), criar/entrar/doar/check-in/subir estandarte (ações). Quando a API vier, entram nas abas sem mudar o resto.
+- Globais com prefixo pg/XGD/PG_ (XG, gFmt, gToast e gClick já existem em screens.js). Zero emoji. Smoke: `node test/paineis/p_guild.smoke.js`.
+
+### Q-10. Correio (js/p_mail.js) — escrita pelo QA, NÃO vista rodando
+- Peça: carregar `'p_mail'` e ligar `PANEL_ON.mail`; um item/ícone de Correio no MENU (ou no cabeçalho) abrindo `Panels.open('mail')`. A chave do MÓDULO `Sys.mail.DATA.enabled` está false: com ela desligada a tela só diz "O Correio ainda não está ativo" e oferece Voltar (ligar os dois juntos).
+- Tudo de `Sys.mail` (inbox, read, claim, claimAll, remove, unread); entrega pelo Sys.loot.grantBundle. Chama `statsChanged()` ao coletar.
+- O módulo não guarda remetente nem tipo da carta: a tela não inventa "Arena/Ranking/Evento"; e não existe "carta sem anexo some 7 dias depois de lida" (só expira em `DATA.expireDays`). Se o PO quiser remetente/tipo, Sistemas (fps-69) precisa acrescentar `from`/`type` ao `Sys.mail.send`.
+- Smoke: `node test/paineis/p_mail.smoke.js`. Zero emoji.

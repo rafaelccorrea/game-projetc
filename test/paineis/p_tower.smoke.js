@@ -47,4 +47,11 @@ g.Sys.pet = g.Sys.pet || {}; const A = tReward({ egg: { r: 2, source: 'tower100'
 const B = tReward({ t100Frags: 3, t100Pet: 'drake', phoenixFrags: 0 }); assert(B.includes('3 fragmentos do Dragão'), B); const C = tReward({ t100Frags: 1, t100Pet: '' }); assert(C.includes('1 fragmento do pet do andar 100'), C);
 const D = tReward({ egg: { r: 4, pet: 'phoenix' }, t100Frags: 2, t100Pet: 'phoenix' }); assert(D.includes('Ovo raro') && !/fênix|fenix/i.test(D + A + B + C), D);
 out.push('formato do andar 100 e acima: ok, sem fênix');
+// 9) torre inteira rolável com lista virtual: altura total, poucos andares desenhados, rolar repinta
+o.best = 49; o.lossesLeft = 5; def.render(); has('pt_in'); has('height:' + ((100 * 110) + 220) + 'px');
+const nF = s => (s.match(/aria-label="Andar [0-9]+/g) || []).length; assert(nF(H()) >= 3 && nF(H()) <= 8, 'janela pequena: ' + nF(H()));
+const sc = { scrollTop: 0, style: {} }, dy = mkEl('pt_dyn'); els.pt_sc = sc; els.pt_dyn = dy; def.render(); assert.strictEqual(typeof sc.onscroll, 'function'); assert(sc.scrollTop > 4000, 'câmera no andar atual');
+sc.scrollTop = 0; sc.onscroll(); assert(dy.innerHTML.includes('Andar 100') && nF(dy.innerHTML) >= 3 && nF(dy.innerHTML) <= 8, 'topo: andar 100'); assert(/CHEFE/.test(dy.innerHTML));
+out.push('torre inteira: lista virtual (' + nF(dy.innerHTML) + ' andares na janela), câmera no andar atual, rolar repinta');
+delete els.pt_sc; delete els.pt_dyn;
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

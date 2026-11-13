@@ -264,7 +264,7 @@ function fbLayout(){ const app = document.getElementById('app'), w = document.ge
   /* alvo de toque nunca abaixo de 44 px na tela: em tela estreita (escala < 1) Desafiar e velocidade ganham altura na base */
   { const mh = (s < 1 ? 44 / s : 44).toFixed(1) + 'px'; app.style.setProperty('--fbt', mh); const e = document.getElementById('fb_boss'); if (e) e.style.height = mh; }
   /* barras do Kael: ancoradas na linha dos pés + altura do corpo PARADO (não seguem golpe nem dano). Protótipo: x 44, 34 px acima do topo da cabeça */
-  { const kb = document.getElementById('fb_kb'), cvw = (typeof cv !== 'undefined' && cv.clientWidth) || W, k = cvw / LW / s; if (kb){ const top = (FIELD_FEET * H - st) / s - heroBodyH() * k - 34; let left = HX * k - 64;
+  { const kb = document.getElementById('fb_kb'), cvw = (typeof cv !== 'undefined' && cv.clientWidth) || W, k = cvw / LW / s; if (kb){ const top = (FIELD_FEET * H - st) / s - (heroBodyH() + (typeof heroRise === 'function' ? heroRise() : 0)) * k - 34;   /* montado: as barras sobem com o Kael */ let left = HX * k - 64;
       /* tela curta (360x640): a coluna esquerda de ícones (x 4-70) desce até a altura das barras; aí as barras começam depois da coluna, sem encostar no ícone */
       if (FB_MENU.some((m, i) => { if (m.side !== 'left' || !fbUnl(m.id)) return false; const y = 136 + 78 * FB_MENU.filter((q, j) => j < i && q.side === 'left' && fbUnl(q.id)).length; return y + (m.big ? 70 : 62) > top - 2 && y < top + 24; })) left = Math.max(left, 74);
       kb.style.left = left.toFixed(1) + 'px'; kb.style.top = top.toFixed(1) + 'px'; } }
@@ -280,8 +280,6 @@ function fbTick(){
   try { const h = Sys.level.hud(S), deg = Math.round((h.max ? 1 : h.frac) * 360); fbSet('fb_lv', h.text); if (FBK.ring !== deg){ FBK.ring = deg; document.getElementById('fb_ring').style.background = `conic-gradient(#5ff0cf ${deg}deg,rgba(255,255,255,.16) 0)`; } } catch (e) {}
   { const sk = SKIN(S.skinEq.armor), t = sk ? tierOf(sk.r) : 0, c = 'kidle' + (t ? ' t' + t : ''); if (FBK.kid !== c){ FBK.kid = c; document.getElementById('fb_kid').className = c; } }
   const e = eraOf(S.stage), inEra = ((S.stage - 1) % STAGES_PER_ERA) + 1; if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
-    else if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
-    else if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
     else if (fbSet('fb_stg', ERAS[e].n)){ const el = document.getElementById('fb_stg'); if (el && el.scrollWidth > el.clientWidth + 1){ el.textContent = FB_ERA_SHORT[e] || ERAS[e].n; FBK.fb_stg = ERAS[e].n; } }   /* nome inteiro; só se não couber entra a abreviação oficial da tabela */ fbSet('fb_stgx', (e + 1) + '-' + inEra);   // era com reticências se faltar largura; o número da fase nunca é cortado
   { const NW = S.farm ? 4 : 5, tot = Math.max(1, B.waveN || 1), left = B.en.length + B.toSpawn.length, pc = Math.round(100 * Math.max(0, Math.min(1, (tot - left) / tot))), k = S.wave + '|' + NW + '|' + pc;
     if (FBK.wv !== k){ FBK.wv = k; let h = ''; for (let i = 1; i <= NW; i++){ const boss = i === 5, cur = i === S.wave;
@@ -297,7 +295,7 @@ function fbTick(){
       document.getElementById('fb_spd').innerHTML = [1, 2, 4].map(n => { const ok = canSpeed(n), on = B.speed === n; return `<button data-fb="spd${n}" class="lil" aria-label="Velocidade x${n}${ok ? '' : ', bloqueada'}" aria-pressed="${on}" style="position:relative;width:var(--fbt,44px);height:var(--fbt,44px);border-radius:11px;border:0;padding:0;background:${on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'transparent'};color:${on ? '#2a1403' : ok ? '#f6ecdf' : '#9c8d7a'};font-size:14px;display:flex;align-items:center;justify-content:center">x${n}${ok ? '' : `<span style="position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:#1a110b;display:flex;align-items:center;justify-content:center">${FB_LOCK}</span>`}</button>`; }).join(''); } }
   { let lab = 'Baú'; try { if (Sys.chest.progress(S, Sys.host).stored) lab = 'Baú cheio'; } catch (e) {} fbSet('fbl_chest', lab); }
   { let n = fbUnl('missions') ? missionAlerts() : 0; if (FB_HIDDEN.pass && fbUnl('pass')) n += passAlerts(); fbSet('fb_bmenu', n ? String(n) : ''); }
-  { const lv = fbLvl() + '|' + Object.keys(Screens.reg || {}).length; if (FBK.unl !== lv){ FBK.unl = lv; fbLayout(); } fbNovoTick(); }   // subiu de nível (ou uma tela foi registrada): refaz o que aparece
+  { const lv = fbLvl() + '|' + Object.keys(Screens.reg || {}).length + '|' + (typeof heroRise === 'function' ? Math.round(heroRise()) : 0); if (FBK.unl !== lv){ FBK.unl = lv; fbLayout(); } fbNovoTick(); }   // subiu de nível (ou uma tela foi registrada): refaz o que aparece
   fbFast();
 }
 /* parte rápida (10x por segundo): vida, energia, recarga do especial e da ultimate */

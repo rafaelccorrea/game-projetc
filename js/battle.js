@@ -114,7 +114,8 @@ const SLOTX=[222,282,338].map(v=>v*PX),   /* 04b (PO): a V2 dos ícones deixa li
 let MAXVIS=MAXVIS_ALL;   // 3 visíveis; cai para 1 na onda em que uma espécie larga demais não cabe (ver SOLO_WIDE)
 /* ESPÉCIE LARGA (PO): mínimo de altura próprio; se mesmo no mínimo não couber nas sobreposições, entra SOZINHA (1 visível, o resto no "+N").
    Hoje só o Drone da era 5 (a arte será refeita mais estreita; quando chegar, tirar a entrada). */
-const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX, HERO_GAP=32*PX, HERO_REACH=4*PX, HERO_SHIFT_MAX=48*PX, HERO_BACK_MIN=80*PX, HERO_FRONT_K=1.10/1.20;   // folga de 32 px do corpo do Kael parado (QA pediu 30-40); fundo até 80 px; frente até a escala 1,10   // HERO_EDGE: borda direita do corpo do Kael parado; HERO_GAP: respiro mínimo até o inimigo da frente
+const heroEdge=()=>HERO_EDGE+Math.max(typeof mountFront==='function'?mountFront():0,typeof petFront==='function'?petFront():0);   // v0.12.7: o inimigo da frente guarda a folga a partir da montaria/do pet, não só do corpo do Kael
+const SOLO_WIDE={ era5_e0:{minH:80*PX} }, HERO_EDGE=150*PX, HERO_GAP=32*PX, HERO_REACH=4*PX, HERO_SHIFT_MAX=110*PX, HERO_BACK_MIN=80*PX, HERO_FRONT_K=1.10/1.20;   // folga de 32 px do corpo do Kael parado (QA pediu 30-40); fundo até 80 px; frente até a escala 1,10   // HERO_EDGE: borda direita do corpo do Kael parado; HERO_GAP: respiro mínimo até o inimigo da frente
 function waveVis(){ const keys=new Set(B.toSpawn.concat(B.en.map(e=>e.kind)).map(k=>`era${eraOf(S.stage)}_${k}`));
   for(const k of keys){ const W=SOLO_WIDE[k]; if(!W) continue; const sp=SPR(`assets/enemies/${k}.png`,'enemy'), w=W.minH*(sp?sp.w/sp.h:2);
     if((w+60*PX)/2-(SLOTX[1]-SLOTX[0])>SLOT_OVL[0]*Math.min(w,60*PX)) return 1; } return ERA_VIS[eraOf(S.stage)]||MAXVIS_ALL; }
@@ -150,7 +151,7 @@ function hordeFit(vis){
   const W=i=>H[i]*A[i];
   const XR=FB_SLOT_XMAX*PX;   // limite direito dos slots dos comuns (04b: constante própria)
   for(let i=0;i<n;i++){ const mw=2*(XR-X[i]); if(W(i)>mw){ H[i]=Math.max(slotMin(vis[i],i),mw/A[i]); if(W(i)>mw) X[i]=XR-W(i)/2; } }
-  if(n===1&&SOLO_WIDE[vis[0].key]){ const Wm=BOSS_X1-HERO_EDGE; if(W(0)>Wm) H[0]=Math.max(slotMin(vis[0],0),Wm/A[0]); X[0]=Math.min(BOSS_X1-W(0)/2,Math.max(X[0],HERO_EDGE+W(0)/2)); }   /* sozinho: usa a largura inteira entre o herói e x=382 (o centro vai para a direita) antes de encolher */
+  if(n===1&&SOLO_WIDE[vis[0].key]){ const HE=heroEdge(), Wm=BOSS_X1-HE; if(W(0)>Wm) H[0]=Math.max(slotMin(vis[0],0),Wm/A[0]); X[0]=Math.min(BOSS_X1-W(0)/2,Math.max(X[0],HE+W(0)/2)); }   /* sozinho: usa a largura inteira entre o herói e x=382 (o centro vai para a direita) antes de encolher */
   /* COMUNS: golpe, dano e morte também ficam dentro de x<=382 pela POSIÇÃO DO SLOT (PO): se um quadro dessas folhas passa da borda, o centro do slot recua;
      o corpo não desliza por quadro. enExt = quanto a parte opaca dessas folhas passa à direita da âncora, por px de altura. */
   const XB=X.slice(), EX=[]; for(let i=0;i<n;i++){ const ex=(EN_EXT_ON&&!(DEBUG&&window.__noExt))?enExt(vis[i],SPR(vis[i].spr,'enemy')):null; EX[i]=ex?ex.r:0; }
@@ -166,7 +167,7 @@ function hordeFit(vis){
      inimigos passar do limite da era, encolhe nesta ordem (PO): 1º só o do FUNDO, até HERO_BACK_MIN; 2º o da FRENTE, até HERO_FRONT_K da altura dele.
      O do meio não encolhe aqui. O que ainda sobrar fica como sobreposição entre inimigos (nunca corte, nunca em cima do herói). */
   if(n){ const XB0=X.slice(), H00=H[0], la=enExtL(vis[0],SPR(vis[0].spr,'enemy')), lim=ERA_OVL[eraOf(S.stage)]||SLOT_OVL;
-    const place=()=>{ for(let i=0;i<n;i++) X[i]=Math.min(XB0[i],Math.max(XR-W(i)/2,XB0[i]-0)); const need=Math.max(HERO_EDGE+HERO_GAP+W(0)/2, la?HERO_EDGE-HERO_REACH+H[0]*la.l:0);
+    const place=()=>{ for(let i=0;i<n;i++) X[i]=Math.min(XB0[i],Math.max(XR-W(i)/2,XB0[i]-0)); const HE=heroEdge(), need=Math.max(HE+HERO_GAP+W(0)/2, la?HE-HERO_REACH+H[0]*la.l:0);
       if(X[0]<need){ const d=Math.min(need-X[0],HERO_SHIFT_MAX); for(let i=0;i<n;i++) X[i]=Math.max(X[i],Math.min(X[i]+d,XR-W(i)/2)); } };
     const ovl=i=>((W(i)+W(i+1))/2-(X[i+1]-X[i]))/Math.min(W(i),W(i+1));
     for(let it=0;it<80;it++){ place(); if(n<2) break; const bad=[]; for(let i=0;i<n-1;i++) if(ovl(i)>lim[i]+0.005) bad.push(i); if(!bad.length) break;
@@ -176,8 +177,6 @@ function hordeFit(vis){
     B.front=X[0]; }
   for(let i=0;i<n;i++){ vis[i].slot=X[i]; vis[i].dhT=H[i]; }
 }
-const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
-const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
 const EN_IDLE_N=4, EN_IDLE_FPS=4;   // inimigo parado: os 4 primeiros quadros da folha de golpe, a 4 quadros/s (não há tabela da Arte por inimigo: valor único, a confirmar)
 const WAITX=LW+110;
 const EN_WALK=62, EN_STEP=120;   // px lógicos/s: entrada pela direita (constante, igual para todos) e passo de um slot para o outro (rápido, para ficar a maior parte do tempo parado e atacando)
@@ -273,8 +272,6 @@ function killEnemy(e){
 function waveClear(){
   const h=B.hero;
   if(typeof petWave==='function') petWave();
-  if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância
-  if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância
   if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
   if(S.wave===5){
@@ -799,10 +796,6 @@ const ART_ON={
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
   kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
   en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
-  kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
-  en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
-  kael_die:true,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
-  en_idle_prep:true,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
   //   // revólver da era 4 (versão corrigida em voto): DESLIGADA; ligada, a era 4 usa assets/anim/hyb/R/pistol/*_era4_t0
   kael_hybR_t0:true, kael_hybR_t1:true, kael_hybR_t2:true,                                 // Kael em folha COMPOSTA aprovada (hybR-run/idle/attack-era2_t<tier>): só com roupa E arma da era 2 no mesmo tier (js/stage.js)
@@ -882,8 +875,6 @@ function drawEnemyAt(e,x,deadP){
     const lb=Math.min(0.05,Math.max(0,room-0.5)/Math.max(1,e.dh||90)); lean-=lb; ox+=Math.max(0,Math.min(3*k,room-0.5-lb*(e.dh||90))); }
   const shDie=dying?enSheet(e,'die'):null, shAtk=!dying&&e.sw>0?enSheet(e,'attack'):null, shHurt=!dying&&!shAtk&&e.hurtT>0?enSheet(e,'hurt'):null, shRun=walking?enSheet(e,'run'):null;
   const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
-  const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
-  const shIdle=(!dying&&!shAtk&&!shHurt&&!walking&&ART_ON.en_idle_prep===true&&enOn(e.key,'attack'))?enSheet(e,'attack'):null;
   if(shAtk||shRun||shHurt) lean=0;                              // com folha o corpo não inclina (a folha já tem o movimento)
   let dark=0;
   if(dying){ if(shDie){ rot=0; alpha=deadP>0.8?Math.max(0,1-(deadP-0.8)/0.2):1; }
@@ -904,8 +895,6 @@ function drawEnemyAt(e,x,deadP){
     else if(shAtk) enFrame(shAtk,1-e.sw/(e.swD||EATK),spr,F);                          // ataque
     else if(shHurt) enFrame(shHurt,1-e.hurtT/(e.hurtD||EN_HURT_DUR),spr,F);                       // levando dano
     else if(shRun) enFrame(shRun,0,spr,F,e.wt);
-    else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando
-    else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando
     else if(shIdle){ const n=shIdle.meta.frames||1, m=Math.max(1,Math.min(EN_IDLE_N,n)), per=Math.max(1,2*m-2), ph=Math.floor(B.at*EN_IDLE_FPS+e.seed*3)%per, fi=ph<m?ph:per-ph; enFrame(shIdle,(fi+0.5)/n,spr,F); }   // preparo do golpe, indo e voltando                                        // corrida (pés do quadro na linha do chão)
     else { ctx.scale(1,sy); if(dark>0) dspr(spr,-dw/2,-dh,dw,dh,'#0a0705',dark); else dspr(spr,-dw/2,-dh,dw,dh,'#fff',(!dying&&e.hit>0)?e.hit/0.12*0.85:0); }
   }else drawEnemyOld(e,1,sy,dying);
@@ -949,9 +938,8 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); HM.wing=heroLook().wing; { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=heroLook(); HM.wing=lk.wing; HM.mount=lk.mount; } { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   const ultOn=!!(B.act&&B.act.type==='s3');
-  if(typeof drawPet==='function') drawPet();   // pet ATRÁS do Kael
   if(!ultOn){ drawHero(HM); drawLevelUp(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
@@ -959,6 +947,7 @@ function draw(){
     for(let j=5;j>=0;j--){ const kj=Math.max(0,k-j*0.035), x=p.x0+(p.x1-p.x0)*kj, y=p.y0+(p.y1-p.y0)*kj-(p.kind==='shell'?26*4*kj*(1-kj):0); drawGlow(col,x,y,(big?11:6)*(1-j/7)*(p.kind==='fire'?1.5+0.3*Math.sin(B.at*40+j):1),j?0.6*(1-j/6):1,false);
       if(!j){ ctx.fillStyle=p.kind==='shell'?'#2a2a30':'#ffffff'; ctx.strokeStyle='#3a1a08'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(x,y,big?4.5:2.6,0,7); ctx.fill(); ctx.stroke(); } } }   /* núcleo sólido: aparece também sobre fundo claro */
   if(ultOn){ drawWfx(2); drawHero(HM); drawLevelUp(); }
+  if(typeof drawPet==='function') drawPet();   // v0.12.7 (dono): pet AO LADO e um pouco À FRENTE do Kael, por cima da montaria
   if(typeof drawHatch==='function') drawHatch();   // ovo chocando (por cima da cena, abaixo do HUD)   // herói sempre por cima do efeito da ultimate
   drawWfx(1);
   // barras de vida depois dos efeitos (nunca cobertas)
@@ -1062,7 +1051,7 @@ function drawHeroPreview(c,look,dt){
   const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, hgt=c.clientHeight; if(!w||!hgt) return;
   if(c.width!==Math.round(w*dpr)||c.height!==Math.round(hgt*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(hgt*dpr); }
   const x=c.getContext('2d'), k=c.height/HS; x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,c.width/k+2,HS+2);
-  hpvT+=dt||0; HPVW.t=hpvT; HPVW.sk=look.armor; HPVW.ws=look.weapon; HPVW.wing=look.wing; HPVW.x=(c.width/k)/2; HPVW.gy=HS*243/256;
+  hpvT+=dt||0; HPVW.t=hpvT; HPVW.sk=look.armor; HPVW.ws=look.weapon; HPVW.wing=look.wing; HPVW.mount=look.mount; HPVW.x=(c.width/k)/2; HPVW.gy=HS*243/256;
   if(hpvWs!==look.weapon){ hpvWs=look.weapon; preloadAssets(); }
   ctx=x; try{ drawHero(HPVW); }finally{ ctx=mainCtx; }
 }

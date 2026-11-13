@@ -19,7 +19,7 @@ const btn = (x, o) => ({ dataset: Object.assign({ x }, o || {}) }); const H = ()
 const G = g.Sys.guild; const allBtn = () => { const bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 1 && bt.every(b => /data-x="/.test(b)), 'todo botão com ação'); return bt.length; };
 const noEmoji = () => assert(!/\p{Extended_Pictographic}/u.test(H()), 'sem emoji');
 // 1) chave desligada: estado + regras reais, sem dado inventado
-G.DATA.on = false; g.Sys.level = g.Sys.level || { unlockLevel: () => 32, level: () => 60 }; def.onOpen(); def.render(); has('Guildas: em breve'); has('Como a guilda funciona'); has('Estandartes'); has('Territórios'); has('Torneio do Poder'); has('Regras de troca');
+G.DATA.on = false; g.Sys.level = { unlockLevel: () => 32, level: () => 60 }; def.onOpen(); def.render(); has('Guildas: em breve'); has('Como a guilda funciona'); has('Estandartes'); has('Territórios'); has('Torneio do Poder'); has('Regras de troca');
 has('até ' + G.DATA.members.max); has('+' + G.DATA.banners.cap.atk + '%'); assert(!/Guardiões|GDT|PRÉVIA|\[QTD\]/.test(H())); noEmoji(); out.push('desligada: estado e regras do módulo, ' + allBtn() + ' botões com ação, zero emoji');
 def.click(btn('create')); assert(toasts.some(t => /não foram ligadas/.test(t))); def.click(btn('join')); out.push('criar/procurar explicam o motivo real');
 // 2) ligada, servidor fechado: "Em breve: abre com o online"

@@ -153,7 +153,24 @@ function yFly(fromEl,kind,delay){ const app=document.getElementById('app'); let 
   app.appendChild(im); setTimeout(()=>{ im.remove(); const p=to.closest('.hpill')||to.closest('.x-hpill')||to; p.classList.remove('y-bump'); void p.offsetWidth; p.classList.add('y-bump'); },1000+(delay||0)); }
 
 /* ======================================================================= 08 PASSE ======================================================================= */
-const XP={page:-1,mt:'d',mpage:0,cf:false,anim:true,toast:'',toastT:0,lvfx:false};
+/* PANEL_V2.passScroll (ligada por padrão; a chave vive no objeto PANEL_V2 do js/screens.js): trilha de prêmios numa lista só, com rolagem, e Missões fora do Passe
+   (botão que abre a tela 34 'missions'; sem ela, a lista de missões daqui). Com PANEL_V2.passScroll=false volta tudo ao que era: páginas (XP.page) e a aba Missões dentro. */
+const pScrollOn=()=>PANEL_V2.passScroll!==false;
+const P_THD=44, P_ROWH=70, P_GAP=6, P_PAD=6;   /* medidas da trilha contínua: legenda presa, linha, vão e respiro de cima (as mesmas do protótipo) */
+const P_MIS_I='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9zM9 5.5H5v15h14v-15h-4M8.5 13.5l2.5 2.5 4.5-4.5"></path></svg>';
+const XP={page:-1,mt:'d',mpage:0,cf:false,anim:true,toast:'',toastT:0,lvfx:false,scKey:''};
+/* a tela 34 (js/p_missions.js: Panels.add('missions'), chave PANEL_ON.missions) ligada, registrada e inteira? Só então o botão Missões abre ela. */
+function pMisScreen(){ try{ const R=window.Screens&&Screens.reg&&Screens.reg.missions; if(!R||R.broken) return false; return !(window.Panels&&Panels.defs&&Panels.defs.missions)||Panels.on('missions'); }catch(e){ return false; } }
+/* abre a tela 34 pelo caminho que ela pede (pedido Q-6: Panels.open('missions'); sem o Panels, Screens.open). Devolve true só se a tela 34 ficou na frente:
+   enquanto o setView do index.html trocar 'missions' por 'pass', a chamada cai na lista de missões daqui e isto devolve false (quem chama garante a lista). */
+function pMisOpen(){ try{ if(window.Panels&&Panels.defs&&Panels.defs.missions&&typeof Panels.open==='function') Panels.open('missions',{tab:'daily'}); else Screens.open('missions',{tab:'daily'}); }catch(e){ console.error('Passe: abrir Missões',e); }
+  return typeof view!=='undefined'&&view==='missions'; }
+/* trilha já rolada até o nível atual do passe, com a linha dele no meio da parte visível (abaixo da legenda presa). Conta por medida fixa (linha de 70 + vão de 6),
+   só a altura da lista é lida da tela; se ela ainda não tiver altura, tenta de novo no quadro seguinte. */
+function pScrollCur(sc,cur){ const lv=Math.max(1,cur||1), go=()=>{ const h=sc.clientHeight||0; if(!h) return false; sc.scrollTop=Math.max(0,Math.round(P_PAD+(lv-1)*(P_ROWH+P_GAP)-(h-P_THD-P_ROWH)/2)); return true; };
+  if(!go()&&typeof requestAnimationFrame==='function') requestAnimationFrame(()=>{ try{ if(sc.isConnected!==false) go(); }catch(e){} }); }
+/* a peça está à vista dentro da lista rolável? (o voo de moeda só sai de cartão visível; senão sai do meio da trilha) */
+function pVisible(el,sc){ try{ if(!sc) return true; const a=sc.getBoundingClientRect(), b=el.getBoundingClientRect(); return !(b.bottom<a.top+P_THD||b.top>a.bottom); }catch(e){ return true; } }
 const P_MICON={kill:'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4',boss:'M12 2l3 7h7l-6 4 2 8-6-5-6 5 2-8-6-4h7z',ult:'M13 2 4 14h7l-1 8 9-12h-7z',chest:'M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4',
   instance:'M4 21V9l8-6 8 6v12M9 21v-6h6v6',forge:'M5 9h9l5 3-5 2v3H7v-3H5zM7 20h8',summon:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18',upgrade:'M12 20V5M5 12l7-7 7 7'};
 const P_GO={summon:'summon',upgrade:'gear'};
@@ -175,7 +192,8 @@ function pClaimOne(track,lv){ const o=Sys.pass.ensure(S), sf=o.free.slice(), sp=
 function pAfterClaim(res,els){ if(!res||!res.n){ snd('ui_tap'); pToast('Nada novo para resgatar'); return; }
   const items=[], held=[]; let k=0;
   for(const r of res.list){ if(r.item) items.push(iname(r.item)); if(r.held) held.push(r.held); if(r.skin){ const sk=SKIN(SEASON_SKIN); items.push(sk?sk.n:'Skin da temporada'); }
-    const el=els&&els[r.track+r.tier]; if(k<8){ if(r.gems) yFly(el||document.getElementById('xp_all'),'gem',k*90); if(r.gold) yFly(el||document.getElementById('xp_all'),'gold',k*90+60); if(r.item||r.skin||r.held) yFly(el||document.getElementById('xp_all'),'item',k*90); k++; } }
+    const el=(els&&els[r.track+r.tier])||(pScrollOn()&&document.getElementById('xp_sc'))||document.getElementById('xp_all');   /* cartão fora da vista (lista rolada): o voo sai do meio da trilha */
+    if(k<8){ if(r.gems) yFly(el,'gem',k*90); if(r.gold) yFly(el,'gold',k*90+60); if(r.item||r.skin||r.held) yFly(el,'item',k*90); k++; } }
   snd('claim'); if(res.list.some(r=>r.gold)) setTimeout(()=>snd('coin'),250); statsChanged(); XP.anim=false; render();
   const hTxt=held.length?(held.length===1?'Item guardado: sai no nível '+held[0].needLevel:held.length+' itens guardados até o nível liberar'):'';
   pToast(res.n===1?(items.length?items[0]+' (veja em Equip.)':hTxt||'Recompensa resgatada'):'Resgatou '+res.n+' recompensas'+(items.length?' · '+items.length+(items.length>1?' itens':' item'):'')+(hTxt?' · '+hTxt:'')); }
@@ -189,9 +207,13 @@ function scrPass(){
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
   const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0;
   const seg=on=>on?'background:linear-gradient(180deg,#b07cff,#6a3cff);color:#fff':'background:transparent;color:#c9b9a2';
+  /* SC = trilha contínua com rolagem (padrão). A lista que rola tem id xp_sc (a trilha no Passe; o miolo inteiro nas Missões): a tela redesenha inteira a cada toque,
+     então o scrollTop é guardado aqui e devolvido no fim (igual ao xg_sc do Equipamento). "first" = abertura ou troca de modo: aí a trilha vai para o nível atual. */
+  const SC=pScrollOn(), scKey=(isMs?'m':'p')+(SC?1:0), first=XP.anim||XP.scKey!==scKey, sc0=document.getElementById('xp_sc'), scTop=sc0&&!first?sc0.scrollTop:0;
   let body='';
   if(!isMs){
-    const pages=Math.ceil(T/PER); if(XP.page<0) XP.page=Math.floor(Math.max(0,Math.min(T,CUR+1)-1)/PER); XP.page=Math.max(0,Math.min(pages-1,XP.page)); const pg=XP.page;
+    const pages=Math.ceil(T/PER); if(XP.page<0) XP.page=Math.floor(Math.max(0,Math.min(T,CUR+1)-1)/PER); XP.page=Math.max(0,Math.min(pages-1,XP.page)); const pg=XP.page;   /* páginas: só com a chave desligada */
+    const lvA=SC?1:pg*PER+1, lvB=SC?T:Math.min(T,pg*PER+PER);
     /* recompensa de equipamento e de skin: a MESMA moldura por raridade das outras telas (xRar, js/screens.js); com PANEL_V2.rar desligada, o desenho de antes */
     const cell=(inf,op)=>{ if(inf.kind==='coin') return `<img src="${inf.img}" alt="" style="width:38px;height:38px;object-fit:contain;flex:none;opacity:${op}">`; const q=xRar(inf.r);
       return inf.kind==='eq'?`<span class="p-slot${q.on?q.cls:' p-rglow'}"${q.at} style="${q.on?'':`border-color:${inf.rc};--rc:${inf.rc};background:radial-gradient(circle,${inf.rc}33,#120d0a 75%);`}opacity:${op}"><img src="${slotIcon(inf.slot,S.eraMax)}" alt="" style="width:28px;height:28px;object-fit:contain"></span>`
@@ -200,29 +222,39 @@ function scrPass(){
     const state=(can,done,fut,lv)=>can?'<span class="p-pill y-gold lil" style="align-self:flex-start;height:22px;padding:0 9px;border-radius:8px;font-size:12px;display:flex;align-items:center;box-shadow:0 3px 0 #8a4f0c">Resgatar</span>'
       :done?`<span style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:900;color:#8fe596">${Y_CHK(14)}Resgatado</span>`:fut?`<span style="font-size:11px;font-weight:800;color:#c9b9a2">No nível ${lv}</span>`:'';
     let rows='';
-    for(let lv=pg*PER+1;lv<=Math.min(T,pg*PER+PER);lv++){ const fi=pInfo(P.reward('free',lv)), pi=pInfo(P.reward('premium',lv)), reached=lv<=CUR;
+    for(let lv=lvA;lv<=lvB;lv++){ const fi=pInfo(P.reward('free',lv)), pi=pInfo(P.reward('premium',lv)), reached=lv<=CUR;
       const fDone=o.free.includes(lv), fCan=reached&&!fDone, fFut=!reached, pDone=o.prem.includes(lv), pCan=prem&&reached&&!pDone, pFut=prem&&!reached, pLock=!prem;
       const fOp=fDone?.6:fFut?.85:1, pOp=pLock||pDone?.6:1, cur=lv===CUR;
-      rows+=`<div class="p-row" style="height:70px;flex:none;display:grid;grid-template-columns:1fr 44px 1fr;gap:6px">
+      rows+=`<div class="p-row${SC&&!reached?' p-fut':''}" data-lv="${lv}" style="${SC?'position:relative;':''}height:${P_ROWH}px;flex:none;display:grid;grid-template-columns:1fr 44px 1fr;gap:6px">
         <button class="p-card ${fCan?'p-can':''}" data-x="claim" data-t="free" data-lv="${lv}" id="xp_free${lv}" aria-label="Nível do passe ${lv}, grátis: ${esc2(fi.tag?fi.tag+', ':'')}${esc2(fi.txt)}${fCan?', resgatar':fDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;border-radius:14px;border:2px solid ${fCan?'#ffc94a':fi.kind==='eq'?fi.rc+'99':'#4a3a2b'};background:${fCan?'linear-gradient(180deg,#4a361f,#241b14)':'#1d1611'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0;opacity:${fOp}">
           ${cell(fi,1)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">${fi.tag?`<span style="font-size:9px;font-weight:900;color:${fi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(fi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1">${rwName(fi)}</span>${state(fCan,fDone,fFut,lv)}</span></button>
         <div style="position:relative;display:flex;align-items:center;justify-content:center">
-          <span style="position:absolute;left:20px;top:-3px;width:4px;height:38px;background:${lv===1?'transparent':reached?'#b07cff':'#4a3a2b'}"></span><span style="position:absolute;left:20px;top:35px;width:4px;height:38px;background:${lv===T?'transparent':lv+1<=CUR?'#b07cff':'#4a3a2b'}"></span>
-          <span class="lil" style="position:relative;width:40px;height:40px;border-radius:50%;border:3px solid ${reached?'#b07cff':'#4a3a2b'};background:${cur?'linear-gradient(180deg,#b07cff,#6a3cff)':reached?'#2e1f4a':'#1d1611'};color:${cur?'#fff':reached?'#d9b3ff':'#c9b9a2'};font-size:17px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${lv}${cur?'<span class="p-cur"></span>':''}</span></div>
+          ${SC?'':`<span style="position:absolute;left:20px;top:-3px;width:4px;height:38px;background:${lv===1?'transparent':reached?'#b07cff':'#4a3a2b'}"></span><span style="position:absolute;left:20px;top:35px;width:4px;height:38px;background:${lv===T?'transparent':lv+1<=CUR?'#b07cff':'#4a3a2b'}"></span>`}
+          <span class="lil${SC&&cur?' p-curn':''}" style="position:relative;width:40px;height:40px;border-radius:50%;border:3px solid ${reached?'#b07cff':'#4a3a2b'};background:${cur?'linear-gradient(180deg,#b07cff,#6a3cff)':reached?'#2e1f4a':'#1d1611'};color:${cur?'#fff':reached?'#d9b3ff':'#c9b9a2'};font-size:17px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${lv}${cur?'<span class="p-cur"></span>':''}</span></div>
         <button class="p-card ${pCan?'p-can':''}" data-x="claim" data-t="premium" data-lv="${lv}" id="xp_premium${lv}" aria-label="Nível do passe ${lv}, premium: ${esc2(pi.tag?pi.tag+', ':'')}${esc2(pi.txt)}${pLock?', exige Premium':pCan?', resgatar':pDone?', resgatado':', libera no nível do passe '+lv}" style="position:relative;overflow:hidden;border-radius:14px;border:2px solid ${pCan?'#ffc94a':pi.kind==='coin'?'#5a3f8a':pi.rc};background:${pi.kind==='coin'?'linear-gradient(180deg,#2a2038,#1d1611)':'linear-gradient(180deg,#3a2a55,#1d1611)'};padding:4px 6px;display:flex;align-items:center;gap:6px;text-align:left;min-width:0">
           ${cell(pi,pOp)}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;opacity:${pOp}">${pi.tag?`<span style="font-size:9px;font-weight:900;color:${pi.rc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(pi.tag)}</span>`:''}<span style="font-size:12px;font-weight:900;line-height:1.1">${rwName(pi)}</span>${state(pCan,pDone,pFut,lv)}</span>
           ${pLock?`<span style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#0e0a07;border:2px solid #8a4dff;display:flex;align-items:center;justify-content:center">${SVG_LOCK(13,'#e6d4ff')}</span>`:''}</button></div>`; }
     const pend=pPending(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===pg?22:8}px;height:8px;border-radius:4px;background:${i===pg?'#b07cff':i*PER+1<=CUR?'#6a4a9a':'#4a3a2b'};transition:width .25s"></span>`).join('');
-    body=`<div style="height:38px;flex:none;display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;align-items:center">
+    /* legenda das trilhas: com rolagem fica presa no topo da lista (p-thd, 44 px); paginado, é a linha de 38 px de antes */
+    const legend=`<div ${SC?`class="p-thd" style="height:${P_THD}px;`:'style="height:38px;flex:none;'}display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;align-items:center">
         <span style="display:flex;flex-direction:column;align-items:center;line-height:1.1"><span class="lil" style="font-size:15px;color:#e8dccb">Grátis</span><span style="font-size:9px;font-weight:800;color:#c9b9a2;text-align:center">diamantes, moedas, Básico · Épico no 30</span></span>
         <span style="text-align:center;font-size:9px;font-weight:900;color:#c9b9a2">NÍVEL DO PASSE</span>
-        <span style="display:flex;flex-direction:column;align-items:center;line-height:1.1"><span class="lil" style="display:flex;align-items:center;gap:4px;font-size:15px;color:#d9b3ff">${prem?'':SVG_LOCK(13,'#e6d4ff')}Premium</span><span style="font-size:9px;font-weight:800;color:#d9c8ff;text-align:center">Raro → Épico → Lendário, + diamantes, skin</span></span></div>
-      <div style="height:${PER*70+(PER-1)*5}px;flex:none;display:flex;flex-direction:column;gap:5px">${rows}</div>
-      <div style="height:52px;flex:none;display:flex;gap:8px;margin-top:auto">
+        <span style="display:flex;flex-direction:column;align-items:center;line-height:1.1"><span class="lil" style="display:flex;align-items:center;gap:4px;font-size:15px;color:#d9b3ff">${prem?'':SVG_LOCK(13,'#e6d4ff')}Premium</span><span style="font-size:9px;font-weight:800;color:#d9c8ff;text-align:center">Raro, Épico e Lendário, + diamantes, skin</span></span></div>`;
+    /* com rolagem: TODOS os níveis numa lista só (id xp_sc), linha de progresso contínua atrás dos números (cheia até o nível atual), fim da temporada no pé; as ações ficam fora da rolagem */
+    const step=P_ROWH+P_GAP, trail=SC?`<div class="x-scroll p-trail" id="xp_sc" role="region" aria-label="Trilha do passe, níveis 1 a ${T}">${legend}
+        <div style="position:relative;display:flex;flex-direction:column;gap:${P_GAP}px;padding:${P_PAD}px 0 4px">
+          <span aria-hidden="true" style="position:absolute;left:calc(50% - 2px);top:${P_PAD+P_ROWH/2}px;width:4px;height:${(T-1)*step}px;border-radius:2px;background:#3a2c1f"></span>
+          <span aria-hidden="true" style="position:absolute;left:calc(50% - 2px);top:${P_PAD+P_ROWH/2}px;width:4px;height:${Math.max(0,Math.min(CUR,T)-1)*step}px;border-radius:2px;background:linear-gradient(180deg,#7fe3ff,#b07cff 30%,#8a4dff);box-shadow:0 0 8px rgba(176,124,255,.8)"></span>
+          ${rows}</div>
+        <div style="padding:8px 0 14px;text-align:center;font-size:12px;font-weight:800;color:#c9b9a2">Fim da temporada · ${T} níveis · itens da sua era</div></div>`
+      :`${legend}
+      <div style="height:${PER*70+(PER-1)*5}px;flex:none;display:flex;flex-direction:column;gap:5px">${rows}</div>`;
+    body=`${trail}
+      <div style="height:52px;flex:none;display:flex;gap:8px;${SC?'':'margin-top:auto'}">
         <button class="lil ${pend.length?'y-gold y-cta':''}" data-x="all" id="xp_all" style="flex:1;height:50px;border-radius:14px;${pend.length?'':'border:2px solid #4a3a2b;background:#241b14;color:#c9b9a2;'}font-size:16px;padding:0">${pend.length?'Resgatar tudo ('+pend.length+')':'Tudo resgatado'}</button>
         ${prem?`<div class="lil" style="flex:1.3;height:50px;border-radius:14px;border:2px solid #8a4dff;background:#241a38;color:#e6d4ff;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box"><img src="assets/ui/pass.png" alt="" style="width:26px;height:26px;object-fit:contain">Premium ativo</div>`
           :`<button class="p-prem" data-x="askprem" style="position:relative;overflow:hidden;flex:1.3;height:50px;border-radius:14px;padding:0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="p-premsh"></span><span class="lil" style="font-size:16px">Ativar Premium</span><span style="font-size:10px;font-weight:900;color:#2a1250">Pagamento em breve</span></button>`}</div>
-      ${xPager('pg',pg,pages,'Níveis '+(pg*PER+1)+'–'+Math.min(T,pg*PER+PER)+' de '+T+' · itens da sua era','Níveis anteriores','Próximos níveis')}`;
+      ${SC?'':xPager('pg',pg,pages,'Níveis '+(pg*PER+1)+'–'+Math.min(T,pg*PER+PER)+' de '+T+' · itens da sua era','Níveis anteriores','Próximos níveis')}`;
     XP.pages=pages;
   } else {
     const src=XP.mt==='d'?L.daily:L.weekly, list=src.map(m=>({m,ev:pEvOf(m.id)}));
@@ -250,7 +282,20 @@ function scrPass(){
       <div style="${passOk?'':'display:none!important;'}height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#1d1611;border:1px dashed #5a3f8a;font-size:12px;font-weight:800;color:#d9c8ff;text-align:center;padding:0 10px;box-sizing:border-box">XP do passe sobe o NÍVEL DO PASSE (${P.DATA.xpPerTier} XP por nível). Não muda o nível do jogador.</div>`;
   }
   const pct=pr.max?100:Math.round(pr.inTier/pr.per*100);
-  V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div class="x-scroll" style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;box-sizing:border-box;background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
+  /* no lugar das abas (chave ligada, Passe liberado): no Passe, o BOTÃO Missões (abre a tela 34; sem ela, a lista daqui); nas Missões, o caminho de volta ao Passe */
+  const pendN=SC&&passOk&&isMs?pPending().length:0;
+  const nav=!SC||!passOk?'':!isMs?`<button class="p-nav" data-x="mis" aria-label="Abrir Missões${ready?', '+ready+(ready===1?' pronta':' prontas')+' para resgatar':''}" style="position:relative;height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;border-radius:13px;border:2px solid #5a3f8a;background:linear-gradient(180deg,#2e1f4a,#1d1611);color:#e6d4ff;text-align:left;box-sizing:border-box">
+        <span style="flex:none;display:flex">${P_MIS_I}</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:17px;color:#fff">Missões</span><span style="font-size:11px;font-weight:800;color:#d9c8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${ready?(ready===1?'1 pronta':ready+' prontas')+' para resgatar':'Ganhe XP do passe'}</span></span>
+        ${ready?`<span class="p-pill" style="flex:none;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#ff5a4e;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}
+        <span style="flex:none;display:flex;color:#d9b3ff">${Y_FWD}</span></button>`
+    :`<button class="p-nav" data-x="tab" data-t="pass" aria-label="Voltar ao Passe${pendN?', '+pendN+(pendN===1?' prêmio':' prêmios')+' para resgatar':''}" style="position:relative;height:48px;flex:none;display:flex;align-items:center;gap:8px;padding:0 12px 0 8px;border-radius:13px;border:2px solid #5a3f8a;background:linear-gradient(180deg,#2e1f4a,#1d1611);color:#e6d4ff;text-align:left;box-sizing:border-box">
+        <span style="flex:none;display:flex;color:#d9b3ff">${Y_BACK}</span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:17px;color:#fff">Voltar ao Passe</span><span style="font-size:11px;font-weight:800;color:#d9c8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pendN?(pendN===1?'1 prêmio':pendN+' prêmios')+' para resgatar':'Prêmios da temporada'}</span></span>
+        ${pendN?`<span class="p-pill" style="flex:none;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:#ffc94a;color:#2a1403;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${pendN}</span>`:''}
+        <img src="assets/ui/pass.png" alt="" style="width:26px;height:26px;flex:none;object-fit:contain"></button>`;
+  /* com rolagem, no Passe o miolo NÃO rola (só a trilha rola: cartão da temporada e botão Missões em cima, ações embaixo, tudo preso); nas Missões o miolo rola como antes */
+  V.innerHTML=xWrap(d,XP.anim?'p-in':'',`<div ${SC&&!isMs?'':`class="x-scroll"${SC?' id="xp_sc"':''} `}style="flex:1;position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 12px 10px;box-sizing:border-box;${SC&&!isMs?'overflow:hidden;':''}background:radial-gradient(120% 50% at 50% 0%,#2c2140 0%,#16110d 70%);min-height:0">
     <div class="p-hdr" style="${passOk?'':'display:none!important;'}height:92px;flex:none;position:relative;display:flex;border-radius:16px;border:2px solid #8a4dff;background:linear-gradient(120deg,#2e1f4a 0%,#1d1611 70%);overflow:hidden">
       <div style="position:relative;width:92px;flex:none;overflow:hidden"><div class="p-aura"></div><div class="p-ped" style="left:18px;top:76px;width:56px;height:12px"></div>
         <div class="kidle ${skT?'t'+skT:''} p-glow" role="img" aria-label="Skin da temporada, prêmio Premium do nível 25 do passe" style="position:absolute;left:6px;top:6px;width:80px;height:80px"></div></div>
@@ -262,10 +307,10 @@ function scrPass(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">jogador: Nv. ${lvP}</span></div>
         <div role="progressbar" aria-label="XP do passe" aria-valuemin="0" aria-valuemax="${pr.per}" aria-valuenow="${pr.inTier}" style="height:12px;border-radius:6px;background:#0e0a07;border:1px solid #5a3f8a;overflow:hidden"><div class="p-fill p-pxp" style="width:${pct}%;height:100%"></div></div>
         <span style="font-size:11px;font-weight:800;color:#d9c8ff;white-space:nowrap">${pr.max?'Nível máximo do passe':pr.inTier+'/'+pr.per+' XP do passe · ganhe nas Missões'}</span></div></div>
-    <div role="tablist" aria-label="Passe" style="${passOk?'':'display:none!important;'}height:52px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
+    ${SC?nav:`<div role="tablist" aria-label="Passe" style="${passOk?'':'display:none!important;'}height:52px;flex:none;display:flex;gap:6px;padding:3px;border-radius:13px;background:#0e0a07;border:1px solid #4a3a2b;box-sizing:border-box">
       <button role="tab" class="lil" aria-selected="${!isMs}" data-x="tab" data-t="pass" style="flex:1;border-radius:10px;border:0;${seg(!isMs)};font-size:16px;padding:0">Recompensas</button>
-      <button role="tab" class="lil" aria-selected="${isMs}" data-x="tab" data-t="mis" style="position:relative;flex:1;border-radius:10px;border:0;${seg(isMs)};font-size:16px;padding:0">Missões${ready?`<span class="p-pill" style="position:absolute;top:4px;right:10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff5a4e;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}</button></div>
-    ${body}<div id="xp_toast"></div></div>
+      <button role="tab" class="lil" aria-selected="${isMs}" data-x="tab" data-t="mis" style="position:relative;flex:1;border-radius:10px;border:0;${seg(isMs)};font-size:16px;padding:0">Missões${ready?`<span class="p-pill" style="position:absolute;top:4px;right:10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff5a4e;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}</button></div>`}
+    ${body}<div id="xp_toast"${SC&&!isMs?' style="position:absolute;left:0;right:0;bottom:0;height:0"':''}></div></div>
     ${XP.cf?`<div class="y-veil" style="position:absolute;inset:0;z-index:30;background:rgba(8,6,4,.78);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
       <div class="y-pop" role="alertdialog" aria-label="Ativar Premium" style="width:330px;border-radius:18px;border:3px solid #8a4dff;background:#221a30;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 30px rgba(138,77,255,.5)">
         <span class="lil" style="font-size:22px;text-align:center">Ativar Passe Premium</span>

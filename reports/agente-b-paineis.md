@@ -800,3 +800,28 @@ Arquivo `js/p_mounts.js` (subagente; conferi `node --check`, fumaça, conflito d
   estrelas iguais no módulo ("Brilho leve"; o protótipo tem "Brilho forte" na 3ª); (3) a fonte de cada montaria.
 - Testes: fumaça sem falha; conflito de nomes ok; teste de cliques do subagente (53 verificações em 5 medidas; 263 HTMLs varridos).
 - A ver no navegador: posição do Kael montado no palco, auras, quebras de texto; equipar lobo e grifo e ver o Kael montar na batalha.
+
+## Bloco 22: depois da reversão acidental (`git checkout -- .`)
+
+O QUE SOBREVIVEU nos meus arquivos (estava no commit da v0.12.6 ou em arquivo novo): escolha de ovo (`eggpick`) no `p_pets.js` e no
+`panels.js`; correção do arrasto em tela baixa (`equipfx.js`); componente de raridade; liberação por nível; avisos dos botões mudos;
+retirada do contorno do `feedTap`; Forja, Configurações, Montarias, Ranking (com o aviso dos simulados no topo do pódio).
+
+O QUE SUMIU E REFIZ (conferido por busca e `node --check`):
+- lista de carga do `js/screens.js`: voltaram `p_rank`, `p_inst`, `p_mounts`; acrescentei `p_missions` (tela 34 do QA, chave desligada);
+- `PANEL_ON.rank = true` (tela vista funcionando antes da reversão);
+- o caractere "★" dos Pets (5 lugares) trocado de novo por "N estrelas".
+
+O QUE SUMIU E ESTÁ SENDO REFEITO por subagente: o Passe com rolagem contínua + botão "Missões" (`js/screens2.js`), a partir dos
+rascunhos que sobraram; agora ligado à tela 34 que passou a existir. A tela 10 (Vitória/Derrota) também está em curso no mesmo arquivo,
+em outra seção; os dois foram avisados para editar só por substituições pequenas e nunca rodar comandos de reversão do git.
+
+O QUE NÃO RELIGUEI: `PANEL_ON.tower` (a Torre voltou à versão antiga; religo quando o QA avisar que refez e eu olhar); `PANEL_ON.era`
+(já estava desligada: o QA mudou a tela depois da minha conferência); `PANEL_ON.mounts` e `PANEL_ON.inst` (nunca foram ligadas).
+
+O QUE NÃO LEMBRO COM CERTEZA: se havia algum ajuste pequeno meu em `js/p_forge.js` ou `js/p_cfg.js` depois da v0.12.6 (acho que não:
+os dois batem com o commit); o texto exato dos blocos do relatório não foi afetado (este arquivo sobreviveu).
+
+PASSADA DE NAVEGADOR INTERROMPIDA: abri a aba para Montarias e Troca de era e o JOGO NÃO SOBE: `js/battle.js` (do agente A) está com
+erro de sintaxe na linha 180 ("Identifier 'EN_IDLE_N' has already been declared"), então `resize` não existe e nenhuma tela abre.
+Fechei a aba sem conferir nada. Não é meu arquivo e não mexi.

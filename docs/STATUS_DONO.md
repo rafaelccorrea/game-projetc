@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h10 · Sistemas entregou (refeito depois do acidente, 42 testes):** a conta do FC que sobe/desce (o engenheiro liga na v0.12.8); a tabela de raridade da ultimate (só visual, o dano continua dos atributos); a regra da Atividade de hoje (baús em 20/40/60/80/100, sem diamante); 33 Conquistas em 5 grupos (diamante só no último nível, ~200 no jogo inteiro, total ~10,2 mil em 6 meses). Agora: telas Arena, Eventos, Torneio
+- **21h10 · Servidor:** asa como item próprio refeita; começou as telas de entrada
+- **21h10 · Sua ordem:** o QA não testa nada no aplicativo até TODAS as telas, montarias e pets estarem prontos; só escreve telas
+
 - **21h · Força-tarefa de telas:** as 6 sessões escrevem telas ao mesmo tempo; o engenheiro só liga no jogo, em lotes (plano em `docs/FORCA_TAREFA_TELAS.md`)
   - QA: Torre (refazendo), Códex, Correio, Chat, Guilda
   - Sistemas: FC na tela (refazendo), Arena, Eventos, Torneio, Atividade/Conquistas
