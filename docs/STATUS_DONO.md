@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14h30 · Arte FECHOU o que tinha começado:** 8 skins prontas (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo, Paladino Solar, Ninja) e 3 pets novos (Lobo das Sombras, Falcão de Guerra, Pantera Espectral). Parado para a próxima parte: Samurai (2 guias e 3 vídeos já feitos, reaproveitados) e Ciborgue do Kael, 6 pets, 10 montarias novas montadas. Saldo ~313
+- **14h30 · APK v0.12.9 compilando;** o servidor do jogo no navegador do PC caiu por falta de memória e volta quando a compilação terminar
+
 - **14h15 · Arte, situação:** PRONTAS 6 skins (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo); terminando Paladino e Ninja do Kael e a Pantera Espectral (~70-90 créditos, saldo final ~250). EM ESPERA para a próxima parte (~620 créditos): Samurai e Ciborgue do Kael (~72), 6 pets (~270), 10 montarias novas montadas (~280)
 
 - **14h05 · Sua ordem:** a Arte termina só o que já começou (Angelical da Kaia, Paladino e Ninja do Kael, e a Pantera Espectral se já estiver em andamento). O resto fica para a próxima parte: Samurai e Ciborgue do Kael, os outros pets e as 10 montarias novas montadas
