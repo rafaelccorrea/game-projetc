@@ -69,6 +69,23 @@ Uma fogueira no canto da batalha. O jogador **alimenta com Brasas** e cada Brasa
 - O presente de boas-vindas passa a ser só +50 gemas; as 200 moedas saem.
 - O efeito sai na mesma medida "novo". Meta proposta: a 1ª derrota no chefe da fase 5 para quem não equipar nada.
 
+## (f) Ajustes da pesquisa de concorrentes (`docs/PESQUISA_CONCORRENTES.md`, 14/11)
+Já estão no protótipo (`docs/proto/v2/Fogueira.html`) e no módulo desligado (`js/sys/bonfire.js` + `test/sys/bonfire.test.js`):
+- o nível 1 da fogueira dá só Básico, e o Raro abre no 2; as chances aparecem na tela;
+- o automático é CEDO (nível 3 da fogueira, ~15 min de jogo):
+  - pausa em Épico ou melhor;
+  - respeita o cadeado;
+  - com a mochila cheia, desmonta a pior destrancada e nunca para o combate;
+  - os últimos 10 desmanches podem ser recuperados por 5 min;
+- pote de abates: a cada 20 abates enche e dá 1 Brasa;
+- a introdução faz o jogador AGIR: forjar, equipar e desmanchar;
+- o item Épico ou melhor fica no chão até o toque; o resto voa sozinho para o herói (ímã).
+
+Ainda a decidir, fora da Fogueira:
+- **Curva dos primeiros minutos:** o herói começa fraco e cresce rápido, com 3 ou 4 saltos de poder nos primeiros 10 min (1º item, 1ª forja, 1º nível da fogueira, 1º pet) e a 1ª parede por volta dos 20 min (o 1º Senhor, fase 10). A Sistemas mede com a medida "novo" e acerta com a calibração da dificuldade.
+- **Baú ocioso:** acumula por até 12 h fora do jogo (o offline de hoje vira um baú visível com o que juntou).
+- **Diário de 7 dias:** libera um sistema por dia (Fogueira, Forja, Pets, Torre...), junto com o login diário que já existe.
+
 **Para o dono decidir:**
 1. Fogueira no lugar do Invocar (proposta) ou ao lado dele.
 2. Ligar a introdução jogável.
