@@ -89,7 +89,7 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
       <span style="flex:none;display:flex;flex-direction:column;align-items:flex-end;font-family:'Lilita One',sans-serif;line-height:1.05">${pts}</span>
       ${on?`<span style="position:absolute;right:8px;top:-7px;font-size:9px;font-weight:900;color:#2a1403;background:#ffc94a;border-radius:6px;padding:1px 5px">ESCOLHIDO</span>`:''}</button>`; }).join('');
   return card+fights+`<div role="list" aria-label="Adversários" style="flex:none;display:flex;flex-direction:column;gap:6px">${list}</div>
-    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">${net?'Adversários e pontos do servidor'+(sfc>0?' · sua FC na Arena: '+paEsc(paN(sfc)):'')+' · luta automática':'Cópias de jogadores com FC até ±10% da sua · luta automática · prêmios valem quando o ranking online abrir'}</span>`; }
+    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">${net?'Adversários e pontos do servidor'+(sfc>0?' · sua FC na Arena: '+paEsc(paN(sfc)):'')+' · luta automática':(paNetDown()?'Sem ligação com o servidor agora: lutas de treino contra cópias, não valem para o ranking online · luta automática':'Cópias de jogadores com FC até ±10% da sua · luta automática · prêmios valem quando o ranking online abrir')}</span>`; }
 /* ---------- LIGAS (aba 1) ---------- */
 function paLeagues(){ const li=Sys.arena.leagueInfo(S,paH()), A=Sys.arena.DATA.leagues;
   const rows=A.map((L,i)=>{ const me=i===li.idx, nx=A[i+1];
@@ -193,6 +193,8 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(
    - RANKING: ao abrir a aba, Sys.arenaNet.loadRanking('arena') e redesenha quando chega (o de FC, 'fc', é da tela de Ranking, js/p_rank.js).
    - FOTO: Sys.arenaNet.snapshot(S, host) ao abrir a Arena e a cada evento 'herochange' do window (ele mesmo limita a frequência). */
 const paNet=()=>{ try{ const N=window.Sys&&Sys.arenaNet; return N&&typeof N.state==='function'&&N.state().started===true?N:null; }catch(e){ return null; } };
+/* QA (429 no /auth/guest): a Arena online está LIGADA mas não iniciou (sem sessão, servidor recusou): o lobby local avisa que é treino, para não parecer online */
+const paNetDown=()=>{ try{ const N=window.Sys&&Sys.arenaNet; return !!(N&&N.DATA&&N.DATA.on===true&&!(typeof N.state==='function'&&N.state().started===true)); }catch(e){ return false; } };
 /* LOBBY ONLINE (correção da 1ª luta real): com a Arena online iniciada, a FC do adversário é a do servidor SEM a escala de exibição (paFCx) e a FC "sua"
    é a do RETRATO (POST /arena/snapshot): o Sys.arenaNet.snapshot manda Sys.tower.playerStats(S,host).fc, a mesma leitura daqui; se um dia o módulo expuser
    o número enviado (state().snapFc), vale o dele. Dificuldade = Sys.tower.difficulty(retrato, FC do servidor). Pontos = a conta do módulo (a mesma que o
