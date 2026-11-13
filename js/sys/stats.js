@@ -195,7 +195,11 @@ function hash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^
 const isFlat=k=>DATA.flatKeys.includes(k);
 /* ---------------- qualidade (chave DATA.quality.on) ---------------- */
 const Q=()=>DATA.quality, qOn=()=>Q().on===true;
-const MAXR=()=>DATA.era9&&DATA.era9.on===true?5:4;
+/* DIVINO (r5) tem chave PRÓPRIA (14/11, achado do Engenheiro): o jogo (RAR do index.html) ainda não tem a linha do Divino, e com as eras 7-8 ligadas o
+   Divino sorteado virava Lendário calado. Liga com o pacote das últimas eras (setDivine(true)), junto da linha do jogo, nomes e arte. Exige as 9 eras. */
+DATA.divine={on:false};
+function setDivine(on){ DATA.divine.on=!!on; return DATA.divine.on; }
+const MAXR=()=>DATA.era9&&DATA.era9.on===true&&DATA.divine.on===true?5:4;
 const rarPctOf=(r,k)=>(qOn()?(Q().keys15.includes(k)?Q().rarPct15:Q().rarPctQ):DATA.rarPct)[clamp(int0(r),0,MAXR())];
 /* sorteia a qualidade de um item novo (0..10.000) */
 function rollQuality(rng){ rng=rng||Math.random; const q=Q(), u=rng(); if(u<q.jackpot) return q.top; const v=(u-q.jackpot)/(1-q.jackpot), A=q.anchors;
@@ -483,7 +487,7 @@ function refFromFc(fc,stage){ const F=root.Sys&&root.Sys.fc, R=DATA.refFc, LV=R.
   const b={atk:num(s0.atk,0),hp:num(s0.hp,0),def:num(s0.def,0),critRate:num(s0.critRate!=null?s0.critRate:s0.crit,12),critDmg:num(s0.critDmg,100),aspd:num(s0.aspd,0)};
   const f0=F.fcOfStats(Object.assign({},b,{pet:{atk:0,heal:0}})), k=f0>0?Math.max(0,num(fc,0))/f0:1;
   return {atk:b.atk*k,hp:b.hp*k,def:b.def*k,critRate:b.critRate,critDmg:b.critDmg,aspd:b.aspd,level:L,era:e,rarity:r,forge,scale:k}; }
-const API={DATA,refFromFc,setRefFc,refFcOn,goLive,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+const API={DATA,setDivine,refFromFc,setRefFc,refFcOn,goLive,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

@@ -12,7 +12,7 @@ let n=0; const t=(name,fn)=>{ try{ fn(); n++; }catch(e){ console.error('FALHOU:'
 
 // ---------- liga tudo o que é da fps-e2 ----------
 function allOn(){
-  Sys.level.setV9(true); Sys.stats.setEra9(true); Sys.stats.DATA.quality.on=true; Sys.stats.DATA.futureEra.on=true;
+  Sys.level.setV9(true); Sys.stats.setEra9(true); Sys.stats.setDivine(true); Sys.stats.DATA.quality.on=true; Sys.stats.DATA.futureEra.on=true;
   Sys.pet.DATA.v3=true; Sys.pet.DATA.v4=true; Sys.pet.DATA.v20.on=true; Sys.pet.setV17(true);
   Sys.mount.DATA.on=true; Sys.offer.DATA.on=true; Sys.phases.DATA.on=true; Sys.guild.DATA.on=true;
 }

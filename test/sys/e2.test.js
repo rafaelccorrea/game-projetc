@@ -464,7 +464,7 @@ t('curva 9 eras: nível 120, teto diário da XP de abate, XP do VIP, estágios d
     assert.strictEqual(LV.DATA.maxLevel,100); assert.strictEqual(ST.DATA.maxEra,6); assert.strictEqual(ST.maxR(),4);
     { const S=newS(), h=makeHost(); assert.strictEqual(LV.addXp(S,5000,h,'kill').gained,5000,'sem teto desligada'); assert.strictEqual(LV.stage(S,h).on,false);
       assert.strictEqual(V.perks(S).xpPct,0); V.setLevel(S,10); assert.strictEqual(V.perks(S).xpPct,25,'coluna antiga'); }
-    LV.setV9(true); ST.setEra9(true);
+    LV.setV9(true); ST.setEra9(true); ST.setDivine(true);   /* Divino tem chave própria desde 14/11 */
     assert.strictEqual(LV.DATA.maxLevel,120); assert.strictEqual(LV.DATA.xpToNext.length,119); assert.strictEqual(ST.DATA.maxEra,8); assert.strictEqual(ST.DATA.maxItemLevel,120);
     for(let i=1;i<119;i++) assert.ok(LV.DATA.xpToNext[i]>=LV.DATA.xpToNext[i-1],'curva sem queda no '+(i+1));
     assert.deepStrictEqual(LV.DATA.xpToNext.slice(0,11),LV.DATA.v9off.xpToNext.slice(0,11),'Nv 1-12 = a curva medida (era 0 em 15-18 min)');
@@ -482,7 +482,7 @@ t('curva 9 eras: nível 120, teto diário da XP de abate, XP do VIP, estágios d
     assert.strictEqual(st.ready,st.next.needFc===0,'pronto só com a FC também');
     // Divino: r 5 com ×1,8 nos planos sobre o Lendário
     const m4=ST.mainOf({slot:'weapon',e:7,r:4,lvl:1},1,0).atk, m5=ST.mainOf({slot:'weapon',e:7,r:5,lvl:1},1,0).atk; near(m5/m4,1.8,1e-9);
-  } finally { LV.setV9(false); ST.setEra9(false); delete globalThis.Sys.vip; }
+  } finally { LV.setV9(false); ST.setEra9(false); ST.setDivine(false); delete globalThis.Sys.vip; }
   assert.strictEqual(LV.DATA.maxLevel,100); assert.strictEqual(ST.DATA.maxEra,6); assert.strictEqual(ST.maxR(),4);
 });
 
