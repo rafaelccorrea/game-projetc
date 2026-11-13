@@ -318,3 +318,59 @@ Tela aprovada pelo dono: `docs/proto/PerfilV5.html`. Só lógica, sem DOM. **Cha
 - **Desenhar**: `Sys.profile.equipped(S,host)` → `{frame, aura, avatar}`. `aura=null` = o jogador não escolheu: usar a aura de hoje (pelo +N da arma). Moldura em CSS pela raridade `r`.
 - **Prêmio de moldura por outro sistema** (Torneio do Poder): `Sys.profile.grant(S,'eterna',host)`.
 - **Falta**: a tela (Engenheiro), decidir Ouro = VIP 3 (protótipo) ou VIP 7 (`Sys.vip.DATA.table.frame`), e ligar `DATA.on` com o OK do dono.
+
+## IDLE_PARECIDOS P2: Conjuntos salvos · Dupla das Eras · Fogueira da Guilda (Sistemas, 13/11)
+
+Itens 5, 9 e 10 do `docs/IDLE_PARECIDOS.md` §3, aprovados pelo dono. Os três com chave DESLIGADA. Nada pago, nada sorteado, nenhuma gema.
+
+### 3 conjuntos salvos (`js/sys/loadouts.js`, `Sys.loadouts`)
+
+| Linha | Estado |
+|---|---|
+| O que é | 3 conjuntos (Fases / Arena / Chefe) com as peças dos 7 espaços (a ASA é a peça do espaço `wing`), o pet e a montaria; troca num toque, grátis e sem limite |
+| Magias | NÃO copiadas: o `Sys.grimoire` já guarda um conjunto por modo com os mesmos nomes; a batalha continua lendo `Sys.grimoire.loadout(S,modo)`; o view mostra as magias do modo |
+| Chave | ⏸ `Sys.loadouts.DATA.on=false` · `setOn(true)` |
+| Regras | `apply` equipa por `host.equip(item)` (o mesmo do jogo e da Fogueira); pula peça que não existe mais (`gone`), espaço que ainda não aceita (`Sys.stats.canEquip`: asa antes do nível = `locked`), pet/montaria que não tem ou trancados; espaço vazio no conjunto NÃO desequipa. Pet/montaria por `Sys.pet.equip`/`Sys.mount.equip` (com o "trocar sem perder" de cada um, se ligado). Opção do jogador `auto` (desligada): `forBattle` troca sozinho antes da luta |
+| API | `save(S,modo,host)` · `apply(S,modo,host)` → `{ok,equipped,changes,skipped}` · `plan` (prévia) · `clear` · `modeFor({boss,pvp})` (= Grimório) · `setAuto(S,v)` · `forBattle(S,host,ctx)` · `view(S,host)` (por modo: `saved`, `inUse`, `gear[]`, `pet`, `mount`, `spells`, `missing`) |
+| Save | `S.sys.loadouts {v, sets:{modo:{gear:{espaço:id},pet,mount,at}}, cur, auto}` |
+| Testes | `test/sys/loadouts.test.js` (8) |
+| Servidor | nada (é local; vai no save) |
+
+### Dupla das Eras (`js/sys/duo.js`, `Sys.duo`)
+
+| Linha | Estado |
+|---|---|
+| O que é | Vincula UM amigo por código de amigo + aceite; meta diária e missões semanais em conjunto; conversa só por FRASES PRONTAS (18, por índice); NENHUMA troca de item ou moeda |
+| Chave | ⏸ `Sys.duo.DATA.on=false` · nível 16 (PROPOSTA, igual ao Chat; `Sys.level.DATA.unlock.duo` manda se existir) |
+| Convites | código `^[A-Z0-9]{6,10}$` (gerado pelo servidor); vence em 48 h; 5 por dia; até 5 enviados e 10 recebidos; 1 dupla por vez |
+| Frases | só índice (não há parâmetro de texto); 1 a cada 5 s, 30 por dia, a mesma no máx. 2 seguidas; o que chega também é só índice |
+| Meta diária | "Juntos hoje": os dois entram no dia e somam 300 abates → cada um resgata 30 × ouro de um abate + 1 Pedra de Forja |
+| Semanais (soma dos dois) | 200 abates de chefe (120× ouro, 4 pedras) · 40 fases (120×, 4) · 20 vitórias na Arena (80×, 3) · os dois entram em 5 dias (150×, 5) |
+| Anti-abuso | sair = 24 h para vincular outro; missão resgatada na semana não volta com parceiro novo; bloquear sai da dupla e impede convites daquele jogador; progresso só conta com dupla |
+| API | `status` · `invite(S,host,código,meuCódigo)` · `receiveInvite` · `accept/decline(S,host,id)` · `leave` · `block/unblock` · `phrases()` · `canSend/send(S,host,idx)` · `receive(S,host,idx,at)` · `track(S,host,'kills'/'bossKills'/'stages'/'arenaWins',n)` · `claim(S,host,'daily'/idSemanal)` · `applyServer(S,host,data)` · `setProvider(p)` / `localProvider` · `view` |
+| Save | `S.sys.duo` (parceiro, convites, bloqueados, dia, semana, frases, fila `outbox`) |
+| Testes | `test/sys/duo.test.js` (11) |
+
+**Servidor (fps-6f) precisa:** código de amigo por jogador (`GET /me/friend-code`) · `POST /duo/invite {code}` (valida nível 16, limites, bloqueio, já em dupla, não a si mesmo) · `GET /duo` → `{partner:{id,name,since,last}|null, partnerDay, partnerWeek, partnerPresent, partnerDays, invites:[{id,name,at}], messages:[{idx,at}]}` (formato do `applyServer`) · `POST /duo/accept/:id`, `/duo/decline/:id`, `/duo/leave` (acaba para os dois; 24 h), `/duo/block/:id` · `POST /duo/phrase {idx}` (só inteiro 0..17, mesmos limites; NUNCA texto) · `POST /duo/progress {kills,bossKills,stages,arenaWins}` (teto por dia contra fraude) · `POST /duo/claim/:id` (confere soma, presença dos dois, 1 resgate por semana por jogador, não por dupla). Nome do parceiro = nome moderado da conta. Depois, um `Sys.duoNet` como o `Sys.guildNet` (provider + refresh).
+
+### Fogueira da Guilda (`js/sys/guildfire.js`, `Sys.guildFire`)
+
+| Linha | Estado |
+|---|---|
+| O que é | Cada membro faz 1 alimentar GRÁTIS por dia (+10 chamas) e pode dar Brasas suas (1 chama por Brasa, até 20 por dia); a fogueira coletiva sobe de nível (1-10, Faísca … Chama Eterna) |
+| Chave | ⏸ `Sys.guildFire.DATA.on=false` · precisa estar numa guilda (`Sys.guild`, só leitura) |
+| Níveis | chamas do n ao n+1 = 300 × 1,35^(n−1) (total ≈ 11,9 mil: ~60 dias com 20 membros só no grátis). Sem reset semanal (o doc não pede). No 10: 1 baú a cada 3.000 chamas a mais |
+| Baú fixo do nível L | para CADA membro: 40 × L × ouro de um abate, L Pedras de Forja, 10 × L de ração; nunca gema. Só de nível alcançado DEPOIS de entrar na guilda (contra pular de guilda); resgate guardado por guilda |
+| Bônus | fora da FC (o único poder de FC da guilda segue o estandarte): ouro +0,5% e XP +0,3% por nível acima do 1 (nível 10 = +4,5% / +2,7%) → `perks(S)`, somado por quem já soma `Sys.guild.perks` |
+| Brasas | **gancho que FALTA**: `Sys.bonfire.spendBrasas(S, n, src)` → `true` se gastou (tira de `S.sys.bonfire.bra`; não mexe em `got`). Sem ele, dar Brasas devolve `reason:'hook'` e só o grátis funciona. Pedido à dona do `bonfire.js` |
+| API | `status` · `contribute(S,host,n)` (n vazio = grátis; n>0 = Brasas) · `feed` · `chests` · `claim(S,host,id)` · `perks(S)` · `applyServer(S,host,{guildId,flames,free,bra})` · `setProvider` / `localProvider` · `levelOf`, `needOf`, `perksAt`, `chestOf` (regras puras) · `view` |
+| Save | `S.sys.guildFire {v, gid, flames, mine, day:{k,free,bra}, claimed:{gid:[...]}, reached:{gid:{nível:ms}}}` |
+| Testes | `test/sys/guildfire.test.js` (11) |
+
+**Servidor (fps-6f) precisa:** `POST /guild/fire/feed {kind:'free'/'brasa', n}` → `{flames}` (soma da guilda; 1 grátis por membro por dia de Brasília; Brasas ≤ 20/dia, conferidas com o teto `got` da Fogueira) · `GET /guild/fire` → `{guildId, flames, free, bra}` · registro da hora em que cada nível foi alcançado e do `joinedAt` do membro; baú pelo correio ou `POST /guild/fire/claim/:id` (1 vez por membro por guilda). Sem rota de compra.
+
+### Telas novas necessárias (primeiro em protótipo sobre o HUD real de hoje)
+
+1. **Conjuntos**: 3 abas Fases / Arena / Chefe na tela do herói, com "Salvar o que estou usando", "Usar" e aviso das peças que sumiram; mostra as 3 magias do Grimório do modo; opção "trocar sozinho antes da luta".
+2. **Dupla das Eras**: tela da dupla (parceiro, meta de hoje com as duas partes, 4 missões da semana, Resgatar); tela de convite (meu código, digitar código, convites recebidos com Aceitar / Recusar / Bloquear); painel de frases prontas (grade das 18) com o histórico; Sair / Bloquear com confirmação.
+3. **Fogueira da Guilda**: aba na tela da guilda com a fogueira (nível, nome, barra), Alimentar (grátis do dia), "Dar Brasas" (1-20), bônus atual e do próximo nível, baús prontos para resgatar.
