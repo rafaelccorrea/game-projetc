@@ -639,7 +639,8 @@ t('aparência em camadas (S.look): itens por cima da base (sem colar e luvas), o
   assert.ok(AP.addCosmetic(S,'goggles').ok); assert.ok(AP.equipCosmetic(S,'glasses','goggles')); assert.ok(!AP.equipCosmetic(S,'mask','goggles'));
   assert.ok(AP.layers(S,h).some(l=>l.layer==='glasses'&&l.key==='cos/goggles'));
   AP.setMode(S,'skin'); assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'modo skin sem skin escolhida = itens');
-  S.skinEq.armor='a31'; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'roupa-skin = combinação (dono 12/11): tinta e os óculos do jogador; o chapéu foi ocultado acima e a combinação respeita');
+  S.skinEq.armor='a31'; AP.DATA.outfitCombosOn=true; assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'roupa-skin = combinação (dono 12/11): tinta e os óculos do jogador; o chapéu foi ocultado acima e a combinação respeita'); AP.DATA.outfitCombosOn=false;
+  assert.deepStrictEqual(AP.layers(S,h).map(l=>l.layer),['base','boots','armor','glasses','weapon'],'decisão final do dono: roupa-skin inativa, cai no modo itens');
   assert.deepStrictEqual(AP.bonus(),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0},'só visual');
   assert.strictEqual(AP.look({look:'lixo'}).mode,'items');
   // asa: atrás do corpo, nos dois modos, com olho para ocultar; skin de asa vence o item
@@ -931,12 +932,12 @@ t('skins × evolução: a skin equipada sobrevive à troca de fase (21→22, 34�
         assert.strictEqual(JSON.stringify([S.skins,S.skinEq,A.look(S).cos]),before,'skin/cosmético intactos na fase '+st); assert.strictEqual(A.layers(S,h).map(l=>l.key).join('|'),lay0,'mesmas camadas');
         const r=A.sheetFor(S,h,'idle'); assert.strictEqual(r.stage,st); assert.ok(ex(r.body+'.json'),'folha da fase nova existe'); if(!ex(r.masks+'_head.json')) console.warn('AVISO (arte): falta '+r.masks+'_head.json (chapéu/óculos nessa fase)'); } } 
   } finally { PU.DATA.on=false; }
-  assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'combo'); assert.strictEqual(A.canSell('a34',ex),true,'combinação completa: pode vender');
-  assert.ok(A.skinCoverage('a34',()=>false).missing.length>=2,'sem as peças (chapéu, aura) não vende');
+  assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'combo'); assert.strictEqual(A.canSell('a34',ex),false,'decisão final do dono: roupa-skin fora de venda'); A.DATA.outfitCombosOn=true; assert.strictEqual(A.canSell('a34',ex),true,'com as combinações ligadas: vende');
+  assert.ok(A.skinCoverage('a34',()=>false).missing.length>=2,'sem as peças (chapéu, aura) não vende'); A.DATA.outfitCombosOn=false;
 });
 
-t('roupa-skin = combinação (dono): 38 skins com chapéu + tinta de colete/botas + óculos/máscara + aura; todas vendáveis; save antigo desenha a combinação em qualquer fase',()=>{
-  const A=require('../../js/sys/appearance.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const ex=f=>fs.existsSync(path.join(__dirname,'../..',f));
+t('roupa-skin = combinação (código mantido, DESLIGADO pelo dono): com a chave ligada as 38 viram chapéu + tinta + óculos/máscara + aura em qualquer fase',()=>{
+  const A=require('../../js/sys/appearance.js'); A.DATA.outfitCombosOn=true; try{ const  PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const ex=f=>fs.existsSync(path.join(__dirname,'../..',f));
   const ids=[]; for(let e=0;e<7;e++) for(let r=0;r<5;r++) ids.push('a'+e+r); ids.push('p10','p20','p30'); assert.ok(ids.every(id=>A.canSell(id,ex)),'as 38 vendáveis');
   assert.deepStrictEqual(A.comboOf('a00'),{hat:null,vest:'couro',boots:'couro',glasses:null,mask:null,aura:null}); assert.strictEqual(A.comboOf('a64').glasses,null,'o chapéu da era 6 já tem a viseira'); assert.strictEqual(A.comboOf('a64').aura,'aura4'); assert.strictEqual(A.comboOf('a43').glasses,null); assert.strictEqual(A.comboOf('p10').mask,'carnival'); assert.strictEqual(A.comboOf('w12'),null);
   for(const id of ids){ const c=A.comboOf(id); for(const k of ['vest','boots']) assert.ok(A.MATERIALS[c[k]],id+' '+k); }
@@ -946,6 +947,14 @@ t('roupa-skin = combinação (dono): 38 skins com chapéu + tinta de colete/bota
       assert.deepStrictEqual([by('hat').hat,by('armor').mat,by('boots').mat,by('glasses').cos,by('aura').aura,lay[0].layer],['era5','ouro','ouro','goggles','aura_evil','aura']);
       A.setLookHidden(S,'hat',true); assert.ok(!A.layers(S,makeHost()).some(l=>l.layer==='hat'),'ocultar o chapéu vale na combinação'); A.addCosmetic(S,'ninja'); A.equipCosmetic(S,'mask','ninja');
       assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; }
+  } finally { A.DATA.outfitCombosOn=false; }
+});
+t('decisão final do dono: Kael/Kaia de hoje são o padrão; roupa-skin fora de venda e inativa (nota "nova skin em breve"), sem perda; arma segue',()=>{
+  const A=require('../../js/sys/appearance.js'), K=require('../../js/sys/skin.js'), fs=require('fs'), path=require('path'); const ex=f=>fs.existsSync(path.join(__dirname,'../..',f));
+  const ids=[]; for(let e=0;e<7;e++) for(let r=0;r<5;r++) ids.push('a'+e+r); ids.push('p10','p20','p30'); assert.ok(ids.every(id=>!A.canSell(id,ex)),'nenhuma roupa-skin à venda');
+  for(let e=0;e<7;e++) for(let r=0;r<5;r++) assert.ok(A.canSell('w'+e+r,ex),'arma w'+e+r);
+  const S={skins:['w00','a00','a54'],skinEq:{weapon:'w00',armor:'a54'}}; A.setMode(S,'skin'); const lay=A.layers(S,makeHost()); assert.deepStrictEqual(lay.map(l=>l.layer),['base','weapon'],'herói padrão');
+  assert.ok(S.skins.includes('a54'),'continua na coleção'); assert.deepStrictEqual(A.outfitStatus('a54'),{outfit:true,active:false,note:'nova skin em breve'}); assert.strictEqual(A.outfitStatus('w12').active,true);
 });
 
 t('fases na carga: save antigo no Nv 60 entra adulto direto (catchUp), camadas mantidas 34→35; drop no chão por raridade (tabela única)',()=>{

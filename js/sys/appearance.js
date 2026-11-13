@@ -72,7 +72,8 @@ function layers(S,host){ const o=look(S), eq=host&&typeof host.equipped==='funct
   const wSkin=chosenSkin(S,'weapon'), wItem=eq.weapon, weapon=wSkin?{layer:'weapon',key:DATA.skinKey(wSkin),source:'skin',id:wSkin}
     :wItem?{layer:'weapon',key:DATA.itemKey('weapon',visualEra(wItem),clamp(int0(wItem.r),0,5)),source:'item',era:visualEra(wItem),r:clamp(int0(wItem.r),0,5)}:{layer:'weapon',key:DATA.skinKey('w00'),source:'skin',id:'w00'};
   const outfit=chosenSkin(S,'armor');
-  if(o.mode==='skin'&&outfit){ const c=comboOf(outfit);   // DONO 12/11: a skin de roupa é uma COMBINAÇÃO de camadas (vale nas 4 fases e nos 2 heróis pelas máscaras de cada fase)
+  if(o.mode==='skin'&&outfit&&DATA.outfitCombosOn!==true){ /* DONO (decisão final, 12/11): roupa-skin INATIVA até as skins fixas com arte própria; o herói fica no padrão e o modo cai no 'items' */ }
+  else if(o.mode==='skin'&&outfit){ const c=comboOf(outfit);   // DONO 12/11: a skin de roupa é uma COMBINAÇÃO de camadas (vale nas 4 fases e nos 2 heróis pelas máscaras de cada fase)
     if(c){ const lay=comboLayers(outfit,c,o); out.splice(0,0,...lay.filter(l=>l.layer==='aura')); out.push(...lay.filter(l=>l.layer!=='aura')); out.push(weapon); return out; }
     out.push({layer:'skin',key:DATA.skinKey(outfit),source:'skin',id:outfit}); out.push(weapon); return out; }
   for(const L of DATA.layerOrder){ if(L==='base'||L==='weapon'||L==='wing') continue; if(o.hidden[L]) continue;
@@ -122,6 +123,10 @@ function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='k
    em vez de um corpo inteiro é chapéu + tinta de colete e botas (nas máscaras R/B de cada fase) + óculos/máscara + aura nas Lendárias. Peças da Arte:
    chapéus por era (assets/anim/equip/hats/hat_<eraN>.png), cosméticos (assets/anim/equip/cos/<id>.png), auras (assets/anim/aura/<id>), tintas abaixo
    (formato da página de aparência da Arte: [R, G, B, ganho]). Save antigo com roupa-skin: MESMA id, passa a desenhar a combinação sozinho. */
+/* DECISÃO FINAL DO DONO (12/11): NADA de combinação para o jogador. Kael e Kaia de hoje são as skins PADRÃO; no futuro, skins FIXAS com arte própria
+   (ex.: cavaleiro de armadura, cavaleiro sombrio), cada uma completa. As 38 roupas-skin saem de venda (canSell=false); quem já tem mantém na coleção,
+   INATIVA, com a nota "nova skin em breve" (outfitStatus). O código das combinações fica (chapéus da era na batalha, se o dono quiser), desligado aqui. */
+DATA.outfitCombosOn=false;
 const MATERIALS={couro:[150,105,65,1.0],couro_escuro:[95,60,40,0.9],bronze:[205,115,50,1.25],ferro:[150,160,180,1.05],prata:[232,235,245,1.4],
   ouro:[240,190,70,1.35],cristal:[110,200,255,1.45],obsidiana:[120,70,160,1.0],rubi:[210,40,60,1.2],esmeralda:[60,190,110,1.2]};
 const RAR_MAT=[['couro','couro'],['couro_escuro','couro'],['bronze','couro_escuro'],['ferro','ferro'],['ouro','ouro']];   // [colete, botas] pela raridade
@@ -156,12 +161,15 @@ function skinCoverage(id,exists){ const has=typeof exists==='function'?exists:()
   if(c){ const need=[]; if(c.hat) need.push('assets/anim/equip/hats/hat_'+c.hat+'.png'); for(const k of ['glasses','mask']) if(c[k]) need.push('assets/anim/equip/cos/'+c[k]+'.png'); if(c.aura) need.push('assets/anim/aura/'+c.aura+'.png');
     for(const f of need) if(!has(f)) out.missing.push({hero:'*',stage:'*',file:f}); for(const k of ['vest','boots']) if(c[k]&&!MATERIALS[c[k]]) out.missing.push({hero:'*',stage:'*',file:'tinta:'+c[k]}); }
   if(out.kind==='weapon'){ const m=/^w(\d)(\d)$/.exec(id), RK=['t0','raro','t1','mitico','t2']; if(m){ const f='assets/weapons/era'+m[1]+'_'+RK[+m[2]]+'.png'; if(!has(f)) out.missing.push({hero:'*',stage:'*',file:f}); } }
+  if(out.kind==='combo'&&DATA.outfitCombosOn!==true){ out.ok=false; out.off=true; out.note='nova skin em breve'; return out; }   // roupa-skin fora de venda (decisão final do dono)
   out.ok=!out.missing.length; return out; }
 const canSell=(id,exists)=>skinCoverage(id,exists).ok;
+/* roupa-skin do save antigo: fica na coleção, inativa. {outfit, active, note} — a tela mostra o item com a nota e sem botão de usar */
+const outfitStatus=id=>FULL_SKIN(id)?{outfit:true,active:DATA.outfitCombosOn===true,note:DATA.outfitCombosOn===true?'':'nova skin em breve'}:{outfit:false,active:true,note:''};
 /* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
    desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
 function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
-const API={DATA,MATERIALS,comboOf,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+const API={DATA,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
