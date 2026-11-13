@@ -92,7 +92,8 @@ function iClick(b,ev){
     iSnd('claim'); XI.res=r; render(); }
 }
 /* a batalha chama isto com o retorno de Sys.instances.finish (vitória ou derrota) */
-function iShow(out){ if(!out) return false; XI.res=out; try{ if(window.Panels&&Panels.open) Panels.open('inst'); else if(typeof render==='function') render(); }catch(e){} return true; }
+/* devolve true SÓ se a tela abriu (Panels.open respeita a chave PANEL_ON.inst); se não abriu, não deixa o resultado preso e quem chamou (a batalha) usa o aviso de reserva */
+function iShow(out){ if(!out) return false; XI.res=out; let ok=false; try{ if(window.Panels&&Panels.open) ok=Panels.open('inst')===true; }catch(e){ ok=false; } if(!ok){ XI.res=null; return false; } return true; }
 window.PInst={showResult:iShow,state:XI};
 Panels.add('inst',{title:'Instâncias',render:scrInst,click:iClick,
   tick(){ if(!iOk()||XI.res) return; try{ const m=iHm(Sys.instances.status(S,Sys.host).resetMs); if(m!==XI.min){ XI.min=m; render(); } }catch(e){} },

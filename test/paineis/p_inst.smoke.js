@@ -14,7 +14,7 @@ g.S = host.S || {}; if (!g.S.sys) g.S.sys = {};
 g.V = { innerHTML: '' }; g.xDims = () => ({}); g.xWrap = (d, c, i) => i; g.kf = v => String(Math.round(v));
 g.ERAS = [0, 1, 2, 3, 4, 5, 6].map(i => ({ n: 'Era' + i })); g.RAR = [{ n: 'Básico', c: '#999' }, { n: 'Raro', c: '#48f' }, { n: 'Épico', c: '#b5f' }, { n: 'Mítico', c: '#f46' }, { n: 'Lendário', c: '#fb2' }];
 const snds = [], toasts = []; g.snd = n => snds.push(n); g.toast = t => toasts.push(t); let changed = 0; g.render = () => def.render(); g.statsChanged = () => { changed++; };
-g.Screens = { close() { g.closed = true; } }; let def = null, opened = 0; g.Panels = { add(n, d) { def = d; return d; }, open() { opened++; def.render(); } };
+g.Screens = { close() { g.closed = true; } }; let def = null, opened = 0; g.Panels = { add(n, d) { def = d; return d; }, open() { if (g.panelOff) return false; opened++; def.render(); return true; } };
 vm.runInThisContext(fs.readFileSync(path.join(R, 'js/p_inst.js'), 'utf8'), { filename: 'p_inst.js' });
 assert(def && def.render && def.click);
 const btn = (x, t) => ({ dataset: { x, t } }); const H = () => g.V.innerHTML; const has = s => assert(H().includes(s), 'faltou: ' + s); const out = [];
@@ -40,6 +40,9 @@ host.stage = () => 1; host.best = () => 1; def.render(); has('Libera na fase'); 
 // 8) resultado vindo da batalha
 g.PInst.showResult({ ok: true, win: true, type: 'boss', level: 0, reward: { gold: 100, gems: 0, items: [{ slot: 'weapon', r: 2, e: 0 }], forge: 3, food: 5, essence: 1, egg: 2, hatched: {} }, keys: 1 }); has('Vitória!'); has('Arma Épico'); has('Ganhou um ovo'); assert(opened >= 1); def.click(btn('ok'));
 g.PInst.showResult({ ok: true, win: false, type: 'gold', level: 0 }); has('Não foi dessa vez'); has('não foi gasta'); def.click(btn('ok')); out.push('resultado da batalha (vitória e derrota): ok');
+// 8b) conserto B (engenheiro): iShow devolve o resultado REAL do Panels.open e não deixa o resultado preso
+g.panelOff = true; assert.strictEqual(g.PInst.showResult({ ok: true, win: true, type: 'gold', level: 0, reward: {} }), false, 'chave desligada: não abriu'); assert.strictEqual(g.PInst.state.res, null, 'não deixa resultado preso'); g.panelOff = false;
+assert.strictEqual(g.PInst.showResult({ ok: true, win: true, type: 'gold', level: 0, reward: {} }), true, 'abriu'); def.click(btn('ok')); out.push('showResult: false quando o painel não abre (sem resultado preso), true quando abre');
 // 9) bloqueio por nível, Voltar, módulo ausente
 const lv = g.Sys.level; g.Sys.level = { isUnlocked: () => false, unlockLevel: () => 14 }; def.render(); has('Libera no nível 14'); def.click(btn('back')); assert(g.closed); g.Sys.level = lv;
 const ii = g.Sys.instances; delete g.Sys.instances; def.render(); has('indisponíveis'); g.Sys.instances = ii; out.push('bloqueio por nível, Voltar, módulo ausente: ok');

@@ -78,10 +78,12 @@ const mHostStage=()=>{ try{ return Math.max(1,(Sys.host&&Sys.host.stage?Sys.host
 function mBest(e,d){ const P=mP(); if(!P) return 0; if(mOn()) return P.bestOf(S,e,d);
   const s=mHostStage(), ce=Math.min(P.DATA.eras-1,Math.floor((s-1)/10)), cur=Math.max(ce,Math.min(mHostEra(),P.DATA.eras-1));
   if(e<cur) return d<P.DATA.required[e]?P.DATA.perEra:0; if(e===cur&&d===0&&e===ce) return ((s-1)%10)*10; return 0; }
-function mCleared(e){ const P=mP(); for(let d=0;d<P.DATA.required[e];d++) if(mBest(e,d)<P.DATA.perEra) return false; return true; }
-const mOpen=e=>e===0||mCleared(e-1);
-function mCurEra(){ const P=mP(); let m=0; for(let e=1;e<P.DATA.eras;e++){ if(mOpen(e)) m=e; else break; } return m; }
-const mDiffOpen=(e,d)=>mOpen(e)&&(d===0||mBest(e,d-1)>=mP().DATA.perEra);
+function mCleared(e){ const P=mP(); if(mOn()) return P.eraCleared(S,e); for(let d=0;d<P.DATA.required[e];d++) if(mBest(e,d)<P.DATA.perEra) return false; return true; }
+const mOpen=e=>mOn()?mP().eraOpen(S,e):(e===0||mCleared(e-1));
+function mCurEra(){ const P=mP(); if(mOn()) return P.eraMax(S); let m=0; for(let e=1;e<P.DATA.eras;e++){ if(mOpen(e)) m=e; else break; } return m; }
+const mDiffOpen=(e,d)=>{ const P=mP(); if(mOn()){ const v=P.eraView(S,e); return !!(v&&v.diffs[d]&&v.diffs[d].open); } return mOpen(e)&&(d===0||mBest(e,d-1)>=P.DATA.perEra); };
+/* fase onde o jogador parou (Sys.phases.current/ensure().cur): só com o módulo ligado */
+function mCurPos(){ const P=mP(); if(!mOn()) return null; try{ const c=P.ensure(S).cur; return c&&P.info(c.e,c.d,c.n)?{e:c.e,d:c.d,n:c.n}:null; }catch(e){ return null; } }
 function mInject(){ if(typeof document==='undefined'||!document.head||document.getElementById('pm_css')) return; const st=document.createElement('style'); st.id='pm_css'; st.textContent=M_CSS; document.head.appendChild(st); }
 function mToast(t){ XM.toast=t; XM.tt=Date.now()+2200; render(); }
 /* retrato: 1º quadro da folha aprovada do chefe da era (célula 544×352, pés em 307) */
@@ -221,7 +223,13 @@ function scrMap(){
   if(w){ if(XM.scrollTo==='world'){ const cur=mCurEra(); w.scrollTop=Math.max(0,mwy(M_ERAS[cur].o[1])-w.clientHeight*0.55); XM.scrollTo=''; } else if(sw!=null) w.scrollTop=sw; }
   if(ea){ if(XM.scrollTo==='era'){ const p=M_GEO.nodes[XM.node-1]; ea.scrollTop=Math.max(0,p[1]+120-ea.clientHeight*0.45); XM.scrollTo=''; } else if(se!=null) ea.scrollTop=se; }
 }
+/* a LUTA chama window.PMap.win(e,d,n) quando o jogador vence a fase: grava pelo Sys.phases.win e guarda o resultado para o aviso do mapa */
+function mWin(e,d,n){ const P=mP(); if(!P||!mOn()) return {ok:false,reason:'off'}; const r=P.win(S,Sys.host,e,d,n); if(r&&r.ok) XM.last={e,d,n,first:r.first,era:r.eraUnlocked,next:r.next}; try{ if(r&&r.ok&&Sys.host&&Sys.host.onChange) Sys.host.onChange(); }catch(x){} return r; }
+function mLastNotice(){ const L=XM.last; XM.last=null; if(!L) return ''; const P=mP();
+  if(L.era!=null) return 'Era '+L.era+' liberada: '+P.DATA.eraName[L.era]+'!'; return (L.first?'Fase ':'Fase repetida ')+L.n+' vencida'+(L.first&&L.next?'. Próxima: fase '+L.next.n+' ('+P.DATA.diffName[L.next.d]+', era '+L.next.e+')':'')+'.'; }
+window.PMap={win:mWin,current:()=>mCurPos(),state:XM};
 function mEnter(e){ const P=mP(); XM.layer='era'; XM.era=e; XM.sel=-1;
+  const cp=mCurPos(); if(cp&&cp.e===e&&mDiffOpen(e,cp.d)){ XM.diff=cp.d; XM.node=cp.n; XM.scrollTo='era'; XM.anim=true; return; }
   let d=0; for(let k=0;k<P.DATA.diffs;k++){ if(mDiffOpen(e,k)&&mBest(e,k)<P.DATA.perEra){ d=k; break; } d=k; }
   XM.diff=d; XM.node=Math.min(P.DATA.perEra,mBest(e,d)+1); XM.scrollTo='era'; XM.anim=true; }
 function mClick(b){
@@ -247,6 +255,6 @@ function mClick(b){
 Panels.add('map',{title:'Mapa das Eras',render:scrMap,click:mClick,
   tick(){ if(XM.toast&&Date.now()>XM.tt){ XM.toast=''; render(); } },
   busy(){ return false; },
-  onOpen(o){ XM.layer='world'; XM.sel=-1; XM.clock=false; XM.toast=''; XM.anim=true; XM.scrollTo='world';
+  onOpen(o){ XM.layer='world'; XM.sel=-1; XM.clock=false; XM.toast=''; XM.anim=true; XM.scrollTo='world'; const nt=mLastNotice(); if(nt){ XM.toast=nt; XM.tt=Date.now()+4200; }
     if(o&&Number.isInteger(o.era)&&mP()){ mEnter(Math.max(0,Math.min(mP().DATA.eras-1,o.era))); } },
   onClose(){ XM.sel=-1; XM.clock=false; XM.toast=''; } });

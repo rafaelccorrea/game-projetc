@@ -37,6 +37,18 @@ def.click(btn('pickcur')); has('Entrar na era'); const e0 = g.PInstSel; def.clic
 P.DATA.on = true; const o = P.ensure(g.S); o.best = { 0: [100, 0, 0, 0], 1: [100, 0, 0, 0], 2: [20, 0, 0, 0] }; o.migrated = true; P.DATA.lvlEntry = P.DATA.lvlEntry.map(() => 1); P.DATA.lvlExit = P.DATA.lvlExit.map(() => 1);
 def.onOpen({ era: 2 }); assert(/data-x="diff"/.test(H()), 'onOpen com era abre a camada da era'); def.click(btn('node', { n: 21 })); has('data-x="fight"'); const gt = goTab.length; def.click(btn('fight')); assert.deepStrictEqual(P.ensure(g.S).cur, { e: 2, d: 0, n: 21 }); assert.strictEqual(goTab.length, gt + 1); out.push('chave ligada: Desafiar grava a fase escolhida e abre a Batalha');
 def.onOpen({ era: 2 }); def.click(btn('node', { n: 60 })); assert(!/data-x="fight"/.test(H()), 'fase fora de ordem não oferece Desafiar'); const cur2 = JSON.stringify(P.ensure(g.S).cur); def.click(btn('fight')); assert.strictEqual(JSON.stringify(P.ensure(g.S).cur), cur2, 'fight fora de ordem não grava'); out.push('fase fora de ordem: sem Desafiar e sem gravar');
+// 7b) LIGADO lê a curva: era liberada = Sys.phases.eraOpen/eraMax; progresso = eraView; vitória = Sys.phases.win (pelo window.PMap.win)
+{ const o2 = P.ensure(g.S); o2.best = { 0: [100, 0, 0, 0], 1: [100, 0, 0, 0], 2: [20, 0, 0, 0] }; o2.cur = { e: 2, d: 0, n: 21 };
+  assert.strictEqual(P.eraMax(g.S), 2); def.onOpen(); def.render(); has('Era atual: ' + P.DATA.eraName[2]); assert.strictEqual(window.PMap.current().n, 21, 'current() lê o Sys.phases');
+  def.click(btn('era', { e: 2 })); def.click(btn('enter', { e: 2 })); assert.strictEqual(window.PMap.state.node, 21, 'entra na fase onde parou'); has('Fase 21'); has('data-x="fight"');
+  const v = P.eraView(g.S, 2); assert.strictEqual(v.diffs[0].best, 20); assert(v.diffs[0].open && !v.diffs[1].open, 'Médio fechado até a fase 100 do Fácil'); def.click(btn('diff', { d: 1 })); assert.strictEqual(window.PMap.state.diff, 0, 'dificuldade fechada não troca');
+  // vitória da fase 21: grava, devolve a próxima e o mapa avisa ao abrir
+  const w = window.PMap.win(2, 0, 21); assert(w.ok && w.first && w.next.n === 22, 'win grava a fase 21'); assert.strictEqual(P.bestOf(g.S, 2, 0), 21); def.onOpen(); def.render(); has('Fase 21 vencida'); has('Próxima: fase 22');
+  // fase fora de ordem: win recusa e não grava
+  const bad = window.PMap.win(2, 0, 60); assert.strictEqual(bad.ok, false); assert.strictEqual(bad.reason, 'order'); assert.strictEqual(P.bestOf(g.S, 2, 0), 21);
+  // fechar a era 2 libera a 3 e o aviso diz qual
+  o2.best[2] = [100, 99, 0, 0]; const w2 = window.PMap.win(2, 1, 100); assert(w2.ok && w2.eraUnlocked === 3, 'vencer a fase 100 libera a era 3'); assert.strictEqual(P.eraMax(g.S), 3); def.onOpen(); def.render(); has('Era 3 liberada: ' + P.DATA.eraName[3]); assert.strictEqual((H().match(/data-x="era"/g) || []).length, 9);
+  P.DATA.on = false; assert.deepStrictEqual(window.PMap.win(0, 0, 1), { ok: false, reason: 'off' }); P.DATA.on = true; out.push('chave ligada lê a curva: eraMax/eraView/current/win, aviso de fase vencida e de era liberada, fora de ordem recusado'); }
 // 8) módulo ausente
 const pp = g.Sys.phases; delete g.Sys.phases; def.render(); has('indisponível'); g.Sys.phases = pp; out.push('sem Sys.phases: aviso');
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');
