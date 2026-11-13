@@ -144,9 +144,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## A. O que eu preciso de você
 
-- [ ] Votar "Fases adultas V2": Kael e Kaia, adulto e guerreiro, com corpo de adulto (página de aprovação)
-- [ ] Votar "Serpe dourada V2": o Kael sentado direito na sela (página de aprovação)
-- [ ] Votar a arte nova ainda aberta na página: 45 armas, montarias novas, Kaia nas 3 fases, pets Cérbero/Pégaso/Prismático, aparência em camadas
+- [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
+- [ ] Próximos votos (quando chegarem, eu aviso): asa no Kael montado (refeita), Kaia adulta e guerreira V2 animadas, cenários das eras 5 e 8
+- [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
 - [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
