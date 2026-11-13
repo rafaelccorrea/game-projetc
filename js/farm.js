@@ -66,6 +66,14 @@ Sys.host = {
   addItem: o => addItemToBag(o),
   /* Sys.pass: mochila (o Item da Temporada evolui no level up) e skin da temporada; Sys.titles: tamanho do catálogo de skins */
   items: () => S.inv,
+  /* FOGUEIRA DAS ERAS (Sys.bonfire, da Sistemas): o que o módulo precisa do jogo. O item forjado NÃO entra sozinho na mochila: a tela decide Equipar, Guardar ou Desmontar.
+     bagMax = espaços da mochila · removeItem(item) tira da mochila (equipado nunca) · fcOf(item) = FC da peça · delta(item) = quanto a FC do herói muda se equipar
+     (> 0 = melhor que a equipada) · equip(item) equipa uma peça QUE JÁ ESTÁ na mochila (sem o equipar automático do addItem). */
+  bagMax: () => { try { return typeof xBagMax === 'function' ? xBagMax() : 60; } catch (e) { return 60; } },
+  removeItem: it => { const id = it && it.id; if (id == null) return false; for (const sl in S.eq) if (S.eq[sl] === id) return false; const i = S.inv.findIndex(x => x && x.id === id); if (i < 0) return false; S.inv.splice(i, 1); return true; },
+  fcOf: it => { try { return Sys.fc.itemFC(S, Sys.host, it).fc; } catch (e) { return 0; } },
+  delta: it => { try { return Sys.fc.itemFC(S, Sys.host, it).swap; } catch (e) { return 0; } },
+  equip: it => { const x = it && it.id != null ? S.inv.find(q => q && q.id === it.id) : null; if (!x || !SLOT[x.slot]) return false; S.eq[x.slot] = x.id; try { if (typeof heroChanged === 'function') heroChanged(); refreshHero(); Sys.fc.record(S, Sys.host); } catch (e) {} return true; },
   addSkin: id => { const k = id === 'season' ? SEASON_SKIN : id; if (k && SKIN(k) && !S.skins.includes(k)) S.skins.push(k); },   /* 'season' sem skin da temporada (SEASON_SKIN vazio): não entrega nada */
   catalog: kind => kind === 'wardrobe' ? SKINS.filter(s => !s.pass || s.id === SEASON_SKIN).length : undefined,
   now: () => Date.now(), rng: Math.random, toast: m => toast(String(m).replace(/ Liberou:.*$/, '').replace(/^🎖️\s*/, '')),   // sem anunciar funções que ainda não estão ligadas
@@ -167,6 +175,12 @@ const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
 function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || F.DATA.on !== true || typeof F.addBrasas !== 'function') return 0; got = F.addBrasas(S, src, n) | 0; } catch (e) { return 0; }
   if (got > 0){ try { const px = typeof x === 'number' ? x : (typeof HX === 'number' ? HX + 40 : 120); spawnPicks(Array.from({ length: Math.min(got, 8) }, (_, i) => ({ type: 'brasa', value: i === 0 ? got - Math.min(got, 8) + 1 : 1, to: 'bag', delay: i * 0.06 })), px); } catch (e) {} }
   return got; }
+/* HOST DA FOGUEIRA: o Sys.host do jogo, trocando só a ENTRADA do item. O addItem comum (addItemToBag) equipa sozinho o que é melhor e desmonta com a mochila cheia;
+   na Fogueira quem decide é o jogador (cartão Equipar / Guardar / Desmontar) ou o automático do módulo, então aqui o item só ENTRA na mochila, sem equipar,
+   e o id criado é escrito de volta na peça forjada (o módulo chama host.equip(peça) logo depois). A mochila cheia é do módulo (Sys.bonfire.makeRoom). */
+function fogBagAdd(o){ if (!o || !SLOT[o.slot]) return null; const it = normItem(o); it.id = S.nextId++; if (it.gotAt == null) it.gotAt = Date.now(); try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; S.inv.push(it);
+  try { o.id = it.id; } catch (e) {} setTimeout(() => { if (typeof codexSync === 'function') codexSync(); }, 0); return it; }
+const fogHost = () => Object.assign({}, Sys.host, { addItem: fogBagAdd });
 const pkHolds = p => fogOn() && p && p.type === 'item' && (p.r | 0) >= PK_HOLD_R;
 const pkHeld = () => PK.list.filter(q => q.hold && q.st === 1 && !q.done);
 /* o item que caiu é melhor que o equipado? (a peça já está na mochila: procura a mais nova igual e pergunta à FC; equipada sozinha = era melhor) */

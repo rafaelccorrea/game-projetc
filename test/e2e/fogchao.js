@@ -50,6 +50,16 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   check('cada Brasa creditada é desenhada (soma dos desenhos = Brasas ganhas)', br.pk >= 3 && br.sum === br.bra, JSON.stringify(br));
   check('fonte que não existe (venda) devolve 0: Brasa nunca é vendida', br.venda === 0);
   let drew2 = true; try { G.inCtx(() => ev('drawPicks')()); step(G, 3); } catch (e) { drew2 = false; console.log(String(e && e.message)); } check('Brasas desenhadas e recolhidas sem erro', drew2 && ev("PK.list.filter(q=>q.p.type==='brasa').length") === 0);
+  /* HOST DA FOGUEIRA com o módulo REAL (Sys.bonfire): forjar não entrega; a peça só entra sem equipar; equipar, desmontar, recuperar e mochila cheia funcionam com o jogo */
+  { const r = JSON.parse(ev(`(function(){ const F=Sys.bonfire, out={}; F.DATA.on=true; const o=F.ensure(S); o.bra=10; o.lv=1; const H=fogHost(); out.miss=['eraMax','level','goldUnit','spendGold','addGold','addItem','removeItem','items','equipped','equip','delta','fcOf','bagMax','now','rng'].filter(k=>typeof H[k]!=='function');
+      const n0=S.inv.length, eq0=JSON.stringify(S.eq); const f=F.forge(S,H); out.forge=!!(f&&f.ok&&f.item&&f.item.slot); out.semEntrega=S.inv.length===n0; out.bra=o.bra; out.delta=typeof H.delta(f.item); out.fc=H.fcOf(f.item)>0;
+      const it=H.addItem(f.item); out.entrou=S.inv.length===n0+1&&!!it&&f.item.id===it.id; out.semEquipar=JSON.stringify(S.eq)===eq0; out.equip=H.equip(f.item)===true&&S.eq[it.slot]===it.id; out.naoTiraEquipado=H.removeItem(it)===false&&S.inv.length===n0+1;
+      const f2=F.forge(S,H); const it2=H.addItem(f2.item); const g0=S.gold; const d=F.dismantle(S,H,[it2]); out.desmonta=!!(d&&d.n===1)&&S.inv.length===n0+1&&S.gold>=g0; out.recente=F.view(S,H).recent.length>=1;
+      const rc=F.recover(S,H,it2.id); out.recupera=!!(rc&&rc.ok)&&S.inv.length===n0+2; out.bagMax=H.bagMax()>0; F.DATA.on=false; return JSON.stringify(out); })()`));
+    check('host da Fogueira tem as 15 funções que o módulo usa', r.miss.length === 0, 'faltam: ' + r.miss.join(','));
+    check('forjar gasta 1 Brasa e NÃO entrega a peça sozinho', r.forge && r.semEntrega && r.bra === 9, JSON.stringify(r));
+    check('a peça entra na mochila sem equipar e ganha id; equipar funciona; equipado não sai da mochila', r.entrou && r.semEquipar && r.equip && r.naoTiraEquipado && r.delta === 'number' && r.fc, JSON.stringify(r));
+    check('desmontar tira da mochila e devolve ouro; recuperar devolve a peça', r.desmonta && r.recente && r.recupera && r.bagMax, JSON.stringify(r)); }
   console.log(fail ? fail + ' FALHA(S) de ' + n + ' (item no chão)' : 'FOGUEIRA · ITEM NO CHÃO OK (' + n + ' verificações): desligada = como hoje; ligada = Épico ou melhor espera o toque');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e && e.stack || e); process.exit(1); });
