@@ -9,7 +9,10 @@
      (telefone, CPF, ano completo), nem "zap/whats/insta/tiktok/face/tel/fone/email/gmail/hotmail", nem @.
      Para adulto valem as regras gerais (o servidor ainda pode recusar).
    - Nome ÚNICO só o servidor confirma (uniq fica true aqui; com o Sys.net ligado, o servidor responde name_taken).
-   check(nome, {minor, current}) → {ok, len, chars, clean, uniq, contact, msg}. */
+   check(nome, {minor, current}) → {ok, len, chars, clean, uniq, contact, msg}.
+   MODO ESTRITO (Perfil V5, troca de nome; check(nome, {strict:true})): soma ao de cima a lista DATA.strict (mais palavrões e ofensas para menores),
+   o filtro de TEXTO livre profane() (ignora acento, l33t, letras repetidas e pontos/espaços/traços entre as letras: "p.u.t.a", "p u t a") e o
+   bloqueio de se passar pela equipe impersonates() ("Admin_Kael", "KaelOficial", "Suporte2", "GM_x", "e0nb0und"). Sem strict o check é o MESMO de antes. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -25,6 +28,19 @@
     reserved: ['admin', 'adm', 'moderador', 'moderadora', 'mod', 'suporte', 'eonbound', 'gm', 'staff', 'oficial', 'sistema', 'system'],
     contact: ['zap', 'whats', 'wpp', 'insta', 'tiktok', 'face', 'telefone', 'tel', 'fone', 'email', 'gmail', 'hotmail', 'outlook', 'discord'],
     maxDigitsMinor: 4,
+    /* só no modo estrito (strict:true) e no profane(): não muda o check() de sempre */
+    strict: {
+      roots: ['arromb', 'corno', 'vagabund', 'escrot', 'safad', 'tesao', 'gostos', 'boquet', 'fudid', 'fuder', 'bucet', 'penis', 'vagina', 'peitud',
+        'bunda', 'estupr', 'pedof', 'maconh', 'cocain', 'nazist', 'traveco', 'sapatao', 'retardad', 'dick', 'cock', 'pussy', 'faggot', 'bastard'],
+      inside: ['putaria', 'cunt', 'nigg', 'motherf', 'xvideo', 'pornhub', 'onlyfans'],
+      short: ['bicha', 'pau', 'rola', 'xota', 'cus', 'fag', 'wtf', 'stfu'],
+    },
+    /* se passar pela equipe/jogo (modo estrito): 'contains' em qualquer lugar; 'piece' só como pedaço inteiro ("Dev_Kael", não "Devon") */
+    impersonate: {
+      contains: ['admin', 'moderador', 'moderadora', 'suporte', 'support', 'eonbound', 'staff', 'oficial', 'official', 'desenvolvedor', 'developer',
+        'gamemaster', 'owner', 'atendimento'],
+      piece: ['adm', 'mod', 'mods', 'gm', 'dev', 'devs', 'dono', 'ceo', 'sistema', 'system', 'equipe', 'team', 'bot', 'sac'],
+    },
   };
   const LEET = { '4': 'a', '@': 'a', '3': 'e', '0': 'o', '5': 's', '$': 's', '7': 't', '!': 'i', '|': 'l' };
   const base = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -54,6 +70,37 @@
     return DATA.contact.some(c => w.includes(c));
   }
 
+  /* ---------- modo estrito ---------- */
+  /* pedaços de um texto livre: corta em tudo que não é letra/número; letras soltas seguidas ("p u t a", "p.u.t.a") viram um pedaço só */
+  function tokens(text) {
+    const raw = base(text).split(/[^a-z0-9@$!|]+/).filter(Boolean), out = []; let run = '';
+    for (const p of raw) { if (p.length === 1) { run += p; continue; } if (run) { out.push(run); run = ''; } out.push(p); }
+    if (run) out.push(run);
+    return out;
+  }
+  const allRoots = () => DATA.roots.concat(DATA.strict.roots), allInside = () => DATA.inside.concat(DATA.strict.inside), allShort = () => DATA.short.concat(DATA.strict.short);
+  /* texto livre com palavrão? (nome, apelido, nome de guilda, frase curta). Ignora acento, l33t (0→o 1→i/l 3→e 4/@→a 5/$→s 7→t), letras repetidas e separadores */
+  function profane(text) {
+    const s = String(text == null ? '' : text); if (!s.trim()) return false;
+    const tk = tokens(s), toks = [...tk, ...pieces(s).map(base)];
+    for (const one of ['i', 'l']) {
+      const lt = toks.map(t => collapse(leet(t, one))).filter(Boolean), joined = collapse(tk.map(t => collapse(leet(t, one))).join('').replace(/[0-9]+/g, ''));
+      if (allInside().some(r => joined.includes(collapse(r)))) return true;
+      const ps = lt.flatMap(t => t.split(/[0-9]+/)).filter(Boolean);
+      if (ps.some(p => allRoots().some(r => p.startsWith(collapse(r))))) return true;
+      if (ps.some(p => allShort().some(x => p === collapse(x) || p === collapse(x) + 's'))) return true;
+    }
+    return dirty(s.replace(/[^A-Za-z0-9_À-ÖØ-öø-ÿ]+/g, '_'));
+  }
+  /* se passa pela equipe do jogo? */
+  function impersonates(text) {
+    const I = DATA.impersonate, s = String(text == null ? '' : text);
+    const flat = collapse(leet(base(s), 'i').replace(/[^a-z]+/g, ''));
+    if (I.contains.some(w => flat.includes(collapse(w)))) return true;
+    const ps = [...tokens(s), ...pieces(s).map(base)].flatMap(t => leet(t, 'i').split(/[^a-z]+/)).filter(Boolean).map(collapse);
+    return ps.some(p => I.piece.some(w => p === collapse(w)));
+  }
+
   function check(name, o) {
     o = o || {}; const n = String(name == null ? '' : name), minor = o.minor !== false;
     const r = {
@@ -71,9 +118,13 @@
     else if (!r.clean) r.msg = reserved(n) ? 'Esse nome é reservado.' : 'Esse nome não é permitido.';
     else if (r.contact) r.msg = 'Não use telefone, rede social ou e-mail no nome.';
     else if (!r.uniq) r.msg = 'Esse já é o seu nome atual.';
+    if (o.strict && n.length && r.len && r.chars && r.clean) {   // modo estrito (troca de nome do Perfil V5)
+      const imp = impersonates(n), bad = !imp && profane(n);
+      if (imp || bad) { r.clean = false; r.msg = imp ? 'Esse nome é reservado.' : 'Esse nome não é permitido.'; }
+    }
     if (r.contact) r.clean = false;            // a tela mostra "Sem palavras proibidas" como não cumprida
     r.ok = r.len && r.chars && r.clean && r.uniq;
     return r;
   }
-  return { DATA, check };
+  return { DATA, check, profane, impersonates };
 });

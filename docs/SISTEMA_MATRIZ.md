@@ -291,3 +291,30 @@ Itens 1, 2 e 3 (P1) do `docs/IDLE_PARECIDOS.md`, aprovados pelo dono em 13/11. T
 2. Trocar sem perder (quando ligar): o botão Equipar pode continuar chamando `Sys.pet.equip` / `Sys.mount.equip` (já transfere com a chave ligada). Para a confirmação: `Sys.pet.swapPreview(S,id)` / `Sys.mount.swapPreview(S,id)` → `{moved,lvlNew,lvlOld}` ("O nível 40 passa para o Dragão"); ou `swapMain(S,host,id)` → `{ok,from,to,moved,lvl}`. Desligado: `swapMain` = `{ok:false,reason:'off'}`, `swapPreview` = null.
 3. Golpe da montaria (quando ligar): na tela da montaria `Sys.mount.strikeInfo(id,estrelas)` → `{k,value,next}` (nome/cor em `Sys.strikes.DATA.name/color[k]`); na batalha nada novo: `Sys.strikes.profile()` já soma, e traz `mount:{id,k,value,name,color}` só quando a montaria soma algo. Recalcular o perfil também ao trocar montaria ou subir estrela.
 4. **Falta**: textos na tela (Engenheiro) e decisão do PO para ligar as chaves.
+
+## Perfil V5: sistemas por trás da tela (`js/sys/profile.js`, `Sys.profile`; filtro em `js/sys/name.js`) (Sistemas, 13/11)
+
+Tela aprovada pelo dono: `docs/proto/PerfilV5.html`. Só lógica, sem DOM. **Chave DESLIGADA** (`Sys.profile.DATA.on=false`): nada escreve no save, `view()` devolve `{on:false}`, `equipped()`/`auraFor()` devolvem `null` e o jogo segue como hoje. Estado em `S.sys.profile`. Testes: `test/sys/profile.test.js` (12) e `test/sys/name.test.js` (7, sem mudança).
+
+**O que faz**
+1. **Trocar nome** (lápis): 3 a 14 letras ou números, **sem espaço** (regra do protótipo e do `Sys.name`; "Maria Clara" passa no filtro de palavrão, mas o nome é "MariaClara" ou "Maria_Clara"). 1ª troca **grátis**, depois **200 gemas** (moeda do jogo; nunca dinheiro). Espera entre trocas: `DATA.rename.cooldownH` (0, o protótipo não tem). Nome único só o servidor confirma.
+2. **Filtro de nome para menores** (`Sys.name`, MODO ESTRITO `check(nome,{strict:true})`): soma ao filtro de sempre a lista `DATA.strict` (mais palavrões/ofensas), `profane(texto)` (ignora acento, l33t 0→o 1→i/l 3→e 4/@→a 5/$→s 7→t, letras repetidas e pontos/espaços/traços entre letras: "p.u.t.a", "p u t a") e `impersonates(texto)` (admin, moderador, suporte, staff, oficial, eonbound, GM, dev, dono...). **Sem `strict` o `check` é o mesmo de antes** (a tela de entrada `js/p_intro.js` não muda; se quiser o filtro novo lá também, passar `strict:true`).
+3. **Moldura, aura e retrato**: lista com tem/falta e "como ganhar". Molduras: Simples (inicial), Bronze (nível 10), Prata (nível 30), Ouro (VIP 3, como no protótipo; a tabela do `Sys.vip` marca moldura no VIP 7: decidir qual vale), Cristal (top 10 da Arena), Eterna (Torneio do Poder, por `grant`), Nove Eras / Além das Eras / Sem Fim (lidas de `S.sys.erasEnd.cos.owned`). Auras: Forja +4/+7/+10/+13 da arma, Sagrada/Sombria (asa de anjo/demônio na Forja +10), Luz das Eras (fim das 9 eras). Retratos: o padrão do herói + os das skins que tem (`Sys.appearance.fixedSkins`). Só visual.
+4. **FC dos últimos 7 dias**: 1 ponto por dia (a MAIOR amostra do dia; dia de Brasília pelo `Sys.clock.dayKey`, sem ele UTC−3), guarda 7 dias; dia sem amostra vem `fc:null, gap:true`.
+5. **Recordes** (só o melhor e a data): fase mais alta, maior FC, andar da Torre, melhor posição/liga/pontos de liga da Arena, maior dano num golpe, melhor sequência sem morrer, mais abates numa sessão, chefe mais rápido (menor tempo vence), mais ouro num dia.
+
+**O que o Engenheiro chama** (carregar `js/sys/name.js` antes de `js/sys/profile.js`)
+- Abrir o Perfil: `Sys.profile.sync(S,host)` (puxa fase `S.best`, torre, arena e amostra o FC) e depois `const v=Sys.profile.view(S,host)` → `{name, rename, equipped:{frame,aura,avatar}, frames[], auras[], portraits[], fc:{points[{day,label,fc,gap}],max,min,last,delta}, records[{id,name,text,v,day,info,has}]}`. Cada item de `frames/auras`: `{id,name,r,how,go,owned,cur,need,equipped}`; `go` = tela do botão Ir.
+- **Amostrar o FC**: `Sys.profile.sampleFC(S,host)` (ou `sampleFC(S,host,fc)` com o número já calculado) no mesmo lugar onde já chama `Sys.fc.record` (depois de equipar, forjar, treinar, subir pet) e ao abrir o jogo. Barato: guarda só a maior do dia.
+- **Recordes** `Sys.profile.record(S,key,valor,host,info)` → `{newRecord, prev, v}`:
+  - `hit`: a cada golpe do herói com o dano (info `'Ultimate'`/`'Crítico'`); pode chamar só quando passar do `records` atual, se quiser poupar.
+  - `streak`: a cada abate com o contador de abates sem morrer (zera na morte, do lado do jogo).
+  - `runKills`: ao fechar a sessão/voltar do segundo plano, com os abates da sessão.
+  - `bossTime`: ao vencer um chefe, segundos da luta (info = nome do chefe).
+  - `goldDay`: `Sys.profile.addDaily(S,host,'goldDay',n)` em cada ganho de ouro (soma do dia; vira no dia de Brasília).
+  - `stage`/`tower`/`arena*`/`fc`: o `sync` e o `sampleFC` já cuidam.
+- **Trocar nome**: `Sys.profile.renameQuote(S,host)` para o texto/botão (`free`, `gems`, `canPay`, `text`); no OK `Sys.profile.rename(S,host,nome,{minor})` → `{ok, msg, reason:'nome'|'gemas'|'espera'}`. Grava `S.name`, cobra por `host.spendGems(n)` (sem ele, `S.gems`) e chama `host.onChange`. Com servidor, mandar o nome ao servidor antes (unicidade) e só então chamar `rename`.
+- **Equipar** (tocou, trocou): `Sys.profile.equip(S,host,'frame'|'aura'|'avatar',id)` → `{ok}` ou `{ok:false,reason:'falta',how,go}` (mostrar "Como ganhar: " + how). `id=null` volta ao padrão.
+- **Desenhar**: `Sys.profile.equipped(S,host)` → `{frame, aura, avatar}`. `aura=null` = o jogador não escolheu: usar a aura de hoje (pelo +N da arma). Moldura em CSS pela raridade `r`.
+- **Prêmio de moldura por outro sistema** (Torneio do Poder): `Sys.profile.grant(S,'eterna',host)`.
+- **Falta**: a tela (Engenheiro), decidir Ouro = VIP 3 (protótipo) ou VIP 7 (`Sys.vip.DATA.table.frame`), e ligar `DATA.on` com o OK do dono.
