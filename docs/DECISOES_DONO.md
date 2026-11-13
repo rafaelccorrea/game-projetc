@@ -3,6 +3,14 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Fogueira das Eras (tipo as lâmpadas do Legend of Mushroom): fazer o protótipo.**
+    - O nível dela é independente da era do jogador ("pode ir para a medieval com a fogueira inicial").
+    - Ela sobe de nível e muda de visual pelo tema das eras, em 9 estágios.
+    - Forja itens conforme o próprio nível.
+    - Brasas só jogando, nunca à venda.
+  · Sistemas faz o protótipo; Arte faz os 9 visuais depois
+- [~] **Pesquisar outros jogos do gênero para adequar** · PO (docs/PESQUISA_CONCORRENTES.md)
+- [x] **Instalar quando o dono pedir, na hora, com memória ou sem** · PO instala via adb
 - [~] **"instala, e sim liga tudo!"**
     - Instalar a v0.13.2 no S24 · Engenheiro + QA
     - Ligar na próxima versão: eras 7 e 8, Asa Seráfica, skins e itens novos de prêmio · Engenheiro + Sistemas
