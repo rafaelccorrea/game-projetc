@@ -128,14 +128,7 @@ const DATA={
       ['Relógio de Bolso','Medalhão de Latão','Engrenagem Pendente','Núcleo a Vapor','Bobina Tesla'],
       ['Placa de Identificação','Medalha de Serviço','Rádio de Pescoço','Medalha de Honra','Chip de Comando'],
       ['Pingente Neon','Chip de Íons','Núcleo de Plasma','Cristal Quântico','Singularidade Pendente']],
-    wing:[
-      ['Asas de Folha','Asas de Pena Bruta','Asas de Pterodáctilo','Asas de Pedra Viva','Asas do Espírito Ancestral'],
-      ['Asas de Linho','Asas de Bronze','Asas de Ícaro','Asas da Esfinge','Asas de Pégaso'],
-      ['Asas de Lona','Asas de Ferro','Asas de Grifo','Asas Rúnicas','Asas do Dragão Real'],
-      ['Asas de Vela','Asas de Lona Encerada','Asas de Gaivota','Asas do Navio Fantasma','Asas do Kraken'],
-      ['Asas de Lona e Arame','Asas de Latão','Asas de Ornitóptero','Asas a Vapor','Asas Elétricas Tesla'],
-      ['Asas de Paraquedas','Asas de Planador','Jetpack Tático','Asas de Caça','Asas Stealth'],
-      ['Asas de Holograma','Asas de Nanofibra','Asas de Plasma','Asas Quânticas','Asas do Vazio']],
+    // asa: SEM tabela por era (dono: item próprio, arte fixa anjo/demoníaca) — o nome vem de Sys.stats.wingName (wingTag/itemName abaixo)
   },
   summon:{rarWeights:[50,28,14,6,2], cost:{base:500, eraGrowth:4, x10Mult:9}, freePerDay:1,   // PO: 1.000 → 500 (no começo só dava a grátis)
     pity:10},   // garantia: a cada 10 invocações sem a MELHOR raridade liberada, a 10ª vem nela (estava no jogo; agora é daqui)
@@ -272,6 +265,9 @@ function topWeights(w,cap,b){
 /* ORIGEM do item (Cofre do Mercado, reports/backend-economia.md): de onde veio. Só itens GANHOS jogando entram no mercado; 'shop'/'offer'/'gift' não.
    O campo é só informativo no jogo solo (não muda poder nem regra). */
 const ORIGIN_OF={drop:'drop',boss:'boss',chest:'chest',arsenal:'instance',eraBossInst:'instance',summon:'summon',shop:'shop'};
+/* ASA (dono): cada asa é anjo ou demoníaca, fixa (não muda por era nem raridade). A regra é do stats (Sys.stats.wingForDrop / DATA.wingDrop). */
+function wingTag(it,diff){ if(!it||it.slot!=='wing') return it; const St=root.Sys&&root.Sys.stats;
+  try{ if(St&&typeof St.wingForDrop==='function') it.wing=St.wingForDrop(it.e,diff); }catch(e){} return it; }
 function rollItem(host,opts){
   opts=opts||{}; const rng=rngOf(host), em=eraMaxOf(host);
   const e=opts.era!=null?clamp(Math.floor(num(opts.era,em)),0,99):rollEra(rng,em);
@@ -286,7 +282,7 @@ function rollItem(host,opts){
   const it={slot,r,e,subs:rollSubs(rng,r,slot),origin:opts.origin||ORIGIN_OF[opts.source]||'drop'}; let qp=qualityOf(rng);
   if(qp!=null) for(let k=1;k<Math.max(1,int0(opts.qBest));k++) qp=Math.max(qp,qualityOf(rng));   // dificuldade: melhor de N (Difícil 2, Hell 3)
   if(qp!=null) it.qp=qp;
-  return it;
+  return wingTag(it,opts.diff!=null?opts.diff:diffOf(null,host));
 }
 /* ---------------- invocação por ouro ---------------- */
 function summonCost(host,n){
@@ -341,7 +337,7 @@ const itemOut=it=>{ const o={slot:it.slot,r:it.r,e:it.e,lvl:1,gold:0,subs:(it.su
 function canHold(host,spec){ if(spec.r>maxAllowedR(host)) return false; if(spec.slot==='wing'&&!wingOk(host,spec.r)) return false; return true; }
 function makeFixedItem(host,spec){ const rng=rngOf(host); let r=clamp(int0(spec.r),0,maxDropR()); if(spec.slot==='weapon'&&r===DATA.launch.mythicR) r--;
   const e=spec.e!=null?clamp(int0(spec.e),0,99):eraMaxOf(host); const it={slot:spec.slot,r,e,lvl:1,gold:0,subs:rollSubs(rng,r,spec.slot),origin:spec.origin||'reward'};
-  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; return it; }
+  const qp=qualityOf(rng); if(qp!=null) it.qp=qp; return wingTag(it,spec.diff!=null?spec.diff:diffOf(null,host)); }
 function grantBundle(S,host,b){
   const o=ensure(S), out={gold:0,gems:0,items:[],heldItems:[],eggs:[],heldEggs:[],skin:null}; if(!b||typeof b!=='object') return out;
   const gold=int0(b.gold)+Math.round(num(b.goldk,0)*goldUnitOf(host)); if(gold){ out.gold=gold; if(host.addGold) host.addGold(gold); }
@@ -363,6 +359,7 @@ function grantBundle(S,host,b){
 }
 /* nome do item dos espaços novos (chapéu, luvas, botas, colar, asa); arma e colete: null (o jogo usa ERAS[e].w / .a) */
 function itemName(it){
+  if(it&&it.slot==='wing'){ const St=root.Sys&&root.Sys.stats; try{ if(St&&typeof St.wingName==='function') return St.wingName(it)||null; }catch(e){} return it.wing==='demon'?'Asa demoníaca':'Asa de anjo'; }
   const tb=it&&DATA.names[it.slot]; if(!tb) return null;
   const e=clamp(int0(it.look!=null?it.look:it.e),0,tb.length-1), row=tb[e];
   return row[clamp(int0(it.r),0,row.length-1)]||null;
@@ -481,7 +478,7 @@ function rollKill(S,host,enemy){
   const Ck=root.Sys&&root.Sys.clock, rest=!!(Ck&&typeof Ck.takeRested==='function'&&Ck.takeRested(S)), rm=rest?num(Ck.DATA.rested.mult,2):1;
   gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+vip.goldPct/100)*rm*dm));   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
   let gems=0; if(rng()<T.gemChance) gems=Math.max(0,Math.round(randInt(rng,T.gems[0],T.gems[1])*num(m.gems,1)));
-  const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1))) items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1}));
+  const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1))) items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1,diff:d}));
   const forge=rollMat(rng,M.forge,num(m.forge,1)*dm), food=rollMat(rng,M.food,num(m.food,1)*dm);
   let essence=0;
   if(cls==='eraBoss'){ const E=DATA.essence, first=!ensure(S).egg.eraFirst.includes(eraOfEnemy(enemy,host));   // 1ª vitória da era (antes do rollEgg marcar)

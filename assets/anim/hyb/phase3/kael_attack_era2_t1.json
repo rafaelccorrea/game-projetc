@@ -3,8 +3,9 @@
  "fps": 12,
  "w": 448,
  "h": 256,
- "padLeft": 0,
- "padRight": 0,
+ "padLeft": 96,
+ "padRight": 96,
  "feetY": 243,
- "note": "pés em x = padLeft+128"
+ "note": "pés em x = padLeft+128",
+ "weapon": "era2_t1"
 }
