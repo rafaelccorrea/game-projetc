@@ -1,0 +1,154 @@
+{
+ "frames": 18,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. skins da Kaia: âncora pelo rosto (kaiaskin/headtrack.js)",
+ "head": [
+  {
+   "x": 243,
+   "y": 92,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 246,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 245,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 242,
+   "y": 98,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 246,
+   "y": 106,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 254,
+   "y": 110,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 255,
+   "y": 111,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 252,
+   "y": 110,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 252,
+   "y": 110,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 252,
+   "y": 110,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 246,
+   "y": 112,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 240,
+   "y": 109,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 225,
+   "y": 106,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 207,
+   "y": 109,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 189,
+   "y": 116,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 271,
+   "y": 211,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 275,
+   "y": 212,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 275,
+   "y": 214,
+   "ang": 90,
+   "s": 0.452,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  }
+ ]
+}
