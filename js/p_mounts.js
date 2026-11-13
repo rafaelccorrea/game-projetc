@@ -166,7 +166,7 @@ let mtRaf=0, mtT0=0;
 function mtRideLoop(ts){ mtRaf=0; const c=typeof document!=='undefined'?document.getElementById('mt_rc'):null; if(!c||typeof view==='undefined'||view!=='mounts'){ mtT0=0; return; }
   try{ const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, h=c.clientHeight; if(w&&h){ if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
       if(!mtT0) mtT0=ts; const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height);
-      const id=c.dataset.id, st=Math.max(1,Math.min(5,Number(c.dataset.st)||1));
+      const id=c.dataset.id, st=Math.max(1,Math.min(typeof mountStarMax==='function'?mountStarMax():5,Number(c.dataset.st)||1));
       window.drawHeroFull(x,c.width*MT_RIDE.fx,c.height*MT_RIDE.fy,c.width*MT_RIDE.k/HS,{t:(ts-mtT0)/1000,mount:{id,stars:st},pet:false}); } }catch(e){}
   mtRaf=requestAnimationFrame(mtRideLoop); }
 function mtRideStart(){ try{ if(!mtRaf&&typeof requestAnimationFrame==='function'&&typeof document!=='undefined'&&document.getElementById('mt_rc')) mtRaf=requestAnimationFrame(mtRideLoop); }catch(e){} }

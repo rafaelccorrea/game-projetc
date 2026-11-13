@@ -70,7 +70,9 @@ function mountFront(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; i
 function mountWingOff(H){ const mo = H.mount; if (!mo || !mountReady(mo.id)) return null; const m = mountMetrics(mo.id), T = MOUNT_TBL[mo.id], k = HS / 256; return m ? { x: (T.wx + (T.wings ? T.wx2 || 0 : 0)) * k, y: -(m.rise + T.wy + (T.wings ? T.wy2 || 0 : 0)) * k, winged: !!T.wings } : null; }
 /* deslocamento do pet nesta montaria (tabela) */
 function mountPetOff(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return null; const T = MOUNT_TBL[mo.id]; const st3 = typeof PETK !== 'undefined' && PETK.info && (PETK.info.stage | 0) >= 3; return { dx: (st3 && T.pdx3) || T.pdx || 0.62, dy: T.pdy || 9 }; }
-const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,200,255,', 'rgba(190,140,255,', 'rgba(255,214,120,'];   // visível já em 1 estrela; mais forte a cada estrela
+const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,200,255,', 'rgba(190,140,255,', 'rgba(255,214,120,', 'rgba(255,110,60,', 'rgba(255,248,215,'];   // visível já em 1 estrela; mais forte a cada estrela · 6 = Submundo (brasa) e 7 = Celestial (branco-dourado): cores da Sistemas (f636e23), só valem com as 7 estrelas ligadas no módulo
+/* teto de estrelas do DESENHO = o do módulo (Sys.mount.DATA.maxStars: 5 hoje; 7 com Sys.mount.setStars7(true), chave desligada), nunca além das cores que existem */
+const mountStarMax = () => { let n = 5; try { n = Sys.mount.DATA.maxStars | 0; } catch (e) {} return Math.max(1, Math.min(MOUNT_AURA.length - 1, n || 5)); };
 const MOUNT_GLOW_OFF = typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('mglow') === '0';
 const MGLOW = new Map(), MGLOW_MAX = 90, MGLOW_K = 0.25, MHALO = {};
 function mountHalo(st){ let c = MHALO[st]; if (c !== undefined) return c; const col = MOUNT_AURA[st]; if (!col) return MHALO[st] = null;
@@ -138,7 +140,7 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
   const F = mountCutFrame(mo.id, 'run', H.t), T = F.T, k = HS / 256, gy = H.gy;
   const a = Math.min(1, (1 - u) * 1.8), cx = H.x + HS * 0.12 - u * u * HS * MOUNT_EXIT_RUN;   /* some só na 2ª metade; arranca devagar e acelera (u²) */
   ctx.save(); ctx.globalAlpha = 0.3 * a; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(cx, gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas, no chão, junto
-  { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN); ctx.save(); ctx.globalAlpha = a * 0.75; ctx.drawImage(hc, cx - r, gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: vai e some com a montaria
+  { const stN = Math.max(0, Math.min(mountStarMax(), mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN); ctx.save(); ctx.globalAlpha = a * 0.75; ctx.drawImage(hc, cx - r, gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: vai e some com a montaria
   ctx.save(); ctx.globalAlpha = a; ctx.translate(cx, gy); ctx.scale(-k, k); ctx.drawImage(F.c, -(F.pad + 128 - T.dx + 0.12 * 256), -(F.fy - T.dy)); ctx.restore();   /* espelhada em torno do centro dela (o da sombra): virou e corre para trás */
   return true; }
 /* ===== DERROTA: A MONTARIA FICA (decisão do PO) =====
@@ -193,7 +195,7 @@ function drawMountDead(H){ const mode = mountDieMode(H); if (!mode) return false
   if (!o.ok){ shadow(0); cut(1); return true; }   /* imagem ainda carregando: espera no lugar, sem piscar nem virar */
   let u; if (d.ready0) u = Math.max(0, H.deadP) * 1.6 / MOUNT_XFADE; else { if (d.tr == null) d.tr = H.t; u = (H.t - d.tr) / MOUNT_XFADE; } u = Math.max(0, Math.min(1, u));
   const G = mountStillGeo(H), bb = o.bb; shadow(G.dx * u);
-  { const stN = Math.max(0, Math.min(5, mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN), pu = 0.5 + 0.2 * Math.sin(H.t * 2.4); ctx.save(); ctx.globalAlpha = Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, H.x + HS * 0.15 + G.dx * u - r, G.gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: continua, atrás
+  { const stN = Math.max(0, Math.min(mountStarMax(), mo.stars | 0)), hc = (stN && !MOUNT_GLOW_OFF) ? mountHalo(stN) : null; if (hc){ const r = HS * (0.75 + 0.06 * stN), pu = 0.5 + 0.2 * Math.sin(H.t * 2.4); ctx.save(); ctx.globalAlpha = Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, H.x + HS * 0.15 + G.dx * u - r, G.gy - HS * 0.45 - r, r * 2, r * 2); ctx.restore(); } }   // aura por estrela: continua, atrás
   ctx.save(); ctx.globalAlpha = u; ctx.translate(G.cx, G.gy); ctx.scale(G.xs, G.s * G.sy); ctx.drawImage(o.c, -(bb.l + bb.r) / 2, -bb.b); ctx.restore();   /* base (borda opaca de baixo) na linha do chão; a respiração estica para cima; xs > 0 = cabeça para a direita */
   if (u < 1) cut(1 - u);   /* fade cruzado: a folha montada (sem o cavaleiro) some no mesmo lugar */
   return true; }
@@ -209,9 +211,9 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
   if (H.deadP >= 0){ const p = H.deadP; rot = -1.2 * Math.min(1, p * 3.2); ox -= Math.min(1, p * 3) * 14; alpha = p > .55 ? Math.max(0.1, 1 - (p - .55) / .45) : 1; }
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.12, gy + HS * 0.012, HS * T.sh, HS * 0.055, 0, 0, 7); ctx.fill(); ctx.restore();   // sombra das patas no chão
   if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
-  { const c = MOUNT_AURA[Math.max(0, Math.min(5, H.mount.stars | 0))]; if (c && H.deadP < 0){ const pu = 0.5 + 0.2 * Math.sin(t * 2.4), gx0 = ox + HS * 0.15, gy0 = gy - HS * 0.45, r = HS * (0.75 + 0.06 * (H.mount.stars | 0));   // aura por estrela (código), ATRÁS do sprite
+  { const c = MOUNT_AURA[Math.max(0, Math.min(mountStarMax(), H.mount.stars | 0))]; if (c && H.deadP < 0){ const pu = 0.5 + 0.2 * Math.sin(t * 2.4), gx0 = ox + HS * 0.15, gy0 = gy - HS * 0.45, r = HS * (0.75 + 0.06 * (H.mount.stars | 0));   // aura por estrela (código), ATRÁS do sprite
       /* Engenheiro 10 (desempenho): o halo era um createRadialGradient + toFixed POR QUADRO; agora é um desenho pronto por estrela (no pulso máximo) e o pulso entra pela transparência */
-      const hc = MOUNT_GLOW_OFF ? null : mountHalo(Math.max(0, Math.min(5, H.mount.stars | 0))); ctx.save();
+      const hc = MOUNT_GLOW_OFF ? null : mountHalo(Math.max(0, Math.min(mountStarMax(), H.mount.stars | 0))); ctx.save();
       if (hc){ ctx.globalAlpha = alpha * Math.min(1, (0.3 * pu + 0.12) / 0.33); ctx.drawImage(hc, gx0 - r, gy0 - r, r * 2, r * 2); ctx.globalAlpha = alpha; }
       else { const g = ctx.createRadialGradient(gx0, gy0, HS * 0.1, gx0, gy0, r); g.addColorStop(0, c + Math.min(0.95, (0.22 + 0.15 * (H.mount.stars | 0)) * (0.75 + pu * 0.5)).toFixed(2) + ')'); g.addColorStop(0.55, c + (0.3 * pu + 0.12).toFixed(2) + ')'); g.addColorStop(1, c + '0)');   /* v0.12.8: mais forte (quase não aparecia) */ ctx.globalAlpha = alpha; ctx.fillStyle = g; ctx.fillRect(gx0 - r, gy0 - r, r * 2, r * 2); }
       if ((H.mount.stars | 0) >= 4){ ctx.fillStyle = c + '0.30)'; for (let i = 0; i < 6; i++){ const ph = (t * 0.5 + i / 6) % 1, sx = ox - HS * 0.28 + i * HS * 0.16 + Math.sin(t * 1.3 + i) * 4; ctx.globalAlpha = alpha * (1 - ph) * ((H.mount.stars | 0) >= 5 ? 0.9 : 0.6); ctx.beginPath(); ctx.ellipse(sx, gy - 2 - ph * HS * 0.16, HS * (0.07 + 0.06 * ph), HS * (0.035 + 0.03 * ph), 0, 0, 7); ctx.fill(); } }   // fumaça nas patas (4 e 5 estrelas)
@@ -222,7 +224,7 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
   const GV = mountGearLay(H, M), bimg = GV ? layBody(sh, GV) : sh.img;   /* Engenheiro 18: corpo com a tinta das peças (chave MOUNT_GEAR, desligada) ou a folha original */
   const bsx = sheetSX(M, fi), bsy = sheetSY(M, fi), body = () => ctx.drawImage(bimg, bsx, bsy, FW, FH, 0, 0, FW, FH);
   /* Engenheiro 2: CONTORNO DE LUZ da aura por estrela, colado na silhueta da montaria (o halo de trás sumia em cima do cenário claro): 1 estrela = fino e claro; 5 = largo e dourado */
-  const stN = H.deadP < 0 ? Math.max(0, Math.min(5, H.mount.stars | 0)) : 0, glowC = MOUNT_AURA[stN];
+  const stN = H.deadP < 0 ? Math.max(0, Math.min(mountStarMax(), H.mount.stars | 0)) : 0, glowC = MOUNT_AURA[stN];
   /* Engenheiro 10 (desempenho): o contorno era o corpo desenhado 2 a 3 vezes com shadowBlur A CADA QUADRO (desfoque de 512x352, caro no celular). Agora o contorno
      de cada quadro é desenhado UMA vez num canvas pequeno (1/4 da célula, só a sombra) e reaproveitado; por quadro: 1 drawImage do contorno + 1 do corpo. O pulso
      entra pela transparência. ?debug=1&mglow=0 volta ao caminho antigo (comparação). */
@@ -254,7 +256,7 @@ function drawHeroMounted(H){ if (!H.mount || !mountPrefix(H.mount.id)) return fa
 /* modo dono / depuração: ganhar e montar uma montaria; estrelas */
 const mountIds = () => mountOk() ? Sys.mount.DATA.mounts.filter(m => MOUNT_TBL[m.id] && (typeof Sys.mount.live !== 'function' || Sys.mount.live(m))) : [];   /* montaria NOVA (nw) só entra quando o módulo a liga */   // só as montarias LIGADAS (com arte aprovada na tabela)
 function mountGive(id){ if (!mountOk() || !MOUNT_TBL[id]) return { ok: false, reason: 'off' }; let r = null; try { r = Sys.mount.add(S, Sys.host, id); Sys.mount.equip(S, id); } catch (e) { console.error('mount.add', e); } if (typeof statsChanged === 'function') statsChanged(); return r; }
-function mountStar(d){ if (!mountOk()) return 0; try { const o = Sys.mount.ensure(S); if (!o.eq || !o.owned[o.eq]) return 0; const x = o.owned[o.eq]; x.stars = Math.max(1, Math.min(5, (x.stars | 0) + (d || 1))); if (typeof statsChanged === 'function') statsChanged(); return x.stars; } catch (e) { return 0; } }
+function mountStar(d){ if (!mountOk()) return 0; try { const o = Sys.mount.ensure(S); if (!o.eq || !o.owned[o.eq]) return 0; const x = o.owned[o.eq]; x.stars = Math.max(1, Math.min(mountStarMax(), (x.stars | 0) + (d || 1))); if (typeof statsChanged === 'function') statsChanged(); return x.stars; } catch (e) { return 0; } }
 function mountOff(){ if (!mountOk()) return; try { Sys.mount.equip(S, null); } catch (e) {} if (typeof statsChanged === 'function') statsChanged(); }
 /* GANCHO DE DEBUG DO QA (só com ?debug=1): window.dbgMount(id, estrelas) dá e monta a montaria (id da MOUNT_TBL) com as estrelas pedidas (1 a 5; padrão: as
    que ela já tem); dbgMount() lista os ids; dbgMount(null) desmonta. Por baixo usa o que já existia aqui e continua valendo no console: mountGive(id),
@@ -263,6 +265,6 @@ if (typeof DEBUG !== 'undefined' && DEBUG){ window.dbgMount = function (id, star
     if (id === null){ mountOff(); if (typeof heroChanged === 'function') heroChanged(); return { desmontado: true }; }
     if (id === undefined || !MOUNT_TBL[id]) return { erro: 'id de montaria desconhecido', ids: Object.keys(MOUNT_TBL) };
     try { const m = Sys.mount.DATA.mounts.find(x => x.id === id); if (m && m.nw && Sys.mount.DATA.newReady) Sys.mount.DATA.newReady[id] = true; } catch (e) {}   /* montaria NOVA (Fênix): no modo de teste liga só ela, só nesta sessão (não grava) */
-    mountGive(id); let st = 0; try { const o = Sys.mount.ensure(S), x = o.owned[id]; if (x){ if (typeof stars === 'number' && isFinite(stars)) x.stars = Math.max(1, Math.min(5, stars | 0)); st = x.stars | 0; } } catch (e) {}
+    mountGive(id); let st = 0; try { const o = Sys.mount.ensure(S), x = o.owned[id]; if (x){ if (typeof stars === 'number' && isFinite(stars)) x.stars = Math.max(1, Math.min(mountStarMax(), stars | 0)); st = x.stars | 0; } } catch (e) {}
     if (typeof statsChanged === 'function') statsChanged(); if (typeof heroChanged === 'function') heroChanged(); const o = MOUNT_REF[id] ? mountStill(id) : null;
     return { id, estrelas: st, montado: !!mountLook(), imagemParada: !o ? 'sem imagem' : o.ok ? 'ok' : o.fail ? 'falhou' : 'carregando' }; }; }
