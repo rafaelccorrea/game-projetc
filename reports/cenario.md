@@ -700,3 +700,61 @@ parada; botão "Ver ANTES"; celular.
 - Arcos elétricos são 3 ziguezagues fixos que piscam; o braço robótico só balança (não pega nada).
 - Restou uma borda esverdeada fina à esquerda do painel esquerdo do ponto de ônibus; a treliça do painel holográfico tem uns fios esverdeados.
 - Pássaros-robô do céu passam na frente da nave-mãe. Herói ainda com a roupa da era 2.
+
+## Era 6 — prévia animada para o voto do dono
+`assets/bg/v2/era6/preview_sheet.png` (faixa de 12 quadros de 234x415, 8 fps, t = 12 a 13,4 s, 312 KB, PNG com paleta) + `preview_sheet.json` ({frames, fps, w, h}).
+Gerada no navegador com o próprio `scene.js` (cena 390x692 a dpr 1, reduzida) e gravada por um receptor local temporário (fora do projeto).
+
+---
+
+# Era 7 (Submundo) — mesmo padrão das eras 4 a 6 (fps-75)
+
+**Ver:** http://localhost:8080/test/bg/preview?era=7 · instantes lado a lado: `http://localhost:8080/test/bg/sheet?era=7&t=3,9,15,21&w=330&line=1`
+**Pasta:** `assets/bg/v2/era7/` (54 arquivos, ~1,5 MB + prévia de 0,37 MB) · **contrato:** `assets/bg/v2/era7/meta.json`
+**Prévia animada para o voto:** `assets/bg/v2/era7/preview_sheet.png` (12 quadros de 234x415, 8 fps, 376 KB) + `preview_sheet.json`.
+**Scripts:** `test/bg/tools/build7.js`, `mkmeta7.js`, `info.era7.json`, `masks7.json`, `cut7.json`, `bands7.json` (`node mkmeta7.js --info tools/info.era7.json <saída>`: idêntico).
+**Créditos:** 10 pedidos Nano Banana 2 2K (8 da era + 2 regerações): 18 a 20 créditos (1 pedido falhou no servidor; não consegui confirmar se foi cobrado). Saldo ao fechar: 291,15.
+Regerações: o mid A veio com fundo BRANCO (inutilizável) e a folha de criaturas voadoras falhou; as duas foram refeitas.
+
+**`scene.js` NÃO mudou** (SHA-1 `5b725460…`). Só dados no meta.
+
+## Camadas
+`sky.webp` (procedural: carmim → vermelho → brasa no horizonte) · `far.webp` (montanhas e agulhas de obsidiana, cidadela demoníaca, 2 cascatas de lava, RIO DE LAVA de
+ponta a ponta; recortado na horizontal onde o rio é contínuo; ESPELHADO) · `midA.webp` (portal gótico com grade, pedestal com braseiro, caveira de rocha com olhos e
+mandíbula de lava, árvore morta, torre com janelas acesas) + `midB.webp` (cristais de obsidiana, forja de diabretes com bigorna, trono de ossos, forca, pilar quebrado
+com cascata de lava) · `ground.webp` (rocha com rachaduras de lava, mureta, lajes hexagonais com juntas de lava em 0,71–0,907, mureta, rocha; pés em 0,78) ·
+`decals.webp` (20: caveira com chifre, ossos cruzados, costelas, poça e rachadura de lava, cinza, brasas, corrente, espada, elmo, runa roxa, cristal, mancha
+queimada, laje rachada, pedrinhas, arranhões, escudo, moedas, lasca de osso, graveto).
+
+## 28 elementos animados
+céu derivando · nuvens de cinza em 2 velocidades · lua de sangue fixa · SERPE cruzando o céu batendo 2 asas · gárgula e corvo voando · 2 bandos de morcegos ·
+lava descendo nas cascatas · rio de lava brilhando com borbulhas · barco do barqueiro navegando no rio (proa de caveira, para a esquerda) · bruma vermelha ·
+fantasma e espírito de fogo (com rastro de fagulhas) flutuando atrás das estruturas · gaiola balançando na forca · fogo roxo no braseiro + fagulhas · olhos da
+caveira pulsando e lava escorrendo da mandíbula · janelas da torre · brilho roxo nos cristais · boca da forja, faíscas na bigorna e fumaça com contorno na chaminé ·
+lava descendo no pilar com brasas e vapor · braseiros da estrada (3 chamas ROXAS em quadros) · estaca com caveira e lanterna · diabrete (senta, anda, volta) ·
+morcego pulando entre 2 colunas quebradas · gato preto · caldeirão com vapor roxo, respiro de fumaça e bacia de lava borbulhando · espinheiro balançando ·
+brasas subindo · primeiro plano balançando · poeira dos passos.
+
+## Como foi feito
+Referências: mid A da era 5 (estilo) + `assets/map/era7.jpg`; mid B, decalques e a folha de voadores com referência das próprias gerações. Fundo verde.
+Asa da serpe: gerada separada do corpo; o sprite ganhou a metade de baixo vazia para o centro cair no ombro, e o `flap` (cosseno) faz a asa bater em torno dele.
+A folha de objetos veio com BORDA BRANCA de adesivo em volta de cada peça: `unsticker` apaga por preenchimento a partir do fundo só pixels quase brancos e neutros
+(os ossos, creme, ficam). A gaiola é recortada da arte (só pixels escuros dentro do retângulo) e balança presa ao gancho da trave. Lava, olhos, janelas, forja e
+cristais piscam com máscaras tiradas dos próprios pixels da arte (`masks7.json`).
+
+## Conferido no Chrome (aba única, fechada no fim)
+`sheet` em t = 3 · 9 · 15 · 21 (com `line=1`), 3/3,3/6/30/33,5 e uma vista sem o plano médio em t = 2 · 4 · 8 para ver o barco (casco na superfície do rio,
+andando para a esquerda) e a serpe (asas batendo). Sem erro de console.
+- Pés nas lajes, sombra na linha de 0,78; decalques sem sobreposição; objetos da beira apoiados na rocha de trás.
+- **Custo por quadro** (dpr 2, mesmo método da era 6, máquina carregada): mediana era 1 = 73,6 ms, era 5 = 71,0, era 6 = 75,4, **era 7 = 68,6**: equivalente.
+NÃO conferido: `preview?era=7` interativo (o botão "Ver ANTES" deve dar erro: não existe `assets/bg/era7.png`, só `era7_ref.png`); emenda do far espelhado;
+emenda do chão só pelo recorte `seam_ground`; ciclo completo do diabrete e do morcego; celular.
+
+## Defeitos que o dono pode notar
+- A serpe e o fantasma passam boa parte do tempo escondidos atrás das estruturas grandes (caveira, cristais, trono).
+- Asa da serpe "vira" para baixo do ombro no meio do ciclo (é o achatamento em cosseno, não um desenho de asa abaixada).
+- Chamas dos braseiros da estrada são roxas, mas o brilho em volta é laranja (cor fixa no módulo para fogo).
+- Cascatas e rio são brilho correndo sobre a arte parada (como nas eras 0 e 1); o barco não deixa rastro na lava.
+- A estrutura grande da caveira, o trono e a árvore são parados; a lua de sangue fica parada no alto.
+- Conferido em recorte: o lugar de onde a gaiola saiu no mid B ficou limpo (sem resto).
+- Herói ainda com a roupa da era 2.

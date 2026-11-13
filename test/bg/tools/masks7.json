@@ -1,0 +1,10 @@
+[
+ {"name": "mFalls", "src": "far",  "kind": "lava",   "rect": [552, 140, 1342, 405], "maxW": 400},
+ {"name": "mRiver", "src": "far",  "kind": "lava",   "rect": [0, 412, 1584, 468], "maxW": 800},
+ {"name": "mJaw",   "src": "midA", "kind": "lava",   "rect": [740, 380, 945, 559]},
+ {"name": "mEyes",  "src": "midA", "kind": "lava",   "rect": [760, 250, 935, 345]},
+ {"name": "mTowerW","src": "midA", "kind": "lava",   "rect": [1365, 140, 1525, 559]},
+ {"name": "mCryst", "src": "midB", "kind": "bright", "rect": [18, 40, 332, 559]},
+ {"name": "mForge", "src": "midB", "kind": "lava",   "rect": [425, 300, 610, 445]},
+ {"name": "mLavaP", "src": "midB", "kind": "lava",   "rect": [1355, 75, 1470, 559]}
+]
