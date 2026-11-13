@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **06h40 · Suas decisões:** (1) ultimates: a raridade mais ALTA ganha a animação nova. Na ordem do jogo (… Mítico, Lendário, Divino), o LENDÁRIO fica com a nova e o MÍTICO com a reforçada; cada família de arma (clava, espada, lança, pistola etc.) tem a sua, em qualquer era. (2) Arco e flecha e bumerangue APROVADOS (versão média: pose própria a pé, montado e projétil pelo código, ultimates): mesmo dano da espada, liberam nos níveis 30 e 45. (3) Skins da Kaia: Palhaça, Princesa, Ninja, Demoníaca e Angelical; referências junto com as 8 do Kael. A Kaia segue com corpo de menina em todas as skins, como o padrão
+
 - **06h20 · PARA VOCÊ VOTAR: amostra das ultimates da ESPADA** (a de hoje, a Lendária reforçada pelo código e a Mítica nova). Aprovando, sai o mesmo para os outros 8 tipos de arma (~54 créditos)
 - **06h20 · Skins novas (sua ordem):** no tamanho do garoto, completas, sem combinação. A Arte faz 8 imagens de referência do Kael (~16 créditos): Demônio, Anjo, Paladino Solar, Bobo da Corte, Ninja das Sombras, Pirata, Samurai, Ciborgue. Você escolhe 5 para animar (~38 cada); uma vai na Oferta de 1ª compra e uma Lendária no fim do Passe. A Kaia ganha as dela quando houver mais crédito
 - **06h20 · Arco e flecha e bumerangue:** custo calculado pela Arte: completo ~200 (não cabe); médio ~104 (pose própria a pé, montado e projétil pelo código, ultimates); barato ~48 (arco usa a pose da pistola, bumerangue usa o golpe da espada). Esperando a sua escolha
