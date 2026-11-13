@@ -121,3 +121,21 @@ Igual à Básica em Forja, aura e ultimate (folha-base `era0_ult`). Teste: `test
 | **Nome na tela** | ✗ **"Machado de Osso"** (`index.html:352`), com arte de clava. Mesma decisão de nome |
 
 **Do lado de sistema: pronta, mas ⏸ (o dono decide liberar a arma Mítica) e com o nome pendente.** Teste: `test/sys/item-armas.test.js` (29), com a regra do lançamento conferida nos dois estados.
+
+## Arma 5: Clava Lendária (`era0_t2`)
+
+| Linha | Estado |
+|---|---|
+| Arte que o sistema lê | ✓ `assets/weapons/era0_t2.png` + grip |
+| Família / ultimate | ✓ Clava / **própria** `assets/anim/ult/club_legend` (png + json). Ligada no boot do jogo: `js/battle.js:510` chama `Sys.stats.goLive('ults')` (a clava está em `ownApproved` e `ownDelivered`, `js/sys/stats.js:56,60`). O Modo dono desliga pelo botão "Ultimates lendárias" |
+| Efeito Lendário | ✓ brilho 3, partículas ×1,7, dano igual |
+| Atributo | ✓ acima do Mítico; 2 secundários |
+| Fontes | ✓ drop da era 0 (0,4% das quedas) · Invocação (peso 2) · respeita o portão de raridade por nível e era (`Sys.loot.maxAllowedR`) |
+| Códex | ✓ `w-0-2` |
+| Nome na tela | ⚠ "Presa de Mamute" (`index.html:352`): uma presa usada como clava; entra na mesma conversa dos nomes |
+
+**Fechada do lado de sistema.** O nome só precisa de confirmação, junto com os outros. Teste: `test/sys/item-armas.test.js` (36).
+
+### Resumo da família Clava (itens 1 a 5)
+- Sistema pronto nas 5. Uma decisão de texto: os nomes da era 0 são de armas diferentes (Graveto, Clava, Lança, Machado, Presa), mas a arte das 5 é de clava.
+- Uma decisão de jogo: a arma Mítica (item 4) não existe no lançamento.
