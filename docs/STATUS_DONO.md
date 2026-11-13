@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **09h · Checklist revisado inteiro** (seções A, B, C e D abaixo estão em dia). Kaia: fica com corpo de menina; as 5 skins dela estão sendo refeitas com rosto e roupa menos infantis. Gasto com versões adultas desde o início: ~236 créditos registrados (a maior parte foi o "Kael crescendo" que você aprovou e depois cancelou; ~26 foram erro meu nas referências maduras). Créditos agora: ~993
+
 - **08h40 · TODO MUNDO COM FILA (ninguém parado):**
   - Engenheiro: ligar atrás de chave as 9 ultimates Lendárias, as 8 asas, arco/bumerangue; tirar do app as permissões de publicidade; diminuir o app (Play Asset Delivery); eventos com horário na tela; brilho do item caído; Fusão
   - QA: telas de coleção dos pets/montarias/asas novos; VIP 8/9 e Mecha na Loja; varredura de polimento quadro a quadro na v0.12.8
@@ -241,89 +243,75 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ---
 
-## A. O que eu preciso de você
+## A. O que eu preciso de você (revisado em 13/11, 09h)
 
-- [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
-- [x] Votados: cenários 5 e 8, asa nas costas, Oferta, Bem-vindo de volta (tudo aprovado)
-- [ ] VOTAR AGORA: 13 referências de skin + amostra das ultimates da espada (página de aprovação)
-- [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
-- [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
-- [~] Banco de desenvolvimento: Supabase criado; falta você seguir o passo a passo na parte AGORA (02h) e pôr as 3 variáveis de ambiente
-- [x] Login com Google: Firebase criado e configurado
-- [ ] Google na versão da loja: no Play Console → Testar e lançar → Integridade do app → Assinatura do app, copie a SHA-1 e cadastre no Firebase → Configurações do projeto → app Android → "Adicionar impressão digital"
-- [ ] Variável de ambiente GOOGLE_CLIENT_ID = 108430697904-opm26965n34smlrrnlq1kha8bobb17b5.apps.googleusercontent.com (não é segredo; junto com as do Supabase)
-- [ ] GitHub: o repositório privado "eonbound-server" foi criado, mas a chave de acesso do GitHub neste PC só enxerga alguns repositórios. Em github.com → Settings → Developer settings → Personal access tokens (fine-grained) → o token em uso → adicione o repositório eonbound-server (Contents: leitura e escrita)
-- [ ] Domínio para o servidor (ex.: api.eonbound.com.br): o Android só aceita conexão segura (HTTPS), que precisa de um domínio apontando para o IP 15.229.249.157
-- [ ] Senha do banco Supabase (DATABASE_URL): seguir o passo a passo das 02h
-- [x] Máquina na AWS criada (t4g.small, São Paulo); Node e nginx instalados; código copiado
-- [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
+**Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19). Cada aprovação libera a produção na hora:
+- [ ] 8 skins do Kael no corpo do garoto (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Bobo da Corte, Pirata, Ciborgue). Escolha 5
+- [ ] 5 skins da Kaia: sendo refeitas com rosto e roupa menos infantis (corpo de menina). Chegam em seguida
+- [ ] 9 pets novos · 10 montarias novas · 8 asas novas
+- [ ] 8 ultimates Lendárias novas (clava, gládio, pólvora, revólver, fuzil, plasma, infernal, celeste) + amostra da espada
+- [ ] Guias do arco, do bumerangue e da Kaia montada
+
+**Celular:**
+- [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
+
+**Servidor (para ligar o online):**
+- [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
+- [ ] Domínio para o servidor (ex.: api.seudominio.com.br → IP 15.229.249.157) + um e-mail para o certificado HTTPS
+- [ ] GitHub: liberar o token deste PC para o repositório privado eonbound-server (Settings → Developer settings → Personal access tokens → o token → adicionar eonbound-server, Contents: leitura e escrita)
+- [ ] Play Console: cadastrar os produtos de compra (o Servidor vai mandar a lista) e a conta de serviço; copiar a SHA-1 da assinatura de release para o Firebase
+
+**Para a loja:**
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
-- [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
-- [x] Montaria Mítica: tigre de cristal
 
-## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 01h15)
+**Já feito:**
+- [x] Firebase (login Google) criado · GOOGLE_CLIENT_ID e JWT_SECRET no seu Windows · máquina na AWS criada e instalada · Supabase criado
+- [x] Votos anteriores: tudo aprovado (telas, cenários das 9 eras, asa nas costas, Oferta, Bem-vindo, Serpe V2, Kaia jogável, etc.)
+- [x] Moedas do incidente: encerrado (conta de teste)
 
-Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo, sendo ligado ou ajustado · `[ ]` ainda não feito
+## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 09h)
+
+Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e desligado (esperando voto/arte) · `[ ]` ainda não feito
 
 **Telas**
-- [x] Batalha em tela cheia · Equipamento · Invocar · Loja · Passe (só a trilha + botão Missões) · Práticas · Títulos · Forja · Configurações · VIP · Pets · Ranking
-- [x] Torre inteira rolando · Troca de era (sem "nova ultimate") · Missões · Perfil e Coleção · Códex · Guilda · Chat (só frases prontas)
-- [x] Arena · Eventos (loja, missões, Trilha e Chefe) · Torneio do Poder · Montarias
-- [x] Telas de entrada: Título B · Login (convidado; Google "em breve") · Prólogo com o avô · Criação · Nome · Bem-vindo de volta
-- [x] Menu por nível com "NOVO!" e os 7 ícones novos
-- [~] Correio (carta de boas-vindas entrando) · Instâncias (2 defeitos sendo corrigidos) · missão guia na batalha
-- [x] Troca de era real e Vitória/Derrota com chefe real (testadas pelo laço da batalha)
-- [~] Mapa das Eras (escrito; o QA liga à curva das 100 fases × 4 dificuldades)
-- [~] Aba Aparência no Equipamento (escrita pelo QA; o engenheiro liga)
-- [~] Leilão (só ouro, preço fixo, 18+; QA conferindo) · Oferta de 1ª compra (pronta; por enquanto só no Modo dono)
+- [x] Batalha, Equipamento, Invocar, Loja, Passe (trilha + botão Missões, nível 25 novo), Práticas, Títulos, Forja, Configurações, VIP, Pets, Ranking, Torre, Troca de era, Missões, Perfil, Códex, Guilda, Chat (frases prontas), Arena, Eventos (Trilha e Chefe), Torneio, Montarias, Correio, Instâncias, Vitória/Derrota
+- [x] Telas de entrada: Título B, Login, Prólogo com o avô, Criação (Kael ou Kaia), Nome, Bem-vindo de volta detalhado
+- [x] Aparência (vitrine com a skin padrão + "Novas skins em breve")
+- [~] Mapa das Eras (100 fases × 4 dificuldades) · Fusão · Coleção (pets, montarias, asas novos) · Leilão · Oferta de 1ª compra (só no Modo dono até as compras existirem)
+- [~] Eventos com horário na tela (ícone pulsando) · brilho do item caído por raridade
 
-**Poder (FC) e habilidades**
-- [x] FC que sobe (verde ▲) ou desce (vermelho ▼) na tela, com o total contando
-- [x] Ultimate pela arma; a raridade muda cor, força e golpe final (Básico cinza, Épico roxo, Lendário dourado)
-- [x] Números abreviados até o quintilhão
+**Herói e skins**
+- [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
+- [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
+- [~] Skins novas no corpo padrão (8 do Kael, 5 da Kaia): referências para voto; depois ~36 créditos cada
+- [~] Kaia montada nas 6 montarias: em produção
+- [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
-**Personagem**
-- [x] Subir de nível novo · pistola e revólver · 45 armas por raridade com brilho
-- [x] Morte nova do Kael (a pé e montado)
-- [x] Asas por item, nas costas (a pé e montado) APROVADAS por você
-- [x] Kael crescendo CANCELADO por você: garoto/menina = skin padrão; adulto e guerreiro viraram skins fixas
-- [~] Kaia adulta e guerreira V2 sendo animadas (vão para o seu voto) · [ ] Kaia jogável na Criação (hoje "chega em breve")
-- [ ] Auras maligna e celestial (Submundo e Celestial)
+**Armas e poder**
+- [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
+- [~] Ultimate por raridade: Mítica = a de hoje reforçada (pronta); Lendária = animação nova (9 famílias prontas, esperando voto)
+- [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas prontas; vídeos do Kael em produção; os da Kaia em seguida
 
-**PETS**
-- [x] Ovo no nível 20 chocando; pet na batalha nos 3 estágios; tela de Pets; pet ao lado do Kael, um pouco à frente
-- [~] Pet ainda encosta no inimigo (engenheiro ajustando)
-- [x] Prismático por 1.000 fragmentos (regra pronta) · [ ] Cérbero, Pégaso e Prismático aparecendo na batalha · [ ] conferir o sorteio 79/21
+**Pets, montarias e asas**
+- [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
+- [~] 9 pets novos, 10 montarias novas, 8 asas novas: referências para voto; dados prontos (como ganhar aprovado: Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
 
-**MONTARIAS**
-- [x] As 6 (pônei, cavalo, tigre, lobo, grifo, serpe V2) paradas, correndo e golpeando, com aura por estrela; tela de Montarias; arma fora do rosto; sem mancha no lobo
-- [~] Serpe aparecendo na tela de Montarias
+**Mundo**
+- [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
+- [x] Inimigo sem ficar parado · inimigos mais fortes por era · curva de 6 meses simulada (~10 mil diamantes) · agenda de eventos aprovada
 
-**Mundo e progressão**
-- [x] Inimigo sem ficar parado entre golpes (eras 0-6)
-- [x] Cenários vivos: Medieval e Industrial ligados · [~] Moderna, Futurista, Submundo e Celestial APROVADOS, sendo ligados
-- [x] Curva de 6 meses simulada (grátis termina no dia 179, ~10,1 mil diamantes); inimigos mais fortes por era (sua decisão)
-- [x] Qualidade (estrelas), fusão, item adormecido (regras prontas) · [~] ligando nas telas
-- [~] Eras 7 (Submundo) e 8 (Celestial) jogáveis: números prontos, inimigos animados aprovados, ligando
-
-**Loja e online (precisa do servidor e do seu acesso)**
-- [~] Tudo pronto no PC e no jogo, desligado: contas, save na nuvem, compras do Google Play, correio, arena/ranking/eventos online, chat de frases prontas online. Falta: o seu acesso (AWS, banco, Google, Play Console)
-- [ ] Painel de moderação (Servidor fazendo agora) · guilda e leilão online
-- [ ] Repositório do servidor no GitHub: o fps-server está só neste PC; se quiser cópia, crie um repositório PRIVADO vazio e me mande o endereço
-
-**Para a loja**
-- [~] Tamanho: base de ~121 MB pelo Google Play (Play Asset Delivery); o resto baixa quando precisar. Regras prontas; o engenheiro liga antes da versão de loja
+**Online e loja**
+- [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
+- [~] Tamanho do app: 722 MB hoje → base de ~121 MB com Play Asset Delivery (em produção) · permissões de publicidade saindo do app
 - [ ] App assinado, teste interno, ficha da loja
 
 ## C. Regras que você decidiu (resumo)
 
-Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sai dos atributos · Ultimate pela arma, era muda cenário e drops · Mostrar FC que sobe/desce · Pet ao lado do Kael, todos aparecendo (asa, Kael montado, pet, inimigo) · Inimigos mais fortes por era (×1,08 até ×1,70) · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP, ~10 mil diamantes · 100 fases × 4 dificuldades · Liberação por nível (Mapa 1, Missões 2, Forja e Códex 12, Torre 15, Chat 16, pets 20, eventos 24, arena e ranking 28, guilda 32, montaria 38, torneio 40, leilão 45, asa 50) · Pets: estrelas = qualidade, nível até 90, 3 estágios · Prismático o mais raro · Montaria: o Kael monta, dá atributo, aura por estrela · Asa = item, você escolhe; skin de asa pode vir depois · Missões numa tela só (o Passe abre ela) · Chat só com frases prontas · Guildas até 30, Torneio 15×15 · Leilão em ouro, preço fixo, anônimo, 18+
+Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sai dos atributos · Ultimate pela família da arma (a raridade mais alta ganha animação nova), a era muda só cenário e drops · Mostrar FC que sobe/desce, em escala grande · Pet ao lado do Kael; pet, montaria, asa e aura nunca somem · O herói não cresce: garoto/menina são a skin padrão; toda skin usa o mesmo corpo; sem combinação de peças; nunca versão adulta · Tudo novo tem evolução (pets 3 estágios, montarias 1-5★, armas raridade/Forja) · Pets, montarias e asas novos com visual maduro, nada infantil · NUNCA sensualizar temas sensíveis · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP, ~10 mil diamantes · Asa = item, você escolhe · Missões numa tela só · Chat só com frases prontas · Leilão em ouro, preço fixo, anônimo, 18+ · Eventos por horário (agenda aprovada)
 
-## D. Versões (no GitHub; no celular só quando você pedir)
+## D. Versões (no GitHub)
 
-- [x] v0.12.1 a v0.12.4: tela cheia, arma na mão, pistola, liberação por nível, Forja, Configurações
-- [x] v0.12.5: 45 armas, modo dono, asa, prévia da arte, raridade pela cor, VIP
-- [x] v0.12.6: pets
-- [x] v0.12.7 (11a2139): montarias, pet ao lado, asa por item; INSTALADA no seu S24
-- [~] v0.12.8 (em curso, lotes já no GitHub): FC na tela, ultimate pela raridade, morte nova, inimigo sem parar, 6 montarias, cenário Industrial, e as telas Torre, Troca de era, Missões, Perfil, Códex, Guilda, Chat, Arena, Eventos, Torneio, Montarias e as telas de entrada
-- [ ] Próximas: asa presa nas costas montado, fases V2 do Kael, cenários 6-7, Mapa, Aparência, Instâncias, Vitória/Derrota, missão guia, Correio, Kaia jogável, eras 7-8, Play Asset Delivery, servidor e compras
+- [x] v0.12.1 a v0.12.6: tela cheia, armas, Forja, pets
+- [x] v0.12.7: montarias, pet ao lado, asa por item (instalada no seu S24)
+- [x] v0.12.8 (APK pronto, 722 MB): todas as telas novas, telas de entrada, Kaia jogável, Kael garoto em qualquer nível, FC nova, morte nova, inimigo sem parar, cenários, Vitória com pet/montaria/asa. Falta só instalar
+- [ ] Próxima: itens novos aprovados (skins, pets, montarias, asas, ultimates, arco/bumerangue), eventos com horário, Fusão, Mapa, app menor (Play Asset Delivery), servidor no ar
