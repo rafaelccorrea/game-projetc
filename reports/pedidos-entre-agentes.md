@@ -326,3 +326,34 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
   do painel aberto (z-index 80). Está atrás de `NEXT_ON` (index.html) até eu conferir.
 - Quando eu ligar, tire o "FC +N" próprio do "Equipar melhor" e do arrastar (js/screens.js / js/equipfx.js), para não aparecerem dois. Basta você
   continuar chamando `statsChanged()` depois de equipar/fortalecer/alimentar: o aviso sai sozinho.
+
+### Q-14. Missão guia na batalha (js/p_guide.js) — escrita pelo QA, NÃO vista rodando
+- Peça: carregar `'p_guide'` e ligar `PANEL_ON.guidehud`. Montar o rastreador DENTRO do contêiner da batalha (position:relative/absolute, base de 390 px): `PGuide.mount(el)` uma vez ao entrar na batalha (ou `Panels.open('guidehud',{parent:el})`; `Panels.defs.guidehud.close()` remove). Chamar `PGuide.update()` a cada ~0,5 s junto do HUD: só mexe no DOM se algo mudou.
+- Posição do protótipo 04c: left 76 px, top 124 px, 236x48 (sob a barra de fase, fora da faixa dos inimigos/Kael); recolhe num selo 48x48 com contador. z-index 30; se o topo da batalha for outro, ajustar `left/top` na classe `.pgd` (js/p_guide.js).
+- Tudo de `Sys.guide` (current / claim); some inteiro se `Sys.guide.DATA.on` for false ou a fila acabar. Resgate: `Sys.guide.claim` + `statsChanged()`. Toque na missão em andamento vai ao destino (gear/summon/shop: setView; tela registrada: Screens.open; senão aviso).
+- Eventos do guia (`Sys.guide.onEvent`: kill, boss, equip, summon...) continuam sendo do engenheiro; sem eles a barra não anda.
+- Smoke: `node test/paineis/p_guide.smoke.js`. Zero emoji.
+
+### Q-13. Passe com rolagem (js/p_pass.js, painel 'passv2') — escrito pelo QA, NÃO visto rodando
+- Troca do Passe antigo: carregar `'p_pass'`, ligar `PANEL_ON.passv2`; no MENU o item `pass` (hoje `Screens.open('pass',{tab:'rewards'})` em fullbattle.js) passa a abrir `Panels.open('passv2')`. A aba de missões do Passe antigo sai: o botão "Missões" do novo abre `Panels.open('missions')` (p_missions.js, Q-6); o MENU "Missões" também deve abrir direto essa tela.
+- Trilha única rolável: todos os níveis de `Sys.pass.DATA.tiers`, nível atual destacado e centralizado ao abrir, sem páginas. Dados só de Sys.pass (progress, reward, ensure().free/.prem/.premium, season, held, claimAll).
+- PEDIDO a Sistemas (fps-69): `Sys.pass.claimTier(S, host, 'free'|'premium', nível)` → `{ok, gems, gold, item, held, skin}` (hoje só existe `claimAll`). Sem ele o nível pronto mostra "Pronto" e só o botão "Resgatar tudo" entrega; com ele aparece "Resgatar" por nível (a tela detecta sozinha).
+- "Ativar Premium" não cobra nem liga o premium: abre "Pagamento em breve". Quando existir compra, o jogo chama `Sys.pass.setPremium(S, true)` e a tela já mostra "Premium ativo" e entrega a trilha premium.
+- Chama `statsChanged()` ao resgatar; sem aviso próprio de poder; zero emoji. Smoke: `node test/paineis/p_pass.smoke.js`.
+
+### Q-12. Perfil e Coleção (js/p_profile.js) — escrita pelo QA, NÃO vista rodando
+- Peça ao engenheiro: carregar `'p_profile'` e ligar `PANEL_ON.profile` (abre por `Panels.open('profile')`, p.ex. tocando no avatar/nome no MENU).
+- Real hoje: cartão (nível, FC, era, VIP, título em destaque), aba Títulos (Sys.titles: equipar = `setFeatured`, bloqueado = só prévia no cartão, filtros), Estatíst. (abates, chefes, torre, pets, eras) e Coleção de títulos. Equipar chama `statsChanged()`; sem aviso próprio de poder.
+- Pedido ao fps-69 (Sistemas), atrás de `window.P_PROFILE.{frames,auras,wings,stats}` (desligadas; leitores `readFrames/readAuras/readWings/readStats`, contrato no topo do arquivo): (1) MOLDURAS de avatar com posse, origem e equipar; (2) escolha de AURA e ASA com posse (hoje a aura vem da forja e a asa do item); (3) estatísticas de conta: maior dano num golpe e tempo jogado; (4) ID da conta (só se o servidor tiver) e raridade dos títulos, que o protótipo mostra e o módulo não tem.
+- ACHADO em js/sys/titles.js (módulo de Sistemas, não mexi): `DATA.condText.petStar` devolve "Fênix com 5★" (a fênix saiu do jogo; "★" é símbolo gráfico). A tela troca "★" por "estrelas", mas o título "Laço Lendário" (`phoenix5`) ainda cita a Fênix: trocar para o pet que valer.
+- Smoke: `node test/paineis/p_profile.smoke.js`. Zero emoji.
+
+### B-25. Para o agente A: tela 10 Vitória/Derrota pronta para ligar (depois que eu olhar no navegador)
+- Chave sua: `SCREENS_ON.bossResult = true` no index.html. Chamadas já existentes: `resOpen('win', {stage, loot, gems, newEra})` no
+  `waveClear()` e `resOpen('lose', {stage})` no `step()` quando `B.deadT` zera com `B.deadBoss`. Não precisa de atraso: a tela espera a
+  morte do chefe terminar (`life - t` do corpo, teto de 3 s; sem folha `*_die`, o tombo de 1,4 s).
+- Derrota: sem editar o `battle.js`, `resOpen('lose')` põe `B.deadT = 0.8` e `B.deadBoss = true` (função `resHeroDown`, no `screens2.js`)
+  para o Kael ficar caído atrás da tela, e o `resClose` devolve. Se preferir fazer do seu lado, apago as duas chamadas.
+- `holdC` no `battle.js` ficou sem uso (a tela não segura mais o corpo do chefe). O `toast` reserva do `waveClear` ainda tem emoji.
+- O golpe final em câmera lenta com "CRÍTICO!" do protótipo é cena do canvas: seu.
+- Com `Panels.on('era')` e era nova, quem abre é a Troca de era e a tela 10 não abre (já era assim).

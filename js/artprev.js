@@ -106,7 +106,7 @@ function ownerAct(k){
   if (!OWNER_MODE) return;
   if (k.indexOf('lv') === 0){ const n = +k.slice(2), o = Sys.level.ensure(S); o.lvl = Math.max(o.lvl | 0, n); o.xp = 0;
     for (const s of SLOTS7){ const it = S.eq[s] != null ? itemOf(S.eq[s]) : null; if (it) it.lvl = Math.max(it.lvl | 0, n); }   // FC coerente: os itens equipados sobem junto
-    S.gold += 200000; toast('Nível ' + n + '. Itens equipados no nível ' + n); }
+    S.gold += 200000; toast('Nível ' + n + '. Itens equipados no nível ' + n); if (typeof petLevel === 'function') petLevel(false); }   /* o atalho pula o caminho normal de subir de nível: chama aqui o ovo do nível 20 */
   else if (k === 'wingangel' || k === 'wingdemon'){ const w = k === 'wingangel' ? 'angel' : 'demon';   /* as duas asas são ITENS distintos (item.wing) */
     try { let it = S.inv.find(i => i.slot === 'wing' && i.wing === w); if (!it){ Sys.host.addItem({ slot: 'wing', r: 2, e: Math.min(6, S.eraMax | 0), lvl: 1, wing: w }); it = S.inv[S.inv.length - 1]; if (it && it.slot === 'wing' && it.wing !== w) it.wing = w; }
       if (it && it.slot === 'wing'){ S.eq.wing = it.id; toast(w === 'angel' ? 'Asa de anjo equipada' : 'Asa demoníaca equipada'); } } catch (e) { toast('Não deu para criar a asa'); } }
