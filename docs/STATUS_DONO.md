@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **15h · Checklist atualizado.** APK v0.12.9 pronto para instalar (ligue o cabo e escreva "pode instalar" na janela do Engenheiro). Arte fechou a rodada (8 skins, 3 pets novos, Kaia montada nas 6, arco/bumerangue, ultimates, asas) e está parada; o resto fica para a próxima parte (~610 créditos; saldo ~313)
+
 - **14h50 · APK v0.12.9 PRONTO** (971 MB, ícone A, sem Facebook, só permissões de internet e vibração). Para instalar: ligue o celular no cabo e escreva "pode instalar" na janela do Engenheiro (instala por cima, mantém seu save). Na instalação ele mede quadros por segundo, pior quadro e memória
 
 - **14h30 · Arte FECHOU o que tinha começado:** 8 skins prontas (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo, Paladino Solar, Ninja) e 3 pets novos (Lobo das Sombras, Falcão de Guerra, Pantera Espectral). Parado para a próxima parte: Samurai (2 guias e 3 vídeos já feitos, reaproveitados) e Ciborgue do Kael, 6 pets, 10 montarias novas montadas. Saldo ~313
@@ -310,7 +312,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Números das guildas online aprovados
 
 **Créditos Higgsfield:**
-- [ ] Saldo ~333 (fica ~250 depois de terminar o que já começou). A próxima parte (2 skins, 6 pets, 10 montarias montadas) custa ~620
+- [ ] Saldo ~313. A próxima parte (Samurai e Ciborgue, 6 pets, 10 montarias novas montadas) custa ~610
 
 **Celular:**
 - [ ] APK v0.12.9 PRONTO: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
@@ -343,18 +345,18 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Herói e skins**
 - [x] Kael garoto e Kaia menina = skins padrão em qualquer nível (o herói NÃO cresce mais) · Kaia jogável
 - [x] Morte nova · asa nas costas (a pé e montado) · avatar pela skin · arma no punho montado
-- [~] Skins novas no corpo padrão APROVADAS e sendo animadas (PRONTAS: Arlequina e Ninja da Kaia, Demônio do Kael; em produção: Anjo do Kael e Demoníaca da Kaia; faltam 5): Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e Kaia (Arlequina, Ninja, Demoníaca, Angelical). Ninja vai na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
-- [x] Kaia montada nas 6 montarias, no jogo (conferida pelo QA)
+- [x] 8 skins novas animadas no corpo padrão: Kaia (Arlequina, Ninja, Demoníaca, Angelical) e Kael (Demônio, Anjo, Paladino Solar, Ninja) · [ ] Samurai e Ciborgue do Kael: próxima parte. Como ganhar: Ninja na Oferta, Anjo no fim do Passe, Demônio no VIP 7, Paladino/Arlequina R$ 24,90, Ciborgue R$ 39,90, Samurai no Torneio
+- [x] Kaia montada nas 6 montarias, no jogo (conferida pelo QA; pontinhos do lobo limpos)
 - [x] Saíram do jogo: skins adultas (Cavaleiro/Lendário), combinação de peças
 
 **Armas e poder**
 - [x] 45 armas por raridade · ultimate pela FAMÍLIA da arma (nunca pela era) · FC grande na escala nova ("701 mil" no nível 20) · FC que sobe/desce
-- [~] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova, as 9 famílias APROVADAS e sendo ligadas
+- [x] Ultimate por raridade: Mítica = a de hoje reforçada; Lendária = animação nova nas 9 famílias, LIGADAS
 - [~] Arco e bumerangue (níveis 30 e 45, mesmo dano da espada): 10 armas, 4 ultimates e as 12 poses (Kael e Kaia) PRONTAS; sendo ligados no jogo. Skins usam a pose da pistola/golpe com a arma pelo código
 
 **Pets, montarias e asas**
 - [x] Pets atuais nos 3 estágios = pets grátis do começo · 6 montarias com aura por estrela · asas anjo e demoníaca
-- [~] APROVADOS: 9 pets novos (Lobo das Sombras e Falcão de Guerra animados e ligados; os outros 7 em produção), 10 montarias novas (animação montada depende de mais crédito), 7 asas novas (prontas, sendo ligadas; Serafim refeito). Como ganhar aprovado (Mecha R$ 49,90, Fênix no VIP 8, Wyvern no VIP 9)
+- [x] Pets novos animados e ligados: Lobo das Sombras, Falcão de Guerra, Pantera Espectral · [ ] os outros 6 (escorpião, corvo, grifo negro, golem, dragão de gelo, wyvern): próxima parte · [x] 7 asas novas ligadas (Serafim refeito, esperando voto) · [ ] 10 montarias novas montadas: próxima parte
 
 **Mundo**
 - [x] Cenários vivos: Medieval, Industrial · [~] Moderna, Futurista, Submundo, Celestial (aprovados, sendo ligados)
