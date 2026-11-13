@@ -48,6 +48,26 @@ function ofMount(o){ const M=ofM(), id=M&&M.DATA?M.DATA.mount:''; let inf=null, 
   return {id:/^[a-z0-9_]+$/.test(id)?id:'',name:nm,rar:inf&&inf.rarityName?inf.rarityName:'',r:inf&&ofNum(inf.rarity)?inf.rarity:-1,pct:inf&&ofNum(inf.maxPct)?inf.maxPct:0,vis}; }
 /* POLIMENTO P1: arte REAL da montaria = o Kael montado (assets/anim/mounts/kael_<id>_idle_era2_t1.png, 12 quadros de 512x352, patas em 339) */
 const ofMountSheet=M=>M&&M.id?'assets/anim/mounts/kael_'+M.id+'_idle_era2_t1.png':'';
+/* POLIMENTO (PO): o Kael montado segura a ARMA DA OFERTA (não a espada da folha). Desenho do próprio jogo (drawHero da batalha, com a montaria e a
+   arma trocável pelo grip quadro a quadro), num canvas da vitrine; sem o desenho do jogo, fica a folha (of-ride) como antes. */
+const OFR={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false,mount:null}; let ofRaf=0, ofLast=0;
+const ofCanDraw=()=>typeof drawHero==='function'&&typeof mainCtx!=='undefined'&&typeof SKIN==='function'&&typeof HS==='number';
+/* desenha nos canvases da tela: vitrine (of_rc, inteiro) e card da montaria (of_rc2, mais perto) */
+function ofRideDraw(c,zoom,dx){ const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, h=c.clientHeight; if(!w||!h) return;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  const x=c.getContext('2d'), k=c.height/(HS*zoom); x.setTransform(k,0,0,k,0,0); x.clearRect(0,0,c.width/k+2,HS*zoom+2);
+  OFR.x=(c.width/k)/2+HS*dx; OFR.gy=HS*(zoom-0.02);
+  ctx=x; try{ drawHero(OFR); }finally{ ctx=mainCtx; } }
+function ofRideLoop(ts){ ofRaf=0; const c=document.getElementById('of_rc'), c2=document.getElementById('of_rc2');
+  if((!c&&!c2)||typeof view==='undefined'||view!=='offer'){ ofLast=0; return; }
+  const dt=ofLast?Math.min(0.05,(ts-ofLast)/1000):0; ofLast=ts; OFR.t+=dt;
+  try{ if(c) ofRideDraw(c,1.42,-0.12); if(c2) ofRideDraw(c2,1.32,-0.05); }catch(e){ ctx=mainCtx; }
+  ofRaf=requestAnimationFrame(ofRideLoop); }
+function ofRideStart(W,M){ if(!ofCanDraw()||!M||!M.id) return;
+  const e=Math.max(0,Math.min(6,W.era|0)), r=Math.max(0,Math.min(4,W.r|0));
+  OFR.sk=SKIN(S.skinEq&&S.skinEq.armor)||SKIN('a00'); OFR.ws=SKIN('w'+e+r)||OFR.ws; OFR.mount={id:M.id,stars:3,aura:null};
+  try{ if(typeof preloadAssets==='function') preloadAssets(); }catch(e){}
+  if(!ofRaf) ofRaf=requestAnimationFrame(ofRideLoop); }
 /* FALTA NO MÓDULO: uma prévia do ouro entregue. A conta do grant é goldk × host.goldUnit(); sem a unidade, a tela diz "de N abates" */
 function ofGold(o){ const k=ofNum(o.c.goldk)?o.c.goldk:0, h=ofHost(); let u=0; try{ u=h&&h.goldUnit?+h.goldUnit():0; }catch(e){ u=0; }
   if(!(k>0)) return {big:'',small:''}; return ofNum(u)&&u>0?{big:kf(Math.round(k*Math.max(1,u))),small:'ouro'}:{big:'Ouro',small:'de '+n0(k)+' abates'}; }
@@ -172,7 +192,8 @@ function scrOffer(){
       <span class="of-spark" style="left:52%;top:30%;animation-delay:1s"></span><span class="of-spark" style="left:92%;top:56%;animation-delay:1.4s"></span>
       <div style="position:absolute;left:0;right:0;bottom:0;height:18px;background:linear-gradient(180deg,#4a2f6a,#24163a);border-top:2px solid rgba(220,190,255,.45)"></div>
       <div style="position:absolute;left:14%;width:34%;bottom:10px;height:14px;border-radius:50%;background:rgba(0,0,0,.45)"></div>
-      ${ofMountSheet(M)?`<div class="of-ride" role="img" aria-label="Kael montado no ${esc2(M.name)}" style="position:absolute;left:34%;bottom:calc(18px - 3.6%);height:96%;aspect-ratio:512 / 352;transform:translateX(-50%);z-index:2;background-image:url(${ofMountSheet(M)})"></div>`
+      ${ofMountSheet(M)?(ofCanDraw()?`<canvas id="of_rc" role="img" aria-label="Kael montado no ${esc2(M.name)} com a arma da oferta" style="position:absolute;left:4%;bottom:10px;width:62%;height:96%;z-index:2"></canvas>`
+        :`<div class="of-ride" role="img" aria-label="Kael montado no ${esc2(M.name)}" style="position:absolute;left:34%;bottom:calc(18px - 3.6%);height:96%;aspect-ratio:512 / 352;transform:translateX(-50%);z-index:2;background-image:url(${ofMountSheet(M)})"></div>`)
         :`<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado ao lado da arma da oferta" style="position:absolute;left:31%;bottom:calc(18px - 4.7%);height:94%;aspect-ratio:1 / 1;transform:translateX(-50%);z-index:2"></div>`}
       <div style="position:absolute;left:72%;bottom:18px;width:76px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2">
         <div class="of-wglow" style="position:relative;width:72px;height:72px;border-radius:16px;border:3px solid ${wCol};background:radial-gradient(circle at 50% 45%,#7a45b8,#2a1640 78%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
@@ -205,7 +226,7 @@ function scrOffer(){
       <div class="${cardCls}" style="padding:8px;display:flex;flex-direction:column;gap:4px;border-color:${mCol};animation-delay:.08s">
         <div style="display:flex;gap:7px;align-items:center">
           <div class="of-wglow" role="img" aria-label="${esc2(M.name)}" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px ${ofMountSheet(M)?'solid':'dashed'} ${mCol};background:${ofMountSheet(M)?'radial-gradient(circle,#7a45b8,#2a1640 78%)':'#1d1030'};display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
-            ${ofMountSheet(M)?`<span class="of-ride" aria-hidden="true" style="position:absolute;left:50%;bottom:-2px;height:120%;aspect-ratio:512 / 352;transform:translateX(-42%);background-image:url(${ofMountSheet(M)})"></span>`:`<span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}`}</div>
+            ${ofMountSheet(M)&&ofCanDraw()?`<canvas id="of_rc2" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`:ofMountSheet(M)?`<span class="of-ride" aria-hidden="true" style="position:absolute;left:50%;bottom:-2px;height:120%;aspect-ratio:512 / 352;transform:translateX(-42%);background-image:url(${ofMountSheet(M)})"></span>`:`<span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}`}</div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">${tag(M.rar,mCol)}
             <span style="font-size:10.5px;font-weight:900;color:#d9b3ff;white-space:nowrap">Montaria</span></div></div>
         <span class="lil" style="${nameSt}">${esc2(M.name)}</span>
@@ -241,6 +262,7 @@ function scrOffer(){
     ${XO.dlg?ofDialog():''}</div>`);
   if(y0){ const sc=document.getElementById('of_scroll'); if(sc) sc.scrollTop=y0; }
   XO.anim=false; XO.sig=ofSig(o);
+  ofRideStart(W,M);
 }
 
 function ofClick(b,ev){
