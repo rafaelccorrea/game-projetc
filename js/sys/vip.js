@@ -132,7 +132,7 @@ function conv(S,id){ const l=level(S), on=DATA.convOn===true;
     return {id,on:on&&l>=c.v,need:c.v,value,name:c.name,free:c.free,lockText:'VIP '+c.v}; }   // conv(S, 'autoCollect') → {on, need, value, lockText}
   const out={on,level:on?l:0}; for(const c of DATA.conv) out[c.id]=c.val?num(c.val[on?l:0],c.val[0]):(on&&l>=c.v); return out; }
 /* tabela legível para o dono: benefício · VIP que libera · o que o grátis tem · valor por nível */
-const convTable=()=>DATA.conv.map(c=>({id:c.id,name:c.name,vip:c.v,free:c.free,values:c.val?c.val.slice():null,unit:c.unit||''}));
+const convTable=()=>DATA.conv.filter(c=>c.v>0).map(c=>({id:c.id,name:c.name,vip:c.v,free:c.free,values:c.val?c.val.slice():null,unit:c.unit||''}));
 const API={conv,convTable,DATA,level,active,setLevel,setActive,addPoints,levelForPoints,progress,levelInfo,perks,mult,maxSpeed,speedMax,bonus};
 root.Sys=root.Sys||{}; root.Sys.vip=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
