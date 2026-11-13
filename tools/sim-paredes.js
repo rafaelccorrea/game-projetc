@@ -55,6 +55,13 @@ for(let e=0;e<9;e++){ const D=END[e]-(e?END[e-1]:0), norm=Math.max(0,D-WB[e]-WM[
 // ---- jogar: passa a fase no 1º momento (passo de 0,05 dia) em que FC >= 100% da recomendada ----
 function play(C){ let i=0, now=0; const pass=[]; while(i<plan.length&&now<400){ if(fcAt(C,now,plan[i].e)>=plan[i].rec){ pass.push(now); i++; } else now+=0.05; }
   return {pass,done:i,stuck:plan.map((p,j)=>pass[j]!=null?pass[j]-(j?pass[j-1]:0):null)}; }
+/* DONO (13/11): o VIP também sente a parede em TODA era: no Senhor da Era das eras 1-8 a FC pedida é a maior entre a do grátis e a que o VIP 5 / VIP 10
+   terá MIN_VIP_WALL dia depois de chegar. Repete até estabilizar (subir uma parede atrasa a chegada nas seguintes). */
+const MIN_VIP_WALL=0.5;
+for(let it=0;it<20;it++){ let moved=false;
+  for(const C of [vip5,vip10]){ const p=play(C); for(let e=1;e<9;e++){ const j=e*10+9, arr=p.pass[j-1]; if(arr==null||p.pass[j]==null) continue;
+    if(p.pass[j]-arr<MIN_VIP_WALL-0.051){ const need=fcAt(C,arr+MIN_VIP_WALL,e)*1.002; if(need>plan[j].rec*1.0001){ plan[j].rec=need; moved=true; } } } }
+  if(!moved) break; }
 const P={free:play(free),vip5:play(vip5),vip10:play(vip10),lazy:play(lazy)};
 const f1=v=>v==null?'—':v<1?(Math.round(v*24)+' h'):(v.toFixed(1).replace('.',',')+' d');
 const ab=v=>ST.abbr(v);
@@ -82,3 +89,4 @@ for(const e of [1,3,5,7,8]){ const day=END[e]-0.5, L=free.L(day), e2=e, f=(L-LIN
 
 // ---- saída para o docs/balance.json (bloco dificuldade): FC pedida das 90 fases, paredes e calendário ----
 if(process.argv.includes("--json")) console.log("JSON "+JSON.stringify({recFc:plan.map(p=>Number(p.rec.toPrecision(3))),wallBossDays:WB,wallMidDays:WM,eraEndDay:END}));
+if(process.argv.includes('--dbg')){ const p=play(vip10), j=59; console.log('vip10 era5 chega',p.pass[j-1],'passa',p.pass[j],'rec',plan[j].rec,'fc chegada',fcAt(vip10,p.pass[j-1],5),'fc +0,5',fcAt(vip10,p.pass[j-1]+0.5,5),'L',vip10.L(p.pass[j-1]),vip10.L(p.pass[j-1]+0.5)); }

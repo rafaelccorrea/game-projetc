@@ -1337,7 +1337,7 @@
       17500,
       18600,
       18600,
-      20800,
+      20900,
       262000,
       277000,
       292000,
@@ -1377,7 +1377,7 @@
       21000000000,
       21700000000,
       23900000000,
-      25300000000,
+      25500000000,
       889000000000,
       939000000000,
       994000000000,
@@ -1478,9 +1478,13 @@
       "free": 180,
       "vip5": 139,
       "vip10": 121,
-      "lazyStuckStage": 61,
-      "freeDaysOnWalls": 29,
-      "freeDaysBelow90pct": 7
-    }
+      "lazyStuckStage": 60,
+      "freeDaysOnWalls": 32,
+      "freeDaysBelow90pct": 5,
+      "vipMinWallHours": 16,
+      "freeEra5BossDays": 5.3
+    },
+    "vipMinWallDays": 0.5,
+    "_vip": "Senhor da Era 1-8: a FC pedida é a maior entre a do grátis e a que o VIP 5/VIP 10 terá 12 h depois de chegar (o VIP também sente a parede; dono 13/11)."
   }
 }

@@ -189,3 +189,17 @@ seguem normais). Simulação refeita com `node tools/sim-paredes.js --json`:
 - `killXpCap` e `mountStarFlat`: as duas regras do dono.
 
 Quem liga é o Engenheiro, depois que o QA medir no jogo real.
+
+### Ajuste (13/11): o VIP também para em toda era
+
+Pedido do dono, via PO. No Senhor da Era das eras 1-8, a FC pedida passa a ser a **maior** entre duas:
+- a do calendário do grátis;
+- a que o VIP 5 ou o VIP 10 terá **12 h depois de chegar**.
+
+Quando a FC do VIP fica parada nessas 12 h (sem subir de nível), ele espera até o próximo crescimento.
+
+Resultado:
+- **VIP:** para de 16 h a 3,5 dias em todos os Senhores da Era 1-8. Na era 5 são 1,1 dia (VIP 5) e 1,5 dia (VIP 10).
+- **Grátis:** continua terminando no dia 180, mas espera 5,3 dias no Senhor da Era 5 (antes 3). Ao todo são 32 dias em paredes e 5 dias abaixo de 90% da FC pedida.
+- **VIP 5 e VIP 10:** continuam terminando nos dias 139 e 121.
+- **Quem não forja nem evolui o pet:** trava na fase 60.
