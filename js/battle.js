@@ -972,6 +972,7 @@ const ART_ON={
      Auditoria item a item: reports/auditoria-aprovados.md. As 84 folhas de inimigo (7 eras x e0/e1/boss x run/attack/hurt/die) estão aprovadas:
      as chaves são criadas logo abaixo, todas ligadas. Para desligar uma, acrescente aqui, por exemplo: era4_e1_die:false. */
   ult_era0:true, ult_era1:true, ult_era2:true, ult_era3:true, ult_era4:true, ult_era5:true, ult_era6:true,   // ult-eraN-anim: as 7 aprovadas
+  ult_era7:true, ult_era8:true,   // ult-era7-anim e ult-era8-anim: APROVADAS pelo dono em 12/11 (confirmado pelo PO em 13/11): folha-base das famílias infernal e celeste
   kael_die:NEXT_ON,       // morte nova do Kael (aprovada): assets/anim/hyb/R/kael_die_body
   en_idle_prep:NEXT_ON,   // inimigo parado = quadros de preparo do golpe em vai-e-volta (opção A aprovada)
   pistol_era4:true,   /* v0.12.4: revólver da era 4 APROVADO */
