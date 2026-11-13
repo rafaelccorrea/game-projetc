@@ -92,11 +92,16 @@ function equippedList(S,host,ov){ const T=root.Sys&&root.Sys.stats; let eq={};
 /* soma SEM teto (pontos %) dos golpes equipados. Desligado: zeros. */
 function raw(S,host,ov){ const o=zero(); if(!on()) return o;
   for(const it of equippedList(S,host,ov)){ ensureItem(it); for(const s of it.stk||[]) if(isKey(s.k)) o[s.k]+=value(s,it); }
+  const m=mountStrike(S); if(m) o[m.k]+=m.value;
   return o; }
-/* perfil da batalha (com teto): {normal:{...}, boss:{...}}. Recalcular só quando trocar item. */
+/* MONTARIA REFORÇA 1 GOLPE (Sys.mount.strikeOf; só com a chave Sys.mount.DATA.strike E esta ligadas). A montaria não ataca: só soma no número do Kael. */
+function mountStrike(S){ if(!on()) return null; const M=root.Sys&&root.Sys.mount; if(!M||typeof M.strikeOf!=='function') return null;
+  try{ const m=M.strikeOf(S); return m&&isKey(m.k)&&num(m.value,0)>0?m:null; }catch(e){ return null; } }
+/* perfil da batalha (com teto): {normal:{...}, boss:{...}}. Recalcular só quando trocar item. mount = {id,k,value} só quando a montaria soma algo. */
 function profile(S,host,ov){ const r=raw(S,host,ov), n=zero(), b=zero();
   for(const k of DATA.keys){ n[k]=Math.min(r[k],DATA.cap[k]); b[k]=Math.min(r[k],DATA.bossCap[k]); }
-  return {on:on(),normal:n,boss:b,raw:r}; }
+  const out={on:on(),normal:n,boss:b,raw:r}, m=mountStrike(S); if(m) out.mount={id:m.id,k:m.k,value:m.value,name:DATA.name[m.k],color:DATA.color[m.k]};
+  return out; }
 /* totais para a FC (teto normal) ou null desligado (o Sys.fc usa null para não mudar nada) */
 function totals(S,host,ov){ if(!on()) return null; return profile(S,host,ov).normal; }
 /* FC: multiplicadores pelo valor esperado. ATQ × (1 + 0,4·combo + 0,25·contra + 0,5·atordoar) · Vida × (1/(1−esquiva)) × (1 + 1,5·roubo). */

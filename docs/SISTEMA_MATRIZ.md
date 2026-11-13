@@ -274,3 +274,20 @@ Tela aprovada: `docs/proto/v2/FimDasEras.html`. Números: `docs/balance.json` bl
 4. Forja: usar `Sys.erasEnd.forgeMult(S,slot)` **no lugar** de `Sys.forge.mult(S,slot)` em `heroStats()` (igual ao de hoje sem nível astral). Tela da Forja: `Sys.erasEnd.view(S,host).astral` (`level`, `astral`, `can:{ok,reason:'base'|'marco'|'pedras'|'max',stones,chance,next,needStage}`), botão → `Sys.erasEnd.astralTry(S,host,slot)`.
 5. Perfil/herói: `Sys.erasEnd.cosmetics(S)`, `equip(S,'frame'|'aura',id|null)`, `equipped(S,'frame')` / `equipped(S,'aura')` (só visual: a aura Luz das Eras = contorno dourado e faíscas, como no protótipo).
 6. **Falta**: arte da moldura Nove Eras, Além das Eras, Sem Fim, ícones `legend9.png` e `mark.png`; tela da Forja Astral (protótipo pelo PO/Arte); servidor guardar `S.sys.erasEnd` junto com o save.
+
+### Forja presa ao espaço, trocar sem perder e golpe da montaria (`forge.js`, `pet.js`, `mount.js`, `strikes.js`)
+
+Itens 1, 2 e 3 (P1) do `docs/IDLE_PARECIDOS.md`, aprovados pelo dono em 13/11. Testes: `test/sys/idle-parecidos.test.js` (10).
+
+| Item | Estado |
+|---|---|
+| 1. Forja presa ao espaço | ✅ **já era assim**: o +N mora em `S.sys.forge.lv[espaço]` e o `Sys.stats.itemsTotal` aplica `Sys.forge.mult(S,espaço)` na peça que estiver no espaço; nenhuma peça guarda +N. Sem chave e sem migração (não há o que migrar). Novo: `Sys.forge.slotNote(S,slot)` → `{slot,lv,mult,keeps:true,text}` com a frase do cartão "novo × atual" ("A Forja +5 é do espaço: a peça nova também fica com +5.") |
+| 2. Trocar sem perder | ⏸ `Sys.pet.DATA.swapKeep.on=false` e `Sys.mount.DATA.swapKeep.on=false`. Ligado, ao trocar o principal (`equip` ou `swapMain`) o novo fica com o MAIOR investimento: se o antigo tinha mais nível, os dois TROCAM (pet: nível, ração gasta, estágio 17b e barra parcial; montaria: nível e ouro anotado). Soma de tudo igual (nada some, nada duplica); trocar de volta desfaz. Estrelas e fragmentos não passam (são cópias daquele pet/montaria). Pet na v2 (nível do espaço) já não perdia nada: não mexe. Desmontar (`equip(S,null)`) e depois montar outra não transfere (o investimento fica na antiga, nada perdido) |
+| 3. Montaria reforça 1 golpe | ⏸ `Sys.mount.DATA.strike.on=false` E `Sys.strikes.DATA.on=false` (precisa das duas). Valor (pontos %) = `perStar[golpe] × estrelas × rarMult[raridade]`: por estrela combo 1,2 · contra 1,2 · atordoar 0,4 · esquiva 0,6 · roubo de vida 0,5; raridade ×0,6/0,8/1/1,2/1,5. Lendário 5★: combo/contra 9 · atordoar 3 · esquiva 4,5 · roubo 3,75. PROPOSTA, o QA calibra. Soma com os itens dentro dos mesmos tetos (normal e chefe/Arena). A montaria NÃO ataca: `bonus()` e `battleInfo()` iguais |
+| Tabela golpe | combo: lobo, tigre de cristal, raptor, tigre celestial · contra-ataque: cavalo, unicórnio, mecha · atordoar: escorpião, lobo de gelo, dragão negro · esquiva: pônei, grifo, pantera · roubo de vida: serpe dourada, cavalo infernal, fênix gigante |
+
+**O que o Engenheiro chama/mostra:**
+1. Forja: no cartão "novo × atual" mostrar `Sys.forge.slotNote(S,slot).text` (a FC do cartão já conta o +N do espaço na peça nova).
+2. Trocar sem perder (quando ligar): o botão Equipar pode continuar chamando `Sys.pet.equip` / `Sys.mount.equip` (já transfere com a chave ligada). Para a confirmação: `Sys.pet.swapPreview(S,id)` / `Sys.mount.swapPreview(S,id)` → `{moved,lvlNew,lvlOld}` ("O nível 40 passa para o Dragão"); ou `swapMain(S,host,id)` → `{ok,from,to,moved,lvl}`. Desligado: `swapMain` = `{ok:false,reason:'off'}`, `swapPreview` = null.
+3. Golpe da montaria (quando ligar): na tela da montaria `Sys.mount.strikeInfo(id,estrelas)` → `{k,value,next}` (nome/cor em `Sys.strikes.DATA.name/color[k]`); na batalha nada novo: `Sys.strikes.profile()` já soma, e traz `mount:{id,k,value,name,color}` só quando a montaria soma algo. Recalcular o perfil também ao trocar montaria ou subir estrela.
+4. **Falta**: textos na tela (Engenheiro) e decisão do PO para ligar as chaves.

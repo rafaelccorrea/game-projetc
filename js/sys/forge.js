@@ -100,6 +100,11 @@ function addStones(S,n,host){
   const k=int0(n); if(!k) return 0; const o=ensure(S), before=o.stones;
   o.stones=Math.min(DATA.maxStones,o.stones+k); o.earned+=o.stones-before; return o.stones-before;
 }
+/* FORJA PRESA AO ESPAÇO (docs/IDLE_PARECIDOS.md §3 item 1, dono aprovou 13/11). Já é assim desde a v1: o +N mora em S.sys.forge.lv[espaço] e o
+   Sys.stats aplica mult(S, espaço) na peça que ESTIVER no espaço; nenhuma peça guarda +N. Trocar de peça mantém o +N, sem chave e sem migração.
+   Para o cartão "novo × atual" (o Engenheiro mostra a frase): {slot, lv, mult, keeps:true, text} */
+function slotNote(S,slot){ if(!isSlot(slot)) return null; const n=level(S,slot);
+  return {slot,lv:n,mult:DATA.bonus[n],keeps:true,text:n>0?`A Forja +${n} é do espaço: a peça nova também fica com +${n}.`:'A Forja é do espaço: o que você fortalecer aqui vale para qualquer peça equipada.'}; }
 /* aura da arma (a fps-ff desenha; a cor vem do +N, nunca da skin) */
 function aura(S){ const n=level(S,'weapon'); let a=DATA.auras[0]; for(const x of DATA.auras) if(n>=x.from) a=x; return {...a,lv:n}; }
 
@@ -145,7 +150,7 @@ function render(el,S,host,opt){
     if(host&&host.toast) host.toast(el.__sysForgeMsg); changed(host); render(el,S,host,opt); };
 }
 
-const API={DATA,setForge20,forge20On,ensure,capOf,level,mult,chance,canTry,attempt,worstTries,addStones,aura,bonus,advice,render,_goldCost:goldCost};
+const API={DATA,setForge20,forge20On,ensure,capOf,level,mult,slotNote,chance,canTry,attempt,worstTries,addStones,aura,bonus,advice,render,_goldCost:goldCost};
 root.Sys=root.Sys||{}; root.Sys.forge=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

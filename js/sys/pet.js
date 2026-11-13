@@ -82,6 +82,11 @@ const DATA={
     // da maior raridade permitida; (d) qualquer outro ovo = a espécie da era (sem sorteio; o único sorteio é o ovo grátis do Nv 20);
     // (c) repetido = 10 fragmentos (economia atual); em 5★ vira ração (sem subir raridade, que seria sorteio); (e) todos "combate".
     tower100:['drake','parrot'], combat:{name:'Combate', dmg:1.0, bond:1.0, heal:0, gold:0}},
+  // TROCAR SEM PERDER (docs/IDLE_PARECIDOS.md §3 item 2, dono aprovou 13/11). DESLIGADO. Só muda algo com o nível POR PET (v3/17b); na v2 o nível já
+  // é do espaço. Ligado: ao trocar o pet principal (equip/swapMain), o investimento passa para o novo: se o antigo tinha mais nível, os dois TROCAM
+  // nível, ração gasta, estágio (17b) e barra parcial de ração. Nada some e nada duplica (as somas não mudam); trocar de volta desfaz. Estrelas e
+  // fragmentos NÃO passam: são cópias daquele pet. Grátis e sem limite (o "Redefinir nível" de 80% continua existindo à parte).
+  swapKeep:{on:false},
   v20:{on:false, unlockLevel:20, firstEgg:{weights:[79,21,0,0,0]}, maxPre:50},
   // pet na batalha (para o engenheiro; os números já eram estes): golpe a cada 2,0 s no inimigo da frente; não é alvo; não dá energia de Ultimate
   battle:{interval:2.0, hitMult:2.5, healEvery:11},
@@ -436,7 +441,22 @@ function canRelease(S,id){ const x=ensure(S).owned[id]; if(!V3()) return {ok:fal
   if(!(int0(x.lvl)>1)) return {ok:false,reason:'level',refund:0}; return {ok:true,reason:'',refund:Math.floor(int0(x.food)*DATA.v3d.releaseRefund),from:x.lvl}; }
 function release(S,host,id){ const c=canRelease(S,id); if(!c.ok) return c; const o=ensure(S), x=o.owned[id];
   x.lvl=1; x.food=0; x.fx=0; addFood(S,c.refund,host); return c; }   // 17b: estrelas e estágio (x.stg) ficam
-function equip(S,id){ const o=ensure(S); if(locked(S)) return false; if(id==null){ o.eq=null; return true; } if(!o.owned[id]) return false; o.eq=id; return true; }
+function equip(S,id){ const o=ensure(S); if(locked(S)) return false; if(id==null){ o.eq=null; return true; } if(!o.owned[id]) return false; if(DATA.swapKeep.on===true&&o.eq&&o.eq!==id) moveInvest(o,o.eq,id); o.eq=id; return true; }
+/* troca sem perder (chave DATA.swapKeep, só com nível por pet): o principal novo fica com o maior nível; os dois trocam lvl, food, stg, fx. {moved, lvl} */
+const INV=['lvl','food','stg','fx'];
+const richer=(a,b)=>int0(a.lvl)>int0(b.lvl)||(int0(a.lvl)===int0(b.lvl)&&(int0(a.stg)>int0(b.stg)||(int0(a.stg)===int0(b.stg)&&int0(a.food)+int0(a.fx)>int0(b.food)+int0(b.fx))));
+function moveInvest(o,from,to){ const a=o.owned[from], b=o.owned[to]; if(!V3()||!a||!b) return {moved:false};
+  if(!richer(a,b)) return {moved:false,lvl:int0(b.lvl)};
+  const ta={}, tb={}; for(const k of INV){ ta[k]=a[k]; tb[k]=b[k]; }
+  for(const k of INV){ if(tb[k]===undefined) delete a[k]; else a[k]=tb[k]; if(ta[k]===undefined) delete b[k]; else b[k]=ta[k]; }
+  if(!(int0(a.lvl)>=1)) a.lvl=1; return {moved:true,lvl:b.lvl}; }
+/* trocar o pet principal (tela). Desligado: {ok:false, reason:'off'} e nada muda (use equip). {ok, reason: off|locked|pet, from, to, moved, lvl} */
+function swapMain(S,host,id){ if(DATA.swapKeep.on!==true) return {ok:false,reason:'off'}; const o=ensure(S); if(locked(S)) return {ok:false,reason:'locked'};
+  if(!o.owned[id]) return {ok:false,reason:'pet'}; const from=o.eq, r=from&&from!==id?moveInvest(o,from,id):{moved:false}; o.eq=id;
+  return {ok:true,reason:'',from:from||null,to:id,moved:!!r.moved,lvl:levelOf(S,id)}; }
+/* o que a troca faria, sem mudar nada (confirmação na tela): {moved, lvlNew, lvlOld} */
+function swapPreview(S,id){ if(DATA.swapKeep.on!==true) return null; const o=ensure(S), a=o.owned[o.eq], b=o.owned[id]; if(!b) return null;
+  const mv=V3()&&!!a&&o.eq!==id&&richer(a,b); return {moved:mv,lvlNew:mv?int0(a.lvl):levelOf(S,id),lvlOld:a?(mv?int0(b.lvl)||1:levelOf(S,o.eq)):0}; }
 const best=S=>{ const o=ensure(S); let b=null; for(const id in o.owned) if(!b||combat(S,id)>combat(S,b)) b=id; return b; };
 
 function bonus(S){
@@ -486,7 +506,7 @@ function render(el,S,host,opt){
     render(el,S,host,opt); };
 }
 
-const API={DATA,setStageMult,battleTable:()=>JSON.parse(JSON.stringify(PET_BATTLE)),ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
+const API={DATA,setStageMult,battleTable:()=>JSON.parse(JSON.stringify(PET_BATTLE)),ensure,share,levelOf,stage,attackOdds,rollAttack,canRelease,release,avail,canResetLevel:canRelease,resetLevel:release,pOf,combat,lvlCap,foodCost,addFragments,addEgg,setV17,chooseEgg,releaseGated,eraEgg,canEvolve,evolve,fcShare,feedTap,firstEgg,firstEggOdds,battleInfo,prismBoss,prismVipMax,starCostOf,addFood,onOffline,canFeed,feed,equip,swapMain,swapPreview,best,setGolemChoice,golemToPhoenix,bonus,advice,render};
 root.Sys=root.Sys||{}; root.Sys.pet=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

@@ -51,6 +51,18 @@ const DATA={
   ],
   newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
   newReady:{phoenixm:true},   // Fênix gigante LIGADA (dono, 14/11, 'liga tudo'): arte completa (Kael e Kaia montados, imagem parada da Derrota, ícone); as outras 9 seguem desligadas
+  // TROCAR SEM PERDER (docs/IDLE_PARECIDOS.md §3 item 2, dono aprovou 13/11). DESLIGADO. Ligado: ao trocar a montaria em uso (equip/swapMain), o NÍVEL
+  // investido (e o ouro anotado nele) passa para a nova: se a antiga tinha mais nível, as duas TROCAM nível e ouro (a nova fica com o maior, a antiga
+  // com o que a nova tinha). Nada some e nada duplica (a soma dos níveis e do ouro não muda); trocar de volta desfaz. Estrelas e fragmentos NÃO passam:
+  // são cópias daquela montaria. Grátis e sem limite.
+  swapKeep:{on:false},
+  // CADA MONTARIA REFORÇA 1 GOLPE ESPECIAL (docs/IDLE_PARECIDOS.md §3 item 3, dono aprovou 13/11). DESLIGADO; só vale com esta chave E a do Sys.strikes.
+  // A montaria continua SEM atacar: só soma pontos % no golpe especial do Kael (Sys.strikes.profile), dentro dos mesmos tetos dos itens.
+  // valor (pontos %) = perStar[golpe] × estrelas × rarMult[raridade]. Lendário 5★: combo/contra 9 · atordoar 3 · esquiva 4,5 · roubo de vida 3,75. PROPOSTA (QA calibra).
+  strike:{on:false,
+    map:{pony:'dodge',horse:'counter',wolf:'combo',griffin:'dodge',mythic:'combo',wyvern:'lifesteal',raptor:'combo',scorpion:'stun',panther:'dodge',
+         hellhorse:'lifesteal',unicorn:'counter',icewolf:'stun',phoenixm:'lifesteal',blackdragon:'stun',celtiger:'combo',mecha:'counter'},
+    perStar:{combo:1.2,counter:1.2,stun:0.4,dodge:0.6,lifesteal:0.5}, rarMult:[0.6,0.8,1,1.2,1.5]},
 };
 const BY={}; for(const m of DATA.mounts) BY[m.id]=m;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -93,7 +105,25 @@ function addFragments(S,id,n,host){ const k=int0(n); if(!k||!BY[id]) return {add
   if(!x){ o.stored[id]=(o.stored[id]||0)+k; const m=BY[id], hf=int0(m.hatchFrags);   // montaria nova: juntou hatchFrags → nasce (o que passar vira estrela)
     if(hf&&live(m)&&o.stored[id]>=hf){ const left=o.stored[id]-hf; delete o.stored[id]; const a=add(S,host,id); if(left) addFragments(S,id,left,host); return {added:k,hatched:true,stars:o.owned[id]?o.owned[id].stars:1,add:a}; }
     return {added:k,stored:true,stars:0,need:hf?Math.max(0,hf-o.stored[id]):0}; } x.frags+=k; const s0=x.stars; starUp(x); return {added:k,stars:x.stars,up:x.stars-s0}; }
-function equip(S,id){ const o=ensure(S); if(id==null){ o.eq=null; return true; } if(!o.owned[id]) return false; o.eq=id; return true; }
+function equip(S,id){ const o=ensure(S); if(id==null){ o.eq=null; return true; } if(!o.owned[id]) return false; if(DATA.swapKeep.on===true&&o.eq&&o.eq!==id) moveInvest(o,o.eq,id); o.eq=id; return true; }
+/* troca sem perder (chave DATA.swapKeep): a principal nova fica com o maior nível; as duas trocam nível e ouro. {moved, lvl} */
+function moveInvest(o,from,to){ const a=o.owned[from], b=o.owned[to]; if(!a||!b) return {moved:false};
+  if(a.lvl>b.lvl||(a.lvl===b.lvl&&a.gold>b.gold)){ const l=a.lvl, g=a.gold; a.lvl=b.lvl; a.gold=b.gold; b.lvl=l; b.gold=g; return {moved:true,lvl:b.lvl}; }
+  return {moved:false,lvl:b.lvl}; }
+/* trocar a montaria principal (tela). Desligado: {ok:false, reason:'off'} e nada muda (use equip). {ok, reason: off|id, from, to, moved, lvl, gold} */
+function swapMain(S,host,id){ if(DATA.swapKeep.on!==true) return {ok:false,reason:'off'}; const o=ensure(S); if(!o.owned[id]) return {ok:false,reason:'id'};
+  const from=o.eq, r=from&&from!==id?moveInvest(o,from,id):{moved:false}; o.eq=id; return {ok:true,reason:'',from:from||null,to:id,moved:!!r.moved,lvl:o.owned[id].lvl,gold:o.owned[id].gold}; }
+/* o que a troca faria, sem mudar nada (confirmação na tela): {moved, lvlNew, lvlOld} */
+function swapPreview(S,id){ if(DATA.swapKeep.on!==true) return null; const o=ensure(S), a=o.owned[o.eq], b=o.owned[id]; if(!b) return null;
+  const mv=!!a&&o.eq!==id&&(a.lvl>b.lvl||(a.lvl===b.lvl&&a.gold>b.gold)); return {moved:mv,lvlNew:mv?a.lvl:b.lvl,lvlOld:a?(mv?b.lvl:a.lvl):0}; }
+/* golpe especial que a montaria reforça (chave DATA.strike + montaria ligada). {k, value} em pontos %, ou null. Sem a chave não toca no save. */
+function strikeValue(id,stars){ const m=BY[id], k=DATA.strike.map[id]; if(!m||!k) return 0;
+  return Math.round(num(DATA.strike.perStar[k],0)*clamp(int0(stars)||1,1,DATA.maxStars)*num(DATA.strike.rarMult[clamp(m.r,0,DATA.strike.rarMult.length-1)],0)*1000)/1000; }
+function strikeOf(S,id){ if(!ON()||DATA.strike.on!==true||!S) return null; const o=ensure(S), mid=id||o.eq, x=o.owned[mid]; if(!x||!DATA.strike.map[mid]) return null;
+  return {id:mid,k:DATA.strike.map[mid],value:strikeValue(mid,x.stars)}; }
+/* para a tela (com ou sem a montaria): {k, value, next} (next = valor com +1 estrela) ou null com a chave desligada */
+function strikeInfo(id,stars){ if(DATA.strike.on!==true||!BY[id]||!DATA.strike.map[id]) return null; const s=clamp(int0(stars)||1,1,DATA.maxStars);
+  return {k:DATA.strike.map[id],value:strikeValue(id,s),next:s<DATA.maxStars?strikeValue(id,s+1):null}; }
 /* custo do próximo nível; {ok, reason: off|id|cap|max|money, gold, cap} */
 function upgradeCost(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!x) return {ok:false,reason:'id',gold:0};
   const C=DATA.cost, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.ceil(C.goldK*unit*(1+C.growth*(x.lvl-1))*(1+m.r*C.rarCost));
@@ -118,7 +148,7 @@ const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return
 
 /* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
 const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],maxPct:DATA.maxPct[m.r],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
-const API={DATA,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const API={DATA,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,swapMain,swapPreview,strikeOf,strikeInfo,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
