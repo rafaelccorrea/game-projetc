@@ -1956,6 +1956,16 @@ Arquivos: `js/stage.js`, `js/battle.js`, `js/fullbattle.js`. Nada em index.html,
 
 Testes (depois de tudo): `node --check` nos 6 arquivos; `run.js` 162 OK; `flows.js` "fluxos duros OK"; `preload.js` passou; `sheetgrid.js` 398 OK; `weapons.js` coerente.
 
+### Engenheiro 13, caso do QA "chefe da era 0 pisca depois do reembalo em grade" (só leitura e node; CAUSA NÃO PROVADA)
+Arquivos: `js/stage.js`, `test/e2e/sheetgrid.js`.
+- Descartado com prova: (a) todo recorte de folha de inimigo, chefe, pet, montaria, herói, máscaras, subir de nível e evolução passa por `sheetSX/sheetSY` (varredura dos `drawImage`); simulação no sandbox de node (`dbgSet(0,0,0,'boss')`, chefe com vida alta, 1.500 quadros): o chefe é desenhado em TODO quadro (1.389 de golpe, 111 de dano), sempre com a origem dentro da imagem. A arte: as 56 folhas em grade comparadas célula a célula com o backup em tira (`Desktop/fps_backup/pregrid`): iguais; nenhuma célula vazia nas folhas de inimigo, chefe e mamute. (c) o servidor local entrega o png e o json novos, `Cache-Control: no-cache`.
+- O que sobra e só aparece no navegador: o `.json` novo (cols 6) com a IMAGEM antiga em tira (cache): os quadros 6 a 11 caem fora da imagem e não desenham nada, que é exatamente o piscar descrito. Não consegui provar que é isso na aba do QA.
+- Mudança 1 (`sheetFix`, `js/stage.js`): na carga da folha, se o `cols` do json não cabe na imagem que chegou, a folha é desenhada pela geometria da IMAGEM (tira, ou as colunas que a largura dá) e sai um aviso no console ("Folha: .json e .png não batem"). Vale para navegador e WebView (atualização da APK com folha reembalada).
+- Mudança 2 (`pinRoom`): no 1º segundo depois da virada da janela de 15 s as folhas em uso pareciam "sem uso" e podiam perder o pino quando a memória fixada estava no teto; agora espera, como o `pinCap`. Não explica quadro em branco (a folha volta à imagem comum e continua desenhando), mas tirava o pino de folha em uso.
+- `sheetgrid.js`: 398 → 584 verificações (sheetFix nos quatro casos json/imagem; toda folha com cols no disco cabe na imagem; folhas de inimigo e chefe de todas as eras com todo quadro dentro da imagem).
+- APK v0.13.0 (da3632a, folhas em tira, sem cols): o caminho de desenho é o mesmo e sem `cols` não há como o quadro cair fora da imagem; por leitura o defeito NÃO existe nela. Não visto no aparelho.
+- Testes: `sheetgrid.js` 584 OK; `run.js` 163 OK; `petfront.js` 80 OK; `preload.js` passou; `eras78.js` 116 OK; `flows.js` "fluxos duros OK".
+
 ## Engenheiro 12 — online na abertura (2026-11-13): sessão de convidado, save na nuvem, login Google. DESLIGADO por `ONLINE_ON`
 
 Escrito e provado SEM navegador e SEM rede (servidor de mentira no teste). Nada visto no navegador nem contra o servidor real: é do QA.

@@ -82,6 +82,8 @@ const sheetSX = (M, f) => M.cols > 0 ? (f % M.cols) * M.w : f * M.w;
 const sheetSY = (M, f) => M.cols > 0 ? Math.floor(f / M.cols) * M.h : 0;
 function sheetXY(M, f){ return { sx: sheetSX(M, f), sy: sheetSY(M, f) }; }
 if (typeof window !== 'undefined'){ window.sheetXY = sheetXY; window.sheetSX = sheetSX; window.sheetSY = sheetSY; }
+/* GRADE x IMAGEM (Engenheiro 13; caso do QA: chefe da era 0 piscando depois do reembalo em grade). O .json e o .png são dois arquivos: se um chega novo e o outro velho (cache do navegador ou do WebView numa atualização), o "cols" do .json não bate com a imagem e os quadros >= cols caem FORA dela (o drawImage não desenha nada: o corpo pisca). sheetFix(M, largura, altura) devolve o cols que a IMAGEM comporta: o do .json se ela cabe; 0 (tira) se o .json diz grade mas a imagem é a tira antiga; imagem em grade com .json sem cols → as colunas que a largura dá. -1 = nada bate (fica o .json). */
+function sheetFix(M, iw, ih){ const n = M.frames | 0, w = M.w | 0, h = M.h | 0, c = M.cols > 0 ? M.cols | 0 : 0; if (!(n > 0 && w > 0 && h > 0 && iw > 0 && ih > 0)) return c; const fits = k => k > 0 ? (iw >= k * w && ih >= Math.ceil(n / k) * h) : (iw >= n * w && ih >= h); if (fits(c)) return c; if (c > 0 && fits(0)) return 0; const k = Math.floor(iw / w); return (c === 0 && k > 0 && k < n && fits(k)) ? k : -1; }
 const SHEETS = {};
 /* Engenheiro 10 (travadas): FOLHA COM PINO. Depois de pronta, a folha troca a imagem por um ImageBitmap decodificado fora do quadro (Preload.pin): o navegador não
    pode mais descartar o bitmap e decodificar de novo dentro do drawImage. A folha carregada agora só fica ok com o pino (ou a falha dele). MEMÓRIA: folha que
@@ -106,6 +108,7 @@ const PIN_ALL = typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefine
 const PIN_HOT = /_(idle|run)(_|$)/;
 const pinHot = base => !PIN_ALL && PIN_HOT.test(base.slice(base.lastIndexOf('/') + 1));
 function pinRoom(need){ const P = PRE(), max = PIN_MAX_MB * 1048576; if (P.pinBytes() + PINS.pend + need <= max) return true;
+  if (performance.now() - PINS.at < 1000) return false;   /* logo depois da virada da janela de 15 s ninguém foi pedido ainda: sem isto as folhas EM USO pareciam "sem uso" e perdiam o pino (mesma espera do pinCap) */
   const L = []; for (const k in SHEETS){ const s = SHEETS[k]; if (s.pin && s.u < PINS.tick) L.push(s); } L.sort((a, b) => a.u - b.u);
   for (const s of L){ if (P.pinBytes() + PINS.pend + need <= max) break; sheetUnpin(s); s.noPin = true; PINS.cut++; }
   return P.pinBytes() + PINS.pend + need <= max; }
@@ -133,7 +136,9 @@ function sheetLoad(base, noNeck){
   s = SHEETS[base] = { base, img: null, el: null, meta: null, neck: null, ok: false, fail: false, p: null, u: PINS.tick, pin: false, pinning: false, noPin: false };
   /* Engenheiro 5: imagem e .json vêm do cache único do Preload (js/preload.js): a folha só fica ok com a imagem DECODIFICADA e o .json interpretado (nunca pela metade) */
   const ei = PRE().get(base + '.png'), ej = PRE().get(base + '.json');
-  const fin = () => { if (!ei.ok || !ej.ok){ s.fail = true; return null; } s.img = s.el = ei.img; s.meta = ej.data; s.neck = noNeck ? [] : neckRows(s); return s; };
+  const fin = () => { if (!ei.ok || !ej.ok){ s.fail = true; return null; } s.img = s.el = ei.img; s.meta = ej.data;
+    { const M = s.meta, c0 = M && M.cols > 0 ? M.cols | 0 : 0, c1 = M ? sheetFix(M, ei.img.naturalWidth, ei.img.naturalHeight) : c0; if (M && c1 !== c0){ if (c1 >= 0) s.meta = Object.assign({}, M, { cols: c1 }); try { console.warn('Folha: .json e .png não batem (' + base + ': imagem ' + ei.img.naturalWidth + 'x' + ei.img.naturalHeight + ', json cols ' + c0 + ', quadros ' + M.frames + ' de ' + M.w + 'x' + M.h + ')' + (c1 >= 0 ? '; desenhando com cols ' + c1 : '; sem conserto')); } catch (e) {} } }
+    s.neck = noNeck ? [] : neckRows(s); return s; };
   if (ei.ok && ej.ok){ fin(); s.ok = true; sheetPin(s); s.p = Promise.resolve(s); }
   else s.p = Promise.all([ei.p, ej.p]).then(fin).then(r => { if (!r) return null; const q = sheetPin(s); return q ? q.then(() => { s.ok = true; return s; }) : (s.ok = true, s); }).catch(() => { s.fail = true; return null; });
   return s;
