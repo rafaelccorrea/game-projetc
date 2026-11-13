@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **10h40 · Você aprovou como ganhar as skins novas:** Ninja (Kael e Kaia) na Oferta de 1ª compra · Anjo (Kael e Kaia) no fim do Passe Premium · Demônio/Demônia grátis no VIP 7 · Paladino (Kael) e Arlequina (Kaia) a R$ 24,90 · Ciborgue (Kael) a R$ 39,90 · Samurai (Kael) no top 10 do Torneio. Nada de sorteio
+- **10h40 · Arte com 5 agentes:** asas (Serafim sendo refeito com 6 asas), as 10 skins, arco/bumerangue, Kaia montada; os 9 pets em seguida. As 10 montarias novas montadas (~280 créditos) não cabem no saldo atual
+
 - **10h20 · Seus votos:** APROVADOS: skins do Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Ciborgue) e da Kaia (Arlequina, Ninja, Demoníaca, Angelical); os 9 pets; as 10 montarias; 7 asas; as 9 ultimates Lendárias; o ícone A e a abertura; os eventos na batalha; as guias do arco/bumerangue/Kaia montada. REPROVADOS: Bobo e Pirata do Kael, Princesa da Kaia, Serafim ("3 asas errado", vai ser refeito com 6). Tudo aprovado entrou em produção
 - **10h20 · Créditos:** animar tudo o que você aprovou custa ~1.000 (10 skins ~360, 9 pets ~360, 10 montarias ~280); o saldo é ~887. A Arte para quando faltar ~60 e me avisa o que sobrou
 - **10h20 · Logo animado PRONTO:** entrada de 2 s (cristais se juntam, letras cristalizam, explosão de luz) + repetição de 3 s sem pulo; letras exatamente as aprovadas. Vai para a tela de título agora
