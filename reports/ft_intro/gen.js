@@ -87,6 +87,16 @@ const PATCH = [
   ['NomeJogador', '<span class="pos" style="color: #ffe07a">12</span>', '<span class="pos" style="color: #ffe07a">-</span>', 'posição só com o servidor'],
   ['NomeJogador', /<span class="rTtl" style="color: #bfe0ff">Cavaleiro do Tempo<\/span>/, '', 'título de exemplo'],
   ['NomeJogador', '<span class="fc">12.480</span>', '<span class="fc">{{pFc}}</span>', 'FC real (Sys.fc.compute)'],
+  // QA (12/11 noite)
+  ['Login', /(Continuar com Google)(\s*<\/button>)/, '$1<sc-if value="{{googleSoon}}"><span class="pi-soon">em breve</span></sc-if>$2', 'Google: selo "em breve" sem o client ID'],
+  ['Prologo', /<div class="gpa" style="width: 120px; height: 190px">[\s\S]*?<\/svg>\s*<\/div>/, '<div class="gpa" style="width: 120px; height: 190px"><span role="img" aria-label="O avô, o antigo Guardião, de capa e cajado" style="position: absolute; left: -26px; bottom: 0; width: 172px; height: 190px; background: url(assets/hero/grandfather.png) center bottom / contain no-repeat; filter: drop-shadow(0 0 5px rgba(255,201,74,0.5))"></span></div>', 'avô com a arte aprovada (assets/hero/grandfather.png) no lugar da silhueta'],
+  ['CriarJogador', /(<span class="sil" style="position: absolute; left: 50%; top: 166px;[\s\S]*?<\/svg><\/span>)/, '<sc-if value="{{kaiaSoon}}">$1</sc-if><sc-if value="{{kaiaReady}}"><span class="pi-kaia" aria-hidden="true" style="position: absolute; left: 50%; top: 150px; width: 168px; height: 168px; margin-left: -84px"></span></sc-if>', 'Kaia: arte aprovada aparece com a chave PI_KAIA'],
+  ['CriarJogador', /(<span class="wip"[^>]*>)arte em produção(<\/span>)/, '<sc-if value="{{kaiaSoon}}">$1chega em breve$2</sc-if>', 'selo: chega em breve (a arte já está aprovada)'],
+  ['CriarJogador', 'aria-label="KAIA, arte em produção"', 'aria-label="KAIA"', 'rótulo'],
+  // PO: o Bem-vindo aparece em TODA volta; sem ganho offline, mostra só a saudação e "Continuar"
+  ['BemVindo', /(<!-- tempo fora com teto -->[\s\S]*?)(\s*<!-- bônus de retorno)/, '<sc-if value="{{hasGain}}">$1</sc-if><sc-if value="{{noGain}}"><div class="pi-nogain">Seu herói descansou e está pronto. Vamos continuar a jornada!</div></sc-if>$2', 'sem ganho: sem a área de recompensas'],
+  ['BemVindo', 'aria-label="Coletar recompensas">Coletar<small>{{colSub}}</small>', 'aria-label="{{colTxt}}">{{colTxt}}<sc-if value="{{hasGain}}"><small>{{colSub}}</small></sc-if>', 'botão: Coletar ou Continuar'],
+  ['BemVindo', "hudGold: fmt(hudGold), hasMore:", "hudGold: fmt(hudGold), hasGain: d.gold > 0, noGain: !(d.gold > 0), colTxt: d.gold > 0 ? 'Coletar' : 'Continuar', hasMore:", 'flags do ganho'],
 ];
 
 function slice(s, a, b, from = 0) { const i = s.indexOf(a, from); if (i < 0) return null; const j = s.indexOf(b, i + a.length); return j < 0 ? null : [i + a.length, j]; }

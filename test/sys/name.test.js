@@ -13,6 +13,10 @@ t('palavrão, inclusive colado, com l33t e letras repetidas', () => {
   for (const s of ['Porra', 'MataPuta', 'P0rr4', 'Caraaalho', 'fdp_10', 'Fdp', 'xBuc3tax', 'Hitler88']) assert.ok(!ok(s), s);
   for (const s of ['Computador', 'Escudo', 'Cuidado', 'Picudo', 'Disputa', 'Fortaleza']) assert.ok(ok(s, { minor: false }), s);
 });
+t('QA: palavrão seguido de número, com separador ou l33t (puta123)', () => {
+  for (const s of ['puta123', 'Puta_123', 'p_u_t_a', 'Pu74_9', 'm3rd4_99', 'P0RR4', 'caralho007', 'Fdp2010', 'xxBuc3t4']) assert.ok(!ok(s), s);
+  assert.strictEqual(N.check('puta123').msg, 'Esse nome não é permitido.');
+});
 t('reservado', () => { assert.ok(!ok('Admin')); assert.ok(!ok('Eonbound')); assert.strictEqual(N.check('Suporte').msg, 'Esse nome é reservado.'); assert.ok(ok('Administrador_')); });
 t('menor (ou idade desconhecida): sem contato no nome; adulto pode números longos', () => {
   for (const s of ['Kael11987654', 'ZapDoKael', 'insta_kael', 'Kael@BR']) assert.ok(!ok(s), s);

@@ -30,8 +30,8 @@ const G={
 /* ---------- nome do jogador: regra no Sys.name (js/sys/name.js); reserva local se o módulo não estiver carregado ---------- */
 function nameCheck(n,mode){
   try{ if(window.Sys&&Sys.name&&Sys.name.check){ const r=Sys.name.check(n,{minor:minor(),current:mode==='change'?G.name():null}); return r; } }catch(e){}
-  const ok=n.length>=3&&n.length<=14&&/^[A-Za-z0-9_À-ÿ]+$/.test(n);
-  return {len:n.length>=3&&n.length<=14,chars:n.length>0&&/^[A-Za-z0-9_À-ÿ]+$/.test(n),clean:true,uniq:true,ok,msg:ok?'':'Use 3 a 14 letras, números ou _.'};
+  /* Sys.name ainda carregando: não aprova nada (nunca "Nome disponível!" sem o filtro) */
+  return {len:n.length>=3&&n.length<=14,chars:n.length>0&&/^[A-Za-z0-9_À-ÿ]+$/.test(n),clean:false,uniq:true,ok:false,msg:'Verificando o nome...'};
 }
 function minor(){ try{ if(window.Sys&&Sys.net&&Sys.net.player){ const p=Sys.net.player(); if(p&&p.ageBand) return p.ageBand!=='18+'; } }catch(e){} return true; }   /* sem saber a idade: regra de menor (a mais rígida) */
 
@@ -94,7 +94,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   dirty(){ if(this.raf) return; this.raf=requestAnimationFrame(()=>{ this.raf=0; this.draw(); }); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
     const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) build(n,sc,out); morphKids(this.root,out); },
-  extra(){ return {pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,pFc:G.fc()}; },
+  extra(){ return {pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,googleSoon:!PI.googleReady(),pFc:G.fc()}; },
   fit(){ if(!this.el) return; const app=document.getElementById('app')||document.body, W=app.clientWidth||390, H=app.clientHeight||844, d=PI_SCREENS[this.id]||{};
     const s=d.fluid?W/390:Math.min(W/390,H/844), h=d.fluid?H/s:844;
     this.root.style.cssText=`position:absolute;left:${(W-390*s)/2}px;top:${d.fluid?0:Math.max(0,(H-844*s)/2)}px;width:390px;height:${h}px;transform:scale(${s});transform-origin:0 0;overflow:hidden`; this.root.style.setProperty('--pi-vw','3.9px'); this.root.style.setProperty('--pi-vh',(h/100).toFixed(2)+'px'); this.el.dataset.fit=W+'x'+H+'@'+s.toFixed(3); },
@@ -106,7 +106,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
     this.draw(); if(c.componentDidMount){ try{ c.componentDidMount(); }catch(e){ console.error(e); } } return true; },
   /* navegação: os links do protótipo (href="X.dc.html") passam por aqui e a regra do fluxo decide a próxima tela */
   nav(target){ const nw=G.isNew(), id=this.id;
-    if(id==='TituloV2B'){ if(nw) this.show('Login'); else if(this.offline()) this.show('BemVindo'); else this.finish(); return; }                       /* JOGAR / Continuar como */
+    if(id==='TituloV2B'){ this.show(nw?'Login':'BemVindo'); return; }                                   /* PO: o Bem-vindo aparece em toda volta (com o ganho offline quando houver) */                       /* JOGAR / Continuar como */
     if(id==='Login'){ this.show(target==='TituloV2B'?'TituloV2B':'Prologo'); return; }        /* convidado ou conta conectada → Prólogo */
     if(id==='Prologo'){ this.show('CriarJogador'); return; }                                   /* "Começar" do fim do Prólogo */
     if(id==='NomeJogador'){ if(target==='BatalhaTelaCheiaV2'){ const n=this.cur&&this.cur.state&&this.cur.state.nick; if(n) this.commitNew(n); this.finish(); } return; }   /* Continuar: grava herói + nome */
@@ -173,6 +173,10 @@ const PI_CSS=`#pin .pi-toast{position:absolute;left:50%;bottom:120px;transform:t
 #pin .pi-logoB span{font-family:'Lilita One',sans-serif;font-size:56px;line-height:1;letter-spacing:1px;color:transparent;background-image:linear-gradient(180deg,#ffffff 0%,#d2f8ff 30%,#4ad8ff 52%,#1a5fd0 68%,#7fe8ff 86%,#e8fdff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:1.5px #08224d;filter:drop-shadow(0 0 6px rgba(74,216,255,.9)) drop-shadow(0 0 18px rgba(60,140,255,.7)) drop-shadow(0 4px 8px rgba(0,0,0,.7))}
 #pin .pi-logoB i{font-style:normal;color:#bff4ff;font-weight:900;font-size:12px;letter-spacing:5px;text-shadow:0 0 8px rgba(74,216,255,.9)}
 @keyframes pi_float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#pin .pi-soon{margin-left:8px;padding:2px 8px;border-radius:8px;background:#1f1f1f;color:#ffe07a;font:900 11px Nunito,system-ui,sans-serif;letter-spacing:.3px}
+#pin .pi-kaia{background-image:url(assets/anim/hyb/kaia/kaia_idle_era2_t1.png);background-size:2100% 100%;background-repeat:no-repeat;animation:pi_sheet 1.75s steps(21,jump-none) infinite}
+@keyframes pi_sheet{from{background-position:0 0}to{background-position:100% 0}}
+#pin .pi-nogain{flex:none;padding:14px 12px;border-radius:14px;background:rgba(42,32,21,.85);border:1px solid #4a3a2b;color:#f6ecdf;font:800 14px/1.4 Nunito,system-ui,sans-serif;text-align:center}
 @keyframes pi_t{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}`;
 
 /* ---------- ligação com o jogo (só com a chave ligada) ----------
@@ -180,7 +184,8 @@ const PI_CSS=`#pin .pi-toast{position:absolute;left:50%;bottom:120px;transform:t
    mas a criação do jogador novo e o Bem-vindo são do fluxo novo. Sem pedido de mudança em index.html: tudo por fora. */
 /* espera a tela de carregamento (js/loading.js) sair: a entrada vem DEPOIS do "Toque para continuar", no lugar do título antigo */
 function loadingUp(){ const l=document.getElementById('loading'); if(!l) return false; const c=getComputedStyle(l); return c.display!=='none'&&c.visibility!=='hidden'&&+c.opacity>0.05; }
-function boot(){ if(!ON()) return; const t0=document.getElementById('title'); if(t0) t0.style.display='none';
+function needName(){ if(window.Sys&&Sys.name) return; if(document.getElementById('pin_name')) return; const sc=document.createElement('script'); sc.id='pin_name'; sc.src='js/sys/name.js'; document.head.appendChild(sc); }
+function boot(){ if(!ON()) return; needName(); const t0=document.getElementById('title'); if(t0) t0.style.display='none';
   if(loadingUp()){ setTimeout(boot,200); return; }
   const t=document.getElementById('title'); if(t) t.style.display='none';
   if(typeof B!=='undefined') B.paused=true;
