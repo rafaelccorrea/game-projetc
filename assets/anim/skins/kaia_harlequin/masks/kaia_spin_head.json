@@ -1,0 +1,143 @@
+{
+ "frames": 17,
+ "w": 256,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. skins da Kaia: âncora pelo rosto (kaiaskin/headtrack.js)",
+ "head": [
+  {
+   "x": 246,
+   "y": 92,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 240,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 207,
+   "y": 95,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 247,
+   "y": 89,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 228,
+   "y": 86,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 252,
+   "y": 91,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 204,
+   "y": 92,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 215,
+   "y": 88,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 248,
+   "y": 88,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 214,
+   "y": 88,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 249,
+   "y": 90,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 256,
+   "y": 91,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 247,
+   "y": 90,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 215,
+   "y": 87,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 248,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 246,
+   "y": 94,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 245,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  }
+ ]
+}

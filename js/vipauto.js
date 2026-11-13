@@ -80,9 +80,8 @@ function vaKeep(it){ return !it || (S.eq && S.eq[it.slot] === it.id) || it.lock 
 /* ---------- 4) EQUIPAR O MELHOR SOZINHO ---------- */
 /* chamado pelo addItemToBag quando o item novo tem mais FC que o equipado. Espaço vazio: equipa sempre (nada é trocado). */
 function vaEquipAllowed(it){
-  if (!vaConvOn()) return true;                                       // chave desligada: como era antes (equipa para todos)
-  if (!it || S.eq[it.slot] == null || !itemOf(S.eq[it.slot])) return true;
-  return !!vaConv(S, 'autoEquip').on && vaPrefs(S).autoEquip; }
+  return true;   /* DECISÃO DO DONO (13/11, via PO): o jogador GRÁTIS continua equipando o melhor item sozinho, como sempre foi. Equipar sozinho NÃO é
+                    vantagem de VIP (Sistemas troca o benefício do VIP 2). A regra anterior (só VIP 2 com a preferência ligada) saiu. */ }
 
 /* ---------- 5) DESMANCHE AUTOMÁTICO ---------- */
 /* chamado pelo addItemToBag ANTES de o item entrar. Devolve null (o item entra normalmente) ou {msg, gold, forge} (já desmontado: não entra). */
