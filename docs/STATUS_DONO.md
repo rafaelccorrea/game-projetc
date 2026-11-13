@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h · APK v0.13.0 PRONTA** (C:\Users\rafae\Desktop\fps-android\Eonbound-debug-v0.13.0.apk, 1,08 GB), COM ONLINE LIGADO (o QA passou os 6 testes contra o servidor real), escolha de servidor, desempenho novo, arma sempre a equipada, pet na frente, peças em 3 desenhos, Modo dono completo. Para instalar: celular no cabo e escreva "pode instalar" na janela do Engenheiro. Ainda não visto no aparelho: login Google e desempenho no S24
+- **22h · Arte:** Kael CIBORGUE pronto (38 créditos) e Kael ANJO SEM ASA pronto (16) e já ligado: as 6 skins do Kael estão entregues. Agora: Fênix Gigante montada e, se sobrar, Dragão Negro. Saldo 101
+- **22h · Suas decisões aplicadas:** Excluir conta apaga tudo (com aviso); chefes das eras 7 e 8 = Senhor do Submundo e Juiz Celestial; eras 7 e 8 virando jogáveis (9 eras); pet nunca some (Derrota, ovo chocando, Aparência). Servidores fase 2: arena, guildas e chat separados por servidor, no ar
+
 - **21h20 · Kael SAMURAI PRONTO** (8 animações + retrato, 36 créditos; já aparece no Perfil para você ver). Ciborgue em produção; saldo 125. **Páginas públicas no ar como rascunho** (fora dos buscadores até o advogado aprovar): /privacidade, /termos e /excluir-conta em https://15-229-249-157.sslip.io. Arena separada por servidor no ar. Botão "Excluir conta" no jogo (a Play exige) sendo feito pela Sistemas
 
 - **21h · Textos da loja PRONTOS para o advogado (docs/loja/):** ficha da Play Store ("Eonbound: Heróis das Eras"), formulário de Segurança dos Dados, questionário de classificação etária, política de privacidade (LGPD + ECA Digital) e termos de uso. Faltam os dados da empresa e alguns pontos marcados para o advogado. Sem rolagem lateral na Mochila e na Nuvem; seleção de servidor pronta; P24 era o bônus de coleção da skin (sem perda). Curva de 180 dias continua igual
@@ -369,7 +373,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Saldo ~313. A próxima parte (Samurai e Ciborgue, 6 pets, 10 montarias novas montadas) custa ~610
 
 **Celular:**
-- [x] APK v0.12.9 instalado no S24 (save mantido). Jogue e me diga o que achar
+- [ ] APK v0.13.0 PRONTA: ligue o cabo e escreva "pode instalar" na janela do Engenheiro (instalação nova)
 
 **Servidor (para ligar o online):**
 - [x] Senha do banco: feito por você (servidor no ar com o banco)
