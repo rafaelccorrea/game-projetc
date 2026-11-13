@@ -1,18 +1,18 @@
 # Varredura estática de responsividade
 
-Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurística por regex sobre `index.html` e `js/**` (menos `js/sys`, lógica pura). **Pode haver falso positivo**: confira o trecho antes de corrigir. Cada linha: `arquivo:linha` · regra · trecho · correção sugerida.
+Gerado por `node test/resp/estatico.mjs` em 2026-11-13T17:37:52.098Z. Heurística por regex sobre `index.html` e `js/**` (menos `js/sys`, lógica pura). **Pode haver falso positivo**: confira o trecho antes de corrigir. Cada linha: `arquivo:linha` · regra · trecho · correção sugerida.
 
 ## Totais
 
 | regra | achados |
 |---|---|
 | largura-fixa | 19 |
-| nowrap-sem-reticencias | 153 |
-| letra-pequena | 136 |
+| nowrap-sem-reticencias | 156 |
+| letra-pequena | 139 |
 | alvo-pequeno | 22 |
 | absoluta-sem-safe-area | 1 |
 | overflow-x | 0 |
-| **total** | **331** |
+| **total** | **337** |
 
 ## Por arquivo (mais achados primeiro)
 
@@ -20,8 +20,8 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 |---|---|---|
 | js/screens.js | 65 | distribuir |
 | js/screens2.js | 39 | distribuir |
+| js/p_arena.js | 22 | distribuir |
 | js/p_forge.js | 22 | distribuir |
-| js/p_arena.js | 21 | distribuir |
 | js/p_events.js | 21 | distribuir |
 | js/fullbattle.js | 16 | distribuir |
 | js/p_pets.js | 14 | distribuir |
@@ -37,6 +37,7 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 | js/p_guide.js | 6 | distribuir |
 | js/p_intro.js | 6 | distribuir |
 | index.html | 6 | distribuir |
+| js/diff.js | 5 | distribuir |
 | js/p_realm.js | 5 | distribuir |
 | js/p_pass.js | 4 | distribuir |
 | js/evhud.js | 3 | distribuir |
@@ -102,60 +103,60 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 - `js/screens.js:243` · **nowrap-sem-reticencias** · `cgain 1.5s ease-out both;white-space:nowrap;z-index:1}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - `js/screens.js:302` · **nowrap-sem-reticencias** · `ight:800;color:#c9b9a2;white-space:nowrap">${sub}</span>':''}</span>${b(1,pg<pages-1,nextLb||'P` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - `js/screens.js:324` · **largura-fixa** · `:absolute;left:50%;top:0;width:390px;height:${h}px;margin-left:-195px';` → usar max-width:100% / min(390px,100%) ou % (a tela mais estreita é 288 px)
-- `js/screens.js:463` · **letra-pequena** · `22)}<span style="font-size:9px;font-weight:900;line-height:1.05">Nível ${Sys.stats.DATA.wing.mi` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:464` · **nowrap-sem-reticencias** · ` #000,0 0 4px #000;white-space:nowrap">Asa</span></div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:464` · **letra-pequena** · `relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#e8dccb;text-shadow:0 ` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:471` · **letra-pequena** · `gba(0,0,0,.72);font-size:10px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:16px">${` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:474` · **nowrap-sem-reticencias** · ` #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>'; }).join(''); /* rótulo do espaço:` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:474` · **letra-pequena** · `relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#f6ecdf;text-shadow:0 ` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:484` · **nowrap-sem-reticencias** · `:800;color:#c9b9a2;white-space:nowrap">${GL[k]}</span><span class="lil" id="xg_s_${k}" style="f` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:484` · **nowrap-sem-reticencias** · `Px(vL,sIn,14,8)}px;white-space:nowrap">${v0}</span></div></div>'; }).join('');` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:495` · **letra-pequena** · `:rgba(0,0,0,.72);font-size:9px;font-weight:900;color:${c};line-height:15px">Nv.${it.lvl}</span>` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:498` · **nowrap-sem-reticencias** · `op:-6px;right:-4px;white-space:nowrap;line-height:1.1;padding:2px 5px;border-radius:7px;backgro` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:498` · **letra-pequena** · `#16110d;color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;pointer-events:none">NOVO` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:519` · **largura-fixa** · `;left:50%;bottom:0;width:390px;height:292px;margin-left:-195px;pointer-events:none':X390(292)}"` → usar max-width:100% / min(390px,100%) ou % (a tela mais estreita é 288 px)
-- `js/screens.js:524` · **nowrap-sem-reticencias** · `gba(95,208,104,.6);white-space:nowrap">FC +${fcTxt(gain)}</span></div>':''}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:530` · **nowrap-sem-reticencias** · `cing:${fcLs}px;white-space:nowrap">${fcLbl}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:531` · **nowrap-sem-reticencias** · `origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:536` · **nowrap-sem-reticencias** · `olor:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span>${lookOn&&` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:543` · **letra-pequena** · `yle="flex:none;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Mochila ${S.inv` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:543` · **letra-pequena** · `;color:#ffc94a;font-size:9.5px;font-weight:900;white-space:nowrap">${SVG_LOCK(10,'#ffc94a')}${e` → subir para 11–12 px (hoje 9.5 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:543` · **letra-pequena** · `:1;min-width:0;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:543` · **alvo-pequeno** · `center;gap:3px;height:18px;padding:0 6px;border-radius:9px;border:1px solid #8a7458;background:` → alvo de toque ≥ 40×40 px (hoje altura 18 px): aumentar altura ou padding invisível
-- `js/screens.js:545` · **alvo-pequeno** · `:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></s` → alvo de toque ≥ 40×40 px (hoje altura 10 px): aumentar altura ou padding invisível
-- `js/screens.js:546` · **alvo-pequeno** · `:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></s` → alvo de toque ≥ 40×40 px (hoje altura 10 px): aumentar altura ou padding invisível
-- `js/screens.js:547` · **nowrap-sem-reticencias** · `ap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:555` · **nowrap-sem-reticencias** · `;font-weight:900;white-space:nowrap">${SVG_LOCK(12,'#ffc94a')}${esc2(autoLock)}</span>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:556` · **nowrap-sem-reticencias** · `8a':'#c9b9a2'};white-space:nowrap">${autoOn?autoOn+(autoOn===1?' ligado':' ligados'):'desligado` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:561` · **alvo-pequeno** · `le="min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#2a1403;color:#ffe07` → alvo de toque ≥ 40×40 px (hoje altura 24 px): aumentar altura ou padding invisível
-- `js/screens.js:580` · **nowrap-sem-reticencias** · `${lbW}px;flex:none;white-space:nowrap">${GL[k]}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:581` · **nowrap-sem-reticencias** · `-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span st` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:582` · **nowrap-sem-reticencias** · `;font-size:${f2}px;white-space:nowrap;color:${up?'#5fd068':dn?'#ff5a4e':'#c9b9a2'}">${up?SVG_UP` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:586` · **nowrap-sem-reticencias** · `weight:800;color:${lc};white-space:nowrap">${lb}</span><span class="lil" style="font-size:${xFi` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:586` · **nowrap-sem-reticencias** · `11-6,fcCol?14:15,8)}px;white-space:nowrap${vc?';color:'+vc:''}">${val}</span></div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:589` · **letra-pequena** · `<span style="font-size:9px;font-weight:900;color:${tagC};letter-spacing:1px">${tag}</span` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:591` · **nowrap-sem-reticencias** · `b;line-height:1.15;white-space:nowrap">${t}</span>').join(''):''}</div>'; };` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:591` · **letra-pequena** · `p(t=>'<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:no` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:619` · **nowrap-sem-reticencias** · `px;font-weight:900;white-space:nowrap">` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:619` · **alvo-pequeno** · `ta-x="equp" style="height:36px;border-radius:12px;border:2px solid ${plan.ok||S.gems>=plan.gems` → alvo de toque ≥ 40×40 px (hoje altura 36 px): aumentar altura ou padding invisível
-- `js/screens.js:630` · **letra-pequena** · `<span style="font-size:10px;font-weight:800;color:#c9b9a2">Devolve 50% do ouro investido</s` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:631` · **letra-pequena** · `:Nunito,sans-serif;font-size:10px;font-weight:800;color:#b8f0bd">toque para tirar</span></butto` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:640` · **largura-fixa** · `mar melhoria" style="width:330px;border-radius:18px;border:3px solid #ffc94a;background:#241b14` → usar max-width:100% / min(330px,100%) ou % (a tela mais estreita é 288 px)
-- `js/screens.js:671` · **nowrap-sem-reticencias** · `px;font-weight:900;white-space:nowrap">${SVG_LOCK(14,'#ffc94a')}${esc2(r.lockText)}</span>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:681` · **nowrap-sem-reticencias** · `x;font-size:15px;white-space:nowrap">Ir à Loja</button></div>':''}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:744` · **letra-pequena** · `<span style="font-size:10px;font-weight:900;color:${RC[i]};opacity:.75">${RN(i)}</span><spa` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:755` · **letra-pequena** · `pan><span style="font-size:9px;font-weight:900">FALTAM</span></div>` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:783` · **nowrap-sem-reticencias** · `;font-weight:900;white-space:nowrap">${brinde} de brinde</span>':''}</button>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:793` · **nowrap-sem-reticencias** · `:11}px;font-weight:900;white-space:nowrap;box-shadow:0 0 10px ${c};z-index:2">${tag}</span>':''` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:802` · **letra-pequena** · `<span style="font-size:9px;font-weight:900;color:${c}">${k.dism?'Desmontado':RN(k.r)}</sp` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:810` · **nowrap-sem-reticencias** · `px;font-weight:800;white-space:nowrap"></div><div id="xs_btn" style="position:relative"></div><` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:901` · **letra-pequena** · `1a;color:#c9b9a2;font-size:10px;font-weight:900;line-height:1.05;text-align:center;display:flex` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:918` · **nowrap-sem-reticencias** · `<span style="white-space:nowrap">':''}${XH.featDay?'Termina em':'Troca em'}${nw?'</span>':''} <` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:918` · **nowrap-sem-reticencias** · `e:${nw?'16px;white-space:nowrap':'18px'}">${midnightLeft()}</span></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:944` · **nowrap-sem-reticencias** · `nt-size:15px;white-space:nowrap">${esc2(xBuyPrice(mCard.id))}</button>'}</div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:949` · **nowrap-sem-reticencias** · `:0 3px 0 #8a4f0c;white-space:nowrap">${esc2(xBuyPrice(p.id))}</span></button>'; }).join('')` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/screens.js:973` · **letra-pequena** · `center;gap:0 3px;font-size:10px;font-weight:800;line-height:1.1;color:#c9b9a2;text-align:center` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/screens.js:974` · **nowrap-sem-reticencias** · `line-height:1.15;white-space:nowrap">${t}</span>').join('')}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:503` · **letra-pequena** · `22)}<span style="font-size:9px;font-weight:900;line-height:1.05">Nível ${Sys.stats.DATA.wing.mi` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:504` · **nowrap-sem-reticencias** · ` #000,0 0 4px #000;white-space:nowrap">Asa</span></div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:504` · **letra-pequena** · `relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#e8dccb;text-shadow:0 ` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:511` · **letra-pequena** · `gba(0,0,0,.72);font-size:10px;font-weight:900;color:${it?'#fff':'#c9b9a2'};line-height:16px">${` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:514` · **nowrap-sem-reticencias** · ` #000,0 0 4px #000;white-space:nowrap">${nm}</span></div>'; }).join(''); /* rótulo do espaço:` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:514` · **letra-pequena** · `relative;z-index:2;font-size:10px;line-height:11px;font-weight:900;color:#f6ecdf;text-shadow:0 ` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:524` · **nowrap-sem-reticencias** · `:800;color:#c9b9a2;white-space:nowrap">${GL[k]}</span><span class="lil" id="xg_s_${k}" style="f` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:524` · **nowrap-sem-reticencias** · `Px(vL,sIn,14,8)}px;white-space:nowrap">${v0}</span></div></div>'; }).join('');` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:535` · **letra-pequena** · `:rgba(0,0,0,.72);font-size:9px;font-weight:900;color:${c};line-height:15px">Nv.${it.lvl}</span>` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:538` · **nowrap-sem-reticencias** · `op:-6px;right:-4px;white-space:nowrap;line-height:1.1;padding:2px 5px;border-radius:7px;backgro` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:538` · **letra-pequena** · `#16110d;color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;pointer-events:none">NOVO` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:559` · **largura-fixa** · `;left:50%;bottom:0;width:390px;height:292px;margin-left:-195px;pointer-events:none':X390(292)}"` → usar max-width:100% / min(390px,100%) ou % (a tela mais estreita é 288 px)
+- `js/screens.js:564` · **nowrap-sem-reticencias** · `gba(95,208,104,.6);white-space:nowrap">FC +${fcTxt(gain)}</span></div>':''}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:570` · **nowrap-sem-reticencias** · `cing:${fcLs}px;white-space:nowrap">${fcLbl}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:571` · **nowrap-sem-reticencias** · `origin:0 50%;white-space:nowrap">${gFmt('fc',shown.fc)}</span></div></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:576` · **nowrap-sem-reticencias** · `olor:#c9b9a2;white-space:nowrap">Coleção de skins +${p1(SD.collection)}</span></span>${lookOn&&` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:583` · **letra-pequena** · `yle="flex:none;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap">Mochila ${S.inv` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:583` · **letra-pequena** · `;color:#ffc94a;font-size:9.5px;font-weight:900;white-space:nowrap">${SVG_LOCK(10,'#ffc94a')}${e` → subir para 11–12 px (hoje 9.5 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:583` · **letra-pequena** · `:1;min-width:0;font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:583` · **alvo-pequeno** · `center;gap:3px;height:18px;padding:0 6px;border-radius:9px;border:1px solid #8a7458;background:` → alvo de toque ≥ 40×40 px (hoje altura 18 px): aumentar altura ou padding invisível
+- `js/screens.js:585` · **alvo-pequeno** · `:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></s` → alvo de toque ≥ 40×40 px (hoje altura 10 px): aumentar altura ou padding invisível
+- `js/screens.js:586` · **alvo-pequeno** · `:-4px;width:10px;height:10px;border-radius:50%;background:#ff4d3d;border:2px solid #16110d"></s` → alvo de toque ≥ 40×40 px (hoje altura 10 px): aumentar altura ou padding invisível
+- `js/screens.js:587` · **nowrap-sem-reticencias** · `ap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:595` · **nowrap-sem-reticencias** · `;font-weight:900;white-space:nowrap">${SVG_LOCK(12,'#ffc94a')}${esc2(autoLock)}</span>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:596` · **nowrap-sem-reticencias** · `8a':'#c9b9a2'};white-space:nowrap">${autoOn?autoOn+(autoOn===1?' ligado':' ligados'):'desligado` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:601` · **alvo-pequeno** · `le="min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:#2a1403;color:#ffe07` → alvo de toque ≥ 40×40 px (hoje altura 24 px): aumentar altura ou padding invisível
+- `js/screens.js:620` · **nowrap-sem-reticencias** · `${lbW}px;flex:none;white-space:nowrap">${GL[k]}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:621` · **nowrap-sem-reticencias** · `-weight:900;flex:1;white-space:nowrap"><span id="xg_d_${k}">${gFmt(k,shown[k])}</span> <span st` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:622` · **nowrap-sem-reticencias** · `;font-size:${f2}px;white-space:nowrap;color:${up?'#5fd068':dn?'#ff5a4e':'#c9b9a2'}">${up?SVG_UP` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:626` · **nowrap-sem-reticencias** · `weight:800;color:${lc};white-space:nowrap">${lb}</span><span class="lil" style="font-size:${xFi` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:626` · **nowrap-sem-reticencias** · `11-6,fcCol?14:15,8)}px;white-space:nowrap${vc?';color:'+vc:''}">${val}</span></div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:629` · **letra-pequena** · `<span style="font-size:9px;font-weight:900;color:${tagC};letter-spacing:1px">${tag}</span` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:631` · **nowrap-sem-reticencias** · `b;line-height:1.15;white-space:nowrap">${t}</span>').join(''):''}</div>'; };` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:631` · **letra-pequena** · `p(t=>'<span style="font-size:10px;font-weight:800;color:#e8dccb;line-height:1.15;white-space:no` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:659` · **nowrap-sem-reticencias** · `px;font-weight:900;white-space:nowrap">` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:659` · **alvo-pequeno** · `ta-x="equp" style="height:36px;border-radius:12px;border:2px solid ${plan.ok||S.gems>=plan.gems` → alvo de toque ≥ 40×40 px (hoje altura 36 px): aumentar altura ou padding invisível
+- `js/screens.js:670` · **letra-pequena** · `<span style="font-size:10px;font-weight:800;color:#c9b9a2">Devolve 50% do ouro investido</s` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:671` · **letra-pequena** · `:Nunito,sans-serif;font-size:10px;font-weight:800;color:#b8f0bd">toque para tirar</span></butto` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:680` · **largura-fixa** · `mar melhoria" style="width:330px;border-radius:18px;border:3px solid #ffc94a;background:#241b14` → usar max-width:100% / min(330px,100%) ou % (a tela mais estreita é 288 px)
+- `js/screens.js:711` · **nowrap-sem-reticencias** · `px;font-weight:900;white-space:nowrap">${SVG_LOCK(14,'#ffc94a')}${esc2(r.lockText)}</span>'` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:721` · **nowrap-sem-reticencias** · `x;font-size:15px;white-space:nowrap">Ir à Loja</button></div>':''}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:784` · **letra-pequena** · `<span style="font-size:10px;font-weight:900;color:${RC[i]};opacity:.75">${RN(i)}</span><spa` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:795` · **letra-pequena** · `pan><span style="font-size:9px;font-weight:900">FALTAM</span></div>` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:823` · **nowrap-sem-reticencias** · `;font-weight:900;white-space:nowrap">${brinde} de brinde</span>':''}</button>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:833` · **nowrap-sem-reticencias** · `:11}px;font-weight:900;white-space:nowrap;box-shadow:0 0 10px ${c};z-index:2">${tag}</span>':''` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:842` · **letra-pequena** · `<span style="font-size:9px;font-weight:900;color:${c}">${k.dism?'Desmontado':RN(k.r)}</sp` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:850` · **nowrap-sem-reticencias** · `px;font-weight:800;white-space:nowrap"></div><div id="xs_btn" style="position:relative"></div><` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:941` · **letra-pequena** · `1a;color:#c9b9a2;font-size:10px;font-weight:900;line-height:1.05;text-align:center;display:flex` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:958` · **nowrap-sem-reticencias** · `<span style="white-space:nowrap">':''}${XH.featDay?'Termina em':'Troca em'}${nw?'</span>':''} <` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:958` · **nowrap-sem-reticencias** · `e:${nw?'16px;white-space:nowrap':'18px'}">${midnightLeft()}</span></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:984` · **nowrap-sem-reticencias** · `nt-size:15px;white-space:nowrap">${esc2(xBuyPrice(mCard.id))}</button>'}</div>';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:989` · **nowrap-sem-reticencias** · `:0 3px 0 #8a4f0c;white-space:nowrap">${esc2(xBuyPrice(p.id))}</span></button>'; }).join('')` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/screens.js:1013` · **letra-pequena** · `center;gap:0 3px;font-size:10px;font-weight:800;line-height:1.1;color:#c9b9a2;text-align:center` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/screens.js:1014` · **nowrap-sem-reticencias** · `line-height:1.15;white-space:nowrap">${t}</span>').join('')}</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - … mais 5 neste arquivo
 
 ### js/screens2.js (39)
@@ -200,6 +201,31 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 - `js/screens2.js:703` · **nowrap-sem-reticencias** · `xt-shadow:0 2px 0 #000;white-space:nowrap">${ERAS[e].n} ${e+1}-${inEra}</span><span style="font` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - `js/screens2.js:703` · **nowrap-sem-reticencias** · `ight:900;color:#ffb3a8;white-space:nowrap;text-shadow:0 1px 2px #000">${lord?'SENHOR DA ERA':'C` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 
+### js/p_arena.js (22)
+
+- `js/p_arena.js:45` · **nowrap-sem-reticencias** · `e:10px;font-weight:900;white-space:nowrap"><svg width="10" height="10" viewBox="0 0 24 24" fill` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:45` · **letra-pequena** · ` #6b5843;color:#c9b9a2;font-size:10px;font-weight:900;white-space:nowrap"><svg width="10" heigh` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:75` · **letra-pequena** · `ht:1.1"><span style="font-size:10px;font-weight:800;color:${L.c3}">Fecha em</span><span id="pa_` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:85` · **letra-pequena** · `/span><span style="font-size:10px;color:#c9b9a2;font-family:inherit;font-weight:800">pts</span>` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:86` · **letra-pequena** · `right:8px;top:-7px;font-size:9px;font-weight:900;color:#2a1403;background:#ffc94a;border-radius` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:88` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Cópias d` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:93` · **letra-pequena** · `ont-family:inherit;font-size:10px;font-weight:900;color:#2a1403;background:#ffc94a;border-radiu` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:98` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Fragment` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:109` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">${r.bots` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:246` · **nowrap-sem-reticencias** · `ze:13px;line-height:1.15;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:249` · **nowrap-sem-reticencias** · `weight:800;color:#ffd25e;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:249` · **letra-pequena** · `.pv-pf{font-size:10px;font-weight:800;color:#ffd25e;white-space:nowrap}` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:256` · **letra-pequena** · `0;right:0;top:0;bottom:0;font-size:8px;font-weight:900;display:grid;place-items:center;text-sha` → subir para 11–12 px (hoje 8 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:263` · **letra-pequena** · `.pv-tm{font-size:10px;font-weight:900;color:#9aa6d6;font-variant-numeric:tabu` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:264` · **nowrap-sem-reticencias** · `0,255,.28);color:#9aa6d6;white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:264` · **letra-pequena** · `anslateX(-50%);z-index:5;font-size:10px;font-weight:900;padding:3px 10px;border-radius:10px;bac` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:275` · **nowrap-sem-reticencias** · `text-transform:uppercase;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:275` · **letra-pequena** · `info small{display:block;font-size:9px;color:#9aa6d6;font-weight:900;letter-spacing:.8px;text-t` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:276` · **nowrap-sem-reticencias** · `ant-numeric:tabular-nums;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:295` · **letra-pequena** · `.pv-rwt{margin:12px 0 0;font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppe` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+- `js/p_arena.js:299` · **nowrap-sem-reticencias** · `eight:400;font-size:18px;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_arena.js:300` · **letra-pequena** · `.pv-rw small{font-size:10px;color:#9aa6d6;font-weight:800}` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
+
 ### js/p_forge.js (22)
 
 - `js/p_forge.js:155` · **nowrap-sem-reticencias** · `weight:900;padding:0;white-space:nowrap">${m[1]}</button>'; }).join('')` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
@@ -224,30 +250,6 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 - `js/p_forge.js:310` · **nowrap-sem-reticencias** · `e="color:#ffc94a;white-space:nowrap">${L} / ${ML}</span></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - `js/p_forge.js:319` · **nowrap-sem-reticencias** · `4e':'#f6ecdf'};white-space:nowrap">${COIN_I(22)}${blocked?'—':kf(cu.gold)}</span></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 - `js/p_forge.js:328` · **nowrap-sem-reticencias** · `00;color:#c9b9a2;white-space:nowrap">Pedras de Forja</span></div></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-
-### js/p_arena.js (21)
-
-- `js/p_arena.js:43` · **nowrap-sem-reticencias** · `e:10px;font-weight:900;white-space:nowrap"><svg width="10" height="10" viewBox="0 0 24 24" fill` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:43` · **letra-pequena** · ` #6b5843;color:#c9b9a2;font-size:10px;font-weight:900;white-space:nowrap"><svg width="10" heigh` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:72` · **letra-pequena** · `ht:1.1"><span style="font-size:10px;font-weight:800;color:${L.c3}">Fecha em</span><span id="pa_` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:82` · **letra-pequena** · `/span><span style="font-size:10px;color:#c9b9a2;font-family:inherit;font-weight:800">pts</span>` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:83` · **letra-pequena** · `right:8px;top:-7px;font-size:9px;font-weight:900;color:#2a1403;background:#ffc94a;border-radius` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:85` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Cópias d` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:90` · **letra-pequena** · `ont-family:inherit;font-size:10px;font-weight:900;color:#2a1403;background:#ffc94a;border-radiu` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:95` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Fragment` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:105` · **letra-pequena** · `pan style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Prévia c` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:201` · **nowrap-sem-reticencias** · `weight:800;color:#ffd25e;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:201` · **letra-pequena** · `.pv-pf{font-size:10px;font-weight:800;color:#ffd25e;white-space:nowrap}` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:208` · **letra-pequena** · `0;right:0;top:0;bottom:0;font-size:8px;font-weight:900;display:grid;place-items:center;text-sha` → subir para 11–12 px (hoje 8 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:215` · **letra-pequena** · `.pv-tm{font-size:10px;font-weight:900;color:#9aa6d6;font-variant-numeric:tabu` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:216` · **nowrap-sem-reticencias** · `0,255,.28);color:#9aa6d6;white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:216` · **letra-pequena** · `anslateX(-50%);z-index:5;font-size:10px;font-weight:900;padding:3px 10px;border-radius:10px;bac` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:227` · **nowrap-sem-reticencias** · `text-transform:uppercase;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:227` · **letra-pequena** · `info small{display:block;font-size:9px;color:#9aa6d6;font-weight:900;letter-spacing:.8px;text-t` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:228` · **nowrap-sem-reticencias** · `ant-numeric:tabular-nums;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:246` · **letra-pequena** · `.pv-rwt{margin:12px 0 0;font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppe` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
-- `js/p_arena.js:250` · **nowrap-sem-reticencias** · `eight:400;font-size:18px;white-space:nowrap}` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_arena.js:251` · **letra-pequena** · `.pv-rw small{font-size:10px;color:#9aa6d6;font-weight:800}` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
 
 ### js/p_events.js (21)
 
@@ -340,16 +342,16 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 
 ### js/p_offer.js (10)
 
-- `js/p_offer.js:190` · **largura-fixa** · `="left:50%;top:50%;width:360px;height:360px;margin:-200px 0 0 -110px"></div>` → usar max-width:100% / min(360px,100%) ou % (a tela mais estreita é 288 px)
-- `js/p_offer.js:203` · **nowrap-sem-reticencias** · `;color:#ffe07a;white-space:nowrap;line-height:12px">${W.stars}<svg width="9" height="9" viewBox` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:203` · **letra-pequena** · `?'<span style="font-size:9.5px;font-weight:900;color:#ffe07a;white-space:nowrap;line-height:12p` → subir para 11–12 px (hoje 9.5 px) ou usar clamp(11px,3vw,13px)
-- `js/p_offer.js:211` · **nowrap-sem-reticencias** · `e:11px;font-weight:900;white-space:nowrap">${esc2(txt)}</span>':'';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:216` · **nowrap-sem-reticencias** · `:18px;color:#fff;white-space:nowrap">${esc2(big)}</b><span style="font-size:11px;font-weight:90` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:231` · **nowrap-sem-reticencias** · `olor:#d9b3ff;white-space:nowrap">Montaria</span></div></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:231` · **letra-pequena** · `<span style="font-size:10.5px;font-weight:900;color:#d9b3ff;white-space:nowrap">Montaria</span>` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
-- `js/p_offer.js:242` · **nowrap-sem-reticencias** · `px;line-height:1;white-space:nowrap">${price}</span>':''}</div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:253` · **nowrap-sem-reticencias** · `line-height:20px;white-space:nowrap">PRIMEIRA COMPRA · SÓ UMA VEZ</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
-- `js/p_offer.js:254` · **nowrap-sem-reticencias** · `;line-height:1.1;white-space:nowrap;filter:drop-shadow(0 2px 0 #2a1403)">Oferta do Guardião</sp` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:191` · **largura-fixa** · `="left:50%;top:50%;width:360px;height:360px;margin:-200px 0 0 -110px"></div>` → usar max-width:100% / min(360px,100%) ou % (a tela mais estreita é 288 px)
+- `js/p_offer.js:204` · **nowrap-sem-reticencias** · `;color:#ffe07a;white-space:nowrap;line-height:12px">${W.stars}<svg width="9" height="9" viewBox` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:204` · **letra-pequena** · `?'<span style="font-size:9.5px;font-weight:900;color:#ffe07a;white-space:nowrap;line-height:12p` → subir para 11–12 px (hoje 9.5 px) ou usar clamp(11px,3vw,13px)
+- `js/p_offer.js:212` · **nowrap-sem-reticencias** · `e:11px;font-weight:900;white-space:nowrap">${esc2(txt)}</span>':'';` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:217` · **nowrap-sem-reticencias** · `:18px;color:#fff;white-space:nowrap">${esc2(big)}</b><span style="font-size:11px;font-weight:90` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:232` · **nowrap-sem-reticencias** · `olor:#d9b3ff;white-space:nowrap">Montaria</span></div></div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:232` · **letra-pequena** · `<span style="font-size:10.5px;font-weight:900;color:#d9b3ff;white-space:nowrap">Montaria</span>` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/p_offer.js:243` · **nowrap-sem-reticencias** · `px;line-height:1;white-space:nowrap">${price}</span>':''}</div>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:254` · **nowrap-sem-reticencias** · `line-height:20px;white-space:nowrap">PRIMEIRA COMPRA · SÓ UMA VEZ</span>` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_offer.js:255` · **nowrap-sem-reticencias** · `;line-height:1.1;white-space:nowrap;filter:drop-shadow(0 2px 0 #2a1403)">Oferta do Guardião</sp` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 
 ### js/p_tourney.js (9)
 
@@ -420,6 +422,14 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 - `index.html:250` · **letra-pequena** · `round:#ff4d3d;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify` → subir para 11–12 px (hoje 10 px) ou usar clamp(11px,3vw,13px)
 - `index.html:563` · **nowrap-sem-reticencias** · `system-ui,sans-serif;white-space:nowrap";` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 
+### js/diff.js (5)
+
+- `js/diff.js:107` · **letra-pequena** · `gba(255,236,200,.18);font-size:10.5px;line-height:14px;font-weight:900;white-space:nowrap;overf` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/diff.js:107` · **letra-pequena** · `tyle="max-width:100%;font-size:9px;line-height:11px;font-weight:800;color:#c9b9a2;text-shadow:0` → subir para 11–12 px (hoje 9 px) ou usar clamp(11px,3vw,13px)
+- `js/diff.js:140` · **letra-pequena** · `{L ? '<span style="font-size:10.5px;line-height:1.15;font-weight:800;color:#ffb3a8;white-space:` → subir para 11–12 px (hoje 10.5 px) ou usar clamp(11px,3vw,13px)
+- `js/diff.js:142` · **nowrap-sem-reticencias** · `ify-content:center;white-space:nowrap;box-sizing:border-box">${L ? 'Nv ' + L : diffEsc(a.route.` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/diff.js:156` · **nowrap-sem-reticencias** · `f;font-size:17px;white-space:nowrap">Desafiar assim mesmo</button></div></div></div>'; }` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+
 ### js/p_realm.js (5)
 
 - `js/p_realm.js:50` · **nowrap-sem-reticencias** · `e:10px;font-weight:900;white-space:nowrap">${b[0]}</span>').join('')` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
@@ -480,7 +490,7 @@ Gerado por `node test/resp/estatico.mjs` em 2026-11-13T13:58:55.961Z. Heurístic
 
 ### js/p_era.js (1)
 
-- `js/p_era.js:112` · **nowrap-sem-reticencias** · `ed(0)}px;color:#ffc94a;white-space:nowrap">ERA ${t+1} · ${peEsc(et?et.n.toUpperCase():'')}</spa` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
+- `js/p_era.js:115` · **nowrap-sem-reticencias** · `ed(0)}px;color:#ffc94a;white-space:nowrap">ERA ${t+1} · ${peEsc(et?et.n.toUpperCase():'')}</spa` → juntar overflow:hidden;text-overflow:ellipsis;min-width:0 (ou permitir quebra: white-space:normal)
 
 ### js/p_mail.js (1)
 
