@@ -28,7 +28,7 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   const cv = G.mkCanvas(false); cv.__tap = true; const cx = cv.getContext('2d'); let sign = 1; const stack = [];
   cx.save = () => { stack.push(sign); }; cx.restore = () => { if (stack.length) sign = stack.pop(); }; cx.scale = (a) => { if (a < 0) sign = -sign; }; cx.setTransform = (a) => { sign = a < 0 ? -1 : 1; };
   X.__pvCv = cv; ev('XA2.cv=__pvCv; 1');
-  const drawList = () => { const L = []; sign = 1; stack.length = 0; G.setDrawTap(s => L.push({ s, m: sign < 0 })); try { G.inCtx(() => ev('paPvDraw')()); } catch (e) { errs.push('paPvDraw: ' + errStr(e)); } G.setDrawTap(null); return L; };
+  const drawList = () => { const L = []; sign = 1; stack.length = 0; try { ev('if(XA2.pv&&XA2.pv.off&&XA2.pv.off.__srcs) XA2.pv.off.__srcs.clear(); 1'); } catch (e) {}   /* o canvas de quem perdeu não acumula folhas de quadros antigos */ G.setDrawTap(s => L.push({ s, m: sign < 0 })); try { G.inCtx(() => ev('paPvDraw')()); } catch (e) { errs.push('paPvDraw: ' + errStr(e)); } G.setDrawTap(null); return L; };
   const step = dt => { try { G.inCtx(() => ev('paPvStep(' + dt + ')')); } catch (e) { const s = 'paPvStep: ' + errStr(e); if (!errs.includes(s)) errs.push(s); } };
   const click = (x, extra) => { try { return G.inCtx(() => ev('paClick({dataset:' + JSON.stringify(Object.assign({ x }, extra || {})) + '})')); } catch (e) { errs.push('paClick ' + x + ': ' + errStr(e)); } };
   const w288 = () => ev("paPvNameFit(['Kael · Nv 50','Odin das Eras'],288).two===true&&paPvNameFit(['Kael · Nv 50','Odin das Eras'],360).two===false");
@@ -81,7 +81,7 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   check('minha aparência = a do jogo (montaria, asa, pet, arma do item equipado)', looks.myMount === mt.id && looks.myWing === 'angel' && looks.myPet === pet.base && looks.myW === looks.lkW, JSON.stringify(looks));
   check('adversário aparece como o opp.look do módulo diz (montaria e estrelas, pet e estágio, asa, aura, herói) e a arma é a skin que o módulo deu', looks.hasLook && looks.asLook && looks.oppW === looks.oppSkinW, JSON.stringify(looks));
   check('robô de nível ' + looks.lv + ' (jogador 60): o look do módulo traz montaria, pet e asa (pré-condição dos testes de desenho)', looks.lv >= 58 && looks.oppMountOk && !!looks.oppPet && !!looks.oppWing, JSON.stringify(looks));
-  check('placar e VS mostram o nível do adversário', html().indexOf(ev('XA2.pv.opp.name') + ' · Nv ' + looks.lv) >= 0 || (() => { ev('XA2.pv.phase="run"; render(); XA2.pv.phase="vs"; 1'); const h = html(); ev('render(); 1'); return h.indexOf(' · Nv ' + looks.lv + '<') >= 0; })());
+  check('placar e VS mostram o nível do adversário', html().indexOf(ev('XA2.pv.opp.name') + ' ·\u00a0Nv\u00a0' + looks.lv) >= 0 || (() => { ev('XA2.pv.phase="run"; render(); XA2.pv.phase="vs"; 1'); const h = html(); ev('render(); 1'); return h.indexOf(' ·\u00a0Nv\u00a0' + looks.lv + '<') >= 0; })());
   check('aparência do adversário é fixa para o mesmo adversário', looks.det);
 
   /* ---------- VS → luta (espera as folhas) ---------- */
@@ -220,8 +220,8 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
   /* ---------- placar e VS em tela estreita (visto pelo QA a 288): nomes inteiros, FC numa linha, retratos alinhados ---------- */
   ev("XA2.view='fight'; paPvStart(Object.assign({},__again.opp,{name:'Odin das Eras'}),__again.r,__again.fc,__again.max[0],__again.max[1]); 1");
   check('placar: o nome não usa reticências nem corte (CSS)', ev("!/\\.pv-pn\\{[^}]*(ellipsis|overflow:hidden)/.test(PV_CSS)&&/\\.pv-pf\\{[^}]*white-space:nowrap/.test(PV_CSS)"));
-  for (const w of [288, 320, 360, 384, 412]) { const q = ev('(function(){ const pv=XA2.pv; pv.phase="run"; const h=paPvHTML({Wb:' + w + ',H:640}), nm=[...h.matchAll(/<div class="pv-pn( w2)?" style="font-size:([0-9.]+)px"><span>([^<]*)<\\/span>/g)].map(m=>({two:!!m[1],fs:+m[2],t:m[3],em:xTxtEm(m[3])})), fc=[...h.matchAll(/<div class="pv-pf" style="font-size:([0-9.]+)px">([^<]*)</g)].map(m=>({fs:+m[1],t:m[2],em:xTxtEm(m[2])})), av=paPvNameFit(["a","b"],' + w + ').avail; pv.phase="vs"; const v=paPvHTML({Wb:' + w + ',H:640}); return {nm,fc,av,vs:v}; })()');
-    const okN = q.nm.length === 2 && q.nm[0].two === q.nm[1].two && q.nm[0].fs === q.nm[1].fs && q.nm.every(x => x.fs >= 9 && x.em * x.fs <= q.av * (x.two ? 1.7 : 1) + 0.5) && q.nm[1].t.indexOf('Odin das Eras') === 0;
+  for (const w of [288, 320, 360, 384, 412]) { const q = ev('(function(){ const pv=XA2.pv; pv.phase="run"; const h=paPvHTML({Wb:' + w + ',H:640}), nm=[...h.matchAll(/<div class="pv-pn( w2)?" style="font-size:([0-9.]+)px"><span>([^<]*)<\\/span>/g)].map(m=>({two:!!m[1],fs:+m[2],t:m[3],em:paPvEm(m[3]),nb:/ ·\u00a0Nv\u00a0[0-9]+$/.test(m[3])})), fc=[...h.matchAll(/<div class="pv-pf" style="font-size:([0-9.]+)px">([^<]*)</g)].map(m=>({fs:+m[1],t:m[2],em:xTxtEm(m[2])})), av=paPvNameFit(["a","b"],' + w + ').avail; pv.phase="vs"; const v=paPvHTML({Wb:' + w + ',H:640}); return {nm,fc,av,vs:v}; })()');
+    const okN = q.nm.length === 2 && q.nm[0].two === q.nm[1].two && q.nm[0].fs === q.nm[1].fs && q.nm.every(x => x.fs >= 9 && x.em * x.fs <= q.av * (x.two ? 1.7 : 1) + 0.5) && q.nm[1].t.indexOf('Odin das Eras') === 0 && q.nm.every(x => x.nb);
     check(w + ': nomes do placar inteiros (uma linha, ou os DOIS lados em duas linhas da mesma altura), fonte >= 9', okN, JSON.stringify({ nm: q.nm, av: q.av }));
     check(w + ': FC do placar numa linha só e cabendo (fonte >= 7, igual dos dois lados)', q.fc.length === 2 && q.fc[0].fs === q.fc[1].fs && q.fc.every(x => x.fs >= 7 && x.em * x.fs <= q.av + 0.5), JSON.stringify(q.fc));
     const row = (q.vs.match(/<div class="pv-vsrow">([\s\S]*?)<\/div><div style="font-weight:900/) || ['', ''])[1], kids = (row.match(/<div class="pv-(vsc[^"]*|bigvs)"/g) || []).map(x => x.replace(/<div class="pv-/, '').replace(/"$/, ''));
@@ -241,6 +241,77 @@ const RE = { pet: /anim\/pets\//, mount: /anim\/mounts\//, wing: /equip\/wing_/,
     check(tag + 'herói montado cabe abaixo do placar (topo da montaria abaixo de 60 px)', q.top > 60, 'topo ' + q.top);
     check(tag + 'HTML sem rolagem horizontal declarada e sem undefined/NaN', !q.bad && !q.nan, q.bad); }
   ev('paPvFree(); XA2.view="lobby"; 1');
+
+  /* ---------- FIM DA LUTA (dono: "quando acaba a partida da arena, a batalha ainda continua") ---------- */
+  { /* rAF de mentira: fila de quadros pedidos; pump() roda os pendentes como o navegador faria */
+    const pend = new Map(); let rid = 0, tnow = 1000, maxPend = 0; const raf0 = X.requestAnimationFrame, caf0 = X.cancelAnimationFrame;
+    X.requestAnimationFrame = fn => { const id = ++rid; pend.set(id, fn); maxPend = Math.max(maxPend, pend.size); return id; }; X.cancelAnimationFrame = id => { pend.delete(id); };
+    const pump = n => { for (let i = 0; i < n; i++) { const L = [...pend.values()]; pend.clear(); tnow += 16; for (const fn of L) { try { G.inCtx(() => fn(tnow)); } catch (e) { errs.push('rAF: ' + errStr(e)); } } } };
+    const fresh = ph => { ev("XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); " + (ph ? "XA2.pv.phase='" + ph + "'; " : '') + "render(); 1"); };
+    const snap = () => ev("(function(){ const pv=XA2.pv; return JSON.stringify({hp:pv.hp,en:pv.en,dmg:pv.dmg,crits:pv.crits,used:pv.used.length,i:pv.i,fx:pv.FX.length,ult:!!pv.ULT,at:pv.F.map(F=>F.at+':'+F.petT+':'+F.shake),phase:pv.phase,view:XA2.view,gold:S.gold,gems:S.gems,lp:Sys.arena.ensure(S,Sys.host).lp,left:Sys.arena.ensure(S,Sys.host).attemptsLeft,feed:pv.feed.length,html:String(V_TEST.innerHTML).length}); })()");
+    ev('window.__bp=B.paused; B.paused=true; 1');   /* a batalha das fases parada aqui: este bloco mede só a luta da Arena */
+    fresh('run'); pump(40); check('luta rodando: um único quadro agendado por vez', pend.size === 1 && maxPend <= 1, 'pendentes ' + pend.size + ', máximo ' + maxPend);
+    click('pvspd', { v: '4' }); pump(60); const midUsed = ev('XA2.pv.used.length'); click('skip'); const s0 = snap(); pump(625);   /* 10 s de relógio depois do fim */
+    const s1 = snap(), Lr = drawList();
+    check('depois do fim (Pular com ' + midUsed + ' golpes vistos): 10 s de relógio não mudam vida, energia, dano, críticos, registro, prêmio, saldo, pontos nem a tela', s0 === s1, s0 + ' /// ' + s1);
+    check('depois do fim: nenhum golpe em andamento, faixa de ultimate, número ou tremor por trás do resultado; só o parado', !Lr.some(o => /_attack_body|_atk1\.|anim\/ult\//.test(o.s)) && ev("XA2.pv.FX.length===0&&!XA2.pv.ULT&&XA2.pv.F.every(F=>F.at===-9&&F.petT===-9&&F.shake===0)") && Lr.some(o => /_idle/.test(o.s)), Lr.filter(o => /_attack_body|_atk1\.|anim\/ult\//.test(o.s)).map(o => o.s).join(' | '));
+    check('depois do fim: vida final = registro; a tela não é redesenhada por fora (busy) e o laço segue com um quadro só', ev("(function(){ const pv=XA2.pv; let h0=pv.max[0], h1=pv.max[1]; for(const e of pv.log){ if(e.s===0) h1=e.hp; else h0=e.hp; } return Math.abs(h0-pv.hp[0])<1e-6&&Math.abs(h1-pv.hp[1])<1e-6&&Panels.defs.arena.busy()===true; })()") && pend.size === 1 && maxPend <= 1);
+    /* fim natural (sem Pular): mesmo congelamento */
+    fresh('run'); click('pvspd', { v: '4' }); for (let i = 0; i < 4000 && ev("XA2.pv.phase!=='result'"); i++) pump(1); const n0 = snap(); pump(625); check('fim natural da luta: 10 s depois nada mudou', ev("XA2.pv.phase==='result'") && n0 === snap(), n0);
+    click('pvspd', { v: '1' });
+    /* O CASO DO DONO: Pular logo depois de a ultimate começar (o golpe do herói e o bote do pet estão AGENDADOS para depois) em x1, x2 e x4 */
+    for (const sp of [1, 2, 4]) { fresh('run'); click('pvspd', { v: String(sp) }); let g2 = 0; while (ev("!XA2.pv.ULT&&XA2.pv.phase==='run'") && g2++ < 20000) pump(1);
+      const pre = ev("(function(){ const pv=XA2.pv, U=pv.ULT; return U?{side:U.side, hero:+(pv.F[U.side].at-pv.clock).toFixed(2), pet:+(pv.F[U.side].petT-pv.clock).toFixed(2), hasPet:!!pv.F[U.side].look.pet}:null; })()");
+      check('x' + sp + ': a ultimate agenda o golpe do herói para depois (o caso que deixava golpe vivo atrás do resultado)', !!pre && pre.hero > 0.3, JSON.stringify(pre));
+      click('skip'); const z0 = snap(); let atk = 0, pet = 0, ult = 0, num = 0; for (let k = 0; k < 190; k++) { pump(1); const Lk = drawList(); if (Lk.some(o => /_attack_body|\/[a-z]+_attack_/.test(o.s))) atk++; if (Lk.some(o => /_atk1\./.test(o.s))) pet++; if (Lk.some(o => RE.ult.test(o.s))) ult++; num += ev('XA2.pv.FX.length'); }
+      check('x' + sp + ': Pular durante a ultimate → nos 3 s seguintes NENHUM golpe, bote de pet, faixa ou número atrás do resultado', atk === 0 && pet === 0 && ult === 0 && num === 0, 'golpe ' + atk + ', pet ' + pet + ', faixa ' + ult + ', números ' + num);
+      check('x' + sp + ': depois de Pular na ultimate o placar não muda mais e é o do registro', z0 === snap() && near(ev('XA2.pv.hp[0]'), watched.hp[0]) && near(ev('XA2.pv.hp[1]'), watched.hp[1])); }
+    click('pvspd', { v: '1' });
+    /* fim natural em x2 e x4: nada depois do resultado */
+    for (const sp of [2, 4]) { fresh('run'); click('pvspd', { v: String(sp) }); for (let i = 0; i < 6000 && ev("XA2.pv.phase!=='result'"); i++) pump(1); const z0 = snap(); let bad = 0; for (let k = 0; k < 190; k++) { pump(1); const Lk = drawList(); if (Lk.some(o => /_attack_body|_atk1\.|anim\/ult\//.test(o.s)) || ev('XA2.pv.FX.length')) bad++; }
+      check('x' + sp + ': fim natural → resultado; 3 s depois nenhum golpe/pet/faixa/número e nada mudou', ev("XA2.pv.phase==='result'") && bad === 0 && z0 === snap(), 'quadros com animação de luta: ' + bad); }
+    click('pvspd', { v: '1' });
+    /* sair no meio: Voltar, fechar a tela, trocar de tela */
+    fresh('run'); pump(30); ev("XA2.pv.phase='result'; XA2.view='result'; render(); 1"); click('back'); check('Voltar: nenhum quadro pendente, luta encerrada', pend.size === 0 && ev('XA2.pv===null'), 'pendentes ' + pend.size); pump(5); check('Voltar: nada roda depois', pend.size === 0);
+    fresh('run'); pump(30); const oldPv = ev('window.__old=XA2.pv; XA2.pv.id'); ev('Panels.defs.arena.onClose(); 1'); check('fechar a tela no meio da luta: nenhum quadro pendente, luta encerrada', pend.size === 0 && ev('XA2.pv===null')); pump(5);
+    check('evento atrasado da luta fechada é ignorado (terminar / aplicar golpe da luta antiga não muda nada)', ev("(function(){ const v0=XA2.view; paPvFinish(__old); return XA2.pv===null&&XA2.view===v0&&__old.phase!=='result'; })()"));
+    fresh('run'); pump(30); ev("view='battle'; 1"); pump(3); check('trocar de tela no meio da luta: o laço percebe, encerra e não agenda mais', pend.size === 0 && ev('XA2.pv===null')); ev("view='arena'; 1");
+    /* Lutar de novo 3 vezes seguidas */
+    { ev("Sys.arena.ensure(S,Sys.host).attemptsLeft=3; XA2.view='lobby'; XA2.sel=0; render(); 1"); click('fight'); const ids = [ev('XA2.pv.id')]; let clean = true, one = true;
+      for (let k = 0; k < 3; k++) { pump(20); click('skip'); pump(10); ev('window.__old=XA2.pv; Sys.arena.ensure(S,Sys.host).attemptsLeft=3; 1'); click('again'); ids.push(ev('XA2.pv.id'));
+        if (!ev("XA2.pv!==__old&&XA2.pv.phase==='vs'&&XA2.pv.used.length===0&&XA2.pv.clock===0&&XA2.pv.FX.length===0&&!XA2.pv.ULT&&XA2.pv.hp[0]===XA2.pv.max[0]&&XA2.pv.hp[1]===XA2.pv.max[1]&&XA2.pv.dmg[0]===0&&XA2.pv.en[0]===0")) clean = false;
+        ev('paPvFinish(__old); 1'); if (!ev("XA2.pv.phase==='vs'&&XA2.view==='fight'")) clean = false; if (pend.size > 1) one = false; pump(5); if (pend.size !== 1) one = false; }
+      check('Lutar de novo 3 vezes seguidas: cada luta com id novo (' + ids.join(' < ') + '), começa limpa, e a anterior não interfere', clean && ids.every((v, i) => !i || v > ids[i - 1]) && ids[0] > oldPv);
+      check('Lutar de novo 3 vezes seguidas: nunca mais de um quadro agendado (nada pendente da luta anterior)', one && maxPend <= 1, 'máximo ' + maxPend); click('skip'); click('back'); check('ao sair: zero quadros pendentes', pend.size === 0); }
+    X.requestAnimationFrame = raf0; X.cancelAnimationFrame = caf0; ev('B.paused=__bp; 1'); }
+
+  /* ---------- BATALHA DAS FASES POR TRÁS: som, troca de tela e (com a chave do PO) farm parado ---------- */
+  { const fbs = fs.readFileSync(path.join(G.ROOT, 'js/fullbattle.js'), 'utf8');
+    check('o HUD da batalha fica escondido com tela cheia aberta (body.fb.full #fbhud{visibility:hidden}): o trio x1/x2/x4 dela não aparece nem recebe toque', /body\.fb\.full #fbhud\{visibility:hidden\}/.test(fbs));
+    ev("window.__ga=window.GameAudio; window.__sn=[]; window.GameAudio={sfx:function(n){ __sn.push(n); }}; window.__ss=S.set.sound; S.set.sound=true; XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); XA2.pv.phase='run'; render(); 1");
+    const q = ev("(function(){ snd('era0_s1'); snd('gem'); snd('crit'); const a=__sn.length; paSnd('hit'); const b=__sn.slice(); const r1=Screens.open('eggpick',{index:0,options:[]}), r2=Panels.open('era',{from:0,to:1,boss:'x',gems:40}); return {mutedBattle:a===0, own:b.join(','), r1, r2, view:view, pv:!!XA2.pv&&XA2.pv.phase, held:paPvHeld.map(h=>h[0]+':'+h[1]).join(',')}; })()");
+    check('com a luta aberta: sons da batalha das fases não tocam; os da própria luta tocam', q.mutedBattle && q.own === 'hit', JSON.stringify(q));
+    check('com a luta aberta: evento da batalha NÃO troca a tela (ovo de escolha, Troca de era): fica guardado', q.r1 === false && q.r2 === false && q.view === 'arena' && q.pv === 'run' && q.held === 'S:eggpick,P:era', JSON.stringify(q));
+    /* 60 s de batalha das fases por trás (chave do PO desligada = regra de hoje: o idle segue rendendo, como atrás de toda tela cheia) */
+    const run60 = () => ev("(function(){ const g0=S.gold, m0=S.gems, v0=view, p0=XA2.pv, ph=p0.phase, used=p0.used.length; let n=0, err=''; for(let i=0;i<600;i++){ if(!B.paused){ try{ step(0.1); if(typeof petStep==='function') petStep(0.1); n++; }catch(e){ err=String(e&&e.message||e); break; } } } return {gold:S.gold-g0, gems:S.gems-m0, sameView:view===v0&&view==='arena', samePv:XA2.pv===p0&&p0.phase===ph&&p0.used.length===used, steps:n, err, sounds:__sn.length}; })()");
+    ev('__sn.length=0; window.__bp2=B.paused; B.paused=false; 1'); const a60 = run60();
+    check('60 s de batalha por trás (farm ligado, regra de hoje): nenhuma tela trocada, a luta não é tocada, nenhum som da batalha (o saldo do farm subiu ' + a60.gold + ' moedas e ' + a60.gems + ' gemas: decisão do dono, o farm rende escondido)', a60.sameView && a60.samePv && !a60.err && a60.steps === 600 && a60.sounds === 0, JSON.stringify(a60));
+    { const Lb = (() => { try { G.inCtx(() => ev('draw')()); } catch (e) {} return drawList(); })(); check('nada da batalha das fases desenhado na cena da luta (só lutadores, pets, asas, armas, auras e ultimate)', Lb.length > 0 && Lb.every(o => /assets\/(anim\/(mounts|pets|hyb|skins|aura|ult|equip)\/|weapons\/)/.test(o.s)), Lb.filter(o => !/assets\/(anim\/(mounts|pets|hyb|skins|aura|ult|equip)\/|weapons\/)/.test(o.s)).map(o => o.s).join(' | ')); }
+    /* ao sair, o que ficou guardado reabre na ordem */
+    ev("window.__ro=[]; window.__so=Screens.open; window.__po=Panels.open; Screens.open=function(n){ __ro.push('S:'+n); return true; }; Panels.open=function(n){ __ro.push('P:'+n); return true; }; XA2.pv.phase='result'; XA2.view='result'; 1"); click('back');
+    check('ao sair da luta: as telas guardadas reabrem na ordem e os sons da batalha voltam', ev("__ro.join(',')") === 'S:eggpick,P:era' && ev('paPvHeld.length') === 0 && ev("(function(){ __sn.length=0; snd('gem'); return __sn.join(','); })()") === 'gem', ev("__ro.join(',')"));
+    ev('Screens.open=__so; Panels.open=__po; 1');
+    check('decisão do dono: a Arena NÃO pausa a batalha das fases (segue rendendo escondida)', ev('B.paused===false') && fs.readFileSync(path.join(G.ROOT, 'js/p_arena.js'), 'utf8').indexOf('B.paused=') < 0);
+    /* popup de FC e aviso da batalha (#fcnote tem z-index 80, acima do painel): com a luta aberta não aparecem; os que já estavam somem; ao sair não aparece atrasado */
+    { ev("XA2.view='lobby'; render(); 1"); const el = G.document.getElementById('fcnote'), tt = G.document.getElementById('toast'); let removed = 0; const cl0 = tt.classList; try { el.style.display = 'block'; } catch (e) {}
+      ev("window.__fc0=FCN.snap; FCN.armed=true; FCN.until=Date.now()+9999; FCN.base={x:1}; XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); XA2.pv.phase='run'; render(); 1");
+      const q2 = ev("(function(){ const fake={fc:1,atk:1,hp:1,def:0}; FCN.snap=fake; let called=0; const d0=Sys.fc.delta; Sys.fc.delta=function(){ called++; return d0.apply(this,arguments); }; fcNotice(); fcNotice(); Sys.fc.delta=d0; const during={called, snapKept:FCN.snap===fake, until:FCN.until, base:FCN.base}; XA2.pv.phase='result'; XA2.view='result'; paClick({dataset:{x:'back'}}); return {during, after:{snapNow:FCN.snap!==fake&&!!FCN.snap}}; })()");
+      check('popup de FC da batalha: com a luta aberta o fcNotice não roda (nada aparece por cima do resultado); o que estava na tela some ao abrir a luta', q2.during.called === 0 && q2.during.until === 0 && q2.during.base === null && el.style.display === 'none', JSON.stringify(q2));
+      check('popup de FC: ao sair da luta a referência vira a FC de agora (a diferença acumulada não aparece atrasada)', q2.after.snapNow === true); }
+    ev("B.paused=__bp2; window.GameAudio=__ga; S.set.sound=__ss; 1");
+    /* erro de desenho na Arena: fica na Arena com aviso (o index trocaria para a batalha e marcaria a tela como quebrada) */
+    const e0 = G.consoleErrs.length; const hard = ev("(function(){ const li=Sys.arena.leagueInfo; Sys.arena.leagueInfo=function(){ throw new Error('teste'); }; view='arena'; XA2.view='lobby'; XA2.tab=0; let threw=false; try{ scrArena(); }catch(e){ threw=true; } const h=String(V_TEST.innerHTML); Sys.arena.leagueInfo=li; render(); return {threw, msg:/Arena indisponível agora/.test(h)&&/data-x=\"back\"/.test(h), view, back:/role=\"tablist\"/.test(String(V_TEST.innerHTML))}; })()"); G.consoleErrs.length = e0;
+    check('erro de desenho na lista da Arena: não lança para o jogo (a tela não é trocada pela batalha), mostra aviso com botão e volta ao normal', !hard.threw && hard.msg && hard.view === 'arena' && hard.back, JSON.stringify(hard)); }
 
   /* ---------- ganchos de debug do QA: dbgPvpAt(i) e dbgPvpUlt(lado, t) ---------- */
   ev("XA2.view='fight'; paPvStart(__again.opp,__again.r,__again.fc,__again.max[0],__again.max[1]); XA2.pv.phase='run'; render(); 1");

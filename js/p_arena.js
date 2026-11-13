@@ -14,7 +14,7 @@
    Pedido ao engenheiro: incluir 'p_arena' na lista de scripts de js/screens.js:823 e abrir pelo menu (FB_UNLOCK.arena, nível 28).
    LUTA PvP NOVA (Tela 23 aprovada, protótipo docs/proto/ArenaPvP.html): bloco "LUTA PvP" no fim deste arquivo, atrás da chave window.PA_PVP2
    (desligada = a luta antiga abaixo, intacta). */
-const XA2={tab:0,view:'lobby',sel:0,fight:null,res:null,step:0,speed:1,timer:0,sec:-1,pv:null,pvSpeed:1,cv:null};
+const XA2={tab:0,view:'lobby',sel:0,fight:null,res:null,step:0,speed:1,timer:0,sec:-1,pv:null,pvSpeed:1,cv:null,wait:null,waitT:0,refBusy:false};
 const A_MINH=640;
 const A_CSS=`.pa-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:pak 1s steps(12,jump-none) infinite}
 @keyframes pak{from{background-position:0 0}to{background-position:100% 0}}
@@ -30,7 +30,9 @@ const A_CSS=`.pa-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.pn
 .pa-gold:active{transform:translateY(3px);box-shadow:0 2px 0 #8a4f0c}
 .pa-shine{position:relative;overflow:hidden}.pa-shine::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);pointer-events:none;background-size:220% 100%;animation:pas 2.4s linear infinite}
 @keyframes pas{from{background-position:120% 0}to{background-position:-120% 0}}
-@media (prefers-reduced-motion:reduce){.pa-kid,.pa-in,.pa-vs,.pa-dmg,.pa-hit,.pa-shine::after{animation:none}.pa-hp{transition:none}}`;
+
+.pa-spin{width:34px;height:34px;border-radius:50%;border:4px solid #4a3a2b;border-top-color:#ffc94a;animation:paspin .8s linear infinite}@keyframes paspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pa-kid,.pa-in,.pa-vs,.pa-dmg,.pa-hit,.pa-shine::after,.pa-spin{animation:none}.pa-hp{transition:none}}`;
 const paOk=()=>!!(window.Sys&&Sys.arena&&Sys.arena.leagueInfo&&Sys.arena.opponents&&Sys.arena.fight);
 const paEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const paN=v=>Math.round(v||0).toLocaleString('pt-BR');
@@ -43,8 +45,9 @@ function paVipChip(){ const c=paConv(); if(!c||c.value>0) return ''; let add=2; 
   return ` <span aria-label="Lutas extras com VIP ${c.need}: mais ${add}" style="display:inline-flex;align-items:center;gap:3px;margin-left:4px;padding:1px 7px;border-radius:8px;background:#2a1f16;border:1px solid #6b5843;color:#c9b9a2;font-size:10px;font-weight:900;white-space:nowrap"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="3" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>VIP ${c.need}: +${add}</span>`; }
 function paF(v){ try{ if(typeof kf==='function') return kf(v); }catch(e){} return paN(v); }
 const paIc=(n,z)=>'<img src="assets/ui/'+n+'.png" alt="" style="width:'+(z||14)+'px;height:'+(z||14)+'px;vertical-align:-2px;object-fit:contain">';
-const paToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
-const paSnd=n=>{ try{ if(typeof snd==='function') snd(n); }catch(e){} };
+let paOwn=0;   /* > 0 = som/aviso da própria Arena (passa pelo filtro paPvQuiet enquanto a luta PvP está aberta) */
+const paToast=t=>{ paOwn++; try{ if(typeof toast==='function') toast(t); }catch(e){} finally{ paOwn--; } };
+const paSnd=n=>{ paOwn++; try{ if(typeof snd==='function') snd(n); }catch(e){} finally{ paOwn--; } };
 const paH=()=>Sys.host;
 /* o jogador de verdade (ordem do dono: o herói segue a fase e o herói escolhido): nome do save e Kael/Kaia */
 const paMe=()=>{ try{ return (S.name&&String(S.name).trim())||(S.hero==='kaia'?'Kaia':'Kael'); }catch(e){ return 'Kael'; } };
@@ -72,7 +75,7 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
     <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:10px;font-weight:800;color:${L.c3}">Fecha em</span><span id="pa_week" role="timer" style="font-family:'Lilita One',sans-serif;font-size:14px;color:#fff">${paClock(li.msLeft)}</span></div></div>`;
   const fights=`<div style="flex:none;height:46px;display:flex;align-items:center;gap:8px">
     <span style="flex:1;min-width:0;font-size:13px;font-weight:900">Lutas hoje <span style="color:#ffe07a">${o.attemptsLeft}/${paMaxTries()}</span> <span style="font-size:11px;color:#c9b9a2;font-weight:800">· recarrega em <span id="pa_day">${paClock(paDayLeft())}</span></span>${paVipChip()}</span>
-    <button data-x="refresh" class="pa-btn" style="padding:0 12px" aria-label="Trocar adversários (${o.refreshLeft} grátis hoje)">Trocar <span style="color:#ffe07a">${o.refreshLeft}</span></button></div>`;
+    <button data-x="refresh" class="pa-btn" style="padding:0 12px" aria-busy="${!!XA2.refBusy}" aria-label="Trocar adversários (${o.refreshLeft} grátis hoje)">${XA2.refBusy?'Trocando':'Trocar'} <span style="color:#ffe07a">${o.refreshLeft}</span></button></div>`;
   const dcol={easy:'#5fd068',even:'#ffc94a',hard:'#ff9a3c',nope:'#ff5a5a'};
   const list=ops.map((p,i)=>{ const on=i===XA2.sel, d=p.diff||{id:'even',txt:''};
     return `<button data-x="sel" data-i="${i}" aria-pressed="${on}" aria-label="${paEsc(p.name)}, FC ${paFC(p.fc)}, ${paEsc(d.txt)}" class="pa-in" style="position:relative;animation-delay:${i*.06}s;flex:none;height:72px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:14px;background:${on?'#3a2c1f':'#1d1611'};border:2px solid ${on?'#ffc94a':'#4a3a2b'};color:#f6ecdf;text-align:left;width:100%">
@@ -96,13 +99,14 @@ function paLeagues(){ const li=Sys.arena.leagueInfo(S,paH()), A=Sys.arena.DATA.l
 /* ---------- RANKING (aba 2) ---------- */
 function paRanking(){ const li=Sys.arena.leagueInfo(S,paH()); let r=null; try{ r=Sys.arena.ranking(S,paH(),'arena'); }catch(e){}
   if(!r||!r.list) return `<div role="note" style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:#c9b9a2;font-weight:800">O ranking abre com o online</div>`;
-  const me=r.me, from=Math.max(0,Math.min(me.rank-4,r.list.length-8)), rows=r.list.slice(from,from+8).map(x=>`<div style="flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:${x.me?'#3a2c1f':'#1d1611'};border:${x.me?'2px solid #ffc94a':'1px solid #4a3a2b'}">
+  if(r.loading||!r.list.length) return `<div role="status" style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:#c9b9a2;font-weight:800">${r.loading?'Carregando o ranking':'Ninguém no ranking desta semana ainda'}</div>`;
+  const me=r.me||{}, hasRank=me.rank>0, from=Math.max(0,Math.min((hasRank?me.rank:1)-4,r.list.length-8)), rows=r.list.slice(from,from+8).map(x=>`<div style="flex:none;height:44px;display:flex;align-items:center;gap:8px;padding:0 8px;border-radius:12px;background:${x.me?'#3a2c1f':'#1d1611'};border:${x.me?'2px solid #ffc94a':'1px solid #4a3a2b'}">
       <span style="width:30px;text-align:center;font-family:'Lilita One',sans-serif;color:#c9b9a2">${x.rank}</span><span style="flex:1;min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(x.me?'Você · '+paMe():x.name)}</span>
       <span style="font-family:'Lilita One',sans-serif;color:#ffe07a">${paN(x.value)} pts</span></div>`).join('');
   const rb=(()=>{ try{ return typeof realmBadge==='function'?realmBadge():''; }catch(e){ return ''; } })();
-  return `<span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;overflow-wrap:anywhere">${rb?'<b style="color:#ffe07a">'+paEsc(rb)+'</b> · ':''}Ranking da sua liga (${paEsc(li.league.name)}) nesta semana · você em ${me.rank}º</span>
+  return `<span style="flex:none;font-size:12px;font-weight:800;color:#c9b9a2;overflow-wrap:anywhere">${rb?'<b style="color:#ffe07a">'+paEsc(rb)+'</b> · ':''}Ranking da sua liga (${paEsc(li.league.name)}) nesta semana${hasRank?' · você em '+me.rank+'º':''}</span>
     <div style="flex:none;display:flex;flex-direction:column;gap:4px">${rows}</div>
-    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">Prévia com jogadores simulados · prêmios valem quando o ranking online abrir</span>`; }
+    <span style="flex:none;font-size:10.5px;font-weight:800;color:#ffd27a;text-align:center">${r.bots===false?'Ranking do servidor · o prêmio é o da liga em que você fechar a semana':'Prévia com jogadores simulados · prêmios valem quando o ranking online abrir'}</span>`; }
 /* ---------- LUTA: VS → golpes do registro → resultado ---------- */
 function paFightView(){ const F=XA2.fight, log=(F.r.duel&&F.r.duel.log)||[], st=Math.min(XA2.step,log.length), cur=log[st-1];
   let hpA=1, hpB=1; const mA=F.maxA, mB=F.maxB; for(let i=0;i<st;i++){ const e=log[i]; if(e.s===0) hpB=e.hp/mB; else hpA=e.hp/mA; }
@@ -130,7 +134,9 @@ function paResult(){ const F=XA2.fight, r=F.r, li=Sys.arena.leagueInfo(S,paH()),
     <span style="font-size:11px;font-weight:800;color:#ffd27a">Prêmios valem quando o ranking online abrir</span>
     <div style="width:100%;display:flex;gap:8px;margin-top:6px"><button data-x="back" class="pa-btn" style="flex:1;height:54px">Voltar à arena</button>
       <button data-x="again" class="pa-gold" style="flex:1;height:54px;font-size:18px" ${o.attemptsLeft<=0?'disabled':''}>${o.attemptsLeft>0?'Lutar de novo':'Sem lutas hoje'}</button></div></div>`; }
-function scrArena(){
+function scrArena(){ try{ scrArena0(); }catch(e){ try{ console.error('arena',e); }catch(er){}   /* erro de desenho: fica na Arena com o aviso (o index trocaria a tela para a batalha e desligaria a Arena) */
+    try{ V.innerHTML=xWrap(xDims(A_MINH),'',`<div role="alert" style="flex:1;display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Arena indisponível agora.<button data-x="back" class="pa-btn" style="padding:0 18px">Voltar à arena</button></div>`); }catch(er){} } }
+function scrArena0(){
   paInject(); const d=xDims(A_MINH);
   if(!paOk()){ V.innerHTML=xWrap(d,'',`<div role="alert" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Arena indisponível agora.</div>`); return; }
   if((XA2.view==='fight'||XA2.view==='result')&&XA2.pv){ V.innerHTML=xWrap(d,'',paPvHTML(d)); try{ paPvDraw(); }catch(e){} paPvLoopOn(); return; }   /* luta PvP nova (chave PA_PVP2) */
@@ -140,7 +146,7 @@ function scrArena(){
   const body=XA2.tab===1?paLeagues():XA2.tab===2?paRanking():paLobby(), o=Sys.arena.ensure(S,paH());
   const foot=XA2.tab===0?`<div style="flex:none;padding:6px 2px;padding-bottom:max(8px,env(safe-area-inset-bottom))"><button data-x="fight" class="pa-gold pa-shine" style="width:100%;height:60px;font-size:24px" ${o.attemptsLeft<=0?'disabled':''} aria-label="Lutar contra o adversário escolhido">${o.attemptsLeft>0?'LUTE!':'Sem lutas hoje'}</button></div>`:'';
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:4px 2px 6px">
-    <div role="tablist" aria-label="Arena" style="flex:none;display:flex;gap:4px">${tabs}</div>${body}</div>${foot}`);
+    <div role="tablist" aria-label="Arena" style="flex:none;display:flex;gap:4px">${tabs}</div>${body}</div>${foot}${paWaitHTML()}`);
 }
 /* herói completo na luta: window.drawHeroFull do jogo (mesmo código da batalha: fase certa, pet, montaria, asa e camadas) */
 let paRaf=0;
@@ -152,13 +158,17 @@ function paStop(){ paPvLoopOff(); if(paRaf&&typeof cancelAnimationFrame==='funct
 function paPlay(){ paStop(); const F=XA2.fight; if(!F) return; const n=(F.r.duel&&F.r.duel.log||[]).length;
   if(XA2.step>=n){ XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.view='result'; paSnd(F.r.win?'claim':'ui_tap'); render(); },500/XA2.speed); return; }
   XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.step++; const e=F.r.duel.log[XA2.step-1]; paSnd(e&&e.crit?'crit':'hit'); render(); paPlay(); },(XA2.step===0?900:420)/XA2.speed); }
-function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH();
-  if(a==='tab'){ const i=parseInt(b.dataset.i,10); if(i!==XA2.tab&&i>=0&&i<3){ XA2.tab=i; paSnd('ui_tap'); render(); } return; }
+function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(XA2.wait) return;   /* esperando o servidor decidir a luta: nenhum toque vale (o véu cobre a tela) */
+  if(a==='tab'){ const i=parseInt(b.dataset.i,10); if(i!==XA2.tab&&i>=0&&i<3){ XA2.tab=i; paSnd('ui_tap'); render(); if(i===2) paNetRank(); } return; }
   if(a==='sel'){ XA2.sel=parseInt(b.dataset.i,10)||0; paSnd('ui_tap'); render(); return; }
+  if(a==='refresh'&&paNet()){ if(XA2.refBusy) return; XA2.refBusy=true; render();   /* online: quem troca a lista é o servidor */
+    const fin=r=>{ XA2.refBusy=false; if(!r||!r.ok) paToast(paNetMsg(r&&r.reason,'Não deu para trocar agora')); else { XA2.sel=0; paSnd('ui_tap'); } try{ if(XA2.view==='lobby'&&!XA2.pv) render(); }catch(e){} };
+    let p=null; try{ p=paNet().refresh(S,h); }catch(e){ p=null; } Promise.resolve(p||{ok:false,reason:'offline'}).then(fin,()=>fin({ok:false,reason:'offline'})); return; }
   if(a==='refresh'){ const r=Sys.arena.refresh(S,h); if(!r.ok){ paToast('Sem trocas grátis hoje'); return; } XA2.sel=0; paSnd('ui_tap'); render(); return; }
   if(a==='pvspd'){ const v=parseInt(b.dataset.v,10); if(XA2.pv&&(v===1||v===2||v===4)&&v!==XA2.pv.speed){ XA2.pv.speed=XA2.pvSpeed=v; paSnd('ui_tap'); render(); } return; }
   if(a==='fight'||a==='again'){ const ops=Sys.arena.opponents(S,h), prev=XA2.pv&&XA2.pv.opp, opp=(a==='again'&&prev&&ops.find(o=>o.id===prev.id))||ops[a==='again'&&!XA2.pv?0:XA2.sel]; if(!opp) return; const myFc=paMyFc(), W=Sys.tower;
     let maxA=1, maxB=1; try{ const me=W.playerStats(S,h), foe=W.scaledFoe(me,opp.fc); maxA=Math.max(1,me.hp); maxB=Math.max(1,foe.hp); }catch(e){}
+    if(paNet()){ paNetFight(opp,myFc,maxA,maxB); return; }   /* Arena online: a luta é decidida no servidor (Promise) */
     const r=Sys.arena.fight(S,h,opp.id); if(!r.ok){ paToast(r.reason==='tries'?'Sem lutas hoje: recarrega à meia-noite':'Luta indisponível agora'); return; }
     try{ if(typeof save==='function') save(); }catch(e){}
     XA2.fight={opp,r,myFc,maxA,maxB}; XA2.step=0; XA2.view='fight'; paSnd('ui_tap');
@@ -166,8 +176,41 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH();
     XA2.pv=null; render(); paPlay(); return; }
   if(a==='skip'){ if(XA2.pv){ paPvSkip(); return; } paStop(); XA2.view='result'; render(); return; }
   if(a==='speed'){ XA2.speed=XA2.speed===1?2:1; render(); return; }
-  if(a==='back'){ paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; render(); return; }
+  if(a==='back'){ paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; render(); paPvReplay(); return; }
 }
+/* ================= ARENA ONLINE (Sys.arenaNet, js/sys/arenanet.js do Servidor; contrato docs/API_SERVIDOR.md §4.1) =================
+   NADA muda com ela desligada: tudo aqui só age quando Sys.arenaNet.state().started é verdadeiro (quem liga é o js/onlineboot.js, depois do boot online; esta
+   tela nunca chama start). Ligada:
+   - LUTA: Sys.arenaNet.fight(S, host, oppId) → Promise com o mesmo que o Sys.arena.fight devolve (win, delta, points, log com k/en, rewards) + oppServer
+     {id, name, fc, level, look}. Enquanto não volta: véu "Procurando adversário" por cima da lista (nada tocável por baixo, toque duplo ignorado). Erro
+     {ok:false, reason} = aviso em português e a lista de volta; a tela nunca chama o Sys.arena.fight local nesse caminho (não gasta tentativa local).
+     Segurança: 20 s sem resposta = aviso e lista de volta; se a resposta chegar depois (ou com a tela fechada), sai só um aviso com o resultado.
+   - LISTA: Trocar chama Sys.arenaNet.refresh; a lista e o ranking continuam lidos do Sys.arena (o provider online responde pelo cache dele).
+   - RANKING: ao abrir a aba, Sys.arenaNet.loadRanking('arena') e redesenha quando chega (o de FC, 'fc', é da tela de Ranking, js/p_rank.js).
+   - FOTO: Sys.arenaNet.snapshot(S, host) ao abrir a Arena e a cada evento 'herochange' do window (ele mesmo limita a frequência). */
+const paNet=()=>{ try{ const N=window.Sys&&Sys.arenaNet; return N&&typeof N.state==='function'&&N.state().started===true?N:null; }catch(e){ return null; } };
+function paNetMsg(reason,dflt){ const r=String(reason||''); if(r==='tries'||r==='arena_limit') return 'Sem lutas hoje: recarrega à meia-noite'; if(r==='busy') return 'Luta em andamento: aguarde';
+  if(r==='opp'||r==='not_found') return 'Esse adversário saiu da lista: troque os adversários'; if(r==='refresh') return 'Sem trocas grátis hoje'; if(r==='no_snapshot'||r==='snapshot_mismatch') return 'Seu herói ainda não foi enviado ao servidor: tente de novo em instantes';
+  if(/offline|net|network|timeout|fetch|unreachable/i.test(r)) return 'Sem conexão: tente de novo'; return dflt||'Luta indisponível agora'; }
+function paNetSnap(){ const N=paNet(); if(!N||typeof N.snapshot!=='function') return false; try{ const p=N.snapshot(S,paH()); if(p&&typeof p.catch==='function') p.catch(()=>{}); }catch(e){} return true; }
+function paNetRank(){ const N=paNet(); if(!N||typeof N.loadRanking!=='function') return false; const again=()=>{ try{ if(XA2.view==='lobby'&&XA2.tab===2&&!XA2.wait&&typeof view!=='undefined'&&view==='arena') render(); }catch(e){} };
+  try{ const p=N.loadRanking('arena'); if(p&&typeof p.then==='function') p.then(again,()=>{}); }catch(e){} return true; }
+let paNetSeq=0;
+function paNetStopWait(){ if(XA2.waitT){ try{ clearTimeout(XA2.waitT); }catch(e){} XA2.waitT=0; } XA2.wait=null; }
+function paNetFight(opp,myFc,maxA,maxB){ const N=paNet(); if(!N||XA2.wait) return false; const tok=++paNetSeq; paStop(); paPvFree(); XA2.view='lobby'; XA2.wait={tok,name:opp.name}; render();
+  const done=r=>{ if(!XA2.wait||XA2.wait.tok!==tok){ if(r&&r.ok) paToast('Luta contra '+opp.name+': '+(r.win?'vitória':'derrota')+' ('+(r.delta>=0?'+':'−')+Math.abs(r.delta|0)+' pontos)'); return; }   /* resposta atrasada ou tela já fechada: só o aviso */
+    paNetStopWait(); if(!r||!r.ok){ paToast(paNetMsg(r&&r.reason)); XA2.view='lobby'; try{ render(); }catch(e){} return; }
+    try{ if(typeof save==='function') save(); }catch(e){}
+    const sv=r.oppServer&&typeof r.oppServer==='object'?r.oppServer:null, o2=Object.assign({},opp); if(sv){ for(const k of ['name','fc','level','look']) if(sv[k]!=null) o2[k]=sv[k]; }   /* o adversário como o servidor lutou (aparência e nível da foto dele) */
+    XA2.fight={opp:o2,r,myFc,maxA,maxB}; XA2.step=0; XA2.view='fight'; paSnd('ui_tap');
+    if(window.PA_PVP2===true){ paStop(); paPvStart(o2,r,myFc,maxA,maxB); render(); } else { XA2.pv=null; render(); paPlay(); } };
+  let p=null; try{ p=N.fight(S,paH(),opp.id); }catch(e){ p=null; }
+  Promise.resolve(p||{ok:false,reason:'offline'}).then(done,()=>done({ok:false,reason:'offline'}));
+  try{ XA2.waitT=setTimeout(()=>{ XA2.waitT=0; if(XA2.wait&&XA2.wait.tok===tok){ XA2.wait=null; paToast('O servidor demorou para responder: tente de novo'); XA2.view='lobby'; try{ render(); }catch(e){} } },20000); }catch(e){}
+  return true; }
+const paWaitHTML=()=>XA2.wait?`<div role="status" aria-live="polite" aria-label="Procurando adversário" style="position:absolute;left:0;right:0;top:0;bottom:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;background:rgba(14,10,7,.9)"><span class="pa-spin" aria-hidden="true"></span><span style="font-family:'Lilita One',sans-serif;font-size:22px;color:#ffe07a">Procurando adversário</span><span style="font-size:13px;font-weight:800;color:#c9b9a2;overflow-wrap:anywhere">${paEsc(XA2.wait.name)} · o servidor está decidindo a luta</span></div>`:'';
+try{ if(typeof window!=='undefined'&&typeof window.addEventListener==='function') window.addEventListener('herochange',()=>{ paNetSnap(); }); }catch(e){}
+
 /* ================= LUTA PvP (Tela 23 · protótipo APROVADO docs/proto/ArenaPvP.html) =================
    Chave: window.PA_PVP2, LIGADA por padrão (?debug=1&pvp2=0 desliga para comparar). Desligada = a luta antiga acima.
    A LUTA SEGUE O REGISTRO: paPvScript transforma o duel.log do Sys.arena.fight ({s, dmg, crit, hp} por golpe, na ordem) num roteiro com hora marcada;
@@ -362,13 +405,35 @@ function paPvScript(log,lag){ const n=log.length, gap=Math.max(0.7,Math.min(1.35
     else { out.push({t:T,k:'atk',s,i,pet,solo:pet}); if(has){ en[s]=e.en; if(!pet) en[1-s]=Math.min(full,en[1-s]+hurt); }
       out.push({t:T+Math.min(pet?0.5:lag[s],gap-0.05),k:'hit',s,i,dmg:+e.dmg||0,crit:!!e.crit,ult:false,pet,hp:+e.hp||0,en:[pct(en[0]),pct(en[1])]}); T+=pet?Math.min(gap,0.65):gap; } }
   return out; }
-function paPvStart(opp,r,myFc,maxA,maxB){ paPvFree(); const d=r.duel||{}, log=(Array.isArray(d.log)?d.log:Array.isArray(r.log)?r.log:[]).filter(e=>e&&typeof e==='object'&&(e.s===0||e.s===1));
+/* BATALHA POR TRÁS (dono: "quando acaba a partida da arena, a batalha ainda continua"): a batalha normal é idle e segue rodando atrás de toda tela cheia
+   (regra do jogo; pausar o farm é decisão do PO). Enquanto a luta PvP ou o resultado dela está aberto, NADA dela chega ao jogador: os sons (snd) e os
+   avisos (toast) da batalha são engolidos; só passam os da própria Arena (paSnd / paToast). O filtro é instalado uma vez, na 1ª luta, e fora da luta
+   deixa tudo passar igual a antes. O HUD da batalha já fica escondido pelo jogo (body.fb.full #fbhud{visibility:hidden}) e o painel cobre a cena.
+   TROCA DE TELA: um evento da batalha (Troca de era depois de um Senhor da Era vencido no automático: Panels.open('era'); ovo de escolha: Screens.open('eggpick'))
+   abria outra tela POR CIMA da luta. Com a luta aberta, toda abertura de tela que não vem da própria Arena é GUARDADA (paPvHeld) e reaberta, na ordem,
+   quando o jogador sai da luta (Voltar à arena ou fechar a tela): nada se perde, só espera. O Voltar do cabeçalho (Screens.close) continua livre.
+   DECISÃO DO DONO: a batalha das fases NÃO pausa: segue rendendo (ouro, XP, fases) escondida atrás da Arena, como atrás de toda tela cheia. */
+let paPvQ=false; const paPvHeld=[];
+function paPvReplay(){ if(XA2.pv||!paPvHeld.length) return; const L=paPvHeld.splice(0); for(const h of L){ try{ if(h[0]==='P'&&window.Panels) Panels.open(h[1],h[2]); else if(window.Screens) Screens.open(h[1],h[2]); }catch(e){} } }
+function paPvQuiet(){ if(paPvQ) return; paPvQ=true;
+  try{ if(window.Screens&&typeof Screens.open==='function'){ const o0=Screens.open; Screens.open=function(name,o){ if(XA2.pv&&!paOwn&&name!=='arena'){ if(paPvHeld.length<8) paPvHeld.push(['S',name,o]); return false; } return o0.apply(this,arguments); }; } }catch(e){}
+  try{ if(window.Panels&&typeof Panels.open==='function'){ const p0=Panels.open; Panels.open=function(name,o){ if(XA2.pv&&!paOwn&&name!=='arena'){ if(paPvHeld.length<8) paPvHeld.push(['P',name,o]); return false; } return p0.apply(this,arguments); }; } }catch(e){}
+  try{ if(typeof snd==='function'){ const s0=snd; snd=function(){ if(XA2.pv&&!paOwn) return; return s0.apply(this,arguments); }; } }catch(e){}
+  try{ if(typeof toast==='function'){ const t0=toast; toast=function(){ if(XA2.pv&&!paOwn) return; return t0.apply(this,arguments); }; } }catch(e){}
+  /* popup verde/vermelho de FC (fcNotice do index.html: #fcnote, position:fixed, z-index 80, acima do painel): com a luta aberta não aparece */
+  try{ if(typeof fcNotice==='function'){ const f0=fcNotice; fcNotice=function(){ if(XA2.pv) return; return f0.apply(this,arguments); }; } }catch(e){} }
+/* ao abrir a luta: some o que já estava na tela (popup de FC, aviso). ao sair: a FC de referência do popup vira a de agora (a diferença acumulada durante a luta
+   é descartada, não aparece atrasada) */
+function paPvHush(on){ try{ if(on){ const e=document.getElementById('fcnote'); if(e&&e.style) e.style.display='none'; const t=document.getElementById('toast'); if(t&&t.classList) t.classList.remove('on'); }
+    if(typeof FCN!=='undefined'&&FCN){ if(on){ FCN.until=0; FCN.base=null; } if(window.Sys&&Sys.fc&&typeof Sys.fc.snapshot==='function'&&Sys.host) FCN.snap=Sys.fc.snapshot(S,Sys.host); } }catch(e){} }
+let paPvSeq=0;   /* cada luta tem um id: qualquer coisa atrasada de uma luta anterior (quadro agendado, resposta de rede) confere o id e é ignorada */
+function paPvStart(opp,r,myFc,maxA,maxB){ paPvFree(); paPvQuiet(); paPvHush(true); const d=r.duel||{}, log=(Array.isArray(d.log)?d.log:Array.isArray(r.log)?r.log:[]).filter(e=>e&&typeof e==='object'&&(e.s===0||e.s===1));
   const L0=paPvMyLook(), L=[L0,paPvOppLook(opp,L0)], mk=l=>{ const m=!!l.mount; return {look:l,at:-9,dur:m?17/14:0.4,lag:m?0.64:0.19,act:null,shake:0,alpha:1,petT:-9,petDur:1}; }, F=[mk(L[0]),mk(L[1])];
   { let la=0, lb=0; for(const e of log){ if(e.s===0) lb=+e.hp||0; else la=+e.hp||0; }   /* vida cheia = sobra ÷ fração do duelo, quando dá para tirar do registro; senão a calculada antes da luta (a mesma conta do módulo) */
     if(la>0&&d.hpA>0&&d.hpA<=1) maxA=la/d.hpA; if(lb>0&&d.hpB>0&&d.hpB<=1) maxB=lb/d.hpB; }
-  XA2.pv={opp,r,myFc,log,max:[Math.max(1,maxA),Math.max(1,maxB)],hp:[Math.max(1,maxA),Math.max(1,maxB)],en:[0,0],dmg:[0,0],crits:0,used:[],F,script:paPvScript(log,[F[0].lag,F[1].lag]),i:0,
+  XA2.pv={id:++paPvSeq,opp,r,myFc,log,max:[Math.max(1,maxA),Math.max(1,maxB)],hp:[Math.max(1,maxA),Math.max(1,maxB)],en:[0,0],dmg:[0,0],crits:0,used:[],F,script:paPvScript(log,[F[0].lag,F[1].lag]),i:0,
     clock:0,vsT:0,endT:0,phase:'vs',speed:XA2.pvSpeed||1,ULT:null,ub:null,FX:[],feed:[],loser:-1,rdy:false,last:0,off:null,geo:paPvGeo(390,640)}; }
-function paPvFree(){ const pv=XA2.pv; if(pv&&pv.off){ try{ pv.off.width=pv.off.height=1; }catch(e){} pv.off=null; } XA2.pv=null; paPvLoopOff(); }
+function paPvFree(){ const pv=XA2.pv; if(pv&&pv.off){ try{ pv.off.width=pv.off.height=1; }catch(e){} pv.off=null; } XA2.pv=null; paPvLoopOff(); if(pv) paPvHush(false); }
 const paPvEl=id=>{ try{ return typeof document!=='undefined'?document.getElementById(id):null; }catch(e){ return null; } };
 const paPvPct=(v,m)=>Math.max(0,Math.min(100,v/m*100));
 const paPvClock=t=>{ const s=Math.max(0,Math.floor(t)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
@@ -395,11 +460,18 @@ function paPvApply(pv,ev,quiet){ const s=ev.s, A=pv.F[s], D=pv.F[1-s], G=pv.geo,
   paSnd(ev.crit||ev.ult?'crit':'hit'); paPvHud(); }
 function paPvFire(pv,quiet){ while(pv.i<pv.script.length&&(quiet||pv.script[pv.i].t<=pv.clock)) paPvApply(pv,pv.script[pv.i++],quiet);
   if(pv.i>=pv.script.length&&pv.phase==='run'){ pv.phase='end'; pv.endT=0; const l=pv.r.win?1:0; pv.loser=pv.hp[l]<=0?l:-1; } }
-function paPvFinish(pv){ pv.phase='result'; XA2.view='result'; paPvUb(pv,null); paSnd(pv.r.win?'claim':'ui_tap'); try{ render(); }catch(e){} }
+/* TÉRMINO ÚNICO da luta (fim natural e Pular). CAUSA do "a luta continua depois do resultado" (dono): a ultimate AGENDA o golpe do herói e o bote do pet para
+   depois (F.at e F.petT ficam no FUTURO: o golpe sai ~0,9 s e o pet ~1,05 s depois do início da faixa). Pular nesse intervalo abria o resultado e esses dois
+   ainda tocavam por trás do cartão. Aqui tudo o que estava agendado ou em curso é cancelado e o placar fica no valor final do registro. */
+function paPvFinish(pv){ if(pv!==XA2.pv||pv.phase==='result') return;   /* luta antiga ou já encerrada: ignora */
+  pv.i=pv.script.length; pv.ULT=null; pv.FX=[]; pv.frozen=false; pv.lagPct=null; for(const F of pv.F){ F.at=-9; F.petT=-9; F.shake=0; }   /* acabou: sem golpe, faixa, número ou tremor por trás do resultado */
+  { let h0=pv.max[0], h1=pv.max[1]; for(const e of pv.log){ if(e.s===0) h1=Math.max(0,+e.hp||0); else h0=Math.max(0,+e.hp||0); } pv.hp=[h0,h1]; }   /* vida final = a do registro */
+  pv.phase='result'; XA2.view='result'; paPvUb(pv,null); paSnd(pv.r.win?'claim':'ui_tap'); try{ render(); }catch(e){} }
 /* passo da luta: dt em segundos de relógio real (a velocidade x1/x2/x4 entra aqui) */
 function paPvStep(dt){ const pv=XA2.pv; if(!pv||pv.frozen) return; dt=Math.max(0,+dt||0);   /* frozen: cena congelada pelos ganchos de debug do QA (dbgPvpAt / dbgPvpUlt) */
   if(pv.phase==='vs'){ pv.vsT+=dt; if(pv.vsT>=PV_VS&&(pv.rdy||pv.vsT>=PV_VS+4)){ pv.phase='run'; try{ render(); }catch(e){} } return; }
-  pv.clock+=dt*(pv.phase==='result'?1:pv.speed);
+  if(pv.phase==='result'){ pv.clock+=dt; if(pv.loser>=0){ const F=pv.F[pv.loser]; F.alpha=Math.max(PV_FADE,F.alpha-dt*1.5); } return; }   /* ACABOU: só o parado (respiração) segue; vida, placar, energia e números não mudam mais */
+  pv.clock+=dt*pv.speed;
   if(pv.phase==='run') paPvFire(pv,false);
   for(const F of pv.F) if(F.shake>0) F.shake=Math.max(0,F.shake-dt*pv.speed*4.8);
   if(pv.ULT&&pv.clock-pv.ULT.t>=pv.ULT.dur) pv.ULT=null;
@@ -409,7 +481,7 @@ function paPvStep(dt){ const pv=XA2.pv; if(!pv||pv.frozen) return; dt=Math.max(0
   if(pv.phase==='end'||pv.phase==='result'){ if(pv.loser>=0){ const F=pv.F[pv.loser]; F.alpha=Math.max(PV_FADE,F.alpha-dt*1.5); } }
   if(pv.phase==='end'){ pv.endT+=dt*Math.min(pv.speed,2); if(pv.endT>=1.1&&!pv.ULT) paPvFinish(pv); } }
 /* PULAR: aplica o resto do registro de uma vez e abre o resultado */
-function paPvSkip(){ const pv=XA2.pv; if(!pv||pv.phase==='result') return; pv.frozen=false; pv.lagPct=null; if(pv.phase==='vs') pv.phase='run'; paPvFire(pv,true); pv.ULT=null; pv.FX=[]; pv.feed=[]; if(pv.loser>=0) pv.F[pv.loser].alpha=PV_FADE; paPvFinish(pv); }
+function paPvSkip(){ const pv=XA2.pv; if(!pv||pv.phase==='result') return; pv.frozen=false; pv.lagPct=null; if(pv.phase==='vs') pv.phase='run'; paPvFire(pv,true); pv.feed=[]; if(pv.loser>=0) pv.F[pv.loser].alpha=PV_FADE; paPvFinish(pv); }
 /* ---------- desenho ---------- */
 function paPvAura(g,base,cx,by,w,t){ if(!base||typeof sheetLoad!=='function') return; const s=sheetLoad(base,true); if(!s.ok) return; const M=s.meta, fi=Math.floor(t*(M.fps||12))%(M.frames||1), h=w*M.h/M.w;
   g.save(); g.globalAlpha=0.85; if(M.blend==='lighter') g.globalCompositeOperation='lighter'; g.drawImage(s.img,sheetSX(M,fi),sheetSY(M,fi),M.w,M.h,cx-w/2,by-h,w,h); g.restore(); }
@@ -491,8 +563,8 @@ if(typeof DEBUG!=='undefined'&&DEBUG){ const sum=(pv,i)=>{ const e=pv.log[i]; re
     while(pv.i<pv.script.length&&pv.script[pv.i].i===i){ const ev=pv.script[pv.i]; if(ev.k==='ult'){ t0=ev.t; pv.clock=ev.t; paPvApply(pv,ev,false); pv.i++; } else if(t>=PV_ULT_HIT){ pv.clock=ev.t; paPvApply(pv,ev,false); pv.i++; } else break; }
     for(const X of pv.F) X.shake=0; pv.clock=t0+t; pv.lagPct=t>=PV_ULT_HIT?pre:null; pv.frozen=true; XA2.view='fight'; try{ render(); }catch(e){}
     return Object.assign({congelado:true,lado:side,t,nome:F.look.ult.name,folha:F.look.ult.sheet,numeroNaTela:t>=PV_ULT_HIT},sum(pv,i)); }; }
-let paPvRaf=0, paPvErr=0;
-function paPvLoop(now){ paPvRaf=0; const pv=XA2.pv; if(!pv) return; try{ if(typeof view!=='undefined'&&view!=='arena'){ paPvFree(); return; } }catch(e){}
+let paPvRaf=0, paPvErr=0, paPvLoopId=0;
+function paPvLoop(now){ paPvRaf=0; const pv=XA2.pv; if(!pv) return; if(paPvLoopId!==pv.id){ paPvLoopId=pv.id; pv.last=0; }   /* quadro agendado por uma luta anterior: recomeça o relógio desta, sem pulo */ try{ if(typeof view!=='undefined'&&view!=='arena'){ paPvFree(); paPvReplay(); return; } }catch(e){}
   const dt=pv.last?Math.min(0.05,Math.max(0,(now-pv.last)/1000)):0; pv.last=now;
   try{ paPvStep(dt); paPvDraw(); }catch(e){ if(!paPvErr){ paPvErr=1; try{ console.error('arena pvp',e); }catch(er){} } }
   if(XA2.pv&&!paPvRaf&&typeof requestAnimationFrame==='function') paPvRaf=requestAnimationFrame(paPvLoop); }
@@ -500,7 +572,7 @@ function paPvLoopOn(){ if(!paPvRaf&&XA2.pv&&typeof requestAnimationFrame==='func
 function paPvLoopOff(){ if(paPvRaf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(paPvRaf); paPvRaf=0; }
 /* ---------- tela ---------- */
 /* texto que tem de caber INTEIRO sem medir no DOM (xTxtEm do js/screens.js; sem ele, 0,6 em por letra) */
-const paPvEm=t=>{ try{ if(typeof xTxtEm==='function') return xTxtEm(t); }catch(e){} return String(t==null?'':t).length*0.6; };
+const paPvEm=t=>{ t=String(t==null?'':t).replace(/\u00a0/g,' ');   /* o espaço que não quebra mede o mesmo que o espaço comum */ try{ if(typeof xTxtEm==='function') return xTxtEm(t); }catch(e){} return t.length*0.6; };
 const paPvFit=(t,avail,base,min)=>Math.max(min,Math.min(base,Math.floor(avail/Math.max(0.01,paPvEm(t))*10)/10));
 /* nomes do placar: {fs px, two}. Largura de cada nome = metade da tela menos retrato, folgas e o VS do meio. Uma linha se os DOIS couberem com fonte >= 11;
    senão os dois lados em duas linhas (mesma altura), com a fonte que faz o nome mais comprido caber em duas linhas (mínimo 9) */
@@ -526,7 +598,7 @@ function paPvResultHTML(pv){ const r=pv.r, win=!!r.win, li=Sys.arena.leagueInfo(
     <p class="pv-note">Prêmio da liga ${paEsc(L.name)} ao fechar a semana${li.rewardsOn?'':' · vale quando o ranking online abrir'}</p>
     <div class="pv-acts"><button class="o" data-x="back">Voltar à arena</button><button class="g${o.attemptsLeft>0?'':' off'}" data-x="again" aria-disabled="${o.attemptsLeft<=0}">${o.attemptsLeft>0?'Lutar de novo · '+o.attemptsLeft:'Sem lutas hoje'}</button></div></div></div>`; }
 function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,d.H||640), li=Sys.arena.leagueInfo(S,paH()), o=Sys.arena.ensure(S,paH()), mx=paMaxTries(), lv=paPvLvl(), fn=o.rwFights>0?Math.floor(o.rwFights):Math.max(1,mx-o.attemptsLeft);   /* nº da luta de hoje: contador do módulo (rwFights); sem ele, máximo − restantes. No Modo dono as tentativas são repostas, então pode passar do máximo: aí sai só "Luta N de hoje" */
-  const olv=+pv.opp.level>0?Math.floor(+pv.opp.level):null, nm=[paMe()+(lv!=null?' · Nv '+lv:''),pv.opp.name+(olv!=null?' · Nv '+olv:'')], fc=[pv.myFc,pv.opp.fc], col=['#5ee7ff','#ff5d7a'], nf=paPvNameFit(nm,G.W), fcs=Math.min(paPvFit('FC '+paFC(fc[0]),nf.avail,10,7),paPvFit('FC '+paFC(fc[1]),nf.avail,10,7));
+  const olv=+pv.opp.level>0?Math.floor(+pv.opp.level):null, nm=[paMe()+(lv!=null?' ·\u00a0Nv\u00a0'+lv:''),pv.opp.name+(olv!=null?' ·\u00a0Nv\u00a0'+olv:'')],   /* espaços que não quebram: "· Nv 69" fica junto e a quebra cai antes do "·" */ fc=[pv.myFc,pv.opp.fc], col=['#5ee7ff','#ff5d7a'], nf=paPvNameFit(nm,G.W), fcs=Math.min(paPvFit('FC '+paFC(fc[0]),nf.avail,10,7),paPvFit('FC '+paFC(fc[1]),nf.avail,10,7));
   let bg=''; try{ if(typeof bgPath==='function'&&typeof B!=='undefined') bg=bgPath(B.dispEra!=null?B.dispEra:0); }catch(e){ bg=''; }
   const pl=i=>{ const p=paPvPct(pv.hp[i],pv.max[i]); return `<div class="pv-pl${i?' r':''}" style="--c:${col[i]}"><div class="pv-av" aria-hidden="true">${paPvPortrait(i,pv,46)}</div><div class="pv-pi"><div class="pv-pn${nf.two?' w2':''}" style="font-size:${nf.fs}px"><span>${paEsc(nm[i])}</span></div><div class="pv-pf" style="font-size:${fcs}px">FC ${paFC(fc[i])}</div>
     <div class="pv-bar${p<30?' low':''}" id="pa_hb${i}" role="progressbar" aria-label="Vida de ${paEsc(i?pv.opp.name:paMe())}"><i class="lag" id="pa_lg${i}" style="width:${(pv.lagPct?Math.max(p,pv.lagPct[i]):p).toFixed(1)}%${pv.lagPct?';transition:none':''}"></i><i class="hp" id="pa_hp${i}" style="width:${p.toFixed(1)}%"></i><b id="pa_ht${i}">${paF(pv.hp[i])}</b></div>
@@ -546,7 +618,7 @@ function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,
     ${pv.phase==='result'?'':`<div class="pv-ctr">${sp(1)}${sp(2)}${sp(4)}<button class="skip" data-x="skip">Pular</button></div>`}
     ${ov}</div>`; }
 Panels.add('arena',{title:'Arena',render:scrArena,click:paClick,
-  busy(){ return XA2.view==='fight'; },
+  busy(){ return XA2.view==='fight'||!!XA2.pv||!!XA2.wait; },   /* luta e resultado: ninguém de fora redesenha a tela (o cartão do resultado não "pula" de novo a cada evento da batalha) */
   tick(){ if(!paOk()||XA2.view!=='lobby'||XA2.tab!==0) return; try{ const w=document.getElementById('pa_week'), d=document.getElementById('pa_day');
     if(w) w.textContent=paClock(Sys.arena.leagueInfo(S,paH()).msLeft); if(d) d.textContent=paClock(paDayLeft()); }catch(e){} },
-  onOpen(){ XA2.view='lobby'; XA2.tab=0; XA2.sel=0; paStop(); paPvFree(); }, onClose(){ paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; } });
+  onOpen(){ XA2.view='lobby'; XA2.tab=0; XA2.sel=0; XA2.refBusy=false; paNetStopWait(); paStop(); paPvFree(); paNetSnap(); }, onClose(){ paNetStopWait(); paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; try{ setTimeout(paPvReplay,0); }catch(e){} } });
