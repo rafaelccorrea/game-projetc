@@ -20,6 +20,9 @@ const ITENS=[
   {e:0,r:2,fam:'club',nome:'Lança de Sílex',ult:'base',codex:'w-0-1'},   // nome de lança, arte de clava: decisão de texto com o PO
   {e:0,r:3,fam:'club',nome:'Machado de Osso',ult:'boost',codex:'w-0-1',mythic:true},   // arma Mítica: BLOQUEADA no lançamento (abaixo)
   {e:0,r:4,fam:'club',nome:'Presa de Mamute',ult:'own',codex:'w-0-2',own:'assets/anim/ult/club_legend'},   // ultimate própria: o jogo liga no boot (js/battle.js:510 goLive('ults'))
+  // itens 6-10: gládio da era 1
+  {e:1,r:0,fam:'gladius',nome:'Lança de Bronze',ult:'base',codex:'w-1-0'},{e:1,r:1,fam:'gladius',nome:'Gládio',ult:'base',codex:'w-1-0'},{e:1,r:2,fam:'gladius',nome:'Falcata de Ferro',ult:'base',codex:'w-1-1'},
+  {e:1,r:3,fam:'gladius',nome:'Xifos Espartano',ult:'boost',codex:'w-1-1',mythic:true},{e:1,r:4,fam:'gladius',nome:'Lâmina de Aquiles',ult:'own',codex:'w-1-2',own:'assets/anim/ult/gladius_legend'},
 ];
 ST.goLive('ults');   /* como o jogo faz no boot (js/battle.js:510): liga as ultimates próprias aprovadas e entregues */
 for(const I of ITENS){ const it={slot:'weapon',e:I.e,r:I.r,lvl:1,gold:0,subs:[]}, key='era'+I.e+'_'+RKEY[I.r];
