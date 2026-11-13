@@ -29,6 +29,8 @@ const DATA={
   // prêmios por dificuldade (R2.5; proposta, quem calibra o drop é a fps-30). XP NÃO multiplica (o teto diário de XP de abate seguraria).
   reward:{gold:[1,1.6,2.5,4], mats:[1,1.6,2.5,4], topRarChance:[1,1.3,1.7,2.2], qualityBestOf:[1,1,2,3], firstWinGems:[1,1.5,2,3], firstWinPetFrag:[0,0,0,1]},
   // ouro/drop do jogo de hoje (fórmula do engenheiro por "fase antiga" 1-90): fase n da era e ≈ fase antiga e×10 + ⌈n/10⌉
+  // PO 12/11 (reports/eras-7-8.md): começo das eras 7-8 suavizado — ouro ×1,5 nas fases 1-30 do Fácil (a parede de entrada ficava 3× a da era 2)
+  entryGold:{eras:[7,8], diff:0, upTo:30, mult:1.5},
   glow:0.9,                                          // o botão "Desafiar" brilha com 90% da fcRec (como na Revisão 1)
   waves:{short:[0,1], shortWaves:1},                 // R2.1: nas eras 0-1 a fase é 1 onda curta (~15-25 s); da era 2 em diante, fase normal (proposta)
 };
@@ -53,10 +55,11 @@ const oldStage=(e,n)=>okE(e)&&okN(n)?e*10+Math.ceil(n/10):1;
 function enemy(e,d,n,kind){ if(!valid(e,d,n)) return null; const f=fcRec(e,d,n); let k=kind==='boss'?(kindOf(n)||'boss'):'common';
   if(kind==='chefe'||kind==='senhor') k=kind; const E=DATA.enemy[k];
   return {kind:k,hp:Math.max(1,Math.round(f*E.hp*E.hpDef)),dmg:Math.max(1,Math.round(f*E.dmg)),def:Math.round(f*E.def),fcRec:f,
-    goldStage:oldStage(e,n),goldMult:DATA.reward.gold[d],name:k==='senhor'?'Senhor da Era':k==='chefe'?'Chefe':null}; }
+    goldStage:oldStage(e,n),goldMult:DATA.reward.gold[d]*entryMult(e,d,n),name:k==='senhor'?'Senhor da Era':k==='chefe'?'Chefe':null}; }
 function info(e,d,n){ if(!valid(e,d,n)) return null;
   return {era:e,diff:d,stage:n,diffName:DATA.diffName[d],eraName:DATA.eraName[e],fcRec:fcRec(e,d,n),lvlLock:lvlLock(e,d,n),required:isRequired(e,d),boss:kindOf(n),
     oldStage:oldStage(e,n),shortWave:DATA.waves.short.indexOf(e)>=0}; }
+const entryMult=(e,d,n)=>{ const G=DATA.entryGold; return G&&G.eras.includes(e)&&d===G.diff&&n<=G.upTo?G.mult:1; };
 const rewardOf=d=>{ const R=DATA.reward, i=okD(d)?d:0, o={}; for(const k in R) o[k]=R[k][i]; return o; };
 
 /* ---------- progresso no save: S.sys.phases {v, best:{era:[b0,b1,b2,b3]}, cur:{e,d,n}, migrated} ---------- */
