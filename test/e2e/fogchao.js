@@ -1,0 +1,46 @@
+'use strict';
+/* FOGUEIRA, parte 4: ITEM NO CHÃO ESPERANDO O TOQUE (js/farm.js). Sem navegador: node test/e2e/fogchao.js
+   Chave desligada (padrão): todo item voa sozinho, como hoje. Chave ligada (?debug=1&fogueira=1): Épico ou melhor espera o toque parado na tela;
+   Básico e Raro voam sozinhos; o toque perto do item o manda para a mochila; longe não faz nada; sem toque ele vai sozinho depois do prazo;
+   nunca mais que PK_HOLD_MAX esperando; "+FC" só quando a peça é melhor que a equipada. Sai com código 1 se falhar. */
+const boot = require('./sandbox');
+let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
+async function game(search) { const G = boot({ realFetch: true, runBoot: true, search }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  ev("(function(){ S.tut=99; S.welcome=true; B.paused=false; B.res=null; view='battle'; PK.list.length=0; return 1; })()"); return G; }
+const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 30)};i++) tickPicks(1/30); return 1; })()`);
+(async () => {
+  /* 1) chave desligada: nada espera */
+  let G = await game('?debug=1&fresh=1&skip=1'), ev = G.ev;
+  check('chave desligada por padrão', ev('FOGUEIRA_ON===false&&fogOn()===false'));
+  ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'},{type:'item',value:1,r:0,slot:'armor',e:0,to:'bag'}],200)"); step(G, 0.2);
+  check('chave desligada: nenhum item marcado para esperar', ev('PK.list.length===2&&PK.list.every(q=>!q.hold)'), ev('JSON.stringify(PK.list.map(q=>q.hold))'));
+  step(G, 3); check('chave desligada: tudo voou sozinho em 3 s', ev('PK.list.length') === 0, 'sobraram ' + ev('PK.list.length'));
+  /* 2) chave ligada */
+  G = await game('?debug=1&fresh=1&skip=1&fogueira=1'); ev = G.ev;
+  check('chave ligada pelo parâmetro de conferência', ev('fogOn()===true&&FOGUEIRA_ON===false'));
+  ev("spawnPicks([{type:'item',value:1,r:2,slot:'weapon',e:0,to:'bag'},{type:'item',value:1,r:1,slot:'armor',e:0,to:'bag'},{type:'item',value:1,r:0,slot:'boots',e:0,to:'bag'},{type:'gold',value:5,to:'gold'}],200)");
+  step(G, 3);
+  const h1 = JSON.parse(ev('JSON.stringify(pkHeld().map(q=>({r:q.p.r,x:q.x,y:q.y,st:q.st})))'));
+  check('Épico espera no chão; Raro, Básico e ouro voaram sozinhos', h1.length === 1 && h1[0].r === 2 && ev('PK.list.length') === 1, JSON.stringify(h1) + ' lista ' + ev('PK.list.length'));
+  check('o item que espera fica dentro da tela', h1.length === 1 && h1[0].x >= 16 && h1[0].x <= ev('LW') - 16, JSON.stringify(h1));
+  ev('B.running=true; 1'); const x0 = h1.length ? h1[0].x : 0; step(G, 2); check('não anda com o cenário (herói correndo)', Math.abs(ev('pkHeld()[0].x') - x0) < 0.01, x0 + ' → ' + ev('pkHeld()[0].x')); ev('B.running=false; 1');
+  check('toque LONGE não pega', ev('pkTap(pkHeld()[0].x+80, pkHeld()[0].y)') === false && ev('pkHeld().length') === 1);
+  check('toque PERTO manda para a mochila', ev('pkTap(pkHeld()[0].x+10, pkHeld()[0].y-12)') === true && ev('pkHeld().length') === 0 && ev('PK.list.length') === 1);
+  step(G, 1); check('depois do toque o item chega e sai da lista', ev('PK.list.length') === 0);
+  /* sem toque: vai sozinho depois do prazo */
+  ev("spawnPicks([{type:'item',value:1,r:4,slot:'weapon',e:0,to:'bag'}],220)"); step(G, 5); check('Lendário ainda espera aos 5 s', ev('pkHeld().length') === 1);
+  step(G, ev('PK_HOLD_S') + 2); check('sem toque, vai sozinho depois de ' + ev('PK_HOLD_S') + ' s', ev('PK.list.length') === 0, 'sobraram ' + ev('PK.list.length'));
+  /* teto de itens esperando */
+  ev("spawnPicks(Array.from({length:10},()=>({type:'item',value:1,r:2,slot:'weapon',e:0,to:'bag'})),200)"); step(G, 3);
+  check('no máximo ' + ev('PK_HOLD_MAX') + ' esperando; o excedente voa', ev('pkHeld().length') === ev('PK_HOLD_MAX') && ev('PK.list.length') === ev('PK_HOLD_MAX'), ev('pkHeld().length') + ' / ' + ev('PK.list.length'));
+  ev('PK.list.length=0; 1');
+  /* +FC: peça melhor que a equipada (equipada sozinha ao entrar na mochila) e peça pior */
+  const up = ev("(function(){ addItemToBag({slot:'weapon',r:3,e:0}); const p={type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'}; return pkBetter(p); })()");
+  check('"+FC" quando a peça é melhor que a equipada', up === true, String(up));
+  const dn = ev("(function(){ const p={type:'item',value:1,r:2,slot:'necklace',e:0,to:'bag'}; return pkBetter(p); })()"); check('sem a peça na mochila não promete "+FC"', dn === false, String(dn));
+  let drew = true; try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
+  ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'}],200)"); step(G, 2); try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
+  check('desenho do item esperando (anel e etiqueta) sem erro', drew && ev('pkHeld().length===1&&pkHeld()[0].up===true'));
+  console.log(fail ? fail + ' FALHA(S) de ' + n + ' (item no chão)' : 'FOGUEIRA · ITEM NO CHÃO OK (' + n + ' verificações): desligada = como hoje; ligada = Épico ou melhor espera o toque');
+  process.exit(fail ? 1 : 0);
+})().catch(e => { console.error(e && e.stack || e); process.exit(1); });

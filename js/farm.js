@@ -150,11 +150,30 @@ function farmKill(e, y){
    Rótulo "+N" agrupado por tipo (Sys.loot.createGrouper) ao lado do destino, para não poluir a horda. ---------- */
 const PK = { list: [], G: null, tg: {}, tgT: -9, MAX: 70 };
 const PK_TO = { gold: 'gold', gems: 'gems', level: 'lvb', bag: 'tabgear' };
+/* ================= FOGUEIRA DAS ERAS, parte 4 (ordem do dono, 14/11): ITEM NO CHÃO =================
+   CHAVE FOGUEIRA_ON (desligada; ?debug=1&fogueira=1 liga para conferir). Regra da Sistemas (docs/ANALISE_LOOP_INICIAL.md): o item ÉPICO OU MELHOR fica no chão
+   até o TOQUE; o resto voa sozinho para o contador (o ímã, como hoje). O ganho já foi creditado no abate: o que espera é só o desenho.
+   - o item que espera NÃO anda com o cenário (fica onde caiu, dentro da tela), pulsa um anel na cor da raridade e mostra "+FC" quando é melhor que o equipado;
+   - o toque (até PK_TAP_R px do item) faz ele voar para a mochila; sem toque, voa sozinho depois de PK_HOLD_S s (nunca enche a tela nem trava nada);
+   - no máximo PK_HOLD_MAX esperando ao mesmo tempo: o excedente voa sozinho.
+   pkHeld() devolve os que estão esperando (teste e, depois, o cartão "novo × o seu" da Fogueira V3). */
+const FOGUEIRA_ON = false;
+const fogOn = () => FOGUEIRA_ON || (typeof DEBUG !== 'undefined' && DEBUG && /[?&]fogueira=1/.test(location.search));
+const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
+const pkHolds = p => fogOn() && p && p.type === 'item' && (p.r | 0) >= PK_HOLD_R;
+const pkHeld = () => PK.list.filter(q => q.hold && q.st === 1 && !q.done);
+/* o item que caiu é melhor que o equipado? (a peça já está na mochila: procura a mais nova igual e pergunta à FC; equipada sozinha = era melhor) */
+function pkBetter(p){ try { const it = S.inv.filter(x => x && x.slot === p.slot && x.r === p.r && x.e === p.e).pop(); if (!it) return false; if (S.eq && S.eq[it.slot] === it.id) return true; return Sys.fc.itemFC(S, Sys.host, it).swap > 0; } catch (e) { return false; } }
+/* toque na batalha: solta o item que espera mais perto do dedo. Devolve true se pegou algum (coordenadas lógicas da cena) */
+function pkTap(x, y){ let best = null, bd = PK_TAP_R * PK_TAP_R; for (const q of pkHeld()){ const d = (q.x - x) * (q.x - x) + (q.y - 8 - y) * (q.y - 8 - y); if (d <= bd){ bd = d; best = q; } }
+  if (!best) return false; best.st = 2; best.sx = best.x; best.sy = best.y; best.tapped = true; try { snd('ui_tap'); } catch (e) {} return true; }
+try { if (typeof cv !== 'undefined' && cv && cv.addEventListener) cv.addEventListener('pointerdown', ev => { if (!fogOn() || !pkHeld().length) return; const cr = cv.getBoundingClientRect(), k = cr.width / LW; if (!(k > 0)) return; pkTap((ev.clientX - cr.left) / k, (ev.clientY - cr.top) / k); }); } catch (e) {}
 function spawnPicks(arr, x){
   if (!PK.G) PK.G = Sys.loot.createGrouper();
   for (const p of arr){
     if (PK.list.length >= PK.MAX){ PK.G.add(p.type, p.value, B.at); continue; }      // teto: o excedente vai direto para o "+N"
-    PK.list.push({ p, x, y: GY - 34, vx: -20 + Math.random() * 90, vy: -150 - Math.random() * 90, t: -(p.delay || 0), st: 0, rt: 0, ft: 0, sx: 0, sy: 0, rest: 0.3 + Math.random() * 0.35, sd: Math.random() * 6 });
+    const hold = pkHolds(p) && pkHeld().length + PK.list.filter(q => q.hold && q.st === 0).length < PK_HOLD_MAX;
+    PK.list.push({ p, x, y: GY - 34, vx: -20 + Math.random() * 90, vy: -150 - Math.random() * 90, t: -(p.delay || 0), st: 0, rt: 0, ft: 0, sx: 0, sy: 0, rest: 0.3 + Math.random() * 0.35, sd: Math.random() * 6, hold, up: hold && pkBetter(p) });
     if (p.type === 'item' && typeof rarSnd === 'function') rarSnd(p.r); }   // som por raridade: só com a chave SCREENS_ON.rarityFx (js/rarity.js)
 }
 function pickTarget(to){
@@ -170,6 +189,7 @@ function tickPicks(dt){
   for (const q of PK.list){
     q.t += dt; if (q.t < 0) continue;
     if (q.st === 0){ q.vy += 620 * dt; q.x += q.vx * dt - run; q.y += q.vy * dt; if (q.y >= GY - 6 && q.vy > 0){ q.y = GY - 6; q.st = 1; } }
+    else if (q.st === 1 && q.hold){ q.rt += dt; q.x = Math.max(16, Math.min(LW - 16, q.x)); if (q.rt > PK_HOLD_S){ q.st = 2; q.sx = q.x; q.sy = q.y; } }   /* Épico ou melhor: espera o toque parado na tela; depois de PK_HOLD_S s vai sozinho */
     else if (q.st === 1){ q.rt += dt; q.x -= run; if (q.rt > q.rest || q.x < 6){ q.st = 2; q.sx = q.x; q.sy = q.y; } }
     else { q.ft += dt / 0.5; const k = Math.min(1, q.ft), e = k * k, T = pickTarget(q.p.to); q.x = q.sx + (T.x - q.sx) * e; q.y = q.sy + (T.y - q.sy) * e - Math.sin(Math.PI * k) * 26;
       if (k >= 1){ q.done = true; PK.G.add(q.p.type, q.p.value, B.at); if (q.p.type === 'gold' && B.at - (PK.bumpT || 0) > 0.4){ PK.bumpT = B.at; const gp = document.getElementById('fb_goldp'); if (gp){ gp.classList.remove('fb-cbump'); void gp.offsetWidth; gp.classList.add('fb-cbump'); } } } }
@@ -193,6 +213,11 @@ function drawPicks(){
       ctx.fillStyle = c; ctx.fillRect(-1.2 * s, -6 * s, 2.4 * s, 8 * s); ctx.fillRect(-3.5 * s, -0.5 * s, 7 * s, 1.8 * s); }
     else { const c = p.type === 'egg' && RAR[p.r] ? RAR[p.r].c : (PK_COL[p.type] || '#fff'); drawGlow(c, 0, 0, (9 + 2 * Math.sin(ph)) * s, 0.7); ctx.rotate(Math.sin(ph * 0.7) * 0.3);
       ctx.fillStyle = c; ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1; ctx.beginPath(); if (p.type === 'egg') ctx.ellipse(0, 0, 4.2 * s, 5.6 * s, 0, 0, 7); else { for (let i = 0; i < 6; i++){ const a = i * Math.PI / 3; ctx.lineTo(Math.cos(a) * 5 * s, Math.sin(a) * 5 * s); } ctx.closePath(); } ctx.fill(); ctx.stroke(); }
+    ctx.restore(); }
+  /* item esperando o toque: anel pulsando na cor da raridade e a etiqueta "+FC" quando é melhor que o equipado */
+  for (const q of PK.list){ if (!q.hold || q.st !== 1 || q.t < 0) continue; const c = RAR[q.p.r] ? RAR[q.p.r].c : '#fff', pu = 0.5 + 0.5 * Math.sin(t * 5 + q.sd);
+    ctx.save(); ctx.translate(q.x, q.y - 6); ctx.globalAlpha = 0.35 + 0.45 * pu; ctx.strokeStyle = c; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(0, 0, 13 + 3 * pu, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    if (q.up){ ctx.font = '900 10px system-ui'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('+FC', 0, -20); ctx.fillStyle = '#7ef08a'; ctx.fillText('+FC', 0, -20); }
     ctx.restore(); }
   if (!PK.G) return; PK.G.due(t);
   for (const b of PK.G.live()){ const to = b.type === 'gold' ? 'gold' : b.type === 'gem' ? 'gems' : b.type === 'xp' ? 'level' : 'bag', T = pickTarget(to), age = t - b.last, pop = 1 + 0.35 * Math.max(0, 1 - age * 6);
