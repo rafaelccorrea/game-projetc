@@ -994,4 +994,17 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
   F.DATA.viewOn=false;
 });
 
+t('ultimate por TIPO de arma + raridade (dono): nunca pela era do mapa; base → Lendário reforçada → Mítico própria (fallback até a arte); arco/bumerangue desligados',()=>{
+  const T=require('../../js/sys/stats.js'), D=T.DATA;
+  const a=T.ultOf({e:0,r:0}), b=T.ultOf({e:7,r:0}); assert.strictEqual(a.sheet,b.sheet,'mesma ultimate em qualquer era'); assert.strictEqual(a.tier,'base');
+  assert.ok(['base','base','base'].every((x,r)=>T.ultOf({e:1,r}).tier===x&&!T.ultOf({e:1,r}).boost));
+  const L=T.ultOf({e:1,r:4}); assert.strictEqual(L.tier,'legendary'); assert.strictEqual(L.sheet,a.sheet); assert.ok(L.boost.size>1);
+  const M=T.ultOf({e:1,r:3}); assert.strictEqual(M.tier,'mythic'); assert.strictEqual(M.fallback,true); assert.strictEqual(M.sheet,a.sheet,'sem arte mítica: base reforçada');
+  D.mythicReady.sword=true; try{ assert.strictEqual(T.ultOf({e:1,r:3}).sheet,D.weaponTypes.sword.mythic); } finally { delete D.mythicReady.sword; }
+  assert.strictEqual(T.ultOf({e:4,r:1}).type,'gun'); assert.strictEqual(T.ultOf({e:4,r:1,wt:'sword'}).type,'sword','tipo do item vence a regra antiga');
+  assert.strictEqual(T.weaponType({e:0,wt:'bow'}),'sword','arco desligado'); assert.strictEqual(T.weaponType({e:0},{weaponType:()=>'gun'}),'gun','host decide pelo meta.json');
+  for(const k of ['bow','boomerang']){ const W=D.weaponTypes[k]; for(const h of ['s1','s2']) assert.ok(Math.abs(W.hits[h].reduce((x,y)=>x+y,0)-1)<1e-9,'mesmo dano total: '+k+' '+h); }
+  assert.strictEqual(T.skillFx({e:0,r:4},'s3').ult.tier,'legendary'); assert.strictEqual(T.skillFx({e:0,r:4},'s1').ult,undefined); assert.strictEqual(T.skillFx({e:0,r:4},'s3').dmgMult,1,'só visual');
+});
+
 console.log(`ok: ${n} testes`);

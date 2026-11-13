@@ -23,6 +23,23 @@ const DATA={
   // (rarPct) e a regra de coerência (dano sai dos atributos; teto por golpe s1 1× / s2 3× / s3 5× final, 10× total) fica intacta.
   // color = cor da raridade (a mesma do jogo; Divino novo) · tint = quanto pintar o efeito (0-1) · particles = × partículas · size = × tamanho do golpe
   // final da ultimate · glow = brilho (0-3) · shake = × tremor de tela · trail = rastro no s1/s2 (0-3) · flash = clarão no golpe final.
+  // ULTIMATE POR TIPO DE ARMA (DECISÃO DO DONO, 12/11): arma e ultimate NÃO mudam com a era do mapa. 3 níveis por tipo, pela raridade da arma:
+  //   base (Básico→Épico) = a ultimate de hoje do tipo · legendary = a mesma folha REFORÇADA por código (boost) · mythic = animação PRÓPRIA (a Arte faz;
+  //   até chegar, mythicReady:false e toca a base com o boost). ultTier[r] liga raridade → nível (ordem do jogo: 0 Básico, 1 Raro, 2 Épico, 3 Mítico,
+  //   4 Lendário, 5 Divino). ATENÇÃO: o dono disse 'Lendário = reforçada, Mítico = nova'; no jogo o Mítico vem ANTES do Lendário. Literal abaixo; o PO confirma.
+  //   base = folha de hoje escolhida para o tipo (PROPOSTA: espada = a da era 0, pistola = a da era 3; trocar aqui sem mexer no jogo).
+  //   Arco e bumerangue: PROPOSTA (on:false) — mesmo poder da espada (a raridade/nível/era do item dão o ATK; o tipo muda só o jeito de bater).
+  ultTier:['base','base','base','mythic','legendary','mythic'],
+  ultBoost:{legendary:{size:1.25,glow:1,particles:1.5,shake:1.15,ring:true}, mythic:{size:1.15,glow:1,particles:1.3,shake:1.1,ring:true}},
+  weaponTypes:{
+    sword:    {on:true,  name:'Espada',     ult:'assets/anim/ult/era0_ult', mythic:'assets/anim/ult/sword_mythic',     style:'melee'},
+    gun:      {on:true,  name:'Pistola',    ult:'assets/anim/ult/era3_ult', mythic:'assets/anim/ult/gun_mythic',       style:'gun'},
+    bow:      {on:false, name:'Arco e flecha', ult:null, mythic:'assets/anim/ult/bow_mythic',       style:'ranged',
+               unlockLevel:30, dropFromEra:2, dropPct:15, hits:{s1:[1], s2:[0.34,0.33,0.33]}, note:'flecha única de longe; s2 = 3 flechas; mesmo dano total da espada'},
+    boomerang:{on:false, name:'Bumerangue', ult:null, mythic:'assets/anim/ult/boomerang_mythic', style:'ranged',
+               unlockLevel:45, dropFromEra:3, dropPct:15, hits:{s1:[0.5,0.5], s2:[0.25,0.25,0.25,0.25]}, note:'vai e volta: 2 acertos de 50% (atravessa a fila); mesmo dano total'},
+  },
+  mythicReady:{},   // tipo → true quando a Arte entregar a folha mítica (assets/anim/ult/<tipo>_mythic.png + .json)
   skillFx:[
     {r:0,name:'Básico',  color:'#e8e2d8',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
     {r:1,name:'Raro',    color:'#4aa3ff',tint:0.25,particles:1.2,size:1.05,glow:1,shake:1.0,trail:1,flash:false},
@@ -362,7 +379,18 @@ const wingOf=it=>it&&it.slot==='wing'?(DATA.wingTypes[it.wing]?it.wing:wingForDr
 const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
 /* efeito visual da habilidade pela arma na mão: skillFx(arma|raridade, 's1'|'s2'|'s3') → {r, color, tint, particles, size, glow, shake, trail, flash, prism,
    dmgMult:1}. s1/s2 usam a mesma cor/tinta com menos força (size 1 e metade do excesso de partículas); dmgMult é sempre 1 (só visual). */
-function skillFx(w,kind){ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.skillFx.length-1), F=Object.assign({},DATA.skillFx[r],{dmgMult:1});
+/* tipo da arma (não depende da era do MAPA): it.wt quando o item já tem; senão host.weaponType(it) (o jogo lê assets/weapons/meta.json); senão a regra
+   antiga da arte (pistola nas eras 3-5 da ARMA). Tipos desligados (on:false) caem na espada. */
+function weaponType(it,host){ const T=DATA.weaponTypes, ok=t=>typeof t==='string'&&T[t]&&T[t].on===true;
+  if(it&&ok(it.wt)) return it.wt; try{ const h=host&&host.weaponType?host.weaponType(it):null; if(ok(h)) return h; if(h==='melee') return 'sword'; }catch(e){}
+  const e=int0(it&&it.e); return e>=3&&e<=5?'gun':'sword'; }
+/* ultimate da arma: {type, name, tier: base|legendary|mythic, sheet, mythicReady, boost} — só tipo + raridade (nunca a era do mapa) */
+function ultOf(it,host){ const r=clamp(int0(it&&typeof it==='object'?it.r:it),0,DATA.ultTier.length-1), type=weaponType(it&&typeof it==='object'?it:null,host), W=DATA.weaponTypes[type];
+  const tier=DATA.ultTier[r], mr=tier==='mythic'&&DATA.mythicReady[type]===true, sheet=mr?W.mythic:W.ult;
+  const boost=tier==='base'?null:Object.assign({},DATA.ultBoost[tier==='mythic'&&!mr?'legendary':tier]);   // mítica sem arte = base reforçada
+  return {type,name:W.name,tier,sheet,mythicReady:mr,fallback:tier==='mythic'&&!mr,boost}; }
+function skillFx(w,kind,host){ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.skillFx.length-1), F=Object.assign({},DATA.skillFx[r],{dmgMult:1});
+  if(kind==='s3'||kind==null) F.ult=ultOf(w,host);
   if(kind==='s1'||kind==='s2'){ F.particles=Math.round((1+(F.particles-1)/2)*100)/100; F.size=1; F.flash=false; F.shake=kind==='s2'?Math.min(F.shake,1.15):1; }
   return F; }
 /* atalho com o nome pedido pelo PO: o mesmo Sys.fc.delta (antes/depois: números ou Sys.fc.snapshot) */
@@ -374,7 +402,7 @@ function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA
   return (neg?'−':'')+out; }
 /* efeito do item caído no chão pela raridade (o engenheiro desenha; tabela única): dropFx(item|r) → {r, name, color, glow, particles, beam, pulse, sound, prism} */
 const dropFx=w=>{ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.dropFx.length-1); return Object.assign({},DATA.dropFx[r],{sound:DATA.dropFx[r].sound?Object.assign({},DATA.dropFx[r].sound):null}); };
-const API={DATA,abbr,dropFx,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+const API={DATA,abbr,dropFx,skillFx,weaponType,ultOf,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
