@@ -214,7 +214,7 @@ function scrMounts(){
   /* ----- nome, raridade, estrelas, nível, aura ----- */
   const info=`<div style="flex:none;display:flex;align-items:center;gap:8px;min-height:50px">
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
-        <span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="lil mt-ol" style="font-size:21px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${xRarName(r,name)}</span>
+        <span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="lil mt-ol" style="min-width:0;font-size:${typeof xFitPx==='function'?xFitPx(name,Math.max(120,d.Wb-24-(isEq?26:0)-130),21,15):21}px;line-height:1.25;overflow-wrap:anywhere">${xRarName(r,name)}</span>
           ${isEq?`<span role="img" aria-label="Equipada" style="flex:none;width:20px;height:20px;border-radius:50%;background:#5fd068;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 12 10 18 20 6"></polyline></svg></span>`:''}</span>
         <span style="display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap">
           <span class="mt-chip${r>=3?' mt-rare':''}" style="background:${rc}">${esc2(rarName)}</span>

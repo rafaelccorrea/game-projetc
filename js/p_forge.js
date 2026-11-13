@@ -171,7 +171,7 @@ function scrForge(){
         ${XF.busy?'<svg class="f-hammer" width="44" height="44" viewBox="0 0 24 24" fill="#c9b9a2" stroke="#16110d" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true" style="position:absolute;right:-28px;top:-18px"><path d="M14.5 3.5l6 6-2.5 2.5-6-6z"></path><path d="M12.5 7.5 3.5 16.5l4 4 9-9z" fill="#8a5a33"></path></svg>':''}
       </div>
       <span style="width:72px;text-align:center;font-size:11px;font-weight:900;color:#ffc94a;text-shadow:0 1px 2px #000;white-space:nowrap">${esc2(SLOT[sl].n)}</span>
-      ${it?`<span style="max-width:96px;font-size:10px;font-weight:800;color:${xRarT(it)};text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>`:''}</div>`;
+      ${it?`<span style="max-width:96px;font-size:10px;font-weight:800;color:${xRarT(it)};text-shadow:0 1px 2px #000,0 0 4px #000;line-height:1.1;overflow-wrap:anywhere">${esc2(iname(it))}</span>`:''}</div>`;
 
   /* ----- prévia das auras (direita): pastilha de 52x44 como no protótipo; o botão em volta é o alvo de toque (cresce em tela estreita) ----- */
   const chips=A.map((a,i)=>{ const on=shownT===i, col=F_TC[i]||F_TC[0];
@@ -307,7 +307,7 @@ function scrForge(){
           <span style="font-size:11px;font-weight:800;color:#c9b9a2;white-space:nowrap">${esc2(fStatName(sl))} do item</span>
           <span style="font-size:15px;font-weight:900;white-space:nowrap">${fMul(L)} <span style="color:#c9b9a2">→</span> <span style="color:#5fd068">${isMax?'—':fMul(L+1)}</span></span></div></div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;gap:8px"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${xRarT(it)}">${esc2(iname(it))}</span><span style="color:#ffc94a;white-space:nowrap">${L} / ${ML}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;gap:8px"><span style="min-width:0;overflow-wrap:anywhere;color:${xRarT(it)}">${esc2(iname(it))}</span><span style="color:#ffc94a;white-space:nowrap">${L} / ${ML}</span></div>
         <div style="height:14px;border-radius:7px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden">
           <div class="f-pitybar" style="width:${Math.round(L/ML*100)}%;height:100%;background:linear-gradient(90deg,#5fd068,#b6f07a)"></div></div></div>
       <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b">${F_SHIELD}

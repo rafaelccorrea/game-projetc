@@ -485,14 +485,17 @@ function scrGear(){
   /* mochila */
   const list=S.inv.filter(x=>XG.filter==='all'||x.slot===XG.filter).sort((a,b)=>(b.nw?1:0)-(a.nw?1:0)||b.r-a.r||b.e-a.e||b.lvl-a.lvl||a.id-b.id);
   const pages=Math.max(1,Math.ceil(list.length/PER)); XG.page=Math.max(0,Math.min(XG.page,pages-1));
+  /* célula da mochila: 58 px (protótipo) quando cabem 5 com 4 px de vão na largura útil (tela − 24); em tela estreita encolhe (49 px em 288) para a 5ª coluna
+     e o selo NOVO não saírem pela direita. O ícone acompanha. */
+  const bagC=d.real?Math.max(44,Math.min(58,Math.floor((d.Wb-24-16)/5))):58, bagIc=Math.round(bagC*40/58);
   const cells=list.slice(XG.page*PER,XG.page*PER+PER).map(it=>{ const eq=S.eq[it.slot]===it.id, c=RC[it.r], q=xRar(it); let better=false; if(!eq&&canEq(it)){ try{ better=Sys.fc.itemFC(S,Sys.host,it).swap>0.5; }catch(e){} }
-    return `<div class="x-cellin" style="position:relative;width:58px;height:58px">${it.r>=2&&!q.on?`<span class="x-halo" style="background:${c}"></span>`:''}
+    return `<div class="x-cellin" style="position:relative;width:${bagC}px;height:${bagC}px">${it.r>=2&&!q.on?`<span class="x-halo" style="background:${c}"></span>`:''}
       <button class="x-cell${eq&&it.slot==='weapon'?' eqw':''}${q.cls}" data-x="cell" data-id="${it.id}"${q.at} aria-label="${esc2(iname(it))}, ${RN(it.r)}, nível ${it.lvl}, ${SLOT[it.slot].n}${eq?', equipado':''}${it.nw?', novo':''}" style="position:absolute;inset:0;border-radius:14px;${q.on?'':`border:3px solid ${c};background:radial-gradient(circle at 50% 38%,${c}33,#120d0a 75%);`}padding:0;overflow:hidden">
-        ${itemIcon(it,40,'margin-top:-6px')}${it.r>=2?'<span class="x-sheen"></span>':''}
+        ${itemIcon(it,bagIc,'margin-top:-6px')}${it.r>=2?'<span class="x-sheen"></span>':''}
         <span style="position:absolute;left:0;right:0;bottom:0;height:15px;background:rgba(0,0,0,.72);font-size:9px;font-weight:900;color:${c};line-height:15px">Nv.${it.lvl}</span></button>
       ${eq?`<span aria-hidden="true" style="position:absolute;top:-5px;left:-5px;width:20px;height:20px;border-radius:50%;background:#5fd068;border:2px solid #16110d;display:flex;align-items:center;justify-content:center;pointer-events:none"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`:''}
       ${better?`<span class="x-better" aria-hidden="true" style="position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:6px;background:#5fd068;display:flex;align-items:center;justify-content:center;pointer-events:none">${SVG_UP(12,'#0d2410')}</span>`:''}
-      ${it.nw?`<span class="x-novo" style="position:absolute;top:-8px;right:-8px;padding:2px 5px;border-radius:7px;background:#ff4d3d;border:2px solid #16110d;color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;pointer-events:none">NOVO</span>`:''}</div>`; }).join('')
+      ${it.nw?`<span class="x-novo" style="position:absolute;top:-6px;right:-4px;white-space:nowrap;line-height:1.1;padding:2px 5px;border-radius:7px;background:#ff4d3d;border:2px solid #16110d;color:#fff;font-size:10px;font-weight:900;letter-spacing:.5px;pointer-events:none">NOVO</span>`:''}</div>`; }).join('')
     ||`<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:58px;font-size:13px;font-weight:800;color:#c9b9a2">Nenhum item neste espaço ainda. Invoque ou derrote chefes.</div>`;
   const best=gBest(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XG.page?22:8}px;height:8px;border-radius:4px;background:${i===XG.page?'#ffc94a':'#4a3a2b'};transition:width .2s"></span>`).join('');
   const selIt=XG.sel!=null?itemOf(XG.sel):null; if(XG.sel!=null&&!selIt) XG.sel=null;
@@ -544,7 +547,7 @@ function scrGear(){
         ${d.real?'':best.n>0?`<button class="x-gold x-pulse lil" data-x="best" id="xg_best" style="height:40px;padding:0 12px;border-radius:12px;font-size:14px;display:flex;align-items:center;gap:5px;flex:none;white-space:nowrap">${SVG_UP(16)}Equipar melhor</button>`
           :'<button class="lil x-bestoff" data-x="best" id="xg_best" aria-disabled="true" aria-label="Equipar melhor: você já está com o melhor" style="height:40px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#2a211a;color:#9c8d7a;font-size:12px;line-height:1.05;flex:none;text-align:center">Já está com <br>o melhor</button>'}
       </div>
-      <div data-bag="1" style="flex:none;height:${rows*58+(rows-1)*8}px;display:grid;grid-template-columns:repeat(5,58px);grid-auto-rows:58px;justify-content:space-between;row-gap:8px;align-content:start">${cells}</div>
+      <div data-bag="1" style="flex:none;height:${rows*bagC+(rows-1)*8}px;display:grid;grid-template-columns:repeat(5,${bagC}px);grid-auto-rows:${bagC}px;justify-content:space-between;row-gap:8px;align-content:start">${cells}</div>
       ${xPager('pg',XG.page,pages)}
       ${autoRows?`<button data-x="auto" aria-label="Automático: desmanchar itens sozinho ao pegar.${autoLock?'Trancado: '+esc2(autoLock):autoOn?autoOn+(autoOn===1?' ligado':' ligados'):'tudo desligado'}. Abrir" style="min-height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;text-align:left;box-sizing:border-box">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 4 21 9 16 9"></polyline></svg>
@@ -590,7 +593,7 @@ function gSheet(it,H,now,shown,Wb){
   return `<button class="x-scrim" data-x="close" aria-label="Fechar comparação" style="position:absolute;inset:0;border:0;padding:0;background:rgba(8,5,3,.66)"></button>
   <div class="${XG.sheetIn?'x-sheet':''}" role="dialog" aria-label="Comparar item" style="position:absolute;left:0;right:0;bottom:0;height:${Math.min(696,H-8)}px;padding:10px 14px 12px;box-sizing:border-box;background:#1d1611;border-top:3px solid ${c};border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:${small?6:8}px">
     <div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0;display:flex;flex-direction:column">
-        <span class="lil" style="font-size:21px;color:${xRarT(it)};text-shadow:0 2px 0 #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>
+        <span class="lil" style="font-size:21px;color:${xRarT(it)};text-shadow:0 2px 0 #000;line-height:1.15;overflow-wrap:anywhere">${esc2(iname(it))}</span>
         <span style="font-size:12px;font-weight:800;color:#c9b9a2">${RN(it.r)} · ${ERAS[it.e].n} · ${SLOT[it.slot].n}</span></div>
       <button data-x="close" aria-label="Fechar" style="width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;padding:0;display:flex;align-items:center;justify-content:center">${SVG_X}</button></div>
     <div style="display:flex;align-items:stretch;gap:6px;height:118px;flex:none">

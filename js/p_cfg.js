@@ -318,7 +318,7 @@ function cPageAccount(){
           <span style="position:relative;width:46px;height:46px;flex:none;border-radius:12px;border:2px solid #ffc94a;background:#33271d;overflow:hidden;box-sizing:border-box">
             ${typeof avatarTag==='function'?avatarTag(42,'position:absolute;left:0;top:0',S.hero==='kaia'?'Kaia':'Kael')   /* retrato da fase e do herói (js/avatar.js); sem ele, o de antes */
               :`<span class="kidle ${t?'t'+t:''}" role="img" aria-label="Kael" style="position:absolute;left:-20px;top:-8px;width:84px;height:84px;display:block"></span>`}</span>
-          <span class="c-rl"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(S.name||'Kael')}${lv?' · Nv. '+n0(lv):''}</b><small>ID do jogador</small><span style="font-size:12px;font-weight:900;color:#8a7a66">em breve</span></span>
+          <span class="c-rl"><b style="overflow-wrap:anywhere">${esc2(S.name||'Kael')}${lv?' · Nv. '+n0(lv):''}</b><small>ID do jogador</small><span style="font-size:12px;font-weight:900;color:#8a7a66">em breve</span></span>
           <span class="c-dis" data-x="soon" style="flex:none;display:flex"><button class="c-sb" disabled aria-disabled="true" aria-label="Copiar o ID do jogador, em breve" style="flex:none;width:88px;height:44px;font-size:13px">${cI(C_IC.copy,16,'currentColor',2.4)}Copiar</button></span>
         </div>${cRealmRow()}
         ${cLinkOn()?`<div class="c-row" data-row="link" style="flex-direction:column;align-items:stretch;gap:6px;padding:8px;animation-delay:.18s">
@@ -376,7 +376,7 @@ function cDialog(){
       ${txt('O progresso atual deste aparelho será <b style="color:#ffb3a8">substituído</b> pelo progresso do código. Não dá para desfazer.')}
       <div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b">
         <span style="font-size:11px;font-weight:900;color:#c9b9a2;letter-spacing:.5px">PROGRESSO DO CÓDIGO</span>
-        <span style="font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(typeof o.name==='string'&&o.name?o.name:'Kael')}${lv?' · Nv. '+n0(lv):''}</span>
+        <span style="font-size:15px;font-weight:900;overflow-wrap:anywhere">${esc2(typeof o.name==='string'&&o.name?o.name:'Kael')}${lv?' · Nv. '+n0(lv):''}</span>
         <span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:900">${COIN_I(18)}${kf(o.gold||0)}<span style="width:8px"></span>${GEM_I(18)}${n0(o.gems||0)}</span></div>
       <div style="display:flex;gap:8px;padding-bottom:6px">${btnNo('impno','Cancelar')}
         <button class="c-red lil" data-x="impyes" style="flex:1.3;height:52px;border-radius:14px;font-size:19px;padding:0">Substituir</button></div>`); }
@@ -405,9 +405,9 @@ function scrCfg(){
       <div class="c-inner">
         <div role="tablist" aria-label="Grupos de opções" style="flex:none;display:flex;gap:6px;padding:8px 10px 4px">${tabs}</div>
         <div class="c-scroll x-scroll ${XC.cards?'c-cards':''}" id="c_scroll">${XC.page===0?cPageSound():XC.page===1?cPageScreen():cPageAccount()}</div>
-        <div style="height:40px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px;border-top:1px solid #4a3a2b;background:rgba(14,10,7,.85);font-size:11.5px;font-weight:800;color:#c9b9a2;box-sizing:border-box">
+        <div style="min-height:40px;flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 10px;padding:3px 18px;border-top:1px solid #4a3a2b;background:rgba(14,10,7,.85);font-size:11.5px;font-weight:800;color:#c9b9a2;box-sizing:border-box">
           <span class="c-saved" style="display:flex;align-items:center;gap:6px;color:#9be89f;white-space:nowrap">${cI(C_IC.chk,14,'currentColor',3)}Salvo automaticamente</span>
-          <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(cName())} · ${esc2(cVer())}</span></div>
+          <span style="min-width:0;line-height:1.3;overflow-wrap:anywhere">${esc2(cName())} · ${esc2(cVer())}</span></div>
       </div>
     </div>
     ${cDialog()}

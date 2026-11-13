@@ -1313,3 +1313,16 @@ Teste novo (fumaça): 270 combinações (9 eras × 5 peças × 6 raridades) no m
 - Import de outro servidor: o `cImportDo` e o `cParse` já recusavam; o aviso passou a "Este código é do servidor S1 · Nova Era. Troque de servidor para usar."
   O caso (g) do `test/e2e/realm.js` estava escrito ao contrário (gravava o save à mão quando a tela recusava); virou 3 verificações duras.
 - Testes novos na fumaça (3) e ajuste do texto esperado no teste de cópia de segurança. Fumaça 288/360/390: 203 OK, 0 FALHA.
+
+## Bloco 51 (Painéis 3, sem navegador): textos cortados a 288 px (lista do QA no fim do docs/POLIMENTO.md)
+
+- Equipamento: a grade da mochila era 5 × 58 px fixos (290 px numa largura útil de 264 em 288): a 5ª coluna e o selo NOVO saíam pela direita. Célula agora
+  `min(58, (largura − 24 − 16) / 5)` (49 px em 288, 58 de 330 px para cima), ícone proporcional; selo NOVO mais para dentro (−6/−4 px).
+- Configurações: rodapé "Salvo automaticamente | nome · versão" quebra em duas linhas quando não cabe (sem reticências); nome do jogador quebra linha.
+- Pets: células "Soma à FC" sem `overflow:hidden` e com altura de linha 1,25; nome do pet e das habilidades quebram linha. Montarias: nome com fonte ajustada
+  (21 → 15 px) e altura de linha 1,25. Correio: título da carta quebra linha. Leilão: abaixo de 340 px ícone de 44 px e selos sem espaçamento (classe `au-nar`);
+  nome do item quebra linha. Também: nome do item na comparação do Equipamento, na Vitória, na Forja; nome do evento; nome da guilda.
+- Passe (não medido pelo QA): a etiqueta "Raro · Chapéu/Elmo" tinha reticências; abaixo de 380 px mostra só a raridade (o espaço está no nome do item) e quebra linha.
+- NÃO mexi (linhas de altura fixa, precisam do navegador): nome do prêmio com materiais no Passe (`screens2.js:314/319`), nomes de títulos (`:502`, `:513`),
+  nomes no Torneio (`p_tourney.js:141`, `:183`). De outros donos: Ranking (`p_rank.js:58`, `:59`, `:76`) e VIP ("Aura VIP", `p_vip.js:71`).
+- Fumaça: verificação estática nova "sem reticências em FC/raridade" (falha nas minhas telas; nome de item entra como aviso). 288/360/390: 204 OK, 0 FALHA.

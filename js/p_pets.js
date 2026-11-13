@@ -363,7 +363,7 @@ function scrPets(){
   /* ----- nome, raridade, estrelas, nível, estágios ----- */
   const info=`<div style="flex:none;display:flex;align-items:center;gap:6px;min-height:54px">
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
-        <span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="lil pt-ol" style="font-size:21px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(def.name)}</span>
+        <span style="display:flex;align-items:center;gap:6px;min-width:0"><span class="lil pt-ol" style="min-width:0;font-size:${String(def.name||'').length>14?18:21}px;line-height:1.25;overflow-wrap:anywhere">${esc2(def.name)}</span>
           ${isEq?`<span role="img" aria-label="Equipado" style="flex:none;width:20px;height:20px;border-radius:50%;background:#5fd068;display:flex;align-items:center;justify-content:center">${Y_CHK(13,'#0d2410')}</span>`:''}</span>
         <span style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0">
           <span class="${prism?'pt-rbw pt-rare':r>=3?'pt-rare':''}" style="flex:none;padding:1px 7px;border-radius:7px;font-size:11px;font-weight:900;color:#16110d;background:${rc}">${esc2(ptRN(r))}</span>
@@ -383,7 +383,7 @@ function scrPets(){
       return `<button role="tab" aria-selected="${on}" data-x="tab" data-t="${t[0]}" class="lil" style="flex:1;min-width:0;border-radius:12px;border:2px solid ${on?'#ffc94a':'#4a3a2b'};background:${on?'linear-gradient(180deg,#ffe07a,#f2a826)':'#33271d'};color:${on?'#2a1403':'#c9b9a2'};font-size:${W<350?14:15}px;padding:0">${t[1]}</button>`; }).join('')}</div>`;
 
   const soonBox=`<div class="${pin}" style="display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:72px"><span style="font-size:13px;font-weight:900;line-height:1.3;text-align:center;color:#c9b9a2">${esc2(PT_TXT.soon)}</span></div>`;
-  const cell=(lb,val)=>`<div style="flex:1;min-width:0;min-height:40px;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:2px 8px;line-height:1.15"><span style="font-size:10px;font-weight:800;color:#c9b9a2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${lb}</span><span style="font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${val}</span></div>`;
+  const cell=(lb,val)=>`<div style="flex:1;min-width:0;min-height:40px;border-radius:10px;background:#33271d;display:flex;flex-direction:column;justify-content:center;padding:3px 8px;line-height:1.25"><span style="font-size:10px;font-weight:800;color:#c9b9a2;overflow-wrap:anywhere">${lb}</span><span style="font-size:13px;font-weight:900;overflow-wrap:anywhere">${val}</span></div>`;   /* valor (FC) e rótulo inteiros: quebram linha se faltar largura, sem reticências nem corte na altura */
 
   /* ----- DETALHES ----- */
   const det=()=>{ const bpH=[44,54,62][vw], pvH=Math.round(Math.max(88,Math.min(132,W*0.27)));
@@ -411,7 +411,7 @@ function scrPets(){
       ${ptAtkInfo(def,x).map(k=>{ const sc=k.k==='basic'?1:0.15;
         return `<button data-x="atk" data-k="${k.k}" id="pt_ak_${k.k}" aria-label="${esc2(k.name)}, ${k.kind}, dano ${k.mult}, chance atual ${ptPct(k.now)}, no máximo ${ptPct(k.max)}. Toque para ver" style="flex:none;min-height:52px;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:12px;border:2px solid ${XPT.fx===k.k?k.c:'#4a3a2b'};background:#33271d;color:#f6ecdf;text-align:left">
         <span style="flex:none;width:36px;height:36px;border-radius:10px;background:${k.c};display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16110d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${PT_ICON[k.k]}"></path></svg></span>
-        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(k.name)}</span><span style="font-size:11px;font-weight:800;color:${k.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${k.kind} · dano ${k.mult}</span></span>
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:14px;font-weight:900;overflow-wrap:anywhere">${esc2(k.name)}</span><span style="font-size:11px;font-weight:800;color:${k.c};overflow-wrap:anywhere">${k.kind} · dano ${k.mult}</span></span>
         <span style="flex:none;width:32%;display:flex;flex-direction:column;gap:2px;line-height:1.1">
           <span style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;white-space:nowrap"><span class="lil" style="font-size:17px;color:${k.c}">${ptPct(k.now)}</span><span style="font-size:10px;font-weight:900;color:#c9b9a2">máx ${ptPct(k.max)}</span></span>
           <span class="pt-bar" style="height:8px"><span class="pt-barF" style="width:${Math.min(100,k.now/sc*100).toFixed(1)}%;background:${k.c}"></span><span aria-hidden="true" style="position:absolute;top:0;bottom:0;left:${Math.min(99,k.max/sc*100).toFixed(1)}%;width:2px;background:#f6ecdf"></span></span>

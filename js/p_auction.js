@@ -68,6 +68,7 @@ function auOn(){ return typeof view!=='undefined'&&view==='auction'; }
 .au-ghost{min-height:44px;min-width:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf!important;font-weight:900;font-size:13px;padding:0 10px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
 .au-fcount{min-width:18px;height:18px;border-radius:9px;background:#ffc94a;color:#2a1403;font-size:11px;font-weight:900;line-height:18px;text-align:center;padding:0 4px;box-sizing:border-box}
 .au-grid{flex:none;display:grid;gap:8px}
+.au-nar .au-ic{width:44px;height:44px}.au-nar .au-rp,.au-nar .au-ex{padding:0 4px;letter-spacing:0}.au-nar .au-ex{font-size:9px}   /* tela abaixo de 340 px: os selos (raridade, EXEMPLO) cabem ao lado do ícone, sem corte */
 .au-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px;border-radius:16px;border:2px solid var(--rc);background:linear-gradient(180deg,var(--rb) 0%,#19120d 62%);text-align:left;min-width:0;overflow:hidden;box-sizing:border-box;color:#f6ecdf!important}
 .au-card.hi{animation:au-rG 2.2s ease-in-out infinite}
 .au-new .au-card{animation:au-cardIn .4s cubic-bezier(.2,1.2,.4,1) both}
@@ -84,7 +85,7 @@ function auOn(){ return typeof view!=='undefined'&&view==='auction'; }
 .au-tw{position:absolute;width:10px;height:10px;background:radial-gradient(circle,#fff 0 22%,rgba(255,240,170,.95) 30%,transparent 65%);clip-path:polygon(50% 0,60% 40%,100% 50%,60% 60%,50% 100%,40% 60%,0 50%,40% 40%);animation:au-twk 1.6s ease-in-out infinite}
 .au-rp{display:inline-block;font-size:10px;font-weight:900;line-height:16px;padding:0 6px;border-radius:6px;color:#16110d;white-space:nowrap}
 .au-ex{display:inline-block;font-size:9.5px;font-weight:900;letter-spacing:.5px;line-height:14px;padding:0 6px;border-radius:999px;border:1px dashed #8cc8ff;background:rgba(14,10,7,.75);color:#cfe7ff;white-space:nowrap}
-.au-nm{font-size:13.5px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.au-nm{font-size:13.5px;font-weight:900;line-height:1.15;overflow-wrap:anywhere}   /* nome do item inteiro: quebra linha, sem reticências */
 .au-sub{font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .au-stars{font-size:14px;letter-spacing:1px;line-height:1;white-space:nowrap}
 .au-pw{font-size:11px;font-weight:900;color:#e8dccb}
@@ -177,7 +178,7 @@ function auPageBuy(d){
         ${parts.length?`<span class="au-fcount">${parts.length}</span>`:''}</button>
       <button class="au-ghost" data-x="sort" aria-label="Ordenar: ${XA.sort===0?'acaba antes':'menor preço'}. Toque para trocar" style="flex:none">${XA.sort===0?'Acaba antes':'Menor preço'}</button></div>
     <span class="au-note" style="flex:none">Cartões de exemplo, só para mostrar o desenho. Os lotes de verdade aparecem quando o leilão online abrir.</span>
-    <div class="au-grid" style="grid-template-columns:repeat(${auCols(d)},minmax(0,1fr))">${cards}</div>`;
+    <div class="au-grid${d.Wb<340?' au-nar':''}" style="grid-template-columns:repeat(${auCols(d)},minmax(0,1fr))">${cards}</div>`;
 }
 
 /* ---------- aba Vender: a mochila é REAL (S.inv), mas nada pode ser anunciado ---------- */
@@ -196,7 +197,7 @@ function auPageSell(d){
   const sb=(t,aria)=>`<button disabled aria-disabled="true" data-act="1" aria-pressed="false" aria-label="${aria}">${t}</button>`;
   return `<div style="flex:none;display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <span class="lil au-ol" style="font-size:19px">1. Escolha o item</span><span class="au-note">Pets, skins e VIP não entram</span></div>
-    ${bag.length?`<div class="au-grid" style="grid-template-columns:repeat(${auCols(d)},minmax(0,1fr))">${cards}</div>
+    ${bag.length?`<div class="au-grid${d.Wb<340?' au-nar':''}" style="grid-template-columns:repeat(${auCols(d)},minmax(0,1fr))">${cards}</div>
       ${pages>1?xPager('mypg',XA.page,pages,n0(bag.length)+' na mochila','Itens anteriores','Próximos itens'):`<span class="au-note" style="flex:none;text-align:center">${n0(bag.length)} na mochila</span>`}`
       :'<div class="au-empty">Sua mochila está vazia. Os itens que você ganhar aparecem aqui.</div>'}
     ${auOff(`<div class="au-box au-up" style="flex:1;min-width:0">
@@ -261,7 +262,7 @@ function auSheet(d){
     return wrap('Detalhe do cartão de exemplo',`<div style="display:flex;align-items:center;gap:8px;${auVars(r)}">
         ${auIcBox(auImg(x.slot,x.e,r),r>=3)}
         <span style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px">
-          <span class="lil au-ol" style="font-size:20px;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis">${esc2(nm)}</span>
+          <span class="lil au-ol" style="font-size:20px;line-height:1.15;max-width:100%;overflow-wrap:anywhere">${esc2(nm)}</span>
           <span class="au-sub" style="max-width:100%"><span style="color:${RC[r]}">${esc2(auRarN(r))}</span> · ${esc2(AU_SL[x.slot].n)} · ${esc2(auEraN(x.e))}</span>${AU_EXTAG}</span>
         ${xb('Fechar')}</div>
       <div class="au-box" style="gap:5px">
