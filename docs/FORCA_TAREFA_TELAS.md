@@ -10,6 +10,13 @@ As 6 sessões escrevem telas AO MESMO TEMPO. O engenheiro só liga e confere.
   Se der "index.lock", espere alguns segundos e tente de novo. A perda máxima é de minutos. O fps-c8 continua fechando as versões.
 - Não editar arquivo de outra sessão. Se precisar mudar algo nele, peça ao dono do arquivo.
 
+## NAVEGADOR: 3 ABAS LIBERADAS PELO DONO (12/11, 22h)
+- **Aba 1: Engenheiro (fps-c8)** e o agente dele, para ligar e conferir a v0.12.8
+- **Aba 2: QA**, que confere tela por tela contra o protótipo e manda as diferenças ao fps-c8
+- **Aba 3: rodízio** entre Sistemas, Servidor e Arte, cada um para conferir o que escreveu. Anote aqui embaixo quem está usando e libere ao terminar (feche a aba)
+- Cada sessão cria a SUA aba (não usa a de outra), usa `localhost:8080/?debug=1&painel=<nome>` e o **Modo dono** (save separado), e nunca mexe no save real
+- Aba 3 em uso por: (livre)
+
 ## Regras para todos (contrato igual ao js/p_vip.js)
 - Cada tela num arquivo próprio `js/p_<nome>.js`, que nasce DESLIGADO (`PANEL_ON.<nome>`), usando `Panels.add(name, def)`. Não mexa em arquivo de outra pessoa.
 - Protótipo aprovado: `docs/proto/<Nome>.dc.html` é a fonte. Igual ao protótipo, com a arte real de `assets/`, sem emoji e sem texto de desenvolvimento.
