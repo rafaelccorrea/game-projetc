@@ -16,8 +16,8 @@ const xBagMax=()=>typeof bagMax==='function'?bagMax():BAG_MAX;   /* limite da mo
    equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo).
    rar = RARIDADE PELA BORDA E PELA COR com UM componente (xRar / classe .xr, mais abaixo) em todo lugar que mostra item nos painéis: mochila, espaços,
          comparação, Invocar, Loja, Passe e Forja. Desligada, cada tela volta a desenhar o item exatamente como antes (mesmo HTML). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:true,passScroll:true,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true,rarIcons:false},window.PANEL_V2||{});
-/* rarIcons = ÍCONE DE PEÇA POR RARIDADE, "opção C" (xRarIco, mais abaixo): nasce DESLIGADA até o voto do dono. Ligar: PANEL_V2.rarIcons=true e redesenhar
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:true,passScroll:true,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true,rarIcons:true},window.PANEL_V2||{});
+/* rarIcons = ÍCONE DE PEÇA POR RARIDADE, "opção C" (xRarIco, mais abaixo): LIGADA em 13/11/2026 (dono aprovou a C, via PO). Trocar: PANEL_V2.rarIcons=true|false e redesenhar
    (vale na hora, sem recarregar); para conferir: ?debug=1&rarico=1. Desligada, o HTML das telas é o mesmo de antes. */
 if(typeof DEBUG!=='undefined'&&DEBUG&&/[?&]rarico=1/.test(location.search)) PANEL_V2.rarIcons=true;
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
