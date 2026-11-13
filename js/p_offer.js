@@ -108,8 +108,9 @@ function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return 
 @keyframes of-cardIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
 .of-got{border-color:#5fd068!important}
 .of-off{filter:grayscale(.85) brightness(.7)}
-.of-ride{background-repeat:no-repeat;background-size:1200% 100%;animation:of-rideK 1s steps(12,jump-none) infinite}
-@keyframes of-rideK{from{background-position:0 0}to{background-position:100% 0}}
+/* a folha da montaria virou GRADE 6×2 (Arte b691560: 3072×704, 12 quadros): um passo por quadro, linha de cima e depois a de baixo */
+.of-ride{background-repeat:no-repeat;background-size:600% 200%;animation:of-rideK 1s step-end infinite}
+@keyframes of-rideK{0%{background-position:0% 0%}8.333%{background-position:20% 0%}16.667%{background-position:40% 0%}25%{background-position:60% 0%}33.333%{background-position:80% 0%}41.667%{background-position:100% 0%}50%{background-position:0% 100%}58.333%{background-position:20% 100%}66.667%{background-position:40% 100%}75%{background-position:60% 100%}83.333%{background-position:80% 100%}91.667%{background-position:100% 100%}100%{background-position:0% 0%}}
 .of-mist{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 50% at 50% 60%,rgba(220,190,255,.55),rgba(176,124,255,.18) 55%,rgba(176,124,255,0) 75%);animation:of-mistK 2.8s ease-in-out infinite}
 @keyframes of-mistK{0%,100%{opacity:.6;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
 .of-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403!important;box-shadow:0 6px 0 #8a4f0c;border:0}
