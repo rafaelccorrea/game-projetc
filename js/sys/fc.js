@@ -38,7 +38,9 @@ const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const zero=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0,petAtk:0,petHp:0,petBond:0,petCap:0});
 const sysRoot=()=>root.Sys||{};
-function fmt(n){ n=num(n,0); const a=Math.abs(n), s=n<0?'-':'';
+/* números: o formatador único Sys.stats.abbr (vírgula, até o quintilhão, sufixos em português com a chave ptNum); sem ele, o antigo abaixo */
+function fmt(n){ const T=sysRoot().stats; if(T&&typeof T.abbr==='function') return T.abbr(n).replace('−','-');
+  n=num(n,0); const a=Math.abs(n), s=n<0?'-':'';
   return s+(a>=1e12?(a/1e12).toFixed(1)+'T':a>=1e9?(a/1e9).toFixed(1)+'B':a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(1)+'k':Math.floor(a)+''); }
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function clean(b){ const o=zero(); if(b&&typeof b==='object') for(const k of KEYS) o[k]=num(b[k],0); return o; }

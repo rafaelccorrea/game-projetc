@@ -31,16 +31,17 @@ const DATA={
   ],
   // LIGAS (tela 23, protótipo aprovado): pontos de LIGA (lp) acumulam de semana a semana (os pontos da semana, do ranking, zeram em 1000).
   // Fecha toda semana (virada da semana): lp ≥ mínimo da próxima = SOBE; lp < mínimo da sua = CAI. Prêmio = o da liga em que fechou, entregue só
-  // quando o ranking online abrir (rewardsVsBots, como o resto). 💎 por semana só online e só nas ligas altas (conta no reports/sys-e2-api.md §5m).
+  // quando o ranking online abrir (rewardsVsBots, como o resto). 💎 só da Platina para cima (PO: caber nos ~10 mil 💎/180 dias do jogador típico,
+  // que fica em Ouro/Platina ~26 semanas: ≤ 5 💎/semana ≈ +130 no total; o resto vai em baú e fragmento).
   // goldk = × ouro de um abate da fase; chest = baú do Sys.chest; prism = fragmentos do Prismático (só com a v4); frame/title = visual.
   leagues:[
     {id:'bronze',  name:'Bronze',  min:0,    c1:'#d08a4a',c2:'#6a3a14',c3:'#ffd2a3', prize:{goldk:200}},
-    {id:'silver',  name:'Prata',   min:600,  c1:'#d6dde8',c2:'#5a6270',c3:'#ffffff', prize:{goldk:300,gems:10}},
-    {id:'gold',    name:'Ouro',    min:1200, c1:'#ffc94a',c2:'#8a4f0c',c3:'#fff3c4', prize:{gems:20,chest:1}},
-    {id:'platinum',name:'Platina', min:1600, c1:'#5fe0d0',c2:'#136a63',c3:'#e0fffb', prize:{gems:30,chest:1,prism:1}},
-    {id:'diamond', name:'Diamante',min:2100, c1:'#6ab8ff',c2:'#1d4a8a',c3:'#e6f4ff', prize:{gems:40,chest:2,prism:3}, wing:true},
-    {id:'master',  name:'Mestre',  min:2700, c1:'#c97cff',c2:'#4a1f8a',c3:'#ffd0ff', prize:{gems:60,chest:3,prism:5,frame:true}, wing:true, crown:true},
-    {id:'legend',  name:'Lenda',   min:3400, c1:'#ff5a7a',c2:'#6a0f24',c3:'#ffe07a', prize:{gems:80,chest:3,prism:10,title:true}, wing:true, crown:true, rainbow:true},
+    {id:'silver',  name:'Prata',   min:600,  c1:'#d6dde8',c2:'#5a6270',c3:'#ffffff', prize:{goldk:300,chest:1}},
+    {id:'gold',    name:'Ouro',    min:1200, c1:'#ffc94a',c2:'#8a4f0c',c3:'#fff3c4', prize:{goldk:400,chest:2}},
+    {id:'platinum',name:'Platina', min:1600, c1:'#5fe0d0',c2:'#136a63',c3:'#e0fffb', prize:{gems:5,chest:2,prism:1}},
+    {id:'diamond', name:'Diamante',min:2100, c1:'#6ab8ff',c2:'#1d4a8a',c3:'#e6f4ff', prize:{gems:15,chest:3,prism:3}, wing:true},
+    {id:'master',  name:'Mestre',  min:2700, c1:'#c97cff',c2:'#4a1f8a',c3:'#ffd0ff', prize:{gems:25,chest:3,prism:5,frame:true}, wing:true, crown:true},
+    {id:'legend',  name:'Lenda',   min:3400, c1:'#ff5a7a',c2:'#6a0f24',c3:'#ffe07a', prize:{gems:40,chest:4,prism:10,title:true}, wing:true, crown:true, rainbow:true},
   ],
   names:{pre:['Kael','Nara','Ícaro','Yara','Odin','Selene','Brutus','Iara','Ragnar','Cauã','Hera','Tita','Bento','Aurora','Zéfiro','Tupã'],
          suf:['do Vale','da Pedra','do Bronze','Rubro','de Ferro','do Vento','Sombrio','Dourado','das Eras','do Norte']},

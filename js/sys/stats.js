@@ -30,6 +30,9 @@ const DATA={
     {r:3,name:'Mítico',  color:'#ff4d6d',tint:0.55,particles:1.9,size:1.20,glow:2,shake:1.2,trail:2,flash:true},
     {r:4,name:'Lendário',color:'#ffb21e',tint:0.70,particles:2.4,size:1.30,glow:3,shake:1.3,trail:2,flash:true},
     {r:5,name:'Divino',  color:'#7ff6ff',tint:0.80,particles:3.0,size:1.40,glow:3,shake:1.4,trail:3,flash:true,prism:true}],   // prism = brilho arco-íris
+  // NÚMEROS ABREVIADOS (dono): um formatador só para o jogo inteiro. ptNum = sufixos em português ("1,2 mi"), liga junto com a curva de 9 eras
+  // (mesma decisão do PANEL_V2.ptNum do engenheiro). Vai até o quintilhão (o dano do Celestial passa de 10 quatrilhões).
+  abbr:{ptNum:false, pt:[' mil',' mi',' bi',' tri',' qua',' qui'], en:['K','M','B','T','Qa','Qi']},
   wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'}}, wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
   eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
   maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
@@ -353,7 +356,12 @@ function skillFx(w,kind){ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DAT
   return F; }
 /* atalho com o nome pedido pelo PO: o mesmo Sys.fc.delta (antes/depois: números ou Sys.fc.snapshot) */
 const powerDelta=(a,b)=>{ const F=root.Sys&&root.Sys.fc; return F&&F.delta?F.delta(a,b):null; };
-const API={DATA,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+/* abbr(v, {pt}) → '999' · '1,2K' · '15,5K' · '3,4B' · '2,2Qa' (ou ' mil', ' mi', ' bi', ' tri', ' qua', ' qui' com ptNum). Vírgula decimal (pt-BR);
+   a partir de 100 na unidade, sem casa decimal ('157 tri'). Negativo com '−'. Abaixo de 1.000: inteiro. */
+function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA.abbr, pt=opt&&opt.pt!=null?!!opt.pt:A.ptNum===true, U=pt?A.pt:A.en;
+  let out; if(n<1000) out=String(Math.floor(n)); else { let i=-1; while(n>=1000&&i<U.length-1){ n/=1000; i++; } out=(n>=100?String(Math.round(n)):(Math.floor(n*10)/10).toFixed(1).replace('.',',').replace(',0',''))+U[i]; }
+  return (neg?'−':'')+out; }
+const API={DATA,abbr,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
