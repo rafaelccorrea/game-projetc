@@ -330,6 +330,35 @@ const SK = 'eras_proto_v2';
     cap(g); sv.fail['POST /auth/login/google'] = [500, 'internal']; const r3 = await g.promise('OnlineBoot.google()')(60);
     check('10. erro do servidor no login → {ok:false, reason} sem lançar', r3 && r3.v && r3.v.ok === false && r3.v.reason === 'internal', JSON.stringify(r3)); }
 
+  /* ============ 11. APARELHO SEM SAVE (ou com save vazio) × NUVEM COM PROGRESSO: NUNCA SOBE (perda de save achada pelo QA no servidor real) ============ */
+  sec('11. Aparelho sem save × nuvem com progresso');
+  { const PROG = () => cloudOf(5, mk({ gold: 777, name: 'DaNuvem', kills: 16, realm: 's1' }), { level: 2, stage: 9 });
+    const meta = d => ({ 'eon.net': netMem({ save: { version: 5, dirty: !!d } }) });
+    const g0 = game({ search: '?debug=1' }); g0.ev('save()'); const EMPTY = g0.ls.getItem(SK);   /* save vazio como o jogo grava ao nascer */
+    check('11. (preparo) o save recém-nascido do jogo: sem nome, tut 0, fase 1, sem abates', !!EMPTY && !JSON.parse(EMPTY).name && JSON.parse(EMPTY).stage === 1 && !JSON.parse(EMPTY).kills, String(EMPTY).slice(0, 120));
+    const cases = [['SEM save local, sessão guardada {v5, sem mudança}', meta(false)], ['SEM save local, sessão guardada {v5, "mudou"}', meta(true)],
+      ['save local VAZIO já gravado, sessão {v5, sem mudança}', Object.assign({ [SK]: EMPTY }, meta(false))], ['save local VAZIO já gravado, sessão {v5, "mudou"}', Object.assign({ [SK]: EMPTY }, meta(true))]];
+    for (const [nm, storage] of cases) {
+      { const sv = mkServer({ cloud: PROG() }); const g = game({ search: '?debug=1&online=1', server: sv, storage }); g.ev('save(); save()'); await g.settle(); const st = g.st(), o = g.stored();
+        check('11. ' + nm + ', no título: NENHUM PUT; a nuvem continua na versão 5 com o progresso', sv.count('PUT /save') === 0 && sv.cloud.version === 5 && sv.cloud.save.name === 'DaNuvem' && sv.cloud.save.kills === 16, sv.keys().join(',') + ' nuvem v' + sv.cloud.version + ' ' + sv.cloud.save.name);
+        check('11. ' + nm + ', no título: o jogo fica com o save da NUVEM (grava e recarrega)', !!o && o.name === 'DaNuvem' && o.kills === 16 && g.reloaded() && st.lastAction === 'applied', JSON.stringify(st) + ' ' + JSON.stringify(o).slice(0, 80)); }
+      { const sv = mkServer({ cloud: PROG() }); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage }); g.ev('S.welcome=true; S.gold+=200; save(); save()'); await g.settle(); g.ev('save()'); await g.adv(125000); const st = g.st();
+        check('11. ' + nm + ', batalha já rodando (gravações do save novo no meio do boot e depois): NENHUM PUT, nuvem intacta, save da nuvem PENDENTE', sv.count('PUT /save') === 0 && sv.cloud.version === 5 && sv.cloud.save.name === 'DaNuvem' && st.pending && st.lastAction === 'pending' && !g.reloaded(), sv.keys().join(',') + ' ' + JSON.stringify(st));
+        const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
+        check('11. ' + nm + ': na abertura seguinte entra o save da nuvem; nenhum PUT', g2.stored().name === 'DaNuvem' && g2.reloaded() && sv.count('PUT /save') === 0, String(g2.stored().name)); } }
+    { const sv = mkServer({ cloud: PROG(), fail: { 'GET /save': [503, 'unavailable'] } }); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: meta(false) }); await g.settle(); g.ev('S.gold=5; save(); save()'); await g.adv(125000);
+      check('11. aparelho vazio, nuvem com progresso e a descida FALHA (503): nada sobe (nem depois, jogando); o jogo segue local', sv.count('PUT /save') === 0 && sv.cloud.version === 5 && g.st().booted === false && g.stored().gold === 5, sv.keys().join(',') + ' ' + JSON.stringify(g.st())); }
+    { const sv = mkServer({ cloud: PROG(), fail: { 'GET /save/head': [503, 'unavailable'] } }); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: meta(true) }); await g.settle(); g.ev('save()'); await g.adv(125000);
+      check('11. aparelho vazio e a cabeça da nuvem não responde: nada sobe', sv.count('PUT /save') === 0 && sv.cloud.version === 5, sv.keys().join(',')); }
+    { const sv = mkServer({ cloud: cloudOf(1, JSON.parse(EMPTY), { level: 1, stage: 1, fc: 0, gems: 30, maxRarity: 0 }) }); const g = game({ search: '?debug=1&online=1', server: sv, storage: Object.assign({ [SK]: EMPTY }, { 'eon.net': netMem({ save: { version: 1, dirty: false } }) }) }); await g.settle(); const st = g.st();
+      check('11. jogador novo que ainda não jogou (aparelho vazio × nuvem vazia v1): segue normal ("none"), sem baixar nem recarregar em laço', st.lastAction === 'none' && st.booted && !g.reloaded() && sv.count('GET /save') === 0, JSON.stringify(st) + ' ' + sv.keys().join(',')); }
+    { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
+      check('11. jogador novo de verdade (sem save, sem sessão, nuvem vazia): cria a sessão e sobe o save novo, como antes', sv.count('POST /auth/guest') === 1 && sv.cloud && sv.cloud.version === 1 && g.st().lastAction === 'push', sv.keys().join(',')); }
+    { const sv = mkServer({ cloud: PROG() }); const g = game({ search: '?debug=1&online=1', server: sv, storage: meta(false) }); await g.settle();
+      check('11. depois de recarregar pelo save da nuvem a marca eon_cloud_reload existe (guarda contra laço)...', !!g.ls.getItem('eon_cloud_reload'), '');
+      const g2 = game({ search: '?debug=1&online=1', server: sv, storage: g.snap() }); await g2.settle();
+      check('11. ...e a abertura seguinte (que não recarrega) LIMPA a chave eon_cloud_reload; joga com o save da nuvem, nada sobe', g2.ls.getItem('eon_cloud_reload') == null && g2.ev('S.name') === 'DaNuvem' && g2.st().lastAction === 'none' && sv.count('PUT /save') === 0, String(g2.ls.getItem('eon_cloud_reload')) + ' ' + JSON.stringify(g2.st())); } }
+
   check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
   process.exit(fail ? 1 : 0);

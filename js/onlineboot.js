@@ -127,21 +127,42 @@
   /* o gancho summary é a FUNÇÃO: o Sys.net a chama na hora de cada pedido, junto com o save (d786848). Nada aqui guarda resumo de antes. */
   const HOOKS = { summary, apply, choose };
 
+  /* ---------- APARELHO SEM SAVE × NUVEM COM PROGRESSO (perda de save achada pelo QA no servidor real; regra do dono: NUNCA subir) ----------
+     O Sys.net guarda "a versão da nuvem que o aparelho conhece" na chave da sessão (eon.net), separada do save. Se o save local some (dados do jogo
+     apagados, chave removida) a sessão continua dizendo "versão 5, sem mudança": o sync devolve 'none' (ou 'push', se uma gravação do save novo marcar
+     "mudou" antes) e o save VAZIO recém-criado cobre a nuvem. Por isso, com o save do aparelho VAZIO (sem abates, fase 1, nível 1, 0 s de
+     jogo), ANTES do Sys.online.boot: abre a sessão, lê a cabeça da nuvem e, se ela tem progresso, BAIXA (Sys.net.pull) e passa pelo apply de sempre
+     (carregamento/título: grava e recarrega; jogo rodando: pendente). Erro no meio = o boot desta abertura para ali (nada sobe). Nuvem vazia ou sem
+     progresso = segue o caminho normal. Enquanto isso as gravações do save vazio não são repassadas (saved). */
+  function blank(S) { try { if (!S || typeof S !== 'object') return true; let lv = 1; try { lv = num(X().level.level(S)) || 1; } catch (e) {}
+      /* o nome não entra na conta: save antigo sem nome ganha "Kael" sozinho (js/farm.js) e o ?skip=1 também põe */
+      return !(S.kills > 0) && !(S.stage > 1) && !(S.best > 1) && !num(S.playSeconds) && lv <= 1; } catch (e) { return false; } }
+  const progress = s => !!s && (num(s.level) > 1 || num(s.stage) > 1 || num(s.era) > 0 || num(s.xp) > 0 || num(s.playSeconds) > 0);
+  async function rescue() { const N = X().net;
+    N.init({ storage: { get: LS.get, set: LS.set }, clientVersion: HOOKS.clientVersion });
+    await N.ensureSession(); const h = await N.head();
+    if (!h || !progress(h.summary)) return null;
+    dbg('aparelho sem save e nuvem com progresso: baixa a nuvem (nada sobe)');
+    const r = await N.pull(); if (!r || !r.save) throw Object.assign(new Error('pull'), { code: 'pull_failed' });
+    apply(r.save); return r; }
+
   /* ---------- boot ---------- */
   async function doBoot() {
     if (!ST.on) return { ok: false, reason: ST.why || 'off' };
     if (ST.reloading || W.__noSave) return { ok: false, reason: 'nosave' };
-    ST.booting = true; ST.applyRes = null; ST.choiceMade = false; let r;
+    ST.booting = true; ST.applyRes = null; ST.choiceMade = false; ST.blank = ST.blank0 != null ? ST.blank0 : blank(S); ST.blank0 = null; let r, resc = null;   /* 1º boot: o save como estava na abertura (start) */
     try { let v = '0'; try { v = VERSION; } catch (e) {} HOOKS.clientVersion = v;
       const O = X().online, N = X().net; O.DATA.on = true; N.DATA.on = true; N.DATA.base = baseUrl();
-      r = await O.boot(S, X().host, HOOKS); }
+      if (ST.blank) resc = await rescue();
+      r = ST.reloading ? { ok: true, save: 'pulled', deliveries: 0, mail: 0, errors: [] } : await O.boot(S, X().host, HOOKS); }
     catch (e) { r = { ok: false, reason: code(e) }; dbg('boot falhou', e); }
     r = r || { ok: false, reason: 'error' };
     ST.booting = false; ST.booted = !!r.ok; ST.last = r;
-    ST.lastAction = !r.ok ? null : r.save === 'pulled' ? (ST.applyRes || 'refused') : (r.save || null);
+    ST.lastAction = !r.ok ? null : (resc || r.save === 'pulled') ? (ST.applyRes || 'refused') : (r.save || null);
     /* a troca escolhida na tela falhou (sem rede no meio): a tela avisa e o jogo segue com o save do aparelho */
     if (ST.choiceMade) { const bad = (r.errors || []).find(x => /^save:/.test(x)) || (!r.ok ? 'save:' + r.reason : '');
       if (bad) { try { const C = W.CloudChoice; if (C && typeof C.failed === 'function') C.failed({ code: bad.replace(/^save:/, '') }); } catch (e) {} } }
+    if (!ST.reloading) LS.del('eon_cloud_reload');   /* a guarda contra recarga em laço só vale entre recargas seguidas: abertura que não recarrega limpa a chave */
     dbg('boot', r.ok ? 'ok' : 'sem servidor (' + r.reason + ')', 'save:', ST.lastAction, r.errors && r.errors.length ? r.errors : ''); emit();
     return r; }
   /* um boot de cada vez (o de depois do login espera o da abertura) */
@@ -154,7 +175,7 @@
       ST.why = wanted() ? blocked() : 'off';
       if (ST.why) { dbg('desligado (' + ST.why + ')'); return state(); }
       const N = X().net, O = X().online; N.DATA.base = baseUrl(); N.DATA.on = true; O.DATA.on = true; ST.on = true; ST.why = '';
-      watchPlay();
+      watchPlay(); ST.blank0 = blank(S);
       if (pendingAtOpen()) return state();   /* gravou o save pendente e está recarregando: nada mais nesta carga */
       runBoot();
     } catch (e) { dbg('start falhou', e); }
@@ -199,7 +220,7 @@
      mudado: e763f75). Com save pendente nada sobe. Com o boot EM ANDAMENTO e o jogo ainda no carregamento/título não repassa: as gravações de arrumação
      da abertura marcariam "aparelho mudou" antes de o sync ler, e a tela Nuvem × Aparelho abriria sem o jogador ter jogado. */
   function saved(S) { if (!ST.on || ST.pending || ST.reloading || W.__noSave || owner()) return false;
-    if (ST.booting && !started()) return false;
+    if (ST.booting && (!started() || ST.blank)) return false;   /* ST.blank: save vazio com o boot em andamento (ver rescue) */
     try { return !!X().online.saved(S); } catch (e) { dbg('saved falhou', e); }
     return false; }
 
