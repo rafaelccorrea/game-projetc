@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP V2. Fogueira das Eras V2 (PROPOSTA): nível próprio 1-60 independente da era, 9 estágios visuais pelo tema das eras, raridade e qualidade pelo nível; Brasas só jogando; cartão novo × o seu; mochila com desmontar rápido, cadeado e desfazer; introdução jogável curta. */
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão da VIP V2. Fogueira das Eras V2 (PROPOSTA, ajustada pela pesquisa de concorrentes): nível próprio 1-60, 9 estágios visuais, raridade e qualidade pelo nível; Brasas só jogando e pote de abates; automático cedo que pausa em Épico; recuperar os últimos 10 desmanches; introdução em que o jogador forja, equipa e desmancha. */
 :root{
   --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
   --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
@@ -269,16 +269,18 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events
       <h2>Simular</h2>
       <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
       <div class="seg" role="group" aria-label="Momento" style="margin-top:8px"><button data-scn="intro" aria-pressed="false">Primeira vez</button><button data-scn="med" aria-pressed="true">Medieval, fogueira 3</button><button data-scn="near" aria-pressed="false">Prestes a evoluir</button><button data-scn="n60" aria-pressed="false">Fogueira 38, automático</button></div>
+      <div class="seg" style="margin-top:8px"><button data-sim="kills">+20 abates (pote de Brasa)</button></div>
       <p class="sub" style="margin-top:8px">Primeira vez: a introdução jogável (~60 s, pode pular). Medieval com a fogueira 3: o exemplo do dono, na era Medieval com a fogueira de pedras. Prestes a evoluir: nível 21 com a barra cheia; "Subir" leva à Caldeira a vapor, com o clarão. Fogueira 38: o Reator de plasma com o automático.</p>
     </div>
     <div class="box">
       <h2>Proposta: estágios e chances</h2>
       <ul>
         <li>Estágios por nível: 1 Pedras, 5 Bronze, 10 Ferreiro, 16 Pólvora, 22 Vapor, 29 Elétrico, 36 Plasma, 44 Infernal, 52 Celestial (até o nível 60)</li>
-        <li>Chances pelo nível: Raro desde o 1 (8% + 1,2 por nível, até 35%), Épico do 8 (até 30%), Mítico do 20 (até 15%), Lendário do 35 (até 6%). O Básico nunca fica abaixo de 14%. O portão do jogador corta o que passar</li>
+        <li>Chances pelo nível: no nível 1, só Básico; Raro a partir do 2 (6% + 1,2 por nível, até 35%), Épico do 8 (até 30%), Mítico do 20 (até 15%), Lendário do 35 (até 6%). O Básico nunca fica abaixo de 14%. O portão do jogador corta o que passar</li>
         <li>Qualidade: média de estrelas = 1 + nível ÷ 15 (5 estrelas no 60)</li>
         <li>Subir: XP de forjar (1 por Brasa) e de desmontar; barra = 10 + 3 × nível; custo em ouro = 1.500 × 1,17^(nível−1)</li>
-        <li>Automático no nível 10 (Forja de ferreiro): lote 1/3/5, equipar o melhor, desmontar abaixo do filtro. É de todos</li>
+        <li>Automático CEDO, no nível 3 (~15 min de jogo): lote 1/3/5, equipar o melhor, desmontar abaixo do filtro, PAUSA em Épico ou melhor, respeita o cadeado, a mochila cheia nunca para o combate (desmonta a pior) e os últimos 10 desmanches podem ser recuperados por 5 min. É de todos</li>
+        <li>Pote de abates: a cada 20 abates enche e dá 1 Brasa (no palco: "pote N/20")</li>
         <li>Brasas só jogando: a cada 20 abates +1, fase +3, chefe +5, baú +5, missões do dia +20; guarda até 300. NUNCA à venda (sem pacote, loja, VIP ou anúncio)</li>
       </ul>
     </div>
@@ -326,10 +328,10 @@ const STAGES=[
  {from:36,name:'Reator de plasma',     era:'Futurista',    flame:['#8a4aff','#3ae8ff','#e8ffff'], base:'reactor'},
  {from:44,name:'Forja infernal',       era:'Submundo',     flame:['#a01020','#ff3a1a','#ffb07a'], base:'infernal'},
  {from:52,name:'Altar celestial',      era:'Celestial',    flame:['#ffd25e','#fff4c8','#ffffff'], base:'altar'}];
-const MAXF=60;
+const MAXF=60, AUTO_LV=3, KEEP_N=10, KEEP_MS=5*60;   /* pesquisa (docs/PESQUISA_CONCORRENTES.md): automático cedo; guarda os últimos 10 desmanches por 5 min */
 const stageOf=lv=>{ let i=0; for(let k=0;k<STAGES.length;k++) if(lv>=STAGES[k].from) i=k; return i; };
 /* chances por nível (proposta): Raro desde o 1, Épico do 8, Mítico do 20, Lendário do 35 */
-function weights(lv){ const R=Math.min(35,8+lv*1.2), E=lv>=8?Math.min(30,(lv-7)*1.1):0, M=lv>=20?Math.min(15,(lv-19)*0.6):0, L=lv>=35?Math.min(6,(lv-34)*0.24):0; return [Math.max(14,100-R-E-M-L),R,E,M,L]; }
+function weights(lv){ const R=lv>=2?Math.min(35,6+lv*1.2):0, E=lv>=8?Math.min(30,(lv-7)*1.1):0, M=lv>=20?Math.min(15,(lv-19)*0.6):0, L=lv>=35?Math.min(6,(lv-34)*0.24):0; return [Math.max(14,100-R-E-M-L),R,E,M,L]; }
 /* qualidade (estrelas 1-5 da peça): média sobe com o nível */
 const starsAvg=lv=>Math.min(5,1+lv/15);
 function odds(lv,cap){ const w=weights(lv).map((x,r)=>r<=cap?x:0), t=w.reduce((a,b)=>a+b,0); return w.map(x=>x/t*100); }
@@ -360,7 +362,7 @@ const SCN={intro:{lvl:1,flv:1,bra:0,gold:1200,cap:1,first:true},
 let S={hero:'kael'}, card=null;
 function reset(key){ const c=SCN[key], hero=S.hero||'kael';
   S={hero,scn:key,skin:'def',wing:'angel',weapon:['era2_t1',2,'Espada Longa Azul'],lvl:c.lvl,flv:c.flv,fxp:0,bra:c.bra,gold:c.gold,cap:c.cap,
-    eq:{},bag:[],bagMax:30,undo:null,stones:0,era:c.era||'Pré-História',auto:{on:!!c.auto,batch:5,equip:true,sellBelow:2},evolve:null,ground:[],fx:[],flare:0,intro:c.first?{step:0,kills:0,en:[]}:null,log:[]};
+    eq:{},bag:[],bagMax:30,undo:null,recent:[],pot:13,stones:0,era:c.era||'Pré-História',auto:{on:!!c.auto,batch:5,equip:true,sellBelow:2},evolve:null,ground:[],fx:[],flare:0,intro:c.first?{step:0,kills:0,en:[]}:null,log:[]};
   const lv=Math.max(1,Math.round(c.lvl*0.9)); if(!c.first){ S.eq.weapon=mkItem('weapon',Math.min(2,c.cap),lv); S.eq.armor=mkItem('armor',1,lv); S.eq.hat=mkItem('hat',1,lv); S.eq.gloves=mkItem('gloves',0,lv); S.eq.boots=mkItem('boots',1,lv); S.eq.necklace=mkItem('necklace',0,lv); }
   else { S.eq.weapon=mkItem('weapon',0,1,0.8); }
   if(c.full) S.fxp=fxpNeed(S.flv);
@@ -485,7 +487,8 @@ let t0=performance.now();
 function fx(s,c,xx,yy,big){ S.fx.push({s,c,x:xx,y:yy,t:S.t||0,big}); }
 
 /* ---------- forjar ---------- */
-function roll(){ const o=odds(S.flv,S.cap), u=Math.random()*100; let r=0, acc=0; for(let i=0;i<5;i++){ acc+=o[i]; if(u<acc){ r=i; break; } }
+function roll(){ const I=S.intro; if(I&&I.step===3) return mkItem('armor',1,1,1,2); if(I&&I.step===4) return mkItem('gloves',0,1,0.5,1);
+  const o=odds(S.flv,S.cap), u=Math.random()*100; let r=0, acc=0; for(let i=0;i<5;i++){ acc+=o[i]; if(u<acc){ r=i; break; } }
   const k=SLOTS[Math.floor(Math.random()*SLOTS.length)].k, sa=starsAvg(S.flv), st=Math.max(1,Math.min(5,Math.round(sa+(Math.random()-0.5)*1.6))); return mkItem(k,r,Math.max(1,Math.round(S.lvl*0.9)),0.9+Math.random()*0.2,st); }
 function deltaOf(it){ const cur=S.eq[it.slot]; return it.fc-(cur?cur.fc:0); }
 function forge(){ if(S.bra<=0){ toast('Sem Brasas: elas vêm de abates, fases, chefes, baú e missões'); return; } if(card||S.ground.length) return;
@@ -496,9 +499,10 @@ function closeCard(){ card=null; S.ground=[]; renderCard(); full(true); }
 function equip(it){ const old=S.eq[it.slot], f0=fcAll(); S.eq[it.slot]=it; const df=fcAll()-f0; fx('FC '+(df>=0?'+':'')+ab(df),df>=0?'#5ef0a0':'#ff9f9f',HX,GY-140,true); if(old) dismantle(old,true); }
 /* DESMONTAR devolve: ouro (pela FC e raridade), pedras de forja (Épico+: raridade − 1), 1 Brasa (Mítico+), XP da fogueira (2 + 3 × raridade) */
 const refundOf=it=>({gold:Math.round(it.fc*3*(1+it.r)),stones:it.r>=2?it.r-1:0,bra:it.r>=3?1:0,xp:2+it.r*3});
-function dismantleMany(list,why){ if(!list.length) return null; const tot={gold:0,stones:0,bra:0,xp:0};
-  for(const it of list){ const r=refundOf(it); for(const k in tot) tot[k]+=r[k]; } S.gold+=tot.gold; S.stones+=tot.stones; S.bra+=tot.bra; addFxp(tot.xp);
-  S.undo={items:list.slice(),tot,why,t:S.t||0}; return tot; }
+function dismantleMany(list,why){ if(!list.length) return null; const tot={gold:0,stones:0,bra:0,xp:0}, now=S.t||0;
+  for(const it of list){ const r=refundOf(it); for(const k in tot) tot[k]+=r[k]; S.recent.unshift({it,ref:r,t:now}); } S.recent=S.recent.filter(x=>now-x.t<KEEP_MS).slice(0,KEEP_N);
+  S.gold+=tot.gold; S.stones+=tot.stones; S.bra+=tot.bra; addFxp(tot.xp); S.undo={items:list.slice(),tot,why,t:now}; return tot; }
+function recover(id){ const i=S.recent.findIndex(x=>x.it.id===id); if(i<0) return; const x=S.recent[i], r=x.ref; S.gold-=r.gold; S.stones-=r.stones; S.bra=Math.max(0,S.bra-r.bra); S.fxp=Math.max(0,S.fxp-r.xp); S.recent.splice(i,1); S.bag.push(x.it); toast('Recuperado: '+x.it.name); full(true); }
 function dismantle(it,silent){ const tot=dismantleMany([it],'um'); if(!silent&&tot) fx('+'+ab(tot.gold)+' ouro','#ffd25e',FX,GY-120); }
 const totTxt=t=>'+'+ab(t.gold)+' ouro'+(t.stones?', +'+t.stones+' pedras de forja':'')+(t.bra?', +'+t.bra+' Brasa'+(t.bra>1?'s':''):'');
 /* GUARDAR na mochila; cheia (30): desmonta sozinha a PIOR destrancada, com aviso */
@@ -511,32 +515,36 @@ function addFxp(v){ if(S.flv>=MAXF) return; S.fxp=Math.min(fxpNeed(S.flv),S.fxp+
 function levelUp(){ if(S.flv>=MAXF) return; if(S.fxp<fxpNeed(S.flv)){ toast('Forje mais para encher a barra (faltam '+(fxpNeed(S.flv)-S.fxp)+' de XP)'); return; } const c=upCost(S.flv); if(S.gold<c){ toast('Falta ouro'); return; }
   const st0=stageOf(S.flv); S.gold-=c; S.fxp=0; S.flv++; S.flare=1; const st1=stageOf(S.flv);
   if(st1!==st0){ S.flare=2.2; S.evolve={t:S.t||0,name:STAGES[st1].name}; toast('A Fogueira evoluiu: '+STAGES[st1].name+'!'); } else toast('Fogueira nível '+S.flv); full(true); }
-function autoRun(){ if(S.flv<10) return; const N=Math.min(S.auto.batch,S.bra); if(!N){ toast('Sem Brasas'); return; } let eq=0, sold=0, kept=0, best=-1;
-  for(let i=0;i<N;i++){ S.bra--; addFxp(1); const it=roll(); best=Math.max(best,it.r); if(S.auto.equip&&deltaOf(it)>0){ equip(it); eq++; } else if(it.r<S.auto.sellBelow){ dismantle(it,true); sold++; } else { keep(it); kept++; } }
-  S.flare=1.5; S.log.unshift({N,eq,sold,kept,best}); toast('Forjou '+N+': '+eq+' equipado'+(eq===1?'':'s')+', '+sold+' desmontado'+(sold===1?'':'s')+', '+kept+' guardado'+(kept===1?'':'s')); full(true); }
+function autoRun(){ if(S.flv<AUTO_LV) return; const N=Math.min(S.auto.batch,S.bra); if(!N){ toast('Sem Brasas'); return; } let eq=0, sold=0, kept=0, done=0, pause=null;
+  for(let i=0;i<N;i++){ S.bra--; addFxp(1); done++; const it=roll(); if(it.r>=2){ pause=it; break; }
+    if(S.auto.equip&&deltaOf(it)>0){ equip(it); eq++; } else if(it.r<S.auto.sellBelow){ dismantle(it,true); sold++; } else { keep(it); kept++; } }
+  S.flare=1.5; S.log.unshift({N:done,eq,sold,kept});
+  if(pause){ toast('Pausou: saiu '+RN[pause.r]+'! Você decide'); S.ground=[{it:pause,t:S.t||0,x:215,delta:deltaOf(pause)}]; setTimeout(()=>openCard(pause),400); }
+  else toast('Forjou '+done+': '+eq+' equipado'+(eq===1?'':'s')+', '+sold+' desmontado'+(sold===1?'':'s')+', '+kept+' guardado'+(kept===1?'':'s'));
+  full(true); }
 
 /* ---------- telas ---------- */
 function renderTop(){ $('#bIc').innerHTML=SV.brasa; $('#bra').textContent=n(S.bra); $('#gold').textContent=ab(S.gold); }
 function renderFP(){ const o=odds(S.flv,S.cap), on=!(S.intro&&S.intro.step<3); if(!on){ $('#fp').innerHTML=''; return; }
   const si=stageOf(S.flv), st=STAGES[si], nx=STAGES[si+1], need=fxpNeed(S.flv), fullBar=S.fxp>=need, top=S.flv>=MAXF;
   $('#fp').innerHTML=`<div class="fpan"><div class="frow"><span class="lv">NÍVEL<b>${S.flv}</b></span><span class="mi"><b>${esc(st.name)}</b><small>estágio ${si+1} de 9 (tema ${esc(st.era)})${nx?' · evolui no nível '+nx.from+': '+esc(nx.name):' · estágio final'} · você está na era ${esc(S.era)}</small></span></div>
-    <div class="bar" style="margin-top:6px"><i style="width:${top?100:Math.min(100,S.fxp/need*100).toFixed(1)}%;background:linear-gradient(90deg,#ff8a3c,#ffe07a)"></i></div><div class="prog" style="font-size:10.5px"><span>XP da fogueira ${top?'máximo':S.fxp+'/'+need}</span><span>qualidade média ${dec(starsAvg(S.flv),1)} estrelas</span></div>
+    <div class="bar" style="margin-top:6px"><i style="width:${top?100:Math.min(100,S.fxp/need*100).toFixed(1)}%;background:linear-gradient(90deg,#ff8a3c,#ffe07a)"></i></div><div class="prog" style="font-size:10.5px"><span>XP da fogueira ${top?'máximo':S.fxp+'/'+need} · pote ${S.pot}/20 abates</span><span>qualidade média ${dec(starsAvg(S.flv),1)} estrelas</span></div>
     <div class="odds">${o.map((p,r)=>`<span class="${r>S.cap?'lock':''}" style="--rc:${RC[r]}">${RN[r]}<small>${r>S.cap?'portão':dec(p,p<10?1:0)+'%'}</small></span>`).join('')}</div>
-    <div class="big2"><button class="bt" data-act="forge" ${S.bra>0?'':'disabled'}>Forjar 1 <span class="brasa">${SV.brasa}</span></button>${S.flv>=10&&S.auto.on?`<button class="bt" data-act="auto">Automático ×${S.auto.batch}</button>`:`<button class="bt ${fullBar&&!top?'':'off'}" data-act="up">${top?'Nível máximo':fullBar?'Subir: '+ab(upCost(S.flv))+' de ouro':'Forje para encher'}</button>`}</div></div>`; }
+    <div class="big2"><button class="bt" data-act="forge" ${S.bra>0?'':'disabled'}>Forjar 1 <span class="brasa">${SV.brasa}</span></button>${S.flv>=AUTO_LV&&S.auto.on?`<button class="bt" data-act="auto">Automático ×${S.auto.batch}</button>`:`<button class="bt ${fullBar&&!top?'':'off'}" data-act="up">${top?'Nível máximo':fullBar?'Subir: '+ab(upCost(S.flv))+' de ouro':'Forje para encher'}</button>`}</div></div>`; }
 function renderBody(keep){ const b=$('#body'), sc=b.scrollTop; if(S.intro&&S.intro.step<3){ b.innerHTML='<p class="hint" style="text-align:center;margin-top:20px">Introdução: siga os passos no palco.</p>'; return; }
-  const autoBox=S.flv>=10?`<div class="sw2"><span>Automático<small>Forja em lote; equipa o que tiver mais FC; desmonta abaixo do filtro</small></span><button class="tg" data-tg="on" aria-pressed="${S.auto.on}" aria-label="Automático"></button></div>
+  const autoBox=S.flv>=AUTO_LV?`<div class="sw2"><span>Automático<small>Forja em lote; equipa o que tiver mais FC; desmonta abaixo do filtro</small></span><button class="tg" data-tg="on" aria-pressed="${S.auto.on}" aria-label="Automático"></button></div>
     <div class="sw2"><span>Por toque</span><span class="seg2">${[1,3,5].map(k=>`<button data-batch="${k}" aria-pressed="${S.auto.batch===k}">${k}</button>`).join('')}</span></div>
     <div class="sw2"><span>Equipar o melhor sozinho</span><button class="tg" data-tg="equip" aria-pressed="${S.auto.equip}" aria-label="Equipar o melhor"></button></div>
     <div class="sw2"><span>Desmontar abaixo de</span><span class="seg2">${[1,2,3].map(r=>`<button data-sell="${r}" aria-pressed="${S.auto.sellBelow===r}" style="color:${RC[r]}">${RN[r]}</button>`).join('')}</span></div>`
-    :`<div class="lockbox">Automático abre no nível 10 da fogueira (Forja de ferreiro) (faltam ${10-S.flv}). Até lá, cada toque mostra o item para você escolher.</div>`;
+    :`<div class="lockbox">Automático abre no nível ${AUTO_LV} da fogueira (~15 min de jogo) (faltam ${AUTO_LV-S.flv}). Até lá, cada toque mostra o item para você escolher.</div>`;
   const LK='<svg viewBox="0 0 24 24" fill="none" stroke="#ffd25e" stroke-width="2.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>', UL='<svg viewBox="0 0 24 24" fill="none" stroke="#9aa6d6" stroke-width="2.6" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 017.5-2"/></svg>';
   const bagH=`<div class="sec"><span>Mochila ${S.bag.length}/${S.bagMax}</span><span>cheia: desmonta a pior destrancada</span></div>
     <div class="qd"><button class="bt off" data-q="worse">Desmontar os piores que o seu</button>${[1,2,3].map(r=>`<button class="bt off" data-q="below" data-r="${r}">Abaixo de ${RN[r]}</button>`).join('')}</div>
-    ${S.undo?`<div class="qd"><button class="bt" data-q="undo">Desfazer: ${S.undo.items.length} item${S.undo.items.length>1?'s':''} (${totTxt(S.undo.tot)})</button></div>`:''}
+    ${S.recent.length?`<div class="sec"><span>Recuperar (últimos ${KEEP_N}, por 5 min)</span><span>${S.recent.length}</span></div><div class="bag">${S.recent.map(x=>`<div class="bi" style="--rc:${RC[x.it.r]};opacity:.75"><img src="${x.it.img}" alt=""><small>${RN[x.it.r]}</small><button class="lk" data-rec="${x.it.id}" aria-label="Recuperar ${esc(x.it.name)}" style="width:auto;padding:0 3px;font-size:9px;font-weight:900;color:#5ef0a0">voltar</button></div>`).join('')}</div>`:''}
     <div class="bag">${S.bag.map(it=>{ const d=deltaOf(it); return `<div class="bi ${it.lock?'locked':''}" style="--rc:${RC[it.r]}"><img src="${it.img}" alt=""><small>${'★'.repeat(it.stars||1)}</small><small class="${d>0?'du':'dl'}">${d>0?'+':''}${ab(d)}</small><button class="lk" data-lock="${it.id}" aria-pressed="${!!it.lock}" aria-label="${it.lock?'Destrancar':'Trancar'} ${esc(it.name)}">${it.lock?LK:UL}</button></div>`; }).join('')}</div>
     <p class="hint">Cadeado: o item nunca é desmontado (nem no rápido, nem no automático, nem com a mochila cheia). Desmontar devolve ouro, XP da fogueira, pedras de forja (Épico+) e 1 Brasa (Mítico+). Você tem ${n(S.stones)} pedras de forja.</p>`;
   b.innerHTML=bagH+`<div class="sec"><span>Automático</span><span>de todos, não é VIP</span></div>${autoBox}
-    ${S.flv>=10&&S.auto.on?`<div class="big2" style="margin-top:0"><button class="bt ${S.fxp>=fxpNeed(S.flv)?'':'off'}" data-act="up">Subir para o nível ${S.flv+1}: ${ab(upCost(S.flv))} de ouro</button></div>`:''}
+    ${S.flv>=AUTO_LV&&S.auto.on?`<div class="big2" style="margin-top:0"><button class="bt ${S.fxp>=fxpNeed(S.flv)?'':'off'}" data-act="up">Subir para o nível ${S.flv+1}: ${ab(upCost(S.flv))} de ouro</button></div>`:''}
     <div class="sec"><span>Os 9 estágios</span><span>só o visual muda</span></div>
     <div class="src">${STAGES.map((x,i)=>`<span style="${i===stageOf(S.flv)?'color:var(--gold)':''}">${i+1}. ${esc(x.name)}</span><span>nível ${x.from}</span>`).join('')}</div>
     <div class="sec"><span>De onde vêm as Brasas</span><span>só jogando</span></div>
@@ -559,10 +567,11 @@ function go(where){ const d=document.createElement('div'); d.className='nav'; d.
 /* ---------- INTRODUÇÃO JOGÁVEL (~60 s; pular em qualquer passo) ---------- */
 const STORY=[['O relógio quebrado','O seu avô guardava um relógio que atravessa as eras. Ele quebrou, e as peças caíram em 9 eras diferentes.'],['O portal','Cada era tem um Senhor que guarda uma peça. Comece pela Pré-História: os lagartos já vêm aí.']];
 function renderOv(){ const o=$('#ov'), I=S.intro; let h='';
-  if(I){ h+=`<div class="steps">${[0,1,2,3,4].map(i=>`<i class="${i<=I.step?'on':''}"></i>`).join('')}</div>`;
+  if(I){ h+=`<div class="steps">${[0,1,2,3,4,5].map(i=>`<i class="${i<=I.step?'on':''}"></i>`).join('')}</div>`;
     if(I.step===2&&!S.ground.length) h+=`<div class="hint2">A batalha é automática: o herói ataca sozinho</div>`;
     if(I.step===2&&S.ground.length&&!card) h+=`<div class="hint2">Caiu um item! Toque nele para pegar</div>`;
-    if(I.step===3&&!card&&!S.ground.length) h+=`<div class="hint2">A fogueira acendeu: toque nela para forjar com 1 Brasa</div>`; }
+    if(I.step===3&&!card&&!S.ground.length) h+=`<div class="hint2">A fogueira acendeu: toque nela para forjar com 1 Brasa</div>`;
+    if(I.step===4&&!card&&!S.ground.length) h+=`<div class="hint2">Forje mais uma e desmanche a pior</div>`; }
   else if(!card&&S.bra>0) h+=`<div class="hint2">Toque na fogueira para forjar</div>`;
   o.innerHTML=h; renderIntro(); }
 function renderIntro(){ const old=document.getElementById('introov'); if(old) old.remove(); const I=S.intro; if(!I||I.step>1) return; const s=STORY[I.step], d=document.createElement('div'); d.className='intro'; d.id='introov';
@@ -578,7 +587,8 @@ let ovKey='';
 function renderOvLite(){ const k=S.intro?S.intro.step+'|'+S.ground.length+'|'+!!card:''; if(k!==ovKey){ ovKey=k; renderOv(); } }
 function introNext(){ const I=S.intro; if(!I) return; I.step++;
   if(I.step===3){ S.bra+=3; S.flare=1.6; toast('A Fogueira das Eras acendeu! +3 Brasas'); }
-  if(I.step>=5){ endIntro(); return; } full(false); }
+  if(I.step===4){ toast('Agora forje de novo e DESMANCHE o que não presta'); }
+  if(I.step>=6){ endIntro(); return; } full(false); }
 function endIntro(){ S.intro=null; S.ground=[]; card=null; renderCard(); toast('Introdução feita. Fase 1!'); full(false); }
 
 /* ---------- cliques ---------- */
@@ -587,22 +597,24 @@ scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) ret
   if(d.go){ go(d.go); return; }
   if(d.i==='skip'){ endIntro(); return; }
   if(d.i==='next'){ introNext(); return; }
-  if(b.id==='tapF'){ const I=S.intro; if(I&&I.step<3) return; if(S.ground.length&&!card){ openCard(S.ground[0].it); return; } forge(); if(I&&I.step===3) I.forged=true; return; }
+  if(b.id==='tapF'){ const I=S.intro; if(I&&I.step<3) return; if(S.ground.length&&!card){ openCard(S.ground[0].it); return; } forge(); if(I&&(I.step===3||I.step===4)) I.forged=true; return; }
   if(d.c){ const it=card; if(d.c==='equip'){ equip(it); } else if(d.c==='keep'){ keep(it); } else dismantle(it); const I=S.intro; closeCard();
-    if(I&&I.step===2){ introNext(); } else if(I&&I.step===3&&I.forged){ I.step=4; setTimeout(()=>{ if(S.intro&&S.intro.step===4){ endIntro(); } },900); full(false); }
+    if(I&&I.step===2){ introNext(); } else if(I&&I.step===3&&I.forged){ I.forged=false; introNext(); } else if(I&&I.step===4&&I.forged){ if(d.c==='sell'){ introNext(); introNext(); } else toast('Este é pior: toque em Desmontar'); }
     return; }
-  if(d.act==='forge'){ forge(); if(S.intro&&S.intro.step===3) S.intro.forged=true; return; }
+  if(d.act==='forge'){ forge(); if(S.intro&&(S.intro.step===3||S.intro.step===4)) S.intro.forged=true; return; }
   if(d.act==='up'){ levelUp(); return; }
   if(d.act==='auto'){ autoRun(); return; }
   if(d.tg){ S.auto[d.tg]=!S.auto[d.tg]; full(true); return; }
   if(d.batch){ S.auto.batch=+d.batch; full(true); return; }
   if(d.sell){ S.auto.sellBelow=+d.sell; full(true); return; }
+  if(d.rec){ recover(+d.rec); return; }
   if(d.q==='worse'){ quick('worse'); return; } if(d.q==='below'){ quick('below',+d.r); return; } if(d.q==='undo'){ undo(); return; }
   if(d.lock){ const it=S.bag.find(x=>x.id===+d.lock); if(it){ it.lock=!it.lock; toast(it.lock?'Trancado: nunca será desmontado':'Destrancado'); full(true); } return; } });
 /* tocar no item caído (intro e normal): toque no palco perto do item abre o cartão */
 $('#stage').addEventListener('click',e=>{ if(e.target.closest('button')) return; if(S.ground.length&&!card){ openCard(S.ground[0].it); } });
 function syncSide(){ document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.hero===S.hero)); document.querySelectorAll('[data-scn]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.scn===S.scn)); }
 document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.sim==='kills'){ if(!S.eq) return; S.pot+=20; while(S.pot>=20){ S.pot-=20; S.bra=Math.min(300,S.bra+1); } toast('Pote cheio: +1 Brasa'); full(true); return; }
   if(d.hero){ S.hero=d.hero; syncSide(); full(true); } else if(d.scn){ reset(d.scn); syncSide(); renderCard(); full(false); } });
 S.hero='kael'; reset('med'); full(false);
 setTimeout(()=>{ for(const h of ['kael','kaia']) img('a/body_'+h+'.png'); img('a/en0_e0.png'); for(const s of SLOTS) for(let r=0;r<5;r++) img(s.img(r)); },600);
