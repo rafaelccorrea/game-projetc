@@ -75,7 +75,8 @@ body.fb #tut .tring{box-shadow:0 0 0 3px #ffc94a,0 0 18px 6px rgba(255,201,74,.7
 .fb-novo{position:absolute;left:50%;top:-9px;transform:translateX(-50%);height:15px;padding:0 6px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:9.5px;line-height:15px;font-weight:900;white-space:nowrap;border:1px solid #2a1403;animation:fbbdg 1s ease-in-out infinite;z-index:2}
 .fb-tag{position:absolute;left:50%;top:-7px;transform:translateX(-50%);height:14px;padding:0 5px;border-radius:7px;background:#ffc94a;color:#2a1403;font-size:8.5px;line-height:14px;font-weight:900;white-space:nowrap;border:1px solid #2a1403}
 @keyframes fbbdg{0%,80%,100%{transform:scale(1)}88%{transform:scale(1.25)}}
-.fb-pill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box}
+.fb-pill{height:38px;display:flex;align-items:center;gap:5px;padding:0 4px;border-radius:999px;color:#f6ecdf;box-sizing:border-box;position:relative}
+.fb-pill::after{content:"";position:absolute;left:0;right:0;top:50%;height:42px;transform:translateY(-50%)}   /* QA 69586ea: ouro e gemas com alvo de toque ≥ 40 px sem mexer na altura da barra */
 .fb-plus{width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#7fe07a,#3fae3c);color:#0d2410;font-size:17px;font-weight:900;line-height:24px;text-align:center;box-shadow:0 2px 0 #1f6a1d}
 .fb-rb{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f6ecdf;padding:0;box-sizing:border-box}
 .fb-eq{display:flex;gap:2px;align-items:flex-end;height:14px}.fb-eq i{width:3px;height:100%;background:#ffe2a8;border-radius:1px;animation:fbeqa .9s ease-in-out infinite;transform-origin:50% 100%}.fb-eq i:nth-child(2){animation-delay:.2s}.fb-eq i:nth-child(3){animation-delay:.4s}
