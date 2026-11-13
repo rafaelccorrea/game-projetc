@@ -117,14 +117,17 @@
     let p; try { p = fn(Object.assign({}, info, { recommend: rec })); } catch (e) { dbg('CloudChoice falhou ao abrir', e); return Promise.resolve(rec); }
     if (!p || typeof p.then !== 'function') return Promise.resolve(rec);
     ST.choosing = true; beatOn(); emit();
-    const done = v => { ST.choosing = false; beatOff(); ST.choiceMade = true; emit(); return v === 'cloud' || v === 'device' ? v : rec; };
+    /* o resumo foi montado ANTES da escolha e o Sys.online.boot manda esse mesmo objeto no chooseSide: se o jogo andou com a tela aberta, ele é refeito
+       no lugar, do S de agora (o servidor confere era, stage e gems contra o save enviado) */
+    const done = v => { ST.choosing = false; beatOff(); ST.choiceMade = true; try { if (ST.sum) Object.assign(ST.sum, summary(S)); } catch (e) {} emit(); return v === 'cloud' || v === 'device' ? v : rec; };
     return ST.choiceP = Promise.resolve(p).then(done, () => done(rec)); }
   /* com a escolha aberta a tela de carregamento não pode dar "parou" nem abandonar a tarefa "online" (js/preload.js: STALL_MS/TASK_MS): uma tarefa vazia a cada
      5 s marca progresso (o mesmo recurso do "Tentar de novo" do js/loading.js) enquanto o carregamento estiver na frente */
   function beatOn() { beatOff(); try { ST.beat = setInterval(() => { try { if (!ST.choosing) { beatOff(); return; } if (typeof LD !== 'undefined' && LD.el && !LD.closed && !LD.fin && W.Preload && typeof W.Preload.track === 'function') W.Preload.track(Promise.resolve(true), 'online: escolha'); } catch (e) {} }, 5000); } catch (e) {} }
   function beatOff() { try { if (ST.beat) clearInterval(ST.beat); } catch (e) {} ST.beat = 0; }
 
-  const HOOKS = { summary, apply, choose };
+  /* o resumo é SEMPRE montado na hora, do S que vai junto (boot: logo antes do sync; subida: dentro do temporizador do Sys.online, na hora do PUT) */
+  const HOOKS = { summary: s => (ST.sum = summary(s)), apply, choose };
 
   /* ---------- boot ---------- */
   async function doBoot() {
@@ -174,7 +177,9 @@
   /* LOGIN GOOGLE (as telas são do Servidor):
        1) Sys.net.googleSignIn('login'): conta já vinculada → entra nela e refaz o boot (o save da conta vem pela regra de sempre)
             → {ok:true, action:'login', save:<lastAction>, pending, player}
-       2) 404 not_linked: a conta Google não tem personagem neste servidor → vincula ao convidado ATUAL (o save do aparelho continua)
+       2) 404 not_linked: a conta Google não tem personagem neste servidor → vincula ao convidado ATUAL (o save do aparelho continua) com o MESMO
+          idToken (e.idToken do erro, Sys.net e763f75: a janela do Google abre UMA vez; é o que o modo 'auto' faz por dentro, mas em dois passos para
+          saber se foi 'login' ou 'linked'). Sys.net antigo, sem e.idToken: caminho antigo (abre a janela de novo)
             → {ok:true, action:'linked', player}
        3) 409 link_taken: essa conta Google é de outro jogador → {ok:false, reason:'link_taken', other: details.otherPlayer}
        qualquer outro erro ou cancelamento → {ok:false, reason} ('cancelled', 'google_unavailable', 'offline'...). Nunca trava nem lança. */
@@ -184,7 +189,7 @@
       const N = X().net;
       try { await N.googleSignIn('login'); }
       catch (e) { const c = code(e); if (c !== 'not_linked') return { ok: false, reason: c };
-        try { if (!N.hasSession()) await N.ensureSession(); const p = await N.googleSignIn('link'); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
+        try { if (!N.hasSession()) await N.ensureSession(); const p = await (e && e.idToken ? N.googleSignIn('link', { idToken: e.idToken }) : N.googleSignIn('link')); emit(); return { ok: true, action: 'linked', player: p || N.player() }; }
         catch (e2) { const c2 = code(e2); return c2 === 'link_taken' ? { ok: false, reason: 'link_taken', other: (e2.details && e2.details.otherPlayer) || null } : { ok: false, reason: c2 }; } }
       const r = await reboot(); let pl = null; try { pl = N.player(); } catch (e) {}
       return { ok: true, action: 'login', save: r.action, pending: !!ST.pending, player: pl, boot: r }; };
@@ -192,10 +197,12 @@
     ST.gP = run().then(r => { fin(); return r; }, e => { fin(); dbg('google falhou', e); return { ok: false, reason: code(e) }; });
     return ST.gP; }
 
-  /* depois de cada gravação local (save() do index.html). Antes de o boot terminar (ou sem rede) o Sys.online.saved não marca nada: a mudança fica
-     marcada direto no Sys.net (senão um aparelho jogado sem rede perderia para a nuvem sem pergunta). Com save pendente nada sobe. */
+  /* depois de cada gravação local (save() do index.html): repassa ao Sys.online.saved (que sobe no intervalo dele e, sem boot, marca o aparelho como
+     mudado: e763f75). Com save pendente nada sobe. Com o boot EM ANDAMENTO e o jogo ainda no carregamento/título não repassa: as gravações de arrumação
+     da abertura marcariam "aparelho mudou" antes de o sync ler, e a tela Nuvem × Aparelho abriria sem o jogador ter jogado. */
   function saved(S) { if (!ST.on || ST.pending || ST.reloading || W.__noSave || owner()) return false;
-    try { const O = X().online, N = X().net; if (O.saved(S)) return true; if (!ST.booting && !ST.booted && N && typeof N.markDirty === 'function' && N.hasSession && N.hasSession()) N.markDirty(); } catch (e) { dbg('saved falhou', e); }
+    if (ST.booting && !started()) return false;
+    try { return !!X().online.saved(S); } catch (e) { dbg('saved falhou', e); }
     return false; }
 
   /* ---------- TEMPO DE JOGO: S.playSeconds (decisão do coordenador; é dado do SAVE: conta com o online ligado ou desligado) ----------

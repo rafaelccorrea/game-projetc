@@ -24,6 +24,7 @@ const SUM = o => Object.assign({ level: 1, xp: 0, era: 0, stage: 9, fc: 100, gem
 const cloudOf = (version, save, summary) => ({ version, updatedAt: Date.now() - 60000, deviceId: 'outro-aparelho', summary: SUM(summary), save });
 const netMem = o => JSON.stringify(Object.assign({ deviceId: 'dev-1', access: 'A0', refresh: 'R0', accessExpiresAt: 0, player: { id: 'p1' } }, o || {}));
 
+const PUTS = { n: 0, bad: [] };
 /* ---------------- servidor de mentira (contrato docs/API_SERVIDOR.md) ---------------- */
 function mkServer(o) {
   const sv = Object.assign({ calls: [], silent: false, cloud: null, google: 'ok', link: 'ok', n: 0, fail: {} }, o || {});
@@ -41,6 +42,8 @@ function mkServer(o) {
       case 'GET /save/head': return Promise.resolve(sv.cloud ? resp(200, head()) : err(404, 'not_found'));
       case 'GET /save': return Promise.resolve(sv.cloud ? resp(200, Object.assign(head(), { save: sv.cloud.save })) : err(404, 'not_found'));
       case 'PUT /save': { const cur = sv.cloud ? sv.cloud.version : 0; if (body.baseVersion !== cur) return Promise.resolve(err(409, 'save_conflict', { cloud: head() }));
+        /* o servidor real CONFERE era, stage e gems do resumo contra o save enviado (e os 8 números >= 0): o de mentira anota cada divergência */
+        { const s = body.summary || {}, v = body.save || {}; PUTS.n++; if (s.era !== v.eraMax || s.stage !== v.stage || s.gems !== v.gems || s.playSeconds !== Math.floor(v.playSeconds || 0) || !['level', 'xp', 'era', 'stage', 'fc', 'gems', 'playSeconds', 'maxRarity'].every(k => typeof s[k] === 'number' && isFinite(s[k]) && s[k] >= 0)) PUTS.bad.push(JSON.stringify(s) + ' × save {eraMax:' + v.eraMax + ', stage:' + v.stage + ', gems:' + v.gems + '}'); }
         sv.cloud = { version: cur + 1, updatedAt: Date.now(), deviceId: body.deviceId, summary: body.summary, save: body.save }; return Promise.resolve(resp(200, { version: cur + 1, updatedAt: sv.cloud.updatedAt })); }
       case 'POST /auth/login/google': if (sv.google === 'ok') sv.pid = 'g1'; return Promise.resolve(sv.google === 'ok' ? resp(200, sess('g1')) : err(404, 'not_linked'));
       case 'POST /auth/link/google': return Promise.resolve(sv.link === 'ok' ? resp(200, { id: 'p1', ageBand: '18+', linked: ['google'] }) : err(409, 'link_taken', { otherPlayer: { level: 12, era: 1, updatedAt: 111 } }));
@@ -205,6 +208,12 @@ const SK = 'eras_proto_v2';
   { const g = await conflict(); g.ev("CloudChoice._click('device'); CloudChoice._click('device')"); await g.settle(); const st = g.st();
     check('6. escolheu APARELHO: sobe por cima da nuvem (um PUT, base 5 → versão 6), sem recarga, save local intacto', g.sv.count('PUT /save') === 1 && g.sv.cloud.version === 6 && g.sv.cloud.save.gold === 1234 && !g.reloaded() && g.ev('S.gold') === 1234 && st.lastAction === 'push', g.sv.keys().join(',') + ' ' + JSON.stringify(st));
     check('6. depois da escolha a espera termina (o jogo segue)', g.ev('window.__w') === 1 && !st.choosing, String(g.ev('window.__w'))); }
+  { const g = await conflict(); g.ev("S.gems=4040; S.stage=12; S.best=12; S.eraMax=1; CloudChoice._click('device'); CloudChoice._click('device')"); await g.settle(); const b = g.sv.last('PUT /save').body;
+    check('6. o save mudou COM A TELA ABERTA: o resumo enviado é refeito do S de agora (era, stage e gems batem com o save enviado)', b.summary.gems === 4040 && b.save.gems === 4040 && b.summary.stage === 12 && b.save.stage === 12 && b.summary.era === 1 && b.save.eraMax === 1, JSON.stringify(b.summary)); }
+  { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 999999, realm: 's1' })) });
+    const g = game({ search: '?debug=1&online=1', server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, { 'eon.net': netMem({ save: { version: 3, dirty: false } }) }) });
+    g.ev('save(); save()'); await g.settle(); const st = g.st();
+    check('6. gravações de arrumação DURANTE o boot, ainda no carregamento/título, não abrem a tela à toa: nuvem mais nova e aparelho parado → baixa direto', !st.choosing && st.lastAction === 'applied' && g.reloaded() && g.stored().gold === 999999, JSON.stringify(st) + ' ' + sv.keys().join(',')); }
   { const g = await conflict(); g.sv.fail['GET /save'] = [503, 'unavailable']; const loc = g.ls.getItem(SK); g.ev("CloudChoice._click('cloud'); CloudChoice._click('cloud')"); await g.settle(); const st = g.st();
     check('6. a troca FALHOU (sem rede no meio): CloudChoice.failed(err) é chamada', g.ev('window.__cf') !== null && g.ev('window.__cf.code') === 'unavailable', JSON.stringify(g.ev('window.__cf&&window.__cf.code')));
     check('6. ...e o jogo segue com o save do aparelho: SAVE_KEY intacta, sem recarga, espera terminada', g.ls.getItem(SK) === loc && !g.reloaded() && !g.ev('!!window.__noSave') && g.ev('window.__w') === 1 && st.lastAction === null, JSON.stringify(st)); }
@@ -307,6 +316,7 @@ const SK = 'eras_proto_v2';
   { const sv = mkServer({ google: 'not_linked', link: 'ok' }); const loc = JSON.stringify(mk()); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: { [SK]: loc } }); await g.settle(); cap(g); const n0 = sv.calls.length;
     const r = await g.promise('OnlineBoot.google()')(120), ks = sv.keys().slice(n0);
     check('10. (b) 404 not_linked → vincula ao convidado atual (POST /auth/link/google com a sessão)', r && r.v && r.v.ok === true && r.v.action === 'linked' && ks.join(',') === 'POST /auth/login/google,POST /auth/link/google' && /^Bearer /.test(sv.last('POST /auth/link/google').headers.authorization || ''), JSON.stringify(r) + ' ' + ks.join(','));
+    check('10. (b) a janela do Google abriu UMA vez e o vínculo usou o MESMO idToken', g.G.sandbox.__gl === 1 && sv.last('POST /auth/link/google').body.idToken === 'tok-1', 'janelas ' + g.G.sandbox.__gl + ' ' + JSON.stringify(sv.last('POST /auth/link/google').body));
     check('10. (b) o save do aparelho continua (nada baixado, nada recarregado)', g.ev('S.gold') === 1234 && !g.reloaded() && g.st().pending === false, ''); }
   { const sv = mkServer({ google: 'not_linked', link: 'taken' }); const g = game({ search: '?debug=1&online=1&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle(); cap(g);
     const r = await g.promise('OnlineBoot.google()')(120);
@@ -320,6 +330,7 @@ const SK = 'eras_proto_v2';
     cap(g); sv.fail['POST /auth/login/google'] = [500, 'internal']; const r3 = await g.promise('OnlineBoot.google()')(60);
     check('10. erro do servidor no login → {ok:false, reason} sem lançar', r3 && r3.v && r3.v.ok === false && r3.v.reason === 'internal', JSON.stringify(r3)); }
 
+  check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('ERRO NO TESTE:', e && e.stack || e); process.exit(1); });
