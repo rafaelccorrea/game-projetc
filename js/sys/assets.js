@@ -15,7 +15,7 @@ const DATA={
   // FICAM no APK os _ref que as telas desenham: assets/pets/<espécie>_ref.png (1º estágio na tela de Pets) e assets/mounts/mount_<id>_ref.png (Códex).
   // assets/mobile = ícones da loja/lançador (vão no build nativo, não no jogo). EXCEÇÃO: o fundo da tela de carregamento
   // (splash_loading.webp e a reserva .jpg, a659e6d) é a 1ª coisa que o jogador vê: vai no core (pacote base). A PNG 1080x1920 fica só no Android.
-  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\/(?!splash(\/splash_loading\.(webp|jpg))?$)/,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i,/\.pre-[^/]*$/i],   // bg/v2/era5 ENTRA (cenário vivo 5-8 ligado); *.pre-* = rascunho da Arte
+  exclude:[/^assets\/(pets|mounts|anim\/equip)\/new\/.*_ref\.(png|webp)$/i,/^assets\/hero\/(guides|skins)\//,/^assets\/mobile\/(?!splash(\/splash_loading\.(webp|jpg))?$)/,/(^|\/)_/,/(^|\/)(src|raw[^/]*|rig)(\/|$)/,/^assets\/eras_novas\//,/^assets\/hero\/phases\//,/\.(psd|kra|mp4|webm|mov|bak|bak2|log)$/i,/\.bak[_a-z0-9]*$/i,/\.pre-[^/]*$/i],   // bg/v2/era5 ENTRA (cenário vivo 5-8 ligado); *.pre-* = rascunho da Arte
   preloadNextEra:true, preloadNextPhase:true,
   // pacotes que entram no APK base de TODO jogador novo (o resto: Play asset packs fast-follow/on-demand ou download)
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar

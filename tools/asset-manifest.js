@@ -11,8 +11,11 @@ const packs={};
   if(A.excluded(rel)) continue; const st=fs.statSync(full); if(st.isDirectory()){ walk(full); continue; }
   if(rel==='assets/manifest.json') continue; const id=A.classify(rel); (packs[id]=packs[id]||{bytes:0,files:[]}); packs[id].bytes+=st.size; packs[id].files.push(rel); } })(path.join(ROOT,'assets'));
 for(const id in packs){ packs[id].delivery=A.deliveryOf(id); packs[id].apack=A.apackOf(id); }   // PLANO_PACOTES (1): grupo de entrega e nome do pacote do Play
+/* pacotes que NÃO vão no app (delivery none: retired, preview) ficam FORA do manifesto do jogo (o jogo nunca pede um arquivo que não está no APK);
+   ficam só listados em omitted (nome e bytes) para o relatório. --all grava tudo (uso de quem precisa da lista completa). */
+const omitted={}; if(!args.includes('--all')) for(const id of Object.keys(packs)) if(packs[id].delivery==='none'){ omitted[id]={bytes:packs[id].bytes,files:packs[id].files.length}; delete packs[id]; }
 const total=Object.values(packs).reduce((t,p)=>t+p.bytes,0);
-const man={v:1,generated:new Date().toISOString().slice(0,10),total,packs};
+const man={v:1,generated:new Date().toISOString().slice(0,10),total,packs,omitted};
 fs.writeFileSync(OUT,JSON.stringify(man));
 if(args.includes('--report')){ A.setManifest(man); const mb=b=>(b/1048576).toFixed(1);
   const rows=Object.entries(packs).sort((a,b)=>b[1].bytes-a[1].bytes);
