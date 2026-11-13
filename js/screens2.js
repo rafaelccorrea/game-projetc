@@ -767,7 +767,7 @@ function resAct(q){ if(!B.res||!RES.el) return;
 }
 /* fecha a tela: 'next' (vitória: a batalha segue na fase nova) · 'retry' = desafia o chefe de novo · 'farm' / 'close' = modo farm (repete as ondas 1 a 4) */
 function resClose(how){ const r=B.res; if(!r) return; B.res=null; document.body.classList.remove('resui'); if(RES.el){ RES.el.remove(); RES.el=null; }
-  if(r.mode==='lose'){ resHeroDown(false); if(how!=='retry') S.farm=true; S.wave=1; startBattle(); if(how==='retry'&&challengeBoss()) toast('Desafiando o chefe!'); }
+  if(r.mode==='lose'){ resHeroDown(false); if(how!=='retry') S.farm=true; S.wave=1; startBattle(); if(how==='retry'&&challengeBoss()){ try{ B.hero.hp=B.hero.maxhp; }catch(e){} toast('Desafiando o chefe!'); } }   /* depois da Derrota o herói volta com a vida cheia (o desafio sozinho agora só cura uma parte) */
   save(); hud(); }
 /* relógio da tela (tempo real, chamado pelo laço do jogo): anda a linha do tempo da vitória, o contador de moedas, a barra de XP e as contagens automáticas */
 function resTick(dt){ if(!B.res||!RES.el) return; RES.t+=dt; const t=RES.t;

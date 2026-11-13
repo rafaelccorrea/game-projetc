@@ -86,9 +86,14 @@ function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys 
       es = nE && typeof esRaw === 'number' && isFinite(esRaw) && esRaw > 0 ? Math.min(esRaw, kill * 0.9, surv * 0.9) : 0;
     const hp = es ? Math.max(1, dps * (kill - es)) : Math.max(1, total / (1 + nE * hs)), tE = es ? es : nE ? Math.min(surv, nE * hs * hp / dps) : 0;   /* tE = quando cai a última escolta */
     let eHits = 0; for (let i = 1; i <= nE; i++) eHits += (tE * i / nE) / BAL.commonAtkInterval; const bHits = Math.max(1, (surv - tE) / bossEvery);
-    const def = Math.max(0, diffNum(ref.def, 0)), after = d => Sys.stats.hit({ atk: d, critRate: 0, critDmg: 0 }, 1, def, false).dmg, sum = d => bHits * after(d) + (ds > 0 ? eHits * after(d * ds) : 0), want = ref.hp;
+    const def = Math.max(0, diffNum(ref.def, 0)), after = d => Sys.stats.hit({ atk: d, critRate: 0, critDmg: 0 }, 1, def, false).dmg, pds0 = diffNum(C.dmgPostDefShareOfBoss, 0), sum = d => bHits * after(d) + (pds0 > 0 ? eHits * after(d) * pds0 : ds > 0 ? eHits * after(d * ds) : 0), want = ref.hp;   /* com o dano do comum medido depois da DEF, a conta de quanto o herói aguenta já usa esse dano */
     let lo = 0, hi = want / bHits; for (let i = 0; i < 80 && sum(hi) < want; i++) hi *= 2; for (let i = 0; i < 60; i++){ const m = (lo + hi) / 2; if (sum(m) < want) lo = m; else hi = m; }
-    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg: hi * ds, hs, ds, need, ref, dps, kill, surv, escorts: nE, tE, escortSec: es }; }
+    /* DANO DO COMUM MEDIDO DEPOIS DA DEFESA (Sistemas, P0 "os bots dão só -1"): a redução é DEF ÷ (DEF + 2 × ataque), com teto; um ataque pequeno (5% do bruto do chefe)
+       cai sempre no teto e o golpe some. Com commons.dmgPostDefShareOfBoss (ex.: 0,25) o dano BRUTO do comum é o valor que, DEPOIS da DEF da referência, tira essa
+       parte do golpe do chefe (também depois da DEF). Sem o campo: cdmg = dano do chefe × dmgShareOfBoss, como antes. */
+    let cdmg = hi * ds; const pds = diffNum(C.dmgPostDefShareOfBoss, 0);
+    if (pds > 0){ const goal = after(hi) * pds; let a = 0, b = Math.max(hi, 1e-6); for (let i = 0; i < 80 && after(b) < goal; i++) b *= 2; for (let i = 0; i < 60; i++){ const m = (a + b) / 2; if (after(m) < goal) a = m; else b = m; } cdmg = b; }
+    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg, hs, ds: pds > 0 ? 1 : ds, need, ref, dps, kill, surv, escorts: nE, tE, escortSec: es, postDef: pds }; }
   if (Object.keys(DIFF.memo).length > 200) DIFF.memo = {}; DIFF.memo[key] = out; return out; }
 /* inimigo de FASE (mkEnemy). Devolve b (o de hoje) se a chave estiver desligada, em instância ou sem tabela. */
 function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 'undefined' && B.inst)) return b;

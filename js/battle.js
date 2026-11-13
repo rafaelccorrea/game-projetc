@@ -44,7 +44,11 @@ const BAL={ commonHpMult:0.42, commonDmgMult:0.33, commonGoldMult:0.32, commonAt
   eraMult:[0.944,0.777,1.44,4.2,16.1,53.2,161], itemEraFactor:12, priceEraFactor:4, sellBase:8, pullPity:10,
   bossDmgMult:1.8, eraBossDmgMult:0.9, earlyEase:[0.5,0.65,0.8], s1Interval:0.8, s2Cooldown:6, s2Mult:3, s3Mult:10,
   energyPerHit:4, energyPerSkillHit:2, energyPerHurt:3, critChance:0.12, critMult:2, goldBase:4, goldGrowth:1.15, bossGoldMult:5,
-  offlineCapHours:8, offlineKillsPerMin:6, offlineRate:0.5 };
+  offlineCapHours:8, offlineKillsPerMin:6, offlineRate:0.5,
+  /* CURA DO HERÓI (P0 do dono, 14/11: "quando derrotar um BOSS a vida regenera"). waveHeal = parte da vida máxima que volta depois de cada onda COMUM vencida;
+     depois da onda do CHEFE não há cura (a fase nova começa com a vida que sobrou). bossChallengeHeal = quanto volta ao DESAFIAR o chefe (botão ou automático):
+     antes era a vida CHEIA (1); agora é a mesma cura de uma onda. Derrota e "tentar de novo" continuam com a vida cheia. */
+  waveHeal:0.08, bossChallengeHeal:0.08 };
 function loadBalance(){
   fetch('docs/balance.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ if(!j) return;
     const src=Object.assign({},j,j.BAL||{},j.combat||{},j.combate||{},j.offline||{});
@@ -378,6 +382,7 @@ function waveClear(){
   if(typeof petWave==='function') petWave();
   if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
+  const bossWon=S.wave===5;
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
     S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem'); if(typeof codexSync==='function') codexSync();   /* códex: fase vencida */
@@ -393,14 +398,14 @@ function waveClear(){
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
-    if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
+    if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ challengeBoss(); return; } }   /* a cura é a do próprio desafio (bossChallengeHeal): antes somava 8% e depois enchia a vida */
   else S.wave++;
-  h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08);
+  if(!bossWon) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.waveHeal));   /* depois do chefe a fase nova começa com a vida que sobrou */
   B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=1.2; B.waveT=1.2; preloadAssets(); save();
   if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); }
 }
 /* "Desafiar chefe": chama a onda do chefe da fase atual (com a vida cheia), no farm ou fora dele (fora do farm só antecipa a onda 5). Também é o "Tentar de novo" da derrota. */
-function challengeBoss(){ if(S.wave===5||B.deadT>0||B.res) return false; S.farm=false; S.wave=5; const h=B.hero; if(h) h.hp=h.maxhp; B.act=null; B.eshots=[]; startWave(0.4); save(); hud(); return true; }
+function challengeBoss(){ if(S.wave===5||B.deadT>0||B.res) return false; S.farm=false; S.wave=5; const h=B.hero; if(h) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.bossChallengeHeal)); B.act=null; B.eshots=[]; startWave(0.4); save(); hud(); return true; }
 /* kind: 0 normal · 2 = s2 (laranja maior) · 3 = s3 (dourado enorme) */
 function hitEnemy(e,mult,a,h){
   const hero=B.hero; if(!e||e.dead){ e=target(); if(!e) return; }
