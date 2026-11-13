@@ -132,7 +132,7 @@ function waveSpec(stage,wave){
 }
 function lootFor(e){ return {gold:e.gold, dropChance:e.boss?1:BAL.commonDrop}; }
 function startWave(delay){
-  B.en=[]; B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=delay==null?0.4:delay; B.enemy=null; B.waveT=0; preloadAssets();
+  B.en=[]; B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=delay==null?0.4:delay; B.enemy=null; B.waveT=0; B.bossT0=S.wave===5?Date.now():0; preloadAssets();
 }
 /* ATRIBUTOS NA BATALHA (ponto único): tudo vem de heroStats() = Sys.fc.stats. Golpe = ATK × mult × (1 + dano crítico, se critar) × (1 − redução
    da DEF do alvo), pelo Sys.stats.hit; a DEF do herói reduz o dano recebido pela mesma fórmula; a velocidade de ataque encurta o básico. */
@@ -252,7 +252,7 @@ function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no go
   floatText(HX,GY-HS*0.9,'-'+fmt(Math.max(1,d)),'#ff6b6b'); burst(HX,GY-HS*0.45,'#ff4d4d',4); addEnergy(BAL.energyPerHurt);
   wfx(fnHit,0.22,{x:HX+HS*0.1,y:GY-HS*0.45,r:src&&src.boss?36:24,n:8,col:ULTCOL[B.dispEra]||'#ff6b5a',rot:Math.random()*6.28,layer:1,hero:1});   // impacto NO HERÓI, na cor da era (o golpe não viaja pela tela)
   if(DEBUG) window.__dmgIn=(window.__dmgIn||0)+d;
-  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5&&!B.inst; snd('defeat'); if(!B.deadBoss&&!B.inst) toast((typeof diffDeadMsg==='function'&&diffDeadMsg())||'Derrotado... recomeçando a fase');   /* na instância o aviso é o resultado da instância, não o da fase */ return true; }
+  if(h.hp<=0){ h.hp=0; B.streak=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5&&!B.inst; snd('defeat'); if(!B.deadBoss&&!B.inst) toast((typeof diffDeadMsg==='function'&&diffDeadMsg())||'Derrotado... recomeçando a fase');   /* na instância o aviso é o resultado da instância, não o da fase */ return true; }
   return false;
 }                                   // fila de espera, fora da tela (selo "+N" na borda direita)
 const contact = e => e.boss?bossSlot(e):Math.max(SLOTX[0],B.front||0);   // B.front: centro real do slot da frente (hordeFit pode levá-lo para a direita)   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
@@ -369,11 +369,13 @@ function useSkill(n){
   if(n===3){ if(B.energy<100||(B.act&&B.act.type!=='s1')) return false; flushAct(); startAct('s3'); return true; }
   return false;
 }
+/* RECORDES DO PERFIL (Sys.profile da Sistemas; chave desligada = não chama nada): maior golpe, sequência de abates sem cair e tempo do chefe */
+function profRec(k,v,info){ try{ const P=window.Sys&&Sys.profile; if(P&&P.DATA&&P.DATA.on===true&&typeof P.record==='function') P.record(S,k,v,Sys.host,info); }catch(e){} }
 function killEnemy(e){
   e.dead=true; const i=B.en.indexOf(e); if(i>=0) B.en.splice(i,1);
   const lt=lootFor(e), y=eY(e); e.x=eX(e); e.sw=0;   // morre onde está desenhado
   if(B.inst){ B.inst.kills++; }   /* instância: sem drops de fase, sem XP, sem missão; o prêmio vem do Sys.instances.finish */
-  else { S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y); }   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
+  else { S.kills++; ptrack('kill'); if(e.boss) ptrack('boss'); farmKill(e,y); B.streak=(B.streak||0)+1; profRec('streak',B.streak); }   // ouro, XP, gemas, item e materiais: Sys.loot (js/farm.js); voam como pickups
   burst(e.x,y,e.col,e.boss?22:10); ring(e.x,y,'#ffffff',e.boss?40:26); B.corpses.push({e,x:e.x,t:0,life:enSheet(e,'die')?shDur(enSheet(e,'die'),EN_DIE_DUR):(e.boss&&SCREENS_ON.bossResult)?BOSS_FALL_DUR:0.6}); if(e.boss&&SCREENS_ON.bossResult) for(let i=0;i<3;i++) dust(e.x-30+i*30,GY-2,3,'#c8b496'); snd('enemy_die'); if(e.boss) snd('coin');
 }
 function heroDown(on){ if(on){ B.deadT=0.8; B.deadBoss=true; } else { B.deadT=0; B.deadBoss=false; } }   // tela 10 (derrota): deixa o Kael caído / devolve
@@ -383,7 +385,7 @@ function waveClear(){
   if(typeof petWave==='function') petWave();
   if(B.inst){ instWaveClear(); return; }   // luta da instância (js/instfx.js): as ondas são as da instância   // cura por onda do pet (se o pet equipado curar)
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
-  const bossWon=S.wave===5;
+  const bossWon=S.wave===5; if(bossWon&&B.bossT0>0){ profRec('bossTime',(Date.now()-B.bossT0)/1000,'Fase '+S.stage); B.bossT0=0; }
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
     S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem'); if(typeof fogBrasa==='function') fogBrasa('stage',1);   /* Fogueira: Brasas da fase vencida (só com o módulo ligado) */ if(typeof codexSync==='function') codexSync();   /* códex: fase vencida */
@@ -408,7 +410,7 @@ function waveClear(){
   else S.wave++;
   if(!bossWon) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.waveHeal));   /* depois do chefe a fase nova começa com a vida que sobrou */
   { const gap=(bossWon||S.wave===5)?1.2:WAVE_GAP;   /* B4 (polimento da batalha): entre ondas comuns o próximo inimigo entra logo, sem 1,2 s de palco vazio; a entrada do chefe e a fase nova mantêm a pausa */
-    B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=gap; B.waveT=gap; } preloadAssets(); save();
+    B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=gap; B.waveT=gap; B.bossT0=S.wave===5?Date.now():0; } preloadAssets(); save();
   if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); }
 }
 /* "Desafiar chefe": chama a onda do chefe da fase atual (com a vida cheia), no farm ou fora dele (fora do farm só antecipa a onda 5). Também é o "Tentar de novo" da derrota. */
@@ -420,7 +422,7 @@ function hitEnemy(e,mult,a,h){
   else { crit=Math.random()<BAL.critChance; d=hero.atk*mult*(crit?BAL.critMult:1)*(0.9+Math.random()*0.2); }
   const ex=eX(e), ey=eY(e), fin=h&&h.fin, k=a.type==='s3'?(fin?3:2):a.type==='s2'?2:crit?1:0;
   e.hp-=d; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }   // a folha de dano toca inteira, no fps do .json
-  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2?1:crit?3:0);
+  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2?1:crit?3:0); profRec('hit',d,a.type==='s3'?'Ultimate':crit?'Crítico':'');
   { const fx=a.fx, pm=fx&&fx.particles>0?fx.particles:1, lite=a.type==='s3'?1:0.5;   /* s1 e s2: metade do reforço */
     burst(ex-8,ey+6,a.col==='#ffffff'?'#ff9d5c':a.col,Math.round((crit||fin?8:3)*(1+(pm-1)*lite)));
     if(fx&&fin){ const sz=fx.size>0?fx.size:1; ring(ex-6,ey,a.col,34*sz); if(sz>1) ring(ex-6,ey,'#ffffff',22*sz); B.shake=Math.max(B.shake,.5*(fx.shake>0?fx.shake:1)); if(fx.flash) B.flash=Math.max(B.flash||0,0.28); } }
