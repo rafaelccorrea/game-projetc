@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **07h10 · PARA VOCÊ VOTAR (página de aprovação):** as 13 referências de skin: Kael (Demônio, Anjo, Paladino Solar, Bobo da Corte, Ninja, Pirata, Samurai, Ciborgue; escolha 5) e Kaia moça adulta (Palhaça, Princesa, Ninja, Demoníaca, Angelical). O bastão rosa é só o marcador da arma. Também a amostra das ultimates da espada, com os nomes corrigidos (Lendária = animação nova; Mítica = reforçada). Créditos: ~187
+- **07h10 · Regra fixa registrada:** nunca sensualizar temas sensíveis, nunca em personagem criança
+- **07h10 · Pets novos:** os de hoje ficam como pets grátis do começo; os novos, com visual de criatura de verdade (não infantil). Sugestões de 12 (raro a lendário) mandadas; ~40 créditos cada, esperando sua escolha
+
 - **06h55 · Engenheiro fechou a parte dele para o APK (4e35bc7, visto no navegador):** o save do nível 60 aparece como o GAROTO, com a mesma FC; a KAIA JOGÁVEL como menina (asa, pet, pistola, morte, retrato); as skins fixas Cavaleiro/Lendário funcionando; subir de nível com o efeito novo; FC "2,2 mil" no topo. Antes do APK faltam: a escala nova da FC, a Kaia na tela de Criação e a passada final do QA. Ponto aberto: a Kaia montada ainda não tem arte (aparece a pé, com o bônus da montaria valendo); já pedi à Arte a Kaia menina montada nas 6 montarias
 
 - **06h40 · Suas decisões:** (1) ultimates: a raridade mais ALTA ganha a animação nova. Na ordem do jogo (… Mítico, Lendário, Divino), o LENDÁRIO fica com a nova e o MÍTICO com a reforçada; cada família de arma (clava, espada, lança, pistola etc.) tem a sua, em qualquer era. (2) Arco e flecha e bumerangue APROVADOS (versão média: pose própria a pé, montado e projétil pelo código, ultimates): mesmo dano da espada, liberam nos níveis 30 e 45. (3) Skins da Kaia: Palhaça, Princesa, Ninja, Demoníaca e Angelical; referências junto com as 8 do Kael. A Kaia segue com corpo de menina em todas as skins, como o padrão
@@ -215,7 +219,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
 - [x] Votados: cenários 5 e 8, asa nas costas, Oferta, Bem-vindo de volta (tudo aprovado)
-- [ ] VOTAR AGORA: Kaia adulta e guerreira V2 animadas (página de aprovação)
+- [ ] VOTAR AGORA: 13 referências de skin + amostra das ultimates da espada (página de aprovação)
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
 - [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
 - [~] Banco de desenvolvimento: Supabase criado; falta você seguir o passo a passo na parte AGORA (02h) e pôr as 3 variáveis de ambiente
