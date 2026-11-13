@@ -21,6 +21,13 @@ const DATA={
   // TROCA (doação) com as travas do leilão
   trade:{adult:18, memberDays:7, itemAgeH:24, givePerDay:3, getPerDay:2, pairPerDay:1, goldBack:0.5, logDays:30,
     blocked:['offer','bought','shop_gem','pet','skin','vip','mount','frag','material','currency']},
+  // TEMPORADA SEMANAL do torneio (spec §3; relógio do servidor, Brasília): seg-qui declarar (dias 1-4, até 2 ataques/guilda/dia, 1 território
+  // defendido por vez), sex-sáb batalhas automáticas às 20h, domingo prêmios com o mapa congelado. getDay(): 0 = domingo.
+  season:{declareDays:[1,2,3,4], battleDays:[5,6], battleHour:20, prizeDay:0, attacksPerDay:2, defendOne:true},
+  // RANKING de territórios (spec §4): região e vale 1 + e pontos; Capital 15. Capital: só guilda com mediana de era ≥ capitalMinEra (PROPOSTA, a spec
+  // não fixa: 8 = só quem já está no Celestial). Baú semanal por território, por membro (spec §3): 1 item da raridade-teto da era DO MEMBRO + materiais.
+  rankPoints:{regionBase:1, capital:15}, capitalMinEra:8,
+  weeklyChest:{item:'topRarity', mats:{forge:2, food:30, essence:1}},
   // PRÊMIOS do ranking do torneio (por membro que lutou ou estava escalado), sem sorteio
   tourney:{size:15, rewards:[{from:1,to:1,coin:300,prism:3,frame:true},{from:2,to:3,coin:200,prism:2},{from:4,to:10,coin:120,prism:1},{from:11,to:50,coin:60,prism:0}]},
   donate:[{id:'gold_s',goldk:60,coin:10,xp:20},{id:'gold_l',goldk:240,coin:30,xp:60},{id:'gems',gems:50,coin:40,xp:80}],   // 1 de cada por dia
@@ -49,6 +56,11 @@ function territoryBonus(list){ const T=DATA.territory, o={gold:0,xp:0,drop:0}; f
   for(const k in o) o[k]=Math.min(T.cap[k],o[k]); return o; }
 /* região e do território: só guilda cuja MEDIANA de era dos escalados seja ≥ e (sem guilda de era 2 dominando a era 8) */
 function canAttackRegion(eras,region){ const a=(Array.isArray(eras)?eras:[]).map(int0).sort((x,y)=>x-y); if(!a.length) return false; const m=a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2; return m>=int0(region); }
+/* pontos de território para o ranking: lista [{region, capital}] → soma (região e = 1 + e; Capital 15) */
+function territoryPoints(list){ const R=DATA.rankPoints; let t=0; for(const x of Array.isArray(list)?list:[]){ if(!x) continue; t+=x.capital?R.capital:R.regionBase+clamp(int0(x.region),0,8); } return t; }
+const canAttackCapital=eras=>canAttackRegion(eras,DATA.capitalMinEra);
+/* fase da temporada num instante (dia da semana do relógio do jogo; com servidor, o do servidor): 'declare' | 'battle' | 'prize' */
+function seasonPhase(ms){ const d=new Date(num(ms,Date.now())).getDay(), Z=DATA.season; return Z.declareDays.includes(d)?'declare':Z.battleDays.includes(d)?'battle':'prize'; }
 const tourneyReward=pos=>{ const p=int0(pos); const r=DATA.tourney.rewards.find(x=>p>=x.from&&p<=x.to); return r?{coin:r.coin,prism:r.prism,frame:!!r.frame}:{coin:0,prism:0,frame:false}; };
 const createCost=host=>Math.round(DATA.create.goldk*Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)));
 const goldBackOf=item=>Math.floor(int0(item&&item.gold)*DATA.trade.goldBack);
@@ -125,7 +137,7 @@ function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0};
 function perks(S){ const z={goldPct:0,xpPct:0,dropPct:0,foodPct:0}; if(!S||!ON()) return z; const o=ensure(S); if(!o.id) return z; const t=territoryBonus(o.territories);
   return {goldPct:o.banners.gold+t.gold,xpPct:t.xp,dropPct:t.drop,foodPct:o.banners.food}; }
 
-const API={DATA,xpToNext,levelOfXp,memberCap,bannerCap,territoryBonus,canAttackRegion,tourneyReward,createCost,goldBackOf,
+const API={DATA,territoryPoints,canAttackCapital,seasonPhase,xpToNext,levelOfXp,memberCap,bannerCap,territoryBonus,canAttackRegion,tourneyReward,createCost,goldBackOf,
   ensure,inGuild,setProvider,applyServer,status,canCreate,canJoin,cooldownLeft,itemTradable,canDonate,received,markDonated,bonus,perks,
   get provider(){ return provider; }};
 root.Sys=root.Sys||{}; root.Sys.guild=API;
