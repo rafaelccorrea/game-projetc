@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **00h05 · v0.12.8, lote 3 LIGADO: TELAS DE ENTRADA no jogo (e86e5a8, conferidas pelo QA):**
+  - [x] Título B (logo inteiro em tela estreita) → Login (convidado; Google "em breve") → Prólogo em 4 cenas com o avô → Criação (Kaia "chega em breve") → Nome (filtro barra palavrão) → jogo
+  - [x] Quem volta: "Continuar como <nome>" → Bem-vindo de volta com o ganho offline entregue UMA vez
+  - [~] Sai o aviso antigo de boas-vindas que ainda aparecia depois do fluxo novo
+- **00h05 · Decisões do PO:** a Oferta de primeira compra fica visível só no Modo dono por enquanto, para o relógio de 24 h não correr no seu save real antes da compra existir de verdade; a Arte assume também o acabamento do cenário da era 5; o cenário da era 6 vai para a página de aprovação para o seu voto
+
 - **23h55 · Oferta de primeira compra pronta (Servidor, 780655a):** R$ 29,90 com a arma, o Lobo de guerra, 300 gemas e ouro. Enquanto a Play não estiver configurada, o botão diz "Pagamento em breve"; testada até "COMPRADO" com uma Play de teste. Entra no próximo lote junto com as telas de entrada
 
 - **23h45 · Telas de entrada corrigidas (Servidor, 2d7f76b):** o filtro de nome barra palavrão com números; o botão Google diz "em breve"; o avô aparece no Prólogo; o Bem-vindo de volta aparece toda vez. O QA reconfere e o engenheiro liga no próximo lote. Também pronto: a carta de boas-vindas do Correio e a compra pelo Google Play preparada (desligada até o servidor). Próximo do Servidor: Oferta de primeira compra
