@@ -260,3 +260,18 @@ usa um provider trocável (como a arena); sem servidor, a guilda fica fechada.
 - `GET /guild/missions` · `POST /guild/missions/{id}/claim`. As missões contam só eventos que o servidor vê.
 - `POST /guild/checkin` (+5 Brasões, +5 XP da guilda, uma vez por dia de Brasília).
 - Chat da guilda: canal `guild:<id>` no gateway do chat (§5), com frases prontas para TODOS até o parecer. Depois, vale a regra de idade da spec (menor de 16, só frases).
+
+## 11. SERVIDORES (realms) — IMPLEMENTADO (fps-server af8ebbb; regras: docs/SERVIDORES.md)
+- **Identificador:** `'s1'`, `'s2'`... (`^s[0-9]{1,3}$`). Ausente = `'s1'`. Estados: `new` | `open` (aceitam personagem novo) | `full` | `closed` (só quem já tem personagem entra).
+- **`GET /realms`** é público. Com `Authorization` válido, cada servidor traz o personagem do jogador nele; token inválido é tratado como sem token (nunca 401). Resposta:
+  `[{ id:'s1', code:'S1', name:'Nova Era', state:'open', recommended:true, openedAt:<ms>, me:{ name, level, fc, hero, avatar } | null }]`
+  - `me` vem do resumo do último save aceito daquele personagem. `fc` é a FC REAL; a tela converte para exibição.
+- **Login por servidor:** o corpo leva `realm` (padrão `'s1'`).
+  - `POST /auth/guest { deviceId, birthDate?, platform?, realm }`: mesmo aparelho no mesmo servidor = o mesmo personagem; em outro servidor = outro personagem.
+    Erros: 400 (realm inválido); 409 `realm_closed` (criar personagem em servidor inexistente, `full` ou `closed`).
+  - `POST /auth/login/google { idToken, deviceId?, realm }`: 404 `not_linked` quando a conta Google não tem personagem NAQUELE servidor (o jogo cria como convidado e vincula); 404 `realm_not_found`.
+  - `POST /auth/link/google`: vincula a conta Google ao personagem da sessão. A mesma conta Google pode estar vinculada a um personagem em cada servidor, sem conflito.
+  - O access token leva `rlm`. `POST /auth/refresh` mantém o servidor. O `player` da sessão traz `realm`.
+- **Save:** `PUT /save` com `save.realm` diferente do servidor da sessão → 409 `realm_mismatch { session, save }`. Nada é gravado.
+- **Isolamento:** tudo do mundo é do personagem (`player_id`): save, correio, compras, VIP, arena, guilda, leilão. Itens, ouro e 💎 (inclusive comprados) nunca passam entre servidores.
+- **Fase 2 (antes de abrir o S2):** as listas do mundo (rankings, guildas, chat Mundial/Era, Chefe Mundial, torneio, correio para todos) passam a filtrar por realm.

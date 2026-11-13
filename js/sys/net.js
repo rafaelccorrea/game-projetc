@@ -32,8 +32,13 @@ function init(o){
   ST.mem=load(); if(!ST.mem.deviceId){ ST.mem.deviceId=uuid(); persist(); }
   return API;
 }
-function load(){ try{ const s=ST.storage&&ST.storage.get(DATA.storageKey); return s?JSON.parse(s):{}; }catch(e){ return {}; } }
-function persist(){ try{ ST.storage&&ST.storage.set(DATA.storageKey,JSON.stringify(ST.mem)); }catch(e){} }
+/* SERVIDOR (realm, docs/SERVIDORES.md): o do jogo (window.Realm.id(), fps-c8) ou DATA.realm; ausente = 's1'. A SESSÃO é por servidor
+   (chave 'eon.net' no S1, como sempre; 'eon.net@sN' nos outros), o deviceId é do aparelho (o mesmo em todos: o servidor acha os personagens da conta). */
+function realm(){ let r=DATA.realm; try{ if(!r&&typeof window!=='undefined'&&window.Realm&&typeof window.Realm.id==='function') r=window.Realm.id(); }catch(e){} r=String(r||'s1').toLowerCase(); return /^s[0-9]{1,3}$/.test(r)?r:'s1'; }
+const skey=()=>realm()==='s1'?DATA.storageKey:DATA.storageKey+'@'+realm();
+function load(){ try{ const g=k=>{ const s=ST.storage&&ST.storage.get(k); return s?JSON.parse(s):null; }; const m=g(skey())||{};
+  if(!m.deviceId&&skey()!==DATA.storageKey){ const b=g(DATA.storageKey); if(b&&b.deviceId) m.deviceId=b.deviceId; } return m; }catch(e){ return {}; } }
+function persist(){ try{ ST.storage&&ST.storage.set(skey(),JSON.stringify(ST.mem)); }catch(e){} }
 function uuid(){
   const c=root.crypto; if(c&&typeof c.randomUUID==='function') return c.randomUUID();
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,ch=>{ const r=Math.random()*16|0; return (ch==='x'?r:(r&3|8)).toString(16); });
@@ -86,13 +91,15 @@ function refresh(){
 async function ensureSession(o){
   o=o||{};
   if(ST.mem.refresh){ try{ return await refresh(); }catch(e){ if(e.code==='offline'||e.code==='net_off') throw e; } }
-  const body={deviceId:ST.mem.deviceId,platform:ST.platform,clientVersion:ST.clientVersion};
+  const body={deviceId:ST.mem.deviceId,platform:ST.platform,clientVersion:ST.clientVersion,realm:realm()};
   if(o.birthDate) body.birthDate=o.birthDate;
   return takeSession(await raw('POST','/auth/guest',body,false));
 }
 const linkGoogle=tok=>call('POST','/auth/link/google',tok).then(p=>{ ST.mem.player=p; persist(); return p; });
 /* aparelho novo: entra na conta vinculada ao Google (o save da nuvem vem depois, por sync) */
-async function loginGoogle(tok){ return takeSession(await raw('POST','/auth/login/google',Object.assign({deviceId:ST.mem.deviceId},tok),false)); }
+async function loginGoogle(tok){ return takeSession(await raw('POST','/auth/login/google',Object.assign({deviceId:ST.mem.deviceId,realm:realm()},tok),false)); }
+/* GET /realms (público; com sessão, o servidor junta o personagem do jogador em cada servidor). Sem rede: rejeita (a tela mostra só o servidor atual). */
+const realms=()=>raw('GET','/realms',null,!!(ST.mem&&ST.mem.access));
 /* entra com o Google pelo plugin nativo e manda só o idToken ao servidor. mode 'login' = aparelho novo / conta vinculada; 'link' = vincula ao convidado atual.
    Sem o plugin (navegador, APK sem ele): rejeita {code:'google_unavailable'} e a tela mantém "em breve". Cancelado pelo jogador: {code:'cancelled'}. */
 function googleReady(){ try{ const P=root.Capacitor&&root.Capacitor.Plugins; return !!(DATA.on&&DATA.googleClientId&&P&&P[DATA.googlePlugin]); }catch(e){ return false; } }
@@ -199,7 +206,7 @@ const events=()=>call('GET','/events');
 
 function _reset(){ ST.fetch=null; ST.storage=null; ST.mem={}; ST.offset=0; ST.refreshing=null; }
 
-const API={DATA,init,ensureSession,linkGoogle,loginGoogle,googleReady,googleSignIn,logout,me,player,hasSession,deleteAccount,serverNow,time,
+const API={DATA,realm,realms,init,ensureSession,linkGoogle,loginGoogle,googleReady,googleSignIn,logout,me,player,hasSession,deleteAccount,serverNow,time,
   markDirty,saveMeta,head,pull,push,sync,chooseSide,history,restore,accountId,canBuy,verifyGoogle,deliveries,ackDelivery,entitlements,offers,claimMonthlyCard,
   mail,claimMail,events,_reset,_call:call};
 root.Sys=root.Sys||{}; root.Sys.net=API;

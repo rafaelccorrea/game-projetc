@@ -165,3 +165,16 @@ test('MODO DONO: o save do dono nunca sobe nem desce da nuvem e as entregas reai
     assert.equal(f.calls.length, 0);
   } finally { net.DATA.ownerForce = false; }
 });
+
+test('SERVIDOR: convidado manda o realm; sessão guardada por servidor (eon.net no S1, eon.net@s2 no S2) com o MESMO deviceId', async () => {
+  const st = store(); let got = null;
+  boot({ 'POST /auth/guest': b => { got = b; return [200, session(1)]; } }, st);
+  await net.ensureSession(); assert.equal(got.realm, 's1'); const dev = got.deviceId; assert.ok(st.m['eon.net']);
+  net.DATA.realm = 's2';
+  try {
+    boot({ 'POST /auth/guest': b => { got = b; return [200, session(2)]; }, 'GET /realms': () => [200, [{ id: 's1' }, { id: 's2' }]] }, st);
+    await net.ensureSession(); assert.equal(got.realm, 's2'); assert.equal(got.deviceId, dev);
+    assert.equal(JSON.parse(st.m['eon.net@s2']).access, 'A2'); assert.equal(JSON.parse(st.m['eon.net']).access, 'A1');   // o S1 não foi tocado
+    assert.equal((await net.realms()).length, 2);
+  } finally { net.DATA.realm = null; }
+});
