@@ -312,6 +312,31 @@ Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado 
 - **Torneio, trava da escalação:** `lockAt` vem na resposta do `PUT /tourney/lineup` (`{ok, slot, members, lockAt}`), no 409 `lineup_locked` (`details.lockAt`), no `GET /tourney/lineup?slot=` (`{slot, members, lockAt, locked}`) e em `GET /tourney` → `battles:[{slot, at, lockAt}]` (o `lineups` dali é só `{d5:[ids], d6:[ids]}`).
 - **Arena contra robô:** gasta a tentativa, mas `delta` 0 e nenhum ponto. É regra do servidor; a tela pode mostrar "sem pontos".
 - **Erro 429 do limitador por IP** (ex.: 5 convidados por hora): `retryAfterMs` agora vem do `Retry-After` real, em milissegundos (antes vinha 0).
+- **Horários:** `requests[].at`, `joinedAt`, `lastSeen`, `at` e `lockAt` são em MILISSEGUNDOS desde a época (UTC), como todo horário deste contrato.
+- **Batalha com `reason: "owner"`:** o atacante já era o dono do território na hora da batalha (venceu antes outra batalha pelo mesmo território). Então `defender.id === attacker.id` e `winner` é o próprio atacante.
+  - A tela deve escrever "já era dono", não "X ataca X". `duels` vem vazio.
+- **Doação e ouro:** o servidor NÃO confere o ouro. O resumo do save não traz ouro, e o `cost.goldk` só informa quanto o cliente debita.
+  - Debitar `goldk × Sys.host.goldUnit()` da fase atual (a mesma conversão do `createCost`) é decisão do jogo, e não marca o save.
+  - Diamantes, sim: o resumo traz `gems`, e o teto por dia de conta vale (§3.4).
+- **Códigos de erro por rota** (`error.code`; 400 `bad_request`, 403 `forbidden`, 404 `not_found` e 404 `not_in_guild` podem vir em qualquer uma):
+
+  | Rota | Códigos próprios |
+  |---|---|
+  | `POST /guilds` (criar) | `already_in_guild`, `level_required`, `name_taken`, `name_filtered`, `description_filtered`, `cooldown`, `rejoin_cooldown` |
+  | `PATCH /guild` | `name_taken`, `name_filtered`, `description_filtered` |
+  | `POST /guilds/:id/join` | `already_in_guild`, `guild_full`, `cooldown`, `rejoin_cooldown` |
+  | `POST /guild/requests/:id/accept` | `guild_full` |
+  | `POST /guild/members/:id/promote` | `officers_full` |
+  | `POST /guild/donate`, `POST /guild/checkin` | `daily_limit` (429, com `retryAfterMs`) |
+  | `POST /guild/blessings/:id/upgrade` | `banner_cap`, `not_enough_xp` |
+  | `POST /guild/shop/buy` | `guild_level`, `weekly_limit`, `not_enough_coin`, `mail_unavailable` |
+  | `POST /guild/boss/hit` | `boss_unavailable`, `snapshot_required`, `boss_down`, `daily_limit` (429) |
+  | `POST /guild/missions/:id/claim` | `mission_not_done`, `already_claimed`, `not_contributed` |
+  | `GET /guild-ranking` | `ranking_unavailable` |
+  | `POST /tourney/declare` | `tourney_phase`, `own_territory`, `daily_limit` (429), `territory_busy`, `defender_busy`, `era_too_low` |
+  | `PUT /tourney/lineup` | `lineup_locked` (`details.lockAt`), `member_too_new` (`details.ids`, `hours`) |
+
+  - No jogo, `Sys.guildNet` e `Sys.tourneyNet` devolvem `{ok:false, reason, details, retryAfterMs}` (game 003ebd3).
 
 ## 11. SERVIDORES (realms) — IMPLEMENTADO (fps-server af8ebbb; regras: docs/SERVIDORES.md)
 - **Identificador:** `'s1'`, `'s2'`... (`^s[0-9]{1,3}$`). Ausente = `'s1'`. Estados: `new` | `open` (aceitam personagem novo) | `full` | `closed` (só quem já tem personagem entra).
