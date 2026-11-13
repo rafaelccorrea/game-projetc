@@ -47,6 +47,7 @@ const uReduced=()=>{ try{ return !!(window.matchMedia&&matchMedia('(prefers-redu
 function uStars(n,s){ let h=''; const M=uMaxSt(); for(let i=1;i<=M;i++) h+=uStar(i<=n,s); return `<span role="img" aria-label="${n} de ${M} estrelas" style="display:inline-flex;gap:1px;align-items:center">${h}</span>`; }
 
 (function(){ if(typeof document==='undefined'||!document.head) return; const st=document.createElement('style'); st.textContent=`
+#fu_scroll>*{flex-shrink:0}   /* F1 (QA): as vagas não encolhem; quem rola é a lista */
 .fu-in{animation:fu-fade .22s ease-out}
 @keyframes fu-fade{from{opacity:0}to{opacity:1}}
 .fu-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403!important;box-shadow:0 6px 0 #8a4f0c;border:0}
@@ -128,7 +129,7 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
         <span style="position:relative">${uThumb(it,64)}${uIsEq(it)?uEqTag:''}</span><span style="font-size:11px;font-weight:900;color:#c9b9a2;margin-top:4px">${n0(uQp(it))}</span></button>`
       :`<button data-x="slot" data-i="${i}" aria-label="Vaga ${i+1} vazia: escolha um item abaixo" style="width:80px;height:96px;border:0;background:transparent;padding:0;display:flex;align-items:flex-start;justify-content:center">
         <span style="width:64px;height:64px;border-radius:15px;border:2px dashed #8a7458;background:rgba(14,10,7,.82);display:flex;align-items:center;justify-content:center;color:#8a7458;font-size:26px;font-weight:900">+</span></button>`; }
-  const stage=`<div style="position:relative;margin:0 12px;padding:10px 0 4px;border-radius:16px;background:radial-gradient(ellipse at 50% 60%,#3a2c1f,#16110d 75%);border:2px solid #4a3a2b;overflow:hidden">
+  const stage=`<div style="position:relative;margin:0 12px;padding:8px 0 2px;border-radius:16px;background:radial-gradient(ellipse at 50% 60%,#3a2c1f,#16110d 75%);border:2px solid #4a3a2b;overflow:hidden">
       <div role="group" aria-label="Vagas da fusão" style="display:flex;justify-content:center;gap:12px">${slots}</div>
       ${fx==='fuse'?'<div class="fu-flash" style="position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.95),rgba(255,201,74,.55) 35%,rgba(255,201,74,0) 70%)"></div>':''}</div>`;
   const pool=g.items.slice().sort((a,b)=>uQp(a)-uQp(b)||a.id-b.id).map(it=>{ const on=XU.pick.indexOf(it.id)>=0;
@@ -138,8 +139,9 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
   let card='';
   if(picked.length===need){ const P=uPlan(picked), c=P.c, R=P.res, lack=c.reason==='money', okGo=c.ok&&!XU.busy;
     const anyEq=picked.some(uIsEq); let fcRow='';
-    if(R){ let sw=0; try{ sw=Sys.fc.itemFC(S,Sys.host,R).swap; }catch(e){ sw=0; } const dl=Sys.fc&&Sys.fc.delta?Sys.fc.delta(0,sw):null;
-      fcRow=`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900"><span style="color:#c9b9a2">${anyEq?'FC depois de fundir (fica equipado)':'FC se equipar o resultado'}</span><span style="color:${dl?dl.color:'#c9b9a2'}">${dl&&dl.text?esc2(dl.text):'sem mudança'}</span></div>`; }
+    if(R){ let sw=0; try{ sw=Sys.fc.itemFC(S,Sys.host,R).swap; }catch(e){ sw=0; } const dl=Sys.fc&&Sys.fc.delta?Sys.fc.delta(0,sw):null, ba=uBA(sw);
+      fcRow=`<div style="display:flex;flex-direction:column;gap:1px;font-size:12px;font-weight:900"><span style="color:#c9b9a2">${anyEq?'FC depois de fundir (fica equipado)':'FC se equipar o resultado'}</span>
+        <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>${esc2(ba.b)}</span>${U_ARROW.replace(/22/g,'16')}<span class="lil" style="font-size:16px;color:${dl?dl.color:'#c9b9a2'}">${esc2(ba.a)}</span><span style="color:${dl?dl.color:'#c9b9a2'}">(${dl&&dl.text?esc2(dl.text):'sem mudança'})</span></span></div>`; }
     const label=XU.busy?'Fundindo...':c.ok?'Fundir':uWhy(c);
     card=`<div style="${U_CARD}">
       ${R?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${uStars(c.fromStars||g.st,16)}${U_ARROW}${uStars(R?uSt(R):g.st+1,18)}</div>
@@ -157,12 +159,14 @@ function uBench(d,g){ const t44=uTouch(d), need=uQ().fusion.count, picked=uPicke
         <button class="lil ${okGo?'fu-gold fu-pulse':''}" data-x="fuse" aria-disabled="${!okGo}" aria-label="${esc2(label)}" style="flex:1;height:56px;border-radius:16px;font-size:${label.length>14?17:21}px;padding:0;${okGo?'':U_OFF}">${esc2(label)}</button></div></div>`; }
   else card=`<div style="${U_CARD};align-items:center;text-align:center"><span style="font-size:13px;font-weight:800;color:#c9b9a2">Escolha mais ${need-picked.length} ${need-picked.length===1?'item':'itens'} na lista abaixo.</span></div>`;
   const it0=g.items[0];
-  return `${back}
-    <div style="margin:0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:14px;font-weight:900;color:${xRarT(it0)}">${esc2(iname(it0))}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">${esc2(SLOT[g.slot].n)} · ${esc2(RN(g.r))} · ${esc2(uEraName(g.e))}</span></div>
+  return `<div style="display:flex;align-items:center;gap:8px;margin-right:12px">${back.replace('align-self:flex-start;','flex:none;')}<div style="min-width:0;display:flex;flex-direction:column;line-height:1.2"><span style="font-size:13px;font-weight:900;color:${xRarT(it0)};overflow-wrap:anywhere">${esc2(iname(it0))}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">${esc2(SLOT[g.slot].n)} · ${esc2(RN(g.r))} · ${esc2(uEraName(g.e))}</span></div></div>
     ${stage}${card}
     <div style="margin:0 12px;font-size:12px;font-weight:900;color:#c9b9a2">Itens iguais (${g.items.length}) · toque para pôr ou tirar da vaga</div>
     <div role="group" aria-label="Itens do grupo" style="margin:0 12px;display:flex;flex-wrap:wrap;gap:6px">${pool}</div>`; }
 
+/* FC antes → depois na escala de exibição (Sys.fc.viewText): antes = FC de agora; depois = agora + a troca */
+function uBA(sw,before){ let b=0; try{ b=before!=null?before:Sys.fc.compute(S,Sys.host); }catch(e){ b=0; } const vt=v=>{ try{ return Sys.fc.viewText(v); }catch(e){ return String(Math.round(v)); } };
+  return {b:vt(b),a:vt(Math.max(0,b+(+sw||0)))}; }
 /* ---------- cartão do resultado ---------- */
 function uResult(d){ const R=XU.res, it=itemOf(R.id);
   if(!it) return uEmpty('Fusão feita','O item novo está na mochila.');
@@ -173,8 +177,9 @@ function uResult(d){ const R=XU.res, it=itemOf(R.id);
     <div style="display:flex;align-items:center;gap:8px">${uStars(R.from,14)}${U_ARROW}${uStars(R.to,20)}</div>
     <span style="font-size:12px;font-weight:900;color:#c9b9a2">Qualidade ${n0(uQp(it))} · Nv. ${it.lvl||1}</span>
     <div style="display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b">
-      <span style="font-size:11px;font-weight:800;color:#c9b9a2">${R.eq?'Variação de FC':'FC se equipar'}</span>
-      <span class="lil" style="font-size:24px;color:${esc2(R.color)}">${R.text?esc2(R.text):'sem mudança'}</span></div>
+      <span style="font-size:11px;font-weight:800;color:#c9b9a2">${R.eq?'Sua FC':'FC se equipar'}</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:900">${esc2(R.b||'')}</span>${U_ARROW}<span class="lil" style="font-size:22px;color:${esc2(R.color)}">${esc2(R.a||'')}</span></span>
+      <span style="font-size:12px;font-weight:900;color:${esc2(R.color)}">${R.text?esc2(R.text):'sem mudança'}</span></div>
     <button class="lil fu-gold" data-x="done" aria-label="Continuar" style="width:100%;height:${Math.max(52,uTouch(d))}px;border-radius:16px;font-size:20px;margin-top:4px">Continuar</button></div>`; }
 
 /* ---------- aba Adormecidos ---------- */
@@ -190,7 +195,7 @@ function uDormTab(){ const L=uDormList(), W=uWoke(), now=uEraNow();
     return `<div role="listitem" class="${woke?'fu-woke':''}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#1d1611;border:2px solid ${woke?'#5fd068':'#4a3a2b'};box-sizing:border-box">
       ${uThumb(it,52)}
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
-        <div style="display:flex;align-items:center;gap:6px"><span style="min-width:0;font-size:13px;font-weight:900;color:${xRarT(it)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc2(iname(it))}</span>
+        <div style="display:flex;align-items:center;gap:4px 6px;flex-wrap:wrap"><span style="min-width:0;font-size:13px;font-weight:900;color:${xRarT(it)};line-height:1.2;overflow-wrap:anywhere">${esc2(iname(it))}</span>
           ${woke?'<span style="flex:none;padding:1px 8px;border-radius:8px;background:#5fd068;color:#0d2410;font-size:11px;font-weight:900">Acordou!</span>':''}</div>
         <span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:${woke?'#5fd068':'#c9a4ff'}">${woke?'Já rende com a força da era dele':U_MOON+esc2(di.label||'')}</span>
         <div role="img" aria-label="Sua era ${now} de ${we}" style="height:8px;border-radius:4px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden"><div style="width:${pct}%;height:100%;background:${woke?'#5fd068':'linear-gradient(90deg,#7a5cff,#c9a4ff)'}"></div></div>
@@ -231,6 +236,7 @@ function uClick(b){
 function uMake(res,best){ let it; try{ it=typeof normItem==='function'?normItem(res):Object.assign({},res); }catch(e){ it=Object.assign({},res); }
   it.lvl=res.lvl; it.gold=res.gold; it.qp=res.qp; if(Number.isInteger(res.look)) it.look=res.look;
   if(it.slot==='wing'&&best&&(best.wing==='angel'||best.wing==='demon')) it.wing=best.wing;
+  const top=(S.inv||[]).reduce((m,x)=>Math.max(m,+(x&&x.id)||0),0); if(!(S.nextId>top)) S.nextId=top+1;   /* F4 (QA): nextId atrasado reaproveitaria o id de um item da mochila */
   it.id=S.nextId++; it.gotAt=Date.now(); it.nw=1; try{ Sys.stats.ensureSubs(it); }catch(e){} return it; }
 function uFuse(){
   const items=uPicked(), H=Sys.host, c=Sys.stats.canFuse(S,H,items);
@@ -244,10 +250,10 @@ function uFuse(){
     made=it; return r; };
   let dl=null; try{ dl=Sys.fc&&Sys.fc.measure?Sys.fc.measure(S,H,run).delta:(run(),null); }catch(e){ if(!rr) run(); }
   if(!made){ snd('ui_tap'); uToast(rr&&rr.reason==='money'?needMsg('gold',c.gold):'Não deu para fundir agora'); render(); return; }
-  let text=dl?dl.text:'', color=dl?dl.color:'#c9b9a2';
-  if(!wasEq){ try{ const sw=Sys.fc.itemFC(S,H,made).swap, d2=Sys.fc.delta(0,sw); text=d2.text; color=d2.color; }catch(e){} }
+  let text=dl?dl.text:'', color=dl?dl.color:'#c9b9a2', ba=dl?uBA(dl.after-dl.before,dl.before):uBA(0);
+  if(!wasEq){ try{ const sw=Sys.fc.itemFC(S,H,made).swap, d2=Sys.fc.delta(0,sw); text=d2.text; color=d2.color; ba=uBA(sw); }catch(e){} }
   statsChanged();
-  XU.res={id:made.id,eq:wasEq,from:c.fromStars,to:c.toStars,text,color};
+  XU.res={id:made.id,eq:wasEq,from:c.fromStars,to:c.toStars,text,color,b:ba.b,a:ba.a};
   if(uReduced()){ snd('upgrade'); vib(40); render(); return; }
   snd('ui_tap'); XU.busy=true; XU.fx='fuse'; const keep=XU.res; XU.res=null;
   render();
