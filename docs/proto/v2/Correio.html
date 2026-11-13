@@ -172,9 +172,9 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events
 .stage{height:150px}
 #stc{height:150px}
 .flt{position:relative;z-index:3;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:4px 12px 0}
-.flt button{position:relative;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:11px;color:var(--muted);padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flt button{position:relative;height:32px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:10.5px;color:var(--muted);padding:0 2px;white-space:nowrap}
 .flt button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
-.flt i{position:absolute;right:3px;top:3px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--rose);color:#fff;font-size:9px;font-style:normal;line-height:14px;font-weight:900}
+.flt i{position:absolute;right:-4px;top:-6px;z-index:1;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--rose);color:#fff;font-size:9px;font-style:normal;line-height:14px;font-weight:900}
 .lt{display:block;width:100%;text-align:left;border-radius:13px;background:var(--glass);border:1px solid var(--line);margin-bottom:5px;padding:0;overflow:hidden}
 .lt.unr{border-color:rgba(94,231,255,.6)}
 .lt.op{border:2px solid var(--gold)}
@@ -270,13 +270,15 @@ const D={"W":{"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"f
 
 /* ---------- CORREIO: js/sys/mail.js (tipos, remetente, prazo) ---------- */
 const FROM={system:'Equipe Eonbound',reward:'Prêmios',guild:'Guilda',event:'Eventos'};
-const TN={all:'Todas',reward:'Prêmios',guild:'Guilda',event:'Eventos',system:'Sistema'};
+const TN={all:'Todas',reward:'Prêmios',guild:'Guilda',event:'Eventos',system:'Avisos'};
 const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff1a8'], RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
 /* anexo → peças da tela (o grantBundle do jogo entrega cada uma) */
-const AT={gold:['a/coin.png','Ouro'],gems:['a/gem.png','Diamantes'],forge:['a/forge.png','Pedras de forja'],food:['a/pets.png','Ração'],essence:['a/chest.png','Essência'],stones:['a/forge.png','Pedras de treino'],prism:['a/pp_prism_fox.png','Fragm. Prismático'],mfrag:['a/m_horse.png','Fragm. montaria']};
+const AT={gold:['a/coin.png','Ouro'],gems:['a/gem.png','Diamantes'],forge:['a/forge.png','Pedras de forja'],food:['a/pets.png','Ração'],essence:['a/chest.png','Essência'],stones:['a/forge.png','Pedras de treino'],prism:['a/pp_prism_fox.png','Fragm. Prismático',12],mfrag:['a/m_horse.png','Fragm. montaria']};
 function pieces(att){ const out=[]; for(const k of Object.keys(att)){ if(k==='item'){ const it=att.item; out.push({img:it.img,b:RN[it.r],s:it.name,rc:RC[it.r],k}); continue; }
   if(k==='title'){ out.push({img:'a/ic_vip.png',b:'Título',s:att.title,rc:RC[4],k}); continue; }
-  const a=AT[k]; if(a) out.push({img:a[0],b:k==='gold'?ab(att[k]):'×'+n(att[k]),s:a[1],k}); } return out; }
+  const a=AT[k]; if(a) out.push({img:a[0],sheet:a[2]||0,b:k==='gold'?ab(att[k]):'×'+n(att[k]),s:a[1],k}); } return out; }
+/* ícone: imagem inteira, ou o 1º quadro de uma folha animada (12 quadros em linha) */
+const ico=(p,sz)=>p.sheet?`<span style="display:block;width:${sz}px;height:${sz}px;margin:0 auto;background:url(${p.img}) 0 50%/${p.sheet*100}% auto no-repeat"></span>`:`<img src="${p.img}" alt="" style="width:${sz}px;height:${sz}px">`;
 
 /* ---------- formatos ---------- */
 const n=v=>Math.round(v).toLocaleString('pt-BR');
@@ -378,7 +380,7 @@ function drawPet(x,t){ const I=img('a/pt_pet_shadowwolf_idle.png'); if(!ok(I)) r
 /* prêmios voando até o herói: saem de baixo (da carta) num arco e somem no peito dele */
 function drawFly(x,t){ S.fly=S.fly.filter(p=>t-p.t<1.1+p.d); for(const p of S.fly){ const u=Math.max(0,Math.min(1,(t-p.t-p.d)/0.9)); if(u<=0) continue; const im=img(p.img); if(!ok(im)) continue;
     const sx=p.x0, sy=170, ex=HX, ey=GY-60, cx=(sx+ex)/2, cy=Math.min(sy,ey)-70, k=1-u, xx=k*k*sx+2*k*u*cx+u*u*ex, yy=k*k*sy+2*k*u*cy+u*u*ey, s=26*(1-u*0.5);
-    x.save(); x.globalAlpha=u>0.85?(1-u)/0.15:1; x.drawImage(im,xx-s/2,yy-s/2,s,s); x.restore(); } }
+    x.save(); x.globalAlpha=u>0.85?(1-u)/0.15:1; if(p.sheet){ const fw=im.naturalWidth/p.sheet, fh=im.naturalHeight, w2=s*fw/fh>s?s:s*fw/fh; x.drawImage(im,0,0,fw,fh,xx-s/2,yy-s/2,s,s*fh/fw); } else x.drawImage(im,xx-s/2,yy-s/2,s,s); x.restore(); } }
 function drawFx(x,t){ S.fx=S.fx.filter(p=>t-p.t<1.3); for(const p of S.fx){ const a=(t-p.t)/1.3; x.save(); x.globalAlpha=1-a; x.font='900 14px Nunito,sans-serif'; x.textAlign='center'; x.lineWidth=3; x.strokeStyle='rgba(0,0,0,.6)'; x.fillStyle=p.c; x.strokeText(p.s,p.x,p.y-a*28); x.fillText(p.s,p.x,p.y-a*28); x.restore(); } }
 function draw(t){ if(!S.box) return; S.t=t; const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,150);
   try{ const g=x.createRadialGradient(HX,GY,10,HX,GY,150); g.addColorStop(0,'rgba(255,210,94,.25)'); g.addColorStop(1,'rgba(255,210,94,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,150,14,0,0,7); x.fill(); }catch(err){ stgErr('o chão',err); }
@@ -393,8 +395,8 @@ let t0=performance.now();
 function renderTop(){ $('#gold').textContent=ab(S.gold); $('#gems').textContent=n(S.gems); $('#who span').textContent=hn(); }
 function renderFlt(){ $('#flt').innerHTML=Object.keys(TN).map(k=>{ const c=S.box.filter(m=>(k==='all'||m.type===k)&&unreadOf(m)).length; return `<button data-flt="${k}" aria-pressed="${flt===k}">${TN[k]}${c?'<i>'+c+'</i>':''}</button>`; }).join(''); }
 function letter(m){ const op=openId===m.id, pcs=hasAtt(m)?pieces(m.att):[], warn=m.left<=3;
-  const atr=hasAtt(m)?(m.claimed?'<span class="atr"><span class="ok">Resgatado</span></span>':'<span class="atr">'+pcs.slice(0,3).map(p=>`<img src="${p.img}" alt="">`).join('')+(pcs.length>3?'<span class="ok" style="color:var(--muted)">+'+(pcs.length-3)+'</span>':'')+'</span>'):'';
-  let body=''; if(op){ body=`<div class="lb"><p>${esc(m.body)}</p>${pcs.length?'<div class="att">'+pcs.map(p=>`<div class="ai ${m.claimed?'got':''}" style="${p.rc?'--rc:'+p.rc:''}"><img src="${p.img}" alt=""><b>${esc(p.b)}</b><small>${esc(p.s)}</small></div>`).join('')+'</div>':''}
+  const atr=hasAtt(m)?(m.claimed?'<span class="atr"><span class="ok">Resgatado</span></span>':'<span class="atr">'+pcs.slice(0,3).map(p=>ico(p,20)).join('')+(pcs.length>3?'<span class="ok" style="color:var(--muted)">+'+(pcs.length-3)+'</span>':'')+'</span>'):'';
+  let body=''; if(op){ body=`<div class="lb"><p>${esc(m.body)}</p>${pcs.length?'<div class="att">'+pcs.map(p=>`<div class="ai ${m.claimed?'got':''}" style="${p.rc?'--rc:'+p.rc:''}">${ico(p,34)}<b>${esc(p.b)}</b><small>${esc(p.s)}</small></div>`).join('')+'</div>':''}
     <div class="row">${pending(m)?`<button class="bt" data-claim="${m.id}">Resgatar</button>`:`<button class="bt rose" data-del="${m.id}">Apagar</button>`}</div>
     <div class="note2">De: ${esc(FROM[m.type])} · chegou ${m.age<1?'hoje':'há '+Math.floor(m.age)+' dia'+(Math.floor(m.age)===1?'':'s')} · vence em ${m.left} dia${m.left===1?'':'s'}${pending(m)?'; depois disso o anexo se perde':''}${m.att&&m.att.item?'. Item acima do seu portão fica guardado até você poder usar':''}</div></div>`; }
   return `<div class="lt ${unreadOf(m)?'unr':''} ${op?'op':''}"><button class="lh" data-open="${m.id}" style="width:100%;border:0;background:none;text-align:left" aria-expanded="${op}"><span class="lic ${m.type}">${SV[m.type]}${unreadOf(m)?'<span class="dot"></span>':''}</span><span class="mi"><b>${esc(m.title)}</b><small>${esc(FROM[m.type])} · ${warn&&pending(m)?'<em>vence em '+m.left+' dia'+(m.left===1?'':'s')+'</em>':'vence em '+m.left+' dias'}</small></span>${atr}</button>${body}</div>`; }
@@ -411,7 +413,7 @@ function go(where){ const d=document.createElement('div'); d.className='nav'; d.
 /* ---------- ações (Sys.mail.claim / claimAll / remove; no servidor POST /mail/{id}/claim) ---------- */
 function claim(m,delay){ if(!pending(m)) return false; m.claimed=true; m.read=true; const a=m.att;
   if(a.gold) S.gold+=a.gold; if(a.gems) S.gems+=a.gems;
-  pieces(a).forEach((p,i)=>S.fly.push({img:p.img,x0:60+((i*67)%270),t:S.t||0,d:(delay||0)+i*0.12}));
+  pieces(a).forEach((p,i)=>S.fly.push({img:p.img,sheet:p.sheet,x0:60+((i*67)%270),t:S.t||0,d:(delay||0)+i*0.12}));
   setTimeout(()=>{ S.fx.push({s:a.gems?'+'+a.gems+' diamantes':a.gold?'+'+ab(a.gold)+' ouro':'Resgatado!',c:'#5ef0a0',x:HX,y:GY-120,t:S.t||0}); renderTop(); },700);
   return true; }
 scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
