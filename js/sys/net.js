@@ -102,7 +102,7 @@ async function googleSignIn(mode){
   const G=root.Capacitor.Plugins[DATA.googlePlugin];
   if(!gInit) gInit=G.initialize({google:{webClientId:DATA.googleClientId}});
   await gInit;
-  let r; try{ r=await G.login({provider:'google',options:{}});   // sem scopes: com a MainActivity padrão (BridgeActivity) o plugin recusa; email e perfil já vêm }
+  let r; try{ r=await G.login({provider:'google',options:{}}); /* sem scopes: com a MainActivity padrão (BridgeActivity) o plugin recusa; email e perfil já vêm */ }
   catch(e){ const m=String(e&&(e.code||e.message)||''); throw fail(/cancel/i.test(m)?'cancelled':'google_error'); }
   const idToken=r&&r.result&&(r.result.idToken||(r.result.credential&&r.result.credential.idToken));
   if(!idToken) throw fail('google_error');
