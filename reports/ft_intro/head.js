@@ -45,20 +45,20 @@ const val=(path,sc)=>{ const ps=path.split('.'); let v=sc; for(const p of ps){ i
 const RX=/\{\{\s*([\w.$]+)\s*\}\}/g;
 const interp=(s,sc)=>s.replace(RX,(m,p)=>{ const v=val(p,sc); return v==null||v===false?'':String(v); });
 const single=s=>{ const m=/^\{\{\s*([\w.$]+)\s*\}\}$/.exec(s.trim()); return m?m[1]:null; };
-function build(node,sc,out){
+function piBuild(node,sc,out){
   if(node.nodeType===3){ out.push(document.createTextNode(interp(node.nodeValue,sc))); return; }
   if(node.nodeType!==1) return;
   const tag=node.localName;
-  if(tag==='sc-if'){ const p=single(node.getAttribute('value')||''); if(p&&val(p,sc)) for(const c of node.childNodes) build(c,sc,out); return; }
+  if(tag==='sc-if'){ const p=single(node.getAttribute('value')||''); if(p&&val(p,sc)) for(const c of node.childNodes) piBuild(c,sc,out); return; }
   if(tag==='sc-for'){ const p=single(node.getAttribute('list')||''), as=node.getAttribute('as')||'item', L=p?val(p,sc):null;
-    if(Array.isArray(L)) L.forEach((it,i)=>{ const s2=Object.create(sc); s2[as]=it; s2.$index=i; for(const c of node.childNodes) build(c,s2,out); }); return; }
+    if(Array.isArray(L)) L.forEach((it,i)=>{ const s2=Object.create(sc); s2[as]=it; s2.$index=i; for(const c of node.childNodes) piBuild(c,s2,out); }); return; }
   const el=node.namespaceURI&&node.namespaceURI!=='http://www.w3.org/1999/xhtml'?document.createElementNS(node.namespaceURI,tag):document.createElement(tag);
   for(const a of node.attributes){ const n=a.name;
     if(/^on[a-z]+$/i.test(n)){ const p=single(a.value); const f=p?val(p,sc):null; if(typeof f==='function'){ (el.__on||(el.__on={}))[n.slice(2).toLowerCase()]=f; } continue; }
     const p=single(a.value); if(p){ const v=val(p,sc); if(v===false||v==null){ if(n==='disabled'||n==='checked'||n==='hidden') continue; el.setAttribute(n,v==null?'':String(v)); continue; } }
     el.setAttribute(n,interp(a.value,sc)); }
   el.__t=node;   /* de qual nó do modelo veio: mesmo nó = mesmo elemento (atualiza); outro nó = elemento novo (a animação de entrada roda) */
-  const kids=[]; for(const c of node.childNodes) build(c,sc,kids); for(const k of kids) el.appendChild(k);
+  const kids=[]; for(const c of node.childNodes) piBuild(c,sc,kids); for(const k of kids) el.appendChild(k);
   out.push(el);
 }
 /* troca só o que mudou (as animações em curso não reiniciam) */
@@ -75,7 +75,7 @@ function morphKids(par,news){
 }
 function same(o,n){ return o.nodeType===n.nodeType&&(o.nodeType!==1||(o.localName===n.localName&&o.__t===n.__t)); }
 function patch(o,n){
-  for(const a of [...o.attributes]) if(!n.hasAttribute(a.name)) o.removeAttribute(a.name);
+  for(const a of [...o.attributes]) if(!n.hasAttribute(a.name)&&!(o.localName==='canvas'&&(a.name==='width'||a.name==='height'))) o.removeAttribute(a.name);
   for(const a of n.attributes) if(o.getAttribute(a.name)!==a.value) o.setAttribute(a.name,a.value);
   o.__on=n.__on;
   if(o.localName==='input'||o.localName==='textarea'){ const v=n.getAttribute('value')||''; if(o.value!==v) o.value=v; return; }
@@ -92,9 +92,16 @@ function compOf(id){ if(clsCache[id]) return clsCache[id];
 /* ---------- a sobreposição ---------- */
 const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON:PI_KAIA,
   dirty(){ if(this.raf) return; this.raf=requestAnimationFrame(()=>{ this.raf=0; this.draw(); }); },
+  heroT:0, heroRaf:0, heroLast:0,
+  heroTick(ts){ this.heroRaf=0; if(!this.root) return; const cs=this.root.querySelectorAll('canvas[data-pi-hero]'); if(!cs.length){ this.heroLast=0; return; }
+    const dt=this.heroLast?Math.min(0.05,(ts-this.heroLast)/1000):0; this.heroLast=ts; this.heroT+=dt;
+    for(const c of cs){ try{ const r=c.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr); if(!w||!h) continue;
+      if(c.width!==w||c.height!==h){ c.width=w; c.height=h; } const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,w,h);
+      const z=+c.dataset.piZoom||1; drawHeroFull(x,w/2,h*243/256,h/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false}); }catch(e){} }
+    this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
-    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) build(n,sc,out); morphKids(this.root,out); },
-  extra(){ return {pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,googleSoon:!PI.googleReady(),pFc:G.fc()}; },
+    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
+  extra(){ const av=typeof window.avatarTag==='function', full=!G.isNew()&&typeof drawHeroFull==='function'&&typeof HS==='number'; return {hasAv:av,noAv:!av,fullHero:full,kidHero:!full,pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,googleSoon:!PI.googleReady(),pFc:G.fc()}; },
   fit(){ if(!this.el) return; const app=document.getElementById('app')||document.body, W=app.clientWidth||390, H=app.clientHeight||844, d=PI_SCREENS[this.id]||{};
     const s=d.fluid?W/390:Math.min(W/390,H/844), h=d.fluid?H/s:844;
     this.root.style.cssText=`position:absolute;left:${(W-390*s)/2}px;top:${d.fluid?0:Math.max(0,(H-844*s)/2)}px;width:390px;height:${h}px;transform:scale(${s});transform-origin:0 0;overflow:hidden`; this.root.style.setProperty('--pi-vw','3.9px'); this.root.style.setProperty('--pi-vh',(h/100).toFixed(2)+'px'); this.el.dataset.fit=W+'x'+H+'@'+s.toFixed(3); },
