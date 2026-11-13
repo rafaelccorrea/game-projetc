@@ -32,7 +32,8 @@
     clockSync(host);   // agenda (Sys.schedule) e afins passam a usar a hora do servidor
     /* save na nuvem (contrato §3.3): sobe, não faz nada, baixa, ou pergunta */
     try {
-      const sum = hooks.summary ? hooks.summary(S) : {};
+      /* o resumo vai como FUNÇÃO: o Sys.net monta na hora de cada pedido (depois do choose, que pode demorar, o S pode ter mudado) */
+      const sum = hooks.summary ? (S2 => hooks.summary(S2)) : {};
       let r = await N.sync(S, sum);
       if (r.action === 'choose') { const side = hooks.choose ? await hooks.choose(r) : r.recommend; r = await N.chooseSide(side === 'cloud' ? 'cloud' : 'device', S, sum); }
       /* o jogo pode RECUSAR (servidor errado) ou deixar PENDENTE (batalha já começou): apply === false → o S do jogo continua o mesmo */
@@ -59,7 +60,7 @@
     if (st.timer) return true;
     const wait = Math.max(0, st.last + DATA.pushEveryMs - Date.now());
     st.timer = setTimeout(async () => { st.timer = null; st.last = Date.now();
-      try { await N.push(st.S, st.hooks && st.hooks.summary ? st.hooks.summary(st.S) : {}); clockSync(st.host); }
+      try { const h = st.hooks; await N.push(st.S, h && h.summary ? (S2 => h.summary(S2)) : {}); clockSync(st.host); }
       catch (e) { note('push', e.code); if (e.code === 'save_conflict' && st.hooks && st.hooks.conflict) st.hooks.conflict(e.details); } }, wait);
     return true;
   }

@@ -113,8 +113,9 @@ async function googleSignIn(mode,o){
   let idToken=o&&o.idToken;
   if(!idToken) idToken=await googleIdToken();
   if(mode==='link') return linkGoogle({idToken});
-  try{ return await loginGoogle({idToken}); }
-  catch(e){ if(e&&e.code==='not_linked'){ if(mode==='auto') return linkGoogle({idToken}); e.idToken=idToken; } throw e; }
+  /* 'auto' devolve {action:'login'|'linked', player} (a tela precisa saber se ENTROU na conta ou VINCULOU ao convidado); 'login' devolve o jogador */
+  try{ const p=await loginGoogle({idToken}); return mode==='auto'?{action:'login',player:p}:p; }
+  catch(e){ if(e&&e.code==='not_linked'){ if(mode==='auto') return {action:'linked',player:await linkGoogle({idToken})}; e.idToken=idToken; } throw e; }
 }
 async function googleIdToken(){
   if(!googleReady()) throw fail('google_unavailable');
@@ -155,12 +156,15 @@ async function pull(){
   catch(e){ if(e.code==='not_found') return null; throw e; }
 }
 /* sobe o S. 409 save_conflict: rejeita com details.cloud (a tela decide com chooseSide). */
+/* summary pode ser o OBJETO ou a FUNÇÃO S → resumo: com a função, o resumo é montado junto com o corpo do pedido (o mesmo instante em que o S
+   é serializado), então gemas/fase que mudarem durante um await não divergem do save (o servidor confere era/fase/gemas contra o blob). */
+const sumOf=(S,summary)=>{ try{ return (typeof summary==='function'?summary(S):summary)||{}; }catch(e){ return {}; } };
 async function push(S,summary){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta();
   let r;
   try{ r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
-    clientTime:Date.now(),summary:summary||{},save:S}); }
+    clientTime:Date.now(),summary:sumOf(S,summary),save:S}); }
   catch(e){
     // 422 save_implausible: o servidor GUARDOU o save (marcado para revisão) na versão details.version; o aparelho precisa saber, senão o próximo dá conflito
     if(e.code==='save_implausible'&&e.details&&typeof e.details.version==='number') setMeta(e.details.version,false);
@@ -183,7 +187,7 @@ async function sync(S,summary){
     const r=await push(S,summary); return {action:'push',version:r.version};
   }
   if(!m.dirty){ const r=await pull(); return {action:'pulled',version:r.version,save:r.save,summary:r.summary}; }
-  return {action:'choose',cloud:h,device:summary||{},recommend:num(summary&&summary.playSeconds)>=num(h.summary&&h.summary.playSeconds)?'device':'cloud'};
+  const dv=sumOf(S,summary); return {action:'choose',cloud:h,device:dv,recommend:num(dv.playSeconds)>=num(h.summary&&h.summary.playSeconds)?'device':'cloud'};
 }
 const num=v=>(typeof v==='number'&&isFinite(v))?v:0;
 /* escolha da tela no conflito. 'device' sobe o S por cima (a versão da nuvem vai para o histórico); 'cloud' baixa. */

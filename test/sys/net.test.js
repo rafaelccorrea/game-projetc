@@ -187,7 +187,7 @@ test('Google "auto": sem vínculo neste servidor, vincula ao convidado com o MES
   globalThis.Capacitor = { Plugins: { SocialLogin: { initialize: async () => {}, login: async () => { logins++; return { result: { idToken: 'tok-1' } }; } } } };
   try {
     await net.ensureSession(); await net.push({}, {});
-    await net.googleSignIn('auto'); assert.equal(logins, 1); assert.equal(linked, 'tok-1');
+    const ra = await net.googleSignIn('auto'); assert.equal(ra.action, 'linked'); assert.equal(logins, 1); assert.equal(linked, 'tok-1');
     await assert.rejects(net.googleSignIn('login'), e => e.code === 'not_linked' && e.idToken === 'tok-1');      // o chamador pode vincular sem abrir de novo
     await net.googleSignIn('link', { idToken: 'tok-1' }); assert.equal(logins, 2);                                 // reusou o token: nenhuma janela nova
   } finally { delete globalThis.Capacitor; }
@@ -197,4 +197,11 @@ test('Google "auto": sem vínculo neste servidor, vincula ao convidado com o MES
   try { await net.ensureSession(); await net.push({}, {}); assert.equal(net.saveMeta().version, 7); await net.googleSignIn('login'); assert.equal(net.saveMeta().version, 0); }
   finally { delete globalThis.Capacitor; }
   void f;
+});
+
+test('resumo como FUNÇÃO: montado na hora do pedido, junto com o save (sem divergência de gemas/fase)', async () => {
+  let body = null; boot({ 'POST /auth/guest': () => [200, session(1)], 'PUT /save': b => { body = b; return [200, { version: 1 }]; } });
+  await net.ensureSession(); const S = { gems: 10, stage: 3 };
+  const p = net.push(S, S2 => ({ gems: S2.gems, stage: S2.stage })); S.gems = 99; await p;   // mudou depois da chamada: o resumo acompanha o save enviado
+  assert.equal(body.summary.gems, body.save.gems); assert.equal(body.summary.stage, 3);
 });
