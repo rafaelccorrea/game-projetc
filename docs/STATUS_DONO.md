@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **12h15 · Sua decisão:** grátis 3 entradas por dia na Arena e 3 na Torre; VIP soma (Arena 5 no VIP 4 e 6 no VIP 8; Torre 4 no VIP 5 e 5 no VIP 10). Vantagens do VIP LIGADAS nos módulos; as automações nascem desligadas e nunca mexem em item equipado, travado ou de 5 estrelas
+- **12h15 · Guildas online:** chefe semanal, loja de Brasões, estandartes, missões semanais e ranking prontos no servidor (desligados). Sistemas monta a tabela de números para você aprovar
+- **12h15 · Arte:** Kaia montada nas 6 montarias pronta; Lobo das Sombras ligado no jogo
+
 - **12h · Checklist atualizado.** Próximo APK: sai quando o carregamento parar de acusar erro com internet lenta; vai com ícone A, abertura, logo animado, eventos, Kaia montada, sem Facebook. Arte: pets (2 de 9), skins, arco/bumerangue, Kaia montada. Créditos ~713
 
 - **11h40 · Você aprovou as vantagens do VIP** (docs/PROPOSTA_VIP.md): coleta automática, fusão automática, equipar o melhor sozinho, pular chefe vencido, mais Arena/Torre/Chefe Mundial, Forja automática, offline maior, mochila maior. Sem atributo nem diamante: grátis em 6 meses, VIP 10 em 4. Sendo ligado nas telas
