@@ -45,7 +45,11 @@ function evolve(S,host){ if(!ON()) return {ok:false,reason:'off'}; const n=next(
 /* save antigo que já passou dos níveis: as fases ficam PENDENTES (cada uma toca a animação uma vez), nada é aplicado sozinho */
 const pendingCount=(S,host)=>{ if(!ON()) return 0; const o=ensure(S), lv=lvlOf(S,host); let k=0; for(let i=o.stg+1;i<DATA.levels.length;i++) if(lv>=DATA.levels[i]&&(!DATA.useFc||fcOf(S,host)>=DATA.fc[i])) k++; return k; };
 
-const API={DATA,ensure,current,nameOf,next,pending,evolve,pendingCount};
+/* SAVE ANTIGO NA CARGA (PO): quem já passou dos níveis entra DIRETO na fase certa (Nv 60 → adulto), sem tocar as animações em fila. A evolução animada
+   (pending/evolve) fica para quem sobe de nível jogando. Chamar UMA vez no boot, antes de desenhar o herói. {ok, from, to, applied} */
+function catchUp(S,host){ if(!ON()) return {ok:false,reason:'off'}; const o=ensure(S), from=o.stg; let n=0; while(n<4){ const x=next(S,host); if(!x||!x.ready) break; o.stg=x.to; n++; }
+  const L=SYS().level; try{ if(n&&L&&L.ensure) L.ensure(S).stg=o.stg; }catch(e){} return {ok:true,from,to:o.stg,applied:n}; }
+const API={DATA,ensure,current,nameOf,next,pending,evolve,pendingCount,catchUp};
 root.Sys=root.Sys||{}; root.Sys.phaseUp=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

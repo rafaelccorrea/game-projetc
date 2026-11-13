@@ -948,4 +948,16 @@ t('roupa-skin = combinação (dono): 38 skins com chapéu + tinta de colete/bota
       assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; }
 });
 
+t('fases na carga: save antigo no Nv 60 entra adulto direto (catchUp), camadas mantidas 34→35; drop no chão por raridade (tabela única)',()=>{
+  const PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), A=require('../../js/sys/appearance.js'), T=require('../../js/sys/stats.js');
+  PU.DATA.on=true; try{ const S={hero:'kaia',skins:['w00','a00','a43'],skinEq:{weapon:'w00',armor:'a43'}}; A.setMode(S,'skin'); L.ensure(S).lvl=60;
+    const c=PU.catchUp(S,makeHost()); assert.deepStrictEqual([c.from,c.to,c.applied],[0,2,2]); assert.strictEqual(A.sheetFor(S,makeHost(),'idle').dir,'assets/anim/hyb/kaia_phase2/'); assert.strictEqual(PU.pending(S,makeHost()).ready,false,'nada em fila');
+    assert.strictEqual(PU.catchUp(S,makeHost()).applied,0,'idempotente');
+    const S2={hero:'kael',skins:['a43'],skinEq:{armor:'a43'}}; A.setMode(S2,'skin'); L.ensure(S2).lvl=34; PU.catchUp(S2,makeHost()); const before=A.layers(S2,makeHost()).map(l=>l.key).join('|');
+    L.ensure(S2).lvl=35; assert.ok(PU.evolve(S2,makeHost()).ok); assert.strictEqual(A.layers(S2,makeHost()).map(l=>l.key).join('|'),before,'camadas iguais 34→35'); assert.strictEqual(PU.current(S2),2);
+  } finally { PU.DATA.on=false; }
+  const d=[0,1,2,3,4,5].map(r=>T.dropFx(r)); assert.deepStrictEqual(d.map(x=>x.beam),[0,0,0,62,62,62]); assert.deepStrictEqual(d.map(x=>x.sound&&x.sound.id),[null,null,'gem','legendary','legendary','legendary']);
+  assert.ok(d.every((x,i)=>i===0||x.glow>d[i-1].glow)); assert.strictEqual(T.dropFx({r:4}).color,'#ffc94a','paleta do Equipamento');
+});
+
 console.log(`ok: ${n} testes`);

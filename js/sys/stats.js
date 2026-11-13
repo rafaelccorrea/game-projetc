@@ -24,15 +24,25 @@ const DATA={
   // color = cor da raridade (a mesma do jogo; Divino novo) · tint = quanto pintar o efeito (0-1) · particles = × partículas · size = × tamanho do golpe
   // final da ultimate · glow = brilho (0-3) · shake = × tremor de tela · trail = rastro no s1/s2 (0-3) · flash = clarão no golpe final.
   skillFx:[
-    {r:0,name:'Básico',  color:'#9aa0a6',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
+    {r:0,name:'Básico',  color:'#e8e2d8',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
     {r:1,name:'Raro',    color:'#4aa3ff',tint:0.25,particles:1.2,size:1.05,glow:1,shake:1.0,trail:1,flash:false},
-    {r:2,name:'Épico',   color:'#b45cff',tint:0.40,particles:1.5,size:1.10,glow:1,shake:1.1,trail:1,flash:false},
-    {r:3,name:'Mítico',  color:'#ff4d6d',tint:0.55,particles:1.9,size:1.20,glow:2,shake:1.2,trail:2,flash:true},
-    {r:4,name:'Lendário',color:'#ffb21e',tint:0.70,particles:2.4,size:1.30,glow:3,shake:1.3,trail:2,flash:true},
+    {r:2,name:'Épico',   color:'#b07cff',tint:0.40,particles:1.5,size:1.10,glow:1,shake:1.1,trail:1,flash:false},
+    {r:3,name:'Mítico',  color:'#ff5a5a',tint:0.55,particles:1.9,size:1.20,glow:2,shake:1.2,trail:2,flash:true},
+    {r:4,name:'Lendário',color:'#ffc94a',tint:0.70,particles:2.4,size:1.30,glow:3,shake:1.3,trail:2,flash:true},
     {r:5,name:'Divino',  color:'#7ff6ff',tint:0.80,particles:3.0,size:1.40,glow:3,shake:1.4,trail:3,flash:true,prism:true}],   // prism = brilho arco-íris
   // NÚMEROS ABREVIADOS (dono): um formatador só para o jogo inteiro. ptNum = sufixos em português ("1,2 mi"), liga junto com a curva de 9 eras
   // (mesma decisão do PANEL_V2.ptNum do engenheiro). Vai até o quintilhão (o dano do Celestial passa de 10 quatrilhões).
   abbr:{ptNum:false, pt:[' mil',' mi',' bi',' tri',' qua',' qui'], en:['K','M','B','T','Qa','Qi']},
+  // DROP NO CHÃO por raridade (PO; mesmas regras do js/rarity.js do engenheiro, que desenha: brilho em todos, partículas do Épico para cima, FEIXE
+  // vertical do Mítico para cima com 62 px lógicos (abaixo das barras de vida), apoiado no chão, sem tremer). Cores = paleta aprovada do Equipamento.
+  // glow px · particles por segundo · beam px (0 = sem) · pulse s (0 = parado) · sound {id, rate} (Épico 'gem'; Mítico 'legendary' 0,9; Lendário 'legendary')
+  dropFx:[
+    {r:0,name:'Básico',  color:'#e8e2d8',glow:4, particles:0, beam:0, pulse:0,  sound:null},
+    {r:1,name:'Raro',    color:'#4aa3ff',glow:7, particles:0, beam:0, pulse:0,  sound:null},
+    {r:2,name:'Épico',   color:'#b07cff',glow:10,particles:6, beam:0, pulse:0,  sound:{id:'gem',rate:1}},
+    {r:3,name:'Mítico',  color:'#ff5a5a',glow:13,particles:10,beam:62,pulse:1.6,sound:{id:'legendary',rate:0.9}},
+    {r:4,name:'Lendário',color:'#ffc94a',glow:16,particles:16,beam:62,pulse:1.6,sound:{id:'legendary',rate:1}},
+    {r:5,name:'Divino',  color:'#7ff6ff',glow:20,particles:24,beam:62,pulse:1.2,sound:{id:'legendary',rate:1.1},prism:true}],   // Divino: feixe arco-íris
   wingTypes:{angel:{name:'Asa de anjo'}, demon:{name:'Asa demoníaca'}}, wingDrop:{demonEras:[7], demonDiff:3, default:'angel'},
   eraFactor:12,                                     // planos × 12^era (regra "era manda mais que raridade")
   maxEra:6,                                         // última era que existe (eras 7-8: só mudar aqui)
@@ -361,7 +371,9 @@ const powerDelta=(a,b)=>{ const F=root.Sys&&root.Sys.fc; return F&&F.delta?F.del
 function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA.abbr, pt=opt&&opt.pt!=null?!!opt.pt:A.ptNum===true, U=pt?A.pt:A.en;
   let out; if(n<1000) out=String(Math.floor(n)); else { let i=-1; while(n>=1000&&i<U.length-1){ n/=1000; i++; } out=(n>=100?String(Math.round(n)):(Math.floor(n*10)/10).toFixed(1).replace('.',',').replace(',0',''))+U[i]; }
   return (neg?'−':'')+out; }
-const API={DATA,abbr,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+/* efeito do item caído no chão pela raridade (o engenheiro desenha; tabela única): dropFx(item|r) → {r, name, color, glow, particles, beam, pulse, sound, prism} */
+const dropFx=w=>{ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.dropFx.length-1); return Object.assign({},DATA.dropFx[r],{sound:DATA.dropFx[r].sound?Object.assign({},DATA.dropFx[r].sound):null}); };
+const API={DATA,abbr,dropFx,skillFx,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
