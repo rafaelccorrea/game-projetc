@@ -1,0 +1,133 @@
+<title>Eonbound Direções Mapa e Correio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Duas direções de layout para cada tela reprovada (Mapa das Eras, Correio), em miniatura, para o dono escolher. Depois a escolhida vira protótipo V2. */
+:root{--night:#0b1030;--glass:rgba(24,33,86,.62);--line:rgba(130,150,255,.3);--gold:#ffd25e;--cyan:#5ee7ff;--violet:#a97bff;--rose:#ff6b9a;--green:#5ef0a0;--text:#eef1ff;--muted:#9aa6d6;
+  --fd:'Lilita One',Impact,sans-serif;--fb:Nunito,'Segoe UI',system-ui,sans-serif;color-scheme:dark}
+html,body{overflow-x:hidden}
+body{margin:0;background:#070a1f;color:var(--text);font-family:var(--fb)}
+*{box-sizing:border-box}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:var(--fd);font-weight:400;font-size:30px;margin:0 0 6px;letter-spacing:.5px}
+.lead{color:var(--muted);font-size:15px;margin:0 0 18px;line-height:1.5;max-width:760px}
+h2{font-family:var(--fd);font-weight:400;font-size:22px;margin:26px 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:18px}
+.opt{flex:1 1 300px;min-width:0;background:#11173a;border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:flex-start}
+.opt .txt{flex:1;min-width:0}
+.opt h3{margin:0 0 6px;font-size:16px;font-weight:900}
+.opt h3 span{display:inline-block;font-family:var(--fd);font-weight:400;font-size:13px;padding:1px 8px;border-radius:8px;background:var(--gold);color:#2a1403;margin-right:6px}
+.opt ul{margin:0;padding-left:17px;font-size:13px;line-height:1.5;color:#d6dcff}
+.opt .bt{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:2px solid var(--line);background:#0b1030;color:var(--text);font-weight:900;font-size:14px;cursor:pointer}
+.opt .bt[aria-pressed="true"]{border-color:var(--green);background:rgba(94,240,160,.14);color:var(--green)}
+/* telefone em miniatura (proporção do jogo 390x844) */
+.ph{flex:none;width:150px;height:325px;border-radius:22px;overflow:hidden;position:relative;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466,0 8px 24px rgba(0,0,0,.4)}
+.ph *{pointer-events:none}
+@media (max-width:420px){.opt{flex-direction:column;align-items:center}.ph{width:170px;height:368px}}
+.vst{font-size:14px;color:var(--muted);margin-top:14px}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:64px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line);color:var(--text);padding:8px 10px;font:600 14px var(--fb)}
+
+/* ---- MAPA A: trilha vertical com parallax ---- */
+.ma .sky{position:absolute;inset:0;background:url(a/bg8_sky.webp) center/cover}
+.ma .far{position:absolute;left:0;right:0;bottom:30%;height:45%;background:url(a/bg8_far.webp) center bottom/cover;opacity:.9}
+.ma .gnd{position:absolute;left:0;right:0;bottom:0;height:34%;background:url(a/bg8_ground.webp) center top/cover}
+.ma .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,16,48,.1),rgba(11,16,48,.2) 50%,rgba(11,16,48,.85))}
+.ma svg.path{position:absolute;left:0;top:30px;width:150px;height:220px}
+.ma .hero{position:absolute;left:52px;top:150px;width:46px;height:46px;background:url(a/kael_phase0.png) center/contain no-repeat;filter:drop-shadow(0 0 6px rgba(255,210,94,.8))}
+.ma .chip{position:absolute;right:6px;font-size:7px;font-weight:900;padding:2px 5px;border-radius:6px;background:rgba(5,8,28,.7);border:1px solid var(--line)}
+.ma .glass{position:absolute;left:8px;right:8px;bottom:10px;border-radius:12px;padding:7px;background:rgba(255,255,255,.12);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.35)}
+.ma .glass b{display:block;font-family:var(--fd);font-weight:400;font-size:12px}
+.ma .glass small{display:block;font-size:7px;color:#e6ecff;font-weight:800}
+.ma .glass i{display:block;margin-top:5px;height:18px;border-radius:7px;background:linear-gradient(180deg,#ffe58a,#f4a52a)}
+/* ---- MAPA B: carrossel de eras em tela cheia ---- */
+.mb .card{position:absolute;left:14px;right:14px;top:34px;bottom:96px;border-radius:16px;overflow:hidden;background:url(a/bg_era2.png) center/cover;box-shadow:0 0 0 2px var(--gold),0 10px 20px rgba(0,0,0,.5)}
+.mb .card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(11,16,48,.9))}
+.mb .peek{position:absolute;top:50px;bottom:112px;width:10px;border-radius:8px;background:url(a/bg8_sky.webp) center/cover;opacity:.6}
+.mb .ttl{position:absolute;left:24px;right:24px;bottom:104px;z-index:2;font-family:var(--fd);font-size:15px;text-align:center}
+.mb .ring{position:absolute;z-index:2;left:50%;top:70px;transform:translateX(-50%);width:62px;height:62px;border-radius:50%;background:conic-gradient(var(--gold) 0 70%,rgba(255,255,255,.18) 0);display:grid;place-items:center}
+.mb .ring span{width:50px;height:50px;border-radius:50%;background:#1a2366 url(a/kael_phase0.png) center 20%/130% no-repeat}
+.mb .dots{position:absolute;left:0;right:0;bottom:86px;display:flex;justify-content:center;gap:3px}
+.mb .dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3)}
+.mb .dots i.on{background:var(--gold);width:12px;border-radius:3px}
+.mb .sheet{position:absolute;left:0;right:0;bottom:0;height:80px;border-radius:14px 14px 0 0;background:#141c4a;border-top:1px solid var(--line);padding:6px 8px}
+.mb .sheet div{height:12px;border-radius:5px;background:rgba(255,255,255,.08);margin-bottom:5px}
+.mb .sheet div.on{background:rgba(255,210,94,.3);outline:1px solid var(--gold)}
+/* ---- CORREIO A: cartões com prévia e arrastar para resgatar ---- */
+.ca{background:linear-gradient(180deg,#141c4a,#0b1030)}
+.ca .hdr{position:absolute;left:10px;top:12px;font-family:var(--fd);font-size:14px}
+.ca .cd{position:absolute;left:8px;right:8px;height:74px;border-radius:14px;background:var(--glass);border:1px solid var(--line);padding:6px;overflow:hidden}
+.ca .cd b{display:block;font-size:8px;font-weight:900}
+.ca .cd .rw{display:flex;gap:4px;margin-top:4px}
+.ca .cd .rw span{width:30px;height:30px;border-radius:8px;background:rgba(5,8,28,.6) center/70% no-repeat;border:1px solid var(--line2,rgba(160,180,255,.5))}
+.ca .cd .sw{position:absolute;left:6px;right:6px;bottom:5px;height:12px;border-radius:6px;background:rgba(94,240,160,.15);overflow:hidden}
+.ca .cd .sw i{display:block;width:40%;height:100%;background:linear-gradient(90deg,#22c47a,#7dffb8);border-radius:6px}
+.ca .cd.top{transform:translateX(18px) rotate(2deg);box-shadow:0 8px 16px rgba(0,0,0,.4);border-color:var(--green)}
+/* ---- CORREIO B: abas + prêmio no herói ---- */
+.cb{background:linear-gradient(180deg,#1a2366,#0b1030 60%)}
+.cb .tabs{position:absolute;left:8px;right:8px;top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.cb .tabs i{height:13px;border-radius:5px;background:rgba(255,255,255,.08)}
+.cb .tabs i.on{background:linear-gradient(180deg,#3d4fb8,#26338a)}
+.cb .stage{position:absolute;left:0;right:0;top:30px;height:120px;background:radial-gradient(60% 50% at 50% 70%,rgba(255,210,94,.25),transparent)}
+.cb .stage .h{position:absolute;left:38px;top:22px;width:80px;height:92px;background:url(a/kael_phase0.png) center/contain no-repeat}
+.cb .stage .m{position:absolute;right:6px;top:52px;width:58px;height:58px;background:url(a/m_wolf.png) center/contain no-repeat;filter:drop-shadow(0 0 6px rgba(255,210,94,.9))}
+.cb .stage .pv{position:absolute;left:8px;top:6px;font-size:7px;font-weight:900;padding:2px 5px;border-radius:6px;background:var(--rose);color:#3a0716}
+.cb .ln{position:absolute;left:8px;right:8px;height:24px;border-radius:8px;background:var(--glass);border:1px solid var(--line)}
+.cb .ln.sel{border-color:var(--gold);background:rgba(255,210,94,.12)}
+.cb .cta{position:absolute;left:8px;right:8px;bottom:10px;height:24px;border-radius:9px;background:linear-gradient(180deg,#ffe58a,#f4a52a)}
+</style>
+<div class="wrap">
+  <h1>Mapa das Eras e Correio: escolha a direção</h1>
+  <p class="lead">O dono reprovou as duas telas ("nada moderno" no Mapa, "não é a melhor proposta" no Correio). Aqui estão 2 direções de layout para cada uma, em miniatura. Escolha uma de cada (ou comente). A escolhida vira o protótipo completo no padrão V2: herói à vista, tudo funcionando simulado, 320/390 sem rolagem lateral. As regras e os números continuam os mesmos.</p>
+
+  <h2>Mapa das Eras</h2>
+  <div class="row">
+    <div class="opt"><div class="ph ma" aria-hidden="true"><div class="sky"></div><div class="far"></div><div class="gnd"></div><div class="shade"></div>
+        <svg class="path" viewBox="0 0 150 220"><path d="M75 215 C20 190 130 160 75 140 S20 90 75 70 S130 30 75 5" stroke="#ffd25e" stroke-width="3" fill="none" stroke-dasharray="5 5" opacity=".85"/>
+          <circle cx="75" cy="140" r="7" fill="#ffd25e"/><circle cx="58" cy="105" r="5" fill="#fff" opacity=".6"/><circle cx="92" cy="80" r="5" fill="#fff" opacity=".6"/><circle cx="75" cy="40" r="8" fill="#ff6b9a"/></svg>
+        <div class="hero"></div><span class="chip" style="top:40px">Senhor da Era</span><span class="chip" style="top:150px;background:rgba(255,210,94,.25)">Fase 47</span>
+        <div class="glass"><b>Próxima: fase 48</b><small>FC 297 mi · você 285 mi · Difícil</small><i></i></div></div>
+      <div class="txt"><h3><span>A</span>Trilha vertical com parallax</h3><ul><li>A tela inteira é o cenário da era, com as 3 camadas se movendo ao rolar (parallax)</li><li>Uma trilha luminosa sobe pela tela; cada fase é um ponto e o Senhor fica no topo</li><li>O herói fica de pé no ponto da fase atual</li><li>Cartão de vidro embaixo: próxima fase, FC e Lutar</li><li>Ao subir de era, o cenário troca com uma transição</li></ul>
+        <button class="bt" data-v="mapa" data-c="A" aria-pressed="false">Escolher A para o Mapa</button></div></div>
+    <div class="opt"><div class="ph mb" aria-hidden="true"><div class="peek" style="left:0"></div><div class="peek" style="right:0"></div><div class="card"></div>
+        <div class="ring"><span></span></div><div class="ttl">Era Industrial<br><small style="font-family:var(--fb);font-size:8px;font-weight:900;color:#ffe9b0">7 de 10 fases · Senhor: Golem a Vapor</small></div>
+        <div class="dots"><i></i><i></i><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="sheet"><div></div><div class="on"></div><div></div><div></div></div></div>
+      <div class="txt"><h3><span>B</span>Carrossel de eras em tela cheia</h3><ul><li>Uma era por tela, arrastando para os lados (as vizinhas aparecem na borda)</li><li>Arte grande da era, com o anel de progresso (fases vencidas) e o retrato do herói</li><li>Gaveta embaixo com as 10 fases da era e o botão Lutar</li><li>A última "era" é a das fases sem fim, brilhando, com o próximo marco</li><li>Bolinhas mostram em que era você está</li></ul>
+        <button class="bt" data-v="mapa" data-c="B" aria-pressed="false">Escolher B para o Mapa</button></div></div>
+  </div>
+
+  <h2>Correio</h2>
+  <div class="row">
+    <div class="opt"><div class="ph ca" aria-hidden="true"><div class="hdr">Correio</div>
+        <div class="cd top" style="top:40px"><b>Arena: prêmio da semana</b><div class="rw"><span style="background-image:url(a/gem.png)"></span><span style="background-image:url(a/coin.png)"></span><span style="background-image:url(a/forge.png)"></span></div><div class="sw"><i></i></div></div>
+        <div class="cd" style="top:124px"><b>Baú de território</b><div class="rw"><span style="background-image:url(a/era4_vest_t2.png)"></span><span style="background-image:url(a/chest.png)"></span></div><div class="sw"></div></div>
+        <div class="cd" style="top:208px;opacity:.7"><b>Marco da fase 100</b><div class="rw"><span style="background-image:url(a/ic_vip.png)"></span><span style="background-image:url(a/gem.png)"></span></div><div class="sw"></div></div></div>
+      <div class="txt"><h3><span>A</span>Cartões com prévia e arrastar para resgatar</h3><ul><li>Cada carta é um cartão grande com os prêmios já à vista (ícones grandes, raridade em cor)</li><li>Arrastar o cartão para o lado resgata, com os itens voando para o herói</li><li>Cartão vencendo em poucos dias pisca em vermelho</li><li>"Resgatar tudo" vira um botão fixo em cima</li><li>O herói aparece pequeno no topo, recebendo os prêmios</li></ul>
+        <button class="bt" data-v="correio" data-c="A" aria-pressed="false">Escolher A para o Correio</button></div></div>
+    <div class="opt"><div class="ph cb" aria-hidden="true"><div class="tabs"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="stage"><span class="pv">Prévia: Lobo de guerra</span><div class="h"></div><div class="m"></div></div>
+        <div class="ln sel" style="top:160px"></div><div class="ln" style="top:190px"></div><div class="ln" style="top:220px"></div><div class="ln" style="top:250px"></div><div class="cta"></div></div>
+      <div class="txt"><h3><span>B</span>Caixa em abas com o prêmio no herói</h3><ul><li>Abas no topo: Prêmios, Guilda, Eventos, Avisos</li><li>Palco grande do herói: tocar numa carta mostra o prêmio NO herói (montaria ao lado, skin vestida, pet na frente)</li><li>Lista compacta embaixo, uma linha por carta</li><li>Botão fixo "Resgatar" da carta escolhida, e "Resgatar tudo"</li><li>Mesma linguagem da Loja e do VIP aprovados</li></ul>
+        <button class="bt" data-v="correio" data-c="B" aria-pressed="false">Escolher B para o Correio</button></div></div>
+  </div>
+
+  <label for="nota" class="vst" style="display:block">Comentário (opcional)</label>
+  <textarea id="nota" placeholder="Ex.: o Mapa B, mas com a trilha do A dentro de cada era"></textarea>
+  <div class="vst" id="vst">Carregando a escolha…</div>
+</div>
+<script>
+'use strict';
+const pick={mapa:null,correio:null};
+function paint(){ document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-pressed',pick[b.dataset.v]===b.dataset.c)); }
+(async()=>{ const st=document.getElementById('vst'); const DOC='decisoes/direcao-mapa-correio';
+  const timer=setTimeout(()=>{ st.textContent='Escolha indisponível nesta visualização. Diga no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  const save=async()=>{ if(!db){ st.textContent='Escolha indisponível nesta visualização. Diga no chat.'; return; } st.textContent='Salvando…'; try{ await db.doc(DOC).set({mapa:pick.mapa,correio:pick.correio,nota:document.getElementById('nota').value.trim(),em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Diga no chat.'; } };
+  document.querySelectorAll('[data-v]').forEach(b=>b.addEventListener('click',()=>{ pick[b.dataset.v]=b.dataset.c; paint(); save(); }));
+  if(!db){ clearTimeout(timer); st.textContent='Escolha indisponível nesta visualização. Diga no chat.'; return; }
+  try{ db.doc(DOC).onSnapshot(s=>{ clearTimeout(timer); const d=s.exists?s.data():null; if(d){ pick.mapa=d.mapa||null; pick.correio=d.correio||null; paint(); }
+    st.innerHTML=d&&(d.mapa||d.correio)?'Escolha salva: Mapa <b>'+(d.mapa||'—')+'</b> · Correio <b>'+(d.correio||'—')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''):'Ainda sem escolha.'; },()=>{ st.textContent='Não consegui ler a escolha agora.'; }); }catch(e){}
+})();
+</script>
