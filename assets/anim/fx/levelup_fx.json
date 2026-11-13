@@ -1,0 +1,9 @@
+{
+ "frames": 22, "cols": 8,
+ "fps": 12,
+ "w": 448,
+ "h": 384,
+ "feetY": 352,
+ "anchorX": 224,
+ "note": "SÓ EFEITO (sem herói): anel, coluna de luz, faíscas e \"NÍVEL +1\"; o jogo desenha o herói com as camadas por cima/por baixo; pés do herói em (anchorX, feetY); fundo transparente; tocar uma vez"
+}
