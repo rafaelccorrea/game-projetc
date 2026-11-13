@@ -1,7 +1,7 @@
 'use strict';
-/* _cal.js (Sistemas, 14/11): CÓPIA do test/e2e/diff.js do Engenheiro com medidas extras de CALIBRAÇÃO da dificuldade (não é teste; não rodar no conjunto).
-   Medidas novas: --medida=escoltas:<era>-<era>:eras9 (tempo da fase das escoltas) · cal:<eras>/<n>:eras9 com CAL='{...boss}' (vitórias com 100% e 90%, tempo de cada luta e do duelo) · log1:<fase>:eras9 (uma luta segundo a segundo).
-   As outras medidas e checagens são as do diff.js; se o diff.js mudar, refazer a cópia. */
+/* _cal.js (Sistemas, 14/11): CÓPIA do test/e2e/diff.js do Engenheiro (9e0e274, arma da era) com a medida de CALIBRAÇÃO 'cal' (não é teste; não rodar no conjunto).
+   Uso: CAL='{...campos de dificuldade.boss}' node test/e2e/_cal.js --medida=cal:<eras>/<n>:eras9 → vitórias com 100% e 90% (arma da era), tempo de cada luta.
+   Se o diff.js mudar, refazer a cópia. */
 /* DIFICULDADE COM PAREDES (js/diff.js) SEM NAVEGADOR. Uso: node test/e2e/diff.js [-v]. Sai com código 1 se algo falhar.
    Chave desligada = nada muda (FC pedida, inimigos das fases 1/10/35/70, HUD, Derrota, Desafiar, módulos). Ligada = tabela do docs/balance.json
    (lida do arquivo, nenhum número fixo aqui), cores, cartão na Derrota e antes do chefe, botões, chefe 32 s/40 s na batalha de verdade, comuns,
@@ -80,35 +80,23 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   /* senhoresref:<era>-<era>[:eras9] = o mesmo, com o HERÓI DE REFERÊNCIA novo (Sys.stats.refFromFc, chave ligada só nesta medida): o chefe é derivado dele e quem luta é ele,
      com 100%, 90% e 80% da FC pedida e chegando com a FC da fase anterior. 6 lutas por caso. */
   if (what === 'senhoresref') { const on = ev('Sys.stats.setRefFc(true)'); P('referência nova ligada: ' + on); const ab = arg.split('-').map(Number);
-    for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`), r = {}; for (const m of [1, 0.9, 0.8, 1 / wall]) r[m] = await many(6, s, 5, { ref: true, fcm: m });
+    for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`), r = {}; const arma = !parts.includes('clava'); for (const m of [1, 0.9, 0.8, 1 / wall]) r[m] = await many(6, s, 5, { ref: true, fcm: m, arma });
       const f = m => show(r[m]) + ', derrotas ' + (6 - r[m].wins) + '/6';
-      P('Senhor da era ' + e + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · 100%: ' + f(1) + ' · 90%: ' + f(0.9) + ' · 80%: ' + f(0.8) + ' · com a FC da fase anterior (' + Math.round(100 / wall) + '%): ' + f(1 / wall)); } return; }
-  if (what === 'escoltas') { ev('Sys.stats.setRefFc(true)'); const ab = arg.split('-').map(Number); const out = [];
-    for (let e = ab[0]; e <= ab[1]; e++) { const st = e * 10 + 10, xs = [];
-      for (let i = 0; i < 4; i++) { G.start(st, 5); const stt = JSON.parse(ev('JSON.stringify(diffRef(fcNeed(' + st + '),' + st + '))')); G.scale = { st: stt, k: 1, atk0: false, fix: true, set: false }; ev('SCREENS_ON.bossResult=false');
-        let t0 = null, tb = null; await G.until(() => { const en = ev('B.en'), t = ev('B.t'); if (t0 == null && en.some(x => x.wasParked)) t0 = t; if (tb == null && en.some(x => x.boss && x.wasParked)) tb = t; return tb != null || ev('B.deadT') > 0; }, 150); G.scale = null; if (t0 != null && tb != null) xs.push(tb - t0); }
-      xs.sort((a, b) => a - b); out.push(+(xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1)); P('era ' + e + ' escoltas ' + xs.map(x => x.toFixed(1)).join(' ')); }
-    P('ESCORTSEC ' + JSON.stringify(out)); return; }
+      P('Senhor da era ' + e + (arma ? ' COM A ARMA DA ERA' : ' (clava da era 0)') + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · 100%: ' + f(1) + ' · 90%: ' + f(0.9) + ' · 80%: ' + f(0.8) + ' · com a FC da fase anterior (' + Math.round(100 / wall) + '%): ' + f(1 / wall)); } return; }
+  /* PADRÃO DAS MEDIDAS (combinado com a Sistemas): o herói de referência luta com a ARMA DA ERA DA FASE; acrescente :clava para a clava da era 0 do save novo (como era antes).
+     diag:<fase>[:clava][:eras9] = UMA luta do herói de referência (100%) na onda do chefe, narrada: arma e alcance do herói do teste, e a cada 2 s a vida do herói e, de cada
+     inimigo, chave, posição x, lugar (slot), se está parado, se já parou e a vida. Serve para ver quem bate em quem e quando (pedido da Sistemas: herói caindo antes do duelo). */
+  if (what === 'diag') { const s = +arg; ev('Sys.stats.setRefFc(true)'); G.start(s, 5);
+    if (!parts.includes('clava')) ev(`(function(){ addItemToBag({slot:'weapon',r:0,e:eraOf(${s})}); const it=S.inv.filter(x=>x.slot==='weapon').pop(); if(it) S.eq.weapon=it.id; statsChanged(); refreshHero(); startBattle(); return 1; })()`);   /* diag:<fase>:arma = com a arma da ERA DA FASE (o save novo do teste luta com a clava da era 0) */
+    const st = JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${s}),${s}))`)); G.scale = { st, k: 1, atk0: false, fix: true, set: false }; ev('SCREENS_ON.bossResult=false');
+    P('herói do teste: arma ' + ev("(function(){ const w=wSkin(); return JSON.stringify({e:w.e,r:w.r,arma:w.n,fogo:!!wIsGun(w)}); })()") + ' · alcance ' + ev('heroRange()') + ' · era da fase ' + ev(`eraOf(${s})`) + ' · HX ' + ev('HX') + ' · LW ' + ev('LW') + ' · inimigos da onda: ' + ev(`JSON.stringify(waveSpec(${s},5))`));
+    let last = -9, res = null; const t0 = ev('B.t');
+    await G.until(() => { const t = ev('B.t') - t0; if (t - last >= 2) { last = t; P('t ' + t.toFixed(1) + ' s · herói ' + Math.round(100 * ev('B.hero.hp/B.hero.maxhp')) + '% · energia ' + Math.round(ev('B.energy')) + ' · fila ' + ev('B.toSpawn.length') + ' · ' + ev("B.en.map(e=>e.key+(e.boss?'(CHEFE)':'')+' x'+Math.round(e.x)+' lugar'+Math.round(e.slot)+(e.parked?' PARADO':e.wasParked?' já parou':' chegando')+' vida'+Math.round(100*e.hp/e.maxhp)+'%'+(e.fury?' FÚRIA':'')).join(' | ')") + ' · tiros no ar ' + ev('B.eshots.length')); }
+      if (ev('B.deadT') > 0) { res = 'CAIU'; return true; } const b = ev('B.en').find(e => e.boss); if (b && b.dead) { res = 'venceu'; return true; } return false; }, 150);
+    P('fim: ' + (res || 'tempo esgotado') + ' aos ' + (ev('B.t') - t0).toFixed(1) + ' s · herói ' + Math.round(100 * Math.max(0, ev('B.hero.hp/B.hero.maxhp'))) + '%'); G.scale = null; return; }
   if (what === 'cal') { ev('Sys.stats.setRefFc(true)'); const cfg = JSON.parse(process.env.CAL); ev('Object.assign(DIFF.tbl.boss,' + JSON.stringify(cfg) + '); DIFF.memo={}'); P('cal ' + JSON.stringify(cfg)); const [eras, N] = arg.split('/'); const n = +N || 12;
-    for (const e of eras.split(',').map(Number)) { const s = e * 10 + 10, r = {}; for (const m of [1, 0.9]) r[m] = await many(n, s, 5, { ref: true, fcm: m });
-      P('era ' + e + ' · 100%: ' + show(r[1]) + ' · 90%: ' + show(r[0.9])); P('  runs100 ' + r[1].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0) + '(b' + (x.tb!=null?(x.sec-x.tb).toFixed(0):'?') + ')' + (x.tFury!=null?'f'+x.tFury.toFixed(0):'')).join(' ')); P('  runs90 ' + r[0.9].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0) + '(b' + (x.tb!=null?(x.sec-x.tb).toFixed(0):'?') + ')').join(' ')); } return; }
-  if (what === 'duelo') { ev('Sys.stats.setRefFc(true)'); const cfg = JSON.parse(process.env.CAL); ev('Object.assign(DIFF.tbl.boss,' + JSON.stringify(cfg) + '); DIFF.memo={}'); const [eras, N] = arg.split('/'); const n = +N || 4; const res = {};
-    for (const e of eras.split(',').map(Number)) { const st = e * 10 + 10, kb = [], sb = []; const b = JSON.parse(ev('JSON.stringify((()=>{const x=diffBoss(' + st + ');return {kill:x.kill,surv:x.surv,tE:x.tE}})())'));
-      for (const atk0 of [false, true]) for (let i = 0; i < n; i++) { G.start(st, 5); const stt = JSON.parse(ev('JSON.stringify(diffRef(fcNeed(' + st + '),' + st + '))')); G.scale = { st: stt, k: 1, atk0, fix: true, set: false }; ev('SCREENS_ON.bossResult=false; DIFF.tbl.boss.furyAtSec=999');
-        let tb = null, end = null, how = null; await G.until(() => { const en = ev('B.en'), t = ev('B.t'); const bo = en.find(x => x.boss); if (tb == null && bo && bo.wasParked) tb = t; if (ev('B.deadT') > 0) { end = t; how = 'dead'; return true; } if (bo && bo.dead) { end = t; how = 'win'; return true; } return false; }, 200); G.scale = null;
-        if (tb != null && end != null) (atk0 ? sb : kb).push(+(end - tb).toFixed(1)); ev('DIFF.tbl.boss.furyAtSec=' + cfg.furyAtSec); }
-      const avg = a => a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : null; res[e] = { modelKill: +(b.kill - b.tE).toFixed(1), realKill: avg(kb), modelSurv: +(b.surv - b.tE).toFixed(1), realSurv: avg(sb) }; P('era ' + e + ' ' + JSON.stringify(res[e]) + ' kills ' + kb.join(',') + ' surv ' + sb.join(',')); }
-    P('DUELO ' + JSON.stringify(res)); return; }
-  if (what === 'log1') { ev('Sys.stats.setRefFc(true)'); const cfg = JSON.parse(process.env.CAL); ev('Object.assign(DIFF.tbl.boss,' + JSON.stringify(cfg) + '); DIFF.memo={}'); const st = +arg;
-    G.start(st, 5); const stt = JSON.parse(ev('JSON.stringify(diffRef(fcNeed(' + st + '),' + st + '))')); G.scale = { st: stt, k: 1, atk0: false, fix: true, set: false }; ev('SCREENS_ON.bossResult=false');
-    let last = -9; const T0 = ev('B.t'); await G.until(() => { const t = ev('B.t') - T0; if (t - last >= 4) { last = t; const h = ev('B.hero'); P('t=' + t.toFixed(0) + ' heroi ' + (h.hp / h.maxhp * 100).toFixed(0) + '% atk ' + Math.round(h.atk) + ' act ' + (ev('B.act') ? ev('B.act.type') : '-') + ' en ' + Math.round(ev('B.energy') || 0) + ' | ' + JSON.stringify(ev('B.en').filter(x => !x.dead).map(x => [x.kind, (x.hp / x.maxhp * 100).toFixed(0) + '%', x.parked ? 'P' : 'w', +(x.x||0).toFixed(0), x.fury || 0]))); }
-      const bo = ev('B.en').find(x => x.boss); return ev('B.deadT') > 0 || (bo && bo.dead); }, 200); G.scale = null; return; }
-  if (what === 'kb') { ev('Sys.stats.setRefFc(true)'); const cfg = JSON.parse(process.env.CAL); ev('Object.assign(DIFF.tbl.boss,' + JSON.stringify(cfg) + '); DIFF.tbl.boss.furyAtSec=999; DIFF.memo={}'); const [eras, N] = arg.split('/'); const n = +N || 4; const out = {};
-    for (const e of eras.split(',').map(Number)) { const st = e * 10 + 10, ks = []; const b = JSON.parse(ev('JSON.stringify((()=>{const x=diffBoss(' + st + ');return {kill:x.kill,tE:x.tE}})())'));
-      for (let i = 0; i < n; i++) { G.start(st, 5); const stt = JSON.parse(ev('JSON.stringify(diffRef(fcNeed(' + st + '),' + st + '))')); G.scale = { st: stt, k: 1, atk0: false, fix: true, set: false }; ev('SCREENS_ON.bossResult=false');
-        let tb = null, res = null, tend = null; await G.until(() => { const t = ev('B.t'); const bo = ev('B.en').find(x => x.boss); if (tb == null && bo && bo.parked) tb = t; if (ev('B.deadT') > 0) { res = 'dead'; tend = t; return true; } if (bo && bo.dead) { res = 'win'; tend = t; return true; } return false; }, 200); G.scale = null;
-        ks.push((res === 'win' ? '' : 'X') + (tb != null ? (tend - tb).toFixed(1) : '?')); }
-      out[e] = { model: +(b.kill - b.tE).toFixed(1), real: ks }; P('era ' + e + ' ' + JSON.stringify(out[e])); } return; }
+    for (const e of eras.split(',').map(Number)) { const s = e * 10 + 10, r = {}; for (const m of [1, 0.9]) r[m] = await many(n, s, 5, { ref: true, fcm: m, arma: true });
+      P('era ' + e + ' · 100%: ' + show(r[1]) + ' · 90%: ' + show(r[0.9])); P('  runs100 ' + r[1].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0)).join(' ')); P('  runs90 ' + r[0.9].runs.map(x => (x.res==='win'?'V':'D') + x.sec.toFixed(0)).join(' ')); } return; }
   P('medida desconhecida: ' + MEDIDA); }
 
 (async () => {
@@ -224,12 +212,13 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
     check('fase ' + s + ': herói de referência tem a FC pedida pelo Sys.fc', near(ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`), b.need, 0.01), ev(`Sys.fc.fcOfStats(diffRef(fcNeed(${s}),${s}))`) + ' x ' + b.need); }
   G.start(1, 1); rich(G, 60); check('chefe e comuns NÃO dependem do herói do momento (herói forte = mesmos inimigos)', STAGES.map(s => KINDS.map(k => enemy(G, s, k)).join(';')).join('#') === en1 && ev('heroFC()') > 1000, String(ev('heroFC()')));
   /* luta real. spec: {ref:true, mul} = herói de referência da FC pedida × mul; {mul} = herói do jogo (proporções de quem começa) com mul × a FC pedida; atk0 = sem bater */
-  async function fight(stage, wave, spec) { G.__tb = null; G.start(stage, wave); const need = ev(`fcNeed(${stage})`);
+  async function fight(stage, wave, spec) { G.start(stage, wave); if (spec && spec.arma) ev(`(function(){ addItemToBag({slot:'weapon',r:0,e:eraOf(${stage})}); const it=S.inv.filter(x=>x.slot==='weapon').pop(); if(it) S.eq.weapon=it.id; statsChanged(); refreshHero(); startBattle(); return 1; })()`);   /* spec.arma: luta com a arma da ERA DA FASE (o save novo do teste usa a clava da era 0 em qualquer fase) */
+    const need = ev(`fcNeed(${stage})`);
     if (spec) { const st = spec.ref ? JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${stage})*${spec.fcm || 1},${stage}))`)) : JSON.parse(ev('JSON.stringify(heroStats())')); G.scale = { st, k: (spec.ref ? 1 : need / ev('heroFC()')) * (spec.mul || 1), atk0: !!spec.atk0, fix: !!spec.ref, set: false }; }
     ev('SCREENS_ON.bossResult=false'); let t0 = null, tFury = null, res = null, boss = null; const t = () => ev('B.t'), w0 = ev('S.wave');
-    await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.fury && tFury == null) tFury = t() - t0; if (boss && boss.wasParked && G.__tb == null && t0 != null) G.__tb = t() - t0;
+    await G.until(() => { const en = ev('B.en'); if (t0 == null && en.some(e => e.wasParked)) t0 = t(); if (!boss) boss = en.find(e => e.boss) || null; if (boss && boss.fury && tFury == null) tFury = t() - t0;
       if (ev('B.deadT') > 0) { res = 'dead'; return true; } if (wave === 5 ? (boss && boss.dead) : ev('S.wave') !== w0) { res = 'win'; return true; } return false; }, 150);
-    const out = { tb: G.__tb, res: res || 'tempo', sec: t0 != null ? t() - t0 : 0, hp: Math.max(0, ev('B.hero.hp/B.hero.maxhp')), tFury }; G.scale = null; return out; }
+    const out = { res: res || 'tempo', sec: t0 != null ? t() - t0 : 0, hp: Math.max(0, ev('B.hero.hp/B.hero.maxhp')), tFury }; G.scale = null; return out; }
   const many = async (n, stage, wave, spec) => { const r = []; for (let i = 0; i < n; i++) r.push(await fight(stage, wave, spec)); const w = r.filter(x => x.res === 'win'); return { runs: r, wins: w.length, n, mean: w.length ? w.reduce((a, x) => a + x.sec, 0) / w.length : 0, meanAll: r.reduce((a, x) => a + x.sec, 0) / n, hp: w.length ? w.reduce((a, x) => a + x.hp, 0) / w.length : 0 }; };
   const show = m => m.wins + '/' + m.n + (m.wins ? ' em ' + m.mean.toFixed(0) + ' s, sobra ' + Math.round(m.hp * 100) + '%' : ' (cai aos ' + m.meanAll.toFixed(0) + ' s)');
 
@@ -253,6 +242,11 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
       const withEs = JSON.parse(ev("(function(){ DIFF.tbl.boss.escortSec=15; DIFF.memo={}; const x=diffBoss(60); const r={hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec}; DIFF.tbl.boss.escortSec=[5,5,5,5,5,12,5,5,5]; DIFF.memo={}; r.byEra=diffBoss(60).tE; r.byEra0=diffBoss(10).tE; delete DIFF.tbl.boss.escortSec; DIFF.memo={}; r.back=diffBoss(60).hp; return JSON.stringify(r); })()"));
       check('opção escortSec = 15: vida do chefe = DPS × (killSec − 15), chefe bate mais forte (menos tempo de duelo para os mesmos ' + SURV + ' s)', withEs.tE === 15 && near(withEs.hp, withEs.dps * (KILL - 15), 1e-6) && withEs.dmg > base.dmg, JSON.stringify(withEs));
       check('opção escortSec por era (lista) e volta ao padrão ao tirar o campo', withEs.byEra === 12 && withEs.byEra0 === 5 && near(withEs.back, base.hp, 1e-9), JSON.stringify(withEs));
+      const pe = JSON.parse(ev(`(function(){ const B0=DIFF.tbl.boss, k0=B0.killSecAt100, s0=B0.surviveSecAt100, f0=B0.furyAtSec, o={}; DIFF.memo={}; o.base10=diffBoss(10).hp; o.base60=diffBoss(60).hp; o.dps60=diffBoss(60).dps;
+        B0.killSecAt100=[k0,k0,k0,k0,k0,k0+8]; B0.surviveSecAt100=[s0,s0,s0,s0,s0,s0+6]; DIFF.memo={}; const a=diffBoss(10), b=diffBoss(60), c=diffBoss(90); o.a=[a.kill,a.surv,a.hp]; o.b=[b.kill,b.surv,b.hp,b.dmg]; o.c=[c.kill,c.surv];
+        o.pick=[diffByEra(7,60), diffByEra([1,2,3],10), diffByEra([1,2,3],30), diffByEra([1,2,3],90), diffByEra([],10)];
+        B0.killSecAt100=k0; B0.surviveSecAt100=s0; B0.furyAtSec=f0; DIFF.memo={}; o.back=diffBoss(60).hp; return JSON.stringify(o); })()`));
+      check('opção por era: killSecAt100 e surviveSecAt100 como lista mudam só a era da posição (era 0 igual; era 5 com +8 s e +6 s; lista curta: a última vale para as eras seguintes); número continua valendo', near(pe.a[2], pe.base10, 1e-9) && pe.a[0] === KILL && pe.b[0] === KILL + 8 && pe.b[1] === SURV + 6 && pe.b[2] > pe.base60 && pe.c[0] === KILL + 8 && pe.c[1] === SURV + 6 && pe.pick[0] === 7 && pe.pick[1] === 1 && pe.pick[2] === 3 && pe.pick[3] === 3 && pe.pick[4] == null && near(pe.back, pe.base60, 1e-9), JSON.stringify(pe));
       const fb = JSON.parse(ev(`(function(){ const o={}; DIFF.tbl.boss.furyFrom='boss'; B.banner=null;
         B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT + 5}); o.soEscolta=[DIFF.ft, B.en[1].fury||0];
         B.en[1].wasParked=true; diffStep(${FAT - 0.5}); o.antes=B.en[1].fury||0; diffStep(0.6); o.depois=B.en[1].fury||0;
