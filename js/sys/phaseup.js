@@ -35,7 +35,7 @@ function next(S,host){ if(!ON()) return null; const o=ensure(S), to=o.stg+1; if(
 function pending(S,host){ const n=next(S,host); if(!n||!n.ready) return {ready:false,next:n};
   const from=n.to-1, key=from+'_'+n.to, sheet=DATA.anim[key]||DATA.fallbackAnim;
   const AP=SYS().appearance, layered=!!(AP&&AP.evolveNeedsLayers&&AP.evolveNeedsLayers(S,host));   // skin/cosmético visível: desenhar por camadas (a folha aprovada tem o herói padrão)
-  return {ready:true,from,to:n.to,fromName:nameOf(S,from),toName:n.name,hero:heroOf(S),anim:{sheet,fallback:!DATA.anim[key],layered}}; }
+  return {ready:true,from,to:n.to,fromName:nameOf(S,from),toName:n.name,hero:heroOf(S),anim:{sheet,fallback:!DATA.anim[key],layered,fx:'assets/anim/fx/evolve_'+key+'_fx'}}; }   // fx = só o efeito (sem herói nem texto; a Arte faz por código): por cima das camadas quando layered
 /* aplica UMA fase (depois da animação). {ok, reason: off|max|level|fc, from, to, name} */
 function evolve(S,host){ if(!ON()) return {ok:false,reason:'off'}; const n=next(S,host); if(!n) return {ok:false,reason:'max'};
   if(!n.ready) return {ok:false,reason:n.missing.level?'level':'fc',need:n.missing};
