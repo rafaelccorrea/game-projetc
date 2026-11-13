@@ -31,6 +31,26 @@ function fcTxt(fc){ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.viewText==='functi
 function xTxtEm(t){ let w=0; for(const ch of String(t==null?'':t)){ w+=ch>='0'&&ch<='9'?0.56:ch===','||ch==='.'?0.27:ch===' '?0.25:ch==='m'?0.84:ch==='i'||ch==='l'?0.29:ch==='t'?0.38:ch==='r'?0.4:ch>='A'&&ch<='Z'||ch==='Ç'?0.7:0.57; } return w*1.04; }
 function xFitPx(t,avail,base,min){ const em=xTxtEm(t); if(!(em>0)) return base; return Math.max(min||8,Math.min(base,Math.floor(avail/em*10)/10)); }
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- COMPRAS PELO Sys.buy (js/sys/buy.js, do Servidor) ----------
+   Sys.buy.ready() verdadeiro (hoje só no Modo dono: compra SIMULADA, nada é cobrado) → as telas mostram os produtos de Sys.buy.DATA.products com o
+   preço de Sys.buy.priceText(id) e compram por Sys.buy.purchase. Falso (o jogador de hoje) → as telas ficam EXATAMENTE como eram ("Pagamento em
+   breve"). Nenhum id, nome ou preço escrito aqui: tudo vem do catálogo do módulo. A entrega é do próprio Sys.buy; a tela só avisa e redesenha. */
+const XBUY={busy:null};
+function xBuyReady(){ try{ return !!(window.Sys&&Sys.buy&&typeof Sys.buy.ready==='function'&&typeof Sys.buy.purchase==='function'&&Sys.buy.ready()===true); }catch(e){ return false; } }
+function xBuyProds(kind){ try{ return (Sys.buy.DATA.products||[]).filter(p=>p&&p.kind===kind&&typeof p.id==='string'); }catch(e){ return []; } }
+const xBuyPrice=id=>{ try{ return String(Sys.buy.priceText(id)||''); }catch(e){ return ''; } };
+const xBuySim=()=>{ try{ return typeof Sys.buy.simulated==='function'&&Sys.buy.simulated()===true; }catch(e){ return false; } };
+/* aviso curto do retorno: ok (com os diamantes que entraram, lidos da entrega), cancelado, pendente, recusado */
+function xBuyMsg(r,p){ const nm=(p&&p.name)||'item';
+  if(r&&r.ok){ let g=0; try{ for(const a of r.applied||[]) for(const x of (a&&a.got)||[]) if(x&&x.kind==='gems'&&x.n>0) g+=x.n; }catch(e){} return 'Compra concluída: '+nm+(g?' · +'+n0(g)+' diamantes':''); }
+  const w=r&&r.reason; return w==='cancelled'?'Compra cancelada':w==='soon'?'Pagamento em breve: nada é cobrado agora':w==='owned'?'Você já tem: '+nm
+    :w==='pending'?'Pagamento pendente: a entrega chega quando for aprovado':w==='offline'?'Sem conexão: tente de novo':'Compra não concluída'; }
+/* compra um produto e chama done(resultado, produto) uma vez; uma compra por vez (o segundo toque não vale enquanto a primeira não voltar) */
+function xBuy(id,done){ if(XBUY.busy) return false; let p=null; try{ p=Sys.buy.product(id); }catch(e){ p=null; }
+  if(!p||!xBuyReady()){ done({ok:false,reason:'soon'},p); return true; }
+  XBUY.busy=id; const fin=r=>{ XBUY.busy=null; if(r&&r.ok){ try{ statsChanged(); }catch(e){} } try{ done(r||{ok:false,reason:'error'},p); }catch(e){ console.error('xBuy',e); } };
+  try{ const pr=Sys.buy.purchase(S,Sys.host,id); if(pr&&typeof pr.then==='function') pr.then(fin,()=>fin({ok:false,reason:'error'})); else fin(pr); }catch(e){ fin({ok:false,reason:'error'}); }
+  return true; }
 const COIN_I=(s)=>`<img src="assets/ui/coin.png" alt="moedas" style="width:${s}px;height:${s}px;object-fit:contain">`;
 const GEM_I=(s)=>`<img src="assets/ui/gem.png" alt="gemas" style="width:${s}px;height:${s}px;object-fit:contain">`;
 const plv=()=>Sys.level.level(S);
@@ -826,7 +846,21 @@ function scrShop(){
     const vOn=Sys.vip.active(S), small=!d.real&&H<640, vLv=Math.max(1,Sys.vip.level?Sys.vip.level(S):1), VI=Sys.vip.levelInfo(vLv), V0=Sys.vip.levelInfo(0);
     /* cartão do VIP: linha do nível atual (ou do VIP 1, o que a compra dá primeiro), pelo Sys.vip.levelInfo; benefício que vale 0 não aparece */
     const vTxt=[VI.atkPct?'+'+VI.atkPct+'% ATK e HP':'',VI.goldXpPct?'+'+VI.goldXpPct+'% XP e ouro':'',VI.offlineMult>1?'offline x'+VI.offlineMult:'',VI.chestPerDay>V0.chestPerDay?'+'+(VI.chestPerDay-V0.chestPerDay)+' baús por dia':'',VI.keys?'+'+VI.keys+' chave'+(VI.keys>1?'s':''):'',VI.speedTier>=1?'velocidade x2 liberada':''].filter(Boolean).join(', ');
-    const bundles=['Punhado de gemas','Saco de gemas','Baú de gemas','Tesouro de gemas'].map((n,i)=>`<button class="x-tile" data-x="iap" aria-label="${n}: pagamento em breve" style="border-radius:14px;border:2px solid ${i===3?'#ffc94a':'#4aa3ff'};background:linear-gradient(180deg,#2b3a52 0%,#1d1611 70%);color:#f6ecdf;padding:${small?4:8}px;display:flex;flex-direction:column;align-items:center;gap:${small?1:4}px">
+    /* COMPRA LIGADA (Sys.buy.ready(): hoje só o Modo dono, simulada): os pacotes e o Cartão Mensal vêm do catálogo do Sys.buy, com o preço do módulo.
+       Desligada: os 4 cartões "Em breve" de sempre (o trecho de baixo, sem mudança). */
+    const bReady=xBuyReady(), bSim=bReady&&xBuySim(), gP=bReady?xBuyProds('gems'):[], mCard=bReady?xBuyProds('monthly_card')[0]:null, tileH=small?104:132;
+    let cardSt=null; if(mCard&&bSim){ try{ cardSt=Sys.buy.cardStatus(S,Sys.host); }catch(e){ cardSt=null; } }
+    const cardOn=!!(cardSt&&cardSt.active), cardH=!mCard?'':`<div data-card="${esc2(mCard.id)}" style="min-height:60px;border-radius:14px;border:2px solid #4aa3ff;background:linear-gradient(90deg,#1f2c44,#1d1611);padding:6px 8px 6px 12px;display:flex;align-items:center;gap:8px;box-sizing:border-box">
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2"><span class="lil" style="font-size:16px;color:#9fd0ff">${esc2(mCard.name)}</span>
+            <span style="font-size:12px;font-weight:800;color:#c9b9a2">${cardOn?'Ativo: '+cardSt.daysLeft+(cardSt.daysLeft===1?' dia restante':' dias restantes')+' · '+n0(mCard.daily)+' diamantes por dia':n0(mCard.gems)+' diamantes na hora e '+n0(mCard.daily)+' por dia durante '+n0(mCard.days)+' dias'}</span></span>
+          ${cardOn?`<button data-x="cardclaim" class="lil ${cardSt.claimedToday?'':'x-gold'}" aria-disabled="${cardSt.claimedToday?'true':'false'}" style="flex:none;min-width:96px;height:44px;padding:0 10px;border-radius:12px;font-size:14px;line-height:1.05;${cardSt.claimedToday?'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2':''}">${cardSt.claimedToday?'Resgatado hoje':'Resgatar +'+n0(mCard.daily)}</button>`
+            :`<button data-x="buy" data-id="${esc2(mCard.id)}" class="x-gold lil" aria-label="Comprar ${esc2(mCard.name)}: ${esc2(xBuyPrice(mCard.id))}" style="flex:none;min-width:96px;height:44px;padding:0 10px;border-radius:12px;font-size:15px;white-space:nowrap">${esc2(xBuyPrice(mCard.id))}</button>`}</div>`;
+    const bundles=gP.length?gP.map((p,i)=>{ const top=i===gP.length-1, k=Math.min(3,Math.floor(i*4/gP.length));
+        return `<button class="x-tile" data-x="buy" data-id="${esc2(p.id)}" aria-label="Comprar ${esc2(p.name)}: ${esc2(xBuyPrice(p.id))}" style="border-radius:14px;border:2px solid ${top?'#ffc94a':'#4aa3ff'};background:linear-gradient(180deg,#2b3a52 0%,#1d1611 70%);color:#f6ecdf;padding:${small?4:8}px;display:flex;flex-direction:column;align-items:center;gap:${small?1:4}px;min-width:0">
+        ${top?'<span class="x-tshine"></span>':''}<div class="x-bob" style="height:${small?30:46}px;display:flex;align-items:flex-end;justify-content:center;animation-duration:2.6s">${Array.from({length:k+1},()=>`<img src="assets/ui/gem.png" alt="" style="width:${(small?20:30)+k*4}px;height:${(small?20:30)+k*4}px;object-fit:contain;margin:0 -6px">`).join('')}</div>
+        <span style="font-size:13px;font-weight:900;text-align:center;line-height:1.1">${esc2(p.name)}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;line-height:1.1">${bSim?'compra simulada':'compra com dinheiro real'}</span>
+        <span class="x-gold lil" style="height:28px;min-width:96px;border-radius:10px;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #8a4f0c;white-space:nowrap">${esc2(xBuyPrice(p.id))}</span></button>`; }).join('')
+      :['Punhado de gemas','Saco de gemas','Baú de gemas','Tesouro de gemas'].map((n,i)=>`<button class="x-tile" data-x="iap" aria-label="${n}: pagamento em breve" style="border-radius:14px;border:2px solid ${i===3?'#ffc94a':'#4aa3ff'};background:linear-gradient(180deg,#2b3a52 0%,#1d1611 70%);color:#f6ecdf;padding:${small?4:8}px;display:flex;flex-direction:column;align-items:center;gap:${small?1:4}px">
         ${i===3?'<span class="x-tshine"></span>':''}<div class="x-bob" style="height:${small?30:46}px;display:flex;align-items:flex-end;justify-content:center;animation-duration:2.6s">${Array.from({length:i+1},()=>`<img src="assets/ui/gem.png" alt="" style="width:${(small?20:30)+i*4}px;height:${(small?20:30)+i*4}px;object-fit:contain;margin:0 -6px">`).join('')}</div>
         <span style="font-size:13px;font-weight:900">${n}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">compra com dinheiro real</span>
         <span class="x-gold lil" style="height:28px;min-width:96px;border-radius:10px;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #8a4f0c">Em breve</span></button>`).join('');
@@ -834,8 +868,8 @@ function scrShop(){
     if(mc&&xGate(['assets/mounts/new/war_mecha_ref_prev.png'])) return;
     body=(mc&&mc.html?`<div style="flex:none">${mc.html}</div>`:'')+`<div class="x-feat" style="flex:none;display:flex;flex-direction:column;gap:8px">
         <span class="lil" style="font-size:17px">Comprar gemas</span>
-        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,${small?104:132}px);gap:8px">${bundles}</div>
-        <span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;margin-top:${small?0:6}px;line-height:1.35">Só pacotes de gemas, compra direta: você vê quanto recebe antes de pagar. Nada de sorteio pago. Pagamento em breve.</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(${gP.length?Math.ceil(gP.length/2):2},${tileH}px);gap:8px">${bundles}</div>${cardH}
+        <span style="font-size:12px;font-weight:800;color:#c9b9a2;text-align:center;margin-top:${small?0:6}px;line-height:1.35">Só pacotes de gemas, compra direta: você vê quanto recebe antes de pagar. Nada de sorteio pago. ${gP.length?(bSim?'Modo dono: compra simulada, nada é cobrado.':''):'Pagamento em breve.'}</span>
         <button data-x="vip" aria-label="Clube VIP${vOn?', nível '+vLv+', ativo':''}: ${esc2(vTxt)}" style="min-height:60px;border-radius:14px;border:2px solid #ffc94a;background:linear-gradient(90deg,#4a3214,#241a12);color:#f6ecdf;padding:4px 12px;display:flex;align-items:center;gap:10px;box-sizing:border-box;text-align:left">
           <svg width="30" height="24" viewBox="0 0 24 18" fill="#ffc94a" aria-hidden="true" style="flex:none"><path d="M2 16 L4 4 L9 9 L12 1 L15 9 L20 4 L22 16 Z"></path></svg>
           <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2"><span class="lil" style="font-size:17px;color:#ffc94a">Clube VIP${vOn?' · VIP '+vLv+' ativo':''}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">${vTxt}</span></span>
@@ -923,6 +957,11 @@ function hClick(b){ const a=b.dataset.x;
   else if(a==='gopass'){ snd('ui_tap'); if(!xUnlocked('pass')){ hToast('Skin do Passe da temporada'); return; } XH.sel=null; setView('pass'); }
   else if(a==='vip'){ snd('ui_tap'); if(typeof scrVip==='function'&&window.Screens) Screens.open('vip'); else hToast('Clube VIP: em breve'); }   /* tela 18 (VIP): entra no item 3 */
   else if(a==='iap'){ snd('ui_tap'); hToast('Pagamento em breve: nada é cobrado agora'); }
+  /* compra pelo Sys.buy (os botões só existem com Sys.buy.ready() verdadeiro): a entrega é do módulo; aqui o aviso do retorno e o redesenho */
+  else if(a==='buy'){ snd('ui_tap'); xBuy(String(b.dataset.id||''),(r,p)=>{ if(r&&r.ok) snd('gem'); if(view==='shop') render(); hToast(xBuyMsg(r,p)); }); }
+  else if(a==='cardclaim'){ snd('ui_tap'); let r=null; try{ r=Sys.buy.cardClaim(S,Sys.host); }catch(e){ r=null; }
+    if(r&&r.ok){ statsChanged(); snd('gem'); render(); hToast('Cartão Mensal: +'+n0(r.gems)+' diamantes de hoje'); }
+    else hToast(r&&r.reason==='claimed'?'Já resgatado hoje: volte amanhã':r&&r.reason==='no_card'?'O Cartão Mensal não está ativo':'Não deu para resgatar agora'); }
   else if(a==='skequip'){ const sk=SKIN(XH.sel); if(!sk||!S.skins.includes(sk.id)) return; if(xOutfitNote(sk.id)){ hToast(xOutfitNote(sk.id)); return; } S.skinEq[sk.slot]=sk.id; pvSkin[sk.slot]=null; preloadAssets(); statsChanged(); snd('upgrade'); render(); hToast('Equipada: '+sk.n+' · FC '+fcTxt(heroFC())); }
   else if(a==='cfyes'){ const cf=XH.cf; if(!cf) return;
     if(cf.kind==='skin'){ const sk=SKIN(cf.id), p=SKIN_PRICE[sk.r]; if(S.skins.includes(sk.id)||S.gems<p||!xCanSell(sk.id)) return; S.gems-=p; S.skins.push(sk.id); XH.cf=null; XH.burst=true; statsChanged(); snd('gem'); render(); XH.burst=false; hToast('Skin desbloqueada: '+sk.n); }
@@ -941,6 +980,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['avatar','equipfx','panels','p_wait','p_forge','p_fuse','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao','p_shopmecha']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['avatar','equipfx','panels','p_wait','p_forge','p_fuse','p_bag','p_realm','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat','p_intro','p_offer','p_auction','p_look','p_colecao','p_shopmecha']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();

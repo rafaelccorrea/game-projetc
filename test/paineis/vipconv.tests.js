@@ -172,4 +172,72 @@ var VIPCONV_TESTS=(function(){
           if(!(a>0)||a!==b) throw new Error('fontes: '+a+' / '+b); if(xTxtEm(t)*a>RES_FC_W+0.01||xTxtEm('999,9 mil')*a>RES_FC_W+0.01) throw new Error('"'+t+'" não cabe: '+(xTxtEm(t)*a).toFixed(0)+' em '+RES_FC_W); if(a<18) throw new Error('fonte '+a);
           if(h.indexOf('>'+t+'<')<0||h.indexOf(t+' de FC')<0) throw new Error('texto cortado'); if(/undefined|NaN/.test(h)) throw new Error('undefined/NaN'); out.push(a); } }catch(e){ err=e; }
       RES.fc=fc0; RES.rec=rec0; if(err) throw err; return 'fonte (base 26) por valor: '+out.join(', ')+'; "Faltam" quebra em linhas'; }); };
+  /* ---------- CARGA: p_bag na lista do screens.js, desligada; nada na lista sem arquivo no disco (__loadList e __jsFiles vêm do smoke.js) ---------- */
+  T['carga: p_bag na lista e desligada; lista só com arquivos que existem']=function(){
+    if(typeof __loadList==='undefined') return 'smoke sem a lista de carga'; const miss=__loadList.filter(n=>__jsFiles.indexOf(n+'.js')<0); if(miss.length) throw new Error('na lista e fora do disco: '+miss.join(','));
+    if(__loadList.indexOf('p_bag')<0) throw new Error('p_bag fora da lista'); if(__loadList.indexOf('p_bag')!==__loadList.indexOf('p_fuse')+1) throw new Error('p_bag não está junto do p_fuse');
+    if(__on0.bag!==false) throw new Error('PANEL_ON.bag nasceu ligada'); if(!Panels.defs.bag) throw new Error('painel bag não registrou'); if(__on0.realm) throw new Error('PANEL_ON.realm nasceu ligada');
+    if(__loadList.indexOf('p_realm')>=0&&__realmConflict) throw new Error('p_realm na lista com nomes em conflito');
+    if(__jsFiles.indexOf('p_realm.js')>=0&&!__realmConflict){ if(__loadList.indexOf('p_realm')<0) throw new Error('p_realm existe, sem conflito, e está fora da lista'); if(__on0.realm!==false) throw new Error('PANEL_ON.realm não nasceu desligada'); if(!Panels.defs.realm) throw new Error('painel realm não registrou'); }    return __loadList.length+' arquivos, todos no disco; bag desligada; p_realm '+(__loadList.indexOf('p_realm')>=0?'na lista':'fora da lista'+(__jsFiles.indexOf('p_realm.js')>=0?' (existe, mas '+(__realmConflict?'colide: '+__realmConflict:'aguardando')+')':' (arquivo não existe)')); };
+
+  /* ---------- COMPRAS PELO Sys.buy ---------- */
+  function withBuy(ready,fn){ const B=Sys.buy, r0=B.ready, p0=B.purchase, s0=B.simulated, c0=B.cardStatus, calls=[]; let out, err=null, res={ok:true,status:'granted',applied:[{got:[{kind:'gems',n:120}]}]};
+    const g0=PANEL_V2.gate, cf0=XP.cf, t0=XH.tab; XBUY.busy=null;
+    try{ B.ready=function(){ return ready; }; B.simulated=function(){ return ready; }; B.cardStatus=function(){ return {active:false,daysLeft:0,claimedToday:false,simulated:ready}; };
+      B.purchase=function(S0,h,id){ calls.push(id); const r=res; return {then:function(f){ f(r); }}; };
+      PANEL_V2.gate=false; out=fn(calls,function(r){ res=r; }); }catch(e){ err=e; }
+    B.ready=r0; B.purchase=p0; B.simulated=s0; B.cardStatus=c0; PANEL_V2.gate=g0; XP.cf=cf0; XH.tab=t0; XH.sel=null; XH.cf=null; XBUY.busy=null; if(err) throw err; return out; }
+  const shopGem=()=>{ XH.tab='gem'; XH.sel=null; XH.cf=null; view='shop'; render(); return V_TEST.innerHTML; };
+  const passHtml=cf=>{ passTab='pass'; XP.cf=!!cf; XP.anim=false; XP.toast=''; view='pass'; render(); return V_TEST.innerHTML; };
+
+  T['compras: ready falso = Loja e Passe idênticos aos de hoje']=function(){
+    if(!(Sys.buy&&Sys.buy.ready)) return 'Sys.buy não carregado';
+    const a=shopGem(), pa=passHtml(false), pb=passHtml(true);
+    return withBuy(false,function(calls){ const b=shopGem(); if(a!==b) throw new Error('a Loja mudou com ready falso'); if(passHtml(false)!==pa||passHtml(true)!==pb) throw new Error('o Passe mudou com ready falso');
+      if(/data-x="buy"|data-x="buyprem"|R\$/.test(b+pa+pb)) throw new Error('botão de compra ou preço com a compra desligada'); if((b.match(/data-x="iap"/g)||[]).length!==4||b.indexOf('Pagamento em breve')<0) throw new Error('cartões "Em breve" de sempre');
+      hClick({dataset:{x:'buy',id:'gems_60'}}); pClick({dataset:{x:'buyprem'}}); if(calls.length) throw new Error('chamou purchase com ready falso'); return 'idênticos; 4 cartões "Em breve"; nenhum preço; purchase não é chamado'; }); };
+
+  T['compras: ready verdadeiro = Loja com o catálogo e purchase com o id certo']=function(){
+    if(!(Sys.buy&&Sys.buy.ready)) return 'Sys.buy não carregado';
+    return withBuy(true,function(calls,setRes){ const P=Sys.buy.DATA.products, gp=P.filter(p=>p.kind==='gems'), mc=P.find(p=>p.kind==='monthly_card'); const h=bad0(shopGem());
+      for(const p of gp){ if(h.indexOf('data-x="buy" data-id="'+p.id+'"')<0) throw new Error('pacote '+p.id+' fora da tela'); if(h.indexOf(Sys.buy.priceText(p.id))<0||h.indexOf(p.name)<0) throw new Error(p.id+' sem nome/preço do módulo'); }
+      if((h.match(/class="x-tile" data-x="buy"/g)||[]).length!==gp.length) throw new Error('quantidade de pacotes'); if(/data-x="iap"|Em breve<|Pagamento em breve/.test(h)) throw new Error('sobrou "Em breve"');
+      if(mc&&(h.indexOf('data-card="'+mc.id+'"')<0||h.indexOf(Sys.buy.priceText(mc.id))<0)) throw new Error('Cartão Mensal fora da tela'); if(h.indexOf('compra simulada')<0) throw new Error('sem o aviso de compra simulada');
+      for(const p of gp.concat(mc?[mc]:[])){ calls.length=0; XH.toastMsg=''; hClick({dataset:{x:'buy',id:p.id}}); if(calls.join()!==p.id) throw new Error('purchase('+calls.join()+') em vez de '+p.id); }
+      const m1=xBuyMsg({ok:true,applied:[{got:[{kind:'gems',n:120}]}]},gp[0]); if(m1.indexOf('120')<0||m1.indexOf(gp[0].name)<0) throw new Error('aviso ok: '+m1);
+      const outs=['cancelled','owned','pending','offline','xyz'].map(w=>xBuyMsg({ok:false,reason:w},gp[0])); if(outs[0]!=='Compra cancelada'||outs[4]!=='Compra não concluída'||new Set(outs).size!==5) throw new Error('avisos: '+outs.join(' | '));
+      setRes({ok:false,reason:'cancelled'}); calls.length=0; const g0=S.gems; hClick({dataset:{x:'buy',id:gp[0].id}}); if(S.gems!==g0||XBUY.busy) throw new Error('cancelado mexeu no save ou travou');
+      calls.length=0; XBUY.busy='x'; hClick({dataset:{x:'buy',id:gp[0].id}}); XBUY.busy=null; if(calls.length) throw new Error('segunda compra com uma em curso');
+      return gp.length+' pacotes + '+(mc?mc.name:'sem cartão')+', preços do módulo ('+Sys.buy.priceText(gp[0].id)+' …); purchase com o id de cada um; avisos: '+outs.slice(0,3).join(' / '); }); };
+
+  T['compras: ready verdadeiro = Ativar Premium compra o produto do Passe']=function(){
+    if(!(Sys.buy&&Sys.buy.ready)) return 'Sys.buy não carregado'; const pp=Sys.buy.DATA.products.find(p=>p.kind==='pass_premium'); if(!pp) return 'catálogo sem pass_premium';
+    return withBuy(true,function(calls,setRes){ const o=Sys.pass.ensure(S), pr0=o.premium; let err=null, out='';
+      try{ o.premium=false; const price=Sys.buy.priceText(pp.id); let h=bad0(passHtml(false)); if(h.indexOf('data-x="askprem"')<0||h.indexOf(price)<0) throw new Error('botão Ativar Premium sem o preço do módulo');
+        if(h.indexOf('Pagamento em breve')>=0) throw new Error('sobrou "Pagamento em breve"'); pClick({dataset:{x:'askprem'}}); h=bad0(V_TEST.innerHTML); if(h.indexOf('data-x="buyprem"')<0||h.indexOf('Ativar · '+price)<0) throw new Error('popup sem o botão de compra');
+        setRes({ok:false,reason:'cancelled'}); pClick({dataset:{x:'buyprem'}}); if(calls.join()!==pp.id) throw new Error('purchase('+calls.join()+')'); if(!XP.cf||XP.toast!=='Compra cancelada') throw new Error('cancelado: popup '+XP.cf+', aviso '+XP.toast);
+        setRes({ok:true,status:'granted',applied:[]}); calls.length=0; pClick({dataset:{x:'buyprem'}}); if(calls.join()!==pp.id||XP.cf||XP.toast!=='Passe Premium ativado') throw new Error('ok: popup '+XP.cf+', aviso '+XP.toast);
+        out='preço '+price+'; purchase("'+pp.id+'"); cancelado mantém o popup; ok fecha e avisa'; }catch(e){ err=e; }
+      o.premium=pr0; XP.toast=''; if(err) throw err; return out; }); };
+  /* ---------- CONFIGURAÇÕES: código de progresso × servidor (achado A2 do QA) ---------- */
+  T['cópia de segurança: código só entra no servidor em que foi exportado']=function(){
+    if(typeof cParse!=='function') return 'p_cfg não carregado';
+    const R0=window.Realm, ns0=window.__noSave, k0=localStorage.getItem(SAVE_KEY), href0=location.href, x0={dlg:XC.dlg,imp:XC.imp,err:XC.err,src:XC.src}, v0=view, r0=S.realm; let err=null, out='';
+    const at=id=>{ window.Realm={id:function(){ return id; }}; };
+    const mk=o=>{ const b=cB64e(JSON.stringify(o)); return C_PRE+b+'.'+cSum(b); };
+    try{ view='cfg'; at('s1'); S.realm='s1'; const code=cExport(); if(!code) throw new Error('exportar falhou'); const r=cParse(code); if(!r.ok) throw new Error('mesmo servidor recusado: '+r.msg);
+      if(r.save.realm!=='s1') throw new Error('o código exportado não leva o S.realm: '+r.save.realm);
+      const want='Este código é do servidor S1. Troque para o S1 para importar.';
+      at('s2'); const r2=cParse(code); if(r2.ok||r2.msg!==want) throw new Error('S1 → S2: '+JSON.stringify(r2).slice(0,120));
+      localStorage.setItem(SAVE_KEY,'ANTES'); XC.dlg='imp'; XC.imp=code; document.getElementById('c_imp').value=code; cClick({dataset:{x:'impgo'}}); if(XC.err!==want||XC.src||XC.dlg!=='imp') throw new Error('tela: err="'+XC.err+'" dlg='+XC.dlg);
+      XC.src=r.save; XC.dlg='impok'; window.__noSave=false; if(cImportDo()!==false) throw new Error('cImportDo gravou código de outro servidor'); if(localStorage.getItem(SAVE_KEY)!=='ANTES'||window.__noSave) throw new Error('a chave do save mudou na recusa'); if(XC.err!==want) throw new Error('recusa sem aviso');
+      const old=JSON.parse(JSON.stringify(S)); delete old.realm; const oc=mk(old); if(cParse(oc).ok) throw new Error('código sem realm aceito no S2'); at('s1'); const ro=cParse(oc); if(!ro.ok) throw new Error('código sem realm recusado no S1: '+ro.msg);
+      const s3=JSON.parse(JSON.stringify(S)); s3.realm='s3'; const m3=cParse(mk(s3)); if(m3.ok||m3.msg.indexOf('S3')<0) throw new Error('S3 → S1: '+m3.msg);
+      at('s2'); S.realm='s2'; const c2=cExport(), q2=cParse(c2); if(!q2.ok||q2.save.realm!=='s2') throw new Error('S2 → S2 recusado');
+      at('s1'); S.realm='s1'; XC.src=r.save; XC.dlg='impok'; window.__noSave=false; if(cImportDo()!==true) throw new Error('mesmo servidor: não importou'); if(localStorage.getItem(SAVE_KEY)!==JSON.stringify(r.save)) throw new Error('save gravado diferente do código');
+      out='S1→S1 e S2→S2 importam; S1→S2 e S3→S1 recusam com o aviso e a chave fica igual; sem realm: entra no S1, recusado no S2';
+    }catch(e){ err=e; }
+    window.Realm=R0; window.__noSave=ns0; S.realm=r0; if(k0===null) localStorage.removeItem(SAVE_KEY); else localStorage.setItem(SAVE_KEY,k0); try{ location.href=href0; }catch(e){} XC.dlg=x0.dlg; XC.imp=x0.imp; XC.err=x0.err; XC.src=x0.src; view=v0; try{ document.getElementById('c_imp').value=''; }catch(e){}
+    if(err) throw err; return out; };
+  function bad0(h){ if(/undefined|NaN|\[object/.test(h)) throw new Error('undefined/NaN no HTML: '+(h.match(/.{50}(undefined|NaN|\[object).{30}/)||[''])[0]); return h; }
   return T; })();

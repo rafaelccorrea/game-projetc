@@ -228,6 +228,8 @@ const P_MICON={kill:'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4',boss:'M12
   instance:'M4 21V9l8-6 8 6v12M9 21v-6h6v6',forge:'M5 9h9l5 3-5 2v3H7v-3H5zM7 20h8',summon:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18',upgrade:'M12 20V5M5 12l7-7 7 7'};
 const P_GO={summon:'summon',upgrade:'gear'};
 const pEvOf=id=>{ const D=Sys.pass.DATA, m=D.daily.concat(D.weekly).find(x=>x.id===id); return m?m.k:'kill'; };
+/* produto do Passe Premium no catálogo do Sys.buy (kind 'pass_premium'), só com a compra ligada (Sys.buy.ready()); senão null */
+function pPremProd(){ try{ return typeof xBuyReady==='function'&&xBuyReady()?(xBuyProds('pass_premium')[0]||null):null; }catch(e){ return null; } }
 function pToast(msg){ XP.toast=msg; XP.toastT=Date.now(); const el=document.getElementById('xp_toast'); if(el) el.innerHTML=`<div style="position:absolute;left:24px;right:24px;bottom:112px;z-index:40;display:flex;justify-content:center;pointer-events:none"><span class="y-toast" role="status" style="padding:10px 16px;border-radius:12px;background:#12261a;border:2px solid #5fd068;color:#e6fbe7;font-size:14px;font-weight:900;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.6)">${esc2(msg)}</span></div>`; }
 /* PACOTE DE UM NÍVEL (Sys.pass: rw.mat = {forge, essence, ...} e rw.mountFrags): nada de número fixo aqui, tudo vem do prêmio que o módulo devolve.
    Ícones = os que o jogo já usa: pedra de forja (Y_STONE, a mesma das missões e da Vitória), essência e ração (Q_ESS / Q_FOOD da Vitória) e o
@@ -285,7 +287,7 @@ function scrPass(){
   /* TELA 34 ligada: a lista de missões de dentro do Passe não aparece mais; qualquer caminho que peça Missões (aba antiga, Screens.open('pass',{tab:'missions'}),
      jogador abaixo do nível do Passe) vai para a tela nova. O Passe fica só com a trilha de prêmios e o XP. */
   if(passTab==='mis'&&window.Panels&&Panels.on('missions')&&window.Screens&&Screens.reg&&Screens.reg.missions&&!Screens.reg.missions.broken){ passTab='pass'; V.innerHTML=''; setTimeout(()=>{ if(typeof view!=='undefined'&&view==='pass') Panels.open('missions',{tab:XP.mt==='w'?'weekly':'daily'}); },0); return; }   /* antes do nível do Passe (18) o painel é só MISSÕES: sem cabeçalho da temporada, sem aba de recompensas, sem Premium */
-  const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv();
+  const d=xFit(682,610), H=d.H, PER=d.real?5:(d.full?5+Math.min(2,Math.max(0,Math.floor((H-682)/75))):4), P=Sys.pass, T=P.DATA.tiers, o=P.refresh(S,Sys.host), pr=P.progress(S), CUR=pr.tier, prem=pr.premium, lvP=plv(), premP=pPremProd();   /* premP: produto do Passe Premium no Sys.buy quando a compra está ligada; null = "Pagamento em breve" como sempre */
   const sea=P.season(S,Sys.host), days=Math.max(0,Math.ceil((sea.end-Date.now())/86400000)), L=P.list(S,Sys.host), isMs=passTab==='mis';
   const ready=L.daily.concat(L.weekly).filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0), sk=SKIN(SEASON_SKIN), skT=sk?tierOf(sk.r):0, big=pBig(), bigI=big?pInfo(big.rw):null;
   const seg=on=>on?'background:linear-gradient(180deg,#b07cff,#6a3cff);color:#fff':'background:transparent;color:#c9b9a2';
@@ -335,7 +337,7 @@ function scrPass(){
       <div style="height:52px;flex:none;display:flex;gap:8px;${SC?'':'margin-top:auto'}">
         <button class="lil ${pend.length?'y-gold y-cta':''}" data-x="all" id="xp_all" style="flex:1;height:50px;border-radius:14px;${pend.length?'':'border:2px solid #4a3a2b;background:#241b14;color:#c9b9a2;'}font-size:16px;padding:0">${pend.length?'Resgatar tudo ('+pend.length+')':'Tudo resgatado'}</button>
         ${prem?`<div class="lil" style="flex:1.3;height:50px;border-radius:14px;border:2px solid #8a4dff;background:#241a38;color:#e6d4ff;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box"><img src="assets/ui/pass.png" alt="" style="width:26px;height:26px;object-fit:contain">Premium ativo</div>`
-          :`<button class="p-prem" data-x="askprem" style="position:relative;overflow:hidden;flex:1.3;height:50px;border-radius:14px;padding:0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="p-premsh"></span><span class="lil" style="font-size:16px">Ativar Premium</span><span style="font-size:10px;font-weight:900;color:#2a1250">Pagamento em breve</span></button>`}</div>
+          :`<button class="p-prem" data-x="askprem" style="position:relative;overflow:hidden;flex:1.3;height:50px;border-radius:14px;padding:0 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05"><span class="p-premsh"></span><span class="lil" style="font-size:16px">Ativar Premium</span><span style="font-size:10px;font-weight:900;color:#2a1250">${premP?esc2(xBuyPrice(premP.id)):'Pagamento em breve'}</span></button>`}</div>
       ${SC?'':xPager('pg',pg,pages,'Níveis '+(pg*PER+1)+'–'+Math.min(T,pg*PER+PER)+' de '+T+' · itens da sua era','Níveis anteriores','Próximos níveis')}`;
     XP.pages=pages;
   } else {
@@ -404,7 +406,9 @@ function scrPass(){
           <span>Equipamentos melhores: Raro e Épico ao longo do passe e 2 Itens da Temporada (níveis 27 e 30) que evoluem até Lendário</span>
           ${big?`<span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span>No nível ${big.lv} do passe:</span>${bigI.kind==='eq'?`<span style="display:flex;align-items:center;gap:3px;color:${bigI.rc}"><img src="${slotIcon(bigI.slot,S.eraMax)}" alt="" style="width:20px;height:20px;object-fit:contain">${esc2(bigI.tag||'')}</span>`:''}${pExHtml(bigI.ex,16,13)}</span>`:'<span>Skin da temporada no passe</span>'}<span>Mais diamantes nos outros níveis e +${P.DATA.premiumXpPct}% de XP do passe</span>
           <span style="font-size:12px;color:#c9b9a2">Compra direta pela loja do aparelho (Google Play / App Store), sem sorteio. Níveis já alcançados ficam prontos para resgatar.</span>
-          <span role="note" style="padding:6px 8px;border-radius:8px;background:#3a2c1f;border:1px solid #ffc94a;color:#ffe07a;font-size:12px;font-weight:900;text-align:center">Pagamento em breve: a compra ainda não está disponível.</span></div>
+          ${premP?(xBuySim()?'<span role="note" style="padding:6px 8px;border-radius:8px;background:#3a2c1f;border:1px solid #ffc94a;color:#ffe07a;font-size:12px;font-weight:900;text-align:center">Modo dono: compra simulada, nada é cobrado.</span>':'')
+            :'<span role="note" style="padding:6px 8px;border-radius:8px;background:#3a2c1f;border:1px solid #ffc94a;color:#ffe07a;font-size:12px;font-weight:900;text-align:center">Pagamento em breve: a compra ainda não está disponível.</span>'}</div>
+        ${premP?`<button class="p-prem lil" data-x="buyprem" aria-label="Comprar ${esc2(premP.name)}: ${esc2(xBuyPrice(premP.id))}" style="position:relative;overflow:hidden;height:52px;border-radius:14px;font-size:18px;padding:0 8px;white-space:nowrap">Ativar · ${esc2(xBuyPrice(premP.id))}</button>`:''}
         <button class="lil" data-x="cfno" style="height:50px;border-radius:14px;border:2px solid #4a3a2b;background:#33271d;color:#f6ecdf;font-size:18px;padding:0">Fechar</button></div></div>`:''}`);
   XP.anim=false; XP.lvfx=false; XP.scKey=scKey;
   { const sc1=document.getElementById('xp_sc'); if(sc1){ if(first&&SC&&!isMs) pScrollCur(sc1,CUR); else if(scTop) sc1.scrollTop=scTop; } }   /* abertura: trilha no nível atual; redesenho: a rolagem fica onde estava */
@@ -421,6 +425,9 @@ function pClick(b){ const a=b.dataset.x, P=Sys.pass;
   else if(a==='mpg'){ const p=XP.mpage+(+b.dataset.d); if(p>=0&&p<(XP.mpages||1)){ snd('ui_tap'); XP.mpage=p; XP.anim=true; render(); } }
   else if(a==='askprem'){ snd('ui_tap'); XP.cf=true; render(); }
   else if(a==='cfno'){ snd('ui_tap'); XP.cf=false; render(); }
+  /* "Ativar Premium" pelo Sys.buy (o botão só existe com Sys.buy.ready() verdadeiro; produto do catálogo, kind 'pass_premium'): quem liga o Premium é a entrega do módulo */
+  else if(a==='buyprem'){ snd('ui_tap'); const pp=pPremProd(); if(!pp){ pToast('Pagamento em breve: nada é cobrado agora'); return; }
+    xBuy(pp.id,(r,p)=>{ if(r&&r.ok){ XP.cf=false; snd('claim'); try{ if(typeof passSync==='function') passSync(); }catch(e){} } if(typeof view!=='undefined'&&view==='pass') render(); pToast(r&&r.ok?'Passe Premium ativado':xBuyMsg(r,p)); }); }
   else if(a==='all'){ const els={}, sc=pScrollOn()?document.getElementById('xp_sc'):null; pPending().forEach(([t,l])=>{ const e=document.getElementById('xp_'+t+l); if(e&&pVisible(e,sc)) els[t+l]=e; }); pAfterClaim(P.claimAll(S,Sys.host),els); }
   else if(a==='claim'){ const t=b.dataset.t, lv=+b.dataset.lv, o=P.ensure(S), reached=lv<=P.tier(S);
     if(t==='premium'&&!o.premium){ snd('ui_tap'); XP.cf=true; render(); return; }

@@ -68,9 +68,17 @@ function cParse(txt){ const t=String(txt==null?'':txt).replace(/\s+/g,'');
   if(!b||b.length%4!==0||!/^[A-Za-z0-9+\/]+={0,2}$/.test(b)||sum!==cSum(b)) return {ok:false,msg:'Código incompleto ou alterado. Copie de novo, inteiro.'};
   let o; try{ o=JSON.parse(cB64d(b)); }catch(e){ return {ok:false,msg:'Código danificado: não deu para ler. Copie de novo, inteiro.'}; }
   if(cCheck(o)) return {ok:false,msg:'Este código não traz um progresso válido do jogo.'};
+  const rm=cRealmMsg(o); if(rm) return {ok:false,msg:rm};
   return {ok:true,save:o}; }
+/* SAVES POR SERVIDOR (index.html: window.Realm; cada save leva S.realm e um save de outro servidor NÃO é carregado): um código só entra no servidor
+   em que foi exportado. De outro servidor é RECUSADO com aviso, sem gravar nada (não se carimba por cima: seria copiar progresso entre servidores).
+   Código antigo, sem o campo realm, vale como S1. */
+const cRealmNow=()=>{ try{ const r=window.Realm&&typeof Realm.id==='function'?Realm.id():''; return /^s[0-9]{1,3}$/.test(r||'')?r:'s1'; }catch(e){ return 's1'; } };
+const cRealmOf=o=>(o&&typeof o.realm==='string'&&/^s[0-9]{1,3}$/.test(o.realm))?o.realm:'s1';
+function cRealmMsg(o){ const from=cRealmOf(o); if(from===cRealmNow()) return ''; const nm=from.toUpperCase(); return 'Este código é do servidor '+nm+'. Troque para o '+nm+' para importar.'; }
 /* grava o save importado e recarrega, do mesmo jeito que o "Apagar tudo": __noSave antes, para o save de saída não escrever por cima */
 function cImportDo(){ const o=XC.src; if(!o) return false; const prev=window.__noSave; let ok=false;
+  { const rm=cRealmMsg(o); if(rm){ XC.src=null; XC.dlg='imp'; XC.err=rm; render(); return false; } }   /* segunda trava (o cParse já recusa): código de outro servidor nunca é gravado */
   try{ const j=JSON.stringify(o); window.__noSave=true; localStorage.setItem(SAVE_KEY,j); ok=localStorage.getItem(SAVE_KEY)===j; }catch(e){ ok=false; }
   if(!ok){ window.__noSave=prev; try{ save(); }catch(e){} XC.dlg='imp'; XC.err='Não deu para gravar neste aparelho. Nada mudou.'; render(); return false; }
   location.href=location.pathname+location.search; return true; }

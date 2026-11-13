@@ -1205,4 +1205,15 @@ desligada nada disto aparece. Sem preço e sem "comprar VIP": o texto é "O VIP 
   "Soma à FC" (cabe com folga; segue com reticências só como reserva). 3 testes novos ("FC inteira: …") percorrem 288, 320, 360, 384, 390, 412 e
   430 px com "195 mil", "999,9 mil/mi/bi/tri/qua/qui" e "1000 tri/qui". LIMITE: a conta é estimativa (sem medir no DOM); o QA confere no aparelho.
   Fumaça 288, 360, 390 e 412: 173 OK, 0 FALHA (segue o timer do p_intro); `run.js` TUDO OK (154); `flows.js` "fluxos duros OK".
+- CARGA: `'p_bag'` e `'p_realm'` na lista do `js/screens.js` (depois de `'p_fuse'`); `PANEL_ON.bag=false` e `PANEL_ON.realm=false` em `js/panels.js`;
+  sem item no MENU nem entrada em outra tela. O `conflitos.js` acusa XR/rClick no p_realm, mas é falso alarme: o arquivo inteiro roda em escopo próprio.
+- COMPRAS PELO Sys.buy (`js/screens.js`: `xBuyReady/xBuyProds/xBuyPrice/xBuy/xBuyMsg`): com `Sys.buy.ready()` falso a Loja e o Passe ficam idênticos
+  (teste compara o HTML). Com verdadeiro: aba de gemas com os pacotes `kind:'gems'` e o Cartão Mensal do catálogo (nome e preço do módulo; no Modo
+  dono "compra simulada"; resgate diário pelo `Sys.buy.cardClaim` só na simulação), e "Ativar Premium" (`js/screens2.js`) com o preço e o botão
+  "Ativar · R$" no popup (`kind:'pass_premium'`). Retorno: ok / cancelada / já tem / pendente / sem conexão / não concluída; uma compra por vez.
+  PENDENTE para o Servidor: na compra REAL o resgate diário do Cartão Mensal é do servidor e a tela ainda não tem esse botão.
+- CONFIGURAÇÕES (`js/p_cfg.js`, achado A2 do QA): código de progresso de outro servidor é recusado no "Conferir" e de novo antes de gravar
+  ("Este código é do servidor S1. Troque para o S1 para importar."); sem o campo realm vale como S1; o exportado leva o `S.realm`.
+- Testes novos (5): carga, compras ×3, cópia de segurança × servidor. Fumaça 390 e 288: 186 OK, 0 FALHA (segue o timer do p_intro); `smoke.js` sem
+  falha; `run.js` TUDO OK (160); `flows.js` "fluxos duros OK" (rodado antes da mudança do p_cfg, que ele não toca).
 - Largura 288 (nota antiga, resolvida pelo QA: 5 por linha, 1 px de folga): a grade da mochila do Equipamento (5 colunas de 58 px + 24 de margem = 314 px) já não cabia antes desta peça; o QA precisa olhar.

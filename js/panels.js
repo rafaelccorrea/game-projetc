@@ -18,6 +18,8 @@ const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:
   arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false,
   colecao:false,   /* Coleção (js/p_colecao.js, do QA): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
   shopmecha:false,   /* cartão do Mecha de Guerra na Loja (js/p_shopmecha.js, do QA): DESLIGADA até a arte ser aprovada pelo dono */
+  bag:false,   /* Mochila nova (js/p_bag.js, de Sistemas): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
+  realm:false,   /* escolha de servidor (js/p_realm.js, do Servidor): carregada e DESLIGADA; sem item no MENU. O arquivo roda em escopo próprio (os nomes XR e rClick dele não chegam ao js/screens2.js) */
   fuse:false   /* Fusão (js/p_fuse.js, de Sistemas): DESLIGADA; só liga junto com Sys.stats.DATA.quality.on (qualidade/fusão é da v0.13, sem voto ainda) */},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
