@@ -1,0 +1,71 @@
+{
+ "frames": 8,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. Kael V2: âncora pelo pescoço (kv2/headneck.js)",
+ "head": [
+  {
+   "x": 305,
+   "y": 37,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 305,
+   "y": 37,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 304,
+   "y": 39,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 304,
+   "y": 36,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 305,
+   "y": 36,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 305,
+   "y": 38,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 304,
+   "y": 39,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 303,
+   "y": 37,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  }
+ ]
+}

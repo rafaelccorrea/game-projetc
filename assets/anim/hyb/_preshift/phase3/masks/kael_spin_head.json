@@ -1,0 +1,151 @@
+{
+ "frames": 18,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. Kael V2: âncora pelo pescoço (kv2/headneck.js)",
+ "head": [
+  {
+   "x": 327,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 327,
+   "y": 27,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 326,
+   "y": 29,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 326,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 326,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 325,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 323,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 320,
+   "y": 17,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 321,
+   "y": 18,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 322,
+   "y": 20,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 325,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 325,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 329,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 332,
+   "y": 20,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 333,
+   "y": 18,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 329,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 328,
+   "y": 27,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 327,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  }
+ ]
+}

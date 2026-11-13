@@ -1,0 +1,159 @@
+{
+ "frames": 18,
+ "w": 448,
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. Kael V2: âncora pelo pescoço (kv2/headneck.js)",
+ "head": [
+  {
+   "x": 222,
+   "y": 31,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 229,
+   "y": 25,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 236,
+   "y": 29,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 230,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 215,
+   "y": 29,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 207,
+   "y": 36,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 203,
+   "y": 70,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 215,
+   "y": 86,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 226,
+   "y": 95,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 252,
+   "y": 87,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 272,
+   "y": 126,
+   "ang": 30,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "interp": true
+  },
+  {
+   "x": 291,
+   "y": 164,
+   "ang": 60,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "interp": true
+  },
+  {
+   "x": 311,
+   "y": 203,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 310,
+   "y": 211,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 310,
+   "y": 212,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 310,
+   "y": 212,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 310,
+   "y": 212,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  },
+  {
+   "x": 310,
+   "y": 212,
+   "ang": 90,
+   "s": 0.26,
+   "e": 0,
+   "ok": true,
+   "lying": true
+  }
+ ]
+}
