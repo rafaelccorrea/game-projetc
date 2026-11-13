@@ -35,7 +35,8 @@ const DATA={
   futureEra:{on:false, chances:[0.005,0.0005,0.00005], maxEra:6},
   // LANÇAMENTO: 28 armas, sem a Mítica (r3) de arma. Sorteio de ARMA que daria Mítico vira Épico.
   // Exceção: quando a fonte exige Mítico+ (minR>=3) e a sorte de +1 acerta, vai direto para Lendário. Armadura não muda.
-  launch:{noMythicWeapon:true, mythicR:3},
+  // DONO (14/11, via PO): arma Mítica LIBERADA (noMythicWeapon:false), com as chances já definidas (drop 1,6%, Invocação peso 6). true volta à regra antiga.
+  launch:{noMythicWeapon:false, mythicR:3},
   // PORTÕES DE RARIDADE (regra do dono via PO): raridade r só sai se o jogador tiver nível >= lvl E era liberada >= era.
   // Abaixo do portão, cai para a maior raridade permitida. Vale para item (drop, baú, instâncias) e para ovo de pet só de Mítico/Lendário (eggGateFrom).
   // Nível vem de host.level() (curva de XP da fps-c9). Sem host.level, o portão de NÍVEL fica desligado e só o de era vale.
@@ -326,7 +327,7 @@ function summonOdds(host){
   const weap=gate.slice(); if(DATA.launch.noMythicWeapon&&weap[3]){ weap[2]+=weap[3]; weap[3]=0; }
   const byR=gate.map((p,r)=>Math.round(((1-ws)*p+ws*weap[r])*10000)/100);
   const best=byR.reduce((b,p,r)=>p>0?r:b,0);
-  return {byR,best,cap,weaponShare:Math.round(ws*1000)/10,pity:{every:num(DATA.summon.pity,0),r:cap,weaponAtMythicGate:cap===3?2:cap}};
+  return {byR,best,cap,weaponShare:Math.round(ws*1000)/10,pity:{every:num(DATA.summon.pity,0),r:cap,weaponAtMythicGate:DATA.launch.noMythicWeapon&&cap===3?2:cap}};
 }
 /* invoca n (1 ou 10) itens. opts.free: usa a grátis do dia (só n=1). Cobra por host.spendGold(valor) → true/false (o jogo debita).
    Devolve {ok, cost, items, free} ou {ok:false, reason:'ouro'|'gratis'|'n'|'host'}. Entrega os itens por host.addItem. */
@@ -340,7 +341,7 @@ function summon(S,host,n,opts){
   const items=[], best=maxAllowedR(host), P=num(DATA.summon.pity,0);
   for(let i=0;i<n;i++){
     let it=rollItem(host,{source:'summon',rarWeights:DATA.summon.rarWeights});
-    const top=it.r>=best||(it.slot==='weapon'&&best===3&&it.r===2);   // arma no portão Mítico: Épico já é a melhor possível
+    const top=it.r>=best||(DATA.launch.noMythicWeapon&&it.slot==='weapon'&&best===3&&it.r===2);   // só com a regra antiga: arma no portão Mítico, Épico era a melhor possível
     if(top) st.pity=0; else st.pity++;
     if(P&&!top&&st.pity>=P){ it=rollItem(host,{source:'summon',rarWeights:DATA.summon.rarWeights,minR:best}); it.pity=true; st.pity=0; }
     items.push(it);

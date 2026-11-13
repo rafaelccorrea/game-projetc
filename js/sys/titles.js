@@ -18,6 +18,7 @@ const DATA={
   featuredMult:2,
   // tamanho do catálogo do LANÇAMENTO (revisão do PO): 28 armas (7 eras × 4 raridades, sem a Mítica), 10 roupas, 5 cabelos, 5 olhos,
   // 4 chapéus, 2 montarias; pets vêm do Sys.pet. host.catalog(tipo) substitui estes números quando existir.
+  // weapons: sem número fixo desde que a arma Mítica foi liberada (dono, 14/11): eras × raridades de arma, pelo Sys.stats e pelo Sys.loot (weaponsCatalog)
   catalog:{weapons:28, wardrobe:38, hair:5, eyes:5, hats:4, mounts:2, pets:5},
   titles:[
     {id:'stage10', name:'Desbravador',          cond:{type:'stage',n:10},     bonus:{atkPct:1}},
@@ -126,12 +127,16 @@ function owned(S,host,kind){
   return 0;
 }
 const CAT_KEY={weapons:'weapons',skins:'wardrobe',hair:'hair',eyes:'eyes',hats:'hats',mounts:'mounts',pets:'pets'};
+/* armas que existem: (eras) × (raridades de arma: 5, ou 4 com a regra antiga sem Mítica). null sem os módulos (vale o DATA.catalog) */
+function weaponsCatalog(){ try{ const T=root.Sys&&root.Sys.stats, L=root.Sys&&root.Sys.loot; if(!T||!T.DATA) return null; const eras=int0(T.DATA.maxEra)+1;
+  const noM=!!(L&&L.DATA&&L.DATA.launch&&L.DATA.launch.noMythicWeapon); return eras*(noM?4:5); }catch(e){ return null; } }
 /* quanto a condição pede: número fixo, ou 'all' = tamanho do catálogo */
 function need(S,host,c){
   if(c.n!=='all') return Math.max(1,int0(c.n));
   const k=CAT_KEY[c.type]; let n=null;
   if(host&&typeof host.catalog==='function'){ try{ n=host.catalog(k); }catch(e){ n=null; } }
   if(!(typeof n==='number'&&n>0)&&k==='pets'){ const P=root.Sys&&root.Sys.pet; if(P&&P.DATA&&Array.isArray(P.DATA.pets)) n=P.DATA.pets.length; }
+  if(!(typeof n==='number'&&n>0)&&k==='weapons') n=weaponsCatalog();
   if(!(typeof n==='number'&&n>0)) n=DATA.catalog[k];
   return Math.max(1,int0(n));
 }

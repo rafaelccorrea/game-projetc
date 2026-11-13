@@ -74,7 +74,7 @@ for(const I of ITENS){ ST.setEra9(I.e>=7); const it={slot:'weapon',e:I.e,r:I.r,l
   t(key+': nome na tela "'+I.nome+'"',()=>{ assert.strictEqual(I.e<=6?eraNames(I.e)[I.r]:ERA78[I.e][I.r],I.nome); });
 }
 /* ARMA MÍTICA: a regra do lançamento (Sys.loot.DATA.launch.noMythicWeapon) troca todo sorteio de arma Mítica por Épica. Hoje ninguém consegue a arma Mítica. */
-t('arma Mítica bloqueada no lançamento: na Invocação só a armadura dá Mítico; desligando a regra, a arma Mítica volta (decisão do dono)',()=>{ const {makeHost}=require('./_host.js'), h=makeHost({level:90,eraMax:6}), L=LT.DATA.launch, keep=L.noMythicWeapon;
-  try{ assert.strictEqual(keep,true,'regra ligada hoje'); const on=LT.summonOdds(h), ws=on.weaponShare/100; assert.ok(Math.abs(on.byR[3]-Math.round((1-ws)*6*100)/100)<0.01,'só armadura: '+on.byR[3]);
+t('arma Mítica LIBERADA (dono 14/11): a Invocação dá Mítico a 6%; com a regra antiga ligada, só a armadura dá Mítico',()=>{ const {makeHost}=require('./_host.js'), h=makeHost({level:90,eraMax:6}), L=LT.DATA.launch, keep=L.noMythicWeapon;
+  try{ assert.strictEqual(keep,false,'liberada'); assert.strictEqual(LT.summonOdds(h).byR[3],6); L.noMythicWeapon=true; const on=LT.summonOdds(h), ws=on.weaponShare/100; assert.ok(Math.abs(on.byR[3]-Math.round((1-ws)*6*100)/100)<0.01,'só armadura: '+on.byR[3]);
     L.noMythicWeapon=false; assert.strictEqual(LT.summonOdds(h).byR[3],6); } finally { L.noMythicWeapon=keep; } });
 console.log(n+' testes ok');

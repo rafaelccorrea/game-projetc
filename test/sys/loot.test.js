@@ -37,14 +37,15 @@ t('chefe: item r>=1 sempre, pedra 1-2, ração 3-5; Senhor da Era: r>=2, gemas 3
     assert.ok(b.forge>=3&&b.forge<=5); assert.ok(b.food>=15&&b.food<=20); }
 });
 
-t('LANÇAMENTO: arma nunca Mítica (vira Épica); armadura mantém Mítica',()=>{
+t('regra antiga do lançamento (hoje DESLIGADA, dono 14/11): ligada, arma nunca Mítica (vira Épica); armadura mantém Mítica',()=>{
+  assert.strictEqual(L.DATA.launch.noMythicWeapon,false,'arma Mítica liberada'); L.DATA.launch.noMythicWeapon=true;
   const h=makeHost({seed:12,eraMax:6}); let wM=0,aM=0,wE=0;
   for(let i=0;i<40000;i++){ const it=L.rollItem(h,{}); if(it.slot==='weapon'){ if(it.r===3) wM++; if(it.r===2) wE++; } else if(it.r===3) aM++; }
   assert.strictEqual(wM,0); assert.ok(aM>0); assert.ok(wE>0);
   // fonte Mítico+ (minR 3): arma vai a Épico, ou a Lendário quando a sorte de +1 acerta
   let leg=0,epi=0; for(let i=0;i<4000;i++){ const it=L.rollItem(h,{slot:'weapon',minR:3,upChance:0.3}); assert.ok(it.r===2||it.r===4); if(it.r===4) leg++; else epi++; }
   assert.ok(leg>0&&epi>0);
-  L.DATA.launch.noMythicWeapon=false; let m=0; for(let i=0;i<4000;i++) if(L.rollItem(h,{slot:'weapon'}).r===3) m++; L.DATA.launch.noMythicWeapon=true;
+  L.DATA.launch.noMythicWeapon=false; let m=0; for(let i=0;i<4000;i++) if(L.rollItem(h,{slot:'weapon'}).r===3) m++;
   assert.ok(m>0,'desligando a regra a Mítica volta');
 });
 
@@ -57,8 +58,8 @@ t('PORTÕES: Raro nv10 · Épico nv25 · Mítico nv70+era4 · Lendário nv85+era
   // sorteio: nível 9 = tudo Básico, mesmo chefe (mínimo Raro) e sorte; nível 30 era 6 = no máximo Épico
   const h9=makeHost({level:9,eraMax:6,seed:3}); for(let i=0;i<3000;i++) assert.strictEqual(L.rollItem(h9,{minR:2,upChance:1}).r,0);
   const h30=makeHost({level:30,eraMax:6,seed:4}); let ep=0; for(let i=0;i<5000;i++){ const r=L.rollItem(h30,{minR:3,upChance:0.5}).r; assert.ok(r<=2); if(r===2) ep++; } assert.strictEqual(ep,5000);
-  // nível 70 era 4: Mítico só na ARMADURA (arma não tem Mítica no lançamento → Épico)
-  const h70=makeHost({level:70,eraMax:4,seed:5}); for(let i=0;i<4000;i++){ const it=L.rollItem(h70,{minR:4}); assert.strictEqual(it.r,it.slot==='weapon'?2:3); }
+  // nível 70 era 4: Mítico na arma e na armadura (arma Mítica liberada, dono 14/11)
+  const h70=makeHost({level:70,eraMax:4,seed:5}); for(let i=0;i<4000;i++){ const it=L.rollItem(h70,{minR:4}); assert.strictEqual(it.r,3); }
 });
 
 t('PORTÕES nos ovos: só Mítico/Lendário são barrados',()=>{
@@ -229,7 +230,7 @@ t('INVOCAÇÃO por ouro: 500·4^era (x10 = 9×), 1 grátis por dia, tabela 50/28
   const hb=mk({eraMax:6,wallet:1e15,seed:9,level:90}); const c=[0,0,0,0,0]; let w=0; const pity=L.DATA.summon.pity; L.DATA.summon.pity=0;   // tabela pura (sem a garantia)
   for(let i=0;i<4000;i++){ for(const it of L.summon({},hb,10).items){ c[it.r]++; if(it.slot==='weapon'&&it.r===3) w++; } }
   L.DATA.summon.pity=pity;
-  const tot=c.reduce((a,b)=>a+b,0); assert.ok(Math.abs(c[0]/tot-0.5)<0.02,'Básico '+c[0]/tot); assert.strictEqual(w,0,'arma Mítica nunca');
+  const tot=c.reduce((a,b)=>a+b,0); assert.ok(Math.abs(c[0]/tot-0.5)<0.02,'Básico '+c[0]/tot); assert.ok(w>0,'arma Mítica sai (liberada, dono 14/11)');
   const hl=mk({eraMax:6,wallet:1e15,seed:10,level:5}); for(let i=0;i<300;i++) assert.ok(L.summon({},hl,10).items.every(it=>it.r===0),'nível 5: só Básico');
 });
 
@@ -286,8 +287,8 @@ t('NOMES: 4 espaços × 9 eras × 5 raridades, todos preenchidos e únicos por e
 t('CHANCES EFETIVAS da invocação: portão aplicado e arma sem Mítica; batem com o sorteio real',()=>{
   const o5=L.summonOdds(makeHost({level:5,eraMax:6})); assert.deepStrictEqual(o5.byR,[100,0,0,0,0]); assert.strictEqual(o5.cap,0);
   const o30=L.summonOdds(makeHost({level:30,eraMax:6})); assert.deepStrictEqual(o30.byR,[50,28,22,0,0]);
-  const o75=L.summonOdds(makeHost({level:75,eraMax:4})); assert.ok(Math.abs(o75.byR.reduce((a,b)=>a+b,0)-100)<0.05); assert.ok(o75.byR[3]<8&&o75.byR[2]>14,'Mítico só fora da arma');
-  assert.strictEqual(o75.pity.weaponAtMythicGate,2);
+  const o75=L.summonOdds(makeHost({level:75,eraMax:4})); assert.ok(Math.abs(o75.byR.reduce((a,b)=>a+b,0)-100)<0.05); assert.ok(Math.abs(o75.byR[3]-8)<0.05&&Math.abs(o75.byR[2]-14)<0.05&&o75.pity.weaponAtMythicGate===3,'Mítico também na arma (liberada, dono 14/11): '+o75.byR);
+  assert.strictEqual(o75.pity.weaponAtMythicGate,3);
   // confere contra o sorteio de verdade (sem garantia)
   const h=makeHost({level:75,eraMax:4,seed:31}); h.spendGold=()=>true; const pity=L.DATA.summon.pity; L.DATA.summon.pity=0; const c=[0,0,0,0,0]; let n=0;
   for(let i=0;i<4000;i++) for(const it of L.summon({},h,10).items){ c[it.r]++; n++; } L.DATA.summon.pity=pity;

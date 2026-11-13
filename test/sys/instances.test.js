@@ -109,10 +109,10 @@ t('Chefe de Era: ração 5/7/10 e ovo 15/25/40% (tabela 34/35/18/12/1; Lendário
   delete globalThis.Sys.pet;
 });
 
-t('Chefe de Era Difícil: ~10% das armas Lendárias (resto Épico, sem Mítica)',()=>{
+t('Chefe de Era Difícil: ~10% das armas Lendárias (resto Mítico; a arma Mítica foi liberada)',()=>{
   const h=makeHost({eraMax:6,seed:77}); let w=0,leg=0;   // portões abertos
   for(let i=0;i<12000;i++){ const S={}; const r=I.start(S,h,'boss',11); I.finish(S,h,r.run.id,{win:true}); }
-  for(const it of h.items) if(it.slot==='weapon'){ w++; if(it.r===4) leg++; assert.ok(it.r===2||it.r===4); }
+  for(const it of h.items) if(it.slot==='weapon'){ w++; if(it.r===4) leg++; assert.ok(it.r===3||it.r===4,'r'+it.r); }   /* arma Mítica liberada (dono 14/11): o resto é Mítico (antes, Épico) */
   assert.ok(Math.abs(leg/w-0.10)<0.015,'Lendária '+(leg/w));
 });
 
@@ -124,10 +124,10 @@ t('no máximo 1 ovo de instância por dia; renova à meia-noite',()=>{
   const exp=1-Math.pow(0.6,2); assert.ok(Math.abs(eggs/days-exp)<0.07,'ovos/dia '+(eggs/days)+' (esperado ~'+exp.toFixed(2)+')');
 });
 
-t('arma Mítica nunca sai das instâncias (lançamento)',()=>{
+t('arma Mítica sai das instâncias (liberada pelo dono, 14/11), como a armadura Mítica',()=>{
   const h=makeHost({eraMax:6,seed:23});   // portões abertos (a armadura Mítica precisa de era 4+)
   for(let i=0;i<600;i++){ const S={}; const r=I.start(S,h,'boss',11); I.finish(S,h,r.run.id,{win:true}); }
-  assert.ok(!h.items.some(it=>it.slot==='weapon'&&it.r===3)); assert.ok(h.items.some(it=>it.slot==='armor'&&it.r===3));
+  assert.ok(h.items.some(it=>it.slot==='weapon'&&it.r===3)); assert.ok(h.items.some(it=>it.slot==='armor'&&it.r===3));
 });
 
 t('cadeado por fase: Fácil abre na fase 3, Normal na 6, Difícil na 9 de cada era',()=>{
