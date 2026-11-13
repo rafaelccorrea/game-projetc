@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **07h30 · Pets novos escolhidos (9, visual feroz):** Raros: Lobo das Sombras, Falcão de Guerra · Épicos: Pantera Espectral, Escorpião Rúnico, Corvo da Tempestade · Míticos: Grifo Negro, Golem de Obsidiana · Lendários: Dragão de Gelo, Wyvern Infernal. Primeiro as 9 referências (~18 créditos) para você votar; depois as animações (~40 cada). Os pets de hoje ficam como os grátis do começo
+
 - **07h20 · Kaia na Criação:** já dá para escolher a Kaia de verdade ao começar o jogo (Servidor, conferido no navegador). Para o APK falta só a passada final do QA
 - **07h20 · Sua direção de arte:** o público é um pouco mais velho. Skins e pets novos no estilo herói semi-chibi (rosto adulto, visual épico), nada infantil. A Arte refaz as 13 referências de skin (~26 créditos). Lista de 13 pets novos (raro a lendário, criaturas ferozes) esperando sua escolha
 
