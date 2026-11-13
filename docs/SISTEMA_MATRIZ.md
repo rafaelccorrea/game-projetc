@@ -107,3 +107,17 @@ Igual à Básica em Forja, aura e ultimate (folha-base `era0_ult`). Teste: `test
 | **Nome na tela** | ✗ **"Lança de Sílex"** (`index.html:352`), mas a arte é de clava. Mesma decisão do nome da Básica |
 
 **Fechada do lado de sistema, com 1 pendência: o nome.**
+
+## Arma 4: Clava Mítica (`era0_mitico`)
+
+| Linha | Estado |
+|---|---|
+| Arte que o sistema lê | ✓ `assets/weapons/era0_mitico.png` + grip |
+| Família / ultimate | ✓ Clava / base `era0_ult` reforçada por código (tamanho ×1,25, brilho, partículas ×1,5, anel) |
+| Efeito Mítico | ✓ brilho 2, partículas ×1,45, dano igual |
+| Atributo | ✓ acima do Épico; 2 secundários |
+| **Fontes** | ⏸ **bloqueada pela regra do lançamento** (`js/sys/loot.js:36-38`, `launch.noMythicWeapon:true`): todo sorteio de arma Mítica vira Épica (drop, baú, instância, Invocação). Hoje ninguém consegue a Clava Mítica. Decisão do dono: liberar a arma Mítica (muda para todas as 9 eras), ou a linha fica ⏸ |
+| Códex | ✓ `w-0-1` (a casa é alcançável pela Épica, então o Códex não trava) |
+| **Nome na tela** | ✗ **"Machado de Osso"** (`index.html:352`), com arte de clava. Mesma decisão de nome |
+
+**Do lado de sistema: pronta, mas ⏸ (o dono decide liberar a arma Mítica) e com o nome pendente.** Teste: `test/sys/item-armas.test.js` (29), com a regra do lançamento conferida nos dois estados.

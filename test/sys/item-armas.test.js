@@ -18,6 +18,7 @@ const ITENS=[
   {e:0,r:0,fam:'club',nome:'Graveto Afiado',ult:'base',codex:'w-0-0'},
   {e:0,r:1,fam:'club',nome:'Clava de Pedra',ult:'base',codex:'w-0-0'},
   {e:0,r:2,fam:'club',nome:'Lança de Sílex',ult:'base',codex:'w-0-1'},   // nome de lança, arte de clava: decisão de texto com o PO
+  {e:0,r:3,fam:'club',nome:'Machado de Osso',ult:'boost',codex:'w-0-1',mythic:true},   // arma Mítica: BLOQUEADA no lançamento (abaixo)
 ];
 for(const I of ITENS){ const it={slot:'weapon',e:I.e,r:I.r,lvl:1,gold:0,subs:[]}, key='era'+I.e+'_'+RKEY[I.r];
   t(key+' ('+RNAME[I.r]+'): arte no disco (ícone/mão + grip no meta.json) e ultimate da era',()=>{
@@ -29,4 +30,8 @@ for(const I of ITENS){ const it={slot:'weapon',e:I.e,r:I.r,lvl:1,gold:0,subs:[]}
   t(key+': Códex marca '+I.codex,()=>{ const S={inv:[Object.assign({},it)],sys:{}}; assert.ok(CX.catalog().some(c=>c.id===I.codex)); assert.ok([...CX.scan(S)].includes(I.codex)); });
   t(key+': nome na tela "'+I.nome+'"',()=>{ assert.strictEqual(eraNames(I.e)[I.r],I.nome); });
 }
+/* ARMA MÍTICA: a regra do lançamento (Sys.loot.DATA.launch.noMythicWeapon) troca todo sorteio de arma Mítica por Épica. Hoje ninguém consegue a arma Mítica. */
+t('arma Mítica bloqueada no lançamento: na Invocação só a armadura dá Mítico; desligando a regra, a arma Mítica volta (decisão do dono)',()=>{ const {makeHost}=require('./_host.js'), h=makeHost({level:90,eraMax:6}), L=LT.DATA.launch, keep=L.noMythicWeapon;
+  try{ assert.strictEqual(keep,true,'regra ligada hoje'); const on=LT.summonOdds(h), ws=on.weaponShare/100; assert.ok(Math.abs(on.byR[3]-Math.round((1-ws)*6*100)/100)<0.01,'só armadura: '+on.byR[3]);
+    L.noMythicWeapon=false; assert.strictEqual(LT.summonOdds(h).byR[3],6); } finally { L.noMythicWeapon=keep; } });
 console.log(n+' testes ok');
