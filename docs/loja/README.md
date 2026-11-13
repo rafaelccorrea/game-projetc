@@ -18,6 +18,6 @@
 - **Leilão e trocas entre jogadores**: **só para 18+** e **só com ouro do jogo**; nunca diamante, nunca dinheiro.
 - **Sem sorteio pago**: nada aleatório é vendido por dinheiro nem por diamante. A invocação de equipamentos usa só ouro do jogo. Tudo o que se compra é compra direta, com o conteúdo mostrado antes.
 - **Compras não passam entre contas**: diamantes e itens comprados ficam presos à conta que comprou.
-- **Exclusão da conta** pelo jogo (Configurações › Conta › Excluir conta, em breve no app) ou pela página https://15-229-249-157.sslip.io/excluir-conta: apaga em 30 dias, em todos os servidores (entrar de novo nesse prazo cancela). Texto da página: docs/loja/excluir_conta.md (o Servidor copia para fps-server/legal/excluir-conta.md).
+- **Exclusão da conta** pelo jogo (Configurações › Conta › Excluir conta) ou pela página https://15-229-249-157.sslip.io/excluir-conta: apaga em 30 dias, em todos os servidores (entrar de novo nesse prazo cancela). Texto da página: docs/loja/excluir_conta.md (o Servidor copia para fps-server/legal/excluir-conta.md).
 - **Hospedagem**: AWS (São Paulo) e banco no Supabase (região a confirmar). Páginas públicas no ar como RASCUNHO (faixa vermelha, noindex): /privacidade, /termos, /excluir-conta. Para atualizar: mudar o docs/loja/*.md e avisar o Servidor (fps-6f); quando o advogado aprovar, tirar "RASCUNHO" da 1ª linha.
 - **Servidores separados** (S1 "Nova Era", depois outros): cada servidor tem o seu progresso.
