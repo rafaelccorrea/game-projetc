@@ -51,9 +51,9 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [ ] P15 · kael_wyvern_attack_body.png · quadros 8-10: mancha rosa translúcida sobre a cabeça da serpe (além do arco de golpe) · Arte (sem print ampliado ainda)
 - [ ] A VARRER: folhas kael_*_era2_t1 (com arma), pétalas 1-5 estrelas (idle_Nstar), Kael a pé nas 4 fases, pet; e CONFIRMAR NO JOGO se esses quadros aparecem (o jogo pode usar só parte dos 17 quadros).
 - [x] P16 · kael_wolf_attack_era2_t1.png (folha COM ARMA) · quadros 1,3,5: a espada fica SOLTA, atrás do Kael, longe da mão; a mão segura só uma haste fina preta (guia do recorte ainda visível) e há traços pretos verticais na armadura do lobo; é o "arma que sai da mão" do dono; print reports/prints/pol_8_folhas_com_arma_lobo_e_cavalo.png · Arte
-- [ ] P17 · kael_horse_attack_era2_t1.png (COM ARMA) · quadro 7: além da espada na mão aparece uma PONTA de lança branca sobrando embaixo do peito do cavalo (resto da arma da folha body); mesmo print pol_8 · Arte
+- [x] P17 · kael_horse_attack_era2_t1.png (COM ARMA) · quadro 7: além da espada na mão aparece uma PONTA de lança branca sobrando embaixo do peito do cavalo (resto da arma da folha body); mesmo print pol_8 · Arte
 - Conferido LIMPO nas folhas com arma (amostra por contato, 9 quadros por montaria): pônei, grifo, tigre e serpe nos quadros 0-8 (espada na mão, arcos de golpe ok); falta ver os quadros 9-16 e as folhas idle/run com arma.
-- [ ] P17 · Oferta · na vitrine o Kael no lobo segura uma ESPADA, mas a arma da oferta é uma CLAVA (Arma Épica 3★); o Kael tem que segurar a própria arma da oferta · Servidor (p_offer)
+- [x] P17 · Oferta · na vitrine o Kael no lobo segura uma ESPADA, mas a arma da oferta é uma CLAVA (Arma Épica 3★); o Kael tem que segurar a própria arma da oferta · Servidor (p_offer)
 
 ### Reconferência no jogo (QA, aba 2, v0.12.8 + commits a67084f/c453c7a; 13/11)
 - [x] P7 (asa) · conferido no jogo: a pé e montado no lobo a asa agora sai das costas/ombros, não da cabeça (3 quadros em sequência no lobo e a pé, com pet) · OK
