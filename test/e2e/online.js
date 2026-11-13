@@ -168,9 +168,12 @@ const SK = 'eras_proto_v2';
   sec('5. Escolha sem a tela (window.CloudChoice ausente)');
   const dirty = { 'eon.net': netMem({ save: { version: 3, dirty: true } }) };
   { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 999999, realm: 's1' }), { playSeconds: 500 }) });
-    const g = game({ search: '?debug=1&online=1', noChoice: true, server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, dirty) }); await g.settle();
+    const g = game({ search: '?debug=1&online=1', noChoice: true, server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk({ playSeconds: 400 })) }, dirty) }); await g.settle();
     check('5. sem a tela: window.CloudChoice não existe', g.ev('typeof window.CloudChoice') === 'undefined', g.ev('typeof window.CloudChoice'));
-    check('5. nuvem com mais tempo de jogo (500 s × 0): recommend = cloud → baixa e aplica (antes da batalha)', g.stored().gold === 999999 && g.reloaded() && sv.count('GET /save') === 1 && sv.count('PUT /save') === 0, sv.keys().join(',')); }
+    check('5. tempo de jogo nos DOIS lados (nuvem 500 s × aparelho 400 s, aparelho com FC maior): vale o info.recommend = cloud → baixa e aplica', g.stored().gold === 999999 && g.reloaded() && sv.count('GET /save') === 1 && sv.count('PUT /save') === 0, sv.keys().join(',')); }
+  { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 999999, realm: 's1' }), { playSeconds: 500, fc: 1 }) });
+    const g = game({ search: '?debug=1&online=1', noChoice: true, server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk()) }, dirty) }); await g.settle();
+    check('5. UM lado com tempo 0 (aparelho antigo 0 × nuvem 500 s): ainda vale o mais avançado (aparelho com FC maior) → sobe', sv.count('PUT /save') === 1 && sv.count('GET /save') === 0 && !g.reloaded() && sv.cloud.save.gold === 1234, sv.keys().join(',')); }
   { const sv = mkServer({ cloud: cloudOf(5, mk({ gold: 999999, realm: 's1' }), { playSeconds: 500 }) });
     const g = game({ search: '?debug=1&online=1', noChoice: true, server: sv, storage: Object.assign({ [SK]: JSON.stringify(mk({ playSeconds: 900 })) }, dirty) }); await g.settle();
     check('5. aparelho com mais tempo de jogo (900 s × 500): recommend = device → sobe por cima (PUT base 5 → versão 6), sem recarga', sv.cloud.version === 6 && sv.cloud.save.gold === 1234 && !g.reloaded() && g.st().lastAction === 'push' && sv.last('PUT /save').body.baseVersion === 5, sv.keys().join(',') + ' ' + JSON.stringify(g.st())); }
@@ -262,10 +265,30 @@ const SK = 'eras_proto_v2';
     check('9. level e xp do Sys.level (nível 7, XP acumulada 444)', s.level === 7 && s.xp === 444, s.level + ' ' + s.xp);
     check('9. era = S.eraMax (1), stage = S.stage (14), gems = S.gems (321), maxRarity = maior raridade do inventário (2)', s.era === 1 && s.stage === 14 && s.gems === 321 && s.maxRarity === 2, JSON.stringify(s));
     check('9. hero, avatar (Sys.appearance.avatarKey), realm (Realm.id), name, savedAt (S.lastSeen)', s.hero === 'kael' && s.avatar === g.ev('Sys.appearance.avatarKey(S,Sys.host)') && s.realm === 's1' && s.name === 'Velho' && s.savedAt === g.ev('S.lastSeen'), JSON.stringify(s));
-    check('9. playSeconds: o save não tem o campo → 0 (PENDÊNCIA no relatório); com S.playSeconds ele é lido', s.playSeconds === 0 && g.ev('(S.playSeconds=77.9, OnlineBoot.summary(S).playSeconds)') === 77, String(s.playSeconds));
+    check('9. playSeconds: save antigo sem o campo → 0; com S.playSeconds ele é lido (inteiro)', s.playSeconds === 0 && g.ev('(S.playSeconds=77.9, OnlineBoot.summary(S).playSeconds)') === 77, String(s.playSeconds));
     const put = sv.last('PUT /save').body.summary;
     check('9. o resumo enviado ao servidor tem os 8 números do contrato (finitos, >= 0) e o save inteiro', ['level', 'xp', 'era', 'stage', 'fc', 'gems', 'playSeconds', 'maxRarity'].every(k => typeof put[k] === 'number' && isFinite(put[k]) && put[k] >= 0) && sv.last('PUT /save').body.save.gold === 1234, JSON.stringify(put));
     const k = JSON.parse(g.ev("JSON.stringify(OnlineBoot.summary({hero:'kaia',stage:3,inv:[]}))")); check('9. Kaia: hero = kaia; save mínimo não quebra', k.hero === 'kaia' && k.stage === 3 && k.maxRarity === 0, JSON.stringify(k)); }
+
+  /* ============ 9b. TEMPO DE JOGO (S.playSeconds) ============ */
+  sec('9b. Tempo de jogo');
+  { const sv = mkServer(); const g = game({ search: '?debug=1&skip=1', server: sv, storage: { [SK]: JSON.stringify(mk()) } }); await g.settle();   /* online DESLIGADO: o contador é do save */
+    const T = 1e12, tk = t => g.ev('OnlineBoot.playTick(' + (T + t) + ')'), ps = () => g.ev('S.playSeconds'), vis = v => { g.G.document.visibilityState = v; };
+    check('9b. save antigo sem o campo: começa em 0 no resumo', g.ev('OnlineBoot.summary(S).playSeconds') === 0 && (ps() === undefined || ps() === 0), String(ps()));
+    vis('visible'); g.ev('B.paused=false'); tk(0); let sum = 0; for (let i = 1; i <= 10; i++) sum += tk(i * 1000);
+    check('9b. batalha rodando e página visível: +1 por segundo (10 passos de 1 s → 10)', sum === 10 && ps() === 10, sum + ' / ' + ps());
+    check('9b. conta com o online DESLIGADO e nenhum pedido ao servidor', g.st().on === false && sv.calls.length === 0, '');
+    tk(10400); tk(10800); tk(11200); check('9b. passos mais rápidos que 1 s não somam além do relógio real (1,2 s → +1)', ps() === 11, String(ps()));
+    g.ev('B.paused=true'); for (let i = 12; i <= 20; i++) tk(i * 1000); check('9b. batalha em pausa (título, modal): não conta', ps() === 11, String(ps()));
+    g.ev('B.paused=false'); tk(21000); check('9b. o intervalo em pausa não entra quando a batalha volta', ps() === 11, String(ps())); tk(22000); check('9b. ...e volta a contar no passo seguinte', ps() === 12, String(ps()));
+    vis('hidden'); tk(23000); tk(24000); tk(3600000); check('9b. página escondida (1 h em segundo plano / offline): não conta', ps() === 12, String(ps()));
+    vis('visible'); tk(3601000); check('9b. ao voltar, o tempo fora não entra', ps() === 12, String(ps())); tk(3602000); check('9b. ...e segue +1', ps() === 13, String(ps()));
+    tk(3602000 + 600000); check('9b. temporizador atrasado 10 min (aba congelada): soma no máximo 5 s', ps() === 18, String(ps()));
+    tk(3602000 + 500000); check('9b. relógio para trás: soma 0', ps() === 18, String(ps())); tk(3602000 + 501000);
+    check('9b. sempre inteiro; entra no resumo (playSeconds) e no save gravado', Number.isInteger(ps()) && g.ev('OnlineBoot.summary(S).playSeconds') === ps() && (g.ev('save()'), g.stored().playSeconds === ps()), ps() + ' ' + JSON.stringify(g.stored().playSeconds)); }
+  { const g = game({ search: '?debug=1&skip=1', storage: { [SK]: JSON.stringify(mk({ playSeconds: 5000 })), eon_owner_mode: '1', eras_owner_v1: JSON.stringify(mk({ gold: 50, playSeconds: 7 })) } }); await g.settle();
+    g.G.document.visibilityState = 'visible'; g.ev('B.paused=false; OnlineBoot.playTick(1e12); OnlineBoot.playTick(1e12+1000); OnlineBoot.playTick(1e12+2000); save()');
+    check('9b. MODO DONO: conta no save do dono (7 → 9) e o save real fica como estava (5000)', g.stored().playSeconds === 9 && JSON.parse(g.ls.getItem(SK)).playSeconds === 5000, g.stored().playSeconds + ' / ' + JSON.parse(g.ls.getItem(SK)).playSeconds); }
 
   /* ============ 10. LOGIN GOOGLE ============ */
   sec('10. Login Google');

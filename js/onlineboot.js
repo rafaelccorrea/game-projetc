@@ -61,7 +61,7 @@
        stage        S.stage                          (fase atual, 1..; a mais alta é S.best)
        fc           Sys.fc.compute(S, Sys.host)      (FC REAL, a mesma do heroFC() do index; NUNCA a de exibição ×31)
        gems         S.gems
-       playSeconds  S.playSeconds                    (NÃO EXISTE no save hoje → 0; pedido ao coordenador no relatório)
+       playSeconds  S.playSeconds                    (contador deste arquivo: playTick, no fim; save antigo sem o campo = 0)
        maxRarity    maior it.r do S.inv              (0..4)
        hero         S.hero || 'kael'      avatar  Sys.appearance.avatarKey(S, Sys.host)      realm  Realm.id()      name  S.name || ''
        savedAt      S.lastSeen                       (ms da última gravação local; a tela Nuvem × Aparelho mostra) */
@@ -105,10 +105,11 @@
 
   /* choose(info): os dois lados mudaram. Com a tela (js/cloudchoice.js: window.CloudChoice(info) → Promise<'device'|'cloud'>) o jogador escolhe; sem ela vale
      info.recommend. Quem chama Sys.net.chooseSide é o Sys.online.boot (logo depois deste gancho): aqui NÃO se chama de novo.
-     EMPATE de tempo de jogo (hoje sempre: o save não tem playSeconds): o recomendado passa a ser o lado mais avançado (nível, depois fase, depois FC);
-     tudo igual = info.recommend. Sem isso o aparelho novo (nível 1) ganharia sempre do save da conta. */
+     RECOMENDADO (decisão do coordenador): com tempo de jogo nos DOIS lados (playSeconds > 0) vale o info.recommend do Sys.net (o de mais tempo). Enquanto
+     algum lado for 0 (save antigo, de antes do contador S.playSeconds) o recomendado é o lado mais avançado (nível, depois fase, depois FC); tudo igual =
+     info.recommend. Sem isso o aparelho novo (nível 1) ganharia sempre do save da conta. */
   function recommend(info) { const rec = info && info.recommend === 'cloud' ? 'cloud' : 'device', d = (info && info.device) || {}, c = (info && info.cloud && info.cloud.summary) || {};
-    if (num(d.playSeconds) !== num(c.playSeconds)) return rec;
+    if (num(d.playSeconds) > 0 && num(c.playSeconds) > 0) return rec;
     for (const k of ['level', 'stage', 'fc']) { const a = num(d[k]), b = num(c[k]); if (a !== b) return a > b ? 'device' : 'cloud'; }
     return rec; }
   function choose(info) { const rec = recommend(info), fn = W.CloudChoice;
@@ -197,7 +198,22 @@
     try { const O = X().online, N = X().net; if (O.saved(S)) return true; if (!ST.booting && !ST.booted && N && typeof N.markDirty === 'function' && N.hasSession && N.hasSession()) N.markDirty(); } catch (e) { dbg('saved falhou', e); }
     return false; }
 
+  /* ---------- TEMPO DE JOGO: S.playSeconds (decisão do coordenador; é dado do SAVE: conta com o online ligado ou desligado) ----------
+     Segundos inteiros somados SÓ com a batalha rodando (B.paused === false) e a página visível (document.visibilityState === 'visible'). Um temporizador de
+     1 s (sem requestAnimationFrame) chama playTick(agora): soma o tempo REAL decorrido desde o passo anterior, e só se as condições valiam nos DOIS passos
+     (o intervalo em pausa/escondido não conta; ganhos offline não contam). Temporizador atrasado não compensa além do relógio real e nunca soma mais de 5 s de
+     uma vez (aba congelada, aparelho dormindo); relógio para trás soma 0. Save antigo sem o campo começa em 0. Cada save tem o seu (o Modo dono conta no save
+     do dono, o real no real: S é o save carregado). Vai no resumo (summary.playSeconds). playTick(agora) fica exposto para o teste (tempo virtual). */
+  const PT = { last: 0, ok: false, acc: 0 };
+  function playOk() { try { return typeof B !== 'undefined' && !!B && B.paused === false && document.visibilityState === 'visible'; } catch (e) { return false; } }
+  function playTick(now) { now = typeof now === 'number' ? now : Date.now(); const ok = playOk(), was = PT.ok, dt = PT.last ? now - PT.last : 0; PT.last = now; PT.ok = ok;
+    if (!ok || !was || !(dt > 0)) { if (!ok) PT.acc = 0; return 0; }
+    PT.acc += Math.min(dt, 5000); const add = Math.floor(PT.acc / 1000); if (!add) return 0; PT.acc -= add * 1000;
+    try { if (typeof S !== 'object' || !S) return 0; S.playSeconds = Math.floor(num(S.playSeconds)) + add; } catch (e) { return 0; }
+    return add; }
+  try { setInterval(() => { try { playTick(); } catch (e) {} }, 1000); } catch (e) {}
+
   function state() { return { on: ST.on, why: ST.why, booted: ST.booted, booting: ST.booting, lastAction: ST.lastAction, pending: !!ST.pending, choosing: ST.choosing, started: ST.game }; }
 
-  W.OnlineBoot = { start, wait, reboot, google, saved, state, applyPending, summary, _st: ST };
+  W.OnlineBoot = { start, wait, reboot, google, saved, state, applyPending, summary, playTick, _st: ST, _pt: PT };
 })(window);
