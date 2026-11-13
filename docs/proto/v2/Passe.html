@@ -1,0 +1,628 @@
+<title>Eonbound Passe V2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 (o jogo) no centro, escalado para caber; ao lado (ou abaixo, no celular) o painel de voto. Mesmo padrão do Perfil V5 aprovado e do Invocar/Equipamento V2.
+   Passe V2: o herói fica SEMPRE à vista no topo (arma equipada NA MÃO, pet na frente). Trilha VERTICAL (uma linha por nível: grátis à esquerda, premium à direita),
+   nunca rolagem horizontal. Tocar numa skin, asa, montaria, pet ou arma da trilha mostra a PRÉVIA no herói na hora. Premium = compra direta (sem sorteio),
+   simulada numa folha dentro do aparelho; nada de dados de pagamento. Regras: js/sys/pass.js (copiadas abaixo, sem inventar). */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bg{position:absolute;left:0;right:0;top:0;height:360px;background:url(a/bg_era2.png) center top/cover;filter:saturate(1.15) brightness(.62) hue-rotate(205deg)}
+.bg2{position:absolute;inset:0;background:radial-gradient(110% 40% at 50% 22%,rgba(169,123,255,.22),transparent 60%),linear-gradient(180deg,rgba(11,16,48,.1) 0%,rgba(11,16,48,.35) 26%,var(--night) 40%)}
+canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events:none}
+.top{position:relative;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 2px}
+.back{width:40px;height:40px;border-radius:13px;border:1px solid var(--line2);background:var(--glass);display:grid;place-items:center;flex:none}
+.back svg{width:20px;height:20px}
+.ttl{font-family:var(--fd);font-size:21px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(169,123,255,.6)}
+.cur{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 3px;border-radius:15px;background:rgba(5,8,28,.65);border:1px solid var(--line);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+.cur img{width:22px;height:22px}
+
+.stage{position:relative;z-index:2;height:226px;flex:none}
+#stc{position:absolute;left:0;top:0;width:390px;height:226px}
+.who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
+.who i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+.who span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+/* prévia: mesmo padrão do Perfil V5 ("Prévia: X · Sair" em cima do herói) */
+.who.pv{background:rgba(255,107,154,.2);border-color:var(--rose);color:#ffd6e2;padding-right:4px}
+.who.pv i{background:var(--rose);box-shadow:0 0 8px var(--rose)}
+.who button{flex:none;border:0;border-radius:9px;background:rgba(255,255,255,.16);height:20px;padding:0 9px;font-weight:900;font-size:11px}
+.pvnote{position:absolute;z-index:3;left:50%;bottom:2px;transform:translateX(-50%);font-size:10px;font-weight:900;color:var(--muted);background:rgba(5,8,28,.7);border-radius:8px;padding:2px 8px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+
+/* cabeçalho da temporada */
+.sea{position:relative;z-index:3;display:flex;align-items:center;gap:10px;margin:0 12px;padding:7px 10px;border-radius:16px;background:linear-gradient(90deg,rgba(169,123,255,.2),rgba(10,14,44,.88) 62%);border:1px solid rgba(169,123,255,.55);flex:none}
+.lvb{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 0 14px rgba(255,210,94,.5),inset 0 -3px 0 rgba(0,0,0,.2);line-height:1;text-align:center}
+.lvb b{display:block;font-family:var(--fd);font-weight:400;font-size:22px}
+.lvb small{display:block;font-size:8px;font-weight:900;letter-spacing:.5px}
+.sei{flex:1;min-width:0}
+.sei .l1{display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:900;white-space:nowrap}
+.sei .l1 span:first-child{letter-spacing:1px;color:var(--violet);overflow:hidden;text-overflow:ellipsis}
+.sei .l1 span:last-child{color:var(--muted)}
+.xpb{position:relative;height:12px;margin:5px 0 3px;border-radius:6px;background:rgba(255,255,255,.08);border:1px solid var(--line);overflow:hidden}
+.xpb span{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#5ee7ff,#a97bff);box-shadow:0 0 8px rgba(94,231,255,.5);transition:width .4s}
+.sei .l2{display:flex;justify-content:space-between;gap:6px;font-size:10px;font-weight:900;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.sei .l2 b{color:var(--text)}
+.pchip{display:inline-flex;align-items:center;gap:3px;height:16px;padding:0 6px;border-radius:6px;font-size:9px;font-weight:900;letter-spacing:.4px}
+.pchip.on{background:linear-gradient(90deg,#ffe58a,#f4a52a);color:var(--ink)}
+.pchip.off{background:rgba(255,255,255,.08);color:var(--muted)}
+
+.tabs{position:relative;z-index:3;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:7px 12px 0;flex:none}
+.tabs button{position:relative;height:36px;border-radius:12px;border:1px solid var(--line2);background:rgba(11,16,48,.85);font-weight:900;font-size:13px}
+.tabs button[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.tabs .nb{position:absolute;right:8px;top:50%;transform:translateY(-50%);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--rose);color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center}
+
+.body{position:relative;z-index:3;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 12px 12px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+
+/* trilha vertical */
+.thead{position:sticky;top:-6px;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:6px;padding:6px 0 5px;background:linear-gradient(180deg,var(--night) 75%,rgba(11,16,48,0));font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center}
+.thead .f{color:var(--green)} .thead .p{color:var(--gold)}
+.row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);gap:6px;margin-bottom:6px;min-width:0}
+.node{position:relative;display:flex;align-items:center;justify-content:center}
+.node::before{content:'';position:absolute;left:50%;top:-6px;bottom:-6px;width:4px;margin-left:-2px;background:rgba(255,255,255,.08)}
+.row.got .node::before{background:linear-gradient(180deg,#5ee7ff,#a97bff)}
+.row:first-of-type .node::before{top:50%}
+.row:last-child .node::before{bottom:50%}
+.node b{position:relative;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--fd);font-weight:400;font-size:15px;background:#1a2366;border:2px solid var(--line2);color:var(--muted)}
+.row.got .node b{background:linear-gradient(180deg,#6fd8ff,#5a4fd0);border-color:#bfe9ff;color:#fff}
+.row.now .node b{background:radial-gradient(circle at 50% 35%,#ffe58a,#f4a52a);border-color:#fff3b8;color:var(--ink);box-shadow:0 0 14px rgba(255,210,94,.7)}
+.cell{position:relative;min-width:0;display:flex;gap:6px;align-items:center;padding:6px;border-radius:13px;background:var(--glass);border:1px solid var(--line);min-height:76px}
+.cell.pr{background:linear-gradient(160deg,rgba(255,210,94,.12),rgba(24,33,86,.8) 55%);border-color:rgba(255,210,94,.35)}
+.cell.ready{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,210,94,.5),0 0 12px rgba(255,210,94,.25)}
+.cell.lockp .cx,.cell.lockp .ci img{opacity:.72}
+.ci{position:relative;flex:none;width:46px;height:46px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 38%,#1a2366),#0c1238);padding:0;overflow:visible}
+.ci img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain;border-radius:8px}
+.ci.av img{inset:0;width:100%;height:100%;object-fit:cover;border-radius:9px}
+.ci.pvon{outline:3px solid var(--rose);outline-offset:1px}
+.ci .eye{position:absolute;left:-4px;top:-4px;width:16px;height:16px;border-radius:50%;background:var(--rose);display:grid;place-items:center;box-shadow:0 0 6px rgba(255,107,154,.7)}
+.ci .eye svg{width:10px;height:10px}
+.ci .pl{position:absolute;right:-5px;bottom:-5px;width:18px;height:18px;border-radius:6px;background:#2a1f4a;border:1px solid var(--gold);display:grid;place-items:center}
+.ci .pl svg{width:11px;height:11px}
+.ciw{position:relative;flex:none;width:46px;height:46px}
+.mini{position:absolute;z-index:2;right:-7px;bottom:-7px;width:24px;height:24px;border-radius:8px;border:2px solid var(--mc);background:#0c1238;padding:0}
+.mini img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain}
+.mini.pvon{outline:2px solid var(--rose)}
+.cx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cn{font-size:11.5px;font-weight:900;line-height:1.15;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cn em{font-style:normal;color:var(--rc)}
+.cs{font-size:9.5px;font-weight:800;color:var(--muted);line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cs b{color:var(--gold)}
+.cb{margin-top:2px;height:24px;border-radius:8px;border:0;font-weight:900;font-size:10.5px;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;padding:0 4px;min-width:0;overflow:hidden}
+.cb svg{width:11px;height:11px;flex:none}
+.cb.go{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 2px 0 #9a5a10}
+.cb.go:active{transform:translateY(2px);box-shadow:none}
+.cb.ok{background:rgba(94,240,160,.12);color:var(--green);border:1px solid var(--green);cursor:default}
+.cb.hd{background:rgba(255,210,94,.1);color:var(--gold);border:1px solid rgba(255,210,94,.5);cursor:default}
+.cb.lk{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--line);cursor:default}
+.cb.pm{background:linear-gradient(180deg,#c9a6ff,#7b4fe0);color:#1a0838;box-shadow:0 2px 0 #3f2394}
+
+/* missões */
+.pan{border-radius:16px;background:var(--glass);border:1px solid var(--line);padding:10px;margin-bottom:8px;min-width:0}
+.sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:900;margin:0 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.sec span:last-child{letter-spacing:0;text-transform:none;font-size:11px;text-align:right;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hint{font-size:11px;color:var(--muted);margin:6px 0 0;line-height:1.4;font-weight:700}
+.hint b{color:var(--gold)}
+.ms{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(130,150,255,.14);min-width:0}
+.ms:first-of-type{border-top:0}
+.mt{flex:1;min-width:0}
+.mt .t{font-size:12px;font-weight:900;line-height:1.2}
+.mbar{display:flex;align-items:center;gap:6px;margin-top:4px}
+.mbar i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
+.mbar i span{position:absolute;left:0;top:0;bottom:0;background:var(--cyan);border-radius:4px}
+.mbar i span.full{background:var(--green)}
+.mbar small{flex:none;font-size:10px;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums}
+.mr{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.mr span{display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px;border-radius:6px;background:rgba(5,8,28,.55);font-size:10px;font-weight:900;color:var(--cyan);white-space:nowrap}
+.mr span.g{color:var(--text)}
+.mr img{width:13px;height:13px}
+.mr button{display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px;border-radius:6px;border:1px solid rgba(255,107,154,.6);background:rgba(255,107,154,.12);font-size:10px;font-weight:900;color:#ffd6e2;white-space:nowrap}
+.mr button img{width:14px;height:14px}
+.ms .cb{flex:none;width:76px;margin:0;height:30px;font-size:11px}
+
+/* rodapé fixo */
+.foot{position:relative;z-index:4;flex:none;display:flex;gap:8px;padding:8px 12px 12px;background:linear-gradient(180deg,rgba(11,16,48,0),var(--night) 30%)}
+.fb{flex:1;min-width:0;height:48px;border-radius:13px;border:0;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.1;padding:0 6px}
+.fb b{font-family:var(--fd);font-weight:400;font-size:16px;letter-spacing:.4px;white-space:nowrap}
+.fb small{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.fb.buy{flex:1.25;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10}
+.fb.all{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b;box-shadow:0 3px 0 #0d6b40}
+.fb.all:disabled{background:rgba(255,255,255,.06);color:var(--muted);box-shadow:none;border:1px solid var(--line);cursor:default}
+.fb.on{flex:1.25;background:rgba(255,210,94,.1);border:2px solid var(--gold);color:var(--gold);cursor:default}
+.fb:active:not(:disabled){transform:translateY(2px)}
+
+/* folha de compra (dentro do aparelho) */
+.shade{position:absolute;inset:0;z-index:20;background:rgba(3,5,18,.72);display:flex;align-items:flex-end;animation:fade .2s}
+.sheet{width:100%;max-height:86%;overflow-y:auto;border-radius:24px 24px 0 0;background:linear-gradient(180deg,#232c78,#0f1540);border:1px solid var(--line2);border-bottom:0;padding:10px 16px 16px;animation:sup .25s ease-out;scrollbar-width:none}
+.sheet::-webkit-scrollbar{display:none}
+.grab{width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 10px}
+.simtag{display:inline-block;font-size:10px;font-weight:900;letter-spacing:1px;padding:2px 8px;border-radius:7px;background:var(--rose);color:#fff;margin-bottom:6px}
+.sheet h3{font-family:var(--fd);font-weight:400;font-size:22px;margin:0 0 2px}
+.sheet p{margin:0 0 6px;font-size:12.5px;color:var(--muted);line-height:1.45}
+.sheet p b{color:var(--text)}
+.price{display:flex;align-items:baseline;gap:8px;margin:2px 0 8px}
+.price b{font-family:var(--fd);font-weight:400;font-size:30px;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.45)}
+.price small{font-size:11px;font-weight:900;color:var(--muted)}
+.hl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:4px 0 10px}
+.hl div{min-width:0;text-align:center}
+.hl span{position:relative;display:block;aspect-ratio:1;border-radius:12px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rc) 38%,#1a2366),#0c1238);overflow:hidden}
+.hl img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain}
+.hl img.av{inset:0;width:100%;height:100%;object-fit:cover}
+.hl small{display:block;margin-top:3px;font-size:9.5px;font-weight:900;line-height:1.15;color:var(--text)}
+.gl{list-style:none;margin:0 0 10px;padding:0}
+.gl li{display:flex;gap:7px;align-items:flex-start;font-size:12px;font-weight:800;line-height:1.35;padding:4px 0;border-top:1px solid rgba(130,150,255,.14)}
+.gl li:first-child{border-top:0}
+.gl li svg{flex:none;width:14px;height:14px;margin-top:2px}
+.gl li b{color:var(--gold)}
+.warn{margin:0 0 10px;padding:8px 10px;border-radius:11px;background:rgba(255,107,154,.1);border:1px solid rgba(255,107,154,.45);font-size:11.5px;font-weight:800;color:#ffd6e2;line-height:1.4}
+.macts{display:flex;gap:8px}
+.macts button{flex:1;height:48px;border-radius:13px;border:0;font-weight:900;font-size:14px}
+.macts .c{flex:.7;background:rgba(255,255,255,.08);border:1px solid var(--line2)}
+.macts .y{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);box-shadow:0 3px 0 #9a5a10}
+
+.nav{position:absolute;inset:0;z-index:25;background:linear-gradient(180deg,#141c4a,#0b1030);animation:slide .28s ease-out;display:flex;flex-direction:column}
+.navb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+.navb p{margin:0;color:var(--muted);font-size:14px;line-height:1.5;max-width:300px}
+.navb b{color:var(--gold)}
+.navb button{height:46px;min-width:200px;border-radius:12px;border:0;font-weight:900;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink)}
+.toast{position:absolute;left:50%;top:60px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid var(--line2);font-weight:900;font-size:12px;white-space:nowrap;animation:tin .25s ease-out;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.lvup{position:absolute;left:0;right:0;top:250px;z-index:31;text-align:center;pointer-events:none;font-family:var(--fd);font-size:34px;letter-spacing:1.5px;color:var(--gold);text-shadow:0 0 22px rgba(255,210,94,.9),0 3px 0 rgba(0,0,0,.55);animation:mbn 1.5s ease-out forwards}
+@keyframes fade{from{opacity:0}}
+@keyframes sup{from{transform:translateY(40%);opacity:.3}}
+@keyframes slide{from{transform:translateX(100%)}}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}}
+@keyframes mbn{0%{opacity:0;transform:scale(.4)}18%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="bg"></div><div class="bg2"></div>
+        <canvas class="fx" id="fx" width="780" height="720"></canvas>
+        <div class="top">
+          <button class="back" data-go="Batalha" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <div class="ttl">PASSE</div>
+          <div class="cur" aria-label="Ouro"><img src="a/coin.png" alt=""><span id="gold">0</span></div>
+          <div class="cur" aria-label="Gemas"><img src="a/gem.png" alt=""><span id="gems">0</span></div>
+        </div>
+        <div class="stage" id="stage">
+          <canvas id="stc" width="780" height="452" role="img" aria-label="Seu herói com a arma equipada na mão e o pet na frente"></canvas>
+          <div class="who" id="who"><i></i><span>Kael</span></div>
+          <div id="pvnote"></div>
+        </div>
+        <div class="sea" id="sea"></div>
+        <div class="tabs" role="tablist"><button role="tab" data-tab="track" aria-selected="true">Recompensas</button><button role="tab" data-tab="mis" aria-selected="false">Missões</button></div>
+        <div class="body" id="body"></div>
+        <div class="foot" id="foot"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Tela · Passe (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
+    <p class="sub">Passe da temporada com o herói sempre à vista. A trilha é vertical: uma linha por nível, grátis à esquerda e premium à direita, sem nada de lado. Tocou na skin, na asa, na montaria, no pet ou na arma de um prêmio: aparece no herói na hora ("Prévia: ... · Sair"). O Premium é compra direta de uma trilha conhecida, nunca sorteio; aqui a compra é só simulada, dentro do aparelho.</p>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <div class="seg" role="group" aria-label="Jogador" style="margin-top:8px"><button data-sc="free" aria-pressed="true">Passe grátis nível 8</button><button data-sc="prem" aria-pressed="false">Premium · jogador nível 42</button></div>
+      <p class="sub" style="margin-top:8px">"Passe grátis nível 8": jogador nível 13, sem Premium, faltam 21 dias. "Premium · jogador nível 42": Premium comprado, passe no nível 22 (o passe do jogo tem 30 níveis, então não existe nível 42 do passe; o 42 é o nível do jogador), faltam 13 dias. Os números vêm de js/sys/pass.js, js/sys/loot.js (portões), js/sys/appearance.js (skin do fim) e da lista de produtos (preço).</p>
+    </div>
+    <div class="box">
+      <h2>Como funciona</h2>
+      <ul>
+        <li>30 níveis, 100 XP do passe por nível, temporada de 30 dias</li>
+        <li>O XP do passe vem só das missões (diárias 90 por dia com o bônus, semanais 190 por semana); Premium dá +25%</li>
+        <li>Item acima do seu nível de raridade fica guardado e sai quando o portão abrir (Épico no nível 25, asa no nível 50)</li>
+        <li>Itens da temporada (níveis 27 e 30 do Premium) chegam na melhor raridade liberada e evoluem até Lendário</li>
+        <li>Nível 30 do Premium: skin Anjo do seu herói (Lendária)</li>
+        <li>Premium: R$ 24,90, uma vez por temporada, compra direta (produto pass_premium)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: prêmio do nível 30 maior, missões em cima"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+
+/* ---------- REGRAS DO PASSE (copiadas de js/sys/pass.js DATA; não inventar) ---------- */
+const PASS={tiers:30,xpPerTier:100,seasonDays:30,premiumXpPct:25,instancesOn:false,
+  free:[
+    {goldk:10},{gems:5},{item:{slot:'weapon',r:0}},{goldk:15},{gems:10},{item:{slot:'armor',r:0}},{goldk:20},{gems:5},{item:{slot:'hat',r:0}},{gems:10},
+    {goldk:25},{item:{slot:'gloves',r:0}},{goldk:25},{gems:5},{item:{slot:'boots',r:0}},{goldk:30},{gems:5},{item:{slot:'necklace',r:0}},{goldk:30},{gems:10},
+    {item:{slot:'weapon',r:0}},{goldk:35},{gems:5},{item:{slot:'armor',r:0}},{gems:10},{goldk:40},{item:{slot:'hat',r:0}},{goldk:40},{gems:10},{item:{slot:'weapon',r:2}}],
+  premium:[
+    {item:{slot:'weapon',r:1}},{gems:15},{item:{slot:'armor',r:1}},{gems:15},{item:{slot:'hat',r:1}},{gems:15},{item:{slot:'gloves',r:1}},{gems:20},{item:{slot:'boots',r:1}},{gems:20},
+    {item:{slot:'necklace',r:2}},{gems:20},{item:{slot:'weapon',r:2}},{gems:20},{item:{slot:'armor',r:2}},{gems:25},{item:{slot:'wing',r:2}},{gems:25},{item:{slot:'hat',r:2}},{gems:25},
+    {item:{slot:'gloves',r:2}},{gems:25},{item:{slot:'boots',r:2}},{gems:30},{item:{slot:'weapon',r:2},mat:{forge:30,essence:5},mountFrags:10},{gems:30},{item:{slot:'armor',r:4,season:true}},{gems:30},{gems:40},{item:{slot:'weapon',r:4,season:true}}],
+  daily:[
+    {id:'d_kill',k:'kill',need:150,pxp:15,gems:2,txt:'Derrote 150 inimigos'},
+    {id:'d_ult',k:'ult',need:3,pxp:10,gems:2,txt:'Use a ultimate 3 vezes'},
+    {id:'d_chest',k:'chest',need:1,pxp:10,gems:2,txt:'Abra 1 baú'},
+    {id:'d_inst',k:'instance',need:1,pxp:15,gems:2,txt:'Vença 1 instância',needsInstances:true},
+    {id:'d_boss',k:'boss',need:2,pxp:15,gems:2,txt:'Derrote 2 chefes',replaces:'d_inst'},
+    {id:'d_forge',k:'forge',need:15,pxp:10,gems:2,txt:'Colete 15 pedras de forja (de qualquer fonte)'},
+    {id:'d_summon',k:'summon',need:1,pxp:10,gems:2,txt:'Faça 1 invocação (a grátis conta)'}],
+  dailyBonus:{pxp:20,gems:5,txt:'Complete as 6 diárias'},
+  weekly:[
+    {id:'w_kill',k:'kill',need:1500,pxp:40,gems:8,txt:'Derrote 1.500 inimigos'},
+    {id:'w_boss',k:'boss',need:15,pxp:40,gems:8,txt:'Derrote 15 chefes'},
+    {id:'w_inst',k:'instance',need:10,pxp:40,gems:8,txt:'Vença 10 instâncias',needsInstances:true},
+    {id:'w_summon',k:'summon',need:10,pxp:40,gems:8,txt:'Faça 10 invocações (a grátis conta)',replaces:'w_inst'},
+    {id:'w_chest',k:'chest',need:15,pxp:35,gems:6,txt:'Abra 15 baús'},
+    {id:'w_up',k:'upgrade',need:20,pxp:35,gems:6,txt:'Melhore equipamentos 20 vezes',minLevel:5}]};
+/* portões de raridade e asa (js/sys/loot.js DATA.gates / DATA.wing); a asa do drop é de anjo nas eras 0-6 (js/sys/stats.js DATA.wingDrop.default) */
+const GATES=[{lvl:1,era:0},{lvl:10,era:0},{lvl:25,era:0},{lvl:70,era:4},{lvl:85,era:5}], WINGR={minLevel:50,minR:2};
+/* ouro: goldk × ouro de 1 abate comum (js/farm.js goldUnit = ceil(goldBase 4 × 1,15^(fase−1) × commonGoldMult 0,32)) */
+const goldUnit=st=>Math.max(1,Math.ceil(4*Math.pow(1.15,st-1)*0.32));
+/* skin do fim do Premium: js/sys/appearance.js DATA.passSkin {kael:'kael_angel', kaia:'kaia_angel'} (r:4 Lendária) */
+const PASS_SKIN={kael:{id:'kael_angel',name:'Kael Anjo',av:'a/av_kael_angel.png'},kaia:{id:'kaia_angel',name:'Kaia Anjo',av:'a/av_kaia_angel.png'}};
+/* montaria: js/sys/mount.js starCost [10,20,30,40]; a do jogador = Lobo de guerra (r:2). Aura por estrela = js/mountfx.js MOUNT_AURA */
+const STAR_COST=[10,20,30,40], MOUNT_AURA=[null,'rgba(200,230,255,','rgba(120,200,255,','rgba(120,200,255,','rgba(190,140,255,','rgba(255,214,120,'];
+/* pet: bônus das 6 diárias = 1 fragmento do Falcão de guerra por dia (js/sys/newdrops.js 'missions:daily'; nasce com 60, js/sys/pet.js) */
+const FALCON={name:'Falcão de guerra',hatch:60};
+const PRICE='R$ 24,90';   /* reports/play-console-produtos.md: pass_premium */
+
+/* ---------- dados medidos dos arquivos do jogo (mesmo formato do Invocar/Equipamento V2) ----------
+   W: arma (caixa no PNG de 1024 + grip/angle de assets/weapons/meta.json). B: grip por quadro das folhas SEM arma; ss = escala da cópia em a/ (folhas grandes reduzidas).
+   kael_angel/kaia_angel: assets/anim/skins/<skin>/<herói>_idle_body.json · kael_wolf/kaia_wolf: assets/anim/mounts/<herói>_wolf_idle_body.json (bk = âncora das costas). */
+const D={"W":{"era1_t0":{"w":84,"h":300,"fx":0.38281,"fy":0.08203,"fw":0.23535,"fh":0.83594,"type":"melee","grip":[0.498,0.765],"angle":90},"era1_raro":{"w":84,"h":300,"fx":0.38281,"fy":0.08203,"fw":0.23438,"fh":0.83496,"type":"melee","grip":[0.498,0.765],"angle":90},"era2_t0":{"w":95,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.82813,"type":"melee","grip":[0.496,0.78],"angle":90},"era2_raro":{"w":92,"h":300,"fx":0.36719,"fy":0.08594,"fw":0.26172,"fh":0.85156,"type":"melee","grip":[0.496,0.78],"angle":90},"era2_t1":{"w":171,"h":300,"fx":0.29297,"fy":0.125,"fw":0.42578,"fh":0.74609,"kb":50,"type":"melee","grip":[0.385,0.741],"angle":62,"len":0.696}},"B":{"kael":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[124.78,199.76,42.35,0.7391,-0.6736,-12.27,12.27,3.29,0],[125.13,199.14,42.62,0.7359,-0.6771,-12.27,12.27,3.24,0],[125.54,198.56,43.14,0.7296,-0.6838,-12.27,12.27,3.24,0],[125.78,198.54,43.41,0.7265,-0.6872,-12.42,12.42,3.29,0],[125.92,198.92,43.77,0.7221,-0.6918,-12.27,12.27,3.29,0],[125.77,199.25,43.6,0.7242,-0.6896,-12.27,12.27,3.24,0],[125.35,199.09,42.96,0.7318,-0.6815,-12.42,12.42,3.24,0],[125.09,199.04,42.66,0.7354,-0.6776,-12.27,12.27,3.29,0],[124.88,198.89,42.19,0.7409,-0.6716,-12.27,12.27,3.29,0],[124.68,199.16,42.08,0.7422,-0.6702,-12.27,12.27,3.29,0],[124.67,199.64,42.03,0.7428,-0.6695,-12.27,12.27,3.29,0],[124.55,199.97,42.05,0.7425,-0.6698,-12.27,12.27,3.29,0]],"back":{"x":91.3,"y":162,"a":0,"s":1},"neck":[116,131,115,105,131,131,131,131,130,131,131,131]},"kaia":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"g":[[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.93,199.06,41.6,0.7478,-0.6639,-5.71,5.71,3.43,0],[127.44,199.62,40.86,0.7563,-0.6542,-5.71,5.71,3.48,0],[123.53,201.81,40.92,0.7556,-0.6551,-11.68,11.68,3.43,0],[127.74,197.35,41.55,0.7484,-0.6632,-5.71,5.71,3.43,0],[128.44,197.02,41.92,0.744,-0.6681,-5.71,5.71,3.48,0],[127.94,198.53,41.81,0.7453,-0.6667,-5.71,5.71,3.48,0],[127.57,199.77,41.25,0.7518,-0.6594,-5.71,5.71,3.48,0],[127.28,199.52,40.73,0.7578,-0.6525,-5.71,5.71,3.48,0],[127.43,198.13,40.96,0.7552,-0.6555,-5.71,5.71,3.43,0],[127.7,197.31,41.59,0.7479,-0.6638,-5.71,5.71,3.43,0],[128.47,197.04,41.94,0.7439,-0.6683,-5.71,5.71,3.43,0]],"back":{"x":110.2,"y":162,"a":-10.2,"s":1},"neck":[31,32,31,30,31,31,32,32,31,30,31,31]},"kael_angel":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":242,"ss":0.75,"g":[[127.55,198.03,42.99,0.7315,-0.6819,-5.4,5.4,3.63,0],[128.53,198.13,43.01,0.7312,-0.6821,-5.4,5.4,3.68,0],[128.91,199,42.65,0.7355,-0.6775,-5.4,5.4,3.68,0],[128.07,197.6,42.04,0.7427,-0.6697,-5.4,5.4,3.63,0],[128.36,197.96,42.29,0.7397,-0.6729,-5.4,5.4,3.68,0],[128.13,197.21,42.88,0.7328,-0.6805,-5.4,5.4,3.68,0],[127.47,197.46,43.18,0.7292,-0.6843,-5.4,5.4,3.63,0],[127.53,198,43.24,0.7285,-0.685,-5.4,5.4,3.63,0],[127.95,198.95,43.05,0.7308,-0.6826,-5.4,5.4,3.68,0],[128.87,198.96,42.62,0.7359,-0.6771,-5.4,5.4,3.63,0],[127.92,198.93,42.4,0.7385,-0.6742,-5.4,5.4,3.63,0],[127.55,198.08,42.63,0.7357,-0.6773,-5.4,5.4,3.68,0]],"bk":[[88.7,163,0,1],[85.5,163,0,1],[82.5,163,0,1],[82.5,163,0,1],[84.7,162,0,1],[86.7,162,0,1],[91.5,162,0,1],[91.5,162,0,1],[91,163,0,1],[89,165,0,1],[88.7,165,0,1],[88.7,165,0,1]]},"kaia_angel":{"w":256,"h":256,"n":12,"fps":12,"pad":0,"fy":243,"ss":1,"g":[[117.56,194.31,40.55,0.7598,-0.6501,-11.41,11.41,4.04,0],[119.68,194.61,37.99,0.7881,-0.6155,-11.13,11.13,4.1,0],[118.48,193.4,36.8,0.8008,-0.599,-11.35,11.35,4.1,0],[116.37,194.26,40.41,0.7614,-0.6483,-11.35,11.35,4.1,0],[118.28,195.23,40.07,0.7653,-0.6437,-11.24,11.24,4.04,0],[119.74,194.23,36.66,0.8022,-0.5971,-11.24,11.24,4.04,0],[117.62,194.62,37.64,0.7918,-0.6107,-11.3,11.3,4.04,0],[116.21,194.35,40.58,0.7595,-0.6505,-11.24,11.24,4.1,0],[117.37,194.42,40.73,0.7578,-0.6525,-11.19,11.19,4.1,0],[119.73,193.57,37.9,0.7891,-0.6143,-11.3,11.3,4.1,0],[118.63,194.32,36.72,0.8016,-0.5979,-11.19,11.19,4.04,0],[116.34,195.23,40.12,0.7647,-0.6444,-11.35,11.35,4.1,0]],"bk":[[110.2,161,-14.1,1],[115.5,162,-14.1,1],[112.1,161,-9.9,1],[108.5,162,-9.9,1],[111.4,163,-10.2,1],[116.4,164,-10.7,1],[110.4,164,-12.6,1],[107.4,162,-12.8,1],[107.9,162,-12.6,1],[113.8,163,-9.7,1],[113.2,164,-9.7,1],[110.7,163,-10,1]]},"kael_wolf":{"w":512,"h":352,"n":12,"fps":12,"pad":96,"fy":339,"ss":0.625,"g":[[182.62,196.77,24,0.9135,-0.4067,-4.14,4.14,58.86,0],[182.73,197.5,24,0.9135,-0.4067,-6.6,6.6,64.2,0],[182.83,197.94,24,0.9135,-0.4067,-6.6,6.6,64.5,0],[182.55,197.3,24,0.9135,-0.4067,-6.6,6.6,61.56,0],[182.55,196.89,24,0.9135,-0.4067,-3.78,3.78,58.02,0],[182.75,196.43,24,0.9135,-0.4067,-6.6,6.6,61.5,0],[182.7,196.43,24,0.9135,-0.4067,-1.92,1.92,64.5,0],[182.79,196.84,24,0.9135,-0.4067,-6.6,6.6,76.74,0],[182.9,197.49,24,0.9135,-0.4067,-6.6,6.6,76.74,0],[182.5,197.93,24,0.9135,-0.4067,-6.6,6.6,76.74,0],[182.51,197.48,24,0.9135,-0.4067,-6.6,6.6,76.74,0],[182.61,197.02,24,0.9135,-0.4067,-6.6,6.6,76.74,0]],"bk":[[161.3,172,24.7,0.654],[161.4,172,23.6,0.644],[161.5,172,24.9,0.644],[163.1,172,24.5,0.644],[163.1,172,26.4,0.654],[162.4,171,26.4,0.654],[162.4,171,26.4,0.654],[162.5,172,26.7,0.654],[163,173,26.7,0.654],[163,172,27.2,0.644],[160.9,172,27.2,0.654],[160.9,172,24.7,0.654]]},"kaia_wolf":{"w":512,"h":352,"n":12,"fps":12,"pad":96,"fy":339,"ss":0.625,"g":[[182.55,194.68,24,0.9135,-0.4067,-2.94,2.94,59.82,0],[183.46,195.68,24,0.9135,-0.4067,-3.42,3.42,87.96,0],[183.17,195.64,24,0.9135,-0.4067,-2.34,2.34,88.8,0],[182.76,196.46,24,0.9135,-0.4067,-6.6,6.6,81.78,0],[182.19,195.31,24,0.9135,-0.4067,-6.6,6.6,82.08,0],[182.48,195.72,24,0.9135,-0.4067,-6.6,6.6,82.74,0],[182.65,196.44,24,0.9135,-0.4067,-6.6,6.6,89.1,0],[182.84,195.57,24,0.9135,-0.4067,-6.6,6.6,90.3,0],[183.01,195.15,24,0.9135,-0.4067,-6.6,6.6,89.52,0],[182.86,195.5,24,0.9135,-0.4067,-6.6,6.6,88.32,0],[182.39,195.83,24,0.9135,-0.4067,-6.6,6.6,89.04,0],[182.12,196.89,24,0.9135,-0.4067,-6.6,6.6,78,0]],"bk":[[164.3,173,26.4,0.654],[164.7,172,26.4,0.654],[165,172,26.4,0.654],[165,173,26.4,0.654],[165.1,173,26.4,0.654],[165.3,173,26.4,0.654],[165.3,172,26.4,0.654],[164.5,172,26.4,0.654],[164.5,172,26.4,0.654],[164.5,173,26.4,0.654],[164.5,173,26.4,0.654],[164.3,173,26.4,0.654]]}}};
+
+const RN=['Básico','Raro','Épico','Mítico','Lendário'];
+const RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434'];
+const GEN={weapon:'f',armor:'f',wing:'f',gloves:'fp',boots:'fp',hat:'m',necklace:'m'};
+const rarW=(r,g)=>{ const b=RN[r]; if(g==='m') return b; const f=b.replace(/o$/,'a'); return g==='fp'?f+'s':f; };
+const n=v=>Math.round(v).toLocaleString('pt-BR');
+const fmtG=v=>v>=1e6?(v/1e6).toFixed(v>=1e7?1:2).replace('.',',').replace(/,?0+$/,'')+' mi':v>=1e5?Math.round(v/1000)+' mil':n(v);
+const SV={
+ lock:c=>`<svg viewBox="0 0 24 24" fill="${c||'#9aa6d6'}"><path d="M7 10V7a5 5 0 0110 0v3h1a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8a2 2 0 012-2h1zm2 0h6V7a3 3 0 00-6 0v3z"/></svg>`,
+ ok:'<svg viewBox="0 0 24 24" fill="none" stroke="#5ef0a0" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="2.5" fill="#fff"/></svg>',
+ box:'<svg viewBox="0 0 24 24" fill="none" stroke="#ffd25e" stroke-width="2.4" stroke-linejoin="round"><path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/></svg>',
+ chk:'<svg viewBox="0 0 24 24" fill="none" stroke="#ffd25e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>'};
+
+/* ---------- nomes do jogo (index.html ERAS[e] / js/sys/loot.js DATA.names), era 2 = Medieval ---------- */
+const ERAN={1:'Antiguidade',2:'Medieval'};
+const NAMES={
+ weapon:{1:['Lança de Bronze','Gládio','Falcata de Ferro','Xifos Espartano','Lâmina de Aquiles'],2:['Espada Enferrujada','Espada de Aço','Lâmina Rúnica','Espada do Dragão','Excalibur']},
+ armor:{2:['Túnica de Couro','Cota de Malha','Armadura de Placas','Armadura Infernal','Égide Sagrada']},
+ hat:{2:['Capuz de Lã','Elmo de Ferro','Elmo de Cavaleiro','Grande Elmo Rúnico','Coroa do Rei Dragão']},
+ gloves:{2:['Luvas de Lã','Luvas de Cota','Manoplas de Ferro','Manoplas Rúnicas','Manoplas do Dragão']},
+ boots:{2:['Botas de Lã','Botas de Couro','Escarpes de Ferro','Escarpes Rúnicos','Botas do Paladino Solar']},
+ necklace:{2:['Cordão de Ferro','Medalhão de Ferro','Relicário do Templário','Amuleto Rúnico','Graal Pendente']}};
+const SLN={weapon:'Arma',armor:'Armadura',hat:'Chapéu',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asa'};
+const ICO_SLOT={armor:'vest',hat:'helmet',gloves:'gloves',boots:'boots',necklace:'necklace'};
+const WKEY=['t0','raro','t1','mitico','t2'], TIER=[0,0,1,1,2];
+const WING_AN={angel:{L:[0.996,0.729,223,187],R:[0,0.729,223,187],fit:1}};
+const wkey=(e,r)=>'era'+e+'_'+WKEY[r];
+function itemIcon(slot,e,r){ if(slot==='weapon') return 'a/ic_'+wkey(e,r)+'.png'; if(slot==='wing') return 'a/wing_angel.png'; const t=TIER[r]; return 'a/era'+e+'_'+ICO_SLOT[slot]+(t?'_t'+t:'')+'.png'; }
+
+/* ---------- os dois jogadores do Simular ---------- */
+const range=(a,b)=>{ const o=[]; for(let i=a;i<=b;i++) o.push(i); return o; };
+const SC={
+ free:{lvl:13,era:2,stage:26,xp:845,premium:false,free:range(1,6),prem:[],held:[],days:21,gold:95000,gems:251,weapon:[2,1],mount:{stars:1,frags:0},
+   d:{kill:150,ult:3,chest:1,boss:1,forge:9,summon:1},dc:['d_ult','d_chest'],w:{kill:820,boss:15,summon:4,chest:15,upgrade:6},wc:['w_chest'],falcon:7},
+ prem:{lvl:42,era:2,stage:60,xp:2230,premium:true,free:range(1,20),prem:range(1,19),held:[{slot:'wing',r:2}],days:13,gold:2400000,gems:1840,weapon:[2,2],mount:{stars:2,frags:12},
+   d:{kill:150,ult:3,chest:1,boss:2,forge:15,summon:1},dc:['d_kill','d_ult','d_chest','d_boss','d_forge'],w:{kill:1500,boss:15,summon:10,chest:9,upgrade:20},wc:['w_kill','w_summon'],falcon:22}};
+let S={hero:'kael',sc:'free',tab:'track',pv:null};
+let P=null;
+function reset(){ const c=SC[S.sc]; P=JSON.parse(JSON.stringify(c)); P.bonus=false; S.pv=null; }
+reset();   /* antes do laço do palco: o 1º quadro já sai com o jogador */
+const tier=()=>Math.min(PASS.tiers,Math.floor(P.xp/PASS.xpPerTier));
+function maxAllowedR(){ let r=0; while(r<GATES.length-1){ const g=GATES[r+1]; if(P.lvl>=g.lvl&&P.era>=g.era) r++; else break; } return r; }
+const canReceive=sp=>maxAllowedR()>=sp.r&&!(sp.slot==='wing'&&(P.lvl<WINGR.minLevel||sp.r<WINGR.minR));
+const needLevel=sp=>Math.max(GATES[sp.r].lvl,sp.slot==='wing'?WINGR.minLevel:1);
+const seasonR=sp=>{ let r=Math.min(sp.r,maxAllowedR()); if(sp.slot==='weapon'&&r===3) r=2; return r; };
+const xpGain=px=>Math.round(px*(1+(P.premium?PASS.premiumXpPct:0)/100));   /* addXp do pass.js (VIP 0-6: sem bônus de XP) */
+const eqWeapon=()=>({slot:'weapon',e:P.weapon[0],r:P.weapon[1],name:NAMES.weapon[P.weapon[0]][P.weapon[1]]});
+
+/* ---------- o que cada prêmio é (só o que o pass.js entrega) ---------- */
+function rwInfo(trk,t){
+  const rw=PASS[trk==='premium'?'premium':'free'][t-1], o={main:null,mini:null,name:'',sub:'',rc:RC[0]};
+  if(rw.goldk){ o.main={ic:'a/coin.png'}; o.name=fmtG(rw.goldk*goldUnit(P.stage))+' de ouro'; o.sub='= '+rw.goldk+' abates da sua fase'; o.rc='#ffd25e'; }
+  else if(rw.gems&&!rw.item){ o.main={ic:'a/gem.png'}; o.name=rw.gems+' gemas'; o.sub=''; o.rc='#5ee7ff'; }
+  if(rw.item){ const sp=rw.item, e=P.era;
+    if(sp.season){ const r=seasonR(sp); o.rc=RC[r];
+      o.main={ic:itemIcon(sp.slot,e,r),pv:sp.slot==='weapon'?{kind:'weapon',slot:'weapon',e,r,name:NAMES.weapon[e][r]}:null};
+      o.name=SLN[sp.slot]+' da temporada'; o.sub=r<sp.r?`chega <b>${rarW(r,GEN[sp.slot])}</b>, evolui até ${rarW(sp.r,GEN[sp.slot])}`:`${rarW(sp.r,GEN[sp.slot])}`; }
+    else if(sp.slot==='wing'){ o.rc=RC[sp.r]; o.main={ic:'a/wing_angel.png',pv:{kind:'wing',id:'angel',name:'Asa de anjo ('+rarW(sp.r,'f')+')'}};
+      o.name=`Asa de anjo <em>${rarW(sp.r,'f')}</em>`; o.sub=canReceive(sp)?'vai para a mochila':`guardada até o <b>nível ${needLevel(sp)}</b>`; }
+    else { o.rc=RC[sp.r]; o.main={ic:itemIcon(sp.slot,e,sp.r),pv:sp.slot==='weapon'?{kind:'weapon',slot:'weapon',e,r:sp.r,name:NAMES.weapon[e][sp.r]}:null};
+      o.name=`${SLN[sp.slot]} <em>${rarW(sp.r,GEN[sp.slot])}</em>`; o.sub=canReceive(sp)?ERAN[e]+' (era liberada)':`guardada até o <b>nível ${needLevel(sp)}</b>`; } }
+  if(rw.mountFrags){ o.mini={ic:'a/wolf.png',mc:RC[2],pv:{kind:'mount',name:'Lobo de guerra '+starsAfter(rw.mountFrags)+' estrelas'}};
+    o.sub=`+${rw.mat.forge} pedras de forja · +${rw.mat.essence} essências · +${rw.mountFrags} frag. do Lobo`; }
+  if(trk==='premium'&&t===PASS.tiers){ const sk=PASS_SKIN[S.hero]; o.mini={ic:o.main.ic,mc:o.rc,pv:o.main.pv}; o.main={ic:sk.av,av:true,pv:{kind:'skin',name:sk.name+' (Lendária)'}}; o.rc=RC[4];
+    o.name=`Skin <em>${sk.name}</em>`; o.sub='+ Arma da temporada (evolui até Lendária)'; }
+  return o; }
+function starsAfter(fr){ let s=P.mount.stars, f=P.mount.frags+fr; while(s<5&&f>=STAR_COST[s-1]){ f-=STAR_COST[s-1]; s++; } return s; }
+
+/* ---------- PALCO EM CANVAS (receita do Invocar/Equipamento V2 e de js/stage.js + js/mountfx.js: corpo sem arma + arma no grip de cada quadro, asa nas costas, pet na frente) ---------- */
+const IM={};
+/* imagens do palco como <img> DE VERDADE na página (no host publicado, new Image() não chega ao canvas), escondidas fora da tela;
+   cada uma avisa se carregou ou falhou na linha "Palco" do painel ao lado (mesma correção do Equipamento V2) */
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el||el.dataset.err) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
+const ok=i=>i&&i.complete&&i.naturalWidth>0;
+const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
+function wSpr(key,r){ const im=img('a/wh_'+key+'.png'); if(!ok(im)) return null; const W=D.W[key], rr=Math.min(4,r|0), base={c:im,w:W.w,h:W.h,pad:0};
+  if(rr<1) return base; const id=key+'|'+r; if(WV[id]) return WV[id];
+  const col=RC[r], pad=Math.round(GLOWB[rr]*2.2), c=document.createElement('canvas'); c.width=W.w+pad*2; c.height=W.h+pad*2;
+  const x=c.getContext('2d'); x.shadowColor=col; x.shadowBlur=GLOWB[rr]*2; x.drawImage(im,pad,pad,W.w,W.h); x.shadowBlur=0;
+  const t=document.createElement('canvas'); t.width=W.w; t.height=W.h; const y=t.getContext('2d'); y.drawImage(im,0,0,W.w,W.h); y.globalCompositeOperation='source-atop'; y.globalAlpha=TINT[rr]; y.fillStyle=col; y.fillRect(0,0,W.w,W.h);
+  x.drawImage(t,pad,pad); return WV[id]={c,w:W.w,h:W.h,pad}; }
+function dspr(x,s,px,py,dw,dh){ const kx=dw/s.w, ky=dh/s.h; x.drawImage(s.c,px-s.pad*kx,py-s.pad*ky,(s.w+s.pad*2)*kx,(s.h+s.pad*2)*ky); }
+function wAng(W,G){ const wang=typeof W.angle==='number'?W.angle:90; return -(G.ang-wang)*Math.PI/180; }
+const HX=196, GY=214, HK=0.8, MK=0.62;
+/* o que desenhar: a prévia troca UMA peça (skin, montaria, pet, asa ou arma) */
+function look(){ const pv=S.pv, L={weapon:eqWeapon(),skin:null,mount:null,pet:'shadowwolf',wing:null};
+  if(pv){ if(pv.kind==='skin') L.skin='angel'; else if(pv.kind==='mount') L.mount={stars:starsAfter(10)}; else if(pv.kind==='pet') L.pet='falcon'; else if(pv.kind==='wing') L.wing='angel'; else if(pv.kind==='weapon') L.weapon=pv; }
+  return L; }
+function rig(L){ const h=S.hero;
+  if(L.mount){ const B=D.B[h+'_wolf'], ox=HX+14; return {B,sheet:'a/body_'+h+'_wolf_62.png',k:MK,x0:ox-(B.pad+128)*MK,y0:GY-B.fy*MK,ox,hh:G=>Math.min(G.hw,4)+5,ride:true}; }
+  if(L.skin){ const B=D.B[h+'_angel']; return {B,sheet:h==='kael'?'a/body_kael_angel_75.png':'a/body_kaia_angel.png',k:HK,x0:HX-(B.pad+128)*HK,y0:GY-B.fy*HK,ox:HX,hh:G=>Math.min(G.hw,6)+5,skin:true}; }
+  const B=D.B[h]; return {B,sheet:'a/body_'+h+'.png',k:HK,x0:HX-(B.pad+128)*HK,y0:GY-(h==='kael'?242:B.fy)*HK,ox:HX,hh:G=>(h==='kael'?G.hw:Math.min(G.hw,6))+5}; }
+function drawHero(x,t,L){
+  const R=rig(L), B=R.B, sheet=img(R.sheet), k=R.k, ss=B.ss||1;
+  if(!ok(sheet)) return;
+  const fi=((Math.floor(t*B.fps)%B.n)+B.n)%B.n, g=B.g[fi], G={x:g[0],y:g[1],ang:g[2],ux:g[3],uy:g[4],f0:g[5],f1:g[6],hw:g[7],behind:!!g[8]};
+  const x0=R.x0, y0=R.y0;
+  if(R.ride){ /* sombra das patas e aura por estrela da montaria, atrás (js/mountfx.js) */
+    const HS=256*k, st=L.mount.stars, col=MOUNT_AURA[st];
+    x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(R.ox+HS*0.12,GY+2,HS*0.42,HS*0.055,0,0,7); x.fill(); x.restore();
+    if(col){ const pu=0.5+0.2*Math.sin(t*2.4), gx0=R.ox+HS*0.15, gy0=GY-HS*0.45, rr=HS*(0.75+0.06*st), gg=x.createRadialGradient(gx0,gy0,HS*0.1,gx0,gy0,rr);
+      gg.addColorStop(0,col+Math.min(0.95,(0.22+0.15*st)*(0.75+pu*0.5)).toFixed(2)+')'); gg.addColorStop(0.55,col+(0.3*pu+0.12).toFixed(2)+')'); gg.addColorStop(1,col+'0)'); x.fillStyle=gg; x.fillRect(gx0-rr,gy0-rr,rr*2,rr*2); } }
+  else { x.save(); x.globalAlpha=.3; x.fillStyle='#1e1208'; x.beginPath(); x.ellipse(HX-3,GY+2,34,8,0,0,7); x.fill(); x.restore(); }
+  /* asa nas costas (a skin Anjo já traz as asas dela; com a skin, a asa do item não entra) */
+  const WA=L.wing&&!R.skin&&WING_AN[L.wing], bk=B.bk?B.bk[fi]:(B.back?[B.back.x,B.back.y,B.back.a,B.back.s]:null);
+  if(WA&&bk){ const Li=img('a/wg_'+L.wing+'_L.png'), Ri=img('a/wg_'+L.wing+'_R.png');
+    if(ok(Li)&&ok(Ri)){ const ax=x0+bk[0]*k, ay=y0+bk[1]*k, sc=k*0.62*bk[3]*WA.fit, fl=1+0.07*Math.sin(t*3.2);
+      x.save(); x.translate(ax,ay); x.rotate(bk[2]*Math.PI/180); x.scale(sc,sc);
+      x.save(); x.scale(fl,1); x.drawImage(Li,-WA.L[0]*WA.L[2],-WA.L[1]*WA.L[3],WA.L[2],WA.L[3]); x.restore();
+      x.save(); x.scale(fl,1); x.drawImage(Ri,-WA.R[0]*WA.R[2],-WA.R[1]*WA.R[3],WA.R[2],WA.R[3]); x.restore();
+      x.restore(); } }
+  x.save(); x.translate(x0,y0); x.scale(k,k);
+  const body=()=>x.drawImage(sheet,fi*B.w*ss,0,B.w*ss,B.h*ss,0,0,B.w,B.h);
+  const wi=L.weapon, key=wi?wkey(wi.e,wi.r):null, W=key?D.W[key]:null, ws=W?wSpr(key,wi.r):null;
+  let drawW=null;
+  if(ws){ const grip=W.grip, kk=256*0.5/Math.max(W.w,W.h);
+    const dw=W.w*kk, dh=W.h*kk, gx=((grip[0]-W.fx)/W.fw)*dw, gy2=((grip[1]-W.fy)/W.fh)*dh, ang=wAng(W,G);
+    drawW=()=>{ x.save(); x.translate(G.x,G.y); x.rotate(ang); dspr(x,ws,-gx,-gy2,dw,dh); x.restore(); }; }
+  const behind=G.behind||Math.cos(G.ang*Math.PI/180)<-0.25;
+  if(drawW&&behind){ drawW(); body(); }
+  else { body(); if(drawW){ drawW();
+      fingers(x,G,body,-12,12,R.hh(G));
+      const nk=B.neck&&B.neck[fi]; if(nk){ x.save(); x.beginPath(); x.rect(0,0,B.w,nk+2); x.clip(); body(); x.restore(); } } }
+  x.restore(); }
+function fingers(x,G,body,d0,d1,hh){ const ux=G.ux, uy=G.uy, px=-uy, py=ux, f0=(G.f0!=null?G.f0:d0)-1.5, f1=(G.f1!=null?G.f1:d1)+1.5;
+  x.save(); x.beginPath(); x.moveTo(G.x+ux*f0-px*hh,G.y+uy*f0-py*hh); x.lineTo(G.x+ux*f1-px*hh,G.y+uy*f1-py*hh); x.lineTo(G.x+ux*f1+px*hh,G.y+uy*f1+py*hh); x.lineTo(G.x+ux*f0+px*hh,G.y+uy*f0+py*hh); x.closePath(); x.clip(); body(); x.restore(); }
+function draw(t){
+  const c=$('#stc'), x=c.getContext('2d'); x.setTransform(2,0,0,2,0,0); x.clearRect(0,0,390,226);
+  const L=look(), fi=Math.floor(t*12)%12;
+  const g=x.createRadialGradient(HX,GY,10,HX,GY,140); g.addColorStop(0,'rgba(94,231,255,.35)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,140,20,0,0,7); x.fill();
+  x.strokeStyle=S.pv?'rgba(255,107,154,.6)':'rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(HX,GY,112,15,0,0,7); x.stroke(); x.setLineDash([]);
+  /* um erro no herói não pode apagar o pet: é pego aqui e aparece na linha "Palco" do painel */
+  try{ drawHero(x,t,L); }catch(err){ try{ x.restore(); }catch(e2){} x.setTransform(2,0,0,2,0,0); const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar o herói ('+(err&&err.message||err)+')'; } }
+  /* PET SEMPRE NA FRENTE (regra do dono): desenhado depois do herói e da montaria; folhas de 512x352 (pés em 307); o falcão em a/ está a 62,5% */
+  const pf=L.pet==='falcon', Pp=img(pf?'a/pt_pet_falcon_idle_62.png':'a/pt_pet_shadowwolf_idle.png'), ps=pf?0.625:1;
+  if(ok(Pp)){ const kp=150/512, cx=L.mount?92:126; x.drawImage(Pp,fi*512*ps,0,512*ps,352*ps,cx-224*kp,GY+8-307*kp,512*kp,352*kp); }
+}
+let t0=performance.now();
+(function loop(now){ if(!document.hidden) draw(Math.max(0,(now-t0)/1000)); requestAnimationFrame(loop); })(t0);
+
+/* ---------- topo, palco e temporada ---------- */
+const heroName=()=>S.hero==='kael'?'Kael':'Kaia';
+function renderTop(){
+  $('#gold').textContent=fmtG(P.gold); $('#gems').textContent=n(P.gems);
+  const w=$('#who'), pv=S.pv;
+  if(pv){ w.className='who pv'; w.innerHTML=`<i></i><span>Prévia: ${pv.name}</span><button data-x="endpv">Sair</button>`; }
+  else { w.className='who'; w.innerHTML=`<i></i><span>${heroName()} · Nível ${P.lvl} · ${NAMES.weapon[P.weapon[0]][P.weapon[1]]} na mão</span>`; }
+  const notes={skin:'Mesmo corpo do herói · arma equipada na mão',mount:'Montado no Lobo de guerra · aura da estrela depois do prêmio',pet:'O pet fica na frente do herói',wing:'Asa nas costas · equipa a partir do nível 50',weapon:'Na mão do herói · ainda não equipada'};
+  $('#pvnote').innerHTML=pv?`<div class="pvnote">${notes[pv.kind]}</div>`:'';
+  const t=tier(), mx=t>=PASS.tiers, inT=mx?PASS.xpPerTier:P.xp%PASS.xpPerTier;
+  $('#sea').innerHTML=`<div class="lvb" aria-label="Nível do passe ${t} de ${PASS.tiers}"><span><b>${t}</b><small>DE ${PASS.tiers}</small></span></div>
+    <div class="sei"><div class="l1"><span>TEMPORADA 1</span><span>Faltam ${P.days} dias</span></div>
+    <div class="xpb" role="progressbar" aria-valuemin="0" aria-valuemax="${PASS.xpPerTier}" aria-valuenow="${inT}"><span style="width:${inT/PASS.xpPerTier*100}%"></span></div>
+    <div class="l2"><span>${mx?'<b>Nível máximo</b>':`<b>${inT}/${PASS.xpPerTier} XP</b> para o nível ${t+1}`}</span><span class="pchip ${P.premium?'on':'off'}">${P.premium?'PREMIUM +25% XP':'GRÁTIS'}</span></div></div>`;
+  const nm=misAlerts(); document.querySelectorAll('.tabs button').forEach(b=>{ b.setAttribute('aria-selected',b.dataset.tab===S.tab); const old=b.querySelector('.nb'); if(old) old.remove(); });
+  const tr=trackAlerts(); if(tr){ const b=$('[data-tab="track"]'); b.insertAdjacentHTML('beforeend',`<span class="nb">${tr}</span>`); }
+  if(nm){ const b=$('[data-tab="mis"]'); b.insertAdjacentHTML('beforeend',`<span class="nb">${nm}</span>`); } }
+
+/* ---------- trilha vertical ---------- */
+function cellState(trk,t){ const got=trk==='free'?P.free:P.prem;
+  if(got.includes(t)) return 'done'; if(trk==='premium'&&!P.premium) return 'lockp'; if(t>tier()) return 'lock'; return 'ready'; }
+const pvSame=pv=>S.pv&&pv&&S.pv.kind===pv.kind&&S.pv.name===pv.name;
+let PVS=[];   /* prévias da tela, por índice (data-pv) */
+function pvBtn(pv){ PVS.push(pv); return PVS.length-1; }
+function cellHTML(trk,t){ const o=rwInfo(trk,t), st=cellState(trk,t), pr=trk==='premium';
+  const held=st==='done'&&pr&&t===17&&P.held.some(h=>h.slot==='wing');
+  const mainPv=o.main.pv, mi=mainPv?pvBtn(mainPv):-1;
+  const icon=`<div class="ciw"><button class="ci ${o.main.av?'av':''} ${pvSame(mainPv)?'pvon':''}" style="--rc:${o.rc}" ${mi>=0?`data-pv="${mi}" aria-label="Ver no herói: ${mainPv.name}"`:'tabindex="-1" aria-hidden="true"'}><img src="${o.main.ic}" alt="">${mainPv?`<span class="eye">${SV.eye}</span>`:''}${st==='lockp'?`<span class="pl">${SV.lock('#ffd25e')}</span>`:''}</button>
+    ${o.mini?(()=>{ const j=o.mini.pv?pvBtn(o.mini.pv):-1; return `<button class="mini ${pvSame(o.mini.pv)?'pvon':''}" style="--mc:${o.mini.mc}" ${j>=0?`data-pv="${j}" aria-label="Ver no herói: ${o.mini.pv.name}"`:'tabindex="-1"'}><img src="${o.mini.ic}" alt=""></button>`; })():''}</div>`;
+  const b=st==='done'?(held?`<span class="cb hd">${SV.box}Guardada · Nv. ${WINGR.minLevel}</span>`:`<span class="cb ok">${SV.ok}Resgatado</span>`)
+    :st==='ready'?`<button class="cb go" data-claim="${trk}|${t}">Resgatar</button>`
+    :st==='lockp'?`<button class="cb pm" data-x="buy">${SV.lock('#1a0838')}Premium</button>`
+    :`<span class="cb lk">${SV.lock()}Nível ${t}</span>`;
+  return `<div class="cell ${pr?'pr':''} ${st}" style="--rc:${o.rc}">${icon}<div class="cx"><div class="cn">${o.name}</div>${o.sub?`<div class="cs">${o.sub}</div>`:''}${b}</div></div>`; }
+function trackHTML(){ PVS=[]; const t=tier(); let h=`<div class="thead"><span class="f">Grátis</span><span></span><span class="p">Premium</span></div>`;
+  for(let i=1;i<=PASS.tiers;i++) h+=`<div class="row ${i<=t?'got':''} ${i===t?'now':''}" id="r${i}">${cellHTML('free',i)}<div class="node"><b>${i}</b></div>${cellHTML('premium',i)}</div>`;
+  return h; }
+function trackAlerts(){ const t=tier(); let c=0; for(let i=1;i<=t;i++){ if(!P.free.includes(i)) c++; if(P.premium&&!P.prem.includes(i)) c++; } return c; }
+
+/* ---------- missões (Sys.pass.list: chave das instâncias desligada = entram as substitutas; "Melhore 20 vezes" só do nível 5) ---------- */
+const GO={kill:'Batalha',ult:'Batalha',chest:'Baús',boss:'Batalha',forge:'Forja',summon:'Invocar',upgrade:'Equipamento',instance:'Instâncias'};
+const openM=m=>P.lvl>=(m.minLevel||1)&&(PASS.instancesOn?!m.replaces:!m.needsInstances);
+function misList(){ const row=(p,c,m)=>({...m,p:Math.min(m.need,p[m.k]||0),done:(p[m.k]||0)>=m.need,claimed:c.includes(m.id)});
+  const daily=PASS.daily.filter(openM).map(m=>row(P.d,P.dc,m)), weekly=PASS.weekly.filter(openM).map(m=>row(P.w,P.wc,m));
+  return {daily,weekly,bonus:{...PASS.dailyBonus,ready:daily.every(m=>m.claimed),claimed:P.bonus}}; }
+function misAlerts(){ const L=misList(); return L.daily.filter(m=>m.done&&!m.claimed).length+L.weekly.filter(m=>m.done&&!m.claimed).length+(L.bonus.ready&&!L.bonus.claimed?1:0); }
+function misRow(m,key){ const pct=m.p/m.need*100, gx=xpGain(m.pxp);
+  const b=m.claimed?`<span class="cb ok">${SV.ok}Feito</span>`:m.done?`<button class="cb go" data-mis="${key}">Resgatar</button>`:`<button class="cb lk" data-go="${GO[m.k]}" style="cursor:pointer">Ir</button>`;
+  return `<div class="ms"><div class="mt"><div class="t">${m.txt}</div><div class="mbar"><i><span class="${m.done?'full':''}" style="width:${pct}%"></span></i><small>${n(m.p)}/${n(m.need)}</small></div>
+    <div class="mr"><span>+${gx} XP do passe</span><span class="g"><img src="a/gem.png" alt="">+${m.gems}</span></div></div>${b}</div>`; }
+function misHTML(){ PVS=[]; const L=misList(), bo=L.bonus, fpv=pvBtn({kind:'pet',name:FALCON.name+' (pet)'});
+  const bb=bo.claimed?`<span class="cb ok">${SV.ok}Feito</span>`:bo.ready?`<button class="cb go" data-mis="bonus">Resgatar</button>`:`<span class="cb lk">${L.daily.filter(m=>m.claimed).length}/6</span>`;
+  return `<div class="pan"><div class="sec"><span>Diárias</span><span>renovam à meia-noite</span></div>${L.daily.map(m=>misRow(m,m.id)).join('')}
+    <div class="ms" style="background:rgba(255,210,94,.06);border-radius:10px;padding:7px 6px;margin-top:4px"><div class="mt"><div class="t">${bo.txt}</div>
+      <div class="mr"><span>+${xpGain(bo.pxp)} XP do passe</span><span class="g"><img src="a/gem.png" alt="">+${bo.gems}</span><button data-pv="${fpv}" aria-label="Ver no herói: ${FALCON.name}"><img src="a/war_falcon.png" alt="">+1 frag. ${FALCON.name} (${P.falcon}/${FALCON.hatch})</button></div></div>${bb}</div>
+    <p class="hint">Todas as diárias com o bônus = <b>90 XP</b> por dia${P.premium?' (113 com o Premium)':''}. O fragmento do falcão entra junto com os pets novos.</p></div>
+    <div class="pan"><div class="sec"><span>Semanais</span><span>renovam na segunda</span></div>${L.weekly.map(m=>misRow(m,m.id)).join('')}
+    <p class="hint">Semanais = <b>190 XP</b> por semana. Jogando todo dia, o grátis chega ao nível 30 no dia 27; com o Premium (+25%), por volta do dia 21.</p></div>`; }
+
+function renderFoot(){ const c=trackAlerts();
+  const all=`<button class="fb all" data-x="all" ${c?'':'disabled'}><b>Resgatar tudo</b><small>${c?c+(c===1?' prêmio pronto':' prêmios prontos'):'nada pronto agora'}</small></button>`;
+  $('#foot').innerHTML=(P.premium?`<div class="fb on"><b>Premium ativo</b><small>Temporada 1 · +25% XP</small></div>`:`<button class="fb buy" data-x="buy"><b>Comprar Passe Premium</b><small>${PRICE} · compra direta</small></button>`)+all; }
+function renderBody(top){ const b=$('#body'), y=b.scrollTop; b.innerHTML=S.tab==='track'?trackHTML():misHTML();
+  if(top){ if(S.tab==='track'){ const r=document.getElementById('r'+Math.max(1,tier())); b.scrollTop=r?Math.max(0,r.offsetTop-90):0; } else b.scrollTop=0; } else b.scrollTop=y; }
+function full(top){ renderTop(); renderBody(top); renderFoot(); }
+
+/* ---------- resgatar (claimTier do pass.js: bloqueado / premium / resgatado; item acima do portão fica GUARDADO) ---------- */
+function give(trk,t){ const rw=PASS[trk==='premium'?'premium':'free'][t-1], out=[];
+  (trk==='free'?P.free:P.prem).push(t);
+  if(rw.goldk){ const g=rw.goldk*goldUnit(P.stage); P.gold+=g; out.push('+'+fmtG(g)+' ouro'); }
+  if(rw.gems){ P.gems+=rw.gems; out.push('+'+rw.gems+' gemas'); }
+  if(rw.item){ const sp=rw.item;
+    if(sp.season) out.push(SLN[sp.slot]+' da temporada ('+rarW(seasonR(sp),GEN[sp.slot])+')');
+    else if(canReceive(sp)) out.push(SLN[sp.slot]+' '+rarW(sp.r,GEN[sp.slot])+' na mochila');
+    else { P.held.push({slot:sp.slot,r:sp.r}); out.push(SLN[sp.slot]+' guardada até o nível '+needLevel(sp)); } }
+  if(rw.mountFrags){ const s0=P.mount.stars; P.mount.frags+=rw.mountFrags; while(P.mount.stars<5&&P.mount.frags>=STAR_COST[P.mount.stars-1]){ P.mount.frags-=STAR_COST[P.mount.stars-1]; P.mount.stars++; }
+    out.push(P.mount.stars>s0?'Lobo de guerra '+P.mount.stars+' estrelas':'+'+rw.mountFrags+' frag. do Lobo'); }
+  if(trk==='premium'&&t===PASS.tiers) out.push(PASS_SKIN[S.hero].name+' é sua');
+  return out; }
+function claim(trk,t){ const st=cellState(trk,t);
+  if(st==='lockp'){ buySheet(); return; } if(st!=='ready') return;
+  const out=give(trk,t); full(false); toast('Nível '+t+': '+out.join(' · ')); }
+function claimAll(){ const t=tier(); let c=0, gold=0, gems=0, held=0; const g0=P.gold, m0=P.gems, h0=P.held.length;
+  for(let i=1;i<=t;i++){ if(!P.free.includes(i)){ give('free',i); c++; } if(P.premium&&!P.prem.includes(i)){ give('premium',i); c++; } }
+  if(!c) return; gold=P.gold-g0; gems=P.gems-m0; held=P.held.length-h0; full(false);
+  toast(c+(c===1?' prêmio':' prêmios')+(gold?' · +'+fmtG(gold)+' ouro':'')+(gems?' · +'+gems+' gemas':'')+(held?' · '+held+' guardado(s)':'')); }
+function claimMis(id){ const L=misList(); let m;
+  if(id==='bonus'){ if(!L.bonus.ready||P.bonus) return; P.bonus=true; m=PASS.dailyBonus; P.falcon=Math.min(FALCON.hatch,P.falcon+1); }
+  else { m=L.daily.find(x=>x.id===id)||L.weekly.find(x=>x.id===id); if(!m||!m.done||m.claimed) return; (PASS.daily.some(x=>x.id===id)?P.dc:P.wc).push(id); }
+  const from=tier(), gx=xpGain(m.pxp); P.xp=Math.min(PASS.tiers*PASS.xpPerTier,P.xp+gx); P.gems+=m.gems; const to=tier();
+  full(false); toast('+'+gx+' XP do passe · +'+m.gems+' gemas'+(id==='bonus'?' · +1 frag. '+FALCON.name:''));
+  if(to>from) lvUp(to); }
+function lvUp(t){ const o=document.createElement('div'); o.className='lvup'; o.textContent='PASSE NÍVEL '+t+'!'; scr.appendChild(o); setTimeout(()=>o.remove(),1550); }
+
+/* ---------- compra simulada (folha dentro do aparelho; nada de dados de pagamento) ---------- */
+function buySheet(){ if(P.premium) return; closeSheet();
+  const sk=PASS_SKIN[S.hero], gems=PASS.premium.reduce((s,r)=>s+(r.gems||0),0), items=PASS.premium.filter(r=>r.item).length, t=tier();
+  const ready=t;
+  const s=document.createElement('div'); s.className='shade'; s.id='shade';
+  s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Comprar Passe Premium"><div class="grab"></div>
+    <span class="simtag">COMPRA SIMULADA</span>
+    <h3>Passe Premium · Temporada 1</h3>
+    <div class="price"><b>${PRICE}</b><small>uma vez nesta temporada · faltam ${P.days} dias</small></div>
+    <p>Compra direta de uma trilha conhecida: <b>você vê agora tudo o que vem</b>. Nada é sorteado.</p>
+    <div class="hl">
+      <div><span style="--rc:${RC[4]}"><img class="av" src="${sk.av}" alt=""></span><small>${sk.name}<br>nível 30</small></div>
+      <div><span style="--rc:${RC[2]}"><img src="a/wing_angel.png" alt=""></span><small>Asa de anjo<br>nível 17</small></div>
+      <div><span style="--rc:${RC[4]}"><img src="a/ic_era2_t1.png" alt=""></span><small>Itens da temporada<br>27 e 30</small></div>
+      <div><span style="--rc:${RC[2]}"><img src="a/wolf.png" alt=""></span><small>+10 frag. Lobo<br>nível 25</small></div></div>
+    <ul class="gl">
+      <li>${SV.chk}<span>Trilha Premium inteira: <b>30 prêmios</b>${t?`; os ${ready} níveis que você já alcançou liberam na hora`:''}</span></li>
+      <li>${SV.chk}<span><b>+25% de XP do passe</b> nas missões (ex.: 15 XP viram ${Math.round(15*(1+PASS.premiumXpPct/100))})</span></li>
+      <li>${SV.chk}<span>${items} equipamentos: Raros nos primeiros níveis, Épicos no meio, e os 2 itens da temporada que evoluem até Lendário</span></li>
+      <li>${SV.chk}<span><b>${gems} gemas</b> ao longo da trilha</span></li>
+      <li>${SV.chk}<span>Nível 25: Arma Épica + 30 pedras de forja + 5 essências + 10 fragmentos de montaria</span></li>
+      <li>${SV.chk}<span>Nível 30: skin <b>${sk.name}</b> (Lendária), mesmo corpo do herói</span></li></ul>
+    <div class="warn">Compra simulada: nada é cobrado e nenhum dado de pagamento é pedido. No jogo, o pagamento é feito pela Google Play. O Premium vale só nesta temporada.</div>
+    <div class="macts"><button class="c" data-x="sclose">Agora não</button><button class="y" data-x="buyok">Simular compra · ${PRICE}</button></div></div>`;
+  scr.appendChild(s); s.addEventListener('click',e=>{ if(e.target===s) closeSheet(); }); }
+function closeSheet(){ const s=$('#shade'); if(s) s.remove(); }
+function buyOk(){ closeSheet(); P.premium=true; full(false); const c=trackAlerts(); toast('Premium ativo'+(c?': '+c+' prêmios prontos para resgatar':'')); }
+
+/* ---------- prévia no herói ---------- */
+function preview(i){ const pv=PVS[i]; if(!pv) return; if(pvSame(pv)){ S.pv=null; full(false); return; } S.pv=pv; full(false); toast('Prévia: '+pv.name); }
+
+/* ---------- comum ---------- */
+function go(where){ closeSheet(); const d=document.createElement('div'); d.className='nav'; d.id='nav';
+  d.innerHTML=`<div class="top"><button class="back" data-x="navback" aria-label="Voltar para o Passe"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="ttl">${where.toUpperCase()}</div></div>
+  <div class="navb"><p>No jogo, este botão abre a tela <b>${where}</b>.</p><p>O voltar traz de volta para o Passe.</p><button data-x="navback">Voltar para o Passe</button></div>`;
+  scr.appendChild(d); }
+function toast(t){ document.querySelectorAll('.toast').forEach(o=>o.remove()); const o=document.createElement('div'); o.className='toast'; o.textContent=t; scr.appendChild(o); setTimeout(()=>o.remove(),2000); }
+
+scr.addEventListener('click',e=>{ const pvEl=e.target.closest('[data-pv]'); if(pvEl){ preview(+pvEl.dataset.pv); return; }
+  const b=e.target.closest('button'); if(!b||b.disabled) return; const d=b.dataset;
+  if(d.tab){ S.tab=d.tab; full(true); return; }
+  if(d.claim){ const [trk,t]=d.claim.split('|'); claim(trk,+t); return; }
+  if(d.mis){ claimMis(d.mis); return; }
+  if(d.go){ go(d.go); return; }
+  if(d.x==='endpv'){ S.pv=null; full(false); return; }
+  if(d.x==='buy'){ buySheet(); return; }
+  if(d.x==='buyok'){ buyOk(); return; }
+  if(d.x==='sclose'){ closeSheet(); return; }
+  if(d.x==='all'){ claimAll(); return; }
+  if(d.x==='navback'){ const nv=$('#nav'); if(nv) nv.remove(); return; }
+});
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hero){ S.hero=b.dataset.hero; S.pv=null; document.querySelectorAll('[data-hero]').forEach(x=>x.setAttribute('aria-pressed',x===b)); full(false); }
+  if(b.dataset.sc){ S.sc=b.dataset.sc; reset(); document.querySelectorAll('[data-sc]').forEach(x=>x.setAttribute('aria-pressed',x===b)); closeSheet(); const nv=$('#nav'); if(nv) nv.remove(); document.querySelectorAll('.toast,.lvup').forEach(x=>x.remove()); full(true); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSheet(); const nv=$('#nav'); if(nv) nv.remove(); } });
+
+/* brilho subindo atrás do herói */
+(function(){ const c=$('#fx'), x=c.getContext('2d'); if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const W=780,H=720,Pp=[]; for(let i=0;i<36;i++) Pp.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*3,v:.3+Math.random()*.9,h:Math.random()<.6?265:45,a:Math.random()});
+  (function loop(){ if(!document.hidden){ x.clearRect(0,0,W,H); for(const p of Pp){ p.y-=p.v; p.x+=Math.sin((p.y+p.a*500)/90)*.4; if(p.y<-10){p.y=H+10;p.x=Math.random()*W;} x.fillStyle=`hsla(${p.h},100%,74%,${.25+.55*Math.abs(Math.sin(p.y/120+p.a*6))})`; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); } } requestAnimationFrame(loop); })(); })();
+
+reset(); full(true);
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-passe-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Passe V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
