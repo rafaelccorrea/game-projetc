@@ -1,0 +1,278 @@
+{
+ "frames": 12,
+ "fps": 12,
+ "w": 512,
+ "h": 352,
+ "padLeft": 96,
+ "padRight": 160,
+ "padTop": 96,
+ "padBottom": 0,
+ "feetY": 339,
+ "loop": {
+  "c": 18042.47027888605,
+  "P": 10,
+  "s": 82
+ },
+ "xf": {
+  "sc": 0.6,
+  "ox": 70.4,
+  "oy": 96
+ },
+ "grip": [
+  {
+   "x": 182.34,
+   "y": 163.55,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.22,
+   "behind": false,
+   "src": "f001.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.56,
+   "y": 163.16,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.3,
+   "f1": 9.3,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f009.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.93,
+   "y": 162.94,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f017.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.48,
+   "y": 163.48,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f025.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.57,
+   "y": 164.77,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f033.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.68,
+   "y": 166.07,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f041.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.72,
+   "y": 166.72,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.04,
+   "behind": false,
+   "src": "f049.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.55,
+   "y": 166.55,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.04,
+   "behind": false,
+   "src": "f057.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.6,
+   "y": 166,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.52,
+   "behind": false,
+   "src": "f065.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.25,
+   "y": 164.75,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.04,
+   "behind": false,
+   "src": "f073.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.82,
+   "y": 164.02,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f081.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.5,
+   "y": 163.41,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f089.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  }
+ ],
+ "back": [
+  {
+   "x": 164.3,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 164.7,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.7,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.9,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.9,
+   "y": 141,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 163.4,
+   "y": 142,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 162.9,
+   "y": 143,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 162.9,
+   "y": 143,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 142,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 141,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 164.8,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 164.3,
+   "y": 140,
+   "ang": 5.4,
+   "s": 0.654,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) entre as escápulas; ang: tronco em graus (mediana do Kael na mesma montaria); s: cabeça montada / a pé; ok=false: estimado dos vizinhos}. Kaia: tools/kaiamount/kback.js (rosto -> costas, calibrado no Kael)"
+}

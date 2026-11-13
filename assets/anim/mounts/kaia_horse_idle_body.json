@@ -20,31 +20,17 @@
  },
  "grip": [
   {
-   "x": 182.49,
-   "y": 163.4,
+   "x": 182.38,
+   "y": 163.6,
    "fdy": -63,
    "ang": 22,
    "ux": 0.9272,
    "uy": -0.3746,
-   "f0": -9.12,
-   "f1": 9.12,
-   "hw": 2.22,
-   "behind": false,
-   "src": "f005.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 182.64,
-   "y": 162.95,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -9.12,
-   "f1": 9.12,
+   "f0": -8.88,
+   "f1": 8.88,
    "hw": 2.16,
    "behind": false,
-   "src": "f007.png",
+   "src": "f001.png",
    "angFix": "video->22 (arma nao cobre o rosto)"
   },
   {
@@ -62,48 +48,6 @@
    "angFix": "video->22 (arma nao cobre o rosto)"
   },
   {
-   "x": 182.95,
-   "y": 162.37,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -8.88,
-   "f1": 8.88,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f011.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 182.94,
-   "y": 162.36,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -8.88,
-   "f1": 8.88,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f013.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 182.91,
-   "y": 162.34,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -8.88,
-   "f1": 8.88,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f015.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
    "x": 182.92,
    "y": 162.35,
    "fdy": -63,
@@ -115,48 +59,6 @@
    "hw": 2.16,
    "behind": false,
    "src": "f017.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 183,
-   "y": 162.43,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -8.88,
-   "f1": 8.88,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f019.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 183,
-   "y": 162.71,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -8.7,
-   "f1": 8.7,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f021.png",
-   "angFix": "video->22 (arma nao cobre o rosto)"
-  },
-  {
-   "x": 182.59,
-   "y": 163.51,
-   "fdy": -63,
-   "ang": 22,
-   "ux": 0.9272,
-   "uy": -0.3746,
-   "f0": -9.06,
-   "f1": 9.06,
-   "hw": 2.16,
-   "behind": false,
-   "src": "f023.png",
    "angFix": "video->22 (arma nao cobre o rosto)"
   },
   {
@@ -174,8 +76,106 @@
    "angFix": "video->22 (arma nao cobre o rosto)"
   },
   {
-   "x": 182.53,
-   "y": 163.75,
+   "x": 182.35,
+   "y": 163.87,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f033.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.54,
+   "y": 163.14,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.34,
+   "behind": false,
+   "src": "f041.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.65,
+   "y": 162.65,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.34,
+   "behind": false,
+   "src": "f049.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.59,
+   "y": 162.59,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f057.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.37,
+   "y": 163.87,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.22,
+   "behind": false,
+   "src": "f065.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.4,
+   "y": 163.91,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.22,
+   "behind": false,
+   "src": "f073.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.16,
+   "y": 163.67,
+   "fdy": -63,
+   "ang": 22,
+   "ux": 0.9272,
+   "uy": -0.3746,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f081.png",
+   "angFix": "video->22 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.31,
+   "y": 163.52,
    "fdy": -63,
    "ang": 22,
    "ux": 0.9272,
@@ -184,41 +184,13 @@
    "f1": 8.88,
    "hw": 2.16,
    "behind": false,
-   "src": "f027.png",
+   "src": "f089.png",
    "angFix": "video->22 (arma nao cobre o rosto)"
   }
  ],
  "back": [
   {
-   "x": 165.7,
-   "y": 140,
-   "ang": 34.7,
-   "s": 0.654,
-   "ok": true
-  },
-  {
-   "x": 165.7,
-   "y": 139,
-   "ang": 34.7,
-   "s": 0.654,
-   "ok": true
-  },
-  {
-   "x": 165.7,
-   "y": 139,
-   "ang": 34.7,
-   "s": 0.654,
-   "ok": true
-  },
-  {
-   "x": 165.4,
-   "y": 139,
-   "ang": 34.7,
-   "s": 0.654,
-   "ok": true
-  },
-  {
-   "x": 165.4,
+   "x": 165.3,
    "y": 139,
    "ang": 34.7,
    "s": 0.654,
@@ -239,36 +211,64 @@
    "ok": true
   },
   {
-   "x": 165,
+   "x": 165.5,
+   "y": 140,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.9,
+   "y": 140,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 166.2,
    "y": 139,
    "ang": 34.7,
    "s": 0.654,
    "ok": true
   },
   {
-   "x": 165,
+   "x": 166.2,
    "y": 139,
    "ang": 34.7,
    "s": 0.654,
    "ok": true
   },
   {
-   "x": 165.1,
+   "x": 165.4,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.4,
    "y": 140,
    "ang": 34.7,
    "s": 0.654,
    "ok": true
   },
   {
-   "x": 165.2,
+   "x": 165.8,
    "y": 140,
    "ang": 34.7,
    "s": 0.654,
    "ok": true
   },
   {
-   "x": 165.2,
-   "y": 140,
+   "x": 165.8,
+   "y": 139,
+   "ang": 34.7,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 165.3,
+   "y": 139,
    "ang": 34.7,
    "s": 0.654,
    "ok": true
