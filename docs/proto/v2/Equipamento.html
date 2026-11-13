@@ -200,6 +200,7 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:380px;pointer-events
 
   <aside class="side">
     <h1>Tela · Equipamento (versão 2)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: carregando</p>
     <p class="sub">O herói fica sempre à vista no topo, com a arma equipada na mão, a asa nas costas e o pet na frente. As 7 peças ficam em volta dele. Tocou, trocou: a peça da mochila vai para o herói na hora, e a faixa mostra o FC de antes e de agora, atributo por atributo. Na mochila, a seta verde marca o que é melhor que o que você usa.</p>
     <div class="box">
       <h2>Simular</h2>
@@ -336,7 +337,14 @@ const BAGMAX=80;
 
 /* ---------- PALCO EM CANVAS (receita do jogo: js/stage.js drawHeroAnim / drawHeroPhase / drawHeroPistol) ---------- */
 const IM={};
-function img(u){ let o=IM[u]; if(!o){ o=IM[u]=new Image(); o.src=u; } return o; }
+/* imagens do palco como <img> DE VERDADE na página (o mesmo caminho das peças da mochila, que carregam em qualquer lugar onde a página é aberta),
+   escondidas fora da tela; cada uma avisa se carregou ou falhou na linha "Palco" do painel ao lado */
+const STG=(()=>{ const d=document.createElement('div'); d.setAttribute('aria-hidden','true'); d.style.cssText='position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden'; document.body.appendChild(d); return d; })();
+const IMS={};
+function stgNote(){ const el=document.getElementById('stgdiag'); if(!el) return; const v=Object.entries(IMS), bad=v.filter(([,s])=>s==='erro').map(([u])=>u.replace('a/','')), wait=v.filter(([,s])=>s==='...').length;
+  el.textContent=bad.length?('Palco: não carregou '+bad.join(', ')):wait?('Palco: carregando '+wait+' imagem(ns)'):('Palco: '+v.length+' imagens carregadas'); }
+function img(u){ let o=IM[u]; if(!o){ o=IM[u]=document.createElement('img'); o.decoding='sync'; o.loading='eager'; o.alt=''; IMS[u]='...';
+    o.onload=()=>{ IMS[u]='ok'; stgNote(); }; o.onerror=()=>{ IMS[u]='erro'; stgNote(); }; o.src=u; STG.appendChild(o); stgNote(); } return o; }
 const ok=i=>i&&i.complete&&i.naturalWidth>0;
 /* brilho e tinta leves por raridade na arma da mão (skinSpr do jogo: GLOWB/TINT; o Básico fica sem nada) */
 const GLOWB=[0,5,8,11,15], TINT=[0,.08,.12,.16,.2], WV={};
@@ -395,7 +403,8 @@ function draw(t){
   /* chão */
   const g=x.createRadialGradient(HX,GY,10,HX,GY,130); g.addColorStop(0,'rgba(94,231,255,.35)'); g.addColorStop(1,'rgba(94,231,255,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(HX,GY,130,20,0,0,7); x.fill();
   x.strokeStyle='rgba(255,210,94,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(HX,GY,104,15,0,0,7); x.stroke(); x.setLineDash([]);
-  drawHero(x,t);
+  /* um erro no herói não pode apagar o pet: é pego aqui e aparece na linha "Palco" do painel */
+  try{ drawHero(x,t); }catch(err){ try{ x.restore(); }catch(e2){} const el=document.getElementById('stgdiag'); if(el&&!el.dataset.err){ el.dataset.err='1'; el.textContent='Palco: erro ao desenhar o herói ('+(err&&err.message||err)+')'; } }
   /* PET SEMPRE NA FRENTE (regra do dono): desenhado depois do herói, à frente e abaixo (folha 512x352, pés em 307) */
   const P=img('a/pt_pet_shadowwolf_idle.png'); if(ok(P)){ const kp=150/512, cx=126; x.drawImage(P,fi*512,0,512,352,cx-224*kp,GY+8-307*kp,512*kp,352*kp); }
 }
