@@ -4,11 +4,11 @@
    Passo 1: explica (texto do PO) + link da página pública de exclusão. Passo 2: o jogador DIGITA "EXCLUIR" para liberar o botão vermelho (confirmação dupla).
    Envia Sys.net.deleteAccount() (DELETE /me: apaga em 30 dias; entrar de novo cancela). Deu certo → window.OnlineBoot.accountDeleted() (da fps-c8: bloqueia
    gravações, apaga a sessão, o pendente da nuvem e a marca do servidor e recarrega no Título). Falhou ou sem resposta → NADA é apagado no aparelho.
-   Sem online (sem Sys.net, sem sessão ou sem rede) → "Precisa de internet". DATA.localSave: 'erase' (padrão, proposta ao dono) = o texto avisa que o jogo
+   Sem online (sem Sys.net, sem sessão ou sem rede) → "Precisa de internet". DATA.localSave: 'erase' (decidido pelo dono) = o texto avisa que o jogo
    deste aparelho também é apagado; 'keep' = o texto diz que o aparelho fica com o progresso como jogo sem conta. Sem emoji; só rolagem vertical; 360 px. */
 (function(){
 const DATA={
-  localSave:'erase',   // decisão do dono pendente (A = 'erase', recomendado; B = 'keep')
+  localSave:'erase',   // DONO escolheu A (2026-11-13): apaga tudo, inclusive o save deste aparelho; 'keep' fica só como opção técnica
   page:'https://15-229-249-157.sslip.io/excluir-conta',
   word:'EXCLUIR', timeoutMs:15000,
   t:{title:'Excluir conta',
