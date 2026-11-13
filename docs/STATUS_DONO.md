@@ -8,6 +8,10 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **08h10 · PARA VOCÊ VOTAR (página de aprovação):** as 8 skins do Kael (Demônio, Anjo, Paladino Solar, Ninja, Samurai, Bobo da Corte sinistro, Pirata, Ciborgue) e as 5 da Kaia (Arlequina, Princesa guerreira, Ninja, Demoníaca, Angelical), todas no corpo padrão; os 9 pets novos (visual feroz); as guias do arco, do bumerangue e da Kaia montada. As 10 montarias saem em seguida
+- **08h10 · Em produção direto (padrão já aprovado):** as ultimates Lendária e Mítica de TODAS as famílias de arma. Também na fila: 8 asas novas (Fênix, Gelo, Sombra, Tempestade, Mecânicas, Ossos, Serafim, Mariposa Sombria). Fila completa em docs/FILA_ARTE.md
+- **08h10 · APK v0.12.8:** pronto para gerar assim que entrarem 2 consertos pequenos (pistola abaixo do chão na morte, "NÍVEL +1" atrás da barra). Inclui: Kaia jogável, Kael garoto em qualquer nível, FC grande em escala nova, Passe nível 25 novo, Vitória com pet/montaria/asa
+
 - **07h55 · PARA VOCÊ VOTAR (leva 1):** 5 skins do Kael no mesmo corpo do garoto (Demônio, Anjo, Paladino Solar, Ninja, Samurai) e as guias do arco, do bumerangue e da Kaia montada no lobo. A leva 2 (Bobo, Pirata, Ciborgue e as 5 da Kaia) e os 9 pets chegam em seguida
 - **07h55 · Montarias novas escolhidas (10):** Raptor de Guerra · Escorpião Gigante · Pantera Sombria · Cavalo Infernal · Unicórnio de Guerra · Lobo do Gelo · Fênix Gigante · Dragão Negro · Tigre de Guerra Celestial · Mecha de Guerra. Primeiro as referências para seu voto
 - **07h55 · Habilidades das armas novas:** arco (Chuva de Flechas; Lendária: Flecha Celestial) e bumerangue (Ciclone de Lâminas; Lendária: Tempestade de Bumerangues). Sistemas monta a tabela para você aprovar. Créditos: ~1.070
