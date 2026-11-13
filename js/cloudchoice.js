@@ -33,6 +33,8 @@ function inject(){ if(document.getElementById('cc_css')) return; const st=docume
 @keyframes cc-in{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
 @media (max-width:330px){#cc_root .cc-cards{flex-direction:column}}
 @media (prefers-reduced-motion:reduce){#cc_root .cc-box{animation:none}}`; document.head.appendChild(st); }
+/* o contador de tempo de jogo (S.playSeconds) é novo: enquanto os dois lados estiverem em 0, a linha "Jogado" não aparece */
+const showPlay=()=>{ const I=C.info||{}; return (+((I.device||{}).playSeconds)||0)>0||(+(((I.cloud||{}).summary||{}).playSeconds)||0)>0; };
 function card(side){ const I=C.info, sm=side==='device'?(I.device||{}):((I.cloud&&I.cloud.summary)||{}), when=side==='device'?(I.device&&I.device.savedAt)||cTry(()=>S.lastSeen,0):(I.cloud&&I.cloud.updatedAt);
   const rec=I.recommend===side, pick=C.pick===side, name=cTry(()=>S.name,'Herói');
   const label=side==='device'?'Este aparelho':'Nuvem';
@@ -46,7 +48,7 @@ function card(side){ const I=C.info, sm=side==='device'?(I.device||{}):((I.cloud
     <span style="font-size:13px;font-weight:900;color:#ffe07a">Nível ${sm.level|0}</span>
     <span style="font-size:12px;font-weight:800">FC ${cEsc(cFC(sm.fc))}</span>
     <span style="font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.25">${cEsc(cEra(sm.era|0))}${sm.stage?' · '+cEsc(cStage(sm.stage)):''}</span>
-    <span style="font-size:11px;font-weight:800;color:#c9b9a2">Jogado: ${cEsc(cPlay(sm.playSeconds))}</span>
+    ${showPlay()?`<span style="font-size:11px;font-weight:800;color:#c9b9a2">Jogado: ${cEsc(cPlay(sm.playSeconds))}</span>`:''}
     <span style="font-size:11px;font-weight:800;color:#8a7458">Salvo em ${cEsc(cWhen(when))}</span>
     <button class="cc-btn ${pick?'cc-warn':'cc-gold'}" data-cc="${side}" aria-label="${pick?'Confirmar: usar '+label:'Usar '+label}" ${C.busy?'disabled':''}>${pick?'Toque de novo para confirmar':'Usar este'}</button></div>`; }
 function draw(){ if(!C.el) return; const other=C.pick==='device'?'da nuvem':'deste aparelho';

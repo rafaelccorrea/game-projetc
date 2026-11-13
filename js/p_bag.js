@@ -41,7 +41,7 @@ function bStarRow(n,max,s){ let h=''; for(let i=1;i<=max;i++) h+=bSvgStar(i<=n,s
 function bItemImg(it){ const wt=bTry(()=>Sys.stats.weaponType(it),null);
   if(it.slot==='weapon'&&(wt==='bow'||wt==='boomerang')) return 'assets/weapons/'+wt+'_'+B_RNAME[Math.min(5,it.r|0)]+'.png';
   if(it.slot==='wing'){ const w=bTry(()=>Sys.stats.wingOf(it),'angel'); if(w&&w!=='angel'&&w!=='demon') return 'assets/icons/wings/wing_'+w+'.png'; }
-  return bTry(()=>slotIcon(it.slot,ieraV(it)),'assets/ui/chest.png'); }
+  return bTry(()=>typeof xRarIcoUrl==='function'?xRarIcoUrl(slotIcon(it.slot,ieraV(it)),it.r,46):slotIcon(it.slot,ieraV(it)),'assets/ui/chest.png'); }   // ícone da peça por raridade (PANEL_V2.rarIcons; desligado = o de hoje)
 function bPetImg(id){ if(B_PET_ART[id]) return 'assets/icons/pets/'+B_PET_ART[id]+'.png';
   const P=bSys().pet, d=bTry(()=>P.DATA.pets.find(p=>p.id===id),null), sp=d&&d.sprite, st=bTry(()=>P.stage(S,id).index|0,0);
   return sp?'assets/icons/pets/'+sp+['_ref','_mid','_evo'][Math.max(0,Math.min(2,st))]+'.png':'assets/icons/menu/pets.png'; }
