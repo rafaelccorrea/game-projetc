@@ -48,7 +48,7 @@ function classify(p0){ const p=norm(p0); let m;
   if((m=/^assets\/anim\/pets\/([a-z0-9]+_[a-z]+?)(_mid|_evo)?_(run|idle|atk\d)/.exec(p))) return 'pet:'+m[1]+':'+(m[2]==='_mid'?1:m[2]==='_evo'?2:0);
   if((m=/^assets\/map\/era(\d)\./.exec(p))) return 'era:'+m[1];
   if((m=/^assets\/icons\/slots\/era(\d)_[a-z]+_t[12]\.png$/.exec(p))) return 'era:'+m[1];   // arte da era no mapa (o mundo e o relógio ficam no core)
-  if((m=/^assets\/anim\/skins\/([a-z0-9_]+)\//.exec(p))) return 'skin:'+m[1];   // skin fixa nova (corpo padrão): só quem tem a skin baixa
+  if((m=/^assets\/anim\/skins\/([a-z0-9_]+?)(?:_nowing)?\//.exec(p))) return 'skin:'+m[1];   // a variante "sem asa" vai no MESMO pacote da skin   // skin fixa nova (corpo padrão): só quem tem a skin baixa
   if(/^assets\/anim\/aura\//.test(p)) return 'aura';
   if(/^assets\/anim\/fx\/(kaia_)?evolve_/.test(p)) return 'retired';   // evolução do herói aposentada (dono: o herói não cresce); fora do APK base
   if((m=/^assets\/anim\/ult\/(?:weapon\/)?([a-z]+)_(legend|legendary|mythic)\./.exec(p))) return 'ult:'+m[1];   // ultimate Lendária própria por família (só quem tem a arma)

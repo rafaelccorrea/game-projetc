@@ -1130,7 +1130,7 @@ t('P24 (FC 324 → 326 ao voltar à skin padrão): é o bônus de COLEÇÃO da s
 t('skin com asa própria + asa-item (dono: o jogador nunca tira a asa): pasta "sem asa" só com a asa-item equipada e visível E a pasta pronta',()=>{
   const A=require('../../js/sys/appearance.js'), k=A.FIXED.find(x=>x.id==='kael_angel'); const keep=k.noWingReady;
   try{ const S={hero:'kael',inv:[{id:7,slot:'wing',r:3,wing:'angel'}],eq:{}}; A.grantFixed(S,'kael_angel',{owner:true}); A.equipFixed(S,'kael_angel');
-    assert.strictEqual(k.noWingReady,false,'desligada até a Arte avisar'); assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'));
+    k.noWingReady=false; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'));
     S.eq.wing=7; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'),'pasta não pronta: como hoje');
     k.noWingReady=true; const r=A.sheetFor(S,makeHost(),'attack'); assert.ok(r.dir.endsWith('kael_angel_nowing/')&&r.noWing===true&&r.body.endsWith('kael_angel_nowing/kael_attack_body'));
     S.look.hidden={wing:true}; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'),'asa escondida: a skin com a asa dela');
