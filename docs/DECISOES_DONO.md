@@ -3,6 +3,9 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Acabar as eras NÃO é o fim do jogo** ("acabar as eras não quer dizer que o jogo acabou"): fase 90 = "fim das 9 eras"; depois disso vêm as fases sem fim (+3% por fase) e metas que seguem forçando evolução (marcos a cada 10 fases, ranking, Forja/pet/montaria, Torneio e Arena) · Sistemas propõe o pós-eras e ajusta textos/tela
+- [x] **Link das telas recriado** e **fim das 9 eras ligado** (pedido do dono): liga depois da APK, quando o Engenheiro medir que 100% da FC vence o chefe · Sistemas + Engenheiro
+- [?] **Skin montada do Samurai e do Ciborgue**: A ~196 créditos (7 montarias), B ~56 (lobo e cavalo), C grátis (só a cabeça) · dono decide
 - [~] **Paredes das eras 5-8**: em vez de 5-12 dias, mais fontes de FC no fim (Forja além do +15, Divino mais cedo, títulos das eras 7-8), paredes de 3-5 dias · Sistemas propõe e simula
 - [x] **Um link só para todas as telas** (https://claude.ai/artifact/Dje98dqTa6vConwpewnGds) · PO
 - [x] **Bug da Arena** (a luta seguia depois do fim) corrigido; durante a Arena a batalha das fases segue rendendo escondida · Engenheiro
