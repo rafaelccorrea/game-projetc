@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **03h25 · Sua decisão: as skins de roupa viram CAMADAS** (chapéu + cor do colete/botas + óculos/máscara). Funcionam nas 4 fases e nos 2 heróis, sem gastar crédito; a skin nunca se perde ao evoluir (regra testada em 21→22, 34→35, 69→70). Até as camadas ficarem prontas, a Loja vende só skins de arma
+- **03h25 · Polimento resolvido:** arma no punho no lobo e no grifo (P2), nome do chefe certo na Vitória (P6), a Serpe na tela de Montarias (P7), ícone da Oferta (P9), Instâncias ligada (P10). Eventos com horário LIGADOS (regra)
+
 - **03h15 · PARA VOCÊ VOTAR: ASA NAS COSTAS refeita** (página de aprovação, 6 prints): a pé parado, golpeando, asa demoníaca, e montado no lobo, grifo e serpe. A asa sai do ombro, atrás do tronco, e nada fica acima da cabeça. Montado, de perfil, aparece uma metade (a outra fica atrás do Kael). As fases adolescente/adulto/guerreiro vêm com as 4 fases (o engenheiro começou agora)
 
 - **03h05 · Sua ordem, Bem-vindo de volta:** ao voltar depois de ficar off, o jogo mostra tudo o que você ganhou no tempo fora antes de coletar: quanto tempo ficou fora, ouro, XP e quantos níveis subiu, itens com imagem e cor da raridade, e ração/pedras/fragmentos. Depois, "Coletar" com os números contando. Com o Servidor (P16 do polimento)

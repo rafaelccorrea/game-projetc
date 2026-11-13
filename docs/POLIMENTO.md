@@ -15,15 +15,15 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 
 ## Achados (formato: `- [ ] P<n> · tela · o que está errado · dono da correção`)
 - [ ] P1 · Oferta de 1ª compra · não mostra a imagem do Lobo de guerra (montaria) nem do pet; tem que mostrar tudo com a arte real · Engenheiro/Servidor (p_offer)
-- [ ] P2 · Batalha montado · a arma sai da mão e flutua em cima da montaria · Arte (encaixe nas folhas montadas) + Engenheiro
+- [x] P2 · Batalha montado · a arma sai da mão e flutua em cima da montaria · Arte (encaixe nas folhas montadas) + Engenheiro
 - [ ] P3 · Batalha montado · a arma não aparece na mão com o Kael montado (QA confirmou: não é arquivo faltando; 26 telas sem imagem quebrada) · Engenheiro junto com a asa montada
 - [ ] P4 · Vitória (e outras cenas) · o pet some; montaria/asa/aura também precisam aparecer · Engenheiro (drawHeroFull)
 - [~] P5 · Todas as cenas · a asa fica atrás da cabeça em vez das costas · Engenheiro (âncora das costas da Arte)
-- [ ] P6 · Vitória · diz "Javali" quando o chefe é o Rex Furioso (nome do chefe errado) · Engenheiro
-- [ ] P7 · Tela de Montarias · a Serpe não está na lista (5 de 6) · Engenheiro
+- [x] P6 · Vitória · diz "Javali" quando o chefe é o Rex Furioso (nome do chefe errado) · Engenheiro
+- [x] P7 · Tela de Montarias · a Serpe não está na lista (5 de 6) · Engenheiro
 - [ ] P8 · Instância · o texto de tempo esgotado é igual ao da derrota · Engenheiro
 - [x] P9 · Oferta 24h · usa o ícone de Eventos; precisa de ícone próprio · Arte — FEITO: assets/icons/menu/offer.png (presente + cronômetro) e ícones dos eventos assets/icons/events/{worldboss,goldenhour,invasion,weekend,pethunt,forge}.png
-- [ ] P10 · Instâncias · tela ainda desligada (fluxo 24/26) · Engenheiro (painéis)
+- [x] P10 · Instâncias · tela ainda desligada (fluxo 24/26) · Engenheiro (painéis)
 
 ## Achados do QA (varredura de 13/11, aba 2, Modo teste nível 60; prints em reports/prints/)
 - [ ] P11 · Batalha montado (grifo) · CONFIRMA P2/P3: o Kael montado não mostra a arma na mão (só um brilho); print reports/prints/pol_1_montado_asa_arma.png · Arte (folhas montadas com arma) + Engenheiro
@@ -43,10 +43,13 @@ Nas palavras do dono: "Tá jogável, já tá bem avançado. Só que tem muito bu
 
 ### Passada FINA, quadro a quadro, folhas das 6 montarias (QA, offline: folha de contato ampliada; ferramenta test/paineis fora do repo)
 Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_body.png foi aberta quadro a quadro. IDLE e RUN das 6 montarias: LIMPOS (sem sobra, sem piscada). Defeitos só nas folhas de ATAQUE (todas com 17 quadros), todos de IMAGEM (dono: Arte):
-- [ ] P10 · kael_horse_attack_body.png · quadros 2 e 6-7: braço/capa "fantasma" semitransparente borrado sobre o tronco/sela e a PONTA da lança flutuando atrás da garupa (sem cabo) = o "braço saindo de trás do cavalo" do P15; print reports/prints/pol_4_cavalo_ataque_borrao_e_ponta.png · Arte
+- [x] P10 · kael_horse_attack_body.png · quadros 2 e 6-7: braço/capa "fantasma" semitransparente borrado sobre o tronco/sela e a PONTA da lança flutuando atrás da garupa (sem cabo) = o "braço saindo de trás do cavalo" do P15; print reports/prints/pol_4_cavalo_ataque_borrao_e_ponta.png · Arte
 - [ ] P11 · kael_griffin_attack_body.png · quadro 2: borrão corrompido sobre olho/rosto e mão do Kael; quadro 12: faixa de traços horizontais picados na altura do antebraço/peito; print pol_5_grifo_ataque_borrao_rosto_e_tracos.png · Arte
 - [~] P12 · kael_wolf_attack_body.png · quadros 1,3,5: linhas pretas riscadas (haste/guia do recorte) ao redor da mão e traços verticais sobre a armadura do lobo; quadros 9-12: franja/rastro borrado à direita da cabeça do lobo; print pol_6_lobo_ataque_tracos_pretos_e_rastro.png · Arte
 - [ ] P13 · kael_mythic_attack_body.png (Tigre de cristal) · quadros 7-12: faixa vertical CORROMPIDA (listras roxo/branco/verde) cobrindo o rosto/pescoço do tigre; quadros 2-3: borrão no tronco e um bloco preto flutuando na mão; print pol_7_tigre_ataque_faixa_corrompida_no_rosto.png · Arte
 - [ ] P14 · kael_pony_attack_body.png · quadros 7-13: mancha rosa/cinza semitransparente com borda picada sobre pescoço e crina · Arte (sem print ampliado ainda)
 - [ ] P15 · kael_wyvern_attack_body.png · quadros 8-10: mancha rosa translúcida sobre a cabeça da serpe (além do arco de golpe) · Arte (sem print ampliado ainda)
 - [ ] A VARRER: folhas kael_*_era2_t1 (com arma), pétalas 1-5 estrelas (idle_Nstar), Kael a pé nas 4 fases, pet; e CONFIRMAR NO JOGO se esses quadros aparecem (o jogo pode usar só parte dos 17 quadros).
+- [ ] P16 · kael_wolf_attack_era2_t1.png (folha COM ARMA) · quadros 1,3,5: a espada fica SOLTA, atrás do Kael, longe da mão; a mão segura só uma haste fina preta (guia do recorte ainda visível) e há traços pretos verticais na armadura do lobo; é o "arma que sai da mão" do dono; print reports/prints/pol_8_folhas_com_arma_lobo_e_cavalo.png · Arte
+- [ ] P17 · kael_horse_attack_era2_t1.png (COM ARMA) · quadro 7: além da espada na mão aparece uma PONTA de lança branca sobrando embaixo do peito do cavalo (resto da arma da folha body); mesmo print pol_8 · Arte
+- Conferido LIMPO nas folhas com arma (amostra por contato, 9 quadros por montaria): pônei, grifo, tigre e serpe nos quadros 0-8 (espada na mão, arcos de golpe ok); falta ver os quadros 9-16 e as folhas idle/run com arma.
