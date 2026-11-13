@@ -496,14 +496,30 @@ function fxArtGo(A,x,y,layer,ex){ const im=IMG(fxPng(A)); if(!im) return false;
    até o voto do dono (liga só em ?debug=1&ultlend=1, ou quando Sistemas marcar DATA.ownReady[família] depois do voto).
    A era do MAPA não entra: a.era = artEra da família da arma na mão. Família sem folha no disco (arco/bumerangue: bow_base/boomerang_base ainda não existem):
    cai na folha da era de reserva da arma (era<a.era>_ult); sem ela, o efeito em código. */
-window.ULT_LEGEND_ON=DEBUG&&typeof QP!=='undefined'&&QP.get('ultlend')==='1';   /* chave em window (o botão "Ultimates lendárias" do Modo dono liga/desliga); lida a cada uso; DESLIGADA por padrão */
+/* Engenheiro 9 (voto do dono de 13/11; as 9 vistas na batalha): LIGADA por padrão; ?debug=1&ultlend=0 desliga (o botão "Ultimates lendárias" do Modo dono também).
+   No boot, com os módulos js/sys já carregados (vêm antes deste arquivo), Sys.stats.goLive('ults') marca as 9 aprovadas (idempotente). */
+window.ULT_LEGEND_ON=!(DEBUG&&typeof QP!=='undefined'&&QP.get('ultlend')==='0');   /* chave em window; lida a cada uso */
+try{ if(window.ULT_LEGEND_ON===true&&typeof Sys!=='undefined'&&Sys&&Sys.stats&&typeof Sys.stats.goLive==='function') Sys.stats.goLive('ults'); }catch(e){ console.error('goLive ults',e); }
+/* 7 ASAS NOVAS aprovadas (fênix, gelo, sombra, tempestade, mecânica, ossos, mariposa sombria; vistas a pé e montado, Kael e Kaia): ligadas no boot.
+   A de serafim (reprovada) não está em DATA.wingsApproved: segue desenhando a de anjo/demônio. */
+try{ if(typeof Sys!=='undefined'&&Sys&&Sys.stats&&typeof Sys.stats.goLive==='function') Sys.stats.goLive('wings'); }catch(e){ console.error('goLive wings',e); }
 const ULT_ARTS={};
 const ultArtOf = sheet => ULT_ARTS[sheet]||(ULT_ARTS[sheet]={sheet,meta:true,dur:2.5});
-function ultPlan(arm,era){   // → {sheet, boost, own} ou null (sem módulo: a folha da era, como antes)
+/* Engenheiro 9: (1) a chave window.ULT_LEGEND_ON MANDA: desligada, o Lendário/Divino toca a base da família com reforço, mesmo com ownReady ligado no módulo
+   (é o que faz o botão do Modo dono e o ?ultlend=0 valerem depois do goLive('ults')); (2) a folha própria só é devolvida para TOCAR quando está decodificada
+   (png + json): enquanto carrega, sai a base com reforço (inteira), nunca o efeito em código nem quadro vazio; want=true (pré-carga, lista da cena) devolve a
+   folha DESEJADA, pronta ou não. */
+function ultBaseOf(U){ try{ const W=Sys.stats.DATA.weaponTypes[U.type]; return W?(W.ult!==undefined?W.ult:(W.artEra!=null?'assets/anim/ult/era'+W.artEra+'_ult':null)):null; }catch(e){ return null; } }
+const ultHas = sheet => !!IMG(sheet+'.png')&&J(sheet+'.json').frames>0;
+function ultPlan(arm,era,want){   // → {sheet, boost, own} ou null (sem módulo: a folha da era, como antes)
   let U=null; try{ U=(NEXT_ON&&window.Sys&&Sys.stats&&typeof Sys.stats.ultOf==='function')?Sys.stats.ultOf(arm):null; }catch(e){ U=null; }
   const eraSheet=ART_ON['ult_era'+era]?'assets/anim/ult/era'+era+'_ult':null; if(!U) return eraSheet?{sheet:eraSheet,boost:null,own:false}:null;
   let sheet=U.sheet, boost=U.boost||null, own=U.ownReady===true;
-  if(U.tier==='own'&&!own&&window.ULT_LEGEND_ON===true){ const D=Sys.stats.DATA.ownDelivered; if(Array.isArray(D)&&D.indexOf(U.type)>=0){ sheet=U.ownSheet; boost=null; own=true; } }
+  const toBase=()=>{ sheet=ultBaseOf(U); own=false; try{ boost=Object.assign({},Sys.stats.DATA.ultBoost); }catch(e){ boost=null; } };
+  if(U.tier==='own'){ const keyOn=window.ULT_LEGEND_ON===true;
+    if(!own&&keyOn){ const D=Sys.stats.DATA.ownDelivered; if(Array.isArray(D)&&D.indexOf(U.type)>=0){ sheet=U.ownSheet; boost=null; own=true; } }
+    else if(own&&!keyOn) toBase();
+    if(own){ const q=IMGS[sheet+'.png']; if((q&&q.fail)||(!want&&!ultHas(sheet))) toBase(); } }   // folha própria ausente do disco, ou ainda carregando (ultHas já pediu): base reforçada
   if(!own){ const m=/\/era(\d+)_ult$/.exec(sheet||''); if(m&&!ART_ON['ult_era'+m[1]]) sheet=null; }   // folha de era só com a chave de arte dela ligada
   if(sheet){ const q=IMGS[sheet+'.png']; if(q&&q.fail) sheet=null; }                                    // arquivo não existe no disco
   if(!sheet) sheet=eraSheet;
@@ -751,7 +767,7 @@ function preloadAssets(){
   SPR(hp('hero',ae.e,tierOf(ae.r)),'hero'); SPR(wPng(we),'weapon'); heroPreload(ae.e);
   ['hit','crit','muzzle','slash','aura'].forEach(n=>{ if(FX_ART[n]==='sprite') IMG(`assets/fx/${n}.png`); });
   ['s2','s1'].forEach(kd=>{ const A=FX_ART[kd][we.e]; if(A){ IMG(fxPng(A)); if(A.meta) J(A.sheet+'.json'); } });
-  { const E=Math.min(SKN.length-1,we.e), P=ultPlan(wArm(),E); if(P){ IMG(P.sheet+'.png'); J(P.sheet+'.json'); }   /* ultimate da FAMÍLIA da arma (base, ou a própria com a chave ligada) */
+  { const E=Math.min(SKN.length-1,we.e); for(const wt of [true,false]){ const P=ultPlan(wArm(),E,wt); if(P){ IMG(P.sheet+'.png'); J(P.sheet+'.json'); } }   /* ultimate da FAMÍLIA da arma: a desejada (base, ou a própria com a chave ligada) e a que toca enquanto a própria carrega (base) */
     if(we.wk&&ART_ON['ult_era'+E]){ IMG('assets/anim/ult/era'+E+'_ult.png'); J('assets/anim/ult/era'+E+'_ult.json'); } }   /* arco/bumerangue: a folha de reserva também */
   const era=eraOf(S.stage); preloadEra(era);
   if(((S.stage-1)%STAGES_PER_ERA)+1>=8){ preloadEra(era+1); if(typeof eraReady==='function') eraReady(era+1); }   /* próxima era em segundo plano (cenário, inimigos, chefe) */

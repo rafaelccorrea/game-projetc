@@ -42,7 +42,7 @@ function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = 
     { const mo = opt.mount !== undefined ? opt.mount : lk.mount; if (mo && mo.id && typeof mountSheet === 'function') for (const st of ['idle', 'run', 'attack']) sheet(mountSheet(mo.id, st)); }
     { const b = opt.pet !== undefined ? opt.pet : (typeof petInfo === 'function' && (PETK.infoT = 0, petInfo()) ? PETK.base : ''); if (b) for (const st of ['idle', 'run', 'atk1']) sheet(sheetLoad(PET_DIR + b + '_' + st, true)); }
     { const wg = opt.wing !== undefined ? opt.wing : wingNow(lk); if (wg){ const j = 'assets/anim/equip/wing_' + wg + '.json'; J(j); add(j); wingList(wg).forEach(add); } }
-    { const E = Math.min(SKN.length - 1, ws.e), P = ultPlan(wArm(), E); if (P){ IMG(P.sheet + '.png'); J(P.sheet + '.json'); add(P.sheet + '.png'); add(P.sheet + '.json'); }
+    { const E = Math.min(SKN.length - 1, ws.e), P = ultPlan(wArm(), E, true); if (P){ IMG(P.sheet + '.png'); J(P.sheet + '.json'); add(P.sheet + '.png'); add(P.sheet + '.json'); }
       for (let n = 1; n <= 3; n++) add(`assets/icons/era${E}_s${n}.png`); }
     add('assets/hero/avatar/avatars.json'); add('assets/hero/avatar/' + F.hero + '_phase0.png');                                                   // retrato do cabeçalho
     domImages().forEach(add);                                                                                                                       // ícones do cabeçalho e do menu (o que está na tela)
@@ -190,11 +190,16 @@ function loadStep(){
   const ti = Math.floor(Math.max(p / 26, el_s / 3.5)) % LOAD_TIPS.length;
   if (ti !== LD.tip && p < 100){ LD.tip = ti; const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }
   if (p >= 100 && !LD.fin){ LD.fin = true; loadLater(); LD.finMs = Math.round(now - LD.t0); if (DEBUG) console.info('Carregamento: pronto em ' + (LD.finMs / 1000).toFixed(1) + ' s (' + PG.done + '/' + PG.total + ', falhas ' + PG.failed.length + ')');
+{ const b = document.getElementById('lbar'); if (b){ b.style.transition = 'none'; b.style.width = '100%'; } }   /* L2 (QA): a barra animava atrás do número ("Pronto! 100%" com a barra em ~75%): no "Pronto!" ela salta para o fim, sem transição */
 document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); el.setAttribute('tabindex', '0'); try { el.focus({ preventScroll: true }); } catch (e) {} }
 }
 /* arquivos que não vieram depois das tentativas automáticas: aviso claro + "Tentar de novo" (recarrega só os que faltam) + "Continuar mesmo assim"
    (entra com a reserva de sempre para esses arquivos; a lista fica no console). Nunca trava para sempre. */
-function loadFailOff(){ const box = LD.failUI; if (!box) return; box.remove(); LD.failUI = null; const tip = document.getElementById('ltip'); if (tip) tip.style.display = ''; LD.era = -1; }   /* LD.era = -1: o texto "Atravessando..." volta no próximo quadro */
+/* L1 (QA, 288 px): o aviso de falha (texto + nomes + 2 botões, que quebram linha em tela estreita) cresce para cima e cobria a linha "Faltam N de M · 97%" da barra.
+   Com o aviso na tela, a caixa da barra sobe para ficar logo ACIMA do rodapé (medido em px do .lwrap, antes da escala); sem o aviso volta ao CSS. */
+function loadFailFit(){ const el = LD.el, foot = el && el.querySelector('.lfoot'), bb = el && el.querySelector('.lbarbox'); if (!foot || !bb) return;
+  if (!LD.failUI){ bb.style.bottom = ''; return; } const h = foot.offsetHeight || 0; bb.style.bottom = Math.max(120, 36 + h + 12) + 'px'; }
+function loadFailOff(){ const box = LD.failUI; if (!box) return; box.remove(); LD.failUI = null; loadFailFit(); const tip = document.getElementById('ltip'); if (tip) tip.style.display = ''; LD.era = -1; }   /* LD.era = -1: o texto "Atravessando..." volta no próximo quadro */
 function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySelector('.lfoot'), box = document.createElement('div'); LD.failUI = box; box.id = 'lfail'; box.stall = !!stall;
   box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;width:100%';
   const n = stall ? PG.total - PG.done : PG.failed.length, bt = 'min-height:44px;padding:0 18px;border-radius:12px;font:800 15px Nunito,system-ui,sans-serif;cursor:pointer;';
@@ -204,7 +209,7 @@ function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySel
     (who ? '<p id="lwho" style="margin:0;font-size:11px;font-weight:700;color:#cfc6ea;text-align:center;word-break:break-word">Falta: ' + who + '</p>' : '') +
     '<div style="display:flex;gap:10px"><button type="button" id="lretry" style="' + bt + 'flex:0 0 auto;white-space:nowrap;border:2px solid #7a4a12;background:#ffc94a;color:#3a2206">Tentar de novo</button>' +
     '<button type="button" id="lskip" style="' + bt + 'border:2px solid #6a5a48;background:#2a2019;color:#f6ecdf">Continuar mesmo assim</button></div>';
-  document.getElementById('lstep').textContent = 'Faltam ' + n + ' de ' + PG.total + ' arquivos'; const tip = document.getElementById('ltip'); if (tip) tip.style.display = 'none'; foot.appendChild(box);
+  document.getElementById('lstep').textContent = 'Faltam ' + n + ' de ' + PG.total + ' arquivos'; const tip = document.getElementById('ltip'); if (tip) tip.style.display = 'none'; foot.appendChild(box); loadFailFit();
   console.warn(stall ? 'Carregamento: nada progrediu por ' + LOAD_STALL_S + ' s; pendentes (' + n + '): ' + names.join(' | ') : 'Carregamento: arquivos que faltaram: ' + names.join(' | '));
   const off = ev => ev.stopPropagation();
   box.querySelector('#lretry').addEventListener('pointerup', off); box.querySelector('#lskip').addEventListener('pointerup', off);

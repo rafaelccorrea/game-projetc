@@ -1798,3 +1798,74 @@ Estado da conferência: tudo abaixo foi exercitado pelo console numa aba própri
 - **7) API**: `window.VipAuto = { prefs(S), setPref(S, chave, valor), state(S), bagMax(S?), offlineCapH(S?), collect(), fuseNow(), fusionOn() }`. Preferências em `S.set.vipAuto`.
 - Testes: `node --check` nos 3 arquivos; `run.js` TUDO OK (154); `flows.js` "fluxos duros OK".
 - Pedidos a outros donos: painéis (`js/screens.js:429` e `:856`: `BAG_MAX` → `bagMax()`); Servidor (`js/p_intro.js:278`: "Teto: 8 h" → "Teto: {{capH}} h" e `aria-valuemax="8"` → `aria-valuemax="{{capH}}"`); Sistemas (teto de 8 h fixo em `js/sys/level.js:93`, `js/sys/practice.js:87`, `js/sys/pet.js:339`: decidir se XP, pedras de treino e ração seguem o teto do VIP). skipBoss: entraria no `js/fullbattle.js`/`js/battle.js` (botão "Desafiar" de chefe com `S.best` acima da fase) chamando o mesmo caminho de vitória (`farmKill` + tela de resultado).
+
+## Engenheiro 7 — v0.12.9 (2026-11-13, 01h00-02h05)
+
+Arquivos mexidos: `js/preload.js`, `js/loading.js`, `js/battle.js`, `js/mountfx.js` (só `mountArtOf`), `index.html` (lista js/sys: `'assets'`; `scene.js?v=` -c58 → -c59; `wingArt`; classe `lsplash` + regras CSS do `#loading`; texto inicial "Carregando…"), `test/e2e/preload.js` (só a opção `--nova`). Uma aba em `localhost:8080`, fechada; localStorage devolvido (mesmas 4 chaves; `eras_owner_v1` com os mesmos 7315 caracteres).
+
+### Chaves (nome, estado)
+- `window.PRELOAD_NEW` (js/preload.js): **DESLIGADA** por padrão (ordem do PO). Liga só com `?debug=1&carga=nova`. Desligada = carga antiga (imagem pronta no onload, sem decode, sem fila; lista de antes na barra; fuga dos 15 s).
+- `window.ULT_LEGEND_ON`: desligada (não mexi). `Sys.stats.goLive('ults')` e `goLive('wings')`: NÃO chamados no boot.
+- Parâmetros novos só de debug: `&falha=<trecho>` (`&falhas=N`), `&trava=<trecho>`, `&semraf=1`, `&carga=nova`. `Preload.pending`, `Preload.idle`, `Preload.live`, `Preload.timeline`.
+
+### Peça 1, pré-carregador
+- VISTO no caminho novo (`carga=nova`, a frio): save novo 54 arquivos + 2 tarefas, 3,8 s; save gravado de jogador que volta (lobo + asa + pet) 71 + 2, 7,2 s, com Título, "Bem-vindo de volta" e batalha completos; lento=250 5,6 s; lento=800 10,4 s; sem rAF (`semraf=1`) 12,2 s. 0 falhas em todos. Era 5 com pistola mítica: 81 arquivos (visto antes da chave, 19,8 s com lento=800).
+- VISTO: "Tentar de novo" e "Continuar mesmo assim" com `&falha=wolf_run`; aviso de parada aos 15,0 s com `&trava=wolf_run`, que some sozinho quando o progresso volta; "Carregando a próxima era" (salto de era com lento=800); primeira cena com lobo, asa, pet e arma já no primeiro quadro; Kaia montada pelo `Sys.assets.mountedArt` (no lobo: o manifesto já lista `kaia_wolf`).
+- NÃO visto: aba realmente em segundo plano (as ferramentas trazem a aba para a frente); fundo em 430 px; a troca do fundo para `splash_loading.webp` feita pelo coordenador só foi vista funcionando (imagem aparece), sem medir o tempo.
+- Causas do "Confira a conexão" e do 0% parado: (1) o prazo de cada arquivo contava a espera na fila; (2) `img.decode()` não responde quando a janela não produz quadros (janela coberta: `document.hidden` continua false) e prendia as vagas da fila; (3) a barra só andava por rAF; (4) os 7 cenários vivos da travessia da própria tela seguravam a barra de 5 a 17 s; (5) a lista do módulo trazia 367 arquivos (174 bloqueando).
+- O que mudou: fila de 8 em paralelo com prazo depois de sair da fila; nada estoura por tempo total (só com 15 s sem nenhum arquivo concluído, página visível); decode com reserva de 1,5 s e onload direto sem quadros; barra por temporizador de 400 ms + visibilitychange + boot, além do rAF; aviso com nomes ("Falta: ..."; lista inteira no console); do `Sys.assets.sceneSet` entram weapon, ult, wing, enemies (hero, mount _Nstar, pet atk2/3 e camadas do cenário vivo ficam fora); ícones fora da tela só depois de a barra fechar; fundo = imagem de abertura, sem travessia, logo solto, rótulo de era e Kael correndo.
+- (d) A lista vem do módulo somada à do jogo desde que `'assets'` entrou na lista de js/sys (antes o módulo nem carregava: por isso `later = 0`).
+- Prints: `v0129_preload_equipado.jpg`, `v0129_preload_falha.jpg`, `v0129_preload_aviso_era.jpg`, `v0129_carregamento_fundo.jpg` (são .jpg).
+
+### Desempenho (medido nesta máquina, janela estrangulada)
+- Batalha com lobo + asa + pet + cenário vivo: trabalho do jogo 3,3 ms por quadro (`__fpsStat.workMs`); `draw()` 0,46 ms; o navegador entregava 12 quadros/s (pior 659 ms). heroLook 2,9 µs, wSkin 0,8 µs, mountReady 0,65 µs, heroEdge 4,2 µs por chamada.
+- Cortes (ganho de microssegundos, sem diferença visível): `lookNow()` guarda a aparência por estado e 200 ms; `wSkin` reaproveita; a montaria já desenhada não reconfere as 3 folhas por quadro; `mountArtOf` guarda a resposta do manifesto.
+- Limitador de 60: a taxa da tela passou a sair da MÉDIA de 40 intervalos (o quartil baixo podia dar "120 Hz" numa tela de 60 com quadros irregulares e o jogo desenhava 1 a cada 2). Escrito, NÃO medido em 120 Hz. Não medi: HUD dos eventos, laço do cenário vivo, mesma velocidade com `fps=120`, degraus com `peso=1`.
+
+### Não feito
+- Peça 2 (ultimates lendárias) e peça 3 (7 asas): não vistas, não ligadas. Peça 4: só o que está acima. Peça 5 (arco/bumerangue com as folhas novas da Arte e a regra do PO para skin sem folha, decidida por `sheetFor().noFamilySheet/familyDir`) e a skin Kaia Arlequina: não comecei. Lido para a skin: pistola, morte e fases saem do `sheetFor` (js/stage.js `pistolSheet`, `dieSheet`, `phaseSheet`); `HERO_DIR`/`PISTOL_DIR` fixos em `hyb/R` ainda existem em js/stage.js:59-60 e :198 (Kael padrão, giro e rastro da era 2): conferir no navegador com a skin equipada.
+
+### Pedidos a outros donos
+- Dono do `js/avatar.js` (linhas 22, 63, 121): `need(AV.RES, ...)` pede `assets/anim/hyb/R/kael_idle_era2_t0.json`, que não existe (só o .png): apontar o .json para `assets/anim/hyb/R/kael_idle_body.json`.
+- Sistemas: incluir no manifesto/pacote base o fundo da tela de carregamento (`assets/mobile/splash/splash_loading.webp` e `.jpg`); `assets/mobile` está fora do manifesto.
+- QA: caso real de aba em segundo plano com `?debug=1&carga=nova` (trocar de aba durante a carga e voltar).
+
+### Testes
+- `node --check` nos 6 arquivos; `run.js` TUDO OK (154); `flows.js` "fluxos duros OK"; `preload.js` 4/4 no antigo e 4/4 com `--nova`.
+
+## Engenheiro 9 — v0.12.9 (2026-11-13): o que entra no APK (L1/L2, ultimates lendárias, 7 asas)
+
+Arquivos mexidos: `js/battle.js`, `js/loading.js`. Nada em index.html, js/sys, painéis ou assets. Uma aba em `localhost:8080` (save em memória, `fresh=1`), fechada; localStorage devolvido igual (4 chaves, mesmos tamanhos, conferido chave a chave).
+
+### Chaves (nome, estado)
+- `window.ULT_LEGEND_ON` (js/battle.js): **LIGADA por padrão**; `?debug=1&ultlend=0` desliga (e o botão do Modo dono). Agora a chave MANDA: desligada, Lendário/Divino tocam a base da família com reforço, mesmo com `ownReady` ligado.
+- `Sys.stats.goLive('ults')` e `Sys.stats.goLive('wings')`: chamados no boot, no topo do `js/battle.js` (os módulos js/sys carregam antes), com guarda `typeof`. Visto no boot: `ownReady` com as 9 famílias, `newWingReady` com as 7 asas. Com `ultlend=0`: `ownReady` vazio, asas ligadas.
+- Serafim: fora de `wingsApproved`; item de asa serafim desenha a de anjo (visto).
+
+### Tela de carregamento (VISTO)
+- L1 (288 px, `&falha=era0_e`): com o aviso de falha na tela a caixa da barra sobe para cima do rodapé (`loadFailFit`); "Faltam 18 de 72 arquivos · 38%" acima, "18 arquivos não carregaram. Confira a conexão." abaixo, nomes e os 2 botões, sem sobreposição (medido: linha da barra termina em y 538, aviso começa em 547). A largura de 288 foi forçada no `#app` (a janela não encolhe até aí).
+- L2 (`&lento=250&frio=1`): no "Pronto!" a barra salta para o fim sem transição; na primeira amostra com "Pronto! 100%" a barra já estava em 100% da largura (amostras a cada 16 ms).
+
+### Peça 1, ultimates lendárias (VISTO; ligadas)
+- Por leitura: `ultStart` usa `ultPlan` → `Sys.stats.ultOf(arma).sheet` (família do item, nunca a era do mapa); reforço do Mítico em `fnSheet` (tamanho/brilho) + `fnUltBoost`; tremor preso em 3 px de tela no `draw()`.
+- Mudança: a folha própria só toca quando está decodificada; enquanto carrega sai a base com reforço (nunca efeito em código nem quadro vazio). Pré-carga (`preloadAssets`, `sceneList`) pede a folha desejada e a base.
+- Visto na batalha, folha certa no chão do campo, sem quadro vazio: espada Épico (`era2_ult`), Mítico (`era2_ult` + reforço), Lendário (`sword_legend`); pistola de pólvora Raro (`era3_ult`), Mítico (reforço), Lendário (`flintlock_legend`); Lendário de clava, gládio, revólver, fuzil, plasma, infernal; Divino celeste (`celestial_legend`). Tremor máximo medido 2,68 px.
+- Visto o caso da folha ainda carregando (infernal e celeste na 1ª vez; a celeste levou mais de 10 s para decodificar nesta máquina): tocou a base com reforço, inteira.
+- Achados: (a) infernal e celeste não têm base própria ligada (`ART_ON.ult_era7/8` não existem; `era7_ult`/`era8_ult` estão no disco sem voto registrado): Básico a Mítico dessas famílias tocam a folha da era da arma na mão; (b) as folhas rifle_legend e sword_legend têm a borda de cima reta visível em alguns quadros (arte, igual às bases); (c) `bow_legend`/`boomerang_legend` entram junto com o arco/bumerangue (família desligada).
+- Prints: `v0129_ult_base.png`, `v0129_ult_mitico.png`, `v0129_ult_lendaria.png` (pistola de pólvora; pequenos, 169 px de largura).
+
+### Peça 2, 7 asas (VISTO; ligadas)
+- Folha de contato com o MESMO desenho da batalha (`drawHeroFull`): anjo (referência) + 7 asas × parado, corrida, golpe, montado no lobo, Kael e Kaia. Raiz nas costas na altura do ombro em todas; tamanho coerente com a de anjo (as novas são mais altas, com o `fit` do .json). Print `v0129_asas_novas.png` (Kael em cima, Kaia embaixo).
+- Na batalha de verdade: item de asa fênix equipado → desenhou a fênix nas costas.
+- Não visto: cada asa uma a uma na batalha rodando (só a fênix); asa nova em montaria com asas (grifo, serpe); tempestade na Kaia fica em boa parte atrás do corpo (arte estreita).
+
+### Não feito (fica para depois do APK, ordem do coordenador)
+- Peça 3 (Kaia Arlequina) e peça 4 (arco e bumerangue): só leitura. Arlequina: nada no desenho supõe `hyb/kaia` fixo para a Kaia (folhas, pistola, morte e escala saem do `sheetFor`). Arco/bumerangue: as folhas da Arte não têm âncora `back` (asa) e o desenho pelas poses novas não foi escrito.
+- Peça 5 (60 FPS): não conferida.
+
+### Pedidos a outros donos
+- Arte: âncora `back` nos `_body.json` de `hyb/R/{bow,boomerang}` e `hyb/kaia/{bow,boomerang}` (sem ela a asa usa a última posição conhecida).
+- PO/dono: votar `era7_ult` e `era8_ult` (base das famílias infernal e celeste) ou confirmar que ficam na folha da era.
+
+### Testes
+- `node --check` em `js/battle.js` e `js/loading.js`; `run.js` TUDO OK (154); `flows.js` "fluxos duros OK"; `preload.js` 4/4 e `--nova` 4/4.
