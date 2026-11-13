@@ -235,7 +235,7 @@ function uClick(b){
 /* item novo a partir do resultado do canFuse, no formato da mochila (normItem do js/farm.js quando existe; ele zera lvl/gold, então voltam aqui) */
 function uMake(res,best){ let it; try{ it=typeof normItem==='function'?normItem(res):Object.assign({},res); }catch(e){ it=Object.assign({},res); }
   it.lvl=res.lvl; it.gold=res.gold; it.qp=res.qp; if(Number.isInteger(res.look)) it.look=res.look;
-  if(it.slot==='wing'&&best&&(best.wing==='angel'||best.wing==='demon')) it.wing=best.wing;
+  if(it.slot==='wing'&&best&&best.wing){ let ok=best.wing==='angel'||best.wing==='demon'; try{ ok=!!Sys.stats.DATA.wingTypes[best.wing]; }catch(e){} if(ok) it.wing=best.wing; }   /* asas novas também (o desenho decide pelo Sys.stats.wingOf) */
   const top=(S.inv||[]).reduce((m,x)=>Math.max(m,+(x&&x.id)||0),0); if(!(S.nextId>top)) S.nextId=top+1;   /* F4 (QA): nextId atrasado reaproveitaria o id de um item da mochila */
   it.id=S.nextId++; it.gotAt=Date.now(); it.nw=1; try{ Sys.stats.ensureSubs(it); }catch(e){} return it; }
 function uFuse(){

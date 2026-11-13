@@ -54,6 +54,12 @@ const DATA={
   // a partir da era 3), só os ligados; o resto é a família da ARTE do item que caiu (era do drop). Depois de gravada em it.wt, nunca muda (inclusive na transformação).
   // sword_legend ENTREGUE pela Arte (12/11, 49 quadros, lighter) e EM VOTAÇÃO do dono: marcar ownReady.sword=true só depois da aprovação (regra: nada entra sem o dono)
   ownDelivered:['sword','club','gladius','flintlock','revolver','rifle','plasma','infernal','celestial'],   // folhas próprias ENTREGUES pela Arte e em voto (13/11); o ownReady só depois do OK do dono
+  // VOTO DO DONO (13/11): APROVADAS as 9 Lendárias próprias (as 9 famílias, espada inclusa) e 7 asas novas (a de serafim foi REPROVADA, está sendo
+  // refeita: fica desligada). As viradas ficam PRONTAS e só são feitas quando o engenheiro disser que o desenho na batalha está visto:
+  // Sys.stats.goLive('ults') liga ownReady das aprovadas; Sys.stats.goLive('wings') liga newWingReady das aprovadas. (Nada liga sozinho.)
+  ownApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
+  wingsApproved:['phoenix','ice','shadow','storm','mechanical','bone','darkmoth'],
+  baseDelivered:['bow'],   // folha-base própria entregue (arco: Chuva de Flechas, bow_base); bumerangue e as lendárias dos dois em produção
   ownReady:{},   // família → true quando a Arte entregar a folha própria do Lendário (assets/anim/ult/<família>_legend.png + .json)
   skillFx:[
     {r:0,name:'Básico',  color:'#e8e2d8',tint:0,   particles:1.0,size:1.00,glow:0,shake:1.0,trail:0,flash:false},
@@ -411,6 +417,9 @@ const wingOf=it=>it&&it.slot==='wing'?(wingLive(it.wing)?it.wing:wingForDrop(it.
 /* brilho da asa para o engenheiro: {glow, color, particles} pela raridade do item + nível da Forja da asa (Sys.forge lv.wing, 0..15) */
 function wingGlow(it,forgeLv){ const G=DATA.wingGlow, r=clamp(int0(it&&it.r),0,G.base.length-1), f=clamp(int0(forgeLv),0,15), fx=DATA.dropFx[Math.min(r,DATA.dropFx.length-1)];
   return {wing:wingOf(it),glow:Math.round((G.base[r]+G.perForge*f)*100)/100,color:fx&&fx.color,particles:r>=G.particlesFromR||f>=G.particlesFromForge,prism:r>=5}; }
+/* vira as aprovadas pelo dono: 'ults' (Lendárias próprias entregues E aprovadas) | 'wings' (asas novas aprovadas). Devolve a lista ligada. */
+function goLive(what){ if(what==='ults'){ const on=DATA.ownApproved.filter(k=>DATA.ownDelivered.includes(k)); for(const k of on) DATA.ownReady[k]=true; return on; }
+  if(what==='wings'){ for(const k of DATA.wingsApproved) if(DATA.wingTypes[k]) DATA.newWingReady[k]=true; return DATA.wingsApproved.slice(); } return []; }
 const wingCatalog=()=>Object.keys(DATA.wingTypes).map(id=>{ const W=DATA.wingTypes[id]; return {id,name:W.name,r:W.r==null?null:W.r,live:wingLive(id),soon:!wingLive(id),src:(W.src||[]).slice(),rarest:!!W.rarest}; });
 const wingName=it=>{ const w=wingOf(it); return w?DATA.wingTypes[w].name:''; };
 /* efeito visual da habilidade pela arma na mão: skillFx(arma|raridade, 's1'|'s2'|'s3') → {r, color, tint, particles, size, glow, shake, trail, flash, prism,
@@ -444,7 +453,7 @@ function abbr(v,opt){ let n=num(v,0); const neg=n<0; n=Math.abs(n); const A=DATA
   return (neg?'−':'')+out; }
 /* efeito do item caído no chão pela raridade (o engenheiro desenha; tabela única): dropFx(item|r) → {r, name, color, glow, particles, beam, pulse, sound, prism} */
 const dropFx=w=>{ const r=clamp(int0(w&&typeof w==='object'?w.r:w),0,DATA.dropFx.length-1); return Object.assign({},DATA.dropFx[r],{sound:DATA.dropFx[r].sound?Object.assign({},DATA.dropFx[r].sound):null}); };
-const API={DATA,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
+const API={DATA,goLive,wingGlow,wingCatalog,wingLive,abbr,dropFx,skillFx,weaponType,ensureWeaponType,rollWeaponType,weaponStyle,ultOf,FAM_BY_ERA,powerDelta,wingForDrop,wingOf,wingName,offerSync,setEra9,maxR:MAXR,maxHit,checkHit,SUB_KEYS,STAT_KEYS,subCount,rollSubs,ensureSubs,subValue,mainOf,itemStats,slotOpen,canEquip,equippedOf,itemsTotal,itemLevel,upgradeCap,isDormant,dormantView,dormantInfo,canFuse,fuse,lvlFactor,rollQuality,qualityMult,qualityStars,qpOf,levelBase,compute,upgradeCost,canUpgrade,upgrade,dismantleGold,planUpgrade,upgradeTo,visualEra,transformCost,canTransform,planTransform,transform,legacyGold,migrateItem,migrateSave,defReduction,hit,interval,bonus};
 root.Sys=root.Sys||{}; root.Sys.stats=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

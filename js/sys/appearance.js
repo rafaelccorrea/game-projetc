@@ -126,6 +126,23 @@ const FIXED=[
    PODE vir mesmo com fixedGrant=false ('offer' = oferta de 1ª compra, 'pass' = último nível do Passe premium). Cadastro: addFixed({...}) quando o dono
    escolher. DATA.offerSkin / DATA.passSkin = id da skin de cada gancho (null até a escolha): Sys.offer e Sys.pass entregam por grantFixed(S, id, {source}). */
 DATA.offerSkin=null; DATA.passSkin=null;
+/* AS 10 SKINS APROVADAS PELO DONO (13/11): Kael 6 (Demônio, Anjo, Paladino, Ninja, Samurai, Ciborgue), Kaia 4 (Arlequina, Ninja, Demônia, Anjo).
+   Mesmo corpo do garoto/menina (só a folha troca). art:false até a Arte entregar a pasta: aparece na vitrine como "em breve" e não se obtém
+   (o Modo dono vê); quando chegar, preencher dir (+ avatar) e art:true. r = raridade (bônus no padrão do Sys.skin). PROPOSTA dos ganchos:
+   oferta de 1ª compra = NINJA do herói do jogador (Épico); fim do Passe premium = ANJO do herói (Lendário). Os ganchos ficam null até a arte. */
+DATA.hookProposal={offer:{kael:'kael_ninja',kaia:'kaia_ninja'},pass:{kael:'kael_angel',kaia:'kaia_angel'}};
+for(const k of [
+  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7 (proposta)'},
+  {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium (proposta)', sources:['pass']},
+  {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta (proposta R$ 24,90)'},
+  {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra (proposta)', sources:['offer']},
+  {id:'kael_samurai',name:'Kael Samurai',   hero:'kael', r:3, how:'Torneio: top 10 da temporada (proposta)'},
+  {id:'kael_cyborg', name:'Kael Ciborgue',  hero:'kael', r:4, how:'Loja: compra direta (proposta R$ 39,90)'},
+  {id:'kaia_harlequin',name:'Kaia Arlequina',hero:'kaia', r:3, how:'Loja: compra direta (proposta R$ 24,90)'},
+  {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra (proposta)', sources:['offer']},
+  {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7 (proposta)'},
+  {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium (proposta)', sources:['pass']},
+]) FIXED.push(Object.assign({dir:null,avatar:null,mountArt:false,art:false,sources:[]},k));
 const FX={}; for(const k of FIXED) FX[k.id]=k;
 const dirOf=(k,h)=>k?(k.dir&&typeof k.dir==='object'?k.dir[h]||null:k.dir):null;
 const fitsHero=(k,h)=>!!k&&(k.hero===h||(k.hero==='both'&&!!dirOf(k,h)));
@@ -139,9 +156,10 @@ const fixedEquipped=S=>{ if(!S||typeof S!=='object') return null; const id=fixed
 /* para a vitrine: [{id, name, hero, r, owned, equipped, available (do herói atual), how, bonus (texto '+7% ATK e Vida'), bonusPct:{equipped, collection}, soon, avatar, scale, mountArt}] */
 function fixedSkins(S,host){ const f=fixedState(S), h=heroOf(S), K=root.Sys&&root.Sys.skin&&root.Sys.skin.DATA;
   return FIXED.filter(k=>k.off!==true).map(k=>({id:k.id,name:k.name,hero:k.hero,r:k.r,owned:f.owned.includes(k.id),equipped:f.eq[k.hero]===k.id,available:fitsHero(k,h),how:k.how,
-    soon:DATA.fixedGrant!==true,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
+    soon:DATA.fixedGrant!==true||k.art===false,art:k.art!==false,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
 /* obter: {ok, reason: id|owned|off}. Enquanto DATA.fixedGrant=false só o Modo dono ({owner:true}) libera. */
-function grantFixed(S,id,opt){ if(!FX[id]) return {ok:false,reason:'id'}; if(FX[id].off===true) return {ok:false,reason:'retired'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
+function grantFixed(S,id,opt){ if(id&&typeof id==='object') id=id[heroOf(S)];   // gancho por herói ({kael, kaia})
+  if(!FX[id]) return {ok:false,reason:'id'}; if(FX[id].art===false&&!(opt&&opt.owner===true)) return {ok:false,reason:'art'}; if(FX[id].off===true) return {ok:false,reason:'retired'}; const src=opt&&opt.source; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)&&!(src&&Array.isArray(FX[id].sources)&&FX[id].sources.includes(src))) return {ok:false,reason:'off'};
   const f=fixedState(S); if(f.owned.includes(id)) return {ok:false,reason:'owned'}; f.owned.push(id); return {ok:true,id}; }
 /* equipar (null = voltar ao padrão do herói atual). Skin de um herói não equipa no outro. {ok, reason: id|hero|owned} */
 function equipFixed(S,id){ const f=fixedState(S), h=heroOf(S); if(id==null){ f.eq[h]=null; return {ok:true,id:null}; }
