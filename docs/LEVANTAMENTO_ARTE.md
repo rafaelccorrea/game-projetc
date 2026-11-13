@@ -1,21 +1,47 @@
 # Levantamento: arte que falta para 100% (13/11/2026, ~19h30)
 
-## PRIORIDADE (pedido do dono, 14/11: "prioriza o que é pendente no game: Kael montado, ataques etc.")
+## PRIORIDADE (dono, 14/11: "prioridade não é criar as coisas novas e sim animar o que já temos por completo")
 
-Critério: primeiro o que o jogador VÊ faltando no jogo; depois o resto. Fluxo grátis (rafae-47: Google AI Studio + Kling grátis, ~1 montaria/dia) faz o máximo; Higgsfield (saldo a confirmar, ~69?) só no que o grátis não alcança.
+Feita pela Arte (fps-75) em 14/11, cruzando o que o código PEDE (js/) com o que EXISTE em assets/. Ordem: o que o jogador vê mais cedo. Montarias e pets NOVOS ficam para depois (fim da seção).
 
-| # | O que | Por que primeiro | Quem / como | Custo |
-|---|---|---|---|---|
-| 1 | Inimigos das eras 7-8 ligados + fundo de reserva | arte pronta, eras 7-8 mostram inimigo sem animação | Engenheiro (só ligação) | 0 |
-| 2 | 6 ícones de golpe das eras 7-8 | eras 7-8 sem ícone de golpe | Arte, Higgsfield | ~4 |
-| 3 | Kaia na Fênix gigante (parado/correr/golpe) | prêmio do VIP 8 já existe; Kael pronto, Kaia não | Arte, vídeos já pagos | 0 |
-| 4 | Kael montado no **Mecha de Guerra** | é vendido (R$ 49,90) e aparece parado atrás do herói; **não vender antes da arte** | grátis (rafae-47); se não passar no teste, Higgsfield | 0 ou ~28 |
-| 5 | Kael montado no **Raptor** (em andamento), depois **Escorpião**, **Pantera**, **Unicórnio**, **Lobo de gelo** (os que o jogador ganha antes, por Torre/eventos/Arena/Guilda/Torneio) | aparecem cedo no jogo | grátis (rafae-47), 1 por dia | 0 |
-| 6 | Kael montado no **Cavalo infernal**, **Dragão negro**, **Tigre celestial** (eras 7-8 e topo do Torneio) | só no fim | grátis | 0 |
-| 7 | Kaia montada nas 10 novas (mesma ordem) | Kaia hoje cai no padrão | grátis depois do Kael de cada uma | 0 |
-| 8 | Limpezas do Ciborgue (manchas do ataque, faixa do peito) | visível no ataque | Arte, por código | 0 |
-| 9 | 6 pets novos (3 estágios) | ainda desligados no jogo | depois das montarias | ~255-270 ou grátis |
-| 10 | Montaria sem cavaleiro (Derrota) e skins montadas | hoje há paliativo por código | por último | ~80-110 / A-B-C |
+| # | O que falta (já existe no jogo) | Jogador vê em | Evidência | Como | Custo |
+|---|---|---|---|---|---|
+| 1 | Ciborgue: faixa no peito no **giro** (spin q2-q15) | sempre que a skin está equipada | resto limpo em 7f938d7 / 454ceb8 | Higgsfield: refazer o vídeo do spin (o remendo por código corta braço/rosto) | ~4 |
+| 2 | **Aura dos pets** por estágio não é desenhada (a arte existe: aura4/7/10/13/evil/holy) | nível 20 (1º ovo) | js/sys/pet.js:97-98, 399-421 monta `draw.aura`; js/petfx.js não desenha | Engenheiro, só código | 0 |
+| 3 | **Tela de Pets** mostra "Em breve" para Cérbero, Pégaso e Raposa, e não lista Falcão, Pantera e Lobo das Sombras, mas TODAS as folhas existem | nível 20+ | js/p_pets.js:49-51, 228, 273-284 (PT_SH / PT_ART.sheet:false) | Engenheiro, só código | 0 |
+| 4 | Ícones de golpe das **eras 7-8** (6) | fases 71-90 (hoje travadas: ERA9_KEY=false por js/eras9.js:22) | assets/icons só tem era0..6 | Higgsfield (kit docs/guidekit/icons78) | ~4 |
+| 5 | **Kaia na Fênix gigante** (idle/run/attack) | VIP 8 (montaria ainda desligada) | não há kaia_giant_phoenix_* | Arte; os vídeos já estão pagos | 0 |
+| 5b | A Fênix não carrega nem para o Kael: id `phoenixm` ≠ arquivo `giant_phoenix`; fica fora do MOUNT_TBL e do manifest | VIP 8 | js/sys/mount.js:42, js/mountfx.js:11-20, 49 | Engenheiro: alias ou renomear + tabela | 0 |
+| 6 | Pets médio/evoluído com atk2/atk3 (hoje repetem o atk1) | **só na tela de Pets**; na batalha nenhum estágio usa atk2/3 | js/loading.js:59, js/p_pets.js:276-282 | grátis (rafae-47): 20 folhas (5 pets × 2 estágios × 2) + o Engenheiro acrescenta na PT_SH | 0 |
+| 7 | Asa Seráfica (arte reprovada, a refazer) | nível 50 | fora de wingsApproved (js/sys/stats.js) | grátis primeiro; Higgsfield se não passar | 0 ou ~4 |
+
+**Conferido e SEM falta** (não gastar):
+- Kaia nas 6 montarias antigas: completa, com era2_t1 e manifest.
+- Estados de todas as skins Kael/Kaia: run/idle/attack/spin/die/pistola.
+- `attack_wide` da Kaia: o código não lê attack_wide de skin (js/stage.js:259, 397).
+- Inimigos e chefes das eras 0-8: run/attack/hurt/die.
+- Asas: imagem L/R batida por código; morte via drawWingsAt.
+- Pets sem dano/morte: é por desenho, o pet não é alvo (js/sys/pet.js:86).
+- Ultimates: era0..8_ult e os 9 *_legend existem.
+
+**Desligado / novo: depois, pela regra do dono**
+- Mecha de Guerra: sem folha montada. **Não está à venda**: o card shopmecha está false (js/panels.js:20). São 6 folhas, grátis (rafae-47) ou ~28-34 por cavaleiro.
+- 8 montarias novas (raptor, escorpião, pantera, cavalo infernal, unicórnio, lobo de gelo, dragão negro, tigre celestial): 6 folhas cada, grátis primeiro.
+- 6 pets novos (escorpião, corvo, grifo, obsidiana, dragão de gelo, wyvern): 9 folhas cada.
+- bow_legend e boomerang_legend: só quando o arco e o bumerangue forem ligados.
+
+**Plano dos 119 créditos do Higgsfield** (reserva de ~15% = 18 para refazer)
+
+| Ordem | Item | Custo |
+|---|---|---|
+| 1 | Kaia na Fênix (baixar os 3 vídeos já pagos) | 0 |
+| 2 | 6 ícones das eras 7-8 | ~4 |
+| 3 | Giro do Ciborgue (spin) | ~4 |
+| 4 | Asa Seráfica, se o grátis não passar | ~4 |
+| — | Reserva para refazer | 18 |
+| — | **Sobra ~89, sem destino entre os itens existentes.** Sugestão, a decidir pelo PO e pelo dono: cobrir os vídeos grátis que não fecharem o laço ou não passarem nos 3 testes (o Mecha primeiro, porque vai ser vendido) | a decidir |
+
+Quase tudo o que falta no que JÁ existe é código (itens 2, 3 e 5b, do Engenheiro), não arte.
 
 Comparação do catálogo do código com os arquivos em `assets/` (pastas de reprovado/backup ignoradas).
 
