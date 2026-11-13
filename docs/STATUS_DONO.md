@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14h · APK v0.12.9 SENDO GERADO** (o QA aprovou). Leva: carregamento novo (abre em ~5 s), ícone A e abertura, logo animado, 60 FPS, eventos na batalha, Kaia montada nas 6, vantagens do VIP (mochila, forja automática, desmontar sozinho etc.), 9 ultimates Lendárias, 7 asas novas, Lobo das Sombras e Falcão, sem Facebook. Quando ficar pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
+
 - **13h50 · Checklist atualizado.** Carregamento novo ligado (bloqueio resolvido). APK: falta só conferir e ligar as 9 ultimates Lendárias e as 7 asas. Skins animadas: 3 de 10. Pets: 2 de 9. Créditos ~459 (vai precisar de mais para terminar tudo)
 
 - **13h40 · Bloqueio do APK RESOLVIDO:** o carregamento novo passou nos 4 testes (normal 6 s, internet lenta 9 s, muito lenta 15 s, segundo plano) e está ligado. O próximo APK sai assim que as 9 ultimates Lendárias e as 7 asas forem conferidas e ligadas (falta pouco). Leva: carregamento novo, fundo da abertura, 60 quadros por segundo, eventos na batalha, Kaia montada nas 6, vantagens do VIP, ícone A, logo animado, sem Facebook
@@ -302,7 +304,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Saldo ~459. Faltam 7 skins (~280) e 7 pets (~310): ~590 no total, mais ~280 das 10 montarias novas montadas. Vai precisar de mais crédito (eu aviso antes de acabar)
 
 **Celular:**
-- [ ] APK v0.12.8 pronto: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
+- [ ] APK v0.12.9 (sendo gerado): ligue o cabo e escreva "pode instalar" na janela do Engenheiro
 
 **Servidor (para ligar o online):**
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
