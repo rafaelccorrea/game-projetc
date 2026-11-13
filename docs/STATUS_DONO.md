@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **21h45 · Arte:** começaram as animações do adulto e do guerreiro (Kael e Kaia, 32 vídeos, ~150 créditos, 2 agentes em paralelo); a pistola do guerreiro sai certa junto com elas. A tela Mapa das Eras foi ESCRITA (salva no GitHub, ainda não vista rodando). O QA pula o Mapa e vai direto para o Perfil
+
 - **21h35 · Ninguém parado. Fila de cada um, em ordem:**
   - Engenheiro: conferir e fechar a v0.12.7 (com a Serpe V2) → ligar tudo que está escrito (v0.12.8) → ultimate pela raridade → Aparência → Kaia jogável, morte, inimigo, cenário Industrial
   - QA (ajudante do engenheiro): Mapa das Eras → Perfil → Passe com rolagem → missão guia → ajudar o engenheiro a conferir as telas no navegador
