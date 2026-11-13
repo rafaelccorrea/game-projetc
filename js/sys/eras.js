@@ -10,7 +10,7 @@
 const ERAS78=[
  {n:'Submundo', icon:'', key:'underworld',
   sky:['#2a0a0a','#8a1a0a'], mtn:'#3a0f0a', gr:'#2a1410', gr2:'#4a1a12', sun:'#ff6a2a',
-  w:['Tridente de Brasa','Foice Sombria','Lâmina Infernal','Garra do Abismo','Ceifadora do Submundo'],
+  w:['Foice de Osso','Foice Sombria','Lâmina Infernal','Espada de Obsidiana','Tridente do Submundo'],
   a:['Couro Chamuscado','Placas de Obsidiana','Armadura de Cinzas','Couraça do Abismo','Manto do Senhor das Chamas'],
   ws:['Brasa Opaca','Ferro Negro','Obsidiana','Lava Viva','Chama Eterna'],
   as:['Cinza','Obsidiana','Rubro Vulcânico','Sombra Ardente','Fogo Real'],
@@ -18,7 +18,7 @@ const ERAS78=[
   en:[{n:'Diabrete',s:'h',c:'#c8322a',art:'era7_e0'},{n:'Cão Infernal',s:'beast',c:'#3a2a24',art:'era7_e1'},{n:'Senhor do Submundo',s:'h',c:'#a8221a',art:'era7_boss'}]},
  {n:'Celestial', icon:'', key:'celestial',
   sky:['#bfe3ff','#fff4d0'], mtn:'#d8e4f0', gr:'#e8eef6', gr2:'#cfd9e6', sun:'#fffbe0',
-  w:['Lança de Luz','Espada Alada','Lâmina Celeste','Gládio do Firmamento','Juízo do Arcanjo'],
+  w:['Lança de Luz','Espada de Cristal Celeste','Espada Galáxia','Espada da Fênix Celeste','Cetro do Sol'],
   a:['Túnica de Nuvem','Peitoral de Prata','Armadura Seráfica','Couraça Celeste','Manto do Arcanjo'],
   ws:['Prata Clara','Aço Celeste','Ouro Branco','Luz Viva','Aurora Eterna'],
   as:['Nuvem','Prata','Ouro Branco','Céu Profundo','Aurora'],
