@@ -484,18 +484,21 @@ function stageWin(S,host,w){
   return {first:true,kind,gems,gold,xp,golem};
 }
 /* sorteia o saque de um abate (atualiza a garantia do ovo; NÃO entrega: ver grant/onKill) */
+/* bônus do evento com horário ativo (Sys.schedule.perks). Sem o módulo ou sem evento: tudo 0. Nunca negativo. */
+function schedPerks(S,host){ const z={goldPct:0,dropPct:0,forgePct:0,foodPct:0,petFragPct:0}; const Sc=root.Sys&&root.Sys.schedule;
+  try{ const p=Sc&&typeof Sc.perks==='function'?Sc.perks(S,host):null; if(p&&typeof p==='object') for(const k in z) z[k]=Math.max(0,num(p[k],0)); }catch(e){} return z; }
 function rollKill(S,host,enemy){
   ensure(S);
   const rng=rngOf(host), cls=killClass(enemy,host), T=DATA.enemy[cls], m=params.mult, M=DATA.mats[cls], d=diffOf(enemy,host), dm=diffMult(d), DF=DATA.diff;
   let gold=(enemy&&num(enemy.gold,0)>0)?enemy.gold:goldUnitOf(host)*T.goldMult;
   if(T.goldVar>0) gold*=1+(rng()*2-1)*T.goldVar;
-  const vip=vipPerks(S);
+  const vip=vipPerks(S), ev=schedPerks(S,host);   // ev: evento com horário ativo agora (Sys.schedule: Hora de Ouro, Invasão, Bênção da Forja, Caça aos Pets)
   // BÔNUS DE RETORNO (Sys.clock, atrás de chave): enquanto houver XP descansada, o abate vale XP e ouro em dobro
   const Ck=root.Sys&&root.Sys.clock, rest=!!(Ck&&typeof Ck.takeRested==='function'&&Ck.takeRested(S)), rm=rest?num(Ck.DATA.rested.mult,2):1;
-  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+vip.goldPct/100)*rm*dm));   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
+  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+(vip.goldPct+ev.goldPct)/100)*rm*dm));   // VIP e evento SOMAM (Hora de Ouro +100% = ×2 sem VIP)   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
   let gems=0; if(rng()<T.gemChance) gems=Math.max(0,Math.round(randInt(rng,T.gems[0],T.gems[1])*num(m.gems,1)));
-  const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1))) items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1,diff:d}));
-  const forge=rollMat(rng,M.forge,num(m.forge,1)*dm), food=rollMat(rng,M.food,num(m.food,1)*dm);
+  const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1)*(1+ev.dropPct/100)))   /* evento: mais CHANCE de item; a raridade continua presa ao portão (rollItem) */ items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1,diff:d}));
+  const forge=rollMat(rng,M.forge,num(m.forge,1)*dm*(1+ev.forgePct/100)), food=rollMat(rng,M.food,num(m.food,1)*dm*(1+ev.foodPct/100));
   let essence=0;
   if(cls==='eraBoss'){ const E=DATA.essence, first=!ensure(S).egg.eraFirst.includes(eraOfEnemy(enemy,host));   // 1ª vitória da era (antes do rollEgg marcar)
     essence=Math.round((first?E.eraBossFirst:randInt(rng,E.eraBossRepeat[0],E.eraBossRepeat[1]))*dm); }
@@ -505,7 +508,7 @@ function rollKill(S,host,enemy){
     else eggs.push(c); }
   const xpKill=Math.round(xpFor(enemy,host,cls)*(1+vip.xpPct/100));   // VIP +XP nos orbes (XP de instância/missão/offline: Sys.level)
   const xp=Math.round(xpKill*rm), xpExtra=xp-xpKill;                  // ×2 com retorno: a parte extra vai SEM teto (v9)
-  const res={cls,gold,gems,items,forge,food,eggs,held,xp,xpKill,xpExtra,essence,rested:rest,x:enemy&&num(enemy.x,null),y:enemy&&num(enemy.y,null)};   // rested: abate em dobro (retorno)
+  const res={cls,gold,gems,items,forge,food,eggs,held,xp,xpKill,xpExtra,essence,rested:rest,event:(ev.goldPct||ev.dropPct||ev.forgePct||ev.foodPct)?ev:null,x:enemy&&num(enemy.x,null),y:enemy&&num(enemy.y,null)};   // rested: abate em dobro (retorno)
   res.pickups=pickups(res,{coins:T.coins,orbs:DATA.xp.orbs[cls],rng});
   return res;
 }
