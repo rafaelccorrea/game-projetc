@@ -682,7 +682,7 @@ function resLoseHtml(Y,bname,lord){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4
       <div role="progressbar" aria-label="Sua FC é ${pct}% da recomendada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" style="position:relative;height:18px;border-radius:9px;background:#0e0a07;border:1px solid #6a4a1a;overflow:hidden"><div class="q-fcbar" style="width:${pct}%;height:100%;border-radius:9px;background:linear-gradient(90deg,#c0301f,#f2a826 70%,#ffe07a)"></div><span class="q-shine" style="width:${pct}%"></span></div>
       <span style="font-size:13px;line-height:1.2;font-weight:800;color:${miss>0?'#ffb3a8':'#9be89f'}">${miss>0?`Faltam <span style="color:#fff;font-weight:900">${fcTxt(miss)} de FC</span> para a recomendada`:'Sua FC já alcança a recomendada: tente de novo'}</span></div>
     <span class="q-cup lil" style="flex:none;margin:12px 2px 8px;font-size:20px;line-height:24px;color:#ffc94a;text-shadow:0 2px 0 #000;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
-    <div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div></div>`; }
+    ${(typeof diffLoseRows==='function'&&diffLoseRows(rec))||`<div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div>`}</div>`; }   /* dificuldade com paredes (js/diff.js): ligada, as 3 ações do Sys.advice na mesma caixa de 150 px; desligada, os caminhos de sempre */
 /* botões da derrota: "Modo farm" é o PRINCIPAL (com a contagem); "Tentar de novo" embaixo. low = tela baixa: os dois encolhem para não encostar no Kael */
 function resLoseBtns(low){
   return `<button class="y-gold q-farm" data-q="farm" style="position:absolute;left:20px;right:20px;bottom:${low?74:90}px;height:${low?58:66}px;border-radius:18px;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box;text-align:left">
@@ -720,7 +720,7 @@ function resOpen(mode,o,force){
       <div id="res_p" style="position:absolute;left:16px;right:16px;top:${Y.top}px;display:flex;flex-direction:column;gap:8px;transform-origin:50% 0;transform:scale(${Y.f.toFixed(3)})"></div>
       <div id="res_a" style="position:absolute;left:0;right:0;bottom:0;height:0">${resActHtml(false)}</div></div>`;
   } else {
-    RES.fc=heroFC(); RES.rec=recFC(stage); const Y=RES.lay=resLay('lose',G,0), kx=G.hx-G.hs*0.4, star=dl=>`<svg class="q-orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${dl}s"><path d="${Q_STAR}" fill="#ffe07a"></path></svg>`;
+    RES.fc=heroFC(); RES.rec=(typeof fcNeed==='function'?fcNeed:recFC)(stage); const Y=RES.lay=resLay('lose',G,0), kx=G.hx-G.hs*0.4, star=dl=>`<svg class="q-orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${dl}s"><path d="${Q_STAR}" fill="#ffe07a"></path></svg>`;
     /* escuro por cima do chefe, mais leve em volta do Kael caído (o canvas já escurece a cena enquanto o herói está no chão) */
     h=`<div class="q-dark" style="background:radial-gradient(ellipse at ${(kx/3.9).toFixed(0)}% ${((G.feet-G.hs*0.15)/G.Hb*100).toFixed(0)}%,rgba(20,6,4,.12) 0%,rgba(12,5,4,.72) 45%,rgba(6,3,2,.88) 100%)"></div>
     <div class="rw" id="res_w" style="height:${G.Hb.toFixed(1)}px;transform:scale(${G.s.toFixed(4)})">${top}
@@ -761,6 +761,7 @@ function resAct(q){ if(!B.res||!RES.el) return;
   if(q==='farm'||q==='retry'){ if(RES.t<RES_LOSE_BTN) return; snd('ui_tap'); resClose(q); }   // antes de o botão aparecer o toque não vale
   else if(q==='forge'||q==='gear'||q==='summon'){ if(RES.t<RES_LOSE_PATH) return; snd('ui_tap'); resClose('farm');   // o jogo segue no modo farm atrás da tela aberta
     if(q==='forge'){ if(!(window.Screens&&Screens.open('forge'))) setView('gear'); } else setView(q); }
+  else if(q.indexOf('adv:')===0){ if(RES.t<RES_LOSE_PATH) return; if(typeof diffGo==='function') diffGo(+q.slice(4),'lose'); }   /* ação do Sys.advice (js/diff.js) */
 }
 /* fecha a tela: 'next' (vitória: a batalha segue na fase nova) · 'retry' = desafia o chefe de novo · 'farm' / 'close' = modo farm (repete as ondas 1 a 4) */
 function resClose(how){ const r=B.res; if(!r) return; B.res=null; document.body.classList.remove('resui'); if(RES.el){ RES.el.remove(); RES.el=null; }

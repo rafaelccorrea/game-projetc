@@ -51,6 +51,7 @@ function loadBalance(){
     /* as tabelas de XP do Sys.level NÃO são mais sobrescritas aqui: o js/sys/level.js já traz os números do balance.json (remendo da rodada 6 retirado) */
     try{ const t=j.tower&&j.tower.fc_mediana_do_gratis_no_fim_de_cada_era; if(Array.isArray(t)&&t.length>=7&&t.every(v=>typeof v==='number'&&v>0)){ REC_FC=t.slice(0,Math.max(7,ERAS.length));   /* o balance.json pode trazer 9 valores (eras 7-8): com a chave desligada valem só os 7 primeiros */ if(typeof ERA9!=='undefined') ERA9.fcDer=false; } }catch(e){}   // FC recomendada por era (modo farm e tela de derrota)
     for(const k in BAL){ const v=src[k]; if(Array.isArray(BAL[k])?Array.isArray(v):(typeof v==='number'&&isFinite(v)&&v>0)) BAL[k]=v; }
+    if(typeof diffBal==='function') diffBal(j.dificuldade);   /* dificuldade com paredes (js/diff.js, chave desligada): a tabela é lida daqui, nunca copiada para o código */
     if(typeof era9Bal==='function') era9Bal();   /* eras 7-8 (js/eras9.js): o arquivo traz 7 valores de eraMult e de FC recomendada; os das eras 7-8 seguem a regra das eras de trás */
   }).catch(()=>{});
 }
@@ -111,12 +112,13 @@ function mkEnemy(stage,kind){   // kind: 'e0' | 'e1' | 'boss'
   const era=eraOf(stage), boss=kind==='boss', eraBoss=boss&&stage%STAGES_PER_ERA===0, ease=BAL.earlyEase[stage-1]||1;
   const kinds=ERAS[era].en, k=kinds[(kind==='e1'?1:kind==='boss'?kinds.length-1:0)%kinds.length], key=`era${era}_${kind}`;
   const em=BAL.eraMult[era]||1;   // dificuldade por era (v6): multiplica vida E dano
-  const hp=em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult);
-  const dmg=em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult);
+  const dx=typeof diffEnemy==='function'?diffEnemy(stage,kind,null):null;   /* dificuldade com paredes (js/diff.js): com a chave DESLIGADA vem null e vale a conta de sempre */
+  const hp=dx?dx.hp:em*BAL.enemyHpBase*Math.pow(BAL.enemyHpGrowth,stage-1)*ease*(boss?BAL.bossHpMult*(eraBoss?BAL.eraBossHpMult:1):BAL.commonHpMult);
+  const dmg=dx?dx.dmg:em*BAL.enemyDmgBase*Math.pow(BAL.enemyDmgGrowth,stage-1)*(ease<1?0.7:1)*(boss?BAL.bossDmgMult*(eraBoss?BAL.eraBossDmgMult:1):BAL.commonDmgMult);
   const gold=Math.max(1,Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,stage-1)*(boss?BAL.bossGoldMult:BAL.commonGoldMult)));
   return {kind,key,boss,eraBoss,maxhp:hp,hp,dmg,gold,atkEvery:boss?1.15:BAL.commonAtkInterval,atkT:0.5+Math.random()*0.7,
     id:B.spawnN++,x:WAITX,slot:WAITX,lane:0,idx:9,sc:1,wt:Math.random()*2,parked:false,dead:false,hit:0,sw:0,seed:Math.random()*6,spd:EN_WALK,
-    name:(boss&&typeof era9Boss==='function'&&era9Boss(era))||(eraBoss?'Senhor da Era '+k.n:boss?'Chefe '+k.n:k.n),col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`};
+    name:(boss&&typeof era9Boss==='function'&&era9Boss(era))||(eraBoss?'Senhor da Era '+k.n:boss?'Chefe '+k.n:k.n),col:eraBoss?'#7a1020':boss?'#c0392b':k.c,size:eraBoss?1.7:boss?1.45:1,kindName:k.n,shape:k.s,spr:`assets/enemies/${key}.png`,...(dx?{diff:true}:null)};
 }
 function waveSpec(stage,wave){
   if(wave===5) return ['e0','e1','boss'];
@@ -246,7 +248,7 @@ function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no go
   floatText(HX,GY-HS*0.9,'-'+fmt(Math.max(1,d)),'#ff6b6b'); burst(HX,GY-HS*0.45,'#ff4d4d',4); addEnergy(BAL.energyPerHurt);
   wfx(fnHit,0.22,{x:HX+HS*0.1,y:GY-HS*0.45,r:src&&src.boss?36:24,n:8,col:ULTCOL[B.dispEra]||'#ff6b5a',rot:Math.random()*6.28,layer:1,hero:1});   // impacto NO HERÓI, na cor da era (o golpe não viaja pela tela)
   if(DEBUG) window.__dmgIn=(window.__dmgIn||0)+d;
-  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5&&!B.inst; snd('defeat'); if(!B.deadBoss&&!B.inst) toast('Derrotado... recomeçando a fase');   /* na instância o aviso é o resultado da instância, não o da fase */ return true; }
+  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5&&!B.inst; snd('defeat'); if(!B.deadBoss&&!B.inst) toast((typeof diffDeadMsg==='function'&&diffDeadMsg())||'Derrotado... recomeçando a fase');   /* na instância o aviso é o resultado da instância, não o da fase */ return true; }
   return false;
 }                                   // fila de espera, fora da tela (selo "+N" na borda direita)
 const contact = e => e.boss?bossSlot(e):Math.max(SLOTX[0],B.front||0);   // B.front: centro real do slot da frente (hordeFit pode levá-lo para a direita)   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
@@ -391,7 +393,7 @@ function waveClear(){
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
-    if(S.set.autoBoss&&heroFC()>=recFC(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
+    if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
   else S.wave++;
   h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08);
   B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=1.2; B.waveT=1.2; preloadAssets(); save();
@@ -608,6 +610,7 @@ function step(dt){
   if(B.res) return;   // tela 10 (resultado do chefe) aberta: a batalha espera
   B.t+=dt;
   const h=B.hero; if(!h) return;
+  if(typeof diffStep==='function') diffStep(dt);   /* fúria do chefe (js/diff.js; chave desligada = não faz nada) */
   if(window.__stay){ B.hurt=0; h.hp=h.maxhp; } if(B.hurt>0) B.hurt-=dt;
   if(B.cd2>0) B.cd2-=dt;
   if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.inst){ instEnd(false); return; } if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
@@ -644,7 +647,7 @@ function step(dt){
     else { if(e.x<e.slot-0.5) e.x+=Math.min(e.slot-e.x,30*dt); const was=e.parked; e.parked=e.idx<MAXVIS; if(e.parked) e.wasParked=true; if(e.parked&&!was) e.atkT=Math.min(e.atkT,0.15+0.12*e.idx); }   // chegou ao slot: ataca logo
     if(e.idx<(window.__atk2?2:MAXVIS)&&e.x<=LW){ e.atkT-=dt;   /* a cadência conta também enquanto ele troca de slot: ao parar, ataca logo (nenhum visível fica 2 s sem atacar) */
       if((e.parked||(e.wasParked&&e.x-e.slot<70))&&e.atkT<=0&&e.sw<=0&&B.t-B.eAtkT>=EGAP){   /* quem já esteve num slot e só está fechando a fila (até 70 px do slot novo) golpeia sem esperar chegar: nenhum visível fica mais de 2 s sem golpear */ e.atkT=e.atkEvery; B.eAtkT=B.t; { const sh=enSheet(e,'attack'); e.swD=sh?shDur(sh,EN_ATK_DUR):EATK; e.swH=sh?(EN_HIT_FRAME[e.key]!=null?EN_HIT_FRAME[e.key]/(sh.meta.fps||12):e.swD*0.5):EHIT; } e.sw=e.swD; e.struck=false; if(DEBUG) (window.__atk=window.__atk||[]).push([e.id,e.idx,+B.t.toFixed(2)]); } }
-    if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.dmg*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
+    if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.dmg*(e.fury||1)*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
       if(kind){ const x0=e.x-(e.dw||60)*0.35, y0=GY-(e.dh||80)*0.55, x1=HX+HS*0.1, y1=GY-HS*0.45;
         B.eshots.push({x0,y0,x1,y1,t:0,dur:Math.max(0.16,Math.hypot(x1-x0,y1-y0)/380),d,boss:e.boss,kind});
         wfx(fnHit,0.14,{x:x0-4,y:y0,r:e.boss?20:12,n:6,col:ESHOT_COL[kind],rot:Math.random()*6.28,layer:1}); }
