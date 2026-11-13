@@ -57,7 +57,10 @@ function fromModuleAdvice(S,host,out){ const f=F(); if(!f||typeof f.advice!=='fu
 function petEvolve(S,host,now,out){ const P=SYS().pet; if(!P||typeof P.canEvolve!=='function') return; let o; try{ o=P.ensure(S); }catch(e){ return; } const id=o&&o.eq; if(!id) return;
   const c=P.canEvolve(S,id); if(!c||c.reason==='off'||c.reason==='max'||c.reason==='pet') return;
   const g=simGain(S,host,now,S2=>{ const r=P.evolve(S2,id); if(r&&r.ok) return true; P.ensure(S2).owned[id].stg=c.stage+1; return true; });
-  out.push({id:'pet.evolve',kind:'pet',icon:'🐾',label:c.ok?`Evoluir o pet (estágio ${c.stage+2})`:`Evoluir o pet: chegue ao Nv ${c.need} do pet`,gain:g,ready:!!c.ok,cost:c.ok?'grátis':'',costN:0}); }
+  if(g>=DATA.minGain){ out.push({id:'pet.evolve',kind:'pet',icon:'🐾',label:c.ok?`Evoluir o pet (estágio ${c.stage+2})`:`Evoluir o pet: chegue ao Nv ${c.need} do pet`,gain:g,ready:!!c.ok,cost:c.ok?'grátis':'',costN:0}); return; }
+  /* tela 17b (Sistemas 13/11): evoluir NÃO dá poder na hora, só libera o teto de nível. No teto do estágio: a dica aparece SEM número */
+  const x=o.owned[id], cap=P.DATA.v17&&P.DATA.v17.stageCap?P.DATA.v17.stageCap[c.stage]:null;
+  if(c.ok&&cap!=null&&int0(x&&x.lvl)>=cap) out.push({id:'pet.evolve',kind:'pet',icon:'🐾',label:'Evoluir o pet para liberar mais níveis',gain:0,ready:true,cost:'grátis',costN:0,noGain:true}); }
 
 function mountStar(S,host,now,out){ const M=SYS().mount; if(!M||typeof M.info!=='function') return; let o; try{ o=M.ensure(S); }catch(e){ return; } const id=o&&o.eq; if(!id) return;
   const inf=M.info(S,host,id); if(!inf||!inf.owned||inf.stars>=M.DATA.maxStars) return;
@@ -88,7 +91,7 @@ function all(S,host){ const now=fcOf(S,host), out=[];
   if(on('mount')) mountStar(S,host,now,out);
   if(on('fuse')) fuse(S,host,now,out);
   if(on('level')) levelUp(S,host,now,out);
-  const list=out.filter(a=>on(a.kind)&&a.gain>=DATA.minGain).map(a=>Object.assign(a,{gain:Math.round(a.gain),gainText:'+'+view(a.gain)+' FC',tab:DATA.tabs[a.kind]||a.kind}));
+  const list=out.filter(a=>on(a.kind)&&(a.noGain||a.gain>=DATA.minGain)).map(a=>Object.assign(a,{gain:Math.round(a.gain),gainText:a.noGain?'':'+'+view(a.gain)+' FC',tab:DATA.tabs[a.kind]||a.kind}));
   list.sort((a,b)=>(!!a.last-!!b.last)||(b.ready-a.ready)||(b.gain-a.gain)||(a.costN-b.costN));
   return {now,list}; }
 
@@ -98,7 +101,7 @@ function advise(S,host,opts){ opts=opts||{};
   const missing=has?Math.max(0,Math.ceil(need-now)):null, top=Math.max(0,int0(num(opts.limit,DATA.top)));
   return {on:true,fc:now,need:has?need:null,missing,ok:has?missing===0:null,
     text:!has?'':missing>0?`Faltam ${view(missing)} de FC`:'FC suficiente',
-    actions:list.slice(0,top).map(({costN,last,...a})=>a)}; }
+    actions:list.slice(0,top).map(({costN,last,noGain,...a})=>a)}; }
 
 const API=Object.assign(advise,{DATA,advise,all});
 root.Sys=root.Sys||{}; root.Sys.advice=API;

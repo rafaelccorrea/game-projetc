@@ -73,7 +73,7 @@ t('pet e montaria: simulados numa CÓPIA (o save real não muda); ganho = difere
     // ganho real de evoluir (cópia): hoje o estágio não muda o bônus do pet → 0 FC → a dica não aparece (não mostramos ação sem ganho)
     const c = JSON.parse(before); PET.ensure(c).owned[pid].stg = 1; const evGain = Math.round(F.compute(c, w.host) - fcNow(w));
     const ev = list.find(a => a.id === 'pet.evolve');
-    if (evGain >= 1) { assert.ok(ev); assert.strictEqual(ev.gain, evGain); assert.strictEqual(ev.tab, 'pet'); } else assert.strictEqual(ev, undefined, 'evoluir dá ' + evGain + ' FC: fica fora');
+    if (evGain >= 1) { assert.ok(ev); assert.strictEqual(ev.gain, evGain); assert.strictEqual(ev.tab, 'pet'); } else { assert.ok(ev, 'no teto do estágio (Nv 60 ≥ 30) a dica aparece'); assert.strictEqual(ev.label, 'Evoluir o pet para liberar mais níveis'); assert.strictEqual(ev.gainText, '', 'sem número'); assert.strictEqual(ev.gain, 0); assert.strictEqual(ev.ready, true); }
     const c2 = JSON.parse(before); M.ensure(c2).owned[mid].stars = 2; const msGain = Math.round(F.compute(c2, w.host) - fcNow(w));
     const ms = list.find(a => a.id === 'mount.star'); assert.ok(msGain >= 1 && ms, 'montaria +1★ dá ' + msGain + ' FC');
     assert.strictEqual(ms.gain, msGain); assert.strictEqual(ms.ready, false); assert.ok(/faltam 7 fragmentos/.test(ms.label), ms.label); assert.strictEqual(ms.tab, 'mount');
