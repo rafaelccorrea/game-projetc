@@ -81,7 +81,7 @@ Manual: [docs/arte/MANUAL_montaria.md](arte/MANUAL_montaria.md).
 1. Imagem da montaria sozinha (referência, Códex, Derrota) uma vez.
 2. Guia com o **Kael** no assento (bastão magenta, 1 sela só); Kaia pelo guia do Kael (opção B).
 3. Por herói: parado, correr, golpe (3 vídeos com laço). Folha `_body` (sem arma) é a que o jogo usa; a arma entra no grip.
-4. Asa nas costas montado (âncora `back`), aura por estrela 1-5 (código, `MOUNT_AURA`; *correção técnica: o jogo vai até 5★, `maxStars:5` em js/sys/mount.js:13; a 6ª e a 7ª estão atrás de `setStars7`, desligado*), ícone.
+4. Asa nas costas montado (âncora `back`), aura por estrela 1-7 (código, `MOUNT_AURA`; 7★ aprovado pelo dono e as cores 6-7 já estão no código (2b06361); hoje o jogo para em 5★ (`maxStars:5`, js/sys/mount.js:13) até ligar `setStars7` com o pacote das últimas eras), ícone.
 5. Ligar no MOUNT_TBL, MOUNT_REF, manifest e todas as telas.
 
 ### Arma (família × raridade × era)
