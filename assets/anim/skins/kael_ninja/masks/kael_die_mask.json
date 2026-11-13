@@ -1,0 +1,9 @@
+{
+ "frames": 18,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "sheet": "assets/anim/skins/kael_ninja/kael_die_body.png",
+ "note": "R = colete, B = botas (intensidade = força); alfa = cobertura. Pintar: cor = luminância × tinta do material."
+}
