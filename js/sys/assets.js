@@ -154,10 +154,10 @@ function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1,
 /* existe folha MONTADA deste herói nesta montaria? (fonte única para o desenho e a pré-carga) true/false pelo manifesto; null sem manifesto */
 /* ÍCONE DA PEÇA POR NÍVEL DE RARIDADE (opção A da Arte, aprovada pelo PO): Básico/Raro = o ícone de hoje (t0), Épico/Mítico = _t1, Lendário/Divino = _t2.
    tierIcon('assets/icons/slots/era2_helmet.png', r) → 'assets/icons/slots/era2_helmet_t1.png' SE o arquivo estiver no manifesto; senão o de hoje
-   (a Arte entrega era a era: eras 0-3 primeiro). Sem manifesto, devolve o de hoje. Só peças (não arma, que já tem arte por raridade, nem asa). */
+   (a Arte entrega era a era). Sem manifesto, ou com o pacote da era ainda não instalado (Play Asset Delivery), devolve o de hoje. Só peças (não arma, que já tem arte por raridade, nem asa). */
 const TIER_OF_R=[0,0,1,1,2,2];
 function tierIcon(url,r){ const u=String(url||''), t=TIER_OF_R[Math.max(0,Math.min(5,r|0))]; if(!t||!MAN||!/^assets\/icons\/slots\/era\d_(helmet|vest|gloves|boots|necklace)\.png$/.test(u)) return u;
-  const cand=u.replace(/\.png$/,'_t'+t+'.png'); if(!tierIcon.set||tierIcon.man!==MAN){ tierIcon.set=new Set(Object.values(MAN.packs).flatMap(p=>p.files)); tierIcon.man=MAN; } return tierIcon.set.has(cand)?cand:u; }
+  const cand=u.replace(/\.png$/,'_t'+t+'.png'); if(!tierIcon.set||tierIcon.man!==MAN){ tierIcon.set=new Set(Object.values(MAN.packs).flatMap(p=>p.files)); tierIcon.man=MAN; } return tierIcon.set.has(cand)&&isReady(cand)?cand:u; }
 const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs['mount:'+id]; return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
 /* (1) grupo de entrega e nome do asset pack do Play de um pacote */
 const deliveryOf=id=>DATA.basePacks().includes(id)?'base':DATA.noneIds.includes(id)?'none':DATA.fastFollow().includes(id)?'fast':'demand';

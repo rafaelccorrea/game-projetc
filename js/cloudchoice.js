@@ -36,7 +36,7 @@ function inject(){ if(document.getElementById('cc_css')) return; const st=docume
 /* o contador de tempo de jogo (S.playSeconds) é novo: enquanto os dois lados estiverem em 0, a linha "Jogado" não aparece */
 const showPlay=()=>{ const I=C.info||{}; return (+((I.device||{}).playSeconds)||0)>0||(+(((I.cloud||{}).summary||{}).playSeconds)||0)>0; };
 function card(side){ const I=C.info, sm=side==='device'?(I.device||{}):((I.cloud&&I.cloud.summary)||{}), when=side==='device'?(I.device&&I.device.savedAt)||cTry(()=>S.lastSeen,0):(I.cloud&&I.cloud.updatedAt);
-  const rec=I.recommend===side, pick=C.pick===side, name=cTry(()=>S.name,'Herói');
+  const rec=I.recommend===side, pick=C.pick===side, name=sm.name||(side==='device'?cTry(()=>S.name,'Herói'):'Herói');
   const label=side==='device'?'Este aparelho':'Nuvem';
   const icon=side==='device'?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9b9a2" stroke-width="2.4" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>'
     :'<svg width="20" height="18" viewBox="0 0 26 20" fill="none" stroke="#c9b9a2" stroke-width="2.4" aria-hidden="true"><path d="M7 18h12a5 5 0 0 0 .8-9.9A7 7 0 0 0 6.3 7.2 5.4 5.4 0 0 0 7 18z"></path></svg>';
