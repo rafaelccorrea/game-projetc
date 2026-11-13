@@ -218,6 +218,17 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
     check('fúria: nada antes de furyAtSec; depois, dano × furyDmgMult (uma vez)', before === 0 && ev('B.en[0].fury') === FM, before + ' → ' + ev('B.en[0].fury'));
     check('fúria: aviso na tela sem emoji', /FÚRIA/.test(bn.txt || '') && bn.sub === 'Dano x' + FM && !EMOJI.test((bn.txt || '') + bn.sub), JSON.stringify(bn));
     check('fúria: o HUD avisa', /fúria/.test(JSON.parse(ev('JSON.stringify(diffHudInfo(heroFC(),10))')).text));
+    /* opções novas da Sistemas, DESLIGADAS por padrão (campo ausente na tabela = tudo como antes; os testes acima provam o padrão) */
+    { const base = JSON.parse(ev("(function(){ DIFF.memo={}; const x=diffBoss(60); return JSON.stringify({hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec,n:x.escorts}); })()"));
+      check('opção escortSec ausente: conta de antes (tE = vida das escoltas ÷ DPS)', base.es === 0 && base.n > 0 && base.tE > 0 && base.tE < 10, JSON.stringify(base));
+      const withEs = JSON.parse(ev("(function(){ DIFF.tbl.boss.escortSec=15; DIFF.memo={}; const x=diffBoss(60); const r={hp:x.hp,dmg:x.dmg,dps:x.dps,kill:x.kill,tE:x.tE,es:x.escortSec}; DIFF.tbl.boss.escortSec=[5,5,5,5,5,12,5,5,5]; DIFF.memo={}; r.byEra=diffBoss(60).tE; r.byEra0=diffBoss(10).tE; delete DIFF.tbl.boss.escortSec; DIFF.memo={}; r.back=diffBoss(60).hp; return JSON.stringify(r); })()"));
+      check('opção escortSec = 15: vida do chefe = DPS × (killSec − 15), chefe bate mais forte (menos tempo de duelo para os mesmos ' + SURV + ' s)', withEs.tE === 15 && near(withEs.hp, withEs.dps * (KILL - 15), 1e-6) && withEs.dmg > base.dmg, JSON.stringify(withEs));
+      check('opção escortSec por era (lista) e volta ao padrão ao tirar o campo', withEs.byEra === 12 && withEs.byEra0 === 5 && near(withEs.back, base.hp, 1e-9), JSON.stringify(withEs));
+      const fb = JSON.parse(ev(`(function(){ const o={}; DIFF.tbl.boss.furyFrom='boss'; B.banner=null;
+        B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.toSpawn=[]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT + 5}); o.soEscolta=[DIFF.ft, B.en[1].fury||0];
+        B.en[1].wasParked=true; diffStep(${FAT - 0.5}); o.antes=B.en[1].fury||0; diffStep(0.6); o.depois=B.en[1].fury||0;
+        delete DIFF.tbl.boss.furyFrom; B.en=[mkEnemy(10,'e0'),mkEnemy(10,'boss')]; B.en[0].wasParked=true; B.en[1].wasParked=false; DIFF.ft=0; diffStep(${FAT + 5}); o.padrao=B.en[1].fury||0; B.banner=null; DIFF.ft=0; return JSON.stringify(o); })()`));
+      check("opção furyFrom 'boss': só a escolta no lugar não gasta o relógio; conta do chefe parado; sem o campo conta da 1ª escolta", fb.soEscolta[0] === 0 && fb.soEscolta[1] === 0 && fb.antes === 0 && fb.depois === FM && fb.padrao === FM, JSON.stringify(fb)); }
     ev("B.en=[]; B.toSpawn=['e0','e1','boss']; diffStep(0.1)"); check('fúria: o relógio zera quando a onda do chefe recomeça', ev('DIFF.ft') === 0);
     const a = await fight(10, 5, { ref: true, mul: 3, atk0: true }); check('fúria na luta real: entra ' + FAT + ' s depois do primeiro inimigo da onda chegar', a.tFury != null && near(a.tFury, FAT, 0.03), JSON.stringify(a)); }
   /* o resto do jogo não muda */

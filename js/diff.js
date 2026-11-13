@@ -76,11 +76,16 @@ function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys 
       eHit: BAL.energyPerHit, eSkill: BAL.energyPerSkillHit, eHurt: BAL.energyPerHurt, hurtEvery: bossEvery, energy: 0, cd2: 0, petK: 0, petIvl: 2 });
     const C = T.commons || {}, hs = Math.max(0, diffNum(C.hpShareOfBoss, diffNum(C.shareOfBoss, 0))), ds = Math.max(0, diffNum(C.dmgShareOfBoss, diffNum(C.shareOfBoss, 0)));
     let nE = 0; if (T.boss.waveIncludesEscorts === true){ try { nE = waveSpec(stage, 5).filter(k => k !== 'boss').length; } catch (e) { nE = 0; } }
-    const total = ref.atk * crit * U.u, dps = total / kill, hp = Math.max(1, total / (1 + nE * hs)), tE = nE ? Math.min(surv, nE * hs * hp / dps) : 0;   /* tE = quando cai a última escolta */
+    /* (b) TEMPO DAS ESCOLTAS MEDIDO (Sistemas, depois da medida na batalha real: a fase das escoltas leva ~15 s, e não os ~5 s da conta "escoltas ÷ DPS", porque
+       elas chegam uma de cada vez e há caminhada). Se a tabela trouxer boss.escortSec (número, ou lista por era), tE = esse tempo e a vida do chefe = DPS ×
+       (killSec − tE): os segundos de kill/survive passam a valer com a fase das escoltas no tamanho real. Sem o campo: a conta de antes, sem mudar nada. */
+    const total = ref.atk * crit * U.u, dps = total / kill, esRaw = Array.isArray(T.boss.escortSec) ? T.boss.escortSec[Math.max(0, Math.min(T.boss.escortSec.length - 1, eraOf(stage)))] : T.boss.escortSec,
+      es = nE && typeof esRaw === 'number' && isFinite(esRaw) && esRaw > 0 ? Math.min(esRaw, kill * 0.9, surv * 0.9) : 0;
+    const hp = es ? Math.max(1, dps * (kill - es)) : Math.max(1, total / (1 + nE * hs)), tE = es ? es : nE ? Math.min(surv, nE * hs * hp / dps) : 0;   /* tE = quando cai a última escolta */
     let eHits = 0; for (let i = 1; i <= nE; i++) eHits += (tE * i / nE) / BAL.commonAtkInterval; const bHits = Math.max(1, (surv - tE) / bossEvery);
     const def = Math.max(0, diffNum(ref.def, 0)), after = d => Sys.stats.hit({ atk: d, critRate: 0, critDmg: 0 }, 1, def, false).dmg, sum = d => bHits * after(d) + (ds > 0 ? eHits * after(d * ds) : 0), want = ref.hp;
     let lo = 0, hi = want / bHits; for (let i = 0; i < 80 && sum(hi) < want; i++) hi *= 2; for (let i = 0; i < 60; i++){ const m = (lo + hi) / 2; if (sum(m) < want) lo = m; else hi = m; }
-    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg: hi * ds, hs, ds, need, ref, dps, kill, surv, escorts: nE }; }
+    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg: hi * ds, hs, ds, need, ref, dps, kill, surv, escorts: nE, tE, escortSec: es }; }
   if (Object.keys(DIFF.memo).length > 200) DIFF.memo = {}; DIFF.memo[key] = out; return out; }
 /* inimigo de FASE (mkEnemy). Devolve b (o de hoje) se a chave estiver desligada, em instância ou sem tabela. */
 function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 'undefined' && B.inst)) return b;
@@ -89,7 +94,10 @@ function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 
    Passado o tempo, o dano do chefe multiplica (uma vez) e a tela avisa. */
 function diffStep(dt){ if (!diffOn() || !DIFF.tbl || B.inst) return; const T = DIFF.tbl.boss; if (!T) return; const at = diffNum(T.furyAtSec, 0), m = diffNum(T.furyDmgMult, 1); if (!(at > 0) || !(m > 1)) return;
   if (S.wave !== 5 || B.deadT > 0 || (!B.en.length && B.toSpawn.length > 1)){ DIFF.ft = 0; return; }
-  if (DIFF.ft > 0 || B.en.some(e => e.wasParked)) DIFF.ft = (DIFF.ft || 0) + dt; if (!(DIFF.ft >= at)) return;
+  /* (a) de onde conta a fúria (Sistemas): boss.furyFrom === 'boss' = desde que o CHEFE parou no lugar dele (a fase das escoltas não gasta o relógio);
+     sem o campo = desde o primeiro inimigo da onda, como antes */
+  const fromBoss = T.furyFrom === 'boss';
+  if (DIFF.ft > 0 || B.en.some(e => e.wasParked && (!fromBoss || e.boss))) DIFF.ft = (DIFF.ft || 0) + dt; if (!(DIFF.ft >= at)) return;
   for (const e of B.en){ if (!e.boss || !e.diff || e.dead || e.fury) continue;
     e.fury = m; B.banner = { txt: 'FÚRIA DO CHEFE', sub: 'Dano x' + m, t: 0, dur: 1.8, col: '#ff5252' }; B.shake = Math.max(B.shake || 0, .5); try { snd('boss_appear'); } catch (er) {} DIFF.hk = null; } }
 const diffFury = () => { try { return diffOn() && B.en.some(e => e.boss && e.fury > 1 && !e.dead); } catch (e) { return false; } };
