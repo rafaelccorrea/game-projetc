@@ -59,9 +59,9 @@ const DATA={
   // Sys.stats.goLive('ults') liga ownReady das aprovadas; Sys.stats.goLive('wings') liga newWingReady das aprovadas. (Nada liga sozinho.)
   ownApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
   wingsApproved:['phoenix','ice','shadow','storm','mechanical','bone','darkmoth'],
-  // FOLHA-BASE aprovada por família (Básico→Mítico): as 7 de hoje (eras 0-6, aprovadas). Infernal (era7_ult) e celeste (era8_ult) estão no disco SEM
-  // voto, e arco/bumerangue (bow_base/boomerang_base) também: até o voto, ultOf devolve sheet null (o jogo desenha a ultimate por código) e baseReady:false.
-  baseApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma'],
+  // FOLHA-BASE aprovada por família (Básico→Mítico): as 9 das eras 0-8 (as eras 7 e 8, ult-era7-anim/ult-era8-anim, aprovadas pelo dono em 12/11).
+  // Arco e bumerangue (bow_base/boomerang_base) estão no disco SEM voto: até o voto, ultOf devolve sheet null (ultimate por código) e baseReady:false.
+  baseApproved:['club','gladius','sword','flintlock','revolver','rifle','plasma','infernal','celestial'],
   baseDelivered:['bow','boomerang'],   // folhas-base próprias entregues: bow_base (Chuva de Flechas), boomerang_base (Ciclone de Lâminas)
   ownReady:{},   // família → true quando a Arte entregar a folha própria do Lendário (assets/anim/ult/<família>_legend.png + .json)
   skillFx:[

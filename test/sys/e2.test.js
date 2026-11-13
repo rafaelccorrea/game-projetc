@@ -998,7 +998,7 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
 t('ultimate por FAMÍLIA de arma + raridade (dono): it.wt no item, nunca a era do mapa; base → Mítico reforçada → Lendário/Divino própria; arco/bumerangue',()=>{
   const T=require('../../js/sys/stats.js'), D=T.DATA;
   assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).baseSheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'a folha-base de cada família');
-  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6].map(e=>'assets/anim/ult/era'+e+'_ult').concat([null,null]),'infernal e celeste: base sem voto, ultimate por código');
+  assert.deepStrictEqual(T.FAM_BY_ERA.map(f=>T.ultOf({wt:f,r:0}).sheet),[0,1,2,3,4,5,6,7,8].map(e=>'assets/anim/ult/era'+e+'_ult'),'as 9 bases aprovadas (eras 7-8 em 12/11)');
   const it={slot:'weapon',e:2,r:0}; T.migrateItem(it); assert.strictEqual(it.wt,'sword','save antigo: família pela arte');
   it.e=6; it.look=6; T.migrateItem(it); assert.strictEqual(it.wt,'sword','gravada, não muda com a era'); assert.strictEqual(T.ultOf(it).sheet,'assets/anim/ult/era2_ult');
   assert.deepStrictEqual([0,1,2,3,4,5].map(r=>T.ultOf({wt:'rifle',r}).tier),['base','base','base','boost','own','own']);
