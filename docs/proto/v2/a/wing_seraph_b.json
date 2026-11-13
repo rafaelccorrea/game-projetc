@@ -1,0 +1,21 @@
+{
+ "cut": 254,
+ "L": {
+  "root": [
+   0.996,
+   0.643
+  ],
+  "w": 233,
+  "h": 421
+ },
+ "R": {
+  "root": [
+   0,
+   0.638
+  ],
+  "w": 233,
+  "h": 421
+ }
+ ,"note": "serafim B (só penas, sem ornamento): prévia para voto, NÃO está em assets",
+ "fit": 0.74
+}

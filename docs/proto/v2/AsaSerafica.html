@@ -1,0 +1,168 @@
+<title>Eonbound Asa Seráfica A/B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Layout: aparelho 390x844 no centro, escalado para caber; ao lado o painel de voto. Mesmo padrão das telas V2. Asa Seráfica: duas versões (A com ornamento
+   dourado na raiz, B só penas) desenhadas como no jogo: raiz na âncora "back" de cada quadro, escala 0,62 × fit 0,74, bate de leve a partir da raiz, atrás do corpo.
+   Imagens: a/ws_<a|b>_<kael|kaia>_<idle|run>.webp e a/ws_<a|b>_kael_wolf.webp (24 quadros, 12 fps, CSS steps). Sem geração paga. */
+:root{
+  --night:#0b1030; --glass:rgba(24,33,86,.78); --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --violet:#a97bff; --rose:#ff6b9a; --green:#5ef0a0; --red:#ff6b6b;
+  --text:#eef1ff; --muted:#9aa6d6; --ink:#1c1206;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 110px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;background:radial-gradient(120% 45% at 50% 0%,rgba(255,210,94,.18),transparent 60%),var(--night)}
+.top{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:8px;padding:12px 14px 8px;background:linear-gradient(180deg,var(--night) 70%,transparent)}
+.ttl{font-family:var(--fd);font-size:22px;letter-spacing:1px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 18px rgba(255,210,94,.5)}
+.ab{display:flex;gap:6px;padding:0 14px}
+.ab button{flex:1;min-height:52px;border-radius:14px;border:2px solid var(--line2);background:#121a48;font-weight:900;font-size:14px;line-height:1.15;padding:4px 8px}
+.ab button b{display:block;font-family:var(--fd);font-weight:400;font-size:20px;letter-spacing:.5px}
+.ab button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink);border-color:#ffe58a;box-shadow:0 3px 0 #9a5a10}
+.hs{display:flex;gap:6px;padding:8px 14px 0}
+.hs button{flex:1;min-height:36px;border-radius:11px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:13px}
+.hs button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.scr>*{flex:none}
+.card{margin:10px 14px 0;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,#1a2668 0%,#141c4a 62%,#2b2416 62%,#1f1a10 100%);overflow:hidden;position:relative}
+.card .cap{position:absolute;left:10px;top:8px;z-index:2;font-size:11px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;background:rgba(5,8,28,.7);border-radius:8px;padding:3px 8px;color:#cdeffd}
+.card .tag{position:absolute;right:10px;top:8px;z-index:2;font-family:var(--fd);font-size:15px;color:var(--ink);background:var(--gold);border-radius:8px;padding:1px 8px}
+.ground{position:absolute;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,rgba(255,220,150,.35) 0 18px,transparent 18px 36px)}
+.card.run .ground{animation:gr .6s linear infinite}
+@keyframes gr{to{background-position:-36px 0}}
+.row2{display:flex;gap:0}
+.row2 .card{flex:1;min-width:0}
+/* folha de 24 quadros: a imagem inteira anda em degraus dentro da janela do quadro */
+.spr{position:relative;overflow:hidden;margin:0 auto}
+.spr img{position:absolute;left:0;top:0;height:100%;width:auto;max-width:none;display:none;animation:play 2s steps(24) infinite}
+.spr img.on{display:block}
+@keyframes play{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.spr img,.card.run .ground{animation:none}}
+.hero .spr{width:340px;height:218px}
+.hero .ground{top:204px}
+.wolf .spr{width:340px;height:234px}
+.wolf .ground{top:222px}
+.wing{display:flex;align-items:center;justify-content:center;gap:10px;padding:30px 10px 12px;background:radial-gradient(70% 70% at 50% 50%,#2a3790,#141c4a)}
+.wing img{height:150px;width:auto;display:none}
+.wing img.on{display:block}
+.txt{margin:8px 16px 0;font-size:13px;line-height:1.45;color:#dfe5ff}
+.txt b{color:var(--gold)}
+.foot{height:20px;flex:none}
+.sr{position:absolute;left:-9999px}
+</style>
+
+<div class="page">
+  <div class="devwrap" id="devwrap">
+    <div class="dev" id="dev">
+      <div class="scr" id="scr">
+        <div class="top"><div class="ttl">Asa Seráfica · qual fica?</div></div>
+        <div class="ab" role="group" aria-label="Versão da asa">
+          <button data-v="a" aria-pressed="true"><b>A</b>Ornamento dourado</button>
+          <button data-v="b" aria-pressed="false"><b>B</b>Só penas</button>
+        </div>
+        <div class="hs" role="group" aria-label="Herói">
+          <button data-h="kael" aria-pressed="true">Kael</button>
+          <button data-h="kaia" aria-pressed="false">Kaia</button>
+        </div>
+        <p class="txt" id="vtxt"></p>
+
+        <div class="card hero"><span class="cap">Parado</span><span class="tag" data-tag>A</span><div class="ground"></div>
+          <div class="spr" role="img" aria-label="Herói parado com a asa seráfica nas costas e a espada na mão">
+            <img data-k="a-kael-idle" src="a/ws_a_kael_idle.webp" alt=""><img data-k="b-kael-idle" src="a/ws_b_kael_idle.webp" alt="">
+            <img data-k="a-kaia-idle" src="a/ws_a_kaia_idle.webp" alt=""><img data-k="b-kaia-idle" src="a/ws_b_kaia_idle.webp" alt="">
+          </div></div>
+        <div class="card hero run"><span class="cap">Correndo</span><span class="tag" data-tag>A</span><div class="ground"></div>
+          <div class="spr" role="img" aria-label="Herói correndo com a asa seráfica nas costas e a espada na mão">
+            <img data-k="a-kael-run" src="a/ws_a_kael_run.webp" alt=""><img data-k="b-kael-run" src="a/ws_b_kael_run.webp" alt="">
+            <img data-k="a-kaia-run" src="a/ws_a_kaia_run.webp" alt=""><img data-k="b-kaia-run" src="a/ws_b_kaia_run.webp" alt="">
+          </div></div>
+        <div class="card wolf"><span class="cap">Montado no lobo</span><span class="tag" data-tag>A</span><div class="ground"></div>
+          <div class="spr" role="img" aria-label="Kael montado no lobo com a asa seráfica nas costas">
+            <img data-k="a-wolf" src="a/ws_a_kael_wolf.webp" alt=""><img data-k="b-wolf" src="a/ws_b_kael_wolf.webp" alt="">
+          </div></div>
+        <p class="txt">No lobo: o Kael, com a asa presa nas costas na sela.</p>
+        <div class="card"><span class="cap">A asa sozinha</span><span class="tag" data-tag>A</span>
+          <div class="wing"><img data-k="a-asa" src="a/ws_a_asa.webp" alt="Asa A: 3 pares de asas com ornamento dourado na raiz"><img data-k="b-asa" src="a/ws_b_asa.webp" alt="Asa B: 3 pares de asas só de penas"></div></div>
+        <div class="foot"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="side">
+    <h1>Asa Seráfica · versão A ou B</h1>
+    <p class="sub">A mesma asa de 6 penas (3 pares saindo da mesma raiz) em duas versões. <b>A</b>: com o ornamento dourado na raiz. <b>B</b>: só penas, sem o ornamento. Troque no botão A/B da tela; Kael e Kaia, parados e correndo, e o Kael no lobo.</p>
+    <div class="box">
+      <h2>Como foi desenhado</h2>
+      <ul>
+        <li>Mesma conta do jogo (js/stage.js drawWingsAt): a raiz da asa vai na âncora das costas de cada quadro, escala 0,62 × 0,74, atrás do corpo</li>
+        <li>A asa bate de leve a partir da raiz: presa nas costas, nada flutua</li>
+        <li>Corpo e espada na mão: folhas aprovadas da era 2 (tier 1)</li>
+        <li>A: assets/anim/equip/wing_seraph (já recortada). B: recortada só para esta prévia, ainda fora do jogo</li>
+        <li>Sem geração paga: só recorte e montagem das artes que já existem</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vA">Fico com a A</button><button class="vbtn ok" id="vB">Fico com a B</button><button class="vbtn no" id="vNo">Nenhuma</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: B, mas asa um pouco menor"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; $('#dev').style.transform='scale('+s+')'; const wr=$('#devwrap'); wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; }
+addEventListener('resize',fit); fit();
+const S={v:/[#&]v=b/.test(location.hash)?'b':'a',h:/[#&]h=kaia/.test(location.hash)?'kaia':'kael'};   /* #v=b&h=kaia abre direto numa combinação (conferência) */
+const TXT={a:'<b>A</b>: ornamento dourado na raiz, onde as 3 asas se juntam nas costas.',b:'<b>B</b>: só penas; a raiz fica limpa, sem o enfeite dourado.'};
+function show(){
+  $$('[data-v]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.v));
+  $$('[data-h]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.h===S.h));
+  $$('[data-tag]').forEach(t=>t.textContent=S.v.toUpperCase());
+  $('#vtxt').innerHTML=TXT[S.v];
+  const want=new Set([S.v+'-'+S.h+'-idle',S.v+'-'+S.h+'-run',S.v+'-wolf',S.v+'-asa']);
+  $$('img[data-k]').forEach(i=>i.classList.toggle('on',want.has(i.dataset.k)));
+}
+$('#scr').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.dataset.v){ S.v=b.dataset.v; show(); } else if(b.dataset.h){ S.h=b.dataset.h; show(); } });
+show();
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-asa-serafica';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Versão '+(d.escolha||'?'):'Nenhuma (refazer)')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status,escolha){ st.textContent='Salvando…'; try{ await ref.set({status,escolha,nota:$('#nota').value.trim(),tela:'Asa Seráfica A/B',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vA').onclick=()=>vote('aprovado','A'); $('#vB').onclick=()=>vote('aprovado','B'); $('#vNo').onclick=()=>vote('reprovado',null); })();
+</script>
