@@ -303,11 +303,11 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ---
 
-## A. O que eu preciso de você (revisado em 13/11, 09h)
+## A. O que eu preciso de você (revisado em 13/11, 15h)
 
 **Votar na página de aprovação** (https://claude.ai/artifact/Qow6wHm4Eyyqu5QpkqJE19):
 - [x] Votado: skins (Kael 6, Kaia 4), 9 pets, 10 montarias, 7 asas, 9 ultimates Lendárias, ícone A + abertura, eventos na batalha, guias do arco/bumerangue/Kaia montada, como ganhar cada skin e cada item novo
-- [ ] Ainda para votar: Fusão · Coleção (no Modo dono) · Serafim refeito (2 versões) · Lobo das Sombras animado · tela de carregamento nova · skins animadas (Arlequina, Ninja da Kaia, Demônio do Kael) · poses do arco e do bumerangue
+- [ ] Ainda para votar: Fusão · Coleção (no Modo dono) · Serafim refeito (2 versões) · Lobo das Sombras animado · tela de carregamento nova · 8 skins animadas (Kaia: Arlequina, Ninja, Demoníaca, Angelical; Kael: Demônio, Anjo, Paladino Solar, Ninja) · Pantera Espectral e Falcão animados · poses do arco e do bumerangue
 - [x] Votado também: vantagens do VIP (docs/PROPOSTA_VIP.md; grátis 3 na Arena e 3 na Torre) · como ganhar cada skin · VIP pelo total gasto
 - [x] Números das guildas online aprovados
 
@@ -331,7 +331,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Votos anteriores: tudo aprovado (telas, cenários das 9 eras, asa nas costas, Oferta, Bem-vindo, Serpe V2, Kaia jogável, etc.)
 - [x] Moedas do incidente: encerrado (conta de teste)
 
-## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 09h)
+## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 15h)
 
 Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e desligado (esperando voto/arte) · `[ ]` ainda não feito
 
@@ -365,7 +365,7 @@ Legenda: `[x]` ligado no jogo e conferido · `[~]` em produção ou pronto e des
 **Online e loja**
 - [~] Servidor instalado na AWS e protegido, parado esperando o banco e o domínio · login Google, save na nuvem, compras, correio, arena, chat, moderação prontos e desligados
 - [~] Tamanho do app: plano pronto (base ~148 MB + pacotes por era) · [x] Facebook e permissões de publicidade fora · [x] ícone A e abertura no app
-- [x] Logo animado na tela de título · [x] tela de carregamento com o fundo novo (carregamento antigo, estável) · [~] carregamento novo (espera tudo): sendo consertado para passar nos 4 testes; BLOQUEIA o APK · [~] 60 FPS escrito, medir no S24
+- [x] Logo animado na tela de título · [x] carregamento novo (espera tudo, abre em ~5 s, aprovado pelo QA) · [x] 60 FPS ligado (medir no S24 com a v0.12.9)
 - [x] Vantagens do VIP ligadas: Arena e Torre (grátis 3), Chefe Mundial, eventos, XP do Passe, mochila 60/80/100, offline até 14 h, coleta automática, desmontar sozinho. Grátis continua equipando sozinho o item melhor (sua decisão); VIP 2 ganha outra vantagem no lugar
 - [ ] App assinado, teste interno, ficha da loja
 
@@ -377,5 +377,6 @@ Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sa
 
 - [x] v0.12.1 a v0.12.6: tela cheia, armas, Forja, pets
 - [x] v0.12.7: montarias, pet ao lado, asa por item (instalada no seu S24)
-- [x] v0.12.8 (APK pronto, 722 MB): todas as telas novas, telas de entrada, Kaia jogável, Kael garoto em qualquer nível, FC nova, morte nova, inimigo sem parar, cenários, Vitória com pet/montaria/asa. Falta só instalar
-- [ ] Próxima: itens novos aprovados (skins, pets, montarias, asas, ultimates, arco/bumerangue), eventos com horário, Fusão, Mapa, app menor (Play Asset Delivery), servidor no ar
+- [x] v0.12.8 (APK pronto, 722 MB): todas as telas novas, telas de entrada, Kaia jogável, Kael garoto em qualquer nível, FC nova, morte nova, inimigo sem parar, cenários, Vitória com pet/montaria/asa. Substituída pela v0.12.9
+- [x] v0.12.9 (APK pronto, 971 MB, em Desktopps-android): carregamento novo, ícone A e abertura, logo animado, 60 FPS, eventos na batalha, VIP, ultimates Lendárias, asas novas, skins e pets novos, arco/bumerangue, sem Facebook. Falta só instalar
+- [ ] Próxima: FC em telas estreitas, telas VIP, Kael Ninja/Pantera no app, lobo da Kaia limpo, depois a próxima parte da arte (Samurai, Ciborgue, 6 pets, 10 montarias) · itens novos aprovados (skins, pets, montarias, asas, ultimates, arco/bumerangue), eventos com horário, Fusão, Mapa, app menor (Play Asset Delivery), servidor no ar
