@@ -77,13 +77,14 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   /* senhoresref:<era>-<era>[:eras9] = o mesmo, com o HERÓI DE REFERÊNCIA novo (Sys.stats.refFromFc, chave ligada só nesta medida): o chefe é derivado dele e quem luta é ele,
      com 100%, 90% e 80% da FC pedida e chegando com a FC da fase anterior. 6 lutas por caso. */
   if (what === 'senhoresref') { const on = ev('Sys.stats.setRefFc(true)'); P('referência nova ligada: ' + on); const ab = arg.split('-').map(Number);
-    for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`), r = {}; const arma = parts.includes('arma'); for (const m of [1, 0.9, 0.8, 1 / wall]) r[m] = await many(6, s, 5, { ref: true, fcm: m, arma });
+    for (let e = ab[0]; e <= ab[1]; e++) { const s = e * 10 + 10, wall = ev(`fcNeed(${s})/fcNeed(${s - 1})`), r = {}; const arma = !parts.includes('clava'); for (const m of [1, 0.9, 0.8, 1 / wall]) r[m] = await many(6, s, 5, { ref: true, fcm: m, arma });
       const f = m => show(r[m]) + ', derrotas ' + (6 - r[m].wins) + '/6';
       P('Senhor da era ' + e + (arma ? ' COM A ARMA DA ERA' : ' (clava da era 0)') + ' (fase ' + s + ', pede ' + ev(`fcNeed(${s})`) + ') · 100%: ' + f(1) + ' · 90%: ' + f(0.9) + ' · 80%: ' + f(0.8) + ' · com a FC da fase anterior (' + Math.round(100 / wall) + '%): ' + f(1 / wall)); } return; }
-  /* diag:<fase>[:eras9] = UMA luta do herói de referência (100%) na onda do chefe, narrada: arma e alcance do herói do teste, e a cada 2 s a vida do herói e, de cada
+  /* PADRÃO DAS MEDIDAS (combinado com a Sistemas): o herói de referência luta com a ARMA DA ERA DA FASE; acrescente :clava para a clava da era 0 do save novo (como era antes).
+     diag:<fase>[:clava][:eras9] = UMA luta do herói de referência (100%) na onda do chefe, narrada: arma e alcance do herói do teste, e a cada 2 s a vida do herói e, de cada
      inimigo, chave, posição x, lugar (slot), se está parado, se já parou e a vida. Serve para ver quem bate em quem e quando (pedido da Sistemas: herói caindo antes do duelo). */
   if (what === 'diag') { const s = +arg; ev('Sys.stats.setRefFc(true)'); G.start(s, 5);
-    if (parts[2] === 'arma') ev(`(function(){ addItemToBag({slot:'weapon',r:0,e:eraOf(${s})}); const it=S.inv.filter(x=>x.slot==='weapon').pop(); if(it) S.eq.weapon=it.id; statsChanged(); refreshHero(); startBattle(); return 1; })()`);   /* diag:<fase>:arma = com a arma da ERA DA FASE (o save novo do teste luta com a clava da era 0) */
+    if (!parts.includes('clava')) ev(`(function(){ addItemToBag({slot:'weapon',r:0,e:eraOf(${s})}); const it=S.inv.filter(x=>x.slot==='weapon').pop(); if(it) S.eq.weapon=it.id; statsChanged(); refreshHero(); startBattle(); return 1; })()`);   /* diag:<fase>:arma = com a arma da ERA DA FASE (o save novo do teste luta com a clava da era 0) */
     const st = JSON.parse(ev(`JSON.stringify(diffRef(fcNeed(${s}),${s}))`)); G.scale = { st, k: 1, atk0: false, fix: true, set: false }; ev('SCREENS_ON.bossResult=false');
     P('herói do teste: arma ' + ev("(function(){ const w=wSkin(); return JSON.stringify({e:w.e,r:w.r,arma:w.n,fogo:!!wIsGun(w)}); })()") + ' · alcance ' + ev('heroRange()') + ' · era da fase ' + ev(`eraOf(${s})`) + ' · HX ' + ev('HX') + ' · LW ' + ev('LW') + ' · inimigos da onda: ' + ev(`JSON.stringify(waveSpec(${s},5))`));
     let last = -9, res = null; const t0 = ev('B.t');
