@@ -14,7 +14,7 @@ const MOUNT_TBL = {
   pony:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.34, pdx: 0.55, pdy: 9 },
   horse:   { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.40, pdx: 0.66, pdy: 9 },
   wolf:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.70, pdy: 9 },
-  griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 26 },   /* 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
+  griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, pdx3: 0.66, wings: true, wx2: -14, wy2: 26 },   /* pdx3 = pet EVOLUÍDO (estágio 3, maior): menos à frente, senão a asa dele encosta no inimigo da frente · 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
   mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10 },
   wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 10 },   /* Engenheiro 2: wy2 26 → 10 (na serpe a sela já é alta: com 26 a asa do Kael ficava solta acima da cabeça) · Serpe dourada V2 APROVADA (v0.12.8): de volta à tabela */
 };
@@ -36,7 +36,7 @@ function heroRise(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if 
 function mountFront(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return 0; const m = mountMetrics(mo.id); return m ? Math.max(0, m.right * HS / 256 - (HERO_EDGE - HX)) : 0; }
 function mountWingOff(H){ const mo = H.mount; if (!mo || !mountReady(mo.id)) return null; const m = mountMetrics(mo.id), T = MOUNT_TBL[mo.id], k = HS / 256; return m ? { x: (T.wx + (T.wings ? T.wx2 || 0 : 0)) * k, y: -(m.rise + T.wy + (T.wings ? T.wy2 || 0 : 0)) * k, winged: !!T.wings } : null; }
 /* deslocamento do pet nesta montaria (tabela) */
-function mountPetOff(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return null; const T = MOUNT_TBL[mo.id]; return { dx: T.pdx || 0.62, dy: T.pdy || 9 }; }
+function mountPetOff(){ const mo = typeof HM !== 'undefined' ? HM.mount : null; if (!mo || !mountReady(mo.id)) return null; const T = MOUNT_TBL[mo.id]; const st3 = typeof PETK !== 'undefined' && PETK.info && (PETK.info.stage | 0) >= 3; return { dx: (st3 && T.pdx3) || T.pdx || 0.62, dy: T.pdy || 9 }; }
 const MOUNT_AURA = [null, 'rgba(200,230,255,', 'rgba(120,200,255,', 'rgba(120,200,255,', 'rgba(190,140,255,', 'rgba(255,214,120,'];   // visível já em 1 estrela; mais forte a cada estrela
 function drawHeroMounted(H){ const id = H.mount.id; if (!mountReady(id)) return false; const T = MOUNT_TBL[id];
   const a = H.deadP >= 0 ? null : H.act, st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle', sh = mountSheet(id, st), M = sh.meta, n = M.frames, FW = M.w, FH = M.h, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 339, t = H.t;

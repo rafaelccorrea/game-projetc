@@ -125,9 +125,15 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
   { id: 'shop',   icon: 'shop',      label: 'Loja',    side: 'left',  x: 4, y: 292, big: true, act: 'shop',   prio: 3 },
   { id: 'pass',   icon: 'pass',      label: 'Passe',   side: 'left',  x: 4, y: 370, big: true, act: 'pass',   prio: 4, hot: true, badge: 'fb_bp' },
   { id: 'chest',  icon: '',          label: 'Baú',     side: 'right', x: 7, y: 150, act: 'chest', prio: 5, chest: true, badge: 'fb_bc' },
+  /* OFERTA 24h (pedido B-28; decisão do PO: SÓ no Modo dono até existir compra real). Aparece com a tela 'offer' ligada E a oferta valendo (Sys.offer.status);
+     o rótulo é o relógio; some ao comprar ou expirar. Ícone PROVISÓRIO (o de Eventos) até a Arte entregar o da oferta. */
+  { id: 'offer',  icon: 'events',    label: 'Oferta',  side: 'right', x: 7, y: 220, act: 'soon:offer', prio: 6, hot: true, show: () => fbOfferOn() },
   /* alerta "Evento" (prio 6, side right, y 220): só entra quando existir evento no jogo; hoje não há, então não é desenhado (Eventos fica no MENU, "Em breve") */
 ];
 /* itens do botão MENU (drop down), na ordem do protótipo. act 'soon:<chave>' = tela ainda não aprovada/feita: mostra "Em breve" */
+/* a oferta de 1ª compra está valendo? (Modo dono + tela ligada + módulo ligado + dentro das 24 h + nunca comprou) */
+function fbOfferSt(){ try { if (!(typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || !(window.Panels && Panels.on('offer')) || !(window.Sys && Sys.offer && Sys.host)) return null; const st = Sys.offer.status(S, Sys.host); return st && st.on && st.available ? st : null; } catch (e) { return null; } }
+const fbOfferOn = () => !!fbOfferSt();
 const FB_DROP = [
   { id: 'forge',    icon: 'forge',     label: 'Forja',      act: 'soon:forge' },
   { id: 'pets',     icon: 'pets',      label: 'Pets',       act: 'soon:pets' },
@@ -290,18 +296,19 @@ function fbLayout(){ const app = document.getElementById('app'), w = document.ge
       kb.style.left = left.toFixed(1) + 'px'; kb.style.top = top.toFixed(1) + 'px'; } }
   const feet = (FIELD_FEET * H - st) / s, bandTop = feet - FB_BAND, bottomLim = Hb - 182 - 6; let changed = false;
   { let li = 0; FB_MENU.forEach(m => { m.cy = m.y; if (m.side === 'left' && fbUnl(m.id)){ m.cy = 136 + 78 * li; li++; } }); }   // coluna esquerda: só os liberados, de cima para baixo, sem buraco
-  FB_MENU.forEach(m => { const b = document.getElementById('fbm_' + m.id); if (!b) return; if (!fbUnl(m.id)){ FB_HIDDEN[m.id] = false; b.style.display = 'none'; return; } b.style.top = m.cy + 'px'; const bot = m.cy + (m.big ? 70 : 62), lim = m.side === 'right' ? Math.min(bandTop, bottomLim) : bottomLim, hide = bot > lim;
+  FB_MENU.forEach(m => { const b = document.getElementById('fbm_' + m.id); if (!b) return; if (!fbUnl(m.id) || (m.show && !m.show())){ FB_HIDDEN[m.id] = false; b.style.display = 'none'; return; } b.style.top = m.cy + 'px'; const bot = m.cy + (m.big ? 70 : 62), lim = m.side === 'right' ? Math.min(bandTop, bottomLim) : bottomLim, hide = bot > lim;
     if (!!FB_HIDDEN[m.id] !== hide) changed = true; FB_HIDDEN[m.id] = hide; b.style.display = hide ? 'none' : ''; });
   if (changed && document.getElementById('fbdrop')) fbMenuClose();
   app.style.setProperty('--fbtop', Math.max(0, H - FB_SHEET_H * Math.min(s, H / 844 > 1 ? s : s)).toFixed(0) + 'px'); app.style.setProperty('--fbhead', (FB_HEAD * Math.min(1.2, s)).toFixed(0) + 'px'); }
 function fbTick(){
   if (!document.getElementById('fbhud')) return; const f = typeof gNum === 'function' ? gNum : fmt, kf2 = typeof kf === 'function' ? kf : fmt;
   if (typeof NEXT_ON !== 'undefined' && NEXT_ON && window.PGuide && window.Panels && typeof Panels.on === 'function' && Panels.on('guidehud')){ try { if (!FBK.pg){ const host = document.getElementById('fb_w'); if (host){ PGuide.mount(host); FBK.pg = 1; } } if (FBK.pg) PGuide.update(); } catch (e) { console.error('PGuide', e); FBK.pg = 2; } }
+  { const os = fbOfferSt(), on = !!os; if (FBK.ofOn !== on){ FBK.ofOn = on; fbLayout(); } if (os){ const s = Math.max(0, Math.floor(os.msLeft / 1000)), hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60); fbSet('fbl_offer', hh > 0 ? hh + 'h ' + String(mm).padStart(2, '0') + 'min' : mm + 'min ' + String(s % 60).padStart(2, '0') + 's'); } }   /* ícone Oferta 24h: aparece/some e mostra o relógio */
   fbSet('fb_gold', kf2(S.gold)); fbSet('fb_gems', String(S.gems)); fbSet('fbp_gold', kf2(S.gold)); fbSet('fbp_gems', String(S.gems)); fbSet('fb_fc', 'FC ' + f(heroFC()));
   try { const h = Sys.level.hud(S), deg = Math.round((h.max ? 1 : h.frac) * 360); fbSet('fb_lv', h.text); if (FBK.ring !== deg){ FBK.ring = deg; document.getElementById('fb_ring').style.background = `conic-gradient(#5ff0cf ${deg}deg,rgba(255,255,255,.16) 0)`; } } catch (e) {}
   { const sk = SKIN(S.skinEq.armor), t = sk ? tierOf(sk.r) : 0, c = 'kidle' + (t ? ' t' + t : ''); if (FBK.kid !== c){ FBK.kid = c; document.getElementById('fb_kid').className = c; } }
   const e = eraOf(S.stage), inEra = ((S.stage - 1) % STAGES_PER_ERA) + 1; if (B.inst && typeof instHud === 'function'){ const ih = instHud(); fbSet('fb_stg', ih.name); fbSet('fb_stgx', ih.sub); }
-    else if (fbSet('fb_stg', ERAS[e].n)){ const el = document.getElementById('fb_stg'); if (el && el.scrollWidth > el.clientWidth + 1){ el.textContent = FB_ERA_SHORT[e] || ERAS[e].n; FBK.fb_stg = ERAS[e].n; } }   /* nome inteiro; só se não couber entra a abreviação oficial da tabela */ fbSet('fb_stgx', (e + 1) + '-' + inEra);   // era com reticências se faltar largura; o número da fase nunca é cortado
+    else if (fbSet('fb_stg', ERAS[e].n)){ const el = document.getElementById('fb_stg'); if (el && el.scrollWidth > el.clientWidth + 1){ el.textContent = FB_ERA_SHORT[e] || ERAS[e].n; FBK.fb_stg = ERAS[e].n; } }   /* nome inteiro; só se não couber entra a abreviação oficial da tabela */ if (!B.inst) fbSet('fb_stgx', (e + 1) + '-' + inEra);   /* Engenheiro 2: na instância o número da fase escrevia por cima do RELÓGIO */   // era com reticências se faltar largura; o número da fase nunca é cortado
   { const NW = S.farm ? 4 : 5, tot = Math.max(1, B.waveN || 1), left = B.en.length + B.toSpawn.length, pc = Math.round(100 * Math.max(0, Math.min(1, (tot - left) / tot))), k = S.wave + '|' + NW + '|' + pc;
     if (FBK.wv !== k){ FBK.wv = k; let h = ''; for (let i = 1; i <= NW; i++){ const boss = i === 5, cur = i === S.wave;
         h += `<span class="${cur ? 'fb-ring' : ''}" style="width:14px;height:6px;border-radius:3px;background:${i < S.wave ? '#ffc94a' : cur ? `linear-gradient(90deg,${boss ? '#ff5a4e' : '#ffc94a'} ${pc}%,rgba(255,255,255,.25) ${pc}%)` : boss ? 'rgba(255,90,78,.55)' : 'rgba(255,255,255,.25)'}${boss ? ';box-shadow:0 0 0 1px #ff8a7a' : ''}"></span>`; }

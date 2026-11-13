@@ -9,7 +9,10 @@ function instMk(sp){ const e = mkEnemy(S.stage, sp.kind || 'e0'); const hm = sp.
   e.maxhp = e.hp = e.hp * hm; e.dmg *= dm; if (sp.eraBoss) e.eraBoss = true; e.gold = 0; return e; }
 function instWave(i){ const I = B.inst, w = I.run.waves[i] || []; B.en = []; B.toSpawn = w.map(x => Object.assign({}, x)); B.waveN = B.toSpawn.length; B.spawnT = 0.4; B.enemy = null; B.waveT = 0; preloadAssets(); }
 if (typeof NEXT_ON !== 'undefined' && NEXT_ON) window.startInstanceRun = function(run){ if (!run || !Array.isArray(run.waves) || !run.waves.length || B.inst) return false;
+  if (B.res && B.res.mode === 'era') return false;   /* Troca de era aberta: não entra */
   if (view !== 'battle') setView('battle');
+  /* Engenheiro 2 (visto no navegador): se o chefe da campanha morreu no instante da entrada, a tela de Vitória/Derrota abria e ficava presa POR CIMA da instância. Fecha direito antes de começar. */
+  if (B.res && typeof resClose === 'function'){ try { resClose(B.res.mode === 'win' ? 'next' : 'farm'); } catch (e) { console.error('resClose', e); } }
   B.inst = { run, wi: 0, kills: 0, t: run.time > 0 ? run.time : 60, back: { stage: S.stage, wave: S.wave, farm: !!S.farm }, done: false };
   if (Number.isInteger(run.stage) && run.stage > 0) S.stage = run.stage; S.wave = 1; S.farm = false;
   const st = heroStats(); B.hero = { hp: st.hp, atkT: 0.3 }; heroApply(B.hero, st); B.deadT = 0; B.deadBoss = false; B.act = null; B.res = null; B.running = true;
@@ -24,7 +27,10 @@ function instEnd(win){ const I = B.inst; if (!I || I.done) return; I.done = true
   try { out = Sys.instances.finish(S, Sys.host, I.run.id, { win: !!win, kills: I.kills }); } catch (e) { console.error('instances.finish', e); out = { ok: false, reason: 'erro' }; }
   S.stage = I.back.stage; S.wave = I.back.wave; S.farm = I.back.farm; B.inst = null;   // volta ao farm onde estava
   B.deadT = 0; B.deadBoss = false; startBattle(); if (typeof refreshHero === 'function') refreshHero(); save(); hud();
-  if (window.PInst && typeof PInst.showResult === 'function'){ try { PInst.showResult(out); } catch (e) { console.error('PInst.showResult', e); toast(win ? 'Instância vencida' : 'Instância perdida'); } }
-  else toast(out && out.ok !== false && (out.win || win) ? 'Instância vencida' : 'Instância perdida'); }
+  /* Engenheiro 2 (achado dos testes de Sistemas): o PInst.showResult devolve true mesmo sem abrir (tela 'inst' desligada). Só confio nele com a tela ligada;
+     senão (ou se ele falhar) sai o aviso de reserva: o jogador SEMPRE vê o resultado. */
+  const won = !!(out && out.ok !== false && (out.win || (out.win === undefined && win))), msg = won ? 'Instância vencida! Prêmio entregue' : (I.t <= 0 && !win ? 'Tempo esgotado: instância perdida' : 'Instância perdida');
+  let shown = false; if (window.PInst && typeof PInst.showResult === 'function' && window.Panels && typeof Panels.on === 'function' && Panels.on('inst')){ try { shown = PInst.showResult(out) !== false && typeof view !== 'undefined' && view === 'inst'; } catch (e) { console.error('PInst.showResult', e); } }
+  if (!shown) toast(msg); }
 /* texto do cabeçalho da batalha durante a instância: nome e relógio */
 function instHud(){ const I = B.inst; if (!I) return null; const s = Math.max(0, Math.ceil(I.t)); return { name: 'Instância', sub: Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + (I.run.goal === 'kills' ? ' · ' + I.kills : '') }; }

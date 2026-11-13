@@ -40,7 +40,7 @@ function petLevel(atBoot){ if (!petOk()) return; let r = null; try { r = Sys.pet
 function petHatchQueue(h, first){ if (!h || !h.pet) return; const sp = (Sys.pet.DATA.v17 && Sys.pet.DATA.v17.species && Sys.pet.DATA.v17.species[h.pet]) || {}, info = { name: sp.name, sprite: sp.sprite, r: sp.r }; const r = h.r != null ? h.r : info.r | 0;
   HATCH.q.push({ pet: h.pet, name: h.name || info.name || 'Pet', r: Math.max(0, Math.min(4, r | 0)), sprite: info.sprite || null, first: !!first, dup: !!h.dup }); }
 /* AVISOS DE OVO: recebe a lista de respostas do Sys.pet.addEgg (drops, chefe, baú, prêmios). Nunca "chocou undefined". */
-function petNotice(list){ if (!petOk() || !Array.isArray(list)) return;
+function petNotice(list){ if (!petOk() || !Array.isArray(list)) return; if (typeof codexSync === 'function') setTimeout(codexSync, 0);   /* códex: ovo/pet novo */
   for (const x of list){ if (!x) continue;
     if (x.held && x.pre) toast('Ovo guardado: choca no nível ' + (x.needLevel || 20));
     else if (x.choice){ if (Screens.reg && Screens.reg.eggpick && !Screens.reg.eggpick.broken) Screens.open('eggpick', { index: x.index, options: x.options }); else toast('Você ganhou um ovo para escolher: abra Pets'); }
@@ -72,7 +72,9 @@ function drawPet(){ const I = petInfo(); if (!I || B.res || HATCH.cur) return; c
   let sh = petSheet(st); petSheet('idle'); petSheet('run'); petSheet('atk1'); if (!sh || !sh.ok){ sh = petSheet('idle'); if (!sh || !sh.ok) return; }
   const M = sh.meta, n = M.frames || 1, fps = M.fps || 12, fi = act && st === 'atk1' ? Math.min(n - 1, Math.floor(act.t * fps)) : Math.floor(B.at * fps) % n;
   const T = petTbl(), k = petK(), ax = (M.padLeft != null ? M.padLeft : 96) + 128, fy = typeof M.feetY === 'number' ? M.feetY : 307;
-  const px = petX(), gy = GY + T.dy + (petMO() ? petMO().dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
+  /* Engenheiro 2: na MORTE do Kael (morte nova) o pet RECUA para trás dele, para não ficar em cima do corpo caído */
+  const dieK = (B.deadT > 0 && typeof ART_ON !== 'undefined' && ART_ON.kael_die === true) ? Math.min(1, (1 - B.deadT / 1.6) * 3.2) : 0, backX = HX - HS * KAEL_W * PET_BACK * 1.5;
+  const px0 = petX(), px = px0 + (backX - px0) * dieK * dieK * (3 - 2 * dieK), gy = GY + T.dy + (petMO() ? petMO().dy : 0), fly = I.draw.fly ? heroBodyH() * (T.fly + 0.012 * Math.sin(B.at * 3)) : 0;   // ninguém flutua: o voador paira 10-15% acima do chão, com a sombra NO chão
   ctx.save(); ctx.globalAlpha = 0.28; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(px, gy + HS * 0.012, HS * (fly ? 0.09 : 0.13), HS * 0.032, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, px - ax * k, gy - fly - fy * k, M.w * k, M.h * k); }
 /* CHOCAR (por código, sobre a batalha): o ovo treme, racha, luz, o pet salta ao chão; depois o nome e a raridade */

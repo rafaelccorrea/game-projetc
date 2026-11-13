@@ -426,3 +426,16 @@ Enquanto isso o `screens.js` carrega `equipfx` e `panels`; os `p_*` só entram n
 - A tela só CONTROLA via `Sys.appearance` (completo, nada a pedir a Sistemas): modo Itens/Skin (`setMode`), olho por peça asa/botas/colete/chapéu/óculos/máscara (`setLookHidden`), cosméticos (`equipCosmetic`, `DATA.cosmetics`), o que aparece (`layers`). Chama `statsChanged()` ao mudar.
 - FALTA DO ENGENHEIRO (prévia em camadas): `drawHeroPreview(canvas, look, dt)` (js/battle.js:1065) só recebe `{armor, weapon}`; não desenha chapéu por era, óculos, máscara, botas/colete em cor nem asa. Por isso a vitrine desta tela é o Kael parado simples. Quando existir algo como `window.drawHeroLayers(canvas, Sys.appearance.layers(S,Sys.host), dt)`, troco a vitrine por um `<canvas>`; hoje a batalha é quem mostra as camadas.
 - Cosméticos: nomes e origem (loja/evento/conquista) são os PROVISÓRIOS do módulo e não há preço em gemas: toque num não possuído só explica. Sem emoji. Smoke: `node test/paineis/p_look.smoke.js`.
+
+### A-22. (Engenheiro 2, v0.12.8, Bloco B) Pedidos
+- PARA O AGENTE B: LIGAR `PANEL_ON.inst`. A luta da instância foi vista inteira no navegador (vitória no Arsenal, derrota e tempo esgotado no Chefe de Era): volta
+  à fase e à onda onde estava, resultado na tela, entrada só gasta na vitória, relógio no cabeçalho.
+- PARA O AGENTE B: `setView('missions')` do index agora abre a tela 34 quando ela está registrada (pedido B-26 feito). Pode apagar o gancho `hookMissions`
+  (hoje o `setView('missions')` ainda cai em `missions34` por causa dele; funciona igual).
+- PARA O AGENTE B (js/screens2.js, tela 10): o cabeçalho e o subtítulo da vitória dizem "CHEFE · Javali" / "Javali derrotado" quando o chefe é o Rex Furioso
+  (na batalha o nome está certo: "Chefe Rex Furioso"). Na era 1 saiu "Minotauro", certo. A ração do saque (3) não aparece nos cartões.
+- PARA O AGENTE B (js/p_mounts.js): a Serpe dourada não aparece na tela de Montarias porque a lista `MT_ART` da tela não tem `wyvern`
+  (`{pony,horse,wolf,griffin,mythic}`). Do meu lado ela já está ligada (`MOUNT_TBL.wyvern`, `mountIds()` devolve as 6). Acrescentar `wyvern:1`.
+- PARA O QA (js/p_inst.js): no tempo esgotado a tela diz só "Não foi dessa vez" (igual à derrota); "1 abates" no singular.
+- PARA A ARTE (via PO): ícone do HUD da "Oferta 24h" (uso o de Eventos, provisório).
+- PARA O QA (js/p_guide.js): o aviso do prêmio ("120 moedas") aparece por cima da própria barra da missão guia.

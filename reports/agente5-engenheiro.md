@@ -1559,3 +1559,35 @@ Assumi no meio da v0.12.8. Tudo abaixo foi olhado no Chrome, origem `localhost:8
 
 Pedidos abertos: A-21 (Arte: resíduo escuro nas folhas do lobo; maça sobre o rosto em pônei/cavalo/tigre; agente B: arma errada na vitrine da Forja; letreiro da ultimate).
 BLOCO B: não iniciado (itens 8 a 13 + Vitória/Derrota do chefe no jogo real + Correio com `mail` na lista de módulos).
+
+## Engenheiro 2 — v0.12.8, BLOCO B (2026-11-12; interrompido por ordem do dono para a asa)
+
+Tudo visto no Chrome, `localhost:8080`, Modo dono (save separado), mais o save de teste da origem para a conferência de poder. Zero erro no console.
+
+### Visto rodando
+- **Troca de era de verdade (item 8)**: Senhor da Era da fase 10 morto → VITÓRIA (tela 10) → "Continuar" → Troca de era (portal, "ERA 2 · ANTIGUIDADE", inimigos, recompensa +40 gemas e +5 Essência) → "Começar a era" → jogo rodando em Antiguidade 2-1.
+- **Vitória/Derrota do chefe no jogo real**: a morte aprovada do chefe toca inteira (aos 0,67 s e a 1,00 s de 1,08 s só o cabeçalho na tela; o baú entra em 1,23 s e o letreiro em 1,98 s); cartões = saque real (42 moedas, +10 gemas, 41 XP, 1 pedra de forja, Botas de Pele raro); "Continuar" devolve o jogo na fase seguinte. Derrota: Kael caído, FC x recomendada, três caminhos; "Modo farm" entrou sozinho em 10 s; "Tentar de novo" desafia o chefe outra vez. **`SCREENS_ON.bossResult` LIGADA por padrão** (`?debug=1&res=0` desliga).
+- **Luta da instância (item 9)**, com `?painel=inst`: vitória (Arsenal, 12 abates, prêmio na tela), derrota e tempo esgotado (Chefe de Era): "Não foi dessa vez · A entrada não foi gasta"; volta à mesma fase e onda; ouro/itens só mudam pelo prêmio; cabeçalho "Instância 0:40".
+- **Missão guia (item 10)**, com `?painel=guidehud` e `Sys.guide.DATA.on` ligado na mão: barra em 56,92 (174x35) sob a barra de fase, sem cobrir cabeçalho nem MENU; "Derrote 10 inimigos" andou até 10/10, "Resgatar" entregou e passou para "Derrote o primeiro chefe".
+- **Módulos (item 12)**: `chat, codex, phaseup, evtrail, name, mail, net, buy, online, auction` carregados antes do `fc` (arquivos conferidos), chaves desligadas (só `mail` ligada); `P_CHAT` e `P_CODEX` criados; FC do save antigo 4.509 antes e 4.509 depois.
+- **Correio (item 13)**: carta "Bem-vindo a Eonbound" na tela, uma só; depois de recarregar continua uma; `welcomeOnce` devolve 0.
+- **Oferta só no Modo dono**: ícone no HUD (direita, sob o Baú) com o relógio "23h 59min", abre a tela; no save normal tela e módulo desligados, ícone escondido, relógio não começa.
+- **Leilão**: abre como demonstração, cartão de exemplo, "Comprar · abre com o online" desligado; nível 45 na tabela.
+- **Pet**: na morte recua para trás do Kael (corpo caído inteiro à vista); grifo + pet evoluído sem encostar no inimigo.
+
+### Corrigido / escrito
+- `js/battle.js`: vitória → Troca de era em ordem (`B.eraPend`, abre quando a vitória fecha); nome real do Senhor da Era na Troca de era; sem "Derrotado... recomeçando a fase" na instância; folga do inimigo refeita quando montaria/pet mudam no meio da onda (era a causa do pet encostando); `codexSync` na fase vencida.
+- `js/instfx.js`: aviso de reserva quando a tela `inst` não abre; fecha a Vitória/Derrota antes de entrar (ficava PRESA por cima da instância se o chefe da campanha morresse no instante da entrada: visto); não entra com a Troca de era aberta.
+- `js/fullbattle.js`: relógio da instância (o número da fase escrevia por cima); ícone "Oferta 24h".
+- `index.html`: lista de módulos; `sysBootB()` (provedores, correio, oferta no Modo dono); `codexSync()` no `statsChanged`; `setView('missions')` direto para a tela 34 (B-26); tela 10 ligada.
+- `js/farm.js`, `js/petfx.js`: `codexSync` em item novo e em ovo; recuo do pet na morte. `js/mountfx.js`: `pdx3` do grifo.
+
+### Não visto
+- Chat e Códex abertos com os provedores (só conferi que existem); `Sys.codex.sync` gravando em cada gatilho (vi 6 vistos no save depois da carga).
+- Holofote do tutorial por cima da Derrota; entrada na instância no instante da morte do chefe DEPOIS do conserto.
+- Menu do Leilão num jogador abaixo do nível 45 (li a tabela: 45).
+- 360x640; celular.
+
+### Aberto (fila passada pelo coordenador, nesta ordem)
+1. ASA NAS COSTAS (âncora `back` + `root` das asas), a pé nas 4 fases e nas 6 montarias; prints `v0128_asa_*`. 2. `drawHeroFull` (pet/montaria/asa/aura nunca somem; Vitória, Troca de era, subir de nível) e `drawHeroLayers` para a Aparência. 3. P3/P1 (imagens de arma e da Oferta). 4. "Pular" do tutorial em save antigo. 5. Fases do Kael (`PHASES_ON`), cenários das eras 6 e 7, Kaia, pets novos.
+Serpe na tela de Montarias: depende do agente B (A-22).

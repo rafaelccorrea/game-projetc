@@ -27,7 +27,7 @@ function normItem(o){ const slot = SLOT[o.slot] ? o.slot : 'armor', r = Math.max
 function dropToast(msg){ if (view === 'shop') return; toast(msg); }
 /* entrada única de item na mochila (drop, chefe, baú, invocação, loja, offline). Equipar automático: pela FC REAL (Sys.fc.itemFC().swap > 0).
    A garantia da invocação é do Sys.loot.summon (o item vem com pity:true); a do jogo (S.pity) foi retirada. */
-function addItemToBag(o){
+function addItemToBag(o){ setTimeout(()=>{ if(typeof codexSync==='function') codexSync(); },0);   /* códex: item novo na mochila (drop, invocação, prêmio) */
   const it = normItem(o); it.id = S.nextId++; if (it.gotAt == null) it.gotAt = Date.now(); try { Sys.stats.ensureSubs(it); } catch (e) {} it.nw = 1; const nm = iname(it);
   if (S.inv.length >= BAG_MAX){   /* MOCHILA CHEIA: sai o item MAIS FRACO que não está equipado (FC do item no nível atual, Sys.fc.itemFC().fc); o novo só é descartado se for ele o mais fraco */
     const fcOf = x => { try { return Sys.fc.itemFC(S, Sys.host, x).fc; } catch (e) { return 0; } };

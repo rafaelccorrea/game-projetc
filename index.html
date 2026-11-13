@@ -432,7 +432,7 @@ const DEBUG=/[?&]debug=1/.test(location.search);
 /* CHAVES DE TELA (voto do dono): só entra ligada a tela aprovada. bossResult = tela 10 (Vitória/Derrota do chefe): REPROVADA depois de escrita;
    o código fica em js/screens2.js, desligado. Com a chave desligada vale o comportamento da v0.9 (aviso de derrota + farm; vitória no fluxo normal).
    Em debug, ?res=1 liga só para conferência. */
-const SCREENS_ON={bossResult:DEBUG&&/[?&]res=1/.test(location.search), progress:true,
+const SCREENS_ON={bossResult:!(DEBUG&&/[?&]res=0/.test(location.search)), progress:true,   /* Engenheiro 2 (v0.12.8, Bloco B): tela 10 LIGADA por padrão (QA: "pode ligar"; vista no jogo real: morte do chefe inteira, cartões = saque, Continuar, derrota, Modo farm em 10 s, Tentar de novo, Senhor da Era → Troca de era). Em debug, ?res=0 desliga. */
   rarityFx:DEBUG&&/[?&]rar=1/.test(location.search)};   /* rarityFx = raridade reconhecível de longe (js/rarity.js): DESLIGADA; só em debug com ?rar=1 */   /* progress = tela 16 */
 const VERSION='v0.12.8';   /* BUILD ÚNICO: troque a cada mudança. Vai no ?v= de TODOS os scripts (o CSS é embutido neste arquivo) e aparece no carregamento, no título e em Configurações. */
 S.set.auto=true;   /* v0.12.1 (ordem do dono): SÓ AUTOMÁTICO. Save antigo com o modo de toque ligado passa a automático. */
@@ -455,6 +455,8 @@ const pvSkin={weapon:null,armor:null};   // skin em prévia na aba Skins
 const QP=new URLSearchParams(location.search);
 /* Engenheiro 2: ?debug=1&skip=1 também pula a ENTRADA NOVA (js/p_intro.js): a chave da tela nasce desligada só nesta carga (o js/panels.js respeita window.PANEL_ON) */
 if(DEBUG&&QP.has('skip')) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{intro:false});
+/* OFERTA DE 1ª COMPRA (decisão do PO): só no MODO DONO. No save real nem a tela nem o módulo ligam: o relógio de 24 h não começa até existir compra real. */
+if(OWNER_MODE) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{offer:true});
 /* DEBUG OFICIAL DO SENHOR DA ERA (pedido do QA): ?debug=1&fresh=1&lord=<era 0..6> põe o save na fase <era*10+10>, onda 5 (Senhor da Era), com o herói
    forte o bastante para vencer e SEM __stay (o chefe morre de verdade, a fase avança e a era troca). O reforço é refeito a cada 0,2 s (ver o fim do arquivo). */
 if(DEBUG&&QP.has('lord')){ QP.set('era',QP.get('lord')); QP.set('eb','1'); window.__lord=true; }
@@ -529,7 +531,9 @@ function fcNotice(){ if(!NEXT_ON||!window.Sys||!Sys.fc||typeof Sys.fc.snapshot!=
   const step=()=>{ const k=Math.min(1,(performance.now()-t0)/700), v=from+(to-from)*(1-Math.pow(1-k,3)); tt.textContent='FC '+f(Math.round(v)); if(k<1) FCN.raf=requestAnimationFrame(step); }; step();
   clearTimeout(FCN.hide); FCN.hide=setTimeout(()=>{ if(Date.now()>=FCN.until-50){ el.style.display='none'; FCN.base=null; } },2650); }
 setTimeout(()=>{ try{ if(window.Sys&&Sys.fc&&typeof Sys.fc.snapshot==='function'&&Sys.host) FCN.snap=Sys.fc.snapshot(S,Sys.host); }catch(e){} FCN.armed=true; },4000);   // na carga do jogo e na troca de save não avisa
-function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); fcNotice(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
+/* CÓDEX: registra o que o jogador já teve/viu (grava mesmo com a chave do módulo desligada; sem prêmio). Chamado depois de drop, equipar, ovo, evolução, montaria, forja e fase vencida. */
+function codexSync(){ try{ if(window.Sys&&Sys.codex&&typeof Sys.codex.sync==='function'&&Sys.host) Sys.codex.sync(S,Sys.host); }catch(e){} }
+function statsChanged(){ if(typeof refreshHero==='function') refreshHero(); fcNotice(); codexSync(); try{ if(window.Sys&&Sys.fc&&Sys.host) Sys.fc.record(S,Sys.host); }catch(e){} save(); hud(); }
 function roll(key){
   const tot=RAR.reduce((s,r)=>s+r[key],0); let x=Math.random()*tot;
   for(let i=0;i<RAR.length;i++){ x-=RAR[i][key]; if(x<=0) return i; } return 0;
@@ -574,7 +578,7 @@ V.addEventListener('click',ev=>{
   save(); render(); hud();
 });
 const FULLV={gear:1,summon:1,shop:1,pass:1,prog:1};   // telas cheias (entre o HUD e as abas)
-function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.tab='col'; } else if(v==='missions'){ v='pass'; passTab='mis'; }
+function setView(v){ if(v==='skins'){ v='shop'; if(typeof XH!=='undefined') XH.tab='col'; } else if(v==='missions'&&!(Screens.reg.missions&&!Screens.reg.missions.broken)){ v='pass'; passTab='mis'; }   /* B-26: com a tela 34 (Missões) registrada, 'missions' abre a própria tela; sem ela, a aba antiga do Passe */
   if(v==='pass'&&typeof XP!=='undefined') XP.anim=true; if(v==='prog'&&typeof XR!=='undefined') XR.anim=true;
   view=v; document.body.dataset.v=v; document.body.classList.toggle('sheet',false); document.body.classList.toggle('full',!!FULLV[v]);
   if(typeof XG!=='undefined'){ XG.anim=XS.anim=XH.anim=true; if(v!=='gear'){ XG.sel=null; XG.cf=null; } if(v!=='shop'){ XH.sel=null; XH.cf=null; } }
@@ -720,14 +724,21 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['fc']).forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';
 ['toast','tut','title','modal','loading'].forEach(id=>document.getElementById('app').appendChild(document.getElementById(id)));   // tudo dentro da "tela de celular"
+/* Engenheiro 2 (Bloco B): provedores das telas de Chat e Códex, Correio (módulo ligado junto com a chave da tela + carta de boas-vindas, uma vez) e Oferta (só Modo dono). Tudo protegido: módulo ausente não quebra a carga. */
+function sysBootB(){ if(!window.Sys||!Sys.host) return;
+  try{ if(Sys.chat&&typeof Sys.chat.screenProvider==='function') window.P_CHAT=Sys.chat.screenProvider(()=>S,Sys.host); }catch(e){ console.error('P_CHAT',e); }
+  try{ if(Sys.codex&&typeof Sys.codex.screenProvider==='function') window.P_CODEX=Sys.codex.screenProvider(()=>S,()=>Sys.host); }catch(e){ console.error('P_CODEX',e); }
+  try{ if(Sys.mail){ if(typeof PANEL_ON!=='undefined'&&PANEL_ON.mail) Sys.mail.DATA.enabled=true; if(typeof Sys.mail.welcomeOnce==='function') Sys.mail.welcomeOnce(S,Sys.host); } }catch(e){ console.error('mail',e); }
+  try{ if(OWNER_MODE&&Sys.offer&&Sys.offer.DATA) Sys.offer.DATA.on=true; }catch(e){}
+  codexSync(); }
 loadBalance(); versionCheck();
-sysBoot(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
+sysBoot(); sysBootB(); B.speed=[1,2,4].includes(S.set.spd)?S.set.spd:1; syncSpeed(); initTitle(); preloadAssets(); resize(); startBattle(); render(); fbInit(); hud(); dispatchEvent(new Event('resize')); if(DEBUG&&QP.has('tab')) setView(QP.get('tab')); requestAnimationFrame(loop);
 if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px'; document.getElementById('app').style.width='min(900px,100dvw)'; resize(); }
 if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
 if(DEBUG&&window.__lord) setInterval(()=>{ const h=B.hero, e=B.en[0]; if(h&&e){ h.atk=Math.max(h.atk,e.maxhp/(e.boss?12:3)); h.maxhp=Math.max(h.maxhp,e.dmg*400); h.hp=h.maxhp; } },200);   /* ?lord=<era>: herói forte, sem stay */

@@ -201,7 +201,7 @@ function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no go
   floatText(HX,GY-HS*0.9,'-'+fmt(Math.max(1,d)),'#ff6b6b'); burst(HX,GY-HS*0.45,'#ff4d4d',4); addEnergy(BAL.energyPerHurt);
   wfx(fnHit,0.22,{x:HX+HS*0.1,y:GY-HS*0.45,r:src&&src.boss?36:24,n:8,col:ULTCOL[B.dispEra]||'#ff6b5a',rot:Math.random()*6.28,layer:1,hero:1});   // impacto NO HERÓI, na cor da era (o golpe não viaja pela tela)
   if(DEBUG) window.__dmgIn=(window.__dmgIn||0)+d;
-  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5; snd('defeat'); if(!B.deadBoss) toast('Derrotado... recomeçando a fase'); return true; }
+  if(h.hp<=0){ h.hp=0; B.deadT=1.6; B.act=null; B.toSpawn=[]; B.eshots=[]; B.deadBoss=S.wave===5&&!B.inst; snd('defeat'); if(!B.deadBoss&&!B.inst) toast('Derrotado... recomeçando a fase');   /* na instância o aviso é o resultado da instância, não o da fase */ return true; }
   return false;
 }                                   // fila de espera, fora da tela (selo "+N" na borda direita)
 const contact = e => e.boss?bossSlot(e):Math.max(SLOTX[0],B.front||0);   // B.front: centro real do slot da frente (hordeFit pode levá-lo para a direita)   // posição de luta (protótipo: o da frente fica em x=194 e o chefe pode encostar no herói)
@@ -282,13 +282,17 @@ function waveClear(){
   try{ if(window.Sys&&Sys.titles){ const fr=Sys.titles.onWaveClear(S,Sys.host); if(fr&&fr.length){ refreshHero(); if(typeof progFresh==='function') progFresh(fr); } } }catch(e){}
   if(S.wave===5){
     const oldEra=eraOf(S.stage), won=S.stage, loot=B.bossLoot; B.bossLoot=null;
-    S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem');
+    S.farm=false; S.gems+=10; S.stage++; S.wave=1; S.best=Math.max(S.best,S.stage); snd('gem'); if(typeof codexSync==='function') codexSync();   /* códex: fase vencida */
     const ne=eraOf(S.stage), newEra=ne>oldEra&&ne>S.eraMax;
     if(newEra){ S.eraMax=ne; S.gems+=30; }
     /* TELA 10 (vitória): abre por cima da batalha; se não puder abrir (outra tela aberta, tutorial), vale o aviso curto de antes */
     /* TROCA DE ERA (pedido Q-2): tela nova em overlay (js/p_era.js), só com PANEL_ON.era ligada pelo agente B; se não abrir, vale o fluxo de sempre */
-    let eraShown=false; if(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era')){ try{ eraShown=Panels.open('era',{from:oldEra,to:ne,boss:(ERAS[oldEra]&&ERAS[oldEra].lord)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}})!==false; }catch(er){ console.error('era',er); eraShown=false; } }
-    const shown=eraShown||(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
+    /* Engenheiro 2 (coordenador): no Senhor da Era a ORDEM é VITÓRIA (tela 10) → TROCA DE ERA, uma depois da outra: a Troca de era fica guardada em B.eraPend e
+       abre quando a vitória fechar (laço do jogo). Sem a tela 10 (chave desligada, tutorial, outra tela aberta) a Troca de era abre direto, como antes. */
+    const eraOpts=(newEra&&window.Panels&&typeof Panels.on==='function'&&Panels.on('era'))?{from:oldEra,to:ne,boss:((J('assets/enemies/meta.json')['era'+oldEra+'_boss']||{}).name)||'Senhor da Era',gems:40,essence:loot&&loot.essence||0,onDone:()=>{}}:null;   /* nome do Senhor da Era vencido, do meta dos inimigos */
+    let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
+    if(shown&&eraOpts) B.eraPend=eraOpts;
+    else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
     if(S.set.autoBoss&&heroFC()>=recFC(S.stage)){ h.hp=Math.min(h.maxhp,h.hp+h.maxhp*0.08); challengeBoss(); return; } }
@@ -949,6 +953,8 @@ function draw(){
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
   HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=heroLook(); HM.wing=lk.wing; HM.mount=lk.mount; } { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
+  /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
+  { const he=heroEdge(); if(B.heK!=null&&Math.abs(he-B.heK)>1&&B.deadT<=0&&!B.res){ try{ layoutHorde(); }catch(e){} } B.heK=he; }
   const ultOn=!!(B.act&&B.act.type==='s3');
   if(!ultOn){ drawHero(HM); drawLevelUp(); }
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
@@ -1077,6 +1083,7 @@ function loop(now){
   try{
   if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
+  if(B.eraPend&&!B.res&&!B.inst){ const eo=B.eraPend; B.eraPend=null; try{ if(window.Panels&&Panels.on('era')) Panels.open('era',eo); }catch(er){ console.error('era',er); } }   /* a vitória fechou: agora a Troca de era */
   tickFx(dt); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
   drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
