@@ -1,150 +1,150 @@
 {
  "frames": 18,
  "w": 448,
- "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro",
+ "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. Kael V2: âncora pelo pescoço (kv2/headneck.js)",
  "head": [
   {
-   "x": 324,
-   "y": 56,
-   "ang": 1.5,
-   "s": 0.5131,
-   "e": 136,
-   "ok": true
-  },
-  {
-   "x": 322,
-   "y": 60,
-   "ang": 2.5,
-   "s": 0.5131,
-   "e": 136,
+   "x": 327,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   },
   {
    "x": 327,
-   "y": 52,
-   "ang": -7.5,
-   "s": 0.4895,
-   "e": 134,
-   "ok": true
-  },
-  {
-   "x": 325,
-   "y": 57,
-   "ang": -17.5,
-   "s": 0.4678,
-   "e": 138,
-   "ok": true
-  },
-  {
-   "x": 305,
-   "y": 58,
-   "ang": 17.5,
-   "s": 0.4678,
-   "e": 160,
-   "ok": true
-  },
-  {
-   "x": 299,
-   "y": 51,
-   "ang": 17.5,
-   "s": 0.4678,
-   "e": 148,
-   "ok": true
-  },
-  {
-   "x": 291,
-   "y": 55,
-   "ang": 10.5,
-   "s": 0.4678,
-   "e": 152,
-   "ok": true
-  },
-  {
-   "x": 293,
-   "y": 58,
-   "ang": -3.5,
-   "s": 0.4968,
-   "e": 136,
-   "ok": true
-  },
-  {
-   "x": 304,
-   "y": 51,
-   "ang": -15.5,
-   "s": 0.4678,
-   "e": 137,
-   "ok": true
-  },
-  {
-   "x": 307,
-   "y": 54,
-   "ang": -12.5,
-   "s": 0.4678,
-   "e": 151,
-   "ok": true
-  },
-  {
-   "x": 308,
-   "y": 56,
-   "ang": 17.5,
-   "s": 0.4678,
-   "e": 160,
-   "ok": true
-  },
-  {
-   "x": 303,
-   "y": 52,
-   "ang": 17.5,
-   "s": 0.4751,
-   "e": 150,
-   "ok": true
-  },
-  {
-   "x": 311,
-   "y": 53,
-   "ang": 7.5,
-   "s": 0.4751,
-   "e": 159,
+   "y": 27,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   },
   {
    "x": 326,
-   "y": 57,
-   "ang": 2.5,
-   "s": 0.5131,
-   "e": 135,
+   "y": 29,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   },
   {
-   "x": 327,
-   "y": 59,
-   "ang": 4.5,
-   "s": 0.4968,
-   "e": 136,
+   "x": 326,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 326,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   },
   {
    "x": 325,
-   "y": 56,
-   "ang": 2.5,
-   "s": 0.5131,
-   "e": 136,
-   "ok": true
-  },
-  {
-   "x": 324,
-   "y": 56,
-   "ang": 1.5,
-   "s": 0.5054,
-   "e": 137,
+   "y": 30,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   },
   {
    "x": 323,
-   "y": 56,
-   "ang": -2.5,
-   "s": 0.4968,
-   "e": 140,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 320,
+   "y": 17,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 321,
+   "y": 18,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 322,
+   "y": 20,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 325,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 325,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 329,
+   "y": 26,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 332,
+   "y": 20,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 333,
+   "y": 18,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 329,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 328,
+   "y": 27,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 327,
+   "y": 28,
+   "ang": 0,
+   "s": 0.26,
+   "e": 0,
    "ok": true
   }
  ]
