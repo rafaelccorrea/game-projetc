@@ -73,7 +73,8 @@ function add(S,host,id){ const m=BY[id]; if(!m) return {ok:false,reason:'id'}; i
   if(x){ const a=addFragments(S,id,DATA.dupFrags); return {ok:true,id,isNew:false,frags:DATA.dupFrags,stars:a.stars}; }
   o.owned[id]={stars:1,frags:0,lvl:1,gold:0}; const sv=o.stored[id]||0; delete o.stored[id]; if(sv) addFragments(S,id,sv);
   if(!o.eq||pctOf(id,1,o.owned[id].stars)>pctOf(o.eq,o.owned[o.eq].lvl,o.owned[o.eq].stars)) o.eq=id;
-  return {ok:true,id,isNew:true,stars:o.owned[id].stars,equipped:o.eq===id}; }
+  let passFrags=0; try{ const P=root.Sys&&root.Sys.pass; if(P&&P.releaseMountFrags) passFrags=int0(P.releaseMountFrags(S)); }catch(e){}   // fragmentos do Passe guardados sem montaria (nível 25): entram na 1ª
+  return {ok:true,id,isNew:true,stars:o.owned[id].stars,equipped:o.eq===id,passFrags}; }
 function addFragments(S,id,n,host){ const k=int0(n); if(!k||!BY[id]) return {added:0,stars:0}; const o=ensure(S), x=o.owned[id];
   if(!x){ o.stored[id]=(o.stored[id]||0)+k; const m=BY[id], hf=int0(m.hatchFrags);   // montaria nova: juntou hatchFrags → nasce (o que passar vira estrela)
     if(hf&&live(m)&&o.stored[id]>=hf){ const left=o.stored[id]-hf; delete o.stored[id]; const a=add(S,host,id); if(left) addFragments(S,id,left,host); return {added:k,hatched:true,stars:o.owned[id]?o.owned[id].stars:1,add:a}; }

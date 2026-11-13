@@ -1041,4 +1041,13 @@ t('8 asas novas (dono): item de asa no mesmo padrão (atributo do item), atrás 
   const path=require('path'), fs=require('fs'), root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/equip/wing_angel_L.png'))) for(const k of nw){ for(const x of ['_L.png','_R.png','.json']) assert.ok(fs.existsSync(path.join(root,'assets/anim/equip/wing_'+k+x)),'falta wing_'+k+x); assert.ok(JSON.parse(fs.readFileSync(path.join(root,'assets/anim/equip/wing_'+k+'.json'),'utf8')).fit>0,'fit: '+k); }
 });
 
+t('passe nível 25: os 10 fragmentos de montaria entram na equipada (viram estrela: 1★ → 2★) e, sem montaria, entram sozinhos na 1ª (Sys.mount.add)',()=>{
+  const M=require('../../js/sys/mount.js'), P=require('../../js/sys/pass.js'); globalThis.Sys.mount=M; globalThis.Sys.pass=P; const h=makeHost({level:40});
+  try{ const S=newS(); M.add(S,h,'wolf'); P.setPremium(S,true); P.addXp(S,1e7); const c=P.claimTier(S,h,'premium',25);
+    assert.ok(c.ok,JSON.stringify(c)); assert.strictEqual(c.rewards.mountFrags,10); assert.strictEqual(M.ensure(S).owned.wolf.stars,2,'10 fragmentos = 1 estrela (o contador volta a 0)');
+    const T=newS(); P.setPremium(T,true); P.addXp(T,1e7); P.claimTier(T,h,'premium',25); assert.strictEqual(P.ensure(T).mfrag,10,'guardados sem montaria');
+    const a=M.add(T,h,'pony'); assert.strictEqual(a.passFrags,10); assert.strictEqual(P.ensure(T).mfrag,0); assert.strictEqual(M.ensure(T).owned.pony.stars,2);
+  } finally { delete globalThis.Sys.pass; }
+});
+
 console.log(`ok: ${n} testes`);
