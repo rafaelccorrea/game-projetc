@@ -11,7 +11,7 @@
    Desligado: nada aqui roda; o jogo segue com o título e a intro de sempre (index.html / js/intro.js). */
 (function(){
 const ON=()=>typeof PANEL_ON!=='undefined'&&!!PANEL_ON.intro;
-const PI_KAIA=false;   /* chave: true quando a arte da Kaia for aprovada; até lá ela aparece como no protótipo ("arte em produção") */
+const PI_KAIA=true;    /* Kaia jogável (aprovada pelo dono, commit 4e35bc7 do engenheiro): escolhível na Criação, com a arte dela. false = volta o "chega em breve" */
 const piEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ---------- jogo: leituras protegidas ---------- */
@@ -108,7 +108,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       const r=c.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr); if(!w||!h) continue;
       if(c.width!==w||c.height!==h){ c.width=w; c.height=h; } const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,w,h);
       const z=+c.dataset.piZoom||1, Fp=h/1.9;   /* F em pixels do canvas */
-      drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false,...(c.dataset.piMount==='0'?{mount:false}:{})}); }catch(e){} }
+      /* data-pi-as: desenha OUTRO herói (cartão da Kaia na Criação) trocando S.hero só durante o desenho */
+      const as=c.dataset.piAs, sv=G.S(), h0=sv.hero; if(as) sv.hero=as;
+      try{ drawHeroFull(x,w/2,h*(1.85/1.9),Fp/(HS*z),{t:this.heroT,walking:c.dataset.piHero==='walk',pet:false,...(c.dataset.piMount==='0'?{mount:false,wing:false}:{})}); }finally{ if(as) sv.hero=h0; } }catch(e){} }
     this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
     const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
@@ -190,7 +192,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
       if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){ console.error(e); } },
   /* escolhas do jogador novo (gravadas só no fim, no Nome; até lá nada muda no save) */
   pick:{hero:'',name:''},
-  commitNew(name){ const s=G.S(); s.hero=this.pick.hero==='kaia'&&PI_KAIA?'kaia':'kael'; s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
+  /* herói escolhido na Criação: entra no save já (em memória) para o retrato do Nome mostrar quem foi escolhido; gravado no fim, com o nome */
+  setHero(h){ const s=G.S(), v=h==='kaia'&&PI_KAIA?'kaia':'kael'; try{ if(window.Sys&&Sys.appearance&&Sys.appearance.setHero&&Sys.appearance.setHero(s,v)) return v; }catch(e){} s.hero=v; return v; },
+  commitNew(name){ const s=G.S(); this.setHero(this.pick.hero); s.name=name; try{ if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){} },
   /* login: convidado = local (e, com o Sys.net ligado, sessão de convidado no servidor sem travar o jogo); Google: em breve */
   guest(){ const s=G.S(); s.acct='guest'; try{ if(window.Sys&&Sys.net&&Sys.net.DATA&&Sys.net.DATA.on) Sys.net.ensureSession().catch(()=>{}); }catch(e){} },
   googleReady(){ try{ return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },
@@ -220,7 +224,7 @@ const PI_CSS=`#pin .pi-TituloV2B .logoWrap .clockBox{z-index:1}
 #pin .pi-logoB i{font-style:normal;color:#bff4ff;font-weight:900;font-size:12px;letter-spacing:5px;text-shadow:0 0 8px rgba(74,216,255,.9)}
 @keyframes pi_float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 #pin .pi-soon{margin-left:8px;padding:2px 8px;border-radius:8px;background:#1f1f1f;color:#ffe07a;font:900 11px Nunito,system-ui,sans-serif;letter-spacing:.3px}
-#pin .pi-kaia{background-image:url(assets/anim/hyb/kaia/kaia_idle_era2_t1.png);background-size:2100% 100%;background-repeat:no-repeat;animation:pi_sheet 1.75s steps(21,jump-none) infinite}
+#pin .pi-kaia{background-image:url(assets/anim/hyb/kaia/kaia_idle_era2_t1.png);background-size:1200% 100%;background-repeat:no-repeat;animation:pi_sheet 1s steps(12,jump-none) infinite;pointer-events:none}   /* quadro 448×256: a Kaia no meio (96 px de folga de cada lado) */
 @keyframes pi_sheet{from{background-position:0 0}to{background-position:100% 0}}
 #pin .pi-nogain{flex:none;padding:14px 12px;border-radius:14px;background:rgba(42,32,21,.85);border:1px solid #4a3a2b;color:#f6ecdf;font:800 14px/1.4 Nunito,system-ui,sans-serif;text-align:center}
 @keyframes pi_t{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}`;
