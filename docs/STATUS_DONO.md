@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **06h55 · Engenheiro fechou a parte dele para o APK (4e35bc7, visto no navegador):** o save do nível 60 aparece como o GAROTO, com a mesma FC; a KAIA JOGÁVEL como menina (asa, pet, pistola, morte, retrato); as skins fixas Cavaleiro/Lendário funcionando; subir de nível com o efeito novo; FC "2,2 mil" no topo. Antes do APK faltam: a escala nova da FC, a Kaia na tela de Criação e a passada final do QA. Ponto aberto: a Kaia montada ainda não tem arte (aparece a pé, com o bônus da montaria valendo); já pedi à Arte a Kaia menina montada nas 6 montarias
+
 - **06h40 · Suas decisões:** (1) ultimates: a raridade mais ALTA ganha a animação nova. Na ordem do jogo (… Mítico, Lendário, Divino), o LENDÁRIO fica com a nova e o MÍTICO com a reforçada; cada família de arma (clava, espada, lança, pistola etc.) tem a sua, em qualquer era. (2) Arco e flecha e bumerangue APROVADOS (versão média: pose própria a pé, montado e projétil pelo código, ultimates): mesmo dano da espada, liberam nos níveis 30 e 45. (3) Skins da Kaia: Palhaça, Princesa, Ninja, Demoníaca e Angelical; referências junto com as 8 do Kael. A Kaia segue com corpo de menina em todas as skins, como o padrão
 
 - **06h20 · PARA VOCÊ VOTAR: amostra das ultimates da ESPADA** (a de hoje, a Lendária reforçada pelo código e a Mítica nova). Aprovando, sai o mesmo para os outros 8 tipos de arma (~54 créditos)
