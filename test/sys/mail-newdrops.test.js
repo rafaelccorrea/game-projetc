@@ -38,4 +38,9 @@ t('a mesma carta recebida de novo do servidor (já resgatada) não entrega outra
   const S={}, h=makeHost(); M.receive(S,h,srv(h)); M.claim(S,h,'w-1'); calls.length=0;
   M.receive(S,h,srv(h)); assert.deepStrictEqual(M.claim(S,h,'w-1'),{ok:false,reason:'resgatado'}); assert.strictEqual(calls.length,0);
 });
+t('temporada do Fim de Semana (tourney:season, Sistemas 13/11): a carta do servidor entrega pelo newDrops com o rank',()=>{
+  Sys.newDrops.DATA.on=true; const S={}, h=makeHost(); calls.length=0;
+  M.receive(S,h,[{id:'s-1',title:'Temporada do Torneio de Fim de Semana',att:{newDrops:{src:'tourney:season',ctx:{rank:2}}},createdAt:h.t,expiresAt:h.t+864e5,source:'weekend'}]);
+  const r=M.claim(S,h,'s-1'); assert.strictEqual(r.ok,true); assert.deepStrictEqual(calls,[{src:'tourney:season',ctx:{rank:2}}]); assert.strictEqual(r.got.newDrops.length,1);
+});
 console.log(n+' testes ok');

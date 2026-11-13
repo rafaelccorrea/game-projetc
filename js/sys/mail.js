@@ -14,7 +14,7 @@ const hasAtt=m=>!!(m.att&&typeof m.att==='object'&&Object.keys(m.att).length);
 /* ITENS NOVOS PELO CORREIO (fps-server §14): a carta do servidor pode trazer att.newDrops = {src, ctx}. O SERVIDOR decide quem ganha e em que posição;
    o PRÊMIO é o da tabela do Sys.newDrops (newdrops.js), chamado aqui no resgate. Só as fontes que o servidor decide (= SERVER_DROP_SOURCES do mail-core).
    Idempotente pela carta (o.done, como o resto do anexo). Com o Sys.newDrops desligado, a carta NÃO é consumida (fica para quando ligar). */
-const ND_SRC=['tourney:weekend','guild:weekly','guild:capital','worldboss'];
+const ND_SRC=['tourney:weekend','tourney:season','guild:weekly','guild:capital','worldboss'];
 const NewDrops=()=>root.Sys&&root.Sys.newDrops;
 const ndOf=m=>{ const x=m.att&&m.att.newDrops; return x&&typeof x==='object'&&ND_SRC.includes(x.src)?{src:x.src,ctx:(x.ctx&&typeof x.ctx==='object')?x.ctx:{}}:null; };
 const ndOn=()=>{ const N=NewDrops(); return !!(N&&N.DATA&&N.DATA.on===true&&typeof N.grant==='function'); };
