@@ -27,6 +27,7 @@
   function rnd(i, seed, k) { var x = imul(i | 0, 0x9E3779B1) ^ imul(seed * 31 + k + 1, 0x85EBCA6B); x ^= x >>> 15; x = imul(x, 0x2C1B3C6D); x ^= x >>> 12; x = imul(x, 0x297A2D39); x ^= x >>> 15; return (x >>> 0) / 4294967296; }
   function mod(a, n) { return ((a % n) + n) % n; }
   function lerp(r, t) { return r[0] + (r[1] - r[0]) * t; }
+  function pin(i) { return (typeof createImageBitmap === 'function') ? createImageBitmap(i).then(function (b) { return b; }, function () { return i; }) : Promise.resolve(i); }   /* bitmap FIXADO na memória: o drawImage não decodifica de novo no meio do quadro (reserva: a própria imagem) */
   function loadImg(u) { return new Promise(function (ok, er) { var i = new Image(); i.decoding = 'async'; i.onerror = function () { er(new Error('imagem não carregou: ' + u)); }; i.src = u;
     if (i.decode) i.decode().then(function () { ok(i); }, function () { if (i.complete && i.naturalWidth) ok(i); else i.onload = function () { ok(i); }; }); else i.onload = function () { ok(i); }; }); }
   function pick(pool, r) { var tot = 0, i; for (i = 0; i < pool.length; i++) tot += (pool[i].weight || pool[i][1] || 1); r *= tot; for (i = 0; i < pool.length; i++) { r -= (pool[i].weight || pool[i][1] || 1); if (r <= 0) return pool[i]; } return pool[pool.length - 1]; }
@@ -36,10 +37,10 @@
     var t0 = performance.now(), base = o.base || '', url = o.resolve || function (f) { return base + f; };
     var getMeta = o.meta ? Promise.resolve(o.meta) : fetch(url('meta.json')).then(function (r) { if (!r.ok) throw new Error('meta.json não carregou'); return r.json(); });
     return getMeta.then(function (M) {
-      var S = {}, LAY = {}, jobs = [], done = 0, heroImg = null, decalImg = null, millBody = null, millBlade = null;
+      var BMP = [], S = {}, LAY = {}, jobs = [], done = 0, heroImg = null, decalImg = null, millBody = null, millBlade = null;
       M.layers.forEach(function (L) { LAY[L.id] = L; L.imgs = []; L.hi = []; });
       var api = build();
-      function job(file, fn) { var p = loadImg(url(file)).then(function (i) { done++; api.progress = done / jobs.length; fn(i); }); jobs.push(p); return p; }
+      function job(file, fn) { var p = loadImg(url(file)).then(pin).then(function (i) { if (i && i.close) { if (api.released) { i.close(); return; } BMP.push(i); } done++; api.progress = done / jobs.length; fn(i); }); jobs.push(p); return p; }
       // leves primeiro (pedidos na frente), pesadas depois
       M.layers.forEach(function (L) { (L.filesLow || []).forEach(function (f, k) { job(f, function (i) { if (!L.hi[k]) L.imgs[k] = i; }); }); });
       M.layers.forEach(function (L) { if (!L.filesLow) (L.files || [L.file]).forEach(function (f, k) { job(f, function (i) { L.imgs[k] = i; L.hi[k] = 1; }); }); });
@@ -284,8 +285,9 @@
         function frame(now) { if (self.maxFps && now - last < 1000 / self.maxFps - 2) { raf = requestAnimationFrame(frame); return; } var dt = Math.min(0.05, (now - last) / 1000); last = now; if (!frozen) { T += dt; if (running) { scroll += M.runSpeed * dt; runT += dt; } stepSmoke(dt); stepPuffs(dt); } else stepSmoke(0.016); draw(); self.fps = dt > 0 ? 1 / dt : 0; raf = requestAnimationFrame(frame); }
         self = {
           meta: M, fps: 0, loaded: false, progress: 0, firstPaintMs: null, readyMs: null, ready: null,
-          start: function () { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } return self; },
+          start: function () { if (self.released) return self; if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } return self; },
           stop: function () { cancelAnimationFrame(raf); raf = 0; return self; },
+          release: function () { cancelAnimationFrame(raf); raf = 0; self.released = true; BMP.forEach(function (b) { try { b.close(); } catch (e) {} }); BMP.length = 0; return self; },   /* troca de era: solta os bitmaps (a cena não desenha mais depois disso; crie outra) */
           setRunning: function (b) { running = !!b; return self; },
           set: function (t, freeze) { T = t; runT = t; scroll = t * M.runSpeed; SMOKE.length = 0; if (freeze != null) frozen = !!freeze; for (var i = 0; i < 300; i++) stepSmoke(0.016); return self; },
           resize: function (w, h) { resize(w, h); return self; },
