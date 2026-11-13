@@ -84,7 +84,9 @@ function wFamLook(w){ const it=wItemNow(); if(!it||!(window.Sys&&Sys.stats&&type
     const k=t+'_'+W_FKEY[r]; return WARM[k]||(WARM[k]={id:'wf_'+k,slot:'weapon',e:Math.max(0,Math.min(6,W.fromEra|0)),r,wk:k,wt:t,style:W.style,fam:W,n:W.name});
   }catch(e){ return w; } }
 /* o que vai para o Sys.stats (ultOf/skillFx): o ITEM equipado (família e raridade de verdade, Divino inclusive); com skin de arma escolhida, a skin */
-const wArm = () => wItemNow()||wSkin();
+/* Engenheiro 10: enquanto a arma nova espera a arte (wSkin segura a ANTERIOR na mão por até 4 s), a ultimate e o efeito por raridade seguem a arma que está NA MÃO
+   (HLK.arm = o item que valia quando ela entrou), não o item recém-equipado: antes saía a ultimate da família nova com a arma antiga na mão. */
+const wArm = () => { const w=wSkin(); if(WS_W!==HLK.cur) return HLK.arm||w; return wItemNow()||w; };
 /* DESEMPENHO (Engenheiro 7): a aparência do herói (heroLook: 3 buscas em SKINS, 2 em S.inv, Sys.stats.wingOf, Sys.mount.battleInfo) era refeita a CADA chamada
    de wSkin()/draw(), várias vezes por quadro. lookNow() guarda o resultado por ESTADO (espaços de arma/asa, skins, herói, montaria e estrelas, asa escondida) e
    por no máximo 200 ms (mesma folga do heroForm e do petInfo: item transformado no mesmo espaço aparece em até 0,2 s). SÓ LEITURA: quem altera o objeto
@@ -94,7 +96,7 @@ function lookNow(){ const now=performance.now(); let k=''; try{ const e=S.eq||{}
     k=e.weapon+'|'+e.wing+'|'+q.weapon+'|'+q.armor+'|'+S.hero+'|'+(m?m.eq+':'+(m.owned&&m.owned[m.eq]?m.owned[m.eq].stars|0:0):'')+'|'+(ap?(ap.skin&&ap.skin.wing)+':'+(ap.hidden&&ap.hidden.wing):''); }catch(er){ k=''; }
   if(LKC.v&&k&&k===LKC.k&&now-LKC.t<200&&now>=LKC.t) return LKC.v; LKC.k=k; LKC.t=now; return LKC.v=heroLook(); }
 const wSkin = () => { const lk=lookNow(); let w; if(lk===WS_LK) w=WS_W; else { w=wFamLook(lk.weapon); WS_LK=lk; WS_W=w; } if(w!==HLK.cur){ if(HLK.req!==w){ HLK.req=w; HLK.t0=performance.now(); }
-    if(!HLK.cur||lookReady(w)||performance.now()-HLK.t0>4000) HLK.cur=w; } return HLK.cur; };   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
+    if(!HLK.cur||lookReady(w)||performance.now()-HLK.t0>4000){ HLK.cur=w; HLK.arm=wItemNow(); } } return HLK.cur; };   // arma NA MÃO: skin escolhida, senão o item equipado (heroLook, index.html)
 const fxCol = () => { const r=wSkin().r; return r>0?RAR[r].c:'#ffffff'; };
 /* POSE PELA FAMÍLIA: Sys.stats.weaponStyle (melee | gun | ranged | return); sem o módulo, o tipo do meta.json da arma (conferido: os dois dizem o mesmo nas 35 armas de era) */
 const wIsGun0 = ws => { if(ws.wk) return false;   /* arco e bumerangue: pose de golpe, projétil por código */
@@ -669,11 +671,22 @@ function IMG(path){
   if(!o){ const e=PRE().get(path); o=IMGS[path]={img:e.img,ok:e.ok,fail:e.fail,p:e.p};   /* Engenheiro 5: cache único do Preload; ok = DECODIFICADA */
     /* Engenheiro 10: folhas grandes de efeito (ultimate, subir de nível, efeitos em folha) ganham o PINO de decodificação (Preload.pin): a imagem só fica ok com o
        bitmap pronto, para o 1º quadro da ultimate não decodificar 3072x1512 dentro do desenho */
-    const big=/assets\/(anim\/(ult|fx)|fx)\//.test(path)&&typeof PRE().pin==='function'&&PRE().pinOk;
+    /* Engenheiro 13 (memória): as folhas de ULTIMATE (3.072x1.512 = 17,7 MB cada) não são mais fixadas aqui: a pré-carga pedia 2 ou 3 (a própria, a base e a da
+       era) e as 3 ficavam fixadas para sempre (53 MB). Quem fixa é o ultPinKeep (abaixo): só a que VAI TOCAR. */
+    const big=/assets\/(anim\/fx|fx)\//.test(path)&&typeof PRE().pin==='function'&&PRE().pinOk;
     const pin=()=>big&&e.ok?PRE().pin(path).then(bm=>{ if(bm&&IMGS[path]===o) o.img=bm; },()=>{}):Promise.resolve();
     if(e.ok){ if(big) pin(); } else { o.p=e.p.then(()=>pin()).then(()=>{ if(!o.img) o.img=e.img; o.ok=e.ok; o.fail=e.fail; return e; }); } }
   return o.ok?o.img:null;
 }
+/* Engenheiro 13: PINO DA ULTIMATE = uma folha só, a que vai tocar (ultPlan sem "want": a própria se já está pronta, senão a base). Chamado pela pré-carga
+   (a cada fase e a cada troca de arma). As outras voltam à imagem comum; o bitmap antigo não é fechado à força (uma ultimate em andamento ainda o desenha). */
+const UPIN={path:null,busy:false};
+function ultPinKeep(sheet){ let P=null; try{ P=PRE(); }catch(e){ return; } if(!P||!P.pinOk||typeof P.pin!=='function') return; const path=sheet?sheet+'.png':null;
+  const drop=()=>{ if(!UPIN.path) return; const q=IMGS[UPIN.path]; if(q&&q.el){ q.img=q.el; q.el=null; } try{ P.unpin(UPIN.path,false); }catch(e){} UPIN.path=null; };
+  if(!path){ drop(); return; } if(UPIN.path===path||UPIN.busy) return; IMG(path); const o=IMGS[path]; if(!o||o.fail) return;
+  if(!o.ok||!o.img){ if(o.p&&!o.upw){ o.upw=true; o.p.then(()=>{ o.upw=false; try{ ultPinNow(); }catch(e){} },()=>{ o.upw=false; }); } return; }   /* ainda carregando: tenta de novo quando chegar */
+  UPIN.busy=true; P.pin(path).then(bm=>{ UPIN.busy=false; if(!bm) return; if(IMGS[path]!==o){ try{ P.unpin(path,true); }catch(e){} return; } drop(); o.el=o.img; o.img=bm; UPIN.path=path; if(typeof pinWarm==='function') pinWarm(bm); try{ ultPinNow(); }catch(e){} },()=>{ UPIN.busy=false; }); }
+function ultPinNow(){ const E=Math.min(SKN.length-1,wSkin().e), P=ultPlan(wArm(),E); ultPinKeep(P?P.sheet:null); }
 const JSONS={};
 function J(path){
   if(!(path in JSONS)){ JSONS[path]=null; const e=PRE().get(path); if(e.ok) JSONS[path]=e.data; else e.p.then(()=>{ JSONS[path]=e.ok?e.data:{}; }); }   /* Engenheiro 5: cache único do Preload */
@@ -775,7 +788,8 @@ function preloadAssets(){
   ['hit','crit','muzzle','slash','aura'].forEach(n=>{ if(FX_ART[n]==='sprite') IMG(`assets/fx/${n}.png`); });
   ['s2','s1'].forEach(kd=>{ const A=FX_ART[kd][we.e]; if(A){ IMG(fxPng(A)); if(A.meta) J(A.sheet+'.json'); } });
   { const E=Math.min(SKN.length-1,we.e); for(const wt of [true,false]){ const P=ultPlan(wArm(),E,wt); if(P){ IMG(P.sheet+'.png'); J(P.sheet+'.json'); } }   /* ultimate da FAMÍLIA da arma: a desejada (base, ou a própria com a chave ligada) e a que toca enquanto a própria carrega (base) */
-    if(we.wk&&ART_ON['ult_era'+E]){ IMG('assets/anim/ult/era'+E+'_ult.png'); J('assets/anim/ult/era'+E+'_ult.json'); } }   /* arco/bumerangue: a folha de reserva também */
+    if(we.wk&&ART_ON['ult_era'+E]){ IMG('assets/anim/ult/era'+E+'_ult.png'); J('assets/anim/ult/era'+E+'_ult.json'); }   /* arco/bumerangue: a folha de reserva também */
+    ultPinNow(); }   /* Engenheiro 13: fixa só a folha que vai tocar */
   const era=eraOf(S.stage); preloadEra(era);
   if(((S.stage-1)%STAGES_PER_ERA)+1>=8){ preloadEra(era+1); if(typeof eraReady==='function') eraReady(era+1); }   /* próxima era em segundo plano (cenário, inimigos, chefe) */
 }
@@ -1292,7 +1306,9 @@ function fpsWindow(now){ const el=now-FP.w0; if(el<2000) return; const avg=FP.wf
   /* só desce o degrau quando o trabalho do PRÓPRIO jogo pesa (mais de 40% do orçamento do quadro): se a média cai com o jogo folgado (aba em segundo plano, navegador ou
      aparelho segurando os quadros), tirar partículas não ajuda e não é feito */
   if(ok){ if(avg<target*55/60&&work>400/target){ FP.low++; FP.high=0; } else { FP.low=0; if(avg>=target*0.97&&work<500/target) FP.high++; else FP.high=0; }
-    if(FP.low>=2&&FP.q<2){ FP.q++; FP.low=0; FP.high=0; fpsApply(); } else if(FP.high>=5&&FP.q>0){ FP.q--; FP.high=0; FP.low=0; fpsApply(); } }
+    /* Engenheiro 13 (sem piscar): se o degrau desce de novo menos de 30 s depois de ter subido, a subida seguinte passa a exigir o dobro de janelas boas (5 → 10 → 20 → 40,
+       isto é, 10 s → 80 s); antes um aparelho no limite podia alternar de degrau a cada ~14 s para sempre */
+    if(FP.low>=2&&FP.q<2){ FP.q++; FP.low=0; FP.high=0; if(FP.upAt&&now-FP.upAt<30000) FP.upNeed=Math.min(40,(FP.upNeed||5)*2); fpsApply(); } else if(FP.high>=(FP.upNeed||5)&&FP.q>0){ FP.q--; FP.high=0; FP.low=0; FP.upAt=now; fpsApply(); } }
   FP.w0=now; FP.wf=0; FP.work=0; FP.worst=0; }
 function fpsApply(){ try{ if(typeof sceneQuality==='function') sceneQuality(FP.q>=2?0.7:1); }catch(e){} if(DEBUG) console.log('qualidade adaptativa: degrau '+FP.q); }
 /* ===== PERFIL DE PICOS (Engenheiro 10; SÓ com ?debug=1&pf=1: fora disso PF é null e nada é medido) =====
@@ -1311,7 +1327,7 @@ function pfInit(){ PF.init=true;
     report(){ const r1=v=>Math.round(v*100)/100, sg={}, sm={}; for(const k in PF.seg){ sg[k]=r1(PF.seg[k]/Math.max(1,PF.n)); sm[k]=r1(PF.segMax[k]); }
       return {quadros:PF.n,mediaMs:r1(PF.sum/Math.max(1,PF.n)),piorMs:r1(PF.max),acima8:PF.o8,acima16:PF.o16,acima33:PF.o33,acima50:PF.o50,intervaloAcima50:PF.gap50,intervaloMax:Math.round(PF.gapMax),mediaPorParte:sg,piorPorParte:sm,
         saves:{n:PF.saves.n,mediaMs:r1(PF.saves.sum/Math.max(1,PF.saves.n)),piorMs:r1(PF.saves.max)},funcoes:Object.keys(PF.fn).filter(k=>PF.fn[k].n).map(k=>k+' n'+PF.fn[k].n+' média '+r1(PF.fn[k].sum/PF.fn[k].n)+' pior '+r1(PF.fn[k].max)).join(' · '),
-        pinos:(()=>{ try{ const P=PRE(); return {n:P.pins(),MB:r1(P.pinBytes()/1048576),picoMB:r1(P.pinPeak()/1048576),cortesPeloTeto:typeof PINS!=='undefined'?PINS.cut:0}; }catch(e){ return null; } })(),jsHeapMB:(performance.memory?Math.round(performance.memory.usedJSHeapSize/1048576):null),tarefasLongas:PF.long,drawLento:PF.slow,piores:PF.worst.map(w=>w.ms+'ms ['+w.seg+'] '+w.st+(w.tags.length?' | '+w.tags.join('; '):''))}; } }; }
+        pinos:(()=>{ try{ const P=PRE(); return {n:P.pins(),MB:r1(P.pinBytes()/1048576),picoMB:r1(P.pinPeak()/1048576),cortesPeloTeto:typeof PINS!=='undefined'?PINS.cut:0,recusadasPeloTeto:typeof PINS!=='undefined'?PINS.refused:0}; }catch(e){ return null; } })(),jsHeapMB:(performance.memory?Math.round(performance.memory.usedJSHeapSize/1048576):null),tarefasLongas:PF.long,drawLento:PF.slow,piores:PF.worst.map(w=>w.ms+'ms ['+w.seg+'] '+w.st+(w.tags.length?' | '+w.tags.join('; '):''))}; } }; }
 function pfEnd(gap,a,b,c,d,e,f,g){ const tot=g-a; PF.n++; PF.sum+=tot; if(tot>PF.max) PF.max=tot; if(tot>8) PF.o8++; if(tot>16.7) PF.o16++; if(tot>33) PF.o33++; if(tot>50) PF.o50++;
   if(!document.hidden&&gap<1000){ if(gap>50) PF.gap50++; if(gap>PF.gapMax) PF.gapMax=gap; }
   const v=[b-a,c-b,d-c,e-d,f-e,g-f], K=['step','fx','draw','prev','hud','save']; for(let i=0;i<6;i++){ PF.seg[K[i]]+=v[i]; if(v[i]>PF.segMax[K[i]]) PF.segMax[K[i]]=v[i]; }

@@ -91,15 +91,43 @@ const SHEETS = {};
    PIN_MAX_MB. Passou: solta a folha fixada MAIS ANTIGA sem uso; nunca uma pedida (sheetLoad) na janela atual de 15 s, que é o que está em desenho (herói, montaria,
    pet, asa, inimigos da onda: todos pedem a folha a cada quadro ou a cada onda). O bitmap só é FECHADO se ninguém o pede há pelo menos uma janela inteira. */
 const PIN_MAX_MB = 150;
-const PINS = { tick: 0, at: 0, ok: null, cut: 0 };
+const PINS = { tick: 0, at: 0, ok: null, cut: 0, pend: 0, refused: 0 };
 const pinOk = () => { if (PINS.ok == null){ let P = null; try { P = PRE(); } catch (e) {} PINS.ok = !!(P && P.pinOk && typeof P.pin === 'function'); if (PINS.ok) setInterval(pinSweep, 15000); } return PINS.ok; };
 function sheetUnpin(s){ const close = PINS.tick - s.u >= 2; s.img = s.el; s.pin = false; try { PRE().unpin(s.base + '.png', close); } catch (e) {} }
 function pinCap(){ const P = PRE(), max = PIN_MAX_MB * 1048576; if (P.pinBytes() <= max || performance.now() - PINS.at < 1000) return;   /* logo depois da virada da janela ninguém foi pedido ainda: espera */
   const L = []; for (const k in SHEETS){ const s = SHEETS[k]; if (s.pin && s.u < PINS.tick) L.push(s); } L.sort((a, b) => a.u - b.u);
   for (const s of L){ if (P.pinBytes() <= max) break; sheetUnpin(s); s.noPin = true; PINS.cut++; } }   /* a que saiu pelo teto não volta a fixar sozinha (senão entra e sai sem parar); a varredura devolve o direito */
-function sheetPin(s){ if (s.pin || s.pinning || s.noPin || !s.el || !pinOk()) return null; s.pinning = true;
-  return PRE().pin(s.base + '.png').then(bm => { s.pinning = false; if (bm && bm.width === s.el.naturalWidth && bm.height === s.el.naturalHeight){ s.img = bm; s.pin = true; pinCap(); } else { s.noPin = true; if (bm){ try { PRE().unpin(s.base + '.png', true); } catch (e) {} } } return s; }, () => { s.pinning = false; s.noPin = true; return s; }); }
-function pinSweep(){ PINS.tick++; PINS.at = performance.now(); for (const k in SHEETS){ const s = SHEETS[k]; if (s.pin && PINS.tick - s.u > 6) sheetUnpin(s); else if (s.noPin && s.el && PINS.tick - s.u > 6) s.noPin = false; } }
+/* Engenheiro 13 (decisão do coordenador, opção b; medido: a cena da era 0 fixava 206 a 223 MB, acima do teto, e o teto não cortava nada porque tudo era pedido
+   na janela): (1) folha desenhada em TODO quadro (parado e corrida do herói, da montaria, do pet e dos inimigos: nome com _idle / _run) NÃO é fixada: o navegador
+   a mantém quente sozinho. Fixa só o que entra de vez em quando e dói ao decodificar (ataque, ferido, morte, giro, rastro, subir de nível, evolução).
+   ?debug=1&pin=all fixa tudo como antes (comparação). (2) O TETO VALE DE VERDADE: antes de fixar, soma o que já está fixado + o que está a caminho + esta folha;
+   passou, solta as fixadas sem uso; ainda passa, esta folha NÃO é fixada (fica na imagem comum) e a varredura de 15 s tenta de novo quando houver espaço. */
+const PIN_ALL = typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('pin') === 'all';
+const PIN_HOT = /_(idle|run)(_|$)/;
+const pinHot = base => !PIN_ALL && PIN_HOT.test(base.slice(base.lastIndexOf('/') + 1));
+function pinRoom(need){ const P = PRE(), max = PIN_MAX_MB * 1048576; if (P.pinBytes() + PINS.pend + need <= max) return true;
+  const L = []; for (const k in SHEETS){ const s = SHEETS[k]; if (s.pin && s.u < PINS.tick) L.push(s); } L.sort((a, b) => a.u - b.u);
+  for (const s of L){ if (P.pinBytes() + PINS.pend + need <= max) break; sheetUnpin(s); s.noPin = true; PINS.cut++; }
+  return P.pinBytes() + PINS.pend + need <= max; }
+/* AQUECIMENTO DO PINO (Engenheiro 13; medido: o 1º uso de um bitmap fixado custa 4 a 20 ms, cópia para a placa de vídeo e para o canvas pequeno do contorno da
+   montaria; era o pior quadro que sobrava, 18 a 31 ms no 1º ataque do lobo). Logo que o pino chega (tela de carregamento / fora do golpe), desenha um pedaço dele
+   num canvas pequeno e no canvas do jogo (1 px, quase transparente; o quadro seguinte redesenha tudo): o custo sai do 1º uso. ?debug=1&warm=0 desliga. */
+const PIN_WARM = !(typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('warm') === '0');
+/* UM por quadro, quadro sim / quadro não (fila): na fase 8 a era seguinte chega com 9 folhas de uma vez; aquecidas todas na mesma tarefa davam 52 a 66 ms seguidos. */
+let WARM_C = null; const WARM_Q = []; let warmOn = false, warmSkip = false;
+function warmPump(){ if (!WARM_Q.length){ warmOn = false; return; } warmSkip = !warmSkip; if (!warmSkip){ const bm = WARM_Q.shift(); if (bm && bm.width > 0) warmNow(bm); } requestAnimationFrame(warmPump); }
+function pinWarm(bm){ if (!PIN_WARM || !bm) return; WARM_Q.push(bm); if (!warmOn){ warmOn = true; requestAnimationFrame(warmPump); } }
+function warmNow(bm){ try { if (typeof mainCtx === 'undefined' || !mainCtx) return;
+    if (!WARM_C){ WARM_C = document.createElement('canvas'); WARM_C.width = WARM_C.height = 32; } const g = WARM_C.getContext('2d'); g.clearRect(0, 0, 32, 32); g.drawImage(bm, 0, 0, 64, 64, 0, 0, 32, 32);
+    mainCtx.save(); mainCtx.setTransform(1, 0, 0, 1, 0, 0); mainCtx.globalAlpha = 0.01; mainCtx.drawImage(WARM_C, 0, 0, 1, 1); mainCtx.drawImage(bm, 0, 0, 2, 2, 0, 0, 1, 1); mainCtx.restore(); } catch (e) {} }
+if (typeof window !== 'undefined') window.pinWarm = pinWarm;
+function sheetPin(s){ if (s.pin || s.pinning || s.noPin || !s.el || !pinOk()) return null;
+  if (pinHot(s.base)){ s.noPin = true; s.hot = true; pinWarm(s.el); return null; }   /* não fixa, mas aquece uma vez (o 1º parado da montaria custava 17 ms no começo da luta) */
+  const need = s.el.naturalWidth * s.el.naturalHeight * 4; if (!pinRoom(need)){ s.noPin = true; s.full = true; PINS.refused++; return null; }
+  s.pinning = true; PINS.pend += need; const done = () => { s.pinning = false; PINS.pend = Math.max(0, PINS.pend - need); };
+  return PRE().pin(s.base + '.png').then(bm => { done(); if (bm && bm.width === s.el.naturalWidth && bm.height === s.el.naturalHeight){ s.img = bm; s.pin = true; pinCap(); if (s.pin) pinWarm(bm); } else { s.noPin = true; if (bm){ try { PRE().unpin(s.base + '.png', true); } catch (e) {} } } return s; }, () => { done(); s.noPin = true; return s; }); }
+function pinSweep(){ PINS.tick++; PINS.at = performance.now(); const room = PRE().pinBytes() + PINS.pend < PIN_MAX_MB * 1048576;
+  for (const k in SHEETS){ const s = SHEETS[k]; if (s.pin && PINS.tick - s.u > 6) sheetUnpin(s); else if (s.noPin && s.el && !s.hot && (PINS.tick - s.u > 6 || (s.full && room))){ s.noPin = false; s.full = false; } } }
 function sheetLoad(base, noNeck){
   let s = SHEETS[base]; if (s){ s.u = PINS.tick; if (s.ok && !s.pin && !s.pinning && !s.noPin) sheetPin(s); return s; }
   s = SHEETS[base] = { base, img: null, el: null, meta: null, neck: null, ok: false, fail: false, p: null, u: PINS.tick, pin: false, pinning: false, noPin: false };

@@ -1910,6 +1910,52 @@ Medido à parte: `createImageBitmap(img)` é síncrono (49 ms no fio principal p
 
 Testes (depois de tudo acima): `node --check` nos 6 arquivos; `run.js` 160 OK; `flows.js` "fluxos duros OK"; `preload.js` passou; `weapons.js` coerente; `sheetgrid.js` 398 OK.
 
+## Engenheiro 13 — desempenho: o DEPOIS medido, memória do pino abaixo do teto (2026-11-13)
+
+Arquivos: `js/stage.js`, `js/battle.js`, `js/fullbattle.js`. Nada em index.html, loading.js, js/sys, painéis, assets. Uma aba só, Modo dono (save `eras_owner_v1`, cópia do localStorage guardada antes e devolvida no fim), `?debug=1&pf=1`.
+
+**O jogo abre com o helper.** VISTO a olho (prints): carregamento a 100%, título, batalha rodando com lobo (halo e contorno novos), pet, asa de anjo, espada Lendária, pistola da era 3 montado, inimigos, cenário da era 0, tela de vitória. Rodou sem erro no console e sem `loop` com erro, mas NÃO olhei a olho: o quadro da ultimate lendária (tocou 22 vezes nos 5 min, só medida), o efeito de subir de nível (subiu do 20 ao 21), o chefe. NÃO rodou: troca de era (as medições foram das fases 1 a 7, todas na era 0) e save novo de jogador (só a abertura até a tela de entrada; a batalha foi no save do Modo dono).
+
+**Como foi medido.** Save do Modo dono na fase 1-1, lobo + pet + asa + espada Lendária (raridade 4), automático; a ultimate enche sozinha só a cada ~95 s, então o teste enche a energia a cada 10 s (95 s = 9 ultimates) ou 12 s (5 min = 22 ultimates) para a ultimate tocar com o lobo atacando. Janela NÃO estrangulada nas medições abaixo (66 a 72 quadros/s, degrau de qualidade 0, divisor 1 o tempo todo). CPU cheia (sem a lentidão 4× do celular).
+
+| 95 s, fases 1-1 a 3-2 | ANTES (Eng. 10) | sem pino (`&pin=0`) | pino antigo (tudo fixado) | DEPOIS (final) |
+|---|---|---|---|---|
+| quadros | 5.613 | 6.612 | 6.029 | 6.750 |
+| trabalho médio | 3,0 ms | 1,74 ms | 1,60 ms | 1,52 ms |
+| PIOR quadro | 85,5 ms | 48,0 ms | 16,9 ms | 13,8 ms |
+| acima de 50 ms | 2 | 0 | 0 | 0 |
+| acima de 33 ms | 3 | 1 | 0 | 0 |
+| acima de 16,7 ms | 7 | 6 | 1 | 0 |
+| tarefas longas | 4 (78 a 149 ms) | 1 (56 ms) | 0 | 0 |
+| MEMÓRIA fixada no pico | sem pino | 0 | 206 MB (26 folhas; 223 MB com o mamute) | 139 MB (16 folhas) |
+| memória do JS (performance.memory) | sem dado | 98 MB | 79 MB | 62 MB |
+
+(O "pino antigo" foi medido sem forçar a ultimate: 0 ultimates em 85 s. O "sem pino" e o "DEPOIS" com 9 ultimates cada, na mesma sessão e janela.)
+
+**5 MINUTOS seguidos (meta do PO), código final:** 21.230 quadros, fases 1-1 a 7-3, 22 ultimates; trabalho médio 1,53 ms; PIOR quadro 15,2 ms; acima de 50 ms: 0; acima de 33: 0; acima de 16,7: 0; acima de 8: 12; tarefas longas dentro dos 5 min: 0; memória fixada no pico 144 MB (17 folhas, teto 150); JS 54 MB; 98 gravações do save, pior 1,7 ms. Piores quadros que restam: 15,2 e 12,7 ms ao abrir o RESULTADO da fase (passo 8 a 10 ms: montagem da tela de vitória, `js/screens2.js`, não é meu); 11,8 ms no começo da fase 1-2 (pré-carga, 5 ms: sprites criados uma vez); 11,7 ms na ultimate (desenho de tela cheia da folha lendária, 10,7 ms).
+
+**O que mudou**
+1. `js/stage.js`, pino só no que dói (opção b do coordenador): folhas `_idle` / `_run` (parado e corrida de herói, montaria, pet, inimigos) não são fixadas; ataque, ferido, morte, giro, rastro, subir de nível continuam. `?debug=1&pin=all` fixa tudo como antes.
+2. `js/stage.js`, teto de 150 MB valendo de verdade: confere ANTES de fixar (fixado + a caminho + a folha nova); se passa, solta as fixadas sem uso; se ainda passa, a folha nova fica na imagem comum e a varredura de 15 s tenta de novo quando houver espaço. Antes o teto só olhava depois e nunca cortava o que era pedido na janela (206 a 223 MB com teto de 150). `__pf.report().pinos` ganhou `recusadasPeloTeto`.
+3. `js/battle.js`, ultimate: a pré-carga fixava 2 ou 3 folhas de 17,7 MB (a própria, a base e a da era) para sempre; agora `ultPinKeep` fixa só a que VAI tocar e solta a anterior quando a arma muda.
+4. `js/stage.js`, AQUECIMENTO do pino (`pinWarm`): achado novo. O pior quadro que sobrava (18 a 31 ms no 1º ataque do lobo, sempre na fase 1-1) não era decodificação: era o 1º USO de um bitmap fixado (cópia para a placa de vídeo e para o canvas pequeno do contorno da montaria; 4 a 20 ms por folha). Agora cada folha é aquecida logo que o pino chega (um desenho de 1 px), uma por quadro, quadro sim / quadro não: o custo cai na tela de carregamento / título. As folhas `_idle` / `_run` também são aquecidas uma vez. `?debug=1&warm=0` desliga.
+5. `js/fullbattle.js`, cabeçalho: `heroFC()` (0,16 ms) era chamado 3 vezes por batida do `fbTick` (mais da metade do tempo dele); agora 1 vez. O resto do `fbTick` já só escreve no DOM quando o valor muda (`fbSet`). Medido por função em 40 s: `fbTick` 0,95 ms de média antes; `fcNotice` 0,21 (é o `Sys.fc.snapshot`, index.html); `hudSys` 0,12.
+6. `js/battle.js`, qualidade adaptativa: se o degrau desce de novo menos de 30 s depois de subir, a subida seguinte exige o dobro de janelas boas (10 s → 20 → 40 → 80 s). Por leitura, um aparelho no limite podia alternar de degrau a cada ~14 s. Não reproduzido neste PC (degrau 0 e divisor 1 em todas as medições, tela de 60 a 72 Hz).
+7. `js/battle.js`, `wArm` (escrito pelo Engenheiro 10, mantido): VISTO. Com a troca de arma pendente (revólver na mão, clava equipada), a ultimate saiu com a folha do revólver (`era4_ult`); completada a troca, com a da clava (`era0_ult`). O mesmo com clava → pistola.
+
+**Conferido sem mudança**
+- Save GRANDE (LIBERAR TUDO: 145 itens, 28,6 KB): `JSON.stringify` 0,4 ms + `localStorage.setItem` 0,1 ms; ~1 gravação a cada 3 s; pior 1,7 ms. Não pesa.
+- Tiro saindo da clava (caso do QA): pistola da era 3 na mão, troca para clava aos 0,06 s de um golpe de 0,8 s com 2 tiros por sair: nenhum `shotFx` depois da troca. Não sai mais tiro.
+- Limitador: divisor 1 em 60 a 72 Hz o tempo todo (nunca desenhou 1 a cada 2).
+
+**NÃO medido / não visto**
+- Fase 8 (pré-carga da era seguinte, 9 folhas fixadas de uma vez): num teste com o aquecimento ainda sem fila vi 4 tarefas longas de 52 a 66 ms na entrada da fase 8-1; pus a fila (uma folha por quadro) e NÃO consegui medir depois: a janela do navegador foi estrangulada pelo PC (1 quadro por segundo, depois parada). Fica por medir.
+- Nada foi medido com a lentidão de CPU do celular; a prova é no aparelho.
+- Subir de nível e drop de item apareceram nos 5 min sem entrar entre os 12 piores quadros (todos abaixo de 16 ms), mas não medi cada um isolado.
+- O Modo dono com a ultimate forçada a cada 10 a 12 s é mais pesado que o jogo normal (1 ultimate a cada ~95 s).
+
+Testes (depois de tudo): `node --check` nos 6 arquivos; `run.js` 162 OK; `flows.js` "fluxos duros OK"; `preload.js` passou; `sheetgrid.js` 398 OK; `weapons.js` coerente.
+
 ## Engenheiro 12 — online na abertura (2026-11-13): sessão de convidado, save na nuvem, login Google. DESLIGADO por `ONLINE_ON`
 
 Escrito e provado SEM navegador e SEM rede (servidor de mentira no teste). Nada visto no navegador nem contra o servidor real: é do QA.
