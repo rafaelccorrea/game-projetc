@@ -205,7 +205,9 @@ const PI_ICON={
   food:piSvg('<path d="M14 36 C14 22 28 14 40 16 C52 18 56 30 50 40 C44 50 26 54 18 46 Z" fill="#c9783a" stroke="#5a2e10" stroke-width="3"/><path d="M44 18 L54 8 M50 22 L58 14" stroke="#f1e2c8" stroke-width="5" stroke-linecap="round"/>'),
   egg:piSvg('<path d="M32 6 C46 6 54 26 54 38 C54 52 44 58 32 58 C20 58 10 52 10 38 C10 26 18 6 32 6 Z" fill="#f4e6c8" stroke="#6a5a3a" stroke-width="3"/><path d="M18 34 L26 28 L32 34 L40 28 L48 34" fill="none" stroke="#c9a86a" stroke-width="3"/>'),
 };
-const PI_CSS=`#pin .pi-lvfrom{font:900 13px Nunito,system-ui,sans-serif;color:#c9b9a2;margin-right:4px;white-space:nowrap}
+const PI_CSS=`#pin .pi-TituloV2B .logoWrap .clockBox{z-index:1}
+#pin .pi-TituloV2B .logoWrap .word{z-index:3}   /* o nome EONBOUND sempre por cima do relógio e dos anéis (QA) */
+#pin .pi-lvfrom{font:900 13px Nunito,system-ui,sans-serif;color:#c9b9a2;margin-right:4px;white-space:nowrap}
 #pin .pi-BemVindo .num{white-space:nowrap}
 #pin .pi-extras{display:flex;flex-wrap:wrap;gap:6px;padding:8px}
 #pin .pi-ex{display:flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:12px;background:rgba(14,10,7,.55);border:1px solid #4a3a2b}
