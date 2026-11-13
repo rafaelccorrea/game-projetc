@@ -103,7 +103,9 @@ const DATA={
       ['Lenço de Marujo','Tricórnio de Couro','Tricórnio de Oficial','Bicorne do Comodoro','Chapéu do Almirante'],
       ['Boné de Operário','Cartola de Latão','Óculos de Inventor','Elmo a Vapor','Coroa Tesla'],
       ['Boné Tático','Capacete Militar','Capacete Balístico','Capacete de Visão Noturna','Capacete Stealth'],
-      ['Viseira Neon','Capacete Espacial','Elmo de Íons','Elmo Quântico','Coroa do Vazio']],
+      ['Viseira Neon','Capacete Espacial','Elmo de Íons','Elmo Quântico','Coroa do Vazio'],
+      ['Capuz Chamuscado','Elmo de Obsidiana','Chifres de Cinza','Elmo do Abismo','Coroa das Chamas'],   // era 7 Submundo (curva de 9 eras)
+      ['Tiara de Nuvem','Elmo de Prata','Halo Seráfico','Elmo do Firmamento','Coroa do Arcanjo']],
     gloves:[
       ['Faixas de Couro','Luvas de Pele','Garras de Osso','Manoplas de Mamute','Garras do Grande Felino'],
       ['Braçadeiras de Linho','Luvas de Couro','Braçadeiras de Bronze','Manoplas de Gladiador','Punhos de Hércules'],
@@ -111,7 +113,9 @@ const DATA={
       ['Luvas de Lona','Luvas de Couro Curtido','Luvas de Mosqueteiro','Luvas de Duelista','Luvas do Capitão Fantasma'],
       ['Luvas de Operário','Luvas de Latão','Luvas Mecânicas','Manoplas a Vapor','Manoplas Tesla'],
       ['Luvas de Treino','Luvas Táticas','Luvas Blindadas','Luvas de Exoesqueleto','Luvas Stealth'],
-      ['Luvas Neon','Luvas de Nanofibra','Luvas de Plasma','Manoplas Quânticas','Manoplas do Vazio']],
+      ['Luvas Neon','Luvas de Nanofibra','Luvas de Plasma','Manoplas Quânticas','Manoplas do Vazio'],
+      ['Luvas Chamuscadas','Manoplas de Obsidiana','Garras de Cinza','Manoplas do Abismo','Punhos das Chamas'],
+      ['Luvas de Nuvem','Manoplas de Prata','Luvas Seráficas','Manoplas do Firmamento','Mãos do Arcanjo']],
     boots:[
       ['Pés de Couro Cru','Botas de Pele','Botas de Couro de Urso','Botas de Mamute','Passos do Caçador Ancestral'],
       ['Sandálias de Corda','Sandálias de Couro','Grevas de Bronze','Grevas Espartanas','Sandálias Aladas de Hermes'],
@@ -119,7 +123,9 @@ const DATA={
       ['Botas de Convés','Botas de Couro','Botas de Cavalaria','Botas de Corsário','Botas do Almirante'],
       ['Botinas de Fábrica','Botas de Latão','Botas de Engrenagem','Botas a Vapor','Botas Relâmpago Tesla'],
       ['Tênis de Corrida','Coturno Tático','Coturno Blindado','Botas de Exoesqueleto','Botas Stealth'],
-      ['Botas Neon','Botas Magnéticas','Botas Antigravidade','Botas Quânticas','Botas do Vazio']],
+      ['Botas Neon','Botas Magnéticas','Botas Antigravidade','Botas Quânticas','Botas do Vazio'],
+      ['Botas Chamuscadas','Grevas de Obsidiana','Botas de Cinza','Grevas do Abismo','Passos das Chamas'],
+      ['Sandálias de Nuvem','Grevas de Prata','Botas Seráficas','Grevas do Firmamento','Asas nos Pés do Arcanjo']],
     necklace:[
       ['Colar de Pedrinhas','Colar de Dentes','Colar de Garras','Amuleto de Âmbar','Talismã do Xamã'],
       ['Colar de Contas','Colar de Bronze','Medalhão do Senado','Colar do Faraó','Amuleto do Olimpo'],
@@ -127,7 +133,9 @@ const DATA={
       ['Cordão de Bússola','Medalha de Bravura','Colar de Dobrões','Medalhão da Coroa','Amuleto do Kraken'],
       ['Relógio de Bolso','Medalhão de Latão','Engrenagem Pendente','Núcleo a Vapor','Bobina Tesla'],
       ['Placa de Identificação','Medalha de Serviço','Rádio de Pescoço','Medalha de Honra','Chip de Comando'],
-      ['Pingente Neon','Chip de Íons','Núcleo de Plasma','Cristal Quântico','Singularidade Pendente']],
+      ['Pingente Neon','Chip de Íons','Núcleo de Plasma','Cristal Quântico','Singularidade Pendente'],
+      ['Colar de Brasas','Amuleto de Obsidiana','Talismã de Cinza','Olho do Abismo','Coração das Chamas'],
+      ['Pingente de Nuvem','Medalhão de Prata','Amuleto Seráfico','Estrela do Firmamento','Pena do Arcanjo']],
     // asa: SEM tabela por era (dono: item próprio, arte fixa anjo/demoníaca) — o nome vem de Sys.stats.wingName (wingTag/itemName abaixo)
   },
   summon:{rarWeights:[50,28,14,6,2], cost:{base:500, eraGrowth:4, x10Mult:9}, freePerDay:1,   // PO: 1.000 → 500 (no começo só dava a grátis)

@@ -274,9 +274,9 @@ t('TRANSFORMAÇÃO: custo por raridade e salto de era; cobra tudo ou nada; não 
   const b=L.transformCost(S,makeHost({eraMax:6}),{slot:'boots',r:0,e:5}); assert.strictEqual(b.essence,1); assert.strictEqual(b.gold,100*4096);
 });
 
-t('NOMES: 4 espaços × 7 eras × 5 raridades, todos preenchidos e únicos por espaço/era; nome pela era de aparência (asa: item próprio, ver loot-wing.test.js)',()=>{
+t('NOMES: 4 espaços × 9 eras × 5 raridades, todos preenchidos e únicos por espaço/era; nome pela era de aparência (asa: item próprio, ver loot-wing.test.js)',()=>{
   assert.ok(!L.DATA.names.wing);
-  for(const s of ['hat','gloves','boots','necklace']){ const tb=L.DATA.names[s]; assert.strictEqual(tb.length,7,s);
+  for(const s of ['hat','gloves','boots','necklace']){ const tb=L.DATA.names[s]; assert.strictEqual(tb.length,9,s);   // 7 eras + Submundo e Celestial (curva de 9 eras)
     tb.forEach((row,e)=>{ assert.strictEqual(row.length,5,s+e); assert.strictEqual(new Set(row).size,5,s+' era '+e+' repetido'); assert.ok(row.every(n=>typeof n==='string'&&n.length>2)); }); }
   assert.ok(/^Asa (de anjo|demoníaca)$/.test(L.itemName({slot:'wing',r:4,e:6}))); assert.strictEqual(L.itemName({slot:'hat',r:2,e:1}),'Elmo de Bronze');
   assert.strictEqual(L.itemName({slot:'hat',r:2,e:5,look:1}),'Elmo de Bronze','item transformado mantém o nome da aparência');
