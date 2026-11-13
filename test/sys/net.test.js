@@ -227,3 +227,10 @@ test('PERDA DE SAVE (QA): aparelho sem save local + identidade guardada NUNCA so
   let sent = null; boot({ 'POST /auth/guest': () => [200, session(1)], 'GET /save/head': () => [200, cloud], 'PUT /save': b => { sent = b; return [200, { version: 6 }]; } }, st);
   await net.chooseSide('device', {}, { ...empty, level: 8 }); assert.equal(sent.force, true);
 });
+
+test('excluir conta: DELETE /me, a sessão local sai e devolve quando a exclusão se completa (30 dias)', async () => {
+  const { f, st } = boot({ 'POST /auth/guest': () => [200, session(1)], 'DELETE /me': () => [202, null] });
+  await net.ensureSession(); const r = await net.deleteAccount();
+  assert.equal(r.ok, true); assert.ok(r.until > Date.now() + 29 * 86400000); assert.equal(net.hasSession(), false);
+  assert.equal(JSON.parse(st.m['eon.net']).access, undefined); assert.ok(f.calls.some(c => c.key === 'DELETE /me'));
+});

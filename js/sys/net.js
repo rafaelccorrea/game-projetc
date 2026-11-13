@@ -132,7 +132,10 @@ async function logout(){ const t=ST.mem.refresh; dropSession(); if(t){ try{ awai
 const me=()=>call('GET','/me');
 const player=()=>ST.mem.player||null;
 const hasSession=()=>!!ST.mem.refresh;
-const deleteAccount=()=>call('DELETE','/me');
+/* EXCLUSÃO DA CONTA (Play Store/LGPD): DELETE /me → 202. O servidor apaga em 30 dias e REVOGA todas as sessões; aqui a sessão local também sai.
+   Resolve {ok:true, until:<ms em que a exclusão se completa>}. Entrar de novo antes disso cancela o pedido (o login devolve a conta). Rejeita como as outras
+   chamadas: e.code 'offline' | 'timeout' | 'no_session' | 'token_invalid' | 'server'... */
+async function deleteAccount(){ await call('DELETE','/me'); dropSession(); delete ST.mem.player; delete ST.mem.save; persist(); return {ok:true,until:serverNow()+30*86400000}; }
 
 /* ---------- relógio ---------- */
 /* agora no relógio do servidor (a última resposta trouxe x-server-time); sem servidor = relógio do aparelho */
