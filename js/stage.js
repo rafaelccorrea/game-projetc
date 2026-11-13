@@ -8,8 +8,12 @@
    Debug: ?v2=0 desliga todas. Sem a chave (ou se algo falhar ao carregar) vale o fundo antigo. */
 const V2_OFF = DEBUG && QP.get('v2') === '0';
 const GROUND_FRAC = FIELD_FEET;                 // linha dos pés em fração da altura do CAMPO (#stage = campo entre o HUD e as abas); 0,78 = groundY do meta: a cena ocupa o campo inteiro
-const sceneOn = era => !!(ERAS[era] && ERAS[era].sceneV2) && !!window.EonScene && !V2_OFF;
-const SCN = { list: {}, cur: null, tf: '' };
+const SCN = { list: {}, cur: null, tf: '', force: null };
+const sceneOn = era => (!!(ERAS[era] && ERAS[era].sceneV2) || era === SCN.force) && !!window.EonScene && !V2_OFF;
+/* PRÉVIA DE CENÁRIO (Modo dono / debug): as eras 7 (Submundo) e 8 (Celestial) ainda não existem na tabela ERAS; sceneForce(7|8) põe o cenário vivo delas
+   atrás da batalha atual; sceneForce(null) devolve o da era do jogador. Só vale no Modo dono ou com ?debug=1 (?debug=1&scn=7). Nada muda para o jogador. */
+window.sceneForce = n => { SCN.force = (n == null || !((typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || DEBUG)) ? null : (n | 0); return SCN.force; };
+if (DEBUG && QP.has('scn')) SCN.force = +QP.get('scn') | 0;
 function sceneDims(s){ const st = document.getElementById('stage'); return { w: st.clientWidth, h: Math.round(st.clientHeight * GROUND_FRAC / s.gy) }; }
 function sceneFit(s){ const d = sceneDims(s); if (!d.w || !d.h) return; if (d.w === s.w && d.h === s.h) return; s.w = d.w; s.h = d.h; s.cv.style.width = d.w + 'px'; s.cv.style.height = d.h + 'px'; if (s.api){ s.api.resize(d.w, d.h); s.api.draw(); } }
 function sceneGet(era){
@@ -29,6 +33,7 @@ function sceneGet(era){
 }
 /* chamado a cada quadro pelo drawBG: devolve a cena em uso (ou null = fundo antigo) */
 function sceneFrame(era){
+  if (SCN.force != null) era = SCN.force;
   const s0 = sceneGet(era), use = s0 && s0.api && !s0.fail ? s0 : null;
   if (SCN.cur !== use){
     if (SCN.cur){ SCN.cur.cv.style.display = 'none'; try { SCN.cur.api.stop(); } catch (e) {} }
@@ -83,7 +88,7 @@ function neckRows(s){
 function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p, sheetLoad(set.idle).p, sheetLoad(set.attack).p];
   const ws = heroLook().weapon, sp = ws && spinBase(ws); if (sp) out.push(sheetLoad(sp, true).p);
   { const pe = pistolEra(ws); if (pe >= 0) for (const st of ['idle', 'run', 'shoot']) out.push(pistolSheet(pe, st).p); }
-  if (ART_ON.kael_die === true) out.push(sheetLoad(HERO_DIR + 'kael_die_body', true).p);
+  if (ART_ON.kael_die === true) out.push(dieSheet().p);   /* morte: a folha da fase atual */
   { const tb = ws && trailBase(ws); if (tb) out.push(sheetLoad(tb, true).p); }
   const au = auraBase(); if (au) out.push(sheetLoad(au, true).p);
   return out; }
@@ -102,12 +107,16 @@ function heroSpinSheet(ws){ const b = spinBase(ws); if (!b) return null; const s
 const AURA_OF = { blue: 4, purple: 7, flame: 10, gold: 13 };
 function auraBase(){ let n = 0; if (DEBUG && window.__aura) n = +window.__aura; else { try { n = AURA_OF[Sys.forge.aura(S).id] || 0; } catch (e) { n = 0; } }
   return n && ART_ON['aura' + n] === true ? 'assets/anim/aura/aura' + n : null; }
-function drawAura(ox, gy, t, alpha){ const b = auraBase(); if (!b) return; const s = sheetLoad(b, true); if (!s.ok) return; const M = s.meta, fi = Math.floor(t * (M.fps || 12)) % M.frames, w = HS, h = HS * M.h / M.w;
+/* H (opcional) = herói que está sendo desenhado: a aura da ROUPA-SKIN (camada 'aura' do Sys.appearance) entra aqui; no herói da batalha vale a MAIOR entre ela e a
+   da Forja (uma aura só na tela); nas prévias (H.main falso) só a da roupa-skin. ps = escala da fase. */
+function auraPick(H){ const L = H ? layNow(H) : null, la = L && L.aura ? L.aura : null, b = (!H || H.main) ? auraBase() : null; if (!la) return b; if (!b) return la;
+  const n = s => +((/aura(\d+)$/.exec(s) || [0, 0])[1]); const x = n(la); return (!x || x >= n(b)) ? la : b; }   /* aura da skin com nome próprio (aura_evil, aura_holy): vale a da skin */
+function drawAura(ox, gy, t, alpha, H, ps){ const b = auraPick(H); if (!b) return; const s = sheetLoad(b, true); if (!s.ok) return; const M = s.meta, fi = Math.floor(t * (M.fps || 12)) % M.frames, w = HS * (ps || 1), h = w * M.h / M.w;
   ctx.save(); ctx.globalAlpha = alpha; if (M.blend === 'lighter') ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(s.img, fi * M.w, 0, M.w, M.h, ox - w / 2, gy + HS * 0.022 - h, w, h); ctx.restore(); }
 function drawHeroSpin(H){ const a = H.act, sh = a.spin || a.trail, M = sh.meta, k = HS / 256, gy = H.gy, ox = H.x; let fi = Math.min(M.frames - 1, Math.max(0, Math.floor(a.t / a.dur * M.frames)));
   if (!a.spin){ const th = a.hits[0] ? a.hits[0].t : a.dur * 0.45; fi = a.t < th ? Math.min(TRAIL_HIT, Math.floor(a.t / th * TRAIL_HIT)) : Math.min(M.frames - 1, TRAIL_HIT + Math.floor((a.t - th) / Math.max(0.01, a.dur - th) * (M.frames - TRAIL_HIT))); }
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  drawAura(ox, gy, H.t, 1); drawWingsAt(H, null, 0, 0, 0, 0, false);   /* giro/rastro: a folha composta não tem âncora; vale a última */
+  drawAura(ox, gy, H.t, 1, H); drawWingsAt(H, null, 0, 0, 0, 0, false);   /* giro/rastro: a folha composta não tem âncora; vale a última */
   const fy = typeof M.feetY === 'number' ? M.feetY : 243;
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, ox - ((M.padLeft || 0) + 128) * k, gy - fy * k, M.w * k, M.h * k);
   if (H.hurt > 0){ ctx.save(); ctx.globalAlpha = 0.25; ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, ox - ((M.padLeft || 0) + 128) * k, gy - fy * k, M.w * k, M.h * k); ctx.restore(); }
@@ -133,7 +142,7 @@ function atkFrame(a, gun, K){
 /* pistola ainda carregando (só no primeiro instante do jogo: depois o wSkin segura a arma anterior): Kael parado da folha do corpo, sem a pose de tiro antiga */
 function drawHeroPistolWait(H){ const sh = SHEET(heroSet(H.sk.e).idle); if (!sh) return true; const M = sh.meta, k = HS / M.w, fi = Math.floor(H.t * (M.fps || 12)) % M.frames;
   drawWingsAt(H, sh, fi, H.x - HS / 2, H.gy - HS * HERO_FOOT, k, true);
-  ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore(); return true; }
+  const L = layNow(H); ctx.save(); ctx.translate(H.x - HS / 2, H.gy - HS * HERO_FOOT); ctx.scale(k, k); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); ctx.restore(); return true; }
 /* ASA NO KAEL (v0.12.4): duas metades (assets/anim/equip/wing_<anjo|demon>_L/R.png; raiz de cada uma no .json), ATRÁS do corpo, presas às costas,
    batendo de leve (escala em x a partir da raiz). Mesma escala do quadro do herói. H.wing = 'angel' | 'demon' (heroLook). */
 const WING_IMG = {};
@@ -197,12 +206,13 @@ function drawHeroPistol(H, E){
   if (H.hurt > 0 && H.deadP < 0) ox += (Math.random() - .5) * 3;
   if (H.deadP >= 0){ const p = H.deadP; rot = -1.45 * Math.min(1, p * 3.2); ox -= Math.min(1, p * 3) * 14; alpha = p > .55 ? Math.max(0.1, 1 - (p - .55) / .45) : 1; }
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
+  const L = layNow(H), bimg = layBody(sh, L);
+  if (H.deadP < 0) drawAura(ox, gy, t, alpha, H);
   drawWingsAt(H, sh, fi, ox - (pad + 128) * k, gy - fy * k, k, !a);   /* asa nas costas (âncora da folha da pistola) */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, 0, -HS * .45, HS * (0.5 + 0.2 * Math.min(1, a.t)), 0.5 + 0.2 * Math.sin(t * 20));
   ctx.translate(-HS / 2 - pad * k, -fy * k); ctx.scale(k, k);          // espaço do quadro largo (0..448); a célula de 256 começa em padLeft
-  const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const body = () => ctx.drawImage(bimg, fi * FW, 0, FW, FH, 0, 0, FW, FH);
   body();
   /* arma da raridade na mão: pivô = grip do meta.json; direção = ângulo da mão do .json menos o ângulo nativo da arma; tamanho = scale do .json aprovado da era */
   const ws = H.ws, wm = J('assets/weapons/meta.json')[wKey(ws)] || {}, w0 = SPR(wPng(ws), 'weapon'), S0 = pistolScale(E, st), fl = a ? shotEnv(a, 0.09) : 0, rec = a ? shotEnv(a, 0.16) * 4 : 0;
@@ -218,6 +228,7 @@ function drawHeroPistol(H, E){
     /* dedos por cima do cabo: redesenha o trecho do corpo em volta da mão */
     if (typeof G.ux === 'number'){ const ux = G.ux, uy = G.uy, px = -uy, py = ux, f0 = (G.f0 != null ? G.f0 : -5) - 1.5, f1 = (G.f1 != null ? G.f1 : 5) + 1.5, hh = (G.hw || 3.4) + 5;
       ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); } }
+  layHead(sh, fi, L);   /* chapéu, óculos e máscara da roupa-skin */
   if (H.hurt > 0 && H.deadP < 0){ HFLx.globalCompositeOperation = 'source-over'; HFLx.clearRect(0, 0, 256, 256); HFLx.drawImage(sh.img, fi * FW + pad, 0, 256, FH, 0, 0, 256, 256); HFLx.globalCompositeOperation = 'source-atop'; HFLx.fillStyle = '#ff3030'; HFLx.fillRect(0, 0, 256, 256);
     ctx.globalAlpha = alpha * Math.min(1, H.hurt / 0.15 * 0.65); ctx.drawImage(HFL, pad, 0, 256, FH); }
   ctx.restore();
@@ -228,7 +239,9 @@ function drawHeroPistol(H, E){
 /* MORTE NOVA DO KAEL (aprovada, v0.12.8): folha assets/anim/hyb/R/kael_die_body (448x256, padLeft 96, pés em feetY; 18 quadros a 12 fps; o último,
    deitado, segura). Cai de joelho e de bruços; a arma cai por código ao lado; poeira ao bater no chão; a tela escurece (battle.js). Vale montado
    (não há folha da montaria sem o Kael: ele cai a pé e a montaria sai de cena) e com pet (o pet para). Chave: ART_ON.kael_die. */
-function drawHeroDie(H){ const sh = sheetLoad(HERO_DIR + 'kael_die_body', true); if (!sh.ok) return false; const M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256;
+/* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
+function dieSheet(){ const ph = typeof heroPhase === 'function' ? heroPhase() : 0; if (ph > 0){ const s = phaseSheet('die', ph); if (s) return s; } return sheetLoad(HERO_DIR + 'kael_die_body', true); }
+function drawHeroDie(H){ const sh = dieSheet(); if (!sh.ok) return false; const ph = typeof heroPhase === 'function' ? heroPhase() : 0, PS = PH_SCALE[ph] || 1, M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, k = HS / 256 * PS;
   const T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12))), ox = H.x, gy = H.gy, alpha = 1;
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox + HS * 0.05 * Math.min(1, T), gy + HS * 0.012, HS * (0.21 + 0.12 * Math.min(1, T)), HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
   ctx.save(); ctx.translate(ox - (pad + 128) * k, gy - fy * k); ctx.scale(k, k);
@@ -236,7 +249,7 @@ function drawHeroDie(H){ const sh = sheetLoad(HERO_DIR + 'kael_die_body', true);
   const ws = H.ws, w0 = ws ? SPR(wPng(ws), 'weapon') : null, p = Math.min(1, T / 0.7), e2 = p * p;
   if (w0){ const kk = 256 * 0.5 / Math.max(w0.w, w0.h), dw = w0.w * kk, dh = w0.h * kk, x = pad + 128 + 34 + 46 * p, y = (fy - 112) + (112 - 10) * e2, ang = -0.3 + (Math.PI / 2 + 0.3) * e2;
     ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = alpha; dspr(skinSpr(w0, ws.r), -dw / 2, -dh / 2, dw, dh); ctx.restore(); }
-  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); ctx.restore();
+  { const L = layNow(H); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); } ctx.restore();
   if (H.main){ B.tipW = null; const imp = (M.impact && M.impact.body) || 16;
     if (p >= 1 && !B.dieDustW){ B.dieDustW = 1; dust(ox + HS * 0.45, gy - 2, 3, '#c8b496'); }
     if (fi >= imp && !B.dieDustB){ B.dieDustB = 1; dust(ox + HS * 0.1, gy - 2, 5, '#c8b496'); dust(ox - HS * 0.1, gy - 2, 3, '#c8b496'); } }
@@ -247,11 +260,12 @@ function drawHeroAnim(H){
   if (H.mount && typeof drawHeroMounted === 'function' && drawHeroMounted(H)) return true;   // Kael MONTADO (js/mountfx.js); sem as folhas carregadas, segue a pé
   { const ph = typeof heroPhase === 'function' ? heroPhase() : 0; if (ph > 0 && drawHeroPhase(H, ph)) return true; }   /* fases 1 a 3 (adolescente, adulto, guerreiro) */
   { const pe = pistolEra(H.ws); if (pe >= 0) return drawHeroPistol(H, pe) || drawHeroPistolWait(H); }
-  if (H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);
+  const L = layNow(H);   /* camadas da roupa-skin (ou null) */
+  if (!L && H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);   /* com roupa-skin em camadas a folha composta (corpo já pintado) não vale: corpo + arma na mão */
   const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;
   const st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle';
   const sh = SHEET(set[st]); if (!sh) return false;
-  const CT = heroCompTier(H.sk, H.ws), comp = CT >= 0 ? heroCompImg(st, CT) : null;   // folha composta (ou null = corpo + arma na mão)
+  const CT = L ? -1 : heroCompTier(H.sk, H.ws), comp = CT >= 0 ? heroCompImg(st, CT) : null, bimg = layBody(sh, L);   // folha composta (ou null = corpo + arma na mão)
   if (CT >= 0){ heroCompImg('run', CT); heroCompImg('idle', CT); heroCompImg('attack', CT); }   // deixa as três carregadas: sem troca de modo no meio da ação
   const M = sh.meta, FW = M.w, FH = M.h, n = M.frames;
   let fi = a ? atkFrame(a, gun, set.atk) : Math.floor(t * (M.fps || 12)) % n; if (!(fi >= 0 && fi < n)) fi = 0;
@@ -265,7 +279,7 @@ function drawHeroAnim(H){
   if (H.deadP >= 0){ const p = H.deadP; rot = -1.45 * Math.min(1, p * 3.2); ox -= Math.min(1, p * 3) * 14; alpha = p > .55 ? Math.max(0.1, 1 - (p - .55) / .45) : 1; }
   // sombra presa ao chão
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);   // aura de fortalecimento ATRÁS do herói, base no chão
+  if (H.deadP < 0) drawAura(ox, gy, t, alpha, H);   // aura (Forja ou roupa-skin) ATRÁS do herói, base no chão
   drawWingsAt(H, sh, fi, ox - HS / 2, gy - HS * HERO_FOOT, k, !a);   /* asa nas costas, atrás do corpo */
   ctx.save(); ctx.translate(ox, gy); ctx.rotate(rot); ctx.globalAlpha = alpha;
   const T = tierOf(H.sk.r);
@@ -273,7 +287,7 @@ function drawHeroAnim(H){
   if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, 0, -HS * .45, HS * (0.5 + 0.2 * Math.min(1, a.t)), 0.5 + 0.2 * Math.sin(t * 20));
   ctx.translate(-HS / 2, -HS * HERO_FOOT); ctx.scale(k, k);          // daqui em diante: espaço do quadro (0..256)
   const wide = comp && st === 'attack';   // folha larga: o quadro de 448 é desenhado com a célula de 256 no mesmo lugar (96 px para cada lado)
-  const body = () => wide ? ctx.drawImage(comp, fi * HERO_WIDE_W, 0, HERO_WIDE_W, FH, -HERO_WIDE_PAD, 0, HERO_WIDE_W, FH) : ctx.drawImage(comp || sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const body = () => wide ? ctx.drawImage(comp, fi * HERO_WIDE_W, 0, HERO_WIDE_W, FH, -HERO_WIDE_PAD, 0, HERO_WIDE_W, FH) : ctx.drawImage(comp || bimg, fi * FW, 0, FW, FH, 0, 0, FW, FH);
   // arma: pivô = grip do meta.json da arma, na mão do quadro; direção = eixo da mão (bastão-guia) do .json
   const wk = wKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(wPng(ws), 'weapon'), fx = WFIX[wk] || WFIX[heroKey(ws)] || {};
   if (H.main) B.tipW = null;
@@ -317,6 +331,7 @@ function drawHeroAnim(H){
       // cabeça por cima da lâmina
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, FW, (sh.neck[fi] || 0) + 2); ctx.clip(); body(); ctx.restore(); }
   }
+  layHead(sh, fi, L);   /* chapéu, óculos e máscara da roupa-skin, por cima de tudo (a cabeça já fica por cima da lâmina) */
   if (H.hurt > 0 && H.deadP < 0){ HFLx.globalCompositeOperation = 'source-over'; HFLx.clearRect(0, 0, 256, 256); HFLx.drawImage(comp || sh.img, wide ? fi * HERO_WIDE_W + HERO_WIDE_PAD : fi * FW, 0, FW, FH, 0, 0, 256, 256); HFLx.globalCompositeOperation = 'source-atop'; HFLx.fillStyle = '#ff3030'; HFLx.fillRect(0, 0, 256, 256);
     ctx.globalAlpha = alpha * Math.min(1, H.hurt / 0.15 * 0.65); ctx.drawImage(HFL, 0, 0, FW, FH); }
   ctx.restore();
@@ -333,7 +348,7 @@ const PH_DIRS = ['R', 'phase1', 'phase2', 'phase3'];
 const phasesOk = () => typeof PHASES_ON !== 'undefined' && PHASES_ON && typeof Sys !== 'undefined' && !!Sys.phaseUp && !!Sys.appearance && typeof Sys.appearance.sheetFor === 'function';
 function phaseBoot(){ if (!phasesOk()) return; try { Sys.phaseUp.DATA.on = true; Sys.phaseUp.ensure(S); phaseCheck(true); } catch (e) { console.error('phaseBoot', e); } }
 /* fase DESENHADA agora (durante a animação de evolução: a antiga até a metade, depois a nova) */
-function heroPhase(){ if (!phasesOk()) return 0; let st = 0; try { st = Sys.phaseUp.current(S) | 0; } catch (e) { st = 0; } const ev = typeof B !== 'undefined' ? B.evo : null; if (ev && (B.at - ev.t0) < ev.dur * 0.5) st = ev.from; return Math.max(0, Math.min(3, st)); }
+function heroPhase(){ if (!phasesOk()) return 0; let st = 0; try { st = Sys.phaseUp.current(S) | 0; } catch (e) { st = 0; } const ev = typeof B !== 'undefined' ? B.evo : null; if (ev && (B.at - ev.t0) < ev.dur * (ev.swap || 0.5)) st = ev.from; return Math.max(0, Math.min(3, st)); }
 const phaseK = () => PH_SCALE[heroPhase()] || 1;
 function phaseSheet(st, stage){ let r = null; try { r = Sys.appearance.sheetFor(S, Sys.host, st); } catch (e) { return null; } if (!r) return null; let base = r.body;
   if (stage != null && stage !== r.stage && !r.fallback) base = base.replace(/hyb\/[^/]+\//, 'hyb/' + (r.hero === 'kaia' ? (stage ? 'kaia_phase' + stage : 'kaia') : PH_DIRS[stage]) + '/');
@@ -346,17 +361,32 @@ function phaseBodyH(){ const p = heroPhase(); if (!p) return 0; if (PH_H[p]) ret
 /* EVOLUÇÃO: save antigo que já passou dos níveis evolui DIRETO para a fase certa, com UMA animação (decisão do dono); a fase vai para o save na hora
    (recarregar não repete). 0→1 sem skin/cosmético visível: folha própria (evolve_0_1, que já traz o herói); nos outros casos o herói é desenhado por
    camadas (fase antiga → clarão → fase nova) com a animação de subir de nível por cima. */
-function phaseCheck(atBoot){ if (!phasesOk() || (typeof B !== 'undefined' && B.evo)) return; let first = null, last = null, n = 0;
-  try { for (let i = 0; i < 4; i++){ const p = Sys.phaseUp.pending(S, Sys.host); if (!p || !p.ready) break; if (!first) first = p; last = p; const r = Sys.phaseUp.evolve(S, Sys.host); if (!r || !r.ok) break; n++; } } catch (e) { console.error('phaseCheck', e); }
-  if (!n) return; save(); const own = n === 1 && first.from === 0 && first.anim && !first.anim.fallback && !first.anim.layered, base = own ? first.anim.sheet : 'assets/anim/fx/levelup';
+/* NA CARGA (save antigo): Sys.phaseUp.catchUp põe a fase certa de uma vez (rotina do módulo; uma só, sem fila); aqui só sai UM aviso + UMA animação para a fase
+   final. JOGANDO (subiu de nível): pending → evolve, um passo. Efeito: com skin/cosmético visível (anim.layered) ou sem folha própria, o herói antigo com as
+   camadas → efeito indicado pelo módulo (anim.fx = assets/anim/fx/evolve_<de>_<para>_fx, só o efeito; troca de fase no quadro 27) → herói novo com as camadas;
+   se o arquivo do efeito faltar, a animação de subir de nível + clarão por código (reserva). */
+const EVO_LV = 'assets/anim/fx/levelup', EVO_SWAP = 27 / 38;
+function phaseCheck(atBoot){ if (!phasesOk() || (typeof B !== 'undefined' && B.evo)) return; let first = null, last = null, n = 0, stg0 = 0;
+  try { stg0 = Sys.phaseUp.current(S) | 0;
+    /* carga: o módulo aplica de uma vez tudo MENOS a última fase (catchUp); a última vem no pending() e toca UMA animação */
+    if (atBoot && typeof Sys.phaseUp.catchUp === 'function') Sys.phaseUp.catchUp(S, Sys.host);
+    for (let i = 0; i < 4; i++){ const p = Sys.phaseUp.pending(S, Sys.host); if (!p || !p.ready) break; if (!first) first = p; last = p; const r = Sys.phaseUp.evolve(S, Sys.host); if (!r || !r.ok) break; n++; }
+    const stg1 = Sys.phaseUp.current(S) | 0;
+    if (!last && stg1 > stg0){ n = stg1 - stg0; last = { from: stg1 - 1, to: stg1, toName: Sys.phaseUp.nameOf(S, stg1), anim: { fallback: true, fx: 'assets/anim/fx/evolve_' + (stg1 - 1) + '_' + stg1 + '_fx' } }; }   /* módulo que aplica tudo no catchUp: ainda assim UM aviso */
+    first = last;   /* só a evolução FINAL aparece (herói da fase anterior à final → efeito → fase final) */
+  } catch (e) { console.error('phaseCheck', e); }
+  if (!last || (Sys.phaseUp.current(S) | 0) === stg0) return; save(); const an = last.anim || {}, own = !!an.sheet && !an.fallback && !an.layered && !heroLook().mount, fx = !own && an.fx ? an.fx : null, base = own ? an.sheet : (fx || EVO_LV);
   sheetLoad(base, true); phaseReady(last.to); phaseReady(first.from);
-  B.evo = { t0: (B.at || 0) + (atBoot ? 1.2 : 0.1), from: first.from, to: last.to, sheet: base, own, dur: own ? 38 / 12 : 1.6, name: last.toName };
-  B.banner = { txt: (S.hero === 'kaia' ? 'Kaia' : 'Kael') + ' evoluiu: ' + last.toName + '!', pill: true, bg: 'rgba(60,40,8,.92)', bd: '#ffc94a', sh: '#2a1403', t: -(atBoot ? 1.2 : 0.1), dur: 2.6, col: '#ffe07a' };
+  B.evo = { t0: (B.at || 0) + (atBoot ? 1.2 : 0.1), from: first.from, to: last.to, sheet: base, own, fx: !!fx, swap: fx ? EVO_SWAP : 0.5, dur: (own || fx) ? 38 / 12 : 1.6, name: last.toName };
+  B.lvfx = null;   /* a evolução já tem o seu efeito: sem a animação de subir de nível por cima (visto: as duas juntas) */
+  B.banner = { txt: 'Evoluiu: ' + last.toName + '!', pill: true, bg: 'rgba(60,40,8,.92)', bd: '#ffc94a', sh: '#2a1403', t: -(atBoot ? 1.2 : 0.1), dur: 2.6, col: '#ffe07a' };
   if (typeof snd === 'function') snd('legendary'); if (typeof fbLayout === 'function') setTimeout(fbLayout, 50); }
 function drawEvo(){ const ev = B.evo; if (!ev) return; const t = B.at - ev.t0; if (t < 0) return;
   if (t >= ev.dur){ B.evo = null; if (typeof fbLayout === 'function') fbLayout(); if (typeof layoutHorde === 'function'){ try { layoutHorde(); } catch (e) {} } return; }
+  if (ev.fx){ const f = sheetLoad(ev.sheet, true); if (f.fail){ ev.fx = false; ev.sheet = EVO_LV; ev.swap = 0.5; ev.dur = Math.max(1.6, t + 0.8); } }   /* efeito do módulo não existe no disco: reserva */
   const u = t / ev.dur, gl = Math.max(0, 1 - Math.abs(u - 0.5) * 4);
-  if (!ev.own && gl > 0){ const r = HS * (0.6 + 0.5 * gl), g = ctx.createRadialGradient(HX, GY - HS * 0.5, 2, HX, GY - HS * 0.5, r); g.addColorStop(0, 'rgba(255,255,255,' + (0.95 * gl).toFixed(2) + ')'); g.addColorStop(0.5, 'rgba(255,224,122,' + (0.6 * gl).toFixed(2) + ')'); g.addColorStop(1, 'rgba(255,224,122,0)'); ctx.fillStyle = g; ctx.fillRect(HX - r, GY - HS * 0.5 - r, r * 2, r * 2); }
+  if (!ev.own && !ev.fx && gl > 0){ const r = HS * (0.6 + 0.5 * gl), g = ctx.createRadialGradient(HX, GY - HS * 0.5, 2, HX, GY - HS * 0.5, r); g.addColorStop(0, 'rgba(255,255,255,' + (0.95 * gl).toFixed(2) + ')'); g.addColorStop(0.5, 'rgba(255,224,122,' + (0.6 * gl).toFixed(2) + ')'); g.addColorStop(1, 'rgba(255,224,122,0)'); ctx.fillStyle = g; ctx.fillRect(HX - r, GY - HS * 0.5 - r, r * 2, r * 2); }
+  if (ev.sheet === EVO_LV){ if (typeof drawLevelUpCode === 'function') drawLevelUpCode(t, ev.dur); return; }   /* a folha levelup traz o Kael garoto desenhado: na evolução vale o efeito por código */
   const sh = sheetLoad(ev.sheet, true); if (!sh.ok) return; const M = sh.meta, fi = Math.min(M.frames - 1, Math.floor(u * M.frames)), k = HS / 256 * (ev.own ? 1 : PH_SCALE[ev.to]);
   ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, HX - (M.anchorX || M.w / 2) * k, GY - (M.feetY || M.h) * k, M.w * k, M.h * k); }
 /* PONTO ÚNICO da compensação do "pad duplo" das folhas não-paradas das fases 1 a 3 (aviso da Arte: pés ~96 px à direita de padLeft+128; a parada está certa).
@@ -377,7 +407,8 @@ function drawHeroPhase(H, stage){ if (!phaseReady(stage)) return false;
   let ox = H.x, alpha = 1; if (H.hurt > 0 && H.deadP < 0) ox += (Math.random() - .5) * 3;
   if (H.deadP >= 0) alpha = H.deadP > .55 ? Math.max(0.1, 1 - (H.deadP - .55) / .45) : 1;
   ctx.save(); ctx.globalAlpha = 0.3 * alpha; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(ox - HS * 0.02, gy + HS * 0.012, HS * 0.21 * PS, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  if (H.main && H.deadP < 0) drawAura(ox, gy, t, alpha);
+  const L = layNow(H), bimg = layBody(sh, L);
+  if (H.deadP < 0) drawAura(ox, gy, t, alpha, H);
   /* nas fases 1 a 3 as folhas de corrida, golpe e giro têm o corpo 96 px mais à direita na célula do que a folha parada (campo xf.ox do .json; o padLeft diz 96 nas duas):
      a diferença do xf.ox para a folha parada entra na âncora, senão o Kael pula para a frente ao sair do parado */
   const idM = st !== 'idle' ? (phaseSheet('idle', stage) || {}).meta : null, dxf = phasePadFix(M, idM);
@@ -387,7 +418,7 @@ function drawHeroPhase(H, stage){ if (!phaseReady(stage)) return false;
   if (tierOf(H.sk.r) === 2) drawGlow(RAR[H.sk.r].c, ox, gy - HS * .5 * PS, HS * .7 * PS, alpha * (0.45 + 0.15 * Math.sin(t * 3)));   // skin de raridade alta: o brilho da skin continua
   if (a && a.type === 's3' && a.t < 1.95) drawGlow(a.col, ox, gy - HS * .45 * PS, HS * (0.5 + 0.2 * Math.min(1, a.t)) * PS, 0.5 + 0.2 * Math.sin(t * 20));
   ctx.translate(x0, y0); ctx.scale(k, k);
-  const body = () => ctx.drawImage(sh.img, fi * FW, 0, FW, FH, 0, 0, FW, FH);
+  const body = () => ctx.drawImage(bimg, fi * FW, 0, FW, FH, 0, 0, FW, FH);
   const wk = wKey(ws), wm = J('assets/weapons/meta.json')[wk] || {}, w0 = SPR(wPng(ws), 'weapon'), fx = WFIX[wk] || WFIX[heroKey(ws)] || {};
   let drawW = null, tip = { x: G.x + 40, y: G.y - 40 };
   if (w0){ const wimg = skinSpr(w0, ws.r), grip = wm.grip || (gun ? [0.26, 0.6] : [0.5, 0.78]); let kk = 256 * (gun ? 0.44 : 0.5) * (fx.s || 1) / Math.max(w0.w, w0.h); if (gun) kk = Math.min(kk, 256 * 0.21 * (fx.s || 1) / w0.h);
@@ -404,10 +435,76 @@ function drawHeroPhase(H, stage){ if (!phaseReady(stage)) return false;
       if (typeof G.ux === 'number'){ const ux = G.ux, uy = G.uy, px = -uy, py = ux, f0 = (G.f0 != null ? G.f0 : -12) - 1.5, f1 = (G.f1 != null ? G.f1 : 12) + 1.5, hh = Math.min(G.hw || 3.3, 6) + 5;   // dedos por cima do cabo
         ctx.save(); ctx.beginPath(); ctx.moveTo(G.x + ux * f0 - px * hh, G.y + uy * f0 - py * hh); ctx.lineTo(G.x + ux * f1 - px * hh, G.y + uy * f1 - py * hh); ctx.lineTo(G.x + ux * f1 + px * hh, G.y + uy * f1 + py * hh); ctx.lineTo(G.x + ux * f0 + px * hh, G.y + uy * f0 + py * hh); ctx.closePath(); ctx.clip(); body(); ctx.restore(); }
       if (sh.neck && sh.neck[fi]){ ctx.save(); ctx.beginPath(); ctx.rect(0, 0, FW, sh.neck[fi] + 2); ctx.clip(); body(); ctx.restore(); } } }   // cabeça por cima da lâmina
+  layHead(sh, fi, L);   /* chapéu, óculos e máscara da roupa-skin */
   ctx.restore();
   if (H.main){ B.tipW = { x: x0 + tip.x * k, y: y0 + tip.y * k };
     if (!a && H.deadP < 0 && !H.walking){ const rc = Math.max(HX + HS * 0.36, Math.min(HX + HS * 0.62 * PS, B.tipW.x + (gun ? 3 : 6))); B.reach += (rc - B.reach) * 0.2; } }
   return true; }
 function drawHeroPhaseDie(H, sh, k){ const M = sh.meta, n = M.frames, pad = M.padLeft || 0, fy = typeof M.feetY === 'number' ? M.feetY : 243, T = Math.max(0, H.deadP) * 1.6, fi = Math.min(n - 1, Math.floor(T * (M.fps || 12)));
   ctx.save(); ctx.globalAlpha = 0.3; ctx.fillStyle = '#1e1208'; ctx.beginPath(); ctx.ellipse(H.x, H.gy + HS * 0.012, HS * 0.3, HS * 0.05, 0, 0, 7); ctx.fill(); ctx.restore();
-  ctx.drawImage(sh.img, fi * M.w, 0, M.w, M.h, H.x - (pad + 128) * k, H.gy - fy * k, M.w * k, M.h * k); return true; }
+  const L = layNow(H); ctx.save(); ctx.translate(H.x - (pad + 128) * k, H.gy - fy * k); ctx.scale(k, k); ctx.drawImage(layBody(sh, L), fi * M.w, 0, M.w, M.h, 0, 0, M.w, M.h); layHead(sh, fi, L); ctx.restore(); return true; }
+
+/* ================= CAMADAS DA ROUPA-SKIN (Engenheiro 3; decisão do dono de 12/11: a roupa-skin é uma COMBINAÇÃO de camadas) =================
+   Fonte: Sys.appearance.layers(S, Sys.host) (js/sys/appearance.js) → {layer:'aura', sheet} · {layer:'armor'|'boots', mat, tint:[R,G,B,ganho]} · {layer:'hat', hat:'eraN'} ·
+   {layer:'glasses'|'mask', cos}. Tudo é desenhado DENTRO do desenho do herói (fase 0, fases 1 a 3, pistola, morte), então vale na batalha, na evolução e nas prévias.
+   - TINTA de colete (canal R da máscara) e botas (canal B): conta copiada da página da Arte (test/anim/look/index.html): m = canal/255 × alfa;
+     l = luminância(0,30 R + 0,59 G + 0,11 B)/128 × ganho; cor = cor×(1−m) + min(255, tinta×l)×m (colete primeiro, botas depois). A folha inteira do estado é pintada
+     UMA vez e guardada (chave: folha + colete + botas + cabelo apagado); por quadro é só um drawImage da cópia. No máximo LAY_MAX cópias (as menos usadas saem).
+   - Chapéu com hideHair: o cabelo é apagado na MESMA cópia (máscara _hair, destination-out), nunca no canvas do jogo.
+   - Chapéu/óculos/máscara: âncora da cabeça por quadro (masks/<herói>_<estado>_head.json): translate(x,y) rotate(ang) scale(s/res) drawImage(png, -pivot). ok:false = não desenha.
+   - Máscara com célula mais larga que a folha (garoto: golpe de 256 com máscara de 448): entra centrada (folga igual dos dois lados).
+   - Montado: as folhas de montaria não têm máscara nem âncora de cabeça (Arte): o Kael montado não ganha camadas.
+   Chave: LAYERS_ON (index.html), DESLIGADA por decisão final do dono (sem combinações de camadas para o jogador); só liga com ?debug=1&camadas=1. H.lay (prévias) = camadas já lidas; sem ele, as do save (relidas 4x por segundo). */
+const LAY_MAX = 6, LAYC = new Map(), LAYI = {}, LAYN = { t: -1e9, v: null }, LAYS = {}; let LAYU = 0, LAYB = -1e9, LAYT = null;
+const layersOk = () => typeof LAYERS_ON !== 'undefined' && LAYERS_ON && typeof Sys !== 'undefined' && !!Sys.appearance && typeof Sys.appearance.layers === 'function';
+function layParse(list){ if (!Array.isArray(list)) return null; const o = { aura: null, vest: null, boots: null, hat: null, glasses: null, mask: null, tints: {} }; let any = false;
+  for (const l of list){ if (!l) continue;
+    if (l.layer === 'aura' && l.sheet){ o.aura = l.sheet; any = true; }
+    else if ((l.layer === 'armor' || l.layer === 'boots') && l.mat && Array.isArray(l.tint)){ o[l.layer === 'armor' ? 'vest' : 'boots'] = l.mat; o.tints[l.mat] = l.tint; any = true; }
+    else if (l.layer === 'hat' && l.hat){ o.hat = l.hat; any = true; }
+    else if ((l.layer === 'glasses' || l.layer === 'mask') && (l.cos || (l.source === 'cos' && l.id))){ o[l.layer] = l.cos || l.id; any = true; } }
+  return any ? o : null; }
+/* combinação de uma roupa-skin pela id (vitrine da Coleção: mostra a skin olhada, não a vestida) */
+function layOfSkin(id){ if (id in LAYS) return LAYS[id]; let v = null; try { const c = Sys.appearance.comboOf(id), M = Sys.appearance.MATERIALS; if (c){ const l = [];
+      if (c.aura) l.push({ layer: 'aura', sheet: 'assets/anim/aura/' + c.aura }); if (c.boots && M[c.boots]) l.push({ layer: 'boots', mat: c.boots, tint: M[c.boots] }); if (c.vest && M[c.vest]) l.push({ layer: 'armor', mat: c.vest, tint: M[c.vest] });
+      if (c.hat) l.push({ layer: 'hat', hat: c.hat }); if (c.glasses) l.push({ layer: 'glasses', cos: c.glasses }); if (c.mask) l.push({ layer: 'mask', cos: c.mask }); v = layParse(l); } } catch (e) { v = null; }
+  return LAYS[id] = v; }
+function layNow(H){ if (!layersOk()) return null; if (H && H.lay !== undefined) return H.lay;
+  const now = performance.now(); if (now - LAYN.t > 250){ LAYN.t = now; try { LAYN.v = layParse(Sys.appearance.layers(S, Sys.host)); } catch (e) { LAYN.v = null; } } return LAYN.v; }
+function layLoad(p){ let o = LAYI[p]; if (!o){ o = LAYI[p] = { img: null, ok: false, fail: false }; const im = new Image(); im.onload = () => { o.img = im; o.ok = true; }; im.onerror = () => { o.fail = true; }; im.src = p; } return o; }
+const layMaskBase = sh => { const m = /^(.*\/)([a-z]+_[a-z_]+)_body$/.exec(sh.base); return m ? m[1] + 'masks/' + m[2] : null; };
+const layHat = id => { const h = J('assets/anim/equip/hats/hats.json').hats; return h ? (h[id] || null) : undefined; };   // undefined = tabela ainda carregando
+/* folha do corpo com a tinta (e o cabelo apagado) da roupa-skin; enquanto não fica pronta, a folha original */
+function layBody(sh, L){ if (!L || !sh || !sh.ok || !sh.img) return sh.img; let hide = false;
+  if (L.hat){ const h = layHat(L.hat); if (h === undefined) return sh.img; hide = !!(h && h.hideHair); }
+  if (!L.vest && !L.boots && !hide) return sh.img;
+  const mb = layMaskBase(sh); if (!mb) return sh.img; const key = sh.base + '|' + (L.vest || '') + '|' + (L.boots || '') + '|' + (hide ? 1 : 0); let e = LAYC.get(key);
+  if (e){ e.use = ++LAYU; e.at = performance.now(); return e.cv; }
+  const mk = (L.vest || L.boots) ? layLoad(mb + '_mask.png') : null, hr = hide ? layLoad(mb + '_hair.png') : null;
+  if ((mk && !mk.ok && !mk.fail) || (hr && !hr.ok && !hr.fail)) return sh.img;          // máscaras carregando
+  const now = performance.now(); if (now - LAYB < 30) return sh.img; LAYB = now;         // no máximo uma folha pintada por quadro
+  let cv = sh.img;
+  try { const W = sh.img.naturalWidth, Hh = sh.img.naturalHeight, n = sh.meta.frames, FW = sh.meta.w;
+    if (!LAYT) LAYT = document.createElement('canvas'); LAYT.width = W; LAYT.height = Hh; const g = LAYT.getContext('2d', { willReadFrequently: true });
+    const put = im => { const mw = im.naturalWidth / n; if (Math.abs(mw - FW) < 1) g.drawImage(im, 0, 0, W, Hh); else { const off = (mw - FW) / 2; for (let i = 0; i < n; i++) g.drawImage(im, i * mw + off, 0, FW, im.naturalHeight, i * FW, 0, FW, Hh); } };
+    if (mk && mk.ok){ g.clearRect(0, 0, W, Hh); put(mk.img); const md = g.getImageData(0, 0, W, Hh).data; g.clearRect(0, 0, W, Hh); g.drawImage(sh.img, 0, 0);
+      const out = g.getImageData(0, 0, W, Hh), d = out.data, chs = [[0, L.vest ? L.tints[L.vest] : null], [2, L.boots ? L.tints[L.boots] : null]];
+      for (let i = 0; i < d.length; i += 4){ const a = md[i + 3] / 255; if (!a) continue;
+        for (let q = 0; q < 2; q++){ const t = chs[q][1]; if (!t) continue; const m = md[i + chs[q][0]] / 255 * a; if (m <= 0) continue; const l = (d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11) / 128 * t[3];
+          for (let k = 0; k < 3; k++) d[i + k] = d[i + k] * (1 - m) + Math.min(255, t[k] * l) * m; } }
+      g.putImageData(out, 0, 0); }
+    else { g.clearRect(0, 0, W, Hh); g.drawImage(sh.img, 0, 0); }
+    if (hr && hr.ok){ g.globalCompositeOperation = 'destination-out'; put(hr.img); g.globalCompositeOperation = 'source-over'; }
+    cv = document.createElement('canvas'); cv.width = W; cv.height = Hh; cv.getContext('2d').drawImage(LAYT, 0, 0); LAYT.width = LAYT.height = 1;
+  } catch (er) { cv = sh.img; if (!window.__layErr){ window.__layErr = 1; console.error('layBody', er); } }
+  LAYC.set(key, { cv, use: ++LAYU, at: now });
+  while (LAYC.size > LAY_MAX){ let ok = null, ou = 1e18; for (const [k2, v] of LAYC) if (v.use < ou && now - v.at > 2000){   /* nunca tira uma cópia usada nos últimos 2 s (duas fases na evolução, prévias): sem vai-e-vem */ ou = v.use; ok = k2; } if (ok){ const v = LAYC.get(ok); if (v.cv && v.cv.getContext) v.cv.width = v.cv.height = 1; LAYC.delete(ok); } else break; }
+  return cv; }
+/* chapéu, óculos e máscara na âncora da cabeça do quadro; o ctx já está no espaço da CÉLULA da folha */
+function layHead(sh, fi, L){ if (!L || !(L.hat || L.glasses || L.mask) || !sh) return; const mb = layMaskBase(sh); if (!mb) return; const hj = J(mb + '_head.json'), a = hj.head && hj.head[fi]; if (!a || a.ok === false) return;
+  /* garoto, golpe e giro: a âncora da cabeça vem na célula LARGA da máscara (448, padLeft 96) e a folha do corpo é de 256: desconta a folga (medido: cabeça em x≈246 numa célula de 256) */
+  const mj = J(mb + '_mask.json'), hx = (mj.w > 0 && sh.meta && mj.w !== sh.meta.w) ? (mj.w - sh.meta.w) / 2 : 0; if (!('w' in mj) && !('frames' in mj) && !('note' in mj) && sh.meta && sh.meta.w < 448 && /_(attack|spin)$/.test(mb)) return;   /* .json da máscara ainda carregando */
+  const one = (def, dir) => { if (!def || !def.pivot) return; const im = layLoad(dir + def.file); if (!im.ok) return; const s = (a.s > 0 ? a.s : 1) / (def.res || 1);
+    ctx.save(); ctx.translate(a.x - hx, a.y); ctx.rotate((a.ang || 0) * Math.PI / 180); ctx.scale(s, s); ctx.drawImage(im.img, -def.pivot.x, -def.pivot.y); ctx.restore(); };
+  if (L.hat) one(layHat(L.hat), 'assets/anim/equip/hats/');
+  if (L.glasses || L.mask){ const ci = J('assets/anim/equip/cos/cos.json').items || {}; if (L.glasses) one(ci[L.glasses], 'assets/anim/equip/cos/'); if (L.mask) one(ci[L.mask], 'assets/anim/equip/cos/'); } }

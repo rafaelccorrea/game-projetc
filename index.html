@@ -334,6 +334,7 @@ const INAME_E2={ hat:['Capuz de Couro','Elmo de Ferro','Elmo Rúnico','Elmo do D
 const INOUN={hat:'Elmo',gloves:'Luvas',boots:'Botas',necklace:'Colar',wing:'Asas'}, ERA_MAT=['de Osso','de Bronze','de Aço','da Pólvora','a Vapor','de Kevlar','de Plasma'];
 const WSHAPE=['club','spear','sword','musket','rifle','rifle','energy'];
 const PHASES_ON=!/[?&]fases=0/.test(location.search);   /* KAEL POR FASE (Engenheiro 2): garoto → adolescente (22) → adulto (35) → guerreiro (70). ?fases=0 desliga para conferência */
+const LAYERS_ON=/[?&]debug=1/.test(location.search)&&/[?&]camadas=1/.test(location.search);   /* ROUPA-SKIN EM CAMADAS: DESLIGADA (decisão final do dono: não haverá combinações de camadas para o jogador). O código (js/stage.js, bloco CAMADAS DA ROUPA-SKIN) fica inerte: com a chave desligada layNow() devolve null e o desenho é o de sempre, sem custo por quadro. Só para conferência: ?debug=1&camadas=1 */
 const NEXT_ON=true;   /* LOTE v0.12.8 (escrito, ainda NÃO visto rodando): cenário vivo da era 4, morte nova do Kael, inimigo parado animado e luta da instância. Trocar para true na conferência. */
 const ERAS=[
  {n:'Pré-História',icon:'🦴',sceneV2:true,sky:['#5aa7d6','#f2c37a'],mtn:'#7a5c3d',gr:'#5a6b2e',gr2:'#7a8a3e',sun:'#fff3c4',
@@ -371,14 +372,14 @@ const ERAS=[
   as:['Lona Cinza','Latão Escuro','Vapor Roxo','Engrenagem Rubra','Tesla Dourado'],
   wp:['#7a7a7a','#c07a3a','#a06ad0','#c03a3a','#ffd23f'], ap:['#5d5a55','#a8742e','#7a4aa8','#a02a2a','#e0b030'],
   en:[{n:'Autômato',s:'robot',c:'#a8742e'},{n:'Operário Rebelde',s:'h',c:'#6a6a6a'},{n:'Aranha Mecânica',s:'beast',c:'#8a6a3a'},{n:'Golem a Vapor',s:'robot',c:'#6a6f78'}]},
- {n:'Era Moderna',icon:'🪖',sky:['#223a5e','#7aa6c9'],mtn:'#34425a',gr:'#2e3a2e',gr2:'#445544',sun:'#f4f4f4',
+ {n:'Era Moderna',icon:'🪖',sceneV2:true,sky:['#223a5e','#7aa6c9'],mtn:'#34425a',gr:'#2e3a2e',gr2:'#445544',sun:'#f4f4f4',
   w:['Pistola 9mm','Fuzil de Assalto','Fuzil de Precisão','Minigun','Railgun Protótipo'],
   a:['Colete Tático','Armadura Kevlar','Traje Blindado','Exoesqueleto','Armadura Stealth'],
   ws:['Preto Fosco','Camuflagem','Aço Escovado','Vermelho Tático','Dourado Elite'],
   as:['Verde Oliva','Camuflado','Cinza Urbano','Vermelho Tático','Preto e Ouro'],
   wp:['#3a3a3a','#6b7a4a','#8aa0b0','#c0392b','#e8c040'], ap:['#5a6b4a','#6b7a4a','#4a5058','#a02a2a','#2a2a2a'],
   en:[{n:'Mercenário',s:'h',c:'#6b6b4a'},{n:'Drone',s:'robot',c:'#8a8f98'},{n:'Soldado Blindado',s:'h',c:'#3a4a3a'},{n:'Tanque Robô',s:'robot',c:'#5a6a4a'}]},
- {n:'Era Futurista',icon:'🚀',sky:['#0b0b2e','#5b2a8a'],mtn:'#1b1b4a',gr:'#15153a',gr2:'#2a2a7a',sun:'#9ad8ff',stars:true,
+ {n:'Era Futurista',icon:'🚀',sceneV2:true,sky:['#0b0b2e','#5b2a8a'],mtn:'#1b1b4a',gr:'#15153a',gr2:'#2a2a7a',sun:'#9ad8ff',stars:true,
   w:['Blaster Básico','Espada de Plasma','Rifle de Íons','Canhão de Antimatéria','Lâmina do Vazio'],
   a:['Traje Espacial','Nano-Armadura','Escudo de Energia','Armadura Quântica','Manto Cósmico'],
   ws:['Plasma Azul','Plasma Verde','Íon Violeta','Antimatéria','Vazio Dourado'],
@@ -726,7 +727,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
 ['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','auction','schedule'],['fc'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
-document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>');   /* módulo EonScene, carregado como está */
+document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c58')+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['battle','stage','mountfx','farm','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','artprev','intro','meta','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>
 'use strict';

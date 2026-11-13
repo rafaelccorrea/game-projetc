@@ -1633,3 +1633,33 @@ Achados: (1) montado de perfil só aparece UMA metade da asa na maior parte dos 
 ### Adendo: "pad duplo" das folhas não-paradas das fases 1 a 3 (aviso da Arte)
 Medido: nos `.json`, `xf.ox` de run/attack/spin é exatamente 96 px maior que o da idle nas fases 1, 2 e 3 (phase1 67,8 → 163,8; phase2 105,2 → 201,2; phase3 98,7 → 194,7). No navegador, SEM compensar, o adolescente/adulto/guerreiro correndo e golpeando apareciam deslocados para a direita da sombra (≈ 96 px da célula × escala da fase; print antigo da 1ª tentativa); COM a compensação ficam centrados na sombra como o parado (prints `v0128_fases_4_lado_a_lado_correndo/golpe/giro`). A compensação está num ponto só: `phasePadFix(M, idM)` em `js/stage.js` (lê `M.padFix` se a Arte gravar; senão a diferença do `xf.ox`). `pistol_run`/`pistol_shoot` por fase não são usadas pelo código. Se a Arte corrigir os PNG sem atualizar o `xf.ox`, o Kael vai pular 96 px para a ESQUERDA: aí basta gravar `"padFix": 0` nos json ou apagar a função. Não medi em px na tela com régua; a conferência foi a olho contra a sombra.
 `js/avatar.js` ainda não existe no disco: o retrato do cabeçalho não foi trocado. `drawHeroFull` tem o ctx como primeiro parâmetro; por dentro ela troca o `ctx` global da batalha só durante a chamada e devolve no `finally` (funciona com canvas fora da tela).
+
+## Engenheiro 3 — v0.12.8, fechamento para o APK (2026-11-12)
+
+Arquivos mexidos: `index.html`, `js/stage.js`, `js/battle.js`, `js/fullbattle.js`, `js/artprev.js`. `node --check` em todos; `run.js` 145 OK; `flows.js` "fluxos duros OK". Navegador: uma aba em `localhost:8080/?debug=1&fresh=1` (save em memória, `__noSave`); os 3 saves do armazenamento conferidos iguais ao backup no fim; aba fechada.
+
+### Feito e VISTO
+- **Morte por fase**: `dieSheet()` lê `Sys.appearance.sheetFor(..., 'die')` (pasta da fase), escala da fase, pés no chão, arma caindo. Vistas as 4 fases em 3 momentos (`v0128_morte_4fases.png`): garoto, adolescente, adulto e guerreiro morrem cada um com o seu corpo.
+- **96 px das fases 1-3 (depois da correção da Arte, cache refeito)**: `phasePadFix` deu 0,000 nas 3 fases (não mexi). Parado × correndo × golpe × giro: centro dos pés a no máximo 20 px da âncora em todas (medido por pixel), asa nas costas e arma na mão (`v0128_fases123_sem_pulo_96px.png`).
+- **Retrato do cabeçalho** (`js/fullbattle.js`): `#fb_kid` vira o canvas do `avatarFor(S, 50)` (mesmo círculo de 50 px); `avatarRefresh()` quando herói/fase mudam; sem o `avatar.js`, o de antes. Visto nos níveis 21 (garoto), 22 (adolescente), 35 (adulto), 70 (guerreiro): `v0128_avatar_cabecalho_{21,22,35,70}.png`.
+- **Cenários vivos das eras 5 e 6 ligados** (`sceneV2:true`); eras 7 e 8 (sem entrada na tabela ERAS) por prévia: `sceneForce(7|8)`, botões "Cenário: Submundo / Celestial / da era atual" no Modo dono e `?debug=1&scn=7`. `scene.js?v=VERSION-c58`. Vistos os 4 (`v0128_cenario_era{5,6,7,8}.png`). Custo do desenho da cena (PC, canvas 360x728, 150 quadros, `api.draw()`): era 5 1,15 ms · era 6 1,02 · era 7 2,06 · era 8 1,18 · era 4 1,68 · era 0 1,87 (95%: até 3,4 ms na era 7).
+- **Vitória com lobo + asa + pet** e **nome do chefe** ("SENHOR DA ERA · Rex Furioso") em luta real: `v0128_herofull_vitoria.png`.
+- **Evolução 21 → 22 de verdade** (subindo de nível): aviso, folha `evolve_0_1`, clarão, adolescente (`v0128_evolucao_21_22_depois.png`). 34 → 35 subindo de nível: adulto.
+- **Golpe montado nas 6 montarias** (cache refeito), 4 momentos do golpe (não os 17 quadros): arma no punho, sem guia preta, braço fantasma ou mancha (`v0128_golpe_montado_6_{preparo,golpe}.png`). No preparo a cabeça da maça passa em cima do rosto do Kael em cavalo, grifo, tigre, pônei e serpe (A-21, aberto).
+
+### Feito, só ESCRITO depois da última olhada (testes passam; não revisto no navegador)
+- `phaseCheck`: na carga chama `Sys.phaseUp.catchUp` (aplica tudo menos a última fase) e toca UMA evolução (a final) pelo `pending().anim`: folha com o herói (`sheet`, por herói) quando não há asa/montaria; com `layered` ou montado, herói antigo → `anim.fx` (troca no quadro 27) → herói novo; arquivo faltando = efeito por código. Rotina única (ninguém mais evolui).
+- **Subir de nível**: a folha `levelup` TRAZ o Kael garoto a pé desenhado; montado/fases 1-3 aparecia um segundo Kael criança por cima (VISTO: `v0128_herofull_levelup.png` é o print do DEFEITO). Agora ela só toca com Kael garoto a pé; nos outros casos coluna de luz + anel por código. Na evolução a animação de subir de nível não toca por cima. Aviso encurtado para "Evoluiu: Adolescente!" (o antigo era cortado pelos botões da esquerda).
+
+### Camadas da roupa-skin: escritas, vistas e DESLIGADAS (decisão final do dono)
+`LAYERS_ON` = falso (só liga com `?debug=1&camadas=1`); com a chave desligada `layNow()` devolve null e o desenho é o de antes, sem custo. Enquanto ligada foi vista nas 4 fases (tinta por máscara em cache, chapéu, óculos, aura; 1,14 ms/quadro com × 1,21-1,32 sem: sem diferença medível) e `drawHeroLayers(canvas, layers, dt)` funcionou em canvas da tela e fora da tela. Prints `v0128_camadas_4fases.png` e `v0128_fases_skin_34_35_{antes,depois}.png` são dessa função desligada. `drawHeroFull` ganhou só o campo opcional `state.layers`; assinatura igual.
+
+### NÃO feito
+- **Kaia (tarefa F)**: nada (KAIA_ON, pistola por herói/fase, `js/intro.js:88/102`).
+- Não vistos: `setView('missions')`, ícone da Oferta 24h, arma do nível 60 montado, meio da evolução com `anim.fx`, subir de nível com o efeito por código.
+
+### Achados para outros donos
+- **`js/p_era.js:11, 92, 131` (Troca de era)**: desenha o Kael GAROTO a pé, sem montaria, asa e pet, mesmo com jogador adolescente montado (VISTO: `v0128_herofull_era.png`). Precisa chamar `window.drawHeroFull`.
+- Arte: versão só-efeito da `levelup` (`levelup_fx`); `R/masks/kael_attack_head.json` e `kael_spin_head.json` dizem `w:256` mas as coordenadas estão na célula de 448.
+- Sistemas: `js/sys/level.js:83` aviso com emoji de estrela. Fluxos 4 e 5 do `flows.js` não são meus.
+- `js/avatar.js` desenha chapéu/óculos pelo `layers()`; hoje o módulo não devolve mais essas camadas.
