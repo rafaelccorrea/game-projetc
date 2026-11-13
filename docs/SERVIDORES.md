@@ -45,4 +45,8 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 |---|---|---|---|
 | 13/11/2026 | convidado "Viajante5696" (S1) | `fps-server/scripts/smoke-real.mjs` | teste automático contra o servidor real (cada execução cria **1** convidado novo "Viajante…" com save de nível 1) |
 
+| 13/11/2026 | +1 convidado "Viajante…" (S1) | `smoke-real.mjs` (2ª execução, com a conferência de CORS) | idem |
+
+**Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-6:8080). O app (`https://localhost`) fica fixo no código.
+
 Regra: toda nova execução do `smoke-real.mjs` em produção acrescenta uma linha aqui. Na limpeza, também conferir e apagar convidados de nível 1 sem compras criados pelo teste do QA.
