@@ -19,9 +19,9 @@
   const DATA = {
     min: 3, max: 14,
     roots: ['porra', 'bosta', 'cacete', 'idiota', 'otario', 'otaria', 'babaca', 'imbecil', 'foda', 'fode', 'foder',
-      'puta', 'vadia', 'viado', 'cuzao', 'shit', 'bitch', 'whore', 'slut', 'nazi', 'hitler'],   // no COMEÇO de um pedaço do nome ("MataPuta", "puta_x")
-    inside: ['merd', 'caralho', 'buceta', 'arrombad', 'fuck', 'asshole'],                      // em qualquer lugar (não aparecem dentro de palavra comum)
-    short: ['cu', 'fdp', 'vsf', 'pqp', 'krl', 'crl'],     // só valem como pedaço inteiro (separado por _ ou número, ou o nome todo)
+      'puta', 'vadia', 'viado', 'cuzao', 'shit', 'bitch', 'whore', 'slut', 'nazi', 'hitler', 'sexo', 'sexy', 'porno', 'putinh'],   // no COMEÇO de um pedaço do nome ("MataPuta", "puta_x")
+    inside: ['merd', 'caralho', 'karalho', 'kralho', 'buceta', 'xoxota', 'xereca', 'piroca', 'punheta', 'siririca', 'arrombad', 'fuck', 'asshole'],                      // em qualquer lugar (não aparecem dentro de palavra comum)
+    short: ['cu', 'fdp', 'vsf', 'pqp', 'krl', 'crl', 'vtnc', 'tnc', 'tmnc'],     // só valem como pedaço inteiro (separado por _ ou número, ou o nome todo)
     reserved: ['admin', 'adm', 'moderador', 'moderadora', 'mod', 'suporte', 'eonbound', 'gm', 'staff', 'oficial', 'sistema', 'system'],
     contact: ['zap', 'whats', 'wpp', 'insta', 'tiktok', 'face', 'telefone', 'tel', 'fone', 'email', 'gmail', 'hotmail', 'outlook', 'discord'],
     maxDigitsMinor: 4,
@@ -38,7 +38,8 @@
     for (const one of ['i', 'l']) {
       const all = collapse(leet(base(n), one).replace(/_/g, ''));
       if (DATA.inside.some(r => all.includes(collapse(r)))) return true;
-      const ps = pieces(n).flatMap(p => leet(base(p), one).split(/[0-9]+/)).filter(Boolean).map(collapse);
+      /* números como separador: "123puta"/"2025put4" — corta nos grupos de 2+ dígitos ANTES de trocar 1/3/4... por letras (senão "123" vira "iie" e gruda) */
+      const ps = pieces(n).flatMap(p => [p, ...base(p).split(/[0-9]{2,}/)]).flatMap(p => leet(base(p), one).split(/[0-9]+/)).filter(Boolean).map(collapse);
       if (ps.some(p => DATA.roots.some(r => p.startsWith(collapse(r))))) return true;
       if (ps.some(p => DATA.short.includes(p) || DATA.short.some(x => p === x + 's'))) return true;
       if (DATA.roots.some(r => all === collapse(r))) return true;

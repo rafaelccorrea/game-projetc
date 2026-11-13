@@ -24,4 +24,8 @@ t('menor (ou idade desconhecida): sem contato no nome; adulto pode números long
   assert.strictEqual(N.check('ZapDoKael').msg, 'Não use telefone, rede social ou e-mail no nome.');
 });
 t('troca: o nome atual não conta como novo', () => { assert.ok(!N.check('Kael', { current: 'Kael' }).ok); assert.ok(N.check('Kaelzinho', { current: 'Kael' }).ok); });
+t('palavrão com números antes/depois e grafias com k/x (pedido do dono)', () => {
+  for (const s of ['123puta', '2025put4', '99caralho', 'x0x0t4', 'k4r4lh0', 'vtnc', 'putinha', 's3x0']) assert.ok(!N.check(s).ok, s);
+  for (const s of ['Pauleta', 'Cassio', 'Escudo', 'Arsenal', 'Sextante', 'Computador', 'Putinzinho', 'Ana2010']) assert.ok(N.check(s).ok, s);
+});
 console.log(n + ' testes ok');
