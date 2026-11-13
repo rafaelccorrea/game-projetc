@@ -53,7 +53,18 @@ function check(tag) {
   assert(!/\b(alert|confirm|prompt)\(/.test(h), tag + ': diálogo do navegador'); assert(!/comprar|sorteio pago|R\$/i.test(h), tag + ': texto de venda');
   const imgs = [...h.matchAll(/(?:src="|url\()([^")]+)/g)].map(m => m[1]);
   for (const u of imgs) { assert(fs.existsSync(path.join(R, u)), tag + ': imagem não existe: ' + u); seenImgs.add(u); }
+  // QA 320 px: nenhum texto cortado com reticências (nem por estilo na própria marca) e nenhum aviso dentro do palco (o aviso fica no rodapé, fora do herói)
+  assert(!/text-overflow\s*:\s*ellipsis/.test(h), tag + ': reticências no HTML');
+  const sg = stageSeg(h); if (sg) { assert(!/p2-toast|p2-mbn|p2-fly|role="status"|role="alert"/.test(sg.in), tag + ': aviso dentro do palco');
+    const ni = h.indexOf('class="p2-notes"'); assert(ni > sg.b, tag + ': a faixa de avisos fica depois (fora) do palco');
+    for (const c of ['p2-toast', 'p2-mbn', 'p2-fly']) { const i = h.indexOf('class="' + c); if (i >= 0) { assert(i > ni, tag + ': ' + c + ' fora da faixa de avisos'); seenNotes.add(c); } } }
   return bt.length; }
+// o trecho do HTML que é o palco (do <div class="p2-stage"> até o </div> que o fecha)
+function stageSeg(h) { const a = h.indexOf('<div class="p2-stage"'); if (a < 0) return null; const re = /<div\b|<\/div>/g; re.lastIndex = a; let d = 0, m;
+  while ((m = re.exec(h))) { d += m[0] === '</div>' ? -1 : 1; if (d === 0) return { a, b: re.lastIndex, in: h.slice(a, re.lastIndex) }; } return null; }
+const seenNotes = new Set();
+const CSS = () => g.document.head.children.map(c => c.textContent).join('\n');
+const rule = sel => { const css = CSS(), i = css.indexOf('\n' + sel + '{'); assert(i >= 0, 'regra de estilo ausente: ' + sel); return css.slice(i + 1, css.indexOf('}', i) + 1); };
 // um quadro do palco: devolve o state entregue ao drawHeroFull
 function frame() { assert(raf.length >= 1, 'o laço do palco está rodando'); drew = []; const f = raf.shift(); f(1000); assert.strictEqual(drew.length, 1, 'um desenho por quadro'); return drew[0].st; }
 const sheetsOk = base => ['idle', 'run', 'atk1'].forEach(k => ['.png', '.json'].forEach(x => assert(fs.existsSync(path.join(R, 'assets/anim/pets/' + base + '_' + k + x)), 'folha não existe: ' + base + '_' + k + x)));
@@ -123,7 +134,7 @@ out.push('alimentar: Sys.pet.feedTap, ração e nível mudam; sem ração e teto
   const e0 = P.evolve; let calls = 0; P.evolve = function () { calls++; return e0.apply(P, arguments); };
   def.click(btn('evo')); assert.strictEqual(calls, 1, 'Evoluir chama Sys.pet.evolve'); assert.strictEqual(pStg(), 1, 'estágio mudou no save'); has(SN[1] + '</span>'); has('evoluiu para ' + SN[1]); has('p2-flash'); check('evoluir');
   assert.strictEqual(frame().pet.base, 'era0_mammoth', 'nos primeiros 0,7 s o herói ainda mostra o estágio antigo'); clock += 800; assert.strictEqual(frame().pet.base, 'era0_mammoth_mid', 'depois troca para o estágio novo');
-  def.render(); has(SN[1].toUpperCase() + '!'); clock += 3000; def.tick(); not('p2-flash'); not('p2-mbn'); not('p2-toast'); has('Mamute ' + SN[1]);
+  def.render(); has(SN[1].toUpperCase() + '!'); has('class="p2-mbn'); check('estágio novo'); clock += 3000; def.tick(); not('p2-flash'); not('p2-mbn'); not('p2-toast'); has('Mamute ' + SN[1]);
   P.evolve = e0; }
 function pStg() { return P.stage(g.S, 'wolf').index; }
 out.push('evoluir: Sys.pet.evolve, estágio muda no save e no herói (clarão, faixa do estágio); os efeitos somem sozinhos');
@@ -165,6 +176,37 @@ out.push('desenho do jogo com erro ou ausente: imagem parada do pet, sem exceç�
 // 15) tela baixa (aparelho curto) e larguras de 320 e 390: desenha igual; fechar para o laço
 { for (const w of [320, 390]) { g.xDims = () => ({ H: 560, Wb: w }); def.onOpen(); def.render(); check('largura ' + w); has('PODER (FC)'); } g.xDims = () => ({});
   def.onOpen(); def.render(); assert(raf.length >= 1); def.onClose(); assert.strictEqual(raf.length, 0, 'fechar para o laço'); }
+// 15b) QA 320 px, defeito 1: nenhum título cortado com reticências. A folha de estilo da tela não usa text-overflow:ellipsis em lugar nenhum, e os
+// títulos e rótulos (nome do pet, raridade, estágio, botões, faixa do herói, células da grade) quebram linha em vez de cortar
+{ const css = CSS(); assert(!/text-overflow\s*:\s*ellipsis/.test(css), 'a folha de estilo não corta texto com reticências');
+  for (const sel of ['.p2-who>span', '.p2-dn', '.p2-cn', '.p2-cs', '.p2-bt>span,.p2-bt>small', '.p2-sc small', '.p2-odd .n', '.p2-lvb em', '.p2-fc b.v']) { const r = rule(sel);
+    assert(/white-space:normal/.test(r) && /overflow-wrap:anywhere/.test(r), sel + ': quebra linha'); assert(!/white-space:nowrap|overflow:hidden/.test(r), sel + ': não corta'); }
+  assert(!/white-space:nowrap/.test(rule('.p2-who')), 'a faixa do herói não prende o texto numa linha só');
+  assert(/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/.test(css) && /\.p2-bt\{flex:1 1 0;min-width:0;min-height:40px/.test(css), 'sem rolagem lateral: colunas minmax(0,1fr), botões com min-width:0 e toque de 40 px');
+  out.push('320 px: nenhuma regra com reticências; nome, raridade, estágio, botões e células da grade quebram linha'); }
+// 15c) defeito 2: os avisos (mensagem, nome do estágio novo, "+poder") ficam numa faixa no RODAPÉ da tela, fora do palco (conferido em toda tela pelo check)
+{ const n = rule('.p2-notes'); assert(/position:absolute/.test(n) && /bottom:\d+px/.test(n) && !/[;{]top:/.test(n), 'a faixa de avisos é presa ao rodapé');
+  assert(/pointer-events:none/.test(n), 'a faixa de avisos não segura toque');
+  for (const sel of ['.p2-toast', '.p2-mbn', '.p2-fly']) { const r = rule(sel); assert(!/position:absolute|position:fixed|[;{]top:|[;{]left:/.test(r), sel + ': sem posição própria (segue a faixa do rodapé)'); }
+  assert.deepStrictEqual([...seenNotes].sort(), ['p2-fly', 'p2-mbn', 'p2-toast'], 'os três avisos apareceram em alguma tela conferida, sempre fora do palco');
+  g.S = { sys: {}, hero: 'kael' }; o().first = true; def.onOpen(); def.render(); def.click(btn('pet', { id: 'falcon' })); has('class="p2-toast"'); const sg = stageSeg(H()); assert(sg && H().indexOf('class="p2-toast"') > sg.b && !sg.in.includes('Prévia: Falcão de guerra no herói'), 'o aviso da prévia fica fora do palco');
+  def.click(btn('sair')); out.push('avisos: faixa no rodapé (.p2-notes), nunca dentro do palco'); }
+// 15d) defeito 3: abrir NÃO mostra "Carregando as imagens". A tela pede as imagens ao Preload ao abrir (antes de desenhar) e desenha na hora
+{ const asked = []; let ready = false, calls = 0; g.Preload = { ready(u) { calls++; asked.push(...u); return Promise.resolve({ ok: true, failed: [] }); }, has: () => ready };
+  const poster = () => { g.V.innerHTML = '<span>Carregando as imagens</span>'; return true; }; g.xGate = poster; g.pGate = poster; g.pwGate = poster;   // a espera antiga, se a tela ainda a chamasse
+  g.S = { sys: {}, hero: 'kael' }; o().first = true; o().owned.wolf = { stars: 1, frags: 0, lvl: 1 }; o().owned.owl = { stars: 2, frags: 0, lvl: 12, stg: 1 }; o().eq = 'wolf';
+  g.V.innerHTML = ''; def.onOpen(); assert(calls >= 1 && H() === '', 'as imagens são pedidas ao abrir, ANTES de desenhar');
+  def.render(); not('Carregando'); has('id="p2_cv"'); has('PODER (FC)'); assert.strictEqual((H().match(/data-x="pet"/g) || []).length, 11, 'imagens ainda chegando: a tela inteira já está desenhada');
+  const srcs = [...H().matchAll(/src="([^"]+)"/g)].map(m => m[1]); assert(srcs.length >= 15, 'miniaturas da grade, do pet e dos estágios');
+  for (const u of srcs) assert(asked.includes(u), 'imagem da primeira vista não foi pedida ao Preload: ' + u);
+  assert(asked.includes('assets/pets/era1_sphinx_mid.png'), 'a miniatura da grade é a do estágio de verdade do pet'); assert.strictEqual(new Set(asked).size, asked.length, 'cada imagem é pedida uma vez só');
+  const n0 = calls, nOpen = asked.length; def.render(); def.tick(); assert.strictEqual(calls, n0, 'redesenhar não pede de novo');
+  ready = true; def.click(btn('pet', { id: 'falcon' })); def.click(btn('stg', { i: 2 })); not('Carregando'); has('<span>Prévia: Falcão de guerra'); assert.strictEqual(calls, n0, 'o Preload diz que estão prontas: nada é pedido e a tela desenha direto');
+  ready = false; def.click(btn('pet', { id: 'drake' })); not('Carregando'); has('<span>Prévia: Dragão'); assert(calls > n0 && asked.includes('assets/pets/era2_dragon_evo.png'), 'trocar o pet escolhido pede as imagens novas dele');
+  check('carga');
+  g.Preload = { ready() { throw new Error('boom'); }, has() { throw new Error('boom'); } }; def.onOpen(); def.render(); has('PODER (FC)'); not('Carregando');   // pré-carregador com erro: a tela não depende dele
+  delete g.Preload; delete g.xGate; delete g.pGate; delete g.pwGate; def.onOpen(); def.render(); has('PODER (FC)');
+  out.push('carga: ao abrir pede ' + nOpen + ' imagens ao Preload antes de desenhar; desenha na hora, sem o cartaz "Carregando as imagens"; pronta no Preload = não pede'); }
 // 16) cobertura: todas as ações da tela apareceram em algum botão e todas as imagens paradas dos 11 pets existem
 { const never = def.actions.filter(a => !seenActs.has(a)); assert.deepStrictEqual(never, [], 'ação sem botão em nenhum estado: ' + never.join(','));
   for (const p of D.pets.filter(p => p.sprite && !p.removed)) for (const s of ['ref', 'mid', 'evo']) { const u = 'assets/pets/' + p.sprite + '_' + s + '.png'; if (['wolf', 'owl', 'shadowwolf', 'falcon', 'drake', 'parrot', 'panther', 'golem', 'underworld', 'celestial', 'prism'].includes(p.id)) assert(fs.existsSync(path.join(R, u)), 'falta ' + u); }

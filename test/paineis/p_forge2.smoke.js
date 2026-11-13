@@ -48,7 +48,19 @@ const btn = (x, o) => ({ dataset: Object.assign({ x }, o || {}) });
 const sane = what => { const bt = buttons(); assert(bt.length >= 1, what + ': sem botões');
   for (const b of bt) { assert(b.dataset.x, what + ': botão sem data-x: ' + b.tag); assert(def.actions.includes(b.dataset.x), what + ': ação não tratada: ' + b.dataset.x); assert(!/\sdisabled[\s>=]/.test(b.tag), what + ': botão morto (disabled): ' + b.tag); }
   assert(!/\p{Extended_Pictographic}/u.test(H()), what + ': tem emoji'); assert(!/undefined|NaN|\bnull\b|\[object/.test(H()), what + ': texto quebrado: ' + (H().match(/.{30}(undefined|NaN|\bnull\b|\[object).{30}/) || [''])[0]);
-  assert(!/comprar|sorteio/i.test(H().replace(/<style[\s\S]*?<\/style>/g, '')), what + ': texto proibido'); return bt.length; };
+  assert(!/comprar|sorteio/i.test(H().replace(/<style[\s\S]*?<\/style>/g, '')), what + ': texto proibido');
+  // QA 320 px: nada cortado com reticências por estilo na própria marca; nenhum aviso dentro do palco nem com posição própria (os avisos ficam na faixa do rodapé)
+  const h = H(); assert(!/text-overflow\s*:\s*ellipsis/.test(h), what + ': reticências no HTML');
+  const sg = stageSeg(h); if (sg) { assert(!/f2-toast|f2_toast|f2-ban|f2-fly|role="status"|role="alert"/.test(sg.in), what + ': aviso dentro do palco');
+    const ni = h.indexOf('class="f2-notes"'); assert(ni > sg.b, what + ': a faixa de avisos fica depois (fora) do palco'); const ti = h.indexOf('id="f2_toast"'); assert(ti > ni, what + ': o aviso mora na faixa do rodapé');
+    for (const c of ['f2-toast', 'f2-ban', 'f2-fly']) for (const m of h.matchAll(new RegExp('<div class="' + c + '[ "][^>]*>', 'g'))) { assert(m.index > ni, what + ': ' + c + ' fora da faixa de avisos'); assert(!/[";]top:|[";]left:/.test(m[0]), what + ': ' + c + ' com posição própria: ' + m[0]); seenNotes.add(c); } }
+  return bt.length; };
+// o trecho do HTML que é o palco (do <div class="f2-stage"> até o </div> que o fecha)
+function stageSeg(h) { const a = h.indexOf('<div class="f2-stage"'); if (a < 0) return null; const re = /<div\b|<\/div>/g; re.lastIndex = a; let d = 0, m;
+  while ((m = re.exec(h))) { d += m[0] === '</div>' ? -1 : 1; if (d === 0) return { a, b: re.lastIndex, in: h.slice(a, re.lastIndex) }; } return null; }
+const seenNotes = new Set();
+const CSS = () => g.document.head.children.map(c => c.textContent).join('\n');
+const rule = sel => { const css = CSS(), i = css.indexOf('\n' + sel + '{'); assert(i >= 0, 'regra de estilo ausente: ' + sel); return css.slice(i + 1, css.indexOf('}', i) + 1); };
 const st = () => F.ensure(g.S);
 const give = (stones, gold) => { st().stones = stones; g.S.gold = gold; };
 const setF = (slot, lv, pity) => { st().lv[slot] = lv; st().pity[slot] = pity || 0; };
@@ -89,6 +101,7 @@ out.push('forjar: acerto sobe o +N e cobra pedras e ouro; falha mantém o nível
 
 // 4) sem pedras / sem ouro / no teto: o botão explica e NÃO tenta
 t0 = st().tries; give(0, 1e6); def.render(); has('aria-disabled="true"'); def.click(btn('forge')); assert.strictEqual(st().tries, t0); assert(/Faltam pedras/.test(X.toast));
+def.render(); has('class="f2-toast"'); has('Faltam pedras de forja'); sane('aviso de falta de pedras');   // o aviso aparece, e fora do palco (o sane confere)
 give(500, 0); def.render(); def.click(btn('auto')); assert.strictEqual(st().tries, t0); assert(/Falta ouro/.test(X.toast)); assert.strictEqual(X.busy, false);
 give(500, 1e6); setF('weapon', F.capOf(host), 0); def.render(); has('no teto da era'); has('Teto da era: <b>+' + F.capOf(host) + '</b>'); not('data-x="forge"'); def.click(btn('forge')); assert.strictEqual(st().tries, t0); assert(/Teto da/.test(X.toast)); sane('teto');
 out.push('sem pedras, sem ouro e no teto da era: explica e não chama a tentativa');
@@ -153,4 +166,26 @@ g.S = newSave(); setLv(60); g.S.inv = [{ id: 1, slot: 'weapon', e: 4, r: 2, lvl:
 let taps = 0; for (const tab of ['forge', 'trans']) { def.onOpen({ tab }); def.render(); for (const b of buttons()) { def.onOpen({ tab }); def.render(); try { def.click(b); flush(); taps++; } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } sane('toque ' + b.dataset.x); } }
 def.tick(); def.onClose(); assert.strictEqual(def.busy(), false);
 out.push('toques: ' + taps + ' botões das abas tocados sem exceção, tela sempre íntegra');
+
+// 12) QA 320 px, defeito 1: nenhum título cortado com reticências. A folha de estilo não usa text-overflow:ellipsis em lugar nenhum e os títulos e
+// rótulos (espaço e nome do item, raridade, linha da Forja, abas, botões, células de custo, lista, tabela) quebram linha em vez de cortar
+{ const css = CSS(); assert(!/text-overflow\s*:\s*ellipsis/.test(css) && !/text-overflow\s*:\s*ellipsis/.test(SRC), 'a folha de estilo não corta texto com reticências');
+  for (const sel of ['.f2-who span', '.f2-dn', '.f2-dh', '.f2-tab', '.f2-bt span', '.f2-bt small', '.f2-chn small', '.f2-sts small', '.f2-sts b', '.f2-sts em', '.f2-row .tx b', '.f2-row .tx small', '.f2-ac small', '.f2-tbl>span', '.f2-fcb b', '.f2-fcb em', '.f2-slot .sl', '.f2-trio .q small', '.f2-bands small']) { const r = rule(sel);
+    assert(/white-space:normal/.test(r) && /overflow-wrap:anywhere/.test(r), sel + ': quebra linha'); assert(!/white-space:nowrap|overflow:hidden/.test(r), sel + ': não corta'); }
+  assert(!/white-space:nowrap|[;{]height:/.test(rule('.f2-who')) && !/[;{]height:/.test(rule('.f2-tab')), 'a faixa do herói e as abas crescem com o texto (sem altura fixa)');
+  assert(/min-height:40px/.test(rule('.f2-tab')) && /min-height:44px/.test(rule('.f2-bt')) && /min-width:0/.test(rule('.f2-bt')), 'toque de pelo menos 40 px e botões que encolhem (min-width:0)');
+  assert(/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/.test(css) && /repeat\(2,minmax\(0,1fr\)\)/.test(SRC), 'sem rolagem lateral: colunas minmax(0,1fr)');
+  // o caso do QA: espaço "Chapéu/Elmo" vazio, em 320 px
+  g.xDims = () => ({ H: 560, Wb: 320 }); def.onOpen({ slot: 'hat' }); def.render(); has('Chapéu/Elmo · espaço vazio'); has('grid-template-columns:repeat(2,minmax(0,1fr))'); sane('320 px'); g.xDims = () => ({});
+  out.push('320 px: nenhuma regra com reticências; espaço, item, raridade, abas, botões, custos, lista e tabela quebram linha'); }
+// 13) defeito 2: os avisos (mensagem, faixas do resultado, "+FC") ficam numa faixa no RODAPÉ da tela, fora do palco (conferido em toda tela pelo sane)
+{ const n = rule('.f2-notes'); assert(/position:absolute/.test(n) && /bottom:\d+px/.test(n) && !/[;{]top:/.test(n), 'a faixa de avisos é presa ao rodapé'); assert(/pointer-events:none/.test(n), 'a faixa de avisos não segura toque');
+  for (const sel of ['.f2-toast', '.f2-ban', '.f2-fly']) { const r = rule(sel); assert(!/position:absolute|position:fixed|[;{]top:|[;{]left:/.test(r), sel + ': sem posição própria (segue a faixa do rodapé)'); }
+  assert.deepStrictEqual([...seenNotes].sort(), ['f2-ban', 'f2-fly', 'f2-toast'], 'os três avisos apareceram em alguma tela conferida, sempre fora do palco');
+  out.push('avisos: faixa no rodapé (.f2-notes), nunca dentro do palco nem com top próprio'); }
+// 14) defeito 3: a Forja V2 não tem espera de imagens (nenhum cartaz de carregamento): desenha na hora mesmo com a espera do jogo dizendo "ainda não"
+{ assert(!/\b(xGate|pGate|pwGate|pWait)\s*\(/.test(SRC), 'a tela não chama a espera de imagens');
+  const poster = () => { g.V.innerHTML = '<span>Carregando as imagens</span>'; return true; }; g.xGate = poster; g.pGate = poster; g.pwGate = poster; g.Preload = { ready: () => Promise.resolve({ ok: false, failed: [] }), has: () => false };
+  def.onOpen(); def.render(); not('Carregando'); has('PODER (FC)'); has('id="f2_stc"'); sane('sem cartaz'); delete g.xGate; delete g.pGate; delete g.pwGate; delete g.Preload; def.onClose();
+  out.push('carga: a Forja V2 desenha na hora, sem cartaz de carregamento'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

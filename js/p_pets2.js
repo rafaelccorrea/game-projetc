@@ -59,8 +59,8 @@ const P2_SVG={
 .p2-in{animation:p2k-in .25s ease-out both}
 @keyframes p2k-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .p2-stage{position:relative;flex:none;overflow:hidden;background:radial-gradient(110% 70% at 50% 60%,rgba(94,240,160,.18),rgba(94,240,160,0) 62%)}
-.p2-who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
-.p2-who>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.p2-who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;line-height:1.15;max-width:94%}
+.p2-who>span{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center;padding:3px 0}
 .p2-who>i{flex:none;width:7px;height:7px;border-radius:50%;background:#5ef0a0;box-shadow:0 0 8px #5ef0a0}
 .p2-who.pv{padding:2px 2px 2px 10px;background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22));border-color:#ffd25e;color:#ffd25e}
 .p2-who.pv>i{background:#ffd25e;box-shadow:0 0 8px #ffd25e}
@@ -68,12 +68,12 @@ const P2_SVG={
 .p2-food{position:absolute;z-index:3;right:8px;bottom:6px;display:flex;align-items:center;gap:4px;height:28px;padding:0 9px 0 5px;border-radius:14px;background:rgba(5,8,28,.7);border:1px solid rgba(130,150,255,.28);font-weight:900;font-size:12px;font-variant-numeric:tabular-nums}
 .p2-fc{position:relative;flex:none;display:flex;align-items:center;gap:8px;margin:2px 12px 0;padding:4px 10px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5);min-width:0}
 .p2-fc small{display:block;font-size:9px;letter-spacing:1.2px;color:#ffd25e;font-weight:900}
-.p2-fc b.v{display:block;font-size:26px;line-height:1;color:#ffd25e;text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p2-fc b.v{display:block;font-size:26px;line-height:1;color:#ffd25e;text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);font-variant-numeric:tabular-nums;white-space:normal;overflow-wrap:anywhere}
 .p2-chip{flex:none;max-width:52%;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:10px;font-weight:900;color:#9aa6d6;text-align:right;overflow-wrap:anywhere}
 .p2-chip b{color:#eef1ff;font-size:12px}
-.p2-bt{flex:1 1 0;min-width:0;min-height:40px;padding:0 6px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:#1c1206!important;box-shadow:0 3px 0 #9a5a10;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;overflow:hidden}
+.p2-bt{flex:1 1 0;min-width:0;min-height:40px;padding:3px 6px;text-align:center;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:#1c1206!important;box-shadow:0 3px 0 #9a5a10;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;overflow:hidden}
 .p2-bt:active{transform:translateY(2px)}
-.p2-bt>span,.p2-bt>small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p2-bt>span,.p2-bt>small{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .p2-bt>small{font-size:10px;font-weight:900;opacity:.9}
 .p2-bt.on{background:rgba(94,240,160,.12);color:#5ef0a0!important;box-shadow:none;border:2px solid #5ef0a0}
 .p2-bt.off{background:rgba(255,255,255,.06);color:#9aa6d6!important;box-shadow:none;border:1px solid rgba(130,150,255,.28)}
@@ -88,15 +88,16 @@ const P2_SVG={
 .p2-tag{display:inline-block;font-size:9px;font-weight:900;letter-spacing:1px;padding:1px 6px;border-radius:6px;background:#ffd25e;color:#1c1206;vertical-align:2px;margin-right:4px}
 .p2-tag.eq{background:#5ef0a0;color:#043018}
 .p2-tag.sn{background:#9aa6d6;color:#0b1030}
-.p2-dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p2-dn{font-weight:900;font-size:14px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
 .p2-rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
 .p2-dh{font-size:11px;color:#9aa6d6;font-weight:800;overflow-wrap:anywhere;line-height:1.25}
 .p2-stars{flex:none;display:flex;gap:1px}
-.p2-lvb{margin-top:6px;position:relative;height:20px;border-radius:10px;background:rgba(5,8,28,.6);border:1px solid rgba(130,150,255,.28);overflow:hidden}
+.p2-lvb{margin-top:6px;position:relative;min-height:20px;border-radius:10px;background:rgba(5,8,28,.6);border:1px solid rgba(130,150,255,.28);overflow:hidden}
 .p2-lvb>i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#22c47a,#7dffb8);border-radius:10px;transition:width .25s}
 .p2-lvb>i.cap{background:linear-gradient(90deg,#f4a52a,#ffe58a)}
-.p2-lvb>span{position:relative;display:flex;justify-content:space-between;gap:6px;padding:0 9px;line-height:18px;font-size:11px;font-weight:900;white-space:nowrap;text-shadow:0 1px 2px #000}
-.p2-lvb em{font-style:normal;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.p2-lvb>span{position:relative;display:flex;justify-content:space-between;gap:6px;padding:0 9px;line-height:18px;font-size:11px;font-weight:900;text-shadow:0 1px 2px #000}
+.p2-lvb b{flex:none;white-space:nowrap}
+.p2-lvb em{font-style:normal;min-width:0;text-align:right;white-space:normal;overflow-wrap:anywhere;line-height:1.15;align-self:center}
 .p2-cmp{display:flex;align-items:center;flex-wrap:wrap;gap:2px 6px;margin-top:6px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
 .p2-cmp small{flex:1 1 100%;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9aa6d6;min-width:0;overflow-wrap:anywhere}
 .p2-cmp .a{color:#9aa6d6;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -120,11 +121,12 @@ const P2_SVG={
 .p2-cell.sel{outline:3px solid #ffd25e;outline-offset:1px}
 .p2-pi{width:100%;aspect-ratio:1/.8;display:block;object-fit:contain}
 .p2-cell.lk .p2-pi{filter:grayscale(1) brightness(.55)}
-.p2-cn{font-size:10px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:13px}
-.p2-cs{font-size:9px;font-weight:900;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px;line-height:12px;color:#9aa6d6}
+.p2-cn{font-size:10px;font-weight:900;text-align:center;white-space:normal;overflow-wrap:anywhere;padding:0 2px;line-height:12px;min-height:24px;display:flex;align-items:center;justify-content:center}
+.p2-cs{font-size:9px;font-weight:900;text-align:center;white-space:normal;overflow-wrap:anywhere;padding:0 2px;line-height:11px;color:#9aa6d6}
 .p2-cs.r{color:var(--rc)}
 .p2-bdg{position:absolute;left:3px;top:3px;font-size:7px;font-weight:900;padding:1px 4px;border-radius:4px;letter-spacing:.3px;line-height:10px;background:#5ef0a0;color:#043018}
 .p2-bdg.ev{left:auto;right:3px;background:#ffd25e;color:#1c1206}
+.p2-bdg+.p2-bdg.ev{top:15px}
 .p2-lki{position:absolute;right:4px;top:4px;width:14px;height:14px}
 .p2-ss{display:flex;justify-content:center;line-height:10px}
 .p2-stg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -132,27 +134,29 @@ const P2_SVG={
 .p2-sc[aria-pressed="true"]{border:2px solid #ffd25e}
 .p2-sc .p2-pi{aspect-ratio:1/.7}
 .p2-sc.no .p2-pi{filter:grayscale(.9) brightness(.6)}
-.p2-sc b{font-size:11px;font-weight:900;text-align:center}
-.p2-sc small{font-size:9px;font-weight:900;text-align:center;color:#9aa6d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.p2-sc b{font-size:11px;font-weight:900;text-align:center;line-height:1.15;overflow-wrap:anywhere;padding:0 2px}
+.p2-sc small{font-size:9px;font-weight:900;text-align:center;color:#9aa6d6;white-space:normal;overflow-wrap:anywhere;line-height:1.15;padding:0 2px}
 .p2-sc small.up{color:#5ef0a0}
 .p2-kv{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;padding:4px 0;border-top:1px solid rgba(130,150,255,.15);min-width:0}
 .p2-kv.f{border-top:0}
 .p2-kv>span:first-child{color:#9aa6d6;flex:none;max-width:42%;overflow-wrap:anywhere}
 .p2-kv>span:last-child{text-align:right;min-width:0;overflow-wrap:anywhere}
 .p2-odd{display:flex;align-items:center;gap:8px;min-height:22px;font-size:12px;font-weight:900;min-width:0}
-.p2-odd .n{flex:0 1 44%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p2-odd .n{flex:0 1 44%;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
 .p2-odd .bar{flex:1;min-width:0;height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
 .p2-odd .bar>span{display:block;height:100%;background:var(--rc);border-radius:4px}
 .p2-odd .pc{flex:none;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
 .p2-rowb{display:flex;gap:6px;margin-top:8px;min-width:0}
 .p2-flash{position:absolute;inset:0;z-index:4;pointer-events:none;animation:p2k-flash .9s ease-out both}
 @keyframes p2k-flash{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
-.p2-mbn{position:absolute;left:0;right:0;top:34%;z-index:5;text-align:center;pointer-events:none;font-size:32px;letter-spacing:2px;text-shadow:0 0 22px currentColor,0 3px 0 rgba(0,0,0,.55);animation:p2k-mbn 1.6s ease-out both}
+.p2-notes{position:absolute;left:12px;right:12px;bottom:10px;z-index:6;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;min-width:0}
+.p2-notes>*{max-width:100%;min-width:0;text-align:center;overflow-wrap:anywhere;background:rgba(5,8,28,.94);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.p2-mbn{padding:4px 16px;border-radius:14px;border:2px solid currentColor;font-size:24px;line-height:1.1;letter-spacing:2px;text-shadow:0 0 18px currentColor,0 2px 0 rgba(0,0,0,.55);animation:p2k-mbn 1.6s ease-out both}
 @keyframes p2k-mbn{0%{opacity:0;transform:scale(.4)}18%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
-.p2-toast{position:absolute;left:50%;top:50px;z-index:6;transform:translateX(-50%);padding:7px 14px;border-radius:13px;background:rgba(5,8,28,.92);border:1px solid rgba(160,180,255,.5);font-weight:900;font-size:12px;text-align:center;line-height:1.25;max-width:92%;overflow-wrap:anywhere;pointer-events:none;animation:p2k-toast 2.2s ease-out both}
+.p2-toast{padding:7px 14px;border-radius:13px;border:1px solid rgba(160,180,255,.5);font-weight:900;font-size:12px;line-height:1.25;animation:p2k-toast 2.2s ease-out both}
 @keyframes p2k-toast{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
-.p2-fly{position:absolute;z-index:6;left:50%;bottom:8px;transform:translateX(-50%);font-size:24px;pointer-events:none;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.5);animation:p2k-fly 1.6s ease-out both}
-@keyframes p2k-fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-50px)}}
+.p2-fly{padding:2px 14px;border-radius:13px;border:1px solid rgba(160,180,255,.35);font-size:20px;line-height:1.2;text-shadow:0 2px 0 rgba(0,0,0,.5);animation:p2k-fly 1.6s ease-out both}
+@keyframes p2k-fly{0%{opacity:0;transform:translateY(8px) scale(.9)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 @media (prefers-reduced-motion:reduce){.p2-root *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 `; document.head.appendChild(st); })();
 
@@ -272,6 +276,9 @@ function pRender(){
       ${who}
       <span class="p2-food" role="img" aria-label="Ração: ${n0(o.food)}">${P2_SVG.bowl}<span id="p2_food">${esc2(gNum(o.food))}</span></span>
       ${XP.fx&&fxAge<950?`<span class="p2-flash" aria-hidden="true" style="background:radial-gradient(circle at 46% 72%,rgba(255,250,225,.9),${pHexA(XP.fx.c,0.45)} 30%,transparent 62%);animation-delay:-${fxAge|0}ms"></span>`:''}
+    </div>`;
+  /* AVISOS: faixa no RODAPÉ da tela, fora do palco (nada de texto por cima do herói): nome do estágio novo, "+poder" e a mensagem */
+  const notes=`<div class="p2-notes" id="p2_notes">
       ${XP.fx&&fxAge>=500&&fxAge<2100?`<span class="p2-mbn p2-lil" role="status" style="color:${XP.fx.c};animation-delay:-${(fxAge-500)|0}ms">${esc2(String(XP.fx.txt).toUpperCase())}!</span>`:''}
       ${XP.fly&&flyAge<1600?`<span class="p2-fly p2-lil ${XP.fly.d>0?'p2-up':'p2-dn2'}" aria-hidden="true" style="animation-delay:-${flyAge|0}ms">${XP.fly.d>0?'+':'−'}${esc2(pFcT(Math.abs(XP.fly.d)))} de poder</span>`:''}
       ${XP.toast&&tAge<2200?`<span class="p2-toast" role="status" style="animation-delay:-${tAge|0}ms">${esc2(XP.toast)}</span>`:''}
@@ -385,7 +392,7 @@ function pRender(){
 
   const compact=H<620;   /* tela baixa: a faixa do pet rola junto com o resto para a lista não sumir */
   V.innerHTML=xWrap(d,'p2-root '+(XP.anim?'p2-in':''),`${stage}${fcrow}${compact?'':det}
-    <div id="p2_scroll" class="x-scroll p2-body">${compact?det:''}${grid}${about}${eggs}</div>`);
+    <div id="p2_scroll" class="x-scroll p2-body">${compact?det:''}${grid}${about}${eggs}</div>${notes}`);
   XP.anim=false;
   if(y0){ const sc=document.getElementById('p2_scroll'); if(sc) sc.scrollTop=y0; }
   pStart();
@@ -448,18 +455,26 @@ function pClick(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototyp
   if(!pReady()||pHidden()) return;
   const P=pP(); return ACT[a](b,{P,host:pHost(),o:pSave(),list:pList()}); }
 
-/* imagens que a tela mostra agora (para a espera de carga do jogo, xGate): o ovo e o desenho parado de cada pet nos estágios que aparecem */
+/* imagens que a tela mostra agora: o ovo e o desenho parado de cada pet nos estágios que aparecem (miniaturas da grade e os 3 estágios do pet escolhido).
+   A tela NÃO espera por elas com cartaz de carregamento (o QA viu "Carregando as imagens" ao abrir): pAsk() PEDE a carga ao pré-carregador do jogo
+   (window.Preload.ready, o mesmo cache das <img>) ao abrir e antes de cada desenho, e a tela desenha na hora com o que tem; cada <img> se completa sozinha
+   quando o arquivo chega. Cada URL é pedida uma vez só; a que o Preload já tem (Preload.has) nem é pedida. Sem o Preload, as <img> carregam como sempre. */
+const p2Asked={};
+function pAsk(){ try{ const PL=window.Preload; if(!PL||typeof PL.ready!=='function') return; const need=[];
+    for(const u of pUrls()){ if(p2Asked[u]) continue; p2Asked[u]=1; if(typeof PL.has==='function'&&PL.has(u)) continue; need.push(u); }
+    if(need.length){ const p=PL.ready(need); if(p&&typeof p.then==='function') p.then(()=>{},()=>{}); } }catch(e){} }
 function pUrls(){ const u=['assets/pets/pet_egg.png']; try{ if(!pReady()) return u; const o=pSave(); for(const d of pList()){ u.push(pImg(d,o.owned[d.id]?pStgOf(d.id):0)); }
     const s=XP.pv&&!XP.pv.soon?pDef(XP.pv.id):(o.eq?pDef(o.eq):null); if(s&&s.sprite) for(let i=0;i<3;i++) if(u.indexOf(pImg(s,i))<0) u.push(pImg(s,i)); }catch(e){} return u; }
 
 if(!('pets2' in PANEL_ON)) PANEL_ON.pets2=false;
 Panels.add(P2,{title:'Pets',actions:Object.keys(ACT),
-  render(){ if(typeof xGate==='function'&&xGate(pUrls())) return; return pRender(); },
-  click(b){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return pClick(b); },
+  render(){ pAsk(); return pRender(); },
+  click(b){ return pClick(b); },
   /* 4x por segundo: a ração do topo e a limpeza do aviso, do "+poder" e do clarão quando o tempo deles acaba */
   tick(){ if(!pReady()||pHidden()) return; const el=document.getElementById('p2_food'); if(el){ const t=gNum(pSave().food); if(el.textContent!==t) el.textContent=t; }
     if(XP.until&&pNow()>XP.until){ XP.until=0; if(XP.fx&&pNow()-XP.fx.t>2100) XP.fx=null; if(XP.fly&&pNow()-XP.fly.t>1600) XP.fly=null; if(XP.toast&&pNow()-XP.toastT>2200) XP.toast=''; pRedraw(); } },
   onOpen(op){ pStop(); XP.pv=null; XP.undo=null; XP.last=null; XP.fx=null; XP.fly=null; XP.toast=''; XP.until=0; XP.confirm=false; XP.err=0; XP.anim=true; p2Tbl=null;
-    if(op&&op.pet&&pReady()){ const d=pDef(op.pet), o=pSave(); if(d&&d.sprite&&!o.owned[d.id]&&!pSoon(d,o)) XP.pv={id:d.id,stg:0,soon:false}; } },
+    if(op&&op.pet&&pReady()){ const d=pDef(op.pet), o=pSave(); if(d&&d.sprite&&!o.owned[d.id]&&!pSoon(d,o)) XP.pv={id:d.id,stg:0,soon:false}; }
+    pAsk(); },
   onClose(){ pStop(); XP.pv=null; XP.undo=null; XP.last=null; XP.fx=null; XP.fly=null; XP.toast=''; XP.until=0; XP.confirm=false; } });
 })();

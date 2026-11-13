@@ -90,10 +90,10 @@ const starsH=s=>{ let M=5; try{ M=Q().stars.length; }catch(e){} let h=''; for(le
 .f2-in{animation:f2-fade .22s ease-out}
 .f2-bg{position:absolute;left:0;right:0;top:0;height:380px;pointer-events:none;background:radial-gradient(110% 46% at 50% 30%,rgba(255,150,70,.22),transparent 62%),radial-gradient(70% 30% at 50% 58%,rgba(120,90,255,.18),transparent 70%),linear-gradient(180deg,#1a1440 0%,#141a4c 40%,var(--night) 100%)}
 .f2-stage{position:relative;z-index:2;flex:none}
-.f2-who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;height:24px;max-width:calc(100% - 128px);padding:0 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap}
+.f2-who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;min-height:24px;max-width:calc(100% - 128px);padding:3px 10px;border-radius:12px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;line-height:1.15}
 .f2-who i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-.f2-who span{overflow:hidden;text-overflow:ellipsis;min-width:0}
-button.f2-who{height:40px;top:0;border-color:var(--gold);color:var(--gold);background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22))}
+.f2-who span{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center}
+button.f2-who{min-height:40px;top:0;border-color:var(--gold);color:var(--gold);background:linear-gradient(90deg,rgba(255,210,94,.3),rgba(255,164,52,.22))}
 button.f2-who i{background:var(--gold);box-shadow:0 0 8px var(--gold)}
 button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padding:0 9px;border-radius:11px;background:var(--gold);color:var(--ink);font-size:11px}
 .f2-slot{position:absolute;z-index:3;width:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0;background:none;padding:0}
@@ -103,20 +103,20 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-slot .fg.cp{color:var(--muted)}
 .f2-slot .lk{position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:5px;background:rgba(5,8,28,.85);display:grid;place-items:center}
 .f2-slot.lock .sb img{filter:grayscale(.85) brightness(.5)}
-.f2-slot .sl{font-size:9px;font-weight:900;color:var(--muted);text-shadow:0 1px 0 #000;white-space:nowrap;max-width:54px;overflow:hidden;text-overflow:ellipsis}
+.f2-slot .sl{font-size:9px;font-weight:900;color:var(--muted);text-shadow:0 1px 0 #000;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1;max-width:54px}
 .f2-slot.on .sb{box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(255,210,94,.6)}
 .f2-slot.on .sl{color:var(--gold)}
 .f2-fcrow{position:relative;z-index:3;flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:2px 12px 0;padding:4px 8px 4px 12px;border-radius:16px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 60%);border:1px solid rgba(255,210,94,.5)}
 .f2-fcb{flex:1 1 96px;min-width:0}
 .f2-fcb small{display:block;font-size:9px;letter-spacing:1.2px;color:var(--gold);font-weight:900}
-.f2-fcb b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:26px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f2-fcb em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-fcb b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:26px;line-height:1;color:var(--gold);text-shadow:0 0 14px rgba(255,210,94,.55),0 2px 0 rgba(0,0,0,.4);white-space:normal;overflow-wrap:anywhere}
+.f2-fcb em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);line-height:1.15;white-space:normal;overflow-wrap:anywhere}
 .f2-chip{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:6px;max-width:150px;min-height:38px;padding:2px 10px 2px 8px;border-radius:11px;background:rgba(5,8,28,.6);border:1px solid var(--line2)}
 .f2-chip i{flex:none;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,var(--ac) 45%,transparent 72%);box-shadow:0 0 10px var(--ac)}
 .f2-chip span{min-width:0;font-size:11px;font-weight:900;line-height:1.15;overflow-wrap:anywhere}
 .f2-chip small{display:block;font-size:9px;color:var(--muted);letter-spacing:.4px}
 .f2-tabs{position:relative;z-index:3;flex:none;display:grid;gap:3px;margin:6px 12px 0;padding:3px;border-radius:14px;background:rgba(5,8,28,.75);border:1px solid var(--line)}
-.f2-tab{height:40px;border:0;border-radius:10px;background:none;font-weight:900;font-size:13px;color:var(--muted);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px}
+.f2-tab{min-height:40px;border:0;border-radius:10px;background:none;font-weight:900;font-size:13px;line-height:1.1;color:var(--muted);min-width:0;white-space:normal;overflow-wrap:anywhere;padding:2px}
 .f2-tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
 .f2-scroll{position:relative;z-index:3;flex:1;min-height:0;padding:6px 12px 20px}
 .f2-det{position:relative;margin:0 0 8px;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,#1b2459,#141c4a);border:1px solid var(--rc);min-width:0}
@@ -124,9 +124,9 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-di0{flex:none;width:42px;height:42px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,#27337e,#0c1238);position:relative;overflow:hidden;display:block}
 .f2-di0 img{position:absolute;left:8%;top:8%;width:84%;height:84%;object-fit:contain}
 .f2-di{flex:1;min-width:0}
-.f2-dn{font-weight:900;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-dn{font-weight:900;font-size:14px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
 .f2-rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}
-.f2-dh{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-dh{font-size:11px;color:var(--muted);font-weight:800;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
 .f2-dh b{color:var(--gold)}
 .f2-lvb{flex:none;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;line-height:1;color:var(--gold);text-shadow:0 0 12px rgba(255,210,94,.5);display:flex;align-items:center;gap:3px}
 .f2-lvb .nx{color:var(--green);text-shadow:0 0 12px rgba(94,240,160,.5)}
@@ -134,7 +134,7 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-chn{display:flex;gap:10px;align-items:center;margin-top:6px;padding:6px 8px;border-radius:10px;background:rgba(5,8,28,.55);min-width:0}
 .f2-chn .pc{flex:none;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:28px;line-height:1;color:var(--cyan);text-shadow:0 0 12px rgba(94,231,255,.45);min-width:62px;text-align:center}
 .f2-chn .cw{flex:1;min-width:0}
-.f2-chn small{display:block;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-chn small{display:block;font-size:11px;font-weight:900;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
 .f2-chn small b{color:var(--green)}
 .f2-chn em{display:block;font-style:normal;font-size:10px;font-weight:800;color:var(--muted);overflow-wrap:anywhere;line-height:1.2}
 .f2-pity{display:block;height:7px;margin:3px 0;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
@@ -143,9 +143,9 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-msg b{color:var(--gold)}
 .f2-sts{display:grid;gap:4px;margin-top:5px}
 .f2-sts div{border-radius:9px;background:rgba(5,8,28,.45);padding:4px 6px;min-width:0}
-.f2-sts small{display:block;font-size:8.5px;font-weight:900;color:var(--muted);letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f2-sts b{display:block;font-size:11.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f2-sts em{display:block;font-style:normal;font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-sts small{display:block;font-size:8.5px;font-weight:900;color:var(--muted);letter-spacing:.4px;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.f2-sts b{display:block;font-size:11.5px;font-weight:900;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.f2-sts em{display:block;font-style:normal;font-size:9px;font-weight:800;color:var(--muted);line-height:1.2;white-space:normal;overflow-wrap:anywhere}
 .f2-sts .up b{color:var(--green)}
 .f2-sts .bad b{color:var(--red)}
 .f2-cmp{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin-top:5px;padding:5px 8px;border-radius:10px;background:rgba(5,8,28,.55);font-weight:900;font-size:12px;min-width:0}
@@ -154,10 +154,10 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-cmp .b{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:17px;white-space:nowrap}
 .f2-cmp .d{margin-left:auto;white-space:nowrap}
 .f2-acts{display:flex;gap:6px;margin-top:7px}
-.f2-bt{flex:1 1 0;min-width:0;min-height:44px;padding:2px 6px;border-radius:11px;border:0;font-weight:900;font-size:12px;line-height:1.1;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink)!important;box-shadow:0 3px 0 #9a5a10;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.f2-bt{flex:1 1 0;min-width:0;min-height:44px;padding:3px 6px;border-radius:11px;border:0;font-weight:900;font-size:12px;line-height:1.1;text-align:center;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink)!important;box-shadow:0 3px 0 #9a5a10;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
 .f2-bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
-.f2-bt span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
-.f2-bt small{font-size:10px;font-weight:800;opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f2-bt span{max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.f2-bt small{font-size:10px;font-weight:800;opacity:.85;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .f2-bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);color:#04223f!important;box-shadow:0 3px 0 #164e8c}
 .f2-bt.off,.f2-bt[aria-disabled="true"]{background:rgba(255,255,255,.06);color:var(--muted)!important;box-shadow:none;border:1px solid var(--line);transform:none}
 .f2-foot{margin-top:5px;font-size:10px;font-weight:800;color:var(--muted);line-height:1.3;overflow-wrap:anywhere}
@@ -173,12 +173,12 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-ac .sw{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,#fff 0 12%,var(--ac) 40%,transparent 72%);box-shadow:0 0 12px var(--ac)}
 .f2-ac .sw.none{background:radial-gradient(circle,#55608f 0 30%,transparent 70%);box-shadow:none}
 .f2-ac b{font-size:12px;font-weight:900;color:var(--gold)}
-.f2-ac small{font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.f2-ac small{font-size:9px;font-weight:800;color:var(--muted);text-align:center;line-height:1.15;white-space:normal;overflow-wrap:anywhere;max-width:100%;padding:0 1px}
 .f2-ac.cur{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,94,.45)}
 .f2-ac.cur::after{content:'SUA';position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:900;letter-spacing:.6px;padding:0 5px;border-radius:5px;background:var(--gold);color:var(--ink)}
 .f2-ac.pv{border-color:var(--cyan)}
 .f2-tbl{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.6fr);border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px;font-size:11px;font-weight:800}
-.f2-tbl>span{padding:4px 5px;background:rgba(5,8,28,.45);border-top:1px solid rgba(130,150,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;min-width:0}
+.f2-tbl>span{padding:4px 3px 4px 5px;background:rgba(5,8,28,.45);border-top:1px solid rgba(130,150,255,.12);line-height:1.15;white-space:normal;overflow-wrap:anywhere;display:flex;align-items:center;gap:4px;min-width:0}
 .f2-tbl>span.h{background:rgba(61,79,184,.35);color:var(--muted);font-size:9px;letter-spacing:.6px;border-top:0}
 .f2-tbl>span.dn{color:#6f7ab0}
 .f2-tbl>span.cu{background:rgba(255,210,94,.18);color:var(--gold)}
@@ -187,8 +187,8 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-row{width:100%;min-height:54px;display:flex;gap:10px;align-items:center;padding:7px 8px;border-radius:14px;background:var(--glass);border:1px solid var(--line);margin-bottom:6px;text-align:left;min-width:0}
 .f2-row .f2-di0{width:40px;height:40px}
 .f2-row .tx{flex:1;min-width:0;display:block}
-.f2-row .tx b{display:block;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f2-row .tx small{display:block;font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-row .tx b{display:block;font-size:13px;font-weight:900;line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+.f2-row .tx small{display:block;font-size:11px;color:var(--muted);font-weight:700;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
 .f2-row strong{flex:none;font-size:11px;font-weight:900;text-align:right;line-height:1.3}
 .f2-row.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,94,.35)}
 .f2-eqb{font-size:8px;font-weight:900;padding:1px 5px;border-radius:5px;background:var(--green);color:#043018;vertical-align:1px;margin-left:4px}
@@ -200,13 +200,15 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto minmax(0,1.1fr);gap:5px;align-items:center;margin-top:6px}
 .f2-trio .q{border-radius:10px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:4px 2px;text-align:center;min-width:0}
 .f2-trio .q img{width:30px;height:30px;object-fit:contain;display:block;margin:0 auto}
-.f2-trio .q small{display:block;font-size:9px;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f2-trio .q small{display:block;font-size:9px;font-weight:900;color:var(--muted);line-height:1.15;white-space:normal;overflow-wrap:anywhere}
 .f2-trio .q.res{border-color:var(--gold);background:rgba(255,210,94,.12)}
 .f2-bands{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-bottom:10px}
 .f2-bands div{border-radius:10px;background:rgba(5,8,28,.5);border:1px solid var(--line);padding:5px 3px;text-align:center;min-width:0}
 .f2-bands b{display:block;font-size:11px;color:var(--gold)}
-.f2-bands small{display:block;font-size:9px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.f2-ban{position:absolute;z-index:30;left:50%;transform:translateX(-50%);min-width:200px;max-width:calc(100% - 24px);padding:7px 14px;border-radius:14px;text-align:center;pointer-events:none;animation:f2-bin 2.4s ease-out both}
+.f2-bands small{display:block;font-size:9px;font-weight:800;color:var(--muted);line-height:1.15;white-space:normal;overflow-wrap:anywhere}
+.f2-notes{position:absolute;z-index:40;left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;min-width:0}
+.f2-notes>div:empty{display:none}
+.f2-ban{min-width:min(200px,100%);max-width:100%;padding:7px 14px;border-radius:14px;text-align:center;animation:f2-bin 2.4s ease-out both}
 .f2-ban b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:21px;line-height:1.1;overflow-wrap:anywhere}
 .f2-ban small{display:block;font-size:11px;font-weight:900;overflow-wrap:anywhere}
 .f2-ban.ok{background:linear-gradient(180deg,rgba(60,40,6,.94),rgba(30,20,4,.94));border:2px solid var(--gold);color:var(--gold);box-shadow:0 0 24px rgba(255,210,94,.5)}
@@ -214,8 +216,8 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-ban.no{background:rgba(42,21,48,.94);border:2px solid var(--rose);color:#ffb3c4}
 .f2-ban.no small{color:var(--text)}
 .f2-ban.au{border-color:var(--ac);color:#fff;box-shadow:0 0 30px var(--ac)}
-.f2-fly{position:absolute;z-index:40;left:50%;transform:translateX(-50%);font-family:'Lilita One',Nunito,sans-serif;font-size:24px;pointer-events:none;animation:f2-fly 1.6s ease-out both;text-shadow:0 2px 0 rgba(0,0,0,.5);white-space:nowrap;color:var(--green)}
-.f2-toast{position:absolute;left:50%;top:44px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);font-weight:900;font-size:12px;line-height:1.25;text-align:center;animation:f2-tin 2.2s ease both;max-width:calc(100% - 24px);overflow-wrap:anywhere;pointer-events:none}
+.f2-fly{padding:2px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);max-width:100%;text-align:center;overflow-wrap:anywhere;font-family:'Lilita One',Nunito,sans-serif;font-size:20px;line-height:1.2;animation:f2-fly 1.6s ease-out both;text-shadow:0 2px 0 rgba(0,0,0,.5);color:var(--green)}
+.f2-toast{padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);box-shadow:0 4px 14px rgba(0,0,0,.5);font-weight:900;font-size:12px;line-height:1.25;text-align:center;animation:f2-tin 2.2s ease both;max-width:100%;overflow-wrap:anywhere}
 .f2-shade{position:absolute;inset:0;z-index:50;background:rgba(3,5,18,.72);display:flex;align-items:center;animation:f2-fade .2s}
 .f2-modal{margin:auto 16px;width:100%;max-height:86%;overflow-y:auto;border-radius:22px;background:linear-gradient(180deg,#1d2768,#0f1540);border:1px solid var(--line2);padding:16px;min-width:0}
 .f2-modal h3{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;margin:0 0 8px}
@@ -225,9 +227,9 @@ button.f2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .f2-gain span{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:0 9px;border-radius:9px;background:rgba(255,107,107,.12);color:#ffc9c9;font-weight:900;font-size:12px}
 .f2-gate{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0 28px;text-align:center}
 @keyframes f2-fade{from{opacity:0}}
-@keyframes f2-tin{0%{opacity:0;transform:translate(-50%,-8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
-@keyframes f2-fly{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60px)}}
-@keyframes f2-bin{0%{opacity:0;transform:translate(-50%,8px) scale(.85)}10%{opacity:1;transform:translate(-50%,0) scale(1.06)}18%{transform:translate(-50%,0) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
+@keyframes f2-tin{0%{opacity:0;transform:translateY(8px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes f2-fly{0%{opacity:0;transform:translateY(8px) scale(.9)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes f2-bin{0%{opacity:0;transform:translateY(8px) scale(.85)}10%{opacity:1;transform:scale(1.06)}18%{transform:none}82%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 @media (prefers-reduced-motion:reduce){.f2-in,.f2-shade{animation:none}.f2-ban,.f2-fly,.f2-toast{animation-timing-function:step-end}}
 `; document.head.appendChild(st); })();
 
@@ -236,8 +238,8 @@ const toastHtml=m=>'<div class="f2-toast" role="status">'+esc2(m)+'</div>';
 function say(m){ X.toast=String(m||''); X.toastT=now(); try{ const el=document.getElementById('f2_toast'); if(el) el.innerHTML=toastHtml(X.toast); }catch(e){} }
 function banner(cls,title,sub){ X.ban={cls,title,sub:sub||'',t:now()}; }
 /* a faixa guarda a hora em que nasceu: se a tela redesenhar no meio, a animação continua de onde estava (atraso negativo) */
-function banHtml(b,top){ if(!b) return ''; const age=now()-b.t; if(age>=BAN_MS) return '';
-  return '<div class="f2-ban '+b.cls+'" role="status" style="top:'+top+'px;animation-delay:'+(-age)+'ms'+(b.col?';--ac:'+b.col:'')+'"><b>'+esc2(b.title)+'</b><small>'+esc2(b.sub)+'</small></div>'; }
+function banHtml(b){ if(!b) return ''; const age=now()-b.t; if(age>=BAN_MS) return '';
+  return '<div class="f2-ban '+b.cls+'" role="status" style="animation-delay:'+(-age)+'ms'+(b.col?';--ac:'+b.col:'')+'"><b>'+esc2(b.title)+'</b><small>'+esc2(b.sub)+'</small></div>'; }
 function whyTxt(r,sl){ return r==='locked'?'A Forja libera no nível '+gateLv():r==='wing'?'A asa abre no nível '+wingLv()
   :r==='max'?slotShort(sl)+' já está no máximo: +'+FD().max:r==='cap'?'Teto da '+eraName(eraNow())+': +'+capNow()+'. Avance de era para passar.'
   :r==='stones'?'Faltam pedras de forja. Elas caem de chefes e inimigos e vêm ao desmontar itens.':r==='gold'?'Falta ouro para a tentativa':'Não dá para forjar este espaço agora'; }
@@ -468,12 +470,14 @@ function draw(){
   if(X.tab==='trans'){ const L=transList(); if(!L.some(o=>String(o.it.id)===String(X.tsel))) X.tsel=L.length?L[0].it.id:null; det=detTrans(narrow,L); body=bodyTrans(L); }
   else if(X.tab==='fuse'){ const G=groups(); if(!G.some(o=>o.k===X.gkey)) X.gkey=G.length?G[0].k:null; det=detFuse(narrow,G); body=bodyFuse(G); }
   else { det=detForge(narrow); body=bodyForge(); }
-  const fly=X.fly&&now()-X.fly.t<1600?'<div class="f2-fly" style="top:'+(SH+14)+'px;animation-delay:'+(X.fly.t-now())+'ms">'+esc2(X.fly.txt)+'</div>':'';
+  const fly=X.fly&&now()-X.fly.t<1600?'<div class="f2-fly" aria-hidden="true" style="animation-delay:'+(X.fly.t-now())+'ms">'+esc2(X.fly.txt)+'</div>':'';
   V.innerHTML=xWrap(d,'','<div class="f2'+(X.anim?' f2-in':'')+'"><div class="f2-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.5,0.9):'#16110d')+'"></div>'
     +stageHtml(SH)+fcRowHtml()+tabsHtml()
     +'<div id="f2_scroll" class="f2-scroll x-scroll">'+det+body+'</div>'
-    +banHtml(X.ban,SH-24)+banHtml(X.ban2,SH-90)   /* a 2ª faixa ("Nova aura") nasce 0,7 s depois: hora no futuro = atraso positivo da animação */
-    +fly+'<div id="f2_toast">'+(X.toast&&now()-X.toastT<2000?toastHtml(X.toast):'')+'</div>'+askHtml()+'</div>');
+    /* AVISOS: faixa no RODAPÉ da tela, fora do palco (nada de texto por cima do herói): faixas do resultado, "+FC" e a mensagem.
+       A 2ª faixa ("Nova aura") nasce 0,7 s depois: hora no futuro = atraso positivo da animação */
+    +'<div class="f2-notes" id="f2_notes">'+banHtml(X.ban2)+banHtml(X.ban)
+    +fly+'<div id="f2_toast">'+(X.toast&&now()-X.toastT<2000?toastHtml(X.toast):'')+'</div></div>'+askHtml()+'</div>');
   if(y0){ try{ const sc=document.getElementById('f2_scroll'); if(sc) sc.scrollTop=y0; }catch(e){} }
   X.anim=false; X.top=false; X.sig=sig(); loopStart();
 }
