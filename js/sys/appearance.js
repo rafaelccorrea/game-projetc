@@ -141,8 +141,9 @@ for(const k of [
   {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'],
    dir:'assets/anim/skins/kael_demon', avatar:'kael_demon', art:true, families:[]},   // ARTE ENTREGUE (e6800d4); arco/bumerangue por código
   {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass'],
-   dir:'assets/anim/skins/kael_angel', avatar:'kael_angel', art:true, families:[],
-   noWingDir:'assets/anim/skins/kael_angel_nowing', noWingReady:true},   // pasta SEM ASA pronta (Arte b94cf8b: as 8 animações sem asa; os 86 arquivos do kael_angel conferidos)   // ARTE ENTREGUE (4598ed9); arco/bumerangue por código
+   /* REGRA DO DONO (14/11, via PO): SKIN NUNCA COM ASA NO CORPO. O Kael Anjo usa SEMPRE a pasta sem asa (kael_angel_nowing), com ou sem item de asa equipado;
+      asa só existe como item. A pasta antiga (kael_angel, asa pintada) não é mais lida pelo jogo. noWingDir/noWingReady saíram deste item. */
+   dir:'assets/anim/skins/kael_angel_nowing', avatar:'kael_angel', art:true, families:[]},   // pasta SEM ASA pronta (Arte b94cf8b: as 8 animações sem asa; os 86 arquivos do kael_angel conferidos)   // ARTE ENTREGUE (4598ed9); arco/bumerangue por código
   {id:'kael_paladin',name:'Kael Paladino',  hero:'kael', r:3, how:'Loja: compra direta', sources:['reward','shop'], product:'skin_kael_paladin',
    dir:'assets/anim/skins/kael_solar_paladin', avatar:'kael_solar_paladin', art:true, families:[]},   // ARTE ENTREGUE (9d920e7; pasta da Arte 'kael_solar_paladin', id e produto continuam kael_paladin)
   {id:'kael_ninja',  name:'Kael Ninja',     hero:'kael', r:2, how:'Oferta de 1ª compra', sources:['offer'],

@@ -1127,15 +1127,12 @@ t('P24 (FC 324 → 326 ao voltar à skin padrão): é o bônus de COLEÇÃO da s
   for(let i=0;i<5;i++){ A.equipFixed(S,'kaia_harlequin'); A.equipFixed(S,null); } assert.strictEqual(K.bonus(S).atkPct,b1,'sem deriva');
 });
 
-t('skin com asa própria + asa-item (dono: o jogador nunca tira a asa): pasta "sem asa" só com a asa-item equipada e visível E a pasta pronta',()=>{
-  const A=require('../../js/sys/appearance.js'), k=A.FIXED.find(x=>x.id==='kael_angel'); const keep=k.noWingReady;
-  try{ const S={hero:'kael',inv:[{id:7,slot:'wing',r:3,wing:'angel'}],eq:{}}; A.grantFixed(S,'kael_angel',{owner:true}); A.equipFixed(S,'kael_angel');
-    k.noWingReady=false; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'));
-    S.eq.wing=7; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'),'pasta não pronta: como hoje');
-    k.noWingReady=true; const r=A.sheetFor(S,makeHost(),'attack'); assert.ok(r.dir.endsWith('kael_angel_nowing/')&&r.noWing===true&&r.body.endsWith('kael_angel_nowing/kael_attack_body'));
-    S.look.hidden={wing:true}; assert.ok(A.sheetFor(S,makeHost(),'idle').dir.endsWith('kael_angel/'),'asa escondida: a skin com a asa dela');
-    S.look.hidden={}; assert.ok(A.sheetFor(S,makeHost(),'idle',{skin:'kael_angel'}).dir.endsWith('kael_angel/'),'cartão da vitrine: a skin como ela é');
-  } finally { k.noWingReady=keep; }
+t('Kael Anjo: SEMPRE a pasta sem asa (regra do dono, 14/11: skin nunca com asa no corpo; asa só como item)',()=>{
+  const A=require('../../js/sys/appearance.js'), k=A.FIXED.find(x=>x.id==='kael_angel'); assert.ok(k&&/kael_angel_nowing$/.test(k.dir)&&k.noWingDir===undefined,'catálogo aponta para a pasta sem asa');
+  const S={hero:'kael',inv:[{id:7,slot:'wing',r:3,wing:'angel'}],eq:{}}; A.grantFixed(S,'kael_angel',{owner:true}); A.equipFixed(S,'kael_angel'); const end=r=>r.dir.endsWith('kael_angel_nowing/');
+  assert.ok(end(A.sheetFor(S,makeHost(),'idle')),'sem item de asa'); S.eq.wing=7; const r=A.sheetFor(S,makeHost(),'attack'); assert.ok(end(r)&&r.body.indexOf('kael_angel_nowing/kael_att')>=0,'com item de asa');
+  S.look=S.look||{}; S.look.hidden={wing:true}; assert.ok(end(A.sheetFor(S,makeHost(),'idle')),'asa escondida'); S.look.hidden={}; assert.ok(end(A.sheetFor(S,makeHost(),'idle',{skin:'kael_angel'})),'cartão da vitrine');
+  for(const x of A.FIXED) assert.ok(!/\/kael_angel$/.test(x.dir||'')&&!x.noWingDir,'nenhuma skin aponta para pasta com asa: '+x.id);
 });
 
 console.log(`ok: ${n} testes`);

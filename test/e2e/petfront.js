@@ -236,9 +236,9 @@ function order(tag, L, must, also) { const p = first(L, RE.pet), det = k => k + 
         check('asa na morte · ' + nm + ': recorte termina exatamente na linha do chão (nada da asa abaixo) e cobre a tela toda', c.b === c.gy && c.gy === c.GY && c.x <= 0 && c.r >= c.LW && c.y <= 0, JSON.stringify(c)); }
       /* nunca asa dupla */
       let ok = await setLook('kael', 'kael_angel', 'skins/kael_angel_nowing/'); let f = frame(17);
-      check('asa na morte · Kael Anjo COM item de asa: corpo da pasta SEM asa + asa do item, uma só', ok && f.die && f.n === 2 && f.before, ev('dieSheet().base') + ' · ' + JSON.stringify(f));
-      ev('S.eq.wing=null; statsChanged(); 1'); ok = await setLook('kael', 'kael_angel', 'skins/kael_angel/'); await until(() => ev('!HM.wing'), 60); f = frame(17);
-      check('asa na morte · Kael Anjo SEM item de asa: só a asa pintada da skin (nenhuma asa de item)', ok && f.die && f.n === 0, ev('dieSheet().base') + ' · ' + JSON.stringify(f));
+      check('asa na morte · Kael Anjo COM item de asa: corpo sem asa (regra do dono: skin nunca tem asa no corpo) + asa do item, uma só', ok && f.die && f.n === 2 && f.before, ev('dieSheet().base') + ' · ' + JSON.stringify(f));
+      ev('S.eq.wing=null; statsChanged(); 1'); ok = await setLook('kael', 'kael_angel', 'skins/kael_angel_nowing/'); await until(() => ev('!HM.wing'), 60); f = frame(17);
+      check('asa na morte · Kael Anjo SEM item de asa: a MESMA pasta sem asa e nenhuma asa desenhada', ok && f.die && f.n === 0 && /kael_angel_nowing\//.test(ev('dieSheet().base')), ev('dieSheet().base') + ' · ' + JSON.stringify(f));
       ev('S.eq.wing=window.__pfW.wing; statsChanged(); 1'); ok = await setLook('kaia', 'kaia_angel', 'skins/kaia_angel/'); await until(() => ev('HM.wing==="angel"'), 60); f = frame(17);
       check('asa na morte · Kaia Angelical (sem asa pintada, Arte 4a92ee6) com item de asa: UM par, o do item', ok && f.die && f.n === 2 && ev('dieWingOk(dieSheet())'), ev('dieSheet().base') + ' · ' + JSON.stringify(f));
       /* folha sem âncora regravada: sem asa, como antes */

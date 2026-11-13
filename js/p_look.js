@@ -10,8 +10,9 @@
    todos os cartões mostram o herói equipado (pedido ao engenheiro). Reserva do desenho: o Kael parado de assets/anim/hyb/R. Zero emoji, nenhum botão sem ação.
    Pedido Q-15 (reports/pedidos-entre-agentes.md): carregar este script e ligar PANEL_ON.look; a entrada é o cartão do Equipamento (Panels.open('look')), o Voltar volta ao Equipamento. */
 const XLK={raf:0,t0:0,err:0,open:null,mount:false,tm:0};
-/* skins que trazem asa PRÓPRIA desenhada: no cartão e no destaque o desenho sai com wing:false (só a asa da skin), senão a asa-item equipada soma e aparece asa DUPLA. Para o Kael Anjo o catálogo tem noWingDir; a Kaia Angelical ainda não tem a variante sem asa: por isso a lista aqui. Acrescentar o id de skin nova que tenha asa própria. */
-const PL_OWNWING={kael_angel:1};   /* Kaia Angelical NÃO tem asa pintada (Arte conferiu todas as folhas, 4a92ee6: só auréola e cachecol): recebe a asa do item como qualquer skin */
+/* REGRA DO DONO (14/11): skin NUNCA tem asa no corpo; asa é só item. Nenhuma skin esconde a asa-item (o Kael Anjo passou a usar a pasta sem asa no catálogo).
+   A lista fica vazia de propósito; não acrescentar id aqui: skin nova com asa pintada é arte reprovada. */
+const PL_OWNWING={};   /* Kaia Angelical NÃO tem asa pintada (Arte conferiu todas as folhas, 4a92ee6: só auréola e cachecol): recebe a asa do item como qualquer skin */
 const plWingOff=id=>PL_OWNWING[id]===1;
 const PL_MINH=520;
 const PL_CSS=`.pl-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:plk 1s steps(12,jump-none) infinite}

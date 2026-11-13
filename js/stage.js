@@ -341,11 +341,10 @@ function drawHeroPistol(H, E){
      · a folha não tem "back" para todos os quadros ou tem algum ok != true;
      · a folha é das pastas de FASE (hyb/phase1|2|3, hyb/kaia_phase1|2|3): a Arte NÃO regravou essas; a âncora antiga é medida automática e não acompanha o corpo
        deitado (a asa ficaria solta no ar), mesmo marcada ok. São as folhas das skins Kael/Kaia Cavaleiro (phase2) e Guerreiro Lendário (phase3);
-     · a folha é de skin com asa PRÓPRIA pintada no corpo (kael_angel, kaia_angel): nunca asa dupla. Com item de asa equipado o Kael Anjo usa a pasta SEM asa
-       (kael_angel_nowing, regra noWing do Sys.appearance.sheetFor), que tem âncora: aí a asa do item é desenhada, uma só. */
+     Skin com asa pintada no corpo não existe mais (regra do dono, 14/11: asa só como item; o Kael Anjo usa a pasta sem asa, que tem âncora). */
 /* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
 function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) return s; return sheetLoad(HERO_DIR + 'kael_die_body', true); }   /* a pasta que o sheetFor devolver (herói e skin); sem o módulo, a do Kael */
-const DIE_WING_OFF = /hyb\/(kaia_)?phase\d\/|skins\/kael_angel\//;   /* kaia_angel saiu: ela não tem asa pintada (Arte, 4a92ee6) */
+const DIE_WING_OFF = /hyb\/(kaia_)?phase\d\//;   /* kaia_angel saiu: ela não tem asa pintada (Arte, 4a92ee6) */
 function dieWingOk(sh){ if (!sh || !sh.ok) return false; if (sh._dw !== undefined) return sh._dw; const M = sh.meta, A = M && M.back;
   return sh._dw = !!(Array.isArray(A) && A.length >= (M.frames || 1) && A.every(b => b && b.ok === true && typeof b.x === 'number' && typeof b.y === 'number') && !DIE_WING_OFF.test(sh.base || '')); }
 /* recorte da asa na morte: tudo ACIMA da linha do chão do herói (px lógicos) */

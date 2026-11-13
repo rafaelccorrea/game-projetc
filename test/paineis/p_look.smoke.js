@@ -36,7 +36,7 @@ def.click(btn('open', { id: 'kpal' })); has('role="dialog"'); has('COMO GANHAR')
 assert(raf.length === 1, 'um laço só, para o destaque'); out.push('destaque: um canvas animado, como ganhar sem preço, botão Ir à Loja');
 mkCanvases(); drew = []; raf.shift()(16); assert(drew[0].wing === undefined, 'skin sem asa própria: wing segue o jogo'); assert(drew.length >= 1 && drew[0].skin === 'kpal' && drew[0].mount === false, 'desenha a skin a pé no destaque'); assert(drew[0].pet === undefined, 'regra do dono (pet sempre na frente e nunca some): o destaque NÃO esconde o pet (sem state.pet o drawHeroFull desenha o pet por último)');
 // 2b) skin com asa PRÓPRIA (Kael Anjo, Kaia Angelical): wing:false no desenho (sem asa dupla); as outras seguem a regra do jogo (wing indefinido)
-assert(plWingOff('kael_angel') === true && plWingOff('kaia_angel') === false && plWingOff('kdem') === false && plWingOff('default') === false, 'só as skins com asa própria'); 
+assert(plWingOff('kael_angel') === false && plWingOff('kaia_angel') === false && plWingOff('kdem') === false && plWingOff('default') === false, 'só as skins com asa própria'); 
 out.push('asa própria: wing:false só para kael_angel/kaia_angel');
 // 3) botão leva à tela certa; destino desligado explica
 opened.length = 0; def.click(btn('route', { id: 'kpal' })); assert.deepStrictEqual(opened, ['screen:shop']); assert.strictEqual(window.SHOP_RETURN, 'look'); out.push('Loja: Screens.open(shop) e SHOP_RETURN = look');
