@@ -8,6 +8,9 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **22h45 · Arte:** os 7 ícones de menu que faltavam ficaram prontos (Arena, Guilda, Torneio, Códex, Chat, Mapa, Montarias; 14 créditos). Seguem as animações do adulto e do guerreiro e os cenários das eras 6 a 8
+- **22h45 · Moedas do incidente:** o engenheiro devolve as 9,8 mil moedas quando você escrever "sim" na janela dele e ligar o celular no cabo
+
 - **22h35 · Medidas no S24:** batalha a 120 quadros/s (105 com lobo + pet + asa); abre em 0,5 s; memória até ~800 MB com tudo; app de 657 MB (precisa diminuir antes da loja)
 - **22h35 · INCIDENTE no seu celular:** um script de teste de outra sessão se conectou por engano ao seu celular e tirou o jogo da tela ("Página da Web não disponível"). O save NÃO foi alterado, mas o aviso de ganho offline (2h52, +9,8 mil moedas) sumiu antes de você resgatar. Regra nova: nenhum script toca no celular; os acessos ao aparelho foram removidos. Falta você decidir se repomos as 9,8 mil moedas
 
