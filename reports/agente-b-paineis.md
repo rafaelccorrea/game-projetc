@@ -920,3 +920,17 @@ Conferido por leitura:
 (c) `node --check` em screens.js, screens2.js, panels.js e em todos os `p_*.js`: ok. `conflitos.js` nas 21 telas carregadas: nenhum conflito.
     Fumaça: 133 passos, 0 falhas (390x788).
 Risco que só o navegador mostra: o redirecionamento do Passe para a tela 34 e o gancho `missions34` nunca rodaram numa tela de verdade.
+
+## Bloco 27 (lote 2, sem navegador): o que mudou
+
+- VOLTAR DAS MISSÕES: quando a tela 34 é aberta pelo botão "Missões" do Passe, o Voltar agora devolve ao Passe. Mecanismo geral no
+  `js/panels.js`: quem abre com `Panels.open(nome, {from:'<tela>'})` volta para essa tela ao fechar; aberta pelo MENU (sem `from`), volta
+  para a batalha como antes. Escrito, não visto.
+- `p_intro` (telas iniciais do Servidor, arquivo gerado): na lista de carga do `js/screens.js`; chave `PANEL_ON.intro` DESLIGADA. O teste
+  de conflito agora passa nesse arquivo (o conflito de `esc` / `KAIA_ON` que eu tinha visto sumiu). Entra por último na lista: se o
+  fluxo de entrada precisar carregar antes das outras telas, o Servidor me diz.
+- Arena, Eventos e Torneio: carregadas, sem conflito de nomes, chaves `arena`, `events`, `tourney` desligadas, prontas para virar.
+- Chat (`window.P_CHAT`) e Códex (`window.P_CODEX`): nada do meu lado.
+- Vitória/Derrota: `resHeroDown` agora chama o `heroDown(on)` do agente A (pedido A-20); o corpo antigo ficou só de reserva.
+- "FC +N": já estava preparado (some quando `NEXT_ON` e `fcNotice` existem). Passe com rolagem e Montarias: sem mudança, esperando o navegador.
+- `node --check` nos três arquivos; conflitos ok; fumaça 133 passos, 0 falhas.

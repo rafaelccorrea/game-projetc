@@ -11,7 +11,7 @@
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
 const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas por mim no navegador */
-  tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true,   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
+  tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true, intro:false,   /* telas iniciais do Servidor (js/p_intro.js, arquivo GERADO): desligada */   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
   mail:false,   /* espera Sys.mail.DATA.enabled (Servidor) */  inst:false,   /* espera a luta da instância (agente A) */
   mounts:false,result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,auction:false,   /* esperam pagamento / servidor */
@@ -37,7 +37,8 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   hookCfg(){ if(this.cfgHooked||typeof openSettings!=='function') return; this.cfgHooked=true; const P=this, o0=openSettings;
     openSettings=function(confirmReset){ if(confirmReset||!P.on('cfg')) return o0(confirmReset); if(!P.open('cfg')) return o0(confirmReset); }; },
   hookClose(){ if(this.closeHooked||!window.Screens||typeof Screens.close!=='function') return; this.closeHooked=true; const P=this, c0=Screens.close.bind(Screens);
-    Screens.close=function(){ const cur=P.cur(); if(cur&&cur.parent&&typeof setView==='function'){ if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(cur.parent); return; } return c0(); }; },
+    Screens.close=function(){ const cur=P.cur(); const bt=cur&&P.back&&P.back[cur.name]; if(bt&&typeof setView==='function'){ P.back[cur.name]=null; if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(bt); return; }
+      if(cur&&cur.parent&&typeof setView==='function'){ if(typeof Screens.register==='function'&&cur.onClose){ try{ cur.onClose(); }catch(e){} } setView(cur.parent); return; } return c0(); }; },
   hook(){ if(this.hooked) return; this.hooked=true; const P=this;
     if(typeof render==='function'&&!(window.Screens&&typeof Screens.register==='function')){ const r0=render; render=function(){ const d=P.defs[view]; if(d&&P.on(view)&&!d.overlay) return d.render(); return r0(); }; }
     if(typeof setView==='function'&&!(window.Screens&&typeof Screens.register==='function')){ const s0=setView;   /* com o registro oficial, quem chama onOpen/onClose é o index */ setView=function(v){ const prev=P.defs[view], next=P.defs[v];
@@ -48,6 +49,8 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   /* ROTA ÚNICA: Panels.open(nome, o) e Screens.open(nome, o) abrem a MESMA tela. Panels.open só confere a chave (desligada = false, nada abre) e
      entrega ao Screens.open, que troca a tela (setView) e chama onOpen. Overlays (era, result) abrem pela função open da própria tela. */
   open(name,o){ if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{};
+    /* VOLTAR PARA ONDE VEIO: quem abre passando {from:'<tela>'} (ex.: o botão Missões do Passe) recebe o jogador de volta nessa tela ao fechar */
+    this.back=this.back||{}; this.back[name]=(o&&typeof o.from==='string')?o.from:null; if(this.back[name]) this.hookClose();
     if(window.Screens&&typeof Screens.open==='function'){ if(typeof Screens.register==='function'&&!(Screens.reg&&Screens.reg[name])) this.enable(name); return Screens.open(name,o||{})!==false; }
     setView(name); return true; },
   /* 'missions': o setView do index.html troca 'missions' por 'pass' + aba Missões (apelido antigo). Com a tela 34 ligada, este gancho registra a

@@ -216,7 +216,7 @@ const XP={page:-1,mt:'d',mpage:0,cf:false,anim:true,toast:'',toastT:0,lvfx:false
 function pMisScreen(){ try{ const R=window.Screens&&Screens.reg&&Screens.reg.missions; if(!R||R.broken) return false; return !(window.Panels&&Panels.defs&&Panels.defs.missions)||Panels.on('missions'); }catch(e){ return false; } }
 /* abre a tela 34 pelo caminho que ela pede (pedido Q-6: Panels.open('missions'); sem o Panels, Screens.open). Devolve true só se a tela 34 ficou na frente:
    enquanto o setView do index.html trocar 'missions' por 'pass', a chamada cai na lista de missões daqui e isto devolve false (quem chama garante a lista). */
-function pMisOpen(){ try{ if(window.Panels&&Panels.defs&&Panels.defs.missions&&typeof Panels.open==='function') Panels.open('missions',{tab:'daily'}); else Screens.open('missions',{tab:'daily'}); }catch(e){ console.error('Passe: abrir Missões',e); }
+function pMisOpen(){ try{ if(window.Panels&&Panels.defs&&Panels.defs.missions&&typeof Panels.open==='function') Panels.open('missions',{tab:'daily',from:'pass'}); else Screens.open('missions',{tab:'daily'}); }catch(e){ console.error('Passe: abrir Missões',e); }
   return typeof view!=='undefined'&&(view==='missions'||view==='missions34'); }   /* 'missions34' = a tela 34 pelo gancho provisório do js/panels.js */
 /* trilha já rolada até o nível atual do passe, com a linha dele no meio da parte visível (abaixo da legenda presa). Conta por medida fixa (linha de 70 + vão de 6),
    só a altura da lista é lida da tela; se ela ainda não tiver altura, tenta de novo no quadro seguinte. */
@@ -546,7 +546,7 @@ const resCardsH=()=>RES.cards.reduce((a,c)=>a+c.h,0)+8*Math.max(0,RES.cards.leng
 /* DERROTA: o Kael fica caído e visível enquanto a tela está aberta (protótipo). O canvas desenha o herói tombado e a cena escura sem letreiro
    quando B.deadT > 0 com B.deadBoss ligado (js/battle.js: HM.deadP e o véu da derrota); com B.res o step() não anda, então o valor fica parado em
    0,8 (deadP = 0,5: tombado, ainda opaco). resClose devolve os dois campos antes de recomeçar a luta. */
-function resHeroDown(on){ B.deadT=on?0.8:0; B.deadBoss=!!on; }
+function resHeroDown(on){ if(typeof heroDown==='function') heroDown(!!on); else { B.deadT=on?0.8:0; B.deadBoss=!!on; } }   /* fonte única: heroDown(on) do js/battle.js (pedido A-20); o corpo antigo é só reserva */
 const resEggR=x=>Math.max(0,Math.min(4,(x&&typeof x==='object'?(x.r!=null?x.r:(x.egg&&x.egg.r)):x)|0));
 /* cartões da vitória, na ordem do protótipo: moedas (com as gemas da fase), XP, extras (ovos, pedras, essência: só se vieram) e o item de maior raridade */
 function resLoot(o){ const L=o.loot||{}, n=v=>Math.max(0,Math.round(+v||0)), cards=[], gold=n(L.gold), gems=n(o.gems)+n(L.gems), xp=n(L.xp);
