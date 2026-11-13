@@ -80,6 +80,9 @@ var VIPCONV_TESTS=(function(){
   T['forja automática: trancada mostra VIP n, explica e não forja']=function(){
     const cv=Sys.vip.conv(S,'autoForge'); if(!xVipConvOn()||!cv) return 'sem a conveniência';
     return forgeEnv(0,function(o){ render(); const h=bad(V_TEST.innerHTML), lt=Sys.vip.conv(S,'autoForge').lockText;
+      /* Sistemas fbd1672 (ordem do dono: "Forjar até conseguir" é de TODOS): no VIP 0 a conveniência vem ligada; a tela mostra o seletor de alvo e nenhuma linha trancada */
+      if(Sys.vip.conv(S,'autoForge').on){ if(h.indexOf('data-x="autogo"')<0) throw new Error('forja automática escondida'); if(h.indexOf('data-x="goal"')<0) throw new Error('liberada para todos, mas sem o seletor de alvo no VIP 0');
+        if(h.indexOf('id="f_locktip"')>=0) throw new Error('linha trancada com a forja liberada'); return 'liberada para todos no VIP 0 (sem trava)'; }
       if(h.indexOf('data-x="autogo"')<0) throw new Error('forja automática escondida'); if(h.indexOf(lt)<0) throw new Error('sem "'+lt+'"'); if(h.indexOf('data-x="goal"')>=0) throw new Error('seletor de alvo aparece trancado');
       const t0=o.tries, s0=o.stones; fc('autogo'); runAll(); if(o.tries!==t0||o.stones!==s0||XF.auto) throw new Error('forjou sem VIP');
       /* E3: a explicação abre DENTRO da linha trancada; nenhum aviso flutuante (cobria o rótulo "Arma +0: Sem aura") */
