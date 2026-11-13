@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **20h45 · Servidor:** escolha de servidor na entrada FEITA (Login → Servidor → Prólogo; selo "S1 · Nova Era" e "Trocar servidor" no Título; quem já joga não é obrigado). Achado e corrigido um risco de PERDA DE SAVE (celular vazio baixa a nuvem; celular atrasado pergunta; o servidor recusa save que volta para trás). Filtro de nome mais forte contra palavrão disfarçado com números. Agora: rankings, guildas, chat, correio e leilão separados por servidor; depois a página de privacidade
+
 - **20h30 · Arte de graça pronta (4475394):** ícones dos 3 estágios do lobo, falcão e pantera; ícones das asas Anjo e Demoníaca. Kael Anjo sem asa: por código ficou bom de lado; giro e golpe vão ser refeitos sem asa (~10 créditos, autorizado), depois do Samurai e do Ciborgue
 
 - **20h15 · Sua ordem: fechar tudo o que não precisa de arte.** Lista distribuída em docs/BACKLOG_SEM_ARTE.md (APK v0.13.0, inimigos das eras 7-8, polimento aberto, servidores fase 2, textos da loja e política de privacidade para o advogado, sem rolagem lateral, desempenho no S24). Arte: Samurai, Ciborgue e Fênix com o saldo. Paramos tudo se você avisar que o uso do Claude chegou a 80%
