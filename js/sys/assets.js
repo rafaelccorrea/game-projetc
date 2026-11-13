@@ -45,15 +45,16 @@ function classify(p0){ const p=norm(p0); let m;
 
 /* ---------------- o que o jogador precisa agora ---------------- */
 const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
-function phaseOf(S,host){ const PU=SYS().phaseUp, L=SYS().level;
-  try{ if(PU&&PU.DATA&&PU.DATA.on===true) return int0(PU.current(S)); if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) return int0(g.stage); } }catch(e){} return 0; }
+/* pasta do herói = a da SKIN FIXA equipada (decisão do dono: o herói não cresce; 0 padrão, 2 cavaleiro, 3 lendário) */
+function phaseOf(S,host){ const A=SYS().appearance;
+  try{ if(A&&A.sheets) return int0(A.sheets(S,host).stage); }catch(e){} return 0; }
 function eraOf(S,host){ const P=SYS().phases; try{ if(P&&P.DATA&&P.DATA.on===true) return P.eraMax(S); }catch(e){} return int0(host&&host.eraMax&&host.eraMax()); }
 const maxEra=()=>{ const T=SYS().stats; return T&&T.DATA?int0(T.DATA.maxEra):6; };
 const gunEra=e=>e>=3&&e<=6;   // eras com pistola (armas de fogo)
 function needed(S,host){ if(!ON()) return {on:false};
   const h=heroOf(S), ph=phaseOf(S,host), e=eraOf(S,host), top=maxEra(), out=new Set(['core','aura','hero:'+h+':'+ph]);
   for(const x of [e,DATA.preloadNextEra?e+1:e]) if(x<=top){ out.add('era:'+x); out.add('enemy:'+x); }
-  if(DATA.preloadNextPhase&&ph<3) out.add('hero:'+h+':'+(ph+1));
+  if(DATA.preloadNextPhase&&ph<3&&!(SYS().phaseUp&&SYS().phaseUp.DATA&&SYS().phaseUp.DATA.retired===true)) out.add('hero:'+h+':'+(ph+1));
   // armas que ele tem: era de cada arma na mochila/equipada (a arte da arma é pequena; a pistola da era vai junto)
   const inv=Array.isArray(S&&S.inv)?S.inv:[];
   for(const it of inv) if(it&&it.slot==='weapon'){ const we=Number.isInteger(it.look)?it.look:int0(it.e); if(we<=top){ out.add('era:'+we); if(gunEra(we)) out.add('gun:'+we); } }

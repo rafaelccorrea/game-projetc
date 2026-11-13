@@ -193,58 +193,54 @@ const pick = (set, re) => [...set].filter(x => re.test(x)).slice(0, 6).join(', '
 /* a partida do index pode ter deixado título/tutorial: o laço é o nosso */
 const SAFE_START = "S.tut=99; S.welcome=true; S.name=S.name||'Kael'; B.paused=false; B.res=null; B.inst=null; view='battle';";
 
-/* ---------------- 4. FASES DO HERÓI ---------------- */
+/* ---------------- 4. HERÓI SEM CRESCIMENTO + SKINS FIXAS (decisão final do dono, 12/11) ---------------- */
 async function flowPhases() {
-  /* (a) SAVE ANTIGO NO NÍVEL 60 → na carga o herói já é ADULTO (fase 2) */
-  for (const hero of ['kael', 'kaia']) { const T = hero === 'kaia' ? 'Kaia' : 'Kael', dir = hero === 'kaia' ? /hyb\/kaia_phase2\// : /hyb\/phase2\//;
+  /* (a) SAVE ANTIGO que já EVOLUIU (Nv 60, fase 2 gravada) → na carga volta ao corpo PADRÃO, sem perder nível nem poder */
+  for (const hero of ['kael', 'kaia']) { const T = hero === 'kaia' ? 'Kaia' : 'Kael', def = hero === 'kaia' ? /hyb\/kaia\// : /hyb\/R\//;
     const G0 = await newGame(); const key = G0.ev('SAVE_KEY');
     const save = G0.ev(`(function(){ __e2eReplace(JSON.parse(__e2eBase)); S.hero='${hero}'; S.name='${T}'; S.tut=99; S.welcome=true; S.stage=60; S.wave=1; S.best=60; S.eraMax=5; S.kills=20000;
-      try{ if(Sys.appearance.setHero) Sys.appearance.setHero(S,'${hero}'); }catch(e){} const L=Sys.level.ensure(S); L.lvl=60; L.xp=0; L.stg=0; Sys.phaseUp.ensure(S).stg=0; S.lastSeen=Date.now(); return JSON.stringify(S); })()`);
-    const G = await newGame({ search: '?debug=1', storage: { [key]: save }, runBoot: true, draw: true }); const { ev } = G; const stgBoot = ev('Sys.phaseUp.current(S)'); await G.settle();
+      try{ if(Sys.appearance.setHero) Sys.appearance.setHero(S,'${hero}'); }catch(e){} const L=Sys.level.ensure(S); L.lvl=60; L.xp=0; L.stg=2; Sys.phaseUp.ensure(S).stg=2; S.lastSeen=Date.now(); return JSON.stringify(S); })()`);
+    const G = await newGame({ search: '?debug=1', storage: { [key]: save }, runBoot: true, draw: true }); const { ev } = G; await G.settle();
     check(T + ' Nv 60: save antigo carregado (nível 60)', ev('Sys.level.level(S)') === 60 && ev('S.hero') === hero, 'nível ' + ev('Sys.level.level(S)') + ' herói ' + ev('S.hero'));
-    check(T + ': Sys.phaseUp.DATA.on ligado na carga (PHASES_ON=' + ev('PHASES_ON') + ')', ev('Sys.phaseUp.DATA.on') === true, 'continua desligado', true);
-    const calls = callersOf(G, 'Sys.phaseUp.catchUp');
-    check(T + ': a partida chama Sys.phaseUp.catchUp(S, Sys.host)' + (calls.length ? ' (' + calls.join(', ') + ')' : ''), calls.length > 0,
-      'EM CONFERÊNCIA: o boot ainda não chama Sys.phaseUp.catchUp. Hoje a partida faz phaseBoot() (' + lineOf(G, 'js/stage.js', /function phaseBoot/) + ') → phaseCheck(true) (' + lineOf(G, 'js/stage.js', /function phaseCheck/) + '), que evolui por pending/evolve e toca UMA animação', true);
-    const stg = stgBoot;
-    check(T + ': depois da carga está na fase 2 (adulto) — via ' + (calls.length ? 'catchUp' : 'phaseBoot/phaseCheck'), stg === 2, 'fase ' + stg + ' (Sys.level stg ' + ev('Sys.level.ensure(S).stg') + ')', true);
-    G.drawOn = true; ev(SAFE_START + ' 1'); const d = tapDraws(G); G.mode = 'strong'; await G.run(7);   /* animação de evolução da carga (1,2 s + 1,6 s) e depois o herói */
-    check(T + ': as folhas do herói desenhadas vêm de ' + (hero === 'kaia' ? 'kaia_phase2' : 'phase2'), has(d, dir), 'folhas do herói desenhadas: ' + (pick(d, /hyb\/(R|phase\d|kaia[^/]*)\//) || '(nenhuma)'), true);
+    check(T + ': Sys.phaseUp aposentado (retired) mesmo com o boot ligando DATA.on: current() = 0', ev('Sys.phaseUp.DATA.retired') === true && ev('Sys.phaseUp.current(S)') === 0, 'retired ' + ev('Sys.phaseUp.DATA.retired') + ' current ' + ev('Sys.phaseUp.current(S)'));
+    check(T + ': nada em fila (pending vazio) e o save guarda a fase antiga (nada apagado)', ev('Sys.phaseUp.pending(S,Sys.host).ready') === false && ev('Sys.phaseUp.ensure(S).stg') === 2, JSON.stringify(ev('Sys.phaseUp.pending(S,Sys.host)')));
+    const sh = ev("Sys.appearance.sheetFor(S,Sys.host,'idle')");
+    check(T + ' (Sys): sheetFor idle no corpo padrão → ' + sh.body + ' (escala ' + sh.scale + ')', def.test(String(sh.body)) && sh.scale === 1 && !sh.skin, JSON.stringify(sh));
+    check(T + ' (Sys): avatar padrão ' + ev('Sys.appearance.avatarKey(S,Sys.host)'), ev('Sys.appearance.avatarKey(S,Sys.host)') === hero + '_phase0', ev('Sys.appearance.avatarKey(S,Sys.host)'));
+    G.drawOn = true; ev(SAFE_START + ' 1'); const d = tapDraws(G); G.mode = 'strong'; await G.run(5);
+    check(T + ': as folhas do herói desenhadas vêm do corpo padrão (' + (hero === 'kaia' ? 'kaia' : 'R') + ')', has(d, def) && !has(d, /hyb\/(kaia_)?phase\d\//), 'folhas do herói desenhadas: ' + (pick(d, /hyb\/(R|phase\d|kaia[^/]*)\//) || '(nenhuma)'), true);
+    check(T + ': nenhuma animação de evolução na carga', !ev('B.evo'), 'B.evo = ' + JSON.stringify(ev('B.evo?{sheet:B.evo.sheet,from:B.evo.from,to:B.evo.to}:null')), true);
     noErr(G, T + ': nenhuma exceção na carga e no laço');
-    /* LADO DO Sys (duro): o próprio catchUp no mesmo save antigo */
-    const r = ev(`(function(){ const T=JSON.parse(${JSON.stringify(save)}); Sys.phaseUp.DATA.on=true; const a=Sys.phaseUp.catchUp(T,Sys.host), b=Sys.phaseUp.catchUp(T,Sys.host), pe=Sys.phaseUp.pending(T,Sys.host), ev1=Sys.phaseUp.evolve(T,Sys.host), sh=Sys.appearance.sheetFor(T,Sys.host,'idle');
-      return {a, b, pe:{ready:pe.ready,from:pe.from,to:pe.to,sheet:pe.anim&&pe.anim.sheet}, ev:ev1&&ev1.ok, cur:Sys.phaseUp.current(T), lstg:Sys.level.ensure(T).stg, body:sh&&sh.body, name:Sys.phaseUp.nameOf(T,Sys.phaseUp.current(T))}; })()`);
-    check(T + ' (Sys): catchUp no Nv 60 aplica tudo MENOS a última (→ fase 1) e deixa UMA animação final 1→2', r.a && r.a.ok && r.a.from === 0 && r.a.to === 1 && r.a.applied === 1 && r.pe.ready && r.pe.from === 1 && r.pe.to === 2 && r.ev, JSON.stringify({a:r.a,pe:r.pe,ev:r.ev}));
-    check(T + ' (Sys): fase 2 = "' + r.name + '", Sys.level stg também 2; segunda chamada não aplica nada', r.cur === 2 && r.lstg === 2 && r.b && r.b.applied === 0, JSON.stringify({ cur: r.cur, lstg: r.lstg, b: r.b }));
-    check(T + ' (Sys): Sys.appearance.sheetFor idle → ' + r.body, dir.test(String(r.body)), 'pasta errada: ' + r.body);
   }
-  /* (b) CAMADAS MANTIDAS 34 → 35 (skin de roupa + óculos) */
+  /* (b) 34 → 35 com skin de roupa + óculos: NÃO evolui, camadas iguais */
   const G = await newGame({ search: '?debug=1&fresh=1', runBoot: true, draw: true }), { ev, sandbox: X } = G; await G.settle();
   const keys = () => ev('JSON.stringify(Sys.appearance.layers(S,Sys.host).map(l=>l.layer+":"+l.key).sort())');
-  const setup = ev(`(function(){ ${SAFE_START} Sys.phaseUp.DATA.on=true; const L=Sys.level.ensure(S); L.lvl=34; L.xp=0; L.stg=1; Sys.phaseUp.ensure(S).stg=1;
+  const setup = ev(`(function(){ ${SAFE_START} const L=Sys.level.ensure(S); L.lvl=34; L.xp=0;
     if(!S.skins.includes('a43')) S.skins.push('a43'); S.skinEq.armor='a43'; const m=Sys.appearance.setMode(S,'skin'); const c=Sys.appearance.addCosmetic(S,'goggles'), e=Sys.appearance.equipCosmetic(S,'glasses','goggles');
-    startBattle(); return {skin:!!SKIN('a43'), mode:m, cos:c, eq:e, lvl:Sys.level.level(S), stg:Sys.phaseUp.current(S)}; })()`);
-  check('34→35: Nv 34, fase 1, skin a43 em modo "skin", óculos equipados', setup.skin && setup.mode && setup.eq && setup.lvl === 34 && setup.stg === 1, JSON.stringify(setup));
-  const k0 = keys(); check('34→35: camadas antes: ' + k0, /goggles/.test(k0), 'óculos não aparecem nas camadas', true);
+    startBattle(); return {mode:m, eq:e, lvl:Sys.level.level(S), stg:Sys.phaseUp.current(S)}; })()`);
+  check('34→35: Nv 34, modo "skin", óculos equipados, fase 0', setup.mode && setup.eq && setup.lvl === 34 && setup.stg === 0, JSON.stringify(setup));
+  const k0 = keys();
   let lr = null; try { lr = G.inCtx(() => X.Sys.level.addXp(ev('S'), X.Sys.level.need(34) - ev('Sys.level.ensure(S).xp'), X.Sys.host)); } catch (e) { lr = { err: errStr(e) }; }
   check('34→35: XP pelo caminho real (Sys.level.addXp) sobe para 35', lr && lr.from === 34 && lr.to === 35, JSON.stringify(lr));
-  const p = ev('Sys.phaseUp.pending(S,Sys.host)');
-  check('34→35: Sys.phaseUp.pending pronto (1→2, layered=true por causa da skin/óculos)', p && p.ready && p.from === 1 && p.to === 2 && p.anim && p.anim.layered === true, JSON.stringify(p));
   let lvErr = null; try { G.inCtx(() => X.onLevelUp(lr)); } catch (e) { lvErr = errStr(e); }
   check('34→35: onLevelUp do jogo (' + lineOf(G, 'js/farm.js', /function onLevelUp/) + ') sem exceção', !lvErr, lvErr, true);
-  let evolved = ev('Sys.phaseUp.current(S)') === 2;
-  check('34→35: o jogo evoluiu no subir de nível (phaseCheck)', evolved, 'continua na fase ' + ev('Sys.phaseUp.current(S)'), true);
-  if (!evolved) { const r = ev('Sys.phaseUp.evolve(S,Sys.host)'); check('34→35 (Sys): Sys.phaseUp.evolve aplica 1→2', r && r.ok && r.to === 2, JSON.stringify(r)); }
-  const k1 = keys(); check('34→35: Sys.appearance.layers iguais antes e depois', k0 === k1, 'antes ' + k0 + ' | depois ' + k1);
-  const evo = ev('B.evo?{sheet:B.evo.sheet,own:B.evo.own,from:B.evo.from,to:B.evo.to}:null');
-  if (evo && p && p.anim) { const fxOk = fsx.existsSync(pathx.join(G.ROOT, String(p.anim.fx) + '.png'));
-    check('34→35 (animação): com layered=true usa pending().anim.fx (' + p.anim.fx + (fxOk ? ', existe em disco' : ', NÃO existe') + ')', evo.sheet === p.anim.fx,
-      'B.evo.sheet = ' + evo.sheet + ': phaseCheck (' + lineOf(G, 'js/stage.js', /base\s*=\s*own\s*\?/) + ') toca a animação de subir de nível e não lê anim.fx', true);
-    G.drawOn = true; const d = tapDraws(G); G.mode = 'strong'; await G.run(4);
-    check('34→35 (animação): desenhou o efeito e o herói por camadas (óculos) na fase 2', has(d, /evolve_1_2_fx|fx\/levelup/) && has(d, /goggles/) && has(d, /hyb\/phase2\//),
-      'efeito: ' + (pick(d, /anim\/fx\//) || '(nenhum)') + ' · óculos: ' + (pick(d, /goggles|glasses/) || '(nenhum)') + ' · corpo: ' + (pick(d, /hyb\/(R|phase\d)\//) || '(nenhum)'), true);
-  } else check('34→35 (animação): B.evo montado no subir de nível', false, 'o jogo não tocou animação de evolução', true);
-  noErr(G, '34→35: nenhuma exceção no laço (com desenho)');
+  check('34→35: o herói NÃO evolui (fase 0, pending vazio)', ev('Sys.phaseUp.current(S)') === 0 && ev('Sys.phaseUp.pending(S,Sys.host).ready') === false, 'fase ' + ev('Sys.phaseUp.current(S)'));
+  check('34→35: Sys.appearance.layers iguais antes e depois', k0 === keys(), 'antes ' + k0 + ' | depois ' + keys());
+  /* (c) SKIN FIXA: não obtida pelo jogador; Modo dono libera; equipar troca a pasta, a morte, o avatar e a escala; um herói não usa a do outro */
+  const fx = ev(`(function(){ const A=Sys.appearance, list=A.fixedSkins(S,Sys.host), sk0=Sys.skin.bonus(S).atkPct; const g0=A.grantFixed(S,'kael_knight'); const g1=A.grantFixed(S,'kael_knight',{owner:true}); A.grantFixed(S,'kaia_legend',{owner:true});
+    const wrong=A.equipFixed(S,'kaia_legend'), e=A.equipFixed(S,'kael_knight'); statsChanged&&statsChanged(); refreshHero&&refreshHero();
+    return {names:list.map(x=>x.name), soon:list.every(x=>x.soon&&!x.owned&&x.how), g0:g0.reason, g1:g1.ok, wrong:wrong.reason, e:e.ok, idle:A.sheetFor(S,Sys.host,'idle'), die:A.sheetFor(S,Sys.host,'die').body,
+      card:A.sheetFor(S,Sys.host,'idle',{skin:'default'}).body, av:A.avatarKey(S,Sys.host), sk:Math.round((Sys.skin.bonus(S).atkPct-sk0)*1e6)/1e6}; })()`);
+  check('skins fixas na vitrine: ' + fx.names.join(', ') + ' (não obtidas, "como obter")', fx.names.length === 4 && fx.soon, JSON.stringify(fx.names));
+  check('jogador não obtém (off); Modo dono libera; skin da Kaia não equipa no Kael', fx.g0 === 'off' && fx.g1 && fx.wrong === 'hero' && fx.e, JSON.stringify({ g0: fx.g0, g1: fx.g1, wrong: fx.wrong, e: fx.e }));
+  check('Kael Cavaleiro: folhas phase2, morte phase2, escala ' + fx.idle.scale + ', avatar ' + fx.av + ', sem arte montada', /hyb\/phase2\/kael_idle_body$/.test(fx.idle.body) && /hyb\/phase2\/kael_die_body$/.test(fx.die) && fx.idle.scale > 1 && fx.av === 'kael_phase2' && fx.idle.mountArt === false, JSON.stringify(fx));
+  check('cartão da vitrine: sheetFor(..., {skin:"default"}) → corpo padrão ' + fx.card, /hyb\/R\/kael_idle_body$/.test(fx.card), fx.card);
+  check('bônus da skin fixa no Sys.skin (Mítico equipada +7 e 2 na coleção +1; o teto da coleção pode cortar) = +' + fx.sk + '%', fx.sk >= 7 && fx.sk <= 8, String(fx.sk));
+  G.drawOn = true; const d = tapDraws(G); G.mode = 'strong'; ev(SAFE_START + ' 1'); await G.run(4);
+  check('batalha desenha o Kael Cavaleiro (hyb/phase2)', has(d, /hyb\/phase2\//), 'corpo desenhado: ' + (pick(d, /hyb\/(R|phase\d)\//) || '(nenhum)') + ': o jogo ainda escolhe a pasta pela fase (stage.js heroPhase), não pelo Sys.appearance.sheetFor', true);
+  ev('Sys.appearance.equipFixed(S,null); 1');
+  check('voltar ao padrão: sheetFor idle → R', /hyb\/R\//.test(ev("Sys.appearance.sheetFor(S,Sys.host,'idle').body")), ev("Sys.appearance.sheetFor(S,Sys.host,'idle').body"));
+  noErr(G, 'skins fixas: nenhuma exceção no laço (com desenho)');
 }
 
 /* ---------------- 5. drawHeroFull com pet + montaria + asa ---------------- */
@@ -298,7 +294,7 @@ async function flowHeroFull() {
 }
 
 (async () => {
-  for (const [id, name, fn] of [['era', '1. TROCA DE ERA', flowEra], ['inst', '2. INSTÂNCIA', flowInst], ['result', '3. VITÓRIA/DERROTA', flowResult], ['phases', '4. FASES DO HERÓI', flowPhases], ['heroFull', '5. drawHeroFull (pet + montaria + asa)', flowHeroFull]]) {
+  for (const [id, name, fn] of [['era', '1. TROCA DE ERA', flowEra], ['inst', '2. INSTÂNCIA', flowInst], ['result', '3. VITÓRIA/DERROTA', flowResult], ['phases', '4. HERÓI SEM CRESCIMENTO + SKINS FIXAS', flowPhases], ['heroFull', '5. drawHeroFull (pet + montaria + asa)', flowHeroFull]]) {
     cur = { id, name, checks: [] }; flows.push(cur); console.log('--- ' + name + (HARD[id] ? '' : ' (EM CONFERÊNCIA)'));
     try { await fn(); } catch (e) { check('fluxo terminou sem exceção', false, errStr(e)); } }
   console.log('\n================ RESUMO ================'); let hardFail = 0;

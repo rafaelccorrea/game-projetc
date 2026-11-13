@@ -30,8 +30,11 @@ const minorIds=S=>{ const a=S&&S.sys&&S.sys.appearance&&S.sys.appearance.skin; i
 function majorPct(S){ const v=equippedIds(S).map(rarOf).filter(r=>r>=0).map(r=>DATA.equippedPct[r]);
   if(!v.length) return 0; return DATA.perSlot?v.reduce((s,x)=>s+x,0):Math.max(...v); }
 const minorPct=S=>minorIds(S).map(rarOf).filter(r=>r>=0).reduce((s,r)=>s+DATA.minorPct[r],0);
-const equippedPct=S=>majorPct(S)+minorPct(S);
-const collectionPct=S=>Math.min(DATA.collectionCap,ownedCount(S)*DATA.collectionPer);
+/* SKIN FIXA (Sys.appearance; Kael Cavaleiro etc.): equipada soma pela raridade, como arma/roupa; possuída conta na coleção */
+const fixedOf=S=>{ const A=root.Sys&&root.Sys.appearance; try{ return A&&A.fixedPct?A.fixedPct(S):{r:-1,owned:0}; }catch(e){ return {r:-1,owned:0}; } };
+const fixedEq=S=>{ const r=fixedOf(S).r; return r>=0?DATA.equippedPct[clamp(r,0,4)]:0; };
+const equippedPct=S=>majorPct(S)+minorPct(S)+fixedEq(S);
+const collectionPct=S=>Math.min(DATA.collectionCap,(ownedCount(S)+fixedOf(S).owned)*DATA.collectionPer);
 function bonus(S){ const p=Math.round((equippedPct(S)+collectionPct(S))*1e6)/1e6;
   return {atkPct:p,hpPct:p,goldPct:0,critPct:0,defPct:0,fc:0}; }
 /* detalhamento para a tela (cartão: "+5% ATK e HP" grande; embaixo "Skins equipadas +4% · Coleção +1%").

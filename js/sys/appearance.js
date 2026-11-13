@@ -105,18 +105,54 @@ const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});   // vis
    sheets(S,host) → {hero, stage, dir:'assets/anim/hyb/<pasta>/', prefix:'kael_'|'kaia_', masks:'<dir>masks/'} (docs/ARTE_LIGAR.md §5 e §9b) */
 const HERO_DIRS={kael:['R','phase1','phase2','phase3'],kaia:['kaia','kaia_phase1','kaia_phase2','kaia_phase3']};
 const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
-function sheets(S,host){ const h=heroOf(S), L=root.Sys&&root.Sys.level, PU=root.Sys&&root.Sys.phaseUp; let st=0;
-  try{ if(PU&&PU.DATA&&PU.DATA.on===true) st=clamp(int0(PU.current(S)),0,3); else if(L&&L.stage){ const g=L.stage(S,host); if(g&&g.on!==false) st=clamp(int0(g.stage),0,3); } }catch(e){}   // Sys.phaseUp (níveis 22/35/70) manda quando ligado
-  const dir='assets/anim/hyb/'+HERO_DIRS[h][st]+'/'; return {hero:h,stage:st,dir,prefix:h+'_',masks:dir+'masks/'}; }
+/* SKINS FIXAS (DECISÃO FINAL DO DONO, 12/11): o herói não cresce; o padrão é o garoto/menina em todo nível. O adulto e o guerreiro (arte e animações
+   aprovadas) são as PRIMEIRAS skins fixas, cada uma de UM herói. Estado: S.look.fixed = {owned:[ids], eq:{kael:id|null, kaia:id|null}}.
+   r = raridade no padrão do Sys.skin (equipada: +7% Mítico / +10% Lendário de ATK e Vida; possuída: +0,5% de coleção). scale = escala FIXA de desenho
+   (substitui a da fase). mountArt:false = sem arte montada: montado usa o corpo PADRÃO até a Arte fazer. avatar = assets/hero/avatar/<avatar>.png.
+   how = como se obtém (PROPOSTA ao dono, sem sorteio). DATA.fixedGrant=false: o jogador ainda não obtém (vitrine 'em breve'); Modo dono libera com {owner:true}. */
+DATA.fixedGrant=false;
+const FIXED=[
+  {id:'kael_knight', name:'Kael Cavaleiro',          hero:'kael', dir:'phase2',      r:3, scale:1.25, avatar:'kael_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kael_legend', name:'Kael Guerreiro Lendário', hero:'kael', dir:'phase3',      r:4, scale:1.30, avatar:'kael_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
+  {id:'kaia_knight', name:'Kaia Cavaleira',          hero:'kaia', dir:'kaia_phase2', r:3, scale:1.25, avatar:'kaia_phase2', mountArt:false, how:'Loja: compra direta (proposta R$ 19,90) ou VIP 6'},
+  {id:'kaia_legend', name:'Kaia Guerreira Lendária', hero:'kaia', dir:'kaia_phase3', r:4, scale:1.30, avatar:'kaia_phase3', mountArt:false, how:'Prêmio: VIP 10 ou top 3 da temporada do Torneio'},
+];
+const FX={}; for(const k of FIXED) FX[k.id]=k;
+const DEFAULT_LOOK={kael:{dir:'R',scale:1,avatar:'kael_phase0'},kaia:{dir:'kaia',scale:1,avatar:'kaia_phase0'}};
+function fixedState(S){ const o=look(S), f=(o.fixed&&typeof o.fixed==='object')?o.fixed:{}, owned=Array.isArray(f.owned)?[...new Set(f.owned.filter(id=>FX[id]))]:[], eq={kael:null,kaia:null};
+  for(const h of ['kael','kaia']){ const id=f.eq&&f.eq[h]; if(typeof id==='string'&&FX[id]&&FX[id].hero===h&&owned.includes(id)) eq[h]=id; }
+  o.fixed={owned,eq}; return o.fixed; }
+const fixedEquipped=S=>{ if(!S||typeof S!=='object') return null; const id=fixedState(S).eq[heroOf(S)]; return id?FX[id]:null; };
+/* para a vitrine: [{id, name, hero, r, owned, equipped, available (do herói atual), how, bonus (texto '+7% ATK e Vida'), bonusPct:{equipped, collection}, soon, avatar, scale, mountArt}] */
+function fixedSkins(S,host){ const f=fixedState(S), h=heroOf(S), K=root.Sys&&root.Sys.skin&&root.Sys.skin.DATA;
+  return FIXED.map(k=>({id:k.id,name:k.name,hero:k.hero,r:k.r,owned:f.owned.includes(k.id),equipped:f.eq[k.hero]===k.id,available:k.hero===h,how:k.how,
+    soon:DATA.fixedGrant!==true,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:k.scale,mountArt:k.mountArt})); }
+/* obter: {ok, reason: id|owned|off}. Enquanto DATA.fixedGrant=false só o Modo dono ({owner:true}) libera. */
+function grantFixed(S,id,opt){ if(!FX[id]) return {ok:false,reason:'id'}; if(DATA.fixedGrant!==true&&!(opt&&opt.owner===true)) return {ok:false,reason:'off'};
+  const f=fixedState(S); if(f.owned.includes(id)) return {ok:false,reason:'owned'}; f.owned.push(id); return {ok:true,id}; }
+/* equipar (null = voltar ao padrão do herói atual). Skin de um herói não equipa no outro. {ok, reason: id|hero|owned} */
+function equipFixed(S,id){ const f=fixedState(S), h=heroOf(S); if(id==null){ f.eq[h]=null; return {ok:true,id:null}; }
+  const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(k.hero!==h) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};
+  f.eq[h]=id; return {ok:true,id}; }
+/* skin fixa para o Sys.skin: raridade da equipada (r, -1 = nenhuma) e quantas possui (o Sys.skin converte em pontos %) */
+function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e?e.r:-1,owned:fixedState(S).owned.length}; }
+/* retrato: 'kael_phase0' | 'kael_phase2' | ... (assets/hero/avatar/<key>.png) */
+const avatarKey=(S,host)=>{ const e=fixedEquipped(S); return e?e.avatar:DEFAULT_LOOK[heroOf(S)].avatar; };
+/* pasta das folhas pela SKIN FIXA equipada (não há mais fase). stage = índice da pasta antiga (0 padrão, 2 cavaleiro, 3 lendário) só por compatibilidade. */
+const PH_SCALE=[1,1.12,1.25,1.30];   // só o caminho ANTIGO (Sys.phaseUp com retired:false, para teste); desligado o herói nunca muda de fase
+const legacyStage=S=>{ const PU=root.Sys&&root.Sys.phaseUp; try{ return PU&&PU.current?clamp(int0(PU.current(S)),0,3):0; }catch(e){ return 0; } };
+/* opt.skin = id de skin fixa (cartão da vitrine: desenhar uma que não é a equipada) ou 'default' (corpo padrão); sem opt = a equipada */
+function sheets(S,host,opt){ const os=opt&&opt.skin, e=os?(os==='default'?null:FX[os]||null):fixedEquipped(S), h=e?e.hero:heroOf(S), lg=e||os?0:legacyStage(S), d=e?e.dir:lg?HERO_DIRS[h][lg]:DEFAULT_LOOK[h].dir, st=Math.max(0,HERO_DIRS[h].indexOf(d));
+  const dir='assets/anim/hyb/'+d+'/'; return {hero:h,stage:st,skin:e?e.id:null,scale:e?e.scale:PH_SCALE[lg],mountArt:e?e.mountArt:true,avatar:e?e.avatar:DEFAULT_LOOK[h].avatar,dir,prefix:h+'_',masks:dir+'masks/'}; }
 /* KAIA JOGÁVEL: estados de animação que a batalha toca e onde cada um existe. A Kaia garota (fase 0) só tem run/idle/attack: giro, morte e pistola
    caem na FASE MAIS PRÓXIMA que tem o estado (kaia_phase1), com fallback:true (pedir a arte que falta à fps-75). O Kael garoto tem todos. */
 const STATES=['run','idle','attack','spin','die','pistol_idle','pistol_run','pistol_shoot'];
 const HAS={};   // Arte (b3d89ba): a Kaia menina ganhou os 8 estados; todas as fases dos dois heróis têm todos (fallback só se um dia faltar)
-function sheetFor(S,host,state){ const sh=sheets(S,host), h=sh.hero, st=STATES.includes(state)?state:'idle';
+function sheetFor(S,host,state,opt){ const sh=sheets(S,host,opt), h=sh.hero, st=STATES.includes(state)?state:'idle';
   const has=ph=>{ const L=HAS[h]&&HAS[h][ph]; return !L||L.includes(st); };
   let ph=sh.stage; if(!has(ph)){ for(let k=1;k<4;k++){ if(ph+k<=3&&has(ph+k)){ ph=ph+k; break; } if(ph-k>=0&&has(ph-k)){ ph=ph-k; break; } } }
   const dir='assets/anim/hyb/'+HERO_DIRS[h][ph]+'/';
-  return {hero:h,state:st,stage:ph,fallback:ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st}; }
+  return {hero:h,state:st,stage:ph,skin:sh.skin,scale:sh.scale,mountArt:sh.mountArt,avatar:sh.avatar,fallback:ph!==sh.stage,dir,body:dir+h+'_'+st+'_body',masks:dir+'masks/'+h+'_'+st}; }
 /* troca o herói do save (a criação chama; só 'kael' | 'kaia'). Só visual: atributos e FC iguais (os dois usam os mesmos itens e o mesmo Sys.stats). */
 function setHero(S,hero){ if(!S||typeof S!=='object') return false; if(hero!=='kael'&&hero!=='kaia') return false; S.hero=hero; return true; }
 /* ROUPA-SKIN = COMBINAÇÃO DE CAMADAS (decisão do dono, 12/11): cada skin de roupa (a<era><r>, 35, e p10/p20/p30 do passe) mantém id, nome e preço, mas
@@ -169,7 +205,7 @@ const outfitStatus=id=>FULL_SKIN(id)?{outfit:true,active:DATA.outfitCombosOn===t
 /* evolução: a animação aprovada (evolve_0_1) tem o herói padrão DESENHADO nela; se o jogador usa skin/cosmético/arma visível, a evolução tem que ser
    desenhada por CAMADAS (folha da fase antiga → brilho → folha da fase nova, com as camadas dele) para a skin aparecer. */
 function evolveNeedsLayers(S,host){ try{ return layers(S,host).some(l=>l.source==='skin'&&l.layer!=='base'||l.source==='cos'||l.layer==='hat'||l.layer==='wing'); }catch(e){ return false; } }
-const API={DATA,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
+const API={DATA,FIXED,fixedSkins,grantFixed,equipFixed,fixedEquipped,fixedPct,avatarKey,MATERIALS,comboOf,outfitStatus,STATES,heroOf,setHero,sheets,sheetFor,skinCoverage,canSell,evolveNeedsLayers,ensure,skinOf,setSkin,setHidden,of,bonus,look,setMode,setLookHidden,addCosmetic,equipCosmetic,layers};
 root.Sys=root.Sys||{}; root.Sys.appearance=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

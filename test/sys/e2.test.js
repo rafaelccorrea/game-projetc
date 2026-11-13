@@ -743,15 +743,27 @@ t('guilda (Sys.guild): desligada não muda nada; sem servidor fica fechada; teto
   } finally { G.DATA.on=false; G.setProvider(null); }
 });
 
-t('aparência: herói Kael/Kaia (S.hero) escolhe o corpo e a pasta das folhas pela fase; as 8 pastas existem',()=>{
-  const A=require('../../js/sys/appearance.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path'); const v9=L.DATA.v9.on;
+t('aparência: herói Kael/Kaia (S.hero) no corpo PADRÃO em todo nível; a pasta vem da SKIN FIXA equipada (dono: sem crescimento); as 8 pastas existem',()=>{
+  const A=require('../../js/sys/appearance.js'), L=require('../../js/sys/level.js'), PU=require('../../js/sys/phaseup.js'), K=require('../../js/sys/skin.js'), fs=require('fs'), path=require('path'); const v9=L.DATA.v9.on, pon=PU.DATA.on;
   try{ assert.strictEqual(A.heroOf({}),'kael'); assert.strictEqual(A.heroOf({hero:'kaia'}),'kaia'); assert.strictEqual(A.heroOf({hero:'x'}),'kael');
     assert.strictEqual(A.layers({hero:'kaia'},makeHost()).find(l=>l.layer==='base').key,'base/kaia');
-    assert.deepStrictEqual(A.sheets({},makeHost()),{hero:'kael',stage:0,dir:'assets/anim/hyb/R/',prefix:'kael_',masks:'assets/anim/hyb/R/masks/'});
-    L.setV9(true); const S={hero:'kaia'}; L.ensure(S).lvl=80; L.ensure(S).stg=3; assert.strictEqual(A.sheets(S,makeHost()).dir,'assets/anim/hyb/kaia_phase3/');
-    const root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/hyb'))) for(const h of ['kael','kaia']) for(let st=0;st<4;st++){ const T={hero:h}; L.ensure(T).lvl=120; L.ensure(T).stg=st;
-      const d=A.sheets(T,makeHost()); assert.strictEqual(d.stage,st); assert.ok(fs.existsSync(path.join(root,d.dir,d.prefix+'idle_body.json')),'falta '+d.dir+d.prefix+'idle_body.json'); }
-  } finally { L.setV9(v9); }
+    const d0=A.sheets({},makeHost()); assert.strictEqual(d0.dir,'assets/anim/hyb/R/'); assert.strictEqual(d0.stage,0); assert.strictEqual(d0.scale,1); assert.strictEqual(d0.avatar,'kael_phase0');
+    // save antigo que já evoluiu (Nv 80, fase 3, até com o boot ligando o phaseUp): volta ao padrão, mesmo poder
+    L.setV9(true); PU.DATA.on=true; const S={hero:'kaia'}; L.ensure(S).lvl=80; L.ensure(S).stg=3; PU.ensure(S).stg=3;
+    assert.strictEqual(PU.current(S),0); assert.strictEqual(PU.pending(S,makeHost()).ready,false); assert.strictEqual(PU.catchUp(S,makeHost()).ok,false); assert.strictEqual(PU.evolve(S,makeHost()).ok,false);
+    assert.strictEqual(A.sheets(S,makeHost()).dir,'assets/anim/hyb/kaia/'); assert.strictEqual(PU.ensure(S).stg,3,'nada apagado do save');
+    // skins fixas: não obtidas pelo jogador (fixedGrant=false), Modo dono libera; uma por herói; morte, avatar e escala pela skin; bônus no padrão do Sys.skin
+    const list=A.fixedSkins(S,makeHost()); assert.deepStrictEqual(list.map(x=>x.name),['Kael Cavaleiro','Kael Guerreiro Lendário','Kaia Cavaleira','Kaia Guerreira Lendária']);
+    assert.ok(list.every(x=>!x.owned&&x.soon&&x.how)); assert.strictEqual(A.grantFixed(S,'kaia_knight').reason,'off');
+    assert.ok(A.grantFixed(S,'kaia_knight',{owner:true}).ok); assert.ok(A.grantFixed(S,'kael_legend',{owner:true}).ok);
+    assert.strictEqual(A.equipFixed(S,'kael_legend').reason,'hero'); assert.ok(A.equipFixed(S,'kaia_knight').ok);
+    const die=A.sheetFor(S,makeHost(),'die'); assert.strictEqual(die.body,'assets/anim/hyb/kaia_phase2/kaia_die_body'); assert.strictEqual(die.scale,1.25); assert.strictEqual(die.mountArt,false);
+    assert.strictEqual(A.avatarKey(S,makeHost()),'kaia_phase2'); assert.strictEqual(K.bonus(S).atkPct,K.DATA.equippedPct[3]+2*K.DATA.collectionPer);
+    assert.ok(A.equipFixed(S,null).ok); assert.strictEqual(A.avatarKey(S,makeHost()),'kaia_phase0'); assert.strictEqual(K.bonus(S).atkPct,2*K.DATA.collectionPer);
+    const root=path.join(__dirname,'../..'); if(fs.existsSync(path.join(root,'assets/anim/hyb'))) for(const k of A.FIXED.concat([{hero:'kael'},{hero:'kaia'}])){ const T={hero:k.hero}; if(k.id){ A.grantFixed(T,k.id,{owner:true}); A.equipFixed(T,k.id); }
+      for(const st of A.STATES){ const d=A.sheetFor(T,makeHost(),st); assert.ok(fs.existsSync(path.join(root,d.body+'.json')),'falta '+d.body+'.json'); }
+      if(k.avatar) assert.ok(fs.existsSync(path.join(root,'assets/hero/avatar/'+k.avatar+'.png'))); }
+  } finally { L.setV9(v9); PU.DATA.on=pon; }
 });
 
 t('torre com a 17b: andar 100 = ovo Épico À ESCOLHA (Dragão/Papagaio), sem fênix; fragmentos acima do 100 vão para o pet escolhido',()=>{
@@ -868,7 +880,7 @@ t('guilda: membros (espelho do servidor, saneados), permissões por cargo, contr
 t('fases do herói (Sys.phaseUp): gatilho nos níveis 22/35/70, uma fase por vez, nomes por herói, animação (0→1 própria, resto fallback), pasta das folhas acompanha',()=>{
   const PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), A=require('../../js/sys/appearance.js'); const S={hero:'kaia'}, h=makeHost();
   assert.strictEqual(PU.current(S),0); assert.strictEqual(PU.evolve(S,h).reason,'off'); assert.strictEqual(PU.next(S,h),null);
-  PU.DATA.on=true; try{
+  PU.DATA.on=true; PU.DATA.retired=false; try{
     L.ensure(S).lvl=21; let p=PU.pending(S,h); assert.ok(!p.ready&&p.next.needLevel===22&&p.next.missing.level===1); assert.strictEqual(PU.evolve(S,h).reason,'level');
     L.ensure(S).lvl=80; assert.strictEqual(PU.pendingCount(S,h),3,'save antigo: 3 fases pendentes, nada aplicado sozinho'); assert.strictEqual(PU.current(S),0);
     p=PU.pending(S,h); assert.deepStrictEqual([p.ready,p.from,p.to,p.fromName,p.toName,p.anim.sheet,p.anim.fallback],[true,0,1,'Menina','Adolescente','assets/anim/fx/kaia_evolve_0_1',false],'folha da Kaia');
@@ -876,7 +888,7 @@ t('fases do herói (Sys.phaseUp): gatilho nos níveis 22/35/70, uma fase por vez
     PU.evolve(S,h); const e=PU.evolve(S,h); assert.deepStrictEqual([e.to,e.name],[3,'Guerreira lendária']); assert.strictEqual(PU.evolve(S,h).reason,'max'); assert.strictEqual(L.ensure(S).stg,3,'Sys.level em dia');
     assert.strictEqual(A.sheets(S,h).dir,'assets/anim/hyb/kaia_phase3/'); assert.strictEqual(PU.nameOf({},3),'Guerreiro lendário');
     PU.DATA.useFc=true; const S2={}; L.ensure(S2).lvl=30; assert.strictEqual(PU.pending(S2,h).next.missing.fc>0,true,'com a trava de FC ligada, FC baixa segura');
-  } finally { PU.DATA.on=false; PU.DATA.useFc=false; }
+  } finally { PU.DATA.on=false; PU.DATA.retired=true; PU.DATA.useFc=false; }
 });
 
 t('eras 7-8 (Sys.eras): mesmo formato do ERAS do jogo, arte existente, só com a curva de 9 eras ligada; cartão da fase com números abreviados',()=>{
@@ -895,12 +907,12 @@ t('Kaia jogável: setHero, FC idêntica ao Kael, folha de cada estado em cada fa
   const eq={weapon:{slot:'weapon',e:2,r:2,lvl:30},armor:{slot:'armor',e:2,r:2,lvl:30}}, h=makeHost(); h.equipped=()=>eq;
   const K={}, Y={}; assert.ok(A.setHero(K,'kael')&&A.setHero(Y,'kaia')); assert.strictEqual(A.setHero(Y,'xx'),false); assert.strictEqual(Y.hero,'kaia');
   L.ensure(K).lvl=30; L.ensure(Y).lvl=30; assert.strictEqual(F.compute(K,h),F.compute(Y,h),'mesma FC'); assert.deepStrictEqual(F.snapshot(K,h),F.snapshot(Y,h));
-  const root=path.join(__dirname,'../..'); PU.DATA.on=true; try{
+  const root=path.join(__dirname,'../..'); PU.DATA.on=true; PU.DATA.retired=false; try{
     for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero}; L.ensure(S).lvl=120; PU.ensure(S).stg=st;
       for(const state of A.STATES){ const r=A.sheetFor(S,h,state); assert.ok(fs.existsSync(path.join(root,r.body+'.json')),'falta '+r.body);
         assert.strictEqual(r.fallback,false,hero+' fase '+st+' '+state+': folha própria'); } }
     const g={hero:'kaia'}; assert.strictEqual(A.sheetFor(g,h,'idle').fallback,false);
-  } finally { PU.DATA.on=false; }
+  } finally { PU.DATA.on=false; PU.DATA.retired=true; }
 });
 
 t('pets novos na batalha: os 8 com posição/altura/efeito/aura por estágio (auras existem no disco); Cérbero fogo, Pégaso luz, Raposa arco-íris',()=>{
@@ -924,14 +936,14 @@ t('ovo do Nv 20: 10 mil sorteios dão 79% Básico / 21% Raro (±1,5), nunca acim
 
 t('skins × evolução: a skin equipada sobrevive à troca de fase (21→22, 34→35, 69→70), a folha vem da fase nova, cobertura e venda só com as 8 versões',()=>{
   const A=require('../../js/sys/appearance.js'), PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), fs=require('fs'), path=require('path');
-  const ex=f=>fs.existsSync(path.join(__dirname,'../..',f)); PU.DATA.on=true;
+  const ex=f=>fs.existsSync(path.join(__dirname,'../..',f)); PU.DATA.on=true; PU.DATA.retired=false;
   try{ for(const hero of ['kael','kaia']){ const S={hero,skins:['w00','a00','w24','a34'],skinEq:{weapon:'w24',armor:'a34'},inv:[]}, h=makeHost(); h.equipped=()=>({hat:{slot:'hat',e:3,r:2}});
       A.addCosmetic(S,'goggles'); A.equipCosmetic(S,'glasses','goggles'); const before=JSON.stringify([S.skins,S.skinEq,A.look(S).cos]), lay0=A.layers(S,h).map(l=>l.key).join('|');
       for(const [a,b,st] of [[21,22,1],[34,35,2],[69,70,3]]){ L.ensure(S).lvl=a; assert.strictEqual(PU.pending(S,h).ready,false,'Nv '+a);
         L.ensure(S).lvl=b; const p=PU.pending(S,h); assert.ok(p.ready&&p.anim.layered,'Nv '+b+': evolução por camadas (tem skin e óculos)'); assert.ok(PU.evolve(S,h).ok);
         assert.strictEqual(JSON.stringify([S.skins,S.skinEq,A.look(S).cos]),before,'skin/cosmético intactos na fase '+st); assert.strictEqual(A.layers(S,h).map(l=>l.key).join('|'),lay0,'mesmas camadas');
         const r=A.sheetFor(S,h,'idle'); assert.strictEqual(r.stage,st); assert.ok(ex(r.body+'.json'),'folha da fase nova existe'); if(!ex(r.masks+'_head.json')) console.warn('AVISO (arte): falta '+r.masks+'_head.json (chapéu/óculos nessa fase)'); } } 
-  } finally { PU.DATA.on=false; }
+  } finally { PU.DATA.on=false; PU.DATA.retired=true; }
   assert.strictEqual(A.skinCoverage('w24',ex).ok,true,'arma vale em todas as fases'); const c=A.skinCoverage('a34',ex); assert.strictEqual(c.kind,'combo'); assert.strictEqual(A.canSell('a34',ex),false,'decisão final do dono: roupa-skin fora de venda'); A.DATA.outfitCombosOn=true; assert.strictEqual(A.canSell('a34',ex),true,'com as combinações ligadas: vende');
   assert.ok(A.skinCoverage('a34',()=>false).missing.length>=2,'sem as peças (chapéu, aura) não vende'); A.DATA.outfitCombosOn=false;
 });
@@ -942,11 +954,11 @@ t('roupa-skin = combinação (código mantido, DESLIGADO pelo dono): com a chave
   assert.deepStrictEqual(A.comboOf('a00'),{hat:null,vest:'couro',boots:'couro',glasses:null,mask:null,aura:null}); assert.strictEqual(A.comboOf('a64').glasses,null,'o chapéu da era 6 já tem a viseira'); assert.strictEqual(A.comboOf('a64').aura,'aura4'); assert.strictEqual(A.comboOf('a43').glasses,null); assert.strictEqual(A.comboOf('p10').mask,'carnival'); assert.strictEqual(A.comboOf('w12'),null);
   for(const id of ids){ const c=A.comboOf(id); for(const k of ['vest','boots']) assert.ok(A.MATERIALS[c[k]],id+' '+k); }
   // save ANTIGO: roupa-skin equipada no modo skin → agora vira camadas (nada de corpo inteiro), igual em todas as fases e nos dois heróis
-  PU.DATA.on=true; try{ for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero,skins:['w00','a00','a54'],skinEq:{weapon:'w00',armor:'a54'}}; A.setMode(S,'skin'); L.ensure(S).lvl=120; PU.ensure(S).stg=st;
+  PU.DATA.on=true; PU.DATA.retired=false; try{ for(const hero of ['kael','kaia']) for(let st=0;st<4;st++){ const S={hero,skins:['w00','a00','a54'],skinEq:{weapon:'w00',armor:'a54'}}; A.setMode(S,'skin'); L.ensure(S).lvl=120; PU.ensure(S).stg=st;
       const lay=A.layers(S,makeHost()); assert.ok(!lay.some(l=>l.layer==='skin'),'sem corpo inteiro'); const by=k=>lay.find(l=>l.layer===k);
       assert.deepStrictEqual([by('hat').hat,by('armor').mat,by('boots').mat,by('glasses').cos,by('aura').aura,lay[0].layer],['era5','ouro','ouro','goggles','aura_evil','aura']);
       A.setLookHidden(S,'hat',true); assert.ok(!A.layers(S,makeHost()).some(l=>l.layer==='hat'),'ocultar o chapéu vale na combinação'); A.addCosmetic(S,'ninja'); A.equipCosmetic(S,'mask','ninja');
-      assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; }
+      assert.strictEqual(A.layers(S,makeHost()).find(l=>l.layer==='mask').cos,'ninja','máscara do jogador por cima da combinação'); } } finally { PU.DATA.on=false; PU.DATA.retired=true; }
   } finally { A.DATA.outfitCombosOn=false; }
 });
 t('decisão final do dono: Kael/Kaia de hoje são o padrão; roupa-skin fora de venda e inativa (nota "nova skin em breve"), sem perda; arma segue',()=>{
@@ -959,14 +971,14 @@ t('decisão final do dono: Kael/Kaia de hoje são o padrão; roupa-skin fora de 
 
 t('fases na carga: save antigo no Nv 60 entra adulto direto (catchUp), camadas mantidas 34→35; drop no chão por raridade (tabela única)',()=>{
   const PU=require('../../js/sys/phaseup.js'), L=require('../../js/sys/level.js'), A=require('../../js/sys/appearance.js'), T=require('../../js/sys/stats.js');
-  PU.DATA.on=true; try{ const S={hero:'kaia',skins:['w00','a00','a43'],skinEq:{weapon:'w00',armor:'a43'}}; A.setMode(S,'skin'); L.ensure(S).lvl=60;
+  PU.DATA.on=true; PU.DATA.retired=false; try{ const S={hero:'kaia',skins:['w00','a00','a43'],skinEq:{weapon:'w00',armor:'a43'}}; A.setMode(S,'skin'); L.ensure(S).lvl=60;
     const c=PU.catchUp(S,makeHost()); assert.deepStrictEqual([c.from,c.to,c.applied],[0,1,1],'aplica tudo menos a última');
     const pe=PU.pending(S,makeHost()); assert.deepStrictEqual([pe.ready,pe.from,pe.to,pe.anim.sheet],[true,1,2,'assets/anim/fx/kaia_evolve_1_2'],'UMA animação: a final, da Kaia'); assert.ok(PU.evolve(S,makeHost()).ok);
     assert.strictEqual(A.sheetFor(S,makeHost(),'idle').dir,'assets/anim/hyb/kaia_phase2/'); assert.strictEqual(PU.pending(S,makeHost()).ready,false,'nada em fila');
     assert.strictEqual(PU.catchUp(S,makeHost()).applied,0,'idempotente');
     const S2={hero:'kael',skins:['a43'],skinEq:{armor:'a43'}}; A.setMode(S2,'skin'); L.ensure(S2).lvl=34; PU.catchUp(S2,makeHost()); while(PU.pending(S2,makeHost()).ready) PU.evolve(S2,makeHost()); const before=A.layers(S2,makeHost()).map(l=>l.key).join('|');
     L.ensure(S2).lvl=35; assert.ok(PU.evolve(S2,makeHost()).ok); assert.strictEqual(A.layers(S2,makeHost()).map(l=>l.key).join('|'),before,'camadas iguais 34→35'); assert.strictEqual(PU.current(S2),2);
-  } finally { PU.DATA.on=false; }
+  } finally { PU.DATA.on=false; PU.DATA.retired=true; }
   const d=[0,1,2,3,4,5].map(r=>T.dropFx(r)); assert.deepStrictEqual(d.map(x=>x.beam),[0,0,0,62,62,62]); assert.deepStrictEqual(d.map(x=>x.sound&&x.sound.id),[null,null,'gem','legendary','legendary','legendary']);
   assert.ok(d.every((x,i)=>i===0||x.glow>d[i-1].glow)); assert.strictEqual(T.dropFx({r:4}).color,'#ffc94a','paleta do Equipamento');
 });

@@ -8,6 +8,9 @@
 'use strict';
 const DATA={
   on:false, useFc:false,
+  // DECISÃO FINAL DO DONO (12/11): o herói NÃO cresce mais. retired:true vence o on (mesmo com o boot ligando DATA.on): current()=0, sem pending/evolve/catchUp.
+  // O adulto e o guerreiro viraram SKINS FIXAS (Sys.appearance.fixedSkins). Save antigo: o stg fica guardado (nada se perde; fase nunca deu poder).
+  retired:true,
   levels:[1,22,35,70], fc:[0,15000,400000,6e8],
   names:{kael:['Garoto','Adolescente','Adulto','Guerreiro lendário'], kaia:['Menina','Adolescente','Adulta','Guerreira lendária']},
   // animação de evolução por passo (de → para). Só existe a 0→1 (assets/anim/fx/evolve_0_1, 38 quadros, pés em (224, 352)); as outras usam a do
@@ -20,7 +23,7 @@ const DATA={
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const ON=()=>DATA.on===true;
+const ON=()=>DATA.on===true&&DATA.retired!==true;
 const SYS=()=>root.Sys||{};
 const heroOf=S=>S&&S.hero==='kaia'?'kaia':'kael';
 const lvlOf=(S,host)=>{ const L=SYS().level; if(L&&L.level) return L.level(S); return int0(host&&host.level&&host.level())||1; };
