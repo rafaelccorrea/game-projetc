@@ -65,7 +65,8 @@ t('StageKit desligado por padrão',()=>{ assert.strictEqual(SK.DATA.on,false); }
 
 /* ACHADOS CONHECIDOS da arte (avisados à Arte e ao Engenheiro em 13/11): aparecem como AVISO e não quebram o teste; achado NOVO quebra */
 /* papagaio e falcão saíram (13/11): com a subida real dos voadores (fly ÷ h × altura) nenhum quadro afunda no chão */
-const KNOWN=[/kael_pistol_shoot_body q\d+ mão no grip/,/kael_cyborg\/kael_attack_body q\d+ mão no grip/,/kael_demon\/kael_attack_body q5 mão no grip/];
+/* ciborgue, demônio e pistola atirando: grip corrigido no json pela Arte (7429424, 36683e8, bbaf54d). Lista vazia: qualquer achado volta a FALHAR */
+const KNOWN=[];
 const known=fails.filter(x=>KNOWN.some(r=>r.test(x))); for(const k of known) fails.splice(fails.indexOf(k),1);
 if(known.length){ const by={}; for(const k of known){ const kk=k.replace(/ q\d+ /,' qN ').replace(/:.*/,''); by[kk]=(by[kk]||0)+1; } console.log('AVISOS (achados conhecidos da arte): '+Object.entries(by).map(([k,v])=>v+'× '+k).join(' · ')); }
 console.log(n+' verificações ok'+(notes.length?' · '+notes.length+' folhas ausentes':''));
