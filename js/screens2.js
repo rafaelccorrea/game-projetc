@@ -217,7 +217,7 @@ function pMisScreen(){ try{ const R=window.Screens&&Screens.reg&&Screens.reg.mis
 /* abre a tela 34 pelo caminho que ela pede (pedido Q-6: Panels.open('missions'); sem o Panels, Screens.open). Devolve true só se a tela 34 ficou na frente:
    enquanto o setView do index.html trocar 'missions' por 'pass', a chamada cai na lista de missões daqui e isto devolve false (quem chama garante a lista). */
 function pMisOpen(){ try{ if(window.Panels&&Panels.defs&&Panels.defs.missions&&typeof Panels.open==='function') Panels.open('missions',{tab:'daily'}); else Screens.open('missions',{tab:'daily'}); }catch(e){ console.error('Passe: abrir Missões',e); }
-  return typeof view!=='undefined'&&view==='missions'; }
+  return typeof view!=='undefined'&&(view==='missions'||view==='missions34'); }   /* 'missions34' = a tela 34 pelo gancho provisório do js/panels.js */
 /* trilha já rolada até o nível atual do passe, com a linha dele no meio da parte visível (abaixo da legenda presa). Conta por medida fixa (linha de 70 + vão de 6),
    só a altura da lista é lida da tela; se ela ainda não tiver altura, tenta de novo no quadro seguinte. */
 function pScrollCur(sc,cur){ const lv=Math.max(1,cur||1), go=()=>{ const h=sc.clientHeight||0; if(!h) return false; sc.scrollTop=Math.max(0,Math.round(P_PAD+(lv-1)*(P_ROWH+P_GAP)-(h-P_THD-P_ROWH)/2)); return true; };
@@ -365,7 +365,7 @@ function scrPass(){
       <button role="tab" class="lil" aria-selected="${isMs}" data-x="tab" data-t="mis" style="position:relative;flex:1;border-radius:10px;border:0;${seg(isMs)};font-size:16px;padding:0">Missões${ready?`<span class="p-pill" style="position:absolute;top:4px;right:10px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff5a4e;color:#fff;font-family:Nunito,sans-serif;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${ready}</span>`:''}</button></div>`}
     ${body}<div id="xp_toast"${SC&&!isMs?' style="position:absolute;left:0;right:0;bottom:0;height:0"':''}></div></div>
     ${XP.cf?`<div class="y-veil" style="position:absolute;inset:0;z-index:30;background:rgba(8,6,4,.78);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box">
-      <div class="y-pop" role="alertdialog" aria-label="Ativar Premium" style="width:330px;border-radius:18px;border:3px solid #8a4dff;background:#221a30;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 30px rgba(138,77,255,.5)">
+      <div class="y-pop" role="alertdialog" aria-label="Ativar Premium" style="width:330px;max-width:100%;border-radius:18px;border:3px solid #8a4dff;background:#221a30;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 30px rgba(138,77,255,.5)">
         <span class="lil" style="font-size:22px;text-align:center">Ativar Passe Premium</span>
         <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:#16110d;border:1px solid #4a3a2b;font-size:13px;font-weight:800">
           <span>Equipamentos melhores: Raro e Épico ao longo do passe e 2 Itens da Temporada (níveis 27 e 30) que evoluem até Lendário</span>

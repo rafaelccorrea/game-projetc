@@ -10,7 +10,9 @@
    render()  desenha em V (use xFit/xDims + xWrap do screens.js, base de 390 px)
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
-const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,vip:true,era:false,rank:true,inst:false,tower:false,result:false,cfg:true,profile:false,pets:true},window.PANEL_ON||{});
+const PANEL_ON=window.PANEL_ON=Object.assign({forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas no navegador */
+  era:false,tower:false,inst:false,mounts:false,missions:false,result:false,eggpick:false,offer:false,auction:false,   /* escritas, esperando conferência ou dependência */
+  arena:false,events:false,tourney:false,map:false,profile:false,passv2:false,guidehud:false,guild:false,codex:false,mail:false,chat:false},window.PANEL_ON||{});
 (function(){ try{ if(typeof DEBUG!=='undefined'&&DEBUG){ const m=/[?&]painel=([\w,]+)/.exec(location.search); if(m) m[1].split(',').forEach(k=>{ PANEL_ON[k]=true; }); } }catch(e){} })();
 const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
   add(name,def){ def.name=name; this.defs[name]=def; if(PANEL_ON[name]) this.enable(name); return def; },
@@ -22,6 +24,7 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
     if(typeof FB_TITLES!=='undefined') FB_TITLES[name]=d.title||''; else this.lateTitle=true;
     if(d.parent) this.hookClose();
     if(name==='cfg') this.hookCfg();
+    if(name==='missions') this.hookMissions();
     if(name==='pets'&&this.defs.eggpick&&!PANEL_ON.eggpick) this.enable('eggpick');   /* a escolha de ovo (pedido A-15) liga junto com a tela de Pets */
     this.hook(); return true; },
   /* SUBTELA (decisão do PO: Forja é subtela do Equipamento): o Voltar leva à tela-mãe (def.parent), não à batalha. Contorno do pedido B-11:
@@ -39,5 +42,15 @@ const Panels=window.Panels={ defs:{}, hooked:false, opts:null,
         if(prev&&P.on(view)&&view!==v&&prev.onClose){ try{ prev.onClose(); }catch(e){} }
         if(next&&P.on(v)&&view!==v&&next.onOpen){ try{ next.onOpen(P.opts||{}); }catch(e){} } P.opts=null;
         return s0(v); }; } },
-  open(name,o){ if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{}; if(window.Screens) Screens.open(name,o||{}); else setView(name); return true; },
+  /* ROTA ÚNICA: Panels.open(nome, o) e Screens.open(nome, o) abrem a MESMA tela. Panels.open só confere a chave (desligada = false, nada abre) e
+     entrega ao Screens.open, que troca a tela (setView) e chama onOpen. Overlays (era, result) abrem pela função open da própria tela. */
+  open(name,o){ if(!this.on(name)) return false; const d=this.defs[name]; if(d.overlay) return d.open?d.open(o||{}):false; this.opts=o||{};
+    if(window.Screens&&typeof Screens.open==='function'){ if(typeof Screens.register==='function'&&!(Screens.reg&&Screens.reg[name])) this.enable(name); return Screens.open(name,o||{})!==false; }
+    setView(name); return true; },
+  /* 'missions': o setView do index.html troca 'missions' por 'pass' + aba Missões (apelido antigo). Com a tela 34 ligada, este gancho registra a
+     MESMA tela também como 'missions34' e desvia setView('missions') para lá. Sai quando o index condicionar o apelido (pedido B-26). */
+  hookMissions(){ if(this.misHooked||typeof setView!=='function'||!window.Screens||typeof Screens.register!=='function') return; this.misHooked=true; const P=this, d=this.defs.missions, s0=setView;
+    try{ Screens.register('missions34',{title:d.title,render:d.render,onOpen:d.onOpen,onClose:d.onClose}); }catch(e){}
+    this.defs.missions34=d; if(typeof FULL_VIEWS!=='undefined') FULL_VIEWS.missions34=1; PANEL_ON.missions34=true;
+    setView=function(v){ if(v==='missions'&&P.on('missions')&&Screens.reg.missions34&&!Screens.reg.missions34.broken&&!(Screens.reg.missions&&Screens.reg.missions.broken)) v='missions34'; return s0(v); }; },
   cur(){ const d=this.defs[typeof view!=='undefined'?view:'']; return d&&this.on(d.name)&&!d.overlay?d:null; } };

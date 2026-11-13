@@ -850,3 +850,55 @@ e a fumaça sem falha). Abre só com `SCREENS_ON.bossResult` (index.html); confe
 - Limites conhecidos (teste do subagente): em 360x584 a vitória com 4 cartões cobre 21 px do Kael; em 320x500 "Tentar de novo" fica com
   41 px. De 360x640 a 430x900 passa.
 - A ver no navegador: baú e moedas na posição do chefe; animações; o Kael caído; o HUD sumindo e voltando.
+
+## Bloco 24: LOTE v0.12.8 preparado sem navegador (ligar o que está escrito)
+
+1. LISTA DE CARGA (`js/screens.js`): equipfx, panels, p_forge, p_cfg, p_vip, p_era, p_tower, p_pets, p_rank, p_inst, p_mounts, p_missions,
+   p_arena, p_events, p_tourney, p_map, p_profile, p_pass, p_guide, p_guild, p_codex, p_mail, p_chat. `node --check` ok em todas;
+   `conflitos.js` sem conflito nessas. NÃO carreguei `p_intro` (conflito de nomes: `esc` com artprev.js e `KAIA_ON` com intro.js).
+   Chaves em `js/panels.js`: LIGADAS forge, cfg, vip, pets, rank. DESLIGADAS era, tower, inst, mounts, missions, result, eggpick (liga com
+   pets), offer, auction, arena, events, tourney, map, profile, passv2, guidehud, guild, codex, mail, chat.
+2. ROTAS: `Panels.open` = confere a chave e chama `Screens.open` (mesma tela). 'missions': gancho provisório no `panels.js` (a tela 34
+   entra como `missions34` enquanto o `setView` do index troca 'missions' por 'pass'); só age com `PANEL_ON.missions` ligada. Pedido B-26.
+3. PASSE, duas versões: comparação por leitura em curso (subagente só de leitura); resposta em seguida.
+4. Título cortado do cabeçalho: anotado para o agente A (B-26).
+5. Aviso de poder: com `NEXT_ON` e `fcNotice`, o selo "FC +N" do Equipamento não é desenhado. Escrito, não visto.
+6. NÚMEROS: `kf` chama `Sys.stats.abbr(v, {pt})` (reserva: o corpo antigo); `PANEL_V2.ptNum` LIGADA: mil, mi, bi, tri, qua, qui.
+   Outros formatadores meus: `gNum` (número inteiro com pontos até 10 milhões, depois `kf`), `n0` (inteiro com pontos, usado em gemas,
+   pedras, níveis), `p1` / `f1c` (porcentagens). Nenhum deles tem sufixo próprio. As telas `p_*` usam `kf`/`gNum`/`n0`; não achei sufixo
+   "K/M/B" escrito à mão nelas (busca simples).
+7. Estrela de texto: tirei também de `js/p_auction.js` e `js/p_offer.js` (minhas, desligadas). Nas telas dos outros ainda há caractere
+   em faixa de símbolo: `p_map.js` (um "✕" no botão fechar) e `p_profile.js` (um "★" dentro de uma expressão de troca de texto).
+8. Mapa (`p_map.js`, da Arte): só carregado; fica desligado até a curva nova.
+9. Teste de fumaça: consertei o leitor da lista de módulos (o index mudou o formato da lista); 133 passos, 0 falhas em 390x788 e 360x584.
+
+ORDEM em que quero conferir no navegador (ligando cada chave se estiver boa):
+ a) regressão rápida das 5 telas com `ptNum` ligada (números em português) e o Passe com rolagem;
+ b) Montarias (equipar lobo e grifo) → `mounts`;
+ c) Troca de era refeita → `era`; Torre refeita → `tower`;
+ d) Missões (tela 34) pelo botão do Passe e pelo MENU → `missions`;
+ e) Vitória/Derrota com `dbgResult` (a chave é do agente A);
+ f) telas do QA e de Sistemas, uma a uma: profile, mail, codex, guild, chat, arena, events, tourney, guidehud;
+ g) passv2 só para comparar com a minha (decisão do PO); mapa só abrir (fica desligado).
+
+## Bloco 25: as duas versões do Passe com rolagem (comparação por leitura, nada apagado)
+
+RECOMENDAÇÃO: ficar com a MINHA (dentro da tela `pass`, `js/screens2.js`) como base, e aproveitar três coisas da do QA (`js/p_pass.js`, `passv2`).
+- Por que a minha: é a que segue o protótipo (cartão da temporada, legenda, nó redondo, linha de progresso, cadeado, diálogo); já é a tela
+  que o MENU, a Loja e o tutorial abrem; cumpre a liberação no nível 18, o voo de moeda, a raridade única e "nada mudo ao toque"; resgata
+  nível por nível.
+- Por que não a do QA hoje: não resgata por nível (espera um `Sys.pass.claimTier` que não existe: o nível pronto só mostra "Pronto"); os
+  cartões não respondem ao toque; não confere a liberação por nível; sem voo de moeda; sem cartão da temporada, linha e cadeado; a lista
+  não abre no nível atual da 2ª abertura em diante.
+- O que aproveitar dela: (1) textos lidos do `Sys.pass` (a minha tem números escritos à mão: "Épico no 30", "níveis 27 e 30", "nível 25",
+  "Temporada Solar"); (2) o aviso fixo de itens guardados; (3) o teste de comportamento (`test/paineis/p_pass.smoke.js`) adaptado.
+- Risco da minha que precisa dos Sistemas: o resgate de UM nível (`pClaimOne`) mexe no estado interno do `Sys.pass` para reaproveitar o
+  `claimAll`; funciona pela leitura, mas há dois casos de prêmio em dobro ou perdido (erro no meio da entrega; virada de temporada durante
+  o resgate). Pedido B-27: `Sys.pass.claimTier(S, host, trilha, nível)`.
+- DEFEITO COMUM, importante: quando o botão "Missões" passar a abrir a tela 34, a missão diária deixa de dar XP do JOGADOR (hoje quem
+  chama `Sys.level.onMission` / `onDailyBonus` é o resgate dentro do meu Passe; o `p_missions.js` não chama). Tem de entrar na tela 34
+  antes de ligar `PANEL_ON.missions`. E o Voltar da tela 34 leva à batalha, não ao Passe.
+- Corrigi já (pequenos, escritos e não vistos): diálogo do Premium não estoura mais em 320 px; a chave `passScroll` agora existe no
+  `PANEL_V2`; o botão Missões reconhece a tela 34 também pelo nome provisório `missions34`.
+- Ficam para depois da decisão do PO: tirar os números escritos à mão; apagar a lista de Missões interna, as páginas antigas, o apelido
+  'missions' e o `p_pass.js`.

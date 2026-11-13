@@ -15,10 +15,10 @@ const BAG_MAX=60, FULL_VIEWS={gear:1,summon:1,shop:1,pass:1,prog:1};
    equipFly = itens voando no "Equipar melhor"; equipDrag = arrastar da mochila ao espaço; shopCol = aba "Coleção" (não existe no protótipo).
    rar = RARIDADE PELA BORDA E PELA COR com UM componente (xRar / classe .xr, mais abaixo) em todo lugar que mostra item nos painéis: mochila, espaços,
          comparação, Invocar, Loja, Passe e Forja. Desligada, cada tela volta a desenhar o item exatamente como antes (mesmo HTML). */
-const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:false,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true},window.PANEL_V2||{});
+const PANEL_V2=window.PANEL_V2=Object.assign({ptNum:true,passScroll:true,frame:false,gate:true,real:true,fit:true,equip:true,equipFly:true,equipDrag:true,summon:true,shop:true,shopCol:false,pass:true,prog:true,rar:true},window.PANEL_V2||{});
 const n0=v=>Math.round(v).toLocaleString('pt-BR');
 const p1=v=>String(Math.round(v*10)/10).replace('.',',')+'%';
-const kf=v=>{ v=Math.max(0,v||0); const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
+const kf=v=>{ v=Math.max(0,v||0); try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v,{pt:!!PANEL_V2.ptNum}); }catch(e){}   /* fonte única dos números abreviados (o corpo abaixo é só reserva: parava em tri) */ const f=(x,u)=>(x>=100?Math.round(x)+'':x.toFixed(1).replace('.',','))+u; const U=PANEL_V2.ptNum?[' tri',' bi',' mi',' mil']:['T','B','M','K'];   /* PANEL_V2.ptNum = sufixos em português (decisão do dono); desligado até o PO mandar ligar junto com a curva de 9 eras */
   return v>=1e12?f(v/1e12,U[0]):v>=1e9?f(v/1e9,U[1]):v>=1e6?f(v/1e6,U[2]):v>=1e3?f(v/1e3,U[3]):String(Math.floor(v)); };
 const gNum=v=>v>=1e7?kf(v):n0(v);
 const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -391,7 +391,7 @@ function scrGear(){
     ||`<div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;height:58px;font-size:13px;font-weight:800;color:#c9b9a2">Nenhum item neste espaço ainda. Invoque ou derrote chefes.</div>`;
   const best=gBest(), dots=Array.from({length:pages},(_,i)=>`<span style="width:${i===XG.page?22:8}px;height:8px;border-radius:4px;background:${i===XG.page?'#ffc94a':'#4a3a2b'};transition:width .2s"></span>`).join('');
   const selIt=XG.sel!=null?itemOf(XG.sel):null; if(XG.sel!=null&&!selIt) XG.sel=null;
-  const sc0=document.getElementById('xg_sc'), scTop=sc0?sc0.scrollTop:0, gain=tw&&tw.big&&tw.to.fc>tw.from.fc+0.5?tw.to.fc-tw.from.fc:0;
+  const sc0=document.getElementById('xg_sc'), scTop=sc0?sc0.scrollTop:0, gain=tw&&tw.big&&tw.to.fc>tw.from.fc+0.5&&!(typeof NEXT_ON!=='undefined'&&NEXT_ON&&typeof fcNotice==='function')?tw.to.fc-tw.from.fc:0;   /* com o aviso único de poder do index (fcNotice, pedido A-19) o meu "FC +N" sai */
   V.innerHTML=xWrap(d,XG.anim?'x-in':'',`
     <div ${d.real?'class="x-scroll" id="xg_sc" style="flex:1;min-height:0;display:flex;flex-direction:column"':'style="display:contents"'}>
     <div style="position:relative;height:${vitH}px;flex:none;overflow:hidden;background:#7fb3d9">
@@ -820,6 +820,6 @@ addEventListener('resize',()=>{ if(FULL_VIEWS[view]) softRender(); });
 
 /* ---------- arquivos novos dos painéis (agente B): carregados daqui para não mexer no index.html ---------- */
 (function(){ const v=(typeof DEBUG!=='undefined'&&DEBUG)?Date.now():(typeof VERSION!=='undefined'?VERSION:'');
-  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
+  for(const n of ['equipfx','panels','p_forge','p_cfg','p_vip','p_era','p_tower','p_pets','p_rank','p_inst','p_mounts','p_missions','p_arena','p_events','p_tourney','p_map','p_profile','p_pass','p_guide','p_guild','p_codex','p_mail','p_chat']){   /* telas novas (js/p_*.js) entram nesta lista quando estiverem escritas */ const src='js/'+n+'.js?v='+v;
     if(document.readyState==='loading') document.write('<script src="'+src+'"><\/script>');
     else { const el=document.createElement('script'); el.src=src; el.async=false; document.head.appendChild(el); } } })();
