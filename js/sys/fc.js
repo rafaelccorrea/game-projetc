@@ -7,7 +7,7 @@
 
 /* ---------------- dados (balanceamento) ---------------- */
 const DATA={
-  viewOn:false,    // escala de EXIBIÇÃO da FC (×VIEW.k); desligada = FC real na tela. O engenheiro liga quando todas as telas usarem viewText
+  viewOn:true,     // escala de EXIBIÇÃO da FC (×VIEW.k) LIGADA (12/11: a varredura das telas fechou: painéis 599be94, QA d7b3b49, engenheiro 4e35bc7)
   wAtk:5,         // peso do ATK na FC (no jogo o HP base é ~5x o ATK: 100 x 5 + 8 x 40 por raridade)
   wHp:1,           // peso do HP
   wDef:5,          // peso da DEF plana na parte de vida (colete Básico era 0: 4 DEF ≈ 20 de HP). PROVISÓRIO: a v7 calibra.
