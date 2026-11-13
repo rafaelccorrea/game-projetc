@@ -149,73 +149,74 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [x] Votos na página de aprovação: TUDO votado até agora (fases adultas V2, Serpe V2, 45 armas, montarias, Kaia, pets novos, aparência, Kael V2 animado, cenários 6 e 7, prints da v0.12.8). Nada pendente
 - [ ] Próximos votos (quando chegarem, eu aviso): asa no Kael montado (refeita), Kaia adulta e guerreira V2 animadas, cenários das eras 5 e 8
 - [ ] Moedas do incidente: escrever "sim" na janela do Engenheiro e ligar o celular no cabo
+- [ ] Se quiser cópia do servidor no GitHub: criar um repositório PRIVADO vazio e mandar o endereço
 - [ ] Servidor: acesso à AWS EC2, endereço do Postgres (DATABASE_URL), ID do Google, conta de serviço do Play Console e os produtos de compra (guia `fps-server/docs/google-play-setup.md`). Tudo por variável de ambiente, nunca por mensagem
 - [ ] Política de privacidade num link; classificação etária; parecer de advogado (chat com menores, leilão, trocas)
 - [x] Telas votadas hoje: todas aprovadas (Título B, Bem-vindo, Nome, Guilda, Aparência, missão guia, Passe com rolagem, Códex V2, Correio, Chat, Montarias, Missões)
 - [x] Montaria Mítica: tigre de cristal
 
-## B. O QUE AINDA NÃO ESTÁ NO JOGO
+## B. SITUAÇÃO DE CADA PARTE DO JOGO (revisada em 13/11, 01h15)
+
+Legenda: `[x]` ligado no jogo e conferido no navegador · `[~]` escrito e salvo, sendo ligado ou ajustado · `[ ]` ainda não feito
 
 **Telas**
-- [x] Batalha em tela cheia, menu agrupado, barras sobre o Kael · Equipamento · Invocar · Loja · Passe · Práticas · Títulos · Forja · Configurações · VIP
-- [~] Torre (inteira rolando) · Troca de era (sem "nova ultimate") · Instâncias · Ranking animado · Vitória/Derrota (v0.12.8)
-- [ ] Passe com rolagem · missão guia na Batalha · Missões (v0.12.10); "Atividade de hoje" e "Conquistas" dependem da regra que Sistemas está escrevendo
-- [ ] Aba Aparência no Equipamento (v0.12.11)
-- [ ] Título (logo B) · Login · Prólogo com o avô · Criação (Kael/Kaia) · Nome do jogador · Bem-vindo de volta · Perfil e Coleção · Oferta de 1ª compra (R$ 29,90)
-- [ ] Códex V2 · Correio · Chat de frases prontas · Guilda
-- [ ] Mapa das Eras com 100 fases × 4 dificuldades (Fácil/Médio/Difícil/Hell)
-- [ ] Arena · Eventos · Torneio do Poder · Leilão (telas; prêmios só com servidor)
-- [x] Menu: funções escondidas até o nível, com "NOVO!"
+- [x] Batalha em tela cheia · Equipamento · Invocar · Loja · Passe (só a trilha + botão Missões) · Práticas · Títulos · Forja · Configurações · VIP · Pets · Ranking
+- [x] Torre inteira rolando · Troca de era (sem "nova ultimate") · Missões · Perfil e Coleção · Códex · Guilda · Chat (só frases prontas)
+- [x] Arena · Eventos (loja, missões, Trilha e Chefe) · Torneio do Poder · Montarias
+- [x] Telas de entrada: Título B · Login (convidado; Google "em breve") · Prólogo com o avô · Criação · Nome · Bem-vindo de volta
+- [x] Menu por nível com "NOVO!" e os 7 ícones novos
+- [~] Correio (carta de boas-vindas entrando) · Instâncias (luta em conferência) · Vitória/Derrota com chefe real · missão guia na batalha
+- [~] Mapa das Eras (escrito; o QA liga à curva das 100 fases × 4 dificuldades)
+- [~] Aba Aparência no Equipamento (QA fazendo agora)
+- [~] Leilão (só ouro, preço fixo, 18+; QA conferindo) · Oferta de 1ª compra (pronta; por enquanto só no Modo dono)
 
 **Poder (FC) e habilidades**
-- [ ] Mostrar o FC que subiu (verde ▲) ou desceu (vermelho ▼) em tudo que mexe no poder: item, título, pet, montaria, asa, Forja, fusão, nível (v0.12.8)
-- [ ] Ultimate e habilidades pela ARMA na mão (a era da arma); a raridade muda cor, força e golpe final. A era do mapa muda só cenário e drops (v0.12.9)
+- [x] FC que sobe (verde ▲) ou desce (vermelho ▼) na tela, com o total contando
+- [x] Ultimate pela arma; a raridade muda cor, força e golpe final (Básico cinza, Épico roxo, Lendário dourado)
+- [x] Números abreviados até o quintilhão
 
 **Personagem**
-- [x] Subir de nível novo · pistola (eras 3, 5, 6) e revólver (era 4) · 45 armas por raridade com brilho
-- [~] Asas: já aparecem atrás do Kael. Cada asa é um item; você equipa a que quiser. Anjo cai nas eras 0-6 e 8 (primeira asa no nível 50); demoníaca na era 7 e no Hell. Skin de asa pode vir depois
-- [ ] Kael crescendo: adolescente (22), adulto (35), guerreiro (70), com animação de evolução. Adulto e guerreiro com CORPO DE ADULTO (arte refeita, esperando seu voto) e maiores na tela
-- [ ] Kaia jogável e crescendo nas 3 fases (adulta e guerreira com corpo de mulher, idem)
-- [ ] Morte nova do Kael (v0.12.12)
-- [ ] Aparência em camadas: chapéu por era, colete e botas, óculos e máscaras, modo Itens/Skin, esconder peça
+- [x] Subir de nível novo · pistola e revólver · 45 armas por raridade com brilho
+- [x] Morte nova do Kael (a pé e montado)
+- [~] Asas por item (anjo eras 0-6 e 8; demoníaca era 7 e Hell): a pé ok; MONTADO reprovada por você, sendo presa nas costas
+- [~] Kael crescendo: adulto e guerreiro V2 APROVADOS, sendo ligados; tamanho por fase na tela; evolução adolescente→adulto e adulto→guerreiro sendo animada
+- [~] Kaia adulta e guerreira V2 sendo animadas (vão para o seu voto) · [ ] Kaia jogável na Criação (hoje "chega em breve")
 - [ ] Auras maligna e celestial (Submundo e Celestial)
 
 **PETS**
-- [x] Ovo no nível 20 chocando; pet na batalha nos 3 estágios, atacando sozinho; tela de Pets (v0.12.6)
-- [~] Pet AO LADO do Kael, um pouco à frente, sem cobrir a montaria (v0.12.7, em ajuste)
-- [ ] Conferir o sorteio 79% / 21% e os outros pets (Esfinge, Dragão, Cão) na batalha
-- [ ] Pets do Submundo (Cérbero), Celestial (Pégaso) e Prismático (raposa, por 1.000 fragmentos)
+- [x] Ovo no nível 20 chocando; pet na batalha nos 3 estágios; tela de Pets; pet ao lado do Kael, um pouco à frente
+- [~] Pet ainda encosta no inimigo (engenheiro ajustando)
+- [x] Prismático por 1.000 fragmentos (regra pronta) · [ ] Cérbero, Pégaso e Prismático aparecendo na batalha · [ ] conferir o sorteio 79/21
 
 **MONTARIAS**
-- [~] Kael montado no Lobo e no Grifo, com a arma do jogador (v0.12.7, em ajuste: pet cobrindo as patas, asa se confundindo com a do grifo, aura fraca)
-- [ ] Pônei, Cavalo de guerra e Tigre de cristal (arte pronta, ligando na v0.12.7)
-- [ ] Serpe dourada V2 (refeita, esperando seu voto)
-- [ ] Tela de Montarias · aura por estrela · atributos (3% a 12%) · lobo na oferta de 1ª compra
+- [x] As 6 (pônei, cavalo, tigre, lobo, grifo, serpe V2) paradas, correndo e golpeando, com aura por estrela; tela de Montarias; arma fora do rosto; sem mancha no lobo
+- [~] Serpe aparecendo na tela de Montarias
 
 **Mundo e progressão**
-- [ ] Inimigo sem ficar parado entre golpes · cenário vivo Industrial (v0.12.12), depois Moderna, Futurista, Submundo, Celestial
-- [ ] Submundo e Celestial jogáveis (inimigos, chefes, mapas)
-- [ ] Curva de 6 meses (níveis 1-120), qualidade do item (estrelas), fusão, item adormecido, números abreviados
-- [ ] Raridade pela cor também no item caído no chão (brilho/feixe) e na mochila, com som
+- [x] Inimigo sem ficar parado entre golpes (eras 0-6)
+- [x] Cenários vivos: Medieval e Industrial ligados · [~] Futurista e Submundo APROVADOS, sendo ligados · [~] Moderna (acabamento) e Celestial indo para o seu voto
+- [x] Curva de 6 meses simulada (grátis termina no dia 179, ~10,1 mil diamantes); inimigos mais fortes por era (sua decisão)
+- [x] Qualidade (estrelas), fusão, item adormecido (regras prontas) · [~] ligando nas telas
+- [~] Eras 7 (Submundo) e 8 (Celestial) jogáveis: números prontos, inimigos animados aprovados, ligando
 
 **Loja e online (precisa do servidor e do seu acesso)**
-- [~] Servidor pronto no PC: contas, save na nuvem, compras do Google Play, cartão mensal, correio (134 testes). Falta o seu acesso para pôr no ar
-- [ ] Login convidado + Google · compras reais (gemas, cartão mensal, Passe Premium, skins, oferta, VIP)
-- [ ] Ranking/Arena/Eventos/Torneio com prêmio, Leilão, Guilda, chat de frases prontas, painel de moderação
+- [~] Tudo pronto no PC e no jogo, desligado: contas, save na nuvem, compras do Google Play, correio, arena/ranking/eventos online, chat de frases prontas online. Falta: o seu acesso (AWS, banco, Google, Play Console)
+- [ ] Painel de moderação (Servidor fazendo agora) · guilda e leilão online
+- [ ] Repositório do servidor no GitHub: o fps-server está só neste PC; se quiser cópia, crie um repositório PRIVADO vazio e me mande o endereço
 
 **Para a loja**
-- [ ] Carregar só a arte em uso (para não travar em celular comum)
+- [~] Tamanho: base de ~121 MB pelo Google Play (Play Asset Delivery); o resto baixa quando precisar. Regras prontas; o engenheiro liga antes da versão de loja
 - [ ] App assinado, teste interno, ficha da loja
 
 ## C. Regras que você decidiu (resumo)
 
-Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sai dos atributos · Ultimate pela arma, era muda cenário e drops · Mostrar FC que sobe/desce · Pet ao lado do Kael, todos aparecendo (asa, Kael montado, pet, inimigo) · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP · 100 fases × 4 dificuldades · Liberação por nível (pets 20, eventos 24, arena 28, guilda 32, montaria 38, torneio 40, leilão 45, asa 50) · Pets: estrelas = qualidade, nível até 90, 3 estágios · Prismático o mais raro · Montaria: o Kael monta, dá atributo, aura por estrela · Asa = item, você escolhe · Missões numa tela só (o Passe abre ela) · Guildas até 30, Torneio 15×15 · Leilão em ouro, anônimo, 18+
+Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sai dos atributos · Ultimate pela arma, era muda cenário e drops · Mostrar FC que sobe/desce · Pet ao lado do Kael, todos aparecendo (asa, Kael montado, pet, inimigo) · Inimigos mais fortes por era (×1,08 até ×1,70) · Nunca sorteio pago; diamante comprado não passa entre contas · 9 eras, nível máx. 120, ~6 meses grátis / ~4 VIP, ~10 mil diamantes · 100 fases × 4 dificuldades · Liberação por nível (Mapa 1, Missões 2, Forja e Códex 12, Torre 15, Chat 16, pets 20, eventos 24, arena e ranking 28, guilda 32, montaria 38, torneio 40, leilão 45, asa 50) · Pets: estrelas = qualidade, nível até 90, 3 estágios · Prismático o mais raro · Montaria: o Kael monta, dá atributo, aura por estrela · Asa = item, você escolhe; skin de asa pode vir depois · Missões numa tela só (o Passe abre ela) · Chat só com frases prontas · Guildas até 30, Torneio 15×15 · Leilão em ouro, preço fixo, anônimo, 18+
 
-## D. Versões (no computador; o celular só no fim)
+## D. Versões (no GitHub; no celular só quando você pedir)
 
 - [x] v0.12.1 a v0.12.4: tela cheia, arma na mão, pistola, liberação por nível, Forja, Configurações
-- [x] v0.12.5 (f30627f): 45 armas, modo dono, asa, prévia da arte, raridade pela cor, VIP
-- [x] v0.12.6 (0bdde98): pets
-- [~] v0.12.7: montarias, pet ao lado, asa por item, tela de Montarias
-- [ ] v0.12.8 FC na tela + Torre/Troca de era/Instâncias/Ranking/Vitória · v0.12.9 ultimate pela arma · v0.12.10 Passe/missão guia/Missões · v0.12.11 Aparência · v0.12.12 Kaia, morte, inimigo, cenário Industrial · v0.12.13 telas iniciais · v0.12.14 Correio/Códex/Chat/Guilda
-- [ ] v0.13.x: Mapa + 100 fases + curva, eras 7-8, Kael e Kaia crescendo (após seu voto), carregamento sob demanda, servidor e compras
+- [x] v0.12.5: 45 armas, modo dono, asa, prévia da arte, raridade pela cor, VIP
+- [x] v0.12.6: pets
+- [x] v0.12.7 (11a2139): montarias, pet ao lado, asa por item; INSTALADA no seu S24
+- [~] v0.12.8 (em curso, lotes já no GitHub): FC na tela, ultimate pela raridade, morte nova, inimigo sem parar, 6 montarias, cenário Industrial, e as telas Torre, Troca de era, Missões, Perfil, Códex, Guilda, Chat, Arena, Eventos, Torneio, Montarias e as telas de entrada
+- [ ] Próximas: asa presa nas costas montado, fases V2 do Kael, cenários 6-7, Mapa, Aparência, Instâncias, Vitória/Derrota, missão guia, Correio, Kaia jogável, eras 7-8, Play Asset Delivery, servidor e compras
