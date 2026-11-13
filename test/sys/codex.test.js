@@ -91,4 +91,14 @@ t('sem aleatoriedade: o mesmo save dá o mesmo resultado; sync grava mesmo desli
   assert.deepStrictEqual(C.owned(mk(),h),C.owned(mk(),h)); const S=mk(); assert.ok(C.sync(S,h)>0); assert.strictEqual(C.sync(S,h),0);
 });
 
+t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet ligado E as entregas ligadas; +9 itens; posse pelo estágio',()=>{
+  clean(); const P=require('../../js/sys/pet.js'), N=require('../../js/sys/newdrops.js'); globalThis.Sys.pet=P; globalThis.Sys.newDrops=N; const on0=N.DATA.on;
+  try{ N.DATA.on=false; assert.strictEqual(C.catalog().length,117); assert.deepStrictEqual(C.newPets(),[]);
+    N.DATA.on=true; assert.deepStrictEqual(C.newPets(),['lobo','falcao','pantera']); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,126);
+    const pi=cat.filter(id=>id.startsWith('p-')); assert.deepStrictEqual(pi.slice(-9),['p-lobo-0','p-lobo-1','p-lobo-2','p-falcao-0','p-falcao-1','p-falcao-2','p-pantera-0','p-pantera-1','p-pantera-2']);
+    assert.strictEqual(pi[23],'p-prisma-2','os antigos não mudam de posição');
+    const S={sys:{pet:{owned:{falcon:{stars:1,frags:0,lvl:35,stg:1}}}}}, h=makeHost({}); const own=C.owned(S,h); assert.ok(own.includes('p-falcao-0')&&own.includes('p-falcao-1')&&!own.includes('p-falcao-2'));
+    const rd=P.DATA.newReady.panther; P.DATA.newReady.panther=false; assert.deepStrictEqual(C.newPets(),['lobo','falcao']); P.DATA.newReady.panther=rd;
+  } finally { N.DATA.on=on0; clean(); delete globalThis.Sys.newDrops; }
+});
 console.log(n+' testes ok');

@@ -23,8 +23,11 @@ const DATA={
   eras:7,                       // teto da tela (Math.min(7, ERAS.length))
   stagesPerEra:10,              // STAGES_PER_ERA do index.html (sistema antigo de fases)
   slots:[['vest','armor'],['helmet','hat'],['gloves','gloves'],['boots','boots'],['necklace','necklace'],['wings','wing']],   // [id da tela, slot do item]
-  pets:{wolf:'mamute',owl:'esfinge',drake:'dragao',parrot:'papagaio',golem:'cao',underworld:'cerbero',celestial:'pegaso',prism:'prisma'},   // save → tela
+  pets:{wolf:'mamute',owl:'esfinge',drake:'dragao',parrot:'papagaio',golem:'cao',underworld:'cerbero',celestial:'pegaso',prism:'prisma',shadowwolf:'lobo',falcon:'falcao',panther:'pantera'},   // save → tela
   petOrder:['mamute','esfinge','dragao','papagaio','cao','cerbero','pegaso','prisma'],   // ordem do K_PETS da tela
+  // PETS NOVOS (combinado com o Engenheiro, 14/11): entram NO FIM, depois do prisma (nenhum id muda de posição). Só contam quando dá para conseguir:
+  // pet ligado no Sys.pet (newPets ou newReady) E as entregas ligadas (Sys.newDrops.DATA.on); senão a coleção nunca chegaria a 100%. +9 itens (3 × 3 estágios).
+  petNew:[['lobo','shadowwolf'],['falcao','falcon'],['pantera','panther']],
   mountArt:['pony','horse','wolf','griffin','mythic','wyvern'],   // ids com arte (K_MART): só esses entram no catálogo
   mountFall:['pony','horse','wolf','griffin','mythic','wyvern'],  // sem Sys.mount (K_MFALL)
   bestEras:7, bestKinds:['e0','e1','boss'],                      // meta.json: eras 0-6 têm nome (7 e 8 ficam de fora, como na tela)
@@ -47,12 +50,15 @@ const ID_RE=/^(w|a|m|p|b|u)-[a-z0-9-]{1,30}$/;
 function eraCount(){ let n=DATA.eras; try{ if(typeof ERAS!=='undefined'&&Array.isArray(ERAS)) n=Math.min(DATA.eras,ERAS.length); }catch(e){} return n; }   // eslint-disable-line no-undef
 function mountIds(){ let L=null; try{ const M=SYS().mount; if(M&&M.DATA&&Array.isArray(M.DATA.mounts)) L=M.DATA.mounts.map(m=>m&&m.id); }catch(e){} if(!L) L=DATA.mountFall.slice();
   return L.filter(id=>DATA.mountArt.includes(id)); }
+/* pets novos que já dá para conseguir (ids da tela, na ordem do DATA.petNew) */
+function newPets(){ try{ const P=SYS().pet, N=SYS().newDrops; if(!P||!P.DATA||!N||!N.DATA||N.DATA.on!==true) return [];
+  return DATA.petNew.filter(([,id])=>{ const d=(P.DATA.pets||[]).find(x=>x&&x.id===id); return !!d&&(P.DATA.newPets===true||(P.DATA.newReady&&P.DATA.newReady[id]===true)); }).map(([c])=>c); }catch(e){ return []; } }
 /* catálogo na MESMA ordem da tela: [{id, cat}] (cat = arm|eq|mnt|pet|bes|aur) */
 function catalog(){ const A=[], E=eraCount();
   for(let e=0;e<E;e++) for(let t=0;t<3;t++) A.push({id:'w-'+e+'-'+t,cat:'arm'});
   for(let e=0;e<E;e++) for(const s of DATA.slots) A.push({id:'a-'+e+'-'+s[0],cat:'eq'});
   for(const m of mountIds()) A.push({id:'m-'+m,cat:'mnt'});
-  for(const p of DATA.petOrder) for(let s=0;s<3;s++) A.push({id:'p-'+p+'-'+s,cat:'pet'});
+  for(const p of DATA.petOrder.concat(newPets())) for(let s=0;s<3;s++) A.push({id:'p-'+p+'-'+s,cat:'pet'});
   for(let e=0;e<DATA.bestEras;e++) for(const k of DATA.bestKinds) A.push({id:'b-'+e+'-'+k,cat:'bes'});
   for(const n of DATA.auras) A.push({id:'u-'+n,cat:'aur'});
   return A; }
@@ -115,7 +121,7 @@ function screenProvider(getS,getHost){ const s=()=>typeof getS==='function'?getS
       return {claimed:r.claimed,marks:r.marks.map(m=>({p:m.p,txt:m.txt})),claim(p){ const c=claim(s(),h(),p); return {ok:c.ok,txt:c.ok?c.txt:'',reason:c.reason}; }}; },
   }; }
 
-const API={DATA,ensure,catalog,scan,sync,owned,progress,rewards,claim,screenProvider};
+const API={newPets,DATA,ensure,catalog,scan,sync,owned,progress,rewards,claim,screenProvider};
 root.Sys=root.Sys||{}; root.Sys.codex=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
