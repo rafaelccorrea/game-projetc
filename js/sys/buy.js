@@ -124,11 +124,25 @@
   }
   /** Cartão Mensal simulado: 60 💎 por dia enquanto valer (no jogo de verdade é POST /purchases/monthly-card/claim) */
   function cardStatus(S, host) { const z = simState(S), now = nowOf(host); return { active: z.card.until > now, daysLeft: Math.max(0, Math.ceil((z.card.until - now) / 86400000)), claimedToday: z.card.last === dayKey(now), simulated: simulated() }; }
+  /** Cartão Mensal, os DOIS caminhos (a tela usa sempre estes; await Promise.resolve(...) serve para os dois):
+      Modo dono → local (acima); compra real → POST /purchases/monthly-card/claim (o servidor cria a entrega de 60 💎) + Sys.buy.sync (aplica e confirma). */
+  async function cardStatusLive(S, host) {
+    if (simulated()) return cardStatus(S, host);
+    const N = net(); if (!ready() || !N || !N.entitlements) return { active: false, daysLeft: 0, claimedToday: false, simulated: false, soon: true };
+    try { const e = await N.entitlements(), c = (e && e.monthlyCard) || {}; return { active: !!c.active, daysLeft: int0(c.daysLeft), claimedToday: !!c.claimedToday, simulated: false }; }
+    catch (e) { return { active: false, daysLeft: 0, claimedToday: false, simulated: false, error: (e && e.code) || 'error' }; }
+  }
   function cardClaim(S, host) {
-    if (!simulated()) return { ok: false, reason: 'soon' };
+    if (!simulated()) return cardClaimReal(S, host);
     const st = cardStatus(S, host); if (!st.active) return { ok: false, reason: 'no_card' }; if (st.claimedToday) return { ok: false, reason: 'claimed' };
     const p = product('monthly_card'), z = simState(S); z.card.last = dayKey(nowOf(host)); if (host && host.addGems) host.addGems(p.daily); else S.gems = int0(S.gems) + p.daily;
     try { if (host && host.save) host.save(); } catch (e) {} return { ok: true, gems: p.daily, simulated: true };
+  }
+  async function cardClaimReal(S, host) {
+    if (ownerGuard()) return { ok: false, reason: 'owner_guard' };
+    const N = net(); if (!ready() || !N || !N.claimMonthlyCard) return { ok: false, reason: 'soon' };
+    try { const r = await N.claimMonthlyCard(); const applied = await sync(S, host); return { ok: true, gems: int0(r && r.gems), daysLeft: int0(r && r.daysLeft), applied, simulated: false }; }
+    catch (e) { const c = e && e.code; return { ok: false, reason: c === 'already_claimed' ? 'claimed' : c === 'no_active_card' ? 'no_card' : c || 'error' }; }
   }
   /** atalho do Modo dono: põe o VIP no nível n (pontos = o mínimo do nível; os benefícios ligam como no jogo) */
   function simVip(S, n) {
@@ -232,5 +246,5 @@
     if (p.kind !== 'mount') return true;
     try { const N = Sys().newDrops, s = N && N.shop ? N.shop() : []; const x = s.find(q => q.productId === id); return !!(x && x.on); } catch (e) { return false; } };
   const priceText = id => { const p = product(id); return p ? 'R$ ' + p.brl.toFixed(2).replace('.', ',') : ''; };
-  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available, simulated, simVip, cardStatus, cardClaim };
+  return { DATA, ensure, ready, purchase, sync, applyGrants, product, priceText, available, simulated, simVip, cardStatus, cardStatusLive, cardClaim };
 });

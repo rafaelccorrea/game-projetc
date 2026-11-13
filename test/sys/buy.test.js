@@ -120,5 +120,21 @@ function world(dels) {
       globalThis.SAVE_KEY = 'eras_owner_v1x'; assert.strictEqual(B.simulated(), false);
     } finally { delete globalThis.OWNER_MODE; delete globalThis.SAVE_KEY; }
   });
+  await t('Cartão Mensal REAL: resgate pelo servidor (claim + entrega pela lista) e status pelo /entitlements', async () => {
+    const S = { gems: 0 }, host = { addGems: x => { S.gems += x; }, save: () => {} }, dels = [];
+    globalThis.Capacitor = { Plugins: { EonBilling: { purchase: async () => ({}) } } };
+    const old = globalThis.Sys.net; let claimed = false;
+    globalThis.Sys.net = { DATA: { on: true }, hasSession: () => true, entitlements: async () => ({ monthlyCard: { active: true, daysLeft: 12, claimedToday: claimed } }),
+      claimMonthlyCard: async () => { if (claimed) throw { code: 'already_claimed' }; claimed = true; dels.push({ id: 'card1', grants: [{ kind: 'gems', amount: 60 }] }); return { gems: 60, daysLeft: 12 }; },
+      deliveries: async () => dels.slice(), ackDelivery: async id => { const i = dels.findIndex(d => d.id === id); if (i >= 0) dels.splice(i, 1); } };
+    B.DATA.on = true;
+    try {
+      assert.deepStrictEqual(await B.cardStatusLive(S, host), { active: true, daysLeft: 12, claimedToday: false, simulated: false });
+      const r = await B.cardClaim(S, host); assert.strictEqual(r.ok, true); assert.strictEqual(r.gems, 60); assert.strictEqual(S.gems, 60);
+      assert.strictEqual((await B.cardClaim(S, host)).reason, 'claimed'); assert.strictEqual(S.gems, 60);
+      assert.strictEqual((await B.cardStatusLive(S, host)).claimedToday, true);
+    } finally { B.DATA.on = false; globalThis.Sys.net = old; delete globalThis.Capacitor; }
+    assert.strictEqual((await B.cardClaim(S, host)).reason, 'soon');
+  });
   console.log(n + ' testes ok');
 })().catch(e => { console.error(e); process.exit(1); });
