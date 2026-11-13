@@ -16,7 +16,7 @@
 /* CHAVE. Desligada: o jogo é o de 7 eras, sem nenhuma mudança. Ligada: as eras 7 e 8 abrem pela Troca de era depois do Senhor da era 6.
    Está DESLIGADA porque falta arte obrigatória no disco (ERA9_MISSING). Quando os arquivos chegarem: trocar para true (só esta linha).
    Conferência sem ligar para o jogador: ?debug=1&eras9=1. Save que já entrou nas eras 7-8 continua nelas mesmo com a chave desligada (nada se perde). */
-const ERA9_KEY = false;
+const ERA9_KEY = true;   /* LIGADA em 14/11 (dono: "liga tudo"; a arte obrigatória chegou: 9b94ead; o Divino ficou com chave própria no Sys.stats, a2aa7ad, desligada). Para desligar: false (save que já entrou nas eras 7-8 continua nelas) */
 /* ARTE QUE FALTA EM assets/ (conferido em disco): os ícones dos 3 botões de golpe da batalha para a ARMA das eras 7 e 8 (js/fullbattle.js lê
    assets/icons/era<era da arma>_s<1|2|3>.png). Sem eles o botão mostra imagem quebrada assim que o jogador equipa uma arma dessas eras. */
 const ERA9_MISSING = [];   /* 14/11: a Arte entregou os 6 ícones (assets/icons/era7_s1..3 e era8_s1..3, 9b94ead). Não falta mais arte obrigatória; a ERA9_KEY continua desligada só por decisão (ligar é voto do dono, pelo PO) */
