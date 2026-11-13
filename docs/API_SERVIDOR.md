@@ -346,13 +346,13 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 |---|---|---|---|---|---|
 | Missões, atividade, instância, chefe de era, trilha de evento (`missions:daily`, `activity:full`, `inst:win`, `boss:era`, `evtrail:top`) | jogo | — | não precisa | — | não (na hora) |
 | Torre (`tower:floor`: falcão 30, raptor 50, grifo 150, asa 120/140/160) | jogo | — | não precisa | — | não |
-| Invasão da Era, baú de topo (`invasion:top`, nv 18) | **indefinido**: ninguém chama no jogo; "topo" de quê? | — | **não** | — | — |
+| Invasão da Era, baú de topo (`invasion:top`, nv 18) | jogo (Sistemas 13/11: 1 vez por semana para quem passar da meta de abates da própria invasão; a Sistemas liga) | — | não precisa | — | não |
 | Chefe Mundial (nv 24): faixa de dano e ≥5% da vida | jogo ("cada um contra o seu") | — | não precisa | — | não |
 | Chefe Mundial: topo do mês (`monthTop`, asa Fênix) | servidor (dano medido no servidor; desenho em §14.1) | `GET /worldboss?month=`, `POST /worldboss/hit` (WORLDBOSS_ON) | **sim** (fps-server, números PROVISÓRIOS) | sim (worldboss.test, memória e pg) | sim: `att.newDrops {src:'worldboss', ctx:{monthTop:true, rank}}` |
 | Torneio de Fim de Semana (nv 28): ranking próprio, top 100 (`tourney:weekend`) e prêmio por posição | servidor | `GET /weekend?week=` → {week, startsAt, endsAt, open, closed, arenaPct, me:{rank,points}, list:[{rank,id,name,points}]}; fechamento automático (WEEKEND_ON) | **sim** (fps-server, 13/11) | sim (weekend.test, memória e pg) | sim: `att.newDrops` (o jogo precisa resgatar essa chave); pedras/prismático por posição quando houver tabela |
 | Arena: ranking semanal e prêmio por faixa | servidor | `GET /ranking`, fechamento semanal | sim | sim (arena.test) | sim |
 | Arena: liga de fim de temporada (`arena:season`) | jogo, com o delta das lutas do servidor | `POST /arena/fight` | sim | sim | não (o jogo entrega a liga) |
-| Torneio da temporada, top 10 (`tourney:season`) | **indefinido**: ninguém chama no jogo; qual ranking? | — | **não** | — | — |
+| Temporada do Torneio de Fim de Semana, top 10 (`tourney:season`) | servidor (Sistemas 13/11: os fins de semana do MÊS somam os pontos; o mês é o do sábado) | `GET /weekend/season?month=` → {month, weekends, closesAt, closed, top, me, list}; paga sozinho depois do último fim de semana do mês (WEEKEND_ON) | **sim** (fps-server 000fc3a) | sim (weekend.test, memória e pg) | sim: `att.newDrops {src:'tourney:season', ctx:{rank}}` (o mail.js do jogo precisa da fonte na lista: com a Sistemas) |
 | Guilda: baú semanal (item + materiais) | servidor | Torneio do Poder, `payWeek` | sim | sim (tourney.test) | sim |
 | Guilda: baú semanal, fragmentos novos (`guild:weekly`: corvo, unicórnio) | servidor | Torneio do Poder, `payWeek` (NEWDROPS_ON) | **sim** (fps-server 1ad866e) | sim (tourney.test) | sim: `att.newDrops {src:'guild:weekly'}` no baú |
 | Guerra de guildas: Capital (`guild:capital`, 40 por temporada) | servidor (a temporada do Torneio do Poder é semanal: dono da Capital na hora dos prêmios de domingo) | Torneio do Poder, `payWeek` (NEWDROPS_ON) | **sim** (fps-server 1ad866e) | sim (tourney.test) | sim: `att.newDrops {src:'guild:capital'}` a cada membro |
@@ -362,27 +362,28 @@ Regra do dono: completar o que já existe. "Jogo" = o próprio jogo decide e ent
 | Loja: Mecha, skins (`shop:product`), pacotes, cartão, passe | servidor | `POST /purchases/google` + entregas | sim | sim (services/delivery.test) | entregas (§7) |
 | Oferta de boas-vindas (offer.js) | servidor | `first_offer` (`deliveredBy:'offer'`) | sim | sim | entregas (§7) |
 
-**A fazer, nesta ordem:**
-1. Torneio de Fim de Semana (nv 28).
-2. Guilda: fragmentos do baú semanal e Capital por temporada.
-3. Chefe Mundial: topo do mês (precisa definir como medir o dano, sem confiar no aparelho).
-
-Os dois indefinidos (Invasão: topo; Torneio da temporada) dependem da Sistemas dizer o ranking. Tudo atrás de chave.
+**Situação (13/11):** todas as fontes que dependem do servidor estão feitas, atrás de chave.
+- O resgate no jogo é o `Sys.mail.claim` → `Sys.newDrops.grant` (b2ce145). Com o Sys.newDrops desligado, a carta espera.
+- Prêmio do Fim de Semana: só o newDrops (top 100). Não há tabela de pedras, forja ou prismático (Sistemas).
 
 ### 14.1 Chefe Mundial: topo do mês (desenho do Servidor, 13/11; **para a Sistemas revisar**)
 O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`worldboss` com `frac`), "cada um contra o seu". Só o que precisa ser JUSTO entre jogadores é medido no servidor: o ranking do mês e o prêmio do topo (`ctx.monthTop`).
 - **Golpe (`POST /v1/worldboss/hit`):** o servidor luta com o MESMO motor da Arena.
   - Lado do herói: o retrato da arena do jogador (`POST /arena/snapshot`, conferido contra o teto por dia de conta).
-  - Lado do chefe: o chefe do mês. A luta é `Sys.tower.duel` do jogo (cópia fixada em `game-sys/`).
+  - Lado do chefe: o chefe escala pelo JOGADOR, para ser justo entre eras (Sistemas 13/11). A luta é `Sys.tower.duel` do jogo (cópia fixada em `game-sys/`).
   - Semente = hash no servidor de (servidor, mês, jogador, dia, nº do golpe). O aparelho não manda dano nenhum; recebe `{damage, seed, rounds, log, myDamage, hitsLeft, month}` para animar.
-- **Chefe do mês:** atributos FIXOS, iguais para todos.
-  - São as proporções do retrato honesto da arena (atk 100, vida 600, def 10, crít 12%/100%), escaladas para a FC do chefe com `Sys.tower.scaledFoe`.
-  - A vida é um poço que não acaba (10⁶ × ATK do herói): o golpe dura até o fim da luta (40 rodadas ou o herói cair). Dano = o que saiu do poço. Mais FC dá mais dano; o herói fraco cai antes.
+- **Chefe:** proporções FIXAS, as do retrato honesto da arena (atk 100, vida 600, def 10, crít 12%/100%), escaladas com `Sys.tower.scaledFoe` para:
+  - a FC do próprio jogador × `power` (como o chefe da guilda; padrão), ou
+  - a FC do chefe da ERA do jogador, se houver a tabela `WORLDBOSS_FC_BY_ERA` (9 números, era 0-8).
+  - A vida é um poço que não acaba (10⁶ × ATK do herói): o golpe dura até o fim da luta (40 rodadas ou o herói cair). Dano = o que saiu do poço.
 - **Golpes:** N por dia de Brasília (429 `daily_limit` com o tempo até a virada). Não depende da janela das 12h/20h do jogo.
-- **Ranking (`GET /v1/worldboss`):** por servidor e por mês (Brasília). Soma do dano; empate = quem chegou primeiro. Conta marcada, banida ou excluída fica fora. Resposta: `{month, closesAt, closed, boss:{fc, atk, def, critRate, critDmg, provisional:true}, hitsPerDay, hitsLeft, top, me:{damage, rank}, list:[{rank, id, name, damage}]}`.
+- **Ranking (`GET /v1/worldboss`):** por servidor e por mês (Brasília), pelo **DANO RELATIVO** = soma de (dano ÷ ATQ do retrato), a mesma faixa do chefe da guilda. Assim a era 3 disputa com a 8. Empate = quem chegou primeiro. Conta marcada, banida ou excluída fica fora.
+  - Resposta: `{month, closesAt, closed, boss:{scale:'player'|'era', power, byEra, score, provisional:true}, hitsPerDay, hitsLeft, top, me:{score, damage, rank}, list:[{rank, id, name, score, damage}]}`.
+  - O golpe devolve também `score` (relativo do golpe) e `myScore`.
 - **Fechamento:** no 1º dia do mês seguinte, o top N de cada servidor recebe pelo correio `att.newDrops = {src:'worldboss', ctx:{monthTop:true, rank}}`. É a fonte `worldboss` que o newdrops.js já tem, com `monthTop`. Uma vez só (`server_paid`).
-- **NÚMEROS PROVISÓRIOS** (por ambiente, até a Sistemas calibrar):
-  - FC do chefe `WORLDBOSS_FC` = 10⁹;
-  - golpes por dia `WORLDBOSS_HITS_PER_DAY` = 4;
-  - tamanho do topo `WORLDBOSS_TOP` = 10.
-  - Perguntas à Sistemas: a FC do chefe deve mudar a cada mês, ou por era do jogador? O topo é por servidor inteiro ou por faixa de era (hoje o VIP de era alta sempre ganha)?
+- **Respondido pela Sistemas (13/11):** por mês, por servidor, com dano relativo e chefe que escala pela era do jogador. A Sistemas revisou e concordou com o duelo no servidor.
+- **NÚMEROS PROVISÓRIOS** (por ambiente):
+  - `WORLDBOSS_POWER` = 0,8 (o do chefe da guilda);
+  - `WORLDBOSS_FC_BY_ERA` = (vazio: usa a FC do jogador);
+  - `WORLDBOSS_HITS_PER_DAY` = 4;
+  - `WORLDBOSS_TOP` = 10.
