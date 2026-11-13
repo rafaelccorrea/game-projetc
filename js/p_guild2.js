@@ -47,11 +47,15 @@ function hm(ms){ const h=Math.floor(ms/36e5), m=Math.floor(ms%36e5/6e4); return 
 const WHY={off:'As guildas ainda não foram ligadas',server:'Em breve: abre com o online',forbidden:'O seu cargo não permite isso',guild_full:'A guilda está cheia',
   rejoin_cooldown:'Você saiu desta guilda há pouco: espere para voltar',cooldown:'Você saiu de uma guilda há pouco: espere para entrar em outra',name_taken:'Já existe uma guilda com esse nome',
   name_filtered:'Esse nome não é permitido. Escolha outro',level_required:'Seu nível ainda não libera isso',already_in_guild:'Você já está em uma guilda',in_guild:'Você já está em uma guilda',
-  leader_must_transfer:'Passe a liderança antes de sair',not_in_guild:'Você não está numa guilda',daily_limit:'Você já fez isso hoje. Volta amanhã',weekly_limit:'Limite desta semana atingido',
+  leader_must_transfer:'Passe a liderança antes de sair',not_in_guild:'Você não está numa guilda',daily_limit:'Já feito hoje. Volta à meia-noite de Brasília',weekly_limit:'Limite desta semana atingido',
+  guild_level:'O nível da guilda ainda não libera este item',boss_down:'O chefe desta semana já foi derrubado',not_contributed:'Os Brasões desta missão são só para quem ajudou nela',
   not_enough_coin:'Faltam Brasões',not_enough_xp:'Falta XP da guilda',cap:'Já está no teto do nível da guilda',not_found:'Isso ainda não está disponível no servidor',
   bad_request:'Pedido inválido: confira os dados',too_many_officers:'A guilda já tem o máximo de oficiais',not_done:'A missão ainda não terminou',already_claimed:'Você já resgatou esta missão',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 const why=r=>WHY[r]||'Não foi possível agora. Tente de novo';
+/* recusa inteira ({reason, details, retryAfterMs}): no 429 daily_limit (contrato 10.5) mostra o tempo que falta quando o retryAfterMs chega; sem ele, a virada de Brasília */
+function whyR(r){ const R=r&&r.reason; if(R!=='daily_limit') return why(R); const ms=num(r.retryAfterMs)||num(r.details&&r.details.retryAfterMs); if(!(ms>0)) return why(R);
+  const h=Math.floor(ms/36e5), m=Math.floor(ms%36e5/6e4); return 'Já feito hoje. Volta em '+(h>0?h+' h '+m+' min':Math.max(1,m)+' min'); }
 function whyLocal(c){ const R=c&&c.reason;
   if(R==='level') return 'A guilda libera no nível '+nT(c.needLevel||0);
   if(R==='cooldown') return 'Espere '+hm(num(c.msLeft))+' depois de sair de uma guilda';
@@ -201,7 +205,7 @@ function say(m){ X.toast=String(m||''); X.toastT=Date.now(); redraw(); }
 
 /* ---------- rede: uma ação por vez; "Carregando…" enquanto a Promise não volta; a recusa vira texto ---------- */
 function run(label,fn,okMsg,after){ if(X.busy) return; X.busy=label||'Carregando…'; X.conf=null; redraw();
-  const end=r=>{ X.busy=''; if(r&&r.ok){ try{ if(after) after(r); }catch(e){} saved(); sfx('claim'); X.toast=String(typeof okMsg==='function'?okMsg(r):okMsg); } else X.toast=why(r&&r.reason); X.toastT=Date.now(); redraw(); };
+  const end=r=>{ X.busy=''; if(r&&r.ok){ try{ if(after) after(r); }catch(e){} saved(); sfx('claim'); X.toast=String(typeof okMsg==='function'?okMsg(r):okMsg); } else X.toast=whyR(r); X.toastT=Date.now(); redraw(); };
   let pr=null; try{ pr=fn(); }catch(e){ pr=null; } Promise.resolve(pr).then(end,()=>end(null)); }
 /* leituras por aba (lista de guildas, chefe, loja, missões): {st:'load'|'ok'|'err', d, why} */
 function loadSec(k){ const n=GN(); if(!n||!online()) return; const h=host();
@@ -322,21 +326,27 @@ function pMembers(o){ const G=GM(), D=G.DATA, L=memList(), offs=L.filter(m=>role
   const rq=Array.isArray(mine.requests)?mine.requests.filter(r=>r&&(r.playerId!=null||r.id!=null)):[];
   if(can('accept')&&rq.length){ h+=secH('Pedidos para entrar',nT(rq.length));
     for(const r of rq){ const id=String(r.playerId!=null?r.playerId:r.id), lvl=pick(r,'level','lvl');
-      h+='<div class="gd2-row"><span class="mi"><b>'+esc2(r.name||'?')+'</b><small>'+esc2([lvl!=null?'Nv '+nT(lvl):'',isN(r.fc)?'FC '+fcT(r.fc):''].filter(Boolean).join(' · '))+'</small></span></div>'
+      h+='<div class="gd2-row"><span class="mi"><b>'+esc2(r.name||'?')+'</b><small>'+esc2([lvl!=null?'Nv '+nT(lvl):'',isN(r.fc)?'FC '+fcT(r.fc):'',isN(r.at)&&r.at>0?'pediu '+ago(r.at):''].filter(Boolean).join(' · '))+'</small></span></div>'
         +'<div class="gd2-mact"><button class="gd2-bt" data-x="req" data-k="accept" data-id="'+esc2(id)+'">Aceitar</button><button class="gd2-bt ghost" data-x="req" data-k="decline" data-id="'+esc2(id)+'">Recusar</button></div>'; } }
   h+='<p class="gd2-hint">Líder ausente por '+nT(D.leave.leaderAbsentDays)+' dias passa a liderança ao oficial mais ativo. Sair: '+nT(D.leave.cooldownH)+' h para entrar em outra, '+nT(D.leave.sameGuildDays)+' dias para voltar a esta.</p>'
     +'<button class="gd2-bt ghost wide" data-x="leave">Sair da guilda</button>';
   return h; }
 
 /* ----- Doar ----- */
+/* ouro de "goldk": goldk × ouro de um abate da fase (Sys.host.goldUnit), a mesma conta do Sys.guild.createCost */
+const gUnit=()=>{ let u=1; try{ const h=host(); u=Math.max(1,num(h&&h.goldUnit&&h.goldUnit())); }catch(e){} return u; };
 function donCost(d){ const h=host(); if(d.gems) return {gems:d.gems,txt:nT(d.gems)+' diamantes',ok:!h||typeof h.canSpendGems!=='function'||!!h.canSpendGems(d.gems)};
-  let u=1; try{ u=Math.max(1,num(h&&h.goldUnit&&h.goldUnit())); }catch(e){} const g=Math.round(num(d.goldk)*u); return {gold:g,txt:kfT(g)+' de ouro',ok:!h||typeof h.canSpendGold!=='function'||!!h.canSpendGold(g)}; }
-function pDonate(o){ const D=GM().DATA, me=(mineNow()||{}).me||{}, done=Array.isArray(me.donatedToday)?me.donatedToday.map(String):[], ck=me.checkinToday===true||done.indexOf('checkin')>=0;
+  const g=Math.round(num(d.goldk)*gUnit()); return {gold:g,txt:kfT(g)+' de ouro',ok:!h||typeof h.canSpendGold!=='function'||!!h.canSpendGold(g)}; }
+/* contrato 10.5: a resposta da doação traz cost:{goldk, gems} e é ESSE o valor que o jogo debita (null = a resposta veio sem o cost) */
+function srvCost(c){ return c&&typeof c==='object'?{gems:Math.max(0,Math.round(num(c.gems))),gold:Math.round(Math.max(0,num(c.goldk))*gUnit())}:null; }
+/* contrato 10.5: me.donatedToday traz as chaves feitas no dia de Brasília ("donate:<kind>" e "checkin"); checkinToday é o mesmo dado como booleano */
+function doneToday(key){ const me=(mineNow()||{}).me||{}, L=Array.isArray(me.donatedToday)?me.donatedToday.map(String):[]; return L.indexOf(key)>=0||(key==='checkin'&&me.checkinToday===true); }
+function pDonate(o){ const D=GM().DATA, ck=doneToday('checkin'), feito='<span class="gd2-pill on">Feito hoje</span>', volta=' · volta à meia-noite de Brasília';
   let h=secH('Hoje','1 de cada por dia')
-    +'<div class="gd2-row"><span class="ic">'+SV.cal+'</span><span class="mi"><b>Check-in</b><small><em>+'+nT(D.checkin.coin)+' '+esc2(coinName(D.checkin.coin))+'</em> · +'+nT(D.checkin.xp)+' XP da guilda</small></span>'+(ck?'<span class="gd2-pill on">Feito</span>':'<button class="gd2-bt" data-x="checkin">Fazer</button>')+'</div>';
-  for(const d of D.donate){ const c=donCost(d), dn=done.indexOf(d.id)>=0;
-    h+='<div class="gd2-row"><span class="ic">'+(d.gems?img(IC.gem,28):SV.gold)+'</span><span class="mi"><b>'+esc2(DN[d.id]||d.id)+': '+esc2(c.txt)+'</b><small><em>+'+nT(d.coin)+' '+esc2(coinName(d.coin))+'</em> · +'+nT(d.xp)+' XP da guilda</small></span>'
-      +(dn?'<span class="gd2-pill on">Feito</span>':'<button class="gd2-bt'+(c.ok?'':' off')+'" data-x="don" data-id="'+esc2(d.id)+'">Doar</button>')+'</div>'; }
+    +'<div class="gd2-row"><span class="ic">'+SV.cal+'</span><span class="mi"><b>Check-in</b><small><em>+'+nT(D.checkin.coin)+' '+esc2(coinName(D.checkin.coin))+'</em> · +'+nT(D.checkin.xp)+' XP da guilda'+(ck?volta:'')+'</small></span>'+(ck?feito:'<button class="gd2-bt" data-x="checkin">Fazer</button>')+'</div>';
+  for(const d of D.donate){ const c=donCost(d), dn=doneToday('donate:'+d.id);
+    h+='<div class="gd2-row"><span class="ic">'+(d.gems?img(IC.gem,28):SV.gold)+'</span><span class="mi"><b>'+esc2(DN[d.id]||d.id)+': '+esc2(c.txt)+'</b><small><em>+'+nT(d.coin)+' '+esc2(coinName(d.coin))+'</em> · +'+nT(d.xp)+' XP da guilda'+(dn?volta:'')+'</small></span>'
+      +(dn?feito:'<button class="gd2-bt'+(c.ok?'':' off')+'" data-x="don" data-id="'+esc2(d.id)+'">Doar</button>')+'</div>'; }
   return h+'<p class="gd2-hint">'+esc2(coinName(1))+' é a moeda da guilda (loja da guilda). O XP sobe o nível: mais vagas e teto maior nas bênçãos.</p>'; }
 
 /* ----- Bênçãos ----- */
@@ -351,34 +361,56 @@ function pBless(o){ const G=GM(), B=G.DATA.banners, up=can('banner'); let bv=nul
 
 /* ----- Chefe ----- */
 function bandTxt(b){ return coinTxt(b.coin)+(b.forge?' · '+nT(b.forge)+' forja':'')+(b.food?' · '+nT(b.food)+' ração':'')+(b.essence?' · '+nT(b.essence)+' Ess.':''); }
-function pBoss(o){ const D=GM().DATA.boss, z=sec('boss'); let h='';
-  if(z.st!=='ok') h+=secHtml(z,'boss');
-  else { const d=z.d, hp=pick(d,'hpLeft','hp'), max=pick(d,'hpMax','maxHp'), left=pick(d,'hitsLeft'), lv=pick(d,'level','bossLevel'), dead=hp!=null&&hp<=0, canHit=!dead&&left!==0, fr=hp!=null&&max>0?c01(hp/max):null;
-    h+='<div class="gd2-boss"><div class="gd2-prog" style="margin-top:0"><span>Chefe da semana'+(lv!=null?' · nível '+nT(lv):'')+'</span><span>'+(fr!=null?dec(fr*100)+'%':'')+'</span></div>'
+/* contrato 10.5: GET /guild/boss → {week, hpMax, hpLeft, down, hitsLeft, myDamage, top:[{id,name,damage}], bands:[…], kill:{…}}. As faixas e o prêmio de derrubar
+   são os que o SERVIDOR mandou; só sem eles (resposta ainda não chegou) valem os do Sys.guild.DATA.boss, que é a tabela que o servidor lê */
+const bossDown=d=>!!d&&(d.down===true||(isN(d.hpLeft)&&isN(d.hpMax)&&d.hpMax>0&&d.hpLeft<=0));
+function pBoss(o){ const D=GM().DATA.boss, z=sec('boss'), d=z.st==='ok'?z.d:null; let h='';
+  const sb=d&&Array.isArray(d.bands)?d.bands.filter(b=>b&&isN(b.minRatio)).sort((a,b)=>a.minRatio-b.minRatio):[], bands=sb.length?sb:D.bands, kill=d&&d.kill&&typeof d.kill==='object'?d.kill:D.kill;
+  if(!d) h+=secHtml(z,'boss');
+  else { const hp=pick(d,'hpLeft'), max=pick(d,'hpMax'), left=pick(d,'hitsLeft'), myD=pick(d,'myDamage'), dead=bossDown(d), canHit=!dead&&left!==0, fr=hp!=null&&max>0?c01(hp/max):null;
+    const top=Array.isArray(d.top)?d.top.filter(t=>t&&isN(t.damage)).slice(0,10):[], meM=memList().find(m=>m.me), meId=meM?String(meM.id):'';
+    h+='<div class="gd2-boss"><div class="gd2-prog" style="margin-top:0"><span>Chefe da semana'+(dead?' · derrubado':'')+'</span><span>'+(fr!=null?dec(fr*100)+'%':'')+'</span></div>'
       +(fr!=null?'<div class="gd2-bar red" role="progressbar" aria-label="Vida do chefe" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(fr*100)+'"><i style="width:'+(fr*100).toFixed(1)+'%"></i></div>':'')
-      +'<div class="gd2-prog"><span>'+(hp!=null?'Vida '+kfT(hp)+(max!=null?' de '+kfT(max):''):'A vida do chefe não veio do servidor')+'</span><span>'+(left!=null?nT(left)+(left===1?' golpe hoje':' golpes hoje'):nT(D.hitsPerDay)+' golpes por dia')+'</span></div>'
-      +'<button class="gd2-bt wide '+(canHit?'rose':'off')+'" data-x="hit" style="margin-top:8px">'+(dead?'Derrubado':canHit?'Atacar':'Volte amanhã')+'</button>'
-      +(X.hit?'<p class="gd2-hint" style="margin:8px 0 0" role="status">Último golpe: <b>'+esc2(kfT(X.hit.damage))+'</b> de dano'+(isN(X.hit.coin)?' · prêmio: '+coinTxt(X.hit.coin):'')+'</p>':'')+'</div>'; }
+      +'<div class="gd2-prog"><span>'+(hp!=null?'Vida '+kfT(hp)+(max!=null?' de '+kfT(max):''):'A vida do chefe não veio do servidor')+'</span><span>'+(dead?'':left!=null?nT(left)+(left===1?' golpe hoje':' golpes hoje'):nT(D.hitsPerDay)+' golpes por dia')+'</span></div>'
+      +(myD!=null?'<div class="gd2-prog"><span>Seu dano na semana</span><span>'+esc2(kfT(myD))+'</span></div>':'')
+      +(dead?'<div class="gd2-note" role="status" style="margin:8px 0 0">Chefe derrubado nesta semana. Os prêmios de quem bateu foram pelo correio. Na semana que vem tem outro.</div>'
+        :'<button class="gd2-bt wide '+(canHit?'rose':'off')+'" data-x="hit" style="margin-top:8px">'+(canHit?'Atacar':'Golpes de hoje usados')+'</button>'+(canHit?'':'<p class="gd2-hint" style="margin:6px 0 0">Feito hoje: os golpes voltam à meia-noite de Brasília.</p>'))
+      +(X.hit?'<p class="gd2-hint" style="margin:8px 0 0" role="status">Último golpe: <b>'+esc2(kfT(X.hit.damage))+'</b> de dano'+(X.hit.band?' · prêmio: '+bandTxt(X.hit.band):'')+'</p>':'')+'</div>';
+    if(top.length){ h+=secH('Quem mais bateu','dano na semana'); top.forEach((t,i)=>{ h+='<div class="gd2-band"><span>'+nT(i+1)+'º '+esc2(t.name||'?')+(meId&&String(t.id)===meId?' (você)':'')+'</span><span>'+esc2(kfT(t.damage))+'</span></div>'; }); } }
   h+=secH('Prêmio por faixa de dano','dano ÷ seu ATQ');
-  D.bands.forEach((b,i)=>{ const nx=D.bands[i+1]; h+='<div class="gd2-band"><span>'+(nx?'De '+nT(b.minRatio)+'x a '+nT(nx.minRatio)+'x':nT(b.minRatio)+'x ou mais')+'</span><span>'+bandTxt(b)+'</span></div>'; });
-  return h+'<p class="gd2-hint" style="margin-top:8px">Derrubar o chefe dá a todos '+coinTxt(D.kill.coin)+', '+nT(D.kill.forge)+' pedras de forja, '+nT(D.kill.food)+' de ração e '+nT(D.kill.essence)+' Essências, mais '+nT(D.kill.xp)+' XP da guilda. O dano é calculado no servidor; os prêmios chegam pelo correio.</p>'; }
+  bands.forEach((b,i)=>{ const nx=bands[i+1]; h+='<div class="gd2-band"><span>'+(nx?'De '+dec(b.minRatio)+'x a '+dec(nx.minRatio)+'x':dec(b.minRatio)+'x ou mais')+'</span><span>'+bandTxt(b)+'</span></div>'; });
+  return h+'<p class="gd2-hint" style="margin-top:8px">Derrubar o chefe dá a todos que bateram '+coinTxt(num(kill.coin))+', '+nT(num(kill.forge))+' pedras de forja, '+nT(num(kill.food))+' de ração e '+nT(num(kill.essence))+' Essências, mais '+nT(num(kill.xp))+' XP da guilda. O dano é calculado no servidor; os prêmios chegam pelo correio.</p>'; }
 
 /* ----- Loja (só por Brasões; nada sorteado) ----- */
-function shopItems(){ const D=GM().DATA, z=X.d.shop, sv={}; if(z&&z.st==='ok') for(const it of arr(z.d)) if(it&&it.id!=null) sv[String(it.id)]=it;
-  return (D.shop||[]).map(it=>{ const s=sv[it.id]||{}, used=pick(s,'bought','used','count'), left=pick(s,'left'); return {id:it.id,name:it.name,cost:it.cost,weekly:it.weekly,minLevel:it.minLevel,give:it.give||{},left:left!=null?left:used!=null?Math.max(0,it.weekly-used):null}; }); }
+/* contrato 10.5: GET /guild/shop → {coin, week, items:[{id, name, cost, weekly, minLevel, give, bought, left, locked}]}. Com a lista do servidor, é ELA que a tela mostra
+   (nome, custo, limite, o que sobrou e a trava); a tabela do Sys.guild.DATA.shop só completa um campo que não veio */
+function shopItems(){ const D=GM().DATA, z=X.d.shop, L=z&&z.st==='ok'?arr(z.d).filter(s=>s&&s.id!=null):[], loc=id=>(D.shop||[]).find(q=>q.id===String(id))||{};
+  return (L.length?L:(D.shop||[])).map(row=>{ const s=L.length?row:{}, it=L.length?loc(row.id):row, weekly=isN(s.weekly)?s.weekly:num(it.weekly), bought=pick(s,'bought'), left=pick(s,'left');
+    return {id:String(row.id),name:String(s.name||it.name||row.id),cost:isN(s.cost)?s.cost:num(it.cost),weekly:weekly,minLevel:isN(s.minLevel)?s.minLevel:num(it.minLevel),give:(s.give&&typeof s.give==='object'?s.give:it.give)||{},
+      left:left!=null?left:bought!=null?Math.max(0,weekly-bought):null,locked:s.locked===true}; }); }
+const shopCoin=o=>{ const z=X.d.shop; return z&&z.st==='ok'&&z.d&&isN(z.d.coin)?z.d.coin:num(o.coin); };
+const shopLock=(it,o)=>it.locked||o.level<it.minLevel;
+const shopLockTxt=(it,o)=>it.minLevel>o.level?'Abre no nível '+nT(it.minLevel)+' da guilda':'Ainda não liberado para a sua guilda';
 function pShop(o){ const z=sec('shop'); let h=secH('Loja da guilda','só por '+esc2(coinName(2)))+secHtml(z,'shop');
-  if(z.st==='ok') for(const it of shopItems()){ const lock=o.level<it.minLevel, out=it.left!=null&&it.left<=0, afford=o.coin>=it.cost, ic=GIVE_IC[Object.keys(it.give)[0]]||IC.chest;
-    h+='<div class="gd2-row">'+img(ic,36)+'<span class="mi"><b>'+esc2(it.name)+'</b><small>'+(lock?'Abre no nível '+nT(it.minLevel)+' da guilda':it.left!=null?nT(it.left)+' de '+nT(it.weekly)+' nesta semana':'até '+nT(it.weekly)+' por semana')+'</small></span>'
-      +(lock?'<span class="gd2-pill off">Nível '+nT(it.minLevel)+'</span>':out?'<span class="gd2-pill off">Esgotado</span>':'<button class="gd2-bt'+(afford?'':' off')+'" data-x="buy" data-id="'+esc2(it.id)+'" aria-label="'+esc2('Trocar '+nT(it.cost)+' '+coinName(it.cost)+' por '+it.name)+'">'+coinTxt(it.cost)+'</button>')+'</div>'; }
+  if(z.st==='ok') for(const it of shopItems()){ const lock=shopLock(it,o), out=it.left!=null&&it.left<=0, afford=shopCoin(o)>=it.cost, ic=GIVE_IC[Object.keys(it.give)[0]]||IC.chest;
+    h+='<div class="gd2-row">'+img(ic,36)+'<span class="mi"><b>'+esc2(it.name)+'</b><small>'+(lock?esc2(shopLockTxt(it,o)):out?'Limite desta semana atingido ('+nT(it.weekly)+' de '+nT(it.weekly)+')':it.left!=null?nT(it.left)+' de '+nT(it.weekly)+' nesta semana':'até '+nT(it.weekly)+' por semana')+'</small></span>'
+      +(lock?'<span class="gd2-pill off">'+(it.minLevel>o.level?'Nível '+nT(it.minLevel):'Travado')+'</span>':out?'<span class="gd2-pill off">Esgotado</span>':'<button class="gd2-bt'+(afford?'':' off')+'" data-x="buy" data-id="'+esc2(it.id)+'" aria-label="'+esc2('Trocar '+nT(it.cost)+' '+coinName(it.cost)+' por '+it.name)+'">'+coinTxt(it.cost)+'</button>')+'</div>'; }
   return h+'<p class="gd2-hint">Sem diamante e sem sorteio. Os fragmentos são da montaria que você usa. A loja renova na segunda.</p>'; }
 
 /* ----- Missões ----- */
-function pMiss(o){ const D=GM().DATA, z=sec('miss'), sv={}; if(z.st==='ok') for(const m of arr(z.d)) if(m&&m.id!=null) sv[String(m.id)]=m;
+/* contrato 10.5: GET /guild/missions → {week, list:[{id, name, counter, target, xp, coin, progress, done, contributed, claimed}]}. "done" e "contributed" são do servidor:
+   os Brasões da missão são só de quem ajudou nela (409 not_contributed) */
+function missList(){ const D=GM().DATA, z=X.d.miss, L=z&&z.st==='ok'?arr(z.d).filter(m=>m&&m.id!=null):[], loc=id=>(D.missions||[]).find(q=>q.id===String(id))||{};
+  return (L.length?L:(D.missions||[])).map(row=>{ const s=L.length?row:{}, it=L.length?loc(row.id):row, target=isN(s.target)?s.target:num(it.target), pv=pick(s,'progress'), v=pv!=null?Math.max(0,Math.min(target,pv)):null;
+    return {id:String(row.id),name:String(s.name||it.name||row.id),target:target,xp:isN(s.xp)?s.xp:num(it.xp),coin:isN(s.coin)?s.coin:num(it.coin),v:v,
+      done:typeof s.done==='boolean'?s.done:(v!=null&&target>0&&v>=target),helped:s.contributed!==false,claimed:s.claimed===true}; }); }
+function pMiss(o){ const z=sec('miss');
   let h=secH('Missões da semana','contam as ações de todos')+secHtml(z,'miss');
-  if(z.st==='ok') for(const m of D.missions){ const s=sv[m.id]||{}, pv=pick(s,'progress','value','count'), v=pv!=null?Math.min(m.target,pv):null, done=v!=null&&v>=m.target, cl=s.claimed===true;
-    h+='<div class="gd2-ms"><div class="row"><b>'+esc2(m.name)+'</b><span>'+(v!=null?nT(v)+'/'+nT(m.target):'meta '+nT(m.target))+'</span>'+(cl?'<span class="gd2-pill on">Resgatado</span>':done?'<button class="gd2-bt" data-x="claim" data-id="'+esc2(m.id)+'">Resgatar</button>':'')+'</div>'
-      +(v!=null?'<div class="gd2-bar grn"><i style="width:'+(v/m.target*100).toFixed(1)+'%"></i></div>':'')
-      +'<div class="gd2-prog"><span>+'+nT(m.xp)+' XP da guilda</span><span>'+coinTxt(m.coin)+' para cada membro</span></div></div>'; }
+  if(z.st==='ok') for(const m of missList()){ const can=m.done&&m.helped&&!m.claimed;
+    h+='<div class="gd2-ms"><div class="row"><b>'+esc2(m.name)+'</b><span>'+(m.v!=null?nT(m.v)+'/'+nT(m.target):'meta '+nT(m.target))+'</span>'+(m.claimed?'<span class="gd2-pill on">Resgatado</span>':can?'<button class="gd2-bt" data-x="claim" data-id="'+esc2(m.id)+'">Resgatar</button>':m.done?'<span class="gd2-pill off">Concluída</span>':'')+'</div>'
+      +(m.v!=null&&m.target>0?'<div class="gd2-bar grn"><i style="width:'+(c01(m.v/m.target)*100).toFixed(1)+'%"></i></div>':'')
+      +'<div class="gd2-prog"><span>+'+nT(m.xp)+' XP da guilda</span><span>'+coinTxt(m.coin)+' para cada membro que ajudou</span></div>'
+      +(m.done&&!m.helped&&!m.claimed?'<p class="gd2-hint" style="margin:5px 0 0">'+esc2(WHY.not_contributed)+'.</p>':'')+'</div>'; }
   return h; }
 
 /* ----- Territórios ----- */
@@ -445,19 +477,24 @@ const ACT={
     if(k==='transfer') return ask('transfer',id,'Passar a liderança para <b>'+esc2(nm)+'</b>? Você deixa de ser o líder da guilda.','Passar a liderança'); },
   req(b){ const k=b.dataset.k==='accept'?'accept':'decline', id=String(b.dataset.id||''), n=GN(); if(!id) return; sfx('ui_tap'); run('Carregando…',()=>n[k](S,host(),id),k==='accept'?'Pedido aceito':'Pedido recusado'); },
   leave(){ const D=GM().DATA; sfx('ui_tap'); ask('leave','','Sair da guilda? Você perde os '+esc2(coinName(2))+' não gastos e as bênçãos. São '+nT(D.leave.cooldownH)+' h para entrar em outra e '+nT(D.leave.sameGuildDays)+' dias para voltar a esta.','Sair da guilda'); },
-  checkin(){ const n=GN(), D=GM().DATA; sfx('ui_tap'); run('Carregando…',()=>n.checkin(S,host()),'Check-in feito: +'+nT(D.checkin.coin)+' '+coinName(D.checkin.coin),()=>fx('+'+nT(D.checkin.coin)+' '+coinName(D.checkin.coin),'#5ee7ff')); },
-  don(b){ const id=String(b.dataset.id||''), d=(GM().DATA.donate||[]).find(x=>x.id===id); if(!d) return; sfx('ui_tap'); const c=donCost(d);
+  checkin(){ const n=GN(), D=GM().DATA; sfx('ui_tap'); if(doneToday('checkin')) return say(why('daily_limit'));
+    const got=r=>{ const c=r&&r.gained&&isN(r.gained.coin)?r.gained.coin:D.checkin.coin; return '+'+nT(c)+' '+coinName(c); };
+    run('Carregando…',()=>n.checkin(S,host()),r=>'Check-in feito: '+got(r),r=>fx(got(r),'#5ee7ff')); },
+  don(b){ const id=String(b.dataset.id||''), d=(GM().DATA.donate||[]).find(x=>x.id===id); if(!d) return; sfx('ui_tap'); if(doneToday('donate:'+d.id)) return say(why('daily_limit')); const c=donCost(d);
     if(!c.ok) return say(d.gems?'Faltam diamantes para esta doação':'Falta ouro para esta doação');
     ask('don',id,'Doar <b>'+esc2(c.txt)+'</b> para a guilda? Você recebe +'+nT(d.coin)+' '+esc2(coinName(d.coin))+' e a guilda +'+nT(d.xp)+' XP.','Doar'); },
   bls(b){ const k=String(b.dataset.id||''), B=GM().DATA.banners, n=GN(); if(!(k in B.cap)) return; sfx('ui_tap'); if(!can('banner')) return say('Só o líder e os oficiais sobem as bênçãos');
     run('Carregando…',()=>n.upgradeBlessing(S,host(),k),(BN[k]||k)+' subiu para toda a guilda',()=>{ X.glow=1.6; fx('+'+dec(B.step[k])+'% '+(BN[k]||k),'#ffe58a'); }); },
-  hit(){ const z=X.d.boss, d=z&&z.st==='ok'?z.d:null, n=GN(); if(!d) return; sfx('ui_tap'); const hp=pick(d,'hpLeft','hp');
-    if(hp!=null&&hp<=0) return say('O chefe desta semana já foi derrubado'); if(pick(d,'hitsLeft')===0) return say('Você já usou os golpes de hoje. Eles voltam amanhã');
-    run('Atacando o chefe…',()=>n.bossHit(S,host()),r=>'Golpe no chefe: '+kfT(num(r.damage))+' de dano',r=>{ X.hit={damage:num(r.damage),coin:isN(r.coin)?r.coin:null,t:X.t}; fx('-'+kfT(num(r.damage)),'#ff9f9f',1); delete X.d.boss; }); },
+  /* contrato 10.5: o golpe volta {damage, seed, log, timeout, killed, band, hitsLeft, hpLeft, hpMax}; band = a faixa de prêmio que o golpe alcançou */
+  hit(){ const z=X.d.boss, d=z&&z.st==='ok'?z.d:null, n=GN(); if(!d) return; sfx('ui_tap');
+    if(bossDown(d)) return say(why('boss_down')); if(pick(d,'hitsLeft')===0) return say('Você já usou os golpes de hoje. Eles voltam à meia-noite de Brasília');
+    run('Atacando o chefe…',()=>n.bossHit(S,host()),r=>(r.killed===true?'Chefe derrubado! ':'')+'Golpe no chefe: '+kfT(num(r.damage))+' de dano',r=>{ X.hit={damage:num(r.damage),band:r.band&&typeof r.band==='object'&&isN(r.band.coin)?r.band:null,t:X.t}; fx('-'+kfT(num(r.damage)),'#ff9f9f',1); delete X.d.boss; }); },
   buy(b){ const id=String(b.dataset.id||''), it=shopItems().find(x=>x.id===id), o=GM().ensure(S); if(!it) return; sfx('ui_tap');
-    if(o.level<it.minLevel) return say('Abre no nível '+nT(it.minLevel)+' da guilda'); if(it.left!=null&&it.left<=0) return say('Limite desta semana atingido'); if(o.coin<it.cost) return say('Faltam '+coinName(2)+': custa '+nT(it.cost));
+    if(shopLock(it,o)) return say(shopLockTxt(it,o)); if(it.left!=null&&it.left<=0) return say('Limite desta semana atingido'); if(shopCoin(o)<it.cost) return say('Faltam '+coinName(2)+': custa '+nT(it.cost));
     ask('buy',id,'Trocar <b>'+nT(it.cost)+' '+esc2(coinName(it.cost))+'</b> por <b>'+esc2(it.name)+'</b>?','Comprar'); },
-  claim(b){ const id=String(b.dataset.id||''), m=(GM().DATA.missions||[]).find(x=>x.id===id), n=GN(); if(!m) return; sfx('ui_tap'); run('Carregando…',()=>n.claimMission(S,host(),id),'Missão resgatada: +'+nT(m.coin)+' '+coinName(m.coin),()=>{ delete X.d.miss; }); },
+  claim(b){ const id=String(b.dataset.id||''), m=missList().find(x=>x.id===id), n=GN(); if(!m) return; sfx('ui_tap');
+    if(m.claimed) return say(why('already_claimed')); if(!m.done) return say(why('not_done')); if(!m.helped) return say(why('not_contributed'));
+    run('Carregando…',()=>n.claimMission(S,host(),id),'Missão resgatada: +'+nT(m.coin)+' '+coinName(m.coin),()=>{ delete X.d.miss; }); },
   find(){ sfx('ui_tap'); grab(); X.q=X.q.trim(); delete X.d.list; redraw(); },
   join(b){ const id=String(b.dataset.id||''), n=GN(); if(!id) return; sfx('ui_tap'); let c={ok:true}; try{ c=GM().canJoin(S,host(),id); }catch(e){} if(!c.ok) return say(whyLocal(c));
     run('Carregando…',()=>n.join(S,host(),id),r=>r.status==='requested'?'Pedido enviado. O líder ou um oficial precisa aceitar':'Você entrou na guilda',()=>{ delete X.d.list; X.tab='members'; X.top=true; }); },
@@ -472,8 +509,11 @@ const ACT={
     if(c.k==='leave') return run('Saindo da guilda…',()=>n.leave(S,h),'Você saiu da guilda',()=>{ X.d={}; X.sel=''; X.tab='members'; X.hit=null; });
     if(c.k==='buy'){ const it=shopItems().find(x=>x.id===c.id); return run('Comprando…',()=>n.shopBuy(S,h,c.id),'Comprado: '+(it?it.name:'item')+'. Chega pelo correio',()=>{ delete X.d.shop; }); }
     if(c.k==='don'){ const d=(G.DATA.donate||[]).find(x=>x.id===c.id); if(!d) return redraw(); const cost=donCost(d); if(!cost.ok) return say(d.gems?'Faltam diamantes para esta doação':'Falta ouro para esta doação');
-      /* contrato 10.4: quem debita o ouro ou o diamante é o jogo, só DEPOIS de o servidor aceitar; o servidor confere pelo resumo do save */
-      return run('Doando…',()=>n.donate(S,h,d.id),'Doado: +'+nT(d.coin)+' '+coinName(d.coin)+', +'+nT(d.xp)+' XP da guilda',()=>{ try{ if(cost.gems&&h&&h.spendGems) h.spendGems(cost.gems); else if(cost.gold&&h&&h.spendGold) h.spendGold(cost.gold); }catch(e){} fx('+'+nT(d.coin)+' '+coinName(d.coin),'#5ee7ff'); }); }
+      /* contrato 10.4 e 10.5: quem debita o ouro ou o diamante é o jogo, UMA vez e só DEPOIS de o servidor aceitar, e o valor é o cost:{goldk, gems} da resposta
+         (goldk × ouro de um abate); o servidor confere pelo resumo do save. Só se a resposta vier sem o cost vale o valor da tabela do jogo, que é a que o servidor lê */
+      const gain=r=>{ const q=(r&&r.gained)||{}; return {coin:isN(q.coin)?q.coin:d.coin,xp:isN(q.xp)?q.xp:d.xp}; };
+      return run('Doando…',()=>n.donate(S,h,d.id),r=>{ const q=gain(r); return 'Doado: +'+nT(q.coin)+' '+coinName(q.coin)+', +'+nT(q.xp)+' XP da guilda'; },r=>{ const pay=srvCost(r.cost)||cost, q=gain(r);
+        try{ if(pay.gems>0&&h&&h.spendGems) h.spendGems(pay.gems); if(pay.gold>0&&h&&h.spendGold) h.spendGold(pay.gold); }catch(e){} fx('+'+nT(q.coin)+' '+coinName(q.coin),'#5ee7ff'); }); }
     if(c.k==='create'){ let cc={ok:false}; try{ cc=G.canCreate(S,h); }catch(e){} if(!cc.ok) return say(whyLocal(cc));
       /* contrato 10.1: o custo em ouro é cobrado pelo jogo (depois de o servidor aceitar) e conferido no save */
       return run('Criando a guilda…',()=>n.create(S,h,{name:String(c.id),emblemId:0,lang:'pt',open:true,minLevel:1}),'Guilda criada! Você é o líder',()=>{ try{ if(h&&h.spendGold) h.spendGold(cc.gold); }catch(e){} X.d={}; X.name=''; X.tab='members'; X.top=true; }); }
@@ -500,5 +540,5 @@ const def=Panels.add(N,{title:'Guilda',actions:Object.keys(ACT),urls:urls,
     try{ const n=GN(); if(n&&online()&&typeof n.refresh==='function') Promise.resolve(n.refresh(S,host())).then(redraw,()=>{}); }catch(e){} },
   onClose(){ loopStop(); X.conf=null; X.toast=''; X.busy=''; } });
 /* para o teste de fumaça e para conferir no console (somente leitura por convenção) */
-window.Guild2={X:X,def:def,urls:urls,why:why};
+window.Guild2={X:X,def:def,urls:urls,why:why,whyR:whyR};
 })();

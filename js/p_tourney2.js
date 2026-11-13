@@ -50,9 +50,10 @@ function tStatus(){ const G=tG(); if(!G) return {on:false,open:false,reason:'off
 const T_WHY={tourney_phase:'Ataques só de segunda a quinta',own_territory:'Este território já é da sua guilda',daily_limit:'Sua guilda já usou os ataques de hoje',territory_busy:'Já há um ataque a este território nesse dia',
   defender_busy:'O dono já defende outro território nesse dia',era_too_low:'A era mediana dos escalados está abaixo desta região',forbidden:'Só o líder e os oficiais declaram ataques',not_in_guild:'Entre numa guilda para participar',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
-const T_LUWHY={lineup_locked:'Escalação travada às 19h',member_too_new:'Há escalado com menos de 24 h de guilda antes da trava',bad_request:'Escalação inválida: confira os escalados',forbidden:'Só o líder e os oficiais escalam',
+const T_LUWHY={lineup_locked:'Escalação travada',member_too_new:'Há escalado com menos de 24 h de guilda antes da trava',bad_request:'Escalação inválida: confira os escalados',forbidden:'Só o líder e os oficiais escalam',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
-const T_REASON={neutral:'território sem dono',walkover:'o dono não tinha lutador',empty:'o atacante não tinha lutador',era:'era mediana abaixo da região'};
+/* contrato 10.5: o motivo (reason) de cada batalha */
+const T_REASON={fight:'decidida na luta',neutral:'território sem dono',walkover:'o dono não tinha lutador',empty:'o atacante não tinha lutador',era:'era mediana do atacante abaixo da região',owner:'o atacante já era o dono'};
 const T_PAL=['#4aa3ff','#ff6a5a','#c58bff','#ff9f43','#4ad6c8','#ff7ac0','#b8c94a','#a9b3c9'];
 const hashOf=v=>{ let x=7; for(const c of String(v)) x=(x*31+c.charCodeAt(0))>>>0; return x; };
 const colOf=id=>T_PAL[hashOf(id)%T_PAL.length];
@@ -191,6 +192,9 @@ function tMembers(){ try{ const GN=window.Sys&&Sys.guildNet, m=GN&&GN.mine?GN.mi
     const hasFc=L.some(x=>typeof x.fc==='number'); return {list:hasFc?L.slice().sort((a,b)=>(+b.fc||0)-(+a.fc||0)):L,hasFc}; }catch(e){ return {list:[],hasFc:false}; } }
 function tLockAt(N,slot){ try{ const l=N.lineup(slot); if(l&&l.lockAt>0) return +l.lockAt; const s=N.schedule().find(x=>x&&x.slot===slot); return s&&s.lockAt>0?+s.lockAt:0; }catch(e){ return 0; } }
 function tLocked(N,slot){ try{ const l=N.lineup(slot); if(l&&l.locked===true) return true; }catch(e){} const at=tLockAt(N,slot); return at>0&&tNow()>=at; }
+/* hora da trava = a do lockAt do SERVIDOR, lida no relógio de Brasília (UTC-3, o relógio do torneio); sem o lockAt não há hora na tela */
+const lockHour=at=>{ if(!(at>0)) return ''; const d=new Date(at-3*36e5), m=d.getUTCMinutes(); return d.getUTCHours()+'h'+(m?(m<10?'0':'')+m:''); };
+const lockedTxt=(N,slot,at)=>{ const lh=lockHour(at>0?+at:tLockAt(N,slot)); return T_LUWHY.lineup_locked+(lh?' às '+lh:''); };
 const tElig=(m,lockAt)=>!(lockAt>0&&typeof m.joinedAt==='number')||m.joinedAt<=lockAt-864e5;
 /* cópia de trabalho da escalação do dia (começa igual à do servidor; "salva" enquanto não muda) */
 function tLu(N,slot){ let w=X.lu[slot]; if(!w){ let base=[]; try{ const l=N.lineup(slot); base=l&&Array.isArray(l.members)?l.members.map(String):[]; }catch(e){} w=X.lu[slot]={ids:base,saved:true}; } return w; }
@@ -199,9 +203,13 @@ const median=a=>a.length?(a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.leng
 /* ---------- BATALHA: monta a reprise a partir do registro do servidor (nada é simulado aqui) ---------- */
 function myGuildId(){ const N=tNet(), my=N?N.my():null; return my&&my.guildId!=null?String(my.guildId):null; }
 function battleInfo(b){ const A=b.attacker||{}, D=b.defender||null, me=myGuildId(), aMine=me!=null&&A.id!=null&&String(A.id)===me, bMine=me!=null&&!!D&&D.id!=null&&String(D.id)===me;
-  const done=b.winner!=null||!!b.winnerName, winAtt=done&&(b.winner!=null?String(b.winner)===String(A.id):String(b.winnerName)===String(A.name));
+  /* contrato 10.5: winner = id da GUILDA vencedora (attacker.id ou defender.id); null = ninguém ficou com o território. Batalha resolvida sempre traz o reason */
+  const w=b.winner!=null?String(b.winner):null, done=w!=null||(typeof b.reason==='string'&&!!b.reason), winAtt=w!=null&&A.id!=null&&w===String(A.id), winDef=w!=null&&!!D&&D.id!=null&&w===String(D.id);
   const duels=(Array.isArray(b.duels)?b.duels:[]).filter(d=>d&&Array.isArray(d.log)&&d.log.length);
-  return {A:A,D:D,aName:String(A.name||'Guilda'),dName:D?String(D.name||'Guilda'):'Sem dono',aMine:aMine,bMine:bMine,done:done,winAtt:winAtt,duels:duels}; }
+  return {A:A,D:D,aName:String(A.name||'Guilda'),dName:D?String(D.name||'Guilda'):'Sem dono',aMine:aMine,bMine:bMine,done:done,winAtt:winAtt,winDef:winDef,noOne:done&&w==null,kept:b.reason==='owner',duels:duels}; }
+/* o desfecho em texto (quem chama escapa): curto para a lista, inteiro para o fim da reprise */
+function outcome(I,long){ const t=long?' o território':'';
+  return I.kept?I.aName+(long?' já era a dona do território':' já era a dona'):I.winAtt?I.aName+(long?' toma':' tomou')+t:I.winDef?I.dName+(long?' segura':' segurou')+t:I.noOne?'O território segue sem dono':'O território não mudou de dono'; }
 function buildReplay(b,bi){ const I=battleInfo(b); if(!I.duels.length) return null; const mem={}; for(const m of tMembers().list) mem[String(m.id)]=m;
   const full={}, seqA=[], seqB=[], out=[];
   const who=(id,mine,n)=>{ const m=mine?mem[id]:null; return {name:m&&m.name?String(m.name):'Lutador '+n,fc:m&&isN(m.fc)?m.fc:null,me:!!(m&&m.me)}; };
@@ -215,7 +223,7 @@ function buildReplay(b,bi){ const I=battleInfo(b); if(!I.duels.length) return nu
 function ovHtml(){ const R=X.rp; if(!R) return ''; const D=R.duels[Math.min(R.i,R.duels.length-1)], I=R.I, pa=c01(R.hp[0]/D.maxA)*100, pb=c01(R.hp[1]/D.maxB)*100;
   const side=(c,p,g,pc,id)=>'<div class="tr2-hp '+c+'"><b>'+esc2(p.name)+(p.me?' (você)':'')+'</b><small>'+esc2(g)+(p.fc!=null?' · FC '+esc2(fcT(p.fc)):'')+'</small><div class="tr2-hpb"><i id="'+id+'" style="width:'+pc.toFixed(1)+'%"></i></div></div>';
   return side('l',D.pa,I.aName,pa,'tr2_hpa')+side('r',D.pb,I.dName,pb,'tr2_hpb')
-    +'<div class="tr2-qs" role="status">'+(R.done?(I.done?esc2(I.winAtt?I.aName+' toma o território':I.dName+' segura o território'):'Fim do registro'):'Duelo '+nT(R.i+1)+' de '+nT(R.duels.length))+'</div>'; }
+    +'<div class="tr2-qs" role="status">'+(R.done?(I.done?esc2(outcome(I,true)):'Fim do registro'):'Duelo '+nT(R.i+1)+' de '+nT(R.duels.length))+'</div>'; }
 function ovPut(){ try{ const el=document.getElementById('tr2_ov'); if(el) el.innerHTML=ovHtml(); }catch(e){} }
 function setBars(){ const R=X.rp; if(!R) return; const D=R.duels[R.i]; try{ const a=document.getElementById('tr2_hpa'), b=document.getElementById('tr2_hpb'); if(a&&a.style) a.style.width=(c01(R.hp[0]/D.maxA)*100).toFixed(1)+'%'; if(b&&b.style) b.style.width=(c01(R.hp[1]/D.maxB)*100).toFixed(1)+'%'; }catch(e){} }
 /* toca o registro: um golpe por passo (o ritmo é só desenho); entre dois duelos, a fila anda e as barras voltam para a vida que cada um trouxe */
@@ -319,7 +327,8 @@ function pLineup(N){ const my=N.my()||{}; if(my.guildId==null) return note('Entr
   const slot=X.slot==='d6'?'d6':'d5', can=!!my.canLineup, size=tSize(N), lockAt=tLockAt(N,slot), lk=tLocked(N,slot), W=tLu(N,slot), M=tMembers(), by={}; for(const m of M.list) by[String(m.id)]=m;
   const ids=W.ids.filter(id=>by[id]), picked=ids.map(id=>by[id]), ord=M.hasFc?picked.slice().sort((a,b)=>(+b.fc||0)-(+a.fc||0)):picked, pos={}; ord.forEach((m,i)=>{ pos[String(m.id)]=i+1; });
   const med=median(picked.map(m=>m.era).filter(e=>typeof e==='number').sort((a,b)=>a-b)), fcSum=picked.reduce((a,m)=>a+(+m.fc||0),0), h=lockAt>0?(lockAt-tNow())/36e5:null, hh=hourTxt();
-  const lockTxt=lk?'Travada às 19h. Trocar de equipamento agora não muda a batalha':h==null?'Trava às 19h do dia da luta':h>48?'Trava '+dayName(slot)+' às 19h (1 h antes da luta)':'Trava em '+Math.max(1,Math.round(h))+' h, às 19h';
+  /* contrato 10.5: a hora da trava é a do lockAt (GET /tourney/lineup ou battles[] do GET /tourney); sem ele, o texto não cita hora */
+  const lh=lockHour(lockAt), lockTxt=lk?'Travada'+(lh?' às '+lh:'')+'. Trocar de equipamento agora não muda a batalha':h==null?'A escalação trava antes da batalha':h>48?'Trava '+dayName(slot)+' às '+lh:'Trava em '+Math.max(1,Math.round(h))+' h, às '+lh;
   let out='<div class="tr2-seg" role="group" aria-label="Dia da batalha">'+['d5','d6'].map(k=>'<button data-x="slot" data-k="'+k+'" aria-pressed="'+(slot===k)+'">'+(k==='d5'?'Sexta':'Sábado')+(hh?' '+hh:'')+'</button>').join('')+'</div>'
     +'<div class="tr2-lsum"><div class="row"><span>Escalados '+ids.length+'/'+size+'</span><span>'+(M.hasFc?'FC somada '+esc2(fcT(fcSum)):'')+'</span></div>'
     +'<div class="row" style="margin-top:3px"><span>'+(med!=null?'Mediana de era: '+esc2(dec(med))+' ('+esc2(tEra(Math.floor(med)))+')':'Mediana de era: sem dados')+'</span><span>'+(W.saved?'Salva':'Não salva')+'</span></div>'
@@ -341,9 +350,9 @@ function pBattles(N){ const L=battleList(N), hh=hourTxt();
   if(!L){ if(!X.asked.bt){ X.asked.bt=1; try{ Promise.resolve(N.loadBattles()).then(redraw,redraw); }catch(e){} } return weekStrip()+note('Carregando as batalhas…'); }
   if(!L.length) return weekStrip()+note('Nenhuma batalha nesta semana ainda. Elas acontecem na sexta e no sábado'+(hh?', às '+hh:'')+'.');
   let h=secH('Batalhas da semana','toque para ver a luta');
-  L.forEach((b,i)=>{ const I=battleInfo(b), meIn=I.aMine||I.bMine, meWin=(I.aMine&&I.winAtt)||(I.bMine&&!I.winAtt), nd=I.duels.length;
-    const res=!I.done?'Aguardando a batalha'+(hh?' das '+hh:''):(I.winAtt?I.aName+' tomou':I.dName+' segurou')+(nd?' · '+nT(nd)+(nd===1?' duelo':' duelos'):'')+(T_REASON[b.reason]?' · '+T_REASON[b.reason]:'')+(meIn?(meWin?' · vitória da sua guilda':' · derrota da sua guilda'):'');
-    h+='<div class="tr2-bat"><span class="tr2-mi"><b>'+esc2(tTerrName(b.territory))+' · '+dayName(b.slot)+'</b><b>'+esc2(I.aName)+' ataca '+esc2(I.dName)+'</b><small class="'+(I.done&&meIn?(meWin?'won':'lost'):'')+'">'+esc2(res)+'</small></span>'
+  L.forEach((b,i)=>{ const I=battleInfo(b), meIn=I.aMine||I.bMine, meWin=(I.aMine&&I.winAtt)||(I.bMine&&I.winDef), meLost=meIn&&!meWin&&(I.winAtt||I.winDef), nd=I.duels.length;
+    const res=!I.done?'Aguardando a batalha'+(hh?' das '+hh:''):outcome(I,false)+(nd?' · '+nT(nd)+(nd===1?' duelo':' duelos'):'')+(T_REASON[b.reason]&&!I.kept?' · '+T_REASON[b.reason]:'')+(I.kept?'':meWin?' · vitória da sua guilda':meLost?' · derrota da sua guilda':'');
+    h+='<div class="tr2-bat"><span class="tr2-mi"><b>'+esc2(tTerrName(b.territory))+' · '+dayName(b.slot)+'</b><b>'+esc2(I.aName)+' ataca '+esc2(I.dName)+'</b><small class="'+(I.kept?'':meWin?'won':meLost?'lost':'')+'">'+esc2(res)+'</small></span>'
       +(nd?'<button class="tr2-bt fix" data-x="watch" data-i="'+i+'">Ver luta</button>':'')+'</div>'; });
   return h+'<p class="tr2-hint">Cada duelo é o registro de golpes que o servidor manda; a tela só toca. O vencedor segue com a vida que sobrou contra o próximo da fila.</p>'; }
 
@@ -411,17 +420,17 @@ const ACT={
   slot(b){ const N=tNet(), k=b.dataset.k==='d6'?'d6':'d5'; if(!N||k===X.slot) return; sfx('ui_tap'); X.slot=k;
     try{ if(!N.lineup(k)||N.lineup(k).lockAt==null) Promise.resolve(N.loadLineup(k)).then(()=>{ if(X.lu[k]&&X.lu[k].saved) delete X.lu[k]; redraw(); },()=>{}); }catch(e){} redraw(); },
   pick(b){ const N=tNet(); if(!N) return; sfx('ui_tap'); const slot=X.slot==='d6'?'d6':'d5', W=tLu(N,slot), my=N.my()||{}, size=tSize(N), lockAt=tLockAt(N,slot), M=tMembers();
-    if(tLocked(N,slot)) return say(T_LUWHY.lineup_locked); if(!my.canLineup) return say(T_LUWHY.forbidden);
+    if(tLocked(N,slot)) return say(lockedTxt(N,slot)); if(!my.canLineup) return say(T_LUWHY.forbidden);
     const id=String(b.dataset.id), m=M.list.find(x=>String(x.id)===id), i=W.ids.indexOf(id); if(!m) return;
     if(i>=0){ W.ids.splice(i,1); W.saved=false; return redraw(); }
     if(!tElig(m,lockAt)) return say((m.name||'Este membro')+' entrou há menos de 24 h antes da trava'+(slot==='d5'&&tElig(m,tLockAt(N,'d6'))?' (pode no sábado)':''));
     if(W.ids.length>=size) return say('Já são '+size+'. Tire alguém antes'); W.ids.push(id); W.saved=false; redraw(); },
   lu(b){ const N=tNet(); if(!N) return; sfx('ui_tap'); const slot=X.slot==='d6'?'d6':'d5', W=tLu(N,slot), my=N.my()||{}, size=tSize(N), lockAt=tLockAt(N,slot), M=tMembers(), k=b.dataset.k;
-    if(tLocked(N,slot)) return say(T_LUWHY.lineup_locked); if(!my.canLineup) return say(T_LUWHY.forbidden);
+    if(tLocked(N,slot)) return say(lockedTxt(N,slot)); if(!my.canLineup) return say(T_LUWHY.forbidden);
     if(k==='clear'){ W.ids=[]; W.saved=false; return redraw(); }
     if(k==='best'){ if(!M.hasFc) return; W.ids=M.list.filter(m=>tElig(m,lockAt)).slice(0,size).map(m=>String(m.id)); W.saved=false; return redraw(); }
     if(k==='save'){ if(W.saved||X.busy) return; if(!W.ids.length) return say('Escale pelo menos 1'); X.busy='Salvando a escalação…'; redraw(); const n=W.ids.length;
-      const end=q=>{ X.busy=''; if(q&&q.ok){ W.saved=true; if(Array.isArray(q.members)) W.ids=q.members.map(String); sfx('claim'); } X.toast=q&&q.ok?'Escalação de '+dayName(slot)+' salva ('+n+'/'+size+')':(T_LUWHY[q&&q.reason]||'Não foi possível salvar agora'); X.toastT=Date.now(); redraw(); };
+      const end=q=>{ X.busy=''; if(q&&q.ok){ W.saved=true; if(Array.isArray(q.members)) W.ids=q.members.map(String); sfx('claim'); } X.toast=q&&q.ok?'Escalação de '+dayName(slot)+' salva ('+n+'/'+size+')':q&&q.reason==='lineup_locked'?lockedTxt(N,slot,q.details&&q.details.lockAt):(T_LUWHY[q&&q.reason]||'Não foi possível salvar agora'); X.toastT=Date.now(); redraw(); };
       let pr=null; try{ pr=N.setLineup(slot,W.ids.slice()); }catch(e){ pr=null; } Promise.resolve(pr).then(end,()=>end(null)); } },
   rk(b){ const k=b.dataset.k==='territory'?'territory':'tournament'; if(k===X.rk) return; sfx('ui_tap'); X.rk=k; X.top=true; redraw(); },
   /* a luta: toca o registro da batalha escolhida */

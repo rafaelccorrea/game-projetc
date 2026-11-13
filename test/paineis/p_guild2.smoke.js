@@ -34,21 +34,35 @@ const calls = []; let role = 'leader', inGuild = true; const fail = {};
 const MEMBERS = () => role === 'leader'
   ? [{ id: 'p1', name: 'Ana <i>', role: 'leader', me: true, contrib: 10, joinedAt: NOW - 9e8, fc: 5000, level: 60 }, { id: 'p2', name: 'Bento', role: 'officer', contrib: 30, fc: 9000, level: 70 }, { id: 'p3', name: 'Caio', role: 'member', contrib: 5, lastSeen: NOW - 5 * 36e5 }, { id: 'p4', name: 'Dora', role: 'member', contrib: 1 }]
   : [{ id: 'p1', name: 'Ana <i>', role: 'member', me: true, contrib: 10, joinedAt: NOW - 9e8 }, { id: 'p2', name: 'Bento', role: 'leader', contrib: 30 }, { id: 'p3', name: 'Caio', role: 'officer', contrib: 5 }, { id: 'p4', name: 'Dora', role: 'member', contrib: 1 }];
+/* respostas NO FORMATO EXATO do contrato docs/API_SERVIDOR.md 10.5 (GET /guild, doar, check-in, chefe, golpe, loja, missões) */
+const DAILY = [], WEEK = '2026-W46', SRV_GOLDK = 61;   // SRV_GOLDK de propósito diferente da tabela do jogo (60): a tela tem de debitar o cost que o SERVIDOR devolve
+const GV = () => ({ id: 'g1', name: 'Lobos <b>', emblemId: '0', level: 2, xp: 1700, xpNext: 3000, members: 4, maxMembers: 22, open: true, minLevel: 1, lang: 'pt', power: 22000, bonus: { blessings: {}, territory: {} } });
+const BOSS = { week: WEEK, hpMax: 100000, hpLeft: 63000, down: false, hitsLeft: 2, myDamage: 1500, top: [{ id: 'p2', name: 'Bento <s>', damage: 30000 }, { id: 'p1', name: 'Ana <i>', damage: 1500 }],
+  bands: [{ minRatio: 0, coin: 7 }, { minRatio: 12, coin: 11, forge: 1 }], kill: { xp: 333, coin: 31, forge: 5, food: 50, essence: 2 } };
+const BOUGHT = { forge10: 2, essence2: 3 };
+const SHOP = () => ({ coin: 77, week: WEEK, items: G.DATA.shop.map(i => ({ ...i, name: i.id === 'food100' ? '100 de ração <b>' : i.name, bought: BOUGHT[i.id] || 0, left: Math.max(0, i.weekly - (BOUGHT[i.id] || 0)), locked: 2 < i.minLevel })) });
+const MISS = { bossDown: { progress: 1, done: true, contributed: true, claimed: false }, checkins100: { progress: 74, done: false, contributed: true, claimed: false },
+  donations150: { progress: 150, done: true, contributed: false, claimed: false }, bossHits150: { progress: 150, done: true, contributed: true, claimed: true } };
+const daily = (key, gained) => { if (DAILY.includes(key)) throw { code: 'daily_limit', details: { key }, retryAfterMs: 5.5 * 36e5 }; DAILY.push(key); return { guild: GV(), coin: 77 + gained.coin, gained }; };
 const ROUTES = {
-  'GET /guild': () => { if (!inGuild) throw { code: 'not_in_guild' }; return { guild: { id: 'g1', name: 'Lobos <b>', level: 2, xp: 1700, members: 4, maxMembers: 22 }, me: { role, coin: 77, donatedToday: [] }, members: MEMBERS(), requests: [{ playerId: 'p9', name: 'Eva <u>' }], territories: [{ region: 0, capital: false }] }; },
+  'GET /guild': () => { if (!inGuild) throw { code: 'not_in_guild' }; return { guild: GV(), me: { role, coin: 77, contrib: 10, donatedToday: DAILY.slice(), checkinToday: DAILY.includes('checkin') }, members: MEMBERS(),
+    requests: role === 'member' ? [] : [{ id: 'p9', name: 'Eva <u>', at: NOW - 2 * 36e5 }], territories: [{ region: 0, capital: false }] }; },
   'GET /guild/blessings': () => ({ level: 2, xpFree: 1234, list: [{ id: 'atk', value: 0.5, cap: 1 }] }),
-  'GET /guild/boss': () => ({ level: 2, hpMax: 100000, hpLeft: 63000, hitsLeft: 2 }),
-  'POST /guild/boss/hit': () => ({ damage: 4321, hitsLeft: 1, coin: 10 }),
-  'GET /guild/shop': () => ({ list: [{ id: 'forge10', bought: 2 }] }),
-  'POST /guild/shop/buy': () => ({}), 'GET /guild/missions': () => ({ list: [{ id: 'bossDown', progress: 1, claimed: false }, { id: 'checkins100', progress: 74 }] }),
-  'POST /guild/missions/bossDown/claim': () => ({}), 'POST /guild/checkin': () => ({}), 'POST /guild/donate': () => ({ coin: 10 }),
+  'GET /guild/boss': () => JSON.parse(JSON.stringify(BOSS)),
+  'POST /guild/boss/hit': () => { BOSS.hitsLeft = 1; BOSS.hpLeft = 58679; BOSS.myDamage = 5821; return { damage: 4321, seed: 9, log: [], timeout: false, killed: false, band: { minRatio: 12, coin: 11, forge: 1 }, hitsLeft: 1, hpLeft: 58679, hpMax: 100000 }; },
+  'GET /guild/shop': () => SHOP(),
+  'POST /guild/shop/buy': b => ({ ok: true, item: b.itemId, ...SHOP() }),
+  'GET /guild/missions': () => ({ week: WEEK, list: G.DATA.missions.map(ms => ({ ...ms, ...MISS[ms.id] })) }),
+  'POST /guild/missions/bossDown/claim': () => ({}), 'POST /guild/checkin': () => daily('checkin', { xp: 5, coin: 5, contrib: 5 }),
+  'POST /guild/donate': b => { const d = G.DATA.donate.find(x => x.id === b.kind); if (!d) throw { code: 'bad_request', details: { fields: ['kind'] } };
+    return { ...daily('donate:' + b.kind, { xp: d.xp, coin: d.coin, contrib: d.xp }), cost: { goldk: d.goldk ? SRV_GOLDK : 0, gems: d.gems || 0 } }; },
   'POST /guild/members/p3/kick': () => ({}), 'POST /guild/members/p4/kick': () => ({}), 'POST /guild/members/p4/promote': () => ({}), 'POST /guild/members/p2/demote': () => ({}),
   'POST /guild/leader': () => ({}), 'POST /guild/blessings/atk/upgrade': () => ({}), 'POST /guild/requests/p9/accept': () => ({}), 'POST /guild/requests/p9/decline': () => ({}),
   'POST /guild/leave': () => { inGuild = false; return {}; },
   'GET /guilds': () => [{ id: 'g7', name: 'Rubra <b>', level: 3, members: 10, maxMembers: 24, open: true, minLevel: 30 }, { id: 'g8', name: 'Véu', open: false }],
   'POST /guilds/g7/join': () => { inGuild = true; return { status: 'joined' }; }, 'POST /guilds': () => { inGuild = true; return { id: 'g1' }; } };
 g.Sys.net = { _call(m, p, b) { const k = m + ' ' + p.split('?')[0]; calls.push(m + ' ' + p + (b ? ' ' + JSON.stringify(b) : ''));
-  if (fail[k]) return Promise.reject({ code: fail[k] }); const h = ROUTES[k]; if (!h) return Promise.reject({ code: 'not_found' });
+  if (fail[k]) return Promise.reject(typeof fail[k] === 'string' ? { code: fail[k] } : fail[k]); const h = ROUTES[k]; if (!h) return Promise.reject({ code: 'not_found' });
   try { return Promise.resolve(h(b)); } catch (e) { return Promise.reject(e); } } };
 
 const SRC = fs.readFileSync(path.join(R, 'js/p_guild2.js'), 'utf8');
@@ -90,7 +104,7 @@ const tab = t => click('tab', { t });
   // 2) online pronto, LÍDER: cartão, membros e pedidos do servidor, nomes escapados
   assert.strictEqual((await GN.start(g.S, host)).ok, true); await open(); check('membros líder');
   assert(sent(/^GET \/guild$/) >= 2, 'onOpen refaz a leitura da guilda');
-  has('Lobos &lt;b&gt;'); not('Lobos <b>'); has('Ana &lt;i&gt; (você)'); not('Ana <i>'); has('Eva &lt;u&gt;'); not('Eva <u>'); has('seu cargo: <b>Líder</b>'); has('4/22'); has('FC '); has('visto há 5 h');
+  has('Lobos &lt;b&gt;'); not('Lobos <b>'); has('Ana &lt;i&gt; (você)'); not('Ana <i>'); has('Eva &lt;u&gt;'); not('Eva <u>'); has('pediu há 2 h'); has('data-k="accept" data-id="p9"'); has('seu cargo: <b>Líder</b>'); has('4/22'); has('FC '); has('visto há 5 h');
   // expulsar: 1º toque só confirma, 2º envia; "Carregando" durante a Promise
   click('sel', { id: 'p3' }); check('membro aberto'); has('data-k="kick"'); has('data-k="promote"'); has('data-k="transfer"');
   click('mact', { k: 'kick', id: 'p3' }); check('confirma expulsar'); has('Expulsar <b>Caio</b>?'); assert.strictEqual(sent(/kick/), 0, '1º toque não envia');
@@ -108,22 +122,38 @@ const tab = t => click('tab', { t });
   out.push('líder: membros e pedidos do servidor escapados; expulsar e passar a liderança em 2 toques; promover, rebaixar e aceitar; recusa (forbidden) em texto');
 
   // 3) Doar: check-in direto; doação em 2 toques, ouro debitado só depois do ok; sem diamante = motivo, sem rede
-  tab('donate'); check('doar'); has('Check-in'); click('checkin'); has('Carregando…'); await settle(); assert(calls.includes('POST /guild/checkin')); has('Check-in feito');
-  fail['POST /guild/checkin'] = 'daily_limit'; click('checkin'); await settle(); has('Você já fez isso hoje'); delete fail['POST /guild/checkin'];
-  const gold0 = g.S.gold, cost = Math.round(G.DATA.donate[0].goldk * host.goldUnit());
+  tab('donate'); check('doar'); has('Check-in'); not('Feito hoje');
+  // 429 daily_limit do servidor (com retryAfterMs): texto claro. O Sys.guildNet hoje NÃO repassa o retryAfterMs, então o texto é o da virada de Brasília; quando repassar, a tela mostra o tempo
+  const LIM = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 };
+  fail['POST /guild/checkin'] = LIM; click('checkin'); await settle(); has('Já feito hoje. Volta à meia-noite de Brasília'); delete fail['POST /guild/checkin'];
+  assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 }), 'Já feito hoje. Volta em 5 h 30 min');
+  assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { retryAfterMs: 40e3 } }), 'Já feito hoje. Volta em 1 min'); assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'boss' } }), 'Já feito hoje. Volta à meia-noite de Brasília');
+  click('checkin'); has('Carregando…'); await settle(); assert(calls.includes('POST /guild/checkin')); has('Check-in feito: +5 Brasões'); check('check-in feito');
+  has('Feito hoje'); has('volta à meia-noite de Brasília'); not('data-x="checkin"'); { const nC = sent(/checkin/); click('checkin'); await settle(); assert.strictEqual(sent(/checkin/), nC, 'check-in feito hoje (checkinToday) não reenvia'); has('Já feito hoje'); }
+  // doação: o débito é o cost:{goldk, gems} que o SERVIDOR devolveu (goldk × ouro de um abate), uma vez só e só com ok
+  const gold0 = g.S.gold, unit = host.goldUnit(), local = Math.round(G.DATA.donate[0].goldk * unit), cost = Math.round(SRV_GOLDK * unit); assert.notStrictEqual(local, cost, 'o teste distingue o cost do servidor da tabela do jogo');
   click('don', { id: 'gold_s' }); check('confirma doar'); has('Doar <b>'); assert.strictEqual(sent(/donate/), 0, '1º toque não envia'); assert.strictEqual(g.S.gold, gold0);
-  click('yes'); has('Doando…'); await settle(); assert(calls.includes('POST /guild/donate {"kind":"gold_s"}')); assert.strictEqual(g.S.gold, gold0 - cost, 'ouro debitado depois do ok do servidor'); has('Doado: +');
-  fail['POST /guild/donate'] = 'daily_limit'; click('don', { id: 'gold_l' }); click('yes'); await settle(); has('Você já fez isso hoje'); assert.strictEqual(spent.length, 1, 'recusa do servidor não debita'); delete fail['POST /guild/donate'];
+  click('yes'); has('Doando…'); await settle(); assert(calls.includes('POST /guild/donate {"kind":"gold_s"}')); assert.strictEqual(g.S.gold, gold0 - cost, 'debita o cost do servidor, depois do ok'); assert.deepStrictEqual(spent, ['gold:' + cost], 'um débito só'); has('Doado: +10 Brasões, +20 XP da guilda');
+  check('doou'); not('data-id="gold_s"'); assert.strictEqual((H().match(/Feito hoje/g) || []).length, 2, 'check-in e gold_s feitos (donatedToday: "checkin" e "donate:gold_s")'); has('data-id="gold_l"');
+  click('don', { id: 'gold_s' }); not('gd2-conf'); has('Já feito hoje'); assert.strictEqual(sent(/"kind":"gold_s"/), 1, 'doação feita hoje não reenvia');
+  fail['POST /guild/donate'] = Object.assign({}, LIM, { details: { key: 'donate:gold_l' } }); click('don', { id: 'gold_l' }); click('yes'); await settle(); has('Já feito hoje'); assert.strictEqual(spent.length, 1, 'recusa do servidor não debita'); delete fail['POST /guild/donate'];
   click('don', { id: 'gems' }); has('Faltam diamantes'); not('gd2-conf'); assert.strictEqual(sent(/"kind":"gems"/), 0);
-  out.push('doar: check-in, doação em 2 toques com débito só depois do ok, recusa (daily_limit) em texto, sem diamante não envia');
+  g.S.gems = 60; def.render(); click('don', { id: 'gems' }); click('yes'); await settle(); assert.strictEqual(g.S.gems, 10, 'diamantes: debita o cost.gems do servidor'); assert.deepStrictEqual(spent, ['gold:' + cost, 'gems:50']); assert.strictEqual(g.S.gold, gold0 - cost, 'doação de diamante não mexe no ouro');
+  out.push('doar: "Feito hoje" por donatedToday/checkinToday, doação em 2 toques debitando o cost do servidor uma vez e só no ok, 429 daily_limit em texto, sem diamante não envia');
 
   // 4) Bênçãos
   tab('bless'); check('bênçãos'); has('XP guardado: <b>1.234</b>'); has('data-x="bls"'); click('bls', { id: 'atk' }); await settle(); assert(calls.includes('POST /guild/blessings/atk/upgrade')); has('Ataque subiu para toda a guilda');
   // 5) Chefe: carrega, mostra a vida do servidor, golpe
-  delete g.Guild2.X.d.boss; tab('boss'); has('Carregando…'); check('chefe carregando'); await settle(); check('chefe'); has('Chefe da semana · nível 2'); has('2 golpes hoje'); has('63%');
-  click('hit'); has('Atacando o chefe…'); await settle(); assert(calls.includes('POST /guild/boss/hit')); await settle(); def.render(); has('Último golpe: <b>'); check('chefe depois do golpe');
+  delete g.Guild2.X.d.boss; tab('boss'); has('Carregando…'); check('chefe carregando'); await settle(); check('chefe'); has('Chefe da semana'); has('2 golpes hoje'); has('63%'); has('Vida 63000 de 100000');
+  has('Seu dano na semana'); has('1º Bento &lt;s&gt;'); not('Bento <s>'); has('2º Ana &lt;i&gt; (você)'); has('De 0x a 12x'); has('12x ou mais'); has('333 XP da guilda'); not('De 10x a 25x');   // faixas e prêmio de derrubar: os do servidor, não os da tabela
+  click('hit'); has('Atacando o chefe…'); await settle(); assert(calls.includes('POST /guild/boss/hit')); has('Golpe no chefe: 4321 de dano'); await settle(); def.render(); has('Último golpe: <b>4321</b> de dano · prêmio: '); has('1 forja</p>'); has('1 golpe hoje'); check('chefe depois do golpe');
   fail['GET /guild/boss'] = 'not_found'; click('retry', { k: 'boss' }); await settle(); has('Isso ainda não está disponível no servidor'); has('data-x="retry"'); check('chefe com erro'); delete fail['GET /guild/boss'];
-  out.push('bênçãos (subir) e chefe (vida do servidor, golpe, erro com Tentar de novo)');
+  // golpes do dia usados: o botão explica e não envia; 429 do servidor em texto
+  BOSS.hitsLeft = 0; click('retry', { k: 'boss' }); await settle(); check('chefe sem golpes'); has('Golpes de hoje usados'); has('voltam à meia-noite de Brasília'); { const nH = sent(/boss\/hit/); click('hit'); await settle(); assert.strictEqual(sent(/boss\/hit/), nH, 'sem golpes não envia'); }
+  // chefe caído (down): estado próprio, sem botão de atacar
+  BOSS.down = true; BOSS.hpLeft = 0; delete g.Guild2.X.d.boss; def.render(); await settle(); check('chefe caído'); has('Chefe da semana · derrubado'); has('Chefe derrubado nesta semana'); not('data-x="hit"'); has('1º Bento');
+  { const nH = sent(/boss\/hit/); click('hit'); await settle(); assert.strictEqual(sent(/boss\/hit/), nH, 'chefe caído não envia golpe'); has('O chefe desta semana já foi derrubado'); }
+  out.push('bênçãos (subir) e chefe (vida, golpes, meu dano, top e faixas do servidor; golpe com a faixa; sem golpes; caído; erro com Tentar de novo)');
 
   // 6) Loja: compra em 2 toques; item acima do nível da guilda não tem botão
   tab('shop'); await settle(); check('loja'); has('3 de 5 nesta semana'); has('Abre no nível 3 da guilda'); not('data-id="stones5"');
@@ -131,8 +161,13 @@ const tab = t => click('tab', { t });
   click('yes'); has('Comprando…'); await settle(); assert(calls.includes('POST /guild/shop/buy {"itemId":"forge10"}')); await settle();
   fail['POST /guild/shop/buy'] = 'weekly_limit'; click('buy', { id: 'food100' }); click('yes'); await settle(); has('Limite desta semana atingido'); delete fail['POST /guild/shop/buy'];
   click('buy', { id: 'stones5' }); has('Abre no nível 3 da guilda'); not('gd2-conf');
-  // 7) Missões
-  tab('miss'); await settle(); check('missões'); has('74/100'); has('data-id="bossDown"'); not('data-id="checkins100"'); click('claim', { id: 'bossDown' }); await settle(); assert(calls.includes('POST /guild/missions/bossDown/claim')); await settle();
+  // item com left 0 (essence2: 3 de 3) e item locked não têm botão e explicam; nome do item vindo do servidor escapado
+  has('Esgotado'); has('Limite desta semana atingido (3 de 3)'); not('data-id="essence2"'); not('data-id="mfrag5"'); has('100 de ração &lt;b&gt;'); not('ração <b>');
+  { const nB = sent(/shop\/buy/); click('buy', { id: 'essence2' }); not('gd2-conf'); has('Limite desta semana atingido'); click('buy', { id: 'mfrag5' }); not('gd2-conf'); has('Abre no nível 4 da guilda'); click('yes'); await settle(); assert.strictEqual(sent(/shop\/buy/), nB, 'esgotado ou travado não compra'); }
+  // 7) Missões: progresso, done, contributed e claimed do servidor
+  tab('miss'); await settle(); check('missões'); has('74/100'); has('data-id="bossDown"'); not('data-id="checkins100"'); has('Resgatado'); not('data-id="bossHits150"');
+  not('data-id="donations150"'); has('Os Brasões desta missão são só para quem ajudou nela'); { const nM = sent(/claim/); click('claim', { id: 'donations150' }); click('claim', { id: 'checkins100' }); click('claim', { id: 'bossHits150' }); await settle(); assert.strictEqual(sent(/claim/), nM, 'missão sem ajuda, incompleta ou já resgatada não envia'); }
+  click('claim', { id: 'bossDown' }); await settle(); assert(calls.includes('POST /guild/missions/bossDown/claim')); await settle();
   // 8) Territórios e atalho do torneio
   tab('terr'); check('territórios'); has('pontos de território'); has('Abrir o Torneio do Poder'); click('tour'); assert.deepStrictEqual(opened, ['tourney:guild2']);
   out.push('loja (comprar em 2 toques, recusa weekly_limit, item travado sem botão), missões (resgatar) e territórios (abre o torneio)');

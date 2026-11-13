@@ -37,19 +37,24 @@ const FA = { atk: 300, hp: 5000, def: 0, critRate: 20, critDmg: 50, aspd: 0 }, F
 const d1 = TW.duelCarry(FA, FB, 11), d2 = TW.duelCarry(FA, FB, 12, d1.hpLeftA, null); assert(d1.win && d2.win && d1.log.length > 1 && d2.log.length > 1, 'duelos de teste: o atacante vence os dois');
 const DUELS = [{ a: 'p2', b: 'x1', win: true, hpLeftA: d1.hpLeftA, hpLeftB: d1.hpLeftB, seed: 11, timeout: false, log: d1.log }, { a: 'p2', b: 'x2', win: true, hpLeftA: d2.hpLeftA, hpLeftB: d2.hpLeftB, seed: 12, timeout: false, log: d2.log }];
 const calls = [];
-const VIEW = () => ({ week: '2026-W46', phase, now: NOW, size: 15, battles: [{ slot: 'd5', at: 1, lockAt: 0 }],
+/* respostas NO FORMATO EXATO do contrato docs/API_SERVIDOR.md 10.3 e 10.5. lockMode: 'ok' (lockAt real) | 'locked' (sexta já travada) | 'none' (resposta sem lockAt: a tela não pode citar hora) */
+let lockMode = 'ok';
+const HR = at => { const d = new Date(at - 3 * 36e5), m = d.getUTCMinutes(); return d.getUTCHours() + 'h' + (m ? String(m).padStart(2, '0') : ''); };   // a hora de Brasília do lockAt, como a tela mostra
+const G1 = { id: 'g1', name: 'Guardiões do Teste' }, G9 = { id: 'g9', name: 'Lobos <b>' };
+const BT = (id, territory, slot, attacker, defender, winner, reason, duels) => ({ id, slot, territory, attacker, defender, winner, winnerName: winner ? (winner === 'g1' ? G1.name : G9.name) : null, reason, duels: duels || [], at: NOW - 36e5 });
+const VIEW = () => ({ week: '2026-W46', phase, now: NOW, size: 15, battles: lockMode === 'none' ? [] : [{ slot: 'd5', at: LOCK.d5 + 36e5, lockAt: LOCK.d5 }, { slot: 'd6', at: LOCK.d6 + 36e5, lockAt: LOCK.d6 }],
   map: [{ id: 'r0t1', region: 0, capital: false, owner: { id: 'g1', name: 'Guardiões do Teste' }, attacks: [] }, { id: 'r2t2', region: 2, capital: false, owner: { id: 'g9', name: 'Lobos <b>' }, attacks: [{ slot: 'd5', attacker: { id: 'g1', name: 'Guardiões do Teste' } }] },
     { id: 'capital', region: 4, capital: true, owner: { id: 'g9', name: 'Lobos <b>' }, attacks: [] }, { id: 'lixo' }, null],
   my: { guildId: 'g1', role, canDeclare: role === 'leader', canLineup: role === 'leader', attacksLeftToday: 2, lineups: { d5: [], d6: [] }, territories: ['r0t1'] } });
 g.Sys.net = { _call(m, p, b) { calls.push(m + ' ' + p + (b ? ' ' + JSON.stringify(b) : ''));
   if (p === '/tourney') return Promise.resolve(VIEW());
   if (p.indexOf('/tourney/ranking') === 0) return Promise.resolve({ kind: /territory/.test(p) ? 'territory' : 'tournament', week: 'w', list: [{ rank: 1, guildId: 'g9', name: 'Lobos <b>', wins: 3, points: 21, me: false }, { rank: 2, guildId: 'g1', name: 'Guardiões do Teste', wins: 1, points: 4, me: true }], me: null });
-  if (p.indexOf('/tourney/battles') === 0) return Promise.resolve({ week: 'w', list: [
-    { id: 1, territory: 'r2t2', slot: 'd5', attacker: { id: 'g1', name: 'Guardiões do Teste' }, defender: { id: 'g9', name: 'Lobos <b>' }, winner: 'g1', winnerName: 'Guardiões do Teste', reason: 'fight', duels: DUELS },
-    { id: 2, territory: 'r5t1', slot: 'd5', attacker: { id: 'g9', name: 'Lobos <b>' }, defender: null, winner: 'g9', winnerName: 'Lobos <b>', reason: 'neutral', duels: [] },
-    { id: 3, territory: 'capital', slot: 'd6', attacker: { id: 'g1', name: 'Guardiões do Teste' }, defender: { id: 'g9', name: 'Lobos <b>' }, winner: null, reason: null, duels: [] }] });
-  if (p.indexOf('/tourney/lineup') === 0 && m === 'GET') return Promise.resolve({ slot: /d6/.test(p) ? 'd6' : 'd5', members: /d6/.test(p) ? [] : ['p2'], lockAt: LOCK[/d6/.test(p) ? 'd6' : 'd5'], locked: false });
-  if (p === '/tourney/lineup' && m === 'PUT') return lineupAns && lineupAns.code ? Promise.reject(lineupAns) : Promise.resolve({ slot: b.slot, members: b.members.slice(), lockAt: LOCK[b.slot] });
+  /* um de cada motivo (reason); winner = id da GUILDA vencedora, null = ninguém ficou com o território; defender null = território sem dono */
+  if (p.indexOf('/tourney/battles') === 0) return Promise.resolve({ week: '2026-W46', list: [
+    BT(1, 'r2t2', 'd5', G1, G9, 'g1', 'fight', DUELS), BT(2, 'r5t1', 'd5', G9, null, 'g9', 'neutral'), BT(3, 'r3t1', 'd5', G1, G9, 'g1', 'walkover'),
+    BT(4, 'r6t2', 'd6', G9, null, null, 'empty'), BT(5, 'capital', 'd6', G1, G9, 'g9', 'era'), BT(6, 'r0t1', 'd6', G1, G1, 'g1', 'owner')] });
+  if (p.indexOf('/tourney/lineup') === 0 && m === 'GET') { const k = /d6/.test(p) ? 'd6' : 'd5', r = { slot: k, members: k === 'd6' ? [] : ['p2'], lockAt: LOCK[k], locked: lockMode === 'locked' && k === 'd5' }; if (lockMode === 'none') { delete r.lockAt; delete r.locked; } return Promise.resolve(r); }
+  if (p === '/tourney/lineup' && m === 'PUT') return lineupAns && lineupAns.code ? Promise.reject(lineupAns) : Promise.resolve({ ok: true, slot: b.slot, members: b.members.slice(), lockAt: LOCK[b.slot] });
   if (p === '/tourney/declare') return declareAns && declareAns.code ? Promise.reject(declareAns) : Promise.resolve(declareAns);
   return Promise.reject({ code: 'not_found' }); } };
 
@@ -105,18 +110,22 @@ let ts = 1000; const frames = (n, dt) => { for (let i = 0; i < n; i++) { const f
   out.push('mapa: defender leva à escalação; atacar confirma em 2 toques e envia território + dia; recusa (daily_limit) em texto; Capital = id capital');
 
   // 4) ESCALAÇÃO: as mesmas contas da tela de hoje
-  tab('lineup'); check('escalação'); has('Escalados 1/15'); has('>Salva<'); has('Trava em 10 h, às 19h'); has('Ana &lt;i&gt; (você)'); not('Ana <i>'); has('Menos de 24 h de guilda antes da trava'); has('FC somada 9 mil');
+  tab('lineup'); check('escalação'); has('Escalados 1/15'); has('>Salva<'); has('Trava em 10 h, às ' + HR(LOCK.d5) + '.'); has('Ana &lt;i&gt; (você)'); not('Ana <i>'); has('Menos de 24 h de guilda antes da trava'); has('FC somada 9 mil');
   { const order = ['Dora', 'Bento', 'Caio', 'Ana'].map(n => H().indexOf('<b>' + n)); assert(order.every((v, i) => v > 0 && (!i || v > order[i - 1])), 'linhas em ordem de FC: ' + order); }
   click('pick', { id: 'p4' }); has('entrou há menos de 24 h antes da trava (pode no sábado)'); has('Escalados 1/15');
   click('pick', { id: 'p1' }); has('Escalados 2/15'); has('Não salva'); has('>2º<'); has('Mediana de era: 4,5');
   click('lu', { k: 'clear' }); has('Escalados 0/15'); click('lu', { k: 'save' }); has('Escale pelo menos 1'); assert.strictEqual(sent(/PUT/), 0);
   click('lu', { k: 'best' }); has('Escalados 3/15'); click('lu', { k: 'save' }); has('Salvando a escalação…'); await settle();
   assert(calls.includes('PUT /tourney/lineup {"slot":"d5","members":["p2","p3","p1"]}'), 'salva os de maior FC elegíveis, sem a Dora: ' + calls.filter(c => /PUT/.test(c))); has('Escalação de sexta salva (3/15)'); has('>Salva<');
-  click('slot', { k: 'd6' }); await settle(); has('Escalados 0/15'); click('pick', { id: 'p4' }); has('Escalados 1/15'); lineupAns = { code: 'lineup_locked' }; click('lu', { k: 'save' }); await settle(); has('Escalação travada às 19h'); has('Não salva'); lineupAns = null; check('escalação sábado');
+  click('slot', { k: 'd6' }); await settle(); has('Escalados 0/15'); click('pick', { id: 'p4' }); has('Escalados 1/15'); has('Trava em 34 h, às ' + HR(LOCK.d6) + '.');
+  lineupAns = { code: 'lineup_locked', details: { lockAt: Date.UTC(2026, 10, 13, 22, 30) } }; click('lu', { k: 'save' }); await settle(); has('Escalação travada às 19h30'); has('Não salva'); lineupAns = null; check('escalação sábado');   // 409: a hora é a do details.lockAt (22:30 UTC = 19h30 de Brasília)
   out.push('escalação: ordem de FC, posição, 24 h antes da trava, mediana, Limpar, maior FC, Salvar e recusa do servidor');
 
   // 5) BATALHAS: lista do servidor e a luta animada pelo registro (x1/x4, Pular, Ver de novo, Fechar)
-  tab('battles'); check('batalhas'); has('Guardiões do Teste ataca Lobos &lt;b&gt;'); has('Guardiões do Teste tomou · 2 duelos · vitória da sua guilda'); has('território sem dono'); has('Aguardando a batalha das 20h');
+  tab('battles'); check('batalhas'); has('Guardiões do Teste ataca Lobos &lt;b&gt;'); has('Guardiões do Teste tomou · 2 duelos · decidida na luta · vitória da sua guilda');
+  has('Lobos &lt;b&gt; ataca Sem dono'); has('Lobos &lt;b&gt; tomou · território sem dono<'); has('Guardiões do Teste tomou · o dono não tinha lutador · vitória da sua guilda'); has('O território segue sem dono · o atacante não tinha lutador<');
+  has('Lobos &lt;b&gt; segurou · era mediana do atacante abaixo da região · derrota da sua guilda'); has('Guardiões do Teste já era a dona<'); not('Aguardando a batalha');
+  assert.strictEqual((H().match(/class="won"/g) || []).length, 2, 'duas vitórias da minha guilda (fight e walkover)'); assert.strictEqual((H().match(/class="lost"/g) || []).length, 1, 'uma derrota (era)');
   assert.strictEqual(buttons().filter(b => b.dataset.x === 'watch').length, 1, 'só a batalha com registro tem Ver luta'); click('watch', { i: '1' }); has('Esta batalha não teve luta'); not('tr2-ctl');
   click('watch', { i: '0' }); check('luta'); has('tr2-ctl'); has('Duelo 1 de 2'); has('<b>Bento</b>'); has('Lutador 1'); has('FC 9 mil'); has('>x1<'); has('>x4<'); has('Pular'); has('Fechar'); assert(def.busy(), 'durante a luta a tela não é redesenhada por fora');
   frames(1, 16); assert.strictEqual(drew.length, 2, 'dois lutadores por quadro'); assert.strictEqual(drew[0].st.hero, 'kael'); assert.strictEqual(drew[1].st.hero, 'kaia'); assert(drew[0].x < drew[1].x, 'atacante à esquerda, defensor à direita'); assert.strictEqual(drew[0].st.pet, false);
@@ -137,6 +146,12 @@ let ts = 1000; const frames = (n, dt) => { for (let i = 0; i < n; i++) { const f
   click('tile', { id: 'r2t2' }); check('membro comum mapa'); not('data-x="decl"'); has('Só o líder e os oficiais declaram ataque.'); click('decl', { k: 'd6' }); has('Só o líder e os oficiais declaram ataques'); not('tr2-conf'); click('yes'); await settle(); assert.strictEqual(sent(/declare/), nD, 'membro comum não declara');
   tab('lineup'); check('membro comum escalação'); has('Só <b>o líder e os oficiais</b> escalam'); not('data-x="lu"'); click('pick', { id: 'p3' }); has('Só o líder e os oficiais escalam'); click('lu', { k: 'save' }); await settle(); assert.strictEqual(sent(/PUT/), nP, 'membro comum não salva');
   out.push('membro comum: sem Atacar, sem Limpar/Salvar; toque forjado não chega ao servidor');
+
+  // 7b) trava: sexta já travada (locked do servidor) mostra a hora do lockAt; resposta sem lockAt = texto genérico, sem hora inventada
+  role = 'leader'; lockMode = 'locked'; N._reset(); await open(); tab('lineup'); check('escalação travada'); has('Travada às ' + HR(LOCK.d5) + '. Trocar de equipamento agora não muda a batalha'); not('data-x="lu"');
+  click('pick', { id: 'p3' }); has('Escalação travada às ' + HR(LOCK.d5)); click('lu', { k: 'save' }); await settle(); assert.strictEqual(sent(/PUT/), nP, 'escalação travada não salva');
+  lockMode = 'none'; N._reset(); await open(); tab('lineup'); check('escalação sem lockAt'); has('A escalação trava antes da batalha.'); assert(!/[Tt]rava[^<]*às \d/.test(H()), 'sem lockAt a tela não cita hora de trava'); lockMode = 'ok';
+  out.push('trava: hora do lockAt real (lineup, battles[] e details do 409), estado travado, e texto sem hora quando o lockAt não vem');
 
   // 8) fora dos dias de declarar: o botão explica; sem o módulo: indisponível com Voltar
   role = 'leader'; phase = 'battle'; N._reset(); await open(); click('tile', { id: 'r2t2' }); check('fase de batalha'); has('Ataques só de segunda a quinta'); click('decl', { k: 'd6' }); not('tr2-conf'); assert.strictEqual(sent(/declare/), nD);
