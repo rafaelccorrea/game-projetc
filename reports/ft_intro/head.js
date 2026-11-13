@@ -138,7 +138,7 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
     if(this.logoCfg!==undefined){ go(this.logoCfg); return; }
     fetch(base+'logo_anim.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).catch(()=>null).then(cfg=>{ this.logoCfg=cfg; go(cfg); }); },
   draw(){ const c=this.cur; if(!c||!this.root) return; let v={}; try{ v=c.renderVals()||{}; }catch(e){ console.error('[intro] '+this.id,e); }
-    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); if(this.id==='TituloV2B') this.logoAnim(); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
+    const sc=Object.assign(Object.create(null),PI.extra(this.id),v); const out=[]; for(const n of tplOf(this.id).childNodes) piBuild(n,sc,out); morphKids(this.root,out); this.realmBar(); if(this.id==='TituloV2B') this.logoAnim(); if(!this.heroRaf&&this.root.querySelector('canvas[data-pi-hero]')) this.heroRaf=requestAnimationFrame(t=>this.heroTick(t)); },
   extra(){ const av=typeof window.avatarTag==='function', full=!G.isNew()&&typeof drawHeroFull==='function'&&typeof HS==='number'; return {hasAv:av,noAv:!av,fullHero:full,kidHero:!full,pName:piEsc(G.name()||'Viajante'),pLvl:G.level(),ver:piEsc(G.version()),isNew:G.isNew(),isOld:!G.isNew(),kaiaReady:PI_KAIA,kaiaSoon:!PI_KAIA,googleSoon:!PI.googleReady(),pFc:G.fc()}; },
   fit(){ if(!this.el) return; const app=document.getElementById('app')||document.body, W=app.clientWidth||390, H=app.clientHeight||844, d=PI_SCREENS[this.id]||{};
     const s=d.fluid?W/390:Math.min(W/390,H/844), h=d.fluid?H/s:844;
@@ -152,10 +152,33 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   /* navegação: os links do protótipo (href="X.dc.html") passam por aqui e a regra do fluxo decide a próxima tela */
   nav(target){ const nw=G.isNew(), id=this.id;
     if(id==='TituloV2B'){ if(nw){ this.show('Login'); return; } if(this.offline()){ this.show('BemVindo'); return; } this.finish(); return; }   /* REGRA DO DONO: Bem-vindo SÓ com tempo fora REAL (>= 120 s, relógio no passado) e ganho > 0 (PI.offline); conta/save novo ou volta rápida entra direto no jogo */
-    if(id==='Login'){ this.show(target==='TituloV2B'?'TituloV2B':'Prologo'); return; }        /* convidado ou conta conectada → Prólogo */
+    if(id==='Login'){ if(target==='TituloV2B'){ this.show('TituloV2B'); return; }              /* convidado ou conta conectada → (SERVIDOR, 1ª vez) → Prólogo */
+      const go=()=>{ if(this.el) this.show('Prologo'); }; if(!this.realmSeen()&&this.realmUI()) this.realmStep(true,go); else go(); return; }
     if(id==='Prologo'){ this.show('CriarJogador'); return; }                                   /* "Começar" do fim do Prólogo */
     if(id==='NomeJogador'){ if(target==='BatalhaTelaCheiaV2'){ const n=this.cur&&this.cur.state&&this.cur.state.nick; if(n) this.commitNew(n); this.finish(); } return; }   /* Continuar: grava herói + nome */
     if(id==='BemVindo'){ this.claimOffline(); this.finish(); return; } },
+  /* SERVIDOR (decisão do dono: tela de seleção ligada mesmo com um servidor só). A lista é da Sistemas (js/p_realm.js: window.RealmUI.mount(el,{first,onDone}));
+     escolher o atual grava 'eon_realm_seen' e chama onDone; escolher outro troca pelo Realm.set (recarrega). Sem o RealmUI, o passo é pulado sem travar.
+     Jogador antigo (já tem save) não é obrigado a passar por ela: vê o selo do servidor e o "Trocar servidor" no Título. */
+  realmUI(){ const R=window.RealmUI; return R&&typeof R.mount==='function'?R:null; },
+  realmSeen(){ try{ return localStorage.getItem('eon_realm_seen')==='1'; }catch(e){ return true; } },
+  realmBadge(){ try{ if(typeof window.realmBadge==='function') return String(window.realmBadge()); }catch(e){}
+    let id='s1'; try{ if(window.Realm&&Realm.id) id=Realm.id(); }catch(e){} return id==='s1'?'S1 · Nova Era':id.toUpperCase(); },
+  realmStep(first,next){ const R=this.realmUI(); if(!R||!this.el){ if(next) next(); return; }
+    const box=document.createElement('div'); box.className='pi-realm'; box.style.cssText='position:absolute;inset:0;z-index:5;background:#0b0806;overflow-x:hidden;overflow-y:auto';
+    this.el.appendChild(box); let done=false;
+    const end=id=>{ if(done) return; done=true; try{ box.remove(); }catch(e){} if(next) next(id); };
+    try{ R.mount(box,{first:!!first,onDone:end}); }catch(e){ console.error('[intro] servidor',e); end(); } },
+  /* selo "S1 · Nova Era" + "Trocar servidor" no Título (fora do modelo do protótipo, sobre a tela) */
+  realmBar(){ const el=this.el; if(!el) return; let b=el.querySelector('.pi-realmbar');
+    if(this.id!=='TituloV2B'){ if(b) b.remove(); return; } if(b) return;
+    b=document.createElement('div'); b.className='pi-realmbar';
+    b.style.cssText='position:absolute;z-index:4;left:12px;top:max(12px,env(safe-area-inset-top));display:flex;align-items:center;gap:6px;max-width:calc(100% - 84px);font-family:Nunito,system-ui,sans-serif';
+    const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    b.innerHTML='<span role="status" aria-label="Servidor atual" style="padding:6px 10px;border-radius:12px;background:rgba(20,14,10,.72);border:1px solid #6b5338;color:#ffe07a;font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(this.realmBadge())+'</span>'
+      +(this.realmUI()?'<button type="button" class="pi-realmbtn" style="min-height:36px;padding:6px 10px;border-radius:12px;border:1px solid #6b5338;background:rgba(40,28,18,.85);color:#f6ecdf;font:800 13px Nunito,sans-serif;white-space:nowrap">Trocar servidor</button>':'');
+    const btn=b.querySelector('.pi-realmbtn'); if(btn) btn.addEventListener('click',ev=>{ ev.stopPropagation(); this.sfx&&this.sfx('snd:ui_tap'); this.realmStep(false,()=>{}); });
+    el.appendChild(b); },
   open(done){ if(this.el) return; this.done=done||null;
     const el=document.createElement('div'); el.id='pin'; el.setAttribute('role','dialog'); el.setAttribute('aria-label','Entrada do jogo');
     el.style.cssText='position:absolute;inset:0;z-index:95;background:#0b0806;overflow:hidden';
