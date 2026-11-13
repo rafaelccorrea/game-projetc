@@ -8,6 +8,19 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13/11, noite · Engenheiro: todas as telas novas escritas e batalha mais ágil** (tudo no GitHub; as telas novas ficam desligadas até o QA ver cada uma na tela).
+    - **Telas novas prontas no código (14):** Forja, Pets, VIP, Montarias, Passe, Loja, Torre, Equipamento + Mochila, Guilda e Torneio do Poder (as duas ligadas ao servidor de verdade), Fim das 9 eras e Perfil.
+    - **Batalha:** o próximo inimigo entra logo (sem o palco vazio entre ondas), o dano crítico aparece maior, números grandes ganham "T", e depois de perder para o chefe a faixa mostra "Juntando força". O QA mediu e aprovou.
+    - **Defeitos que o QA achou e já foram corrigidos (retestados e aprovados):**
+        - o "cano de arma" solto ao lado do herói: estava pintado na imagem do tigre levando golpe; a imagem foi desligada e a Arte está refazendo;
+        - a Forja mostrava o herói com espada mesmo com a Clava equipada;
+        - a Arena parecia online quando o servidor recusava a entrada: agora avisa que são lutas de treino.
+    - **Arena:** a previsão de pontos passa a ser a mesma conta do servidor (falta o QA conferir numa luta real).
+    - **"Forjar até conseguir"** liberado para todos, sem VIP.
+    - **Tamanho na loja (decisão do PO):** o APK de teste continua com tudo dentro; a versão da Play Store vai dividir a arte em pacotes baixados pela própria Play. Plano em `docs/PLANO_ASSET_PACKS.md`.
+    - **Esperando o seu voto:** Fogueira das Eras (no link de telas). Nada dela é ligado antes.
+    - **Ainda não aprovado na tela:** o QA devolveu ajustes da Forja, do Equipamento e da Torre novas em tela pequena (sendo corrigidos); Guilda, Torneio, Fim das 9 eras e Perfil novos ainda não foram vistos no navegador.
+
 - **19h · Força-tarefa para finalizar tudo** (`docs/FORCA_TAREFA_FINAL.md`), com agentes extras em cada sessão.
     - **APK v0.13.2 instalada no seu S24 e testada:** salvar e reabrir funcionou.
     - **Servidor na AWS com o online ligado:** Arena, Guilda, Torneio, Fim de Semana, Chefe Mundial e fases sem fim; 25 testes reais passaram.
