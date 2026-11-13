@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **17h50 · DESEMPENHO, resultado de 95 s (navegador):** pior quadro 18 ms (antes 85), nenhuma travada acima de 50 ms (antes 2), memória das imagens 139 MB (limite 150). Falta o teste de 5 min e, depois, medir no S24. **APK v0.13.0:** sai assim que o teste de 5 min passar, com tudo o que estiver conferido; o online vai junto se você rodar o script do banco antes, senão entra na seguinte
+
 - **17h30 · Você APROVOU:** desenho das peças por raridade, opção de 3 desenhos + cor (~100 créditos); a Arte começa e manda amostra de 1 era antes do resto. A parte por código (moldura, brilho e gema por raridade) JÁ está pronta (d5069c6)
 - **17h30 · Aparência com TODAS as skins** (e39d3c5, conferida pelo QA): prévia animada a pé e montado, como ganhar com botão para a tela, troca Kael ↔ Kaia no Modo dono. Prints na página do Perfil. Achado: a prévia mostrava os heróis com pistola (pode ser o "revólver" que você viu); em correção
 - **17h30 · Online:** ligação no jogo pronta e desligada (0e3ceac) + tela nuvem × aparelho (b6d3dce); falta o script do banco e o teste real. Desempenho: parcial com pior quadro 30 ms e nenhum acima de 50 ms (antes 85 ms); medição completa e memória em andamento
