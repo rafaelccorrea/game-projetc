@@ -8,6 +8,22 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **19h · Força-tarefa para finalizar tudo** (`docs/FORCA_TAREFA_FINAL.md`), com agentes extras em cada sessão.
+    - **APK v0.13.2 instalada no seu S24 e testada:** salvar e reabrir funcionou.
+    - **Servidor na AWS com o online ligado:** Arena, Guilda, Torneio, Fim de Semana, Chefe Mundial e fases sem fim; 25 testes reais passaram.
+    - **Corrigidos para a próxima versão:**
+        - o inimigo que tirava só 1 de dano (o dano do comum sobe);
+        - a cura cheia antes do chefe;
+        - os botões ilegíveis;
+        - a Loja repetindo itens;
+        - o "Bem-vindo de volta" que não aparecia.
+    - **Kael Anjo refeita:** sem asa, com os mesmos movimentos do herói padrão.
+    - **Skins do Kael:** as outras 5 estão em produção.
+    - **Ligados no código:** eras 7 e 8, Fênix, Asa Seráfica, skins e prêmios novos, arma Mítica, nomes novos das armas.
+    - **Fogueira das Eras:** a versão dentro da tela de batalha está sendo refeita para o seu voto.
+    - **Pesquisa do Legend of Mushroom:** está no documento que abri para você.
+    - **Higgsfield:** 88 créditos gastos.
+
 - **14h30 · Terminar as 9 eras não é terminar o jogo (sua regra):** os textos agora dizem "fim das 9 eras", e a tela Fim das 9 eras fecha com "A jornada continua" em destaque (próximo marco na fase 100, botão "Seguir para a fase 91"). **Proposta do pós-eras, desligada, para você decidir** (`docs/PROPOSTA_POS_ERAS.md`): marco a cada 10 fases (título +1%, 30 diamantes), Forja Astral +21 a +25, pet até Nv 150, treino diário sem teto, ranking semanal por servidor, Torneio e Arena. Nada pago, nada sorteado. Simulação: o grátis chega à fase 100 no dia 192, à 120 no dia 210 e à 150 no dia 255; o VIP 10 chega à 100 no dia 131, à 120 no dia 148 e à 150 no dia 192. Nenhuma fase passa de ~5 dias de espera.
 
 - **05h10 · Todas as telas da fila prontas** no link https://claude.ai/artifact/Dje98dqTa6vConwpewnGds. São 12 telas, e as novas são **Batalha** e **Fim das 9 eras**. **Para você decidir:** os prêmios do fim das 9 eras (título "Lenda das 9 Eras" com +3%, moldura, aura e 300 gemas uma vez). Achado: na era 2, a fase 6 pede mais que o dobro da fase 5. Isso será suavizado junto com o conserto da dificuldade
