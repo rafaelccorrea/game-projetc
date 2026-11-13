@@ -20,7 +20,8 @@ const vaConvOn = () => { const V = vaVip(); return !!(V && V.DATA && V.DATA.conv
 /* conveniência do save: sempre um objeto (sem o módulo: desligada) */
 function vaConv(S0, id){ const V = vaVip(); try { const c = V && V.conv(S0, id); if (c) return c; } catch (e) {}
   return { id, on: false, need: 0, value: 0, name: '', free: '', lockText: 'VIP' }; }
-const vaNum = n => { try { return (typeof gNum === 'function' ? gNum : fmt)(n); } catch (e) { return String(Math.floor(n)); } };
+/* número curto em português (mil, mi, bi) para o aviso: Sys.stats.abbr a partir de 10 mil; abaixo, o número inteiro do jogo */
+const vaNum = n => { try { if (n >= 1e4 && Sys.stats && typeof Sys.stats.abbr === 'function') return Sys.stats.abbr(n); return (typeof gNum === 'function' ? gNum : fmt)(n); } catch (e) { return String(Math.floor(n)); } };
 
 /* ---------- 1) MOCHILA ---------- */
 function bagMax(S0){ const base = (typeof BAG_MAX === 'number' && BAG_MAX > 0) ? BAG_MAX : VA_BAG_BASE; let add = 0;
@@ -164,7 +165,8 @@ function vaCollect(force){
   return out; }
 /* aviso único, um pouco mais longo que o comum (o resumo tem mais texto) */
 function vaToast(msg){ const t = document.getElementById('toast'); if (!t || typeof toastT === 'undefined'){ toast(msg); return; }
-  t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3600); }
+  const show = () => { t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3600); };
+  show(); setTimeout(() => { if (t.textContent !== msg) show(); }, 2400); }   /* outro aviso por cima (ex.: "Códex liberado" ao subir de nível com a XP das missões): o resumo volta UMA vez depois dele */
 function vaCollectSoon(ms){ clearTimeout(VA.colTimer); VA.colTimer = setTimeout(() => { try { vaCollect(false); } catch (e) { console.error('vaCollect', e); } }, ms > 0 ? ms : 800); }
 /* volta do segundo plano (navegador e app) */
 document.addEventListener('visibilitychange', () => { if (!document.hidden) vaCollectSoon(900); });

@@ -20,9 +20,9 @@ vm.runInThisContext(fs.readFileSync(path.join(R, 'js/p_tower.js'), 'utf8'), { fi
 assert(def && def.render && def.click, 'Panels.add registrou a tela');
 const btn = x => ({ dataset: { x } }); const H = () => g.V.innerHTML; const has = s => assert(H().includes(s), 'faltou: ' + s); const out = [];
 const T = g.Sys.tower; const o = T.ensure(g.S, host); o.best = 0; o.lossesLeft = T.DATA.lossesPerDay;
-// 1) estado inicial: andar 1, tentativas 5/5, botão "Subir ao andar 1", marcos reais, ranking com aviso, sem dado inventado
-def.onOpen(); def.render(); has('Subir ao andar 1'); has('Tentativas'); has('5/5'); has('Andar 1'); has('Andar 10'); has('Andar 100'); has('Valendo quando o online abrir'); has('Melhor: 0'); has('início');
-assert(!/\[VALOR\]|PROPOSTA/.test(H())); out.push('estado inicial ok (andar 1, 5/5, marcos, ranking com aviso)');
+// 1) estado inicial: andar 1, tentativas n/n (n do módulo), botão "Subir ao andar 1", marcos reais, ranking com aviso, sem dado inventado
+def.onOpen(); def.render(); has('Subir ao andar 1'); has('Tentativas'); has(T.DATA.lossesPerDay+'/'+T.DATA.lossesPerDay); has('Andar 1'); has('Andar 10'); has('Andar 100'); has('Valendo quando o online abrir'); has('Melhor: 0'); has('início');
+assert(!/\[VALOR\]|PROPOSTA/.test(H())); out.push('estado inicial ok (andar 1, n/n do módulo, marcos, ranking com aviso)');
 // 2) tela cheia de botões com ação
 let bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 2 && bt.every(b => /data-x="/.test(b)), 'todo botão com ação');
 // 3) desafiar: usa Sys.tower.fight (uma vez), reproduz o registro, termina com faixa e redesenha
@@ -34,7 +34,7 @@ assert(els.pt_ban.innerHTML.includes('vencido!') || els.pt_ban.innerHTML.include
 // 4) sem tentativas: botão desligado visualmente, toque explica e NÃO luta
 o.lossesLeft = 0; def.render(); has('Sem tentativas hoje'); has('Voltam amanhã'); const f0 = o.fights; def.click(btn('climb'), {}); assert.strictEqual(o.fights, f0, 'sem tentativas não luta'); assert(toasts.some(t => /tentativas/.test(t)), 'explica'); out.push('sem tentativas: explica e não luta');
 // 5) andar de chefe: andar 9 vencido -> próximo é o 10 (chefe, imagem do chefe, 💎 e marco)
-o.best = 9; o.lossesLeft = 5; def.render(); has('Subir ao andar 10'); has('chefe'); has('era0_boss.png'); has('CHEFE'); out.push('andar 10: chefe com imagem da era e plaquinha CHEFE');
+o.best = 9; o.lossesLeft = T.DATA.lossesPerDay; def.render(); has('Subir ao andar 10'); has('chefe'); has('era0_boss.png'); has('CHEFE'); out.push('andar 10: chefe com imagem da era e plaquinha CHEFE');
 // 6) marco conquistado marca ✓
 o.best = 25; def.render(); has('conquistado'); out.push('marcos conquistados: ok');
 // 7) ranking sem tela: avisa; Voltar do bloqueio; Sys.tower ausente
@@ -48,13 +48,13 @@ const B = tReward({ t100Frags: 3, t100Pet: 'drake', phoenixFrags: 0 }); assert(B
 const D = tReward({ egg: { r: 4, pet: 'phoenix' }, t100Frags: 2, t100Pet: 'phoenix' }); assert(D.includes('Ovo raro') && !/fênix|fenix/i.test(D + A + B + C), D);
 out.push('formato do andar 100 e acima: ok, sem fênix');
 // 9) torre inteira rolável com lista virtual: altura total, poucos andares desenhados, rolar repinta
-o.best = 49; o.lossesLeft = 5; def.render(); has('pt_in'); has('height:' + ((100 * 110) + 220) + 'px');
+o.best = 49; o.lossesLeft = T.DATA.lossesPerDay; def.render(); has('pt_in'); has('height:' + ((100 * 110) + 220) + 'px');
 const nF = s => (s.match(/aria-label="Andar [0-9]+/g) || []).length; assert(nF(H()) >= 3 && nF(H()) <= 8, 'janela pequena: ' + nF(H()));
 const sc = { scrollTop: 0, style: {} }, dy = mkEl('pt_dyn'); els.pt_sc = sc; els.pt_dyn = dy; def.render(); assert.strictEqual(typeof sc.onscroll, 'function'); assert(sc.scrollTop > 4000, 'câmera no andar atual');
 sc.scrollTop = 0; sc.onscroll(); assert(dy.innerHTML.includes('Andar 100') && nF(dy.innerHTML) >= 3 && nF(dy.innerHTML) <= 8, 'topo: andar 100'); assert(/CHEFE/.test(dy.innerHTML));
 out.push('torre inteira: lista virtual (' + nF(dy.innerHTML) + ' andares na janela), câmera no andar atual, rolar repinta');
 delete els.pt_sc; delete els.pt_dyn;
 // tentativas com o bônus do VIP (o que o módulo devolve) e chip trancado para quem não tem
-{ const o2 = g.Sys.tower.ensure(g.S, host); o2.best = 0; o2.lossesLeft = 5; g.Sys.vip = g.Sys.vip || null; const keep = g.Sys.vip; try{ require('../../js/sys/vip.js'); }catch(e){}
-  def.render(); has('Tentativas extras: VIP 5'); has(': +1'); assert(!/R[$]/.test(g.V.innerHTML)); Sys.vip.setLevel(g.S, 5); g.Sys.tower.ensure(g.S, host); g.Sys.tower.ensure(g.S, host).lossesLeft = 6; def.render(); has('6/6'); assert(!/Tentativas extras: VIP/.test(g.V.innerHTML), 'com VIP 5 o chip some'); Sys.vip.setLevel(g.S, 0); g.Sys.vip = keep; out.push('torre: tentativas com bônus do VIP e chip "VIP 5: +1" trancado'); }
+{ const o2 = g.Sys.tower.ensure(g.S, host); o2.best = 0; o2.lossesLeft = T.DATA.lossesPerDay; g.Sys.vip = g.Sys.vip || null; const keep = g.Sys.vip; try{ require('../../js/sys/vip.js'); }catch(e){}
+  def.render(); has('Tentativas extras: VIP 5'); has(': +1'); assert(!/R[$]/.test(g.V.innerHTML)); Sys.vip.setLevel(g.S, 5); g.Sys.tower.ensure(g.S, host); const mx = T.DATA.lossesPerDay + Sys.vip.conv(g.S, 'towerAdd').value; g.Sys.tower.ensure(g.S, host).lossesLeft = mx; def.render(); has(mx + '/' + mx); assert(mx === T.DATA.lossesPerDay + 1, 'VIP 5 soma 1 ao grátis do módulo'); assert(!/Tentativas extras: VIP/.test(g.V.innerHTML), 'com VIP 5 o chip some'); Sys.vip.setLevel(g.S, 0); g.Sys.vip = keep; out.push('torre: tentativas com bônus do VIP e chip "VIP 5: +1" trancado'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

@@ -218,7 +218,7 @@ html,body{background:#0a0807}
 #lver{position:absolute;left:0;right:0;bottom:10px;margin:0;text-align:center;font-size:11px;font-weight:700;color:#b9a993}
 /* Engenheiro 7 (ordem do PO): FUNDO = a imagem de abertura do Android (opção A aprovada), cobrindo a tela e centrada, para a passagem da abertura ao jogo ficar
    sem emenda; até decodificar, a cor #140C34 (nunca branco). O logo já está na imagem: logo solto, travessia das eras, rótulo da era e Kael correndo saem. */
-#loading.lsplash{background:#140C34 url(assets/mobile/splash/splash_1080x1920.png) center/cover no-repeat}
+#loading.lsplash{background:#140C34 url(assets/mobile/splash/splash_loading.jpg) center/cover no-repeat;background-image:image-set(url(assets/mobile/splash/splash_loading.webp) type("image/webp"),url(assets/mobile/splash/splash_loading.jpg) type("image/jpeg"))}
 #loading.lsplash .lbg,#loading.lsplash .lpillw,#loading.lsplash .llogo,#loading.lsplash .lsh,#loading.lsplash #lrun{display:none}
 #loading.lsplash .lshade{background:linear-gradient(180deg,rgba(10,6,28,0) 0%,rgba(10,6,28,0) 64%,rgba(10,6,28,.8) 84%,rgba(10,6,28,.92) 100%)}
 #loading.lsplash #lver{color:#cfc6ea}
@@ -297,7 +297,7 @@ body.full #toast{top:calc(var(--hudh) + 150px);max-width:210px;font-size:13px}
   <div id="lrun" role="img" aria-label="Kael correndo"></div>
   <div class="lbarbox">
     <div id="lbarw" role="progressbar" aria-label="Carregando" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><i id="lbar"></i></div>
-    <div class="lrow"><span id="lstep">Atravessando a Pré-História…</span><span id="lpct">0%</span></div>
+    <div class="lrow"><span id="lstep">Carregando…</span><span id="lpct">0%</span></div>
   </div>
   <div class="lfoot">
     <p id="ltip" class="tip"><b>Dica:</b> <span></span></p>

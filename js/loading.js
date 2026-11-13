@@ -104,7 +104,7 @@ function sceneTrim(){ const cur = eraOf(S.stage); for (const k in SCN.list){ con
 
 function initLoading(){
   const el = LD.el = document.getElementById('loading'); if (!el) return;
-  if (DEBUG && QP.has('skip')){ el.remove(); LD.closed = true; return; }
+  if (DEBUG && QP.has('skip')){ el.remove(); LD.closed = true; loadManifest(); return; }   /* o manifesto vale mesmo sem a barra (Sys.assets.mountedArt: Kaia montada) */
   const app = document.getElementById('app');
   const fit = () => { const r = app.getBoundingClientRect(); if (r.height) el.style.setProperty('--s', (r.height / 844).toFixed(4)); };
   fit(); addEventListener('resize', fit);
@@ -112,7 +112,8 @@ function initLoading(){
   LD.t0 = performance.now();
 
   /* --- fila real de pré-carregamento (Engenheiro 5): a lista da PRIMEIRA CENA sai de sceneList(); cada arquivo conta na barra --- */
-  PRE().reset(); LD.old = DEBUG && QP.get('carga') === 'antiga';   /* ?debug=1&carga=antiga: só a lista de antes e a fuga dos 15 s (para comparar o defeito); nunca para o jogador */
+  PRE().reset(); LD.old = window.PRELOAD_NEW !== true || (DEBUG && QP.get('carga') === 'antiga');   /* PADRÃO = caminho ANTIGO (ordem do PO); o novo só com ?debug=1&carga=nova (chave window.PRELOAD_NEW, js/preload.js) */
+  if (LD.old) loadManifest();   /* fora da barra: só para o Sys.assets.mountedArt (Kaia montada) */   /* ?debug=1&carga=antiga: só a lista de antes e a fuga dos 15 s (para comparar o defeito); nunca para o jogador */
   const era = eraOf(S.stage);
   /* um erro aqui NUNCA deixa a barra parada: registra no console e entra pela lista antiga; o cão de guarda abaixo libera a tela se o laço da barra morrer */
   const queue = () => { try { sceneQueue(LD.old); } catch (er) { console.error('Carregamento: a lista da cena falhou; entrando pelo caminho antigo', er); try { sceneQueue(true); } catch (e2) { console.error(e2); } } };
@@ -147,15 +148,22 @@ function initLoading(){
       const eat = e => { e.stopPropagation(); e.preventDefault(); }; ['click', 'pointerdown', 'pointerup', 'touchend'].forEach(t => document.addEventListener(t, eat, true));
       setTimeout(() => ['click', 'pointerdown', 'pointerup', 'touchend'].forEach(t => document.removeEventListener(t, eat, true)), 500); closeLoading(); } });
   el.addEventListener('keydown', ev => { if (LD.fin && (ev.key === 'Enter' || ev.key === ' ')) closeLoading(); });
-  requestAnimationFrame(loadTick);
+  try { loadStep(); } catch (e) { console.error(e); }                                     /* 1º estado da barra e 1ª dica já no boot, sem esperar quadro */
+  if (!(DEBUG && QP.get('semraf') === '1')) requestAnimationFrame(loadTick);             /* ?debug=1&semraf=1: prova que a barra anda e fecha SEM nenhum quadro (só o temporizador) */
+  LD.iv =setInterval(() => { if (LD.closed){ clearInterval(LD.iv); return; } try { loadStep(); } catch (e) { console.error(e); } }, 400);   /* anda sem quadros (segundo plano) */
+  document.addEventListener('visibilitychange', () => { if (!LD.closed){ try { loadStep(); } catch (e) {} } });
   /* cão de guarda: se o próprio laço da barra morrer por um erro, a tela libera o toque sozinha depois do tempo-limite geral */
   const dog = () => { if (LD.fin || LD.closed) return;   /* só age se o LAÇO morreu: página visível e nenhum loadTick há mais de 20 s */
     if (document.hidden || !LD.lastT || performance.now() - LD.lastT < 20000){ setTimeout(dog, 5000); return; }
     console.warn('Carregamento: cão de guarda liberou a tela'); LD.fin = true; try { document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); } catch (e) {} };
   LD.lastT = performance.now(); setTimeout(dog, 5000);
 }
-function loadTick(now){
-  if (LD.closed) return;
+/* Engenheiro 7 (impedimento do APK, QA): a barra NÃO depende de requestAnimationFrame. Aba/app em segundo plano não recebe quadros: a carga já era por
+   promessas, mas a barra, o "Pronto!" e o aviso de falha só andavam no rAF (visto pelo QA: 0% parado). loadStep() é chamado pelo rAF (suave, em primeiro
+   plano), por um temporizador de 400 ms (anda em segundo plano), a cada troca de visibilidade e direto no boot. O tempo vem do relógio (performance.now). */
+function loadTick(){ if (LD.closed) return; loadStep(); requestAnimationFrame(loadTick); }
+function loadStep(){
+  if (LD.closed) return; const now = performance.now();
   /* Engenheiro 7 (decisão do PO): NADA estoura por tempo total. Enquanto houver progresso a barra continua, por mais lenta que a rede esteja. O aviso
      "Confira a conexão" só aparece (a) quando NADA progrediu por LOAD_STALL_S s com arquivos ainda pendentes (some sozinho se o progresso voltar) ou (b) quando
      tudo terminou e algum arquivo falhou de verdade (erro do servidor / arquivo inexistente depois das tentativas). Página escondida não conta (Preload.idle). */
@@ -165,7 +173,7 @@ function loadTick(now){
   if (LD.skipFail) real = 1; else if (LD.retrying) real = Math.min(real, 0.99);
   if (!LD.skipFail && !LD.old && !LD.retrying){
     if (LD.failUI && LD.failUI.stall && (pend <= 0 || idle < 3000)) loadFailOff();                                                   /* o progresso voltou: o aviso sai sozinho */
-    if (PG.total && pend <= 0 && PG.failed.length){ loadFail(PG, false); requestAnimationFrame(loadTick); return; }                  /* faltou arquivo: para e oferece "Tentar de novo" */
+    if (PG.total && pend <= 0 && PG.failed.length){ loadFail(PG, false); return; }                 /* faltou arquivo: para e oferece "Tentar de novo" */
     if (pend > 0 && idle > LOAD_STALL_S * 1000 && !LD.failUI) loadFail(PG, true); }                                                   /* rede parada: avisa, e a carga continua por trás */
   document.getElementById('lstep').dataset.n = PG.done + '/' + PG.total;
   const cap = Math.min(1, el_s / minDur);                                                        // duração mínima: dá tempo de ver a travessia
@@ -183,7 +191,6 @@ function loadTick(now){
   if (ti !== LD.tip && p < 100){ LD.tip = ti; const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }
   if (p >= 100 && !LD.fin){ LD.fin = true; loadLater(); LD.finMs = Math.round(now - LD.t0); if (DEBUG) console.info('Carregamento: pronto em ' + (LD.finMs / 1000).toFixed(1) + ' s (' + PG.done + '/' + PG.total + ', falhas ' + PG.failed.length + ')');
 document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); el.setAttribute('tabindex', '0'); try { el.focus({ preventScroll: true }); } catch (e) {} }
-  requestAnimationFrame(loadTick);
 }
 /* arquivos que não vieram depois das tentativas automáticas: aviso claro + "Tentar de novo" (recarrega só os que faltam) + "Continuar mesmo assim"
    (entra com a reserva de sempre para esses arquivos; a lista fica no console). Nunca trava para sempre. */
@@ -191,11 +198,14 @@ function loadFailOff(){ const box = LD.failUI; if (!box) return; box.remove(); L
 function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySelector('.lfoot'), box = document.createElement('div'); LD.failUI = box; box.id = 'lfail'; box.stall = !!stall;
   box.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;width:100%';
   const n = stall ? PG.total - PG.done : PG.failed.length, bt = 'min-height:44px;padding:0 18px;border-radius:12px;font:800 15px Nunito,system-ui,sans-serif;cursor:pointer;';
+  /* NOMES (ordem do PO): o aviso e o console dizem QUEM falta (arquivo ou tarefa): os 3 primeiros na tela, todos no console */
+  const names = (stall ? (PRE().pending || []) : PG.failed).slice(), shortN = s => String(s).replace(/^.*\//, '').replace(/[<>&]/g, ''), who = names.slice(0, 3).map(shortN).join(', ') + (names.length > 3 ? ' e mais ' + (names.length - 3) : '');
   box.innerHTML = '<p style="margin:0;font-size:13px;font-weight:800;color:#ffd7a8;text-align:center">' + (stall ? 'O carregamento parou.' : n === 1 ? '1 arquivo não carregou.' : n + ' arquivos não carregaram.') + ' Confira a conexão.</p>' +
+    (who ? '<p id="lwho" style="margin:0;font-size:11px;font-weight:700;color:#cfc6ea;text-align:center;word-break:break-word">Falta: ' + who + '</p>' : '') +
     '<div style="display:flex;gap:10px"><button type="button" id="lretry" style="' + bt + 'flex:0 0 auto;white-space:nowrap;border:2px solid #7a4a12;background:#ffc94a;color:#3a2206">Tentar de novo</button>' +
     '<button type="button" id="lskip" style="' + bt + 'border:2px solid #6a5a48;background:#2a2019;color:#f6ecdf">Continuar mesmo assim</button></div>';
   document.getElementById('lstep').textContent = 'Faltam ' + n + ' de ' + PG.total + ' arquivos'; const tip = document.getElementById('ltip'); if (tip) tip.style.display = 'none'; foot.appendChild(box);
-  console.warn(stall ? 'Carregamento: nada progrediu por ' + LOAD_STALL_S + ' s; pendentes: ' + n : 'Carregamento: arquivos que faltaram', PG.failed);
+  console.warn(stall ? 'Carregamento: nada progrediu por ' + LOAD_STALL_S + ' s; pendentes (' + n + '): ' + names.join(' | ') : 'Carregamento: arquivos que faltaram: ' + names.join(' | '));
   const off = ev => ev.stopPropagation();
   box.querySelector('#lretry').addEventListener('pointerup', off); box.querySelector('#lskip').addEventListener('pointerup', off);
   box.querySelector('#lretry').addEventListener('click', () => { const wasStall = box.stall; loadFailOff(); document.getElementById('lstep').textContent = 'Tentando de novo…';
