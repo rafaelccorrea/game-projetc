@@ -8,6 +8,8 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **15h10 · v0.12.9 INSTALADA no seu S24** (por cima, save mantido: Nv. 13, FC 92,1 mil). Abre em 0,77 s; memória menor que a v0.12.7 (626 MB); tela fluida (mediana 12 ms por quadro). Ainda não conferido no aparelho: carregamento novo, abertura, Kaia, asas, ultimates, VIP, eventos, som; o limite de 60 FPS do jogo falta medir pelo contador interno
+
 - **15h · Checklist atualizado.** APK v0.12.9 pronto para instalar (ligue o cabo e escreva "pode instalar" na janela do Engenheiro). Arte fechou a rodada (8 skins, 3 pets novos, Kaia montada nas 6, arco/bumerangue, ultimates, asas) e está parada; o resto fica para a próxima parte (~610 créditos; saldo ~313)
 
 - **14h50 · APK v0.12.9 PRONTO** (971 MB, ícone A, sem Facebook, só permissões de internet e vibração). Para instalar: ligue o celular no cabo e escreva "pode instalar" na janela do Engenheiro (instala por cima, mantém seu save). Na instalação ele mede quadros por segundo, pior quadro e memória
@@ -315,7 +317,7 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 - [ ] Saldo ~313. A próxima parte (Samurai e Ciborgue, 6 pets, 10 montarias novas montadas) custa ~610
 
 **Celular:**
-- [ ] APK v0.12.9 PRONTO: ligue o cabo e escreva "pode instalar" na janela do Engenheiro
+- [x] APK v0.12.9 instalado no S24 (save mantido). Jogue e me diga o que achar
 
 **Servidor (para ligar o online):**
 - [ ] Senha do banco Supabase no servidor (passo a passo em fps-server/deploy/LEIA-ME.md)
@@ -376,7 +378,7 @@ Nada parado; ninguém flutua; arma na mão direita · Só automático · Dano sa
 ## D. Versões (no GitHub)
 
 - [x] v0.12.1 a v0.12.6: tela cheia, armas, Forja, pets
-- [x] v0.12.7: montarias, pet ao lado, asa por item (instalada no seu S24)
+- [x] v0.12.7: montarias, pet ao lado, asa por item 
 - [x] v0.12.8 (APK pronto, 722 MB): todas as telas novas, telas de entrada, Kaia jogável, Kael garoto em qualquer nível, FC nova, morte nova, inimigo sem parar, cenários, Vitória com pet/montaria/asa. Substituída pela v0.12.9
-- [x] v0.12.9 (APK pronto, 971 MB, em Desktopps-android): carregamento novo, ícone A e abertura, logo animado, 60 FPS, eventos na batalha, VIP, ultimates Lendárias, asas novas, skins e pets novos, arco/bumerangue, sem Facebook. Falta só instalar
+- [x] v0.12.9 (APK pronto, 971 MB, em Desktopps-android): carregamento novo, ícone A e abertura, logo animado, 60 FPS, eventos na batalha, VIP, ultimates Lendárias, asas novas, skins e pets novos, arco/bumerangue, sem Facebook. INSTALADA no seu S24
 - [ ] Próxima: FC em telas estreitas, telas VIP, Kael Ninja/Pantera no app, lobo da Kaia limpo, depois a próxima parte da arte (Samurai, Ciborgue, 6 pets, 10 montarias) · itens novos aprovados (skins, pets, montarias, asas, ultimates, arco/bumerangue), eventos com horário, Fusão, Mapa, app menor (Play Asset Delivery), servidor no ar
