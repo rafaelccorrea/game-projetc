@@ -1,0 +1,194 @@
+{
+ "frames": 8,
+ "fps": 12,
+ "w": 512,
+ "h": 352,
+ "padLeft": 96,
+ "padRight": 160,
+ "padTop": 96,
+ "padBottom": 0,
+ "feetY": 339,
+ "loop": {
+  "c": 6566.999890230865,
+  "P": 32,
+  "s": 18
+ },
+ "xf": {
+  "sc": 0.6,
+  "ox": 70.4,
+  "oy": 96
+ },
+ "grip": [
+  {
+   "x": 183.86,
+   "y": 164.06,
+   "fdy": -61,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 1.98,
+   "behind": false,
+   "src": "f019.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.95,
+   "y": 165.06,
+   "fdy": -60,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f023.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.75,
+   "y": 165.36,
+   "fdy": -61,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f027.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.71,
+   "y": 165.71,
+   "fdy": -61,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f031.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 184.14,
+   "y": 163.74,
+   "fdy": -61,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.04,
+   "behind": false,
+   "src": "f035.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.16,
+   "y": 164.66,
+   "fdy": -60,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -9.12,
+   "f1": 9.12,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f039.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 182.61,
+   "y": 164.21,
+   "fdy": -62,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.16,
+   "behind": false,
+   "src": "f043.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  },
+  {
+   "x": 183.51,
+   "y": 165.52,
+   "fdy": -61,
+   "ang": 24,
+   "ux": 0.9135,
+   "uy": -0.4067,
+   "f0": -8.88,
+   "f1": 8.88,
+   "hw": 2.1,
+   "behind": false,
+   "src": "f047.png",
+   "angFix": "video->24 (arma nao cobre o rosto)"
+  }
+ ],
+ "back": [
+  {
+   "x": 164,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 159.2,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 159.2,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 163.8,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 163.8,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 159.4,
+   "y": 140,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 159.4,
+   "y": 141,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  },
+  {
+   "x": 164,
+   "y": 140,
+   "ang": 16.5,
+   "s": 0.654,
+   "ok": true
+  }
+ ],
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) entre as escápulas; ang: tronco (16,5 = mediana do Kael no grifo); s: cabeça montada / a pé}. tools/kaiamount/kback.js (rosto -> costas; o backanchor confundia a asa da montaria com o cachecol)"
+}
