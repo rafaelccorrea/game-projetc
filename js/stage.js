@@ -341,7 +341,7 @@ function drawHeroPistol(H, E){
        (kael_angel_nowing, regra noWing do Sys.appearance.sheetFor), que tem âncora: aí a asa do item é desenhada, uma só. */
 /* A folha da morte é a da FASE (Sys.appearance.sheetFor → phase1|2|3/kael_die_body), na escala da fase, pés no chão: o herói nunca "volta a ser criança" ao morrer. */
 function dieSheet(){ const s = phaseSheet('die', heroPhase(), true); if (s) return s; return sheetLoad(HERO_DIR + 'kael_die_body', true); }   /* a pasta que o sheetFor devolver (herói e skin); sem o módulo, a do Kael */
-const DIE_WING_OFF = /hyb\/(kaia_)?phase\d\/|skins\/(kael_angel|kaia_angel)\//;
+const DIE_WING_OFF = /hyb\/(kaia_)?phase\d\/|skins\/kael_angel\//;   /* kaia_angel saiu: ela não tem asa pintada (Arte, 4a92ee6) */
 function dieWingOk(sh){ if (!sh || !sh.ok) return false; if (sh._dw !== undefined) return sh._dw; const M = sh.meta, A = M && M.back;
   return sh._dw = !!(Array.isArray(A) && A.length >= (M.frames || 1) && A.every(b => b && b.ok === true && typeof b.x === 'number' && typeof b.y === 'number') && !DIE_WING_OFF.test(sh.base || '')); }
 /* recorte da asa na morte: tudo ACIMA da linha do chão do herói (px lógicos) */
