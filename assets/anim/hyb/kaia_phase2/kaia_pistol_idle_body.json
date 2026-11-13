@@ -20,8 +20,8 @@
  },
  "grip": [
   {
-   "x": 268.6,
-   "y": 83.7,
+   "x": 265.7,
+   "y": 95.9,
    "fdy": 0,
    "ang": 1.09,
    "ux": 0.9998188608621129,
@@ -33,8 +33,8 @@
    "src": "f001.png"
   },
   {
-   "x": 268.6,
-   "y": 83.7,
+   "x": 265.2,
+   "y": 96.4,
    "fdy": 0,
    "ang": -0.42,
    "ux": 0.9999730521397237,
@@ -46,8 +46,8 @@
    "src": "f009.png"
   },
   {
-   "x": 294.72,
-   "y": 80.22,
+   "x": 265.2,
+   "y": 95.4,
    "fdy": 0,
    "ang": 0.91,
    "ux": 0.9998730269601329,
@@ -59,8 +59,8 @@
    "src": "f017.png"
   },
   {
-   "x": 297.76,
-   "y": 77.45,
+   "x": 265.4,
+   "y": 94.9,
    "fdy": 0,
    "ang": 0.82,
    "ux": 0.9998982657549094,
@@ -72,8 +72,8 @@
    "src": "f025.png"
   },
   {
-   "x": 293.08,
-   "y": 79.97,
+   "x": 265,
+   "y": 94.1,
    "fdy": 0,
    "ang": 2.24,
    "ux": 0.9992384252871221,
@@ -85,8 +85,8 @@
    "src": "f033.png"
   },
   {
-   "x": 293.08,
-   "y": 79.97,
+   "x": 265.3,
+   "y": 96.5,
    "fdy": 0,
    "ang": -0.4,
    "ux": 0.9999758796975824,
@@ -98,8 +98,8 @@
    "src": "f041.png"
   },
   {
-   "x": 294.11,
-   "y": 80.63,
+   "x": 265.2,
+   "y": 94.3,
    "fdy": 0,
    "ang": 1.7,
    "ux": 0.9995623917339249,
@@ -111,8 +111,8 @@
    "src": "f049.png"
   },
   {
-   "x": 295.91,
-   "y": 78.48,
+   "x": 263.6,
+   "y": 94.2,
    "fdy": 0,
    "ang": 1.89,
    "ux": 0.9994579714096166,
@@ -124,8 +124,8 @@
    "src": "f057.png"
   },
   {
-   "x": 295.91,
-   "y": 78.48,
+   "x": 265,
+   "y": 96.6,
    "fdy": 0,
    "ang": -0.24,
    "ux": 0.9999913543170259,
@@ -137,8 +137,8 @@
    "src": "f065.png"
   },
   {
-   "x": 292.46,
-   "y": 78.58,
+   "x": 264.6,
+   "y": 95.2,
    "fdy": 0,
    "ang": 1.59,
    "ux": 0.9996143960748931,
@@ -150,8 +150,8 @@
    "src": "f073.png"
   },
   {
-   "x": 294.42,
-   "y": 88.34,
+   "x": 263.8,
+   "y": 94.2,
    "fdy": 0,
    "ang": 2.14,
    "ux": 0.9992994801379729,
@@ -163,8 +163,8 @@
    "src": "f081.png"
   },
   {
-   "x": 292.62,
-   "y": 79.25,
+   "x": 263.3,
+   "y": 94.4,
    "fdy": 0,
    "ang": 3.08,
    "ux": 0.9985548720753767,
@@ -262,5 +262,6 @@
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "gripNote": "P19 (13/11): grip = centro do punho (hand do kaia_pistol_idle_era5_t0), igual ao Kael R/garota; antes ficava no centro da arma do vídeo"
 }

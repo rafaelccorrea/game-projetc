@@ -1,0 +1,9 @@
+{
+ "frames": 22,
+ "fps": 12,
+ "w": 448,
+ "h": 384,
+ "feetY": 352,
+ "anchorX": 224,
+ "note": "igual ao levelup_fx com o \"NÍVEL +1\" mais baixo (centro do texto a 150 px acima dos pés, na altura do peito/cabeça, abaixo da barra de vida); pés do herói em (anchorX, feetY); tocar uma vez"
+}

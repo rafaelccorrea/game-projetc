@@ -20,8 +20,8 @@
  },
  "grip": [
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 276.8,
+   "y": 99.1,
    "fdy": 8,
    "ang": 2.17,
    "ux": 0.9992805265153912,
@@ -33,8 +33,8 @@
    "src": "f069.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 275.9,
+   "y": 101.7,
    "fdy": 3,
    "ang": 4.34,
    "ux": 0.9971379376808236,
@@ -46,8 +46,8 @@
    "src": "f072.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 273.5,
+   "y": 100.2,
    "fdy": 7,
    "ang": 1.9,
    "ux": 0.9994527905493169,
@@ -59,8 +59,8 @@
    "src": "f075.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 273.1,
+   "y": 99.6,
    "fdy": 4,
    "ang": 2.83,
    "ux": 0.9987804636841988,
@@ -72,8 +72,8 @@
    "src": "f078.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 276,
+   "y": 101.9,
    "fdy": 1,
    "ang": 2.39,
    "ux": 0.999132192887713,
@@ -85,8 +85,8 @@
    "src": "f081.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 280.6,
+   "y": 99.2,
    "fdy": 7,
    "ang": 1.1,
    "ux": 0.9998165883991614,
@@ -98,8 +98,8 @@
    "src": "f084.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 277.1,
+   "y": 101.1,
    "fdy": 3,
    "ang": 3.1,
    "ux": 0.9985404125152886,
@@ -111,8 +111,8 @@
    "src": "f087.png"
   },
   {
-   "x": 282.44,
-   "y": 82.8,
+   "x": 276.5,
+   "y": 102.5,
    "fdy": 4,
    "ang": 2.01,
    "ux": 0.9993843031870462,
@@ -183,5 +183,6 @@
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "gripNote": "P19 (13/11): grip = centro do punho (hand do kaia_pistol_run_era5_t0), igual ao Kael R/garota; antes ficava no centro da arma do vídeo"
 }

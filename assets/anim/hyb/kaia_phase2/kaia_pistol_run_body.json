@@ -20,8 +20,8 @@
  },
  "grip": [
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 283.2,
+   "y": 94,
    "fdy": 3,
    "ang": 1.57,
    "ux": 0.999624205505701,
@@ -33,8 +33,8 @@
    "src": "f043.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 280.9,
+   "y": 95.6,
    "fdy": 4,
    "ang": -0.95,
    "ux": 0.9998627099953603,
@@ -46,8 +46,8 @@
    "src": "f047.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 277.9,
+   "y": 95.2,
    "fdy": 1,
    "ang": 0.86,
    "ux": 0.9998871256027451,
@@ -59,8 +59,8 @@
    "src": "f052.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 280.3,
+   "y": 96.1,
    "fdy": 2,
    "ang": -0.88,
    "ux": 0.9998821259129226,
@@ -72,8 +72,8 @@
    "src": "f056.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 280.4,
+   "y": 95.7,
    "fdy": 2,
    "ang": 0.93,
    "ux": 0.9998677644746172,
@@ -85,8 +85,8 @@
    "src": "f061.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 279.2,
+   "y": 94.1,
    "fdy": 6,
    "ang": -0.46,
    "ux": 0.9999672631753778,
@@ -98,8 +98,8 @@
    "src": "f065.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 278.1,
+   "y": 95.7,
    "fdy": 1,
    "ang": 0.8,
    "ux": 0.9999030710842406,
@@ -111,8 +111,8 @@
    "src": "f069.png"
   },
   {
-   "x": 284.87,
-   "y": 79.09,
+   "x": 281.7,
+   "y": 96.4,
    "fdy": 2,
    "ang": -0.54,
    "ux": 0.9999552673167642,
@@ -183,5 +183,6 @@
    "ok": true
   }
  ],
- "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}"
+ "backNote": "back[i] = {x,y: px da célula (mesma grade do grip) no ponto entre as escápulas; ang: tronco em graus, 0 = vertical, + = inclinado para a direita; s: altura da cabeça do Kael / a do Kael a pé da mesma fase; ok=false: estimado dos vizinhos}",
+ "gripNote": "P19 (13/11): grip = centro do punho (hand do kaia_pistol_run_era5_t0), igual ao Kael R/garota; antes ficava no centro da arma do vídeo"
 }

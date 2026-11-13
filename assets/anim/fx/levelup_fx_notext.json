@@ -1,0 +1,9 @@
+{
+ "frames": 22,
+ "fps": 12,
+ "w": 448,
+ "h": 384,
+ "feetY": 352,
+ "anchorX": 224,
+ "note": "SÓ EFEITO sem texto (anel, coluna de luz, faíscas); o \"NÍVEL +1\" fica por conta do jogo, desenhado DEPOIS da barra de vida; pés do herói em (anchorX, feetY); tocar uma vez"
+}
