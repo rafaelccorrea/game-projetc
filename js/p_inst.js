@@ -39,6 +39,8 @@ function iReward(p,rush){ if(!p) return '';
   const a=[]; if(p.gold) a.push((rush?'≈ ':'')+iIc('coin')+' '+iFmt(p.gold)); if(p.gems) a.push(iIc('gem')+' '+p.gems);
   if(p.items) a.push(p.items+(p.items>1?' itens':' item')+(p.minR?' '+iRar(p.minR)+'+':'')); if(p.forge) a.push(p.forge+' de forja'); if(p.food) a.push(p.food+' de ração');
   if(p.eggChance) a.push('ovo '+Math.round(p.eggChance*100)+'%'); return a.join(' · '); }
+/* nível mostrado no cartão = nível usado ao entrar/varrer/navegar (mesma regra do desenho) */
+function iCur(t){ const I=Sys.instances; return iSel(t,I.levelsUnlocked(Sys.host),I.recommended(S,Sys.host)); }
 function iSel(t,nL,rec){ if(XI.sel[t]==null||XI.sel[t]>=nL) XI.sel[t]=Math.min(rec,nL-1); return XI.sel[t]; }
 function iCard(t,st,nL,rec){
   const I=Sys.instances, T=I.DATA.types[t], L=iSel(t,nL,rec), inf=I.levelInfo(L), p=I.rewardPreview(t,L,Sys.host), open=I.isOpen(Sys.host,L), done=(st.best[t]!=null?st.best[t]:-1)>=L, sw=I.canSweep(S,Sys.host,t,L), k=st.keys[t]||0, rush=T.mode==='rush';
@@ -79,14 +81,14 @@ function iClick(b,ev){
   if(!iOk()) return; const I=Sys.instances;
   if(a==='ok'){ iSnd('ui_tap'); XI.res=null; render(); return; }
   if(XI.res) return;
-  if(a==='prev'||a==='next'){ const nL=I.levelsUnlocked(Sys.host); XI.sel[t]=Math.max(0,Math.min(nL-1,(XI.sel[t]||0)+(a==='next'?1:-1))); iSnd('ui_tap'); render(); return; }
-  if(a==='lock'){ iSnd('ui_tap'); const inf=I.levelInfo(XI.sel[t]||0); iToast('Avance na campanha: libera na fase '+inf.stage); return; }
-  if(a==='go'){ const L=XI.sel[t]||0, c=I.canEnter(S,Sys.host,t,L); iSnd('ui_tap');
+  if(a==='prev'||a==='next'){ const nL=I.levelsUnlocked(Sys.host); XI.sel[t]=Math.max(0,Math.min(nL-1,iCur(t)+(a==='next'?1:-1))); iSnd('ui_tap'); render(); return; }
+  if(a==='lock'){ iSnd('ui_tap'); const inf=I.levelInfo(iCur(t)); iToast('Avance na campanha: libera na fase '+inf.stage); return; }
+  if(a==='go'){ const L=iCur(t), c=I.canEnter(S,Sys.host,t,L); iSnd('ui_tap');
     if(!c.ok){ iToast(c.reason==='chave'?'Sem entradas hoje nesta área. Renovam à meia-noite':c.reason==='bloqueado'?'Libera na fase '+c.unlockAt:'Não dá para entrar agora'); return; }
     if(typeof window.startInstanceRun!=='function'){ iToast('A batalha das instâncias ainda não está ligada'); return; }   /* não abre entrada que ninguém vai fechar */
     const r=I.start(S,Sys.host,t,L); if(!r||!r.ok){ iToast('Não dá para entrar agora'); return; }
     window.startInstanceRun(r.run); return; }
-  if(a==='sweep'){ const L=XI.sel[t]||0; if(!I.canSweep(S,Sys.host,t,L)){ iSnd('ui_tap'); iToast((I.status(S,Sys.host).keys[t]||0)<1?'Sem entradas hoje nesta área. Renovam à meia-noite':'Vença este nível antes de varrer'); return; }
+  if(a==='sweep'){ const L=iCur(t); if(!I.canSweep(S,Sys.host,t,L)){ iSnd('ui_tap'); iToast((I.status(S,Sys.host).keys[t]||0)<1?'Sem entradas hoje nesta área. Renovam à meia-noite':'Vença este nível antes de varrer'); return; }
     const r=I.sweep(S,Sys.host,t,L); if(!r||!r.ok){ iToast('Não foi possível varrer agora'); return; }
     try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){}
     iSnd('claim'); XI.res=r; render(); }

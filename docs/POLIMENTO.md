@@ -54,3 +54,12 @@ Metodologia: cada folha assets/anim/mounts/kael_<montaria>_<idle|run|attack>_bod
 - [ ] P17 · kael_horse_attack_era2_t1.png (COM ARMA) · quadro 7: além da espada na mão aparece uma PONTA de lança branca sobrando embaixo do peito do cavalo (resto da arma da folha body); mesmo print pol_8 · Arte
 - Conferido LIMPO nas folhas com arma (amostra por contato, 9 quadros por montaria): pônei, grifo, tigre e serpe nos quadros 0-8 (espada na mão, arcos de golpe ok); falta ver os quadros 9-16 e as folhas idle/run com arma.
 - [ ] P17 · Oferta · na vitrine o Kael no lobo segura uma ESPADA, mas a arma da oferta é uma CLAVA (Arma Épica 3★); o Kael tem que segurar a própria arma da oferta · Servidor (p_offer)
+
+### Reconferência no jogo (QA, aba 2, v0.12.8 + commits a67084f/c453c7a; 13/11)
+- [x] P7 (asa) · conferido no jogo: a pé e montado no lobo a asa agora sai das costas/ombros, não da cabeça (3 quadros em sequência no lobo e a pé, com pet) · OK
+- [x] P6 (arma na mão, montado no lobo) · conferido: o Kael montado segura a arma (osso/clava) na mão em 3 quadros seguidos e a pé também · OK nos quadros amostrados (o ataque 1-5 do lobo, P16, ainda depende da folha)
+- [ ] P8 (Vitória sem pet) · AINDA ABERTO: na Vitória com lobo + asa + arma o pet (mamute) NÃO aparece (print reports/prints/pol_9_vitoria_sem_pet_apos_correcoes.jpg); montaria, asa e arma aparecem · Engenheiro (drawHeroFull)
+- [x] Serpe dourada em Montarias · conferido: página 6/6, Lendário, "Na batalha: Kael montado", sem erro
+- [x] Instâncias · conferido de ponta a ponta: Entrar (Mina de Ouro) roda a horda cronometrada ("Instância 0:44 · 0" e faixa "Instância: Mina de Ouro"), com Kael montado + asa + pet; ao fim "Vitória! Mina de Ouro · 29 abates · 232 moedas · 25 XP" + "Coletar"; entradas 8→7
+- [x] P18 · Instâncias (js/p_inst.js, do QA) · BUG achado e CORRIGIDO: o onOpen zerava a seleção depois do 1º desenho, então "Entrar"/"Varrer" usavam o nível 0 (Fácil) enquanto o cartão mostrava o recomendado (Difícil): prêmio entregue 232 em vez de ≈1.160. Agora o clique relê o nível pelo mesmo caminho do desenho (iCur). Smoke cobre. A reconferir no navegador depois de recarregar.
+- [ ] P19 · Vitória (dbgResult) · o letreiro diz só "Chefe derrotado · Fase 1-9 liberada": o nome do chefe do c453c7a não apareceu (pode ser só o dbgResult, que não tem chefe real; conferir numa luta de verdade) · Engenheiro
