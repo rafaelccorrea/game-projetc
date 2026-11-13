@@ -186,8 +186,8 @@ const num=v=>(typeof v==='number'&&isFinite(v))?v:0;
 const isFresh=d=>num(d.level)<=1&&num(d.stage)<=1&&num(d.xp)<=0&&num(d.playSeconds)<=0;
 const hasProgress=c=>num(c.level)>1||num(c.stage)>1||num(c.xp)>0||num(c.playSeconds)>0;
 const behind=(d,c)=>num(d.level)<num(c.level)||num(d.era)<num(c.era);
-/* lado recomendado: mais tempo de jogo; empate (ex.: tempo ainda não medido) → o mais avançado (nível, era, fase, FC); empate total → nuvem */
-function recommendOf(d,c){ for(const k of ['playSeconds','level','era','stage','fc']){ if(num(d[k])>num(c[k])) return 'device'; if(num(d[k])<num(c[k])) return 'cloud'; } return 'cloud'; }
+/* lado recomendado: mais tempo de jogo; empate (ex.: tempo ainda não medido) → o mais avançado (nível, era, fase, FC); empate total → aparelho (mesmo progresso; é só o destaque, o jogador escolhe) */
+function recommendOf(d,c){ for(const k of ['playSeconds','level','era','stage','fc']){ if(num(d[k])>num(c[k])) return 'device'; if(num(d[k])<num(c[k])) return 'cloud'; } return 'device'; }
 async function sync(S,summary){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta(), h=await head();
