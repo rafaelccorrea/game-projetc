@@ -1106,4 +1106,16 @@ t('arma coerente (defeito do dono: "revólver saindo da arma de pedra"): famíli
   for(let e=0;e<=8;e++){ const it={slot:'weapon',e,r:1,look:e}; T.migrateItem(it); assert.strictEqual(W[T.weaponType(it)].artEra,e); }
 });
 
+t('chefe sem repetição (dono: "o mesmo item sempre dropa no chefe"): nunca o mesmo espaço seguido, no máximo 2 iguais (espaço+raridade) em 5; pesos e portão iguais',()=>{
+  const L=require('../../js/sys/loot.js'); if(!/BOSS_HIST|bossRepeat/.test(require('fs').readFileSync(require.resolve('../../js/sys/loot.js'),'utf8'))) return;   // só depois do anti-repetição estar no módulo
+  const h={eraMax:()=>1,level:()=>13,now:()=>1}, N=1500, items=[]; for(let i=0;i<N;i++) items.push(L.rollItem(h,{minR:1,upChance:0.25,source:'boss'}));
+  // re-sorteio limitado a 6 tentativas: uma repetição rara ainda pode passar (antes: ~20% de espaço repetido seguido)
+  const rep=items.slice(1).filter((it,i)=>it.slot===items[i].slot).length; assert.ok(rep/N<0.01,'mesmo espaço seguido: '+rep+'/'+N);
+  let win=0; for(let i=4;i<N;i++){ const w=items.slice(i-4,i+1).map(x=>x.slot+'|'+x.r); if(Math.max(...w.map(k=>w.filter(z=>z===k).length))>2) win++; } assert.ok(win/N<0.01,'3 iguais em 5: '+win+'/'+N);
+  assert.ok(items.every(it=>it.r<=L.maxAllowedR(h)),'portão de raridade mantido');
+  const c={}; for(const it of items) c[it.slot]=(c[it.slot]||0)+1; const W=L.DATA.slotWeightsBySource.boss||L.DATA.slotWeights, tot=Object.keys(c).reduce((t,k)=>t+(W[k]||0),0);
+  for(const k in c) assert.ok(Math.abs(c[k]/N-(W[k]||0)/tot)<0.05,'peso do espaço '+k+' perto do original');
+  const d=[]; for(let i=0;i<300;i++) d.push(L.rollItem(h,{minR:1,source:'drop'}).slot); assert.ok(d.slice(1).some((s,i)=>s===d[i]),'só o chefe: o drop comum continua livre');
+});
+
 console.log(`ok: ${n} testes`);
