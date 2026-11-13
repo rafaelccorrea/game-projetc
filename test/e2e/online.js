@@ -493,6 +493,18 @@ const SK = 'eras_proto_v2';
     { const sv = mkServer({ silent: true }); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle(); g.ev('OnlineBoot.play(); OnlineBoot.play()'); await g.adv(20000); g.ev('OnlineBoot.play()'); await g.settle();
       check('14. JOGAR com o servidor mudo: um pedido de criação só, nada trava, o jogo segue local', sv.count('POST /auth/guest') === 1 && g.st().on && !g.st().booted, sv.keys().join(',')); } }
 
+  /* 15. MÓDULOS ONLINE OPCIONAIS (Sys.arenaNet / Sys.guildNet / Sys.tourneyNet): carregados pelo index.html, chaves DESLIGADAS; o arranque só chama o start de quem
+     tem a própria chave ligada, uma vez, depois do boot dar certo; o start que falha não derruba nada */
+  { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
+    check('15. módulos online carregados e com as chaves desligadas', g.ev("!!(Sys.arenaNet&&Sys.guildNet&&Sys.tourneyNet)&&Sys.arenaNet.DATA.on===false&&Sys.guildNet.DATA.on===false&&Sys.tourneyNet.DATA.on===false"));
+    g.ev("window.__st={a:0,g:0}; Sys.arenaNet.__s=Sys.arenaNet.start; Sys.guildNet.__s=Sys.guildNet.start; Sys.arenaNet.start=function(){ __st.a++; return Promise.resolve({ok:true}); }; Sys.guildNet.start=function(){ __st.g++; throw new Error('quebrou'); }; 1");
+    const r1 = await g.promise('OnlineBoot.play()')(80); await g.settle();
+    check('15. chaves desligadas: o arranque não chama o start de nenhum', g.st().booted && g.ev('__st.a') === 0 && g.ev('__st.g') === 0, JSON.stringify(g.ev('__st'))); }
+  { const sv = mkServer(); const g = game({ search: '?debug=1&online=1', server: sv }); await g.settle();
+    g.ev("window.__st={a:0,g:0}; Sys.arenaNet.DATA.on=true; Sys.guildNet.DATA.on=true; Sys.arenaNet.start=function(){ __st.a++; return Promise.resolve({ok:true}); }; Sys.guildNet.start=function(){ __st.g++; throw new Error('quebrou'); }; 1");
+    const r2 = await g.promise('OnlineBoot.play()')(80); await g.settle();
+    check('15. chaves ligadas: start de cada um chamado uma vez depois do boot; o que quebra não derruba o arranque', g.ev('__st.a') === 1 && g.ev('__st.g') === 1 && g.st().booted, JSON.stringify(g.ev('__st'))); }
+
   check('TODOS os saves enviados neste teste (' + PUTS.n + ' PUT): era = S.eraMax, stage = S.stage, gems = S.gems e playSeconds do MESMO save enviado; os 8 números >= 0', PUTS.n > 5 && PUTS.bad.length === 0, PUTS.bad.slice(0, 3).join(' | '));
   console.log(fail ? '\n' + fail + ' de ' + total + ' VERIFICAÇÃO(ÕES) REPROVADA(S)' : '\nONLINE NA ABERTURA: ' + total + ' verificações OK');
   process.exit(fail ? 1 : 0);
