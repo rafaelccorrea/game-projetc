@@ -25,6 +25,10 @@ Comparação do catálogo do código com os arquivos em `assets/` (pastas de rep
 - Inimigos das eras 7 e 8: animação pronta, falta ligar (EN_ANIM_ERAS) e dar nome no meta
 - Fundo estático de reserva das eras 7 e 8: renomear era7_ref/era8_ref e cadastrar
 
+## Novo (achado na Derrota)
+- Montaria sem cavaleiro, parada (1 folha por montaria, 16): para a montaria ficar em cena na Derrota. A orçar.
+- Asa na morte: conferir a âncora das costas nas folhas de morte (por código, 0 crédito).
+
 ## Opcional
 - Ícones médio/evoluído dos 9 pets novos (18)
 - Ícones próprios das asas Anjo e Demoníaca (2)
