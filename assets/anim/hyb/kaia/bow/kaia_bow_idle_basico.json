@@ -1,0 +1,230 @@
+{
+ "frames": 12,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "bow_basico",
+ "scale": 0.1556,
+ "refAngle": 90,
+ "grip": [
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 303.77,
+    "y": 168.84
+   },
+   "ang": 82.61,
+   "pull": null,
+   "tipTop": {
+    "x": 283.3,
+    "y": 102.9
+   },
+   "tipBot": {
+    "x": 267.1,
+    "y": 228.2
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.5,
+    "y": 175.61
+   },
+   "ang": 83.11,
+   "pull": null,
+   "tipTop": {
+    "x": 279.3,
+    "y": 109.5
+   },
+   "tipBot": {
+    "x": 264.1,
+    "y": 235
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.67,
+    "y": 176.27
+   },
+   "ang": 81.43,
+   "pull": null,
+   "tipTop": {
+    "x": 281.2,
+    "y": 109.2
+   },
+   "tipBot": {
+    "x": 262.3,
+    "y": 234.2
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301,
+    "y": 175
+   },
+   "ang": 82.61,
+   "pull": null,
+   "tipTop": {
+    "x": 280.3,
+    "y": 108.9
+   },
+   "tipBot": {
+    "x": 264.1,
+    "y": 234.2
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 301,
+    "y": 175.55
+   },
+   "ang": 83.35,
+   "pull": null,
+   "tipTop": {
+    "x": 279.5,
+    "y": 109
+   },
+   "tipBot": {
+    "x": 264.9,
+    "y": 234.6
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.72,
+    "y": 177.27
+   },
+   "ang": 83.58,
+   "pull": null,
+   "tipTop": {
+    "x": 279.2,
+    "y": 111.1
+   },
+   "tipBot": {
+    "x": 265.1,
+    "y": 236.7
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.28,
+    "y": 176.43
+   },
+   "ang": 83.32,
+   "pull": null,
+   "tipTop": {
+    "x": 278.5,
+    "y": 110
+   },
+   "tipBot": {
+    "x": 263.8,
+    "y": 235.6
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 303.22,
+    "y": 176.33
+   },
+   "ang": 81.4,
+   "pull": null,
+   "tipTop": {
+    "x": 284.2,
+    "y": 109.2
+   },
+   "tipBot": {
+    "x": 265.3,
+    "y": 234.2
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.56,
+    "y": 175.71
+   },
+   "ang": 82.85,
+   "pull": null,
+   "tipTop": {
+    "x": 280.1,
+    "y": 108.9
+   },
+   "tipBot": {
+    "x": 264.3,
+    "y": 234.4
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.28,
+    "y": 175.38
+   },
+   "ang": 83.79,
+   "pull": null,
+   "tipTop": {
+    "x": 278.5,
+    "y": 109.6
+   },
+   "tipBot": {
+    "x": 264.8,
+    "y": 235.3
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.78,
+    "y": 176.22
+   },
+   "ang": 81.87,
+   "pull": null,
+   "tipTop": {
+    "x": 281.2,
+    "y": 109.8
+   },
+   "tipBot": {
+    "x": 263.3,
+    "y": 234.9
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 300.67,
+    "y": 175.77
+   },
+   "ang": 82.61,
+   "pull": null,
+   "tipTop": {
+    "x": 280.3,
+    "y": 108.9
+   },
+   "tipBot": {
+    "x": 264.1,
+    "y": 234.2
+   }
+  }
+ ]
+}

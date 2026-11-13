@@ -1,0 +1,158 @@
+{
+ "frames": 8,
+ "fps": 12,
+ "w": 448,
+ "h": 256,
+ "padLeft": 96,
+ "padRight": 96,
+ "feetY": 243,
+ "weapon": "bow_basico",
+ "scale": 0.1569,
+ "refAngle": 90,
+ "grip": [
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 309.5,
+    "y": 177.2
+   },
+   "ang": 79.99,
+   "pull": null,
+   "tipTop": {
+    "x": 291.7,
+    "y": 109.1
+   },
+   "tipBot": {
+    "x": 269.5,
+    "y": 235.2
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 310.95,
+    "y": 179.44
+   },
+   "ang": 80.66,
+   "pull": null,
+   "tipTop": {
+    "x": 292,
+    "y": 111.2
+   },
+   "tipBot": {
+    "x": 271.2,
+    "y": 237.5
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 310.28,
+    "y": 175.13
+   },
+   "ang": 83.11,
+   "pull": null,
+   "tipTop": {
+    "x": 289.1,
+    "y": 107.7
+   },
+   "tipBot": {
+    "x": 273.8,
+    "y": 234.7
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 309.11,
+    "y": 173.98
+   },
+   "ang": 82.87,
+   "pull": null,
+   "tipTop": {
+    "x": 287.9,
+    "y": 107.1
+   },
+   "tipBot": {
+    "x": 272,
+    "y": 234.1
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 307.38,
+    "y": 176.82
+   },
+   "ang": 79.76,
+   "pull": null,
+   "tipTop": {
+    "x": 290,
+    "y": 109.1
+   },
+   "tipBot": {
+    "x": 267.2,
+    "y": 235.1
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 309.11,
+    "y": 178.16
+   },
+   "ang": 79.4,
+   "pull": null,
+   "tipTop": {
+    "x": 291.9,
+    "y": 109.6
+   },
+   "tipBot": {
+    "x": 268.4,
+    "y": 235.4
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 312.85,
+    "y": 172.41
+   },
+   "ang": 82.17,
+   "pull": null,
+   "tipTop": {
+    "x": 292.2,
+    "y": 105.5
+   },
+   "tipBot": {
+    "x": 274.8,
+    "y": 232.3
+   }
+  },
+  {
+   "inHand": true,
+   "flip": false,
+   "hand": {
+    "x": 312.29,
+    "y": 174.09
+   },
+   "ang": 83.58,
+   "pull": null,
+   "tipTop": {
+    "x": 290.1,
+    "y": 107.3
+   },
+   "tipBot": {
+    "x": 275.8,
+    "y": 234.5
+   }
+  }
+ ]
+}
