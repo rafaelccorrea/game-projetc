@@ -80,7 +80,7 @@ O motivo da ordem: a Batalha é onde o jogador passa o tempo e é ela que mostra
 - Abas **Transformar** (`Sys.loot.transformCost`, `Sys.stats.transform`) e **Fundir** (`Sys.stats.canFuse`).
 
 **Regras novas:**
-- **Forja +16 a +20 (pacote do fim)**, em `docs/balance.json` `dificuldade.pacoteFim.forge`. Eu ligo em `js/sys/forge.js` com `setLateGame(true)` depois da v0.13.1: teto 18 na era 7 e 20 na era 8.
+- **Forja +16 a +20 (pacote das últimas eras)**, em `docs/balance.json` `dificuldade.pacoteFim.forge`. Eu ligo em `js/sys/forge.js` com `setLateGame(true)` depois da v0.13.1: teto 18 na era 7 e 20 na era 8.
 - **A fusão está DESLIGADA no código** (`Sys.stats.DATA.quality.on=false`). Se o dono aprovar a aba Fundir, ela precisa ser ligada, e isso tem de ser combinado comigo porque mexe no poder.
 
 **Arte que falta:** as auras são desenhadas por código no protótipo. Se preferirem folhas, existem `assets/anim/aura/aura4/7/10/13` (~2 MB cada).
@@ -94,7 +94,7 @@ O motivo da ordem: a Batalha é onde o jogador passa o tempo e é ela que mostra
 
 **Regras novas:**
 - **Evoluir dá FC na hora**: `Sys.pet.setStageMult(true)` (parte do pet ×0,8 / ×0,9 / ×1). Sem a chave, evoluir só libera níveis e o ganho é 0. A chave liga junto com a dificuldade.
-- **Pet até o Nv 120** (pacote do fim), ligado com o `setLateGame`.
+- **Pet até o Nv 120** (pacote das últimas eras), ligado com o `setLateGame`.
 
 **Arte que falta:** os 6 pets novos ainda desligados (`Sys.pet.DATA.newReady`). Folhas montadas dos pets que ainda não as têm.
 
@@ -197,7 +197,7 @@ O motivo da ordem: a Batalha é onde o jogador passa o tempo e é ela que mostra
 | `Sys.mount.setStarFlat(true)` | `js/sys/mount.js` | +2 a +3% por estrela | junto com a dificuldade |
 | `Sys.pet.setStageMult(true)` | `js/sys/pet.js` | evoluir dá FC | junto com a dificuldade |
 | `Sys.level.setCap120(true)` | `js/sys/level.js` | nível 120 | já ligado por você no era9Boot |
-| `setLateGame(true)` (Forja +20, Divino Nv 95, 8 títulos, montaria 7★, pet Nv 120, treino de era) | `js/sys/*` | fim do jogo | depois da v0.13.1 e da medida |
+| `setLateGame(true)` (Forja +20, Divino Nv 95, 8 títulos, montaria 7★, pet Nv 120, treino de era) | `js/sys/*` | fim das 9 eras | depois da v0.13.1 e da medida |
 | `fimDasEras.on` | `docs/balance.json` | prêmios das 9 eras | se o dono aprovar |
 | Subir estrela manual | `js/sys/mount.js` | botão da tela Montarias | se o dono aprovar a tela |
 | Fusão (`quality.on`) | `js/sys/stats.js` | aba Fundir da Forja | se o dono aprovar |

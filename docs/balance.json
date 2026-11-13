@@ -262,7 +262,7 @@
       13,
       15
     ],
-    "teto_degrau_efeito": "Fim do jogo igual (dia 61). Só redistribui: era 3 de 3,8 h para 3,6 h, era 5 de 10,5 h para 8,1 h, era 6 de 16,1 h para 19,8 h.",
+    "teto_degrau_efeito": "Fim das 9 eras igual (dia 61). Só redistribui: era 3 de 3,8 h para 3,6 h, era 5 de 10,5 h para 8,1 h, era 6 de 16,1 h para 19,8 h.",
     "missao": {
       "texto": "Colete 15 pedras de forja",
       "recompensa": 5,
@@ -1483,7 +1483,8 @@
         87,
         87,
         87
-      ]
+      ],
+      "_dias": "dia em que termina as 9 eras (vence a fase 90). Terminar as 9 eras não é terminar o jogo: depois vêm as fases sem fim (posEras)."
     },
     "vipMinWallDays": 0.5,
     "_vip": "Senhor da Era 1-8: a FC pedida é a maior entre a do grátis e a que o VIP 5/VIP 10 terá 12 h depois de chegar (o VIP também sente a parede; dono 13/11).",
@@ -1498,7 +1499,7 @@
     },
     "afterLastGrowth": 1.03,
     "pacoteFim": {
-      "_o_que": "Pacote do fim das eras 5-8 (dono 13/11: paredes de 3-5 dias e sempre algo para melhorar). DESLIGADO. Simulação: node tools/sim-paredes.js --late --trainmul --train=2 --traincap=200 --game. Sem sorteio pago e sem compra de poder.",
+      "_o_que": "Pacote das últimas eras das eras 5-8 (dono 13/11: paredes de 3-5 dias e sempre algo para melhorar). DESLIGADO. Simulação: node tools/sim-paredes.js --late --trainmul --train=2 --traincap=200 --game. Sem sorteio pago e sem compra de poder.",
       "on": false,
       "recFc": [
         210,
@@ -1695,7 +1696,8 @@
           "era8": 5
         },
         "vipBossWallDays": "3 a 6",
-        "era8MidFreeDays": 9.5
+        "era8MidFreeDays": 9.5,
+        "_dias": "dia em que termina as 9 eras (vence a fase 90). Terminar as 9 eras não é terminar o jogo: depois vêm as fases sem fim (posEras)."
       }
     }
   },
@@ -1730,12 +1732,146 @@
     "gems": 300,
     "_gems": "uma vez, só no fim: ~3% da meta de ~10 mil diamantes em 180 dias; cabe porque chega no dia ~178 (grátis) / ~118 (VIP 10)",
     "mail": {
-      "subject": "As 9 eras concluídas",
+      "subject": "As 9 eras concluídas: a jornada continua",
       "body": "Você venceu o Juiz Celestial. A jornada continua nas fases sem fim."
     },
     "endless": {
       "growthPerStage": 1.03,
       "_uso": "depois da fase 90, FC pedida = a da 90 × 1,03 por fase (dificuldade.afterLastGrowth)"
+    }
+  },
+  "posEras": {
+    "_o_que": "PÓS-ERAS (PO 13/11, regra do dono: 'acabar as eras não quer dizer que o jogo acabou'). O que o jogador persegue depois da fase 90, sempre forçando a evoluir. PROPOSTA, DESLIGADA até o dono aprovar. Nada sorteado, nada pago. Doc: docs/PROPOSTA_POS_ERAS.md. Simulação: node tools/sim-paredes.js --late --trainmul --train=2 --traincap=200 --pos --postrain=1.5 --poswall=1.04",
+    "on": false,
+    "needs": "pacoteFim ligado (setLateGame) e a medida do Engenheiro (100% da FC vence o Senhor) depois da APK v0.13.1",
+    "endless": {
+      "growthPerStage": 1.03,
+      "milestoneEvery": 10,
+      "milestoneWall": 1.04,
+      "_uso": "fase s > 90: FC pedida = recFc[89] × 1,03^(s − 90); nas fases 100, 110, ... × 1,04 a mais (parede curta de marco, como um Senhor de era pequeno). Sem fim de fases: segue depois da 150 na mesma regra."
+    },
+    "milestones": {
+      "every": 10,
+      "from": 100,
+      "title": {
+        "idPrefix": "mark",
+        "name": "Marco {fase}",
+        "bonusEffectivePct": {
+          "atk": 1,
+          "hp": 1
+        },
+        "_nota": "um título por marco (100, 110, 120...); +1% ATQ e +1% VIDA efetivos cada (já com o bonusMult do Sys.titles), somam. Do 160 em diante só o nome muda (sem bônus), para o poder não fugir.",
+        "bonusUntilStage": 150
+      },
+      "gems": 30,
+      "_gems": "30 por marco: 6 marcos até a 150 = 180 diamantes; ~3 meses de jogo, desprezível na meta de ~10 mil",
+      "frames": {
+        "100": {
+          "id": "mark100",
+          "name": "Além das Eras"
+        },
+        "150": {
+          "id": "mark150",
+          "name": "Sem Fim"
+        }
+      },
+      "astralForge": "cada marco libera +1 nível da Forja Astral (100 → +21 ... 140 → +25)",
+      "mail": {
+        "subject": "Marco da fase {fase}",
+        "body": "Você venceu a fase {fase}. Próximo marco: fase {prox}."
+      }
+    },
+    "astralForge": {
+      "levels": [
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "bonus": [
+        1.65,
+        1.77,
+        1.89,
+        2.01,
+        2.13
+      ],
+      "unlockStage": [
+        100,
+        110,
+        120,
+        130,
+        140
+      ],
+      "stone": "pedra astral",
+      "stoneSource": "só nas fases sem fim (inimigos depois da 90 e prêmio de marco)",
+      "_bonus": "mesma escada da Forja +16 a +20 (+0,12 por nível); cada nível vale ~+6,9% de FC no herói da fase 90",
+      "_trava": "nível só abre ao vencer o marco: a Forja nunca anda na frente do progresso"
+    },
+    "petLevel": {
+      "from": 121,
+      "to": 150,
+      "petPartMultAt150": 1.4,
+      "_uso": "pet continua do Nv 121 ao 150 com ração (sobe ~1 nível por dia jogado); parte do pet na FC vai de x1,25 (Nv 120) a x1,40"
+    },
+    "training": {
+      "aboveCapPctPerDay": 1.5,
+      "cap": null,
+      "_uso": "treino de era: até x3 segue +2%/dia; depois da fase 90, acima do teto, +1,5% por dia treinado, composto, SEM teto. É o que garante que nenhuma fase sem fim vire parede impossível (a FC pedida sobe 3% por fase, o treino sobe 1,5% por dia: ~2 dias por fase no longo prazo)."
+    },
+    "mount": {
+      "_uso": "montaria continua até 7 estrelas (teto aprovado); nada novo aqui"
+    },
+    "ranking": {
+      "scope": "servidor",
+      "metric": "fase sem fim mais alta (desempate: quem chegou primeiro)",
+      "period": "semanal",
+      "rewards": {
+        "top1": {
+          "gems": 50,
+          "badge": "Primeiro da semana"
+        },
+        "top10": {
+          "gems": 30
+        },
+        "top100": {
+          "gems": 15
+        }
+      },
+      "visualOnlyBadge": true,
+      "_nota": "só diamantes pequenos e selo visual; nada de poder, nada pago. Servidor guarda; pedir ao Servidor (fps-6f) quando ligar."
+    },
+    "social": {
+      "_uso": "Torneio e Arena viram o fim de jogo social: Arena já tem teto por era (maxEraNow); quem passou da 90 enfrenta outros da era 8. Sem mudança de números aqui."
+    },
+    "sim": {
+      "_cmd": "node tools/sim-paredes.js --late --trainmul --train=2 --traincap=200 --pos --postrain=1.5 --poswall=1.04",
+      "reachDay": {
+        "free": {
+          "end9": 178,
+          "s100": 192,
+          "s110": 199,
+          "s120": 210,
+          "s150": 255
+        },
+        "vip5": {
+          "end9": 136,
+          "s100": 150,
+          "s110": 156,
+          "s120": 166,
+          "s150": 211
+        },
+        "vip10": {
+          "end9": 118,
+          "s100": 131,
+          "s110": 137,
+          "s120": 148,
+          "s150": 192
+        }
+      },
+      "maxWaitDays": 4.7,
+      "_maxWait": "maior espera numa fase sem fim (marco da 150); as paredes das eras 5-8 ficam em 3-5 dias, a mesma faixa",
+      "_nota": "reachDay = dia em que VENCE a fase. end9 = dia em que termina as 9 eras."
     }
   }
 }

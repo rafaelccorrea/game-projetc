@@ -78,7 +78,7 @@ aprovação no canvas. O texto abaixo vale para tudo o que NÃO está nesta list
 
 ## NÍVEL DO JOGADOR 1-100 e PORTÕES DE RARIDADE (sistema novo pedido pelo dono; spec do PO; simulação v6 em andamento)
 XP por abates, chefes, instâncias, missões e offline. Curva íngreme: ~nível 25 no fim da era 2, ~70 no fim da era 4/5,
-100 só perto do fim do jogo (~dia 61). Nível dá +0,3% de ATK/HP por nível e libera funções (torre, instâncias, forja
+100 só perto do fim das 9 eras (~dia 61). Nível dá +0,3% de ATK/HP por nível e libera funções (torre, instâncias, forja
 etc.). HUD: "Nv. X" com barra de XP no avatar.
 PORTÕES DE RARIDADE (drop, baú, invocação e instâncias): Básico sempre; Raro nível 10+; Épico nível 25+; Mítico nível
 70+ E era 4 ou acima; Lendário nível 85+ E era 5 ou acima. Abaixo do portão, o sorteio vira a raridade permitida mais

@@ -171,7 +171,7 @@ Ajuste feito: tempo de chegada e de avanço dos inimigos × 3,5 e intervalo entr
 | 5 | 10,2 h | 88 | 34,3 bi | 88 / 87 / 87 / 87 / 73 / 74 / 72 | +12 |
 | 6 | 14,9 h | 100 | 1,54 tri | 94 / 96 / 96 / 95 / 71 / 73 / 71 | +14 |
 
-FC no fim do jogo: ATK 67%, HP 29%, DEF 3%; o crítico vale 32% e a velocidade de ataque 29%. Por espaço (queda sem o item): arma 50%, luvas 28%, colete 26%, botas 20%, colar 18%, asa 17%, chapéu 15%.
+FC no fim das 9 eras: ATK 67%, HP 29%, DEF 3%; o crítico vale 32% e a velocidade de ataque 29%. Por espaço (queda sem o item): arma 50%, luvas 28%, colete 26%, botas 20%, colar 18%, asa 17%, chapéu 15%.
 
 **Respostas às perguntas desta rodada**
 
@@ -224,7 +224,7 @@ FC no fim do jogo: ATK 67%, HP 29%, DEF 3%; o crítico vale 32% e a velocidade d
 | P0 | Mover "Invocar equipamento" para moedas e **tirar moedas da trilha Premium do passe** (hoje `passPrem` dá 5 diamantes + moedas). São os dois vazamentos de pay-to-win. Rodada 2: a curva v2 foi calibrada com a invocação por diamantes, como está no código. Simulado sem ela, o total quase não muda (dia 63 em vez de 64); só a era 0 alonga de 19 para 41 min, o que se corrige com uma invocação por moedas. |
 | P0 | Frase fixa na loja: "Diamantes compram só aparência. Poder se ganha jogando." |
 | P1 | Preços de skin direta `[40, 90, 200, 450, 900]` (hoje `[30, 60, 120, 250, 500]`): com ~75 diamantes grátis por dia, uma Lendária leva ~12 dias. Meta longa para quem não paga, sem obrigar a pagar. |
-| P1 | Ralo de moedas de fim de jogo: trocar moedas por "tingimentos" simples de skin, para as moedas não perderem sentido. |
+| P1 | Ralo de moedas do pós-eras: trocar moedas por "tingimentos" simples de skin, para as moedas não perderem sentido. |
 | Evitar | Terceira moeda, energia/estamina para jogar, VIP, multiplicador de moedas pago, extensão paga do teto offline. |
 
 ## 6. Skins e raridades

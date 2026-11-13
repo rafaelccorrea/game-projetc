@@ -225,7 +225,7 @@ O Engenheiro ligou a chave e encontrou 3 bloqueios:
 
 Simulação refeita:
 
-| Perfil | Fim | Paredes |
+| Perfil | Dia em que termina as 9 eras | Paredes |
 |---|---|---|
 | Grátis | dia 178 | Senhor: 7 h (era 0), 1,1 d (era 1), ~3-4 d (eras 2-4), 5-12 d (eras 5-8) |
 | VIP 5 | dia 137 | para em todos os Senhores |
@@ -238,7 +238,7 @@ Simulação refeita:
 
 Decisão do dono. Os números estão no balance.json (bloco `dificuldade`, `on:false`).
 
-### Pacote do fim (eras 5-8), simulado, NÃO ligado (13/11)
+### Pacote das últimas eras (eras 5-8), simulado, NÃO ligado (13/11)
 
 O dono quer mais fontes de FC no fim, para as paredes das eras 5-8 voltarem a 3-5 dias. Simulação: `node tools/sim-paredes.js --late --game`.
 
@@ -259,7 +259,7 @@ Espera no Senhor da Era (grátis · VIP 5 · VIP 10):
 | 7 | 7,4 d | **7,4** · 3,3 · 2,9 d |
 | 8 | 5,3 d | 5,0 · 7,1 · 9,3 d |
 
-**Fins:** grátis no dia 178, VIP 5 no 143 e VIP 10 no **127** (meta ~121). Quem não forja nem evolui o pet trava na fase 61.
+**Dia em que termina as 9 eras:** grátis no dia 178, VIP 5 no 143 e VIP 10 no **127** (meta ~121). Quem não forja nem evolui o pet trava na fase 61.
 
 **O que falta:**
 - **Era 7 (7,4 d):** na era 7 nada novo abre enquanto o jogador espera, e o nível sobe devagar com o teto de XP.
@@ -269,7 +269,7 @@ Espera no Senhor da Era (grátis · VIP 5 · VIP 10):
 
 **Próximo passo possível:** uma fonte DIÁRIA nas eras 7-8, que cresce enquanto o jogador espera. Exemplos: pedra de Forja extra por dia nas eras 7-8, ou um "treino de era" com teto diário. Com ela, a era 7 cai para ~4-5 dias. Essa escolha é do dono.
 
-### Pacote do fim + TREINO DE ERA (opção b do dono), simulado, NÃO ligado
+### Pacote das últimas eras + TREINO DE ERA (opção b do dono), simulado, NÃO ligado
 
 **O que entra no pacote:** sem sorteio pago e sem compra de poder.
 - Forja +16 a +20.
@@ -282,7 +282,7 @@ Espera no Senhor da Era (grátis · VIP 5 · VIP 10):
 
 **Por que pelo progresso e por percentual:**
 - Fonte presa ao dia do calendário favorece o grátis, que chega depois, e atrasa o VIP. Títulos e estrelas pelo progresso fazem o VIP ganhar antes.
-- Bônus somado dilui no fim do jogo. O treino em percentual composto mantém ~2% de crescimento por dia enquanto o jogador está na parede.
+- Bônus somado dilui no fim das 9 eras. O treino em percentual composto mantém ~2% de crescimento por dia enquanto o jogador está na parede.
 
 Espera no Senhor da Era:
 
@@ -293,7 +293,7 @@ Espera no Senhor da Era:
 | 7 | 4,0 d | 3,4 d | 4,1 d |
 | 8 | 5,0 d | 3,5 d | 3,0 d |
 
-**Fins:** grátis no dia 178, VIP 5 no 136 e **VIP 10 no 118** (meta ~121). Quem não forja nem evolui o pet trava na fase 60.
+**Dia em que termina as 9 eras:** grátis no dia 178, VIP 5 no 136 e **VIP 10 no 118** (meta ~121). Quem não forja nem evolui o pet trava na fase 60.
 
 **Fica de fora da meta:** o chefe do meio da era 8 segura o grátis por 9,5 dias.
 

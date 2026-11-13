@@ -14,7 +14,7 @@ const capKill=(raw,e)=>{ const t=KILL[e]; return Math.min(raw,t)+CAP.mid*Math.ma
 const VT=VIP.DATA.table, X=LV.DATA.xpToNext;
 function dayXp(e,L,o){ const v=o.vip||0, xpP=1+(VT.xp9[v]||0)/100, speed=v>=5&&L>=40?4:(v>=1||L>=15)?2:1;
   return capKill(KILL[e]*(L<15?1:Math.min(speed,4)/2),e)*xpP+(M.offline+M.missions+M.inst*(v>=1?1.5:1))*(1+e)*xpP; }
-/* PACOTE DO FIM (--late, dono 13/11: paredes das eras 5-8 em 3-5 dias): Forja +16 a +20, Divino mais cedo (Torre/evento, Nv 95 na era 6), títulos das eras 5-8,
+/* PACOTE DAS ÚLTIMAS ERAS (--late, dono 13/11: paredes das eras 5-8 em 3-5 dias): Forja +16 a +20, Divino mais cedo (Torre/evento, Nv 95 na era 6), títulos das eras 5-8,
    montaria 6 e 7 estrelas, pet Nv 91-120. Sem sorteio pago e sem compra de poder. */
 const LATE=process.argv.includes('--late');
 if(LATE){ FG.DATA.max=20; FG.DATA.bonus.push(1.05,1.17,1.29,1.41,1.53); }
@@ -103,7 +103,7 @@ for(let e=0;e<9;e++){ const iM=e*10+4, iB=e*10+9, endD=k=>P[k].pass[iB]!=null?Ma
 for(const k of ['free','vip5','vip10','lazy']){ const p=P[k], last=p.pass[p.done-1]||0, n=Math.ceil(last);
   const below=[]; for(let d=1;d<=Math.min(180,Math.max(n,180));d++){ const i=p.pass.findIndex(x=>x>d); if(i<0) break; if(fcAt(k==='free'?free:k==='vip5'?vip5:k==='vip10'?vip10:lazy,d,plan[i].e)<0.9*plan[i].rec) below.push(d); }
   const daysOnWall=plan.reduce((a,pl,j)=>a+(pl.wall&&p.stuck[j]!=null?p.stuck[j]:0),0);
-  console.log(k+': fases vencidas '+p.done+'/90'+(p.done<90?' (TRAVA na fase '+(p.done+1)+', era '+plan[p.done].e+')':'')+' · fim no dia '+(p.done===90?Math.ceil(last):'—')+' · dias em parede '+daysOnWall.toFixed(0)+' · dias abaixo de 90% da FC pedida (até o dia 180): '+below.length); }
+  console.log(k+': fases vencidas '+p.done+'/90'+(p.done<90?' (TRAVA na fase '+(p.done+1)+', era '+plan[p.done].e+')':'')+' · termina as 9 eras no dia '+(p.done===90?Math.ceil(last):'—')+' · dias em parede '+daysOnWall.toFixed(0)+' · dias abaixo de 90% da FC pedida (até o dia 180): '+below.length); }
 console.log('\n## FC pedida (amostra) — fases 1, 5, 9, 10 de cada era');
 for(let e=0;e<9;e++) console.log('era '+e+': '+[1,5,9,10].map(s=>'f'+s+' '+ab(plan[e*10+s-1].rec)).join(' · '));
 // ---- de onde vem a FC para vencer a parede: ganho de cada ação no meio de cada era (grátis ativo) ----
@@ -137,3 +137,35 @@ if(process.argv.includes('--game')){ const ab2=v=>ST.abbr(v);
   console.log('JSONGAME '+JSON.stringify(recGame)); }
 if(process.argv.includes('--dbg2')){ for(const j of [59,69,79,89]){ const p=play(free), arr=p.pass[j-1]; console.log('fase',j+1,'pedida',ab(plan[j].rec),'chegada x WR',ab(fcAt(free,arr,plan[j].e)*WR_BOSS[plan[j].e]),'alvo',plan[j].target.toFixed(1),'chega',arr.toFixed(1),'passa',p.pass[j].toFixed(1),'L',free.L(arr)); } }
 if(process.argv.includes('--levels')){ const p=play(free); const lv=plan.map((pl,j)=>free.L(p.pass[j]!=null?p.pass[j]:p.pass[p.pass.length-1])); console.log('LEVELS '+JSON.stringify(lv)); }
+
+// ---- PÓS-ERAS (--pos, PO 13/11: "acabar as eras não quer dizer que o jogo acabou") ----
+// Fases sem fim depois da 90: FC pedida = a da fase 90 × 1,03 por fase; nos MARCOS (100, 110, ...) × POS_WALL a mais (parede curta).
+// O que segue crescendo depois da fase 90 (proposta, docs/PROPOSTA_POS_ERAS.md):
+//  - treino de era: até o teto x3 continua +2%/dia; acima do teto, +POS_TRAIN%/dia composto, SEM teto (nunca há parede impossível);
+//  - Forja Astral +21 a +25: 1 nível a mais liberado em cada marco vencido (pedra só das fases sem fim);
+//  - pet Nv 121-150: +1 nível por dia jogado, parte do pet até x1,40 (era x1,25 no Nv 120);
+//  - título de marco: +1% ATQ e VIDA a cada marco (100 a 150).
+if(process.argv.includes('--pos')){
+  const POS_TRAIN=+((process.argv.find(a=>a.startsWith('--postrain='))||'--postrain=1.5').split('=')[1]), POS_WALL=+((process.argv.find(a=>a.startsWith('--poswall='))||'--poswall=1.04').split('=')[1]);
+  const LAST=150, GROW=BALJ.dificuldade.afterLastGrowth||1.03;
+  FG.DATA.max=25; while(FG.DATA.bonus.length<26) FG.DATA.bonus.push(FG.DATA.bonus[FG.DATA.bonus.length-1]+0.12);
+  const fb=k=>baseFc(120,8,5,20+k,4000)/baseFc(120,8,5,20,4000);
+  const recPos=s=>plan[89].rec*Math.pow(GROW,s-90)*(s%10===0?POS_WALL:1);
+  const ps=petShare(120,8,false);
+  function posPlay(C,P0){ const tEnd=P0.pass[89]; if(tEnd==null) return null; fcAt(C,tEnd,8);
+    const tCap=C.LS.t100+Math.log(1+TRAIN_CAP/100)/Math.log(1+TRAIN_DAY/100);
+    const fcPos=(t,beaten)=>{ const d=t-tEnd, m=Math.min(5,Math.floor((beaten-90)/10));
+      const train=Math.pow(1+POS_TRAIN/100,Math.max(0,t-Math.max(tEnd,tCap)));
+      const pet=(1-ps*1.25)/(1-Math.min(0.6,ps*Math.min(1.40,1.25+0.005*d)));
+      return fcAt(C,t,8)*train*fb(m)*pet*(1+m/100); };
+    let s=91, t=tEnd; const at={}; let maxWait=0, last=tEnd;
+    while(s<=LAST&&t<tEnd+600){ if(fcPos(t,s-1)>=recPos(s)){ at[s]=t; maxWait=Math.max(maxWait,t-last); last=t; s++; } else t+=0.05; }
+    return {tEnd,at,maxWait,fcEnd:fcAt(C,tEnd,8),trainEnd:Math.min(1+TRAIN_CAP/100,Math.pow(1+TRAIN_DAY/100,Math.max(0,tEnd-C.LS.t100)))}; }
+  console.log('\n## PÓS-ERAS: dia em que chega (vence) a fase · treino acima do teto +'+POS_TRAIN+'%/dia · marco x'+POS_WALL+' · fases sem fim x'+GROW+'/fase');
+  console.log('| Jogador | Dia em que termina as 9 eras | Treino no fim das eras | Fase 100 | Fase 110 | Fase 120 | Fase 150 | Maior espera numa fase |');
+  console.log('|---|---|---|---|---|---|---|---|');
+  for(const [nm,C,k] of [['Grátis ativo',free,'free'],['VIP 5',vip5,'vip5'],['VIP 10',vip10,'vip10']]){ const r=posPlay(C,P[k]); if(!r){ console.log('| '+nm+' | não termina |'); continue; }
+    const dd=s=>r.at[s]!=null?'dia '+Math.ceil(r.at[s]):'depois do dia '+Math.ceil(r.tEnd+600);
+    console.log('| '+nm+' | '+Math.ceil(r.tEnd)+' | x'+r.trainEnd.toFixed(2).replace('.',',')+' | '+dd(100)+' | '+dd(110)+' | '+dd(120)+' | '+dd(150)+' | '+f1(r.maxWait)+' |'); }
+  console.log('Forja Astral +21..+25 vs +20: '+[1,2,3,4,5].map(k=>'+'+(20+k)+' x'+fb(k).toFixed(3)).join(' · ')+' · pet share Nv120 '+(ps*1.25).toFixed(3));
+}

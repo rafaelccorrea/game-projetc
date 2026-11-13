@@ -30,7 +30,7 @@ Créditos Higgsfield: ~628.
 3. Loot box paga: docs/RECOMENDACOES.md aponta o ECA Digital (Lei 15.211/2025, art. 20) vedando caixas de recompensa pagas
    para menores; afeta "Invocar skin" e pacotes. Leitura de leigo: validar com advogado.
 4. Pay-to-win já existente: invocar equipamento custa diamantes e o passe Premium dá moedas.
-5. Progressão curta (~4 h para zerar); proposta em docs/balance.json (não aplicada: nomes de chave diferem do código).
+5. Progressão curta (~4 h para terminar as eras); proposta em docs/balance.json (não aplicada: nomes de chave diferem do código).
 6. Fila de funcionalidades a avaliar (docs/CONTRATO_V2.md): loot voando + baú, instâncias, VIP/montaria, práticas e títulos,
    torre, arena, ranking, leilão de skins. Ranking, arena real e leilão exigem servidor (backend), que não existe.
 7. Publicação: Android primeiro (US$ 25); Apple US$ 99/ano + Mac; nome "Eonbound" sem checagem formal de marca.
