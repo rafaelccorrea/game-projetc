@@ -32,7 +32,7 @@ const DATA={
     {r:5,name:'Divino',  color:'#7ff6ff',tint:0.80,particles:3.0,size:1.40,glow:3,shake:1.4,trail:3,flash:true,prism:true}],   // prism = brilho arco-íris
   // NÚMEROS ABREVIADOS (dono): um formatador só para o jogo inteiro. ptNum = sufixos em português ("1,2 mi"), liga junto com a curva de 9 eras
   // (mesma decisão do PANEL_V2.ptNum do engenheiro). Vai até o quintilhão (o dano do Celestial passa de 10 quatrilhões).
-  abbr:{ptNum:false, pt:[' mil',' mi',' bi',' tri',' qua',' qui'], en:['K','M','B','T','Qa','Qi']},
+  abbr:{ptNum:true,  pt:[' mil',' mi',' bi',' tri',' qua',' qui'], en:['K','M','B','T','Qa','Qi']},
   // DROP NO CHÃO por raridade (PO; mesmas regras do js/rarity.js do engenheiro, que desenha: brilho em todos, partículas do Épico para cima, FEIXE
   // vertical do Mítico para cima com 62 px lógicos (abaixo das barras de vida), apoiado no chão, sem tremer). Cores = paleta aprovada do Equipamento.
   // glow px · particles por segundo · beam px (0 = sem) · pulse s (0 = parado) · sound {id, rate} (Épico 'gem'; Mítico 'legendary' 0,9; Lendário 'legendary')

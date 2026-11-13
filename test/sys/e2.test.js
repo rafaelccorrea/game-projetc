@@ -885,7 +885,7 @@ t('eras 7-8 (Sys.eras): mesmo formato do ERAS do jogo, arte existente, só com a
   for(const x of all){ for(const k of ['w','a','ws','as','wp','ap']) assert.strictEqual(x[k].length,5,x.n+' '+k); assert.strictEqual(x.en.length,3); assert.strictEqual(x.icon,'','sem emoji');
     for(const en of x.en) assert.ok(fs.existsSync(path.join(__dirname,'../../assets/enemies/'+en.art+'.png')),'arte '+en.art); }
   T.setEra9(true); try{ assert.strictEqual(E.extra().length,2);
-    const c=E.stageCard(8,2,100); assert.strictEqual(c.boss.name,'Juiz Celestial'); assert.strictEqual(c.boss.kind,'senhor'); assert.ok(/T$|Qa$/.test(c.fcText),'abreviado: '+c.fcText);
+    const c=E.stageCard(8,2,100); assert.strictEqual(c.boss.name,'Juiz Celestial'); assert.strictEqual(c.boss.kind,'senhor'); assert.ok(/ (tri|qua)$/.test(c.fcText),'abreviado: '+c.fcText);
     assert.strictEqual(E.stageCard(7,0,3).common.name,'Cão Infernal'); assert.strictEqual(E.stageCard(6,0,1),null);
   } finally { T.setEra9(false); }
 });
@@ -975,7 +975,7 @@ t('escala de exibição da FC (dono, só visual): Nv 20 ≈ 700 mil; constante �
   const F=require('../../js/sys/fc.js'); require('../../js/sys/stats.js');
   assert.strictEqual(F.DATA.viewOn,false,'chave desligada por padrão'); assert.strictEqual(F.view(22599),22599,'desligada = FC real'); assert.strictEqual(F.delta(1000,1200).text,'+'+F.viewText(200));
   F.DATA.viewOn=true;
-  assert.ok(Math.abs(F.view(22599)-700000)<10000,'Nv 20: '+F.viewText(22599)); assert.strictEqual(F.viewText(22599),'701K');
+  assert.ok(Math.abs(F.view(22599)-700000)<10000,'Nv 20: '+F.viewText(22599)); assert.strictEqual(F.viewText(22599),'701 mil','português (ptNum ligado)');
   const me=50000, rec=60000; assert.strictEqual(F.view(me)<F.view(rec),me<rec); assert.ok(Math.abs(F.view(me)/F.view(rec)-me/rec)<1e-3,'razão preservada');
   const d=F.delta(1000,1200); assert.strictEqual(d.diff,200,'diff real'); assert.strictEqual(d.viewDiff,F.view(200)); assert.strictEqual(d.text,'+'+F.viewText(200));
   assert.ok(F.hud({best:1,inv:[]},makeHost()).startsWith('FC '));

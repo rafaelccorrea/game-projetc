@@ -39,6 +39,7 @@ const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fcV=n=>{ const F=root.Sys&&root.Sys.fc; return F&&F.viewText?F.viewText(n):fmt(n); };   // FC na escala de exibição (Sys.fc.DATA.viewOn)
 function fmt(n){ n=num(n,0); return n>=1e12?(n/1e12).toFixed(1)+'T':n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(Math.floor(n)); }
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const changed=host=>{ if(host&&typeof host.onChange==='function') host.onChange(); };
@@ -200,7 +201,7 @@ function render(el,S,host,opt){
     <div class="sys-card sys-tow-opp ${opp.kind}">
       <div class="sys-tow-fl">Andar <b>${f}</b>${opp.kind==='boss'?' · CHEFE':''}</div>
       <div class="sys-tow-nm">${opp.kind==='boss'?'👑':'👻'} ${esc(opp.name)}</div>
-      <div class="sys-tow-vs"><span>Você<br><b>${fmt(me.fc)}</b></span><span class="sys-tow-x">VS</span><span>FC<br><b>${fmt(opp.fc)}</b></span></div>
+      <div class="sys-tow-vs"><span>Você<br><b>${fcV(me.fc)}</b></span><span class="sys-tow-x">VS</span><span>FC<br><b>${fcV(opp.fc)}</b></span></div>
       <div class="sys-tow-dif ${dif.id}">${dif.txt}</div>
       <div class="sys-tow-rw">Prêmio: 🪙${fmt(rw.gold)}${rw.stones&&SYS.practice?` · 🪨${rw.stones}`:''}${rw.forge&&SYS.forge?` · 🔨${rw.forge}`:''}${rw.gems?` · 💎${rw.gems}`:''}${
         rw.egg&&SYS.pet?(rw.egg.choice?' · 🥚 ovo Épico à escolha':rw.egg.r===4?' · 🥚 FÊNIX':' · 🥚 ovo de pet'):''}${rw.phoenixFrags&&SYS.pet?` · 🔥${rw.phoenixFrags} fragmento de fênix`:''}${!rw.phoenixFrags&&rw.t100Frags&&SYS.pet?` · ${rw.t100Frags} fragmento ${rw.t100Pet?'do '+((SYS.pet.DATA.pets.find(x=>x.id===rw.t100Pet)||{}).name||'pet'):'do pet do andar 100'}`:''}</div>
