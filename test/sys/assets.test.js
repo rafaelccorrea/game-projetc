@@ -36,9 +36,13 @@ t('needed/plan: herói e fase, era atual + próxima, pistola, montaria e pet equ
     assert.ok(!pl.fetch.includes('hero:kaia:0')&&pl.fetch.includes('mount:wolf'),'a Kaia padrão já vem no APK base'); assert.deepStrictEqual(pl.drop,['mount:pony'],'só sai o que não é do APK base nem é preciso'); assert.ok(pl.fetchBytes>0);
   } finally { A.DATA.on=false; PU.DATA.on=false; M.DATA.on=false; delete globalThis.Sys.mount; A.setManifest(null); }
 });
-t('manifesto real (se gerado): APK base com os dois heróis < 150 MB e todo arquivo listado existe',()=>{
+t('manifesto real (se gerado): BASE do AAB da loja (install-time, docs/PLANO_ASSET_PACKS.md) < 150 MB e todo arquivo listado existe',()=>{
   const f=path.join(__dirname,'../../assets/manifest.json'); if(!fs.existsSync(f)) return; const m=JSON.parse(fs.readFileSync(f,'utf8')); A.setManifest(m);
-  try{ const b=A.firstBoot(); assert.ok(b.packs.includes('hero:kael:0')&&b.packs.includes('hero:kaia:0')); assert.ok(b.mb<150,'APK base '+b.mb+' MB');
+  try{ const b=A.firstBoot(); assert.ok(b.packs.includes('hero:kael:0')&&b.packs.includes('hero:kaia:0'));
+    /* decisão do PO (13/11): o APK de TESTE leva tudo; o teto vale para a BASE do AAB da loja (Play Asset Delivery install-time) */
+    const STORE_BASE=['core','hero:kael:0','hero:kaia:0','era:0','enemy:0','pet:era0_mammoth:0','ult:club'];
+    for(const id of STORE_BASE) assert.ok(m.packs[id],'pacote da base sumiu do manifesto: '+id);
+    const mb=Math.round(STORE_BASE.reduce((t,id)=>t+(m.packs[id].bytes||0),0)/1048576*10)/10; assert.ok(mb<150,'base do AAB '+mb+' MB (teto 150): tire a Kaia da base ou encolha o core');
     const root=path.join(__dirname,'../..'); let miss=0; for(const id in m.packs) for(const x of m.packs[id].files) if(!fs.existsSync(path.join(root,x))) miss++; if(miss>5) console.warn('AVISO: '+miss+' arquivos do manifesto não existem mais (a Arte mexeu na arte): rode node tools/asset-manifest.js');   // aviso, não falha: o manifesto segue a arte de outra sessão
   } finally { A.setManifest(null); }
 });
