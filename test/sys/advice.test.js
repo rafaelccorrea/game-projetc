@@ -91,5 +91,13 @@ t('save vazio/estranho não quebra', () => {
   const w = world(); assert.ok(Array.isArray(A(w.S, w.host).actions)); assert.ok(Array.isArray(A({}, {}).actions)); assert.ok(Array.isArray(A(null, null).actions));
 });
 
+t('dica de tela trancada: vai para o fim, no máximo uma, com lockLevel; sem nada aberto, jogue as fases anteriores', () => {
+  A.DATA.on = true; const w = world({ lvl: 1 });
+  const r = A.all(w.S, w.host).list; const shut = r.filter(a => a.locked); assert.ok(shut.length <= 1, 'no máximo 1 trancada');
+  const firstShut = r.findIndex(a => a.locked); if (firstShut >= 0) assert.strictEqual(firstShut, r.length - 1, 'a trancada fica no fim');
+  assert.ok(r.length >= 1);
+  const w2 = world({ lvl: 1 }); w2.host.unlocked = () => false; const r2 = A.all(w2.S, w2.host).list; assert.strictEqual(r2[0].id, 'farm'); assert.ok(/fases anteriores/.test(r2[0].label));
+});
+
 A.DATA.on = false;
 console.log(n + ' testes ok');

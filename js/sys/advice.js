@@ -95,7 +95,16 @@ function all(S,host){ const now=fcOf(S,host), out=[];
   if(on('level')) levelUp(S,host,now,out);
   const list=out.filter(a=>on(a.kind)&&(a.noGain||a.gain>=DATA.minGain)).map(a=>Object.assign(a,{gain:Math.round(a.gain),gainText:a.noGain?'':'+'+view(a.gain)+' FC',tab:DATA.tabs[a.kind]||a.kind}));
   list.sort((a,b)=>(!!a.last-!!b.last)||(b.ready-a.ready)||(b.gain-a.gain)||(a.costN-b.costN));
-  return {now,list}; }
+  return {now,list:gate(S,host,list)}; }
+/* destino trancado pelo nível (PO/Engenheiro 14/11): a dica de tela fechada vai para o fim, no máximo UMA, com lockLevel;
+   o que o jogador pode fazer agora vem antes. Sem nenhuma aberta: 'jogue as fases anteriores para ganhar peças'.
+   host.unlocked(tab) decide se existir; senão, Sys.level.DATA.unlock pelo nível. */
+const TAB_FEATURE={forge:'forge',pet:'pets',mount:'mount',titles:null,gear:null,hero:null};
+function lockOf(S,host,tab){ if(host&&typeof host.unlocked==='function'){ try{ const r=host.unlocked(tab); if(r===true) return 0; if(r===false) return -1; if(typeof r==='number') return r; }catch(e){} }
+  const f=TAB_FEATURE[tab]; if(!f) return 0; const L=SYS().level; if(!L||!L.DATA||!L.DATA.unlock) return 0; const need=int0(L.DATA.unlock[f]); let lv=0; try{ lv=int0(L.level(S)); }catch(e){} return lv>=need?0:need; }
+function gate(S,host,list){ const open=[], shut=[]; for(const a of list){ const lk=lockOf(S,host,a.tab); if(lk===0) open.push(a); else shut.push(Object.assign(a,{locked:true,lockLevel:lk>0?lk:null,last:true})); }
+  const out=open.slice(); if(!open.length) out.push({id:'farm',kind:'level',tab:'battle',label:'Jogue as fases anteriores para ganhar peças',gain:0,gainText:'',ready:true,noGain:true,last:true,costN:0});
+  if(shut.length) out.push(shut[0]); return out; }
 
 function advise(S,host,opts){ opts=opts||{};
   if(DATA.on!==true) return {on:false,fc:0,need:null,missing:null,ok:null,text:'',actions:[]};
