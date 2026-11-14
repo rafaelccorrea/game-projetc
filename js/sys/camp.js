@@ -20,7 +20,7 @@ const DATA={
   // pet trabalhando: +10% × (raridade+1) + 5% por estrela (Lendário 5★ = +75%)
   petRate:{perRarity:0.10, perStar:0.05},
   tents:[
-    {id:'gold',     name:'Tenda do Ouro',         res:'gold',     perHour:3, unit:'goldUnit', capMin:5},   // 3 "abates" de ouro por hora (× host.goldUnit da fase atual); guarda no máximo capMin minutos de abate
+    {id:'gold',     name:'Tenda do Ouro',         res:'gold',     perHour:3, unit:'goldUnit', capMin:5, noUpgrade:true},   // PO 14/11: sem Melhorar (bate nos 5 min cedo; melhorar só faria encher mais rápido)   // 3 "abates" de ouro por hora (× host.goldUnit da fase atual); guarda no máximo capMin minutos de abate
     {id:'forge',    name:'Forja do Acampamento',  res:'forge',    perHour:1},                     // Pedra de Forja por hora
     {id:'practice', name:'Pedreira',              res:'practice', perHour:2},                     // pedras de prática por hora
   ],
@@ -101,7 +101,7 @@ function unassign(S,host,petId){ if(DATA.on!==true) return {ok:false,reason:'off
 /* melhoria da tenda: só ouro. → {ok, reason:'off'|'id'|'locked'|'max'|'money', cost, lv} */
 function upgradeCost(S,host,id){ const o=ensure(S,host), t=o.tents[id]; if(!t) return 0; const u=Math.max(1,unitOf(host));
   return Math.ceil(Math.round(DATA.upgrade.base*Math.pow(DATA.upgrade.growth,t.lv-1)*1e6)/1e6)*Math.ceil(u); }   /* arredonda antes do ceil (300×1,6² = 768, não 769) */
-function canUpgrade(S,host,id){ if(DATA.on!==true) return {ok:false,reason:'off'}; if(!TENT[id]) return {ok:false,reason:'id'};
+function canUpgrade(S,host,id){ if(DATA.on!==true) return {ok:false,reason:'off'}; if(!TENT[id]) return {ok:false,reason:'id'}; if(TENT[id].noUpgrade) return {ok:false,reason:'fixed'};
   if(locked(S,host)) return {ok:false,reason:'locked'}; const o=ensure(S,host), t=o.tents[id], cost=upgradeCost(S,host,id);
   if(t.lv>=DATA.maxLevel) return {ok:false,reason:'max',cost,lv:t.lv};
   if(host&&typeof host.canSpendGold==='function'&&!host.canSpendGold(cost)) return {ok:false,reason:'money',cost,lv:t.lv};
