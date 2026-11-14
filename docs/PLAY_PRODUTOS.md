@@ -35,7 +35,10 @@ primeira compra deste pacote, vem o dobro."
 1. **Perfil de pagamentos:** Play Console > Configuração > Perfil de pagamentos. A conta da empresa precisa estar como comerciante.
    Sem isso, a tela de produtos não deixa pôr preço.
 2. **Um build com cobrança enviado:** o Play só abre "Produtos" depois de receber um AAB com a permissão de cobrança (biblioteca
-   Play Billing). Basta enviar para Teste interno. O Engenheiro confirma se o AAB atual já leva a biblioteca.
+   Play Billing). Basta enviar para Teste interno.
+   **Situação em 14/11 (Engenheiro):** o app ainda NÃO tem a biblioteca nem a permissão `com.android.vending.BILLING`, e o AAB da
+   loja nunca foi gerado. O plugin de cobrança espera a decisão do dono. Para só destravar o cadastro, o Engenheiro pode incluir a
+   biblioteca sem ligar compra nenhuma (`Sys.buy.DATA.on` continua `false`), se o PO/dono pedir.
 3. **Criar cada produto:** Monetizar > Produtos > Produtos únicos (em inglês, "One-time products") > Criar produto.
    - **ID do produto:** copie da tabela. O ID **não pode ser trocado nem reaproveitado** depois de criado. Se errar, o certo é
      desativar e criar outro, e o catálogo do servidor tem de mudar junto.
