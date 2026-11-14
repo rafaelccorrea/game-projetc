@@ -33,7 +33,14 @@
   function onError(ev){ const im=ev&&ev.target; if(!im||im.tagName!=='IMG') return; const r=fix(im);
     if(r==='swap'){ if(ev.stopPropagation) ev.stopPropagation(); return; }   /* a reserva da tela não dispara: a imagem vai carregar do pacote */
     if(r==='wait'){ if(!(im.getAttribute&&im.getAttribute('onerror'))&&im.style){ im.style.visibility='hidden'; im.dataset.lpH='1'; }   /* sem reserva própria: some, sem ícone quebrado */
-      WAIT.add(im); if(!timer&&typeof setInterval==='function') timer=setInterval(tick,3000); } }
+      WAIT.add(im); if(!timer&&typeof setInterval==='function') timer=setInterval(tick,3000); return; }
+    if(r==='') hudRetry(im); }
+  /* QA 14/11 (S24, rede caiu): os botões da BATALHA mostravam o ícone de imagem quebrada enquanto a arte não vinha. Imagem do #fbhud que falha e não tem
+     reserva própria: some (o botão fica só com a moldura e o rótulo) e é pedida de novo a cada 5 s, até 24 vezes; ao carregar, volta a aparecer. */
+  function hudRetry(im){ try{ if(!im.closest||!im.closest('#fbhud')||(im.getAttribute&&im.getAttribute('onerror'))||!im.style) return; const src=im.getAttribute('src'); if(!src||src.indexOf('data:')===0) return;
+      im.style.visibility='hidden'; if(!im.dataset.lpR){ im.dataset.lpR='0'; im.addEventListener('load',()=>{ try{ im.style.visibility=''; im.dataset.lpR='0'; }catch(e){} }); }
+      const n=(parseInt(im.dataset.lpR,10)||0)+1; if(n>24) return; im.dataset.lpR=String(n);
+      setTimeout(()=>{ try{ if(im.isConnected&&im.getAttribute('src')===src&&!(im.complete&&im.naturalWidth>0)) im.src=src; }catch(e){} },5000); }catch(e){} }
   try{ if(typeof document!=='undefined'&&document.addEventListener) document.addEventListener('error',onError,true); }catch(e){}
   /* simulação: troca o endereço das <img> do pacote por um que não existe (guarda o original em data-lp-p); o erro de verdade segue o caminho normal */
   function simMark(im){ try{ if(!SIM.on||!im||im.tagName!=='IMG'||im.dataset.lpP) return; const p=rel(im.getAttribute('src')); if(!late(p)) return; im.dataset.lpP=p; im.src='assets/__pacote_ausente__/'+p.split('/').pop(); }catch(e){} }
@@ -42,5 +49,5 @@
   try{ const q=new URLSearchParams(location.search), v=q.get('semlate'); if(q.get('debug')==='1'&&v!=null&&typeof MutationObserver==='function'){ SIM.on=true;
       new MutationObserver(ms=>{ if(!SIM.on) return; for(const m of ms){ if(m.type==='attributes') simMark(m.target); else m.addedNodes.forEach(simScan); } }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
       simScan(document.documentElement); const sec=parseInt(v,10); if(sec>1) setTimeout(chegou,sec*1000); console.log('[LatePack] simulação: pacote ui:late AUSENTE'+(sec>1?' por '+sec+' s':' (LatePack.chegou() para fazer chegar)')); } }catch(e){}
-  window.LatePack={PACK,rel,late,fix,onError,tick,chegou,sim:SIM,simMark,waiting:()=>WAIT.size};
+  window.LatePack={PACK,rel,late,fix,onError,tick,hudRetry,chegou,sim:SIM,simMark,waiting:()=>WAIT.size};
 })();
