@@ -57,7 +57,9 @@ const WHY={off:'As guildas ainda não foram ligadas',server:'Em breve: abre com 
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 const why=r=>WHY[r]||'Não foi possível agora. Tente de novo';
 /* recusa inteira ({reason, details, retryAfterMs}): no 429 daily_limit (contrato 10.5) mostra o tempo que falta quando o retryAfterMs chega; sem ele, a virada de Brasília */
-function whyR(r){ const R=r&&r.reason; if(R!=='daily_limit') return why(R); const ms=num(r.retryAfterMs)||num(r.details&&r.details.retryAfterMs); if(!(ms>0)) return why(R);
+/* recusas do nome montado e do estilo (name, name_taken, style, leader, rename_cooldown, restyle_cooldown): o texto é do Sys.guild.reasonText */
+const rt=r=>{ try{ return String(GM().reasonText(r)||''); }catch(e){ return ''; } };
+function whyR(r){ const R=r&&r.reason, t=rt(r); if(t) return t; if(R!=='daily_limit') return why(R); const ms=num(r.retryAfterMs)||num(r.details&&r.details.retryAfterMs); if(!(ms>0)) return why(R);
   const h=Math.floor(ms/36e5), m=Math.floor(ms%36e5/6e4); return 'Já feito hoje. Volta em '+(h>0?h+' h '+m+' min':Math.max(1,m)+' min'); }
 function whyLocal(c){ const R=c&&c.reason;
   if(R==='level') return 'A guilda libera no nível '+nT(c.needLevel||0);
@@ -190,8 +192,17 @@ const bossUrl=lv=>'assets/enemies/era'+Math.max(0,Math.min(8,(lv|0)-1))+'_boss.p
 .gd2-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin:4px 0 8px}
 .gd2-week span{min-width:0;border-radius:7px;padding:4px 0;text-align:center;font-size:9px;font-weight:900;background:rgba(255,255,255,.05);color:var(--muted);line-height:1.15;overflow-wrap:anywhere}
 .gd2-week span.now{background:rgba(255,210,94,.2);color:var(--gold);outline:1px solid var(--gold)}
-.gd2-inp{flex:1;min-width:0;min-height:40px;border-radius:11px;border:1px solid var(--line2);background:rgba(5,8,28,.7);color:#eef1ff;padding:0 10px;font:800 13px Nunito,system-ui,sans-serif}
-.gd2-form{display:flex;gap:6px;align-items:center;margin-bottom:6px;min-width:0}
+.gd2-pk2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:6px;min-width:0}
+.gd2-pk2 .gd2-bt{min-width:0;min-height:44px}
+.gd2-pk,.xs .gd2-pk{min-width:0;min-height:44px;padding:4px 9px;border-radius:11px;border:1px solid var(--line2);background:rgba(5,8,28,.7);color:#eef1ff;text-align:left;font-weight:900;font-size:13px;line-height:1.15;overflow-wrap:anywhere}
+.gd2-pk small{display:block;font-size:9.5px;font-weight:900;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:1px}
+.gd2-pk b{display:block}
+.gd2-pk[aria-expanded="true"],.xs .gd2-pk[aria-expanded="true"]{border-color:var(--cyan)}
+.gd2-pl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;max-height:232px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px;border-radius:12px;border:1px solid var(--cyan);background:rgba(5,8,28,.7);margin-bottom:6px;min-width:0}
+.gd2-po,.xs .gd2-po{min-width:0;min-height:40px;padding:2px 6px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#eef1ff;font-weight:800;font-size:12.5px;line-height:1.15;text-align:center;overflow-wrap:anywhere}
+.gd2-po[aria-selected="true"],.xs .gd2-po[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff;color:#fff}
+.gd2-pv{padding:9px 10px;border-radius:13px;border:1px dashed var(--line2);background:rgba(5,8,28,.45);text-align:center;font-size:21px;letter-spacing:.4px;line-height:1.15;color:var(--gold);margin-bottom:6px;overflow-wrap:anywhere}
+.gd2-pv small{display:block;font:900 9.5px Nunito,system-ui,sans-serif;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .gd2-toast{position:absolute;left:50%;z-index:40;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:8px 14px;border-radius:13px;background:rgba(5,8,28,.94);border:1px solid var(--line2);font-weight:900;font-size:12px;line-height:1.25;text-align:center;overflow-wrap:anywhere;pointer-events:none;animation:gd2-tin .25s ease-out both}
 @keyframes gd2-tin{from{opacity:0;transform:translate(-50%,-8px)}}
 .gd2-gate{position:relative;z-index:3;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
@@ -201,7 +212,7 @@ const bossUrl=lv=>'assets/enemies/era'+Math.max(0,Math.min(8,(lv|0)-1))+'_boss.p
 
 /* ---------- estado da tela (nada disto vai para o save) ---------- */
 const TABS=[['members','Membros'],['donate','Doar'],['bless','Bênçãos'],['boss','Chefe'],['shop','Loja'],['miss','Missões'],['terr','Territórios']];
-const X={tab:'members',md:'',sel:'',conf:null,busy:'',toast:'',toastT:0,anim:true,top:true,sig:'',tk:0,d:{},q:'',name:'',hit:null,raf:0,t0:0,t:0,glow:0,fx:[],lv:1};
+const X={tab:'members',md:'',sel:'',conf:null,busy:'',toast:'',toastT:0,anim:true,top:true,sig:'',tk:0,d:{},pk:{ca:null,cb:null,cs:0,ra:null,rb:null,qa:null,qb:null},open:'',plk:'',ren:false,hit:null,raf:0,t0:0,t:0,glow:0,fx:[],lv:1};
 let toastTop=190;
 const toastHtml=(m,top)=>'<div class="gd2-toast" role="status" style="top:'+top+'px">'+esc2(m)+'</div>';
 function say(m){ X.toast=String(m||''); X.toastT=Date.now(); redraw(); }
@@ -212,7 +223,8 @@ function run(label,fn,okMsg,after){ if(X.busy) return; X.busy=label||'Carregando
   let pr=null; try{ pr=fn(); }catch(e){ pr=null; } Promise.resolve(pr).then(end,()=>end(null)); }
 /* leituras por aba (lista de guildas, chefe, loja, missões): {st:'load'|'ok'|'err', d, why} */
 function loadSec(k){ const n=GN(); if(!n||!online()) return; const h=host();
-  const fn={list:()=>n.list(S,h,X.q?{search:X.q}:null),boss:()=>n.boss(S,h),shop:()=>n.shop(S,h),miss:()=>n.missions(S,h)}[k]; if(!fn) return;
+  /* busca sem texto: GET /guilds?a=<nameA>&b=<nameB> (uma parte, as duas ou nenhuma = todas); docs/GUILDA_NOME.md seção 5 */
+  const fn={list:()=>n.list(S,h,isN(X.pk.qa)||isN(X.pk.qb)?{a:isN(X.pk.qa)?X.pk.qa:null,b:isN(X.pk.qb)?X.pk.qb:null}:null),boss:()=>n.boss(S,h),shop:()=>n.shop(S,h),miss:()=>n.missions(S,h)}[k]; if(!fn) return;
   const tok=X.d[k]={st:'load'}; let pr=null; try{ pr=fn(); }catch(e){ pr=null; }
   const end=r=>{ if(X.d[k]!==tok) return; X.d[k]=r&&r.ok?{st:'ok',d:r}:{st:'err',why:why(r&&r.reason)}; redraw(); };
   Promise.resolve(pr).then(end,()=>end(null)); }
@@ -283,28 +295,66 @@ function pClosed(M){ const R=M.st.reason, z=netSt();
   const sub=R==='off'||R==='level'?'':'As guildas ainda não abriram. Volte mais tarde.';
   return '<div class="gd2-note" role="status"><b class="lil" style="display:block;font-size:20px;color:#eef1ff">Guilda</b>'+esc2(txt)+(sub?'<br>'+esc2(sub):'')+'</div>'+rulesHtml(); }
 
+/* ----- NOME MONTADO e ESTILO: seletores de toque, sem teclado (decisão do dono: nenhum texto livre de jogador; docs/GUILDA_NOME.md) -----
+   Chaves: ca/cb/cs = criar (1ª parte, 2ª parte, estilo) · ra/rb = trocar o nome (líder) · qa/qb = busca (null = qualquer) · st = estilo da guilda (líder).
+   Um botão mostra a escolha e abre a lista rolável logo abaixo (uma lista aberta por vez); as listas são as do Sys.guild (nameParts, styles). */
+const PK={ca:['a','Primeira parte do nome'],cb:['b','Segunda parte do nome'],cs:['s','Estilo da guilda'],ra:['a','Primeira parte do novo nome'],rb:['b','Segunda parte do novo nome'],
+  qa:['a','Busca pela primeira parte'],qb:['b','Busca pela segunda parte'],st:['s','Estilo da guilda']};
+const pkAny=k=>k==='qa'||k==='qb';
+function pkItems(k){ const G=GM(), t=PK[k]?PK[k][0]:'', P=(G&&G.nameParts)||{}, L=t==='a'?P.a:t==='b'?P.b:t==='s'?(G&&G.styles):null; return Array.isArray(L)?L:[]; }
+/* estilo atual da guilda: o do Sys.guild (status().styleIdx); enquanto o espelho não traz o índice, vale o da última leitura do servidor (GET /guild) */
+function styleNow(){ const G=GM(); let i=null; try{ i=G.ensure(S).styleIdx; }catch(e){} if(G&&!G.styleValid(i)){ const g=(mineNow()||{}).guild||{}; i=G.styleValid(g.styleIdx)?g.styleIdx:null; } return isN(i)?i:null; }
+const pkCur=k=>k==='st'?styleNow():X.pk[k];
+/* os seletores de cada estado: sem guilda = criar e buscar; na guilda = nome e estilo, só para o líder (o Sys.guild e o servidor conferem de novo) */
+function pkOk(k){ if(!PK[k]) return false; if(X.md==='out') return k[0]==='c'||k[0]==='q'; if(X.md!=='in') return false; let r=''; try{ r=GM().ensure(S).role; }catch(e){} return r==='leader'&&(k[0]==='r'||k==='st'); }
+/* garante um par válido nos seletores de criar e de trocar o nome (começa sorteado: o botão Criar nunca fica sem nome) */
+function seed(){ const G=GM(), p=X.pk; if(!G||typeof G.nameRandom!=='function') return; for(const k of ['c','r']) if(!G.nameValid(p[k+'a'],p[k+'b'])){ const r=G.nameRandom(); p[k+'a']=r.a; p[k+'b']=r.b; } if(!G.styleValid(p.cs)) p.cs=0; }
+function pkBtn(k,cap){ const L=pkItems(k), i=pkCur(k), v=isN(i)&&L[i]!=null?String(L[i]):(pkAny(k)?'Qualquer':'Escolher');
+  return '<button class="gd2-pk" data-x="pk" data-k="'+k+'" aria-expanded="'+(X.open===k)+'" aria-label="'+esc2(PK[k][1]+': '+v)+'"><small>'+esc2(cap)+'</small><b>'+esc2(v)+'</b></button>'; }
+function pkList(k){ if(X.open!==k) return ''; const L=pkItems(k), i=pkCur(k), o=(v,t,on)=>'<button class="gd2-po" role="option" data-x="opt" data-k="'+k+'" data-i="'+v+'" aria-selected="'+on+'">'+esc2(t)+'</button>';
+  return '<div id="gd2_pl" class="gd2-pl" role="listbox" aria-label="'+esc2(PK[k][1])+'">'+(pkAny(k)?o('any','Qualquer',i==null):'')+L.map((t,j)=>o(j,String(t),j===i)).join('')+'</div>'; }
+const namePick=p=>'<div class="gd2-pk2">'+pkBtn(p+'a','1ª parte')+pkBtn(p+'b','2ª parte')+'</div>'+pkList(p+'a')+pkList(p+'b');
+const pvHtml=(a,b,cap)=>'<div class="gd2-pv lil"><small>'+esc2(cap)+'</small>'+esc2(GM().nameOf(a,b))+'</div>';
+
 /* ----- online, sem guilda: procurar e criar ----- */
-function pNone(M){ const G=GM(), D=G.DATA, z=sec('list'), L=z.st==='ok'?arr(z.d).filter(g=>g&&g.id!=null).slice(0,30):[]; let c={ok:false}; try{ c=G.canCreate(S,host()); }catch(e){} let cost=0; try{ cost=G.createCost(host()); }catch(e){}
+function pNone(M){ const G=GM(), D=G.DATA, p=X.pk, z=sec('list'), L=z.st==='ok'?arr(z.d).filter(g=>g&&g.id!=null).slice(0,30):[]; let c={ok:false}; try{ c=G.canCreate(S,host(),p.ca,p.cb,p.cs); }catch(e){} let cost=0; try{ cost=G.createCost(host()); }catch(e){}
   let h=rule('Na guilda: bênçãos de <b>ATQ, Vida e Defesa</b> para todos, chefe da semana, loja de '+esc2(coinName(2))+' e o <b>Torneio do Poder</b>.')
-    +secH('Entrar numa guilda','busca pelo nome')
-    +'<div class="gd2-form"><input id="gd2_q" class="gd2-inp" type="text" maxlength="24" autocomplete="off" placeholder="Nome da guilda" aria-label="Buscar guilda pelo nome" value="'+esc2(X.q)+'"><button class="gd2-bt ghost" data-x="find">Buscar</button></div>'
+    +secH('Entrar numa guilda','busca pelas partes do nome')
+    +namePick('q')
     +secHtml(z,'list');
   if(z.st==='ok'&&!L.length) h+='<div class="gd2-note" role="status">Nenhuma guilda encontrada.</div>';
   for(const g of L){ const lv=pick(g,'level'), mem=pick(g,'members'), cap=pick(g,'maxMembers'), full=mem!=null&&cap!=null&&mem>=cap, ask=g.open===false;
     const sub=[lv!=null?'nível '+nT(lv):'',mem!=null?nT(mem)+(cap!=null?'/'+nT(cap):'')+' membros':'',g.open===true?'aberta':ask?'com pedido':'',isN(g.minLevel)&&g.minLevel>0?'Nv mínimo '+nT(g.minLevel):''].filter(Boolean).join(' · ');
     h+='<div class="gd2-row"><span class="mi"><b>'+esc2(g.name||'Guilda')+'</b><small>'+esc2(sub)+'</small></span>'+(full?'<span class="gd2-pill off">Cheia</span>':'<button class="gd2-bt'+(ask?' ghost':'')+'" data-x="join" data-id="'+esc2(g.id)+'">'+(ask?'Pedir':'Entrar')+'</button>')+'</div>'; }
   h+=secH('Criar a sua','nível '+nT(M.st.needLevel||0))
-    +'<div class="gd2-form"><input id="gd2_name" class="gd2-inp" type="text" maxlength="24" autocomplete="off" placeholder="Nome da nova guilda" aria-label="Nome da nova guilda" value="'+esc2(X.name)+'"><button class="gd2-bt'+(c.ok?'':' off')+'" data-x="create">Criar</button></div>'
-    +'<p class="gd2-hint">Criar custa <b>'+esc2(kfT(cost))+' de ouro</b> (cerca de '+nT(D.create.goldk)+' abates da sua fase). Sem diamante. O nome passa pelo filtro do chat.'+(c.ok?'':' '+esc2(whyLocal(c))+'.')+'</p>';
+    +pvHtml(p.ca,p.cb,'Nome da nova guilda')
+    +namePick('c')
+    +'<div class="gd2-pk2">'+pkBtn('cs','Estilo')+'<button class="gd2-bt ghost" data-x="roll" data-k="c">Sortear</button></div>'+pkList('cs')
+    +'<button class="gd2-bt wide'+(c.ok?'':' off')+'" data-x="create">Criar guilda</button>'
+    +'<p class="gd2-hint">Criar custa <b>'+esc2(kfT(cost))+' de ouro</b> (cerca de '+nT(D.create.goldk)+' abates da sua fase). Sem diamante. Escolher e sortear o nome não gastam nada.'+(c.ok?'':' '+esc2(rt(c)||whyLocal(c))+'.')+'</p>';
   return h; }
+
+/* ----- ficha da guilda (só o líder): nome montado e estilo. Líder de guilda com nome antigo (status().nameLegacy) vê o aviso para escolher o novo nome -----
+   As regras são do Sys.guild (canRename: troca livre da migração, depois 1 a cada 30 dias; canRestyle: 1 por dia de Brasília); o envio é o PATCH /guild. */
+function fichaHtml(o){ if(roleKey(o.role)!=='leader') return ''; const G=GM(), p=X.pk; let st={}, cr={ok:false}, cs={ok:false}; try{ st=G.status(S,host())||{}; cr=G.canRename(S,host()); cs=G.canRestyle(S,host()); }catch(e){}
+  const legacy=st.nameLegacy===true, si=styleNow(); let h='';
+  if(legacy||X.ren) h+=secH(legacy?'Escolha o novo nome da guilda':'Trocar o nome da guilda','só o líder')
+    +(legacy?rule('O nome da guilda agora é montado com <b>duas partes</b>. O nome antigo aparece até você escolher o novo. Não custa nada.'):'')
+    +pvHtml(p.ra,p.rb,'Novo nome')+namePick('r')
+    +'<div class="gd2-pk2"><button class="gd2-bt ghost" data-x="roll" data-k="r">Sortear</button><button class="gd2-bt'+(cr.ok?'':' off')+'" data-x="rename">'+(legacy?'Usar este nome':'Trocar nome')+'</button></div>'
+    +(cr.ok?'':'<p class="gd2-hint">'+esc2(rt(cr)||why(cr.reason))+'.</p>');
+  h+=secH('Ficha da guilda','só o líder troca');
+  if(!legacy) h+='<div class="gd2-row"><span class="mi"><b>Nome</b><small>'+esc2(G.name(S)||'Sua guilda')+'</small></span><button class="gd2-bt ghost'+(cr.ok||X.ren?'':' off')+'" data-x="ren">'+(X.ren?'Fechar':'Trocar')+'</button></div>';
+  return h+'<div class="gd2-row"><span class="mi"><b>Estilo</b><small>'+esc2(si!=null?G.styleOf(si):'Ainda sem estilo')+(cs.ok?'':' · '+esc2(rt(cs)||why(cs.reason)))+'</small></span><button class="gd2-bt ghost'+(cs.ok?'':' off')+'" data-x="pk" data-k="st">Trocar</button></div>'+pkList('st'); }
 
 /* ----- cartão da guilda ----- */
 function cardHtml(o){ const G=GM(), mine=mineNow()||{}, g=mine.guild||{}, n=Array.isArray(mine.members)?mine.members.length:pick(g,'members'), cap=G.memberCap(o.level), b=o.banners||{}; let pk={goldPct:0,xpPct:0,dropPct:0}, xb={into:0,need:0,frac:0,max:false};
   try{ pk=G.perks(S); }catch(e){} try{ xb=G.xpBar(S); }catch(e){}
-  return '<div class="gd2-gc"><div class="gd2-gh">'+SV.emb+'<div class="t"><div class="nm lil">'+esc2(o.name||'Sua guilda')+'</div><small>'+(n!=null?nT(n)+'/':'até ')+nT(cap)+' membros · seu cargo: <b>'+esc2(roleName(o.role))+'</b> · '+coinTxt(o.coin)+' '+esc2(coinName(o.coin))+'</small></div><div class="gd2-lvb">NÍVEL<b class="lil">'+nT(o.level)+'</b></div></div>'
+  let gname=''; try{ gname=String(G.name(S)||''); }catch(e){} const si=styleNow();   /* nome da MINHA guilda: o par das listas (Sys.guild.name); guilda antiga mostra o texto antigo, escapado */
+  return '<div class="gd2-gc"><div class="gd2-gh">'+SV.emb+'<div class="t"><div class="nm lil">'+esc2(gname||'Sua guilda')+'</div><small>'+(n!=null?nT(n)+'/':'até ')+nT(cap)+' membros · seu cargo: <b>'+esc2(roleName(o.role))+'</b> · '+coinTxt(o.coin)+' '+esc2(coinName(o.coin))+'</small></div><div class="gd2-lvb">NÍVEL<b class="lil">'+nT(o.level)+'</b></div></div>'
     +'<div class="gd2-bar" role="progressbar" aria-label="XP da guilda" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(c01(xb.frac)*100)+'"><i style="width:'+(c01(xb.frac)*100).toFixed(1)+'%"></i></div>'
     +'<div class="gd2-prog"><span>'+(xb.max?'Nível máximo da guilda':'XP da guilda '+nT(xb.into)+'/'+nT(xb.need))+'</span><span>'+(xb.max?'':'próximo nível: mais vagas e teto maior')+'</span></div>'
-    +'<div class="gd2-chips"><span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">Vida <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">Defesa <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Itens <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
+    +'<div class="gd2-chips">'+(si!=null?'<span class="gd2-chip">Estilo <b>'+esc2(G.styleOf(si))+'</b></span>':'')+'<span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">Vida <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">Defesa <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Itens <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
 const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.concat(fireOn()?[['fire','Fogueira']]:[]).map(t=>'<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'">'+t[1]+'</button>').join('')+'</div>';
 
 /* ----- Membros ----- */
@@ -319,7 +369,7 @@ function actsFor(m,o,offs){ if(m.me) return []; const D=GM().DATA, r=roleKey(m.r
   return a; }
 const ACT_LB={promote:['Promover a oficial',''],demote:['Rebaixar a membro',' ghost'],transfer:['Passar a liderança',' ghost'],kick:['Expulsar',' rose']};
 function pMembers(o){ const G=GM(), D=G.DATA, L=memList(), offs=L.filter(m=>roleKey(m.role)==='officer').length, mine=mineNow()||{};
-  let h=secH('Membros',nT(L.length)+'/'+nT(G.memberCap(o.level))+' · oficiais '+nT(offs)+'/'+nT(D.maxOfficers));
+  let h=fichaHtml(o)+secH('Membros',nT(L.length)+'/'+nT(G.memberCap(o.level))+' · oficiais '+nT(offs)+'/'+nT(D.maxOfficers));
   if(!L.length) h+='<div class="gd2-note" role="status">A lista de membros ainda não chegou.</div>';
   for(const m of L){ const id=String(m.id), acts=actsFor(m,o,offs), open=X.sel===id&&acts.length>0, lvl=pick(m,'level','lvl');
     const sub=[lvl!=null?'Nv '+nT(lvl):'',isN(m.fc)?'FC '+fcT(m.fc):'',isN(m.contrib)?nT(m.contrib)+' na semana':'',!m.me&&m.lastSeen>0?'visto '+ago(m.lastSeen):''].filter(Boolean).join(' · ');
@@ -461,14 +511,14 @@ const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,m
 /* ----- faixa de confirmação (2º toque), dentro da tela ----- */
 function confHtml(){ const c=X.conf; if(!c) return '';
   return '<div class="gd2-conf" role="alertdialog" aria-label="Confirmação"><p>'+c.txt+'</p><div class="row"><button class="gd2-bt ghost" data-x="no">Cancelar</button><button class="gd2-bt rose" data-x="yes">'+esc2(c.yes)+'</button></div></div>'; }
-/* os campos de texto sobrevivem ao redesenho: valor e foco são lidos antes e devolvidos depois */
-function grab(){ let foc=''; try{ for(const k of ['q','name']){ const el=document.getElementById('gd2_'+k); if(el&&typeof el.value==='string'){ X[k]=el.value.slice(0,24); if(document.activeElement===el) foc='gd2_'+k; } } }catch(e){} return foc; }
 
 /* ================= desenho da tela ================= */
 function draw(){
   const d=xDims(240)||{}, M=mode(); X.md=M.m;
   if(M.m==='none'){ V.innerHTML=xWrap(d,'','<div class="gd2">'+bgHtml()+'<div class="gd2-gate"><b class="lil" style="font-size:26px">Guilda</b><span role="alert">Guilda indisponível agora.</span><button class="gd2-bt" data-x="back" style="min-height:48px;padding:0 26px;font-size:15px">Voltar</button></div></div>'); X.sig='x'; return; }
-  const foc=grab(); let y0=0; try{ const sc0=X.top?null:document.getElementById('gd2_scroll'); y0=sc0?(+sc0.scrollTop||0):0; }catch(e){}
+  seed(); if(X.open&&!pkOk(X.open)) X.open=''; if(M.m!=='in') X.ren=false;
+  /* a rolagem da tela e a da lista aberta (a mesma lista) sobrevivem ao redesenho */
+  let y0=0, y1=0; try{ const sc0=X.top?null:document.getElementById('gd2_scroll'); y0=sc0?(+sc0.scrollTop||0):0; const pl0=X.open&&X.open===X.plk?document.getElementById('gd2_pl'):null; y1=pl0?(+pl0.scrollTop||0):0; }catch(e){}
   const Hh=+d.H||0, small=!!(Hh&&Hh<620), SH=small?150:176; toastTop=SH+8;
   let card='', tabs='', body='';
   if(M.m==='closed') body=pClosed(M); else if(M.m==='out') body=pNone(M);
@@ -480,11 +530,11 @@ function draw(){
     +(small?'':card)+tabs+(X.busy?'<div class="gd2-busy" role="status">'+esc2(X.busy)+'</div>':'')+confHtml()
     +'<div id="gd2_scroll" class="gd2-scroll x-scroll">'+(small?card:'')+body+'</div>'
     +'<div id="gd2_toast">'+(X.toast&&Date.now()-X.toastT<2600?toastHtml(X.toast,toastTop):'')+'</div></div>');
-  try{ if(y0){ const sc=document.getElementById('gd2_scroll'); if(sc) sc.scrollTop=y0; } if(foc){ const el=document.getElementById(foc); if(el&&el.focus) el.focus(); } }catch(e){}
-  X.anim=false; X.top=false; X.sig=sig(); loopStart();
+  try{ if(y0){ const sc=document.getElementById('gd2_scroll'); if(sc) sc.scrollTop=y0; } if(y1){ const pl=document.getElementById('gd2_pl'); if(pl) pl.scrollTop=y1; } }catch(e){}
+  X.plk=X.open; X.anim=false; X.top=false; X.sig=sig(); loopStart();
 }
 /* o que muda por fora (resposta do servidor, nível, herói): o tick redesenha só quando muda */
-function sig(){ try{ const M=mode(), z=netSt()||{}, o=M.o||{}; return [M.m,M.st&&M.st.reason,o.id,o.level,o.coin,o.role,o.xp,z.at,z.started,heroId()].join('|'); }catch(e){ return ''; } }
+function sig(){ try{ const M=mode(), z=netSt()||{}, o=M.o||{}; return [M.m,M.st&&M.st.reason,o.id,o.level,o.coin,o.role,o.xp,o.name,o.nameA,o.nameB,o.styleIdx,z.at,z.started,heroId()].join('|'); }catch(e){ return ''; } }
 
 /* ================= toques (cada data-x da tela tem uma entrada aqui) ================= */
 const memName=id=>{ const m=memList().find(x=>String(x.id)===String(id)); return m?String(m.name||'?'):''; };
@@ -527,12 +577,31 @@ const ACT={
   claim(b){ const id=String(b.dataset.id||''), m=missList().find(x=>x.id===id), n=GN(); if(!m) return; sfx('ui_tap');
     if(m.claimed) return say(why('already_claimed')); if(!m.done) return say(why('not_done')); if(!m.helped) return say(why('not_contributed'));
     run('Carregando…',()=>n.claimMission(S,host(),id),'Missão resgatada: +'+nT(m.coin)+' '+coinName(m.coin),()=>{ delete X.d.miss; }); },
-  find(){ sfx('ui_tap'); grab(); X.q=X.q.trim(); delete X.d.list; redraw(); },
+  /* seletores do nome, do estilo e da busca: abrir ou fechar a lista, escolher um item, sortear o par. Nada disto gasta nem chama a rede (só a busca recarrega a lista) */
+  pk(b){ const k=String(b.dataset.k||''); if(!pkOk(k)) return; sfx('ui_tap');
+    if(k==='st'&&X.open!=='st'){ let c={ok:false}; try{ c=GM().canRestyle(S,host()); }catch(e){} if(!c.ok) return say(rt(c)||why(c.reason)); }
+    X.open=X.open===k?'':k; X.conf=null; redraw(); },
+  opt(b){ const k=String(b.dataset.k||''), raw=String(b.dataset.i==null?'':b.dataset.i), G=GM(); if(!pkOk(k)) return; const L=pkItems(k), i=raw==='any'?null:parseInt(raw,10);
+    if(i===null?!pkAny(k):!(i>=0&&i<L.length)) return; sfx('ui_tap'); X.open=''; X.conf=null;
+    if(k==='st'){ if(i===styleNow()) return redraw(); let c={ok:false}; try{ c=G.canRestyle(S,host(),i); }catch(e){} if(!c.ok) return say(rt(c)||why(c.reason)); const per=num(G.DATA.restyle&&G.DATA.restyle.perDay)||1;
+      return ask('restyle',i,'Trocar o estilo da guilda para <b>'+esc2(G.styleOf(i))+'</b>? Só dá para trocar '+(per===1?'1 vez':nT(per)+' vezes')+' por dia.','Trocar estilo'); }
+    X.pk[k]=i; if(pkAny(k)) delete X.d.list; redraw(); },
+  roll(b){ const k=b.dataset.k==='r'?'r':'c', G=GM(), p=X.pk; if(!pkOk(k+'a')) return; sfx('ui_tap'); let r=null;
+    for(let i=0;i<8;i++){ r=G.nameRandom(); if(r.a!==p[k+'a']||r.b!==p[k+'b']) break; }
+    p[k+'a']=r.a; p[k+'b']=r.b; X.open=''; X.conf=null; redraw(); },
+  /* líder: abre ou fecha a troca de nome (guilda que já tem o par); os seletores começam no nome atual */
+  ren(){ const G=GM(); if(!pkOk('ra')) return; sfx('ui_tap'); X.open=''; X.conf=null; if(X.ren){ X.ren=false; return redraw(); }
+    let c={ok:false}; try{ c=G.canRename(S,host()); }catch(e){} if(!c.ok) return say(rt(c)||why(c.reason));
+    const o=G.ensure(S); if(G.nameValid(o.nameA,o.nameB)){ X.pk.ra=o.nameA; X.pk.rb=o.nameB; } X.ren=true; redraw(); },
+  rename(){ const G=GM(), p=X.pk; if(!pkOk('ra')) return; sfx('ui_tap'); let c={ok:false}; try{ c=G.canRename(S,host(),p.ra,p.rb); }catch(e){} if(!c.ok) return say(rt(c)||why(c.reason));
+    const o=G.ensure(S); if(o.nameA===p.ra&&o.nameB===p.rb) return say('Esse já é o nome da guilda');
+    X.open=''; ask('rename',{nameA:p.ra,nameB:p.rb},'Trocar o nome da guilda para <b>'+esc2(G.nameOf(p.ra,p.rb))+'</b>? Não custa nada. Depois desta troca, a próxima só em '+nT(G.DATA.rename.everyDays)+' dias.','Trocar nome'); },
   join(b){ const id=String(b.dataset.id||''), n=GN(); if(!id) return; sfx('ui_tap'); let c={ok:true}; try{ c=GM().canJoin(S,host(),id); }catch(e){} if(!c.ok) return say(whyLocal(c));
     run('Carregando…',()=>n.join(S,host(),id),r=>r.status==='requested'?'Pedido enviado. O líder ou um oficial precisa aceitar':'Você entrou na guilda',()=>{ delete X.d.list; X.tab='members'; X.top=true; }); },
-  create(){ sfx('ui_tap'); grab(); const nm=X.name.trim().replace(/\s+/g,' '); let c={ok:false}; try{ c=GM().canCreate(S,host()); }catch(e){}
-    if(!c.ok) return say(whyLocal(c)); if(nm.length<3) return say('O nome precisa ter de 3 a 24 letras'); X.name=nm;
-    ask('create',nm,'Criar a guilda <b>'+esc2(nm)+'</b> por <b>'+esc2(kfT(c.gold))+' de ouro</b>? Você será o líder.','Criar guilda'); },
+  /* criar: o nome é o par dos seletores (índices); canCreate devolve o body {nameA, nameB, styleIdx} que vai ao servidor, sem texto livre */
+  create(){ sfx('ui_tap'); const p=X.pk; let c={ok:false}; try{ c=GM().canCreate(S,host(),p.ca,p.cb,p.cs); }catch(e){}
+    if(!c.ok) return say(rt(c)||whyLocal(c)); X.open='';
+    ask('create',Object.assign({},c.body),'Criar a guilda <b>'+esc2(c.name)+'</b> por <b>'+esc2(kfT(c.gold))+' de ouro</b>? Você será o líder.','Criar guilda'); },
   tour(){ sfx('ui_tap'); try{ if(window.Panels&&Panels.open&&Panels.open('tourney',{from:N})) return; }catch(e){} say('O Torneio do Poder ainda não abriu'); },
   /* 2º toque: só aqui a ação que muda o servidor é enviada */
   yes(){ const c=X.conf, n=GN(), h=host(), G=GM(); if(!c||!n) return; sfx('ui_tap'); X.conf=null;
@@ -546,9 +615,16 @@ const ACT={
       const gain=r=>{ const q=(r&&r.gained)||{}; return {coin:isN(q.coin)?q.coin:d.coin,xp:isN(q.xp)?q.xp:d.xp}; };
       return run('Doando…',()=>n.donate(S,h,d.id),r=>{ const q=gain(r); return 'Doado: +'+nT(q.coin)+' '+coinName(q.coin)+', +'+nT(q.xp)+' XP da guilda'; },r=>{ const pay=srvCost(r.cost)||cost, q=gain(r);
         try{ if(pay.gems>0&&h&&h.spendGems) h.spendGems(pay.gems); if(pay.gold>0&&h&&h.spendGold) h.spendGold(pay.gold); }catch(e){} fx('+'+nT(q.coin)+' '+coinName(q.coin),'#5ee7ff'); }); }
-    if(c.k==='create'){ let cc={ok:false}; try{ cc=G.canCreate(S,h); }catch(e){} if(!cc.ok) return say(whyLocal(cc));
-      /* contrato 10.1: o custo em ouro é cobrado pelo jogo (depois de o servidor aceitar) e conferido no save */
-      return run('Criando a guilda…',()=>n.create(S,h,{name:String(c.id),emblemId:0,lang:'pt',open:true,minLevel:1}),'Guilda criada! Você é o líder',()=>{ try{ if(h&&h.spendGold) h.spendGold(cc.gold); }catch(e){} X.d={}; X.name=''; X.tab='members'; X.top=true; }); }
+    if(c.k==='create'){ const b=(c.id&&typeof c.id==='object')?c.id:{}; let cc={ok:false}; try{ cc=G.canCreate(S,h,b.nameA,b.nameB,b.styleIdx); }catch(e){} if(!cc.ok) return say(rt(cc)||whyLocal(cc));
+      /* contrato 10.1: o custo em ouro é cobrado pelo jogo (depois de o servidor aceitar) e conferido no save. O corpo é o cc.body do Sys.guild: índices, sem name nem description */
+      return run('Criando a guilda…',()=>n.create(S,h,Object.assign({emblemId:0,lang:'pt',open:true,minLevel:1},cc.body)),'Guilda criada! Você é o líder',()=>{ try{ if(h&&h.spendGold) h.spendGold(cc.gold); }catch(e){} X.d={}; X.open=''; X.tab='members'; X.top=true; }); }
+    /* nome e estilo da guilda (só o líder): PATCH /guild {nameA, nameB} e PATCH /guild {styleIdx}; sem custo */
+    if(c.k==='rename'){ const b=(c.id&&typeof c.id==='object')?c.id:{}; let cc={ok:false}; try{ cc=G.canRename(S,h,b.nameA,b.nameB); }catch(e){} if(!cc.ok) return say(rt(cc)||why(cc.reason));
+      if(typeof n.patch!=='function') return say('Trocar o nome ainda não está disponível');
+      return run('Trocando o nome',()=>n.patch(S,h,{nameA:b.nameA,nameB:b.nameB}),'Nome da guilda trocado',()=>{ X.ren=false; X.open=''; }); }
+    if(c.k==='restyle'){ let cc={ok:false}; try{ cc=G.canRestyle(S,h,c.id); }catch(e){} if(!cc.ok) return say(rt(cc)||why(cc.reason));
+      if(typeof n.patch!=='function') return say('Trocar o estilo ainda não está disponível');
+      return run('Trocando o estilo',()=>n.patch(S,h,{styleIdx:c.id}),'Estilo da guilda trocado',()=>{ X.open=''; }); }
     redraw(); } };
 function click(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototype.hasOwnProperty.call(ACT,a)) return;
   if(a==='back') return ACT.back();
@@ -566,7 +642,7 @@ const def=Panels.add(N,{title:'Guilda',actions:Object.keys(ACT),urls:urls,
   tick(){ if(!isOn()) return; if(X.toast&&Date.now()-X.toastT>2600){ X.toast=''; try{ const el=document.getElementById('gd2_toast'); if(el) el.innerHTML=''; }catch(e){} }
     if(X.busy) return; X.tk=(X.tk+1)%4; if(X.tk===0&&X.sig&&X.sig!=='x'&&sig()!==X.sig) redraw(); },
   busy(){ return !!X.busy; },
-  onOpen(){ loopStop(); X.tab='members'; X.sel=''; X.conf=null; X.busy=''; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; X.d={}; X.hit=null; X.fx=[]; X.glow=0;
+  onOpen(){ loopStop(); X.tab='members'; X.sel=''; X.conf=null; X.busy=''; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; X.d={}; X.hit=null; X.fx=[]; X.glow=0; X.open=''; X.plk=''; X.ren=false; X.pk.qa=null; X.pk.qb=null;
     try{ if(typeof pwLoad==='function') pwLoad(urls()); }catch(e){}   /* pede a carga das imagens já na abertura */
     /* contrato 12.1: ao abrir a tela de guilda, o jogo refaz a leitura da guilda no servidor */
     try{ const n=GN(); if(n&&online()&&typeof n.refresh==='function') Promise.resolve(n.refresh(S,host())).then(redraw,()=>{}); }catch(e){} },

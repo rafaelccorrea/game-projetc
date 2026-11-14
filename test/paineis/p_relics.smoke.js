@@ -74,6 +74,11 @@ for (const r of D.relics) { const ic = def.iconOf(r.id, ''), sil = def.iconOf(r.
   if (/^<img /.test(ic)) { const m = /src="([^"]+)"/.exec(ic); assert(m && fs.existsSync(path.join(R, m[1])), 'arquivo do ícone de ' + r.id); }
   else assert(/^<svg /.test(ic), 'ícone de reserva de ' + r.id); assert(ic !== sil && sil !== lk, 'três estados diferentes para ' + r.id); }
 assert.strictEqual(new Set(D.relics.map(r => def.iconOf(r.id, ''))).size, D.relics.length, 'um ícone diferente por relíquia');
+// arte da Arte: r<era>.png pela ERA da relíquia; o desenho por código vem junto como reserva (aparece se a imagem falhar); era trancada não mostra a relíquia
+for (const r of D.relics) { const ic = def.iconOf(r.id, ''), sil = def.iconOf(r.id, 'sil'), lk = def.iconOf(r.id, 'lock'), src = 'src="assets/icons/relics/r' + r.era + '.png"';
+  assert(ic.startsWith('<img ' + src) && /onerror="[^"]*rl-e[^"]*"><svg class="fb" /.test(ic), 'imagem da era ' + r.era + ' com reserva por código: ' + r.id);
+  assert(sil.startsWith('<img ' + src) && /class="sil"/.test(sil) && /<svg class="pd" /.test(sil), 'silhueta com cadeado: ' + r.id); assert(/^<svg /.test(lk) && !/<img/.test(lk), 'era trancada: só o cadeado'); }
+assert(/\.rl-i\.rl-e img[^{]*\{display:none\}/.test(CSS) && /\.rl-i\.rl-e svg\.fb\{display:block\}/.test(CSS), 'a reserva troca de lugar com a imagem que falha');
 assert(/\.rl-bt,\.xs \.rl-bt\{[^}]*color:#2a1403/.test(CSS), 'botão dourado com texto escuro, também com .xs');
 assert(/\.rl-grid\{[^}]*repeat\(3,minmax\(0,1fr\)\)/.test(CSS), 'grade 3 colunas com minmax(0,1fr): sem rolagem lateral');
 for (const m of CSS.matchAll(/\.rl-(cd|bt),\.xs \.rl-\1\{[^}]*min-height:(\d+)px/g)) assert(+m[2] >= 40, 'toque mínimo de 40 px em .rl-' + m[1]);
@@ -109,8 +114,10 @@ out.push('ligado sem relíquias: vazio honesto, 9 cartões, 6 eras com cadeado e
 // 3) COM RELÍQUIAS (via grant do módulo): cartões e folha com os números do view
 { g.S = newSave(); assert.strictEqual(RL.grant(g.S, host, 'eraLord', { era: 0 }).unlocked, 'flintAxe'); assert.strictEqual(RL.grant(g.S, host, 'eraLord', { era: 2 }).unlocked, 'knightHelm');
   RL.addFragments(g.S, 0, 6, 'dig'); RL.addFragments(g.S, 1, 20, 'dig'); RL.addFragments(g.S, 2, 2, 'dig');
-  open(); const v = RL.view(g.S, host); has('2 de 9 relíquias'); has('<b>' + g.esc2(v.bonusText) + '</b>'); not('Você ainda não tem'); assert(v.bonusText.includes('ATQ +0,6%'));
-  has('Pode subir · 6 / 5'); has('>2 / 5<'); has('Pode despertar'); has('20 / 20'); has('Nv 1/10'); assert.strictEqual(count(/class="rl-cd"/g), 2); check('com relíquias');
+  open(); const v = RL.view(g.S, host); has('2 de 9 relíquias'); { const m = /<div class="rl-top"><b>(.*?)<\/b>/.exec(H()); assert(m && m[1].replace(/<\/?em>/g, '') === g.esc2(v.bonusText), 'placa: o bônus total do módulo'); has('ATQ <em>+0,6%</em>'); } not('Você ainda não tem'); assert(v.bonusText.includes('ATQ +0,6%'));
+  has('<s>6/5</s>'); has('<s>2/5</s>'); has('<s>20/20</s>'); has('<em>Nv 1</em>'); assert.strictEqual(count(/class="rl-cd"/g), 2);
+  assert.strictEqual(count(/class="rl-go" data-x="sel" data-id="flintAxe"[^>]*>Subir</g), 1, 'botão Subir embaixo do cartão que pode subir (abre a folha)'); assert.strictEqual(count(/class="rl-go" data-x="sel" data-id="scarab"[^>]*>Despertar</g), 1); assert.strictEqual(count(/class="rl-go"/g), 2, 'só nos cartões que já podem'); check('com relíquias');
+  assert(H().indexOf('class="rl-top"') < H().indexOf('class="rl-grid"') && H().indexOf('class="rl-grid"') < H().indexOf('class="rl-src"'), 'ordem do mock: placa do bônus, grade; o resto abaixo');
   tap('sel', { id: 'flintAxe' }); const s = sheet(), row = v.slots[0]; assert(s.includes('Nv 1/10')); assert(s.includes('Bônus Nv 1')); assert(s.includes(g.esc2(row.passiveText))); assert(s.includes('<em>' + g.esc2(row.nextText) + '</em>'), 'bônus atual → próximo do módulo');
   assert(s.includes('FRAGMENTOS DE PRÉ-HISTÓRIA <b>6/5</b>')); assert(s.includes('data-x="up">Subir para o Nv 2')); check('folha'); }
 out.push('com relíquias: total, bônus, selo Pode subir / Pode despertar, folha com bônus atual e próximo e a barra de fragmentos');
@@ -150,7 +157,7 @@ out.push('Despertar: 1º toque arma, 2º chama unlock uma vez, gasta 20 fragment
 out.push('fragmentos soltos aparecem; textos do módulo escapados (nome, descrição, era, aviso)');
 
 // 7) tick: redesenha quando chega fragmento por fora ou a era libera; o aviso some; a rolagem é mantida; módulo desliga com a tela aberta
-{ open(); const h0 = H(); def.tick(); assert.strictEqual(H(), h0, 'sem mudança: sem redesenho'); RL.addFragments(g.S, 2, 3, 'dig'); def.tick(); assert.notStrictEqual(H(), h0); has('Pode subir · 5 / 5');
+{ open(); const h0 = H(); def.tick(); assert.strictEqual(H(), h0, 'sem mudança: sem redesenho'); RL.addFragments(g.S, 2, 3, 'dig'); def.tick(); assert.notStrictEqual(H(), h0); has('<s>5/5</s>');
   host._eraMax = 3; def.tick(); assert.strictEqual(count(/Chegue a esta era para liberar/g), 5, 'era nova liberada: um cadeado a menos'); host._eraMax = 2; def.tick();
   els.rl_scroll.scrollTop = 222; tap('sel', { id: 'knightHelm' }); assert.strictEqual(els.rl_scroll.scrollTop, 222, 'a lista não volta ao topo'); tap('wake'); assert(msg()); const t0 = Date.now; Date.now = () => t0() + 5000; try { els.rl_msg2.innerHTML = 'x'; def.tick(); assert.strictEqual(els.rl_msg2.innerHTML, '', 'o aviso some sozinho'); } finally { Date.now = t0; } tap('close'); els.rl_scroll.scrollTop = 0;
   D.on = false; def.render(); has('ainda não abriram'); check('desligou aberto'); D.on = true; }

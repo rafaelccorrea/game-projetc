@@ -71,11 +71,15 @@ assert(!/\.on\s*=\s*true|PANEL_ON\.\w+\s*=\s*true|setOn\s*\(|\.grant\s*\(|addPic
 assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/R\$/.test(SRC), 'nenhum preço');
 assert(!/text-overflow\s*:\s*ellipsis|…/.test(SRC), 'nenhum texto cortado com reticências'); assert(!/text-overflow\s*:\s*ellipsis/.test(CSS));
 assert(/^function dgIcon\(key\)/m.test(SRC) && /^const DG_TILE=/m.test(SRC), 'arte de reserva atrás de UMA função (dgIcon) e UMA constante (DG_TILE)');
-for (const k of ['pick', 'bomb', 'drill', 'stones', 'frag', 'stairs']) assert(/^<svg class="dg-ic"[^>]*>.+<\/svg>$/.test(def.iconOf(k)), 'ícone de reserva: ' + k);
+// arte da Arte: cada ícone é a imagem em disco e traz junto o desenho por código (reserva escondida, que aparece se a imagem falhar)
+for (const k of ['pick', 'bomb', 'drill', 'stones', 'frag', 'stairs']) { const m = /^<img class="dg-ic" src="(assets\/[^"]+\.png)" alt="" onerror="[^"]+"><svg class="dg-ic fb"[^>]*>.+<\/svg>$/.exec(def.iconOf(k)); assert(m, 'ícone com imagem e reserva: ' + k); assert(fs.existsSync(path.join(R, m[1])), 'imagem do ícone existe: ' + m[1]); }
+assert(/^<svg class="dg-ic"[^>]*>.*<\/svg>$/.test(def.iconOf('nada')), 'chave sem arte: só o desenho por código');
+assert(/\.dg-ic\.fb\{display:none\}/.test(CSS), 'a reserva fica escondida enquanto a imagem carrega');
+for (const k of ['dirt', 'rock', 'hole', 'dirtOff', 'rockOff']) { const m = /url\((assets\/ui\/dig\/[a-z]+\.png)\) center\/cover no-repeat,#[0-9a-f]{6}$/.exec(def.tiles[k]); assert(m && fs.existsSync(path.join(R, m[1])), 'ladrilho da Arte com cor de reserva: ' + k); }
 for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
 for (const m of SRC.matchAll(/'(assets\/[^']+\.png)'/g)) if (!/ex\.:/.test(SRC.slice(Math.max(0, m.index - 30), m.index))) assert(fs.existsSync(path.join(R, m[1])), 'imagem citada no arquivo não existe: ' + m[1]);
 assert(/\.dg-bt,\.xs \.dg-bt\{[^}]*color:#2a1403/.test(CSS), 'botão dourado com texto escuro, também com .xs');
-assert(/\.dg-grid\{[^}]*minmax\(0,1fr\)/.test(CSS) && /\.dg-tools\{[^}]*repeat\(3,minmax\(0,1fr\)\)/.test(CSS), 'grades com minmax(0,1fr): sem rolagem lateral');
+assert(/\.dg-grid\{[^}]*minmax\(0,1fr\)/.test(CSS) && /\.dg-tools\{[^}]*minmax\(0,104px\) minmax\(0,46px\) minmax\(0,46px\)/.test(CSS), 'grades com minmax(0,1fr): sem rolagem lateral');
 for (const m of CSS.matchAll(/\.dg-(c|tl|bt),\.xs \.dg-\1\{[^}]*min-height:(\d+)px/g)) assert(+m[2] >= 40, 'toque mínimo de 40 px em .dg-' + m[1]);
 assert(/\.dg-root\{--dg-ink:/.test(CSS), 'cores em variáveis no topo do estilo');
 out.push('registro: dig desligada, ' + def.actions.length + ' ações com tratador, dgIcon com 6 ícones de reserva, sem diálogo, sem emoji, sem reticências');
@@ -89,7 +93,8 @@ out.push('desligado ou sem módulo: aviso com Voltar; nenhum toque escreve no sa
 
 DG.setOn(true);
 // 2) CAMADA NOVA: cabeçalho, picaretas, ferramentas, 30 células (só a linha de cima clara), totais zerados, como conseguir
-{ g.S = newSave(); open(); const v = DG.view(g.S, host); has('Pré-História · camada 1'); has('<b>20/20</b>'); has('picaretas cheias'); has('bomba: abre em cruz'); has('broca: abre a coluna');
+{ g.S = newSave(); open(); const v = DG.view(g.S, host); has('Pré-História · camada 1'); has('<b>20/20</b>'); has('picaretas cheias'); has('Bomba: 0. Abre em cruz'); has('Broca: 0. Abre a coluna inteira'); has('<b>×0</b>');
+  { const h = H(); assert(h.indexOf('class="dg-hd"') < h.indexOf('class="dg-tools"') && h.indexOf('class="dg-tools"') < h.indexOf('class="dg-grid"') && h.indexOf('class="dg-grid"') < h.indexOf('class="dg-ft"') && h.indexOf('class="dg-ft"') < h.indexOf('class="dg-box"'), 'ordem do mock: era e camada, ferramentas, grade, Descer; o resto abaixo'); }
   assert.strictEqual(count(/data-x="cell"/g), N_, '30 células'); assert.strictEqual(count(/class="dg-c lit"/g), D.cols, 'só a linha de cima dá para cavar'); assert.strictEqual(count(/class="dg-o/g), 0);
   assert.strictEqual(count(/aria-label="Rocha, /g), v.cells.filter(c => c.rock).length, 'rochas do view'); assert.strictEqual(count(/data-x="tool"/g), 3); has('data-t="pick" aria-pressed="true"');
   has('A escada está escondida nesta camada.'); not('data-x="down"'); has('Total achado na Escavação'); has('<b>0</b><small>pedras de prática</small>');
@@ -151,6 +156,24 @@ out.push('prêmio guardado aparece com o motivo e entra sozinho quando o Treino 
   D.on = false; def.render(); has('ainda não abriu'); check('desligou aberto'); D.on = true;
   { const oc = host.onChange; delete host.onChange; saves = 0; o().e = 5; try { open(); cell(0, 0); assert(saves >= 1, 'sem host.onChange a tela grava'); } finally { host.onChange = oc; } } }
 out.push('fundo liberado diz o que falta; textos do módulo escapados');
+
+// 9b) HERÓI FORA DA GRADE (ressalva do dono): canvas próprio acima da grade, sem posição absoluta; nenhuma célula fica coberta
+{ let raf = []; g.requestAnimationFrame = f => { raf.push(f); return raf.length; }; g.cancelAnimationFrame = () => { raf = []; };
+  const calls = []; g.HS = 155; g.drawHeroFull = (c, x, y, k, st) => { calls.push({ x, y, k, st }); return true; };
+  const ctx = new Proxy({}, { get: (t, k) => k in t ? t[k] : () => {}, set: (t, k, v) => { t[k] = v; return true; } });
+  els.dg_hero = mkEl('dg_hero'); els.dg_hero.getContext = () => ctx; els.dg_hero.clientWidth = 104; els.dg_hero.clientHeight = 68;
+  try { open(); has('id="dg_hero"'); const h = H(), gi = h.indexOf('class="dg-grid"'), ge = h.indexOf('class="dg-ft"'), grid = h.slice(gi, ge);
+    assert(h.indexOf('id="dg_hero"') < h.indexOf('id="dg_scroll"'), 'o herói fica acima, fora da área rolável da grade');
+    assert(!/canvas|dg-hero/.test(grid), 'nada do herói dentro da grade');
+    assert.strictEqual((grid.match(/data-x="cell"/g) || []).length + (grid.match(/class="dg-o/g) || []).length, N_, 'a grade inteira continua lá, toda tocável');
+    assert.strictEqual(raf.length, 1, 'o laço do herói começa'); raf.shift()(1000); assert.strictEqual(calls.length, 1, 'drawHeroFull chamado'); assert.strictEqual(calls[0].st.mount, false, 'a pé');
+    assert(calls[0].x > 0 && calls[0].x < 104 && calls[0].y > 0 && calls[0].y <= 68, 'os pés ficam dentro do canvas do herói');
+    const rule = n => (new RegExp('\\.dg-' + n + '\\{([^}]*)\\}').exec(CSS) || ['', ''])[1];
+    for (const n of ['hero', 'hero canvas', 'say']) { assert(rule(n), 'regra .dg-' + n); assert(!/position\s*:\s*(absolute|fixed)|margin[^;]*-\d|transform/.test(rule(n)), '.dg-' + n + ' não sai do próprio bloco (não cobre célula)'); }
+    assert(!/position\s*:\s*(absolute|fixed)/.test(rule('msg')), 'o aviso fica ao lado do herói, não por cima');
+    check('herói'); def.onClose(); assert.strictEqual(raf.length, 0, 'fechar a tela para o laço'); }
+  finally { delete g.requestAnimationFrame; delete g.cancelAnimationFrame; delete g.drawHeroFull; delete g.HS; delete els.dg_hero; } }
+out.push('herói: desenhado pelo drawHeroFull num canvas acima da grade, a pé; nenhuma célula coberta; o laço para ao fechar');
 
 // 10) larguras e sem fundo; todos os botões em três situações
 { for (const w of [320, 390]) { dims = { H: 560, Wb: w }; open(); check('largura ' + w); } dims = {};

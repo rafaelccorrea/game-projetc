@@ -80,6 +80,11 @@ assert(/\.td-bt,\.xs \.td-bt\{[^}]*color:#2a1403/.test(CSS), 'botão dourado com
 for (const m of CSS.matchAll(/\.td-(row|bt),\.xs \.td-\1\{[^}]*min-height:(\d+)px/g)) assert(+m[2] >= 40, 'toque mínimo de 40 px em .td-' + m[1]);
 assert(/\.td-root\{--td-ink:/.test(CSS), 'cores em variáveis no topo do estilo');
 for (const s of TD.SOURCES) assert(/^<span class="td-i"><(svg|img) /.test(def.iconOf(s.icon)), 'ícone para ' + s.icon);
+// arte por tipo de linha: toda linha do módulo tem imagem em disco, com o desenho por código junto (reserva se a imagem falhar); tipo desconhecido = só o desenho
+for (const s of TD.SOURCES) { const m = /^<span class="td-i"><img src="(assets\/[^"]+\.png)" alt=""[^>]* onerror="[^"]*td-e[^"]*"><svg class="fb" .+<\/svg><\/span>$/.exec(def.iconOf(s.icon)); assert(m, 'imagem com reserva para ' + s.icon); assert(fs.existsSync(path.join(R, m[1])), 'imagem existe: ' + m[1]); }
+assert(/^<span class="td-i"><svg viewBox/.test(def.iconOf('tipo-novo')), 'tipo desconhecido: desenho por código');
+assert(/\.td-i svg\.fb\{display:none\}/.test(CSS) && /\.td-i\.td-e img\{display:none\}/.test(CSS) && /\.td-i\.td-e svg\.fb\{display:block\}/.test(CSS), 'a reserva troca de lugar com a imagem que falha');
+assert(def.iconOf('activity').includes('assets/icons/today/activity.png') && def.iconOf('dig').includes('assets/icons/dig/pickaxe.png') && def.iconOf('relic').includes('assets/icons/dig/fragment.png'));
 out.push('registro: today desligada, ' + def.actions.length + ' ações com tratador, ícone para as ' + TD.SOURCES.length + ' linhas do módulo, sem diálogo, sem emoji, sem reticências');
 
 // 1) MÓDULO DESLIGADO e módulo ausente: aviso e Voltar; nenhum toque escreve no save nem chama resgate
@@ -104,7 +109,8 @@ out.push('vazio honesto: texto de estado vazio, Pegar tudo (0) apagado e com mot
   assert.strictEqual(count(/data-x="go"/g), v.items.length, 'uma linha por item do módulo'); for (const it of v.items) { has('<b>' + g.esc2(it.label) + '</b>'); has('data-id="' + it.id + '"'); }
   assert.strictEqual(count(/class="td-seal"/g), 3, 'selo dourado só nas linhas de resgate'); assert.strictEqual(count(/class="td-ch"/g), 2, 'seta nas linhas de aviso');
   has('<span class="td-seal">2</span>'); has('<span class="td-seal">3</span>'); has('<span class="td-seal">4</span>'); has('<span class="td-num">' + Sys.dig.picks(g.S, host) + '</span>');
-  has('5 coisas para fazer agora'); has('>Pegar tudo (' + v.claimable + ')'); has('aria-disabled="false"'); has('Prêmios prontos'); has('Para fazer');
+  has('5 coisas para fazer agora'); has('>Pegar tudo (' + v.claimable + ')'); has('aria-disabled="false"'); assert.strictEqual(count(/class="td-ok"/g), 3, 'visto verde nas linhas que entram no Pegar tudo'); assert.strictEqual(count(/class="td-go">Ir</g), 2, '"Ir" nas linhas que abrem outra tela');
+  { const h = H(); assert(h.indexOf('class="td-st"') < h.indexOf('class="td-rib"') && h.indexOf('class="td-rib"') < h.indexOf('id="td_scroll"') && h.indexOf('id="td_scroll"') < h.indexOf('data-x="all"'), 'ordem do mock: palco, faixa Hoje, linhas, Pegar tudo'); assert(h.lastIndexOf('class="td-ok"') < h.indexOf('class="td-go"'), 'primeiro as de pegar, depois as de ir'); }
   assert(H().indexOf('data-id="mail"') < H().indexOf('data-id="chest"') && H().indexOf('data-id="chest"') < H().indexOf('data-id="dig"'), 'ordem do módulo');
   assert(gated.includes('assets/icons/menu/mail.png') && gated.includes('assets/ui/chest.png'), 'pede a carga dos ícones'); for (const u of gated) assert(fs.existsSync(path.join(R, u)), 'imagem pedida existe: ' + u); check('lista'); }
 out.push('lista: uma linha por item do view, na ordem do módulo, selo nas de resgate e seta nas de aviso');
@@ -129,7 +135,7 @@ out.push('toque na linha: Panels.open(tab, {from:today}) ou host.goTab(tab); sem
   has('Pegou 5 prêmios'); has('<li>Correio com prêmio: 2</li>'); has('<li>Conquistas: 3</li>'); has('<li>Ouro: +80</li>'); has('<li>Diamantes: +3</li>'); not('<li>Baús de abate');
   has('data-id="chest"'); has('Mochila cheia'); not('data-id="mail"'); not('data-id="achievements"'); has('>Pegar tudo (0)'); has('data-id="dig"'); check('depois de pegar');
   tap('all'); assert.strictEqual(msg(), TD.why('bag') + ': abra espaço para pegar Baús de abate'); assert.strictEqual(F.calls.chest, 0); not('Pegou 5'); check('recusa mochila');
-  bag = false; def.render(); has('>Pegar tudo (1)'); tap('all'); assert.strictEqual(F.calls.chest, 4); has('Pegou 4 prêmios'); has('<li>Baús de abate: 4</li>'); not('<li>Ouro'); not('Prêmios prontos'); has('Para fazer'); check('baús'); }
+  bag = false; def.render(); has('>Pegar tudo (1)'); tap('all'); assert.strictEqual(F.calls.chest, 4); has('Pegou 4 prêmios'); has('<li>Baús de abate: 4</li>'); not('<li>Ouro'); assert.strictEqual(count(/class="td-ok"/g), 0, 'nada mais para pegar'); has('class="td-go">Ir<'); check('baús'); }
 out.push('Pegar tudo: claimAll uma vez, resumo por linha com ouro e diamantes que entraram; mochila cheia fica fora do lote e explica');
 
 // 6) "Pegar tudo" nunca gasta: picaretas, fragmentos e Brasas iguais antes e depois
@@ -144,6 +150,18 @@ out.push('nunca gasta picareta nem fragmento; recusa e erro do módulo viram mot
 { const s = TD.SOURCES.find(x => x.id === 'mail'), l0 = s.label; s.label = '<b>"Correio" & cia</b>'; F.mail = 1;
   try { open(); has('&lt;b&gt;&quot;Correio&quot; &amp; cia&lt;/b&gt;'); not('<b>"Correio"'); tap('all'); has('<li>&lt;b&gt;&quot;Correio&quot;'); check('escapado'); } finally { s.label = l0; } }
 out.push('rótulo do módulo escapado na linha e no resumo');
+
+// 8b) HERÓI NO PALCO: drawHeroFull num canvas acima da folha; o laço para ao fechar
+{ let raf = []; g.requestAnimationFrame = f => { raf.push(f); return raf.length; }; g.cancelAnimationFrame = () => { raf = []; };
+  const calls = []; g.HS = 155; g.drawHeroFull = (c, x, y, k, st) => { calls.push({ x, y, k, st }); return true; };
+  const ctx = new Proxy({}, { get: (t, k) => k in t ? t[k] : () => {}, set: (t, k, v) => { t[k] = v; return true; } });
+  els.td_hero = mkEl('td_hero'); els.td_hero.getContext = () => ctx; els.td_hero.clientWidth = 320; els.td_hero.clientHeight = 160;
+  try { open(); has('id="td_hero"'); assert(H().indexOf('id="td_hero"') < H().indexOf('class="td-sh'), 'o herói fica no palco, fora da folha');
+    assert.strictEqual(raf.length, 1, 'o laço do herói começa'); raf.shift()(1000); assert.strictEqual(calls.length, 1, 'drawHeroFull chamado'); assert(!('mount' in calls[0].st), 'o herói como está no jogo (montaria do save)');
+    assert(calls[0].y <= 160 - 24, 'os pés ficam acima da faixa Hoje (ela sobe 24 px no palco)');
+    check('herói'); def.onClose(); assert.strictEqual(raf.length, 0, 'fechar a tela para o laço'); }
+  finally { delete g.requestAnimationFrame; delete g.cancelAnimationFrame; delete g.drawHeroFull; delete g.HS; delete els.td_hero; } }
+out.push('herói: desenhado pelo drawHeroFull no palco acima da folha; o laço para ao fechar');
 
 // 9) tick: redesenha quando a lista muda por fora (no máximo a cada 2 s); o aviso some sozinho; módulo desliga com a tela aberta
 { open(); const h0 = H(); const t0 = Date.now; let add = 0; Date.now = () => t0() + add;

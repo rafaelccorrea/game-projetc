@@ -36,7 +36,8 @@ const MEMBERS = () => role === 'leader'
   : [{ id: 'p1', name: 'Ana <i>', role: 'member', me: true, contrib: 10, joinedAt: NOW - 9e8 }, { id: 'p2', name: 'Bento', role: 'leader', contrib: 30 }, { id: 'p3', name: 'Caio', role: 'officer', contrib: 5 }, { id: 'p4', name: 'Dora', role: 'member', contrib: 1 }];
 /* respostas NO FORMATO EXATO do contrato docs/API_SERVIDOR.md 10.5 (GET /guild, doar, check-in, chefe, golpe, loja, missões) */
 const DAILY = [], WEEK = '2026-W46', SRV_GOLDK = 61;   // SRV_GOLDK de propósito diferente da tabela do jogo (60): a tela tem de debitar o cost que o SERVIDOR devolve
-const GV = () => ({ id: 'g1', name: 'Lobos <b>', emblemId: '0', level: 2, xp: 1700, xpNext: 3000, members: 4, maxMembers: 22, open: true, minLevel: 1, lang: 'pt', power: 22000, bonus: { blessings: {}, territory: {} } });
+let GNAME = 'Lobos <b>', GSTYLE = null;   // guilda ANTIGA (nome digitado, fora das listas): o líder vê o aviso para escolher o novo nome; o PATCH e o POST trocam pelo par
+const GV = () => ({ id: 'g1', name: GNAME, ...(GSTYLE != null ? { styleIdx: GSTYLE } : {}), emblemId: '0', level: 2, xp: 1700, xpNext: 3000, members: 4, maxMembers: 22, open: true, minLevel: 1, lang: 'pt', power: 22000, bonus: { blessings: {}, territory: {} } });
 const BOSS = { week: WEEK, hpMax: 100000, hpLeft: 63000, down: false, hitsLeft: 2, myDamage: 1500, top: [{ id: 'p2', name: 'Bento <s>', damage: 30000 }, { id: 'p1', name: 'Ana <i>', damage: 1500 }],
   bands: [{ minRatio: 0, coin: 7 }, { minRatio: 12, coin: 11, forge: 1 }], kill: { xp: 333, coin: 31, forge: 5, food: 50, essence: 2 } };
 const BOUGHT = { forge10: 2, essence2: 3 };
@@ -60,12 +61,14 @@ const ROUTES = {
   'POST /guild/leader': () => ({}), 'POST /guild/blessings/atk/upgrade': () => ({}), 'POST /guild/requests/p9/accept': () => ({}), 'POST /guild/requests/p9/decline': () => ({}),
   'POST /guild/leave': () => { inGuild = false; return {}; },
   'GET /guilds': () => [{ id: 'g7', name: 'Rubra <b>', level: 3, members: 10, maxMembers: 24, open: true, minLevel: 30 }, { id: 'g8', name: 'Véu', open: false }],
-  'POST /guilds/g7/join': () => { inGuild = true; return { status: 'joined' }; }, 'POST /guilds': () => { inGuild = true; return { id: 'g1' }; } };
+  'POST /guilds/g7/join': () => { inGuild = true; return { status: 'joined' }; },
+  'POST /guilds': b => { inGuild = true; GNAME = G.nameOf(b.nameA, b.nameB); GSTYLE = b.styleIdx != null ? b.styleIdx : null; return { id: 'g1' }; },
+  'PATCH /guild': b => { if (b.nameA != null) GNAME = G.nameOf(b.nameA, b.nameB); if (b.styleIdx != null) GSTYLE = b.styleIdx; return { guild: GV() }; } };
 g.Sys.net = { _call(m, p, b) { const k = m + ' ' + p.split('?')[0]; calls.push(m + ' ' + p + (b ? ' ' + JSON.stringify(b) : ''));
   if (fail[k]) return Promise.reject(typeof fail[k] === 'string' ? { code: fail[k] } : fail[k]); const h = ROUTES[k]; if (!h) return Promise.reject({ code: 'not_found' });
   try { return Promise.resolve(h(b)); } catch (e) { return Promise.reject(e); } } };
 
-const SRC = fs.readFileSync(path.join(R, 'js/p_guild2.js'), 'utf8');
+const SRC = fs.readFileSync(process.env.GD2_SRC || path.join(R, 'js/p_guild2.js'), 'utf8');   // GD2_SRC: testar uma cópia antes de gravar no jogo (o jogo recarrega a cada gravação em js/)
 vm.runInThisContext(SRC, { filename: 'p_guild2.js' });
 
 /* ---------- ajudantes ---------- */
@@ -78,6 +81,7 @@ function check(tag) { const h = H(), bt = buttons();
   for (const b of bt) { assert(b.dataset.x, tag + ': botão sem data-x: ' + b.tag); assert(def.actions.includes(b.dataset.x), tag + ': ação sem tratamento: ' + b.dataset.x); assert(!/\sdisabled[\s>=]/.test(b.tag), tag + ': botão morto: ' + b.tag); seenActs.add(b.dataset.x); }
   assert(!/\p{Extended_Pictographic}/u.test(h), tag + ': tem emoji'); assert(!/undefined|NaN|\[object|>null<|Infinity/.test(h), tag + ': texto quebrado: ' + (/.{40}(undefined|NaN|\[object|>null<|Infinity).{40}/.exec(h) || [''])[0]);
   assert(!/R\$|\d\s*reais|sorteio pago|última chance|só hoje|oferta acaba/i.test(h), tag + ': preço em dinheiro ou pressão de compra');
+  assert(!/<input|<textarea|contenteditable|type="text"/i.test(h), tag + ': campo de texto livre (jogo com menores: o nome é montado com listas)'); assert(!/filtro do chat/i.test(h), tag + ': frase do filtro do chat');
   for (const m of h.matchAll(/(?:src="|url\()([^")]+)/g)) { assert(fs.existsSync(path.join(R, m[1])), tag + ': imagem não existe: ' + m[1]); seenImgs.add(m[1]); }
   return bt.length; }
 const click = (x, o) => def.click({ dataset: Object.assign({ x }, o || {}) });
@@ -91,6 +95,7 @@ const tab = t => click('tab', { t });
   assert.strictEqual(addName, 'guild2'); assert.strictEqual(g.PANEL_ON.guild2, false, 'a chave nasce desligada'); assert(def && def.render && def.click && def.tick && def.onOpen && def.onClose);
   assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/PANEL_ON\.\w+\s*=\s*true|DATA\.on\s*=(?!=)/.test(SRC), 'o arquivo não liga chave nenhuma');   /* (?!=): ler a chave (DATA.on===true, no fireOn da Fogueira da Guilda) não é ligar; atribuição continua proibida */
   for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
+  assert(!/<input|<textarea|contenteditable|type="text"/i.test(SRC), 'o arquivo não tem campo de texto'); assert(!/filtro do chat/i.test(SRC), 'a frase do filtro do chat saiu'); assert(!/search\s*:/.test(SRC), 'a busca não manda texto');
   out.push('registro: painel guild2, chave desligada, sem alert/confirm/prompt, sem emoji');
 
   // 1) online desligado (e ligado mas não iniciado): estado honesto, zero rede, nenhuma guilda ou membro na tela
@@ -120,6 +125,30 @@ const tab = t => click('tab', { t });
   click('mact', { k: 'demote', id: 'p2' }); await settle(); assert(calls.includes('POST /guild/members/p2/demote'));
   click('req', { k: 'accept', id: 'p9' }); await settle(); assert(calls.includes('POST /guild/requests/p9/accept')); has('Pedido aceito');
   out.push('líder: membros e pedidos do servidor escapados; expulsar e passar a liderança em 2 toques; promover, rebaixar e aceitar; recusa (forbidden) em texto');
+
+  // 2b) LÍDER de guilda com NOME ANTIGO (status().nameLegacy): aviso + seletores; a troca vai por canRename e PATCH /guild {nameA, nameB}, em dois toques, uma vez
+  { const P = g.Guild2.X.pk, patches = () => sent(/^PATCH \/guild /), nm = G.nameOf(3, 5);
+    assert.strictEqual(G.status(g.S, host).nameLegacy, true, 'o teste parte de uma guilda com nome antigo'); def.render(); check('nome antigo');
+    has('Escolha o novo nome da guilda'); has('Lobos &lt;b&gt;'); has('data-x="rename"'); has('data-k="ra"'); has('data-k="rb"'); has('data-x="roll" data-k="r"'); not('data-x="ren"'); assert(G.nameValid(P.ra, P.rb), 'os seletores já começam com um par sorteado');
+    click('pk', { k: 'ra' }); check('lista da 1ª parte'); has('role="listbox"'); assert.strictEqual((H().match(/data-x="opt" data-k="ra"/g) || []).length, G.nameParts.a.length, 'a lista mostra todas as partes'); not('data-i="any"');
+    click('opt', { k: 'ra', i: '3' }); not('role="listbox"'); click('pk', { k: 'rb' }); assert.strictEqual((H().match(/data-x="opt" data-k="rb"/g) || []).length, G.nameParts.b.length); click('opt', { k: 'rb', i: '5' });
+    assert.deepStrictEqual([P.ra, P.rb], [3, 5]); has(g.esc2(nm)); click('opt', { k: 'ra', i: '999' }); click('opt', { k: 'ra', i: 'x' }); click('opt', { k: 'ra', i: 'any' }); assert.deepStrictEqual([P.ra, P.rb], [3, 5], 'índice fora da lista é ignorado');
+    { const n0 = calls.length; click('roll', { k: 'r' }); assert(P.ra !== 3 || P.rb !== 5, 'Sortear muda o par'); assert(G.nameValid(P.ra, P.rb)); has(g.esc2(G.nameOf(P.ra, P.rb))); assert.strictEqual(calls.length, n0, 'Sortear não chama a rede'); }
+    click('opt', { k: 'ra', i: '3' }); click('opt', { k: 'rb', i: '5' });
+    click('rename'); check('confirma o nome'); has('Trocar o nome da guilda para <b>' + g.esc2(nm) + '</b>?'); assert.strictEqual(patches(), 0, '1º toque não envia'); click('no'); assert.strictEqual(patches(), 0);
+    click('rename'); click('yes'); await settle(); assert.strictEqual(patches(), 1, 'um PATCH só'); assert(calls.includes('PATCH /guild {"nameA":3,"nameB":5}'), 'manda só os índices'); has('Nome da guilda trocado');
+    def.render(); check('nome novo'); assert.strictEqual(G.name(g.S), nm); assert.strictEqual(G.status(g.S, host).nameLegacy, false); has(g.esc2(nm)); not('Escolha o novo nome da guilda'); not('Lobos &lt;b&gt;'); not('data-x="rename"'); has('Ficha da guilda'); has('data-x="ren"');
+    // guilda que já tem o par: "Trocar" abre os seletores no nome atual; mesmo nome não envia; recusa do servidor (429 rename_cooldown) vira o texto do módulo
+    click('ren'); check('trocar o nome'); has('Trocar o nome da guilda'); assert.deepStrictEqual([P.ra, P.rb], [3, 5]); click('rename'); has('Esse já é o nome da guilda'); not('gd2-conf');
+    click('opt', { k: 'ra', i: '4' }); fail['PATCH /guild'] = { code: 'rename_cooldown', retryAfterMs: 3 * 864e5 }; click('rename'); click('yes'); await settle(); has('Você poderá trocar o nome em 3 dias'); assert.strictEqual(G.name(g.S), nm, 'recusa não muda o nome');
+    fail['PATCH /guild'] = 'name_taken'; click('rename'); click('yes'); await settle(); has('Esse nome já existe neste servidor; troque uma das partes'); assert.strictEqual(P.ra, 4, 'os seletores ficam como estavam'); delete fail['PATCH /guild'];
+    click('ren'); not('data-x="rename"');
+    // estilo na ficha: lista do módulo, canRestyle, dois toques, PATCH /guild {styleIdx}
+    has('Ainda sem estilo'); const p0 = patches(); click('pk', { k: 'st' }); check('lista de estilo'); assert.strictEqual((H().match(/data-x="opt" data-k="st"/g) || []).length, G.styles.length);
+    click('opt', { k: 'st', i: '2' }); check('confirma o estilo'); has('Trocar o estilo da guilda para <b>' + g.esc2(G.styles[2]) + '</b>?'); assert.strictEqual(patches(), p0, '1º toque não envia');
+    click('yes'); await settle(); assert(calls.includes('PATCH /guild {"styleIdx":2}')); assert.strictEqual(patches(), p0 + 1); has('Estilo da guilda trocado'); def.render(); check('estilo trocado'); has('Estilo <b>' + g.esc2(G.styles[2]) + '</b>'); not('Ainda sem estilo');
+    fail['PATCH /guild'] = { code: 'restyle_cooldown', retryAfterMs: 5 * 36e5 }; click('pk', { k: 'st' }); click('opt', { k: 'st', i: '1' }); click('yes'); await settle(); has('Você poderá trocar o estilo amanhã'); delete fail['PATCH /guild'];
+    out.push('líder com nome antigo: aviso "Escolha o novo nome da guilda", seletores e Sortear sem rede, PATCH {nameA,nameB} uma vez em 2 toques; recusas rename_cooldown e name_taken pelo reasonText; estilo pela lista com PATCH {styleIdx}'); }
 
   // 3) Doar: check-in direto; doação em 2 toques, ouro debitado só depois do ok; sem diamante = motivo, sem rede
   tab('donate'); check('doar'); has('<b>Presença</b>'); not('Feito hoje');
@@ -180,27 +209,51 @@ const tab = t => click('tab', { t });
   role = 'member'; await GN.refresh(g.S, host); await open(); check('membros comum'); has('seu cargo: <b>Membro</b>'); not('data-x="sel"'); not('data-x="mact"'); not('data-x="req"'); not('Pedidos para entrar');
   const nK = sent(/kick|promote|demote|\/guild\/leader/); click('mact', { k: 'kick', id: 'p4' }); click('yes'); await settle(); assert.strictEqual(sent(/kick|promote|demote|\/guild\/leader/), nK, 'membro comum não envia ação de líder');
   tab('bless'); check('bênçãos comum'); not('data-x="bls"'); has('Só <b>líder e oficiais</b> sobem as bênçãos'); const nB = sent(/upgrade/); click('bls', { id: 'atk' }); await settle(); assert.strictEqual(sent(/upgrade/), nB);
-  out.push('membro comum: sem abrir membro, sem promover/expulsar/transferir, sem pedidos, sem subir bênção');
+  // membro comum não vê renomear nem trocar o estilo (só o estilo escolhido, no cartão); toque forjado não envia
+  tab('members'); check('ficha comum'); not('Ficha da guilda'); not('Escolha o novo nome'); not('data-x="ren"'); not('data-x="rename"'); not('data-x="pk"'); not('data-x="roll"'); has('Estilo <b>' + g.esc2(G.styles[2]) + '</b>');
+  { const nP = sent(/^PATCH /); click('ren'); click('pk', { k: 'st' }); click('opt', { k: 'st', i: '1' }); click('yes'); click('pk', { k: 'ra' }); click('rename'); click('yes'); await settle(); not('gd2-conf'); not('role="listbox"'); assert.strictEqual(sent(/^PATCH /), nP, 'membro comum não troca nome nem estilo'); }
+  // líder de guilda antiga visto por um membro comum: sem aviso
+  { const keepN = GNAME; GNAME = 'Antiga <b>'; await GN.refresh(g.S, host); def.render(); has('Antiga &lt;b&gt;'); not('Antiga <b>'); not('Escolha o novo nome'); not('data-x="rename"'); GNAME = keepN; await GN.refresh(g.S, host); def.render(); }
+  out.push('membro comum: sem abrir membro, sem promover/expulsar/transferir, sem pedidos, sem subir bênção, sem renomear nem trocar o estilo');
 
   // 10) Sair: 2 toques; recusa leader_must_transfer; depois sai e cai na busca
   tab('members'); click('leave'); check('confirma sair'); has('Sair da guilda?'); assert.strictEqual(sent(/leave/), 0, '1º toque não envia');
   fail['POST /guild/leave'] = 'leader_must_transfer'; click('yes'); has('Saindo da guilda…'); await settle(); has('Passe a liderança antes de sair'); delete fail['POST /guild/leave'];
   click('leave'); click('yes'); await settle(); assert(calls.includes('POST /guild/leave')); await settle(); def.render(); await settle(); def.render(); check('sem guilda');
   has('Entrar numa guilda'); has('Rubra &lt;b&gt;'); not('Rubra <b>'); has('Pedir'); not('gd2-tabs'); assert.strictEqual(G.ensure(g.S).id, null);
-  // 11) Criar: nome escapado, 2 toques, ouro debitado só depois do ok; recusa name_taken
-  click('create'); has('depois de sair de uma guilda'); host.t += 8 * 864e5; click('create'); has('O nome precisa ter de 3 a 24 letras'); g.Guild2.X.name = 'Nova <x>'; def.render(); has('value="Nova &lt;x&gt;"');
-  click('create'); check('confirma criar'); has('Criar a guilda <b>Nova &lt;x&gt;</b>'); not('Nova <x>'); assert.strictEqual(sent(/^POST \/guilds /), 0, '1º toque não envia');
-  fail['POST /guilds'] = 'name_taken'; const gold1 = g.S.gold; click('yes'); has('Criando a guilda…'); await settle(); has('Já existe uma guilda com esse nome'); assert.strictEqual(g.S.gold, gold1, 'recusa não debita'); delete fail['POST /guilds'];
+  // 10b) Busca SEM texto: os dois seletores com "Qualquer"; GET /guilds?a=&b= (uma parte, as duas ou nenhuma)
+  const P = g.Guild2.X.pk; has('data-k="qa"'); has('data-k="qb"'); not('data-x="find"'); assert.strictEqual(P.qa, null); assert.strictEqual(P.qb, null);
+  click('pk', { k: 'qa' }); check('lista da busca'); has('data-i="any"'); assert.strictEqual((H().match(/data-x="opt" data-k="qa"/g) || []).length, G.nameParts.a.length + 1, 'todas as partes mais "Qualquer"');
+  click('opt', { k: 'qa', i: '3' }); await settle(); assert.strictEqual(calls[calls.length - 1], 'GET /guilds?a=3'); click('opt', { k: 'qb', i: '0' }); await settle(); assert.strictEqual(calls[calls.length - 1], 'GET /guilds?a=3&b=0');
+  click('opt', { k: 'qa', i: 'any' }); await settle(); assert.strictEqual(calls[calls.length - 1], 'GET /guilds?b=0'); click('opt', { k: 'qb', i: 'any' }); await settle(); assert.strictEqual(calls[calls.length - 1], 'GET /guilds'); assert.strictEqual(sent(/search=/), 0, 'a busca nunca manda texto');
+  def.render(); check('busca'); has('Rubra &lt;b&gt;');
+  // 11) Criar: par dos seletores, prévia, estilo, Sortear sem rede; recusa pelo reasonText; 2 toques; ouro debitado só depois do ok; recusa name_taken
+  const BASE = { emblemId: 0, lang: 'pt', open: true, minLevel: 1 }, posts = () => calls.filter(c => c.indexOf('POST /guilds {') === 0);
+  click('create'); has('depois de sair de uma guilda'); not('gd2-conf'); host.t += 8 * 864e5; def.render(); check('criar');
+  assert(G.nameValid(P.ca, P.cb), 'criar começa com um par sorteado'); has(g.esc2(G.nameOf(P.ca, P.cb))); has('data-k="ca"'); has('data-k="cb"'); has('data-k="cs"'); has('data-x="roll" data-k="c"'); has('Sortear');
+  { const n0 = calls.length, gold0 = g.S.gold, a0 = P.ca, b0 = P.cb; click('roll', { k: 'c' }); assert(P.ca !== a0 || P.cb !== b0, 'Sortear muda o par'); has(g.esc2(G.nameOf(P.ca, P.cb))); click('roll', { k: 'c' }); click('roll', { k: 'c' });
+    assert.strictEqual(calls.length, n0, 'Sortear não chama a rede'); assert.strictEqual(g.S.gold, gold0, 'Sortear não gasta'); not('gd2-conf'); }
+  click('pk', { k: 'ca' }); check('lista de criar'); assert.strictEqual((H().match(/data-x="opt" data-k="ca"/g) || []).length, G.nameParts.a.length); click('opt', { k: 'ca', i: '0' }); click('pk', { k: 'cb' }); click('opt', { k: 'cb', i: '0' });
+  click('pk', { k: 'cs' }); check('lista de estilo de criar'); assert.strictEqual((H().match(/data-x="opt" data-k="cs"/g) || []).length, G.styles.length); click('opt', { k: 'cs', i: '4' });
+  check('par escolhido'); has('Lobos da Aurora'); has(g.esc2(G.styles[4])); assert.deepStrictEqual([P.ca, P.cb, P.cs], [0, 0, 4]);
+  // recusas locais: o texto do Sys.guild.reasonText (par inválido) e a falta de ouro; nenhuma abre a confirmação nem chama a rede
+  P.ca = 99; click('create'); has(G.reasonText({ reason: 'name' })); has('Escolha as duas partes do nome'); not('gd2-conf'); assert(G.nameValid(P.ca, P.cb), 'par inválido volta a um par sorteado'); click('opt', { k: 'ca', i: '0' }); click('opt', { k: 'cb', i: '0' });
+  { const keepG = g.S.gold; g.S.gold = 0; click('create'); has('Falta ouro: criar custa'); not('gd2-conf'); g.S.gold = keepG; } assert.strictEqual(posts().length, 0);
+  const CB = G.canCreate(g.S, host, 0, 0, 4); assert.strictEqual(CB.ok, true); assert.deepStrictEqual(CB.body, { nameA: 0, nameB: 0, styleIdx: 4 }); const WANT = 'POST /guilds ' + JSON.stringify(Object.assign({}, BASE, CB.body));
+  click('create'); check('confirma criar'); has('Criar a guilda <b>Lobos da Aurora</b>'); assert.strictEqual(posts().length, 0, '1º toque não envia');
+  fail['POST /guilds'] = 'name_taken'; const gold1 = g.S.gold; click('yes'); has('Criando a guilda…'); await settle(); has('Esse nome já existe neste servidor; troque uma das partes'); assert.strictEqual(g.S.gold, gold1, 'recusa não debita'); delete fail['POST /guilds'];
+  assert.deepStrictEqual(posts(), [WANT], 'o corpo é o c.body, sem name nem description'); assert.deepStrictEqual([P.ca, P.cb, P.cs], [0, 0, 4], 'name_taken deixa os seletores como estão');
   // entrar numa guilda da lista
   click('join', { id: 'g7' }); has('Carregando…'); await settle(); assert(calls.includes('POST /guilds/g7/join')); await settle(); def.render(); has('Você entrou na guilda'); has('gd2-tabs'); check('entrou');
   // criar de verdade (sai antes)
-  role = 'leader'; click('leave'); click('yes'); await settle(); await settle(); host.t += 8 * 864e5; g.Guild2.X.name = 'Nova <x>'; def.render(); click('create'); click('yes'); await settle();
-  assert(calls.some(c => c.indexOf('POST /guilds {"name":"Nova <x>"') === 0), 'cria com o nome digitado'); assert.strictEqual(g.S.gold, gold1 - G.createCost(host), 'ouro da criação debitado depois do ok'); await settle(); def.render(); has('Guilda criada'); check('criou');
-  out.push('sair em 2 toques (recusa leader_must_transfer), busca com nomes escapados, entrar, criar em 2 toques (recusa name_taken, débito só no ok)');
+  role = 'leader'; click('leave'); click('yes'); await settle(); await settle(); host.t += 8 * 864e5; def.render(); assert.deepStrictEqual([P.ca, P.cb, P.cs], [0, 0, 4]); click('create'); assert.strictEqual(posts().length, 1, '1º toque não envia'); click('yes'); click('yes'); await settle();
+  assert.deepStrictEqual(posts(), [WANT, WANT], 'criar manda exatamente o c.body UMA vez (a outra é a recusada acima)'); { const sentBody = JSON.parse(posts()[1].slice('POST /guilds '.length)); assert(!('name' in sentBody) && !('description' in sentBody), 'sem name nem description'); assert.deepStrictEqual(sentBody, Object.assign({}, BASE, CB.body)); }
+  assert.strictEqual(g.S.gold, gold1 - G.createCost(host), 'ouro da criação debitado depois do ok, uma vez'); await settle(); def.render(); has('Guilda criada'); check('criou'); has('Lobos da Aurora'); has('Estilo <b>' + g.esc2(G.styles[4]) + '</b>'); not('Escolha o novo nome'); has('Ficha da guilda');
+  out.push('sair em 2 toques (recusa leader_must_transfer), busca pelos seletores (?a=&b=, sem texto) com nomes escapados, entrar, criar pelo par (Sortear sem rede, recusa pelo reasonText, corpo = c.body uma vez em 2 toques, recusa name_taken, débito só no ok)');
 
   // 12) toda ação desenhada foi vista; toda imagem citada existe (também as da lista de carga)
   for (const u of g.Guild2.urls()) assert(fs.existsSync(path.join(R, u)), 'imagem da lista de carga não existe: ' + u);
-  for (const a of ['tab', 'sel', 'mact', 'req', 'leave', 'yes', 'no', 'checkin', 'don', 'bls', 'hit', 'buy', 'claim', 'find', 'join', 'create', 'tour', 'retry']) assert(seenActs.has(a), 'ação nunca apareceu num botão: ' + a);
+  for (const a of ['tab', 'sel', 'mact', 'req', 'leave', 'yes', 'no', 'checkin', 'don', 'bls', 'hit', 'buy', 'claim', 'pk', 'opt', 'roll', 'ren', 'rename', 'join', 'create', 'tour', 'retry']) assert(seenActs.has(a), 'ação nunca apareceu num botão: ' + a);
   // sem o módulo: tela de indisponível com Voltar
   const keep = g.Sys.guild; g.Sys.guild = null; def.render(); has('Guilda indisponível agora.'); check('sem módulo'); assert(seenActs.has('back')); g.Sys.guild = keep;
   out.push('imagens em disco: ' + seenImgs.size + ' na tela + ' + g.Guild2.urls().length + ' na lista de carga; ' + seenActs.size + ' ações vistas em botões');
