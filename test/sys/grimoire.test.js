@@ -96,4 +96,8 @@ t('view para a tela: 9 eras × 2, contagem, texto do bônus, custo, onde está e
   assert.strictEqual(v.bonusText,'ATQ +0,4%'); assert.strictEqual(v.eras[8].spells[1].owned,false); assert.ok(v.eras[8].spells[1].how);
 }));
 t('grant idempotente: eraLord 2× na mesma era vira eraLordRepeat (1 página, 1 por dia); chief50 só uma vez por era', () => { const G=require('../../js/sys/grimoire.js'); const k=G.DATA.on; G.DATA.on=true; try{ const S={}, h=require('./_host.js').makeHost({level:60,eraMax:3}); const a=G.grant(S,h,'eraLord',{era:2}); assert.ok(a.ok&&a.learned); const b=G.grant(S,h,'eraLord',{era:2}); assert.strictEqual(b.src,'eraLordRepeat'); assert.strictEqual(G.grant(S,h,'eraLord',{era:2}).reason,'daily'); assert.ok(G.grant(S,h,'chief50',{era:2}).ok); assert.strictEqual(G.grant(S,h,'chief50',{era:2}).reason,'done'); assert.ok(G.grant(S,h,'chief50',{era:3}).ok); } finally { G.DATA.on=k; } });
+t('cast: dano total pelo ATQ, área dividida entre os alvos, atordoar pela metade no chefe, cura e escudo pela vida máxima', () => { const G=require('../../js/sys/grimoire.js'); const k=G.DATA.on; G.DATA.on=true; try{ const S={}, h=require('./_host.js').makeHost({level:60,eraMax:3});
+  G.grant(S,h,'eraLord',{era:0}); G.grant(S,h,'eraLord',{era:2}); G.grant(S,h,'chief50',{era:0});
+  assert.strictEqual(G.cast(S,'cannonball',{atk:100}).reason,'locked'); const r=G.cast(S,'rollingStone',{atk:100,targets:4}); assert.ok(r.aoe&&r.targets===4&&r.dmg===200&&r.hits[0]===50);
+  const kc=G.cast(S,'knightCharge',{atk:100,boss:true}); assert.strictEqual(kc.stun,0.5); assert.strictEqual(G.cast(S,'ancestralFire',{hpMax:1000}).heal,120); } finally { G.DATA.on=k; } });
 console.log(n+' testes ok');

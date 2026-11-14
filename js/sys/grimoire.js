@@ -169,6 +169,20 @@ function modeFor(ctx){ ctx=ctx||{}; if(ctx.pvp||ctx.arena) return 'arena'; if(ct
 function loadout(S,mode){ if(!on()) return []; const o=ensure(S); let m=isMode(mode)?mode:'fases'; let ids=o.sets[m]; if(!ids.length&&m!=='fases') ids=o.sets.fases;
   return ids.map(id=>{ const sp=spell(id), lv=o.own[id].lv, st=stat(sp,lv); return {id,name:sp.name,era:sp.era,lv,cd:st.cd,effect:st,text:effectText(sp,st)}; }); }
 
+/* LANÇAR na luta (pedido do Engenheiro: o laço só cuida do relógio, do alcance e de aplicar; a regra fica aqui).
+   ctx = {atk (ATQ do herói, já com tudo), hpMax, boss, pvp, targets (inimigos em alcance)}.
+   → {ok, id, kind, label, color, dmg (dano total), hits:[dano de cada golpe POR ALVO], aoe (acerta todos em alcance), targets, heal, shield:{amount,sec}, stun (s), buff:{key,val,sec}, cd}
+   Dano em área é DIVIDIDO entre os alvos (como diz a magia); atordoar no chefe vale a metade (igual aos golpes especiais). */
+function cast(S,id,ctx){ if(!on()) return {ok:false,reason:'off'}; const o=ensure(S), sp=spell(id); if(!sp) return {ok:false,reason:'spell'}; const x=o.own[id]; if(!x) return {ok:false,reason:'locked'};
+  const st=stat(sp,x.lv), c=ctx||{}, atk=Math.max(0,Number(c.atk)||0), hpMax=Math.max(0,Number(c.hpMax)||0), n=Math.max(1,Math.floor(Number(c.targets)||1));
+  const out={ok:true,id,kind:sp.kind,label:sp.name,color:(DATA.eraColor&&DATA.eraColor[sp.era])||'#ffc94a',dmg:0,hits:[],aoe:false,targets:1,heal:0,shield:null,stun:0,buff:null,cd:st.cd};
+  if(sp.kind==='dmg'){ const total=atk*st.mult; out.aoe=!!st.area; out.targets=out.aoe?n:1; out.dmg=Math.round(total); const per=out.aoe?total/n:total;
+    out.hits=st.hits.map(f=>Math.round(per*f)); if(st.stun) out.stun=c.boss?st.stun*0.5:st.stun; }
+  else if(sp.kind==='heal') out.heal=Math.round(hpMax*st.pct/100);
+  else if(sp.kind==='shield') out.shield={amount:Math.round(hpMax*st.pct/100),sec:st.sec};
+  else if(sp.kind==='buff') out.buff={key:st.key,val:Math.round(st.val*10)/10,sec:st.sec};
+  return out; }
+
 /* ---------------- bônus por ter (entra na FC pelo Sys.fc) ---------------- */
 function bonus(S){ const b=zeroB(); if(!on()||!S||typeof S!=='object') return b; const o=ensure(S);
   for(const id in o.own){ const sp=spell(id); if(sp) b[sp.passive]+=passiveOf(sp,o.own[id].lv); }
@@ -184,7 +198,7 @@ function view(S,host){ const o=ensure(S), b=bonus(S);
         cd:st.cd,effectText:effectText(sp,st),passiveText:`${PNAME[sp.passive]} +${fmt1(passiveOf(sp,lv))}${sp.passive==='critPct'?' pts':'%'}`,
         how:DATA.learn[letterOf(sp)],in:DATA.modes.filter(m=>o.sets[m].includes(sp.id))}; })}))}; }
 
-const API={DATA,on,setOn,ensure,spell,catalog,stat,passiveOf,owned,levelOf,addPages,addInk,grant,levelCost,canLevel,levelUp,equip,setPreset,modeFor,loadout,bonus,view};
+const API={cast,DATA,on,setOn,ensure,spell,catalog,stat,passiveOf,owned,levelOf,addPages,addInk,grant,levelCost,canLevel,levelUp,equip,setPreset,modeFor,loadout,bonus,view};
 root.Sys=root.Sys||{}; root.Sys.grimoire=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
