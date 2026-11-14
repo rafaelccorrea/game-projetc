@@ -71,6 +71,8 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 21:xx (Brasília) | +1 convidado "Viajante2926" (S1) | `smoke-real.mjs` (12ª execução, deploy de9f83c) | idem |
 | 13/11/2026 21:xx (Brasília) | Viajante6053 e Viajante2902 (contas do e2e) | `scripts/e2e-duo.ts` (teste combinado da Dupla) | ficaram: código de amigo de cada um, BLOQUEIO entre os dois, espera de 24 h do 2902, 1 carta "Dupla das Eras" no 6053; somem com as contas |
 
+**APK DEV (br.com.intellisys.eonbound.dev, 13/11):** carrega o jogo de `http://localhost:8080` (adb reverse) e fala com a EC2. Essa origem já está liberada pelo `CORS_ORIGINS_TEST` (preflight conferido em 13/11: PUT com authorization, content-type, x-client-version e x-device-id → 204 com Allow-Origin certo). Ao tirar as origens de teste antes do lançamento, decidir se o APK DEV continua falando com a produção (aí fica só `http://localhost:8080`).
+
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
 
 **Limpeza automática (fps-server a3653c6):** a cada 6 h o servidor apaga de vez (1) as contas com exclusão pedida há 30 dias e (2) os convidados vazios (só aparelho, Nv. ≤ 1 e fase ≤ 1, sem compra/cartão/entrega) sem acesso há 30 dias (`PURGE_GUEST_DAYS`, 0 desliga). Os convidados de teste desta lista saem sozinhos 30 dias depois do último acesso; a conferência à mão antes do lançamento continua.
