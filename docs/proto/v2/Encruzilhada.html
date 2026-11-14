@@ -5,7 +5,7 @@
 <style>
 /* Encruzilhada das Eras (js/sys/crossroads.js, desligado). Sobre o PRINT REAL da batalha de hoje (a/v5_hoje.png, v0.13.3): à esquerda o print puro,
    à direita a mesma tela com só o que é novo: a janela de escolha depois da vitória, o selo "Encruzilhada" embaixo da barra da fase e o botão
-   "Bênçãos" na lateral direita (área livre x>=300, y 390-640). Mesmo padrão de página da Fogueira V5 / Derrota. */
+   "Bênçãos" na coluna da esquerda, abaixo da Loja (a faixa x>=300 entre y 390 e 640 é proibida pela regra do HUD). Mesmo padrão de página da Fogueira V5 / Derrota. */
 :root{
   --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
   --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
@@ -49,7 +49,7 @@ textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background
 /* ===== TELA ===== */
 .scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
 .cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
-.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:390px}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
 .cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
 .shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
 svg.ic{display:block}
@@ -60,8 +60,8 @@ svg.ic{display:block}
 .xbadge small{display:block;font-size:10px;font-weight:900;color:var(--cream);white-space:nowrap;line-height:1.1}
 .xbadge[hidden]{display:none}
 @keyframes xb{50%{box-shadow:0 0 0 3px rgba(255,201,74,.35),0 0 18px rgba(255,201,74,.6)}}
-/* botão Bênçãos (lateral direita, área livre) */
-.bb{position:absolute;z-index:6;left:326px;top:404px;width:58px;height:74px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+/* botão Bênçãos (coluna da esquerda, abaixo da Loja) */
+.bb{position:absolute;z-index:6;left:12px;top:290px;width:58px;height:74px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px}
 .bb[hidden]{display:none}
 .bb .r{position:relative;width:52px;height:52px;border-radius:50%;background:var(--glass);border:2px solid var(--g2);display:grid;place-items:center;box-shadow:0 6px 16px rgba(0,0,0,.4)}
 .bb .r svg{width:34px;height:34px}
