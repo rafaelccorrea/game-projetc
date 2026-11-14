@@ -1034,7 +1034,7 @@ t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade
   // montaria: desligada não entra; ligada, nasce ao juntar os fragmentos e o que sobra vira estrela; aura pelas estrelas de hoje
   const S={}; assert.strictEqual(M.add(S,h,'raptor').reason,'off'); assert.ok(M.addFragments(S,'raptor',30,h).stored);
   M.DATA.newReady.raptor=true; try{ const r=M.addFragments(S,'raptor',40,h); assert.ok(r.hatched); assert.strictEqual(M.ensure(S).owned.raptor.stars,2,'60 nasce, 10 de sobra = 2★');
-    assert.strictEqual(M.add(S,h,'scorpion').reason,'off','uma a uma'); assert.ok(M.catalog().find(x=>x.id==='raptor').live); assert.ok(M.catalog().find(x=>x.id==='mecha').soon);
+    assert.strictEqual(M.add(S,h,'scorpion').reason,'off','uma a uma'); assert.ok(M.catalog().find(x=>x.id==='raptor').live); assert.ok(M.catalog().find(x=>x.id==='mecha').live,'Mecha ligado (PO 14/11)'); assert.ok(M.catalog().find(x=>x.id==='scorpion').soon);
   } finally { delete M.DATA.newReady.raptor; }
 });
 

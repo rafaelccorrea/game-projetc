@@ -18,7 +18,7 @@ t('catálogo = exatamente o cdxItems() da tela (mesmos ids, mesma ordem, com o m
   const ids=vm.runInContext('XK.meta=__meta; cdxItems().map(i=>i.id)',ctx);
   assert.deepStrictEqual(C.catalog().map(c=>c.id),Array.from(ids));
   const cnt={}; for(const c of C.catalog()) cnt[c.cat]=(cnt[c.cat]||0)+1;
-  assert.deepStrictEqual(cnt,{arm:21,eq:42,mnt:7,pet:24,bes:21,aur:3}); assert.strictEqual(C.catalog().length,118);   /* 7 montarias: as 6 de lançamento + a Fênix gigante, liberada (73349f0) */
+  assert.deepStrictEqual(cnt,{arm:21,eq:42,mnt:8,pet:24,bes:21,aur:3}); assert.strictEqual(C.catalog().length,119);   /* 7 montarias: as 6 de lançamento + a Fênix gigante, liberada (73349f0) */
 });
 
 t('posse pelo save: armas por tier de raridade, espaços mapeados, pets (id do save → tela, estágios anteriores), montarias, auras da forja',()=>{
@@ -57,7 +57,7 @@ t('marcos: % da coleção inteira (piso), prêmio fixo via grantBundle, sem diam
   for(const m of C.DATA.marks) assert.ok(!m.prize.gems,'sem diamante');
   assert.deepStrictEqual(C.DATA.marks.map(m=>m.p),[10,25,50,75,100]);
   const h=makeHost({unit:10}), S={inv:[]};
-  assert.deepStrictEqual(C.progress(S,h),{have:0,total:118,pct:0}); assert.strictEqual(C.claim(S,h,10).reason,'pct'); assert.strictEqual(C.claim(S,h,11).reason,'id');
+  assert.deepStrictEqual(C.progress(S,h),{have:0,total:119,pct:0}); assert.strictEqual(C.claim(S,h,10).reason,'pct'); assert.strictEqual(C.claim(S,h,11).reason,'id');
   const ids=C.catalog().map(c=>c.id); S.sys.codex.seen={}; for(let i=0;i<30;i++) S.sys.codex.seen[ids[i]]=1;   // 30/118 = 25%
   const pr=C.progress(S,h); assert.strictEqual(pr.pct,25);
   const r=C.rewards(S,h); assert.strictEqual(r.next.p,10); assert.ok(r.marks[0].ready&&r.marks[1].ready&&!r.marks[2].ready);
@@ -93,7 +93,7 @@ t('sem aleatoriedade: o mesmo save dá o mesmo resultado; sync grava mesmo desli
 
 t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet ligado E as entregas ligadas; +9 itens; posse pelo estágio',()=>{
   clean(); const P=require('../../js/sys/pet.js'), N=require('../../js/sys/newdrops.js'); globalThis.Sys.pet=P; globalThis.Sys.newDrops=N; const on0=N.DATA.on;
-  try{ N.DATA.on=false; assert.strictEqual(C.catalog().length,118); assert.deepStrictEqual(C.newPets(),[]);
+  try{ N.DATA.on=false; assert.strictEqual(C.catalog().length,119); assert.deepStrictEqual(C.newPets(),[]);
     N.DATA.on=true; assert.deepStrictEqual(C.newPets(),['lobo','falcao','pantera']); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,127);
     const pi=cat.filter(id=>id.startsWith('p-')); assert.deepStrictEqual(pi.slice(-9),['p-lobo-0','p-lobo-1','p-lobo-2','p-falcao-0','p-falcao-1','p-falcao-2','p-pantera-0','p-pantera-1','p-pantera-2']);
     assert.strictEqual(pi[23],'p-prisma-2','os antigos não mudam de posição');
@@ -103,7 +103,7 @@ t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet 
 });
 t('9 eras (dono 14/11): com as eras 7-8 ligadas, armas, armaduras e melhores inimigos do Submundo e do Celestial entram (+24); desligadas, 117 como antes',()=>{
   clean(); const ST=require('../../js/sys/stats.js'); globalThis.Sys.stats=ST; const was=ST.DATA.era9.on;
-  try{ ST.setEra9(false); assert.strictEqual(C.catalog().length,118); assert.strictEqual(C.era9On(),false);
+  try{ ST.setEra9(false); assert.strictEqual(C.catalog().length,119); assert.strictEqual(C.era9On(),false);
     ST.setEra9(true); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,142); assert.strictEqual(C.era9On(),true);
     for(const id of ['w-7-0','w-7-2','w-8-1','a-7-vest','a-8-wings','b-7-boss','b-8-e0']) assert.ok(cat.includes(id),id);
     const S={inv:[{slot:'weapon',e:8,r:4,lvl:1,subs:[]},{slot:'armor',e:7,r:1,lvl:1,subs:[]}],sys:{}}; const sc=[...C.scan(S)]; assert.ok(sc.includes('w-8-2')&&sc.includes('a-7-vest'),sc.join(','));

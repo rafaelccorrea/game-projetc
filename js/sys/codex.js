@@ -31,7 +31,7 @@ const DATA={
   mountArt:['pony','horse','wolf','griffin','mythic','wyvern'],   // ids com arte (K_MART): só esses entram no catálogo
   mountFall:['pony','horse','wolf','griffin','mythic','wyvern'],  // sem Sys.mount (K_MFALL)
   // montarias NOVAS com arte: entram no FIM da lista de montarias só quando o Sys.mount.live diz que estão no jogo (newReady um a um). Fênix: 73349f0
-  mountNew:['phoenixm'],
+  mountNew:['phoenixm','mecha'],
   bestEras:7, bestKinds:['e0','e1','boss'],                      // meta.json: eras 0-6 têm nome (7 e 8 ficam de fora, como na tela)
   auras:[7,10,13],
   marks:[

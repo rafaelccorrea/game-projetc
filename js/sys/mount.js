@@ -53,7 +53,7 @@ const DATA={
   // A Fênix gigante (VIP 8) e o Mecha de guerra (loja, R$ 49,90) são Lendários no visual (moldura, nome, cor, aura) e dão o poder de uma ÉPICA:
   // % de ATK e Vida, estrela plana, golpe reforçado e custo do nível seguem pr. Teto do VIP: tabela + prêmios ≤ +10% (a Épica o grátis também tem).
   newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
-  newReady:{phoenixm:true},   // Fênix gigante LIGADA (dono, 14/11, 'liga tudo'): arte completa (Kael e Kaia montados, imagem parada da Derrota, ícone); as outras 9 seguem desligadas
+  newReady:{phoenixm:true, mecha:true},   // Mecha de guerra LIGADO (PO 14/11: já à venda; arte Kael e Kaia montados bd475d4/1cb9597, tabela de desenho 4b1d736). Fênix gigante LIGADA (dono, 14/11, 'liga tudo'): arte completa (Kael e Kaia montados, imagem parada da Derrota, ícone); as outras 9 seguem desligadas
   // TROCAR SEM PERDER (docs/IDLE_PARECIDOS.md §3 item 2, dono aprovou 13/11). DESLIGADO. Ligado: ao trocar a montaria em uso (equip/swapMain), o NÍVEL
   // investido (e o ouro anotado nele) passa para a nova: se a antiga tinha mais nível, as duas TROCAM nível e ouro (a nova fica com o maior, a antiga
   // com o que a nova tinha). Nada some e nada duplica (a soma dos níveis e do ouro não muda); trocar de volta desfaz. Estrelas e fragmentos NÃO passam:
