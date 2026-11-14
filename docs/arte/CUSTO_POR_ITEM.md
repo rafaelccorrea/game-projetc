@@ -74,3 +74,6 @@ Medido 14/11: skin inteira na coreografia do padrão ≈ 4 por estado (+2 se pre
 | Molduras do retrato (1 imagem 3×3, as 9) | ~2 |
 | **Reserva que sobrou (teto 38 − 34, + reserva ~21 − molduras 2)** | **~23** |
 | Pendente p/ próximo orçamento: golpes atk2/atk3 dos pets médio/evoluído (19 vídeos restantes) | ~76 |
+| Molduras VIP 1-10 (3×3 + VIP 10) | ~4 |
+| Ícones do Grimório V3 (2 × 3×3 + 1 × 2×2: 18 feitiços, tinta, página, menu) | ~6 |
+| **Reserva que sobrou** | **~9** |
