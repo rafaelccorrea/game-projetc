@@ -490,7 +490,7 @@ function sheetTent(){ const id=ST.tent, d=TENT[id], v=view().find(x=>x.id===id),
     '<div class="card"><h4>Quem trabalha<span>'+t.pets.length+' de '+DATA.petSlots+' pets</span></h4>'+
       '<div class="wrow"><span class="av" style="--rc:#e7c58a">'+HELPER.replace('class="hlp"','')+'</span><span class="t"><b>Ajudante</b>fixo: sempre trabalha (a produção base)</span></div>'+workers+
       '<p class="note">O <b>pet principal</b> fica na luta e não trabalha. Pet na tenda <b>não perde nada</b>: continua seu, não perde nível e não muda a batalha.</p></div>'+
-    (d.noUpgrade?'<div class="card"><p class="note nup" style="margin:0;color:#f6ecdf">Esta tenda não melhora: o ouro é pouco e chega ao teto de 5 min de abate.</p></div>':
+    (d.noUpgrade?'<div class="card"><p class="note nup" style="margin:0;color:#f6ecdf">Esta tenda não melhora: o ouro é pouco, no máximo 5 min de abate por coleta.</p></div>':
     '<div class="card"><h4>Melhorar<span>só ouro · +15% por nível</span></h4>'+
       (t.lv<DATA.maxLevel?'<div class="kv"><span>Nv '+t.lv+' → '+(t.lv+1)+'</span><b>'+unitN(v.perHour)+' → <span class="up">'+unitN(nextR)+'</span></b></div>'+
         '':
