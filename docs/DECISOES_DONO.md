@@ -3,6 +3,8 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [?] **VIP e Passe (proposta no link)**: 1) poder do VIP com teto de +10% (Fênix e Serpe com visual Lendário e poder de Épica); 2) ouro do VIP +5/+10% e offline ×2 sem ouro; 3) Mecha (R$ 49,90) com poder de Épica; 4) preço dos níveis VIP (R$ 50 a R$ 5.000 proposto); 5) rastro de arma e aura VIP só visuais; 6) prêmio de temporada antiga volta como evento grátis?; 7) tirar a skin do VIP 10 até ter uma no corpo padrão · dono decide
+- [~] **Acampamento**: protótipo no link; PO decidiu Nv 20, só pelo Menu, volta dentro da janela do offline, sem Melhorar na Tenda do Ouro
 - [?] **Ouro nas fontes que já estão no jogo** (auditoria em docs/ECONOMIA_OURO.md): o offline dá 187 min de abate a cada 8 h (mais que o dia inteiro jogando). Proposta da Sistemas: offline 8 h = 60 min; Hora de Ouro +100% → +30%; teto na Mina de Ouro e na Torre; oferta paga sem ouro. Com tudo, upar fica 1,3-1,5× mais lento que hoje · dono decide
 - [?] **Moldura Ouro**: com as 10 molduras VIP, a Ouro passaria a ser conquista de quem joga (ex.: nível 60) · dono decide
 - [~] **Ícones do Grimório (18 feitiços + tinta, página, menu)** e **molduras VIP 1-10** gerados (~10 créditos) · Arte confere
