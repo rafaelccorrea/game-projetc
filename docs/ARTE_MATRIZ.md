@@ -183,3 +183,27 @@ Arte: nada a fazer (ícone, grip do meta.json e folhas conferidos).
 - Montaria vai a 5★ no jogo; o ARTE_PRONTO diz 1-7.
 - Há 154 folhas `*_Nstar` de montaria no git (assets/anim/mounts) que o código não usa e não estão no manifesto (regra antiga: sem folhas de estrela). Peso morto no repositório; não apaguei.
 - `kael_gun_{idle,run,shoot}_body` (hyb/R) não é lido por nenhum js.
+
+## Atualização 14/11 (Arte): skins na coreografia do padrão, tiro montado, Fogueira
+
+**Skins: golpe, giro e pistola na MESMA coreografia do herói padrão** (seedance fast + VIDEO_REFERENCES da folha padrão, `motionref/mkref.js`). Coluna "mesma animação do padrão": ✓ com as ressalvas abaixo. Falta o G5 (QA na tela) em todas.
+| Skin | Refeito | Commits | Ressalva |
+|---|---|---|---|
+| Kael Anjo (sem asa) | os 8 estados | 4c99b18, 053dc2d, 11c7ce8 | corrida: 2 quadros de apoio a 13-14 px |
+| Kael Samurai | golpe, giro, pistola ×3 | 70c6235, 94596ab, 496e26e | pistola: braço ~40 px mais longo (arma na mão desenhada) |
+| Kael Ciborgue | golpe, giro, pistola ×3 | 93c5278, e1c37b6, c401b1b | pistola: idem; giro q6 de costas a 35 px |
+| Kael Ninja | golpe, giro | 0abf6d4, 9cfd853 | — |
+| Kael Demônio | golpe, giro | 1bdd6d8, 72db255 | — |
+| Kael Paladino Solar | golpe, giro | 19731ab, 596c4b6 | — |
+| Kaia Ninja | golpe, giro (15 q), pistola ×3 | 49538f2 | tiro dispara 2× (padrão 4×) |
+| Kaia Demônia | golpe, giro, corrida, pistola ×3 | 9d54966, ddb52da, 09c94f1 | tiro dispara 2× |
+| Kaia Arlequina | golpe, giro | c8beca9 | giro sem a vista de lado (bastão-guia saiu preto) |
+| Kaia Anjo | golpe, giro | 63640bf | 1 quadro de cada a ~35 px |
+(6b940be: espada na frente na guarda, igual ao padrão, nos golpes do Kael.)
+
+**Tiro montado** (`<herói>_<montaria>_shoot_body`, 12 q, cols 6): ✓ Kael nas 6 montarias; Kaia em pônei, cavalo, lobo, grifo e wyvern. ✗ Kaia no mítico: 3 vídeos cobriam o rosto; o PO decidiu o fallback (golpe de espada). Conferência: assets/anim/mounts/_conferencia_tiro_montado.png (786df9f). Kaia wyvern no limite (punho logo abaixo do queixo).
+
+**Montaria parada da Derrota**: ✓ assets/mounts/still/ (b934d3b), as 6 + Fênix.
+**Fogueira das Eras (aprovada pelo dono)**: ✓ fg_s1..9.png (90de853) + laços fg_s1..9_loop (37908a6, d787433).
+**Kaia na Fênix**: ✓ 5df5551. **Ícones das eras 7-8**: ✓ 9b94ead. **Asa Seráfica (A)**: ✓ 4b6c357, no wingsApproved.
+**Pendente**: folhas de dano dos inimigos (arma do atacante pintada; em limpeza); G5 do QA em tudo acima.
