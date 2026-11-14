@@ -6,6 +6,11 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
 - [x] **Dificuldade das eras 0-8 na opção A** (meio-termo): com módulos o Senhor cai em ~22-34 s; sem módulos vence com ~115% da FC pedida (0bbd70a, b87e350) · Sistemas
 - [~] **Calendário do jogador grátis: DONO ESCOLHEU ~178 dias** (14/11): eras 6-8 mais duras, o chefe com módulos pode passar dos 30 s · Sistemas (medida na fila do PC)
 - [~] **Temas de evento: DONO ESCOLHEU OS 3** (14/11): #2 Caçada aos Chefes, #4 Semana da Forja, #6 Festa dos Pets, alternando com o Festival (docs/EVENTOS_TEMAS.md) · Sistemas + Engenheiro + Arte + Servidor
+- [~] **Batalha (dono jogando no S24, 14/11 tarde):** Fogueira no centro-baixo maior ✓; golpes num menu na lateral esquerda ✓; x1/x2/x4 na lateral; "FC recomendada" com ênfase quando fraco; botão "Como ganhar FC" com "Ir" mostrando só o que já liberou; "melhor" nunca com +0 de FC ✓; anel do Equip. não pula ✓ · Engenheiro + Sistemas. Mocks A/B da batalha no voto
+- [x] **Regra: nada aparece antes de todo o conteúdo carregar** (nunca personagem parado) · agente de performance 1fa87af, falta QA completo
+- [?] **Liberação progressiva** (docs/LIBERACOES.md): cronograma proposto para mostrar menos coisa no começo · dono decide
+- [~] **Skin de arma de EVENTO na mão** (exceção à regra "arma na mão = equipada"; poder segue o da arma equipada): Lâmina do Caçador, Martelo das Eras, Lâmina do Festival · Engenheiro + Arte
+- [x] **Biblioteca Play Billing no app sem ligar compras** (PO) para destravar o cadastro de produtos no Play Console
 - [~] **Voto dos temas de evento (14/11 16h16):** Caçada aos Chefes A (escuro), Semana da Forja B (claro, sem sacos de ouro), Festa dos Pets A (escuro, com o dragãozinho) · Arte gera as peças (lote 2)
 - [~] **Arte dos temas de evento: dono liberou lotes 1 e 2** (até ~32 créditos; 6 mocks A/B para voto, depois peças). Skin "Avental do Ferreiro": decidir depois (fica escondida) · Arte
 - [x] Missão "Vença 15 instâncias" do Festival não contava: corrigida (9c8de08), falta o QA ver
