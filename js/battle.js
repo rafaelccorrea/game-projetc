@@ -401,6 +401,8 @@ function waveClear(){
     let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot:lootW,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
+    /* ENCRUZILHADA (js/p_cross.js, Sys.crossroads; aprovada pelo dono, chaves desligadas): na vitória da fase em que ela abre (fase 5 da era na curva de hoje), a janela das 2 bênçãos entra depois da Vitória */
+    try{ if(window.Panels&&typeof Panels.on==='function'&&Panels.on('cross')&&window.Sys&&Sys.crossroads&&typeof Sys.crossroads.onStage==='function'){ const cr=Sys.crossroads.onStage(S,Sys.host,won); if(cr&&cr.due) B.crossPend={stage:won}; } }catch(er){ console.error('cross',er); }
     /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
     /* Sys.erasEnd (Sistemas, chave desligada = {ok:false}): na fase 90 entrega os prêmios do fim das 9 eras (uma vez) e a tela os mostra; acima da 90, marco a cada 10 fases e pedras astrais, num aviso curto */
     if(ee&&ee.ok&&ee.mark&&typeof toast==='function'){ try{ toast((ee.mark.name||'Marco')+' alcançado'+(ee.stones>0?': +'+ee.stones+' pedras astrais':'')); }catch(er){} }
@@ -1265,6 +1267,7 @@ function draw(){
 let vigC=null, lilitaOk=false, lilitaT=0;
 function LILITA(){ if(lilitaOk) return true; const now=performance.now(); if(now-lilitaT>1000){ lilitaT=now; try{ lilitaOk=!!(document.fonts&&document.fonts.check('15px "Lilita One"')&&[...document.fonts].some(f=>/Lilita/.test(f.family)&&f.status==='loaded')); }catch(e){} } return lilitaOk; }
 function tickFx(dt){
+  if(B.crossPend&&!B.eraPend&&!B.endPend&&!B.res&&!B.inst){ const co=B.crossPend; B.crossPend=null; try{ if(window.Panels&&Panels.on('cross')) Panels.open('cross',co); }catch(er){ console.error('cross',er); } }   /* a vitória fechou: Encruzilhada */
   if(B.endPend&&!B.res&&!B.inst){ const eo=B.endPend; B.endPend=null; try{ if(window.Panels&&Panels.on('end9')) Panels.open('end9',eo); }catch(er){ console.error('end9',er); } }   /* a vitória fechou: Fim das 9 eras */
   if(B.eraPend&&!B.res&&!B.inst){ const eo=B.eraPend; B.eraPend=null; try{ if(window.Panels&&Panels.on('era')) Panels.open('era',eo); }catch(er){ console.error('era',er); } }   /* a vitória fechou: agora a Troca de era */
 
