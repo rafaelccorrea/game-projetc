@@ -46,6 +46,7 @@ function instWaveClear(){ const I = B.inst; if (!I || I.done) return; I.wi++;
 function instEnd(win){ const I = B.inst; if (!I || I.done) return; if (I.run.special){ ligSpecialEnd(I, win); return; } I.done = true; let out = null;
   try { out = Sys.instances.finish(S, Sys.host, I.run.id, { win: !!win, kills: I.kills, timeout: !win && I.t <= 0 }); } catch (e) { console.error('instances.finish', e); out = { ok: false, reason: 'erro' }; }
   try { if (out && out.ok !== false && out.win && typeof grimSrc === 'function') grimSrc('instance', { id: I.run.id, era: (Sys.instances.levelInfo(out.level) || {}).era }); } catch (e) { console.error('grimSrc', e); }   /* Grimório: fonte do dia (1 vez por instância vencida; o save vem logo abaixo) */
+  try { if (out && out.ok !== false && out.win && typeof ptrack === 'function') ptrack('instance', 1); } catch (e) { console.error('ptrack instance', e); }   /* missões de evento/Passe/Conquistas que contam instância vencida (Sistemas 14/11: 'Vença 15 instâncias' nunca completava) */
   S.stage = I.back.stage; S.wave = I.back.wave; S.farm = I.back.farm; B.inst = null;   // volta ao farm onde estava
   B.deadT = 0; B.deadBoss = false; startBattle(); if (typeof refreshHero === 'function') refreshHero(); save(); hud();
   /* Engenheiro 2 (achado dos testes de Sistemas): o PInst.showResult devolve true mesmo sem abrir (tela 'inst' desligada). Só confio nele com a tela ligada;

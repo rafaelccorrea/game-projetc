@@ -91,6 +91,7 @@ function iClick(b,ev){
   if(a==='sweep'){ const L=iCur(t); if(!I.canSweep(S,Sys.host,t,L)){ iSnd('ui_tap'); iToast((I.status(S,Sys.host).keys[t]||0)<1?'Sem entradas hoje nesta área. Renovam à meia-noite':'Vença este nível antes de varrer'); return; }
     const r=I.sweep(S,Sys.host,t,L); if(!r||!r.ok){ iToast('Não foi possível varrer agora'); return; }
     try{ if(typeof grimSrc==='function') grimSrc('instance',{id:'sweep-'+t+'-'+L+'-'+Date.now(),era:(I.levelInfo(L)||{}).era}); }catch(e){}   /* Grimório: fonte do dia (1 vez por varredura; grava no statsChanged abaixo) */
+    try{ if(typeof ptrack==='function') ptrack('instance',1); }catch(e){}   /* varrer = 1 instância vencida para as missões (evento, Passe, Conquistas) */
     try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){}
     iSnd('claim'); XI.res=r; render(); }
 }
