@@ -44,7 +44,10 @@ t('sem efeito duradouro: só anota vezes e melhor dano/s; nada de ouro/gemas/ite
 t('Sys.path futuro manda nos números; save torto',()=>withOn(()=>{
   Sys.path={DATA:{paths:[{id:'blade',name:'Lâmina',strikes:{counter:5},stat:{}}]},chosen:()=>null};
   try{ assert.deepStrictEqual(P.battle('blade').bonus.strikes,{counter:5}); assert.strictEqual(P.battle('shot'),null); } finally{ delete Sys.path; }
-  const S={sys:{pathTry:{tried:{blade:{n:'x',best:-3},zz:{n:1}}}}}; P.ensure(S); assert.deepStrictEqual(S.sys.pathTry.tried,{blade:{n:0,best:0}});
+  const S={sys:{pathTry:{tried:{blade:{n:'x',best:-3},zz:{n:1}}}}}; P.ensure(S); assert.deepStrictEqual(S.sys.pathTry.tried,{blade:{n:0,best:0,life:null,lifeMax:null,ctrl:null}});
 }));
 
+t('ensaio guarda vida no fim e controle; selo melhor por linha (Comparar com 3 linhas)', () => { const P2=require('../../js/sys/pathtry.js'); const k=P2.DATA.on; P2.DATA.on=true; try{ const S={}, h=require('./_host.js').makeHost({level:40});
+  P2.start(S,h,'blade'); P2.finish(S,h,{damage:6000,sec:60,life:1083,lifeMax:3600,stunSec:0}); P2.start(S,h,'shot'); P2.finish(S,h,{damage:9000,sec:60,life:1,lifeMax:3600,stunSec:0}); P2.start(S,h,'arcane'); const f=P2.finish(S,h,{damage:5800,sec:60,life:1,lifeMax:3600,stunSec:4});
+  assert.strictEqual(f.ctrl,4); const r=P2.compare(S), by=id=>r.find(x=>x.id===id); assert.ok(by('shot').topDps&&by('blade').topLife&&by('arcane').topCtrl); assert.strictEqual(by('blade').life,1083); } finally { P2.DATA.on=k; P2.cancel(); } });
 console.log(`pathtry: ${n} ok`);

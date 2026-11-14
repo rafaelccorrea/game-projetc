@@ -41,7 +41,7 @@ function ensure(S){
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.pathTry; if(!o||typeof o!=='object') o=S.sys.pathTry={};
   o.v=1; const t=o.tried&&typeof o.tried==='object'?o.tried:{}; o.tried={};
-  for(const p of paths()){ const x=t[p.id]; if(x&&typeof x==='object') o.tried[p.id]={n:int0(x.n),best:int0(x.best)}; }
+  for(const p of paths()){ const x=t[p.id]; if(x&&typeof x==='object') o.tried[p.id]={n:int0(x.n),best:int0(x.best),life:x.life==null?null:int0(x.life),lifeMax:x.lifeMax==null?null:int0(x.lifeMax),ctrl:x.ctrl==null?null:Math.max(0,num(x.ctrl,0))}; }
   return o;
 }
 
@@ -64,15 +64,20 @@ function battle(id){ const p=pathOf(id); if(!p) return null; const D=DATA.dummy;
 function start(S,host,id){ const c=canTry(S,host,id); if(!c.ok) return c; const b=battle(id); cur={id,battle:b}; return {ok:true,reason:'',battle:b}; }
 function active(){ return cur?{id:cur.id,battle:clone(cur.battle)}:null; }
 function cancel(){ const had=!!cur; cur=null; return had; }
-/* fim do ensaio. res = {damage, sec} (dano total no boneco e segundos lutados). Só anota vezes e o melhor dano/s. Nunca dá prêmio.
-   → {ok, id, dps, best, rows (compare)} */
+/* fim do ensaio. res = {damage, sec, life, lifeMax, stunSec} (dano total no boneco, segundos lutados, vida no fim / máxima, segundos de boneco atordoado).
+   Anota vezes, o melhor dano/s, a melhor vida no fim e o melhor controle (protótipo aprovado: 3 linhas no Comparar). Nunca dá prêmio.
+   → {ok, id, dps, life, ctrl, best, rows (compare)} */
 function finish(S,host,res){ if(!cur) return {ok:false,reason:'none'}; const id=cur.id; cur=null;
   const sec=Math.max(1,Math.min(DATA.sec,num(res&&res.sec,DATA.sec))), dps=int0(num(res&&res.damage,0)/sec);
-  const o=ensure(S), t=o.tried[id]||(o.tried[id]={n:0,best:0}); t.n++; t.best=Math.max(t.best,dps);
-  return {ok:true,id,dps,best:t.best,rows:compare(S)}; }
+  const o=ensure(S), t=o.tried[id]||(o.tried[id]={n:0,best:0,life:null,lifeMax:null,ctrl:null}); t.n++; t.best=Math.max(t.best,dps);
+  const life=res&&res.life!=null?Math.max(0,int0(res.life)):null, lifeMax=res&&res.lifeMax!=null?Math.max(1,int0(res.lifeMax)):null, ctrl=Math.max(0,Math.round(num(res&&res.stunSec,0)*10)/10);
+  if(life!=null&&(t.life==null||life>t.life)){ t.life=life; t.lifeMax=lifeMax; } if(t.ctrl==null||ctrl>t.ctrl) t.ctrl=ctrl;
+  return {ok:true,id,dps,life,lifeMax,ctrl,best:t.best,rows:compare(S)}; }
 /* comparação para a tela: os 3 caminhos com o melhor dano/s de cada (null = ainda não testou) e qual foi o maior */
-function compare(S){ const o=ensure(S), rows=paths().map(p=>({id:p.id,name:p.name,tried:!!o.tried[p.id],n:o.tried[p.id]?o.tried[p.id].n:0,bestDps:o.tried[p.id]?o.tried[p.id].best:null}));
-  let top=null; for(const r of rows) if(r.bestDps!=null&&(!top||r.bestDps>top.bestDps)) top=r; rows.forEach(r=>{ r.top=!!top&&r===top; }); return rows; }
+function compare(S){ const o=ensure(S), rows=paths().map(p=>({id:p.id,name:p.name,tried:!!o.tried[p.id],n:o.tried[p.id]?o.tried[p.id].n:0,bestDps:o.tried[p.id]?o.tried[p.id].best:null,life:o.tried[p.id]?o.tried[p.id].life:null,lifeMax:o.tried[p.id]?o.tried[p.id].lifeMax:null,ctrl:o.tried[p.id]?o.tried[p.id].ctrl:null}));
+  /* selo 'melhor' por linha: só com 2+ caminhos testados e um único maior (como no protótipo) */
+  const tested=rows.filter(r=>r.tried), best=k=>{ if(tested.length<2) return null; const v=tested.map(r=>r[k]).filter(x=>x!=null); if(!v.length) return null; const m=Math.max(...v); const w=tested.filter(r=>r[k]===m); return w.length===1&&m>0?w[0]:null; };
+  const tD=best('bestDps'), tL=best('life'), tC=best('ctrl'); rows.forEach(r=>{ r.top=!!tD&&r===tD; r.topDps=r.top; r.topLife=!!tL&&r===tL; r.topCtrl=!!tC&&r===tC; }); return rows; }
 /* modelo da tela (cartões dos 3 caminhos + botão Testar) */
 function view(S,host){ const lv=levelOf(S,host), ch=chosenOf(S), rows=compare(S);
   return {on:DATA.on===true, unlocked:lv>=DATA.unlockLevel, needLevel:DATA.unlockLevel, chosen:ch, sec:DATA.sec, free:true,
