@@ -20,6 +20,7 @@ const MOUNT_TBL = {
   wolf:    { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.70, pdy: 9 },
   griffin: { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10, pdx3: 0.66, wings: true, wx2: -14, wy2: 26 },   /* pdx3 = pet EVOLUÍDO (estágio 3, maior): menos à frente, senão a asa dele encosta no inimigo da frente · 0,86 → 0,74: na fumaça da v0.12.7 o pet ficou perto demais do inimigo da frente */
   mythic:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.42, pdx: 0.74, pdy: 10 },
+  mecha:   { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10 },   /* Mecha de guerra (Arte 1cb9597/bd475d4: Kael e Kaia montados, idle/run/attack; o id do módulo é o nome do arquivo). Só aparece quando o Sys.mount a libera (newReady.mecha). Medidas iguais às da Serpe sem asas: a conferir na tela */
   wyvern:  { dx: 0, dy: 0, wx: 6, wy: 0, sh: 0.44, pdx: 0.74, pdy: 10, wings: true, wx2: -14, wy2: 10 },
   /* Fênix gigante (VIP 8): montaria NOVA, atrás da chave do Sys.mount (DATA.newOn / newReady.phoenixm, desligada até o voto do dono). A linha só deixa o desenho
      pronto: mountIds() e a batalha só a mostram quando o módulo disser que ela está ligada. Números iguais aos do grifo (mesma célula e mesma sela alta);
@@ -169,7 +170,7 @@ function drawMountExit(H){ const mo = H.mount; if (!mo || !MOUNT_TBL[mo.id] || !
    na batalha, então nenhuma é espelhada. Arte nova virada para a esquerda: face 'L' (o desenho espelha). rs = ajuste de tamanho (padrão 1). */
 /* MONTARIA PARADA DA DERROTA (dono via PO, Arte b934d3b): imagens próprias em assets/mounts/still/ (animal sozinho com a sela, olhando para a direita, recorte justo,
    patas na borda de baixo), no lugar das imagens do Códex. A respiração continua por código. A chave é o id do módulo; o arquivo é o mountFile(id). */
-const MOUNT_REF = { pony: { f: 'still/pony', face: 'R' }, horse: { f: 'still/horse', face: 'R' }, wolf: { f: 'still/wolf', face: 'R' }, griffin: { f: 'still/griffin', face: 'R' }, mythic: { f: 'still/mythic', face: 'R' }, wyvern: { f: 'still/wyvern', face: 'R' }, phoenixm: { f: 'still/giant_phoenix', face: 'R' } };
+const MOUNT_REF = { pony: { f: 'still/pony', face: 'R' }, horse: { f: 'still/horse', face: 'R' }, wolf: { f: 'still/wolf', face: 'R' }, griffin: { f: 'still/griffin', face: 'R' }, mythic: { f: 'still/mythic', face: 'R' }, wyvern: { f: 'still/wyvern', face: 'R' }, phoenixm: { f: 'still/giant_phoenix', face: 'R' }, mecha: { f: 'still/mecha', face: 'R' } };
 const MOUNT_STILL_EDGE = 8;   /* margem mínima da montaria parada até as bordas da cena, em px lógicos (a cena tem sempre LW = 330 de largura lógica: 8 px lógicos = 7 px de tela a 288, 8,7 a 360, 9,5 a 390) */
 const MOUNT_STILL = {}, MOUNT_STILL_W = 384, MOUNT_XFADE = 0.3, MOUNT_BREATH = 2.6, MOUNT_BREATH_K = 0.015;
 function mountStill(id){ let o = MOUNT_STILL[id]; if (o) return o; for (const k in MOUNT_STILL) delete MOUNT_STILL[k];   /* só a da montaria em uso */

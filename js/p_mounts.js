@@ -18,7 +18,7 @@ const MT_OFF=[];   /* era ['wyvern'] (serpe reprovada). A-22: o engenheiro relig
    As referências de assets/mounts (1,1 a 4,2 MB, paradas) NÃO são usadas. Só a folha da montaria em exibição é pedida no palco;
    MT_TILE_ART: false (padrão) = cartões da Coleção com marcador neutro (ferradura na cor da raridade), nenhum arquivo a mais;
    true = cartões com o 1º quadro das mesmas folhas (as 5 juntas somam ~8,7 MB: só ligar quando a Arte entregar miniaturas leves). */
-const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1,phoenixm:1};   /* phoenixm: folhas kael_giant_phoenix_* (nome do arquivo ≠ id: mtFile); só aparece quando o Sys.mount ligar a montaria nova */
+const MT_ART={pony:1,horse:1,wolf:1,griffin:1,mythic:1,wyvern:1,phoenixm:1,mecha:1};   /* phoenixm: folhas kael_giant_phoenix_* (nome do arquivo ≠ id: mtFile); só aparece quando o Sys.mount ligar a montaria nova */
 const mtFile=id=>{ try{ return typeof mountFile==='function'?mountFile(id):id; }catch(e){ return id; } };
 /* wyvern: assets/anim/mounts/kael_wyvern_idle_era2_t1.png (existe; enquadramento NÃO medido) */
 const MT_SHEET={dir:'assets/anim/mounts/',frames:12,cols:6,fps:12,w:512,h:352,x0:68,y0:36,box:304};   /* cols:6 = folha em GRADE (3072x704, 6 × 2) desde o lote b691560; w/h são da CÉLULA */

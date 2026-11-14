@@ -278,7 +278,7 @@ function ptEggLine(h,stageName){ if(!h) return ''; if(h.held) return 'Ovo '+ptGa
    Cérbero: só parte das folhas (filhote idle+atk1, médio idle, evoluído nada) => segue em silhueta "em breve" (PT_ART.sheet=false). */
 const PT_SHEET={frames:12,fps:12,w:512,h:352,feetY:307,cx:224,box:256};
 const PT_SH={
-  era0_mammoth:[['idle','atk1','atk2','atk3'],['idle','atk1','atk2'],['idle','atk1']],
+  era0_mammoth:[['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2']],
   era1_sphinx: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
   era2_dragon: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],
   era3_parrot: [['idle','atk1','atk2','atk3'],['idle','atk1'],['idle','atk1']],

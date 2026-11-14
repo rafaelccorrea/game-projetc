@@ -34,7 +34,7 @@ const K_MART={pony:'mount_pony_ref',horse:'mount_horse_ref',wolf:'mount_wolf_ref
 const K_MFALL=[{id:'pony',name:'Pônei',r:0},{id:'horse',name:'Cavalo de guerra',r:1},{id:'wolf',name:'Lobo de guerra',r:2},{id:'griffin',name:'Grifo dourado',r:2},{id:'mythic',name:'Tigre de cristal',r:3},{id:'wyvern',name:'Serpe dourada',r:4}];
 const K_MHOW={pony:['Loja','shop'],horse:['Passe da temporada','pass'],wolf:['Oferta de primeira compra','offer'],griffin:['Eventos','events'],mythic:['Eventos','events'],wyvern:['Loja','shop'],phoenixm:['VIP 8','vip']};
 /* MONTARIAS NOVAS no Códex: entram no FIM (depois da serpe), cada uma só quando o Sys.mount a liga (live). Hoje: a Fênix gigante. Mesma regra do catálogo da Sistemas (DATA.mountNew), para a tela ficar igual ao Sys.codex.catalog(). */
-const K_MART_NEW={phoenixm:'mount_giant_phoenix_ref'};
+const K_MART_NEW={phoenixm:'mount_giant_phoenix_ref',mecha:'mount_mecha_ref'};
 const cdxMountArt=m=>{ if(K_MART[m.id]) return K_MART[m.id]; const f=K_MART_NEW[m.id]; if(!f) return null; try{ return window.Sys&&Sys.mount&&typeof Sys.mount.live==='function'&&Sys.mount.live(m)?f:null; }catch(e){ return null; } };
 const K_CSS=`.pk-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:pkk 1s steps(12,jump-none) infinite}
 @keyframes pkk{from{background-position:0 0}to{background-position:100% 0}}
