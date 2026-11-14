@@ -53,3 +53,14 @@ Chefe com arte própria seria um inimigo novo (folhas parado/golpe/dano/morte), 
 
 - Lotes 1 + 2: **~24** (até ~32 com refação). Cobrem tudo, menos o avental.
 - Com o avental (um herói): **~60**. Com o avental para os dois heróis: **~96**.
+
+## Lote 1: prompts prontos (liberado pelo dono 14/11, teto 32 para lotes 1+2)
+
+`nano_banana_pro`, 9:16, 2k, 1 imagem por job. Referências, nesta ordem: 1) `reports/prints/ft_events_trilha.png` (tela real de Eventos), 2) `tools/mock/kael_griffin.png` (herói), 3) chefe do tema (`assets/enemies/era3_boss.png` Caçada, `era4_boss.png` Forja, `era1_boss.png` Pets), 4) só na Festa: `tools/mock/pet_dragon.png`.
+
+Cabeçalho: "A full-screen mobile game UI screen mockup, portrait 9:16, for the chibi fantasy RPG 'Eonbound', same layout as image 1 (top bar with back arrow 'Eventos', points counter, tabs 'Trilha / Chefe / Loja', a winding milestone trail of round reward medallions over a painted map, the hero standing on the trail, a big bottom button), in the exact painted chibi style of the reference art (bold outlines, rich shading). The hero is a child, fully clothed; nothing sensual. Text in Brazilian Portuguese, short. No prices, no money, no gems for sale, no random boxes, no ads, no watermark. Gold coins appear only as a small reward, never piles."
+Variantes: A = "dark rich background, deep shadows, warm rim lights"; B = "bright warm daylight, vivid cheerful colors".
+
+- **Caçada aos Chefes**: "Event theme 'Caçada aos Chefes': a hunters' trail through a wild boss-hunting ground with banners, crossed spears and trophy shields; the points counter uses a small bronze trophy icon labeled 'Troféus da Caçada'; the boss from image 3 waits at the end of the trail as 'Rei da Caçada'; the grand prize medallion is a hunter's frame with antlers."
+- **Semana da Forja**: "Event theme 'Semana da Forja': the trail runs through a glowing dwarven forge hall with anvils, bellows, sparks and molten metal channels; the points counter uses a small hammer icon labeled 'Martelos da Forja'; the boss from image 3 waits at the end as 'Colosso da Bigorna'; the grand prize medallion is a weapon on an anvil."
+- **Festa dos Pets**: "Event theme 'Festa dos Pets': the trail runs through a festive meadow with ribbons, lanterns, bunting and food bowls; the pet from image 4 walks beside the hero; the points counter uses a small ribbon bow icon labeled 'Laços da Festa'; the boss from image 3 waits at the end as 'Fera Ancestral'; the grand prize medallion is a paw-print frame with a bow."
