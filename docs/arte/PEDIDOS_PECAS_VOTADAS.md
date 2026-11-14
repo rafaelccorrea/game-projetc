@@ -88,3 +88,24 @@ Referências: 1) docs/proto/v2/a/mocks/vp_vb.jpg (VIP B) ou vp_pb.jpg (Passe B),
 **P2, pégaso + ícones da trilha (~4):** o item 5 acima, exatamente.
 Destinos: V1 → assets/ui/vip/vip_aba.png 520x90, vip_cartao.png 720x620; V2 → assets/ui/vip/vip_medalha.png, vip_medalha_on.png e assets/icons/vip/{speed,atkhp,xp,key,offline,auto}.png 96x96; P1 → assets/ui/pass/passe_faixa.png 640x80, passe_pedestal.png 520x160, passe_faixa_gratis.png e passe_faixa_premium.png 360x160; P2 → assets/ui/pass/pegaso.png e assets/icons/pass/<item>.png.
 **Total do bloco: ~10.**
+
+## BLOCO 3: peças das telas votadas (14/11)
+Todos nano_banana_pro, 2k; ref 2 = a ref de ícones 79bfaae4.
+
+**R1, Relíquias, estilo B (1:1, ~2).** Ref 1: docs/proto/v2/a/mocks/rel_b.jpg.
+"A 3x3 grid of NINE separate relic artifacts on a flat pure green (#00FF00) background with wide gaps, each a single glowing painted object, same bright style as image 1, no pedestal, no text, no green in the objects: (1) flint stone axe; (2) golden sacred scarab; (3) steel knight helmet with a red plume; (4) brass captain's compass; (5) brass cogwheel; (6) vintage field radio; (7) glowing purple-blue plasma core orb; (8) ferryman's lantern with a soft teal flame; (9) a white feather resting on a small golden balance scale."
+Ids: assets/icons/relics/r0..r8.png (256).
+
+**E1, Escavação, estilo A (1:1, ~2).** Ref 1: docs/proto/v2/a/mocks/esc_a.jpg.
+"A 3x3 grid of NINE separate square game tiles/icons on a flat pure green background with wide gaps, same earthy painted style as image 1, no text, no green: (1) a square dirt block tile with roots; (2) a square grey rock block tile with cracks; (3) a dug-out empty hole tile (dark earth); (4) a wooden ladder going down in a hole; (5) a pickaxe icon; (6) a round black bomb with a lit fuse; (7) a steel hand drill; (8) a relic fragment shard with a soft glow; (9) a small OPEN chest with stones inside (no gold coins)."
+Ids: assets/ui/dig/dirt, rock, hole, ladder; assets/icons/dig/pickaxe, bomb, drill, fragment, chest.
+
+**M1, 9 retratos dos Mentores, estilo da galeria B (1:1, ~2; +1 refação no máx.).** Ref 1: docs/proto/v2/a/mocks/me_gb.jpg.
+"A 3x3 grid of NINE separate bust portraits on a flat pure green background with wide gaps, EXACTLY the characters and bright painted style of image 1, each a head-and-shoulders portrait facing slightly right, no frame, no text, no green: (1) Nara, cave painter woman with ochre hand-paint marks and fur shawl; (2) Tales, scribe man with laurel and scroll; (3) Bertoldo, bearded blacksmith with apron; (4) Inês, navigator woman with tricorn and spyglass; (5) Otto, inventor man with brass goggles; (6) Lia, aviator woman with leather cap and white scarf; (7) Kira, star engineer woman in a sci-fi suit; (8) Caronte, hooded ferryman with a lantern, a FRIENDLY kind old face, not scary; (9) Aurora, astronomer woman in a starry robe with a small telescope. All adults, modest clothing, warm friendly expressions, nothing sensual."
+Ids: assets/mentors/m0..m8.png (512).
+
+**T1, Tela Inicial A: fundo (9:16, ~2).** Ref 1: docs/proto/v2/a/mocks/ti_a.jpg; ref 2: assets/bg/era2.png.
+"The SAME epic dusk medieval landscape as image 1 (castle on a hill, torches, embers, purple-orange sky, god rays) as an EMPTY background plate, portrait 9:16: NO characters, NO logo, NO buttons, NO text, NO UI; leave the upper fifth and the lower third calm and uncluttered for the logo and the buttons; a clear open ground area in the middle-lower part where the hero and pet will stand."
+O herói montado e o dragão entram ANIMADOS por código (as folhas do jogo: kael_griffin_idle e o pet dragão), sem custo. Destino: assets/ui/title/title_bg_a.png (o recorte em camadas céu/longe/chão eu faço por código).
+
+**Total do bloco 3: ~8 (+2 de folga para 1 refação).**
