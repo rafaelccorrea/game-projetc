@@ -85,12 +85,17 @@ function play(C){ let i=0, now=0; const pass=[]; while(i<plan.length&&now<400){ 
   return {pass,done:i,stuck:plan.map((p,j)=>pass[j]!=null?pass[j]-(j?pass[j-1]:0):null)}; }
 /* DONO (13/11): o VIP também sente a parede em TODA era: no Senhor da Era das eras 1-8 a FC pedida é a maior entre a do grátis e a que o VIP 5 / VIP 10
    terá MIN_VIP_WALL dia depois de chegar. Repete até estabilizar (subir uma parede atrasa a chegada nas seguintes). */
-const MIN_VIP_WALL=0.5;
+/* 14/11 (teto de +10% de poder do VIP aprovado): quem puxa a parede vem do balance.json (dificuldade.vipWallFollow: "free" = só o grátis, "vip5" = grátis e VIP 5, "all" = grátis, VIP 5 e VIP 10, o de antes) ou de --vipwall=. */
+const BALJ0=JSON.parse(require("fs").readFileSync(process.cwd()+"/docs/balance.json","utf8")).dificuldade||{};
+const VIP_FOLLOW=((process.argv.find(a=>a.startsWith("--vipwall="))||"").split("=")[1])||BALJ0.vipWallFollow||"all";
+const MIN_VIP_WALL=typeof BALJ0.vipMinWallDays==="number"?BALJ0.vipMinWallDays:0.5;
 for(let it=0;it<20;it++){ let moved=false;
-  for(const C of [vip5,vip10]){ const p=play(C); for(let e=1;e<9;e++){ const j=e*10+9, arr=p.pass[j-1]; if(arr==null||p.pass[j]==null) continue;
+  for(const C of (VIP_FOLLOW==="free"?[]:VIP_FOLLOW==="vip5"?[vip5]:[vip5,vip10])){ const p=play(C); for(let e=1;e<9;e++){ const j=e*10+9, arr=p.pass[j-1]; if(arr==null||p.pass[j]==null) continue;
     if(p.pass[j]-arr<MIN_VIP_WALL-0.051){ const need=fcAt(C,arr+MIN_VIP_WALL,e)*1.002; if(need>plan[j].rec*1.0001){ plan[j].rec=need; moved=true; } } } }
   if(!moved) break; }
 const P={free:play(free),vip5:play(vip5),vip10:play(vip10),lazy:play(lazy)};
+const arrPct=(C,k)=>{ const p=P[k]; return [1,2,3,4,5,6,7,8].map(e=>{ const j=e*10+9, a=p.pass[j-1]; return a==null?null:Math.round(fcAt(C,a,e)/plan[j].rec*100); }); };
+console.log("parede do Senhor segue: "+VIP_FOLLOW+" (VIP sente no mínimo "+MIN_VIP_WALL+" d) · chegada ao Senhor das eras 1-8, % da FC pedida: grátis "+arrPct(free,"free").join("/")+" · VIP 5 "+arrPct(vip5,"vip5").join("/")+" · VIP 10 "+arrPct(vip10,"vip10").join("/"));
 const f1=v=>v==null?'—':v<1?(Math.round(v*24)+' h'):(v.toFixed(1).replace('.',',')+' d');
 const ab=v=>ST.abbr(v);
 console.log('## Paredes por era (grátis ativo; tempo na parede = espera até ter a FC)');

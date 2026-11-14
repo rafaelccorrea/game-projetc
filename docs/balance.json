@@ -1343,7 +1343,7 @@
       19300,
       19300,
       19300,
-      21400,
+      21200,
       147000,
       156000,
       164000,
@@ -1516,7 +1516,7 @@
       },
       "freeArriveAtBossPct": [
         94,
-        90,
+        91,
         87,
         87,
         87,
@@ -1528,7 +1528,8 @@
       "_dias": "dia em que termina as 9 eras (vence a fase 90). Terminar as 9 eras não é terminar o jogo: depois vêm as fases sem fim (posEras)."
     },
     "vipMinWallDays": 0.5,
-    "_vip": "Senhor da Era 1-8: a FC pedida é a maior entre a do grátis e a que o VIP 5/VIP 10 terá 12 h depois de chegar (o VIP também sente a parede; dono 13/11).",
+    "vipWallFollow": "free",
+    "_vip": "14/11 (teto de +10% de poder do VIP aprovado pelo dono): a parede do Senhor da Era segue SÓ o grátis (vipWallFollow \"free\"; \"vip5\" = grátis e VIP 5; \"all\" = grátis, VIP 5 e VIP 10, como era em 13/11). tools/sim-paredes.js lê vipWallFollow e vipMinWallDays daqui. Chegada ao Senhor das eras 1-8 (% da FC pedida): grátis 91/87/87/87/87/87/87/87, VIP 5 95/87/89/88/92/87/89/88, VIP 10 91/89/90/89/93/87/87/88. Antes (all) só mudava a fase 20 (21,4 mil, agora 21,2 mil): nas outras eras a espera do VIP já passava de 0,5 dia. vipMinWallDays só vale com vip5/all.",
     "petStageMult": {
       "on": true,
       "m": [
