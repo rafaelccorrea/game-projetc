@@ -25,11 +25,11 @@ const DATA={
           map:1, codex:12, chat:16, duo:16, mentors:16, camp:20, today:7, relics:12, dig:14, coop:30},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
   // Dupla das Eras e Mentores no 16 (o Menu lia a reserva FB_UNLOCK do js/fullbattle.js; agora a fonte é esta). Com o módulo DESLIGADO, o aviso
   // "Liberou: ..." do addXp não cita a função (gated: chave do Sys.<módulo>).
-  gated:{duo:'duo', mentors:'mentors'},
+  gated:{duo:'duo', mentors:'mentors', camp:'camp', today:'today', relics:'relics', dig:'dig', coop:'coop'},
   alias:{inst:'instances', mounts:'mount'},
   unlockName:{missions:'Missões',summon:'Invocar',practice:'Práticas',mail:'Correio',login:'Login diário',profile:'Perfil',shopgem:'Loja de gemas',
     forge:'Forja',instances:'Instâncias',tower:'Torre',pass:'Passe',pets:'Pets',events:'Eventos',rank:'Ranking',arena:'Arena',guild:'Guilda',
-    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat',duo:'Dupla',mentors:'Mentores'},
+    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat',duo:'Dupla',mentors:'Mentores',camp:'Acampamento',today:'Hoje',relics:'Relíquias',dig:'Escavação',coop:'Ruínas em Trio'},
   // portões de raridade dos OVOS (decisão do PO): raridade r exige nível E era mínimos. A fênix do andar 100 da torre é exceção.
   eggGate:{3:{level:70,era:4}, 4:{level:85,era:5}},
   // ===== CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA). Spec e simulação: reports/curva-9-eras-e2.md =====
