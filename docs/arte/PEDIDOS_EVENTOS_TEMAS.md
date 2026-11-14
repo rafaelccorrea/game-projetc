@@ -101,3 +101,12 @@ Saída: o melhor de cada linha → `assets/ui/frames/evt_cacada.png` e `evt_pets
 Saída: sprite (lado ≤ 1024) + ícone 256 por código; chaves `cacada_weapon` e `forja_weapon` (grip no meta.json pela Arte).
 
 Pós-produção (Arte, custo 0, fora de assets/): recorte do verde (`key.js`), divisão da grade (`icn/split4.js` / cut), redução para os tamanhos, JPG 82 dos fundos, conferência e cópia para assets/ por tema.
+
+## Entregue (14/11, ad71c52)
+Fundos, ícones do tema, pontos, marcos e molduras evt_cacada/evt_pets em assets/. Gasto dos lotes 1+2: ~24 de 32.
+
+**Armas de evento SEGURADAS fora de assets/** (Engenheiro, 14/11): a aba "Skins arma" saiu do jogo (js/screens.js, scrShop); a mão usa sempre a arma equipada. O dono decide se a skin de arma de evento volta ou se o prêmio troca.
+Prontas em `C:\Users\rafae\AppData\Local\Temp\tools\evt\out\weapons\` (sprite 1024) e `out\icons\` (256). Grips medidos (`out\weapons\meta_novos.json`):
+- cacada_weapon: grip [0.363,0.863], angle 69, len 0.899;
+- forja_weapon: grip [0.273,0.815], angle 82, len 0.801.
+Com o OK: copiar para assets/weapons/<chave>.png e assets/icons/weapons/<chave>.png e pôr a entrada no meta.json.

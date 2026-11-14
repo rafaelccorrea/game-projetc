@@ -1,0 +1,20 @@
+{
+ "cacada_weapon": {
+  "type": "melee",
+  "grip": [
+   0.363,
+   0.863
+  ],
+  "angle": 69,
+  "len": 0.899
+ },
+ "forja_weapon": {
+  "type": "melee",
+  "grip": [
+   0.273,
+   0.815
+  ],
+  "angle": 82,
+  "len": 0.801
+ }
+}
