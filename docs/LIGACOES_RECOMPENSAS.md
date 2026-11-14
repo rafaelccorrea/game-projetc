@@ -526,6 +526,8 @@ window.PCamp={X:X,actions:ACTIONS,def:def};
 
 **Chaves, em ordem:** L1 e L2 → K1-K3 e o `js/p_camp.js` → F1/F2 (o Bem-vindo) → QA confere a tela → `PANEL_ON.camp = true` (o item do Menu só aparece com a tela ligada, pelo `fbHasScreen`) → `SYS_LIVE.camp = true` (sem a chave, o módulo não acumula nem escreve no save).
 
+**COLETAR POR TENDA (novo, Sistemas 13/11, pedido do Engenheiro):** `Sys.camp.collectTent(S, host, tentId)` com `tentId` = `'gold'`, `'forge'` ou `'practice'` → `{ok, reason:''|'off'|'id'|'locked'|'empty', tent, got:{gold, forge, practice}}` (o mesmo formato do `collect`; só o recurso daquela tenda vem > 0). Mesma conta do coletar tudo (o `collect` agora passa por ela): parte inteira entregue, a fração fica, os mesmos tetos (8 h / VIP e os 5 min de abate da Tenda do Ouro). As outras tendas não mudam. Chama `host.onChange` quando entregou algo. **Na tela:** trocar o "zera na memória o acumulado das outras tendas e chama o collect" por `Sys.camp.collectTent(S, Sys.host, id)`; o Coletar tudo segue `Sys.camp.collect`. Teste: `test/sys/camp-tenda.test.js`.
+
 ---
 
 ## Resumo: o que ligar, em que ordem

@@ -76,16 +76,27 @@ function tick(S,host){
   const h=dt/3600000; for(const d of DATA.tents){ const t=o.tents[d.id], cap=capOf(S,host,d.id); t.acc=Math.min(cap,t.acc+rate(S,host,d.id)*h); }
   return o; }
 
-/* coleta tudo (parte inteira; a fração fica). → {ok, reason, got:{gold, forge, practice}} */
-function collect(S,host){ if(DATA.on!==true) return {ok:false,reason:'off',got:{gold:0,forge:0,practice:0}};
-  if(locked(S,host)){ tick(S,host); return {ok:false,reason:'locked',got:{gold:0,forge:0,practice:0}}; }   // tick só anda o marcador
-  const o=tick(S,host), got={gold:0,forge:0,practice:0};
-  for(const d of DATA.tents){ const t=o.tents[d.id], n=Math.floor(t.acc); if(n<=0) continue;
-    if(d.res==='gold'){ if(host&&typeof host.addGold==='function'){ host.addGold(n); got.gold=n; t.acc-=n; } }
-    else if(d.res==='forge'){ const F=root.Sys&&root.Sys.forge; if(F&&F.addStones){ F.addStones(S,n,host); got.forge=n; t.acc-=n; } }
-    else if(d.res==='practice'){ const P=root.Sys&&root.Sys.practice; if(P&&P.addStones){ P.addStones(S,n,host); got.practice=n; t.acc-=n; } } }
+/* entrega a parte inteira de UMA tenda já com o relógio andado (a fração fica). Conta ÚNICA: o coletar por tenda e o coletar tudo passam por aqui,
+   com os mesmos tetos do tick (inclusive os capMin minutos de abate da Tenda do Ouro). Soma em got[d.res]. */
+function take(S,host,o,d,got){ const t=o.tents[d.id], n=Math.floor(t.acc); if(n<=0) return;
+  if(d.res==='gold'){ if(host&&typeof host.addGold==='function'){ host.addGold(n); got.gold+=n; t.acc-=n; } }
+  else if(d.res==='forge'){ const F=root.Sys&&root.Sys.forge; if(F&&F.addStones){ F.addStones(S,n,host); got.forge+=n; t.acc-=n; } }
+  else if(d.res==='practice'){ const P=root.Sys&&root.Sys.practice; if(P&&P.addStones){ P.addStones(S,n,host); got.practice+=n; t.acc-=n; } } }
+const zero=()=>({gold:0,forge:0,practice:0});
+/* coleta as tendas da lista (anda o relógio uma vez). → {ok, reason, got:{gold, forge, practice}} */
+function collectList(S,host,list){ if(DATA.on!==true) return {ok:false,reason:'off',got:zero()};
+  if(locked(S,host)){ tick(S,host); return {ok:false,reason:'locked',got:zero()}; }   // tick só anda o marcador
+  const o=tick(S,host), got=zero();
+  for(const d of list) take(S,host,o,d,got);
   const any=got.gold+got.forge+got.practice>0; if(any&&host&&typeof host.onChange==='function') host.onChange();
   return {ok:any,reason:any?'':'empty',got}; }
+/* coleta tudo (parte inteira; a fração fica). → {ok, reason:''|'off'|'locked'|'empty', got:{gold, forge, practice}} */
+function collect(S,host){ return collectList(S,host,DATA.tents); }
+/* coleta SÓ uma tenda (pedido do Engenheiro): o mesmo formato e a mesma conta do coletar tudo; as outras tendas não mudam.
+   → {ok, reason:''|'off'|'id'|'locked'|'empty', tent, got:{gold, forge, practice}} (só o recurso da tenda pode vir > 0) */
+function collectTent(S,host,tentId){ const d=TENT[tentId];
+  if(!d) return {ok:false,reason:DATA.on!==true?'off':'id',tent:tentId,got:zero()};
+  return Object.assign({tent:tentId},collectList(S,host,[d])); }
 
 /* pôr / tirar pet da tenda (o que já foi produzido fica; a mudança vale daqui para frente) */
 function assign(S,host,tentId,petId){ if(DATA.on!==true) return {ok:false,reason:'off'}; if(!TENT[tentId]) return {ok:false,reason:'id'};
@@ -122,7 +133,7 @@ function view(S,host){ if(DATA.on!==true) S=JSON.parse(JSON.stringify(S||{}));  
         upgrade:canUpgrade(S,host,d.id)}; })}; }
 
 function setOn(v){ DATA.on=!!v; return DATA.on; }
-const API={DATA,setOn,ensure,capHours,idlePets,petBoost,rate,tick,collect,assign,unassign,upgradeCost,canUpgrade,upgrade,view};
+const API={DATA,setOn,ensure,capHours,idlePets,petBoost,rate,tick,collect,collectTent,assign,unassign,upgradeCost,canUpgrade,upgrade,view};
 root.Sys=root.Sys||{}; root.Sys.camp=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

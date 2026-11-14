@@ -25,7 +25,7 @@ const DATA={
   // Valores PROPOSTA (Sistemas calibra com o QA): até 9 escolhas por era: no máximo +36% numa chave de combate (Vida 4 x 9) escolhendo sempre a mesma.
   // OURO (docs/ECONOMIA_OURO.md, regra do dono "ouro difícil, sempre pouco"): Trilha do Tesouro +5% e UMA vez por era (antes +8% repetível = até +72% de ouro).
   pool:[
-    {id:'furia',   name:'Fúria da Era',      text:'+3% de ATK',                       stat:{atkPct:3}},
+    {id:'furia',   name:'Fúria da Era',      text:'+3% de ATQ',                       stat:{atkPct:3}},
     {id:'vigor',   name:'Vigor Antigo',      text:'+4% de Vida',                      stat:{hpPct:4}},
     {id:'olhar',   name:'Olhar Certeiro',    text:'+1,5 de chance de crítico',        stat:{critPct:1.5}},
     {id:'escudo',  name:'Escudo dos Ancestrais', text:'+2% de redução de dano',       stat:{defPct:2}},
@@ -68,7 +68,10 @@ function ensure(S){
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.crossroads; if(!o||typeof o!=='object') o=S.sys.crossroads={};
   o.v=1;
-  if(typeof o.seed!=='number'||!isFinite(o.seed)) o.seed=hash(String(S.id||S.uid||S.name||'')+'|'+Date.now()+'|'+Math.random());
+  /* SEMENTE SEM SORTEIO (QA): antes nascia de Date.now()+Math.random(). Se o app fechasse antes de gravar, a semente nascia outra na volta e as
+     2 bênçãos mudavam ("rolar de novo" fechando o app). Agora a semente sai só do que não muda no save (S.id / S.uid; sem eles, uma fixa):
+     a mesma fase dá sempre as mesmas 2, gravada ou não. Saves que já têm semente gravada continuam com a deles. */
+  if(typeof o.seed!=='number'||!isFinite(o.seed)) o.seed=hash('eonbound-cross|'+String(S.id||S.uid||''));
   o.era=int0(o.era);
   const src=(o.picks&&typeof o.picks==='object')?o.picks:{}; o.picks={};
   for(const k in src){ const p=src[k]; if(p&&typeof p==='object'&&BY[p.id]) o.picks[k]={id:p.id,era:int0(p.era),at:int0(p.at)}; }
