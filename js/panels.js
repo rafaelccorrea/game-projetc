@@ -10,14 +10,14 @@
    render()  desenha em V (use xFit/xDims + xWrap do screens.js, base de 390 px)
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
-const PANEL_ON=window.PANEL_ON=Object.assign({forge2:true,   /* Forja V2 LIGADA: o QA viu a faixa de resultado na linha reservada (320x640) e a volta igual à da Forja antiga */
+const PANEL_ON=window.PANEL_ON=Object.assign({cross:true, end9:true, mail2:true, tower2:true, gear2:true, shop2:true, pass2:true, profile2:true, map2:true, forge2:true,   /* Forja V2 LIGADA: o QA viu a faixa de resultado na linha reservada (320x640) e a volta igual à da Forja antiga */
   pets2:true,vip2:true,mounts2:true,   /* TELAS V2 LIGADAS (lote 1, QA aprovou na tela em 320 e 360 abrindo pelo Menu, 13/11; PO autorizou ligar por lote): Pets, VIP e Montarias novas entram no lugar das antigas. Forja V2 espera o teste da faixa de resultado */
   forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas por mim no navegador */
   tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true, intro:true, look:true,   /* aba Aparência do Equipamento (js/p_look.js, do QA): desligada até a conferência */   /* conferida pelo QA (fluxo novo e de quem volta) */    /* telas iniciais do Servidor (js/p_intro.js, arquivo GERADO): desligada */   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
   mail:true,   /* conferida pelo QA; carta local de boas-vindas (Sys.mail.welcomeOnce, o engenheiro liga o módulo no boot) */     /* espera Sys.mail.DATA.enabled (Servidor) */  inst:true,   /* luta da instância vista pelo engenheiro no navegador (vitória, derrota, tempo esgotado): pedido A-22 */
   mounts:true,   /* conferida pelo QA no navegador (equipar, nível, aura, batalha) */  result:false,   /* escritas por mim, ainda não vistas rodando */  eggpick:false,   /* liga sozinha junto com pets */
   offer:false,   /* só no Modo dono até existir compra real (PO) */  auction:true,   /* demonstração "Em breve: abre com o online" (PO); conferida pelo QA */    /* esperam pagamento / servidor */
-  arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:false,passv2:false,guidehud:false,
+  arena:true,events:true,tourney:true,   /* Sistemas: conferidas pelo QA no navegador ("pode ligar") */  map:true,passv2:false,guidehud:false,
   colecao:false,   /* Coleção (js/p_colecao.js, do QA): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */
   shopmecha:false,   /* cartão do Mecha de Guerra na Loja (js/p_shopmecha.js, do QA): DESLIGADA até a arte ser aprovada pelo dono */
   bag:false,   /* Mochila nova (js/p_bag.js, de Sistemas): carregada e DESLIGADA; sem item no MENU nem entrada em outra tela até o voto do dono */

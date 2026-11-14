@@ -281,7 +281,7 @@ const PT_SH={
   era0_mammoth:[['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3']],
   era1_sphinx: [['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3']],
   era2_dragon: [['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3']],
-  era3_parrot: [['idle','atk1','atk2','atk3'],['idle','atk1','atk2'],['idle','atk1','atk2','atk3']],
+  era3_parrot: [['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3']],
   era4_mechdog:[['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3'],['idle','atk1','atk2','atk3']],
   /* levantamento da Arte (14/11): Cérbero, Pégaso e Raposa têm as folhas dos 3 estágios (idle, run, atk1) em assets/anim/pets: sheet:true e animados como os outros.
      Seguem "Em breve" só enquanto o MÓDULO disser que não existem (Sys.pet.avail: chave v4 e eras 7-8, voto do dono), não mais por falta de folha. */
