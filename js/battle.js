@@ -544,7 +544,7 @@ function waveClear(){
     if(S.set.autoBoss&&heroFC()>=(typeof fcNeed==='function'?fcNeed:recFC)(S.stage)){ challengeBoss(); return; } }   /* a cura é a do próprio desafio (bossChallengeHeal): antes somava 8% e depois enchia a vida */
   else S.wave++;
   if(!bossWon) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.waveHeal));   /* depois do chefe a fase nova começa com a vida que sobrou */
-  { const gap=(bossWon||S.wave===5)?1.2:WAVE_GAP;   /* B4 (polimento da batalha): entre ondas comuns o próximo inimigo entra logo, sem 1,2 s de palco vazio; a entrada do chefe e a fase nova mantêm a pausa */
+  { const gap=(bossWon||S.wave===5)?1.2:(typeof bpWaveGap==='function'?bpWaveGap(WAVE_GAP):WAVE_GAP);   /* js/battlepolish.js (chave battlePolish desligada = WAVE_GAP, como sempre) */   /* B4 (polimento da batalha): entre ondas comuns o próximo inimigo entra logo, sem 1,2 s de palco vazio; a entrada do chefe e a fase nova mantêm a pausa */
     B.toSpawn=waveSpec(S.stage,S.wave); B.waveN=B.toSpawn.length; B.spawnT=gap; B.waveT=gap; B.bossT0=S.wave===5?Date.now():0; } preloadAssets(); save();
   if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); }
 }
@@ -787,7 +787,7 @@ function step(dt){
   /* Engenheiro 5: ERA NOVA só entra com cenário, inimigos e chefe DECODIFICADOS (eraReady, js/loading.js). Enquanto carrega, o herói segue correndo no cenário
      antigo com um aviso curto; no máximo ERA_HOLD_MAX s de jogo (depois entra com a reserva: nunca trava). */
   B.eraHold=false; if(!B.inst&&typeof eraReady==='function'){ const ne=eraOf(S.stage); if(ne!==B.dispEra&&!eraReady(ne)&&(B.eraWait||0)<ERA_HOLD_MAX){ B.eraHold=true; B.eraWait=(B.eraWait||0)+dt; } else if(ne===B.dispEra) B.eraWait=0; }
-  if(B.toSpawn.length&&!B.eraHold&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=(B.inst&&typeof instMk==='function')?instMk(k):mkEnemy(S.stage,k); B.en.push(e);
+  if(B.toSpawn.length&&!B.eraHold&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=(B.inst&&typeof instMk==='function')?instMk(k):mkEnemy(S.stage,k); B.en.push(e); if(typeof bpSpawn==='function') bpSpawn(e);   /* js/battlepolish.js: ondas sem buraco (chave desligada = não faz nada) */
       B.spawnT=(B.toSpawn[0]==='boss'?1:0)+0.55+Math.random()*0.4;
       if(e.boss){ snd('boss_appear'); vib(60); B.banner={txt:e.eraBoss?'SENHOR DA ERA':'CHEFE',sub:'',t:0,dur:1.4,col:'#ff5252'}; } } }
   layoutHorde();
@@ -832,6 +832,7 @@ function step(dt){
     else if(B.cd2<=0) startAct('s2');   /* v0.12.1 (ordem do dono): o jogo é SÓ AUTOMÁTICO; especial e ultimate disparam sozinhos sempre, sem modo manual e sem esperar o tutorial */
     else { h.atkT-=dt; if(h.atkT<=0){ h.atkT=h.ivl||BAL.s1Interval; startAct('s1'); } }   // intervalo do básico = Sys.stats.interval (0,8 s ÷ (1 + velocidade de ataque))
   }
+  if(typeof mcStep==='function') mcStep(dt);   /* Investida montada (js/mountcharge.js; chave mountCharge desligada = sai na primeira linha) */
   if(B.stkQ.length) stkStep(dt);   /* golpes extras na fila (combo, contra-ataque): só existem com o Sys.strikes ligado */
   if(B.grim) grimStep(dt);   /* magias do Grimório: relógios e lançamento sozinho (só existe com o Sys.grimoire ligado) */
   B.sysT-=dt; if(B.sysT<=0){ B.sysT=1; sysSync(); }   /* 1 vez por segundo: chave dos golpes especiais / caminho mudou? conjunto do Grimório? */
@@ -1346,7 +1347,7 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=lookNow(), wg=wingNow(lk), mo=(B.inst&&B.inst.run&&B.inst.run.noMount)?null:lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
+  HM.x=HX+heroLunge()+(typeof mcLunge==='function'?mcLunge():0);   /* + avanço da Investida montada (0 com a chave desligada) */ HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=lookNow(), wg=wingNow(lk), mo=(B.inst&&B.inst.run&&B.inst.run.noMount)?null:lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
     if(!wg||wg===HM.wing||typeof wingReady!=='function'||wingReady(wg)||lookWait('wing',wg)) HM.wing=wg;
     if(!mo||(HM.mount&&HM.mount.id===mo.id)||typeof mountReady!=='function'||mountReady(mo.id)||lookWait('mount',mo.id)) HM.mount=mo; }   /* mesma montaria que já está no desenho: sem conferir as 3 folhas de novo a cada quadro */ { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
