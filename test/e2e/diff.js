@@ -179,7 +179,9 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   /* TELAS V2: com a chave da tela nova ligada (PANEL_ON.<nome>2) o jogo troca o nome pelo mapa Panels.v2 e a view de chegada é a nova (forge2, mounts2...).
      A tela esperada é lida do jogo carregado (mesma regra do Panels.open: par no mapa + chave ligada + tela registrada); desligada, vale a antiga. */
   const VIEW0 = { gear: 'gear', forge: 'forge', pet: 'pets', mount: 'mounts', titles: 'profile' }, VIEW = {};
-  for (const k in VIEW0) VIEW[k] = String(ev(`(function(n){ const P=window.Panels, n2=P&&P.v2&&P.v2[n]; return n2&&PANEL_ON[n2]===true&&P.defs&&P.defs[n2]?n2:n; })('${VIEW0[k]}')`));
+  for (const k in VIEW0) VIEW[k] = String(ev(`(function(n){ const P=window.Panels, ok=x=>!!(x&&PANEL_ON[x]===true&&P&&P.defs&&P.defs[x]), n2=P&&P.v2&&P.v2[n]; if(ok(n2)) return n2;
+    /* telas trocadas pelo setView do index.html (viewV2 / VIEW_V2: gear, shop, pass), com a mesma regra dele: chave ligada + tela registrada */
+    const n3=typeof VIEW_V2!=='undefined'&&VIEW_V2?VIEW_V2[n]:null; return ok(n3)?n3:n; })('${VIEW0[k]}')`));
   for (let i = 0; i < adv.actions.length; i++) { const a = adv.actions[i]; if (!D.reg.dfc) F('bossAskT=0; bossTap()');
     ev(`diffAct('adv:${i}')`); const v = ev('view');
     check('antes do chefe · ' + a.id + ' → ' + (a.route.lock ? 'aviso "abre no nível ' + a.route.lock + '"' : a.route.farm ? 'volta a lutar' : 'tela ' + VIEW[a.tab]), a.route.lock ? v === 'battle' && !!D.reg.dfc : a.route.farm ? v === 'battle' && !D.reg.dfc : v === VIEW[a.tab] && !D.reg.dfc, 'view=' + v);

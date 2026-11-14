@@ -312,7 +312,7 @@ function detHtml(narrow){ const it=X.sel!=null?byId(X.sel):null; if(!it) return 
     else if(eq&&prev){ A=snap({item:prev}); B=snap(); label='FC ANTES → AGORA'; }
     else if(eq){ A=snap({item:it,remove:true}); B=snap(); label='FC SEM → COM ELA'; } }catch(e){ A=B=null; }
   const dorm=tr(()=>Sys.stats.dormantInfo(it,Sys.host),null);
-  const sub=esc2(slotShort(sl))+' · Nv. '+(it.lvl||1)+' · '+esc2(eraName(eraOfItem(it)))+' · Forja +'+fl+(eq?' · <b>usando</b>':ok?'':' · <b>'+esc2(whyNot(it))+'</b>')+(dorm&&dorm.dormant?' · <b>'+esc2(dorm.label)+'</b>':'');
+  const sub=esc2(slotShort(sl))+' · Nv. '+(it.lvl||1)+' · '+esc2(eraName(eraOfItem(it)))+' · Forja +'+fl+(eq?'':ok?'':' · <b>'+esc2(whyNot(it))+'</b>')+(dorm&&dorm.dormant?' · <b>'+esc2(dorm.label)+'</b>':'');
   const head='<div class="g2-dt">'+ico(it,'g2-di0')+'<div class="g2-di"><div class="g2-dn">'+esc2(iName(it))+' <span class="g2-rar" style="color:'+rc+'">'+esc2(rname(it))+'</span></div><div class="g2-dh">'+sub+'</div></div>'
     +'<button class="g2-dx" data-x="close" aria-label="Fechar o detalhe">'+SV.x+'</button></div>';
   const cmp=A&&B?'<div class="g2-cmp"><small>'+label+'</small><span class="a">'+esc2(fcTxt(A.fc))+'</span>'+SV.go+'<span class="b">'+esc2(fcTxt(B.fc))+'</span><span class="d '+dCls(B.fc-A.fc)+'">'+esc2(dTxt(B.fc-A.fc))+'</span></div>'
@@ -320,7 +320,8 @@ function detHtml(narrow){ const it=X.sel!=null?byId(X.sel):null; if(!it) return 
   const eqB=u?'<button class="g2-bt off" data-x="undo"><span>'+SV.undo+'Voltar</span></button>'
     :eq?'<span class="g2-bt on" role="status"><span>Usando</span></span>'
     :'<button class="g2-bt blue" data-x="equip" data-id="'+id+'" aria-disabled="'+(!ok)+'"><span>'+(ok?'Equipar':esc2(lockShort(it)))+'</span></button>';
-  const disB='<button class="g2-bt '+(eq?'off':'red')+'" data-x="dism" data-id="'+id+'" aria-disabled="'+eq+'"><span>'+(eq?'Em uso':'Desmontar')+'</span></button>';
+  /* peça em uso: o botão Desmontar fica apagado com o MESMO nome (o toque explica o motivo); o único rótulo de uso do detalhe é o selo "Usando" */
+  const disB='<button class="g2-bt '+(eq?'off':'red')+'" data-x="dism" data-id="'+id+'" aria-disabled="'+eq+'"'+(eq?' aria-label="Desmontar: peça em uso, equipe outra antes"':'')+'><span>Desmontar</span></button>';
   const top='<div class="g2-det" id="g2_det" style="--rc:'+rc+'">'+head+cmp+'<div class="g2-acts"><button class="g2-bt" data-x="forge" data-slot="'+esc2(sl)+'"><span>'+SV.hammer+'Forjar</span><small>Forja +'+fl+'</small></button>'+disB+eqB+'</div></div>';
   const c=upPlan(it), mx=maxPlan(it);
   const vs=!eq?'<div class="g2-vs">'+vsCell('NOVO',it,sl)+'<i aria-hidden="true">×</i>'+vsCell('O SEU',cur,sl)+'</div>':prev?'<div class="g2-vs">'+vsCell('AGORA',it,sl)+'<i aria-hidden="true">×</i>'+vsCell('ANTES',prev,sl)+'</div>':'';

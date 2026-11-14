@@ -68,7 +68,8 @@ for (const m of SRC.matchAll(/'(assets\/[^'+]+\.png)'/g)) assert(fs.existsSync(p
   for (const l in T.DATA.opens) for (const o of T.DATA.opens[l]) assert(!code.includes(o.name), 'função aberta copiada no código: ' + o.name); }
 assert(/\.pt-gold,\.xs \.pt-gold\{[^}]*color:#2a1403/.test(CSS), 'botão dourado: texto escuro, declarado também com .xs');
 assert(/\.pt-go,\.xs \.pt-go\{[^}]*color:#0d2410/.test(CSS), 'botão verde: texto escuro, declarado também com .xs');
-for (const m of CSS.matchAll(/\.pt-(go|gold|o|sb|tip|seal),\.xs \.pt-\1\{[^}]*min-height:(\d+)px/g)) assert(+m[2] >= 40, 'toque mínimo de 40 px em .pt-' + m[1]);
+for (const m of CSS.matchAll(/\.pt-(go|gold|o|sb|tip|seal),\.xs \.pt-\1\{[^}]*min-height:(\d+)px/g)) { const ex = m[1] === 'seal' ? /\.pt-seal::before\{[^}]*top:-(\d+)px;bottom:-(\d+)px/.exec(CSS) : null;   /* o selo do HUD mede 37 px (cabe entre o FC e o 1º ícone) e a área de toque cresce pelo ::before */
+  assert(+m[2] + (ex ? +ex[1] + +ex[2] : 0) >= 40, 'toque mínimo de 40 px em .pt-' + m[1]); }
 assert.strictEqual([...CSS.matchAll(/\.pt-(go|gold|o|sb|tip|seal),\.xs \.pt-\1\{[^}]*min-height:(\d+)px/g)].length, 6, 'os 6 tipos de botão têm altura mínima');
 assert(/\.pt-tg\{[^}]*repeat\(3,minmax\(0,1fr\)\)/.test(CSS) && /\.pt\{[^}]*overflow:hidden/.test(CSS) && !/white-space:nowrap/.test(CSS.replace(/\.pt-(seal|band)[^{]*\{[^}]*\}/g, '')), 'sem rolagem lateral: grades com minmax e texto que quebra');
 out.push('registro: trial desligada, ' + def.actions.length + ' ações com tratador, sem diálogo, sem emoji, sem reticências, nada do módulo copiado no código');
@@ -180,7 +181,17 @@ out.push('save antigo: provações antigas abertas com escolha; todas vencidas: 
 
 // 12) SELO "Teto Nv X" no HUD: no teto mostra a XP guardada; cheio muda de cor; toca e abre a tela; some com a tela ou o módulo desligado
 g.S = newSave(9, 0); LV.addXp(g.S, LV.need(9) + 7, host); P.update(true);
-assert(hud.innerHTML.includes('data-pt="open"') && hud.innerHTML.includes('>Teto Nv 10<') && hud.innerHTML.includes('>guardada:<') && hud.innerHTML.includes('>7 XP<') && /class="pt-seal"[^>]*style="top:97px"/.test(hud.innerHTML), 'selo do teto embaixo do FC com a XP guardada');
+assert(hud.innerHTML.includes('data-pt="open"') && hud.innerHTML.includes('>Teto Nv 10<') && hud.innerHTML.includes('>guardada:<') && hud.innerHTML.includes('>7 XP<') && /class="pt-seal"[^>]*style="top:98px"/.test(hud.innerHTML), 'selo do teto embaixo do FC com a XP guardada');
+// o selo cabe no vão entre o FC do retrato e o 1º ícone da coluna esquerda, à esquerda da barra da fase (números lidos do js/fullbattle.js e do CSS desta tela)
+{ const FBS = fs.readFileSync(path.join(R, 'js/fullbattle.js'), 'utf8'), css = head.children.map(c => c.textContent).join('\n'), n = (re, src, what) => { const m = re.exec(src); assert(m, 'não achei: ' + what); return +m[1]; };
+  const rule = (/\.pt-seal,\.xs \.pt-seal\{([^}]*)\}/.exec(css) || [])[1] || ''; assert(/box-sizing:border-box/.test(rule), 'altura do selo já com borda');
+  const top = n(/class="pt-seal"[^>]*style="top:(\d+)px"/, hud.innerHTML, 'topo do selo'), left = n(/left:(\d+)px/, rule, 'x do selo'), w = n(/min-width:(\d+)px/, rule, 'largura'), pad = n(/padding:(\d+)px/, rule, 'respiro'), brd = n(/border:([\d.]+)px/, rule, 'borda');
+  const lb = n(/\.pt-seal b\{[^}]*line-height:(\d+)px/, css, 'linha do título'), ls = n(/\.pt-seal small\{[^}]*line-height:([\d.]+)px/, css, 'linha pequena'), h = Math.max(n(/min-height:(\d+)px/, rule, 'altura mínima'), lb + 2 * ls + 2 * pad + 2 * brd);
+  const avTop = n(/id="fb_av"[^>]*style="position:absolute;left:\d+px;top:(\d+)px/, FBS, 'retrato'), fcEnd = avTop + 58 + n(/id="fb_fc" style="margin-top:(\d+)px/, FBS, 'margem do FC') + n(/id="fb_fc" style="margin-top:\d+px;height:(\d+)px/, FBS, 'altura do FC');
+  const ico = n(/m\.cy = (\d+) \+ 78 \* li/, FBS, '1º ícone da coluna esquerda'), bar = n(/style="position:absolute;left:(\d+)px;right:74px;top:60px;height:58px/, FBS, 'barra da fase');
+  assert(top >= fcEnd, 'o selo começa depois do FC do retrato (' + top + ' >= ' + fcEnd + ')'); assert(top + h <= ico, 'o selo acaba antes do 1º ícone da coluna esquerda (' + (top + h) + ' <= ' + ico + ')'); assert(left + w < bar, 'o selo não encosta na barra da fase (' + (left + w) + ' < ' + bar + ')');
+  const hitm = /\.pt-seal::before\{[^}]*top:-(\d+)px;bottom:-(\d+)px/.exec(css); assert(hitm && h + (+hitm[1]) + (+hitm[2]) >= 40, 'área de toque de 40 px ou mais');
+  out.push('selo do teto: y ' + top + ' a ' + (top + h) + ', x ' + left + ' a ' + (left + w) + ': entre o FC do retrato (' + fcEnd + ') e o 1º ícone (' + ico + '), antes da barra da fase (' + bar + '); toque de ' + (h + (+hitm[1]) + (+hitm[2])) + ' px'); }
 LV.addXp(g.S, 1e6, host); P.update(true); assert(hud.innerHTML.includes('class="pt-seal full"') && hud.innerHTML.includes('cheia: o que passar disso não é guardado') && hud.innerHTML.includes('>' + g.n0(LV.need(10)) + ' XP<'), 'cofre cheio: selo avisa');
 clean(hud.innerHTML, 'selo'); for (const b of buttons(hud.innerHTML)) assert.strictEqual(b.dataset.pt, 'open', 'botão do HUD sem ação');
 opened.length = 0; hud.listeners.click({ target: { closest: () => ({ dataset: { pt: 'open' } }) } }); assert.deepStrictEqual(opened[0], ['trial', {}], 'o selo abre a Provação'); has('data-x="go"');

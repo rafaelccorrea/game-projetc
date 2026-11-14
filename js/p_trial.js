@@ -165,10 +165,11 @@ const CSS=`.pt{position:relative;flex:1;min-height:0;min-width:0;display:flex;fl
 .pt-tip small{font-size:9.5px;font-weight:800;color:#c9b8a2;text-align:center;line-height:1.15}
 .pt-tip .gb{position:absolute;right:3px;top:3px;padding:0 6px;height:18px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:12px;line-height:18px;box-shadow:0 1px 0 #9a5a10}
 .pt-hud{position:absolute;left:0;top:0;width:0;height:0;z-index:6;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
-.pt-seal,.xs .pt-seal{position:absolute;left:3px;min-width:76px;min-height:40px;padding:2px 5px;border-radius:12px;background:rgba(22,16,12,.78);border:1.5px solid #ffc94a;color:#f6ecdf;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4);animation:pt-sp 1.4s ease-in-out infinite;width:max-content;max-width:120px}
+.pt-seal,.xs .pt-seal{position:absolute;left:2px;box-sizing:border-box;min-width:74px;min-height:37px;padding:1px 4px;border-radius:12px;background:rgba(22,16,12,.78);border:1.5px solid #ffc94a;color:#f6ecdf;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4);animation:pt-sp 1.4s ease-in-out infinite;width:max-content;max-width:120px}
 .pt-seal.full,.xs .pt-seal.full{border-color:#ff9a4a}
 .pt-seal b{display:block;font-size:12px;line-height:13px;color:#ffc94a;white-space:nowrap}
-.pt-seal small{display:block;font-size:8.5px;line-height:10px;font-weight:900;white-space:nowrap}
+.pt-seal::before{content:'';position:absolute;left:-2px;right:-2px;top:-2px;bottom:-2px}
+.pt-seal small{display:block;font-size:8.5px;line-height:9.5px;font-weight:900;white-space:nowrap}
 .pt-seal.full small:last-child{color:#ffb38a}
 @keyframes pt-sp{50%{box-shadow:0 0 0 3px rgba(255,201,74,.35),0 0 16px rgba(255,201,74,.6)}}
 .pt-band{position:absolute;left:80px;width:235px;min-height:44px;border-radius:14px;background:rgba(22,16,12,.78);border:1.5px solid #ffc94a;display:flex;align-items:center;gap:6px;padding:4px 8px 7px 5px;box-shadow:0 6px 16px rgba(0,0,0,.4);overflow:hidden}
@@ -269,6 +270,10 @@ function finish(res){ if(!ok()) return {ok:false,reason:'off'}; const lv0=levelN
   persist(); sfx(r.won?'claim':'ui_tap'); X.res={r:r,lv0:lv0,lv1:levelNow(),cap0:cap0}; X.mode='result'; X.msg=''; X.sel=r.lvl; X.anim=true; hudUpdate(true);
   if(isOn()) redraw(); else { try{ if(window.Panels&&typeof Panels.open==='function') Panels.open(N,{result:true}); }catch(e){} }
   return r; }
+/* DESISTIR no meio da luta (a batalha chama, js/instfx.js ligTrialExit, depois de voltar à fase): UMA chamada ao Sys.trial.quit, que desfaz a tentativa e não
+   mexe na XP guardada nem no teto. Não há resultado: some a faixa da regra e a tela volta a poder começar outra luta. */
+function cancel(){ let r=null; try{ const T=TR(); if(T&&typeof T.quit==='function') r=T.quit(sv(),host()); }catch(e){ r=null; }
+  X.run=null; X.left=null; if(r&&r.ok) persist(); hudUpdate(true); redraw(); return r||{ok:false,reason:'none'}; }
 function goTip(d){ if(!TIPS.some(t=>t.d===d)) return; sfx('ui_tap');
   try{ if(d==='gear'){ if(typeof setView==='function') setView('gear'); return; } if(window.Panels&&typeof Panels.open==='function') Panels.open(d); }catch(e){} }
 function closeMe(){ try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} }
@@ -296,7 +301,9 @@ function hudHtml(o){ o=o||{}; if(!hudOn()) return '';
     return '<div class="pt-band" role="status" style="top:'+(o.bandTop!=null?+o.bandTop:bandTop())+'px" aria-label="Provação do Mestre, regra '+esc(ru.name)+', faltam '+mmss(left)+'">'+ruleIc(ru.id)
       +'<span class="tx"><small>Provação do Mestre</small><b>'+esc(ru.name)+'</b></span><span class="tm pt-lil'+(left<=10?' low':'')+'">'+mmss(left)+'</span><span class="bar"><i style="width:'+(left/tot*100).toFixed(1)+'%"></i></span></div>'; }
   let d=null; try{ d=TR().due(sv(),host()); }catch(e){ d=null; } if(!d||!d.due) return '';
-  const top=o.sealTop!=null?+o.sealTop:97;
+  /* o selo mora no vão entre o FC do retrato (acaba em y 97) e o 1º ícone da coluna esquerda (começa em y 136), à esquerda da barra da fase (x 78):
+     37 px de altura em y 98 a 135, x 2 a 76; a área de toque passa 2 px de cada lado (41 px) pelo ::before */
+  const top=o.sealTop!=null?+o.sealTop:98;
   if(d.atCap&&capOn()){ const v=viewOf(), bank=v?num(v.bank):0, full=bankFull(v);
     return '<button class="pt-seal'+(full?' full':'')+'" data-pt="open" style="top:'+top+'px" aria-label="Teto do Nv '+nT(d.lvl)+': '+nT(bank)+' XP guardada'+(full?', cheia: o que passar disso não é guardado':'')+'. Toque para abrir a Provação do Mestre"><b class="pt-lil">Teto Nv '+nT(d.lvl)+'</b><small>guardada:</small><small>'+nT(bank)+' XP</small></button>'; }
   return '<button class="pt-seal" data-pt="open" style="top:'+top+'px" aria-label="Provação do Mestre do Nv '+nT(d.lvl)+' aberta. Toque para abrir"><b class="pt-lil">Provação</b><small>do Nv '+nT(d.lvl)+'</small><small>aberta</small></button>'; }
@@ -321,7 +328,7 @@ const def=Panels.add(N,{title:'Provação do Mestre',actions:ACTIONS,
     if(!(o&&o.result&&X.res)){ X.mode='card'; X.res=null; } if(o&&o.lvl) X.sel=Math.floor(num(+o.lvl)); },
   onClose(){ X.msg=''; if(X.mode==='result'){ X.mode='card'; X.res=null; } } });
 /* para a batalha, o HUD, o teste de fumaça e o console */
-Object.assign(API,{state:X,actions:ACTIONS,def:def,ART:ART,IC:IC,urls:urls,start:begin,finish:finish,time:time,battle:null,
+Object.assign(API,{state:X,actions:ACTIONS,def:def,ART:ART,IC:IC,urls:urls,start:begin,finish:finish,cancel:cancel,time:time,battle:null,
   running:()=>X.run?{lvl:X.run.lvl,spec:X.run.spec}:null,hudOn:hudOn,hudHtml:hudHtml,hudClick:hudClick,mount:mount,update:hudUpdate,unmount:unmount});
 window.PTrial=API;
 })();

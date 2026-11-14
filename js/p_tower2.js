@@ -90,7 +90,7 @@ const ic=(u,z)=>'<img src="'+u+'" alt="" style="width:'+(z||18)+'px;height:'+(z|
 .t2-hpb{height:8px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden;margin-top:3px;border:1px solid rgba(255,255,255,.15)}
 .t2-hpb i{display:block;height:100%;background:linear-gradient(90deg,#5ef0a0,#22c47a);transition:width .12s linear}
 .t2-hp.r .t2-hpb i{background:linear-gradient(90deg,#ff9f9f,#ff6b6b);margin-left:auto}
-.t2-ban{position:absolute;z-index:4;left:8px;right:8px;top:54px;text-align:center;font-size:24px;letter-spacing:1px;line-height:1.1;overflow-wrap:anywhere;text-shadow:0 3px 0 rgba(0,0,0,.45);pointer-events:none;animation:t2-pop .5s ease-out both}
+.t2-ban{position:absolute;z-index:4;left:0;right:0;bottom:-2px;margin:0 auto;width:fit-content;max-width:calc(100% - 24px);padding:2px 14px;border-radius:12px;background:rgba(5,8,28,.88);border:1px solid currentColor;text-align:center;font-size:14px;letter-spacing:1px;line-height:1.1;overflow-wrap:anywhere;pointer-events:none;animation:t2-pop .5s ease-out both}
 .t2-ban.w{color:#7dffb8}
 .t2-ban.l{color:#ff9f9f}
 @keyframes t2-pop{0%{opacity:0;transform:scale(.5)}70%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}

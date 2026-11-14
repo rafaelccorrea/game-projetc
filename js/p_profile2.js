@@ -17,6 +17,8 @@
    O QUE O JOGO NÃO TEM NÃO APARECE (o protótipo mostrava com dados de exemplo): asas no Perfil (asa é item do Equipamento), economia, de onde vem o FC.
    TELA BAIXA (altura menor que 690): palco menor, e a identidade e os três quadros rolam junto com o conteúdo (as abas ficam logo abaixo do palco).
    A faixa do item tocado (em uso ou prévia) só existe nas abas Visual e Coleção.
+   ABAS TÍTULOS E NÚMEROS: o palco cede a altura à lista (sobra menos que STAGE_MIN = sai de cena) e fica só a identidade compacta acima das abas.
+   ÍCONE DE TÍTULO: só vira <img> o que está na lista TI_HAVE (arquivos do disco); o resto é medalhão por CSS (titleIcon / crest).
    Depois de trocar skin, montaria, pet ou título a tela chama statsChanged() (o aviso de poder é do jogo). O cabeçalho (Voltar, título, moedas) é do jogo.
    O arquivo roda em escopo próprio: os nomes daqui não chegam ao js/p_profile.js, que continua valendo enquanto esta chave estiver desligada. */
 (function(){
@@ -36,6 +38,13 @@ const FR={none:'border:2px solid rgba(255,255,255,.25)',bronze:'border:3px solid
   prata:'border:3px solid #dfe7ff;box-shadow:inset 0 0 0 2px #7f8bb5,0 0 10px rgba(220,230,255,.5)',ouro:'border:3px solid #ffd25e;box-shadow:inset 0 0 0 2px #a8661a,0 0 14px rgba(255,210,94,.7)',
   cristal:'border:3px solid #5ee7ff;box-shadow:inset 0 0 0 2px #a97bff,0 0 16px rgba(94,231,255,.8)',eterna:'border:3px solid #fff1a8;box-shadow:inset 0 0 0 3px #ff9f2e,0 0 20px #ffd25e,0 0 34px rgba(255,159,46,.6)'};
 const KN={frame:'Moldura',aura:'Aura',avatar:'Retrato'};
+/* ícones de título que EXISTEM em assets/icons/titles (lista do disco). Título fora daqui (marcos, mentores, fim das eras, ranking de evento) não ganha <img>:
+   ganha o medalhão por CSS na cor da raridade, com a inicial. Arte nova entra aqui quando o arquivo chegar ao disco. */
+const TI_DIR='assets/icons/titles/', TI_HAVE=['arena1','arena10','arena3','boss10','boss50','era2','era4','era6','eyesAll','hairAll','hatsAll','kill10k','kill1k','mount1','mountAll','pet1','pet3','petAll','phoenix5','prac200','prac50','skin10','skin25','skinAll','stage10','stage30','stage50','stage70','tow10','tow100','tow25','tow50','weap7','weapAll'];
+function titleIcon(t){ const u=t&&typeof t.icon==='string'?t.icon:''; if(u.indexOf(TI_DIR)!==0||u.slice(-4)!=='.png') return null; return TI_HAVE.indexOf(u.slice(TI_DIR.length,-4))>=0?u:null; }
+/* altura que a lista pede nas abas Títulos e Números (base da tela): identidade compacta, abas, filtros com o aviso e 5 cartões de título.
+   O palco do herói fica só com o que SOBRA da altura da tela (xDims); sobrando menos que STAGE_MIN, ele sai de cena nessas duas abas. */
+const CP_ID=70, CP_TABS=54, CP_HEAD=96, CP_ROW=97, CP_ROWS=5, STAGE_MIN=96;
 
 /* ---------- leituras ISOLADAS ---------- */
 const Y=()=>window.Sys||{};
@@ -186,6 +195,12 @@ function titleRows(){ const T=Y().titles, feat=T.featured(S); return T.DATA.titl
 .p5-trow.eq{border-color:#ffd25e;box-shadow:0 0 0 1px #ffd25e inset}
 .p5-crest{flex:none;width:46px;height:46px;border-radius:13px;background:#0c1238;border:2px solid var(--rc);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .p5-crest img{width:42px;height:42px;object-fit:contain}
+.p5-med{flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;color:#0c1238;background:radial-gradient(circle at 35% 30%,#fff 0,var(--rc) 46%,rgba(5,8,28,.6) 135%);border:2px solid rgba(255,255,255,.6);box-shadow:inset 0 0 0 2px rgba(5,8,28,.3),0 0 8px var(--rc)}
+.p5-med[hidden]{display:none}
+.p5-idb.cp{margin-top:12px;padding:4px 8px;border-radius:14px}
+.p5-idb.cp .p5-idt{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px}
+.p5-idb.cp .p5-tit{margin-top:0}
+.p5-idb.cp .p5-nm{font-size:17px}
 .p5-trow.lock .p5-crest{filter:grayscale(.85) brightness(.7)}
 .p5-ti{flex:1;min-width:0}
 .p5-tn{font-weight:900;font-size:14px;line-height:1.2;overflow-wrap:anywhere}
@@ -326,19 +341,30 @@ function colHtml(){ const all=[].concat(...KINDS.map(k=>LIST[k[0]]())), own=all.
   h+=`<div class="p5-filt" role="group" aria-label="Filtro">${[['all','Todos'],['own','Tenho'],['lock','Falta']].map(([k,l])=>`<button class="p5-fb" data-x="cf" data-f="${k}" aria-pressed="${X.cf===k}">${l}</button>`).join('')}</div>`;
   const list=L.filter(i=>X.cf==='all'||(X.cf==='own'?i.own:!i.own)).sort((a,b)=>((b.own?1:0)-(a.own?1:0))||(a.r-b.r));
   return h+(list.length?`<div class="p5-grid">${list.map(cell).join('')}</div>`:'<p class="p5-hint" role="note">Nada aqui.</p>'); }
+/* brasão do título: a arte quando o arquivo existe; sem arte (ou arte que não carregou), medalhão na cor da raridade com a inicial */
+function crest(t){ const u=titleIcon(t), med=h=>`<span class="p5-med p5-lil" aria-hidden="true"${h?' hidden':''}>${esc2(String(t.name).charAt(0).toUpperCase())}</span>`;
+  return u?`<img src="${esc2(u)}" alt="" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.hidden=false">`+med(true):med(false); }
 function titHtml(){ const T=Y().titles, rows=titleRows(), cnt=rows.filter(r=>r.own).length, list=rows.filter(r=>X.tf==='all'||(X.tf==='own'?r.own:!r.own));
   let h=`<div class="p5-filt" role="group" aria-label="Filtro">${[['all','Todos'],['own','Conquistados'],['lock','A conquistar']].map(([k,l])=>`<button class="p5-fb" data-x="tf" data-f="${k}" aria-pressed="${X.tf===k}">${l}</button>`).join('')}</div>
-    <p class="p5-hint">${n0(cnt)} de ${n0(rows.length)} conquistados. O título em destaque vale <b>${T.DATA.featuredMult===2?'em dobro':'x'+String(T.DATA.featuredMult).replace('.',',')}</b>; os outros conquistados somam normal.</p>`;
+    <p class="p5-hint">${n0(cnt)} de ${n0(rows.length)} conquistados. O título em destaque vale <b>${T.DATA.featuredMult===2?'em dobro':'x'+String(T.DATA.featuredMult).replace('.',',')}</b>.</p>`;
   for(const r of list){ const t=r.t, p=r.p, c=rc(t.r), bn=t.cosmetic?['Visual']:String(T.bonusText(t,r.eq?T.DATA.featuredMult:1)).split(' · ').filter(s=>s&&s!=='—'), cond=noStar(T.condLabel(S,hostOf(),t));
     const prog=!r.own&&p&&p.need>0&&t.cond.type!=='arena', pct=prog?Math.round(clamp(p.frac,0,1)*100):0, to=GO[t.cond.type], canGo=!!to&&(to==='battle'||panelOn(to));
-    h+=`<div class="p5-trow${r.eq?' eq':''}${r.own?'':' lock'}" style="--rc:${c}"><span class="p5-crest">${t.icon?`<img src="${esc2(t.icon)}" alt="">`:`<span class="p5-lil" aria-hidden="true" style="font-size:20px;color:${c}">${esc2(String(t.name).charAt(0))}</span>`}</span>
+    h+=`<div class="p5-trow${r.eq?' eq':''}${r.own?'':' lock'}" style="--rc:${c}"><span class="p5-crest">${crest(t)}</span>
       <div class="p5-ti"><div class="p5-tn">${esc2(t.name)}</div><div class="p5-rar">${esc2((T.DATA.titleRName&&T.DATA.titleRName[t.r|0])||'')}</div><div class="p5-tc">${r.own?'Conquistado: ':''}${esc2(cond)}${prog?' · '+n0(Math.min(p.cur,p.need))+'/'+n0(p.need):''}</div>${prog?`<div class="p5-pb" role="progressbar" aria-label="Progresso de ${esc2(t.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>`:''}<div class="p5-bon">${bn.map(s=>`<span class="${r.eq?'x2':''}">${esc2(s)}</span>`).join('')}</div></div>
       ${r.eq?'<span class="p5-tag">Destaque</span>':r.own?`<button class="p5-bt" data-x="feat" data-id="${esc2(t.id)}" aria-label="Destacar ${esc2(t.name)}">Destacar</button>`:canGo?`<button class="p5-bt blue" data-x="go" data-to="${to}" aria-label="Ir para ${esc2(GO_NAME[to])}">Ir ${SVG_GO}</button>`:''}</div>`; }
   return h+(list.length?'':'<p class="p5-hint" role="note">Nenhum título aqui.</p>'); }
-function numHtml(pvw){ const kv=(l,v,s)=>`<div><small>${esc2(l)}</small><b class="p5-lil">${esc2(v)}</b>${s?'<em>'+esc2(s)+'</em>':''}</div>`, card=(t,a)=>a.length?`<div class="p5-card"><h4><span>${t}</span></h4><div class="p5-kv">${a.join('')}</div></div>`:''; let h=pvw?fcHtml(pvw.fc):'';
+/* OURO DO ABATE (Sys.loot.goldBreakdown: quanto soma no abate, o teto e o que passou dele e virou XP). Tudo lido do módulo; sem a função, ou sem
+   nenhuma fonte, a linha não aparece. As fontes saem com o valor já no teto de cada uma (applied) */
+const GOLD_SRC={crossroads:'Encruzilhada',guildFire:'Fogueira da Guilda',titles:'Títulos',practice:'Prática',mentors:'Mentores',guild:'Guilda'};
+const pc1=v=>String(Math.round(v*10)/10).replace('.',',');
+function goldHtml(){ let b=null; try{ const L=Y().loot; b=L&&typeof L.goldBreakdown==='function'?L.goldBreakdown(S):null; }catch(e){ b=null; }
+  if(!b||typeof b!=='object'||!fin(b.pct)) return ''; const raw=fin(b.raw)?b.raw:b.pct; if(!(b.pct>0)&&!(raw>0)) return '';
+  const ap=b.applied&&typeof b.applied==='object'?b.applied:{}, src=Object.keys(ap).filter(k=>fin(ap[k])&&ap[k]>0).map(k=>(GOLD_SRC[k]||k)+' +'+pc1(ap[k])+'%');
+  return `<p class="p5-hint" style="margin:8px 0 0">Ouro do abate: <b>+${esc2(pc1(b.pct))}%</b>${fin(b.cap)&&b.cap>0?' (teto +'+esc2(pc1(b.cap))+'%)':''}${raw>b.pct&&fin(b.overXp)&&b.overXp>0?'<br>acima do teto: <b>+'+esc2(pc1(b.overXp))+'% de XP</b>':''}${src.length?'<br>'+esc2(src.join(' · ')):''}</p>`; }
+function numHtml(pvw){ const kv=(l,v,s)=>`<div><small>${esc2(l)}</small><b class="p5-lil">${esc2(v)}</b>${s?'<em>'+esc2(s)+'</em>':''}</div>`, card=(t,a,x)=>(a.length||x)?`<div class="p5-card"><h4><span>${t}</span></h4><div class="p5-kv">${a.join('')}</div>${x||''}</div>`:''; let h=pvw?fcHtml(pvw.fc):'';
   { const a=[], fc=myFC(); let P=null; try{ P=Y().level.progress(S); }catch(e){}
     if(fc!=null) a.push(kv('FC',fcT(fc),'')); if(P) a.push(kv('Nível',n0(P.lvl),P.max?'nível máximo':Math.round(clamp(P.frac,0,1)*100)+'% para o próximo'));
-    try{ const V=Y().vip; if(V&&typeof V.level==='function') a.push(kv('VIP',V.level(S)>0?n0(V.level(S)):'Sem VIP','')); }catch(e){} h+=card('Poder',a); }
+    try{ const V=Y().vip; if(V&&typeof V.level==='function') a.push(kv('VIP',V.level(S)>0?n0(V.level(S)):'Sem VIP','')); }catch(e){} h+=card('Poder',a,goldHtml()); }
   { const a=[], k=cur('kills'), b=cur('boss'); if(k!=null) a.push(kv('Inimigos derrotados',n0(k),'')); if(b!=null) a.push(kv('Chefes derrotados',n0(b),'')); h+=card('Combate',a); }
   { const a=[]; try{ const best=Math.max(1,S.best|0,S.stage|0), e=eraOf(best); a.push(kv('Fase mais alta',n0(best),'Era '+(e+1)+' · '+ERAS[e].n)); a.push(kv('Eras liberadas',n0(Math.min(ERAS.length,(cur('era')|0)+1))+' de '+n0(ERAS.length),'')); }catch(e){}
     const tw=cur('tower'), ar=cur('arena'), pr=cur('practice'); if(tw!=null&&Y().tower) a.push(kv('Torre',tw>0?'Andar '+n0(tw):'—',tw>0?'seu recorde':'ainda sem recorde'));
@@ -360,14 +386,17 @@ function vRender(){ const d=xDims(600)||{}, H=d.H>0?d.H:704, bg=typeof xEraBg===
   const pvw=pview(); if(!pvw) X.rn=null; let refocus=false;
   if(X.rn){ try{ const el=document.getElementById('p5_name'); if(el&&typeof el.value==='string'){ X.rn.val=el.value.slice(0,40); refocus=document.activeElement===el; } }catch(e){} }   /* o que o jogador já digitou não se perde num redesenho */
   const lo=H<690;   /* tela baixa: palco menor; identidade e quadros rolam com o conteúdo */
-  const T=Y().titles, feat=T.featured(S), av=avatarUrl(), can=canDraw(), stH=Math.round(lo?clamp(H*0.24,120,170):clamp(H*0.28,150,250)), p=pvItem(), mt=eqMount(), showMode=!!(mt||(p&&p.kind==='mount'));
+  const stN=Math.round(lo?clamp(H*0.24,120,170):clamp(H*0.28,150,250)), slim=X.tab==='tit'||X.tab==='num';
+  /* Títulos e Números: o herói não muda nelas, então o palco fica só com a sobra depois da lista (5 cartões); sem sobra, sai de cena */
+  const room=slim?Math.floor(H-(CP_ID+CP_TABS+CP_HEAD+CP_ROW*CP_ROWS)):stN, stH=slim?(room>=STAGE_MIN?Math.min(stN,room):0):stN, cp=slim&&stH<stN;
+  const T=Y().titles, feat=T.featured(S), av=avatarUrl(), can=canDraw(), p=pvItem(), mt=eqMount(), showMode=!!(mt||(p&&p.kind==='mount'));
   /* ----- PALCO ----- */
   const rb=realmTxt(); let vip='';
   try{ const V0=Y().vip; if(V0&&typeof V0.level==='function'){ const lv=V0.level(S)|0, P=typeof V0.progress==='function'?V0.progress(S):null, pct=P?Math.round(clamp(+P.frac||0,0,1)*100):0, inner=`<span class="p5-crown p5-lil">${n0(lv)}</span><span><small>VIP</small>${lv?'Nível '+n0(lv):'Sem VIP'}${P&&!P.max?`<span class="p5-vb"><i style="width:${pct}%"></i></span>`:''}</span>`;
       vip=panelOn('vip')?`<button class="p5-chip p5-vip" data-x="vip" aria-label="Ver o Clube VIP: ${lv?'VIP '+lv:'sem VIP'}">${inner}</button>`:`<span class="p5-chip p5-vip">${inner}</span>`; } }catch(e){ vip=''; }
   const alt=heroN()+' com a arma na mão'+(p?', prévia de '+p.name:'');
   const md=p&&p.kind==='mount'?'ride':X.mode;
-  const stage=`<div class="p5-stage" style="height:${stH}px">${can?`<canvas id="p5_cv" class="p5-cv" role="img" aria-label="${esc2(alt)}"></canvas>`:av?`<img class="p5-still" src="${esc2(av)}" alt="${esc2(heroN())}">`:''}${rb?`<span class="p5-chip p5-srv"><i></i>${esc2(rb)}</span>`:''}${vip}
+  const stage=!stH?'':`<div class="p5-stage" style="height:${stH}px">${can?`<canvas id="p5_cv" class="p5-cv" role="img" aria-label="${esc2(alt)}"></canvas>`:av?`<img class="p5-still" src="${esc2(av)}" alt="${esc2(heroN())}">`:''}${rb?`<span class="p5-chip p5-srv"><i></i>${esc2(rb)}</span>`:''}${vip}
     ${showMode?`<div class="p5-mode" role="group" aria-label="Como mostrar o herói"><button data-x="mode" data-m="ride" aria-pressed="${md==='ride'}">Montado</button><button data-x="mode" data-m="foot" aria-pressed="${md==='foot'}">A pé</button></div>`:''}</div>`;
   /* ----- IDENTIDADE (abaixo do palco: nada por cima do herói) ----- */
   const tc=feat?rc(feat.r):'#9aa6d6', id=playerId();
@@ -379,8 +408,8 @@ function vRender(){ const d=xDims(600)||{}, H=d.H>0?d.H:704, bg=typeof xEraBg===
     else { pfS=' style="border:0"'; frH=`<span class="p5-fr" style="${frCss(fid,f?f.r|0:0)}"></span>`; }
     nmH=`<div class="p5-nmr">${nmH}<button class="p5-pen" data-x="ren" aria-expanded="${!!X.rn}" aria-label="Trocar nome">${SVG_PEN}</button></div>`;
     if(au) auH=`<div class="p5-au">Aura: <b>${esc2(au.name)}</b></div>`; }
-  const idb=`<div class="p5-idb"><button class="p5-pfp"${pfS} data-x="tab" data-t="vis" aria-label="Retrato: abrir a aba Visual">${pfA?`<img src="${esc2(pfA)}" alt=""${pfR}>`:''}${frH}</button>
-    <div class="p5-idt">${nmH}<button class="p5-tit" style="--tc:${tc}" data-x="tab" data-t="tit" aria-label="Título em destaque: ${esc2(feat?feat.name:'nenhum')}. Abrir a aba Títulos">${feat&&feat.icon?`<img src="${esc2(feat.icon)}" alt="">`:''}<span>${esc2(feat?feat.name:'Sem título')}</span></button>${auH}</div>
+  const idb=`<div class="p5-idb${cp?' cp':''}"><button class="p5-pfp"${pfS} data-x="tab" data-t="vis" aria-label="Retrato: abrir a aba Visual">${pfA?`<img src="${esc2(pfA)}" alt=""${pfR}>`:''}${frH}</button>
+    <div class="p5-idt">${nmH}<button class="p5-tit" style="--tc:${tc}" data-x="tab" data-t="tit" aria-label="Título em destaque: ${esc2(feat?feat.name:'nenhum')}. Abrir a aba Títulos">${titleIcon(feat)?`<img src="${esc2(titleIcon(feat))}" alt="" onerror="this.style.display='none'">`:''}<span>${esc2(feat?feat.name:'Sem título')}</span></button>${auH}</div>
     ${id?`<div class="p5-idr">ID ${esc2(id)}</div>`:''}</div>`;
   /* ----- NÍVEL, FC, ERA ----- */
   let P=null; try{ P=Y().level.progress(S); }catch(e){} const fc=myFC(), xp=P?Math.round(clamp(P.frac,0,1)*100):0; let eraT='';
@@ -391,7 +420,7 @@ function vRender(){ const d=xDims(600)||{}, H=d.H>0?d.H:704, bg=typeof xEraBg===
   const body=X.tab==='tit'?titHtml():X.tab==='col'?colHtml():X.tab==='num'?numHtml(pvw):visHtml(pvw,av);
   const det=(X.tab==='vis'||X.tab==='col')?detHtml():'';   /* a faixa do item tocado só faz sentido onde há itens */
   const rnH=pvw?renHtml(pvw):'', scO='<div id="p5_scroll" class="x-scroll p5-body" style="overflow-y:auto;overflow-x:hidden">';
-  V.innerHTML=xWrap(d,'p5-root '+(X.anim?'p5-in':''),`<div class="p5-bg" style="background:${bg}"></div>${stage}`+(lo?`${tabs}${det}${fl}${scO}<div class="p5-top lo">${idb}${stats}</div>${rnH}${body}</div>`:`${idb}${stats}${tabs}${det}${fl}${scO}${rnH}${body}</div>`));
+  V.innerHTML=xWrap(d,'p5-root '+(X.anim?'p5-in':''),`<div class="p5-bg" style="background:${bg}"></div>${stage}`+(cp?`${idb}${tabs}${fl}${scO}${rnH}${body}</div>`:lo?`${tabs}${det}${fl}${scO}<div class="p5-top lo">${idb}${stats}</div>${rnH}${body}</div>`:`${idb}${stats}${tabs}${det}${fl}${scO}${rnH}${body}</div>`));
   X.anim=false; X.top=false; X.sig=sig();
   if(y0){ try{ const sc=document.getElementById('p5_scroll'); if(sc) sc.scrollTop=y0; }catch(e){} }
   if(X.rn&&(refocus||X.rn.focus)){ X.rn.focus=false; try{ const el=document.getElementById('p5_name'); if(el&&typeof el.focus==='function'){ el.focus(); const n=String(el.value||'').length; if(typeof el.setSelectionRange==='function') el.setSelectionRange(n,n); } }catch(e){} }
@@ -459,7 +488,7 @@ function vClick(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototyp
   return ACT[a](b); }
 /* imagens que a tela mostra agora (para a espera de carga do jogo, xGate) */
 function urls(){ const u=[]; const add=x=>{ if(x&&u.indexOf(x)<0) u.push(x); };
-  try{ add(typeof xEraBgUrl==='function'?xEraBgUrl():''); add(avatarUrl()); { const v=pview(); if(v){ add(pfpUrl(v,null)); if(X.tab==='vis') for(const q of portraitList(v)) add('assets/hero/avatar/'+q.p.avatar+'.png'); } } if(ok()){ const f=Y().titles.featured(S); add(f&&f.icon); if(X.tab==='tit') for(const t of Y().titles.DATA.titles) add(t.icon); else if(X.tab!=='num') for(const k of KINDS) for(const it of LIST[k[0]]()) add(it.icon); } }catch(e){}
+  try{ add(typeof xEraBgUrl==='function'?xEraBgUrl():''); add(avatarUrl()); { const v=pview(); if(v){ add(pfpUrl(v,null)); if(X.tab==='vis') for(const q of portraitList(v)) add('assets/hero/avatar/'+q.p.avatar+'.png'); } } if(ok()){ const f=Y().titles.featured(S); add(titleIcon(f)); if(X.tab==='tit') for(const t of Y().titles.DATA.titles) add(titleIcon(t)); else if(X.tab!=='num') for(const k of KINDS) for(const it of LIST[k[0]]()) add(it.icon); } }catch(e){}
   return u; }
 
 if(!('profile2' in PANEL_ON)) PANEL_ON.profile2=false;

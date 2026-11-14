@@ -134,6 +134,21 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   g.PANEL_ON.vip = false; try { def.render(); not('data-x="vip"'); has('p5-vip'); } finally { g.PANEL_ON.vip = true; }
   out.push('coleção e números: contagens e valores dos módulos; servidor, login e ID só com window.realmBadge e Sys.net.player; Copiar; chip do VIP abre o Clube VIP'); }
 
+// 4b) OURO DO ABATE em Números: tudo lido do Sys.loot.goldBreakdown (muda o retorno, muda o texto); sem a função ou sem fonte, a linha não aparece
+{ const L = Sys.loot, real = L.goldBreakdown; assert.strictEqual(typeof real, 'function', 'Sys.loot.goldBreakdown existe'); assert(!/teto \+25|\b25%/.test(SRC), 'o teto não está escrito fixo na tela');
+  const mk = o => { L.goldBreakdown = () => Object.assign({ sources: {}, applied: {}, raw: 0, pct: 0, cap: 25, srcCap: {}, overXp: 0 }, o); advSave(); open({ tab: 'num' }); };
+  try {
+    { L.goldBreakdown = real; const S = advSave(), b = real(S); open({ tab: 'num' }); if (b.pct > 0) has('Ouro do abate: <b>+' + String(b.pct).replace('.', ',') + '%</b> (teto +' + b.cap + '%)'); else not('Ouro do abate'); check('ouro real'); }
+    mk({ pct: 12.5, raw: 12.5, applied: { titles: 10, crossroads: 2.5, guild: 0 } }); has('Ouro do abate: <b>+12,5%</b> (teto +25%)'); not('acima do teto'); has('Títulos +10% · Encruzilhada +2,5%'); not('Guilda +'); check('ouro 12,5');
+    mk({ pct: 30, raw: 37, cap: 30, overXp: 7, applied: { practice: 10, mentors: 20 } }); has('Ouro do abate: <b>+30%</b> (teto +30%)'); has('acima do teto: <b>+7% de XP</b>'); has('Prática +10% · Mentores +20%'); check('ouro acima do teto');
+    mk({ pct: 25, raw: 25, overXp: 4 }); has('Ouro do abate: <b>+25%</b> (teto +25%)'); not('acima do teto');   /* raw não passou do pct: sem a 2ª linha */
+    mk({ pct: 0, raw: 0 }); not('Ouro do abate'); mk({ pct: 5, raw: 5, applied: { 'x<b>': 5 } }); has('x&lt;b&gt; +5%'); check('ouro escapado');
+    L.goldBreakdown = () => { throw new Error('boom'); }; advSave(); open({ tab: 'num' }); not('Ouro do abate'); L.goldBreakdown = () => null; open({ tab: 'num' }); not('Ouro do abate');
+    delete L.goldBreakdown; L.goldBreakdown = undefined; open({ tab: 'num' }); not('Ouro do abate'); has('>Poder<'); check('módulo antigo');
+    for (const t of ['vis', 'col', 'tit']) { mk({ pct: 12, raw: 12 }); open({ tab: t }); not('Ouro do abate'); }
+  } finally { L.goldBreakdown = real; }
+  out.push('ouro do abate em Números: percentual, teto, sobra em XP e fontes lidos do Sys.loot.goldBreakdown (retorno trocado = texto trocado); some sem a função, com erro ou sem fonte'); }
+
 // 5) Kaia; tick; reservas
 { const S = advSave('kaia'); open(); has('Kaia (padrão)'); has('assets/hero/avatar/kaia_phase0.png'); not('Kael Demônio'); def.click(btn('it', { k: 'skin', id: 'kaia_ninja' })); assert.strictEqual(A.fixedEquipped(S).id, 'kaia_ninja'); check('Kaia');
   advSave(); open(); const h0 = H(); def.tick(); assert.strictEqual(H(), h0, 'sem mudança: sem redesenho'); g.S.stage = 27; def.tick(); has('Fase 27'); check('tick');
