@@ -85,7 +85,7 @@ function toastHtml(html,ms){ const t=document.getElementById('toast'); if(!t) re
 function showOffline(){
   /* QA no S24: jogador novo que fecha o jogo antes de terminar o tutorial (o último passo espera o nível 3) NUNCA via o 'Bem-vindo de volta' nem recebia o tempo fora.
      Agora só fica de fora quem ainda nem passou do 1º balão (S.tut < 1); o tutorial continua depois do aviso (botão do aviso chama startTut). */
-  if(window.__noSave||(S.tut|0)<1||AWAY<120||window.__offDone) return false; window.__offDone=true;
+  if(window.__noSave||(S.tut|0)<1||AWAY<120||window.__offDone) return false; window.__offDone=true; try{ if(window.Fogueira) Fogueira.offline(AWAY); }catch(e){}   /* Fogueira: Brasas do tempo fora, uma vez (cartão próprio; desligada devolve null) */
   const capH=typeof offlineCapH==='function'?offlineCapH():BAL.offlineCapHours, cap=capH*3600, t=Math.min(AWAY,cap);   // teto com o VIP (8 h; 10/12/14 h: js/vipauto.js)
   if(typeof vaOfflineSync==='function') vaOfflineSync();
   const perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,S.stage-1));

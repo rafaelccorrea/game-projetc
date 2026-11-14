@@ -142,6 +142,7 @@ function farmKill(e, y){
   let r = null;
   try { r = Sys.loot.onKill(S, Sys.host, { gold: e.gold, boss: e.boss, eraBoss: e.eraBoss, era: eraOf(S.stage), stage: S.stage, x: e.x, y });
     Sys.chest.onKill(S, { boss: e.boss, eraBoss: e.eraBoss }, Sys.host);
+    if (window.Fogueira) Fogueira.onKill(e.x, y - 30);   /* faísca do abate que conta para o pote (a Fogueira decide pelo killCounts) */
     fogBrasa('kill', 1, e.x); if (e.boss) fogBrasa('boss', 1, e.x);   /* Fogueira: pote de abates e Brasas do chefe (só com o Sys.bonfire ligado) */
     if (SYS_E2){ const en = { boss: !!e.boss, eraBoss: !!e.eraBoss }; const st = Sys.practice.onKill(S, Sys.host, en); if (st > 0 && typeof progStone === 'function') progStone(st);
       const fresh = Sys.titles.onKill(S, Sys.host, en); if (fresh && fresh.length){ refreshHero(); if (typeof progFresh === 'function') progFresh(fresh); } }
@@ -179,7 +180,7 @@ function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bon
     if (F.DATA.on !== true) return 0;
     /* "só abate novo" (Sistemas c5e128c, aprovado pelo dono): o abate só enche o pote na maior fase já alcançada; o módulo decide com {stage, maxStage} */
     got = (src === 'kill' ? F.addBrasas(S, src, n, { stage: S.stage, maxStage: S.best }) : F.addBrasas(S, src, n)) | 0; } catch (e) { return 0; }
-  if (got > 0){ try { const px = typeof x === 'number' ? x : (typeof HX === 'number' ? HX + 40 : 120); spawnPicks(Array.from({ length: Math.min(got, 8) }, (_, i) => ({ type: 'brasa', value: i === 0 ? got - Math.min(got, 8) + 1 : 1, to: 'bag', delay: i * 0.06 })), px); } catch (e) {} }
+  if (got > 0){ try { const px = typeof x === 'number' ? x : (typeof HX === 'number' ? HX + 40 : 120); if (!(window.Fogueira && Fogueira.onBrasa(px, GY - 34, got))) spawnPicks(Array.from({ length: Math.min(got, 8) }, (_, i) => ({ type: 'brasa', value: i === 0 ? got - Math.min(got, 8) + 1 : 1, to: 'bag', delay: i * 0.06 })), px); } catch (e) {} }
   return got; }
 /* HOST DA FOGUEIRA: o Sys.host do jogo, trocando só a ENTRADA do item. O addItem comum (addItemToBag) equipa sozinho o que é melhor e desmonta com a mochila cheia;
    na Fogueira quem decide é o jogador (cartão Equipar / Guardar / Desmontar) ou o automático do módulo, então aqui o item só ENTRA na mochila, sem equipar,

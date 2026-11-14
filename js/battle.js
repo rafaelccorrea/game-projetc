@@ -1221,7 +1221,7 @@ function draw(){
       ctx.fillStyle='#ffffff'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(tx,0,1); ctx.restore(); } }
   if(B.eraHold){ ctx.save(); ctx.font='800 12px system-ui'; ctx.textAlign='center'; ctx.lineJoin='round'; ctx.lineWidth=3; ctx.strokeStyle='#000'; ctx.fillStyle='#ffe9c8'; const tx='Carregando a próxima era'+'.'.repeat(1+Math.floor(B.at*2)%3); ctx.strokeText(tx,LW/2,GY-HS-40); ctx.fillText(tx,LW/2,GY-HS-40); ctx.restore(); }
   drawLevelUp();   /* P21: subir de nível DEPOIS das barras de vida e dos selos do canvas (o texto nunca fica atrás deles) */
-  drawPicks();
+  drawPicks(); if(typeof Fogueira!=='undefined') Fogueira.draw(ctx);   /* faíscas e Brasas voando até a Fogueira */
   for(const p of B.parts){ const a=Math.max(0,1-p.t/p.life); ctx.globalAlpha=a; ctx.fillStyle=p.col;
     if(p.glow) ctx.globalCompositeOperation='lighter'; const s=p.sz*(p.glow?a+.4:1); ctx.fillRect(p.x-s/2,p.y-s/2,s,s); if(p.glow) ctx.globalCompositeOperation='source-over'; }
   ctx.globalAlpha=1;
@@ -1378,7 +1378,7 @@ function loop(now){
   if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
   if(PF) pA=performance.now();
-  tickFx(dt); if(PF) pB=performance.now(); draw();
+  tickFx(dt); if(typeof Fogueira!=='undefined') Fogueira.tick(rdt);   /* Fogueira das Eras V5 (js/fogueira.js): monta e desmonta sozinha; desligada não faz nada */ if(PF) pB=performance.now(); draw();
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
   if(PF) pC=performance.now();
   drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
