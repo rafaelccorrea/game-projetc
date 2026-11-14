@@ -9,15 +9,18 @@ const vm = require('vm');
 const boot = require('./sandbox');
 let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
 (async () => {
-  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
-  const J = code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
+  /* o JOGO liga o Grimório no arranque (SYS_LIVE, js/farm.js); "?debug=1&sem=grimoire" sobe sem ele, para provar o "desligado = como antes" */
+  { const G0 = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }); for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+    check('sem parâmetro o Grimório nasce LIGADO (SYS_LIVE do jogo)', G0.ev('!!(Sys.grimoire&&Sys.grimoire.DATA)&&Sys.grimoire.DATA.on===true')); }
+  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1&sem=grimoire' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  const J =code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
   if (ev("typeof GrimHud==='undefined'")) vm.runInContext(G.rd('js/grimhud.js'), G.sandbox, { filename: 'js/grimhud.js' });   /* enquanto o arquivo não entra na lista do index.html */
   ev(`(function(){ S.tut=99; S.welcome=true; B.paused=false; B.res=null; view='battle'; Math.random=()=>0.5; window.__rng=0.999; Sys.host.rng=()=>window.__rng;
     window.__mk=function(k,kind){ const L=[]; for(let i=0;i<(k||1);i++){ const e=mkEnemy(S.stage,kind||'e0'); e.maxhp=e.hp=1e7; e.dmg=5; e.atkT=99; L.push(e); } B.en=L; B.toSpawn=[]; B.eshots=[]; placeNow(); B.fx.length=0; B.banner=null; B.hero.hp=B.hero.maxhp; B.deadT=0; B.act=null; return L; };
     window.__set=function(mode,ids){ const Gm=Sys.grimoire; for(const id of ids) if(!Gm.owned(S,id)) Gm.addPages(S,id,1,'test'); const r=Gm.setPreset(S,mode,ids); grimSync(); return r&&r.ok; };
     window.__run=function(sec){ const k=Math.round(sec*30); for(let i=0;i<k;i++) grimStep(1/30); }; return 1; })()`);
   /* ---------- 1) desligado ---------- */
-  check('módulo carregado e chave DESLIGADA por padrão', ev('!!(Sys.grimoire&&Sys.grimoire.DATA)&&Sys.grimoire.DATA.on===false'));
+  check('módulo carregado e chave DESLIGADA com &sem=grimoire', ev('!!(Sys.grimoire&&Sys.grimoire.DATA)&&Sys.grimoire.DATA.on===false'));
   { const r = J(`startBattle(); B.sysT=0; for(let i=0;i<90;i++) step(1/30); return {grim:B.grim,list:GrimBattle.list(),on:GrimBattle.on(),banner:B.banner&&B.banner.txt};`);
     check('desligado: sem estado de magia, sem lista para a coluna', r.grim === null && r.list === null && r.on === false, JSON.stringify(r)); }
   /* ---------- 2) conjunto e relógio ---------- */

@@ -8,8 +8,12 @@
 const boot = require('./sandbox');
 let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
 (async () => {
-  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
-  const J = code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
+  /* o JOGO liga golpes, caminho e afinidade no arranque (SYS_LIVE, js/farm.js). Este teste sobe com "&sem=strikes,path,affinity": os dois primeiros para provar o
+     "desligado = como antes"; a afinidade para ISOLAR os golpes (as contas abaixo são ATQ × multiplicador do golpe; a afinidade tem o teste dela, afinidade.js) */
+  { const G0 = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }); for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+    check('sem parâmetro golpes e caminho nascem LIGADOS (SYS_LIVE do jogo)', G0.ev('Sys.strikes.DATA.on===true&&Sys.path.DATA.on===true')); }
+  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1&sem=strikes,path,affinity' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  const J =code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
   ev(`(function(){ S.tut=99; S.welcome=true; B.paused=false; B.res=null; view='battle'; Math.random=()=>0.5; window.__rng=0; window.__rngN=0; Sys.host.rng=()=>{ window.__rngN++; return window.__rng; };
     window.__mk=function(kind){ const e=mkEnemy(S.stage,kind||'e0'); e.maxhp=e.hp=1e7; e.dmg=5; B.en=[e]; B.toSpawn=[]; B.eshots=[]; placeNow(); B.fx.length=0; B.stkQ.length=0; B.hero.hp=B.hero.maxhp; B.hero.critRate=0; B.deadT=0; B.act=null; B.stkLsT=null; return e; };
     window.__A={type:'s1',col:'#ffffff',hits:[],ev:[]}; window.__lab=t=>B.fx.filter(f=>f.txt===t);
@@ -17,7 +21,7 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
   const D = J('const K=Sys.strikes.DATA; return {battle:K.battle,color:K.color,comboMult:K.comboMult,counterMult:K.counterMult,stunSec:K.stunSec,stunSecBoss:K.stunSecBoss,imm:K.stunImmuneSec,paths:Sys.path.DATA.paths};');
   const path = id => D.paths.find(p => p.id === id);
   /* ---------- 1) tudo desligado ---------- */
-  check('chaves DESLIGADAS por padrão (strikes, path)', ev('Sys.strikes.DATA.on===false&&Sys.path.DATA.on===false'));
+  check('chaves DESLIGADAS com &sem=strikes,path (strikes, path)', ev('Sys.strikes.DATA.on===false&&Sys.path.DATA.on===false'));
   { const r = J(`refreshHero(); const base={aspd:B.hero.aspd,critDmg:B.hero.critDmg,ivl:B.hero.ivl}; const e=__mk(); __rngN=0; hitEnemy(e,1,__A,null); const d=1e7-e.hp; const hp0=B.hero.hp; heroHit(10,e); for(let i=0;i<30;i++) step(1/30);
       return {stk:B.stk,q:B.stkQ.length,rng:__rngN,d,atk:B.hero.atk,hurt:hp0-B.hero.hp>0,labels:B.fx.filter(f=>/[A-Z]{4}/.test(f.txt)).map(f=>f.txt),base};`);
     check('desligado: sem perfil, sem fila, sem rótulo, sem gastar a sorte do jogo', r.stk === null && r.q === 0 && r.rng === 0 && r.labels.length === 0, JSON.stringify(r));

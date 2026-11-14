@@ -6,13 +6,16 @@
 const boot = require('./sandbox');
 let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
 (async () => {
-  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  /* o JOGO liga a afinidade no arranque (SYS_LIVE, js/farm.js); "?debug=1&sem=affinity" sobe sem ela, para provar o "desligada = como antes" */
+  { const G0 = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }); for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+    check('sem parâmetro a afinidade nasce LIGADA (SYS_LIVE do jogo)', G0.ev('!!(Sys.affinity&&Sys.affinity.DATA)&&Sys.affinity.DATA.on===true')); }
+  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1&sem=affinity' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
   ev("(function(){ S.tut=99; S.welcome=true; B.paused=false; B.res=null; view='battle'; Math.random=()=>0.5; return 1; })()");
   /* um golpe básico do herói num inimigo de vida enorme; devolve o dano e o número que saltou */
   const hit = () => JSON.parse(ev(`(function(){ AFFC.t=-1e9; B.hero.critRate=0; B.fx.length=0; const e=mkEnemy(S.stage,'e0'); e.maxhp=e.hp=1e7; e.x=e.slot=SLOTX[0]; e.parked=true; B.en=[e];
     hitEnemy(e,1,{type:'s1',col:'#ffffff',hits:[],ev:[]},null); const f=B.fx[0]; return JSON.stringify({d:1e7-e.hp,txt:f?f.txt:'',fmt:fmt(1e7-e.hp)}); })()`));
   const at = (stage, on) => { ev('(function(){ S.stage=' + stage + '; S.wave=1; Sys.affinity.setOn(' + (on ? 'true' : 'false') + '); return 1; })()'); return hit(); };
-  check('módulo carregado e chave DESLIGADA por padrão', ev('!!(Sys.affinity&&Sys.affinity.DATA)&&Sys.affinity.DATA.on===false'));
+  check('módulo carregado e chave DESLIGADA com &sem=affinity', ev('!!(Sys.affinity&&Sys.affinity.DATA)&&Sys.affinity.DATA.on===false'));
   const D = JSON.parse(ev('JSON.stringify({weak:Sys.affinity.DATA.weak,resist:Sys.affinity.DATA.resist,per:STAGES_PER_ERA})'));
   check('herói de corpo a corpo no save novo (estilo Lâmina pelo módulo)', ev("(function(){ Sys.affinity.setOn(true); const s=Sys.affinity.heroStyle(S,Sys.host); Sys.affinity.setOn(false); return s; })()") === 'blade');
   /* era 0: fraca contra Lâmina · era 3: resiste a Lâmina · era 1: neutra para Lâmina (tabela do módulo) */

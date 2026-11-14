@@ -10,8 +10,11 @@
 const boot = require('./sandbox');
 let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
 (async () => {
-  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
-  const J = code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
+  /* o JOGO liga a Provação e o Ensaio no arranque (SYS_LIVE, js/farm.js); "?debug=1&sem=trial,pathTry" sobe sem eles, para provar que desligados nada começa */
+  { const G0 = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1' }); for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+    check('sem parâmetro a Provação e o Ensaio nascem LIGADOS (SYS_LIVE do jogo)', G0.ev('Sys.trial.DATA.on===true&&Sys.pathTry.DATA.on===true')); }
+  const G = boot({ realFetch: true, runBoot: true, search: '?debug=1&fresh=1&skip=1&sem=trial,pathTry' }), { ev } = G; for (let i = 0; i < 20; i++) await new Promise(r => setImmediate(r));
+  const J =code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
   ev(`(function(){ S.tut=99; S.welcome=true; B.paused=false; B.res=null; view='battle'; Math.random=()=>0.5; let sd=7; Sys.host.rng=()=>{ sd=(sd*1103515245+12345)%2147483648; return sd/2147483648; };
     const L=Sys.level.ensure(S); L.lvl=60; L.xp=0; S.stage=4; S.best=7; S.wave=2; S.farm=false; startBattle();
     window.__n={tfin:0,tres:[],time:[],pfin:0,pres:[],pcan:0};
@@ -23,7 +26,7 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
     window.__snap=()=>({stage:S.stage,wave:S.wave,farm:!!S.farm,kills:S.kills,inv:S.inv.length});
     if(typeof ligBridges==='function') ligBridges(); return 1; })()`);
   check('pontes ligadas: PTrial.battle e PPath.battle são funções', ev("typeof PTrial.battle==='function'&&typeof PPath.battle==='function'"));
-  check('chaves DESLIGADAS por padrão: Lutar e Testar não começam nada', ev("Sys.trial.DATA.on===false&&Sys.pathTry.DATA.on===false") && ev('PTrial.start(10)') === false && ev("PPath.tryStart('blade')") === false && ev('B.inst==null'));
+  check('chaves DESLIGADAS com &sem=trial,pathTry: Lutar e Testar não começam nada', ev("Sys.trial.DATA.on===false&&Sys.pathTry.DATA.on===false") && ev('PTrial.start(10)') === false && ev("PPath.tryStart('blade')") === false && ev('B.inst==null'));
 
   /* =================== PROVAÇÃO =================== */
   ev('Sys.trial.setOn(true); 1');

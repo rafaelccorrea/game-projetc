@@ -10,7 +10,7 @@
    render()  desenha em V (use xFit/xDims + xWrap do screens.js, base de 390 px)
    click(b,ev) recebe o elemento [data-x] tocado · tick() 4x por segundo (relógios) · busy() true = não redesenhar por fora (animação em curso)
    onOpen(opções) / onClose() ao entrar e sair da tela. */
-const PANEL_ON=window.PANEL_ON=Object.assign({grim:true, path:true, trial:true, cross:true, end9:true, mail2:true, tower2:true, gear2:true, shop2:true, pass2:true, profile2:true, map2:true, forge2:true,   /* Forja V2 LIGADA: o QA viu a faixa de resultado na linha reservada (320x640) e a volta igual à da Forja antiga */
+const PANEL_ON=window.PANEL_ON=Object.assign({guild2:true, tourney2:true, grim:true, path:true, trial:true, cross:true, end9:true, mail2:true, tower2:true, gear2:true, shop2:true, pass2:true, profile2:true, map2:true, forge2:true,   /* Forja V2 LIGADA: o QA viu a faixa de resultado na linha reservada (320x640) e a volta igual à da Forja antiga */
   pets2:true,vip2:true,mounts2:true,   /* TELAS V2 LIGADAS (lote 1, QA aprovou na tela em 320 e 360 abrindo pelo Menu, 13/11; PO autorizou ligar por lote): Pets, VIP e Montarias novas entram no lugar das antigas. Forja V2 espera o teste da faixa de resultado */
   forge:true,cfg:true,vip:true,pets:true,rank:true,   /* ligadas: vistas por mim no navegador */
   tower:true,era:true,missions:true,profile:true,codex:true,guild:true,chat:true, intro:true, look:true,   /* aba Aparência do Equipamento (js/p_look.js, do QA): desligada até a conferência */   /* conferida pelo QA (fluxo novo e de quem volta) */    /* telas iniciais do Servidor (js/p_intro.js, arquivo GERADO): desligada */   /* ligadas: conferidas pelo QA na aba dele ("pode ligar") */
