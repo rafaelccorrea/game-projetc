@@ -20,7 +20,7 @@
 if(!('trial' in PANEL_ON)) PANEL_ON.trial=false;
 const N='trial';
 const ACTIONS=['go','back','sel','retry','cont','tip'];
-const ART={portrait:false};   /* a Arte ainda não entregou os retratos dos mestres */
+const ART={portrait:true};   /* retratos dos mestres: assets/mentors/m0..m8.png (Arte, adec5d2), os mesmos da tela dos Mentores */
 const X={mode:'card',sel:0,res:null,msg:'',tone:'',busy:false,run:null,left:null,anim:true,sig:'',tk:0,hud:null,hudSig:'',hudT:0,css:false};
 const API={};
 
