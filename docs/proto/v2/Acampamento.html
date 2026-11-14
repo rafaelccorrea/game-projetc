@@ -1,0 +1,575 @@
+<title>Eonbound Acampamento das Eras</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Acampamento das Eras (js/sys/camp.js, desligado). Sobre os PRINTS REAIS de hoje: a batalha (a/v5_hoje.png, v0.13.3) e a folha do
+   Equipamento (a/eq_hoje.png: cabeçalho Voltar | título | ouro | gemas, marrom). À esquerda o print puro, à direita a mesma tela com só o que é novo.
+   Entrada: pontinho no botão Menu da batalha + item "Acampamento" no painel do Menu (o mesmo dos Mentores e da Dupla).
+   Momentos: Menu · Acampamento (3 tendas) · Tenda · Pôr pet · Coleta · Volta depois de horas fora.
+   TENDAS E AJUDANTE PROVISÓRIOS: desenhados no código (a Arte faz as tendas e o Ajudante). Sem PNG novo: só o que já está em a/
+   (mbg_era*, pp_*, coin, gem, mi_*). */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2; --brown:#211812; --brown2:#2c2119;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45;overflow-wrap:anywhere}
+.stl b{color:var(--gold)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+.tbl th,.tbl td{padding:5px 4px;border-top:1px solid var(--line);text-align:right;font-weight:800}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{color:var(--muted);font-size:11.5px;font-weight:900}
+.tbl td b{color:var(--gold)}
+.tnote{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.45}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+.lvp{position:absolute;z-index:5;left:16px;top:56px;width:48px;height:21px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2b52a);border:2px solid #3a2208;color:#3a2208;font-family:var(--fd);font-size:13px;line-height:17px;text-align:center;pointer-events:none}
+.mhit{position:absolute;z-index:6;left:322px;top:56px;width:56px;height:66px;border:0;background:none;border-radius:16px}
+.mhit.open{box-shadow:0 0 0 3px var(--g2) inset}
+.mdot{position:absolute;right:2px;top:0;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10.5px/14px var(--fb);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.mdim{position:absolute;inset:0;z-index:7;background:rgba(6,4,3,.58);animation:fade .2s ease-out}
+.mpan{position:absolute;z-index:8;right:10px;top:138px;width:370px;padding:12px 10px;border-radius:22px;background:linear-gradient(180deg,rgba(44,33,24,.98),rgba(24,18,13,.98));border:1px solid rgba(255,236,200,.22);box-shadow:0 18px 40px rgba(0,0,0,.6);animation:min .22s cubic-bezier(.2,.9,.25,1)}
+@keyframes min{from{opacity:0;transform:translateY(-18px) scale(.9)}}
+.mpan .mh{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
+.mpan .mh b{font-family:var(--fd);font-weight:400;font-size:20px;color:#fff}
+.mpan .mh span{font-size:11px;font-weight:800;color:#c9b9a2}
+.mgr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 6px}
+.mi{position:relative;height:76px;padding:0;border:0;border-radius:16px;background:rgba(255,236,200,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#ffe2a8;font-weight:900;font-size:11.5px}
+.mi.old{opacity:.42}
+.mi .ib{position:relative;width:50px;height:50px;border-radius:14px;display:grid;place-items:center}
+.mi .ib img,.mi .ib svg{width:42px;height:42px;object-fit:contain}
+.mi.new{background:rgba(255,201,74,.14);box-shadow:0 0 0 2px var(--g2) inset;animation:sp 1.4s ease-in-out infinite}
+.mi .bdg{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10.5px/14px var(--fb)}
+.mi .tag{position:absolute;left:50%;top:-7px;transform:translateX(-50%);padding:0 6px;height:16px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font:900 10px/16px var(--fb);white-space:nowrap}
+.mi .lk{position:absolute;inset:0;border-radius:14px;background:rgba(0,0,0,.55);display:grid;place-items:center;font:900 10px var(--fb);color:#fff}
+.mnote{margin:10px 4px 0;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.35}
+@keyframes sp{50%{box-shadow:0 0 0 2px var(--g2) inset,0 0 16px rgba(255,201,74,.55)}}
+@keyframes fade{from{opacity:0}}
+/* folha cheia no estilo do Equipamento de hoje */
+.sheet{position:absolute;inset:0;z-index:20;background:var(--brown);display:flex;flex-direction:column;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.hd{flex:none;height:56px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid rgba(255,236,200,.12);background:#1c140f}
+.back{flex:none;height:44px;padding:0 12px 0 8px;border-radius:14px;border:1.5px solid rgba(255,236,200,.18);background:#241a13;font-weight:900;font-size:15px;display:flex;align-items:center;gap:4px}
+.hd h2{flex:1;min-width:0;margin:0;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;height:32px;padding:0 9px 0 4px;border-radius:16px;background:#2a1f17;border:1.5px solid rgba(255,236,200,.14);display:flex;align-items:center;gap:4px;font-family:var(--fd);font-size:14px;color:#fff}
+.pill img{width:24px;height:24px}
+.bd{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.card{border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:9px 10px}
+.card h4{margin:0 0 6px;font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px}
+.card h4 span{font-family:var(--fb);font-size:11px;font-weight:900;color:var(--mut2);white-space:nowrap}
+.card.hi{background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2)}
+.note{font-size:11.5px;font-weight:800;color:var(--mut2);line-height:1.35;margin:6px 0 0}
+.note b{color:var(--cream)}
+.btn{flex:none;min-height:44px;min-width:44px;padding:0 12px;border-radius:13px;border:1.5px solid rgba(255,236,200,.25);background:#3a2c20;font-weight:900;font-size:14px;color:var(--cream);display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn img{width:22px;height:22px}
+.btn.g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1d5a1c}
+.btn.y{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10}
+.btn[disabled],.btn.off{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.wide{width:100%;min-height:48px;font-size:16px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 8px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12px;white-space:nowrap}
+.chip img,.chip svg{width:18px;height:18px}
+.chip.z{opacity:.45}
+.prov{position:absolute;padding:1px 6px;border-radius:7px;background:rgba(10,7,5,.78);border:1px dashed rgba(255,236,200,.45);color:#f6ecdf;font:900 9.5px/14px var(--fb);white-space:nowrap;pointer-events:none}
+/* cena do acampamento */
+.scene{position:relative;height:206px;border-radius:16px;overflow:hidden;border:2px solid #4a3a2b;flex:none}
+.scene>.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 60%}
+.scene .sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,14,10,.05) 30%,rgba(20,14,10,.6))}
+.tpin{position:absolute;bottom:8px;width:112px;height:150px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.tpin .tsv{width:104px;height:88px}
+.tpin .nm{margin-top:2px;padding:1px 7px;border-radius:8px;background:rgba(10,7,5,.8);font:900 11px/16px var(--fb);color:#fff;white-space:nowrap}
+.tpin .mb{width:84px;height:7px;margin-top:3px;border-radius:4px;background:rgba(0,0,0,.6);overflow:hidden}
+.tpin .mb i{display:block;height:100%;background:linear-gradient(90deg,#9cf08f,#3fae3c)}
+.tpin.full .mb i{background:linear-gradient(90deg,#ffe07a,#f2a826)}
+.tpin .ful{position:absolute;top:2px;left:50%;transform:translateX(-50%);padding:0 7px;height:18px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10px/14px var(--fb);white-space:nowrap;animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateX(-50%) translateY(-3px)}}
+.tpin .wk{position:absolute;bottom:40px;display:flex;gap:0}
+.tpin .wk img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+/* linhas das tendas */
+.trow{width:100%;display:flex;gap:8px;align-items:center;padding:8px;border-radius:14px;background:var(--brown2);border:1.5px solid #4a3a2b;text-align:left;min-height:84px}
+.trow.full{border-color:var(--g2)}
+.trow .tsv{width:64px;height:54px;flex:none}
+.trow .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.trow .t b{display:flex;justify-content:space-between;gap:6px;font-family:var(--fd);font-weight:400;font-size:15px;color:#fff}
+.trow .t b span{font-family:var(--fb);font-size:11px;font-weight:900;color:var(--g2);white-space:nowrap}
+.trow .t small{font-size:11.5px;font-weight:800;color:var(--mut2);line-height:1.25}
+.trow .t small em{font-style:normal;color:var(--cream)}
+.trow .pets{display:flex;gap:2px;flex:none}
+.trow .pets i{width:26px;height:26px;border-radius:8px;background:rgba(0,0,0,.35);border:1px dashed rgba(255,236,200,.25);display:grid;place-items:center}
+.trow .pets img{width:24px;height:24px;object-fit:contain}
+.trow .chev{flex:none;width:12px}
+.bar{position:relative;display:block;height:16px;border-radius:8px;background:rgba(0,0,0,.45);overflow:hidden;border:1px solid rgba(255,236,200,.16)}
+.bar i{display:block;height:100%;background:linear-gradient(180deg,#9cf08f,#3fae3c)}
+.bar.full i{background:linear-gradient(180deg,#ffe07a,#f2a826)}
+.bar span{position:absolute;inset:0;text-align:center;font:900 10.5px/14px var(--fb);color:#fff;text-shadow:0 1px 2px #000}
+.gfoot{flex:none;padding:8px 12px 12px;background:#1c140f;border-top:1px solid rgba(255,236,200,.12);display:flex;flex-direction:column;gap:6px}
+.gfoot .sum{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+/* detalhe da tenda */
+.hero{position:relative;height:190px;border-radius:16px;overflow:hidden;border:2px solid #4a3a2b;flex:none}
+.hero>.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 60%}
+.hero .sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,14,10,.1) 0,rgba(20,14,10,.15) 45%,rgba(20,14,10,.88) 66%)}
+.hero .tsv{position:absolute;left:8px;bottom:8px;width:190px;height:158px}
+.hero .hlp{position:absolute;left:150px;bottom:10px;width:48px;height:70px}
+.hero .wk{position:absolute;left:4px;bottom:4px;display:flex}
+.hero .wk img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.hero .tx{position:absolute;right:10px;top:12px;width:40%;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.hero .tx small{font-size:11px;font-weight:900;color:var(--mut2);letter-spacing:.3px}
+.hero .tx b{font-family:var(--fd);font-weight:400;font-size:24px;line-height:1.05;color:#fff}
+.hero .tx i{font-style:normal;font-size:12.5px;font-weight:900;color:var(--cream);line-height:1.25}
+.lvb{display:inline-flex;padding:2px 9px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:12px;font-weight:900}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid rgba(255,236,200,.1);font-size:12.5px;font-weight:800}
+.kv:first-of-type{border-top:0}
+.kv span{color:var(--mut2)}
+.kv b{color:#fff;text-align:right}
+.small{display:flex;gap:8px;align-items:flex-start;margin-top:6px;padding:6px 8px;border-radius:10px;background:rgba(0,0,0,.3);border:1px dashed rgba(255,201,74,.5);font-size:11.5px;font-weight:800;line-height:1.3;color:var(--cream)}
+.small img{width:22px;height:22px;flex:none}
+.small b{color:var(--g2)}
+.wrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,236,200,.1)}
+.wrow:first-of-type{border-top:0}
+.wrow .av{flex:none;width:46px;height:46px;border-radius:12px;background:#1c140f;border:2px solid var(--rc,#4a3a2b);display:grid;place-items:center;position:relative;overflow:hidden}
+.wrow .av img{width:42px;height:42px;object-fit:contain}
+.wrow .av svg{width:40px;height:40px}
+.wrow .av.empty{border-style:dashed;border-color:rgba(255,236,200,.3)}
+.wrow .t{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.25;color:var(--mut2)}
+.wrow .t b{display:block;font-size:13.5px;color:#fff}
+.wrow .t em{font-style:normal;color:#7fe07a;font-weight:900}
+.wrow .t .bad{color:#ff8a9a}
+.stars{color:var(--g2);letter-spacing:-1px;font-size:11px}
+.up{color:#7fe07a}
+/* escolher pet */
+.pg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.pc{position:relative;min-height:118px;padding:6px 4px 6px;border-radius:14px;background:#1c140f;border:2.5px solid var(--rc,#a9b3c9);display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center}
+.pc img{width:56px;height:56px;object-fit:contain}
+.pc b{font-size:12.5px;font-weight:900;color:#fff;line-height:1.15}
+.pc small{font-size:10.5px;font-weight:900;color:var(--mut2);line-height:1.2}
+.pc em{font-style:normal;font-size:12.5px;font-weight:900;color:#7fe07a}
+.pc.na{opacity:.45;border-style:dashed}
+.pc.na em{color:var(--mut2);font-size:11px}
+.pc .tg{position:absolute;left:4px;top:4px;padding:0 6px;height:16px;border-radius:8px;background:rgba(10,7,5,.8);color:#f6ecdf;font:900 9.5px/16px var(--fb);white-space:nowrap}
+/* janelas */
+.dim{position:absolute;inset:0;z-index:30;background:rgba(6,4,2,.72);animation:fade .2s ease-out}
+.pop{position:absolute;z-index:31;left:16px;right:16px;top:118px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(52,36,20,.99),rgba(26,18,12,.99));border:2px solid var(--g2);box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 30px rgba(255,201,74,.3);display:flex;flex-direction:column;animation:pop .28s cubic-bezier(.2,.9,.25,1.2)}
+@keyframes pop{from{opacity:0;transform:scale(.88)}}
+.pop .top{position:relative;height:124px}
+.pop .top .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 60%;opacity:.8}
+.pop .top .tsv{position:absolute;bottom:2px;width:104px;height:88px}
+.pop .in{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.pop .k{font-size:12px;font-weight:900;color:var(--mut2);letter-spacing:.5px}
+.pop h3{margin:0;font-family:var(--fd);font-weight:400;font-size:23px;color:#fff;line-height:1.1}
+.pop p{margin:0;font-size:12.5px;font-weight:800;color:var(--cream);line-height:1.35}
+.gl{width:100%;display:flex;flex-direction:column;gap:6px}
+.gr{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,236,200,.14);text-align:left;animation:gin .45s cubic-bezier(.2,.9,.25,1.2) both}
+.gr:nth-child(2){animation-delay:.15s}.gr:nth-child(3){animation-delay:.3s}
+@keyframes gin{from{opacity:0;transform:translateY(14px) scale(.9)}}
+.gr .ico{flex:none;width:34px;height:34px;display:grid;place-items:center}
+.gr .ico img,.gr .ico svg{width:32px;height:32px}
+.gr .ico.fly{animation:fly .9s ease-out both}
+@keyframes fly{0%{transform:translateY(-34px) scale(1.5);opacity:0}60%{transform:translateY(3px) scale(1.1);opacity:1}100%{transform:none}}
+.gr .t{flex:1;min-width:0;font-size:11.5px;font-weight:800;color:var(--mut2);line-height:1.25}
+.gr .t b{display:block;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff}
+.gr.z{opacity:.45}
+.gr.z .t b{font-family:var(--fb);font-weight:900;font-size:13px}
+.gr small.mins{display:inline-block;margin-top:2px;padding:0 6px;border-radius:7px;background:rgba(0,0,0,.4);border:1px dashed rgba(255,201,74,.55);color:#ffe2a8;font-size:10.5px;font-weight:900}
+.btns{display:flex;gap:8px;width:100%}
+.btns .btn{flex:1}
+.toast{position:absolute;left:50%;top:96px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.96);border:1px solid rgba(255,236,200,.3);font-weight:900;font-size:12.5px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption id="cap0">Hoje<small>print real do jogo (v0.13.3, batalha)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" id="shot0" src="a/v5_hoje.png" alt="Print real do jogo hoje"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Com o Acampamento das Eras<small>a mesma tela; só o que é novo aparece</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <img class="shot" src="a/v5_hoje.png" alt="">
+    <div id="hud"></div>
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Acampamento das Eras</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">À esquerda, o <b>print real de hoje</b> (a batalha, ou a folha do Equipamento quando o Acampamento está aberto, para comparar o cabeçalho e o marrom). À direita, <b>a mesma tela</b> com só o que é novo: um <b>pontinho no Menu</b> e o item <b>Acampamento</b>; ele abre numa <b>folha nova</b> no estilo do Equipamento. As <b>tendas e o Ajudante são provisórios</b>, desenhados no código, até a Arte fazer os de verdade. Os pets e o cenário da era já estão no jogo.</p>
+    <div class="box">
+      <h2>Momento</h2>
+      <div class="seg" role="group" aria-label="Momento"><button data-st="menu" aria-pressed="true">0 · Entrada pelo Menu</button><button data-st="camp" aria-pressed="false">1 · As 3 tendas</button><button data-st="tent" aria-pressed="false">2 · Tenda aberta</button><button data-st="pick" aria-pressed="false">3 · Pôr pet</button><button data-st="collect" aria-pressed="false">4 · Coleta</button><button data-st="back" aria-pressed="false">5 · Volta depois de 8 h</button></div>
+      <h3>Tenda aberta</h3>
+      <div class="seg" role="group" aria-label="Tenda" id="tseg"></div>
+      <h3>Nível do jogador</h3>
+      <div class="seg" role="group" aria-label="Nível"><button data-lv="15" aria-pressed="false">Nv 15 (trancado)</button><button data-lv="34" aria-pressed="true">Nv 34</button></div>
+      <h3>Teto (horas do offline)</h3>
+      <div class="seg" role="group" aria-label="VIP" id="vseg"></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Simular">
+        <button data-sim="h1">Passar 1 h</button>
+        <button data-sim="h8">Passar 8 h</button>
+        <button data-sim="h14">Passar 14 h (VIP 14 h)</button>
+        <button data-sim="up">Melhorar a tenda aberta</button>
+        <button data-sim="pet">Pôr pet na tenda aberta</button>
+        <button data-sim="main">Pet da tenda vira o principal</button>
+        <button data-sim="clock">Voltar o relógio 3 h</button>
+        <button data-sim="reset">Recomeçar</button>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/camp.js, desligado)</h2>
+      <ul>
+        <li>Abre no <b>Nv 20</b>. Antes disso as tendas <b>não acumulam</b></li>
+        <li><b>3 tendas</b> que enchem com o tempo, também com o jogo fechado: <b>Tenda do Ouro</b> 3 abates de ouro por hora · <b>Forja do Acampamento</b> 1 Pedra de Forja por hora · <b>Pedreira</b> 2 pedras de prática por hora</li>
+        <li><b>Teto = as horas do offline</b>: <b>8 h</b> grátis; com o VIP de conveniência, as mesmas <b>10, 12 ou 14 h</b> do resto do jogo</li>
+        <li><b>Ouro sempre pouco</b>: a Tenda do Ouro guarda no máximo <b>5 min de abate por coleta</b> (120 abates), mesmo no Nv 10 com pets e VIP</li>
+        <li>Cada tenda: <b>1 Ajudante fixo</b> (sempre trabalha) e <b>2 vagas de pet parado</b>. <b>O pet principal nunca trabalha</b> (se um pet da tenda virar o principal, ele para de contar sozinho)</li>
+        <li>Pet na tenda <b>não perde nada</b>: continua seu, não perde nível e não muda a batalha. Ajuda: <b>+10% × (raridade + 1) + 5% por estrela</b> (Básico 0★ +10% · Lendário 5★ +75%)</li>
+        <li><b>Melhorar Nv 1 a 10 só com ouro</b>: cada nível <b>+15%</b> da produção base (Nv 10 = ×2,35). Custo = 300 × 1,6^(nível−1) abates da fase</li>
+        <li>Coleta pega a <b>parte inteira</b>; a fração fica na tenda. Pet trocado vale <b>daqui para frente</b></li>
+        <li><b>Voltar a hora do aparelho não rende nada</b>: o marcador só anda para frente</li>
+        <li><b>Nada à venda, nada sorteado, sem gema</b></li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Ouro da Tenda do Ouro por coleta</h2>
+      <div id="gtab"></div>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: tendas lado a lado sem a lista, Coletar também na batalha"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), hud=$('#hud'), lay=$('#lay');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const f1=v=>String(Math.round(v*10)/10).replace('.',',');
+const f2=v=>String(Math.round(v*100)/100).replace('.',',');
+const kfmt=v=>v>=10000?f1(v/1000)+' mil':nf(v);
+function hfmt(h){ const m=Math.max(1,Math.ceil(h*60)); const hh=Math.floor(m/60), mm=m%60; return hh?(hh+' h'+(mm?' '+mm+' min':'')):mm+' min'; }
+
+/* ===== regras: cópia fiel de js/sys/camp.js (DATA) ===== */
+const DATA={
+  unlockLevel:20, capHours:8, maxLevel:10, levelRate:0.15, petSlots:2,
+  petRate:{perRarity:0.10, perStar:0.05},
+  tents:[
+    {id:'gold',     name:'Tenda do Ouro',        res:'gold',     perHour:3, unit:'goldUnit', capMin:5},
+    {id:'forge',    name:'Forja do Acampamento', res:'forge',    perHour:1},
+    {id:'practice', name:'Pedreira',             res:'practice', perHour:2},
+  ],
+  upgrade:{base:300, growth:1.6},
+  killsPerMin:24,
+};
+const TENT={}; DATA.tents.forEach(t=>{ TENT[t.id]=t; });
+const VIPH=[{h:8,l:'Grátis 8 h'},{h:10,l:'VIP 10 h'},{h:12,l:'VIP 12 h'},{h:14,l:'VIP 14 h'}];
+const RES={gold:'ouro',forge:'Pedras de Forja',practice:'pedras de prática'};
+const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
+const PRN=['Básico','Raro','Épico','Mítico','Lendário','Prismático'], RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff0a8'];
+/* pets do jogador simulado (Nv 34, era Pólvora): espécies do js/sys/pet.js, imagens que já estão em a/ */
+const PETS=[
+  {id:'wolf',       name:'Mamute',            r:0, img:'pp_era0_mammoth_mid'},
+  {id:'owl',        name:'Esfinge',           r:1, img:'pp_era1_sphinx'},
+  {id:'drake',      name:'Dragão',            r:2, img:'pp_era2_dragon_evo'},
+  {id:'parrot',     name:'Papagaio-fênix',    r:2, img:'pp_era3_parrot'},
+  {id:'shadowwolf', name:'Lobo sombrio',      r:1, img:'pp_pet_shadowwolf_mid'},
+  {id:'panther',    name:'Pantera espectral', r:2, img:'pp_pet_panther'}];
+const PBY={}; PETS.forEach(p=>{ PBY[p.id]=p; });
+const int0=v=>Math.max(0,Math.floor(typeof v==='number'&&isFinite(v)?v:0));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const T0=Date.UTC(2026,10,13,12,0,0), HMS=3600000;
+
+/* ===== estado (espelho do S.sys.camp + o que o host dá) ===== */
+const ST={st:'menu',menu:true,lv:34,gu:74,era:3,capH:8,now:T0,t:T0,tents:{},eq:'drake',owned:{},gold:0,stones:0,pstones:0,tent:'gold',got:null,from:'camp',away:0,lastToast:''};
+function scenario(){ ST.lv=ST.lv||34; ST.gu=74; ST.capH=8; ST.now=T0; ST.t=T0; ST.eq='drake'; ST.gold=95000; ST.stones=12; ST.pstones=30; ST.got=null; ST.away=0;
+  ST.owned={wolf:{stars:3},owl:{stars:2},drake:{stars:4},parrot:{stars:1},shadowwolf:{stars:5},panther:{stars:2}};
+  ST.tents={gold:{lv:2,pets:['shadowwolf'],acc:0},forge:{lv:1,pets:[],acc:0},practice:{lv:1,pets:['wolf'],acc:20}};
+  const lv=ST.lv; ST.lv=34; pass(5,true); ST.lv=lv; }
+const locked=()=>ST.lv<DATA.unlockLevel;
+/* pets que podem trabalhar: os que o jogador tem, menos o principal */
+const idlePets=()=>Object.keys(ST.owned).filter(id=>id!==ST.eq&&PBY[id]);
+function petBoost(id){ const d=PBY[id], x=ST.owned[id]; if(!d||!x||id===ST.eq) return 0; return DATA.petRate.perRarity*(int0(d.r)+1)+DATA.petRate.perStar*int0(x.stars); }
+const unitOf=d=>d.unit==='goldUnit'?ST.gu:1;
+function rateWith(id,lv,pets){ const d=TENT[id]; if(!d) return 0; const m=(1+DATA.levelRate*(lv-1))*(1+pets.reduce((s,p)=>s+petBoost(p),0)); return d.perHour*m*unitOf(d); }
+const rate=id=>{ const t=ST.tents[id]; return rateWith(id,t.lv,t.pets); };
+function capWith(id,r){ const d=TENT[id], c=r*ST.capH; if(!d||!(d.capMin>0)||d.unit!=='goldUnit') return c; return Math.min(c,d.capMin*DATA.killsPerMin*ST.gu); }   // teto do ouro em minutos de abate
+const capOf=id=>capWith(id,rate(id));
+const minOf=g=>g/(DATA.killsPerMin*ST.gu);   // ouro → minutos de abate da fase
+/* anda o relógio: soma o produzido desde o último marcador (teto por tenda). Relógio para trás: só move o marcador para frente */
+function tick(){ const dt=ST.now-ST.t; ST.t=Math.max(ST.t,ST.now); if(!(dt>0)||locked()) return;
+  const h=dt/HMS; for(const d of DATA.tents){ const t=ST.tents[d.id], cap=capOf(d.id); t.acc=Math.min(cap,t.acc+rate(d.id)*h); } }
+function collect(){ if(locked()){ tick(); return {ok:false,reason:'locked',got:{gold:0,forge:0,practice:0}}; }
+  tick(); const got={gold:0,forge:0,practice:0};
+  for(const d of DATA.tents){ const t=ST.tents[d.id], n=Math.floor(t.acc); if(n<=0) continue; got[d.res]=n; t.acc-=n;
+    if(d.res==='gold') ST.gold+=n; else if(d.res==='forge') ST.stones+=n; else ST.pstones+=n; }
+  const any=got.gold+got.forge+got.practice>0; return {ok:any,reason:any?'':'empty',got}; }
+function assign(tentId,petId){ if(!TENT[tentId]) return {ok:false,reason:'id'}; if(locked()) return {ok:false,reason:'locked'};
+  if(!idlePets().includes(petId)) return {ok:false,reason:'pet'};
+  tick(); const t=ST.tents[tentId];
+  for(const k in ST.tents) if(ST.tents[k].pets.includes(petId)) return {ok:false,reason:'busy',tent:k};
+  if(t.pets.length>=DATA.petSlots) return {ok:false,reason:'full'};
+  t.pets.push(petId); return {ok:true}; }
+function unassign(petId){ tick(); for(const k in ST.tents){ const t=ST.tents[k], i=t.pets.indexOf(petId); if(i>=0){ t.pets.splice(i,1); return {ok:true,tent:k}; } } return {ok:false,reason:'pet'}; }
+function upgradeCost(id){ const t=ST.tents[id]; if(!t) return 0; return Math.ceil(DATA.upgrade.base*Math.pow(DATA.upgrade.growth,t.lv-1))*Math.ceil(Math.max(1,ST.gu)); }
+function canUpgrade(id){ if(!TENT[id]) return {ok:false,reason:'id'}; if(locked()) return {ok:false,reason:'locked'};
+  const t=ST.tents[id], cost=upgradeCost(id); if(t.lv>=DATA.maxLevel) return {ok:false,reason:'max',cost,lv:t.lv};
+  if(ST.gold<cost) return {ok:false,reason:'money',cost,lv:t.lv}; return {ok:true,reason:'',cost,lv:t.lv}; }
+function upgrade(id){ const c=canUpgrade(id); if(!c.ok) return c; tick(); ST.gold-=c.cost; ST.tents[id].lv++; return {ok:true,reason:'',cost:c.cost,lv:ST.tents[id].lv}; }
+/* modelo da tela (o teto do ouro aqui usa o capOf, igual ao tick) */
+function view(){ tick(); return DATA.tents.map(d=>{ const t=ST.tents[d.id], r=rate(d.id), cap=capOf(d.id), full=cap>0&&t.acc>=cap-1e-9;
+  return {id:d.id,name:d.name,res:d.res,lv:t.lv,perHour:r,stored:Math.floor(t.acc),acc:t.acc,cap,full,pct:cap>0?Math.min(100,Math.round(t.acc/cap*100)):0,
+    toFull:full||!(r>0)?0:(cap-t.acc)/r,pets:t.pets.slice()}; }); }
+const fullN=()=>locked()?0:view().filter(v=>v.full).length;
+const pending=()=>{ const g={gold:0,forge:0,practice:0}; if(locked()) return g; view().forEach(v=>{ g[v.res]=v.stored; }); return g; };
+function pass(h,quiet){ ST.now+=h*HMS; tick(); if(!quiet) render(); }
+
+/* ===== desenho no código (PROVISÓRIO: a Arte faz as tendas e o Ajudante) ===== */
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const SV=inner=>'<svg class="ic" viewBox="0 0 48 48" aria-hidden="true">'+inner+'</svg>';
+const BACK='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV='<svg class="chev" viewBox="0 0 12 20" aria-hidden="true"><path d="M3 3l6 7-6 7" fill="none" stroke="#c9b8a2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const FSTONE=SV('<path d="M10 18l14-12 14 12-6 22H16z" fill="#9ab4d6" '+K+'/><path d="M10 18h28M24 6l-6 12 6 22 6-22z" fill="none" stroke="#2a3a5a" stroke-width="2"/>');
+const PSTONE=SV('<path d="M7 30c0-10 7-19 18-19s16 8 16 17-7 13-17 13S7 38 7 30z" fill="#a39a8c" '+K+'/><path d="M19 21l5 6-5 6M29 21l-5 6 5 6" fill="none" stroke="#3a3128" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>');
+const COIN='<img src="a/coin.png" alt="">', GEM='<img src="a/gem.png" alt="">';
+const RICON={gold:COIN,forge:FSTONE,practice:PSTONE};
+const PLUS='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" stroke="#f6ecdf" stroke-width="3.5" stroke-linecap="round"/></svg>';
+const CAMPI=SV('<path d="M24 7L5 40h38z" fill="#d9a24a" '+K+'/><path d="M24 7l-7 33h14z" fill="#7a4a1c" '+K+'/><path d="M24 7V2" stroke="#1a110b" stroke-width="2.4"/><path d="M24 2l8 3-8 3z" fill="#ff6a4a" '+K+'/>');
+const G=(c,inner)=>SV('<rect x="5" y="5" width="38" height="38" rx="10" fill="'+c+'" '+K+'/>'+inner);
+const MI_OLD=[{l:'Forja',img:'a/mi_forge.png'},{l:'Pets',img:'a/mi_pets.png'},{l:'Missões',svg:G('#c98a4a','<path d="M15 16h18M15 24h18M15 32h12" stroke="#1a110b" stroke-width="3.5" stroke-linecap="round"/>')},
+  {l:'Mapa',svg:G('#7fae5a','<path d="M14 14l7 3 7-3 7 3v18l-7-3-7 3-7-3z" fill="#e9dcb8" '+K+'/>')},{l:'Chat',svg:G('#5a8fd6','<path d="M13 15h22v13H22l-6 5v-5h-3z" fill="#f6ecdf" '+K+'/>')},
+  {l:'Correio',svg:G('#d6b45a','<rect x="12" y="16" width="24" height="17" rx="2" fill="#f6ecdf" '+K+'/><path d="M13 17l11 8 11-8" fill="none" stroke="#1a110b" stroke-width="2.4"/>')},
+  {l:'Config.',svg:G('#8a8a9a','<circle cx="24" cy="24" r="8" fill="#e9e9f0" '+K+'/><circle cx="24" cy="24" r="3" fill="#1a110b"/>')}];
+/* tenda provisória: lona com a cor da tenda + emblema (moeda, bigorna, picareta) */
+const TC={gold:{a:'#e7b450',b:'#a8732a',f:'#ffd25e'},forge:{a:'#b5654a',b:'#6e3424',f:'#ff8a4a'},practice:{a:'#8f9aa6',b:'#4f5a66',f:'#cfd8e2'}};
+const EMB={
+  gold:'<circle cx="60" cy="66" r="11" fill="#ffd25e" stroke="#1a110b" stroke-width="2.4"/><path d="M60 60v12M56 63h6a2.5 2.5 0 010 5h-4a2.5 2.5 0 000 5h6" fill="none" stroke="#7a4a10" stroke-width="2"/>',
+  forge:'<path d="M48 62h24l-4 5h-4v5h6v4H50v-4h6v-5h-4z" fill="#3a3a44" stroke="#1a110b" stroke-width="2"/><path d="M70 52l6-6M74 56l6-3" stroke="#ffb15a" stroke-width="2.4" stroke-linecap="round"/>',
+  practice:'<path d="M50 58c6-5 14-5 20 0" fill="none" stroke="#3a3128" stroke-width="4" stroke-linecap="round"/><path d="M60 56v22" stroke="#7a4a1c" stroke-width="4" stroke-linecap="round"/><circle cx="72" cy="76" r="5" fill="#a39a8c" stroke="#1a110b" stroke-width="2"/>'};
+function tentSvg(id){ const c=TC[id];
+  return '<svg class="tsv" viewBox="0 0 120 100" aria-hidden="true"><ellipse cx="60" cy="94" rx="52" ry="5" fill="rgba(0,0,0,.45)"/>'+
+    (id==='forge'?'<path d="M92 40h8v30h-8z" fill="#5a4a44" stroke="#1a110b" stroke-width="2"/><circle cx="98" cy="30" r="6" fill="rgba(200,200,210,.5)"/><circle cx="104" cy="20" r="5" fill="rgba(200,200,210,.35)"/>':'')+
+    '<path d="M60 14L10 92h100z" fill="'+c.a+'" stroke="#1a110b" stroke-width="2.6" stroke-linejoin="round"/>'+
+    '<path d="M60 14L35 92M60 14l25 78" stroke="'+c.b+'" stroke-width="2" opacity=".6"/>'+
+    '<path d="M60 40L46 92h28z" fill="#2a1a10" stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"/>'+
+    '<path d="M60 14V3" stroke="#1a110b" stroke-width="2.6"/><path d="M60 3l13 4-13 5z" fill="'+c.f+'" stroke="#1a110b" stroke-width="2" stroke-linejoin="round"/>'+
+    '<g transform="translate(0 -10)">'+EMB[id]+'</g></svg>'; }
+/* Ajudante provisório: silhueta encapuzada com ferramenta */
+const HELPER='<svg class="hlp" viewBox="0 0 48 70" aria-hidden="true"><ellipse cx="24" cy="67" rx="16" ry="3" fill="rgba(0,0,0,.4)"/><path d="M8 66c1-17 7-27 16-27s15 10 16 27z" fill="#3a2c22" stroke="#e7c58a" stroke-width="2"/><circle cx="24" cy="26" r="11" fill="#3a2c22" stroke="#e7c58a" stroke-width="2"/><path d="M13 26c0-9 5-15 11-15s11 6 11 15c-3-5-7-7-11-7s-8 2-11 7z" fill="#5a4030" stroke="#e7c58a" stroke-width="2"/><path d="M38 40l8-12" stroke="#c9a06a" stroke-width="3" stroke-linecap="round"/><path d="M42 25l7 4" stroke="#8a8a96" stroke-width="4" stroke-linecap="round"/></svg>';
+const petImg=id=>'<img src="a/'+PBY[id].img+'.png" alt="">';
+const stars=n=>'<span class="stars" aria-label="'+n+' estrelas">'+'★'.repeat(n)+'</span>';
+
+/* ===== desenho ===== */
+function renderHud(){ let h='<div class="lvp">Nv.'+ST.lv+'</div>';
+  if(ST.st==='menu'){ const n=fullN();
+    h+='<button class="mhit'+(ST.menu?' open':'')+'" data-act="menu" aria-expanded="'+ST.menu+'" aria-label="Menu'+(n?', '+n+' tenda'+(n>1?'s':'')+' cheia'+(n>1?'s':''):'')+'">'+(n?'<span class="mdot">'+n+'</span>':'')+'</button>'; }
+  hud.innerHTML=h; }
+function menuPanel(){ const lock=locked(), n=fullN();
+  return '<div class="mdim" data-act="menu"></div><div class="mpan" role="dialog" aria-label="Menu"><div class="mh"><b>Menu</b><span>toque fora para fechar</span></div><div class="mgr">'+
+    MI_OLD.map(m=>'<button class="mi old" tabindex="-1" aria-hidden="true" data-act="oldmenu" data-l="'+m.l+'"><span class="ib">'+(m.img?'<img src="'+m.img+'" alt="">':m.svg)+'</span>'+m.l+'</button>').join('')+
+    '<button class="mi new" data-act="open" aria-label="Acampamento das Eras'+(lock?', abre no Nv 20':(n?', '+n+' tenda'+(n>1?'s':'')+' cheia'+(n>1?'s':''):''))+'"><span class="ib">'+CAMPI+(lock?'<span class="lk">Nv 20</span>':'')+(!lock&&n?'<span class="bdg">'+n+'</span>':'')+'</span><span class="tag">Novo</span>Acampamento</button>'+
+    '</div><p class="mnote">Os outros itens do Menu ficam como hoje (aqui só apagados para situar). Novo: o item <b style="color:#ffc94a">Acampamento</b>, com o número de tendas cheias.</p></div>'; }
+function head(title,backAct){ return '<div class="hd"><button class="back" data-act="'+backAct+'" aria-label="Voltar">'+BACK+'Voltar</button><h2>'+title+'</h2><span class="pill">'+COIN+kfmt(ST.gold)+'</span><span class="pill">'+GEM+'50</span></div>'; }
+function amt(res,n){ return res==='gold'?nf(n)+' de ouro':nf(n)+' '+RES[res]; }
+function rateTxt(v){ const d=TENT[v.id]; return d.unit==='goldUnit'?f1(v.perHour/ST.gu)+' abates/h ('+nf(v.perHour)+' de ouro/h)':f2(v.perHour)+' por hora'; }
+function bar(v){ return '<span class="bar'+(v.full?' full':'')+'" role="img" aria-label="'+v.pct+'% cheia"><i style="width:'+v.pct+'%"></i><span>'+(v.full?'Cheia · '+amt(v.res,v.stored):nf(v.stored)+' / '+nf(Math.floor(v.cap)))+'</span></span>'; }
+function sheetCamp(){ const V=view(), P=pending(), any=P.gold+P.forge+P.practice>0, X=[4,123,242];
+  const pins=V.map((v,i)=>'<button class="tpin'+(v.full?' full':'')+'" style="left:'+X[i]+'px" data-act="tent" data-id="'+v.id+'" aria-label="'+esc(v.name)+', '+v.pct+'% cheia">'+(v.full?'<span class="ful">Cheia!</span>':'')+tentSvg(v.id)+
+    '<span class="wk">'+v.pets.map(p=>petImg(p)).join('')+'</span><span class="nm">'+esc(v.name.replace('Forja do Acampamento','Forja'))+' · Nv '+v.lv+'</span><span class="mb"><i style="width:'+v.pct+'%"></i></span></button>').join('');
+  const rows=V.map(v=>{ const slots=[0,1].map(i=>v.pets[i]?'<i>'+petImg(v.pets[i])+'</i>':'<i></i>').join('');
+    return '<button class="trow'+(v.full?' full':'')+'" data-act="tent" data-id="'+v.id+'" aria-label="'+esc(v.name)+', nível '+v.lv+', '+(v.full?'cheia':v.pct+'%')+'">'+tentSvg(v.id)+
+      '<span class="t"><b>'+esc(v.name)+'<span>Nv '+v.lv+'/'+DATA.maxLevel+'</span></b>'+bar(v)+
+      '<small>'+(v.full?'<em>Cheia: colete para voltar a encher</em>':'Cheia em <em>'+hfmt(v.toFull)+'</em>')+(v.id==='gold'?' · ≈ '+f1(minOf(v.stored))+' min de abate':'')+'</small></span>'+
+      '<span class="pets" aria-label="'+v.pets.length+' de 2 pets">'+slots+'</span>'+CHEV+'</button>'; }).join('');
+  return '<div class="sheet" role="dialog" aria-label="Acampamento das Eras">'+head('Acampamento das Eras','close')+'<div class="bd">'+
+    '<div class="scene"><img class="bg" src="a/mbg_era'+ST.era+'.png" alt=""><span class="sh"></span>'+pins+'<span class="prov" style="left:6px;top:6px">tendas provisórias (Arte)</span></div>'+
+    '<div class="card hi"><h4>As tendas trabalham sozinhas<span>até '+ST.capH+' h</span></h4><p class="note" style="margin:0;color:#f6ecdf">As tendas enchem até '+ST.capH+' h, também com o jogo fechado. Pets parados ajudam; o pet principal fica na luta.</p></div>'+
+    rows+'</div>'+
+    '<div class="gfoot"><div class="sum">'+DATA.tents.map(d=>'<span class="chip'+(P[d.res]?'':' z')+'">'+RICON[d.res]+'+'+nf(P[d.res])+'</span>').join('')+'</div>'+
+    '<button class="btn g wide'+(any?'':' off')+'" data-act="collect"'+(any?'':' aria-disabled="true"')+'>Coletar tudo</button></div></div>'; }
+function sheetTent(){ const id=ST.tent, d=TENT[id], v=view().find(x=>x.id===id), t=ST.tents[id], c=canUpgrade(id), gold=id==='gold', capFull=v.perHour*ST.capH;
+  const workers=[0,1].map(i=>{ const p=t.pets[i];
+    if(!p) return '<div class="wrow"><span class="av empty">'+PLUS+'</span><span class="t"><b>Vaga de pet '+(i+1)+'</b>livre: pet parado acelera a tenda</span><button class="btn y" data-act="pickopen">Pôr pet</button></div>';
+    const pd=PBY[p], b=petBoost(p), main=p===ST.eq;
+    return '<div class="wrow"><span class="av" style="--rc:'+RC[pd.r]+'">'+petImg(p)+'</span><span class="t"><b>'+esc(pd.name)+'</b>'+PRN[pd.r]+' '+stars(ST.owned[p].stars)+' · '+(main?'<span class="bad">virou o principal: não conta</span>':'<em>+'+Math.round(b*100)+'%</em>')+'</span><button class="btn" data-act="unpet" data-id="'+p+'" aria-label="Tirar '+esc(pd.name)+' da tenda">Tirar</button></div>'; }).join('');
+  const nextR=t.lv<DATA.maxLevel?rateWith(id,t.lv+1,t.pets):0, unitN=r=>gold?f1(r/ST.gu)+' abates/h':f2(r)+'/h';
+  const upBtn=c.reason==='max'?'<button class="btn wide off" data-act="up" aria-disabled="true">Nível máximo</button>':
+    '<button class="btn y wide'+(c.ok?'':' off')+'" data-act="up"'+(c.ok?'':' aria-disabled="true"')+'>Melhorar · '+COIN+nf(c.cost)+'</button>';
+  return '<div class="sheet" role="dialog" aria-label="'+esc(d.name)+'">'+head(esc(d.name),'tcamp')+'<div class="bd">'+
+    '<div class="hero"><img class="bg" src="a/mbg_era'+ST.era+'.png" alt=""><span class="sh"></span>'+tentSvg(id)+HELPER+'<span class="wk">'+t.pets.map(p=>petImg(p)).join('')+'</span>'+
+      '<span class="prov" style="left:6px;top:6px">tenda e ajudante provisórios (Arte)</span>'+
+      '<span class="tx"><small>ACAMPAMENTO · ERA '+ERA[ST.era].toUpperCase()+'</small><b>'+esc(d.name)+'</b><span class="lvb">Nv '+t.lv+' / '+DATA.maxLevel+'</span><i>Faz '+(gold?'ouro':RES[d.res])+' sozinha, até '+ST.capH+' h</i></span></div>'+
+    '<div class="card"><h4>Produção<span>'+(v.full?'cheia':'cheia em '+hfmt(v.toFull))+'</span></h4>'+bar(v)+
+      '<div class="kv" style="margin-top:6px"><span>Por hora</span><b>'+rateTxt(v)+'</b></div>'+
+      '<div class="kv"><span>Guarda no máximo</span><b>'+(gold?nf(Math.floor(v.cap))+' de ouro':nf(Math.floor(v.cap))+' '+RES[d.res])+' ('+(gold&&v.cap<capFull-1e-9?'teto de 5 min de abate':ST.capH+' h')+')</b></div>'+
+      (gold?'<div class="small">'+COIN+'<span>Guardado agora: <b>≈ '+f1(minOf(v.stored))+' min de abate</b>. Ouro é sempre pouco: a tenda <b>nunca passa de 5 min de abate por coleta</b> ('+nf(TENT.gold.capMin*DATA.killsPerMin*ST.gu)+' de ouro nesta fase), mesmo no Nv 10, com pets e VIP.</span></div>':'')+
+    '</div>'+
+    '<div class="card"><h4>Quem trabalha<span>'+t.pets.length+' de '+DATA.petSlots+' pets</span></h4>'+
+      '<div class="wrow"><span class="av" style="--rc:#e7c58a">'+HELPER.replace('class="hlp"','')+'</span><span class="t"><b>Ajudante</b>fixo: sempre trabalha (a produção base)</span></div>'+workers+
+      '<p class="note">O <b>pet principal</b> fica na luta e não trabalha. Pet na tenda <b>não perde nada</b>: continua seu, não perde nível e não muda a batalha.</p></div>'+
+    '<div class="card"><h4>Melhorar<span>só ouro · +15% por nível</span></h4>'+
+      (t.lv<DATA.maxLevel?'<div class="kv"><span>Nv '+t.lv+' → '+(t.lv+1)+'</span><b>'+unitN(v.perHour)+' → <span class="up">'+unitN(nextR)+'</span></b></div>'+
+        (gold&&capWith(id,nextR)>=TENT.gold.capMin*DATA.killsPerMin*ST.gu-1e-9?'<p class="note">Já bate no teto de 5 min por coleta em '+ST.capH+' h: melhorar só enche mais rápido.</p>':''):
+        '<div class="kv"><span>Nv 10</span><b>'+unitN(v.perHour)+'</b></div>')+
+      upBtn+(c.reason==='money'?'<p class="note">Falta ouro: '+nf(c.cost-ST.gold)+'.</p>':'')+'</div>'+
+    '</div></div>'; }
+function sheetPick(){ const id=ST.tent, d=TENT[id], t=ST.tents[id], r0=rate(id), gold=id==='gold', u=r=>gold?f1(r/ST.gu)+' abates/h':f2(r)+'/h';
+  const order=PETS.map(p=>p.id).filter(p=>ST.owned[p]).sort((a,b)=>{ const s=x=>x===ST.eq?2:(Object.keys(ST.tents).some(k=>ST.tents[k].pets.includes(x))?1:0); return s(a)-s(b)||petBoost(b)-petBoost(a); });
+  const card=p=>{ const pd=PBY[p], x=ST.owned[p], main=p===ST.eq, where=Object.keys(ST.tents).find(k=>ST.tents[k].pets.includes(p));
+    if(main) return '<button class="pc na" style="--rc:'+RC[pd.r]+'" data-act="pet" data-id="'+p+'" data-why="main" aria-disabled="true" aria-label="'+esc(pd.name)+', pet principal: não trabalha"><span class="tg">principal</span>'+petImg(p)+'<b>'+esc(pd.name)+'</b><small>'+PRN[pd.r]+' '+stars(x.stars)+'</small><em>fica na luta</em></button>';
+    if(where) return '<button class="pc na" style="--rc:'+RC[pd.r]+'" data-act="pet" data-id="'+p+'" data-why="busy" data-w="'+where+'" aria-disabled="true" aria-label="'+esc(pd.name)+', já trabalha em '+esc(TENT[where].name)+'"><span class="tg">'+(where===id?'nesta tenda':'na '+esc(TENT[where].name.replace('Forja do Acampamento','Forja')))+'</span>'+petImg(p)+'<b>'+esc(pd.name)+'</b><small>'+PRN[pd.r]+' '+stars(x.stars)+'</small><em>já trabalha</em></button>';
+    const b=petBoost(p), r1=rateWith(id,t.lv,t.pets.concat([p]));
+    return '<button class="pc" style="--rc:'+RC[pd.r]+'" data-act="pet" data-id="'+p+'" aria-label="'+esc(pd.name)+', +'+Math.round(b*100)+'%"><span class="tg">parado</span>'+petImg(p)+'<b>'+esc(pd.name)+'</b><small>'+PRN[pd.r]+' '+stars(x.stars)+'</small><em>+'+Math.round(b*100)+'% · '+u(r0)+' → '+u(r1)+'</em></button>'; };
+  return '<div class="sheet" role="dialog" aria-label="Pôr pet na '+esc(d.name)+'">'+head('Pôr pet · '+esc(d.name.replace('Forja do Acampamento','Forja')),'ttent')+'<div class="bd">'+
+    '<div class="card hi"><h4>O pet principal não trabalha<span>vagas: '+t.pets.length+' de '+DATA.petSlots+'</span></h4><p class="note" style="margin:0;color:#f6ecdf">Só pets <b>parados</b> vão para a tenda. Ele continua seu, não perde nível e não muda a batalha. Ajuda = +10% × (raridade + 1) + 5% por estrela.</p></div>'+
+    '<div class="card"><h4>Seus pets<span>'+idlePets().length+' parados</span></h4><div class="pg">'+order.map(card).join('')+'</div></div>'+
+    '</div></div>'; }
+function grRows(got,anim){ return DATA.tents.map(d=>{ const n=got[d.res];
+  return '<div class="gr'+(n?'':' z')+'"><span class="ico'+(anim&&n?' fly':'')+'">'+RICON[d.res]+'</span><span class="t"><b>'+(n?'+'+amt(d.res,n):'nada ainda')+'</b>'+esc(d.name)+
+    (d.res==='gold'&&n?'<br><small class="mins">≈ '+f1(minOf(n))+' min de abate</small>':'')+'</span></div>'; }).join(''); }
+function collectPop(){ const g=ST.got; if(!g) return '';
+  return '<div class="dim"></div><div class="pop" role="alertdialog" aria-label="Coleta do Acampamento"><div class="in"><span class="k">ACAMPAMENTO DAS ERAS</span><h3>Coletado!</h3>'+
+    '<div class="gl">'+grRows(g,true)+'</div><p>A fração que sobra fica na tenda e continua enchendo.</p>'+
+    '<button class="btn g wide" data-act="done">Pronto</button></div></div>'; }
+function backPop(){ const P=pending();
+  return '<div class="dim"></div><div class="pop" role="alertdialog" aria-label="Acampamento: as tendas encheram"><div class="top"><img class="bg" src="a/mbg_era'+ST.era+'.png" alt="">'+
+    ['gold','forge','practice'].map((id,i)=>tentSvg(id).replace('class="tsv"','class="tsv" style="left:'+(14+i*112)+'px"')).join('')+'<span class="prov" style="left:6px;top:6px">tendas provisórias</span></div>'+
+    '<div class="in"><span class="k">VOCÊ FICOU '+hfmt(ST.away).toUpperCase()+' FORA</span><h3>O Acampamento trabalhou</h3><p>Aparece logo depois da janela do offline de hoje (que não muda).</p>'+
+    '<div class="gl">'+grRows(P,false)+'</div>'+
+    '<div class="btns"><button class="btn" data-act="seecamp">Ver tendas</button><button class="btn g" data-act="collect">Coletar</button></div></div></div>'; }
+function renderLayer(){ let h='';
+  if(ST.st==='menu') h=ST.menu?menuPanel():'';
+  else if(ST.st==='back') h=ST.got?collectPop():backPop();
+  else if(ST.st==='camp') h=sheetCamp()+collectPop();
+  else if(ST.st==='tent') h=sheetTent();
+  else if(ST.st==='pick') h=sheetPick();
+  lay.innerHTML=h; }
+function renderLeft(){ const sheet=ST.st!=='menu'&&ST.st!=='back'; $('#shot0').src=sheet?'a/eq_hoje.png':'a/v5_hoje.png';
+  $('#cap0').innerHTML=sheet?'Hoje<small>print real da folha do Equipamento (mesmo cabeçalho e marrom)</small>':'Hoje<small>print real do jogo (v0.13.3, batalha)</small>';
+  $('#cap2').innerHTML=sheet?'Com o Acampamento das Eras<small>folha nova, aberta pelo Menu, no estilo do Equipamento</small>':
+    (ST.st==='back'?'Com o Acampamento das Eras<small>a batalha de hoje; na volta, a janela do Acampamento</small>':'Com o Acampamento das Eras<small>a mesma tela; só o pontinho no Menu e o item Acampamento</small>'); }
+function renderSide(){ const V=view(), s=V.map(v=>esc(v.name.replace('Forja do Acampamento','Forja'))+' Nv <b>'+v.lv+'</b> <b>'+v.pct+'%</b>').join(' · ');
+  $('#stl').innerHTML='Momento <b>'+({menu:'Menu',camp:ST.got?'Coleta':'As 3 tendas',tent:'Tenda',pick:'Pôr pet',back:ST.got?'Coleta':'Volta'})[ST.st]+'</b> · Nv <b>'+ST.lv+'</b>'+(locked()?' (trancado)':'')+' · teto <b>'+ST.capH+' h</b> · 1 abate = <b>'+ST.gu+'</b> de ouro · '+s+
+    ' · ouro <b>'+nf(ST.gold)+'</b> · Pedras de Forja <b>'+ST.stones+'</b> · pedras de prática <b>'+ST.pstones+'</b> · pet principal <b>'+esc(PBY[ST.eq].name)+'</b>';
+  $('#tseg').innerHTML=DATA.tents.map(d=>'<button data-tn="'+d.id+'" aria-pressed="'+(d.id===ST.tent)+'">'+esc(d.name.replace('Forja do Acampamento','Forja'))+'</button>').join('');
+  $('#vseg').innerHTML=VIPH.map(x=>'<button data-vip="'+x.h+'" aria-pressed="'+(x.h===ST.capH)+'">'+x.l+'</button>').join(''); }
+function syncPressed(){ const cur=ST.got?'collect':ST.st; document.querySelectorAll('[data-st]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.st===cur)));
+  document.querySelectorAll('[data-lv]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.lv===ST.lv))); }
+function render(){ renderHud(); renderLayer(); renderSide(); syncPressed(); renderLeft(); }
+function draw(t){ return t; }
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; d.setAttribute('role','status'); scr.appendChild(d); setTimeout(()=>d.remove(),2600); ST.lastToast=t; }
+
+/* tabela: ouro da Tenda do Ouro por coleta em minutos de abate */
+function goldTable(){ const save={lv:ST.tents.gold.lv,pets:ST.tents.gold.pets.slice(),owned:ST.owned,eq:ST.eq,capH:ST.capH};
+  ST.owned=Object.assign({},ST.owned,{zz1:{stars:5},zz2:{stars:5}}); PBY.zz1={id:'zz1',r:4}; PBY.zz2={id:'zz2',r:4};
+  const rows=[[1,[],8,'Nv 1, sem pet, 8 h'],[1,['zz1','zz2'],8,'Nv 1 + 2 Lendários 5★, 8 h'],[5,[],8,'Nv 5, sem pet, 8 h'],[10,[],8,'Nv 10, sem pet, 8 h'],[10,['zz1','zz2'],14,'Nv 10 + 2 Lendários 5★ + VIP 14 h']];
+  const out=rows.map(([lv,pets,h,l])=>{ ST.capH=h; const r=rateWith('gold',lv,pets), c=capWith('gold',r); return '<tr><td>'+l+'</td><td>'+f1(r/ST.gu)+'</td><td><b>'+f1(minOf(c))+' min</b></td><td>'+hfmt(c/r)+'</td></tr>'; }).join('');
+  delete PBY.zz1; delete PBY.zz2; ST.owned=save.owned; ST.capH=save.capH;
+  return '<table class="tbl"><tr><th>Tenda do Ouro</th><th>abates/h</th><th>por coleta</th><th>enche em</th></tr>'+out+'</table>'+
+    '<p class="tnote">1 min de abate = 24 abates da fase (fase 30: 1 abate = 74 de ouro). O teto é 5 min por coleta (docs/ECONOMIA_OURO.md). As pedras seguem o teto em horas: Forja do Acampamento de 8 (Nv 1, 8 h) a 82 por coleta e Pedreira de 16 a 164 (Nv 10 + 2 Lendários 5★ + VIP 14 h).</p>'; }
+
+/* ===== navegação ===== */
+const REASON={locked:'O Acampamento abre no Nv 20',pet:'Esse pet não pode trabalhar',busy:'Esse pet já trabalha em outra tenda: tire de lá primeiro',full:'As 2 vagas desta tenda estão ocupadas',max:'Tenda no nível máximo',money:'Ouro insuficiente',empty:'As tendas ainda estão vazias',id:'Tenda inválida'};
+function pick(s){ scenario(); ST.menu=true; ST.got=null;
+  if(locked()&&s!=='menu'){ ST.st='menu'; render(); toast(REASON.locked); return; }
+  if(s==='menu') ST.st='menu';
+  else if(s==='camp') ST.st='camp';
+  else if(s==='tent') ST.st='tent';
+  else if(s==='pick'){ ST.st='pick'; }
+  else if(s==='collect'){ ST.st='camp'; const r=collect(); ST.got=r.got; }
+  else if(s==='back'){ ST.away=8; pass(8,true); ST.st='back'; }
+  render(); }
+function doCollect(){ const r=collect(); if(!r.ok){ toast(REASON[r.reason]||'Nada para coletar'); return r; } ST.got=r.got; render(); return r; }
+function act(a,d){ d=d||{}; let r;
+  if(a==='menu'){ ST.menu=!ST.menu; render(); }
+  else if(a==='oldmenu') toast('Abre a tela '+d.l+', como hoje');
+  else if(a==='open'){ if(locked()){ toast(REASON.locked); return {ok:false,reason:'locked'}; } ST.st='camp'; render(); }
+  else if(a==='close'){ ST.st='menu'; ST.menu=false; render(); }
+  else if(a==='tcamp'){ ST.st='camp'; render(); }
+  else if(a==='ttent'){ ST.st='tent'; render(); }
+  else if(a==='tent'){ if(!TENT[d.id]) return; ST.tent=d.id; ST.st='tent'; render(); }
+  else if(a==='pickopen'){ if(ST.tents[ST.tent].pets.length>=DATA.petSlots){ toast(REASON.full); return {ok:false,reason:'full'}; } ST.st='pick'; render(); }
+  else if(a==='pet'){ if(d.why==='main'){ toast('O pet principal fica na luta e não trabalha'); return {ok:false,reason:'pet'}; }
+    r=assign(ST.tent,d.id); if(!r.ok){ toast(r.reason==='busy'&&r.tent===ST.tent?'Esse pet já está nesta tenda':REASON[r.reason]||'Não deu'); return r; }
+    ST.st='tent'; render(); toast(PBY[d.id].name+' foi trabalhar: +'+Math.round(petBoost(d.id)*100)+'% daqui para frente'); return r; }
+  else if(a==='unpet'){ r=unassign(d.id); render(); if(r.ok) toast(PBY[d.id].name+' voltou a ficar parado (o que já foi feito fica)'); return r; }
+  else if(a==='up'){ r=upgrade(ST.tent); if(!r.ok){ toast(REASON[r.reason]||'Não deu'); return r; } render(); toast(TENT[ST.tent].name+' subiu para o Nv '+r.lv+' (−'+nf(r.cost)+' de ouro)'); return r; }
+  else if(a==='collect'){ return doCollect(); }
+  else if(a==='seecamp'){ ST.st='camp'; ST.got=null; render(); }
+  else if(a==='done'){ ST.got=null; if(ST.st==='back'){ ST.st='menu'; ST.menu=false; } render(); } }
+scr.addEventListener('click',e=>{ const b=e.target.closest('[data-act]')||e.target.closest('button'); if(!b||!b.dataset||!b.dataset.act) return; act(b.dataset.act,b.dataset); });
+
+function sim(k){ let r;
+  if(k==='h1'||k==='h8'||k==='h14'){ const h=+k.slice(1); if(k==='h14') ST.capH=14; ST.away=h; pass(h);
+    toast(locked()?'+'+h+' h: antes do Nv 20 as tendas não acumulam':'+'+h+' h'+(k==='h14'?' com VIP 14 h':'')+': '+DATA.tents.map(d=>esc(d.name.replace('Forja do Acampamento','Forja'))+' '+view().find(v=>v.id===d.id).pct+'%').join(', ')); }
+  else if(k==='up'){ r=upgrade(ST.tent); render(); toast(r.ok?TENT[ST.tent].name+' Nv '+r.lv+' (−'+nf(r.cost)+' de ouro)':REASON[r.reason]); }
+  else if(k==='pet'){ const free=idlePets().filter(p=>!Object.values(ST.tents).some(t=>t.pets.includes(p))).sort((a,b)=>petBoost(b)-petBoost(a));
+    if(!free.length){ toast('Nenhum pet parado livre'); return; } r=assign(ST.tent,free[0]); render(); toast(r.ok?PBY[free[0]].name+' foi para a '+TENT[ST.tent].name:REASON[r.reason]); }
+  else if(k==='main'){ const t=ST.tents[ST.tent], p=t.pets.find(x=>x!==ST.eq);
+    if(!p){ ST.eq='drake'; render(); toast('Sem pet nesta tenda: o Dragão segue como principal'); return; }
+    ST.eq=p; render(); toast(PBY[p].name+' virou o principal: na tenda ele para de contar sozinho'); }
+  else if(k==='clock'){ ST.now-=3*HMS; tick(); render(); toast('Relógio voltou 3 h: nada rende até o relógio passar do marcador'); }
+  else if(k==='reset'){ const s=ST.got?'collect':ST.st; pick(s); } }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.st) pick(d.st);
+  else if(d.lv){ ST.lv=+d.lv; if(locked()&&ST.st!=='menu'){ ST.st='menu'; ST.menu=true; ST.got=null; } render(); }
+  else if(d.tn){ ST.tent=d.tn; if(ST.st==='menu'||ST.st==='back'||ST.got){ ST.got=null; if(!locked()) ST.st='tent'; } else if(ST.st==='camp') ST.st='tent'; render(); }
+  else if(d.vip){ tick(); ST.capH=+d.vip; render(); }
+  else if(d.sim) sim(d.sim); });
+
+scenario(); ST.st='menu'; ST.menu=true; render();
+$('#gtab').innerHTML=goldTable();
+window.__acampamentoTeste={ST,DATA,render,pick,act,sim,view,rate,capOf,petBoost,idlePets,assign,unassign,upgrade,upgradeCost,canUpgrade,collect,tick,pass,minOf,pending,fullN};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-acampamento';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Acampamento das Eras',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
