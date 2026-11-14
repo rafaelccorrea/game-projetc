@@ -295,7 +295,11 @@ A primeira tentativa (era 6) foi parada pelo sistema por falta de memória, e ne
 |---|---|---|---|
 | 6 | 4/4 em 29,5 s | 2/4 | 3/4 |
 | 7 | 4/4 em 25,2 s | 0/4 | 4/4 |
-| 8 | falta (a checagem de memória parou em 1,38 GB livres; o S24 passou ao QA) | | |
+| 8 | 4/4 em 48,3 s (passa dos 30 s, como o dono aceitou) | 1/4 | 4/4 |
 
 Leitura: o caso "com os módulos" usa o herói montado na FC nova, por isso o chefe não ficou mais lento. O ×1,5 muda **quando** o jogador
 chega (o calendário), não a luta. As eras 6 e 7 cumprem os limites do dono.
+
+**Aplicado (14/11):** FC pedida ×1,5 nas eras 6, 7 e 8 (docs/balance.json, `boss._recal178`). Os números de chefe (kill/survive/fúria) ficaram iguais.
+Calendário (RX das eras 6-8 = 2,5 / 2,622 / 2,31): com os módulos, o grátis termina as 9 eras no **dia 179** (plano 178). Fim de cada era:
+era 5 = 62, era 6 = 121, era 7 = 162, era 8 = 179.

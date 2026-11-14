@@ -1426,16 +1426,16 @@
       22200000000000,
       23000000000000,
       26300000000000,
-      317000000000000,
-      326000000000000,
-      336000000000000,
-      345000000000000,
-      370000000000000,
-      365000000000000,
-      376000000000000,
-      387000000000000,
-      388000000000000,
-      447000000000000
+      476000000000000,
+      489000000000000,
+      504000000000000,
+      518000000000000,
+      555000000000000,
+      548000000000000,
+      564000000000000,
+      581000000000000,
+      582000000000000,
+      671000000000000
     ],
     "_recFc": "FC pedida das 90 fases NA ESCALA DO JOGO (índice 0 = fase 1). Fase 1 = 210 (80% de quem começa com ~260); Senhor da Era e = FC com que o grátis chega nele no jogo (tower.fc_mediana..., eras 0-2 medidas, 3-8 estimadas) × a parede. Depois da fase 90: a da 90 × 1,03 por fase.",
     "boss": {
@@ -1492,7 +1492,7 @@
       "_recal1": "14/11 (Sistemas, docs/EQUILIBRIO_TUDO_LIGADO.md P1+P2, só a ERA 0 medida): com afinidade, golpes e Grimório ligados a fase 10 caía em 22-28 s. recFc das fases 5-10 × 1,073 (o poder dos módulos na era 0), killSecAt100[0] 33 -> 37, surviveSecAt100[0] 40 -> 36. Medido: 100% da FC vence 4/4 em 34,5 s; 90% vence 3/4. Eras 1-8: P1/P2 propostos e NÃO aplicados (falta medir; o PC parou a rodada por memória).",
       "_recal2": "14/11 (Sistemas, docs/EQUILIBRIO_TUDO_LIGADO.md 'Aplicado'; código com P3 bossCap 30/30/10/5 e commons.minHitPctOfRefHp; tools/cal-tudo.js medida tudo, 4 lutas por caso): SÓ A ERA 1 medida e aplicada. recFc das fases 11-20 × 1,113, killSecAt100[1] 33 -> 34, surviveSecAt100[1] fica 40. Medido na fase 20: com os módulos 100% vence 4/4 em 28,4 s (sobra 41%), 90% vence 4/4 em 33,1 s; sem os módulos com 100% da FC pedida nova 3/4 em 36,3 s (sobra 3%); sem os módulos com o mesmo progresso (90% da FC nova) 0/4. Testado antes: killSec 36/aguentar 38 dava com módulos 4/4 em 34,9 s e 90% 3/4, mas sem os módulos 0/4 (sem saída); prioridade do PO = sem módulos vencer. Eras 2-8: NÃO aplicadas (o sistema parou a rodada por falta de memória).",
       "_recalA": "14/11 (Sistemas, opção A do PO com o meio-termo; docs/EQUILIBRIO_TUDO_LIGADO.md §9): FC pedida das eras 1-8 = original × [1; 1; 1,40; 1,48; 1,50; 1,49; 1,667; 1,748; 1,54] (era 1 volta à original: os módulos dão só ×1,11 nela), killSec/surviveSec por era acima. Alvo: com os módulos o Senhor cai em ~30 s; sem os módulos perde com 100% e vence com ~115% da FC pedida. Janela 2: eras 3 e 4 com fúria aos 30 e 26 s (era o que derrubava o sem módulos a 115%) e FC 1,48/1,50; era 0 aguentar 36 -> 40 (fase 10 volta a passar com 100% sem módulos, pedido do PO).",
-      "_recal178": "dono 14/11 (via PO): calendário ~178 dias = FC pedida x1,5 nas eras 6-8. Eras 6 e 7 aplicadas e medidas (EQUILIBRIO §9.3); era 8 falta medir."
+      "_recal178": "dono 14/11 (via PO): calendário ~178 dias = FC pedida x1,5 nas eras 6, 7 e 8 (EQUILIBRIO §9.3, medidas leves 4 lutas por caso)."
     },
     "commons": {
       "hpShareOfBoss": 0.1,
