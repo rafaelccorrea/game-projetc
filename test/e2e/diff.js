@@ -34,6 +34,10 @@ async function game(search) { const loadErr = []; const G = boot({ realFetch: tr
   G.scale = null; G.frameErr = [];
   /* herói com os atributos do jogo × G.scale.k (ATQ, VIDA, DEF) a cada quadro; G.scale.atk0 = sem dano (mede só quanto aguenta) */
   G.hero = () => { const h = ev('B.hero'), s = G.scale; if (!h || !s) return; const st = s.st; const r = h.maxhp > 0 ? h.hp / h.maxhp : 1; h.atk = (s.atk0 && ev('B.en').some(e => e.boss)) ? 1e-9 : st.atk * s.k;   /* atk0: para de bater quando o chefe entra (as escoltas caem normalmente) */ h.maxhp = st.hp * s.k; h.def = (st.def || 0) * s.k; if (s.fix) { h.critRate = st.critRate; h.critDmg = st.critDmg; h.aspd = st.aspd || 0; h.ivl = G.ev('Sys.stats.interval')(st); } if (!s.set) { h.hp = h.maxhp; s.set = true; } else h.hp = Math.min(h.maxhp, r * h.maxhp); };
+  /* defeito de medida (mesmo conserto do _cal.js): no meio do step() o herói pode ganhar item/nível/título e o jogo chama refreshHero(), que reaplica os atributos do SAVE;
+     o herói ficava com a vida/ATQ/DEF do save até o quadro seguinte e um golpe nesse mesmo quadro o derrubava (~2 s). Reaplica a escala NA HORA, mantendo a proporção da vida.
+     Só age com G.scale definido (G.hero não faz nada sem ele) */
+  G.sandbox.__e2eRescale = () => G.hero(); ev(`(function(){ if(!window.__rhWrap){ const o=refreshHero; refreshHero=function(){ const r=o.apply(this,arguments); try{ __e2eRescale(); }catch(e){} return r; }; window.__rhWrap=1; } return 1; })()`);
   G.sandbox.__e2eFrame = dt => { const B = ev('B'); if (!B.paused) { G.hero(); ev('step')(dt); if (typeof G.sandbox.petStep === 'function') ev('petStep')(dt); } if (typeof G.sandbox.resTick === 'function') ev('resTick')(dt); ev('tickFx')(dt); };
   G.frame = async () => { try { inCtx(() => G.sandbox.__e2eFrame(DT)); } catch (e) { const s = errStr(e); if (!G.frameErr.includes(s)) G.frameErr.push(s); } try { inCtx(() => G.advance(DT * 1000)); } catch (e) {} if (++G.n % 30 === 0) await tick(); };
   G.n = 0; G.until = async (cond, secs) => { const n = Math.ceil(secs / DT); for (let i = 0; i < n; i++) { if (cond()) return true; await G.frame(); if (G.frameErr.length > 10) break; } return !!cond(); };
@@ -248,9 +252,10 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
 
   if (MEDIDA) { await medidas({ G, ev, fight, many, show }); process.exit(0); }
 
-  /* a sorte da luta (crítico no especial e na ultimate) espalha cada luta em uns ±15%: a regra é conferida na MÉDIA de 4 lutas */
+  /* a sorte da luta (crítico no especial e na ultimate) espalha cada luta em uns ±15%: a regra é conferida na MÉDIA de 4 lutas.
+     A calibração aprovada mira ~5 vitórias em 6 com 100% da FC pedida (era 3: 10 em 11), então exigir 4/4 falhava sem defeito: pede-se 3 de 4 e a média só das VENCIDAS (many já calcula assim) */
   for (const s of [10, 35]) { const m = await many(4, s, 5, { ref: true }), K = KILL(s), SV = SURV(s), FA = FAT(s);
-    check('fase ' + s + ': herói de referência (100% da FC pedida) vence a onda do chefe inteira em ~' + K + ' s (média de 4, ±15%)', m.wins === 4 && near(m.mean, K, 0.15), m.runs.map(r => r.res + ' ' + r.sec.toFixed(1)).join(', '));
+    check('fase ' + s + ': herói de referência (100% da FC pedida) vence a onda do chefe inteira pelo menos 3 de 4 vezes (alvo da calibração: ~5/6 de vitória) em ~' + K + ' s (média das lutas vencidas, ±15%)', m.wins >= 3 && near(m.mean, K, 0.15), m.runs.map(r => r.res + ' ' + r.sec.toFixed(1)).join(', '));
     /* surviveSecAt100 é a conta do dano NORMAL do chefe. Com furyFrom 'boss' e a fúria da era antes disso (escoltas + furyAtSec < surviveSec), na luta de verdade a fúria
        chega primeiro: (1) sem a fúria, o herói sem bater aguenta ~surviveSec; (2) com a fúria ligada, ele cai depois dela e nunca depois de ~surviveSec */
     const b0 = await fight(s, 5, { ref: true, atk0: true, noFury: true }); check('fase ' + s + ': sem bater no chefe e sem a fúria, ele cairia em ~' + SV + ' s (±12%)', b0.res === 'dead' && b0.tFury == null && near(b0.sec, SV, 0.12), JSON.stringify(b0));
