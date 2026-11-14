@@ -1528,6 +1528,10 @@ function pfEnd(gap,a,b,c,d,e,f,g){ const tot=g-a; PF.n++; PF.sum+=tot; if(tot>PF
   const W=PF.worst; if(tot>4&&(W.length<20||tot>W[W.length-1].ms)){ let st=''; try{ st='fase '+S.stage+'-'+S.wave+' t'+Math.round(B.at)+' ato:'+(B.act?B.act.type:'-')+' inim:'+B.en.length+' part:'+B.parts.length+' wfx:'+B.wfx.length+(B.tr?' TROCA-ERA':'')+(B.lvfx?' NIVEL':'')+(B.deadT>0?' MORTE':'')+(B.res?' RESULTADO':'')+(typeof view!=='undefined'&&view!=='battle'?' tela:'+view:''); }catch(er){}
     W.push({ms:Math.round(tot*10)/10,seg:K.map((k,i)=>k+' '+v[i].toFixed(1)).filter((s,i)=>v[i]>=0.5).join(', '),st,tags:PF.tags.slice()}); W.sort((x,y)=>y.ms-x.ms); if(W.length>20) W.length=20; }
   PF.tags.length=0; }
+const DRAW_ALWAYS=(function(){ try{ return typeof DEBUG!=='undefined'&&DEBUG&&new URLSearchParams(location.search).get('desenho')==='1'; }catch(e){ return false; } })();
+const DRAWH={since:0,last:0};
+function drawHidden(now){ if(DRAW_ALWAYS) return false; let full=false; try{ const c=document.body.classList; full=typeof view!=='undefined'&&view!=='battle'&&c.contains('fb')&&c.contains('full'); }catch(e){ full=false; }
+  if(!full){ DRAWH.since=0; return false; } if(!DRAWH.since) DRAWH.since=now; if(now-DRAWH.since<400) return false; if(now-DRAWH.last>=1000) return false; return true; }
 function loop(now){
   { const d=now-FP.lastRaw; FP.lastRaw=now; if(d>2&&d<60){ FP.raw.push(d); if(FP.raw.length>=40){ let sm=0; for(let i=0;i<40;i++) sm+=FP.raw[i]; const hz=40000/sm; FP.raw.length=0;   /* Engenheiro 7: taxa pela MÉDIA dos 40 intervalos, não pelo quartil baixo: em tela de 60 Hz com quadros irregulares (8 ms / 25 ms alternados, PC ou celular carregado) o quartil dava "120 Hz" e o jogo passava a desenhar 1 a cada 2 (30 por segundo). A média nunca passa da taxa real; com quadros perdidos ela só erra para MENOS (sem pular quadro) */ if(hz>30&&hz<400){ FP.hz=hz; FP.n=FPS_FREE?1:Math.max(1,Math.floor(hz/60+0.15)); } } }
     if(++FP.i<FP.n){ requestAnimationFrame(loop); return; } FP.i=0; }   /* tela de 120/144 Hz: pula as chamadas do meio (nada é calculado nem desenhado nelas) */
@@ -1539,7 +1543,7 @@ function loop(now){
   if(!B.paused){ const n=B.speed; for(let i=0;i<n;i++){ step(dt); if(typeof petStep==='function') petStep(dt); if(B.inst&&typeof instStep==='function') instStep(dt); } }
   if(typeof resTick==='function') resTick(rdt);
   if(PF) pA=performance.now();
-  tickFx(dt); if(typeof Fogueira!=='undefined') Fogueira.tick(rdt);   /* Fogueira das Eras V5 (js/fogueira.js): monta e desmonta sozinha; desligada não faz nada */ if(PF) pB=performance.now(); draw();
+  tickFx(dt); if(typeof Fogueira!=='undefined') Fogueira.tick(rdt);   /* Fogueira das Eras V5 (js/fogueira.js): monta e desmonta sozinha; desligada não faz nada */ if(PF) pB=performance.now(); if(drawHidden(now)) window.__drawSkip=(window.__drawSkip||0)+1; else { DRAWH.last=now; window.__drawDone=(window.__drawDone||0)+1; draw(); }
   }catch(er){ if(!window.__loopErr||performance.now()-window.__loopErr>2000){ window.__loopErr=performance.now(); console.error('loop',er); } try{ ctx=mainCtx; ctx.setTransform(1,0,0,1,0,0); resize(); }catch(e2){} }
   if(PF) pC=performance.now();
   drawPreview(rdt); drawGearPreview(rdt);   // prévia animada da Coleção (dentro da Loja); sai sozinha se o canvas não existir
