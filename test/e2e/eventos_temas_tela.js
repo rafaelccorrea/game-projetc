@@ -11,7 +11,12 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
   const J = code => JSON.parse(ev('JSON.stringify((function(){' + code + '})())'));
   const DAY = 86400000, now = Date.now(), ymd = t => { const d = new Date(t - 3 * 3600000), p = x => String(x).padStart(2, '0'); return p(d.getUTCFullYear() % 100) + p(d.getUTCMonth() + 1) + p(d.getUTCDate()); };
   ev(`(function(){ S.tut=99; S.welcome=true; view='battle'; Sys.events.DATA.enabled=true; Sys.evtrail.DATA.on=true; PANEL_ON.events=true;
-    Sys.net=Sys.net||{}; Sys.net.events=function(){ return Promise.reject(Object.assign(new Error('x'),{code:'offline'})); }; return 1; })()`);
+    Sys.net=Sys.net||{}; Sys.net.events=function(){ return Promise.reject(Object.assign(new Error('x'),{code:'offline'})); };
+    window.__art0=JSON.stringify(EVT_ART); for(const k of Object.keys(EVT_ART)) delete EVT_ART[k];   /* os casos abaixo partem da tabela vazia (desenho por código); a tabela de verdade é conferida aqui */
+    return 1; })()`);
+  { const fs = require('fs'), path = require('path'), art = JSON.parse(ev('window.__art0')), bad = [];
+    for (const b of Object.keys(art)) for (const k of Object.keys(art[b])) { const f = path.join(__dirname, '../../assets/events', b, k === 'bg' ? 'bg.jpg' : k + '.png'); if (!fs.existsSync(f)) bad.push(b + '/' + k); }
+    check('tabela EVT_ART do jogo: toda peça ligada existe em assets/events/', bad.length === 0, bad.join(', ')); }
   const T = { cacada_chefes: { bd: '#ffb04a', map: 'assets/map/era3.jpg', frame: '#d8362a' }, semana_forja: { bd: '#ffd27a', map: 'assets/map/era4.jpg', frame: '#e0701a' }, festa_pets: { bd: '#ffe07a', map: 'assets/map/era1.jpg', frame: '#22a86a' } };
   for (const base of Object.keys(T)) {
     const id = base + '_' + ymd(now - DAY), cal = [{ id, start: now - DAY, end: now + 13 * DAY }];

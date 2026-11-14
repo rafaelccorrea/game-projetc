@@ -58,7 +58,7 @@ const EVT_SKHUE={festival_weapon:'250deg',festival_armor:'200deg',cacada_weapon:
    RESERVA: toda <img> daqui leva onerror="evtArtFail(this)". A peça que falhar (pacote 'ui:late' ainda não chegou, arquivo faltando) é marcada em XEVT.artBad e a
    tela é redesenhada com o desenho por código; a marca vale até a tela ser aberta de novo (aí tenta outra vez). Se o pacote já chegou mas mora em outra pasta,
    o js/latepack.js troca o endereço antes de a reserva agir. Ao abrir, as peças ligadas dos eventos do calendário entram na pré-carga (evtArtPre). */
-const EVT_ART={};
+const EVT_ART={ cacada_chefes:{bg:1,icon:1,points:1,frame:1}, semana_forja:{bg:1,icon:1,points:1,frame:1}, festa_pets:{bg:1,icon:1,points:1,frame:1} };   /* arte da Arte (ad71c52, voto do dono 14/11) */
 const EVT_ARTF={bg:'bg.jpg',icon:'icon.png',points:'points.png',frame:'frame.png'};
 function evtArt(base,k){ const a=Object.prototype.hasOwnProperty.call(EVT_ART,base)?EVT_ART[base]:null; if(!a||!a[k]||!EVT_ARTF[k]||!/^[a-z0-9_]+$/.test(base)) return '';
   const p='assets/events/'+base+'/'+EVT_ARTF[k]; return XEVT.artBad&&XEVT.artBad[p]?'':p; }
