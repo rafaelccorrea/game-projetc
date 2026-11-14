@@ -79,7 +79,9 @@ if (!process.argv.includes('--dias')) {
 }
 // --dias: roda o tools/sim-paredes.js com a FC multiplicada pelos módulos (por era, valor do Senhor) e a XP extra (XPX, % em toda XP, depois do teto de abate)
 const XPX = +((process.argv.find(a => a.startsWith('--xp=')) || '--xp=24').split('=')[1]), FCON = !process.argv.includes('--semfc');
-const MUL = E.map(x => 1 + (process.argv.includes('--sopct') ? x.fcGainPct : x.fcAllPct) / 100);   // --sopct: só os % (sem os golpes dos itens)
+/* RX='[x por era]' (opção A, 14/11): a FC pedida foi multiplicada por x na era; o efeito no calendário é a FC do jogador ÷ x (com ou sem os módulos: --semfc) */
+const RX = process.env.RX ? JSON.parse(process.env.RX) : null;
+const MUL = E.map((x, e) => (FCON ? 1 + (process.argv.includes('--sopct') ? x.fcGainPct : x.fcAllPct) / 100 : 1) / (RX ? RX[e] : 1));   // --sopct: só os % (sem os golpes dos itens)
 let src = require('fs').readFileSync(process.cwd() + '/tools/sim-paredes.js', 'utf8');
 const rep = (a, b) => { if (!src.includes(a)) throw new Error('sim-paredes mudou: ' + a.slice(0, 50)); src = src.replace(a, b); };
 rep("const v=baseFc(L,e,r,forge,o.vip?6000:4000)*pct*trainMul", "const v=(o.mod?o.mod[e]:1)*baseFc(L,e,r,forge,o.vip?6000:4000)*pct*trainMul");
@@ -87,7 +89,7 @@ rep("key=(o.vip||0)+'|'+(o.lazy?1:0)+'|'", "key=(o.tag||'')+(o.vip||0)+'|'+(o.la
 rep("function dayXp(e,L,o){", "function dayXp(e,L,o){ return dayXp0(e,L,o)*(1+(o.xpx||0)/100); }\nfunction dayXp0(e,L,o){");
 rep("const P={free:play(free),vip5:play(vip5),vip10:play(vip10),lazy:play(lazy)};", "const P={free:play(free),vip5:play(vip5),vip10:play(vip10),lazy:play(lazy)};\n__TUDO(P,play,curve,plan,fcAt,END);");
 global.__TUDO = (P, play, curve, plan, fcAt) => {
-  const mk = o => curve(Object.assign({ tag: 'T', mod: FCON ? MUL : null, xpx: XPX }, o));
+  const mk = o => curve(Object.assign({ tag: 'T', mod: FCON || RX ? MUL : null, xpx: XPX }, o));
   const C = { free: mk({}), vip10: mk({ vip: 10 }), lazy: mk({ lazy: true }) }, Q = { free: play(C.free), vip10: play(C.vip10), lazy: play(C.lazy) };
   const endD = (p, e) => p.pass[e * 10 + 9] != null ? Math.ceil(p.pass[e * 10 + 9]) : 'trava';
   const wall = (p, j) => p.stuck[j] != null ? r1(p.stuck[j]) : '—';

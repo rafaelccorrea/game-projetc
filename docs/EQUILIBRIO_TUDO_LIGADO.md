@@ -227,3 +227,36 @@ fase 35 "herói de referência vence com 100%" e "cai depois da fúria" falham *
 (era 0, não mexida) 2/4 em 31 s; e a razão comum ÷ chefe (alvo 0,25) dá 0,65-0,69 nas fases 1/10/35/70 por causa do piso
 `minHitPctOfRefHp` (fases 1 e 10 não mexidas). O diff.js é do Engenheiro: o alvo da fase 35 passa a ser "100% perde, 115% vence".
 Calendário (dias até a fase 90): não refeito.
+
+### 9.1 Janela 2 (14/11): eras 0, 3 e 4 fechadas, calendário refeito
+
+O que derrubava o sem módulos a 115% nas eras 3 e 4 era a **fúria** (27 s e 24 s depois do chefe parar: pegava quem leva 32-34 s). Aguentar
+38 s não resolveu (3/6 e 3/6). Aplicado: `furyAtSec` era 3 27 → 30, era 4 24 → 26; FC pedida era 3 × 1,48 e era 4 × 1,50 (sobre a original);
+aguentar 36 nas duas. Era 0 (pedido do PO: a fase 10 é o começo do jogo, sem módulos, tem de passar com 100%): `surviveSecAt100[0]` 36 → 40.
+
+| Era | Com módulos 100% | Sem módulos 100% | Sem módulos 115% |
+|---|---|---|---|
+| 0 (aguentar 40) | 6/6 · 29,5 s | **6/6 · 33,6 s** | 6/6 · 28,1 s |
+| 3 (FC 1,48, fúria 30) | 6/6 · 22,8 s | 0/6 (cai 33 s) | **6/6 · 35,2 s** |
+| 4 (FC 1,50, fúria 26) | 6/6 · 21,7 s | 1/6 | **6/6 · 32,0 s** |
+
+Limite: nas eras 3 e 4 o com módulos fica em ~22 s (alvo ~30). Subir mais a FC pedida quebra o com módulos de uma vez (era 3 com 1,57 = 0/6:
+o dano do chefe sobe junto). Fica assim; o sem módulos (que é o que trava) está no alvo.
+
+**Decisão do PO (14/11):** a razão golpe do comum ÷ golpe do chefe fica em 0,65-0,69 nas fases 1/10/35/70 (alvo antigo 0,25) por causa do piso
+`commons.minHitPctOfRefHp` 0,025: aceito por ora (o "-1" era pior). O diff.js do Engenheiro precisa aceitar o piso.
+
+**Calendário** (`RX='[1.073,1,1.40,1.48,1.50,1.49,1.667,1.748,1.54]' node tools/sim-tudo-ligado.js --dias --xp=10`, com e sem `--semfc`;
+RX = os fatores da FC pedida aplicados, o jogador fica com a FC ÷ RX):
+
+| | fim da era 2 | 4 | 5 | 6 | 7 | 8 (fim das 9 eras) | dias em parede |
+|---|---|---|---|---|---|---|---|
+| plano (sem módulos, números antigos) | 13 | 42 | 68 | 105 | 137 | **178** | 79 |
+| com os módulos, números antigos | 8 | 33 | 50 | 62 | 66 | **74** | 29 |
+| **com os módulos, opção A** | 14 | 40 | 62 | 85 | 121 | **121** | 57 |
+| **sem os módulos, opção A** | 17 | 40 | 62 | 158 | trava | trava | 51 |
+
+Leitura: com os módulos o grátis termina as 9 eras no dia ~121 (era 74 sem a recalibração; o plano era 178). Sem os módulos trava na era 7
+(regra A: a dificuldade obriga a evoluir). A diferença para 178 vem de o calendário usar a FC (os módulos ×1,9-2,1 nas eras 6-8) e a luta real
+mostrar que esse poder vale menos no chefe (por isso os fatores 1,67-1,75 já deixam o com módulos em ~30 s). Para chegar perto de 178 teria de
+subir a FC pedida das eras 6-8 e o com módulos passaria de 30 s: decisão do PO/dono.
