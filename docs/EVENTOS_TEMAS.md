@@ -160,3 +160,19 @@ instância é vencida e uma vez por varredura. Enquanto não entrar, a Caçada a
   com bônus 80, Colosso da Bigorna `era4_boss`, Fera Ancestral `era1_boss`; a Arte pode trocar). O ataque ao chefe conta `evboss`.
 - `js/sys/tower.js`: andar vencido conta `tower`. `js/sys/pet.js`: `feed` e `feedTap` contam `petfeed` e `petlevel`. O Engenheiro não liga nada.
 - Teste: `test/sys/events-temas.test.js` (11). `test/sys` 94 de 94.
+
+## Caminhos da arte (Engenheiro confirmou com a Arte, 14/11; tela em 35abad1)
+
+<base> = festival_eras | cacada_chefes | semana_forja | festa_pets. Tudo no pacote 'ui:late' (js/sys/assets.js), fora da base do AAB.
+
+| Peça | Caminho | Tamanho |
+|---|---|---|
+| Fundo da tela de Eventos | `assets/events/<base>/bg.jpg` | 720×1280 |
+| Ícone do tema | `assets/events/<base>/icon.png` | 128 |
+| Ícone dos pontos | `assets/events/<base>/points.png` | 96 |
+| Moldura do grande prêmio (ícone do marco) | `assets/events/<base>/frame.png` | 128 |
+| Molduras da loja (Perfil) | `assets/ui/frames/evt_cacada.png`, `assets/ui/frames/evt_pets.png` | 256×256, janela 160 |
+
+- Chefe do evento: `assets/enemies/<art>.png`. Ficam era3_boss, era4_boss e era1_boss (Arte, 14/11).
+- Quando a arte entrar no jogo: o Engenheiro põe os ids em `Sys.events.DATA.ready`. A Sistemas põe `evt_cacada` e `evt_pets` no catálogo do Perfil
+  (`Sys.profile.DATA.frames`, `need:{grant:true}`).
