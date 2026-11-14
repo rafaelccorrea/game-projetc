@@ -98,12 +98,15 @@ async function send(S,host,idx){ if(!ST.started) return {ok:false,reason:'off'};
   const c=Du.canSend(S,host,idx); if(!c.ok) return c;   // as mesmas regras (5 s, 30/dia, 2 seguidas) antes de gastar rede
   let r; try{ r=await call('POST','/duo/phrase',{idx}); }catch(e){ return fail(e); }
   return withAuth('send',r,()=>Du.send(S,host,idx)); }
-/* resgate: o servidor autoriza; o Sys.duo paga UMA vez. 409 claimed: marca sem pagar. */
+/* resgate: com mailed:true o servidor credita pelo correio e o jogo só marca; sem mailed (servidor antigo), o servidor autoriza e o Sys.duo paga UMA vez. 409 claimed: marca sem pagar. */
 async function claim(S,host,id){ if(!ST.started) return {ok:false,reason:'off'}; const Du=D(), o=Du.ensure(S);
   if(id==='daily'?o.day.claimed:o.week.claimed.includes(id)) return {ok:false,reason:'claimed'};
   let r; try{ r=await call('POST','/duo/claim/'+enc(String(id)),undefined); }
   catch(e){ const f=fail(e); if(f.reason==='claimed'){ await refresh(S,host); if(id==='daily') o.day.claimed=true; else if(Du.DATA.weekly.some(m=>m.id===id)&&!o.week.claimed.includes(id)) o.week.claimed.push(id); } return f; }
   await refresh(S,host);   // traz a soma e a presença do servidor antes de pagar
+  /* PO (de9f83c): com mailed:true o SERVIDOR credita pelo correio (carta source duo, att goldk/forge); o jogo só marca resgatado e NÃO paga */
+  if(r&&r.mailed===true){ if(id==='daily') o.day.claimed=true; else if(!o.week.claimed.includes(id)) o.week.claimed.push(id);
+    return {ok:true,id,mailed:true,reward:r.reward||null,paid:false,period:r.period,value:r.value,target:r.target}; }
   const out=await withAuth('claim',r,()=>Du.claim(S,host,id));
   return Object.assign({},out,{period:r&&r.period,value:r&&r.value,target:r&&r.target}); }
 

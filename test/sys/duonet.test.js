@@ -137,6 +137,14 @@ async function started(x, routes) { const w = world(); DU.DATA.on = true; DU.set
     assert.ok(DU.ensure(w.S).week.claimed.includes('days5'), 'o servidor diz que já resgatou: marca sem pagar');
   });
 
+  await t('resgate com mailed:true (de9f83c): o SERVIDOR credita pelo correio; o jogo só marca resgatado e NÃO paga', async () => {
+    const { w } = await started({ partnerDay: { kills: 290, bossKills: 0, stages: 0, arenaWins: 0 } }, {
+      'POST /duo/claim/daily': () => ({ ok: true, id: 'daily', period: dk(w.host.t), value: 300, target: 300, reward: { goldK: 30, stones: 1, gems: 0 }, mailed: true }) });
+    DU.track(w.S, w.host, 'kills', 10); const g0 = w.host.gold;
+    const r = await DN.claim(w.S, w.host, 'daily'); assert.ok(r.ok && r.mailed && r.paid === false, JSON.stringify(r)); assert.strictEqual(w.host.gold, g0, 'não pagou');
+    assert.strictEqual(DU.ensure(w.S).day.claimed, true); assert.strictEqual((await DN.claim(w.S, w.host, 'daily')).reason, 'claimed');
+  });
+
   await t('resgate autorizado com o espelho local atrasado: paga (o servidor conferiu a soma); resgates do servidor no GET viram resgatados', async () => {
     const { w, sv } = await started(null, { 'POST /duo/claim/stages40': () => ({ ok: true, id: 'stages40', period: wk(w.host.t), value: 40, target: 40, reward: { goldK: 120, stones: 4 } }) });
     assert.ok((await DN.claim(w.S, w.host, 'stages40')).ok); assert.strictEqual(w.host.gold, 1200);
