@@ -191,9 +191,27 @@ T.cancel(S, h);
 
 Corrida que ficou aberta (app fechado no meio): `view().run` vem preenchido e `canEnter` false; a tela deve oferecer "Continuar" (perseguição que termina com `finish`) ou `cancel` (a entrada já foi gasta).
 
-**Online:** com o servidor ligado (`THIEF_ON`), as entradas são contadas no servidor (`GET /v1/thief`, `POST /v1/thief/enter`, `/finish`, `/sweep`, docs/API_SERVIDOR.md §15). Não existe camada `Sys.thief` online (como o `arenanet`/`guildnet`): ver "Lacunas" no fim.
+**Online:** com o servidor ligado (`THIEF_ON`), as entradas são contadas no servidor (`GET /v1/thief`, `POST /v1/thief/enter`, `/finish`, `/sweep`, docs/API_SERVIDOR.md §15). A camada é o `Sys.thiefNet` (`js/sys/thiefnet.js`, nasce DESLIGADA), ver abaixo.
 
 **Chaves, em ordem:** L1 (carregar) → tela `thief` escrita e aprovada → `PANEL_ON.thief = true` → `SYS_LIVE.thief = true`.
+
+### 2.1 Ladrão online — `Sys.thiefNet` (js/sys/thiefnet.js; teste test/sys/thiefnet.test.js)
+
+Mesmo padrão do `Sys.duoNet`/`Sys.guildNet`. `start(S, host)` faz `GET /v1/thief`, espelha no `Sys.thief` (entradas do dia, melhor nível vencido, corrida aberta) e liga o provider online. A partir daí o **servidor decide**: `Sys.thief.enter/finish/sweep` síncronos devolvem `{ok:false, reason:'online'}` (o módulo não gasta entrada sozinho) e a tela usa as Promises do `Sys.thiefNet`, que devolvem **o mesmo formato** do síncrono:
+- `enter(S, host)` → `POST /v1/thief/enter` (a entrada é gasta AO ENTRAR, no servidor) → `{ok, lv, lote, secs, runId, seed, endsAt, left}`;
+- `finish(S, host, score)` → `POST /v1/thief/finish {runId, score}` → `{ok, score, lv, lote, drop, brasas, won, best, left, runId, total}`. As Brasas do servidor entram pelo `Sys.bonfire.addBrasas(S,'thief',n)` **uma vez por runId** (`S.sys.thief.paid`); não gasta outra entrada;
+- `sweep(S, host)` → `POST /v1/thief/sweep` → `{ok, lv, drop, brasas, left, total}`;
+- erro: `{ok:false, reason, details, retryAfterMs, local}`. `reason` = código do servidor; `local` = a palavra do `WHY` da tela (`daily_limit` → `'entries'`, `nothing_to_sweep` → `'none'`, `already_finished`/`expired` → `'run'`). 404 com o online ligado = o servidor desligou o Ladrão: volta ao local sozinho.
+
+**N1 · `js/onlineboot.js`** (linha da lista dos módulos online, junto do `guildNet`/`duoNet`) — acrescentar `'thiefNet'`:
+```js
+if (r.ok) for (const k of ['arenaNet', 'guildNet', 'duoNet', 'guildFireNet', 'thiefNet']) { ... }
+```
+**N2 · `index.html`** — `'thiefnet'` na lista de `js/sys/`, DEPOIS de `'net'` e de `'thief'` (L1).
+
+**N3 · `js/p_thief.js`** — com `Sys.thiefNet.state().started`, os toques Entrar / fim / Repetir chamam `await Sys.thiefNet.enter|finish|sweep(S, host[, score])` no lugar do `Sys.thief.*` síncrono (mesmo resultado; no erro usar `why(r.local)` e mostrar o `retryAfterMs`). "Sair sem gastar" continua `Sys.thief.cancel` (a entrada do servidor já foi gasta no enter; a corrida aberta volta no próximo refresh enquanto o servidor aceitar o fim, 3 min).
+
+**Ligar, em ordem:** `THIEF_ON=1` no servidor → `SYS_LIVE.thief = true` (tela aprovada) → `Sys.thiefNet.DATA.on = true` (com N1-N3 colados). Desligar é o inverso; com o servidor em 404 o jogo volta ao local sozinho.
 
 ---
 
@@ -530,6 +548,6 @@ window.PCamp={X:X,actions:ACTIONS,def:def};
 3. **Encruzilhada apagava uma fase tarde** (na 1ª vitória da era nova, não na do Senhor da Era): corrigido no `Sys.crossroads`, com teste.
 4. **Forja Astral não entrava na FC**: corrigido no `Sys.stats`, com teste.
 5. **`Sys.thief` e `Sys.camp` não são carregados** pelo `index.html` (L1).
-6. **Ladrão de Brasas online**: o servidor tem as rotas (`/v1/thief/*`), mas não há camada no jogo que as chame (como `arenanet.js`). Com o servidor ligado, as entradas locais (`Sys.thief`) e as do servidor contam separadas. Pedido para o Servidor/Sistemas: um `Sys.thiefNet` que, online, troque `enter/finish/sweep` pelas rotas e chame `Sys.bonfire.addBrasas(S,'thief',brasas)` com o valor do servidor.
+6. **Ladrão de Brasas online**: resolvido pelo `Sys.thiefNet` (seção 2.1; desligado). Falta colar N1-N3. Resto: se a resposta do `finish` se perder na rede, o reenvio dá 409 `already_finished` sem o valor e essas Brasas não entram (pedido ao Servidor: mandar `{brasas}` no `details` desse 409).
 7. **Ícone do Acampamento** no Menu: não existe `assets/icons/menu/camp.png` (K2 usa o da guilda, provisório). Pedido para a Arte.
 8. **Ladrão sem protótipo** em `docs/proto/v2`: a tela precisa passar pelo voto do dono.
