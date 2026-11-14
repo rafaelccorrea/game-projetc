@@ -129,7 +129,10 @@ function itemFC(S,host,item){
   const T=sysRoot().stats; if(!item||!T) return {fc:0,atPlayerLevel:0,level:1,playerLevel:null,swap:0};
   const L=sysRoot().level, pl=L&&L.level?L.level(S):(host&&typeof host.level==='function'?Math.floor(num(host.level(),1)):null);
   const empty=compute(S,host,{item,remove:true}), as=compute(S,host,{item}), top=Math.max(Math.max(1,Math.floor(num(item.lvl,1))),pl==null?100:Math.min(100,pl));
-  return {fc:as-empty, atPlayerLevel:compute(S,host,{item,atLevel:top})-empty, level:Math.max(1,Math.floor(num(item.lvl,1))), playerLevel:pl, swap:as-compute(S,host)};
+  /* swap = ganho de FC ao equipar, pela FC EXIBIDA (dono 14/11, via PO: "melhor" com +0 de FC): se a FC na tela não muda, swap = 0 (nem melhor nem pior).
+     swapRaw = a conta sem arredondar; better = a FC exibida sobe */
+  const cur=compute(S,host), raw=as-cur, shown=view(as)-view(cur);
+  return {fc:as-empty, atPlayerLevel:compute(S,host,{item,atLevel:top})-empty, level:Math.max(1,Math.floor(num(item.lvl,1))), playerLevel:pl, swap:shown===0?0:raw, swapRaw:raw, better:shown>0};
 }
 const hud=(S,host)=>'FC '+viewText(compute(S,host));
 /* VARIAÇÃO DE PODER (dono via PO: mostrar +/− de FC em TUDO que mexe no poder: título, item, pet, montaria, asa, forja, fusão, estandarte...).
@@ -138,9 +141,9 @@ const hud=(S,host)=>'FC '+viewText(compute(S,host));
    Para PRÉVIA de item sem mexer no save: Sys.fc.itemFC(S,host,item).swap (já existe). */
 const SNAP_KEYS=['atk','hp','def','critRate','critDmg','aspd'];
 function snapshot(S,host){ const st=stats(S,host), o={fc:fcOfStats(st)}; for(const k of SNAP_KEYS) o[k]=num(st[k],0); return o; }
-function delta(a,b){ const A=typeof a==='number'?{fc:a}:(a||{fc:0}), B=typeof b==='number'?{fc:b}:(b||{fc:0}), before=num(A.fc,0), after=num(B.fc,0), diff=after-before;
+function delta(a,b){ const A=typeof a==='number'?{fc:a}:(a||{fc:0}), B=typeof b==='number'?{fc:b}:(b||{fc:0}), before=num(A.fc,0), after=num(B.fc,0), rawDiff=after-before, dv=view(after)-view(before), diff=dv===0?0:rawDiff;   // diferença que a tela não mostra = 0 (sem "+0")
   const sign=diff>0?'up':diff<0?'down':'same', st={}; for(const k of SNAP_KEYS) if(A[k]!=null&&B[k]!=null) st[k]=num(B[k],0)-num(A[k],0);
-  return {before,after,diff,pct:before>0?Math.round(diff/before*10000)/100:0,sign,text:diff>0?'+'+viewText(diff):diff<0?'−'+viewText(-diff):'',viewBefore:view(before),viewAfter:view(after),viewDiff:view(diff),color:diff>0?'#5fd068':diff<0?'#ff6b6b':'#c9b9a2',stats:st}; }
+  return {before,after,diff,rawDiff,pct:before>0?Math.round(diff/before*10000)/100:0,sign,text:dv>0?'+'+fmt(dv):dv<0?'−'+fmt(-dv):'',viewBefore:view(before),viewAfter:view(after),viewDiff:dv,color:diff>0?'#5fd068':diff<0?'#ff6b6b':'#c9b9a2',stats:st}; }
 function measure(S,host,fn){ const a=snapshot(S,host); const result=typeof fn==='function'?fn():undefined; return {result,delta:delta(a,snapshot(S,host))}; }
 
 /* RANKING (regra F): cada troca de item/skin grava a FC atual; o ranking semanal usa a MAIOR FC registrada na semana (segunda a domingo,
