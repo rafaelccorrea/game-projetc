@@ -100,7 +100,7 @@ function unassign(S,host,petId){ if(DATA.on!==true) return {ok:false,reason:'off
 
 /* melhoria da tenda: só ouro. → {ok, reason:'off'|'id'|'locked'|'max'|'money', cost, lv} */
 function upgradeCost(S,host,id){ const o=ensure(S,host), t=o.tents[id]; if(!t) return 0; const u=Math.max(1,unitOf(host));
-  return Math.ceil(DATA.upgrade.base*Math.pow(DATA.upgrade.growth,t.lv-1))*Math.ceil(u); }
+  return Math.ceil(Math.round(DATA.upgrade.base*Math.pow(DATA.upgrade.growth,t.lv-1)*1e6)/1e6)*Math.ceil(u); }   /* arredonda antes do ceil (300×1,6² = 768, não 769) */
 function canUpgrade(S,host,id){ if(DATA.on!==true) return {ok:false,reason:'off'}; if(!TENT[id]) return {ok:false,reason:'id'};
   if(locked(S,host)) return {ok:false,reason:'locked'}; const o=ensure(S,host), t=o.tents[id], cost=upgradeCost(S,host,id);
   if(t.lv>=DATA.maxLevel) return {ok:false,reason:'max',cost,lv:t.lv};
@@ -116,7 +116,7 @@ function view(S,host){ if(DATA.on!==true) S=JSON.parse(JSON.stringify(S||{}));  
   return {on:DATA.on===true, locked:locked(S,host), needLevel:DATA.unlockLevel, capHours:capH,
     text:`As tendas enchem até ${capH} h. Pets parados ajudam; o pet principal fica na luta.`,
     idlePets:idle.filter(id=>!Object.values(o.tents).some(t=>t.pets.includes(id))),
-    tents:DATA.tents.map(d=>{ const t=o.tents[d.id], r=rate(S,host,d.id), cap=r*capH;
+    tents:DATA.tents.map(d=>{ const t=o.tents[d.id], r=rate(S,host,d.id), cap=capOf(S,host,d.id);   /* o mesmo teto do tick (o ouro para em capMin minutos de abate) */
       return {id:d.id,name:d.name,res:d.res,lv:t.lv,maxLv:DATA.maxLevel,perHour:Math.round(r*100)/100,stored:Math.floor(t.acc),cap:Math.floor(cap),
         full:cap>0&&t.acc>=cap-1e-9,pct:cap>0?Math.min(100,Math.round(t.acc/cap*100)):0,pets:t.pets.slice(),slots:DATA.petSlots,
         upgrade:canUpgrade(S,host,d.id)}; })}; }

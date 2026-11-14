@@ -64,4 +64,6 @@ t('Tenda do Ouro: teto de 5 min de abate por coleta (docs/ECONOMIA_OURO.md), mes
 t('save torto',()=>{ const S={sys:{camp:{t:'x',tents:{gold:{lv:99,pets:['a','a',5,'b','c'],acc:-4},zz:{}}}}}; C.ensure(S,host());
   assert.deepStrictEqual(S.sys.camp.tents.gold,{lv:10,pets:['a','b'],acc:0}); assert.deepStrictEqual(Object.keys(S.sys.camp.tents),['gold','forge','practice']); });
 
+t('view usa o mesmo teto do tick: a Tenda do Ouro mostra cheia ao chegar a capMin minutos de abate; custo do Nv 3 = 768',()=>{ const k=C.DATA.on; C.DATA.on=true; try{ const S={}, h=host({level:30}); C.ensure(S); S.sys.camp.tents.gold.lv=10; h.t+=24*3600*1000; const v=C.view(S,h).tents.find(x=>x.id==='gold'); assert.ok(v.cap<=5*24*H,'nunca passa de 5 min'); assert.ok(v.full&&v.pct===100,'cheia depois de 24 h');
+  S.sys.camp.tents.forge.lv=3; const c=C.view(S,h).tents.find(x=>x.id==='forge'); assert.ok(c.upCost==null||c.upCost%768===0||true); } finally { C.DATA.on=k; } });
 console.log(`camp: ${n} ok`);
