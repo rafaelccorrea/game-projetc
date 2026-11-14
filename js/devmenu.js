@@ -83,6 +83,9 @@
       <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">LIGAR MÓDULO DESLIGADO (com=)</span>
       <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Liga no jogo que estiver aberto, só nesta carga. São módulos ainda não aprovados.</span>
       ${keys.length ? keys.map(k => box(!!U.com[k], `data-d="com" data-id="${esc(k)}"`, k, '')).join('') : '<span style="font-size:12.5px;font-weight:700">Nenhuma chave desligada no SYS_LIVE.</span>'}
+      <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">RECARGA AO VIVO</span>
+      <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Pausa por 60 min a recarga que acontece a cada arquivo gravado (vale para todos os aparelhos neste servidor). Ao liberar, o app recarrega se houve mudança.</span>
+      <span style="display:flex;gap:8px"><button data-d="lrpause" style="${B};flex:1;min-height:48px">Pausar 60 min</button><button data-d="lrresume" style="${B};flex:1;min-height:48px">Liberar agora</button></span>
       <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">SKINS DE ARMA DE EVENTO</span>
       <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Dá as 3 (Caçador, Martelo, Festival) só nesta carga, para ver em Perfil › Visual. Só funciona com o jogo em memória: aplique antes "fresh=1" ou "Subir para o nível".</span>
       <button data-d="skins" style="${B};min-height:48px">Dar skins de arma de evento</button>
@@ -110,6 +113,8 @@
     U.ask = false; return go(url(selNow())); }
   function backToNormal() { return go(normalUrl()); }
 
+  function liveReload(pause) { try { if (typeof fetch !== 'function') { U.msg = 'Sem rede para falar com o servidor de desenvolvimento.'; paint(); return false; }
+      fetch(pause ? '/__dev/pause?min=60' : '/__dev/resume', { cache: 'no-store' }).then(r => { U.msg = r && r.ok ? (pause ? 'Recarga ao vivo PAUSADA por 60 min.' : 'Recarga ao vivo liberada.') : 'O servidor de desenvolvimento não aceitou o pedido.'; paint(); }).catch(() => { U.msg = 'Não consegui falar com o servidor de desenvolvimento.'; paint(); }); return true; } catch (e) { return false; } }
   function giveSkins() { try { if (W.__noSave !== true) { U.msg = 'Só com o jogo em memória: aplique antes "fresh=1" ou "Subir para o nível".'; paint(); return false; }
       const ws = W.WSkin; if (!ws || !Array.isArray(ws.TABLE)) { U.msg = 'As skins de arma não estão carregadas.'; paint(); return false; }
       if (!Array.isArray(S.skins)) S.skins = []; let n = 0; for (const r of ws.TABLE) { r.art = true; if (S.skins.indexOf(r.id) < 0) { S.skins.push(r.id); n++; } }   /* art=true só nesta carga: mostra também a que está escondida do jogador */
@@ -117,7 +122,7 @@
   function onClick(ev) { let b = ev && ev.target; try { b = b && b.closest ? b.closest('[data-d]') : null; } catch (e) { b = null; }
     if (!b) { if (ev && ev.target === U.el) close(); return; }
     const a = b.dataset.d;
-    if (a === 'close') close(); else if (a === 'skins') giveSkins(); else if (a === 'normal') backToNormal(); else if (a === 'item' || a === 'com') toggle(a, b.dataset.id);
+    if (a === 'close') close(); else if (a === 'skins') giveSkins(); else if (a === 'lrpause') liveReload(true); else if (a === 'lrresume') liveReload(false); else if (a === 'normal') backToNormal(); else if (a === 'item' || a === 'com') toggle(a, b.dataset.id);
     else if (a === 'apply') apply(false); else if (a === 'askyes') apply(true); else if (a === 'askno') { U.ask = false; paint(); } }
   function open() { if (U.el) return true; let host = null; try { host = document.body; } catch (e) {} if (!host) return false;
     fromUrl(); const el = document.createElement('div'); el.id = 'dv_root';
