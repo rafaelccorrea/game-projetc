@@ -4,6 +4,16 @@ Base: docs/EVENTOS_TEMAS.md (Sistemas 6e74bcf). Nada gerado ainda; **cada lote s
 Preços: nano_banana_pro ~2 por imagem; seedance_2_0 fast sem áudio ~4 por vídeo (docs/arte/CUSTO_POR_ITEM.md).
 Regras: corpo padrão nas skins, sem asa pintada, nada sensual, arma na mão direita, nada flutua, ouro escasso (nenhuma moeda dourada nova; Brasas = carvão).
 
+## Arquivos de saída (confirmados pelo Engenheiro, 14/11)
+
+base = cacada_chefes, semana_forja, festa_pets (e festival_eras). Montar fora de assets/ e copiar só o pronto.
+- fundo: `assets/events/<base>/bg.jpg`, 720×1280, JPG ~82, sem texto, centro livre (o terço de cima fica atrás do título);
+- ícone do tema: `assets/events/<base>/icon.png`, 128×128, transparente;
+- ícone dos pontos: `assets/events/<base>/points.png`, 96×96, transparente, legível em 20-32 px;
+- marco do grande prêmio: `assets/events/<base>/frame.png`, 128×128, transparente (ícone de marco, não moldura de retrato);
+- molduras da loja: `assets/ui/frames/evt_cacada.png` e `evt_pets.png`, 256×256, janela de 160 no centro (padrão das molduras de retrato).
+Avisar o Engenheiro por tema quando os arquivos chegarem.
+
 ## Lote 1: mocks de tela cheia (voto do dono com caixinhas)
 
 Tela de Eventos com o tema aplicado, 9:16, 2k, A (escuro/épico) e B (claro/colorido). Referências: print real da tela de Eventos (Festival), herói real, fundo da era.
