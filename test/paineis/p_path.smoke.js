@@ -37,6 +37,9 @@ const un = s => s.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g,
 const buttons = () => (H().match(/<button[^>]*>/g) || []).map(tag => { const ds = {}; for (const m of tag.matchAll(/data-([a-z]+)="([^"]*)"/g)) ds[m[1]] = un(m[2]); return { tag, dataset: ds }; });
 const acts = () => buttons().map(b => b.dataset.x + (b.dataset.id ? ':' + b.dataset.id : ''));
 const tap = (x, o) => def.click({ dataset: Object.assign({ x }, o || {}) });
+/* colunas da comparação: as linhas (rótulo, valor, selo "melhor") de cada caminho */
+const cols = () => H().split('<div class="pp-cc').slice(1).map(c => { const html = c.split('<div class="pp-free"')[0]; return { html, cur: c.startsWith(' cur"'), none: html.includes('ainda não testou'),
+  lines: [...html.matchAll(/<div class="pp-ln( tp)?"><small>([^<]*)<\/small><span class="pp-v pp-lil">([^<]*)<\/span>((?:(?!<div class="pp-ln)[\s\S])*)/g)].map(m => { assert.strictEqual(m[4].includes('class="pp-bst">melhor<'), !!m[1], 'selo e destaque da linha andam juntos'); return { lab: m[2], val: m[3], top: !!m[1] }; }) }; });
 const clean = what => { const h = H(); assert(!/\p{Extended_Pictographic}/u.test(h), what + ': tem emoji'); assert(!/undefined|NaN|\bnull\b|\[object/.test(h), what + ': texto quebrado: ' + (h.match(/.{30}(undefined|NaN|\bnull\b|\[object).{30}/) || [''])[0]);
   assert(!/\.\.\.|…/.test(h), what + ': reticências');
   assert(!/comprar|compra\b|sorte|R\$|preço|só hoje|última chance|oferta|gema|diamante|\bpag[ao]|por ouro/i.test(h), what + ': texto proibido (jogo com menores; nunca troca paga)');
@@ -113,23 +116,45 @@ open(); tap('try', { id: 'blade' }); assert.deepStrictEqual(starts, ['blade'], '
 { const c = cfgs[0]; assert.strictEqual(c.mode, 'pathTry'); assert.strictEqual(c.path, 'blade'); assert.strictEqual(c.sec, PT.DATA.sec); assert(c.noGold && c.noXp && c.noLoot && c.noProgress && c.noDeath); assert.strictEqual(c.enemy.immortal, true); assert.deepStrictEqual(c.bonus.strikes, PA.DATA.paths[0].strikes); }
 assert.deepStrictEqual(P.running(), { id: 'blade' }); assert.strictEqual(PT.active().id, 'blade'); tap('try', { id: 'shot' }); tap('try', { id: 'blade' }); tap('other'); assert.strictEqual(starts.length, 1, 'com o ensaio em curso o toque não vale');
 // fim do ensaio: UMA chamada ao finish; nada é ganho; a comparação mostra o que o módulo guarda
-{ const s0 = JSON.stringify(g.S.sys.path || null), g0 = host.gold; opened.length = 0; g.view = 'battle'; const r = P.finish({ damage: 60000, sec: 60 }); g.view = 'path';
-  assert.strictEqual(fins.length, 1, 'finish chamado UMA vez'); assert.deepStrictEqual(fins[0], { damage: 60000, sec: 60 }); assert(r.ok && r.dps === 1000); assert.deepStrictEqual(opened[0], ['path', { keep: true }], 'fora da tela: abre o painel na comparação');
-  assert.strictEqual(host.gold, g0, 'o ensaio não dá nada'); assert.strictEqual(JSON.stringify(g.S.sys.path || null), s0, 'o ensaio não escolhe caminho'); assert.deepStrictEqual(g.S.sys.pathTry.tried, { blade: { n: 1, best: 1000 } }); assert.strictEqual(P.running(), null);
-  has('Ensaio de ' + g.esc2(PA.DATA.paths[0].name)); has('Este ensaio: 1.000 dano/s.'); has('O melhor de cada caminho em ' + PT.DATA.sec + ' s contra o ' + g.esc2(PT.DATA.dummy.name) + '.');
-  has('<span class="pp-dp pp-lil">1.000</span><small>1 teste</small>'); assert.strictEqual((H().match(/ainda não testou/g) || []).length, 2); not('>melhor<'); has('O ensaio não dá prêmio nem conta progresso.'); has('Testar de novo é grátis e sem limite.');
+{ const s0 = JSON.stringify(g.S.sys.path || null), g0 = host.gold; opened.length = 0; g.view = 'battle'; const r = P.finish({ damage: 60000, sec: 60, life: 900, lifeMax: 1000, stunSec: 0 }); g.view = 'path';
+  assert.strictEqual(fins.length, 1, 'finish chamado UMA vez'); assert.deepStrictEqual(fins[0], { damage: 60000, sec: 60, life: 900, lifeMax: 1000, stunSec: 0 }, 'a ponte repassa life, lifeMax e stunSec ao módulo'); assert(r.ok && r.dps === 1000 && r.life === 900 && r.ctrl === 0); assert.deepStrictEqual(opened[0], ['path', { keep: true }], 'fora da tela: abre o painel na comparação');
+  assert.strictEqual(host.gold, g0, 'o ensaio não dá nada'); assert.strictEqual(JSON.stringify(g.S.sys.path || null), s0, 'o ensaio não escolhe caminho'); assert.deepStrictEqual(g.S.sys.pathTry.tried, { blade: { n: 1, best: 1000, life: 900, lifeMax: 1000, ctrl: 0 } }); assert.strictEqual(P.running(), null);
+  has('Ensaio de ' + g.esc2(PA.DATA.paths[0].name)); has('Este ensaio: 1.000 dano/s, vida no fim 900, controle 0 s.'); has('O melhor de cada caminho em ' + PT.DATA.sec + ' s contra o ' + g.esc2(PT.DATA.dummy.name) + '.');
+  // as 3 linhas do protótipo no caminho testado; os outros dois com traço, sem número
+  { const c = cols(); assert.strictEqual(c.length, 3); assert.deepStrictEqual(c[0].lines, [{ lab: 'Dano/s', val: '1.000', top: false }, { lab: 'Vida no fim', val: '900', top: false }, { lab: 'Controle', val: '0 s', top: false }]);
+    assert(c[0].cur && c[0].html.includes('<small>1 teste</small>') && c[0].html.includes('<i style="width:90.0%"></i>') && c[0].html.includes('<small>boneco atordoado</small>'), 'dano com a conta dos testes, vida com a barra, controle com a legenda');
+    for (const k of [1, 2]) { assert(c[k].none && c[k].lines.length === 0, 'não testado: nenhuma linha'); assert(c[k].html.includes('aria-hidden="true">—</span><small>ainda não testou</small>'), 'não testado: traço'); assert(!/\d/.test(c[k].html.replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]*>/g, '')), 'não testado: nenhum número inventado'); } }
+  assert.strictEqual((H().match(/ainda não testou/g) || []).length, 2); not('>melhor<'); has('O ensaio não dá prêmio nem conta progresso.'); has('Testar de novo é grátis e sem limite.');
   assert.deepStrictEqual(acts(), ['try:shot', 'try:arcane', 'other', 'pick:blade']); has('>Testar outro<'); has('>Escolher ' + g.esc2(PA.DATA.paths[0].name) + '<'); sane('comparação 1');
-  tap('other'); assert.deepStrictEqual(starts, ['blade', 'shot'], 'Testar outro: o próximo que falta, UMA chamada'); P.finish({ damage: 90000, sec: 60 }); assert.strictEqual(fins.length, 2);
-  has('Ensaio de ' + g.esc2(PA.DATA.paths[1].name)); has('<span class="pp-dp pp-lil">1.500</span>'); assert.strictEqual((H().match(/>melhor</g) || []).length, 1, 'o selo "melhor" é o do módulo (um só)');
-  { const rows = PT.compare(g.S), top = rows.find(x => x.top); assert.strictEqual(top.id, 'shot'); assert(new RegExp('class="pp-cc cur"><span class="tb">melhor</span>').test(H())); }
-  tap('try', { id: 'arcane' }); assert.strictEqual(starts.length, 3); P.finish({ damage: 30000, sec: 60 }); assert.deepStrictEqual(acts(), ['list', 'pick:arcane']); has('>Ver os caminhos<'); not('ainda não testou'); sane('comparação 3');
+  tap('other'); assert.deepStrictEqual(starts, ['blade', 'shot'], 'Testar outro: o próximo que falta, UMA chamada'); P.finish({ damage: 90000, sec: 60, life: 400, lifeMax: 1000, stunSec: 0 }); assert.strictEqual(fins.length, 2);
+  has('Ensaio de ' + g.esc2(PA.DATA.paths[1].name));
+  // 2 testados: o selo de cada linha é o do módulo (topDps no Disparo, topLife na Lâmina; controle 0 nos dois = sem selo)
+  { const rows = PT.compare(g.S), c = cols(); assert.strictEqual(rows.find(x => x.topDps).id, 'shot'); assert.strictEqual(rows.find(x => x.topLife).id, 'blade'); assert(!rows.some(x => x.topCtrl));
+    assert.deepStrictEqual(c.map(q => q.lines.map(l => l.top)), [[false, true, false], [true, false, false], []]); assert.strictEqual(c[1].lines[0].val, '1.500'); assert(c[1].cur && !c[0].cur); assert.strictEqual((H().match(/>melhor</g) || []).length, 2); }
+  tap('try', { id: 'arcane' }); assert.strictEqual(starts.length, 3); P.finish({ damage: 30000, sec: 60, life: 600, lifeMax: 1000, stunSec: 7.46 }); assert.deepStrictEqual(acts(), ['list', 'pick:arcane']); has('>Ver os caminhos<'); not('ainda não testou'); sane('comparação 3');
+  { const rows = PT.compare(g.S), c = cols(); has('Este ensaio: 500 dano/s, vida no fim 600, controle 7,5 s.');
+    for (let i = 0; i < 3; i++) assert.deepStrictEqual(c[i].lines.map(l => l.top), [rows[i].topDps, rows[i].topLife, rows[i].topCtrl], 'selo por linha = topDps / topLife / topCtrl do módulo');
+    assert.deepStrictEqual(c.map(q => q.lines.map(l => l.val)), [['1.000', '900', '0 s'], ['1.500', '400', '0 s'], ['500', '600', '7,5 s']]); assert.strictEqual((H().match(/>melhor</g) || []).length, 3, 'um selo por linha'); }
+  // PROVA de que a tela não calcula o melhor: com os selos do módulo trocados (ou ausentes), a tela segue o módulo, não os números
+  { const c0 = PT.compare; try {
+      PT.compare = function () { const rows = c0.apply(this, arguments); rows.forEach(x => { x.top = false; x.topDps = x.id === 'arcane'; x.topLife = x.id === 'shot'; x.topCtrl = x.id === 'blade'; }); return rows; }; def.render();
+      assert.deepStrictEqual(cols().map(q => q.lines.map(l => l.top)), [[false, false, true], [false, true, false], [true, false, false]], 'o selo segue as marcas do módulo, mesmo contra os números');
+      PT.compare = function () { const rows = c0.apply(this, arguments); rows.forEach(x => { delete x.topDps; delete x.topLife; delete x.topCtrl; x.top = true; }); return rows; }; def.render(); not('>melhor<');
+      // sem leitura de vida ou de controle no módulo (save antigo, batalha sem os campos): traço e "sem leitura", nunca número
+      PT.compare = function () { const rows = c0.apply(this, arguments); rows.forEach(x => { x.life = null; x.lifeMax = null; x.ctrl = null; x.topLife = true; x.topCtrl = true; }); return rows; }; def.render();
+      for (const q of cols()) { assert.deepStrictEqual(q.lines.slice(1), [{ lab: 'Vida no fim', val: '—', top: false }, { lab: 'Controle', val: '—', top: false }]); assert.strictEqual((q.html.match(/<small>sem leitura<\/small>/g) || []).length, 2); assert(!q.html.includes('pp-hb')); } sane('sem leitura');
+    } finally { PT.compare = c0; } def.render(); }
   tap('list'); assert.strictEqual(X.mode, 'list'); has('seu teste: 1.500 dano/s'); has('seu teste: 500 dano/s'); has('>Comparar os testes<'); sane('lista com testes'); tap('cmp'); has('Comparar os testes'); not('Este ensaio'); sane('comparação pela lista'); tap('list'); }
+// ponte antiga (a batalha manda só damage e sec): nada é inventado; a vida fica "sem leitura" e o módulo recebe só o que veio
+{ const S0 = g.S; g.S = newSave(); open(); tap('try', { id: 'shot' }); const n = fins.length; P.finish({ damage: 1200, sec: 60, life: NaN, lifeMax: 'x' }); assert.deepStrictEqual(fins[n], { damage: 1200, sec: 60 }, 'sem número, o campo não é repassado');
+  has('Este ensaio: 20 dano/s. '); const c = cols()[1]; assert.deepStrictEqual(c.lines, [{ lab: 'Dano/s', val: '20', top: false }, { lab: 'Vida no fim', val: '—', top: false }, { lab: 'Controle', val: '0 s', top: false }]); sane('ponte só com dano'); g.S = S0; open(); }
 // sair do ensaio e batalha que não abre: nada guardado, nada pendurado
 { const tr0 = JSON.stringify(g.S.sys.pathTry); tap('try', { id: 'blade' }); assert.strictEqual(PT.active().id, 'blade'); const c0 = cancels; assert.strictEqual(P.cancel(), true); assert.strictEqual(cancels, c0 + 1); assert.strictEqual(PT.active(), null);
   has('Ensaio encerrado: nada foi gasto nem ganho.'); has('role="status"'); assert.strictEqual(JSON.stringify(g.S.sys.pathTry), tr0, 'sair não anota nada'); assert.strictEqual(P.cancel(), false);
   P.battle = () => false; tap('try', { id: 'shot' }); assert.strictEqual(PT.active(), null, 'a batalha não abriu: o ensaio é solto'); has('Não foi possível abrir o ensaio agora. Nada foi gasto.'); P.battle = () => { throw new Error('boom'); }; tap('try', { id: 'shot' }); assert.strictEqual(PT.active(), null); P.battle = hook;
   o0.start.call(PT, g.S, host, 'arcane'); assert(PT.active()); open(); assert.strictEqual(PT.active(), null, 'abrir a tela solta um ensaio pendurado'); const n = starts.length; tap('try', { id: 'arcane' }); assert.strictEqual(starts.length, n + 1); P.cancel(); }
-out.push('Testar grátis: Sys.pathTry.start UMA vez e o cfg do módulo para o PPath.battle; fim: Sys.pathTry.finish UMA vez, nada ganho, comparação com o melhor dano/s e o selo "melhor" do módulo; sair não anota');
+out.push('Testar grátis: Sys.pathTry.start UMA vez e o cfg do módulo para o PPath.battle; fim: Sys.pathTry.finish UMA vez com damage, sec, life, lifeMax e stunSec, nada ganho; sair não anota');
+out.push('comparação do protótipo: Dano/s, Vida no fim (com barra) e Controle por caminho; selo "melhor" por linha = topDps/topLife/topCtrl do módulo (trocar as marcas troca os selos); não testado ou sem leitura = traço');
 
 // 5) ESCOLHER: 1º toque só abre a confirmação; Voltar desfaz; Confirmar chama o Sys.path.choose UMA vez; a 1ª escolha não gasta a troca
 open(); tap('pick', { id: 'nao-existe' }); assert.strictEqual(X.mode, 'list'); has('Este caminho não existe.'); assert.strictEqual(chooses.length, 0);

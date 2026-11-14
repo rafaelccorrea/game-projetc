@@ -12,7 +12,12 @@
    - FC pedida: fcNeed (js/diff.js; cai no recFC com a chave da dificuldade desligada) · a sua FC: heroFC · texto: fcShow · faixas de cor: diffTier e DIFF.tier;
    - baús de marco: Sys.mapChest (list devolve closed | ready | collected e o prêmio; claim coleta e credita). Chave do módulo desligada ou módulo ausente:
      nenhum baú aparece. O prêmio mostrado é sempre o que o módulo devolve (os números são PROVISÓRIOS e moram no módulo);
-   - marcos depois da última era: Sys.erasEnd.isMark / milestoneRewards (os prêmios só aparecem com a chave do módulo ligada).
+   - marcos depois da última era: Sys.erasEnd.isMark / milestoneRewards (os prêmios só aparecem com a chave do módulo ligada);
+   - prêmios do Senhor da Era e do chefe do meio (cartão da fase): lidos do Sys.loot.DATA, que é quem paga na própria vitória (rollKill / rollEgg do js/sys/loot.js).
+     Pedras de forja: mats.eraBoss.forge e mats.boss.forge = [chance, mínimo, máximo]. Ovo do Senhor: garantido na 1ª vitória de cada era (eggs.eraBossFirstMin é a
+     raridade mínima desse ovo; quais eras já deram o ovo fica no save do módulo, lido aqui sem escrever) e, nas seguintes, eggs.eraBossRepeatChance. Ovo do chefe
+     de fase: eggs.bossChance, garantido quando a conta de chefes sem ovo chega a eggs.pity (vale para o chefe de TODA fase, não só o do meio). Sem o módulo ou
+     sem o campo, aquele prêmio não aparece. Nenhum desses números está escrito neste arquivo.
    "LUTAR" usa a mesma rota do js/p_map.js: fecha a tela e volta para a Batalha (Screens.close + Sys.host.goTab('battle')), que já está na fase atual.
    AS ERAS NÃO ENCERRAM O JOGO: depois da última fase da última era a trilha continua ("Além das Eras", fases sem fim).
    DESEMPENHO: nada pesado por quadro (só o canvas do herói e até 44 partículas); a rolagem move 3 camadas por transform; só as imagens da era à vista são pedidas.
@@ -97,6 +102,29 @@ function chestsOf(v){ const m=MC(); if(!m||v>=NE()||lockedV(v)) return []; let L
   return L.filter(c=>c&&Number.isInteger(c.stage)&&c.stage>=a&&c.stage<a+n&&(c.state==='closed'||c.state==='ready'||c.state==='collected')); }
 const chestAt=(v,s)=>chestsOf(v).find(c=>c.stage===s)||null;
 function readyCount(){ const m=MC(); if(!m||typeof m.readyCount!=='function') return -1; try{ return Math.max(0,Math.floor(num(m.readyCount(S,host())))); }catch(e){ return -1; } }
+/* ---------- prêmios do chefe: só leitura do Sys.loot.DATA (ver o cabeçalho); campo ausente ou sem valor = texto vazio = o prêmio não aparece ---------- */
+const LD=()=>{ try{ const m=Y().loot; return m&&m.DATA&&typeof m.DATA==='object'?m.DATA:null; }catch(e){ return null; } };
+const pctT=v=>String(Math.round(num(v)*1000)/10).replace('.',',')+'%';
+/* spec = [chance, mínimo, máximo] (o rollMat do módulo: sai se a sorte for menor que a chance; a quantidade é um inteiro do mínimo ao máximo) */
+function stonesTxt(cls){ let sp=null; try{ sp=LD().mats[cls].forge; }catch(e){ sp=null; } if(!Array.isArray(sp)) return '';
+  const ch=num(sp[0]), a=Math.floor(num(sp[1])), b=Math.floor(num(sp[2])); if(!(ch>0)||!(b>0)||a>b) return '';
+  const q=a===b?pl(b,'pedra de forja','pedras de forja'):a<1?'até '+pl(b,'pedra de forja','pedras de forja'):nT(a)+' a '+nT(b)+' pedras de forja';
+  return ch>=1?q:pctT(ch)+' de chance: '+q; }
+/* a era já deu o ovo da 1ª vitória? (marca do módulo no save; aqui só se lê) */
+const eraEggDone=e=>{ try{ const a=S.sys.loot.egg.eraFirst; return Array.isArray(a)&&a.includes(e); }catch(x){ return false; } };
+function lordEggTxt(e){ const D=LD(), E=D&&D.eggs; if(!E||typeof E!=='object') return '';
+  if(!eraEggDone(e)) return Array.isArray(E.eraBossFirstMin)?'Ovo de pet garantido na 1ª vitória':'';
+  const c=num(E.eraBossRepeatChance); return c>=1?'Ovo de pet garantido':c>0?pctT(c)+' de chance de ovo de pet':''; }
+function bossEggTxt(){ const D=LD(), E=D&&D.eggs; if(!E||typeof E!=='object') return ''; const c=num(E.bossChance), p=Math.floor(num(E.pity));
+  if(c>=1) return 'Ovo de pet garantido'; if(!(c>0)) return p>1?'Ovo de pet garantido a cada '+nT(p)+' chefes':'';
+  return pctT(c)+' de chance de ovo de pet'+(p>1?' (garantido a cada '+nT(p)+' chefes sem ovo)':''); }
+/* com as dificuldades do módulo ligadas, o chefe de fase só paga como chefe nas fases de DATA.diff.bossStages (o Senhor da Era não muda) */
+function bossPays(s){ try{ const F=LD().diff; if(!F||F.on!==true) return true; const n=Math.floor(num(F.stagesPerEra)); return n>0&&Array.isArray(F.bossStages)&&F.bossStages.includes(((s-1)%n)+1); }catch(e){ return false; } }
+const EGG_SV='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C8 3 5 8.6 5 13.2a7 7 0 0014 0C19 8.6 16 3 12 3z" fill="#ffe9b0" stroke="#6a3a06" stroke-width="1.6"/><path d="M9 9.5c.8-1.6 1.8-2.6 3-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>';
+/* [ícone, texto] dos prêmios do chefe da fase s: Senhor da Era ou chefe do meio (as fases comuns seguem sem lista de prêmio, como no protótipo) */
+function bossRewards(s){ const o=[]; if(!LD()||s>LAST()) return o; const lord=isLord(s); if(!lord&&!(isMid(s)&&bossPays(s))) return o;
+  const st=stonesTxt(lord?'eraBoss':'boss'), eg=lord?lordEggTxt(eraIdx(s)):bossEggTxt();
+  if(st) o.push([ic(IC.forge,22),st]); if(eg) o.push([EGG_SV,eg]); return o; }
 const mounted=()=>{ try{ return typeof heroLook==='function'&&!!heroLook().mount; }catch(e){ return false; } };
 const canDraw=()=>{ try{ return !X.herr&&typeof window.drawHeroFull==='function'&&typeof HS==='number'&&HS>0; }catch(e){ return false; } };
 
@@ -436,7 +464,9 @@ function cardHtml(v){ const s=X.sel, cur=stageNow(), lv=lockedV(v), st=lv?'lock'
   if(st==='lock'){ if(lv) gain=v>=ne?'Depois de <b>'+esc(bossName(ne-1))+'</b> (fase '+nT(L)+') vêm as <b>fases sem fim</b>: a jornada continua.'
       :'Vença <b>'+esc(bossName(v-1))+'</b>, Senhor da era '+esc(eraName(v-1))+' (fase '+nT(v*n)+'), para abrir esta era.';
     else gain='Vença a <b>fase '+nT(cur)+'</b> antes.'+(gain?' '+gain:''); }
-  let chips=''; if(st!=='done'&&lord) chips='<div class="m2-rw"><span>'+SV.key+esc(s>=L?'Completa as '+nT(ne)+' eras':'Abre a era '+eraName(e+1))+'</span></div>';
+  const brw=st!=='done'?bossRewards(s).map(q=>'<span>'+q[0]+esc(q[1])+'</span>').join(''):'';
+  let chips=''; if(st!=='done'&&lord) chips='<div class="m2-rw">'+brw+'<span>'+SV.key+esc(s>=L?'Completa as '+nT(ne)+' eras':'Abre a era '+eraName(e+1))+'</span></div>';
+  else if(brw) chips='<div class="m2-rw">'+brw+'</div>';
   else if(st!=='done'&&mark){ const rw=markRewards(s); if(rw.length) chips='<div class="m2-rw">'+rw.map(t=>'<span>'+SV.title+esc(t)+'</span>').join('')+'</div>'; }
   let dif='', fcr='';
   if(need&&fc){ const k=fc/need, pct=Math.round(k*100), tm=tierMarks(), tr=TIER[tierOf(fc,need)], sc=Math.max(1.25,tm.g*1.25), w=clamp(k/sc*100,2,100);
@@ -550,7 +580,8 @@ function click(b){ const ds=(b&&b.dataset)||{}, a=ds.x||'';
 /* imagens que a tela mostra agora (só as da era à vista), para a espera de carga do jogo */
 function urls(){ const u=[]; if(!NE()) return u; const v=clamp(Math.floor(num(X.view)),0,NE()), e=artEra(v), d=bgDir(e), add=q=>{ if(u.indexOf(q)<0) u.push(q); };
   add(d+'sky.webp'); add(d+'far.webp'); add(d+'ground.webp'); add(bossUrl(e));
-  try{ if(v<NE()&&eraWon(v)) add(bgDir(artEra(v+1))+'sky.webp'); if(chestsOf(v).length){ add(IC.chest); add(IC.coin); add(IC.gem); add(IC.forge); } }catch(x){}
+  try{ if(v<NE()&&eraWon(v)) add(bgDir(artEra(v+1))+'sky.webp'); if(chestsOf(v).length){ add(IC.chest); add(IC.coin); add(IC.gem); add(IC.forge); }
+    if(v<NE()&&(stonesTxt('eraBoss')||stonesTxt('boss'))) add(IC.forge); }catch(x){}
   return u; }
 
 const def=Panels.add(N,{title:'Mapa das Eras',actions:ACTIONS,

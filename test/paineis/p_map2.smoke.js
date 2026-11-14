@@ -4,7 +4,7 @@
 const fs = require('fs'), path = require('path'), vm = require('vm'), assert = require('assert');
 const R = path.join(__dirname, '..', '..');
 const g = globalThis; g.window = g; g.Sys = g.Sys || {};
-['forge', 'erasend', 'mapchest'].forEach(m => require(path.join(R, 'js/sys/' + m + '.js')));
+['forge', 'erasend', 'mapchest', 'loot'].forEach(m => require(path.join(R, 'js/sys/' + m + '.js')));
 const { makeHost } = require(path.join(R, 'test/sys/_host.js'));
 const Sys = g.Sys, MCm = Sys.mapChest, EEm = Sys.erasEnd;
 
@@ -189,6 +189,38 @@ try {
   // 13) sem a tabela de eras: explica e só o Voltar funciona
   { const E0 = g.ERAS; g.ERAS = []; open(); has('Mapa das Eras indisponível agora.'); sane('sem eras'); log.length = 0; def.click(btn('fight')); def.click(btn('back')); assert(log.includes('close')); g.ERAS = E0; }
   out.push('sem a tabela de eras: aviso e Voltar');
+
+  // 13b) PRÊMIOS DO CHEFE: lidos do Sys.loot.DATA (pedras = [chance, mín, máx]; ovos = eggs.*). Mudar o módulo muda o texto; sem o campo, o prêmio some
+  { const LD = Sys.loot.DATA, keepM = JSON.stringify(LD.mats), keepE = JSON.stringify(LD.eggs), keepD = JSON.stringify(LD.diff), back = () => { LD.mats = JSON.parse(keepM); LD.eggs = JSON.parse(keepE); LD.diff = JSON.parse(keepD); };
+    const card = () => { const m = /id="m2_card"[^>]*>([\s\S]*?)<div id="m2_toast">/.exec(H()); assert(m, 'cartão da fase'); return m[1]; };
+    const chips = () => [...card().matchAll(/<span>(?:<img[^>]*>|<svg[\s\S]*?<\/svg>)([^<]*)<\/span>/g)].map(m => un(m[1]));
+    const sel = s => { def.click(btn('st', { s: String(s) })); assert.strictEqual(X.sel, s); };
+    const pct = v => String(Math.round(v * 1000) / 10).replace('.', ',') + '%';
+    try {
+      { const code = SRC.replace(/\/\*[\s\S]*?\*\//g, ''); assert(!/\d+ a \d+ pedras|\d+ pedras? de forja|\d+\s*% de|a cada \d+ chefes/.test(code), 'nenhum número de prêmio escrito no arquivo'); assert(/\.loot\b/.test(code) && /mats\[cls\]\.forge/.test(code) && /eraBossRepeatChance/.test(code) && /bossChance/.test(code) && /\.pity\b/.test(code), 'lê os campos do Sys.loot.DATA'); }
+      setStage(24); FC = g.recFC(24); open();
+      // Senhor da Era (fase 30): pedras do mats.eraBoss.forge e ovo garantido na 1ª vitória; a chave "abre a era" continua
+      sel(30); { const f = LD.mats.eraBoss.forge; assert.strictEqual(f[0], 1); assert.deepStrictEqual(chips(), [f[1] + ' a ' + f[2] + ' pedras de forja', 'Ovo de pet garantido na 1ª vitória', 'Abre a era Era da Pólvora']); assert(card().includes('src="assets/icons/menu/forge.png"')); assert(g.Map2.urls().includes('assets/icons/menu/forge.png'), 'o ícone da pedra entra na espera de carga'); sane('prêmio do Senhor'); }
+      LD.mats.eraBoss.forge = [1, 7, 9]; def.render(); assert.strictEqual(chips()[0], '7 a 9 pedras de forja', 'mudou o módulo, mudou o texto'); LD.mats.eraBoss.forge = [1, 4, 4]; def.render(); assert.strictEqual(chips()[0], '4 pedras de forja'); LD.mats.eraBoss.forge = [1, 1, 1]; def.render(); assert.strictEqual(chips()[0], '1 pedra de forja');
+      LD.mats.eraBoss.forge = [0.5, 2, 6]; def.render(); assert.strictEqual(chips()[0], '50% de chance: 2 a 6 pedras de forja', 'a 1ª posição é a chance'); LD.mats.eraBoss.forge = [0, 3, 5]; def.render(); assert.deepStrictEqual(chips(), ['Ovo de pet garantido na 1ª vitória', 'Abre a era Era da Pólvora'], 'chance zero: sem pedra');
+      delete LD.mats.eraBoss.forge; def.render(); assert.strictEqual(chips().length, 2, 'campo ausente: o prêmio não aparece'); sane('sem o campo da pedra'); back();
+      // a era já deu o ovo da 1ª vitória (marca do módulo no save): passa a valer a chance de repetição do módulo
+      g.S.sys.loot = { egg: { eraFirst: [0, 1] } }; def.render(); assert.strictEqual(chips()[1], 'Ovo de pet garantido na 1ª vitória', 'a era III ainda não deu o ovo'); const snap = JSON.stringify(g.S.sys.loot);
+      g.S.sys.loot.egg.eraFirst.push(2); def.render(); assert.strictEqual(chips()[1], pct(LD.eggs.eraBossRepeatChance) + ' de chance de ovo de pet'); assert.strictEqual(chips()[1], '25% de chance de ovo de pet');
+      LD.eggs.eraBossRepeatChance = 0.4; def.render(); assert.strictEqual(chips()[1], '40% de chance de ovo de pet'); LD.eggs.eraBossRepeatChance = 0; def.render(); assert.deepStrictEqual(chips(), ['3 a 5 pedras de forja', 'Abre a era Era da Pólvora'], 'sem chance de repetição: sem ovo'); sane('era já vencida');
+      g.S.sys.loot.egg.eraFirst.pop(); assert.strictEqual(JSON.stringify(g.S.sys.loot), snap, 'a tela só lê a marca do módulo'); delete LD.eggs.eraBossFirstMin; def.render(); assert.deepStrictEqual(chips(), ['3 a 5 pedras de forja', 'Abre a era Era da Pólvora'], 'sem o campo do ovo da 1ª vitória: sem ovo'); back(); delete g.S.sys.loot;
+      // chefe do meio (fase 25): pedras do mats.boss.forge e a chance de ovo do chefe de fase com a garantia (pity)
+      sel(25); { const f = LD.mats.boss.forge, E = LD.eggs; assert.deepStrictEqual(chips(), [f[1] + ' a ' + f[2] + ' pedras de forja', pct(E.bossChance) + ' de chance de ovo de pet (garantido a cada ' + E.pity + ' chefes sem ovo)']); assert.deepStrictEqual(chips(), ['1 a 2 pedras de forja', '10% de chance de ovo de pet (garantido a cada 10 chefes sem ovo)']); sane('prêmio do chefe do meio'); }
+      LD.mats.boss.forge = [1, 2, 4]; LD.eggs.bossChance = 0.125; LD.eggs.pity = 8; def.render(); assert.deepStrictEqual(chips(), ['2 a 4 pedras de forja', '12,5% de chance de ovo de pet (garantido a cada 8 chefes sem ovo)'], 'mudou o módulo, mudou o texto');
+      delete LD.eggs.pity; def.render(); assert.strictEqual(chips()[1], '12,5% de chance de ovo de pet', 'sem a garantia no módulo, a tela não promete'); delete LD.eggs.bossChance; def.render(); assert.deepStrictEqual(chips(), ['2 a 4 pedras de forja']); delete LD.mats.boss; def.render(); assert.deepStrictEqual(chips(), []); sane('chefe do meio sem campos'); back();
+      // dificuldades do módulo ligadas: o chefe de fase só paga como chefe nas fases de bossStages; o Senhor não muda
+      LD.diff.on = true; def.render(); assert.deepStrictEqual(chips(), [], 'fase 25 fora de bossStages: sem prêmio de chefe'); sel(30); assert.strictEqual(chips().length, 3); back();
+      // fase comum e fase vencida: sem lista de prêmio; chefe do meio só da era III em diante
+      sel(26); assert.deepStrictEqual(chips(), []); sel(22); assert.deepStrictEqual(chips(), []); setStage(4); open(); sel(5); assert.deepStrictEqual(chips(), [], 'eras I e II não têm chefe do meio'); setStage(24); open();
+      // sem o Sys.loot: nenhum prêmio de chefe, a tela segue inteira
+      { const l0 = Sys.loot; delete Sys.loot; try { open(); sel(30); assert.deepStrictEqual(chips(), ['Abre a era Era da Pólvora']); sel(25); assert.deepStrictEqual(chips(), []); sane('sem o Sys.loot'); } finally { Sys.loot = l0; } }
+    } finally { back(); delete g.S.sys.loot; }
+    out.push('prêmios do chefe: Senhor = pedras do mats.eraBoss.forge + ovo garantido na 1ª vitória (ou a chance de repetição se a era já deu o ovo); chefe do meio = mats.boss.forge + bossChance com a garantia (pity); mudar o Sys.loot.DATA muda o texto; campo ausente = prêmio some'); }
 
   // 14) todos os botões, em quatro momentos: tocar em cada um não gera exceção
   let taps = 0; for (const stg of [1, 24, 90, 118]) { setStage(stg); FC = g.recFC(stg); open(); for (const b of buttons()) { open(); try { def.click(b); flush(); for (const b2 of buttons()) if (b2.dataset.x === 'cclose' || b2.dataset.x === 'claim') { def.click(b2); break; } taps++; } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } sane('toque ' + b.dataset.x + ' na fase ' + stg); } }

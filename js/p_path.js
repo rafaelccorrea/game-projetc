@@ -9,10 +9,17 @@
    O ENSAIO É A BATALHA DE VERDADE (js/battle.js) com as flags de treino do módulo (Sys.pathTry.battle). Este arquivo NÃO luta e NÃO mexe na batalha.
    A ponte é esta (o Engenheiro liga):
      PPath.battle = function(cfg){ monta a luta de treino e devolve true }   → chamada depois do Sys.pathTry.start aceitar, com o cfg do módulo;
-     PPath.finish({damage, sec})                                             → no fim dos segundos do ensaio: anota e abre a comparação;
+     PPath.finish({damage, sec, life, lifeMax, stunSec})                     → no fim dos segundos do ensaio: anota e abre a comparação;
      PPath.cancel()                                                          → "Sair do ensaio": nada é guardado.
+   O QUE A BATALHA MANDA NO PPath.finish (tudo número; a tela repassa ao Sys.pathTry.finish sem fazer conta):
+     damage  = dano total causado no boneco durante o ensaio;
+     sec     = segundos lutados (o módulo limita à duração do ensaio);
+     life    = vida do herói no fim do ensaio · lifeMax = vida máxima do herói no ensaio (as duas juntas: enchem a linha "Vida no fim" e a barra);
+     stunSec = soma dos segundos em que o boneco ficou atordoado (0 para quem não atordoa): é a linha "Controle".
+     Sem life, a linha "Vida no fim" fica com traço ("sem leitura"); sem stunSec o módulo anota 0 de controle.
    Sem PPath.battle ligada, o Testar grátis explica que o ensaio ainda não está ligado e NÃO chama o módulo.
-   A comparação mostra o que o módulo guarda: o melhor dano por segundo e quantas vezes testou cada caminho, com o selo "melhor" dele.
+   A comparação é a do protótipo e mostra só o que o Sys.pathTry.compare devolve: por caminho, Dano/s (bestDps), Vida no fim (life / lifeMax) e Controle (ctrl),
+   com o selo "melhor" de cada linha vindo de topDps / topLife / topCtrl (a tela NÃO decide quem é o melhor). Caminho não testado: traço, sem número.
    Módulo desligado ou ausente: aviso e Voltar; nada é escrito no save. Sem imagem: os ícones são desenhados no código (os do protótipo).
    Toques por data-x; a lista das ações tratadas fica em def.actions. */
 (function(){
@@ -142,8 +149,14 @@ const CSS=`.pp{position:relative;flex:1;min-height:0;min-width:0;display:flex;fl
 .pp-cc .pp-pi svg{width:32px;height:32px}
 .pp-cc>b{font-size:12.5px;font-weight:900;color:#fff;margin-top:2px;line-height:1.15;overflow-wrap:anywhere;max-width:100%}
 .pp-cc small{display:block;font-size:10px;font-weight:800;color:#c9b8a2;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
-.pp-dp{font-size:22px;line-height:1.05;color:#ffc94a;text-shadow:0 2px 0 #000;overflow-wrap:anywhere;max-width:100%}
-.pp-cc .tb{position:absolute;left:50%;top:-10px;transform:translateX(-50%);padding:0 7px;height:18px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:10px;font-weight:900;line-height:18px}
+.pp-dp{font-size:20px;line-height:1.05;color:#c9b8a2;text-shadow:0 2px 0 #000;max-width:100%}
+.pp-ln{position:relative;width:100%;margin-top:4px;padding:3px 3px 4px;border-radius:9px;background:rgba(0,0,0,.25);border:1px solid rgba(255,236,200,.1);display:flex;flex-direction:column;align-items:center;min-width:0}
+.pp-ln.tp{border-color:#ffc94a;background:rgba(255,201,74,.1)}
+.pp-v{font-size:19px;line-height:1.05;color:#fff;text-shadow:0 2px 0 #000;overflow-wrap:anywhere;max-width:100%}
+.pp-ln.tp .pp-v{color:#ffc94a}
+.pp-hb{display:block;width:88%;height:6px;margin-top:2px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}
+.pp-hb i{display:block;height:100%;background:linear-gradient(90deg,#3fae3c,#9cf08f)}
+.pp-bst{position:absolute;right:-2px;top:-7px;padding:0 5px;height:15px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:9px;font-weight:900;line-height:15px}
 .pp-tt,.xs .pp-tt{margin-top:4px;width:100%;min-height:44px;border-radius:11px;border:1.5px solid rgba(255,236,200,.35);background:rgba(255,236,200,.07);color:#f6ecdf;font-weight:900;font-size:12.5px;padding:2px 4px}
 .pp-free{border-radius:12px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);padding:7px 9px;font-size:12px;font-weight:900;text-align:center;line-height:1.35;overflow-wrap:anywhere}
 .pp-cf{display:flex;gap:10px;align-items:center;min-width:0}
@@ -198,14 +211,21 @@ function confirmHtml(v){ const p=(v.paths||[]).find(q=>q.id===X.pick), a=affOf(p
   return wrap('<div class="pp-res" role="dialog" aria-label="Confirmar caminho"><div class="pp-cf"><span class="pp-pi">'+ico(p)+'</span><div class="pp-rh"><b class="pp-lil">'+(ch?'Trocar para ':'Escolher ')+esc(p.name)+'?</b><small>'+esc(p.desc)+'</small></div></div>'
     +bonHtml(p)+'<ul class="pp-cl">'+items+'</ul></div>',
     '<div class="pp-row"><button class="pp-o" data-x="no">Voltar</button><button class="pp-g pp-lil" data-x="ok">Confirmar</button></div>'); }
-function compareHtml(v){ const rows=rowsOf(), tv=tryView(), last=X.last, lp=last?rows.find(r=>r.id===last.id):null, sec=trySec(), dn=dummyName(), next=rows.find(r=>r&&!r.tried&&canTryRow(tv,r.id)), many=rows.filter(r=>r&&r.tried).length>1;   /* o selo "melhor" (r.top, do módulo) só aparece com 2 ou mais caminhos testados, como no protótipo */
-  const col=r=>{ const p=(v.paths||[]).find(q=>q.id===r.id)||{id:r.id};
-    return '<div class="pp-cc'+(last&&r.id===last.id?' cur':'')+'">'+(r.top&&many?'<span class="tb">melhor</span>':'')+'<span class="pp-pi">'+ico(p)+'</span><b>'+esc(r.name)+'</b>'
-      +(r.tried?'<small>Dano/s</small><span class="pp-dp pp-lil">'+nT(r.bestDps)+'</span><small>'+(r.n===1?'1 teste':nT(r.n)+' testes')+'</small>'
-        :'<small>ainda não testou</small>'+(canTryRow(tv,r.id)?'<button class="pp-tt" data-x="try" data-id="'+esc(r.id)+'" aria-label="Testar '+esc(r.name)+' grátis">Testar</button>':''))+'</div>'; };
+/* uma linha da comparação (Dano/s, Vida no fim, Controle): o valor e o selo "melhor" são os do módulo; sem leitura, traço */
+const fin=v=>typeof v==='number'&&isFinite(v);
+const DASH='—';
+const lnHtml=(lab,val,extra,top)=>'<div class="pp-ln'+(top?' tp':'')+'"><small>'+lab+'</small><span class="pp-v pp-lil">'+val+'</span>'+extra+(top?'<span class="pp-bst">melhor</span>':'')+'</div>';
+function compareHtml(v){ const rows=rowsOf(), tv=tryView(), last=X.last, lp=last?rows.find(r=>r.id===last.id):null, sec=trySec(), dn=dummyName(), next=rows.find(r=>r&&!r.tried&&canTryRow(tv,r.id));
+  const col=r=>{ const p=(v.paths||[]).find(q=>q.id===r.id)||{id:r.id}, hasD=fin(r.bestDps), hasL=fin(r.life), lm=num(r.lifeMax), hf=hasL&&lm>0?Math.max(0,Math.min(1,r.life/lm)):-1, hasC=fin(r.ctrl), no='<small>sem leitura</small>';
+    return '<div class="pp-cc'+(last&&r.id===last.id?' cur':'')+'"><span class="pp-pi">'+ico(p)+'</span><b>'+esc(r.name)+'</b>'
+      +(r.tried?lnHtml('Dano/s',hasD?nT(r.bestDps):DASH,'<small>'+(r.n===1?'1 teste':nT(r.n)+' testes')+'</small>',hasD&&r.topDps===true)
+          +lnHtml('Vida no fim',hasL?nT(r.life):DASH,hasL?(hf>=0?'<span class="pp-hb" role="img" aria-label="'+Math.round(hf*100)+'% da vida máxima"><i style="width:'+(hf*100).toFixed(1)+'%"></i></span>':''):no,hasL&&r.topLife===true)
+          +lnHtml('Controle',hasC?dec(r.ctrl)+' s':DASH,hasC?'<small>boneco atordoado</small>':no,hasC&&r.topCtrl===true)
+        :'<span class="pp-dp pp-lil" aria-hidden="true">'+DASH+'</span><small>ainda não testou</small>'+(canTryRow(tv,r.id)?'<button class="pp-tt" data-x="try" data-id="'+esc(r.id)+'" aria-label="Testar '+esc(r.name)+' grátis">Testar</button>':''))+'</div>'; };
   const pk=lp&&(v.paths||[]).find(q=>q.id===lp.id), canPick=pk&&((pk.canChoose&&pk.canChoose.ok)||(pk.canChange&&pk.canChange.ok));
+  const mine=lp?[nT(last.dps)+' dano/s'].concat(fin(last.life)?['vida no fim '+nT(last.life)]:[],fin(last.ctrl)?['controle '+dec(last.ctrl)+' s']:[]).join(', '):'';
   return wrap('<div class="pp-res" role="status" aria-label="Comparação dos ensaios"><div class="pp-rh"><b class="pp-lil">'+(lp?'Ensaio de '+esc(lp.name):'Comparar os testes')+'</b><small>'
-      +(lp?'Este ensaio: '+nT(last.dps)+' dano/s. ':'')+'O melhor de cada caminho'+(sec?' em '+sec+' s':'')+(dn?' contra o '+esc(dn):'')+'.</small></div>'
+      +(lp?'Este ensaio: '+mine+'. ':'')+'O melhor de cada caminho'+(sec?' em '+sec+' s':'')+(dn?' contra o '+esc(dn):'')+'.</small></div>'
       +'<div class="pp-cg">'+rows.map(col).join('')+'</div><div class="pp-free">O ensaio não dá prêmio nem conta progresso.<br>Testar de novo é grátis e sem limite.</div></div>',
     '<div class="pp-row"><button class="pp-o" data-x="'+(next?'other':'list')+'">'+(next?'Testar outro':'Ver os caminhos')+'</button>'
       +(canPick?'<button class="pp-g pp-lil" data-x="pick" data-id="'+esc(pk.id)+'">Escolher '+esc(pk.name)+'</button>':'')+'</div>'+msgHtml()); }
@@ -244,11 +264,15 @@ function tryStart(id){ if(X.busy||X.run) return false; if(!tryOn()){ redraw(); r
   if(!started){ X.run=null; try{ PT().cancel(); }catch(e){} say('Não foi possível abrir o ensaio agora. Nada foi gasto.'); redraw(); return false; }
   return true; }
 function showMe(o){ if(isOn()) redraw(); else { try{ if(window.Panels&&typeof Panels.open==='function') Panels.open(N,o); }catch(e){} } }
-/* fim do ensaio (a batalha chama): UMA chamada ao Sys.pathTry.finish; nada é ganho. Abre a comparação. */
+/* fim do ensaio (a batalha chama): UMA chamada ao Sys.pathTry.finish; nada é ganho. Abre a comparação.
+   res = {damage, sec, life, lifeMax, stunSec} (ver o cabeçalho). life, lifeMax e stunSec só são repassados quando a batalha mandou número:
+   sem eles o módulo guarda "sem leitura" na vida (e 0 no controle), em vez de a tela inventar um valor. */
 function finish(res){ const T=PT(); X.run=null; if(!tryOn()) return {ok:false,reason:'off'}; let r=null;
-  try{ r=T.finish(sv(),host(),{damage:num(res&&res.damage),sec:num(res&&res.sec)}); }catch(e){ r=null; }
+  const o={damage:num(res&&res.damage),sec:num(res&&res.sec)}, sent=fin(res&&res.stunSec);
+  if(fin(res&&res.life)){ o.life=res.life; if(fin(res.lifeMax)) o.lifeMax=res.lifeMax; } if(sent) o.stunSec=res.stunSec;
+  try{ r=T.finish(sv(),host(),o); }catch(e){ r=null; }
   if(!r||!r.ok) return r||{ok:false,reason:'err'};
-  keep(); sfx('ui_tap'); X.last={id:r.id,dps:r.dps,best:r.best}; X.mode='compare'; X.msg=''; X.anim=true; showMe({keep:true}); return r; }
+  keep(); sfx('ui_tap'); X.last={id:r.id,dps:r.dps,best:r.best,life:fin(r.life)?r.life:null,ctrl:sent&&fin(r.ctrl)?r.ctrl:null}; X.mode='compare'; X.msg=''; X.anim=true; showMe({keep:true}); return r; }
 /* "Sair do ensaio" (a batalha chama): nada é guardado */
 function cancel(){ X.run=null; let had=false; try{ const T=PT(); had=!!(T&&typeof T.cancel==='function'&&T.cancel()); }catch(e){ had=false; }
   if(had){ X.mode='list'; say('Ensaio encerrado: nada foi gasto nem ganho.','ok'); showMe({keep:true}); } return had; }
