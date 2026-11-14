@@ -3,6 +3,12 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Ouro tem que ser escasso** ("sempre em quantidades pequenas… tudo upa com ouro; nem tão difícil, nem tão fácil"). Ouro da Provação cortado; auditoria de todas as fontes em docs/ECONOMIA_OURO.md · Sistemas
+- [x] **Nome do jogador sem espaço** ("não")
+- [~] **Baús do Mapa: fazer o recomendado** (fase 3 moedas + 1 pedra; fase 7 20 diamantes + 2 pedras), com o ouro pequeno · Sistemas
+- [~] **Molduras novas bem modernas no Higgsfield** · Arte (1 teste antes; moldura Ouro segue a tabela do VIP 7)
+- [~] **App DEV no celular com atualização ao vivo** (como hot reload do Flutter), separado do app normal · Engenheiro; CORS já liberado · Servidor
+- [~] **Força-tarefa** ("aprovei diversas coisas faça força tarefa!") · todas as sessões
 - [~] **Votos do dono no link (13/11, 22h58-23h17):**
     - Fogueira V5 **aprovada** (V4 reprovada) → Engenheiro escreve a tela com o Sys.bonfire
     - Arte da Fogueira, 9 estágios: **aprovada** → Arte prepara no formato do botão; loops de chama só com o pedido e o custo
