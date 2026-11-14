@@ -98,8 +98,15 @@ function sysMigrate(){
   if (!S.name && (S.welcome || S.kills > 0 || S.stage > 1)){ S.name = 'Kael'; S.hero = 'kael'; }   // save antigo sem nome: "Kael", sem mostrar a intro
   return n;
 }
+/* SISTEMAS LIGADOS (ordem do dono, 14/11: tudo o que foi aprovado tem de estar funcional no jogo). Cada módulo da Sistemas nasce com a chave desligada no
+   arquivo dele; aqui o JOGO liga, no arranque e antes de qualquer leitura do save, os que já têm tela pronta. Um por linha, para ligar e desligar sem caçar
+   em vários arquivos. Para conferir sem um deles: ?debug=1&sem=bonfire,crossroads */
+const SYS_LIVE = { bonfire: true };
+function sysLive(){ let off = []; try { if (typeof DEBUG !== 'undefined' && DEBUG){ const m = /[?&]sem=([\w,]+)/.exec(location.search); if (m) off = m[1].split(','); } } catch (e) {}
+  for (const k in SYS_LIVE){ if (!SYS_LIVE[k] || off.indexOf(k) >= 0) continue; try { const M = window.Sys && Sys[k]; if (!M) continue; if (typeof M.setOn === 'function') M.setOn(true); else if (M.DATA) M.DATA.on = true; } catch (e) { console.error('sysLive', k, e); } } }
 function sysBoot(){
   if (!SYS_ON) return;
+  sysLive();
   try { window.__migrated = sysMigrate(); Sys.loot.ensure(S); Sys.chest.ensure(S); Sys.level.ensure(S); if (DEBUG && window.__plv > 1){ const o = Sys.level.ensure(S); o.lvl = Math.min(100, window.__plv | 0); o.xp = 0; } Sys.loot.flushPending(S, Sys.host);
     if (typeof vaOfflineSync === 'function') vaOfflineSync();   // VIP: teto de horas do ganho offline (itens do Sys.loot.offline)
     if (SYS_E2) sysBootE2();
@@ -172,8 +179,8 @@ const PK_TO = { gold: 'gold', gems: 'gems', level: 'lvb', bag: 'tabgear' };
    - o toque (até PK_TAP_R px do item) faz ele voar para a mochila; sem toque, voa sozinho depois de PK_HOLD_S s (nunca enche a tela nem trava nada);
    - no máximo PK_HOLD_MAX esperando ao mesmo tempo: o excedente voa sozinho.
    pkHeld() devolve os que estão esperando (teste e, depois, o cartão "novo × o seu" da Fogueira V3). */
-const FOGUEIRA_ON = false;
-const fogOn = () => FOGUEIRA_ON || (typeof DEBUG !== 'undefined' && DEBUG && /[?&]fogueira=1/.test(location.search));
+const FOGUEIRA_ON = true;   /* LIGADA (ordem do dono, 14/11: 'tudo entregue e funcional dentro do jogo'; Fogueira V5 aprovada por ele). ?debug=1&fogueira=0 mostra a batalha sem ela, para comparar */
+const fogOn = () => { const dbg = typeof DEBUG !== 'undefined' && DEBUG; if (dbg && /[?&]fogueira=0/.test(location.search)) return false; return FOGUEIRA_ON || (dbg && /[?&]fogueira=1/.test(location.search)); };
 const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
 /* BRASAS DA FOGUEIRA (regra e números do Sys.bonfire, da Sistemas: pote de 20 abates = 1, fase +3, chefe +5; NUNCA à venda). O jogo só avisa o módulo e desenha as
    Brasas que ele creditou: cada uma pula do inimigo e voa para a Fogueira (por enquanto o destino é o botão da mochila, até a Fogueira V3 existir na tela de batalha).

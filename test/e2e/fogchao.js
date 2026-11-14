@@ -10,15 +10,15 @@ async function game(search) { const G = boot({ realFetch: true, runBoot: true, s
 const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 30)};i++) tickPicks(1/30); return 1; })()`);
 (async () => {
   /* 1) chave desligada: nada espera */
-  let G = await game('?debug=1&fresh=1&skip=1'), ev = G.ev;
-  check('chave desligada por padrão', ev('FOGUEIRA_ON===false&&fogOn()===false'));
+  let G = await game('?debug=1&fresh=1&skip=1&fogueira=0&sem=bonfire'), ev = G.ev;
+  check('chave desligada pelos parâmetros de conferência (?debug=1&fogueira=0&sem=bonfire)', ev('fogOn()===false'));
   ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'},{type:'item',value:1,r:0,slot:'armor',e:0,to:'bag'}],200)"); step(G, 0.2);
   check('chave desligada: nenhum item marcado para esperar', ev('PK.list.length===2&&PK.list.every(q=>!q.hold)'), ev('JSON.stringify(PK.list.map(q=>q.hold))'));
   step(G, 3); check('chave desligada: tudo voou sozinho em 3 s', ev('PK.list.length') === 0, 'sobraram ' + ev('PK.list.length'));
   check('sem o modo de conferência: Sys.bonfire carregado e DESLIGADO; fogBrasa não credita, não liga e não desenha', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)&&Sys.bonfire.DATA.on===false') && ev("fogBrasa('boss',1,200)") === 0 && ev('Sys.bonfire.DATA.on===false') && ev('PK.list.length') === 0);
   /* 2) chave ligada */
-  G = await game('?debug=1&fresh=1&skip=1&fogueira=1'); ev = G.ev;
-  check('chave ligada pelo parâmetro de conferência', ev('fogOn()===true&&FOGUEIRA_ON===false'));
+  G = await game('?debug=1&fresh=1&skip=1'); ev = G.ev;
+  check('LIGADA por padrão (ordem do dono): FOGUEIRA_ON e o módulo Sys.bonfire ligado no arranque (sysLive)', ev('fogOn()===true&&FOGUEIRA_ON===true&&Sys.bonfire.DATA.on===true'));
   ev("spawnPicks([{type:'item',value:1,r:2,slot:'weapon',e:0,to:'bag'},{type:'item',value:1,r:1,slot:'armor',e:0,to:'bag'},{type:'item',value:1,r:0,slot:'boots',e:0,to:'bag'},{type:'gold',value:5,to:'gold'}],200)");
   step(G, 3);
   const h1 = JSON.parse(ev('JSON.stringify(pkHeld().map(q=>({r:q.p.r,x:q.x,y:q.y,st:q.st})))'));
@@ -44,7 +44,7 @@ const step = (G, secs) => G.ev(`(function(){ for(let i=0;i<${Math.round(secs * 3
   ev("spawnPicks([{type:'item',value:1,r:3,slot:'weapon',e:0,to:'bag'}],200)"); step(G, 2); try { G.inCtx(() => ev('drawPicks')()); } catch (e) { drew = false; console.log(String(e && e.message)); }
   check('desenho do item esperando (anel e etiqueta) sem erro', drew && ev('pkHeld().length===1&&pkHeld()[0].up===true'));
   /* BRASAS: com o módulo desligado nada entra; ligado, o pote de 20 abates dá 1, o chefe e a fase dão as do módulo, e cada Brasa creditada vira um desenho que voa */
-  check('modo de conferência (?debug=1&fogueira=1): o módulo liga só nesta sessão na 1ª Brasa, para o QA ver', ev('!!(Sys.bonfire&&Sys.bonfire.DATA)') && ev("(function(){ Sys.bonfire.DATA.on=false; const g=fogBrasa('boss',1,200); return g>0&&Sys.bonfire.DATA.on===true; })()"));
+  check('ligada: a Brasa do chefe credita pelo módulo', ev('!!(Sys.bonfire&&Sys.bonfire.DATA&&Sys.bonfire.DATA.on===true)') && ev("fogBrasa('boss',1,200)") > 0);
   ev('PK.list.length=0; 1');
   const br = JSON.parse(ev("(function(){ const F=Sys.bonfire; F.DATA.on=true; const o=F.ensure(S); o.bra=0; o.pot=0; const out={}; let k=0; for(let i=0;i<19;i++) k+=fogBrasa('kill',1,200); out.k19=k; out.k20=fogBrasa('kill',1,200); out.bra1=o.bra; out.boss=fogBrasa('boss',1,200); out.stage=fogBrasa('stage',1); out.bra=o.bra; out.pk=PK.list.filter(q=>q.p.type==='brasa').length; out.sum=PK.list.filter(q=>q.p.type==='brasa').reduce((a,q)=>a+q.p.value,0); out.venda=fogBrasa('shop',5,200); F.DATA.on=false; return JSON.stringify(Object.assign(out,{B:F.DATA.brasas})); })()"));
   check('pote: 19 abates não dão Brasa, o 20º dá 1', br.k19 === 0 && br.k20 === 1 && br.bra1 === 1, JSON.stringify(br));
