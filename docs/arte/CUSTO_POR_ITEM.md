@@ -52,3 +52,20 @@ Notas:
 - Sempre com `mode: "fast"` e `generate_audio: false`: 480p, 4 s = **4 créditos**. Sem esses dois parâmetros, o MESMO vídeo custa **12**.
 - O seedance_2_0 aceita `VIDEO_REFERENCES` (vídeo de referência de movimento) junto com quadro inicial = final. Esse é o caminho barato para "skin nova a partir do vídeo do padrão": monte a referência da folha padrão com `node C:\Users\rafae\AppData\Local\Temp\tools\motionref\mkref.js <hyb/R ou hyb/kaia>/<herói>_<estado>_body <saída.mp4>` (custo 0: fundo verde, bastão magenta no grip, pausa no início e no fim).
 - O motion transfer dedicado (`hf_mult_motion_control`) custa **28 por vídeo**: não usar no lote.
+
+## Conta do orçamento de 14/11 (dono liberou ~325)
+| Item | Créditos |
+|---|---|
+| Kaia na Fênix | 0 (vídeos já pagos) |
+| Ícones eras 7-8 (2 + refação do s3) | 6 |
+| Kael Anjo refeito (8 estados + guia da pistola + giro refeito) | 38 |
+| Lote 1 skins (teste + 9) | 40 |
+| Lote 2 (pistola Samurai/Ciborgue, 4 skins da Kaia, tiro montado ×12) | 132 |
+| Tiro montado refeito (7) + Kaia mítico (2 tentativas) | 36 |
+| Giro do Ninja refeito (desnecessário: o defeito era da limpeza) | 4 |
+| Kaia Demônia golpe + giro refeitos | 8 |
+| Fogueira (imagem 3×3 + 9 laços) | 38 |
+| **Subtotal** | **~302** |
+| Liberado agora: Mecha de Guerra montado (teto 34) + teste pet mamute médio atk2 (4) | teto 38 |
+| Reserva (pela conta do PO) | ~21 |
+Medido 14/11: skin inteira na coreografia do padrão ≈ 4 por estado (+2 se precisar de guia novo); tiro montado ≈ 4 por herói×montaria (+4 por refação).
