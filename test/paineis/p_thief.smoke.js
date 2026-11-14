@@ -117,7 +117,7 @@ out.push('Repetir em 2 toques (1 chamada, 1 entrada, lote do melhor nível venci
   const lm = /\['loot','chest','level'[^\n]*/.exec(idx); assert(lm, 'lista de módulos do index.html'); const L = lm[0];
   assert(L.includes("'thiefnet'") && L.indexOf("'thiefnet'") > L.indexOf("'thief'") && L.indexOf("'thiefnet'") > L.indexOf("'net'") && L.indexOf("'net'") > 0, "N2: 'thiefnet' na lista do index.html, depois de 'net' e de 'thief'");
   assert.strictEqual((idx.match(/'thiefnet'/g) || []).length, 1, 'N2: uma vez só'); assert(fs.existsSync(path.join(R, 'js/sys/thiefnet.js')), 'o módulo existe');
-  assert(/for \(const k of \['arenaNet', 'guildNet', 'duoNet', 'guildFireNet', 'thiefNet'\]\)/.test(boot) && /M\.DATA\.on === true && typeof M\.start === 'function'/.test(boot), 'N1: thiefNet na lista de início do onlineboot, só com a chave dele ligada');
+  assert(/for \(const k of \[[^\]]*'thiefNet'[^\]]*\]\)/.test(boot) && /M\.DATA\.on === true && typeof M\.start === 'function'/.test(boot), 'N1: thiefNet na lista de início do onlineboot, só com a chave dele ligada');
   const wait = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setImmediate(r)); };
   const net = { started: false, calls: [], next: {}, state() { return { on: true, started: this.started }; },
     enter(S, h) { this.calls.push('enter'); assert(S === g.S && h === host); return Promise.resolve(this.next.enter); },
