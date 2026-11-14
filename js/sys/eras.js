@@ -41,7 +41,10 @@ function stageCard(e,d,n){ const P=root.Sys&&root.Sys.phases, T=root.Sys&&root.S
 
 /* P19 (POLIMENTO): nome do chefe de uma fase sem a luta (ex.: a Vitória aberta pelo dbgResult, sem chefe real). Mesmo padrão do battle.js:117:
    fase de Senhor (a última da era) = "Senhor da Era <chefe>" (eras 7-8: o nome próprio); senão "Chefe <chefe>". Lê o ERAS do jogo; eras 7-8 daqui. */
-function bossName(stage,opt){ const G=root.ERAS, P=num0(opt&&opt.perEra)||num0(root.STAGES_PER_ERA)||10, st=Math.max(1,Math.floor(+stage||1)), e=Math.floor((st-1)/P), last=((st-1)%P)+1===P;
+/* ERAS e STAGES_PER_ERA são const do index.html: ficam no escopo global de script, NÃO em window (root.X era sempre undefined e caía no 10 e no 'Chefe'). typeof protege o node */
+const gameEras=()=>typeof ERAS!=='undefined'&&Array.isArray(ERAS)?ERAS:root.ERAS;
+const gamePerEra=()=>typeof STAGES_PER_ERA==='number'?STAGES_PER_ERA:num0(root.STAGES_PER_ERA);
+function bossName(stage,opt){ const G=gameEras(), P=num0(opt&&opt.perEra)||num0(gamePerEra())||10, st=Math.max(1,Math.floor(+stage||1)), e=Math.floor((st-1)/P), last=((st-1)%P)+1===P;
   const E=(G&&G[e])||ERAS78[e-7]; if(!E||!Array.isArray(E.en)||!E.en.length) return last?'Senhor da Era':'Chefe';
   const k=E.en[E.en.length-1]; if(last) return SENHOR[e]||('Senhor da Era '+k.n); return 'Chefe '+k.n; }
 function num0(v){ return typeof v==='number'&&isFinite(v)?v:0; }

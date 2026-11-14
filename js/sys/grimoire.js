@@ -86,9 +86,11 @@ const IDX={}; DATA.spells.forEach((s,i)=>{ IDX[s.id]=i; });
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
+const trimSet=a=>{ a=a.map(x=>x||null); while(a.length&&a[a.length-1]==null) a.pop(); return a; };   // conjunto sem null no fim
 const on=()=>DATA.on===true;
 const setOn=v=>{ DATA.on=!!v; return DATA.on; };
 const spell=id=>DATA.spells[IDX[id]]||null;
+  /* conjunto = posições 0..slots-1; casa vazia ANTES de uma ocupada = null (equipar no espaço 3 com o conjunto vazio fica no espaço 3); sem null no fim */
 const isMode=m=>DATA.modes.includes(m);
 const pad=n=>String(n).padStart(2,'0');
 function dayKey(ms){ const C=root.Sys&&root.Sys.clock; if(C&&typeof C.dayKey==='function') return C.dayKey(ms); const d=new Date(ms); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
@@ -107,8 +109,8 @@ function ensure(S){
   for(const s of DATA.spells){ const x=own[s.id]; if(x&&typeof x==='object') o.own[s.id]={lv:clamp(int0(x.lv)||1,1,DATA.maxLv),pages:int0(x.pages)}; }
   const sets=(o.sets&&typeof o.sets==='object')?o.sets:{}; o.sets={};
   for(const m of DATA.modes){ const a=Array.isArray(sets[m])?sets[m]:[], out=[];
-    for(const id of a) if(o.own[id]&&!out.includes(id)&&out.length<DATA.slots) out.push(id);
-    o.sets[m]=out; }
+    for(let i=0;i<a.length&&i<DATA.slots;i++){ const id=a[i]; out.push(o.own[id]&&!out.includes(id)?id:null); }
+    o.sets[m]=trimSet(out); }
   const f=(o.first&&typeof o.first==='object')?o.first:{}; o.first={eraLord:(f.eraLord&&typeof f.eraLord==='object')?f.eraLord:{},chief50:(f.chief50&&typeof f.chief50==='object')?f.chief50:{}};   /* 1ª vitória por era (grant idempotente) */
   const d=(o.day&&typeof o.day==='object')?o.day:{}; o.day={k:typeof d.k==='string'?d.k:'',lord:(d.lord&&typeof d.lord==='object')?d.lord:{}};
   return o;
@@ -209,11 +211,13 @@ function canLevel(S,id){ if(!on()) return {ok:false,reason:'off'}; const o=ensur
 function levelUp(S,id,host){ const c=canLevel(S,id); if(!c.ok) return c; const o=ensure(S), x=o.own[id]; x.pages-=c.cost.pages; o.ink-=c.cost.ink; x.lv++; changed(host); return {ok:true,id,lv:x.lv,cost:c.cost}; }
 
 /* ---------------- conjuntos (Fases / Arena / Chefe) ---------------- */
-/* coloca uma magia na posição i (0..2) do conjunto do modo; se ela já estava em outra posição, troca as duas de lugar. id null = tira. */
+/* coloca uma magia na posição i (0..2) do conjunto do modo, EXATAMENTE nessa posição (casas vazias antes dela ficam null); se ela já estava em outra
+   posição, troca as duas de lugar. id null = tira (aí o conjunto se junta no começo, como antes: a tela conta com isso ao tirar). */
 function equip(S,mode,i,id){ if(!on()) return {ok:false,reason:'off'}; if(!isMode(mode)) return {ok:false,reason:'mode'}; i=int0(i); if(i>=DATA.slots) return {ok:false,reason:'slot'};
   const o=ensure(S), a=o.sets[mode].slice(); while(a.length<DATA.slots) a.push(null);
-  if(id==null){ a[i]=null; } else { if(!o.own[id]) return {ok:false,reason:'notOwned'}; const j=a.indexOf(id); if(j>=0) a[j]=a[i]; a[i]=id; }
-  o.sets[mode]=a.filter(Boolean); return {ok:true,mode,set:o.sets[mode].slice()}; }
+  if(id==null){ a[i]=null; o.sets[mode]=a.filter(Boolean); }
+  else { if(!o.own[id]) return {ok:false,reason:'notOwned'}; const j=a.indexOf(id); if(j>=0) a[j]=a[i]; a[i]=id; o.sets[mode]=trimSet(a); }
+  return {ok:true,mode,set:o.sets[mode].slice()}; }
 /* troca o conjunto inteiro do modo (até 3, aprendidas, sem repetir) */
 function setPreset(S,mode,ids){ if(!on()) return {ok:false,reason:'off'}; if(!isMode(mode)) return {ok:false,reason:'mode'}; const o=ensure(S), out=[];
   for(const id of Array.isArray(ids)?ids:[]){ if(!o.own[id]) return {ok:false,reason:'notOwned',id}; if(!out.includes(id)) out.push(id); }
@@ -221,7 +225,7 @@ function setPreset(S,mode,ids){ if(!on()) return {ok:false,reason:'off'}; if(!is
 /* modo da batalha → conjunto: fase normal = fases; Senhor da Era/chefe/Chefe Mundial = chefe; Arena/Torneio = arena. Conjunto vazio cai no de Fases. */
 function modeFor(ctx){ ctx=ctx||{}; if(ctx.pvp||ctx.arena) return 'arena'; if(ctx.boss||ctx.worldBoss) return 'chefe'; return 'fases'; }
 /* o que a batalha lança: [{id, name, era, cd, effect:{type, mult, hits, area, stun | pct, sec | key, val, sec}}]. Desligado: []. */
-function loadout(S,mode){ if(!on()) return []; const o=ensure(S); let m=isMode(mode)?mode:'fases'; let ids=o.sets[m]; if(!ids.length&&m!=='fases') ids=o.sets.fases;
+function loadout(S,mode){ if(!on()) return []; const o=ensure(S); let m=isMode(mode)?mode:'fases'; let ids=o.sets[m].filter(Boolean); if(!ids.length&&m!=='fases') ids=o.sets.fases.filter(Boolean);
   return ids.map(id=>{ const sp=spell(id), lv=o.own[id].lv, st=stat(sp,lv); return {id,name:sp.name,era:sp.era,lv,cd:st.cd,effect:st,text:effectText(sp,st)}; }); }
 
 /* LANÇAR na luta (pedido do Engenheiro: o laço só cuida do relógio, do alcance e de aplicar; a regra fica aqui).

@@ -6,15 +6,15 @@
 
 /* ---------------- dados (balanceamento) ---------------- */
 const DATA={
-  label:'Práticas', icon:'🪨',
+  label:'Práticas', icon:'',   // sem emoji (pedido do PO): o painel da FC mostra só o nome
   // stat = chave do bonus() (pontos percentuais, ver js/sys/fc.js); per = quanto cada nível soma (balance v5.1, aprovado pelo PO:
   // era 6 / Nv 70 = +35% ATK, +35% HP, +7 pts de crítico, +10,5% defesa, +35% ouro)
   tracks:[
-    {id:'str',  name:'Força',      icon:'💪', stat:'atkPct',  per:0.5,  unit:'% ATK'},
-    {id:'vit',  name:'Vitalidade', icon:'❤️', stat:'hpPct',   per:0.5,  unit:'% HP'},
-    {id:'crit', name:'Crítico',    icon:'🎯', stat:'critPct', per:0.1,  unit:'% crítico'},
-    {id:'def',  name:'Defesa',     icon:'🛡️', stat:'defPct',  per:0.15, unit:'% defesa'},
-    {id:'gold', name:'Coleta',     icon:'🪙', stat:'goldPct', per:0.5,  unit:'% ouro', maxPct:10},
+    {id:'str',  name:'Força',      icon:'ATQ',  stat:'atkPct',  per:0.5,  unit:'% ATK'},
+    {id:'vit',  name:'Vitalidade', icon:'Vida', stat:'hpPct',   per:0.5,  unit:'% HP'},
+    {id:'crit', name:'Crítico',    icon:'Crít', stat:'critPct', per:0.1,  unit:'% crítico'},
+    {id:'def',  name:'Defesa',     icon:'Def',  stat:'defPct',  per:0.15, unit:'% defesa'},
+    {id:'gold', name:'Coleta',     icon:'Ouro', stat:'goldPct', per:0.5,  unit:'% ouro', maxPct:10},
   ],
   cost:{base:4, growth:1.06},     // custo do nível n+1 = ceil(base * growth^n)  (Nv 70 ≈ 236 pedras)
   cap:{base:10, perEra:10},       // teto = base + perEra * eraMax  (era 0: 10 · era 6: 70)
@@ -115,7 +115,7 @@ function advice(S,host){
 /* ---------------- UI (opcional) ---------------- */
 function render(el,S,host,opt){
   if(!el) return; opt=opt||{};
-  if(locked(S)){ el.innerHTML=`<div class="sys-prac"><div class="sys-card sys-lock">${LOCK}<b>Práticas</b><span>Libera no nível ${lockLevel()}</span><small>🪨 ${fmtN(ensure(S).stones)} pedras guardadas</small></div></div>`; el.onclick=null; return; }
+  if(locked(S)){ el.innerHTML=`<div class="sys-prac"><div class="sys-card sys-lock">${LOCK}<b>Práticas</b><span>Libera no nível ${lockLevel()}</span><small>${fmtN(ensure(S).stones)} pedras guardadas</small></div></div>`; el.onclick=null; return; }
   const o=ensure(S), cap=capOf(host), era=eraMaxOf(host);
   // linhas por página pela altura real do contêiner (cabeçalho ~54px; o pager ~40px só entra se não couber tudo)
   const N=DATA.tracks.length, rowH=num(opt.rowH,58), body=num(el.clientHeight,0)-54;
@@ -123,13 +123,13 @@ function render(el,S,host,opt){
   const pages=Math.ceil(N/per), pg=clamp(int0(el.__sysPracPage),0,pages-1); el.__sysPracPage=pg;
   const rows=DATA.tracks.slice(pg*per,pg*per+per).map(t=>{ const lv=o.lv[t.id], c=canTrain(S,host,t.id), tc=capT(t,host), full=lv>=tc;
     return `<div class="sys-prac-row${full?' full':''}">
-      <span class="sys-prac-ic">${t.icon}</span>
+      <span class="sys-prac-ic">${esc(t.icon)}</span>
       <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${tc}</small><br><span>${soonT(t)?'Em breve':`+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}`}</span></span>
       <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${soonT(t)?'Em breve':full?'Teto':`Treinar<small>${c.cost} pedras</small>`}</button>
       <button class="sys-btn sys-prac-max" data-id="${t.id}" data-max="1" ${c.ok?'':'disabled'} aria-label="Treinar o máximo">Máx</button>
     </div>`; }).join('');
   el.innerHTML=`<div class="sys-prac">
-    <div class="sys-prac-top"><span class="sys-prac-st">🪨 <b>${fmtN(o.stones)}</b> pedras</span>
+    <div class="sys-prac-top"><span class="sys-prac-st"><b>${fmtN(o.stones)}</b> pedras</span>
       <span class="sys-prac-cap">Teto da era ${era}: Nv ${cap}${era<6?` · próxima era: Nv ${cap+DATA.cap.perEra}`:''}</span></div>
     <div class="sys-prac-list">${rows}</div>
     ${pages>1?`<div class="sys-pg"><button class="sys-pg-btn" data-pg="-1" ${pg?'':'disabled'}>‹</button><span>${pg+1}/${pages}</span><button class="sys-pg-btn" data-pg="1" ${pg<pages-1?'':'disabled'}>›</button></div>`:''}
@@ -137,7 +137,7 @@ function render(el,S,host,opt){
   el.onclick=ev=>{ const b=ev.target.closest&&ev.target.closest('button'); if(!b||b.disabled) return;
     if(b.dataset.pg){ el.__sysPracPage=pg+Number(b.dataset.pg); render(el,S,host,opt); return; }
     const r=train(S,host,b.dataset.id,b.dataset.max?Infinity:1);
-    if(r.ok){ const t=TRACK[b.dataset.id]; if(host&&host.toast) host.toast(`${t.icon} ${t.name} Nv ${o.lv[t.id]}${r.n>1?` (+${r.n})`:''}`); changed(host); }
+    if(r.ok){ const t=TRACK[b.dataset.id]; if(host&&host.toast) host.toast(`${t.name} Nv ${o.lv[t.id]}${r.n>1?` (+${r.n})`:''}`); changed(host); }
     render(el,S,host,opt); };
 }
 

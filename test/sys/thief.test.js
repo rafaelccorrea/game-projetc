@@ -32,6 +32,25 @@ t('Repetir: lote cheio do melhor nível vencido, na hora, gasta 1 entrada; sem v
   assert.strictEqual(BF.ensure(S).got,8); h.t+=DAY; assert.strictEqual(TH.sweep(S,h).drop,4,'dia novo'); }));
 t('regra única com o servidor: a entrada é gasta AO ENTRAR; sair no meio não devolve; result {won} compatível',()=>on(()=>{ const S={}, h=host(); TH.enter(S,h); assert.strictEqual(TH.view(S,h).left,1,'gastou ao entrar'); assert.strictEqual(TH.cancel(S,h),true); assert.strictEqual(TH.view(S,h).left,1,'sair não devolve');
   TH.enter(S,h); assert.ok(TH.result(S,h,{won:true}).won); }));
+t('VIDA DO SACO no enter: run.bagHp = dps de referência × secs × frac(Fogueira); frac 0,55 no Nv 1 e 0,90 no Nv 60, sobe com o nível',()=>on(()=>{
+  const B=TH.DATA.bag; assert.strictEqual(TH.bagFrac(1),B.fracMin); assert.strictEqual(TH.bagFrac(60),B.fracMax); assert.ok(B.fracMin===0.55&&B.fracMax===0.9);
+  for(let lv=2;lv<=60;lv++) assert.ok(TH.bagFrac(lv)>TH.bagFrac(lv-1),'sobe no Nv '+lv);
+  const h=host(), ref=100*(1+0.12*1)*(1/0.8+3/6+10/20)*B.pace;   // host de teste: ATQ 100, sem Sys.fc: crítico de base 12% × +100%
+  assert.ok(Math.abs(TH.refDps({},h)-ref)<1e-9,String(TH.refDps({},h)));
+  const bags=[1,10,30,60].map(lv=>{ const S={}; BF.ensure(S).lv=lv; const e=TH.enter(S,h); assert.ok(e.ok); assert.strictEqual(e.bagHp,Math.round(ref*45*TH.bagFrac(lv))); assert.strictEqual(TH.view(S,h).run.bagHp,e.bagHp); return e.bagHp; });
+  for(let i=1;i<bags.length;i++) assert.ok(bags[i]>bags[i-1],JSON.stringify(bags));
+  const S={}; BF.ensure(S).lv=20; const h2=host(); h2.heroDps=()=>500; assert.strictEqual(TH.enter(S,h2).bagHp,Math.round(500*45*TH.bagFrac(20)),'host.heroDps manda quando existe'); }));
+t('o saco fica FIXO depois do enter: herói mais forte, Fogueira subindo e recarga do save não mudam bagHp nem a fuga',()=>on(()=>{ const S={}, h=host(); BF.ensure(S).lv=15;
+  const e=TH.enter(S,h); h.atk=()=>5000; BF.ensure(S).lv=40; const v=TH.view(S,h).run; assert.strictEqual(v.bagHp,e.bagHp); assert.deepStrictEqual(v.escapes,e.escapes);
+  const S2=JSON.parse(JSON.stringify(S)); const v2=TH.view(S2,h).run; assert.strictEqual(v2.bagHp,e.bagHp); assert.strictEqual(v2.seed,e.seed); assert.deepStrictEqual(v2.escapes,e.escapes); assert.strictEqual(v2.rid,e.rid);
+  const r=TH.finish(S2,h,{score:1}); assert.ok(r.ok&&r.lv===15,'fim usa o nível da entrada'); }));
+t('FUGA na corrida: escapeAt 7, escapeEvery 8, escapeDur 1,4; inícios com desvio de até ±0,5 s pela seed (local: do rid), sempre iguais para a mesma seed',()=>on(()=>{
+  const S={}, h=host(); const e=TH.enter(S,h); assert.ok(e.escapeAt===7&&e.escapeEvery===8&&e.escapeDur===1.4&&e.jitter===0.5&&e.secs===45,JSON.stringify(e));
+  assert.ok(typeof e.rid==='string'&&e.rid&&Number.isInteger(e.seed)); assert.strictEqual(e.escapes.length,5);
+  e.escapes.forEach((x,i)=>assert.ok(Math.abs(x-(7+8*i))<=0.5+1e-9&&x<45,JSON.stringify(e.escapes)));
+  assert.deepStrictEqual(TH.escapesOf(e.seed,45),e.escapes); assert.deepStrictEqual(TH.escapesOf(12345,45),TH.escapesOf(12345,45));
+  assert.notDeepStrictEqual(TH.escapesOf(1,45),TH.escapesOf(2,45),'seeds diferentes, fugas diferentes');
+  TH.cancel(S,h); h.t+=60000; const e2=TH.enter(S,h); assert.notStrictEqual(e2.rid,e.rid,'cada corrida local tem o seu id'); }));
 t('nada à venda: sem preço, gema, produto, anúncio ou sorteio',()=>{ const src=require('fs').readFileSync(require('path').join(__dirname,'../../js/sys/thief.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'');
   assert.ok(!/gems|productId|brl|price|preço|addGems|rng|Math\.random|\bads?\b/i.test(src)); });
 console.log(n+' testes ok');

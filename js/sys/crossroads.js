@@ -53,8 +53,9 @@ const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 function hash(s){ let h=2166136261; s=String(s); for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function mulberry(seed){ let a=seed>>>0; return ()=>{ a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 
-/* fases por era: 100 com o Sys.phases ligado (curva de 9 eras), senão o STAGES_PER_ERA do jogo (10) */
-function perEra(){ const P=SYS().phases; if(P&&P.DATA&&P.DATA.on===true) return int0(P.DATA.perEra)||100; const g=int0(root.STAGES_PER_ERA); return g||10; }
+/* fases por era: 100 com o Sys.phases ligado (curva de 9 eras), senão o STAGES_PER_ERA do jogo (10). O STAGES_PER_ERA é const do index.html: fica no escopo
+   global de script, NÃO em window (root.STAGES_PER_ERA era sempre undefined); typeof protege o node. */
+function perEra(){ const P=SYS().phases; if(P&&P.DATA&&P.DATA.on===true) return int0(P.DATA.perEra)||100; const g=typeof STAGES_PER_ERA==='number'?int0(STAGES_PER_ERA):0; return g||10; }
 const everyOf=pe=>pe>=DATA.every*2?DATA.every:DATA.everyShort;
 /* fase → {era, n, key}. Aceita o número da fase (1, 2 ...; era = (fase-1)/porEra) ou {era, n} (Sys.phases). */
 function where(stage){ const pe=perEra(); let era, n;

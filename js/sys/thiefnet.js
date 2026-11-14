@@ -6,7 +6,9 @@
    - refresh(S, host): GET /thief → applyServer (entradas do dia, melhor nível vencido, corrida aberta). 404 com o online ligado = o servidor desligou
      o Ladrão: volta ao local.
    - AÇÕES (Promise), mesmo formato de resposta do Sys.thief síncrono, para a tela trocar só a chamada:
-     enter(S,host) → POST /thief/enter (gasta 1 entrada NO SERVIDOR) → Sys.thief.serverEnter (runId, lote do servidor);
+     enter(S,host) → POST /thief/enter (gasta 1 entrada NO SERVIDOR) → Sys.thief.serverEnter (runId, lote do servidor). O servidor NÃO manda a vida do
+       saco: o serverEnter calcula run.bagHp igual ao enter local (herói e Fogueira na hora do enter) e a fuga pela seed do servidor; run.endsAt do
+       servidor é o limite do relógio da luta. A resposta traz bagHp, escapeAt, escapeEvery, escapeDur, jitter e escapes para a tela passar à luta;
      finish(S,host,score) → POST /thief/finish {runId, score} → Sys.thief.serverFinish (credita as Brasas do servidor UMA vez por runId) → refresh;
      sweep(S,host) → POST /thief/sweep → Sys.thief.serverSweep (credita o lote cheio do melhor nível vencido).
      Erro: {ok:false, reason, details, retryAfterMs, local} (reason = código do servidor; local = a palavra do Sys.thief para a tela:

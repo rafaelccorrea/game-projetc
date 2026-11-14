@@ -172,6 +172,25 @@ const bra = S => BF.ensure(S).bra, got = S => BF.ensure(S).got;
     sv.entries = 3; await TN.refresh(w.S, w.host); v = TH.view(w.S, w.host); assert.ok(v.left === 0 && !v.canEnter && !v.canSweep);
   });
 
+  await t('ONLINE: o servidor não manda a vida do saco; o serverEnter calcula bagHp como o local, fuga pela seed do servidor, endsAt = limite do relógio', async () => {
+    const { w, sv } = await started(null, 12);
+    const e = await TN.enter(w.S, w.host);
+    const want = Math.round(TH.refDps(w.S, w.host) * 45 * TH.bagFrac(12));
+    assert.ok(e.ok && e.bagHp === want && e.bagHp > 0, JSON.stringify([e.bagHp, want]));
+    assert.ok(e.seed === 77 && e.endsAt === 46000 && e.escapeAt === 7 && e.escapeEvery === 8 && e.escapeDur === 1.4 && e.jitter === 0.5, JSON.stringify(e));
+    assert.deepStrictEqual(e.escapes, TH.escapesOf(77, 45), 'fuga pela seed do servidor');
+    const run = TH.view(w.S, w.host).run; assert.ok(run.bagHp === want && run.endsAt === 46000 && run.seed === 77 && run.id === 'run1', JSON.stringify(run));
+    /* fica fixo: herói mais forte e Fogueira acima depois do enter; recarga do save; GET /thief com a mesma corrida aberta */
+    BF.ensure(w.S).lv = 40; w.host.atk = () => 9999;
+    const S2 = JSON.parse(JSON.stringify(w.S)); assert.strictEqual(TH.view(S2, w.host).run.bagHp, want);
+    await TN.refresh(w.S, w.host); assert.strictEqual(TH.view(w.S, w.host).run.bagHp, want, 'refresh com a mesma corrida não recalcula');
+    /* corrida aberta que este save não conhece (outro aparelho): calcula na hora, com o runId como seed se o servidor não mandar uma */
+    const S3 = {}; BF.ensure(S3).lv = 12; TH.applyServer(S3, w.host, { perDay: 2, entriesLeft: 1, fireLevel: 12, batch: 5, run: { runId: 'runX', endsAt: 2000 } });
+    const r3 = TH.view(S3, w.host).run; assert.ok(r3.bagHp > 0 && r3.endsAt === 2000 && r3.escapes.length === 5, JSON.stringify(r3));
+    assert.deepStrictEqual(TH.view(TH.applyServer(S3, w.host, { run: { runId: 'runX', endsAt: 2000 } }) && S3, w.host).run.bagHp, r3.bagHp);
+    sv.calls.length = 0;
+  });
+
   await t('404 com o online ligado (servidor desligou THIEF_ON): volta ao LOCAL', async () => {
     const { w, sv } = await started(null, 12); sv.off = true;
     const r = await TN.refresh(w.S, w.host); assert.strictEqual(r.reason, 'not_found');

@@ -77,6 +77,16 @@ t('conjuntos Fases/Arena/Chefe: 3 por modo, só aprendidas, sem repetir; equip t
   assert.strictEqual(G.setPreset(S,'xx',[]).reason,'mode'); assert.strictEqual(G.equip(S,'arena',0,'lightLance').reason,'notOwned');
   G.setPreset(S,'chefe',['plasmaRay','cannonball']); G.equip(S,'chefe',0,'cannonball'); assert.deepStrictEqual(G.ensure(S).sets.chefe,['cannonball','plasmaRay'],'troca de lugar');
   G.equip(S,'chefe',2,'medKit'); assert.deepStrictEqual(G.ensure(S).sets.chefe,['cannonball','plasmaRay','medKit']);
+  /* espaço pedido respeitado (QA): equipar no espaço 3 com o conjunto vazio fica no espaço 3, com as casas antes dele vazias (null) */
+  { const r=G.equip(S,'arena',2,'medKit'); assert.ok(r.ok); assert.deepStrictEqual(r.set,[null,null,'medKit']); assert.deepStrictEqual(G.ensure(S).sets.arena,[null,null,'medKit']);
+    G.equip(S,'arena',0,'plasmaRay'); assert.deepStrictEqual(G.ensure(S).sets.arena,['plasmaRay',null,'medKit']);
+    G.equip(S,'arena',1,'medKit'); assert.deepStrictEqual(G.ensure(S).sets.arena,['plasmaRay','medKit'],'mover para uma casa vazia: a de origem fica vazia (e o null do fim sai)');
+    G.equip(S,'arena',2,'cannonball'); G.equip(S,'arena',0,null); assert.deepStrictEqual(G.ensure(S).sets.arena,['medKit','cannonball'],'tirar junta no começo, como antes');
+    G.setPreset(S,'arena',[]); G.equip(S,'arena',1,'rollingStone');
+    const S2=JSON.parse(JSON.stringify(S)); assert.deepStrictEqual(G.ensure(S2).sets.arena,[null,'rollingStone'],'o buraco sobrevive à recarga');
+    assert.deepStrictEqual(G.loadout(S,'arena').map(x=>x.id),['rollingStone'],'a batalha só vê as magias (sem null)');
+    assert.strictEqual(G.view(S,makeHost({})).sets.find(s=>s.mode==='arena').ids[1],'rollingStone','a tela vê a magia no espaço 2');
+    G.setPreset(S,'arena',[]); }
   assert.strictEqual(G.modeFor({boss:true}),'chefe'); assert.strictEqual(G.modeFor({pvp:true}),'arena'); assert.strictEqual(G.modeFor({}),'fases');
   assert.deepStrictEqual(G.loadout(S,'chefe').map(x=>x.id),['cannonball','plasmaRay','medKit']);
   assert.deepStrictEqual(G.loadout(S,'arena').map(x=>x.id),['rollingStone','ancestralFire','cannonball'],'arena vazia cai no de Fases');

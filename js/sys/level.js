@@ -22,7 +22,7 @@ const DATA={
   // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).
   unlock:{missions:2, summon:3, practice:5, mail:7, login:7, profile:10, shopgem:10, forge:12, instances:14, tower:15, pass:18, pets:20,
           events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1,
-          map:1, codex:12, chat:16, duo:16, mentors:16},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
+          map:1, codex:12, chat:16, duo:16, mentors:16, camp:20, today:7, relics:12, dig:14, coop:30},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
   // Dupla das Eras e Mentores no 16 (o Menu lia a reserva FB_UNLOCK do js/fullbattle.js; agora a fonte é esta). Com o módulo DESLIGADO, o aviso
   // "Liberou: ..." do addXp não cita a função (gated: chave do Sys.<módulo>).
   gated:{duo:'duo', mentors:'mentors'},
