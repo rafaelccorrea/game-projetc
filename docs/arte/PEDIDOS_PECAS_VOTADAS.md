@@ -48,3 +48,25 @@ Aguardam o "sim" do dono (~18). Todos de imagem usam `nano_banana_pro`, 2k; o v�
   - **Prompt:** "A 3x3 grid of NINE separate reward item icons on a flat pure green background with wide gaps, bright painted chibi style: (1) blue upgrade stones; (2) pet food bowl; (3) glowing purple essence vial; (4) mount fragment (a winged horseshoe shard); (5) small pile of diamonds; (6) glowing ember coal (Brasa); (7) a season portrait frame (rounded square, gold); (8) an OPEN milestone chest showing its contents on top (never closed); (9) XP scroll with a star. No gold coins, no closed chests, no text, no green in the icons."
 
 **Total ≈ 18.**
+
+## Atualização: lista do Engenheiro (peças que as telas refeitas ainda desenham em CSS)
+Agrupado em poucas imagens, com o recorte de graça. O orçamento total substitui o "~18" acima.
+
+| # | Peças (destino) | Imagem | ~créd. |
+|---|---|---|---|
+| V1 | VIP: vip_aba 520x90 + vip_cartao 720x620 (estilo B claro) | 1 imagem com os 2 painéis vazios sobre verde | 2 |
+| V2 | VIP: vip_medalha, vip_medalha_on + 6 ícones de benefício (velocidade, ATQ/vida, XP, chave, offline, engrenagem) + 1 reserva | 1 grade 3×3 | 2 |
+| P1 | Passe: passe_faixa 640x80, passe_pedestal 520x160, passe_faixa_gratis e _premium 360x160 | 1 grade 2×2 | 2 |
+| P2 | Passe: pégaso âncora + 9 ícones da trilha (item 5 acima) | 2 imagens | 4 |
+| D1 | Dupla: duo_retrato_eu e duo_retrato_par 264x306 (aro dourado; o Kael e a parceira) | 1 imagem com 2 retratos | 2 |
+| D2 | Dupla: duo_madeira 780x640 + duo_placa_codigo 660x150 (estilo A escuro) | 1 imagem | 2 |
+| D3 | Dupla: 18 ícones das frases (item 4 acima) | 2 grades 3×3 | 4 |
+| D4 | 4 ícones das missões da semana + ícones do Menu duo, camp, mentors + 2 reservas | 1 grade 3×3 | 2 |
+| A1 | Acampamento: Ajudante ADULTO (item 1) | 1 imagem | 2 |
+| A2 | Acampamento: as 3 tendas SEM placa (opcional) | 1 grade 2×2 (+1 reserva) | 2 |
+| L1 | Ladrão: run (item 2: vídeo + folha de 8 quadros, 512x352, pés 307, para a direita) | vídeo | 4 |
+| L2 | Ladrão: hurt (vídeo início = fim: o goblin leva um golpe, cambaleia e larga brasas, volta à pose) | vídeo | 4 |
+| L3 | Ladrão: mock do resultado (item 3) | 1 imagem | 2 |
+| M1 | Mentores: 9 retratos m0..m8 depois do voto da tela | 1 grade 3×3 (+1 refação) | 2-4 |
+| T1 | Títulos novos sem ícone (lista do Engenheiro, depois) | 1 grade | 2 |
+| **Total** | | | **~38-42** (sem A2: ~36-40) |
