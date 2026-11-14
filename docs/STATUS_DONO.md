@@ -8,6 +8,15 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **13/11, fim da noite · Engenheiro: primeiras telas novas LIGADAS e Fogueira escrita.**
+    - **Ligadas no jogo (o QA aprovou na tela, abrindo pelo Menu):** Pets, VIP e Montarias novas, no lugar das antigas.
+    - **"-1" de dano resolvido e conferido pelo QA no jogo:** o inimigo comum tira de 1,7% a 3,9% da vida por golpe nas fases 1 a 8. Falta a Sistemas acertar o chefe da fase 5 (fácil no nível 8, impossível no nível 5).
+    - **Fogueira das Eras (versão 5 que você aprovou):** escrita dentro da batalha, com a arte dos 9 estágios e a chama animada. Está desligada até o QA ver na tela. Brasas não são vendidas em lugar nenhum.
+    - **Correio novo (versão A que você aprovou):** escrito, desligado até o QA ver.
+    - **Perfil novo:** corrigido depois do QA e com trocar nome, moldura, aura, retrato, gráfico de FC e recordes (desligado; esperando reteste).
+    - **Esperando o QA para ligar:** Forja (falta um teste), Torre, Equipamento, Loja, Passe, Perfil, Correio, Fogueira. Guilda e Torneio só depois de uma rodada com a guilda de teste, porque mexem no servidor real.
+    - **Tiro montado:** a Arte entregou 11 de 12 animações; a Kaia na montaria mítica fica com o golpe de espada. Desligado até o QA ver.
+
 - **13/11, noite · Engenheiro: todas as telas novas escritas e batalha mais ágil** (tudo no GitHub; as telas novas ficam desligadas até o QA ver cada uma na tela).
     - **Telas novas prontas no código (14):** Forja, Pets, VIP, Montarias, Passe, Loja, Torre, Equipamento + Mochila, Guilda e Torneio do Poder (as duas ligadas ao servidor de verdade), Fim das 9 eras e Perfil.
     - **Batalha:** o próximo inimigo entra logo (sem o palco vazio entre ondas), o dano crítico aparece maior, números grandes ganham "T", e depois de perder para o chefe a faixa mostra "Juntando força". O QA mediu e aprovou.
