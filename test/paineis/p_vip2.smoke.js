@@ -97,7 +97,8 @@ setPts(853); open(); const seen = new Set(), T = VIP.convTable();
 for (let L = 0; L <= D.maxLevel; L++) { def.click(btn('lv', { l: String(L) })); const p = panel(), i = VIP.levelInfo(L); seen.add(p);
   assert(new RegExp('data-l="' + L + '" aria-pressed="true"').test(H()), 'nível ' + L + ' marcado');
   assert(p.includes(L ? '>VIP ' + L + '</b>' : '>Sem VIP</b>')); assert(p.includes(L ? 'Tudo no VIP ' + L : 'Tudo no jogo grátis'));
-  if (i.atkPct) assert(p.includes('>+' + i.atkPct + '%<'), 'ATQ e VIDA do nível ' + L); if (i.goldXpPct) assert(p.includes('>+' + i.goldXpPct + '%<'), 'Ouro e XP do nível ' + L);
+  if (i.atkPct) assert(p.includes('>+' + i.atkPct + '%<'), 'ATQ e VIDA do nível ' + L); if (i.goldPct) assert(p.includes('>+' + i.goldPct + '%<'), 'Ouro do nível ' + L); if (i.xpPct) assert(p.includes('>+' + i.xpPct + '%<'), 'XP do nível ' + L + ' (separado do ouro)');
+  assert(!p.includes('Ouro e XP'), 'ouro e XP em linhas separadas'); assert(p.includes('XP, itens, pedras e ração offline'), 'o x2 do offline não cita o ouro'); assert.strictEqual(i.frame, false, 'a moldura Ouro não é mais do VIP'); if (i.frameVip) assert(p.includes('>VIP ' + i.frameVip + '<'), 'moldura VIP ' + L + ' vem do frameVip');
   assert(p.includes('>x' + i.offlineMult + '<')); assert(p.includes('>' + i.chestPerDay + '<'));
   for (const c of T) { const nm = g.esc2(c.name.replace(/\s*\(.*$/, '')); assert(p.includes(nm), 'conveniência na tabela: ' + nm); if (!c.values && L === c.vip) assert(p.includes('<em>Abre</em>'), nm + ' abre no VIP ' + L); }
   if (L > 0) assert(p.includes('Abre no VIP ' + L)); else assert(!p.includes('Abre no VIP'));

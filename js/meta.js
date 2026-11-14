@@ -88,8 +88,8 @@ function showOffline(){
   if(window.__noSave||(S.tut|0)<1||AWAY<120||window.__offDone) return false; window.__offDone=true; try{ if(window.Fogueira) Fogueira.offline(AWAY); }catch(e){}   /* Fogueira: Brasas do tempo fora, uma vez (cartão próprio; desligada devolve null) */
   const capH=typeof offlineCapH==='function'?offlineCapH():BAL.offlineCapHours, cap=capH*3600, t=Math.min(AWAY,cap);   // teto com o VIP (8 h; 10/12/14 h: js/vipauto.js)
   if(typeof vaOfflineSync==='function') vaOfflineSync();
-  const perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,S.stage-1));
-  let om=1; try{ om=Math.max(1,Sys.vip.perks(S).offlineMult||1); }catch(e){}   // VIP: ouro offline em dobro (número do Sys.vip)
+  const perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,S.stage-1)*BAL.commonGoldMult);   // ouro de 1 abate COMUM (o mesmo da batalha): 8 h fora = 60 min de abate
+  let om=1; try{ om=Math.max(1,Sys.vip.perks(S).offlineGoldMult||1); }catch(e){}   // o x2 do VIP NÃO vale para o ouro offline (dono 14/11): Sys.vip devolve offlineGoldMult = 1
   const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
   const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60);
   mbox.innerHTML=`<h3>Enquanto você esteve fora</h3>

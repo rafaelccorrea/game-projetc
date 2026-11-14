@@ -93,7 +93,7 @@ const mountLive=m=>{ try{ return !!Sys.mount.live(m); }catch(e){ return false; }
 const mountOwned=id=>{ try{ return !!(Sys.mount.ensure(S).owned||{})[id]; }catch(e){ return false; } };
 function mountIcon(id){ let f=MOUNT_ICO[id]||''; try{ if(!f&&typeof CL_ART!=='undefined'&&CL_ART.mounts&&CL_ART.mounts[id]) f=CL_ART.mounts[id]; }catch(e){}
   try{ if(!f&&typeof mountFile==='function') f=mountFile(id); }catch(e){} return 'assets/icons/mounts/'+(f||id)+'.png'; }
-const mountGives=m=>{ try{ const D=Sys.mount.DATA; return 'Até +'+num(D.maxPct[m.r])+'% ATQ e VIDA (Nv. '+D.maxLvl+' e '+D.maxStars+' estrelas)'; }catch(e){ return ''; } };
+const mountGives=m=>{ try{ const D=Sys.mount.DATA, pr=typeof Sys.mount.powerRarity==='function'?Sys.mount.powerRarity(m.id):null; return 'Até +'+num(D.maxPct[pr!=null?pr:m.r])+'% ATQ e VIDA (Nv. '+D.maxLvl+' e '+D.maxStars+' estrelas)'; }catch(e){ return ''; } };
 /* dá para mostrar montado no palco? só montaria liberada E com a folha montada do herói (as mesmas condições do mountLook do js/mountfx.js) */
 function mountCanPv(m){ try{ return !!m&&mountLive(m)&&Sys.mount.DATA.visual===true&&typeof MOUNT_TBL!=='undefined'&&!!MOUNT_TBL[m.id]&&typeof mountPrefix==='function'&&!!mountPrefix(m.id); }catch(e){ return false; } }
 /* montarias à venda: Sys.newDrops.shop() (on = liberada no jogo) + o produto do Sys.buy */
@@ -416,14 +416,17 @@ function perkRows(L){ const me=vipP().level, I=vipInfo(L), I0=vipInfo(0), mx=vip
   const row=(name,val,need,sub)=>need?'<div class="s2-pk"><span>'+esc2(name)+(sub?'<small>'+esc2(sub)+'</small>':'')+'</span>'+(val!=null?'<em>'+(L>=need?esc2(val):'-')+'</em>':'')+pill(need)+'</div>':'';
   let spd=''; try{ const SP=Sys.vip.DATA.speeds, l2=(SP[1].rules.find(r=>r.level&&!r.spd)||{}).level, l4=(SP[2].rules[0]||{}).level, s4=SP[2].speed, s2=SP[1].speed;
     spd=I.speedTier>=2?'x'+s2+' já · x'+s4+' no nível '+l4:I.speedTier>=1?'x'+s2+' já':'x'+s2+' no nível '+l2; }catch(e){ spd=''; }
-  let h=row('ATQ e VIDA','+'+num(I.atkPct)+'%',first(x=>x.atkPct>0),'Poder do VIP')+row('Ouro e XP','+'+num(I.goldXpPct)+'%',first(x=>x.goldXpPct>0),'')
+  /* ouro e XP separados (Sys.vip: goldPct e xpPct; com a curva v9 do Sys.level o XP é o da coluna xp9); módulo antigo sem os campos = goldXpPct nos dois */
+  const gp=x=>+(x.goldPct!=null?x.goldPct:x.goldXpPct)||0, xp=x=>{ try{ const Lv=Sys.level, T=Sys.vip.DATA.table; if(Lv&&Lv.DATA&&Lv.DATA.v9&&Lv.DATA.v9.on===true&&Array.isArray(T.xp9)) return +T.xp9[x.level]||0; }catch(e){} return +(x.xpPct!=null?x.xpPct:x.goldXpPct)||0; };
+  const fv=x=>x.frameVip|0, fN=first(x=>fv(x)>0)||first(x=>x.frame);
+  let h=row('ATQ e VIDA','+'+num(I.atkPct)+'%',first(x=>x.atkPct>0),'Poder do VIP')+row('Ouro','+'+num(gp(I))+'%',first(x=>gp(x)>0),'')+row('XP','+'+num(xp(I))+'%',first(x=>xp(x)>0),'')
     +(spd?row('Velocidade da batalha',spd,first(x=>x.speedTier>I0.speedTier),''):'')
     +row('Entradas de instância por área','+'+n0(I.keys),first(x=>x.keys>I0.keys),'')
     +row('Baús por dia',n0(I.chestPerDay),first(x=>x.chestPerDay>I0.chestPerDay),'Grátis: '+n0(I0.chestPerDay))
-    +row('Pedras e ração offline','x'+num(I.offlineMult),first(x=>x.offlineMult>I0.offlineMult),'Grátis: x'+num(I0.offlineMult));
+    +row('XP, itens, pedras e ração offline','x'+num(I.offlineMult),first(x=>x.offlineMult>I0.offlineMult),'Grátis: x'+num(I0.offlineMult)+'. Não vale para o ouro');
   try{ if(Sys.vip.DATA.convOn===true) for(const c of Sys.vip.convTable()||[]){ const v=c.values?c.values[L]:null;
       h+=row(c.name,v==null?null:(c.id==='offlineH'?n0(v)+' h':'+'+n0(v)+(c.unit||'')),c.vip,'Grátis: '+c.free); } }catch(e){}
-  h+=row('Moldura VIP no perfil',null,first(x=>x.frame),'')+row('Aura VIP',null,first(x=>x.aura),'');
+  h+=row('Moldura VIP no perfil',fv(I)>0?'VIP '+n0(fv(I)):null,fN,fv(I)>0?'Uma moldura por nível de VIP':'')+row('Aura VIP',null,first(x=>x.aura),'');
   return h; }
 function tabVip(){ const v=vipP(), mx=vipMax(), on=ready(); if(X.vl==null||X.vl<1||X.vl>mx) X.vl=Math.min(mx,Math.max(1,v.level)); const L=X.vl;
   let h='<div class="s2-vipc"><div class="s2-viph">'+SV.crown(48)+'<div class="t"><div class="big">VIP '+v.level+'</div><small>'+(v.max?'Nível máximo':'<b>'+n0(v.points)+'</b> de <b>'+n0(v.needTotal)+'</b> pontos para o VIP '+v.next)+'</small>'

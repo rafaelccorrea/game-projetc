@@ -48,6 +48,7 @@ const starMax=()=>{ try{ if(typeof mountStarMax==='function') return mountStarMa
 const auraOf=n=>{ try{ return M().auraOf(n)||null; }catch(e){ return null; } };
 const auraCol=n=>{ try{ if(typeof MOUNT_AURA!=='undefined'&&MOUNT_AURA[n]) return MOUNT_AURA[n]; }catch(e){} return 'rgba(200,230,255,'; };
 const pctOf=(id,l,s)=>{ try{ return +M().pctOf(id,l,s)||0; }catch(e){ return 0; } };
+const powR=inf=>(inf&&typeof inf.powerRarity==='number'?inf.powerRarity:(inf?inf.rarity:0))|0;   /* raridade do PODER (Sys.mount.info().powerRarity): estrela plana e custo seguem ela, não a do visual */
 const canUp=id=>{ try{ return M().canUpgrade(S,host(),id)||{ok:false,reason:'off',gold:0}; }catch(e){ return {ok:false,reason:'off',gold:0}; } };
 const heroName=()=>{ try{ return S.hero==='kaia'?'Kaia':'Kael'; }catch(e){ return 'Kael'; } };
 const plvNow=()=>{ try{ return plv()|0; }catch(e){ return 0; } };
@@ -348,9 +349,9 @@ function starsHtml(id,inf){ if(!id||!inf) return ''; const D=M().DATA, mx=starMa
   let cards=''; for(let s=1;s<=mx;s++){ const A=auraOf(s)||{}, col=auraCol(s), got=inf.owned&&s<=(inf.stars|0);
     const dot=A.glow>0?'background:radial-gradient(circle,'+col+'0.95) 0,'+col+'0.35) '+Math.min(64,30+10*A.glow)+'%,transparent 72%)':'background:rgba(255,255,255,.06);border:1px dashed rgba(160,180,255,.35)';
     cards+='<button class="m2-sc'+(got||!inf.owned?'':' no')+'" data-x="star" data-n="'+s+'" aria-pressed="'+(cur===s)+'" aria-label="'+esc2(stTxt(s))+': '+esc2(A.name||'')+'. Ver no herói"><b>'+s+SV.star(true,11)+'</b><i style="'+dot+'"></i><small>'+esc2(A.name||'')+'</small><small class="v">'+pc(pctOf(id,lv,s))+'</small></button>'; }
-  const F=D.starFlat, flat=F&&F.on===true&&Array.isArray(F.pct)?F.pct[clamp(inf.rarity|0,0,F.pct.length-1)]:0, sc=Array.isArray(D.starCost)?D.starCost:[], ca=auraOf(cur);
+  const F=D.starFlat, flat=F&&F.on===true&&Array.isArray(F.pct)?F.pct[clamp(powR(inf),0,F.pct.length-1)]:0, sc=Array.isArray(D.starCost)?D.starCost:[], ca=auraOf(cur);
   return '<div class="m2-pan"><div class="m2-sec"><span>Estrelas e aura</span><span>'+esc2(inf.name)+' · Nv '+n0(lv)+' · toque para ver</span></div><div class="m2-st" style="grid-template-columns:repeat('+cols+',minmax(0,1fr))">'+cards+'</div>'
-    +'<p class="m2-hint">Com '+esc2(stTxt(cur))+': <b>'+esc2((ca&&ca.name)||'')+'</b> e '+pc(pctOf(id,lv,cur))+' de ATK e VIDA no Nv '+n0(lv)+'.'+(flat?' Cada estrela acima da 1ª soma +'+dec(flat)+'% ('+esc2(inf.rarityName||'')+').':'')+'</p>'
+    +'<p class="m2-hint">Com '+esc2(stTxt(cur))+': <b>'+esc2((ca&&ca.name)||'')+'</b> e '+pc(pctOf(id,lv,cur))+' de ATK e VIDA no Nv '+n0(lv)+'.'+(flat?' Cada estrela acima da 1ª soma +'+dec(flat)+'% (poder de '+esc2(inf.powerRarityName||inf.rarityName||'')+').':'')+'</p>'
     +(sc.length?'<div class="m2-kv k0"><span>Custo</span><span>'+sc.map(n0).join(' / ')+' fragmentos (da 2ª à '+(sc.length+1)+'ª estrela)</span></div>':'')
     +'<div class="m2-kv'+(sc.length?'':' k0')+'"><span>Montaria repetida</span><span>'+n0(D.dupFrags|0)+' fragmentos</span></div></div>'; }
 function levelHtml(id,inf){ if(!id||!inf) return ''; const D=M().DATA, C=D.cost||{}, mxL=D.maxLvl|0, own=!!inf.owned, lv=own?inf.lvl|0:1, st=own?inf.stars|0:1; let unit=0; try{ unit=+host().goldUnit()||0; }catch(e){ unit=0; }
@@ -358,7 +359,7 @@ function levelHtml(id,inf){ if(!id||!inf) return ''; const D=M().DATA, C=D.cost|
   return '<div class="m2-pan"><div class="m2-sec"><span>Nível</span><span>teto agora: Nv '+n0(inf.cap|0)+' (jogador Nv '+n0(plvNow())+')</span></div>'
     +'<div class="m2-kv k0"><span>Ouro de 1 abate</span><span>'+(unit?esc2(gold(unit)):'-')+'</span></div>'
     +(own?'<div class="m2-kv"><span>Nv '+n0(lv)+' → '+n0(Math.min(mxL,lv+1))+'</span><span>'+(lv<mxL&&uc&&uc.ok?esc2(gold(uc.gold))+' de ouro':'máximo')+'</span></div>':'')
-    +(typeof C.goldK==='number'?'<div class="m2-kv"><span>Conta</span><span>'+dec(C.goldK)+' × ouro de 1 abate × (1 + '+dec(C.growth)+' × '+(lv-1)+') × (1 + '+dec(C.rarCost)+' × '+(inf.rarity|0)+')</span></div>':'')
+    +(typeof C.goldK==='number'?'<div class="m2-kv"><span>Conta</span><span>'+dec(C.goldK)+' × ouro de 1 abate × (1 + '+dec(C.growth)+' × '+(lv-1)+') × (1 + '+dec(C.rarCost)+' × '+powR(inf)+')</span></div>':'')
     +'<div class="m2-kv"><span>Nv 1 → Nv '+n0(mxL)+'</span><span>'+pc(pctOf(id,1,st))+' → '+pc(pctOf(id,mxL,st))+' de ATK e VIDA ('+esc2(stTxt(st))+')</span></div></div>'; }
 function howHtml(list,o){ const D=M().DATA, rows=list.filter(q=>!o.owned[q]).map(q=>{ const s=srcOf(q), i=info(q); return s.length&&i?'<div class="m2-kv"><span>'+esc2(i.name)+'</span><span>'+esc2(s[0])+'</span></div>':''; }).join('');
   return '<div class="m2-pan"><div class="m2-sec"><span>Como conseguir</span><span>fragmentos e montarias vêm de jogar</span></div>'+rows

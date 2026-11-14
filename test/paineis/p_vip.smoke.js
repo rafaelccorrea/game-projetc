@@ -27,18 +27,24 @@ const out = [];
 g.S.sys = {}; def.onOpen(); def.render(); html = g.V.innerHTML;
 has('Sem VIP'); has('VIP 1'); has('Falta 1 ponto VIP'.replace('1 pontos', '1 pontos')); has('Ir à Loja'); has('Cada compra soma pontos VIP'); assert(!/Comprar VIP|Pagamento em breve|R\$/.test(html), 'sem preço nem compra de VIP');
 has('data-x="prev"'); assert(/data-x="prev"[^>]*visibility:hidden/.test(html), 'seta anterior escondida no VIP 1');
-not('class="pv-aura"'); not('class="pv-frame"'); not('[VALOR]'); not('PROPOSTA');
+const LI = n => g.Sys.vip.levelInfo(n), pc = v => '+' + String(v).replace('.', ',') + '%';
+// moldura: cada VIP N tem a moldura VIP N (frameVip do módulo); a moldura Ouro saiu do VIP (nível 60). A vitrine anima a moldura quando o nível escolhido tem moldura VIP
+not('class="pv-aura"'); if (LI(1).frameVip) { has('class="pv-frame"'); has('>VIP ' + LI(1).frameVip + '<'); } else not('class="pv-frame"'); not('[VALOR]'); not('PROPOSTA');
+has('Moldura do perfil'); not('Moldura animada'); not('Ouro e XP'); not('Ganho offline'); has('Offline: XP, itens, pedras e ração'); has('>Ouro<'); has('>XP<');
 out.push('sem VIP: ok');
 
 // 2) próximo ×9 chega ao VIP 10 (aura + moldura), seta seguinte escondida; mais um clique não passa de 10
 for (let i = 0; i < 12; i++) def.click(btn('next'), {});
-html = g.V.innerHTML; has('VIP 10'); has('class="pv-aura"'); has('class="pv-frame"'); assert(/data-x="next"[^>]*visibility:hidden/.test(html), 'seta seguinte escondida no 10');
+html = g.V.innerHTML; has('VIP 10'); has('class="pv-aura"'); assert.strictEqual(LI(10).frameVip, 10, 'o VIP 10 tem a moldura VIP 10 (módulo)'); assert.strictEqual(LI(10).frame, false, 'a moldura Ouro não é mais do VIP'); has('class="pv-frame"'); has('>' + g.Sys.vip.levelInfo(10).frameVipText.replace('Moldura ', '') + '<'); assert(/data-x="next"[^>]*visibility:hidden/.test(html), 'seta seguinte escondida no 10');
 has('Skin exclusiva'); has('Aura VIP'); has('NOVO');
 out.push('carrossel 1..10: ok');
 
-// 3) valores da tabela vêm do levelInfo (nível 5: +8% ATK, +18% ouro/XP, x4 já)
+// 3) valores da tabela vêm do levelInfo (nível 5: ATK, OURO e XP separados, x4 já): números lidos do módulo
 for (let i = 0; i < 5; i++) def.click(btn('prev'), {});
-html = g.V.innerHTML; has('VIP 5'); has('+8%'); has('+18%'); has('x2 já · x4 no nível 40'); has('10/dia'); has('x2');
+html = g.V.innerHTML; has('VIP 5'); has('+8%'); has('x2 já · x4 no nível 40'); has('10/dia'); has('x2');
+{ const i5 = LI(5); assert(i5.goldPct > 0 && i5.xpPct > 0 && i5.goldPct !== i5.xpPct, 'ouro e XP do VIP 5 são números diferentes no módulo'); assert.strictEqual(i5.goldXpPct, i5.goldPct, 'goldXpPct agora é só o ouro');
+  has('>' + pc(i5.atkPct)); assert(new RegExp('>Ouro</span>[\\s\\S]*?>' + pc(i5.goldPct).replace('+', '\\+') + '(<|$)', 'm').test(html), 'linha Ouro com o goldPct'); assert(new RegExp('>XP</span>[\\s\\S]*?>' + pc(i5.xpPct).replace('+', '\\+') + '(<|$)', 'm').test(html), 'linha XP com o xpPct');
+  has('>x' + i5.offlineMult); has('>VIP ' + i5.frameVip + '<'); }
 out.push('tabela do VIP 5 vem do Sys.vip: ok');
 
 // 4) comprar abre o aviso (nada é cobrado), Entendi fecha

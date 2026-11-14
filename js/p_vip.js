@@ -8,7 +8,7 @@
    - sem a faixa "NÚMEROS = PROPOSTA": é texto de desenvolvimento e os números já são os do Sys.vip;
    - sem preço e sem "[VALOR]": os pontos que faltam são os reais do Sys.vip.progress (o valor de cada nível é do dono); o botão de compra diz
      "Pagamento em breve" e abre o aviso do protótipo (nada é cobrado, nada é simulado);
-   - a vitrine mostra o que o nível ESCOLHIDO dá: moldura animada só nos níveis que a têm (7+) e aura dourada só no nível que a tem (10);
+   - a vitrine mostra o que o nível ESCOLHIDO dá: moldura animada nos níveis que têm moldura VIP (frameVip do módulo: todo VIP N tem a moldura VIP N) e aura dourada só no nível que a tem (10);
    - setas do carrossel somem nos extremos (nenhum botão sem ação);
    - "Chaves/dia" mostra +N entradas de instância POR ÁREA (Sys.vip.levelInfo.keys), igual ao Sys.instances.
    Sem pedido a outros arquivos: o script entra pela lista de scripts de js/screens.js junto com os outros p_*.js (pedido Q-vip no reports/pedidos-entre-agentes.md). */
@@ -16,7 +16,7 @@ const XV={sel:1,cf:false,anim:true,sig:''};
 const V_MINH=520;   /* altura mínima passada ao xDims; o que faltar rola (classe x-scroll) */
 const V_ICON={spd:'M5 19l7-7-7-7M12 19l7-7-7-7',atk:'M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6',gold:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v10M9 9.5h4.5a1.8 1.8 0 0 1 0 3.5h-3a1.8 1.8 0 0 0 0 3.5H15',
   keys:'M8 14a4 4 0 1 1 0-8 4 4 0 0 1 0 8zM11 10h10M18 10v4M21 10v3',chest:'M3 10h18v10H3zM3 10l2-5h14l2 5M12 10v4',off:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
-  frame:'M4 4h16v16H4zM8 8h8v8H8z',skin:'M8 3l4 3 4-3 4 4-2 4v10H6V11L4 7z',aura:'M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z'};
+  xp:'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.3l6.1-.7z',frame:'M4 4h16v16H4zM8 8h8v8H8z',skin:'M8 3l4 3 4-3 4 4-2 4v10H6V11L4 7z',aura:'M12 2l2.5 6.5L21 9l-5 4.5L17.5 21 12 17l-5.5 4L8 13.5 3 9l6.5-.5z'};
 const V_SPD=['x1 (x2 no nível 15)','x2 já','x2 já · x4 no nível 40'];
 const V_CSS=`.pv-kid{background-image:url(assets/anim/hyb/R/kael_idle_era2_t0.png);background-size:1200% 100%;background-repeat:no-repeat;animation:pvk 1s steps(12,jump-none) infinite}
 @keyframes pvk{from{background-position:0 0}to{background-position:100% 0}}
@@ -59,17 +59,24 @@ const vInfo=n=>Sys.vip.levelInfo(n);
 const vEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function vInject(){ if(typeof document==='undefined'||!document.head||document.getElementById('pv_css')) return; const st=document.createElement('style'); st.id='pv_css'; st.textContent=V_CSS; document.head.appendChild(st); }
 /* linhas da tabela: [chave, rótulo, formatador do valor] — cada valor vem do levelInfo; "base" é o nível 0 (sem VIP) */
+/* OURO e XP separados (dono 14/11): goldPct e xpPct do levelInfo; com a curva v9 do Sys.level o XP é o da coluna xp9 do módulo. Módulo antigo sem os campos: goldXpPct nos dois.
+   MOLDURA: cada VIP N tem a moldura VIP N (frameVip); a moldura Ouro saiu do VIP (é do nível 60). O x2 do offline NÃO vale para o ouro. */
+const pvGold=i=>+(i.goldPct!=null?i.goldPct:i.goldXpPct)||0;
+const pvXp=i=>{ try{ const L=window.Sys&&Sys.level, T=Sys.vip.DATA.table; if(L&&L.DATA&&L.DATA.v9&&L.DATA.v9.on===true&&Array.isArray(T.xp9)) return +T.xp9[i.level]||0; }catch(e){} return +(i.xpPct!=null?i.xpPct:i.goldXpPct)||0; };
+const pvFrameN=i=>(i.frameVip|0)||(i.frame?(i.level|0)||1:0);
+const pvPc=v=>'+'+String(v).replace('.',',')+'%';
 const V_ROWS=[
   ['spd','Velocidade',i=>V_SPD[Math.max(0,Math.min(2,i.speedTier|0))]],
-  ['atk','ATK e Vida',i=>i.atkPct?'+'+i.atkPct+'%':'—'],
-  ['gold','Ouro e XP',i=>i.goldXpPct?'+'+i.goldXpPct+'%':'—'],
+  ['atk','ATK e Vida',i=>i.atkPct?pvPc(i.atkPct):'—'],
+  ['gold','Ouro',i=>pvGold(i)?pvPc(pvGold(i)):'—'],
+  ['xp','XP',i=>pvXp(i)?pvPc(pvXp(i)):'—'],
   ['keys','Entradas de instância/dia por área',i=>i.keys?'+'+i.keys:'—'],
   ['chest','Baús/dia',(i,base)=>i.chestPerDay>base.chestPerDay?i.chestPerDay+'/dia':'padrão ('+i.chestPerDay+')'],
-  ['off','Ganho offline',i=>'x'+(i.offlineMult||1)],
-  ['frame','Moldura animada',i=>i.frame?'Sim':'—'],
+  ['off','Offline: XP, itens, pedras e ração',i=>'x'+(i.offlineMult||1)],
+  ['frame','Moldura do perfil',i=>pvFrameN(i)?'VIP '+pvFrameN(i):'—'],
   ['skin','Skin exclusiva',i=>i.vipSkin?'Sim':'—'],
   ['aura','Aura VIP',i=>i.aura?'Sim':'—']];
-const V_KEY={spd:'speedTier',atk:'atkPct',gold:'goldXpPct',keys:'keys',chest:'chestPerDay',off:'offlineMult',frame:'frame',skin:'vipSkin',aura:'aura'};
+const V_KEY={spd:'speedTier',atk:'atkPct',gold:pvGold,xp:pvXp,keys:'keys',chest:'chestPerDay',off:'offlineMult',frame:pvFrameN,skin:'vipSkin',aura:'aura'};   /* campo do levelInfo ou função que devolve o valor comparado */
 
 /* recompensa ÚNICA do nível: lida das fontes dos módulos (Sys.mount/Sys.pet: src "VIP n: inteira..."); nada escrito aqui */
 /* só item VIVO no módulo (a função do próprio módulo: Sys.mount.live / Sys.pet.avail); desligado = nada aparece e a tela fica igual à de antes */
@@ -104,14 +111,14 @@ function scrVip(){
   if(!vOk()){ V.innerHTML=xWrap(d,'',`<div role="alert" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Clube VIP indisponível agora.</div>`); XV.sig='x'; return; }
   const cur=vCur(), P=Sys.vip.progress(S), L=vClamp(XV.sel), base=vInfo(0), here=vInfo(L), prev=L>1?vInfo(L-1):base, max=vMax();
   const pct=Math.round((P.frac||0)*100), dots=Array.from({length:max},(_,i)=>{ const n=i+1; return `<span style="width:${n===L?20:8}px;height:8px;border-radius:4px;background:${n===L?'#ffc94a':n<=cur?'#a8761f':'#4a3a2b'};transition:width .25s"></span>`; }).join('');
-  const rows=V_ROWS.map((r,ix)=>{ const k=V_KEY[r[0]], bv=r[2](base,base), hv=r[2](here,base), changed=here[k]!==base[k], isNew=here[k]!==prev[k]&&L>1||(L===1&&here[k]!==base[k]);
+  const rows=V_ROWS.map((r,ix)=>{ const k=V_KEY[r[0]], val=typeof k==='function'?k:(i=>i[k]), bv=r[2](base,base), hv=r[2](here,base), changed=val(here)!==val(base), isNew=val(here)!==val(prev)&&L>1||(L===1&&val(here)!==val(base));
     return `<div role="row" class="pv-row" style="flex:1;min-height:38px;display:grid;grid-template-columns:1.25fr .9fr 1.2fr;align-items:center;border-bottom:1px solid #2a2018;animation-delay:${(ix*0.03).toFixed(2)}s">
       <span role="cell" style="display:flex;align-items:center;gap:6px;padding-left:8px;font-size:12px;font-weight:900;line-height:1.1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffc94a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="${V_ICON[r[0]]}"></path></svg>${vEsc(r[1])}</span>
       <span role="cell" style="text-align:center;font-size:${bv.length>12?10:12}px;line-height:1.1;font-weight:800;color:#9c8d7a">${vEsc(bv)}</span>
       <span role="cell" style="height:100%;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(255,201,74,.07);font-size:${hv.length>12?10:13}px;line-height:1.1;text-align:center;font-weight:900;color:${changed?'#ffe07a':'#9c8d7a'}">${vEsc(hv)}${isNew&&changed?'<span class="pv-new" style="padding:0 4px;border-radius:5px;background:#5fd068;color:#0d2410;font-size:9px;font-weight:900">NOVO</span>':''}</span></div>`; }).join('');
   const arrow=(a,label,ch,show)=>`<button data-x="${a}" aria-label="${label}" style="width:48px;height:48px;flex:none;border-radius:12px;border:2px solid #6a4a1a;background:#2a1d0f;color:#ffe07a;font-family:'Lilita One',sans-serif;font-size:26px;padding:0;visibility:${show?'visible':'hidden'}" ${show?'':'tabindex="-1" aria-hidden="true"'}>${ch}</button>`;
   const title=cur>=1?'VIP '+cur:'Sem VIP';
-  const hasFrame=!!here.frame, hasAura=!!here.aura;
+  const hasFrame=pvFrameN(here)>0, hasAura=!!here.aura;
   const need=P.max?'Você está no nível máximo do Clube VIP.':`${P.missing===1?"Falta 1 ponto VIP":"Faltam "+kf(P.missing)+" pontos VIP"} em compras. Toda compra conta (diamantes, passe, ofertas).`;
   const stage=`<div style="height:196px;flex:none;position:relative;display:flex;gap:10px;padding:0 12px">
       <div style="position:relative;width:168px;flex:none"><div class="${hasFrame?'pv-frame':'pv-frame0'}"><div class="pv-in">
