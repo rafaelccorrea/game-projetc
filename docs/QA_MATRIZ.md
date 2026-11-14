@@ -73,3 +73,8 @@ Percorrido passo a passo: abertura, herói, jogar, Equipamento, Aparência, VIP,
 - Os ✓ de "tela" vêm de Chrome headless com estados forçados por script; fps e toque real só no celular.
 - Coluna "Equilíbrio": o QA mediu só o dano do comum e a cura (P0) e a Provação está medindo agora; o resto é da Sistemas.
 - Vários vereditos de tela foram dados por subagentes que olharam parte dos prints (cada relatório diz quantos); o QA confirmou pessoalmente os defeitos principais.
+
+## Celular (S24) — DEV, 14/11 00:38-00:52 (HEAD v0.13.3, save novo de convidado)
+Visto no aparelho (prints em reports/qa/s24/d*.png): abertura e Título, aviso do convidado, servidor S1, prólogo, herói, nome (corrigido em d583eed), batalha com "Forte contra", Fogueira (botão, cartão, gaveta com Ladrão), Menu, **Mapa V4 ✓** (reteste da fase atual e das etiquetas OK), **Grimório ✓** (tela), **Provação ✓** (tela, sem lutar), **Caminhos ✓** (tela, trava no Nv 30), chefe Rex vencido. Defeitos: "-1/-3" no herói nas fases 1-1/1-2 (Sistemas), tutorial deixa "Equip." aceso, aviso de FC sobre o Menu, bolinhas de era sobre "FC 19,5" no Mapa, "Lutar" com ícone sobre o texto, retrato do mestre em silhueta.
+**Continuam SEM ver no celular:** Derrota com prêmio, Encruzilhada, golpes especiais, Fogueira automático, Provação (luta), Caminhos (escolha), Dupla, Acampamento, Correio, Perfil, Guilda/Torneio, Ladrão (só a gaveta), Hoje/Relíquias/Escavação/Mentores (bloqueados por nível em Nv 3-6).
+Desempenho do DEV: batalha pura janky 0,91% (p95 17 ms); sessão inteira 8,73% (p95 29 ms); PSS ~680-720 MB; 34,8→42,5 °C em ~14 min.
