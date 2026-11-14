@@ -227,7 +227,9 @@ const gotTx=g=>['gold','forge','practice'].filter(x=>num(g&&g[x])>0).map(x=>'+'+
 const tentName=(k,id)=>{ try{ const d=k.DATA.tents.find(t=>t.id===id); return d?String(d.name):''; }catch(e){ return ''; } };
 /* COLETA DE UMA TENDA: o módulo só coleta tudo. Anda o relógio, guarda o que as OUTRAS tendas juntaram, chama o collect do módulo UMA vez
    (só a tenda tocada tem o que entregar) e devolve o guardado às outras, sempre (finally). Nenhuma conta de prêmio é feita aqui. */
-function collectOne(k,id){ const h=host(), o=k.tick(S,h), keep={};
+/* coleta de UMA tenda: a função do módulo (Sys.camp.collectTent, Sistemas e26ae54: mesma conta e tetos do coletar tudo). O bloco de reserva abaixo (zera as outras na memória, coleta e devolve) só vale para módulo antigo */
+function collectOne(k,id){ if(typeof k.collectTent==='function') return k.collectTent(S,host(),id);
+  const h=host(), o=k.tick(S,h), keep={};
   for(const t in o.tents) if(t!==id){ keep[t]=num(o.tents[t].acc); o.tents[t].acc=0; }
   try{ return k.collect(S,h); }
   finally{ const T=(S.sys&&S.sys.camp&&S.sys.camp.tents)||{}; for(const t in keep) if(T[t]) T[t].acc=num(T[t].acc)+keep[t]; } }
