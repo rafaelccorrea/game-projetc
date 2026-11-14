@@ -194,3 +194,36 @@ Calendário (~178 dias) e diff.js: não refeitos.
 **Era 3 com kill 34 / aguentar 40 (medida, NÃO aplicada):** com módulos 100% 4/4 em 20,3 s (sobra 73%), 90% 4/4 em 21,9 s (59%); sem módulos
 com o mesmo progresso 0/4 (cai aos 28 s); sem módulos com 100% da FC nova 4/4 em 25,8 s (35%). Próximo palpite (a medir): kill ~43, aguentar 40
 (leva o sem módulos para ~33 s; o com módulos ficaria em ~26 s, abaixo da meta: o mesmo conflito da era 1, maior).
+
+## 9. Aplicado: opção A do PO (14/11, eras 1-8; a era 1 refeita)
+
+Regra (PO 14/11, opção A com o meio-termo): **com os módulos** (afinidade, golpes, Grimório, Fraco contra, Caminho) o Senhor da Era cai em
+~30 s; **sem os módulos** perde com 100% da FC pedida e vence com ~110-120%. Conta: FC pedida = original × (poder dos módulos na era ÷ 1,15),
+ajustada era a era pela medida. A era 1 volta à FC pedida original (os módulos dão só ×1,11 nela, então o sem módulos já precisa de ~111%).
+
+Medida: `tools/cal-tudo.js --medida=tudo` (janela exclusiva de memória), `CASOS=T100,RN100,RN115` (T = com os módulos a 100%; RN = sem os
+módulos a 100% e 115% da FC pedida nova). Era 1: 4 lutas por caso; eras 2-8: 6 lutas por caso. Scripts: scratchpad runA.sh/loopA.sh.
+
+**Aplicado no docs/balance.json** (`dificuldade.boss._recalA`):
+
+| Era | FC pedida × original | killSecAt100 | surviveSecAt100 | Com módulos 100% | Sem módulos 100% | Sem módulos 115% |
+|---|---|---|---|---|---|---|
+| 0 | (recal1, sem mudança) | 37 | 36 | — | — | — |
+| 1 | 1 (desfaz o × 1,113 do §8) | 38 | 34 | 4/4 · 28,5 s | 0/4 (cai 33 s) | 4/4 · 35,8 s |
+| 2 | 1,40 | 35 | 33 | 6/6 · 27,5 s | 0/6 (cai 33 s) | 6/6 · 33,1 s |
+| 3 | 1,30 | 38 | 36 | 6/6 · 25,9 s | 1/6 | **3/6** · 32,0 s |
+| 4 | 1,38 | 38 | 36 | 6/6 · 28,1 s | 2/6 | **3/6** · 28,6 s |
+| 5 | 1,49 | 38 | 36 | 6/6 · 30,6 s | 1/6 | 5/6 · 31,6 s |
+| 6 | 1,667 | 38 | 34 | 6/6 · 34,5 s | 2/6 | 5/6 · 33,9 s |
+| 7 | 1,748 | 38 | 36 | 5/6 · 30,5 s | 1/6 | 5/6 · 32,9 s |
+| 8 | 1,54 | 38 | 34 | 6/6 · 30,4 s | 1/6 | 5/6 · 30,9 s |
+
+Rodadas anteriores (no resA.log): era 3 com 1,57 = com módulos 0/6 (o chefe fica forte demais de uma vez); era 4 com 1,51 = 3/6; era 2 com
+1,045 e 1,22 = com módulos em 23-26 s (fácil). Eras 3 e 4 estão **fora do alvo do lado sem módulos a 115% (3/6)**: a próxima tentativa é
+aguentar 38 s nas duas (era 3 também com FC 1,40). A rodada com isso foi parada pelo sistema por falta de memória (só a era 2 terminou).
+
+Testes depois de aplicar: `test/sys` 92 de 93 (assets.test: base do AAB 161 MB > 150, da arte, sem relação). `test/e2e/diff.js` 139/146:
+fase 35 "herói de referência vence com 100%" e "cai depois da fúria" falham **por regra** (opção A: sem módulos com 100% perde); a fase 10
+(era 0, não mexida) 2/4 em 31 s; e a razão comum ÷ chefe (alvo 0,25) dá 0,65-0,69 nas fases 1/10/35/70 por causa do piso
+`minHitPctOfRefHp` (fases 1 e 10 não mexidas). O diff.js é do Engenheiro: o alvo da fase 35 passa a ser "100% perde, 115% vence".
+Calendário (dias até a fase 90): não refeito.
