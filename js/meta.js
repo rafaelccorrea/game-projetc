@@ -110,8 +110,8 @@ function showOffline(){
 const TUT=[
   {txt:'A batalha é <b>automática</b>: seu herói ataca sozinho. Derrote 4 inimigos e o chefe para avançar de fase.', sel:()=>'#cv', ok:true},
   {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#fb_s2b', ok:true},
-  {txt:()=>view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
-   sel:()=>view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', views:['gear'], okIf:()=>view==='gear'&&!!document.getElementById('g_upgold')&&tutCapped()},
+  {txt:()=>view==='gear2'?(tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque na sua <b>arma</b> e depois em <b>Upar</b> para deixá-la mais forte.'):view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
+   sel:()=>view==='gear2'?'#tut_sem_alvo':view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', views:['gear','gear2'], okIf:()=>(view==='gear2'||(view==='gear'&&!!document.getElementById('g_upgold')))&&tutCapped()},
   {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#fb_s3b', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
   /* v0.12.3 (liberação por nível): Invocar só existe a partir do nível 3. O passo fica por último e ESPERA o nível (when); até lá o tutorial some da tela */
   {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull', views:['summon'],
@@ -155,7 +155,9 @@ function tutLayout(){
   if(S.tut===1&&B.cd2>0&&!(B.act&&B.act.type==='s2')) B.cd2=0;
   /* Engenheiro 2 (QA): com uma TELA CHEIA aberta que não é a do passo (Pets, Arena, Torneio...), o holofote e o balão somem e voltam ao fechar */
   const other=(view!=='battle'&&!(st.views&&st.views.indexOf(view)>=0))||!!(typeof B!=='undefined'&&B.res);   /* B.res = Vitória/Derrota do chefe ou Troca de era por cima da batalha */
-  const el=document.querySelector(st.sel()), hide=other||(modal.style.display==='flex'&&!(el&&modal.contains(el)));
+  const el=document.querySelector(st.sel()); let cov=false;
+  try{ if(el&&st.sel()!=='#cv'){ const q1=el.getBoundingClientRect(), c=q1.width>0?document.elementFromPoint(q1.left+q1.width/2,q1.top+q1.height/2):null; cov=!!c&&c!==el&&!el.contains(c)&&!c.contains(el)&&!(c.closest&&c.closest('#tut')); } }catch(e){ cov=false; }
+  const hide=other||cov||(modal.style.display==='flex'&&!(el&&modal.contains(el)));
   document.getElementById('tut').style.visibility=hide?'hidden':'visible';
   if(!el){ r.style.display='none'; b.style.top='40%'; b.style.bottom='auto'; return; }
   const q0=el.getBoundingClientRect(), ar=document.getElementById('app').getBoundingClientRect(), cvS=st.sel()==='#cv', pad=6;

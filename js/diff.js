@@ -93,8 +93,10 @@ function diffBoss(stage){ const T = DIFF.tbl; if (!T || !T.boss || !(window.Sys 
        cai sempre no teto e o golpe some. Com commons.dmgPostDefShareOfBoss (ex.: 0,25) o dano BRUTO do comum é o valor que, DEPOIS da DEF da referência, tira essa
        parte do golpe do chefe (também depois da DEF). Sem o campo: cdmg = dano do chefe × dmgShareOfBoss, como antes. */
     let cdmg = hi * ds; const pds = diffNum(C.dmgPostDefShareOfBoss, 0);
-    if (pds > 0){ const goal = after(hi) * pds; let a = 0, b = Math.max(hi, 1e-6); for (let i = 0; i < 80 && after(b) < goal; i++) b *= 2; for (let i = 0; i < 60; i++){ const m = (a + b) / 2; if (after(m) < goal) a = m; else b = m; } cdmg = b; }
-    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg, hs, ds: pds > 0 ? 1 : ds, need, ref, dps, kill, surv, escorts: nE, tE, escortSec: es, postDef: pds }; }
+    /* PISO (Sistemas, 14/11, QA no S24: "-1" de volta nas fases 1-1/1-2): commons.minHitPctOfRefHp = parte mínima da vida da referência que cada golpe de comum tira DEPOIS da DEF. Nas fases altas os 25% do chefe já passam disso. */
+    const minP = diffNum(C.minHitPctOfRefHp, 0), goal = Math.max(pds > 0 ? after(hi) * pds : 0, minP > 0 ? ref.hp * minP : 0);
+    if (goal > 0){ let a = 0, b = Math.max(hi, 1e-6); for (let i = 0; i < 80 && after(b) < goal; i++) b *= 2; for (let i = 0; i < 60; i++){ const m = (a + b) / 2; if (after(m) < goal) a = m; else b = m; } cdmg = b; }
+    out = { hp, dmg: Math.max(1e-6, hi), chp: Math.max(1, hp * hs), cdmg, hs, ds: (pds > 0 || minP > 0) ? 1 : ds, need, ref, dps, kill, surv, escorts: nE, tE, escortSec: es, postDef: pds }; }
   if (Object.keys(DIFF.memo).length > 200) DIFF.memo = {}; DIFF.memo[key] = out; return out; }
 /* inimigo de FASE (mkEnemy). Devolve b (o de hoje) se a chave estiver desligada, em instância ou sem tabela. */
 function diffEnemy(stage, kind, b){ if (!diffOn() || !DIFF.tbl || (typeof B !== 'undefined' && B.inst)) return b;
