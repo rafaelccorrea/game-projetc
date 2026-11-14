@@ -71,6 +71,8 @@ const cnt=x=>{ const o=zc(); if(x&&typeof x==='object') for(const k of DATA.coun
 const strId=v=>(typeof v==='string'||typeof v==='number')&&String(v).length&&String(v).length<=64?String(v):null;
 /* nível e era do outro (servidor 2b77eb6, GET /duo e invites[]): número ou null; era 0-8 */
 const lvOf=v=>{ const n=int0(v); return n>0?n:null; }, eraOf2=v=>{ if(v==null||v==='') return null; const n=int0(v); return n>=0&&n<=8?n:null; };
+/* moldura do Perfil do outro (servidor: partner.frame no GET /duo): id curto [a-z0-9_] ou null. Só visual; qualquer outra coisa vira null. */
+const frameOf=v=>typeof v==='string'&&/^[a-z0-9_]{1,32}$/.test(v)?v:null;
 const cleanName=v=>String(v==null?'':v).slice(0,24);   // nome vem do SERVIDOR (já moderado na criação da conta); aqui só corta
 const needLevel=()=>{ const L=SYS().level; const u=L&&L.DATA&&L.DATA.unlock; return u&&u.duo!=null?int0(u.duo):DATA.needLevel; };
 const levelOf=(S,host)=>{ const L=SYS().level; try{ if(L&&L.level) return L.level(S); }catch(e){} return int0(host&&host.level&&host.level())||1; };
@@ -79,7 +81,7 @@ function ensure(S){
   if(!S||typeof S!=='object') throw new Error('Sys.duo.ensure: save inválido');
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.duo; if(!o||typeof o!=='object') o=S.sys.duo={};
-  o.v=1; const p=o.partner; o.partner=p&&typeof p==='object'&&strId(p.id)?{id:strId(p.id),name:cleanName(p.name),since:int0(p.since),last:int0(p.last),lv:lvOf(p.lv),era:eraOf2(p.era)}:null;
+  o.v=1; const p=o.partner; o.partner=p&&typeof p==='object'&&strId(p.id)?{id:strId(p.id),name:cleanName(p.name),since:int0(p.since),last:int0(p.last),lv:lvOf(p.lv),era:eraOf2(p.era),frame:frameOf(p.frame)}:null;
   const iv=(o.inv&&typeof o.inv==='object')?o.inv:{};
   o.inv={out:(Array.isArray(iv.out)?iv.out:[]).filter(x=>x&&typeof x.code==='string'&&DATA.codeRe.test(x.code)).slice(0,DATA.invite.maxOut).map(x=>({code:x.code,at:int0(x.at)})),
     in:(Array.isArray(iv.in)?iv.in:[]).filter(x=>x&&strId(x.id)).slice(0,DATA.invite.maxIn).map(x=>({id:strId(x.id),name:cleanName(x.name),at:int0(x.at),lv:lvOf(x.lv),era:eraOf2(x.era)})),
@@ -153,7 +155,7 @@ function accept(S,host,id){ const g=gate(S,host); if(g) return g; const o=S_(S,h
   pair(o,{id,name:iv.name},t); roll(o,host); changed(host); return {ok:true,partner:Object.assign({},o.partner)}; }
 function decline(S,host,id){ if(!on()) return {ok:false,reason:'off'}; const o=ensure(S); id=strId(id); const n0=o.inv.in.length; o.inv.in=o.inv.in.filter(x=>x.id!==id);
   if(n0===o.inv.in.length) return {ok:false,reason:'invite'}; call('decline',S,host,id); changed(host); return {ok:true}; }
-function pair(o,p,t){ o.partner={id:p.id,name:cleanName(p.name),since:t,last:int0(p.last),lv:lvOf(p.lv),era:eraOf2(p.era)}; o.inv={out:[],in:[],day:o.inv.day,n:o.inv.n}; o.inbox=[]; o.outbox=[];
+function pair(o,p,t){ o.partner={id:p.id,name:cleanName(p.name),since:t,last:int0(p.last),lv:lvOf(p.lv),era:eraOf2(p.era),frame:frameOf(p.frame)}; o.inv={out:[],in:[],day:o.inv.day,n:o.inv.n}; o.inbox=[]; o.outbox=[];
   o.day.partner=zc(); o.day.pDay=false; o.week.partner=zc(); o.week.pDays=[]; }
 function unpair(o,t){ o.partner=null; o.leftAt=t; o.inbox=[]; o.outbox=[]; o.day.partner=zc(); o.day.pDay=false; o.week.partner=zc(); o.week.pDays=[]; }
 /* sair da dupla (para os dois). Espera 24 h para vincular outro. */
@@ -220,7 +222,7 @@ function applyServer(S,host,data){ if(!on()) return {ok:false,reason:'off'}; con
   /* a dupla acabou do outro lado: só QUEM SAIU espera 24 h (servidor, API_SERVIDOR §16); quem ficou pode vincular outro na hora. data.leftAt só vem quando fui eu que saí */
   if(data.partner===null){ if(o.partner) unpair(o,int0(data.leftAt)||0); }
   else if(data.partner&&strId(data.partner.id)){ const id=strId(data.partner.id); if(o.blocked.includes(id)) return {ok:false,reason:'blocked'};
-    if(!o.partner||o.partner.id!==id){ pair(o,data.partner,int0(data.partner.since)||t); roll(o,host); } o.partner.name=cleanName(data.partner.name||o.partner.name); o.partner.last=int0(data.partner.last); if('lv' in data.partner) o.partner.lv=lvOf(data.partner.lv); if('era' in data.partner) o.partner.era=eraOf2(data.partner.era); }
+    if(!o.partner||o.partner.id!==id){ pair(o,data.partner,int0(data.partner.since)||t); roll(o,host); } o.partner.name=cleanName(data.partner.name||o.partner.name); o.partner.last=int0(data.partner.last); if('lv' in data.partner) o.partner.lv=lvOf(data.partner.lv); if('era' in data.partner) o.partner.era=eraOf2(data.partner.era); if('frame' in data.partner) o.partner.frame=frameOf(data.partner.frame); }
   if(o.partner){ if(data.partnerDay) o.day.partner=cnt(data.partnerDay); if(data.partnerWeek) o.week.partner=cnt(data.partnerWeek);
     if(data.partnerPresent===true){ o.day.pDay=true; if(!o.week.pDays.includes(o.day.k)) o.week.pDays.push(o.day.k); }
     if(Array.isArray(data.partnerDays)) o.week.pDays=data.partnerDays.filter(x=>typeof x==='string').slice(0,7);

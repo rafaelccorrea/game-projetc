@@ -22,11 +22,14 @@ const DATA={
   // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).
   unlock:{missions:2, summon:3, practice:5, mail:7, login:7, profile:10, shopgem:10, forge:12, instances:14, tower:15, pass:18, pets:20,
           events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1,
-          map:1, codex:12, chat:16},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
+          map:1, codex:12, chat:16, duo:16, mentors:16},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
+  // Dupla das Eras e Mentores no 16 (o Menu lia a reserva FB_UNLOCK do js/fullbattle.js; agora a fonte é esta). Com o módulo DESLIGADO, o aviso
+  // "Liberou: ..." do addXp não cita a função (gated: chave do Sys.<módulo>).
+  gated:{duo:'duo', mentors:'mentors'},
   alias:{inst:'instances', mounts:'mount'},
   unlockName:{missions:'Missões',summon:'Invocar',practice:'Práticas',mail:'Correio',login:'Login diário',profile:'Perfil',shopgem:'Loja de gemas',
     forge:'Forja',instances:'Instâncias',tower:'Torre',pass:'Passe',pets:'Pets',events:'Eventos',rank:'Ranking',arena:'Arena',guild:'Guilda',
-    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat'},
+    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat',duo:'Dupla',mentors:'Mentores'},
   // portões de raridade dos OVOS (decisão do PO): raridade r exige nível E era mínimos. A fênix do andar 100 da torre é exceção.
   eggGate:{3:{level:70,era:4}, 4:{level:85,era:5}},
   // ===== CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA). Spec e simulação: reports/curva-9-eras-e2.md =====
@@ -70,6 +73,14 @@ const need=lvl=>lvl>=DATA.maxLevel?0:Math.max(1,int0(DATA.xpToNext[clamp(lvl,1,D
 const level=S=>ensure(S).lvl;
 function progress(S){ const o=ensure(S), n=need(o.lvl); return {lvl:o.lvl,xp:o.xp,need:n,frac:n?o.xp/n:1,max:o.lvl>=DATA.maxLevel}; }
 
+/* % de XP fora do VIP, somada (pontos percentuais): Encruzilhada (Saber das Eras), Guilda (territórios) e Fogueira da Guilda. Cada um só com a chave ligada. */
+const xpPerkPct=S=>{ const Y=root.Sys||{}; let p=0;
+  for(const [m,f] of [['crossroads','perks'],['guildFire','perks'],['guild','perks']]){ const M=Y[m];
+    if(!M||typeof M[f]!=='function'||(m==='crossroads'&&!(M.DATA&&M.DATA.on===true))) continue;
+    try{ const v=num(M[f](S).xpPct,0); if(v>0) p+=v; }catch(e){} }
+  return p; };
+/* função com chave própria (DATA.gated): só entra no aviso "Liberou" com o módulo carregado e ligado */
+const gateOn=f=>{ const m=DATA.gated&&DATA.gated[f]; if(!m) return true; const M=root.Sys&&root.Sys[m]; return !!(M&&M.DATA&&M.DATA.on===true); };
 /* soma XP e sobe de nível quantas vezes der. Devolve {gained, levels, from, to, unlocked:[funções novas]} */
 /* TETO DIÁRIO DA XP DE ABATE também fora do v9 (dono aprovou 13/11 com a dificuldade de paredes; depois do teto, ouro e itens seguem normais).
    Desligado até o QA medir: setKillCap(true). Mesma tabela DATA.v9.kill. */
@@ -90,12 +101,14 @@ function addXp(S,n,host,src){
   /* teto da Provação do Mestre (Sys.trial, desligado): ponto ÚNICO de toda XP; a XP acima do teto fica guardada lá (até 1 nível). src trial = devolução, já conferida */
   if(src!=='trial'&&k0){ const T=root.Sys&&root.Sys.trial; if(T&&T.DATA&&T.DATA.on&&typeof T.gateXp==='function'){ try{ const g=T.gateXp(S,host,k0); if(g&&typeof g.give==='number') k0=Math.max(0,Math.min(k0,g.give)); }catch(e){} } }
   /* bênção "Saber das Eras" da Encruzilhada (Sys.crossroads.perks xpPct; desligada = nada muda): +% em toda XP, antes do teto da Provação (a devolução 'trial' já veio com ela) */
-  if(src!=='trial'&&k0){ const C=root.Sys&&root.Sys.crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.perks==='function'){ try{ const p=num(C.perks(S).xpPct,0); if(p>0) k0=Math.round(k0*(1+p/100)); }catch(e){} } }
+  /* + XP da GUILDA (Sys.guild.perks xpPct: territórios do torneio) e da FOGUEIRA DA GUILDA (Sys.guildFire.perks xpPct, +0,3%/nível): o mesmo ponto
+     único de toda XP (orbes de abate, instância, missão, offline). Módulo desligado ou sem guilda = 0: nada muda. docs/LIGACOES_SOCIAL.md §8 */
+  if(src!=='trial'&&k0){ const p=xpPerkPct(S); if(p>0) k0=Math.round(k0*(1+p/100)); }
   const k=k0, o=ensure(S), from=o.lvl; if(!k||o.lvl>=DATA.maxLevel) return {gained:0,levels:0,from,to:from,unlocked:[]};
   o.total+=k; o.xp+=k;
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }
   if(o.lvl>=DATA.maxLevel) o.xp=0;
-  const unlocked=Object.keys(DATA.unlock).filter(f=>f!=='pet'&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl);
+  const unlocked=Object.keys(DATA.unlock).filter(f=>f!=='pet'&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl&&gateOn(f));
   if(o.lvl>from&&host&&host.toast) host.toast(`Nível ${o.lvl}!${unlocked.length?' Liberou: '+unlocked.map(f=>DATA.unlockName[f]||f).join(', '):''}`);
   return {gained:k,levels:o.lvl-from,from,to:o.lvl,unlocked};
 }

@@ -19,7 +19,7 @@ prontos e testados; aqui estão as ligações que faltam nos arquivos do Engenhe
 | Mentores | Módulo carregado (`'mentors'` na lista do `index.html`); a Provação lê `Sys.mentors.byEra`; o `Sys.fc` soma o `bonus(S)` sozinho. | Chave desligada (**L1**), entrada do Menu (**D7**, **D8**) e a tela (`js/p_mentors.js`, não existe). |
 | Dupla das Eras | A tela `js/p_duo.js` está em escrita (ainda fora do git): usa `Sys.duo.view/status/canSend`, `Sys.duoNet.start/refresh/friendCode` e as 7 ações, e expõe `window.PDuo.alerts()`. | Os módulos `duo` e `duonet` **não estão na lista de carga** do `index.html` (**M1**), nenhum contador é avisado (**D1-D4**), o online não inicia a Dupla (**D5**, **D6**), sem item no Menu (**D7**, **D8**), tela fora da lista do `js/screens.js` (**S1**), chaves (**L1**). |
 | Molduras fora do Perfil | Nada. | Fonte única + HUD (**F1-F3**), Arena (**F4-F6**), cartão da Dupla (seção 4.3). |
-| Fogueira da Guilda | Nada. O módulo `guildfire` **não está na lista de carga**. | **M1**, a 8ª aba (**G1-G6**) e o `js/sys/guildfirenet.js`, que **não existe** (Sistemas, seção 8). |
+| Fogueira da Guilda | Nada. O módulo `guildfire` **não está na lista de carga**. | **M1** (com `'guildfirenet'`), **L1** e a 8ª aba (**G1-G6**). O `js/sys/guildfirenet.js` **já existe** (Sistemas, seção 8). |
 | Conjuntos salvos | Nada (sem voto do dono). O módulo `loadouts` não está na lista de carga. | Só **M1** (carregar com a chave desligada não muda nada). API na seção 7.2. |
 
 ## 2. Chaves: o que ligar, em que ordem, e o que o servidor precisa
@@ -28,18 +28,18 @@ prontos e testados; aqui estão as ligações que faltam nos arquivos do Engenhe
 |---|---|---|---|
 | 1 | Aplicar **M1, L1, R1, F1-F6, D1-D8, S1, G1-G6**. Com isso: Mentores ligado (`SYS_LIVE.mentors`); Perfil com `runKills`; moldura no HUD e na lista da Arena; o resto fica parado atrás das chaves. | nada | já |
 | 2 | Dupla: `PANEL_ON.duo = true` e, **no mesmo build**, `SYS_LIVE.duo = true` e `SYS_LIVE.duoNet = true`. | `DUO_ON=1` (fps-server; desligado, toda rota da dupla dá 404 e o `Sys.duoNet.start` fica no provider local: a tela mostra "abre com o online"). | depois do QA da tela |
-| 3 | Fogueira: a Sistemas entrega o `js/sys/guildfirenet.js` e põe `'guildfirenet'` logo depois de `'guildfire'` na lista do M1. Depois `SYS_LIVE.guildFire = true` e `SYS_LIVE.guildFireNet = true` (no mesmo build). A aba só aparece com os dois e o online da guilda iniciado. | `GUILDFIRE_ON=1` (baú automático pelo correio já está no servidor, fps-server 679191b). Precisa também do `Sys.guildNet` ligado (já está: `DATA.on = true`). | depois do `guildfirenet.js` |
+| 3 | Fogueira: o `js/sys/guildfirenet.js` **já foi entregue** (Sistemas) e o `'guildfirenet'` já está logo depois de `'guildfire'` na lista do M1. Depois `SYS_LIVE.guildFire = true` e `SYS_LIVE.guildFireNet = true` (no mesmo build). A aba só aparece com os dois e o online da guilda iniciado. | `GUILDFIRE_ON=1` (baú automático pelo correio já está no servidor, fps-server 679191b). Precisa também do `Sys.guildNet` ligado (já está: `DATA.on = true`). | depois do `guildfirenet.js` |
 | 4 | Mentores: tela `js/p_mentors.js`, `'p_mentors'` na lista do `js/screens.js` (como o S1) e a chave da tela. A chave do módulo já foi no passo 1. | nada (tudo no save) | quando a tela existir |
 | 5 | Moldura de OUTRO jogador (Arena, Dupla): já desenha quando o dado chegar. | Aceitar `look.frame` no `POST /arena/snapshot` (hoje "campo desconhecido some") e mandar `partner.frame` no `GET /duo`. | quando o Servidor puder |
 | 6 | Conjuntos: `SYS_LIVE.loadouts = true` + tela. | nada | só com o voto do dono |
 
 **Mentores, regra dura:** a chave tem de ser ligada pelo `SYS_LIVE` (o `sysLive()` é a 1ª linha do `sysBoot`, antes do `Sys.titles.ensure` do `sysBootE2`).
 Ligada depois do 1º `Sys.titles.ensure`, o `Sys.titles` apaga do save os 9 títulos `mentor_*` (o `Sys.mentors.sync` regrava, mas o jogador vê sumir).
-Os módulos sem `setOn` (`duoNet`, e o futuro `guildFireNet`) também ligam pelo `SYS_LIVE`: o `sysLive` põe `DATA.on = true`.
+Os módulos sem `setOn` (`duoNet` e `guildFireNet`) também ligam pelo `SYS_LIVE`: o `sysLive` põe `DATA.on = true`.
 
 ## 3. Carga dos módulos e chaves
 
-**M1 · `index.html` · Lista de módulos: duo, duonet, guildfire e loadouts entram antes do 'fc'**
+**M1 · `index.html` · Lista de módulos: duo, duonet, guildfire, guildfirenet e loadouts entram antes do 'fc'**
 
 ANTES (exato, aparece uma vez):
 
@@ -50,7 +50,7 @@ ANTES (exato, aparece uma vez):
 DEPOIS:
 
 ```js
-'trial','pathtry','mapchest','assets','duo','duonet','guildfire','loadouts'],['fc','advice','bossloss'])
+'trial','pathtry','mapchest','assets','duo','duonet','guildfire','guildfirenet','loadouts'],['fc','advice','bossloss'])
 ```
 
 **L1 · `js/farm.js` · Chaves dos módulos (SYS_LIVE): Mentores agora; Dupla, Fogueira e Conjuntos esperando**
@@ -67,7 +67,7 @@ DEPOIS:
 const SYS_LIVE = { bonfire: true, bossLoss: true, crossroads: true, erasEnd: true, profile: true, mapChest: true,
   mentors: true,                  /* Mentores: TEM de ligar AQUI. O sysLive roda antes do Sys.titles.ensure do sysBootE2; ligado depois, os títulos mentor_* somem do save */
   duo: false, duoNet: false,      /* Dupla das Eras: ligar os DOIS juntos (tela js/p_duo.js com PANEL_ON.duo e servidor com DUO_ON=1) */
-  guildFire: false,               /* Fogueira da Guilda: ligar quando existir o js/sys/guildfirenet.js (Sistemas) e o servidor estiver com GUILDFIRE_ON=1 */
+  guildFire: false, guildFireNet: false,   /* Fogueira da Guilda: ligar os DOIS juntos, com o servidor em GUILDFIRE_ON=1 (js/sys/guildfirenet.js já existe) */
   loadouts: false };              /* Conjuntos salvos: o dono ainda não votou */
 ```
 
@@ -157,7 +157,7 @@ DEPOIS:
 
 ### 4.2 Início com o online e ritmo do refresh
 O `Sys.duoNet.start` entra na mesma lista do `arenaNet`/`guildNet`, depois do boot online (só com `r.ok` e a chave do módulo ligada).
-`'guildFireNet'` já entra na lista: enquanto o módulo não existir, a linha não faz nada.
+`'guildFireNet'` já entra na lista (o `Sys.guildFireNet.start(S, host)` só age com `SYS_LIVE.guildFireNet`; desligado devolve `{ok:false, reason:'off'}` sem rede).
 Ritmo: a cada 3 min com o jogo visível e na volta ao jogo; com a tela da Dupla aberta quem lê é a própria tela (`poll` de 10-30 s do `js/p_duo.js`).
 Cada refresh da Dupla = 1 `POST /duo/progress` (só se mudou) + 1 `GET /duo`.
 
@@ -392,7 +392,7 @@ Dados: `Sys.guildFire.view(S, host)` → `{on, open, reason, online, level, name
 freeFlames, braLeft, brasaHook, perks, perksText, next:{level, perks, chest:{gold, stones, food}}, chests}`. Bônus: `Sys.guildFire.perks(S)` → `{goldPct, xpPct}`.
 Dar Brasas usa o gancho `Sys.bonfire.spendBrasas(S, n, 'guildFire')` (já existe no `js/sys/bonfire.js`); o estoque é `Sys.bonfire.ensure(S).bra`.
 **Os baús vão SOZINHOS pelo correio** (servidor, PO 14/11): a aba não tem botão de resgatar e nunca chama `Sys.guildFire.claim`.
-Tudo o que muda passa pelo `Sys.guildFireNet.feed(S, host, n)` (n = 0 grátis; n > 0 Brasas), que ainda **não existe** (seção 8): até lá, a aba não
+Tudo o que muda passa pelo `Sys.guildFireNet.feed(S, host, n)` (n = 0 grátis; n > 0 Brasas; **já existe**, seção 8). Sem as chaves ligadas a aba não
 aparece (`fireOn()` exige o módulo iniciado), então os blocos abaixo podem entrar já.
 
 **G1 · `js/p_guild2.js` · Fogueira: textos das recusas**
@@ -552,17 +552,35 @@ B.streak=(B.streak||0)+1; profRec('streak',B.streak); B.runK=(B.runK||0)+1; prof
 
 ## 8. Lacunas encontradas (o que não depende do Engenheiro)
 
-**Sistemas (esta sessão):**
-- `js/sys/guildfirenet.js` **não existe**. Sem ele a Fogueira da Guilda não fala com o servidor (o provider local só soma as chamas deste aparelho).
-  Contrato que os blocos G usam, no padrão do `Sys.duoNet`: `DATA.on` (sem `setOn`), `start(S, host)` (GET `/guild/fire` → `Sys.guildFire.applyServer`
-  e troca o provider), `refresh(S, host)`, `feed(S, host, n)` → Promise `{ok, kind, flames, total, level, levelUp, chestsMailed}` ou
-  `{ok:false, reason (daily_limit, brasas_over, brasas_unverified, net_off...), retryAfterMs}` (servidor primeiro; com o ok dele, o `Sys.guildFire.contribute`
-  gasta as Brasas uma vez), `state()` → `{on, started, err, at}`. E entrar na lista do M1 depois de `'guildfire'`.
-- Os bônus de ouro e XP da Fogueira (`Sys.guildFire.perks`) **não são aplicados** em lugar nenhum. O `Sys.guild.perks` (estandartes e territórios) também
-  não: nem o `Sys.loot` nem o `Sys.level` leem. A ligação é nos módulos da Sistemas (loot.js e level.js, como o VIP e a Encruzilhada), não no jogo.
-- `Sys.level.DATA.unlock` não tem `duo` nem `mentors` (o Menu usa a reserva `FB_UNLOCK` do D7, 16 e 16). Pôr lá para ficar fonte única.
-- `Sys.duo.applyServer` guarda só `id, name, since, last, lv, era` do parceiro: quando o servidor mandar `partner.frame`, o módulo precisa guardar também.
-- `Sys.profile` não exporta `on()` nem um "caminho da arte da moldura"; o F1 lê `DATA.on` e monta o caminho (o mesmo do Perfil).
+**Sistemas (esta sessão): FECHADAS em 14/11** (teste: `node test/sys/guildfirenet.test.js` e `node test/sys/lacunas-social.test.js`).
+- **`js/sys/guildfirenet.js` (`Sys.guildFireNet`) existe.** Nasce DESLIGADO (`DATA.on=false`, liga pelo `SYS_LIVE.guildFireNet`). Contrato da API_SERVIDOR §16.2:
+  - `start(S, host)`: `GET /guild/fire` → `Sys.guildFire.applyServer` (chamas de todos, grátis e Brasas de hoje, minhas chamas) e troca o provider.
+    404 (`GUILDFIRE_ON` desligado) ou sem rede: fica o local. 403 `not_in_guild`: inicia sem guilda (a aba diz "entre numa guilda").
+  - `refresh(S, host)` (o mesmo GET; 404 com o online ligado volta ao local), `stop()`, `state()` → `{on, started, err, at, inGuild}`, `view()` (o último GET).
+  - `feed(S, host, n)` → Promise `{ok, kind, flames (somadas agora), total, level, levelUp, chestsMailed, braLeft}` ou `{ok:false, reason, details, retryAfterMs}`.
+    Confere as regras locais antes da rede (`guild`, `done`, `day`, `hook`, `brasas`); o servidor decide (`POST /guild/fire/feed {kind, n}`); com o ok dele o
+    `Sys.guildFire.contribute` gasta as Brasas UMA vez. 429 `daily_limit` vira `done` (grátis) ou `day` (Brasas) e espelha o servidor; `brasas_over` e
+    `brasas_unverified` passam como vêm (textos do G1).
+  - Baús: só o servidor (correio). Com o online ligado, `Sys.guildFire.claim` recusa com `'mailed'` e nada credita no aparelho.
+  - **Linha do Engenheiro:** já está no D5 (`for (const k of ['arenaNet', 'guildNet', 'duoNet', 'guildFireNet'])` chama `Sys.guildFireNet.start(S, X().host)`
+    depois do boot online) e no D6 (refresh). Falta só: `'guildfirenet'` no M1 (logo depois de `'guildfire'`) e `guildFireNet` no L1 (os dois já estão nos
+    blocos acima). Quem abre a aba chama `Sys.guildFireNet.refresh(S, host)` (G5).
+- **Bônus de ouro e XP aplicados num ponto só** (decisão pela auditoria do ouro, docs/ECONOMIA_OURO.md):
+  - **XP** (`Sys.level.addXp`, toda XP menos a devolução da Provação): soma Encruzilhada (já estava) + `Sys.guildFire.perks` xpPct (+0,3%/nível, até
+    +2,7%) + `Sys.guild.perks` xpPct (territórios do torneio, até +5%). Desligado ou sem guilda = 0.
+  - **Ouro do abate** (`Sys.loot.rollKill`, novo `Sys.loot.goldPerkPct(S)`): SÓ o que a auditoria orçou: Encruzilhada `goldPct` (Trilha do Tesouro +5%,
+    uma vez por era, está no `tools/sim-ouro.js`) e Fogueira da Guilda (+0,5%/nível, até +4,5%, §4 "não muda"). Teto +25%. Soma com o VIP e o evento.
+    A Encruzilhada está viva (`SYS_LIVE.crossroads`): quem escolheu a Trilha do Tesouro passa a ganhar os +5% que a tela já prometia.
+  - **NÃO aplicados no ouro** (fora do orçamento): títulos (até ~+10%: tabela 20% × bonusMult 0,5, mais o destaque), prática Coleta (+0,5%/nível, +35% na era 6), mentores Inês e
+    Aurora, estandarte de ouro da Guilda (até +10%) e territórios (até +10%). Com eles a soma passa de +70% e o tempo para upar fica MAIS RÁPIDO que
+    a curva calibrada (tools/sim-ouro.js, fase 80: a proposta C dá +65% sobre o abate e a curva calibrada L, +131%; com mais +70% a C iria a +135%, acima da L).
+    Para ligar, o dono precisa aprovar o teto de +25% no total e o corte (por exemplo, títulos e prática até +10% cada). Eles seguem no `Sys.fc.bonus`
+    (o `goldMult` do `Sys.fc.compute` continua sem uso).
+- **`Sys.level.DATA.unlock` tem `duo: 16` e `mentors: 16`** (nomes "Dupla" e "Mentores"). O aviso "Liberou" do addXp só cita os dois com a chave do
+  módulo ligada (`DATA.gated`). O `FB_UNLOCK` do D7 vira só reserva.
+- **`Sys.duo.applyServer` guarda `partner.frame`** (id `[a-z0-9_]` até 32, ou null; outro valor vira null; sem o campo, fica a que estava). Sai no
+  `Sys.duo.view(S, host).partner.frame` e no save.
+- `Sys.profile` sem `on()` nem "caminho da arte da moldura": continua como está (o F1 lê `DATA.on` e monta o caminho, como o Perfil).
 
 **Servidor:**
 - `DUO_ON` e `GUILDFIRE_ON` desligados (seção 2).

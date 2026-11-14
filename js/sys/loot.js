@@ -505,15 +505,24 @@ function stageWin(S,host,w){
 const ND=(S,host,src,ctx)=>{ const N=root.Sys&&root.Sys.newDrops; try{ return N&&N.grant?N.grant(S,host,src,ctx):null; }catch(e){ return null; } };   // itens novos (fps-69, Sys.newDrops; desligado até a arte)
 function schedPerks(S,host){ const z={goldPct:0,dropPct:0,forgePct:0,foodPct:0,petFragPct:0}; const Sc=root.Sys&&root.Sys.schedule;
   try{ const p=Sc&&typeof Sc.perks==='function'?Sc.perks(S,host):null; if(p&&typeof p==='object') for(const k in z) z[k]=Math.max(0,num(p[k],0)); }catch(e){} return z; }
+/* % de OURO do abate fora do VIP e do evento (docs/ECONOMIA_OURO.md §1 e §6; docs/LIGACOES_SOCIAL.md §8). SÓ o que a auditoria do ouro orçou:
+   Encruzilhada (Trilha do Tesouro +5%, uma vez por era: está no tools/sim-ouro.js) e Fogueira da Guilda (+0,5% por nível, até +4,5%: §4 "não muda").
+   NÃO entram (fora do orçamento; a soma passaria a curva calibrada, ver §8 do LIGACOES_SOCIAL): títulos, prática Coleta, mentores e o estandarte/
+   território de ouro da Guilda. Teto goldPerkCap (+25%, a proposta da §6). Módulo desligado = 0: o abate fica igual. */
+const GOLD_PERK_CAP=25;
+function goldPerkPct(S){ const Y=root.Sys||{}; let p=0;
+  try{ const C=Y.crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.bonus==='function') p+=Math.max(0,num(C.bonus(S).goldPct,0)); }catch(e){}
+  try{ const F=Y.guildFire; if(F&&typeof F.perks==='function') p+=Math.max(0,num(F.perks(S).goldPct,0)); }catch(e){}
+  return Math.min(GOLD_PERK_CAP,p); }
 function rollKill(S,host,enemy){
   ensure(S);
   const rng=rngOf(host), cls=killClass(enemy,host), T=DATA.enemy[cls], m=params.mult, M=DATA.mats[cls], d=diffOf(enemy,host), dm=diffMult(d), DF=DATA.diff;
   let gold=(enemy&&num(enemy.gold,0)>0)?enemy.gold:goldUnitOf(host)*T.goldMult;
   if(T.goldVar>0) gold*=1+(rng()*2-1)*T.goldVar;
-  const vip=vipPerks(S), ev=schedPerks(S,host);   // ev: evento com horário ativo agora (Sys.schedule: Hora de Ouro, Invasão, Bênção da Forja, Caça aos Pets)
+  const vip=vipPerks(S), ev=schedPerks(S,host), gp=goldPerkPct(S);   // ev: evento com horário ativo agora (Sys.schedule: Hora de Ouro, Invasão, Bênção da Forja, Caça aos Pets)
   // BÔNUS DE RETORNO (Sys.clock, atrás de chave): enquanto houver XP descansada, o abate vale XP e ouro em dobro
   const Ck=root.Sys&&root.Sys.clock, rest=!!(Ck&&typeof Ck.takeRested==='function'&&Ck.takeRested(S)), rm=rest?num(Ck.DATA.rested.mult,2):1;
-  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+(vip.goldPct+ev.goldPct)/100)*rm*dm));   // VIP e evento SOMAM (Hora de Ouro +100% = ×2 sem VIP)   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
+  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+(vip.goldPct+ev.goldPct+gp)/100)*rm*dm));   // gp: Encruzilhada + Fogueira da Guilda (goldPerkPct)   // VIP e evento SOMAM (Hora de Ouro +100% = ×2 sem VIP)   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
   let gems=0; if(rng()<T.gemChance) gems=Math.max(0,Math.round(randInt(rng,T.gems[0],T.gems[1])*num(m.gems,1)));
   const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1)*(1+ev.dropPct/100)))   /* evento: mais CHANCE de item; a raridade continua presa ao portão (rollItem) */ items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1,diff:d}));
   const forge=rollMat(rng,M.forge,num(m.forge,1)*dm*(1+ev.forgePct/100)), food=rollMat(rng,M.food,num(m.food,1)*dm*(1+ev.foodPct/100));
@@ -650,7 +659,7 @@ function offline(S,host,seconds,opts){
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 
 const API={DATA,params,ensure,today,todayCount,rarWeights,rollRarity,rollItem,rollKill,rollEgg,grant,onKill,pickups,createGrouper,offline,stageWin,diffOf,
-  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,
+  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,goldPerkPct,
   summon,summonCost,summonFreeLeft,summonOdds,dismantle,grantBundle,qualityOf,prismBoss,heldItems:S=>ensure(S).heldItems.map(h=>({slot:h.slot,r:h.r})),transformCost,payTransform,essence:essenceOf,itemName,
   releaseHeld, onLevelUp:releaseHeld, held:S=>ensure(S).held.map(h=>({r:h.r,needLevel:eggNeedLevel(h.r)}))};
 root.Sys=root.Sys||{}; root.Sys.loot=API;

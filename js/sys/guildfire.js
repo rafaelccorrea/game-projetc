@@ -111,7 +111,8 @@ function chests(S,host){ if(!on()) return []; const o=sync(S,host); if(!o.gid) r
   for(let x=1;x<=L.extra;x++) if(after('x'+x)&&!got.includes('x'+x)) out.push({id:'x'+x,level:DATA.maxLevel,extra:x,chest:chestOf(DATA.maxLevel,host)});
   return out; }
 /* resgata um baú (id = nível ou 'x'+n). Entrega pelo host.addGold, Sys.forge.addStones e Sys.pet.addFood. {ok, reason: off|guild|id, reward} */
-function claim(S,host,id){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; const c=chests(S,host).find(x=>x.id===id); if(!c) return {ok:false,reason:'id'};
+/* Com o online ligado (Sys.guildFireNet) o SERVIDOR manda o baú sozinho ao correio (PO 14/11): aqui não credita nada ('mailed'). */
+function claim(S,host,id){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; if(provider.online===true) return {ok:false,reason:'mailed'}; const c=chests(S,host).find(x=>x.id===id); if(!c) return {ok:false,reason:'id'};
   const o=ensure(S), rw=c.chest, out={gold:0,stones:0,food:0,gems:0};
   if(rw.gold&&host&&typeof host.addGold==='function'){ host.addGold(rw.gold); out.gold=rw.gold; }
   const F=SYS().forge; if(rw.stones&&F&&typeof F.addStones==='function') out.stones=int0(F.addStones(S,rw.stones,host));
@@ -122,10 +123,10 @@ function claim(S,host,id){ const st=status(S,host); if(!st.open) return {ok:fals
 function perks(S){ const z={goldPct:0,xpPct:0}; if(!on()||!S) return z; const o=ensure(S); if(!o.gid||!guildOf(S)) return z; return perksAt(levelOf(o.flames).level); }
 
 /* ---------------- espelho do servidor ---------------- */
-/* data: {guildId, flames, free?:bool (já alimentou hoje), bra?:n (Brasas dadas hoje)} — o servidor soma todos; só aceita da guilda atual */
+/* data: {guildId, flames, free?:bool (já alimentou hoje), bra?:n (Brasas dadas hoje), mine?:n (minhas chamas; vale o maior)} — o servidor soma todos; só aceita da guilda atual */
 function applyServer(S,host,data){ if(!on()) return {ok:false,reason:'off'}; const o=sync(S,host); if(!data||typeof data!=='object') return {ok:false,reason:'data'};
   if(!o.gid||String(data.guildId)!==o.gid) return {ok:false,reason:'guild'};
-  const before=levelOf(o.flames); o.flames=int0(data.flames); if(data.free===true) o.day.free=true; if(data.bra!=null) o.day.bra=Math.max(o.day.bra,int0(data.bra));
+  const before=levelOf(o.flames); o.flames=int0(data.flames); if(data.free===true) o.day.free=true; if(data.bra!=null) o.day.bra=Math.max(o.day.bra,int0(data.bra)); if(data.mine!=null) o.mine=Math.max(o.mine,int0(data.mine));
   markReached(o,host,before);
   return {ok:true,level:levelOf(o.flames).level}; }
 
