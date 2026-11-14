@@ -38,7 +38,9 @@ function eraOf(stage,opt){ if(stage&&typeof stage==='object'&&Number.isInteger(s
   const P=int0(opt&&opt.perEra)||DATA.perEra; return clamp(Math.floor((Math.max(1,int0(stage)||1)-1)/P),0,DATA.eras.length-1); }
 /* estilo do herói: opt.style (predefinição) > caminho escolhido > arma equipada > estilo da era */
 function heroStyle(S,host,opt){ if(opt&&DATA.styles[opt.style]) return opt.style;
-  const P=root.Sys&&root.Sys.path; let p=null; try{ p=P&&typeof P.chosen==='function'?P.chosen(S):null; }catch(e){ p=null; }
+  const P=root.Sys&&root.Sys.path; let p=null;
+  try{ const st=P&&typeof P.styleOf==='function'?P.styleOf(S):null; if(DATA.styles[st]) return st; }catch(e){}   // Sys.path ligado: o caminho atual (Sys.path.current) manda
+  try{ p=P&&typeof P.chosen==='function'?P.chosen(S):null; }catch(e){ p=null; }
   if(!p&&S&&S.sys&&S.sys.path&&typeof S.sys.path.id==='string') p=S.sys.path.id; if(DATA.styles[p]) return p;
   const T=root.Sys&&root.Sys.stats; let w=null; try{ const eq=host&&typeof host.equipped==='function'?host.equipped():null; w=eq&&eq.weapon; }catch(e){ w=null; }
   if(w&&T&&typeof T.weaponStyle==='function'){ const s=T.weaponStyle(w); return s==='melee'?'blade':'shot'; }

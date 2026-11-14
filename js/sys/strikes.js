@@ -93,7 +93,12 @@ function equippedList(S,host,ov){ const T=root.Sys&&root.Sys.stats; let eq={};
 function raw(S,host,ov){ const o=zero(); if(!on()) return o;
   for(const it of equippedList(S,host,ov)){ ensureItem(it); for(const s of it.stk||[]) if(isKey(s.k)) o[s.k]+=value(s,it); }
   const m=mountStrike(S); if(m) o[m.k]+=m.value;
+  const pa=pathStrikes(S); if(pa) for(const k in pa.strikes) o[k]+=pa.strikes[k];
   return o; }
+/* CAMINHO DE LUTA do Nv 30 (Sys.path.profile; só com a chave do Sys.path E esta ligadas): soma os pontos % do caminho, antes dos tetos. */
+function pathStrikes(S){ if(!on()) return null; const P=root.Sys&&root.Sys.path; if(!P||typeof P.profile!=='function') return null;
+  let p=null; try{ p=P.profile(S); }catch(e){ return null; } if(!p||!p.strikes||typeof p.strikes!=='object') return null;
+  const st={}; let any=false; for(const k in p.strikes){ const v=num(p.strikes[k],0); if(isKey(k)&&v>0){ st[k]=v; any=true; } } return any?{id:p.id,name:p.name,strikes:st}:null; }
 /* MONTARIA REFORÇA 1 GOLPE (Sys.mount.strikeOf; só com a chave Sys.mount.DATA.strike E esta ligadas). A montaria não ataca: só soma no número do Kael. */
 function mountStrike(S){ if(!on()) return null; const M=root.Sys&&root.Sys.mount; if(!M||typeof M.strikeOf!=='function') return null;
   try{ const m=M.strikeOf(S); return m&&isKey(m.k)&&num(m.value,0)>0?m:null; }catch(e){ return null; } }
@@ -101,6 +106,7 @@ function mountStrike(S){ if(!on()) return null; const M=root.Sys&&root.Sys.mount
 function profile(S,host,ov){ const r=raw(S,host,ov), n=zero(), b=zero();
   for(const k of DATA.keys){ n[k]=Math.min(r[k],DATA.cap[k]); b[k]=Math.min(r[k],DATA.bossCap[k]); }
   const out={on:on(),normal:n,boss:b,raw:r}, m=mountStrike(S); if(m) out.mount={id:m.id,k:m.k,value:m.value,name:DATA.name[m.k],color:DATA.color[m.k]};
+  const pa=pathStrikes(S); if(pa) out.path=pa;   // path = {id,name,strikes} só com caminho de luta valendo
   return out; }
 /* totais para a FC (teto normal) ou null desligado (o Sys.fc usa null para não mudar nada) */
 function totals(S,host,ov){ if(!on()) return null; return profile(S,host,ov).normal; }

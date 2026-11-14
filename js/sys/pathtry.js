@@ -3,8 +3,8 @@
    LUTA DE TREINO de 60 s contra o Boneco de Treino. GRÁTIS, SEM LIMITE e SEM EFEITO DURADOURO: nada é gasto, nada é ganho (sem ouro, XP,
    itens, pedras, progresso de fase ou missão), o herói não morre e o bônus do caminho vale só durante o ensaio.
    O save guarda só o que a tela precisa para comparar: quantas vezes testou e o melhor dano por segundo de cada caminho (S.sys.pathTry).
-   Ainda NÃO existe o módulo do caminho de luta: os números de DATA.paths são a PROPOSTA do ensaio; quando existir Sys.path com
-   DATA.paths no mesmo formato, o ensaio usa os de lá (a escolha de verdade é do Sys.path, não daqui). DESLIGADO (DATA.on=false).
+   Os números do caminho moram no Sys.path (js/sys/path.js, DATA.paths): com ele carregado o ensaio usa os de lá e a escolha/troca é dele.
+   DATA.paths daqui é só a CÓPIA de reserva (mesmos números) para quando o Sys.path não estiver carregado. DESLIGADO (DATA.on=false).
    Sem tela própria: a luta é a batalha normal com as flags de treino (battle()). */
 (function(root){
 'use strict';
@@ -14,7 +14,7 @@ const DATA={
   unlockLevel:30,          // nível em que o caminho é escolhido
   sec:60,                  // duração do ensaio
   afterChoose:false,       // depois de escolher, o ensaio some (a troca do caminho é do Sys.path)
-  // PROPOSTA do ensaio (o Sys.path, quando existir, manda). strikes = pontos % no Sys.strikes; stat = pontos % nos atributos do herói.
+  // RESERVA: cópia do Sys.path.DATA.paths (o Sys.path manda quando carregado). strikes = pontos % no Sys.strikes; stat = pontos % nos atributos do herói.
   paths:[
     {id:'blade',  name:'Lâmina',  desc:'Contra-ataque e roubo de vida: quanto mais apanha, mais devolve', strikes:{counter:8, lifesteal:5}, stat:{}},
     {id:'shot',   name:'Disparo', desc:'Combo e velocidade de ataque: muitos golpes rápidos',           strikes:{combo:8},                stat:{aspd:10}},
