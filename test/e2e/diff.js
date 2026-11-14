@@ -165,7 +165,10 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
   check('zero emoji e zero estrela desenhada no cartão', !EMOJI.test(html.replace(/<[^>]*>/g, '')), (html.replace(/<[^>]*>/g, '').match(EMOJI) || [''])[0]);
   check('sem undefined/NaN', !/undefined|NaN|\[object/.test(html));
   check('botões "Agora não" e "Desafiar assim mesmo"', /data-d="x"/.test(html) && /data-d="go"/.test(html));
-  const VIEW = { gear: 'gear', forge: 'forge', pet: 'pets', mount: 'mounts', titles: 'profile' };
+  /* TELAS V2: com a chave da tela nova ligada (PANEL_ON.<nome>2) o jogo troca o nome pelo mapa Panels.v2 e a view de chegada é a nova (forge2, mounts2...).
+     A tela esperada é lida do jogo carregado (mesma regra do Panels.open: par no mapa + chave ligada + tela registrada); desligada, vale a antiga. */
+  const VIEW0 = { gear: 'gear', forge: 'forge', pet: 'pets', mount: 'mounts', titles: 'profile' }, VIEW = {};
+  for (const k in VIEW0) VIEW[k] = String(ev(`(function(n){ const P=window.Panels, n2=P&&P.v2&&P.v2[n]; return n2&&PANEL_ON[n2]===true&&P.defs&&P.defs[n2]?n2:n; })('${VIEW0[k]}')`));
   for (let i = 0; i < adv.actions.length; i++) { const a = adv.actions[i]; if (!D.reg.dfc) F('bossAskT=0; bossTap()');
     ev(`diffAct('adv:${i}')`); const v = ev('view');
     check('antes do chefe · ' + a.id + ' → ' + (a.route.lock ? 'aviso "abre no nível ' + a.route.lock + '"' : a.route.farm ? 'volta a lutar' : 'tela ' + VIEW[a.tab]), a.route.lock ? v === 'battle' && !!D.reg.dfc : a.route.farm ? v === 'battle' && !D.reg.dfc : v === VIEW[a.tab] && !D.reg.dfc, 'view=' + v);
