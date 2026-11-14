@@ -137,7 +137,7 @@ function titleRows(){ const T=Y().titles, feat=T.featured(S); return T.DATA.titl
 .p5-nm{font-size:20px;line-height:1.05;overflow-wrap:anywhere}
 .p5-tit,.xs .p5-tit{margin-top:3px;display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:40px;padding:2px 9px 2px 7px;border-radius:9px;font-weight:900;font-size:12px;line-height:1.15;text-align:left;border:0;border-left:3px solid var(--tc);background:rgba(255,255,255,.07);color:var(--tc);overflow-wrap:anywhere}
 .p5-tit img{flex:none;width:18px;height:18px;object-fit:contain}
-.p5-idr{flex:none;max-width:34%;text-align:right;font-size:10px;color:#9aa6d6;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
+.p5-idr{flex:none;max-width:30%;text-align:right;font-size:10px;color:#9aa6d6;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
 .p5-stats{position:relative;z-index:2;flex:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 10px 0}
 .p5-st,.xs .p5-st{min-width:0;min-height:48px;border-radius:12px;padding:5px 8px;background:rgba(10,14,44,.82);border:1px solid rgba(130,150,255,.28);text-align:left;color:#eef1ff;display:block}
 .p5-st small{display:block;font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#9aa6d6;font-weight:900;line-height:1.2;overflow-wrap:anywhere}
@@ -410,7 +410,7 @@ function vRender(){ const d=xDims(600)||{}, H=d.H>0?d.H:704, bg=typeof xEraBg===
     if(au) auH=`<div class="p5-au">Aura: <b>${esc2(au.name)}</b></div>`; }
   const idb=`<div class="p5-idb${cp?' cp':''}"><button class="p5-pfp"${pfS} data-x="tab" data-t="vis" aria-label="Retrato: abrir a aba Visual">${pfA?`<img src="${esc2(pfA)}" alt=""${pfR}>`:''}${frH}</button>
     <div class="p5-idt">${nmH}<button class="p5-tit" style="--tc:${tc}" data-x="tab" data-t="tit" aria-label="Título em destaque: ${esc2(feat?feat.name:'nenhum')}. Abrir a aba Títulos">${titleIcon(feat)?`<img src="${esc2(titleIcon(feat))}" alt="" onerror="this.style.display='none'">`:''}<span>${esc2(feat?feat.name:'Sem título')}</span></button>${auH}</div>
-    ${id?`<div class="p5-idr">ID ${esc2(id)}</div>`:''}</div>`;
+    ${id?`<div class="p5-idr" aria-label="ID do jogador, começo: ${esc2(String(id).slice(0,8))}. O ID inteiro fica em Números, Conta">ID ${esc2(String(id).length>12?String(id).slice(0,8)+'…':String(id))}</div>`:''}</div>`;
   /* ----- NÍVEL, FC, ERA ----- */
   let P=null; try{ P=Y().level.progress(S); }catch(e){} const fc=myFC(), xp=P?Math.round(clamp(P.frac,0,1)*100):0; let eraT='';
   try{ const stg=Math.max(1,S.stage|0), e=eraOf(stg); eraT=`<div class="p5-st"><small>Era ${e+1} · ${esc2(ERAS[e].n)}</small><b class="p5-lil">Fase ${n0(stg)}</b></div>`; }catch(e){ eraT=''; }
