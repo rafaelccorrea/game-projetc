@@ -108,3 +108,6 @@ Gerar em lote do mesmo item (ex.: 4 medalhões por era numa imagem só) para pag
 ## Regra: refação só com prova do VÍDEO BRUTO (PO, 14/11)
 Antes de pedir uma refação paga, mande ao PO 1-2 quadros do **vídeo bruto** (o mp4 baixado, antes de qualquer limpeza) mostrando o defeito. A folha limpa não serve de prova: a limpeza (ex.: a remoção do bastão magenta pelo `polevid_s.js`) pode criar defeitos que o vídeo não tem. Em 14/11, o giro do Kael Ninja foi refeito à toa (~4 créditos) porque a "bainha escura" vinha do preenchimento da limpeza sobre a roupa escura, não do vídeo.
 Para extrair os quadros: `ffmpeg -i video.mp4 -vf "select=eq(n\,35)" -frames:v 1 q35.png`.
+
+## Regra: folha de DANO (hurt) só com o inimigo (Engenheiro, 14/11)
+Na folha `_hurt` de inimigo entra SÓ o inimigo: nada da arma, bala, raio, clarão ou punho de quem bate. O vídeo de "levar golpe" costuma desenhar o atacante; no prompt peça "no attacker, no weapon, no projectile, no muzzle flash, no impact effect in frame, only the creature flinching", e confira o vídeo bruto. O efeito de impacto é por código. Limpeza de 14/11: 7148219 e eabfae1 (24 folhas; originais em fps_backup\enemy_hurt).
