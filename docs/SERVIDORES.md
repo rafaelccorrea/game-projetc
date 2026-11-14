@@ -79,7 +79,8 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 14/11/2026 (Brasília) | +1 convidado do smoke (deploy 07a5075) e +1 do switch-check à mão | `smoke-real.mjs` 21ª execução; `switch-check.mjs` | idem |
 | 14/11/2026 (Brasília) | +1 convidado "Viajante4834" (S1), papel `sem-guilda` do e2e | `e2e-guildfire.ts` (caso 403 not_in_guild) | idem |
 | 14/11/2026 (Brasília) | +1 convidado do smoke (deploy 43af2a4) e +1 (deploy 49c0fd4) | `smoke-real.mjs` 22ª e 23ª execuções | idem |
-| 14/11/2026 (Brasília) | +1 convidado "BrasaDourado" (S1) | QA no S24, app DEV | idem |
+| 14/11/2026 (Brasília) | +1 convidado "BrasaDourado" (S1) | QA no S24, app DEV | o QA apaga pelo app DEV (Configurações > Excluir conta) e confirma; até lá a linha fica |
+| 14/11/2026 (Brasília) | +1 convidado do smoke (deploy 0c64f11) e +1 "Viajante8979" (S1) | `smoke-real.mjs` 24ª execução; `switch-check.mjs` (GUILDHELP_ON desligada) | idem |
 | 13/11/2026 21:xx (Brasília) | Viajante6053 e Viajante2902 (contas do e2e) | `scripts/e2e-duo.ts` (teste combinado da Dupla) | ficaram: código de amigo de cada um, BLOQUEIO entre os dois, espera de 24 h do 2902, 1 carta "Dupla das Eras" no 6053; somem com as contas |
 
 **APK DEV (br.com.intellisys.eonbound.dev, 13/11):** carrega o jogo de `http://localhost:8080` (adb reverse) e fala com a EC2. Essa origem já está liberada pelo `CORS_ORIGINS_TEST` (preflight conferido em 13/11: PUT com authorization, content-type, x-client-version e x-device-id → 204 com Allow-Origin certo). Ao tirar as origens de teste antes do lançamento, decidir se o APK DEV continua falando com a produção (aí fica só `http://localhost:8080`).
