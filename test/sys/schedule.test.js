@@ -24,7 +24,7 @@ t('entrada: nível, janela aberta e 2 ataques por janela do Chefe Mundial; bônu
   const S={}; let h=host(BRT(2026,11,13,12,5)); h.level=()=>10; assert.strictEqual(SC.canEnter(S,h,'world_boss').reason,'level');
   h.level=()=>40; assert.ok(SC.enter(S,h,'world_boss').ok); assert.strictEqual(SC.enter(S,h,'world_boss').left,0); assert.strictEqual(SC.canEnter(S,h,'world_boss').reason,'entries');
   h=host(BRT(2026,11,13,20,5)); assert.ok(SC.canEnter(S,h,'world_boss').ok,'janela das 20h é outra'); assert.strictEqual(SC.canEnter({},host(BRT(2026,11,13,15,0)),'world_boss').reason,'closed');   // save novo: o S já viu 20h05 (a trava não deixa voltar)
-  assert.strictEqual(SC.perks({},host(BRT(2026,11,13,19,10))).goldPct,100); assert.strictEqual(SC.perks({},host(BRT(2026,11,13,18,10))).goldPct,0);
+  assert.strictEqual(SC.perks({},host(BRT(2026,11,13,19,10))).goldPct,30,'Hora de Ouro +30% (dono 14/11; era +100%)'); assert.strictEqual(SC.perks({},host(BRT(2026,11,13,18,10))).goldPct,0);
   const h2=host(BRT(2026,11,13,19,10)); h2.level=()=>5; assert.strictEqual(SC.perks({},h2).goldPct,0,'abaixo do nível não ganha');
 });
 t('trava do relógio: voltar a hora não reabre a janela já gasta; servidor manda quando conectado',()=>{

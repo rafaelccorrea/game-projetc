@@ -10,7 +10,7 @@
 'use strict';
 const R=(goldk,stones,forge,food,gems)=>({goldk,stones,forge,food,gems});
 // prêmio por posição do nível (0..3); gems só onde a conquista pede (lastGems no último nível)
-const TIER_REWARD=[R(60,2,0,0,0),R(200,4,2,20,0),R(600,8,4,40,0),R(1500,12,8,80,0)];
+const TIER_REWARD=[R(24,2,0,0,0),R(48,4,2,20,0),R(96,8,4,40,0),R(120,12,8,80,0)];   // ouro 60/200/600/1.500 → 24/48/96/120 (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
 const A=(id,group,name,src,tiers,lastGems)=>({id,group,name,src,tiers,lastGems:lastGems||0});
 const DATA={
   on:false,

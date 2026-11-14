@@ -9,7 +9,7 @@ const DATA={
   on:false, id:'first_purchase', priceBRL:29.90, windowMs:24*3600*1000,
   weapon:{slot:'weapon', r:2, qp:5000, subs:[{k:'atkPct',q:0.5},{k:'critRate',q:0.5}]},
   mount:'wolf',            // a montaria Épica do catálogo do Sys.mount: Lobo de guerra
-  gems:300, goldk:2000,
+  gems:300, goldk:0,       // dono 14/11: a oferta paga NÃO dá ouro (era 2.000 abates ≈ 83 min; ouro pago compra melhoria). docs/ECONOMIA_OURO.md §6
   skin:null,               // GANCHO (dono, 12/11): id de uma das 5 skins novas (Sys.appearance, sources:['offer']); null = a oferta segue como hoje    // goldk = 2.000 × o ouro de um abate da fase (≈ 2 h de farm)
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -41,7 +41,7 @@ function grant(S,host,opts){ if(DATA.on!==true) return {ok:false,reason:'off'}; 
   if(ST&&ST.offerSync) ST.offerSync(w,S,host); if(host&&host.addItem) host.addItem(w);
   const M=Sys().mount, mount=M&&M.add?M.add(S,host,DATA.mount):null;
   if(host&&host.addGems) host.addGems(DATA.gems);
-  const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.round(DATA.goldk*unit); if(host&&host.addGold) host.addGold(gold);
+  const unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.round(int0(DATA.goldk)*unit); if(gold>0&&host&&host.addGold) host.addGold(gold);
   const A=Sys().appearance, sid=skinId(S), skin=sid&&A&&A.grantFixed?A.grantFixed(S,sid,{source:'offer'}):null;
   o.claimed=true; return {ok:true,weapon:w,mount,gems:DATA.gems,gold,skin}; }
 /* com servidor: a janela vem do GET /offers (endsAt, relógio do servidor). O seen passa a ser endsAt − 24 h, e o relógio do aparelho não manda mais. */

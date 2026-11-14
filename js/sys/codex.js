@@ -35,11 +35,11 @@ const DATA={
   bestEras:7, bestKinds:['e0','e1','boss'],                      // meta.json: eras 0-6 têm nome (7 e 8 ficam de fora, como na tela)
   auras:[7,10,13],
   marks:[
-    {p:10, prize:R(100,3,20,0)},
-    {p:25, prize:R(300,6,40,2)},
-    {p:50, prize:R(800,10,80,5)},
-    {p:75, prize:R(1500,15,120,8)},
-    {p:100,prize:R(3000,25,200,15)},
+    {p:10, prize:R(24,3,20,0)},   // ouro 100/300/800/1.500/3.000 → 24/48/72/96/120 (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
+    {p:25, prize:R(48,6,40,2)},
+    {p:50, prize:R(72,10,80,5)},
+    {p:75, prize:R(96,15,120,8)},
+    {p:100,prize:R(120,25,200,15)},
   ],
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;

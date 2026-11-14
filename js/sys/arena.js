@@ -45,9 +45,9 @@ const DATA={
   // que fica em Ouro/Platina ~26 semanas: ≤ 5 💎/semana ≈ +130 no total; o resto vai em baú e fragmento).
   // goldk = × ouro de um abate da fase; chest = baú do Sys.chest; prism = fragmentos do Prismático (só com a v4); frame/title = visual.
   leagues:[
-    {id:'bronze',  name:'Bronze',  min:0,    c1:'#d08a4a',c2:'#6a3a14',c3:'#ffd2a3', prize:{goldk:200}},
-    {id:'silver',  name:'Prata',   min:600,  c1:'#d6dde8',c2:'#5a6270',c3:'#ffffff', prize:{goldk:300,chest:1}},
-    {id:'gold',    name:'Ouro',    min:1200, c1:'#ffc94a',c2:'#8a4f0c',c3:'#fff3c4', prize:{goldk:400,chest:2}},
+    {id:'bronze',  name:'Bronze',  min:0,    c1:'#d08a4a',c2:'#6a3a14',c3:'#ffd2a3', prize:{goldk:120}},   // liga: 120 nas três (eram 200/300/400) (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
+    {id:'silver',  name:'Prata',   min:600,  c1:'#d6dde8',c2:'#5a6270',c3:'#ffffff', prize:{goldk:120,chest:1}},
+    {id:'gold',    name:'Ouro',    min:1200, c1:'#ffc94a',c2:'#8a4f0c',c3:'#fff3c4', prize:{goldk:120,chest:2}},
     {id:'platinum',name:'Platina', min:1600, c1:'#5fe0d0',c2:'#136a63',c3:'#e0fffb', prize:{gems:5,chest:2,prism:1}},
     {id:'diamond', name:'Diamante',min:2100, c1:'#6ab8ff',c2:'#1d4a8a',c3:'#e6f4ff', prize:{gems:15,chest:3,prism:3}, wing:true},
     {id:'master',  name:'Mestre',  min:2700, c1:'#c97cff',c2:'#4a1f8a',c3:'#ffd0ff', prize:{gems:25,chest:3,prism:5,frame:true}, wing:true, crown:true},

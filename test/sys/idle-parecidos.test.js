@@ -91,7 +91,7 @@ t('tabela: as 16 montarias têm 1 golpe válido; cada golpe tem 3+ montarias; va
   for(const id in M.DATA.strike.map) assert.ok(M.DATA.mounts.some(m=>m.id===id),id);
   for(const k of K.DATA.keys) assert.ok(Object.values(M.DATA.strike.map).filter(x=>x===k).length>=3,k);
   M.DATA.strike.on=true; try{ assert.deepStrictEqual(M.strikeInfo('wolf',3),{k:'combo',value:3.6,next:4.8}); assert.strictEqual(M.strikeInfo('wyvern',5).value,3.75);
-    assert.strictEqual(M.strikeInfo('mecha',5).value,9); assert.strictEqual(M.strikeInfo('wyvern',5).next,null); } finally{ M.DATA.strike.on=false; }
+    assert.strictEqual(M.strikeInfo('mecha',5).value,6,'Mecha: visual Lendário, poder de Épica (dono 14/11)'); assert.strictEqual(M.strikeInfo('wyvern',5).next,null); } finally{ M.DATA.strike.on=false; }
   assert.strictEqual(M.strikeInfo('wolf',3),null);
 });
 

@@ -14,14 +14,14 @@ const DATA={
   events:{
     default:{
       trail:[
-        {at:50,  reward:{goldk:60},                 name:'Marco 1'},
+        {at:50,  reward:{goldk:48},                 name:'Marco 1'},   // ouro 60/120/200/400 → 48/72/96/120 (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
         {at:100, reward:{forge:10},                 name:'Marco 2'},
         {at:150, reward:{food:30},                  name:'Marco 3'},
-        {at:200, reward:{goldk:120, essence:3},     name:'Marco 4'},
+        {at:200, reward:{goldk:72, essence:3},      name:'Marco 4'},
         {at:300, reward:{forge:20, food:40},        name:'Marco 5'},
-        {at:400, reward:{essence:6, goldk:200},     name:'Marco 6'},
+        {at:400, reward:{essence:6, goldk:96},      name:'Marco 6'},
         {at:500, reward:{forge:30, essence:8},      name:'Marco 7'},
-        {at:650, reward:{goldk:400, frame:'festival'}, name:'Grande prêmio'},   // moldura do evento (visual)
+        {at:650, reward:{goldk:120, frame:'festival'}, name:'Grande prêmio'},   // moldura do evento (visual)
       ],
       boss:{name:'Devorador do Tempo', art:'era6_boss', attemptsPerDay:2, fightSec:30, localHpFc:60,
         // pontos por ataque pela fração da vida TOTAL do chefe tirada no ataque (local: a vida pessoal)

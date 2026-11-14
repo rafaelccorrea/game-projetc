@@ -474,7 +474,7 @@ t('curva 9 eras: nível 120, teto diário da XP de abate, XP do VIP, estágios d
     assert.strictEqual(LV.killCap(S,h).rate,0.1); assert.strictEqual(LV.addXp(S,500,h).gained,500,'sem src = sem teto');
     h.t+=86400000; assert.strictEqual(g(1000),1000,'dia novo zera'); assert.strictEqual(LV.killCap(S,h).left,2663);
     // VIP no v9: coluna xp9 (o ouro não muda) e o teto sobe junto com o XP do VIP
-    const S2=newS(); V.setLevel(S2,10); assert.strictEqual(V.perks(S2).xpPct,V.DATA.table.xp9[10]); assert.strictEqual(V.perks(S2).goldPct,25);
+    const S2=newS(); V.setLevel(S2,10); assert.strictEqual(V.perks(S2).xpPct,V.DATA.table.xp9[10]); assert.strictEqual(V.perks(S2).goldPct,10,'ouro do VIP 10: +10% (dono 14/11; era +25%)');
     assert.strictEqual(LV.killCap(S2,h).full,Math.round(3663*(1+V.DATA.table.xp9[10]/100)));
     // estágios do Kael: nível E FC
     const S3=newS(), h3=makeHost(); assert.strictEqual(LV.stage(S3,h3).stage,0); assert.strictEqual(LV.evolve(S3,h3).reason,'need');
@@ -595,7 +595,7 @@ t('oferta de 1ª compra: janela de 24 h, uma vez só, arma Épica que acompanha 
   OF.DATA.on=true; M.DATA.on=true;
   try{
     const S=newS(), h=makeHost({eraMax:0}); LV.ensure(S).lvl=3; const st=OF.status(S,h); assert.ok(st.available); assert.strictEqual(st.msLeft,24*3600*1000);
-    h.t+=23*3600*1000; const g=OF.grant(S,h); assert.ok(g.ok); assert.strictEqual(h.gems,300); assert.ok(h.gold>0); assert.strictEqual(h.items[0].r,2);
+    h.t+=23*3600*1000; const g=OF.grant(S,h); assert.ok(g.ok); assert.strictEqual(h.gems,300); assert.strictEqual(h.gold,0,'a oferta paga não dá ouro (dono 14/11)'); assert.strictEqual(g.gold,0); assert.strictEqual(h.items[0].r,2);
     assert.strictEqual(OF.grant(S,h).reason,'done'); assert.ok(M.ensure(S).owned.wolf); assert.ok(M.bonus(S).atkPct>0);
     const S2=newS(), h2=makeHost(); OF.status(S2,h2); h2.t+=25*3600*1000; assert.strictEqual(OF.grant(S2,h2).reason,'expired');
     // D11: só para quem nunca comprou (VIP com pontos, passe premium ou qualquer compra marcada)
@@ -1026,7 +1026,10 @@ t('9 pets e 10 montarias novos (dono): atrás da chave, mesmo poder por raridade
   assert.strictEqual(NP.length,9); assert.strictEqual(NM.length,10);
   assert.deepStrictEqual(NP.map(p=>p.r),[1,1,2,2,2,3,3,4,4]); assert.deepStrictEqual(NM.map(m=>m.r),[1,2,2,3,3,3,4,4,4,4]);
   for(const p of NP){ assert.ok(Math.abs(p.skill.hits.reduce((a,b)=>a+b,0)-1)<1e-9,'mesmo dano total: '+p.id); assert.ok(p.src.length&&p.hatchFrags>0); assert.strictEqual(P.avail(p,h),P.DATA.newReady[p.id]===true,'só liga com a arte (newReady): '+p.id); }
-  for(const m of NM){ assert.ok(m.src.length&&m.hatchFrags>0); assert.ok(Math.abs(M.pctOf(m.id,60,5)-M.DATA.maxPct[m.r]*1.0)<1e-9,'mesmo teto da raridade: '+m.id); }
+  for(const m of NM){ assert.ok(m.src.length&&m.hatchFrags>0); assert.ok(Math.abs(M.pctOf(m.id,60,5)-M.DATA.maxPct[M.powerRarity(m.id)]*1.0)<1e-9,'mesmo teto da raridade do poder: '+m.id); }
+  // dono 14/11 (D1/D3): Fênix gigante (VIP 8) e Mecha (pago) = visual Lendário, poder de Épica; as outras Lendárias seguem Lendárias
+  for(const id of ['phoenixm','mecha']){ assert.strictEqual(M.DATA.mounts.find(m=>m.id===id).r,4,'visual Lendário: '+id); assert.strictEqual(M.powerRarity(id),2,'poder de Épica: '+id); }
+  for(const id of ['blackdragon','celtiger','wyvern']) assert.strictEqual(M.powerRarity(id),4,id);
   assert.ok(P.DATA.starterIds.includes('wolf')&&P.DATA.starterIds.includes('phoenix'));
   // montaria: desligada não entra; ligada, nasce ao juntar os fragmentos e o que sobra vira estrela; aura pelas estrelas de hoje
   const S={}; assert.strictEqual(M.add(S,h,'raptor').reason,'off'); assert.ok(M.addFragments(S,'raptor',30,h).stored);

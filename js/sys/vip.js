@@ -6,7 +6,9 @@
    x4 só com VIP 5+ E nível 40+. Não existe x3. maxSpeed(S, host) devolve o máximo e o motivo de cada bloqueio para a tela.
    Quem aplica cada benefício (sem dobro): bonus() → só ATK/HP, na FC. perks() → lidos pelos outros módulos:
    fps-30 (loot/baú/instâncias): xpPct nos orbes, goldPct no ouro, chestCapAdd, instanceKeysAdd · fps-e2: xpPct no XP de instância/missão/offline
-   (Sys.level), offlineMult nas pedras e ração offline · engenheiro: botão de velocidade até maxSpeed().max e offlineMult no ouro offline (js/meta.js). */
+   (Sys.level), offlineMult nas pedras e ração offline · engenheiro: botão de velocidade até maxSpeed().max. Ouro offline (js/meta.js): offlineGoldMult (= 1, sem ×2).
+   14/11 (dono aprovou D1-D3 de docs/RECOMPENSAS_VIP_PASSE.md): ouro do VIP +5% a +10% (goldOnly), XP igual; o ×2 do offline não vale para o ouro;
+   poder pago do VIP no máximo +10% de ATK e Vida (a Fênix gigante do VIP 8 tem poder de Épica: Sys.mount pr). goldXpPct (levelInfo) = só o ouro. */
 (function(root){
 'use strict';
 const DATA={
@@ -18,15 +20,17 @@ const DATA={
   table:{
     spd:  [0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
     atk:  [0, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10],
-    gold: [0, 10, 12, 14, 16, 18, 20, 21, 22, 24, 25],
+    gold: [0, 10, 12, 14, 16, 18, 20, 21, 22, 24, 25],   // % de XP (fora do v9). O nome ficou 'gold' por compatibilidade: desde 14/11 é SÓ XP
+    // OURO do VIP separado do XP (dono aprovou 14/11, D2 de docs/RECOMPENSAS_VIP_PASSE.md; regra do pouco ouro): era o mesmo número do XP (+10% a +25%)
+    goldOnly:[0, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10],
     // xp9: % de XP no v9 (curva das 9 eras, Sys.level.DATA.v9.on): calibrada para o PROGRESSO total do dia (com x4, +1 entrada e o teto diário)
     // dar ×1,13 (VIP 1) ... ×1,30 (VIP 5) ... ×1,50 (VIP 10), nunca mais. Cai do 4 para o 5 porque o x4 do VIP 5 já rende XP; a tela mostra o progresso.
     xp9:  [0,1,5,8,12,3,6,9,12,15,19],
     prog9:[1, 1.13, 1.16, 1.20, 1.25, 1.30, 1.34, 1.38, 1.42, 1.46, 1.50],   // progresso por dia vs grátis (simulação; para a tela)
     key:  [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],   // dono: instâncias com 2 entradas POR ÁREA por dia, +1 com QUALQUER VIP (era 0,0,0,1,1,1,2,2,2,3,3 na tela 18)
     chest:[0, 0, 0, 10, 10, 10, 10, 12, 12, 12, 14],
-    off:  [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
-    frame:[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    off:  [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],   // offline ×2: XP, itens, pedras e ração. NÃO vale para o OURO offline (dono 14/11): perks().offlineGoldMult = 1
+    frame:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],   // moldura Ouro: saiu do VIP 7 (dono 14/11); agora é conquista do nível 60 (Sys.profile). Os VIPs têm a moldura VIP N (frameVip)
     frameVip:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // dono 13/11: moldura VIP N ao chegar no VIP N (só visual, sem atributo; Sys.profile frames vip1..vip10)
     skin: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     aura: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -64,7 +68,7 @@ const DATA={
 /* benefícios de um nível de VIP montados da tabela (bonus = FC; perks = os outros módulos) */
 function levelData(n){ const T=DATA.table, i=Math.max(0,Math.min(DATA.maxLevel,Math.floor(n)||0)), g=k=>Number(T[k][i])||0;
   return {spd:g('spd'), bonus:{atkPct:g('atk'),hpPct:g('atk')},
-    perks:{xpPct:g('gold'), goldPct:g('gold'), offlineMult:Math.max(1,g('off')), chestCapAdd:g('chest')?Math.max(0,g('chest')-DATA.chestBase):0,
+    perks:{xpPct:g('gold'), goldPct:g('goldOnly'), offlineMult:Math.max(1,g('off')), offlineGoldMult:1, chestCapAdd:g('chest')?Math.max(0,g('chest')-DATA.chestBase):0,
       instanceKeysAdd:g('key'), frame:!!g('frame'), frameVip:g('frameVip'), vipSkin:!!g('skin'), aura:!!g('aura')}}; }
 DATA.levels=Array.from({length:DATA.maxLevel+1},(_,i)=>levelData(i));
 // COMPATIBILIDADE: a Loja (js/screens.js, aba Gemas, cartão "Comprar VIP") lê DATA.bonus e DATA.perks da versão de VIP único.
@@ -125,7 +129,7 @@ function bonus(S){ const t=tier(S).bonus||{}; return {atkPct:num(t.atkPct,0),hpP
 
 /* linha da tabela para a tela (comparar "sem VIP" × "VIP n"): {level, atkPct, goldXpPct, keys, chestPerDay, offlineMult, speed, frame, vipSkin, aura} */
 function levelInfo(n){ const d=DATA.levels[clamp(int0(n),0,DATA.maxLevel)];
-  return {level:clamp(int0(n),0,DATA.maxLevel), atkPct:d.bonus.atkPct, goldXpPct:d.perks.goldPct, keys:d.perks.instanceKeysAdd,
+  return {level:clamp(int0(n),0,DATA.maxLevel), atkPct:d.bonus.atkPct, goldXpPct:d.perks.goldPct, goldPct:d.perks.goldPct, xpPct:d.perks.xpPct, keys:d.perks.instanceKeysAdd,
     chestPerDay:DATA.chestBase+d.perks.chestCapAdd, offlineMult:d.perks.offlineMult, speedTier:d.spd, frame:d.perks.frame, frameVip:d.perks.frameVip, frameVipText:d.perks.frameVip?'Moldura VIP '+d.perks.frameVip:'', vipSkin:d.perks.vipSkin, aura:d.perks.aura}; }
 /* conveniências do VIP: {on, level, autoCollect:bool, bag:n, offlineH:n, autoFuse, autoEquip, autoSell, skipBoss, arena:n, autoForge, tower:n, bossTries:n, passXp:%, eventTries:n}
    Desligado (convOn=false): tudo no valor do grátis (val[0] ou false), para os módulos lerem sem condição. */

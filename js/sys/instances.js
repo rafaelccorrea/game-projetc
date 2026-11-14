@@ -18,7 +18,7 @@ const DATA={
   types:{
     gold:{n:'Mina de Ouro',  icon:'🪙',img:'assets/ui/coin.png', col:'#ffc94a',mode:'rush', time:45,
       desc:'Derrote o máximo que puder em 45 s', hp:0.6,dmg:0.6, wave:['e0','e1','e0','e1','e0','e1'], spawnGap:0.45,
-      reward:{goldPerKill:4, minKills:1}},
+      reward:{goldPerKill:1, minKills:1, capKills:120}},   // era 4 por abate sem teto (Difícil: 400 abates = 16,7 min); 1 por abate e teto de 120 abates de ouro por corrida (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
     gear:{n:'Arsenal',       icon:'⚔️',img:'assets/ui/chest.png',col:'#b45cff',mode:'clear',time:60,
       desc:'Vença 3 ondas e o chefe em 60 s', hp:1,dmg:1, waves:[['e0','e1','e0','e1'],['e1','e0','e1','e0','e1'],['e0','e1','boss']], spawnGap:0.6,
       reward:{items:3,minR:1,upChance:0.2,goldUnits:20,forge:[3,5,8]}},          // forge por dificuldade (Fácil/Normal/Difícil)
@@ -97,7 +97,7 @@ const unitAt=(host,stage)=>Math.max(1,num(host&&host.goldUnit&&host.goldUnit(sta
 /* prévia da recompensa (para a UI e para start). kills só importa na Mina de Ouro. */
 function rewardPreview(type,L,host,kills){
   const T=DATA.types[type], I=levelInfo(L), R=T.reward, rw=I.diff.rw*num(params.rewardMult,1), u=unitAt(host,I.stage), out={gold:0,gems:0,items:0,minR:0};
-  if(T.mode==='rush') out.gold=Math.round(u*R.goldPerKill*rw*Math.max(0,num(kills,DATA.sweepKills)));
+  if(T.mode==='rush'){ out.gold=Math.round(u*R.goldPerKill*rw*Math.max(0,num(kills,DATA.sweepKills))); if(R.capKills) out.gold=Math.min(out.gold,Math.round(u*R.capKills)); }   // teto por corrida (antes do % do VIP)
   if(R.goldUnits) out.gold=Math.round(u*R.goldUnits*rw);
   if(R.gems) out.gems=Math.round((R.gems+num(R.gemsPerEra,0)*I.era)*rw);   // Cristal: 3 x dificuldade (gemsPerEra 0 desde o corte da v0.12.0)
   if(R.items){ out.items=R.items; out.minR=Math.max(R.minR||0,(R.minR||0)+I.diff.minR); }

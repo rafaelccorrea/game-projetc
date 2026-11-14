@@ -11,11 +11,11 @@ const DATA={
   points:{d_kill:20, d_ult:15, d_chest:15, d_inst:20, d_boss:20, d_forge:15, d_summon:15},
   // baús: goldk = × ouro de um abate da fase (host.goldUnit); stones = treino (Sys.practice); forge = forja; food = ração (Sys.pet); mountFrags = montaria equipada
   milestones:[
-    {at:20,  name:'Baú de bronze',   reward:{goldk:40}},
-    {at:40,  name:'Baú de ferro',    reward:{goldk:40, stones:2}},
-    {at:60,  name:'Baú de prata',    reward:{goldk:60, forge:2}},
-    {at:80,  name:'Baú de ouro',     reward:{goldk:60, food:40, stones:2}},
-    {at:100, name:'Baú de diamante', reward:{goldk:120, forge:3, food:60, mountFrags:1}},   // "diamante" é o nome do baú: não dá 💎
+    {at:20,  name:'Baú de bronze',   reward:{goldk:24}},   // ouro dos baús 40/40/60/60/120 → 24/24/24/24/48 (6 min/dia) (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
+    {at:40,  name:'Baú de ferro',    reward:{goldk:24, stones:2}},
+    {at:60,  name:'Baú de prata',    reward:{goldk:24, forge:2}},
+    {at:80,  name:'Baú de ouro',     reward:{goldk:24, food:40, stones:2}},
+    {at:100, name:'Baú de diamante', reward:{goldk:48, forge:3, food:60, mountFrags:1}},   // "diamante" é o nome do baú: não dá 💎
   ],
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;

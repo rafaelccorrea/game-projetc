@@ -3,7 +3,7 @@
    Lógica pura; estado em S.sys.mail. Relatório: reports/sys-mail-login-eventos.md */
 (function(root){
 'use strict';
-const DATA={expireDays:30, max:100, enabled:false};   // CHAVE (PO): desligado até o dono aprovar a tela; o jogo liga com Sys.mail.DATA.enabled=true
+const DATA={expireDays:30, max:100, enabled:false, goldkCap:120};   // goldkCap: teto do ouro em ABATES por carta (dono 14/11, docs/ECONOMIA_OURO.md §6; o servidor também respeita)   // CHAVE (PO): desligado até o dono aprovar a tela; o jogo liga com Sys.mail.DATA.enabled=true
 const OFF={ok:false,reason:'desligado'};
 const DAY=86400000;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -69,7 +69,8 @@ function claim(S,host,id){
   if(!hasAtt(m)) return {ok:false,reason:'sem_anexo'}; if(m.claimed||o.done.includes(m.id)){ m.claimed=true; return {ok:false,reason:'resgatado'}; }
   const nd=ndOf(m); if(nd&&!ndOn()) return {ok:false,reason:'novos_desligado'};   // não consome: o prêmio novo espera a chave do Sys.newDrops
   const L=Loot(); m.claimed=true; m.read=true; o.done.push(m.id); if(o.done.length>300) o.done.shift();
-  const att=Object.assign({},m.att); delete att.newDrops;   // o pacote comum vai sem a chave nova
+  const att=Object.assign({},m.att); delete att.newDrops;
+  if(att.goldk!=null) att.goldk=Math.min(int0(att.goldk),int0(DATA.goldkCap));   // ouro do correio: goldk (× goldUnit da fase) com teto de 5 min de abate   // o pacote comum vai sem a chave nova
   const ndGot=nd?NewDrops().grant(S,host,nd.src,nd.ctx):null;
   if(L&&L.grantBundle){ const got=Object.keys(att).length?L.grantBundle(S,host,att):{}; if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got}; }
   // reserva sem Sys.loot: só ouro e gemas (o resto exige o loot carregado)

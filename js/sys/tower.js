@@ -16,7 +16,8 @@ const DATA={
   perFloor:{atkPct:0.2, hpPct:0.2}, // bônus permanente por andar vencido (melhor andar)
   // chefe a cada 10 (metade dos chefes): o prêmio POR CHEFE dobrou para o total da torre ficar igual (até o andar 105: 185 → 295 💎 e
   // 18 → 36 pedras de forja, como era com chefe a cada 5). bossGems = 10 + andar/5; forja = 4 por chefe a partir do 20.
-  reward:{goldMult:20, goldPerFloor:0.03, stones:1, stonesPer:5, bossGems:10, bossGemsPer:5,
+  reward:{goldMult:20, goldPerFloor:0.015, goldCapK:60,   // era 0,03 sem teto (andar 135 = 101 abates); 0,015 e teto de 60 abates de ouro por andar (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
+           stones:1, stonesPer:5, bossGems:10, bossGemsPer:5,
           forgeFrom:20, forgeOnBoss:4},
   // pets (balance v5.1 "pet"): 1 ovo a cada 10 andares até o 100 (mínimo Raro até o 40, Épico de 50 a 90, pesos do chefe de fase);
   // andar 100: com a 17b, ovo Épico à escolha (Dragão/Papagaio); sem ela, a fênix antiga. Depois, 1 fragmento DESSE pet por andar do 101 ao 110 e 1 a cada 10.
@@ -135,7 +136,7 @@ function rewardsFor(f,host,S){   // S opcional: com ele, t100Pet diz o pet já e
   const R=DATA.reward, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1));
   const P=DATA.pet, egg=f<P.phoenixAt&&f%P.eggEvery===0, minR=egg?(P.minR.find(([upTo])=>f<=upTo)||[0,2])[1]:0;
   const frag=f>P.phoenixAt&&((f>=P.fragEach[0]&&f<=P.fragEach[1])||f%P.fragEvery===0)?1:0;
-  return {gold:Math.round(unit*R.goldMult*(1+R.goldPerFloor*f)), stones:R.stones+Math.floor(f/R.stonesPer),
+  return {gold:Math.round(unit*Math.min(R.goldCapK||Infinity,R.goldMult*(1+R.goldPerFloor*f))), stones:R.stones+Math.floor(f/R.stonesPer),
     gems:(isBoss(f)?R.bossGems+Math.floor(f/R.bossGemsPer):0)+(isMilestone(f)?DATA.milestoneGems:0),
     forge:f>=R.forgeFrom&&isBoss(f)?R.forgeOnBoss:0,
     // andar 100: ovo ÉPICO À ESCOLHA (17b, PO: a fênix saiu) — {r:2, source:'tower100', choice:['drake','parrot']}; sem a 17b, a fênix antiga.

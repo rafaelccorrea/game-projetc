@@ -44,11 +44,14 @@ const DATA={
     {id:'hellhorse',  name:'Cavalo infernal',          r:3, nw:true, hatchFrags:200, minEra:7, src:['Chefe da era 7 (Submundo): 2 fragmentos por dia','Evento do Submundo']},
     {id:'unicorn',    name:'Unicórnio de guerra',      r:3, nw:true, hatchFrags:200, src:['Guilda: baú semanal (5 fragmentos) e loja da guilda por contribuição']},
     {id:'icewolf',    name:'Lobo de gelo',             r:3, nw:true, hatchFrags:200, src:['Torneio de Fim de Semana: top 100 (10), top 10 (25)']},
-    {id:'phoenixm',   name:'Fênix gigante',            r:4, nw:true, hatchFrags:400, src:['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)']},
+    {id:'phoenixm',   name:'Fênix gigante',            r:4, pr:2, nw:true, hatchFrags:400, src:['VIP 8: inteira, uma vez (compra direta de VIP, sem sorteio)']},
     {id:'blackdragon',name:'Dragão negro',             r:4, nw:true, hatchFrags:400, src:['Torneio: top 3 da temporada (inteiro); top 10 (50 fragmentos)']},
     {id:'celtiger',   name:'Tigre de guerra celestial',r:4, nw:true, hatchFrags:400, minEra:8, src:['Chefe da era 8 (Celestial): 2 fragmentos por dia','Guerra de guildas: capital (40 por temporada)']},
-    {id:'mecha',      name:'Mecha de guerra',          r:4, nw:true, hatchFrags:400, src:['Loja: compra direta, inteira (sem sorteio)']},
+    {id:'mecha',      name:'Mecha de guerra',          r:4, pr:2, nw:true, hatchFrags:400, src:['Loja: compra direta, inteira (sem sorteio)']},
   ],
+  // PODER × VISUAL (dono aprovou 14/11, D1 e D3 de docs/RECOMPENSAS_VIP_PASSE.md): pr = raridade do PODER quando difere da do visual (r).
+  // A Fênix gigante (VIP 8) e o Mecha de guerra (loja, R$ 49,90) são Lendários no visual (moldura, nome, cor, aura) e dão o poder de uma ÉPICA:
+  // % de ATK e Vida, estrela plana, golpe reforçado e custo do nível seguem pr. Teto do VIP: tabela + prêmios ≤ +10% (a Épica o grátis também tem).
   newOn:false,   // liga as 10 novas (o engenheiro, quando a arte de cada uma for aprovada; dá para ligar uma a uma com DATA.newReady[id]=true)
   newReady:{phoenixm:true},   // Fênix gigante LIGADA (dono, 14/11, 'liga tudo'): arte completa (Kael e Kaia montados, imagem parada da Derrota, ícone); as outras 9 seguem desligadas
   // TROCAR SEM PERDER (docs/IDLE_PARECIDOS.md §3 item 2, dono aprovou 13/11). DESLIGADO. Ligado: ao trocar a montaria em uso (equip/swapMain), o NÍVEL
@@ -65,6 +68,7 @@ const DATA={
     perStar:{combo:1.2,counter:1.2,stun:0.4,dodge:0.6,lifesteal:0.5}, rarMult:[0.6,0.8,1,1.2,1.5]},
 };
 const BY={}; for(const m of DATA.mounts) BY[m.id]=m;
+const powR=m=>m?(typeof m.pr==='number'?m.pr:m.r):0;   // raridade do poder (pr) ou, sem ela, a do visual (r)
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
@@ -86,8 +90,8 @@ function ensure(S){
 const lvlCap=(S,host)=>clamp(Math.floor(playerLevel(S,host)/2),1,DATA.maxLvl);
 /* % de ATK e de Vida de uma montaria (no nível e estrelas dela) */
 function pctOf(id,lvl,stars){ const m=BY[id]; if(!m) return 0; const L=DATA.lvlMin+(1-DATA.lvlMin)*(clamp(lvl,1,DATA.maxLvl)-1)/(DATA.maxLvl-1);
-  const fl=DATA.starFlat&&DATA.starFlat.on===true?(clamp(stars,1,DATA.maxStars)-1)*num(DATA.starFlat.pct[clamp(m.r,0,DATA.starFlat.pct.length-1)],0):0;
-  return Math.round((DATA.maxPct[m.r]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))+fl)*1000)/1000; }
+  const R=powR(m), fl=DATA.starFlat&&DATA.starFlat.on===true?(clamp(stars,1,DATA.maxStars)-1)*num(DATA.starFlat.pct[clamp(R,0,DATA.starFlat.pct.length-1)],0):0;
+  return Math.round((DATA.maxPct[R]*L*(DATA.starBase+DATA.starStep*clamp(stars,1,DATA.maxStars))+fl)*1000)/1000; }
 const setStarFlat=on=>{ DATA.starFlat.on=!!on; return DATA.starFlat.on; };
 /* 6ª e 7ª estrelas: liga/desliga sem duplicar (teto, custo e aura voltam ao de 5 estrelas ao desligar) */
 function setStars7(on){ const X=DATA.stars7; X.on=!!on; DATA.maxStars=X.on?X.max:5; DATA.starCost.length=4; DATA.aura.length=5;
@@ -118,7 +122,7 @@ function swapPreview(S,id){ if(DATA.swapKeep.on!==true) return null; const o=ens
   const mv=!!a&&o.eq!==id&&(a.lvl>b.lvl||(a.lvl===b.lvl&&a.gold>b.gold)); return {moved:mv,lvlNew:mv?a.lvl:b.lvl,lvlOld:a?(mv?b.lvl:a.lvl):0}; }
 /* golpe especial que a montaria reforça (chave DATA.strike + montaria ligada). {k, value} em pontos %, ou null. Sem a chave não toca no save. */
 function strikeValue(id,stars){ const m=BY[id], k=DATA.strike.map[id]; if(!m||!k) return 0;
-  return Math.round(num(DATA.strike.perStar[k],0)*clamp(int0(stars)||1,1,DATA.maxStars)*num(DATA.strike.rarMult[clamp(m.r,0,DATA.strike.rarMult.length-1)],0)*1000)/1000; }
+  return Math.round(num(DATA.strike.perStar[k],0)*clamp(int0(stars)||1,1,DATA.maxStars)*num(DATA.strike.rarMult[clamp(powR(m),0,DATA.strike.rarMult.length-1)],0)*1000)/1000; }
 function strikeOf(S,id){ if(!ON()||DATA.strike.on!==true||!S) return null; const o=ensure(S), mid=id||o.eq, x=o.owned[mid]; if(!x||!DATA.strike.map[mid]) return null;
   return {id:mid,k:DATA.strike.map[mid],value:strikeValue(mid,x.stars)}; }
 /* para a tela (com ou sem a montaria): {k, value, next} (next = valor com +1 estrela) ou null com a chave desligada */
@@ -126,7 +130,7 @@ function strikeInfo(id,stars){ if(DATA.strike.on!==true||!BY[id]||!DATA.strike.m
   return {k:DATA.strike.map[id],value:strikeValue(id,s),next:s<DATA.maxStars?strikeValue(id,s+1):null}; }
 /* custo do próximo nível; {ok, reason: off|id|cap|max|money, gold, cap} */
 function upgradeCost(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!x) return {ok:false,reason:'id',gold:0};
-  const C=DATA.cost, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.ceil(C.goldK*unit*(1+C.growth*(x.lvl-1))*(1+m.r*C.rarCost));
+  const C=DATA.cost, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.ceil(C.goldK*unit*(1+C.growth*(x.lvl-1))*(1+powR(m)*C.rarCost));
   return {ok:true,gold,lvl:x.lvl,cap:lvlCap(S,host)}; }
 function canUpgrade(S,host,id){ if(!ON()) return {ok:false,reason:'off'}; const c=upgradeCost(S,host,id); if(!c.ok) return c; const x=ensure(S).owned[id];
   if(x.lvl>=DATA.maxLvl) return Object.assign(c,{ok:false,reason:'max'}); if(x.lvl>=c.cap) return Object.assign(c,{ok:false,reason:'cap',needLevel:(x.lvl+1)*2});
@@ -136,10 +140,10 @@ function upgrade(S,host,id,times){ let n=0, spent=0, why=''; const max=Math.max(
     const x=S.sys.mount.owned[id]; x.lvl++; x.gold+=c.gold; spent+=c.gold; n++; }
   return {ok:n>0,n,spent,reason:n>0?'':why,lvl:S.sys.mount.owned[id]?S.sys.mount.owned[id].lvl:0}; }
 const auraOf=stars=>DATA.aura[clamp(int0(stars)||1,1,DATA.maxStars)-1];
-/* para a tela: {id, name, rarity, rarityName, lvl, cap, stars, frags, need, pct, maxPct, equipped} */
+/* para a tela: {id, name, rarity, rarityName, powerRarity, powerRarityName, lvl, cap, stars, frags, need, pct, maxPct, equipped}. rarity = visual; maxPct = do poder */
 function info(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!m) return null;
-  return {id,name:m.name,rarity:m.r,rarityName:DATA.rarName[m.r],owned:!!x,lvl:x?x.lvl:0,cap:lvlCap(S,host),stars:x?x.stars:0,frags:x?x.frags:int0(o.stored[id]),
-    need:x&&x.stars<DATA.maxStars?DATA.starCost[x.stars-1]:0,pct:x?pctOf(id,x.lvl,x.stars):0,maxPct:DATA.maxPct[m.r],equipped:o.eq===id,aura:auraOf(x?x.stars:1)}; }
+  return {id,name:m.name,rarity:m.r,rarityName:DATA.rarName[m.r],powerRarity:powR(m),powerRarityName:DATA.rarName[powR(m)],owned:!!x,lvl:x?x.lvl:0,cap:lvlCap(S,host),stars:x?x.stars:0,frags:x?x.frags:int0(o.stored[id]),
+    need:x&&x.stars<DATA.maxStars?DATA.starCost[x.stars-1]:0,pct:x?pctOf(id,x.lvl,x.stars):0,maxPct:DATA.maxPct[powR(m)],equipped:o.eq===id,aura:auraOf(x?x.stars:1)}; }
 /* bônus no Sys.fc: % de ATK e de Vida da equipada (zero com a chave desligada) */
 function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!S||!ON()) return b; const o=ensure(S); if(!o.eq) return b;
   const x=o.owned[o.eq], p=pctOf(o.eq,x.lvl,x.stars); b.atkPct=p; b.hpPct=p; return b; }
@@ -147,8 +151,8 @@ function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0};
 const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return null; return {id:o.eq,name:BY[o.eq].name,rarity:BY[o.eq].r,visual:DATA.visual===true,sprite:'mount_'+o.eq,stars:o.owned[o.eq].stars,aura:auraOf(o.owned[o.eq].stars)}; };
 
 /* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
-const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],maxPct:DATA.maxPct[m.r],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
-const API={DATA,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,swapMain,swapPreview,strikeOf,strikeInfo,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],pr:powR(m),powerRarName:DATA.rarName[powR(m)],maxPct:DATA.maxPct[powR(m)],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
+const API={DATA,powerRarity:id=>BY[id]?powR(BY[id]):null,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,swapMain,swapPreview,strikeOf,strikeInfo,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

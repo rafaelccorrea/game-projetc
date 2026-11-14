@@ -79,7 +79,10 @@ t('molduras: liberadas por nível, VIP, arena, prêmio e fim das 9 eras; travada
   assert.ok(P.equip(S, h, 'frame', 'bronze').ok); assert.strictEqual(P.equipped(S, h).frame, 'bronze');
   S.sys.vip = { level: 7, active: true, points: 8000 }; S.sys.arena = { bestRank: 7 }; S.sys.erasEnd = { cos: { owned: ['nine_eras'], eq: {} } };
   assert.ok(P.grant(S, 'eterna')); assert.ok(!P.grant(S, 'eterna')); assert.ok(!P.grant(S, 'nao_existe'));
-  assert.deepStrictEqual(own(), ['none', 'bronze', 'ouro', 'vip1', 'vip2', 'vip3', 'vip4', 'vip5', 'vip6', 'vip7', 'cristal', 'eterna', 'nine_eras']);
+  assert.deepStrictEqual(own(), ['none', 'bronze', 'vip1', 'vip2', 'vip3', 'vip4', 'vip5', 'vip6', 'vip7', 'cristal', 'eterna', 'nine_eras'], 'moldura Ouro não vem mais do VIP 7 (dono 14/11)');
+  const ouro = P.frames(S, h).find(f => f.id === 'ouro'); assert.strictEqual(ouro.how, 'Chegar ao nível 60'); assert.strictEqual(ouro.need, 60); assert.strictEqual(ouro.cur, 12);
+  const h60 = makeHost({ level: 60 }); assert.ok(P.frames(S, h60).find(f => f.id === 'ouro').owned, 'nível 60 libera a moldura Ouro (conquista)');
+  S.sys.vip = { level: 0, active: false, points: 0 }; assert.ok(P.frames(S, h60).find(f => f.id === 'ouro').owned, 'sem VIP também'); S.sys.vip = { level: 7, active: true, points: 8000 };
   assert.ok(P.equip(S, h, 'frame', 'nine_eras').ok);
   assert.ok(P.equip(S, h, 'frame', null).ok); assert.strictEqual(P.equipped(S, h).frame, 'none');
   assert.strictEqual(P.equip(S, h, 'frame', 'xx').reason, 'id'); assert.strictEqual(P.equip(S, h, 'chapeu', 'none').reason, 'tipo');

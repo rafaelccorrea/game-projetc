@@ -61,8 +61,8 @@ t('marcos: % da coleção inteira (piso), prêmio fixo via grantBundle, sem diam
   const ids=C.catalog().map(c=>c.id); S.sys.codex.seen={}; for(let i=0;i<30;i++) S.sys.codex.seen[ids[i]]=1;   // 30/118 = 25%
   const pr=C.progress(S,h); assert.strictEqual(pr.pct,25);
   const r=C.rewards(S,h); assert.strictEqual(r.next.p,10); assert.ok(r.marks[0].ready&&r.marks[1].ready&&!r.marks[2].ready);
-  assert.strictEqual(r.marks[0].txt,'1.000 de ouro, 3 pedras de forja, 20 de ração');
-  const c=C.claim(S,h,25); assert.ok(c.ok); assert.strictEqual(h.gold,3000); assert.strictEqual(h.gems,0); assert.strictEqual(L.essence(S),2); assert.strictEqual(c.got.forge,6);
+  assert.strictEqual(r.marks[0].txt,'240 de ouro, 3 pedras de forja, 20 de ração');
+  const c=C.claim(S,h,25); assert.ok(c.ok); assert.strictEqual(h.gold,480,'ouro do marco 25%: 48 abates (dono 14/11; era 300)'); assert.strictEqual(h.gems,0); assert.strictEqual(L.essence(S),2); assert.strictEqual(c.got.forge,6);
   assert.strictEqual(C.claim(S,h,25).reason,'done'); assert.ok(C.claim(S,h,10).ok); assert.deepStrictEqual(C.rewards(S,h).claimed,[10,25]);
   assert.strictEqual(C.claim(S,h,50).reason,'pct'); assert.strictEqual(C.rewards(S,h).next.p,50);
   C.DATA.on=false;

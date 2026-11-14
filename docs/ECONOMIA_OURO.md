@@ -88,7 +88,7 @@ Com a chave desligada, nada muda no jogo. Todos os testes de `test/sys` passam.
 - **Dupla** (`API_SERVIDOR §16.1`): a missão semanal `days5` passa de **goldK 150 para 120**. Nada mais muda na Dupla: `daily` 30, `boss200` 120, `stages40` 120, `arena20` 80, pedras iguais. O jogo é quem paga; o servidor só precisa mudar se guarda ou mostra o prêmio.
 - **Fogueira da Guilda** (`API_SERVIDOR §16.2`): o baú `POST /v1/guild/fire/claim/:id`, que vai pelo correio, passa de `{goldk: 40×L, …}` para **`{goldk: 12×L, …}`**. Pedras (L) e ração (10×L) não mudam, nem chamas, níveis, extras e perks. Vale também para os extras `xN` (baú do 10 = goldk 120).
 
-## 6. Fontes antigas acima de X ou da meta: PROPOSTA para o dono decidir (nada mudou no jogo)
+## 6. Fontes antigas acima de X ou da meta: APROVADO pelo dono em 14/11 (aplicado: ver §8)
 
 | Fonte (viva) | Hoje | Proposta | Por quê |
 | --- | --- | --- | --- |
@@ -137,3 +137,27 @@ Minutos de jogo para pagar = custo ÷ (24 × (1 + ouro extra do dia ÷ ouro de a
 - **Depois deste commit (Cn)**, com os módulos novos já corrigidos mas as fontes vivas sem mudança, ligar todos os módulos novos ainda deixa upar **~7% mais rápido** que hoje (0,93): Acampamento 7,7, Dupla 3,9, Derrota 1,0 e baús do mapa 0,9 min/dia somam.
   - **Recomendação:** corrigir o offline (§6) antes ou junto de ligar os módulos novos.
   - Só a correção do offline já tira ~127 min de abate por dia e põe tudo de volta abaixo da curva.
+
+## 8. Aplicado em 14/11 (o dono aprovou a §6)
+
+Medida: X = 5 min de abate = 120 × `goldUnit` por resgate. Teste: `node test/sys/economia-ouro.test.js` (e toda a `test/sys` passa).
+
+| Fonte | Antes | Depois | Onde | Situação |
+| --- | --- | --- | --- | --- |
+| Hora de Ouro | +100% (×2) por 60 min | **+30%** | `js/sys/schedule.js` golden_hour | **vivo**: vale já |
+| Mina de Ouro | goldPerKill 4, sem teto (Difícil: 400 abates) | **goldPerKill 1 e teto de 120 abates por corrida** (`capKills`, antes do % do VIP) | `js/sys/instances.js` | **vivo** |
+| Torre | 20 × (1 + 0,03 × andar), sem teto | **20 × (1 + 0,015 × andar), teto 60 por andar** (`goldCapK`) | `js/sys/tower.js` | **vivo** |
+| Liga semanal da Arena | Bronze 200 · Prata 300 · Ouro 400 | **120 nas três** | `js/sys/arena.js` | **vivo** |
+| Oferta de 1ª compra | goldk 2.000 | **0** (a oferta não dá ouro) | `js/sys/offer.js` | desligada (só no modo dono) |
+| Correio | goldk sem teto | **goldk com teto de 120 por carta** (`goldkCap`) | `js/sys/mail.js` | o servidor também precisa respeitar (abaixo) |
+| Baús de atividade | 40, 40, 60, 60, 120 | **24, 24, 24, 24, 48** | `js/sys/activity.js` | desligada |
+| Conquistas | 60, 200, 600, 1.500 | **24, 48, 96, 120** | `js/sys/achievements.js` | desligada |
+| Coleção (Códex) | 100, 300, 800, 1.500, 3.000 | **24, 48, 72, 96, 120** | `js/sys/codex.js` | desligada |
+| Trilha do evento | 60, 120, 200, 400 | **48, 72, 96, 120** | `js/sys/evtrail.js` | desligada |
+| Ouro do VIP | +10% a +25% (o mesmo do XP) | **+5/5/6/6/8/8/9/9/10/10%**; XP igual | `js/sys/vip.js` `table.goldOnly` | **vivo** |
+| Offline ×2 do VIP 5+ | também no ouro | **só XP, itens, pedras e ração**; `perks().offlineGoldMult` = 1 | `js/sys/vip.js` | falta o Engenheiro (abaixo) |
+| **Offline 8 h** | 187 min de abate (ouro por abate sem o 0,32) | **60 min de abate** (3 abates/min × `goldUnit`) | `js/meta.js` e `js/p_intro.js` | **falta o Engenheiro** (abaixo) |
+
+Falta, fora da Sistemas:
+- **Engenheiro** (`js/meta.js` showOffline e `js/p_intro.js` offline()): trocar `perKill=Math.ceil(BAL.goldBase*Math.pow(BAL.goldGrowth,S.stage-1))` pelo `goldUnit` da fase (com o `commonGoldMult` 0,32) e o `om` pelo `Sys.vip.perks(S).offlineGoldMult` (= 1). 8 h = 1.440 × `goldUnit`.
+- **Servidor**: correio com `goldk` (abates) e no máximo 120 por carta; nunca `gold` absoluto. A Fogueira da Guilda já cabe (12 × L, L ≤ 10).

@@ -4,7 +4,7 @@ Pedido do dono: "pensar melhor nas recompensas dos VIPs e Passe".
 
 Protótipo para o voto: `docs/proto/v2/VipPasse.html`. São dois aparelhos lado a lado, "Hoje" e "Proposta", com as abas VIP e Passe. O voto fica em `decisoes/tela-vip-passe`.
 
-**Nada mudou no jogo.** `js/sys/vip.js` e `js/sys/pass.js` ficam com os números de hoje até o voto. Este documento e o protótipo são só proposta.
+**14/11: o dono APROVOU D1, D2 e D3, e elas foram APLICADAS** (ver §6). D4 a D8 e o Passe seguem como proposta.
 
 Fontes lidas:
 - `js/sys/vip.js` (tabela, conveniências, pontos) e `js/sys/pass.js` (trilhas e missões);
@@ -242,9 +242,9 @@ Premium (`premium`). Os diamantes ficam iguais, nos mesmos níveis:
 
 ## 4. Decisões para o dono
 
-- **D1. Teto do poder do VIP em +10% no total.** A Fênix (VIP 8) e a Serpe (VIP 9) ficam com o visual Lendário e o poder de uma Épica. Recomendo **sim**: sem isso, o VIP 10 passa da linha dos 100% e, pela regra do `vipMinWallDays`, a parede sobe para todo mundo.
-- **D2. Ouro do VIP: +5% a +10%** (hoje +10% a +25%), e o offline ×2 deixa de valer para o ouro. O XP fica como está. Recomendo **sim** (regra do pouco ouro).
-- **D3. Mecha de guerra (R$ 49,90)**: mesmo caso da Fênix, uma montaria Lendária comprada. Opções:
+- **D1 (APROVADA e aplicada em 14/11). Teto do poder do VIP em +10% no total.** A Fênix (VIP 8) e a Serpe (VIP 9) ficam com o visual Lendário e o poder de uma Épica. Recomendo **sim**: sem isso, o VIP 10 passa da linha dos 100% e, pela regra do `vipMinWallDays`, a parede sobe para todo mundo.
+- **D2 (APROVADA e aplicada em 14/11). Ouro do VIP: +5% a +10%** (hoje +10% a +25%), e o offline ×2 deixa de valer para o ouro. O XP fica como está. Recomendo **sim** (regra do pouco ouro).
+- **D3 (APROVADA a opção (a) e aplicada em 14/11). Mecha de guerra (R$ 49,90)**: mesmo caso da Fênix, uma montaria Lendária comprada. Opções:
   - (a) poder de Épica, como na D1;
   - (b) fica como está.
 
@@ -265,3 +265,15 @@ Premium (`premium`). Os diamantes ficam iguais, nos mesmos níveis:
 - **Engenheiro:** desenhar Rastro, Aura VIP e nome colorido em código (como `MOUNT_AURA` em `js/mountfx.js`) e o topo do Passe com a âncora.
 - **Arte:** nenhum PNG novo para o VIP. Para o Passe, só a âncora da temporada 2 em diante, escolhida entre a arte já pronta (regra "completar antes de criar").
 - **Servidor:** o catálogo de produtos não muda. Se a D4 passar, mudam só os pontos por nível do VIP (lidos do cliente). O Passe continua um produto por temporada.
+
+## 6. Aplicado em 14/11 (D1, D2 e D3)
+
+Teste: `node test/sys/economia-ouro.test.js`; toda a `test/sys` passa.
+
+- **D1** (`js/sys/mount.js`): campo novo `pr` = raridade do PODER. A Fênix gigante (`phoenixm`, VIP 8) tem `r:4, pr:2`: visual Lendário (nome, cor, aura, `rarity` 4) e poder de Épica. O % de ATK e Vida, a estrela plana, o golpe reforçado e o custo do nível seguem `pr`. `info()` devolve `powerRarity`/`powerRarityName`; `catalog()` devolve `pr`/`powerRarName`; `maxPct` é o do poder; `Sys.mount.powerRarity(id)`.
+  - Resultado: a montaria exclusiva soma 0% sobre a Épica do grátis. O VIP fica na tabela (+5% a +10% de ATK e Vida). Pior caso do VIP 10: **+10%** (era +17,5% com a Fênix Nv 60 5★; +18,5% com 7★ e estrela plana).
+  - A **Serpe infernal** (pet, VIP 9) fica como está: pet Lendário igual aos Lendários iniciais do grátis (§2.1). A **Serpe dourada** (montaria Lendária, Arena L85+ e era 8) é fonte grátis e **não mudou**.
+- **D2** (`js/sys/vip.js`): `table.goldOnly` = 0, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10 vira o `perks().goldPct`. O XP fica no `table.gold` (e no `xp9`). `levelInfo` traz `goldPct` e `xpPct` separados; `goldXpPct` passa a ser só o ouro. `perks().offlineGoldMult` = 1: o ×2 do VIP 5+ vale só para XP, itens, pedras e ração. O ouro offline é do Engenheiro (`js/meta.js`).
+- **D3** (`js/sys/mount.js`): Mecha de guerra `r:4, pr:2`, como a Fênix.
+- Moldura **Ouro**: saiu do VIP 7 e virou conquista do nível 60 (`js/sys/profile.js`, `need:{level:60}`). `table.frame` do VIP zerado; o VIP N segue com a moldura VIP N.
+- **Achado, para o dono decidir:** a skin **Demônio/Demônia do VIP 7** é Lendária e dá **+10% de ATK e Vida** equipada (+0,5% na coleção, `Sys.skin`). Com ela, o VIP 7+ passa do teto: 9% da tabela + 10% = +19%. O grátis não tem skin fixa Lendária. Nada mudou aqui. Opções: (a) a skin do VIP só visual (poder 0); (b) poder de Básica (+2%) e a tabela do VIP 7-10 baixa 2 pontos; (c) fica como está, fora do teto.

@@ -20,7 +20,7 @@ const DATA={
     {id:'none',      name:'Simples',       r:0, how:'Inicial',                         need:null},
     {id:'bronze',    name:'Bronze',        r:1, how:'Nível 10',                        need:{level:10}},
     {id:'prata',     name:'Prata',         r:2, how:'Nível 30',                        need:{level:30}},
-    {id:'ouro',      name:'Ouro',          r:4, how:'VIP 7',                           need:{vip:7}},   // dono 13/11: segue a tabela do VIP (VIP 7)
+    {id:'ouro',      name:'Ouro',          r:4, how:'Chegar ao nível 60',              need:{level:60}},   // dono 14/11: saiu do VIP 7 e virou conquista (nível 60)
     {id:'vip1', name:'VIP 1', r:2, how:'Chegar ao VIP 1', need:{vip:1}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
     {id:'vip2', name:'VIP 2', r:2, how:'Chegar ao VIP 2', need:{vip:2}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
     {id:'vip3', name:'VIP 3', r:2, how:'Chegar ao VIP 3', need:{vip:3}, vipFrame:true},   // só visual, sem atributo (dono 13/11)

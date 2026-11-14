@@ -15,8 +15,8 @@ const DATA={
     {id:'world_boss', name:'Chefe Mundial', icon:'boss', level:24, days:ALL, at:[[12,0],[20,0]], durMin:30, entries:2,
      what:'Um chefe gigante para todos atacarem juntos (online); por enquanto, cada um contra o seu. 2 ataques por janela.',
      prize:'Pedras de forja, Essência e ouro por faixa de dano; fragmentos de montaria para quem passar de 5% da vida'},
-    {id:'golden_hour', name:'Hora de Ouro', icon:'gold', level:10, days:ALL, at:[[19,0]], durMin:60, entries:0, perks:{goldPct:100},
-     what:'Ouro dobrado em todos os abates por 1 hora.', prize:'Ouro ×2 (abates, chefes e baús)'},
+    {id:'golden_hour', name:'Hora de Ouro', icon:'gold', level:10, days:ALL, at:[[19,0]], durMin:60, entries:0, perks:{goldPct:30},   // era +100% (×2); +30% (dono aprovou 14/11; docs/ECONOMIA_OURO.md §6: X = 5 min de abate = 120 × goldUnit por resgate)
+     what:'Ouro +30% em todos os abates por 1 hora.', prize:'Ouro +30% (abates, chefes e baús)'},
     {id:'era_invasion', name:'Invasão da Era', icon:'invasion', level:18, days:ALL, at:[[21,0]], durMin:20, entries:1, perks:{dropPct:50},
      what:'Ondas da sua era invadem: 20 minutos de drop de item +50% (sem passar da raridade-teto).', prize:'Drop de item +50% · baú da invasão ao fim'},
     {id:'weekend_tourney', name:'Torneio de Fim de Semana', icon:'tourney', level:28, days:[6], at:[[10,0]], durMin:36*60, entries:0, perks:{arenaPct:50},
