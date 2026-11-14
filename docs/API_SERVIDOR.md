@@ -141,7 +141,7 @@ Mesmo formato do `Sys.arena.localProvider`, com o campo `bots:false` vindo do se
 
 ### 4.1 Luta nova da Arena (13/11; fps-server, contrato com o Engenheiro e a Sistemas 53409f3)
 - **POST /arena/snapshot** aceita também `look`, `level` e `petFrac`. Nada disso entra na FC: a conferência de ±1% continua só nos atributos.
-  - `look` = `{hero, skin, armor, mount:{id, stars 0-5}|null, pet:{base, stage 1-3, fly}|null, wing, aura, weapon:{e 0-20, r 0-4, type}|null}` (formato da tela do Engenheiro: `skin` = skin fixa ou null, `armor` = roupa 'aXY' a pé, `weapon.e` = era visual, `type` = família), com ids `[a-z0-9_]`. No jogo, quem monta é `window.heroSnapshot()` do Engenheiro → `{look, level, petFrac}`; quem manda é `Sys.arenaNet.snapshot` (js/sys/arenanet.js, chave desligada). O servidor limpa: id inválido vira null, número fora do intervalo vira o limite, campo desconhecido some. O retrato nunca é recusado por causa da aparência.
+  - `look` = `{hero, skin, armor, mount:{id, stars 0-7}|null, pet:{base, stage 1-3, fly}|null, wing, aura, weapon:{e 0-25, r 0-5, type}|null, frame}` (`frame` = id da moldura equipada, ex. `ouro`, `vip7`, `nine_eras`; o servidor só guarda se for a equipada no save, `S.sys.profile.frame`; senão `null`) (formato da tela do Engenheiro: `skin` = skin fixa ou null, `armor` = roupa 'aXY' a pé, `weapon.e` = era visual, `type` = família), com ids `[a-z0-9_]`. No jogo, quem monta é `window.heroSnapshot()` do Engenheiro → `{look, level, petFrac}`; quem manda é `Sys.arenaNet.snapshot` (js/sys/arenanet.js, chave desligada). O servidor limpa: id inválido vira null, número fora do intervalo vira o limite, campo desconhecido some. O retrato nunca é recusado por causa da aparência.
   - `level` = nível do jogador.
   - `petFrac` = parte do ATQ que vem do pet (0..0,9; o mesmo `petFracOf` do jogo).
 - **GET /arena/opponents**: cada adversário traz `look` e `level`. O real vem com a foto dele; o bot, com `Sys.arena.botLook` pelo nível (nível do jogador ± `botLook.levelSpread`). Retrato sem `level` = bots com `level:null, look:null`, como antes.
@@ -443,12 +443,12 @@ O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`wo
 - Números PROVISÓRIOS (Sistemas). Quando "só abate novo dá Brasa" ligar, o teto de `got` cai.
 
 **Ladrão de Brasas (instância diária; atrás de `THIEF_ON`, migração 019).** As ENTRADAS do dia são contadas no servidor. Brasas só jogando: sem chave paga, sem anúncio.
-- `GET /v1/thief` → `{day, perDay, entriesLeft, batch, fireLevel, lastReward, canSweep, run:{runId, endsAt}|null, resetsInMs, provisional:true}`.
+- `GET /v1/thief` → `{day, perDay, entriesLeft, batch, fireLevel, lastReward, bestLevel, sweepBrasas, canSweep, run:{runId, endsAt}|null, resetsInMs, provisional:true}`.
 - `POST /v1/thief/enter` → `{runId, seed, startsAt, endsAt, maxBrasas, entriesLeft}`. Gasta 1 entrada; sem entrada: 429 `daily_limit` (com o tempo até a virada de Brasília).
 - `POST /v1/thief/finish {runId, score}` → `{brasas, score, maxBrasas, total}`.
   - `score` = fração do saco que o jogador soltou nos 45 s (0..1). Brasas = arredonda(`score` × lote); no máximo 1 lote por entrada.
   - Uma vez por corrida (409 `already_finished`); antes de 5 s, 409 `too_fast`; depois de 3 min, 409 `expired` (a entrada foi gasta).
-- `POST /v1/thief/sweep` → `{brasas, entriesLeft, total}`: "Varrer o último". Gasta 1 entrada e repete o último prêmio. Sem corrida jogada antes: 409 `nothing_to_sweep`.
+- `POST /v1/thief/sweep` → `{brasas, bestLevel, entriesLeft, total}`: "Varrer" (regra do jogo, 13/11). Gasta 1 entrada e paga o LOTE CHEIO do melhor nível de Fogueira já VENCIDO (corrida com score 1; o servidor guarda o nível da Fogueira de cada entrada). Sem corrida vencida antes: 409 `nothing_to_sweep`. A entrada é gasta no `enter`; sair no meio não devolve. Lote: Nv 1-3 = 1, 4-6 = 2, 7-9 = 4, 10-19 = 5, 20-34 = 6, 35-49 = 8, 50-60 = 10.
 - **Lote** = pelo NÍVEL da Fogueira no último save do jogador (`S.sys.bonfire.lv`):
 
   | Nível da Fogueira | 1-3 | 4-6 | 7-9 | 10-19 | 20-34 | 35-49 | 50-60 |
@@ -464,7 +464,7 @@ Pedido da Sistemas (docs/SISTEMA_MATRIZ.md, 1e54f3f). Nada é vendido em nenhum 
 ### 16.1 Dupla das Eras (`Sys.duo`)
 - **Código de amigo** `GET /v1/me/friend-code` → `{code}`. São 8 caracteres de `BCDFGHJKLMNPQRSTVWXZ23456789` (sem vogais, então não forma palavra), aleatórios, numa tabela própria. NÃO expõe o id interno nem dado pessoal. **Todo `id` das rotas da dupla é o CÓDIGO** (partner.id, invites[].id, `:id`).
 - `GET /v1/duo` → no formato do `applyServer`:
-  - `{on, code, day, week, needLevel, partner:{id, name, since, last, lv, era}|null, leftAt, relinkLeftMs, partnerDay, partnerWeek, partnerPresent, partnerDays[], myDay, myWeek, myDays[], invites:[{id, name, at, lv, era}], invitesOut, invitesLeft, messages:[{idx, at}], msgLeft, claimed:{daily, weekly[]}, cap}`;
+  - `{on, code, day, week, needLevel, partner:{id, name, since, last, lv, era, frame}|null, leftAt, relinkLeftMs, partnerDay, partnerWeek, partnerPresent, partnerDays[], myDay, myWeek, myDays[], invites:[{id, name, at, lv, era, frame}], invitesOut, invitesLeft, messages:[{idx, at}], msgLeft, claimed:{daily, weekly[]}, cap}`;
   - contadores `{kills, bossKills, stages, arenaWins}`. As mensagens são entregues uma vez.
   - `lv` (nível) e `era` (0-8) do parceiro e de quem convidou, para o cartão (resumo do último save; `null` sem save). "Online" no jogo = `last` há menos de 5 min.
   - **Bloqueio não avisa (PO):** quem foi bloqueado não vê nada. O convite dele dá o MESMO 404 `code` de um código inexistente. Se eram dupla, ela acaba como numa saída, sem dizer que foi bloqueio e sem espera para ninguém.
