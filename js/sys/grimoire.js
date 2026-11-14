@@ -75,7 +75,7 @@ const DATA={
     instance:{pages:1, ink:3, cap:{pages:1, ink:3}},   // por instância vencida (ou varrida): página da B da era só se a B já foi aprendida
     tower:   {ink:5, every:10, cap:{ink:5}},           // só no andar múltiplo de 10 (ctx.floor); outros andares devolvem reason 'skip'
     mission: {ink:1, cap:{ink:5}},                     // por missão DIÁRIA resgatada; o id vale só no dia (o módulo junta o dia ao id)
-    event:   {pages:1, ink:2, cap:{pages:1, ink:2}},   // por prêmio de evento: página da magia ctx.spell (pode ensinar, como o grant 'event'); sem ctx.spell, só a tinta
+    event:   {pages:1, ink:2, cap:{pages:1, ink:2}},   // por prêmio de evento: página da magia ctx.spell (pode ensinar, como o grant 'event'); sem ctx.spell, página da A da era se já aprendida
   },
   sourceCap:{pages:2, ink:12},                         // teto do DIA, as 4 fontes somadas
   forbidden:['shop','gems','offer','pack','pay','gacha'],   // fontes RECUSADAS (regra: nada à venda dá poder sorteado; menores jogam)
@@ -188,7 +188,8 @@ function onSource(S,host,src,ctx){ const no=(reason)=>({ok:false,src,pages:0,ink
   let sp=null;
   if(int0(D.pages)>0){
     if(src==='instance'){ const era=ctx.era!=null?clamp(int0(ctx.era),0,8):eraMaxOf(host), b=spellOfEra(era,'B'); if(o.own[b.id]) sp=b; }   // só junta página de magia já aprendida
-    else if(src==='event'){ sp=spell(ctx.spell); } }
+    else if(src==='event'){ sp=spell(ctx.spell);   // evento sem magia própria (Sys.events não tem grimSpell): página da A da era mais alta, se já aprendida (Sistemas 14/11)
+      if(!sp){ const era=ctx.era!=null?clamp(int0(ctx.era),0,8):eraMaxOf(host), a=spellOfEra(era,'A'); if(a&&o.own[a.id]) sp=a; } } }
   const pages=sp?Math.min(int0(D.pages),left('pages')):0, ink=Math.min(int0(D.ink),left('ink'));
   if(!pages&&!ink) return no('cap');
   let learned=false; if(pages){ const r=addPages(S,sp.id,pages,src); learned=!!(r&&r.learned); }

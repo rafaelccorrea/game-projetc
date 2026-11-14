@@ -41,12 +41,13 @@ t('missões diárias: 1 tinta cada, até 5 no dia; o mesmo id de missão volta a
   h.t+=DAY; const r=G.onSource(S,h,'mission',{id:'d_kill'}); assert.ok(r.ok&&r.ink===1,'missão diária é do dia');
 }));
 
-t('evento: 1 página da magia que o evento diz + 2 tinta (pode ensinar); sem magia, só a tinta',()=>withOn(()=>{
+t('evento: 1 página da magia que o evento diz + 2 tinta (pode ensinar); sem magia, página da A da era se já aprendida (senão só a tinta)',()=>withOn(()=>{
   let S={}, h=makeHost({});
   let r=G.onSource(S,h,'event',{id:'ev1:100',spell:'plasmaRay'}); assert.deepStrictEqual([r.ok,r.pages,r.ink,r.spell,r.learned],[true,1,2,'plasmaRay',true]);
   assert.strictEqual(G.levelOf(S,'plasmaRay'),1);
   S={}; r=G.onSource(S,h,'event',{id:'ev1:200'}); assert.deepStrictEqual([r.ok,r.pages,r.ink,r.spell],[true,0,2,null]);
   S={}; r=G.onSource(S,h,'event',{id:'ev1:300',spell:'naoExiste'}); assert.deepStrictEqual([r.pages,r.ink],[0,2]);
+  const A0=G.DATA.spells.filter(x=>x.era===0)[0]; S={}; G.ensure(S); G.onSource(S,h,'event',{id:'ev3:0',spell:A0.id}); h.t+=DAY; r=G.onSource(S,h,'event',{id:'ev3:1',era:0}); assert.strictEqual(r.spell,A0.id,'sem magia do evento: página da A da era, já aprendida'); assert.strictEqual(r.pages,1);
 }));
 
 t('mesmo ctx.id não paga duas vezes, nem na virada do dia; sem id não paga',()=>withOn(()=>{
