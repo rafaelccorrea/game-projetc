@@ -100,7 +100,7 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   // 4) rede ligada, SEM CONEXÃO: "Carregando…" durante a chamada, depois o motivo em texto e "Tentar de novo"
   DN.DATA.on = true; fail['GET /duo'] = 'timeout'; def.onOpen(); def.render(); has('Carregando…'); check('conectando'); await settle(); def.render(); check('sem conexão'); has('Sem conexão: tente de novo'); has('abre com o online'); has('data-x="retry"'); not('Bia');
   assert.strictEqual(sent(/^GET \/duo$/), 1, 'uma tentativa só por abertura');
-  fail['GET /duo'] = 'not_found'; click('retry', { k: 'boot' }); has('Carregando…'); await settle(); has('A Dupla ainda não abriu no servidor'); assert.strictEqual(posts(), 0);
+  fail['GET /duo'] = 'not_found'; click('retry', { k: 'boot' }); has('Carregando…'); await settle(); has('A Dupla ainda não abriu'); assert.strictEqual(posts(), 0);
   out.push('nível baixo, rede desligada ("abre com o online" + regras do módulo), sem conexão e 404 do servidor em texto, com Tentar de novo');
 
   // 5) ONLINE, SEM DUPLA: o meu código e os convites vêm do servidor; nomes escapados

@@ -489,7 +489,7 @@ function cardHtml(v){ const s=X.sel, cur=stageNow(), lv=lockedV(v), st=lv?'lock'
       +'<div class="m2-fbar" role="img" aria-label="Sua FC é '+nT(pct)+'% da pedida"><i style="width:'+w.toFixed(1)+'%"></i><em style="left:'+(tm.y/sc*100).toFixed(1)+'%"></em><em style="left:'+(tm.g/sc*100).toFixed(1)+'%"></em></div>'
       +'<div class="m2-flbl"><span>Abaixo de '+nT(Math.round(tm.y*100))+'%: bem abaixo</span><span>'+nT(Math.round(tm.g*100))+'%: FC suficiente</span></div>'; }
   else { dif=st==='done'?'<span class="m2-dif gone">Vencida</span>':'';
-    if(need) fcr='<div class="m2-fcr"><span>FC pedida<b class="lil">'+esc(fcT(need))+'</b></span><span>Sua FC<b class="lil">sem leitura agora</b></span></div>'; }
+    if(need) fcr='<div class="m2-fcr"><span>FC pedida<b class="lil">'+esc(fcT(need))+'</b></span><span>Sua FC<b class="lil">indisponível agora</b></span></div>'; }
   const btn=st==='now'?'<button class="m2-bt big" data-x="fight">'+SV.sword+'Lutar</button>':'<button class="m2-bt ghost" data-x="cur">Ir para a fase atual ('+nT(cur)+')</button>';
   return '<div class="m2-ch"><div class="t"><span class="m2-ck '+kick[0]+'">'+kick[1]+'</span><b class="lil">'+esc(stageName(s))+'</b><small>'+esc(sub)+'</small></div>'+dif+'</div>'
     +(gain?'<div class="m2-gain">'+gain+'</div>':'')+chips+fcr+'<div class="m2-row">'+btn+'</div>'; }

@@ -202,7 +202,8 @@ function gCard(r,D){ const on=X.sel===r.id?' on':'';
 function gSources(D){ const g=D.grants||{}, L=[];
   if(g.eraLord) L.push('<b>Senhor da Era</b>, 1ª vitória: aprende a 1ª magia da era + '+n0(g.eraLord.ink)+' de tinta');
   if(g.eraLordRepeat) L.push('<b>Senhor da Era</b> de novo: '+gPl(g.eraLordRepeat.n|0,'página','páginas')+' da 1ª magia, '+n0(g.eraLordRepeat.daily)+' por era por dia');
-  if(g.chief50) L.push('<b>Chefe da fase 50</b>, 1ª vitória: aprende a 2ª magia + '+n0(g.chief50.ink)+' de tinta');
+  let mid=5; try{ if(typeof STAGES_PER_ERA==='number'&&STAGES_PER_ERA>0) mid=Math.round(STAGES_PER_ERA/2); }catch(e){}   /* a mesma conta do js/battle.js: o chefe do meio da era (fase 5 de cada era, "1-5") */
+  if(g.chief50) L.push('<b>Chefe da fase '+n0(mid)+' de cada era</b>, 1ª vitória: aprende a 2ª magia + '+n0(g.chief50.ink)+' de tinta');
   if(g.instance) L.push('<b>Instância diária</b> vencida: '+gPl(g.instance.n|0,'página','páginas')+' da 2ª magia + '+n0(g.instance.ink)+' de tinta');
   if(g.tower) L.push('<b>Torre</b>: '+n0(g.tower.ink)+' de tinta a cada 10 andares');
   if(g.daily) L.push('<b>Missões diárias</b> completas: '+n0(g.daily.ink)+' de tinta');

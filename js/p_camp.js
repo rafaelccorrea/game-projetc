@@ -57,7 +57,7 @@ const rateTx=v=>{ v=num(v); return v>=1000?nf(v):String(Math.round(v*100)/100).r
 const pctTx=v=>Math.round(num(v)*100)+'%';
 const isOn=()=>{ try{ return typeof view!=='undefined'&&view===N; }catch(e){ return false; } };
 const lvNow=()=>{ try{ const h=host(); if(h&&typeof h.level==='function') return Math.max(0,Math.floor(num(h.level()))); return Math.max(0,Math.floor(num(Sys.level.level(S)))); }catch(e){ return 0; } };
-const RES={gold:'moedas',forge:'pedras de forja',practice:'pedras de treino'};
+const RES={gold:'moedas',forge:'pedras de forja',practice:'pedras de prática'};
 const WHY={off:'O Acampamento das Eras está fechado agora.',locked:'O Acampamento das Eras ainda está trancado.',id:'Essa tenda não existe.',
   pet:'Esse pet não pode trabalhar: é o principal ou não é seu.',busy:'Esse pet já está em outra tenda.',full:'Essa tenda não tem vaga de pet.',
   fixed:'Esta tenda é fixa: não tem melhoria.',max:'A tenda já está no nível máximo.',money:'Falta ouro para melhorar.',empty:'Ainda não juntou nada para coletar.'};
@@ -198,7 +198,7 @@ function sheetHtml(t,v,k){ const fixed=t.upgrade&&t.upgrade.reason==='fixed';
     +'<div class="ac-shh">'+art(t.id)+'<div><b class="lil">'+esc(t.name)+'</b><small>'+(fixed?'Tenda fixa':'Nível '+esc(t.lv+' de '+t.maxLv))+'</small></div><button class="ac-b ghost" data-x="close">Fechar</button></div>'
     +'<div class="ac-kv" style="margin-top:8px"><span>Produção</span><b>+'+esc(rateTx(t.perHour)+' '+(RES[t.res]||''))+' por hora</b></div>'
     +'<div class="ac-kv"><span>Guardado agora</span><b>'+esc(nf(t.stored)+' de '+nf(t.cap))+'</b></div>'
-    +'<p class="ac-note">'+(t.full?'Cheia: colete para voltar a encher.':'Enchendo. A coleta pega a parte inteira; o resto continua na tenda.')+'</p>'
+    +'<p class="ac-note">'+(t.full?'Cheia: colete para voltar a encher.':'Enchendo. A coleta pega só as unidades inteiras; o resto continua na tenda.')+'</p>'
     +petsHtml(t,v,k)+upHtml(t,k)+'</div></div>'; }
 const msgHtml=()=>'<div class="ac-msg">'+(X.msg?'<span class="'+(X.tone==='ok'?'ok':'bad')+'" role="'+(X.tone==='ok'?'status':'alert')+'">'+esc(X.msg)+'</span>':'')+'</div>';
 const sigOf=v=>{ try{ return v.tents.map(t=>[t.id,t.stored,t.pct,t.lv,(t.pets||[]).join(','),t.upgrade&&t.upgrade.reason].join('/')).join('|')+'#'+(v.idlePets||[]).length; }catch(e){ return ''; } };

@@ -96,7 +96,7 @@ const tab = t => click('tab', { t });
   // 1) online desligado (e ligado mas não iniciado): estado honesto, zero rede, nenhuma guilda ou membro na tela
   G.DATA.on = true; GN.DATA.on = false; GN._reset(); G.setProvider(null); await open(); check('desligado'); has('Em breve: abre com o online'); has('Como a guilda funciona'); not('Lobos'); not('Ana');
   click('checkin'); click('leave'); click('create'); has('Em breve: abre com o online'); not('gd2-conf'); assert.strictEqual(calls.length, 0, 'sem rede com o online desligado');
-  GN.DATA.on = true; def.onOpen(); def.render(); check('não iniciado'); has('Em breve: abre com o online'); has('ainda não conectou'); assert.strictEqual(calls.length, 0, 'sem rede antes de o online iniciar');
+  GN.DATA.on = true; def.onOpen(); def.render(); check('não iniciado'); has('Em breve: abre com o online'); has('As guildas ainda não abriram. Volte mais tarde.'); assert.strictEqual(calls.length, 0, 'sem rede antes de o online iniciar');
   G.DATA.on = false; def.render(); has('Guildas: em breve'); G.DATA.on = true;
   { const r = raf.shift(); assert(r, 'o laço do palco roda'); drew = []; r(1000); assert.strictEqual(drew.length, 1, 'um herói por quadro'); assert.strictEqual(drew[0].st.mount, false); assert(drew[0].k > 0 && isFinite(drew[0].k)); }
   out.push('online desligado ou não iniciado: "abre com o online", regras do módulo, zero rede; herói desenhado pela rota do jogo');
@@ -122,7 +122,7 @@ const tab = t => click('tab', { t });
   out.push('líder: membros e pedidos do servidor escapados; expulsar e passar a liderança em 2 toques; promover, rebaixar e aceitar; recusa (forbidden) em texto');
 
   // 3) Doar: check-in direto; doação em 2 toques, ouro debitado só depois do ok; sem diamante = motivo, sem rede
-  tab('donate'); check('doar'); has('Check-in'); not('Feito hoje');
+  tab('donate'); check('doar'); has('<b>Presença</b>'); not('Feito hoje');
   // 429 daily_limit do servidor: o Sys.guildNet repassa {reason, details, retryAfterMs}. Com retryAfterMs > 0 a tela mostra o tempo que falta; com 0 ou sem o campo, a virada de Brasília
   const LIM = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 }, MID = 'Já feito hoje. Volta à meia-noite de Brasília';
   fail['POST /guild/checkin'] = LIM; click('checkin'); await settle(); has('Já feito hoje. Volta em 5 h 30 min'); not(MID);
@@ -132,7 +132,7 @@ const tab = t => click('tab', { t });
   assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: null, retryAfterMs: 0 }), MID);
   assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 }), 'Já feito hoje. Volta em 5 h 30 min');
   assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { retryAfterMs: 40e3 } }), 'Já feito hoje. Volta em 1 min'); assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'boss' } }), 'Já feito hoje. Volta à meia-noite de Brasília');
-  click('checkin'); has('Carregando…'); await settle(); assert(calls.includes('POST /guild/checkin')); has('Check-in feito: +5 Brasões'); check('check-in feito');
+  click('checkin'); has('Carregando…'); await settle(); assert(calls.includes('POST /guild/checkin')); has('Presença marcada: +5 Brasões'); check('check-in feito');
   has('Feito hoje'); has('volta à meia-noite de Brasília'); not('data-x="checkin"'); { const nC = sent(/checkin/); click('checkin'); await settle(); assert.strictEqual(sent(/checkin/), nC, 'check-in feito hoje (checkinToday) não reenvia'); has('Já feito hoje'); }
   // doação: o débito é o cost:{goldk, gems} que o SERVIDOR devolveu (goldk × ouro de um abate), uma vez só e só com ok
   const gold0 = g.S.gold, unit = host.goldUnit(), local = Math.round(G.DATA.donate[0].goldk * unit), cost = Math.round(SRV_GOLDK * unit); assert.notStrictEqual(local, cost, 'o teste distingue o cost do servidor da tabela do jogo');
@@ -151,7 +151,7 @@ const tab = t => click('tab', { t });
   delete g.Guild2.X.d.boss; tab('boss'); has('Carregando…'); check('chefe carregando'); await settle(); check('chefe'); has('Chefe da semana'); has('2 golpes hoje'); has('63%'); has('Vida 63000 de 100000');
   has('Seu dano na semana'); has('1º Bento &lt;s&gt;'); not('Bento <s>'); has('2º Ana &lt;i&gt; (você)'); has('De 0x a 12x'); has('12x ou mais'); has('333 XP da guilda'); not('De 10x a 25x');   // faixas e prêmio de derrubar: os do servidor, não os da tabela
   click('hit'); has('Atacando o chefe…'); await settle(); assert(calls.includes('POST /guild/boss/hit')); has('Golpe no chefe: 4321 de dano'); await settle(); def.render(); has('Último golpe: <b>4321</b> de dano · prêmio: '); has('1 forja</p>'); has('1 golpe hoje'); check('chefe depois do golpe');
-  fail['GET /guild/boss'] = 'not_found'; click('retry', { k: 'boss' }); await settle(); has('Isso ainda não está disponível no servidor'); has('data-x="retry"'); check('chefe com erro'); delete fail['GET /guild/boss'];
+  fail['GET /guild/boss'] = 'not_found'; click('retry', { k: 'boss' }); await settle(); has('Isso ainda não está disponível'); has('data-x="retry"'); check('chefe com erro'); delete fail['GET /guild/boss'];
   // golpes do dia usados: o botão explica e não envia; 429 do servidor em texto
   BOSS.hitsLeft = 0; click('retry', { k: 'boss' }); await settle(); check('chefe sem golpes'); has('Golpes de hoje usados'); has('voltam à meia-noite de Brasília'); { const nH = sent(/boss\/hit/); click('hit'); await settle(); assert.strictEqual(sent(/boss\/hit/), nH, 'sem golpes não envia'); }
   // chefe caído (down): estado próprio, sem botão de atacar
@@ -162,7 +162,7 @@ const tab = t => click('tab', { t });
   // 6) Loja: compra em 2 toques; item acima do nível da guilda não tem botão
   tab('shop'); await settle(); check('loja'); has('3 de 5 nesta semana'); has('Abre no nível 3 da guilda'); not('data-id="stones5"');
   click('buy', { id: 'forge10' }); check('confirma comprar'); has('Trocar <b>20 Brasões</b> por <b>10 pedras de forja</b>?'); assert.strictEqual(sent(/shop\/buy/), 0, '1º toque não envia');
-  click('yes'); has('Comprando…'); await settle(); assert(calls.includes('POST /guild/shop/buy {"itemId":"forge10"}')); await settle();
+  click('yes'); has('Trocando…'); await settle(); assert(calls.includes('POST /guild/shop/buy {"itemId":"forge10"}')); await settle();
   fail['POST /guild/shop/buy'] = 'weekly_limit'; click('buy', { id: 'food100' }); click('yes'); await settle(); has('Limite desta semana atingido'); delete fail['POST /guild/shop/buy'];
   click('buy', { id: 'stones5' }); has('Abre no nível 3 da guilda'); not('gd2-conf');
   // item com left 0 (essence2: 3 de 3) e item locked não têm botão e explicam; nome do item vindo do servidor escapado

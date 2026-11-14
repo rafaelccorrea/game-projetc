@@ -130,7 +130,16 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
      o rótulo é o relógio; some ao comprar ou expirar. Ícone próprio da Arte (assets/icons/menu/offer.png). */
   { id: 'offer',  icon: 'offer',     label: 'Oferta',  side: 'right', x: 7, y: 220, act: 'soon:offer', prio: 6, hot: true, show: () => fbOfferOn() },
   /* alerta "Evento" (prio 6, side right, y 220): só entra quando existir evento no jogo; hoje não há, então não é desenhado (Eventos fica no MENU, "Em breve") */
+  /* HOJE (Sys.today, nível 7): lista do que dá para pegar agora, com "Pegar tudo". Só aparece com o módulo e a tela ligados E algo na lista (o selo é a conta).
+     Fica abaixo do Baú; com a Oferta ou o Evento na tela, desce uma casa por cada um. Ícone PROVISÓRIO = o de Missões, até a Arte entregar assets/icons/menu/today.png */
+  { id: 'today',  icon: 'missions',  label: 'Hoje',    side: 'right', x: 7, y: 220, yf: () => fbTodayY(), act: 'soon:today', prio: 7, badge: 'fb_bt', show: () => fbTodayN() > 0 },
 ];
+/* HOJE: a conta do selo é lida 1 vez por segundo (Sys.today.badge percorre os outros módulos; o fbTick roda várias vezes por segundo) */
+const FB_TODAY = { n: 0, t: 0 };
+function fbTodayN(){ const now = Date.now(); if (now < FB_TODAY.t && FB_TODAY.t - now <= 1000) return FB_TODAY.n; FB_TODAY.t = now + 1000; let n = 0;
+  try { if (window.Sys && Sys.today && Sys.today.on() && Screens.reg && Screens.reg.today && !Screens.reg.today.broken && fbPanelOn('today')) n = Sys.today.badge(S, Sys.host) | 0; } catch (e) { n = 0; }
+  FB_TODAY.n = n; return n; }
+function fbTodayY(){ let k = 0; try { for (const m of FB_MENU){ if (m.id === 'today' || m.side !== 'right' || m.chest || typeof m.show !== 'function') continue; if (fbUnl(m.id) && m.show()) k++; } } catch (e) {} return 220 + 76 * k; }
 /* itens do botão MENU (drop down), na ordem do protótipo. act 'soon:<chave>' = tela ainda não aprovada/feita: mostra "Em breve" */
 /* a oferta de 1ª compra está valendo? (Modo dono + tela ligada + módulo ligado + dentro das 24 h + nunca comprou) */
 function fbOfferSt(){ try { if (!(typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || !(window.Panels && Panels.on('offer')) || !(window.Sys && Sys.offer && Sys.host)) return null; const st = Sys.offer.status(S, Sys.host); return st && st.on && st.available ? st : null; } catch (e) { return null; } }
@@ -156,6 +165,8 @@ const FB_DROP = [
   { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map', alerts: () => { try { return window.Map2 && fbPanelOn('map2') ? Map2.ready() : 0; } catch (e) { return 0; } } },   /* Mapa das Eras: nível 1 (PO) */
   { id: 'camp',     icon: 'guild',     label: 'Acampamento das Eras', act: 'soon:camp', alerts: () => { try { const v = Sys.camp && Sys.camp.DATA.on === true ? Sys.camp.view(S, Sys.host) : null; return v && !v.locked ? v.tents.filter(t => t.full).length : 0; } catch (e) { return 0; } } },   /* Acampamento das Eras (Sys.camp, nível 20). Ícone PROVISÓRIO até a Arte entregar assets/icons/menu/camp.png */
   { id: 'grim',     icon: 'grimoire',  label: 'Grimório',   act: 'soon:grim' },   /* Grimório das Eras (Sys.grimoire); só aparece com a tela ligada */
+  { id: 'relics',   icon: 'codex',     label: 'Relíquias',  act: 'soon:relics', alerts: () => { try { return Sys.relics.on() ? Sys.relics.view(S, Sys.host).slots.filter(x => x.canLevel || x.canUnlock).length : 0; } catch (e) { return 0; } } },   /* Relíquias das Eras (Sys.relics, nível 12); selo = relíquias que dá para subir ou despertar. Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/relic.png */
+  { id: 'dig',      icon: 'tower',     label: 'Escavação',  act: 'soon:dig', alerts: () => { try { return Sys.dig.on() ? (Sys.dig.view(S, Sys.host).picks >= 20 ? 1 : 0) : 0; } catch (e) { return 0; } } },   /* Escavação (Sys.dig, nível 14); selo: picaretas cheias. Ícone PROVISÓRIO = o da Torre, até a Arte entregar assets/icons/menu/dig.png */
   { id: 'path',     icon: 'equipment', label: 'Caminhos',   act: 'soon:path' },   /* Caminhos (Sys.path, nível 30: a própria tela explica o que falta). Ícone PROVISÓRIO */
   { id: 'trial',    icon: 'tower',     label: 'Provação',   act: 'soon:trial' },   /* Provação do Mestre (Sys.trial). Ícone PROVISÓRIO */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },
@@ -171,8 +182,8 @@ const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="
    Ao liberar, o ícone aparece UMA vez com o selo "NOVO!" e um balão curto; um por vez, em fila; S.unl guarda o que já foi anunciado.
    Trocar o nível = trocar 1 número aqui. (O Sys.level.isUnlocked só conhece as chaves do módulo: practice, forge, instances, tower, arena, pet;
    as outras ainda não estão lá, por isso a tabela fica aqui e a conta usa Sys.level.level(S).) Sem entrada na tabela = desde o início. */
-const FB_UNLOCK = { camp: 20, map: 1, codex: 12, chat: 16, duo: 16, mentors: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
-const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
+const FB_UNLOCK = { camp: 20, relics: 12, dig: 14, today: 7, map: 1, codex: 12, chat: 16, duo: 16, mentors: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
+const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes', today: 'Hoje: tudo o que dá para pegar agora', relics: 'Relíquias: uma por era, com bônus fixo', dig: 'Escavação: cave e ache fragmentos' };
 const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
 /* SAVE ANTIGO NÃO PERDE ACESSO (PO, v0.12.4): quem já jogava antes da liberação por nível continua vendo o que já usava, em qualquer nível.
    Marcador no save: S.bornV ('old' = save anterior à regra; senão a versão em que o save nasceu). Lista herdada: S.unlKeep = {id:1}.
@@ -348,6 +359,7 @@ function fbTick(){
   { const inB = S.wave === 5, gl = !inB && FCV >= BOSS_GLOW_AT * (typeof fcNeed === 'function' ? fcNeed : recFC)(S.stage), k = e + '|' + inB + '|' + gl; if (FBK.boss !== k){ FBK.boss = k; const b = document.getElementById('fb_boss'); document.getElementById('fb_bossi').src = 'assets/enemies/era' + e + '_boss.png';
       b.classList.toggle('fb-desglow', gl); b.style.filter = gl ? '' : 'grayscale(.75) brightness(.8)'; } }
   { const nm = missionAlerts(), np = passAlerts(); fbSet('fb_bm', nm ? String(nm) : ''); fbSet('fb_bp', np ? String(np) : ''); }
+  { const tn = fbTodayN(), on = tn > 0; if (FBK.tdOn !== on){ FBK.tdOn = on; fbLayout(); } fbSet('fb_bt', tn ? String(tn) : ''); }   /* botão Hoje: aparece/some com a lista e mostra a conta no selo */
   try { const p = Sys.chest.progress(S, Sys.host), w = Math.round((p.stored ? 1 : p.pct) * 100); fbSet('fb_bc', p.stored ? String(p.stored) : ''); if (FBK.chp !== w){ FBK.chp = w; document.getElementById('fb_chp').style.width = w + '%'; } } catch (er) {}
   { const gp = fbUnl('shopgem') ? 1 : 0; if (FBK.gp !== gp){ FBK.gp = gp; const pl = document.querySelector('#fb_gemp .fb-plus'); if (pl) pl.style.display = gp ? '' : 'none'; } }   // o "+" das gemas só aparece quando a loja de gemas existe para o jogador
   { const k = S.set.sound ? 1 : 0; if (FBK.mus !== k){ FBK.mus = k; document.getElementById('fb_mus').innerHTML = k ? '<span class="fb-eq"><i></i><i></i><i></i></span>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>'; } }

@@ -204,6 +204,8 @@ function pSources(def){ const P=pP(), D=P.DATA; if(Array.isArray(def.src)&&def.s
   if(P2_HOW[def.id]) s.push(P2_HOW[def.id]);
   const tw=D.v17.tower100; if(Array.isArray(tw)&&tw.indexOf(def.id)>=0) s.push('Torre, andar 100: ovo '+pRN(def.r)+' à escolha ('+tw.map(q=>{ const d=pDef(q); return d?d.name:''; }).filter(Boolean).join(' ou ')+')');
   return s; }
+/* Pets de apoio (Sys.petSupport + tela 'petsup'): o botão da grade só existe com os dois ligados */
+function pSupOn(){ try{ const M=window.Sys&&Sys.petSupport; return !!(M&&M.DATA&&M.DATA.on===true&&window.Panels&&typeof Panels.on==='function'&&Panels.on('petsup')); }catch(e){ return false; } }
 function pRoute(def){ try{ if(!window.Panels||typeof Panels.on!=='function') return null; for(const t of pSources(def)) for(const r of P2_ROUTE) if(r[0].test(t)&&Panels.on(r[1])) return {to:r[1],label:r[2]}; }catch(e){} return null; }
 const pStars=(k,max,sz)=>{ let h=''; for(let i=1;i<=max;i++) h+=`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P2_STAR}" fill="${i<=k?'#ffd25e':'rgba(255,255,255,.12)'}" stroke="${i<=k?'#9a5a10':'rgba(160,180,255,.4)'}" stroke-width="1.4" stroke-linejoin="round"></path></svg>`; return h; };
 const pX=v=>String(v).replace('.',',');
@@ -346,7 +348,7 @@ function pRender(){
       <span class="p2-cn">${esc2(p.name)}</span><span class="p2-cs r">${esc2(rn)}</span><span class="p2-cs">${esc2(third)}</span></button>`; };
   const nLater=D.pets.filter(p=>!p.removed&&P2_ORDER.indexOf(p.id)<0).length;
   const grid=`<div class="p2-pan"><div class="p2-sec"><span>Pets</span><span><b>${n0(nOwn)}/${n0(list.length)}</b> · toque para usar ou ver</span></div><div class="p2-grid">${list.map(cell).join('')}</div>
-      <p class="p2-hint">Ração: vem dos baús e de <b>${n0(D.offlineFoodPer8h)} a cada 8 h</b> fora do jogo.${nLater?' Mais '+n0(nLater)+' pets entram quando a arte deles for aprovada.':''}</p></div>`;
+      <p class="p2-hint">Ração: vem dos baús e de <b>${n0(D.offlineFoodPer8h)} a cada 8 h</b> fora do jogo.${nLater?' Mais '+n0(nLater)+' pets entram quando a arte deles for aprovada.':''}</p>${pSupOn()?`<div class="p2-rowb"><button class="p2-bt off" data-x="go" data-to="petsup"><span>Pets de apoio</span><small>2 espaços atrás do principal e o bônus da coleção</small></button></div>`:''}</div>`;   /* entrada dos Pets de apoio (js/p_petsup.js, Sys.petSupport): só com o sistema e a tela ligados */
 
   /* ----- SOBRE O PET: estágios, golpe, estrelas ----- */
   let about='';
@@ -441,7 +443,7 @@ const ACT={
   relok(b,c){ const id=c.o.eq; XP.confirm=false; if(!id||!c.o.owned[id]){ pRedraw(); return; } const before=pFc(), r=c.P.resetLevel(S,c.host,id);
     if(r&&r.ok){ pSnd('coin'); pChanged(); const after=pFc(); XP.undo=null; XP.last={id,what:'Nv 1',a:before,b:after}; pFlyFc(after-before); pToast('+'+n0(r.refund|0)+' de ração de volta'); } else pToast('Já está no Nv 1');
     pRedraw(); },
-  go(b,c){ const to=String(b.dataset.to||''); pSnd('ui_tap'); let ok=false; try{ ok=P2_ROUTE.some(r=>r[1]===to)&&!!window.Panels&&Panels.on(to)&&Panels.open(to,{from:P2})!==false; }catch(e){ ok=false; }
+  go(b,c){ const to=String(b.dataset.to||''); pSnd('ui_tap'); let ok=false; try{ ok=(P2_ROUTE.some(r=>r[1]===to)||(to==='petsup'&&pSupOn()))&&!!window.Panels&&Panels.on(to)&&Panels.open(to,{from:P2})!==false; }catch(e){ ok=false; }
     if(!ok){ pToast('Esta tela ainda não está disponível'); pRedraw(); } },
   egg(b,c){ if(!pEggPending()) return; const r=c.P.firstEgg(S,c.host);
     if(!r||!r.ok){ pToast(r&&r.reason==='level'?'Libera no nível '+n0(r.needLevel||pLockLevel()):'O ovo já foi chocado'); pRedraw(); return; }

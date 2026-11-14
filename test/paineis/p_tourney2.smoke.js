@@ -113,7 +113,7 @@ let ts = 1000; const frames = (n, dt) => { for (let i = 0; i < n; i++) { const f
   tab('lineup'); check('escalação'); has('Escalados 1/15'); has('>Salva<'); has('Trava em 10 h, às ' + HR(LOCK.d5) + '.'); has('Ana &lt;i&gt; (você)'); not('Ana <i>'); has('Menos de 24 h de guilda antes da trava'); has('FC somada 9 mil');
   { const order = ['Dora', 'Bento', 'Caio', 'Ana'].map(n => H().indexOf('<b>' + n)); assert(order.every((v, i) => v > 0 && (!i || v > order[i - 1])), 'linhas em ordem de FC: ' + order); }
   click('pick', { id: 'p4' }); has('entrou há menos de 24 h antes da trava (pode no sábado)'); has('Escalados 1/15');
-  click('pick', { id: 'p1' }); has('Escalados 2/15'); has('Não salva'); has('>2º<'); has('Mediana de era: 4,5');
+  click('pick', { id: 'p1' }); has('Escalados 2/15'); has('Não salva'); has('>2º<'); has('Era do time: 4,5');
   click('lu', { k: 'clear' }); has('Escalados 0/15'); click('lu', { k: 'save' }); has('Escale pelo menos 1'); assert.strictEqual(sent(/PUT/), 0);
   click('lu', { k: 'best' }); has('Escalados 3/15'); click('lu', { k: 'save' }); has('Salvando a escalação…'); await settle();
   assert(calls.includes('PUT /tourney/lineup {"slot":"d5","members":["p2","p3","p1"]}'), 'salva os de maior FC elegíveis, sem a Dora: ' + calls.filter(c => /PUT/.test(c))); has('Escalação de sexta salva (3/15)'); has('>Salva<');
@@ -124,7 +124,7 @@ let ts = 1000; const frames = (n, dt) => { for (let i = 0; i < n; i++) { const f
   // 5) BATALHAS: lista do servidor e a luta animada pelo registro (x1/x4, Pular, Ver de novo, Fechar)
   tab('battles'); check('batalhas'); has('Guardiões do Teste ataca Lobos &lt;b&gt;'); has('Guardiões do Teste tomou · 2 duelos · decidida na luta · vitória da sua guilda');
   has('Lobos &lt;b&gt; ataca Sem dono'); has('Lobos &lt;b&gt; tomou · território sem dono<'); has('Guardiões do Teste tomou · o dono não tinha lutador · vitória da sua guilda'); has('O território segue sem dono · o atacante não tinha lutador<');
-  has('Lobos &lt;b&gt; segurou · era mediana do atacante abaixo da região · derrota da sua guilda'); has('Guardiões do Teste já era a dona<'); not('Aguardando a batalha');
+  has('Lobos &lt;b&gt; segurou · era do time atacante abaixo da região · derrota da sua guilda'); has('Guardiões do Teste já era a dona<'); not('Aguardando a batalha');
   assert.strictEqual((H().match(/class="won"/g) || []).length, 2, 'duas vitórias da minha guilda (fight e walkover)'); assert.strictEqual((H().match(/class="lost"/g) || []).length, 1, 'uma derrota (era)');
   assert.strictEqual(buttons().filter(b => b.dataset.x === 'watch').length, 1, 'só a batalha com registro tem Ver luta'); click('watch', { i: '1' }); has('Esta batalha não teve luta'); not('tr2-ctl');
   click('watch', { i: '0' }); check('luta'); has('tr2-ctl'); has('Duelo 1 de 2'); has('<b>Bento</b>'); has('Lutador 1'); has('FC 9 mil'); has('>x1<'); has('>x4<'); has('Pular'); has('Fechar'); assert(def.busy(), 'durante a luta a tela não é redesenhada por fora');

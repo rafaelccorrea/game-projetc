@@ -47,7 +47,7 @@ const codeOk=c=>{ try{ return data().codeRe.test(c); }catch(e){ return false; } 
 
 /* ---------- recusas (o módulo e o servidor decidem; aqui só o texto, com os números do módulo) ---------- */
 function why(r){ const D=data(), I=D.invite||{}, M=D.msg||{};
-  const T={off:'A Dupla ainda não foi ligada',online:'Em breve: abre com o online',module:'Dupla indisponível agora',data:'O servidor respondeu de um jeito inesperado. Tente de novo',
+  const T={off:'A Dupla ainda não foi ligada',online:'Em breve: abre com o online',module:'Dupla indisponível agora',data:'Algo deu errado. Tente de novo',
     code:'Código inválido ou não encontrado: confira com o seu amigo',self:'Esse é o seu código',dup:'Você já convidou esse código',
     limit:'Os convites de hoje acabaram ('+nT(I.perDay)+' por dia). Amanhã tem mais',limit_out:'Você já tem '+nT(I.maxOut)+' convites esperando resposta',
     paired:'Você já tem uma dupla',relink:'Você saiu de uma dupla: espere a contagem para formar outra',level:'A Dupla abre no nível '+nT(D.needLevel),
@@ -55,8 +55,8 @@ function why(r){ const D=data(), I=D.invite||{}, M=D.msg||{};
     invite:'Esse convite venceu',blocked:'Jogador bloqueado',none:'Você está sem dupla agora',id:'Isso não existe mais',
     wait:'Aguarde um pouco para a próxima frase',day:'Chegou a '+nT(M.perDay)+' frases hoje. Amanhã tem mais',repeat:'Essa já foi '+nT(M.repeatMax)+' vezes seguidas: escolha outra',phrase:'Frase inválida',
     done:'A meta ainda não fechou',presence:'A meta precisa dos dois: o seu parceiro ainda não entrou',claimed:'Você já resgatou este prêmio',
-    not_found:'A Dupla ainda não abriu no servidor',forbidden:'O servidor não permitiu isso',bad_request:'Pedido inválido: confira os dados',daily_limit:'Limite de hoje atingido. Amanhã tem mais',
-    net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo',server:'O servidor não respondeu. Tente de novo'};
+    not_found:'A Dupla ainda não abriu',forbidden:'Isso não é permitido agora',bad_request:'Não deu certo. Confira e tente de novo',daily_limit:'Limite de hoje atingido. Amanhã tem mais',
+    net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo',server:'Sem resposta agora. Tente de novo'};
   return T[r]||'Não foi possível agora. Tente de novo'; }
 /* recusa inteira ({reason, ms, retryAfterMs}): quando o tempo que falta chega, ele entra no texto */
 function whyR(r){ const R=r&&r.reason, ms=num(r&&r.retryAfterMs)||num(r&&r.ms);
@@ -332,13 +332,13 @@ function rulesHtml(){ const D=data(), I=D.invite||{}, M=D.msg||{}, G=D.daily||{}
     +row('Conversa','Só '+nT((D.phrases||[]).length)+' frases prontas. '+nT(M.perDay)+' por dia')
     +row(String(G.name||'Meta do dia'),'Os dois entram no dia e somam '+nT(G.target)+' abates')
     +row('Semana',nT((D.weekly||[]).length)+' missões pela soma dos dois')
-    +row('Prêmio','Igual para os dois. Cada um resgata o seu. Só ouro e Pedras de Forja')
+    +row('Prêmio','Igual para os dois. Cada um resgata o seu. Só ouro e pedras de forja')
     +row('Sair','Acaba para os dois. Quem sai espera '+nT(Math.round(num(D.relinkMs)/3600000))+' h')+'</div>'; }
 function pClosed(M){ const z=netSt(); let t='', btn='';
   if(M.m==='boot') t='<span role="status">Carregando…</span>';
-  else if(!z||!z.on) t='<span role="status">Em breve: abre com o online</span><span>A Dupla depende do servidor. Nada aparece aqui antes disso.</span>';
+  else if(!z||!z.on) t='<span role="status">Em breve: abre com o online</span><span>A Dupla ainda não abriu. Volte mais tarde.</span>';
   else if(X.boot==='err'){ t='<span role="alert">'+esc2(X.bootWhy||why(''))+'</span><span>A Dupla abre com o online. Nada aparece aqui antes disso.</span>'; btn='<button class="du-bt y" data-x="retry" data-k="boot">Tentar de novo</button>'; }
-  else { t='<span role="status">Em breve: abre com o online</span><span>O jogo ainda não conectou ao servidor da Dupla.</span>'; btn='<button class="du-bt y" data-x="retry" data-k="boot">Tentar de novo</button>'; }
+  else { t='<span role="status">Em breve: abre com o online</span><span>A Dupla ainda não abriu. Volte mais tarde.</span>'; btn='<button class="du-bt y" data-x="retry" data-k="boot">Tentar de novo</button>'; }
   return '<div class="du-card hi du-wt"><b>Dupla das Eras</b>'+t.replace(/<span/g,'<small').replace(/<\/span>/g,'</small>')+(btn?'<div style="margin-top:8px">'+btn+'</div>':'')+'</div>'+rulesHtml(); }
 
 /* ----- sem dupla: o meu código, convidar pelo código, convites recebidos ----- */
@@ -363,7 +363,7 @@ function invitesCard(v,waiting){ const L=v.invitesIn||[], ttlH=nT(Math.round(num
       return '<div class="du-inv'+(i?'':' first')+'"><div class="who"><span class="du-av">'+SV(I_ONE,30)+'</span><span class="tx"><b>'+nm+'</b><small>'+esc2(sub)+'</small></span></div>'
         +'<div class="acts"><button class="du-bt g'+(waiting?' off':'')+'" data-x="accept" data-id="'+id+'">Aceitar</button><button class="du-bt" data-x="decline" data-id="'+id+'">Recusar</button><button class="du-bt r" data-x="blockinv" data-id="'+id+'" aria-label="Bloquear '+nm+'">'+SV(I_BLOCK)+'</button></div></div>'; }).join('')
     :'<div class="du-empty">Nenhum convite agora.</div>')+(L.length?'<p class="du-note">Convite sem resposta vence em '+ttlH+' h.</p>':'')+(num(v.blocked)>0?'<p class="du-note">Bloqueados: <b>'+nT(v.blocked)+'</b> (não podem te convidar)</p>':'')+'</div>'; }
-function pOut(v){ return '<div class="du-card hi"><h4>Jogue em dupla com um amigo<span>1 dupla por vez</span></h4><p class="du-note" style="margin:0;color:#f6ecdf">Juntos vocês fecham a meta do dia e as missões da semana. <b>Cada um ganha o seu prêmio.</b> Só ouro e Pedras de Forja.</p></div>'
+function pOut(v){ return '<div class="du-card hi"><h4>Jogue em dupla com um amigo<span>1 dupla por vez</span></h4><p class="du-note" style="margin:0;color:#f6ecdf">Juntos vocês fecham a meta do dia e as missões da semana. <b>Cada um ganha o seu prêmio.</b> Só ouro e pedras de forja.</p></div>'
   +codeCard(v,false)+invitesCard(v,false); }
 function pWait(v){ const rh=nT(Math.round(num(data().relinkMs)/3600000));
   return '<div class="du-card hi du-wt" role="status"><b>Você saiu da dupla</b><span class="tm" id="du_wtm">'+hms(v.relinkLeft)+'</span><small>Pode formar outra dupla quando a contagem acabar.</small><small class="d">Só quem sai espera '+rh+' h. Quem ficou pode formar outra na hora. Missão já resgatada nesta semana não volta com parceiro novo.</small></div>'
@@ -395,7 +395,7 @@ function pDuo(v){ const p=v.partner, nm=esc2(p.name||'Parceiro'), on=partnerOn(p
     +'<h4 class="ct">Missões da semana<span>soma dos dois · cada um resgata o seu</span></h4>'+W.map((m,i)=>'<div class="du-wm'+(i?'':' first')+'"><span class="wi">'+SV(W_IC[m.id]||I_DUO,36)+'</span><div class="wb"><div class="nm">'+esc2(m.name)+': <b>'+nT(m.value)+'/'+nT(m.target)+'</b></div>'
         +(m.mine==null?bar2(m.value,0,m.target)+'<div class="du-leg"><span>dias em que os dois entraram</span></div>':bar2(m.mine,m.partner,m.target)+'<div class="du-leg"><span class="m">Você: '+nT(m.mine)+'</span><span class="p">'+nm+': '+nT(m.partner)+'</span></div>')
         +'<div class="du-rw"><span class="chips">'+rwChips(m.reward)+'</span>'+claimBtn(m)+'</div></div></div>').join('')
-    +'<p class="du-note">Só ouro e Pedras de Forja. Nada da Dupla se compra.</p></div>'
+    +'<p class="du-note">Só ouro e pedras de forja. Nada da Dupla se compra.</p></div>'
     +'<div class="du-card"><h4>Frases prontas<span>Frases hoje: '+nT(sent)+'/'+nT(M.perDay)+'</span></h4><div class="du-fpv">'+SV(I_BUB,30)+'<span class="q">'+(last?(last.me?'Você':'<b>'+nm+'</b>')+': '+esc2(last.txt):'Nenhuma frase ainda.')+'</span></div>'
     +'<div class="du-quick" role="group" aria-label="Frases prontas">'+(v.phrases||[]).slice(0,QUICK).map(f=>'<button class="du-qb" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+'">'+esc2(f.txt)+'</button>').join('')
     +'<button class="du-bt b" data-x="phr" aria-label="Abrir todas as frases'+(un?', '+nT(un)+' novas':'')+'">'+SV(I_SCROLL,24)+'<span class="tw">Abrir'+(un?' ('+nT(un)+')':'')+'<small>todas as frases</small></span></button></div></div>'
@@ -480,7 +480,7 @@ const ACT={
     if(st.claimed) return say(why('claimed'),'bad');
     if(!st.done) return say(id==='daily'&&!st.both?String(v.partner.name||'O parceiro')+' ainda não entrou hoje: a meta precisa dos dois':why('done'),'bad');
     run('Carregando…',()=>n.claim(sv(),host(),id),{after:r=>{ if(r.mailed===true) X.mailed[id]=1; },
-      ok:r=>{ if(r.mailed===true) return 'Prêmio enviado: chega pelo correio'; const q=r.reward||{}, g=num(q.gold), s=num(q.stones), parts=[]; if(g>0) parts.push('+'+kfT(g)+' de ouro'); if(s>0) parts.push('+'+nT(s)+(s>1?' Pedras de Forja':' Pedra de Forja'));
+      ok:r=>{ if(r.mailed===true) return 'Prêmio enviado: chega pelo correio'; const q=r.reward||{}, g=num(q.gold), s=num(q.stones), parts=[]; if(g>0) parts.push('+'+kfT(g)+' de ouro'); if(s>0) parts.push('+'+nT(s)+(s>1?' pedras de forja':' pedra de forja'));
         return parts.length?'Prêmio recebido: '+parts.join(' e '):'Prêmio resgatado'; }}); } };
 const LOCAL={retry:1,no:1,tduo:1};
 function click(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototype.hasOwnProperty.call(ACT,a)) return;

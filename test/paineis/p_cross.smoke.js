@@ -81,7 +81,7 @@ has('Vale até o fim da era'); has('Fase 1-5 vencida'); has('escolha 1 de 2'); h
 assert.strictEqual((H().match(/class="pt /g) || []).length, C.view(g.S, host).points.length, 'trilha: os pontos do módulo'); has('class="pt now"');
 assert.deepStrictEqual(buttons(H()).map(b => b.dataset.x), ['pick', 'pick', 'later']); sane('escolha');
 // rótulo curto: valores do módulo
-assert.strictEqual(P.fx({ stat: { atkPct: 3 } }), 'ATK +3%'); assert.strictEqual(P.fx({ stat: { defPct: 2 } }), 'Dano recebido -2%'); assert.strictEqual(P.fx({ stat: { critPct: 1.5 } }), 'Crítico +1,5');
+assert.strictEqual(P.fx({ stat: { atkPct: 3 } }), 'ATQ +3%'); assert.strictEqual(P.fx({ stat: { defPct: 2 } }), 'Dano recebido -2%'); assert.strictEqual(P.fx({ stat: { critPct: 1.5 } }), 'Crítico +1,5%');
 assert.strictEqual(P.fx({ perk: { brasaPot: 1 } }), 'Brasa +1 por pote'); assert.strictEqual(P.fx({ strike: { combo: 4 } }, 2), 'Combo +8'); assert.strictEqual(P.fx({ stat: { novo: 9 }, text: '+9 de coisa nova' }), '+9 de coisa nova', 'chave desconhecida: texto do módulo');
 for (const b of C.DATA.pool) { const c = C.offers; const card = { id: b.id, name: b.name, text: b.text, stat: b.stat || {}, perk: b.perk || {}, strike: b.strike || {} }; const t = P.fx(card); assert(t && t !== b.text && /[+-]\d/.test(t), 'rótulo curto de ' + b.id + ': ' + t); void c; }
 out.push('ligado: 2 cartões com nome, efeito e texto do módulo (' + of5.map(b => b.name + ' = ' + P.fx(b)).join(' | ') + '), trilha e regra "Vale até o fim da era"');

@@ -24,17 +24,19 @@ if (typeof NEXT_ON !== 'undefined' && NEXT_ON) window.startInstanceRun = functio
   B.grim = null; if (B.stkQ) B.stkQ.length = 0;   /* magias e golpes extras da luta anterior não entram nesta (as recargas recomeçam cheias) */
   if (Number.isInteger(run.stage) && run.stage > 0) S.stage = run.stage; S.wave = 1; S.farm = false;
   const st = heroStats(); B.hero = { hp: st.hp, atkT: 0.3 }; heroApply(B.hero, st); B.deadT = 0; B.deadBoss = false; B.act = null; B.res = null; B.running = true;
-  if (run.special){ B.hero.hp = B.hero.maxhp * (run.hpStart > 0 && run.hpStart < 1 ? run.hpStart : 1); B.inst.en0 = B.energy; B.energy = 0; B.cd2 = 0; B.eshots = []; ligExit(run.special === 'pathTry' || run.special === 'thief'); }   /* Provação "metade da vida"; vida cheia pela conta da regra (sem pet / sem montaria); todo ensaio/provação começa igual */
+  if (run.special){ B.hero.hp = B.hero.maxhp * (run.hpStart > 0 && run.hpStart < 1 ? run.hpStart : 1); B.inst.en0 = B.energy; B.energy = 0; B.cd2 = 0; B.eshots = []; ligExit(true); }   /* Provação "metade da vida"; vida cheia pela conta da regra (sem pet / sem montaria); todo ensaio/provação começa igual */
   if (typeof grimSync === 'function') grimSync();
   instWave(0); B.banner = { txt: run.banner || ('Instância: ' + (run.name || '')), pill: true, bg: 'rgba(29,22,17,.92)', bd: '#ffc94a', sh: '#0e0a07', t: 0, dur: 2.2, col: '#ffc94a' };
   if (typeof fbTick === 'function') fbTick(); return true; };
 function instStep(dt){ const I = B.inst; if (!I || I.done) return; I.t -= dt;
   if (I.run.special){ const sp = I.run.special;
-    if (sp === 'trial'){ const s = Math.ceil(Math.max(0, I.t)); if (s !== I.tk){ I.tk = s; try { if (window.PTrial && typeof PTrial.time === 'function') PTrial.time(Math.max(0, I.t)); } catch (e) {} } }   /* relógio da faixa da regra: só quando o segundo muda */
+    if (sp === 'trial'){ const s = Math.ceil(Math.max(0, I.t)); if (s !== I.tk){ I.tk = s; try { if (window.PTrial && typeof PTrial.time === 'function') PTrial.time(Math.max(0, I.t)); } catch (e) {} ligExit(true); }   /* relógio da faixa da regra: só quando o segundo muda (e o "Desistir" se acerta embaixo da faixa) */
+      if (I.ask > 0){ I.ask -= dt; if (I.ask <= 0) ligTrialAsk(false); }   /* o aviso do "Desistir" vence */
+      ligTrialFury(I); }
     else if (sp === 'pathTry'){ for (const e of B.en) if (e.immortal && e.hp < e.maxhp){ I.dmg += e.maxhp - e.hp; e.hp = e.maxhp; }   /* dano causado no boneco (herói, pet e magias) */
       let live = true; try { const T = window.Sys && Sys.pathTry; if (T && typeof T.active === 'function') live = !!T.active(); } catch (e) {}
       if (!live){ ligSpecialEnd(I, false, true); return; } }   /* o ensaio foi solto por fora (o jogador reabriu a tela Caminhos): a luta volta à fase sem anotar nada */
-    else if (sp === 'thief'){ if (thiefStep(I, dt)) return; } }   /* Ladrão de Brasas: saco, fuga e Brasas caindo; true = saco vazio (a luta já acabou) */
+    else if (sp === 'thief'){ if (thiefStep(I, dt)) return; } }   /* Ladrão de Brasas: saco, fuga e Brasas caindo; true = saco vazio (a luta já acabou) ou fim segurado até o tempo mínimo do servidor */
   if (I.t <= 0){ I.t = 0; instEnd(I.run.goal === 'kills'); } }   // tempo esgotado: na corrida de abates quem decide é o módulo (kills >= mínimo)
 function instWaveClear(){ const I = B.inst; if (!I || I.done) return; I.wi++;
   if (I.wi < I.run.waves.length){ instWave(I.wi); return; }
@@ -75,7 +77,10 @@ function ligSpecialEnd(I, win, abort){ if (!I || I.done) return; I.done = true;
 /* PTrial.battle(spec) ← Sys.trial.start(...).spec. Devolve true quando a luta começou. */
 function ligTrialBattle(spec){ if (!spec || typeof window.startInstanceRun !== 'function') return false; const en = spec.enemy || {}, m = spec.master || {};
   const run = { special: 'trial', id: 'trial' + (spec.lvl | 0), name: m.name || 'Mestre', hud: 'Provação', banner: 'Provação: ' + (spec.rule && spec.rule.name || ''),
-    waves: [[{ kind: 'boss', hpMult: en.hpMul > 0 ? en.hpMul : 1, dmgMult: en.dmgMul > 0 ? en.dmgMul : 1, name: m.name ? 'Mestre ' + m.name : '' }]],
+    /* hpMulToday/dmgMulToday (Sys.trial.enemyOf) = o chefe da CAMPANHA (dificuldade nova) × o fator do marco, já convertido para o chefe que o instMk monta
+       (mkEnemy sem a dificuldade). Vem um OU outro, nunca os dois multiplicados: hpMul/dmgMul são só o fator que a tela mostra ("Vida ×0,85") e a reserva */
+    waves: [[{ kind: 'boss', hpMult: en.hpMulToday > 0 ? en.hpMulToday : en.hpMul > 0 ? en.hpMul : 1, dmgMult: en.dmgMulToday > 0 ? en.dmgMulToday : en.dmgMul > 0 ? en.dmgMul : 1, name: m.name ? 'Mestre ' + m.name : '' }]],
+    fury: en.fury && en.fury.atSec > 0 && en.fury.dmgMult > 1 ? { atSec: +en.fury.atSec, dmgMult: +en.fury.dmgMult } : null,   /* fúria do chefe da campanha: ligTrialFury */
     time: spec.sec > 0 ? spec.sec : 60, goal: 'boss', stage: (en.stage | 0) || S.stage, hpStart: spec.hpStart > 0 ? spec.hpStart : 1,
     noPet: !!spec.noPet, noMount: !!spec.noMount, noSpells: !!spec.noSpells, skip: spec.noPet ? 'pet' : spec.noMount ? 'mount' : '' };
   return window.startInstanceRun(run) !== false; }
@@ -89,14 +94,33 @@ function ligPathBattle(cfg){ if (!cfg || typeof window.startInstanceRun !== 'fun
 /* "Sair do ensaio": volta à fase e avisa a tela (PPath.cancel): nada é anotado. Também serve de gesto pelo console/teste. */
 function ligPathExit(){ const I = B.inst; if (!I || I.done || !I.run || I.run.special !== 'pathTry') return false; ligSpecialEnd(I, false, true);
   try { if (window.PPath && typeof PPath.cancel === 'function') PPath.cancel(); else if (window.Sys && Sys.pathTry) Sys.pathTry.cancel(); } catch (e) { console.error('PPath.cancel', e); } return true; }
-/* botão "Sair do ensaio" (só existe durante o ensaio): embaixo da barra da fase, no lugar da faixa da Provação; desce se o selo "Fraco contra" estiver na tela */
+/* "Desistir" da Provação: DOIS toques, como na perseguição. O 1º avisa que nada se perde (devolve 'ask'); o 2º, dentro de THIEF.askSec s, volta à fase SEM finish
+   e avisa a tela (PTrial.cancel), que faz a ÚNICA chamada ao Sys.trial.quit: a tentativa do start é desfeita e a XP guardada, o teto e o prêmio não mudam.
+   sure = true pula o aviso (console/teste) */
+function ligTrialAsk(on){ try { const b = typeof document !== 'undefined' ? document.getElementById('lig_exit') : null; if (b) b.textContent = on ? 'Desistir mesmo? Nada se perde' : 'Desistir'; } catch (e) {} }
+function ligTrialExit(sure){ const I = B.inst; if (!I || I.done || !I.run || I.run.special !== 'trial') return false;
+  if (!sure && !(I.ask > 0)){ I.ask = THIEF.askSec; ligTrialAsk(true); try { toast('Desistir não custa nada: a tentativa não conta. Toque de novo para sair'); } catch (e) {} return 'ask'; }
+  ligSpecialEnd(I, false, true);
+  try { if (window.PTrial && typeof PTrial.cancel === 'function') PTrial.cancel(); else if (window.Sys && Sys.trial && typeof Sys.trial.quit === 'function') Sys.trial.quit(S, Sys.host); } catch (e) { console.error('PTrial.cancel', e); } return true; }
+/* FÚRIA do mestre: a do chefe da campanha (spec.enemy.fury do Sys.trial: {atSec, dmgMult}), aplicada aqui porque o diffStep (js/diff.js) não roda dentro de
+   instância. Aos atSec segundos de luta o dano do mestre × dmgMult, pelo mesmo e.fury que o golpe do inimigo já lê (js/battle.js) e com o mesmo aviso da campanha.
+   Uma vez por luta; se o e.fury já veio de outro lugar (o diffStep, se um dia rodar aqui), não aplica de novo */
+function ligTrialFury(I){ const F = I.run.fury; if (!F || I.fury || !(I.run.time - I.t >= F.atSec)) return;
+  for (const e of B.en){ if (!e.boss || e.dead) continue; I.fury = true; if (e.fury > 1) continue;
+    e.fury = F.dmgMult; B.banner = { txt: 'FÚRIA DO MESTRE', sub: 'Dano x' + F.dmgMult, t: 0, dur: 1.8, col: '#ff5252' }; B.shake = Math.max(B.shake || 0, .5); try { snd('boss_appear'); } catch (er) {} } }
+/* botão de sair da luta especial ("Sair do ensaio", "Sair da perseguição", "Desistir" da Provação): embaixo da barra da fase; desce se o selo "Fraco contra"
+   estiver na tela e, na Provação, fica embaixo da faixa da regra (PTrial) */
 function ligExit(on){ try { if (typeof document === 'undefined') return; let b = document.getElementById('lig_exit');
     if (!on){ if (b){ if (typeof b.remove === 'function') b.remove(); else if (b.parentNode) b.parentNode.removeChild(b); } return; }
-    const h = document.getElementById('fb_w'); if (!h) return; if (!b){ b = document.createElement('button'); b.id = 'lig_exit'; b.type = 'button'; { const th = !!(B.inst && B.inst.run && B.inst.run.special === 'thief');   /* o mesmo botão serve à perseguição do Ladrão de Brasas (sair pede dois toques: ligThiefExit) */
-        b.textContent = th ? 'Sair da perseguição' : 'Sair do ensaio'; b.setAttribute('aria-label', th ? 'Sair da perseguição: a entrada não volta' : 'Sair do ensaio: nada é gasto nem anotado'); }
+    const h = document.getElementById('fb_w'); if (!h) return; if (!b){ b = document.createElement('button'); b.id = 'lig_exit'; b.type = 'button'; { const k = B.inst && B.inst.run ? B.inst.run.special : '', th = k === 'thief', tr = k === 'trial';   /* o mesmo botão serve à perseguição do Ladrão de Brasas e à Provação (nas duas, sair pede dois toques: ligThiefExit / ligTrialExit) */
+        b.textContent = th ? 'Sair da perseguição' : tr ? 'Desistir' : 'Sair do ensaio'; b.setAttribute('aria-label', th ? 'Sair da perseguição: a entrada não volta' : tr ? 'Desistir da provação: nada se perde e a tentativa não conta' : 'Sair do ensaio: nada é gasto nem anotado'); }
       b.style.cssText = 'position:absolute;left:82px;z-index:6;min-height:44px;padding:0 16px;border-radius:22px;border:2px solid #ffc94a;background:rgba(29,22,17,.92);color:#f6ecdf;font:900 13px/1 Nunito,system-ui,sans-serif;box-shadow:0 2px 0 rgba(0,0,0,.4);cursor:pointer';
-      if (b.addEventListener) b.addEventListener('click', () => { try { if (typeof snd === 'function') snd('ui_tap'); } catch (e) {} if (B.inst && B.inst.run && B.inst.run.special === 'thief') ligThiefExit(); else ligPathExit(); }); h.appendChild(b); }
-    let top = 122; const w = document.getElementById('wsl_root'); if (w && w.style && w.style.display !== 'none'){ const hh = Math.round(+w.offsetHeight || 0) || 24; top = 122 + hh + 6; } b.style.top = top + 'px';
+      if (b.addEventListener) b.addEventListener('click', () => { try { if (typeof snd === 'function') snd('ui_tap'); } catch (e) {} const k = B.inst && B.inst.run ? B.inst.run.special : ''; if (k === 'thief') ligThiefExit(); else if (k === 'trial') ligTrialExit(); else ligPathExit(); }); h.appendChild(b); }
+    let top = 122; const w = document.getElementById('wsl_root'); if (w && w.style && w.style.display !== 'none'){ const hh = Math.round(+w.offsetHeight || 0) || 24; top = 122 + hh + 6; }
+    if (B.inst && B.inst.run && B.inst.run.special === 'trial'){ let bh = 0;   /* Provação: a faixa da regra (PTrial, 44 px ou mais) ocupa este lugar; o botão vai para baixo dela */
+      try { if (window.PTrial && typeof PTrial.hudOn === 'function' && PTrial.hudOn()){ const bd = typeof document.querySelector === 'function' ? document.querySelector('#pt_hud .pt-band') : null; bh = (bd && Math.round(+bd.offsetHeight || 0)) || 44; } } catch (e) { bh = 44; }
+      if (bh) top += bh + 6; }
+    b.style.top = top + 'px';
   } catch (e) {} }
 /* liga as pontes das telas (p_trial.js / p_path.js carregam DEPOIS deste arquivo). Chamada no fim do js/fullbattle.js (patch F1 do documento) e, por garantia,
    tentada aqui algumas vezes depois da carga: sem ela o botão Lutar / Testar grátis diz que a luta ainda não está ligada. */
@@ -114,6 +138,9 @@ function ligBridges(){ let ok = true; if (window.PTrial){ if (typeof PTrial.batt
      com o ladrão ao alcance. O que cair nessa medição já conta. Assim o saco inteiro é alcançável, mas não garantido. score = fração do saco que caiu (0 a 1).
    - A FUGA: ritmo FIXO, igual para todos e sem sorte: o ladrão chega ao alcance em THIEF.intro s; a 1ª fuga é aos THIEF.fleeFirst s e depois uma a cada
      THIEF.fleeEvery s; cada fuga dura THIEF.fleeDur s (ele dispara para fora da tela, além do alcance de qualquer arma, e o herói o alcança de novo).
+   - PELO RUN DO MÓDULO (campos que o enter pode trazer; sem eles vale o que está acima): bagHp = vida do saco, sem medição; escapeAt / escapeEvery /
+     escapeDur (+ seed: desvio de ± THIEF.jitter s por fuga, determinístico) = ritmo da fuga; endsAt (epoch ms do servidor) = o relógio não passa dele.
+     O fim NUNCA sai antes de THIEF.minEnd s de relógio (o servidor responde 409 too_fast): saco vazio antes disso espera o tempo fechar.
    - ARTE: a criatura PARADA da Arte (THIEF_ART.still) com balanço por código; a folha animada ainda vem. Reserva enquanto a imagem não carrega = o inimigo
      comum da era atual (THIEF_ART.kind), espelhado, com o nome próprio. O especial do herói começa recarregando (a medição do saco pega só o ritmo de base).
    - FIM DE TARDE: um véu de cor por cima do cenário, só durante a perseguição (dois fillRect; sem arte nova). */
@@ -121,21 +148,39 @@ function ligBridges(){ let ok = true; if (window.PTrial){ if (typeof PTrial.batt
    ganha um balanço por código (e.bob, js/battle.js). kind: reserva enquanto a imagem não carrega (ou se faltar) = o inimigo comum da era atual, espelhado */
 const THIEF_ART = { kind: 'e0', name: 'Ladrão de Brasas', key: 'thief', still: 'assets/anim/enemy/thief/thief_still.png' };
 const THIEF = { bagFrac: 0.8, measure: 3, intro: 0.5, fleeFirst: 7, fleeEvery: 8, fleeDur: 1.4, fleeOut: 0.3, fleeBack: 0.35, ember: 0.04, askSec: 4,
+  minEnd: 5, jitter: 0.5,   /* minEnd: o servidor recusa o fim antes de 5 s do enter (409 too_fast); jitter: ± segundos por fuga, tirados do seed do run */
   veil: 'rgba(255,132,40,.14)', veilSky: 'rgba(255,96,72,.10)' };
-/* quanto o ladrão está longe (0 = ao alcance, 1 = fora da tela) no segundo tt da corrida. Função pura: o ritmo é o mesmo em toda corrida */
-function thiefOff(tt){ let k = 0; if (tt < THIEF.intro) k = 1 - Math.max(0, tt) / THIEF.intro;
-  else { const u = tt - THIEF.fleeFirst; if (u >= 0){ const p = u % THIEF.fleeEvery, D = THIEF.fleeDur; if (p < D) k = p < THIEF.fleeOut ? p / THIEF.fleeOut : p > D - THIEF.fleeBack ? (D - p) / THIEF.fleeBack : 1; } }
+/* quanto o ladrão está longe (0 = ao alcance, 1 = fora da tela) no segundo tt da corrida. Função pura. Sem P: o ritmo fixo (igual em toda corrida).
+   Com P (thiefPlan: o ritmo que veio no run do módulo/servidor): as fugas começam nos segundos de P.at e duram P.dur */
+function thiefOff(tt, P){ let k = 0; if (tt < THIEF.intro) k = 1 - Math.max(0, tt) / THIEF.intro;
+  else { const D = P ? P.dur : THIEF.fleeDur; let p = -1;
+    if (P){ for (const s of P.at){ if (tt < s) break; if (tt - s < D){ p = tt - s; break; } } } else { const u = tt - THIEF.fleeFirst; if (u >= 0) p = u % THIEF.fleeEvery; }
+    if (p >= 0 && p < D) k = p < THIEF.fleeOut ? p / THIEF.fleeOut : p > D - THIEF.fleeBack ? (D - p) / THIEF.fleeBack : 1; }
   return k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k); }
+/* ritmo da fuga pelo run do módulo: escapeAt (1ª fuga), escapeEvery (intervalo) e escapeDur (duração), em segundos. Com seed, cada fuga ganha um desvio de
+   ± THIEF.jitter s tirado de um gerador determinístico (o mesmo seed dá sempre o mesmo ritmo). null = o run não trouxe o ritmo: vale o fixo */
+function thiefPlan(run, secs){ const a = +run.escapeAt, ev = +run.escapeEvery, du = +run.escapeDur; if (!(a > 0) || !(ev > 0) || !(du > 0)) return null;
+  const sd = run.seed; let rnd = null;
+  if (sd != null && sd !== ''){ let h = 2166136261; if (typeof sd === 'number' && isFinite(sd)) h = (Math.floor(Math.abs(sd)) % 4294967296) >>> 0;
+    else { const s = String(sd); for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } h >>>= 0; }
+    rnd = () => { h = (h + 0x6D2B79F5) >>> 0; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const at = []; for (let i = 0, t = a; t < secs + 1 && i < 200; i++, t += ev) at.push(Math.max(THIEF.intro, t + (rnd ? (rnd() * 2 - 1) * THIEF.jitter : 0)));
+  at.sort((x, y) => x - y); return { at, dur: du }; }
+/* agora no relógio do SERVIDOR (o endsAt do run é dele); sem o Sys.net, o relógio do aparelho */
+const thiefNow = () => { try { const N = window.Sys && Sys.net; if (N && typeof N.serverNow === 'function') return N.serverNow(); } catch (e) {} return Date.now(); };
 const thiefScore = I => { const C = I && I.chase, f = C ? +C.frac : 0; return f > 0 ? Math.min(1, f) : 0; };
 function thiefEmber(x, y, n){ const v = RUNV(); for (let i = 0; i < n; i++) B.parts.push({ x: x + (Math.random() - .5) * 10, y, vx: -v * (0.45 + Math.random() * 0.5), vy: -40 - Math.random() * 70, g: 320, t: 0, life: .5 + Math.random() * .3, col: i % 2 ? '#ffd27a' : '#ff8a2a', sz: 2 + Math.random() * 3, glow: true }); }
 /* um passo da perseguição (depois do step da batalha). Devolve true quando a luta acabou (saco vazio) */
 function thiefStep(I, dt){ const C = I.chase, e = B.en[0]; if (!C || !e || !e.thief) return false;
-  C.tt += dt; if (C.ask > 0){ C.ask -= dt; if (C.ask <= 0) thiefAsk(false); }
+  C.tt += dt; C.wt += dt / (B.speed > 0 ? B.speed : 1);   /* wt: o laço chama este passo B.speed vezes por quadro; dividido, dá o tempo de relógio (o que o servidor conta) */
+  if (C.ask > 0){ C.ask -= dt; if (C.ask <= 0) thiefAsk(false); }
+  if (I.run.endsAt > 0){ const lf = (I.run.endsAt - thiefNow()) / 1000; if (lf < I.t) I.t = lf; }   /* o relógio da tela não passa do fim que o servidor marcou */
+  if (I.t < 0) I.t = 0;
   if (!(C.hp > 0)) C.hp = e.maxhp;
   if (!e.bob && SPR(THIEF_ART.still, 'enemy')){ e.spr = THIEF_ART.still; e.key = THIEF_ART.key; e.flee = false; e.bob = true; e.hc = 0; }   /* a arte própria chegou: troca a reserva (já olha para a direita; sem folhas, balanço por código) */
   /* dano no ladrão neste passo (herói, pet e magias). A vida dele é só um colchão enorme: se um golpe passar do colchão o killEnemy devolve a vida cheia (hp > o que deixei) e o golpe vale o colchão inteiro */
   const d = e.hp > C.hp ? e.maxhp : C.hp - e.hp; if (d > 0){ if (C.max > 0) C.out += d; else C.dmg += d; }
-  const k = thiefOff(C.tt);
+  const k = C.hold ? 0 : thiefOff(C.tt, C.plan);   /* saco vazio à espera do fim: o ladrão não foge mais */
   if (!(C.max > 0)){ if (k === 0) C.tm += dt;   /* medição: só conta o tempo com o ladrão ao alcance */
     if (C.tm >= THIEF.measure){ if (C.dmg > 0){ C.max = C.dmg / C.tm * THIEF.bagFrac * I.run.time; C.out = C.dmg; } else C.tm = 0; } }   /* nenhum dano na janela: mede de novo */
   const f = C.max > 0 ? C.out / C.max : (C.dmg > 0 ? Math.min(C.tm, THIEF.measure) / (THIEF.bagFrac * I.run.time) : 0);
@@ -145,11 +190,14 @@ function thiefStep(I, dt){ const C = I.chase, e = B.en[0]; if (!C || !e || !e.th
     if (pe > C.pe){ C.pe = pe; if (e.x < LW) thiefEmber(sx, sy, 3); }
     if (nb > C.nb){ const q = nb - C.nb; C.nb = nb; let ok = false; try { ok = !!(window.Fogueira && Fogueira.onBrasa(Math.min(LW - 20, sx), sy, q)); } catch (er) {}
       if (!ok) floatText(Math.min(LW - 40, sx), sy - 20, '+' + q + (q === 1 ? ' Brasa' : ' Brasas'), '#ffc27a', 0); } }
-  if (C.max > 0 && C.frac >= 1){ instEnd(true); return true; }   /* saco vazio antes do tempo */
+  /* saco vazio antes do tempo. O servidor recusa o fim antes de THIEF.minEnd s do enter (409 too_fast): se esvaziou antes disso (golpe gigante), o ladrão para
+     ao alcance com o saco vazio (o score já é 1) e o fim sai quando o tempo mínimo fechar. O finish continua sendo UMA chamada */
+  if (C.max > 0 && C.frac >= 1){ if (C.wt >= THIEF.minEnd){ instEnd(true); return true; }
+    if (!C.hold){ C.hold = true; B.banner = { txt: 'Saco vazio!', pill: true, bg: 'rgba(29,22,17,.92)', bd: '#ffc94a', sh: '#0e0a07', t: 0, dur: 1.6, col: '#ffc94a' }; } }
   e.hp = C.hp = e.maxhp * Math.max(1e-3, (1 - C.frac) * 0.999);   /* a barra em cima do ladrão é o SACO (cheio → vazio) */
   e.x = e.slot + (LW + 44 - e.slot) * k; e.parked = false; e.hurtT = 0;   /* a posição é a do ritmo da fuga; sempre na folha de corrida */
   if (B.running){ const dx = RUNV() * dt; for (const t of B.fx) t.x += dx; for (const r of B.rings) r.x += dx; }   /* os números de dano ficam com o ladrão (o step os leva com o chão) */
-  return false; }
+  return I.t <= 0 && C.wt < THIEF.minEnd; }   /* true também quando o relógio zerou antes do tempo mínimo do servidor: o instStep ainda não fecha a luta */
 /* véu do fim de tarde, por cima do cenário (chamado pelo draw do js/battle.js só com B.inst.chase) */
 function thiefVeil(){ ctx.fillStyle = THIEF.veil; ctx.fillRect(-12, -12, LW + 24, LH + 24); ctx.fillStyle = THIEF.veilSky; ctx.fillRect(-12, -12, LW + 24, GY * 0.55 + 12); }
 /* texto do botão de sair: o 1º toque arma o aviso por THIEF.askSec s */
@@ -163,10 +211,12 @@ function ligThiefExit(sure){ const I = B.inst; if (!I || I.done || !I.run || I.r
 window.startThiefRun = function(run){ const T = window.Sys && Sys.thief; if (!T || !T.DATA || T.DATA.on !== true) return false;
   if (!run || !(run.secs > 0) || typeof window.startInstanceRun !== 'function') return false;
   const r = { special: 'thief', id: 'thief', name: THIEF_ART.name, hud: 'Ladrão', banner: THIEF_ART.name, time: +run.secs, goal: 'time', stage: S.stage,
-    waves: [[{ kind: THIEF_ART.kind, immortal: true, thief: true, name: THIEF_ART.name }]], lote: Math.max(0, Math.floor(+run.lote || 0)), lv: Math.floor(+run.lv || 0) };
+    waves: [[{ kind: THIEF_ART.kind, immortal: true, thief: true, name: THIEF_ART.name }]], lote: Math.max(0, Math.floor(+run.lote || 0)), lv: Math.floor(+run.lv || 0),
+    bagHp: +run.bagHp > 0 && isFinite(+run.bagHp) ? +run.bagHp : 0, endsAt: +run.endsAt > 0 && isFinite(+run.endsAt) ? +run.endsAt : 0 };   /* campos novos do run do módulo (podem não vir): vida do saco e fim no relógio do servidor */
   let ok = false; try { ok = window.startInstanceRun(r) !== false; } catch (e) { console.error('startThiefRun', e); ok = false; }
   if (!ok || !B.inst || B.inst.run !== r) return false;
-  B.inst.chase = { tt: 0, tm: 0, dmg: 0, max: 0, out: 0, frac: 0, hp: 0, pe: 0, nb: 0, ask: 0 }; B.spawnT = 0;
+  /* max = vida do saco: a do run (bagHp), sem medição; sem ela fica 0 e o thiefStep mede (reserva). plan = ritmo da fuga do run (null = o fixo). wt = segundos de RELÓGIO da corrida (não acelera com x2/x4) */
+  B.inst.chase = { tt: 0, tm: 0, dmg: 0, max: r.bagHp, out: 0, frac: 0, hp: 0, pe: 0, nb: 0, ask: 0, wt: 0, hold: false, plan: thiefPlan(run, r.time) }; B.spawnT = 0;
   if (typeof BAL !== 'undefined' && BAL.s2Cooldown > 0) B.cd2 = BAL.s2Cooldown;   /* o especial começa recarregando: a medição do saco (3 s) pega só o ritmo de base, sem a rajada do especial inflar a vida do saco por sorte de momento (medido: com o especial na janela o score variava de 0,53 a 0,97 no mesmo herói) */
   try { SPR(THIEF_ART.still, 'enemy'); } catch (e) {}   /* pede a arte do ladrão já (ele entra em THIEF.intro s) */
   return true; };

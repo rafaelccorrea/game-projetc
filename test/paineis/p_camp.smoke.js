@@ -110,7 +110,7 @@ sane('coleta de uma tenda'); out.push('Coletar (uma tenda): 1 chamada ao módulo
 
 // 5) Coletar tudo: UMA chamada, entrega o resto e mostra
 { nCollect = 0; const p0 = JSON.stringify(g.S.sys.practice || null); def.click(find('all')); assert.strictEqual(nCollect, 1); assert.strictEqual(host.gold, 6, 'ouro entregue pelo módulo, uma vez');
-  assert.notStrictEqual(JSON.stringify(g.S.sys.practice || null), p0); has('Coletou: +6 moedas · +4 pedras de treino'); assert.deepStrictEqual(C.view(g.S, host).tents.map(t => t.stored), [0, 0, 0]);
+  assert.notStrictEqual(JSON.stringify(g.S.sys.practice || null), p0); has('Coletou: +6 moedas · +4 pedras de prática'); assert.deepStrictEqual(C.view(g.S, host).tents.map(t => t.stored), [0, 0, 0]);
   def.render(); def.render(); def.tick(); def.tick(); assert.strictEqual(host.gold, 6, 'redesenhar não entrega de novo'); assert.strictEqual(nCollect, 1);
   assert(/data-x="all" aria-disabled="true"/.test(H())); def.click(find('all')); has('As tendas ainda não juntaram nada para coletar.'); assert.strictEqual(host.gold, 6); }
 sane('coletar tudo'); out.push('Coletar tudo: 1 chamada ao módulo, ouro e pedras entregues uma vez, aviso com os números');

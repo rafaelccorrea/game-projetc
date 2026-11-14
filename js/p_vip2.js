@@ -192,13 +192,13 @@ function vSpd(t){ const out=[]; let L=[]; try{ L=vM().DATA.speeds||[]; }catch(e)
 /* linhas fixas: [campo do levelInfo, rótulo, texto do valor]. Com a curva v9 do Sys.level o XP tem coluna própria no módulo (DATA.table.xp9) */
 function vBaseRows(){ const v9=vV9(), T=vM().DATA.table||{}, gp=i=>+(i.goldPct!=null?i.goldPct:i.goldXpPct)||0, xp=i=>+(i.xpPct!=null?i.xpPct:i.goldXpPct)||0, fv=i=>(i.frameVip|0)||(i.frame?(i.level|0)||1:0);
   const rows=[['speedTier','Velocidade da batalha',i=>vSpd(i.speedTier|0)],
-    ['atkPct','ATQ e VIDA',i=>i.atkPct?'+'+vPc(i.atkPct):'—'],
+    ['atkPct','ATQ e Vida',i=>i.atkPct?'+'+vPc(i.atkPct):'—'],
     ['goldPct','Ouro',i=>gp(i)?'+'+vPc(gp(i)):'—',gp]];   /* ouro e XP separados (dono 14/11): goldPct e xpPct do levelInfo; módulo antigo sem os campos = goldXpPct nos dois */
   if(v9&&Array.isArray(T.xp9)) rows.push(['xp9','XP',i=>{ const v=+T.xp9[i.level]||0; return v?'+'+vPc(v):'—'; },i=>+T.xp9[i.level]||0]);
   else rows.push(['xpPct','XP',i=>xp(i)?'+'+vPc(xp(i)):'—',xp]);
   rows.push(['keys','Entradas de instância por área',i=>i.keys?'+'+n0(i.keys)+' por dia':'—'],
     ['chestPerDay','Baús por dia',i=>n0(i.chestPerDay)],
-    ['offlineMult','XP, itens, pedras e ração offline',i=>'x'+String(i.offlineMult).replace('.',',')],   /* o x2 do offline não vale para o ouro */
+    ['offlineMult','XP, itens, pedras e ração fora do jogo',i=>'x'+String(i.offlineMult).replace('.',',')],   /* o x2 do offline não vale para o ouro */
     ['frameVip','Moldura VIP no perfil',i=>fv(i)?'VIP '+n0(fv(i)):'—',fv]);   /* cada VIP N tem a moldura VIP N; a moldura Ouro é do nível 60 */
   return rows; }
 const vRowVal=(r,i)=>r[3]?r[3](i):i[r[0]];

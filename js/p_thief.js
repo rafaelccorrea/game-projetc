@@ -178,7 +178,7 @@ function sig(){ try{ const M=mode(), v=M.v; if(!v) return M.m; const f=M.f||{}; 
 
 /* ================= a corrida (a luta é do jogo; aqui só a entrega e o resultado) ================= */
 /* entrega a corrida à batalha. Devolveu false ou estourou: a corrida fica ABERTA no módulo (a entrada já foi gasta no enter; o jogador volta por Continuar) */
-function launch(run){ let ok=false; try{ ok=window.startThiefRun({lv:run.lv,lote:run.lote,secs:run.secs})!==false; }catch(e){ ok=false; }
+function launch(run){ let ok=false; try{ ok=window.startThiefRun(Object.assign({},run,{lv:run.lv,lote:run.lote,secs:run.secs}))!==false;   /* a corrida INTEIRA do módulo: a luta usa bagHp, escapeAt/Every/Dur, seed e endsAt quando vierem */ }catch(e){ ok=false; }
   if(!ok) say('Não foi possível começar agora. A perseguição fica aberta: toque em Continuar');
   return ok; }
 /* FIM DA PERSEGUIÇÃO (a batalha chama UMA vez): score 0..1 = fração do saco que caiu. Roda o Sys.thief.finish, grava e abre o resultado. Devolve o que o módulo devolveu */
@@ -207,12 +207,12 @@ const ACT={
   /* Entrar: uma chamada ao Sys.thief.enter, que GASTA a entrada na hora; o fim (Sys.thief.finish) não gasta outra */
   enter(){ const T=TH(), v=viewNow(); if(!v) return; sfx('ui_tap'); X.conf=false;
     if(v.run) return say(why('run')); if(!v.canEnter) return say(why('entries'));
-    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Nada foi gasto');   /* não abre corrida que ninguém vai fechar */
+    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está disponível. Nada foi gasto');   /* não abre corrida que ninguém vai fechar */
     { const net=TN(); if(net) return online(()=>net.enter(sv(),host()),q=>{ X.res=null; saved(); launch(q); redraw(); }); }
     let r=null; try{ r=T.enter(sv(),host()); }catch(e){ r=null; } if(!r||!r.ok) return say(why(r&&r.reason));
     X.res=null; saved(); launch(r); redraw(); },
   resume(){ const T=TH(), v=viewNow(); if(!v||!v.run) return; sfx('ui_tap');
-    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Ela continua aberta');
+    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está disponível. Ela continua aberta');
     launch({lv:v.run.lv,lote:T.loteOf(v.run.lv),secs:v.secs}); redraw(); },
   cancel(){ const v=viewNow(); if(!v||!v.run) return; sfx('ui_tap'); if(cancel()) say('Você saiu da perseguição. A entrada foi gasta'); },
   /* Repetir gasta uma entrada do dia na hora: o 1º toque só abre a confirmação */

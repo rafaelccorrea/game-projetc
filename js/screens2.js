@@ -672,12 +672,11 @@ function resActHtml(end){
   return end?`<button class="y-gold q-go lil" data-q="next" style="position:absolute;left:24px;right:24px;bottom:24px;height:64px;border-radius:18px;font-size:28px;display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden">Continuar${Q_CHEV(24)}<i class="q-auto" id="res_au" style="width:0"></i></button>`
     :`<button class="q-skip lil" data-q="skip" aria-label="Pular a apresentação" style="position:absolute;right:16px;bottom:30px;height:44px;padding:0 16px;border-radius:14px;border:2px solid #4a3a2b;background:rgba(29,22,17,.88);color:#f6ecdf;font-size:17px;display:flex;align-items:center;gap:6px">Pular<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5 L13 12 L4 19 Z M13 5 L22 12 L13 19 Z"></path></svg></button>`; }
 /* os 3 caminhos da derrota, com a regra de liberação: o que ainda não liberou NÃO aparece. Equipamento existe desde o nível 1. */
-function resPaths(){ const p=[]; let fg=false, sm=true;
+function resPaths(){ const p=[]; let fg=false;
   try{ fg=!!(window.Panels&&Panels.on('forge')&&xUnlocked('forge')); }catch(er){ fg=false; }
-  try{ sm=(typeof PANEL_V2!=='undefined'&&PANEL_V2.gate===false)?true:typeof fbUnl==='function'?!!fbUnl('summon'):xUnlocked('summon'); }catch(er){ sm=true; }
   if(fg) p.push({id:'forge',bd:'#ff9a3c',rgb:'255,154,60',ic:'forge',t1:'Forja',t2:'Melhore a arma'});
   p.push({id:'gear',bd:'#4aa3ff',rgb:'74,163,255',ic:'equipment',t1:'Equipamento',t2:'Use o melhor'});
-  if(sm) p.push({id:'summon',bd:'#b45cff',rgb:'180,92,255',ic:'summon',t1:'Invocar',t2:'Novos itens'});
+  /* Invocar NÃO entra na Derrota (Sys.bossLoss proíbe invocação nesta tela; revisão de textos 13/11) */
   return p; }
 const RES_FC_W=(390-32-28-4)/2-8;   /* largura de cada número de FC no cartão da Derrota (base 390: margens 16+16, respiro 14+14, borda 2+2, vão) */
 /* ===== DERROTA QUE RENDE (Sys.bossLoss, js/sys/bossloss.js; protótipo aprovado docs/proto/v2/Derrota.html) =====
@@ -697,7 +696,7 @@ function resBossLoss(){ try{ const M=window.Sys&&Sys.bossLoss; if(!M||!M.DATA||M
     return Object.assign({},r,{stage,nth:z?z.nth:-1,mult:z?z.mult:0,low:!!(z&&z.low),part:z?M.DATA.share*z.frac*z.mult:0}); }catch(e){ try{ console.error('resBossLoss',e); }catch(e2){} return null; } }
 /* aviso quando a tela da Derrota não pôde abrir (jogador em outra tela): diz o que entrou. '' = sem prêmio */
 function resLossToast(L){ const R=(L&&L.reward)||{}, g=Math.max(0,Math.round(+R.gold||0)), x=Math.max(0,Math.round(+R.xp||0)), s=Math.max(0,Math.round(+R.stones||0)), p=[];
-  if(g) p.push('+'+gNum(g)+' de ouro'); if(x) p.push('+'+gNum(x)+' XP'); if(s) p.push('+'+s+(s===1?' Pedra de Forja':' Pedras de Forja'));
+  if(g) p.push('+'+gNum(g)+' de ouro'); if(x) p.push('+'+gNum(x)+' XP'); if(s) p.push('+'+s+(s===1?' pedra de forja':' pedras de forja'));
   return p.length?'Derrotado pelo chefe. Prêmio pelo dano: '+p.join(', '):''; }
 /* dicas do módulo → só as que têm tela (diffRoute do js/diff.js, o mesmo DIFF_ROUTE do cartão "Faltam X de FC"); no máximo 3 */
 function resLossTips(L){ const out=[]; if(typeof diffRoute!=='function') return out; const tx=typeof diffTxt==='function'?diffTxt:(s=>String(s==null?'':s));
@@ -713,7 +712,7 @@ function resLossBox(L,tips,stage){ const D=Sys.bossLoss.DATA, R=L.reward||{}, n=
   const txt=has?`Você tirou ${em(pct+'%')} da vida do chefe: ${em(Math.round((+L.part||0)*100)+'%')} do prêmio da vitória${mult>0&&mult<1&&ord?' (×'+String(mult).replace('.',',')+' por ser a '+ord+'ª)':''}`
     :esc2(L.text||'')+(L.low?' Esta derrota não gasta a sua vez do dia.':'');
   const chip=(ic,t)=>`<span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;height:26px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12.5px;white-space:nowrap;box-sizing:border-box">${ic}${t}</span>`;
-  const chips=has?`<div style="display:flex;gap:6px;margin-top:5px">${gold?chip('<img src="assets/ui/coin.png" alt="" style="width:18px;height:18px;flex:none;object-fit:contain">','+'+gNum(gold)):''}${xp?chip(RES_XP_IC,'+'+gNum(xp)+' XP'):''}${st?chip(Y_STONE(18),'+'+st+(st===1?' Pedra':' Pedras')):''}</div>`:'';
+  const chips=has?`<div style="display:flex;gap:6px;margin-top:5px">${gold?chip('<img src="assets/ui/coin.png" alt="" style="width:18px;height:18px;flex:none;object-fit:contain">','+'+gNum(gold)):''}${xp?chip(RES_XP_IC,'+'+gNum(xp)+' XP'):''}${st?chip(Y_STONE(18),'+'+st+(st===1?' pedra':' pedras')):''}</div>`:'';
   const showRule=ord>0&&!dayCap&&steps.length>0, rule=showRule?`<div style="display:flex;gap:4px;margin-top:5px">${steps.map((m,i)=>(i+1)+'ª: '+Math.round(m*100)+'%').concat([(steps.length+1)+'ª: nada']).map((t,i)=>`<span style="flex:1;min-width:0;height:16px;line-height:16px;text-align:center;font-size:9.5px;font-weight:900;border-radius:7px;white-space:nowrap;${i===ord-1?'background:#ffc94a;color:#2a1403':i<ord-1?'background:rgba(0,0,0,.3);color:#c9b8a2;text-decoration:line-through':'background:rgba(0,0,0,.3);color:#8a7a66'}">${t}</span>`).join('')}</div>`:'';
   const rwH=4+14+20+2+32+(has?31:0)+(showRule?21:0);
   let h=8+rwH, html=`<div class="q-cup" id="res_rw" role="group" aria-label="${esc2(title)}" style="flex:none;margin-top:8px;animation-delay:${RES_LOSE_PATH}s;border-radius:16px;border:2px solid ${has?'#ffc94a':'#6a5a48'};background:linear-gradient(180deg,#3a2a18,#24180f);padding:7px 10px;box-sizing:border-box">
@@ -754,7 +753,7 @@ function resLoseHtml(Y,bname,lord,lossHtml){ const fc=RES.fc, rec=RES.rec, pct=M
 function resLoseBtns(low){
   return `<button class="y-gold q-farm" data-q="farm" style="position:absolute;left:20px;right:20px;bottom:${low?74:90}px;height:${low?58:66}px;border-radius:18px;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box;text-align:left">
       <svg class="q-fspin" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M21 12a9 9 0 0 1-15.5 6.2"></path><polyline points="3 20 5.5 18.2 7 21"></polyline><path d="M3 12a9 9 0 0 1 15.5-6.2"></path><polyline points="21 4 18.5 5.8 17 3"></polyline></svg>
-      <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:25px">Modo farm</span><span style="font-size:12px;font-weight:900">Continua farmando automático</span></span>
+      <span style="flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1"><span class="lil" style="font-size:25px">Seguir lutando</span><span style="font-size:12px;font-weight:900">Continua lutando sozinho</span></span>
       <span id="res_cd" aria-live="polite" class="lil" style="flex:none;min-width:44px;height:36px;padding:0 8px;border-radius:12px;background:rgba(42,20,3,.85);color:#ffe07a;font-size:17px;display:flex;align-items:center;justify-content:center;box-sizing:border-box">${RES_AUTO_FARM}s</span></button>
     <button class="q-red lil" data-q="retry" style="position:absolute;left:20px;right:20px;bottom:${low?16:22}px;height:${low?50:56}px;border-radius:16px;border:2px solid #7a2a20;background:rgba(29,22,17,.95);color:#f6ecdf;font-size:21px;display:flex;align-items:center;justify-content:center;gap:10px;box-sizing:border-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff8a7e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>Tentar de novo</button>`; }
 function resOpen(mode,o,force){

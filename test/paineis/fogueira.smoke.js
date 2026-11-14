@@ -128,17 +128,17 @@ els.app = { clientWidth: 390, clientHeight: 844 };
 { BAG = g.S.inv.length; for (const it of g.S.inv) BF.lock(g.S, it, true); tapB('forge'); if (st().queue.length) { /* lote de 2 */ } const c = st().card, m0 = spy.makeRoom;
   tapB('keep'); assert(/Mochila cheia e sem peça destrancada/.test(lastSaid()), lastSaid()); assert.strictEqual(st().card, c, 'o cartão continua aberto'); assert.strictEqual(g.S.inv.length, BAG);
   tapB('equip'); assert(/Mochila cheia/.test(lastSaid())); assert.strictEqual(st().card, c);
-  const free = g.S.inv.find(x => g.S.eq[x.slot] !== x.id); BF.lock(g.S, free, false); tapB('keep'); assert(spy.makeRoom > m0); assert(/Mochila cheia: desmontei a pior destrancada/.test(lastSaid()), lastSaid()); assert.strictEqual(g.S.inv.length, BAG); assert(g.S.inv.includes(c.it) && !g.S.inv.includes(free));
+  const free = g.S.inv.find(x => g.S.eq[x.slot] !== x.id); BF.lock(g.S, free, false); tapB('keep'); assert(spy.makeRoom > m0); assert(/Mochila cheia: a pior peça destrancada foi desmontada/.test(lastSaid()), lastSaid()); assert.strictEqual(g.S.inv.length, BAG); assert(g.S.inv.includes(c.it) && !g.S.inv.includes(free));
   while (st().card) tapB('sell'); BAG = 30; for (const it of g.S.inv) BF.lock(g.S, it, false);
   out.push('mochila cheia: tudo trancado = explica e mantém o cartão; com peça destrancada, makeRoom desmonta a pior e a nova entra'); }
 
 // 7) automático: abre no nível 3; liga/desliga pelo setAuto; roda pelo autoRun; PAUSA em Épico ou melhor e abre o cartão
 { o().lv = 2; tapB('on'); assert.strictEqual(o().auto.on, false); assert(/automático abre no nível 3/.test(lastSaid()));
-  o().lv = 3; BF.addBrasas(g.S, 'missions'); const s0 = spy.setAuto; tapB('on'); assert(spy.setAuto > s0); assert.strictEqual(o().auto.on, true); ticks(1); assert.strictEqual(st().hud.auto, 'AUTO');
+  o().lv = 3; BF.addBrasas(g.S, 'missions'); const s0 = spy.setAuto; tapB('on'); assert(spy.setAuto > s0); assert.strictEqual(o().auto.on, true); ticks(1); assert.strictEqual(st().hud.auto, 'Auto');
   const a0 = spy.autoRun, b0 = o().bra; ticks(8); assert(spy.autoRun > a0, 'o relógio chama o autoRun'); assert(o().bra < b0, 'gasta Brasas pela regra do módulo'); assert(st().status && /^Automático: /.test(st().status.txt)); assert(cardH().includes('role="status"')); sane('automático');
   g.view = 'gear'; const a1 = spy.autoRun; ticks(12); assert.strictEqual(spy.autoRun, a1, 'com outra tela aberta o automático espera'); g.view = 'battle';
   const real = BF.autoRun, ep = { slot: 'boots', r: 2, e: 2, qp: 4100, name: 'Botas Épicas', subs: [] }; BF.autoRun = () => ({ ok: true, done: 1, equipped: 0, sold: 0, kept: 0, pause: ep }); ticks(8); BF.autoRun = real;
-  assert(st().card && st().card.why === 'pause' && st().card.it === ep); assert.strictEqual(st().auto.paused, true); assert.strictEqual(st().hud.auto, 'PAUSA'); assert(cardH().includes('Automático pausou: saiu Épico. Você decide.') && cardH().includes('3 estrelas')); sane('pausa');
+  assert(st().card && st().card.why === 'pause' && st().card.it === ep); assert.strictEqual(st().auto.paused, true); assert.strictEqual(st().hud.auto, 'Pausa'); assert(cardH().includes('Automático pausou: saiu Épico. Você decide.') && cardH().includes('3 estrelas')); sane('pausa');
   const a2 = spy.autoRun; ticks(12); assert.strictEqual(spy.autoRun, a2, 'pausado não forja'); tapB('keep'); assert.strictEqual(st().auto.paused, false); assert(g.S.inv.includes(ep));
   tapB('off'); assert.strictEqual(o().auto.on, false); ticks(1); assert.strictEqual(st().hud.auto, ''); const a3 = spy.autoRun; ticks(12); assert.strictEqual(spy.autoRun, a3, 'desligado não roda');
   /* uma peça por vez sem a conveniência: com lote 3 o módulo é chamado com lote 1, e a preferência do jogador volta para 3 */
@@ -162,7 +162,7 @@ els.app = { clientWidth: 390, clientHeight: 844 };
   /* desmontar rápido: 1º toque arma e diz quantas; 2º toque chama o módulo; a trancada fica */
   for (let i = 0; i < 3; i++) host.addItem({ slot: 'gloves', r: 0, e: 2, qp: 0, name: 'Luva fraca ' + i, subs: [] }); const q0 = spy.quick, n0 = g.S.inv.length; tapB('below', '1');
   assert.strictEqual(spy.quick, q0, 'o 1º toque não desmonta'); assert(st().arm && st().arm.n >= 3); assert(/Toque de novo: desmontar \d+ peças/.test(sheetH())); sane('desmontar rápido armado');
-  tapB('below', '1'); assert.strictEqual(spy.quick, q0 + 1); assert(g.S.inv.length <= n0 - 3); assert(g.S.inv.includes(it), 'a trancada nunca sai'); assert(/Desmontei \d+ peças/.test(lastSaid())); assert.strictEqual(st().arm, null);
+  tapB('below', '1'); assert.strictEqual(spy.quick, q0 + 1); assert(g.S.inv.length <= n0 - 3); assert(g.S.inv.includes(it), 'a trancada nunca sai'); assert(/^\d+ peças desmontadas/.test(lastSaid())); assert.strictEqual(st().arm, null);
   tapB('worse'); tapB('close'); tapB('sheet'); assert.strictEqual(st().arm, null, 'trocar de ação desarma');
   /* recuperar */
   const rc = o().recent[0]; assert(rc && sheetH().includes('data-fg="rec" data-v="' + rc.item.id + '"')); const r0 = spy.recover; g.S.gold = 1e9; tapB('rec', String(rc.item.id)); assert.strictEqual(spy.recover, r0 + 1); assert(/Recuperada: /.test(lastSaid())); assert(g.S.inv.some(x => x === rc.item));

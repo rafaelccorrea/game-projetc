@@ -48,12 +48,12 @@ function tStatus(){ const G=tG(); if(!G) return {on:false,open:false,reason:'off
 
 /* ---------- recusas do servidor (as mesmas do js/p_tourney.js) ---------- */
 const T_WHY={tourney_phase:'Ataques só de segunda a quinta',own_territory:'Este território já é da sua guilda',daily_limit:'Sua guilda já usou os ataques de hoje',territory_busy:'Já há um ataque a este território nesse dia',
-  defender_busy:'O dono já defende outro território nesse dia',era_too_low:'A era mediana dos escalados está abaixo desta região',forbidden:'Só o líder e os oficiais declaram ataques',not_in_guild:'Entre numa guilda para participar',
+  defender_busy:'O dono já defende outro território nesse dia',era_too_low:'A era do time (a era do meio dos escalados) está abaixo desta região',forbidden:'Só o líder e os oficiais declaram ataques',not_in_guild:'Entre numa guilda para participar',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 const T_LUWHY={lineup_locked:'Escalação travada',member_too_new:'Há escalado com menos de 24 h de guilda antes da trava',bad_request:'Escalação inválida: confira os escalados',forbidden:'Só o líder e os oficiais escalam',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 /* contrato 10.5: o motivo (reason) de cada batalha */
-const T_REASON={fight:'decidida na luta',neutral:'território sem dono',walkover:'o dono não tinha lutador',empty:'o atacante não tinha lutador',era:'era mediana do atacante abaixo da região',owner:'o atacante já era o dono'};
+const T_REASON={fight:'decidida na luta',neutral:'território sem dono',walkover:'o dono não tinha lutador',empty:'o atacante não tinha lutador',era:'era do time atacante abaixo da região',owner:'o atacante já era o dono'};
 const T_PAL=['#4aa3ff','#ff6a5a','#c58bff','#ff9f43','#4ad6c8','#ff7ac0','#b8c94a','#a9b3c9'];
 const hashOf=v=>{ let x=7; for(const c of String(v)) x=(x*31+c.charCodeAt(0))>>>0; return x; };
 const colOf=id=>T_PAL[hashOf(id)%T_PAL.length];
@@ -279,16 +279,16 @@ function prizesHtml(){ const G=tG(), D=G.DATA, W=D.weeklyChest&&D.weeklyChest.ma
 function rulesHtml(){ const G=tG(), D=G.DATA, Z=D.season||{}, T=D.territory, hh=hourTxt();
   return rule('Cada guilda escala até <b>'+nT(D.tourney.size)+' membros</b>. Luta automática com os atributos reais: quem vence segue com a vida que sobrou e enfrenta o próximo. Empate no tempo: o defensor fica.')
     +'<div class="tr2-det"><div class="tr2-kv" style="border-top:0"><span>Declarar ataques</span><span>segunda a quinta, até '+nT(Z.attacksPerDay||0)+' por dia</span></div><div class="tr2-kv"><span>Batalhas</span><span>sexta e sábado'+(hh?', às '+hh:'')+'</span></div>'
-    +'<div class="tr2-kv"><span>Território</span><span>ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, drop +'+dec(T.per.drop)+'%</span></div><div class="tr2-kv"><span>Capital</span><span>vale '+nT(T.capitalMult)+'x · pede mediana de era '+nT(D.capitalMinEra)+'</span></div>'
-    +'<div class="tr2-kv"><span>Região</span><span>só ataca a guilda cuja mediana de era dos escalados alcança a era da região</span></div></div>'; }
+    +'<div class="tr2-kv"><span>Território</span><span>ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, itens +'+dec(T.per.drop)+'%</span></div><div class="tr2-kv"><span>Capital</span><span>vale '+nT(T.capitalMult)+'x · pede era do time '+nT(D.capitalMinEra)+'</span></div>'
+    +'<div class="tr2-kv"><span>Região</span><span>só ataca a guilda cuja era do time (a era do meio dos escalados) alcança a era da região</span></div></div>'; }
 
 /* em que estado a tela está: none (sem módulo) · closed (sem online ou sem dados) · on (cache do servidor pronto) */
 function mode(){ const G=tG(); if(!G) return {m:'none'}; const N=tNet(); if(N) return {m:'on',N:N}; let z=null; try{ const T=TN(); z=T&&T.state?T.state():null; }catch(e){} return {m:'closed',z:z,st:tStatus()}; }
-function pClosed(M){ const z=M.z, st=M.st||{}; let txt='Em breve: abre com o online', sub='As guildas, os donos dos territórios e as batalhas vêm do servidor. Nada aparece aqui antes disso.';
+function pClosed(M){ const z=M.z, st=M.st||{}; let txt='Em breve: abre com o online', sub='O torneio ainda não abriu. Volte mais tarde.';
   if(st.reason==='level'){ txt='Libera no nível '+nT(st.needLevel||0); sub='O torneio abre junto com a guilda.'; }
   else if(z&&z.on&&X.loading){ txt='Carregando o torneio…'; sub=''; }
-  else if(z&&z.on&&z.err==='not_in_guild'){ txt='Entre numa guilda para participar'; sub='O torneio é disputado entre as guildas do seu servidor.'; }
-  else if(z&&z.on&&(z.err==='net_off'||z.err==='timeout'||z.err==='offline')){ txt='Sem conexão com o servidor'; sub='Abra a tela de novo quando a conexão voltar.'; }
+  else if(z&&z.on&&z.err==='not_in_guild'){ txt='Entre numa guilda para participar'; sub='O torneio é disputado entre as guildas do seu mundo.'; }
+  else if(z&&z.on&&(z.err==='net_off'||z.err==='timeout'||z.err==='offline')){ txt='Sem conexão agora'; sub='Abra a tela de novo quando a conexão voltar.'; }
   return '<div class="tr2-note" role="status"><b class="lil" style="display:block;font-size:20px;color:#eef1ff">Torneio do Poder</b>'+esc2(txt)+(sub?'<br>'+esc2(sub):'')+'</div>'+weekStrip()+rulesHtml()+prizesHtml(); }
 
 /* ----- Mapa ----- */
@@ -305,8 +305,8 @@ function detHtml(MD,N){ const t=tileOf(X.sel); if(!t) return ''; const G=tG(), D
   const pts=t.capital?num(P.capital):num(P.regionBase)+t.region, atks=Array.isArray(m.attacks)?m.attacks.filter(a=>a):[], used=atks.map(a=>a.slot), hh=hourTxt(), z=N.state();
   let h='<div class="tr2-det"><h3>'+esc2(tTerrName(t.id))+'<span>'+nT(pts)+(pts===1?' ponto':' pontos')+'</span></h3>'
     +'<div class="tr2-kv" style="border-top:0"><span>Dono</span><span>'+(mine?'Sua guilda':ow?esc2(ow.name||'Guilda'):'Sem dono')+'</span></div>'
-    +'<div class="tr2-kv"><span>Bônus para o dono</span><span>ouro +'+dec(T.per.gold*mult)+'%, XP +'+dec(T.per.xp*mult)+'%, drop +'+dec(T.per.drop*mult)+'%</span></div>'
-    +'<div class="tr2-kv"><span>Pede mediana de era</span><span>'+(t.capital?nT(D.capitalMinEra)+' ou mais':nT(t.region)+' ou mais ('+esc2(tEra(t.region))+')')+'</span></div>'
+    +'<div class="tr2-kv"><span>Bônus para o dono</span><span>ouro +'+dec(T.per.gold*mult)+'%, XP +'+dec(T.per.xp*mult)+'%, itens +'+dec(T.per.drop*mult)+'%</span></div>'
+    +'<div class="tr2-kv"><span>Pede era do time</span><span>'+(t.capital?nT(D.capitalMinEra)+' ou mais':nT(t.region)+' ou mais ('+esc2(tEra(t.region))+')')+'</span></div>'
     +atks.map(a=>'<div class="tr2-kv"><span>Ataque marcado</span><span>'+esc2((a.attacker&&a.attacker.name)||'Guilda')+' · '+dayName(a.slot)+(hh?' '+hh:'')+'</span></div>').join('');
   if(mine) h+='<div class="tr2-row2" style="margin-top:8px;grid-template-columns:minmax(0,1fr)"><button class="tr2-bt ghost" data-x="defend">Escalar a defesa</button></div>';
   else if(MD.my.canDeclare){ const off=k=>z.phase!=='declare'||used.indexOf(k)>=0;
@@ -320,7 +320,7 @@ function pMap(N){ const G=tG(), MD=mapData(N), R=tRegions(), PR=tPerRegion(); le
   const ids=Object.keys(owners), tb=G.territoryBonus(mineL); let pts=0; try{ pts=G.territoryPoints(mineL); }catch(e){}
   const leg='<div class="tr2-leg">'+(MD.me!=null?'<span><i style="background:#5ef0a0"></i>Sua guilda</span>':'')+ids.slice(0,6).map(id=>'<span><i style="background:'+colOf(id)+'"></i>'+esc2(owners[id])+'</span>').join('')+(ids.length>6?'<span>+'+nT(ids.length-6)+' guildas</span>':'')+'<span><i style="background:rgba(255,255,255,.12)"></i>Sem dono</span><span>'+SV.sw+' ataque marcado</span></div>';
   return weekStrip()+tileBtn('capital',MD)+rows+leg+(X.sel?detHtml(MD,N):note('Toque num território para ver o dono, o bônus e atacar.'))
-    +(MD.me!=null?'<div class="tr2-pk"><span>'+(mineL.length===1?'Seu território':'Seus '+nT(mineL.length)+' territórios')+' · '+nT(pts)+(pts===1?' ponto':' pontos')+'<small>No dia dos prêmios: 1 baú por território para cada membro</small></span><em>Ouro +'+dec(tb.gold)+'%<br>XP +'+dec(tb.xp)+'% · Drop +'+dec(tb.drop)+'%</em></div>':note('Entre numa guilda para participar do torneio.')); }
+    +(MD.me!=null?'<div class="tr2-pk"><span>'+(mineL.length===1?'Seu território':'Seus '+nT(mineL.length)+' territórios')+' · '+nT(pts)+(pts===1?' ponto':' pontos')+'<small>No dia dos prêmios: 1 baú por território para cada membro</small></span><em>Ouro +'+dec(tb.gold)+'%<br>XP +'+dec(tb.xp)+'% · Itens +'+dec(tb.drop)+'%</em></div>':note('Entre numa guilda para participar do torneio.')); }
 
 /* ----- Escalação ----- */
 function pLineup(N){ const my=N.my()||{}; if(my.guildId==null) return note('Entre numa guilda para escalar os lutadores.');
@@ -331,8 +331,8 @@ function pLineup(N){ const my=N.my()||{}; if(my.guildId==null) return note('Entr
   const lh=lockHour(lockAt), lockTxt=lk?'Travada'+(lh?' às '+lh:'')+'. Trocar de equipamento agora não muda a batalha':h==null?'A escalação trava antes da batalha':h>48?'Trava '+dayName(slot)+' às '+lh:'Trava em '+Math.max(1,Math.round(h))+' h, às '+lh;
   let out='<div class="tr2-seg" role="group" aria-label="Dia da batalha">'+['d5','d6'].map(k=>'<button data-x="slot" data-k="'+k+'" aria-pressed="'+(slot===k)+'">'+(k==='d5'?'Sexta':'Sábado')+(hh?' '+hh:'')+'</button>').join('')+'</div>'
     +'<div class="tr2-lsum"><div class="row"><span>Escalados '+ids.length+'/'+size+'</span><span>'+(M.hasFc?'FC somada '+esc2(fcT(fcSum)):'')+'</span></div>'
-    +'<div class="row" style="margin-top:3px"><span>'+(med!=null?'Mediana de era: '+esc2(dec(med))+' ('+esc2(tEra(Math.floor(med)))+')':'Mediana de era: sem dados')+'</span><span>'+(W.saved?'Salva':'Não salva')+'</span></div>'
-    +'<small>'+esc2(lockTxt)+'. '+(M.hasFc?'A fila luta em ordem de FC (o 1º abre). ':'')+'Só entra quem está na guilda desde 24 h antes da trava.'+(med!=null?' Com esta mediana dá para atacar até a região '+esc2(tEra(Math.min(tRegions()-1,Math.floor(med))))+'.':'')+'</small></div>';
+    +'<div class="row" style="margin-top:3px"><span>'+(med!=null?'Era do time: '+esc2(dec(med))+' ('+esc2(tEra(Math.floor(med)))+')':'Era do time: sem dados')+'</span><span>'+(W.saved?'Salva':'Não salva')+'</span></div>'
+    +'<small>'+esc2(lockTxt)+'. '+(M.hasFc?'A fila luta em ordem de FC (o 1º abre). ':'')+'Só entra quem está na guilda desde 24 h antes da trava.'+(med!=null?' Com esta era do time dá para atacar até a região '+esc2(tEra(Math.min(tRegions()-1,Math.floor(med))))+'.':'')+'</small></div>';
   const meId=String((M.list.find(m=>m.me)||{}).id);
   if(!can) out+=rule('Só <b>o líder e os oficiais</b> escalam. Você está '+(pos[meId]?'<b>escalado</b> na posição '+pos[meId]:'fora da escalação')+'.');
   if(!M.list.length) out+=note('A lista de membros da guilda ainda não chegou.');
@@ -354,7 +354,7 @@ function pBattles(N){ const L=battleList(N), hh=hourTxt();
     const res=!I.done?'Aguardando a batalha'+(hh?' das '+hh:''):outcome(I,false)+(nd?' · '+nT(nd)+(nd===1?' duelo':' duelos'):'')+(T_REASON[b.reason]&&!I.kept?' · '+T_REASON[b.reason]:'')+(I.kept?'':meWin?' · vitória da sua guilda':meLost?' · derrota da sua guilda':'');
     h+='<div class="tr2-bat"><span class="tr2-mi"><b>'+esc2(tTerrName(b.territory))+' · '+dayName(b.slot)+'</b><b>'+esc2(I.aName)+' ataca '+esc2(I.dName)+'</b><small class="'+(I.kept?'':meWin?'won':meLost?'lost':'')+'">'+esc2(res)+'</small></span>'
       +(nd?'<button class="tr2-bt fix" data-x="watch" data-i="'+i+'">Ver luta</button>':'')+'</div>'; });
-  return h+'<p class="tr2-hint">Cada duelo é o registro de golpes que o servidor manda; a tela só toca. O vencedor segue com a vida que sobrou contra o próximo da fila.</p>'; }
+  return h+'<p class="tr2-hint">Veja cada duelo golpe a golpe. O vencedor segue com a vida que sobrou contra o próximo da fila.</p>'; }
 
 /* ----- Ranking ----- */
 function pRank(N){ const kind=X.rk==='territory'?'territory':'tournament', K=N.ranking(kind), L=K&&Array.isArray(K.list)?K.list.filter(g=>g):[];

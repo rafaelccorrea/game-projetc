@@ -150,7 +150,7 @@ const artHtml = (n, cls) => `<span class="${cls}"><span class="fgx-fb" aria-hidd
 /* ---------- montar / desmontar ---------- */
 const mk = (id, html) => { const e = document.createElement('div'); e.id = id; if (html != null) e.innerHTML = html; return e; };
 const gid = id => { try { return document.getElementById(id); } catch (e) { return null; } };
-function btnHtml(){ return `<button class="fgx-b" data-fg="forge" id="fgx_b" aria-label="Fogueira das Eras: toque para forjar, segure para abrir o painel"><span class="fgx-w">${artHtml(1, 'fgx-i" id="fgx_i')}<svg class="fgx-pot" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="37" class="p0"></circle><circle cx="40" cy="40" r="37" class="p1" id="fgx_pot" pathLength="100"></circle></svg><span class="fgx-bd" id="fgx_bdw"><b id="fgx_bra">0</b></span><span class="fgx-au" id="fgx_au" hidden>AUTO</span></span><span class="fgx-lb" id="fgx_lb">Fogueira</span></button><button class="fgx-g" data-fg="sheet" aria-label="Painel da Fogueira: nível, estágios, automático e mochila">${GEAR}</button>`; }
+function btnHtml(){ return `<button class="fgx-b" data-fg="forge" id="fgx_b" aria-label="Fogueira das Eras: toque para forjar, segure para abrir o painel"><span class="fgx-w">${artHtml(1, 'fgx-i" id="fgx_i')}<svg class="fgx-pot" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="37" class="p0"></circle><circle cx="40" cy="40" r="37" class="p1" id="fgx_pot" pathLength="100"></circle></svg><span class="fgx-bd" id="fgx_bdw"><b id="fgx_bra">0</b></span><span class="fgx-au" id="fgx_au" hidden>Auto</span></span><span class="fgx-lb" id="fgx_lb">Fogueira</span></button><button class="fgx-g" data-fg="sheet" aria-label="Painel da Fogueira: nível, estágios, automático e mochila">${GEAR}</button>`; }
 function mount(){ if (M) return true; if (!isOn() || typeof document === 'undefined') return false; const hostEl = gid('fb_w'); if (!hostEl) return false;
   const css = document.createElement('style'); css.id = 'fgx_css'; css.textContent = CSS; document.head.appendChild(css);
   const root = mk('fgx'), btn = mk('fgx_btn', btnHtml()), card = mk('fgx_card', ''), sheet = mk('fgx_sheet', ''), off = mk('fgx_off', '');
@@ -176,9 +176,9 @@ function onImgErr(ev){ const t = ev && ev.target; if (!t || !t.classList || !t.c
 function setH(id, prop, v){ const k = id + '|' + prop; if (ST.key[k] === v) return false; ST.key[k] = v; const e = gid(id); if (!e) return true;
   if (prop === 'text') e.textContent = v; else if (prop === 'class') e.className = v; else if (prop === 'hidden') e.hidden = v; else if (prop === 'dash') e.style.strokeDasharray = v; else e.setAttribute(prop, v); return true; }
 function sync(){ const b = BF(); if (!b || !M) return; const o = b.ensure(S), D = b.DATA, n = b.stageOf(o.lv) + 1, autoOk = o.auto.on && o.lv >= D.auto.level, full = o.lv < D.maxLevel && o.xp >= b.xpNeed(o.lv), per = b.perTap(o.lv);
-  ST.hud = { lv: o.lv, bra: o.bra, pot: o.pot, stage: n, auto: autoOk ? (A.paused ? 'PAUSA' : 'AUTO') : '', pulse: full };
+  ST.hud = { lv: o.lv, bra: o.bra, pot: o.pot, stage: n, auto: autoOk ? (A.paused ? 'Pausa' : 'Auto') : '', pulse: full };
   setH('fgx_bra', 'text', String(o.bra)); setH('fgx_pot', 'dash', (o.pot / D.brasas.potKills * 100).toFixed(1) + ' 100'); setH('fgx_lb', 'text', 'Fogueira ' + o.lv);
-  setH('fgx_au', 'hidden', !autoOk); setH('fgx_au', 'class', 'fgx-au' + (A.paused ? ' pz' : '')); setH('fgx_au', 'text', A.paused ? 'PAUSA' : 'AUTO');
+  setH('fgx_au', 'hidden', !autoOk); setH('fgx_au', 'class', 'fgx-au' + (A.paused ? ' pz' : '')); setH('fgx_au', 'text', A.paused ? 'Pausa' : 'Auto');
   setH('fgx_b', 'class', 'fgx-b' + (full ? ' pulse' : ''));
   setH('fgx_b', 'aria-label', 'Fogueira nível ' + o.lv + ', ' + pl(o.bra, 'Brasa', 'Brasas') + ', pote ' + o.pot + ' de ' + D.brasas.potKills + '. Toque para forjar ' + pl(per, 'peça', 'peças') + '. Segure para abrir o painel');
   if (ST.stage !== n){ ST.stage = n; setArt(n); } }
@@ -222,7 +222,7 @@ function layKey(){ let k = ''; try { if (typeof FB_MENU !== 'undefined') for (co
 /* ---------- mochila: abrir espaço pela regra do módulo (desmonta a pior destrancada; a luta nunca para) ---------- */
 function room(h){ const full = () => bagOf(h).length >= bagMaxOf(h); if (!full()) return { ok: true, out: null }; let r = null; try { r = BF().makeRoom(S, h); } catch (e) {} if (!r || full()) return { ok: false, out: null }; return { ok: true, out: r }; }
 const FULL_TXT = 'Mochila cheia e sem peça destrancada para sair. Destranque ou desmonte uma peça no painel.';
-const roomMsg = (h, r) => r && r.out ? 'Mochila cheia: desmontei a pior destrancada (' + nameOf(h, r.out.item) + ')' : '';
+const roomMsg = (h, r) => r && r.out ? 'Mochila cheia: a pior peça destrancada foi desmontada (' + nameOf(h, r.out.item) + ')' : '';
 
 /* ---------- toque: forja o lote do nível pela regra do módulo ---------- */
 function tapForge(){ const b = BF(); if (!b || !M) return false; if (OFF){ say('Feche o resumo primeiro.'); return false; }
@@ -305,7 +305,7 @@ function quickAct(k, opt){ const b = BF(), h = host(), eq = eqIds(h);
   if (!QK || QK.k !== k){ const n = bagOf(h).filter(it => it && !b.isLocked(S, it) && !eq.has(String(it.id)) && (opt.worse ? deltaOf(h, it) < 0 : (it.r | 0) < opt.belowR)).length;
     if (!n){ QK = null; say('Nada para desmontar.'); return; } QK = { k, n }; return; }   /* 1º toque: mostra quantas; 2º toque: desmonta */
   QK = null; const t = b.quick(S, h, opt); if (!t.n){ say('Nada para desmontar.'); return; } sfx('claim'); try { if (h.onChange) h.onChange(); } catch (e) {}
-  say('Desmontei ' + pl(t.n, 'peça', 'peças') + ': +' + nf(t.gold) + ' ouro · +' + t.xp + ' XP da Fogueira'); }
+  say(pl(t.n, 'peça desmontada', 'peças desmontadas') + ': +' + nf(t.gold) + ' ouro · +' + t.xp + ' XP da Fogueira'); }
 function levelUp(){ const b = BF(), h = host(), v0 = b.view(S, h), r = b.levelUp(S, h);
   if (!r.ok){ if (r.reason === 'xp') say((r.need === 1 ? 'Falta 1' : 'Faltam ' + r.need) + ' de XP da Fogueira. Forje e desmonte para encher a barra.'); else if (r.reason === 'gold') say('Falta ouro: subir custa ' + nf(r.cost) + '.'); else if (r.reason === 'max') say('A Fogueira já está no nível máximo.'); return; }
   sfx('upgrade'); const u = v0.unlock, msg = [r.evolved ? 'A Fogueira evoluiu: ' + r.stage.name + ' (nível ' + r.lv + ')' : 'Fogueira nível ' + r.lv];

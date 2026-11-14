@@ -207,6 +207,16 @@ out.push('desenho do jogo com erro ou ausente: imagem parada do pet, sem exceç�
   g.Preload = { ready() { throw new Error('boom'); }, has() { throw new Error('boom'); } }; def.onOpen(); def.render(); has('PODER (FC)'); not('Carregando');   // pré-carregador com erro: a tela não depende dele
   delete g.Preload; delete g.xGate; delete g.pGate; delete g.pwGate; def.onOpen(); def.render(); has('PODER (FC)');
   out.push('carga: ao abrir pede ' + nOpen + ' imagens ao Preload antes de desenhar; desenha na hora, sem o cartaz "Carregando as imagens"; pronta no Preload = não pede'); }
+// 15b) Pets de apoio: o botão da grade só existe com o Sys.petSupport E a tela 'petsup' ligados; o toque abre a tela com volta para Pets
+{ const keep = g.Sys.petSupport; def.onOpen(); def.render();
+  delete g.Sys.petSupport; def.render(); not('data-to="petsup"');
+  g.Sys.petSupport = { DATA: { on: false } }; def.render(); not('data-to="petsup"');
+  g.Sys.petSupport = { DATA: { on: true } }; panelOk = false; def.render(); not('data-to="petsup"'); panelOk = true;
+  def.render(); has('data-x="go" data-to="petsup"'); has('Pets de apoio'); check('pets de apoio');
+  opened.length = 0; def.click(btn('go', { to: 'petsup' })); assert.deepStrictEqual(opened, ['petsup@pets2'], 'o botão abre os Pets de apoio com volta para Pets');
+  g.Sys.petSupport.DATA.on = false; opened.length = 0; def.click(btn('go', { to: 'petsup' })); assert.deepStrictEqual(opened, [], 'sistema desligado: o toque não abre'); has('ainda não está disponível');
+  if (keep) g.Sys.petSupport = keep; else delete g.Sys.petSupport; def.onOpen(); def.render();
+  out.push('pets de apoio: botão só com o sistema e a tela ligados; abre petsup com volta para pets2'); }
 // 16) cobertura: todas as ações da tela apareceram em algum botão e todas as imagens paradas dos 11 pets existem
 { const never = def.actions.filter(a => !seenActs.has(a)); assert.deepStrictEqual(never, [], 'ação sem botão em nenhum estado: ' + never.join(','));
   for (const p of D.pets.filter(p => p.sprite && !p.removed)) for (const s of ['ref', 'mid', 'evo']) { const u = 'assets/pets/' + p.sprite + '_' + s + '.png'; if (['wolf', 'owl', 'shadowwolf', 'falcon', 'drake', 'parrot', 'panther', 'golem', 'underworld', 'celestial', 'prism'].includes(p.id)) assert(fs.existsSync(path.join(R, u)), 'falta ' + u); }

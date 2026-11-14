@@ -49,9 +49,9 @@ const WHY={off:'As guildas ainda não foram ligadas',server:'Em breve: abre com 
   name_filtered:'Esse nome não é permitido. Escolha outro',level_required:'Seu nível ainda não libera isso',already_in_guild:'Você já está em uma guilda',in_guild:'Você já está em uma guilda',
   leader_must_transfer:'Passe a liderança antes de sair',not_in_guild:'Você não está numa guilda',daily_limit:'Já feito hoje. Volta à meia-noite de Brasília',weekly_limit:'Limite desta semana atingido',
   guild_level:'O nível da guilda ainda não libera este item',boss_down:'O chefe desta semana já foi derrubado',not_contributed:'Os Brasões desta missão são só para quem ajudou nela',
-  not_enough_coin:'Faltam Brasões',not_enough_xp:'Falta XP da guilda',cap:'Já está no teto do nível da guilda',not_found:'Isso ainda não está disponível no servidor',
-  bad_request:'Pedido inválido: confira os dados',too_many_officers:'A guilda já tem o máximo de oficiais',not_done:'A missão ainda não terminou',already_claimed:'Você já resgatou esta missão',
-  brasas:'Faltam Brasas: jogue para ganhar mais na sua Fogueira',brasas_over:'Essas Brasas ainda não chegaram ao servidor: jogue um pouco e tente de novo',
+  not_enough_coin:'Faltam Brasões',not_enough_xp:'Falta XP da guilda',cap:'Já está no teto do nível da guilda',not_found:'Isso ainda não está disponível',
+  bad_request:'Não deu certo. Confira e tente de novo',too_many_officers:'A guilda já tem o máximo de oficiais',not_done:'A missão ainda não terminou',already_claimed:'Você já resgatou esta missão',
+  brasas:'Faltam Brasas: jogue para ganhar mais na sua Fogueira',brasas_over:'Suas Brasas ainda estão sendo salvas: jogue um pouco e tente de novo',
   brasas_unverified:'Seu progresso ainda não foi enviado: tente de novo em instantes',hook:'Dar Brasas ainda não está disponível',done:'Já feito hoje. Volta à meia-noite de Brasília',
   day:'Limite de Brasas de hoje atingido',guild:'Entre numa guilda para alimentar a fogueira',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
@@ -69,7 +69,7 @@ function whyLocal(c){ const R=c&&c.reason;
 const IC={coin:'assets/ui/coin.png',gem:'assets/ui/gem.png',chest:'assets/ui/chest.png',forge:'assets/icons/menu/forge.png',pets:'assets/icons/menu/pets.png',mounts:'assets/icons/menu/mounts.png',tourney:'assets/icons/menu/tourney.png'};
 const GIVE_IC={forge:IC.forge,food:IC.pets,essence:IC.chest,stones:IC.forge,mountFrags:IC.mounts};
 const BN={atk:'Ataque',hp:'Vida',def:'Defesa',gold:'Ouro',food:'Ração'};
-const DN={gold_s:'Ouro (pouco)',gold_l:'Ouro (muito)',gems:'Diamantes'};
+const DN={gold_s:'Ouro (pequena)',gold_l:'Ouro (grande)',gems:'Diamantes'};
 const ERA0=['Pré','Ant','Med','Pól','Ind','Mod','Fut','Sub','Cel'];
 const SV={
   coin:'<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="flex:none;vertical-align:-2px"><path d="M12 2l8 3v6c0 5.5-3.6 9.3-8 11-4.4-1.7-8-5.5-8-11V5z" fill="#5ee7ff" stroke="#16306e" stroke-width="1.6"></path><path d="M12 6.5l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#fff6d6"></path></svg>',
@@ -273,19 +273,19 @@ function rulesHtml(){ const G=GM(), D=G.DATA, B=D.banners, T=D.territory; let co
   const row=(a,b)=>'<div class="gd2-row"><span class="mi"><b>'+esc2(a)+'</b><small>'+esc2(b)+'</small></span></div>';
   return secH('Como a guilda funciona','regras do jogo')
     +row('Vagas',nT(D.members.base)+' no nível 1, +'+nT(D.members.perLevel)+' por nível, até '+nT(D.members.max))
-    +row('Criar',(cost?cost+' de ouro':'ouro de farm')+'. Sem diamante')
+    +row('Criar',(cost?cost+' de ouro':'ouro de umas 8 h jogando')+'. Sem diamante')
     +row('Cargos','Líder (1), oficiais (até '+nT(D.maxOfficers)+') e membros')
     +row('Bênçãos (estandartes)','Valem para todos. Teto no nível '+nT(D.xpLevel.maxLevel)+': '+Object.keys(B.cap).map(k=>(BN[k]||k)+' +'+dec(B.cap[k])+'%').join(', '))
-    +row('Territórios','Cada um: ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, drop +'+dec(T.per.drop)+'%. Capital vale '+nT(T.capitalMult)+'x. Teto: '+dec(T.cap.gold)+'/'+dec(T.cap.xp)+'/'+dec(T.cap.drop)+'%')
+    +row('Territórios','Cada um: ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, itens +'+dec(T.per.drop)+'%. Capital vale '+nT(T.capitalMult)+'x. Teto: '+dec(T.cap.gold)+'/'+dec(T.cap.xp)+'/'+dec(T.cap.drop)+'%')
     +row('Loja da guilda','Só por '+coinName(2)+'. Sem diamante e sem sorteio'); }
 function pClosed(M){ const R=M.st.reason, z=netSt();
   const txt=R==='off'?'Guildas: em breve':R==='level'?'A guilda libera no nível '+nT(M.st.needLevel||0):'Em breve: abre com o online';
-  const sub=R==='off'||R==='level'?'':(z&&z.on?'O jogo ainda não conectou ao servidor das guildas. Nada aparece aqui antes disso.':'As guildas dependem do servidor. Nada aparece aqui antes disso.');
+  const sub=R==='off'||R==='level'?'':'As guildas ainda não abriram. Volte mais tarde.';
   return '<div class="gd2-note" role="status"><b class="lil" style="display:block;font-size:20px;color:#eef1ff">Guilda</b>'+esc2(txt)+(sub?'<br>'+esc2(sub):'')+'</div>'+rulesHtml(); }
 
 /* ----- online, sem guilda: procurar e criar ----- */
 function pNone(M){ const G=GM(), D=G.DATA, z=sec('list'), L=z.st==='ok'?arr(z.d).filter(g=>g&&g.id!=null).slice(0,30):[]; let c={ok:false}; try{ c=G.canCreate(S,host()); }catch(e){} let cost=0; try{ cost=G.createCost(host()); }catch(e){}
-  let h=rule('Na guilda: bênçãos de <b>ATQ, VIDA e DEF</b> para todos, chefe da semana, loja de '+esc2(coinName(2))+' e o <b>Torneio do Poder</b>.')
+  let h=rule('Na guilda: bênçãos de <b>ATQ, Vida e Defesa</b> para todos, chefe da semana, loja de '+esc2(coinName(2))+' e o <b>Torneio do Poder</b>.')
     +secH('Entrar numa guilda','busca pelo nome')
     +'<div class="gd2-form"><input id="gd2_q" class="gd2-inp" type="text" maxlength="24" autocomplete="off" placeholder="Nome da guilda" aria-label="Buscar guilda pelo nome" value="'+esc2(X.q)+'"><button class="gd2-bt ghost" data-x="find">Buscar</button></div>'
     +secHtml(z,'list');
@@ -304,7 +304,7 @@ function cardHtml(o){ const G=GM(), mine=mineNow()||{}, g=mine.guild||{}, n=Arra
   return '<div class="gd2-gc"><div class="gd2-gh">'+SV.emb+'<div class="t"><div class="nm lil">'+esc2(o.name||'Sua guilda')+'</div><small>'+(n!=null?nT(n)+'/':'até ')+nT(cap)+' membros · seu cargo: <b>'+esc2(roleName(o.role))+'</b> · '+coinTxt(o.coin)+' '+esc2(coinName(o.coin))+'</small></div><div class="gd2-lvb">NÍVEL<b class="lil">'+nT(o.level)+'</b></div></div>'
     +'<div class="gd2-bar" role="progressbar" aria-label="XP da guilda" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(c01(xb.frac)*100)+'"><i style="width:'+(c01(xb.frac)*100).toFixed(1)+'%"></i></div>'
     +'<div class="gd2-prog"><span>'+(xb.max?'Nível máximo da guilda':'XP da guilda '+nT(xb.into)+'/'+nT(xb.need))+'</span><span>'+(xb.max?'':'próximo nível: mais vagas e teto maior')+'</span></div>'
-    +'<div class="gd2-chips"><span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">VIDA <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">DEF <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Drop <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
+    +'<div class="gd2-chips"><span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">Vida <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">Defesa <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Itens <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
 const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.concat(fireOn()?[['fire','Fogueira']]:[]).map(t=>'<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'">'+t[1]+'</button>').join('')+'</div>';
 
 /* ----- Membros ----- */
@@ -320,7 +320,7 @@ function actsFor(m,o,offs){ if(m.me) return []; const D=GM().DATA, r=roleKey(m.r
 const ACT_LB={promote:['Promover a oficial',''],demote:['Rebaixar a membro',' ghost'],transfer:['Passar a liderança',' ghost'],kick:['Expulsar',' rose']};
 function pMembers(o){ const G=GM(), D=G.DATA, L=memList(), offs=L.filter(m=>roleKey(m.role)==='officer').length, mine=mineNow()||{};
   let h=secH('Membros',nT(L.length)+'/'+nT(G.memberCap(o.level))+' · oficiais '+nT(offs)+'/'+nT(D.maxOfficers));
-  if(!L.length) h+='<div class="gd2-note" role="status">A lista de membros ainda não chegou do servidor.</div>';
+  if(!L.length) h+='<div class="gd2-note" role="status">A lista de membros ainda não chegou.</div>';
   for(const m of L){ const id=String(m.id), acts=actsFor(m,o,offs), open=X.sel===id&&acts.length>0, lvl=pick(m,'level','lvl');
     const sub=[lvl!=null?'Nv '+nT(lvl):'',isN(m.fc)?'FC '+fcT(m.fc):'',isN(m.contrib)?nT(m.contrib)+' na semana':'',!m.me&&m.lastSeen>0?'visto '+ago(m.lastSeen):''].filter(Boolean).join(' · ');
     const inner='<span class="gd2-av lil" aria-hidden="true">'+esc2(Array.from(String(m.name||'?'))[0]||'?')+'</span><span class="mi"><b>'+esc2(m.name||'?')+(m.me?' (você)':'')+'</b><small>'+esc2(sub)+'</small></span><span class="gd2-role '+roleKey(m.role)+'">'+esc2(roleName(m.role))+'</span>';
@@ -346,7 +346,7 @@ function srvCost(c){ return c&&typeof c==='object'?{gems:Math.max(0,Math.round(n
 function doneToday(key){ const me=(mineNow()||{}).me||{}, L=Array.isArray(me.donatedToday)?me.donatedToday.map(String):[]; return L.indexOf(key)>=0||(key==='checkin'&&me.checkinToday===true); }
 function pDonate(o){ const D=GM().DATA, ck=doneToday('checkin'), feito='<span class="gd2-pill on">Feito hoje</span>', volta=' · volta à meia-noite de Brasília';
   let h=secH('Hoje','1 de cada por dia')
-    +'<div class="gd2-row"><span class="ic">'+SV.cal+'</span><span class="mi"><b>Check-in</b><small><em>+'+nT(D.checkin.coin)+' '+esc2(coinName(D.checkin.coin))+'</em> · +'+nT(D.checkin.xp)+' XP da guilda'+(ck?volta:'')+'</small></span>'+(ck?feito:'<button class="gd2-bt" data-x="checkin">Fazer</button>')+'</div>';
+    +'<div class="gd2-row"><span class="ic">'+SV.cal+'</span><span class="mi"><b>Presença</b><small><em>+'+nT(D.checkin.coin)+' '+esc2(coinName(D.checkin.coin))+'</em> · +'+nT(D.checkin.xp)+' XP da guilda'+(ck?volta:'')+'</small></span>'+(ck?feito:'<button class="gd2-bt" data-x="checkin">Fazer</button>')+'</div>';
   for(const d of D.donate){ const c=donCost(d), dn=doneToday('donate:'+d.id);
     h+='<div class="gd2-row"><span class="ic">'+(d.gems?img(IC.gem,28):SV.gold)+'</span><span class="mi"><b>'+esc2(DN[d.id]||d.id)+': '+esc2(c.txt)+'</b><small><em>+'+nT(d.coin)+' '+esc2(coinName(d.coin))+'</em> · +'+nT(d.xp)+' XP da guilda'+(dn?volta:'')+'</small></span>'
       +(dn?feito:'<button class="gd2-bt'+(c.ok?'':' off')+'" data-x="don" data-id="'+esc2(d.id)+'">Doar</button>')+'</div>'; }
@@ -374,15 +374,15 @@ function pBoss(o){ const D=GM().DATA.boss, z=sec('boss'), d=z.st==='ok'?z.d:null
     const top=Array.isArray(d.top)?d.top.filter(t=>t&&isN(t.damage)).slice(0,10):[], meM=memList().find(m=>m.me), meId=meM?String(meM.id):'';
     h+='<div class="gd2-boss"><div class="gd2-prog" style="margin-top:0"><span>Chefe da semana'+(dead?' · derrubado':'')+'</span><span>'+(fr!=null?dec(fr*100)+'%':'')+'</span></div>'
       +(fr!=null?'<div class="gd2-bar red" role="progressbar" aria-label="Vida do chefe" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(fr*100)+'"><i style="width:'+(fr*100).toFixed(1)+'%"></i></div>':'')
-      +'<div class="gd2-prog"><span>'+(hp!=null?'Vida '+kfT(hp)+(max!=null?' de '+kfT(max):''):'A vida do chefe não veio do servidor')+'</span><span>'+(dead?'':left!=null?nT(left)+(left===1?' golpe hoje':' golpes hoje'):nT(D.hitsPerDay)+' golpes por dia')+'</span></div>'
+      +'<div class="gd2-prog"><span>'+(hp!=null?'Vida '+kfT(hp)+(max!=null?' de '+kfT(max):''):'Vida do chefe indisponível agora')+'</span><span>'+(dead?'':left!=null?nT(left)+(left===1?' golpe hoje':' golpes hoje'):nT(D.hitsPerDay)+' golpes por dia')+'</span></div>'
       +(myD!=null?'<div class="gd2-prog"><span>Seu dano na semana</span><span>'+esc2(kfT(myD))+'</span></div>':'')
       +(dead?'<div class="gd2-note" role="status" style="margin:8px 0 0">Chefe derrubado nesta semana. Os prêmios de quem bateu foram pelo correio. Na semana que vem tem outro.</div>'
         :'<button class="gd2-bt wide '+(canHit?'rose':'off')+'" data-x="hit" style="margin-top:8px">'+(canHit?'Atacar':'Golpes de hoje usados')+'</button>'+(canHit?'':'<p class="gd2-hint" style="margin:6px 0 0">Feito hoje: os golpes voltam à meia-noite de Brasília.</p>'))
       +(X.hit?'<p class="gd2-hint" style="margin:8px 0 0" role="status">Último golpe: <b>'+esc2(kfT(X.hit.damage))+'</b> de dano'+(X.hit.band?' · prêmio: '+bandTxt(X.hit.band):'')+'</p>':'')+'</div>';
     if(top.length){ h+=secH('Quem mais bateu','dano na semana'); top.forEach((t,i)=>{ h+='<div class="gd2-band"><span>'+nT(i+1)+'º '+esc2(t.name||'?')+(meId&&String(t.id)===meId?' (você)':'')+'</span><span>'+esc2(kfT(t.damage))+'</span></div>'; }); } }
-  h+=secH('Prêmio por faixa de dano','dano ÷ seu ATQ');
+  h+=secH('Prêmio por faixa de dano','seu dano dividido pelo seu ATQ');
   bands.forEach((b,i)=>{ const nx=bands[i+1]; h+='<div class="gd2-band"><span>'+(nx?'De '+dec(b.minRatio)+'x a '+dec(nx.minRatio)+'x':dec(b.minRatio)+'x ou mais')+'</span><span>'+bandTxt(b)+'</span></div>'; });
-  return h+'<p class="gd2-hint" style="margin-top:8px">Derrubar o chefe dá a todos que bateram '+coinTxt(num(kill.coin))+', '+nT(num(kill.forge))+' pedras de forja, '+nT(num(kill.food))+' de ração e '+nT(num(kill.essence))+' Essências, mais '+nT(num(kill.xp))+' XP da guilda. O dano é calculado no servidor; os prêmios chegam pelo correio.</p>'; }
+  return h+'<p class="gd2-hint" style="margin-top:8px">Derrubar o chefe dá a todos que bateram '+coinTxt(num(kill.coin))+', '+nT(num(kill.forge))+' pedras de forja, '+nT(num(kill.food))+' de ração e '+nT(num(kill.essence))+' Essências, mais '+nT(num(kill.xp))+' XP da guilda. Os prêmios chegam pelo correio.</p>'; }
 
 /* ----- Loja (só por Brasões; nada sorteado) ----- */
 /* contrato 10.5: GET /guild/shop → {coin, week, items:[{id, name, cost, weekly, minLevel, give, bought, left, locked}]}. Com a lista do servidor, é ELA que a tela mostra
@@ -428,7 +428,7 @@ function pTerr(o){ const G=GM(), D=G.DATA, T=D.territory, Z=D.season||{}, L=o.te
     h+='<div class="gd2-map" style="grid-template-columns:repeat('+T.regions+',minmax(0,1fr))">'+cells+cell('capital','Capital','cap')+'</div>'
       +'<div class="gd2-leg"><span><i style="background:#5ef0a0"></i>Sua guilda</span><span><i style="background:#a97bff"></i>Outra guilda</span><span><i style="background:rgba(255,255,255,.12)"></i>Sem dono</span></div>'; }
   else h+='<div class="gd2-note" role="status">'+(L.length?'Sua guilda tem '+nT(L.length)+(L.length===1?' território':' territórios')+(L.some(t=>t.capital)?' (com a Capital)':'')+'.':'Sua guilda ainda não tem territórios.')+' O mapa completo fica no Torneio do Poder.</div>';
-  h+='<div class="gd2-row"><span class="mi"><b>Bônus '+(L.length===1?'do seu território':'dos seus '+nT(L.length)+' territórios')+'</b><small>Cada um: ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, drop +'+dec(T.per.drop)+'%. Capital vale '+nT(T.capitalMult)+'x. Teto: ouro +'+dec(T.cap.gold)+'%, XP +'+dec(T.cap.xp)+'%, drop +'+dec(T.cap.drop)+'%</small></span><span class="gd2-pill on">Ouro +'+dec(tb.gold)+'%<br>XP +'+dec(tb.xp)+'% · Drop +'+dec(tb.drop)+'%</span></div>'
+  h+='<div class="gd2-row"><span class="mi"><b>Bônus '+(L.length===1?'do seu território':'dos seus '+nT(L.length)+' territórios')+'</b><small>Cada um: ouro +'+dec(T.per.gold)+'%, XP +'+dec(T.per.xp)+'%, itens +'+dec(T.per.drop)+'%. Capital vale '+nT(T.capitalMult)+'x. Teto: ouro +'+dec(T.cap.gold)+'%, XP +'+dec(T.cap.xp)+'%, itens +'+dec(T.cap.drop)+'%</small></span><span class="gd2-pill on">Ouro +'+dec(tb.gold)+'%<br>XP +'+dec(tb.xp)+'% · Itens +'+dec(tb.drop)+'%</span></div>'
     +'<button class="gd2-bt wide" data-x="tour">'+img(IC.tourney,20)+'Abrir o Torneio do Poder</button>'
     +'<p class="gd2-hint" style="margin-top:8px">Líder e oficiais declaram até '+nT(Z.attacksPerDay||0)+' ataques por dia. As batalhas são de '+nT(D.tourney.size)+' contra '+nT(D.tourney.size)+'. No dia dos prêmios, um baú por território para cada membro, pelo correio.</p>';
   return h; }
@@ -454,7 +454,7 @@ function pFire(o){ let v=null; try{ v=fireOn()?GF().view(S,host()):null; }catch(
       +(opts.length?opts.map(n=>'<button class="gd2-bt'+(n<=have?'':' off')+'" data-x="fire" data-n="'+n+'" aria-label="Dar '+nT(n)+' Brasas">+'+nT(n)+'</button>').join(''):'<span class="gd2-pill on">Feito hoje</span>')+'</div>'; }
   const nx=v.next&&v.next.chest;
   if(nx) h+=secH(v.max?'Próximo baú extra':'Baú do nível '+nT(v.next.level),'para cada membro')
-    +'<div class="gd2-row"><span class="ic">'+img(IC.chest,28)+'</span><span class="mi"><b>'+kfT(nx.gold)+' de ouro · '+nT(nx.stones)+' Pedras de Forja · '+nT(nx.food)+' de ração</b><small>Chega sozinho pelo correio quando a guilda sobe de nível</small></span></div>';
+    +'<div class="gd2-row"><span class="ic">'+img(IC.chest,28)+'</span><span class="mi"><b>'+kfT(nx.gold)+' de ouro · '+nT(nx.stones)+' pedras de forja · '+nT(nx.food)+' de ração</b><small>Chega sozinho pelo correio quando a guilda sobe de nível</small></span></div>';
   return h+'<p class="gd2-hint">As Brasas vêm só de jogar (a sua Fogueira). Nada aqui se compra. O baú vai para quem já estava na guilda quando o nível subiu.</p>'; }
 const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,miss:pMiss,terr:pTerr,fire:pFire};
 
@@ -511,7 +511,7 @@ const ACT={
     run('Alimentando a fogueira…',()=>Nn.feed(S,host(),k),r=>'+'+nT(num(r.flames)||(k||num(GF().DATA.free.flames)))+' chamas na fogueira'+(num(r.chestsMailed)>0?' · '+nT(r.chestsMailed)+(r.chestsMailed>1?' baús enviados':' baú enviado')+' ao seu correio':''),()=>{ X.glow=1.2; }); },
   checkin(){ const n=GN(), D=GM().DATA; sfx('ui_tap'); if(doneToday('checkin')) return say(why('daily_limit'));
     const got=r=>{ const c=r&&r.gained&&isN(r.gained.coin)?r.gained.coin:D.checkin.coin; return '+'+nT(c)+' '+coinName(c); };
-    run('Carregando…',()=>n.checkin(S,host()),r=>'Check-in feito: '+got(r),r=>fx(got(r),'#5ee7ff')); },
+    run('Carregando…',()=>n.checkin(S,host()),r=>'Presença marcada: '+got(r),r=>fx(got(r),'#5ee7ff')); },
   don(b){ const id=String(b.dataset.id||''), d=(GM().DATA.donate||[]).find(x=>x.id===id); if(!d) return; sfx('ui_tap'); if(doneToday('donate:'+d.id)) return say(why('daily_limit')); const c=donCost(d);
     if(!c.ok) return say(d.gems?'Faltam diamantes para esta doação':'Falta ouro para esta doação');
     ask('don',id,'Doar <b>'+esc2(c.txt)+'</b> para a guilda? Você recebe +'+nT(d.coin)+' '+esc2(coinName(d.coin))+' e a guilda +'+nT(d.xp)+' XP.','Doar'); },
@@ -523,7 +523,7 @@ const ACT={
     run('Atacando o chefe…',()=>n.bossHit(S,host()),r=>(r.killed===true?'Chefe derrubado! ':'')+'Golpe no chefe: '+kfT(num(r.damage))+' de dano',r=>{ X.hit={damage:num(r.damage),band:r.band&&typeof r.band==='object'&&isN(r.band.coin)?r.band:null,t:X.t}; fx('-'+kfT(num(r.damage)),'#ff9f9f',1); delete X.d.boss; }); },
   buy(b){ const id=String(b.dataset.id||''), it=shopItems().find(x=>x.id===id), o=GM().ensure(S); if(!it) return; sfx('ui_tap');
     if(shopLock(it,o)) return say(shopLockTxt(it,o)); if(it.left!=null&&it.left<=0) return say('Limite desta semana atingido'); if(shopCoin(o)<it.cost) return say('Faltam '+coinName(2)+': custa '+nT(it.cost));
-    ask('buy',id,'Trocar <b>'+nT(it.cost)+' '+esc2(coinName(it.cost))+'</b> por <b>'+esc2(it.name)+'</b>?','Comprar'); },
+    ask('buy',id,'Trocar <b>'+nT(it.cost)+' '+esc2(coinName(it.cost))+'</b> por <b>'+esc2(it.name)+'</b>?','Trocar'); },
   claim(b){ const id=String(b.dataset.id||''), m=missList().find(x=>x.id===id), n=GN(); if(!m) return; sfx('ui_tap');
     if(m.claimed) return say(why('already_claimed')); if(!m.done) return say(why('not_done')); if(!m.helped) return say(why('not_contributed'));
     run('Carregando…',()=>n.claimMission(S,host(),id),'Missão resgatada: +'+nT(m.coin)+' '+coinName(m.coin),()=>{ delete X.d.miss; }); },
@@ -539,7 +539,7 @@ const ACT={
     if(c.k==='kick'){ const nm=memName(c.id); return run('Expulsando…',()=>n.kick(S,h,c.id),nm+' saiu da guilda',()=>{ X.sel=''; }); }
     if(c.k==='transfer'){ const nm=memName(c.id); return run('Passando a liderança…',()=>n.transfer(S,h,c.id),nm+' agora é '+roleName('leader'),()=>{ X.sel=''; }); }
     if(c.k==='leave') return run('Saindo da guilda…',()=>n.leave(S,h),'Você saiu da guilda',()=>{ X.d={}; X.sel=''; X.tab='members'; X.hit=null; });
-    if(c.k==='buy'){ const it=shopItems().find(x=>x.id===c.id); return run('Comprando…',()=>n.shopBuy(S,h,c.id),'Comprado: '+(it?it.name:'item')+'. Chega pelo correio',()=>{ delete X.d.shop; }); }
+    if(c.k==='buy'){ const it=shopItems().find(x=>x.id===c.id); return run('Trocando…',()=>n.shopBuy(S,h,c.id),'Trocado: '+(it?it.name:'item')+'. Chega pelo correio',()=>{ delete X.d.shop; }); }
     if(c.k==='don'){ const d=(G.DATA.donate||[]).find(x=>x.id===c.id); if(!d) return redraw(); const cost=donCost(d); if(!cost.ok) return say(d.gems?'Faltam diamantes para esta doação':'Falta ouro para esta doação');
       /* contrato 10.4 e 10.5: quem debita o ouro ou o diamante é o jogo, UMA vez e só DEPOIS de o servidor aceitar, e o valor é o cost:{goldk, gems} da resposta
          (goldk × ouro de um abate); o servidor confere pelo resumo do save. Só se a resposta vier sem o cost vale o valor da tabela do jogo, que é a que o servidor lê */

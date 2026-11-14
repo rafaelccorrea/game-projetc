@@ -437,7 +437,7 @@ function gotTxt(r){ const out=[]; if(!r) return out;
   if(r.item){ let nm=''; try{ nm=String(iname(r.item)||''); }catch(e){} out.push((nm||sln(r.item.slot))+(r.item.season?' (item da temporada)':'')+' na mochila'); }
   if(r.held) out.push(sln(r.held.slot)+' guardada até o nível '+n0(r.held.needLevel||needLv(r.held)));
   if(r.mat) for(const k in r.mat){ const q=int0(r.mat[k]); if(q) out.push('+'+n0(q)+' '+(MATN[k]?MATN[k][q===1?0:1]:k)); }
-  if(r.mountFrags){ const mf=r.mountFrags, q=int0(typeof mf==='object'?mf.n:mf); if(q) out.push('+'+n0(q)+' frag. de montaria'+(mf&&mf.stored?' (guardados até a 1ª montaria)':mf&&mf.up?' (estrela nova)':'')); }
+  if(r.mountFrags){ const mf=r.mountFrags, q=int0(typeof mf==='object'?mf.n:mf); if(q) out.push('+'+n0(q)+' fragmentos de montaria'+(mf&&mf.stored?' (guardados até a 1ª montaria)':mf&&mf.up?' (estrela nova)':'')); }
   if(r.fixedSkin){ let nm=''; try{ const k=(Sys.appearance.FIXED||[]).find(z=>z&&z.id===r.fixedSkin); nm=k?k.name:''; }catch(e){} out.push((nm||'Skin do passe')+' é sua'); }
   return out; }
 function claimOne(trk,t){ let r=null; try{ r=PS().claimTier(S,Sys.host,trk,t); }catch(e){ r={ok:false,reason:'erro'}; }

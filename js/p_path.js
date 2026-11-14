@@ -72,13 +72,13 @@ function affOf(p){ try{ const A=window.Sys&&window.Sys.affinity; if(!A||!A.DATA|
     return {strong:A.DATA.eras.filter(e=>e&&e.weak===st).map(e=>String(e.n)),resist:A.DATA.eras.filter(e=>e&&e.resist===st).map(e=>String(e.n)),up:pc(A.DATA.weak),dn:pc(A.DATA.resist)}; }catch(e){ return null; } }
 
 const WHY={off:'O Caminho de luta está desligado agora.',id:'Este caminho não existe.',chosen:'Você já escolheu um caminho. Para mudar, use a troca grátis da semana.',
-  none:'Escolha um caminho primeiro.',same:'Você já está neste caminho.',busy:'Já há um ensaio em andamento.'};
-const TRY_WHY={off:'O Testar grátis está desligado agora.',id:WHY.id,chosen:'O Testar grátis fecha depois da escolha.',busy:WHY.busy,none:'Não há ensaio em andamento.'};
+  none:'Escolha um caminho primeiro.',same:'Você já está neste caminho.',busy:'Já há um teste em andamento.'};
+const TRY_WHY={off:'O teste grátis está desligado agora.',id:WHY.id,chosen:'O teste grátis fecha depois da escolha.',busy:WHY.busy,none:'Não há teste em andamento.'};
 function why(r,v){ const k=r&&r.reason;
   if(k==='level'){ const need=num(r.need)||(v?num(v.needLevel):0), lv=v?Math.floor(num(v.level)):0; return 'Libera no Nv '+nT(need)+'.'+(v?' Você está no Nv '+nT(lv)+'.':''); }
   if(k==='week'){ const w=whenTxt(r.next||(v&&v.nextFreeChange)); return 'Você já usou a troca grátis desta semana.'+(w?' A próxima volta '+w+'.':'')+' Não há outra forma de trocar.'; }
   return WHY[k]||'Não foi possível agora.'; }
-const NO_BATTLE='O ensaio ainda não está ligado nesta versão. Nada foi gasto.';
+const NO_BATTLE='O teste ainda não está disponível. Nada foi gasto.';
 
 /* ---------- ícones desenhados no código (os do protótipo) ---------- */
 const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
@@ -197,17 +197,17 @@ function cardHtml(p,v,tv,rows){ const row=rows.find(r=>r&&r.id===p.id)||null, tp
     +bonHtml(p)+affHtml(p)+(bt?'<div class="pp-pb">'+bt+'</div>':'')+'</div>'; }
 function listHtml(v){ const tv=tryView(), rows=rowsOf(), lv=Math.floor(num(v.level)), need=Math.floor(num(v.needLevel)), miss=Math.max(1,need-lv), w=whenTxt(v.nextFreeChange);
   const title=!v.unlocked?'Caminho de luta: libera no Nv '+nT(need):v.chosen?'Seu caminho: '+esc(v.chosenName):'Nv '+nT(need)+': escolha seu caminho';
-  const intro='<div class="pp-intro"><b class="pp-lil">'+title+'</b>'+esc(v.text)+(v.chosen&&v.unlocked&&w?' Volta <em>'+esc(w)+'</em>.':'')+(v.chosen?' O herói continua igual.':'')+'</div>'
+  const intro='<div class="pp-intro"><b class="pp-lil">'+title+'</b>'+esc(v.text)+(v.chosen&&v.unlocked&&w?' Volta <em>'+esc(w)+'</em>.':'')+(v.chosen?' A aparência do herói continua igual.':'')+'</div>'
     +(!v.unlocked?'<div class="pp-note" role="status">Você está no Nv '+nT(lv)+'. '+(miss===1?'Falta 1 nível':'Faltam '+nT(miss)+' níveis')+' para escolher o caminho.</div>':'');
   const any=rows.some(r=>r&&r.tried); let foot=any?'<div class="pp-row"><button class="pp-o" data-x="cmp">Comparar os testes</button></div>':'';
   if(!v.unlocked) foot=backRow;
-  const line=X.msg?msgHtml():(v.unlocked&&tv&&!v.chosen?'<p class="pp-ln">'+esc(tv.text)+'</p>':v.unlocked&&v.chosen&&tryOn()&&!afterChoose()?'<p class="pp-ln">Ensaio fechado depois da escolha. A troca é nesta tela.</p>':'');
+  const line=X.msg?msgHtml():(v.unlocked&&tv&&!v.chosen?'<p class="pp-ln">'+esc(tv.text)+'</p>':v.unlocked&&v.chosen&&tryOn()&&!afterChoose()?'<p class="pp-ln">Teste fechado depois da escolha. A troca é nesta tela.</p>':'');
   return wrap(intro+(Array.isArray(v.paths)?v.paths:[]).map(p=>cardHtml(p,v,tv,rows)).join(''),foot+line); }
 function confirmHtml(v){ const p=(v.paths||[]).find(q=>q.id===X.pick), a=affOf(p), ch=X.kind==='change', n=perWeek(), li=(cls,t)=>'<li><i class="'+cls+'">'+(cls==='y'?TICK:WARN)+'</i><span>'+t+'</span></li>';
   const items=li('y','O corpo e a skin do herói <em>não mudam</em>. Muda só como ele luta.')
     +(a&&a.strong.length?li('y','Forte contra: <em>'+esc(a.strong.join(', '))+'</em> (+'+a.up+'%).'):'')
     +(ch?li('w','Esta é a <em>troca grátis desta semana</em>. Depois dela, a próxima só volta na semana seguinte.')+li('w','Você deixa o caminho <em>'+esc(v.chosenName)+'</em>.')
-        :(n>0?li('w','Trocar depois: <em>grátis '+nT(n)+(n===1?' vez':' vezes')+' por semana</em>.'):'')+(tryOn()&&!afterChoose()?li('w','Depois de escolher, o Testar grátis fecha.'):''));
+        :(n>0?li('w','Trocar depois: <em>grátis '+nT(n)+(n===1?' vez':' vezes')+' por semana</em>.'):'')+(tryOn()&&!afterChoose()?li('w','Depois de escolher, o teste grátis fecha.'):''));
   return wrap('<div class="pp-res" role="dialog" aria-label="Confirmar caminho"><div class="pp-cf"><span class="pp-pi">'+ico(p)+'</span><div class="pp-rh"><b class="pp-lil">'+(ch?'Trocar para ':'Escolher ')+esc(p.name)+'?</b><small>'+esc(p.desc)+'</small></div></div>'
     +bonHtml(p)+'<ul class="pp-cl">'+items+'</ul></div>',
     '<div class="pp-row"><button class="pp-o" data-x="no">Voltar</button><button class="pp-g pp-lil" data-x="ok">Confirmar</button></div>'); }
@@ -216,7 +216,7 @@ const fin=v=>typeof v==='number'&&isFinite(v);
 const DASH='—';
 const lnHtml=(lab,val,extra,top)=>'<div class="pp-ln'+(top?' tp':'')+'"><small>'+lab+'</small><span class="pp-v pp-lil">'+val+'</span>'+extra+(top?'<span class="pp-bst">melhor</span>':'')+'</div>';
 function compareHtml(v){ const rows=rowsOf(), tv=tryView(), last=X.last, lp=last?rows.find(r=>r.id===last.id):null, sec=trySec(), dn=dummyName(), next=rows.find(r=>r&&!r.tried&&canTryRow(tv,r.id));
-  const col=r=>{ const p=(v.paths||[]).find(q=>q.id===r.id)||{id:r.id}, hasD=fin(r.bestDps), hasL=fin(r.life), lm=num(r.lifeMax), hf=hasL&&lm>0?Math.max(0,Math.min(1,r.life/lm)):-1, hasC=fin(r.ctrl), no='<small>sem leitura</small>';
+  const col=r=>{ const p=(v.paths||[]).find(q=>q.id===r.id)||{id:r.id}, hasD=fin(r.bestDps), hasL=fin(r.life), lm=num(r.lifeMax), hf=hasL&&lm>0?Math.max(0,Math.min(1,r.life/lm)):-1, hasC=fin(r.ctrl), no='<small>sem dado ainda</small>';
     return '<div class="pp-cc'+(last&&r.id===last.id?' cur':'')+'"><span class="pp-pi">'+ico(p)+'</span><b>'+esc(r.name)+'</b>'
       +(r.tried?lnHtml('Dano/s',hasD?nT(r.bestDps):DASH,'<small>'+(r.n===1?'1 teste':nT(r.n)+' testes')+'</small>',hasD&&r.topDps===true)
           +lnHtml('Vida no fim',hasL?nT(r.life):DASH,hasL?(hf>=0?'<span class="pp-hb" role="img" aria-label="'+Math.round(hf*100)+'% da vida máxima"><i style="width:'+(hf*100).toFixed(1)+'%"></i></span>':''):no,hasL&&r.topLife===true)
@@ -224,9 +224,9 @@ function compareHtml(v){ const rows=rowsOf(), tv=tryView(), last=X.last, lp=last
         :'<span class="pp-dp pp-lil" aria-hidden="true">'+DASH+'</span><small>ainda não testou</small>'+(canTryRow(tv,r.id)?'<button class="pp-tt" data-x="try" data-id="'+esc(r.id)+'" aria-label="Testar '+esc(r.name)+' grátis">Testar</button>':''))+'</div>'; };
   const pk=lp&&(v.paths||[]).find(q=>q.id===lp.id), canPick=pk&&((pk.canChoose&&pk.canChoose.ok)||(pk.canChange&&pk.canChange.ok));
   const mine=lp?[nT(last.dps)+' dano/s'].concat(fin(last.life)?['vida no fim '+nT(last.life)]:[],fin(last.ctrl)?['controle '+dec(last.ctrl)+' s']:[]).join(', '):'';
-  return wrap('<div class="pp-res" role="status" aria-label="Comparação dos ensaios"><div class="pp-rh"><b class="pp-lil">'+(lp?'Ensaio de '+esc(lp.name):'Comparar os testes')+'</b><small>'
-      +(lp?'Este ensaio: '+mine+'. ':'')+'O melhor de cada caminho'+(sec?' em '+sec+' s':'')+(dn?' contra o '+esc(dn):'')+'.</small></div>'
-      +'<div class="pp-cg">'+rows.map(col).join('')+'</div><div class="pp-free">O ensaio não dá prêmio nem conta progresso.<br>Testar de novo é grátis e sem limite.</div></div>',
+  return wrap('<div class="pp-res" role="status" aria-label="Comparação dos testes"><div class="pp-rh"><b class="pp-lil">'+(lp?'Teste de '+esc(lp.name):'Comparar os testes')+'</b><small>'
+      +(lp?'Este teste: '+mine+'. ':'')+'O melhor de cada caminho'+(sec?' em '+sec+' s':'')+(dn?' contra o '+esc(dn):'')+'.</small></div>'
+      +'<div class="pp-cg">'+rows.map(col).join('')+'</div><div class="pp-free">O teste não dá prêmio nem conta progresso.<br>Testar de novo é grátis e sem limite.</div></div>',
     '<div class="pp-row"><button class="pp-o" data-x="'+(next?'other':'list')+'">'+(next?'Testar outro':'Ver os caminhos')+'</button>'
       +(canPick?'<button class="pp-g pp-lil" data-x="pick" data-id="'+esc(pk.id)+'">Escolher '+esc(pk.name)+'</button>':'')+'</div>'+msgHtml()); }
 const canTryRow=(tv,id)=>{ const p=tv&&Array.isArray(tv.paths)?tv.paths.find(q=>q&&q.id===id):null; return !!(p&&p.can&&p.can.ok); };
@@ -252,7 +252,7 @@ function commit(){ if(X.busy||X.mode!=='confirm'||!X.pick||!ok()) return; X.busy
   try{ r=kind==='change'?PA().change(sv(),host(),id):PA().choose(sv(),host(),id); }catch(e){ r=null; }
   X.busy=false;
   if(r&&r.ok){ persist(); sfx('claim'); const nm=(p&&p.name)||'', w=whenTxt(r.next);
-    say(kind==='change'?'Caminho trocado: agora é '+nm+'.'+(w?' Próxima troca grátis: '+w+'.':''):'Caminho escolhido: '+nm+'. O herói continua igual; os golpes mudam.','ok'); }
+    say(kind==='change'?'Caminho trocado: agora é '+nm+'.'+(w?' Próxima troca grátis: '+w+'.':''):'Caminho escolhido: '+nm+'. A aparência continua igual; o jeito de lutar muda.','ok'); }
   else { sfx('ui_tap'); say(r?why(r,viewOf()):'Não foi possível agora.'); }
   redraw(); }
 /* Testar grátis: confere a ponte da batalha ANTES de chamar o módulo; depois UMA chamada ao Sys.pathTry.start e o cfg vai para a batalha */
@@ -261,7 +261,7 @@ function tryStart(id){ if(X.busy||X.run) return false; if(!tryOn()){ redraw(); r
   X.busy=true; let r=null; try{ r=PT().start(sv(),host(),id); }catch(e){ r=null; } X.busy=false;
   if(!r||!r.ok){ sfx('ui_tap'); say(r&&r.reason==='level'?why(r,viewOf()):(r&&TRY_WHY[r.reason])||'Não foi possível testar agora.'); redraw(); return false; }
   X.msg=''; X.run={id:id}; sfx('ui_tap'); let started=false; try{ started=API.battle(r.battle)!==false; }catch(e){ started=false; }
-  if(!started){ X.run=null; try{ PT().cancel(); }catch(e){} say('Não foi possível abrir o ensaio agora. Nada foi gasto.'); redraw(); return false; }
+  if(!started){ X.run=null; try{ PT().cancel(); }catch(e){} say('Não foi possível abrir o teste agora. Nada foi gasto.'); redraw(); return false; }
   return true; }
 function showMe(o){ if(isOn()) redraw(); else { try{ if(window.Panels&&typeof Panels.open==='function') Panels.open(N,o); }catch(e){} } }
 /* fim do ensaio (a batalha chama): UMA chamada ao Sys.pathTry.finish; nada é ganho. Abre a comparação.
@@ -275,7 +275,7 @@ function finish(res){ const T=PT(); X.run=null; if(!tryOn()) return {ok:false,re
   keep(); sfx('ui_tap'); X.last={id:r.id,dps:r.dps,best:r.best,life:fin(r.life)?r.life:null,ctrl:sent&&fin(r.ctrl)?r.ctrl:null}; X.mode='compare'; X.msg=''; X.anim=true; showMe({keep:true}); return r; }
 /* "Sair do ensaio" (a batalha chama): nada é guardado */
 function cancel(){ X.run=null; let had=false; try{ const T=PT(); had=!!(T&&typeof T.cancel==='function'&&T.cancel()); }catch(e){ had=false; }
-  if(had){ X.mode='list'; say('Ensaio encerrado: nada foi gasto nem ganho.','ok'); showMe({keep:true}); } return had; }
+  if(had){ X.mode='list'; say('Teste encerrado: nada foi gasto nem ganho.','ok'); showMe({keep:true}); } return had; }
 function closeMe(){ try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} }
 function click(b){ const ds=(b&&b.dataset)||{}, a=ds.x||'';
   if(a==='back'){ sfx('ui_tap'); closeMe(); return; }

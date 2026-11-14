@@ -4,6 +4,7 @@
    Sobe o jogo de verdade no sandbox e passa pelas TELAS (PTrial.start / PPath.tryStart), como o jogador:
    - Provação: termina nos três jeitos (vitória, derrota, tempo esgotado), cada um com UMA chamada ao Sys.trial.finish; relógio na faixa (PTrial.time);
      regras de cada marco (sem pet, 30 s, sem montaria, sem magias, metade da vida); sem drop, sem abate de fase, fase e onda do jogador de volta no fim;
+     mestre = chefe da campanha pelo hpMulToday/dmgMulToday do módulo; fúria (spec.enemy.fury) aos atSec; "Desistir" (dois toques) chama só o Sys.trial.quit;
    - Ensaio: boneco imortal que bate a fração do módulo, herói não cai, bônus do caminho testado só nessa luta, soma o dano e os segundos de atordoado,
      termina no tempo com UMA chamada ao Sys.pathTry.finish; "Sair do ensaio" não anota nada.
    Só lê arquivos do jogo. Sai com código 1 se falhar. */
@@ -33,10 +34,14 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
   const snap0 = J('return __snap();');
   /* a) vitória (Nv 10: sem pet) */
   { const r = J(`const spec=Sys.trial.spec(10,Sys.host); const ok=PTrial.start(10); const I=B.inst, run=I&&I.run; for(let i=0;i<120&&B.inst&&!B.en.length;i++){ step(1/30); instStep(1/30); }
-      const e=B.en[0], base=mkEnemy(S.stage,'boss'); const o={ok,spec,special:run&&run.special,time:I&&I.run.time,noPet:run&&run.noPet,skip:run&&run.skip,stage:S.stage,pet:petInfo(),hud:instHud(),boss:e&&e.boss,tag:e&&e.tag,hpK:e?e.maxhp/base.maxhp:0,dmgK:e?e.dmg/base.dmg:0,hp:B.hero.hp,max:B.hero.maxhp};
+      const e=B.en[0], base=mkEnemy(S.stage,'boss'); const o={ok,spec,special:run&&run.special,time:I&&I.run.time,noPet:run&&run.noPet,skip:run&&run.skip,stage:S.stage,pet:petInfo(),hud:instHud(),boss:e&&e.boss,tag:e&&e.tag,hpK:e?e.maxhp/base.maxhp:0,dmgK:e?e.dmg/base.dmg:0,ehp:e?e.maxhp:0,edmg:e?e.dmg:0,fury0:e?e.fury||0:-1,hp:B.hero.hp,max:B.hero.maxhp};
       B.hero.atk=1e15; const ended=__go(20); o.ended=ended; o.n=__n.tfin; o.res=__n.tres[0]; o.passed=Sys.trial.passed(S,10); o.after=__snap(); o.inst=B.inst; o.times=__n.time.length; o.atk=B.hero.atk<1e14; return o;`);
     check('Provação Nv 10 começa pela tela (Sys.trial.start + PTrial.battle) como instância especial', r.ok === true && r.special === 'trial' && r.time === r.spec.sec && r.hud && r.hud.name === 'Provação', JSON.stringify(r).slice(0, 400));
-    check('inimigo = chefe da fase do spec × fatores do módulo, com o nome do mestre', r.boss === true && r.stage === (r.spec.enemy.stage || snap0.stage) && Math.abs(r.hpK - r.spec.enemy.hpMul) < 1e-9 && Math.abs(r.dmgK - r.spec.enemy.dmgMul) < 1e-9 && /^Mestre /.test(r.tag || ''), JSON.stringify([r.boss, r.stage, r.hpK, r.dmgK, r.tag, r.spec.enemy]));
+    /* o multiplicador é o hpMulToday/dmgMulToday do módulo (chefe da campanha × fator do marco, convertido para o chefe que a instância monta); sem eles, o hpMul/dmgMul. Nunca os dois multiplicados */
+    const en = r.spec.enemy, wantHp = en.hpMulToday > 0 ? en.hpMulToday : en.hpMul, wantDmg = en.dmgMulToday > 0 ? en.dmgMulToday : en.dmgMul;
+    check('inimigo = chefe da fase do spec × hpMulToday/dmgMulToday do módulo (um só fator), com o nome do mestre', r.boss === true && r.stage === (en.stage || snap0.stage) && Math.abs(r.hpK - wantHp) < 1e-9 * wantHp && Math.abs(r.dmgK - wantDmg) < 1e-9 * wantDmg && /^Mestre /.test(r.tag || ''), JSON.stringify([r.boss, r.stage, r.hpK, r.dmgK, r.tag, en]));
+    if (en.src === 'diff') check('dificuldade nova: a vida e o dano do mestre na luta são os absolutos do módulo (spec.enemy.hp / dmg); a fúria não começa ligada', en.hpMulToday > 0 && en.dmgMulToday > 0 && Math.abs(r.ehp - en.hp) < 1e-6 * en.hp && Math.abs(r.edmg - en.dmg) < 1e-6 * en.dmg && r.fury0 === 0, JSON.stringify([r.ehp, en.hp, r.edmg, en.dmg, r.fury0]));
+    else console.log('  (dificuldade nova desligada no sandbox: o mestre usa o hpMul/dmgMul sobre o chefe de hoje)');
     check('regra "sem pet": pet fora da luta (não bate, não cura, não aparece) e fora dos atributos', r.spec.noPet === true && r.noPet === true && r.skip === 'pet' && r.pet === null, JSON.stringify([r.noPet, r.skip, r.pet]));
     check('VITÓRIA: termina quando o chefe cai, com UMA chamada ao finish {won:true}', r.ended && r.n === 1 && r.res.won === true && r.res.sec >= 0 && r.res.sec <= r.spec.sec && r.passed === true, JSON.stringify([r.ended, r.n, r.res, r.passed]));
     check('sem drop de fase, sem abate contado, fase/onda/farm do jogador de volta; herói recalculado', r.inst == null && r.after.stage === snap0.stage && r.after.wave === snap0.wave && r.after.farm === snap0.farm && r.after.kills === snap0.kills && r.after.inv === snap0.inv && r.atk, JSON.stringify([r.after, snap0]));
@@ -63,6 +68,33 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
     check('Nv 40 "sem magias": nenhuma magia na luta (mesmo com o Grimório ligado e equipado)', r.g0 && r.s.rule === 'nospell' && r.s.noSpells === true && r.s.grim === null && r.s.grim2 === null, JSON.stringify(r.s));
     check('Nv 50 "metade da vida": o herói entra com a fração do módulo', r.h.rule === 'half' && Math.abs(r.h.frac - r.h.want) < 1e-9 && r.h.want === 0.5, JSON.stringify(r.h));
     check('cada luta chamou o finish uma vez (3 lutas, 3 chamadas a mais) e a batalha voltou; magias voltam fora da provação', r.n === 4 && r.inst == null && r.grimBack, JSON.stringify([r.n, r.grimBack])); }
+  /* e) FÚRIA do mestre (spec.enemy.fury do módulo): entra aos atSec segundos de luta, uma vez, com o dmgMult. Nv 30: luta de 60 s (ainda aberta) */
+  { const r = J(`__n.tfin=0; __n.tres=[]; const spec=Sys.trial.spec(30,Sys.host), F=spec.enemy.fury||null; const ok=PTrial.start(30); const I=B.inst; for(let i=0;i<150&&B.inst&&!(B.en[0]&&B.en[0].parked);i++){ step(1/30); instStep(1/30); }
+      B.hero.atk=0; B.hero.def=0; B.hero.maxhp=B.hero.hp=1e15; const o={ok,F,sec:spec.sec,at:-1,early:false,pre:0,post:0,ban:'',sub:'',n:0};
+      for(let i=0;i<30*70&&B.inst;i++){ const h0=B.hero.hp; step(1/30); if(B.inst) instStep(1/30); const e=B.en[0], d=h0-B.hero.hp; if(!B.inst||!e) continue; const t=I.run.time-I.t;
+        if(e.fury>1){ if(o.at<0){ o.at=t; o.n++; o.mult=e.fury; o.ban=B.banner&&B.banner.txt; o.sub=B.banner&&B.banner.sub; if(F&&t<F.atSec-1e-9) o.early=true; } else if(e.fury!==o.mult) o.n++; if(d>o.post) o.post=d; }
+        else if(d>o.pre) o.pre=d; }
+      o.fin=__n.tfin; o.inst=B.inst; return o;`);
+    if (r.F) {
+      check('FÚRIA: entra aos ' + r.F.atSec + ' s de luta (não antes), uma vez, com o dmgMult do módulo (x' + r.F.dmgMult + ') e o aviso na tela', r.ok && r.sec > r.F.atSec && !r.early && r.at >= r.F.atSec - 1e-9 && r.at < r.F.atSec + 0.1 && r.n === 1 && r.mult === r.F.dmgMult && /FÚRIA/.test(r.ban || '') && r.sub === 'Dano x' + r.F.dmgMult, JSON.stringify(r));
+      check('FÚRIA: o golpe do mestre passa a tirar dmgMult vezes mais vida', r.pre > 0 && Math.abs(r.post / r.pre - r.F.dmgMult) < 0.02 * r.F.dmgMult, JSON.stringify([r.pre, r.post, r.post / r.pre]));
+    } else { check('sem fúria no spec (dificuldade nova desligada): o mestre nunca entra em fúria', r.ok && r.at < 0, JSON.stringify(r)); console.log('  (spec.enemy.fury não veio: fúria não testada)'); }
+    check('a luta com fúria termina no tempo com UM finish', r.fin === 1 && r.inst == null, JSON.stringify([r.fin, r.inst])); }
+  /* f) DESISTIR (dois toques): volta à fase, UMA chamada ao Sys.trial.quit, nenhuma ao finish; tentativa desfeita; XP guardada, teto, vencidas e prêmio intactos */
+  { const r = J(`__n.tfin=0; window.__q=0; const q0=Sys.trial.quit; Sys.trial.quit=function(){ __q++; return q0.apply(this,arguments); };
+      const T=Sys.trial.ensure(S), bank0=T.bank; T.bank=123; const keep=()=>JSON.stringify([Sys.trial.ensure(S).bank,Sys.trial.ensure(S).passed,Sys.trial.cap(S,Sys.host),S.gold,S.gems,Sys.level.ensure(S),S.sys.forge||null,S.inv.length]);
+      const s0=__snap(), k0=keep(), tries0=Sys.trial.ensure(S).tries['30']||0;
+      const ok=PTrial.start(30); const triesMid=Sys.trial.ensure(S).tries['30']||0, run1=!!PTrial.running(); for(let i=0;i<60&&B.inst;i++){ step(1/30); instStep(1/30); } B.hero.atk=0; B.hero.maxhp=B.hero.hp=1e15;
+      const a=ligTrialExit(); const mid=!!B.inst, q1=__q; __go(1); const b=ligTrialExit();
+      const o={ok,a,mid,q1,b,inst:B.inst,q:__q,fin:__n.tfin,again:ligTrialExit(),cur:Sys.trial.ensure(S).cur,tries0,triesMid,tries:Sys.trial.ensure(S).tries['30']||0,same:keep()===k0,k0,k1:keep(),after:__snap(),s0,run1,run2:PTrial.running(),atk:B.hero.atk>0&&B.hero.maxhp<1e14};
+      /* o aviso vence: passado o prazo, o toque seguinte volta a ser o 1º. E a tela começa outra luta normalmente depois de desistir */
+      o.re=PTrial.start(30); B.hero.atk=0; B.hero.maxhp=B.hero.hp=1e15; __go(2); o.a2=ligTrialExit(); __go(THIEF.askSec+0.5); o.a3=ligTrialExit(); o.still=!!B.inst; o.q2=__q; o.sure=ligTrialExit(true); o.q3=__q; o.fin3=__n.tfin; o.inst3=B.inst; o.same3=keep()===k0; o.tries3=Sys.trial.ensure(S).tries['30']||0;
+      Sys.trial.ensure(S).bank=bank0; Sys.trial.quit=q0; return o;`);
+    check('1º toque em "Desistir" só avisa; a luta continua e nada é chamado', r.ok === true && r.run1 && r.a === 'ask' && r.mid && r.q1 === 0, JSON.stringify([r.ok, r.a, r.mid, r.q1]));
+    check('2º toque: volta à fase, chama Sys.trial.quit UMA vez e NÃO chama finish', r.b === true && r.inst == null && r.q === 1 && r.fin === 0 && r.again === false && r.cur == null && r.run2 == null, JSON.stringify([r.b, r.inst, r.q, r.fin, r.again, r.cur, r.run2]));
+    check('desistir desfaz a tentativa; XP guardada (cofre), teto, provações vencidas, ouro, gemas, XP, Forja e mochila intactos', r.triesMid === r.tries0 + 1 && r.tries === r.tries0 && r.same, JSON.stringify([r.tries0, r.triesMid, r.tries, r.k0, r.k1]));
+    check('depois de desistir: fase/onda/abates do jogador de volta e herói recalculado', r.after.stage === r.s0.stage && r.after.wave === r.s0.wave && r.after.kills === r.s0.kills && r.after.inv === r.s0.inv && r.atk, JSON.stringify([r.after, r.s0, r.atk]));
+    check('a tela começa outra luta depois de desistir; o aviso vence em 4 s; saída direta (console) chama quit uma vez, sem finish', r.re === true && r.a2 === 'ask' && r.a3 === 'ask' && r.still && r.q2 === 1 && r.sure === true && r.q3 === 2 && r.fin3 === 0 && r.inst3 == null && r.same3 && r.tries3 === r.tries0, JSON.stringify([r.re, r.a2, r.a3, r.still, r.q2, r.sure, r.q3, r.fin3, r.same3, r.tries3])); }
   ev('Sys.trial.setOn(false); 1');
 
   /* =================== ENSAIO DE CAMINHO =================== */

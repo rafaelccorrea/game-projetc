@@ -5,6 +5,8 @@
    PThief.finish(score) e a saída por UMA chamada a PThief.cancel(). Prova: chave desligada não começa nada; o ladrão não morre nem ataca; o saco esvazia
    com o dano; o relógio desce; termina no tempo com score = fração esvaziada; saco vazio antes do tempo = score 1; sair (dois toques) cancela sem finish;
    fase, onda, abates, mochila, ouro e XP voltam iguais; a luta não credita nada (as Brasas entram só pelo Sys.thief.finish da tela).
+   Campos do run do módulo/servidor (podem não vir): bagHp = vida do saco (sem ele, a medição); escapeAt/escapeEvery/escapeDur + seed = ritmo da fuga
+   determinístico (sem eles, o fixo); endsAt limita o relógio; o finish nunca sai antes de 5 s de relógio (o servidor responde too_fast).
    Só lê arquivos do jogo. Sai com código 1 se falhar. */
 const boot = require('./sandbox');
 let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; console.log('  FALHA ' + name + (det ? ' · ' + det : '')); } };
@@ -90,6 +92,45 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
   { const r = J(`__n.fin=0; __n.sc=[]; const run=__enter(); window.startThiefRun(run); const I=B.inst; __go(60); return {n:__n.fin,sc:__n.sc[0],left:I.t};`);
     check('corrida natural: UM finish, score entre 0 e 1', r.n === 1 && r.sc >= 0 && r.sc <= 1, JSON.stringify(r));
     console.log('  (corrida natural do herói do teste: score ' + (+r.sc).toFixed(3) + ', sobraram ' + (+r.left).toFixed(1) + ' s)'); }
+  /* =================== g) VIDA DO SACO pelo run (bagHp) ou pela medição (reserva) =================== */
+  { const r = J(`const run=__enter(); const ok=window.startThiefRun(Object.assign({},run,{bagHp:1e12})); const I=B.inst, C=I.chase; const o={ok,max0:C.max,plan:C.plan,ends:I.run.endsAt}; __go(6); o.max6=C.max; o.tm=C.tm; o.out=C.out; o.frac=C.frac; o.dmg=C.dmg; ligThiefExit(true);
+      const run2=__enter(); window.startThiefRun(run2); const C2=B.inst.chase; o.r0=C2.max; __go(1.5); o.r1=C2.max; __go(3.5); o.r5=C2.max; o.rtm=C2.tm; o.rdmg=C2.dmg; ligThiefExit(true); o.inst=B.inst; return o;`);
+    check('run.bagHp: a vida do saco é a do run desde o começo, sem medição; score = dano ÷ bagHp', r.ok && r.max0 === 1e12 && r.max6 === 1e12 && r.tm === 0 && r.dmg === 0 && r.out > 0 && Math.abs(r.frac - r.out / 1e12) < 1e-15 && r.plan === null && r.ends === 0, JSON.stringify(r));
+    check('sem run.bagHp: a reserva (medição dos primeiros ' + TH.cfg.measure + ' s)', r.r0 === 0 && r.r1 === 0 && r.r5 > 0 && Math.abs(r.r5 - r.rdmg / r.rtm * TH.cfg.bagFrac * TH.secs) < 1e-6 * r.r5 && r.inst == null, JSON.stringify([r.r0, r.r1, r.r5, r.rtm, r.rdmg])); }
+
+  /* =================== h) RITMO DA FUGA pelo run (escapeAt / escapeEvery / escapeDur + seed) =================== */
+  { const r = J(`const f={escapeAt:6,escapeEvery:7,escapeDur:1.2}, mk=sd=>thiefPlan(sd===undefined?f:Object.assign({seed:sd},f),45);
+      const o={A:mk(123),A2:mk(123),Bp:mk(124),N:mk(),Ss:mk('abc-1'),Ss2:mk('abc-1'),St:mk('abc-2'),none:thiefPlan({seed:5},45),inv:thiefPlan({escapeAt:6,escapeEvery:0,escapeDur:1,seed:5},45)};
+      const run=__enter(); o.ok=window.startThiefRun(Object.assign({},run,f,{seed:123,bagHp:1e12})); const I=B.inst, C=I.chase, P=C.plan; o.P=P; let bad=0, was=false; const starts=[];
+      __go(40,()=>{ const e=B.en[0], k=thiefOff(C.tt,P); if(Math.abs(e.x-(e.slot+(LW+44-e.slot)*k))>1e-6) bad++; const out=k>0&&C.tt>THIEF.intro; if(out&&!was) starts.push(C.tt); was=out; });
+      o.bad=bad; o.starts=starts; ligThiefExit(true); return o;`);
+    const base = i => 6 + 7 * i, eq = (a, b) => JSON.stringify(a) === JSON.stringify(b), J5 = TH.cfg.jitter;
+    check('com seed o ritmo é determinístico: o mesmo seed dá sempre as mesmas fugas (número ou texto)', r.A && r.A.at.length >= 6 && eq(r.A, r.A2) && eq(r.Ss, r.Ss2) && r.A.dur === 1.2, JSON.stringify([r.A, r.A2]));
+    check('outro seed muda o ritmo; cada fuga fica a ±' + J5 + ' s do passo do run; sem seed, o passo exato', !eq(r.A, r.Bp) && !eq(r.Ss, r.St) && r.A.at.every((t, i) => Math.abs(t - base(i)) <= J5 + 1e-9) && r.Bp.at.every((t, i) => Math.abs(t - base(i)) <= J5 + 1e-9) && r.A.at.some((t, i) => Math.abs(t - base(i)) > 0.01) && r.N.at.every((t, i) => t === base(i)), JSON.stringify([r.A.at, r.Bp.at, r.N.at]));
+    check('sem os campos do ritmo (ou com valor inválido): null = o ritmo fixo de sempre', r.none === null && r.inv === null, JSON.stringify([r.none, r.inv]));
+    { const want = r.A.at.filter(t => t < 40 - 0.1);
+      check('na corrida: o ladrão foge nos segundos do run (não nos do ritmo fixo)', r.ok && eq(r.P, r.A) && r.bad === 0 && r.starts.length === want.length && r.starts.every((t, i) => t >= want[i] && t - want[i] < 0.07), JSON.stringify([r.bad, r.starts, want])); } }
+
+  /* =================== i) NUNCA termina antes de 5 s (o servidor responde too_fast) =================== */
+  { const r = J(`__n.fin=0; __n.sc=[]; __n.can=0; const run=__enter(); const ok=window.startThiefRun(Object.assign({},run,{bagHp:1})); const I=B.inst, C=I.chase; const o={ok,tHold:-1,moved:0,hud:'',ban:'',fin3:-1,last:0};
+      __go(20,()=>{ const e=B.en[0]; if(C.hold){ if(o.tHold<0){ o.tHold=C.tt; o.hud=instHud().sub; o.ban=B.banner&&B.banner.txt; o.scHold=thiefScore(I); } if(e&&Math.abs(e.x-e.slot)>1e-6) o.moved++; } if(C.tt<=3) o.fin3=__n.fin; o.last=C.tt; });
+      o.n=__n.fin; o.sc=__n.sc[0]; o.can=__n.can; o.inst=B.inst; o.out=__n.out;
+      __n.fin=0; __n.sc=[]; const run2=__enter(); const sp0=B.speed; B.speed=2; window.startThiefRun(Object.assign({},run2,{bagHp:1})); const C2=B.inst.chase; let last2=0; __go(20,()=>{ last2=C2.tt; }); B.speed=sp0; o.last2=last2; o.n2=__n.fin; o.sc2=__n.sc[0]; return o;`);
+    check('saco vazio com 1 golpe (antes de ' + TH.cfg.minEnd + ' s): o fim é SEGURADO; o ladrão para ao alcance com o saco em 0% e o score já é 1', r.ok && r.tHold > 0 && r.tHold < 3 && r.fin3 === 0 && r.moved === 0 && r.scHold === 1 && / · Saco 0%$/.test(r.hud) && r.ban === 'Saco vazio!', JSON.stringify(r));
+    check('o finish sai aos ' + TH.cfg.minEnd + ' s de corrida, UMA vez, com score 1 (lote cheio pelo módulo)', r.n === 1 && r.sc === 1 && r.can === 0 && r.inst == null && r.last > TH.cfg.minEnd - 0.1 && r.last < TH.cfg.minEnd + 0.05 && r.out && r.out.won === true, JSON.stringify([r.n, r.sc, r.last, r.out]));
+    check('os ' + TH.cfg.minEnd + ' s são de RELÓGIO: em x2 a luta espera ' + 2 * TH.cfg.minEnd + ' s de jogo', r.n2 === 1 && r.sc2 === 1 && r.last2 > 2 * TH.cfg.minEnd - 0.1 && r.last2 < 2 * TH.cfg.minEnd + 0.05, JSON.stringify([r.n2, r.sc2, r.last2])); }
+
+  /* =================== j) endsAt (relógio do servidor) limita o relógio da tela =================== */
+  { const r = J(`const N0=Sys.net, sn0=N0&&N0.serverNow; if(!Sys.net) Sys.net={}; window.__clk=1700000000000; Sys.net.serverNow=()=>__clk; const tick=()=>{ __clk+=1000/30; };
+      __n.fin=0; __n.sc=[]; let run=__enter(); const ok=window.startThiefRun(Object.assign({},run,{bagHp:1e12,endsAt:__clk+20000})); let I=B.inst; const C=I.chase; const o={ok,t0:I.t,ends:I.run.endsAt===__clk+20000}; __go(1,tick); o.t1=I.t; o.hud1=instHud().sub;
+      let last=0; o.ended=__go(30,()=>{ tick(); last=C.tt; }); o.last=last; o.n=__n.fin; o.sc=__n.sc[0];
+      run=__enter(); window.startThiefRun(Object.assign({},run,{bagHp:1e12,endsAt:__clk+90000})); I=B.inst; __go(1,tick); o.far=I.t; ligThiefExit(true);
+      __n.fin=0; run=__enter(); window.startThiefRun(Object.assign({},run,{bagHp:1e12,endsAt:__clk+2000})); I=B.inst; const C3=I.chase; __go(3,tick); o.t3=I.t; o.fin3=__n.fin; o.alive3=!!B.inst; o.hud3=B.inst?instHud().sub:'';
+      let l3=0; o.e3=__go(10,()=>{ tick(); l3=C3.tt; }); o.l3=l3; o.n3=__n.fin;
+      if(sn0) Sys.net.serverNow=sn0; else if(N0) delete Sys.net.serverNow; else delete Sys.net; return o;`);
+    check('endsAt a 20 s: o relógio da tela cai para min(secs, endsAt − agora) e a corrida termina aí, com UM finish', r.ok && r.ends && r.t0 === TH.secs && r.t1 > 18.5 && r.t1 < 19.1 && /^0:(19|20) /.test(r.hud1) && r.ended && r.last > 19.7 && r.last < 20.1 && r.n === 1 && r.sc < 1, JSON.stringify(r));
+    check('endsAt depois do secs: vale o secs (o relógio não cresce)', r.far > TH.secs - 1.1 && r.far < TH.secs - 0.9, String(r.far));
+    check('endsAt antes de ' + TH.cfg.minEnd + ' s: o relógio zera, mas o finish só sai aos ' + TH.cfg.minEnd + ' s (uma vez)', r.t3 === 0 && r.fin3 === 0 && r.alive3 && /^0:00 /.test(r.hud3) && r.e3 && r.l3 > TH.cfg.minEnd - 0.1 && r.l3 < TH.cfg.minEnd + 0.05 && r.n3 === 1, JSON.stringify([r.t3, r.fin3, r.alive3, r.hud3, r.e3, r.l3, r.n3])); }
   check('sem console.error do jogo', G.consoleErrs.length === 0, G.consoleErrs.slice(0, 4).join(' | '));
 
   /* =================== f) ARTE do ladrão (sandbox de desenho: as imagens carregam de verdade) =================== */

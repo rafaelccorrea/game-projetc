@@ -72,17 +72,17 @@ has('id="th_left">2/2'); has('45 s'); has('lote do nível 12 da Fogueira'); has(
 // Repetir sem nível vencido: explica, sem confirmação, sem gastar
 click('sweep'); has('Vença uma perseguição inteira para liberar o Repetir'); not('th-conf'); click('yes'); assert.strictEqual(n('sweep'), 0);
 // Entrar sem a batalha ligada: explica e NÃO abre corrida
-click('enter'); has('A perseguição ainda não está ligada na batalha'); assert.strictEqual(n('enter'), 0, 'sem a batalha, o módulo não é chamado'); assert.strictEqual(T.view(g.S, host).run, null);
+click('enter'); has('A perseguição ainda não está disponível'); assert.strictEqual(n('enter'), 0, 'sem a batalha, o módulo não é chamado'); assert.strictEqual(T.view(g.S, host).run, null);
 // REGRA ÚNICA COM O SERVIDOR (js/sys/thief.js): a entrada é gasta AO ENTRAR; sair no meio não devolve; o fim não gasta outra
 has('Entrar gasta 1 entrada na hora. Sair no meio não devolve.');
 // a batalha recusa (false) depois do enter: a entrada já foi gasta, então a corrida fica ABERTA (Continuar) em vez de se perder
 const runs = []; let accept = false; g.startThiefRun = r => { runs.push(r); return accept; };
 click('enter'); assert.strictEqual(n('enter'), 1); assert.deepStrictEqual(spy.enter[0], [g.S, host]); assert.strictEqual(n('cancel'), 0, 'recusa da batalha não joga a entrada fora'); has('A perseguição fica aberta: toque em Continuar'); has('id="th_left">1/2');
-assert.deepStrictEqual(runs[0], { lv: 12, lote: 5, secs: 45 }); assert(T.view(g.S, host).run, 'a corrida continua aberta'); assert(saves > 0, 'grava ao entrar'); check('corrida aberta');
+assert.deepStrictEqual((r => ({ lv: r.lv, lote: r.lote, secs: r.secs }))(runs[0]), { lv: 12, lote: 5, secs: 45 }); assert(T.view(g.S, host).run, 'a corrida continua aberta'); assert(saves > 0, 'grava ao entrar'); check('corrida aberta');
 has('Há uma perseguição aberta (nível 12)'); has('A entrada dela já foi gasta'); has('>Sair (a entrada não volta)<'); not('sem gastar'); not('data-x="enter"'); has('data-x="resume"'); has('data-x="cancel"');
 click('enter'); click('sweep'); assert.strictEqual(n('enter'), 1, 'corrida aberta: não entra de novo'); not('th-conf');
 // Continuar entrega a MESMA corrida, sem gastar outra entrada
-accept = true; click('resume'); assert.strictEqual(n('enter'), 1); assert.deepStrictEqual(runs[1], { lv: 12, lote: 5, secs: 45 }, 'Continuar entrega a mesma corrida'); has('id="th_left">1/2');
+accept = true; click('resume'); assert.strictEqual(n('enter'), 1); assert.deepStrictEqual((r => ({ lv: r.lv, lote: r.lote, secs: r.secs }))(runs[1]), { lv: 12, lote: 5, secs: 45 }, 'Continuar entrega a mesma corrida'); has('id="th_left">1/2');
 // Sair no meio: fecha a corrida e a entrada NÃO volta (o botão já dizia)
 click('cancel'); assert.strictEqual(n('cancel'), 1); has('Você saiu da perseguição. A entrada foi gasta'); has('id="th_left">1/2'); has('data-x="enter"'); assert.strictEqual(T.view(g.S, host).run, null); assert.strictEqual(BF.ensure(g.S).bra, 0, 'sair não rende Brasas'); check('saiu');
 out.push('entrada: dados do módulo; sem a batalha não chama o enter; Entrar = 1 chamada, gasta a entrada na hora e entrega {lv, lote, secs}; recusa da batalha deixa a corrida aberta; Continuar não gasta; Sair não devolve');
@@ -133,7 +133,7 @@ out.push('Repetir em 2 toques (1 chamada, 1 entrada, lote do melhor nível venci
     net.started = true; net.next.enter = { ok: true, lv: 12, lote: 5, secs: 30, runId: 'r1', seed: 1, endsAt: 0, left: 0 }; e0 = n('enter'); const s0 = saves, r0 = ran.length;
     click('enter'); click('enter'); assert.strictEqual(ran.length, r0, 'a perseguição só começa com a resposta do servidor'); await wait();
     assert.deepStrictEqual(net.calls, ['enter'], 'um pedido só, mesmo com dois toques'); assert.strictEqual(n('enter'), e0, 'online: o Sys.thief.enter síncrono não é chamado');
-    assert.strictEqual(ran.length, r0 + 1); assert.deepStrictEqual(ran[ran.length - 1], { lv: 12, lote: 5, secs: 30 }, 'a batalha recebe o que o servidor devolveu'); assert(saves > s0, 'gravou depois do enter');
+    assert.strictEqual(ran.length, r0 + 1); assert.deepStrictEqual((r => ({ lv: r.lv, lote: r.lote, secs: r.secs }))(ran[ran.length - 1]), { lv: 12, lote: 5, secs: 30 }, 'a batalha recebe o que o servidor devolveu'); assert(saves > s0, 'gravou depois do enter');
     // recusa do servidor: a palavra local (r.local) vira o texto da tela; sem entradas não repete o prazo; outro motivo mostra o retryAfterMs
     net.next.enter = { ok: false, reason: 'daily_limit', local: 'entries', retryAfterMs: 3600000, details: null }; click('enter'); await wait(); has('Sem entradas hoje. Elas voltam à meia-noite de Brasília'); not('Tente de novo em'); assert.strictEqual(ran.length, r0 + 1, 'recusado: nada começa'); check('online sem entradas');
     net.next.enter = { ok: false, reason: 'rate_limited', local: 'rate_limited', retryAfterMs: 5000 }; def.onOpen(); click('enter'); await wait(); has('Não foi possível agora. Tente de novo em 5 s'); check('online com espera');

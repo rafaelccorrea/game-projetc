@@ -8,7 +8,7 @@
    NENHUMA regra nem número de jogo aqui. Tudo vem do js/sys/crossroads.js (Sys.crossroads):
    - as 2 bênçãos (nome, texto, valores): offers(S, fase) · gravar a escolha: choose(S, fase, id, host) (UMA chamada por toque em Confirmar);
    - bênçãos ativas da era: active(S) · era, fases por era, pontos da trilha e encruzilhadas esperando: view(S, host) · fase → era/número: where(fase).
-   O rótulo curto do cartão ("ATK +3%") é montado com os valores stat/perk/strike que o módulo devolve; chave que a tela não conhece mostra o texto do módulo.
+   O rótulo curto do cartão ("ATQ +3%") é montado com os valores stat/perk/strike que o módulo devolve; chave que a tela não conhece mostra o texto do módulo.
    Quando o módulo recusa (off, stage, old, done, id) a janela mostra o motivo; nada é gravado aqui.
    Módulo desligado ou ausente: aviso e Voltar.
    NA BATALHA (PCross.mount(host) + PCross.update() no fbTick, como o PGuide): o selo "Encruzilhada" embaixo da barra da fase enquanto houver uma esperando
@@ -44,12 +44,14 @@ const perEraOf=()=>{ try{ return Math.max(1,Math.floor(num(CR().perEra()))||10);
 const lastLbl=era=>(era+1)+'-'+perEraOf();
 
 /* rótulo curto do efeito, com os valores do módulo (k = quantas vezes a bênção foi escolhida na era) */
-const LAB={atkPct:['ATK','%',1],hpPct:['Vida','%',1],critPct:['Crítico','',1],defPct:['Dano recebido','%',-1],goldPct:['Ouro','%',1],
+const LAB={atkPct:['ATQ','%',1],hpPct:['Vida','%',1],critPct:['Crítico','%',1],defPct:['Dano recebido','%',-1],goldPct:['Ouro','%',1],
   xpPct:['XP','%',1],brasaPot:['Brasa',' por pote',1],combo:['Combo','',1],counter:['Contra-ataque','',1],dodge:['Esquiva','',1],stun:['Atordoar','',1],lifesteal:['Roubo de vida','',1]};
 function fx(b,k){ k=k||1; const out=[]; let unknown=false;
   for(const grp of [b&&b.stat,b&&b.perk,b&&b.strike]){ if(!grp) continue; for(const key in grp){ const v=num(grp[key]); if(!v) continue; const L=LAB[key]; if(!L){ unknown=true; continue; }
       const val=v*k*L[2]; out.push(L[0]+' '+(val<0?'-':'+')+nf(Math.abs(val))+L[1]); } }
   return (unknown||!out.length)?String((b&&b.text)||''):out.join(' · '); }
+/* o ouro das bênçãos entra no teto total de ouro (Sys.loot.goldBreakdown().cap): o cartão avisa; sem o módulo, não diz nada */
+const goldCapNote=b=>{ try{ if(!(b&&b.stat&&num(b.stat.goldPct)>0)) return ''; const c=num(Sys.loot.goldBreakdown(S).cap); return c>0?' (dentro do teto de +'+nf(c)+'%)':''; }catch(e){ return ''; } };
 const plural=n=>n===0?'nenhuma escolhida':n===1?'1 escolhida':n+' escolhidas';
 const WHY={off:'A Encruzilhada está desligada agora.',stage:'Esta fase não tem encruzilhada.',old:'Esta encruzilhada é de uma era que já passou. As bênçãos dela acabaram.',
   done:'Você já escolheu nesta encruzilhada. Não dá para trocar.',id:'Esta bênção não está nesta encruzilhada.'};
@@ -170,10 +172,10 @@ function trackHtml(st,v){ const pe=(v&&v.perEra>0)?v.perEra:perEraOf(), pts=(v&&
     +'<div class="pc-trkl"><span>Agora: fase '+esc(lbl(st))+'</span><span>Fase '+esc(lastLbl(st.era))+': Senhor da Era</span></div>'; }
 function pickHtml(){ const st=X.stage, of=X.offers=offersOf(st), v=viewOf(), next=(typeof ERAS!=='undefined'&&ERAS[st.era+1]&&ERAS[st.era+1].n)?String(ERAS[st.era+1].n):'';
   const sel=of.find(b=>b.id===X.sel)||null; if(!sel) X.sel='';
-  const cards=of.map(b=>'<div class="pc-xc'+(sel?(sel.id===b.id?' sel':' off'):'')+'"><span class="ib">'+ico(b.id)+'</span><b>'+esc(b.name)+'</b><span class="fx pc-lil">'+esc(fx(b))+'</span><small>'+esc(b.text)+'</small><span class="until">até o fim da era</span>'
+  const cards=of.map(b=>'<div class="pc-xc'+(sel?(sel.id===b.id?' sel':' off'):'')+'"><span class="ib">'+ico(b.id)+'</span><b>'+esc(b.name)+'</b><span class="fx pc-lil">'+esc(fx(b))+'</span><small>'+esc(b.text+goldCapNote(b))+'</small><span class="until">até o fim da era</span>'
     +(sel?'':'<button class="pc-gold pc-lil" data-x="pick" data-id="'+esc(b.id)+'" aria-label="Escolher '+esc(b.name)+': '+esc(fx(b))+', vale até o fim da era">Escolher</button>')+'</div>').join('');
   const foot=sel?('<div class="pc-xq">Ficar com <em>'+esc(sel.name)+'</em> ('+esc(fx(sel))+') até vencer o Senhor da Era?<br>Não dá para trocar depois.</div><div class="pc-xbt"><button class="pc-o" data-x="back">Voltar</button><button class="pc-g" data-x="ok">Confirmar</button></div>')
-    :(msgHtml()+'<div class="pc-xf"><b>Escolha definitiva.</b> Estas 2 são sempre as mesmas nesta encruzilhada: elas não mudam.</div><div class="pc-xbt"><button class="pc-o" data-x="later">Escolher depois<small>fica esperando no selo, sem prazo</small></button></div>');
+    :(msgHtml()+'<div class="pc-xf"><b>Escolha definitiva.</b> '+(of.length===1?'Esta é sempre a mesma nesta encruzilhada: ela não muda.':'Estas '+of.length+' são sempre as mesmas nesta encruzilhada: elas não mudam.')+'</div><div class="pc-xbt"><button class="pc-o" data-x="later">Escolher depois<small>fica esperando no selo, sem prazo</small></button></div>');
   return headHtml('Encruzilhada das Eras','Fase '+lbl(st)+' vencida · escolha 1 de '+of.length+' bênçãos',false)
     +'<div class="pc-xr"><div class="t">'+GLASS+'<b class="pc-lil">Vale até o fim da era</b></div><p>Acaba ao vencer o <em>Senhor da Era</em> (fase '+esc(lastLbl(st.era))+').'+(next?' Na era seguinte ('+esc(next)+') começa uma coleção nova.':'')+'</p>'+trackHtml(st,v)+'</div>'
     +'<div class="pc-xcs">'+cards+'</div>'+foot; }
