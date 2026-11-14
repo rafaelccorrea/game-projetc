@@ -71,7 +71,9 @@ assert(!/text-overflow\s*:\s*ellipsis|…/.test(SRC), 'nenhum texto cortado com 
 assert(/^function iconOf\(id,locked\)/m.test(SRC), 'os ícones passam por UMA função iconOf'); assert.strictEqual(typeof def.iconOf, 'function');
 for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
 for (const m of SRC.matchAll(/'(assets\/[^']+\.png)'/g)) assert(fs.existsSync(path.join(R, m[1])), 'imagem citada no arquivo não existe: ' + m[1]);
-for (const sp of D.spells) { const ic = def.iconOf(sp.id), lk = def.iconOf(sp.id, true); assert(/^<svg /.test(ic) && ic !== lk, 'ícone de reserva de ' + sp.id); assert(!/<text/.test(ic), 'símbolo próprio para ' + sp.id); }
+for (const sp of D.spells) { const ic = def.iconOf(sp.id), lk = def.iconOf(sp.id, true); /* com a arte final ligada (GM_ART_ON, ícones da Arte em assets/icons/grimoire) o ícone é <img> de arquivo que existe; desligada, o medalhão de reserva em SVG */
+  if (/^<img /.test(ic)) { const m = /src="([^"]+)"/.exec(ic); assert(m && fs.existsSync(path.join(R, m[1])), 'arquivo do ícone de ' + sp.id); assert(ic !== lk, 'trancado diferente de ' + sp.id); }
+  else { assert(/^<svg /.test(ic) && ic !== lk, 'ícone de reserva de ' + sp.id); assert(!/<text/.test(ic), 'símbolo próprio para ' + sp.id); } }
 assert.strictEqual(new Set(D.spells.map(sp => def.iconOf(sp.id))).size, D.spells.length, 'um ícone diferente por magia');
 assert(/\.gm-bt,\.xs \.gm-bt\{[^}]*color:#2a1403/.test(CSS), 'botão dourado com texto escuro, também com .xs');
 assert(/\.gm-cards\{[^}]*repeat\(2,minmax\(0,1fr\)\)/.test(CSS) && /\.gm-slots\{[^}]*repeat\(3,minmax\(0,1fr\)\)/.test(CSS), 'grades com minmax(0,1fr): sem rolagem lateral');
@@ -93,7 +95,7 @@ setOn(true);
   for (const sp of D.spells) has('>' + g.esc2(sp.name) + '</b>'); for (const nm of D.eraName) has(g.esc2(nm) + '</h4>');
   assert.strictEqual(count(/data-x="slot"/g), D.slots); assert.strictEqual(count(/>Vazio<\/b>/g), D.slots, 'casas vazias'); assert.strictEqual(count(/data-x="mode"/g), D.modes.length);
   has('Nada à venda.'); has(g.n0(D.grants.eraLord.ink) + ' de tinta'); has(g.n0(D.grants.tower.ink) + ' de tinta a cada 10 andares'); check('vazio');
-  assert.deepStrictEqual(gated, ['assets/bg/era1.png'], 'pede a carga do cenário antes de desenhar'); has('url(assets/bg/era1.png)');
+  assert(gated.includes('assets/bg/era1.png'), 'pede a carga do cenário antes de desenhar'); for (const u of gated) assert(fs.existsSync(path.join(R, u)), 'imagem pedida existe em disco: ' + u);   /* com a arte final ligada a tela pede também os ícones das magias */ has('url(assets/bg/era1.png)');
   // detalhe de magia que falta: como conseguir (texto do módulo), sem botão de ação além de Fechar
   tap('sp', { id: 'cannonball' }); const s = sheet(); assert(s.includes('role="dialog"')); assert(s.includes('Não aprendida')); assert(s.includes('Como conseguir'));
   const row = GR.view(g.S, host).eras[3].spells.find(q => q.id === 'cannonball'); assert(s.includes(g.esc2(row.how)), 'como conseguir vem do view do módulo'); assert(s.includes(g.esc2(GR.spell('cannonball').desc))); assert(s.includes(g.esc2(row.effectText)));

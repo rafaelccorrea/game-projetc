@@ -15,7 +15,7 @@ const N='grim';
 
 /* ---------- ÍCONES DAS 18 MAGIAS: UMA função (iconOf). Enquanto a Arte não entrega os finais, a reserva é desenhada aqui (círculo na cor da era + símbolo).
    Quando os 18 arquivos existirem em GM_ART_DIR (<id>.png, o id do módulo), basta trocar GM_ART_ON para true. ---------- */
-const GM_ART_ON=false, GM_ART_DIR='assets/icons/grimoire/';
+const GM_ART_ON=true, GM_ART_DIR='assets/icons/grimoire/';
 const GM_ERA=['#a8794a','#e0b040','#d64a4a','#2fa7a0','#8a8f9c','#3f8cff','#22c7d8','#9b3fd9','#f0d860'];   /* cor de cada era (igual ao protótipo) */
 const GM_GLY={
   rollingStone:'<circle cx="20" cy="20" r="9"/><path d="M15 17l4 3-2 4M24 14l-2 5 4 2M8 31h24"/>',
