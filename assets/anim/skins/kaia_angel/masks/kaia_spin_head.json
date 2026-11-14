@@ -1,5 +1,5 @@
 {
- "frames": 17,
+ "frames": 15,
  "w": 256,
  "note": "head: centro da cabeça na célula da folha do jogo; desenhar chapéu com translate(x,y) rotate(ang graus) scale(s/res) drawImage(png, -pivot.x, -pivot.y); ok=false -> ocultar chapéu neste quadro. skins da Kaia: âncora pelo rosto (kaiaskin/headtrack.js)",
  "head": [
@@ -12,7 +12,31 @@
    "ok": true
   },
   {
-   "x": 242,
+   "x": 249,
+   "y": 93,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 250,
+   "y": 101,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 250,
+   "y": 101,
+   "ang": 0,
+   "s": 0.452,
+   "e": 0,
+   "ok": true
+  },
+  {
+   "x": 254,
    "y": 94,
    "ang": 0,
    "s": 0.452,
@@ -20,40 +44,8 @@
    "ok": true
   },
   {
-   "x": 242,
-   "y": 94,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 242,
-   "y": 92,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 246,
-   "y": 92,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 205,
-   "y": 95,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 205,
-   "y": 95,
+   "x": 252,
+   "y": 93,
    "ang": 0,
    "s": 0.452,
    "e": 0,
@@ -68,7 +60,7 @@
    "ok": true
   },
   {
-   "x": 216,
+   "x": 214,
    "y": 93,
    "ang": 0,
    "s": 0.452,
@@ -76,7 +68,7 @@
    "ok": true
   },
   {
-   "x": 238,
+   "x": 214,
    "y": 93,
    "ang": 0,
    "s": 0.452,
@@ -84,15 +76,7 @@
    "ok": true
   },
   {
-   "x": 242,
-   "y": 93,
-   "ang": 0,
-   "s": 0.452,
-   "e": 0,
-   "ok": true
-  },
-  {
-   "x": 253,
+   "x": 198,
    "y": 92,
    "ang": 0,
    "s": 0.452,
@@ -100,24 +84,24 @@
    "ok": true
   },
   {
-   "x": 210,
-   "y": 95,
+   "x": 246,
+   "y": 92,
    "ang": 0,
    "s": 0.452,
    "e": 0,
    "ok": true
   },
   {
-   "x": 229,
-   "y": 97,
+   "x": 223,
+   "y": 99,
    "ang": 0,
    "s": 0.452,
    "e": 0,
    "ok": true
   },
   {
-   "x": 244,
-   "y": 93,
+   "x": 246,
+   "y": 91,
    "ang": 0,
    "s": 0.452,
    "e": 0,
@@ -133,7 +117,7 @@
   },
   {
    "x": 246,
-   "y": 92,
+   "y": 91,
    "ang": 0,
    "s": 0.452,
    "e": 0,
