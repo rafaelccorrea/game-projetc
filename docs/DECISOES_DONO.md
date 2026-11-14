@@ -3,6 +3,8 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Telas com vida, feitas no Higgsfield** ("você não está usando o Higgsfield da forma correta para montar as telas"): mock de tela cheia A/B antes de montar. Tela Inicial A/B no link; o dono liberou ~38 créditos para Mentores, VIP × Passe, Acampamento e Dupla, e ~4 para fechar o papagaio · Arte + PO
+- [x] **App DEV no S24** com atualização ao vivo; recarga volta direto para a batalha; dicas 4 s; aviso de login no DEV
 - [~] **Aprovado pelo dono (14/11):** corrigir o ouro das fontes antigas (offline 8 h = 60 min, Hora de Ouro +30%, tetos, oferta sem ouro); moldura Ouro no Nv 60; ~76 créditos para os golpes dos pets; VIP com teto de +10% (Fênix, Serpe e Mecha com poder de Épica); ouro do VIP +5/+10% e offline ×2 sem ouro · Sistemas + Engenheiro + Arte
 - [?] **VIP e Passe (proposta no link)**: 1) poder do VIP com teto de +10% (Fênix e Serpe com visual Lendário e poder de Épica); 2) ouro do VIP +5/+10% e offline ×2 sem ouro; 3) Mecha (R$ 49,90) com poder de Épica; 4) preço dos níveis VIP (R$ 50 a R$ 5.000 proposto); 5) rastro de arma e aura VIP só visuais; 6) prêmio de temporada antiga volta como evento grátis?; 7) tirar a skin do VIP 10 até ter uma no corpo padrão · dono decide
 - [~] **Acampamento**: protótipo no link; PO decidiu Nv 20, só pelo Menu, volta dentro da janela do offline, sem Melhorar na Tenda do Ouro
