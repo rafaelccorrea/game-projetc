@@ -94,7 +94,7 @@ t('sem aleatoriedade: o mesmo save dá o mesmo resultado; sync grava mesmo desli
 t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet ligado E as entregas ligadas; +9 itens; posse pelo estágio',()=>{
   clean(); const P=require('../../js/sys/pet.js'), N=require('../../js/sys/newdrops.js'); globalThis.Sys.pet=P; globalThis.Sys.newDrops=N; const on0=N.DATA.on;
   try{ N.DATA.on=false; assert.strictEqual(C.catalog().length,119); assert.deepStrictEqual(C.newPets(),[]);
-    N.DATA.on=true; assert.deepStrictEqual(C.newPets(),['lobo','falcao','pantera']); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,127);
+    N.DATA.on=true; assert.deepStrictEqual(C.newPets(),['lobo','falcao','pantera']); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,128);
     const pi=cat.filter(id=>id.startsWith('p-')); assert.deepStrictEqual(pi.slice(-9),['p-lobo-0','p-lobo-1','p-lobo-2','p-falcao-0','p-falcao-1','p-falcao-2','p-pantera-0','p-pantera-1','p-pantera-2']);
     assert.strictEqual(pi[23],'p-prisma-2','os antigos não mudam de posição');
     const S={sys:{pet:{owned:{falcon:{stars:1,frags:0,lvl:35,stg:1}}}}}, h=makeHost({}); const own=C.owned(S,h); assert.ok(own.includes('p-falcao-0')&&own.includes('p-falcao-1')&&!own.includes('p-falcao-2'));
@@ -104,7 +104,7 @@ t('pets novos (lobo, falcão, pantera): no FIM, depois do prisma, só com o pet 
 t('9 eras (dono 14/11): com as eras 7-8 ligadas, armas, armaduras e melhores inimigos do Submundo e do Celestial entram (+24); desligadas, 117 como antes',()=>{
   clean(); const ST=require('../../js/sys/stats.js'); globalThis.Sys.stats=ST; const was=ST.DATA.era9.on;
   try{ ST.setEra9(false); assert.strictEqual(C.catalog().length,119); assert.strictEqual(C.era9On(),false);
-    ST.setEra9(true); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,142); assert.strictEqual(C.era9On(),true);
+    ST.setEra9(true); const cat=C.catalog().map(c=>c.id); assert.strictEqual(cat.length,143); assert.strictEqual(C.era9On(),true);
     for(const id of ['w-7-0','w-7-2','w-8-1','a-7-vest','a-8-wings','b-7-boss','b-8-e0']) assert.ok(cat.includes(id),id);
     const S={inv:[{slot:'weapon',e:8,r:4,lvl:1,subs:[]},{slot:'armor',e:7,r:1,lvl:1,subs:[]}],sys:{}}; const sc=[...C.scan(S)]; assert.ok(sc.includes('w-8-2')&&sc.includes('a-7-vest'),sc.join(','));
   } finally { ST.setEra9(was); delete globalThis.Sys.stats; clean(); }
