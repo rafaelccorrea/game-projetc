@@ -68,6 +68,8 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 13/11/2026 19:2x (Brasília) | +1 convidado "Viajante1184" (S1) | `smoke-real.mjs` (9ª execução, deploy 24e5906) | idem às outras execuções |
 | 13/11/2026 19:5x (Brasília) | +1 convidado "Viajante8653" (S1) | `smoke-real.mjs` (10ª execução, deploy aca983a) | idem às outras execuções |
 | 13/11/2026 20:5x (Brasília) | +1 convidado "Viajante5565" (S1) | `smoke-real.mjs` (11ª execução, deploy 9d37586) | idem às outras execuções |
+| 13/11/2026 21:xx (Brasília) | +1 convidado "Viajante2926" (S1) | `smoke-real.mjs` (12ª execução, deploy de9f83c) | idem |
+| 13/11/2026 21:xx (Brasília) | Viajante6053 e Viajante2902 (contas do e2e) | `scripts/e2e-duo.ts` (teste combinado da Dupla) | ficaram: código de amigo de cada um, BLOQUEIO entre os dois, espera de 24 h do 2902, 1 carta "Dupla das Eras" no 6053; somem com as contas |
 
 **Também antes do lançamento:** tirar `CORS_ORIGINS_TEST` do `/etc/eonbound/server.env` (origens de teste do QA no navegador: localhost:8080 e 127.0.0.1-8:8080; .7 e .8 acrescentadas em 13/11 para o QA testar "Excluir conta" com convidado descartável). O app (`https://localhost`) fica fixo no código.
 
