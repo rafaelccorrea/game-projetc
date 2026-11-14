@@ -10,6 +10,9 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
 - [x] **Regra: nada aparece antes de todo o conteúdo carregar** (nunca personagem parado) · agente de performance 1fa87af, falta QA completo
 - [?] **Liberação progressiva** (docs/LIBERACOES.md): cronograma proposto para mostrar menos coisa no começo · dono decide
 - [~] **Skin de arma de EVENTO na mão** (exceção à regra "arma na mão = equipada"; poder segue o da arma equipada): Lâmina do Caçador, Martelo das Eras, Lâmina do Festival · Engenheiro + Arte
+- [~] **Skins montadas: dono escolheu TODAS as 70** (10 skins × 7 montarias, ~18 créditos cada, teto ~1.300): MAS só depois de o dono validar 1 piloto (Kael Ninja no Pônei, ~18) · Arte
+- [x] **Liberação progressiva aprovada** (docs/LIBERACOES.md): nada com cadeado/"Em breve"; uma novidade por nível · Sistemas + Engenheiro
+- [~] **Sair/trocar de conta** (só conta Google) e **"Sobre"** em Configurações; falta o dono fornecer razão social, CNPJ, e-mail, endereço e encarregado (LGPD) · Engenheiro + Servidor
 - [x] **Biblioteca Play Billing no app sem ligar compras** (PO) para destravar o cadastro de produtos no Play Console
 - [~] **Voto dos temas de evento (14/11 16h16):** Caçada aos Chefes A (escuro), Semana da Forja B (claro, sem sacos de ouro), Festa dos Pets A (escuro, com o dragãozinho) · Arte gera as peças (lote 2)
 - [~] **Arte dos temas de evento: dono liberou lotes 1 e 2** (até ~32 créditos; 6 mocks A/B para voto, depois peças). Skin "Avental do Ferreiro": decidir depois (fica escondida) · Arte
