@@ -476,3 +476,21 @@ Itens 8, 9, 10 e 13 do `docs/LOM_VS_EONBOUND.md` §5. Os 4 estão com a chave **
 - Pedras de prática por dia: 19,8 na era 0, 26,3 na era 3 e 44,2 na era 8.
 - Isso é ~5 a 10% das pedras que o abate dá (290 a 460 por dia).
 - Fragmentos: ~2 por dia.
+
+### LoM bloco B: Minijogo de evento, Arena PvP + Brasa, Guilda "Ajudar todos" + chefe na batalha, Masmorra de 3, Ranking de evento (`minigame.js`, `arenaset.js`, `guildboss.js`, `coop.js`, `eventrank.js`)
+
+Itens 12, 14, 15, 16 e 17 do `docs/LOM_VS_EONBOUND.md` §5. Os 5 módulos estão com a chave **DESLIGADA** (`DATA.on=false`). Passo a passo do Engenheiro: `docs/LIGACOES_LOM_B.md`. Contrato do servidor: `docs/SERVIDOR_LOM.md`.
+
+| Ponto | Minijogo (`Sys.minigame`) | Arena PvP (`Sys.arenaSet`) | Guilda (`Sys.guildBoss`) | Masmorra de 3 (`Sys.coop`) | Ranking de evento (`Sys.eventRank`) |
+|---|---|---|---|---|---|
+| Regra | ✓ timing, 10 toques (100/60/25/0); Bronze 300, Prata 550, Ouro 800; tema troca a cada 14 dias desde 20/11 (Forja, Pesca, Escavação) | ✓ magias do preset `arena` do Grimório + conjunto `arena` do `Sys.loadouts` no retrato; magias viram modificadores fixos (tetos ATQ +50%, Vida +50%, vel. +30, adversário −20%) | ✓ pedido de ajuda 1/dia (boss 3 ajudas = +1 golpe hoje; forge 5 = 10 pedras; food 5 = 50 ração); Ajudar todos até 10/dia; barra do chefe na batalha | ✓ grupo de 3 (código/guilda, vaga = retrato ±15%), 10 andares, corrida determinística (mulberry32, `p = x/(x+1)`, `x = (T/E)^10`) | ✓ top 1/10/50% e participação pela posição final; métrica = pontos ganhos da trilha |
+| Entradas | ✓ 3 grátis/dia, nada pago | ✓ as 3 lutas da arena de hoje | ✓ 10 ajudas/dia | ✓ 2 grátis/dia | — |
+| Prêmio | ✓ fixo: dia 3 forja / 5 forja + 20 ração / 8 forja + 30 ração + 1 Essência; marcos 3, 7, 10 dias | ✓ 1 Brasa por vitória, 5/dia (`Sys.bonfire` fonte `'arena'`, `S.sys.bonfire.ar`) | ✓ quem ajuda: +1 Brasão +2 contribuição; quem pediu: prêmio do tipo | ✓ fixo por andar; total 30 fragmentos de relíquia, 22 pedras de prática, 120 goldk (1 resgate) | ✓ moldura/título/selo `evt_<evento>_topN`, selo `evt_part`; sem poder |
+| Ouro / Brasas | ✓ zero / zero | ✓ zero / 1 por vitória até 5 | ✓ zero / zero | ✓ ≤120 goldk por corrida / zero | ✓ zero / zero |
+| Venda / sorteio pago | ✓ nada | ✓ nada | ✓ nada; sem troca de item | ✓ nada; frases prontas por índice | ✓ nada |
+| Servidor | — (local; confere `day.tries <= 3`) | ✓ `pvp` no snapshot; luta `Sys.arenaSet.duel` (vm: stats, grimoire, arena, arenaset) | ✗ rotas `/guild/help*` e campos do `GET /guild/boss` (fps-6f) | ✗ rotas `/coop/*`, correio `coop` (fps-6f); provider `coopNet` falta | ✗ `GET /events/:id/rank`, correio `eventrank` (fps-6f) |
+| Ligação no jogo | ✗ Engenheiro: tela do minijogo em Eventos | ✓ arena e arenanet já chamam; ✗ caixa "+1 Brasa" e aba Conjunto PvP | ✗ aba Ajuda, botão Ajudar todos, faixa do chefe na batalha | ✗ cartão em Instâncias, animação da corrida | ✗ aba Ranking, `grantVisual` no correio, `sync` no boot, selos no perfil |
+| Arte | ✗ 3 temas (barra, marcador, faixa) | ✗ ícone de Brasa na caixa do prêmio | ✗ ícones dos 3 tipos de pedido; faixa do chefe | ✗ ruínas, 10 andares, moldura "Retrato" | ✗ molduras e selos de evento |
+| Testes | ✓ `test/sys/minigame.test.js` (8) | ✓ `test/sys/arenaset.test.js` (10, inclui a fonte `'arena'` do bonfire e o vm) | ✓ `test/sys/guildboss.test.js` (9) | ✓ `test/sys/coop.test.js` (13, inclui o vm) | ✓ `test/sys/eventrank.test.js` (7, inclui o vm) |
+
+Mudanças pequenas em módulos existentes (desligado = como antes, testes provam): `bonfire.js` (fonte `'arena'` com teto diário, `arenaLeft`), `arena.js` (bot local leva as mesmas magias; `rewards.brasas` só quando entra), `arenanet.js` (campo `pvp` no snapshot).

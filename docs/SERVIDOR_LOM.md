@@ -127,7 +127,7 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 | 10 | 1,60 | 5 | 4 | 12 |
 | **Total (10 andares)** | | **30** | **22** | **120** |
 
-- O ouro de uma corrida inteira é no máximo 120 `goldk` = **um resgate** (teto do `ECONOMIA_OURO`). `relicFrags` = fragmentos genéricos de relíquia (o `Sys.relics` da outra sessão decide para qual relíquia vão; até ele existir, ficam guardados em `S.sys.coop.relicFrags`).
+- O ouro de uma corrida inteira é no máximo 120 `goldk` = **um resgate** (teto do `ECONOMIA_OURO`). `relicFrags` = fragmentos genéricos de relíquia (o `Sys.relics` da outra sessão decide para qual relíquia vão; desligado ou ausente, ficam guardados em `S.sys.loot.relicFrags` pelo `Sys.loot.grantBundle`).
 - Entrega: **o SERVIDOR credita pelo correio** para todos os humanos com entrada: carta `source: 'coop'`, `ref: 'r_<runId>:<playerId>'`, `att: { relicFrags, stones, goldk }` (a chave `relicFrags` no correio é do agente das relíquias). O `POST /coop/start` e o `lastRun` do status devolvem `reward` com **`mailed: true`** só para a animação: o `Sys.coop.applyResult` **não credita** quando `mailed: true` (só o provider local, sem servidor, credita na hora).
 
 ### 3.3 Rotas

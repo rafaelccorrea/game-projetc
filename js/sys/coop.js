@@ -5,9 +5,9 @@
      servidor. Quem sai antes da corrida vira o próprio retrato. Conversa SÓ por frase pronta da Dupla (Sys.duo.DATA.phrases), pelo ÍNDICE.
    - 2 entradas por dia (dia de Brasília), grátis: sem compra, sem anúncio, sem VIP. Humano sem entrada entra como retrato (não gasta, não ganha).
    - 10 andares; prêmio FIXO por andar vencido (fragmentos de relíquia, pedras de prática, ouro). Corrida inteira = 30 / 22 / 120 goldk (1 resgate de
-     ouro, docs/ECONOMIA_OURO.md). Os fragmentos vão para o Sys.relics se ele tiver addFrags; senão ficam guardados em S.sys.coop.relicFrags.
+     ouro, docs/ECONOMIA_OURO.md). Os fragmentos entram pelo Sys.loot.grantBundle (relicFrags → Sys.relics.addRelicFrags; desligado = guardados em S.sys.loot.relicFrags).
    PROVIDER LOCAL (sem servidor): o jogador corre com 2 retratos de mentira de FC parecida (a mesma conta), para o modo existir offline e nos testes.
-   Estado: S.sys.coop {v, day, used, runs:[runId], relicFrags, party, invites, chat:{day, n, last}, lastRun}. Sem DOM. Teste: test/sys/coop.test.js */
+   Estado: S.sys.coop {v, day, used, runs:[runId], party, invites, chat:{day, n, last}, lastRun}. Sem DOM. Teste: test/sys/coop.test.js */
 (function(root){
 'use strict';
 const F=(mult,relicFrags,stones,goldk)=>({mult,reward:{relicFrags,stones,goldk}});
@@ -54,7 +54,7 @@ function ghost(avgFc,seed,i){ const r=mulberry(hash('coop-ghost',seed,i))(); ret
 /* ================= ESTADO ================= */
 function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.coop.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.coop; if(!o||typeof o!=='object') o=S.sys.coop={}; o.v=1;
-  o.day=typeof o.day==='string'?o.day:''; o.used=clamp(int0(o.used),0,DATA.entriesPerDay); o.relicFrags=int0(o.relicFrags);
+  o.day=typeof o.day==='string'?o.day:''; o.used=clamp(int0(o.used),0,DATA.entriesPerDay); delete o.relicFrags;
   o.runs=Array.isArray(o.runs)?o.runs.filter(x=>typeof x==='string').slice(-30):[];
   o.party=o.party&&typeof o.party==='object'&&Array.isArray(o.party.members)?o.party:null; o.invites=Array.isArray(o.invites)?o.invites.filter(x=>x&&typeof x==='object').slice(0,10):[];
   const c=(o.chat&&typeof o.chat==='object')?o.chat:{}; o.chat={day:typeof c.day==='string'?c.day:'',n:int0(c.n),last:int0(c.last)};
@@ -66,7 +66,7 @@ const entriesLeft=(S,host)=>Math.max(0,DATA.entriesPerDay-roll(S,host).used);
 
 function status(S,host){ if(!on()) return {on:false,open:false,reason:'off'}; const o=roll(S,host), lv=levelOf(S,host);
   if(lv<DATA.needLevel) return {on:true,open:false,reason:'level',needLevel:DATA.needLevel};
-  return {on:true,open:true,reason:'',entriesLeft:entriesLeft(S,host),entriesMax:DATA.entriesPerDay,online:provider!==localProvider,party:o.party,invites:o.invites.slice(),lastRun:o.lastRun,relicFrags:o.relicFrags}; }
+  return {on:true,open:true,reason:'',entriesLeft:entriesLeft(S,host),entriesMax:DATA.entriesPerDay,online:provider!==localProvider,party:o.party,invites:o.invites.slice(),lastRun:o.lastRun}; }
 /* convite: código de amigo (formato) OU id de membro da MINHA guilda (do espelho do Sys.guild) */
 function canInvite(S,host,who){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; who=who||{};
   if(who.friendCode!=null){ return DATA.codeRe.test(String(who.friendCode))?{ok:true,by:'code'}:{ok:false,reason:'code'}; }
@@ -87,9 +87,7 @@ function applyResult(S,host,res){ if(!on()) return {ok:false,reason:'off'}; if(!
   if(res.paid===false||res.mailed===true) return {ok:true,got:null,mailed:res.mailed===true};
   /* o prêmio é sempre o da TABELA pelo andar (nunca o número mandado), com o teto do ouro */
   const rw=rewardFor(res.reached), L=SYS().loot; let got={};
-  if(L&&L.grantBundle) got=L.grantBundle(S,host,{goldk:Math.min(120,rw.goldk),stones:rw.stones});
-  const R=SYS().relics; let stored=rw.relicFrags; try{ if(R&&typeof R.addFrags==='function'&&rw.relicFrags){ const x=R.addFrags(S,rw.relicFrags,'coop',host); if(!(x&&x.ok===false)) stored=0; } }catch(e){}
-  o.relicFrags+=stored; got.relicFrags=rw.relicFrags; got.relicStored=stored;
+  if(L&&L.grantBundle) got=L.grantBundle(S,host,{goldk:Math.min(120,rw.goldk),stones:rw.stones,relicFrags:rw.relicFrags});   /* relicFrags: o Sys.loot entrega ao Sys.relics ou guarda */
   return {ok:true,reward:rw,got}; }
 
 /* ================= PROVIDER ================= */
