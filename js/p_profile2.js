@@ -71,7 +71,7 @@ const persist=()=>{ try{ if(typeof save==='function') save(); }catch(e){} };
 const frCss=(id,r)=>FR[id]||('border:3px solid '+rc(r)+';box-shadow:inset 0 0 0 2px rgba(5,8,28,.7),0 0 14px '+rc(r));
 /* arte da moldura (assets/ui/frames/<id>.png, 256x256 com janela interna de 160 centrada): o retrato ocupa 62,5% do quadro e a moldura vai por cima no quadro inteiro.
    Id sem arte, ou arte que não carregou, fica com a borda por CSS (frCss) */
-const FRI=['none','bronze','prata','ouro','cristal','eterna','nine_eras','mark100','mark150'], FRX={};
+const FRI=['none','bronze','prata','ouro','cristal','eterna','nine_eras','mark100','mark150','vip1','vip2','vip3','vip4','vip5','vip6','vip7','vip8','vip9','vip10'], FRX={};   /* as 10 molduras VIP com a arte da Arte (aprovadas pelo dono) */
 function frImg(id){ if(FRI.indexOf(id)<0||FRX[id]===-1) return ''; const u='assets/ui/frames/'+id+'.png';
   if(FRX[id]==null){ FRX[id]=1; try{ if(typeof Image==='function'){ const im=new Image(); im.onerror=()=>{ FRX[id]=-1; try{ if(typeof view!=='undefined'&&view===N) redraw(); }catch(e){} }; im.src=u; } }catch(e){} }
   return u; }
