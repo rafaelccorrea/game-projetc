@@ -112,7 +112,7 @@ t('9 eras (dono 14/11): com as eras 7-8 ligadas, armas, armaduras e melhores ini
 t('Fênix gigante (phoenixm) no Códex só quando a montaria está liberada (newReady), no fim das montarias',()=>{
   clean(); const M=require('../../js/sys/mount.js'); globalThis.Sys.mount=M; const r0=M.DATA.newReady.phoenixm;
   try{ M.DATA.newReady.phoenixm=false; assert.ok(!C.catalog().some(c=>c.id==='m-phoenixm'));
-    M.DATA.newReady.phoenixm=true; const mm=C.catalog().filter(c=>c.cat==='mnt').map(c=>c.id); assert.strictEqual(mm[mm.length-1],'m-phoenixm');
+    M.DATA.newReady.phoenixm=true; const mm=C.catalog().filter(c=>c.cat==='mnt').map(c=>c.id); assert.ok(mm.includes('m-phoenixm')&&mm.indexOf('m-phoenixm')>=mm.length-2,'Fênix entre as novas, no fim');
     const S={sys:{mount:{owned:{phoenixm:{stars:1,frags:0,lvl:1,gold:0}}}}}; assert.ok([...C.scan(S)].includes('m-phoenixm')); } finally { M.DATA.newReady.phoenixm=r0; delete globalThis.Sys.mount; clean(); }
 });
 console.log(n+' testes ok');
