@@ -32,7 +32,7 @@ const DATA={
   instancesOn:false,
   daily:[
     {id:'d_kill',   k:'kill',    need:150, pxp:15, gems:2, txt:'Derrote 150 inimigos'},
-    {id:'d_ult',    k:'ult',     need:3,   pxp:10, gems:2, txt:'Use a ultimate 3 vezes'},
+    {id:'d_ult',    k:'ult',     need:3,   pxp:10, gems:2, txt:'Use a Ultimate 3 vezes'},
     {id:'d_chest',  k:'chest',   need:1,   pxp:10, gems:2, txt:'Abra 1 baú'},
     {id:'d_inst',   k:'instance',need:1,   pxp:15, gems:2, txt:'Vença 1 instância', needsInstances:true},
     {id:'d_boss',   k:'boss',    need:2,   pxp:15, gems:2, txt:'Derrote 2 chefes', replaces:'d_inst'},

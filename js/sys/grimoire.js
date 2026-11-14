@@ -50,7 +50,7 @@ const DATA={
     S_('lightLance',8,'Lança de Luz','dmg',16,{mult:3.0,hits:[0.5,0.5]},'hpPct','Duas lanças de luz no inimigo da frente.'),
   ],
   // como aprender (1ª página) e como juntar páginas: tudo FIXO e só jogando. A = 1ª magia da era, B = 2ª.
-  learn:{A:'1ª vitória sobre o Senhor da Era',B:'1ª vitória sobre o chefe da fase 50 da era'},
+  learn:{A:'1ª vitória sobre o Senhor da Era',B:'1ª vitória sobre o chefe do meio da era'},
   // fontes aceitas em grant(): o que cada uma dá, sempre igual (nunca sorteio)
   grants:{
     eraLord:      {learn:'A', ink:20},             // 1ª vitória sobre o Senhor da Era: aprende a A + 20 tinta
@@ -107,12 +107,12 @@ function stat(sp,lv){ lv=clamp(int0(lv)||1,1,DATA.maxLv); const f=sp.fx, k=lv-1,
   else if(sp.kind==='buff'){ o.key=f.key; o.val=f.val*(1+DATA.fxStep*k); o.sec=f.sec; }
   return o; }
 function passiveOf(sp,lv){ const P=DATA.passive[sp.passive]; if(!P||!lv) return 0; return P[0]+P[1]*(clamp(lv,1,DATA.maxLv)-1); }
-const PNAME={atkPct:'ATQ',hpPct:'Vida',defPct:'DEF',critPct:'Crítico'};
+const PNAME={atkPct:'ATQ',hpPct:'Vida',defPct:'Defesa',critPct:'Crítico'};
 function effectText(sp,st){ switch(st.type){
   case 'dmg': return `Dano ${fmt1(st.mult*100)}% do ATQ${st.hits.length>1?` em ${st.hits.length} golpes`:''}${st.area?' na fila':''}${st.stun?`, atordoa ${fmt1(st.stun)} s`:''}`;
   case 'heal': return `Cura ${fmt1(st.pct)}% da vida`;
   case 'shield': return `Escudo de ${fmt1(st.pct)}% da vida por ${st.sec} s`;
-  case 'buff': return `${st.key==='dodge'?'Esquiva':'Vel. de ataque'} +${fmt1(st.val)}% por ${st.sec} s`;
+  case 'buff': return `${st.key==='dodge'?'Esquiva':'Velocidade de ataque'} +${fmt1(st.val)}% por ${st.sec} s`;
   } return ''; }
 function catalog(lv){ return DATA.spells.map(sp=>{ const st=stat(sp,lv); return {id:sp.id,era:sp.era,eraName:DATA.eraName[sp.era],name:sp.name,kind:sp.kind,cd:st.cd,
   effect:st,effectText:effectText(sp,st),passiveKey:sp.passive,passive:passiveOf(sp,clamp(int0(lv)||1,1,DATA.maxLv)),desc:sp.desc,

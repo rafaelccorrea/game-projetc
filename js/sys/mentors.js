@@ -59,7 +59,7 @@ const DATA={
             'O Juiz Celestial pesa a coragem, não a força.','A luz mais forte nasce depois da noite mais longa.',
             'Você atravessou o tempo. As estrelas agora contam a sua história.']},
   ],
-  statText:{atkPct:'ATK',hpPct:'Vida',critPct:'chance de crítico',defPct:'redução de dano',goldPct:'ouro'},
+  statText:{atkPct:'ATQ',hpPct:'Vida',critPct:'chance de crítico',defPct:'redução de dano',goldPct:'ouro'},
 };
 const BY={}; for(const m of DATA.list) BY[m.era]=m;
 const SYS=()=>root.Sys||{};

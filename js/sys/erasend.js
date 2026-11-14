@@ -93,7 +93,7 @@ function giveGems(S,host,n,mail){ const Mm=SYS().mail;
   const L=SYS().loot; if(L&&typeof L.grantBundle==='function') L.grantBundle(S,host,{gems:n,origin:'erasEnd'}); else if(host&&typeof host.addGems==='function') host.addGems(n);
   return {via:'direct',mailId:0}; }
 function own(o,c){ if(c&&!o.cos.owned.includes(c.id)) o.cos.owned.push(c.id); }
-const prizeTitle=(def,eff)=>({title:'Título: '+def.name,text:Object.keys(eff).length?`+${fmtP(eff.atkPct||0)}% ATQ e +${fmtP(eff.hpPct||0)}% VIDA (o dobro em destaque)`:'Só o nome (sem bônus)'});
+const prizeTitle=(def,eff)=>({title:'Título: '+def.name,text:Object.keys(eff).length?`+${fmtP(eff.atkPct||0)}% de ATQ e +${fmtP(eff.hpPct||0)}% de Vida (o dobro com o título em destaque)`:'Só o nome (sem bônus)'});
 
 /* VENCEU A FASE 90 (o Juiz Celestial, Senhor da 9ª era). Idempotente: a 2ª chamada não paga nada (given:false) e devolve os mesmos textos.
    → {ok, given, prizes:[{title,text}], milestone:{stage, rewards:[texto]}, gemsVia} — prizes e milestone no formato do Panels.open('end9',{prizes,milestone}). */
@@ -111,7 +111,7 @@ function finalPrizes(){ const F=DATA.final; return [prizeTitle(F.title,F.title.e
 
 /* o que o PRÓXIMO marco dá (para a tela do fim das 9 eras e a tela de vitória). stage = maior fase vencida (sem ela: a do save) */
 function milestoneRewards(s){ const M=DATA.marks, out=[], d=markDef(s), i=DATA.astral.unlockStage.indexOf(s);
-  out.push(d.cosmetic?`Título Marco ${s}`:`Título Marco ${s} (+${fmtP(M.eff.atkPct)}% ATQ e VIDA)`); out.push(`${M.gems} diamantes`);
+  out.push(d.cosmetic?`Título Marco ${s}`:`Título Marco ${s} (+${fmtP(M.eff.atkPct)}% de ATQ e de Vida)`); out.push(`${M.gems} diamantes`);
   out.push(`${DATA.astral.perMark} pedras astrais`); if(i>=0) out.push(`Forja Astral +${DATA.astral.levels[i]} liberada`);
   if(M.frames[s]) out.push(`Moldura ${M.frames[s].name}`); return out; }
 function nextMilestone(S,stage){ const won=stage!=null?int0(stage):beaten(S); const s=nextMark(Math.max(won,DATA.finalStage)); return {stage:s,rewards:milestoneRewards(s)}; }

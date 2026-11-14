@@ -41,15 +41,15 @@ const DATA={
   conv:[
     {id:'autoCollect', name:'Coleta automática (baús do dia, missões feitas e correio sem item)', v:1, free:'toca um a um'},
     {id:'bag',         name:'Espaços extras na mochila', v:1, val:[0,20,20,20,20,20,40,40,40,40,40], free:'60 espaços'},
-    {id:'offlineH',    name:'Horas máximas de ouro, itens, pedras e ração offline (o XP offline fica em 8 h)', v:1, val:[8,10,10,10,10,12,12,12,12,12,14], free:'8 h'},
+    {id:'offlineH',    name:'Mais horas guardando ouro, itens, pedras e ração fora do jogo (o XP fica em 8 h)', v:1, val:[8,10,10,10,10,12,12,12,12,12,14], free:'8 h'},
     {id:'autoFuse',    name:'Fusão automática (junta 3 iguais sozinha; nunca o equipado nem item de 5 estrelas)', v:2, free:'fusão manual na Forja'},
-    {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:0, free:'todos (dono 13/11: é do grátis, como sempre foi)'},
-    {id:'autoSell',    name:'Desmontar sozinho o que sobra, virando ouro (Básico/Raro, o jogador escolhe; nunca o equipado)', v:2, free:'"desmontar todos" manual'},   // dono 13/11: no lugar do equipar sozinho (que voltou a ser de todos)
+    {id:'autoEquip',   name:'Equipar o melhor sozinho (troca quando o item novo tem mais FC)', v:0, free:'todos'},
+    {id:'autoSell',    name:'Desmontar sozinho o que sobra, virando ouro (Básico/Raro, o jogador escolhe; nunca o equipado)', v:2, free:'botão "Desmontar todos"'},   // dono 13/11: no lugar do equipar sozinho (que voltou a ser de todos)
     {id:'skipBoss',    name:'Pular chefe já vencido (resultado na hora, mesmo prêmio)', v:3, free:'luta inteira (até x2/x4)'},
-    {id:'arenaAdd',    name:'Entradas de arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'3 por dia'},
-    {id:'autoForge',   name:'Forjar até conseguir (até o nível escolhido; mesma chance e custo; para no ouro ou nas pedras)', v:0, free:'todos (dono: agora é do grátis)'},
+    {id:'arenaAdd',    name:'Entradas na Arena a mais por dia', v:4, val:[0,0,0,0,2,2,2,2,3,3,3], free:'3 por dia'},
+    {id:'autoForge',   name:'Forjar até conseguir (até o nível escolhido; mesma chance e custo; para no ouro ou nas pedras)', v:0, free:'todos'},
     {id:'bonfireInstant', name:'Fogueira: o automático solta o lote inteiro de uma vez (mesmas peças, chances e Brasas)', v:4, free:'uma peça por vez'},
-    {id:'towerAdd',    name:'Tentativas (derrotas) da torre a mais por dia', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'3 por dia'},
+    {id:'towerAdd',    name:'Tentativas a mais na Torre por dia (só a derrota gasta)', v:5, val:[0,0,0,0,0,1,1,1,1,1,2], free:'3 por dia'},
     {id:'bossAdd',     name:'Ataques a mais no Chefe Mundial por janela', v:6, val:[0,0,0,0,0,0,1,1,1,1,1], free:'2 por janela'},
     {id:'passXp',      name:'XP do Passe a mais (só o Passe; o nível do jogador não muda)', v:7, val:[0,0,0,0,0,0,0,10,10,15,20], unit:'%', free:'0%'},
     {id:'eventTries',  name:'Entrada extra nos eventos com hora (Invasão, Chefe Mundial)', v:8, val:[0,0,0,0,0,0,0,0,1,1,1], free:'as da agenda'},
@@ -61,7 +61,7 @@ const DATA={
   // spd = o degrau de velocidade do nível de VIP (DATA.table.spd); level = nível do jogador.
   speeds:[
     {speed:1, rules:[{}]},
-    {speed:2, rules:[{spd:1},{level:15}], text:'x2: nível 15 ou VIP'},
+    {speed:2, rules:[{spd:1},{level:15}], text:'x2: nível 15 ou VIP 1'},
     {speed:4, rules:[{spd:2, level:40}], text:'x4: VIP 5 e nível 40'},
   ],
 };

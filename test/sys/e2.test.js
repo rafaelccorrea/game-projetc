@@ -246,7 +246,7 @@ t('skin dá poder (equipada por raridade + coleção com teto) e VIP (bônus e p
   // VIP 1-10 e velocidade (regra nova do dono): x1; x2 com qualquer VIP OU nível 15; x4 só com VIP 5+ E nível 40+
   const L2=require('../../js/sys/level.js'), sp=(vip,lv)=>{ const Sx={}; V.setLevel(Sx,vip); L2.ensure(Sx).lvl=lv; return V.speedMax(Sx); };
   assert.strictEqual(sp(0,1),1); assert.strictEqual(sp(0,15),2); assert.strictEqual(sp(1,1),2); assert.strictEqual(sp(4,99),2); assert.strictEqual(sp(5,39),2); assert.strictEqual(sp(5,40),4); assert.strictEqual(sp(10,100),4);
-  const Sd={}; V.setLevel(Sd,0); L2.ensure(Sd).lvl=3; const md=V.maxSpeed(Sd); assert.strictEqual(md.next.speed,2); assert.strictEqual(md.next.text,'x2: nível 15 ou VIP');
+  const Sd={}; V.setLevel(Sd,0); L2.ensure(Sd).lvl=3; const md=V.maxSpeed(Sd); assert.strictEqual(md.next.speed,2); assert.strictEqual(md.next.text,'x2: nível 15 ou VIP 1');
   assert.ok(md.next.need.vip===1||md.next.need.level===15);
   const Sv5={}; V.setLevel(Sv5,5); L2.ensure(Sv5).lvl=20; assert.deepStrictEqual(V.maxSpeed(Sv5).next.need,{level:40});
   assert.strictEqual(V.level({vip:true}),1,'save antigo com a flag = VIP 1');

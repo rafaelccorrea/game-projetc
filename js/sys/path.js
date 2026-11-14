@@ -17,7 +17,7 @@ const DATA={
   paths:[
     {id:'blade',  name:'Lâmina',  style:'blade',  desc:'Contra-ataque e roubo de vida: quanto mais apanha, mais devolve', strikes:{counter:8, lifesteal:5}, stat:{}},
     {id:'shot',   name:'Disparo', style:'shot',   desc:'Combo e velocidade de ataque: muitos golpes rápidos',           strikes:{combo:8},                stat:{aspd:10}},
-    {id:'arcane', name:'Arcano',  style:'arcane', desc:'Atordoar e crítico de habilidade: golpes especiais fortes',     strikes:{stun:3},                 stat:{critDmg:20}},
+    {id:'arcane', name:'Arcano',  style:'arcane', desc:'Atordoar e dano crítico: golpes que acertam forte',     strikes:{stun:3},                 stat:{critDmg:20}},
   ],
 };
 const DAY=86400000;
@@ -97,8 +97,8 @@ function bonus(){ return {atkPct:0,hpPct:0,critPct:0,defPct:0,goldPct:0,fc:0}; }
 /* {on, unlocked, needLevel, level, chosen, chosenName, freeLeft, nextFreeChange (ms, 0 = já), paid:false,
     paths:[{id,name,desc,strikes,stat,chosen,canChoose,canChange}], text} */
 function view(S,host){ const lv=levelOf(S,host), ch=on()?chosen(S):null, nf=nextFreeChange(S,host), left=freeLeft(S,host);
-  const text=!on()?'':lv<DATA.unlockLevel?`Escolha o seu caminho de luta no Nv ${DATA.unlockLevel}.`:!ch?'Escolha um caminho. Ele não muda o seu herói, só os golpes.'
-    :left>0?'Você tem 1 troca grátis nesta semana.':'Troca grátis usada nesta semana. A próxima vem na segunda-feira.';
+  const text=!on()?'':lv<DATA.unlockLevel?`Escolha o seu caminho de luta no Nv ${DATA.unlockLevel}.`:!ch?'Escolha um caminho. A aparência do herói não muda, só o jeito de lutar.'
+    :left>0?(left>1?`Você tem ${left} trocas grátis nesta semana.`:'Você tem 1 troca grátis nesta semana.'):'Troca grátis usada nesta semana. A próxima vem na segunda-feira.';
   return {on:on(), unlocked:lv>=DATA.unlockLevel, needLevel:DATA.unlockLevel, level:lv, chosen:ch, chosenName:ch?pathOf(ch).name:null,
     freeLeft:left, nextFreeChange:nf, paid:false, text,
     paths:DATA.paths.map(p=>({id:p.id,name:p.name,desc:p.desc,style:p.style||p.id,strikes:clone(p.strikes||{}),stat:clone(p.stat||{}),chosen:ch===p.id,

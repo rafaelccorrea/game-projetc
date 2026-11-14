@@ -45,10 +45,10 @@ const DATA={
   shop:[{id:'forge10',name:'10 pedras de forja',cost:20,weekly:5,minLevel:1,give:{forge:10}},
     {id:'food100',name:'100 de ração',cost:15,weekly:5,minLevel:1,give:{food:100}},
     {id:'essence2',name:'2 Essências',cost:40,weekly:3,minLevel:2,give:{essence:2}},
-    {id:'stones5',name:'5 pedras de treino',cost:30,weekly:3,minLevel:3,give:{stones:5}},
+    {id:'stones5',name:'5 pedras de prática',cost:30,weekly:3,minLevel:3,give:{stones:5}},
     {id:'mfrag5',name:'5 fragmentos de montaria',cost:60,weekly:2,minLevel:4,give:{mountFrags:5}}],
   missions:[{id:'donations150',name:'150 doações',counter:'donations',target:150,xp:400,coin:30},
-    {id:'checkins100',name:'100 check-ins',counter:'checkins',target:100,xp:300,coin:20},
+    {id:'checkins100',name:'100 presenças',counter:'checkins',target:100,xp:300,coin:20},
     {id:'bossHits150',name:'150 golpes no chefe',counter:'bossHits',target:150,xp:300,coin:20},
     {id:'bossDown',name:'Derrubar o chefe',counter:'bossDown',target:1,xp:500,coin:40}],
   // PRÊMIOS do ranking do torneio (por membro que lutou ou estava escalado), sem sorteio

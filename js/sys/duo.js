@@ -52,7 +52,7 @@ const DATA={
     {id:'voce_manda',  txt:'Você manda bem!'},
     {id:'ja_volto',    txt:'Já volto!'},
     {id:'amanha',      txt:'Até amanhã!'},
-    {id:'gg',          txt:'GG!'},
+    {id:'gg',          txt:'Boa partida!'},
     {id:'joinha',      txt:'Combinado!'}],
 };
 const SYS=()=>root.Sys||{};

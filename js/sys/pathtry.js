@@ -18,7 +18,7 @@ const DATA={
   paths:[
     {id:'blade',  name:'Lâmina',  desc:'Contra-ataque e roubo de vida: quanto mais apanha, mais devolve', strikes:{counter:8, lifesteal:5}, stat:{}},
     {id:'shot',   name:'Disparo', desc:'Combo e velocidade de ataque: muitos golpes rápidos',           strikes:{combo:8},                stat:{aspd:10}},
-    {id:'arcane', name:'Arcano',  desc:'Atordoar e crítico de habilidade: golpes especiais fortes',     strikes:{stun:3},                 stat:{critDmg:20}},
+    {id:'arcane', name:'Arcano',  desc:'Atordoar e dano crítico: golpes que acertam forte',     strikes:{stun:3},                 stat:{critDmg:20}},
   ],
   // Boneco de Treino: não morre; bate leve de 2 em 2 s (para o contra-ataque e o roubo de vida aparecerem); o herói fica com no mínimo 1 de vida
   dummy:{name:'Boneco de Treino', immortal:true, hitEverySec:2, hitPctHeroHp:4, heroMinHp:1},
