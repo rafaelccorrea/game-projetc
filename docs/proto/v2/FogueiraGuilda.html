@@ -402,7 +402,7 @@ canvas.fx{position:absolute;left:0;top:0;width:390px;height:360px;pointer-events
         <li>Cada membro: <b>1 alimentar grátis por dia</b> (+10 chamas). Quem quiser dá também <b>Brasas suas</b>: 1 chama cada, <b>até 20 por dia</b></li>
         <li>Brasas vêm <b>só jogando</b> (a Fogueira do herói). <b>Nada aqui se compra</b>: sem diamante, oferta, pacote, VIP ou anúncio</li>
         <li>As chamas de todos sobem o nível: <b>1 a 10</b> (Faísca … Chama Eterna), sem reset. Do nível n ao n+1: <b>300 × 1,35^(n−1)</b> chamas</li>
-        <li>Cada nível novo: o <b>servidor manda sozinho</b> um baú <b>fixo</b> (nada sorteado) ao <b>correio</b> de cada membro que já estava na guilda: um pouco de ouro (<b>40 × nível abates</b>, ≈ minutos de abate), <b>nível</b> Pedras de Forja, <b>10 × nível</b> de ração. Nunca diamante</li>
+        <li>Cada nível novo: o <b>servidor manda sozinho</b> um baú <b>fixo</b> (nada sorteado) ao <b>correio</b> de cada membro que já estava na guilda: um pouco de ouro (<b>12 × nível abates</b>, ≈ minutos de abate), <b>nível</b> Pedras de Forja, <b>10 × nível</b> de ração. Nunca diamante</li>
         <li>Nível alcançado <b>antes de você entrar</b> não dá baú (contra pular de guilda)</li>
         <li>No nível 10: <b>mais 1 baú a cada 3.000 chamas</b></li>
         <li>Bônus pequeno para todos, <b>fora da Força de Combate</b>: ouro +0,5% e XP +0,3% por nível acima do 1 (nível 10 = +4,5% / +2,7%)</li>
@@ -584,7 +584,7 @@ function pMembers(){ const ord={leader:0,officer:1,member:2}, list=S.members.sli
 
 /* ===== FOGUEIRA: regras = cópia fiel de js/sys/guildfire.js ===== */
 const DATA={free:{flames:10}, brasa:{flames:1,perDay:20}, maxLevel:10, need:{base:300,growth:1.35}, extraEvery:3000,
-  perLevel:{goldPct:0.5,xpPct:0.3}, chest:{goldK:40,stonesPer:1,foodPer:10},
+  perLevel:{goldPct:0.5,xpPct:0.3}, chest:{goldK:12,stonesPer:1,foodPer:10},
   names:['Faísca','Brasa','Chama','Fogueira','Labareda','Fogaréu','Tocha das Eras','Pira','Farol','Chama Eterna']};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const int0=v=>Math.max(0,Math.floor(+v||0));
