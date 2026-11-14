@@ -40,7 +40,7 @@ function classify(p0){ const p=norm(p0); let m;
      FICAM na base: o pet inicial (era0_mammoth_*, pet abre no Nv 1) e o ovo (chocar na batalha); os ícones do Grimório (1ª magia na fase 10, aparecem na batalha)
      e o relógio do mapa (a história de abertura usa). As telas caem na reserva delas até o pacote chegar (js/latepack.js). */
   if(/^assets\/(icons\/)?pets\//.test(p)&&!/^assets\/(icons\/)?pets\/(era0_mammoth_|pet_egg\.)/.test(p)) return 'ui:late';   // retratos e ícones de pet, menos o mamute inicial e o ovo
-  if(/^assets\/(mentors|icons\/titles|icons\/relics|icons\/dig|ui\/dig|icons\/duo|ui\/duo|ui\/camp|ui\/title)\//.test(p)) return 'ui:late';
+  if(/^assets\/(events|mentors|icons\/titles|icons\/relics|icons\/dig|ui\/dig|icons\/duo|ui\/duo|ui\/camp|ui\/title)\//.test(p)) return 'ui:late';
   if((m=/^assets\/mounts\/still\/([a-z]+)(?:_([a-z]+))?\.png$/.exec(p))) return 'mount:'+m[1];   // PO 14/11: imagem parada da montaria (Derrota) no pacote da própria montaria (giant_phoenix -> mount:giant, como a Fênix no manifesto); a tela usa a folha se faltar   // PO 14/11: molduras do Perfil fora da base (o Perfil cai na borda por CSS até baixar)
   if(/^assets\/anim\/(look_preview|equip\/preview)\//.test(p)) return 'preview';   // prévias de arte (Modo dono / aprovação): fora do APK do jogador
   if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma

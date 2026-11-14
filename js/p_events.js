@@ -33,8 +33,20 @@ const EVT_MINH=640, EVT_SPER=3, EVT_MPER=4;
 const EVT_TH={
   festival_eras:{bg:'linear-gradient(135deg,#5a2ea0 0%,#a8650c 60%,#3a1a04 100%)',bd:'#ffc94a',t1:'#3a2350',a:'#b07cff',tok:'#8a4dff',map:'assets/map/world.jpg',mapF:'saturate(1.1)',
     fog:'linear-gradient(180deg,rgba(58,35,80,.18),rgba(20,10,30,.4))',shards:true,vit:'rgba(176,124,255,.6)',
-    boss:{n:'Devorador do Tempo',img:'assets/enemies/era6_boss.png',c:'#c58bff',hue:'0deg',mist:'rgba(176,124,255,.4)',fog:'linear-gradient(180deg,rgba(40,10,70,.5),rgba(10,4,20,.72))',mapF:'brightness(.5) saturate(1.3) hue-rotate(30deg)'}}};
-const EVT_SKHUE={festival_weapon:'250deg',festival_armor:'200deg'};
+    boss:{n:'Devorador do Tempo',img:'assets/enemies/era6_boss.png',c:'#c58bff',hue:'0deg',mist:'rgba(176,124,255,.4)',fog:'linear-gradient(180deg,rgba(40,10,70,.5),rgba(10,4,20,.72))',mapF:'brightness(.5) saturate(1.3) hue-rotate(30deg)'}},
+  /* Caçada aos Chefes: vermelho de caça e osso, mapa da era 3 */
+  cacada_chefes:{bg:'linear-gradient(135deg,#7a1410 0%,#b0521a 55%,#2a0806 100%)',bd:'#ffb04a',t1:'#4a1a16',a:'#ff7a5a',tok:'#d8362a',map:'assets/map/era3.jpg',mapF:'saturate(1.15)',
+    fog:'linear-gradient(180deg,rgba(80,20,16,.18),rgba(30,8,6,.42))',shards:false,vit:'rgba(255,122,90,.6)',frame:'cacada',
+    boss:{n:'Rei da Caçada',img:'assets/enemies/era3_boss.png',c:'#ff9a7a',hue:'120deg',mist:'rgba(255,122,90,.4)',fog:'linear-gradient(180deg,rgba(70,12,8,.5),rgba(20,4,4,.72))',mapF:'brightness(.5) saturate(1.3)'}},
+  /* Semana da Forja: brasa e aço, mapa da era 4 */
+  semana_forja:{bg:'linear-gradient(135deg,#8a3a06 0%,#d07a12 50%,#1e222c 100%)',bd:'#ffd27a',t1:'#3a2c20',a:'#ffa23a',tok:'#e0701a',map:'assets/map/era4.jpg',mapF:'saturate(1.1)',
+    fog:'linear-gradient(180deg,rgba(90,50,10,.18),rgba(24,16,10,.42))',shards:false,vit:'rgba(255,162,58,.6)',frame:'forja',
+    boss:{n:'Colosso da Bigorna',img:'assets/enemies/era4_boss.png',c:'#ffc078',hue:'150deg',mist:'rgba(255,162,58,.4)',fog:'linear-gradient(180deg,rgba(70,36,6,.5),rgba(18,10,4,.72))',mapF:'brightness(.5) saturate(1.25)'}},
+  /* Festa dos Pets: verde de mata e céu, mapa da era 1 */
+  festa_pets:{bg:'linear-gradient(135deg,#1c7a4a 0%,#2a9ab0 55%,#0c2a24 100%)',bd:'#ffe07a',t1:'#1e4034',a:'#5fe0a0',tok:'#22a86a',map:'assets/map/era1.jpg',mapF:'saturate(1.15)',
+    fog:'linear-gradient(180deg,rgba(20,80,56,.18),rgba(6,26,20,.42))',shards:false,vit:'rgba(95,224,160,.6)',frame:'pets',
+    boss:{n:'Fera Ancestral',img:'assets/enemies/era1_boss.png',c:'#8ff0c0',hue:'240deg',mist:'rgba(95,224,160,.4)',fog:'linear-gradient(180deg,rgba(8,56,40,.5),rgba(4,18,14,.72))',mapF:'brightness(.5) saturate(1.3)'}}};
+const EVT_SKHUE={festival_weapon:'250deg',festival_armor:'200deg',cacada_weapon:'340deg',forja_weapon:'20deg',forja_armor:'30deg'};
 const EVT_START=[7,81], EVT_NODES=[[27,81],[53,81],[82,81],[75,53],[48,53],[21,53],[26,25],[53,25],[82,25]];   /* caminho em serpente do protótipo (só desenho) */
 const EVT_RN=['Básico','Raro','Épico','Mítico','Lendário','Prismático'];
 const EVT_RC=['#9aa0a6','#4aa3ff','#b45cff','#ff4d6d','#ffb21e','#8ff5ff'];
@@ -297,8 +309,10 @@ const etCfg=id=>{ const E=(Sys.evtrail.DATA&&Sys.evtrail.DATA.events)||{}; let b
 const evtAbbr=v=>{ try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v); }catch(e){} try{ if(typeof kf==='function') return kf(v); }catch(e){} return evtN(v); };
 /* texto do prêmio de um marco */
 function etRw(rw){ const a=[]; if(!rw) return ''; if(rw.goldk) a.push('Ouro'); if(rw.forge) a.push(rw.forge+' Pedras de forja'); if(rw.food) a.push(rw.food+' Ração'); if(rw.essence) a.push(rw.essence+' Essência'); if(rw.frame) a.push('Moldura do evento'); return a.join(' · '); }
-const EVT_FRAME='<svg class="pz-bob" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#ffe07a" stroke-width="2.6"></rect><rect x="7" y="7" width="10" height="10" rx="2" fill="#8a4dff" stroke="#fff3c4" stroke-width="1.2"></rect><circle cx="3.5" cy="3.5" r="1.8" fill="#ffc94a"></circle><circle cx="20.5" cy="20.5" r="1.8" fill="#ffc94a"></circle></svg>';
-function etIc(rw){ rw=rw||{}; if(rw.frame) return EVT_FRAME; if(rw.essence) return evtSvgIc('ess'); if(rw.forge) return evtSvgIc('stone'); if(rw.food) return evtSvgIc('food'); return '<img class="pz-cspin" src="assets/ui/coin.png" alt="">'; }
+const EVT_FRAMEC={festival:['#8a4dff','#ffc94a'],cacada:['#d8362a','#ffb04a'],forja:['#e0701a','#ffd27a'],pets:['#22a86a','#ffe07a']};   /* [miolo, cantos] */
+const evtFrame=(k,th)=>{ const c=EVT_FRAMEC[k]||(th&&th.tok?[th.tok,th.bd||'#ffc94a']:EVT_FRAMEC.festival); return '<svg class="pz-bob" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#ffe07a" stroke-width="2.6"></rect><rect x="7" y="7" width="10" height="10" rx="2" fill="'+c[0]+'" stroke="#fff3c4" stroke-width="1.2"></rect><circle cx="3.5" cy="3.5" r="1.8" fill="'+c[1]+'"></circle><circle cx="20.5" cy="20.5" r="1.8" fill="'+c[1]+'"></circle></svg>'; };
+const EVT_FRAME=evtFrame('festival');
+function etIc(rw,th){ rw=rw||{}; if(rw.frame) return evtFrame(rw.frame,th); if(rw.essence) return evtSvgIc('ess'); if(rw.forge) return evtSvgIc('stone'); if(rw.food) return evtSvgIc('food'); return '<img class="pz-cspin" src="assets/ui/coin.png" alt="">'; }
 /* posições dos marcos no mini-mapa: serpente de baixo para cima, 3 por linha (a do protótipo para 9 marcos) */
 function etPos(n){ const rows=Math.max(1,Math.ceil(n/3)), out=[];
   for(let i=0;i<n;i++){ const r=Math.floor(i/3), k=i%3, y=rows===1?53:81-r*(56/(rows-1)); out.push([r%2?[75,48,21][k]:[27,53,82][k],+y.toFixed(1)]); } return out; }
@@ -363,10 +377,10 @@ function etTrail(M,th){ const T=M.tr, c=M.cur, pre=!c.live, n=T.milestones.lengt
   const seg=Math.min(CO.length-2,Math.floor(mk)), dir=moving?XEVT.mkDir:(CO[seg+1]&&CO[seg+1][0]<CO[seg][0]?-1:1); if(!moving) XEVT.mkDir=dir;
   const all=CO.map(p=>p[0]+','+p[1]).join(' '), done=[]; for(let k=0;k<=Math.min(Math.floor(mk),CO.length-1);k++) done.push(CO[k][0]+','+CO[k][1]); done.push(mp[0].toFixed(2)+','+mp[1].toFixed(2));
   const nx=T.next, hint=pre?'Começa em breve · veja os prêmios':nx?'Próximo marco: '+(nx.name||'')+' em '+evtN(nx.at-T.earned)+' pts':'Trilha completa!';
-  const nodes=T.milestones.map((m,i)=>{ const big=!!(m.reward&&m.reward.frame)||i===last, go=m.reached&&!m.claimed, rc=big?'#ffb21e':th.a, rg=big?'rgba(255,178,30,.75)':'rgba(176,124,255,.6)', p=NP[i];
+  const nodes=T.milestones.map((m,i)=>{ const big=!!(m.reward&&m.reward.frame)||i===last, go=m.reached&&!m.claimed, rc=big?'#ffb21e':th.a, rg=big?'rgba(255,178,30,.75)':(th.vit||'rgba(176,124,255,.6)'), p=NP[i];
     const st=m.claimed?'resgatado':go?'pronto para resgatar':pre?'prévia':'faltam '+Math.max(0,m.at-T.earned)+' pontos';
     return `${big?`<span class="pz-ndr" style="left:${p[0]}%;top:${p[1]}%;--rg:${rg}"></span>`:''}<button data-x="node" data-at="${m.at}" class="pz-nd${big?' big':''}${go?' go':m.claimed?' done':m.reached?'':' lock'}" aria-label="${evtEsc(m.name)}: ${evtEsc(etRw(m.reward))}, marco de ${m.at} pontos, ${st}" style="left:${p[0]}%;top:${p[1]}%;--rc:${rc};--rg:${rg};animation-delay:${(i*.09).toFixed(2)}s">
-      <span class="pz-ni" aria-hidden="true">${etIc(m.reward)}</span><span class="pz-npt">${evtN(m.at)}</span>
+      <span class="pz-ni" aria-hidden="true">${etIc(m.reward,th)}</span><span class="pz-npt">${evtN(m.at)}</span>
       ${m.claimed?'<span class="pz-nck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>':''}${go?'<span class="pz-nbg" aria-hidden="true">!</span>':''}</button>`; }).join('');
   const list=T.milestones.map(m=>{ const go=m.reached&&!m.claimed;
     return `<div class="pz-ms${go?' go':m.claimed?' done':''}"><span style="min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:13px;font-weight:900">${evtEsc(m.name)} <span style="color:#c9b9a2;font-weight:800">· ${evtN(m.at)} pts</span></span><span style="font-size:11.5px;font-weight:800;color:#e8dccb">${evtEsc(etRw(m.reward))}</span></span>
