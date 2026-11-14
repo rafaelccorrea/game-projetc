@@ -20,16 +20,28 @@ const DATA={
   // FONTE ÚNICA da liberação por nível (PO, 2026-11-12; reports/liberacao-por-nivel.md). As ids são as do MENU (FB_UNLOCK em js/fullbattle.js),
   // que passa a ler daqui. Chaves dos módulos: 'pet' = portão do Sys.pet (1; com o v20 ligado quem manda é Sys.pet.DATA.v20.unlockLevel = 20)
   // e 'instances' (= 'inst' do menu, via DATA.alias). Materiais caem antes e ficam guardados. Função sem tela continua oculta (regra do engenheiro).
+  // CRONOGRAMA APROVADO PELO DONO (14/11, via PO; docs/LIBERACOES.md §c): uma novidade por nível, o que não liberou NÃO aparece (sem cadeado nem
+  // "Em breve"). Mudou: map 1→4, codex 12→13, dig 14→16, mentors 16→17, chat 16→19, duo 16→21, camp 20→22, rank 28→26, coop 30→31.
+  // Novas: vip 10, trial 10, grim 13, path 30, thief 8 (Ladrão de Brasas), speed 15 (x2/x4), weak 30 (selo "Fraco contra"), abas da Loja e do Equip.
+  // Além do nível, DATA.cond diz se a função EXISTE de verdade (compra real, evento aberto, online, guilda...): leia Sys.level.unlocked(S, chave, host).
   unlock:{missions:2, summon:3, practice:5, mail:7, login:7, profile:10, shopgem:10, forge:12, instances:14, tower:15, pass:18, pets:20,
-          events:24, rank:28, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1,
-          map:1, codex:12, chat:16, duo:16, mentors:16, camp:20, today:7, relics:12, dig:14, coop:30},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
+          events:24, rank:26, arena:28, guild:32, mount:38, tourney:40, auction:45, wing:50, pet:1,
+          map:4, codex:13, chat:19, duo:21, mentors:17, camp:22, today:7, relics:12, dig:16, coop:31,
+          vip:10, trial:10, grim:13, path:30, thief:8, speed:15, weak:30,
+          shopOffers:10, shopLook:10, shopMount:38, shopVip:10, shopPass:18,
+          gearSkins:10, gearPets:20, gearMount:38, gearWing:50},   // PO 12/11: Mapa das Eras no 1 (as dificuldades além do Fácil abrem pelo Sys.phases), Códex 12, Chat 16 (só frases prontas)
   // Dupla das Eras e Mentores no 16 (o Menu lia a reserva FB_UNLOCK do js/fullbattle.js; agora a fonte é esta). Com o módulo DESLIGADO, o aviso
   // "Liberou: ..." do addXp não cita a função (gated: chave do Sys.<módulo>).
   gated:{duo:'duo', mentors:'mentors', camp:'camp', today:'today', relics:'relics', dig:'dig', coop:'coop'},
-  alias:{inst:'instances', mounts:'mount'},
+  alias:{inst:'instances', mounts:'mount', shopGems:'shopgem', wingSlot:'gearWing'},
   unlockName:{missions:'Missões',summon:'Invocar',practice:'Práticas',mail:'Correio',login:'Login diário',profile:'Perfil',shopgem:'Loja de gemas',
     forge:'Forja',instances:'Instâncias',tower:'Torre',pass:'Passe',pets:'Pets',events:'Eventos',rank:'Ranking',arena:'Arena',guild:'Guilda',
-    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat',duo:'Dupla',mentors:'Mentores',camp:'Acampamento',today:'Hoje',relics:'Relíquias',dig:'Escavação',coop:'Ruínas em Trio'},
+    mount:'Montaria',tourney:'Torneio do Poder',auction:'Leilão',wing:'Asa',pet:'Pets',map:'Mapa das Eras',codex:'Códex',chat:'Chat',duo:'Dupla',mentors:'Mentores',camp:'Acampamento',today:'Hoje',relics:'Relíquias',dig:'Escavação',coop:'Ruínas em Trio',
+    vip:'VIP',trial:'Provação',grim:'Grimório',path:'Caminhos',thief:'Ladrão de Brasas',speed:'Velocidade x2',weak:'Fraco contra',
+    shopOffers:'Ofertas',shopLook:'Visual',shopMount:'Montarias na Loja',shopVip:'VIP na Loja',shopPass:'Passe na Loja',
+    gearSkins:'Skins',gearPets:'Pets no Equipamento',gearMount:'Montarias no Equipamento',gearWing:'Asa'},
+  // ABAS (não anunciam no "Liberou": entram junto com a função principal do mesmo nível)
+  quiet:['shopOffers','shopLook','shopMount','shopVip','shopPass','gearSkins','gearPets','gearMount','gearWing','speed','weak','thief','pet'],
   // portões de raridade dos OVOS (decisão do PO): raridade r exige nível E era mínimos. A fênix do andar 100 da torre é exceção.
   eggGate:{3:{level:70,era:4}, 4:{level:85,era:5}},
   // ===== CURVA DAS 9 ERAS (dono via PO; PROPOSTA, DESLIGADA). Spec e simulação: reports/curva-9-eras-e2.md =====
@@ -81,6 +93,32 @@ const xpPerkPct=S=>{ const Y=root.Sys||{}; let p=0;
   return p; };
 /* função com chave própria (DATA.gated): só entra no aviso "Liberou" com o módulo carregado e ligado */
 const gateOn=f=>{ const m=DATA.gated&&DATA.gated[f]; if(!m) return true; const M=root.Sys&&root.Sys[m]; return !!(M&&M.DATA&&M.DATA.on===true); };
+/* "EXISTE DE VERDADE" (cronograma do dono 14/11): além do nível. host.featureOn(chave) → true/false manda (o jogo sabe do online, da guilda etc.);
+   sem resposta do host, valem as regras abaixo. Sem regra = só o nível. */
+const SY=()=>root.Sys||{};
+const hostSays=(host,f)=>{ if(host&&typeof host.featureOn==='function'){ try{ const r=host.featureOn(f); if(r===true||r===false) return r; }catch(e){} } return null; };
+const onlineOk=(host,f)=>{ const r=hostSays(host,'online:'+f); if(r!==null) return r; if(host&&typeof host.online==='function'){ try{ return host.online(f)===true; }catch(e){ return false; } } return false; };
+const COND={
+  vip:(S,host)=>{ const B=SY().buy; try{ return !!(B&&typeof B.ready==='function'&&B.ready()); }catch(e){ return false; } },   // só com a compra real
+  login:()=>{ const L=SY().login; return !!(L&&L.DATA&&L.DATA.enabled===true); },
+  events:(S,host)=>{ const E=SY().events; try{ return !!(E&&E.DATA&&E.DATA.enabled===true&&E.list(S,host).length>0); }catch(e){ return false; } },   // evento aberto (ativo ou loja)
+  auction:(S,host)=>onlineOk(host,'auction'), chat:(S,host)=>onlineOk(host,'chat'), duo:(S,host)=>onlineOk(host,'duo'),
+  coop:(S,host)=>onlineOk(host,'coop'), guild:(S,host)=>onlineOk(host,'guild'),
+  tourney:(S,host)=>{ if(!onlineOk(host,'tourney')) return false; if(host&&typeof host.guildDays==='function'){ try{ return num(host.guildDays(),0)>=7; }catch(e){ return false; } } return false; },   // guilda há 7 dias
+  grim:(S,host)=>{ const G=SY().grimoire; if(!G||typeof G.on!=='function'||!G.on()) return false; try{ const o=G.ensure(S), own=o&&o.own; return level(S)>=DATA.unlock.grim||!!(own&&Object.keys(own).length); }catch(e){ return false; } },   // 1ª magia ou Nv 13
+  relics:(S,host)=>{ const R=SY().relics; if(!R||typeof R.on!=='function'||!R.on()) return false; try{ const o=R.ensure(S), own=o&&o.own; return !!(own&&Object.keys(own).length); }catch(e){ return false; } },   // só com a 1ª relíquia
+  shopVip:(S,host)=>COND.vip(S,host),
+  speed:(S,host)=>true,
+};
+/* a função está liberada E existe? Usa o nível (DATA.unlock), a chave do módulo (gated) e a condição (COND). Para as telas: o que dá false NÃO aparece.
+   speed: Nv 15 OU VIP 1 (regra do Sys.vip). grim: Nv 13 OU a 1ª magia. */
+function unlocked(S,f,host){ const k=unlockKey(f); if(!gateOn(k)) return false; const r=hostSays(host,k); if(r!==null) return r;
+  let lvOk=level(S)>=unlockLevel(k);
+  if(k==='speed'&&!lvOk){ const V=SY().vip; try{ lvOk=!!(V&&typeof V.level==='function'&&V.level(S)>=1); }catch(e){} }
+  if(k==='grim'&&!lvOk) return !!(COND.grim&&COND.grim(S,host));
+  if(!lvOk) return false; const c=COND[k]; return c?!!c(S,host):true; }
+/* o que já está liberado agora (para o "Novo!" do Menu): lista de chaves */
+const unlockedList=(S,host)=>Object.keys(DATA.unlock).filter(f=>f!=='pet'&&unlocked(S,f,host));
 /* soma XP e sobe de nível quantas vezes der. Devolve {gained, levels, from, to, unlocked:[funções novas]} */
 /* TETO DIÁRIO DA XP DE ABATE também fora do v9 (dono aprovou 13/11 com a dificuldade de paredes; depois do teto, ouro e itens seguem normais).
    Desligado até o QA medir: setKillCap(true). Mesma tabela DATA.v9.kill. */
@@ -113,7 +151,7 @@ function addXp(S,n,host,src){
   o.total+=k; o.xp+=k;
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }
   if(o.lvl>=DATA.maxLevel) o.xp=0;
-  const unlocked=Object.keys(DATA.unlock).filter(f=>f!=='pet'&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl&&gateOn(f));
+  const unlocked=Object.keys(DATA.unlock).filter(f=>!DATA.quiet.includes(f)&&DATA.unlock[f]>from&&DATA.unlock[f]<=o.lvl&&gateOn(f)&&(!COND[f]||!!COND[f](S,host)));   // "Liberou: Login diário" só com o módulo ligado
   if(o.lvl>from&&host&&host.toast) host.toast(`Nível ${o.lvl}!${unlocked.length?' Liberou: '+unlocked.map(f=>DATA.unlockName[f]||f).join(', '):''}`);
   return {gained:k,levels:o.lvl-from,from,to:o.lvl,unlocked};
 }
@@ -135,7 +173,7 @@ const onDailyBonus=(S,host)=>addXp(S,Math.round(DATA.xp.dailyBonus*eraMul(host)*
 const unlockKey=f=>(DATA.alias&&DATA.alias[f])||f;
 const unlockLevel=f=>num(DATA.unlock[unlockKey(f)],1);
 const isUnlocked=(S,f)=>level(S)>=unlockLevel(f);
-function nextUnlock(S){ const l=level(S); let best=null; for(const f in DATA.unlock){ if(f==='pet') continue; const u=DATA.unlock[f]; if(u>l&&(!best||u<best.level)) best={feature:f,name:DATA.unlockName[f]||f,level:u}; } return best; }
+function nextUnlock(S){ const l=level(S); let best=null; for(const f in DATA.unlock){ if(f==='pet'||DATA.quiet.includes(f)||!gateOn(f)) continue; const u=DATA.unlock[f]; if(u>l&&(!best||u<best.level)) best={feature:f,name:DATA.unlockName[f]||f,level:u}; } return best; }
 /* portão de raridade de ovo: maior raridade permitida (<= r) para o nível e a era atuais.
    Fonte única: Sys.loot.capEggR (fps-30, DATA.gates). DATA.eggGate daqui é só a reserva para quando o Sys.loot não estiver carregado. */
 function eggMaxR(S,host,r){
@@ -156,7 +194,7 @@ function stage(S,host){ const o=ensure(S), T=DATA.v9.stages; if(!V9()) return {o
   return {on:true,stage:st,id:T[st].id,name:T[st].name,ready:!!nx&&lv>=nx.lvl&&fc>=nx.fc,
     next:nx?{stage:st+1,id:nx.id,name:nx.name,lvl:nx.lvl,fc:nx.fc,needLvl:Math.max(0,nx.lvl-lv),needFc:Math.max(0,Math.ceil(nx.fc-fc))}:null}; }
 function evolve(S,host){ const s0=stage(S,host); if(!s0.ready) return {ok:false,reason:s0.on?'need':'off',stage:s0.stage}; ensure(S).stg=s0.stage+1; return {ok:true,from:s0.stage,stage:s0.stage+1}; }
-const API={DATA,setV9,setCap120,setKillCap,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,nextUnlock,eggMaxR,bonus,hud};
+const API={DATA,setV9,setCap120,setKillCap,killCap,stage,evolve,ensure,need,level,progress,addXp,onKill,onOffline,onInstance,onMission,onDailyBonus,unlockLevel,unlockKey,isUnlocked,unlocked,unlockedList,nextUnlock,eggMaxR,bonus,hud};
 root.Sys=root.Sys||{}; root.Sys.level=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

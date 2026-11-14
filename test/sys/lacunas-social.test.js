@@ -62,12 +62,16 @@ t('XP: Encruzilhada continua (+6% com a chave) e soma com a Fogueira', () => {
 });
 
 t('Sys.level.DATA.unlock: Dupla e Mentores no 16 (fonte única do Menu); o aviso "Liberou" só cita com o módulo ligado', () => {
-  assert.strictEqual(LV.DATA.unlock.duo, 16); assert.strictEqual(LV.DATA.unlock.mentors, 16); assert.strictEqual(LV.unlockLevel('duo'), 16);
+  assert.strictEqual(LV.DATA.unlock.duo, 21); assert.strictEqual(LV.DATA.unlock.mentors, 17); assert.strictEqual(LV.unlockLevel('duo'), 21);   // cronograma do dono 14/11
   assert.strictEqual(LV.DATA.unlockName.duo, 'Dupla'); assert.strictEqual(LV.DATA.unlockName.mentors, 'Mentores');
   const need = lv => LV.DATA.xpToNext[lv - 1];
   let S = { sys: { level: { lvl: 15, xp: 0 } } }, h = host0(); DU.DATA.on = false;
-  let r = LV.addXp(S, need(15), h); assert.strictEqual(r.to, 16); assert.ok(!r.unlocked.includes('duo') && !r.unlocked.includes('mentors')); assert.ok(r.unlocked.includes('chat'));
-  DU.DATA.on = true; S = { sys: { level: { lvl: 15, xp: 0 } } }; r = LV.addXp(S, need(15), host0()); assert.ok(r.unlocked.includes('duo'));
+  let r = LV.addXp(S, need(15), h); assert.strictEqual(r.to, 16); assert.ok(!r.unlocked.includes('duo') && !r.unlocked.includes('mentors') && !r.unlocked.includes('chat'), 'cronograma do dono 14/11: nada social no 16');
+  S = { sys: { level: { lvl: 18, xp: 0 } } }; r = LV.addXp(S, need(18), host0()); assert.ok(!r.unlocked.includes('chat'), 'Chat no 19 só com o online');
+  const hOn = Object.assign(host0(), { online: f => true });
+  S = { sys: { level: { lvl: 18, xp: 0 } } }; r = LV.addXp(S, need(18), hOn); assert.ok(r.unlocked.includes('chat'));
+  DU.DATA.on = true; S = { sys: { level: { lvl: 20, xp: 0 } } }; r = LV.addXp(S, need(20), hOn); assert.ok(r.unlocked.includes('duo'), 'Dupla no 21 com o módulo e o online');
+  S = { sys: { level: { lvl: 20, xp: 0 } } }; r = LV.addXp(S, need(20), host0()); assert.ok(!r.unlocked.includes('duo'), 'sem online, não anuncia');
   DU.DATA.on = false;
 });
 

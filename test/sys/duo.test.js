@@ -23,10 +23,11 @@ t('chave desligada: nada funciona e o save não muda', () => {
   assert.strictEqual(JSON.stringify(w.S), before);
 });
 
-t('portão de nível (16) e formato do código', () => {
+t('portão de nível (21, cronograma do dono 14/11) e formato do código', () => {
   DU.DATA.on = true; const w = world(10);
   assert.strictEqual(DU.invite(w.S, w.host, 'ABC123').reason, 'level');
-  w.S.sys.level.lvl = 20;
+  w.S.sys.level.lvl = 20; assert.strictEqual(DU.invite(w.S, w.host, 'ABC123').reason, 'level', 'Nv 20 ainda não');
+  w.S.sys.level.lvl = 21;
   assert.strictEqual(DU.invite(w.S, w.host, 'oi tudo bem?').reason, 'code');
   assert.strictEqual(DU.invite(w.S, w.host, 'ABC123', 'abc123').reason, 'self');
   const r = DU.invite(w.S, w.host, 'abc123'); assert.ok(r.ok); assert.strictEqual(r.code, 'ABC123');
