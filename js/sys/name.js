@@ -26,7 +26,8 @@
     inside: ['merd', 'caralho', 'karalho', 'kralho', 'buceta', 'xoxota', 'xereca', 'piroca', 'punheta', 'siririca', 'arrombad', 'fuck', 'asshole'],                      // em qualquer lugar (não aparecem dentro de palavra comum)
     short: ['cu', 'fdp', 'vsf', 'pqp', 'krl', 'crl', 'vtnc', 'tnc', 'tmnc'],     // só valem como pedaço inteiro (separado por _ ou número, ou o nome todo)
     reserved: ['admin', 'adm', 'moderador', 'moderadora', 'mod', 'suporte', 'eonbound', 'gm', 'staff', 'oficial', 'sistema', 'system'],
-    contact: ['zap', 'whats', 'wpp', 'insta', 'tiktok', 'face', 'telefone', 'tel', 'fone', 'email', 'gmail', 'hotmail', 'outlook', 'discord'],
+    contact: ['zapzap', 'whats', 'wpp', 'insta', 'tiktok', 'facebook', 'telefone', 'telegram', 'celular', 'email', 'gmail', 'hotmail', 'outlook', 'discord'],   // em qualquer lugar do nome
+    contactPiece: ['zap', 'face', 'tel', 'fone', 'cel'],   // curtas: só como pedaço INTEIRO ("MeuTel99"), para não recusar "MarteloRubro", "Castelo", "Faceiro" (achado do QA 14/11: o nome sugerido pelo jogo era recusado)
     maxDigitsMinor: 4,
     /* só no modo estrito (strict:true) e no profane(): não muda o check() de sempre */
     strict: {
@@ -67,7 +68,9 @@
     if (/[@]/.test(n)) return true;
     if (new RegExp('[0-9]{' + (DATA.maxDigitsMinor + 1) + ',}').test(n)) return true;
     const w = base(n).replace(/[_0-9]+/g, '');
-    return DATA.contact.some(c => w.includes(c));
+    if (DATA.contact.some(c => w.includes(c))) return true;
+    const ps = pieces(n).map(x => base(x).replace(/[0-9]+/g, '')).filter(Boolean);
+    return ps.some(x => DATA.contactPiece.includes(x));
   }
 
   /* ---------- modo estrito ---------- */
