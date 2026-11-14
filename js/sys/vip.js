@@ -27,6 +27,7 @@ const DATA={
     chest:[0, 0, 0, 10, 10, 10, 10, 12, 12, 12, 14],
     off:  [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
     frame:[0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    frameVip:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // dono 13/11: moldura VIP N ao chegar no VIP N (só visual, sem atributo; Sys.profile frames vip1..vip10)
     skin: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     aura: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   },
@@ -64,7 +65,7 @@ const DATA={
 function levelData(n){ const T=DATA.table, i=Math.max(0,Math.min(DATA.maxLevel,Math.floor(n)||0)), g=k=>Number(T[k][i])||0;
   return {spd:g('spd'), bonus:{atkPct:g('atk'),hpPct:g('atk')},
     perks:{xpPct:g('gold'), goldPct:g('gold'), offlineMult:Math.max(1,g('off')), chestCapAdd:g('chest')?Math.max(0,g('chest')-DATA.chestBase):0,
-      instanceKeysAdd:g('key'), frame:!!g('frame'), vipSkin:!!g('skin'), aura:!!g('aura')}}; }
+      instanceKeysAdd:g('key'), frame:!!g('frame'), frameVip:g('frameVip'), vipSkin:!!g('skin'), aura:!!g('aura')}}; }
 DATA.levels=Array.from({length:DATA.maxLevel+1},(_,i)=>levelData(i));
 // COMPATIBILIDADE: a Loja (js/screens.js, aba Gemas, cartão "Comprar VIP") lê DATA.bonus e DATA.perks da versão de VIP único.
 // Sem eles a aba quebrava (VD.bonus.atkPct de undefined). Agora apontam para o VIP 1, o que a compra dá primeiro. Prefira levelInfo(n).
@@ -125,7 +126,7 @@ function bonus(S){ const t=tier(S).bonus||{}; return {atkPct:num(t.atkPct,0),hpP
 /* linha da tabela para a tela (comparar "sem VIP" × "VIP n"): {level, atkPct, goldXpPct, keys, chestPerDay, offlineMult, speed, frame, vipSkin, aura} */
 function levelInfo(n){ const d=DATA.levels[clamp(int0(n),0,DATA.maxLevel)];
   return {level:clamp(int0(n),0,DATA.maxLevel), atkPct:d.bonus.atkPct, goldXpPct:d.perks.goldPct, keys:d.perks.instanceKeysAdd,
-    chestPerDay:DATA.chestBase+d.perks.chestCapAdd, offlineMult:d.perks.offlineMult, speedTier:d.spd, frame:d.perks.frame, vipSkin:d.perks.vipSkin, aura:d.perks.aura}; }
+    chestPerDay:DATA.chestBase+d.perks.chestCapAdd, offlineMult:d.perks.offlineMult, speedTier:d.spd, frame:d.perks.frame, frameVip:d.perks.frameVip, frameVipText:d.perks.frameVip?'Moldura VIP '+d.perks.frameVip:'', vipSkin:d.perks.vipSkin, aura:d.perks.aura}; }
 /* conveniências do VIP: {on, level, autoCollect:bool, bag:n, offlineH:n, autoFuse, autoEquip, autoSell, skipBoss, arena:n, autoForge, tower:n, bossTries:n, passXp:%, eventTries:n}
    Desligado (convOn=false): tudo no valor do grátis (val[0] ou false), para os módulos lerem sem condição. */
 function conv(S,id){ const l=level(S), on=DATA.convOn===true;

@@ -21,6 +21,16 @@ const DATA={
     {id:'bronze',    name:'Bronze',        r:1, how:'Nível 10',                        need:{level:10}},
     {id:'prata',     name:'Prata',         r:2, how:'Nível 30',                        need:{level:30}},
     {id:'ouro',      name:'Ouro',          r:4, how:'VIP 7',                           need:{vip:7}},   // dono 13/11: segue a tabela do VIP (VIP 7)
+    {id:'vip1', name:'VIP 1', r:2, how:'Chegar ao VIP 1', need:{vip:1}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip2', name:'VIP 2', r:2, how:'Chegar ao VIP 2', need:{vip:2}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip3', name:'VIP 3', r:2, how:'Chegar ao VIP 3', need:{vip:3}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip4', name:'VIP 4', r:3, how:'Chegar ao VIP 4', need:{vip:4}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip5', name:'VIP 5', r:3, how:'Chegar ao VIP 5', need:{vip:5}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip6', name:'VIP 6', r:3, how:'Chegar ao VIP 6', need:{vip:6}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip7', name:'VIP 7', r:4, how:'Chegar ao VIP 7', need:{vip:7}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip8', name:'VIP 8', r:4, how:'Chegar ao VIP 8', need:{vip:8}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip9', name:'VIP 9', r:4, how:'Chegar ao VIP 9', need:{vip:9}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
+    {id:'vip10', name:'VIP 10', r:5, how:'Chegar ao VIP 10', need:{vip:10}, vipFrame:true},   // só visual, sem atributo (dono 13/11)
     {id:'cristal',   name:'Cristal',       r:3, how:'Top 10 da Arena',                 need:{arenaTop:10}, go:'Arena'},
     {id:'eterna',    name:'Eterna',        r:5, how:'Torneio do Poder',                need:{grant:true}, go:'Torneio'},
     {id:'nine_eras', name:'Nove Eras',     r:5, how:'Vencer a fase 90 (fim das 9 eras)', need:{erasEnd:'nine_eras'}, go:'Mapa das Eras'},
