@@ -34,10 +34,12 @@ t('ouro do abate: Encruzilhada (goldPct do bonus) só com a chave ligada', () =>
   const base = gold({}, host0()); withSys('crossroads', fake(true), () => { assert.strictEqual(L.goldPerkPct(S), 5); assert.strictEqual(gold(S, host0()), Math.round(base * 1.05)); });
 });
 
-t('ouro do abate: títulos, prática, mentores e estandarte/território de ouro da guilda NÃO entram (fora do orçamento)', () => {
+t('ouro do abate (dono 14/11): todas as fontes somam no teto de +25%; títulos e prática até +10% cada; o resto vira XP (até +10%)', () => {
   GU.DATA.on = true; const w = world('g1'); const g = GU.ensure(w.S); g.banners.gold = 10; g.territories = [{ region: 0, capital: true }];
-  assert.ok(GU.perks(w.S).goldRaw > 0); assert.strictEqual(GU.perks(w.S).goldPct, 0); assert.strictEqual(GU.perks(w.S).goldSoon, true); assert.strictEqual(L.goldPerkPct(w.S), 0);
-  withSys('titles', { bonus: () => ({ goldPct: 20 }) }, () => withSys('practice', { bonus: () => ({ goldPct: 35 }) }, () => assert.strictEqual(L.goldPerkPct(w.S), 0)));
+  const gg = GU.perks(w.S).goldPct; assert.ok(gg > 0); assert.strictEqual(GU.perks(w.S).goldSoon, false); assert.strictEqual(L.goldBreakdown(w.S).sources.guild, gg);
+  withSys('titles', { bonus: () => ({ goldPct: 20 }) }, () => withSys('practice', { bonus: () => ({ goldPct: 35 }) }, () => {
+    const b = L.goldBreakdown(w.S); assert.strictEqual(b.applied.titles, 10); assert.strictEqual(b.applied.practice, 10);
+    assert.strictEqual(L.goldPerkPct(w.S), 25); assert.strictEqual(b.overXp, 10, 'o que passou vira XP, teto +10%'); assert.strictEqual(L.goldPerks(w.S).xpPct, 10); }));
   GU.DATA.on = false;
 });
 

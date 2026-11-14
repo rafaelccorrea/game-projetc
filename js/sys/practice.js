@@ -14,7 +14,7 @@ const DATA={
     {id:'vit',  name:'Vitalidade', icon:'❤️', stat:'hpPct',   per:0.5,  unit:'% HP'},
     {id:'crit', name:'Crítico',    icon:'🎯', stat:'critPct', per:0.1,  unit:'% crítico'},
     {id:'def',  name:'Defesa',     icon:'🛡️', stat:'defPct',  per:0.15, unit:'% defesa'},
-    {id:'gold', name:'Coleta',     icon:'🪙', stat:'goldPct', per:0.5,  unit:'% ouro'},
+    {id:'gold', name:'Coleta',     icon:'🪙', stat:'goldPct', per:0.5,  unit:'% ouro', maxPct:10},
   ],
   cost:{base:4, growth:1.06},     // custo do nível n+1 = ceil(base * growth^n)  (Nv 70 ≈ 236 pedras)
   cap:{base:10, perEra:10},       // teto = base + perEra * eraMax  (era 0: 10 · era 6: 70)
@@ -43,11 +43,16 @@ function ensure(S){
   o.v=1; o.stones=Math.min(DATA.maxStones,int0(o.stones)); o.spent=int0(o.spent); o.earned=int0(o.earned);
   const lv=(o.lv&&typeof o.lv==='object')?o.lv:{}; o.lv={};
   for(const t of DATA.tracks) o.lv[t.id]=int0(lv[t.id]);   // trilha desconhecida some; valor inválido vira 0
+  /* Coleta acima do Nv 20 (+10%): devolve as pedras dos níveis a mais (dono 14/11: o que passa vira pedras) */
+  for(const t of DATA.tracks){ const mx=maxLvOf(t); if(o.lv[t.id]>mx){ let back=0; for(let i=mx;i<o.lv[t.id];i++) back+=Math.ceil(DATA.cost.base*Math.pow(DATA.cost.growth,i)); o.lv[t.id]=mx; o.stones+=back; o.spent=Math.max(0,o.spent-back); o.refund=int0(o.refund)+back; } }
   return o;
 }
 
 const cost=lv=>Math.ceil(DATA.cost.base*Math.pow(DATA.cost.growth,int0(lv)));
 const capOf=host=>DATA.cap.base+DATA.cap.perEra*eraMaxOf(host);
+/* teto da TRILHA: o da era, e a Coleta para no +10% de ouro (Nv 20; dono 14/11) */
+const maxLvOf=t=>t&&t.maxPct?Math.round(t.maxPct/t.per):Infinity;
+const capT=(t,host)=>Math.min(capOf(host),maxLvOf(t));
 const level=(S,id)=>TRACK[id]?ensure(S).lv[id]:0;
 
 /* desbloqueio pelo nível do jogador (Sys.level); sem o Sys.level carregado, fica liberado. As pedras caem antes e ficam guardadas. */
@@ -64,7 +69,7 @@ function canTrain(S,host,id){
   if(soonT(t)) return {ok:false,cost:0,reason:'soon'};
   const o=ensure(S), lv=o.lv[id], c=cost(lv);
   if(locked(S)) return {ok:false,cost:c,reason:'locked'};
-  if(lv>=capOf(host)) return {ok:false,cost:c,reason:'cap'};
+  if(lv>=capT(t,host)) return {ok:false,cost:c,reason:'cap'};
   if(o.stones<c) return {ok:false,cost:c,reason:'stones'};
   return {ok:true,cost:c,reason:''};
 }
@@ -102,7 +107,7 @@ function bonus(S){
 /* dicas para o painel "Como ficar mais forte" (js/sys/fc.js converte delta em FC) */
 function advice(S,host){
   const o=ensure(S), cap=capOf(host), out=[];
-  for(const t of DATA.tracks){ const lv=o.lv[t.id]; if(lv>=cap||soonT(t)) continue; const c=cost(lv);
+  for(const t of DATA.tracks){ const lv=o.lv[t.id]; if(lv>=capT(t,host)||soonT(t)) continue; const c=cost(lv);
     out.push({id:'practice.'+t.id,icon:'practice',label:`Prática: ${t.name} Nv ${lv+1}`,delta:{[t.stat]:t.per},cost:`${c} pedras de prática`,ready:o.stones>=c,tab:'practice'}); }
   return out;
 }
@@ -116,10 +121,10 @@ function render(el,S,host,opt){
   const N=DATA.tracks.length, rowH=num(opt.rowH,58), body=num(el.clientHeight,0)-54;
   const per=body<=0||N*rowH<=body?N:clamp(Math.floor((body-40)/rowH),1,N);
   const pages=Math.ceil(N/per), pg=clamp(int0(el.__sysPracPage),0,pages-1); el.__sysPracPage=pg;
-  const rows=DATA.tracks.slice(pg*per,pg*per+per).map(t=>{ const lv=o.lv[t.id], c=canTrain(S,host,t.id), full=lv>=cap;
+  const rows=DATA.tracks.slice(pg*per,pg*per+per).map(t=>{ const lv=o.lv[t.id], c=canTrain(S,host,t.id), tc=capT(t,host), full=lv>=tc;
     return `<div class="sys-prac-row${full?' full':''}">
       <span class="sys-prac-ic">${t.icon}</span>
-      <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${cap}</small><br><span>${soonT(t)?'Em breve':`+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}`}</span></span>
+      <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${tc}</small><br><span>${soonT(t)?'Em breve':`+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}`}</span></span>
       <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${soonT(t)?'Em breve':full?'Teto':`Treinar<small>${c.cost} pedras</small>`}</button>
       <button class="sys-btn sys-prac-max" data-id="${t.id}" data-max="1" ${c.ok?'':'disabled'} aria-label="Treinar o máximo">Máx</button>
     </div>`; }).join('');
@@ -136,7 +141,7 @@ function render(el,S,host,opt){
     render(el,S,host,opt); };
 }
 
-const API={DATA,ensure,cost,capOf,level,canTrain,train,addStones,onKill,onOffline,bonus,advice,render};
+const API={DATA,ensure,cost,capOf,capT,maxLvOf,level,canTrain,train,addStones,onKill,onOffline,bonus,advice,render};
 root.Sys=root.Sys||{}; root.Sys.practice=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

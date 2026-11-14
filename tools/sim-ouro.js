@@ -53,6 +53,7 @@ const SRC = [
     neu: () => { const d = CA.DATA.tents[0], r = d.perHour * 1.6 * 1.6, cap = d.capMin * KPM; return { claim: Math.min(cap, r * 8), day: Math.min(r * 24, 3 * cap) }; } },
   { id: 'mapchest', name: 'Baús do mapa (Sys.mapchest), 2 por era', fresh: true, old: () => ({ claim: 72, day: 144 / 7 }), neu: null, note: 'da outra sessão; só medido' },
   { id: 'cross', name: 'Encruzilhada ouro % (se o goldPct do Sys.fc for ligado ao abate)', fresh: true, pct: true, old: s => ({ claim: 0, day: 0.24 * KILL[eraOf(s)] }), neu: s => ({ claim: 0, day: 0.05 * KILL[eraOf(s)] }), note: 'antes: 3 de 9 escolhas × 8%' },
+  { id: 'perks', name: 'Bônus de ouro do abate no teto (+25% total: Encruzilhada acima + títulos ≤10, prática ≤10, mentores, Fogueira da Guilda, guilda; dono 14/11)', fresh: true, pct: true, old: () => ({ claim: 0, day: 0 }), neu: s => ({ claim: 0, day: 0.20 * KILL[eraOf(s)] }), note: 'pior caso: o resto do teto de 25% inteiro' },
 ];
 const val = (src, s, which) => { const f = which === 'neu' && src.neu ? src.neu : src.old; return f(s); };
 

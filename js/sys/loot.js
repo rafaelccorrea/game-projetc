@@ -512,12 +512,29 @@ function schedPerks(S,host){ const z={goldPct:0,dropPct:0,forgePct:0,foodPct:0,p
 const GOLD_PERK_CAP=25;
 /* fonte única: que bônus de % de ouro SOMAM no abate. Fora daqui (títulos, prática, mentores, guilda) o módulo zera o goldPct e as telas
    não mostram o "+% de ouro" (regra do PO 14/11). Ligar um: pôr true aqui E somar no goldPerkPct (decisão do dono sobre o teto). */
-const GOLD_LIVE={crossroads:true,guildFire:true,titles:false,practice:false,mentors:false,guild:false};
+const GOLD_LIVE={crossroads:true,guildFire:true,titles:true,practice:true,mentors:true,guild:true};   // dono 14/11: todas ligadas, no teto abaixo
+const GOLD_SRC_CAP={titles:10,practice:10};   // dono 14/11: títulos e prática até +10% cada (a prática já para de treinar no +10%)
+const GOLD_OVER_XP_CAP=10;                    // o que passa dos tetos vira % de XP (1 ponto de ouro = 1 de XP), até +10%
 const goldLive=src=>GOLD_LIVE[src]===true;
-function goldPerkPct(S){ const Y=root.Sys||{}; let p=0;
-  try{ const C=Y.crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.bonus==='function') p+=Math.max(0,num(C.bonus(S).goldPct,0)); }catch(e){}
-  try{ const F=Y.guildFire; if(F&&typeof F.perks==='function') p+=Math.max(0,num(F.perks(S).goldPct,0)); }catch(e){}
-  return Math.min(GOLD_PERK_CAP,p); }
+/* quanto cada fonte dá de % de ouro (antes dos tetos). Cada módulo só conta com a própria chave ligada (o bonus/perks dele devolve 0 desligado) */
+function goldSources(S){ const Y=root.Sys||{}, z={crossroads:0,guildFire:0,titles:0,practice:0,mentors:0,guild:0}; if(!S) return z;
+  const g=(k,fn)=>{ if(!goldLive(k)) return; try{ z[k]=Math.max(0,num(fn(),0)); }catch(e){} };
+  g('crossroads',()=>{ const C=Y.crossroads; return C&&C.DATA&&C.DATA.on===true&&typeof C.bonus==='function'?C.bonus(S).goldPct:0; });
+  g('guildFire',()=>{ const F=Y.guildFire; return F&&typeof F.perks==='function'?F.perks(S).goldPct:0; });
+  g('titles',()=>{ const T=Y.titles; return T&&typeof T.bonus==='function'?T.bonus(S).goldPct:0; });
+  g('practice',()=>{ const P=Y.practice; return P&&typeof P.bonus==='function'?P.bonus(S).goldPct:0; });
+  g('mentors',()=>{ const M=Y.mentors; return M&&typeof M.bonus==='function'?M.bonus(S).goldPct:0; });
+  g('guild',()=>{ const G=Y.guild; return G&&typeof G.perks==='function'?G.perks(S).goldPct:0; });
+  return z; }
+const r1=v=>Math.round(v*10)/10;
+/* a conta inteira, para a tela: {sources (cru), applied (por fonte, já com o teto da fonte), raw, pct (o que soma no abate), cap, overXp} */
+function goldBreakdown(S){ const src=goldSources(S), ap={}; let raw=0, sum=0;
+  for(const k in src){ raw+=src[k]; ap[k]=GOLD_SRC_CAP[k]!=null?Math.min(GOLD_SRC_CAP[k],src[k]):src[k]; sum+=ap[k]; }
+  const pct=Math.min(GOLD_PERK_CAP,sum), over=Math.max(0,raw-pct);
+  return {sources:src,applied:ap,raw:r1(raw),pct:r1(pct),cap:GOLD_PERK_CAP,srcCap:Object.assign({},GOLD_SRC_CAP),overXp:r1(Math.min(GOLD_OVER_XP_CAP,over)),overXpCap:GOLD_OVER_XP_CAP}; }
+function goldPerkPct(S){ return goldBreakdown(S).pct; }
+/* para o Sys.level (xpPerkPct): o ouro que passou dos tetos volta como % de XP */
+function goldPerks(S){ const b=goldBreakdown(S); return {goldPct:b.pct,xpPct:b.overXp}; }
 function rollKill(S,host,enemy){
   ensure(S);
   const rng=rngOf(host), cls=killClass(enemy,host), T=DATA.enemy[cls], m=params.mult, M=DATA.mats[cls], d=diffOf(enemy,host), dm=diffMult(d), DF=DATA.diff;
@@ -526,7 +543,7 @@ function rollKill(S,host,enemy){
   const vip=vipPerks(S), ev=schedPerks(S,host), gp=goldPerkPct(S);   // ev: evento com horário ativo agora (Sys.schedule: Hora de Ouro, Invasão, Bênção da Forja, Caça aos Pets)
   // BÔNUS DE RETORNO (Sys.clock, atrás de chave): enquanto houver XP descansada, o abate vale XP e ouro em dobro
   const Ck=root.Sys&&root.Sys.clock, rest=!!(Ck&&typeof Ck.takeRested==='function'&&Ck.takeRested(S)), rm=rest?num(Ck.DATA.rested.mult,2):1;
-  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+(vip.goldPct+ev.goldPct+gp)/100)*rm*dm));   // gp: Encruzilhada + Fogueira da Guilda (goldPerkPct)   // VIP e evento SOMAM (Hora de Ouro +100% = ×2 sem VIP)   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
+  gold=Math.max(1,Math.round(gold*num(m.gold,1)*(1+(vip.goldPct+ev.goldPct+gp)/100)*rm*dm));   // gp: todas as fontes no teto de +25% (goldPerkPct; dono 14/11)   // VIP e evento SOMAM (Hora de Ouro +100% = ×2 sem VIP)   // VIP +ouro: aplicado aqui (loot/baú/instância), não no Sys.vip.bonus
   let gems=0; if(rng()<T.gemChance) gems=Math.max(0,Math.round(randInt(rng,T.gems[0],T.gems[1])*num(m.gems,1)));
   const items=[]; if(rng()<Math.min(1,T.itemChance*(cls==='common'?num(m.item,1):1)*(1+ev.dropPct/100)))   /* evento: mais CHANCE de item; a raridade continua presa ao portão (rollItem) */ items.push(rollItem(host,{minR:T.minR,upChance:T.upChance,source:cls==='common'?'drop':'boss',topBoost:DF.on?num(DF.topBoost[d],1):1,qBest:DF.on?num(DF.qBest[d],1):1,diff:d}));
   const forge=rollMat(rng,M.forge,num(m.forge,1)*dm*(1+ev.forgePct/100)), food=rollMat(rng,M.food,num(m.food,1)*dm*(1+ev.foodPct/100));
@@ -663,7 +680,7 @@ function offline(S,host,seconds,opts){
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 
 const API={DATA,params,ensure,today,todayCount,rarWeights,rollRarity,rollItem,rollKill,rollEgg,grant,onKill,pickups,createGrouper,offline,stageWin,diffOf,
-  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,goldPerkPct,goldLive,
+  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,goldPerkPct,goldLive,goldSources,goldBreakdown,goldPerks,
   summon,summonCost,summonFreeLeft,summonOdds,dismantle,grantBundle,qualityOf,prismBoss,heldItems:S=>ensure(S).heldItems.map(h=>({slot:h.slot,r:h.r})),transformCost,payTransform,essence:essenceOf,itemName,
   releaseHeld, onLevelUp:releaseHeld, held:S=>ensure(S).held.map(h=>({r:h.r,needLevel:eggNeedLevel(h.r)}))};
 root.Sys=root.Sys||{}; root.Sys.loot=API;

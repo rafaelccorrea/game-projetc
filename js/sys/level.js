@@ -75,7 +75,7 @@ function progress(S){ const o=ensure(S), n=need(o.lvl); return {lvl:o.lvl,xp:o.x
 
 /* % de XP fora do VIP, somada (pontos percentuais): Encruzilhada (Saber das Eras), Guilda (territórios) e Fogueira da Guilda. Cada um só com a chave ligada. */
 const xpPerkPct=S=>{ const Y=root.Sys||{}; let p=0;
-  for(const [m,f] of [['crossroads','perks'],['guildFire','perks'],['guild','perks']]){ const M=Y[m];
+  for(const [m,f] of [['crossroads','perks'],['guildFire','perks'],['guild','perks'],['loot','goldPerks']]){ const M=Y[m];   // loot: ouro acima dos tetos vira XP (dono 14/11)
     if(!M||typeof M[f]!=='function'||(m==='crossroads'&&!(M.DATA&&M.DATA.on===true))) continue;
     try{ const v=num(M[f](S).xpPct,0); if(v>0) p+=v; }catch(e){} }
   return p; };
