@@ -102,7 +102,7 @@ function sysMigrate(){
 /* SISTEMAS LIGADOS (ordem do dono, 14/11: tudo o que foi aprovado tem de estar funcional no jogo). Cada módulo da Sistemas nasce com a chave desligada no
    arquivo dele; aqui o JOGO liga, no arranque e antes de qualquer leitura do save, os que já têm tela pronta. Um por linha, para ligar e desligar sem caçar
    em vários arquivos. Para conferir sem um deles: ?debug=1&sem=bonfire,crossroads */
-const SYS_LIVE = { bonfire: true, bossLoss: true, crossroads: true, erasEnd: true, profile: true, mapChest: true, affinity: true, strikes: true, path: true, pathTry: true, grimoire: true, mentors: true, trial: true, guildFire: true, guildFireNet: true, camp: true, duo: true, duoNet: true, thief: true, thiefNet: true, relics: true, dig: true, today: true, petSupport: true };   /* ordem pedida pela Sistemas: afinidade, golpes, caminho, ensaio, grimório e a Provação por último */
+const SYS_LIVE = { bonfire: true, bossLoss: true, crossroads: true, erasEnd: true, profile: true, mapChest: true, affinity: true, strikes: true, path: true, pathTry: true, grimoire: true, mentors: true, trial: true, guildFire: true, guildFireNet: true, camp: true, duo: true, duoNet: true, thief: true, thiefNet: true, relics: true, dig: true, today: true, petSupport: true, loadouts: true, arenaSet: true, coop: true, coopNet: true, minigame: true, eventRank: true };   /* bloco B: Conjunto PvP (precisa do loadouts para "Salvar equipamento"), Ruínas em Trio (coopNet só fala com o servidor com COOP_ON), Minijogo e Ranking de evento */   /* ordem pedida pela Sistemas: afinidade, golpes, caminho, ensaio, grimório e a Provação por último */
 function sysLive(){ let off = []; try { if (typeof DEBUG !== 'undefined' && DEBUG){ const m = /[?&]sem=([\w,]+)/.exec(location.search); if (m) off = m[1].split(','); } } catch (e) {}
   for (const k in SYS_LIVE){ if (!SYS_LIVE[k] || off.indexOf(k) >= 0) continue; try { const M = window.Sys && Sys[k]; if (!M) continue; if (typeof M.setOn === 'function') M.setOn(true); else if (M.DATA) M.DATA.on = true; } catch (e) { console.error('sysLive', k, e); } } }
 function sysBoot(){
@@ -113,6 +113,7 @@ function sysBoot(){
     if (SYS_E2) sysBootE2();
     try { if (Sys.profile && typeof Sys.profile.sampleFC === 'function'){ Sys.profile.sync(S, Sys.host); Sys.profile.sampleFC(S, Sys.host); } } catch (e) { console.error('profile', e); }   /* Perfil V5 (Sistemas 803c64c; chave desligada = não escreve nada): ponto do gráfico de FC ao abrir o jogo */
     try { if (Sys.erasEnd && typeof Sys.erasEnd.sync === 'function') Sys.erasEnd.sync(S, Sys.host); } catch (e) { console.error('erasEnd', e); }   /* Fim das 9 eras e marcos (Sistemas 8071455; chave desligada = não faz nada): quem já passou da fase 90 recebe uma vez só */
+    try { if (Sys.eventRank && typeof Sys.eventRank.sync === 'function'){ Sys.eventRank.fromMail(S, Sys.host); Sys.eventRank.sync(S, Sys.host); } } catch (e) { console.error('eventRank', e); }   /* molduras/títulos do ranking de evento (chave desligada = não faz nada) */
     const el = document.getElementById('chestbox'); if (el) Sys.chest.render(el, S, Sys.host, { overlay: document.getElementById('app') });
   } catch (e) { console.error('sysBoot', e); }
 }

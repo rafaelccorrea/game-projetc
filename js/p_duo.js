@@ -88,10 +88,24 @@ const I_SWORDS='<path d="M7 7l9 2 16 18-5 5L9 16z" fill="#dbe8ff" '+K+'/><path d
 const I_SCROLL='<path d="M13 7h26v27a7 7 0 01-7 7H13z" fill="#f6e3b0" '+K+'/><path d="M13 7a5 5 0 00-5 5v4h5" fill="#e2c98a" '+K+'/><path d="M19 17h14M19 24h14M19 31h8" fill="none" stroke="#6b4426" stroke-width="2.6" stroke-linecap="round"/>';
 const W_IC={boss200:I_BOSS,stages40:I_FLAG,arena20:I_SWORDS,days5:I_DUO};   /* ícone por missão da semana (id do Sys.duo); id novo cai no I_DUO */
 const coinImg='<img src="'+IC.coin+'" alt="" width="20" height="20">';
-/* ARTE QUE A TELA AINDA DESENHA EM CSS/SVG (mocks du_a, du_fr, du_cv). Quando a Arte entregar os arquivos, o caminho entra AQUI e só aqui (vazio = desenho em CSS):
-   retratoEu/retratoPar: fundo dos dois retratos · madeira: painel das frases · placa: placa do código */
-const ART={retratoEu:'',retratoPar:'',madeira:'',placa:''};
-const artBg=k=>ART[k]?' style="background:url('+ART[k]+') center/cover no-repeat"':'';
+/* ARTE PINTADA (Arte, aprovada pelo dono). O caminho entra AQUI e só aqui (vazio = desenho em CSS). Toda peça tem RESERVA: se a imagem falhar (onerror → bad),
+   a tela redesenha com o desenho em CSS/SVG de antes (mocks du_a, du_fr, du_cv).
+   retratoEu/retratoPar (264x306, o aro ocupa x52-210): só o ARO é usado; o miolo pintado fica coberto pelo fundo e por cima vai o herói do jogo (eu) ou a silhueta (parceiro);
+     o rótulo vai na área de nome, embaixo, dentro do aro · madeira (780x640, o painel ocupa y44-594): painel das frases, na proporção da peça (não estica) ·
+   placa (660x150): placa do código · P_IDS: ícones das frases (assets/icons/duo/<id da frase do Sys.duo>.png) · W_ART: ícone por missão da semana */
+const ART={retratoEu:'assets/ui/duo/duo_retrato_eu.png',retratoPar:'assets/ui/duo/duo_retrato_par.png',madeira:'assets/ui/duo/duo_madeira.png',placa:'assets/ui/duo/duo_placa_codigo.png'};
+const P_ART='assets/icons/duo/';
+const P_IDS=['oi','bom_dia','boa_noite','bora','meta','quase','fechou','chefe','era','arena','forja','parabens','valeu','voce_manda','ja_volto','amanha','gg','joinha'];
+/* a Arte pintou 4 ícones de missão (luta, baú, caminho, forja) e as 4 missões do módulo são chefe, fases, Arena e dias juntos: fases = caminho e Arena = luta são diretos;
+   chefe = baú e dias juntos = forja foram postos por sobra (trocar aqui se a Arte pintar os certos; id sem entrada cai no desenho em SVG do W_IC) */
+const W_ART={boss200:'m_chest',stages40:'m_path',arena20:'m_fight',days5:'m_forge'};
+const BAD={};
+const artOk=k=>!!ART[k]&&!BAD[k];
+function bad(k){ k=String(k||''); if(!k||BAD[k]) return; BAD[k]=1; redraw(); }
+const artImg=(k,u,cls,z)=>'<img'+(cls?' class="'+cls+'"':'')+' src="'+u+'" alt=""'+(z?' width="'+z+'" height="'+z+'"':'')+' onerror="try{PDuo.bad(&quot;'+k+'&quot;)}catch(e){}">';
+const phIc=f=>(f&&P_IDS.indexOf(f.id)>=0&&!BAD['p_'+f.id])?'<i class="pi">'+artImg('p_'+f.id,P_ART+f.id+'.png','',48)+'</i>':'<i>'+SV(I_BUB,26)+'</i>';
+const wIc=id=>(W_ART[id]&&!BAD['w_'+id])?artImg('w_'+id,P_ART+W_ART[id]+'.png','',38):SV(W_IC[id]||I_DUO,36);
+const artUrls=()=>Object.keys(ART).map(k=>ART[k]).filter(Boolean).concat(P_IDS.map(i=>P_ART+i+'.png'),Object.keys(W_ART).map(i=>P_ART+W_ART[i]+'.png'));
 const QUICK=5;   /* quantas frases prontas (as primeiras do módulo) viram balão na tela da dupla; as outras abrem em "Abrir" */
 
 (function(){ if(typeof document==='undefined'||!document.head) return; const el=document.createElement('style'); el.textContent=`
@@ -258,6 +272,27 @@ const QUICK=5;   /* quantas frases prontas (as primeiras do módulo) viram balã
 .du-gate b{font-size:26px;line-height:1.1;color:var(--g2);text-shadow:0 2px 0 rgba(0,0,0,.5)}
 .du-gate span{font-size:13px;font-weight:800;color:var(--mut);line-height:1.4;overflow-wrap:anywhere}
 .du-gate .du-bt{min-height:48px;padding:0 26px;font-size:15px}
+/* ---- arte pintada (classe .art; sem ela vale o desenho em CSS acima) ---- */
+.du-pf .fr.art{max-width:96px;border:0;border-radius:0;box-shadow:none;background:none}
+.du-pf .fr.art:before{padding-top:191.8%}
+.du-pf .fr.art .rg{position:absolute;left:-32.7%;top:0;width:166.04%;height:100.3%;max-width:none}
+.du-pf .fr.art .hl{position:absolute;left:9%;right:9%;top:4.6%;bottom:4.6%;border-radius:999px;overflow:hidden;background:radial-gradient(circle at 50% 36%,#33494a,#1c1d23 88%)}
+.du-pf .fr.art .hl canvas{left:-15%;top:8%;width:130%;height:70.6%}
+.du-pf .fr.art .hl .ph{top:8%;height:70%}
+.du-pf .fr.art .nm{position:absolute;left:8%;right:8%;bottom:6%;font-style:normal;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:12px;line-height:1.1;color:#f8ecd4;text-shadow:0 1px 0 #000;text-align:center;overflow-wrap:anywhere}
+.du-pf .fr.art .dot{right:13%;top:9%;bottom:auto}
+.du-myc.art{position:relative;aspect-ratio:660/150;padding:4px 9.5%;border:0;border-radius:0;background:none;box-shadow:none;overflow:hidden}
+.du-myc.art .pl{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:cover}
+.du-myc.art>.cd,.du-myc.art>.du-bt{position:relative}
+.du-myc.art .cd{min-height:44px;font-size:22px;letter-spacing:2px}
+.du-myc.art .cd.sm{font-size:12.5px;letter-spacing:0}
+.du-wood.art{flex:0 0 auto;min-height:0;aspect-ratio:779/551;margin:10px 6px 8px;padding:7.4% 8.2% 7.2%;border:0;border-radius:0;background:none;box-shadow:none;overflow:hidden}
+.du-wood.art:before,.du-wood.art:after{display:none}
+.du-wood.art .wd{position:absolute;left:0;top:-7.99%;width:100%;height:116.15%;max-width:none;z-index:-1}
+.du-wood.art .du-pgrid{padding-bottom:4px}
+.du .du-phb i.pi{border:0;border-radius:0;box-shadow:none;background:none}
+.du-phb i.pi img{display:block;width:48px;height:48px}
+.du-wm .wi img{display:block;width:38px;height:38px}
 @media (prefers-reduced-motion:reduce){.du-in{animation:none}}
 `; document.head.appendChild(el); })();
 
@@ -347,7 +382,7 @@ function myCodeCard(){ const z=netSt()||{}, c=typeof z.code==='string'&&z.code?z
   if(c) mid='<span class="cd" aria-label="Seu código: '+esc2(c.split('').join(' '))+'">'+esc2(c)+'</span><button class="du-bt y" data-x="copy" aria-label="Copiar o seu código">Copiar</button>';
   else if(X.codeSt==='err') mid='<span class="cd sm" role="alert">Não foi possível ler o seu código</span><button class="du-bt y" data-x="retry" data-k="code">Tentar de novo</button>';
   else mid='<span class="cd sm" role="status">Carregando…</span>';
-  return '<h4 class="pl">Seu código de amigo<span>mostre só a amigos de verdade</span></h4><div class="du-myc"'+artBg('placa')+'>'+mid+'</div>'; }
+  return '<h4 class="pl">Seu código de amigo<span>mostre só a amigos de verdade</span></h4><div class="du-myc'+(artOk('placa')?' art':'')+'">'+(artOk('placa')?artImg('placa',ART.placa,'pl'):'')+mid+'</div>'; }
 function sentList(){ try{ const D=DM(), o=D.ensure(sv()), t=gameNow(), ttl=num(D.DATA.invite.ttlMs); return o.inv.out.filter(x=>t-x.at<ttl).map(x=>({code:x.code,h:Math.max(1,Math.ceil((x.at+ttl-t)/3600000))})); }catch(e){ return []; } }
 function codeCard(v,waiting){ const D=data(), I=D.invite||{}, z=netSt()||{}, left=leftOf(v.invitesLeft,z.invitesLeft), used=Math.max(0,num(I.perDay)-left), out=sentList();
   /* mock du_cv: UM cartão claro com a placa do código em cima e o campo do código do amigo embaixo */
@@ -378,21 +413,25 @@ function claimBtn(st){ if(st.claimed) return '<span class="du-got" role="status"
   return '<button class="du-bt y'+(st.done?'':' off')+'" data-x="claim" data-id="'+esc2(st.id)+'" aria-label="Resgatar '+esc2(st.name)+(st.done?'':', ainda não fechou')+'">Resgatar</button>'; }
 function bar2(mine,partner,target){ const T=Math.max(1,num(target)), a=Math.min(1,num(mine)/T), b=Math.min(1-a,num(partner)/T), tot=Math.min(T,num(mine)+num(partner));
   return '<div class="du-bar" role="img" aria-label="'+nT(tot)+' de '+nT(T)+'"><i class="me" style="width:'+(a*100).toFixed(1)+'%"></i><i class="pa" style="width:'+(b*100).toFixed(1)+'%"></i></div>'; }
+/* um retrato: com a arte, o aro pintado (.rg), o miolo coberto (.hl) com o herói ou a silhueta dentro e o rótulo na área de nome; sem a arte, a moldura em CSS com o rótulo embaixo */
+function pfHtml(k,cls,inner,dot,label){
+  if(artOk(k)) return '<div class="du-pf '+cls+'"><span class="fr art">'+artImg(k,ART[k],'rg')+'<span class="hl">'+inner+'<em class="nm">'+label+'</em></span>'+dot+'</span></div>';
+  return '<div class="du-pf '+cls+'"><span class="fr">'+inner+dot+'</span><small>'+label+'</small></div>'; }
 function pDuo(v){ const p=v.partner, nm=esc2(p.name||'Parceiro'), on=partnerOn(p), d=v.daily, W=v.weekly||[], M=data().msg||{}, z=netSt()||{}, last=v.chat&&v.chat[v.chat.length-1], un=unread(v);
   const days=num(p.since)>0?Math.max(1,Math.round((gameNow()-p.since)/86400000)):0, sent=Math.max(0,num(M.perDay)-leftOf(v.msgLeft,z.msgLeft));
   const sub=[p.lv?'Nv '+nT(p.lv):'',esc2(eraName(p.era)),num(p.last)>0?'<em class="'+(on?'':'off')+'">'+(on?'online':'visto '+esc2(ago(p.last)))+'</em>':''].filter(Boolean).join(' · ');
   const tot=Math.min(num(d.target),num(d.mine)+num(d.partner));
   /* ordem do mock du_a: os dois retratos com o elo e o "juntos hoje" no meio · painel das missões · balões de frase e o botão azul */
   return '<div class="du-card">'
-    +'<div class="du-pair"><div class="du-pf me"><span class="fr"'+artBg('retratoEu')+'>'+(heroOk()?'<canvas id="du_hero" width="208" height="240" aria-hidden="true"></canvas>':'<span class="ph">'+SV(I_ONE,56)+'</span>')+'</span><small>Você</small></div>'
+    +'<div class="du-pair">'+pfHtml('retratoEu','me',heroOk()?'<canvas id="du_hero" width="208" height="240" aria-hidden="true"></canvas>':'<span class="ph">'+SV(I_ONE,56)+'</span>','','Você')
     +'<div class="du-lk">'+SV(I_CHAIN,34)+SV(I_HEART,30)+'<b>'+esc2(d.name)+'</b><em>'+nT(tot)+' / '+nT(d.target)+'</em></div>'
-    +'<div class="du-pf pa"><span class="fr"'+artBg('retratoPar')+'><span class="ph">'+SV(I_ONE,56)+'</span>'+(num(p.last)>0?'<i class="dot'+(on?'':' off')+'"></i>':'')+'</span><small>Parceiro</small></div></div>'
+    +pfHtml('retratoPar','pa','<span class="ph">'+SV(I_ONE,56)+'</span>',num(p.last)>0?'<i class="dot'+(on?'':' off')+'"></i>':'','Parceiro')+'</div>'
     +'<div class="du-pt"><span class="tx"><small>SUA DUPLA'+(days?' · HÁ '+nT(days)+(days>1?' DIAS':' DIA'):'')+'</small><b>'+nm+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</span></div>'
     +'<div class="du-day"><p class="du-note" style="margin:0 0 5px">Os dois entram e somam '+nT(d.target)+' abates.</p>'+bar2(d.mine,d.partner,d.target)
     +'<div class="du-leg"><span class="m">Você: '+nT(d.mine)+'</span><span class="p">'+nm+': '+nT(d.partner)+(d.both?' · entrou hoje':'')+'</span></div>'
     +(d.both?'':'<p class="du-miss">'+nm+' ainda não entrou hoje: a meta precisa dos dois.</p>')
     +'<div class="du-rw"><span class="chips">'+rwChips(d.reward)+'</span>'+claimBtn(d)+'</div></div>'
-    +'<h4 class="ct">Missões da semana<span>soma dos dois · cada um resgata o seu</span></h4>'+W.map((m,i)=>'<div class="du-wm'+(i?'':' first')+'"><span class="wi">'+SV(W_IC[m.id]||I_DUO,36)+'</span><div class="wb"><div class="nm">'+esc2(m.name)+': <b>'+nT(m.value)+'/'+nT(m.target)+'</b></div>'
+    +'<h4 class="ct">Missões da semana<span>soma dos dois · cada um resgata o seu</span></h4>'+W.map((m,i)=>'<div class="du-wm'+(i?'':' first')+'"><span class="wi">'+wIc(m.id)+'</span><div class="wb"><div class="nm">'+esc2(m.name)+': <b>'+nT(m.value)+'/'+nT(m.target)+'</b></div>'
         +(m.mine==null?bar2(m.value,0,m.target)+'<div class="du-leg"><span>dias em que os dois entraram</span></div>':bar2(m.mine,m.partner,m.target)+'<div class="du-leg"><span class="m">Você: '+nT(m.mine)+'</span><span class="p">'+nm+': '+nT(m.partner)+'</span></div>')
         +'<div class="du-rw"><span class="chips">'+rwChips(m.reward)+'</span>'+claimBtn(m)+'</div></div></div>').join('')
     +'<p class="du-note">Só ouro e pedras de forja. Nada da Dupla se compra.</p></div>'
@@ -410,10 +449,10 @@ const cdTxt=c=>c.k==='day'?nT((data().msg||{}).perDay)+' por dia: acabou hoje':c
 function pPhr(v){ const p=v.partner, nm=esc2(p.name||'Parceiro'), M=data().msg||{}, z=netSt()||{}, c=cdState(v), sent=Math.max(0,num(M.perDay)-leftOf(v.msgLeft,z.msgLeft)); X.cdK=c.k;
   return '<div class="du-ph"><button class="du-bt" data-x="tduo" aria-label="Voltar para a dupla">'+SV(I_BACK,16)+'Dupla</button><b class="lil">Frases · '+nm+'</b></div>'
     +'<div id="du_chat" class="du-chat x-scroll" aria-live="polite">'+(v.chat.length?v.chat.map(m=>'<div class="du-bub '+(m.me?'me':'pa')+'">'+esc2(m.txt)+'<small>'+(m.me?'você':nm)+(ago(m.at)?' · '+esc2(ago(m.at)):'')+'</small></div>').join(''):'<div class="du-empty">Toque numa frase para mandar.</div>')+'</div>'
-    +'<div class="du-wood"'+artBg('madeira')+'><h3>Frases prontas</h3>'
+    +'<div class="du-wood'+(artOk('madeira')?' art':'')+'">'+(artOk('madeira')?artImg('madeira',ART.madeira,'wd'):'')+'<h3>Frases prontas</h3>'
     +'<div class="du-cbar"><span class="cd'+(c.k==='ok'?'':' w')+'" id="du_cd">'+esc2(cdTxt(c))+'</span><span>1 a cada '+nT(Math.round(num(M.cooldownMs)/1000))+' s · <b>'+nT(sent)+'/'+nT(M.perDay)+'</b> hoje</span></div>'
     +'<div class="du-pgrid x-scroll" role="group" aria-label="Frases prontas">'+v.phrases.map((f,i)=>{ const r=c.per[i]||{}, rp=!r.ok&&r.reason==='repeat';
-      return '<button class="du-phb'+(rp?' rp':c.k!=='ok'?' cw':'')+'" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+(rp?' (já foi '+nT(M.repeatMax)+' vezes seguidas)':'')+'"><i>'+SV(I_BUB,26)+'</i><span>'+esc2(f.txt)+'</span></button>'; }).join('')+'</div></div>'; }
+      return '<button class="du-phb'+(rp?' rp':c.k!=='ok'?' cw':'')+'" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+(rp?' (já foi '+nT(M.repeatMax)+' vezes seguidas)':'')+'">'+phIc(f)+'<span>'+esc2(f.txt)+'</span></button>'; }).join('')+'</div></div>'; }
 
 function grab(){ let foc=false; try{ const el=byId('du_code'); if(el&&typeof el.value==='string'){ X.code=sanitize(el.value); foc=document.activeElement===el; } }catch(e){} return foc; }
 const gate=(d,txt,role)=>xWrap(d,'','<div class="du">'+bgHtml()+'<div class="du-gate"><b class="lil">Dupla das Eras</b><span role="'+(role||'alert')+'">'+esc2(txt)+'</span><button class="du-bt y" data-x="back">Voltar</button></div></div>');
@@ -494,7 +533,7 @@ try{ if(typeof document!=='undefined'&&typeof document.addEventListener==='funct
   const c=sanitize(t.value); if(t.value!==c) t.value=c; X.code=c; if(X.err){ X.err=''; redraw(); } }); }catch(e){}
 
 /* imagens que a tela mostra (para a espera de carga do jogo) */
-function urls(){ const u=[IC.coin]; try{ const bg=typeof xEraBgUrl==='function'?xEraBgUrl():''; if(bg) u.push(bg); }catch(e){} return u; }
+function urls(){ const u=[IC.coin].concat(artUrls().filter(x=>{ for(const k in ART) if(ART[k]===x) return !BAD[k]; return true; })); try{ const bg=typeof xEraBgUrl==='function'?xEraBgUrl():''; if(bg) u.push(bg); }catch(e){} return u; }
 /* número do selo no Menu: sem dupla = convites recebidos; com dupla = frases novas do parceiro. Chave ou módulo desligado = 0 (e nada é lido do save) */
 function alerts(){ try{ if(!(window.Panels&&typeof Panels.on==='function'&&Panels.on(N))||!online()) return 0; const v=viewNow(); if(!v||!v.open) return 0; return v.partner?unread(v):(v.invitesIn||[]).length; }catch(e){ return 0; } }
 
@@ -515,5 +554,5 @@ const def=Panels.add(N,{title:'Dupla das Eras',actions:Object.keys(ACT),urls:url
     if(online()) poll(true); else boot(); },
   onClose(){ X.conf=null; X.toast=''; X.busy=''; X.phr=false; } });
 /* para o Menu (selo), o teste de fumaça e o console (somente leitura por convenção) */
-window.PDuo={X:X,def:def,urls:urls,why:why,whyR:whyR,alerts:alerts,sanitize:sanitize};
+window.PDuo={X:X,def:def,urls:urls,why:why,whyR:whyR,alerts:alerts,sanitize:sanitize,ART:ART,P_IDS:P_IDS,W_ART:W_ART,BAD:BAD,bad:bad,artUrls:artUrls};
 })();

@@ -29,8 +29,30 @@
     "eraBossHpMult": 1.1,
     "bossDmgMult": 1.8,
     "eraBossDmgMult": 0.9,
-    "earlyDmg": [28, 25, 21, 17, 13, 10, 7.5, 5.5, 4.2, 2.4],
-    "earlyBossDmg": [7, 6.4, 5.4, 4.5, 3.6, 2.6, 1.8, 1.3, 1, 0.6],
+    "earlyDmg": [
+      28,
+      25,
+      21,
+      17,
+      13,
+      10,
+      7.5,
+      5.5,
+      4.2,
+      2.4
+    ],
+    "earlyBossDmg": [
+      7,
+      6.4,
+      5.4,
+      4.5,
+      3.6,
+      2.6,
+      1.8,
+      1.3,
+      1,
+      0.6
+    ],
     "waveHeal": 0.25,
     "bossChallengeHeal": 0.3,
     "_earlyDmg": "P0 do dono 14/11 (bots dando -1 e começo fácil). Multiplicador SÓ DE DANO por fase (índice 0 = fase 1; fase sem valor = 1): earlyDmg nos comuns e escoltas, earlyBossDmg no chefe. A vida (earlyEase) não muda. Com isso o golpe do comum, depois da DEF, tira ~2 a 3,5% da vida do jogador novo nas fases 1-10 (antes 0,04 a 0,25%, sempre -1) e o chefe ~3,5 a 4,5% (antes 0,2 a 2,9%). PRECISA DO ENGENHEIRO: o loader só lê chaves que já existem no BAL do js/battle.js (acrescentar earlyDmg:[] e earlyBossDmg:[]) e o mkEnemy precisa multiplicar o dano por (boss?BAL.earlyBossDmg:BAL.earlyDmg)[stage-1]||1.",
@@ -1328,12 +1350,12 @@
       272,
       352,
       455,
-      589,
-      762,
-      986,
-      1280,
-      1650,
-      1750,
+      632,
+      818,
+      1060,
+      1370,
+      1770,
+      1880,
       15800,
       15800,
       17200,
@@ -1418,7 +1440,7 @@
     "_recFc": "FC pedida das 90 fases NA ESCALA DO JOGO (índice 0 = fase 1). Fase 1 = 210 (80% de quem começa com ~260); Senhor da Era e = FC com que o grátis chega nele no jogo (tower.fc_mediana..., eras 0-2 medidas, 3-8 estimadas) × a parede. Depois da fase 90: a da 90 × 1,03 por fase.",
     "boss": {
       "killSecAt100": [
-        33,
+        37,
         33,
         33,
         33,
@@ -1428,7 +1450,17 @@
         33,
         33
       ],
-      "surviveSecAt100": 40,
+      "surviveSecAt100": [
+        36,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
       "furyAtSec": [
         30,
         28,
@@ -1456,7 +1488,8 @@
       "fromRecOnly": true,
       "waveIncludesEscorts": true,
       "_uso": "Vida e dano do chefe saem SÓ da FC pedida da fase (nunca do herói do momento). A onda do chefe (2 escoltas + chefe) inteira: com 100% da FC pedida o herói vence em ~32 s e aguentaria ~40 s. Conta: com a vida/dano que essa FC dá no Sys.stats, chefe = (32 s × DPS) − vida das escoltas; dano do chefe = (vida ÷ 40 s) − dano das escoltas. Fúria aos 40 s (x4).",
-      "_calibracao": "14/11 (Sistemas): calibrado na batalha real sem navegador (test/e2e/_cal.js, herói de referência Sys.stats.setRefFc ligado, arma da era, 12 lutas por caso, vida cheia no começo da onda do chefe). Listas = um valor por era (0 a 8). Rodada com o código e750701 e commons.dmgPostDefShareOfBoss 0,25 (vitórias 100% / 90% da FC pedida, quedas com menos de 5 s = defeito da medida, fora da conta): era 0 10/12 e 6/12 (34 s), era 1 12/12 e 6/12 (35 s), era 2 12/12 e 8/11 (34 s), era 3 10/11 e 9/12 (30 s), era 4 8/12 e 5/11 (30 s), era 5 5/6 e 4/11 (31 s), era 6 9/9 e 3/6 (34 s), era 7 10/11 e 4/11 (30 s), era 8 11/12 e 7/12 (30 s). escortSec 6,5 nas eras 0, 1, 2 e 6: as escoltas caem aos 4,6 a 8,3 s (diff.js do Engenheiro, fase 10 vencia em ~29 s contra killSec 33); com 6,5 a onda do chefe leva ~34 s. A vida maior do chefe derrubava os 90% para 0-3/12 (o herói cai logo depois da fúria), por isso a fúria dessas eras foi para 28,5-30 s. Eras 3, 4, 5, 7 e 8 ficaram com escortSec 10 (dentro do alvo; onda em ~30 s). furyFrom boss = a fúria conta desde que o chefe para no lugar. ATUALIZAÇÃO 14/11 (eras 1, 2, 5, 6, depois do conserto do _cal.js: refreshHero no meio do passo devolvia o herói do save; as quedas X sumiram, 0 em 144 lutas): fúria era 1 28,5 -> 28, era 2 29 -> 28, era 5 27 -> 25,5, era 6 29 -> 28. Vitórias 100%/90%: era 1 12/12 e 5/12 (35 s; o 100% não desce sem o 90% cair abaixo de 5), era 2 10/12 e 6/12 (34 s), era 5 10/12 e 7/12 (32 s), era 6 11/12 e 5/12 (32 s). Na medida com o conserto e a fúria antiga, era 5 dava 11/12 e 9/12 e era 6 10/12 e 8/12 (as quedas X escondiam que estavam fáceis)."
+      "_calibracao": "14/11 (Sistemas): calibrado na batalha real sem navegador (test/e2e/_cal.js, herói de referência Sys.stats.setRefFc ligado, arma da era, 12 lutas por caso, vida cheia no começo da onda do chefe). Listas = um valor por era (0 a 8). Rodada com o código e750701 e commons.dmgPostDefShareOfBoss 0,25 (vitórias 100% / 90% da FC pedida, quedas com menos de 5 s = defeito da medida, fora da conta): era 0 10/12 e 6/12 (34 s), era 1 12/12 e 6/12 (35 s), era 2 12/12 e 8/11 (34 s), era 3 10/11 e 9/12 (30 s), era 4 8/12 e 5/11 (30 s), era 5 5/6 e 4/11 (31 s), era 6 9/9 e 3/6 (34 s), era 7 10/11 e 4/11 (30 s), era 8 11/12 e 7/12 (30 s). escortSec 6,5 nas eras 0, 1, 2 e 6: as escoltas caem aos 4,6 a 8,3 s (diff.js do Engenheiro, fase 10 vencia em ~29 s contra killSec 33); com 6,5 a onda do chefe leva ~34 s. A vida maior do chefe derrubava os 90% para 0-3/12 (o herói cai logo depois da fúria), por isso a fúria dessas eras foi para 28,5-30 s. Eras 3, 4, 5, 7 e 8 ficaram com escortSec 10 (dentro do alvo; onda em ~30 s). furyFrom boss = a fúria conta desde que o chefe para no lugar. ATUALIZAÇÃO 14/11 (eras 1, 2, 5, 6, depois do conserto do _cal.js: refreshHero no meio do passo devolvia o herói do save; as quedas X sumiram, 0 em 144 lutas): fúria era 1 28,5 -> 28, era 2 29 -> 28, era 5 27 -> 25,5, era 6 29 -> 28. Vitórias 100%/90%: era 1 12/12 e 5/12 (35 s; o 100% não desce sem o 90% cair abaixo de 5), era 2 10/12 e 6/12 (34 s), era 5 10/12 e 7/12 (32 s), era 6 11/12 e 5/12 (32 s). Na medida com o conserto e a fúria antiga, era 5 dava 11/12 e 9/12 e era 6 10/12 e 8/12 (as quedas X escondiam que estavam fáceis).",
+      "_recal1": "14/11 (Sistemas, docs/EQUILIBRIO_TUDO_LIGADO.md P1+P2, só a ERA 0 medida): com afinidade, golpes e Grimório ligados a fase 10 caía em 22-28 s. recFc das fases 5-10 × 1,073 (o poder dos módulos na era 0), killSecAt100[0] 33 -> 37, surviveSecAt100[0] 40 -> 36. Medido: 100% da FC vence 4/4 em 34,5 s; 90% vence 3/4. Eras 1-8: P1/P2 propostos e NÃO aplicados (falta medir; o PC parou a rodada por memória)."
     },
     "commons": {
       "hpShareOfBoss": 0.1,

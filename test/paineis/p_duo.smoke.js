@@ -82,7 +82,14 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   assert(/drawHeroFull/.test(SRC), 'o meu retrato usa o desenho do jogo');
   for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
   for (const u of g.PDuo.urls()) assert(fs.existsSync(path.join(R, u)), 'imagem da lista de carga não existe: ' + u);
-  out.push('registro: painel duo, chave desligada, sem alert/confirm/prompt, sem emoji, sem texto cortado');
+  // arte pintada: toda peça citada existe em disco; os ícones das frases são os ids do módulo; os das missões são ids do módulo
+  { const P = g.PDuo, A = P.artUrls(); assert(A.length === 4 + 18 + 4, 'arte: 4 peças + 18 frases + 4 missões');
+    for (const u of A) { assert(fs.existsSync(path.join(R, u)), 'arte não existe em disco: ' + u); assert(g.PDuo.urls().includes(u), 'arte fora da lista de carga: ' + u); }
+    for (const k of ['retratoEu', 'retratoPar', 'madeira', 'placa']) assert(P.ART[k] && fs.existsSync(path.join(R, P.ART[k])), 'peça sem arquivo: ' + k);
+    assert.deepStrictEqual(P.P_IDS.slice().sort(), D.DATA.phrases.map(p => p.id).sort(), 'um ícone por frase do módulo');
+    for (const m of D.DATA.weekly) assert(P.W_ART[m.id] && fs.existsSync(path.join(R, 'assets/icons/duo/' + P.W_ART[m.id] + '.png')), 'missão sem ícone: ' + m.id);
+    assert(/onerror="try\{PDuo\.bad\(/.test(SRC), 'toda imagem da arte cai na reserva pelo onerror'); assert(!/background-size\s*:\s*100% 100%/.test(SRC), 'nenhuma peça esticada'); }
+  out.push('registro: painel duo, chave desligada, sem alert/confirm/prompt, sem emoji, sem texto cortado; arte pintada em disco (26 arquivos)');
 
   // 1) MÓDULO DESLIGADO: aviso e Voltar, zero rede, nada escrito no save (nem pela leitura do selo do Menu)
   const S0 = JSON.stringify(g.S); DN.DATA.on = true; await open(); assert.strictEqual(check('desligado'), 1, 'só o Voltar'); has('Dupla das Eras: em breve.'); has('data-x="back"');
@@ -105,7 +112,7 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
 
   // 5) ONLINE, SEM DUPLA: o meu código e os convites vêm do servidor; nomes escapados
   delete fail['GET /duo']; click('retry', { k: 'boot' }); await settle(); def.render(); check('sem dupla');
-  has(ME); has('du-card lt'); has('du-myc'); has('Convites hoje: 0/5'); has('Bia &lt;b&gt;'); not('Bia <b>'); has('Nv 17'); has('Theo'); has('Luna'); has('Convite pelo seu código'); has('Convite sem resposta vence em 48 h'); has('data-x="accept" data-id="' + BIA + '"'); has('Nenhum'.slice(0, 0) + 'Convites recebidos<span>3</span>');
+  has(ME); has('du-card lt'); has('du-myc'); has('class="du-myc art"'); has('src="assets/ui/duo/duo_placa_codigo.png"'); has('Convites hoje: 0/5'); has('Bia &lt;b&gt;'); not('Bia <b>'); has('Nv 17'); has('Theo'); has('Luna'); has('Convite pelo seu código'); has('Convite sem resposta vence em 48 h'); has('data-x="accept" data-id="' + BIA + '"'); has('Nenhum'.slice(0, 0) + 'Convites recebidos<span>3</span>');
   assert.strictEqual(g.PDuo.alerts(), 0, 'selo do Menu: chave da tela desligada = 0'); g.PANEL_ON.duo = true; assert.strictEqual(g.PDuo.alerts(), 3, 'selo do Menu: 3 convites'); g.PANEL_ON.duo = false;
   click('copy'); assert(/Código R4K9T2QX copiado|Anote o seu código: R4K9T2QX/.test(H()), 'copiar mostra o código');
   // o campo só aceita A-Z e 0-9
@@ -129,6 +136,9 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   click('accept', { id: BIA }); has('Carregando…'); await settle(); assert.strictEqual(sent(/^POST \/duo\/accept\/BJK9K3X2$/), 1, 'aceita o convite certo, uma vez'); def.render(); check('com dupla');
   has('Dupla formada com Bia &lt;b&gt;'); has('SUA DUPLA · HÁ 1 DIA<'); has('<b>Bia &lt;b&gt;</b>'); not('Bia <b>'); has('Nv 17'); has('online'); has('Juntos hoje'); has('Bia &lt;b&gt;: 96 · entrou hoje'); has('Você: 0'); has('96 / 300');
   has('Juntos, 40 fases vencidas'); has('16/40'); has('data-x="leave"'); has('data-x="block"'); not('du_code');
+  // arte: os dois aros pintados com o miolo coberto (herói ou silhueta por cima), o rótulo na área de nome e os 4 ícones de missão
+  has('src="assets/ui/duo/duo_retrato_eu.png"'); has('src="assets/ui/duo/duo_retrato_par.png"'); has('<em class="nm">Você</em>'); has('<em class="nm">Parceiro</em>'); assert.strictEqual((H().match(/class="fr art"/g) || []).length, 2, 'dois aros pintados');
+  assert.strictEqual((H().match(/class="hl"/g) || []).length, 2, 'o miolo pintado dos dois retratos fica coberto'); for (const i of ['m_chest', 'm_path', 'm_fight', 'm_forge']) has('src="assets/icons/duo/' + i + '.png"');
   // ordem do mock: retratos com o elo no meio, painel das missões, balões de frase (as 5 primeiras do módulo) e o botão azul que abre todas
   { const h = H(), at = s => h.indexOf(s); assert(at('du-pair') > 0 && at('du-pair') < at('Missões da semana') && at('Missões da semana') < at('du-quick') && at('du-quick') < at('data-x="leave"'), 'ordem dos blocos do mock');
     const q = buttons().filter(b => b.dataset.x === 'send'); assert.strictEqual(q.length, 5, '5 balões de frase'); q.forEach((b, i) => assert.strictEqual(b.dataset.idx, String(i), 'balão com o índice do módulo'));
@@ -151,6 +161,11 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   g.PANEL_ON.duo = true; SRV.messages = [{ idx: 0, at: host.now() - 5000 }]; await DN.refresh(g.S, host); assert.strictEqual(g.PDuo.alerts(), 1, 'selo do Menu: 1 frase nova'); def.render(); has('Abrir (1)'); has('<b>Bia &lt;b&gt;</b>: Oi, dupla!');
   click('phr'); await settle(); def.render(); check('frases'); has('Só frases prontas, sem texto livre'); has('Frases · Bia &lt;b&gt;'); has('Oi, dupla!'); has('pode mandar'); assert.strictEqual(g.PDuo.alerts(), 0, 'abrir as frases zera o selo'); g.PANEL_ON.duo = false;
   assert.strictEqual(buttons().filter(b => b.dataset.x === 'send').length, D.DATA.phrases.length, 'um botão por frase do módulo'); assert(!/<input|<textarea/.test(H()), 'sem campo de texto nas frases');
+  has('class="du-wood art"'); has('src="assets/ui/duo/duo_madeira.png"'); for (const p of D.DATA.phrases) has('<i class="pi"><img src="assets/icons/duo/' + p.id + '.png"');
+  // RESERVA: imagem que falha (onerror → PDuo.bad) redesenha com o CSS/SVG de antes, peça por peça
+  { const P = g.PDuo; P.bad('madeira'); has('class="du-wood"'); not('duo_madeira.png'); has('<i class="pi">'); P.bad('p_oi'); not('icons/duo/oi.png'); has('<i><svg'); has('icons/duo/bora.png');
+    for (const p of D.DATA.phrases) P.bad('p_' + p.id); not('assets/icons/duo/'); not('assets/ui/duo/'); assert.strictEqual((H().match(/<i><svg/g) || []).length, D.DATA.phrases.length, 'reserva: um medalhão em CSS por frase'); check('frases na reserva');
+    for (const k of Object.keys(P.BAD)) delete P.BAD[k]; def.render(); has('class="du-wood art"'); }
   click('send', { idx: '3' }); await settle(); assert.strictEqual(sent(/^POST \/duo\/phrase/), 1); assert(calls.includes('POST /duo/phrase {"idx":3}'), 'o corpo é só o índice'); has('Bora jogar?<small>você'); has('aguarde 5 s'); check('frase enviada');
   click('send', { idx: '4' }); await settle(); has('Aguarde 5 s para a próxima frase'); assert.strictEqual(sent(/^POST \/duo\/phrase/), 1, 'no intervalo de 5 s não envia');
   click('send', { idx: '99' }); click('send', { idx: '<b>oi</b>' }); click('send', {}); await settle(); assert.strictEqual(sent(/^POST \/duo\/phrase/), 1, 'índice fora da lista não envia');
@@ -173,6 +188,9 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   { const n = posts(); ELS.du_code.value = 'ZZZZ2222'; click('invite'); has('Você saiu de uma dupla: espere'); SRV.invites = [{ id: BIA, name: 'Bia <b>', lv: 17, era: 1 }]; await DN.refresh(g.S, host); def.render(); click('accept', { id: BIA }); await settle(); has('Você saiu de uma dupla: espere'); assert.strictEqual(posts(), n, 'esperando: não envia'); ELS.du_code.value = ''; }
   // 9) BLOQUEAR o parceiro: dois toques, com o código dele
   SRV.leftAt = 0; SRV.relinkLeftMs = 0; SRV.partner = { id: BIA, name: 'Bia <b>', since: host.now(), last: 0, lv: null, era: null }; await DN.refresh(g.S, host); await open(); check('dupla de novo'); has('<b>Bia &lt;b&gt;</b>'); not('visto'); not('Nv ');
+  // RESERVA dos retratos e das missões: com as imagens em falha voltam a moldura em CSS, o rótulo embaixo e os ícones em SVG
+  { const P = g.PDuo; for (const k of ['retratoEu', 'retratoPar']) P.bad(k); for (const m of D.DATA.weekly) P.bad('w_' + m.id); not('assets/ui/duo/'); not('assets/icons/duo/'); not('fr art'); has('<small>Você</small>'); has('<small>Parceiro</small>');
+    assert.strictEqual((H().match(/class="wi"><svg/g) || []).length, D.DATA.weekly.length, 'reserva: um ícone em SVG por missão'); check('dupla na reserva'); for (const k of Object.keys(P.BAD)) delete P.BAD[k]; def.render(); has('fr art'); }
   click('block'); check('confirma bloquear'); has('Bloquear Bia &lt;b&gt;?'); assert.strictEqual(sent(/block\/BJK9K3X2/), 0, '1º toque não envia'); click('yes'); await settle(); assert.strictEqual(sent(/^POST \/duo\/block\/BJK9K3X2$/), 1, 'bloqueia o parceiro, uma vez'); def.render(); has('Jogador bloqueado'); check('bloqueou');
   out.push('sair e bloquear em 2 toques (1 chamada cada, recusa em texto), espera de quem saiu com a contagem do servidor, esperando não envia');
 

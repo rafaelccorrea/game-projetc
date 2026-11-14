@@ -148,8 +148,9 @@ function scrArena0(){
   if((XA2.view==='fight'||XA2.view==='result')&&XA2.pv){ V.innerHTML=xWrap(d,'',paPvHTML(d)); try{ paPvDraw(); }catch(e){} paPvLoopOn(); return; }   /* luta PvP nova (chave PA_PVP2) */
   if(XA2.view==='fight'){ V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 2px 8px">${paFightView()}</div>`); if(!paRaf) paDrawMe(); return; }
   if(XA2.view==='result'){ V.innerHTML=xWrap(d,'',`<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:4px 2px 8px">${paResult()}</div>`); return; }
-  const TABS=['Arena','Ligas','Ranking'], tabs=TABS.map((t,i)=>`<button role="tab" aria-selected="${i===XA2.tab}" data-x="tab" data-i="${i}" style="flex:1;height:46px;border-radius:11px;border:2px solid ${i===XA2.tab?'#ffc94a':'#4a3a2b'};background:${i===XA2.tab?'#4a3214':'#2a1f16'};color:${i===XA2.tab?'#ffe07a':'#c9b9a2'};font-family:'Lilita One',sans-serif;font-size:15px">${t}</button>`).join('');
-  const body=XA2.tab===1?paLeagues():XA2.tab===2?paRanking():paLobby(), o=Sys.arena.ensure(S,paH());
+  const asOn=paSetOn(); if(XA2.tab===3&&!asOn) XA2.tab=0;   /* aba "Conjunto PvP" (js/p_arenaset.js): só com a tela e o Sys.arenaSet ligados */
+  const TABS=['Arena','Ligas','Ranking'].concat(asOn?[PArenaSet.tab]:[]), tabs=TABS.map((t,i)=>`<button role="tab" aria-selected="${i===XA2.tab}" data-x="tab" data-i="${i}" style="flex:1;height:46px;border-radius:11px;border:2px solid ${i===XA2.tab?'#ffc94a':'#4a3a2b'};background:${i===XA2.tab?'#4a3214':'#2a1f16'};color:${i===XA2.tab?'#ffe07a':'#c9b9a2'};font-family:'Lilita One',sans-serif;font-size:15px">${t}</button>`).join('');
+  const body=XA2.tab===1?paLeagues():XA2.tab===2?paRanking():(XA2.tab===3&&asOn)?PArenaSet.html():paLobby(), o=Sys.arena.ensure(S,paH());
   const foot=XA2.tab===0?`<div style="flex:none;padding:6px 2px;padding-bottom:max(8px,env(safe-area-inset-bottom))"><button data-x="fight" class="pa-gold pa-shine" style="width:100%;height:60px;font-size:24px" ${o.attemptsLeft<=0?'disabled':''} aria-label="Lutar contra o adversário escolhido">${o.attemptsLeft>0?'LUTE!':'Sem lutas hoje'}</button></div>`:'';
   V.innerHTML=xWrap(d,'',`<div class="x-scroll f-in" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:4px 2px 6px">
     <div role="tablist" aria-label="Arena" style="flex:none;display:flex;gap:4px">${tabs}</div>${body}</div>${foot}${paWaitHTML()}`);
@@ -165,7 +166,8 @@ function paPlay(){ paStop(); const F=XA2.fight; if(!F) return; const n=(F.r.duel
   if(XA2.step>=n){ XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.view='result'; paSnd(F.r.win?'claim':'ui_tap'); render(); },500/XA2.speed); return; }
   XA2.timer=setTimeout(()=>{ XA2.timer=0; XA2.step++; const e=F.r.duel.log[XA2.step-1]; paSnd(e&&e.crit?'crit':'hit'); render(); paPlay(); },(XA2.step===0?900:420)/XA2.speed); }
 function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(XA2.wait) return;   /* esperando o servidor decidir a luta: nenhum toque vale (o véu cobre a tela) */
-  if(a==='tab'){ const i=parseInt(b.dataset.i,10); if(i!==XA2.tab&&i>=0&&i<3){ XA2.tab=i; paSnd('ui_tap'); render(); if(i===2) paNetRank(); } return; }
+  if(window.PArenaSet&&PArenaSet.click(b)){ return; }   /* toques "as-*" do Conjunto PvP */
+  if(a==='tab'){ const i=parseInt(b.dataset.i,10); if(i!==XA2.tab&&i>=0&&i<(paSetOn()?4:3)){ XA2.tab=i; paSnd('ui_tap'); render(); if(i===2) paNetRank(); } return; }
   if(a==='sel'){ XA2.sel=parseInt(b.dataset.i,10)||0; paSnd('ui_tap'); render(); return; }
   if(a==='refresh'&&paNet()){ if(XA2.refBusy) return; XA2.refBusy=true; render();   /* online: quem troca a lista é o servidor */
     const fin=r=>{ XA2.refBusy=false; if(!r||!r.ok) paToast(paNetMsg(r&&r.reason,'Não deu para trocar agora')); else { XA2.sel=0; paSnd('ui_tap'); } try{ if(XA2.view==='lobby'&&!XA2.pv) render(); }catch(e){} };
@@ -612,7 +614,10 @@ function paPvPortrait(i,pv,sz){ if(i===0&&typeof avatarTag==='function') return 
    nenhuma (a luta só credita pontos): fica a linha de aviso do prêmio da liga. chest pode vir como número ou lista de itens. */
 function paPvPrize(pv){ const rw=pv.r.rewards&&typeof pv.r.rewards==='object'?pv.r.rewards:null; if(!rw) return null; const out=[], num=v=>(typeof v==='number'&&isFinite(v)&&v>0)?v:0;
   const gold=num(rw.gold), gems=num(rw.gems), chest=Array.isArray(rw.chest)?rw.chest.length:num(rw.chest===true?1:rw.chest);
-  if(gold) out.push({img:'coin',v:'+'+paF(gold),lb:gold===1?'moeda':'moedas'}); if(gems) out.push({img:'gem',v:'+'+paF(gems),lb:gems===1?'gema':'gemas'}); if(chest) out.push({img:'chest',v:'+'+paF(chest),lb:chest===1?'baú':'baús'}); return out; }
+  if(gold) out.push({img:'coin',v:'+'+paF(gold),lb:gold===1?'moeda':'moedas'}); if(gems) out.push({img:'gem',v:'+'+paF(gems),lb:gems===1?'gema':'gemas'}); if(chest) out.push({img:'chest',v:'+'+paF(chest),lb:chest===1?'baú':'baús'});
+  try{ const z=window.PArenaSet&&PArenaSet.prize(rw); if(z) out.push(z); }catch(e){}   /* "+1 Brasa" da Arena (Sys.arenaSet.onWin) */
+  return out; }
+function paSetOn(){ try{ return !!(window.PArenaSet&&PArenaSet.on()); }catch(e){ return false; } }
 function paPvResultHTML(pv){ const r=pv.r, win=!!r.win, li=Sys.arena.leagueInfo(S,paH()), L=li.league, N=li.next, o=Sys.arena.ensure(S,paH()), pz=paPvPrize(pv), nb=pv.log.length, tm=nb+(nb===1?' golpe':' golpes');   /* quantos golpes a luta teve (dado do registro); o relógio da tela é só o da animação e não entra aqui */
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1, to=!win&&pv.hp[0]>0;
   const hint=li.zone==='down'?'cuidado: abaixo de '+paN(L.min)+' você cai':N?(li.toUp>0?'faltam '+paN(li.toUp)+' para '+N.name:'sobe para '+N.name+' no fechamento'):'liga mais alta';
@@ -646,6 +651,7 @@ function paPvHTML(d){ paPvInject(); const pv=XA2.pv, G=pv.geo=paPvGeo(d.Wb||390,
     ${ov}</div>`; }
 Panels.add('arena',{title:'Arena',render:scrArena,click:paClick,
   busy(){ return XA2.view==='fight'||!!XA2.pv||!!XA2.wait; },   /* luta e resultado: ninguém de fora redesenha a tela (o cartão do resultado não "pula" de novo a cada evento da batalha) */
-  tick(){ if(!paOk()||XA2.view!=='lobby'||XA2.tab!==0) return; try{ const w=document.getElementById('pa_week'), d=document.getElementById('pa_day');
+  tick(){ if(paOk()&&XA2.view==='lobby'&&XA2.tab===3){ try{ if(window.PArenaSet) PArenaSet.tick(); }catch(e){} return; }
+    if(!paOk()||XA2.view!=='lobby'||XA2.tab!==0) return; try{ const w=document.getElementById('pa_week'), d=document.getElementById('pa_day');
     if(w) w.textContent=paClock(Sys.arena.leagueInfo(S,paH()).msLeft); if(d) d.textContent=paClock(paDayLeft()); }catch(e){} },
   onOpen(){ XA2.view='lobby'; XA2.tab=0; XA2.sel=0; XA2.refBusy=false; paNetStopWait(); paStop(); paPvFree(); paNetSnap(); }, onClose(){ paNetStopWait(); paStop(); paPvFree(); XA2.view='lobby'; XA2.fight=null; try{ setTimeout(paPvReplay,0); }catch(e){} } });

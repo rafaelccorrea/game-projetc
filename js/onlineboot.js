@@ -175,7 +175,8 @@
     ST.booting = false; ST.booted = !!r.ok; ST.last = r;
     /* MÓDULOS ONLINE OPCIONAIS (Servidor: Sys.arenaNet, Sys.guildNet; o Sys.tourneyNet não tem início, a tela dele busca ao abrir). Cada um só começa com a
        PRÓPRIA chave ligada (DATA.on === true; hoje as três estão desligadas: nada sai para a rede e nada muda). Falha de um não afeta o jogo nem os outros. */
-    if (r.ok) for (const k of ['arenaNet', 'guildNet', 'duoNet', 'guildFireNet', 'thiefNet']) { try { const M = X()[k]; if (M && M.DATA && M.DATA.on === true && typeof M.start === 'function') Promise.resolve(M.start(S, X().host)).then(x => dbg(k, x && x.ok ? 'ligado' : 'local: ' + (x && x.reason)), e => dbg(k + ' falhou', e)); } catch (e) { dbg(k + ' falhou', e); } }
+    if (r.ok) { try { const E = X().events; if (E && typeof E.load === 'function') Promise.resolve(E.load(S, X().host)).then(q => { if (q && q.ok && typeof save === 'function') save(); }, e => dbg('events load falhou', e)); } catch (e) {} }   /* calendário de eventos por edição: busca depois do login e guarda no save */
+    if (r.ok) for (const k of ['arenaNet', 'guildNet', 'duoNet', 'guildFireNet', 'thiefNet', 'coopNet']) { try { const M = X()[k]; if (M && M.DATA && M.DATA.on === true && typeof M.start === 'function') Promise.resolve(M.start(S, X().host)).then(x => dbg(k, x && x.ok ? 'ligado' : 'local: ' + (x && x.reason)), e => dbg(k + ' falhou', e)); } catch (e) { dbg(k + ' falhou', e); } }
     ST.lastAction = !r.ok ? null : (resc || r.save === 'pulled') ? (ST.applyRes || 'refused') : (r.save || null);
     /* a troca escolhida na tela falhou (sem rede no meio): a tela avisa e o jogo segue com o save do aparelho */
     if (ST.choiceMade) { const bad = (r.errors || []).find(x => /^save:/.test(x)) || (!r.ok ? 'save:' + r.reason : '');
