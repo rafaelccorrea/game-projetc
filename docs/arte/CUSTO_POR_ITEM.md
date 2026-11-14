@@ -77,3 +77,21 @@ Medido 14/11: skin inteira na coreografia do padrão ≈ 4 por estado (+2 se pre
 | Molduras VIP 1-10 (3×3 + VIP 10) | ~4 |
 | Ícones do Grimório V3 (2 × 3×3 + 1 × 2×2: 18 feitiços, tinta, página, menu) | ~6 |
 | **Reserva que sobrou** | **~9** |
+
+## Lote das telas por mock (14/11, dono liberou ~38 + ~30 LoM + extras)
+| Item | Créditos |
+|---|---|
+| Mocks Tela Inicial A/B | 4 |
+| Mocks Mentores (4) | 8 |
+| Mocks VIP × Passe (4) | 8 |
+| Mocks Acampamento + Dupla (6) | 12 |
+| Mocks Ladrão A/B | 4 |
+| Mocks LoM (12: Relíquias, Escavação, Hoje, Arena, Trio, Minijogo) | 24 |
+| Peças: guia do ladrão + Acampamento 2×2 | 4 |
+| Peças bloco 1 Dupla (5 imagens) | 10 |
+| Peças bloco 2 VIP/Passe (5 imagens) | 10 |
+| Peças bloco 3 relíquias, escavação, retratos dos mentores, fundo da tela inicial | 8 |
+| Peças bloco 4 ladrão correndo (vídeo), ajudante adulto, 2 grades de títulos | 10 |
+| Golpes dos pets médio/evoluído (23 vídeos com 4 refações) | ~92 |
+| **Total deste ciclo de telas e peças** | **~102** (+ pets ~92) |
+Lição: grades 3×3 e 2×2 = ~0,2 crédito por peça; mock de tela = 2 por imagem; vídeo = 4. As refações mais caras foram de prompt (pose de pet saindo do quadro, papagaio pousado no guia): na próxima, guia já na pose do vídeo e "inside the frame" no prompt.
