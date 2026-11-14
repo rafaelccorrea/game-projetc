@@ -61,7 +61,8 @@ function check(tag) {
 function frame() { assert(raf.length >= 1, 'o laço do palco está rodando'); drew = []; drawn = []; const f = raf.shift(); f(1000); assert.strictEqual(drew.length, 1, 'um herói por quadro'); assert(drew[0].k > 0 && isFinite(drew[0].k)); return drew[0].st; }
 const open = () => { def.onOpen(); def.render(); };
 const setPts = n => { g.S = newSave(g.S.hero); VIP.addPoints(g.S, n); };
-const panel = () => H().slice(H().indexOf('class="v2-lvh"'));   // do cabeçalho do nível escolhido para baixo
+// do cabeçalho do nível escolhido para baixo, SEM a grade geral de prêmios (visual do mock B: a grade passou a vir depois do cartão do nível, no cartão de baixo)
+const panel = () => H().slice(H().indexOf('class="v2-lvh"')).replace(/<div class="v2-rw"[\s\S]*?<\/div>/, '');
 
 // 0) registro: painel 'vip2', chave nasce DESLIGADA, o arquivo não liga chave nenhuma, sem diálogo do navegador, sem emoji
 assert.strictEqual(addName, 'vip2'); assert.strictEqual(g.PANEL_ON.vip2, false, 'a chave nasce desligada'); assert(def && def.render && def.click && def.tick && def.onOpen && def.onClose);
@@ -70,6 +71,10 @@ assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador');
 for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
 for (const m of SRC.matchAll(/'(assets\/[^']+\.png)'/g)) assert(fs.existsSync(path.join(R, m[1])), 'imagem citada no arquivo não existe: ' + m[1]);
 assert.strictEqual(Sys.buy.DATA.on, false, 'a compra real está desligada no jogo');
+// visual do mock B (claro): nenhum texto cortado com reticências; as variáveis de cor ficam no topo do bloco de estilo (contraste não é verificável em node: só a existência)
+assert(!/text-overflow\s*:\s*ellipsis/.test(SRC), 'nenhum texto cortado com reticências');
+{ const top = (/\.v2-root\{([^}]*)\}/.exec(SRC) || ['', ''])[1]; for (const v of ['--v-bg', '--v-paper', '--v-row', '--v-tile', '--v-line', '--v-gold', '--v-ink', '--v-ink2', '--v-brand', '--v-ok', '--v-lock', '--v-soon']) assert(new RegExp(v + ':#[0-9a-f]{6}').test(top), 'variável de cor ausente: ' + v);
+  assert(/color:var\(--v-ink\)/.test(top), 'tela clara: o texto base é escuro'); assert(/\.v2-bt,[^{]*\{[^}]*color:#2a1403/.test(SRC), 'botão dourado com texto escuro'); }
 out.push('registro: vip2 desligada, ' + def.actions.length + ' ações com tratador, sem diálogo do navegador, sem emoji, imagens do arquivo em disco');
 
 // 1) SEM VIP: abre no VIP 1, barra em pontos, 11 níveis, tabela do módulo
@@ -78,6 +83,10 @@ open(); has('Sem VIP'); has('sem VIP</span>'); has('id="v2_cv"'); has('Ir para a
 assert.strictEqual((H().match(/data-x="lv"/g) || []).length, D.maxLevel + 1, 'níveis 0 a ' + D.maxLevel);
 assert(/data-l="1" aria-pressed="true"/.test(H()), 'sem VIP abre no VIP 1'); has('Abre no VIP 1'); has('A partir de <em>' + g.n0(D.points[1]));
 assert(/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/.test(g.document.head.children.map(c => c.textContent).join('')), 'grade dos níveis com minmax(0,1fr)');
+// ordem do mock: trilho dos níveis, palco do herói (com a moldura VIP do nível escolhido), cartão do nível com a barra de pontos, prêmios, botão da Loja
+{ const h = H(), at = s => h.indexOf(s), seq = ['class="v2-top"', 'class="v2-stage"', 'class="v2-lvh"', 'Abre no VIP 1', 'role="progressbar"', 'class="v2-rw"', 'Tudo no VIP 1', 'data-x="shop"'];
+  for (let i = 0; i < seq.length; i++) assert(at(seq[i]) >= 0 && (!i || at(seq[i - 1]) < at(seq[i])), 'ordem dos blocos do mock: ' + seq[i]);
+  assert(/<img class="v2-frame" src="assets\/ui\/frames\/vip1\.png"/.test(h), 'moldura VIP do nível escolhido atrás do herói'); assert(h.indexOf('v2-frame') < h.indexOf('id="v2_cv"'), 'a moldura fica atrás do herói'); }
 check('sem VIP'); { const st = frame(); assert(st.t >= 0); assert(st.skin === undefined && st.mount === undefined && st.pet === undefined, 'sem prévia: o herói é o do jogo (skin, montaria e pet do save)'); assert(!drawn.some(u => /aura/.test(u || '')), 'sem VIP: sem aura'); }
 out.push('sem VIP: desenha, barra em pontos VIP, ' + (D.maxLevel + 1) + ' níveis, abre no VIP 1');
 

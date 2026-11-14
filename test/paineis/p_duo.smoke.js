@@ -77,6 +77,9 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   assert.strictEqual(addName, 'duo'); assert.strictEqual(g.PANEL_ON.duo, false, 'a chave nasce desligada'); assert(def && def.render && def.click && def.tick && def.onOpen && def.onClose && def.title === 'Dupla das Eras');
   assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/PANEL_ON\.\w+\s*=\s*true|DATA\.on\s*=(?!=)/.test(SRC), 'o arquivo não liga chave nenhuma');
   assert(!/text-overflow\s*:\s*ellipsis/.test(SRC), 'nenhum texto cortado com reticências'); assert(!/new Image\(/.test(SRC), 'sem new Image()');
+  // visual do mock A (escuro): as variáveis de cor ficam no topo do bloco de estilo (contraste não é verificável em node: só a existência)
+  { const top = (/\.du\{([^}]*)\}/.exec(SRC) || ['', ''])[1]; for (const v of ['--bg', '--pan', '--line', '--gold', '--g2', '--cream', '--mut', '--ink', '--paper', '--wood', '--blue']) assert(new RegExp(v + ':#|' + v + ':rgba\\(').test(top), 'variável de cor ausente: ' + v); }
+  assert(/drawHeroFull/.test(SRC), 'o meu retrato usa o desenho do jogo');
   for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
   for (const u of g.PDuo.urls()) assert(fs.existsSync(path.join(R, u)), 'imagem da lista de carga não existe: ' + u);
   out.push('registro: painel duo, chave desligada, sem alert/confirm/prompt, sem emoji, sem texto cortado');
@@ -102,7 +105,7 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
 
   // 5) ONLINE, SEM DUPLA: o meu código e os convites vêm do servidor; nomes escapados
   delete fail['GET /duo']; click('retry', { k: 'boot' }); await settle(); def.render(); check('sem dupla');
-  has(ME); has('Convites hoje: 0/5'); has('Bia &lt;b&gt;'); not('Bia <b>'); has('Nv 17'); has('Theo'); has('Luna'); has('Convite pelo seu código'); has('Convite sem resposta vence em 48 h'); has('data-x="accept" data-id="' + BIA + '"'); has('Nenhum'.slice(0, 0) + 'Convites recebidos<span>3</span>');
+  has(ME); has('du-card lt'); has('du-myc'); has('Convites hoje: 0/5'); has('Bia &lt;b&gt;'); not('Bia <b>'); has('Nv 17'); has('Theo'); has('Luna'); has('Convite pelo seu código'); has('Convite sem resposta vence em 48 h'); has('data-x="accept" data-id="' + BIA + '"'); has('Nenhum'.slice(0, 0) + 'Convites recebidos<span>3</span>');
   assert.strictEqual(g.PDuo.alerts(), 0, 'selo do Menu: chave da tela desligada = 0'); g.PANEL_ON.duo = true; assert.strictEqual(g.PDuo.alerts(), 3, 'selo do Menu: 3 convites'); g.PANEL_ON.duo = false;
   click('copy'); assert(/Código R4K9T2QX copiado|Anote o seu código: R4K9T2QX/.test(H()), 'copiar mostra o código');
   // o campo só aceita A-Z e 0-9
@@ -126,6 +129,10 @@ const posts = () => calls.filter(c => /^POST/.test(c) && !/\/duo\/progress/.test
   click('accept', { id: BIA }); has('Carregando…'); await settle(); assert.strictEqual(sent(/^POST \/duo\/accept\/BJK9K3X2$/), 1, 'aceita o convite certo, uma vez'); def.render(); check('com dupla');
   has('Dupla formada com Bia &lt;b&gt;'); has('SUA DUPLA · HÁ 1 DIA<'); has('<b>Bia &lt;b&gt;</b>'); not('Bia <b>'); has('Nv 17'); has('online'); has('Juntos hoje'); has('Bia &lt;b&gt;: 96 · entrou hoje'); has('Você: 0'); has('96 / 300');
   has('Juntos, 40 fases vencidas'); has('16/40'); has('data-x="leave"'); has('data-x="block"'); not('du_code');
+  // ordem do mock: retratos com o elo no meio, painel das missões, balões de frase (as 5 primeiras do módulo) e o botão azul que abre todas
+  { const h = H(), at = s => h.indexOf(s); assert(at('du-pair') > 0 && at('du-pair') < at('Missões da semana') && at('Missões da semana') < at('du-quick') && at('du-quick') < at('data-x="leave"'), 'ordem dos blocos do mock');
+    const q = buttons().filter(b => b.dataset.x === 'send'); assert.strictEqual(q.length, 5, '5 balões de frase'); q.forEach((b, i) => assert.strictEqual(b.dataset.idx, String(i), 'balão com o índice do módulo'));
+    assert(/class="du-bt b" data-x="phr"/.test(h), 'botão azul abre todas as frases'); }
   { const unit = host.goldUnit(), gk = Math.round(30 * unit); has('>' + gk + '</span>'); has('+1 pedra<'); has('+4 pedras<'); }
   // meta não fechada: o toque explica e NÃO envia
   click('claim', { id: 'daily' }); has('A meta ainda não fechou'); assert.strictEqual(sent(/claim/), 0, 'meta aberta não envia');

@@ -80,11 +80,23 @@ const I_DOOR='<path d="M8 6h20v36H8z" fill="#8a5a34" '+K+'/><path d="M28 24h15M3
 const I_BUB='<path d="M6 10h36v22H20l-9 8v-8H6z" fill="#f6ecdf" '+K+'/><circle cx="16" cy="21" r="2.6" fill="#1a110b"/><circle cx="24" cy="21" r="2.6" fill="#1a110b"/><circle cx="32" cy="21" r="2.6" fill="#1a110b"/>';
 const I_LOCK='<rect x="10" y="21" width="28" height="22" rx="4" fill="#ffd25e" '+K+'/><path d="M16 21v-6a8 8 0 0116 0v6" fill="none" stroke="#1a110b" stroke-width="4"/>';
 const I_BACK='<path d="M30 8L14 24l16 16" fill="none" stroke="#f6ecdf" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>';
+const I_CHAIN='<g fill="none" stroke="#1a110b" stroke-width="8"><rect x="5" y="16" width="22" height="16" rx="8"/><rect x="21" y="16" width="22" height="16" rx="8"/></g><g fill="none" stroke="#c3ccde" stroke-width="4"><rect x="5" y="16" width="22" height="16" rx="8"/><rect x="21" y="16" width="22" height="16" rx="8"/></g>';
+const I_HEART='<path d="M24 42C10 32 5 24 5 16a9.5 9.5 0 0119-3 9.5 9.5 0 0119 3c0 8-5 16-19 26z" fill="#ff5468" '+K+'/><path d="M13 13c-2 1-3 3-3 5" fill="none" stroke="#ffc2c9" stroke-width="3" stroke-linecap="round"/>';
+const I_BOSS='<path d="M12 17L5 6l13 5M36 17l7-11-13 5" fill="#ffd25e" '+K+'/><path d="M11 23c0-9 5-14 13-14s13 5 13 14v8l-5 4v6H16v-6l-5-4z" fill="#e2574c" '+K+'/><circle cx="19" cy="25" r="3" fill="#1a110b"/><circle cx="29" cy="25" r="3" fill="#1a110b"/>';
+const I_FLAG='<path d="M14 8h25l-7 9 7 9H14z" fill="#7fe07a" '+K+'/><path d="M12 44V6" stroke="#1a110b" stroke-width="7" stroke-linecap="round"/><path d="M12 44V6" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round"/>';
+const I_SWORDS='<path d="M7 7l9 2 16 18-5 5L9 16z" fill="#dbe8ff" '+K+'/><path d="M41 7l-9 2-16 18 5 5 18-16z" fill="#9ab4d6" '+K+'/><path d="M8 40l9-9M40 40l-9-9" stroke="#1a110b" stroke-width="8" stroke-linecap="round"/><path d="M8 40l9-9M40 40l-9-9" stroke="#ffd25e" stroke-width="4" stroke-linecap="round"/>';
+const I_SCROLL='<path d="M13 7h26v27a7 7 0 01-7 7H13z" fill="#f6e3b0" '+K+'/><path d="M13 7a5 5 0 00-5 5v4h5" fill="#e2c98a" '+K+'/><path d="M19 17h14M19 24h14M19 31h8" fill="none" stroke="#6b4426" stroke-width="2.6" stroke-linecap="round"/>';
+const W_IC={boss200:I_BOSS,stages40:I_FLAG,arena20:I_SWORDS,days5:I_DUO};   /* ícone por missão da semana (id do Sys.duo); id novo cai no I_DUO */
 const coinImg='<img src="'+IC.coin+'" alt="" width="20" height="20">';
+/* ARTE QUE A TELA AINDA DESENHA EM CSS/SVG (mocks du_a, du_fr, du_cv). Quando a Arte entregar os arquivos, o caminho entra AQUI e só aqui (vazio = desenho em CSS):
+   retratoEu/retratoPar: fundo dos dois retratos · madeira: painel das frases · placa: placa do código */
+const ART={retratoEu:'',retratoPar:'',madeira:'',placa:''};
+const artBg=k=>ART[k]?' style="background:url('+ART[k]+') center/cover no-repeat"':'';
+const QUICK=5;   /* quantas frases prontas (as primeiras do módulo) viram balão na tela da dupla; as outras abrem em "Abrir" */
 
 (function(){ if(typeof document==='undefined'||!document.head) return; const el=document.createElement('style'); el.textContent=`
-.du{--g2:#ffc94a;--cream:#f6ecdf;--mut:#c9b8a2;--brown2:rgba(44,33,25,.94);--pc:#5ee7c8;
-  position:relative;flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:#16110d;color:var(--cream);font-family:Nunito,system-ui,sans-serif}
+.du{--bg:#12142a;--pan:rgba(22,24,44,.95);--pan2:rgba(34,30,62,.97);--line:#8a6a3a;--gold:#e9b949;--g2:#ffd27a;--cream:#f8ecd4;--mut:#c6bdd6;--ink:#3a2413;--ink2:#5c4630;--paper:#fbf1dc;--paper2:#f1dfba;--wood:#6b4426;--wood2:#4a2d18;--pink:#ff6fae;--pc:#ffd95e;--blue:#3a72cc;
+  position:relative;flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);color:var(--cream);font-family:Nunito,system-ui,sans-serif}
 .du *{box-sizing:border-box}
 .du button{font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .du .lil{font-family:'Lilita One',Nunito,sans-serif;font-weight:400}
@@ -92,84 +104,118 @@ const coinImg='<img src="'+IC.coin+'" alt="" width="20" height="20">';
 .du-bg{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
 .du-in{animation:du-fade .2s ease-out}
 @keyframes du-fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.du-strip{position:relative;z-index:2;flex:none;min-height:44px;margin:8px 12px 0;padding:5px 10px;border-radius:12px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);display:flex;align-items:center;justify-content:center;min-width:0}
+.du-strip{position:relative;z-index:2;flex:none;min-height:44px;margin:8px 12px 0;padding:5px 10px;border-radius:12px;background:rgba(18,20,42,.88);border:1px solid rgba(255,210,122,.42);display:flex;align-items:center;justify-content:center;min-width:0}
 .du-st{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;font-size:11.5px;font-weight:900;line-height:1.3;text-align:center;overflow-wrap:anywhere}
 .du-st span{min-width:0;overflow-wrap:anywhere}
 .du-st.busy{color:#cdeffd}
 .du-st.bad{color:#ffd0c6}
 .du-st.ok{color:#d9ffd4}
-.du-conf{position:relative;z-index:2;flex:none;margin:8px 12px 0;padding:11px 11px 10px;border-radius:16px;background:rgba(42,30,20,.98);border:2px solid #ff8a6a;min-width:0}
+.du-conf{position:relative;z-index:2;flex:none;margin:8px 12px 0;padding:11px 11px 10px;border-radius:16px;background:var(--pan2);border:2px solid #ff8a6a;box-shadow:0 4px 0 rgba(0,0,0,.4);min-width:0}
 .du-conf b{display:block;font-size:19px;line-height:1.15;color:#fff;text-align:center;overflow-wrap:anywhere}
 .du-conf ul{margin:7px 0 9px;padding-left:18px;font-size:12.5px;font-weight:800;line-height:1.4}
 .du-conf ul em{font-style:normal;color:var(--g2)}
 .du-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.du-scroll{position:relative;z-index:2;flex:1;min-height:0;min-width:0;padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px}
-.du-card{flex:none;border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:9px 10px;min-width:0}
-.du-card.hi{background:linear-gradient(180deg,rgba(90,58,16,.96),rgba(58,37,8,.96));border:2px solid var(--g2)}
-.du-card h4{margin:0 0 6px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:15px;line-height:1.15;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px;min-width:0}
+.du-scroll{position:relative;z-index:2;flex:1;min-height:0;min-width:0;padding:8px 12px 16px;display:flex;flex-direction:column;gap:10px}
+.du-card{flex:none;border-radius:16px;background:var(--pan);border:2px solid var(--line);box-shadow:0 4px 0 rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,210,122,.1);padding:10px 11px;min-width:0}
+.du-card.hi{background:linear-gradient(180deg,rgba(58,44,96,.96),rgba(28,26,56,.96));border-color:var(--g2)}
+.du-card h4{margin:0 0 6px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:16px;line-height:1.15;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px;min-width:0}
 .du-card h4 span{font-family:Nunito,system-ui,sans-serif;font-size:11px;font-weight:900;color:var(--mut);min-width:0;overflow-wrap:anywhere}
 .du-card h4 span.cnt{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14px;color:var(--g2)}
+.du-card h4.ct{justify-content:center;text-align:center;font-size:20px;margin:12px 0 4px;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.du-card h4.ct span{flex:0 0 100%;text-align:center}
 .du-note{font-size:11.5px;font-weight:800;color:var(--mut);line-height:1.35;margin:6px 0 0;overflow-wrap:anywhere}
 .du-note b{color:var(--cream)}
 .du-miss{font-size:11.5px;font-weight:800;color:#ffb38a;margin:5px 0 0;line-height:1.3;overflow-wrap:anywhere}
-.du-bt,.xs .du-bt{flex:none;min-height:44px;min-width:44px;padding:4px 12px;border-radius:13px;border:1.5px solid rgba(255,236,200,.25);background:#3a2c20;color:#f6ecdf;font-weight:900;font-size:14px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-align:center;overflow-wrap:anywhere}
+.du-bt,.xs .du-bt{flex:none;min-height:44px;min-width:44px;padding:4px 12px;border-radius:13px;border:2px solid rgba(255,210,122,.35);background:#2a2748;color:#f8ecd4;font-weight:900;font-size:14px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-align:center;overflow-wrap:anywhere}
 .du-bt:active{transform:translateY(2px)}
 .du-bt.g,.xs .du-bt.g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1d5a1c}
-.du-bt.r,.xs .du-bt.r{border:1.5px solid rgba(255,107,107,.6);background:#3a1c1a;color:#ffb3a8}
-.du-bt.y,.xs .du-bt.y{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10}
+.du-bt.r,.xs .du-bt.r{border:2px solid rgba(255,107,107,.6);background:#3a1c26;color:#ffb3a8}
+.du-bt.y,.xs .du-bt.y{border:2px solid #9a5a10;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #7a4208}
+.du-bt.b,.xs .du-bt.b{border:2px solid #1b3c7a;background:linear-gradient(180deg,var(--blue),#27509f);color:#fff;box-shadow:0 3px 0 #16305f;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.du-bt.b small{display:block;font-size:10.5px;font-weight:800;line-height:1.15}
+.du-bt.b .tw{min-width:0;overflow-wrap:anywhere}
 .du-bt.off,.xs .du-bt.off{opacity:.5;box-shadow:none}
-.du-myc{display:flex;align-items:center;gap:8px;min-width:0}
-.du-myc .cd{flex:1;min-width:0;min-height:48px;border-radius:12px;background:rgba(0,0,0,.35);border:1.5px dashed rgba(255,201,74,.6);display:flex;align-items:center;justify-content:center;font-family:'Lilita One',Nunito,sans-serif;font-size:22px;letter-spacing:3px;color:#fff;text-align:center;overflow-wrap:anywhere;padding:2px 6px}
-.du-myc .cd.sm{font-family:Nunito,system-ui,sans-serif;font-size:12.5px;font-weight:900;letter-spacing:0;color:var(--mut)}
+/* cartão claro do convite (mock du_cv): papel creme, aro dourado, placa de madeira com o código */
+.du-card.lt{background:linear-gradient(180deg,var(--paper),var(--paper2));border:3px solid var(--gold);box-shadow:0 0 0 2px #7a4a17,0 6px 0 rgba(0,0,0,.42);color:var(--ink);padding:12px 12px 11px}
+.du-card.lt h4{color:#7a3d0c}
+.du-card.lt h4 span{color:var(--ink2)}
+.du-card.lt h4 span.cnt{color:#7a3d0c}
+.du-card.lt h4.pl{justify-content:center;text-align:center;font-size:19px;margin-bottom:8px}
+.du-card.lt h4.pl span{flex:0 0 100%;text-align:center}
+.du-card.lt h4.s2{margin-top:12px}
+.du-card.lt .du-note{color:var(--ink2)}
+.du-card.lt .du-note b{color:var(--ink)}
+.du-myc{display:flex;align-items:center;gap:8px;min-width:0;padding:9px 10px;border-radius:14px;background:linear-gradient(180deg,#8a5a34,var(--wood) 55%,#5c3a20);border:3px solid var(--gold);box-shadow:inset 0 0 0 2px var(--wood2),0 3px 0 #7a4a17}
+.du-myc .cd{flex:1;min-width:0;min-height:48px;display:flex;align-items:center;justify-content:center;font-family:'Lilita One',Nunito,sans-serif;font-size:25px;letter-spacing:3px;color:#fff3d6;text-shadow:0 2px 0 #2a1a0e;text-align:center;overflow-wrap:anywhere;padding:2px 4px}
+.du-myc .cd.sm{font-family:Nunito,system-ui,sans-serif;font-size:12.5px;font-weight:900;letter-spacing:0;color:#fbe9c8;text-shadow:none}
 .du-cin{display:flex;gap:8px;align-items:stretch;min-width:0}
-.du-inp{flex:1;min-width:0;height:48px;border-radius:12px;background:#140e0a;border:1.5px solid rgba(255,236,200,.3);color:#fff;font:400 20px 'Lilita One',Nunito,sans-serif;letter-spacing:2px;padding:0 10px;text-transform:uppercase}
-.du-inp::placeholder{font:800 12px Nunito,system-ui,sans-serif;letter-spacing:0;color:#8a7a68;text-transform:none}
-.du-inp:disabled{opacity:.45}
-.du-hint{font-size:11px;font-weight:800;color:var(--mut);margin-top:5px;line-height:1.35;overflow-wrap:anywhere}
-.du-hint.err{color:#ff9f8a}
+.du-inp{flex:1;min-width:0;height:48px;border-radius:12px;background:#e6d3b0;border:2px solid #c2a271;color:var(--ink);font:400 20px 'Lilita One',Nunito,sans-serif;letter-spacing:2px;padding:0 10px;text-transform:uppercase}
+.du-inp::placeholder{font:800 12.5px Nunito,system-ui,sans-serif;letter-spacing:0;color:#6e563c;text-transform:none}
+.du-inp:disabled{opacity:.5}
+.du-hint{font-size:11px;font-weight:800;color:var(--ink2);margin-top:6px;line-height:1.35;overflow-wrap:anywhere}
+.du-hint.err{color:#a3261a}
 .du-inv{padding:7px 0;border-top:1px solid rgba(255,236,200,.1);min-width:0}
 .du-inv.first{border-top:0;padding-top:0}
 .du-inv .who{display:flex;align-items:center;gap:8px;min-width:0}
-.du-av{flex:none;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#5a4026,#1a120c 72%);border:2px solid #6a5340;display:grid;place-items:center;position:relative}
+.du-av{flex:none;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#ffcf8a,#a4571f 78%);border:2px solid var(--gold);display:grid;place-items:center;position:relative}
 .du-inv .tx{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.25}
 .du-inv .tx b{display:block;font-size:14.5px;color:#fff;overflow-wrap:anywhere}
 .du-inv .tx small{display:block;color:var(--mut);font-size:11px;line-height:1.25;overflow-wrap:anywhere}
 .du-inv .acts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 48px;gap:6px;margin-top:6px}
 .du-inv .acts .du-bt{min-width:0;padding:4px 6px;font-size:13px}
 .du-empty{font-size:12px;font-weight:800;color:var(--mut);text-align:center;padding:6px 0;line-height:1.35}
-.du-pt{display:flex;align-items:center;gap:10px;min-width:0}
-.du-pt .du-av{width:62px;height:62px;border-color:var(--pc)}
-.du-pt .dot{position:absolute;right:3px;bottom:3px;width:14px;height:14px;border-radius:50%;background:#43e06a;border:2px solid #1a120c}
-.du-pt .dot.off{background:#8a7a68}
-.du-pt .tx{flex:1;min-width:0}
+/* os dois retratos (mock du_a): você à esquerda (o herói do jogo), o parceiro à direita, o elo e o coração no meio */
+.du-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(64px,84px) minmax(0,1fr);align-items:center;gap:6px;min-width:0}
+.du-pf{min-width:0;text-align:center}
+.du-pf .fr{position:relative;display:block;width:100%;max-width:132px;margin:0 auto;border-radius:14px;border:3px solid var(--gold);box-shadow:0 0 0 2px #5a3a12,0 5px 0 rgba(0,0,0,.42);overflow:hidden}
+.du-pf .fr:before{content:"";display:block;padding-top:116%}
+.du-pf.me .fr{background:radial-gradient(circle at 50% 42%,#6cc8ff,#1f4f9a 80%)}
+.du-pf.pa .fr{background:radial-gradient(circle at 50% 42%,#ffd79a,#a4571f 80%)}
+.du-pf .fr canvas,.du-pf .fr .ph{position:absolute;left:0;top:0;width:100%;height:100%}
+.du-pf .fr .ph{display:grid;place-items:center}
+.du-pf .fr .dot{position:absolute;right:6px;bottom:6px;width:16px;height:16px;border-radius:50%;background:#43e06a;border:2px solid #1a120c}
+.du-pf .fr .dot.off{background:#8a7a68}
+.du-pf small{display:block;margin-top:5px;font-size:11px;font-weight:900;line-height:1.2;color:var(--mut);overflow-wrap:anywhere}
+.du-lk{min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.du-lk b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14px;line-height:1.1;color:var(--g2);overflow-wrap:anywhere}
+.du-lk em{display:block;font-style:normal;font-family:'Lilita One',Nunito,sans-serif;font-size:15px;line-height:1.1;color:#fff;overflow-wrap:anywhere}
+.du-pt{display:block;min-width:0;margin-top:8px;text-align:center}
+.du-pt .tx{display:block;min-width:0}
 .du-pt .tx small{display:block;font-size:10.5px;font-weight:900;color:var(--mut);letter-spacing:.3px;line-height:1.25}
-.du-pt .tx b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:23px;line-height:1.08;color:#fff;overflow-wrap:anywhere}
+.du-pt .tx b{display:block;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;line-height:1.1;color:#fff;overflow-wrap:anywhere}
 .du-pt .tx i{display:block;font-style:normal;font-size:12px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
 .du-pt .tx i em{font-style:normal;color:#43e06a;font-weight:900}
 .du-pt .tx i em.off{color:var(--mut)}
-.du-bar{position:relative;height:16px;border-radius:8px;background:rgba(0,0,0,.45);overflow:hidden;display:flex;border:1px solid rgba(255,236,200,.14)}
+.du-day{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,210,122,.2)}
+.du-bar{position:relative;height:18px;border-radius:9px;background:#1a1530;overflow:hidden;display:flex;border:2px solid var(--line);box-shadow:inset 0 2px 3px rgba(0,0,0,.55)}
 .du-bar i{display:block;height:100%}
-.du-bar .me{background:linear-gradient(180deg,#ffe07a,#f2a826)}
-.du-bar .pa{background:linear-gradient(180deg,#8ff5dc,#2fb89a)}
-.du-bar span{position:absolute;left:0;right:0;top:0;bottom:0;text-align:center;font:900 11px/15px Nunito,system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+.du-bar .me{background:linear-gradient(90deg,#ff6fae,#ff9a62)}
+.du-bar .pa{background:linear-gradient(90deg,#ff9a62,#ffd95e)}
 .du-leg{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:11px;font-weight:900;flex-wrap:wrap;line-height:1.3}
 .du-leg span{min-width:0;overflow-wrap:anywhere}
-.du-leg .m{color:#ffd25e}
-.du-leg .p{color:#8ff5dc}
+.du-leg .m{color:#ffa3cb}
+.du-leg .p{color:#ffd95e}
 .du-rw{display:flex;align-items:center;gap:8px;margin-top:7px;min-width:0}
 .du-rw .chips{flex:1;min-width:0;display:flex;gap:5px;flex-wrap:wrap}
-.du-chip{display:inline-flex;align-items:center;gap:3px;min-height:26px;padding:0 7px 0 3px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12px}
+.du-chip{display:inline-flex;align-items:center;gap:3px;min-height:26px;padding:0 7px 0 3px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,210,122,.22);font-weight:900;font-size:12px}
 .du-chip img{width:20px;height:20px;flex:none;object-fit:contain}
 .du-got{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 10px;border-radius:13px;background:rgba(94,231,255,.12);border:1.5px solid rgba(94,231,255,.5);color:#bff4ff;font-weight:900;font-size:12.5px;line-height:1.15;text-align:center}
-.du-wm{padding:7px 0;border-top:1px solid rgba(255,236,200,.1);min-width:0}
+.du-wm{display:grid;grid-template-columns:38px minmax(0,1fr);gap:0 9px;align-items:start;padding:8px 0;border-top:1px solid rgba(255,210,122,.14);min-width:0}
 .du-wm.first{border-top:0;padding-top:2px}
-.du-wm .nm{display:flex;justify-content:space-between;gap:6px;font-size:13px;font-weight:900;line-height:1.2;color:#fff;margin-bottom:4px;min-width:0}
-.du-wm .nm span:first-child{min-width:0;overflow-wrap:anywhere}
-.du-wm .nm span:last-child{flex:none;color:var(--g2);font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14px}
+.du-wm .wi{padding-top:2px}
+.du-wm .wb{min-width:0}
+.du-wm .nm{font-size:13.5px;font-weight:900;line-height:1.2;color:var(--cream);margin-bottom:4px;min-width:0;overflow-wrap:anywhere}
+.du-wm .nm b{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14.5px;color:var(--g2)}
+/* frases rápidas na tela da dupla: balões creme (mock du_a) */
 .du-fpv{display:flex;align-items:center;gap:8px;min-width:0}
 .du-fpv .q{flex:1;min-width:0;font-size:12.5px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
-.du-fpv .q b{color:#8ff5dc}
-.du-rule{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,236,200,.1);font-size:12px;font-weight:800;line-height:1.3;min-width:0}
+.du-fpv .q b{color:var(--pc)}
+.du-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 8px;margin-top:10px;padding-bottom:8px}
+.du-qb,.xs .du-qb{position:relative;min-width:0;min-height:48px;padding:5px 6px;border-radius:14px;border:2px solid var(--wood2);background:linear-gradient(180deg,#fff7e4,#f1e2c0);color:var(--ink);box-shadow:0 3px 0 #2a1a0e;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14.5px;line-height:1.12;text-align:center;overflow-wrap:anywhere}
+.du-qb:after{content:"";position:absolute;left:14px;bottom:-8px;width:12px;height:12px;background:#f1e2c0;border-right:2px solid var(--wood2);border-bottom:2px solid var(--wood2);transform:skewX(28deg) rotate(45deg)}
+.du-qb:active{transform:translateY(2px)}
+.du-quick .du-bt.b{min-width:0;min-height:48px;padding:4px 6px;font-size:13.5px}
+.du-rule{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,210,122,.14);font-size:12px;font-weight:800;line-height:1.3;min-width:0}
 .du-rule.first{border-top:0}
 .du-rule span{min-width:0;overflow-wrap:anywhere}
 .du-rule span:first-child{flex:none;max-width:40%;color:var(--g2);font-weight:900}
@@ -179,23 +225,37 @@ const coinImg='<img src="'+IC.coin+'" alt="" width="20" height="20">';
 .du-wt .tm{display:block;font-family:'Lilita One',Nunito,sans-serif;font-size:38px;line-height:1.15;color:var(--g2);text-shadow:0 2px 0 #000;letter-spacing:1px}
 .du-wt small{display:block;font-size:12px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
 .du-wt small.d{color:var(--mut);margin-top:4px}
+/* frases prontas (mock du_fr): painel de madeira com cantos dourados e medalhões redondos */
 .du-ph{position:relative;z-index:2;flex:none;display:flex;align-items:center;gap:8px;margin:8px 12px 0;min-width:0}
 .du-ph b{flex:1;min-width:0;font-size:18px;line-height:1.15;color:#fff;overflow-wrap:anywhere}
-.du-chat{position:relative;z-index:2;flex:1 1 120px;min-height:96px;min-width:0;margin:8px 12px 0;padding:8px 10px;border-radius:14px;background:rgba(20,14,10,.82);border:1px solid rgba(255,236,200,.12);display:flex;flex-direction:column;gap:6px}
+.du-chat{position:relative;z-index:2;flex:1 1 110px;min-height:84px;min-width:0;margin:8px 12px 0;padding:8px 10px;border-radius:14px;background:rgba(14,15,34,.84);border:1px solid rgba(255,210,122,.2);display:flex;flex-direction:column;gap:6px}
 .du-bub{flex:none;max-width:82%;padding:7px 11px;border-radius:15px;font-size:14px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
-.du-bub small{display:block;font-size:10px;font-weight:800;opacity:.78;margin-top:2px}
+.du-bub small{display:block;font-size:10px;font-weight:800;opacity:.85;margin-top:2px}
 .du-bub.me{align-self:flex-end;background:linear-gradient(180deg,#ffe07a,#f2b52a);color:#2a1403;border-bottom-right-radius:4px}
-.du-bub.pa{align-self:flex-start;background:#2f4a44;color:#e8fff9;border:1px solid rgba(143,245,220,.4);border-bottom-left-radius:4px}
-.du-cbar{position:relative;z-index:2;flex:none;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;margin:6px 12px 0;font-size:11.5px;font-weight:900;line-height:1.3;min-width:0}
-.du-cbar .cd{color:#8ff5dc}
-.du-cbar .cd.w{color:#ffb38a}
+.du-bub.pa{align-self:flex-start;background:linear-gradient(180deg,#fff7e4,#f1e2c0);color:var(--ink);border:1px solid var(--wood2);border-bottom-left-radius:4px}
+.du-wood{position:relative;z-index:2;flex:1 1 250px;min-height:176px;min-width:0;margin:10px 6px 0;padding:10px 9px 0;border-radius:16px 16px 0 0;background:repeating-linear-gradient(180deg,#5c3a20 0,#5c3a20 34px,#4f311a 34px,#4f311a 36px);border:3px solid #2a1a0e;border-bottom:0;box-shadow:inset 0 0 0 2px rgba(255,201,74,.22);display:flex;flex-direction:column}
+.du-wood:before,.du-wood:after{content:"";position:absolute;top:-4px;width:30px;height:30px;border-top:6px solid #f0b53a;pointer-events:none}
+.du-wood:before{left:-4px;border-left:6px solid #f0b53a;border-top-left-radius:18px}
+.du-wood:after{right:-4px;border-right:6px solid #f0b53a;border-top-right-radius:18px}
+.du-wood h3{flex:none;margin:0 0 4px;text-align:center;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;line-height:1.1;color:var(--g2);text-shadow:0 2px 0 #2a1a0e}
+.du-cbar{flex:none;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;font-size:11.5px;font-weight:900;line-height:1.3;min-width:0;color:var(--cream)}
+.du-cbar .cd{color:#9ff5c0}
+.du-cbar .cd.w{color:#ffc29a}
 .du-cbar b{color:var(--g2)}
-.du-pgrid{position:relative;z-index:2;flex:0 1 auto;min-height:104px;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:6px 12px 0;padding-bottom:12px}
-.du-phb,.xs .du-phb{min-width:0;min-height:44px;padding:3px 8px;border-radius:12px;border:1.5px solid rgba(255,236,200,.22);background:#3a2c20;color:#fff;font-weight:900;font-size:13px;line-height:1.15;text-align:center;overflow-wrap:anywhere}
+.du-pgrid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:8px 6px;margin-top:8px;padding-bottom:12px}
+.du-phb,.xs .du-phb{min-width:0;min-height:76px;padding:2px;border:0;border-radius:12px;background:none;color:var(--cream);font-weight:900;font-size:12.5px;line-height:1.15;text-align:center;overflow-wrap:anywhere;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px}
+.du-phb i{flex:none;width:48px;height:48px;border-radius:50%;border:3px solid #f0b53a;box-shadow:0 0 0 2px #4a2d18,0 0 10px rgba(255,170,60,.5);display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#6fb4f0,#27509f)}
+.du-phb:nth-child(5n+2) i{background:radial-gradient(circle at 50% 35%,#f2a85a,#9a4a14)}
+.du-phb:nth-child(5n+3) i{background:radial-gradient(circle at 50% 35%,#7fe0a0,#1f7a46)}
+.du-phb:nth-child(5n+4) i{background:radial-gradient(circle at 50% 35%,#f07a7a,#8a2330)}
+.du-phb:nth-child(5n+5) i{background:radial-gradient(circle at 50% 35%,#c59af2,#5a2f9a)}
+.du-phb span{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.du-phb:active i{transform:translateY(2px)}
 .du-phb.cw,.xs .du-phb.cw{opacity:.5}
-.du-phb.rp,.xs .du-phb.rp{opacity:.4;border-style:dashed}
+.du-phb.rp,.xs .du-phb.rp{opacity:.42}
+.du-phb.rp i{border-style:dashed}
 .du-gate{position:relative;z-index:2;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
-.du-gate b{font-size:26px;line-height:1.1;color:#fff}
+.du-gate b{font-size:26px;line-height:1.1;color:var(--g2);text-shadow:0 2px 0 rgba(0,0,0,.5)}
 .du-gate span{font-size:13px;font-weight:800;color:var(--mut);line-height:1.4;overflow-wrap:anywhere}
 .du-gate .du-bt{min-height:48px;padding:0 26px;font-size:15px}
 @media (prefers-reduced-motion:reduce){.du-in{animation:none}}
@@ -234,7 +294,15 @@ function poll(force){ const n=DN(); if(!n||!online()||typeof n.refresh!=='functi
   let pr=null; try{ pr=n.refresh(sv(),host()); }catch(e){ pr=null; } Promise.resolve(pr).then(end,()=>{}); }
 
 /* ================= HTML ================= */
-const bgHtml=()=>'<div class="du-bg" style="background:'+(typeof xEraBg==='function'?xEraBg(0.74,0.93):'#16110d')+'"></div>';
+/* fundo: regra da casa (cenário da era atual pelo xEraBg), bem escurecido e com um véu azul-noite por cima, como no mock escuro */
+const bgHtml=()=>'<div class="du-bg" style="background:'+(typeof xEraBg==='function'?'linear-gradient(180deg,rgba(18,20,48,.5),rgba(10,10,28,.62)),'+xEraBg(0.7,0.9):'#12142a')+'"></div>';
+/* o MEU retrato: o herói do jogo (window.drawHeroFull: arma na mão), a pé. Sem o desenho do jogo, fica o boneco em SVG */
+const heroOk=()=>{ try{ return typeof window.drawHeroFull==='function'&&typeof HS==='number'&&HS>0&&typeof requestAnimationFrame==='function'; }catch(e){ return false; } };
+let hRaf=0, hT0=0;
+function heroLoop(ts){ hRaf=0; const c=byId('du_hero'); if(!c||!isOn()||typeof c.getContext!=='function'){ hT0=0; return; }
+  try{ if(!hT0) hT0=ts; const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,c.width,c.height); window.drawHeroFull(x,c.width*0.5,c.height*0.95,c.height*0.96/HS,{t:(ts-hT0)/1000,mount:false,pet:false}); }catch(e){}
+  hRaf=requestAnimationFrame(heroLoop); }
+function heroStart(){ try{ if(!hRaf&&heroOk()&&byId('du_hero')) hRaf=requestAnimationFrame(heroLoop); }catch(e){} }
 /* em que estado a tela está: none (sem módulo) · off (chave desligada) · level · closed (sem online) · boot (conectando) · out · wait · duo · phr */
 function mode(){ const D=DM(); if(!D) return {m:'none'}; if(!duoOn()) return {m:'off'};
   let st=null; try{ st=D.status(sv(),host()); }catch(e){ st=null; } if(!st||!st.on) return {m:'off'};
@@ -276,15 +344,16 @@ function pClosed(M){ const z=netSt(); let t='', btn='';
 /* ----- sem dupla: o meu código, convidar pelo código, convites recebidos ----- */
 function myCodeCard(){ const z=netSt()||{}, c=typeof z.code==='string'&&z.code?z.code:'';
   let mid;
-  if(c) mid='<span class="cd" aria-label="Seu código: '+esc2(c.split('').join(' '))+'">'+esc2(c)+'</span><button class="du-bt" data-x="copy" aria-label="Copiar o seu código">'+SV(I_COPY)+'Copiar</button>';
-  else if(X.codeSt==='err') mid='<span class="cd sm" role="alert">Não foi possível ler o seu código</span><button class="du-bt" data-x="retry" data-k="code">Tentar de novo</button>';
+  if(c) mid='<span class="cd" aria-label="Seu código: '+esc2(c.split('').join(' '))+'">'+esc2(c)+'</span><button class="du-bt y" data-x="copy" aria-label="Copiar o seu código">Copiar</button>';
+  else if(X.codeSt==='err') mid='<span class="cd sm" role="alert">Não foi possível ler o seu código</span><button class="du-bt y" data-x="retry" data-k="code">Tentar de novo</button>';
   else mid='<span class="cd sm" role="status">Carregando…</span>';
-  return '<div class="du-card"><h4>Seu código de amigo<span>mostre só a amigos de verdade</span></h4><div class="du-myc">'+mid+'</div></div>'; }
+  return '<h4 class="pl">Seu código de amigo<span>mostre só a amigos de verdade</span></h4><div class="du-myc"'+artBg('placa')+'>'+mid+'</div>'; }
 function sentList(){ try{ const D=DM(), o=D.ensure(sv()), t=gameNow(), ttl=num(D.DATA.invite.ttlMs); return o.inv.out.filter(x=>t-x.at<ttl).map(x=>({code:x.code,h:Math.max(1,Math.ceil((x.at+ttl-t)/3600000))})); }catch(e){ return []; } }
 function codeCard(v,waiting){ const D=data(), I=D.invite||{}, z=netSt()||{}, left=leftOf(v.invitesLeft,z.invitesLeft), used=Math.max(0,num(I.perDay)-left), out=sentList();
-  return myCodeCard()+'<div class="du-card"><h4>Convidar pelo código<span class="cnt">Convites hoje: '+nT(used)+'/'+nT(I.perDay)+'</span></h4>'
+  /* mock du_cv: UM cartão claro com a placa do código em cima e o campo do código do amigo embaixo */
+  return '<div class="du-card lt">'+myCodeCard()+'<h4 class="s2">Convidar pelo código<span class="cnt">Convites hoje: '+nT(used)+'/'+nT(I.perDay)+'</span></h4>'
     +'<div class="du-cin"><input id="du_code" class="du-inp" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10" placeholder="Código do amigo" aria-label="Código do amigo: só letras e números, 6 a 10" value="'+esc2(X.code)+'"'+(waiting?' disabled':'')+'>'
-    +'<button class="du-bt g'+(waiting?' off':'')+'" data-x="invite">Convidar</button></div>'
+    +'<button class="du-bt y'+(waiting?' off':'')+'" data-x="invite">Convidar</button></div>'
     +(X.err?'<div class="du-hint err" role="alert">'+esc2(X.err)+'</div>':'<div class="du-hint">Só letras e números, de 6 a 10. Não é chat: nada que você digita aparece para ninguém.</div>')
     +(out.length?'<p class="du-note">Enviados: '+out.map(x=>'<b>'+esc2(x.code)+'</b> (vence em '+nT(x.h)+' h)').join(', ')+'</p>':'')+'</div>'; }
 function invitesCard(v,waiting){ const L=v.invitesIn||[], ttlH=nT(Math.round(num((data().invite||{}).ttlMs)/3600000));
@@ -308,20 +377,28 @@ function rwChips(rw){ rw=rw||{}; let gold=''; try{ const h=host(); if(h&&typeof 
 function claimBtn(st){ if(st.claimed) return '<span class="du-got" role="status">'+SV(I_ENV)+(X.mailed[st.id]?'No correio':'Resgatado')+'</span>';
   return '<button class="du-bt y'+(st.done?'':' off')+'" data-x="claim" data-id="'+esc2(st.id)+'" aria-label="Resgatar '+esc2(st.name)+(st.done?'':', ainda não fechou')+'">Resgatar</button>'; }
 function bar2(mine,partner,target){ const T=Math.max(1,num(target)), a=Math.min(1,num(mine)/T), b=Math.min(1-a,num(partner)/T), tot=Math.min(T,num(mine)+num(partner));
-  return '<div class="du-bar" role="img" aria-label="'+nT(tot)+' de '+nT(T)+'"><i class="me" style="width:'+(a*100).toFixed(1)+'%"></i><i class="pa" style="width:'+(b*100).toFixed(1)+'%"></i><span>'+nT(tot)+' / '+nT(T)+'</span></div>'; }
+  return '<div class="du-bar" role="img" aria-label="'+nT(tot)+' de '+nT(T)+'"><i class="me" style="width:'+(a*100).toFixed(1)+'%"></i><i class="pa" style="width:'+(b*100).toFixed(1)+'%"></i></div>'; }
 function pDuo(v){ const p=v.partner, nm=esc2(p.name||'Parceiro'), on=partnerOn(p), d=v.daily, W=v.weekly||[], M=data().msg||{}, z=netSt()||{}, last=v.chat&&v.chat[v.chat.length-1], un=unread(v);
   const days=num(p.since)>0?Math.max(1,Math.round((gameNow()-p.since)/86400000)):0, sent=Math.max(0,num(M.perDay)-leftOf(v.msgLeft,z.msgLeft));
   const sub=[p.lv?'Nv '+nT(p.lv):'',esc2(eraName(p.era)),num(p.last)>0?'<em class="'+(on?'':'off')+'">'+(on?'online':'visto '+esc2(ago(p.last)))+'</em>':''].filter(Boolean).join(' · ');
-  return '<div class="du-card"><div class="du-pt"><span class="du-av">'+SV(I_ONE,42)+(num(p.last)>0?'<i class="dot'+(on?'':' off')+'"></i>':'')+'</span><span class="tx"><small>SUA DUPLA'+(days?' · HÁ '+nT(days)+(days>1?' DIAS':' DIA'):'')+'</small><b>'+nm+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</span></div></div>'
-    +'<div class="du-card hi"><h4>'+esc2(d.name)+'<span>os dois entram e somam '+nT(d.target)+' abates</span></h4>'+bar2(d.mine,d.partner,d.target)
+  const tot=Math.min(num(d.target),num(d.mine)+num(d.partner));
+  /* ordem do mock du_a: os dois retratos com o elo e o "juntos hoje" no meio · painel das missões · balões de frase e o botão azul */
+  return '<div class="du-card">'
+    +'<div class="du-pair"><div class="du-pf me"><span class="fr"'+artBg('retratoEu')+'>'+(heroOk()?'<canvas id="du_hero" width="208" height="240" aria-hidden="true"></canvas>':'<span class="ph">'+SV(I_ONE,56)+'</span>')+'</span><small>Você</small></div>'
+    +'<div class="du-lk">'+SV(I_CHAIN,34)+SV(I_HEART,30)+'<b>'+esc2(d.name)+'</b><em>'+nT(tot)+' / '+nT(d.target)+'</em></div>'
+    +'<div class="du-pf pa"><span class="fr"'+artBg('retratoPar')+'><span class="ph">'+SV(I_ONE,56)+'</span>'+(num(p.last)>0?'<i class="dot'+(on?'':' off')+'"></i>':'')+'</span><small>Parceiro</small></div></div>'
+    +'<div class="du-pt"><span class="tx"><small>SUA DUPLA'+(days?' · HÁ '+nT(days)+(days>1?' DIAS':' DIA'):'')+'</small><b>'+nm+'</b>'+(sub?'<i>'+sub+'</i>':'')+'</span></div>'
+    +'<div class="du-day"><p class="du-note" style="margin:0 0 5px">Os dois entram e somam '+nT(d.target)+' abates.</p>'+bar2(d.mine,d.partner,d.target)
     +'<div class="du-leg"><span class="m">Você: '+nT(d.mine)+'</span><span class="p">'+nm+': '+nT(d.partner)+(d.both?' · entrou hoje':'')+'</span></div>'
     +(d.both?'':'<p class="du-miss">'+nm+' ainda não entrou hoje: a meta precisa dos dois.</p>')
     +'<div class="du-rw"><span class="chips">'+rwChips(d.reward)+'</span>'+claimBtn(d)+'</div></div>'
-    +'<div class="du-card"><h4>Frases prontas<span>Frases hoje: '+nT(sent)+'/'+nT(M.perDay)+'</span></h4><div class="du-fpv">'+SV(I_BUB,30)+'<span class="q">'+(last?(last.me?'Você':'<b>'+nm+'</b>')+': '+esc2(last.txt):'Nenhuma frase ainda.')+'</span><button class="du-bt y" data-x="phr">Abrir'+(un?' ('+nT(un)+')':'')+'</button></div></div>'
-    +'<div class="du-card"><h4>Missões da semana<span>soma dos dois · cada um resgata o seu</span></h4>'+W.map((m,i)=>'<div class="du-wm'+(i?'':' first')+'"><div class="nm"><span>'+esc2(m.name)+'</span><span>'+nT(m.value)+'/'+nT(m.target)+'</span></div>'
+    +'<h4 class="ct">Missões da semana<span>soma dos dois · cada um resgata o seu</span></h4>'+W.map((m,i)=>'<div class="du-wm'+(i?'':' first')+'"><span class="wi">'+SV(W_IC[m.id]||I_DUO,36)+'</span><div class="wb"><div class="nm">'+esc2(m.name)+': <b>'+nT(m.value)+'/'+nT(m.target)+'</b></div>'
         +(m.mine==null?bar2(m.value,0,m.target)+'<div class="du-leg"><span>dias em que os dois entraram</span></div>':bar2(m.mine,m.partner,m.target)+'<div class="du-leg"><span class="m">Você: '+nT(m.mine)+'</span><span class="p">'+nm+': '+nT(m.partner)+'</span></div>')
-        +'<div class="du-rw"><span class="chips">'+rwChips(m.reward)+'</span>'+claimBtn(m)+'</div></div>').join('')
+        +'<div class="du-rw"><span class="chips">'+rwChips(m.reward)+'</span>'+claimBtn(m)+'</div></div></div>').join('')
     +'<p class="du-note">Só ouro e Pedras de Forja. Nada da Dupla se compra.</p></div>'
+    +'<div class="du-card"><h4>Frases prontas<span>Frases hoje: '+nT(sent)+'/'+nT(M.perDay)+'</span></h4><div class="du-fpv">'+SV(I_BUB,30)+'<span class="q">'+(last?(last.me?'Você':'<b>'+nm+'</b>')+': '+esc2(last.txt):'Nenhuma frase ainda.')+'</span></div>'
+    +'<div class="du-quick" role="group" aria-label="Frases prontas">'+(v.phrases||[]).slice(0,QUICK).map(f=>'<button class="du-qb" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+'">'+esc2(f.txt)+'</button>').join('')
+    +'<button class="du-bt b" data-x="phr" aria-label="Abrir todas as frases'+(un?', '+nT(un)+' novas':'')+'">'+SV(I_SCROLL,24)+'<span class="tw">Abrir'+(un?' ('+nT(un)+')':'')+'<small>todas as frases</small></span></button></div></div>'
     +'<div class="du-row2" style="flex:none"><button class="du-bt" data-x="leave">'+SV(I_DOOR)+'Sair da dupla</button><button class="du-bt r" data-x="block">'+SV(I_BLOCK)+'Bloquear</button></div>'; }
 
 /* ----- frases prontas ----- */
@@ -333,9 +410,10 @@ const cdTxt=c=>c.k==='day'?nT((data().msg||{}).perDay)+' por dia: acabou hoje':c
 function pPhr(v){ const p=v.partner, nm=esc2(p.name||'Parceiro'), M=data().msg||{}, z=netSt()||{}, c=cdState(v), sent=Math.max(0,num(M.perDay)-leftOf(v.msgLeft,z.msgLeft)); X.cdK=c.k;
   return '<div class="du-ph"><button class="du-bt" data-x="tduo" aria-label="Voltar para a dupla">'+SV(I_BACK,16)+'Dupla</button><b class="lil">Frases · '+nm+'</b></div>'
     +'<div id="du_chat" class="du-chat x-scroll" aria-live="polite">'+(v.chat.length?v.chat.map(m=>'<div class="du-bub '+(m.me?'me':'pa')+'">'+esc2(m.txt)+'<small>'+(m.me?'você':nm)+(ago(m.at)?' · '+esc2(ago(m.at)):'')+'</small></div>').join(''):'<div class="du-empty">Toque numa frase para mandar.</div>')+'</div>'
+    +'<div class="du-wood"'+artBg('madeira')+'><h3>Frases prontas</h3>'
     +'<div class="du-cbar"><span class="cd'+(c.k==='ok'?'':' w')+'" id="du_cd">'+esc2(cdTxt(c))+'</span><span>1 a cada '+nT(Math.round(num(M.cooldownMs)/1000))+' s · <b>'+nT(sent)+'/'+nT(M.perDay)+'</b> hoje</span></div>'
     +'<div class="du-pgrid x-scroll" role="group" aria-label="Frases prontas">'+v.phrases.map((f,i)=>{ const r=c.per[i]||{}, rp=!r.ok&&r.reason==='repeat';
-      return '<button class="du-phb'+(rp?' rp':c.k!=='ok'?' cw':'')+'" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+(rp?' (já foi '+nT(M.repeatMax)+' vezes seguidas)':'')+'">'+esc2(f.txt)+'</button>'; }).join('')+'</div>'; }
+      return '<button class="du-phb'+(rp?' rp':c.k!=='ok'?' cw':'')+'" data-x="send" data-idx="'+nT(f.idx)+'" aria-label="Mandar: '+esc2(f.txt)+(rp?' (já foi '+nT(M.repeatMax)+' vezes seguidas)':'')+'"><i>'+SV(I_BUB,26)+'</i><span>'+esc2(f.txt)+'</span></button>'; }).join('')+'</div></div>'; }
 
 function grab(){ let foc=false; try{ const el=byId('du_code'); if(el&&typeof el.value==='string'){ X.code=sanitize(el.value); foc=document.activeElement===el; } }catch(e){} return foc; }
 const gate=(d,txt,role)=>xWrap(d,'','<div class="du">'+bgHtml()+'<div class="du-gate"><b class="lil">Dupla das Eras</b><span role="'+(role||'alert')+'">'+esc2(txt)+'</span><button class="du-bt y" data-x="back">Voltar</button></div></div>');
@@ -356,7 +434,7 @@ function draw(){
     +(phr?body:'<div id="du_scroll" class="du-scroll x-scroll">'+body+'</div>')+'</div>');
   try{ if(y0){ const sc=byId('du_scroll'); if(sc) sc.scrollTop=y0; } if(phr){ const ch=byId('du_chat'); if(ch) ch.scrollTop=1e6; }
     if(foc){ const el=byId('du_code'); if(el&&el.focus){ el.focus(); if(el.setSelectionRange) el.setSelectionRange(X.code.length,X.code.length); } } }catch(e){}
-  X.anim=false; X.top=false; X.sig=sig();
+  X.anim=false; X.top=false; X.sig=sig(); heroStart();
 }
 /* o que muda por fora (resposta do servidor, relógio do parceiro, nível): o tick redesenha só quando muda */
 function sig(){ try{ const M=mode(), z=netSt()||{}, v=M.v; if(!v) return [M.m,X.boot,z.on,z.started,M.st&&M.st.needLevel].join('|');

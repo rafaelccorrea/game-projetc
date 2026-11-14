@@ -43,108 +43,139 @@ const V2_ART={mounts:{phoenixm:'giant_phoenix'},pets:{wyvernpet:'infernal_wyvern
 const V2_UNIT={offlineH:' h',bag:' espaços'};   /* unidade do valor da conveniência quando o módulo não traz (igual à tela de hoje) */
 const V2_SVG={
   eye:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
-  info:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5ee7ff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>' };
+  info:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e5a8c" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>' };
+/* ARTE QUE A TELA AINDA DESENHA EM CSS/SVG (mock vp_vb). Quando a Arte entregar os arquivos, o caminho entra AQUI e só aqui (vazio = desenho em CSS):
+   aba = aba dourada do "VIP N" · cartao = papel do cartão · medalha/medalhaOn = medalhão do trilho dos níveis (normal e escolhido) */
+const V2_SKIN={aba:'',cartao:'',medalha:'',medalhaOn:''};
+const vSkinBg=k=>V2_SKIN[k]?' style="background:url('+V2_SKIN[k]+') center/100% 100% no-repeat"':'';
+const V2_FRAME=n=>'assets/ui/frames/vip'+n+'.png';   /* moldura VIP N (arte aprovada, 256x256 com janela de 160) */
+/* ícone de cada linha de benefício (pelo campo do Sys.vip.levelInfo); conveniência sem ícone próprio usa a engrenagem */
+const V2_K='stroke="#3a2413" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"';
+const vSvg=inner=>'<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">'+inner+'</svg>';
+const V2_BI={
+  speedTier:vSvg('<path d="M3 5l8 7-8 7zM12 5l9 7-9 7z" fill="#e2a93b" '+V2_K+'/>'),
+  atkPct:vSvg('<path d="M20.5 2.5l-9.5 9 2 2 9-9.5z" fill="#cfd9e6" '+V2_K+'/><path d="M8.5 10.5l5 5M10 14l-5 5" fill="none" '+V2_K+' stroke-width="2.2"/><path d="M17.5 22c-3-2-4.2-3.5-4.2-5.2a2.1 2.1 0 014.2-.6 2.1 2.1 0 014.2.6c0 1.7-1.2 3.2-4.2 5.2z" fill="#e0475a" '+V2_K+'/>'),
+  goldPct:'<img src="assets/ui/coin.png" alt="">',
+  xpPct:vSvg('<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" fill="#ffd25e" '+V2_K+'/>'),
+  keys:vSvg('<path d="M11.5 11.5L21 21M17.2 17.2l2.6-2.6M14 14l2.2-2.2" fill="none" '+V2_K+' stroke-width="2.4"/><circle cx="8" cy="8" r="4.8" fill="#ffd25e" '+V2_K+'/><circle cx="8" cy="8" r="1.6" fill="#dcc396" '+V2_K+'/>'),
+  chestPerDay:'<img src="assets/ui/chest.png" alt="">',
+  offlineMult:vSvg('<path d="M20.5 14.5A8.6 8.6 0 119.5 3.5a7 7 0 0011 11z" fill="#9db7e6" '+V2_K+'/>'),
+  conv:vSvg('<path d="M12 2.3l1.6 2.7 3-.9.6 3 3 .6-.9 3 2.7 1.6-2.7 1.6.9 3-3 .6-.6 3-3-.9L12 21.7l-1.6-2.7-3 .9-.6-3-3-.6.9-3L2 12.3l2.7-1.6-.9-3 3-.6.6-3 3 .9z" fill="#8f9aad" '+V2_K+'/><circle cx="12" cy="12" r="3.3" fill="#dcc396" '+V2_K+'/>') };
+V2_BI.xp9=V2_BI.xpPct;
+function vBenIcon(key,val){ if(key==='frameVip'&&val>0) return '<img src="'+V2_FRAME(val|0)+'" alt="">'; return V2_BI[key]||V2_BI.conv; }
 
 (function(){ if(typeof document==='undefined'||!document.head) return; const st=document.createElement('style'); st.textContent=`
-.v2-root{background:linear-gradient(180deg,#3a2a12 0%,#141c4a 24%,#0b1030 44%)!important;color:#eef1ff}
+.v2-root{--v-bg:#f3e6c6;--v-paper:#fbf1dc;--v-paper2:#f1e0bc;--v-row:#ecd9b2;--v-tile:#dcc396;--v-line:#c9a35a;--v-gold:#e2a93b;--v-gold2:#8a5a1c;--v-ink:#3a2413;--v-ink2:#5c4630;--v-brand:#7a3d0c;--v-ok:#185a2a;--v-lock:#7a4700;--v-soon:#5a5346;--v-rose:#b3264f;--v-blue:#1e3a52;
+  background:var(--v-bg)!important;color:var(--v-ink)}
 .v2-root,.v2-root *{box-sizing:border-box}
 .v2-root button{font-family:Nunito,system-ui,sans-serif;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .v2-lil{font-family:'Lilita One',Nunito,sans-serif;font-weight:400}
 .v2-in{animation:v2k-in .25s ease-out both}
 @keyframes v2k-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.v2-stage{position:relative;flex:none;overflow:hidden;background:radial-gradient(110% 70% at 50% 62%,rgba(255,210,94,.2),rgba(255,210,94,0) 62%)}
-.v2-who{position:absolute;z-index:3;left:50%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;background:linear-gradient(90deg,rgba(94,231,255,.22),rgba(169,123,255,.22));border:1px solid rgba(94,231,255,.55);font-weight:900;font-size:11px;white-space:nowrap;max-width:94%;overflow:hidden}
-.v2-who>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
-.v2-who>i{flex:none;width:7px;height:7px;border-radius:50%;background:#5ef0a0;box-shadow:0 0 8px #5ef0a0}
-.v2-who.pv{padding:2px 2px 2px 10px;background:rgba(255,107,154,.2);border-color:#ff6b9a;color:#ffd6e2}
-.v2-who.pv>i{background:#ff6b9a;box-shadow:0 0 8px #ff6b9a}
-.v2-who button,.xs .v2-who button{flex:none;min-height:40px;min-width:56px;padding:0 14px;border-radius:999px;border:0;background:#ffd25e;color:#1c1206;font-weight:900;font-size:13px}
+.v2-bg{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+/* trilho dos níveis no alto (mock vp_vb): medalhões redondos sobre uma linha; o escolhido fica dourado */
+.v2-top{position:relative;flex:none;padding:8px 12px 2px;min-width:0}
+.v2-lvls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:40px;gap:6px 4px;justify-items:center;align-items:center;background:linear-gradient(var(--v-gold2),var(--v-gold2)) 0 18px/100% 4px no-repeat,linear-gradient(var(--v-gold2),var(--v-gold2)) 0 64px/100% 4px no-repeat}
+.v2-lv,.xs .v2-lv{position:relative;width:40px;height:40px;min-width:40px;min-height:40px;border-radius:50%;border:3px solid #b39662;background:radial-gradient(circle at 50% 32%,#8a5a34,#4f311a);box-shadow:0 2px 0 #2a1a0e;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:17px;color:#eadcc0;padding:0;line-height:1}
+.v2-lv small{font-family:Nunito,system-ui,sans-serif;font-weight:900;font-size:8.5px;display:block;line-height:1.05}
+.v2-lv.got,.xs .v2-lv.got{border-color:var(--v-gold);color:#fff3d6}
+.v2-lv.me,.xs .v2-lv.me{box-shadow:0 0 0 3px #fff7df,0 2px 0 3px #2a1a0e}
+.v2-lv[aria-pressed="true"],.xs .v2-lv[aria-pressed="true"]{background:radial-gradient(circle at 50% 32%,#fff0a8,#f2a826);border-color:#fff7df;color:#2a1403;box-shadow:0 0 0 2px var(--v-gold2),0 0 12px 3px rgba(255,196,60,.85);transform:scale(1.1)}
+.v2-rd{position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:#e0477a;border:2px solid #fff7df}
+.v2-lvcap{display:flex;align-items:center;justify-content:center;align-self:stretch;justify-self:stretch;padding:1px 3px;border-radius:9px;background:var(--v-paper);border:1px solid var(--v-line);font-size:9px;font-weight:900;color:var(--v-ink2);text-align:center;line-height:1.1;min-width:0;overflow-wrap:anywhere}
+/* palco: o cenário aparece; a moldura VIP do nível escolhido fica atrás do herói */
+.v2-stage{position:relative;flex:none;overflow:hidden;background:radial-gradient(60% 46% at 46% 86%,rgba(255,224,122,.6),rgba(255,224,122,0) 70%)}
+.v2-frame{position:absolute;bottom:13%;height:70%;transform:translateX(-50%);object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 10px rgba(255,214,110,.75))}
+.v2-who{position:absolute;z-index:3;left:3%;right:3%;top:4px;margin:0 auto;width:-webkit-fit-content;width:fit-content;display:flex;align-items:center;gap:6px;min-height:26px;padding:2px 10px;border-radius:14px;background:var(--v-paper);border:2px solid var(--v-gold);box-shadow:0 2px 0 rgba(58,36,19,.3);color:var(--v-ink);font-weight:900;font-size:11.5px;line-height:1.15;text-align:center;max-width:94%}
+.v2-who>span{min-width:0;overflow-wrap:anywhere}
+.v2-who>i{flex:none;width:8px;height:8px;border-radius:50%;background:#1f8a44}
+.v2-who.pv{padding:2px 2px 2px 10px;border-color:var(--v-rose)}
+.v2-who.pv>i{background:var(--v-rose)}
+.v2-who button,.xs .v2-who button{flex:none;min-height:40px;min-width:56px;padding:0 14px;border-radius:12px;border:2px solid #9a5a10;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-weight:900;font-size:13px}
 .v2-still{position:absolute;left:50%;bottom:6%;height:78%;transform:translateX(-50%);object-fit:contain}
-.v2-bt,.xs .v2-bt{flex:none;min-height:40px;padding:0 12px;border-radius:11px;border:0;font-weight:900;font-size:12px;background:linear-gradient(180deg,#ffe58a,#f4a52a);color:#1c1206;box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap}
-.v2-bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
-.v2-bt.rose,.xs .v2-bt.rose{background:linear-gradient(180deg,#ff9fbe,#e0477a);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
-.v2-tag{flex:none;min-width:58px;min-height:30px;padding:0 9px;border-radius:10px;font-weight:900;font-size:11px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
-.v2-tag.own{background:rgba(94,240,160,.12);color:#5ef0a0;border:2px solid #5ef0a0}
-.v2-tag.lock{background:rgba(255,255,255,.06);color:#ffd25e;border:1px solid rgba(130,150,255,.28)}
-.v2-tag.soon{background:rgba(255,255,255,.06);color:#9aa6d6;border:1px solid rgba(130,150,255,.28)}
-.v2-det{position:relative;flex:none;display:flex;gap:9px;align-items:center;margin:6px 12px 0;padding:7px 9px;border-radius:14px;background:linear-gradient(90deg,#27214f,#141c4a);border:1px solid var(--rc);min-width:0;animation:v2k-in .2s ease-out both}
-.v2-th{flex:none;width:44px;height:44px;border-radius:11px;border:2px solid var(--rc);background:#0c1238;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.v2-bt,.xs .v2-bt{flex:none;min-height:40px;padding:0 12px;border-radius:12px;border:2px solid #9a5a10;font-weight:900;font-size:12.5px;line-height:1.15;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #7a4208;display:inline-flex;align-items:center;justify-content:center;gap:5px;text-align:center}
+.v2-bt:active{transform:translateY(2px);box-shadow:0 1px 0 #7a4208}
+.v2-bt.rose,.xs .v2-bt.rose{border-color:#8c1d44;background:linear-gradient(180deg,#ffd0de,#f58aae);color:#3a0618;box-shadow:0 3px 0 #8c1d44}
+.v2-tag{flex:none;min-width:58px;min-height:30px;padding:2px 9px;border-radius:10px;font-weight:900;font-size:11px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+.v2-tag.own{background:var(--v-ok);color:#eafff0}
+.v2-tag.lock{background:var(--v-lock);color:#fff3d6}
+.v2-tag.soon{background:var(--v-soon);color:#f3ead8}
+.v2-det{position:relative;flex:none;display:flex;gap:9px;align-items:center;margin:6px 12px 0;padding:7px 9px;border-radius:14px;background:linear-gradient(180deg,var(--v-paper),var(--v-paper2));border:3px solid var(--rc);box-shadow:0 0 0 2px var(--v-gold2),0 3px 0 rgba(58,36,19,.3);min-width:0;animation:v2k-in .2s ease-out both}
+.v2-th{flex:none;width:44px;height:44px;border-radius:11px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 35%,#5a4026,#2a1a10);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .v2-th img{width:100%;height:100%;object-fit:contain;display:block}
 .v2-di{flex:1;min-width:0}
-.v2-dn{font-weight:900;font-size:14px;overflow-wrap:anywhere;line-height:1.2}
-.v2-rar{font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--rc)}
-.v2-dg{font-size:11px;color:#5ef0a0;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
-.v2-dh{font-size:11px;color:#9aa6d6;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
-.v2-dh b{color:#ffd25e}
+.v2-dn{font-weight:900;font-size:14px;overflow-wrap:anywhere;line-height:1.25;color:var(--v-ink)}
+.v2-rar{display:inline-block;font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:#2a1403;background:var(--rc);padding:1px 6px;border-radius:6px;vertical-align:middle}
+.v2-dg{font-size:11px;color:var(--v-ok);font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.v2-dh{font-size:11px;color:var(--v-ink2);font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.v2-dh b{color:var(--v-brand)}
 .v2-body{position:relative;flex:1;min-height:0;padding:8px 12px 14px}
-.v2-body .v2-det{margin:0 0 8px}
-.v2-sec{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#9aa6d6;font-weight:900;margin:10px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
+.v2-body .v2-det{margin:0 0 10px}
+/* cartão do nível escolhido (mock): papel creme, aro dourado, aba dourada com "VIP N", linhas com ícone, barra de pontos embaixo */
+.v2-main,.v2-more{border-radius:16px;background:linear-gradient(180deg,var(--v-paper),var(--v-paper2));border:3px solid var(--v-gold);box-shadow:0 0 0 2px var(--v-gold2),0 5px 0 rgba(58,36,19,.32);padding:0 10px 10px;margin:2px 2px 12px;min-width:0}
+.v2-more{padding-top:2px}
+.v2-sec{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--v-ink2);font-weight:900;margin:10px 0 6px;display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0}
 .v2-sec>span{min-width:0;overflow-wrap:anywhere}
 .v2-sec>span:last-child{letter-spacing:0;text-transform:none;text-align:right}
-.v2-hint{font-size:11px;color:#9aa6d6;margin:6px 0 8px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
-.v2-hint b{color:#ffd25e}
-.v2-rule{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:rgba(94,231,255,.1);border:1px solid rgba(94,231,255,.45);font-size:11.5px;font-weight:800;color:#cdeffd;line-height:1.4;margin:0 0 4px;min-width:0}
+.v2-hint{font-size:11px;color:var(--v-ink2);margin:6px 0 8px;line-height:1.4;font-weight:800;overflow-wrap:anywhere}
+.v2-hint b{color:var(--v-brand)}
+.v2-rule{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:#e3edf3;border:1px solid #7fa6c4;font-size:11.5px;font-weight:800;color:var(--v-blue);line-height:1.4;margin:10px 0 4px;min-width:0}
 .v2-rule>span{min-width:0;overflow-wrap:anywhere}
-.v2-rule b{color:#fff}
-.v2-card{border-radius:18px;padding:10px;margin-bottom:8px;background:linear-gradient(160deg,rgba(255,210,94,.22),rgba(24,33,86,.92) 55%);border:2px solid rgba(255,210,94,.65);min-width:0}
-.v2-ch{display:flex;align-items:center;gap:10px;min-width:0}
-.v2-ch>img{width:52px;height:52px;flex:none;object-fit:contain}
-.v2-ch .t{flex:1;min-width:0}
-.v2-big{font-size:32px;line-height:1;color:#ffd25e;text-shadow:0 0 16px rgba(255,210,94,.6)}
-.v2-ch small{display:block;font-size:11px;font-weight:800;color:#9aa6d6;line-height:1.35;overflow-wrap:anywhere}
-.v2-ch small b{color:#eef1ff}
-.v2-bar{height:10px;border-radius:5px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}
-.v2-bar>i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#ffe58a,#f4a52a)}
-.v2-prog{font-size:12px;font-weight:900;margin-top:5px;display:flex;justify-content:space-between;gap:8px;min-width:0}
-.v2-prog>span:first-child{min-width:0;overflow-wrap:anywhere}
-.v2-prog>span:last-child{color:#ffd25e;flex:none}
-.v2-rw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.v2-rc{position:relative;min-width:0;min-height:44px;border-radius:14px;border:2px solid var(--rc);background:radial-gradient(circle at 50% 30%,#27306f,#0c1238 78%);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:2px}
-.v2-rc.pv{box-shadow:0 0 0 3px #ff6b9a,0 0 14px rgba(255,107,154,.5)}
-.v2-rc.sn .v2-art{filter:grayscale(.9) brightness(.6)}
-.v2-art{width:100%;aspect-ratio:1;object-fit:contain;display:block}
-.v2-nm{width:100%;font-size:10px;font-weight:900;text-align:center;line-height:1.15;min-height:24px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
-.v2-st{width:100%;min-height:20px;border-radius:7px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.1;padding:2px;overflow-wrap:anywhere;text-align:center}
-.v2-st.own{background:rgba(94,240,160,.15);color:#5ef0a0}
-.v2-st.lock{background:rgba(255,255,255,.07);color:#ffd25e}
-.v2-st.soon{background:rgba(255,255,255,.07);color:#9aa6d6}
-.v2-ey{position:absolute;right:4px;top:4px;width:20px;height:20px;border-radius:7px;background:rgba(5,8,28,.8);display:flex;align-items:center;justify-content:center;color:#ffd6e2}
-.v2-lvls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:6px}
-.v2-lv,.xs .v2-lv{position:relative;min-width:0;min-height:40px;border-radius:9px;border:1px solid rgba(130,150,255,.28);background:rgba(255,255,255,.04);font-weight:900;font-size:14px;color:#9aa6d6;padding:0;line-height:1.05}
-.v2-lv small{font-size:9px;display:block;line-height:1}
-.v2-lv.got,.xs .v2-lv.got{color:#eef1ff}
-.v2-lv.me,.xs .v2-lv.me{border:2px solid #ffd25e;color:#ffd25e}
-.v2-lv[aria-pressed="true"],.xs .v2-lv[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
-.v2-rd{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:#ff6b9a}
-.v2-lvcap{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#9aa6d6;text-align:center;line-height:1.2;min-width:0;overflow-wrap:anywhere}
-.v2-lvh{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:linear-gradient(90deg,rgba(255,210,94,.16),rgba(10,14,44,.85) 70%);border:1px solid rgba(255,210,94,.5);min-width:0}
-.v2-lvh>b{font-size:22px;color:#ffd25e;flex:none}
-.v2-lvh>span.tx{flex:1;min-width:0;font-size:11px;font-weight:800;color:#9aa6d6;line-height:1.35;overflow-wrap:anywhere}
-.v2-lvh em{font-style:normal;color:#eef1ff}
-.v2-pill{flex:none;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;white-space:nowrap}
-.v2-pill.on{background:rgba(94,240,160,.15);color:#5ef0a0}
-.v2-pill.off{background:rgba(255,255,255,.07);color:#9aa6d6}
-.v2-pk{display:flex;gap:8px;align-items:center;padding:7px 9px;border-radius:12px;background:rgba(24,33,86,.78);border:1px solid rgba(130,150,255,.28);margin-bottom:5px;min-width:0}
-.v2-pk.nw{border-color:rgba(94,240,160,.5)}
-.v2-pk>span.tx{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
-.v2-pk>span.tx small{display:block;font-size:10px;color:#9aa6d6;font-weight:700}
-.v2-pk>em{font-style:normal;font-weight:900;font-size:12px;color:#ffd25e;flex:none;text-align:right;max-width:42%;overflow-wrap:anywhere}
-.v2-pth{flex:none;width:36px;height:36px;border-radius:9px;background:#0c1238;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.v2-rule b{color:#0f2638}
+.v2-lvh{display:flex;flex-direction:column;align-items:center;gap:2px;width:86%;margin:0 auto 9px;padding:5px 12px 8px;border-radius:0 0 24px 24px;background:linear-gradient(180deg,#f0cf7a,#cf9d3f);box-shadow:0 2px 0 var(--v-gold2);text-align:center;min-width:0}
+.v2-lvh>b{font-size:27px;line-height:1.1;color:var(--v-ink)}
+.v2-lvh>span.tx{min-width:0;font-size:11px;font-weight:800;color:var(--v-ink);line-height:1.3;overflow-wrap:anywhere}
+.v2-lvh em{font-style:normal;font-weight:900;color:#4a1800}
+.v2-pill{flex:none;font-size:10px;font-weight:900;padding:2px 9px;border-radius:9px;line-height:1.3}
+.v2-pill.on{background:var(--v-ok);color:#eafff0}
+.v2-pill.off{background:var(--v-ink2);color:#fff3d6}
+.v2-pk{display:flex;gap:9px;align-items:center;min-height:48px;padding:0 9px 0 0;border-radius:10px;background:var(--v-row);border:1px solid var(--v-line);margin-bottom:6px;min-width:0;overflow:hidden}
+.v2-pk.nw{border-color:var(--v-line)}
+.v2-pi{flex:none;align-self:stretch;width:48px;min-height:48px;background:var(--v-tile);display:flex;align-items:center;justify-content:center}
+.v2-pi img{width:38px;height:38px;object-fit:contain;display:block}
+.v2-pk>span.tx{flex:1;min-width:0;padding:5px 0;font-size:13px;font-weight:900;color:var(--v-ink);line-height:1.25;overflow-wrap:anywhere}
+.v2-pk>span.tx small{display:block;font-size:10.5px;color:var(--v-ink2);font-weight:800;line-height:1.25}
+.v2-pk>em{font-style:normal;font-weight:900;font-size:12.5px;color:var(--v-brand);flex:none;text-align:right;max-width:42%;overflow-wrap:anywhere}
+.v2-pk .v2-bt,.v2-pk .v2-tag{margin:4px 0}
+.v2-pth{flex:none;align-self:stretch;width:48px;min-height:48px;background:radial-gradient(circle at 50% 35%,#5a4026,#2a1a10);overflow:hidden;display:flex;align-items:center;justify-content:center}
 .v2-pth img{width:100%;height:100%;object-fit:contain;display:block}
-.v2-tbl{border-radius:14px;border:1px solid rgba(130,150,255,.28);overflow:hidden;background:rgba(5,8,28,.45)}
-.v2-tr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);align-items:stretch;border-bottom:1px solid rgba(130,150,255,.15);min-height:34px}
+.v2-card{margin-top:10px;padding-top:9px;border-top:2px dashed var(--v-line);min-width:0}
+.v2-ch{display:flex;align-items:center;gap:10px;min-width:0}
+.v2-ch>img{width:44px;height:44px;flex:none;object-fit:contain}
+.v2-ch .t{flex:1;min-width:0}
+.v2-big{font-size:24px;line-height:1.05;color:var(--v-brand)}
+.v2-ch small{display:block;font-size:11px;font-weight:800;color:var(--v-ink2);line-height:1.35;overflow-wrap:anywhere}
+.v2-ch small b{color:var(--v-ink)}
+.v2-bar{position:relative;min-height:28px;border-radius:14px;background:#d9c08e;border:2px solid var(--v-gold2);box-shadow:inset 0 2px 3px rgba(58,36,19,.3);overflow:hidden;margin-top:8px;display:flex;align-items:center;justify-content:center}
+.v2-bar>i{position:absolute;left:0;top:0;bottom:0;display:block;background:linear-gradient(180deg,#ffe58a,#f2a826)}
+.v2-prog{position:relative;z-index:1;font-size:12px;font-weight:900;color:#2a1403;line-height:1.2;text-align:center;padding:3px 10px;min-width:0;overflow-wrap:anywhere}
+.v2-rw{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.v2-rc,.xs .v2-rc{position:relative;min-width:0;min-height:44px;border-radius:13px;border:3px solid var(--rc);background:var(--v-paper);box-shadow:0 2px 0 rgba(58,36,19,.3);color:var(--v-ink);padding:4px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.v2-rc.pv{box-shadow:0 0 0 3px var(--v-rose),0 0 12px rgba(179,38,79,.45)}
+.v2-rc.sn .v2-art{filter:grayscale(.9) brightness(.7)}
+.v2-art{width:100%;aspect-ratio:1;object-fit:contain;display:block;border-radius:9px;background:radial-gradient(circle at 50% 35%,#5a4026,#2a1a10)}
+.v2-nm{width:100%;font-size:10.5px;font-weight:900;text-align:center;line-height:1.15;min-height:24px;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;color:var(--v-ink)}
+.v2-st{width:100%;min-height:20px;border-radius:7px;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;line-height:1.1;padding:2px;overflow-wrap:anywhere;text-align:center}
+.v2-st.own{background:var(--v-ok);color:#eafff0}
+.v2-st.lock{background:var(--v-lock);color:#fff3d6}
+.v2-st.soon{background:var(--v-soon);color:#f3ead8}
+.v2-ey{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:7px;background:rgba(42,20,3,.88);display:flex;align-items:center;justify-content:center;color:#ffe9a8}
+.v2-tbl{border-radius:12px;border:2px solid var(--v-line);overflow:hidden;background:var(--v-paper)}
+.v2-tr{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1fr);align-items:stretch;border-bottom:1px solid rgba(138,90,28,.28);min-height:34px}
 .v2-tr:last-child{border-bottom:0}
-.v2-tr>span{padding:5px 7px;font-size:11px;font-weight:800;line-height:1.25;min-width:0;overflow-wrap:anywhere;display:flex;align-items:center}
-.v2-tr>span:nth-child(2){color:#9aa6d6;justify-content:center;text-align:center}
-.v2-tr>span:nth-child(3){justify-content:center;text-align:center;background:rgba(255,210,94,.07);font-weight:900}
-.v2-tr.hd{min-height:28px;background:rgba(61,79,184,.35)}
-.v2-tr.hd>span{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#9aa6d6;font-weight:900}
-.v2-tr .up{color:#ffd25e}
-.v2-tr .no{color:#9aa6d6}
-.v2-foot{position:relative;flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,16,48,0),#0b1030 30%);display:flex;flex-direction:column;gap:4px;min-width:0}
-.v2-foot .v2-bt{width:100%;min-height:48px;font-size:15px}
-.v2-foot .v2-bt img{width:20px;height:20px;object-fit:contain}
-.v2-foot small{text-align:center;font-size:10px;font-weight:800;color:#9aa6d6;line-height:1.3;overflow-wrap:anywhere}
+.v2-tr>span{padding:5px 7px;font-size:11px;font-weight:800;line-height:1.25;min-width:0;overflow-wrap:anywhere;display:flex;align-items:center;color:var(--v-ink)}
+.v2-tr>span:nth-child(2){color:var(--v-ink2);justify-content:center;text-align:center}
+.v2-tr>span:nth-child(3){justify-content:center;text-align:center;background:rgba(226,169,59,.2);font-weight:900}
+.v2-tr.hd{min-height:28px;background:#e2c98f}
+.v2-tr.hd>span{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--v-ink);font-weight:900}
+.v2-tr .up{color:var(--v-brand)}
+.v2-tr .no{color:var(--v-soon)}
+.v2-foot{position:relative;flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(243,230,198,0),var(--v-bg) 34%);display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.v2-foot .v2-bt{min-width:64%;max-width:100%;min-height:50px;padding:0 22px;border-radius:15px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:19px}
+.v2-foot .v2-bt img{width:22px;height:22px;object-fit:contain}
+.v2-foot small{text-align:center;font-size:10.5px;font-weight:800;color:var(--v-ink2);line-height:1.3;overflow-wrap:anywhere}
+.v2-gate{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 16px;text-align:center}
+.v2-gate span{font-weight:900;font-size:14px;line-height:1.35;color:var(--v-ink);overflow-wrap:anywhere}
 @media (prefers-reduced-motion:reduce){.v2-root *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 `; document.head.appendChild(st); })();
 
@@ -186,7 +217,7 @@ function vTable(L){ const b=vInfo(0), h=vInfo(L), out=[];
   return out; }
 /* o que ABRE ou MELHORA no nível L, comparado com o L-1: [rótulo, valor, 2ª linha] */
 function vOpens(L){ if(L<1) return []; const a=vInfo(L-1), h=vInfo(L), b=vInfo(0), out=[];
-  for(const r of vBaseRows()) if(vRowVal(r,h)!==vRowVal(r,a)){ const f=r[2](b); out.push([r[1],r[2](h),f&&f!=='—'?'Grátis: '+f:'']); }
+  for(const r of vBaseRows()) if(vRowVal(r,h)!==vRowVal(r,a)){ const f=r[2](b); out.push([r[1],r[2](h),f&&f!=='—'?'Grátis: '+f:'',r[0],vRowVal(r,h)]); }   /* 4º e 5º: campo e valor cru, só para o ícone da linha */
   for(const c of vConvs()){ const ch=c.vals?(L>=c.vip&&(+c.vals[L]||0)!==(+c.vals[L-1]||0)):L===c.vip; if(!ch) continue;
     out.push([c.name,c.vals?vConvTxt(c,L):'Abre',[c.sub,c.free?'grátis: '+c.free:''].filter(Boolean).join(' · ')]); }
   return out; }
@@ -260,18 +291,21 @@ function vStop(){ try{ if(v2Raf&&typeof cancelAnimationFrame==='function') cance
 function vStill(){ try{ const A=window.Sys&&Sys.appearance, k=A&&typeof A.avatarKey==='function'?A.avatarKey(S,vHost()):null; return k?'assets/hero/avatar/'+k+'.png':null; }catch(e){ return null; } }
 
 /* ---------- desenho ---------- */
-function vEmpty(d,html){ V.innerHTML=xWrap(d,'v2-root '+(X.anim?'v2-in':''),`<div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center">${html}</div>`); X.anim=false; X.sig='x'; }
+/* fundo: regra da casa (cenário da era atual pelo xEraBg, sem escurecer) com um véu claro por cima, mais forte para baixo, onde fica o texto (mock claro) */
+const vBg=()=>{ let bg=''; try{ if(typeof xEraBg==='function') bg='linear-gradient(180deg,rgba(255,250,236,.3) 0,rgba(253,244,222,.5) 34%,rgba(246,234,204,.9) 58%),'+xEraBg(0,0); }catch(e){ bg=''; } return bg?`<div class="v2-bg" style="background:${bg}"></div>`:''; };
+function vEmpty(d,html){ V.innerHTML=xWrap(d,'v2-root '+(X.anim?'v2-in':''),`${vBg()}<div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px"><div class="v2-main v2-gate">${html}</div></div>`); X.anim=false; X.sig='x'; }
 function vDetHtml(p,cur){ const st=vStat(p,cur), v='<b>VIP '+n0(p.v)+'</b>';
   const line=p.own?(p.kind==='aura'?'Ativa: você tem o '+v:'Na coleção · ganho no '+v)
     :!p.live?'Ainda não está no jogo.'+(p.held?' Quem chega no '+v+' recebe quando entrar; nada se perde.':' É do '+v+'.')
     :esc2(p.what)+', uma vez, ao chegar no '+v+' · sem sorteio';
   return `<div class="v2-det" style="--rc:${vRc(p)}"><span class="v2-th">${vThumb(p)}</span><div class="v2-di"><div class="v2-dn">${esc2(p.name)} <span class="v2-rar">${esc2(vRN(p.r))}</span></div><div class="v2-dg">${esc2(p.gives)}</div><div class="v2-dh">${line}</div></div><span class="v2-tag ${st.c}">${esc2(st.t)}</span></div>`; }
-function vLevelPanel(L,cur,P,list){ const max=vMax();
+/* ordem do mock: cartão do nível (aba "VIP N", o que abre, prêmios do nível, barra de pontos) e, no cartão de baixo, o resto (prog = barra de pontos; mid = prêmios e regra) */
+function vLevelPanel(L,cur,P,list,prog,mid){ const max=vMax();
   const status=L===0?'O que todo jogador tem':L<=cur?'<em>Você tem</em>':(()=>{ const f=Math.max(0,vPts(L)-P.points); return (f===1?'Falta <em>1 ponto VIP</em>':'Faltam <em>'+n0(f)+' pontos VIP</em>'); })();
-  let h=`<div class="v2-lvh"><b class="v2-lil">${L?'VIP '+n0(L):'Sem VIP'}</b><span class="tx">${L?'A partir de <em>'+n0(vPts(L))+(vPts(L)===1?' ponto VIP':' pontos VIP')+'</em> no total':'Jogador grátis'}<br>${status}</span>${L&&L<=cur?'<span class="v2-pill on">Liberado</span>':L?'<span class="v2-pill off">VIP '+n0(L)+'</span>':''}</div>`;
+  let h=`<div class="v2-main"><div class="v2-lvh"${vSkinBg('aba')}><b class="v2-lil">${L?'VIP '+n0(L):'Sem VIP'}</b><span class="tx">${L?'A partir de <em>'+n0(vPts(L))+(vPts(L)===1?' ponto VIP':' pontos VIP')+'</em> no total':'Jogador grátis'}<br>${status}</span>${L&&L<=cur?'<span class="v2-pill on">Liberado</span>':L?'<span class="v2-pill off">VIP '+n0(L)+'</span>':''}</div>`;
   if(L>0){ const op=vOpens(L);
     h+=`<div class="v2-sec"><span>Abre no VIP ${n0(L)}</span><span>${n0(op.length)} ${op.length===1?'item':'itens'}</span></div>`;
-    h+=op.length?op.map(o=>`<div class="v2-pk nw"><span class="tx">${esc2(o[0])}${o[2]?'<small>'+esc2(o[2])+'</small>':''}</span><em>${esc2(o[1])}</em></div>`).join(''):'<p class="v2-hint">Os mesmos benefícios do nível anterior.</p>';
+    h+=op.length?op.map(o=>`<div class="v2-pk nw"><span class="v2-pi" aria-hidden="true">${vBenIcon(o[3],o[4])}</span><span class="tx">${esc2(o[0])}${o[2]?'<small>'+esc2(o[2])+'</small>':''}</span><em>${esc2(o[1])}</em></div>`).join(''):'<p class="v2-hint">Os mesmos benefícios do nível anterior.</p>';
     const rws=list.filter(p=>p.v===L);
     if(rws.length){ h+=`<div class="v2-sec"><span>Prêmios do VIP ${n0(L)}</span><span>inteiros, uma vez</span></div>`;
       h+=rws.map(p=>{ const st=vStat(p,cur), on=X.pv===p.key;
@@ -279,15 +313,15 @@ function vLevelPanel(L,cur,P,list){ const max=vMax();
           +(p.canPv?`<button class="v2-bt rose" data-x="pv" data-id="${esc2(p.key)}" aria-pressed="${on}" aria-label="${esc2((on?'Sair da prévia: ':'Ver no herói: ')+p.name)}">${V2_SVG.eye}${on?'Sair':'Prévia'}</button>`:`<span class="v2-tag ${st.c}">${esc2(st.t)}</span>`)+'</div>'; }).join('');
       if(rws.some(p=>p.kind==='skin')) h+=`<p class="v2-hint">A skin usa o corpo padrão ${vHero()==='kaia'?'da Kaia':'do Kael'}; não muda o tamanho do herói.</p>`;
       if(rws.some(p=>!p.live)) h+='<p class="v2-hint">Prêmio marcado <b>Em breve</b> ainda não está no jogo; ele aparece aqui para você saber o que o nível traz.</p>'; } }
-  h+=`<div class="v2-sec"><span>Tudo no ${L?'VIP '+n0(L):'jogo grátis'}</span><span>acumulado</span></div><div class="v2-tbl" role="table" aria-label="Benefícios: grátis comparado com ${L?'VIP '+n0(L):'grátis'}">
+  h+=`${prog||''}</div><div class="v2-more">${mid||''}<div class="v2-sec"><span>Tudo no ${L?'VIP '+n0(L):'jogo grátis'}</span><span>acumulado</span></div><div class="v2-tbl" role="table" aria-label="Benefícios: grátis comparado com ${L?'VIP '+n0(L):'grátis'}">
     <div class="v2-tr hd" role="row"><span role="columnheader">Benefício</span><span role="columnheader">Grátis</span><span role="columnheader">${L?'VIP '+n0(L):'Grátis'}</span></div>`;
   h+=vTable(L).map(r=>`<div class="v2-tr" role="row"><span role="cell">${esc2(r[0])}</span><span role="cell">${esc2(r[1])}</span><span role="cell" class="${r[3]?'no':'up'}">${esc2(r[2])}</span></div>`).join('')+'</div>';
   const got=list.filter(p=>L>=p.v);
-  h+=`<p class="v2-hint" style="margin-top:8px">Prêmios até ${L?'o VIP '+n0(L):'aqui'}: <b>${got.length?got.map(p=>esc2(p.name)).join(', '):'nenhum'}</b>.${L<max?'':' Este é o nível máximo.'}</p>`;
+  h+=`<p class="v2-hint" style="margin:8px 0 0">Prêmios até ${L?'o VIP '+n0(L):'aqui'}: <b>${got.length?got.map(p=>esc2(p.name)).join(', '):'nenhum'}</b>.${L<max?'':' Este é o nível máximo.'}</p></div>`;
   return h; }
 function vRender(){
   const d=xDims(240)||{}, H=d.H>0?d.H:704;
-  if(!vOk()){ vEmpty(d,'<span role="alert" style="font-weight:800;color:#9aa6d6">Clube VIP indisponível agora.</span><button class="v2-bt" data-x="back" style="min-height:48px;padding:0 28px;font-size:16px">Voltar</button>'); return; }
+  if(!vOk()){ vEmpty(d,'<span role="alert">Clube VIP indisponível agora.</span><button class="v2-bt" data-x="back" style="min-height:48px;padding:0 28px;font-size:16px">Voltar</button>'); return; }
   const max=vMax(), cur=vClamp(vCur(),0,max), P=vM().progress(S), list=vPrizes(); v2List=list;
   X.sel=vClamp(X.sel|0,0,max); if(X.pv&&!list.some(p=>p.key===X.pv)) X.pv=null;
   const L=X.sel, pvP=X.pv?list.find(p=>p.key===X.pv):null, canDraw=vCanDraw();
@@ -298,14 +332,16 @@ function vRender(){
   const who=pvP?`<div class="v2-who pv"><i></i><span>${pvP.canPv?'Prévia':'Em breve'}: ${esc2(pvP.name)}</span><button data-x="sair" aria-label="${pvP.canPv?'Sair da prévia':'Fechar'}">${pvP.canPv?'Sair':'Fechar'}</button></div>`
     :`<div class="v2-who"><i></i><span>${esc2(vHeroN())} · ${cur?'VIP '+n0(cur):'sem VIP'}</span></div>`;
   const alt=vHeroN()+' com a arma na mão'+(pvP&&pvP.canPv?', prévia de '+pvP.name:'');
-  const stage=`<div class="v2-stage" style="height:${stH}px">${canDraw?`<canvas id="v2_cv" role="img" aria-label="${esc2(alt)}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`:still?`<img class="v2-still" src="${esc2(still)}" alt="${esc2(vHeroN())}">`:''}${who}</div>`;
+  /* moldura VIP do nível ESCOLHIDO atrás do herói (arte aprovada; o número vem do Sys.vip.levelInfo(L).frameVip), na mesma coluna em que o herói é desenhado */
+  let fr=0; try{ const fi=vInfo(L); fr=(fi.frameVip|0)||0; }catch(e){ fr=0; }
+  const frame=canDraw&&fr>0?`<img class="v2-frame" src="${V2_FRAME(fr)}" alt="" style="left:${vMounted()?36:44}%">`:'';
+  const stage=`<div class="v2-stage" style="height:${stH}px">${frame}${canDraw?`<canvas id="v2_cv" role="img" aria-label="${esc2(alt)}" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`:still?`<img class="v2-still" src="${esc2(still)}" alt="${esc2(vHeroN())}">`:''}${who}</div>`;
   const det=pvP?vDetHtml(pvP,cur):'';
 
   /* ----- CARTÃO DO NÍVEL ATUAL (em pontos VIP: é o que o módulo guarda; a tela não mostra preço) ----- */
   const pct=Math.round(vClamp(+P.frac||0,0,1)*100);
   const card=`<div class="v2-card"><div class="v2-ch"><img src="${V2_VIP_IC}" alt=""><div class="t"><div class="v2-big v2-lil">${cur?'VIP '+n0(cur):'Sem VIP'}</div><small>Os pontos VIP vêm das compras na Loja. O nível só sobe.</small><small>Seus pontos VIP: <b>${n0(P.points)}</b></small></div></div>
-      <div class="v2-bar" role="progressbar" aria-label="Progresso até o próximo VIP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
-      <div class="v2-prog"><span>${P.max?'Nível máximo do Clube VIP':n0(P.points)+' de '+n0(P.needTotal)+' pontos para o VIP '+n0(P.next)}</span><span>${P.max?'':pct+'%'}</span></div></div>`;
+      <div class="v2-bar" role="progressbar" aria-label="Progresso até o próximo VIP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i><span class="v2-prog">${P.max?'Nível máximo do Clube VIP':n0(P.points)+' de '+n0(P.needTotal)+' pontos para o VIP '+n0(P.next)}</span></div></div>`;
   const rule=`<div class="v2-rule">${V2_SVG.info}<span>O VIP é <b>conveniência</b> mais os <b>prêmios listados</b>. Nada é sorteado: cada prêmio vem inteiro, uma vez, ao chegar no nível.</span></div>`;
 
   /* ----- PRÊMIOS (cartões; sem rolagem para o lado) ----- */
@@ -315,13 +351,14 @@ function vRender(){
 
   /* ----- NÍVEIS 0 a máximo (grade que quebra em 2 linhas) ----- */
   let lv=''; for(let i=0;i<=max;i++){ const dot=list.some(p=>p.v===i);
-    lv+=`<button class="v2-lv${i<=cur?' got':''}${i===cur?' me':''}" data-x="lv" data-l="${i}" aria-pressed="${L===i}" aria-label="${esc2(i?'VIP '+i+', a partir de '+n0(vPts(i))+' pontos VIP'+(dot?', com prêmio':''):'Sem VIP')}">${i?n0(i):'<small>Sem</small><small>VIP</small>'}${dot?'<span class="v2-rd" aria-hidden="true"></span>':''}</button>`; }
-  const lvls=`<div class="v2-sec"><span>Níveis do VIP</span><span>escolha um</span></div><div class="v2-lvls" role="group" aria-label="Nível de VIP">${lv}${list.length?'<span class="v2-lvcap" aria-hidden="true">ponto rosa = prêmio</span>':''}</div>`;
+    lv+=`<button class="v2-lv${i<=cur?' got':''}${i===cur?' me':''}" data-x="lv" data-l="${i}" aria-pressed="${L===i}"${vSkinBg(L===i?'medalhaOn':'medalha')} aria-label="${esc2(i?'VIP '+i+', a partir de '+n0(vPts(i))+' pontos VIP'+(dot?', com prêmio':''):'Sem VIP')}">${i?n0(i):'<small>Sem</small><small>VIP</small>'}${dot?'<span class="v2-rd" aria-hidden="true"></span>':''}</button>`; }
+  const lvls=`<div class="v2-top"><div class="v2-lvls" role="group" aria-label="Níveis do VIP: escolha um">${lv}${list.length?'<span class="v2-lvcap" aria-hidden="true">ponto rosa = prêmio</span>':''}</div></div>`;
 
   const foot=`<div class="v2-foot"><button class="v2-bt" data-x="shop"><img src="assets/icons/menu/shop.png" alt="">Ir para a Loja</button><small>${vBuyOn()?'O VIP sobe com as compras da Loja. Aqui nada se compra.':'O VIP sobe com as compras da Loja. As compras ainda não abriram: nada é cobrado.'}</small></div>`;
 
   const compact=H<620;   /* tela baixa: a faixa do prêmio rola junto com o resto */
-  V.innerHTML=xWrap(d,'v2-root '+(X.anim?'v2-in':''),`${stage}${compact?'':det}<div id="v2_scroll" class="x-scroll v2-body">${compact?det:''}${card}${rule}${rw}${lvls}${vLevelPanel(L,cur,P,list)}</div>${foot}`);
+  /* ordem do mock vp_vb: trilho dos níveis · herói com a moldura · cartão do nível com a barra de pontos · (rolando) prêmios, regra e tabela · botão dourado */
+  V.innerHTML=xWrap(d,'v2-root '+(X.anim?'v2-in':''),`${vBg()}${lvls}${stage}${compact?'':det}<div id="v2_scroll" class="x-scroll v2-body">${compact?det:''}${vLevelPanel(L,cur,P,list,card,rw+rule)}</div>${foot}`);
   X.anim=false; X.top=false; X.sig=vSig();
   if(y0){ try{ const sc=document.getElementById('v2_scroll'); if(sc) sc.scrollTop=y0; }catch(e){} }
   vStart();

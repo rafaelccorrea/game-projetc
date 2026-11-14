@@ -67,11 +67,21 @@ assert(!/setPremium\s*\(|\.premium\s*=(?!=)|\.on\s*=\s*true|PANEL_ON\.\w+\s*=\s*
 assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/R\$/.test(SRC), 'nenhum preço escrito no arquivo');
 for (const a of def.actions) assert(SRC.includes("a==='" + a + "'"), 'ação da lista sem tratador: ' + a);
 assert(Sys.buy && Sys.buy.DATA.on === false, 'a compra real está desligada no módulo');
+// visual do mock B (claro): nenhum texto cortado com reticências nem preso em uma linha; variáveis de cor no topo do bloco de estilo (contraste não é verificável em node: só a existência)
+assert(!/text-overflow\s*:\s*ellipsis/.test(SRC), 'nenhum texto cortado com reticências'); assert(!/white-space\s*:\s*nowrap/.test(SRC), 'nenhum texto preso em uma linha só');
+{ const top = (/\.ps2\{([^}]*)\}/.exec(SRC) || ['', ''])[1]; for (const v of ['--bg', '--paper', '--paper2', '--chip', '--line', '--gold', '--gold2', '--ink', '--ink2', '--brand', '--blue', '--free1', '--prem1', '--green', '--rose']) assert(new RegExp(v + ':#[0-9a-f]{6}').test(top), 'variável de cor ausente: ' + v);
+  assert(/color:var\(--ink\)/.test(top), 'tela clara: o texto base é escuro'); assert(/\.ps2-fb\.buy,[^{]*\{color:#2a1403\}/.test(SRC), 'botão dourado com texto escuro');
+  const th = (/\.ps2-thead span\{([^}]*)\}/.exec(SRC) || ['', ''])[1]; assert(/overflow-wrap:anywhere/.test(th) && !/overflow:hidden/.test(th), 'cabeçalho da trilha quebra em duas linhas em vez de cortar'); }
 out.push('registro: pass2 desligada, ' + def.actions.length + ' ações com tratador, sem diálogo do navegador, sem emoji e sem preço no arquivo');
 
 // 1) save novo: portão pelo nível; liberado, a trilha inteira do módulo, nada pronto, premium trancado e "Em breve"
 unlocked = false; def.onOpen(); def.render(); has('Libera no nível 18'); has('data-x="back"'); sane('portão'); def.click(btn('claim', { t: 'free', lv: '1' })); assert.strictEqual(st().free.length, 0); def.click(btn('back')); assert(log.includes('close')); unlocked = true;
 def.onOpen(); def.render(); has('id="ps2_stc"'); has('TEMPORADA 1'); has('Faltam ' + D.seasonDays + ' dias'); has('0/' + D.xpPerTier + ' XP'); has('GRÁTIS'); has('nada pronto agora'); has('Em breve'); has('Premium · em breve');
+// ordem do mock: palco (pedestal e a faixa do prêmio da temporada), abas, trilha, barra de XP do passe, botões
+{ const h = H(), at = s => h.indexOf(s), seq = ['class="ps2-stage"', 'Prêmio da temporada (nível ' + D.tiers + ')', 'class="ps2-tabs"', 'class="ps2-thead"', 'class="ps2-sea"', 'class="ps2-foot"'];
+  for (let i = 0; i < seq.length; i++) assert(at(seq[i]) >= 0 && (!i || at(seq[i - 1]) < at(seq[i])), 'ordem dos blocos do mock: ' + seq[i]); }
+// QA: em 320 px o cabeçalho "Premium · em breve" aparece inteiro (sem corte) e a tela desenha igual
+{ g.xDims = () => ({ H: 560, Wb: 320 }); def.render(); has('<span class="p">Premium · em breve</span>'); has('<span class="f">Grátis</span>'); has('--ci:40px'); sane('largura 320'); g.xDims = () => ({ H: 640, Wb: 390 }); def.render(); has('<span class="p">Premium · em breve</span>'); sane('largura 390'); g.xDims = () => ({}); def.render(); }
 assert.strictEqual(count(/class="ps2-row/g), D.tiers, 'uma linha por nível'); assert.strictEqual(count(/class="ps2-cell pr lockp"/g), D.tiers, 'trilha premium inteira trancada');
 assert.strictEqual(count(/data-x="claim"/g), 0, 'nada para resgatar no nível 0'); not('Premium ativo'); has('era liberada'); sane('save novo'); noSale('save novo');
 def.click(btn('all')); assert.strictEqual(st().free.length, 0); assert(/Nada pronto/.test(X.toast));
