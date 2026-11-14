@@ -196,5 +196,8 @@ function diffGo(i, from){ const c = DIFF.card; if (!c || !c.adv) return null; co
   setView('gear'); return 'gear'; }
 addEventListener('resize', () => { try { const c = DIFF.card; if (c && c.from === 'boss' && c.el) c.el.innerHTML = diffCardHtml(c.adv, diffGeo()); } catch (e) {} });
 
-/* chave: só em ?debug=1&diff=1 (nada muda para o jogador até o dono mandar ligar) */
-if (typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined' && QP.get('diff') === '1') diffSet(true);
+/* CHAVE LIGADA (14/11): o dono aprovou a dificuldade com paredes (13/11) e mandou segurar até a medida fechar; a Sistemas fechou a calibração (d2bf9dd, b6ed46a),
+   o test/e2e/diff.js passa 143/143 e o PO autorizou ligar para a próxima APK, junto com o herói de referência (Sys.stats.setRefFc, ligado no diffApply).
+   Para conferir a conta antiga sem mexer em código: ?debug=1&diff=0. Desligar de vez: DIFF_DEFAULT = false. */
+const DIFF_DEFAULT = true;
+{ let on = DIFF_DEFAULT; try { if (typeof DEBUG !== 'undefined' && DEBUG && typeof QP !== 'undefined'){ const q = QP.get('diff'); if (q === '1') on = true; else if (q === '0') on = false; } } catch (e) {} if (on) diffSet(true); }
