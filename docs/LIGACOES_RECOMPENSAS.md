@@ -103,11 +103,11 @@ O bônus das diárias (+20) entra sem desenho: o número da Fogueira atualiza no
 
 Trocar:
 ```html
-'pathtry','mapchest','assets'],['fc','advice','bossloss']
+'pathtry','mapchest','assets',
 ```
 Por:
 ```html
-'pathtry','mapchest','thief','camp','assets'],['fc','advice','bossloss']
+'pathtry','mapchest','thief','camp','assets',
 ```
 
 **L2 · `js/farm.js`** — chaves dos dois módulos na lista única SYS_LIVE (nascem false; viram true no passo de ligar)
