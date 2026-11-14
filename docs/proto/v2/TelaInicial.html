@@ -1,0 +1,656 @@
+<title>Eonbound Tela Inicial</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Tela inicial V2 (Título / "Jogar"). Pedido do dono (S24): "a área de jogar tá muito simples, muito feia; o botão de servidor tá espalhado".
+   HOJE (esquerda): o print real do carregamento (a/titulo_hoje.jpg, v0.13.3) e, depois do toque, o Título e o Login MONTADOS do markup do jogo
+   (js/p_intro.js PI_SCREENS "TituloV2B" e "Login" + o selo/botão de servidor do p_intro.realmBar + a lista do js/p_realm.js).
+   As camadas da era 2 do Título (assets/bg/v2/era2) e o title_bg do Login não estão em a/: no lugar entra a/mbg_era2.png (mesma era).
+   PROPOSTA (direita): direções A e B. Logo ÚNICO = o dourado do carregamento (a/logo.png = assets/brand/logo.png, a única imagem nova).
+   Cena = a/mbg_eraN.png; herói montado = a/rd_griffin.png / a/rda_griffin.png (espada na mão da própria arte); pet = a/pt_pet_shadowwolf_idle.png.
+   Regra do fluxo (engenheiro): a conta de convidado nasce SÓ no toque do JOGAR; servidor sempre trocável antes do JOGAR; excluir conta fica em Configurações. */
+:root{
+  --night:#0b0806; --line:rgba(255,214,150,.22); --line2:rgba(255,214,150,.42);
+  --gold:#ffd25e; --g2:#ffc94a; --text:#f6ecdf; --muted:#c9b9a2; --mut2:#8a7458;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --glass:rgba(34,24,16,.80); --brown:#1d1611; --brown2:#2c2119; --ink:#2a1403;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#100b07;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--g2);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #4a3a2b}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#1a130e;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 90px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#120d09;font-weight:900;font-size:13.5px;padding:6px 10px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#6b4a22,#4a3016);border-color:var(--g2);color:#ffe9b0}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1520;color:#ffb3c4;border:2px solid #ff6b9a}
+.vbtn.pa{background:linear-gradient(180deg,#ffe07a,#f2a826);color:var(--ink)}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#120d09;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45;overflow-wrap:anywhere}
+.stl b{color:var(--gold)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0;line-height:1.4}
+
+/* ===== comum às telas ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--text)}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block;object-fit:cover}
+.lil{font-family:var(--fd);font-weight:400}
+.spr{position:absolute;overflow:hidden;pointer-events:none}
+.spr img{display:block;max-width:none;animation:sprA 1.5s steps(12) infinite}
+@keyframes sprA{to{transform:translateX(-100%)}}
+.shd{position:absolute;height:12px;border-radius:50%;background:rgba(20,12,6,.42);pointer-events:none}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+@keyframes pulse{50%{transform:scale(1.035)}}
+@keyframes blink{50%{opacity:.35}}
+@keyframes rise{0%{transform:translateY(0);opacity:0}12%{opacity:.95}100%{transform:translateY(-560px);opacity:0}}
+@keyframes sweep{0%{background-position:160% 0}60%,100%{background-position:-60% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:absolute;left:50%;top:110px;z-index:60;transform:translateX(-50%);padding:9px 14px;border-radius:13px;background:rgba(26,17,11,.96);border:1px solid var(--line2);font-weight:900;font-size:13px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--text);animation:fade .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+
+/* ===== HOJE (reprodução do TituloV2B / Login / p_realm) ===== */
+.hj{position:absolute;inset:0}
+.hjtap{position:absolute;inset:0;border:0;padding:0;background:none;display:block;width:100%;height:100%}
+.hbg{position:absolute;left:-240px;top:0;height:844px;width:auto;max-width:none}
+.hstar{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 6px 2px rgba(190,240,255,.8);animation:blink 2.2s ease-in-out infinite}
+.hrise{position:absolute;bottom:120px;border-radius:50%;background:#bff4ff;box-shadow:0 0 8px 2px rgba(74,216,255,.8);animation:rise 8s linear infinite}
+.hlogo{position:absolute;left:0;right:0;top:64px;display:flex;flex-direction:column;align-items:center;z-index:5;pointer-events:none}
+.hlogo .ring{position:absolute;top:-34px;width:150px;height:150px;border-radius:50%;border:1px dashed rgba(74,216,255,.8);box-shadow:0 0 30px rgba(74,216,255,.45),inset 0 0 30px rgba(74,216,255,.3);animation:spin 30s linear infinite}
+.hlogo .ring.r2{width:120px;height:120px;top:-19px;border:2px dashed rgba(191,244,255,.6);animation-direction:reverse}
+.blue{font-family:var(--fd);font-size:56px;line-height:1;letter-spacing:1px;color:transparent;background-image:linear-gradient(180deg,#fff 0%,#d2f8ff 30%,#4ad8ff 52%,#1a5fd0 68%,#7fe8ff 86%,#e8fdff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:1.5px #08224d;filter:drop-shadow(0 0 6px rgba(74,216,255,.9)) drop-shadow(0 0 18px rgba(60,140,255,.7)) drop-shadow(0 6px 10px rgba(0,0,0,.6));position:relative;margin-top:40px}
+.btag{display:flex;align-items:center;gap:8px;margin-top:8px;color:#bff4ff;font-weight:900;font-size:12px;letter-spacing:5px;text-shadow:0 0 8px rgba(74,216,255,.9)}
+.btag i{display:block;width:26px;height:2px;background:#4ad8ff;box-shadow:0 0 6px #4ad8ff}
+.hrb{position:absolute;z-index:6;left:12px;top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;row-gap:4px;max-width:calc(100% - 84px)}
+.hrb .bd{padding:6px 10px;border-radius:12px;background:rgba(20,14,10,.72);border:1px solid #6b5338;color:#ffe07a;font-weight:900;font-size:13px;white-space:nowrap}
+.hrb button{min-height:44px;padding:6px 10px;border-radius:12px;border:1px solid #6b5338;background:rgba(40,28,18,.85);color:#f6ecdf;font:800 13px var(--fb);white-space:nowrap}
+.hib{position:absolute;z-index:6;right:12px;top:10px;width:44px;height:44px;border-radius:14px;border:2px solid #4a3a2b;background:rgba(22,17,13,.78);display:flex;align-items:center;justify-content:center;padding:0}
+.hmus{position:absolute;z-index:5;left:12px;top:10px;display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:999px;background:rgba(22,17,13,.78);border:1px solid #4a3a2b;font-size:12px;font-weight:800}
+.hbot{position:absolute;left:16px;right:16px;bottom:14px;display:flex;flex-direction:column;align-items:center;gap:10px;z-index:8}
+.hplay{display:flex;align-items:center;justify-content:center;width:270px;height:64px;border-radius:20px;border:0;background:linear-gradient(180deg,#ffe07a 0%,#f2a826 100%);color:#2a1403;font-family:var(--fd);font-size:34px;letter-spacing:3px;animation:pulse 1.6s ease-in-out infinite}
+.hcont{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 6px;border-radius:24px;border:2px solid #4a3a2b;background:rgba(22,17,13,.85);color:#f6ecdf;font-weight:900;font-size:14px}
+.hcont img{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#2a1f16}
+.hver{font-size:12px;font-weight:800;color:#d8cbb8;text-shadow:0 1px 2px #000}
+.hsheet{position:absolute;left:0;right:0;bottom:0;padding:26px 20px 28px;border-radius:28px 28px 0 0;background:#1d1611;border-top:2px solid #4a3a2b;display:flex;flex-direction:column;gap:12px;box-shadow:0 -10px 40px rgba(0,0,0,.6);animation:up .35s ease-out;z-index:8}
+.hsheet h1{margin:0;font-family:var(--fd);font-size:28px;font-weight:400;text-align:center}
+.hsheet p{margin:0;font-size:14px;font-weight:700;color:#c9b9a2;text-align:center;line-height:1.4}
+.hg{height:54px;border-radius:16px;border:0;background:#fff;color:#1f1f1f;font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 0 #9a9a9a}
+.hg i{font-style:normal;width:26px;height:26px;border-radius:50%;border:2px solid #1f1f1f;display:flex;align-items:center;justify-content:center;font-size:15px}
+.hgst{height:50px;border-radius:16px;border:2px solid #4a3a2b;background:transparent;color:#f6ecdf;font-size:15px;font-weight:800}
+.hgold{height:52px;border-radius:16px;border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);box-shadow:0 4px 0 #8a4f0c;color:#2a1403;font-family:var(--fd);font-size:18px}
+.hdim{position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:20px;z-index:12}
+.hmod{width:100%;padding:22px 18px;border-radius:22px;background:#1d1611;border:2px solid #4a3a2b;display:flex;flex-direction:column;gap:12px;animation:pop .2s ease-out}
+.hmod h2{margin:0;font-family:var(--fd);font-size:22px;font-weight:400;text-align:center}
+.hmod p{margin:0;font-size:14px;font-weight:700;color:#e8dccb;line-height:1.45;text-align:center}
+.hrl{position:absolute;inset:0;z-index:15;background:#0b0806;overflow-y:auto;overflow-x:hidden;padding:12px 12px 16px;display:flex;flex-direction:column;gap:10px}
+.hrl .rc{width:100%;min-height:84px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:2px solid #4a3a2b;background:#1d1611;color:#f6ecdf;text-align:left}
+.hrl .rc.on{border-color:#ffc94a;background:#2c2116}
+.hrl .av{width:56px;height:56px;flex:none;border-radius:14px;overflow:hidden;border:2px solid #6b5843;background:#2a1f16;display:flex;align-items:center;justify-content:center}
+.hrl .av img{width:100%;height:100%;object-fit:cover}
+.tg{padding:1px 8px;border-radius:8px;font-size:10px;font-weight:900;white-space:nowrap}
+.hfim{position:absolute;inset:0;z-index:20;background:rgba(8,6,4,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
+.hfim b{font-family:var(--fd);font-weight:400;font-size:24px;color:#ffe07a}
+.hfim p{margin:0;font-size:14px;font-weight:700;color:var(--muted);line-height:1.45}
+
+/* ===== PROPOSTA ===== */
+#pscene{position:absolute;inset:0;transition:filter .9s ease}
+.P.ph-load #pscene{filter:blur(5px) brightness(.42) saturate(.8)}
+.bgstrip{position:absolute;display:flex;will-change:transform}
+.bgstrip img{display:block;height:100%;width:auto;max-width:none}
+.bgstrip img.mir{transform:scaleX(-1)}
+.dirA .bgstrip{animation:drift 70s ease-in-out infinite alternate}
+.dirB .bgstrip{animation:pan 120s linear infinite}
+@keyframes drift{to{transform:translateX(-620px)}}
+@keyframes pan{to{transform:translateX(calc(-200% / 3))}}
+.vign{position:absolute;inset:0;pointer-events:none}
+.fx{position:absolute;border-radius:50%;pointer-events:none;animation:rise 9s linear infinite}
+.rider{position:absolute;inset:0;pointer-events:none}
+.dirB.ph-title .rider{animation:ride 1.3s cubic-bezier(.2,.8,.3,1) both}
+@keyframes ride{from{transform:translateX(-330px)}}
+.dirB .rider .bob{animation:bob 1.1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+#plogo{position:absolute;z-index:9;pointer-events:none;transition:top .8s cubic-bezier(.2,.8,.3,1),left .8s cubic-bezier(.2,.8,.3,1),width .8s cubic-bezier(.2,.8,.3,1);filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+#plogo img{display:block;width:100%;height:auto}
+.ph-load #plogo{left:35px;top:280px;width:320px}
+.dirA.ph-title #plogo{left:70px;top:62px;width:250px}
+.dirB.ph-title #plogo{left:25px;top:64px;width:340px}
+.ent #plogo{opacity:0}
+#pui{position:absolute;inset:0;z-index:10;pointer-events:none}
+#pui>*{pointer-events:auto}
+#psheet{position:absolute;inset:0;z-index:30;pointer-events:none}
+#psheet>*{pointer-events:auto}
+/* carregamento */
+.ld{position:absolute;inset:0;border:0;padding:0;background:none;width:100%;height:100%;display:block;color:var(--text)}
+.ld .bar{position:absolute;left:40px;right:40px;top:470px;height:16px;border-radius:9px;background:rgba(10,7,4,.7);border:2px solid #6b5338;overflow:hidden}
+.ld .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px;background:linear-gradient(180deg,#ffe58a,#f2a826)}
+.ld .lt{position:absolute;left:40px;right:40px;top:494px;display:flex;justify-content:space-between;font-weight:900;font-size:14px}
+.ld .go{position:absolute;left:0;right:0;top:572px;font-family:var(--fd);font-size:28px;color:#ffd77a;text-shadow:0 2px 0 #3a2208,0 0 18px rgba(255,201,74,.5);animation:blink 1.6s ease-in-out infinite}
+.ld .tip{position:absolute;left:32px;right:32px;top:640px;font-size:13px;font-weight:800;color:var(--muted);line-height:1.4}
+.ld .ver{position:absolute;left:0;right:0;bottom:22px;font-size:12px;font-weight:800;color:#d8cbb8}
+/* botões de canto */
+.ib{position:relative;width:44px;height:44px;border-radius:14px;border:2px solid rgba(255,214,150,.35);background:rgba(28,20,13,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:0;color:#ffe2a8}
+.ib:active{transform:scale(.92)}
+.ib .bdg{position:absolute;right:-5px;top:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10.5px/14px var(--fb)}
+.ib .ac{position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:50%;border:2px solid #1d1611;font:900 10px/14px var(--fb);text-align:center}
+.tbar{position:absolute;left:12px;right:12px;top:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tbar .g{display:flex;gap:8px}
+.dchip{display:flex;padding:2px;gap:2px;border-radius:13px;background:rgba(14,10,6,.72);border:1px dashed rgba(255,210,94,.7)}
+.dchip button{width:34px;height:40px;border:0;border-radius:11px;background:none;font-family:var(--fd);font-size:17px;color:var(--muted);padding:0}
+.dchip button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe58a,#f4a52a);color:var(--ink)}
+.bchip{position:absolute;left:50%;top:10px;transform:translateX(-50%)}
+.col{position:absolute;right:10px;top:236px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.col .cb{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:900;color:#ffe9c4;text-shadow:0 1px 2px #000}
+/* botão JOGAR e cartão do servidor */
+.play{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;border-radius:22px;background:linear-gradient(180deg,#ffe58a 0%,#f2a826 100%);color:var(--ink);font-family:var(--fd);letter-spacing:3px;box-shadow:0 6px 0 #8a4f0c,0 10px 24px rgba(0,0,0,.45);animation:pulse 1.8s ease-in-out infinite}
+.play::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);background-size:300% 100%;animation:sweep 2.8s ease-in-out infinite;pointer-events:none}
+.play small{font-family:var(--fb);font-size:12px;font-weight:900;letter-spacing:0;opacity:.85;margin-top:1px}
+.play:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
+.play[disabled]{animation:none;filter:saturate(.35) brightness(.8);cursor:default}
+.play .pb{position:absolute;left:0;bottom:0;height:5px;background:#2a1403;opacity:.5}
+.srv{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:6px 6px 6px 12px;border-radius:16px;border:1.5px solid var(--line2);background:rgba(20,14,9,.66);text-align:left;color:var(--text)}
+.srv .dt{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+.srv .sn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.srv .sn b{font-family:var(--fd);font-weight:400;font-size:17px;color:#ffe9b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srv .sn small{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srv .tr{flex:none;min-height:40px;display:flex;align-items:center;gap:4px;padding:0 12px;border-radius:12px;background:#3a2c1f;border:1px solid #6b5338;font-size:13px;font-weight:900;color:#ffe2a8}
+.ban{display:flex;align-items:flex-start;gap:8px;width:100%;padding:8px 10px;border-radius:12px;font-size:12.5px;font-weight:800;line-height:1.35;text-align:left}
+.ban svg{flex:none;width:18px;height:18px;margin-top:1px}
+.ban.off{background:rgba(60,52,44,.88);border:1px solid #8a7458;color:#f0e4d2}
+.ban.mt{background:rgba(70,36,20,.9);border:1px solid #ff9a5a;color:#ffe2cc}
+.ban.cl{background:rgba(24,40,52,.88);border:1px solid #7fd0ff;color:#dff4ff}
+.pcard{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
+.pcard img{width:48px;height:48px;border-radius:14px;border:2px solid var(--g2);background:#2a1f16;object-fit:cover;flex:none}
+.pcard .pn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.pcard .pn b{font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .pn small{font-size:12.5px;font-weight:800;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .lv{flex:none;padding:3px 10px;border-radius:10px;background:linear-gradient(180deg,#ffe07a,#f2b52a);color:#3a2208;font-family:var(--fd);font-size:15px}
+/* A: painel de vidro embaixo */
+.pan{position:absolute;left:0;right:0;bottom:0;padding:14px 16px 14px;border-radius:28px 28px 0 0;background:linear-gradient(180deg,rgba(44,32,22,.86),rgba(22,16,11,.94));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1.5px solid rgba(255,214,150,.4);box-shadow:0 -12px 34px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:10px;animation:up .6s .15s ease-out both}
+.pan .play{width:100%;height:70px;font-size:36px}
+.pan .ft{display:flex;justify-content:space-between;width:100%;font-size:11px;font-weight:800;color:var(--mut2)}
+.pan .sep{width:100%;height:1px;background:rgba(255,214,150,.14)}
+/* B: pilha vertical sobre a cena aberta */
+.stk{position:absolute;left:24px;right:24px;bottom:18px;display:flex;flex-direction:column;align-items:center;gap:10px;animation:fade .7s .3s both}
+.stk .play{width:100%;height:78px;font-size:40px;border-radius:26px}
+.stk .srv{border-radius:26px;background:rgba(14,10,6,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.stk .ver{font-size:11px;font-weight:800;color:#e8dccb;text-shadow:0 1px 2px #000}
+.rib{position:absolute;left:50%;top:180px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:calc(100% - 40px);padding:4px 16px 4px 4px;border-radius:22px;background:linear-gradient(180deg,rgba(70,44,22,.9),rgba(40,26,14,.9));border:1.5px solid rgba(255,201,74,.7);box-shadow:0 4px 14px rgba(0,0,0,.45);animation:fade .7s .5s both;white-space:nowrap}
+.rib img{width:34px;height:34px;border-radius:50%;border:2px solid var(--g2);object-fit:cover;background:#2a1f16;flex:none}
+.rib span{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:900}
+.rib b{font-family:var(--fd);font-weight:400;font-size:16px;color:#fff}
+/* entrou no jogo (fim do protótipo) */
+.ent2{position:absolute;inset:0;z-index:40;background:rgba(8,6,4,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;animation:fade .3s ease-out}
+.ent2 b{font-family:var(--fd);font-weight:400;font-size:26px;color:#ffe07a}
+.ent2 p{margin:0;font-size:14px;font-weight:700;color:var(--muted);line-height:1.45}
+.ent2 ul{margin:0;padding:0;list-style:none;font-size:13px;font-weight:800;color:var(--text);line-height:1.6}
+/* folhas */
+.dim{position:absolute;inset:0;background:rgba(6,4,2,.62);animation:fade .2s ease-out}
+.sh{position:absolute;left:0;right:0;bottom:0;max-height:80%;overflow-y:auto;overflow-x:hidden;padding:16px 14px 18px;border-radius:26px 26px 0 0;background:linear-gradient(180deg,#2c2116,#1b140e);border-top:2px solid rgba(255,201,74,.55);box-shadow:0 -12px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px;animation:up .25s ease-out}
+.sh .hd{display:flex;align-items:flex-start;gap:8px}
+.sh .hd div{flex:1;min-width:0}
+.sh .hd b{display:block;font-family:var(--fd);font-weight:400;font-size:23px;color:#fff;line-height:1.1}
+.sh .hd small{display:block;font-size:12.5px;font-weight:800;color:var(--muted);line-height:1.35;margin-top:3px}
+.x{flex:none;width:44px;height:44px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;display:flex;align-items:center;justify-content:center;padding:0}
+.rc{width:100%;min-height:76px;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:16px;border:2px solid #4a3a2b;background:#1d1611;color:var(--text);text-align:left}
+.rc.on{border-color:var(--g2);background:#2c2116}
+.rc[aria-disabled="true"]{opacity:.55}
+.rc .av{width:52px;height:52px;flex:none;border-radius:14px;overflow:hidden;border:2px solid #6b5843;background:#16110d;display:flex;align-items:center;justify-content:center}
+.rc .av img{width:100%;height:100%;object-fit:cover}
+.rc .av.e{border-style:dashed}
+.rc .ri{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rc .ri b{font-family:var(--fd);font-weight:400;font-size:17px;overflow-wrap:anywhere}
+.rc .ri .tags{display:flex;gap:5px;flex-wrap:wrap}
+.rc .ri small{font-size:12px;font-weight:800;color:var(--muted)}
+.rc .st{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:11.5px;font-weight:900;text-align:right}
+.rc .st i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.note{font-size:12px;font-weight:800;color:var(--mut2);text-align:center;line-height:1.4}
+.note.w{color:#ffb38a}
+.btn{width:100%;min-height:50px;border-radius:15px;border:2px solid #4a3a2b;background:#33271d;color:var(--text);font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 12px;text-align:center}
+.btn.gold{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:var(--ink);box-shadow:0 4px 0 #8a4f0c;font-family:var(--fd);font-weight:400;font-size:18px}
+.btn.ggl{border:0;background:#fff;color:#1f1f1f;box-shadow:0 4px 0 #9a9a9a}
+.btn.ggl i{font-style:normal;width:26px;height:26px;border-radius:50%;border:2px solid #1f1f1f;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900}
+.btn[disabled]{opacity:.5;cursor:default}
+.who{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:#16110d;border:1.5px solid #4a3a2b}
+.who .ic{width:46px;height:46px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#33271d;border:2px solid #6b5338}
+.who div{flex:1;min-width:0;line-height:1.3}
+.who b{display:block;font-size:15px;font-weight:900}
+.who small{display:block;font-size:12px;font-weight:800;color:var(--muted)}
+.cf{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:5;padding:16px;border-radius:18px;background:#1d1611;border:2px solid var(--g2);display:flex;flex-direction:column;gap:10px;text-align:center;animation:pop .2s ease-out}
+.cf b{font-family:var(--fd);font-weight:400;font-size:20px;color:#ffe07a}
+.cf p{margin:0;font-size:13px;font-weight:800;line-height:1.4}
+.cf .r2{display:flex;gap:8px}
+.cf .r2 .btn{flex:1;min-width:0}
+.nw{display:flex;gap:10px;padding:10px 12px;border-radius:14px;background:#16110d;border:1.5px solid #4a3a2b}
+.nw .d{width:9px;height:9px;border-radius:50%;background:#ff4a5e;flex:none;margin-top:6px}
+.nw .d.r{background:transparent}
+.nw div{flex:1;min-width:0}
+.nw b{display:block;font-size:14.5px;font-weight:900;color:#ffe9b0}
+.nw small{display:block;font-size:12.5px;font-weight:700;color:var(--muted);line-height:1.4;margin-top:2px}
+.cc{display:flex;gap:8px}
+.ccd{flex:1;min-width:0;border-radius:16px;border:2px solid #4a3a2b;background:#16110d;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;position:relative}
+.ccd.rec{border-color:#5fd068}
+.ccd.pk{border-color:var(--g2);box-shadow:0 0 16px rgba(255,201,74,.4)}
+.ccd img{width:52px;height:52px;border-radius:14px;object-fit:cover;background:#2a1f16}
+.ccd b{font-family:var(--fd);font-weight:400;font-size:16px}
+.ccd small{font-size:11.5px;font-weight:800;color:var(--muted);line-height:1.35}
+.ccd .tg2{position:absolute;top:-9px;left:50%;transform:translateX(-50%);padding:1px 8px;border-radius:8px;background:#5fd068;color:#0d2410;font-size:10px;font-weight:900;white-space:nowrap}
+.ccd .btn{min-height:44px;font-size:13.5px;margin-top:4px}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption id="cap0">Hoje<small>carregamento: print real do S24 (v0.13.3). Depois do toque: Título e Login montados do código do jogo (js/p_intro.js). Toque na tela para seguir.</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr" id="scr0"><div class="hj" id="hj"></div></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Proposta · Direção A</figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr P dirA ph-load" id="scr">
+    <div id="pscene"></div>
+    <div id="plogo"><img src="a/logo.png" alt="Eonbound"></div>
+    <div id="pui"></div>
+    <div id="psheet"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Tela inicial V2 (Jogar)</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub" style="padding:8px 10px;border-radius:10px;border:1px dashed var(--g2);color:#ffe9b0"><b>Visual provisório: o visual final segue o mock de tela cheia da Arte.</b> Este protótipo vale pelas REGRAS e pelos ESTADOS (A/B, servidor, conta, avisos, offline, manutenção, nuvem, celular × nuvem, novo × quem volta, convidado criado só no JOGAR).</p>
+    <p class="sub">À esquerda, <b>hoje</b>: o print real do carregamento e, depois do toque, o Título e o Login como o jogo desenha (o selo "S1 · Nova Era" e o "Trocar servidor" soltos no canto, o logo azul diferente do dourado do carregamento, JOGAR e "Continuar como" fazendo a mesma coisa). À direita, a <b>proposta</b> em duas direções: um logo só (o dourado), a era atual do jogador viva atrás, o herói montado com o pet, <b>um JOGAR grande</b> e <b>um cartão de servidor</b> logo embaixo.</p>
+    <div class="box">
+      <h2>Direção</h2>
+      <div class="seg" role="group" aria-label="Direção"><button data-dir="A" aria-pressed="true">A · Cena + painel</button><button data-dir="B" aria-pressed="false">B · Cena aberta</button></div>
+      <p class="stl" id="dirtxt"></p>
+    </div>
+    <div class="box">
+      <h2>Momento</h2>
+      <h3>Proposta</h3>
+      <div class="seg" role="group" aria-label="Momento da proposta"><button data-ph="load" aria-pressed="true">Carregamento</button><button data-ph="title" aria-pressed="false">Título</button></div>
+      <h3>Hoje</h3>
+      <div class="seg" role="group" aria-label="Momento de hoje"><button data-hj="load" aria-pressed="true">Carregamento (print)</button><button data-hj="title" aria-pressed="false">Título</button><button data-hj="login" aria-pressed="false">Login</button><button data-hj="realm" aria-pressed="false">Trocar servidor</button></div>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <h3>Jogador</h3>
+      <div class="seg" role="group" aria-label="Jogador"><button data-pl="old" aria-pressed="true">Volta (Nv 42)</button><button data-pl="new" aria-pressed="false">Novo (sem save)</button></div>
+      <h3>Conexão</h3>
+      <div class="seg" role="group" aria-label="Conexão"><button data-cn="ok" aria-pressed="true">Normal</button><button data-cn="offline" aria-pressed="false">Sem internet</button><button data-cn="maint" aria-pressed="false">Manutenção</button><button data-cn="cloud" aria-pressed="false">Carregando da nuvem</button><button data-cn="choice" aria-pressed="false">Celular × nuvem</button></div>
+      <h3>Conta</h3>
+      <div class="seg" role="group" aria-label="Conta"><button data-ac="none" aria-pressed="false">Nenhuma ainda</button><button data-ac="guest" aria-pressed="true">Convidado</button><button data-ac="google" aria-pressed="false">Google</button></div>
+      <h3>A conta Google já tem outro personagem</h3>
+      <div class="seg" role="group" aria-label="Conta Google com outro personagem"><button data-cf="0" aria-pressed="true">Não</button><button data-cf="1" aria-pressed="false">Sim (Nv 57)</button></div>
+      <h3>Era do jogador</h3>
+      <div class="seg" role="group" aria-label="Era"><button data-era="0" aria-pressed="false">I</button><button data-era="1" aria-pressed="false">II</button><button data-era="2" aria-pressed="true">III</button><button data-era="3" aria-pressed="false">IV</button><button data-era="4" aria-pressed="false">V</button><button data-era="5" aria-pressed="false">VI</button><button data-era="6" aria-pressed="false">VII</button><button data-era="7" aria-pressed="false">VIII</button><button data-era="8" aria-pressed="false">IX</button></div>
+      <h3>Herói</h3>
+      <div class="seg" role="group" aria-label="Herói"><button data-hero="kael" aria-pressed="true">Kael</button><button data-hero="kaia" aria-pressed="false">Kaia</button></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Regras do fluxo</h2>
+      <ul>
+        <li>A conta de <b>convidado nasce só no toque do JOGAR</b>. Abrir a conta, trocar servidor ou "Continuar como convidado" não cria nada</li>
+        <li><b>Servidor sempre trocável antes do JOGAR</b>: o cartão abre a lista com estado, ping e "seu personagem: Nv X". Trocar pede confirmação (cada servidor tem o seu progresso)</li>
+        <li>Conta é um <b>ícone discreto no canto</b>: Google ou convidado. <b>Nenhum dado pessoal</b> é pedido nem mostrado (jogo com menores): sem e-mail, sem idade, sem nome real</li>
+        <li><b>Excluir conta fica em Configurações › Conta</b>, nunca aqui</li>
+        <li>Sem internet ou em manutenção: <b>joga offline</b> e avisa; o progresso sobe quando voltar. Celular × nuvem: escolha obrigatória, o outro lado fica no histórico (5 versões)</li>
+        <li>Nesta tela: <b>nenhum preço, oferta ou contagem regressiva</b>. Tudo fica bonito sem login</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>O que muda em relação a hoje</h2>
+      <ul>
+        <li><b>Um logo só</b>: o dourado do carregamento também no Título (hoje o Título e o Login usam o cristal azul)</li>
+        <li>O selo do servidor e o "Trocar servidor" saem do canto e viram <b>um cartão embaixo do JOGAR</b></li>
+        <li>JOGAR e "Continuar como" (que hoje fazem a mesma coisa) viram <b>um botão só</b>; quem volta vê o seu cartão (herói, nível, era)</li>
+        <li>Fundo da <b>era atual do jogador</b> (hoje é sempre a era 2) e o herói <b>montado com o pet</b></li>
+        <li>Carregamento e Título viram <b>uma cena só</b>: no toque, o logo sobe, o fundo clareia e os botões entram</li>
+        <li>Login e escolha de servidor deixam de ser telas no meio do caminho: viram <b>folhas</b> sobre a cena</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="seg" role="group" aria-label="Direção do voto" style="margin-bottom:8px"><button data-dir="A" aria-pressed="true">Voto na A</button><button data-dir="B" aria-pressed="false">Voto na B</button></div>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: A com o logo maior, servidor mais visível"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), scr0=$('#scr0');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function stgErr(where,e){ const d=$('#stgdiag'); if(d) d.textContent='Palco: erro em '+where+' ('+(e&&e.message||e)+')'; try{ console.error(e); }catch(_){} }
+
+/* ---------- dados ---------- */
+const VER='0.13.3';
+const ERAS=['Pré-História','Antiguidade','Medieval','Era da Pólvora','Era Industrial','Era Moderna','Era Futurista','Submundo','Celestial'];
+const FXC=['255,150,70','255,214,130','200,245,150','220,205,190','255,190,90','160,215,255','110,240,255','205,120,255','255,232,150'];
+const TINT=['rgba(80,30,10,','rgba(90,60,20,','rgba(20,30,10,','rgba(40,30,30,','rgba(50,30,15,','rgba(15,30,55,','rgba(5,30,60,','rgba(40,10,50,','rgba(70,55,20,'];
+const TIPS=['Dica: os heróis seguem lutando enquanto você está fora.','Dica: no Mapa das Eras, toque num chefe para ver o que ele derruba.','Dica: a Forja deixa a sua arma mais forte sem trocar de arma.'];
+/* lista de exemplo (p_realm.js / API_SERVIDOR §11): o mais novo primeiro */
+const REALMS=[{id:'s2',code:'S2',name:'Aurora',state:'new',rec:true,ping:32},{id:'s1',code:'S1',name:'Nova Era',state:'open',rec:false,ping:48}];
+const NEWS=[{id:'n1',t:'Novidades da versão '+VER,d:'Correio novo, Dupla das Eras e telas de Forja mais rápidas.'},{id:'n2',t:'Manutenção programada',d:'Sexta, das 14:00 às 14:30. O jogo offline continua funcionando.'},{id:'n3',t:'Dica da semana',d:'No Mapa das Eras, toque num chefe para ver o que ele derruba.'}];
+const MT={u:{kael:'a/rd_griffin.png',kaia:'a/rda_griffin.png'},n:12,fw:256,fh:176,cx:106,fy:169,fps:8};
+const PT={u:'a/pt_pet_shadowwolf_idle.png',n:12,fw:512,fh:352,cx:208,fy:307,fps:12};
+
+let DIR='A';
+const S={};
+function reset(){ Object.assign(S,{ph:'load',load:0,hj:'load',hjm:'main',hjr:false,pl:'old',cn:'ok',ac:'guest',cf:false,era:2,hero:'kael',realm:'s1',
+  me:{name:'Viajante',lv:42,stage:37},s2me:null,sound:false,hsound:false,sheet:null,sub:null,rcf:null,pick:null,read:{},cloudP:0,
+  guestCreated:false,entered:null,toast:'',log:[],tip:0}); }
+reset();
+
+/* ---------- regras ---------- */
+const realmOf=id=>REALMS.find(r=>r.id===id)||REALMS[1];
+const rLabel=r=>r.code+' · '+r.name;
+function realmMe(id){ if(id==='s1') return S.pl==='old'?{lv:S.me.lv}:null; return S.s2me; }
+const hasChar=()=>!!realmMe(S.realm);
+const eraNow=()=>hasChar()?S.era:0;
+const avOf=()=>'a/'+S.hero+'_phase0.png';
+function status(r){
+  if(S.cn==='offline') return {t:'Sem internet',c:'#a8957a',ms:''};
+  if(r.id==='s1'&&S.cn==='maint') return {t:'Manutenção',c:'#ff8a5a',ms:'volta 14:00'};
+  if(r.ping<60) return {t:'Ótimo',c:'#5fd068',ms:r.ping+' ms'};
+  if(r.ping<150) return {t:'Bom',c:'#ffd25e',ms:r.ping+' ms'};
+  return {t:'Lento',c:'#ff9a4a',ms:r.ping+' ms'}; }
+const online=()=>S.cn!=='offline'&&!(S.cn==='maint'&&S.realm==='s1');
+function toast(t){ S.toast=t; const k=t; setTimeout(()=>{ if(S.toast===k){ S.toast=''; renderP(); } },2600); }
+function unread(){ return NEWS.filter(n=>!S.read[n.id]).length; }
+
+/* JOGAR: único lugar que cria a conta de convidado */
+function play(){
+  if(S.ph!=='title'||S.entered) return false;
+  if(S.cn==='cloud'){ toast('Espere: o seu jogo está vindo da nuvem'); renderP(); return false; }
+  if(S.cn==='choice'){ S.sheet='choice'; renderP(); return false; }
+  const log=[];
+  if(S.ac==='none'){ S.ac='guest'; S.guestCreated=true; log.push('Conta de convidado criada agora, no toque do JOGAR (salva neste celular).'); }
+  if(S.cn==='offline') log.push('Sem internet: joga offline; o progresso sobe quando a conexão voltar.');
+  if(S.cn==='maint'&&S.realm==='s1') log.push('Servidor em manutenção: joga offline até 14:00.');
+  const r=realmOf(S.realm);
+  S.entered={t:hasChar()?'Batalha · '+ERAS[S.era]+', fase '+S.me.stage:'Prólogo com o avô',srv:rLabel(r),log};
+  S.log.push('JOGAR'); S.sheet=null; renderP(); return true; }
+
+function act(d){
+  const x=d.x;
+  if(d.dir){ setDir(d.dir); return; }
+  if(x==='tap'){ if(S.load<100) return; S.ph='title'; S.log.push('título'); }
+  else if(x==='play'){ play(); return; }
+  else if(x==='srv'){ S.sheet='server'; S.rcf=null; }
+  else if(x==='acct'){ S.sheet='acct'; S.sub=null; }
+  else if(x==='news'){ S.sheet='news'; NEWS.forEach(n=>S.read[n.id]=1); }
+  else if(x==='sound'){ S.sound=!S.sound; toast(S.sound?'Música ligada':'Música desligada'); }
+  else if(x==='close'){ if(S.sheet==='choice') return; S.sheet=null; S.sub=null; S.rcf=null; }
+  else if(x==='realm'){ const r=realmOf(d.id);
+    if(r.id===S.realm){ S.sheet=null; toast('Você já está no '+rLabel(r)); }
+    else if(S.cn==='offline'){ toast('Sem internet: a troca de servidor volta quando conectar'); }
+    else S.rcf=r.id; }
+  else if(x==='rcfno'){ S.rcf=null; }
+  else if(x==='rcfyes'){ const r=realmOf(S.rcf); S.realm=r.id; S.rcf=null; S.sheet=null; S.log.push('servidor '+r.id); toast('Agora no '+rLabel(r)); }
+  else if(x==='google'){
+    if(S.cn==='offline'){ toast('Precisa de internet para entrar com o Google'); }
+    else if(S.cn==='maint'){ toast('Servidor em manutenção: entre com o Google depois das 14:00'); }
+    else if(S.cf){ S.sub='conflict'; }
+    else { toast(S.ac==='guest'?'Conta vinculada: o seu progresso agora fica na nuvem':'Conectado com o Google'); S.ac='google'; S.sheet=null; } }
+  else if(x==='guestgo'){ S.sheet=null; toast(S.ac==='none'?'Combinado: o jogo de convidado é criado quando você tocar em JOGAR':'Você continua como convidado'); }
+  else if(x==='usecloud'){ S.ac='google'; S.pl='old'; S.realm='s1'; S.me={name:'Viajante',lv:57,stage:12}; S.era=3; S.cf=false; S.cn='cloud'; S.cloudP=0; S.sheet=null; S.sub=null; cloudRun(); }
+  else if(x==='keepdev'){ S.sub=null; toast(S.ac==='none'?'Nada mudou. Para outro herói, use outro servidor':'Nada mudou: o jogo deste celular continua como está'); }
+  else if(x==='cpick'){ if(S.pick===d.side){ S.cn='ok'; S.sheet=null; S.me.lv=d.side==='cloud'?39:42; toast('Usando o jogo '+(d.side==='device'?'deste celular':'da nuvem')+'. O outro fica no histórico'); S.pick=null; } else S.pick=d.side; }
+  else if(x==='back'){ S.entered=null; }
+  renderP(); syncSide(); }
+
+function setDir(k){ if(k!=='A'&&k!=='B') return; DIR=k; renderP(); syncSide(); }
+
+/* ---------- desenho: cena ---------- */
+let sceneKey='';
+function spr(src,n,fw,fh,k,left,top,fps,cls){
+  return `<div class="spr ${cls||''}" style="left:${left.toFixed(1)}px;top:${top.toFixed(1)}px;width:${(fw*k).toFixed(1)}px;height:${(fh*k).toFixed(1)}px"><img src="${src}" alt="" style="width:${(n*fw*k).toFixed(1)}px;height:${(fh*k).toFixed(1)}px;animation-duration:${(n/fps).toFixed(2)}s"></div>`; }
+function riderHTML(cx,fy,k,pcx,pfy,pk){
+  return `<div class="rider"><div class="bob" style="position:absolute;inset:0">`
+    +`<div class="shd" style="left:${cx-60*k}px;top:${fy-6}px;width:${120*k}px"></div>`
+    +`<div class="shd" style="left:${pcx-30}px;top:${pfy-5}px;width:60px;opacity:.7"></div>`
+    +spr(PT.u,PT.n,PT.fw,PT.fh,pk,pcx-PT.cx*pk,pfy-PT.fy*pk,PT.fps,'pet')
+    +spr(MT.u[S.hero],MT.n,MT.fw,MT.fh,k,cx-MT.cx*k,fy-MT.fy*k,MT.fps,'mount')
+    +`</div></div>`; }
+function fxHTML(e){ let h=''; const c=FXC[e];
+  for(let i=0;i<16;i++){ const l=(i*23+7)%100, s=3+(i*5)%4, du=7+(i*3)%6, de=-(i*1.3).toFixed(1), b=180+(i*37)%380;
+    h+=`<span class="fx" style="left:${l}%;bottom:${b}px;width:${s}px;height:${s}px;background:rgba(${c},.95);box-shadow:0 0 ${s*3}px ${s}px rgba(${c},.55);animation-duration:${du}s;animation-delay:${de}s"></span>`; }
+  return h; }
+function sceneHTML(){
+  const e=eraNow(), bg='a/mbg_era'+e+'.png', t=TINT[e];
+  if(DIR==='A'){ /* fundo 780 de altura, sobe 60: estrada em ~576 */
+    const H=780, W=Math.round(H*1600/1073);
+    return `<div class="bgstrip" style="top:-60px;left:-120px;height:${H}px;width:${W}px"><img src="${bg}" alt=""></div>`
+      +`<div class="vign" style="background:linear-gradient(180deg,${t}.55) 0%,${t}0) 30%,${t}0) 55%,rgba(10,7,4,.7) 100%)"></div>`
+      +`<div class="vign" style="background:radial-gradient(ellipse 70% 40% at 50% 60%,rgba(255,220,150,.22),transparent 70%)"></div>`
+      +fxHTML(e)+riderHTML(205,578,1.4,92,586,.32); }
+  /* B: fundo cheio, 900 de altura, sobe 150; tira A A' A rolando = cavalgando */
+  const H=900, W=Math.round(H*1600/1073);
+  return `<div class="bgstrip" style="top:-150px;left:0;height:${H}px;width:${W*3}px"><img src="${bg}" alt=""><img class="mir" src="${bg}" alt=""><img src="${bg}" alt=""></div>`
+    +`<div class="vign" style="background:linear-gradient(180deg,${t}.6) 0%,${t}.05) 28%,rgba(0,0,0,0) 50%,rgba(10,7,4,.55) 74%,rgba(10,7,4,.88) 100%)"></div>`
+    +fxHTML(e)+riderHTML(150,600,1.5,298,606,.3); }
+
+/* ---------- desenho: interface ---------- */
+const IC={
+  news:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/></svg>',
+  user:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/></svg>',
+  son:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>',
+  soff:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M16 9l5 6M21 9l-5 6"/></svg>',
+  x:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f6ecdf" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  wifi:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><path d="M3 3l18 18"/></svg>',
+  tool:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>',
+  cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/></svg>',
+  chev:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>',
+  plus:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8a7458" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+};
+function acTag(){ if(S.ac==='google') return '<span class="ac" style="background:#fff;color:#1f1f1f">G</span>'; if(S.ac==='guest') return '<span class="ac" style="background:#c9b9a2;color:#1d1611">C</span>'; return ''; }
+function acAria(){ return S.ac==='google'?'Conta: Google':S.ac==='guest'?'Conta: convidado':'Conta: ainda sem conta'; }
+const bAcct=()=>`<button class="ib" data-x="acct" aria-label="${acAria()}">${IC.user}${acTag()}</button>`;
+const bNews=()=>{ const n=unread(); return `<button class="ib" data-x="news" aria-label="Avisos${n?', '+n+' novos':''}">${IC.news}${n?`<span class="bdg">${n}</span>`:''}</button>`; };
+const bSound=()=>`<button class="ib" data-x="sound" aria-label="${S.sound?'Desligar música':'Ligar música'}" aria-pressed="${S.sound}">${S.sound?IC.son:IC.soff}</button>`;
+const chip=()=>`<div class="dchip" role="group" aria-label="Protótipo: direção"><button data-dir="A" aria-pressed="${DIR==='A'}" aria-label="Direção A">A</button><button data-dir="B" aria-pressed="${DIR==='B'}" aria-label="Direção B">B</button></div>`;
+function banner(){
+  if(S.cn==='offline') return `<div class="ban off" role="status">${IC.wifi}<span>Sem internet. Você joga offline e o progresso fica salvo neste celular até a conexão voltar.</span></div>`;
+  if(S.cn==='maint'&&S.realm==='s1') return `<div class="ban mt" role="status">${IC.tool}<span>O S1 está em manutenção até 14:00. Dá para jogar offline; o progresso sobe quando ele voltar.</span></div>`;
+  if(S.cn==='cloud') return `<div class="ban cl" role="status">${IC.cloud}<span>Carregando o seu jogo da nuvem…</span></div>`;
+  return ''; }
+function playBtn(){
+  if(S.cn==='cloud') return `<button class="play" data-x="play" disabled aria-label="Carregando o seu jogo da nuvem">JOGAR<small>Carregando o seu jogo da nuvem… ${S.cloudP}%</small><span class="pb" style="width:${S.cloudP}%"></span></button>`;
+  let sub=hasChar()?'Continuar a jornada':(S.ac==='none'?'Começa como convidado neste celular':'Começar a jornada');
+  if(S.cn==='offline'||(S.cn==='maint'&&S.realm==='s1')) sub='Jogo offline';
+  return `<button class="play" data-x="play">JOGAR<small>${sub}</small></button>`; }
+function srvCard(){ const r=realmOf(S.realm), st=status(r);
+  return `<button class="srv" data-x="srv" aria-label="Servidor ${esc(rLabel(r))}, ${st.t}. Trocar servidor"><span class="dt" style="background:${st.c};color:${st.c}"></span><span class="sn"><b>${esc(rLabel(r))}</b><small>${st.t}${st.ms?' · '+st.ms:''}</small></span><span class="tr">Trocar ${IC.chev}</span></button>`; }
+function pcard(){ if(!hasChar()) return '';
+  return `<div class="pcard"><img src="${avOf()}" alt=""><span class="pn"><b>${esc(S.me.name)}</b><small>${ERAS[S.era]} · fase ${S.me.stage}</small></span><span class="lv">Nv ${S.me.lv}</span></div>`; }
+function loadHTML(){ const done=S.load>=100, e=eraNow();
+  return `<button class="ld" data-x="tap" aria-label="${done?'Toque para continuar':'Carregando'}">`
+    +`<span class="bar"><i style="width:${S.load}%"></i></span>`
+    +`<span class="lt"><span>${done?'Pronto!':'Carregando: '+ERAS[e]+'…'}</span><span>${S.load}%</span></span>`
+    +(done?`<span class="go">Toque para continuar</span>`:'')
+    +`<span class="tip">${TIPS[S.tip%TIPS.length]}</span>`
+    +`<span class="ver">Versão ${VER}</span></button>`; }
+function titleA(){
+  return `<div class="tbar"><div class="g">${bNews()}${bSound()}</div>${chip()}<div class="g">${bAcct()}</div></div>`
+    +`<div class="pan">${banner()}${pcard()}${hasChar()?'<div class="sep"></div>':''}${playBtn()}${srvCard()}<div class="ft"><span>Versão ${VER}</span><span>${S.ac==='google'?'Salvo na nuvem':S.ac==='guest'?'Salvo neste celular':'Sem conta ainda'}</span></div></div>`; }
+function titleB(){
+  return `<div class="bchip">${chip()}</div>`
+    +`<div class="col"><span class="cb">${bAcct()}Conta</span><span class="cb">${bNews()}Avisos</span><span class="cb">${bSound()}Som</span></div>`
+    +(hasChar()?`<div class="rib"><img src="${avOf()}" alt=""><span><b>${esc(S.me.name)}</b> · Nv ${S.me.lv} · ${ERAS[S.era]}</span></div>`:'')
+    +`<div class="stk">${banner()}${playBtn()}${srvCard()}<span class="ver">Versão ${VER}</span></div>`; }
+function enteredHTML(){ const E=S.entered;
+  return `<div class="ent2" role="dialog" aria-label="Entrando"><b>Entrando no ${esc(E.srv)}</b><p>Daqui o jogo segue para: <b style="color:#fff;font-family:var(--fb);font-size:14px">${esc(E.t)}</b></p>${E.log.length?`<ul>${E.log.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}<button class="btn gold" data-x="back" style="max-width:280px">Voltar ao título (protótipo)</button></div>`; }
+
+/* ---------- folhas ---------- */
+function shHead(t,sub,closable){ return `<div class="hd"><div><b>${t}</b>${sub?`<small>${sub}</small>`:''}</div>${closable===false?'':`<button class="x" data-x="close" aria-label="Fechar">${IC.x}</button>`}</div>`; }
+function serverSheet(){
+  const L=S.cn==='offline'?REALMS.filter(r=>r.id===S.realm):REALMS;
+  const rows=L.map(r=>{ const on=r.id===S.realm, me=realmMe(r.id), st=status(r);
+    const tags=(r.state==='new'?'<span class="tg" style="background:#5fd068;color:#0d2410">Novo</span>':'')+(r.rec?'<span class="tg" style="background:#ffc94a;color:#2a1403">Recomendado</span>':'')+(on?'<span class="tg" style="border:1px solid #ffc94a;color:#ffc94a">Atual</span>':'');
+    return `<button class="rc${on?' on':''}" data-x="realm" data-id="${r.id}" aria-label="${esc(rLabel(r))}${on?', servidor atual':''}, ${st.t}${me?', seu personagem nível '+me.lv:''}">`
+      +(me?`<span class="av"><img src="${avOf()}" alt=""></span>`:`<span class="av e">${IC.plus}</span>`)
+      +`<span class="ri"><b style="color:${on?'#ffe07a':'#f6ecdf'}">${esc(rLabel(r))}</b>${tags?`<span class="tags">${tags}</span>`:''}<small>${me?'Seu personagem: Nv '+me.lv:'Comece um herói aqui'}</small></span>`
+      +`<span class="st"><span><i style="background:${st.c}"></i>${st.t}</span><span style="color:#8a7458">${st.ms}</span></span></button>`; }).join('');
+  const cf=S.rcf?realmOf(S.rcf):null;
+  return `<div class="dim" data-x="close"></div><div class="sh" role="dialog" aria-label="Servidores">${shHead('Servidores','Cada servidor é um mundo separado, com o seu progresso, ranking e guilda.')}`
+    +`<div role="list" style="display:flex;flex-direction:column;gap:8px">${rows}</div>`
+    +(S.cn==='offline'?'<div class="note w">Sem internet: a lista dos outros servidores volta quando você conectar.</div>':'<div class="note">Exemplo de lista. Ping medido deste celular.</div>')
+    +(cf?`<div class="cf" role="dialog" aria-label="Trocar de servidor"><b>Entrar no ${esc(rLabel(cf))}?</b><p>Cada servidor tem o seu próprio progresso. O seu herói do ${esc(realmOf(S.realm).code)} fica guardado do jeito que está.${realmMe(cf.id)?'':' Lá você começa um herói novo.'}</p><div class="r2"><button class="btn" data-x="rcfno">Cancelar</button><button class="btn gold" data-x="rcfyes">Entrar</button></div></div>`:'')
+    +`</div>`; }
+function acctSheet(){
+  const noNet=S.cn==='offline'||S.cn==='maint';
+  if(S.sub==='conflict') return `<div class="dim" data-x="close"></div><div class="sh" role="dialog" aria-label="Conta Google com outro personagem">${shHead('Esta conta Google já tem um personagem','No S1 · Nova Era ela já tem um herói. Um celular joga com uma conta por vez.')}`
+    +`<div class="cc"><div class="ccd"><img src="${avOf()}" alt=""><b>${S.ac==='none'?'Neste celular':'Convidado'}</b><small>${S.ac==='none'?'Nada ainda':'Nv '+S.me.lv+' · '+ERAS[S.era]}<br>salvo neste celular</small></div><div class="ccd"><img src="a/${S.hero}_phase0.png" alt=""><b>Conta Google</b><small>Nv 57 · ${ERAS[3]}<br>salvo na nuvem</small></div></div>`
+    +`<button class="btn gold" data-x="usecloud">Jogar com o herói da conta (Nv 57)</button>`
+    +`<button class="btn" data-x="keepdev">${S.ac==='none'?'Voltar':'Manter o jogo deste celular'}</button>`
+    +`<div class="note">${S.ac==='none'?'Para começar outro herói, use outro servidor.':'O jogo de convidado fica neste celular, sem nuvem. Nada é apagado.'}</div></div>`;
+  const who=S.ac==='google'?['Conta Google conectada','Seu progresso fica salvo na nuvem.','#fff']:S.ac==='guest'?['Convidado','Seu progresso fica salvo só neste celular.','#c9b9a2']:['Você ainda não tem conta','Ao tocar em JOGAR, criamos um jogo de convidado neste celular.','#8a7458'];
+  let btns='';
+  if(S.ac==='none') btns=`<button class="btn ggl" data-x="google"${noNet?' disabled':''}><i>G</i>Entrar com Google</button><button class="btn" data-x="guestgo">Continuar como convidado</button>`;
+  else if(S.ac==='guest') btns=`<button class="btn ggl" data-x="google"${noNet?' disabled':''}><i>G</i>Vincular com Google</button><div class="note">Vincular guarda este herói na nuvem para jogar em outro celular.</div>`;
+  else btns=`<div class="note">Para trocar de conta, sair ou excluir a conta: Configurações › Conta.</div>`;
+  return `<div class="dim" data-x="close"></div><div class="sh" role="dialog" aria-label="Conta">${shHead('Conta','')}`
+    +`<div class="who"><span class="ic" style="color:${who[2]}">${S.ac==='google'?'<b style="font-size:20px;color:#fff">G</b>':IC.user}</span><div><b>${who[0]}</b><small>${who[1]}</small></div></div>`
+    +btns+(noNet&&S.ac!=='google'?'<div class="note w">Entrar com Google precisa do servidor no ar. O jogo offline funciona.</div>':'')
+    +`<div class="note">Não pedimos nome, idade nem e-mail. Excluir conta fica em Configurações › Conta.</div></div>`; }
+function newsSheet(){
+  return `<div class="dim" data-x="close"></div><div class="sh" role="dialog" aria-label="Avisos">${shHead('Avisos','Novidades e manutenções.')}`
+    +NEWS.map(n=>`<div class="nw"><span class="d r"></span><div><b>${esc(n.t)}</b><small>${esc(n.d)}</small></div></div>`).join('')+`</div>`; }
+function choiceSheet(){
+  const card=(side,t,lv,fase,when,play,rec)=>{ const pk=S.pick===side;
+    return `<div class="ccd${rec?' rec':''}${pk?' pk':''}">${rec?'<span class="tg2">Recomendado</span>':''}<img src="${avOf()}" alt=""><b>${t}</b><small>Nv ${lv} · ${ERAS[2]}<br>fase ${fase}<br>${when}<br>${play} de jogo</small><button class="btn${pk?' gold':''}" data-x="cpick" data-side="${side}">${pk?'Toque de novo para confirmar':'Usar este'}</button></div>`; };
+  return `<div class="dim"></div><div class="sh" role="dialog" aria-label="Escolha o seu jogo">${shHead('Qual jogo continuar?','O jogo deste celular e o da nuvem mudaram os dois. Escolha um: o outro fica guardado no histórico do servidor (5 versões, dá para voltar).',false)}`
+    +`<div class="cc">${card('device','Este celular',42,37,'13/11 às 09:12','41 h 10 min',true)}${card('cloud','Nuvem',39,12,'12/11 às 22:40','38 h 05 min',false)}</div></div>`; }
+
+function renderP(){
+  try{
+    scr.className='scr P dir'+DIR+' ph-'+S.ph+(S.entered?' ent':'');
+    const key=DIR+'|'+eraNow()+'|'+S.hero; if(key!==sceneKey){ sceneKey=key; $('#pscene').innerHTML=sceneHTML(); }
+    let ui=S.ph==='load'?loadHTML():(DIR==='A'?titleA():titleB());
+    if(S.entered) ui+=enteredHTML();
+    if(S.toast) ui+=`<div class="toast" role="status">${esc(S.toast)}</div>`;
+    $('#pui').innerHTML=ui;
+    const sh=S.ph!=='title'||S.entered?'':S.sheet==='server'?serverSheet():S.sheet==='acct'?acctSheet():S.sheet==='news'?newsSheet():S.sheet==='choice'?choiceSheet():'';
+    $('#psheet').innerHTML=sh;
+    $('#cap2').innerHTML=DIR==='A'?'Proposta · Direção A: cena + painel<small>visual provisório (o final segue o mock da Arte) · herói montado no centro da cena; JOGAR e o cartão do servidor num painel de vidro embaixo; avisos, som e conta na barra do topo</small>'
+      :'Proposta · Direção B: cena aberta<small>visual provisório (o final segue o mock da Arte) · a era inteira na tela, o herói cavalgando com o pet; uma pilha só (JOGAR, servidor) sobre a cena; conta, avisos e som numa coluna à direita</small>';
+    const st=$('#stl'); if(st) st.innerHTML='Proposta: <b>'+(S.ph==='load'?'carregamento':'título')+'</b> · '+(hasChar()?'volta, Nv '+S.me.lv+', '+ERAS[S.era]:'sem herói neste servidor')+' · servidor <b>'+esc(rLabel(realmOf(S.realm)))+'</b> · conta <b>'+(S.ac==='none'?'nenhuma':S.ac==='guest'?'convidado':'Google')+'</b>'+(S.guestCreated?' (criada no JOGAR)':'');
+    const dt=$('#dirtxt'); if(dt) dt.innerHTML=DIR==='A'?'<b>A</b>: o herói é o centro; tudo o que se toca fica junto, num painel de vidro marrom embaixo (seu herói, JOGAR, servidor, versão). Mais calma e organizada.':'<b>B</b>: a cena da era ocupa tudo e anda (o herói cavalga). Logo grande em cima, faixa "seu herói" logo abaixo, coluna de ícones à direita e uma pilha vertical (JOGAR, servidor) sobre a cena. Mais viva, estilo cartaz.';
+  }catch(e){ stgErr('a proposta',e); } }
+
+/* ---------- HOJE ---------- */
+function hjTitle(){ const old=S.pl==='old', H=844, W=Math.round(H*1600/1073);
+  let h=`<img class="hbg" src="a/mbg_era2.png" alt="" style="width:${W}px">`
+    +`<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,14,48,.9) 0%,rgba(14,30,90,.55) 40%,rgba(10,20,60,.25) 62%,rgba(4,8,20,.9) 100%)"></div>`;
+  [[8,6],[22,14],[40,4],[70,10],[86,18],[94,5],[14,30],[80,34]].forEach((p,i)=>{ h+=`<span class="hstar" style="left:${p[0]}%;top:${p[1]}%;animation-delay:${(i*.4).toFixed(1)}s"></span>`; });
+  [[8,5,8],[24,4,10],[41,6,7],[58,4,9],[74,5,8.5],[90,3,7.5]].forEach((p,i)=>{ h+=`<span class="hrise" style="left:${p[0]}%;width:${p[1]}px;height:${p[1]}px;animation-duration:${p[2]}s;animation-delay:${i}s"></span>`; });
+  h+=`<div class="shd" style="left:135px;top:658px;width:120px;height:14px"></div>`;
+  if(old){ const k=.8; h+=`<div class="rider">`+spr(PT.u,PT.n,PT.fw,PT.fh,.2,118-PT.cx*.2,668-PT.fy*.2,12,'')+spr(MT.u[S.hero],MT.n,MT.fw,MT.fh,k,195-MT.cx*k,665-MT.fy*k,8,'')+`</div>`; }
+  else h+=spr('a/body_'+S.hero+'.png',12,256,256,.55,195-128*.55,665-236*.55,12,'');
+  h+=`<div class="hlogo" role="img" aria-label="Logo Eonbound, cristal azul"><span class="ring"></span><span class="ring r2"></span><span class="blue">EONBOUND</span><span class="btag"><i></i>ATRAVESSE AS ERAS<i></i></span></div>`;
+  if(S.hsound) h+=`<span class="hmus">Tema de Eonbound</span>`;
+  h+=`<div class="hrb"><span class="bd" role="status">S1 · Nova Era</span><button data-h="realm">Trocar servidor</button></div>`;
+  h+=`<button class="hib" data-h="music" aria-label="${S.hsound?'Desligar música':'Ligar música'}" style="border-color:${S.hsound?'#ffc94a':'#4a3a2b'}">${S.hsound?IC.son:IC.soff}</button>`;
+  h+=`<div style="position:absolute;left:0;right:0;bottom:0;height:200px;z-index:7;pointer-events:none;background:linear-gradient(180deg,rgba(10,7,5,0) 0%,rgba(10,7,5,.55) 45%,rgba(10,7,5,.85) 100%)"></div>`;
+  h+=`<div class="hbot"><button class="hplay" data-h="play">JOGAR</button>`
+    +(old?`<button class="hcont" data-h="play"><img src="${avOf()}" alt="">Continuar como&nbsp;<b style="color:#ffe07a">${esc(S.me.name)}</b>&nbsp;· Nv. ${S.me.lv}</button>`:'')
+    +`<span class="hver">Versão ${VER}</span></div>`;
+  return h; }
+function hjLogin(){
+  let h=`<img class="hbg" src="a/mbg_era2.png" alt="" style="filter:blur(3px) brightness(.6);width:1258px">`
+    +`<button class="hib" data-h="lback" aria-label="Voltar" style="left:16px;right:auto;top:20px">${IC.chev.replace('9 6 15 12 9 18','15 18 9 12 15 6').replace('width="14" height="14"','width="22" height="22"')}</button>`
+    +`<div style="position:absolute;top:90px;left:0;right:0;display:flex;flex-direction:column;align-items:center"><span class="blue" style="margin-top:0">EONBOUND</span><span class="btag" style="letter-spacing:5px">ATRAVESSE AS ERAS</span></div>`
+    +`<div class="hsheet"><h1>Salve sua lenda</h1><p>Entre para guardar seu progresso na nuvem e continuar em qualquer celular.</p>`
+    +`<button class="hg" data-h="google"><i>G</i>Continuar com Google</button><button class="hgst" data-h="guest">Jogar como convidado</button>`
+    +`<p style="font-size:12px;color:#b9a993">Ao continuar você aceita os Termos de Uso e a Política de Privacidade (em Configurações › Sobre).</p></div>`;
+  if(S.hjm==='guest') h+=`<div class="hdim"><div class="hmod" role="dialog" aria-label="Jogar como convidado"><h2>Jogar sem conta?</h2><p>Seu progresso fica salvo só neste celular. Se apagar o app ou trocar de aparelho, ele se perde. Você pode vincular uma conta depois em Configurações › Conta.</p><button class="hgst" data-h="guestok" style="background:#33271d">Entendi, jogar como convidado</button><button class="hgold" data-h="gback">Voltar e salvar na nuvem</button></div></div>`;
+  return h; }
+function hjRealm(first){ const me=S.pl==='old'&&!first;
+  const card=(r,on,mine)=>`<button class="rc${on?' on':''}" data-h="rpick" data-id="${r.id}"><span class="av"${mine?'':' style="border-style:dashed;background:#16110d"'}>${mine?`<img src="${avOf()}" alt="">`:IC.plus}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span class="lil" style="font-size:17px;color:${on?'#ffe07a':'#f6ecdf'}">${rLabel(r)}</span><span style="display:flex;gap:5px"><span class="tg" style="background:#5fd068;color:#0d2410">Novo</span><span class="tg" style="background:#ffc94a;color:#2a1403">Recomendado</span>${on?'<span class="tg" style="border:1px solid #ffc94a;color:#ffc94a">Atual</span>':''}</span>${mine?`<span style="font-size:12px;font-weight:900">${esc(S.me.name)} · Nv. ${S.me.lv}</span><span style="font-size:11px;font-weight:800;color:#c9b9a2">FC 1,2 mi</span>`:'<span style="font-size:12px;font-weight:800;color:#c9b9a2">Comece um herói aqui</span>'}</span>${IC.chev}</button>`;
+  return `<div class="hrl"><div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span class="lil" style="font-size:22px">${first?'Escolha o seu servidor':'Trocar servidor'}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2;line-height:1.3">${first?'Cada servidor é um mundo separado, com o seu ranking e a sua guilda. Você pode trocar depois, no Título ou nas Configurações.':'Cada servidor é um mundo separado, com o seu próprio progresso.'}</span></div>${first?'':'<button data-h="rback" style="flex:none;min-width:44px;height:44px;padding:0 12px;border-radius:12px;border:2px solid #4a3a2b;background:#33271d;font-size:13px;font-weight:900">Voltar</button>'}</div>`
+    +card({id:'s1',code:'S1',name:'Nova Era'},true,me)+`<div style="font-size:12px;font-weight:800;color:#8a7458;text-align:center">${first?'':'Mais servidores aparecem aqui quando abrirem.'}</div></div>`; }
+function renderH(){
+  try{ let h='';
+    if(S.hj==='load') h=`<button class="hjtap" data-h="tap" aria-label="Toque para continuar"><img class="shot" src="a/titulo_hoje.jpg" alt="Print real do carregamento hoje"></button>`;
+    else if(S.hj==='title') h=hjTitle();
+    else if(S.hj==='login') h=hjLogin();
+    else if(S.hj==='realm') h=hjTitle()+hjRealm(false);
+    else if(S.hj==='realm1') h=hjRealm(true);
+    else if(S.hj==='fim') h=`<div class="hfim"><b>${S.hjr?'Prólogo com o avô':'Batalha'}</b><p>${S.hjr?'Hoje, o novo jogador passa por: Carregamento › Título › Login (Google ou convidado) › Escolha do servidor › Prólogo. A conta de convidado é criada no "Entendi, jogar como convidado".':'Quem volta: Carregamento › Título › (Bem-vindo de volta, se ficou fora) › Batalha.'}</p><button class="hgold" data-h="restart" style="width:100%;max-width:280px">Ver de novo</button></div>`;
+    $('#hj').innerHTML=h;
+  }catch(e){ stgErr('hoje',e); } }
+function actH(d){ const x=d.h;
+  if(x==='tap') S.hj='title';
+  else if(x==='play'){ if(S.pl==='new'){ S.hj='login'; S.hjm='main'; } else { S.hjr=false; S.hj='fim'; } }
+  else if(x==='realm') S.hj='realm';
+  else if(x==='rback'||x==='lback') S.hj='title';
+  else if(x==='rpick'){ if(S.hj==='realm1'){ S.hjr=true; S.hj='fim'; } else S.hj='title'; }
+  else if(x==='music') S.hsound=!S.hsound;
+  else if(x==='google'){ S.hjm='main'; S.hj='realm1'; }
+  else if(x==='guest') S.hjm='guest';
+  else if(x==='gback') S.hjm='main';
+  else if(x==='guestok'){ S.hjm='main'; S.hj='realm1'; }
+  else if(x==='restart') S.hj='load';
+  renderH(); syncSide(); }
+
+/* ---------- painel ---------- */
+function syncSide(){ const m={dir:DIR,ph:S.ph,hj:S.hj==='realm1'?'login':S.hj,pl:S.pl,cn:S.cn,ac:S.ac,cf:S.cf?'1':'0',era:String(S.era),hero:S.hero};
+  try{ for(const k in m) for(const b of document.querySelectorAll('.side [data-'+k+']')) b.setAttribute('aria-pressed',String(b.dataset[k]===m[k])); }catch(e){} }
+function sim(d){
+  if(d.dir){ setDir(d.dir); return; }
+  if(d.ph){ S.ph=d.ph; S.entered=null; if(d.ph==='load') startLoad(); }
+  if(d.hj){ S.hj=d.hj; S.hjm='main'; if(d.hj==='login'&&S.pl!=='new'){ S.pl='new'; S.ac='none'; S.guestCreated=false; } }
+  if(d.pl){ S.pl=d.pl; S.realm='s1'; S.entered=null; S.me={name:'Viajante',lv:42,stage:37}; if(d.pl==='new'){ S.ac='none'; S.guestCreated=false; } else if(S.ac==='none') S.ac='guest'; }
+  if(d.cn){ S.cn=d.cn; S.entered=null; S.pick=null; S.sheet=d.cn==='choice'?'choice':null; if(S.ph==='load'&&d.cn!=='ok'){ S.ph='title'; } if(d.cn==='cloud'){ S.cloudP=0; cloudRun(); } if(d.cn==='choice'&&S.pl==='new'){ S.pl='old'; if(S.ac==='none') S.ac='guest'; } }
+  if(d.ac){ S.ac=d.ac; S.guestCreated=false; S.sub=null; if(d.ac!=='none'&&S.pl==='new'){} }
+  if(d.cf) S.cf=d.cf==='1';
+  if(d.era!=null&&d.era!==undefined){ S.era=+d.era; if(S.pl==='new'){ S.pl='old'; if(S.ac==='none') S.ac='guest'; } }
+  if(d.hero) S.hero=d.hero;
+  renderP(); renderH(); syncSide(); }
+
+/* ---------- tempo (só no navegador; no teste: finishLoad / cloudDone) ---------- */
+let LT=0, CT=0;
+function startLoad(){ S.load=0; S.tip++; clearInterval(LT); LT=setInterval(()=>{ S.load=Math.min(100,S.load+4); renderP(); if(S.load>=100) clearInterval(LT); },70); }
+function cloudRun(){ clearInterval(CT); CT=setInterval(()=>{ if(S.cn!=='cloud'){ clearInterval(CT); return; } S.cloudP=Math.min(100,S.cloudP+5); if(S.cloudP>=100){ S.cn='ok'; clearInterval(CT); toast('Seu jogo da nuvem chegou'); syncSide(); } renderP(); },120); }
+
+scr.addEventListener('click',e=>{ const b=e.target&&e.target.closest?(e.target.closest('button')||e.target.closest('[data-x]')):null; if(!b||b.disabled) return; act(b.dataset||{}); });
+scr0.addEventListener('click',e=>{ const b=e.target&&e.target.closest?e.target.closest('button'):null; if(!b||b.disabled||!b.dataset.h) return; actH(b.dataset); });
+$('.side').addEventListener('click',e=>{ const b=e.target&&e.target.closest?e.target.closest('button'):null; if(!b||!b.dataset) return; const d=b.dataset; if(d.dir||d.ph||d.hj||d.pl||d.cn||d.ac||d.cf||d.era||d.hero) sim(d); });
+function draw(){}
+startLoad(); renderP(); renderH(); syncSide();
+
+window.__telaInicialTeste={ get S(){ return S; }, get dir(){ return DIR; }, setDir, play, act, actH, sim, reset:()=>{ reset(); sceneKey=''; renderP(); renderH(); },
+  finishLoad:()=>{ clearInterval(LT); S.load=100; renderP(); }, cloudDone:()=>{ S.cloudP=100; S.cn='ok'; renderP(); syncSide(); }, hasChar, realmOf, status, unread };
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-inicial-v2';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.escolha?' · direção <b>'+String(d.escolha).replace(/[<>&]/g,'')+'</b>':'')+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,escolha:DIR,nota:$('#nota').value.trim(),tela:'Tela inicial V2',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
