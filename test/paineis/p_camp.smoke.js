@@ -47,7 +47,7 @@ const sane = what => { const bt = buttons(); assert(bt.length >= 1, what + ': se
 const open = () => { def.onOpen(); def.render(); };
 const tent = id => C.view(g.S, host).tents.find(t => t.id === id);
 let nCollect = 0, nUp = 0; const collect0 = C.collect, upgrade0 = C.upgrade;
-C.collect = function () { nCollect++; return collect0.apply(this, arguments); }; C.upgrade = function () { nUp++; return upgrade0.apply(this, arguments); };
+C.collect = function () { nCollect++; return collect0.apply(this, arguments); }; let nTent = 0; const tent0 = C.collectTent; if (typeof tent0 === 'function') C.collectTent = function () { nTent++; nCollect++; return tent0.apply(this, arguments); };   /* a coleta por tenda é do módulo (collectTent) */ C.upgrade = function () { nUp++; return upgrade0.apply(this, arguments); };
 
 try {
 // 0) registro: painel 'camp', chave nasce DESLIGADA, nome por extenso, sem diálogo do navegador, sem emoji, sem reticências, sem ellipsis
@@ -99,7 +99,7 @@ out.push('herói: window.drawHeroFull a pé com o pet na frente; erro no desenho
 
 // 4) Coletar de UMA tenda: chama o collect do módulo UMA vez, só aquela tenda entrega, as outras ficam como estavam; mostra o que entrou
 { const f0 = JSON.stringify(g.S.sys.forge || null), p0 = JSON.stringify(g.S.sys.practice || null); log.length = 0; nCollect = 0;
-  def.click(find('collect', { t: 'forge' })); assert.strictEqual(nCollect, 1, 'UMA chamada ao Sys.camp.collect');
+  def.click(find('collect', { t: 'forge' })); if (typeof tent0 === 'function'){ assert.strictEqual(nTent, 1, 'UMA chamada ao Sys.camp.collectTent'); assert.strictEqual(nCollect, 1, 'uma chamada só ao módulo na coleta de uma tenda'); } else assert.strictEqual(nCollect, 1, 'UMA chamada ao Sys.camp.collect');
   assert.notStrictEqual(JSON.stringify(g.S.sys.forge || null), f0, 'as pedras de forja entraram pelo módulo'); assert.strictEqual(JSON.stringify(g.S.sys.practice || null), p0, 'a Pedreira não foi coletada'); assert.strictEqual(host.gold, 0, 'o ouro não foi coletado');
   assert.deepStrictEqual(C.view(g.S, host).tents.map(t => t.stored), [6, 0, 4], 'as outras tendas continuam com o que tinham');
   has('Coletou: +2 pedras de forja'); has('role="status"'); assert(log.includes('snd:claim') && log.includes('save'), 'som e gravação');
@@ -173,6 +173,6 @@ out.push('textos escapados (tenda e pet); tenda sem arte cai no desenho de reser
 for (const u of Object.values(g.PCamp.ART_IMG)) if (u) imgs.add(u);
 for (const u of imgs) assert(fs.existsSync(path.join(R, u)), 'imagem citada não existe: ' + u);
 out.push('imagens: ' + imgs.size + ' citadas, todas em disco');
-} finally { C.setOn(false); C.collect = collect0; C.upgrade = upgrade0; }
+} finally { C.setOn(false); C.collect = collect0; C.upgrade = upgrade0; if (typeof tent0 === 'function') C.collectTent = tent0; }
 assert.strictEqual(C.DATA.on, false, 'o teste devolve o módulo desligado');
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');
