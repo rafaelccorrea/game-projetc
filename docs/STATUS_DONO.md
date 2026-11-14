@@ -8,6 +8,12 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14/11, madrugada · Engenheiro: APK v0.14.0 pronta para instalar no seu celular** (`Desktop\fps-android\Eonbound-debug-v0.14.0.apk`, 1,07 GB; o PO instala pelo cabo).
+    - **O que tem de novo:** todas as telas e sistemas ligados na força-tarefa (Fogueira, Dupla, Ladrão de Brasas, Acampamento, Grimório, Caminhos, Provação, Relíquias, Escavação, Guilda e Torneio novos, Mapa, Perfil, Correio, entre outros).
+    - **Corrigido a partir do teste do QA no S24:** o "-1" de dano que tinha voltado nas fases 1-1 e 1-2 (agora o inimigo comum tira no mínimo 2,5% da vida); o nome sugerido pelo jogo que era recusado; o destaque do tutorial preso em "Equip.". O dano e o tutorial ainda não foram vistos na tela depois da correção.
+    - **Ficou fora desta versão:** a arte pintada nova de VIP, Passe, Acampamento e Tela Inicial, porque o QA ainda não viu na tela.
+    - **A ver:** o aparelho esquentou no teste (34,8 → 42,5 °C em 14 min).
+
 - **13/11, fim da noite · Engenheiro: primeiras telas novas LIGADAS e Fogueira escrita.**
     - **Ligadas no jogo (o QA aprovou na tela, abrindo pelo Menu):** Pets, VIP e Montarias novas, no lugar das antigas.
     - **"-1" de dano resolvido e conferido pelo QA no jogo:** o inimigo comum tira de 1,7% a 3,9% da vida por golpe nas fases 1 a 8. Falta a Sistemas acertar o chefe da fase 5 (fácil no nível 8, impossível no nível 5).
