@@ -109,3 +109,12 @@ Ids: assets/mentors/m0..m8.png (512).
 O herói montado e o dragão entram ANIMADOS por código (as folhas do jogo: kael_griffin_idle e o pet dragão), sem custo. Destino: assets/ui/title/title_bg_a.png (o recorte em camadas céu/longe/chão eu faço por código).
 
 **Total do bloco 3: ~8 (+2 de folga para 1 refação).**
+
+## BLOCO 4: Ladrão (vídeo), Ajudante, títulos — os ~10 que restam
+**L1, Ladrão correndo (~4, é o teste do grupo de vídeo):** o item 2 acima, exatamente (início = fim = C:\Users\rafae\AppData\Local\Temp\tools\camp\thief_guide_1024.png). O "hurt" sai por CÓDIGO (piscar + recuo + brasas caindo sobre a folha parada/corrida), sem crédito. O mock do resultado NÃO é gerado: a tela usa o mock A já votado como guia e as peças existentes.
+**A1, Ajudante adulto (~2):** o item 1 acima, exatamente.
+**T1, ícones de títulos (2 imagens 1:1, ~4).** Ref: a ref 79bfaae4 + assets/icons/titles/_todos.png (o estilo dos títulos atuais). Cabeçalho: "Game title badge icons, a 3x3 grid of NINE separate badges on a flat pure green (#00FF00) background with wide gaps, EXACTLY the style of the existing title badges in image 2 (shield/medallion shape, metallic rim), no text, no letters, no numbers, no green in the badges:"
+- Imagem 1 (mentores, era 0..8): (1) a campfire with a hand print (Guardiã do Fogo); (2) a scroll and laurel (Escriba das Eras); (3) a small anvil and hammer (Aprendiz da Forja); (4) a compass rose with stars (Leitor de Estrelas); (5) brass gears (Mestre das Engrenagens); (6) an old propeller plane wing (Asa do Século); (7) a small starship (Piloto das Estrelas); (8) a lantern on a small boat (Travessia Segura); (9) a telescope with stars (Guardião dos Astros).
+- Imagem 2: (1) LEGEND badge with nine small glowing gems around a crown (Lenda das 9 Eras, the most precious); (2) a radiant sunburst of light (Luz das Eras); (3) a portal beyond a horizon (Além das Eras); (4) an infinity loop of light (Sem Fim); (5) a golden heart link (Dupla); (6) a relic fragment shard (Relíquias); (7) a pickaxe crossed with a lantern (Escavação); (8) an ember coal in a sack (Ladrão de Brasas); (9) spare: a laurel wreath.
+Ids: imagem 1 → assets/icons/titles/mentor_<id do mentor>.png (nara, tales, bertoldo, ines, otto, lia, kira, caronte, aurora); imagem 2 → legend9, light_of_eras, mark100, mark150, duo, relics, dig, thief, laurel (o Engenheiro confirma os ids finais).
+**Total do bloco 4: ~10. Fecha o lote de 38.**
