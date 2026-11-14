@@ -64,3 +64,14 @@ Variantes: A = "dark rich background, deep shadows, warm rim lights"; B = "brigh
 - **Caçada aos Chefes**: "Event theme 'Caçada aos Chefes': a hunters' trail through a wild boss-hunting ground with banners, crossed spears and trophy shields; the points counter uses a small bronze trophy icon labeled 'Troféus da Caçada'; the boss from image 3 waits at the end of the trail as 'Rei da Caçada'; the grand prize medallion is a hunter's frame with antlers."
 - **Semana da Forja**: "Event theme 'Semana da Forja': the trail runs through a glowing dwarven forge hall with anvils, bellows, sparks and molten metal channels; the points counter uses a small hammer icon labeled 'Martelos da Forja'; the boss from image 3 waits at the end as 'Colosso da Bigorna'; the grand prize medallion is a weapon on an anvil."
 - **Festa dos Pets**: "Event theme 'Festa dos Pets': the trail runs through a festive meadow with ribbons, lanterns, bunting and food bowls; the pet from image 4 walks beside the hero; the points counter uses a small ribbon bow icon labeled 'Laços da Festa'; the boss from image 3 waits at the end as 'Fera Ancestral'; the grand prize medallion is a paw-print frame with a bow."
+
+## Lote 1 gerado (pelo PO, ~12 créditos, 14/11): aguardando o voto do dono
+
+| Tema | A | B |
+|---|---|---|
+| Caçada | 526b31f0-8113-493c-a839-a602629f4a00 | 6e06fed4-f6f6-46ed-ba66-143b219be92d |
+| Forja | 18a6b68c-213d-44eb-958b-4b3b0f5096b2 | 88a877ea-ca32-4d60-a927-b8179ef9059f |
+| Pets | c7e2f136-79c2-4d8f-afa9-10dfc8ee117c | b934ba19-cd1c-48e9-9f21-48044853bdb0 |
+
+Cuidados nas peças (lote 2, só depois do voto): sem os sacos de ouro com "$" da Forja B (ouro escasso); sem baús ou sorteio (Caçada A tem baús); na Festa dos Pets usar o pet real (a Pets A trocou o pet pelo grifo).
+Gasto acumulado lotes 1+2: ~12 de 32.
