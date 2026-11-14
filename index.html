@@ -685,6 +685,8 @@ const Screens={
   reg:{},
   register(name,def){ if(!name||FULLV[name]&&!this.reg[name]) return false; this.reg[name]=def||{}; FULLV[name]=1; return true; },
   open(name,o){ o=o||{};
+    /* TELAS V2: o MENU e vários botões chamam Screens.open direto; sem isto o mapa Panels.v2 só valia para quem chamava Panels.open e o MENU seguia abrindo a tela antiga com a nova ligada. Com a chave da nova ligada, entrega ao Panels.open (que troca o nome e volta aqui já com o nome novo: sem laço, a nova não tem par no mapa) */
+    try{ const P=window.Panels, n2=P&&P.v2&&P.v2[name]; if(n2&&n2!==name&&typeof PANEL_ON!=='undefined'&&PANEL_ON[n2]===true&&P.defs&&P.defs[n2]) return P.open(name,o)!==false; }catch(e){}
     if(this.reg[name]&&window.Panels&&Panels.defs&&Panels.defs[name]&&typeof Panels.on==='function'&&!Panels.on(name)) return false;   /* painel desligado: Screens.open e Panels.open dão no mesmo (não abre) */
     if(this.reg[name]){ const d=this.reg[name]; setView(name); if(typeof d.onOpen==='function'){ try{ d.onOpen(o); }catch(e){ console.error('Screens.onOpen',e); } } return true; }
     if(name==='pass'||name==='missions'){ passTab=(name==='missions'||o.tab==='missions'||o.tab==='mis')?'mis':'pass'; setView('pass'); }
