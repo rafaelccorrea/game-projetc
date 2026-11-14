@@ -148,6 +148,9 @@ function onLevelUp(lv){
 }
 /* abate na campanha: ouro, XP, gema, item e materiais pelo Sys.loot; carga do baú pelo Sys.chest */
 function farmKill(e, y){
+  /* Perfil V5: recorde "Mais abates numa sessão" (runKills; docs/LIGACOES_SOCIAL.md R1). Fica AQUI e não no js/battle.js: o farmKill é chamado uma vez por
+     abate da campanha, no mesmo ramo do recorde de sequência. NÃO aplicar o bloco R1 no js/battle.js (contaria em dobro). B é da sessão. */
+  try { if (typeof B !== 'undefined' && B && typeof profRec === 'function'){ B.runK = (B.runK || 0) + 1; profRec('runKills', B.runK); } } catch (e2) {}
   if (!SYS_ON){ S.gold += e.gold; floatText(e.x, y - 30, '+' + fmt(e.gold), '#ffc94a'); return; }
   let r = null;
   try { r = Sys.loot.onKill(S, Sys.host, { gold: e.gold, boss: e.boss, eraBoss: e.eraBoss, era: eraOf(S.stage), stage: S.stage, x: e.x, y });
@@ -185,7 +188,11 @@ const PK_HOLD_R = 2, PK_HOLD_S = 20, PK_HOLD_MAX = 6, PK_TAP_R = 30;
 /* BRASAS DA FOGUEIRA (regra e números do Sys.bonfire, da Sistemas: pote de 20 abates = 1, fase +3, chefe +5; NUNCA à venda). O jogo só avisa o módulo e desenha as
    Brasas que ele creditou: cada uma pula do inimigo e voa para a Fogueira (por enquanto o destino é o botão da mochila, até a Fogueira V3 existir na tela de batalha).
    Com o módulo desligado (Sys.bonfire.DATA.on false, hoje) não faz nada. Devolve quantas Brasas entraram. */
-function fogBrasa(src, n, x){ let got = 0; try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || typeof F.addBrasas !== 'function') return 0;
+function fogBrasa(src, n, x){ let got = 0;
+  /* Dupla das Eras: fase vencida (docs/LIGACOES_SOCIAL.md D2). Fica AQUI e não no js/battle.js: o único fogBrasa('stage') do jogo é o da fase vencida.
+     NÃO aplicar o bloco D2 no js/battle.js (contaria em dobro). Não depende da Fogueira; com a chave da Dupla desligada o duoTrack não faz nada. */
+  if (src === 'stage' && typeof duoTrack === 'function') duoTrack('stages', n == null ? 1 : n);
+  try { const F = window.Sys && Sys.bonfire; if (!F || !F.DATA || typeof F.addBrasas !== 'function') return 0;
     if (F.DATA.on !== true && !FOGUEIRA_ON && fogOn()) F.DATA.on = true;   /* modo de conferência (?debug=1&fogueira=1): liga o módulo SÓ nesta sessão, para o QA ver as Brasas; nada é gravado na chave */
     if (F.DATA.on !== true) return 0;
     /* "só abate novo" (Sistemas c5e128c, aprovado pelo dono): o abate só enche o pote na maior fase já alcançada; o módulo decide com {stage, maxStage} */

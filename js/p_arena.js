@@ -62,6 +62,8 @@ function paPrize(pz){ const out=[]; if(pz.goldk) out.push(paIc('coin')+' ouro');
   if(pz.prism) out.push(pz.prism+' frag. Prismático'); if(pz.frame) out.push('moldura'); if(pz.title) out.push('título'); return out.join(' · '); }
 
 /* ---------- ARENA (aba 0): liga, lutas do dia, adversários ---------- */
+/* moldura do adversário (look.frame do retrato no servidor; bot não tem). frameTag é a fonte única (js/fullbattle.js); id desconhecido = nada */
+const paFrame=p=>{ const id=p&&p.look&&typeof p.look.frame==='string'?p.look.frame:null, h=id&&typeof frameTag==='function'?frameTag(id,false):''; return h?'<span style="position:absolute;left:-8px;top:-8px;right:-8px;bottom:-8px;pointer-events:none">'+h+'</span>':''; };
 function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ensure(S,h), ops=paOpps(), L=li.league, N=li.next, net=!!paNet(), sfc=net?paSrvFc():0;
   XA2.sel=Math.max(0,Math.min(XA2.sel,ops.length-1));
   const frac=N?Math.max(0,Math.min(1,(li.lp-L.min)/Math.max(1,N.min-L.min))):1;
@@ -83,7 +85,7 @@ function paLobby(){ const h=paH(), li=Sys.arena.leagueInfo(S,h), o=Sys.arena.ens
       :p.noPts?`<span style="font-size:11px;color:#c9b9a2;font-family:Nunito,system-ui,sans-serif;font-weight:800">sem pontos</span>`
       :`<span style="font-size:11px;color:#5fd068;font-family:Nunito,system-ui,sans-serif;font-weight:800">Vitória: sobe</span><span style="font-size:11px;color:#ff6b6b;font-family:Nunito,system-ui,sans-serif;font-weight:800;margin-top:2px">Derrota: desce</span>`;
     return `<button data-x="sel" data-i="${i}" aria-pressed="${on}" aria-label="${paEsc(p.name)}, FC ${paEsc(fcT)}${p.net?(d.txt?', '+paEsc(d.txt):'')+', '+ptsA:', '+paEsc(d.txt)}" class="pa-in" style="position:relative;animation-delay:${i*.06}s;flex:none;height:72px;display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:14px;background:${on?'#3a2c1f':'#1d1611'};border:2px solid ${on?'#ffc94a':'#4a3a2b'};color:#f6ecdf;text-align:left;width:100%">
-      <span aria-hidden="true" style="flex:none;width:54px;height:54px;border-radius:12px;overflow:hidden;position:relative;background:#2a1f16;border:2px solid ${dcol[d.id]||'#6b5843'}"><span style="position:absolute;left:-13px;top:-6px;width:80px;height:80px;display:block;transform:scaleX(-1)"><span class="pa-kid" style="position:absolute;inset:0;display:block"></span></span></span>
+      <span aria-hidden="true" style="flex:none;position:relative;display:flex"><span style="flex:none;width:54px;height:54px;border-radius:12px;overflow:hidden;position:relative;background:#2a1f16;border:2px solid ${dcol[d.id]||'#6b5843'}"><span style="position:absolute;left:-13px;top:-6px;width:80px;height:80px;display:block;transform:scaleX(-1)"><span class="pa-kid" style="position:absolute;inset:0;display:block"></span></span></span>${paFrame(p)}</span>
       <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${paEsc(p.name)}</span>
         <span style="font-size:12px;font-weight:800;color:#c9b9a2">FC ${paEsc(fcT)}${d.txt?` · <span style="color:${dcol[d.id]||'#c9b9a2'}">${paEsc(d.txt)}</span>`:''}</span></span>
       <span style="flex:none;display:flex;flex-direction:column;align-items:flex-end;font-family:'Lilita One',sans-serif;line-height:1.05">${pts}</span>
@@ -174,6 +176,7 @@ function paClick(b){ const a=b.dataset.x; if(!paOk()) return; const h=paH(); if(
     let maxA=1, maxB=1; try{ const me=W.playerStats(S,h), foe=W.scaledFoe(me,opp.fc); maxA=Math.max(1,me.hp); maxB=Math.max(1,foe.hp); }catch(e){}
     if(paNet()){ paNetFight(opp,myFc,maxA,maxB); return; }   /* Arena online: a luta é decidida no servidor (Promise) */
     const r=Sys.arena.fight(S,h,opp.id); if(!r.ok){ paToast(r.reason==='tries'?'Sem lutas hoje: recarrega à meia-noite':'Luta indisponível agora'); return; }
+    if(r.win&&typeof duoTrack==='function') duoTrack('arenaWins',1);   /* Dupla das Eras: vitória na Arena */
     try{ if(typeof save==='function') save(); }catch(e){}
     XA2.fight={opp,r,myFc,maxA,maxB}; XA2.step=0; XA2.view='fight'; paSnd('ui_tap');
     if(window.PA_PVP2===true){ paStop(); paPvStart(opp,r,myFc,maxA,maxB); render(); return; }
@@ -219,7 +222,8 @@ function paNetRank(){ const N=paNet(); if(!N||typeof N.loadRanking!=='function')
 let paNetSeq=0;
 function paNetStopWait(){ if(XA2.waitT){ try{ clearTimeout(XA2.waitT); }catch(e){} XA2.waitT=0; } XA2.wait=null; }
 function paNetFight(opp,myFc,maxA,maxB){ const N=paNet(); if(!N||XA2.wait) return false; const tok=++paNetSeq; paStop(); paPvFree(); XA2.view='lobby'; XA2.wait={tok,name:opp.name}; render();
-  const done=r=>{ if(!XA2.wait||XA2.wait.tok!==tok){ if(r&&r.ok) paToast('Luta contra '+opp.name+': '+(r.win?'vitória':'derrota')+' ('+(r.delta>=0?'+':'−')+Math.abs(r.delta|0)+' pontos)'); return; }   /* resposta atrasada ou tela já fechada: só o aviso */
+  const done=r=>{ if(r&&r.ok&&r.win&&typeof duoTrack==='function') duoTrack('arenaWins',1);   /* Dupla das Eras: vitória na Arena online (conta também a resposta que chegou com a tela fechada) */
+    if(!XA2.wait||XA2.wait.tok!==tok){ if(r&&r.ok) paToast('Luta contra '+opp.name+': '+(r.win?'vitória':'derrota')+' ('+(r.delta>=0?'+':'−')+Math.abs(r.delta|0)+' pontos)'); return; }   /* resposta atrasada ou tela já fechada: só o aviso */
     paNetStopWait(); if(!r||!r.ok){ paToast(paNetMsg(r&&r.reason)); XA2.view='lobby'; try{ render(); }catch(e){} return; }
     try{ if(typeof save==='function') save(); }catch(e){}
     const sv=r.oppServer&&typeof r.oppServer==='object'?r.oppServer:null, o2=Object.assign({},opp); if(sv){ for(const k of ['name','fc','level','look']) if(sv[k]!=null) o2[k]=sv[k]; }   /* o adversário como o servidor lutou (aparência e nível da foto dele) */
@@ -398,6 +402,7 @@ function paPvSnapshot(){ const out={look:{hero:'kael',skin:null,armor:null,mount
     if(L.pet&&id(L.pet.base)) k.pet={base:L.pet.base,stage:Math.max(1,Math.min(3,L.pet.stage|0||1)),fly:!!L.pet.fly};
     if(typeof L.aura==='string'){ const m=/([a-z0-9_]+)$/.exec(L.aura); k.aura=m?id(m[1]):null; }
     if(L.wItem) k.weapon={e:Math.max(0,Math.min(20,L.wItem.e|0)),r:Math.max(0,Math.min(4,L.wItem.r|0)),type:id(L.wItem.type)}; }catch(e){}
+  try{ const fm=typeof frameMine==='function'?frameMine():null; if(fm&&id(fm)) out.look.frame=fm; }catch(e){}   /* moldura do Perfil (só visual; o servidor precisa aceitar look.frame) */
   try{ const lv=Sys.level&&Sys.level.level?Sys.level.level(S):1; out.level=Math.max(1,Math.floor(+lv||1)); }catch(e){}
   try{ const p=(Sys.fc.stats(S,Sys.host)||{}).pet||{}, a=Math.max(0,+p.atk||0); out.petFrac=isFinite(a)?a/(1+a):0; }catch(e){}
   return out; }

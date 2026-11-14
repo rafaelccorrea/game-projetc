@@ -51,6 +51,9 @@ const WHY={off:'As guildas ainda não foram ligadas',server:'Em breve: abre com 
   guild_level:'O nível da guilda ainda não libera este item',boss_down:'O chefe desta semana já foi derrubado',not_contributed:'Os Brasões desta missão são só para quem ajudou nela',
   not_enough_coin:'Faltam Brasões',not_enough_xp:'Falta XP da guilda',cap:'Já está no teto do nível da guilda',not_found:'Isso ainda não está disponível no servidor',
   bad_request:'Pedido inválido: confira os dados',too_many_officers:'A guilda já tem o máximo de oficiais',not_done:'A missão ainda não terminou',already_claimed:'Você já resgatou esta missão',
+  brasas:'Faltam Brasas: jogue para ganhar mais na sua Fogueira',brasas_over:'Essas Brasas ainda não chegaram ao servidor: jogue um pouco e tente de novo',
+  brasas_unverified:'Seu progresso ainda não foi enviado: tente de novo em instantes',hook:'Dar Brasas ainda não está disponível',done:'Já feito hoje. Volta à meia-noite de Brasília',
+  day:'Limite de Brasas de hoje atingido',guild:'Entre numa guilda para alimentar a fogueira',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 const why=r=>WHY[r]||'Não foi possível agora. Tente de novo';
 /* recusa inteira ({reason, details, retryAfterMs}): no 429 daily_limit (contrato 10.5) mostra o tempo que falta quando o retryAfterMs chega; sem ele, a virada de Brasília */
@@ -302,7 +305,7 @@ function cardHtml(o){ const G=GM(), mine=mineNow()||{}, g=mine.guild||{}, n=Arra
     +'<div class="gd2-bar" role="progressbar" aria-label="XP da guilda" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(c01(xb.frac)*100)+'"><i style="width:'+(c01(xb.frac)*100).toFixed(1)+'%"></i></div>'
     +'<div class="gd2-prog"><span>'+(xb.max?'Nível máximo da guilda':'XP da guilda '+nT(xb.into)+'/'+nT(xb.need))+'</span><span>'+(xb.max?'':'próximo nível: mais vagas e teto maior')+'</span></div>'
     +'<div class="gd2-chips"><span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">VIDA <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">DEF <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Drop <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
-const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.map(t=>'<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'">'+t[1]+'</button>').join('')+'</div>';
+const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.concat(fireOn()?[['fire','Fogueira']]:[]).map(t=>'<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'">'+t[1]+'</button>').join('')+'</div>';
 
 /* ----- Membros ----- */
 function memList(){ const m=mineNow(), L=m&&Array.isArray(m.members)?m.members.filter(x=>x&&x.id!=null):[], ord={leader:0,officer:1,member:2};
@@ -429,7 +432,31 @@ function pTerr(o){ const G=GM(), D=G.DATA, T=D.territory, Z=D.season||{}, L=o.te
     +'<button class="gd2-bt wide" data-x="tour">'+img(IC.tourney,20)+'Abrir o Torneio do Poder</button>'
     +'<p class="gd2-hint" style="margin-top:8px">Líder e oficiais declaram até '+nT(Z.attacksPerDay||0)+' ataques por dia. As batalhas são de '+nT(D.tourney.size)+' contra '+nT(D.tourney.size)+'. No dia dos prêmios, um baú por território para cada membro, pelo correio.</p>';
   return h; }
-const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,miss:pMiss,terr:pTerr};
+/* ----- Fogueira da Guilda (8ª aba; Sys.guildFire + Sys.guildFireNet; contrato docs/API_SERVIDOR.md §16.2) -----
+   Aparece só com a chave do módulo ligada, o online da guilda iniciado e o Sys.guildFireNet iniciado (sem ele as chamas seriam só deste aparelho).
+   NENHUM número aqui: tudo vem do Sys.guildFire.view. Os baús de nível vão SOZINHOS pelo correio (servidor): aqui não há botão de resgatar. */
+const GF=()=>(window.Sys&&Sys.guildFire)||null, GFN=()=>(window.Sys&&Sys.guildFireNet)||null;
+function fireOn(){ try{ const F=GF(), Nn=GFN(), z=Nn&&typeof Nn.state==='function'?Nn.state():null; return !!(F&&F.DATA&&F.DATA.on===true&&online()&&z&&z.on&&z.started); }catch(e){ return false; } }
+function fireBra(){ try{ return num(Sys.bonfire.ensure(S).bra); }catch(e){ return 0; } }
+function pFire(o){ let v=null; try{ v=fireOn()?GF().view(S,host()):null; }catch(e){ v=null; }
+  if(!v||v.on!==true) return rule('A Fogueira da Guilda abre com o online.');
+  if(!v.open) return rule('Entre numa guilda para alimentar a fogueira.');
+  const pct=Math.round(c01(num(v.frac))*100), have=fireBra(), left=num(v.braLeft);
+  let h=secH('Fogueira · nível '+nT(v.level),esc2(v.name||''))
+    +'<div class="gd2-row"><span class="mi"><b>'+(v.max?nT(v.into)+'/'+nT(v.need)+' chamas para o próximo baú extra':nT(v.into)+'/'+nT(v.need)+' chamas para o nível '+nT(v.level+1))+'</b>'
+    +'<span role="progressbar" aria-label="Chamas da fogueira" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="display:block;height:8px;margin:6px 0 4px;border-radius:5px;background:rgba(0,0,0,.35);overflow:hidden"><span style="display:block;height:100%;width:'+pct+'%;background:#ff9f2e"></span></span>'
+    +'<small>'+(v.perksText?'Bônus da guilda: '+esc2(v.perksText):'O bônus começa no nível 2')+' · você já deu '+nT(v.mine)+' chamas</small></span></div>';
+  h+=secH('Alimentar','1 grátis por dia');
+  h+='<div class="gd2-row"><span class="mi"><b>Alimentar grátis: +'+nT(v.freeFlames)+' chamas</b><small>'+(v.free?'Uma vez por dia':'Feito hoje · volta à meia-noite de Brasília')+'</small></span>'
+    +(v.free?'<button class="gd2-bt" data-x="fire" data-n="0">Alimentar</button>':'<span class="gd2-pill on">Feito hoje</span>')+'</div>';
+  if(v.brasaHook){ const opts=[1,5,20].filter(n=>n<=left);
+    h+='<div class="gd2-row"><span class="mi"><b>Dar Brasas: 1 chama por Brasa</b><small>Você tem '+nT(have)+' Brasas · pode dar mais '+nT(left)+' hoje</small></span>'
+      +(opts.length?opts.map(n=>'<button class="gd2-bt'+(n<=have?'':' off')+'" data-x="fire" data-n="'+n+'" aria-label="Dar '+nT(n)+' Brasas">+'+nT(n)+'</button>').join(''):'<span class="gd2-pill on">Feito hoje</span>')+'</div>'; }
+  const nx=v.next&&v.next.chest;
+  if(nx) h+=secH(v.max?'Próximo baú extra':'Baú do nível '+nT(v.next.level),'para cada membro')
+    +'<div class="gd2-row"><span class="ic">'+img(IC.chest,28)+'</span><span class="mi"><b>'+kfT(nx.gold)+' de ouro · '+nT(nx.stones)+' Pedras de Forja · '+nT(nx.food)+' de ração</b><small>Chega sozinho pelo correio quando a guilda sobe de nível</small></span></div>';
+  return h+'<p class="gd2-hint">As Brasas vêm só de jogar (a sua Fogueira). Nada aqui se compra. O baú vai para quem já estava na guilda quando o nível subiu.</p>'; }
+const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,miss:pMiss,terr:pTerr,fire:pFire};
 
 /* ----- faixa de confirmação (2º toque), dentro da tela ----- */
 function confHtml(){ const c=X.conf; if(!c) return '';
@@ -445,7 +472,7 @@ function draw(){
   const Hh=+d.H||0, small=!!(Hh&&Hh<620), SH=small?150:176; toastTop=SH+8;
   let card='', tabs='', body='';
   if(M.m==='closed') body=pClosed(M); else if(M.m==='out') body=pNone(M);
-  else { X.lv=M.o.level|0; if(!BODY[X.tab]) X.tab='members'; card=cardHtml(M.o); tabs=tabsHtml(); body=BODY[X.tab](M.o); }
+  else { X.lv=M.o.level|0; if(!BODY[X.tab]||(X.tab==='fire'&&!fireOn())) X.tab='members'; card=cardHtml(M.o); tabs=tabsHtml(); body=BODY[X.tab](M.o); }
   const fc=myFc(), boss=M.m==='in'&&X.tab==='boss';
   const alt=heroName()+' com a arma na mão e o pet na frente, ao lado '+(boss?'do chefe da guilda':'do estandarte da guilda');
   V.innerHTML=xWrap(d,'','<div class="gd2'+(X.anim?' gd2-in':'')+'">'+bgHtml()
@@ -464,7 +491,8 @@ const memName=id=>{ const m=memList().find(x=>String(x.id)===String(id)); return
 const ask=(k,id,txt,yes)=>{ X.conf={k:k,id:id,txt:txt,yes:yes}; redraw(); };
 const ACT={
   back(){ sfx('ui_tap'); try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} },
-  tab(b){ const t=String(b.dataset.t||''); if(!BODY[t]||t===X.tab) return; sfx('ui_tap'); X.tab=t; X.sel=''; X.conf=null; X.top=true; redraw(); },
+  tab(b){ const t=String(b.dataset.t||''); if(!BODY[t]||t===X.tab) return; sfx('ui_tap'); X.tab=t; X.sel=''; X.conf=null; X.top=true; redraw();
+    if(t==='fire'){ try{ const Nn=GFN(); if(Nn&&typeof Nn.refresh==='function') Promise.resolve(Nn.refresh(S,host())).then(redraw,()=>{}); }catch(e){} } },
   sel(b){ const id=String(b.dataset.id||''); sfx('ui_tap'); X.sel=X.sel===id?'':id; X.conf=null; redraw(); },
   retry(b){ const k=String(b.dataset.k||''); sfx('ui_tap'); delete X.d[k]; redraw(); },
   no(){ sfx('ui_tap'); X.conf=null; redraw(); },
@@ -477,6 +505,10 @@ const ACT={
     if(k==='transfer') return ask('transfer',id,'Passar a liderança para <b>'+esc2(nm)+'</b>? Você deixa de ser o líder da guilda.','Passar a liderança'); },
   req(b){ const k=b.dataset.k==='accept'?'accept':'decline', id=String(b.dataset.id||''), n=GN(); if(!id) return; sfx('ui_tap'); run('Carregando…',()=>n[k](S,host(),id),k==='accept'?'Pedido aceito':'Pedido recusado'); },
   leave(){ const D=GM().DATA; sfx('ui_tap'); ask('leave','','Sair da guilda? Você perde os '+esc2(coinName(2))+' não gastos e as bênçãos. São '+nT(D.leave.cooldownH)+' h para entrar em outra e '+nT(D.leave.sameGuildDays)+' dias para voltar a esta.','Sair da guilda'); },
+  /* Fogueira: n = 0 é o alimentar grátis; n > 0 = dar n Brasas. O servidor decide primeiro (Sys.guildFireNet.feed); baú pronto vai ao correio sozinho */
+  fire(b){ const k=Math.max(0,parseInt(b.dataset.n,10)||0), Nn=GFN(); if(!Nn||!fireOn()) return say('A Fogueira da Guilda abre com o online'); sfx('ui_tap');
+    if(k>0&&k>fireBra()) return say(why('brasas'));
+    run('Alimentando a fogueira…',()=>Nn.feed(S,host(),k),r=>'+'+nT(num(r.flames)||(k||num(GF().DATA.free.flames)))+' chamas na fogueira'+(num(r.chestsMailed)>0?' · '+nT(r.chestsMailed)+(r.chestsMailed>1?' baús enviados':' baú enviado')+' ao seu correio':''),()=>{ X.glow=1.2; }); },
   checkin(){ const n=GN(), D=GM().DATA; sfx('ui_tap'); if(doneToday('checkin')) return say(why('daily_limit'));
     const got=r=>{ const c=r&&r.gained&&isN(r.gained.coin)?r.gained.coin:D.checkin.coin; return '+'+nT(c)+' '+coinName(c); };
     run('Carregando…',()=>n.checkin(S,host()),r=>'Check-in feito: '+got(r),r=>fx(got(r),'#5ee7ff')); },

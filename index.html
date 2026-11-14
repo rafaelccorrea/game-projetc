@@ -715,7 +715,11 @@ addEventListener('pagehide',()=>save()); document.addEventListener('freeze',()=>
 const todayKey = () => { const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 const PASS_OK = () => !!(window.Sys&&Sys.pass&&Sys.host);
 /* evento de missão: kill · boss · ult · chest · instance · forge · summon · upgrade */
+/* DUPLA DAS ERAS (Sys.duo, js/sys/duo.js): soma o que o jogador fez no dia (kills, bossKills, stages, arenaWins). Chave desligada ou sem dupla = não conta nada.
+   O teto por dia e o envio ao servidor (POST /duo/progress, pelo refresh do Sys.duoNet) são do módulo. */
+function duoTrack(kind,n){ try{ const D=window.Sys&&Sys.duo; if(D&&D.DATA&&D.DATA.on===true&&Sys.host) D.track(S,Sys.host,kind,n==null?1:n); }catch(e){} }
 function ptrack(ev,n){ const v=n==null?1:n;
+  if(ev==='kill'||ev==='boss') duoTrack(ev==='kill'?'kills':'bossKills',v);   /* Dupla das Eras: abates e chefes (fora da instância: a batalha só chama ptrack fora dela) */
   if(PASS_OK()){ try{ Sys.pass.track(S,Sys.host,ev,v); }catch(e){} }
   if(window.Sys&&Sys.events&&typeof Sys.events.track==='function'){ try{ Sys.events.track(S,Sys.host,ev,v); }catch(e){} }
   if(NEXT_ON&&window.Sys&&Sys.guide&&typeof Sys.guide.onEvent==='function'){ try{ Sys.guide.onEvent(S,ev,v);   /* assinatura do módulo: (S, tipo, n) */ }catch(e){} }   /* missão guia: os mesmos eventos do passe */
@@ -807,7 +811,7 @@ if(DEBUG){ const d=document.createElement('div'); d.className='dbg'; d.id='dbg';
 /* ================= INÍCIO ================= */
 </script>
 <script>document.write('<link rel="stylesheet" href="js/sys/sys.css?v='+(DEBUG?Date.now():VERSION)+'">');
-['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements','eras'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','arenanet','guildnet','tourneynet','auction','schedule','newdrops','bonfire','path','strikes','grimoire','erasend','profile','affinity','crossroads','mentors','trial','pathtry','mapchest','assets'],['fc','advice','bossloss'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
+['loot','chest','level','stats','skin','vip','forge','pass','practice','titles','instances','tower','arena','pet','mount','activity','achievements','eras'].concat(NEXT_ON?['clock','offer','appearance','phases','events','guild','guide']:[],['chat','codex','phaseup','evtrail','name','mail','net','buy','online','arenanet','guildnet','tourneynet','auction','schedule','newdrops','bonfire','path','strikes','grimoire','erasend','profile','affinity','crossroads','mentors','trial','pathtry','mapchest','assets','duo','duonet','guildfire','loadouts'],['fc','advice','bossloss'])   /* Engenheiro 2 (Bloco B): módulos novos ANTES do 'fc'; todos nascem com a chave própria desligada */.forEach(n=>document.write('<script src="js/sys/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));   /* módulos da fps-30/fps-e2, somente leitura. forge: só o multiplicador do espaço entra (pelo Sys.stats); a tela de forja não é desta rodada */
 document.write('<script src="test/bg/scene.js?v='+(DEBUG?Date.now():VERSION+'-c60')+'"><\/script>');   /* módulo EonScene, carregado como está */
 ['eras9','preload','battle','stage','mountfx','farm','vipauto','petfx','instfx','fallback','ui','screens','screens2','rarity','fullbattle','fogueira','weakseal','diff','evhud','artprev','intro','meta','cloudchoice','onlineboot','delacct','loading'].forEach(n=>document.write('<script src="js/'+n+'.js?v='+(DEBUG?Date.now():VERSION)+'"><\/script>'));</script>
 <script>

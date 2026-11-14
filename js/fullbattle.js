@@ -151,6 +151,8 @@ const FB_DROP = [
   { id: 'tourney',  icon: 'tourney',   label: 'Torneio',    act: 'soon:tourney' },
   { id: 'codex',    icon: 'codex',     label: 'Códex',      act: 'soon:codex' },   /* nível 12 (PO) */
   { id: 'chat',     icon: 'chat',      label: 'Chat',       act: 'soon:chat' },   /* nível 16 (PO) */
+  { id: 'duo',      icon: 'chat',      label: 'Dupla',      act: 'soon:duo', alerts: () => duoAlerts() },   /* Dupla das Eras (nível 16; Sys.duo). Ícone PROVISÓRIO = o do Chat, até a Arte entregar assets/icons/menu/duo.png */
+  { id: 'mentors',  icon: 'codex',     label: 'Mentores',   act: 'soon:mentors' },   /* Mentores (nível 16; Sys.mentors). Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/mentors.png */
   { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map' },   /* Mapa das Eras: nível 1 (PO) */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },
   { id: 'events',   icon: 'events',    label: 'Eventos',    act: 'soon:events' },
@@ -165,7 +167,7 @@ const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="
    Ao liberar, o ícone aparece UMA vez com o selo "NOVO!" e um balão curto; um por vez, em fila; S.unl guarda o que já foi anunciado.
    Trocar o nível = trocar 1 número aqui. (O Sys.level.isUnlocked só conhece as chaves do módulo: practice, forge, instances, tower, arena, pet;
    as outras ainda não estão lá, por isso a tabela fica aqui e a conta usa Sys.level.level(S).) Sem entrada na tabela = desde o início. */
-const FB_UNLOCK = { map: 1, codex: 12, chat: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
+const FB_UNLOCK = { map: 1, codex: 12, chat: 16, duo: 16, mentors: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
 const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
 const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
 /* SAVE ANTIGO NÃO PERDE ACESSO (PO, v0.12.4): quem já jogava antes da liberação por nível continua vendo o que já usava, em qualquer nível.
@@ -210,7 +212,7 @@ function fbBuild(){
   <button data-fb="avatar" id="fb_av" aria-label="Kael: nível e força. Abrir Equipamento" style="position:absolute;left:6px;top:10px;width:68px;height:90px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center">
     <span id="fb_ring" style="position:relative;width:58px;height:58px;border-radius:50%;background:conic-gradient(#5ff0cf 0deg,rgba(255,255,255,.16) 0);display:block;box-shadow:0 4px 14px rgba(0,0,0,.45)">
       <span style="position:absolute;left:4px;top:4px;width:50px;height:50px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#4a3a2b,#1d1611);display:block"><span class="kidle" id="fb_kid" style="position:absolute;left:-20px;top:-6px;width:90px;height:90px;display:block"></span></span>
-      <span class="lil" id="fb_lv" style="position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);height:18px;padding:0 7px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:12px;line-height:18px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">Nv. 1</span></span>
+      <span id="fb_frm" aria-hidden="true" style="position:absolute;left:-11px;top:-11px;width:80px;height:80px;pointer-events:none;display:none"></span><span class="lil" id="fb_lv" style="position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);height:18px;padding:0 7px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:12px;line-height:18px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.5)">Nv. 1</span></span>
     <span id="fb_fc" style="margin-top:12px;height:17px;padding:0 7px;border-radius:9px;background:rgba(22,16,12,.74);border:1px solid rgba(255,236,200,.16);font-size:11.5px;line-height:16px;font-weight:900;color:#fff;white-space:nowrap;box-sizing:border-box">FC 0</span></button>
   <div style="position:absolute;right:10px;top:12px;display:flex;align-items:center;gap:6px">
     <button data-fb="shopitem" class="fb-gl fb-pill" id="fb_goldp" aria-label="Moedas. Abrir a loja"><img src="assets/ui/coin.png" alt="" style="width:24px;height:24px;object-fit:contain"><span id="fb_gold" style="font-size:13.5px;font-weight:900">0</span><span class="fb-plus" aria-hidden="true">+</span></button>
@@ -316,6 +318,8 @@ function fbTick(){
   { const os = fbOfferSt(), on = !!os; if (FBK.ofOn !== on){ FBK.ofOn = on; fbLayout(); } if (os){ const s = Math.max(0, Math.floor(os.msLeft / 1000)), hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60); fbSet('fbl_offer', hh > 0 ? hh + 'h ' + String(mm).padStart(2, '0') + 'min' : mm + 'min ' + String(s % 60).padStart(2, '0') + 's'); } }   /* ícone Oferta 24h: aparece/some e mostra o relógio */
   fbSet('fb_gold', kf2(S.gold)); fbSet('fb_gems', String(S.gems)); fbSet('fbp_gold', kf2(S.gold)); fbSet('fbp_gems', String(S.gems)); const FCV = heroFC();   /* Engenheiro 13 (medido: heroFC = 0,16 ms e era chamado 3 vezes por batida do cabeçalho, mais da metade do fbTick): uma vez só */ fbSet('fb_fc', 'FC ' + (typeof fcShow === 'function' ? fcShow(FCV) : f(FCV))); if (typeof diffHud === 'function') diffHud(FCV);   /* FC recomendada colorida (js/diff.js; chave desligada = nada) */
   try { const h = Sys.level.hud(S), deg = Math.round((h.max ? 1 : h.frac) * 360); fbSet('fb_lv', h.text); if (FBK.ring !== deg){ FBK.ring = deg; document.getElementById('fb_ring').style.background = `conic-gradient(#5ff0cf ${deg}deg,rgba(255,255,255,.16) 0)`; } } catch (e) {}
+  { const now = Date.now(); if (!(FBK.frmT > now)){ FBK.frmT = now + 1000; const fid = frameMine(), fe = document.getElementById('fb_frm');   /* moldura do Perfil (Sys.profile): o retrato de 50 px fica na janela da arte (80 px) */
+      if (fe && (FBK.frm !== fid || fe.dataset.f !== String(fid))){ FBK.frm = fid; fe.dataset.f = String(fid); fe.innerHTML = fid ? frameTag(fid, true) : ''; fe.style.display = fid ? 'block' : 'none'; } } }
   /* RETRATO DO CABEÇALHO: o do js/avatar.js (segue a fase, o herói e as camadas de cabeça); sem ele, o Kael parado de antes. Mesmo tamanho e moldura (círculo de 50 px). */
   if (typeof avatarFor === 'function'){ const kid = document.getElementById('fb_kid');
     if (kid && !FBK.av){ try { const c = avatarFor(S, 50); if (c){ c.id = 'fb_kid'; c.style.cssText = 'position:absolute;left:0;top:0;width:50px;height:50px;display:block'; kid.parentNode.replaceChild(c, kid); FBK.av = 1; } } catch (e) { FBK.av = 0; } }
@@ -384,5 +388,23 @@ const FB_TUT_TXT = [
   'A <b>Ultimate</b> dispara sozinha.',
   () => view === 'summon' ? 'Toque na invocação <b>grátis</b>.' : 'Abra <b>Invocar</b>.',
 ];
+/* ================= MOLDURA DO RETRATO (Sys.profile, js/sys/profile.js; aprovadas: 9 molduras + VIP 1-10) =================
+   Fonte única para o HUD, a Arena e a Dupla (o Perfil V5 tem a dele, que faz o mesmo). Arte: assets/ui/frames/<id>.png, 256x256 com janela de
+   160 no centro: o retrato ocupa 62,5% do quadro. A arte vem no pacote 'ui:frames' (fast-follow): sem o pacote (Sys.assets.isReady), sem o
+   arquivo ou com erro ao carregar, vale um anel em CSS na cor da raridade. Chave do módulo desligada = nenhuma moldura (o jogo fica como hoje).
+   Id de outro jogador (Arena, Dupla) só vale se estiver na tabela do módulo: id desconhecido não desenha nada. */
+const FRAME_RC = ['#a9b3c9', '#4fa3ff', '#b46bff', '#ff4f6d', '#ffa434', '#8ff5ff'];
+function frameMine(){ try { const P = window.Sys && Sys.profile; if (!P || !P.DATA || P.DATA.on !== true || typeof P.equipped !== 'function') return null;
+    const e = P.equipped(S, Sys.host); return e && typeof e.frame === 'string' && e.frame !== 'none' ? e.frame : null; } catch (e) { return null; } }
+function frameRar(id){ try { const f = Sys.profile.DATA.frames.find(x => x.id === id); return f ? Math.max(0, Math.min(5, f.r | 0)) : -1; } catch (e) { return -1; } }
+/* HTML que ENCHE um quadro posicionado (position absolute/relative) de lado = retrato / 0,625. round = retrato redondo (o anel CSS também). */
+function frameTag(id, round){ if (typeof id !== 'string' || id === 'none') return ''; const r = frameRar(id); if (r < 0) return '';
+  const c = FRAME_RC[r], ring = d => `<span style="position:absolute;inset:18.75%;border-radius:${round ? '50%' : '14%'};border:3px solid ${c};box-shadow:0 0 10px ${c},inset 0 0 0 2px rgba(5,8,28,.7);box-sizing:border-box;pointer-events:none;display:${d}"></span>`;
+  let u = 'assets/ui/frames/' + id + '.png', ok = true; try { const A = Sys.assets; if (A && typeof A.isReady === 'function') ok = A.isReady(u); if (ok && A && typeof A.url === 'function') u = A.url(u); } catch (e) {}
+  if (!ok) return ring('block');
+  return `<img src="${u}" alt="" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='block'">` + ring('none'); }
+/* selo do item Dupla no Menu: o da tela (window.PDuo.alerts, js/p_duo.js: convites ou frases novas); sem ela, convites + prêmios prontos */
+function duoAlerts(){ try { if (window.PDuo && typeof PDuo.alerts === 'function') return PDuo.alerts() | 0; const D = window.Sys && Sys.duo; if (!D || !D.DATA || D.DATA.on !== true) return 0; const v = D.view(S, Sys.host); if (!v || !v.open) return 0;
+    return (v.invitesIn || []).length + (v.partner ? (v.daily && v.daily.done && !v.daily.claimed ? 1 : 0) + (v.weekly || []).filter(m => m.done && !m.claimed).length : 0); } catch (e) { return 0; } }
 function fbInit(){ fbLegacy(); fbCss();
   if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); if (typeof evhInit === 'function') evhInit(); }

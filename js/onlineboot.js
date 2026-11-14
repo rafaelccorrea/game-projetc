@@ -175,7 +175,7 @@
     ST.booting = false; ST.booted = !!r.ok; ST.last = r;
     /* MÓDULOS ONLINE OPCIONAIS (Servidor: Sys.arenaNet, Sys.guildNet; o Sys.tourneyNet não tem início, a tela dele busca ao abrir). Cada um só começa com a
        PRÓPRIA chave ligada (DATA.on === true; hoje as três estão desligadas: nada sai para a rede e nada muda). Falha de um não afeta o jogo nem os outros. */
-    if (r.ok) for (const k of ['arenaNet', 'guildNet']) { try { const M = X()[k]; if (M && M.DATA && M.DATA.on === true && typeof M.start === 'function') Promise.resolve(M.start(S, X().host)).then(x => dbg(k, x && x.ok ? 'ligado' : 'local: ' + (x && x.reason)), e => dbg(k + ' falhou', e)); } catch (e) { dbg(k + ' falhou', e); } }
+    if (r.ok) for (const k of ['arenaNet', 'guildNet', 'duoNet', 'guildFireNet']) { try { const M = X()[k]; if (M && M.DATA && M.DATA.on === true && typeof M.start === 'function') Promise.resolve(M.start(S, X().host)).then(x => dbg(k, x && x.ok ? 'ligado' : 'local: ' + (x && x.reason)), e => dbg(k + ' falhou', e)); } catch (e) { dbg(k + ' falhou', e); } }
     ST.lastAction = !r.ok ? null : (resc || r.save === 'pulled') ? (ST.applyRes || 'refused') : (r.save || null);
     /* a troca escolhida na tela falhou (sem rede no meio): a tela avisa e o jogo segue com o save do aparelho */
     if (ST.choiceMade) { const bad = (r.errors || []).find(x => /^save:/.test(x)) || (!r.ok ? 'save:' + r.reason : '');
@@ -262,6 +262,21 @@
     try { if (typeof S !== 'object' || !S) return 0; S.playSeconds = Math.floor(num(S.playSeconds)) + add; } catch (e) { return 0; }
     return add; }
   try { setInterval(() => { try { playTick(); } catch (e) {} }, 1000); } catch (e) {}
+
+  /* DUPLA DAS ERAS e FOGUEIRA DA GUILDA (Sys.duoNet / Sys.guildFireNet): depois do start (lista acima), um refresh a cada 3 min com o jogo visível
+     (manda o progresso do dia da Dupla e traz convites, frases e chamas) e na volta ao jogo. Com a tela da Dupla aberta quem lê é a própria tela
+     (js/p_duo.js, poll de 10-30 s): aqui fica parado. Com a Guilda aberta, a Fogueira a cada 60 s. Só módulo com a chave ligada e INICIADO
+     (state().started). Falha de rede não aparece para o jogador (só no console, em debug).
+     Tela atual: Screens.current() se existir; hoje não existe, então vale a variável global `view` do jogo (a mesma que os painéis leem). */
+  const SOC = { at: {} }, SOC_OWN = { duoNet: ['duo'], guildFireNet: [] }, SOC_FAST = { duoNet: [], guildFireNet: ['guild2', 'guild'] };
+  function socTick(force) { try { if (!ST.booted || document.visibilityState !== 'visible') return;
+      const now = Date.now(); let cur = ''; try { cur = (W.Screens && typeof W.Screens.current === 'function') ? String(W.Screens.current() || '') : (typeof view === 'string' ? view : ''); } catch (e) {}
+      for (const k of ['duoNet', 'guildFireNet']) { const M = X()[k];
+        if (!M || !M.DATA || M.DATA.on !== true || typeof M.refresh !== 'function' || typeof M.state !== 'function' || !M.state().started) continue;
+        if (SOC_OWN[k].indexOf(cur) >= 0) continue;
+        const gap = SOC_FAST[k].indexOf(cur) >= 0 ? 60000 : 180000; if (!force && now - (SOC.at[k] || 0) < gap) continue; SOC.at[k] = now;
+        Promise.resolve(M.refresh(S, X().host)).then(null, e => dbg(k + ' refresh falhou', e)); } } catch (e) {} }
+  try { setInterval(() => socTick(false), 5000); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') socTick(true); }); } catch (e) {}
 
   /* ---------- CONTA EXCLUÍDA (tela do Sistemas: js/delacct.js, depois de Sys.net.deleteAccount() dar certo) ----------
      accountDeleted({localSave:'erase'|'keep', until, delayMs}) → {ok:true, localSave, reloadInMs} | {ok:false, reason, step}

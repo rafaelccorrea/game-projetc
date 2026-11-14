@@ -89,7 +89,7 @@ const tab = t => click('tab', { t });
 (async () => {
   // 0) registro
   assert.strictEqual(addName, 'guild2'); assert.strictEqual(g.PANEL_ON.guild2, false, 'a chave nasce desligada'); assert(def && def.render && def.click && def.tick && def.onOpen && def.onClose);
-  assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/PANEL_ON\.\w+\s*=\s*true|DATA\.on\s*=/.test(SRC), 'o arquivo não liga chave nenhuma');
+  assert(!/\b(alert|confirm|prompt)\s*\(/.test(SRC), 'sem diálogo do navegador'); assert(!/\p{Extended_Pictographic}/u.test(SRC), 'arquivo sem emoji'); assert(!/PANEL_ON\.\w+\s*=\s*true|DATA\.on\s*=(?!=)/.test(SRC), 'o arquivo não liga chave nenhuma');   /* (?!=): ler a chave (DATA.on===true, no fireOn da Fogueira da Guilda) não é ligar; atribuição continua proibida */
   for (const a of def.actions) assert(new RegExp('\\b' + a + '\\(').test(SRC), 'ação da lista sem tratador: ' + a);
   out.push('registro: painel guild2, chave desligada, sem alert/confirm/prompt, sem emoji');
 

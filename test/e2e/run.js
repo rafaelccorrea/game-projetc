@@ -72,7 +72,11 @@ for (const [pass, prep] of [['novo', freshState], ['avançado', advancedState]])
   try { FB = vm.runInNewContext('(' + m[1] + ')'); } catch (e) { add(G, 'ler FB_UNLOCK de js/fullbattle.js', false, m ? errStr(e) : 'não achei'); }
   const L = sandbox.Sys && sandbox.Sys.level;
   if (!L || typeof L.unlockLevel !== 'function') add(G, 'Sys.level.unlockLevel', false, 'não existe');
-  else if (FB) { const diff = Object.keys(FB).filter(k => L.unlockLevel(k) !== FB[k]).map(k => k + ': FB_UNLOCK ' + FB[k] + ' x Sys.level ' + L.unlockLevel(k) + (L.DATA.unlock[L.unlockKey ? L.unlockKey(k) : k] == null ? ' (id desconhecida)' : ''));
+  else if (FB) {
+    /* ids que o Sys.level ainda NÃO conhece (docs/LIGACOES_SOCIAL.md seção 8: a Sistemas vai pôr 'duo' e 'mentors' em Sys.level.DATA.unlock). Até lá vale a
+       reserva do FB_UNLOCK (fbLvU). Só tolera enquanto o módulo não conhecer a id: quando ele conhecer, o número tem de bater como os outros. Tirar daqui então. */
+    const PEND = ['duo', 'mentors'], unknown = k => L.DATA.unlock[L.unlockKey ? L.unlockKey(k) : k] == null;
+    const diff = Object.keys(FB).filter(k => L.unlockLevel(k) !== FB[k] && !(PEND.indexOf(k) >= 0 && unknown(k))).map(k => k + ': FB_UNLOCK ' + FB[k] + ' x Sys.level ' + L.unlockLevel(k) + (L.DATA.unlock[L.unlockKey ? L.unlockKey(k) : k] == null ? ' (id desconhecida)' : ''));
     add(G, 'FB_UNLOCK (' + Object.keys(FB).length + ' ids) = Sys.level.unlockLevel', !diff.length, diff.join('; ')); }
   const PO = { map: 1, codex: 12, chat: 16, mail: 7, profile: 10, events: 24, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45 };
   if (L && L.DATA && L.DATA.unlock) { const diff = Object.keys(PO).filter(k => L.DATA.unlock[k] !== PO[k]).map(k => k + ': esperado ' + PO[k] + ', está ' + L.DATA.unlock[k]);
