@@ -9,13 +9,15 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
     - Correio V3: **aprovado, versão A** → Engenheiro
     - Mapa das Eras V3: **reprovado** ("esta muito simples") → Sistemas faz a V4, mais rica, na direção A
 - [x] **"continua tudo"** · todas as sessões seguem as filas
-- [?] **No link para votar:** Mapa das Eras V4, Provação do Mestre, Encruzilhada, 3 pequenas (Fraco contra · Vai sair · Conjuntos), Derrota com prêmio, Grimório
+- [~] **Aprovadas pelo dono (14/11, 00h15):** Mapa das Eras V4, Provação do Mestre, Encruzilhada (vale até o fim da era, como mostrado), selo Fraco contra, Derrota com prêmio, Caminhos com Testar grátis, Grimório V3 → Engenheiro escreve atrás de chave, QA confere
+- [?] **Ainda sem voto:** cartão "Vai sair" da fusão e abas de conjuntos (na página das 3 pequenas)
+- [x] **"continua tudo"** (de novo, 14/11)
 - [?] **Provação: ouro do prêmio no Nv 90 chega a ~86,7 mi** (60 × k × ouro de um abate). Alto? · dono decide
 - [?] **Mapa V4: baús das fases 3 e 7** (provisório: moedas + 1 pedra; 20 diamantes + 2 pedras) · dono decide
 - [x] **Fogueira: 9 laços de chama** no jogo (36 créditos) · Arte
 - [x] **Tiro montado: 11 de 12**. A Kaia no tigre mítico reprovou 2 vezes (o bastão cobre o rosto); fica o golpe de espada ali, sem gastar mais · Arte
 - [?] **Votar no link das telas: Grimório V3 e Derrota com prêmio pelo dano** · protótipos da Sistemas; o Engenheiro só liga depois do voto
-- [?] **Encruzilhada das Eras: bênção vale até o fim da era (como no doc) ou é permanente?** Hoje segue o doc. Mudança pequena se for permanente · dono decide
+- [x] **Encruzilhada: vale até o fim da era** (dono aprovou a tela como mostrada)
 - [~] **As 14 recomendações do doc de idle: todas prontas no módulo**, desligadas e com testes (74d0956). Cada uma liga depois do voto no protótipo da tela · Sistemas → Engenheiro
 - [?] **Perfil: nome com espaço?** O protótipo recusa "Maria Clara" (só "MariaClara"). Recomendação do PO: aceitar um espaço entre palavras · dono decide
 - [?] **Perfil: moldura Ouro a partir do VIP 3 ou do VIP 7?** O protótipo diz VIP 3; a tabela do VIP diz VIP 7. Recomendação do PO: seguir a tabela do VIP (7) · dono decide
