@@ -437,7 +437,7 @@ O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`wo
 - `bonfire_bra_over`: estoque `bra` acima de 300, ou pote `pot` ≥ 20;
 - `bonfire_lv_over`: nível fora de 1-60;
 - `bonfire_lv_jump`: o nível subiu mais de 2 + 40 por dia real entre dois saves;
-- `bonfire_got_jump`: `got` (total de Brasas que ENTRARAM, só sobe; Sistemas 0c7e42a) subiu mais de 300 + 2.500 por dia real (luta automática o dia todo);
+- `bonfire_got_jump`: `got` (total de Brasas que ENTRARAM, só sobe; Sistemas 0c7e42a) subiu mais de 300 + 4.800 por dia real. A conta é: luta automática o dia todo ≈ 2.160 do pote, a bênção da Encruzilhada (+1 por pote cheio) pode dobrar isso, e fase, chefe, baú e missões dão ~150 (fps-server fac7f2b);
 - **Brasas do tempo fora:** `off = {day, n}` (dia de Brasília e Brasas que o tempo fora deu nesse dia). `bonfire_off_over` se `n` > 40. Quem grava `off` é o jogo (Sistemas), quando ligar o offline da Fogueira.
 - Números PROVISÓRIOS (Sistemas). Quando "só abate novo dá Brasa" ligar, o teto de `got` cai.
 
