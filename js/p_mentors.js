@@ -16,7 +16,7 @@ const N='mentors';
 
 /* ---------- RETRATOS DOS 9 MENTORES: UMA função (artOf). Enquanto a Arte não entrega, a reserva é desenhada aqui (busto na cor da era + medalha com a inicial).
    Quando os 9 arquivos existirem em ME_ART_DIR (m0.png a m8.png, pela era), basta trocar ME_ART_ON para true. ---------- */
-const ME_ART_ON=false, ME_ART_DIR='assets/mentors/';
+const ME_ART_ON=true, ME_ART_DIR='assets/mentors/';
 const ME_ERA=['#a8794a','#e0b040','#d64a4a','#2fa7a0','#8a8f9c','#3f8cff','#22c7d8','#9b3fd9','#f0d860'];   /* cor de cada era (igual à do Grimório e das Relíquias) */
 const meMix=(c,k)=>{ const v=parseInt(c.slice(1),16), f=x=>Math.round(x*(1-k)).toString(16).padStart(2,'0'); return '#'+f(v>>16)+f((v>>8)&255)+f(v&255); };
 const ME_LOCK='<circle cx="50" cy="62" r="19" fill="#120d09" stroke="#ffc94a" stroke-width="2.5"/><path d="M41 60h18v14H41zM45 60v-6a5 5 0 0110 0v6" fill="none" stroke="#ffd25e" stroke-width="3.4" stroke-linejoin="round"/>';
