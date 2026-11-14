@@ -23,16 +23,16 @@ const DATA={
   msg:{gapMs:5000, perDay:20},
   /* EQUILÍBRIO (Sistemas 13/11, teste do Servidor): fcRef = max(mediana, média) × 3. Um forte com duas contas fracas (5000/300/320) não leva mais
      o grupo aos 10 andares: a média sobe junto com o forte, então "forte + fracos" fica igual a um grupo de iguais. Grupo de iguais: mediana = média, nada muda.
-     andar: mult (inimigo = fcRef × mult), prêmio fixo. steep = expoente da chance (p = T^steep ÷ (T^steep + E^steep)): grupo igual chega ~ao andar 3,4 (simulado).
+     andar: mult (inimigo = fcRef × mult), prêmio fixo. steep = expoente da chance (p = T^steep ÷ (T^steep + E^steep)): grupo igual: ver a tabela abaixo.
      Como T (soma) nunca passa de max(mediana, média) × 3, NENHUM grupo fica acima da própria referência: forte + fracos ~3,4 como os iguais; um fraco
-     no grupo puxa para baixo (1000/1000/400 ~1,4). Andar 10: 0 em 2.000 corridas, em qualquer grupo. Antes (só mediana) 33% acima da mediana chegava ~6,5 e o dobro ~9,7. */
+     no grupo puxa para baixo (1000/1000/400 ~1,4). Com a tabela de 0,70-1,60 o andar 10 era impossível (0 em 2.000); a tabela 0,55-1,04 (abaixo) dá: grupo de iguais ~6,7 andares e 8,5% chegam ao 10; um fraco no grupo (T/E 0,77) ~3,2. Ouro médio 12 × 6,7 = 81 goldk por corrida (teto 120 = um resgate). */
   steep:10,
   /* palavra que a TELA mostra para cada reason (Sys.coop.why(r)); inclui os erros do servidor que o Sys.coopNet repassa */
   why:{off:'Ruínas em Trio desligadas',level:'Libera no nível 30',limit:'Sem entradas hoje',code:'Código não encontrado',not_guild:'Não é da sua guilda',
     bad_idx:'Frase inválida',data:'Não deu agora',claimed:'Prêmio já recebido',in_party:'Você já está num grupo',no_party:'Crie um grupo primeiro',full:'Grupo cheio',
     not_leader:'Só o líder pode',not_invited:'Convite vencido',party:'Grupo não existe mais',snapshot_required:'Lute uma vez na Arena primeiro',
     not_found:'Abre com o online',net_off:'Sem conexão',offline:'Sem conexão',error:'Não deu agora'},
-  floors:[F(0.70,1,1,12),F(0.78,1,1,12),F(0.86,2,1,12),F(0.94,2,2,12),F(1.02,3,2,12),F(1.10,3,2,12),F(1.20,4,3,12),F(1.32,4,3,12),F(1.45,5,3,12),F(1.60,5,4,12)],
+  floors:[F(0.55,1,1,12),F(0.62,1,1,12),F(0.68,2,1,12),F(0.73,2,2,12),F(0.78,3,2,12),F(0.83,3,2,12),F(0.88,4,3,12),F(0.93,4,3,12),F(0.98,5,3,12),F(1.04,5,4,12)],   // tabela baixada (Sistemas 14/11): com a referência max(mediana, média) o grupo de iguais chega ~6,7 e 8,5% chegam ao 10
 };
 const SYS=()=>root.Sys||{};
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;

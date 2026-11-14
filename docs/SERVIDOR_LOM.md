@@ -110,21 +110,21 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 ### 3.2 A corrida (conta determinística; o servidor roda `Sys.coop.run(team, seed)`)
 - `team` = 3 retratos `{ fc }` (FC do retrato da arena). `fcRef` = **max(mediana, média) das 3 FCs × 3** (Sistemas 13/11, depois do teste de ponta a ponta: com só a mediana, um forte com duas contas fracas, 5000/300/320, vencia os 10 andares). `teamPower` = soma das 3 FCs.
 - Andares de 1 a 10, em ordem. No andar `k`: `enemy = fcRef × mult[k]`; `x = (teamPower ÷ enemy)^10` (`DATA.steep` = 10); chance `p = x ÷ (x + 1)`; vence se `rng() < p`, com `rng = mulberry32(seed)` (o mesmo `mulberry` do `Sys.arena`), um sorteio por andar. Perdeu um andar, a corrida acaba.
-- Simulado (2.000 corridas): grupo de 3 iguais chega em média ao andar 3,4; forte + fracos (3000/1000/1000 ou 5000/300/320) também ~3,4 (o forte não carrega mais); um fraco no grupo puxa para baixo (1000/1000/400 ~1,4). Como `teamPower` nunca passa de `fcRef`, nenhum grupo fica acima da própria referência: o andar 10 saiu 0 vezes em 2.000, em qualquer grupo (o PO decide se a tabela de `mult` baixa).
+- Simulado (20.000 corridas, tabela 0,55-1,04 de 14/11): grupo de iguais (ou forte + fracos, que agora conta igual) chega em média ao andar 6,7 e 8,5% chegam ao 10; um fraco no grupo (soma ÷ referência = 0,77) ~3,2. A tabela antiga (0,70-1,60) com a referência nova dava ~3,4 e nunca o 10.
 - Prêmio = soma dos andares **vencidos**, para cada humano com entrada. Fixo, sem sorteio no prêmio (só o resultado da luta usa a semente, como na arena).
 
 | Andar | `mult` (inimigo × fcRef) | Fragmentos de relíquia (`relicFrags`) | Pedras de prática (`stones`) | Ouro (`goldk`) |
 |---|---|---|---|---|
-| 1 | 0,70 | 1 | 1 | 12 |
-| 2 | 0,78 | 1 | 1 | 12 |
-| 3 | 0,86 | 2 | 1 | 12 |
-| 4 | 0,94 | 2 | 2 | 12 |
-| 5 | 1,02 | 3 | 2 | 12 |
-| 6 | 1,10 | 3 | 2 | 12 |
-| 7 | 1,20 | 4 | 3 | 12 |
-| 8 | 1,32 | 4 | 3 | 12 |
-| 9 | 1,45 | 5 | 3 | 12 |
-| 10 | 1,60 | 5 | 4 | 12 |
+| 1 | 0,55 | 1 | 1 | 12 |
+| 2 | 0,62 | 1 | 1 | 12 |
+| 3 | 0,68 | 2 | 1 | 12 |
+| 4 | 0,73 | 2 | 2 | 12 |
+| 5 | 0,78 | 3 | 2 | 12 |
+| 6 | 0,83 | 3 | 2 | 12 |
+| 7 | 0,88 | 4 | 3 | 12 |
+| 8 | 0,93 | 4 | 3 | 12 |
+| 9 | 0,98 | 5 | 3 | 12 |
+| 10 | 1,04 | 5 | 4 | 12 |
 | **Total (10 andares)** | | **30** | **22** | **120** |
 
 - O ouro de uma corrida inteira é no máximo 120 `goldk` = **um resgate** (teto do `ECONOMIA_OURO`). `relicFrags` = fragmentos genéricos de relíquia (o `Sys.relics` da outra sessão decide para qual relíquia vão; desligado ou ausente, ficam guardados em `S.sys.loot.relicFrags` pelo `Sys.loot.grantBundle`).

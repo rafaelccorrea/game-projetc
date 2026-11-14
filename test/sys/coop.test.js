@@ -19,8 +19,8 @@ t('corrida: mesma semente = mesmo resultado; fcRef = mediana × 3; para no 1º a
   const team=[{fc:1000},{fc:1100},{fc:900}], a=C.run(team,77), b=C.run(team,77); assert.deepStrictEqual(a,b); assert.strictEqual(a.fcRef,3000); assert.strictEqual(a.teamPower,3000);
   assert.strictEqual(a.floors.length,Math.min(10,a.reached+1)); assert.ok(a.floors.slice(0,a.reached).every(f=>f.win)); assert.deepStrictEqual(a.reward,C.rewardFor(a.reached));
   const r1=C.mulberry(5), r2=C.mulberry(5); assert.strictEqual(r1(),r2()); });
-t('equilíbrio: grupo igual chega ~ao andar 3-4 em média; forte + 2 iguais fica igual ao grupo de iguais (fcRef = max(mediana, média) × 3)',()=>{ let s=0, sStrong=0; for(let i=0;i<400;i++){ s+=C.run([{fc:1000},{fc:1000},{fc:1000}],i).reached; sStrong+=C.run([{fc:3000},{fc:1000},{fc:1000}],i).reached; }
-  const avg=s/400, avgS=sStrong/400; assert.ok(avg>2.8&&avg<4.2,'média '+avg); assert.ok(Math.abs(avgS-avg)<0.6,'forte '+avgS+' × iguais '+avg); });
+t('equilíbrio: grupo igual chega ~ao andar 6-7 em média; forte + 2 iguais fica igual ao grupo de iguais (fcRef = max(mediana, média) × 3)',()=>{ let s=0, sStrong=0; for(let i=0;i<400;i++){ s+=C.run([{fc:1000},{fc:1000},{fc:1000}],i).reached; sStrong+=C.run([{fc:3000},{fc:1000},{fc:1000}],i).reached; }
+  const avg=s/400, avgS=sStrong/400; assert.ok(avg>5.8&&avg<7.6,'média '+avg);   /* tabela 0,55-1,04 (14/11): ~6,7 */ assert.ok(Math.abs(avgS-avg)<0.6,'forte '+avgS+' × iguais '+avg); });
 t('local: 2 entradas por dia de Brasília, credita ouro (≤120 goldk) e pedras pela tabela, fragmentos guardados sem Sys.relics; zera no dia seguinte',()=>withOn(()=>{ const S={}, h=host();
   const r1=C.start(S,h); assert.ok(r1.ok&&r1.members.length===3&&r1.members.filter(m=>m.ghost).length===2); const g1=h.gold; assert.strictEqual(C.entriesLeft(S,h),1);
   assert.strictEqual(g1,Math.round(r1.reward.goldk*h.goldUnit())); assert.strictEqual(S.sys.loot.relicFrags,r1.reward.relicFrags,'sem Sys.relics: guardados no Sys.loot'); assert.strictEqual(Sys.practice.ensure(S).stones,r1.reward.stones);

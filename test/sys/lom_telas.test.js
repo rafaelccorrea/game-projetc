@@ -55,10 +55,10 @@ t('eventRank.load: GET /events/:id/rank → applyRank; 404 = not_found; sem net 
 /* ---------- Ruínas em Trio: decisões do teste de ponta a ponta do Servidor ---------- */
 t('coop EQUILÍBRIO: fcRef = max(mediana, média) × 3; 5000/300/320 não vence os 10 andares com chance 1; grupo de iguais igual a antes',()=>{
   const a=C.run([{fc:5000},{fc:300},{fc:320}],1); assert.strictEqual(a.fcRef,Math.max(320,5620/3)*3); assert.ok(a.floors[a.floors.length-1].p<1);
-  let wins=0; for(let s=0;s<200;s++) if(C.run([{fc:5000},{fc:300},{fc:320}],s).reached===10) wins++; assert.ok(wins<20,'forte + 2 fracos chegou ao 10 em '+wins+'/200');
-  const p10=Math.pow(1/1.6,10)/(Math.pow(1/1.6,10)+1);   /* andar 10 com o time igual ao fcRef: ~0,9% */
-  const eq=C.run([{fc:1000},{fc:1000},{fc:1000}],77); assert.strictEqual(eq.fcRef,3000); assert.ok(p10<0.01);
-  let s=0; for(let i=0;i<400;i++) s+=C.run([{fc:1000},{fc:1000},{fc:1000}],i).reached; assert.ok(s/400>2.8&&s/400<4.2,'iguais: '+s/400); });
+  let wins=0; for(let s=0;s<200;s++) if(C.run([{fc:5000},{fc:300},{fc:320}],s).reached===10) wins++; assert.ok(wins<40,'forte + 2 fracos chegou ao 10 em '+wins+'/200');   // igual a um grupo de iguais (~8,5%), nunca sempre
+  const p10=Math.pow(1/1.04,10)/(Math.pow(1/1.04,10)+1);   /* andar 10 com o time igual ao fcRef: ~40% (tabela 14/11) */
+  const eq=C.run([{fc:1000},{fc:1000},{fc:1000}],77); assert.strictEqual(eq.fcRef,3000); assert.ok(p10<0.45);
+  let s=0; for(let i=0;i<400;i++) s+=C.run([{fc:1000},{fc:1000},{fc:1000}],i).reached; assert.ok(s/400>5.8&&s/400<7.6,'iguais: '+s/400);   /* tabela 14/11: ~6,7 */ });
 t('coop código em minúsculas: canInvite aceita e devolve em maiúsculas',withOn([C],()=>{ const S={}, h=host();
   const r=C.canInvite(S,h,{friendCode:' ab12cd '}); assert.ok(r.ok); assert.strictEqual(r.code,'AB12CD'); assert.strictEqual(C.canInvite(S,h,{friendCode:'ab-1'}).reason,'code'); }));
 t('coop frases: 20 por GRUPO por dia (sayLeft do servidor; senão as frases do grupo de hoje); 429 day trava, cooldown só o intervalo',withOn([C],()=>{ const S={}, h=host(); const k=C.dayKey(h.t);
