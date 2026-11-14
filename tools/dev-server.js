@@ -22,7 +22,7 @@ const isLive = (req, u) => /EonboundDev/i.test(req.headers['user-agent'] || '') 
 /* script que a página dev recebe: liga no SSE; "reload" recarrega (guardando o save antes), "css" troca só as folhas de estilo; se o servidor cair, tenta de novo */
 const CLIENT = `<script>(function(){ if(window.__eonLive) return; window.__eonLive=true;
   var pill=null; function note(t){ try{ if(!pill){ pill=document.createElement('div'); pill.style.cssText='position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);transform:translateX(-50%);z-index:99999;pointer-events:none;padding:4px 10px;border-radius:10px;background:rgba(0,0,0,.72);color:#ffe07a;font:800 11px system-ui,sans-serif'; document.body.appendChild(pill); } pill.textContent=t; pill.style.display='block'; clearTimeout(pill._t); pill._t=setTimeout(function(){ pill.style.display='none'; },1600); }catch(e){} }
-  function reload(){ try{ if(typeof save==='function') save(); }catch(e){} note('Atualizando...'); setTimeout(function(){ location.reload(); },120); }
+  function reload(){ try{ if(typeof save==='function') save(); }catch(e){} try{ var t=document.getElementById('title'); if(typeof S!=='undefined'&&S&&S.name&&(!t||t.style.display==='none')) sessionStorage.setItem('eonLiveReload','1'); }catch(e){} note('Atualizando...'); setTimeout(function(){ location.reload(); },120); }
   function css(){ try{ var l=document.querySelectorAll('link[rel="stylesheet"]'), n=0; for(var i=0;i<l.length;i++){ var h=l[i].getAttribute('href')||''; if(/^https?:/.test(h)&&h.indexOf(location.host)<0) continue; l[i].setAttribute('href',h.replace(/([?&])_live=\\d+/,'').replace(/[?&]$/,'')+(h.indexOf('?')>=0?'&':'?')+'_live='+Date.now()); n++; } if(!n) reload(); else note('Estilo atualizado'); }catch(e){ reload(); } }
   function go(){ var es; try{ es=new EventSource('${LIVE_PATH}'); }catch(e){ return; }
     es.addEventListener('reload',reload); es.addEventListener('css',css); es.addEventListener('hello',function(){ note('Recarga ao vivo ligada'); });
@@ -71,9 +71,10 @@ http.createServer((req, res) => {
   fs.createReadStream(file).pipe(res);
 }).listen(port, '0.0.0.0', () => console.log('Eonbound DEV em http://localhost:' + port + ' servindo ' + root + ' (recarga ao vivo para o app dev e para ?live=1)'));
 
-/* VIGIA DOS ARQUIVOS: só o que o jogo carrega. Várias gravações seguidas (um commit, um salvar do editor) viram UM aviso (espera 350 ms de silêncio).
+/* VIGIA DOS ARQUIVOS: só o que o jogo carrega. Várias gravações seguidas (um commit, um salvar do editor) viram UM aviso (espera QUIET_MS de silêncio).
    Só .css mudou = troca de estilo sem recarregar; qualquer outra coisa = recarga. Arquivo temporário de editor (~, .tmp, .swp) é ignorado. */
 const WATCH = ['js', 'assets', 'css'], FILES = new Set(['index.html', 'sw.js']);
+const QUIET_MS = 4000;   /* pedido do dono (recarregava a cada arquivo): só recarrega depois de 4 s sem nenhuma gravação */
 let timer = null, onlyCss = true, count = 0;
 function changed(rel) {
   rel = String(rel || '').replace(/\\/g, '/'); if (!rel || /(~|\.tmp|\.swp|\.crdownload|\.lock)$/i.test(rel) || /(^|\/)\./.test(rel)) return;
@@ -82,7 +83,7 @@ function changed(rel) {
     const ev = onlyCss ? 'css' : 'reload', n = count; onlyCss = true; count = 0;
     if (clients.size) console.log(new Date().toLocaleTimeString() + '  ' + n + ' arquivo(s) mudaram: ' + (ev === 'css' ? 'estilo trocado' : 'recarregando') + ' em ' + clients.size + ' tela(s)');
     for (const c of clients) { try { c.write('event: ' + ev + '\ndata: ' + Date.now() + '\n\n'); } catch (e) { clients.delete(c); } }
-  }, 350);
+  }, QUIET_MS);
 }
 for (const d of WATCH) { const dir = path.join(root, d); try { if (fs.statSync(dir).isDirectory()) fs.watch(dir, { recursive: true }, (t, f) => changed(d + '/' + (f || ''))); } catch (e) {} }
 try { fs.watch(root, (t, f) => { if (f && (FILES.has(String(f)) || /\.css$/i.test(String(f)))) changed(String(f)); }); } catch (e) {}

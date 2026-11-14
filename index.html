@@ -493,7 +493,11 @@ const pvSkin={weapon:null,armor:null};   // skin em prévia na aba Skins
 /* ?debug=1&era=N[&boss=1|eb=1][&wr=R&ar=R][&skip=1][&tab=gear]  -> força era/skins/estado (não grava o save) */
 const QP=new URLSearchParams(location.search);
 /* Engenheiro 2: ?debug=1&skip=1 também pula a ENTRADA NOVA (js/p_intro.js): a chave da tela nasce desligada só nesta carga (o js/panels.js respeita window.PANEL_ON) */
-if(DEBUG&&QP.has('skip')) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{intro:false});
+/* RECARGA AO VIVO (app de desenvolvimento do dono, tools/dev-server.js): quando a página recarrega por mudança de arquivo COM O JOGADOR JÁ DENTRO DO JOGO, o script do
+   servidor de dev deixa a marca eonLiveReload na sessão; a página volta direto para a batalha, sem a tela de carregamento, o título nem o toque. A marca vale uma vez.
+   Só o servidor de dev a escreve: na versão da loja ela nunca existe. */
+const LIVE_SKIP=(()=>{ try{ if(sessionStorage.getItem('eonLiveReload')==='1'){ sessionStorage.removeItem('eonLiveReload'); return true; } }catch(e){} return false; })();
+if((DEBUG&&QP.has('skip'))||LIVE_SKIP) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{intro:false});
 /* OFERTA DE 1ª COMPRA (decisão do PO): só no MODO DONO. No save real nem a tela nem o módulo ligam: o relógio de 24 h não começa até existir compra real. */
 if(OWNER_MODE) window.PANEL_ON=Object.assign(window.PANEL_ON||{},{offer:true});
 /* DEBUG OFICIAL DO SENHOR DA ERA (pedido do QA): ?debug=1&fresh=1&lord=<era 0..6> põe o save na fase <era*10+10>, onda 5 (Senhor da Era), com o herói
@@ -824,7 +828,7 @@ if(DEBUG&&QP.has('cvh')){ document.getElementById('app').style.maxWidth='900px';
 try{ if(window.OnlineBoot) OnlineBoot.start(); }catch(e){ if(DEBUG) console.error(e); }   /* Engenheiro 12: online na abertura (desligado por ONLINE_ON); a tela de carregamento espera até 4 s (tarefa "online") */
 if(typeof initLoading==='function') initLoading(); else { const l=document.getElementById('loading'); if(l) l.remove(); }
 if(DEBUG&&window.__lord) setInterval(()=>{ const h=B.hero, e=B.en[0]; if(h&&e){ h.atk=Math.max(h.atk,e.maxhp/(e.boss?12:3)); h.maxhp=Math.max(h.maxhp,e.dmg*400); h.hp=h.maxhp; } },200);   /* ?lord=<era>: herói forte, sem stay */
-if(DEBUG&&QP.has('skip')){ document.getElementById('title').style.display='none'; B.paused=false; if(!S.name){ S.name='Kael'; S.hero='kael'; } if(S.tut<99) startTut(); }
+if((DEBUG&&QP.has('skip'))||(LIVE_SKIP&&S.name)){ document.getElementById('title').style.display='none'; B.paused=false; if(!S.name){ S.name='Kael'; S.hero='kael'; } if(S.tut<99) startTut(); }
 </script>
 <script src="js/native.js"></script>   <!-- APP ANDROID (Capacitor): ponte nativa; fora do app não faz nada -->
 </body>

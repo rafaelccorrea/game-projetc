@@ -123,9 +123,13 @@ const tab = t => click('tab', { t });
 
   // 3) Doar: check-in direto; doação em 2 toques, ouro debitado só depois do ok; sem diamante = motivo, sem rede
   tab('donate'); check('doar'); has('Check-in'); not('Feito hoje');
-  // 429 daily_limit do servidor (com retryAfterMs): texto claro. O Sys.guildNet hoje NÃO repassa o retryAfterMs, então o texto é o da virada de Brasília; quando repassar, a tela mostra o tempo
-  const LIM = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 };
-  fail['POST /guild/checkin'] = LIM; click('checkin'); await settle(); has('Já feito hoje. Volta à meia-noite de Brasília'); delete fail['POST /guild/checkin'];
+  // 429 daily_limit do servidor: o Sys.guildNet repassa {reason, details, retryAfterMs}. Com retryAfterMs > 0 a tela mostra o tempo que falta; com 0 ou sem o campo, a virada de Brasília
+  const LIM = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 }, MID = 'Já feito hoje. Volta à meia-noite de Brasília';
+  fail['POST /guild/checkin'] = LIM; click('checkin'); await settle(); has('Já feito hoje. Volta em 5 h 30 min'); not(MID);
+  fail['POST /guild/checkin'] = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 36e5 }; click('checkin'); await settle(); has('Já feito hoje. Volta em 1 h 0 min'); not(MID);
+  fail['POST /guild/checkin'] = { code: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 0 }; click('checkin'); await settle(); has(MID); not('Volta em');
+  fail['POST /guild/checkin'] = { code: 'daily_limit', details: { key: 'checkin' } }; click('checkin'); await settle(); has(MID); not('Volta em'); delete fail['POST /guild/checkin'];
+  assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: null, retryAfterMs: 0 }), MID);
   assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'checkin' }, retryAfterMs: 5.5 * 36e5 }), 'Já feito hoje. Volta em 5 h 30 min');
   assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { retryAfterMs: 40e3 } }), 'Já feito hoje. Volta em 1 min'); assert.strictEqual(g.Guild2.whyR({ ok: false, reason: 'daily_limit', details: { key: 'boss' } }), 'Já feito hoje. Volta à meia-noite de Brasília');
   click('checkin'); has('Carregando…'); await settle(); assert(calls.includes('POST /guild/checkin')); has('Check-in feito: +5 Brasões'); check('check-in feito');

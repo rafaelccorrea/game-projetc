@@ -154,7 +154,7 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   out.push('QA lote 3: faixa do item só em Visual e Coleção (sair para Títulos ou Números tira a prévia); em 320x640 e 320x520 o palco encolhe e identidade e quadros rolam com o conteúdo'); }
 
 // 5c) SISTEMAS DO PERFIL (Sys.profile + Sys.name reais): chave desligada = tela igual; ligada (só neste teste): nome, moldura, aura, retrato, gráfico e recordes
-{ const NEW = ['data-x="ren"', 'p5-pen', 'data-x="pf"', 'id="p5_name"', 'class="p5-fr"', 'Moldura do retrato', '>Aura<', '>Retrato<', 'FC em 7 dias', 'class="p5-ch"', '>Recordes<', 'class="p5-rec'];
+{ const NEW = ['data-x="ren"', 'p5-pen', 'data-x="pf"', 'id="p5_name"', 'class="p5-fr"', 'assets/ui/frames/', 'Moldura do retrato', '>Aura<', '>Retrato<', 'FC em 7 dias', 'class="p5-ch"', '>Recordes<', 'class="p5-rec'];
   const shots = () => ['vis', 'col', 'tit', 'num'].map(t => { advSave(); open({ tab: t }); return H(); });
   const absent = shots(); assert(!Sys.profile, 'até aqui o módulo não estava carregado');
   Sys.name = require(path.join(R, 'js/sys/name.js'));   /* em node o name.js entrega pelo module.exports (no navegador ele mesmo se põe em Sys.name) */
@@ -179,9 +179,17 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
     def.click(btn('renok')); assert.strictEqual(S.name, 'Kael_Dois'); assert.strictEqual(S.gems, 50, 'o módulo debitou 200'); assert.strictEqual(prof().renames, 2); has('>Kael_Dois</div>'); not('id="p5_name"'); check('nome pago');
     def.click(btn('ren')); input.value = 'Sem_Gemas'; def.click(btn('renok')); has('Faltam diamantes.'); not('Confirmar'); assert.strictEqual(S.name, 'Kael_Dois'); assert.strictEqual(S.gems, 50); check('sem diamantes'); def.click(btn('renx')); not('id="p5_name"');
     // --- moldura ---
-    open(); has('Moldura do retrato'); assert.strictEqual((body().match(/data-k="frame"/g) || []).length, PR.DATA.frames.length); assert(/class="p5-fr" style="border:2px solid rgba\(255,255,255,\.25\)"/.test(idb()), 'moldura Simples na identidade');
-    def.click(btn('pf', { k: 'frame', id: 'bronze' })); assert.strictEqual(prof().frame, 'bronze', 'Sys.profile.equip trocou a moldura (nível 13)'); assert(idb().includes('border:3px solid #d08a4c'), 'a moldura aparece na identidade'); has('Moldura Bronze em uso'); check('moldura');
-    def.click(btn('pf', { k: 'frame', id: 'ouro' })); assert.strictEqual(prof().frame, 'bronze', 'moldura que não tem não equipa'); has('Moldura Ouro. Como ganhar: VIP 3'); has('>VIP 3</div>'); check('moldura falta');
+    // a arte da moldura (assets/ui/frames/<id>.png) entra quando o arquivo do id existe em disco; sem arquivo, a borda por CSS de sempre
+    const frUrl = id => 'assets/ui/frames/' + id + '.png', frArt = id => fs.existsSync(path.join(R, frUrl(id))), frCell = id => { const m = new RegExp('<button[^>]*data-k="frame" data-id="' + id + '"[^>]*>(.*?)</button>').exec(body()); assert(m, 'célula da moldura ' + id); return m[1]; };
+    const frIdb = (id, css) => frArt(id) ? assert(idb().includes('<img src="' + frUrl(id) + '" alt="" style="inset:-30%;width:160%;height:160%') && !idb().includes('class="p5-fr"'), 'arte da moldura ' + id + ' na identidade, 256/160 do retrato') : assert(idb().includes(css), 'moldura ' + id + ' por CSS na identidade');
+    open(); has('Moldura do retrato'); assert.strictEqual((body().match(/data-k="frame"/g) || []).length, PR.DATA.frames.length); frIdb('none', 'class="p5-fr" style="border:2px solid rgba(255,255,255,.25)"');
+    { let art = 0; for (const f of PR.DATA.frames) { const c = frCell(f.id); if (frArt(f.id)) { art++; assert(c.includes('<img src="' + frUrl(f.id) + '"') && c.includes('inset:18.75%;width:62.5%;height:62.5%') && !c.includes('class="p5-fr"'), 'moldura ' + f.id + ': retrato na janela de 160 e a arte por cima'); } else assert(!c.includes('assets/ui/frames/') && c.includes('class="p5-fr"'), 'moldura ' + f.id + ' sem arte em disco: borda por CSS'); }
+      for (const id of ['none', 'bronze', 'prata', 'ouro', 'cristal', 'eterna', 'nine_eras', 'mark100', 'mark150']) assert(frArt(id), 'arte entregue da moldura existe: ' + frUrl(id)); assert(art >= 9, 'as 9 molduras com arte usam a imagem'); }
+    def.click(btn('pf', { k: 'frame', id: 'bronze' })); assert.strictEqual(prof().frame, 'bronze', 'Sys.profile.equip trocou a moldura (nível 13)'); frIdb('bronze', 'border:3px solid #d08a4c'); has('Moldura Bronze em uso'); check('moldura');
+    // moldura que falta: o "como ganhar" é o que o MÓDULO diz (view().frames), nada fixo aqui
+    { const fo = PR.view(S, host).frames.find(f => f.id === 'ouro'); assert(fo && !fo.owned && typeof fo.how === 'string' && fo.how, 'o módulo diz como ganhar a moldura Ouro (nível 13 ainda não tem)');
+      def.click(btn('pf', { k: 'frame', id: 'ouro' })); assert.strictEqual(prof().frame, 'bronze', 'moldura que não tem não equipa'); has(g.esc2('Moldura ' + fo.name + '. Como ganhar: ' + fo.how)); has('>' + g.esc2(fo.how) + '</div>');
+      for (const f of PR.view(S, host).frames) if (!f.owned && f.how) has('>' + g.esc2(f.how) + '</div>'); check('moldura falta'); }
     def.click(btn('pf', { k: 'frame', id: 'zzz' })); def.click(btn('pf', { k: 'x', id: 'bronze' })); assert.strictEqual(prof().frame, 'bronze');
     // --- aura (o herói do palco não recebe aura: só o selo) ---
     assert.strictEqual((body().match(/data-k="aura"/g) || []).length, PR.DATA.auras.length); not('class="p5-au"'); assert.strictEqual(PR.grant(S, 'light_of_eras'), true); def.render();

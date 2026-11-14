@@ -254,7 +254,8 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
      neste servidor e refaz o boot (save da nuvem). Sem o online ligado (OnlineBoot.state().on falso) o botão diz "em breve". */
   googleReady(){ try{ const OB=window.OnlineBoot; if(OB&&OB.state&&!OB.state().on) return false; return !!(window.Sys&&Sys.net&&Sys.net.googleReady&&Sys.net.googleReady()); }catch(e){ return false; } },
   /* convidado já com sessão = VINCULA a conta atual ao Google (não perde nada); sem sessão = entra na conta do Google (aparelho novo) */
-  google(){ const OB=window.OnlineBoot, mark=p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; };
+  google(){ if(/EonboundDev/i.test((typeof navigator!=='undefined'&&navigator.userAgent)||'')){ PI.toast('No app DEV o login Google não funciona. Jogue como convidado.'); const e=new Error('dev'); e.code='cancelled'; return Promise.reject(e); }   /* app de desenvolvimento do dono (pacote .dev sem registro no Google): aviso claro */
+    const OB=window.OnlineBoot, mark=p=>{ G.S().acct='google'; try{ if(typeof save==='function') save(); }catch(e){} return p; };
     if(!OB||!OB.google){ const N=Sys.net; return N.googleSignIn('auto').then(mark); }   /* reserva: sem a camada online, só o Sys.net */
     return OB.google().then(r=>{
       if(r&&r.ok){ if(r.pending&&OB.applyPending){ PI.toast('Carregando o seu jogo da nuvem...'); setTimeout(()=>{ try{ OB.applyPending(); }catch(e){} },600); } return mark(r.player); }

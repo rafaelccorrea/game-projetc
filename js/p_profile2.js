@@ -69,6 +69,12 @@ function pview(){ const P=prof(); if(!P) return null; try{ const v=P.view(S,host
 const isMinor=()=>{ try{ const p=player(); if(p&&p.ageBand) return p.ageBand!=='18+'; }catch(e){} return true; };   /* sem saber a idade: regra de menor (a mais rígida), como no js/p_intro.js */
 const persist=()=>{ try{ if(typeof save==='function') save(); }catch(e){} };
 const frCss=(id,r)=>FR[id]||('border:3px solid '+rc(r)+';box-shadow:inset 0 0 0 2px rgba(5,8,28,.7),0 0 14px '+rc(r));
+/* arte da moldura (assets/ui/frames/<id>.png, 256x256 com janela interna de 160 centrada): o retrato ocupa 62,5% do quadro e a moldura vai por cima no quadro inteiro.
+   Id sem arte, ou arte que não carregou, fica com a borda por CSS (frCss) */
+const FRI=['none','bronze','prata','ouro','cristal','eterna','nine_eras','mark100','mark150'], FRX={};
+function frImg(id){ if(FRI.indexOf(id)<0||FRX[id]===-1) return ''; const u='assets/ui/frames/'+id+'.png';
+  if(FRX[id]==null){ FRX[id]=1; try{ if(typeof Image==='function'){ const im=new Image(); im.onerror=()=>{ FRX[id]=-1; try{ if(typeof view!=='undefined'&&view===N) redraw(); }catch(e){} }; im.src=u; } }catch(e){} }
+  return u; }
 const dayBR=d=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||'')); return m?m[3]+'/'+m[2]:''; };
 const nameLim=()=>{ let a=3,b=14; try{ const D=Y().name.DATA; if(D.min>0) a=D.min|0; if(D.max>0) b=D.max|0; }catch(e){} return [a,b]; };
 
@@ -275,7 +281,8 @@ const SVG_PEN='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColo
 function cosCell(kind,it,av,r){ const id=kind==='avatar'?it.avatar:it.id, own=!!it.owned, eq=!!it.equipped, how=typeof it.how==='string'?noStar(it.how):'';
   const st=own?(eq?'em uso':'toque para usar'):(how?'como ganhar: '+how:'falta');
   const inner=kind==='avatar'?`<img src="assets/hero/avatar/${esc2(it.avatar)}.png" alt="" loading="lazy" style="inset:0;width:100%;height:100%;object-fit:cover">`
-    :kind==='frame'?(av?`<img src="${esc2(av)}" alt="" loading="lazy" style="inset:0;width:100%;height:100%;object-fit:cover">`:'')+`<span class="p5-fr" style="${frCss(it.id,r)}"></span>`
+    :kind==='frame'?(fu=>fu?(av?`<img src="${esc2(av)}" alt="" loading="lazy" style="inset:18.75%;width:62.5%;height:62.5%;object-fit:cover">`:'')+`<img src="${esc2(fu)}" alt="" loading="lazy" style="inset:0;width:100%;height:100%;object-fit:contain">`
+      :(av?`<img src="${esc2(av)}" alt="" loading="lazy" style="inset:0;width:100%;height:100%;object-fit:cover">`:'')+`<span class="p5-fr" style="${frCss(it.id,r)}"></span>`)(frImg(it.id))
     :it.id==='none'?'<span class="p5-none">Nenhuma</span>':'<span class="p5-glow"></span>';
   const lab=kind==='avatar'?String(it.name).replace(/^(Kael|Kaia) /,''):(own||!how)?it.name:how;
   return `<div><button class="p5-cell${own?'':' lock'}${eq?' sel':''}" style="--rc:${rc(r)}${kind==='frame'?';border:0':''}" data-x="pf" data-k="${kind}" data-id="${esc2(id)}" aria-pressed="${eq}" aria-label="${esc2(KN[kind]+' '+it.name+', '+st)}">${inner}${own?'':`<span class="p5-lk">${SVG_LOCK}</span>`}${eq?'<span class="p5-eqb">Usando</span>':''}</button><div class="p5-cn${own?' own':''}">${esc2(lab)}</div></div>`; }
@@ -364,12 +371,15 @@ function vRender(){ const d=xDims(600)||{}, H=d.H>0?d.H:704, bg=typeof xEraBg===
     ${showMode?`<div class="p5-mode" role="group" aria-label="Como mostrar o herói"><button data-x="mode" data-m="ride" aria-pressed="${md==='ride'}">Montado</button><button data-x="mode" data-m="foot" aria-pressed="${md==='foot'}">A pé</button></div>`:''}</div>`;
   /* ----- IDENTIDADE (abaixo do palco: nada por cima do herói) ----- */
   const tc=feat?rc(feat.r):'#9aa6d6', id=playerId();
-  let pfS='', frH='', nmH=`<div class="p5-nm p5-lil">${esc2(nameOf())}</div>`, auH='', pfA=av;
+  let pfS='', pfR='', frH='', nmH=`<div class="p5-nm p5-lil">${esc2(nameOf())}</div>`, auH='', pfA=av;
   if(pvw){ const E=pvw.equipped||{}, fid=typeof E.frame==='string'&&E.frame?E.frame:'none', f=(pvw.frames||[]).find(q=>q.id===fid), au=E.aura?(pvw.auras||[]).find(q=>q.id===E.aura):null;
-    pfA=pfpUrl(pvw,av); pfS=' style="border:0"'; frH=`<span class="p5-fr" style="${frCss(fid,f?f.r|0:0)}"></span>`;
+    const fu=frImg(fid); pfA=pfpUrl(pvw,av);
+    /* com arte: o retrato fica do tamanho de sempre e a moldura passa 30% para fora de cada lado (256/160 do retrato) */
+    if(fu){ pfS=' style="border:0;overflow:visible;margin:0 6px"'; pfR=' style="border-radius:12%"'; frH=`<img src="${esc2(fu)}" alt="" style="inset:-30%;width:160%;height:160%;max-width:none;object-fit:contain;pointer-events:none">`; }
+    else { pfS=' style="border:0"'; frH=`<span class="p5-fr" style="${frCss(fid,f?f.r|0:0)}"></span>`; }
     nmH=`<div class="p5-nmr">${nmH}<button class="p5-pen" data-x="ren" aria-expanded="${!!X.rn}" aria-label="Trocar nome">${SVG_PEN}</button></div>`;
     if(au) auH=`<div class="p5-au">Aura: <b>${esc2(au.name)}</b></div>`; }
-  const idb=`<div class="p5-idb"><button class="p5-pfp"${pfS} data-x="tab" data-t="vis" aria-label="Retrato: abrir a aba Visual">${pfA?`<img src="${esc2(pfA)}" alt="">`:''}${frH}</button>
+  const idb=`<div class="p5-idb"><button class="p5-pfp"${pfS} data-x="tab" data-t="vis" aria-label="Retrato: abrir a aba Visual">${pfA?`<img src="${esc2(pfA)}" alt=""${pfR}>`:''}${frH}</button>
     <div class="p5-idt">${nmH}<button class="p5-tit" style="--tc:${tc}" data-x="tab" data-t="tit" aria-label="Título em destaque: ${esc2(feat?feat.name:'nenhum')}. Abrir a aba Títulos">${feat&&feat.icon?`<img src="${esc2(feat.icon)}" alt="">`:''}<span>${esc2(feat?feat.name:'Sem título')}</span></button>${auH}</div>
     ${id?`<div class="p5-idr">ID ${esc2(id)}</div>`:''}</div>`;
   /* ----- NÍVEL, FC, ERA ----- */

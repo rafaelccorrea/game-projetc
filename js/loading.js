@@ -105,7 +105,7 @@ function sceneTrim(){ const cur = eraOf(S.stage); for (const k in SCN.list){ con
 
 function initLoading(){
   const el = LD.el = document.getElementById('loading'); if (!el) return;
-  if (DEBUG && QP.has('skip')){ el.remove(); LD.closed = true; loadManifest(); return; }   /* o manifesto vale mesmo sem a barra (Sys.assets.mountedArt: Kaia montada) */
+  if ((DEBUG && QP.has('skip')) || (typeof LIVE_SKIP !== 'undefined' && LIVE_SKIP)){ el.remove(); LD.closed = true; loadManifest(); return; }   /* o manifesto vale mesmo sem a barra (Sys.assets.mountedArt: Kaia montada) */
   const app = document.getElementById('app');
   const fit = () => { const r = app.getBoundingClientRect(); if (r.height) el.style.setProperty('--s', (r.height / 844).toFixed(4)); };
   fit(); addEventListener('resize', fit);
@@ -189,8 +189,8 @@ function loadStep(){
     for (let i = 0; i < 7; i++){ const on = i === ei && LD.bg[i]; document.getElementById('lbg' + i).style.opacity = on ? 1 : 0; const a = LD.scn[i]; if (a){ if (on) a.start(); else a.stop(); } }
     const pill = document.getElementById('lpill'), tx = LOAD_ERAS[ei]; if (pill.textContent !== tx){ pill.textContent = tx; pill.classList.remove('erapill'); void pill.offsetWidth; pill.classList.add('erapill'); }
     document.getElementById('lstep').textContent = `Atravessando a ${LOAD_ERAS[ei]}…`; }
-  const ti = Math.floor(Math.max(p / 26, el_s / 3.5)) % LOAD_TIPS.length;
-  if (ti !== LD.tip && p < 100){ LD.tip = ti; const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }
+  const ti = Math.floor(Math.max(p / 26, el_s / 3.5)) % LOAD_TIPS.length, tnow = Date.now();
+  if (ti !== LD.tip && p < 100 && (LD.tip < 0 || tnow - (LD.tipAt || 0) >= 4000)){ LD.tip = ti; LD.tipAt = tnow;   /* cada dica fica pelo menos 4 s (dono: trocavam rápido demais para ler) */ const tp = document.getElementById('ltip'); tp.querySelector('span').textContent = LOAD_TIPS[ti]; tp.classList.remove('tip'); void tp.offsetWidth; tp.classList.add('tip'); }
   if (p >= 100 && !LD.fin){ LD.fin = true; loadLater(); LD.finMs = Math.round(now - LD.t0); if (DEBUG) console.info('Carregamento: pronto em ' + (LD.finMs / 1000).toFixed(1) + ' s (' + PG.done + '/' + PG.total + ', falhas ' + PG.failed.length + ')');
 { const b = document.getElementById('lbar'); if (b){ b.style.transition = 'none'; b.style.width = '100%'; } }   /* L2 (QA): a barra animava atrás do número ("Pronto! 100%" com a barra em ~75%): no "Pronto!" ela salta para o fim, sem transição */
 document.getElementById('lstep').textContent = 'Pronto!'; el.classList.add('done'); el.setAttribute('tabindex', '0'); try { el.focus({ preventScroll: true }); } catch (e) {} }
