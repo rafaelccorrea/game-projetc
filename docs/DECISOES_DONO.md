@@ -4,7 +4,9 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
 
 ## 14/11/2026 (manhã)
 - [x] **Dificuldade das eras 0-8 na opção A** (meio-termo): com módulos o Senhor cai em ~22-34 s; sem módulos vence com ~115% da FC pedida (0bbd70a, b87e350) · Sistemas
-- [?] **Calendário do jogador grátis**: com módulos chega ao fim das 9 eras no dia ~121 (plano original 178; sem a recalibração seria 74); sem módulos trava na era 7. Para ir a ~178 a FC das eras 6-8 subiria e o chefe com módulos passaria dos 30 s. Recomendação do PO: manter ~121 · dono decide
+- [~] **Calendário do jogador grátis: DONO ESCOLHEU ~178 dias** (14/11): eras 6-8 mais duras, o chefe com módulos pode passar dos 30 s · Sistemas (medida na fila do PC)
+- [~] **Temas de evento: DONO ESCOLHEU OS 3** (14/11): #2 Caçada aos Chefes, #4 Semana da Forja, #6 Festa dos Pets, alternando com o Festival (docs/EVENTOS_TEMAS.md) · Sistemas + Engenheiro + Arte + Servidor
+- [x] Missão "Vença 15 instâncias" do Festival não contava: corrigida (9c8de08), falta o QA ver
 - [x] **Pacote da Play Store ≤150 MB** (base estava 161 MB): arte de telas tardias baixa logo após instalar + compressão sem perda (decisão do PO, sem mudança visual) · Engenheiro + Arte + Sistemas
 - [~] **Aquecimento do S24**: batalha para de desenhar atrás de telas cheias (no main); medir antes/depois · Engenheiro
 
