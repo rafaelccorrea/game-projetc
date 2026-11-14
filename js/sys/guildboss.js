@@ -80,8 +80,13 @@ function applyHelp(S,host,data){ if(!on()) return {ok:false,reason:'off'}; if(!d
     requests:(Array.isArray(data.requests)?data.requests:[]).filter(r=>r&&DATA.kinds[r.kind]).slice(0,30).map(r=>({id:str(r.id),playerId:str(r.playerId),name:str(r.name,24),kind:r.kind,need:int0(r.need),got:int0(r.got),full:r.full===true,helpedByMe:r.helpedByMe===true})),at:nowOf(host)};
   return {ok:true}; }
 /* espelha o GET /guild/boss (ou a resposta do POST /guild/boss/hit) */
-function applyBoss(S,host,data){ if(!on()) return {ok:false,reason:'off'}; const o=roll(S,host); if(!data||typeof data!=='object'||!(int0(data.hpMax)>0)){ o.boss=null; return {ok:true,boss:false}; }
-  o.boss=Object.assign({},data,{at:nowOf(host)}); if(data.extraHit===true) o.extraHit=true; ensure(S); return {ok:true,boss:true}; }
+/* MESCLA com o espelho anterior (Engenheiro 14/11): a resposta do golpe pode vir parcial ({hp, myDamageToday, hitsLeft}) e não pode zerar nome/vida
+   máxima da faixa. Formato antigo do servidor: só hpLeft (sem hp) = a vida atual. Sem vida máxima nem na resposta nem no espelho = sem chefe hoje. */
+function applyBoss(S,host,data){ if(!on()) return {ok:false,reason:'off'}; const o=roll(S,host); if(!data||typeof data!=='object') return {ok:false,reason:'data'};
+  if(data.boss===null){ o.boss=null; return {ok:true,boss:false}; }   // o servidor diz: sem chefe hoje
+  const d=Object.assign({},data); if(d.hp==null&&d.hpLeft!=null) d.hp=d.hpLeft; for(const k in d) if(d[k]==null) delete d[k];
+  const m=Object.assign({},o.boss||{},d,{at:nowOf(host)}); if(!(int0(m.hpMax)>0)){ o.boss=null; return {ok:true,boss:false}; }
+  if(int0(m.hp)>int0(m.hpMax)) m.hp=m.hpMax; o.boss=m; if(data.extraHit===true) o.extraHit=true; ensure(S); return {ok:true,boss:true}; }
 
 /* ---------- regras para a tela ---------- */
 /* golpes no chefe hoje: base + 1 com o pedido 'boss' resgatado */

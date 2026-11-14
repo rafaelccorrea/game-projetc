@@ -43,6 +43,13 @@ t('barra do chefe na batalha: fração, textos K/M, meu dano, golpes; sem chefe 
   GB.applyBoss(S,h,{name:'Golem',level:3,hp:812345,hpMax:1500000,myDamageToday:45210,hitsLeft:1,hitsMax:2}); assert.strictEqual(GB.hud(S,h).show,false,'sem guilda');
   member(S); const u=GB.hud(S,h); assert.ok(u.show&&Math.abs(u.frac-812345/1500000)<1e-9); assert.strictEqual(u.hpText,'812.3K / 1.5M'); assert.strictEqual(u.mineText,'45.2K'); assert.strictEqual(u.hitsLeft,1); assert.strictEqual(u.stale,false);
   h.t+=60000; assert.strictEqual(GB.hud(S,h).stale,true); GB.applyBoss(S,h,{hp:0,hpMax:0}); assert.strictEqual(GB.hud(S,h).show,false); }));
+t('applyBoss MESCLA (resposta parcial do golpe não zera a faixa), formato antigo só com hpLeft, boss:null some, dado ruim não apaga',async()=>withOn(async()=>{ const S={}, h=makeHost(); member(S);
+  GB.applyBoss(S,h,{name:'Golem',level:3,hp:900,hpMax:1000,myDamageToday:10,hitsLeft:2,hitsMax:2});
+  GB.applyBoss(S,h,{hp:700,myDamageToday:210,hitsLeft:1}); let u=GB.hud(S,h); assert.ok(u.show,'parcial não esconde'); assert.strictEqual(u.name,'Golem'); assert.ok(Math.abs(u.frac-0.7)<1e-9); assert.strictEqual(u.hitsLeft,1); assert.strictEqual(u.mine,210);
+  GB.applyBoss(S,h,{hpLeft:400}); u=GB.hud(S,h); assert.ok(Math.abs(u.frac-0.4)<1e-9,'hpLeft = vida atual');
+  const S2={}; member(S2); GB.applyBoss(S2,h,{name:'Hidra',hpLeft:300,hpMax:600}); assert.ok(Math.abs(GB.hud(S2,h).frac-0.5)<1e-9,'servidor antigo, 1a carga');
+  assert.strictEqual(GB.applyBoss(S,h,null).ok,false); assert.ok(GB.hud(S,h).show,'dado ruim não apaga');
+  GB.applyBoss(S,h,{boss:null}); assert.strictEqual(GB.hud(S,h).show,false,'sem chefe'); }));
 t('rede: help-all chama a rota, credita Brasões no espelho e recarrega o quadro; claim de boss liga o golpe extra; forge entra pelo loot; sem rede = net_off',async()=>withOn(async()=>{ const S={}, h=makeHost(); member(S);
   assert.strictEqual((await GB.helpAll(S,h)).reason,'net_off'); const calls=[];
   Sys.net={_call:async(m,p,b)=>{ calls.push(m+' '+p); if(p==='/guild/help-all') return {helped:['a','b'],coin:2,contrib:4,helpsLeft:8}; if(p==='/guild/help') return {helpsLeft:8,mine:null,requests:[]};

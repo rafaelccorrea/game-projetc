@@ -196,7 +196,7 @@ Nenhum atributo, nenhum ouro. A posição vem do servidor. O prêmio chega pelo 
 |---|---|---|---|
 | Arena PvP | — | `POST /arena/snapshot` com `pvp`; a luta usa `Sys.arenaSet.duel` | `stats`, `grimoire`, `arena`, `arenaset` |
 | Brasa da Arena | — | save: `S.sys.bonfire.ar = {day, n<=5}`; cabe no teto de 300 + 4.800/dia | — |
-| Guilda | `GET /guild/help`, `POST /guild/help/request`, `POST /guild/help/:id`, `POST /guild/help-all`, `POST /guild/help/claim` | `GET /guild/boss` com `hp, hpMax, myDamageToday, hitsLeft, hitsMax, extraHit...`; `boss/hit` 429 `limit` | `guildboss` (motor do quadro) |
+| Guilda | `GET /guild/help`, `POST /guild/help/request`, `POST /guild/help/:id`, `POST /guild/help-all`, `POST /guild/help/claim` | `GET /guild/boss` com `hp, hpMax, myDamageToday, hitsLeft, hitsMax, extraHit...`; `boss/hit` 429 `daily_limit` (API §10.4) | `guildboss` (motor do quadro) |
 | Masmorra de 3 | `GET /coop/status`, `POST /coop/party`, `/coop/party/invite`, `/coop/party/:id/join`, `/coop/party/leave`, `/coop/party/phrase`, `/coop/start` | correio `source:'coop'` | `coop` (`run`) |
 | Ranking de evento | `GET /events/:id/rank` | correio `source:'eventrank'` com `att.cosmetic` | `eventrank` (`bandOf`, `prizeFor`) |
 | Minijogo | — (local) | conferir `S.sys.minigame.day.tries <= 3` | — |
