@@ -15,10 +15,12 @@
 (function(root){
 /* TABELA ÚNICA das skins de arma de evento. art:true SÓ quando os três existem no disco: o sprite (1024, transparente), o ícone (256) e a entrada
    no assets/weapons/meta.json com a chave = id ({"type":"melee","grip":[x,y],"angle":N,"len":N}). Com art:false nada é pedido à rede e a opção não aparece. */
+/* DONO 14/11 (via PO): as armas de evento viram ARMAS DE VERDADE (dão poder; Épico, Lendário, Mítico, cada uma com visual e ultimate). O "visual da arma
+   por cima da equipada" deste arquivo fica GUARDADO E DESLIGADO: as três linhas com art:false (o bloco do Perfil não aparece e nada troca na mão). Não apagar. */
 const TABLE=[
   {id:'festival_weapon', name:'Lâmina do Festival', sprite:'assets/weapons/festival_weapon.png', icon:'assets/icons/weapons/festival_weapon.png', art:false},   /* PO 14/11: escondida até o voto do dono e o QA ver o punho no S24; depois volta para true */
-  {id:'cacada_weapon',   name:'Lâmina do Caçador',  sprite:'assets/weapons/cacada_weapon.png',   icon:'assets/icons/weapons/cacada_weapon.png',   art:true},
-  {id:'forja_weapon',    name:'Martelo das Eras',   sprite:'assets/weapons/forja_weapon.png',    icon:'assets/icons/weapons/forja_weapon.png',    art:true}
+  {id:'cacada_weapon',   name:'Lâmina do Caçador',  sprite:'assets/weapons/cacada_weapon.png',   icon:'assets/icons/weapons/cacada_weapon.png',   art:false},
+  {id:'forja_weapon',    name:'Martelo das Eras',   sprite:'assets/weapons/forja_weapon.png',    icon:'assets/icons/weapons/forja_weapon.png',    art:false}
 ];
 const NONE='w00';   /* "nenhum visual escolhido": a skin inicial de todo save (o campo precisa continuar texto: js/p_cfg.js confere) */
 const META='assets/weapons/meta.json';

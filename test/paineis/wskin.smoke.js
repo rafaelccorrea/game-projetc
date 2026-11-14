@@ -35,6 +35,7 @@ assert(/^function wFamLook0\(w\)\{ const it=wItemNow\(\)/m.test(BAT.join('\n')),
 const SRC = fs.readFileSync(process.argv[2] ? path.resolve(process.argv[2]) : path.join(R, 'js/wskin.js'), 'utf8');
 vm.runInThisContext(SRC, { filename: 'wskin.js' });
 const W = g.WSkin, hand = () => g.wFamLook(g.heroLook().weapon);
+assert(W.TABLE.every(r => r.art === false), 'no jogo as 3 linhas ficam desligadas (dono 14/11: armas de evento viram armas de verdade)'); W.TABLE.forEach(r => { r.art = true; });   /* daqui para baixo, ligado só em memória */
 const have = id => { if (!g.S.skins.includes(id)) g.S.skins.push(id); };
 const art = id => disk.add('assets/weapons/' + id + '.png');
 
