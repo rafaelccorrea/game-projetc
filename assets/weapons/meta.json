@@ -646,5 +646,14 @@
   ],
   "angle": 82,
   "len": 0.801
+ },
+ "festival_weapon": {
+  "type": "melee",
+  "grip": [
+   0.185,
+   0.863
+  ],
+  "angle": 47,
+  "len": 1.148
  }
 }
