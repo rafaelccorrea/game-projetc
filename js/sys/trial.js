@@ -4,7 +4,8 @@
    era (Sys.mentors: Nv 10 = Nara, Nv 20 = Tales ... Nv 90+ = Aurora). Vencer:
    - sobe o teto para o próximo marco e devolve a XP guardada enquanto o teto segurava (até 1 nível de XP; o que passa disso não é guardado);
    - dá ATRIBUTO DE BASE permanente (+1% ATK e +1% Vida por provação; Sys.fc soma pelo bonus(S));
-   - dá um prêmio fixo na 1ª vitória (ouro pela unidade do jogador, pedras de forja, ração) e ABRE FUNÇÕES (Nv 10: automático da Fogueira).
+   - dá um prêmio fixo na 1ª vitória (ouro PEQUENO = 3 min de abate da fase atual, pedras de forja, ração) e ABRE FUNÇÕES (Nv 10: automático da Fogueira).
+     O prêmio de verdade é o +1% ATK/Vida permanente; o ouro segue o teto por resgate do docs/ECONOMIA_OURO.md (X = 5 min de abate).
    Tentar de novo é GRÁTIS e SEM LIMITE (sem energia, sem gema, sem anúncio). Perder não custa nada.
    Teto da XP: o Sys.level não é desta sessão; o Engenheiro passa a XP por gateXp(S, host, n) antes do Sys.level.addXp (ver docs/SISTEMA_MATRIZ.md).
    Save antigo (herói já acima de um marco quando a chave liga): o nível NUNCA desce; o teto é o primeiro marco não vencido >= nível atual, e as
@@ -28,7 +29,10 @@ const DATA={
     {id:'half',    name:'Metade da vida',   text:'Comece a luta com 50% da Vida.', hpStart:0.5},
   ],
   stat:{atkPct:1, hpPct:1},  // atributo de base por provação vencida (PROPOSTA)
-  reward:{goldUnits:60, stones:4, food:20},   // × número da provação (1, 2, 3 ...): ouro = goldUnits × host.goldUnit() × k
+  killsPerMin:24,           // ritmo de abate da build (~24 abates/min; o mesmo do Sys.mapchest): 1 min de abate = 24 × host.goldUnit()
+  // ouro = goldMin × killsPerMin × host.goldUnit() (FIXO, não cresce com a provação; dono 14/11: 60 × k × goldUnit era "muito alto", ~86,7 mi no Nv 90)
+  // pedras e ração: × número da provação (1, 2, 3 ...). docs/ECONOMIA_OURO.md
+  reward:{goldMin:3, stones:4, food:20},
   opens:{10:[{id:'bonfireAuto',name:'Automático da Fogueira'}], 30:[{id:'loadoutsAuto',name:'Troca automática de conjunto'}]},   // PROPOSTA: o PO completa
 };
 const SYS=()=>root.Sys||{};
@@ -61,9 +65,9 @@ const passed=(S,l)=>!!ensure(S).passed[String(int0(l))];
 function master(l){ const e=Math.min(8,Math.max(0,idxOf(l)-1)), M=SYS().mentors, m=M&&M.byEra?M.byEra(e):null;
   return {era:e,id:m?m.id:'m'+e,name:m?m.name:'Mestre',role:m?m.role:'',portrait:'assets/mentors/m'+e+'.png'}; }
 function rule(l){ const r=DATA.rules[(idxOf(l)-1)%DATA.rules.length]; return Object.assign({sec:DATA.sec,hpStart:1},r); }
-/* prêmio da 1ª vitória (sem host: ouro em unidades) */
+/* prêmio da 1ª vitória (sem host: ouro em abates; goldMin = minutos de abate) */
 function rewardOf(l,host){ const k=idxOf(l), u=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1));
-  return {gold:Math.round(DATA.reward.goldUnits*k*u),stones:DATA.reward.stones*k,food:DATA.reward.food*k,stat:Object.assign({},DATA.stat),
+  return {gold:Math.round(num(DATA.reward.goldMin,0)*num(DATA.killsPerMin,24)*u),goldMin:num(DATA.reward.goldMin,0),stones:DATA.reward.stones*k,food:DATA.reward.food*k,stat:Object.assign({},DATA.stat),
     opens:(DATA.opens[int0(l)]||[]).map(x=>Object.assign({},x))}; }
 /* tabela inteira (tela e QA) */
 function table(host){ return marks().map(l=>({lvl:l,rule:rule(l),master:master(l),reward:rewardOf(l,host)})); }

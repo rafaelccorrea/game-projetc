@@ -20,9 +20,9 @@ t('DESLIGADO: nada escreve no save e nada é coletado',()=>{
 
 t('produção por hora e teto de 8 h (grátis); voltar o relógio não rende; antes do Nv 20 não acumula',()=>withOn(()=>{
   const S={}, h=host(); C.ensure(S,h); hours(h,2); const v=C.view(S,h);
-  assert.deepStrictEqual(v.tents.map(x=>[x.id,x.perHour,x.stored]),[['gold',40,80],['forge',1,2],['practice',2,4]]);
-  hours(h,100); assert.deepStrictEqual(C.view(S,h).tents.map(x=>x.stored),[320,8,16],'teto = 8 h'); assert.strictEqual(C.view(S,h).tents[0].full,true);
-  const r=C.collect(S,h); assert.deepStrictEqual(r.got,{gold:320,forge:8,practice:16}); assert.strictEqual(h.gold,320);
+  assert.deepStrictEqual(v.tents.map(x=>[x.id,x.perHour,x.stored]),[['gold',3,6],['forge',1,2],['practice',2,4]]);
+  hours(h,100); assert.deepStrictEqual(C.view(S,h).tents.map(x=>x.stored),[24,8,16],'teto = 8 h'); assert.strictEqual(C.view(S,h).tents[0].full,true);
+  const r=C.collect(S,h); assert.deepStrictEqual(r.got,{gold:24,forge:8,practice:16}); assert.strictEqual(h.gold,24);
   assert.strictEqual(S.sys.forge.stones,8); assert.strictEqual(S.sys.practice.stones,16); assert.strictEqual(C.collect(S,h).reason,'empty');
   h.t-=5*3600000; C.tick(S,h); h.t+=5*3600000; C.tick(S,h); assert.deepStrictEqual(C.view(S,h).tents.map(x=>x.stored),[0,0,0],'relógio para trás e de volta: zero');
   const S2={}, h2=host({level:10}); C.ensure(S2,h2); hours(h2,5); assert.strictEqual(C.collect(S2,h2).reason,'locked'); h2._level=20; assert.strictEqual(C.collect(S2,h2).reason,'empty');
@@ -40,8 +40,8 @@ t('pets parados trabalham (nunca o principal, um pet numa tenda só, 2 vagas); o
   assert.ok(C.assign(S,h,'gold','drake').ok); assert.strictEqual(C.assign(S,h,'forge','drake').reason,'busy');
   assert.ok(C.assign(S,h,'gold','golem').ok);
   // drake r2 3★ = 0,30+0,15 = 0,45; golem r3 1★ = 0,40+0,05 = 0,45 → ×1,90
-  assert.strictEqual(Math.round(C.rate(S,h,'gold')*100)/100,76); assert.strictEqual(JSON.stringify(S.sys.pet),petBefore);
-  P.ensure(S).eq='drake'; assert.strictEqual(Math.round(C.rate(S,h,'gold')*100)/100,58,'virou principal: para de contar');
+  assert.strictEqual(Math.round(C.rate(S,h,'gold')*100)/100,5.7); assert.strictEqual(JSON.stringify(S.sys.pet),petBefore);
+  P.ensure(S).eq='drake'; assert.strictEqual(Math.round(C.rate(S,h,'gold')*100)/100,4.35,'virou principal: para de contar');
   assert.ok(C.unassign(S,h,'golem').ok); assert.strictEqual(C.unassign(S,h,'golem').reason,'pet');
 }));
 
@@ -51,6 +51,14 @@ t('melhoria só com ouro: +15% por nível, custo crescente, teto Nv 10',()=>with
   assert.ok(C.upgradeCost(S,h,'forge')>c1); assert.strictEqual(C.rate(S,h,'forge'),1.15);
   while(C.upgrade(S,h,'forge').ok); assert.strictEqual(S.sys.camp.tents.forge.lv,10); assert.strictEqual(C.canUpgrade(S,h,'forge').reason,'max');
   assert.ok(Math.abs(C.rate(S,h,'forge')-2.35)<1e-9); assert.strictEqual(h.gems,0);
+}));
+
+t('Tenda do Ouro: teto de 5 min de abate por coleta (docs/ECONOMIA_OURO.md), mesmo no Nv 10 com pets e VIP',()=>withOn(()=>{
+  const S=petSave(), h=host({unit:10}); C.ensure(S,h); C.ensure(S,h).tents.gold.lv=10; C.assign(S,h,'gold','drake'); C.assign(S,h,'gold','golem');
+  const old=V.DATA.convOn; V.DATA.convOn=true;
+  try{ V.setLevel(S,10); hours(h,100); const cap=5*24*10; assert.strictEqual(C.view(S,h).tents[0].stored,cap); assert.ok(C.view(S,h).tents[1].stored>8,'as tendas de pedra seguem o teto em horas');
+    assert.strictEqual(C.collect(S,h).got.gold,cap); } finally{ V.DATA.convOn=old; }
+  assert.strictEqual(C.DATA.tents[0].perHour,3); assert.strictEqual(C.DATA.upgrade.base,300,'melhoria não ficou mais barata');
 }));
 
 t('save torto',()=>{ const S={sys:{camp:{t:'x',tents:{gold:{lv:99,pets:['a','a',5,'b','c'],acc:-4},zz:{}}}}}; C.ensure(S,host());

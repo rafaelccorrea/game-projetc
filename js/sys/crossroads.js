@@ -22,13 +22,14 @@ const DATA={
   choices:2,         // bênçãos por encruzilhada (documento: 2)
   needLevel:0,       // PROPOSTA: sem portão de nível (a 1ª encruzilhada já é a fase 5/10). O PO pode pôr um nível aqui.
   // POOL de bênçãos. stat = chave do Sys.fc; perk = efeito fora da FC; strike = pontos do Sys.strikes. once = só uma vez por era.
-  // Valores PROPOSTA (Sistemas calibra com o QA): até 9 escolhas por era: no máximo +36% numa chave de combate (Vida 4 x 9) escolhendo sempre a mesma; ouro até +72%.
+  // Valores PROPOSTA (Sistemas calibra com o QA): até 9 escolhas por era: no máximo +36% numa chave de combate (Vida 4 x 9) escolhendo sempre a mesma.
+  // OURO (docs/ECONOMIA_OURO.md, regra do dono "ouro difícil, sempre pouco"): Trilha do Tesouro +5% e UMA vez por era (antes +8% repetível = até +72% de ouro).
   pool:[
     {id:'furia',   name:'Fúria da Era',      text:'+3% de ATK',                       stat:{atkPct:3}},
     {id:'vigor',   name:'Vigor Antigo',      text:'+4% de Vida',                      stat:{hpPct:4}},
     {id:'olhar',   name:'Olhar Certeiro',    text:'+1,5 de chance de crítico',        stat:{critPct:1.5}},
     {id:'escudo',  name:'Escudo dos Ancestrais', text:'+2% de redução de dano',       stat:{defPct:2}},
-    {id:'tesouro', name:'Trilha do Tesouro', text:'+8% de ouro',                      stat:{goldPct:8}},
+    {id:'tesouro', name:'Trilha do Tesouro', text:'+5% de ouro',                      stat:{goldPct:5}, once:true},
     {id:'saber',   name:'Saber das Eras',    text:'+6% de XP',                        perk:{xpPct:6}},
     {id:'brasa',   name:'Brasa Viva',        text:'+1 Brasa por pote de abates',      perk:{brasaPot:1}, once:true},
     {id:'combo',   name:'Golpe Duplo',       text:'+4 de Combo',                      strike:{combo:4}},
@@ -44,6 +45,7 @@ const STK_KEYS=['combo','counter','stun','dodge','lifesteal'];
 const SYS=()=>root.Sys||{};
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
+const intS=v=>int0(Number(v));   // texto da chave 'era:n' → número (o int0 sozinho devolve 0 para texto)
 const on=()=>DATA.on===true;
 const setOn=v=>{ DATA.on=!!v; return DATA.on; };
 const changed=host=>{ if(host&&typeof host.onChange==='function') host.onChange(); };
@@ -72,6 +74,8 @@ function ensure(S){
   for(const k in src){ const p=src[k]; if(p&&typeof p==='object'&&BY[p.id]) o.picks[k]={id:p.id,era:int0(p.era),at:int0(p.at)}; }
   o.open=Array.isArray(o.open)?o.open.filter(k=>typeof k==='string'&&!o.picks[k]):[];
   o.total=int0(o.total);
+  const le=o.lastEnded; o.lastEnded=(le&&typeof le==='object'&&Array.isArray(le.list))?{era:int0(le.era),list:le.list.filter(x=>x&&BY[x.id]).map(x=>card(BY[x.id]))}:null;
+  if(o.lastEnded&&!o.lastEnded.list.length) o.lastEnded=null;
   return o; }
 
 /* bênçãos já escolhidas na era (para o "once") */
@@ -87,16 +91,18 @@ const card=b=>({id:b.id,name:b.name,text:b.text,stat:Object.assign({},b.stat||{}
 
 function levelOk(S,host){ if(!DATA.needLevel) return true; const L=SYS().level; let lv=0; try{ lv=L&&L.level?L.level(S):int0(host&&host.level&&host.level()); }catch(e){ lv=0; } return lv>=DATA.needLevel; }
 /* sobe a era guardada (a era nova apaga as bênçãos da anterior: bonus/perks só contam a era atual) */
-function setEra(o,era){ if(era>o.era){ o.era=era; o.open=o.open.filter(k=>int0(k.split(':')[0])>=era); return true; } return false; }
+/* troca de era: guarda as bênçãos da era que acabou em o.lastEnded {era, list} (a tela anima uma vez e chama ackEnded) e devolve a lista */
+function setEra(o,era){ if(era>o.era){ const old=o.era, ended=Object.keys(o.picks).filter(k=>o.picks[k].era===old).sort((a,b)=>intS(a.split(':')[1])-intS(b.split(':')[1])).map(k=>card(BY[o.picks[k].id]));
+  o.era=era; o.open=o.open.filter(k=>intS(k.split(':')[0])>=era); if(ended.length) o.lastEnded={era:old,list:ended}; return ended; } return null; }
 
 /* O Engenheiro chama ao VENCER uma fase (a primeira vez ou de novo: repetir não abre de novo).
    {due:false} | {due:true, stage, key, offers} */
 function onStage(S,host,stage){ if(!on()) return {due:false,reason:'off'}; const w=where(stage); if(!w) return {due:false,reason:'stage'};
-  const o=ensure(S); const moved=setEra(o,w.era); if(moved) changed(host);
-  if(!w.point||w.era<o.era||o.picks[w.key]) return {due:false,reason:w.point?'done':'none'};
-  if(!levelOk(S,host)) return {due:false,reason:'level'};
+  const o=ensure(S); const moved=setEra(o,w.era); if(moved) changed(host); const ex=moved&&moved.length?{ended:moved,endedEra:w.era-1}:{};
+  if(!w.point||w.era<o.era||o.picks[w.key]) return Object.assign({due:false,reason:w.point?'done':'none'},ex);
+  if(!levelOk(S,host)) return Object.assign({due:false,reason:'level'},ex);
   if(!o.open.includes(w.key)){ o.open.push(w.key); changed(host); }
-  return {due:true,stage,key:w.key,offers:offers(S,stage)}; }
+  return Object.assign({due:true,stage,key:w.key,offers:offers(S,stage)},ex); }
 
 /* grava a escolha. {ok, id, key} | {ok:false, reason: off|stage|old|done|id} */
 function choose(S,stage,id,host){ if(!on()) return {ok:false,reason:'off'}; const w=where(stage); if(!w||!w.point) return {ok:false,reason:'stage'};
@@ -120,10 +126,13 @@ function view(S,host){ if(!on()) return {on:false}; const o=ensure(S), pe=perEra
   const eraName=(()=>{ const P=SYS().phases; const n=P&&P.DATA&&P.DATA.eraName; return Array.isArray(n)?n[o.era]||'':''; })();
   return {on:true,era:o.era,eraName,perEra:pe,every:ev,points:Array.from({length:Math.max(0,Math.ceil(pe/ev)-1)},(_,i)=>(i+1)*ev).filter(n=>n<pe),
     active:active(S),bonus:bonus(S),perks:perks(S),
-    open:o.open.map(k=>{ const [e,n]=k.split(':').map(int0); return {key:k,era:e,n,stage:e*pe+n,offers:offers(S,{era:e,n})}; }),
+    open:o.open.map(k=>{ const [e,n]=k.split(':').map(intS); return {key:k,era:e,n,stage:e*pe+n,offers:offers(S,{era:e,n})}; }),
+    lastEnded:o.lastEnded?{era:o.lastEnded.era,list:o.lastEnded.list.map(x=>Object.assign({},x))}:null,
     total:o.total}; }
+/* a tela já animou as bênçãos que acabaram: limpa o o.lastEnded (mostrar uma vez) */
+function ackEnded(S,host){ if(!on()||!S) return false; const o=ensure(S); if(!o.lastEnded) return false; o.lastEnded=null; changed(host); return true; }
 
-const API={DATA,on,setOn,perEra,where,isPoint,ensure,offers,onStage,choose,active,bonus,perks,view};
+const API={DATA,on,setOn,perEra,where,isPoint,ensure,offers,onStage,choose,active,bonus,perks,view,ackEnded};
 root.Sys=root.Sys||{}; root.Sys.crossroads=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

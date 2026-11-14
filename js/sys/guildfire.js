@@ -23,7 +23,8 @@ const DATA={
   // bônus de guilda pelo nível (fora da FC): ouro +0,5% e XP +0,3% por nível acima do 1 (nível 10 = +4,5% ouro, +2,7% XP)
   perLevel:{goldPct:0.5, xpPct:0.3},
   // baú fixo do nível L (para cada membro): ouro = goldK × L × ouro de um abate · pedras = L · ração = 10 × L. Extra do nível 10 = baú do 10.
-  chest:{goldK:40, stonesPer:1, foodPer:10},
+  // goldK 40 → 12 (docs/ECONOMIA_OURO.md): o baú do 10 = 120 abates = 5 min de abate, o teto por resgate (antes 400 = 16,7 min). O servidor espelha (API_SERVIDOR §16.2).
+  chest:{goldK:12, stonesPer:1, foodPer:10},
   names:['Faísca','Brasa','Chama','Fogueira','Labareda','Fogaréu','Tocha das Eras','Pira','Farol','Chama Eterna'],
 };
 const SYS=()=>root.Sys||{};

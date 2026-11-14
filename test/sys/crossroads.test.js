@@ -86,8 +86,56 @@ t('"once": Brasa Viva não volta a aparecer na mesma era depois de escolhida', (
 t('save sujo é limpo; nove escolhas na era somam no máximo +36% numa chave de combate', () => {
   CR.DATA.on = true; const S = { sys: { crossroads: { seed: 1, era: 'x', picks: { '0:5': { id: 'xx' }, '0:10': { id: 'furia', era: 0 } }, open: [3, '0:20'] } } };
   const o = CR.ensure(S); assert.strictEqual(o.era, 0); assert.deepStrictEqual(Object.keys(o.picks), ['0:10']); assert.deepStrictEqual(o.open, ['0:20']);
-  const max = Math.max(...CR.DATA.pool.flatMap(b => ['atkPct', 'hpPct', 'critPct', 'defPct'].map(k => (b.stat || {})[k] || 0))) * 9; assert.ok(max <= 36);   // combate: até +36% (4 x 9); ouro +8 x 9 = 72%
+  const max = Math.max(...CR.DATA.pool.flatMap(b => ['atkPct', 'hpPct', 'critPct', 'defPct'].map(k => (b.stat || {})[k] || 0))) * 9; assert.ok(max <= 36);   // combate: até +36% (4 x 9)
   assert.ok(CR.DATA.pool.filter(b => !b.once).length >= 10);   // sempre há 2 opções nas 9 encruzilhadas
+});
+
+t('ouro: Trilha do Tesouro +5% e uma vez por era (no máximo +5% de ouro na era; antes +72%)', () => {
+  const g = CR.DATA.pool.filter(b => b.stat && b.stat.goldPct); assert.strictEqual(g.length, 1); assert.strictEqual(g[0].stat.goldPct, 5); assert.strictEqual(g[0].once, true);
+  CR.DATA.on = true; PH.DATA.on = true; const h = makeHost();
+  let S = null; for (let s = 1; s < 500 && !S; s++) { const x = save(s); if (CR.offers(x, 10).some(o => o.id === 'tesouro')) S = x; }
+  CR.onStage(S, h, 10); assert.ok(CR.choose(S, 10, 'tesouro', h).ok);
+  for (let st = 20; st <= 90; st += 10) assert.ok(!CR.offers(S, st).some(o => o.id === 'tesouro'));
+  assert.strictEqual(CR.bonus(S).goldPct, 5); PH.DATA.on = false;
+});
+
+t('view().open traz era, n, fase e as 2 ofertas certas (a chave "era:n" é texto; antes saía tudo 0 e offers vazio)', () => {
+  CR.DATA.on = true; PH.DATA.on = true; const S = save(11), h = makeHost(), pe = CR.perEra();
+  const r = CR.onStage(S, h, pe + 20); assert.ok(r.due);   // era 1, fase 20 da era
+  const v = CR.view(S, h); assert.strictEqual(v.open.length, 1); const o = v.open[0];
+  assert.deepStrictEqual([o.key, o.era, o.n, o.stage], ['1:20', 1, 20, pe + 20]);
+  assert.strictEqual(o.offers.length, 2); assert.deepStrictEqual(o.offers.map(x => x.id), r.offers.map(x => x.id));
+  assert.deepStrictEqual(o.offers.map(x => x.id), CR.offers(S, pe + 20).map(x => x.id));
+  PH.DATA.on = false;
+});
+
+t('troca de era devolve as bênçãos que acabaram (ended) e guarda o.lastEnded para a tela mostrar uma vez (ackEnded)', () => {
+  CR.DATA.on = true; PH.DATA.on = true; const S = save(5), h = makeHost(), pe = CR.perEra();
+  CR.onStage(S, h, 10); const a = CR.offers(S, 10)[0].id; CR.choose(S, 10, a, h);
+  CR.onStage(S, h, 20); const b = CR.offers(S, 20)[0].id; CR.choose(S, 20, b, h);
+  assert.strictEqual(CR.view(S, h).lastEnded, null);
+  const r = CR.onStage(S, h, pe + 1); assert.deepStrictEqual(r.ended.map(x => x.id), [a, b]); assert.strictEqual(r.endedEra, 0);
+  assert.deepStrictEqual(CR.active(S), []); const v = CR.view(S, h); assert.strictEqual(v.lastEnded.era, 0); assert.deepStrictEqual(v.lastEnded.list.map(x => x.id), [a, b]);
+  assert.strictEqual(CR.onStage(S, h, pe + 2).ended, undefined, 'só na troca');
+  assert.strictEqual(JSON.parse(JSON.stringify(CR.ensure(S))).lastEnded.list.length, 2, 'fica no save');
+  assert.ok(CR.ackEnded(S, h)); assert.strictEqual(CR.view(S, h).lastEnded, null); assert.ok(!CR.ackEnded(S, h));
+  const S2 = save(6); CR.onStage(S2, h, pe + 1); assert.strictEqual(CR.view(S2, h).lastEnded, null, 'era sem bênção: nada a mostrar');
+  PH.DATA.on = false;
+});
+
+t('perks aplicados pelos próprios módulos: Saber das Eras no Sys.level.addXp, Brasa Viva no pote do Sys.bonfire (desligada = idêntico)', () => {
+  const LV = require('../../js/sys/level.js'), BF = require('../../js/sys/bonfire.js');
+  CR.DATA.on = true; PH.DATA.on = true; const h = makeHost();
+  const pickId = id => { for (let sd = 1; sd < 2000; sd++) { const S = save(sd); if (CR.offers(S, 10).some(o => o.id === id)) { S.sys.level = { lvl: 1, xp: 0 }; CR.onStage(S, h, 10); assert.ok(CR.choose(S, 10, id, h).ok); return S; } } throw new Error(id); };
+  const Sx = pickId('saber'); LV.addXp(Sx, 100, h, 'kill'); assert.strictEqual(LV.ensure(Sx).total, 106);
+  LV.addXp(Sx, 100, h, 'trial'); assert.strictEqual(LV.ensure(Sx).total, 206, 'devolução da Provação sem bônus de novo');
+  const bon = BF.DATA.on; BF.DATA.on = true;
+  try {
+    const Sb = pickId('brasa'); const got = BF.addBrasas(Sb, 'kill', BF.DATA.brasas.potKills); assert.strictEqual(got, 2, '1 do pote + 1 da bênção');
+    CR.DATA.on = false; const S0 = { sys: {} }; assert.strictEqual(BF.addBrasas(S0, 'kill', BF.DATA.brasas.potKills), 1, 'Encruzilhada desligada: igual a antes');
+    const S1 = { sys: { level: { lvl: 1, xp: 0 } } }; LV.addXp(S1, 100, h, 'kill'); assert.strictEqual(LV.ensure(S1).total, 100);
+  } finally { BF.DATA.on = bon; }
+  PH.DATA.on = false;
 });
 
 CR.DATA.on = false;

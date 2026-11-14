@@ -20,12 +20,15 @@ const DATA={
   // pet trabalhando: +10% × (raridade+1) + 5% por estrela (Lendário 5★ = +75%)
   petRate:{perRarity:0.10, perStar:0.05},
   tents:[
-    {id:'gold',     name:'Tenda do Ouro',         res:'gold',     perHour:40, unit:'goldUnit'},   // 40 "abates" de ouro por hora (× host.goldUnit da fase atual)
+    {id:'gold',     name:'Tenda do Ouro',         res:'gold',     perHour:3, unit:'goldUnit', capMin:5},   // 3 "abates" de ouro por hora (× host.goldUnit da fase atual); guarda no máximo capMin minutos de abate
     {id:'forge',    name:'Forja do Acampamento',  res:'forge',    perHour:1},                     // Pedra de Forja por hora
     {id:'practice', name:'Pedreira',              res:'practice', perHour:2},                     // pedras de prática por hora
   ],
   // custo da melhoria do Nv n para n+1 = ceil(base × growth^(n−1)) × host.goldUnit (ouro da fase atual)
   upgrade:{base:300, growth:1.6},
+  killsPerMin:24,   // ritmo de abate da build (o mesmo do Sys.mapchest): capMin × 24 × goldUnit
+  /* OURO (docs/ECONOMIA_OURO.md): Tenda do Ouro 40 → 3 abates/h e teto de 5 min de abate (120 × goldUnit) por coleta. Antes, Nv 10 com 2 pets
+     Lendários 5★ dava ~137 min de abate por coleta (14 h VIP) e ~235 min por dia. O custo da melhoria NÃO baixou (as tendas de pedra usam a mesma conta). */
 };
 const TENT={}; DATA.tents.forEach(t=>{ TENT[t.id]=t; });
 
@@ -63,7 +66,8 @@ function petBoost(S,id){ const P=PET(); if(!P) return 0; const o=P.ensure(S), d=
 function rate(S,host,id){ const d=TENT[id]; if(!d) return 0; const o=ensure(S,host), t=o.tents[id];
   const m=(1+DATA.levelRate*(t.lv-1))*(1+t.pets.reduce((s,p)=>s+petBoost(S,p),0));
   return d.perHour*m*(d.unit==='goldUnit'?unitOf(host):1); }
-const capOf=(S,host,id)=>rate(S,host,id)*capHours(S);
+const capOf=(S,host,id)=>{ const d=TENT[id], c=rate(S,host,id)*capHours(S); if(!d||!(d.capMin>0)||d.unit!=='goldUnit') return c;
+  return Math.min(c,d.capMin*num(DATA.killsPerMin,24)*unitOf(host)); };   // teto do ouro em minutos de abate
 
 /* anda o relógio: soma o produzido desde o último marcador (teto por tenda). Relógio para trás: só move o marcador. */
 function tick(S,host){

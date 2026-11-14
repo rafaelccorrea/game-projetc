@@ -121,6 +121,12 @@ t('save torto é arrumado', () => {
   assert.deepStrictEqual(o.blocked, ['1', 'a']); assert.strictEqual(o.inbox.length, 1); assert.deepStrictEqual(o.week.claimed, ['boss200']); assert.strictEqual(o.msg.lastIdx, -1);
 });
 
+t('ouro: cada resgate <= 5 min de abate (120 × goldUnit); days5 150 -> 120 (o servidor espelha)', () => {
+  for (const m of [DU.DATA.daily].concat(DU.DATA.weekly)) assert.ok(m.reward.goldK <= 120, m.id);
+  assert.deepStrictEqual(DU.DATA.weekly.map(m => m.reward.goldK), [120, 120, 80, 120]); assert.strictEqual(DU.DATA.daily.reward.goldK, 30);
+});
+
 DU.DATA.on = false; DU.setProvider(null);
 t('teto por dia igual ao do servidor (20.000 abates, 150 chefes, 60 fases, 40 arena); só quem saiu espera 24 h', () => { const D=require('../../js/sys/duo.js'); assert.deepStrictEqual(D.DATA.dayCap,{kills:20000,bossKills:150,stages:60,arenaWins:40}); });
+t('nível e era do parceiro e de quem convida vêm do servidor (lv, era 0-8 ou null)', () => { const D=require('../../js/sys/duo.js'); const k=D.DATA.on; D.DATA.on=true; try{ const S={sys:{duo:{partner:{id:'ABC123',name:'Bruno',since:1,last:2,lv:27,era:9},inv:{in:[{id:'XYZ789',name:'Ana',at:1,lv:5,era:2}]}}}}; const o=D.ensure(S); assert.strictEqual(o.partner.lv,27); assert.strictEqual(o.partner.era,null,'era 9 inválida'); assert.strictEqual(o.inv.in[0].lv,5); assert.strictEqual(o.inv.in[0].era,2); } finally { D.DATA.on=k; } });
 console.log(`\n${n} testes ok (duo)`);

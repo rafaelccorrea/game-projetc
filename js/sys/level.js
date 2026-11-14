@@ -89,6 +89,8 @@ function addXp(S,n,host,src){
   let k0=int0(n); if(KCON()&&src==='kill'&&k0) k0=killCredit(S,host,k0);
   /* teto da Provação do Mestre (Sys.trial, desligado): ponto ÚNICO de toda XP; a XP acima do teto fica guardada lá (até 1 nível). src trial = devolução, já conferida */
   if(src!=='trial'&&k0){ const T=root.Sys&&root.Sys.trial; if(T&&T.DATA&&T.DATA.on&&typeof T.gateXp==='function'){ try{ const g=T.gateXp(S,host,k0); if(g&&typeof g.give==='number') k0=Math.max(0,Math.min(k0,g.give)); }catch(e){} } }
+  /* bênção "Saber das Eras" da Encruzilhada (Sys.crossroads.perks xpPct; desligada = nada muda): +% em toda XP, antes do teto da Provação (a devolução 'trial' já veio com ela) */
+  if(src!=='trial'&&k0){ const C=root.Sys&&root.Sys.crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.perks==='function'){ try{ const p=num(C.perks(S).xpPct,0); if(p>0) k0=Math.round(k0*(1+p/100)); }catch(e){} } }
   const k=k0, o=ensure(S), from=o.lvl; if(!k||o.lvl>=DATA.maxLevel) return {gained:0,levels:0,from,to:from,unlocked:[]};
   o.total+=k; o.xp+=k;
   while(o.lvl<DATA.maxLevel&&o.xp>=need(o.lvl)){ o.xp-=need(o.lvl); o.lvl++; }

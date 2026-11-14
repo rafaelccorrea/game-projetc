@@ -63,7 +63,7 @@ t('servidor soma todos: subir de nível abre baú fixo para quem já estava; res
   const v = GF.view(w.S, w.host); assert.strictEqual(v.level, 3); assert.deepStrictEqual(v.chests.map(c => c.id), [2, 3]);
   assert.deepStrictEqual(GF.perks(w.S), { goldPct: 1, xpPct: 0.6 });
   const st0 = FG.ensure(w.S).stones, f0 = PET.ensure(w.S).food;
-  const r = GF.claim(w.S, w.host, 3); assert.ok(r.ok); assert.deepStrictEqual(r.reward, { gold: 1200, stones: 3, food: 30, gems: 0 });
+  const r = GF.claim(w.S, w.host, 3); assert.ok(r.ok); assert.deepStrictEqual(r.reward, { gold: 360, stones: 3, food: 30, gems: 0 });   // 12 × 3 × 10 (goldK 12: docs/ECONOMIA_OURO.md)
   assert.strictEqual(FG.ensure(w.S).stones, st0 + 3); assert.strictEqual(PET.ensure(w.S).food, f0 + 30);
   assert.strictEqual(GF.claim(w.S, w.host, 3).reason, 'id'); assert.deepStrictEqual(GF.chests(w.S, w.host).map(c => c.id), [2]);
   assert.strictEqual(GF.applyServer(w.S, w.host, { guildId: 'outra', flames: 99999 }).reason, 'guild');
@@ -102,6 +102,11 @@ t('save torto é arrumado', () => {
   const S = { sys: { guildFire: { gid: 5, flames: -3, day: { free: 'sim', bra: 'x' }, claimed: { g1: [2, {}, 'x1'], g2: 'a' }, reached: { g1: { 2: 'x', 3: 10 } } } } };
   const o = GF.ensure(S); assert.strictEqual(o.gid, null); assert.strictEqual(o.flames, 0); assert.deepStrictEqual(o.day, { k: '', free: false, bra: 0 });
   assert.deepStrictEqual(o.claimed, { g1: [2, 'x1'] }); assert.deepStrictEqual(o.reached, { g1: { 2: 0, 3: 10 } });
+});
+
+t('ouro: o baú do nível 10 (e os extras) = 5 min de abate (120 × goldUnit), o teto por resgate', () => {
+  assert.strictEqual(GF.DATA.chest.goldK, 12); for (let L = 1; L <= 10; L++) assert.ok(GF.chestOf(L, { goldUnit: () => 1 }).gold <= 120);
+  assert.strictEqual(GF.chestOf(10, { goldUnit: () => 7 }).gold, 120 * 7);
 });
 
 GF.DATA.on = false; GF.setProvider(null);

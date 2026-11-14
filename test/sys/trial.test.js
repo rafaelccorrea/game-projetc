@@ -82,5 +82,13 @@ t('teto DENTRO do Sys.level.addXp: XP direta (abate, offline, missão) para no n
   TR.DATA.on = false; const S2 = world(9, 0); LV.addXp(S2, 1e6, h, 'kill'); assert.ok(LV.level(S2) > 10, 'desligado: sem teto');
 });
 
+t('ouro da 1ª vitória: 3 min de abate da fase atual (72 × goldUnit), FIXO em toda provação e abaixo do teto de 5 min (docs/ECONOMIA_OURO.md)', () => {
+  const h = makeHost({ unit: 1000 });
+  for (const l of TR.marks()) { const r = TR.rewardOf(l, h); assert.strictEqual(r.gold, 72000); assert.strictEqual(r.goldMin, 3); assert.ok(r.gold <= 120 * 1000); }
+  assert.strictEqual(TR.rewardOf(90).gold, 72); assert.strictEqual(TR.rewardOf(90).stones, 36); assert.strictEqual(TR.rewardOf(90).food, 180);   // pedras e ração seguem × k
+  TR.DATA.on = true; const S = world(10), h2 = makeHost({ unit: 50 }); TR.start(S, h2, 10); const w = TR.finish(S, h2, { won: true, sec: 10 });
+  assert.strictEqual(w.reward.gold, 3600); assert.strictEqual(h2.gold, 3600); TR.DATA.on = false;
+});
+
 TR.DATA.on = false;
 console.log(`trial: ${n} testes ok`);

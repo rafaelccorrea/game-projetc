@@ -87,7 +87,9 @@ function potFill(o,kills){ let add=0; o.pot+=kills; while(o.pot>=DATA.brasas.pot
 function credit(o,add){ const before=o.bra; o.bra=Math.min(DATA.brasas.max,o.bra+Math.max(0,add)); o.got+=o.bra-before; return o.bra-before; }
 function addBrasas(S,src,n,opt){ if(!ON()) return 0; const o=ensure(S), B=DATA.brasas; let add=0;
   if(src==='kill'){ if(opt&&typeof opt==='object'&&opt.stage!=null){ const st=int0(opt.stage), top=Math.max(o.best,int0(opt.maxStage)); if(st<top) return 0; o.best=st; }
-    add=potFill(o,Math.max(1,int0(n)||1)); }
+    add=potFill(o,Math.max(1,int0(n)||1));
+    /* bênção "Brasa Viva" da Encruzilhada (Sys.crossroads.perks brasaPot; desligada = nada muda): +N Brasas por pote cheio */
+    if(add>0){ const C=SYS().crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.perks==='function'){ try{ add+=add*int0(C.perks(S).brasaPot); }catch(e){} } } }
   else if(B[src]>0) add=B[src]*Math.max(1,int0(n)||1); else return 0;
   return credit(o,add); }
 /* abate conta para o pote nesta fase? (para a tela: Brasa voando só quando conta) */
