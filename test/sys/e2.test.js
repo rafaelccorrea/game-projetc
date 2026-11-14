@@ -722,7 +722,7 @@ t('guilda (Sys.guild): desligada não muda nada; sem servidor fica fechada; teto
     G.applyServer(S,{id:'g1',name:'Lobos',role:'officer',xp:3000,banners:{atk:9,hp:1,def:2.9,gold:4,food:20},territories:[{region:2},{region:3,capital:true}],coin:50,joinedAt:h.t-10*864e5});
     const o=G.ensure(S); assert.strictEqual(o.level,3); assert.strictEqual(o.banners.atk,1.5); assert.strictEqual(o.banners.def,0.9); assert.strictEqual(o.banners.food,3);
     const b0=F.total?null:null; assert.deepStrictEqual(G.bonus(S),{atkPct:1.5,hpPct:1,goldPct:0,critPct:0,defPct:0.9,fc:0});
-    assert.deepStrictEqual(G.perks(S),{goldPct:3+8,xpPct:4,dropPct:4,foodPct:3});
+    assert.deepStrictEqual(G.perks(S),{goldPct:0,xpPct:4,dropPct:4,foodPct:3,goldRaw:3+8,goldSoon:true});   // ouro da guilda ainda não soma (Sys.loot.goldLive)
     assert.strictEqual(G.canCreate(S,h).reason,'in_guild');
     // troca: 18+, 7 dias de membro, item comprado não troca, item novo (<24 h) não troca, limites
     const it={slot:'boots',e:3,r:2,lvl:40,gold:1000,qp:5000,subs:[{k:'hpPct',q:0.5}],gotAt:h.t-48*36e5};

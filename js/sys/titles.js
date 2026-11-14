@@ -169,16 +169,19 @@ function onKill(S,host,enemy){ const o=ensure(S); if(enemy&&enemy.boss) o.bosses
 const onWaveClear=(S,host)=>check(S,host);
 
 function titleBonus(t,mult){ const b={}; for(const k of KEYS) b[k]=t.cosmetic?0:num(t.bonus&&t.bonus[k],0)*DATA.bonusMult*mult; return b; }
+const SRC='titles'; const GL=()=>{ const L=root.Sys&&root.Sys.loot; return !!(L&&typeof L.goldLive==='function'&&L.goldLive(SRC)); };   // o % de ouro daqui só aparece/soma quando o Sys.loot o aplica (PO 14/11: nenhuma tela mostra ouro que não soma)
 function bonus(S){
   const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!S) return b; const o=ensure(S);
   for(const id in o.unlocked){ const t=BY[id], m=id===o.featured?DATA.featuredMult:1, tb=titleBonus(t,m); for(const k of KEYS) b[k]+=tb[k]; }
+  if(!GL()) b.goldPct=0;
   for(const k in b) b[k]=Math.round(b[k]*1e6)/1e6;
   return b;
 }
 /* texto da condição com o número real (resolve 'all' pelo catálogo) */
 const condLabel=(S,host,t)=>DATA.condText[t.cond.type](need(S,host,t.cond),t.cond);
 function bonusText(t,mult){ if(t.cosmetic) return 'Cosmético'; const tb=titleBonus(t,mult||1), out=[];
-  for(const k in DATA.statText) if(tb[k]) out.push(`+${fmtP(tb[k])}% ${DATA.statText[k]}`); return out.join(' · ')||'—'; }
+  let soon=false; for(const k in DATA.statText) if(tb[k]){ if(k==='goldPct'&&!GL()){ soon=true; continue; } out.push(`+${fmtP(tb[k])}% ${DATA.statText[k]}`); }
+  return out.join(' · ')||(soon?'Bônus em breve':'—'); }
 /* dicas: trocar o destaque pelo título mais forte (pronto agora) e o próximo título a desbloquear */
 function advice(S,host){
   const o=ensure(S), out=[], power=t=>{ const tb=titleBonus(t,1); return tb.atkPct*1.2+tb.hpPct+tb.critPct*1.5+tb.defPct*1.5+tb.goldPct*0.2; };

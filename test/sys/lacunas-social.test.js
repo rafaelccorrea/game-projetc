@@ -36,7 +36,7 @@ t('ouro do abate: Encruzilhada (goldPct do bonus) só com a chave ligada', () =>
 
 t('ouro do abate: títulos, prática, mentores e estandarte/território de ouro da guilda NÃO entram (fora do orçamento)', () => {
   GU.DATA.on = true; const w = world('g1'); const g = GU.ensure(w.S); g.banners.gold = 10; g.territories = [{ region: 0, capital: true }];
-  assert.ok(GU.perks(w.S).goldPct > 0); assert.strictEqual(L.goldPerkPct(w.S), 0);
+  assert.ok(GU.perks(w.S).goldRaw > 0); assert.strictEqual(GU.perks(w.S).goldPct, 0); assert.strictEqual(GU.perks(w.S).goldSoon, true); assert.strictEqual(L.goldPerkPct(w.S), 0);
   withSys('titles', { bonus: () => ({ goldPct: 20 }) }, () => withSys('practice', { bonus: () => ({ goldPct: 35 }) }, () => assert.strictEqual(L.goldPerkPct(w.S), 0)));
   GU.DATA.on = false;
 });

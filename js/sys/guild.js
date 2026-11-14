@@ -162,8 +162,10 @@ function markDonated(S,host,toId){ const o=ensure(S), dk=dayKey(nowOf(host)); if
 function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!S||!ON()) return b; const o=ensure(S); if(!o.id) return b;
   b.atkPct=o.banners.atk; b.hpPct=o.banners.hp; b.defPct=o.banners.def; return b; }
 /* perks para os módulos da fps-30 (como o VIP): ouro = estandarte + territórios (cada um no seu teto), XP e drop = territórios, ração = estandarte */
+const SRC='guild'; const GL=()=>{ const L=root.Sys&&root.Sys.loot; return !!(L&&typeof L.goldLive==='function'&&L.goldLive(SRC)); };   // o % de ouro daqui só aparece/soma quando o Sys.loot o aplica (PO 14/11: nenhuma tela mostra ouro que não soma)
+/* goldPct = o que SOMA (0 enquanto o estandarte/território de ouro não entra no Sys.loot); goldRaw = o valor das regras; goldSoon = a tela troca o "+%" por "em breve" */
 function perks(S){ const z={goldPct:0,xpPct:0,dropPct:0,foodPct:0}; if(!S||!ON()) return z; const o=ensure(S); if(!o.id) return z; const t=territoryBonus(o.territories);
-  return {goldPct:o.banners.gold+t.gold,xpPct:t.xp,dropPct:t.drop,foodPct:o.banners.food}; }
+  const g=o.banners.gold+t.gold, live=GL(); return {goldPct:live?g:0,xpPct:t.xp,dropPct:t.drop,foodPct:o.banners.food,goldRaw:g,goldSoon:!live&&g>0}; }
 
 /* ---------------- membros, cargos, contribuição (local agora; servidor manda a lista real em applyServer) ---------------- */
 const can=(S,action)=>{ const o=ensure(S), P=DATA.perms[action]; return !!(o.id&&P&&P.includes(o.role)); };

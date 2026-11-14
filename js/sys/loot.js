@@ -510,6 +510,10 @@ function schedPerks(S,host){ const z={goldPct:0,dropPct:0,forgePct:0,foodPct:0,p
    NÃO entram (fora do orçamento; a soma passaria a curva calibrada, ver §8 do LIGACOES_SOCIAL): títulos, prática Coleta, mentores e o estandarte/
    território de ouro da Guilda. Teto goldPerkCap (+25%, a proposta da §6). Módulo desligado = 0: o abate fica igual. */
 const GOLD_PERK_CAP=25;
+/* fonte única: que bônus de % de ouro SOMAM no abate. Fora daqui (títulos, prática, mentores, guilda) o módulo zera o goldPct e as telas
+   não mostram o "+% de ouro" (regra do PO 14/11). Ligar um: pôr true aqui E somar no goldPerkPct (decisão do dono sobre o teto). */
+const GOLD_LIVE={crossroads:true,guildFire:true,titles:false,practice:false,mentors:false,guild:false};
+const goldLive=src=>GOLD_LIVE[src]===true;
 function goldPerkPct(S){ const Y=root.Sys||{}; let p=0;
   try{ const C=Y.crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.bonus==='function') p+=Math.max(0,num(C.bonus(S).goldPct,0)); }catch(e){}
   try{ const F=Y.guildFire; if(F&&typeof F.perks==='function') p+=Math.max(0,num(F.perks(S).goldPct,0)); }catch(e){}
@@ -659,7 +663,7 @@ function offline(S,host,seconds,opts){
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 
 const API={DATA,params,ensure,today,todayCount,rarWeights,rollRarity,rollItem,rollKill,rollEgg,grant,onKill,pickups,createGrouper,offline,stageWin,diffOf,
-  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,goldPerkPct,
+  addMat,addEgg,flushPending,pending,bonus,classOf,maxDropR,dayKey,maxAllowedR,capEggR,xpFor,itemOut,rollSubs,vipPerks,goldPerkPct,goldLive,
   summon,summonCost,summonFreeLeft,summonOdds,dismantle,grantBundle,qualityOf,prismBoss,heldItems:S=>ensure(S).heldItems.map(h=>({slot:h.slot,r:h.r})),transformCost,payTransform,essence:essenceOf,itemName,
   releaseHeld, onLevelUp:releaseHeld, held:S=>ensure(S).held.map(h=>({r:h.r,needLevel:eggNeedLevel(h.r)}))};
 root.Sys=root.Sys||{}; root.Sys.loot=API;

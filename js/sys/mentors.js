@@ -116,7 +116,7 @@ function gift(S,host,era,g){ if(!on()) return {ok:false,reason:'off'}; era=int0(
   const newMarks=[]; for(let i=before+1;i<=after;i++) newMarks.push(markInfo(m,i));
   if(after>=DATA.marks.length) grantTitle(S,host,m);
   changed(host); return {ok:true,era,pts,total:o.pts[k],mark:after,newMarks}; }
-function markInfo(m,i){ const x={mark:i,line:m.lines[i-1],stat:{[m.stat]:m.per},text:`+${fmtP(m.per)}% de ${DATA.statText[m.stat]}`};
+function markInfo(m,i){ const x={mark:i,line:m.lines[i-1],stat:{[m.stat]:m.per},text:sTx(m.stat,m.per)};
   if(i===DATA.marks.length) x.title=m.title; return x; }
 /* título do marco 5: cosmético no Sys.titles (o atributo já vem do bonus daqui) */
 /* Os 9 títulos entram na tabela do Sys.titles SÓ com a chave ligada (setOn(true) ou registerTitles()). O Sys.titles apaga do save título que não está
@@ -131,8 +131,11 @@ function sync(S,host){ if(!on()) return 0; const o=ensure(S); let n=0; for(const
 /* marca as falas novas como vistas (a tela mostra a fala uma vez; depois fica no álbum do mentor) */
 function seen(S,era){ if(!on()) return false; const o=ensure(S), k=String(int0(era)); if(!BY[int0(era)]) return false; o.seen[k]=markOf(o.pts[k]||0); return true; }
 
+const SRC='mentors'; const GL=()=>{ const L=root.Sys&&root.Sys.loot; return !!(L&&typeof L.goldLive==='function'&&L.goldLive(SRC)); };   // o % de ouro daqui só aparece/soma quando o Sys.loot o aplica (PO 14/11: nenhuma tela mostra ouro que não soma)
+const sTx=(stat,v)=>stat==='goldPct'&&!GL()?'Bônus em breve':`+${fmtP(v)}% de ${DATA.statText[stat]}`;
 function bonus(S){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!on()||!S) return b; const o=ensure(S);
   for(const m of DATA.list){ const k=markOf(o.pts[String(m.era)]||0); if(k) b[m.stat]+=statAt(m,k); }
+  if(!GL()) b.goldPct=0;
   for(const k in b) b[k]=Math.round(b[k]*1e6)/1e6; return b; }
 
 /* tela: os 9 mentores (trancado mostra só a silhueta e a era), amizade, próximo marco, falas liberadas, peças que podem virar presente */
@@ -142,7 +145,7 @@ function view(S,host){ if(!on()) return {on:false}; sync(S,host); const o=ensure
     mentors:DATA.list.map(m=>{ const k=String(m.era), pts=int0(o.pts[k]), mk=markOf(pts), un=unlocked(S,host,m.era);
       return {era:m.era,eraName:eraName(m.era),id:m.id,name:un?m.name:'???',role:m.role,portrait:'assets/mentors/m'+m.era+'.png',unlocked:un,
         pts,mark:mk,maxMark:DATA.marks.length,next:mk<DATA.marks.length?DATA.marks[mk]:null,
-        stat:m.stat,statNow:statAt(m,mk),statMax:statAt(m,DATA.marks.length),statText:`+${fmtP(statAt(m,mk))}% de ${DATA.statText[m.stat]}`,
+        stat:m.stat,statNow:statAt(m,mk),statMax:statAt(m,DATA.marks.length),statText:sTx(m.stat,statAt(m,mk)),goldSoon:m.stat==='goldPct'&&!GL(),
         lines:un?m.lines.slice(0,mk):[],newLine:un&&mk>int0(o.seen[k])?m.lines[mk-1]:null,title:mk>=DATA.marks.length?m.title:null,
         fav:un?gl.filter(it=>(it.look!=null?int0(it.look):int0(it.e))===m.era).length:0}; }),
     giftable:gl.map(it=>({id:it.id,slot:it.slot,r:int0(it.r),e:int0(it.e)}))}; }

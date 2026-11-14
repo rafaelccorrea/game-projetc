@@ -56,8 +56,12 @@ const locked=S=>{ const L=LV(); return !!(L&&L.isUnlocked&&!L.isUnlocked(S,'prac
 const lockLevel=()=>{ const L=LV(); return L&&L.unlockLevel?L.unlockLevel('practice'):1; };
 const LOCK='<svg class="sys-lock-ic" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="15.4" r="1.6" fill="#0008"/></svg>';   // cadeado desenhado (sem emoji, pedido do PO)
 /* {ok, cost, reason:'id'|'locked'|'cap'|'stones'} */
+const SRC='practice'; const GL=()=>{ const L=root.Sys&&root.Sys.loot; return !!(L&&typeof L.goldLive==='function'&&L.goldLive(SRC)); };   // o % de ouro daqui só aparece/soma quando o Sys.loot o aplica (PO 14/11: nenhuma tela mostra ouro que não soma)
+const soonT=t=>t&&t.stat==='goldPct'&&!GL();   // Coleta: só treina quando o ouro dela somar
+/* {ok, cost, reason:'id'|'soon'|'locked'|'cap'|'stones'} */
 function canTrain(S,host,id){
   const t=TRACK[id]; if(!t) return {ok:false,cost:0,reason:'id'};
+  if(soonT(t)) return {ok:false,cost:0,reason:'soon'};
   const o=ensure(S), lv=o.lv[id], c=cost(lv);
   if(locked(S)) return {ok:false,cost:c,reason:'locked'};
   if(lv>=capOf(host)) return {ok:false,cost:c,reason:'cap'};
@@ -91,14 +95,14 @@ function onOffline(S,host,seconds){
 
 function bonus(S){
   const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0}; if(!S) return b; const o=ensure(S);
-  for(const t of DATA.tracks) b[t.stat]+=o.lv[t.id]*t.per;
+  for(const t of DATA.tracks) if(!soonT(t)) b[t.stat]+=o.lv[t.id]*t.per;
   for(const k in b) b[k]=Math.round(b[k]*1e6)/1e6;   // 3 x 0,1 = 0,3 (não 0,30000000000000004)
   return b;
 }
 /* dicas para o painel "Como ficar mais forte" (js/sys/fc.js converte delta em FC) */
 function advice(S,host){
   const o=ensure(S), cap=capOf(host), out=[];
-  for(const t of DATA.tracks){ const lv=o.lv[t.id]; if(lv>=cap) continue; const c=cost(lv);
+  for(const t of DATA.tracks){ const lv=o.lv[t.id]; if(lv>=cap||soonT(t)) continue; const c=cost(lv);
     out.push({id:'practice.'+t.id,icon:'practice',label:`Prática: ${t.name} Nv ${lv+1}`,delta:{[t.stat]:t.per},cost:`${c} pedras de prática`,ready:o.stones>=c,tab:'practice'}); }
   return out;
 }
@@ -115,8 +119,8 @@ function render(el,S,host,opt){
   const rows=DATA.tracks.slice(pg*per,pg*per+per).map(t=>{ const lv=o.lv[t.id], c=canTrain(S,host,t.id), full=lv>=cap;
     return `<div class="sys-prac-row${full?' full':''}">
       <span class="sys-prac-ic">${t.icon}</span>
-      <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${cap}</small><br><span>+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}</span></span>
-      <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${full?'Teto':`Treinar<small>${c.cost} pedras</small>`}</button>
+      <span class="sys-prac-tx"><b>${esc(t.name)}</b> <small>Nv ${lv}/${cap}</small><br><span>${soonT(t)?'Em breve':`+${fmtP(lv*t.per)}${esc(t.unit)}${full?'':` → <b>+${fmtP((lv+1)*t.per)}</b>`}`}</span></span>
+      <button class="sys-btn sys-prac-go" data-id="${t.id}" ${c.ok?'':'disabled'}>${soonT(t)?'Em breve':full?'Teto':`Treinar<small>${c.cost} pedras</small>`}</button>
       <button class="sys-btn sys-prac-max" data-id="${t.id}" data-max="1" ${c.ok?'':'disabled'} aria-label="Treinar o máximo">Máx</button>
     </div>`; }).join('');
   el.innerHTML=`<div class="sys-prac">
