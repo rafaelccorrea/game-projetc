@@ -3,6 +3,9 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Votos do dono (14/11, 01h25-02h25):** Ícones do Grimório, Molduras VIP e Fogueira da Guilda APROVADOS; mocks do Higgsfield escolhidos: Ladrão A, Dupla A, Acampamento B, VIP e Passe B (as versões em código de Acampamento, Mentores e VIP/Passe foram reprovadas). Nota: "tá com risco no meio do perfil" → Engenheiro confere o Perfil. Falta voto: Tela Inicial e Mentores
+- [?] **Teto de +25% no bônus de ouro** (títulos e prática até +10% cada) · dono decide
+- [?] **~30 créditos para as telas novas do LoM** (Relíquias, Escavação, Hoje, Arena PvP, Masmorra, Minijogo) · dono decide
 - [~] **Telas com vida, feitas no Higgsfield** ("você não está usando o Higgsfield da forma correta para montar as telas"): mock de tela cheia A/B antes de montar. Tela Inicial A/B no link; o dono liberou ~38 créditos para Mentores, VIP × Passe, Acampamento e Dupla, e ~4 para fechar o papagaio · Arte + PO
 - [x] **App DEV no S24** com atualização ao vivo; recarga volta direto para a batalha; dicas 4 s; aviso de login no DEV
 - [~] **Aprovado pelo dono (14/11):** corrigir o ouro das fontes antigas (offline 8 h = 60 min, Hora de Ouro +30%, tetos, oferta sem ouro); moldura Ouro no Nv 60; ~76 créditos para os golpes dos pets; VIP com teto de +10% (Fênix, Serpe e Mecha com poder de Épica); ouro do VIP +5/+10% e offline ×2 sem ouro · Sistemas + Engenheiro + Arte
