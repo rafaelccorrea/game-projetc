@@ -66,6 +66,13 @@ const DATA={
     map:{pony:'dodge',horse:'counter',wolf:'combo',griffin:'dodge',mythic:'combo',wyvern:'lifesteal',raptor:'combo',scorpion:'stun',panther:'dodge',
          hellhorse:'lifesteal',unicorn:'counter',icewolf:'stun',phoenixm:'lifesteal',blackdragon:'stun',celtiger:'combo',mecha:'counter'},
     perStar:{combo:1.2,counter:1.2,stun:0.4,dodge:0.6,lifesteal:0.5}, rarMult:[0.6,0.8,1,1.2,1.5]},
+  /* CARGA MONTADA (docs/LOM_VS_EONBOUND.md §4 B6; Sistemas 14/11, números de PROPOSTA que o QA calibra). Nome "Carga montada": "Investida do Cavaleiro"
+     já é magia do Grimório. Automática, SEM botão: a cada `every` s o Kael avança montado e acerta TODOS os inimigos comuns da tela com
+     mult × ATQ (o golpe dele, com crítico; sem os golpes especiais dos itens). No CHEFE acerta só ele, com bossMult (área não vale em alvo único).
+     mult sobe com as estrelas da montaria (perStar) e com a raridade do poder (rarMult): Básico 1★ = 0,8× · Lendário 5★ = 1,68×.
+     Só onde o herói anda montado no farm: fases e instâncias. NUNCA na Arena, Torneio, Torre, Provação e Dupla (PvP e duelos ficam iguais).
+     Sem montaria equipada, montaria trancada (Nv 38) ou chave desligada: nada. Não entra na FC (é dano de farm, como a magia de área). */
+  charge:{on:false, name:'Carga montada', every:12, base:1, perStar:0.1, rarMult:[0.8,0.9,1,1.1,1.2], bossMult:0.5, modes:['fases','instancias']},
 };
 const BY={}; for(const m of DATA.mounts) BY[m.id]=m;
 const powR=m=>m?(typeof m.pr==='number'?m.pr:m.r):0;   // raridade do poder (pr) ou, sem ela, a do visual (r)
@@ -128,6 +135,14 @@ function strikeOf(S,id){ if(!ON()||DATA.strike.on!==true||!S) return null; const
 /* para a tela (com ou sem a montaria): {k, value, next} (next = valor com +1 estrela) ou null com a chave desligada */
 function strikeInfo(id,stars){ if(DATA.strike.on!==true||!BY[id]||!DATA.strike.map[id]) return null; const s=clamp(int0(stars)||1,1,DATA.maxStars);
   return {k:DATA.strike.map[id],value:strikeValue(id,s),next:s<DATA.maxStars?strikeValue(id,s+1):null}; }
+/* CARGA MONTADA para a batalha (js/mountcharge.js): {on, id, name, every, mult, bossMult, modes} ou null (chave desligada, sem montaria, modo fora).
+   mode = 'fases' | 'instancias' | 'arena' | 'torneio' | 'torre' | 'provacao' | 'dupla' (outro = null). Ler ao trocar de montaria ou de modo. */
+function chargeMult(id,stars){ const m=BY[id], C=DATA.charge; if(!m) return 0; const s=clamp(int0(stars)||1,1,DATA.maxStars);
+  return Math.round((C.base+C.perStar*(s-1))*num(C.rarMult[clamp(powR(m),0,C.rarMult.length-1)],1)*100)/100; }
+function chargeOf(S,mode){ const C=DATA.charge; if(!ON()||C.on!==true||!S) return null; if(!C.modes.includes(mode||'fases')) return null;
+  const L=root.Sys&&root.Sys.level; try{ if(L&&typeof L.isUnlocked==='function'&&!L.isUnlocked(S,'mount')) return null; }catch(e){ return null; }
+  const o=ensure(S), x=o.eq&&o.owned[o.eq]; if(!x) return null; const mult=chargeMult(o.eq,x.stars);
+  return {on:true,id:o.eq,name:C.name,every:C.every,mult,bossMult:Math.round(mult*C.bossMult*100)/100,modes:C.modes.slice()}; }
 /* custo do próximo nível; {ok, reason: off|id|cap|max|money, gold, cap} */
 function upgradeCost(S,host,id){ const o=ensure(S), x=o.owned[id], m=BY[id]; if(!x) return {ok:false,reason:'id',gold:0};
   const C=DATA.cost, unit=Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)), gold=Math.ceil(C.goldK*unit*(1+C.growth*(x.lvl-1))*(1+powR(m)*C.rarCost));
@@ -152,7 +167,7 @@ const battleInfo=S=>{ if(!ON()) return null; const o=ensure(S); if(!o.eq) return
 
 /* catálogo para a tela: as novas aparecem com 'em breve' até a chave; src = como obter */
 const catalog=()=>DATA.mounts.filter(m=>!m.tbd).map(m=>({id:m.id,name:m.name,r:m.r,rarName:DATA.rarName[m.r],pr:powR(m),powerRarName:DATA.rarName[powR(m)],maxPct:DATA.maxPct[powR(m)],live:live(m),soon:!live(m),hatchFrags:int0(m.hatchFrags),src:(m.src||[]).slice(),minEra:m.minEra||0}));
-const API={DATA,powerRarity:id=>BY[id]?powR(BY[id]):null,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,swapMain,swapPreview,strikeOf,strikeInfo,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
+const API={DATA,powerRarity:id=>BY[id]?powR(BY[id]):null,setStarFlat,setStars7,stars7On,catalog,live,auraOf,ensure,add,addFragments,equip,swapMain,swapPreview,strikeOf,strikeInfo,chargeOf,chargeMult,lvlCap,pctOf,upgradeCost,canUpgrade,upgrade,info,bonus,battleInfo};
 root.Sys=root.Sys||{}; root.Sys.mount=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
