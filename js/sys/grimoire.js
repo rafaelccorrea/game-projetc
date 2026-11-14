@@ -92,6 +92,7 @@ function ensure(S){
   for(const m of DATA.modes){ const a=Array.isArray(sets[m])?sets[m]:[], out=[];
     for(const id of a) if(o.own[id]&&!out.includes(id)&&out.length<DATA.slots) out.push(id);
     o.sets[m]=out; }
+  const f=(o.first&&typeof o.first==='object')?o.first:{}; o.first={eraLord:(f.eraLord&&typeof f.eraLord==='object')?f.eraLord:{},chief50:(f.chief50&&typeof f.chief50==='object')?f.chief50:{}};   /* 1ª vitória por era (grant idempotente) */
   const d=(o.day&&typeof o.day==='object')?o.day:{}; o.day={k:typeof d.k==='string'?d.k:'',lord:(d.lord&&typeof d.lord==='object')?d.lord:{}};
   return o;
 }
@@ -130,14 +131,19 @@ function addInk(S,n,src){ if(!on()) return {ok:false,reason:'off'}; if(badSrc(sr
   const o=ensure(S); o.ink+=k; return {ok:true,ink:o.ink}; }
 /* fontes fixas do jogo. grant(S, host, src, {era, id}) → o que entregou. eraLordRepeat: 1 por era por dia. */
 function grant(S,host,src,opt){ if(!on()) return {ok:false,reason:'off'}; if(badSrc(src)) return {ok:false,reason:'forbidden'};
-  const G=DATA.grants[src]; if(!G) return {ok:false,reason:'src'}; opt=opt||{}; const o=ensure(S), out={ok:true,src,learned:null,pages:null,ink:0};
+  if(!DATA.grants[src]) return {ok:false,reason:'src'}; opt=opt||{}; const o=ensure(S);
   const era=opt.era!=null?clamp(int0(opt.era),0,8):eraMaxOf(host);
+  /* o MÓDULO decide se é a 1ª vitória (pedido do Engenheiro): eraLord repetido vira eraLordRepeat; chief50 só uma vez por era */
+  if(src==='eraLord'&&o.first.eraLord[era]) src='eraLordRepeat';
+  if(src==='chief50'&&o.first.chief50[era]) return {ok:false,reason:'done'};
+  const G=DATA.grants[src], out={ok:true,src,learned:null,pages:null,ink:0};
   if(G.daily){ const k=dayKey(nowOf(host)); if(o.day.k!==k){ o.day.k=k; o.day.lord={}; } if(int0(o.day.lord[era])>=G.daily) return {ok:false,reason:'daily'}; o.day.lord[era]=int0(o.day.lord[era])+1; }
   if(G.learn){ const sp=spellOfEra(era,G.learn); if(!o.own[sp.id]){ addPages(S,sp.id,1,src); out.learned=sp.id; } else { addPages(S,sp.id,1,src); out.pages={id:sp.id,n:1}; } }
   if(G.pages){ const sp=spellOfEra(era,G.pages); const r=addPages(S,sp.id,G.n,src); out.pages={id:sp.id,n:G.n}; if(r.learned) out.learned=sp.id; }
   if(G.pagesEra){ const sp=spellOfEra(era,G.pagesEra); if(o.own[sp.id]){ addPages(S,sp.id,G.n,src); out.pages={id:sp.id,n:G.n}; } }   // só junta página de magia já aprendida
   if(G.pick){ const sp=spell(opt.id); if(!sp) return {ok:false,reason:'spell'}; const r=addPages(S,sp.id,G.n,src); out.pages={id:sp.id,n:G.n}; if(r.learned) out.learned=sp.id; }
   if(G.ink){ o.ink+=G.ink; out.ink=G.ink; }
+  if(src==='eraLord') o.first.eraLord[era]=1; if(src==='chief50') o.first.chief50[era]=1;
   changed(host); return out; }
 
 /* ---------------- subir de nível ---------------- */
