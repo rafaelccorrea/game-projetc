@@ -27,8 +27,11 @@ assert.strictEqual(miss, 0, 'imagens de pet em disco'); out.push(seen + ' imagen
 N.DATA.on = n0; console.log(out.map(t => '- ' + t).join('\n') + '\nCÓDEX × MÓDULO (PETS) OK');
 /* MONTARIAS: a Fênix gigante entra no FIM, só quando o Sys.mount a liga (a paridade com o catalog() é conferida no test/sys/codex.test.js, da Sistemas) */
 { const M = g.Sys.mount, mts = () => cdxItems().filter(x => x.cat === 'mnt').map(x => x.id), on = mts();
-  assert.strictEqual(on[on.length - 1], 'm-phoenixm', 'Fênix no fim das montarias: ' + on.join(' ')); assert.strictEqual(on.length, 7); const it = cdxItems().find(x => x.id === 'm-phoenixm');
+  /* Mecha de guerra LIGADO no módulo (newReady.mecha, 72d7507): as novas ligadas ficam no fim, na ordem do módulo (Fênix, Mecha) = 8; a prova original (Fênix a última, 7) vale com o Mecha desligado no módulo */
+  assert.deepStrictEqual(on.slice(-2), ['m-phoenixm', 'm-mecha'], 'Fênix e Mecha no fim das montarias: ' + on.join(' ')); assert.strictEqual(on.length, 8);
+  { const itM = cdxItems().find(x => x.id === 'm-mecha'); assert(itM && /mount_mecha_ref.png/.test(JSON.stringify(itM.art)) && fs.existsSync(path.join(R, 'assets/mounts/mount_mecha_ref.png')) && !/undefined|NaN/.test(itM.n + itM.how), 'dados do Mecha no Códex'); }
+  const keepM = M.DATA.newReady.mecha; M.DATA.newReady.mecha = false; { const on7 = mts(); assert.strictEqual(on7[on7.length - 1], 'm-phoenixm', 'Mecha desligado: Fênix no fim das montarias: ' + on7.join(' ')); assert.strictEqual(on7.length, 7); } const it = cdxItems().find(x => x.id === 'm-phoenixm');
   assert(it && it.n === 'Fênix gigante' && /mount_giant_phoenix_ref\.png/.test(JSON.stringify(it.art)) && it.how === 'VIP 8' && fs.existsSync(path.join(R, 'assets/mounts/mount_giant_phoenix_ref.png')), 'dados da Fênix no Códex');
-  const keep = M.DATA.newReady.phoenixm; M.DATA.newReady.phoenixm = false; const off = mts(); M.DATA.newReady.phoenixm = keep;
-  assert(off.length === 6 && off.indexOf('m-phoenixm') < 0, 'Fênix desligada no módulo some do Códex: ' + off.join(' ')); assert(!mts().some(id => /raptor|scorpion|mecha/.test(id)), 'montaria nova desligada não aparece');
-  console.log('- montarias: Fênix gigante no fim (7) quando ligada no Sys.mount; desligada some (6); as outras novas não aparecem\nCÓDEX: MONTARIAS OK'); }
+  const keep = M.DATA.newReady.phoenixm; M.DATA.newReady.phoenixm = false; const off = mts(); M.DATA.newReady.phoenixm = keep; M.DATA.newReady.mecha = keepM;
+  assert(off.length === 6 && off.indexOf('m-phoenixm') < 0, 'Fênix desligada no módulo some do Códex: ' + off.join(' ')); assert(!off.some(id => /mecha/.test(id)), 'Mecha desligado no módulo some do Códex'); assert(!mts().some(id => /raptor|scorpion/.test(id)), 'montaria nova desligada não aparece'); assert.strictEqual(mts().length, 8, 'religadas, voltam as 8');
+  console.log('- montarias: Fênix gigante e Mecha no fim (8) quando ligados no Sys.mount; sem o Mecha, Fênix no fim (7); os dois desligados somem (6); as outras novas não aparecem\nCÓDEX: MONTARIAS OK'); }

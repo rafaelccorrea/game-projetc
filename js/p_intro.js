@@ -223,6 +223,10 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
         try{ if(o&&X.chest&&X.chest.onKills){ const r=X.chest.onKills(c,o.kills,quiet); n=r&&r.gained|0; if(n>0) extras.push({key:'chest',n,label:n>1?'baús de abate':'baú de abate',icon:'assets/ui/chest.png'}); } }catch(e){}
         try{ if(X.practice&&X.practice.onOffline){ n=X.practice.onOffline(c,quiet,t)|0; if(n>0) extras.push({key:'stones',n,label:'pedras de treino',icon:PI_ICON.stones}); } }catch(e){}
         try{ if(X.pet&&X.pet.onOffline){ n=X.pet.onOffline(c,quiet,t)|0; if(n>0) extras.push({key:'food',n,label:'ração de pet',icon:PI_ICON.food}); } }catch(e){}
+        /* FOGUEIRA (Sys.bonfire.offline: teto próprio de 12 h e 40 Brasas por dia, por isso o AWAY inteiro e não o t do ouro) e ACAMPAMENTO (Sys.camp.collect: as 3 tendas), na MESMA cópia: o Coletar entrega estes números */
+        try{ if(window.Fogueira&&Fogueira.isOn()&&X.bonfire&&X.bonfire.offline){ const r=X.bonfire.offline(c,quiet,away); n=r&&r.brasas|0; if(n>0) extras.push({key:'brasas',n,label:n>1?'Brasas da Fogueira':'Brasa da Fogueira',icon:'assets/ui/fogueira/fg_s1.png'}); } }catch(e){}
+        try{ const K=X.camp; if(K&&K.DATA&&K.DATA.on===true&&K.collect){ const g=(K.collect(c,quiet)||{}).got||{}; const add=(k,v,lb,ic)=>{ if(!(v>0)) return; const ex=extras.find(x=>x.key===k); if(ex) ex.n+=v; else extras.push({key:k,n:v,label:lb,icon:ic}); };
+          add('campGold',g.gold,'moedas do Acampamento','assets/ui/coin.png'); add('forge',g.forge,'pedras de forja',PI_ICON.forge); add('stones',g.practice,'pedras de treino',PI_ICON.stones); } }catch(e){}
         if(o){ for(const [k,lb,ic] of [['forge','pedras de forja',PI_ICON.forge],['food','ração de pet',PI_ICON.food],['gems','gemas','assets/ui/gem.png']]){ const v=o[k]|0; if(v>0){ const ex=extras.find(x=>x.key===k); if(ex) ex.n+=v; else extras.push({key:k,n:v,label:lb,icon:ic}); } }
           if(Array.isArray(o.eggs)&&o.eggs.length) extras.push({key:'eggs',n:o.eggs.length,label:o.eggs.length>1?'ovos':'ovo',icon:PI_ICON.egg}); }
       } }catch(e){}
@@ -239,7 +243,9 @@ const PI={el:null,root:null,cur:null,id:'',done:null,raf:0,g:G,nameCheck,KAIA_ON
   claimOffline(){ const d=this.offline(); if(!d||this.claimed) return; this.claimed=true; const s=G.S();
     try{ s.gold+=d.gold;
       if(typeof SYS_ON!=='undefined'&&SYS_ON){ try{ if(d.o) Sys.loot.grant(s,Sys.host,d.o); if(d.o&&Sys.chest&&Sys.chest.onKills) Sys.chest.onKills(s,d.o.kills,Sys.host);
-        const lr=Sys.level.onOffline(s,Sys.host,d.sec); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); if(Sys.practice&&Sys.practice.onOffline) Sys.practice.onOffline(s,Sys.host,d.sec); if(Sys.pet&&Sys.pet.onOffline) Sys.pet.onOffline(s,Sys.host,d.sec); }catch(e){ console.error('[intro] offline grant',e); } }
+        const lr=Sys.level.onOffline(s,Sys.host,d.sec); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); if(Sys.practice&&Sys.practice.onOffline) Sys.practice.onOffline(s,Sys.host,d.sec); if(Sys.pet&&Sys.pet.onOffline) Sys.pet.onOffline(s,Sys.host,d.sec); }catch(e){ console.error('[intro] offline grant',e); }
+        try{ if(window.Fogueira) Fogueira.offline(typeof AWAY==='number'?AWAY:d.sec,{silent:true}); }catch(e){ console.error('[intro] fogueira',e); }   /* uma vez (OFF_DONE); silent = já está na lista do Bem-vindo */
+        try{ if(Sys.camp&&Sys.camp.DATA&&Sys.camp.DATA.on===true) Sys.camp.collect(s,Sys.host); }catch(e){ console.error('[intro] camp',e); } }
       if(typeof save==='function') save(); if(typeof hud==='function') hud(); }catch(e){ console.error(e); } },
   /* escolhas do jogador novo (gravadas só no fim, no Nome; até lá nada muda no save) */
   pick:{hero:'',name:''},
@@ -308,6 +314,7 @@ function boot(){ if(!ON()) return; needName(); const t0=document.getElementById(
   PI.open(()=>{ if(typeof B!=='undefined') B.paused=false;
     try{ if(typeof unlockAudio==='function') unlockAudio(); }catch(e){}
     try{ if(typeof music==='function'&&typeof eraOf==='function') music('era'+eraOf(G.S().stage)); }catch(e){}
+    try{ if(window.Fogueira&&typeof AWAY==='number'&&AWAY>=120&&!window.__noSave&&(G.S().tut|0)>=1) Fogueira.offline(AWAY); }catch(e){}   /* Brasas do tempo fora quando o Bem-vindo não abriu (o Fogueira.offline só roda uma vez: depois do Coletar não faz nada) */
     window.__offDone=true;   /* o Bem-vindo já entregou o tempo fora: o modal antigo não aparece de novo */
     try{ const s=G.S(); if(!s.welcome&&typeof showWelcome==='function') showWelcome(); else if(s.tut<99&&typeof startTut==='function') startTut(); }catch(e){} });
 }

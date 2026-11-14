@@ -17,7 +17,7 @@ if(!('forge2' in PANEL_ON)) PANEL_ON.forge2=false;
 
 const X={tab:'forge',slot:'weapon',apv:null,busy:false,auto:null,fx:null,ban:null,fly:null,toast:'',toastT:0,
   tsel:null,ask:null,gkey:null,sig:'',anim:true,top:true,t1:0,raf:0,t0:0};
-const ACTIONS=['tab','slot','forge','auto','aura','pvout','tsel','trans','transok','askno','gsel','fuse','back'];
+const ACTIONS=['tab','slot','forge','auto','aura','pvout','tsel','trans','transok','askno','gsel','fuse','back','astral'];
 const BAN_MS=2400;
 
 /* ---------- leituras dos módulos ---------- */
@@ -366,6 +366,7 @@ function detForge(narrow,short){ const D=FD(), sl=X.slot, it=eqOf(sl), n=lvl(sl)
   const open='<div class="f2-det" id="f2_det" style="--rc:'+rc+'">'+head;
   if(shut) return open+'<div class="f2-chn"><div class="f2-msg">O espaço da asa abre no <b>nível '+wingLv()+'</b>. O +N fica guardado no espaço.</div></div></div>';
   if(c.reason==='locked') return open+'<div class="f2-chn"><div class="f2-msg">A Forja libera no <b>nível '+gateLv()+'</b>.</div></div></div>';
+  if(top){ const AS=astralHtml(sl); if(AS) return open+AS+'</div>'; }   /* Forja Astral +21..+25 (Sys.erasEnd): só com o módulo ligado e o espaço no +20 */
   if(top) return open+'<div class="f2-chn"><div class="f2-msg">Este espaço chegou ao máximo: <b>+'+M+'</b>, bônus '+pctB(bonusOf(n))+'.</div></div></div>';
   if(atCap){ let ne=-1; for(let e=eraNow()+1;e<D.capByEra.length;e++) if(D.capByEra[e]>cap){ ne=e; break; }
     return open+'<div class="f2-chn"><div class="f2-msg">Teto da era: <b>+'+cap+'</b>. '+(ne>=0?'O +'+D.capByEra[ne]+' abre na <b>'+esc2(eraName(ne))+'</b>.':'Não há era com teto maior.')+' Guarde as pedras: elas não se perdem.</div></div></div>'; }
@@ -388,6 +389,21 @@ function detForge(narrow,short){ const D=FD(), sl=X.slot, it=eqOf(sl), n=lvl(sl)
   return open+chn+(short?acts+info:info+acts)
     +'<div class="f2-foot">'+(c.ok?'':'<b>'+esc2(whyTxt(c.reason,sl))+'</b> ')+'A falha nunca tira nível. Pedras e ouro vêm de jogar: nunca de diamante nem de dinheiro.</div></div>'; }
 
+/* ----- FORJA ASTRAL +21..+25 (Sys.erasEnd, pós-eras; docs/LIGACOES_RECOMPENSAS.md E2-E6): só com o módulo ligado; '' = a tela de sempre.
+   Toda regra, chance, custo e garantia são do Sys.erasEnd. Motivo 'base' (o espaço ainda não chegou ao +20 da Forja, por exemplo com o teto no +15): '' também,
+   fica o quadro "chegou ao máximo" de sempre, para não prometer um nível que a Forja de hoje não alcança. ----- */
+const EE=()=>{ const E=window.Sys&&Sys.erasEnd; return E&&E.DATA&&E.DATA.on===true&&typeof E.canAstral==='function'&&typeof E.astralTry==='function'?E:null; };
+function astralHtml(sl){ const E=EE(); if(!E) return ''; let c, a=0, tot=0, st=0; try{ c=E.canAstral(S,Sys.host,sl); a=E.astralLevel(S,sl); tot=E.totalLevel(S,sl); st=E.view(S,Sys.host).stones|0; }catch(e){ return ''; }
+  if(!c||c.reason==='base'||c.reason==='slot'||c.reason==='desligado') return '';
+  const A=E.DATA.astral, max=a>=A.levels.length, why={marco:'O +'+c.next+' abre ao vencer a fase '+c.needStage+'.',pedras:'Faltam pedras astrais: tem '+n0(st)+', a tentativa pede '+n0(c.stones)+'. Elas vêm das fases depois da 90.',max:'Forja Astral no máximo: +'+A.levels[A.levels.length-1]+'.'};
+  return '<div class="f2-chn"><b class="pc">'+(max?'+'+tot:pc(c.chance))+'</b><div class="cw"><small>Forja Astral · '+(max?'+'+tot+' · máximo':(a?'+'+tot:'+'+A.base)+' → +'+c.next)+'</small><em>Pedras astrais: '+n0(st)+' · a falha nunca tira nível, soma garantia</em></div></div>'
+    +(max?'':'<div class="f2-acts"><button class="f2-bt" data-x="astral" aria-disabled="'+(!c.ok||X.busy)+'"><span>'+SV.hammer+'Forja Astral</span><small>'+pl(c.stones,'pedra astral','pedras astrais')+'</small></button></div>')
+    +'<div class="f2-foot">'+(c.ok?'':'<b>'+esc2(why[c.reason]||'')+'</b> ')+'Pedras astrais só vêm de jogar as fases sem fim: nunca de diamante nem de dinheiro.</div>'; }
+function astralOnce(){ const E=EE(), sl=X.slot; if(!E||X.busy) return; const fc0=fcNow(); let r=null; try{ r=E.astralTry(S,Sys.host,sl); }catch(e){ r=null; }
+  if(!r||!r.ok){ sfx('ui_tap'); say(r&&r.reason==='pedras'?'Faltam pedras astrais':r&&r.reason==='marco'?'Vença o próximo marco para abrir este nível':'A Forja Astral não abriu agora'); redraw(); return; }
+  if(r.success){ call(typeof statsChanged==='function'?statsChanged:null); sfx('claim'); const df=fcNow()-fc0; X.fly=df>0?{t:now(),txt:'+'+fcTxt(df)+' FC'}:null; banner('ok',slotShort(sl)+' +'+r.level+'!','Forja Astral'); }
+  else { call(typeof save==='function'?save:null); call(typeof hud==='function'?hud:null); sfx('ui_tap'); X.fly=null; banner('no','Falhou, +'+pc(E.DATA.astral.pityPerFail)+' na próxima','o nível não cai'); }
+  redraw(); }
 /* ----- aba Forjar: legenda das auras e tabela ----- */
 function bodyForge(){ const D=FD(), A=auras(), w=lvl('weapon'), cur=tierOf(w), sl=X.slot, n=lvl(sl), cap=capNow();
   let h='<div class="f2-sec"><span>Auras da arma</span><span>toque para ver no herói</span></div><div class="f2-alg">'+A.map((a,i)=>'<button class="f2-ac'+(i===cur?' cur':'')+(X.apv!=null&&tierOf(X.apv)===i?' pv':'')+'" style="--ac:'+acol(a)+'" data-x="aura" data-v="'+a.from+'" aria-pressed="'+(X.apv!=null&&tierOf(X.apv)===i)+'" aria-label="'+esc2(a.name)+', a partir do +'+a.from+'"><span class="sw'+(a.id==='none'?' none':'')+'"></span><b>+'+a.from+'</b><small>'+esc2(String(a.name).replace('Aura ',''))+'</small></button>').join('')+'</div>';
@@ -499,7 +515,8 @@ function draw(){
 function sig(){ if(locked()) return 'gate'; try{ const c=Sys.forge.canTry(S,Sys.host,X.slot), st=stonesNow(); let x='';
     if(X.tab==='trans'){ const it=X.tsel!=null?byId(X.tsel):null, p=it?transPlan(it):null; x=[essence(),(S.inv||[]).length,p&&p.gold!=null?(canGold(p.gold)?1:0):'-'].join(','); }
     else if(X.tab==='fuse') x=[(S.inv||[]).length,S.nextId].join(',');
-    return [X.tab,X.slot,c.reason,c.stones,c.gold,c.chance,st,c.gold>0?Math.min(40,Math.floor((+S.gold||0)/c.gold)):0,capNow(),wingOpen()?1:0,qOn()?1:0,f20()?1:0,x].join('|'); }catch(e){ return ''; } }
+    let ea=''; try{ const E=EE(); if(E){ const ca=E.canAstral(S,Sys.host,X.slot); ea=[ca.reason,ca.chance,E.astralLevel(S,X.slot),E.view(S,Sys.host).stones].join(','); } }catch(e){}   /* pedras astrais ou marco mudaram em outra tela */
+    return [X.tab,X.slot,c.reason,c.stones,c.gold,c.chance,st,ea,c.gold>0?Math.min(40,Math.floor((+S.gold||0)/c.gold)):0,capNow(),wingOpen()?1:0,qOn()?1:0,f20()?1:0,x].join('|'); }catch(e){ return ''; } }
 
 /* ================= ações ================= */
 /* uma tentativa: quem decide, cobra e guarda a garantia é o Sys.forge; o resultado já fica gravado */
@@ -569,6 +586,7 @@ function click(b){ const a=b&&b.dataset?b.dataset.x:'', ds=b.dataset||{};
   if(a==='tab'){ const t=ds.t==='trans'?'trans':ds.t==='fuse'&&qOn()?'fuse':'forge'; sfx('ui_tap'); if(t===X.tab) return; X.tab=t; X.apv=null; X.top=true; redraw(); }
   else if(a==='slot'){ const s=ds.slot; sfx('ui_tap'); if(!slotOk(s)) return; if(wingShut(s)) say(whyTxt('wing',s)); X.slot=s; X.tab='forge'; X.apv=null; X.top=true; redraw(); }
   else if(a==='forge') forgeOnce();
+  else if(a==='astral') astralOnce();
   else if(a==='auto') autoForge();
   else if(a==='aura'){ const v=+ds.v||0, w=lvl('weapon'); sfx('ui_tap'); X.apv=(X.apv===v||(X.apv==null&&tierOf(v)===tierOf(w)))?null:v; redraw(); }
   else if(a==='pvout'){ sfx('ui_tap'); X.apv=null; redraw(); }

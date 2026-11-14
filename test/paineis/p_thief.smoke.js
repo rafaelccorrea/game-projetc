@@ -73,38 +73,43 @@ has('id="th_left">2/2'); has('45 s'); has('lote do nível 12 da Fogueira'); has(
 click('sweep'); has('Vença uma perseguição inteira para liberar o Repetir'); not('th-conf'); click('yes'); assert.strictEqual(n('sweep'), 0);
 // Entrar sem a batalha ligada: explica e NÃO abre corrida
 click('enter'); has('A perseguição ainda não está ligada na batalha'); assert.strictEqual(n('enter'), 0, 'sem a batalha, o módulo não é chamado'); assert.strictEqual(T.view(g.S, host).run, null);
-// a batalha recusa (false): a corrida é cancelada e a entrada não é gasta
+// REGRA ÚNICA COM O SERVIDOR (js/sys/thief.js): a entrada é gasta AO ENTRAR; sair no meio não devolve; o fim não gasta outra
+has('Entrar gasta 1 entrada na hora. Sair no meio não devolve.');
+// a batalha recusa (false) depois do enter: a entrada já foi gasta, então a corrida fica ABERTA (Continuar) em vez de se perder
 const runs = []; let accept = false; g.startThiefRun = r => { runs.push(r); return accept; };
-click('enter'); assert.strictEqual(n('enter'), 1); assert.strictEqual(n('cancel'), 1, 'recusa da batalha cancela a corrida'); has('A entrada não foi gasta'); has('id="th_left">2/2'); assert.strictEqual(T.view(g.S, host).run, null);
-// Entrar de verdade: UMA chamada com (S, host); a batalha recebe {lv, lote, secs} do módulo; a entrada ainda não foi gasta
-accept = true; click('enter'); assert.strictEqual(n('enter'), 2); assert.deepStrictEqual(spy.enter[1], [g.S, host]); assert.deepStrictEqual(runs[1], { lv: 12, lote: 5, secs: 45 }); check('corrida aberta');
-has('Há uma perseguição aberta (nível 12)'); has('id="th_left">2/2'); not('data-x="enter"'); has('data-x="resume"'); has('data-x="cancel"'); assert(saves > 0, 'grava ao entrar');
-click('enter'); click('sweep'); assert.strictEqual(n('enter'), 2, 'corrida aberta: não entra de novo'); not('th-conf');
-click('resume'); assert.strictEqual(n('enter'), 2); assert.deepStrictEqual(runs[2], { lv: 12, lote: 5, secs: 45 }, 'Continuar entrega a mesma corrida');
-click('cancel'); assert.strictEqual(n('cancel'), 2); has('Você saiu da perseguição. A entrada não foi gasta'); has('id="th_left">2/2'); has('data-x="enter"'); check('saiu sem gastar');
-out.push('entrada: dados do módulo; sem a batalha não abre corrida; recusa cancela; Entrar = 1 chamada e entrega {lv, lote, secs}; Continuar e Sair sem gastar');
+click('enter'); assert.strictEqual(n('enter'), 1); assert.deepStrictEqual(spy.enter[0], [g.S, host]); assert.strictEqual(n('cancel'), 0, 'recusa da batalha não joga a entrada fora'); has('A perseguição fica aberta: toque em Continuar'); has('id="th_left">1/2');
+assert.deepStrictEqual(runs[0], { lv: 12, lote: 5, secs: 45 }); assert(T.view(g.S, host).run, 'a corrida continua aberta'); assert(saves > 0, 'grava ao entrar'); check('corrida aberta');
+has('Há uma perseguição aberta (nível 12)'); has('A entrada dela já foi gasta'); has('>Sair (a entrada não volta)<'); not('sem gastar'); not('data-x="enter"'); has('data-x="resume"'); has('data-x="cancel"');
+click('enter'); click('sweep'); assert.strictEqual(n('enter'), 1, 'corrida aberta: não entra de novo'); not('th-conf');
+// Continuar entrega a MESMA corrida, sem gastar outra entrada
+accept = true; click('resume'); assert.strictEqual(n('enter'), 1); assert.deepStrictEqual(runs[1], { lv: 12, lote: 5, secs: 45 }, 'Continuar entrega a mesma corrida'); has('id="th_left">1/2');
+// Sair no meio: fecha a corrida e a entrada NÃO volta (o botão já dizia)
+click('cancel'); assert.strictEqual(n('cancel'), 1); has('Você saiu da perseguição. A entrada foi gasta'); has('id="th_left">1/2'); has('data-x="enter"'); assert.strictEqual(T.view(g.S, host).run, null); assert.strictEqual(BF.ensure(g.S).bra, 0, 'sair não rende Brasas'); check('saiu');
+out.push('entrada: dados do módulo; sem a batalha não chama o enter; Entrar = 1 chamada, gasta a entrada na hora e entrega {lv, lote, secs}; recusa da batalha deixa a corrida aberta; Continuar não gasta; Sair não devolve');
 
-// 3) FIM pela batalha: PThief.finish(score) roda o módulo UMA vez e abre o resultado
-click('enter'); g.view = 'battle'; g.PANEL_ON.thief = true; const s1 = saves;
-const r1 = P.finish(0.6); assert.strictEqual(n('finish'), 1); assert.deepStrictEqual(spy.finish[0], [g.S, host, { score: 0.6 }]); assert(r1.ok && r1.drop === 3 && r1.brasas === 3 && !r1.won && r1.left === 1);
+// 3) FIM pela batalha: PThief.finish(score) roda o módulo UMA vez, não gasta outra entrada, e abre o resultado
+click('enter'); assert.strictEqual(n('enter'), 2); has('id="th_left">0/2'); g.view = 'battle'; g.PANEL_ON.thief = true; const s1 = saves;
+const r1 = P.finish(0.6); assert.strictEqual(n('finish'), 1); assert.deepStrictEqual(spy.finish[0], [g.S, host, { score: 0.6 }]); assert(r1.ok && r1.drop === 3 && r1.brasas === 3 && !r1.won && r1.left === 0);
 assert.deepStrictEqual(opened, ['thief:{"result":true}'], 'abre a tela com o resultado'); assert(saves > s1, 'grava depois do fim'); def.render(); check('resultado parcial');
-has('Fim da perseguição'); has('+3 Brasas'); has('O ladrão soltou 3 de 5 Brasas do saco.'); has('Entradas que sobram hoje: 1 de 2'); has('Solte o saco inteiro'); has('id="th_left">1/2'); has('>3/300<'); assert.strictEqual(BF.ensure(g.S).bra, 3);
+has('Fim da perseguição'); has('+3 Brasas'); has('O ladrão soltou 3 de 5 Brasas do saco.'); has('Entradas que sobram hoje: 0 de 2'); has('Solte o saco inteiro'); has('id="th_left">0/2'); has('>3/300<'); assert.strictEqual(BF.ensure(g.S).bra, 3);
 assert.strictEqual(P.finish(1).reason, 'run', 'fim sem corrida não vale'); assert.strictEqual(BF.ensure(g.S).bra, 3, 'nada credita duas vezes');
-click('ok'); not('th-card res'); check('depois do resultado');
-// saco inteiro: nível vencido, Repetir liberado
-click('enter'); const r2 = P.finish(1); assert(r2.won && r2.best === 12 && r2.left === 0); def.render(); check('resultado cheio'); has('Saco inteiro'); has('+5 Brasas'); has('Nível 12 vencido'); has('id="th_left">0/2'); assert.strictEqual(P.alerts(), 0);
-click('ok'); has('Sem entradas hoje. Elas voltam à meia-noite de Brasília'); { const e = n('enter'); click('enter'); assert.strictEqual(n('enter'), e, 'sem entradas não chama o módulo'); click('sweep'); not('th-conf'); assert.strictEqual(n('sweep'), 0); }
-out.push('fim: PThief.finish(score) = 1 chamada com {score}, resultado do módulo na tela, sem crédito em dobro; saco inteiro vence o nível; sem entradas não chama');
+click('ok'); not('th-card res'); check('depois do resultado'); assert.strictEqual(P.alerts(), 0);
+has('Sem entradas hoje. Elas voltam à meia-noite de Brasília'); { const e = n('enter'); click('enter'); assert.strictEqual(n('enter'), e, 'sem entradas não chama o módulo'); click('sweep'); not('th-conf'); assert.strictEqual(n('sweep'), 0); }
+// dia novo em Brasília: entradas de volta. Saco inteiro: nível vencido, Repetir liberado
+host.t = Date.UTC(2026, 10, 14, 3, 0, 0); open(); check('dia novo'); has('id="th_left">2/2'); assert.strictEqual(P.alerts(), 2);
+click('enter'); has('id="th_left">1/2'); const r2 = P.finish(1); assert(r2.won && r2.best === 12 && r2.left === 1); def.render(); check('resultado cheio'); has('Saco inteiro'); has('+5 Brasas'); has('Nível 12 vencido'); has('id="th_left">1/2'); assert.strictEqual(P.alerts(), 1);
+click('ok');
+out.push('fim: PThief.finish(score) = 1 chamada com {score}, sem gastar outra entrada, resultado do módulo na tela, sem crédito em dobro; sem entradas não chama; dia novo devolve as entradas; saco inteiro vence o nível');
 
-// 4) dia novo em Brasília: entradas de volta; REPETIR em dois toques, UMA chamada
-host.t = Date.UTC(2026, 10, 14, 3, 0, 0); open(); check('dia novo'); has('id="th_left">2/2'); assert.strictEqual(P.alerts(), 2); has('nível 12): <em>5 Brasas</em>');
+// 4) REPETIR em dois toques, UMA chamada: gasta 1 entrada e paga o lote cheio do melhor nível VENCIDO (best e sweepLote do módulo)
+has('nível 12): <em>5 Brasas</em>');
 BF.ensure(g.S).lv = 40; def.render(); has('lote do nível 40 da Fogueira'); has('>8 Brasas<'); has('nível 12): <em>5 Brasas</em>');
 click('sweep'); check('confirma repetir'); has('Repetir agora?'); has('Gasta <em>1 entrada</em>'); assert.strictEqual(n('sweep'), 0, '1º toque não gasta'); click('no'); not('th-conf'); assert.strictEqual(n('sweep'), 0, 'Cancelar não gasta');
-click('sweep'); click('yes'); assert.strictEqual(n('sweep'), 1); assert.deepStrictEqual(spy.sweep[0], [g.S, host]); check('repetido'); has('Repetido'); has('+5 Brasas'); has('Lote cheio do nível 12 da Fogueira.'); has('id="th_left">1/2'); assert.strictEqual(BF.ensure(g.S).bra, 13);
+click('sweep'); click('yes'); assert.strictEqual(n('sweep'), 1); assert.deepStrictEqual(spy.sweep[0], [g.S, host]); check('repetido'); has('Repetido'); has('+5 Brasas'); has('Lote cheio do nível 12 da Fogueira.'); has('id="th_left">0/2'); assert.strictEqual(BF.ensure(g.S).bra, 13);
 click('yes'); assert.strictEqual(n('sweep'), 1, 'sem confirmação aberta, "yes" não gasta');
-// estoque cheio: a tela avisa antes e o resultado diz o que não coube (número do módulo)
-BF.ensure(g.S).bra = 298; click('ok'); has('O estoque está quase cheio: o que passar de 300 não entra'); click('sweep'); click('yes'); assert.strictEqual(n('sweep'), 2); check('estoque cheio'); has('+2 Brasas'); has('3 Brasas não couberam'); has('id="th_left">0/2');
-out.push('dia novo devolve as entradas; Repetir em 2 toques (1 chamada, lote do melhor nível vencido); estoque cheio avisado com os números do módulo');
+// estoque cheio (outro dia): a tela avisa antes e o resultado diz o que não coube (número do módulo)
+host.t = Date.UTC(2026, 10, 15, 3, 0, 0); BF.ensure(g.S).bra = 298; open(); has('id="th_left">2/2'); has('O estoque está quase cheio: o que passar de 300 não entra'); click('sweep'); click('yes'); assert.strictEqual(n('sweep'), 2); check('estoque cheio'); has('+2 Brasas'); has('3 Brasas não couberam'); has('id="th_left">1/2');
+out.push('Repetir em 2 toques (1 chamada, 1 entrada, lote do melhor nível vencido); estoque cheio avisado com os números do módulo');
 
 // 5) tick não quebra; toda ação apareceu num botão
 def.tick(); def.tick(); def.tick(); def.tick(); def.onClose();

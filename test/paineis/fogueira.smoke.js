@@ -193,6 +193,18 @@ els.app = { clientWidth: 390, clientHeight: 844 };
   assert.strictEqual(F.offlineText({ on: true, brasas: 0, counted: 100 }), ''); assert(/limite de Brasas do tempo fora por dia/.test(F.offlineText({ on: true, brasas: 40, counted: 43200, dayLeft: 0 }))); o().bra = b0;
   out.push('tempo fora: Sys.bonfire.offline uma vez, "' + r.text + '"'); }
 
+// 11b) Ladrão de Brasas: a ENTRADA no painel só aparece com o módulo ligado E a tela 'thief' ligada; o toque fecha o painel e abre a tela; a Fogueira não gasta entrada
+{ require(path.join(R, 'js/sys/thief.js')); const T = Sys.thief, opened = []; let scr = false; assert.strictEqual(T.DATA.on, false, 'Sys.thief nasce desligado');
+  tapB('sheet'); assert(!sheetH().includes('data-fg="thief"'), 'sem a tela e sem a chave: nada'); assert.strictEqual(g.S.sys.thief, undefined, 'desligado não escreve no save');
+  g.Panels = { on: n => n === 'thief' && scr, open: n => opened.push(n) }; tapB('close'); tapB('sheet'); assert(!sheetH().includes('data-fg="thief"'), 'módulo desligado: nada');
+  T.DATA.on = true; tapB('close'); tapB('sheet'); assert(!sheetH().includes('data-fg="thief"'), 'tela desligada: nada'); tapB('thief'); assert.deepStrictEqual(opened, [], 'tela desligada: o toque não abre nada');
+  scr = true; tapB('sheet'); let h = sheetH(); assert(h.includes('Ladrão de Brasas') && h.includes('2 de 2 hoje') && /data-fg="thief" aria-disabled="false">Perseguir o ladrão · até \d+ Brasas?</.test(h), h.match(/Ladrão[^]{0,260}/)[0]); sane('painel com o Ladrão');
+  tapB('thief'); assert.deepStrictEqual(opened, ['thief']); assert.strictEqual(st().sheet, false, 'o painel fecha'); assert.strictEqual(T.view(g.S, host).left, 2, 'a Fogueira não gasta entrada');
+  T.enter(g.S, host); tapB('sheet'); assert(/aria-disabled="false">Perseguição aberta: continuar</.test(sheetH()) && sheetH().includes('1 de 2 hoje')); T.finish(g.S, host, { score: 0 });
+  T.enter(g.S, host); T.finish(g.S, host, { score: 0 }); tapB('close'); tapB('sheet'); assert(/data-fg="thief" aria-disabled="true">Volta amanhã</.test(sheetH()) && sheetH().includes('0 de 2 hoje')); sane('painel sem entradas');
+  tapB('close'); T.DATA.on = false; delete g.S.sys.thief; delete g.Panels;
+  out.push('Ladrão de Brasas: linha no painel só com módulo e tela ligados; o toque abre a tela thief; sem entradas diz "Volta amanhã"'); }
+
 // 12) arte: as 9 paradas existem em disco; a chama animada usa os números do .json na regra de grade do jogo; sem ela nada quebra
 { for (let n = 1; n <= 9; n++){ assert(exists(F.FOG_ART(n)), 'falta a arte do estágio ' + n + ': ' + F.FOG_ART(n)); assert(seenImg.has(F.FOG_ART(n))); }
   const lp = mkEl('span'), art = mkEl('img'), box = mkEl('span'); box.querySelector = s => s === '.fgx-lp' ? lp : s === '.fgx-art' ? art : null; els.fgx_i = box; imgs.length = 0;

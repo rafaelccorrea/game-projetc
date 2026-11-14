@@ -25,14 +25,18 @@ let bt = H().match(/<button[^>]*>/g) || []; assert(bt.length >= 3 && bt.every(b 
 // 2) nada pronto no nível 0: resgatar tudo avisa; premium não liga sozinho
 def.click(btn('all')); assert(toasts.some(t => /Nenhuma recompensa pronta/.test(t))); out.push('sem nível: avisa e não resgata');
 // 3) XP sobe o nível: níveis prontos, centraliza o nível atual, resgatar tudo entrega só a trilha grátis
-P.addXp(g.S, 100 * 3); const e = P.ensure(g.S); def.render(); has('id="pw_cur"'); has('Pronto'); has('Resgatar tudo (3)'); assert(!P.ensure(g.S).premium);
+P.addXp(g.S, 100 * 3); const e = P.ensure(g.S); def.render(); has('id="pw_cur"');
+/* nível pronto: com o resgate por nível do módulo (Sys.pass.claimTier) cada célula pronta traz o botão "Resgatar" (data-x="tier"); sem ele, o rótulo "Pronto" */
+if (typeof P.claimTier === 'function') { for (let t = 1; t <= 3; t++) assert(new RegExp('<button data-x="tier" data-track="free" data-t="' + t + '"[^>]*>Resgatar</button>').test(H()), 'botão Resgatar do nível ' + t); assert(!H().includes('data-track="free" data-t="4"'), 'nível 4 ainda não está pronto'); assert(!H().includes('data-track="premium"'), 'premium bloqueado não tem botão'); assert.strictEqual((H().match(/, pronto"/g) || []).length, 3, '3 células prontas'); } else has('Pronto');
+has('Resgatar tudo (3)'); assert(!P.ensure(g.S).premium);
 const sc = { scrollTop: 0, clientHeight: 400 }; els.pw_sc = sc; def.onOpen(); def.render(); assert(sc.scrollTop > 0, 'rolou até o nível atual'); out.push('nível 3: 3 prontos, nível atual destacado e centralizado');
 def.click(btn('all')); assert.deepStrictEqual(P.ensure(g.S).free, [1, 2, 3]); assert.deepStrictEqual(P.ensure(g.S).prem, [], 'premium não entrega sem premium'); assert(changed >= 1); has('Resgatado'); assert(toasts.some(t => /^Resgatado:/.test(t))); out.push('Resgatar tudo: trilha grátis, premium segue bloqueado, statsChanged');
 def.click(btn('all')); out.push('segunda vez: nada a resgatar');
 // 4) "Resgatar" por nível só aparece se o módulo tiver claimTier
-P.addXp(g.S, 100); def.render(); assert(!/data-x="tier"/.test(H()), 'sem claimTier não há botão por nível'); out.push('sem Sys.pass.claimTier: nível pronto mostra "Pronto", sem botão falso');
-P.claimTier = (S, h, tr, t) => { const o = P.ensure(S); if (t > P.progress(S).tier) return { ok: false }; const L = tr === 'premium' ? o.prem : o.free; if (L.includes(t)) return { ok: false }; L.push(t); return { ok: true, gems: 5 }; };
-def.render(); has('data-x="tier"'); def.click(btn('tier', { track: 'free', t: 4 })); assert(P.ensure(g.S).free.includes(4)); out.push('com claimTier: botão por nível resgata só aquele'); delete P.claimTier;
+const ct0 = P.claimTier; delete P.claimTier;   /* o módulo de hoje já tem claimTier: tira só para provar o caminho sem ele, depois prova com o REAL */
+P.addXp(g.S, 100); def.render(); assert(!/data-x="tier"/.test(H()), 'sem claimTier não há botão por nível'); has('Pronto'); out.push('sem Sys.pass.claimTier: nível pronto mostra "Pronto", sem botão falso');
+P.claimTier = typeof ct0 === 'function' ? ct0 : (S, h, tr, t) => { const o = P.ensure(S); if (t > P.progress(S).tier) return { ok: false }; const L = tr === 'premium' ? o.prem : o.free; if (L.includes(t)) return { ok: false }; L.push(t); return { ok: true, gems: 5 }; };
+def.render(); has('data-x="tier"'); def.click(btn('tier', { track: 'free', t: 4 })); assert(P.ensure(g.S).free.includes(4)); assert.deepStrictEqual(P.ensure(g.S).free, [1, 2, 3, 4], 'só o nível 4 entrou'); def.render(); assert(!/data-x="tier" data-track="free"/.test(H()), 'resgatado: o botão do nível some'); out.push('com claimTier: botão por nível resgata só aquele'); delete P.claimTier;
 // 5) Premium: abre "Pagamento em breve", não liga o premium nem cobra
 def.click(btn('buy')); has('Pagamento em breve'); has('Nada foi cobrado'); assert(!P.ensure(g.S).premium); assert.strictEqual(def.busy(), true); def.click(btn('all')); def.click(btn('dlg-x')); assert.strictEqual(def.busy(), false); assert(!H().includes('Nada foi cobrado')); out.push('Ativar Premium: só explica; premium continua desligado');
 // 6) com premium ativo (como o jogo ligar depois do pagamento): resgata também a trilha premium

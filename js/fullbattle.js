@@ -153,7 +153,7 @@ const FB_DROP = [
   { id: 'chat',     icon: 'chat',      label: 'Chat',       act: 'soon:chat' },   /* nível 16 (PO) */
   { id: 'duo',      icon: 'chat',      label: 'Dupla',      act: 'soon:duo', alerts: () => duoAlerts() },   /* Dupla das Eras (nível 16; Sys.duo). Ícone PROVISÓRIO = o do Chat, até a Arte entregar assets/icons/menu/duo.png */
   { id: 'mentors',  icon: 'codex',     label: 'Mentores',   act: 'soon:mentors' },   /* Mentores (nível 16; Sys.mentors). Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/mentors.png */
-  { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map' },   /* Mapa das Eras: nível 1 (PO) */
+  { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map', alerts: () => { try { return window.Map2 && fbPanelOn('map2') ? Map2.ready() : 0; } catch (e) { return 0; } } },   /* Mapa das Eras: nível 1 (PO) */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },
   { id: 'events',   icon: 'events',    label: 'Eventos',    act: 'soon:events' },
   { id: 'cfg',      icon: 'settings',  label: 'Config.',    act: 'cfg' },
@@ -280,7 +280,7 @@ function fbAct(a, b){
   else if (a.indexOf('spd') === 0){ const n = +a.slice(3); if (canSpeed(n)){ B.speed = n; S.set.spd = n; save(); syncSpeed(); } else { let tx = ''; try { const m = Sys.vip.maxSpeed(S, Sys.host).speeds.find(x => x.speed === n); tx = m && m.text; } catch (e) {} toast(tx || ('x' + n + ' bloqueada')); } fbTick(); }
   else if (a === 'chest'){ const p = Sys.chest.progress(S, Sys.host);
     if (!p.stored){ toast(p.capped ? 'Baú: limite de ' + p.cap + ' por dia atingido. Volte amanhã!' : 'Baú: ' + Math.floor(p.charge) + '/' + p.need + ' abates'); return; }
-    const res = Sys.chest.open(S, Sys.host); snd('claim'); Sys.host.onChange(); if (res) Sys.chest.showOpen(document.getElementById('app'), res, S, Sys.host, () => fbTick()); fbTick(); }
+    const res = Sys.chest.open(S, Sys.host); snd('claim'); if (res && res.brasas > 0){ try { if (window.Fogueira) Fogueira.onBrasa(typeof HX === 'number' ? HX + 40 : 120, GY - 34, res.brasas); } catch (e) {} }   /* Brasas do baú voam até a Fogueira */ Sys.host.onChange(); if (res) Sys.chest.showOpen(document.getElementById('app'), res, S, Sys.host, () => fbTick()); fbTick(); }
 }
 /* destino do voo dos pickups (moeda, gema, XP, item) no HUD novo */
 function fbTarget(to){ return document.getElementById(to === 'gold' ? 'fb_goldp' : to === 'gems' ? 'fb_gemp' : to === 'level' ? 'fb_ring' : 'fbm_gear'); }
@@ -341,7 +341,7 @@ function fbTick(){
   { const k = B.speed + '|' + [1, 2, 4].map(n => canSpeed(n) ? 1 : 0).join(''); if (FBK.spd !== k){ FBK.spd = k;
       document.getElementById('fb_spd').innerHTML = [1, 2, 4].map(n => { const ok = canSpeed(n), on = B.speed === n; return `<button data-fb="spd${n}" class="lil" aria-label="Velocidade x${n}${ok ? '' : ', bloqueada'}" aria-pressed="${on}" style="position:relative;width:var(--fbt,44px);height:var(--fbt,44px);border-radius:11px;border:0;padding:0;background:${on ? 'linear-gradient(180deg,#ffe07a,#f2a826)' : 'transparent'};color:${on ? '#2a1403' : ok ? '#f6ecdf' : '#9c8d7a'};font-size:14px;display:flex;align-items:center;justify-content:center">x${n}${ok ? '' : `<span style="position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:#1a110b;display:flex;align-items:center;justify-content:center">${FB_LOCK}</span>`}</button>`; }).join(''); } }
   { let lab = 'Baú'; try { if (Sys.chest.progress(S, Sys.host).stored) lab = 'Baú cheio'; } catch (e) {} fbSet('fbl_chest', lab); }
-  { let n = fbUnl('missions') ? missionAlerts() : 0; if (FB_HIDDEN.pass && fbUnl('pass')) n += passAlerts(); fbSet('fb_bmenu', n ? String(n) : ''); }
+  { let n = fbUnl('missions') ? missionAlerts() : 0; try { if (fbUnl('map') && window.Map2 && fbPanelOn('map2')) n += Map2.ready(); } catch (e) {} if (FB_HIDDEN.pass && fbUnl('pass')) n += passAlerts(); fbSet('fb_bmenu', n ? String(n) : ''); }
   { const lv = fbLvl() + '|' + Object.keys(Screens.reg || {}).length + '|' + (typeof heroRise === 'function' ? Math.round(heroRise()) : 0); if (FBK.unl !== lv){ FBK.unl = lv; fbLayout(); } fbNovoTick(); }   // subiu de nível (ou uma tela foi registrada): refaz o que aparece
   fbFast();
 }

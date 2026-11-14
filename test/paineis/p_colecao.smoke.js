@@ -20,8 +20,12 @@ assert((H().match(/Como obter/g) || []).length >= 9, 'cada pet novo tem Como obt
 assert(!/undefined|NaN|\bnull\b/.test(H()), 'sem undefined/NaN/null'); assert(!/\p{Extended_Pictographic}/u.test(H()), 'sem emoji');
 has('Em breve'); has('assets/icons/pets/shadow_wolf.png'); has('data-old="assets/pets/new/shadow_wolf_ref_prev.png"'); out.push('Pets: 9 novos + iniciais grátis, como obter, arte');
 // Montarias: 10 novas, mecha em breve com o preço da proposta fora da tela (só "compra direta")
-def.click(btn('tab', { i: 1 })); has('Montarias novas (10)'); has('Fênix gigante'); has('VIP 8: inteira, uma vez'); has('Mecha de guerra'); has('Em breve (até as compras abrirem)'); has('assets/icons/mounts/war_mecha.png');
-assert((H().match(/Como obter/g) || []).length >= 10); assert(!/undefined|NaN|\bnull\b/.test(H())); out.push('Montarias: 10 novas, mecha em breve');
+def.click(btn('tab', { i: 1 })); has('Montarias novas (10)'); has('Fênix gigante'); has('VIP 8: inteira, uma vez'); has('Mecha de guerra'); has('assets/icons/mounts/war_mecha.png');
+/* Mecha LIGADO no módulo (Sys.mount.DATA.newReady.mecha, 72d7507): o cartão dele diz "Disponível" e o "Em breve (até as compras abrirem)" some; desligado no módulo, volta o "Em breve" */
+{ const MM = g.Sys.mount, mc = MM.DATA.mounts.find(m => m.id === 'mecha'), card = () => { const h = H(), i = h.indexOf('Mecha de guerra'); assert(i >= 0); const j = h.indexOf('Como obter', i); return h.slice(i, j > i ? j : i + 1500); };
+  assert.strictEqual(MM.live(mc), true, 'Mecha nasce ligado no Sys.mount'); assert(card().includes('Disponível'), 'Mecha ligado: Disponível'); assert(!H().includes('Em breve (até as compras abrirem)'), 'Mecha ligado: sem o Em breve das compras');
+  const k0 = MM.DATA.newReady.mecha; MM.DATA.newReady.mecha = false; try { def.render(); assert.strictEqual(MM.live(mc), false); has('Mecha de guerra'); has('Em breve (até as compras abrirem)'); assert(!card().includes('Disponível'), 'Mecha desligado: não diz Disponível'); } finally { MM.DATA.newReady.mecha = k0; } def.render(); }
+assert((H().match(/Como obter/g) || []).length >= 10); assert(!/undefined|NaN|\bnull\b/.test(H())); out.push('Montarias: 10 novas, mecha Disponível (ligado no módulo) e "Em breve" quando o módulo o desliga');
 // Asas: 8 novas
 def.click(btn('tab', { i: 2 })); has('Asas novas (8)'); has('Mariposa sombria'); has('Asa de serafim'); has('A asa mais rara do jogo.'); has('assets/icons/wings/wing_seraph.png');
 assert((H().match(/Como obter/g) || []).length >= 8); assert(!/undefined|NaN|\bnull\b/.test(H())); out.push('Asas: 8 novas, serafim a mais rara');

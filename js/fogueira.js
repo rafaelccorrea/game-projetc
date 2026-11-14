@@ -21,7 +21,7 @@ const FOG_LOOP_ON = true;
    porque a fila de baixo é onde a Fogueira fica; ao desmontar, o estilo original volta. false = não toca no grupo (quando o fullbattle já o posicionar). */
 const MOVE_SPEED = true;
 const AUTO_S = 1.5, AUTO_GAP = 0.35, HOLD_MS = 500, MAX_FLY = 24, SYNC_S = 0.2, STATUS_S = 1.3, BAG_SHOW = 30;
-const ACTIONS = ['forge', 'sheet', 'equip', 'keep', 'sell', 'lock', 'cclose', 'close', 'up', 'on', 'off', 'sellb', 'eq', 'batch', 'open', 'worse', 'below', 'rec', 'offok'];
+const ACTIONS = ['forge', 'sheet', 'equip', 'keep', 'sell', 'lock', 'cclose', 'close', 'up', 'on', 'off', 'sellb', 'eq', 'batch', 'open', 'worse', 'below', 'rec', 'offok', 'thief'];
 const RN_DEF = ['Básico', 'Raro', 'Épico', 'Mítico', 'Lendário'], RC_DEF = ['#a9b3c9', '#4fa3ff', '#b46bff', '#ff4f6d', '#ffa434'];
 
 /* ---------- acesso ao jogo (tudo com reserva: o arquivo carrega sozinho no teste) ---------- */
@@ -277,7 +277,7 @@ function sheetHtml(){ const b = BF(), h = host(), v = b.view(S, h), D = b.DATA, 
 <div class="fgx-xp"><i style="width:${(max ? 100 : Math.min(100, v.xp / v.need * 100)).toFixed(1)}%"></i><b>${max ? 'Nível máximo' : 'XP da Fogueira ' + v.xp + '/' + v.need}</b></div>
 <button class="fgx-up" data-fg="up" aria-disabled="${pr(!full)}">${max ? 'Nível máximo' : full ? 'Subir para o nível ' + (v.lv + 1) + ' · ' + nf(v.cost) + ' de ouro' : 'Forje e desmonte para encher a barra'}</button>
 <p class="fgx-nt">Brasas: <b style="color:#ffc27a">${v.bra}/${v.max}</b> · pote ${v.pot}/${v.potKills} abates em fase nova · <b style="color:#fff">${pl(v.perTap, 'peça', 'peças')} por toque</b> (cada uma = 1 Brasa)${v.nextTap ? ' · no nível ' + v.nextTap.lv + ': ' + v.nextTap.n + ' por toque' : ''}. Brasas só se ganham jogando.</p>
-<div class="fgx-se"><span>Estágios</span><span>${si + 1} de ${D.stages.length}</span></div>
+${thiefRow()}<div class="fgx-se"><span>Estágios</span><span>${si + 1} de ${D.stages.length}</span></div>
 <div class="fgx-ga">${D.stages.map((s, i) => `<div class="${i === si ? 'cur' : i > si ? 'lk' : ''}">${artHtml(i + 1, 'fgx-gi')}<b>${esc(s.name)}</b><small>${i > si ? 'nível ' + s.from : i === si ? 'atual' : 'feito'}</small></div>`).join('')}</div>
 <div class="fgx-se"><span>Automático</span><span>${lockA ? 'abre no nível ' + v.autoLevel : A2.on ? 'ligado' : 'desligado'}</span></div>
 <div class="fgx-sg"><button data-fg="on" aria-pressed="${pr(A2.on && !lockA)}">Ligado</button><button data-fg="off" aria-pressed="${pr(!(A2.on && !lockA))}">Desligado</button></div>
@@ -294,6 +294,9 @@ function sheetHtml(){ const b = BF(), h = host(), v = b.view(S, h), D = b.DATA, 
 <div class="fgx-qd">${qb('worse', 'worse', null, 'Desmontar as piores que a sua')}${[1, 2].map(r => qb('below' + r, 'below', r, 'Abaixo de ' + rarN(h, r))).join('')}</div>
 <div class="fgx-bg">${bag.map(it => { const dd = deltaOf(h, it), lk = b.isLocked(S, it), nm = nameOf(h, it); return `<button class="fgx-bi ${lk ? 'locked' : ''}" style="--rc:${rarC(h, it.r)}" data-fg="open" data-v="${esc(it.id)}" aria-label="Ver ${esc(nm)}${lk ? ', trancada' : ''}"><img src="${esc(thumbOf(h, it))}" alt=""><small class="${dd > 0 ? 'du' : dd < 0 ? 'dd' : ''}">${dd > 0 ? '+' : dd < 0 ? '−' : '+'}${esc(fcTxt(Math.abs(dd)))}</small>${lk ? LOCK : ''}</button>`; }).join('') || '<p class="fgx-nt">Vazia.</p>'}</div>
 ${rec.length ? `<div class="fgx-se"><span>Recuperar (últimas ${D.keep.n}, por ${Math.round(D.keep.ms / 60000)} min)</span><span>${rec.length}</span></div><div class="fgx-bg">${rec.map(x => `<button class="fgx-bi" style="--rc:${rarC(h, x.item.r)}" data-fg="rec" data-v="${esc(x.item.id)}" aria-label="Recuperar ${esc(nameOf(h, x.item))}"><img src="${esc(thumbOf(h, x.item))}" alt=""><small>${esc(rarN(h, x.item.r))}</small></button>`).join('')}</div>` : ''}</div>`; }
+/* LADRÃO DE BRASAS (Sys.thief): só a ENTRADA mora aqui; a perseguição é a tela 'thief'. Sem a tela ligada ou o módulo desligado: nada aparece */
+function thiefRow(){ try { const T = Sys.thief; if (!T || !T.DATA || T.DATA.on !== true || !(window.Panels && Panels.on('thief'))) return ''; const v = T.view(S, host());
+  return `<div class="fgx-se"><span>Ladrão de Brasas</span><span>${v.left} de ${v.entries} hoje</span></div><button class="fgx-up" data-fg="thief" aria-disabled="${!(v.canEnter || v.canSweep || v.run)}">${v.run ? 'Perseguição aberta: continuar' : v.canEnter || v.canSweep ? 'Perseguir o ladrão · até ' + pl(v.lote, 'Brasa', 'Brasas') : 'Volta amanhã'}</button>`; } catch (e) { return ''; } }
 function renderSheet(){ if (!M) return; let h = ''; if (SHEET){ try { h = sheetHtml(); } catch (e) { h = ''; SHEET = false; try { console.error('Fogueira: painel', e); } catch (e2) {} } }
   if (M.sheet.innerHTML === h) return; let sc = 0; const old = gid('fgx_sh'); if (old) sc = old.scrollTop || 0; M.sheet.innerHTML = h; const nw = gid('fgx_sh'); if (nw && sc) nw.scrollTop = sc; }
 function sheetKey(){ const b = BF(), o = b.ensure(S), h = host(); return [o.lv, o.xp, o.bra, o.pot, o.recent.length, o.locked.length, bagOf(h).length, o.auto.on, o.auto.batch, o.auto.equip, o.auto.sellBelow].join('|'); }
@@ -313,6 +316,7 @@ function act(a, el){ const b = BF(); if (!b || !M) return; const v = el && el.da
   if (a === 'sheet'){ SHEET = !SHEET; sfx('ui_tap'); SHKEY = ''; renderSheet(); return; }
   if (a === 'equip' || a === 'keep' || a === 'sell' || a === 'lock' || a === 'cclose'){ cardAct(a); return; }
   if (a === 'offok'){ OFF = null; renderOff(); return; }
+  if (a === 'thief'){ SHEET = false; renderSheet(); try { if (window.Panels && Panels.on('thief')) Panels.open('thief'); } catch (e) {} return; }
   if (a === 'close'){ SHEET = false; renderSheet(); return; }
   if (a === 'up') levelUp();
   else if (a === 'on' || a === 'off'){ const o = b.ensure(S); if (o.lv < b.DATA.auto.level){ say('O automático abre no nível ' + b.DATA.auto.level + ' da Fogueira.'); return; } b.setAuto(S, { on: a === 'on' }); A.paused = false; A.left = 0; A.t = 0.5; sync(); }

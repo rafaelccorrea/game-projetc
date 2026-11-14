@@ -2,10 +2,11 @@
 /* ================= TELA LADRÃO DE BRASAS — NASCE DESLIGADA (PANEL_ON.thief = false) =================
    SEM PROTÓTIPO APROVADO em docs/proto/v2 (só a regra: docs/SISTEMA_MATRIZ.md "Fogueira P1 e Ladrão de Brasas" e js/sys/thief.js). Esta é a parte que é TELA:
    a entrada (entradas do dia, lote, Repetir) e o RESULTADO. A perseguição de 45 s é LUTA e não mora aqui (molde do js/p_inst.js):
-   - "Entrar" chama Sys.thief.enter(S, host) UMA vez e entrega a corrida ao jogo por window.startThiefRun({lv, lote, secs}). Se o jogo ainda não ligou essa
-     função, o toque explica e NÃO abre corrida (nada é gasto). Se a função devolver false, a corrida é cancelada (Sys.thief.cancel: não gasta entrada).
+   - "Entrar" chama Sys.thief.enter(S, host) UMA vez e entrega a corrida ao jogo por window.startThiefRun({lv, lote, secs}). REGRA ÚNICA COM O SERVIDOR:
+     a entrada é GASTA AO ENTRAR e sair no meio NÃO devolve (a tela diz isso antes do toque). Se o jogo ainda não ligou essa função, o toque explica e
+     NÃO chama o enter (nada é gasto). Se a função devolver false depois do enter, a corrida fica ABERTA (a entrada já gasta não se perde: Continuar).
    - No fim da perseguição a batalha chama window.PThief.finish(score) (score 0..1 = fração do saco que caiu): aqui roda Sys.thief.finish(S, host, {score})
-     UMA vez, o save é gravado e esta tela abre com o resultado. Saiu antes de lutar: window.PThief.cancel().
+     UMA vez (não gasta outra entrada), o save é gravado e esta tela abre com o resultado. Saiu no meio: window.PThief.cancel() (fecha a corrida; a entrada não volta).
    NENHUMA regra e NENHUM número aqui: entradas, segundos, lote, melhor nível e total vêm do Sys.thief.view; as Brasas entram pelo próprio módulo
    (Sys.bonfire.addBrasas(S,'thief',n)); o estoque e o teto vêm do Sys.bonfire.view.
    ESTADOS HONESTOS: sem o módulo ou com a chave desligada = aviso e Voltar (nada é lido nem gravado no save); Fogueira desligada = aviso e Voltar
@@ -135,8 +136,8 @@ function lobbyHtml(M){ const v=M.v, f=M.f||{}, stock=num(f.stock), max=num(f.max
     +'<div class="th-top"><span class="ib">'+SV(I_SACK,44)+'</span><p>Um ladrão foge com um saco de Brasas por <em>'+nT(v.secs)+' s</em>. Bata nele para o saco soltar as Brasas.</p></div>'
     +'<div class="th-kv"><span>'+SV(I_CLOCK,20)+'<span>Entradas hoje<small>voltam em '+esc2(hm(resetMs()))+' (meia-noite de Brasília)</small></span></span><span id="th_left">'+nT(v.left)+'/'+nT(v.entries)+'</span></div>'
     +'<div class="th-kv"><span>'+SV(I_BRASA,20)+'<span>Prêmio do saco inteiro<small>lote do nível '+nT(v.lv)+' da Fogueira</small></span></span><span>'+esc2(brasas(v.lote))+'</span></div>';
-  if(v.run) h+='<p class="w">Há uma perseguição aberta (nível '+nT(v.run.lv)+'). A entrada só é gasta no fim dela.</p><div class="th-row2" style="margin-top:8px"><button class="th-bt" data-x="cancel">Sair sem gastar</button><button class="th-bt y" data-x="resume">Continuar</button></div>';
-  else h+='<button class="th-bt y wide'+(v.canEnter?'':' off')+'" data-x="enter" aria-label="Entrar na perseguição'+(v.canEnter?'':', sem entradas hoje')+'">Entrar</button>'+(v.left>0?'':'<p class="d">'+esc2(why('entries'))+'.</p>');
+  if(v.run) h+='<p class="w">Há uma perseguição aberta (nível '+nT(v.run.lv)+'). A entrada dela já foi gasta: se sair agora, ela não volta e o saco fica com o ladrão.</p><div class="th-row2" style="margin-top:8px"><button class="th-bt" data-x="cancel" aria-label="Sair da perseguição. A entrada não volta">Sair (a entrada não volta)</button><button class="th-bt y" data-x="resume">Continuar</button></div>';
+  else h+='<button class="th-bt y wide'+(v.canEnter?'':' off')+'" data-x="enter" aria-label="Entrar na perseguição'+(v.canEnter?'':', sem entradas hoje')+'">Entrar</button>'+(v.left>0?'<p class="d">Entrar gasta 1 entrada na hora. Sair no meio não devolve.</p>':'<p class="d">'+esc2(why('entries'))+'.</p>');
   h+='</div>';
   h+='<div class="th-card"><h4>Repetir<span>sem perseguição</span></h4>'
     +(num(v.best)>0?'<p>Rende na hora o lote cheio do melhor nível que você já venceu (nível '+nT(v.best)+'): <em>'+esc2(brasas(v.sweepLote))+'</em>. Gasta 1 entrada.</p>'
@@ -167,9 +168,9 @@ function draw(){
 function sig(){ try{ const M=mode(), v=M.v; if(!v) return M.m; const f=M.f||{}; return [M.m,v.left,v.lv,v.lote,v.best,v.total,v.run?v.run.lv:0,f.stock,f.max,Math.ceil(resetMs()/60000),typeof window.startThiefRun].join('|'); }catch(e){ return ''; } }
 
 /* ================= a corrida (a luta é do jogo; aqui só a entrega e o resultado) ================= */
-/* entrega a corrida à batalha. Devolveu false ou estourou: a corrida é cancelada no módulo (não gasta entrada) */
+/* entrega a corrida à batalha. Devolveu false ou estourou: a corrida fica ABERTA no módulo (a entrada já foi gasta no enter; o jogador volta por Continuar) */
 function launch(run){ let ok=false; try{ ok=window.startThiefRun({lv:run.lv,lote:run.lote,secs:run.secs})!==false; }catch(e){ ok=false; }
-  if(!ok){ try{ TH().cancel(sv(),host()); }catch(e){} saved(); say('Não foi possível começar agora. A entrada não foi gasta'); }
+  if(!ok) say('Não foi possível começar agora. A perseguição fica aberta: toque em Continuar');
   return ok; }
 /* FIM DA PERSEGUIÇÃO (a batalha chama UMA vez): score 0..1 = fração do saco que caiu. Roda o Sys.thief.finish, grava e abre o resultado. Devolve o que o módulo devolveu */
 function finish(score){ const T=TH(); if(!T||!thOn()) return {ok:false,reason:'off'}; if(!fireOn()) return {ok:false,reason:'off'};
@@ -179,7 +180,7 @@ function finish(score){ const T=TH(); if(!T||!thOn()) return {ok:false,reason:'o
 function showResult(r,kind){ if(!r||!r.ok) return false; X.res=Object.assign({},r,{kind:kind==='sweep'?'sweep':'run'}); X.conf=false; X.top=true; X.anim=true;
   try{ if(!isOn()&&window.Panels&&typeof Panels.open==='function'&&Panels.on(N)){ X.keep=true; Panels.open(N,{result:true}); } }catch(e){}
   X.keep=false; redraw(); return true; }
-/* saiu antes de lutar: não gasta entrada */
+/* saiu no meio: fecha a corrida. A entrada foi gasta no enter e NÃO volta */
 function cancel(){ const T=TH(); if(!T||!thOn()) return false; let had=false; try{ had=!!T.cancel(sv(),host()); }catch(e){} if(had) saved(); redraw(); return had; }
 
 /* ================= toques (cada data-x da tela tem uma entrada aqui) ================= */
@@ -187,16 +188,16 @@ const ACT={
   back(){ sfx('ui_tap'); try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} },
   ok(){ sfx('ui_tap'); X.res=null; X.top=true; redraw(); },
   no(){ sfx('ui_tap'); X.conf=false; redraw(); },
-  /* Entrar: uma chamada ao Sys.thief.enter; a entrada só é gasta no fim (Sys.thief.finish) */
+  /* Entrar: uma chamada ao Sys.thief.enter, que GASTA a entrada na hora; o fim (Sys.thief.finish) não gasta outra */
   enter(){ const T=TH(), v=viewNow(); if(!v) return; sfx('ui_tap'); X.conf=false;
     if(v.run) return say(why('run')); if(!v.canEnter) return say(why('entries'));
     if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Nada foi gasto');   /* não abre corrida que ninguém vai fechar */
     let r=null; try{ r=T.enter(sv(),host()); }catch(e){ r=null; } if(!r||!r.ok) return say(why(r&&r.reason));
     X.res=null; saved(); launch(r); redraw(); },
   resume(){ const T=TH(), v=viewNow(); if(!v||!v.run) return; sfx('ui_tap');
-    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Nada foi gasto');
+    if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Ela continua aberta');
     launch({lv:v.run.lv,lote:T.loteOf(v.run.lv),secs:v.secs}); redraw(); },
-  cancel(){ const v=viewNow(); if(!v||!v.run) return; sfx('ui_tap'); if(cancel()) say('Você saiu da perseguição. A entrada não foi gasta','ok'); },
+  cancel(){ const v=viewNow(); if(!v||!v.run) return; sfx('ui_tap'); if(cancel()) say('Você saiu da perseguição. A entrada foi gasta'); },
   /* Repetir gasta uma entrada do dia na hora: o 1º toque só abre a confirmação */
   sweep(){ const v=viewNow(); if(!v) return; sfx('ui_tap'); if(v.run) return say(why('run')); if(!(num(v.best)>0)) return say(why('none')); if(!v.canSweep) return say(why('entries'));
     X.toast=''; X.conf=true; redraw(); },

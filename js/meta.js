@@ -92,13 +92,16 @@ function showOffline(){
   let om=1; try{ om=Math.max(1,Sys.vip.perks(S).offlineGoldMult||1); }catch(e){}   // o x2 do VIP NÃO vale para o ouro offline (dono 14/11): Sys.vip devolve offlineGoldMult = 1
   const gold=Math.floor(t/60*BAL.offlineKillsPerMin*perKill*BAL.offlineRate*om); if(gold<=0) return false;
   const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60);
+  let campTx=''; try{ const K=Sys.camp; if(K&&K.DATA&&K.DATA.on===true){ const v=K.view(S,Sys.host); if(!v.locked) campTx=v.tents.filter(x=>x.stored>0).map(x=>'+'+fmt(x.stored)+' '+(x.res==='gold'?'moedas':x.res==='forge'?'pedras de forja':'pedras de treino')).join(' · '); } }catch(e){}   /* Acampamento: o que as tendas guardaram */
   mbox.innerHTML=`<h3>Enquanto você esteve fora</h3>
     <div>Seu guerreiro continuou lutando por <b>${hh?hh+'h ':''}${mm}min</b>${AWAY>cap?` (teto de ${capH}h)`:''}.</div>
     <div class="card" style="margin-top:10px;text-align:center;font-size:20px"><b>+${fmt(gold)}</b> ${COIN()}</div>
+    ${campTx?`<div class="sm" style="margin-top:8px;text-align:center">Acampamento: ${campTx}</div>`:''}
     <div class="row"><button class="btn grow" id="m_go">Resgatar</button></div>`;
   modal.style.display='flex';
   document.getElementById('m_go').onclick=()=>{ S.gold+=gold;
     if(SYS_ON){ try{ const o=Sys.loot.offline(S,Sys.host,t); Sys.loot.grant(S,Sys.host,o); Sys.chest.onKills(S,o.kills,Sys.host); const lr=Sys.level.onOffline(S,Sys.host,t); if(lr&&lr.levels>0) onLevelUp(lr); if(Sys.practice&&Sys.practice.onOffline) Sys.practice.onOffline(S,Sys.host,t);   /* pedras de prática do tempo fora */ }catch(e){ console.error('offline',e); } }   // itens, carga do baú e XP do tempo fora
+    if(campTx){ try{ Sys.camp.collect(S,Sys.host); }catch(e){ console.error('camp',e); } }
     save(); hud(); closeModal(); snd('coin'); snd('claim'); if(view!=='battle') render(); };
   return true;
 }

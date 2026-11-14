@@ -167,5 +167,21 @@ out.push('HUD: selo "Encruzilhada" enquanto espera, botão "Bênçãos" com cont
   assert(/\.pc-xc \.pc-gold\{[^}]*min-height:44px/.test(SRC) && /\.pc-xbt button\{[^}]*min-height:44px/.test(SRC) && /\.pc-x,\.xs \.pc-x\{[^}]*width:40px;height:40px/.test(SRC) && /\.pc-pend \.pc-gold\{[^}]*min-height:44px/.test(SRC) && /\.pc-badge,\.xs \.pc-badge\{[^}]*min-height:40px/.test(SRC), 'toques com 40 px ou mais');
   out.push('320x568: a janela cabe; toques de 40 px ou mais; pausa opcional'); }
 
+// 9) bênçãos que acabaram: aviso UMA vez (view().lastEnded → ackEnded), só com nada aberto por cima da luta; desligado não avisa nem mexe no save
+{ g.S = newSave('i'); const toasts = []; g.toast = m => toasts.push(String(m)); let acks = 0; const ack0 = C.ackEnded; C.ackEnded = function () { acks++; return ack0.apply(this, arguments); };
+  C.onStage(g.S, host, 5); const of = C.offers(g.S, 5); C.choose(g.S, 5, of[0].id, host); assert.strictEqual(P.mount(), true); P.update(true); assert.strictEqual(toasts.length, 0, 'era em curso: sem aviso');
+  C.onStage(g.S, host, 10); const le = C.view(g.S, host).lastEnded; assert(le && le.list.length === 1, 'o módulo guardou as bênçãos da era vencida (Senhor da Era)');
+  g.B.res = { mode: 'win' }; P.update(true); assert.strictEqual(toasts.length, 0, 'com a Vitória aberta espera'); g.B.res = null;
+  g.B.eraPend = 1; P.update(true); assert.strictEqual(toasts.length, 0, 'com a Troca de era na fila espera'); g.B.eraPend = null;
+  g.PANEL_ON.cross = false; P.update(true); assert.strictEqual(toasts.length, 0, 'tela desligada: sem aviso'); assert(C.view(g.S, host).lastEnded, 'e continua pendente'); g.PANEL_ON.cross = true;
+  C.setOn(false); const s0 = JSON.stringify(g.S); P.update(true); assert.strictEqual(toasts.length, 0, 'módulo desligado: sem aviso'); assert.strictEqual(JSON.stringify(g.S), s0, 'módulo desligado: save intacto'); C.setOn(true); assert.strictEqual(acks, 0);
+  P.update(true); assert.strictEqual(toasts.length, 1); assert.strictEqual(acks, 1); assert.strictEqual(toasts[0], 'As bênçãos da era Pré-História acabaram: ' + of[0].name + '. Na era seguinte (Antiguidade) começa uma coleção nova.');
+  assert(!/\.\.\.|…|undefined|NaN/.test(toasts[0])); assert.strictEqual(C.view(g.S, host).lastEnded, null, 'o módulo limpou');
+  P.update(true); P.update(true); assert.strictEqual(toasts.length, 1, 'uma vez só'); assert.strictEqual(acks, 1);
+  /* pendente de outra abertura do jogo (save com lastEnded): avisa ao montar o HUD */
+  g.S = newSave('j'); C.onStage(g.S, host, 5); const o2 = C.offers(g.S, 5); C.choose(g.S, 5, o2[1].id, host); C.onStage(g.S, host, 10); g.S = JSON.parse(JSON.stringify(g.S)); P.update(true); assert.strictEqual(toasts.length, 2); assert(toasts[1].includes(o2[1].name));
+  P.unmount(); C.ackEnded = ack0; delete g.toast;
+  out.push('bênçãos que acabaram: "' + toasts[0] + '" uma vez, depois da Vitória e da Troca de era; desligado não avisa'); }
+
 C.choose = choose0; C.setOn(false);
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

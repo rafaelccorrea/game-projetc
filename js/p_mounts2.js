@@ -40,7 +40,9 @@ function ids(){ let l=[]; try{ if(typeof mountIds==='function') l=mountIds()||[]
   return l.map(d=>d&&typeof d==='object'?d.id:d).filter(id=>{ const d=defOf(id); return !!d&&!d.tbd&&liveOk(d); }); }
 const catOf=id=>{ try{ return (M().catalog()||[]).find(c=>c&&c.id===id)||null; }catch(e){ return null; } };
 const fileOf=id=>{ try{ return typeof mountFile==='function'?mountFile(id):id; }catch(e){ return id; } };
-const iconOf=id=>ICON_DIR+fileOf(id)+'.png';
+/* o ÍCONE nem sempre tem o nome da folha: o Mecha usa as folhas 'mecha' e o ícone 'war_mecha' (defeito achado pela bateria de testes: ícone quebrado na grade) */
+const ICON_FILE={mecha:'war_mecha'};
+const iconOf=id=>ICON_DIR+(ICON_FILE[id]||fileOf(id))+'.png';
 const refOf=id=>{ try{ return (typeof MOUNT_REF!=='undefined'&&MOUNT_REF[id])||null; }catch(e){ return null; } };
 const stillUrl=id=>{ const r=refOf(id); return r&&r.f?STILL_DIR+r.f+'.png':''; };
 const canRide=id=>{ try{ return typeof window.drawHeroFull==='function'&&typeof MOUNT_TBL!=='undefined'&&!!MOUNT_TBL[id]&&typeof mountPrefix==='function'&&!!mountPrefix(id)&&typeof HS==='number'&&HS>0; }catch(e){ return false; } };

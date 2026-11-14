@@ -125,7 +125,10 @@ out.push('palco: drawHeroFull montado com {id, stars} (em uso, prévia de montar
 
 // 7) só aparece o que o módulo liga: nova desligada nunca; a Fênix só enquanto Sys.mount.live disser que sim
 def.onOpen(); def.render(); const ph = D.mounts.find(m => m.id === 'phoenixm'), rp = D.mounts.find(m => m.id === 'raptor');
-assert.strictEqual(MT.live(rp), false); not('Raptor'); not('Mecha'); not('Dragão negro'); for (const m of D.mounts) if (!MT.live(m)) not(g.esc2(m.name));
+assert.strictEqual(MT.live(rp), false); not('Raptor'); not('Dragão negro');
+/* Mecha de guerra LIGADO no módulo (Sys.mount.DATA.newReady.mecha, 72d7507): aparece; desligado no módulo, some da tela e da grade (mesma prova da Fênix abaixo) */
+{ const mc = D.mounts.find(m => m.id === 'mecha'); assert.strictEqual(MT.live(mc), true, 'Mecha nasce ligado no Sys.mount'); has(g.esc2(mc.name)); const nA = cells(), k0 = D.newReady.mecha; D.newReady.mecha = false;
+  try { assert.strictEqual(MT.live(mc), false); def.tick(); def.render(); not('Mecha'); assert.strictEqual(cells(), nA - 1, 'Mecha desligado: uma célula a menos'); } finally { D.newReady.mecha = k0; } def.tick(); def.render(); has(g.esc2(mc.name)); assert.strictEqual(cells(), nA); } for (const m of D.mounts) if (!MT.live(m)) not(g.esc2(m.name));
 assert.strictEqual(MT.live(ph), true); has('Fênix gigante'); has('assets/icons/mounts/giant_phoenix.png'); def.click(btn('sel', { id: 'phoenixm' })); assert.strictEqual(X.pv, 'phoenixm'); has('Prévia: Fênix gigante'); has(g.esc2(ph.src[0])); has('0/' + ph.hatchFrags + ' fragmentos'); sane('fênix');
 const n1 = cells(); D.newReady.phoenixm = false; try { assert.strictEqual(MT.live(ph), false); X.toast = ''; /* o aviso "Prévia: Fênix..." ainda estava na tela */ def.tick(); not('Fênix gigante'); assert.strictEqual(cells(), n1 - 1); assert.strictEqual(X.pv, null, 'a prévia de uma montaria desligada cai'); def.click(btn('sel', { id: 'phoenixm' })); assert.strictEqual(X.pv, null); sane('fênix desligada'); } finally { D.newReady.phoenixm = true; }
 def.tick(); has('Fênix gigante'); assert.strictEqual(cells(), n1);
@@ -134,7 +137,7 @@ out.push('lista: ' + n1 + ' montarias ligadas; as novas desligadas no módulo n�
 // 8) toda imagem citada pela tela existe em disco (ícones da grade, miniatura da faixa e a imagem parada de cada montaria)
 const cited = new Set(def.urls()); for (const id of idsNow()) { def.onOpen({ mount: id }); def.render(); for (const m of H().matchAll(/(?:src="|url\()([^")]+)/g)) cited.add(un(m[1])); }
 assert(cited.size >= idsNow().length * 2); for (const u of cited) { assert(!/^data:|^https?:/.test(u), 'imagem de fora: ' + u); assert(fs.existsSync(path.join(R, u)), 'imagem que não existe: ' + u); }
-for (const id of idsNow()) { assert(cited.has('assets/icons/mounts/' + mountFile(id) + '.png')); assert(cited.has('assets/mounts/' + MOUNT_REF[id].f + '.png')); }
+for (const id of idsNow()) { assert(cited.has('assets/icons/mounts/' + (({ mecha: 'war_mecha' })[id] || mountFile(id)) + '.png'))   /* o ícone do Mecha é war_mecha (as folhas são 'mecha') */; assert(cited.has('assets/mounts/' + MOUNT_REF[id].f + '.png')); }
 out.push('imagens: ' + cited.size + ' arquivos citados, todos em disco');
 
 // 9) todos os botões: tocar em cada um não gera exceção (sem montaria, com montaria e na prévia)

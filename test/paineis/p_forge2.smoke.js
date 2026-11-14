@@ -218,4 +218,21 @@ out.push('toques: ' + taps + ' botões das abas tocados sem exceção, tela semp
   const poster = () => { g.V.innerHTML = '<span>Carregando as imagens</span>'; return true; }; g.xGate = poster; g.pGate = poster; g.pwGate = poster; g.Preload = { ready: () => Promise.resolve({ ok: false, failed: [] }), has: () => false };
   def.onOpen(); def.render(); not('Carregando'); has('PODER (FC)'); has('id="f2_stc"'); sane('sem cartaz'); delete g.xGate; delete g.pGate; delete g.pwGate; delete g.Preload; def.onClose();
   out.push('carga: a Forja V2 desenha na hora, sem cartaz de carregamento'); }
+// 15) FORJA ASTRAL +21..+25 (Sys.erasEnd REAL): só com o módulo ligado e o espaço no +20; regra, chance, custo e garantia do módulo; desligado = a tela de sempre
+{ require(path.join(R, 'js/sys/erasend.js')); const E = Sys.erasEnd; assert.strictEqual(E.DATA.on, false, 'Sys.erasEnd nasce desligado'); const A = E.DATA.astral;
+  g.S = newSave(); setLv(60); F.setForge20(true); F.ensure(g.S).lv.weapon = 20; def.onOpen(); X.slot = 'weapon'; def.render();
+  has('Este espaço chegou ao máximo'); not('data-x="astral"'); not('Forja Astral'); const s0 = JSON.stringify(g.S); def.click(btn('astral')); assert.strictEqual(JSON.stringify(g.S), s0, 'desligado: o toque não faz nada'); assert.strictEqual(g.S.sys.erasEnd, undefined, 'desligado: nada no save');
+  E.DATA.on = true; def.render(); has('Forja Astral · +20 → +21'); has('O +21 abre ao vencer a fase ' + A.unlockStage[0] + '.'); has('data-x="astral" aria-disabled="true"'); not('Este espaço chegou ao máximo'); sane('astral: marco');
+  def.click(btn('astral')); assert.strictEqual(E.astralLevel(g.S, 'weapon'), 0); assert(/Vença o próximo marco/.test(X.toast), X.toast);
+  E.ensure(g.S).marks.push(A.unlockStage[0]); def.render(); has('Faltam pedras astrais: tem 0, a tentativa pede ' + A.stones[0] + '.'); has('aria-disabled="true"'); def.click(btn('astral')); assert(/Faltam pedras astrais/.test(X.toast)); sane('astral: sem pedras');
+  E.ensure(g.S).stones = 10; def.render(); has('data-x="astral" aria-disabled="false"'); has('Pedras astrais: 10'); has('>' + A.stones[0] + ' pedras astrais<'); has(String(A.chance[0]) + '%'); sane('astral: pronta');
+  rngV = 0.999; log.length = 0; def.click(btn('astral')); assert.strictEqual(E.astralLevel(g.S, 'weapon'), 0, 'a falha não tira nem dá nível'); assert.strictEqual(E.ensure(g.S).stones, 10 - A.stones[0]); assert.strictEqual(F.ensure(g.S).lv.weapon, 20, 'o +20 da Forja fica');
+  has('Falhou, +' + A.pityPerFail + '% na próxima'); has('o nível não cai'); has(String(A.chance[0] + A.pityPerFail) + '%'); assert(log.includes('save')); sane('astral: falha');
+  rngV = 0; log.length = 0; def.click(btn('astral')); assert.strictEqual(E.astralLevel(g.S, 'weapon'), 1); assert.strictEqual(E.totalLevel(g.S, 'weapon'), 21); assert.strictEqual(E.ensure(g.S).stones, 10 - 2 * A.stones[0]); assert(log.includes('stats'), 'recalcula a FC');
+  has('+21!'); has('Forja Astral · +21 → +22'); has('O +22 abre ao vencer a fase ' + A.unlockStage[1] + '.'); sane('astral: subiu');
+  E.ensure(g.S).lv.weapon = A.levels.length; def.render(); has('Forja Astral · +25 · máximo'); not('data-x="astral"'); sane('astral: máximo');
+  /* teto da Forja no +15 (a f20 desligada): a Astral responde "base" e a tela fica como sempre, sem prometer o +21 */
+  g.S = newSave(); setLv(60); F.setForge20(false); F.ensure(g.S).lv.weapon = F.DATA.max; def.render(); has('Este espaço chegou ao máximo'); not('data-x="astral"'); not('Forja Astral ·'); not('Pedras astrais'); sane('astral: base');
+  E.DATA.on = false; def.onClose();
+  out.push('Forja Astral: desligada = tela de sempre; ligada no +20 mostra chance, pedras e motivo (marco, pedras); falha não tira nível e soma garantia; sucesso +21 recalcula a FC; +25 = máximo; teto +15 = tela de sempre'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

@@ -144,13 +144,18 @@ async function flowResult() {
      Destino TRANCADO por nível (diffRoute devolve lock): de propósito a Derrota FICA aberta e sai o aviso "<tela>: abre no nível N". Destino liberado: a Derrota fecha
      (modo farm atrás) e abre a tela (a nova, se a chave v2 dela estiver ligada); "Lutar" só fecha e avisa. */
   const toasts = [], toast0 = X.toast; X.toast = m => { toasts.push(String(m)); return toast0(m); };
-  const advOf = q => { const m = /^adv:(\d+)$/.exec(q); return m ? JSON.parse(ev(`JSON.stringify(DIFF.card&&DIFF.card.adv&&DIFF.card.adv.actions[${m[1]}]||null)`)) : null; };
+  /* DERROTA QUE RENDE (Sys.bossLoss LIGADO por padrão, SYS_LIVE do js/farm.js): o quadro novo (prêmio + dicas) entra no lugar das linhas adv:N e os botões passam a ser
+     data-q="tip:N" (RES.tips do js/screens2.js; o toque vai pelo resTipGo → o MESMO diffGo e a mesma rota do diffRoute). O fluxo confere os botões que a tela traz de verdade:
+     tip:N com o módulo ligado, adv:N sem ele. */
+  const lossOn = ev('!!(window.Sys&&Sys.bossLoss&&Sys.bossLoss.DATA&&Sys.bossLoss.DATA.on===true)'), TIPK = lossOn ? 'tip' : 'adv';
+  const advOf = q => { const m = /^(adv|tip):(\d+)$/.exec(q); if (!m) return null; return JSON.parse(ev(m[1] === 'tip' ? `JSON.stringify(RES.tips&&RES.tips[${m[2]}]||null)` : `JSON.stringify(DIFF.card&&DIFF.card.adv&&DIFF.card.adv.actions[${m[2]}]||null)`)); };
   const viewOf = n => String(ev(`(function(n){ const P=window.Panels, n2=P&&P.v2&&P.v2[n]; return n2&&PANEL_ON[n2]===true&&P.defs&&P.defs[n2]?n2:n; })(${JSON.stringify(n)})`));
   async function advCheck(q, a, html0, after, tag) { tag = tag || 'derrota [' + q + ']';
-    if (!check(tag + ': a dica existe no cartão do js/diff.js (DIFF.card)', !!(a && a.route), 'DIFF.card sem a ação ' + q)) { if (ev('B.res')) ev("resClose('farm'); 1"); return; }
+    const isTip = /^tip:/.test(q);
+    if (!check(tag + (isTip ? ': a dica existe no quadro do Sys.bossLoss (RES.tips)' : ': a dica existe no cartão do js/diff.js (DIFF.card)'), !!(a && a.route), (isTip ? 'RES.tips' : 'DIFF.card') + ' sem a ação ' + q)) { if (ev('B.res')) ev("resClose('farm'); 1"); return; }
     const r = a.route, det = after + ' · dica ' + a.id + ' → ' + JSON.stringify(r) + ' · avisos ' + JSON.stringify(toasts);
     if (r.lock) { const unl = ev(`DIFF_ROUTE[${JSON.stringify(a.tab)}].unl`), msg = r.name + ': abre no nível ' + r.lock;
-      check(tag + ': destino trancado de verdade (' + r.name + ' abre no nível ' + r.lock + ', herói no nível ' + ev('fbLvl()') + ') e o botão mostra "Nv ' + r.lock + '"', ev(`fbUnl(${JSON.stringify(unl)})`) === false && ev(`fbLvU(${JSON.stringify(unl)})`) === r.lock && r.lock > ev('fbLvl()') && html0.includes('>Nv ' + r.lock + '<') && html0.includes(r.name + ': abre no nível ' + r.lock), det);
+      check(tag + ': destino trancado de verdade (' + r.name + ' abre no nível ' + r.lock + ', herói no nível ' + ev('fbLvl()') + ') e o botão mostra "Nv ' + r.lock + '"', ev(`fbUnl(${JSON.stringify(unl)})`) === false && ev(`fbLvU(${JSON.stringify(unl)})`) === r.lock && r.lock > ev('fbLvl()') && html0.includes('>Nv ' + r.lock + '<') && (isTip ? r.why === 'Abre no nível ' + r.lock && new RegExp('data-q="' + q + '" aria-label="[^"]*' + r.why + '"').test(html0) /* no quadro novo o motivo vai no rótulo do próprio botão */ : html0.includes(r.name + ': abre no nível ' + r.lock)), det);
       check(tag + ': destino trancado → a Derrota continua aberta e o aviso diz o motivo ("' + msg + '")', !!ev('B.res') && ev('B.res.mode') === 'lose' && !!ev('RES.el') && ev('view') === 'battle' && toasts.length === 1 && toasts[0] === msg, det);
       ev("resClose('farm'); 1");   /* fecha como o "Modo farm" para a batalha seguir */
     } else { const want = r.farm ? 'battle' : r.scr ? viewOf(r.scr) : 'gear';
@@ -180,6 +185,8 @@ async function flowResult() {
   if (!ok) return noErr(G);
   const bad = badIn(resHtml()); check('derrota: HTML da tela sem undefined/NaN', !bad, bad);
   const qs = attrs(resHtml(), 'data-q'); check('derrota: botões farm e retry (data-q)', qs.includes('farm') && qs.includes('retry'), 'data-q: ' + qs.join(','));
+  check('derrota: Sys.bossLoss ' + (lossOn ? 'ligado → quadro do prêmio (res_rw) com dicas data-q="tip:N" e nenhuma linha adv:N' : 'desligado → linhas adv:N do js/diff.js e nenhum tip:N'),
+    lossOn ? /id="res_rw"/.test(resHtml()) && qs.some(q => /^tip:\d+$/.test(q)) && !qs.some(q => /^adv:/.test(q)) && ev('RES.tips.length') === qs.filter(q => /^tip:/.test(q)).length : !qs.some(q => /^tip:/.test(q)) && !/id="res_rw"/.test(resHtml()), 'data-q: ' + qs.join(','));
   check('derrota: fase não avançou (3, sem ganho)', ev('S.stage') === 3, 'stage ' + ev('S.stage'));
   for (const q of qs) {
     if (!ev('B.res')) { G.start(3, 5); G.mode = 'weak'; if (!await G.until(() => !!ev('B.res'), 120)) { check('derrota [' + q + ']: reabrir', false, 'não perdeu de novo'); continue; } }
@@ -188,7 +195,7 @@ async function flowResult() {
     const a = advOf(q), html0 = resHtml(); toasts.length = 0;   /* a dica é lida ANTES do toque (o diffGo apaga o DIFF.card quando fecha a Derrota) */
     try { G.inCtx(() => X.resAct(q)); } catch (e) { G.frameErr.push('resAct(' + q + '): ' + errStr(e)); }
     const after = ev('JSON.stringify({res:B.res,farm:!!S.farm,wave:S.wave,view:view,deadT:B.deadT})');
-    if (/^adv:/.test(q)) { await advCheck(q, a, html0, after); continue; }
+    if (/^(adv|tip):/.test(q)) { await advCheck(q, a, html0, after); continue; }
     let exp = !ev('B.res') && !ev('RES.el');
     if (q === 'farm') exp = exp && ev('S.farm') === true; else if (q === 'retry') exp = exp && ev('S.wave') === 5; else exp = exp && ev('view') === (q === 'forge' ? ev("Panels.on('forge')?'forge':'gear'") : q);
     check('derrota [' + q + ']: botão fecha a tela e faz o que diz', exp, after);
@@ -198,7 +205,7 @@ async function flowResult() {
   /* DESTINO LIBERADO: no save novo (nível 1) as dicas costumam apontar para telas trancadas por nível (a Derrota fica aberta e avisa). Para não perder a prova do
      "fecha e abre o destino", o mesmo chefe é perdido com o herói no nível 60 (Forja, Pets e Montarias já liberados): cada dica tem de fechar a tela e abrir a tela dela. */
   { let n = 0, open = 0;
-    for (let i = 0; i < 3; i++) { const q = 'adv:' + i;
+    for (let i = 0; i < 3; i++) { const q = TIPK + ':' + i;
       G.start(3, 5, 'try{ Sys.level.ensure(S).lvl=60; }catch(e){}'); G.mode = 'weak';
       if (!await G.until(() => !!ev('B.res'), 120)) { check('derrota nível 60 [' + q + ']: perder para o chefe', false, 'não perdeu: B.res=' + JSON.stringify(ev('B.res')) + ' hp ' + ev('B.hero&&B.hero.hp')); break; }
       if (!attrs(resHtml(), 'data-q').includes(q)) { ev("resClose('farm'); 1"); break; }   /* menos de 3 dicas: acabou */
@@ -206,7 +213,7 @@ async function flowResult() {
       const a = advOf(q), html0 = resHtml(); toasts.length = 0; n++; if (a && !a.route.lock) open++;
       try { G.inCtx(() => X.resAct(q)); } catch (e) { G.frameErr.push('resAct(' + q + ', nível 60): ' + errStr(e)); }
       await advCheck(q, a, html0, ev('JSON.stringify({res:B.res,farm:!!S.farm,wave:S.wave,view:view,deadT:B.deadT})'), 'derrota nível 60 [' + q + ']'); }
-    check('derrota nível 60: a tela traz dicas (data-q="adv:N") e pelo menos uma com o destino liberado', n > 0 && open > 0, n + ' dica(s), ' + open + ' liberada(s)'); }
+    check('derrota nível 60: a tela traz dicas (data-q="' + TIPK + ':N") e pelo menos uma com o destino liberado', n > 0 && open > 0, n + ' dica(s), ' + open + ' liberada(s)'); }
   X.toast = toast0;
   noErr(G);
 }

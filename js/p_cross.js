@@ -19,7 +19,7 @@ if(!('cross' in PANEL_ON)) PANEL_ON.cross=false;
 const N='cross';
 const ACTIONS=['pick','back','ok','later','close','open'];
 const X={open:false,el:null,mode:'',stage:null,sel:'',msg:'',tone:'',busy:false,o:null,paused:false,offers:[],
-  hud:null,hudSig:'',hudT:0,bump:0,css:false};
+  hud:null,hudSig:'',hudT:0,bump:0,css:false,le:null};
 
 /* ---------- leituras do módulo ---------- */
 const CR=()=>(window.Sys&&window.Sys.crossroads)||null;
@@ -236,7 +236,7 @@ function badgeTop(){ try{ const w=document.getElementById('wsl_root'); if(w&&w.s
 /* topo do botão Bênçãos: a vaga livre seguinte da coluna da esquerda do HUD (passo de 78 px a partir de 136, tabela FB_MENU do js/fullbattle.js);
    sem a tabela, a posição do protótipo (290) */
 function bbTop(){ try{ if(typeof FB_MENU!=='undefined'&&Array.isArray(FB_MENU)){ let n=0; for(const m of FB_MENU){ if(m.side!=='left') continue; if(typeof fbUnl==='function'&&!fbUnl(m.id)) continue; if(typeof m.show==='function'&&!m.show()) continue; n++; } return 136+78*n; } }catch(e){} return 290; }
-function hudHtml(o){ o=o||{}; if(!hudOn()) return ''; const v=viewOf(); if(!v) return ''; const act=Array.isArray(v.active)?v.active:[], pend=pendOf(v); if(!act.length&&!pend.length) return '';
+function hudHtml(o){ o=o||{}; X.le=null; if(!hudOn()) return ''; const v=viewOf(); if(!v) return ''; X.le=v.lastEnded||null; const act=Array.isArray(v.active)?v.active:[], pend=pendOf(v); if(!act.length&&!pend.length) return '';
   let h='';
   if(pend.length){ const f=pend[0]; h+='<button class="pc-badge" data-pc="badge" style="top:'+(o.badgeTop!=null?+o.badgeTop:badgeTop())+'px" aria-label="Encruzilhada da fase '+esc(lbl(f))+' esperando: toque para escolher">'+CROSS+'<span><b class="pc-lil">Encruzilhada</b><small>fase '+esc(lbl(f))+' · escolha 1 de '+(offersOf(f).length||2)+'</small></span></button>'; }
   const al=act.length===1?'1 ativa':act.length+' ativas';
@@ -250,7 +250,18 @@ function mount(hostEl){ if(X.hud) return true; try{ if(typeof document==='undefi
     h.appendChild(r); X.hud=r; X.hudSig=''; X.hudT=0; hudUpdate(true); return true; }catch(e){ return false; } }
 /* chamar no fbTick: lê o módulo no máximo 2 vezes por segundo e só troca o HTML quando muda */
 function hudUpdate(force){ const r=X.hud; if(!r) return false; const now=Date.now(); if(!force&&now-X.hudT<500) return X.hudSig!==''; X.hudT=now;
-  let h=''; try{ h=hudHtml(); }catch(e){ h=''; } if(h!==X.hudSig){ X.hudSig=h; r.innerHTML=h; } return h!==''; }
+  let h=''; try{ h=hudHtml(); }catch(e){ h=''; } if(h!==X.hudSig){ X.hudSig=h; r.innerHTML=h; } if(X.le) endedNote(X.le); return h!==''; }
+/* AVISO, UMA VEZ, DAS BÊNÇÃOS QUE ACABARAM (docs/LIGACOES_RECOMPENSAS.md, C1-C2): o módulo guarda em view().lastEnded as bênçãos da era vencida
+   (apaga na vitória do Senhor da Era) e a tela avisa uma vez e chama ackEnded. Sai DEPOIS da Vitória, da Troca de era e da Encruzilhada (nada aberto
+   por cima da luta) e também ao abrir o jogo, se ficou pendente. Usa a leitura que o HUD já fez (nenhuma leitura a mais do módulo). */
+function endedNote(le){ try{ if(X.open||!le||!Array.isArray(le.list)||!le.list.length||typeof toast!=='function') return false;
+    if(typeof B!=='undefined'&&B&&(B.crossPend||B.eraPend||B.endPend||B.res||B.inst)) return false;
+    const C=CR(); if(!C||typeof C.ackEnded!=='function') return false;
+    const k={}, order=[]; for(const b of le.list){ const nm=String((b&&b.name)||''); if(!nm) continue; if(!k[nm]){ k[nm]=0; order.push(nm); } k[nm]++; }
+    const next=(typeof ERAS!=='undefined'&&ERAS[le.era+1]&&ERAS[le.era+1].n)?String(ERAS[le.era+1].n):'';
+    if(C.ackEnded(sv(),host())!==true) return false;   /* o módulo limpa primeiro: se não limpou, não avisa (nunca repete) */
+    X.le=null; toast('As bênçãos da era '+eraName(le.era)+' acabaram'+(order.length?': '+order.map(n=>n+(k[n]>1?' ×'+k[n]:'')).join(', '):'')+'. '+(next?'Na era seguinte ('+next+') começa uma coleção nova.':'A jornada continua.'));
+    return true; }catch(e){ try{ console.error('PCross: fim das bênçãos',e); }catch(e2){} return false; } }
 function unmount(){ const r=X.hud; X.hud=null; X.hudSig=''; try{ if(r){ if(typeof r.remove==='function') r.remove(); else if(r.parentNode) r.parentNode.removeChild(r); } }catch(e){} }
 
 const def=Panels.add(N,{title:'Encruzilhada',overlay:true,actions:ACTIONS,open:open,close:close});

@@ -14,7 +14,9 @@ const text = h => String(h).replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<[^>]*>
 const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]o|R\$/i;
 
 (async () => {
-  const loadErr = []; const G = boot({ realFetch: true, add: (g, n, ok, e) => { if (!ok) loadErr.push(n + ': ' + e); } }); const { ev, inCtx } = G, X = G.sandbox;
+  /* SYS_LIVE (js/farm.js): o Sys.bossLoss agora NASCE LIGADO. Primeiro um jogo sem parâmetro só para provar isso; o jogo do teste sobe com &sem=bossLoss para a parte "desligada" */
+  { const G0 = boot({ realFetch: true }); check('sem parâmetro de conferência o Sys.bossLoss nasce LIGADO (SYS_LIVE.bossLoss do js/farm.js)', G0.ev('!!(typeof SYS_LIVE==="object"&&SYS_LIVE.bossLoss===true&&Sys.bossLoss&&Sys.bossLoss.DATA.on===true)'), String(G0.ev('Sys.bossLoss&&Sys.bossLoss.DATA.on'))); }
+  const loadErr = []; const G = boot({ realFetch: true, search: '?debug=1&fresh=1&skip=1&sem=bossLoss', add: (g, n, ok, e) => { if (!ok) loadErr.push(n + ': ' + e); } }); const { ev, inCtx } = G, X = G.sandbox;
   check('jogo carregou', !loadErr.length, loadErr.slice(0, 3).join(' | '));
   G.frameErr = []; G.n = 0; G.weak = false; G.bossAt = null;
   /* herói fraco (não tira vida do chefe sozinho) e o chefe posto na vida que o caso pede */
@@ -37,7 +39,7 @@ const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]
 
   /* ======================= 1. CHAVE DESLIGADA ======================= */
   console.log('1. chave do Sys.bossLoss desligada');
-  check('módulo carregado e a chave nasce desligada', ev('!!(Sys.bossLoss&&Sys.bossLoss.DATA.on===false)'), String(ev('Sys.bossLoss&&Sys.bossLoss.DATA.on')));
+  check('módulo carregado e, com &sem=bossLoss, a chave fica desligada', ev('!!(Sys.bossLoss&&Sys.bossLoss.DATA.on===false)'), String(ev('Sys.bossLoss&&Sys.bossLoss.DATA.on')));
   let ok = await lose(3, 0.38);
   check('derrota real: tela abriu (modo lose)', ok && ev('RES.mode') === 'lose', JSON.stringify(ev('B.res')));
   const off = html(), b0 = bl();
@@ -101,7 +103,9 @@ const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]
   ev('B.res=null; RES.el=null; heroDown(false)');
 
   /* "Ir": cada dica abre o destino da rota do js/diff.js */
-  const VIEW = { gear: 'gear', forge: 'forge', pet: 'pets', mount: 'mounts', titles: 'profile' };
+  /* com a tela nova ligada (PANEL_ON.<nome>2), quem abre a antiga cai na nova: o destino esperado é lido do jogo carregado (Panels.v2 e VIEW_V2 do index.html) */
+  const dest = n => ev(`(function(n){ const a=Panels.v2[n]; if(a&&PANEL_ON[a]&&Panels.defs[a]) return a; const b=(typeof VIEW_V2!=='undefined')?VIEW_V2[n]:null; if(b&&PANEL_ON[b]===true&&Panels.defs[b]) return b; return n; })(${JSON.stringify(n)})`);
+  const VIEW = { gear: dest('gear'), forge: dest('forge'), pet: dest('pets'), mount: dest('mounts'), titles: dest('profile') };
   for (let i = 0; i < tips.length; i++) { const t = tips[i]; ev('resOpen("lose",{stage:S.stage,loss:__loss},true); RES.t=0'); ev(`resAct('tip:${i}')`);
     check('Ir · ' + t.id + ': antes de os cartões aparecerem o toque não vale', !!ev('B.res'));
     ev('RES.t=RES_LOSE_BTN+1'); ev(`resAct('tip:${i}')`); const v = ev('view'), open = !!ev('B.res');
