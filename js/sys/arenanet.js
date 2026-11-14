@@ -50,7 +50,9 @@ async function loadRanking(kind){ const k=kind==='fc'?'fc':'arena'; ST.ranking[k
 async function snapshot(S,host,force){
   if(DATA.on!==true) return {ok:false,reason:'off'};
   const W=SYS().tower; if(!W||typeof W.playerStats!=='function') return {ok:false,reason:'module'};
-  let p; try{ p=W.playerStats(S,host); }catch(e){ return {ok:false,reason:'module'}; }
+  /* atributos e FC do CONJUNTO ARENA quando ele existe (o mesmo do pvp.gear abaixo); senão, o equipado agora (achado do Servidor 14/11) */
+  let SS=S, HH=host; try{ const L=SYS().loadouts, AS=SYS().arenaSet; if(AS&&typeof AS.on==='function'&&AS.on()&&L&&typeof L.preview==='function'){ const v=L.preview(S,'arena',host); if(v&&v.ok){ SS=v.S; HH=v.host; } } }catch(e){}
+  let p; try{ p=W.playerStats(SS,HH); }catch(e){ return {ok:false,reason:'module'}; }
   const body={fc:p.fc,atk:p.atk,hp:p.hp,def:p.def,critRate:p.critRate,critDmg:p.critDmg,aspd:p.aspd};
   try{ const h=root.heroSnapshot; if(typeof h==='function'){ const x=h()||{}; if(x.look) body.look=x.look; if(x.level!=null) body.level=x.level; if(x.petFrac!=null) body.petFrac=x.petFrac; } }catch(e){}
   /* conjunto PvP (Sys.arenaSet, docs/SERVIDOR_LOM.md §1.1; desligado = null, nada vai) */

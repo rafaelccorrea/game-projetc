@@ -81,6 +81,12 @@ function plan(S,mode,host){ if(!on()) return {ok:false,reason:'off'}; if(!isMode
     if(!own) skipped.push({kind:'mount',id:set.mount,reason:'gone'}); else if(!unlocked(S,'mount')) skipped.push({kind:'mount',id:set.mount,reason:'locked'}); else changes.push({kind:'mount',id:set.mount}); }
   return {ok:true,mode,changes,skipped,same:changes.length===0}; }
 
+/* PRÉVIA sem mexer em nada: {ok, S, host} = uma CÓPIA do save com o pet/montaria do conjunto e um host cujo equipped() devolve as peças do
+   conjunto (as que o plan aceita; o resto fica como está). Serve para calcular atributos/FC de um conjunto (ex.: retrato da Arena) sem equipar. */
+function preview(S,mode,host){ const p=plan(S,mode,host); if(!p.ok) return p; let S2; try{ S2=JSON.parse(JSON.stringify(S)); }catch(e){ return {ok:false,reason:'save'}; }
+  const eq=equippedNow(host); for(const c of p.changes){ if(c.kind==='gear') eq[c.slot]=c.item;
+    else try{ if(c.kind==='pet') SYS().pet.equip(S2,c.id); else if(c.kind==='mount') SYS().mount.equip(S2,c.id); }catch(e){} }
+  const h=Object.assign(Object.create(host||null),{equipped:()=>Object.assign({},eq)}); return {ok:true,mode,S:S2,host:h,same:p.same}; }
 /* troca num toque. {ok, mode, equipped:n, changes, skipped} — pula o que não existe mais ou ainda não pode; espaço vazio no conjunto não desequipa */
 function apply(S,mode,host){ const p=plan(S,mode,host); if(!p.ok) return p; const done=[], skipped=p.skipped.slice();
   for(const c of p.changes){ let ok=false;
@@ -113,7 +119,7 @@ function view(S,host){ const o=ensure(S), G=SYS().grimoire, P=SYS().pet, M=SYS()
       mount:set.mount?{id:set.mount,name:(M&&M.DATA&&Array.isArray(M.DATA.mounts)&&(M.DATA.mounts.find(x=>x.id===set.mount)||{}).name)||set.mount}:null,
       spells,missing:gone}; })}; }
 
-const API={DATA,on,setOn,ensure,save,clear,plan,apply,modeFor,setAuto,forBattle,view};
+const API={DATA,on,setOn,ensure,save,clear,plan,preview,apply,modeFor,setAuto,forBattle,view};
 root.Sys=root.Sys||{}; root.Sys.loadouts=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
