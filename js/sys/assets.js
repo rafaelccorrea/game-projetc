@@ -21,7 +21,7 @@ const DATA={
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
   basePacks:()=>['core','era:0','era:1','enemy:0','enemy:1','hero:kael:0','hero:kaia:0'],   // aura saiu para o fast-follow (só item Lendário mostra; PLANO_PACOTES)
   // Play Asset Delivery: install-time = base; fast-follow = próxima fase do herói e eras 2-3; on-demand = o resto
-  fastFollow:()=>['fx:bonfire','ui:frames','aura','era:2','era:3','enemy:2','enemy:3','gun:3'],   // PLANO_PACOTES: sem depender do herói (a Play não sabe o herói na instalação)
+  fastFollow:()=>['fx:bonfire','ui:frames','ui:late','aura','era:2','era:3','enemy:2','enemy:3','gun:3'],   // PLANO_PACOTES: sem depender do herói (a Play não sabe o herói na instalação)
   // GRUPO DE ENTREGA por pacote (fonte única; o script da compilação lê do manifesto): base | fast | demand | none (fora do app)
   noneIds:['preview','retired'],
 };
@@ -36,6 +36,11 @@ function classify(p0){ const p=norm(p0); let m;
   if(!p.startsWith('assets/')) return 'core';
   if(/^assets\/ui\/fogueira\/fg_s[2-9]_loop\./.test(p)) return 'fx:bonfire';   // PO 14/11: chamas animadas dos estágios 2-9 fora da base (o jogo usa a imagem parada até baixar); fg_s1_loop e as paradas ficam no core
   if(/^assets\/ui\/frames\//.test(p)) return 'ui:frames';
+  /* PO 14/11 (plano A da base do AAB; Engenheiro com o OK da Sistemas): arte de telas que só abrem mais tarde sai da base para o fast-follow 'ui:late'.
+     FICAM na base: o pet inicial (era0_mammoth_*, pet abre no Nv 1) e o ovo (chocar na batalha); os ícones do Grimório (1ª magia na fase 10, aparecem na batalha)
+     e o relógio do mapa (a história de abertura usa). As telas caem na reserva delas até o pacote chegar (js/latepack.js). */
+  if(/^assets\/(icons\/)?pets\//.test(p)&&!/^assets\/(icons\/)?pets\/(era0_mammoth_|pet_egg\.)/.test(p)) return 'ui:late';   // retratos e ícones de pet, menos o mamute inicial e o ovo
+  if(/^assets\/(mentors|icons\/titles|icons\/relics|icons\/dig|ui\/dig|icons\/duo|ui\/duo|ui\/camp|ui\/title)\//.test(p)) return 'ui:late';
   if((m=/^assets\/mounts\/still\/([a-z]+)(?:_([a-z]+))?\.png$/.exec(p))) return 'mount:'+m[1];   // PO 14/11: imagem parada da montaria (Derrota) no pacote da própria montaria (giant_phoenix -> mount:giant, como a Fênix no manifesto); a tela usa a folha se faltar   // PO 14/11: molduras do Perfil fora da base (o Perfil cai na borda por CSS até baixar)
   if(/^assets\/anim\/(look_preview|equip\/preview)\//.test(p)) return 'preview';   // prévias de arte (Modo dono / aprovação): fora do APK do jogador
   if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma
@@ -173,7 +178,7 @@ const apackOf=id=>{ const s=String(id); let m;
   if((m=/^pet:([a-z0-9_]+):\d$/.exec(s))) return 'pet_'+m[1].replace(/^pet_/,'');
   if(/^ult:/.test(s)) return 'ults_lendarias';
   if(/^skin:/.test(s)) return 'skins';
-  if(s==='fx:bonfire'||s==='ui:frames') return 'inicio';   // pacote 'inicio' (fast-follow) do PLANO_ASSET_PACKS
+  if(s==='fx:bonfire'||s==='ui:frames'||s==='ui:late') return 'inicio';   // pacote 'inicio' (fast-follow) do PLANO_ASSET_PACKS
   return s.replace(/[^a-z0-9]+/gi,'_').toLowerCase(); };
 const API={DATA,tierIcon,deliveryOf,apackOf,setInstalled,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;

@@ -74,3 +74,11 @@ Cada um é pedido quando o jogador ganha o item ou abre a vitrine dele. Enquanto
 - Fast-follow não é instantâneo: quem jogar rápido pode chegar à era 1 antes do pacote "inicio". O jogo precisa segurar a entrada da era com a tela de espera que já existe.
 - Só existe na Play: o APK de teste, instalado por cabo, continua levando tudo dentro; os dois caminhos precisam ser testados.
 - A conta de tamanho precisa ser refeita a cada arte nova: o manifesto é a fonte.
+
+## Atualização de 14/11: pacote `ui:late` (plano A aprovado pelo PO)
+
+A base da loja tinha voltado a 161,3 MB. Saiu da base para o fast-follow (pacote da Play `inicio`, junto de `fx:bonfire` e `ui:frames`) a arte de telas que só abrem mais tarde: retratos e ícones de pets (menos o mamute inicial e o ovo), Mentores, ícones de títulos, Relíquias, Escavação, Dupla, Acampamento e Tela Inicial. Base medida depois: **133,2 MB** (`test/sys/assets.test.js` passa).
+
+- Ficam na base de propósito: relógio do mapa (a história de abertura usa), ícones do Grimório (1ª magia na fase 10, aparecem na batalha), ícones do Menu.
+- Regra em `js/sys/assets.js` (`classify`). Imagem desse pacote que falha é tratada em `js/latepack.js`: pacote chegou em outra pasta = troca o endereço; não chegou = reserva da tela, ou a imagem some e volta sozinha quando chegar.
+- Falta: compressão sem perda dos PNG do core (Arte) e ver as telas com o pacote ausente quando o plugin de entrega existir.
