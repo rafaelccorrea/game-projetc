@@ -8,6 +8,15 @@ Atualizado em 12/11/2026, 21h, pelo PO. Legenda: `[x]` já funciona no jogo · `
 
 ## AGORA (atualizado a cada entrega)
 
+- **14/11, tarde · Engenheiro: seus pedidos da batalha estão no app DEV do seu celular** (chegam sozinhos; ainda não estão no APK v0.14.0; o QA está conferindo no S24).
+    - **Fogueira** no centro de baixo e maior.
+    - **Golpes** (Ultimate, Especial, Básico) num menu que abre e fecha na lateral esquerda, botão "Golpes". Fechado, ele brilha quando a Ultimate está pronta.
+    - **x1/x2/x4** sempre em coluna na lateral direita.
+    - **O que pulava no Equip.** era o anel do tutorial, que ficava preso para sempre. Agora some quando o passo é cumprido e não volta.
+    - **"Melhor" com +0 de FC:** nada mais aparece como melhor se a FC na tela não sobe. O cartão da Fogueira diz "igual" e o "Equipar o melhor" fica apagado quando não há peça melhor.
+    - **"FC recomendada"** fica maior, em cor de alerta e pulsando de leve quando você está abaixo dela.
+    - **Eventos:** os 3 temas novos (Caçada aos Chefes, Semana da Forja, Festa dos Pets) com a arte que você votou.
+    - **Falta:** o botão "Como ganhar FC" (em andamento) e a sua decisão sobre as armas de evento: hoje o jogo não desenha skin de arma na mão do herói (decisão sua antiga), então a Lâmina do Caçador e o Martelo das Eras não teriam onde aparecer.
 - **14/11, madrugada · Engenheiro: APK v0.14.0 pronta para instalar no seu celular** (`Desktop\fps-android\Eonbound-debug-v0.14.0.apk`, 1,07 GB; o PO instala pelo cabo).
     - **O que tem de novo:** todas as telas e sistemas ligados na força-tarefa (Fogueira, Dupla, Ladrão de Brasas, Acampamento, Grimório, Caminhos, Provação, Relíquias, Escavação, Guilda e Torneio novos, Mapa, Perfil, Correio, entre outros).
     - **Corrigido a partir do teste do QA no S24:** o "-1" de dano que tinha voltado nas fases 1-1 e 1-2 (agora o inimigo comum tira no mínimo 2,5% da vida); o nome sugerido pelo jogo que era recusado; o destaque do tutorial preso em "Equip.". O dano e o tutorial ainda não foram vistos na tela depois da correção.
