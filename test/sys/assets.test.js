@@ -74,4 +74,10 @@ t('ícone da peça por nível de raridade (tierIcon): t0 Básico/Raro, t1 Épico
     assert.strictEqual(A.tierIcon('assets/icons/slots/era0_weapon.png',4),'assets/icons/slots/era0_weapon.png','arma não'); assert.strictEqual(A.tierIcon('assets/icons/slots/era8_vest.png',4).endsWith('era8_vest.png')||fs.existsSync(path.join(__dirname,'../../assets/icons/slots/era8_vest_t2.png')),true);
   } finally { A.setManifest(null); } assert.strictEqual(A.tierIcon('assets/icons/slots/era0_helmet.png',4),'assets/icons/slots/era0_helmet.png','sem manifesto: o de hoje');
 });
+t('PO 14/11: chamas dos estágios 2-9 e molduras fora da base (fast-follow, pacote inicio); estágio 1 e imagens paradas no core', () => {
+  for (const f of ['assets/ui/fogueira/fg_s2_loop.png','assets/ui/fogueira/fg_s9_loop.json']) { assert.strictEqual(A.classify(f), 'fx:bonfire'); }
+  assert.strictEqual(A.classify('assets/ui/frames/vip3.png'), 'ui:frames');
+  for (const f of ['assets/ui/fogueira/fg_s1_loop.png','assets/ui/fogueira/fg_s7.png']) assert.strictEqual(A.classify(f), 'core');
+  for (const id of ['fx:bonfire','ui:frames']) { assert.strictEqual(A.deliveryOf(id), 'fast'); assert.strictEqual(A.apackOf(id), 'inicio'); }
+});
 console.log(`ok: ${n} testes`);

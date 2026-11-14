@@ -21,7 +21,7 @@ const DATA={
   // os DOIS heróis na fase 0: a escolha Kael/Kaia é feita na criação, depois de instalar
   basePacks:()=>['core','era:0','era:1','enemy:0','enemy:1','hero:kael:0','hero:kaia:0'],   // aura saiu para o fast-follow (só item Lendário mostra; PLANO_PACOTES)
   // Play Asset Delivery: install-time = base; fast-follow = próxima fase do herói e eras 2-3; on-demand = o resto
-  fastFollow:()=>['aura','era:2','era:3','enemy:2','enemy:3','gun:3'],   // PLANO_PACOTES: sem depender do herói (a Play não sabe o herói na instalação)
+  fastFollow:()=>['fx:bonfire','ui:frames','aura','era:2','era:3','enemy:2','enemy:3','gun:3'],   // PLANO_PACOTES: sem depender do herói (a Play não sabe o herói na instalação)
   // GRUPO DE ENTREGA por pacote (fonte única; o script da compilação lê do manifesto): base | fast | demand | none (fora do app)
   noneIds:['preview','retired'],
 };
@@ -34,6 +34,8 @@ const excluded=p=>DATA.exclude.some(r=>r.test(norm(p)));
 /* pacote de um caminho (relativo à raiz do jogo) */
 function classify(p0){ const p=norm(p0); let m;
   if(!p.startsWith('assets/')) return 'core';
+  if(/^assets\/ui\/fogueira\/fg_s[2-9]_loop\./.test(p)) return 'fx:bonfire';   // PO 14/11: chamas animadas dos estágios 2-9 fora da base (o jogo usa a imagem parada até baixar); fg_s1_loop e as paradas ficam no core
+  if(/^assets\/ui\/frames\//.test(p)) return 'ui:frames';   // PO 14/11: molduras do Perfil fora da base (o Perfil cai na borda por CSS até baixar)
   if(/^assets\/anim\/(look_preview|equip\/preview)\//.test(p)) return 'preview';   // prévias de arte (Modo dono / aprovação): fora do APK do jogador
   if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma
   if((m=/^assets\/anim\/hyb\/(phase([123])|kaia_phase([123])|kaia|R)\//.exec(p))){
@@ -170,6 +172,7 @@ const apackOf=id=>{ const s=String(id); let m;
   if((m=/^pet:([a-z0-9_]+):\d$/.exec(s))) return 'pet_'+m[1].replace(/^pet_/,'');
   if(/^ult:/.test(s)) return 'ults_lendarias';
   if(/^skin:/.test(s)) return 'skins';
+  if(s==='fx:bonfire'||s==='ui:frames') return 'inicio';   // pacote 'inicio' (fast-follow) do PLANO_ASSET_PACKS
   return s.replace(/[^a-z0-9]+/gi,'_').toLowerCase(); };
 const API={DATA,tierIcon,deliveryOf,apackOf,setInstalled,sceneSet,nextEraSet,mountedArt,classify,excluded,needed,setManifest,packBytes,filesOf,plan,firstBoot,packOf,setPackPath,url,installed,isReady};
 root.Sys=root.Sys||{}; root.Sys.assets=API;
