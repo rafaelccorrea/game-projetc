@@ -162,7 +162,7 @@ function nextEraSet(S,host,opt){ const all=allFiles(), e=sceneEra(S,host,opt)+1,
 const TIER_OF_R=[0,0,1,1,2,2];
 function tierIcon(url,r){ const u=String(url||''), t=TIER_OF_R[Math.max(0,Math.min(5,r|0))]; if(!t||!MAN||!/^assets\/icons\/slots\/era\d_(helmet|vest|gloves|boots|necklace)\.png$/.test(u)) return u;
   const cand=u.replace(/\.png$/,'_t'+t+'.png'); if(!tierIcon.set||tierIcon.man!==MAN){ tierIcon.set=new Set(Object.values(MAN.packs).flatMap(p=>p.files)); tierIcon.man=MAN; } return tierIcon.set.has(cand)&&isReady(cand)?cand:u; }
-const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs['mount:'+id]; return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
+const mountedArt=(hero,id)=>{ if(!MAN) return null; const h=hero==='kaia'?'kaia':'kael', pk=MAN.packs[classify('assets/anim/mounts/'+h+'_'+id+'_idle_body.png')]||MAN.packs['mount:'+id];   /* pacote pelo classify (giant_phoenix mora em mount:giant; QA 14/11) */ return !!(pk&&pk.files.some(p=>p==='assets/anim/mounts/'+h+'_'+id+'_idle_body.png'||p==='assets/anim/mounts/'+h+'_'+id+'_run_body.png')); };
 /* (1) grupo de entrega e nome do asset pack do Play de um pacote */
 const deliveryOf=id=>DATA.basePacks().includes(id)?'base':DATA.noneIds.includes(id)?'none':DATA.fastFollow().includes(id)?'fast':'demand';
 /* asset pack do Play (agrupado: limite da Play é 100 e o PO aprovou ~28; o script do Android aceita vários pacotes no mesmo apack):
