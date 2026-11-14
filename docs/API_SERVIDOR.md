@@ -463,8 +463,10 @@ Pedido da Sistemas (docs/SISTEMA_MATRIZ.md, 1e54f3f). Nada é vendido em nenhum 
 ### 16.1 Dupla das Eras (`Sys.duo`)
 - **Código de amigo** `GET /v1/me/friend-code` → `{code}`. São 8 caracteres de `BCDFGHJKLMNPQRSTVWXZ23456789` (sem vogais, então não forma palavra), aleatórios, numa tabela própria. NÃO expõe o id interno nem dado pessoal. **Todo `id` das rotas da dupla é o CÓDIGO** (partner.id, invites[].id, `:id`).
 - `GET /v1/duo` → no formato do `applyServer`:
-  - `{on, code, day, week, needLevel, partner:{id, name, since, last}|null, leftAt, relinkLeftMs, partnerDay, partnerWeek, partnerPresent, partnerDays[], myDay, myWeek, myDays[], invites:[{id, name, at}], invitesOut, invitesLeft, messages:[{idx, at}], msgLeft, claimed:{daily, weekly[]}, cap}`;
+  - `{on, code, day, week, needLevel, partner:{id, name, since, last, lv, era}|null, leftAt, relinkLeftMs, partnerDay, partnerWeek, partnerPresent, partnerDays[], myDay, myWeek, myDays[], invites:[{id, name, at, lv, era}], invitesOut, invitesLeft, messages:[{idx, at}], msgLeft, claimed:{daily, weekly[]}, cap}`;
   - contadores `{kills, bossKills, stages, arenaWins}`. As mensagens são entregues uma vez.
+  - `lv` (nível) e `era` (0-8) do parceiro e de quem convidou, para o cartão (resumo do último save; `null` sem save). "Online" no jogo = `last` há menos de 5 min.
+  - **Bloqueio não avisa (PO):** quem foi bloqueado não vê nada. O convite dele dá o MESMO 404 `code` de um código inexistente. Se eram dupla, ela acaba como numa saída, sem dizer que foi bloqueio e sem espera para ninguém.
 - **Convite** `POST /v1/duo/invite {code}` → `{ok, code, expiresAt, left}`. Vale 48 h; 5 por dia (429 `limit`); 5 enviados e 10 recebidos abertos. Erros 409 `paired`, `relink`, `self`, `target_paired`, `target_level`, `dup`, `limit_out`, `target_full`; 403 `level` (nível 16). Código inexistente, de outro servidor, banido ou bloqueado: 404 `code`.
 - `POST /v1/duo/accept/:id`, `/decline/:id` (convite inexistente ou vencido: 404 `invite`), `/leave` (`{ok, relinkMs, relinkAt}`; só quem sai espera 24 h), `/block/:id` (bloqueia nos DOIS sentidos, apaga convites e mensagens entre os dois e desfaz a dupla).
 - **Frase** `POST /v1/duo/phrase {idx}`: SÓ o número 0-17, nunca texto. Qualquer outra chave = 400. 1 a cada 5 s (429 `wait`), 30 por dia (429 `day`), a mesma frase no máximo 2 vezes seguidas (409 `repeat`).
