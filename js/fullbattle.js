@@ -132,7 +132,7 @@ const FB_MENU = [   /* V2 APROVADA (docs/proto/BatalhaTelaCheiaV2.dc.html). x = 
   /* alerta "Evento" (prio 6, side right, y 220): só entra quando existir evento no jogo; hoje não há, então não é desenhado (Eventos fica no MENU, "Em breve") */
   /* HOJE (Sys.today, nível 7): lista do que dá para pegar agora, com "Pegar tudo". Só aparece com o módulo e a tela ligados E algo na lista (o selo é a conta).
      Fica abaixo do Baú; com a Oferta ou o Evento na tela, desce uma casa por cada um. Ícone PROVISÓRIO = o de Missões, até a Arte entregar assets/icons/menu/today.png */
-  { id: 'today',  icon: 'missions',  label: 'Hoje',    side: 'right', x: 7, y: 220, yf: () => fbTodayY(), act: 'soon:today', prio: 7, badge: 'fb_bt', show: () => fbTodayN() > 0 },
+  { id: 'today',  icon: 'today',  label: 'Hoje',    side: 'right', x: 7, y: 220, yf: () => fbTodayY(), act: 'soon:today', prio: 7, badge: 'fb_bt', show: () => fbTodayN() > 0 },
 ];
 /* HOJE: a conta do selo é lida 1 vez por segundo (Sys.today.badge percorre os outros módulos; o fbTick roda várias vezes por segundo) */
 const FB_TODAY = { n: 0, t: 0 };
@@ -165,8 +165,8 @@ const FB_DROP = [
   { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map', alerts: () => { try { return window.Map2 && fbPanelOn('map2') ? Map2.ready() : 0; } catch (e) { return 0; } } },   /* Mapa das Eras: nível 1 (PO) */
   { id: 'camp',     icon: 'camp',     label: 'Acampamento das Eras', act: 'soon:camp', alerts: () => { try { const v = Sys.camp && Sys.camp.DATA.on === true ? Sys.camp.view(S, Sys.host) : null; return v && !v.locked ? v.tents.filter(t => t.full).length : 0; } catch (e) { return 0; } } },   /* Acampamento das Eras (Sys.camp, nível 20). Ícone PROVISÓRIO até a Arte entregar assets/icons/menu/camp.png */
   { id: 'grim',     icon: 'grimoire',  label: 'Grimório',   act: 'soon:grim' },   /* Grimório das Eras (Sys.grimoire); só aparece com a tela ligada */
-  { id: 'relics',   icon: 'codex',     label: 'Relíquias',  act: 'soon:relics', alerts: () => { try { return Sys.relics.on() ? Sys.relics.view(S, Sys.host).slots.filter(x => x.canLevel || x.canUnlock).length : 0; } catch (e) { return 0; } } },   /* Relíquias das Eras (Sys.relics, nível 12); selo = relíquias que dá para subir ou despertar. Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/relic.png */
-  { id: 'dig',      icon: 'tower',     label: 'Escavação',  act: 'soon:dig', alerts: () => { try { return Sys.dig.on() ? (Sys.dig.view(S, Sys.host).picks >= 20 ? 1 : 0) : 0; } catch (e) { return 0; } } },   /* Escavação (Sys.dig, nível 14); selo: picaretas cheias. Ícone PROVISÓRIO = o da Torre, até a Arte entregar assets/icons/menu/dig.png */
+  { id: 'relics',   icon: 'relic',     label: 'Relíquias',  act: 'soon:relics', alerts: () => { try { return Sys.relics.on() ? Sys.relics.view(S, Sys.host).slots.filter(x => x.canLevel || x.canUnlock).length : 0; } catch (e) { return 0; } } },   /* Relíquias das Eras (Sys.relics, nível 12); selo = relíquias que dá para subir ou despertar. Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/relic.png */
+  { id: 'dig',      icon: 'dig',     label: 'Escavação',  act: 'soon:dig', alerts: () => { try { return Sys.dig.on() ? (Sys.dig.view(S, Sys.host).picks >= 20 ? 1 : 0) : 0; } catch (e) { return 0; } } },   /* Escavação (Sys.dig, nível 14); selo: picaretas cheias. Ícone PROVISÓRIO = o da Torre, até a Arte entregar assets/icons/menu/dig.png */
   { id: 'path',     icon: 'equipment', label: 'Caminhos',   act: 'soon:path' },   /* Caminhos (Sys.path, nível 30: a própria tela explica o que falta). Ícone PROVISÓRIO */
   { id: 'trial',    icon: 'tower',     label: 'Provação',   act: 'soon:trial' },   /* Provação do Mestre (Sys.trial). Ícone PROVISÓRIO */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },

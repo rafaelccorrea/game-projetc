@@ -258,7 +258,7 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   EE.setOn(true); MT.registerTitles(); T.addTitle({ id: 'evt_teste', name: 'campeão <b>', text: 'Ranking de evento', bonus: {} });
   try {
     assert(T.DATA.titles.length > base + 10, 'os módulos registraram títulos novos'); const ids = T.DATA.titles.map(t => t.id); assert(ids.includes('legend9') && ids.includes('mark100') && ids.some(i => /^mentor_/.test(i)), 'legend9, marco e mentor na tabela');
-    const noArt = T.DATA.titles.filter(t => !onDisk(t)); assert(noArt.length >= 16, 'há títulos sem arte em disco: ' + noArt.length);
+    const noArt = T.DATA.titles.filter(t => !onDisk(t)); assert(noArt.length >= 1, 'há pelo menos um título sem arte em disco (o de evento do teste), para exercitar o medalhão: ' + noArt.length);   /* a Arte entregou os ícones de mentor, marco e Lenda das 9 Eras (9572a0a) */
     const S = advSave(); const men = ids.find(i => /^mentor_/.test(i)); for (const id of ['legend9', 'mark100', men, 'evt_teste']) assert.strictEqual(T.grant(S, id, host), true, 'título dado: ' + id);
     for (const [w, h] of [[320, 584], [360, 724], [390, 788]]) for (const f of ['all', 'own', 'lock']) { dims = { H: h, Wb: w }; open({ tab: 'tit' }); if (f !== 'all') def.click(btn('tf', { f })); check('títulos de outros módulos ' + w + ' ' + f);
       const rows = body().split('class="p5-trow').slice(1), want = T.DATA.titles.filter(t => f === 'all' || (f === 'own') === T.isUnlocked(S, t.id)); assert.strictEqual(rows.length, want.length, 'uma linha por título em ' + f);
@@ -266,10 +266,12 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
         if (im) { imgs++; assert(fs.existsSync(path.join(R, im[1])), 'ícone de título não existe: ' + im[1]); assert(/onerror="/.test(im[0]), 'imagem do título com reserva (onerror)'); assert(/class="p5-med p5-lil" aria-hidden="true" hidden>/.test(m[1]), 'medalhão de reserva escondido atrás da imagem'); }
         else { meds++; assert(/^<span class="p5-med p5-lil" aria-hidden="true">[^<]+<\/span>$/.test(m[1]), 'sem arte: medalhão com a inicial, sem <img>: ' + m[1]); } assert(/style="--rc:#[0-9a-f]{6}"/.test(r), 'cor da raridade no cartão'); }
       assert.strictEqual(meds, want.filter(t => !onDisk(t)).length, 'um medalhão por título sem arte'); assert.strictEqual(imgs, want.filter(onDisk).length); }
-    for (const bad of ['mark.png', 'legend9.png', 'mentor_', 'evt_teste.png']) { open({ tab: 'tit' }); assert(!H().includes(dir + bad), 'a tela não cita ' + dir + bad); }
+    /* só não pode citar arquivo que NÃO existe: mark, legend9 e os mentor_* chegaram da Arte (9572a0a); o de evento do teste segue sem arte */
+    for (const bad of ['mark.png', 'legend9.png', 'evt_teste.png']) { open({ tab: 'tit' }); if (!fs.existsSync(path.join(R, dir + bad))) assert(!H().includes(dir + bad), 'a tela não cita ' + dir + bad); else assert(H().includes(dir + bad), 'a tela usa a arte que existe: ' + dir + bad); }
     has('campeão &lt;b&gt;'); not('campeão <b>');
     // título sem arte em DESTAQUE: a identidade (em todas as abas) também não cita o arquivo
-    assert.strictEqual(T.setFeatured(S, 'legend9'), true); for (const t of ['vis', 'col', 'tit', 'num']) { dims = { H: 704, Wb: 390 }; open({ tab: t }); has('Lenda das 9 Eras'); assert(!H().includes(dir + 'legend9'), 'destaque sem arte não vira <img>'); check('destaque sem arte ' + t); }
+    /* o título de evento do teste é o que segue SEM arte (legend9 ganhou ícone da Arte) */
+    assert.strictEqual(T.setFeatured(S, 'evt_teste'), true); for (const t of ['vis', 'col', 'tit', 'num']) { dims = { H: 704, Wb: 390 }; open({ tab: t }); assert(!H().includes(dir + 'evt_teste'), 'destaque sem arte não vira <img>'); check('destaque sem arte ' + t); }
     dims = {};
     out.push('QA lote perfil 2 (1a): com legend9, marcos, mentores e título de evento (' + T.DATA.titles.length + ' títulos), toda imagem da aba Títulos existe em disco e tem onerror; os ' + noArt.length + ' sem arte viram medalhão por CSS');
     out.push('ÍCONES DE TÍTULO PARA A ARTE (faltam em ' + dir + '): ' + [...new Set(noArt.filter(t => t.id !== 'evt_teste').map(t => (typeof t.icon === 'string' ? t.icon.replace(dir, '').replace(/\.png$/, '') : t.id) + (t.icon && !t.icon.endsWith('/' + t.id + '.png') ? ' (usado por ' + t.id + ')' : '')))].join(', '));
