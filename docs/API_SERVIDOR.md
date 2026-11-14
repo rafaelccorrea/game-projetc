@@ -243,7 +243,7 @@ O resgate é idempotente (2º resgate → `409 already_claimed`).
 Tudo que vale prêmio é decidido no servidor, com o mesmo `js/sys` do jogo (vm) e o retrato de poder validado (§4). No jogo, o `Sys.guild` da fps-e2
 usa um provider trocável (como a arena); sem servidor, a guilda fica fechada.
 ### 10.1 Guilda e membros
-- `POST /guilds` `{ name, emblemId, lang, open, minLevel }` → `Guild`.
+- `POST /guilds` `{ nameA, nameB, styleIdx?, emblemId, lang, open, minLevel }` → `Guild` (NOME POR LISTAS FIXAS, docs/GUILDA_NOME.md, no ar desde 14/11 49c0fd4: `name` = a[nameA] + " " + b[nameB] do guild.js; texto livre → 400 `fields:["name"]`, índice fora → 400 `fields:["nameA"|"nameB"|"styleIdx"]`, `description` com texto → 400; o par é único POR SERVIDOR → 409 `name_taken`; transição: `{name}` só se for exatamente um nome das listas). `PATCH /guild {nameA, nameB}` (líder; `renameFree` ou 30 dias depois de `renamedAt`, senão 429 `rename_cooldown` + retryAfterMs) · `PATCH /guild {styleIdx}` (líder; 1 por dia de Brasília, senão 429 `restyle_cooldown`). `GET /guilds?search=` (sem acento, por trecho) e `?a=- `POST /guilds` `{ name, emblemId, lang, open, minLevel }` → `Guild`.b=`. GuildView ganha `nameA, nameB, styleIdx, renameFree, renamedAt, styledAt`; `description` vem sempre `""`.
   - Precisa do nível 30. O custo de 8 h de farm em ouro é cobrado pelo cliente e conferido no save. Nome e emblema passam pelo filtro do chat.
   - Erros: `name_taken`, `name_filtered`, `level_required`, `already_in_guild`, `cooldown` (24 h depois de sair).
 - `GET /guilds?search=&lang=&open=` (lista paginada) · `GET /guilds/{id}` · `GET /guild` (a minha, com membros, cargos, nível, XP e vagas).
@@ -296,7 +296,7 @@ Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado 
 - Chat da guilda: canal `guild:<id>` no gateway do chat (§5), com frases prontas para TODOS até o parecer. Depois, vale a regra de idade da spec (menor de 16, só frases).
 
 ### 10.5 Guilda V2 e Torneio V2: formato EXATO das respostas (gerado do código, fps-server, 13/11)
-- **Criar** `POST /guilds {name, emblemId, lang, open, minLevel}`: `emblemId` é texto livre de até 24 caracteres. O número `0` é aceito e volta como `"0"`.
+- **Criar** `POST /guilds {nameA, nameB, styleIdx?, emblemId, lang, open, minLevel}` (nome por listas, ver acima): `emblemId` é texto livre de até 24 caracteres. O número `0` é aceito e volta como `"0"`.
 - **`GET /guild`** →
   - `{guild:GuildView, me:{role, coin, contrib, donatedToday:["donate:gold_s","checkin"], checkinToday:true}, members:[…], requests:[…]}`;
   - cada membro: `{id, name, role, contrib, joinedAt, lastSeen, me, fc?, level?, era?}`;
