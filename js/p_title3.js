@@ -10,7 +10,11 @@
    COMO SE ENCAIXA: sem gancho no index.html nem no js/p_intro.js. Com a chave LIGADA este arquivo embrulha PIntro.show / PIntro.finish /
    PIntro.toast; quando o PIntro pede a tela "TituloV2B", a camada nova é montada e a antiga não é desenhada. Qualquer erro ao montar = a tela
    antiga aparece como sempre. Com a chave DESLIGADA nada é embrulhado, nenhum listener, nenhum estilo, nenhum temporizador.
-   LIGAR: window.TITLE3_ON = true ANTES deste arquivo (ou trocar o false abaixo). Só para conferir: ?debug=1&titulo=3.
+   LIGAR: window.TITLE3_ON = true ANTES deste arquivo (ou trocar o false abaixo). Só para conferir: ?debug=1&titulo=3 (sem o debug=1 o parâmetro não vale).
+   No app (sem barra de endereço), pelo console do chrome://inspect, com o Título de hoje na tela: TITLE3_ON=true; PTitle3.install()  (troca na hora; vale até recarregar).
+   Roteiro do QA: docs/TELA_INICIAL_V2_QA.md.
+   SAVE: quem JÁ TEM JOGO neste celular e toca em "Vincular com Google" vê antes um aviso com Continuar / Cancelar (a conta Google pode já ter um jogo salvo, e o
+   caminho de hoje, PIntro.google, carrega o jogo da nuvem sem perguntar). Jogador novo (sem jogo no celular) entra direto, como na tela de Login de hoje.
    O ?skip=1 e a recarga ao vivo (LIVE_SKIP) desligam a entrada inteira (PANEL_ON.intro = false): esta tela também não aparece.
    Sem preço, oferta ou urgência (jogo com menores). Sem emoji. Teste: node test/paineis/p_title3.smoke.js */
 (function(W){
@@ -44,7 +48,10 @@ const ON=()=>W.TITLE3_ON===true;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tr=(f,d)=>{ try{ const v=f(); return v==null?d:v; }catch(e){ return d; } };
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const T={inst:false,PI:null,el:null,parts:null,bgBad:false,probe:null,live:false,raf:0,last:0,t:0,sheet:null,note:'',gBusy:false,played:false,geo:null,herr:0,h1:null,h2:null,show0:null,fin0:null,toast0:null};
+/* o fundo pintado é do pacote 'ui:late' (assets/ui/title): com o pacote baixado em outra pasta, o endereço de verdade é o do Sys.assets.url; sem o Sys.assets
+   (ou desligado) é o caminho de sempre. Fundo por CSS não passa pelo js/latepack.js, por isso a troca é feita aqui. Pacote que ainda não chegou = a reserva (cena da era). */
+const artUrl=u=>{ const v=tr(()=>W.Sys.assets.url(u),u); return typeof v==='string'&&v?v:u; };
+const T={inst:false,PI:null,el:null,parts:null,bgBad:false,probe:null,live:false,raf:0,last:0,t:0,sheet:null,note:'',gBusy:false,gAsk:false,played:false,geo:null,herr:0,h1:null,h2:null,show0:null,fin0:null,toast0:null};
 const SAVE=()=>{ try{ return (typeof S!=='undefined'&&S)?S:{}; }catch(e){ return {}; } };
 const snd=n=>{ try{ if(T.PI&&T.PI.g&&T.PI.g.snd) T.PI.g.snd(n); }catch(e){} };
 const say=m=>{ try{ if(T.PI&&T.PI.toast) T.PI.toast(m); }catch(e){} };
@@ -123,12 +130,15 @@ function sheetHTML(st){ const noNet=st.net==='offline'||st.net==='maint';
   const who=st.acct==='google'?['Conta Google conectada','Seu progresso fica salvo na nuvem.']
     :st.acct==='guest'?['Convidado','Seu progresso fica salvo só neste celular.']
     :['Você ainda não tem conta',st.net==='off'?'O jogo começa salvo neste celular.':'Ao tocar em JOGAR, criamos um jogo de convidado neste celular.'];
-  const gTxt=T.gBusy?'Conectando com Google':(st.acct==='none'?'Entrar com Google':'Vincular com Google');
+  const ask=T.gAsk&&!T.gBusy&&st.acct==='guest';   /* quem já tem jogo neste celular confirma antes (ACTIONS.google) */
+  const gTxt=T.gBusy?'Conectando com Google':ask?'Continuar com Google':(st.acct==='none'?'Entrar com Google':'Vincular com Google');
   const gBtn='<button type="button" class="t3-btn t3-ggl" data-t3="google"'+((T.gBusy||(noNet&&!st.dev))?' aria-disabled="true"':'')+'><i aria-hidden="true">G</i>'+gTxt+'</button>';
   let body='';
   if(st.acct==='none') body=gBtn+'<button type="button" class="t3-btn" data-t3="guest">Continuar como convidado</button>';
-  else if(st.acct==='guest') body=gBtn+'<p class="t3-note">Vincular guarda este herói na nuvem para jogar em outro celular.</p>';
-  else body='<p class="t3-note">Para trocar de conta ou sair: Configurações › Conta.</p>';
+  else if(st.acct==='guest') body=ask
+    ?'<p class="t3-note t3-w" role="alert">Antes de continuar: se esta conta Google já tiver um jogo salvo, ele pode entrar no lugar do jogo deste celular. Se ela ainda não tiver jogo, este herói fica guardado nela.</p>'+gBtn+'<button type="button" class="t3-btn" data-t3="gno">Cancelar</button>'
+    :gBtn+'<p class="t3-note">Vincular guarda este herói na nuvem para jogar em outro celular.</p>';
+  else body='<p class="t3-note">A conta Google ligada aparece em Configurações › Conta.</p>';
   if(st.acct!=='google'&&st.dev) body+='<p class="t3-note t3-w" role="status">No app DEV o login Google não funciona. Jogue como convidado.</p>';
   else if(st.acct!=='google'&&noNet) body+='<p class="t3-note t3-w" role="status">Entrar com Google precisa de conexão. O jogo offline funciona.</p>';
   if(T.note) body+='<p class="t3-note t3-msg" role="status">'+esc(T.note)+'</p>';
@@ -138,8 +148,9 @@ function sheetHTML(st){ const noNet=st.net==='offline'||st.net==='maint';
 
 /* ---------- ações: cada uma chama a função de hoje ---------- */
 const ACTIONS={
-  acct(){ snd('ui_tap'); T.sheet='acct'; T.note=''; render(); return true; },
-  close(){ if(!T.sheet) return false; T.sheet=null; T.note=''; render(); return true; },
+  acct(){ snd('ui_tap'); T.sheet='acct'; T.note=''; T.gAsk=false; render(); return true; },
+  close(){ if(!T.sheet) return false; T.sheet=null; T.note=''; T.gAsk=false; render(); return true; },
+  gno(){ if(!T.gAsk) return false; snd('ui_tap'); T.gAsk=false; T.note=''; render(); return true; },   /* Cancelar do aviso: nada é chamado */
   /* cartão do servidor: o painel de reinos de hoje (PIntro.realmStep -> RealmUI.mount, com Voltar) */
   srv(){ const PI=T.PI; if(!PI||!tr(()=>PI.realmUI(),null)) return false; snd('ui_tap'); T.sheet=null; render();
     try{ PI.realmStep(false,()=>{ if(T.el) render(); }); }catch(e){ tr(()=>console.error('[titulo3] servidor',e),0); } return true; },
@@ -160,7 +171,10 @@ const ACTIONS={
     if(!st.dev){   /* no app DEV o próprio PIntro.google avisa */
       if(st.net==='offline'||st.net==='maint'){ say('Entrar com Google precisa de conexão. O jogo offline funciona.'); return false; }
       if(!st.gReady){ say('Login com Google ainda não está disponível aqui'); return false; } }
-    T.gBusy=true; T.note=''; snd('ui_tap'); render();
+    /* NADA troca o save sem confirmação: quem já tem jogo neste celular vê o aviso na folha da Conta e só o segundo toque (Continuar com Google) segue.
+       Jogador novo não tem o que perder e entra direto; no app DEV o PIntro.google só avisa. */
+    if(!st.isNew&&!st.dev&&!T.gAsk){ T.gAsk=true; T.sheet='acct'; T.note=''; snd('ui_tap'); render(); return true; }
+    T.gAsk=false; T.gBusy=true; T.note=''; snd('ui_tap'); render();
     let p; try{ p=PI.google(); }catch(e){ p=Promise.reject(e); }
     Promise.resolve(p).then(()=>{ T.gBusy=false; T.sheet=null; T.note=''; snd('claim'); say('Conta Google conectada. O seu progresso fica salvo na nuvem.'); render(); },
       e=>{ T.gBusy=false; if(!(e&&e.code==='cancelled')) say('Não foi possível entrar com o Google. Tente de novo.'); render(); });
@@ -189,7 +203,7 @@ function layout(){ const el=T.el, P=T.parts; if(!el||!P) return; const W0=el.cli
   let feet=0, bh=0;
   if(art){   /* fundo pintado: cobre a largura sem esticar; se a largura mandar e o chão passar dos botões, a pintura sobe (corta um pouco do céu) e o chão fica à vista */
     bh=Math.max(gT/art.ground,W0/art.ratio); const bw=bh*art.ratio, f0=Math.round(bh*art.ground), ty=Math.min(0,gT-f0), left=clamp(W0/2-bw*art.focus,W0-bw,0), end=ty+bh; feet=f0+ty;
-    P.bg.style.cssText='left:'+px(left)+';top:'+px(ty)+';width:'+px(bw)+';height:'+px(bh)+';background-image:url('+art.url+')';
+    P.bg.style.cssText='left:'+px(left)+';top:'+px(ty)+';width:'+px(bw)+';height:'+px(bh)+';background-image:url('+artUrl(art.url)+')';
     const f1=feet+Math.round(bh*0.05);   /* o escuro só começa abaixo da clareira onde o herói pisa */
     P.fade.style.cssText='top:'+px(f1)+';height:'+px(Math.max(48,end-f1));
     P.floor.style.cssText='top:'+px(Math.max(f1+48,end)); }
@@ -255,7 +269,7 @@ const T3_CSS=`#pin .t3{position:absolute;inset:0;z-index:3;overflow:hidden;backg
 #pin .t3-av{width:44px;height:44px;flex:none;border-radius:12px;border:2px solid #ffc94a;background:#2a1f16;object-fit:cover}
 #pin .t3-pn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
 #pin .t3-pn b{font:400 18px 'Lilita One',sans-serif;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pin .t3-pn small{font-size:12.5px;font-weight:800;color:#d8cbb8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pin .t3-pn small{font-size:12.5px;font-weight:800;color:#d8cbb8;overflow-wrap:anywhere}
 #pin .t3-lv{flex:none;padding:3px 10px;border-radius:10px;background:linear-gradient(180deg,#ffe07a,#f2b52a);color:#3a2208;font:400 15px 'Lilita One',sans-serif;white-space:nowrap}
 #pin .t3-srv{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;min-width:0;padding:6px 8px 6px 14px;border-radius:16px;border:1.5px solid rgba(255,214,150,.45);background:rgba(16,11,7,.86);text-align:left;color:#f6ecdf;font-size:14px}
 #pin .t3-dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
@@ -320,7 +334,7 @@ function mount(PI){ if(!PI||!PI.el||!PI.root) return false;
   P.logo.addEventListener('error',()=>{ try{ const t=mk('div','t3-logot'); t.textContent='EONBOUND'; el.replaceChild(t,P.logo); }catch(e){} },{once:true});
   P.logo.setAttribute('src',T3_ART.logo);
   /* pede a carga do fundo pintado junto com o logo; se falhar, a cena volta para a reserva (cenário da era) e é redesenhada */
-  if(!T.bgBad&&T3_ART.bgArt&&T3_ART.bgArt.url){ const pr=mk('img','t3-probe'); pr.addEventListener('error',()=>{ if(T.bgBad) return; T.bgBad=true; if(T.el){ try{ layout(); }catch(e){} } },{once:true}); pr.setAttribute('src',T3_ART.bgArt.url); T.probe=pr; }
+  if(!T.bgBad&&T3_ART.bgArt&&T3_ART.bgArt.url){ const pr=mk('img','t3-probe'); pr.addEventListener('error',()=>{ if(T.bgBad) return; T.bgBad=true; if(T.el){ try{ layout(); }catch(e){} } },{once:true}); pr.setAttribute('src',artUrl(T3_ART.bgArt.url)); T.probe=pr; }
   el.appendChild(scene); el.appendChild(P.logo); el.appendChild(P.ui); el.appendChild(P.sheet);
   el.addEventListener('click',onClick);
   PI.el.appendChild(el);
@@ -330,7 +344,7 @@ function mount(PI){ if(!PI||!PI.el||!PI.root) return false;
   PI.id='TituloV2B'; PI.cur={state:{},renderVals(){ return {}; },__t3:true};
   try{ PI.root.className='pi-TituloV2B'; PI.root.innerHTML=''; PI.fit(); }catch(e){}
   try{ PI.el.classList.add('t3on'); }catch(e){}
-  T.PI=PI; T.el=el; T.parts=P; T.sheet=null; T.note=''; T.gBusy=false; T.played=false; T.herr=0; T.last=0; T.live=true;
+  T.PI=PI; T.el=el; T.parts=P; T.sheet=null; T.note=''; T.gBusy=false; T.gAsk=false; T.played=false; T.herr=0; T.last=0; T.live=true;
   T.h1=()=>{ if(T.el) render(); }; T.h2=()=>{ if(T.el){ try{ layout(); }catch(e){} } };
   try{ W.addEventListener('onlineboot',T.h1); W.addEventListener('online',T.h1); W.addEventListener('offline',T.h1); W.addEventListener('resize',T.h2); }catch(e){}
   render();
@@ -354,7 +368,7 @@ function install(){ if(T.inst) return true; if(!ON()) return false; const PI=W.P
   PI.finish=function(){ unmount(false); return fin0.apply(this,arguments); };   /* a camada some junto com a entrada (o PIntro apaga o #pin) */
   /* com a tela nova na frente: o aviso perde as reticências e, com a folha da Conta aberta, fica escrito nela (o aviso some em 2 s) */
   if(typeof toast0==='function') PI.toast=function(msg){ let m=String(msg==null?'':msg);
-    if(T.el){ m=m.replace(/\s*(\.{3}|…)\s*$/,'').replace(/\.{3}|…/g,'.'); if(T.sheet){ T.note=m; try{ T.parts.sheet.innerHTML=sheetHTML(T.snapNow||snap()); }catch(e){} } }
+    if(T.el){ m=m.replace(/\s*(\.{3}|…)\s*$/,'').replace(/\.{3}|…/g,'.').replace(/\s*Entre por ela na tela de Login\./,'');   /* com esta tela não há "tela de Login" para quem já tem jogo */ if(T.sheet){ T.note=m; try{ T.parts.sheet.innerHTML=sheetHTML(T.snapNow||snap()); }catch(e){} } }
     return toast0.call(this,m); };
   /* arquivo carregado com o Título de hoje já na tela: troca na hora */
   try{ if(PI.el&&PI.root&&PI.id==='TituloV2B'&&!(PI.cur&&PI.cur.__t3)) PI.show('TituloV2B'); }catch(e){}

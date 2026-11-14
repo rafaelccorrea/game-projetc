@@ -37,7 +37,10 @@ const store = {}; g.localStorage = { getItem: k => (k in store ? store[k] : null
 g.location = { search: '' }; g.fetch = undefined; g.devicePixelRatio = 2;
 
 /* ---------- jogo de mentira ---------- */
-g.PANEL_ON = { intro: true }; g.DEBUG = false; g.QP = new URLSearchParams(''); g.VERSION = 'v0.13.3'; g.STAGES_PER_ERA = 10;
+/* a versão é a do jogo (const VERSION do index.html), nunca fixa aqui: o teste não quebra a cada build */
+const GAME_VER = (/\bconst VERSION='([^']+)'/.exec(fs.readFileSync(path.join(R, 'index.html'), 'utf8')) || [])[1];
+assert(GAME_VER && /^v\d+\.\d+\.\d+/.test(GAME_VER), 'versão do jogo lida do index.html: ' + GAME_VER);
+g.PANEL_ON = { intro: true }; g.DEBUG = false; g.QP = new URLSearchParams(''); g.VERSION = GAME_VER; g.STAGES_PER_ERA = 10;
 g.ERAS = ['Pré-História', 'Antiguidade', 'Medieval', 'Era da Pólvora', 'Era Industrial', 'Era Moderna', 'Era Futurista', 'Submundo', 'Celestial'].map(n => ({ n }));
 g.eraOf = st => Math.min(8, Math.floor((st - 1) / 10)); g.B = { paused: true }; g.save = () => {}; g.hud = () => {}; g.snd = () => {}; g.AWAY = 0;
 let gReady = true; const OBS = { on: true, why: '', booted: true, booting: false, lastAction: 'none', pending: false, choosing: false, waitingPlay: false };
@@ -119,7 +122,7 @@ const keep = h => { ALL.push(h); return h; };
     const h = keep(ui());
     assert(/>JOGAR<small>Começa como convidado neste celular<\/small>/.test(h), 'JOGAR do jogador novo'); assert(!/t3-pc/.test(h), 'jogador novo não tem cartão de herói');
     assert((h.match(/data-t3="srv"/g) || []).length === 1 && /S1 · Nova Era/.test(h) && /Trocar/.test(h), 'UM cartão de servidor, com o atual e o Trocar');
-    assert(/data-t3="acct" aria-label="Conta: ainda sem conta"/.test(h), 'conta num ícone'); assert(/Versão v0\.13\.3/.test(h), 'versão no rodapé'); assert(/Termos de Uso/.test(h));
+    assert(/data-t3="acct" aria-label="Conta: ainda sem conta"/.test(h), 'conta num ícone'); assert(h.includes('<span>Versão ' + GAME_VER + '</span>'), 'versão do jogo (index.html) no rodapé'); assert(/Termos de Uso/.test(h));
     assert.strictEqual(plays, 0, 'abrir o Título não cria convidado'); assert.strictEqual(g.S.acct, undefined);
     /* servidor: abre o painel de reinos de hoje (com Voltar), sem criar conta */
     assert.strictEqual(P.act('srv'), true); assert.strictEqual(realmMounts.length, 1); assert.strictEqual(realmMounts[0].first, false, 'troca de servidor (não é o 1º acesso)'); realmMounts[0].onDone('s1'); assert.strictEqual(plays, 0);
@@ -192,14 +195,19 @@ const keep = h => { ALL.push(h); return h; };
     assert.strictEqual(P.act('google'), true, 'no DEV o toque vai ao PIntro.google (que avisa)'); await tickP();
     assert(toasts.some(t => /No app DEV o login Google não funciona/.test(t)), 'aviso do PIntro.google'); assert(/t3-msg[^>]*>No app DEV/.test(keep(sheet())), 'o aviso fica escrito na folha');
     navigator.userAgent = 'node'; gReady = true; P.act('close');
-    g.OnlineBoot.google = () => Promise.resolve({ ok: false, reason: 'link_taken', other: { level: 57 } });
-    P.act('acct'); toasts = []; assert.strictEqual(P.act('google'), true); await tickP(); await tickP();
+    /* NADA troca o save sem confirmação: quem já tem jogo neste celular vê o aviso; o 1º toque não chama nada, Cancelar não chama nada, Continuar chama UMA vez */
+    let obG = 0; g.OnlineBoot.google = () => { obG++; return Promise.resolve({ ok: false, reason: 'link_taken', other: { level: 57 } }); };
+    P.act('acct'); toasts = []; assert.strictEqual(P.act('google'), true); assert.strictEqual(obG, 0, 'quem já tem jogo: o 1º toque só pergunta');
+    { const a = keep(sheet()); assert(/role="alert">Antes de continuar: se esta conta Google já tiver um jogo salvo, ele pode entrar no lugar do jogo deste celular\./.test(a), 'aviso antes do Google'); assert(/data-t3="google"><i aria-hidden="true">G<\/i>Continuar com Google<\/button>/.test(a) && /data-t3="gno">Cancelar<\/button>/.test(a), 'Continuar / Cancelar'); }
+    assert.strictEqual(P.act('gno'), true); assert.strictEqual(obG, 0, 'Cancelar não chama nada'); assert(/Vincular com Google/.test(sheet()) && !/Antes de continuar/.test(sheet()), 'Cancelar volta à folha'); assert.strictEqual(P.act('gno'), false);
+    P.act('google'); P.act('close'); assert.strictEqual(obG, 0, 'fechar a folha desfaz a pergunta'); P.act('acct'); assert(!/Antes de continuar/.test(sheet()));
+    assert.strictEqual(P.act('google'), true); assert.strictEqual(P.act('google'), true); assert.strictEqual(obG, 1, 'Continuar com Google chama o fluxo de hoje UMA vez'); await tickP(); await tickP();
     assert(toasts.some(t => /Esta conta Google já tem outro personagem \(Nv\. 57\)/.test(t)), 'conta com outro personagem: aviso de hoje'); assert(/t3-msg[^>]*>Esta conta Google já tem outro personagem/.test(keep(sheet())), 'e fica na folha');
-    assert(!toasts.some(t => /Não foi possível/.test(t)), 'sem aviso de erro por cima');
+    assert(!toasts.some(t => /Não foi possível/.test(t)), 'sem aviso de erro por cima'); assert(!toasts.some(t => /tela de Login/.test(t)) && !/tela de Login/.test(sheet()), 'o aviso não manda para uma tela de Login que este caminho não tem');
     g.OnlineBoot.google = () => Promise.resolve({ ok: true, pending: true, player: {} }); g.OnlineBoot.applyPending = () => {};
-    toasts = []; P.act('close'); P.act('acct'); P.act('google'); await tickP(); await tickP();
+    toasts = []; P.act('close'); P.act('acct'); P.act('google'); P.act('google'); await tickP(); await tickP();
     assert(toasts.includes('Carregando o seu jogo da nuvem'), 'o aviso de hoje perde as reticências com a tela nova na frente'); assert(!toasts.some(t => /\.\.\.|…/.test(t)));
-    g.OnlineBoot.google = () => Promise.resolve({ ok: false, reason: 'server' }); g.S.acct = undefined; toasts = []; P.act('acct'); P.act('google'); await tickP(); await tickP(); assert(toasts.some(t => /Não foi possível entrar com o Google/.test(t)));
+    g.OnlineBoot.google = () => Promise.resolve({ ok: false, reason: 'server' }); g.S.acct = undefined; toasts = []; P.act('acct'); P.act('google'); P.act('google'); await tickP(); await tickP(); assert(toasts.some(t => /Não foi possível entrar com o Google/.test(t)), 'erro de login: avisa'); assert(/t3-msg[^>]*>Não foi possível entrar com o Google\. Tente de novo\./.test(keep(sheet())) && /Vincular com Google/.test(sheet()), 'erro de login: fica escrito na folha e dá para tentar de novo');
     delete g.OnlineBoot.google; ALL.push(...toasts);
     /* fora da tela nova o aviso do PIntro passa como é */
     PI.show('Prologo'); toasts = []; PI.toast('Verificando o nome...'); assert.deepStrictEqual(toasts, ['Verificando o nome...'], 'sem a tela nova o aviso não é mexido');
@@ -278,6 +286,9 @@ const keep = h => { ALL.push(h); return h; };
       assert(Math.abs(num(dg2, 'top') + D2.feetY * k2 - T0.geo.feet) <= 4 && Math.abs(num(b2, 'height') * (g.PTitle3.ART.bg[2][1] + g.PTitle3.ART.bgFeet) - T0.geo.feet) <= 1, 'reserva: chão da cena da era'); ALL.push(b2.style.cssText);
       g.S = oldS(); PI.show('Prologo'); PI.show('TituloV2B'); assert(part('t3-bg').style.cssText.includes('url(assets/bg/era2.png)'), 'a falha vale até a próxima abertura do jogo (não tenta de novo a cada tela)'); }
     g.S = newS(); load(true); openPin(); PI.show('TituloV2B');
+    /* pacote 'ui:late' baixado em outra pasta (Sys.assets.url): o fundo pintado e a conferência de carga usam o endereço de verdade */
+    { g.Sys.assets = { url: p => 'pack://late/' + p }; g.S = newS(); load(true); openPin(); PI.show('TituloV2B'); const u = 'pack://late/assets/ui/title/title_bg_a.png';
+      assert(part('t3-bg').style.cssText.includes('url(' + u + ')') && g.PTitle3._t.probe.attrs.src === u, 'fundo pintado pelo endereço do pacote'); delete g.Sys.assets; }
     /* sem o desenho do jogo: a tela continua de pé */
     delete g.drawHeroFull; load(true); openPin(); PI.show('TituloV2B'); rafs[0](1000); assert(layer());
     for (const p of ['t3-bg', 't3-dragon']) for (const el of [part(p)]) ALL.push(el.style.cssText);
@@ -287,7 +298,7 @@ const keep = h => { ALL.push(h); return h; };
   { g.S = newS(); setNet(); const P = load(true); openPin(); PI.show('TituloV2B');
     for (const acct of [undefined, 'guest', 'google']) for (const nw of [true, false]) for (const net of [{}, { booted: false, x: 'offline' }, { booted: false, x: 'maintenance' }, { choosing: true }, { lastAction: 'applied' }, { pending: true }, { on: false }]) for (const dev of [false, true]) {
       g.S = nw ? newS() : oldS(); if (acct) g.S.acct = acct; setNet(net, net.x ? { last: { ok: false, reason: net.x } } : null); navigator.userAgent = dev ? 'EonboundDev' : 'node';
-      const st = P.snap(); ALL.push(P.uiHTML(st)); ALL.push(P.sheetHTML(st)); }
+      const st = P.snap(); ALL.push(P.uiHTML(st)); ALL.push(P.sheetHTML(st)); P._t.gAsk = true; ALL.push(P.sheetHTML(st)); P._t.gAsk = false; }
     navigator.userAgent = 'node'; setNet();
     const acts = P.actions(); let nBtn = 0, nImg = 0;
     for (const h of ALL) {
@@ -306,6 +317,7 @@ const keep = h => { ALL.push(h); return h; };
     assert(n(rule('t3-play'), 'min-height') >= 44 && n(rule('t3-srv'), 'min-height') >= 44 && n(rule('t3-btn'), 'min-height') >= 44, 'toque mínimo de 44 px');
     assert(n(rule('t3-acct'), 'width') >= 44 && n(rule('t3-acct'), 'height') >= 44 && n(rule('t3-x'), 'width') >= 44 && n(rule('t3-x'), 'height') >= 44);
     for (const m of css.matchAll(/[;{](?:min-)?width:(\d+)px/g)) assert(+m[1] <= 320, 'largura fixa maior que 320 px: ' + m[0]);
+    assert(!/nowrap|text-overflow/.test(rule('t3-pn small')) && /overflow-wrap:anywhere/.test(rule('t3-pn small')), 'era e fase quebram a linha em 320 px (sem cortar)');
     assert(/#pin \.t3\{[^}]*overflow:hidden/.test(css) && /\.t3-sh\{[^}]*overflow-x:hidden/.test(css), 'sem rolagem lateral'); assert(/prefers-reduced-motion/.test(css));
     /* contraste AA (4,5:1) dos pares texto/fundo sólidos da tela */
     const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
