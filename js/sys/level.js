@@ -97,13 +97,15 @@ function killCap(S,host){ if(!KCON()) return {on:false}; const K=DATA.v9.kill, o
   const t=Math.round(num(K.T[clamp(eraMaxOf(host),0,K.T.length-1)],0)*vipXp(S)); return {on:true,full:t,used:raw,left:Math.max(0,t-raw),rate:raw<t?1:raw<2*t?K.mid:K.over}; }
 /* src = 'kill' para a XP dos orbes de abate (passa pelo teto diário no v9); qualquer outro valor (ou nenhum) não tem teto */
 function addXp(S,n,host,src){
-  let k0=int0(n); if(KCON()&&src==='kill'&&k0) k0=killCredit(S,host,k0);
+  let k0=int0(n);
+  /* bônus de XP ANTES do teto diário da XP de abate (equilíbrio 14/11, docs/EQUILIBRIO_TUDO_LIGADO.md P4): antes ele entrava depois e furava o teto */
+  if(src!=='trial'&&k0){ const p=xpPerkPct(S); if(p>0) k0=Math.round(k0*(1+p/100)); }
+  if(KCON()&&src==='kill'&&k0) k0=killCredit(S,host,k0);
   /* bênção "Saber das Eras" da Encruzilhada (Sys.crossroads.perks xpPct; desligada = nada muda): +% em toda XP.
      + XP da GUILDA (Sys.guild.perks xpPct: territórios do torneio), da FOGUEIRA DA GUILDA (Sys.guildFire.perks xpPct, +0,3%/nível) e do ouro acima
      dos tetos (Sys.loot.goldPerks xpPct): o mesmo ponto único de toda XP (orbes de abate, instância, missão, offline). Módulo desligado ou sem guilda = 0.
      docs/LIGACOES_SOCIAL.md §8. O bônus entra UMA vez, no ganho bruto, ANTES do teto da Provação: assim o teto corta o total já com bônus
      (nada vaza para dentro do nível do teto) e o cofre guarda XP já com bônus. src trial = devolução do cofre: não ganha bônus de novo. */
-  if(src!=='trial'&&k0){ const p=xpPerkPct(S); if(p>0) k0=Math.round(k0*(1+p/100)); }
   /* teto da Provação do Mestre (Sys.trial, desligado): ponto ÚNICO de toda XP; a XP acima do teto fica guardada lá (até 1 nível; cofre cheio = descartada).
      src trial = devolução, já conferida e já com bônus */
   if(src!=='trial'&&k0){ const T=root.Sys&&root.Sys.trial; if(T&&T.DATA&&T.DATA.on&&typeof T.gateXp==='function'){ try{ const g=T.gateXp(S,host,k0); if(g&&typeof g.give==='number') k0=Math.max(0,Math.min(k0,g.give)); }catch(e){} } }

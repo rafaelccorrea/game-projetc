@@ -38,7 +38,7 @@ const DATA={
   eraStep:0.12, maxEra:8,
   // TETOS da soma de todos os itens (pontos %). bossCap vale contra chefe, Senhor da Era e na Arena (PvP): o chefe nunca vira trivial.
   cap:    {combo:50, counter:50, stun:20, dodge:30, lifesteal:20},
-  bossCap:{combo:50, counter:50, stun:10, dodge:20, lifesteal:10},
+  bossCap:{combo:30, counter:30, stun:10, dodge:10, lifesteal:5},   // baixado 14/11 (docs/EQUILIBRIO_TUDO_LIGADO.md P3): com 50/50/20/10 o Senhor da Era caía em 15-23 s nas eras 2-8
   // efeito de cada golpe
   comboMult:0.5,        // golpe extra = 50% do golpe básico (s1); combo não puxa outro combo
   counterMult:0.6,      // revide = 60% do golpe básico
