@@ -164,3 +164,29 @@ outro valor sem a medida da fase 5 (§6).
 - Provação do Nv 20+: só estimativa (§3).
 - Robô até a fase 5: não rodado (§6).
 - Golpes dos itens usam o valor esperado (q = 0,5); um jogador com sorte passa disso, um que não troca de item fica abaixo.
+
+## 8. Aplicado (recal2, 14/11, parcial: só a era 1)
+
+Código medido: P3 (bossCap 30/30/10/5) e o piso do golpe do comum (`commons.minHitPctOfRefHp` 0,025, já lido pelo js/diff.js) ligados.
+Medida: `tools/cal-tudo.js --medida=tudo`, 4 lutas por caso, com a env nova `CASOS=T100,T90,R100,RN100` (T = com os módulos; R = sem os módulos
+com o mesmo progresso, ou seja ~90% da FC pedida nova; RN = sem os módulos com 100% da FC pedida nova).
+
+**Aplicado no balance.json (era 1):** recFc das fases 11-20 × 1,113 (17600 ... 23600), `killSecAt100[1]` 33 → 34, `surviveSecAt100[1]` fica 40.
+
+| Era 1 (fase 20) | com módulos 100% | com módulos 90% | sem módulos, mesmo progresso | sem módulos, 100% da FC nova |
+|---|---|---|---|---|
+| P2 proposto (kill 40, aguentar 34) | 2/4 · 36,6 s · 14% | 0/4 | 0/4 | 1/4 · 35,7 s |
+| kill 36, aguentar 38 | 4/4 · 34,9 s · 22% | 3/4 · 34,8 s | 0/4 | 0/4 |
+| **kill 34, aguentar 40 (aplicado)** | **4/4 · 28,4 s · 41%** | **4/4 · 33,1 s · 20%** | 0/4 | **3/4 · 36,3 s · 3%** |
+
+Conflito (para o PO): com kill 36 o "com módulos" fica em ~35 s, mas o sem módulos com 100% da FC não vence nenhuma; com kill 34 o sem
+módulos vence 3/4 e o com módulos fica fácil (28 s, e 90% vence 4/4). Apliquei o 34 (prioridade: sem módulos não ficar sem saída).
+
+**Eras 3-5 com o P2 proposto (kill 59/52/54, aguentar 30/22/24) e P3:** o P2 ficou DURO demais depois do P3 (golpes menores contra o chefe):
+era 3 com módulos 0/4 (cai aos 37 s), 90% 0/4, sem módulos 0/4 (30 s) · era 4 0/4 (32 s), 0/4, 0/4 (21 s) · era 5 1/4 em 34,8 s, 0/4, 0/4 (27 s).
+Ou seja, o P2 não serve como está: o aguentar curto (22-30 s) mata todo mundo antes da fúria. Próxima tentativa: kill ~34 e aguentar 40 em
+todas as eras (como a era 1), medindo era a era.
+
+**Não aplicado (não medido):** eras 2 e 6-8, e os números finais das eras 3-5. A rodada "kill 34 / aguentar 40" das eras 2-8 foi parada pelo
+sistema por falta de memória do PC (memória livre medida entre 3,2 e 4,7 GB antes de cada era; a queda foi de outro processo enquanto rodava).
+Calendário (~178 dias) e diff.js: não refeitos.
