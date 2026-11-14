@@ -30,7 +30,7 @@ t('Repetir: lote cheio do melhor nível vencido, na hora, gasta 1 entrada; sem v
   BF.ensure(S).lv=40; const v=TH.view(S,h); assert.ok(v.canSweep&&v.sweepLote===4&&v.lote===8);
   const s=TH.sweep(S,h); assert.ok(s.ok&&s.lv===8&&s.drop===4&&s.brasas===4&&s.left===0); assert.strictEqual(TH.sweep(S,h).reason,'entries');
   assert.strictEqual(BF.ensure(S).got,8); h.t+=DAY; assert.strictEqual(TH.sweep(S,h).drop,4,'dia novo'); }));
-t('compatível: result {won} e cancelar não gasta entrada',()=>on(()=>{ const S={}, h=host(); TH.enter(S,h); assert.strictEqual(TH.cancel(S,h),true); assert.strictEqual(TH.view(S,h).left,2);
+t('regra única com o servidor: a entrada é gasta AO ENTRAR; sair no meio não devolve; result {won} compatível',()=>on(()=>{ const S={}, h=host(); TH.enter(S,h); assert.strictEqual(TH.view(S,h).left,1,'gastou ao entrar'); assert.strictEqual(TH.cancel(S,h),true); assert.strictEqual(TH.view(S,h).left,1,'sair não devolve');
   TH.enter(S,h); assert.ok(TH.result(S,h,{won:true}).won); }));
 t('nada à venda: sem preço, gema, produto, anúncio ou sorteio',()=>{ const src=require('fs').readFileSync(require('path').join(__dirname,'../../js/sys/thief.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'');
   assert.ok(!/gems|productId|brl|price|preço|addGems|rng|Math\.random|\bads?\b/i.test(src)); });

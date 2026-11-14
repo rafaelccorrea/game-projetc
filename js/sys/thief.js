@@ -4,7 +4,7 @@
    Brasília, UTC-3). Não há entrada paga, chave por anúncio, nada à venda nem sorteio pago (o jogo tem menores).
    PRÊMIO: no máximo 1 LOTE por entrada, pelo NÍVEL DA FOGUEIRA (Sys.bonfire.perTap: 1-3 = 1, 4-6 = 2, 7-9 = 4, 10-19 = 5, 20-34 = 6, 35-49 = 8, 50-60 = 10).
    Fixo, sem sorteio. O fim é finish {score 0..1}: Brasas = round(lote × score); score 1 = lote cheio e o nível fica VENCIDO (best = nível da Fogueira).
-   Cada fim gasta 1 entrada. REPETIR (sweep): gasta 1 entrada e dá na hora o lote cheio do melhor nível já vencido ("Varrer o último" do LoM).
+   A entrada é gasta ao ENTRAR (regra única com o servidor; sair no meio não devolve). REPETIR (sweep): gasta 1 entrada e dá na hora o lote cheio do melhor nível já vencido ("Varrer o último" do LoM).
    As Brasas entram pelo Sys.bonfire.addBrasas(S,'thief',n) (conta no got; o teto do estoque e a chave da Fogueira valem).
    Estado: S.sys.thief. Teste: test/sys/thief.test.js */
 (function(root){
@@ -46,12 +46,12 @@ function canEnter(S,host){ if(!ON()) return {ok:false,reason:'off'}; const o=tod
   if(o.run) return {ok:false,reason:'run'}; if(left(S,host)<=0) return {ok:false,reason:'entries'};
   const lv=fireLv(S); return {ok:true,lv,lote:loteOf(lv)}; }
 /* começa a perseguição (não gasta entrada; quem gasta é o fim). O lote fica preso ao nível da Fogueira na entrada. {ok, lv, lote, secs} */
-function enter(S,host){ const c=canEnter(S,host); if(!c.ok) return c; const o=ensure(S); o.run={lv:c.lv,t:nowOf(host)}; return {ok:true,lv:c.lv,lote:c.lote,secs:DATA.secs}; }
+function enter(S,host){ const c=canEnter(S,host); if(!c.ok) return c; const o=today(S,host); o.used=Math.min(DATA.entries,o.used+1); o.run={lv:c.lv,t:nowOf(host)};   /* REGRA ÚNICA (igual ao servidor, API_SERVIDOR): a entrada é GASTA AO ENTRAR; sair no meio não devolve */ return {ok:true,lv:c.lv,lote:c.lote,secs:DATA.secs}; }
 /* fim da perseguição: {score:0..1} (fração do saco que caiu). Gasta 1 entrada. score 1 = lote cheio e nível vencido.
    {ok, score, lv, lote, drop (o que o ladrão soltou), brasas (as que entraram na Fogueira), won, best, left} */
 function finish(S,host,res){ if(!ON()) return {ok:false,reason:'off'}; const o=today(S,host); if(!o.run) return {ok:false,reason:'run'};
   const sc=clamp(num(res&&res.score,0),0,1), lv=o.run.lv, lote=loteOf(lv), drop=clamp(Math.round(lote*sc),0,lote), won=sc>=1;
-  o.run=null; o.used=Math.min(DATA.entries,o.used+1); if(won&&lv>o.best) o.best=lv;
+  o.run=null; if(won&&lv>o.best) o.best=lv;   /* a entrada já foi gasta no enter */
   const got=give(S,drop); o.total+=got; return {ok:true,score:sc,lv,lote,drop,brasas:got,won,best:o.best,left:left(S,host)}; }
 /* compatível com {won:true|false, frac}: won = score 1 */
 const result=(S,host,res)=>finish(S,host,{score:res&&res.won===true?1:num(res&&(res.score!=null?res.score:res.frac),0)});
