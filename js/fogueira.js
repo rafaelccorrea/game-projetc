@@ -216,7 +216,7 @@ function layout(){ ST.lay = false; if (!M) return; const app = gid('app'); if (!
   const colH = 3 * fbt + 2 * 2 + 8, fits = top + colH <= feet - 240;
   if (fits){ par.style.cssText = 'position:absolute;right:6px;top:' + top.toFixed(0) + 'px'; el.style.cssText = 'border-radius:26px;padding:3px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px'; ST.spdMode = 'col'; }
   else { /* tela baixa: a coluna entraria na faixa dos inimigos; a fila fica deitada à esquerda, logo ACIMA da Fogueira e abaixo dos pés do herói */
-    par.style.cssText = 'position:absolute;right:6px;top:' + (Hb - 28 - fbt).toFixed(0) + 'px'; el.style.cssText = SPD_ORIG.a; ST.spdMode = 'row'; } }
+    par.style.cssText = 'position:absolute;right:6px;top:' + (Hb - colH - 20).toFixed(0) + 'px'; el.style.cssText = 'border-radius:26px;padding:3px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px'; ST.spdMode = 'row'; } }   /* 'row' = nome antigo: hoje também é coluna, só que no canto de baixo da direita (dono 14/11: velocidade sempre na lateral) */
 function layKey(){ let k = ''; try { if (typeof FB_MENU !== 'undefined') for (const m of FB_MENU) if (m.side === 'right'){ const e = gid('fbm_' + m.id); k += m.id + (e && e.style.display !== 'none' ? (m.cy != null ? m.cy : m.y) : 'x') + ','; } } catch (e) {} return k; }
 
 /* ---------- mochila: abrir espaço pela regra do módulo (desmonta a pior destrancada; a luta nunca para) ---------- */

@@ -11,7 +11,7 @@ const FBS = fs.readFileSync(path.join(R, 'js/fullbattle.js'), 'utf8'), FGS = fs.
 const num = (re, src, what) => { const m = re.exec(src); assert(m, 'não achei no código: ' + what); return +m[1]; };
 const Y0 = num(/m\.cy = (\d+) \+ 78 \* li/, FBS, 'topo da coluna esquerda'), KEEP = num(/bottomLim = Hb - (\d+) - 6/, FBS, 'limite de baixo da coluna') + 6;
 const KBX = num(/id="fb_kb" style="position:absolute;left:(\d+)px/, FBS, 'x das barras do herói'), KBW = num(/id="fb_kb" style="position:absolute;left:\d+px;top:\d+px;width:(\d+)px/, FBS, 'largura das barras');
-const ROW_UP = num(/top:' \+ \(Hb - (\d+) - fbt\)/, FGS, 'fila deitada da Fogueira'), COL_TOP = num(/let top = (\d+); try \{ if \(typeof FB_MENU/, FGS, 'topo da coluna x1/x2/x4');
+const ROW_UP = num(/top:' \+ \(Hb - colH - (\d+)\)/, FGS, 'coluna x1/x2/x4 no canto de baixo'), COL_TOP = num(/let top = (\d+); try \{ if \(typeof FB_MENU/, FGS, 'topo da coluna x1/x2/x4');
 assert(/FIELD_FEET=640\/844/.test(fs.readFileSync(path.join(R, 'js/battle.js'), 'utf8')), 'linha dos pés em 640/844');
 
 const mkEl = id => ({ id, style: { getPropertyValue(k) { return this[k] || ''; } }, children: [], parentNode: null, _h: '', set innerHTML(v) { this._h = v; this.children = (v.match(/<div class="grh-s"[^>]*>/g) || []).map(() => ({ style: {}, children: [{}, { style: {} }, {}], setAttribute() {} })); }, get innerHTML() { return this._h; },
@@ -35,12 +35,12 @@ function scene(W, H, nLeft, bb, fog) { els = {}; unl = nLeft; const s = Math.min
     obst.push({ n: 'herói', x: 58, y: feet - 160, w: 100, h: 160 }); }
   obst.push({ n: 'Baú', x: Wb - 7 - 62, y: 150, w: 62, h: 62 }); els.fbm_chest = mkEl('fbm_chest'); g.FB_MENU[4].cy = 150;
   obst.push({ n: 'barra da fase', x: 78, y: 60, w: Math.min(300, Wb - 152), h: 58 }); obst.push({ n: 'selo Fraco contra', x: 82, y: 122, w: 236, h: 24 });
-  obst.push({ n: 'golpes', x: Wb - 186, y: Hb - 180, w: 186, h: 180 });
+  obst.push({ n: 'botão Golpes', x: 6, y: Hb - 144, w: 62, h: 66 });
   const sp = mkEl('fb_spd'), par = mkEl(''); par.appendChild(sp); els.fb_spd = sp; let mode = 'fora';
-  if (fog) { const top = Math.max(COL_TOP, 150 + 62 + 8), colH = 3 * fbt + 2 * 2 + 8; obst.push({ n: 'Fogueira', x: 0, y: Hb - ROW_UP, w: 180, h: ROW_UP });
+  if (fog) { const top = Math.max(COL_TOP, 150 + 62 + 8), colH = 3 * fbt + 2 * 2 + 8; obst.push({ n: 'Fogueira', x: Wb / 2 - 62, y: Hb - 120, w: 124, h: 120 });
     if (top + colH <= feet - 240) { par.style.right = '6px'; par.style.top = top.toFixed(0) + 'px'; mode = 'coluna'; obst.push({ n: 'x1/x2/x4 em coluna', x: Wb - 6 - (fbt + 6), y: top, w: fbt + 6, h: colH }); }
-    else { const t = Hb - ROW_UP - fbt; par.style.left = '10px'; par.style.top = t.toFixed(0) + 'px'; mode = 'fila'; obst.push({ n: 'x1/x2/x4 deitada', x: 10, y: t, w: 3 * fbt + 10, h: fbt + 6 }); } }
-  else { par.style.left = '10px'; par.style.top = 'calc(100% - 72px)'; obst.push({ n: 'x1/x2/x4 no lugar de sempre', x: 10, y: Hb - 72 - (fbt - 44), w: 3 * fbt + 10, h: fbt + 6 }); }
+    else { const t = Hb - colH - ROW_UP; par.style.right = '6px'; par.style.top = t.toFixed(0) + 'px'; mode = 'fila'; obst.push({ n: 'x1/x2/x4 em coluna, canto de baixo', x: Wb - 6 - (fbt + 6), y: t, w: fbt + 6, h: colH }); } }
+  else { par.style.right = '6px'; par.style.top = 'calc(100% - 3 * var(--fbt,44px) - 30px)'; obst.push({ n: 'x1/x2/x4 no lugar de sempre', x: Wb - 6 - (fbt + 6), y: Hb - 3 * fbt - 30, w: fbt + 6, h: 3 * fbt + 10 }); }
   return { host, obst, Hb, Wb, feet, mode }; }
 const out = []; let cases = 0, rows = 0, narrow = 0;
 for (const [W, H] of [[390, 844], [360, 780], [360, 640], [320, 640], [412, 915]]) for (const nLeft of [0, 1, 2, 3, 4]) for (const bb of [false, true]) for (const fog of [true, false]) for (const n of [1, 2, 3]) {
