@@ -8,6 +8,8 @@
    - 401 token_expired: renova UMA vez e repete o pedido; se a renovação falhar, a sessão volta ao convidado (nova chamada a ensureSession).
    - Sem rede: rejeita {code:'offline'}; a tela mostra "sem conexão" no que precisa do servidor.
    - Nunca passa preço nem 💎 pelo cliente: a compra manda só o recibo do Google (productId, purchaseToken, orderId); quem entrega é o servidor.
+   - Erros: rejeita com Error {code, reason (= code), status, details, retryAfterMs}; em 429 também retryAfterMin (minutos, para cima).
+   - SAIR / TROCAR DE CONTA (§2.2b): signOut(opts) atrás da chave DATA.signOutOn (desligada). Todo PUT /save leva owner = id do jogador da sessão.
    Ligar (camada do engenheiro): Sys.net.init({fetch, storage:{get,set}, clientVersion, platform}); DATA.base='https://<host>/v1'; DATA.on=true.
    Testes: test/sys/net.test.js */
 (function(root){
@@ -22,13 +24,19 @@ const DATA={
      No jogo é o serverClientId do plugin nativo. Vazio = o botão do Google mostra "em breve". */
   googleClientId:'108430697904-opm26965n34smlrrnlq1kha8bobb17b5.apps.googleusercontent.com',
   googlePlugin:'SocialLogin',   // @capgo/capacitor-social-login (Credential Manager do Android)
+  /* SAIR / TROCAR DE CONTA (§2.2b): chave da frente, DESLIGADA. Desligada, signOut() devolve {ok:false, reason:'off'} sem nenhum pedido. */
+  signOutOn:false,
+  signOutTries:4,               // PUT /save com 429: no máximo 4 tentativas...
+  signOutMaxWaitMs:95000,       // ...e no máximo 95 s de espera somada (o limite do servidor é 1 gravação a cada 30 s)
+  realmMax:60,                  // servidores varridos na saída (sessões 'eon.net@sN' guardadas no aparelho)
 };
-const ST={ fetch:null, storage:null, clientVersion:'0', platform:'android', mem:{}, offset:0, refreshing:null };
+const ST={ fetch:null, storage:null, clientVersion:'0', platform:'android', mem:{}, offset:0, refreshing:null, sleep:null, signingOut:null };
 
 function init(o){
   o=o||{};
   ST.fetch=o.fetch||(typeof root.fetch==='function'?root.fetch.bind(root):null);
   ST.storage=o.storage||null; ST.clientVersion=String(o.clientVersion||'0'); ST.platform=String(o.platform||'android');
+  ST.sleep=typeof o.sleep==='function'?o.sleep:null;   // só para teste: espera falsa (sem dormir de verdade)
   ST.mem=load(); if(!ST.mem.deviceId){ ST.mem.deviceId=uuid(); persist(); }
   return API;
 }
@@ -43,7 +51,7 @@ function uuid(){
   const c=root.crypto; if(c&&typeof c.randomUUID==='function') return c.randomUUID();
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,ch=>{ const r=Math.random()*16|0; return (ch==='x'?r:(r&3|8)).toString(16); });
 }
-const fail=(code,extra)=>Object.assign(new Error(code),{code},extra||{});
+const fail=(code,extra)=>Object.assign(new Error(code),{code,reason:code},extra||{});
 
 /* ---------- transporte ---------- */
 async function raw(method,path,body,auth){
@@ -60,7 +68,15 @@ async function raw(method,path,body,auth){
   if(isFinite(st)&&st>0) ST.offset=st-Date.now();
   if(res.status===204) return null;
   let data=null; try{ data=await res.json(); }catch(e){}
-  if(res.status>=400){ const e=(data&&data.error)||{}; throw fail(e.code||('http_'+res.status),{status:res.status,details:e.details||{},retryAfterMs:e.retryAfterMs||0}); }
+  if(res.status>=400){
+    const e=(data&&data.error)||{}, x={status:res.status,details:e.details||{},retryAfterMs:Number(e.retryAfterMs)||0};
+    /* 429: o tempo vem em retryAfterMs (corpo) ou no cabeçalho Retry-After (segundos); a tela mostra em minutos (para cima) */
+    if(res.status===429){
+      if(!(x.retryAfterMs>0)){ const ra=Number(res.headers&&res.headers.get&&res.headers.get('retry-after')); if(isFinite(ra)&&ra>0) x.retryAfterMs=Math.ceil(ra*1000); }
+      x.retryAfterMin=x.retryAfterMs>0?Math.ceil(x.retryAfterMs/60000):0;
+    }
+    throw fail(e.code||(res.status===429?'rate_limited':'http_'+res.status),x);
+  }
   return data;
 }
 /* com sessão: renova uma vez em 401 token_expired e repete */
@@ -103,7 +119,11 @@ async function ensureSession(o){
 }
 const linkGoogle=tok=>call('POST','/auth/link/google',tok).then(p=>{ ST.mem.player=p; persist(); return p; });
 /* aparelho novo: entra na conta vinculada ao Google (o save da nuvem vem depois, por sync) */
-async function loginGoogle(tok){ return takeSession(await raw('POST','/auth/login/google',Object.assign({deviceId:ST.mem.deviceId,realm:realm()},tok),false)); }
+async function loginGoogle(tok){
+  let r; try{ r=await raw('POST','/auth/login/google',Object.assign({deviceId:ST.mem.deviceId,realm:realm()},tok),false); }
+  catch(e){ if(e.status===404&&e.code!=='not_linked'){ e.code=e.reason='not_linked'; e.message='not_linked'; } throw e; }   // 404 = conta Google sem vínculo
+  return takeSession(r);
+}
 /* GET /realms (público; com sessão, o servidor junta o personagem do jogador em cada servidor). Sem rede: rejeita (a tela mostra só o servidor atual). */
 const realms=()=>raw('GET','/realms',null,!!(ST.mem&&ST.mem.access));
 /* entra com o Google pelo plugin nativo e manda só o idToken ao servidor. mode 'login' = aparelho novo / conta vinculada; 'link' = vincula ao convidado atual.
@@ -142,6 +162,91 @@ const hasSession=()=>!!ST.mem.refresh;
    pedir (entrar com o Google continua cancelando, como o aviso diz). */
 async function deleteAccount(){ await call('DELETE','/me'); dropSession(); delete ST.mem.player; delete ST.mem.save; ST.mem.deviceId=uuid(); persist(); return {ok:true,until:serverNow()+30*86400000}; }
 
+/* ---------- sair / trocar de conta (§2.2b) ---------- */
+/* Sys.net.signOut(opts) → Promise<{ok:true} | {ok:false, reason, retryAfterMs?, retryAfterMin?, details?}>. NUNCA rejeita.
+   opts.save     = o S atual (ou opts.getSave = () => S): o mesmo S que o jogo passa ao push/sync;
+   opts.summary  = o resumo (objeto ou função S → resumo), como no push;
+   opts.sleep    = (ms) => Promise (só teste; padrão setTimeout).
+   Ordem (só segue se o passo anterior deu certo; falhou = NADA apagado):
+   (a) save confirmado na nuvem: aparelho com mudança (saveMeta().dirty) → PUT /save com owner até o 200 {version}; 429 → espera o Retry-After e
+       repete (DATA.signOutTries tentativas, DATA.signOutMaxWaitMs de espera somada). Sem mudança → GET /save/head e a version tem de ser a do aparelho
+       (diferente e com o S em mãos → sobe; sem o S → 'save_mismatch');
+   (b) POST /auth/logout {refreshToken} → 204 (401 = sessão já morta: segue);
+   (c) apaga access, refresh, jogador e a versão do save conhecida (a sessão de TODOS os servidores guardados no aparelho);
+   (d) deviceId NOVO no armazenamento do aparelho (o antigo fica preso à conta Google).
+   Apagar o save local e voltar ao Título é da tela. reasons: 'off' (chave desligada), 'net_off', 'not_google' (convidado sem Google: sair perderia a conta),
+   'no_session', 'owner_mode', 'no_save' (há mudança e não veio o S), 'save_mismatch', 'busy' (já saindo), 'rate_limited' (+retryAfterMs/Min),
+   e os códigos do servidor: 'wrong_account' (+details.session), 'save_conflict', 'save_regress', 'offline', 'timeout'... */
+const nap=ms=>new Promise(r=>setTimeout(r,ms));
+function signOut(opts){
+  if(!DATA.signOutOn) return Promise.resolve({ok:false,reason:'off'});
+  if(ST.signingOut) return Promise.resolve({ok:false,reason:'busy'});
+  ST.signingOut=doSignOut(opts||{}).catch(e=>no(e)).finally(()=>{ ST.signingOut=null; });
+  return ST.signingOut;
+}
+function no(e){
+  const o={ok:false,reason:(e&&e.code)||'error'};
+  if(e&&e.retryAfterMs) o.retryAfterMs=e.retryAfterMs;
+  if(e&&e.retryAfterMin!=null) o.retryAfterMin=e.retryAfterMin;
+  if(e&&e.details&&Object.keys(e.details).length) o.details=e.details;
+  return o;
+}
+async function doSignOut(o){
+  if(!DATA.on) return {ok:false,reason:'net_off'};
+  if(ownerMode()) return {ok:false,reason:'owner_mode'};                  // save de teste do dono: nunca sobe, então nunca se confirma
+  if(!ST.mem.refresh) return {ok:false,reason:'no_session'};
+  const p=ST.mem.player, linked=p&&Array.isArray(p.linked)?p.linked:[];
+  if(linked.indexOf('google')<0) return {ok:false,reason:'not_google'};   // §2.2b: só conta com Google (o convidado só volta pelo deviceId)
+  const sleep=o.sleep||ST.sleep||nap;
+  let S=o.save; if(S==null&&typeof o.getSave==='function'){ try{ S=o.getSave(); }catch(e){ S=null; } }
+  /* (a) save confirmado */
+  const pushIt=async()=>{
+    let waited=0;
+    for(let i=1;;i++){
+      try{ return await push(S,o.summary||{}); }
+      catch(e){
+        if(e.code!=='rate_limited'||i>=DATA.signOutTries) throw e;
+        const ms=Math.max(1000,Number(e.retryAfterMs)||30000);
+        if(waited+ms>DATA.signOutMaxWaitMs) throw e;
+        waited+=ms; await sleep(ms);
+      }
+    }
+  };
+  const m=saveMeta();
+  if(m.dirty){
+    if(S==null) return {ok:false,reason:'no_save'};
+    await pushIt();
+  }else{
+    const h=await head();
+    if(!h||h.version!==m.version){
+      if(S==null) return {ok:false,reason:'save_mismatch'};
+      await pushIt();
+    }
+  }
+  /* (b) revoga a sessão do aparelho */
+  const tok=ST.mem.refresh;
+  try{ await raw('POST','/auth/logout',{refreshToken:tok},false); }
+  catch(e){ if(e.status!==401) throw e; }
+  /* (c) + (d): sessão fora e deviceId novo, em todos os servidores guardados no aparelho */
+  const dev=uuid(), cur=skey();
+  delete ST.mem.access; delete ST.mem.refresh; delete ST.mem.accessExpiresAt; delete ST.mem.player; delete ST.mem.save;
+  ST.mem.deviceId=dev; ST.refreshing=null; persist();
+  await sweepRealms(cur,dev);
+  return {ok:true};
+}
+/* as outras sessões guardadas ('eon.net' e 'eon.net@sN') são da MESMA conta: revoga cada uma (sem esperar resultado) e deixa só o deviceId novo */
+async function sweepRealms(cur,dev){
+  if(!ST.storage) return;
+  const keys=[DATA.storageKey]; for(let i=2;i<=DATA.realmMax;i++) keys.push(DATA.storageKey+'@s'+i);
+  for(const k of keys){
+    if(k===cur) continue;
+    let m=null; try{ const s=ST.storage.get(k); m=s?JSON.parse(s):null; }catch(e){ m=null; }
+    if(!m||typeof m!=='object') continue;
+    if(m.refresh){ try{ await raw('POST','/auth/logout',{refreshToken:m.refresh},false); }catch(e){} }
+    try{ ST.storage.set(k,JSON.stringify({deviceId:dev})); }catch(e){}
+  }
+}
+
 /* ---------- relógio ---------- */
 /* agora no relógio do servidor (a última resposta trouxe x-server-time); sem servidor = relógio do aparelho */
 const serverNow=()=>Date.now()+ST.offset;
@@ -171,8 +276,10 @@ async function push(S,summary,o){
   if(ownerMode()) return Object.assign({},OWNER_SKIP);
   const m=saveMeta();
   let r;
+  /* owner (§2.2b): o id do jogador da sessão. O servidor recusa com 409 wrong_account {session} se não for o do token (e não grava). Sem id conhecido, vai sem. */
+  const own=ST.mem.player&&ST.mem.player.id;
   try{ r=await call('PUT','/save',{baseVersion:m.version,saveFormat:DATA.saveFormat,clientVersion:ST.clientVersion,deviceId:ST.mem.deviceId,
-    clientTime:Date.now(),summary:sumOf(S,summary),save:S,...(o&&o.force?{force:true}:{})}); }
+    clientTime:Date.now(),summary:sumOf(S,summary),save:S,...(own!=null?{owner:String(own)}:{}),...(o&&o.force?{force:true}:{})}); }
   catch(e){
     // 422 save_implausible: o servidor GUARDOU o save (marcado para revisão) na versão details.version; o aparelho precisa saber, senão o próximo dá conflito
     if(e.code==='save_implausible'&&e.details&&typeof e.details.version==='number') setMeta(e.details.version,false);
@@ -241,9 +348,9 @@ const mail=()=>call('GET','/mail');
 const claimMail=id=>call('POST','/mail/'+encodeURIComponent(id)+'/claim');
 const events=()=>call('GET','/events');
 
-function _reset(){ ST.fetch=null; ST.storage=null; ST.mem={}; ST.offset=0; ST.refreshing=null; }
+function _reset(){ ST.fetch=null; ST.storage=null; ST.mem={}; ST.offset=0; ST.refreshing=null; ST.sleep=null; ST.signingOut=null; }
 
-const API={DATA,realm,realms,init,ensureSession,linkGoogle,loginGoogle,googleReady,googleSignIn,logout,me,player,hasSession,deleteAccount,serverNow,time,
+const API={DATA,realm,realms,init,ensureSession,linkGoogle,loginGoogle,googleReady,googleSignIn,logout,signOut,me,player,hasSession,deleteAccount,serverNow,time,
   markDirty,saveMeta,head,pull,push,sync,chooseSide,history,restore,accountId,canBuy,verifyGoogle,deliveries,ackDelivery,entitlements,offers,claimMonthlyCard,
   mail,claimMail,events,_reset,_call:call};
 root.Sys=root.Sys||{}; root.Sys.net=API;
