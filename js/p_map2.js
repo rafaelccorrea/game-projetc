@@ -179,6 +179,7 @@ const GOLD_F='hue-rotate(-24deg) saturate(1.45) brightness(1.05)';   /* fases se
 .m2-fx{position:absolute;left:0;top:0;width:100%;height:100%;z-index:4;pointer-events:none}
 .m2-trail{position:absolute;inset:0;z-index:2;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .m2-trail::-webkit-scrollbar{display:none}
+.m2-trail{-webkit-mask-image:linear-gradient(to bottom,transparent 0,transparent 74px,#000 96px);mask-image:linear-gradient(to bottom,transparent 0,transparent 74px,#000 96px)}
 .m2-track{position:relative;width:100%;overflow:hidden}
 .m2-path{position:absolute;left:0;top:0;pointer-events:none}
 .m2-sb{stroke:rgba(20,12,8,.7);stroke-width:22;fill:none;stroke-linecap:round}
@@ -302,7 +303,8 @@ const GOLD_F='hue-rotate(-24deg) saturate(1.45) brightness(1.05)';   /* fases se
 .m2-bt,.xs .m2-bt{flex:1;min-width:0;min-height:44px;padding:4px 10px;border-radius:13px;border:0;font-weight:900;font-size:14px;line-height:1.15;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center;overflow-wrap:anywhere}
 .m2-bt:active{transform:translateY(2px);box-shadow:0 1px 0 #9a5a10}
 .m2-bt.big,.xs .m2-bt.big{min-height:52px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:23px;letter-spacing:1px}
-.m2-bt.big svg{width:20px;height:20px;flex:none}
+.m2-bt.big,.xs .m2-bt.big{flex-direction:row!important;flex-wrap:nowrap!important}
+.m2-bt.big svg{width:20px;height:20px;flex:none;display:block;margin:0}
 .m2-bt.ghost,.xs .m2-bt.ghost{background:rgba(0,0,0,.35);color:#f6ecdf;box-shadow:none;border:1px solid rgba(255,236,200,.28)}
 .m2-cpop{position:absolute;z-index:20;inset:0;background:rgba(10,6,4,.55);display:flex;align-items:flex-end;justify-content:center;padding:0 14px max(16px,env(safe-area-inset-bottom));animation:m2-fade .2s ease-out}
 .m2-cpop .sh{width:100%;max-width:420px;min-width:0;border-radius:20px;background:rgba(29,22,17,.97);border:1.5px solid var(--gold);box-shadow:0 14px 30px rgba(0,0,0,.6);padding:12px;color:var(--text)}
