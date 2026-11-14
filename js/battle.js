@@ -72,7 +72,8 @@ const ULT_HITS=[[.8,.125],[1.05,.125],[1.3,.125],[1.55,.125],[1.9,.5]], ULT_DUR=
 const BOSS_FALL_DUR=1.4;   // chefe tombando (sem folha de morte ligada)
 const B={hero:null,enemy:null,fx:[],t:0,speed:1,deadT:0,swing:0,hurt:0,parts:[],rings:[],corpses:[],wfx:[],shake:0,cam:0,tr:null,
   dispEra:eraOf(S.stage),paused:true,tipW:null,cd2:0,energy:0,act:null,slow:0,dim:0,banner:null,step:0,
-  en:[],toSpawn:[],spawnT:0,spawnN:0,waveT:0,running:true,holdT:0,reach:HX+74,at:0,eshots:[],eAtkT:-9};   // reach = borda direita do herói + arma em repouso
+  en:[],toSpawn:[],spawnT:0,spawnN:0,waveT:0,running:true,holdT:0,reach:HX+74,at:0,eshots:[],eAtkT:-9,
+  stk:null,stkQ:[],grim:null,sysT:1,sysK:null};   // reach = borda direita do herói + arma em repouso · stk/stkQ = golpes especiais (Sys.strikes) · grim = magias do Grimório na luta; os três ficam nulos/vazios com as chaves desligadas
 /* v0.12.3: a arma nova só entra na mão quando a arte dela (sprite da arma e, se for pistola, as 3 folhas) já carregou; até lá fica a ANTERIOR
    (nunca mão vazia). Se a arte não chegar em 4 s, troca assim mesmo. */
 const HLK={cur:null,req:null,t0:0};
@@ -136,17 +137,142 @@ function startWave(delay){
 }
 /* ATRIBUTOS NA BATALHA (ponto único): tudo vem de heroStats() = Sys.fc.stats. Golpe = ATK × mult × (1 + dano crítico, se critar) × (1 − redução
    da DEF do alvo), pelo Sys.stats.hit; a DEF do herói reduz o dano recebido pela mesma fórmula; a velocidade de ataque encurta o básico. */
-function heroApply(h,st){ h.maxhp=st.hp; h.atk=st.atk; h.def=st.def||0; h.critRate=st.critRate||0; h.critDmg=st.critDmg==null?100:st.critDmg; h.aspd=st.aspd||0;
-  h.ivl=(window.Sys&&Sys.stats)?Sys.stats.interval(st):BAL.s1Interval; }
+/* ACRÉSCIMOS QUE SÓ A BATALHA SOMA (pontos %, por cima do Sys.fc.stats; nada disto é número daqui): velocidade de ataque e dano crítico do CAMINHO DE LUTA
+   (Sys.path.statOf, só com a chave do Sys.path ligada: o Sys.stats ainda não soma sozinho), o bônus do ENSAIO de caminho (B.inst.run.bonusStat, só naquela luta,
+   js/instfx.js) e a velocidade de ataque de uma MAGIA do Grimório enquanto dura (B.grim.aspdT). Sem nada disso devolve null e o heroApply é o de sempre.
+   Os tetos são os do Sys.stats (DATA.caps). */
+const HEXT={aspd:0,critDmg:0};
+function heroExtra(){ let a=0, c=0; const R=B.inst&&B.inst.run;
+  if(R&&R.bonusStat){ a+=+R.bonusStat.aspd||0; c+=+R.bonusStat.critDmg||0; }   /* ensaio: o bônus do caminho TESTADO (no lugar do escolhido) */
+  else { try{ const P=window.Sys&&Sys.path; if(P&&P.DATA&&P.DATA.on===true&&typeof P.statOf==='function'){ const s=P.statOf(S); if(s){ a+=+s.aspd||0; c+=+s.critDmg||0; } } }catch(e){} }
+  const g=B.grim; if(g&&g.aspdT>0) a+=g.aspdV;
+  if(!a&&!c) return null; HEXT.aspd=a; HEXT.critDmg=c; return HEXT; }
+/* heroApply roda em startBattle, refreshHero e na entrada da instância (js/instfx.js): por isso o perfil dos golpes especiais (stkRefresh) é refeito aqui, no fim.
+   Provação "sem pet" / "sem montaria" (run.skip do js/instfx.js): os atributos são recalculados sem o bônus daquele módulo (Sys.fc.stats com skip). */
+function heroApply(h,st){ const R=B.inst&&B.inst.run;
+  if(R&&R.skip&&window.Sys&&Sys.fc&&Sys.host){ try{ st=Sys.fc.stats(S,Sys.host,{skip:R.skip})||st; }catch(e){} }
+  const x=heroExtra();
+  if(x){ const C=(window.Sys&&Sys.stats&&Sys.stats.DATA&&Sys.stats.DATA.caps)||{}; st=Object.assign({},st);
+    st.aspd=Math.min(C.aspd>0?C.aspd:1e9,(st.aspd||0)+x.aspd); st.critDmg=Math.min(C.critDmg>0?C.critDmg:1e9,(st.critDmg==null?100:st.critDmg)+x.critDmg); }
+  h.maxhp=st.hp; h.atk=st.atk; h.def=st.def||0; h.critRate=st.critRate||0; h.critDmg=st.critDmg==null?100:st.critDmg; h.aspd=st.aspd||0;
+  h.ivl=(window.Sys&&Sys.stats)?Sys.stats.interval(st):BAL.s1Interval; stkRefresh(); B.sysK=sysKey(); }
 function startBattle(){
   const st=heroStats();
   B.hero={hp:st.hp,atkT:0.3}; heroApply(B.hero,st);
-  B.deadT=0; B.act=null; startWave();
+  B.deadT=0; B.act=null; B.stkQ.length=0; startWave();
 }
 function refreshHero(){
   const st=heroStats(); if(!B.hero) return;
-  const pct=B.hero.hp/B.hero.maxhp; heroApply(B.hero,st); B.hero.hp=Math.max(1,st.hp*pct);
+  const pct=B.hero.hp/B.hero.maxhp; heroApply(B.hero,st); B.hero.hp=Math.max(1,B.hero.maxhp*pct);   /* maxhp = st.hp (ou o da regra da luta especial) */
 }
+/* ===== GOLPES ESPECIAIS COM NOME (Sys.strikes; chave do módulo desligada = B.stk nulo e NADA abaixo roda) =====
+   COMBO, CONTRA-ATAQUE, ATORDOADO, ESQUIVA e ROUBO DE VIDA. A regra, os percentuais, os tetos (normal e chefe), os multiplicadores, os segundos, a imunidade e
+   os rótulos (texto e cor) são do módulo: aqui só o que a luta faz com a resposta.
+   - B.stk = Sys.strikes.profile(S, host): refeito ao entrar na luta e a cada refreshHero (troca de item, montaria, pet, caminho) e, uma vez por segundo, se a
+     chave do módulo ou o caminho mudou (sysSync). No ensaio de caminho o perfil leva o bônus do caminho testado (run.bonusStrikes, js/instfx.js), só naquela luta.
+   - golpe do herói (hitEnemy) → onHeroHit: combo = UM golpe extra (fila B.stkQ, sai STK_GAP s depois; ele não puxa outro combo); atordoar = o inimigo para de
+     atacar por stunSec (o golpe em preparo é cancelado) e guarda immuneUntil; roubo de vida cura o herói.
+   - dano no herói (heroHit) → onHeroHurt: esquiva zera o dano; contra-ataque = UM golpe de volta em quem bateu (mesma fila).
+   - sorte: a mesma do jogo (Sys.host.rng). Relógio: B.t (segundos de luta), o mesmo para now e immuneUntil.
+   Rótulos: um por efeito, no floatText, empilhados ACIMA do número do dano (nunca em cima dele). O ROUBO DE VIDA acontece a cada golpe: a cura é sempre
+   aplicada, mas o rótulo dele sai no máximo uma vez por STK_LS_GAP s (senão cobria a tela). */
+const STK_GAP=0.14, STK_LS_GAP=1.2, STK_ROW=16;   // só tempo/posição de DESENHO (nenhum número de balanço)
+const STK_ACT={type:'s1',col:'#ffffff',stk:'',hits:[],ev:[],fx:null};   // "ação" do golpe extra (combo / contra-ataque): um objeto só, reaproveitado
+const stkOn=()=>{ const K=window.Sys&&Sys.strikes; return !!(K&&K.DATA&&K.DATA.on===true&&typeof K.profile==='function'&&typeof K.onHeroHit==='function'&&typeof K.onHeroHurt==='function'); };
+const stkRng=()=>(window.Sys&&Sys.host&&typeof Sys.host.rng==='function')?Sys.host.rng:Math.random;
+function stkRefresh(){ if(!stkOn()){ B.stk=null; return; }
+  try{ const R=B.inst&&B.inst.run, P=(R&&(R.bonusStrikes||R.noMount))?Sys.strikes.profile(S,Sys.host,null,{extra:R.bonusStrikes||null,noMount:!!R.noMount}):Sys.strikes.profile(S,Sys.host);   /* ensaio: golpes do caminho testado; Provação sem montaria: sem o golpe dela (o módulo aplica os tetos) */
+    B.stk=(P&&P.normal&&P.boss)?P:null; }catch(e){ B.stk=null; console.error('strikes.profile',e); } }
+/* estado dos módulos que muda a luta sem passar pelo refreshHero (chave ligada/desligada, caminho escolhido ou trocado): conferido 1 vez por segundo */
+function sysKey(){ let p=''; try{ const P=window.Sys&&Sys.path; if(P&&P.DATA&&P.DATA.on===true&&typeof P.current==='function') p=P.current(S)||''; }catch(e){} return (stkOn()?'1':'0')+'|'+p; }
+function sysSync(){ const k=sysKey(); if(k!==B.sysK){ B.sysK=k; refreshHero(); } if(typeof grimSync==='function') grimSync(); }
+function stkLabel(x,y,L){ if(L&&L.text) floatText(Math.max(56,Math.min(LW-56,x)),y,L.text,L.color||'#ffffff',0); }
+const stkLab=(r,k)=>{ for(const L of r.labels) if(L.k===k) return L; return null; };
+/* atordoa: o inimigo para de atacar por sec (o laço não conta a cadência dele) e o golpe que ele preparava é cancelado. Usado pelos golpes especiais e pelas magias. */
+function stunEnemy(e,sec,col){ if(!e||e.dead||!(sec>0)) return; e.stunT=Math.max(e.stunT||0,sec); e.stunC=col||'#c78bff'; if(e.sw>0&&!e.struck){ e.sw=0; e.struck=true; } ring(eX(e),eY(e),e.stunC,30); }
+function stkHit(e,d,a){ let r=null;
+  try{ r=Sys.strikes.onHeroHit(S,{profile:B.stk,kind:a.type,dmg:d,boss:!!e.boss,pvp:false,isCombo:!!a.stk,now:B.t,immuneUntil:e.imm||0},stkRng()); }catch(er){ return; }
+  if(!r||!r.labels||!r.labels.length) return;
+  const ex=eX(e), top=(e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20); let row=0;
+  if(r.combo){ const L=stkLab(r,'combo'); B.stkQ.push({t:STK_GAP,m:r.comboMult,e,kind:'combo',col:L&&L.color||'#ffffff'}); stkLabel(ex,top-STK_ROW*(++row),L); }
+  if(r.stun&&e.hp>0){ const L=stkLab(r,'stun'); stunEnemy(e,r.stunSec,L&&L.color); e.imm=r.immuneUntil; stkLabel(ex,top-STK_ROW*(++row),L); }
+  if(r.lifesteal>0){ const h=B.hero; if(h&&B.deadT<=0&&h.hp>0){ h.hp=Math.min(h.maxhp,h.hp+r.lifesteal);
+      if(B.t-(B.stkLsT==null?-99:B.stkLsT)>=STK_LS_GAP||B.t<B.stkLsT){ B.stkLsT=B.t; stkLabel(HX,GY-HS*0.9-STK_ROW*2,stkLab(r,'lifesteal')); } } }
+}
+/* dano que vai chegar no herói: esquiva (golpe especial ou magia), contra-ataque e escudo de magia. Devolve o dano que sobra, ou null quando não sobra nada
+   (o heroHit sai sem piscar, sem som de dano e sem energia). Só é chamado com B.stk ou B.grim. */
+function heroGuard(d,src){ const g=B.grim, rng=stkRng(); let r=null, dodge=false, dcol='';
+  if(g&&g.dodgeT>0&&rng()*100<g.dodgeV){ dodge=true; dcol=g.dodgeC; }
+  if(B.stk){ try{ r=Sys.strikes.onHeroHurt(S,{profile:B.stk,dmg:d,boss:!!(src&&src.boss),pvp:false},rng); }catch(er){ r=null; } }
+  const y=GY-HS*0.9; let row=0;
+  if(r&&r.counter){ const L=stkLab(r,'counter'), en=(src&&src.src)||src; B.stkQ.push({t:STK_GAP,m:r.counterMult,e:(en&&en.maxhp>0)?en:null,kind:'counter',col:L&&L.color||'#ffffff'}); stkLabel(HX,y-STK_ROW*(++row),L); }
+  if(dodge||(r&&r.dodge)){ let L=r&&r.dodge?stkLab(r,'dodge'):null;
+    if(!L){ const K=window.Sys&&Sys.strikes&&Sys.strikes.DATA; L={text:(K&&K.battle&&K.battle.dodge)||'ESQUIVA',color:(K&&K.color&&K.color.dodge)||dcol||'#7fd8ff'}; }
+    stkLabel(HX,y-STK_ROW*(++row),L); return null; }
+  if(r&&typeof r.dmg==='number') d=r.dmg;
+  if(g&&g.shT>0&&g.shAmt>0&&d>0){ const ab=Math.min(d,g.shAmt); g.shAmt-=ab; d-=ab; if(g.shAmt<=0){ g.shAmt=0; g.shT=0; }
+    if(d<=0){ if(B.t-(g.shLbT==null?-99:g.shLbT)>=0.5||B.t<g.shLbT){ g.shLbT=B.t; floatText(HX,y,'ESCUDO',g.shC||'#9ad8ff',0); } ring(HX,GY-HS*0.45,g.shC||'#9ad8ff',30); return null; } }
+  return d; }
+/* ===== MAGIAS DO GRIMÓRIO NA LUTA (Sys.grimoire; chave do módulo desligada = B.grim nulo e NADA abaixo roda) =====
+   O jogo é só automático: as até 3 magias do conjunto do modo lançam SOZINHAS. A regra é toda do módulo: modo (modeFor: onda do chefe / Provação = Chefe,
+   resto = Fases), conjunto e recarga (loadout), e o que cada lançamento faz (cast: dano por golpe e por alvo já dividido, cura, escudo, atordoar, bônus, cor,
+   nome, recarga). Aqui: um relógio por magia (g.list[i].left, em segundos de luta), lançar quando zera E há inimigo em alcance (engaged), e aplicar.
+   - o conjunto é relido 1 vez por segundo (grimSync, no sysSync): trocar magia na tela do Grimório ou entrar na onda do chefe vale em até 1 s; magia que entra
+     no conjunto começa com a recarga CHEIA do módulo (nenhum número daqui); a que continua no conjunto guarda o relógio (g.cds);
+   - 'dmg': os golpes de r.hits saem um a cada GRIM_HIT_GAP s (desenho); em área (r.aoe) acertam todos os inimigos na tela com o valor que o módulo já dividiu;
+     senão, o alvo do herói. r.stun atordoa no 1º golpe, com a MESMA imunidade dos golpes especiais (e.imm; segundos de imunidade do Sys.strikes.DATA);
+   - 'heal' cura; 'shield' absorve dano por r.shield.sec (heroGuard); 'buff': 'dodge' (chance de esquiva em %, heroGuard) e 'aspd' (velocidade de ataque,
+     heroExtra/heroApply) enquanto durar. Chave de bônus que a batalha não conhece: aviso no console e nada mais (hoje o módulo só tem essas duas).
+   - a faixa curta com o nome usa o B.banner pequeno (o mesmo do especial), na cor do módulo; com a faixa da ultimate na tela, o nome sai como rótulo sobre o herói.
+   O dano das magias NÃO leva a afinidade nem puxa golpe especial (o módulo já devolve o dano pronto). Provação "sem magias" (run.noSpells): nada lança.
+   window.GrimBattle (abaixo) é a leitura para a coluna de ícones (js/grimhud.js): a lista viva {id, name, cd, left}; os objetos são reaproveitados. */
+const GRIM_HIT_GAP=0.16, GRIM_CAST_GAP=0.5;   // só ritmo de DESENHO: intervalo entre os golpes de uma magia e entre dois lançamentos (uma faixa de nome por vez)
+const grimOn=()=>{ const G=window.Sys&&Sys.grimoire; return !!(G&&G.DATA&&G.DATA.on===true&&typeof G.loadout==='function'&&typeof G.cast==='function'&&typeof G.modeFor==='function'); };
+const grimBoss=()=>{ const R=B.inst&&B.inst.run; return !!((R&&R.special==='trial')||S.wave===5); };
+function grimSync(){ const R=B.inst&&B.inst.run;
+  if(!grimOn()||(R&&R.noSpells)){ if(B.grim){ const a=B.grim.aspdT>0; B.grim=null; if(a) refreshHero(); } return; }
+  let g=B.grim; if(!g) g=B.grim={mode:'',list:[],cds:{},q:[],gapT:0,casts:0,shT:0,shAmt:0,shMax:0,shC:'',dodgeT:0,dodgeV:0,dodgeC:'',aspdT:0,aspdV:0};
+  let md='fases', L=[]; try{ md=Sys.grimoire.modeFor({boss:grimBoss(),pvp:false}); L=Sys.grimoire.loadout(S,md)||[]; }catch(e){ L=[]; }
+  let same=g.mode===md&&L.length===g.list.length; if(same) for(let i=0;i<L.length;i++) if(L[i].id!==g.list[i].id||L[i].cd!==g.list[i].cd){ same=false; break; }
+  if(same) return;
+  for(const s of g.list) g.cds[s.id]=s.left;
+  g.list=L.map(x=>({id:x.id,name:x.name,cd:x.cd,left:g.cds[x.id]!=null?Math.min(g.cds[x.id],x.cd):x.cd})); g.mode=md; }
+function grimDmg(e,v,col){ if(!e||e.dead||!(v>0)) return; const ex=eX(e), ey=eY(e);
+  e.hp-=v; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }
+  floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(v),col,1); burst(ex-6,ey+4,col,5); ring(ex-6,ey,col,28);
+  if(window.__stay&&e.hp<=0) e.hp=e.maxhp; if(e.hp<=0) killEnemy(e); }
+function grimStun(e,sec,col){ if(!e||e.dead||!(sec>0)||B.t<(e.imm||0)) return; const K=(window.Sys&&Sys.strikes&&Sys.strikes.DATA)||{};
+  stunEnemy(e,sec,(K.color&&K.color.stun)||col); e.imm=B.t+sec+(+(e.boss?K.stunImmuneSecBoss:K.stunImmuneSec)||0);
+  floatText(Math.max(56,Math.min(LW-56,eX(e))),(e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20)-STK_ROW,(K.battle&&K.battle.stun)||'ATORDOADO',(K.color&&K.color.stun)||col,0); }
+function grimCast(s){ const g=B.grim, h=B.hero, boss=grimBoss(), list=[]; for(const e of B.en) if(!e.dead&&e.x<=LW+20) list.push(e);
+  let r=null; try{ r=Sys.grimoire.cast(S,s.id,{atk:h.atk,hpMax:h.maxhp,boss,pvp:false,targets:Math.max(1,list.length)}); }catch(e){ r=null; }
+  if(!r||!r.ok){ s.left=s.cd; return false; }
+  if(r.cd>0) s.cd=r.cd; s.left=s.cd; g.gapT=GRIM_CAST_GAP; g.casts++; g.last=r.id; const col=r.color||'#ffc94a';
+  if(B.banner&&B.banner.pill) floatText(HX,GY-HS-18,r.label,col,0); else B.banner={txt:r.label,sub:'',t:0,dur:.9,col,small:true};
+  if(r.kind==='dmg'||r.dmg>0){ const t0=target()||list[0], tg=r.aoe?list:(t0?[t0]:[]);
+    for(let i=0;i<r.hits.length;i++) g.q.push({t:i*GRIM_HIT_GAP,v:r.hits[i],tg,aoe:!!r.aoe,col,stun:i===0?r.stun:0});
+    if(r.aoe) wfx(fnShock,0.45,{x:HX+60,r:150,col,layer:0}); }
+  if(r.heal>0){ const b=h.hp; h.hp=Math.min(h.maxhp,h.hp+r.heal); floatText(HX,GY-HS-6,'+'+fmt(h.hp-b),'#7ee27a',0); ring(HX,GY-HS*0.45,col,34); burst(HX,GY-HS*0.3,col,8); }
+  if(r.shield&&r.shield.amount>0){ g.shAmt=g.shMax=r.shield.amount; g.shT=r.shield.sec; g.shC=col; ring(HX,GY-HS*0.45,col,40); }
+  if(r.buff){ const k=r.buff.key; ring(HX,GY-HS*0.45,col,34); burst(HX,GY-HS*0.5,col,6);
+    if(k==='dodge'){ g.dodgeT=r.buff.sec; g.dodgeV=r.buff.val; g.dodgeC=col; }
+    else if(k==='aspd'){ g.aspdT=r.buff.sec; g.aspdV=r.buff.val; refreshHero(); }
+    else { g.unk=k; if(!grimCast.warned){ grimCast.warned=1; try{ console.warn('Grimório: bônus "'+k+'" ainda não tem efeito na batalha'); }catch(e){} } } }
+  snd('upgrade'); return true; }
+function grimStep(dt){ const g=B.grim, h=B.hero; if(!h) return;
+  if(g.shT>0){ g.shT-=dt; if(g.shT<=0){ g.shT=0; g.shAmt=0; } }
+  if(g.dodgeT>0) g.dodgeT-=dt;
+  if(g.aspdT>0){ g.aspdT-=dt; if(g.aspdT<=0){ g.aspdT=0; refreshHero(); } }
+  const Q=g.q; for(let i=0;i<Q.length;i++){ const q=Q[i]; q.t-=dt; if(q.t>0) continue; Q.splice(i--,1);
+    if(q.aoe){ for(const e of q.tg) if(!e.dead&&B.en.indexOf(e)>=0){ if(q.stun>0) grimStun(e,q.stun,q.col); grimDmg(e,q.v,q.col); } }
+    else { let e=q.tg[0]; if(!e||e.dead||B.en.indexOf(e)<0) e=target(); if(e){ if(q.stun>0) grimStun(e,q.stun,q.col); grimDmg(e,q.v,q.col); } } }
+  if(g.gapT>0) g.gapT-=dt; let eng=-1;
+  for(const s of g.list){ if(s.left>0) s.left-=dt; if(s.left<=0&&g.gapT<=0){ if(eng<0) eng=engaged()?1:0; if(eng) grimCast(s); } } }
+window.GrimBattle={ on:()=>!!B.grim, list:()=>B.grim?B.grim.list:null, mode:()=>B.grim?B.grim.mode:'', state:()=>B.grim, sync:()=>grimSync() };
+/* fila dos golpes extras (combo e contra-ataque): UM golpe do herói cada, com o multiplicador do módulo sobre o golpe básico, no alvo de origem ou, se ele já caiu, no da frente */
+function stkStep(dt){ const Q=B.stkQ; for(let i=0;i<Q.length;i++){ const q=Q[i]; q.t-=dt; if(q.t>0) continue; Q.splice(i--,1); if(!B.hero||B.deadT>0) continue;
+    let e=(q.e&&!q.e.dead&&q.e.hp>0&&B.en.indexOf(q.e)>=0)?q.e:target(); if(!e) for(const x of B.en) if(!x.dead&&x.x<=LW){ e=x; break; } if(!e) continue;
+    STK_ACT.col=q.col; STK_ACT.stk=q.kind; hitEnemy(e,q.m,STK_ACT,null); snd('hit'); } }
 function floatText(x,y,txt,col,big){ B.fx.push({x:x+(Math.random()-.5)*14,y,txt,col,t:0,big}); }
 function burst(x,y,col,n,sp){ sp=sp||1; if(typeof FP!=='undefined'&&FP.q) n=Math.max(1,Math.round(n*PART_Q[FP.q]));   /* qualidade adaptativa: menos partículas por estouro */ for(let i=0;i<n;i++) B.parts.push({x,y,vx:(Math.random()-.5)*150*sp,vy:(-Math.random()*120-20)*sp,g:320,t:0,life:.5+Math.random()*.35,col:Math.random()<.35?'#ffffff':col,sz:2+Math.random()*3,glow:Math.random()<.4}); }
 function dust(x,y,n,col){ for(let i=0;i<n;i++) B.parts.push({x:x+(Math.random()-.5)*10,y,vx:(Math.random()-.5)*40-(B.running?RUNV()*0.85:0),vy:-10-Math.random()*26,g:30,t:0,life:.45+Math.random()*.3,col:col||'#d8c8a8',sz:3+Math.random()*3,glow:false}); }
@@ -247,8 +373,9 @@ const EN_FLIP={};   // reaberto em 2026-11-12 (parte 2): Rex, Pirata e Tanque J�
 const EN_FLIP_SHEET={};
 function heroHit(d,src){   // dano no herói: pisca, número, som, clarão no golpe. Devolve true se o herói caiu.
   const h=B.hero; if(!h||B.deadT>0) return false;
-  if(window.Sys&&Sys.stats) d=Sys.stats.hit({atk:d,critRate:0,critDmg:0},1,h.def,false).dmg;   // DEF do herói reduz o dano recebido (mesma fórmula do golpe, sem crítico)
-  if(!window.__stay) h.hp-=d; B.hurt=0.15; if(src&&src.boss) B.shake=Math.max(B.shake,.3); snd('hero_hurt');   // golpe comum: SEM tremor de câmera (clarão + número + herói piscando); só o chefe treme, curto
+  if(src&&src.raw) ; else if(window.Sys&&Sys.stats) d=Sys.stats.hit({atk:d,critRate:0,critDmg:0},1,h.def,false).dmg;   // DEF do herói reduz o dano recebido (mesma fórmula do golpe, sem crítico). src.raw (Boneco de Treino): o dano é a fração da vida que o módulo diz, sem DEF
+  if(B.stk||B.grim){ d=heroGuard(d,src); if(d==null) return false; }   /* golpes especiais (esquiva, contra-ataque) e magias (esquiva, escudo): só com a chave do módulo ligada */
+  if(!window.__stay) h.hp-=d; { const R=B.inst&&B.inst.run; if(R&&R.heroMinHp>0&&h.hp<R.heroMinHp) h.hp=R.heroMinHp; }   /* ensaio de caminho: o herói não cai (heroMinHp do módulo) */ B.hurt=0.15; if(src&&src.boss) B.shake=Math.max(B.shake,.3); snd('hero_hurt');   // golpe comum: SEM tremor de câmera (clarão + número + herói piscando); só o chefe treme, curto
   floatText(HX,GY-HS*0.9,'-'+fmt(Math.max(1,d)),'#ff6b6b'); burst(HX,GY-HS*0.45,'#ff4d4d',4); addEnergy(BAL.energyPerHurt);
   wfx(fnHit,0.22,{x:HX+HS*0.1,y:GY-HS*0.45,r:src&&src.boss?36:24,n:8,col:ULTCOL[B.dispEra]||'#ff6b5a',rot:Math.random()*6.28,layer:1,hero:1});   // impacto NO HERÓI, na cor da era (o golpe não viaja pela tela)
   if(DEBUG) window.__dmgIn=(window.__dmgIn||0)+d;
@@ -309,7 +436,7 @@ function startAct(type){
     hs.forEach((h,i)=>a.hits.push({s:h[0]*kd,t:h[0]*kd+lag,m:BAL.s2Mult/hs.length,i,n:hs.length})); B.cd2=BAL.s2Cooldown;
     B.banner={txt:SKN[E][0],sub:'',t:0,dur:.9,col:a.col,small:true}; }
   else { a.dur=ULT_DUR; ULT_HITS.forEach((h,i)=>{ a.hits.push({s:h[0],t:h[0],m:BAL.s3Mult*h[1],i,fin:i===4}); a.ev.push({t:h[0]-0.3,i,fin:i===4,pre:true}); });
-    ptrack('ult'); B.energy=0; B.slow=0.5; B.banner={txt:SKN[E][1]+'!',pill:true,t:0,dur:1.8,col:a.col}; S.ultTip=1; B.shake=Math.max(B.shake,.6*(a.fx&&a.fx.shake>0?a.fx.shake:1)); vib(40); ultStart(a); }
+    if(!(B.inst&&B.inst.run&&B.inst.run.special)) ptrack('ult');   /* Provação e ensaio de caminho não contam missão */ B.energy=0; B.slow=0.5; B.banner={txt:SKN[E][1]+'!',pill:true,t:0,dur:1.8,col:a.col}; S.ultTip=1; B.shake=Math.max(B.shake,.6*(a.fx&&a.fx.shake>0?a.fx.shake:1)); vib(40); ultStart(a); }
   if(gun&&type!=='s3') a.hits.forEach(h=>a.ev.push({t:h.s,h}));
   B.act=a; snd(`era${E}_${type}`);
   if(typeof tutEvent==='function') tutEvent(type);
@@ -370,8 +497,9 @@ function useSkill(n){
   return false;
 }
 /* RECORDES DO PERFIL (Sys.profile da Sistemas; chave desligada = não chama nada): maior golpe, sequência de abates sem cair e tempo do chefe */
-function profRec(k,v,info){ try{ const P=window.Sys&&Sys.profile; if(P&&P.DATA&&P.DATA.on===true&&typeof P.record==='function') P.record(S,k,v,Sys.host,info); }catch(e){} }
+function profRec(k,v,info){ if(B.inst&&B.inst.run&&B.inst.run.special) return;   /* luta especial (Provação, ensaio): não mexe nos recordes do perfil */ try{ const P=window.Sys&&Sys.profile; if(P&&P.DATA&&P.DATA.on===true&&typeof P.record==='function') P.record(S,k,v,Sys.host,info); }catch(e){} }
 function killEnemy(e){
+  if(e.immortal){ e.hp=e.maxhp; return; }   /* Boneco de Treino (Sys.pathTry): herói, pet e magia nunca o derrubam */
   e.dead=true; const i=B.en.indexOf(e); if(i>=0) B.en.splice(i,1);
   const lt=lootFor(e), y=eY(e); e.x=eX(e); e.sw=0;   // morre onde está desenhado
   if(B.inst){ B.inst.kills++; }   /* instância: sem drops de fase, sem XP, sem missão; o prêmio vem do Sys.instances.finish */
@@ -407,7 +535,7 @@ function waveClear(){
     try{ if(window.Panels&&typeof Panels.on==='function'&&Panels.on('cross')&&window.Sys&&Sys.crossroads&&typeof Sys.crossroads.onStage==='function'){ const cr=Sys.crossroads.onStage(S,Sys.host,won); if(cr&&cr.due) B.crossPend={stage:won}; } }catch(er){ console.error('cross',er); }
     /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
     /* Sys.erasEnd (Sistemas, chave desligada = {ok:false}): na fase 90 entrega os prêmios do fim das 9 eras (uma vez) e a tela os mostra; acima da 90, marco a cada 10 fases e pedras astrais, num aviso curto */
-    if(ee&&ee.ok&&ee.mark&&typeof toast==='function'){ try{ toast((ee.mark.name||'Marco')+' alcançado'+(ee.stones>0?': +'+ee.stones+' pedras astrais':'')); }catch(er){} }
+    if(ee&&ee.ok&&ee.mark&&typeof toast==='function'){ try{ toast((ee.mark.title||ee.mark.name||'Marco')+' alcançado'+(ee.stones>0?': +'+ee.stones+' pedras astrais':'')); }catch(er){} }
     if(won===ERAS.length*STAGES_PER_ERA&&window.Panels&&typeof Panels.on==='function'&&Panels.on('end9')){ const eo={stage:won,gems:10,essence:loot&&loot.essence||0}; if(ee&&ee.ok&&ee.final){ if(ee.final.prizes) eo.prizes=ee.final.prizes; if(ee.final.milestone) eo.milestone=ee.final.milestone; } if(shown) B.endPend=eo; else { try{ shown=Panels.open('end9',eo)!==false; }catch(er){ console.error('end9',er); } } }
     if(!shown) toast(newEra?`Nova era: ${ERAS[ne].n}! +40 gemas`:`Fase ${S.stage-1} vencida! +10 gemas`);   // aviso reserva, sem emoji
   } else if(S.farm&&S.wave>=4){ S.wave=1;   // farm: repete as ondas comuns (1 a 4) com drop, ouro e XP normais; nunca entra na onda do chefe sozinho
@@ -420,11 +548,22 @@ function waveClear(){
 }
 /* "Desafiar chefe": chama a onda do chefe da fase atual (com a vida cheia), no farm ou fora dele (fora do farm só antecipa a onda 5). Também é o "Tentar de novo" da derrota. */
 function challengeBoss(){ if(S.wave===5||B.deadT>0||B.res) return false; S.farm=false; S.wave=5; const h=B.hero; if(h) h.hp=Math.min(h.maxhp,h.hp+h.maxhp*Math.min(1,BAL.bossChallengeHeal)); B.act=null; B.eshots=[]; startWave(0.4); save(); hud(); return true; }
+/* AFINIDADE DAS ERAS, "FRACO CONTRA" (Sys.affinity; chave do módulo desligada = 1, nada muda). PONTO ÚNICO: todo golpe do HERÓI passa pelo hitEnemy (básico,
+   especial, ultimate, arco/bumerangue, combo e contra-ataque). O módulo fala do dano que "o herói dá" pelo estilo de luta: NÃO entra o golpe do pet (js/petfx.js)
+   nem o dano das magias do Grimório (o cast do módulo já devolve o dano pronto). A era é a MESMA do selo (js/weakseal.js): eraOf(S.stage) — na instância e na
+   Provação a fase em memória é a da luta, então o selo e o dano falam da mesma era. Inimigo marcado com noAff (Boneco de Treino) fica neutro. Na Arena PvP a
+   luta é a tela própria (js/p_arena.js), não passa aqui. Nenhum número: o multiplicador é o do módulo. Guardado por estado (era, arma, caminho) e por 0,5 s. */
+const AFFC={k:'',v:1,t:-1e9};
+function affMult(e){ const A=window.Sys&&Sys.affinity; if(!A||!A.DATA||A.DATA.on!==true||typeof A.mult!=='function'||(e&&e.noAff)) return 1;
+  try{ const era=eraOf(S.stage), k=era+'|'+(S.eq?S.eq.weapon:'')+'|'+(S.sys&&S.sys.path?S.sys.path.id:'')+'|'+A.DATA.weak+'|'+A.DATA.resist, now=performance.now();
+    if(k===AFFC.k&&now-AFFC.t<500&&now>=AFFC.t) return AFFC.v;
+    const m=A.mult(S,Sys.host,{era}); AFFC.k=k; AFFC.t=now; return AFFC.v=(typeof m==='number'&&isFinite(m)&&m>0)?m:1; }catch(er){ return 1; } }
 /* kind: 0 normal · 2 = s2 (laranja maior) · 3 = s3 (dourado enorme) */
 function hitEnemy(e,mult,a,h){
   const hero=B.hero; if(!e||e.dead){ e=target(); if(!e) return; }
   let crit, d; if(window.Sys&&Sys.stats){ const r=Sys.stats.hit(hero,mult,e.def||0); crit=r.crit; d=r.dmg*(0.9+Math.random()*0.2); }   // inimigos ainda não têm DEF (e.def ausente = 0): a tabela vem do balanceamento
   else { crit=Math.random()<BAL.critChance; d=hero.atk*mult*(crit?BAL.critMult:1)*(0.9+Math.random()*0.2); }
+  { const am=affMult(e); if(am!==1) d*=am; }   /* "Fraco contra" (Sys.affinity): o número que salta já sai com o multiplicador */
   const ex=eX(e), ey=eY(e), fin=h&&h.fin, k=a.type==='s3'?(fin?3:2):a.type==='s2'?2:crit?1:0;
   e.hp-=d; e.hit=0.12; if(!(e.hurtT>0)){ e.hurtD=shDur(enSheet(e,'hurt'),EN_HURT_DUR); e.hurtT=e.hurtD; }   // a folha de dano toca inteira, no fps do .json
   floatText(ex,e.boss?GY-(e.dh||150)-36:GY-(e.dh||90)-20,fmt(d),k===3?'#ffd23f':k===2?(a.type==='s3'?'#ffd23f':'#ff9a3a'):crit?'#ffe14a':'#ffffff',k===3?2:k===2?1:crit?3:0); profRec('hit',d,a.type==='s3'?'Ultimate':crit?'Crítico':'');
@@ -435,6 +574,7 @@ function hitEnemy(e,mult,a,h){
   const hs=fxSpr(crit?'crit':'hit',a.col); if(hs) wfx(fnSpr,crit?0.25:0.16,{spr:hs,x:ex-6,y:ey,size:HS*(crit?0.8:0.5),rot:Math.random()*6.28,layer:1});
   else wfx(fnHit,crit?0.3:0.2,{x:ex-6,y:ey,r:crit?40:24,n:crit?11:7,col:a.col==='#ffffff'?(crit?'#ffd23f':'#ffe9c8'):a.col,rot:Math.random()*6.28,layer:1});
   if(crit){ ring(ex-10,ey,'#ffd23f'); }
+  if(B.stk) stkHit(e,d,a);   /* golpes especiais (Sys.strikes): combo, atordoar e roubo de vida deste golpe */
   if(window.__stay&&e.hp<=0) e.hp=e.maxhp;
   if(e.hp<=0) killEnemy(e);
   return crit;
@@ -667,11 +807,12 @@ function step(dt){
     if(e.x>e.slot+0.5){ const v=(e.wasParked&&!enOn(e.key,'run'))?Math.max(e.spd,EN_STEP):e.spd;   /* já esteve num slot: anda rápido até o próximo */
       e.x-=Math.min(e.x-e.slot,((B.running?RUNV():0)+v)*dt*(ult?0.25:1)); e.parked=false; }
     else { if(e.x<e.slot-0.5) e.x+=Math.min(e.slot-e.x,30*dt); const was=e.parked; e.parked=e.idx<MAXVIS; if(e.parked) e.wasParked=true; if(e.parked&&!was) e.atkT=Math.min(e.atkT,0.15+0.12*e.idx); }   // chegou ao slot: ataca logo
-    if(e.idx<(window.__atk2?2:MAXVIS)&&e.x<=LW){ e.atkT-=dt;   /* a cadência conta também enquanto ele troca de slot: ao parar, ataca logo (nenhum visível fica 2 s sem atacar) */
+    if(e.stunT>0){ e.stunT-=dt; if(B.inst) B.inst.stun=(B.inst.stun||0)+dt; }   /* ATORDOADO (golpe especial ou magia): não conta a cadência nem começa golpe */
+    else if(e.idx<(window.__atk2?2:MAXVIS)&&e.x<=LW){ e.atkT-=dt;   /* a cadência conta também enquanto ele troca de slot: ao parar, ataca logo (nenhum visível fica 2 s sem atacar) */
       if((e.parked||(e.wasParked&&e.x-e.slot<70))&&e.atkT<=0&&e.sw<=0&&B.t-B.eAtkT>=EGAP){   /* quem já esteve num slot e só está fechando a fila (até 70 px do slot novo) golpeia sem esperar chegar: nenhum visível fica mais de 2 s sem golpear */ e.atkT=e.atkEvery; B.eAtkT=B.t; { const sh=enSheet(e,'attack'); e.swD=sh?shDur(sh,EN_ATK_DUR):EATK; e.swH=sh?(EN_HIT_FRAME[e.key]!=null?EN_HIT_FRAME[e.key]/(sh.meta.fps||12):e.swD*0.5):EHIT; } e.sw=e.swD; e.struck=false; if(DEBUG) (window.__atk=window.__atk||[]).push([e.id,e.idx,+B.t.toFixed(2)]); } }
-    if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.dmg*(e.fury||1)*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
+    if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.raw?e.dmg:e.dmg*(e.fury||1)*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
       if(kind){ const x0=e.x-(e.dw||60)*0.35, y0=GY-(e.dh||80)*0.55, x1=HX+HS*0.1, y1=GY-HS*0.45;
-        B.eshots.push({x0,y0,x1,y1,t:0,dur:Math.max(0.16,Math.hypot(x1-x0,y1-y0)/380),d,boss:e.boss,kind});
+        B.eshots.push({x0,y0,x1,y1,t:0,dur:Math.max(0.16,Math.hypot(x1-x0,y1-y0)/380),d,boss:e.boss,kind,src:e,raw:e.raw});
         wfx(fnHit,0.14,{x:x0-4,y:y0,r:e.boss?20:12,n:6,col:ESHOT_COL[kind],rot:Math.random()*6.28,layer:1}); }
       else if(heroHit(d,e)) return; }
   }
@@ -687,6 +828,9 @@ function step(dt){
     else if(B.cd2<=0) startAct('s2');   /* v0.12.1 (ordem do dono): o jogo é SÓ AUTOMÁTICO; especial e ultimate disparam sozinhos sempre, sem modo manual e sem esperar o tutorial */
     else { h.atkT-=dt; if(h.atkT<=0){ h.atkT=h.ivl||BAL.s1Interval; startAct('s1'); } }   // intervalo do básico = Sys.stats.interval (0,8 s ÷ (1 + velocidade de ataque))
   }
+  if(B.stkQ.length) stkStep(dt);   /* golpes extras na fila (combo, contra-ataque): só existem com o Sys.strikes ligado */
+  if(B.grim) grimStep(dt);   /* magias do Grimório: relógios e lançamento sozinho (só existe com o Sys.grimoire ligado) */
+  B.sysT-=dt; if(B.sysT<=0){ B.sysT=1; sysSync(); }   /* 1 vez por segundo: chave dos golpes especiais / caminho mudou? conjunto do Grimório? */
   if(!B.en.length&&!B.toSpawn.length&&B.waveT<=0) waveClear();
 }
 const ERA_HOLD_MAX=20;
@@ -1140,6 +1284,7 @@ function drawEnemyAt(e,x,deadP){
 }
 function bar(x,y,w,pct,col,hh){ hh=hh||7; ctx.fillStyle='#0008'; ctx.fillRect(x,y,w,hh); ctx.fillStyle=col; ctx.fillRect(x,y,w*Math.max(0,pct),hh); ctx.strokeStyle='#000a'; ctx.lineWidth=1; ctx.strokeRect(x,y,w,hh); }
 function enemyLabel(e){
+  if(e.tag) return e.tag;   /* luta especial: "Mestre <mentor>" (Provação) */
   const own=typeof era9Name==='function'?era9Name(e.key):null; if(own) return own;   /* eras 7-8: nome próprio do chefe (js/eras9.js), sem prefixo */
   const mn=(J('assets/enemies/meta.json')[e.key]||{}).name;
   if(!mn) return e.name;
@@ -1195,13 +1340,14 @@ function draw(){
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
   const h=B.hero, L=B.en;
-  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=lookNow(), wg=wingNow(lk), mo=lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
+  HM.x=HX+heroLunge(); HM.gy=GY; HM.t=B.at; HM.sk=SKIN(S.skinEq.armor); { const lk=lookNow(), wg=wingNow(lk), mo=(B.inst&&B.inst.run&&B.inst.run.noMount)?null:lk.mount;   /* Engenheiro 5: asa e montaria NOVAS só entram no desenho quando as folhas delas estão decodificadas; até lá fica a anterior, inteira */
     if(!wg||wg===HM.wing||typeof wingReady!=='function'||wingReady(wg)||lookWait('wing',wg)) HM.wing=wg;
     if(!mo||(HM.mount&&HM.mount.id===mo.id)||typeof mountReady!=='function'||mountReady(mo.id)||lookWait('mount',mo.id)) HM.mount=mo; }   /* mesma montaria que já está no desenho: sem conferir as 3 folhas de novo a cada quadro */ { const w=wSkin(); if(w!==HM.ws){ HM.ws=w; preloadAssets(); } }   /* trocou a arma (equipar item ou skin): carrega a arte na hora */ HM.walking=B.running&&B.deadT<=0&&!B.res; HM.hurt=B.hurt; HM.deadP=B.deadT>0?1-B.deadT/1.6:-1; HM.act=B.act;
   /* Engenheiro 2: trocou montaria/pet/estágio NO MEIO da onda → a folga do inimigo da frente é refeita na hora (antes só na onda seguinte: a asa do pet evoluído encostava no inimigo) */
   { const he=heroEdge(); if(B.heK!=null&&Math.abs(he-B.heK)>1&&B.deadT<=0&&!B.res){ try{ layoutHorde(); }catch(e){} } B.heK=he; }
   const ultOn=!!(B.act&&B.act.type==='s3');
   if(!ultOn){ drawHero(HM); if(typeof drawEvo==='function') drawEvo(); }
+  if(B.grim&&B.grim.shT>0&&B.deadT<=0){ const g=B.grim, k=g.shMax>0?Math.max(0.25,g.shAmt/g.shMax):1; ctx.save(); ctx.globalAlpha=0.35+0.3*k+0.08*Math.sin(B.at*6); ctx.strokeStyle=g.shC||'#9ad8ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(HM.x,GY-heroBodyH()*0.5,HS*0.36,heroBodyH()*0.62,0,0,7); ctx.stroke(); ctx.restore(); }   /* escudo de magia (Grimório): um anel em volta do herói enquanto dura */
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&!(L[i].sw>0)) drawEnemyAt(L[i],L[i].x,0);   // 3º atrás do 2º, 2º atrás do 1º
   for(let i=L.length-1;i>=0;i--) if(L[i].x<WAITX-1&&L[i].sw>0) drawEnemyAt(L[i],L[i].x,0);       // quem está atacando passa pela frente
   for(const p of B.eshots){ const k=Math.min(1,p.t/p.dur), col=ESHOT_COL[p.kind], big=p.kind==='shell'||p.kind==='fire'||p.boss;   // projéteis dos inimigos, em código
@@ -1219,7 +1365,9 @@ function draw(){
     if(e.boss){ const bw=Math.max(80,Math.min((e.dw||90)*.8,110)), bx=Math.max(bw/2+4,Math.min(LW-bw/2-4,vx)); bar(bx-bw/2,gy-top-12,bw,e.hp/e.maxhp,'#ff5252');
       ctx.font='800 11px system-ui'; ctx.fillStyle=e.eraBoss?'#ffd75e':'#fff'; ctx.strokeStyle='#000'; ctx.lineWidth=3;
       const lb=enemyLabel(e), tw=ctx.measureText(lb).width, lx=Math.max(tw/2+4,Math.min(LW-tw/2-4,vx)); ctx.strokeText(lb,lx,gy-top-16); ctx.fillText(lb,lx,gy-top-16); }
-    else if(e.hp<e.maxhp||e===B.enemy) bar(vx-21,gy-top-9,42,e.hp/e.maxhp,'#ff5a4e',5);
+    else if(e.hp<e.maxhp||e===B.enemy||e.tag){ bar(vx-21,gy-top-9,42,e.hp/e.maxhp,'#ff5a4e',5);
+      if(e.tag){ ctx.font='800 11px system-ui'; ctx.fillStyle='#fff'; ctx.strokeStyle='#000'; ctx.lineWidth=3; const tw=ctx.measureText(e.tag).width, lx=Math.max(tw/2+4,Math.min(LW-tw/2-4,vx)); ctx.strokeText(e.tag,lx,gy-top-13); ctx.fillText(e.tag,lx,gy-top-13); } }   /* e.tag: nome próprio da luta especial (Boneco de Treino) */
+    if(e.stunT>0){ ctx.fillStyle=e.stunC||'#c78bff'; for(let i=0;i<3;i++){ const an=B.at*6+i*2.094; ctx.fillRect(vx+Math.cos(an)*13-2,gy-top-(e.boss?30:20)+Math.sin(an)*4-2,4,4); } }   /* ATORDOADO: 3 pontos girando acima da cabeça (só existe com golpes especiais ou magias ligados) */
   }
   { const nw=waitingN(); if(nw>0&&B.deadT<=0&&!B.res){ const tx='+'+nw, pop=1+0.06*Math.sin(B.at*5);   // fila de espera: selo na borda direita, na altura do chão
       ctx.save(); ctx.font=`${LILITA()?'400':'900'} 15px ${LILITA()?'"Lilita One",':''}system-ui`; const tw=Math.max(29,ctx.measureText(tx).width+12), bx=LW-tw/2-6*PX, by2=GY-86*PX;

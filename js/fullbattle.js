@@ -154,6 +154,9 @@ const FB_DROP = [
   { id: 'duo',      icon: 'chat',      label: 'Dupla',      act: 'soon:duo', alerts: () => duoAlerts() },   /* Dupla das Eras (nível 16; Sys.duo). Ícone PROVISÓRIO = o do Chat, até a Arte entregar assets/icons/menu/duo.png */
   { id: 'mentors',  icon: 'codex',     label: 'Mentores',   act: 'soon:mentors' },   /* Mentores (nível 16; Sys.mentors). Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/mentors.png */
   { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map', alerts: () => { try { return window.Map2 && fbPanelOn('map2') ? Map2.ready() : 0; } catch (e) { return 0; } } },   /* Mapa das Eras: nível 1 (PO) */
+  { id: 'grim',     icon: 'grimoire',  label: 'Grimório',   act: 'soon:grim' },   /* Grimório das Eras (Sys.grimoire); só aparece com a tela ligada */
+  { id: 'path',     icon: 'equipment', label: 'Caminhos',   act: 'soon:path' },   /* Caminhos (Sys.path, nível 30: a própria tela explica o que falta). Ícone PROVISÓRIO */
+  { id: 'trial',    icon: 'tower',     label: 'Provação',   act: 'soon:trial' },   /* Provação do Mestre (Sys.trial). Ícone PROVISÓRIO */
   { id: 'mail',     icon: 'mail',      label: 'Correio',    act: 'soon:mail' },
   { id: 'events',   icon: 'events',    label: 'Eventos',    act: 'soon:events' },
   { id: 'cfg',      icon: 'settings',  label: 'Config.',    act: 'cfg' },
@@ -314,6 +317,7 @@ function fbTick(){
   /* SELO "FRACO CONTRA" (js/weakseal.js, regra do Sys.affinity) e ENCRUZILHADA (js/p_cross.js: selo e botão Bênçãos; regra do Sys.crossroads): aprovados pelo dono, os dois atrás da chave do módulo (desligadas = nada na tela). A ordem importa: com o Fraco contra na tela, o selo da Encruzilhada desce */
   if (window.WeakSeal){ try { if (!FBK.ws){ const h = document.getElementById('fb_w'); if (h && WeakSeal.mount(h)) FBK.ws = 1; } if (FBK.ws === 1) WeakSeal.update(); } catch (e) { console.error('WeakSeal', e); FBK.ws = 2; } }
   if (window.PTrial){ try { if (!FBK.ptr){ const h = document.getElementById('fb_w'); if (h && PTrial.mount(h)) FBK.ptr = 1; } if (FBK.ptr === 1) PTrial.update(); } catch (e) { console.error('PTrial', e); FBK.ptr = 2; } }   /* Provação do Mestre: selo "Teto Nv X" (Sys.trial desligado = nada) */
+  if (window.GrimHud){ try { if (!FBK.gh){ const h = document.getElementById('fb_w'); if (h && GrimHud.mount(h)) FBK.gh = 1; } if (FBK.gh === 1) GrimHud.update(); } catch (e) { console.error('GrimHud', e); FBK.gh = 2; } }   /* Grimório: coluna das 3 magias com anel de recarga (Sys.grimoire desligado = nada) */
   if (window.PCross){ try { if (!FBK.pc){ const h = document.getElementById('fb_w'); if (h && PCross.mount(h)) FBK.pc = 1; } if (FBK.pc === 1) PCross.update(); } catch (e) { console.error('PCross', e); FBK.pc = 2; } }
   { const os = fbOfferSt(), on = !!os; if (FBK.ofOn !== on){ FBK.ofOn = on; fbLayout(); } if (os){ const s = Math.max(0, Math.floor(os.msLeft / 1000)), hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60); fbSet('fbl_offer', hh > 0 ? hh + 'h ' + String(mm).padStart(2, '0') + 'min' : mm + 'min ' + String(s % 60).padStart(2, '0') + 's'); } }   /* ícone Oferta 24h: aparece/some e mostra o relógio */
   fbSet('fb_gold', kf2(S.gold)); fbSet('fb_gems', String(S.gems)); fbSet('fbp_gold', kf2(S.gold)); fbSet('fbp_gems', String(S.gems)); const FCV = heroFC();   /* Engenheiro 13 (medido: heroFC = 0,16 ms e era chamado 3 vezes por batida do cabeçalho, mais da metade do fbTick): uma vez só */ fbSet('fb_fc', 'FC ' + (typeof fcShow === 'function' ? fcShow(FCV) : f(FCV))); if (typeof diffHud === 'function') diffHud(FCV);   /* FC recomendada colorida (js/diff.js; chave desligada = nada) */
@@ -408,3 +412,4 @@ function duoAlerts(){ try { if (window.PDuo && typeof PDuo.alerts === 'function'
     return (v.invitesIn || []).length + (v.partner ? (v.daily && v.daily.done && !v.daily.claimed ? 1 : 0) + (v.weekly || []).filter(m => m.done && !m.claimed).length : 0); } catch (e) { return 0; } }
 function fbInit(){ fbLegacy(); fbCss();
   if (typeof TUT !== 'undefined') TUT.forEach((st, i) => { if (FB_TUT_TXT[i]) st.txt = FB_TUT_TXT[i]; }); document.body.classList.add('fb'); fbBuild(); fbLayout(); addEventListener('resize', fbLayout); if (typeof resize === 'function') resize(); fbLayout(); fbTick(); setInterval(fbFast, 100); if (typeof evhInit === 'function') evhInit(); }
+if (typeof ligBridges === 'function') ligBridges();   /* Provação e Ensaio dos Caminhos: liga as pontes das telas à luta especial (js/instfx.js) */

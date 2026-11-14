@@ -53,7 +53,7 @@ function petNotice(list){ if (!petOk() || !Array.isArray(list)) return; if (type
     else if (x.held && x.gated) toast('Ovo de ' + (x.name || 'pet raro') + ' guardado até você liberar essa raridade');
     else if (x.held) toast('Ovo guardado');
     else if (x.pet) petHatchQueue(x, false); } }
-function petInfo(){ if (PETK.ov) return PETK.ov; if (!petOk()) return null; if (B.at - PETK.infoT > 0.5 || !PETK.infoT){ PETK.infoT = B.at || 0.001; let i = null; try { i = Sys.pet.battleInfo(S, Sys.host); } catch (e) { i = null; }
+function petInfo(){ if (PETK.ov) return PETK.ov; if (!petOk()) return null; if (B.inst && B.inst.run && B.inst.run.noPet) return null;   /* Provação "sem pet" (docs/LIGACOES_BATALHA.md, P1): não bate, não cura, não aparece */ if (B.at - PETK.infoT > 0.5 || !PETK.infoT){ PETK.infoT = B.at || 0.001; let i = null; try { i = Sys.pet.battleInfo(S, Sys.host); } catch (e) { i = null; }
     const old = PETK.info; PETK.info = i && i.draw && i.draw.base ? i : null; const b = PETK.info ? PETK.info.draw.base : '';
     if (b !== PETK.base){   /* Engenheiro 5: pet NOVO (ou estágio novo) só entra com as folhas dele decodificadas; até lá o anterior continua na tela (o pet nunca some) */
       if (b && PETK.base && old && !petReady(b) && !(typeof lookWait === 'function' && lookWait('pet', b))){ PETK.info = old; PETK.infoT = B.at - 0.4; }
