@@ -98,7 +98,7 @@ function start(S,host,lvl){ if(!on()) return {ok:false,reason:'off'}; const d=du
   return {ok:true,lvl:l,spec:spec(l,host)}; }
 /* o que a batalha monta: regra, tempo, mestre e o inimigo (chefe da fase mais alta × fatores) */
 function spec(l,host){ const r=rule(l); return {lvl:l,rule:r,sec:r.sec,hpStart:r.hpStart,noPet:r.id==='nopet',noMount:r.id==='nomount',noSpells:r.id==='nospell',
-  master:master(l),enemy:{kind:'boss',stage:int0(host&&host.stage&&host.stage())||1,hpMul:DATA.enemy.hpMul,dmgMul:DATA.enemy.dmgMul}}; }
+  master:master(l),enemy:{kind:'boss',stage:int0(host&&(typeof host.bestStage==='function'?host.bestStage():typeof host.best==='function'?host.best():host.stage&&host.stage()))||1,hpMul:DATA.enemy.hpMul,dmgMul:DATA.enemy.dmgMul}}; }
 
 /* fim da luta. res = {won, sec}. Vitória fora do tempo da regra conta como derrota.
    {ok, won, lvl, reward?, released?, retry:true} | {ok:false, reason: off|none} */

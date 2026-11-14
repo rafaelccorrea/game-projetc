@@ -173,9 +173,11 @@ function loadout(S,mode){ if(!on()) return []; const o=ensure(S); let m=isMode(m
    ctx = {atk (ATQ do herói, já com tudo), hpMax, boss, pvp, targets (inimigos em alcance)}.
    → {ok, id, kind, label, color, dmg (dano total), hits:[dano de cada golpe POR ALVO], aoe (acerta todos em alcance), targets, heal, shield:{amount,sec}, stun (s), buff:{key,val,sec}, cd}
    Dano em área é DIVIDIDO entre os alvos (como diz a magia); atordoar no chefe vale a metade (igual aos golpes especiais). */
+/* cor da era para a faixa e o efeito da magia (a mesma família de cores dos ícones provisórios) */
+const ERA_COLOR=['#ff8a3c','#e0b860','#7aa8ff','#c0503a','#b07a40','#5ee7ff','#a86aff','#ff3a2a','#ffe08a'];
 function cast(S,id,ctx){ if(!on()) return {ok:false,reason:'off'}; const o=ensure(S), sp=spell(id); if(!sp) return {ok:false,reason:'spell'}; const x=o.own[id]; if(!x) return {ok:false,reason:'locked'};
   const st=stat(sp,x.lv), c=ctx||{}, atk=Math.max(0,Number(c.atk)||0), hpMax=Math.max(0,Number(c.hpMax)||0), n=Math.max(1,Math.floor(Number(c.targets)||1));
-  const out={ok:true,id,kind:sp.kind,label:sp.name,color:(DATA.eraColor&&DATA.eraColor[sp.era])||'#ffc94a',dmg:0,hits:[],aoe:false,targets:1,heal:0,shield:null,stun:0,buff:null,cd:st.cd};
+  const out={ok:true,id,kind:sp.kind,label:sp.name,color:ERA_COLOR[sp.era]||'#ffc94a',dmg:0,hits:[],aoe:false,targets:1,heal:0,shield:null,stun:0,buff:null,cd:st.cd};
   if(sp.kind==='dmg'){ const total=atk*st.mult; out.aoe=!!st.area; out.targets=out.aoe?n:1; out.dmg=Math.round(total); const per=out.aoe?total/n:total;
     out.hits=st.hits.map(f=>Math.round(per*f)); if(st.stun) out.stun=c.boss?st.stun*0.5:st.stun; }
   else if(sp.kind==='heal') out.heal=Math.round(hpMax*st.pct/100);

@@ -90,10 +90,11 @@ function equippedList(S,host,ov){ const T=root.Sys&&root.Sys.stats; let eq={};
   for(const s of Object.keys(DATA.pool)){ const it=eq[s]; if(!it) continue; if(T&&typeof T.canEquip==='function'&&lv!=null&&!T.canEquip(it,lv)) continue; out.push(it); }
   return out; }
 /* soma SEM teto (pontos %) dos golpes equipados. Desligado: zeros. */
-function raw(S,host,ov){ const o=zero(); if(!on()) return o;
+function raw(S,host,ov,opt){ const o=zero(); if(!on()) return o; opt=opt||{};
   for(const it of equippedList(S,host,ov)){ ensureItem(it); for(const s of it.stk||[]) if(isKey(s.k)) o[s.k]+=value(s,it); }
-  const m=mountStrike(S); if(m) o[m.k]+=m.value;
+  const m=opt.noMount?null:mountStrike(S); if(m) o[m.k]+=m.value;   /* noMount: Provação sem montaria */
   const pa=pathStrikes(S); if(pa) for(const k in pa.strikes) o[k]+=pa.strikes[k];
+  if(opt.extra&&typeof opt.extra==='object') for(const k in opt.extra) if(isKey(k)) o[k]+=Math.max(0,num(opt.extra[k],0));   /* extra: bônus temporário (Encruzilhada, buff) antes dos tetos */
   return o; }
 /* CAMINHO DE LUTA do Nv 30 (Sys.path.profile; só com a chave do Sys.path E esta ligadas): soma os pontos % do caminho, antes dos tetos. */
 function pathStrikes(S){ if(!on()) return null; const P=root.Sys&&root.Sys.path; if(!P||typeof P.profile!=='function') return null;
@@ -103,9 +104,10 @@ function pathStrikes(S){ if(!on()) return null; const P=root.Sys&&root.Sys.path;
 function mountStrike(S){ if(!on()) return null; const M=root.Sys&&root.Sys.mount; if(!M||typeof M.strikeOf!=='function') return null;
   try{ const m=M.strikeOf(S); return m&&isKey(m.k)&&num(m.value,0)>0?m:null; }catch(e){ return null; } }
 /* perfil da batalha (com teto): {normal:{...}, boss:{...}}. Recalcular só quando trocar item. mount = {id,k,value} só quando a montaria soma algo. */
-function profile(S,host,ov){ const r=raw(S,host,ov), n=zero(), b=zero();
+/* profile(S,host,ov,{extra,noMount}): extra soma pontos % temporários antes dos tetos; noMount ignora o golpe da montaria (Provação) */
+function profile(S,host,ov,opt){ opt=opt||{}; const r=raw(S,host,ov,opt), n=zero(), b=zero();
   for(const k of DATA.keys){ n[k]=Math.min(r[k],DATA.cap[k]); b[k]=Math.min(r[k],DATA.bossCap[k]); }
-  const out={on:on(),normal:n,boss:b,raw:r}, m=mountStrike(S); if(m) out.mount={id:m.id,k:m.k,value:m.value,name:DATA.name[m.k],color:DATA.color[m.k]};
+  const out={on:on(),normal:n,boss:b,raw:r}, m=opt.noMount?null:mountStrike(S); if(m) out.mount={id:m.id,k:m.k,value:m.value,name:DATA.name[m.k],color:DATA.color[m.k]};
   const pa=pathStrikes(S); if(pa) out.path=pa;   // path = {id,name,strikes} só com caminho de luta valendo
   return out; }
 /* totais para a FC (teto normal) ou null desligado (o Sys.fc usa null para não mudar nada) */

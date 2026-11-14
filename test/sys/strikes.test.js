@@ -108,4 +108,5 @@ t('LIGADA: a FC sobe com os golpes do equipamento e itemFC conta o golpe do item
   } finally { K.setOn(false); }
   assert.strictEqual(FC.compute(S,h),off,'desligar volta ao mesmo número');
 });
+{ const SK=require('../../js/sys/strikes.js'); const k=SK.DATA.on; SK.DATA.on=true; try{ const p=SK.profile({},null,null,{extra:{combo:7},noMount:true}); if(!(p.raw.combo>=7)) throw new Error('extra não somou'); if(p.mount) throw new Error('noMount'); console.log('ok - profile aceita extra e noMount'); } finally { SK.DATA.on=k; } }
 console.log(n+' testes ok');
