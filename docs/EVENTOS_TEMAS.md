@@ -176,3 +176,9 @@ instância é vencida e uma vez por varredura. Enquanto não entrar, a Caçada a
 - Chefe do evento: `assets/enemies/<art>.png`. Ficam era3_boss, era4_boss e era1_boss (Arte, 14/11).
 - Quando a arte entrar no jogo: o Engenheiro põe os ids em `Sys.events.DATA.ready`. A Sistemas põe `evt_cacada` e `evt_pets` no catálogo do Perfil
   (`Sys.profile.DATA.frames`, `need:{grant:true}`).
+
+## No ar (Servidor, 14/11)
+
+- O servidor 06b3369 está no ar, com o game-sys fixado no 35abad1.
+- O calendário de produção trocou as ocorrências #2, #4 e #6 para `cacada_chefes_261204`, `semana_forja_270101` e `festa_pets_270129`, sem mudar as datas.
+- `minClientVersion` = v0.15.0, confirmado pelo Engenheiro. Falta sair o build do jogo nessa versão antes de 04/12.
