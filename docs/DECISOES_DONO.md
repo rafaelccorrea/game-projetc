@@ -5,6 +5,7 @@ Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza
 ## 14/11/2026 (madrugada)
 - [~] **Aprovadas: 9 molduras do Perfil e Dupla das Eras** (00h35) → Arte põe as molduras no jogo; Engenheiro escreve a Dupla atrás de chave
 - [~] **"ter molduras dos VIPs"**: 10 molduras, uma por VIP 1-10, cada vez mais ricas (só visual) · Arte (~4 créditos da reserva) + Sistemas
+- [~] **Repensar recompensas do VIP e do Passe** ("pensar melhor nas recompensas dos VIPs e passe") · Sistemas faz proposta + protótipo hoje × proposta → voto
 - [?] **Golpes novos dos pets médios/evoluídos** (19 golpes, ~76 créditos; teste do mamute passou) · dono libera o orçamento
 - [~] **Ouro tem que ser escasso** ("sempre em quantidades pequenas… tudo upa com ouro; nem tão difícil, nem tão fácil"). Ouro da Provação cortado; auditoria de todas as fontes em docs/ECONOMIA_OURO.md · Sistemas
 - [x] **Nome do jogador sem espaço** ("não")
