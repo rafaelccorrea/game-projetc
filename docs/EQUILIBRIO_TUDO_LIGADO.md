@@ -190,3 +190,7 @@ todas as eras (como a era 1), medindo era a era.
 **Não aplicado (não medido):** eras 2 e 6-8, e os números finais das eras 3-5. A rodada "kill 34 / aguentar 40" das eras 2-8 foi parada pelo
 sistema por falta de memória do PC (memória livre medida entre 3,2 e 4,7 GB antes de cada era; a queda foi de outro processo enquanto rodava).
 Calendário (~178 dias) e diff.js: não refeitos.
+
+**Era 3 com kill 34 / aguentar 40 (medida, NÃO aplicada):** com módulos 100% 4/4 em 20,3 s (sobra 73%), 90% 4/4 em 21,9 s (59%); sem módulos
+com o mesmo progresso 0/4 (cai aos 28 s); sem módulos com 100% da FC nova 4/4 em 25,8 s (35%). Próximo palpite (a medir): kill ~43, aguentar 40
+(leva o sem módulos para ~33 s; o com módulos ficaria em ~26 s, abaixo da meta: o mesmo conflito da era 1, maior).
