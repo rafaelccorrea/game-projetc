@@ -59,7 +59,7 @@ t('cleanup: apaga a ocorrência (e a trilha dela) depois do graceEnd; a seguinte
   E.track(S,hostAt(BRT(2026,11,21)),'kill',1); E.track(S,hostAt(BRT(2026,12,5)),'kill',1); X.ensure(S).festival_eras_261120={got:[]};
   E.cleanup(S,hostAt(BRT(2026,12,6))); assert.deepStrictEqual(Object.keys(S.sys.events),['festival_eras_261204']); assert.strictEqual(S.sys.evtrail.festival_eras_261120,undefined); }));
 t('skin já possuída não é vendida de novo na ocorrência seguinte',()=>withOn(()=>{ E.setCalendar(CAL); const S={skins:['festival_weapon']}, h=hostAt(BRT(2026,12,8));
-  E.ensure(S).festival_eras_261204={pts:999,rep:0,p:{},c:[],buys:{}}; const it=E.shop(S,h,'festival_eras_261204').find(x=>x.id==='s_skin_w');
+  E.ensure(S).festival_eras_261204={pts:999,rep:0,p:{},c:[],buys:{}}; E.DATA.ready=['festival_weapon']; const it=E.shop(S,h,'festival_eras_261204').find(x=>x.id==='s_skin_w');
   assert.strictEqual(it.owned,true); assert.strictEqual(it.canBuy,false); assert.strictEqual(E.buy(S,h,'festival_eras_261204','s_skin_w').reason,'possui'); }));
 t('ranking por id completo: nome com a data; chaves do prêmio passam no idRe',()=>{ const k=R.prizeFor('festival_eras_261204','top1').frame;
   assert.strictEqual(k,'evt_festival_eras_261204_top1'); assert.ok(R.DATA.idRe.test(k)); assert.strictEqual(R.nameOf(k),'Festival das Eras · 04/12/2026 · Top 1%'); });

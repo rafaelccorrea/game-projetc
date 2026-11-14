@@ -854,7 +854,7 @@ t('evento: trilha por pontos GANHOS (saldo + loja, nunca diminui) e chefe com vi
     const ev=E.DATA.events[0]; E.ensure(S); S.sys.events.festival_eras={pts:180,rep:0,p:{},c:[],buys:{}};
     let tr=X.trail(S,h,'festival_eras'); assert.strictEqual(tr.earned,180); assert.deepStrictEqual(tr.milestones.filter(m=>m.reached).map(m=>m.at),[50,100,150]);
     const g0=h.gold; assert.ok(X.claimTrail(S,h,'festival_eras',50).ok&&h.gold>g0); assert.strictEqual(X.claimTrail(S,h,'festival_eras',50).reason,'done'); assert.strictEqual(X.claimTrail(S,h,'festival_eras',200).reason,'points');
-    assert.ok(E.buy(S,h,'festival_eras','s_skin_w').ok); assert.strictEqual(X.earned(S,'festival_eras'),180,'gastar na loja não tira da trilha');
+    E.DATA.ready=['festival_weapon']; assert.ok(E.buy(S,h,'festival_eras','s_skin_w').ok); assert.strictEqual(X.earned(S,'festival_eras'),180,'gastar na loja não tira da trilha');
     const b=X.boss(S,h,'festival_eras'); assert.ok(b.on&&!b.online&&b.hpMax>0&&b.hp===b.hpMax&&b.attemptsLeft===2&&b.nextDamage>0);
     const p0=S.sys.events.festival_eras.pts, a1=X.attack(S,h,'festival_eras'); assert.ok(a1.ok&&a1.dmg===b.nextDamage&&a1.pts>=10); assert.strictEqual(S.sys.events.festival_eras.pts,p0+a1.pts,'pontos do chefe no saldo do evento');
     X.attack(S,h,'festival_eras'); assert.strictEqual(X.attack(S,h,'festival_eras').reason,'tries'); h.t+=864e5; assert.strictEqual(X.boss(S,h,'festival_eras').attemptsLeft,2,'novo dia');

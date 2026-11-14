@@ -26,7 +26,7 @@ const THEMES={
     repeat:[{k:'kill', every:250, pts:5, cap:200}],
     // loja de pontos (limit = compras por OCORRÊNCIA). Skins são só visuais (quem já tem a skin não compra de novo). Item fixo respeita o portão.
     shop:[
-      {id:'s_skin_w', cost:150, limit:1,  reward:{skin:'festival_weapon'}, txt:'Skin de arma "Lâmina do Festival"'},
+      {id:'s_skin_w', cost:150, limit:1,  reward:{skin:'festival_weapon'}, needs:'skin', txt:'Skin de arma "Lâmina do Festival"'},
       {id:'s_skin_a', cost:150, limit:1,  reward:{skin:'festival_armor'},  txt:'Skin de roupa "Traje do Festival"'},
       {id:'s_item',   cost:120, limit:1,  reward:{items:[{slot:'necklace',r:2}]}, txt:'Colar Épico da era atual'},
       {id:'s_ess',    cost:40,  limit:5,  reward:{essence:5}, txt:'5 Essências da Era'},

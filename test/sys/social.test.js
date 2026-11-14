@@ -60,7 +60,7 @@ t('EVENTO Festival das Eras: fases, missões dão pontos, pontos repetíveis com
   E.track(S,h,'kill',1000); assert.strictEqual(E.list(S,h)[0].pts,20,'4 × 5 pontos repetíveis');
   E.track(S,h,'kill',20000); const pts=E.list(S,h)[0].pts; assert.strictEqual(pts,200,'teto de 200 nos repetíveis');
   assert.ok(E.claimMission(S,h,'festival_eras','f_kill').ok); assert.strictEqual(E.claimMission(S,h,'festival_eras','f_kill').reason,'resgatado'); assert.strictEqual(E.claimMission(S,h,'festival_eras','f_boss').reason,'incompleto');
-  assert.ok(E.buy(S,h,'festival_eras','s_skin_w').ok); assert.deepStrictEqual(h.skins,['festival_weapon']); assert.strictEqual(E.buy(S,h,'festival_eras','s_skin_w').reason,'limite');
+  E.DATA.ready=['festival_weapon']; assert.ok(E.buy(S,h,'festival_eras','s_skin_w').ok); assert.deepStrictEqual(h.skins,['festival_weapon']); assert.strictEqual(E.buy(S,h,'festival_eras','s_skin_w').reason,'limite');
   const b=E.buy(S,h,'festival_eras','s_item'); assert.strictEqual(b.reason,'pontos',"240-150=90 < 120");
   for(let i=0;i<3;i++) assert.ok(E.buy(S,h,'festival_eras','s_gold').ok); assert.strictEqual(E.shop(S,h,'festival_eras').find(x=>x.id==='s_gold').bought,3);
   h.t=new Date(2026,11,5,12).getTime(); assert.strictEqual(E.phase(ev,h),'loja'); E.track(S,h,'kill',5000); assert.strictEqual(E.list(S,h)[0].pts,30,'na carência não ganha mais pontos');

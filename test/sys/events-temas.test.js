@@ -50,6 +50,9 @@ t('skin e moldura ficam ESCONDIDAS até a arte entrar (DATA.ready); com a skin p
 t('moldura pronta mas fora do catálogo do Perfil: não vende e não gasta ponto',()=>withOn(()=>{ E.setCalendar(CAL); const S={}, h=hostAt(BRT(2026,12,6)), id='cacada_chefes_261204';
   E.ensure(S)[id]={pts:300,rep:0,p:{},c:[],buys:{}}; E.DATA.ready=['evt_cacada']; assert.ok(E.shop(S,h,id).some(x=>x.id==='s_frame'));
   assert.strictEqual(E.buy(S,h,id,'s_frame').reason,'profile'); assert.strictEqual(S.sys.events[id].pts,300); assert.strictEqual(S.sys.events[id].buys.s_frame,undefined); }));
+t('Festival: a Lâmina do Festival fica escondida até a skin de arma existir (PO 14/11); o Traje continua',()=>withOn(()=>{ const S={skins:[]}, h=hostAt(new Date(2026,10,22,12).getTime());
+  E.ensure(S).festival_eras={pts:999,rep:0,p:{},c:[],buys:{}}; const ids=E.shop(S,h,'festival_eras').map(x=>x.id); assert.ok(!ids.includes('s_skin_w')); assert.ok(ids.includes('s_skin_a'));
+  assert.strictEqual(E.buy(S,h,'festival_eras','s_skin_w').reason,'id'); assert.strictEqual(S.sys.events.festival_eras.pts,999); }));
 t('moldura da loja: escondida no Perfil até ficar pronta; pronta, vende uma vez, entrega pelo Perfil e some da compra',()=>withOn(()=>{ const P=Sys.profile, pOn=P.DATA.on; P.setOn(true);
   try{ E.setCalendar(CAL); const S={}, h=hostAt(BRT(2027,2,1)), id='festa_pets_270129'; E.ensure(S)[id]={pts:300,rep:0,p:{},c:[],buys:{}};
     assert.ok(!P.frames(S,h).some(f=>f.id==='evt_pets'),'escondida no Perfil'); assert.ok(!E.shop(S,h,id).some(x=>x.id==='s_frame'),'escondida na loja');
