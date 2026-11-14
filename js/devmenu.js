@@ -83,6 +83,9 @@
       <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">LIGAR MÓDULO DESLIGADO (com=)</span>
       <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Liga no jogo que estiver aberto, só nesta carga. São módulos ainda não aprovados.</span>
       ${keys.length ? keys.map(k => box(!!U.com[k], `data-d="com" data-id="${esc(k)}"`, k, '')).join('') : '<span style="font-size:12.5px;font-weight:700">Nenhuma chave desligada no SYS_LIVE.</span>'}
+      <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">SKINS DE ARMA DE EVENTO</span>
+      <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Dá as 3 (Caçador, Martelo, Festival) só nesta carga, para ver em Perfil › Visual. Só funciona com o jogo em memória: aplique antes "fresh=1" ou "Subir para o nível".</span>
+      <button data-d="skins" style="${B};min-height:48px">Dar skins de arma de evento</button>
       <span style="font-size:12px;font-weight:900;color:#c9b9a2;margin-top:4px">SUBIR PARA O NÍVEL (era=${curEra()}&amp;plv=)</span>
       <span style="font-size:11.5px;font-weight:700;color:#c9b9a2;line-height:1.3">Só nesta carga: nada é gravado e nada vai para a nuvem. O atalho também volta ao início da era, com arma e roupa de teste e 50.000 de ouro. Vazio = não muda o nível.</span>
       <input id="dv_plv" type="number" inputmode="numeric" min="${PLV_MIN}" max="${PLV_MAX}" step="1" value="${esc(U.plv)}" placeholder="${PLV_MIN} a ${PLV_MAX}" aria-label="Nível do jogador, de ${PLV_MIN} a ${PLV_MAX}" style="height:48px;border-radius:12px;border:2px solid #4a3a2b;background:#0e0a07;color:#f6ecdf;font:900 16px Nunito,system-ui,sans-serif;padding:0 12px;box-sizing:border-box;width:100%">
@@ -107,10 +110,14 @@
     U.ask = false; return go(url(selNow())); }
   function backToNormal() { return go(normalUrl()); }
 
+  function giveSkins() { try { if (W.__noSave !== true) { U.msg = 'Só com o jogo em memória: aplique antes "fresh=1" ou "Subir para o nível".'; paint(); return false; }
+      const ws = W.WSkin; if (!ws || !Array.isArray(ws.TABLE)) { U.msg = 'As skins de arma não estão carregadas.'; paint(); return false; }
+      if (!Array.isArray(S.skins)) S.skins = []; let n = 0; for (const r of ws.TABLE) { r.art = true; if (S.skins.indexOf(r.id) < 0) { S.skins.push(r.id); n++; } }   /* art=true só nesta carga: mostra também a que está escondida do jogador */
+      U.msg = n + ' skins de evento dadas, só nesta carga. Veja em Perfil › Visual.'; paint(); return true; } catch (e) { U.msg = 'Não deu: ' + e; paint(); return false; } }
   function onClick(ev) { let b = ev && ev.target; try { b = b && b.closest ? b.closest('[data-d]') : null; } catch (e) { b = null; }
     if (!b) { if (ev && ev.target === U.el) close(); return; }
     const a = b.dataset.d;
-    if (a === 'close') close(); else if (a === 'normal') backToNormal(); else if (a === 'item' || a === 'com') toggle(a, b.dataset.id);
+    if (a === 'close') close(); else if (a === 'skins') giveSkins(); else if (a === 'normal') backToNormal(); else if (a === 'item' || a === 'com') toggle(a, b.dataset.id);
     else if (a === 'apply') apply(false); else if (a === 'askyes') apply(true); else if (a === 'askno') { U.ask = false; paint(); } }
   function open() { if (U.el) return true; let host = null; try { host = document.body; } catch (e) {} if (!host) return false;
     fromUrl(); const el = document.createElement('div'); el.id = 'dv_root';
