@@ -154,6 +154,7 @@ const FB_DROP = [
   { id: 'duo',      icon: 'chat',      label: 'Dupla',      act: 'soon:duo', alerts: () => duoAlerts() },   /* Dupla das Eras (nível 16; Sys.duo). Ícone PROVISÓRIO = o do Chat, até a Arte entregar assets/icons/menu/duo.png */
   { id: 'mentors',  icon: 'codex',     label: 'Mentores',   act: 'soon:mentors' },   /* Mentores (nível 16; Sys.mentors). Ícone PROVISÓRIO = o do Códex, até a Arte entregar assets/icons/menu/mentors.png */
   { id: 'map',      icon: 'map',       label: 'Mapa',       act: 'soon:map', alerts: () => { try { return window.Map2 && fbPanelOn('map2') ? Map2.ready() : 0; } catch (e) { return 0; } } },   /* Mapa das Eras: nível 1 (PO) */
+  { id: 'camp',     icon: 'guild',     label: 'Acampamento das Eras', act: 'soon:camp', alerts: () => { try { const v = Sys.camp && Sys.camp.DATA.on === true ? Sys.camp.view(S, Sys.host) : null; return v && !v.locked ? v.tents.filter(t => t.full).length : 0; } catch (e) { return 0; } } },   /* Acampamento das Eras (Sys.camp, nível 20). Ícone PROVISÓRIO até a Arte entregar assets/icons/menu/camp.png */
   { id: 'grim',     icon: 'grimoire',  label: 'Grimório',   act: 'soon:grim' },   /* Grimório das Eras (Sys.grimoire); só aparece com a tela ligada */
   { id: 'path',     icon: 'equipment', label: 'Caminhos',   act: 'soon:path' },   /* Caminhos (Sys.path, nível 30: a própria tela explica o que falta). Ícone PROVISÓRIO */
   { id: 'trial',    icon: 'tower',     label: 'Provação',   act: 'soon:trial' },   /* Provação do Mestre (Sys.trial). Ícone PROVISÓRIO */
@@ -170,7 +171,7 @@ const FB_HAMMER = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="
    Ao liberar, o ícone aparece UMA vez com o selo "NOVO!" e um balão curto; um por vez, em fila; S.unl guarda o que já foi anunciado.
    Trocar o nível = trocar 1 número aqui. (O Sys.level.isUnlocked só conhece as chaves do módulo: practice, forge, instances, tower, arena, pet;
    as outras ainda não estão lá, por isso a tabela fica aqui e a conta usa Sys.level.level(S).) Sem entrada na tabela = desde o início. */
-const FB_UNLOCK = { map: 1, codex: 12, chat: 16, duo: 16, mentors: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
+const FB_UNLOCK = { camp: 20, map: 1, codex: 12, chat: 16, duo: 16, mentors: 16, missions: 2, summon: 3, practice: 5, mail: 7, login: 7, profile: 10, shopgem: 10, forge: 12, inst: 14, tower: 15, pass: 18, pets: 20, events: 24, rank: 28, arena: 28, guild: 32, mount: 38, tourney: 40, auction: 45, wing: 50 };
 const FB_UNLOCK_TXT = { missions: 'Missões diárias: metas do dia com prêmio', summon: 'Invocar: 1 item grátis por dia', pass: 'Passe da temporada: prêmios por jogar', forge: 'Forja: deixe seus itens mais fortes', inst: 'Instâncias: fases especiais com prêmio', tower: 'Torre: suba andares, ganhe prêmios', pets: 'Pets: um companheiro na batalha', mail: 'Correio: presentes e avisos', events: 'Eventos: missões por tempo limitado', rank: 'Ranking: veja os mais fortes' };
 const fbLvl = () => { try { return Sys.level.level(S); } catch (e) { return 1; } };
 /* SAVE ANTIGO NÃO PERDE ACESSO (PO, v0.12.4): quem já jogava antes da liberação por nível continua vendo o que já usava, em qualquer nível.
@@ -185,14 +186,22 @@ const fbUnl = id => (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) || !!(S.un
 const fbPanelOn = k => !(window.Panels && Panels.defs && Panels.defs[k] && typeof Panels.on === 'function' && !Panels.on(k));
 const fbHasScreen = m => (m.key !== true || (typeof NEXT_ON !== 'undefined' && NEXT_ON)) && (m.act.indexOf('soon:') !== 0 || !!(Screens.reg && Screens.reg[m.act.slice(5)] && !Screens.reg[m.act.slice(5)].broken && fbPanelOn(m.act.slice(5))));
 const fbShown = m => m.on !== false && fbUnl(m.id) && fbHasScreen(m);
-const FBN = { id: null, el: null, until: 0 };
-function fbNovoTick(){ if (view !== 'battle' || B.paused || document.getElementById('fbdrop') || (typeof tutOn === 'function' && tutOn() && !(typeof tutWait !== 'undefined' && tutWait))) return; const now = Date.now(); if (FBN.until > now) return;
+const FBN = { id: null, el: null, until: 0, txt: '', at: 0, redo: '' };
+/* QA B2: com a tela de resultado do chefe aberta (B.res: Vitória, Derrota, Troca de era) ou o herói caindo diante do chefe (ela abre em seguida), o aviso de
+   liberação ESPERA e sai depois que ela fechar. Fila simples: a marca S.unl só é gravada quando o aviso aparece, então o que esperou sai na vez seguinte.
+   Aviso que já estava na tela quando ela abriu sai da frente e é repetido depois. O balão do tutorial espera pelo mesmo sinal (tutLayout do js/meta.js). */
+const fbResUp = () => { try { return !!(B.res || (B.deadBoss && B.deadT > 0)); } catch (e) { return false; } };
+function fbNovoTick(){ const now = Date.now();
+  if (fbResUp()){ if (FBN.txt && !FBN.redo && now - FBN.at < 2200){ FBN.redo = FBN.txt; const t = document.getElementById('toast'); if (t && t.textContent === FBN.txt) t.classList.remove('on'); } return; }
+  if (view !== 'battle' || B.paused || document.getElementById('fbdrop') || (typeof tutOn === 'function' && tutOn() && !(typeof tutWait !== 'undefined' && tutWait))) return;
+  if (FBN.redo){ const tx = FBN.redo; FBN.redo = ''; toast(tx); FBN.txt = tx; FBN.at = now; FBN.until = now + 4500; return; }
+  if (FBN.until > now) return;
   if (FBN.id){ if (FBN.el){ const s = FBN.el.querySelector('.fb-novo'); if (s) s.remove(); } FBN.id = null; FBN.el = null; }
   if (!S.unl || typeof S.unl !== 'object') S.unl = {};
   for (const m of FB_MENU.concat(FB_DROP)){ if (!FB_UNLOCK[m.id] || S.unl[m.id] || !fbShown(m)) continue;
     S.unl[m.id] = 1; save(); const own = document.getElementById('fbm_' + m.id), el = (own && own.style.display !== 'none') ? own : document.getElementById('fb_mbtn'), ib = el && el.querySelector('.fb-ib');
     if (ib){ const s = document.createElement('span'); s.className = 'fb-novo'; s.textContent = 'NOVO!'; ib.appendChild(s); }
-    toast(FB_UNLOCK_TXT[m.id] || (m.label + ' liberado')); snd('claim'); FBN.id = m.id; FBN.el = el; FBN.until = now + 4500; return; } }
+    const tx = FB_UNLOCK_TXT[m.id] || (m.label + ' liberado'); toast(tx); snd('claim'); FBN.id = m.id; FBN.el = el; FBN.until = now + 4500; FBN.txt = tx; FBN.at = now; return; } }
 const FB_BAND = 240;        // faixa livre de ícones: do chão até 240 px acima (base de 390), em x >= 300, RELATIVA à linha dos pés, em qualquer altura de tela
 const FB_HIDDEN = {};       // ícones principais que não couberam nesta tela: vão para o MENU (nunca encolhem abaixo de 44 px)
 const FB_COL = { r: 0, b: 0 };   // coluna esquerda de ícones no canvas (px lógicos): r = borda direita, b = fundo; 0 = sem coluna (preenchido no fbLayout)
