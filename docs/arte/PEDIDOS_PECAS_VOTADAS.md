@@ -70,3 +70,12 @@ Agrupado em poucas imagens, com o recorte de graça. O orçamento total substitu
 | M1 | Mentores: 9 retratos m0..m8 depois do voto da tela | 1 grade 3×3 (+1 refação) | 2-4 |
 | T1 | Títulos novos sem ícone (lista do Engenheiro, depois) | 1 grade | 2 |
 | **Total** | | | **~38-42** (sem A2: ~36-40) |
+
+## BLOCO 1: DUPLA (estilo A escuro) — teto do lote 38
+Referências de todas: 1) docs/proto/v2/a/mocks/du_a.jpg (mock votado); 2) a ref de ícones 79bfaae4. nano_banana_pro, 2k.
+**D1, retratos (1:1, ~2):** "TWO separate round-top portrait cards side by side on a flat pure green (#00FF00) background with a wide green gap, matching the dark rich style and gold trim of image 1: each card is a tall rounded portrait frame with a thick GOLDEN rim and a dark inner background; LEFT card: the hero boy (brown messy hair, red scarf, brown leather armor), bust, smiling, facing slightly right; RIGHT card: a partner hero girl of the same age (long red-brown ponytail, brown leather tunic, red scarf, modest), bust, smiling, facing slightly left. Both children, fully clothed. No text, no green inside the cards."
+**D2, madeira e placa (1:1, ~2):** "TWO separate UI panels on a flat pure green background, stacked with a wide green gap, in the dark rich wooden style of image 1: TOP a large empty dark wooden board panel with carved gold corners and a subtle inner frame (wide, about 6:5); BOTTOM a long empty dark wooden name plate with gold bolts (about 4:1). Both completely EMPTY (no text), clean edges, no green in the panels."
+**D3, 18 ícones das frases (2 imagens 1:1, ~4):** o item 4 acima, exatamente.
+**D4, missões + Menu (1:1, ~2):** "A 3x3 grid of NINE separate round game icons on a flat pure green background with wide gaps, same painted chibi style and dark palette as the references, no text, no green in the icons: (1) two crossed swords with a heart (missão: lutar juntos); (2) a chest with a star (missão: abrir baús); (3) a footprint path (missão: avançar fases); (4) a hammer and anvil (missão: forjar); (5) MENU 'Dupla': two small hero silhouettes back to back with a golden link; (6) MENU 'Acampamento': a small striped tent with a campfire; (7) MENU 'Mentores': an open book with a feather quill and a small star; (8) spare: a handshake; (9) spare: a golden heart badge."
+Ids: D4 → assets/icons/duo/m_fight, m_chest, m_path, m_forge; assets/icons/menu/duo, camp, mentors.
+**Total do bloco: ~10.**
