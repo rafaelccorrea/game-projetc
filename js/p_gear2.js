@@ -81,13 +81,14 @@ const fcWith=it=>tr(()=>Sys.fc.compute(S,Sys.host,{item:it}),fcNow());
 const fcWithout=it=>tr(()=>Sys.fc.compute(S,Sys.host,{item:it,remove:true}),fcNow());
 /* quanto a FC muda se esta peça for para o espaço dela (0 para a que já está em uso) */
 function gain(it){ if(!it||isEq(it)) return 0; const c=cache(), k=String(it.id); if(c.g[k]==null) c.g[k]=fcWith(it)-fcNow(); return c.g[k]; }
-const better=it=>!!it&&!isEq(it)&&canEq(it)&&gain(it)>0.5;
+const fcShown=v=>{ try{ return Sys.fc&&typeof Sys.fc.view==='function'?Sys.fc.view(v):Math.round(v); }catch(e){ return Math.round(v); } };   /* FC como aparece na tela */
+const better=it=>{ if(!it||isEq(it)||!canEq(it)) return false; const g=gain(it); return g>0.5&&fcShown(fcNow()+g)>fcShown(fcNow()); };   /* melhor = a FC EXIBIDA sobe (dono 14/11: nunca "melhor" com +0) */
 function betterIn(s){ const c=cache(); if(c.b[s]==null) c.b[s]=inv().filter(i=>i.slot===s&&better(i)).length; return c.b[s]; }
 const pieceFc=it=>Math.max(0,(isEq(it)?fcNow():fcWith(it))-fcWithout(it));
 /* "Equipar o melhor": mesma conta do gBest (js/screens.js): por espaço aberto, a peça que dá a maior FC, simulando numa cópia do S.eq */
 function bestLocal(){ const L=lv(), eq=Object.assign({},S.eq), real=S.eq; let n=0; S.eq=eq;
   try{ for(const slot of SL()){ if(!Sys.stats.slotOpen(slot,L)) continue; let best=eq[slot], bfc=Sys.fc.compute(S,Sys.host);
-      for(const x of inv()){ if(x.slot!==slot||x.id===eq[slot]||!Sys.stats.canEquip(x,L)) continue; const fc=Sys.fc.compute(S,Sys.host,{item:x}); if(fc>bfc+0.5){ bfc=fc; best=x.id; } }
+      for(const x of inv()){ if(x.slot!==slot||x.id===eq[slot]||!Sys.stats.canEquip(x,L)) continue; const fc=Sys.fc.compute(S,Sys.host,{item:x}); if(fc>bfc+0.5&&fcShown(fc)>fcShown(bfc)){ bfc=fc; best=x.id; } }
       if(best!==eq[slot]){ eq[slot]=best; n++; } } }finally{ S.eq=real; }
   return {eq:eq,n:n}; }
 const bestOnce=()=>{ if(typeof gBest==='function'){ const r=tr(()=>gBest(),null); if(r&&r.eq&&typeof r.n==='number') return r; } return bestLocal(); };
@@ -162,6 +163,7 @@ button.g2-who u{flex:none;text-decoration:none;height:22px;line-height:22px;padd
 .g2-bt span{max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .g2-bt small{font-size:10px;font-weight:800;opacity:.85;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center}
 .g2-bt.best{flex:none;min-width:76px;padding:2px 8px}
+.g2-bt.best.idle,.xs .g2-bt.best.idle{background:rgba(255,236,200,.08);color:var(--muted);box-shadow:inset 0 0 0 1px rgba(255,236,200,.22)}
 .g2-bt.blue{background:linear-gradient(180deg,#6fd8ff,#2f86e0);box-shadow:0 3px 0 #164e8c}
 .xs .g2-bt.blue{color:#04223f}
 .g2-bt.red{background:#2a1530;border:2px solid var(--rose);box-shadow:none}
@@ -296,7 +298,7 @@ function fcRowHtml(narrow){ const nb=SL().reduce((a,s)=>a+(slotOpen(s)&&betterIn
   return '<div class="g2-fcrow"><div class="g2-fcb"><small>PODER (FC)</small><b id="g2_fc" style="font-size:'+(narrow?21:26)+'px">'+esc2(fcTxt(fcNow()))+'</b><em class="'+(nb?'':'m')+'">'+(nb?(nb===1?'1 espaço tem peça melhor':nb+' espaços têm peça melhor'):'Você já usa o melhor que tem')+'</em></div>'
     +'<button class="g2-ib" data-x="forge" aria-label="Abrir a Forja">'+SV.hammer+'<span>Forja</span></button>'
     +'<button class="g2-ib" data-x="look" aria-label="Abrir a Aparência">'+SV.shirt+'<span>Visual</span></button>'
-    +'<button class="g2-bt best" data-x="best" aria-label="Equipar o melhor de cada espaço"><span>'+SV.star+'Equipar</span><span>o melhor</span></button></div>'; }
+    +'<button class="g2-bt best'+(nb?'':' idle')+'" data-x="best" aria-label="Equipar o melhor de cada espaço"><span>'+SV.star+'Equipar</span><span>o melhor</span></button></div>'; }
 
 const dCls=d=>Math.abs(d)<1?'g2-eq0':d>0?'g2-up':'g2-dn2';
 const dTxt=d=>Math.abs(d)<1?'igual':(d>0?'+':'−')+fcTxt(Math.abs(d));

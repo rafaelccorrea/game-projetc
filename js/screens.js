@@ -490,7 +490,7 @@ function gChange(fn,msg,sndName,opt){ opt=opt||{};
   return true; }
 function gBest(){ const lv=plv(), eq=Object.assign({},S.eq), real=S.eq; let n=0; S.eq=eq;   // simula em cópia (Sys.host.equipped lê S.eq)
   try{ for(const slot of SLOTS7){ if(!Sys.stats.slotOpen(slot,lv)) continue; let best=eq[slot], bfc=Sys.fc.compute(S,Sys.host);
-      for(const x of S.inv){ if(x.slot!==slot||x.id===eq[slot]||!Sys.stats.canEquip(x,lv)) continue; const fc=Sys.fc.compute(S,Sys.host,{item:x}); if(fc>bfc+0.5){ bfc=fc; best=x.id; } }
+      for(const x of S.inv){ if(x.slot!==slot||x.id===eq[slot]||!Sys.stats.canEquip(x,lv)) continue; const fc=Sys.fc.compute(S,Sys.host,{item:x}); if(fc>bfc+0.5&&(typeof Sys.fc.view!=='function'||Sys.fc.view(fc)>Sys.fc.view(bfc))){ bfc=fc; best=x.id; } }   /* só troca se a FC EXIBIDA sobe (dono 14/11) */
       if(best!==eq[slot]){ eq[slot]=best; n++; } } }finally{ S.eq=real; }
   return {eq,n}; }
 function gMaxPlan(it){ const cap=Math.min(100,plv()); let g=S.gold, l=it.lvl||1, sum=0, n=0; while(l<cap){ const c=Sys.stats.upgradeCost(Object.assign({},it,{lvl:l})).gold; if(g<c) break; g-=c; sum+=c; l++; n++; } return {n,sum,to:l}; }

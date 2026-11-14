@@ -98,7 +98,7 @@ const CSS = `
 .fgx-tx span{display:block;font-size:10px;font-weight:800;color:#c9b8a2;overflow-wrap:anywhere}
 .fgx-dl{flex:none;font-family:'Lilita One',Nunito,sans-serif;font-size:17px;text-align:right;line-height:1}
 .fgx-dl small{display:block;font-family:Nunito,system-ui,sans-serif;font-size:9px;font-weight:900;color:#c9b8a2}
-.fgx-dl.up{color:#7fe07a}.fgx-dl.dn{color:#ff9f9f}
+.fgx-dl.up{color:#7fe07a}.fgx-dl.dn{color:#ff9f9f}.fgx-dl.eq{color:#c9b8a2;font-size:15px}
 .fgx-n{margin-top:5px;font-size:11px;font-weight:900;text-align:center;line-height:1.3;color:#ffd25e}
 .fgx-q{margin-top:5px;font-size:10px;font-weight:900;color:#c9b8a2;text-align:right}
 .fgx-bt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px}
@@ -235,10 +235,12 @@ function nextCard(){ CARD = Q.shift() || null; renderCard(); }
 function cardHtml(){ const b = BF(), h = host(), it = CARD.it, why = CARD.why, bag = why === 'bag', cur = eqOf(h)[it.slot], same = cur && cur.id != null && cur.id === it.id, d = same ? 0 : deltaOf(h, it), r = b.refundOf(it), rc = rarC(h, it.r), lk = bag && b.isLocked(S, it);
   const mine = same ? 'É a que você está usando' : cur ? 'Sua: ' + nameOf(h, cur) + ' · FC ' + fcTxt(fcOf(h, cur)) : 'Sua: nenhuma';
   const ref = '+' + nf(r.gold) + ' ouro · +' + r.xp + ' XP';
-  return `<div class="fgx-c" role="dialog" aria-label="Peça da Fogueira" style="--rc:${rc}"><div class="fgx-r"><span class="fgx-ic"><img src="${esc(thumbOf(h, it))}" alt=""></span><span class="fgx-tx"><b>${esc(nameOf(h, it))}</b><small>${esc(rarN(h, it.r))} · ${pl(CARD.stars || starsOf(it), 'estrela', 'estrelas')}</small><span>${esc(mine)}</span></span><span class="fgx-dl ${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '+' : '−'}${esc(fcTxt(Math.abs(d)))}<small>de FC</small></span></div>`
+  let zero = !d; try { if (!zero) zero = fcTxt(Math.abs(d)) === fcTxt(0); } catch (e) {}   /* o que a tela mostraria como "+0" é igual, não melhor */
+  const eqCls = !zero && d > 0 ? 'fgx-gd' : 'fgx-ol';
+  return `<div class="fgx-c" role="dialog" aria-label="Peça da Fogueira" style="--rc:${rc}"><div class="fgx-r"><span class="fgx-ic"><img src="${esc(thumbOf(h, it))}" alt=""></span><span class="fgx-tx"><b>${esc(nameOf(h, it))}</b><small>${esc(rarN(h, it.r))} · ${pl(CARD.stars || starsOf(it), 'estrela', 'estrelas')}</small><span>${esc(mine)}</span></span>${zero ? '<span class="fgx-dl eq">igual<small>mesma FC</small></span>' : `<span class="fgx-dl ${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '+' : '−'}${esc(fcTxt(Math.abs(d)))}<small>de FC</small></span>`}</div>`
     + (why === 'pause' ? `<div class="fgx-n">Automático pausou: saiu ${esc(rarN(h, it.r))}. Você decide.</div>` : '')
-    + (bag ? `<div class="fgx-bt two"><button class="fgx-gd" data-fg="equip">Equipar</button><button class="fgx-ol" data-fg="lock">${lk ? 'Destrancar' : 'Trancar'}</button><button class="fgx-rd" data-fg="sell">Desmontar<small>${ref}</small></button><button class="fgx-ol" data-fg="cclose">Fechar</button></div>`
-      : `<div class="fgx-bt"><button class="fgx-gd" data-fg="equip">Equipar</button><button class="fgx-ol" data-fg="keep">Guardar</button><button class="fgx-rd" data-fg="sell">Desmontar<small>${ref}</small></button></div>`)
+    + (bag ? `<div class="fgx-bt two"><button class="${eqCls}" data-fg="equip">Equipar</button><button class="fgx-ol" data-fg="lock">${lk ? 'Destrancar' : 'Trancar'}</button><button class="fgx-rd" data-fg="sell">Desmontar<small>${ref}</small></button><button class="fgx-ol" data-fg="cclose">Fechar</button></div>`
+      : `<div class="fgx-bt"><button class="${eqCls}" data-fg="equip">Equipar</button><button class="fgx-ol" data-fg="keep">Guardar</button><button class="fgx-rd" data-fg="sell">Desmontar<small>${ref}</small></button></div>`)
     + (Q.length ? `<div class="fgx-q">+${Q.length} na fila</div>` : '') + '</div>'; }
 function renderCard(){ if (!M) return; let h = ''; try { h = CARD ? cardHtml() : STATUS ? `<div class="fgx-c st" role="status">${esc(STATUS.txt)}</div>` : ''; } catch (e) { h = ''; try { console.error('Fogueira: cartão', e); } catch (e2) {} } if (M.card.innerHTML !== h) M.card.innerHTML = h; }
 function canWear(h, it){ try { const T = Sys.stats; if (T && T.canEquip) return !!T.canEquip(it, h.level ? h.level() : 1); } catch (e) {} return true; }
