@@ -30,6 +30,38 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
     check(base + ': chefe do Sys.evtrail aparece pelo nome', r.hasBoss, d);
     check(base + ': sem "undefined", "NaN" ou "[object" na tela', !r.undef, d);
   }
+  /* ---------- ARTE PINTADA POR TEMA (EVT_ART em js/p_events.js): nasce vazia; ligada (aqui só em memória) troca fundo, ícone, ficha dos pontos e moldura ---------- */
+  { const base = 'cacada_chefes', dir = 'assets/events/' + base + '/';
+    const cal = [{ id: base + '_' + ymd(now - DAY), start: now - DAY, end: now + 13 * DAY }, { id: 'festa_pets_' + ymd(now + 20 * DAY), start: now + 20 * DAY, end: now + 34 * DAY }];   /* dois eventos: a lista de eventos aparece */
+    const r = J(`const clk=h=>String(h).replace(/<span id="pz_hd">[^<]*<\\/span><span id="pz_sec">[^<]*<\\/span>/g,'').replace(/role="timer" aria-label="[^"]*"/g,'');
+      const draw=()=>{ let h=''; for(const t of [2,0,1]){ XEVT.tab=t; render(); h+=clk(V.innerHTML); } return h; };
+      const o={err:''}; try{ o.vazia=Object.keys(EVT_ART).length===0;
+        try{ Panels.close&&Panels.close(); }catch(e){} Sys.events.setCalendar(${JSON.stringify(cal)},null); XEVT.ev=null; Panels.open('events');
+        draw();   /* o primeiro desenho depois de abrir leva a classe da animação de entrada: a comparação usa o segundo */
+        const h0=draw(); o.semArte=h0.indexOf('assets/events/')<0&&h0.indexOf('evtArtFail')<0&&h0.indexOf('data-art')<0; o.lista0=evtArtList().length; o.tok0=h0.indexOf('class="pz-tok" width="32" height="32" viewBox')>=0;
+        const M0=evtModel(), big=M0.tr.milestones.filter(m=>m.reward&&m.reward.frame).map(m=>m.reward.frame), fr=evtFrame(big[0]); o.frame0=h0.indexOf(fr)>=0;
+        EVT_ART.${base}={bg:1,icon:1,points:1,frame:1}; Panels.open('events');
+        const h1=draw(); o.lista=evtArtList(); o.pre=evtArtPre();
+        o.n={}; for(const f of ['bg.jpg','icon.png','points.png','frame.png']) o.n[f]=h1.split('src="${dir}'+f+'"').length-1;
+        const imgs=h1.match(/<img [^>]*data-art="[^"]*"[^>]*>/g)||[]; o.imgs=imgs.length; o.reserva=imgs.every(t=>t.indexOf('onerror="evtArtFail(this)"')>=0&&t.indexOf(' alt=""')>=0); o.outro=h1.indexOf('assets/events/festa_pets/')>=0;
+        o.tok1=h1.indexOf('class="pz-tok" width="32" height="32" viewBox')>=0; o.frame1=h1.indexOf(fr)>=0; o.veu=h1.indexOf('class="pz-bgv"')>=0&&h1.indexOf('class="pz-bgi"')>=0; o.nome=h1.indexOf(evtEsc(M0.cur.ev.name))>=0;
+        o.undef=/undefined|NaN|\\[object/.test(h1);
+        /* reserva: cada peça que falha volta ao desenho por código; com as quatro em falha a tela sai igual à de antes de ligar */
+        o.f1=evtArtFail({getAttribute:()=>'${dir}points.png'}); o.f1b=evtArtFail({getAttribute:()=>'${dir}points.png'}); const h2=draw(); o.soPontos=h2.indexOf('${dir}points.png')<0&&h2.indexOf('${dir}frame.png')>=0&&h2.indexOf('class="pz-tok" width="32" height="32" viewBox')>=0;
+        for(const f of ['bg.jpg','icon.png','frame.png']) evtArtFail({getAttribute:()=>'${dir}'+f}); const h3=draw(); o.igual=h3===h0; o.lista3=evtArtList().length;
+        /* abrir a tela de novo esquece as falhas (o pacote pode ter chegado) */
+        Panels.open('events'); o.denovo=draw().indexOf('${dir}bg.jpg')>=0;
+        EVT_ART.${base}={points:1}; XEVT.artBad={}; const h4=draw(); o.parcial=h4.indexOf('${dir}points.png')>=0&&h4.indexOf('${dir}bg.jpg')<0&&h4.indexOf('${dir}icon.png')<0&&h4.indexOf('${dir}frame.png')<0&&h4.indexOf(fr)>=0;
+      }catch(e){ o.err=String(e&&e.stack||e); } delete EVT_ART.${base}; XEVT.artBad={}; return o;`);
+    const d = JSON.stringify(r);
+    check('arte: a tabela EVT_ART nasce vazia e, vazia, a tela não cita assets/events nem a reserva', !r.err && r.vazia && r.semArte && r.lista0 === 0 && r.tok0 && r.frame0, d);
+    check('arte ligada: os quatro caminhos do tema aparecem (fundo 1x por desenho, ícone no banner e na lista, ficha dos pontos, moldura)', !r.err && r.n['bg.jpg'] === 3 && r.n['icon.png'] === 6 && r.n['points.png'] >= 3 && r.n['frame.png'] >= 1 && !r.undef && r.nome, d);
+    check('arte ligada: a ficha e a moldura de código saem, o fundo leva o véu de leitura e o tema não ligado fica como antes', !r.tok1 && !r.frame1 && r.veu && !r.outro, d);
+    check('arte ligada: toda <img> nova tem reserva (onerror=evtArtFail) e alt vazio', r.imgs > 0 && r.reserva, d);
+    check('arte ligada: as peças entram na lista de pré-carga da tela', Array.isArray(r.lista) && r.lista.length === 4 && r.lista.every(p => p.indexOf(dir) === 0) && Array.isArray(r.pre) && r.pre.length === 4, d);
+    check('reserva: a peça que falha volta ao desenho por código (uma falha marca uma vez); as quatro em falha = tela igual à de antes', r.f1 === true && r.f1b === false && r.soPontos && r.igual && r.lista3 === 0, d);
+    check('reserva: abrir a tela de novo tenta as peças outra vez; ligar só uma peça troca só ela', r.denovo && r.parcial, d);
+  }
   console.log((fail ? 'FALHOU: ' + fail + ' de ' : 'OK: ' + n + '/') + n + ' (tela de Eventos com os 3 temas novos)');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

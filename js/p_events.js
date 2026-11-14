@@ -25,6 +25,7 @@
    - Sys.events DESLIGADO (DATA.enabled=false) ou evento futuro: a tela mostra o evento como EM BREVE, em prévia (missões com 0, loja sem compra),
      e só mostra "Começa em" com o módulo ligado (desligado, a data não é promessa);
    - sem evento nenhum por abrir: estado vazio "Nenhum evento agora".
+   ARTE PINTADA DOS TEMAS: tabela EVT_ART (abaixo), vazia até a Arte entregar; cada peça tem reserva para o desenho por código.
    PEDIDO ao engenheiro: incluir 'p_events' na lista de scripts de js/screens.js:823 (não editei) e, para conferir, ligar com ?debug=1&painel=events. */
 const XEVT={ev:null,tab:2,mPage:0,sPage:0,mis:false,buy:null,sig:'',sec:'',hd:'',anim:true,
   mk:0,mkTo:0,mkEv:null,mkDir:1,mv:null,hit:null,hitT:null};   /* mk = posição do Kael na trilha (em trechos), hit = último ataque ao chefe */
@@ -47,6 +48,30 @@ const EVT_TH={
     fog:'linear-gradient(180deg,rgba(20,80,56,.18),rgba(6,26,20,.42))',shards:false,vit:'rgba(95,224,160,.6)',frame:'pets',
     boss:{n:'Fera Ancestral',img:'assets/enemies/era1_boss.png',c:'#8ff0c0',hue:'240deg',mist:'rgba(95,224,160,.4)',fog:'linear-gradient(180deg,rgba(8,56,40,.5),rgba(4,18,14,.72))',mapF:'brightness(.5) saturate(1.3)'}}};
 const EVT_SKHUE={festival_weapon:'250deg',festival_armor:'200deg',cacada_weapon:'340deg',forja_weapon:'20deg',forja_armor:'30deg'};
+/* ARTE PINTADA POR TEMA (docs/EVENTOS_TEMAS.md, "Caminhos da arte"): assets/events/<base>/bg.jpg (720x1280), icon.png (128), points.png (96), frame.png (128).
+   A tabela nasce VAZIA: com ela vazia a tela sai igual à de antes, letra por letra. Quando a Arte entregar, ligar SÓ as peças que existem em disco, por tema:
+     const EVT_ART={ cacada_chefes:{bg:1,icon:1,points:1,frame:1} };
+   bg     = fundo da tela inteira, com um véu escuro por cima (o banner e os cartões continuam com o fundo deles; o texto solto fica sobre o véu);
+   icon   = ícone do tema: no banner (canto de cima, ao lado do selo ATIVO / CARÊNCIA / EM BREVE) e na lista de eventos (no lugar do ícone geral);
+   points = troca a ficha desenhada por código (evtTok) nos três lugares: caixa do saldo, botão da vitrine e botões da loja;
+   frame  = troca o desenho de evtFrame no marco do grande prêmio da trilha.
+   RESERVA: toda <img> daqui leva onerror="evtArtFail(this)". A peça que falhar (pacote 'ui:late' ainda não chegou, arquivo faltando) é marcada em XEVT.artBad e a
+   tela é redesenhada com o desenho por código; a marca vale até a tela ser aberta de novo (aí tenta outra vez). Se o pacote já chegou mas mora em outra pasta,
+   o js/latepack.js troca o endereço antes de a reserva agir. Ao abrir, as peças ligadas dos eventos do calendário entram na pré-carga (evtArtPre). */
+const EVT_ART={};
+const EVT_ARTF={bg:'bg.jpg',icon:'icon.png',points:'points.png',frame:'frame.png'};
+function evtArt(base,k){ const a=Object.prototype.hasOwnProperty.call(EVT_ART,base)?EVT_ART[base]:null; if(!a||!a[k]||!EVT_ARTF[k]||!/^[a-z0-9_]+$/.test(base)) return '';
+  const p='assets/events/'+base+'/'+EVT_ARTF[k]; return XEVT.artBad&&XEVT.artBad[p]?'':p; }
+const evtArtImg=(p,attrs)=>'<img '+attrs+' src="'+p+'" data-art="'+p+'" alt="" aria-hidden="true" onerror="evtArtFail(this)">';
+/* reserva: marca a peça e redesenha a tela UMA vez (várias falhas juntas = um redesenho só), guardando a rolagem */
+function evtArtFail(im){ try{ const p=im&&im.getAttribute?im.getAttribute('data-art'):''; if(!p) return false; const B=XEVT.artBad||(XEVT.artBad={}); if(B[p]) return false; B[p]=1; if(XEVT.artT) return true;
+    XEVT.artT=setTimeout(()=>{ XEVT.artT=null; try{ if(!(window.Panels&&Panels.cur&&Panels.cur()===Panels.defs.events)) return; let top=0; try{ const sc=V.querySelector('.x-scroll'); top=sc?sc.scrollTop:0; }catch(e){}
+      render(); try{ const s2=V.querySelector('.x-scroll'); if(s2) s2.scrollTop=top; }catch(e){} }catch(e){} },0); return true; }catch(e){ return false; } }
+/* as peças ligadas (e não marcadas como falha) dos eventos que a tela pode mostrar agora */
+function evtArtList(){ const out=[]; try{ const evs=(window.Sys&&Sys.events&&Sys.events.DATA&&Sys.events.DATA.events)||[]; for(const ev of evs){ const b=evtBase(ev); for(const k in EVT_ARTF){ const p=evtArt(b,k); if(p&&out.indexOf(p)<0) out.push(p); } } }catch(e){} return out; }
+/* pré-carga ao abrir (window.Preload do js/preload.js), sem travar a abertura. Peça de pacote que ainda não chegou fica de fora (a reserva cuida dela) */
+function evtArtPre(){ try{ const A=window.Sys&&Sys.assets, P=window.Preload; const l=evtArtList().filter(p=>!A||typeof A.isReady!=='function'||A.isReady(p)).map(p=>A&&typeof A.url==='function'?A.url(p):p);
+    if(l.length&&P&&typeof P.ready==='function') P.ready(l,{timeout:6000}); return l; }catch(e){ return []; } }
 const EVT_START=[7,81], EVT_NODES=[[27,81],[53,81],[82,81],[75,53],[48,53],[21,53],[26,25],[53,25],[82,25]];   /* caminho em serpente do protótipo (só desenho) */
 const EVT_RN=['Básico','Raro','Épico','Mítico','Lendário','Prismático'];
 const EVT_RC=['#9aa0a6','#4aa3ff','#b45cff','#ff4d6d','#ffb21e','#8ff5ff'];
@@ -248,6 +273,9 @@ const EVT_CSS=`.pz{position:relative;flex:1;min-height:0;display:flex;flex-direc
 @keyframes pzbhit{0%{filter:none}20%{filter:brightness(2.8) saturate(0);transform:translateX(8px)}100%{filter:none;transform:none}}
 .pz-bdp{position:absolute;right:18%;top:22%;font-family:'Lilita One',sans-serif;line-height:1;white-space:nowrap;z-index:5;animation:pzbdp 1.4s ease-out both;pointer-events:none;text-shadow:0 3px 0 #3a0d0a,0 0 10px #000}
 @keyframes pzbdp{0%{opacity:0;transform:scale(.4)}15%{opacity:1;transform:scale(1.3)}30%{transform:scale(1)}80%{opacity:1;transform:translateY(-24px)}100%{opacity:0;transform:translateY(-36px)}}
+.pz-bgi{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;z-index:0;pointer-events:none}
+.pz-bgv{position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(22,17,13,.55) 0%,rgba(22,17,13,.8) 42%,rgba(22,17,13,.92) 100%)}
+.pz-bic{width:36px;height:36px;flex:none;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
 @media (prefers-reduced-motion:reduce){.pz *,.pz *::after{animation:none!important}}`;
 
 /* ---------- leituras do Sys.events isoladas (reserva segura se o módulo não estiver carregado) ---------- */
@@ -312,7 +340,7 @@ function etRw(rw){ const a=[]; if(!rw) return ''; if(rw.goldk) a.push('Ouro'); i
 const EVT_FRAMEC={festival:['#8a4dff','#ffc94a'],cacada:['#d8362a','#ffb04a'],forja:['#e0701a','#ffd27a'],pets:['#22a86a','#ffe07a']};   /* [miolo, cantos] */
 const evtFrame=(k,th)=>{ const c=EVT_FRAMEC[k]||(th&&th.tok?[th.tok,th.bd||'#ffc94a']:EVT_FRAMEC.festival); return '<svg class="pz-bob" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="#ffe07a" stroke-width="2.6"></rect><rect x="7" y="7" width="10" height="10" rx="2" fill="'+c[0]+'" stroke="#fff3c4" stroke-width="1.2"></rect><circle cx="3.5" cy="3.5" r="1.8" fill="'+c[1]+'"></circle><circle cx="20.5" cy="20.5" r="1.8" fill="'+c[1]+'"></circle></svg>'; };
 const EVT_FRAME=evtFrame('festival');
-function etIc(rw,th){ rw=rw||{}; if(rw.frame) return evtFrame(rw.frame,th); if(rw.essence) return evtSvgIc('ess'); if(rw.forge) return evtSvgIc('stone'); if(rw.food) return evtSvgIc('food'); return '<img class="pz-cspin" src="assets/ui/coin.png" alt="">'; }
+function etIc(rw,th,base){ rw=rw||{}; if(rw.frame){ const p=evtArt(base,'frame'); return p?evtArtImg(p,'class="pz-bob"'):evtFrame(rw.frame,th); } if(rw.essence) return evtSvgIc('ess'); if(rw.forge) return evtSvgIc('stone'); if(rw.food) return evtSvgIc('food'); return '<img class="pz-cspin" src="assets/ui/coin.png" alt="">'; }
 /* posições dos marcos no mini-mapa: serpente de baixo para cima, 3 por linha (a do protótipo para 9 marcos) */
 function etPos(n){ const rows=Math.max(1,Math.ceil(n/3)), out=[];
   for(let i=0;i<n;i++){ const r=Math.floor(i/3), k=i%3, y=rows===1?53:81-r*(56/(rows-1)); out.push([r%2?[75,48,21][k]:[27,53,82][k],+y.toFixed(1)]); } return out; }
@@ -337,6 +365,7 @@ function evtSig(M){ if(!M) return 'x'; if(!M.cur) return 'vazio|'+M.on; const c=
 
 /* ---------- pedaços de desenho ---------- */
 const evtTok=(f,z)=>`<svg ${z?'width="'+z+'" height="'+z+'"':'class="pz-tok" width="32" height="32"'} viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="${f}" stroke="#fff3c4" stroke-width="1.7"></circle><path d="M12 5.5 L13.9 9.6 L18.3 10 L15 13 L16 17.4 L12 15.1 L8 17.4 L9 13 L5.7 10 L10.1 9.6 Z" fill="#ffe07a" stroke="#6a3a08" stroke-width=".9" stroke-linejoin="round"></path></svg>`;
+const evtPt=(th,base,z)=>{ const p=evtArt(base,'points'); return p?evtArtImg(p,z?'width="'+z+'" height="'+z+'" style="object-fit:contain;flex:none"':'class="pz-tok" width="32" height="32" style="object-fit:contain"'):evtTok(th.tok,z); };
 const evtSvgIc=k=>{ const c=EVT_ICS[k]; return `<svg class="pz-bob" viewBox="0 0 24 24"><path d="${c.p[0]}" fill="${c.f1}" stroke="${c.st}" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"></path><path d="${c.p[1]}" fill="${c.f2}" stroke="${c.st}" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"></path><circle class="pz-bubl" cx="${c.b[0]}" cy="${c.b[1]}" r="${c.b[2]}" fill="#fff" opacity=".9"></circle></svg>`; };
 const evtEra=()=>{ try{ return Math.max(0,Math.min(6,(S.era|0))); }catch(e){ return 0; } };
 /* como cada recompensa aparece: ícone, rótulo (só o que o módulo sabe) e cor da moldura */
@@ -354,7 +383,7 @@ const evtRc=r=>r>=0?EVT_RC[r]:'#6b5843', evtRg=r=>r>=0?EVT_RG[r]:'rgba(154,160,1
 function evtSkinName(x){ const m=/"([^"]+)"/.exec(x.txt||''); return m?m[1]:x.txt; }
 function evtSkinKind(x){ const i=(x.txt||'').indexOf('"'); return i>0?x.txt.slice(0,i).trim():'Skin'; }
 
-function evtBanner(M,th){ const c=M.cur, ev=c.ev, days=Math.round((evtMs(ev.end)-evtMs(ev.start))/86400000);
+function evtBanner(M,th){ const c=M.cur, ev=c.ev, icp=evtArt(evtBase(ev),'icon'), days=Math.round((evtMs(ev.end)-evtMs(ev.start))/86400000);
   const sub=c.st==='gr'?'Encerrado · use seus pontos na loja antes de sumirem':(isFinite(days)&&days>0?days+' dias · ':'')+'missões e loja de pontos';
   const lbl=c.st==='on'?'Termina em':c.st==='gr'?'Pontos valem por mais':(c.endsAt?'Começa em':'Abre');
   let clk='', aria=lbl;
@@ -365,7 +394,7 @@ function evtBanner(M,th){ const c=M.cur, ev=c.ev, days=Math.round((evtMs(ev.end)
     <div class="pz-rays"></div>${conf}
     <span class="pz-spark" style="left:46%;top:18%"></span><span class="pz-spark" style="left:88%;top:12%;animation-delay:.7s"></span><span class="pz-spark" style="left:70%;top:60%;animation-delay:1.3s"></span>
     <div class="pz-stg" aria-hidden="true"><span class="pz-ped"></span><div class="pz-au13 pz-aur"></div><div class="pz-kid pz-hero"></div></div>
-    ${({on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'})[c.st]?`<span data-bst="${c.st}" style="position:absolute;right:10px;top:10px;z-index:3"><span class="pz-tag ${c.st}" style="box-shadow:0 2px 6px rgba(0,0,0,.5)">${({on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'})[c.st]}</span></span>`:''}
+    ${({on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'})[c.st]?`<span data-bst="${c.st}" style="position:absolute;right:10px;top:${icp?'6px;display:flex;align-items:center;gap:5px':'10px'};z-index:3">${icp?evtArtImg(icp,'class="pz-bic"'):''}<span class="pz-tag ${c.st}" style="box-shadow:0 2px 6px rgba(0,0,0,.5)">${({on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'})[c.st]}</span></span>`:''}
     <div class="pz-btxt"><span style="display:flex;flex-direction:column;gap:3px"><span class="pz-btitle">${evtEsc(ev.name)}</span><span class="pz-ol" style="font-size:12.5px;font-weight:900;color:#fff;line-height:1.2">${evtEsc(sub)}</span></span>
       <span class="pz-timer" role="timer" aria-label="${evtEsc(aria)}"><svg class="pz-hg" width="15" height="20" viewBox="0 0 12 16" aria-hidden="true"><path d="M1 1 H11 M1 15 H11" stroke="#c77a12" stroke-width="1.6" stroke-linecap="round"></path><path d="M2.2 1.5 C2.2 5.5 5.2 6.6 5.6 8 C5.2 9.4 2.2 10.5 2.2 14.5 H9.8 C9.8 10.5 6.8 9.4 6.4 8 C6.8 6.6 9.8 5.5 9.8 1.5 Z" fill="rgba(255,240,200,0.12)" stroke="#ffe07a" stroke-width="0.9"></path><path class="pz-sT" d="M3.4 3.2 H8.6 C8 5.6 6.4 6.6 6 7.4 C5.6 6.6 4 5.6 3.4 3.2 Z" fill="#ffc94a"></path><path class="pz-sB" d="M3 14 C3.4 11.6 5.2 10.6 6 10.4 C6.8 10.6 8.6 11.6 9 14 Z" fill="#ffc94a"></path></svg>
         <span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><span style="font-size:10px;font-weight:800;color:#e8dccb;white-space:nowrap">${lbl}</span><span class="pz-lil" style="font-size:16px;color:#ffe07a;font-variant-numeric:tabular-nums;white-space:nowrap">${clk}</span></span></span></div></div>`; }
@@ -380,7 +409,7 @@ function etTrail(M,th){ const T=M.tr, c=M.cur, pre=!c.live, n=T.milestones.lengt
   const nodes=T.milestones.map((m,i)=>{ const big=!!(m.reward&&m.reward.frame)||i===last, go=m.reached&&!m.claimed, rc=big?'#ffb21e':th.a, rg=big?'rgba(255,178,30,.75)':(th.vit||'rgba(176,124,255,.6)'), p=NP[i];
     const st=m.claimed?'resgatado':go?'pronto para resgatar':pre?'prévia':'faltam '+Math.max(0,m.at-T.earned)+' pontos';
     return `${big?`<span class="pz-ndr" style="left:${p[0]}%;top:${p[1]}%;--rg:${rg}"></span>`:''}<button data-x="node" data-at="${m.at}" class="pz-nd${big?' big':''}${go?' go':m.claimed?' done':m.reached?'':' lock'}" aria-label="${evtEsc(m.name)}: ${evtEsc(etRw(m.reward))}, marco de ${m.at} pontos, ${st}" style="left:${p[0]}%;top:${p[1]}%;--rc:${rc};--rg:${rg};animation-delay:${(i*.09).toFixed(2)}s">
-      <span class="pz-ni" aria-hidden="true">${etIc(m.reward,th)}</span><span class="pz-npt">${evtN(m.at)}</span>
+      <span class="pz-ni" aria-hidden="true">${etIc(m.reward,th,evtBase(c.ev))}</span><span class="pz-npt">${evtN(m.at)}</span>
       ${m.claimed?'<span class="pz-nck"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 7"></polyline></svg></span>':''}${go?'<span class="pz-nbg" aria-hidden="true">!</span>':''}</button>`; }).join('');
   const list=T.milestones.map(m=>{ const go=m.reached&&!m.claimed;
     return `<div class="pz-ms${go?' go':m.claimed?' done':''}"><span style="min-width:0;display:flex;flex-direction:column;line-height:1.15"><span style="font-size:13px;font-weight:900">${evtEsc(m.name)} <span style="color:#c9b9a2;font-weight:800">· ${evtN(m.at)} pts</span></span><span style="font-size:11.5px;font-weight:800;color:#e8dccb">${evtEsc(etRw(m.reward))}</span></span>
@@ -438,12 +467,12 @@ function evtShop(M,th){ const c=M.cur, open=M.shopOpen, D=Sys.events.DATA;
   if(M.vit){ const x=M.vit, out=x.bought>=x.limit, hue=EVT_SKHUE[x.reward.skin]||'250deg', nm=evtSkinName(x);
     vit=`<div class="pz-vit" style="--vg:${th.vit}"><div class="pz-vst" aria-hidden="true"><span class="pz-vr"></span><span class="pz-spark" style="left:12%;top:16%"></span><span class="pz-spark" style="left:82%;top:24%;animation-delay:.7s"></span><span class="pz-spark" style="left:66%;top:70%;animation-delay:1.3s"></span><span class="pz-ped"></span><div class="pz-au13 pz-aur" style="filter:hue-rotate(${hue}) saturate(1.3)"></div><div class="pz-kid pz-hero" style="filter:hue-rotate(${hue}) saturate(1.3)"></div></div>
       <div class="pz-vinfo"><span class="pz-rib">PRÊMIO PRINCIPAL</span><span class="pz-lil pz-ol" style="font-size:21px;line-height:1.05;color:#fff">${evtEsc(nm)}</span><span class="pz-note" style="font-size:11.5px">${evtEsc(evtSkinKind(x))} · só visual, nunca dá atributo</span><span class="pz-lim">limite ${x.bought}/${x.limit} · ${evtN(x.cost)} pontos</span>
-        <button data-x="buy" data-id="${evtEsc(x.id)}" class="pz-buy ${out?'out':x.canBuy?'can':'no'}" aria-label="${evtEsc(nm)}${out?', já comprada':', '+x.cost+' pontos'+(x.canBuy?'':open?', saldo insuficiente':', a loja abre com o evento')}">${out?'Comprada':evtTok(th.tok,18)+evtN(x.cost)}</button></div></div>`; }
+        <button data-x="buy" data-id="${evtEsc(x.id)}" class="pz-buy ${out?'out':x.canBuy?'can':'no'}" aria-label="${evtEsc(nm)}${out?', já comprada':', '+x.cost+' pontos'+(x.canBuy?'':open?', saldo insuficiente':', a loja abre com o evento')}">${out?'Comprada':evtPt(th,evtBase(c.ev),18)+evtN(x.cost)}</button></div></div>`; }
   const pages=Math.max(1,Math.ceil(M.grid.length/EVT_SPER)); XEVT.sPage=Math.max(0,Math.min(XEVT.sPage,pages-1));
   const items=M.grid.slice(XEVT.sPage*EVT_SPER,XEVT.sPage*EVT_SPER+EVT_SPER).map((x,j)=>{ const L=evtLook(x), out=x.bought>=x.limit, nm=x.reward&&x.reward.skin?evtSkinName(x):x.txt;
     return `<div class="pz-it pz-inU${L.r>=2?' hot':''}" style="--rc:${evtRc(L.r)};--rg:${evtRg(L.r)};animation-delay:${j*.06}s,${j*.06}s"><span class="pz-cnr"></span><span class="pz-rlab">${evtEsc(L.lab)}</span>
       <span class="pz-ic" aria-hidden="true"><span class="pz-glow"></span>${L.ic}</span><span class="pz-inm pz-ol">${evtEsc(nm)}</span><span class="pz-lim">limite ${x.bought}/${x.limit}</span>
-      <button data-x="buy" data-id="${evtEsc(x.id)}" class="pz-buy ${out?'out':x.canBuy?'can':'no'}" aria-label="${evtEsc(nm)}${L.lab?', '+evtEsc(L.lab):''}${out?', esgotado':', '+x.cost+' pontos'+(x.canBuy?'':open?', saldo insuficiente':', a loja abre com o evento')}, comprados ${x.bought} de ${x.limit}">${out?'Esgotado':evtTok(th.tok,16)+evtN(x.cost)}</button></div>`; }).join('');
+      <button data-x="buy" data-id="${evtEsc(x.id)}" class="pz-buy ${out?'out':x.canBuy?'can':'no'}" aria-label="${evtEsc(nm)}${L.lab?', '+evtEsc(L.lab):''}${out?', esgotado':', '+x.cost+' pontos'+(x.canBuy?'':open?', saldo insuficiente':', a loja abre com o evento')}, comprados ${x.bought} de ${x.limit}">${out?'Esgotado':evtPt(th,evtBase(c.ev),16)+evtN(x.cost)}</button></div>`; }).join('');
   const arrow=(d,lb,pts,on)=>`<button data-x="spg" data-d="${d}" class="pz-ghost" aria-label="${lb}" style="padding:0" ${on?'':'disabled aria-disabled="true"'}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="${pts}"></polyline></svg></button>`;
   const gd=D.graceDays|0;
   return `${open?'':'<div class="pz-lock" role="note">A loja abre junto com o evento. Prévia:</div>'}${vit}
@@ -497,17 +526,17 @@ function scrEvents(){
   if(!c.live&&XEVT.buy) XEVT.buy=null;
   /* decisão do PO: dentro da tela o nome do evento aparece UMA vez, no banner (que agora leva o selo ATIVO / CARÊNCIA / EM BREVE). A fileira de eventos só
      existe quando há mais de um evento (é o seletor: sem ela não daria para trocar); com um só, ela não é desenhada. */
-  const evs=M.evs.length<2?'':`<div class="pz-evs" role="tablist" aria-label="Eventos">${M.evs.map((x,i)=>`<button data-x="ev" data-id="${evtEsc(x.ev.id)}" class="pz-ev pz-inR" role="tab" aria-selected="${x===c}" aria-label="${evtEsc(x.ev.name)}, ${tag[x.st].toLowerCase()}" style="animation-delay:${i*.06}s"><img src="assets/icons/menu/events.png" alt=""><span style="min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.1"><span style="font-size:12.5px;font-weight:900;overflow-wrap:anywhere">${evtEsc(x.ev.name)}</span><span><span class="pz-tag ${x.st}">${tag[x.st]}</span></span></span></button>`).join('')}</div>`;
+  const evs=M.evs.length<2?'':`<div class="pz-evs" role="tablist" aria-label="Eventos">${M.evs.map((x,i)=>`<button data-x="ev" data-id="${evtEsc(x.ev.id)}" class="pz-ev pz-inR" role="tab" aria-selected="${x===c}" aria-label="${evtEsc(x.ev.name)}, ${tag[x.st].toLowerCase()}" style="animation-delay:${i*.06}s">${(p=>p?evtArtImg(p,'class="pz-evi"'):'<img src="assets/icons/menu/events.png" alt="">')(evtArt(evtBase(x.ev),'icon'))}<span style="min-width:0;display:flex;flex-direction:column;gap:2px;line-height:1.1"><span style="font-size:12.5px;font-weight:900;overflow-wrap:anywhere">${evtEsc(x.ev.name)}</span><span><span class="pz-tag ${x.st}">${tag[x.st]}</span></span></span></button>`).join('')}</div>`;
   const nReady=M.ready.length;
-  const pts=`<div class="pz-pts" style="--t1:${th.t1};--ta:${th.a}"><div class="pz-pbox" role="group" aria-label="${evtEsc(c.ev.points||'Pontos do evento')}: ${c.pts}">${evtTok(th.tok)}<span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saldo</small><b class="pz-lil pz-ol" style="font-size:22px;color:#ffe07a">${evtN(c.pts)}</b></span>${M.tr?`<span style="width:1px;align-self:stretch;background:rgba(255,236,200,.18)"></span><span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap">Ganhos</small><b class="pz-lil pz-ol" style="font-size:22px;color:#fff">${evtN(M.tr.earned)}</b></span>`:''}</div>
+  const pts=`<div class="pz-pts" style="--t1:${th.t1};--ta:${th.a}"><div class="pz-pbox" role="group" aria-label="${evtEsc(c.ev.points||'Pontos do evento')}: ${c.pts}">${evtPt(th,evtBase(c.ev))}<span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Saldo</small><b class="pz-lil pz-ol" style="font-size:22px;color:#ffe07a">${evtN(c.pts)}</b></span>${M.tr?`<span style="width:1px;align-self:stretch;background:rgba(255,236,200,.18)"></span><span style="display:flex;flex-direction:column;line-height:1.05;min-width:0"><small style="font-size:10.5px;font-weight:800;color:#e8dccb;white-space:nowrap">Ganhos</small><b class="pz-lil pz-ol" style="font-size:22px;color:#fff">${evtN(M.tr.earned)}</b></span>`:''}</div>
     <button data-x="misopen" class="pz-mbtn${M.readySum>0?' go':''}" aria-label="Abrir missões do evento${nReady?', '+nReady+' prontas':''}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 H20 M9 12 H20 M9 18 H20"></path><polyline points="3 6 4.5 7.5 7 5"></polyline><polyline points="3 12 4.5 13.5 7 11"></polyline><polyline points="3 18 4.5 19.5 7 17"></polyline></svg>Missões${nReady?`<span class="pz-dot" style="top:-6px;right:-6px">${nReady}</span>`:''}</button></div>`;
   const vDot=M.vit&&M.vit.canBuy?1:0;
   const tabs=`<div class="pz-tabs" role="tablist" aria-label="Seções do evento">${[['Trilha',0,M.tr&&c.live?M.tr.ready:0,M.tr?0:1],['Chefe',1,M.bs&&c.live&&M.bs.open&&!M.bs.killed?M.bs.attemptsLeft:0,M.bs?0:1],['Loja',2,vDot,0]].concat(window.Panels&&Panels.on('minigame')?[['Minijogo',3,(window.PMinigame?PMinigame.alerts():0),0]]:[],window.Panels&&Panels.on('evrank')?[['Ranking',4,0,0]]:[]).map(t=>`<button data-x="tab" data-i="${t[1]}" class="pz-tab" role="tab" aria-selected="${XEVT.tab===t[1]}">${t[0]}${t[3]?'<span class="pz-soon">em breve</span>':''}${t[2]?`<span class="pz-dot">${t[2]}</span>`:''}</button>`).join('')}</div>`;
   const body=XEVT.tab===0?evtTrail(M,th):XEVT.tab===1?evtBoss(M,th):evtShop(M,th);
-  const F=evtFoot(M);
-  V.innerHTML=xWrap(d,XEVT.anim?'f-in':'',`<div class="pz"><div id="pz_scroll" class="x-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:8px 12px 6px;box-sizing:border-box;background:radial-gradient(ellipse at 50% 18%,#2e2040 0%,#1d1611 45%,#16110d 80%)">
+  const F=evtFoot(M), bgp=evtArt(evtBase(c.ev),'bg');   /* fundo pintado: <img> (o js/latepack.js cuida dela) + véu; sem ele, o degradê de sempre */
+  V.innerHTML=xWrap(d,XEVT.anim?'f-in':'',`<div class="pz"${bgp?' style="background:#16110d"':''}>${bgp?evtArtImg(bgp,'class="pz-bgi"')+'<div class="pz-bgv"></div>':''}<div id="pz_scroll" class="x-scroll" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:8px 12px 6px;box-sizing:border-box;background:${bgp?'transparent;position:relative;z-index:1':'radial-gradient(ellipse at 50% 18%,#2e2040 0%,#1d1611 45%,#16110d 80%)'}">
     ${evs}${evtBanner(M,th)}${pts}${tabs}${body}<div style="flex:none;height:2px"></div></div>
-    <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box"><button data-x="foot" data-a="${F.a}"${F.id?` data-id="${evtEsc(F.id)}"`:''} class="pz-gold ${F.cls}" aria-label="${evtEsc(F.lbl)}"><span style="position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${evtEsc(F.lbl)}</span></button></div>
+    <div style="flex:none;padding:8px 12px;padding-bottom:max(12px,env(safe-area-inset-bottom));box-sizing:border-box${bgp?';position:relative;z-index:1':''}"><button data-x="foot" data-a="${F.a}"${F.id?` data-id="${evtEsc(F.id)}"`:''} class="pz-gold ${F.cls}" aria-label="${evtEsc(F.lbl)}"><span style="position:relative;z-index:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${evtEsc(F.lbl)}</span></button></div>
     ${XEVT.mis?evtMisSheet(M,th):''}${XEVT.buy?evtBuySheet(M):''}</div>`);
   XEVT.anim=false; XEVT.sig=evtSig(M);
 }
@@ -594,6 +623,6 @@ Panels.add('events',{title:'Eventos',render:scrEvents,click:evtClick,
       if(M.cur&&M.cur.endsAt){ const k=evtClock(M.cur.endsAt-evtNow()); if(k.sec!==XEVT.sec){ XEVT.sec=k.sec; const el=document.getElementById('pz_sec'); if(el) el.textContent=k.sec; }
         if(k.head!==XEVT.hd){ XEVT.hd=k.head; const eh=document.getElementById('pz_hd'); if(eh) eh.textContent=k.head; } } }catch(e){} },
   busy(){ return false; },
-  onOpen(o){ etStop(); XEVT.tab=etOn()?0:2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; XEVT.mkEv=null; XEVT.anim=true; evtLoadCal();
+  onOpen(o){ etStop(); XEVT.tab=etOn()?0:2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; XEVT.mkEv=null; XEVT.anim=true; XEVT.artBad={}; evtLoadCal(); evtArtPre();
     if(o&&o.event) XEVT.ev=o.event; if(o&&o.missions) XEVT.mis=true; if(o&&(o.tab===0||o.tab===1||o.tab===2)) XEVT.tab=o.tab; },
   onClose(){ etStop(); XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; } });
