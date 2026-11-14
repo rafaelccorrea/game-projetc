@@ -131,7 +131,9 @@ async function medidas({ G, ev, fight, many, show }) { const parts = MEDIDA.spli
       return (w.length + '/' + ok.length) + (w.length ? ' em ' + (w.reduce((a, x) => a + x.sec, 0) / w.length).toFixed(1) + ' s, sobra ' + Math.round(100 * w.reduce((a, x) => a + x.hp, 0) / w.length) + '%' : ' (cai aos ' + (ok.reduce((a, x) => a + x.sec, 0) / Math.max(1, ok.length)).toFixed(0) + ' s)'); };
     const ARR = +(process.env.ARR || 0.87);
     for (const e of eras.split(',').map(Number)) { const s = e * 10 + 10, row = [];
-      for (const [nm, fcm, td] of (process.env.SO_TUDO ? [['TUDO 100%', 1, true], ['TUDO 90%', 0.9, true]] : [['REF 100%', 1, false], ['REF ' + Math.round(ARR * 100) + '%', ARR, false], ['TUDO 100%', 1, true], ['TUDO ' + Math.round(ARR * 100) + '%', ARR, true]])) {
+      /* CASOS=T100,T90,R100,RN100 (recal2): T = com os módulos, R = sem (mesmo progresso: a FC pedida ÷ CALR), RN = sem os módulos com 100% da FC pedida NOVA (fcm × CALR) */
+      const CS = process.env.CASOS ? process.env.CASOS.split(',').map(c => { const m = c.match(/^(T|RN|R)(\d+)$/), p = +m[2] / 100; return m[1] === 'T' ? ['TUDO ' + m[2] + '%', p, true] : m[1] === 'R' ? ['SEM ' + m[2] + '%', p, false] : ['SEM ' + m[2] + '% da FC nova', p * (MR ? MR[e] : 1), false]; }) : null;
+      for (const [nm, fcm, td] of CS ? CS : (process.env.SO_TUDO ?[['TUDO 100%', 1, true], ['TUDO 90%', 0.9, true]] : [['REF 100%', 1, false], ['REF ' + Math.round(ARR * 100) + '%', ARR, false], ['TUDO 100%', 1, true], ['TUDO ' + Math.round(ARR * 100) + '%', ARR, true]])) {
         const r = []; for (let i = 0; i < n; i++) r.push(await fightT(s, fcm, td)); row.push(nm + ': ' + sum(r) + ' [afinidade x' + r[0].aff + ', magias ' + r[0].grim + ', golpes ' + r[0].stk + ']'); }
       P('era ' + e + ' (fase ' + s + ') · ' + row.join(' · ')); }
     return; }
