@@ -401,6 +401,8 @@ function waveClear(){
     let shown=!!(typeof resOpen==='function'&&resOpen('win',{stage:won,loot:lootW,gems:10+(newEra?30:0),newEra:newEra?ne:-1}));
     if(shown&&eraOpts) B.eraPend=eraOpts;
     else if(eraOpts){ try{ shown=Panels.open('era',eraOpts)!==false; }catch(er){ console.error('era',er); } }
+    /* GRIMÓRIO DAS ERAS (Sys.grimoire, chave desligada = {ok:false}): páginas ao vencer o Senhor da Era e o chefe do meio da era ("fase 50"). O módulo decide 1ª vez x repetição (Sistemas 35dbbe6), então a chamada é sempre a mesma */
+    try{ const G=window.Sys&&Sys.grimoire; if(G&&typeof G.grant==='function'){ const ie=((won-1)%STAGES_PER_ERA)+1; if(ie===STAGES_PER_ERA) G.grant(S,Sys.host,'eraLord',{era:oldEra}); else if(ie===Math.round(STAGES_PER_ERA/2)) G.grant(S,Sys.host,'chief50',{era:oldEra}); } }catch(er){ console.error('grimoire',er); }
     /* ENCRUZILHADA (js/p_cross.js, Sys.crossroads; aprovada pelo dono, chaves desligadas): na vitória da fase em que ela abre (fase 5 da era na curva de hoje), a janela das 2 bênçãos entra depois da Vitória */
     try{ if(window.Panels&&typeof Panels.on==='function'&&Panels.on('cross')&&window.Sys&&Sys.crossroads&&typeof Sys.crossroads.onStage==='function'){ const cr=Sys.crossroads.onStage(S,Sys.host,won); if(cr&&cr.due) B.crossPend={stage:won}; } }catch(er){ console.error('cross',er); }
     /* FIM DAS 9 ERAS (tela V2 aprovada, js/p_end9.js; PANEL_ON.end9 nasce desligada): ao vencer a última fase da última era, depois da Vitória. Na fase 90 não há era nova, então não disputa com a Troca de era. Não é fim do jogo: a tela leva à fase seguinte */
