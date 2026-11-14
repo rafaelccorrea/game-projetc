@@ -190,6 +190,9 @@ svg.ic{display:block}
 .mkp .gain{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:12px;background:rgba(127,224,122,.14);border:1px solid rgba(127,224,122,.5);color:#bff5b8;font-weight:900;font-size:14px}
 .mkp .tbox{width:100%;border-radius:12px;background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2);padding:7px 10px;font-size:12px;font-weight:800;line-height:1.35}
 .mkp .tbox b{display:block;font-family:var(--fd);font-weight:400;font-size:19px;color:var(--g2)}
+.cf{position:absolute;z-index:31;left:20px;right:20px;top:280px;border-radius:20px;background:linear-gradient(180deg,rgba(42,30,20,.99),rgba(26,18,12,.99));border:2px solid #ff8a6a;padding:14px 13px 13px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:10px;animation:pop .22s ease-out}
+.cf b{font-family:var(--fd);font-weight:400;font-size:21px;color:#fff;text-align:center;line-height:1.15}
+.cf .row2{display:flex;gap:8px}.cf .row2 .btn{flex:1;min-height:48px;font-size:15px}
 .toast{position:absolute;left:50%;top:96px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.96);border:1px solid rgba(255,236,200,.3);font-weight:900;font-size:12.5px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
 </style>
 
@@ -238,6 +241,7 @@ svg.ic{display:block}
         <li><b>5 marcos</b> de amizade: <b>30 · 100 · 250 · 600 · 1.200</b>. Cada marco dá um <b>atributo pequeno</b> fixo do mentor e <b>uma fala da história</b> (45 no total); o marco 5 dá um <b>título</b> (só enfeite: o atributo já veio dos marcos)</li>
         <li>Atributo por marco: ATK <b>+0,5%</b> · Vida <b>+0,6%</b> · crítico <b>+0,3</b> · redução de dano <b>+0,4%</b> · ouro <b>+2%</b>. Teto com os 9 no máximo: <b>ATK +5%, Vida +6%, crítico +3, defesa +2%, ouro +20%</b></li>
         <li><b>Amizade máxima recusa presente</b> (não gasta peça à toa). Presente é definitivo: a peça sai da mochila</li>
+        <li>Decisão do PO: só peças <b>Básico ou Raro</b> saem com <b>1 toque</b>; com qualquer peça <b>Épica ou melhor</b>, o Dar pede <b>confirmação em 2 toques</b> (Voltar / Dar)</li>
         <li><b>Nada pago, nada sorteado, sem gema</b>. Nada dos Mentores está à venda</li>
       </ul>
     </div>
@@ -310,6 +314,7 @@ const SHORT={atkPct:'ATK',hpPct:'Vida',critPct:'crítico',defPct:'defesa',goldPc
 const BY={}; for(const m of DATA.list) BY[m.era]=m;
 const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
 const ECOL=['#e8955a','#e0c070','#c4ccd8','#5fc0e6','#d9a066','#9cc4f0','#5ee7ff','#ff7a4d','#ffe08a'];
+const RNF=['Básica','Rara','Épica','Mítica','Lendária','Divina'];
 const RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'], RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff0a8'];
 const SLOT={helmet:'Elmo',vest:'Colete',gloves:'Luvas',boots:'Botas',necklace:'Colar',weapon:'Arma'};
 const int0=v=>Math.max(0,Math.floor(typeof v==='number'&&isFinite(v)?v:0));
@@ -332,9 +337,9 @@ const POOL=[{slot:'boots',e:2,r:1,img:'era2_boots'},{slot:'necklace',e:2,r:2,img
   {slot:'boots',e:5,r:2,img:'era5_boots_t1'},{slot:'necklace',e:4,r:3,img:'era4_necklace_t2'},{slot:'vest',e:1,r:2,img:'era1_vest_t1'}];
 
 /* ===== estado (espelho do S.sys.mentors + o que o host dá) ===== */
-const ST={st:'menu',menu:true,lv:34,eraMax:3,me:2,o:null,bag:[],stones:0,food:0,sel:[],gs:0,gf:0,marks:[],mi:0,hl:0,arr:{},titles:[],nid:0,lastToast:''};
+const ST={conf:null,st:'menu',menu:true,lv:34,eraMax:3,me:2,o:null,bag:[],stones:0,food:0,sel:[],gs:0,gf:0,marks:[],mi:0,hl:0,arr:{},titles:[],nid:0,lastToast:''};
 function scenario(){ ST.o={pts:{0:1250,1:640,2:85,3:12},seen:{0:5,1:3,2:1,3:0}}; ST.bag=BAG0.map(x=>Object.assign({},x)); ST.stones=37; ST.food=140; ST.eraMax=3;
-  ST.sel=[]; ST.gs=0; ST.gf=0; ST.marks=[]; ST.mi=0; ST.hl=0; ST.arr={3:true}; ST.titles=['mentor_nara']; ST.nid=0; }
+  ST.sel=[]; ST.gs=0; ST.gf=0; ST.conf=null; ST.marks=[]; ST.mi=0; ST.hl=0; ST.arr={3:true}; ST.titles=['mentor_nara']; ST.nid=0; }
 const ptsOf=era=>int0(ST.o.pts[era]);
 const isOpen=()=>ST.lv>=DATA.needLevel;
 const unlocked=era=>isOpen()&&!!BY[era]&&ST.eraMax>=era;
@@ -470,6 +475,11 @@ function sheetGift(){ const m=BY[ST.me], e=m.era, p=ptsOf(e), add=preview(), k=m
       step('s',STONE,'Pedras de forja',ST.stones,ST.gs,DATA.stonesPer)+step('f',FOOD,'Ração de pet',ST.food,ST.gf,DATA.foodPer)+'</div>'+
     '</div><div class="gfoot"><div class="sum"><span>Presente: <em>+'+add+' de amizade</em></span>'+(k2>k?'<span class="up">Chega ao marco '+k2+'!</span>':'<span>'+nf(p+add)+' / '+nf(DATA.marks[Math.min(k,MAXM-1)])+'</span>')+'</div>'+
     '<button class="btn g wide'+(add?'':' off')+'" data-act="give"'+(add?'':' aria-disabled="true"')+'>Dar presente'+(ST.sel.length?' ('+ST.sel.length+' peça'+(ST.sel.length>1?'s':'')+' sai'+(ST.sel.length>1?'em':'')+' da mochila)':'')+'</button></div></div>'; }
+/* decisão do PO: só Básico/Raro sai com 1 toque; com peça Épica ou melhor, confirmação em 2 toques */
+const heavy=()=>giftable().filter(x=>ST.sel.includes(x.id)&&int0(x.r)>=2);
+function confirmGift(){ if(!ST.conf) return ''; const H=heavy(); if(!H.length) return ''; const top=Math.max(...H.map(x=>int0(x.r)));
+  const msg=H.length===1?'Esta peça '+RNF[top]+' some de vez. Dar mesmo assim?':'Estas '+H.length+' peças (a melhor é '+RNF[top]+') somem de vez. Dar mesmo assim?';
+  return '<div class="dim" data-act="gcancel"></div><div class="cf" role="alertdialog" aria-label="Confirmar presente"><b>'+msg+'</b><div class="row2"><button class="btn" data-act="gcancel">Voltar</button><button class="btn g" data-act="give" data-ok="1">Dar</button></div></div>'; }
 function markPop(){ const x=ST.marks[ST.mi]; if(!x) return ''; const m=BY[ST.me], last=ST.mi>=ST.marks.length-1;
   return '<div class="dim"></div><div class="mkp" role="alertdialog" aria-label="Marco '+x.mark+' com '+esc(m.name)+'"><div class="top"><img class="bg" src="a/mbg_era'+m.era+'.png" alt="">'+por(m.era,false)+'<span class="prov">retrato provisório (Arte)</span></div>'+
     '<div class="in"><span class="k">MARCO '+x.mark+' DE '+MAXM+(ST.marks.length>1?' · '+(ST.mi+1)+' de '+ST.marks.length+' novos':'')+'</span><h3>'+esc(m.name)+' confia mais em você</h3><q>'+esc(x.line)+'</q>'+
@@ -480,7 +490,7 @@ function renderLayer(){ let h='';
   if(ST.st==='menu') h=ST.menu?menuPanel():'';
   else if(ST.st==='gal') h=sheetGal();
   else if(ST.st==='mentor') h=sheetMentor()+markPop();
-  else if(ST.st==='gift') h=sheetGift();
+  else if(ST.st==='gift') h=sheetGift()+confirmGift();
   lay.innerHTML=h; }
 function renderLeft(){ const sheet=ST.st!=='menu'; $('#shot0').src=sheet?'a/eq_hoje.png':'a/v5_hoje.png';
   $('#cap0').innerHTML=sheet?'Hoje<small>print real da folha do Equipamento (mesmo cabeçalho e marrom)</small>':'Hoje<small>print real do jogo (v0.13.3, batalha)</small>';
@@ -498,7 +508,7 @@ function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const 
 /* ===== navegação ===== */
 const REASON={locked:'Esse mentor ainda não chegou',max:'Amizade máxima: não precisa de presente',empty:'Escolha uma peça, pedras ou ração',items:'Essa peça não pode virar presente',stones:'Pedras insuficientes',food:'Ração insuficiente',era:'Mentor inválido'};
 function openMentor(e){ ST.me=e; ST.hl=unseen(e)?markOf(ptsOf(e)):0; seen(e); delete ST.arr[e]; ST.marks=[]; ST.st='mentor'; render(); }
-function resetGift(){ ST.sel=[]; ST.gs=0; ST.gf=0; }
+function resetGift(){ ST.sel=[]; ST.gs=0; ST.gf=0; ST.conf=null; }
 function pick(s){ scenario(); ST.menu=true;
   if(s==='menu'){ ST.st='menu'; }
   else if(s==='gal'){ ST.st='gal'; }
@@ -521,7 +531,8 @@ function act(a,d){ d=d||{}; let r;
   else if(a==='sm'){ ST.gs=Math.max(0,ST.gs-DATA.stonesPer); render(); }
   else if(a==='fp'){ if(ST.gf+DATA.foodPer<=ST.food) ST.gf+=DATA.foodPer; render(); }
   else if(a==='fm'){ ST.gf=Math.max(0,ST.gf-DATA.foodPer); render(); }
-  else if(a==='give'){ r=gift(ST.me,{items:ST.sel.slice(),stones:ST.gs,food:ST.gf}); if(!r.ok){ toast(REASON[r.reason]||'Não deu'); return r; }
+  else if(a==='gcancel'){ ST.conf=null; render(); }
+  else if(a==='give'){ if(!d.ok&&preview()&&heavy().length){ ST.conf={ask:true}; render(); return {ok:false,reason:'confirm'}; } ST.conf=null; r=gift(ST.me,{items:ST.sel.slice(),stones:ST.gs,food:ST.gf}); if(!r.ok){ toast(REASON[r.reason]||'Não deu'); return r; }
     resetGift(); ST.hl=0; ST.st='mentor';
     if(r.newMarks.length){ ST.marks=r.newMarks; ST.mi=0; render(); } else { ST.marks=[]; render(); toast('+'+r.pts+' de amizade com '+BY[ST.me].name); } return r; }
   else if(a==='popnext'){ if(ST.mi<ST.marks.length-1){ ST.mi++; render(); return; } const n=ST.marks.length, lastM=ST.marks[n-1]; seen(ST.me); ST.marks=[]; ST.mi=0; ST.hl=lastM?lastM.mark:0; render(); toast(n>1?n+' falas novas no álbum':'Fala nova guardada no álbum'); } }
