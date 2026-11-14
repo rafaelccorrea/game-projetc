@@ -226,6 +226,7 @@ endereço com número, links e domínios, @ de redes sociais, números longos). 
 - Regras duras: 💎 nunca compra VIP nem Passe Premium; nenhum sorteio pago. O servidor recusa produto que não estiver no catálogo (`products`).
 
 ## 8. Correio do servidor
+- **Ouro no correio** (dono 14/11; fps-server d8234e9): sempre `goldk` (em abates; o jogo multiplica pelo ouro de um abate), no máximo **120 por carta**. `gold` absoluto é RECUSADO (400 `bad_request`, `fields:["gold"]`), assim como `goldk` acima de 120. Vale também para a carta da equipe pelo painel. O `mail.js` do jogo também corta em 120 (`goldkCap`).
 `GET /mail` → `[{ "id", "title", "body", "att", "expiresAt" }]`; `POST /mail/{id}/claim` → `{ "att" }` (o cliente entrega pelo `Sys.loot.grantBundle`).
 O resgate é idempotente (2º resgate → `409 already_claimed`).
 
