@@ -1,0 +1,370 @@
+<title>Eonbound Provação</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Provação do Mestre (js/sys/trial.js, desligado). Sobre o PRINT REAL da batalha de hoje (a/v5_hoje.png, v0.13.3): à esquerda o print puro,
+   à direita a mesma tela com só o que é novo. 4 estados: 1. selo "Teto Nv 10" embaixo do FC (o nível fica no canto de cima à esquerda);
+   2. tela do mestre (folha cheia, cabeçalho marrom como o do Equipamento: Voltar | título | ouro | gemas); 3. faixa da regra embaixo da barra da fase
+   durante a luta; 4. resultado (vitória / derrota). Nenhum ícone na faixa x>=300 entre y 390 e 640. Mesmo padrão de página da Derrota / Encruzilhada. */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --glass:rgba(22,16,12,.78); --gl:rgba(255,236,200,.16); --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2; --brown:#211812; --brown2:#2c2119;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg.mk button{flex:1 1 58px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45}
+.stl b{color:var(--gold)}
+.offs{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.45}
+.offs li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(130,150,255,.14);min-width:0}
+.offs li span{min-width:0;overflow-wrap:anywhere}
+.offs li span:last-child{text-align:right}
+.offs li.cur{color:var(--gold);font-weight:900}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+/* nível simulado por cima do "Nv.1" do print + anel da XP guardada em volta do retrato */
+.ring{position:absolute;z-index:4;left:8px;top:7px;width:64px;height:64px;pointer-events:none}
+.lvp{position:absolute;z-index:5;left:16px;top:56px;width:48px;height:21px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2b52a);border:2px solid #3a2208;color:#3a2208;font-family:var(--fd);font-size:13px;line-height:17px;text-align:center;pointer-events:none}
+/* 1. selo do teto: embaixo do FC, acima do Equip. */
+.seal{position:absolute;z-index:6;left:3px;top:97px;width:76px;height:40px;padding:2px 3px;border-radius:12px;background:var(--glass);border:1.5px solid var(--g2);text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4);animation:sp 1.4s ease-in-out infinite}
+.seal.full{border-color:#ff9a4a}
+.seal.full small:last-child{color:#ffb38a}
+.seal b{display:block;font-family:var(--fd);font-weight:400;font-size:12px;line-height:13px;color:var(--g2);white-space:nowrap}
+.seal small{display:block;font-size:8.5px;line-height:10px;font-weight:900;color:var(--cream);white-space:nowrap}
+.seal[hidden]{display:none}
+@keyframes sp{50%{box-shadow:0 0 0 3px rgba(255,201,74,.35),0 0 16px rgba(255,201,74,.6)}}
+/* 3. faixa da regra na luta: embaixo da barra da fase (x 80-315) */
+.rband{position:absolute;z-index:6;left:80px;top:122px;width:235px;height:44px;border-radius:14px;background:var(--glass);border:1.5px solid var(--g2);display:flex;align-items:center;gap:6px;padding:0 8px 0 5px;box-shadow:0 6px 16px rgba(0,0,0,.4);overflow:hidden}
+.rband svg{width:30px;height:30px;flex:none}
+.rband .tx{flex:1;min-width:0}
+.rband .tx small{display:block;font-size:10px;font-weight:900;color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+.rband .tx b{display:block;font-size:14px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.rband .tm{flex:none;font-family:var(--fd);font-size:21px;color:var(--g2);text-shadow:0 2px 0 #000}
+.rband .tm.low{color:#ff8a6a}
+.rband .bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(0,0,0,.5)}
+.rband .bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb04a,#ffe07a)}
+/* 2. tela do mestre: folha cheia por cima da luta */
+.sheet{position:absolute;inset:0;z-index:20;background:var(--brown);display:flex;flex-direction:column;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.hd{flex:none;height:56px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid rgba(255,236,200,.12);background:#1c140f}
+.back{flex:none;height:44px;padding:0 12px 0 8px;border-radius:14px;border:1.5px solid rgba(255,236,200,.18);background:#241a13;font-weight:900;font-size:15px;display:flex;align-items:center;gap:4px}
+.hd h2{flex:1;min-width:0;margin:0;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;height:32px;padding:0 9px 0 4px;border-radius:16px;background:#2a1f17;border:1.5px solid rgba(255,236,200,.14);display:flex;align-items:center;gap:4px;font-family:var(--fd);font-size:14px;color:#fff}
+.pill img{width:24px;height:24px}
+.bd{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.ms{display:flex;gap:10px;align-items:center}
+.por{position:relative;flex:none;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#5a4026,#1a120c 72%);border:3px solid var(--g2);overflow:hidden}
+.por svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.por span{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-size:8.5px;font-weight:900;color:#2a1403;background:rgba(255,201,74,.9);line-height:13px}
+.mn{min-width:0}
+.mn small{display:block;font-size:11px;font-weight:900;color:var(--mut2);letter-spacing:.3px}
+.mn b{display:block;font-family:var(--fd);font-weight:400;font-size:30px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000}
+.mn i{display:block;font-style:normal;font-size:12.5px;font-weight:800;color:var(--cream)}
+.mn q{display:block;margin-top:4px;font-size:11.5px;font-weight:800;font-style:italic;color:var(--mut2);line-height:1.3}
+.card{border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:8px 10px}
+.card h4{margin:0 0 4px;font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2);display:flex;justify-content:space-between;gap:6px}
+.card h4 span{font-family:var(--fb);font-size:10.5px;font-weight:900;color:var(--mut2);align-self:center;white-space:nowrap}
+.card.rule{background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2)}
+.rl{display:flex;align-items:center;gap:9px}
+.rl svg{width:44px;height:44px;flex:none}
+.rl b{display:block;font-family:var(--fd);font-weight:400;font-size:23px;line-height:1.05;color:#fff;text-shadow:0 2px 0 #000}
+.rl small{display:block;font-size:12px;font-weight:900;color:var(--cream);line-height:1.3}
+.en{display:flex;align-items:center;gap:9px}
+.en .ei{flex:none;width:58px;height:58px;border-radius:12px;background:rgba(0,0,0,.35);display:grid;place-items:center;overflow:hidden}
+.en .ei img{max-width:56px;max-height:56px;object-fit:contain}
+.en .et{min-width:0;font-size:12px;font-weight:800;line-height:1.35}
+.en .et b{color:#fff;font-size:13px}
+.en .et em{font-style:normal;color:#ff9f9f;font-weight:900}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.chip{min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;height:30px;border-radius:15px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12.5px;white-space:nowrap;overflow:hidden}
+.chip img,.chip svg{width:20px;height:20px;flex:none}
+.perm{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:5px 8px;border-radius:11px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);font-size:12px;font-weight:900}
+.perm em{font-style:normal;font-family:var(--fd);font-size:16px;color:#7fe07a;white-space:nowrap}
+.op{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900}
+.op .oi{flex:none;width:36px;height:36px;border-radius:10px;background:rgba(0,0,0,.35);display:grid;place-items:center;overflow:hidden}
+.op .oi img,.op .oi svg{width:32px;height:32px;object-fit:contain}
+.op small{display:block;font-size:10.5px;color:var(--mut2)}
+.cap{font-size:12px;font-weight:800;line-height:1.4}
+.cap em{font-style:normal;color:var(--g2);font-weight:900}
+.ft{flex:none;padding:8px 12px 14px;background:#1c140f;border-top:1px solid rgba(255,236,200,.12);text-align:center}
+.go{width:100%;height:56px;border:0;border-radius:16px;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;font-family:var(--fd);font-size:24px;box-shadow:0 4px 0 #1d5a1c}
+.ft p{margin:7px 0 0;font-size:12px;font-weight:900;color:var(--cream)}
+.ft p span{color:var(--mut2);font-weight:800}
+/* 4. resultado: cartão por cima da luta escurecida */
+.dim{position:absolute;inset:0;z-index:20;background:rgba(6,4,2,.6);animation:fade .2s ease-out}
+@keyframes fade{from{opacity:0}}
+.res{position:absolute;z-index:21;left:12px;right:12px;top:150px;border-radius:20px;background:linear-gradient(180deg,rgba(42,30,20,.98),rgba(26,18,12,.98));border:2px solid var(--g2);padding:12px 11px 12px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px;animation:pop .22s ease-out}
+.res.lose{border-color:#8a6a50}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+.rh{text-align:center}
+.rh b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000}
+.res.lose .rh b{color:#ffb38a}
+.rh small{display:block;margin-top:2px;font-size:12px;font-weight:900;color:var(--cream);line-height:1.3}
+.big{border-radius:14px;background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2);padding:7px 9px;text-align:center}
+.big b{display:block;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;text-shadow:0 2px 0 #000;line-height:1.1}
+.big small{display:block;font-size:11.5px;font-weight:900;color:var(--cream);margin-top:2px}
+.big small em{font-style:normal;color:var(--g2)}
+.free{border-radius:12px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);padding:7px 9px;font-size:12px;font-weight:900;text-align:center;line-height:1.35}
+.tips h4{margin:0 0 4px 2px;font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2)}
+.tg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tip{position:relative;border-radius:14px;background:#2a1f16;border:2px solid #4a3a2b;padding:5px 3px;display:flex;flex-direction:column;align-items:center;min-width:0;min-height:72px;color:#f6ecdf;font-family:inherit}
+.tip.best{border-color:#4aa3ff}
+.tip img,.tip svg{width:26px;height:26px;object-fit:contain}
+.tip b{font-size:11px;font-weight:900;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tip small{font-size:9.5px;font-weight:800;color:#c9b8a2;text-align:center;line-height:1.15}
+.tip .gb{position:absolute;right:3px;top:3px;padding:0 6px;height:18px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-family:var(--fd);font-size:12px;line-height:18px;box-shadow:0 1px 0 #9a5a10}
+.rb{display:flex;gap:6px}
+.rb button{flex:1;min-width:0;height:48px;border-radius:14px;font-weight:900;font-size:14px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb .o{flex:0 0 38%;background:rgba(255,236,200,.06);border:1px solid rgba(255,236,200,.25);color:var(--cream)}
+.rb .g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;font-family:var(--fd);font-size:19px;font-weight:400;box-shadow:0 3px 0 #1d5a1c}
+.toast{position:absolute;left:50%;top:236px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.95);border:1px solid rgba(255,236,200,.25);font-weight:900;font-size:12px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption>Hoje<small>print real do jogo (v0.13.3, batalha)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" src="a/v5_hoje.png" alt="Tela de batalha do jogo hoje: retrato com Nv e FC em cima à esquerda, barra da fase, Equip. e Loja à esquerda, Menu e Baú à direita, golpes embaixo à direita e x1/x2/x4 embaixo à esquerda"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Com a Provação do Mestre<small>a mesma tela; só o que é novo aparece</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <img class="shot" src="a/v5_hoje.png" alt="">
+    <div id="hud"></div>
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Provação do Mestre</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">À esquerda, o <b>print real da batalha de hoje</b>. À direita, <b>a mesma tela</b> com só o que é novo, em 4 momentos: <b>1</b> o selo "Teto" embaixo do FC quando o nível para no marco (o anel em volta do retrato mostra a XP guardada); <b>2</b> a tela do mestre, que abre por cima da luta no mesmo marrom do Equipamento; <b>3</b> a faixa da regra embaixo da barra da fase durante a luta; <b>4</b> o resultado. O print é do Nv 1 na fase 1-1: o nível simulado é desenhado por cima do "Nv.1".</p>
+    <div class="box">
+      <h2>Momento</h2>
+      <div class="seg" role="group" aria-label="Momento"><button data-st="seal" aria-pressed="true">1 · Selo do teto</button><button data-st="master" aria-pressed="false">2 · Tela do mestre</button><button data-st="fight" aria-pressed="false">3 · Faixa na luta</button><button data-st="result" aria-pressed="false">4 · Resultado</button></div>
+      <h3>Marco (a regra muda em ciclo)</h3>
+      <div class="seg mk" role="group" aria-label="Marco de nível"><button data-mk="10" aria-pressed="true">Nv 10</button><button data-mk="20" aria-pressed="false">Nv 20</button><button data-mk="30" aria-pressed="false">Nv 30</button><button data-mk="40" aria-pressed="false">Nv 40</button><button data-mk="50" aria-pressed="false">Nv 50</button><button data-mk="60" aria-pressed="false">Nv 60</button><button data-mk="70" aria-pressed="false">Nv 70</button><button data-mk="80" aria-pressed="false">Nv 80</button><button data-mk="90" aria-pressed="false">Nv 90</button></div>
+      <h3>Resultado da luta</h3>
+      <div class="seg" role="group" aria-label="Resultado"><button data-res="win" aria-pressed="true">Vitória</button><button data-res="lose" aria-pressed="false">Derrota</button><button data-res="late" aria-pressed="false">Venceu fora do tempo</button></div>
+      <h3>XP guardada no teto</h3>
+      <div class="seg" role="group" aria-label="XP guardada"><button data-bank="0.15" aria-pressed="false">Pouca</button><button data-bank="0.5" aria-pressed="true">Metade</button><button data-bank="1" aria-pressed="false">Cheia (1 nível)</button></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Os 9 marcos</h2>
+      <ul class="offs" id="offs"></ul>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/trial.js, desligado)</h2>
+      <ul>
+        <li>A cada <b>10 níveis</b> (10, 20 ... 90) o nível <b>para no marco</b> até vencer a provação. A XP que chega fica <b>guardada até 1 nível</b>; o que passa disso não é guardado. Na vitória, a guardada volta</li>
+        <li>Regra fixa em ciclo: <b>Sem pet · Só 30 s · Sem montaria · Sem magias · Metade da vida</b>. Luta de <b>60 s</b> (30 s na regra do tempo); vencer depois do tempo conta como derrota</li>
+        <li>Mestre = o <b>mentor da era</b> (Nv 10 Nara ... Nv 90 Aurora). Inimigo = chefe da sua fase mais alta com <b>Vida ×1,2</b></li>
+        <li><b>Tentar de novo é grátis e sem limite</b>: sem energia, sem gema, sem anúncio. Perder não custa nada</li>
+        <li>1ª vitória (k = 1, 2, 3 ...): <b>+1% ATK e +1% Vida para sempre</b>, ouro 60 × k × o ouro de um abate, 4 × k pedras de forja, 20 × k ração. Abre funções: <b>Nv 10 automático da Fogueira</b>, Nv 30 troca automática de conjunto</li>
+        <li>Save antigo: o nível nunca desce; as provações que ficaram para trás abrem para pegar o prêmio</li>
+        <li>Retrato do mestre: <b>provisório</b> (silhueta no código); a arte vem depois</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: selo maior, faixa em outro lugar"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), hud=$('#hud'), lay=$('#lay');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>{ v=Math.round(v); if(v>=1e6) return String(Math.round(v/1e5)/10).replace('.',',')+' mi'; if(v>=1e4) return String(Math.round(v/100)/10).replace('.',',')+' mil'; return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); };
+const mmss=s=>Math.floor(s/60)+':'+String(Math.max(0,s)%60).padStart(2,'0');
+
+/* ===== regras: cópia fiel de js/sys/trial.js (DATA) + nomes do js/sys/mentors.js + XP do js/sys/level.js ===== */
+const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
+const MENT=[['Nara','Pintora das Cavernas'],['Tales','Escriba'],['Bertoldo','Ferreiro'],['Inês','Navegadora'],['Otto','Inventor'],['Lia','Aviadora'],['Kira','Engenheira Estelar'],['Caronte','Barqueiro do Submundo'],['Aurora','Astrônoma Celeste']];
+const RULES=[
+  {id:'nopet',   name:'Sem pet',        text:'O pet descansa: só você e o mestre.'},
+  {id:'t30',     name:'Só 30 s',        text:'Vença em 30 segundos.', sec:30},
+  {id:'nomount', name:'Sem montaria',   text:'Lute a pé.'},
+  {id:'nospell', name:'Sem magias',     text:'Só golpes da arma, sem o Grimório.'},
+  {id:'half',    name:'Metade da vida', text:'Comece a luta com 50% da Vida.', hpStart:0.5},
+];
+const DATA={every:10,sec:60,hpMul:1.2,stat:{atkPct:1,hpPct:1},reward:{goldUnits:60,stones:4,food:20},maxLevel:100,
+  opens:{10:[{id:'bonfireAuto',name:'Automático da Fogueira',img:'a/fg_s1.png'}],30:[{id:'loadoutsAuto',name:'Troca automática de conjunto'}]}};
+const XPN=[20,33,46,59,72,85,98,112,125,322,579,836,1094,1351,1609,1866,2123,2381,2638,2895,3153,3410,3668,3925,4217,4259,4301,4343,4385,4427,4470,4512,4554,4596,4638,4681,4723,4765,4807,4849,4891,4934,4976,5018,5060,5102,5144,5187,5229,5271,5313,5355,5398,5440,5482,5524,5566,5608,5651,5693,5735,5777,5819,5861,5904,5946,5988,6030,6072,6708,7846,8983,10120,11258,12395,13532,14670,15807,16945,18082,19219,20357,21494,22631,23769,24906,26043,27181,28318,29455,30593,31730,32868,34005,35142,36280,37417,38554,39692];
+const need=l=>l>=DATA.maxLevel?0:XPN[Math.min(l,99)-1];
+const idxOf=l=>l/DATA.every;
+const rule=l=>Object.assign({sec:DATA.sec,hpStart:1},RULES[(idxOf(l)-1)%RULES.length]);
+const master=l=>{ const e=Math.min(8,Math.max(0,idxOf(l)-1)); return {era:e,name:MENT[e][0],role:MENT[e][1]}; };
+/* fase mais alta simulada: 5ª fase da era do marco; ouro de um abate = js/farm.js goldUnit (4 × 1,15^(fase-1) × 0,32) */
+const stageOf=l=>(idxOf(l)-1)*10+5;
+const goldUnit=st=>Math.max(1,Math.ceil(4*Math.pow(1.15,st-1)*0.32));
+function rewardOf(l){ const k=idxOf(l), u=goldUnit(stageOf(l)); return {k,unit:u,gold:DATA.reward.goldUnits*k*u,stones:DATA.reward.stones*k,food:DATA.reward.food*k,opens:DATA.opens[l]||[]}; }
+const nextCap=l=>Math.min(DATA.maxLevel,l+DATA.every);
+
+const ST={st:'seal',mk:10,res:'win',bankF:0.5,tries:{},left:47,tick:null,won:{}};
+const bankMax=()=>need(ST.mk);
+const bank=()=>Math.round(bankMax()*ST.bankF);
+
+/* ===== ícones desenhados no código ===== */
+const SV=inner=>'<svg class="ic" viewBox="0 0 48 48" aria-hidden="true">'+inner+'</svg>';
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const SLASH='<path d="M8 40L40 8" stroke="#1a110b" stroke-width="8" stroke-linecap="round"/><path d="M8 40L40 8" stroke="#ff5a4a" stroke-width="4.5" stroke-linecap="round"/>';
+const RIC={
+  nopet:SV('<ellipse cx="24" cy="31" rx="10" ry="8" fill="#e8b46a" '+K+'/><circle cx="12" cy="19" r="4.5" fill="#e8b46a" '+K+'/><circle cx="20" cy="12" r="4.5" fill="#e8b46a" '+K+'/><circle cx="29" cy="12" r="4.5" fill="#e8b46a" '+K+'/><circle cx="37" cy="19" r="4.5" fill="#e8b46a" '+K+'/>'+SLASH),
+  t30:SV('<path d="M19 4h10M24 4v6" stroke="#1a110b" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="27" r="17" fill="#ffe07a" '+K+'/><path d="M24 27V15A12 12 0 0136 27z" fill="#f2a826"/><path d="M24 27l6-6" stroke="#1a110b" stroke-width="3" stroke-linecap="round"/><text x="24" y="40" text-anchor="middle" font-size="9" font-weight="900" fill="#3a2208" font-family="Nunito,sans-serif">30</text>'),
+  nomount:SV('<path d="M12 40V22a12 12 0 0124 0v18h-7V22a5 5 0 00-10 0v18z" fill="#b8c4d6" '+K+'/><circle cx="15.5" cy="30" r="1.6" fill="#1a110b"/><circle cx="32.5" cy="30" r="1.6" fill="#1a110b"/>'+SLASH),
+  nospell:SV('<path d="M5 11c7-3 13-2 19 2v28c-6-4-12-5-19-2z" fill="#a98bff" '+K+'/><path d="M43 11c-7-3-13-2-19 2v28c6-4 12-5 19-2z" fill="#c9b4ff" '+K+'/>'+SLASH),
+  half:SV('<path d="M24 42S6 31 6 18a9 9 0 0118-3 9 9 0 0118 3c0 13-18 24-18 24z" fill="#3a2a22" '+K+'/><path d="M24 42S6 31 6 18a9 9 0 0118-3z" fill="#ff5a6e" '+K+'/>'),
+};
+const STONE=SV('<path d="M10 18l14-12 14 12-6 22H16z" fill="#9ab4d6" '+K+'/><path d="M10 18h28M24 6l-6 12 6 22 6-22z" fill="none" stroke="#2a3a5a" stroke-width="2"/>');
+const FOOD=SV('<path d="M30 6c8 0 12 6 12 12 0 8-8 14-16 12l-8 8a5 5 0 11-6-6l8-8c-2-8 2-18 10-18z" fill="#c8673a" '+K+'/><path d="M31 12c4 0 6 3 6 6" stroke="#ffd0a0" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="10" cy="38" r="3" fill="#f6ecdf"/>');
+const SWAP=SV('<path d="M38 17H14l7-8" fill="none" stroke="#1a110b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 31h24l-7 8" fill="none" stroke="#1a110b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M38 17H14l7-8" fill="none" stroke="#7fe07a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 31h24l-7 8" fill="none" stroke="#ffc94a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>');
+const BOOK=SV('<path d="M5 11c7-3 13-2 19 2v28c-6-4-12-5-19-2z" fill="#a98bff" '+K+'/><path d="M43 11c-7-3-13-2-19 2v28c6-4 12-5 19-2z" fill="#c9b4ff" '+K+'/>');
+/* retrato PROVISÓRIO: silhueta (a arte do mestre vem depois) */
+const SIL='<svg viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="40" r="19" fill="#0e0905"/><path d="M14 104c2-26 18-38 38-38s36 12 38 38z" fill="#0e0905"/><text x="52" y="47" text-anchor="middle" font-size="22" font-weight="900" fill="#ffc94a" font-family="Nunito,sans-serif">?</text></svg>';
+const COIN='<img src="a/coin.png" alt="">', GEM='<img src="a/gem.png" alt="">';
+
+/* ===== desenho ===== */
+function ringSvg(f){ const r=28.5, c=2*Math.PI*r, d=Math.max(0,Math.min(1,f))*c;
+  return '<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="'+r+'" fill="none" stroke="#2a2018" stroke-width="5.5"/><circle cx="32" cy="32" r="'+r+'" fill="none" stroke="#ffc94a" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+d.toFixed(1)+' '+c.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'; }
+function renderHud(){ const l=ST.mk, won=!!ST.won[l]; let h='';
+  const lv=won?afterLevel().lvl:l;
+  h+=(won?'':ringSvg(ST.bankF))+'<div class="lvp">Nv.'+lv+'</div>';
+  if(ST.st==='seal'&&!won){ const full=ST.bankF>=1;
+    h+='<button class="seal'+(full?' full':'')+'" data-act="open" aria-label="Teto do Nv '+l+': '+nf(bank())+' XP guardada'+(full?', cheia: o que passar disso não é guardado':'')+'. Toque para abrir a Provação do Mestre"><b>Teto Nv '+l+'</b><small>guardada:</small><small>'+nf(bank())+' XP'+'</small></button>'; }
+  if(ST.st==='fight'){ const r=rule(l), f=Math.max(0,ST.left)/r.sec;
+    h+='<div class="rband" role="status" aria-label="Provação do Mestre, regra '+esc(r.name)+', faltam '+mmss(ST.left)+'">'+RIC[r.id]+'<span class="tx"><small>Provação do Mestre</small><b>'+esc(r.name)+'</b></span><span class="tm'+(ST.left<=10?' low':'')+'">'+mmss(ST.left)+'</span><span class="bar"><i style="width:'+(f*100).toFixed(1)+'%"></i></span></div>'; }
+  hud.innerHTML=h; }
+
+function rewardHtml(l){ const rw=rewardOf(l), k=rw.k;
+  return '<div class="perm">Para sempre:<em>+1% ATK</em><em>+1% Vida</em></div>'+
+    '<div class="chips"><span class="chip">'+COIN+nf(rw.gold)+'</span><span class="chip">'+STONE+'+'+rw.stones+' pedras</span><span class="chip">'+FOOD+'+'+rw.food+' ração</span></div>'; }
+function opensHtml(l){ const o=rewardOf(l).opens; if(!o.length) return '';
+  return o.map(x=>'<div class="op"><span class="oi">'+(x.img?'<img src="'+x.img+'" alt="">':SWAP)+'</span><span>'+esc(x.name)+'<small>abre ao vencer esta provação</small></span></div>').join(''); }
+function afterLevel(){ const l=ST.mk, b=bank(), n=need(l); return b>=n&&l<DATA.maxLevel?{lvl:l+1,rest:b-n}:{lvl:l,rest:b}; }
+
+function masterSheet(){ const l=ST.mk, m=master(l), r=rule(l), k=idxOf(l), st=stageOf(l), t=ST.tries[l]||0, nc=nextCap(l);
+  const op=opensHtml(l);
+  return '<div class="sheet" role="dialog" aria-label="Provação do Mestre do Nv '+l+'">'+
+    '<div class="hd"><button class="back" data-act="close" aria-label="Voltar para a batalha"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Voltar</button><h2>Provação do Mestre</h2><span class="pill">'+COIN+'12</span><span class="pill">'+GEM+'50</span></div>'+
+    '<div class="bd">'+
+      '<div class="ms"><div class="por">'+SIL+'<span>retrato provisório</span></div><div class="mn"><small>PROVAÇÃO DO NV '+l+' · '+k+'ª DE 9</small><b>'+esc(m.name)+'</b><i>'+esc(m.role)+' · mentor'+(/a$/.test(m.name)||m.name==='Inês'?'a':'')+' da era '+esc(ERA[m.era])+'</i><q>Mostre que está pronto para passar do Nv '+l+'.</q></div></div>'+
+      '<div class="card rule"><div class="rl">'+RIC[r.id]+'<div><b>'+esc(r.name)+'</b><small>'+esc(r.text)+' Luta de '+r.sec+' s.</small></div></div></div>'+
+      '<div class="card"><h4>O mestre luta como<span>fase mais alta: '+(Math.floor((st-1)/10)+1)+'-'+(((st-1)%10)+1)+'</span></h4><div class="en"><span class="ei"><img src="a/mboss_era'+m.era+'.png" alt=""></span><div class="et"><b>Chefe da sua fase mais alta</b><br>com <em>Vida ×1,2</em> e o mesmo dano. Vença antes de <b>'+mmss(r.sec)+'</b>.</div></div></div>'+
+      '<div class="card"><h4>Prêmio da 1ª vitória<span>provação '+k+'</span></h4>'+rewardHtml(l)+'</div>'+
+      '<div class="card"><h4>Vencer libera</h4><div class="cap">Teto sobe para o <em>Nv '+nc+'</em>'+(nc>=DATA.maxLevel?' (nível máximo)':'')+' e a XP guardada volta: <em>'+nf(bank())+' XP</em>.</div>'+(op?'<div style="margin-top:6px">'+op+'</div>':'')+'</div>'+
+    '</div>'+
+    '<div class="ft"><button class="go" data-act="fight" aria-label="Lutar contra '+esc(m.name)+', grátis">Lutar</button><p>Tentar de novo é grátis <span>· sem limite, sem energia, sem gema'+(t?' · tentativas: '+t:'')+'</span></p></div>'+
+  '</div>'; }
+
+function tipsHtml(r){ const T=[{img:'a/mi_equipment.png',label:'Equipamento',sub:'Use o melhor',dest:'Equipamento',best:true},{img:'a/mi_forge.png',label:'Forja',sub:'Suba a arma',dest:'Forja'},
+    r.id==='nopet'?{svg:BOOK,label:'Grimório',sub:'Magia mais forte',dest:'Grimório'}:{img:'a/mi_pets.png',label:'Pet',sub:'Evolua o pet',dest:'Pets'}];
+  if(r.id==='nospell') T[2]={img:'a/mi_pets.png',label:'Pet',sub:'Evolua o pet',dest:'Pets'};
+  return '<div class="tips"><h4>Fique mais forte</h4><div class="tg">'+T.map((t,i)=>'<button class="tip'+(t.best?' best':'')+'" data-act="tip" data-dest="'+t.dest+'" aria-label="'+t.label+', '+t.sub+'. Ir para '+t.dest+'"><span class="gb">Ir</span>'+(t.img?'<img src="'+t.img+'" alt="">':t.svg)+'<b>'+t.label+'</b><small>'+t.sub+'</small></button>').join('')+'</div></div>'; }
+
+function resultCard(){ const l=ST.mk, m=master(l), r=rule(l);
+  if(ST.res==='win'){ const a=afterLevel(), nc=nextCap(l), op=rewardOf(l).opens;
+    return '<div class="dim"></div><div class="res" role="dialog" aria-label="Provação vencida">'+
+      '<div class="rh"><b>Provação vencida!</b><small>'+esc(m.name)+' reconhece a sua força · regra '+esc(r.name)+'</small></div>'+
+      '<div class="big"><b>Teto liberado: agora até o Nv '+nc+'</b><small>XP guardada liberada: <em>+'+nf(bank())+' XP</em>'+(a.lvl>l?' · Nv '+l+' → <em>Nv '+a.lvl+'</em>':'')+'</small></div>'+
+      rewardHtml(l)+
+      (op.length?'<div class="free">Abriu: '+op.map(x=>esc(x.name)).join(', ')+'</div>':'')+
+      '<div class="rb"><button class="g" data-act="cont">Continuar</button></div></div>'; }
+  const late=ST.res==='late';
+  return '<div class="dim"></div><div class="res lose" role="dialog" aria-label="O mestre venceu">'+
+    '<div class="rh"><b>'+(late?'Passou do tempo':'O mestre venceu desta vez')+'</b><small>'+(late?'Você venceu depois dos '+r.sec+' s da regra: conta como derrota.':esc(m.name)+' ainda segura o teto do Nv '+l+'.')+'</small></div>'+
+    '<div class="free">Perder não custa nada. Tentar de novo é grátis e sem limite.<br>A XP guardada ('+nf(bank())+' XP) continua esperando.</div>'+
+    tipsHtml(r)+
+    '<div class="rb"><button class="o" data-act="close">Voltar</button><button class="g" data-act="retry">Tentar de novo grátis</button></div></div>'; }
+
+function renderLayer(){ let h='';
+  if(ST.st==='master') h=masterSheet();
+  else if(ST.st==='result') h=resultCard();
+  lay.innerHTML=h; }
+function renderSide(){ const l=ST.mk, r=rule(l), m=master(l), rw=rewardOf(l);
+  $('#stl').innerHTML='Nv <b>'+l+'</b> · mestre <b>'+esc(m.name)+'</b> · regra <b>'+esc(r.name)+'</b> ('+r.sec+' s) · guardada <b>'+nf(bank())+'</b> de '+nf(bankMax())+' XP · ouro da 1ª vitória: 60 × '+rw.k+' × '+rw.unit+' = <b>'+nf(rw.gold)+'</b>'+(ST.won[l]?' · <b>vencida</b>':'');
+  const M=[];for(let x=10;x<DATA.maxLevel;x+=DATA.every) M.push(x);
+  $('#offs').innerHTML=M.map(x=>'<li class="'+(x===l?'cur':'')+'"><span>Nv '+x+' · '+esc(master(x).name)+'</span><span>'+esc(rule(x).name)+' · '+rule(x).sec+' s'+(DATA.opens[x]?' · abre '+esc(DATA.opens[x][0].name):'')+'</span></li>').join(''); }
+function syncPressed(){ document.querySelectorAll('[data-st]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.st===ST.st)));
+  document.querySelectorAll('[data-mk]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.mk===ST.mk)));
+  document.querySelectorAll('[data-res]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.res===ST.res)));
+  document.querySelectorAll('[data-bank]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.bank===ST.bankF))); }
+function render(){ renderHud(); renderLayer(); renderSide(); syncPressed(); }
+function draw(t){ return t; }
+
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2600); }
+
+/* ===== ações ===== */
+function stopTick(){ if(ST.tick){ clearInterval(ST.tick); ST.tick=null; } }
+function setState(s){ stopTick(); ST.st=s;
+  if(s==='fight'){ const r=rule(ST.mk); ST.left=r.sec-13; ST.tick=setInterval(()=>{ if(ST.st!=='fight'){ stopTick(); return; } ST.left--; if(ST.left<=0){ ST.left=0; stopTick(); ST.res='lose'; ST.st='result'; render(); return; } renderHud(); },1000); }
+  render(); }
+function fight(){ ST.tries[ST.mk]=(ST.tries[ST.mk]||0)+1; ST.won[ST.mk]=false; setState('fight'); }
+function finish(res){ ST.res=res; setState('result'); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const a=b.dataset.act;
+  if(a==='open') setState('master');
+  else if(a==='close') setState('seal');
+  else if(a==='fight'||a==='retry') fight();
+  else if(a==='cont'){ ST.won[ST.mk]=true; setState('seal'); toast('Teto agora no Nv '+nextCap(ST.mk)+'. A XP guardada já entrou'); }
+  else if(a==='tip') toast('No jogo, abre a tela '+b.dataset.dest+' no lugar certo'); });
+
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.st){ if(d.st==='fight'){ fight(); return; } if(d.st==='seal') ST.won[ST.mk]=false; setState(d.st); }
+  else if(d.mk){ ST.mk=+d.mk; ST.won[ST.mk]=false; if(ST.st==='fight') setState('fight'); else render(); }
+  else if(d.res){ ST.res=d.res; setState('result'); }
+  else if(d.bank){ ST.bankF=+d.bank; render(); } });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&ST.st==='master') setState('seal'); });
+
+render();
+window.__provacaoTeste={ST,render,setState,fight,finish,rule,master,rewardOf,need,bank,bankMax,afterLevel,nextCap,goldUnit,stageOf,RULES};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-provacao';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Provação do Mestre',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
