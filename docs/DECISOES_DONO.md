@@ -3,6 +3,11 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [x] **Teto de +25% no bônus de ouro** aprovado e aplicado
+- [~] **~40 créditos para as peças pintadas das telas votadas** liberados ("tô ficando meio com medo… dessa vez vou liberar"): teto 38, peças em grade, 1 teste antes de cada grupo, no máximo 1 refação por peça · Arte + PO
+- [~] **Nome da guilda montado pelo jogador** com listas fixas (sem digitar) · Sistemas + Servidor + Engenheiro
+- [x] **"Ultimate" fica como está** por enquanto
+- [?] **Votos A/B** na Tela Inicial, Mentores e nas 6 telas novas · dono vai analisar
 - [~] **Votos do dono (14/11, 01h25-02h25):** Ícones do Grimório, Molduras VIP e Fogueira da Guilda APROVADOS; mocks do Higgsfield escolhidos: Ladrão A, Dupla A, Acampamento B, VIP e Passe B (as versões em código de Acampamento, Mentores e VIP/Passe foram reprovadas). Nota: "tá com risco no meio do perfil" → Engenheiro confere o Perfil. Falta voto: Tela Inicial e Mentores
 - [?] **Teto de +25% no bônus de ouro** (títulos e prática até +10% cada) · dono decide
 - [?] **~30 créditos para as telas novas do LoM** (Relíquias, Escavação, Hoje, Arena PvP, Masmorra, Minijogo) · dono decide
