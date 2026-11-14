@@ -1,4 +1,7 @@
-# Temas novos de evento (para o dono escolher)
+# Temas novos de evento
+
+**DECIDIDO pelo dono (14/11, via PO): os 3.** Ocorrência #2 = Caçada aos Chefes, #4 = Semana da Forja, #6 = Festa dos Pets.
+**Parte da Sistemas FEITA** (ver "Implementado" no fim). Falta: Engenheiro (tela), Arte (fundo, ícones, molduras, skins) e Servidor (seed).
 
 Feito pela Sistemas em 14/11/2026, a pedido do PO. Hoje só existe o tema **Festival das Eras** (`festival_eras`), então o calendário
 (docs/CALENDARIO_EVENTOS.md) repete o Festival 7 vezes. Abaixo, três temas prontos para sair para o Engenheiro assim que o dono escolher.
@@ -43,7 +46,7 @@ Moeda: **Troféus da Caçada**.
   |---|---|---|
   | Skin de arma "Lâmina do Caçador" | 150 | 1 |
   | Moldura "Caçador" | 100 | 1 |
-  | Anel Épico da era atual | 120 | 1 |
+  | Botas Épicas da era atual (o jogo não tem anel) | 120 | 1 |
   | 5 Essências | 40 | 5 |
   | 20 Pedras de Forja | 30 | 5 |
   | 20 Rações | 25 | 5 |
@@ -143,3 +146,17 @@ continuam Festival. Só o prefixo do id muda, e as datas ficam iguais:
 O contador `instance` não é chamado em lugar nenhum: `ptrack` hoje conta kill, boss, ult, chest, forge, upgrade, summon e login.
 Por isso a missão do Festival **"Vença 15 instâncias" nunca completa**. Correção do Engenheiro: `ptrack('instance')` quando a
 instância é vencida e uma vez por varredura. Enquanto não entrar, a Caçada aos Chefes também fica com uma missão sem saída.
+
+## Implementado pela Sistemas (14/11)
+
+- `js/sys/events.js`: os 3 temas em `THEMES` (ids das missões `c_*`, `w_*`, `p_*`; loja como nas tabelas acima). Contadores novos em
+  `EVENTS`: `tower`, `evboss`, `petfeed`, `petlevel` (`Sys.events.EVENTS` exposto).
+- **Skin e moldura escondidas até a arte existir:** a loja tem `needs:'skin'` e `needs:'frame'`. O item só aparece quando o id está em
+  `Sys.events.DATA.ready` (começa vazio). Ids: skins `cacada_weapon`, `forja_weapon`, `forja_armor`; molduras da loja `evt_cacada`, `evt_pets`.
+  - A moldura da loja é entregue por `Sys.profile.grant`. Para vender, ela precisa estar no catálogo do Perfil
+    (`Sys.profile.DATA.frames`, com `need:{grant:true}`); senão a compra recusa com `reason:'profile'` sem gastar ponto.
+  - A moldura do grande prêmio da trilha segue como no Festival (`frame:'cacada'|'forja'|'pets'`, a tela desenha).
+- `js/sys/evtrail.js`: `DATA.events.cacada_chefes|semana_forja|festa_pets` (mesma trilha e ouro do Festival; chefe Rei da Caçada `era3_boss`
+  com bônus 80, Colosso da Bigorna `era4_boss`, Fera Ancestral `era1_boss`; a Arte pode trocar). O ataque ao chefe conta `evboss`.
+- `js/sys/tower.js`: andar vencido conta `tower`. `js/sys/pet.js`: `feed` e `feedTap` contam `petfeed` e `petlevel`. O Engenheiro não liga nada.
+- Teste: `test/sys/events-temas.test.js` (11). `test/sys` 94 de 94.

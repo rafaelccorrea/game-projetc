@@ -171,6 +171,8 @@ const LV=()=>root.Sys&&root.Sys.level;
 const locked=S=>{ const L=LV(); return !!(L&&L.isUnlocked&&!L.isUnlocked(S,'tower')); };
 const lockLevel=()=>{ const L=LV(); return L&&L.unlockLevel?L.unlockLevel('tower'):1; };
 const LOCK='<svg class="sys-lock-ic" viewBox="0 0 24 24" width="40" height="40" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="15.4" r="1.6" fill="#0008"/></svg>';   // cadeado desenhado (sem emoji, pedido do PO)
+/* missões de evento (Caçada aos Chefes: 'Vença 20 andares da Torre'); o Sys.events só conta com evento ativo */
+const evTrack=(S,host,k,n)=>{ const E=root.Sys&&root.Sys.events; if(E&&typeof E.track==='function'){ try{ E.track(S,host,k,n); }catch(e){} } };
 /* desafia o próximo andar. {ok, reason:'tries', win, floor, opp, duel, rewards} */
 function fight(S,host){
   const o=ensure(S,host), f=o.best+1;
@@ -178,7 +180,7 @@ function fight(S,host){
   if(o.lossesLeft<=0) return {ok:false,reason:'tries',floor:f};
   const opp=opponent(f), me=playerStats(S,host), d=duel(me,scaledFoe(me,opp.fc),hash('fight',f,o.fights)); o.fights++;
   const res={ok:true,win:d.win,floor:f,opp,me,duel:d,rewards:null};
-  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host,S)); res.newDrops=ND(S,host,'tower:floor',{floor:f});
+  if(d.win){ o.best=f; o.points+=f; res.rewards=grantRewards(S,host,rewardsFor(f,host,S)); evTrack(S,host,'tower',1); res.newDrops=ND(S,host,'tower:floor',{floor:f});
     const T=root.Sys&&root.Sys.titles; if(T&&T.check) T.check(S,host);
   } else o.lossesLeft--;
   o.last={floor:f,win:d.win,rounds:d.rounds,hp:Math.round((d.win?d.hpA:d.hpB)*100),ts:nowOf(host),name:opp.name};

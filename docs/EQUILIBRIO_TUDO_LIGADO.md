@@ -260,3 +260,13 @@ Leitura: com os módulos o grátis termina as 9 eras no dia ~121 (era 74 sem a r
 (regra A: a dificuldade obriga a evoluir). A diferença para 178 vem de o calendário usar a FC (os módulos ×1,9-2,1 nas eras 6-8) e a luta real
 mostrar que esse poder vale menos no chefe (por isso os fatores 1,67-1,75 já deixam o com módulos em ~30 s). Para chegar perto de 178 teria de
 subir a FC pedida das eras 6-8 e o com módulos passaria de 30 s: decisão do PO/dono.
+
+### 9.2 Decisão do dono (14/11, via PO): calendário perto de 178 dias
+
+- **Decidido:** ir para **~178 dias** no calendário do jogador grátis. As eras 6, 7 e 8 ficam mais duras (sobe a FC pedida).
+- **Aceito:** com os módulos, o Senhor da Era pode passar dos 30 s nessas eras.
+- **Limites que continuam valendo:**
+  - sem módulos, com ~115% da FC pedida, ainda vence;
+  - com módulos (100% da FC) **não pode virar parede**: vence pelo menos 5 de 6 lutas.
+- **Como fazer:** é medida pesada (tools/cal-tudo.js, uma era por vez, e depois o calendário com tools/sim-tudo-ligado.js --dias). Entra na
+  fila do PC depois do QA; a Sistemas espera o PO avisar a vez. Os resultados entram aqui em 9.3.

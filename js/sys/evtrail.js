@@ -27,6 +27,41 @@ const DATA={
         // pontos por ataque pela fração da vida TOTAL do chefe tirada no ataque (local: a vida pessoal)
         bands:[{min:0,pts:10},{min:0.02,pts:15},{min:0.04,pts:20},{min:0.07,pts:25}], killBonus:60},
     },
+    /* TEMAS NOVOS (dono 14/11; docs/EVENTOS_TEMAS.md): mesma trilha (ouro igual ao Festival), só muda a moldura do grande prêmio e o chefe.
+       A arte do chefe é de um chefe que já existe; a Arte pode trocar. */
+    cacada_chefes:{ trail:[
+        {at:50,  reward:{goldk:48},                 name:'Marco 1'},
+        {at:100, reward:{forge:10},                 name:'Marco 2'},
+        {at:150, reward:{food:30},                  name:'Marco 3'},
+        {at:200, reward:{goldk:72, essence:3},      name:'Marco 4'},
+        {at:300, reward:{forge:20, food:40},        name:'Marco 5'},
+        {at:400, reward:{essence:6, goldk:96},      name:'Marco 6'},
+        {at:500, reward:{forge:30, essence:8},      name:'Marco 7'},
+        {at:650, reward:{goldk:120, frame:'cacada'}, name:'Grande prêmio'},
+      ],
+      boss:{name:'Rei da Caçada', art:'era3_boss', attemptsPerDay:2, fightSec:30, localHpFc:60, bands:[{min:0,pts:10},{min:0.02,pts:15},{min:0.04,pts:20},{min:0.07,pts:25}], killBonus:80} },
+    semana_forja:{ trail:[
+        {at:50,  reward:{goldk:48},                 name:'Marco 1'},
+        {at:100, reward:{forge:10},                 name:'Marco 2'},
+        {at:150, reward:{food:30},                  name:'Marco 3'},
+        {at:200, reward:{goldk:72, essence:3},      name:'Marco 4'},
+        {at:300, reward:{forge:20, food:40},        name:'Marco 5'},
+        {at:400, reward:{essence:6, goldk:96},      name:'Marco 6'},
+        {at:500, reward:{forge:30, essence:8},      name:'Marco 7'},
+        {at:650, reward:{goldk:120, frame:'forja'}, name:'Grande prêmio'},
+      ],
+      boss:{name:'Colosso da Bigorna', art:'era4_boss', attemptsPerDay:2, fightSec:30, localHpFc:60, bands:[{min:0,pts:10},{min:0.02,pts:15},{min:0.04,pts:20},{min:0.07,pts:25}], killBonus:60} },
+    festa_pets:{ trail:[
+        {at:50,  reward:{goldk:48},                 name:'Marco 1'},
+        {at:100, reward:{forge:10},                 name:'Marco 2'},
+        {at:150, reward:{food:30},                  name:'Marco 3'},
+        {at:200, reward:{goldk:72, essence:3},      name:'Marco 4'},
+        {at:300, reward:{forge:20, food:40},        name:'Marco 5'},
+        {at:400, reward:{essence:6, goldk:96},      name:'Marco 6'},
+        {at:500, reward:{forge:30, essence:8},      name:'Marco 7'},
+        {at:650, reward:{goldk:120, frame:'pets'}, name:'Grande prêmio'},
+      ],
+      boss:{name:'Fera Ancestral', art:'era1_boss', attemptsPerDay:2, fightSec:30, localHpFc:60, bands:[{min:0,pts:10},{min:0.02,pts:15},{min:0.04,pts:20},{min:0.07,pts:25}], killBonus:60} },
   },
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -90,7 +125,8 @@ function attack(S,host,id){ if(!ON()) return {ok:false,reason:'off'}; if(!evOpen
   const dmg=b.nextDamage; let hp, killed;
   if(provider){ const r=provider.attack(S,host,id,dmg)||{}; if(!r.ok) return {ok:false,reason:r.reason||'server'}; hp=int0(r.hp); killed=!!r.killed; }
   else { s.dmg+=Math.min(dmg,b.hp); hp=Math.max(0,b.hpMax-s.dmg); killed=hp<=0&&!s.killed; }
-  s.att++; let pts=ptsFor(B,dmg/b.hpMax); if(killed){ pts+=B.killBonus; s.killed=true; } s.bossPts+=pts;
+  s.att++; try{ const E=SYS().events; if(E&&typeof E.track==='function') E.track(S,host,'evboss',1); }catch(e){}   // missão 'Ataque o chefe do evento' (Caçada)
+  let pts=ptsFor(B,dmg/b.hpMax); if(killed){ pts+=B.killBonus; s.killed=true; } s.bossPts+=pts;
   const E=SYS().events; if(E&&typeof E.addPoints==='function') E.addPoints(S,host,id,pts,'boss'); else { try{ const o=E.ensure(S); if(!o[id]) o[id]={pts:0,rep:0,p:{},c:[],buys:{}}; o[id].pts=int0(o[id].pts)+pts; }catch(e){} }
   return {ok:true,dmg,pts,killed,hp,hpMax:b.hpMax,attemptsLeft:b.attemptsLeft-1}; }
 

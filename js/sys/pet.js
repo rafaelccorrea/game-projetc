@@ -371,11 +371,14 @@ function evolve(S,id){ const c=canEvolve(S,id); if(!c.ok) return c; ensure(S).ow
 function fcShare(S,host,id){ const F=root.Sys&&root.Sys.fc, o=ensure(S), pid=id||o.eq; if(!F||!F.compute||!BY[pid]) return {now:0,max:0};
   const eq0=o.eq; let now=0; try{ o.eq=null; const base=F.compute(S,host); o.eq=o.owned[pid]?pid:null; const w=o.eq?F.compute(S,host):base; now=w>0?(w-base)/w*100:0; } finally{ o.eq=eq0; }
   const R=BY[pid], pm=DATA.pMax*DATA.rarW[clamp(R.r,0,DATA.rarW.length-1)]; return {now:Math.round(now*10)/10,max:Math.round(pm/(1+pm)*1000)/10}; }
+/* missões de evento (Festa dos Pets: alimentar e subir nível); o Sys.events só conta com evento ativo */
+const evTrack=(S,host,k,n)=>{ const E=root.Sys&&root.Sys.events; if(E&&typeof E.track==='function'){ try{ E.track(S,host,k,n); }catch(e){} } };
 /* RAÇÃO POR TOQUE (17b): põe até `amount` (padrão 25) na barra do próximo nível; sobe quando completa. {ok, given, lvl, fx, need, reason} */
 function feedTap(S,host,id,amount){ const o=ensure(S), pid=id||o.eq, x=o.owned[pid]; if(!V17()) return {ok:false,reason:'off'}; if(!x) return {ok:false,reason:'pet'};
   const c=canFeed(S,host,pid); if(!c.ok&&c.reason!=='food') return {ok:false,reason:c.reason};
   const need=foodCost(x.lvl), give=Math.min(int0(num(amount,DATA.v17.tapFood))||DATA.v17.tapFood,need-int0(x.fx),o.food); if(give<=0) return {ok:false,reason:'food',need};
   o.food-=give; x.fx=int0(x.fx)+give; x.food=int0(x.food)+give; let up=false; if(x.fx>=need){ x.fx=0; x.lvl++; up=true; }
+  evTrack(S,host,'petfeed',1); if(up) evTrack(S,host,'petlevel',1);
   return {ok:true,given:give,up,lvl:x.lvl,fx:x.fx,need:foodCost(x.lvl)}; }
 const locked=S=>{ const L=LV(); if(V20()) return !!(L&&L.level&&L.level(S)<DATA.v20.unlockLevel); return !!(L&&L.isUnlocked&&!L.isUnlocked(S,'pet')); };
 const lockLevel=()=>{ if(V20()) return DATA.v20.unlockLevel; const L=LV(); return L&&L.unlockLevel?L.unlockLevel('pet'):1; };
@@ -435,6 +438,7 @@ function canFeed(S,host,id){ const o=ensure(S), pid=id||o.eq, cur=V3()?(o.owned[
   if(o.food<c) return {ok:false,reason:'food',cost:c}; return {ok:true,reason:'',cost:c}; }
 function feed(S,host,times,id){ let n=0, spent=0, why=''; const max=times===Infinity?1e6:Math.max(1,int0(num(times,1))), pid=id||ensure(S).eq;
   while(n<max){ const c=canFeed(S,host,pid); if(!c.ok){ why=c.reason; break; } const o=S.sys.pet; o.food-=c.cost; if(V3()){ const x=o.owned[pid]; x.lvl++; x.food=int0(x.food)+c.cost; } else o.lvl++; spent+=c.cost; n++; }
+  if(n>0){ evTrack(S,host,'petfeed',n); evTrack(S,host,'petlevel',n); }
   return {ok:n>0,n,spent,reason:n>0?'':why,lvl:V3()&&pid?levelOf(S,pid):ensure(S).lvl}; }
 /* LIBERAR (v3): o pet volta ao Nv 1 e devolve releaseRefund (80%) da ração gasta nele. {ok, reason, refund, from} */
 function canRelease(S,id){ const x=ensure(S).owned[id]; if(!V3()) return {ok:false,reason:'off',refund:0}; if(!x) return {ok:false,reason:'pet',refund:0};
