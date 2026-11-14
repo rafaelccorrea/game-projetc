@@ -88,3 +88,17 @@ Desempenho do DEV: batalha pura janky 0,91% (p95 17 ms); sessão inteira 8,73% (
 - Aviso de FC "+124 mil" aparece sobre o fim do texto de Mentores/Pets (transitório): observação.
 - Missão "Vença 15 instâncias" (9c8de08): vitória na instância chama ptrack('instance',1) uma vez ✓; o contador do Festival não andou porque a fase do evento aqui é "fim" (calendário); varredura não testada. **Falta ver andar com o evento ativo.**
 - **Falta no aparelho (S24 bloqueado):** dificuldade 1-1→10, tutorial passo 3, Derrota, Encruzilhada, Acampamento/Correio/Guilda (9 abas, precisa de sessão), arte pintada, Tela Inicial V2, Ajudar todos, excluir BrasaDourado.
+
+## Entregues em 14/11 (manhã/tarde) e ainda sem o olho do QA (PO)
+
+| Item | Entrega | Testes auto | Equilíbrio | Servidor | Tela/Celular |
+|---|---|---|---|---|---|
+| Dificuldade opção A, eras 0-8 | 0bbd70a, b87e350 | ◐ `diff.js` com alvo novo (115% vence), não rodado | ✓ medida: com módulos 22-34 s; sem módulos 115% vence (eras 3-4 6/6) | n/a | falta (S24 bloqueado) |
+| Calendário ~178 dias (dono) | 3b8d40a (conta) | n/a | **em andamento**: FC eras 6-8 ×1,5; luta parada por memória, refazendo | n/a | n/a |
+| Dupla: cartão sem conexão | correção do Engenheiro (classe .hi) | ✓ fumaça Dupla/Ladrão | n/a | n/a | falta reteste |
+| Mentores sem pacote (reserva) / aviso de FC em Mentores e Pets | Engenheiro | ✓ fumaça Mentores | n/a | n/a | falta reteste |
+| Aquecimento: batalha não desenha atrás de tela cheia | js/battle.js | só node --check | n/a | n/a | falta medir antes/depois |
+| Pacote da loja ≤150 MB (ui:late + compressão sem perda) | 481d134, b43c234 | ✓ `assets.test`, `latepack.smoke` 6 ok · base 125,7 MB pelo manifesto | n/a | n/a | ✓ semlate no headless · falta AAB real e plugin da Play |
+| Ajudar todos + chefe da guilda (desligado) | c40868a, 9336f74 | ✓ fumaças p_guildhelp/p_guild2, guildboss 10/10 | n/a | ✓ GUILDHELP_ON no ar desligada (0c64f11) | falta prévia ?com=guildBoss |
+| 3 temas de evento (dono escolheu os 3) | 6e74bcf, 35abad1 | ✓ events-temas 11/11, tela 18/18 | ✓ ouro igual ao Festival, sem sorteio/diamante | ✓ 06b3369: 04/12 Caçada, 01/01 Forja, 29/01 Pets (v0.15.0) | falta · arte: mocks no voto |
+| Missão "Vença 15 instâncias" do Festival | 9c8de08 | ✓ ptrack chamado | n/a | n/a | falta ver andar com evento ativo |
