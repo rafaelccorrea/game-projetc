@@ -419,3 +419,19 @@ Itens 6, 7 e 8 (P2) do `docs/IDLE_PARECIDOS.md`, aprovados pelo dono. Tudo DESLI
 - Encruzilhada: janela de escolha depois da vitória (2 cartões de bênção com nome, efeito e "vale até o fim da era"; sem botão de rolar de novo), selo no mapa/HUD para encruzilhada aberta, e lista das bênçãos ativas da era (ex.: no painel da era ou no "Como ficar mais forte").
 - Provação do Mestre: selo "Teto Nv 10" na barra de nível quando parado; tela da provação (retrato do mestre, regra, tempo, prêmio e função que abre, botão Lutar grátis); faixa da regra na batalha ("Sem pet · 60 s"); resultado (vitória com prêmio e função aberta / derrota com "Tentar de novo grátis"); lista das provações (vencidas e abertas).
 - Mentores das Eras: galeria dos 9 (trancado = silhueta + era), tela do mentor (retrato, barra de amizade, marcos, álbum de falas), escolha de presentes (peças da mochila com o selo "favorito" da era, pedras e ração com quantidade), janela de marco (fala nova + atributo + título). Retratos: pedido à Arte (sem sensualizar, visual maduro).
+
+### Dupla das Eras no servidor (`duonet.js`, `Sys.duoNet`)
+
+Provider de rede do `Sys.duo` pelo contrato `docs/API_SERVIDOR.md` §16.1 (fps-server 81f2662 e 5023345, chave `DUO_ON`). **DESLIGADO** (`Sys.duoNet.DATA.on=false`): nada sai e o `Sys.duo` segue com o provider local. Teste: `test/sys/duonet.test.js` (9, fetch falso atrás do `Sys.net` de verdade).
+
+| Ponto | Como ficou |
+|---|---|
+| Ligar | `Sys.duo.DATA.on=true`, `Sys.duoNet.DATA.on=true` e, depois do boot online (`Sys.net` com sessão), `Sys.duoNet.start(S,host)`: `GET /v1/duo` → `applyServer` e troca o provider. Falhou (sem rede, `DUO_ON` desligado = 404): fica o local. `refresh(S,host)` ao abrir a tela e de tempos em tempos (manda antes `POST /duo/progress` com os TOTAIS do dia, só se mudou); 404 com o online ligado volta ao local. `stop()` volta ao local. |
+| Ações (Promise) | `invite(code)`, `accept(código)`, `decline(código)`, `leave()`, `block(código?)`, `send(idx)`, `claim(id)`, `friendCode()`. O servidor decide primeiro; com o ok dele roda a mesma função síncrona do `Sys.duo` (o provider online só responde ok com essa autorização) e depois o refresh. Erro: `{ok:false, reason, details, retryAfterMs}`. Com o online ligado, `Sys.duo.*` síncrono direto devolve `reason:'online'`: a tela chama o `Sys.duoNet`. |
+| Ids | Todo id de rota é o CÓDIGO DE AMIGO (8 caracteres), nunca id interno. |
+| Frases | Corpo exatamente `{idx}` (0-17); as regras do `Sys.duo` (5 s, 30/dia, 2 seguidas) são conferidas antes de chamar a rede; não existe parâmetro de texto. |
+| Espera de 24 h | Só quem SAIU: `leftAt` 0 do servidor = sem espera (nunca vira "agora"); com `leftAt` o tempo vem do `relinkLeftMs` (imune à diferença de relógio). |
+| Resgate | O servidor AUTORIZA (§16.1: soma dos dois, presença, 1 por período) e o `Sys.duo` PAGA uma vez. Sem autorização não paga; 409 `claimed` marca sem pagar; resgates do `GET /duo` (`claimed`) viram resgatados e nunca "desresgatam". `duo.js`: com provider online o `claim` aceita a autorização do servidor mesmo com o espelho local atrasado (`r.server===true`); local continua igual (12 testes). |
+| Contadores | `myDay`/`myWeek`/`myDays` do servidor: fica o maior (o teto do dia é o mesmo, `DATA.dayCap`). |
+
+**O que o Engenheiro chama (quando o dono ligar):** carregar `js/sys/duonet.js` depois de `net.js` e `duo.js`; `start` no boot online; a tela da Dupla usa as Promises acima e `Sys.duo.view(S,host)` para desenhar; `Sys.duoNet.state()` traz `code` (o meu código), `invitesLeft`, `msgLeft` e `cap` do servidor.

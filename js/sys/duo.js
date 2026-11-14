@@ -206,8 +206,9 @@ function pay(S,host,rw){ const gold=Math.round(int0(rw.goldK)*goldUnit(host)); i
 function claim(S,host,id){ const g=gate(S,host); if(g) return g; const o=S_(S,host); if(!o.partner) return {ok:false,reason:'none'};
   let st, rw;
   if(id==='daily'){ st=dailyState(o); rw=DATA.daily.reward; } else { st=weeklyState(o).find(x=>x.id===id); if(!st) return {ok:false,reason:'id'}; rw=DATA.weekly.find(m=>m.id===id).reward; }
-  if(st.claimed) return {ok:false,reason:'claimed'}; if(!st.done) return {ok:false,reason:'done'};
+  if(st.claimed) return {ok:false,reason:'claimed'}; if(!st.done&&provider.online!==true) return {ok:false,reason:'done'};
   const r=call('claim',S,host,id); if(!r.ok) return r;
+  if(!st.done&&r.server!==true) return {ok:false,reason:'done'};   // online: quem confere a soma e a presença é o servidor (Sys.duoNet); o espelho local pode estar atrasado
   if(id==='daily') o.day.claimed=true; else o.week.claimed.push(id);
   const reward=pay(S,host,rw); changed(host); return {ok:true,id,reward}; }
 
