@@ -87,7 +87,7 @@ const CSS = `
 @keyframes fgxk1{40%{transform:scale(1.16)}}@keyframes fgxk2{40%{transform:scale(1.16)}}
 @keyframes fgxin{from{opacity:0}}
 @keyframes fgxup{from{transform:translateY(30px);opacity:.3}}
-.fgx-c{position:absolute;left:42px;top:var(--fgct,236px);width:280px;border-radius:16px;background:rgba(29,22,17,.95);border:1.5px solid var(--rc,#6a5a48);padding:8px 9px 9px;box-shadow:0 10px 26px rgba(0,0,0,.5);animation:fgxin .2s ease-out}
+.fgx-c{position:absolute;left:64px;top:var(--fgct,236px);width:262px;border-radius:16px;background:rgba(29,22,17,.95);border:1.5px solid var(--rc,#6a5a48);padding:8px 9px 9px;box-shadow:0 10px 26px rgba(0,0,0,.5);animation:fgxin .2s ease-out}
 .fgx-c.st{padding:8px 10px;text-align:center;font-size:12px;font-weight:900;line-height:1.3;color:#f6ecdf}
 .fgx-r{display:flex;align-items:center;gap:8px;min-width:0}
 .fgx-ic{flex:none;width:46px;height:46px;border-radius:12px;border:2px solid var(--rc,#6a5a48);background:rgba(0,0,0,.45);display:grid;place-items:center}
