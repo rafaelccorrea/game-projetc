@@ -1,6 +1,8 @@
 # Ligações LoM (bloco B): Minijogo de evento, Arena PvP + Brasa, Guilda "Ajudar todos" + chefe na batalha, Masmorra de 3, Ranking de evento
 
-Sistemas, 13/11/2026. Passo a passo para o Engenheiro. Origem: `docs/LOM_VS_EONBOUND.md` §5, itens 12, 14, 15, 16 e 17. O contrato do servidor (rotas, corpos e erros) está em `docs/SERVIDOR_LOM.md`.
+Sistemas, 13/11/2026. Passo a passo para o Engenheiro. Origem: `docs/LOM_VS_EONBOUND.md` §5, itens 12, 14, 15, 16 e 17.
+
+> **Atualizado em 13/11/2026:** a ligação pronta para colar (linha do index.html, SYS_LIVE, Menu e nível, ganchos com arquivo:linha, esqueleto da tela com cada reason e a palavra da tela, online, ordem e fumaça) está em **`docs/LIGACOES_LOM_TELAS.md`**, conferida contra o código de hoje. Onde este guia e aquele discordam, vale o novo. O contrato do servidor (rotas, corpos e erros) está em `docs/SERVIDOR_LOM.md`.
 
 Os 5 módulos novos nascem com a **chave desligada** (`DATA.on=false`). Carregados e desligados, nada muda no jogo. A tela final vem do mock da Arte. A especificação abaixo segue o estilo das telas de hoje: cartões `sys-card`, botão dourado, selo vermelho com número, faixa escura no topo da batalha.
 
@@ -12,10 +14,10 @@ Regras que valem nos cinco:
 
 ## 0. Carregar
 
-No `index.html`, linha 814 (o `forEach` dos módulos `js/sys`), ponha os 5 nomes **antes do `'fc'`**, por exemplo logo depois de `'loadouts'`:
+No `index.html`, linha 814 (o `forEach` dos módulos `js/sys`), ponha os nomes **antes do `'fc'`**, logo depois de `'loadouts'` (o `coopnet` é novo: o provider online das Ruínas em Trio):
 
 ```
-'arenaset','guildboss','coop','eventrank','minigame'
+'arenaset','guildboss','coop','coopnet','eventrank','minigame'
 ```
 
 Nenhum deles tem `bonus()` (nenhum dá poder), então a ordem entre eles não importa. Os nomes no `Sys` são `Sys.arenaSet`, `Sys.guildBoss`, `Sys.coop`, `Sys.eventRank` e `Sys.minigame`.
@@ -95,7 +97,7 @@ Antes de 20/11 a tela mostra "Começa em…".
 3. **Brasa da Arena**: 1 Brasa por vitória, até **5 por dia**. O prêmio da luta já vem com `rewards.brasas` (só quando entrou).
 
 **Onde chamar:**
-1. **Na luta**: nada novo. Se `r.rewards.brasas > 0`, mostre a caixa "+1 Brasa" junto das outras do `paPvPrize` (`js/p_arena.js:608`), com o ícone da Fogueira.
+1. **Na luta**: nada novo. Se `r.rewards.brasas > 0`, mostre a caixa "+1 Brasa" junto das outras do `paPvPrize` (`js/p_arena.js:613`; hoje ele só mostra `gold`, `gems` e `chest`: a linha da Brasa está em `LIGACOES_LOM_TELAS.md` 4(d)), com o ícone da Fogueira.
 2. **Antes da luta (opcional, recomendado)**: `Sys.loadouts.forBattle(S,host,{pvp:true})` troca para o conjunto Arena, se o jogador ligou o "trocar sozinho".
 3. **Aba "Conjunto PvP" na Arena**: `Sys.arenaSet.view(S,host)` → `{on, spells:[{id, name, lv, text}], ownSpells, fromFases, gear, gearSet, pet, mount, mods:{atk, hp, aspd, foe}, brasa:{on, left, cap, got}}`.
    - Mostre as 3 magias com o texto. Se `fromFases`, o selo "usando o conjunto de Fases".
@@ -144,7 +146,7 @@ Antes de 20/11 a tela mostra "Começa em…".
 - Vaga vazia vira retrato de um jogador de FC parecida.
 - **2 entradas por dia**, grátis. Humano sem entrada entra como retrato e não ganha.
 - São 10 andares, com prêmio fixo por andar vencido. A corrida inteira dá 30 fragmentos de relíquia, 22 pedras de prática e 120 `goldk` (tabela em `docs/SERVIDOR_LOM.md` §3.2).
-- Grupo de 3 iguais chega, em média, ao andar 3. Grupo mais forte que a mediana vai mais longe.
+- Inimigo = `max(mediana, média) × 3 × mult` (Sistemas 13/11): um forte não carrega mais duas contas fracas. Grupo de 3 iguais chega, em média, ao andar 3,4.
 
 **Sem servidor:** o provider local deixa jogar sozinho com 2 retratos de mentira e credita na hora. **Com servidor:** o prêmio chega **pelo correio** (carta `coop`), e a resposta só anima (`mailed:true`).
 
@@ -152,7 +154,7 @@ Antes de 20/11 a tela mostra "Começa em…".
 1. Entrada no menu de Instâncias (ao lado da Torre): cartão "Ruínas em Trio · 2/2 hoje", só com `Sys.coop.status(S,host).on`.
 2. `Sys.coop.view(S,host)` → `{on, open, reason:'off'|'level', needLevel, entriesLeft, entriesMax, online, party, invites, lastRun, name, table:[{k, mult, reward}], total, phrases}`.
 3. **Sem online** (`online:false`): botão "Entrar com retratos" → `Sys.coop.start(S,host)` (síncrono). Volta `{ok, runId, floors:[{k, win}], reached, reward, members, entriesLeft}` ou `reason:'limit'`.
-4. **Com online**: o provider do servidor fica numa camada `coopNet`, que ainda não existe (quem escreve é o Servidor ou a Sistemas, depois das rotas). Até lá a tela usa o local. Com o provider:
+4. **Com online**: o provider do servidor é o `Sys.coopNet` (`js/sys/coopnet.js`, chave desligada; servidor `COOP_ON=1`). Com ele:
    - Montar grupo: "Convidar por código" (campo que **só aceita** `A-Z0-9`, de 6 a 10, conferido por `Sys.coop.canInvite(S,host,{friendCode})`) ou "Convidar da guilda" (lista dos membros, com `canInvite(S,host,{guildMemberId})`).
    - Frases: grade com as frases prontas de `view.phrases`; o toque manda o índice. Antes, `Sys.coop.canSay(S,host,idx)` (5 s entre frases, 20 por dia).
    - O líder toca "Começar" → `Sys.coop.start` (Promise do provider), e o resultado passa por `Sys.coop.applyResult` (com `mailed:true` ele não credita).
@@ -181,8 +183,8 @@ Nenhum atributo, nenhum ouro. A posição vem do servidor. O prêmio chega pelo 
    - Sem `online`: "Seus pontos: N · o ranking abre com o online".
    - Com `online`: a minha linha em destaque ("37º de 5.120 · Top 1%"), os 20 primeiros (com a moldura de cada um, se vier) e a tabela de prêmios das 4 faixas, com a miniatura da moldura e o nome do título.
    - Destaque: "Só visual: não dá poder".
-2. Ao abrir a aba: o `GET /events/:id/rank` da camada online (`Sys.net._call`), e depois `Sys.eventRank.applyRank(S,host,resposta)`. A faixa é calculada aqui, não a mandada.
-3. **Correio**: ao resgatar uma carta com `source:'eventrank'`, chame `Sys.eventRank.grantVisual(S,host,att.cosmetic)`. Isso registra e dá a moldura no `Sys.profile`, o título (sem bônus) no `Sys.titles` e guarda o selo. É idempotente.
+2. Ao abrir a aba: `await Sys.eventRank.load(S,host,eventoId)` (faz o `GET /events/:id/rank` e o `applyRank`). A faixa é calculada aqui, não a mandada.
+3. **Correio**: nada a chamar. `Sys.eventRank.fromMail(S,host)` (chamado pelo `view` e no boot) grava o prêmio das cartas `source:'eventrank'` já resgatadas com `Sys.eventRank.grantVisual(S,host,att.cosmetic)`. Isso registra e dá a moldura no `Sys.profile`, o título (sem bônus) no `Sys.titles` e guarda o selo. É idempotente.
 4. **Boot**: depois de carregar o save, chame `Sys.eventRank.sync(S,host)`. Ele re-aplica o que foi ganho (molduras e títulos registrados em tempo de execução).
 5. **Perfil**: mostre a fileira de selos com `Sys.eventRank.badges(S)` → `[{id, name}]`. As molduras aparecem sozinhas na lista do `Sys.profile.frames`, porque o registro põe `need:{grant:true}` e `event:true`.
 

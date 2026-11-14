@@ -81,13 +81,23 @@ function applyRank(S,host,data){ if(!on()) return {ok:false,reason:'off'}; const
 function myPoints(S,ev){ const E=SYS().evtrail; try{ return E&&E.earned?int0(E.earned(S,ev)):0; }catch(e){ return 0; } }
 /* tela do ranking do evento: {on, event, name, points, rank, total, band, bandName, prize (o que a faixa atual daria), next (faixa acima e quantos
    pontos faltam, se o servidor mandou os cortes de pontos), bands (tabela de prêmios), top, online} */
-function view(S,host,ev){ if(!on()) return {on:false}; const id=evId(ev); if(!id) return {on:true,ok:false,reason:'id'}; const o=ensure(S), r=o.ranks[id]||null;
+function view(S,host,ev){ if(!on()) return {on:false}; const id=evId(ev); if(!id) return {on:true,ok:false,reason:'id'}; fromMail(S,host); const o=ensure(S), r=o.ranks[id]||null;
   const table=DATA.bands.map(b=>({id:b.id,name:b.name,prize:prizeFor(id,b.id)})).concat([{id:'part',name:DATA.partName,prize:prizeFor(id,'part')}]);
   const band=r?r.band:null, bn=band?(DATA.bands.find(b=>b.id===band)||{name:DATA.partName}).name:null;
   return {on:true,event:id,name:evName(id),points:r?r.points:myPoints(S,id),rank:r?r.rank:null,total:r?r.total:null,band,bandName:bn,prize:band?prizeFor(id,band):null,
     final:!!(r&&r.final),bands:table,top:r?r.top:[],online:!!r,powerFree:true}; }
 
-const API={DATA,on,setOn,bandOf,cuts,prizeFor,ensure,nameOf,register,grantVisual,sync,badges,applyRank,myPoints,view};
+/* GET /events/:id/rank pela camada online (Sys.net._call) e applyRank. Promise: {ok, band} ou {ok:false, reason ('off'|'id'|'net_off'|'not_found'|...)}.
+   404 = EVENTRANK_ON desligado no servidor ou evento fora da janela: a tela fica no modo 'Seus pontos' (view().online=false). */
+async function load(S,host,ev){ if(!on()) return {ok:false,reason:'off'}; const id=evId(ev); if(!id) return {ok:false,reason:'id'}; const N=SYS().net;
+  if(!N||typeof N._call!=='function') return {ok:false,reason:'net_off'};
+  let d; try{ d=await N._call('GET','/events/'+encodeURIComponent(id)+'/rank'); }catch(e){ return {ok:false,reason:(e&&(e.code||(e.status===404?'not_found':null)))||'error'}; }
+  return applyRank(S,host,d); }
+/* CORREIO SEM GANCHO: as cartas source 'eventrank' JÁ RESGATADAS (por qualquer caminho: tela do Correio, Resgatar tudo, Pegar tudo) gravam o prêmio
+   visual aqui. Idempotente (grantVisual não repete). Chamar no boot e ao abrir a aba Ranking (o view chama sozinho). Devolve quantas cartas leu. */
+function fromMail(S,host){ if(!on()) return 0; const M=SYS().mail; let L=[]; try{ L=M&&M.DATA&&M.DATA.enabled===true&&typeof M.inbox==='function'?M.inbox(S,host):[]; }catch(e){ L=[]; }
+  let n=0; for(const m of L) if(m&&m.source==='eventrank'&&m.claimed&&m.att&&m.att.cosmetic&&typeof m.att.cosmetic==='object'){ const r=grantVisual(S,host,m.att.cosmetic); if(r&&r.ok&&r.fresh.length) n++; } return n; }
+const API={DATA,on,setOn,bandOf,cuts,prizeFor,ensure,nameOf,register,grantVisual,sync,badges,applyRank,myPoints,view,load,fromMail};
 root.Sys=root.Sys||{}; root.Sys.eventRank=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

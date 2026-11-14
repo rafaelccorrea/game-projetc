@@ -27,6 +27,9 @@ const DATA={
   tiers:[{id:'bronze',name:'Bronze',min:300},{id:'prata',name:'Prata',min:550},{id:'ouro',name:'Ouro',min:800}],
   dayReward:{bronze:{forge:3}, prata:{forge:5,food:20}, ouro:{forge:8,food:30,essence:1}},
   milestones:[{days:3,reward:{essence:2}},{days:7,reward:{forge:20}},{days:10,reward:{stones:5}}],
+  /* palavra que a TELA mostra para cada reason (Sys.minigame.why(r)) */
+  why:{off:'Minijogo desligado',soon:'Começa em breve',tries:'Sem tentativas hoje',run:'Nenhuma partida em andamento',tier:'Faça Bronze para ganhar',
+    claimed:'Já resgatado',days:'Ainda faltam dias',id:'Não deu agora'},
 };
 const SYS=()=>root.Sys||{};
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -100,7 +103,13 @@ function view(S,host){ const st=status(S,host); if(!st.open) return st; const o=
     days:o.cyc.days.length,milestones:DATA.milestones.map(m=>({days:m.days,reward:Object.assign({},m.reward),reached:o.cyc.days.length>=m.days,claimed:o.cyc.got.includes(m.days)})),
     event:eventNow(S,host),inRun:!!o.run,paidTries:false}); }
 
-const API={DATA,on,setOn,dayKey,cycleAt,centers,grade,score,tierOf,ensure,status,start,finish,claimDay,claimMilestone,view};
+/* texto curto para o reason (string ou {ok:false, reason}); '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||'Não deu agora'):''; };
+/* número do SELO (botão Minijogo na tela de Eventos): prêmio do dia para resgatar + marcos prontos + 1 se ainda não jogou hoje e tem tentativa.
+   Desligado, antes do 1º ciclo ou sem save: 0. Só leitura (o roll do dia é o mesmo do view). */
+function badge(S,host){ if(!on()||!S) return 0; let v=null; try{ v=view(S,host); }catch(e){ return 0; } if(!v||!v.open) return 0;
+  return (v.canClaim?1:0)+v.milestones.filter(m=>m.reached&&!m.claimed).length+(v.triesLeft>0&&v.best===0?1:0); }
+const API={DATA,on,setOn,dayKey,cycleAt,centers,grade,score,tierOf,ensure,status,start,finish,claimDay,claimMilestone,view,badge,why};
 root.Sys=root.Sys||{}; root.Sys.minigame=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

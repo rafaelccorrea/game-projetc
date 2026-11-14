@@ -4,7 +4,9 @@
    (trilha premium do passe fica de fora, mesmo comprada: o jogador pega na tela do passe). Não cria prêmio: cada resgate é a função do próprio
    módulo, com os tetos dele (ouro ≤ 5 min de abate por resgate, docs/ECONOMIA_OURO.md). Nada aqui tem sorteio próprio.
    Lê os módulos DEFENSIVAMENTE: módulo ausente, desligado ou com erro é pulado (nunca derruba a lista).
-   Tipos de linha: kind 'claim' (entra no Pegar tudo) · kind 'go' (só aviso; o toque abre a tela: host.goTab(tab)).
+   Tipos de linha: kind 'claim' (entra no Pegar tudo) · kind 'go' (só aviso; o toque abre a tela: Panels.open(tab) e, se não for painel, host.goTab(tab)).
+   tab = NOME REAL da tela no jogo (o mesmo do Panels.add / do Menu; o Panels.open troca sozinho para a V2 ligada: mail → mail2, map → map2).
+   tab 'battle' = a coisa mora na própria batalha (Baú, Fogueira, login): o toque fecha a folha e volta para a batalha.
    Sem estado no save (S.sys.today não existe). Sem DOM. Teste: test/sys/today.test.js */
 (function(root){
 'use strict';
@@ -13,6 +15,8 @@ const DATA={
   label:'Hoje', icon:'',
   chestMax:20,        // baús de abate abertos por "Pegar tudo" (o resto fica guardado)
   digFullAt:1,        // picaretas para avisar a Escavação (1 = qualquer picareta)
+  /* palavra que a TELA mostra para cada reason (Sys.today.why(r)) e para a linha bloqueada (blocked) */
+  why:{off:'Lista desligada',empty:'Nada para pegar agora',bag:'Mochila cheia'},
 };
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
@@ -25,7 +29,7 @@ const bagFull=host=>!!(host&&typeof host.bagFull==='function'&&safe(()=>host.bag
 
 /* ---------------- fontes: cada uma devolve {count, ...} ou null (nada agora) e, se for resgate, claim() ---------------- */
 const SOURCES=[
-  {id:'login', icon:'calendar', label:'Login do dia', tab:'login', kind:'claim',
+  {id:'login', icon:'calendar', label:'Login do dia', tab:'battle', kind:'claim',
     peek:(S,h)=>{ const L=SYS().login; if(!L||!L.DATA||L.DATA.enabled!==true||!fn(L,'status')) return 0; return L.status(S,h).canClaim?1:0; },
     claim:(S,h)=>{ const r=SYS().login.claim(S,h); return r&&r.ok?1:0; }},
   {id:'mail', icon:'mail', label:'Correio com prêmio', tab:'mail', kind:'claim',
@@ -45,7 +49,7 @@ const SOURCES=[
   {id:'activity', icon:'activity', label:'Baús da atividade', tab:'missions', kind:'claim',   // depois das missões: os pontos saem delas
     peek:(S,h)=>{ const A=SYS().activity; if(!fn(A,'status')) return 0; const s=A.status(S,h); return s&&s.on?int0(s.ready):0; },
     claim:(S,h)=>{ const r=SYS().activity.claimAll(S,h); return Array.isArray(r)?r.filter(x=>x&&x.ok).length:0; }},
-  {id:'achievements', icon:'trophy', label:'Conquistas', tab:'achievements', kind:'claim',
+  {id:'achievements', icon:'trophy', label:'Conquistas', tab:'missions', kind:'claim',
     peek:(S,h)=>{ const A=SYS().achievements; if(!fn(A,'status')) return 0; const s=A.status(S,h); return s&&s.on?int0(s.ready):0; },
     claim:(S,h)=>{ const r=SYS().achievements.claimAll(S,h); return Array.isArray(r)?r.filter(x=>x&&x.ok).length:0; }},
   {id:'codex', icon:'codex', label:'Coleção: marcos', tab:'codex', kind:'claim',
@@ -64,18 +68,18 @@ const SOURCES=[
       return [].concat(v.daily||[],v.weekly||[]).filter(m=>m&&m.done&&!m.claimed).length; },
     claim:(S,h)=>{ const D=SYS().duo, v=D.view(S,h); let k=0; const ids=[]; if(v.daily&&v.daily.done&&!v.daily.claimed) ids.push('daily');
       for(const m of v.weekly||[]) if(m.done&&!m.claimed) ids.push(m.id); for(const id of ids){ const r=safe(()=>D.claim(S,h,id),null); if(r&&r.ok) k++; } return k; }},
-  {id:'chest', icon:'chest', label:'Baús de abate', tab:'chest', kind:'claim',   // por último: enche a mochila
+  {id:'chest', icon:'chest', label:'Baús de abate', tab:'battle', kind:'claim',   // por último: enche a mochila
     peek:(S,h)=>{ const C=SYS().chest; if(!fn(C,'progress')) return 0; return int0(C.progress(S,h).stored); },
     claim:(S,h)=>{ const C=SYS().chest; let k=0; while(k<DATA.chestMax&&!bagFull(h)){ const r=safe(()=>C.open(S,h),null); if(!r) break; k++; } return k; },
     block:h=>bagFull(h)?'bag':''},
   /* só aviso (gastam entrada/picareta/Brasa ou começam luta) */
-  {id:'instances', icon:'instances', label:'Instâncias: chaves', tab:'instances', kind:'go',
+  {id:'instances', icon:'instances', label:'Instâncias: chaves', tab:'inst', kind:'go',
     peek:(S,h)=>{ const I=SYS().instances; if(!fn(I,'status')) return 0; return int0(I.status(S,h).total); }},
   {id:'thief', icon:'thief', label:'Ladrão de Brasas', tab:'thief', kind:'go',
     peek:(S,h)=>{ const T=SYS().thief; if(!fn(T,'view')) return 0; const v=T.view(S,h); return v&&v.on?int0(v.left):0; }},
   {id:'dig', icon:'dig', label:'Escavação: picaretas', tab:'dig', kind:'go',
     peek:(S,h)=>{ const D=SYS().dig; if(!fn(D,'picks')||!fn(D,'on')||!D.on()) return 0; const p=int0(D.picks(S,h)); return p>=DATA.digFullAt?p:0; }},
-  {id:'bonfire', icon:'fire', label:'Fogueira: Brasas guardadas', tab:'bonfire', kind:'go',
+  {id:'bonfire', icon:'fire', label:'Fogueira: Brasas guardadas', tab:'battle', kind:'go',
     peek:(S,h)=>{ const B=SYS().bonfire; if(!fn(B,'view')) return 0; const v=B.view(S,h); return v&&v.on?int0(v.bra):0; }},
   {id:'relics', icon:'relic', label:'Relíquias para subir', tab:'relics', kind:'go',
     peek:(S,h)=>{ const R=SYS().relics; if(!fn(R,'view')||!fn(R,'on')||!R.on()) return 0; return (R.view(S,h).slots||[]).filter(x=>x.canLevel||x.canUnlock).length; }},
@@ -100,7 +104,9 @@ function claimAll(S,host){ if(!on()) return {ok:false,reason:'off',n:0,by:{},lef
 function view(S,host){ const L=list(S,host); return {on:on(),items:L,claimable:L.filter(x=>x.kind==='claim'&&!x.blocked).length,badge:L.length}; }
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 
-const API={DATA,on,setOn,SOURCES,list,badge,claimable,claimAll,view,bonus};
+/* texto curto para o reason (string ou {ok:false, reason}) ou para item.blocked; '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||'Não deu agora'):''; };
+const API={DATA,on,setOn,SOURCES,list,badge,claimable,claimAll,view,why,bonus};
 root.Sys=root.Sys||{}; root.Sys.today=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

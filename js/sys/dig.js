@@ -33,6 +33,9 @@ const DATA={
     event:   {picks:10, bombs:1, drills:1},   // prêmio fixo de evento
   },
   forbidden:['shop','gems','offer','pack','pay','gacha','ad','ads','refill'],
+  /* palavra que a TELA mostra para cada reason de erro (a tela chama Sys.dig.why(r)) */
+  why:{off:'Escavação desligada',cell:'Já está aberta',blocked:'Cave perto de uma aberta',picks:'Sem picaretas',bombs:'Sem bombas',drills:'Sem brocas',
+    stairs:'Ache a escada primeiro',daily:'Já ganhou hoje',done:'Já ganhou nesta era',forbidden:'Fonte não permitida',src:'Não deu agora',missions:'Complete as missões do dia'},
 };
 
 /* ---------------- utilidades ---------------- */
@@ -88,7 +91,8 @@ function ensure(S,host){
   return o; }
 
 /* picaretas: recarga pelo tempo (relógio para trás só move o marcador) */
-function refill(S,host){ const o=ensure(S,host), now=nowOf(host), ev=EVERY();
+function refill(S,host,noSync){ const o=tick(S,host); if(!noSync&&on()) syncDaily(S,host,o); return o; }
+function tick(S,host){ const o=ensure(S,host), now=nowOf(host), ev=EVERY();
   if(now<o.t){ o.t=now; return o; }
   if(o.e>=DATA.energy.max){ o.t=now; return o; }
   const k=Math.floor((now-o.t)/ev); if(k>0){ o.e=Math.min(DATA.energy.max,o.e+k); o.t=o.e>=DATA.energy.max?now:o.t+k*ev; }
@@ -140,14 +144,22 @@ function descend(S,host){ if(!on()) return {ok:false,reason:'off'}; const o=refi
   return {ok:true,depth:o.depth,round:o.round,era:eraOfDepth(o.depth)}; }
 
 /* fontes FIXAS: grant(S, host, 'daily'|'eraLord'|'event', {era}). Picaretas podem passar do teto da recarga até energy.over. */
-function grant(S,host,src,opt){ if(!on()) return {ok:false,reason:'off'}; if(badSrc(src)) return {ok:false,reason:'forbidden'};
-  const G=DATA.grants[src]; if(!G) return {ok:false,reason:'src'}; opt=opt||{}; const o=refill(S,host);
+function grant(S,host,src,opt){ const r=give(S,host,src,opt); if(r.ok) changed(host); return r; }
+function give(S,host,src,opt){ if(!on()) return {ok:false,reason:'off'}; if(badSrc(src)) return {ok:false,reason:'forbidden'};
+  const G=DATA.grants[src]; if(!G) return {ok:false,reason:'src'}; opt=opt||{}; const o=refill(S,host,true);
   if(G.daily){ const k=dayKey(nowOf(host)); if(o.day.k!==k){ o.day.k=k; o.day.daily=0; } if(o.day.daily>=G.daily) return {ok:false,reason:'daily'}; o.day.daily++; }
   if(src==='eraLord'){ const e=opt.era!=null?clamp(int0(opt.era),0,8):eraMaxOf(host); if(o.lord[e]) return {ok:false,reason:'done'}; o.lord[e]=1; }
   const out={ok:true,src,picks:0,bombs:0,drills:0};
   if(G.picks){ const before=o.e; o.e=Math.min(DATA.energy.over,o.e+G.picks); out.picks=o.e-before; }
   if(G.bombs){ o.bombs+=G.bombs; out.bombs=G.bombs; } if(G.drills){ o.drills+=G.drills; out.drills=G.drills; }
-  changed(host); return out; }
+  return out; }
+/* MISSÕES DO DIA SEM GANCHO: as +5 picaretas entram sozinhas quando o bônus "todas as diárias" do Sys.pass foi resgatado hoje (seja pela tela de
+   Missões, pelo Passe, pelo VIP automático ou pelo "Pegar tudo"). Chamado pelo refill (logo, por view, hit, picks...). 1 vez por dia (o grant 'daily'
+   já guarda). Não chama host.onChange (a leitura da tela não pode redesenhar a tela): o save grava na próxima ação. {ok, picks} ou {ok:false, reason} */
+function syncDaily(S,host,o){ if(!on()) return {ok:false,reason:'off'}; const P=SYS().pass; let done=false;
+  try{ if(P&&typeof P.list==='function'){ const b=P.list(S,host).bonus; done=!!(b&&b.claimed); } }catch(e){ done=false; }
+  if(!done) return {ok:false,reason:'missions'}; o=o||ensure(S,host); const k=dayKey(nowOf(host)); if(o.day.k===k&&o.day.daily>=DATA.grants.daily.daily) return {ok:false,reason:'daily'};
+  return give(S,host,'daily'); }
 
 /* para a tela e para a lista "Hoje": {on, picks, max, nextInMs, bombs, drills, depth, round, era, eraName, maxDepth, atBottom,
    stairsOpen, cols, rows, cells:[{r, c, open, hp, rock, canDig, item (só aberta)}], got, pend, paid:false} */
@@ -162,7 +174,11 @@ function view(S,host){ if(!on()) S=JSON.parse(JSON.stringify(S||{}));   // desli
 const picks=(S,host)=>on()?refill(S,host).e:0;
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 
-const API={DATA,on,setOn,ensure,layout,seedOf,eraOfDepth,maxDepth,refill,nextInMs,hit,bomb,drill,descend,grant,flush,view,picks,bonus,dayKey};
+/* texto curto para o reason (string ou {ok:false, reason}); '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||'Não deu agora'):''; };
+/* "próxima em 18 min" (a tela mostra; 0 = cheia) */
+const nextText=ms=>{ const m=Math.ceil(int0(ms)/60000); return m<=0?'':m>=60?`próxima em ${Math.floor(m/60)} h ${m%60} min`:`próxima em ${m} min`; };
+const API={DATA,on,setOn,ensure,layout,seedOf,eraOfDepth,maxDepth,refill,nextInMs,nextText,hit,bomb,drill,descend,grant,syncDaily,flush,view,picks,bonus,why,dayKey};
 root.Sys=root.Sys||{}; root.Sys.dig=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

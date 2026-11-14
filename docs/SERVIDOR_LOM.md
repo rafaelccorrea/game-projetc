@@ -108,9 +108,9 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 - **Conversa**: só frase pronta da Dupla, por **índice** (0-17). 1 frase a cada 5 s por jogador, até 20 por grupo por dia.
 
 ### 3.2 A corrida (conta determinística; o servidor roda `Sys.coop.run(team, seed)`)
-- `team` = 3 retratos `{ fc }` (FC do retrato da arena). `fcRef` = **mediana** das 3 FCs × 3. `teamPower` = soma das 3 FCs.
+- `team` = 3 retratos `{ fc }` (FC do retrato da arena). `fcRef` = **max(mediana, média) das 3 FCs × 3** (Sistemas 13/11, depois do teste de ponta a ponta: com só a mediana, um forte com duas contas fracas, 5000/300/320, vencia os 10 andares). `teamPower` = soma das 3 FCs.
 - Andares de 1 a 10, em ordem. No andar `k`: `enemy = fcRef × mult[k]`; `x = (teamPower ÷ enemy)^10` (`DATA.steep` = 10); chance `p = x ÷ (x + 1)`; vence se `rng() < p`, com `rng = mulberry32(seed)` (o mesmo `mulberry` do `Sys.arena`), um sorteio por andar. Perdeu um andar, a corrida acaba.
-- Simulado: grupo de 3 iguais chega em média ao andar 3,4; grupo 33% acima da mediana, ao 6,5; o dobro, ao 9,7.
+- Simulado (2.000 corridas): grupo de 3 iguais chega em média ao andar 3,4; forte + fracos (3000/1000/1000 ou 5000/300/320) também ~3,4 (o forte não carrega mais); um fraco no grupo puxa para baixo (1000/1000/400 ~1,4). Como `teamPower` nunca passa de `fcRef`, nenhum grupo fica acima da própria referência: o andar 10 saiu 0 vezes em 2.000, em qualquer grupo (o PO decide se a tabela de `mult` baixa).
 - Prêmio = soma dos andares **vencidos**, para cada humano com entrada. Fixo, sem sorteio no prêmio (só o resultado da luta usa a semente, como na arena).
 
 | Andar | `mult` (inimigo × fcRef) | Fragmentos de relíquia (`relicFrags`) | Pedras de prática (`stones`) | Ouro (`goldk`) |
@@ -128,26 +128,31 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 | **Total (10 andares)** | | **30** | **22** | **120** |
 
 - O ouro de uma corrida inteira é no máximo 120 `goldk` = **um resgate** (teto do `ECONOMIA_OURO`). `relicFrags` = fragmentos genéricos de relíquia (o `Sys.relics` da outra sessão decide para qual relíquia vão; desligado ou ausente, ficam guardados em `S.sys.loot.relicFrags` pelo `Sys.loot.grantBundle`).
-- Entrega: **o SERVIDOR credita pelo correio** para todos os humanos com entrada: carta `source: 'coop'`, `ref: 'r_<runId>:<playerId>'`, `att: { relicFrags, stones, goldk }` (a chave `relicFrags` no correio é do agente das relíquias). O `POST /coop/start` e o `lastRun` do status devolvem `reward` com **`mailed: true`** só para a animação: o `Sys.coop.applyResult` **não credita** quando `mailed: true` (só o provider local, sem servidor, credita na hora).
+- Entrega: **o SERVIDOR credita pelo correio** para todos os humanos com entrada: carta `source: 'coop'`, `ref: '<runId>:<playerId>'` (o `runId` já começa com `r_`, então fica `r_<uuid>:<playerId>`), `att: { relicFrags, stones, goldk }` (a chave `relicFrags` no correio é do agente das relíquias). O `POST /coop/start` e o `lastRun` do status devolvem `reward` com **`mailed: true`** só para a animação: o `Sys.coop.applyResult` **não credita** quando `mailed: true` (só o provider local, sem servidor, credita na hora).
 
 ### 3.3 Rotas
-**`GET /coop/status`** → `{ "day": "2026-11-13", "entriesLeft": 2, "entriesMax": 2, "party": <party> | null, "invites": [ { "partyId": "p_1", "fromName": "Nome", "at": 1763000000000 } ] }`
+**`GET /coop/status`** → `{ "day": "2026-11-13", "entriesLeft": 2, "entriesMax": 2, "party": <party> | null, "invites": [ { "partyId": "p_1", "fromName": "Nome", "at": 1763000000000 } ], "lastRun": <corrida> | null }`
 
-`<party>` = `{ "id": "p_1", "leaderId": "uuid", "members": [ { "playerId": "uuid", "name": "Nome", "fc": 12000, "ghost": false, "entryOk": true } ], "seatsOpen": 1, "chat": [ { "playerId": "uuid", "idx": 3, "at": 1763000000000 } ] }`
+`lastRun` = a última corrida do jogador, no mesmo formato da resposta do `POST /coop/start` (com `ok: true`); o `Sys.coop.applyStatus` passa ela pelo `applyResult` (1 vez por `runId`; com `mailed: true` não credita).
+
+`<party>` = `{ "id": "p_1", "leaderId": "uuid", "members": [ { "playerId": "uuid", "name": "Nome", "fc": 12000, "ghost": false, "entryOk": true } ], "seatsOpen": 1, "sayLeft": 20, "chat": [ { "playerId": "uuid", "idx": 3, "at": 1763000000000 } ] }`
+
+`sayLeft` = frases que ainda **restam ao GRUPO** hoje (volta a 20 no dia novo de Brasília). Vem no `GET /coop/status` e nas respostas de criar e entrar. O `Sys.coop.canSay` usa ele quando vier; sem ele, conta as frases do grupo com data de hoje.
 
 **`POST /coop/party`** `{}` → `{ "ok": true, "party": <party> }` · 409 `in_party` · 403 `level`
 **`POST /coop/party/invite`** `{ "friendCode": "AB12CD" }` ou `{ "guildMemberId": "uuid" }` → `{ "ok": true }` · 404 `code` (código não existe) · 403 `not_guild` (não é da minha guilda) · 409 `full` · 403 `not_leader` · 429 `limit` (10 convites/dia)
 **`POST /coop/party/:id/join`** → `{ "ok": true, "party": <party> }` · 404 `party` · 409 `full` · 409 `in_party` · 403 `not_invited`
 **`POST /coop/party/leave`** → `{ "ok": true }` (vaga vira o retrato de quem saiu; o líder que sai passa a liderança ao próximo humano)
-**`POST /coop/party/phrase`** `{ "idx": 3 }` → `{ "ok": true }` · 400 `bad_idx` · 429 `limit` (5 s ou 20/dia)
+**`POST /coop/party/phrase`** `{ "idx": 3 }` → `{ "ok": true }` · 400 `bad_idx` · 429 `{ code: 'limit', details: { key: 'day' }, retryAfterMs }` (o grupo esgotou as 20 de hoje) ou o mesmo `limit` com a key do intervalo de 5 s. O `Sys.coopNet.say` trava até amanhã com `day` e só o intervalo com a outra key
 **`POST /coop/start`** (só o líder) →
 ```json
 { "ok": true, "runId": "r_1", "seed": 123456789, "fcRef": 36000, "teamPower": 37500,
-  "floors": [ { "k": 1, "win": true }, { "k": 2, "win": true }, { "k": 3, "win": false } ], "reached": 2,
+  "floors": [ { "k": 1, "win": true, "p": 0.9725 }, { "k": 2, "win": true, "p": 0.932 }, { "k": 3, "win": false, "p": 0.8146 } ], "reached": 2,
   "reward": { "relicFrags": 2, "stones": 2, "goldk": 24 }, "mailed": true, "entriesLeft": 1,
   "members": [ { "playerId": "uuid", "name": "Nome", "fc": 12000, "ghost": false, "paid": true } ] }
 ```
-- 403 `not_leader` · 429 `limit` (líder sem entrada) · 409 `no_party`
+- `floors[].p` = a chance daquele andar (só para mostrar). `members[].paid` = aquele humano tinha entrada e ganhou (o `Sys.coop.applyResult` lê a linha do próprio jogador; o `paid` do topo fica de reserva).
+- 403 `not_leader` · 429 `limit` (líder sem entrada) · 409 `no_party` · 409 `snapshot_required` (sem retrato da arena, em criar/entrar)
 - Os outros humanos recebem o mesmo `runId` no próximo `GET /coop/status` (campo `lastRun`, mesmo formato, com `mailed: true`) e o prêmio pelo correio.
 
 ---

@@ -46,6 +46,9 @@ const DATA={
   },
   forbidden:['shop','gems','offer','pack','pay','gacha','ad','ads'],   // fontes RECUSADAS: nada à venda dá poder; menores jogam
   maxFrags:1e6,
+  /* palavra que a TELA mostra para cada reason de erro (fonte única: a tela chama Sys.relics.why(r)) */
+  why:{off:'Relíquias desligadas',id:'Relíquia não encontrada',owned:'Já despertada',frags:'Faltam fragmentos',locked:'Ainda não despertada',
+    max:'Nível máximo',daily:'Já ganhou hoje',forbidden:'Fonte não permitida',src:'Não deu agora',era:'Não deu agora',n:'Não deu agora'},
 };
 const BY={}, ERA={}; DATA.relics.forEach(r=>{ BY[r.id]=r; ERA[r.era]=r; });
 
@@ -153,7 +156,14 @@ function view(S,host){ const o=ensure(S), b=bonus(S), em=eraMaxOf(host);
         cost:x?levelCost(S,r.id):DATA.unlockFrags,canLevel:!!(cl&&cl.ok),canUnlock:!!(cu&&cu.ok),unlockFrags:DATA.unlockFrags,
         passiveText:ptxt(r,lv||1),nextText:x&&!max?ptxt(r,lv+1):'',locked:r.era>em&&!x}; })}; }
 
-const API={DATA,on,setOn,ensure,relic,byEra,levelOf,passiveOf,addFragments,addRelicFrags,grant,canUnlock,unlock,levelCost,canLevel,levelUp,bonus,advice,view,dayKey};
+/* texto curto para o reason (aceita a string ou o objeto {ok:false, reason}); '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||'Não deu agora'):''; };
+/* a folha de UMA relíquia (toque no cartão): o slot da view + need (fragmentos que faltam para Subir/Despertar; 0 = pode) e a lista "Como conseguir".
+   null = id desconhecido. Só leitura. */
+function slot(S,host,id){ const v=view(S,host), x=v.slots.find(s=>s.id===id); if(!x) return null;
+  const need=x.owned?(x.max?0:Math.max(0,int0(x.cost)-x.frags)):Math.max(0,DATA.unlockFrags-x.frags);
+  return Object.assign({},x,{need,sources:v.sources.slice()}); }
+const API={DATA,on,setOn,ensure,relic,byEra,levelOf,passiveOf,addFragments,addRelicFrags,grant,canUnlock,unlock,levelCost,canLevel,levelUp,bonus,advice,view,slot,why,dayKey};
 root.Sys=root.Sys||{}; root.Sys.relics=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

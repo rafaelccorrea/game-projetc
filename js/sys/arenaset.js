@@ -17,6 +17,8 @@ const DATA={
   caps:{atk:0.5, hp:0.5, aspd:30, foe:0.2},
   healWindowSec:30,   // a cura conta como se a luta durasse 30 s: pct × 30 ÷ recarga
   maxSpells:3,
+  /* palavra que a TELA mostra (Sys.arenaSet.why(r)); a aba só tem o estado 'off' (sem ação própria: editar = Grimório, salvar = Sys.loadouts) */
+  why:{off:'Conjunto PvP desligado',brasaCap:'Brasas da Arena de hoje completas'},
 };
 const SYS=()=>root.Sys||{};
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
@@ -70,7 +72,12 @@ function view(S,host){ if(!on()) return {on:false}; const G=SYS().grimoire, B=SY
   return {on:true,spells,ownSpells:own,fromFases:!own&&spells.length>0,gear:set.gear,gearSet:Object.keys(set.gear).length>0,pet:set.pet,mount:set.mount,
     mods:mods(set.spells),brasa:{on:!!(B&&B.DATA&&B.DATA.on===true),left,cap,got:cap-left}}; }
 
-const API={DATA,on,setOn,pvpSet,snapshotPart,mods,applySpells,duel,onWin,view};
+/* texto curto para o reason (string ou {ok:false, reason}); '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||'Não deu agora'):''; };
+/* linha pronta dos modificadores: 'Na arena: ATQ +12% · Vida +8% · Adversário −5%' ('' sem magia) */
+function modsText(m){ m=m||{}; const p=v=>Math.round(num(v,0)*100), out=[]; if(p(m.atk)) out.push('ATQ +'+p(m.atk)+'%'); if(p(m.hp)) out.push('Vida +'+p(m.hp)+'%');
+  if(Math.round(num(m.aspd,0))) out.push('Velocidade +'+Math.round(num(m.aspd,0))); if(p(m.foe)) out.push('Adversário −'+p(m.foe)+'%'); return out.length?'Na arena: '+out.join(' · '):''; }
+const API={DATA,on,setOn,pvpSet,snapshotPart,mods,modsText,applySpells,duel,onWin,view,why};
 root.Sys=root.Sys||{}; root.Sys.arenaSet=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

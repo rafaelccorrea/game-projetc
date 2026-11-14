@@ -2,6 +2,8 @@
 
 Sistemas, 13/11/2026. Passo a passo para o Engenheiro. Origem: `docs/LOM_VS_EONBOUND.md` §5 itens 8, 9, 10 e 13.
 
+> **Atualizado em 13/11/2026:** a ligação pronta para colar (linha do index.html, SYS_LIVE, Menu e nível, ganchos com arquivo:linha, esqueleto da tela com cada reason e a palavra da tela, online, ordem e fumaça) está em **`docs/LIGACOES_LOM_TELAS.md`**, conferida contra o código de hoje. Onde este guia e aquele discordam, vale o novo.
+
 Os 4 módulos são novos, com a **chave desligada** (`DATA.on=false`). Carregados e desligados, nada muda no jogo. A tela final vem do mock da Arte; a especificação abaixo segue o estilo das telas de hoje (cartões `sys-card`, botão dourado, selo vermelho com número).
 
 Regras que valem nos quatro:
@@ -11,7 +13,7 @@ Regras que valem nos quatro:
 
 ## 0. Carregar
 
-No `index.html`, linha do `forEach` dos módulos `js/sys`, ponha os 4 nomes **antes do `'fc'`** (por exemplo, logo depois de `'grimoire'`):
+No `index.html`, linha 814 (o `forEach` dos módulos `js/sys`), ponha os 4 nomes **antes do `'fc'`**, no fim do 3º array, depois de `'loadouts'`:
 
 ```
 'relics','dig','petsupport','today'
@@ -108,7 +110,7 @@ As pedras de prática do abate são ~290 a 460 por dia (8% de chance por inimigo
 1. Tela: `Sys.dig.view(S,host)` devolve `{on, picks, max, nextInMs, bombs, drills, depth, era, eraName, atBottom, stairsOpen, cols, rows, cells:[{r, c, open, hp, rock, canDig, item}], got, pend, paid:false}`. O `item` só aparece na célula aberta: `{t:'stones',n}`, `{t:'frag',era,n}`, `{t:'bomb'}`, `{t:'drill'}` ou `{t:'stairs'}`.
 2. Toque na célula: `Sys.dig.hit(S,host,r,c)` devolve `{ok, hp, opened:[[r,c]], stones, frags:[{era,n}], bombs, drills, stairs, picks}` (a animação "+N" usa isso). Os motivos de erro são `'blocked'` (não é vizinha), `'picks'` (traz `nextInMs`) e `'cell'`.
 3. Bomba: `Sys.dig.bomb(S,host,r,c)`. Broca: `Sys.dig.drill(S,host,col)`. Escada aberta, botão "Descer": `Sys.dig.descend(S,host)`.
-4. Fontes: missões diárias completas → `Sys.dig.grant(S,host,'daily')`; vitória sobre o Senhor da Era → `Sys.dig.grant(S,host,'eraLord',{era})`; prêmio de evento → `grant(S,host,'event')`.
+4. Fontes: missões diárias completas → **nada a chamar** (o `Sys.dig.syncDaily` lê o bônus das diárias do `Sys.pass` sozinho); vitória sobre o Senhor da Era → `Sys.dig.grant(S,host,'eraLord',{era})`; prêmio de evento → `grant(S,host,'event')`.
 5. As pedras entram pelo `Sys.practice.addStones` e os fragmentos pelo `Sys.relics.addFragments(...,'dig')`. Se um desses estiver ausente ou desligado, o prêmio fica em `pend` e entra sozinho na próxima ação (ou com `Sys.dig.flush(S,host)`).
 
 **Tela (estilo de hoje).** Título "Escavação" com a era da profundidade ("Antiguidade · camada 14").
@@ -170,9 +172,9 @@ As pedras de prática do abate são ~290 a 460 por dia (8% de chance por inimigo
 
 **O que chamar:**
 1. Botão "Hoje" no HUD, com o selo `Sys.today.badge(S,host)`. Acender o botão "Pegar tudo" quando `Sys.today.claimable(S,host) > 0`.
-2. Painel: `Sys.today.view(S,host)` devolve `{on, items:[{id, icon, label, count, kind, tab, blocked}], claimable, badge}`. Ao tocar numa linha: `host.goTab(item.tab)`. As abas novas são `'relics'` e `'dig'`; as outras já existem.
+2. Painel: `Sys.today.view(S,host)` devolve `{on, items:[{id, icon, label, count, kind, tab, blocked}], claimable, badge}`. Ao tocar numa linha: `Panels.open(item.tab)` e, se não for painel, `host.goTab(item.tab)`. As abas são os nomes reais das telas (`inst`, `missions`, `battle`...; as antigas `instances`, `achievements`, `chest`, `bonfire`, `login` não abriam nada).
 3. Botão "Pegar tudo": `Sys.today.claimAll(S,host)` devolve `{ok, n, by:{id:quantos}, left:[linhas que sobraram]}`. Mostrar o toast "Pegou N prêmios" e redesenhar o HUD (o módulo já chama `host.onChange()`).
-4. Mochila cheia: se o host tiver `host.bagFull()`, os baús de abate ficam com `blocked:'bag'` (desenhar "Mochila cheia").
+4. Mochila cheia: o `Sys.host` ainda **não tem** `bagFull` (código em `LIGACOES_LOM_TELAS.md` 0.3). Com ele, os baús de abate ficam com `blocked:'bag'` (desenhar "Mochila cheia").
 
 **Tela (estilo de hoje).** Folha que sobe de baixo, com o título "Hoje".
 - Uma linha por item: ícone, texto, número à direita.

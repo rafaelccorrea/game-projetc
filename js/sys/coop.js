@@ -21,9 +21,17 @@ const DATA={
   invitesPerDay:10,
   codeRe:/^[A-Z0-9]{6,10}$/,       // mesmo formato do código de amigo da Dupla
   msg:{gapMs:5000, perDay:20},
-  /* andar: mult (inimigo = fcRef × mult), prêmio fixo. steep = expoente da chance (p = T^steep ÷ (T^steep + E^steep)): grupo igual chega ~ao andar 3,4;
-     grupo 33% acima da mediana ~6,5; o dobro ~9,7 (simulado) */
+  /* EQUILÍBRIO (Sistemas 13/11, teste do Servidor): fcRef = max(mediana, média) × 3. Um forte com duas contas fracas (5000/300/320) não leva mais
+     o grupo aos 10 andares: a média sobe junto com o forte, então "forte + fracos" fica igual a um grupo de iguais. Grupo de iguais: mediana = média, nada muda.
+     andar: mult (inimigo = fcRef × mult), prêmio fixo. steep = expoente da chance (p = T^steep ÷ (T^steep + E^steep)): grupo igual chega ~ao andar 3,4 (simulado).
+     Como T (soma) nunca passa de max(mediana, média) × 3, NENHUM grupo fica acima da própria referência: forte + fracos ~3,4 como os iguais; um fraco
+     no grupo puxa para baixo (1000/1000/400 ~1,4). Andar 10: 0 em 2.000 corridas, em qualquer grupo. Antes (só mediana) 33% acima da mediana chegava ~6,5 e o dobro ~9,7. */
   steep:10,
+  /* palavra que a TELA mostra para cada reason (Sys.coop.why(r)); inclui os erros do servidor que o Sys.coopNet repassa */
+  why:{off:'Ruínas em Trio desligadas',level:'Libera no nível 30',limit:'Sem entradas hoje',code:'Código não encontrado',not_guild:'Não é da sua guilda',
+    bad_idx:'Frase inválida',data:'Não deu agora',claimed:'Prêmio já recebido',in_party:'Você já está num grupo',no_party:'Crie um grupo primeiro',full:'Grupo cheio',
+    not_leader:'Só o líder pode',not_invited:'Convite vencido',party:'Grupo não existe mais',snapshot_required:'Lute uma vez na Arena primeiro',
+    not_found:'Abre com o online',net_off:'Sem conexão',offline:'Sem conexão',error:'Não deu agora'},
   floors:[F(0.70,1,1,12),F(0.78,1,1,12),F(0.86,2,1,12),F(0.94,2,2,12),F(1.02,3,2,12),F(1.10,3,2,12),F(1.20,4,3,12),F(1.32,4,3,12),F(1.45,5,3,12),F(1.60,5,4,12)],
 };
 const SYS=()=>root.Sys||{};
@@ -42,10 +50,10 @@ const phraseCount=()=>{ const D=SYS().duo; return D&&D.DATA&&Array.isArray(D.DAT
 /* ================= CONTA DA CORRIDA (pura; o servidor roda a mesma) ================= */
 /* prêmio fixo de quem venceu `reached` andares */
 function rewardFor(reached){ const out={relicFrags:0,stones:0,goldk:0}; for(let k=0;k<clamp(int0(reached),0,DATA.floors.length);k++){ const r=DATA.floors[k].reward; for(const x in out) out[x]+=r[x]; } return out; }
-/* team: [{fc}] (3 retratos). fcRef = mediana × 3; teamPower = soma. Andar k: inimigo = fcRef × mult; x = T ÷ E; p = x^steep ÷ (x^steep + 1); vence se rng() < p.
+/* team: [{fc}] (3 retratos). fcRef = max(mediana, média) × 3; teamPower = soma. Andar k: inimigo = fcRef × mult; x = T ÷ E; p = x^steep ÷ (x^steep + 1); vence se rng() < p.
    Roda sozinha num vm (o servidor carrega só este arquivo): não lê window/document nem outro módulo. */
 function run(team,seed){ const fcs=(Array.isArray(team)?team:[]).slice(0,DATA.size).map(m=>Math.max(1,num(m&&m.fc,1))); while(fcs.length<DATA.size) fcs.push(1);
-  const sorted=fcs.slice().sort((a,b)=>a-b), med=sorted[1], fcRef=med*DATA.size, T=fcs.reduce((a,b)=>a+b,0), rng=mulberry(int0(seed)), floors=[];
+  const sorted=fcs.slice().sort((a,b)=>a-b), med=sorted[1], T=fcs.reduce((a,b)=>a+b,0), fcRef=Math.max(med,T/fcs.length)*DATA.size, rng=mulberry(int0(seed)), floors=[];
   let reached=0; for(let i=0;i<DATA.floors.length;i++){ const E=fcRef*DATA.floors[i].mult, x=Math.pow(T/E,DATA.steep), p=x/(x+1), win=rng()<p; floors.push({k:i+1,win,p:Math.round(p*10000)/10000}); if(!win) break; reached=i+1; }
   return {seed:int0(seed),fcRef,teamPower:T,floors,reached,reward:rewardFor(reached)}; }
 /* retrato automático para a vaga vazia (o servidor escolhe um jogador real; aqui, de mentira, para o local) */
@@ -69,22 +77,34 @@ function status(S,host){ if(!on()) return {on:false,open:false,reason:'off'}; co
   return {on:true,open:true,reason:'',entriesLeft:entriesLeft(S,host),entriesMax:DATA.entriesPerDay,online:provider!==localProvider,party:o.party,invites:o.invites.slice(),lastRun:o.lastRun}; }
 /* convite: código de amigo (formato) OU id de membro da MINHA guilda (do espelho do Sys.guild) */
 function canInvite(S,host,who){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; who=who||{};
-  if(who.friendCode!=null){ return DATA.codeRe.test(String(who.friendCode))?{ok:true,by:'code'}:{ok:false,reason:'code'}; }
+  if(who.friendCode!=null){ const code=String(who.friendCode).trim().toUpperCase(); return DATA.codeRe.test(code)?{ok:true,by:'code',code}:{ok:false,reason:'code'}; }   /* minúsculas valem (o servidor também põe em maiúsculas) */
   if(who.guildMemberId!=null){ const G=SYS().guild; let ok=false; try{ const g=G&&G.ensure?G.ensure(S):null; ok=!!(g&&g.id&&g.members.some(m=>m.id===String(who.guildMemberId)&&!m.me)); }catch(e){} return ok?{ok:true,by:'guild'}:{ok:false,reason:'not_guild'}; }
   return {ok:false,reason:'code'}; }
 /* frase pronta por índice: 1 a cada 5 s, 20 por dia */
 function canSay(S,host,idx){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; const o=roll(S,host), t=nowOf(host);
   if(!Number.isInteger(idx)||idx<0||idx>=phraseCount()) return {ok:false,reason:'bad_idx'};
-  if(o.chat.n>=DATA.msg.perDay||t-o.chat.last<DATA.msg.gapMs) return {ok:false,reason:'limit'}; return {ok:true}; }
+  if(groupSaid(S,host)>=DATA.msg.perDay||t-o.chat.last<DATA.msg.gapMs) return {ok:false,reason:'limit'}; return {ok:true}; }
+/* frases do GRUPO hoje (contrato: 20 por grupo por dia). Com grupo: o contador que o servidor mandar (party.sayLeft = frases que RESTAM ao grupo hoje, se vier) ou as frases do
+   grupo com data de hoje; nunca menos que as minhas do dia. Sem grupo (local): as minhas. */
+function groupSaid(S,host){ const o=roll(S,host), k=o.day, p=o.party; if(!p) return o.chat.n;
+  const fromSrv=Number.isInteger(p.sayLeft)&&p.chatDay===k?Math.max(0,DATA.msg.perDay-p.sayLeft):null, today=(p.chat||[]).filter(x=>dayKey(x.at)===k).length;
+  return Math.max(o.chat.n,fromSrv!=null?fromSrv:today); }
 function markSaid(S,host){ const o=roll(S,host); o.chat.n++; o.chat.last=nowOf(host); }
+/* o servidor respondeu 429 limit: key 'day' = o grupo esgotou as frases de hoje (trava até amanhã); 'cooldown' = espere os 5 s */
+function markLimit(S,host,key){ const o=roll(S,host); if(key==='cooldown') o.chat.last=nowOf(host); else o.chat.n=Math.max(o.chat.n,DATA.msg.perDay); return {ok:false,reason:'limit'}; }
 const phraseText=i=>{ const D=SYS().duo; return D&&D.phraseText?D.phraseText(i):''; };
 
 /* resultado de uma corrida, UMA vez por runId. LOCAL: credita aqui. SERVIDOR: a resposta vem com mailed:true e o prêmio chega pelo correio (não credita). */
+/* paguei? members[].paid do servidor (a minha linha: id do Sys.net.player(), ou 'me' no local); sem a linha, o res.paid do topo (reserva) */
+function myPlayerId(){ try{ const N=SYS().net, p=N&&typeof N.player==='function'?N.player():null; return p&&p.id?String(p.id):''; }catch(e){ return ''; } }
+function paidOf(res){ const me=myPlayerId(), L=Array.isArray(res.members)?res.members:[];
+  const row=L.find(m=>m&&m.ghost!==true&&typeof m.paid==='boolean'&&(m.playerId==='me'||(me&&String(m.playerId)===me)));
+  return row?row.paid:(typeof res.paid==='boolean'?res.paid:undefined); }
 function applyResult(S,host,res){ if(!on()) return {ok:false,reason:'off'}; if(!res||typeof res!=='object'||!res.runId) return {ok:false,reason:'data'};
   const o=roll(S,host), id=String(res.runId); o.lastRun={runId:id,reached:int0(res.reached),floors:Array.isArray(res.floors)?res.floors.slice(0,DATA.floors.length):[],members:Array.isArray(res.members)?res.members.slice(0,DATA.size):[],at:nowOf(host)};
   if(o.runs.includes(id)) return {ok:false,reason:'claimed'}; o.runs.push(id); if(o.runs.length>30) o.runs.shift();
   /* paid:false = humano sem entrada; mailed:true = o SERVIDOR credita pelo correio (carta source 'coop', ref r_<runId>:<jogador>): aqui só mostra */
-  if(res.paid===false||res.mailed===true) return {ok:true,got:null,mailed:res.mailed===true};
+  if(paidOf(res)===false||res.mailed===true) return {ok:true,got:null,mailed:res.mailed===true};
   /* o prêmio é sempre o da TABELA pelo andar (nunca o número mandado), com o teto do ouro */
   const rw=rewardFor(res.reached), L=SYS().loot; let got={};
   if(L&&L.grantBundle) got=L.grantBundle(S,host,{goldk:Math.min(120,rw.goldk),stones:rw.stones,relicFrags:rw.relicFrags});   /* relicFrags: o Sys.loot entrega ao Sys.relics ou guarda */
@@ -106,7 +126,7 @@ function start(S,host){ const st=status(S,host); if(!st.open) return {ok:false,r
 function applyStatus(S,host,data){ if(!on()) return {ok:false,reason:'off'}; if(!data||typeof data!=='object') return {ok:false,reason:'data'}; const o=roll(S,host);
   if(data.entriesLeft!=null) o.used=clamp(DATA.entriesPerDay-int0(data.entriesLeft),0,DATA.entriesPerDay);
   o.party=data.party&&Array.isArray(data.party.members)?{id:String(data.party.id||''),leaderId:String(data.party.leaderId||''),seatsOpen:int0(data.party.seatsOpen),
-    members:data.party.members.slice(0,DATA.size).map(m=>({playerId:String(m.playerId||''),name:String(m.name||'').slice(0,24),fc:int0(m.fc),ghost:m.ghost===true,entryOk:m.entryOk===true})),
+    sayLeft:Number.isInteger(data.party.sayLeft)?clamp(data.party.sayLeft,0,DATA.msg.perDay):null,chatDay:o.day,members:data.party.members.slice(0,DATA.size).map(m=>({playerId:String(m.playerId||''),name:String(m.name||'').slice(0,24),fc:int0(m.fc),ghost:m.ghost===true,entryOk:m.entryOk===true})),
     chat:(Array.isArray(data.party.chat)?data.party.chat:[]).filter(x=>x&&Number.isInteger(x.idx)&&x.idx>=0&&x.idx<phraseCount()).slice(-30).map(x=>({playerId:String(x.playerId||''),idx:x.idx,txt:phraseText(x.idx),at:int0(x.at)}))}:null;
   o.invites=(Array.isArray(data.invites)?data.invites:[]).slice(0,10).map(x=>({partyId:String(x.partyId||''),fromName:String(x.fromName||'').slice(0,24),at:int0(x.at)}));
   let paid=null; if(data.lastRun&&data.lastRun.runId) paid=applyResult(S,host,data.lastRun); return {ok:true,lastRun:paid}; }
@@ -116,7 +136,9 @@ const table=()=>DATA.floors.map((f,i)=>({k:i+1,mult:f.mult,reward:Object.assign(
 function view(S,host){ const st=status(S,host); if(!st.open) return st; return Object.assign({},st,{name:DATA.name,table:table(),total:rewardFor(DATA.floors.length),
   phrases:(()=>{ const D=SYS().duo; return D&&D.phrases?D.phrases():[]; })()}); }
 
-const API={DATA,on,setOn,dayKey,mulberry,rewardFor,run,ghost,ensure,status,entriesLeft,canInvite,canSay,markSaid,applyResult,applyStatus,
+/* texto curto para o reason (string ou {ok:false, reason}); '' quando deu certo */
+const why=r=>{ const k=r&&typeof r==='object'?(r.ok?'':r.reason):r; return k?(DATA.why[k]||DATA.why.error):''; };
+const API={DATA,on,setOn,dayKey,mulberry,rewardFor,run,ghost,ensure,status,entriesLeft,canInvite,canSay,markSaid,applyResult,applyStatus,why,groupSaid,markLimit,paidOf,
   localProvider,setProvider,get provider(){ return provider; },start,table,view};
 root.Sys=root.Sys||{}; root.Sys.coop=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
