@@ -138,7 +138,7 @@ continuam Festival. Só o prefixo do id muda, e as datas ficam iguais:
 | Arte | Por tema: fundo da tela, ícone do tema, ícone dos pontos e moldura. Skins (Lâmina do Caçador, Martelo das Eras, Avental do Ferreiro) passam pelo fluxo de arte e pelo voto do dono | por tema |
 | Servidor | Seed do calendário: trocar o id das linhas #2, #4 e #6 e preencher `minClientVersion`. Atualizar a cópia fixa do game-sys (`events.js` + `evtrail.js`), senão o `loadEvtrailEarned` dá 0 pontos nos temas novos. Conferir se alguma validação do servidor aceita só o prefixo `festival_eras` | pequeno |
 
-## Defeito achado agora (vale também para o Festival de hoje)
+## Defeito achado agora (vale também para o Festival de hoje): CORRIGIDO pelo Engenheiro em 9c8de08 (falta o QA ver a missão andar no jogo)
 
 O contador `instance` não é chamado em lugar nenhum: `ptrack` hoje conta kill, boss, ult, chest, forge, upgrade, summon e login.
 Por isso a missão do Festival **"Vença 15 instâncias" nunca completa**. Correção do Engenheiro: `ptrack('instance')` quando a
