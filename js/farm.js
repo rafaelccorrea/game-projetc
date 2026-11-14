@@ -66,6 +66,8 @@ Sys.host = {
   addItem: o => addItemToBag(o),
   /* Sys.pass: mochila (o Item da Temporada evolui no level up) e skin da temporada; Sys.titles: tamanho do catálogo de skins */
   items: () => S.inv,
+  /* dicas (Sys.advice / Sys.bossLoss): a tela do destino está aberta para este jogador? true = aberta; número = nível em que abre. É a MESMA regra do Menu (fbUnl do js/fullbattle.js), para a dica nunca mandar a uma tela que o Menu ainda esconde */
+  unlocked: tab => { try { const id = ({ pet: 'pets', pets: 'pets', mount: 'mounts', mounts: 'mounts', forge: 'forge' })[tab]; if (!id || typeof fbUnl !== 'function') return true; if (fbUnl(id)) return true; const n = typeof fbLvU === 'function' ? fbLvU(id) | 0 : 0; return n > 0 ? n : false; } catch (e) { return true; } },
   bestStage: () => Math.max(0, (S.best | 0) - 1),   /* maior fase VENCIDA (Sys.mapChest: baús de marco do Mapa V4) */
   /* FOGUEIRA DAS ERAS (Sys.bonfire, da Sistemas): o que o módulo precisa do jogo. O item forjado NÃO entra sozinho na mochila: a tela decide Equipar, Guardar ou Desmontar.
      bagMax = espaços da mochila · removeItem(item) tira da mochila (equipado nunca) · fcOf(item) = FC da peça · delta(item) = quanto a FC do herói muda se equipar

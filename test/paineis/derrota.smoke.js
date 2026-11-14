@@ -43,7 +43,7 @@ const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]
   const off = html(), b0 = bl();
   check('desligada: onDefeat nem é chamado e nada é creditado', b0.calls === 0 && b0.gold === 0 && b0.xp === 0 && b0.stones === 0 && ev('!(S.sys&&S.sys.bossLoss&&S.sys.bossLoss.total)'), JSON.stringify(b0));
   check('desligada: resBossLoss() devolve null', ev('resBossLoss()') === null);
-  check('desligada: bloco de hoje ("Fique mais forte" + caminhos), sem o quadro novo', /Fique mais forte/.test(off) && /data-q="gear"/.test(off) && /height:150px/.test(off) && !/res_rw|res_tips|data-q="tip:|Prêmio/.test(off), off.length + ' caracteres');
+  check('desligada: bloco de hoje ("Fique mais forte" + caminhos), sem o quadro novo', /Fique mais forte/.test(off) && ((/data-q="gear"/.test(off) && /height:150px/.test(off)) || /res_adv|data-q="adv:/.test(off)) && !/res_rw|res_tips|data-q="tip:|Prêmio/.test(off)   /* com a dificuldade nova ligada por padrão (1d7d977) o bloco de hoje são as linhas do js/diff.js (adv:N); com ela desligada, os caminhos fixos */, off.length + ' caracteres');
   check('desligada: botões de hoje (farm e retry)', /data-q="farm"/.test(off) && /data-q="retry"/.test(off));
   /* mesma tela aberta de três jeitos com o mesmo estado: como hoje, com o {on:false} do módulo e sem o módulo */
   ev("resClose('farm')"); start(3); ev("resOpen('lose',{stage:S.stage},true)"); const offA = html(); ev('B.res=null; RES.el=null; document.body.classList.remove("resui"); heroDown(false)');
