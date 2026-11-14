@@ -472,8 +472,9 @@ Pedido da Sistemas (docs/SISTEMA_MATRIZ.md, 1e54f3f). Nada é vendido em nenhum 
 - **Resgate** `POST /v1/duo/claim/:id` (`daily`, `boss200`, `stages40`, `arena20`, `days5`) → `{ok, id, period, value, target, reward}`.
   - O servidor confere a SOMA dos dois e a presença: o daily exige o parceiro presente hoje; as missões semanais, ao menos 1 dia na semana.
   - Uma vez por período por jogador: daily por dia, missão por semana. Erros 409 `none`, `presence`, `done`, `claimed`.
-  - O servidor só autoriza; o jogo paga, como o `Sys.duo` faz.
-- **Diferença do jogo:** o `applyServer` do `duo.js` começa 24 h de espera para os DOIS ao receber `partner:null`, mas o servidor só faz esperar quem saiu. O `Sys.duoNet` deve repassar `leftAt` e `relinkLeftMs` do servidor.
+  - **Quem paga:** o servidor só AUTORIZA (e registra o resgate, uma vez); o JOGO paga uma vez, como o `Sys.duo` faz. Um 409 `claimed` marca como resgatado no jogo sem pagar de novo. Se o PO quiser que o servidor credite (pelo correio ou por entrega), a mudança é no servidor.
+- **Espera depois de sair:** `leftAt` só vem para QUEM SAIU e ainda está nas 24 h. Quem ficou e quem já passou das 24 h recebem 0 (fps-server 5023345). O `duo.js` trata 0 como "sem espera" (f2e0435), e a espera de quem saiu vem do `relinkLeftMs` (não do relógio do aparelho).
+- **O que o jogo lê do `GET /duo`** (`Sys.duoNet`, 8ae4ce5): `partner`, `invites`, `messages`, `leftAt`, `relinkLeftMs`, `claimed`, `myDay`, `myWeek`, `myDays`, `partnerDay`, `partnerWeek`, `partnerDays`, `code`, `invitesLeft`, `msgLeft` e `cap`. Nos contadores, vale o MAIOR entre o jogo e o servidor (o servidor guarda o maior que recebeu, cortado no teto).
 
 ### 16.2 Fogueira da Guilda (`Sys.guildFire`)
 - `GET /v1/guild/fire` → `{guildId, flames, level, name, into, need, extra, max, next, perks:{goldPct, xpPct}, free, bra, braLeft, freeFlames, mine, fed, brasaCap, joinedAt, reached:{"2":ms,…,"x1":ms}, chests:[{id, level, extra, reachedAt, chest:{goldk, forge, food}}], resetIn}`. Já traz o `{guildId, flames, free, bra}` do `applyServer`.
