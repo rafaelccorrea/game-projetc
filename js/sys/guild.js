@@ -98,7 +98,7 @@ function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.guild.ensur
   o.coin=int0(o.coin); o.xp=int0(o.xp);
   // membros (espelho do servidor): [{id, name, role, lvl, fc, online, contrib (semana), lastSeen}] — até 30, saneados
   o.members=Array.isArray(o.members)?o.members.filter(m=>m&&typeof m==='object'&&m.id!=null).slice(0,DATA.members.max).map(m=>({id:String(m.id),name:String(m.name||'').slice(0,24),
-    role:DATA.roles.includes(m.role)?m.role:'member',lvl:clamp(int0(m.lvl)||1,1,200),fc:int0(m.fc),online:m.online===true,contrib:int0(m.contrib),lastSeen:int0(m.lastSeen),me:m.me===true})):[];
+    role:DATA.roles.includes(m.role)?m.role:'member',lvl:clamp(int0(m.level!=null?m.level:m.lvl)||1,1,200),era:(m.era==null||m.era===''||!(int0(m.era)>=0&&int0(m.era)<=8))?null:int0(m.era),fc:int0(m.fc),online:m.online===true,contrib:int0(m.contrib),lastSeen:int0(m.lastSeen),me:m.me===true})):[];
   const ct=(o.contrib&&typeof o.contrib==='object')?o.contrib:{}; o.contrib={week:typeof ct.week==='string'?ct.week:'',pts:int0(ct.pts),total:int0(ct.total),log:Array.isArray(ct.log)?ct.log.filter(x=>x&&typeof x.k==='string').slice(-30).map(x=>({k:x.k,n:int0(x.n),t:int0(x.t)})):[]};
   const tr=(o.trade&&typeof o.trade==='object')?o.trade:{}; o.trade={day:typeof tr.day==='string'?tr.day:'',gave:int0(tr.gave),got:int0(tr.got),pairs:Array.isArray(tr.pairs)?tr.pairs.filter(x=>typeof x==='string').slice(0,10):[]};
   const dn=(o.daily&&typeof o.daily==='object')?o.daily:{}; o.daily={day:typeof dn.day==='string'?dn.day:'',done:Array.isArray(dn.done)?dn.done.filter(x=>typeof x==='string'):[]};
