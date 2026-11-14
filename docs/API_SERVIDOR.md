@@ -447,7 +447,7 @@ O Chefe Mundial do jogo continua no aparelho: faixa de dano e ≥5% da vida (`wo
 - `POST /v1/thief/enter` → `{runId, seed, startsAt, endsAt, maxBrasas, entriesLeft}`. Gasta 1 entrada; sem entrada: 429 `daily_limit` (com o tempo até a virada de Brasília).
 - `POST /v1/thief/finish {runId, score}` → `{brasas, score, maxBrasas, total}`.
   - `score` = fração do saco que o jogador soltou nos 45 s (0..1). Brasas = arredonda(`score` × lote); no máximo 1 lote por entrada.
-  - Uma vez por corrida (409 `already_finished`); antes de 5 s, 409 `too_fast`; depois de 3 min, 409 `expired` (a entrada foi gasta).
+  - Uma vez por corrida: o reenvio dá 409 `already_finished` com `details:{brasas, total}` = o que ESTA corrida pagou (a resposta se perdeu: o jogo credita uma vez com esse valor); antes de 5 s, 409 `too_fast`; depois de 3 min, 409 `expired` (a entrada foi gasta).
 - `POST /v1/thief/sweep` → `{brasas, bestLevel, entriesLeft, total}`: "Varrer" (regra do jogo, 13/11). Gasta 1 entrada e paga o LOTE CHEIO do melhor nível de Fogueira já VENCIDO (corrida com score 1; o servidor guarda o nível da Fogueira de cada entrada). Sem corrida vencida antes: 409 `nothing_to_sweep`. A entrada é gasta no `enter`; sair no meio não devolve. Lote: Nv 1-3 = 1, 4-6 = 2, 7-9 = 4, 10-19 = 5, 20-34 = 6, 35-49 = 8, 50-60 = 10.
 - **Lote** = pelo NÍVEL da Fogueira no último save do jogador (`S.sys.bonfire.lv`):
 
