@@ -793,6 +793,7 @@ function step(dt){
   let eng=false; for(const e of B.en) if(inEngage(e,gun)){ eng=true; break; }
   if(eng) B.holdT=0.6; else if(B.holdT>0) B.holdT-=dt;
   B.running=!eng&&!B.act&&B.holdT<=0&&!B.en.some(e=>e.x<=LW-10);   // não corre com horda visível na tela
+  const chase=!!(B.inst&&B.inst.chase); if(chase) B.running=true;   /* GANCHO do Ladrão de Brasas (js/instfx.js): na perseguição o herói e o cenário correm o tempo todo e ele bate correndo. Fora dela (B.inst.chase não existe) nada muda */
   // ação em curso
   const a=B.act;
   if(a){ a.t+=dt*(a.rate||1);
@@ -808,6 +809,7 @@ function step(dt){
       e.x-=Math.min(e.x-e.slot,((B.running?RUNV():0)+v)*dt*(ult?0.25:1)); e.parked=false; }
     else { if(e.x<e.slot-0.5) e.x+=Math.min(e.slot-e.x,30*dt); const was=e.parked; e.parked=e.idx<MAXVIS; if(e.parked) e.wasParked=true; if(e.parked&&!was) e.atkT=Math.min(e.atkT,0.15+0.12*e.idx); }   // chegou ao slot: ataca logo
     if(e.stunT>0){ e.stunT-=dt; if(B.inst) B.inst.stun=(B.inst.stun||0)+dt; }   /* ATORDOADO (golpe especial ou magia): não conta a cadência nem começa golpe */
+    else if(e.noAtk) ;   /* GANCHO do Ladrão de Brasas: inimigo marcado com noAtk nunca golpeia */
     else if(e.idx<(window.__atk2?2:MAXVIS)&&e.x<=LW){ e.atkT-=dt;   /* a cadência conta também enquanto ele troca de slot: ao parar, ataca logo (nenhum visível fica 2 s sem atacar) */
       if((e.parked||(e.wasParked&&e.x-e.slot<70))&&e.atkT<=0&&e.sw<=0&&B.t-B.eAtkT>=EGAP){   /* quem já esteve num slot e só está fechando a fila (até 70 px do slot novo) golpeia sem esperar chegar: nenhum visível fica mais de 2 s sem golpear */ e.atkT=e.atkEvery; B.eAtkT=B.t; { const sh=enSheet(e,'attack'); e.swD=sh?shDur(sh,EN_ATK_DUR):EATK; e.swH=sh?(EN_HIT_FRAME[e.key]!=null?EN_HIT_FRAME[e.key]/(sh.meta.fps||12):e.swD*0.5):EHIT; } e.sw=e.swD; e.struck=false; if(DEBUG) (window.__atk=window.__atk||[]).push([e.id,e.idx,+B.t.toFixed(2)]); } }
     if(e.sw>0&&!e.struck&&e.sw<=(e.swD||EATK)-(e.swH||EHIT)){ e.struck=true; const d=e.raw?e.dmg:e.dmg*(e.fury||1)*(0.9+Math.random()*0.2), kind=ENEMY_RANGED[e.key];
@@ -822,7 +824,7 @@ function step(dt){
   B.enemy=target();
   // herói: corre até entrar em alcance; parado, ataca
   if(B.running){ const dx=RUNV()*dt; B.cam+=dx; for(const r of B.rings) r.x-=dx; for(const f of B.fx) f.x-=dx; }
-  else if(!B.act&&B.enemy){
+  if((!B.running||chase)&&!B.act&&B.enemy){   /* fora da perseguição do Ladrão (chase) é o "else" de sempre: correndo não bate */
     const tut=typeof tutHold==='function'&&tutHold();
     if(B.energy>=100) startAct('s3');          
     else if(B.cd2<=0) startAct('s2');   /* v0.12.1 (ordem do dono): o jogo é SÓ AUTOMÁTICO; especial e ultimate disparam sozinhos sempre, sem modo manual e sem esperar o tutorial */
@@ -1252,6 +1254,7 @@ function drawEnemyAt(e,x,deadP){
   let ox=x-adv;
   if(!walking&&!dying&&!(e.sw>0)) sy=1+Math.sin(t*3+e.seed)*0.02;   // respiração: só scaleY (±2%) ancorado na base, só parado
   else if(walking&&!enOn(e.key,'run')) lean=0.06;                    // andando sem folha: desliza reto, com inclinação FIXA para a frente
+  let bobY=0; if(e.bob&&walking){ const q=Math.sin(t*12+e.seed); bobY=-Math.abs(q)*2.5; lean=-0.05-0.025*q; }   /* GANCHO do Ladrão de Brasas (arte parada, olhando para a direita): balanço da corrida por código, até 2,5 px acima do chão e inclinado para a frente (direita) */
   if(!dying&&e.hit>0){ const room=BOSS_X1-(x+(e.dw||0)*0.5), k=e.hit/0.12;   // levou golpe: recuo curto e inclinação para trás, SÓ até a margem de 382 (nada desenhado passa dela)
     const lb=Math.min(0.05,Math.max(0,room-0.5)/Math.max(1,e.dh||90)); lean-=lb; ox+=Math.max(0,Math.min(3*k,room-0.5-lb*(e.dh||90))); }
   const shDie=dying?enSheet(e,'die'):null, shAtk=!dying&&e.sw>0?enSheet(e,'attack'):null, shHurt=!dying&&!shAtk&&e.hurtT>0?enSheet(e,'hurt'):null, shRun=walking?enSheet(e,'run'):null;
@@ -1265,8 +1268,8 @@ function drawEnemyAt(e,x,deadP){
     /* comum: a altura vem do hordeFit (e.hc acompanha o alvo e.dhT com suavização) */ e.dw=dw; e.dh=dh; }
   ctx.save(); ctx.globalAlpha=0.35*alpha; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(x-adv,gy+2,(spr?Math.max(20,dw*.42):22*e.size),5,0,0,7); ctx.fill(); ctx.restore();
   if(window.__probe) window.__probe(e,{x:ox,feet:gy,top:gy-dh*sy,dh,dw,sy,sx:1,rot,lean,adv,walking,atk:e.sw>0,dying,sheet:!!(shDie||shAtk||shHurt||shRun)});   // medição (QA): o que o desenho usa de fato
-  ctx.save(); ctx.translate(ox,gy); ctx.rotate(rot); if(lean) ctx.transform(1,0,lean,1,0,0); ctx.globalAlpha=alpha;
-  { const shU=shDie||shAtk||shHurt||shRun||shIdle; if(shU?EN_FLIP_SHEET[shU.base]:EN_FLIP[e.key]) ctx.scale(-1,1); }   // arquivo virado para a direita: espelha só o corpo (sombra, barra e nome ficam de fora); flag por ARQUIVO (estático x folha)
+  ctx.save(); ctx.translate(ox,gy+bobY); ctx.rotate(rot); if(lean) ctx.transform(1,0,lean,1,0,0); ctx.globalAlpha=alpha;
+  { const shU=shDie||shAtk||shHurt||shRun||shIdle; if(!!(shU?EN_FLIP_SHEET[shU.base]:EN_FLIP[e.key])!==!!e.flee) ctx.scale(-1,1); }   /* e.flee (Ladrão de Brasas com a arte de reserva): corre de costas para o herói */   // arquivo virado para a direita: espelha só o corpo (sombra, barra e nome ficam de fora); flag por ARQUIVO (estático x folha)
   EN_CTX.e=e; EN_CTX.ox=ox; EN_CTX.walk=walking&&!e.wasParked; EN_CTX.st=shDie?'die':shAtk?'attack':shHurt?'hurt':shRun?'run':'idle';
   if(spr){
     const F=dh/spr.fh;                       // F = lado do quadro inteiro (512 da arte) na tela
@@ -1336,6 +1339,7 @@ function draw(){
   { const lim=3*LW/(cv.clientWidth||LW), amp=Math.min(B.shake*4,lim); B.shx=B.shake>0?(Math.random()-.5)*2*amp:0; if(DEBUG&&B.shx){ const px=Math.abs(B.shx)*(cv.clientWidth||LW)/LW; if(!(window.__shxMax>=px)) window.__shxMax=px; } }   /* Engenheiro 2: TETO de 3 px de TELA (regra do dono); antes o golpe final da ultimate chegava a ±5,2 px lógicos */   // tremor (só ultimate e golpe de chefe): SÓ HORIZONTAL e o MESMO deslocamento para o cenário (js/stage.js) e os personagens: ninguém sai da linha do chão
   if(B.shx) ctx.translate(B.shx,0);
   drawBG();
+  if(B.inst&&B.inst.chase&&typeof thiefVeil==='function') thiefVeil();   /* GANCHO do Ladrão de Brasas: véu do fim de tarde, só durante a perseguição */
   if(B.dim>0.01){ ctx.fillStyle=`rgba(4,2,14,${B.dim*0.68})`; ctx.fillRect(-10,-10,LW+20,LH+20); }
   drawWfx(0);
   for(const c of B.corpses) drawEnemyAt(c.e,c.x,c.t/(c.life||0.6));
