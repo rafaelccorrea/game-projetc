@@ -3,6 +3,7 @@
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
 ## 14/11/2026 (madrugada)
+- [~] **Aprovado pelo dono (14/11):** corrigir o ouro das fontes antigas (offline 8 h = 60 min, Hora de Ouro +30%, tetos, oferta sem ouro); moldura Ouro no Nv 60; ~76 créditos para os golpes dos pets; VIP com teto de +10% (Fênix, Serpe e Mecha com poder de Épica); ouro do VIP +5/+10% e offline ×2 sem ouro · Sistemas + Engenheiro + Arte
 - [?] **VIP e Passe (proposta no link)**: 1) poder do VIP com teto de +10% (Fênix e Serpe com visual Lendário e poder de Épica); 2) ouro do VIP +5/+10% e offline ×2 sem ouro; 3) Mecha (R$ 49,90) com poder de Épica; 4) preço dos níveis VIP (R$ 50 a R$ 5.000 proposto); 5) rastro de arma e aura VIP só visuais; 6) prêmio de temporada antiga volta como evento grátis?; 7) tirar a skin do VIP 10 até ter uma no corpo padrão · dono decide
 - [~] **Acampamento**: protótipo no link; PO decidiu Nv 20, só pelo Menu, volta dentro da janela do offline, sem Melhorar na Tenda do Ouro
 - [?] **Ouro nas fontes que já estão no jogo** (auditoria em docs/ECONOMIA_OURO.md): o offline dá 187 min de abate a cada 8 h (mais que o dia inteiro jogando). Proposta da Sistemas: offline 8 h = 60 min; Hora de Ouro +100% → +30%; teto na Mina de Ouro e na Torre; oferta paga sem ouro. Com tudo, upar fica 1,3-1,5× mais lento que hoje · dono decide
