@@ -42,7 +42,25 @@ compra) devolvem uma Promise na camada, e a tela espera a resposta. Sem rede, o 
 - Access: JWT de 15 min (`sub` = player id, `ab` = ageBand, `sv` = versão da sessão).
 - Refresh: opaco, 60 dias, ROTATIVO. Cada uso troca por um novo. Reusar um refresh já trocado derruba a família inteira (roubo de token).
 - `POST /auth/refresh` — `{ "refreshToken" }` → mesmo formato do 2.1.
-- `POST /auth/logout` — `{ "refreshToken" }` → 204.
+- `POST /auth/logout` — `{ "refreshToken" }` → 204. Derruba a família inteira desse refresh (o aparelho), sem tocar nas outras sessões.
+
+### 2.2b Sair / trocar de conta (só conta com Google; servidor 14/11)
+O convidado é preso ao `deviceId`: o `POST /auth/guest` com o mesmo `deviceId` devolve SEMPRE a mesma conta, mesmo depois de vinculada
+ao Google. Por isso "sair" é do CLIENTE, nesta ordem:
+1. `PUT /save` com `owner = session.player.id` e esperar o 200 `{version}`. Com 429 (30 s), espere `Retry-After` e repita. Sem nada
+   novo, confira `GET /save/head` → `version` igual à que o aparelho tem.
+2. `POST /auth/logout {refreshToken}`.
+3. Gerar um `deviceId` NOVO e esquecer o antigo. O antigo fica preso à conta Google e não volta mais; a conta volta só por
+   `POST /auth/login/google`.
+4. Apagar o save local e voltar ao Título.
+
+**Não misturar saves:** todo `PUT /save` leva `owner` (o id do dono do save no aparelho). Se `owner` não for o do token, o servidor
+responde 409 `wrong_account {session}` e não grava nada. Sem `owner`, os clientes antigos continuam gravando. Também continuam valendo
+o 409 `save_regress` (save menor que o da nuvem) e o `save_conflict` (base velha).
+
+**Limites:** não há limite de contas por aparelho. Valem os do IP: `/auth/guest` 5 por hora e `/auth/login/*` 10 por hora (429
+`Retry-After`). Cada "sair + jogar como visitante" cria um convidado novo. Os vazios (Nv ≤ 1, sem compra) somem sozinhos em 30 dias
+sem acesso.
 
 ### 2.3 Vincular e recuperar (Google Play / Apple)
 - `POST /auth/link/google` (autenticado) — `{ "serverAuthCode": "..." }` (Play Games Services v2) ou `{ "idToken": "..." }` (Google Sign-In) → 200 `PlayerDto`.
