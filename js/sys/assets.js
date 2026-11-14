@@ -35,7 +35,8 @@ const excluded=p=>DATA.exclude.some(r=>r.test(norm(p)));
 function classify(p0){ const p=norm(p0); let m;
   if(!p.startsWith('assets/')) return 'core';
   if(/^assets\/ui\/fogueira\/fg_s[2-9]_loop\./.test(p)) return 'fx:bonfire';   // PO 14/11: chamas animadas dos estágios 2-9 fora da base (o jogo usa a imagem parada até baixar); fg_s1_loop e as paradas ficam no core
-  if(/^assets\/ui\/frames\//.test(p)) return 'ui:frames';   // PO 14/11: molduras do Perfil fora da base (o Perfil cai na borda por CSS até baixar)
+  if(/^assets\/ui\/frames\//.test(p)) return 'ui:frames';
+  if((m=/^assets\/mounts\/still\/([a-z]+)(?:_([a-z]+))?\.png$/.exec(p))) return 'mount:'+m[1];   // PO 14/11: imagem parada da montaria (Derrota) no pacote da própria montaria (giant_phoenix -> mount:giant, como a Fênix no manifesto); a tela usa a folha se faltar   // PO 14/11: molduras do Perfil fora da base (o Perfil cai na borda por CSS até baixar)
   if(/^assets\/anim\/(look_preview|equip\/preview)\//.test(p)) return 'preview';   // prévias de arte (Modo dono / aprovação): fora do APK do jogador
   if((m=/^assets\/anim\/hyb\/(?:R|kaia[a-z_0-9]*|phase\d)\/(bow|boomerang)\//.exec(p))) return 'weapon:'+m[1];   // herói com arco/bumerangue: só quem tem a arma
   if((m=/^assets\/anim\/hyb\/(phase([123])|kaia_phase([123])|kaia|R)\//.exec(p))){

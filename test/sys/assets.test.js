@@ -80,4 +80,5 @@ t('PO 14/11: chamas dos estágios 2-9 e molduras fora da base (fast-follow, paco
   for (const f of ['assets/ui/fogueira/fg_s1_loop.png','assets/ui/fogueira/fg_s7.png']) assert.strictEqual(A.classify(f), 'core');
   for (const id of ['fx:bonfire','ui:frames']) { assert.strictEqual(A.deliveryOf(id), 'fast'); assert.strictEqual(A.apackOf(id), 'inicio'); }
 });
+t('imagem parada da montaria (Derrota) no pacote da própria montaria; giant_phoenix na da Fênix (mount:giant)', () => { assert.strictEqual(A.classify('assets/mounts/still/pony.png'),'mount:pony'); assert.strictEqual(A.classify('assets/mounts/still/giant_phoenix.png'),'mount:giant'); assert.strictEqual(A.classify('assets/mounts/still/mecha.png'),'mount:mecha'); });
 console.log(`ok: ${n} testes`);
