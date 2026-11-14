@@ -481,22 +481,32 @@ function rCond(t){ const c=t.cond, T=Sys.titles, n=T.need(S,Sys.host,c);
   if(c.type==='weaponEras') return 'Armas de '+n+' eras, só ITEM (skin não conta)'; if(c.type==='weapons') return 'As '+n+' armas como ITEM (skin não conta)';
   if(c.type==='era') return 'Liberar a '+(ERAS[n]?ERAS[n].n:'era '+n); if(c.type==='kills') return 'Derrotar '+n0(n)+' inimigos'; if(c.type==='skins') return n+' skins de arma ou roupa';
   return T.condLabel(S,Sys.host,t); }
+/* OURO DO ABATE (dono 14/11): todas as fontes somam, com teto. A tela mostra o valor APLICADO pela conta do Sys.loot (goldBreakdown(S).applied.practice,
+   já no teto da fonte), não o cru do Sys.practice. Sem a conta (módulo antigo), vale o valor do Sys.practice. */
+function pracGoldApplied(raw){ try{ const L=Sys.loot, g=L&&typeof L.goldBreakdown==='function'?L.goldBreakdown(S):null, v=g&&g.applied?+g.applied.practice:NaN; if(isFinite(v)&&v>=0) return v; }catch(e){} return +raw||0; }
+/* teto de UMA trilha: o módulo decide (capT: o da era, e a Coleta para antes); sem o campo, o teto da era */
+function pracCap(t,cap){ try{ if(typeof Sys.practice.capT==='function'){ const v=+Sys.practice.capT(t,Sys.host); if(isFinite(v)&&v>=0) return v; } }catch(e){} return cap; }
+/* texto do motivo da recusa do Sys.practice.train/canTrain (reason: locked | soon | cap | stones) */
+function pracWhy(t,reason){ const P=Sys.practice, nm=t?t.name:'Este treino';
+  if(reason==='locked') return 'Libera no nível '+pracNeed(); if(reason==='soon') return nm+': em breve';
+  if(reason==='cap'){ let cap=0; try{ cap=P.capOf(Sys.host); }catch(e){} return t&&pracCap(t,cap)<cap?nm+' já está no máximo':'No teto da era: avance de era para treinar mais'; }
+  let cost=0; try{ cost=t?P.canTrain(S,Sys.host,t.id).cost:0; }catch(e){} return reason==='stones'||!reason?'Faltam pedras de prática'+(cost?': custa '+cost:''):'Não foi possível treinar agora'; }
 function scrProg(){
   if(typeof SYS_E2==='undefined'||!SYS_E2){ V.innerHTML=''; return; }
   const d=xDims(622), H=d.H, P=Sys.practice, T=Sys.titles, lvP=plv(), isP=XR.tab==='prac';
   const tabs=[['prac','Práticas'],['tit','Títulos']].map(x=>{ const on=XR.tab===x[0]; return `<button data-x="tab" data-t="${x[0]}" aria-pressed="${on}" style="position:relative;flex:1;height:44px;padding:0 12px;border-radius:11px;border:0;background:${on?'#3a2c1f':'transparent'};color:${on?'#ffc94a':'#c9b9a2'};font-size:14px;font-weight:900">${x[1]}${x[0]==='tit'&&XR.newDot?'<span aria-hidden="true" style="position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4d3d"></span>':''}</button>`; }).join('');
   let pane='';
   if(isP){
-    const o=P.ensure(S), cap=P.capOf(Sys.host), lock=pracLocked(), need=pracNeed(), b=P.bonus(S); let anyCan=false;
-    const rows=P.DATA.tracks.map((t,i)=>{ const lv=o.lv[t.id], full=lv>=cap, c=P.canTrain(S,Sys.host,t.id), can=c.ok, col=R_COL[t.id]||'#ffc94a', un=R_UNIT[t.id]||t.unit, fx=XR.rowFx===t.id; if(can) anyCan=true;
+    const o=P.ensure(S), cap=P.capOf(Sys.host), lock=pracLocked(), need=pracNeed(), b=P.bonus(S), goldAp=pracGoldApplied(b.goldPct); let anyCan=false;
+    const rows=P.DATA.tracks.map((t,i)=>{ const lv=o.lv[t.id], tc=pracCap(t,cap), tmax=tc<cap, full=lv>=tc, c=P.canTrain(S,Sys.host,t.id), can=c.ok, col=R_COL[t.id]||'#ffc94a', un=R_UNIT[t.id]||t.unit, fx=XR.rowFx===t.id; if(can) anyCan=true;   /* tc = teto DESTA trilha (o módulo decide: a Coleta para antes do teto da era); tmax = parou no máximo da trilha, não no da era */
       return `<div class="r-row ${fx?'r-rowup':''}" style="position:relative;height:80px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:16px;background:#1d1611;border:2px solid #4a3a2b;box-sizing:border-box;animation-delay:${(i*0.06).toFixed(2)}s;${lock?'opacity:.55':''}">
         <div style="width:48px;height:48px;flex:none;border-radius:14px;background:radial-gradient(circle at 50% 40%,#4a3a2b,#120d0a);border:2px solid ${col};display:flex;align-items:center;justify-content:center;color:${col}">${t.id==='gold'?'<img src="assets/ui/coin.png" alt="" style="width:34px;height:34px;object-fit:contain">':`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${R_ICON[t.id]||R_ICON.str}</svg>`}</div>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
-          <div style="display:flex;align-items:baseline;gap:6px"><span class="lil" style="font-size:17px">${esc2(t.name)}</span><span class="${fx?'r-popn':''}" style="font-size:12px;font-weight:900;color:${full?'#5fd068':'#ffc94a'}">Nv ${lv}/${cap}</span></div>
-          <div style="height:10px;border-radius:5px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden"><div class="r-bar r-barf" style="width:${Math.round(lv/cap*100)}%;height:100%;background:linear-gradient(90deg,${col},#ffe07a)"></div></div>
-          <span style="font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap">+${f1c(lv*t.per)}${un} <span style="color:#5fd068">${full?'· máximo da era':'→ +'+f1c((lv+1)*t.per)+un}</span></span></div>
-        <button class="r-tbtn ${can?'y-gold r-pulse':''}" data-x="train" data-id="${t.id}" aria-label="${lock?'Práticas: libera no nível '+need:full?esc2(t.name)+' no teto da era':'Treinar '+esc2(t.name)+' por '+c.cost+' pedras de prática'}" style="width:88px;height:44px;flex:none;border-radius:12px;${can?'box-shadow:0 5px 0 #8a4f0c;':'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;'}padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
-          <span class="lil" style="font-size:15px">${lock?'Nível '+need:full?'Máx.':'Treinar'}</span><span style="font-size:11px;font-weight:900">${lock?'bloqueado':full?'teto da era':c.cost+' pedras'}</span></button>
+          <div style="display:flex;align-items:baseline;gap:6px"><span class="lil" style="font-size:17px">${esc2(t.name)}</span><span class="${fx?'r-popn':''}" style="font-size:12px;font-weight:900;color:${full?'#5fd068':'#ffc94a'}">Nv ${lv}/${tc}</span></div>
+          <div style="height:10px;border-radius:5px;background:#0e0a07;border:1px solid #4a3a2b;overflow:hidden"><div class="r-bar r-barf" style="width:${Math.min(100,Math.round(lv/Math.max(1,tc)*100))}%;height:100%;background:linear-gradient(90deg,${col},#ffe07a)"></div></div>
+          <span style="font-size:12px;font-weight:800;color:#c9b9a2;white-space:nowrap">+${f1c(lv*t.per)}${un} <span style="color:#5fd068">${full?(tmax?'· máximo':'· máximo da era'):'→ +'+f1c((lv+1)*t.per)+un}</span></span></div>
+        <button class="r-tbtn ${can?'y-gold r-pulse':''}" data-x="train" data-id="${t.id}" aria-label="${lock?'Práticas: libera no nível '+need:full?esc2(t.name)+(tmax?' no máximo':' no teto da era'):'Treinar '+esc2(t.name)+' por '+c.cost+' pedras de prática'}" style="width:88px;height:44px;flex:none;border-radius:12px;${can?'box-shadow:0 5px 0 #8a4f0c;':'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;'}padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
+          <span class="lil" style="font-size:15px">${lock?'Nível '+need:full?'Máx.':'Treinar'}</span><span style="font-size:11px;font-weight:900">${lock?'bloqueado':full?(tmax?'no máximo':'teto da era'):c.cost+' pedras'}</span></button>
         ${fx?`<span class="r-float lil" style="position:absolute;right:108px;top:6px;font-size:18px;color:#5fd068;text-shadow:0 2px 0 #000">${esc2(XR.floatTxt)}</span>`:''}</div>`; }).join('');
     pane=`<div class="r-pane" style="flex:1 0 auto;display:flex;flex-direction:column;gap:8px;position:relative">
       <div style="height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 10px;border-radius:14px;background:#1d1611;border:1px solid #4a3a2b">
@@ -507,7 +517,7 @@ function scrProg(){
         ${lock?`<div style="position:absolute;left:40px;right:40px;top:120px;padding:14px 12px;border-radius:16px;background:rgba(14,10,7,.95);border:2px solid #ffc94a;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;box-shadow:0 0 22px rgba(0,0,0,.7)"><span class="r-lockp" style="color:#ffc94a;display:flex">${SVG_LOCK(34,'#ffc94a')}</span><span class="lil" style="font-size:20px;color:#ffc94a">Libera no nível ${need}</span><span style="font-size:12px;font-weight:800;color:#c9b9a2">Você está no nível ${lvP}. As pedras de prática que caem ficam guardadas.</span></div>`:''}</div>
       <div style="height:56px;flex:none;display:flex;align-items:center;gap:8px">
         <div style="flex:1;height:56px;display:flex;flex-direction:column;justify-content:center;padding:0 12px;border-radius:14px;background:#0e0a07;border:1px solid #4a3a2b;line-height:1.25;box-sizing:border-box;min-width:0"><span style="font-size:11px;font-weight:800;color:#c9b9a2">Total das práticas</span>
-          <span style="font-size:13px;font-weight:900;line-height:1.2">+${f1c(b.atkPct)}% ATK · +${f1c(b.hpPct)}% HP · +${f1c(b.critPct)} crít. · +${f1c(b.defPct)}% def. · +${f1c(b.goldPct)}% ouro</span></div>
+          <span style="font-size:13px;font-weight:900;line-height:1.2">+${f1c(b.atkPct)}% ATK · +${f1c(b.hpPct)}% HP · +${f1c(b.critPct)} crít. · +${f1c(b.defPct)}% def. · +${f1c(goldAp)}% ouro</span></div>
         <button class="lil ${anyCan?'y-gold':''}" data-x="trainall" aria-label="Treinar o máximo possível" style="width:96px;height:56px;border-radius:14px;${anyCan?'box-shadow:0 5px 0 #8a4f0c;':'border:2px solid #4a3a2b;background:#33271d;color:#c9b9a2;'}font-size:17px;line-height:1.05;padding:0">Treinar<br>máx.</button></div></div>`;
   } else {
     const o=T.ensure(S), feat=T.featured(S), all=T.DATA.titles.map(t=>({t,w:!!o.unlocked[t.id],p:T.progress(S,Sys.host,t)}));
@@ -554,7 +564,7 @@ function rClick(b){ const a=b.dataset.x, P=Sys.practice, T=Sys.titles;
   else if(a==='filter'){ snd('ui_tap'); XR.filter=b.dataset.f; XR.page=0; XR.anim=true; render(); }
   else if(a==='pg'){ const p=XR.page+(+b.dataset.d); if(p>=0&&p<(XR.pages||1)){ snd('ui_tap'); XR.page=p; XR.anim=true; render(); } }
   else if(a==='train'){ const t=P.DATA.tracks.find(x=>x.id===b.dataset.id), r=P.train(S,Sys.host,b.dataset.id,1);
-    if(!r.ok){ snd('ui_tap'); let m='Libera no nível '+pracNeed(); if(r.reason!=='locked'){ let full=false, cost=0; try{ full=P.ensure(S).lv[b.dataset.id]>=P.capOf(Sys.host); cost=P.canTrain(S,Sys.host,b.dataset.id).cost; }catch(e){} m=full?'No teto da era: avance de era para treinar mais':'Faltam pedras de prática'+(cost?': custa '+cost:''); } rBanner(m); render(); return; }   /* nunca mudo: diz o motivo */
+    if(!r.ok){ snd('ui_tap'); rBanner(pracWhy(t,r.reason)); render(); return; }   /* nunca mudo: diz o motivo que o módulo deu */
     snd('claim'); rAfter(t.id,'+'+f1c(t.per)+(R_UNIT[t.id]||t.unit)); }
   else if(a==='trainall'){ let n=0, guard=0;   /* treina sempre a trilha mais barata que couber (como no canvas) */
     while(guard++<2000){ let best=null, bc=Infinity; for(const t of P.DATA.tracks){ const c=P.canTrain(S,Sys.host,t.id); if(c.ok&&c.cost<bc){ bc=c.cost; best=t.id; } } if(!best||!P.train(S,Sys.host,best,1).ok) break; n++; }
@@ -695,6 +705,7 @@ function resLossTips(L){ const out=[]; if(typeof diffRoute!=='function') return 
     const label=tx(t.label); if(!label) continue; out.push({id:t.id,kind:t.kind,tab:t.dest,label,gainText:tx(t.gainText),ready:!!t.ready,route,ic:m[0],name:m[1]}); }
   return out; }
 /* o quadro: {h, html}. h = altura estimada na base de 390 (o resOpen confere com a altura real depois de montar). Textos do módulo sempre escapados (esc2). */
+const RES_TIP_CH=5.4;   /* largura média de uma letra do rótulo da dica a 10 px (Nunito 800), para estimar as linhas */
 function resLossBox(L,tips,stage){ const D=Sys.bossLoss.DATA, R=L.reward||{}, n=v=>Math.max(0,Math.round(+v||0)), gold=n(R.gold), xp=n(R.xp), st=n(R.stones), has=gold+xp+st>0, pct=n(L.pct);
   const steps=Array.isArray(D.perStageDay)?D.perStageDay:[], ord=L.nth>=0?Math.min(steps.length+1,L.nth+1):0, dayCap=!!L.capped&&L.nth>=0&&L.nth<steps.length;   /* dayCap = acabou pelo limite do dia inteiro, não pela fase */
   const fase='Fase '+(eraOf(stage)+1)+'-'+(((stage-1)%STAGES_PER_ERA)+1), em=t=>`<span style="color:#ffc94a;font-weight:900">${t}</span>`, mult=+L.mult||0;
@@ -708,14 +719,16 @@ function resLossBox(L,tips,stage){ const D=Sys.bossLoss.DATA, R=L.reward||{}, n=
   let h=8+rwH, html=`<div class="q-cup" id="res_rw" role="group" aria-label="${esc2(title)}" style="flex:none;margin-top:8px;animation-delay:${RES_LOSE_PATH}s;border-radius:16px;border:2px solid ${has?'#ffc94a':'#6a5a48'};background:linear-gradient(180deg,#3a2a18,#24180f);padding:7px 10px;box-sizing:border-box">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;height:20px"><span class="lil" style="font-size:17px;line-height:20px;color:#ffc94a;white-space:nowrap">${title}</span><span style="font-size:10px;font-weight:900;color:#c9b8a2;white-space:nowrap">${side}</span></div>
       <div style="margin-top:2px;min-height:32px;font-size:12px;font-weight:800;line-height:16px;overflow-wrap:anywhere">${txt}</div>${chips}${rule}</div>`;
-  if(tips.length){ const lines=Math.max.apply(null,tips.map(t=>Math.max(1,Math.ceil(t.label.length/17)))), tipH=Math.max(68,Math.ceil(62+11.5*lines)); h+=6+21+tipH;
+  /* rótulo da dica (QA B1): 10 px (o menor tamanho da tela), sem reticências, quebra equilibrada. Cabe em até 2 linhas; só passa para 3 quando o texto do módulo
+     não cabe em 2 na largura do cartão (358 px úteis da base de 390 divididos pelas dicas, menos borda e margem; RES_TIP_CH px por letra a 10 px) */
+  if(tips.length){ const tipW=(358-6*(tips.length-1))/tips.length-10, cpl=Math.max(8,Math.floor(tipW/RES_TIP_CH)), lines=Math.max.apply(null,tips.map(t=>Math.max(1,Math.ceil(t.label.length/cpl)))), tipH=Math.max(68,Math.ceil(62+11.5*lines)); h+=6+21+tipH;
     html+=`<span class="q-cup lil" style="flex:none;margin:6px 2px 3px;font-size:15px;line-height:18px;color:#ffc94a;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
       <div id="res_tips" style="flex:none;min-height:${tipH}px;display:flex;gap:6px">${tips.map((t,i)=>{ const lk=t.route.lock;
         return `<button class="q-path" data-q="tip:${i}" aria-label="${esc2(t.name+', '+t.label+': '+t.gainText+'. '+(lk?t.route.why:'Ir para '+t.name))}" style="position:relative;flex:1 1 0;min-width:0;min-height:68px;border-radius:14px;background:#2a1f16;border:2px solid ${i===0&&!lk?'#4aa3ff':'#4a3a2b'};padding:4px 3px;display:flex;flex-direction:column;align-items:center;color:#f6ecdf;box-sizing:border-box;animation-delay:${(RES_LOSE_PATH+0.15+i*0.15).toFixed(2)}s">
           <span class="lil" style="position:absolute;right:3px;top:3px;padding:0 6px;height:18px;border-radius:9px;font-size:12px;line-height:18px;white-space:nowrap;${lk?'background:#16110d;border:1px solid #4a3a2b;color:#c9b9a2':'background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 1px 0 #9a5a10'}">${lk?'Nv '+lk:'Ir'}</span>
           <img src="assets/icons/menu/${t.ic}.png" alt="" style="width:24px;height:24px;flex:none;object-fit:contain">
           <span style="font-size:11px;line-height:13px;font-weight:900;text-align:center">${esc2(t.name)}</span>
-          <span style="max-width:100%;font-size:10px;line-height:11.5px;font-weight:800;color:#c9b8a2;text-align:center;overflow-wrap:anywhere">${esc2(t.label)}</span>
+          <span class="res-tipl" style="max-width:100%;font-size:10px;line-height:11.5px;font-weight:800;letter-spacing:-.1px;color:#c9b8a2;text-align:center;overflow-wrap:anywhere;text-wrap:balance">${esc2(t.label)}</span>
           <span style="max-width:100%;font-size:11px;line-height:13px;font-weight:900;color:#7fe07a;text-align:center;overflow-wrap:anywhere">${esc2(t.gainText)}</span></button>`; }).join('')}</div>`; }
   return {h,html}; }
 /* toque numa dica: a MESMA rota do cartão do js/diff.js (diffGo): trancada por nível = aviso e a tela fica; senão fecha a Derrota (modo farm atrás) e abre o destino */

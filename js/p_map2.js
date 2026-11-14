@@ -26,7 +26,7 @@
 if(!('map2' in PANEL_ON)) PANEL_ON.map2=false;
 const N='map2';
 const ACTIONS=['back','era','st','chest','claim','cclose','gate','fight','cur'];
-const X={view:0,sel:1,chest:0,toast:'',toastT:0,anim:true,swap:false,sig:'',tk:0,raf:0,t0:0,t:0,P:[],fxKind:'',scroll:null,user:false,gt:0,trans:0,wipe:null,tm:[],geo:null,st:0,herr:0};
+const X={view:0,sel:1,chest:0,toast:'',toastT:0,anim:true,swap:false,sig:'',tk:0,raf:0,t0:0,t:0,P:[],fxKind:'',scroll:null,user:false,gt:0,trans:0,wipe:null,tm:[],geo:null,st:0,herr:0,cardH:0,gk:''};
 
 /* ---------- geometria da trilha (só desenho; base de 390 px do protótipo, centrada na largura real) ---------- */
 const TOPY=540, STEP=132, BOT=270;
@@ -34,6 +34,9 @@ const XS=[195,118,205,278,200,112,170,272,226];
 const PF={sky:0.06,mid:0.22,front:1.25};
 const LY=[['m2_lsky','sky'],['m2_lmid','mid'],['m2_lfront','front']];
 const HC_W=240, HC_H=170, HC_X=130, HC_GY=150;   /* canvas do herói: largura, altura, x dos pés e chão */
+/* cartão de baixo: altura de reserva (enquanto a tela não foi medida), margem inferior dele e a folga entre o nó e o topo do cartão
+   (meia altura do nó 23 + sombra 6 + anel da fase atual 9 + 8 de respiro). A fase escolhida NUNCA fica atrás do cartão: ver fit() e targetOf() */
+const CARD_H0=240, CARD_B=12, NODE_CLR=46;
 
 /* ---------- leituras ISOLADAS (reserva segura se algum pedaço do jogo não estiver carregado) ---------- */
 const Y=()=>window.Sys||{};
@@ -195,10 +198,11 @@ const GOLD_F='hue-rotate(-24deg) saturate(1.45) brightness(1.05)';   /* fases se
 .m2-nd.lord{width:96px;height:60px;margin:-30px 0 0 -48px;font-size:20px}
 .m2-nd.lord.lock,.xs .m2-nd.lord.lock{background:radial-gradient(ellipse at 50% 30%,#8a2a30,#2a0712 74%);color:#ffd0d8;box-shadow:0 0 0 3px #ff6b6b,0 0 22px 4px rgba(255,80,80,.45),0 7px 0 #2a0510}
 .m2-nd[aria-pressed="true"]{outline:3px solid #5ee7ff;outline-offset:6px}
-.m2-tag{position:absolute;z-index:2;transform:translateY(-50%);min-height:24px;padding:3px 9px;border-radius:12px;background:rgba(20,12,8,.8);border:1px solid var(--edge);font-size:11px;font-weight:900;line-height:1.2;overflow-wrap:anywhere;pointer-events:none;font-variant-numeric:tabular-nums;display:flex;align-items:center}
-.m2-tag.done{color:var(--green);border-color:rgba(94,240,160,.5)}
-.m2-tag.now{color:var(--gold);border-color:var(--gold)}
-.m2-tag.mid{color:#ffc0d3;border-color:rgba(255,107,154,.6)}
+.m2-ptag{position:absolute;z-index:2;transform:translateY(-50%);min-height:24px;padding:3px 9px;border-radius:12px;background:rgba(20,12,8,.86);border:1px solid var(--edge);color:#f6ecdf;letter-spacing:0;margin:0;font-size:11px;font-weight:900;line-height:1.2;overflow-wrap:anywhere;pointer-events:none;font-variant-numeric:tabular-nums;display:flex;align-items:center}
+.m2-ptag.lock{color:#f6ecdf;border-color:rgba(255,236,200,.3)}
+.m2-ptag.done{color:var(--green);border-color:rgba(94,240,160,.5)}
+.m2-ptag.now{color:var(--gold);border-color:var(--gold)}
+.m2-ptag.mid{color:#ffc0d3;border-color:rgba(255,107,154,.6)}
 .m2-mb{position:absolute;z-index:1;width:84px;height:84px;margin-top:-74px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.6));animation:m2-bob 2.4s ease-in-out infinite}
 .m2-mb.won{filter:grayscale(1) brightness(.7);opacity:.7;animation:none}
 .m2-mb.lk{filter:brightness(0);opacity:.85;animation:none}
@@ -329,9 +333,19 @@ const GOLD_F='hue-rotate(-24deg) saturate(1.45) brightness(1.05)';   /* fases se
 
 /* ---------- geometria ---------- */
 function geo(){ const d=(typeof xDims==='function'&&xDims(640))||{}, W=Math.round(clamp(num(d.Wb)||390,280,600)), H=Math.round(Math.max(420,num(d.H)||704)), n=PER();
-  const TH=TOPY+(n-1)*STEP+BOT, M=Math.max(0,TH-H), Mp=Math.min(M,2400), kx=Math.min(1,W/390), cx=Math.round(W/2);
-  return {d:d,W:W,H:H,n:n,TH:TH,M:M,Mp:Mp,kx:kx,cx:cx,xs:i=>i>=n-1?cx:Math.round(cx+(XS[i%XS.length]-195)*kx),ny:i=>TOPY+(n-1-i)*STEP,lh:k=>Math.round(H+PF[k]*Mp)}; }
-const targetOf=(g,s)=>{ const i=clamp(s-block(X.view),0,g.n-1); return clamp(Math.round(g.ny(i)-Math.max(g.H*0.47,262)),0,g.M); };
+  /* folga inferior da trilha: o que falta, além do BOT, para a fase 1 subir acima do cartão de baixo (altura REAL do cartão, medida no fit()) */
+  const ch=num(X.cardH)>0?X.cardH:CARD_H0, free=H-ch-CARD_B, pad=Math.max(0,H-free+NODE_CLR-BOT);
+  const TH=TOPY+(n-1)*STEP+BOT, M=Math.max(0,TH+pad-H), Mp=Math.min(M,2400), kx=Math.min(1,W/390), cx=Math.round(W/2);
+  return {d:d,W:W,H:H,n:n,TH:TH,M:M,Mp:Mp,kx:kx,cx:cx,free:free,pad:pad,xs:i=>i>=n-1?cx:Math.round(cx+(XS[i%XS.length]-195)*kx),ny:i=>TOPY+(n-1-i)*STEP,lh:k=>Math.round(H+PF[k]*Mp)}; }
+/* mede o cartão de baixo já desenhado (altura e topo reais, na base da tela) e acerta a folga inferior da trilha e o limite da rolagem.
+   Sem medida (tela fora do documento) fica a reserva do geo(). */
+function fit(g){ if(!g) return; const c=el('m2_card'), tk=el('m2_track'); let ch=0, top=0;
+  try{ if(c){ ch=Math.ceil(num(c.offsetHeight)); top=Math.floor(num(c.offsetTop)); } }catch(e){ ch=0; }
+  if(!(ch>0)) return;
+  X.cardH=ch; g.free=(top>0&&top<g.H)?top:g.H-ch-CARD_B; g.pad=Math.max(0,g.H-g.free+NODE_CLR-BOT); g.M=Math.max(0,g.TH+g.pad-g.H);
+  try{ if(tk&&tk.style) tk.style.height=(g.TH+g.pad)+'px'; }catch(e){} }
+/* rolagem que põe a fase s à vista: perto do meio da tela, mas SEMPRE acima do cartão de baixo (o nó inteiro e, na fase atual, o herói em cima dele) */
+const targetOf=(g,s)=>{ const i=clamp(s-block(X.view),0,g.n-1), y=Math.min(Math.max(g.H*0.47,262),g.free-(i>=g.n-1?NODE_CLR+8:NODE_CLR)); return clamp(Math.round(g.ny(i)-y),0,g.M); };
 
 /* ---------- aviso (no alto, logo abaixo da troca de era: longe do cartão, dos botões de baixo e do herói, que fica no meio da tela) ---------- */
 const TOAST_TOP=108;
@@ -425,7 +439,7 @@ function nodesHtml(g,v){ const a=block(v), lv=lockedV(v), e=artEra(v), ne=NE(), 
     const lab=stageName(s)+(st==='done'?', vencida':st==='now'?', fase atual':', fechada');
     h+='<button class="m2-nd '+st+(top?' lord':'')+(mid?' mid':'')+'" style="left:'+x+'px;top:'+y+'px" data-x="st" data-s="'+s+'" aria-pressed="'+(X.sel===s)+'" aria-label="'+esc(lab)+'">'+ico+'<span>'+nT(s)+'</span></button>';
     if(!top){ const need=needFC(s), txt=st==='done'?'vencida':(mid?'Chefe · ':'')+(need?'FC '+fcT(need):'fase '+nT(s)), room=Math.max(60,Math.round(right?g.W-(x+44)-6:x-44-6));
-      h+='<span class="m2-tag '+(st==='lock'?'':st)+(mid&&st==='lock'?' mid':'')+'" style="'+(right?'left:'+(x+44)+'px':'right:'+(g.W-x+44)+'px')+';top:'+y+'px;max-width:'+room+'px">'+esc(txt)+'</span>'; }
+      if(txt) h+='<span class="m2-ptag '+st+(mid&&st==='lock'?' mid':'')+'" style="'+(right?'left:'+(x+44)+'px':'right:'+(g.W-x+44)+'px')+';top:'+y+'px;max-width:'+room+'px">'+esc(txt)+'</span>'; }
     /* chefe do meio: na batalha o chefe de toda fase usa a arte do chefe da era (assets/enemies/era<N>_boss.png), menor; fica de pé do lado oposto à etiqueta */
     if(mid&&v<ne){ const mx=right?x-34-84:x+34; h+='<img class="m2-mb'+(st==='done'?' won':lv?' lk':'')+'" src="'+bossUrl(e)+'" alt="" style="left:'+mx+'px;top:'+y+'px'+(right?'':';transform:scaleX(-1)')+'">'; }
     /* baú de marco: só o que o Sys.mapChest devolve */
@@ -513,7 +527,7 @@ function draw(){
   const alt=heroName()+' na fase atual, com a arma na mão e o pet na frente';
   const w=X.wipe;
   V.innerHTML=xWrap(g.d,'','<div class="m2'+(X.anim?' m2-in':'')+'">'+sceneHtml(g,v)
-    +'<div class="m2-trail" id="m2_trail" aria-label="Trilha das fases: role para cima até o topo"><div class="m2-track" style="height:'+g.TH+'px">'
+    +'<div class="m2-trail" id="m2_trail" aria-label="Trilha das fases: role para cima até o topo"><div class="m2-track" id="m2_track" style="height:'+(g.TH+g.pad)+'px">'
       +'<svg class="m2-path" width="'+g.W+'" height="'+g.TH+'" viewBox="0 0 '+g.W+' '+g.TH+'" aria-hidden="true">'+segsHtml(g,v)+'</svg>'
       +'<div id="m2_top">'+topHtml(g,v)+'</div><div id="m2_nodes">'+nodesHtml(g,v)+'</div>'
       +(here?'<canvas class="m2-hc" id="m2_hc" role="img" aria-label="'+esc(alt)+'" style="left:'+(g.xs(hi)-HC_X)+'px;top:'+(g.ny(hi)-14-HC_GY)+'px"></canvas>':'')
@@ -528,7 +542,9 @@ function draw(){
     +'<div id="m2_toast">'+(X.toast&&now()-X.toastT<2400?toastHtml(X.toast):'')+'</div>'
     +'<div id="m2_pop">'+popHtml(v)+'</div>'
     +'<div class="'+(w?w.cls:'m2-wipe')+'" id="m2_wipe" aria-hidden="true"'+(w?' style="background-image:'+wipeBg(w.v)+'"':'')+'>'+(w?wipeInner(w.v):'')+'</div></div>');
-  const tr=el('m2_trail');
+  const tr=el('m2_trail'); fit(g);
+  /* a tela mudou de tamanho (ou o cartão mudou de altura) sem o jogador ter rolado à mão: volta a pôr a fase escolhida à vista, acima do cartão */
+  const gk=g.W+'|'+g.H+'|'+g.free; if(tr&&!X.scroll&&keep!=null&&!X.user&&X.gk&&X.gk!==gk) X.scroll={to:X.sel,jump:true}; X.gk=gk;
   if(tr){ bind(tr); if(X.scroll){ if(X.scroll.keep===undefined&&keep!=null&&!X.scroll.from) X.scroll.keep=keep; scrollGo(tr,g,X.scroll); } else if(keep!=null) tr.scrollTop=keep; }
   X.scroll=null; parallax(); X.anim=false; X.swap=false; X.sig=sig(); loopStart();
 }
@@ -536,7 +552,7 @@ function draw(){
 function soft(scrollTo){ const g=X.geo, a=el('m2_nodes'), b=el('m2_card'), c=el('m2_ern'), d=el('m2_dots'), p=el('m2_pop'), tr=el('m2_trail');
   if(!g||!a||!b||!c||!d||!p||!tr){ if(scrollTo!=null) X.scroll={to:scrollTo}; redraw(); return; }
   fixState(); const v=X.view; a.innerHTML=nodesHtml(g,v); b.innerHTML=cardHtml(v); try{ b.className='m2-card'+((lockedV(v)||stOf(X.sel)==='lock')?' lk':''); }catch(e){}
-  c.innerHTML=ernHtml(v); d.innerHTML=dotsHtml(v); p.innerHTML=popHtml(v); X.sig=sig();
+  c.innerHTML=ernHtml(v); d.innerHTML=dotsHtml(v); p.innerHTML=popHtml(v); X.sig=sig(); fit(g);
   if(scrollTo!=null) scrollGo(tr,g,{to:scrollTo}); }
 /* o que muda por fora (fase vencida, FC, baú pronto): o tick redesenha só quando muda */
 function sig(){ if(!NE()) return 'x'; try{ return [stageNow(),Math.round(num(myFC())),readyCount(),heroId(),MC()?1:0,eeOn()?1:0].join('|'); }catch(e){ return ''; } }
@@ -584,14 +600,15 @@ function urls(){ const u=[]; if(!NE()) return u; const v=clamp(Math.floor(num(X.
     if(v<NE()&&(stonesTxt('eraBoss')||stonesTxt('boss'))) add(IC.forge); }catch(x){}
   return u; }
 
-const def=Panels.add(N,{title:'Mapa das Eras',actions:ACTIONS,
+/* título curto: o cabeçalho do jogo corta com reticências o que não cabe em 320 px ao lado das moedas ("Mapa das Eras" virava "Mapa das E" cortado) */
+const def=Panels.add(N,{title:'Mapa',actions:ACTIONS,
   render(){ if(typeof pwGate==='function'){ if(pwGate(urls())) return; } else if(typeof xGate==='function'&&xGate(urls())) return; return draw(); },
   click(b,ev){ if(typeof pWaitClick==='function'&&pWaitClick(b)) return; return click(b,ev); },
   tick(){ if(!isOn()||X.trans) return; if(X.toast&&now()-X.toastT>2400){ X.toast=''; const t=el('m2_toast'); if(t) t.innerHTML=''; }
     if(X.chest) return; X.tk=(X.tk+1)%4; if(X.tk===0&&X.sig&&sig()!==X.sig) redraw(); },
   busy(){ return !!X.trans; },
   /* o: {era: índice da era para abrir nela} (opcional). Sem ele, abre na era e na fase atuais */
-  onOpen(o){ stopTimers(); loopStop(); fxReset(); X.chest=0; X.toast=''; X.anim=true; X.swap=false; X.sig=''; X.tk=0; X.herr=0; X.user=false;
+  onOpen(o){ stopTimers(); loopStop(); fxReset(); X.chest=0; X.toast=''; X.anim=true; X.swap=false; X.sig=''; X.tk=0; X.herr=0; X.user=false; X.gk='';
     X.view=(o&&Number.isInteger(o.era))?clamp(o.era,0,NE()):curView(); X.sel=defSel(X.view); X.scroll={to:X.sel,from:'bottom'}; },
   onClose(){ stopTimers(); loopStop(); X.chest=0; X.toast=''; X.P=[]; } });
 /* para o teste de fumaça, o console e o botão do mapa: estado da tela e a conta dos baús prontos (o "!" do botão) */

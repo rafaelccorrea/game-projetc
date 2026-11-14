@@ -94,6 +94,39 @@ const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]
   check('ligada: a altura do bloco entra na conta que protege o Kael caído (RES.loseX e resLay)', ev('typeof RES.loseX==="number"&&RES.lay.f>=0.7&&RES.lay.f<=1') && ev("resLay('lose',RES.geo,RES.loseX).f<=resLay('lose',RES.geo,0).f"), 'loseX ' + ev('RES.loseX') + ' f ' + ev('RES.lay.f'));
   check('ligada: sem alert/confirm/prompt no código novo', !/\b(alert|confirm|prompt)\(/.test(G.rd('js/screens2.js').split('DERROTA QUE RENDE')[1].split('function resLoseHtml')[0]));
 
+  /* QA B1: rótulo da dica em até 2 linhas, fonte de 10 px ou mais, sem reticências; 3 linhas só quando o texto do módulo não cabe em 2 */
+  { const lab = (h.match(/<span class="res-tipl" style="[^"]*"/g) || []);
+    check('B1: rótulo de cada dica com 10 px ou mais, sem reticências, sem linha presa e sem corte', lab.length === 3 && lab.every(s => { const m = /font-size:([\d.]+)px/.exec(s); return m && +m[1] >= 10 && +m[1] <= 11 && !/ellipsis|nowrap|line-clamp|overflow:\s*hidden/.test(s) && /overflow-wrap:anywhere/.test(s) && /text-wrap:balance/.test(s); }), lab[0]);
+    const mh = (n, len) => +ev(`(function(){ const t=RES.tips.slice(0,${n}).map(x=>Object.assign({},x,{label:'Subir para o nivel '.repeat(9).slice(0,${len})})); const m=/id="res_tips" style="flex:none;min-height:(\\d+)px/.exec(resLossBox(RES.o.loss,t,3).html); return m?+m[1]:-1; })()`);
+    const H2 = Math.ceil(62 + 11.5 * 2), H3 = Math.ceil(62 + 11.5 * 3);
+    check('B1: 3 dicas, rótulo de até 38 letras = caixa de 2 linhas; 39 em diante = 3 linhas (só nesse caso)', mh(3, 20) <= H2 && mh(3, 38) === H2 && mh(3, 39) === H3 && mh(3, 57) === H3, [mh(3, 20), mh(3, 38), mh(3, 39), mh(3, 57)].join(','));
+    check('B1: 2 dicas (cartão mais largo), o rótulo do print do QA (39 letras) cabe em 2 linhas; 1 dica, em 1', mh(2, 39) === H2 && mh(2, 60) === H2 && mh(1, 39) === Math.ceil(62 + 11.5), [mh(2, 39), mh(2, 60), mh(1, 39)].join(','));
+    check('B1: a caixa do rótulo longo de mentira (47 letras, 3 dicas) reserva as 3 linhas', new RegExp('id="res_tips" style="flex:none;min-height:' + H3 + 'px').test(h), (h.match(/id="res_tips" style="[^"]*"/) || [''])[0]); }
+
+  /* QA B2: aviso de liberação ("Invocar: 1 item grátis por dia") NÃO sai por cima do resultado: espera a tela fechar (ponto único: fbNovoTick do js/fullbattle.js) */
+  if (check('B2: o ponto único dos avisos de liberação existe (fbNovoTick, FBN, fbResUp)', ev('typeof fbNovoTick==="function"&&typeof FBN==="object"&&typeof fbResUp==="function"'))) {
+    const toasts = []; const t0 = X.toast; X.toast = m => { toasts.push(String(m)); return t0(m); };
+    try {
+      const id = ev(`(function(){ window.__unl=JSON.stringify(S.unl||{}); window.__keep=JSON.stringify(S.unlKeep||null); window.__tut=S.tut; S.tut=99; S.unlKeep=Object.assign({},S.unlKeep||{},{summon:1,missions:1});
+        if(!S.unl||typeof S.unl!=='object') S.unl={}; const all=FB_MENU.concat(FB_DROP).filter(m=>FB_UNLOCK[m.id]); for(const m of all) S.unl[m.id]=1; const m=all.find(m=>fbShown(m)); if(!m) return ''; delete S.unl[m.id]; FBN.until=0; FBN.redo=''; FBN.txt=''; FBN.at=0; return m.id; })()`);
+      const txt = id ? ev(`FB_UNLOCK_TXT[${JSON.stringify(id)}]||''`) : '';
+      check('B2: há um aviso de liberação pendente para o teste', !!id && !!txt, 'id ' + id);
+      check('B2: a Derrota está aberta neste ponto', !!ev('B.res') && ev('fbResUp()') === true);
+      toasts.length = 0; for (let i = 0; i < 5; i++) ev('fbNovoTick()');
+      check('B2: com o resultado aberto o aviso não sai e a liberação continua pendente', !toasts.includes(txt) && !ev(`S.unl[${JSON.stringify(id)}]`), JSON.stringify(toasts));
+      ev('window.__res=B.res; window.__dt=B.deadT; window.__db=B.deadBoss; B.res=null; B.deadBoss=true; B.deadT=0.8'); ev('fbNovoTick()');
+      check('B2: herói caindo diante do chefe (a tela abre em seguida): o aviso também espera', !toasts.includes(txt));
+      ev('B.deadT=0; B.deadBoss=false; window.__v=view; window.__p=B.paused; view="battle"; B.paused=false; fbNovoTick()');
+      check('B2: tela fechada: o aviso que esperou sai, uma vez, e a liberação é marcada', toasts.filter(m => m === txt).length === 1 && ev(`S.unl[${JSON.stringify(id)}]`) === 1, JSON.stringify(toasts));
+      /* aviso já na tela quando o resultado abre: sai da frente e é repetido depois */
+      ev('B.res=window.__res; fbNovoTick()');
+      check('B2: aviso que estava na tela quando o resultado abriu sai da frente e fica na fila', ev('FBN.redo') === txt && ev('(function(){ const t=document.getElementById("toast"); return !t||!t.classList||typeof t.classList.contains!=="function"||!t.classList.contains("on"); })()') === true, String(ev('FBN.redo')));
+      ev('fbNovoTick(); fbNovoTick()'); check('B2: enquanto o resultado está aberto ele não volta', toasts.filter(m => m === txt).length === 1);
+      ev('B.res=null; fbNovoTick()'); check('B2: fechou: o aviso volta uma vez', toasts.filter(m => m === txt).length === 2 && ev('FBN.redo') === '', JSON.stringify(toasts));
+      ev('FBN.until=0; fbNovoTick()'); check('B2: e não repete de novo', toasts.filter(m => m === txt).length === 2);
+      check('B2: o balão do tutorial espera pelo mesmo sinal (tutLayout do js/meta.js lê B.res)', /B\.res/.test((G.rd('js/meta.js').split('function tutLayout')[1] || '').split('function tutEvent')[0]));
+    } finally { X.toast = t0; ev('B.res=window.__res||B.res; B.deadT=window.__dt||0; B.deadBoss=!!window.__db; if(window.__v) view=window.__v; if(window.__p!==undefined) B.paused=window.__p; S.unl=JSON.parse(window.__unl||"{}"); S.unlKeep=JSON.parse(window.__keep||"null")||undefined; S.tut=window.__tut; FBN.until=0; FBN.redo=""; FBN.txt=""; FBN.at=0'); } }
+
   /* reabrir e redesenhar: nada de crédito novo */
   const g1 = ev('S.gold'), sv1 = ev('JSON.stringify(S.sys.bossLoss)');
   ev('window.__loss=RES.o.loss; B.res=null; RES.el=null; heroDown(false); resOpen("lose",{stage:S.stage,loss:__loss},true)'); const h2 = html();
@@ -141,6 +174,38 @@ const SHOP = /loja|vip|oferta|gema|invoca|pacote|sorteio|comprar|compra|pre[çc]
   ev("window.__m=Sys.bossLoss; delete Sys.bossLoss; resOpen('lose',{stage:S.stage},true)"); const offY = html(); ev('Sys.bossLoss=window.__m');
   const geo = x => x.replace(/ellipse at \d+% \d+%/, 'ellipse').replace(/class="q-orbs"[^>]*>/, '').replace(/id="res_w"[^>]*>/, '').replace(/id="res_p"[^>]*>/, '');   /* as telas abertas no meio do teste mexem na medida do palco: sai só a geometria */
   { const A = geo(offA), Z = geo(offZ); let i = 0; while (i < Z.length && Z[i] === A[i]) i++; check('Derrota idêntica à do começo (e à do jogo sem o módulo)', offZ === offY && Z === A, 'difere em ' + i + ': ' + A.slice(i - 60, i + 60) + ' ||| ' + Z.slice(i - 60, i + 60)); }
+  /* ======================= 4. PRÁTICA (mesmo arquivo, js/screens2.js): ouro APLICADO no resumo e teto da trilha pelo módulo ======================= */
+  console.log('4. Prática: resumo com o ouro aplicado (Sys.loot.goldBreakdown) e a Coleta parando no teto do módulo');
+  { const prog = () => String(ev('(function(){ B.res=null; RES.el=null; try{ heroDown(false); }catch(e){} view="prog"; XR.tab="prac"; XR.rowFx=null; scrProg(); return V.innerHTML; })()') || '');
+    const row = (hh, id) => { const i = hh.indexOf('data-id="' + id + '"'); if (i < 0) return ''; const a = hh.lastIndexOf('class="r-row', i), z = hh.indexOf('class="r-row', i); return hh.slice(a, z < 0 ? hh.indexOf('Total das práticas', i) : z); };
+    const sum = hh => text((hh.match(/Total das práticas[\s\S]{0,400}?<\/div>/) || [''])[0]).replace(/\s+/g, ' ');
+    const gid = ev('(Sys.practice.DATA.tracks.find(t=>t.stat==="goldPct")||{}).id') || '', J = JSON.stringify(gid);
+    check('Prática: o Sys.loot tem a conta do ouro (goldBreakdown com applied.practice, raw, pct, overXp) e o Sys.practice o teto da trilha (capT)', !!gid && ev('(function(){ const g=Sys.loot.goldBreakdown(S); return !!(g&&g.applied&&typeof g.applied.practice==="number"&&typeof g.raw==="number"&&typeof g.pct==="number"&&typeof g.overXp==="number"&&typeof Sys.practice.capT==="function"); })()'), gid);
+    /* ouro da Prática ligado no Sys.loot (é o valor de fábrica; o teste força para não depender dele) e nível alto para a Prática estar liberada */
+    ev(`(function(){ window.__gl=Sys.loot.goldLive; Sys.loot.goldLive=function(s){ return s==='practice'?true:window.__gl.apply(this,arguments); }; window.__pr=JSON.stringify(S.sys.practice||null); window.__lv=JSON.stringify(S.sys.level||null); window.__em=S.eraMax;
+      try{ S.sys.level.lvl=60; }catch(e){} S.eraMax=8; const o=Sys.practice.ensure(S); o.stones=1e9; return 1; })()`);
+    try {
+      const capEra = ev('Sys.practice.capOf(Sys.host)'), capG = ev(`Sys.practice.capT(Sys.practice.DATA.tracks.find(t=>t.id===${J}),Sys.host)`), per = ev(`Sys.practice.DATA.tracks.find(t=>t.id===${J}).per`);
+      check('Prática: a Coleta tem teto próprio, abaixo do teto da era (o módulo decide)', capG > 0 && capG < capEra, capG + ' x ' + capEra);
+      ev(`Sys.practice.ensure(S).lv[${J}]=3`); let p = prog(), gr = row(p, gid), ap = ev('Sys.loot.goldBreakdown(S).applied.practice');
+      check('Prática: linha da Coleta mostra o nível sobre o teto DELA e segue treinando', gr.includes('Nv 3/' + capG + '<') && new RegExp('data-x="train" data-id="' + gid + '"').test(gr) && />Treinar</.test(gr) && /% ouro/.test(gr) && !/Em breve/.test(gr), text(gr).replace(/\s+/g, ' ').slice(0, 160));
+      check('Prática: o resumo mostra o ouro APLICADO pela conta do Sys.loot', ap > 0 && sum(p).includes('+' + ev(`f1c(${ap})`) + '% ouro'), sum(p) + ' / aplicado ' + ap);
+      /* a conta do Sys.loot corta a fonte: o resumo segue a conta, não o valor cru do Sys.practice */
+      ev('window.__gb=Sys.loot.goldBreakdown; Sys.loot.goldBreakdown=function(){ const g=window.__gb.apply(this,arguments); g.applied=Object.assign({},g.applied,{practice:0.7}); return g; }');
+      try { p = prog(); check('Prática: se a conta aplica menos que o cru, a tela mostra o aplicado', sum(p).includes('+' + ev('f1c(0.7)') + '% ouro') && !sum(p).includes('+' + ev(`f1c(${ap})`) + '% ouro') && ev('Sys.practice.bonus(S).goldPct') !== 0.7, sum(p)); } finally { ev('Sys.loot.goldBreakdown=window.__gb'); }
+      ev('window.__gb=Sys.loot.goldBreakdown; delete Sys.loot.goldBreakdown'); try { p = prog(); check('Prática: sem a conta (módulo antigo) vale o valor do Sys.practice, sem quebrar', sum(p).includes('+' + ev('f1c(Sys.practice.bonus(S).goldPct)') + '% ouro')); } finally { ev('Sys.loot.goldBreakdown=window.__gb'); }
+      /* Coleta no teto dela: "Máx.", texto próprio (não é o teto da era) e o toque diz o motivo sem gastar pedra */
+      ev(`Sys.practice.ensure(S).lv[${J}]=${capG}`); p = prog(); gr = row(p, gid); const st0 = ev('Sys.practice.ensure(S).stones');
+      check('Prática: Coleta no teto dela mostra "Máx." e "no máximo" (não "teto da era") e o valor aplicado', gr.includes('Nv ' + capG + '/' + capG + '<') && />Máx\.</.test(gr) && />no máximo</.test(gr) && /· máximo</.test(gr) && !/teto da era/.test(gr) && !/y-gold/.test(gr) && sum(p).includes('+' + ev('f1c(Sys.loot.goldBreakdown(S).applied.practice)') + '% ouro') && ev('Sys.loot.goldBreakdown(S).applied.practice') === capG * per, text(gr).replace(/\s+/g, ' ').slice(0, 160) + ' | ' + sum(p));
+      check('Prática: o módulo recusa treinar a Coleta no teto (reason cap)', ev(`Sys.practice.canTrain(S,Sys.host,${J}).reason`) === 'cap');
+      ev(`rClick({dataset:{x:'train',id:${J}}})`);
+      check('Prática: tocar na Coleta no teto não treina nem gasta pedra, e a tela diz o motivo', ev(`Sys.practice.ensure(S).lv[${J}]`) === capG && ev('Sys.practice.ensure(S).stones') === st0 && / já está no máximo$/.test(String(ev('XR.banner'))), String(ev('XR.banner')));
+      check('Prática: os outros motivos têm texto (nível, pedras, teto da era, em breve)', ev('pracWhy(null,"locked")').indexOf('Libera no nível') === 0 && /Faltam pedras de prática/.test(ev(`pracWhy(Sys.practice.DATA.tracks[0],"stones")`)) && /teto da era/.test(ev('pracWhy(Sys.practice.DATA.tracks[0],"cap")')) && /: em breve$/.test(ev(`pracWhy(Sys.practice.DATA.tracks.find(t=>t.id===${J}),"soon")`)) && ev('pracWhy(null,"x")') === 'Não foi possível treinar agora');
+      { const o1 = ev('Sys.practice.DATA.tracks[0].id'); ev(`Sys.practice.ensure(S).lv[${JSON.stringify(o1)}]=${capEra}`); p = prog(); const r1 = row(p, o1); check('Prática: trilha comum no teto da era continua dizendo "teto da era"', />teto da era</.test(r1) && /· máximo da era</.test(r1) && r1.includes('Nv ' + capEra + '/' + capEra + '<'), text(r1).replace(/\s+/g, ' ').slice(0, 140)); }
+      check('Prática: sem reticências, sem emoji, sem undefined', !/…|\.\.\./.test(text(p)) && !EMOJI.test(text(p).replace(/→/g, '')) && !/undefined|NaN|\[object/.test(p));
+    } finally { ev('Sys.loot.goldLive=window.__gl; S.sys.practice=JSON.parse(window.__pr)||undefined; if(window.__lv!=="null") S.sys.level=JSON.parse(window.__lv); S.eraMax=window.__em'); }
+    ev("try{ Screens.close(); }catch(e){} view='battle'"); }
+
   check('nenhuma exceção no laço da batalha', !G.frameErr.length, G.frameErr.slice(0, 4).join(' | '));
   console.log((fails ? 'FALHOU ' : 'OK ') + (total - fails) + '/' + total + ' · derrota.smoke');
   process.exit(fails ? 1 : 0);

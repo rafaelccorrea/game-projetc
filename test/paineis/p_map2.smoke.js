@@ -152,13 +152,52 @@ try {
   // 9) larguras 320, 390 e 600: nenhum nó, baú, portão ou etiqueta sai da largura (sem rolagem lateral); toque mínimo de 40 px no estilo
   for (const W of [320, 390, 600]) { DIM = { H: W === 320 ? 520 : 704, Wb: W }; setStage(24); open(); const ns = nodes(); assert.strictEqual(ns.length, 10);
     for (const n of ns) assert(n.x - 48 >= 0 && n.x + 48 <= W, W + ' px: nó fora da largura: ' + n.x); for (const c of chests()) assert(c.x - 24 >= 0 && c.x + 24 <= W, W + ' px: baú fora da largura');
-    for (const m of H().matchAll(/class="m2-tag[^"]*" style="(left|right):(-?[\d.]+)px;top:[\d.]+px;max-width:(\d+)px"/g)) assert(+m[2] >= 0 && +m[2] + +m[3] <= W, W + ' px: etiqueta fora da largura');
+    { const tg = [...H().matchAll(/class="m2-ptag[^"]*" style="(left|right):(-?[\d.]+)px;top:[\d.]+px;max-width:(\d+)px"/g)]; assert.strictEqual(tg.length, 9, W + ' px: uma etiqueta por fase (menos o topo)'); for (const m of tg) assert(+m[2] >= 0 && +m[2] + +m[3] <= W, W + ' px: etiqueta fora da largura'); }
     { const m = /class="m2-gate[^"]*" style="left:(-?[\d.]+)px/.exec(H()); assert(m && +m[1] >= 0 && +m[1] + 220 <= W, W + ' px: portão dentro da largura'); }
     assert(new RegExp('<svg class="m2-path" width="' + W + '"').test(H()), W + ' px: a trilha tem a largura da tela'); sane(W + ' px'); }
   DIM = { H: 704, Wb: 390 };
   { const css = g.document.head.children.map(c => c.textContent).join('\n'); assert(/\.m2-nd,\.xs \.m2-nd\{[^}]*width:68px;height:46px/.test(css) && /\.m2-chest,\.xs \.m2-chest\{[^}]*width:48px;height:48px/.test(css) && /\.m2-arr,\.xs \.m2-arr\{[^}]*width:44px;min-height:58px/.test(css) && /\.m2-bt,\.xs \.m2-bt\{[^}]*min-height:44px/.test(css) && /\.m2-gbtn,\.xs \.m2-gbtn\{[^}]*min-height:46px/.test(css), 'toque mínimo de 40 px');
     assert(/\.m2-trail\{[^}]*overflow-x:hidden/.test(css) && /\.m2-track\{[^}]*overflow:hidden/.test(css) && /\.m2\{[^}]*overflow:hidden/.test(css), 'sem rolagem lateral'); assert(!/white-space:nowrap/.test(css), 'nenhum texto preso em uma linha'); }
   out.push('larguras 320, 390 e 600: nós, baús, etiquetas e portão dentro da tela; toque mínimo de 40 px; sem rolagem lateral');
+
+  // 9b) QA A2: etiqueta "FC" das fases fechadas com texto CLARO declarado na própria regra e classe só do Mapa (a classe antiga, m2-tag, é também do
+  //     js/p_mounts2.js, que pintava o texto de escuro: era a "pílula vazia" da fase 9); nenhuma etiqueta vazia, com ou sem leitura de FC
+  { const css = g.document.head.children.map(c => c.textContent).join('\n'); assert(!/m2-tag/.test(SRC), 'a classe m2-tag (do js/p_mounts2.js) não é mais usada pelo Mapa');
+    const mounts = fs.readFileSync(path.join(R, 'js/p_mounts2.js'), 'utf8'); assert(!/m2-ptag/.test(mounts), 'a classe da etiqueta é só do Mapa');
+    assert(/\.m2-ptag\{[^}]*color:#f6ecdf/.test(css) && /\.m2-ptag\.lock\{[^}]*color:#f6ecdf/.test(css), 'etiqueta fechada: texto claro declarado');
+    const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+    /* pior caso: a pílula rgba(20,12,8,.86) sobre céu branco */ const bg = '#' + [20, 12, 8].map(v => Math.round(v * 0.86 + 255 * 0.14).toString(16).padStart(2, '0')).join('');
+    assert(/\.m2-ptag\{[^}]*background:rgba\(20,12,8,\.86\)/.test(css)); for (const fg of ['#f6ecdf', '#ffc0d3']) { const k = (lum(fg) + 0.05) / (lum(bg) + 0.05); assert(k >= 4.5, 'contraste AA da etiqueta ' + fg + ': ' + k.toFixed(1)); }
+    const tags = () => [...H().matchAll(/<span class="m2-ptag ([^"]*)"[^>]*>([^<]*)<\/span>/g)].map(m => [m[1], un(m[2])]);
+    setStage(1); open(); { const t = tags(); assert.strictEqual(t.length, 9); assert(t.every(q => q[1].trim().length > 0), 'nenhuma etiqueta vazia'); assert.strictEqual(t[8][1], 'FC fc' + g.recFC(9), 'fase 9: FC pedida escrita'); assert(t.slice(1).every(q => /\block\b/.test(q[0])), 'fechadas levam a classe lock'); }
+    setStage(24); open(); assert(tags().some(q => /\block mid\b/.test(q[0]) && /^Chefe · FC /.test(q[1])), 'chefe do meio fechado: etiqueta própria');
+    { const r0 = g.recFC; g.recFC = () => null; try { setStage(1); open(); const t = tags(); assert.strictEqual(t.length, 9); assert(t.every(q => /^fase \d+$/.test(q[1])), 'sem leitura de FC: a etiqueta diz a fase, nunca fica vazia'); sane('sem FC'); } finally { g.recFC = r0; } }
+    assert.strictEqual(def.title, 'Mapa', 'QA A3: título curto para o cabeçalho do jogo não cortar em 320 px'); }
+  out.push('etiquetas das fases: classe só do Mapa, texto claro com contraste AA, nunca vazias; título do cabeçalho curto ("Mapa")');
+
+  // 9c) QA A1: a fase escolhida (e o herói em cima dela) fica ACIMA do cartão de baixo em qualquer tamanho; a folga inferior da trilha cobre a altura REAL do cartão
+  { const css = g.document.head.children.map(c => c.textContent).join('\n'); const hero = () => { const m = /id="m2_hc"[^>]*style="left:(-?[\d.]+)px;top:(-?[\d.]+)px"/.exec(H()); assert(m, 'herói na trilha'); return +m[2]; };
+    const tr = els.m2_trail = mkEl('m2_trail'), card = els.m2_card = mkEl('m2_card'), tk = els.m2_track = mkEl('m2_track'); tr.addEventListener = () => {}; tr.scrollTo = o => { tr.scrollTop = o.top; };
+    const put = (W, Hh, ch) => { DIM = { H: Hh, Wb: W }; card.offsetHeight = ch; card.offsetTop = Hh - ch - 12; };
+    const check = (what, s, Hh, ch) => { const n = nodes().find(q => q.s === s), y = n.y - tr.scrollTop, cardTop = Hh - ch - 12, lordN = n.cls.includes('lord');
+      assert(y + (lordN ? 30 : 23) + 15 <= cardTop - 6, what + ': o nó da fase ' + s + ' fica inteiro acima do cartão (nó em ' + y + ', cartão em ' + cardTop + ')'); assert(y - 23 >= 0, what + ': o nó não some por cima');
+      const th = +/height:(\d+)px/.exec('height:' + tk.style.height)[1]; assert(th - n.y >= ch, what + ': folga inferior da trilha (' + (th - n.y) + ') menor que o cartão (' + ch + ')'); assert(tr.scrollTop <= th - Hh, what + ': rolagem dentro do limite real da trilha'); return y; };
+    try {
+      for (const [W, Hh, ch] of [[320, 584, 252], [320, 520, 300], [360, 724, 232], [390, 788, 226], [390, 704, 340], [600, 900, 230], [320, 420, 236]]) { const what = W + 'x' + Hh + ' cartão ' + ch;
+        setStage(1); X.cardH = 0; put(W, Hh, ch); open(); const y1 = check(what + ' fase 1', 1, Hh, ch); if (Hh >= 560) assert(hero() - tr.scrollTop + 30 >= 0, what + ': herói à vista');
+        assert(y1 >= Math.min(Hh * 0.47, Hh - ch - 12 - 46) - 1 || tr.scrollTop === 0, what + ': a fase não sobe mais que o preciso');
+        def.click(btn('st', { s: '2' })); check(what + ' fase 2', 2, Hh, ch); def.click(btn('cur')); check(what + ' volta à fase 1', 1, Hh, ch);
+        setStage(8); open(); check(what + ' fase 8', 8, Hh, ch); setStage(10); open(); check(what + ' Senhor', 10, Hh, ch); }
+      /* o cartão cresce (texto quebrou em mais linhas) ou a tela muda de altura sem o jogador ter rolado: a fase volta a ficar à vista */
+      setStage(1); put(390, 788, 226); open(); check('antes de mudar', 1, 788, 226); const st0 = tr.scrollTop;
+      put(390, 640, 300); def.render(); check('tela menor e cartão maior, sem reabrir', 1, 640, 300); assert.notStrictEqual(tr.scrollTop, st0, 'a rolagem foi refeita');
+      /* o jogador rolou à mão: a tela respeita onde ele parou */
+      X.user = true; tr.scrollTop = 500; put(390, 700, 300); def.render(); assert.strictEqual(tr.scrollTop, 500, 'rolagem feita à mão é mantida'); X.user = false;
+      assert(/id="m2_track"/.test(H()), 'a trilha tem a caixa que recebe a folga');
+    } finally { delete els.m2_trail; delete els.m2_card; delete els.m2_track; DIM = { H: 704, Wb: 390 }; X.cardH = 0; }
+    /* sem medida (fora do documento): vale a reserva, que já deixa a fase 1 acima de um cartão de altura comum */
+    setStage(1); open(); assert(new RegExp('id="m2_track" style="height:(\\d+)px"').exec(H())[1] - nodes()[0].y >= 240, 'reserva da folga inferior'); void css; }
+  out.push('rolagem inicial: fase escolhida e herói acima do cartão de baixo em 320, 360, 390 e 600 (alturas e cartões variados); folga inferior da trilha maior que o cartão; refaz ao mudar de tamanho; respeita a rolagem feita à mão');
 
   // 10) herói na fase atual pela rota única do jogo (drawHeroFull); erro no desenho não derruba a tela; fechar para o laço
   setStage(24); open(); els.m2_hc = mkEl('m2_hc'); els.m2_hc.getContext = () => ctx; els.m2_fx = mkEl('m2_fx'); els.m2_fx.getContext = () => ctx; def.render(); assert(raf.length >= 1, 'o laço do herói e das partículas liga');

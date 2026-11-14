@@ -45,6 +45,15 @@ const hm=ms=>{ const m=Math.max(1,Math.ceil(num(ms)/60000)), h=Math.floor(m/60);
 const WHY={off:'O Ladrão de Brasas ainda não foi ligado',entries:'Sem entradas hoje. Elas voltam à meia-noite de Brasília',run:'Há uma perseguição aberta: termine ou saia dela antes',
   none:'Vença uma perseguição inteira para liberar o Repetir'};
 const why=r=>WHY[r]||'Não foi possível agora. Tente de novo';
+/* LADRÃO ONLINE (docs/LIGACOES_RECOMPENSAS.md 2.1, N3): com o Sys.thiefNet INICIADO (state().started) quem decide é o servidor e os toques Entrar / fim / Repetir
+   usam as Promises dele, que devolvem o mesmo formato do Sys.thief síncrono. Módulo ausente, desligado ou não iniciado = null = a tela segue no Sys.thief local.
+   "Sair" continua no Sys.thief.cancel: a entrada do servidor já foi gasta no enter e não volta (o texto da tela já diz). */
+const TN=()=>{ try{ const n=window.Sys&&Sys.thiefNet; return n&&typeof n.state==='function'&&n.state().started===true&&typeof n.enter==='function'&&typeof n.finish==='function'&&typeof n.sweep==='function'?n:null; }catch(e){ return null; } };
+WHY.busy='Aguarde: o pedido anterior ainda está a caminho';
+const waitT=ms=>num(ms)<60000?Math.max(1,Math.ceil(num(ms)/1000))+' s':hm(ms);
+/* motivo de uma recusa do online: r.local é a palavra do WHY desta tela; retryAfterMs = quanto esperar (sem entradas, o texto já diz quando voltam) */
+const whyR=r=>{ const k=r&&(r.local||r.reason), ms=num(r&&r.retryAfterMs); if(!WHY[k]) return ms>0?'Não foi possível agora. Tente de novo em '+waitT(ms):why(k);
+  return WHY[k]+(ms>0&&k!=='entries'&&k!=='busy'?'. Tente de novo em '+waitT(ms):''); };
 
 /* ---------- arte: ícones desenhados no código (a tela não usa PNG; o ladrão em si é da batalha e ainda não tem arte) ---------- */
 const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
@@ -108,7 +117,7 @@ const I_INFO='<circle cx="24" cy="24" r="18" fill="none" stroke="#7fe07a" stroke
 `; document.head.appendChild(el); })();
 
 /* ---------- estado da tela (nada disto vai para o save) ---------- */
-const X={conf:false,res:null,toast:'',tone:'bad',toastT:0,anim:true,top:true,sig:'',tk:0,md:''};
+const X={conf:false,res:null,toast:'',tone:'bad',toastT:0,anim:true,top:true,sig:'',tk:0,md:'',busy:false};
 function say(m,tone){ X.toast=String(m||''); X.tone=tone==='ok'?'ok':'bad'; X.toastT=Date.now(); redraw(); }
 
 /* ================= HTML ================= */
@@ -174,6 +183,10 @@ function launch(run){ let ok=false; try{ ok=window.startThiefRun({lv:run.lv,lote
   return ok; }
 /* FIM DA PERSEGUIÇÃO (a batalha chama UMA vez): score 0..1 = fração do saco que caiu. Roda o Sys.thief.finish, grava e abre o resultado. Devolve o que o módulo devolveu */
 function finish(score){ const T=TH(); if(!T||!thOn()) return {ok:false,reason:'off'}; if(!fireOn()) return {ok:false,reason:'off'};
+  /* online: o servidor paga e o Sys.thiefNet credita uma vez por corrida; devolve a Promise com o mesmo resultado. Recusa: abre a tela e diz o motivo (a corrida que o servidor ainda aceita fica aberta, em Continuar) */
+  { const net=TN(); if(net) return Promise.resolve().then(()=>net.finish(sv(),host(),num(score))).then(r=>r,()=>null).then(r=>{
+      if(!r||!r.ok){ try{ if(!isOn()&&window.Panels&&typeof Panels.open==='function'&&Panels.on(N)) Panels.open(N); }catch(e){} say(whyR(r)); return r||{ok:false,reason:'run'}; }
+      saved(); sfx('claim'); showResult(r); return r; }); }
   let r=null; try{ r=T.finish(sv(),host(),{score:num(score)}); }catch(e){ r=null; } if(!r||!r.ok) return r||{ok:false,reason:'run'};
   saved(); sfx('claim'); showResult(r); return r; }
 /* mostra um resultado já calculado (o que Sys.thief.finish ou sweep devolveu) e abre a tela */
@@ -183,6 +196,9 @@ function showResult(r,kind){ if(!r||!r.ok) return false; X.res=Object.assign({},
 /* saiu no meio: fecha a corrida. A entrada foi gasta no enter e NÃO volta */
 function cancel(){ const T=TH(); if(!T||!thOn()) return false; let had=false; try{ had=!!T.cancel(sv(),host()); }catch(e){} if(had) saved(); redraw(); return had; }
 
+/* um pedido online de cada vez: espera a resposta, diz o motivo da recusa ou segue com o resultado (mesmo formato do Sys.thief) */
+function online(call,done){ if(X.busy) return; X.busy=true;
+  Promise.resolve().then(call).then(r=>r,()=>null).then(r=>{ X.busy=false; if(!r||!r.ok){ say(whyR(r)); return; } try{ done(r); }catch(e){ try{ console.error('ladrão online',e); }catch(e2){} } }); }
 /* ================= toques (cada data-x da tela tem uma entrada aqui) ================= */
 const ACT={
   back(){ sfx('ui_tap'); try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} },
@@ -192,6 +208,7 @@ const ACT={
   enter(){ const T=TH(), v=viewNow(); if(!v) return; sfx('ui_tap'); X.conf=false;
     if(v.run) return say(why('run')); if(!v.canEnter) return say(why('entries'));
     if(typeof window.startThiefRun!=='function') return say('A perseguição ainda não está ligada na batalha. Nada foi gasto');   /* não abre corrida que ninguém vai fechar */
+    { const net=TN(); if(net) return online(()=>net.enter(sv(),host()),q=>{ X.res=null; saved(); launch(q); redraw(); }); }
     let r=null; try{ r=T.enter(sv(),host()); }catch(e){ r=null; } if(!r||!r.ok) return say(why(r&&r.reason));
     X.res=null; saved(); launch(r); redraw(); },
   resume(){ const T=TH(), v=viewNow(); if(!v||!v.run) return; sfx('ui_tap');
@@ -202,6 +219,7 @@ const ACT={
   sweep(){ const v=viewNow(); if(!v) return; sfx('ui_tap'); if(v.run) return say(why('run')); if(!(num(v.best)>0)) return say(why('none')); if(!v.canSweep) return say(why('entries'));
     X.toast=''; X.conf=true; redraw(); },
   yes(){ const T=TH(); if(!X.conf) return; sfx('ui_tap'); X.conf=false;
+    { const net=TN(); if(net) return online(()=>net.sweep(sv(),host()),q=>{ saved(); sfx('claim'); showResult(q,'sweep'); }); }
     let r=null; try{ r=T.sweep(sv(),host()); }catch(e){ r=null; } if(!r||!r.ok) return say(why(r&&r.reason));
     saved(); sfx('claim'); showResult(r,'sweep'); } };
 function click(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototype.hasOwnProperty.call(ACT,a)) return;
@@ -221,7 +239,7 @@ const def=Panels.add(N,{title:'Ladrão de Brasas',actions:Object.keys(ACT),urls:
   tick(){ if(!isOn()) return; if(X.toast&&Date.now()-X.toastT>=TOAST_MS){ X.toast=''; setStrip(); }
     if(X.sig==='x') return; X.tk=(X.tk+1)%4; if(X.tk===0&&X.sig&&sig()!==X.sig) redraw(); },
   busy(){ return false; },
-  onOpen(o){ X.conf=false; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; if(!(o&&o.result)&&!X.keep) X.res=null;   /* aberta pelo resultado (showResult): o resultado fica */
+  onOpen(o){ X.conf=false; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; X.busy=false; if(!(o&&o.result)&&!X.keep) X.res=null;   /* aberta pelo resultado (showResult): o resultado fica */
     try{ if(typeof pwLoad==='function') pwLoad(urls()); }catch(e){} },
   onClose(){ X.conf=false; X.toast=''; X.res=null; } });
 /* ganchos da batalha, selo do Menu, teste de fumaça e console */

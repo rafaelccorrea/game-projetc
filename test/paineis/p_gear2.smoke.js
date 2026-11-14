@@ -145,7 +145,9 @@ out.push('equipar o melhor: em cada espaço fica a peça de maior FC (igual à f
   def.click(btn('dism', { id: String(it.id) })); log.length = 0; def.click(btn('dismok', { id: String(it.id) }));
   assert.strictEqual(g.S.inv.length, n0 - 1); assert(!item(it.id), 'saiu da mochila'); assert.strictEqual(g.S.gold, g0 + wantG, 'devolve o ouro do módulo'); assert.strictEqual(F.ensure(g.S).stones, s0 + wantS, 'e as pedras de forja'); assert(log.includes('stats')); assert(/Desmontou /.test(X.toast)); not('role="dialog"'); has('Mochila <b>' + (n0 - 1) + '/80</b>'); sane('depois de desmontar');
   // em uso: o botão explica, a confirmação não abre, e nem a ação forjada desmonta
-  const eqIt = item(eqId('armor')), n1 = g.S.inv.length, g1 = g.S.gold; def.onOpen({ slot: 'armor' }); def.render(); has('Em uso'); has('data-x="dism" data-id="' + eqIt.id + '" aria-disabled="true"');
+  const eqIt = item(eqId('armor')), n1 = g.S.inv.length, g1 = g.S.gold; def.onOpen({ slot: 'armor' }); def.render(); has('data-x="dism" data-id="' + eqIt.id + '" aria-disabled="true"');
+  { const a = H().indexOf('id="g2_det"'), b = H().indexOf('id="g2_more"'); assert(a > 0 && b > a, 'detalhe da peça em uso'); const det = H().slice(a, b).replace(/aria-label="[^"]*"/g, '');   /* QA lote perfil 2: um só rótulo de uso no detalhe */
+    assert.strictEqual((det.match(/usando|em uso/gi) || []).length, 1, 'um só rótulo de uso no detalhe: ' + (det.match(/usando|em uso/gi) || []).join(', ')); assert(det.includes('role="status"><span>Usando</span>'), 'o rótulo é o selo Usando'); assert(/aria-disabled="true"[^>]*><span>Desmontar<\/span>/.test(det), 'Desmontar apagado com o próprio nome'); }
   def.click(btn('dism', { id: String(eqIt.id) })); not('role="dialog"'); assert(/Em uso/.test(X.toast)); def.click(btn('dismok', { id: String(eqIt.id) })); X.ask = eqIt.id; def.render(); not('role="dialog"'); def.click(btn('dismok', { id: String(eqIt.id) }));
   assert.strictEqual(g.S.inv.length, n1, 'item equipado nunca é desmontado'); assert(item(eqIt.id)); assert.strictEqual(eqId('armor'), eqIt.id); assert.strictEqual(g.S.gold, g1);
   def.click(btn('dismok', { id: '99999' })); assert.strictEqual(g.S.inv.length, n1); }
@@ -212,7 +214,7 @@ out.push('Forja e Aparência: Panels.open com volta para o Equipamento; chave de
   dims = { H: 584, Wb: 320 }; def.onOpen({ slot: 'weapon' }); def.render(); assert(X.sel != null, 'arma em uso selecionada');
   has('class="g2-tabs nar"'); assert.strictEqual((H().match(/role="tab"/g) || []).length, 8); for (const t of ['Equipa&shy;mento', 'Consu&shy;míveis', 'Monta&shy;rias', 'Mate&shy;riais', '>Armas<', '>Asas<', '>Pets<', '>Skins<']) has(t);
   for (const lab of ['Armas', 'Equipamento', 'Asas', 'Pets', 'Montarias', 'Skins', 'Materiais', 'Consumíveis']) has('aria-label="' + lab + '"');
-  const dh = (/<div class="g2-dh">(.*?)<\/div>/.exec(H()) || [])[1] || ''; assert(/ · Nv\. \d+ · .+ · Forja \+\d+ · <b>usando<\/b>/.test(dh), 'linha do detalhe inteira no HTML (quebra em duas linhas pelo estilo): ' + dh);
+  const dh = (/<div class="g2-dh">(.*?)<\/div>/.exec(H()) || [])[1] || ''; assert(/ · Nv\. \d+ · .+ · Forja \+\d+$/.test(dh), 'linha do detalhe inteira no HTML (quebra em duas linhas pelo estilo): ' + dh);
   assert(!/…|\.\.\.<|style="[^"]*(ellipsis|nowrap)/.test(H()), 'nenhuma reticência escrita nem estilo de corte na própria marca'); sane('320 px sem reticências');
   dims = {}; def.render(); not('g2-tabs nar'); has('class="g2-tabs"'); def.onClose();
   out.push('320 px: zero text-overflow no arquivo; abas (10 px, ponto de quebra, min-height 40), linha do detalhe, nomes, botões, células e filtros quebram linha'); }

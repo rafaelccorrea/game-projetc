@@ -111,8 +111,57 @@ click('yes'); assert.strictEqual(n('sweep'), 1, 'sem confirmação aberta, "yes"
 host.t = Date.UTC(2026, 10, 15, 3, 0, 0); BF.ensure(g.S).bra = 298; open(); has('id="th_left">2/2'); has('O estoque está quase cheio: o que passar de 300 não entra'); click('sweep'); click('yes'); assert.strictEqual(n('sweep'), 2); check('estoque cheio'); has('+2 Brasas'); has('3 Brasas não couberam'); has('id="th_left">1/2');
 out.push('Repetir em 2 toques (1 chamada, 1 entrada, lote do melhor nível vencido); estoque cheio avisado com os números do módulo');
 
+(async () => {
+// 4b) LADRÃO ONLINE (docs/LIGACOES_RECOMPENSAS.md 2.1, N1-N3): com o Sys.thiefNet INICIADO os toques usam as Promises dele; sem ele (ou não iniciado) nada muda
+{ const idx = fs.readFileSync(path.join(R, 'index.html'), 'utf8'), boot = fs.readFileSync(path.join(R, 'js/onlineboot.js'), 'utf8');
+  const lm = /\['loot','chest','level'[^\n]*/.exec(idx); assert(lm, 'lista de módulos do index.html'); const L = lm[0];
+  assert(L.includes("'thiefnet'") && L.indexOf("'thiefnet'") > L.indexOf("'thief'") && L.indexOf("'thiefnet'") > L.indexOf("'net'") && L.indexOf("'net'") > 0, "N2: 'thiefnet' na lista do index.html, depois de 'net' e de 'thief'");
+  assert.strictEqual((idx.match(/'thiefnet'/g) || []).length, 1, 'N2: uma vez só'); assert(fs.existsSync(path.join(R, 'js/sys/thiefnet.js')), 'o módulo existe');
+  assert(/for \(const k of \['arenaNet', 'guildNet', 'duoNet', 'guildFireNet', 'thiefNet'\]\)/.test(boot) && /M\.DATA\.on === true && typeof M\.start === 'function'/.test(boot), 'N1: thiefNet na lista de início do onlineboot, só com a chave dele ligada');
+  const wait = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setImmediate(r)); };
+  const net = { started: false, calls: [], next: {}, state() { return { on: true, started: this.started }; },
+    enter(S, h) { this.calls.push('enter'); assert(S === g.S && h === host); return Promise.resolve(this.next.enter); },
+    finish(S, h, sc) { this.calls.push('finish:' + sc); assert(S === g.S && h === host); return Promise.resolve(this.next.finish); },
+    sweep(S, h) { this.calls.push('sweep'); assert(S === g.S && h === host); return Promise.resolve(this.next.sweep); } };
+  const run0 = g.startThiefRun, ran = []; g.startThiefRun = r => { ran.push(r); return true; };
+  host.t = Date.UTC(2026, 10, 17, 15, 0, 0); BF.ensure(g.S).bra = 0; g.view = 'thief'; open(); has('id="th_left">2/2');
+  try {
+    // módulo presente mas NÃO iniciado: tudo local, como hoje
+    g.Sys.thiefNet = net; let e0 = n('enter'); click('enter'); assert.strictEqual(n('enter'), e0 + 1, 'não iniciado: Entrar é o Sys.thief local'); assert.strictEqual(net.calls.length, 0, 'não iniciado: nada vai ao online');
+    assert.strictEqual(P.cancel(), true); open(); has('id="th_left">1/2');
+    // iniciado: Entrar usa o Sys.thiefNet.enter; o síncrono não é chamado; dois toques = um pedido
+    net.started = true; net.next.enter = { ok: true, lv: 12, lote: 5, secs: 30, runId: 'r1', seed: 1, endsAt: 0, left: 0 }; e0 = n('enter'); const s0 = saves, r0 = ran.length;
+    click('enter'); click('enter'); assert.strictEqual(ran.length, r0, 'a perseguição só começa com a resposta do servidor'); await wait();
+    assert.deepStrictEqual(net.calls, ['enter'], 'um pedido só, mesmo com dois toques'); assert.strictEqual(n('enter'), e0, 'online: o Sys.thief.enter síncrono não é chamado');
+    assert.strictEqual(ran.length, r0 + 1); assert.deepStrictEqual(ran[ran.length - 1], { lv: 12, lote: 5, secs: 30 }, 'a batalha recebe o que o servidor devolveu'); assert(saves > s0, 'gravou depois do enter');
+    // recusa do servidor: a palavra local (r.local) vira o texto da tela; sem entradas não repete o prazo; outro motivo mostra o retryAfterMs
+    net.next.enter = { ok: false, reason: 'daily_limit', local: 'entries', retryAfterMs: 3600000, details: null }; click('enter'); await wait(); has('Sem entradas hoje. Elas voltam à meia-noite de Brasília'); not('Tente de novo em'); assert.strictEqual(ran.length, r0 + 1, 'recusado: nada começa'); check('online sem entradas');
+    net.next.enter = { ok: false, reason: 'rate_limited', local: 'rate_limited', retryAfterMs: 5000 }; def.onOpen(); click('enter'); await wait(); has('Não foi possível agora. Tente de novo em 5 s'); check('online com espera');
+    net.next.enter = { ok: false, reason: 'run', local: 'run', retryAfterMs: 90000 }; click('enter'); await wait(); has('Há uma perseguição aberta: termine ou saia dela antes. Tente de novo em 2 min');
+    net.enter = function () { this.calls.push('enter'); return Promise.reject(new Error('rede')); }; click('enter'); await wait(); has('Não foi possível agora. Tente de novo'); click('enter'); await wait(); assert.strictEqual(net.calls.filter(c => c === 'enter').length, 6, 'depois de uma falha de rede a tela não fica presa');
+    // fim: PThief.finish devolve a Promise do online, com o mesmo formato; o síncrono não roda; resultado na tela
+    net.next.finish = { ok: true, score: 1, lv: 12, lote: 5, drop: 5, brasas: 5, won: true, best: 12, left: 0, runId: 'r1', total: 20 }; const f0 = n('finish');
+    { const p = P.finish(1); assert(p && typeof p.then === 'function', 'online: finish devolve Promise'); const r = await p; assert(r && r.ok && r.brasas === 5); assert.strictEqual(n('finish'), f0, 'online: o Sys.thief.finish síncrono não é chamado'); assert(net.calls.includes('finish:1'));
+      check('fim online'); has('Saco inteiro'); has('+5 Brasas'); has('Entradas que sobram hoje: 0 de 2'); click('ok'); }
+    // fim recusado (rede, cedo demais): abre a tela e diz o motivo com a espera
+    net.next.finish = { ok: false, reason: 'too_fast', local: 'too_fast', retryAfterMs: 4000 }; g.view = 'battle'; opened.length = 0;
+    { const r = await P.finish(0.5); assert(r && r.ok === false && r.reason === 'too_fast'); assert(opened.some(x => x.indexOf('thief:') === 0), 'a tela abre para dizer o motivo'); def.render(); has('Não foi possível agora. Tente de novo em 4 s'); not('th-card res'); check('fim recusado'); }
+    // Repetir: 2 toques, depois o Sys.thiefNet.sweep; o síncrono não é chamado
+    g.view = 'thief'; open(); net.next.sweep = { ok: true, lv: 12, drop: 5, brasas: 5, left: 0, total: 25 }; const w0 = n('sweep'); click('sweep'); has('Repetir agora?'); assert(!net.calls.includes('sweep'), '1º toque não envia');
+    click('yes'); await wait(); assert.strictEqual(net.calls.filter(c => c === 'sweep').length, 1); assert.strictEqual(n('sweep'), w0, 'online: o Sys.thief.sweep síncrono não é chamado'); check('repetido online'); has('Repetido'); has('+5 Brasas'); click('ok');
+    net.next.sweep = { ok: false, reason: 'nothing_to_sweep', local: 'none', retryAfterMs: 0 }; click('sweep'); click('yes'); await wait(); has('Vença uma perseguição inteira para liberar o Repetir');
+    // Sair continua local (Sys.thief.cancel): a entrada do servidor já foi gasta e o texto da tela diz que não volta
+    net.started = false; e0 = n('enter'); open(); if (H().includes('data-x="enter"') && !/th-bt y wide off/.test(H())) { click('enter'); assert.strictEqual(n('enter'), e0 + 1); }
+    net.started = true; { const c0 = n('cancel'), k0 = net.calls.length; P.cancel(); assert.strictEqual(n('cancel'), c0 + 1, 'Sair usa o Sys.thief.cancel'); assert.strictEqual(net.calls.length, k0, 'Sair não chama o online'); }
+    assert(/Sair no meio não devolve|a entrada não volta/.test(SRC), 'o texto da tela diz que sair não devolve a entrada');
+    // sem o módulo: local de novo
+    delete g.Sys.thiefNet; host.t = Date.UTC(2026, 10, 19, 15, 0, 0); open(); e0 = n('enter'); const k1 = net.calls.length; click('enter'); assert.strictEqual(n('enter'), e0 + 1, 'sem o Sys.thiefNet: Entrar local'); assert.strictEqual(net.calls.length, k1); P.cancel();
+  } finally { delete g.Sys.thiefNet; g.startThiefRun = run0; g.view = 'thief'; }
+  out.push('online: thiefnet no index (depois de net e thief) e thiefNet no onlineboot; iniciado = Entrar, fim e Repetir pelas Promises do Sys.thiefNet (1 pedido por toque, motivo e espera na tela); não iniciado ou ausente = local; Sair sempre local'); }
+
 // 5) tick não quebra; toda ação apareceu num botão
-def.tick(); def.tick(); def.tick(); def.tick(); def.onClose();
+open(); def.tick(); def.tick(); def.tick(); def.tick(); def.onClose();
 for (const a of def.actions) assert(seenActs.has(a), 'ação nunca apareceu num botão: ' + a);
 out.push('imagens em disco: ' + seenImgs.size + ' na tela + ' + P.urls().length + ' na lista de carga; ' + seenActs.size + ' ações vistas em botões');
 for (const o of out) console.log('- ' + o); console.log('TODOS OS TESTES PASSARAM');
+})().catch(e => { console.error(e && e.stack || e); process.exit(1); });

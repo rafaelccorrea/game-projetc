@@ -146,6 +146,31 @@ P.update(true); assert.strictEqual(hud.innerHTML, '', 'sem bênção e sem esper
 C.onStage(g.S, host, 5); assert.strictEqual(P.update(true), true); assert(hud.innerHTML.includes('data-pc="badge"') && hud.innerHTML.includes('>Encruzilhada<') && hud.innerHTML.includes('fase 1-5') && hud.innerHTML.includes('escolha 1 de 2'), 'selo da encruzilhada esperando');
 assert(hud.innerHTML.includes('data-pc="list"') && hud.innerHTML.includes('>Bênçãos<') && hud.innerHTML.includes('class="ct ex"'), 'botão Bênçãos com o aviso de espera');
 assert(/class="pc-badge"[^>]*style="top:122px"/.test(hud.innerHTML), 'selo logo abaixo da barra da fase'); assert(/class="pc-bb[^"]*"[^>]*style="top:290px"/.test(hud.innerHTML), 'Bênçãos: posição do protótipo sem a tabela do HUD');
+/* QA (360 px): o selo não encosta no chip "FC recomendada" do js/diff.js (#dfh: top 110, 15 px; 27 com a linha do teto de XP) nem no selo "Fraco contra";
+   folga de 6 px ou mais; x de 82 a 318 na base de 390; os avisos do jogo (#toast) descem para baixo do selo enquanto ele está na tela */
+{ const DIFF_SRC = fs.readFileSync(path.join(R, 'js/diff.js'), 'utf8'), dm = /e\.id = 'dfh';[^\n]*?left:78px;right:74px;top:(\d+)px[\s\S]*?id="dfh_t" style="[^"]*?height:(\d+)px[\s\S]*?id="dfh_x" style="[^"]*?line-height:(\d+)px/.exec(DIFF_SRC);
+  assert(dm, 'o chip de FC recomendada do js/diff.js mudou de forma: conferir a posição do selo'); const dTop = +dm[1], dH1 = +dm[2], dH2 = dH1 + 1 + +dm[3]; assert.strictEqual(dTop, 110); assert.strictEqual(dH1, 15); assert.strictEqual(dH2, 27);
+  const topOf = () => +/class="pc-badge"[^>]*style="top:(\d+)px"/.exec(P.hudHtml())[1], gid0 = g.document.getElementById, fake = {};
+  g.document.getElementById = id => fake[id] || gid0(id);
+  try {
+    fake.dfh = { style: {} }; fake.dfh_x = { style: { display: 'none' }, textContent: '' };
+    assert(topOf() - (dTop + dH1) >= 6, 'selo com 6 px ou mais de folga abaixo do chip de FC recomendada: ' + topOf()); assert.strictEqual(topOf(), dTop + dH1 + 6, 'e logo abaixo dele');
+    fake.dfh_x = { style: {}, textContent: 'XP de abate cheia' }; assert(topOf() - (dTop + dH2) >= 6, 'com a linha do teto de XP o selo desce junto: ' + topOf());
+    fake.dfh = { style: {}, offsetTop: 110, offsetHeight: 31 }; assert.strictEqual(topOf(), 147, 'usa a altura real do chip quando o navegador a dá');
+    fake.dfh = { style: {} }; fake.dfh_x = { style: { display: 'none' }, textContent: '' }; fake.wsl_root = { style: {}, offsetHeight: 30 }; assert(topOf() >= 122 + 30 + 6 && topOf() - (dTop + dH1) >= 6, 'com o selo Fraco contra, fica abaixo dos dois: ' + topOf());
+    fake.wsl_root = { style: { display: 'none' }, offsetHeight: 30 }; assert.strictEqual(topOf(), dTop + dH1 + 6, 'selo Fraco contra escondido não conta');
+    delete fake.dfh; delete fake.dfh_x; delete fake.wsl_root; assert.strictEqual(topOf(), 122, 'sem o chip (dificuldade desligada): posição do protótipo');
+    /* largura: x 82 a 318 na base de 390 */
+    const css = head.children.map(c => c.textContent || '').join('\n'), bm = /\.pc-badge,\.xs \.pc-badge\{[^}]*left:(\d+)px;min-height:(\d+)px;max-width:(\d+)px/.exec(css);
+    assert(bm && +bm[1] === 82 && +bm[1] + +bm[3] <= 318 && +bm[2] >= 40, 'selo entre x 82 e 318, toque de 40 px');
+    /* avisos (#toast) abaixo do selo enquanto ele está na tela; voltam quando ele some */
+    assert(/body\.fb\.pcx\.pcx #toast\{top:calc\(var\(--fbsafe,0px\) \+ var\(--pcxt,180px\) \* var\(--fbs,1\)\)\}/.test(css), 'regra que desce os avisos');
+    const cls = new Set(), props = {}; body.classList = { add: c => cls.add(c), remove: c => cls.delete(c), contains: c => cls.has(c) }; body.style.setProperty = (k, v) => { props[k] = v; };
+    fake.dfh = { style: {} }; fake.dfh_x = { style: { display: 'none' }, textContent: '' }; P.update(true); assert(cls.has('pcx'), 'selo na tela: avisos descem'); assert(parseInt(props['--pcxt'], 10) >= topOf() + 40 + 6, 'avisos com folga abaixo do selo: ' + props['--pcxt']);
+    assert(/class="pc-badge"[^>]*style="top:131px"/.test(hud.innerHTML), 'o HUD redesenha o selo na posição nova');
+    g.PANEL_ON.cross = false; P.update(true); assert(!cls.has('pcx'), 'sem selo: avisos no lugar de sempre'); g.PANEL_ON.cross = true; delete fake.dfh; delete fake.dfh_x; P.update(true); assert(cls.has('pcx'));
+  } finally { g.document.getElementById = gid0; }
+  out.push('selo: 6 px ou mais abaixo do chip de FC recomendada (com e sem a linha do teto de XP) e do selo Fraco contra, x 82 a 318, avisos do jogo abaixo dele'); }
 g.FB_MENU = [{ id: 'gear', side: 'left' }, { id: 'summon', side: 'left' }, { id: 'shop', side: 'left' }, { id: 'pass', side: 'left' }, { id: 'chest', side: 'right' }]; g.fbUnl = id => id !== 'pass' && id !== 'summon';
 assert(/class="pc-bb[^"]*"[^>]*style="top:292px"/.test(P.hudHtml()), 'Bênçãos na vaga livre seguinte da coluna da esquerda (abaixo da Loja)'); delete g.FB_MENU; delete g.fbUnl;
 clean(hud.innerHTML, 'HUD'); for (const b of buttons(hud.innerHTML)) assert(b.dataset.pc === 'badge' || b.dataset.pc === 'list', 'botão do HUD sem ação');

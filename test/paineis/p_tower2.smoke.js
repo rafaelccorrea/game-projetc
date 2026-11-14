@@ -175,4 +175,12 @@ out.push('toques: ' + taps + ' botões tocados sem exceção');
 for (const u of Object.values(g.Tower2.IC)) imgs.add(u); for (let e = 0; e < T.DATA.skin.eras; e++) imgs.add('assets/enemies/era' + e + '_boss.png');
 for (const u of imgs) assert(fs.existsSync(path.join(R, u)), 'imagem citada não existe: ' + u);
 out.push('imagens: ' + imgs.size + ' citadas, todas em disco');
+// QA lote perfil 2: a faixa de resultado ("ANDAR 10 VENCIDO") não cobre nomes, barras nem os lutadores: fica na faixa de chão do palco (os pés ficam em GY = altura - 20), estreita
+{ const CSS = g.document.head.children.map(c => c.textContent).join('\n'), m = /\n\.t2-ban\{([^}]*)\}/.exec(CSS); assert(m, 'regra da faixa de resultado'); const r = m[1], n = k => { const q = new RegExp('(?:^|;)' + k + ':(-?[\\d.]+)(?:px)?(?:;|$)').exec(r); assert(q, 'faixa: ' + k); return +q[1]; };
+  assert(!/(?:^|;)top:/.test(r), 'a faixa não fica mais presa ao topo (onde estão nomes, barras e cabeças)'); const gy = +(/GY:h-(\d+)/.exec(SRC) || [])[1]; assert(gy > 0, 'linha do chão do palco');
+  const hBan = Math.ceil(n('font-size') * n('line-height')) + 2 * +/(?:^|;)padding:(\d+)px/.exec(r)[1] + 2; assert(hBan + n('bottom') <= gy, 'a faixa (' + hBan + ' px) cabe abaixo dos pés (' + gy + ' px de chão)'); assert(n('bottom') >= -4, 'não invade o cartão do andar (margem de 4 px)');
+  assert(/max-width:calc\(100% - \d+px\)/.test(r) && /width:fit-content/.test(r) && /margin:0 auto/.test(r), 'largura limitada e centrada'); assert(/overflow-wrap:anywhere/.test(r) && !/nowrap|ellipsis/.test(r));
+  const hp = /\n\.t2-hp\{([^}]*)\}/.exec(CSS)[1]; assert(/top:6px/.test(hp), 'nomes e barras no topo do palco, longe da faixa');
+  assert(/F\.done\) h\+='<div class="t2-ban lil '/.test(SRC), 'a faixa continua saindo no fim da luta');
+  out.push('faixa de resultado: ' + hBan + ' px de altura no chão do palco (abaixo dos pés), largura pelo texto com teto, longe de nomes e barras'); }
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

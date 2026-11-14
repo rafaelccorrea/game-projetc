@@ -19,7 +19,7 @@ if(!('cross' in PANEL_ON)) PANEL_ON.cross=false;
 const N='cross';
 const ACTIONS=['pick','back','ok','later','close','open'];
 const X={open:false,el:null,mode:'',stage:null,sel:'',msg:'',tone:'',busy:false,o:null,paused:false,offers:[],
-  hud:null,hudSig:'',hudT:0,bump:0,css:false,le:null};
+  hud:null,hudSig:'',hudT:0,bump:0,css:false,le:null,bt:null};
 
 /* ---------- leituras do módulo ---------- */
 const CR=()=>(window.Sys&&window.Sys.crossroads)||null;
@@ -144,7 +144,8 @@ const CSS=`.pc-ov{position:absolute;inset:0;z-index:94;overflow:hidden;backgroun
 .pc-end{margin-top:6px;padding:6px 7px;border-radius:10px;background:rgba(0,0,0,.35);font-size:10.5px;font-weight:900;line-height:1.35;color:#f6ecdf;overflow-wrap:anywhere}
 .pc-none{font-size:11.5px;font-weight:800;color:#c9b8a2;padding:8px 2px;line-height:1.3}
 .pc-hud{position:absolute;left:0;top:0;width:0;height:0;z-index:6;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
-.pc-badge,.xs .pc-badge{position:absolute;left:96px;min-height:40px;max-width:230px;padding:2px 12px 2px 5px;border-radius:20px;background:rgba(22,16,12,.74);border:1.5px solid #ffc94a;color:#f6ecdf;display:flex;align-items:center;gap:6px;text-align:left;box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);animation:pc-xb 1.4s ease-in-out infinite;width:max-content}
+body.fb.pcx.pcx #toast{top:calc(var(--fbsafe,0px) + var(--pcxt,180px) * var(--fbs,1))}
+.pc-badge,.xs .pc-badge{position:absolute;left:82px;min-height:40px;max-width:236px;padding:2px 12px 2px 5px;border-radius:20px;background:rgba(22,16,12,.74);border:1.5px solid #ffc94a;color:#f6ecdf;display:flex;align-items:center;gap:6px;text-align:left;box-shadow:0 6px 16px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);animation:pc-xb 1.4s ease-in-out infinite;width:max-content}
 .pc-badge svg{width:30px;height:30px;flex:none}
 .pc-badge b{display:block;font-size:15px;color:#ffc94a;line-height:1}
 .pc-badge small{display:block;font-size:10px;font-weight:900;color:#f6ecdf;line-height:1.1}
@@ -231,14 +232,22 @@ function open(o){ o=o||{}; if(X.open||typeof document==='undefined') return fals
 
 /* ================= na batalha: selo "Encruzilhada" e botão "Bênçãos" ================= */
 const hudOn=()=>{ try{ return ok()&&!!(window.Panels&&typeof Panels.on==='function'&&Panels.on(N)); }catch(e){ return false; } };
-/* topo do selo: logo abaixo da barra da fase (y 122 do protótipo); se o selo "Fraco contra" (js/weakseal.js) está na tela, desce para baixo dele */
-function badgeTop(){ try{ const w=document.getElementById('wsl_root'); if(w&&w.style&&w.style.display!=='none'){ const h=Math.round(num(w.offsetHeight))||24; return 122+h+6; } }catch(e){} return 122; }
+/* topo do selo: logo abaixo da barra da fase (y 122 do protótipo, x 82 a 318 na base de 390). Desce para ficar com BADGE_GAP px de folga abaixo do que estiver ali:
+   o chip "FC recomendada" do js/diff.js (#dfh: top 110, 15 px de altura, 27 com a linha do teto de XP) e o selo "Fraco contra" (js/weakseal.js, #wsl_root). */
+const BADGE_GAP=6, BADGE_H=40;
+function badgeTop(){ let t=122;
+  try{ const d=document.getElementById('dfh'); if(d&&!(d.style&&d.style.display==='none')){ const x=document.getElementById('dfh_x'), two=!!(x&&x.textContent&&!(x.style&&x.style.display==='none'));
+      const top=Math.round(num(d.offsetTop))||110, h=Math.round(num(d.offsetHeight))||(two?27:15); t=Math.max(t,top+h+BADGE_GAP); } }catch(e){}
+  try{ const w=document.getElementById('wsl_root'); if(w&&w.style&&w.style.display!=='none'){ const h=Math.round(num(w.offsetHeight))||24; t=Math.max(t,(Math.round(num(w.offsetTop))||122)+h+BADGE_GAP); } }catch(e){}
+  return t; }
+/* com o selo na tela os avisos do jogo (#toast: liberações, drops) descem para baixo dele, com a mesma folga; sem o selo voltam ao lugar */
+function toastGap(top){ try{ const b=document.body; if(!b||!b.classList) return; if(top!=null){ if(b.style&&typeof b.style.setProperty==='function') b.style.setProperty('--pcxt',(top+BADGE_H+BADGE_GAP+2)+'px'); b.classList.add('pcx'); } else b.classList.remove('pcx'); }catch(e){} }
 /* topo do botão Bênçãos: a vaga livre seguinte da coluna da esquerda do HUD (passo de 78 px a partir de 136, tabela FB_MENU do js/fullbattle.js);
    sem a tabela, a posição do protótipo (290) */
 function bbTop(){ try{ if(typeof FB_MENU!=='undefined'&&Array.isArray(FB_MENU)){ let n=0; for(const m of FB_MENU){ if(m.side!=='left') continue; if(typeof fbUnl==='function'&&!fbUnl(m.id)) continue; if(typeof m.show==='function'&&!m.show()) continue; n++; } return 136+78*n; } }catch(e){} return 290; }
-function hudHtml(o){ o=o||{}; X.le=null; if(!hudOn()) return ''; const v=viewOf(); if(!v) return ''; X.le=v.lastEnded||null; const act=Array.isArray(v.active)?v.active:[], pend=pendOf(v); if(!act.length&&!pend.length) return '';
+function hudHtml(o){ o=o||{}; X.le=null; X.bt=null; if(!hudOn()) return ''; const v=viewOf(); if(!v) return ''; X.le=v.lastEnded||null; const act=Array.isArray(v.active)?v.active:[], pend=pendOf(v); if(!act.length&&!pend.length) return '';
   let h='';
-  if(pend.length){ const f=pend[0]; h+='<button class="pc-badge" data-pc="badge" style="top:'+(o.badgeTop!=null?+o.badgeTop:badgeTop())+'px" aria-label="Encruzilhada da fase '+esc(lbl(f))+' esperando: toque para escolher">'+CROSS+'<span><b class="pc-lil">Encruzilhada</b><small>fase '+esc(lbl(f))+' · escolha 1 de '+(offersOf(f).length||2)+'</small></span></button>'; }
+  if(pend.length){ const f=pend[0], bt=o.badgeTop!=null?+o.badgeTop:badgeTop(); X.bt=bt; h+='<button class="pc-badge" data-pc="badge" style="top:'+bt+'px" aria-label="Encruzilhada da fase '+esc(lbl(f))+' esperando: toque para escolher">'+CROSS+'<span><b class="pc-lil">Encruzilhada</b><small>fase '+esc(lbl(f))+' · escolha 1 de '+(offersOf(f).length||2)+'</small></span></button>'; }
   const al=act.length===1?'1 ativa':act.length+' ativas';
   h+='<button class="pc-bb'+(Date.now()-X.bump<600?' bump':'')+'" data-pc="list" style="top:'+(o.bbTop!=null?+o.bbTop:bbTop())+'px" aria-label="Bênçãos da era: '+al+(pend.length?', encruzilhada esperando':'')+'"><span class="r">'+CROSS+(pend.length?'<em class="ct ex">!</em>':act.length?'<em class="ct">'+act.length+'</em>':'')+'</span><span class="lb">Bênçãos</span></button>';
   return h; }
@@ -250,7 +259,7 @@ function mount(hostEl){ if(X.hud) return true; try{ if(typeof document==='undefi
     h.appendChild(r); X.hud=r; X.hudSig=''; X.hudT=0; hudUpdate(true); return true; }catch(e){ return false; } }
 /* chamar no fbTick: lê o módulo no máximo 2 vezes por segundo e só troca o HTML quando muda */
 function hudUpdate(force){ const r=X.hud; if(!r) return false; const now=Date.now(); if(!force&&now-X.hudT<500) return X.hudSig!==''; X.hudT=now;
-  let h=''; try{ h=hudHtml(); }catch(e){ h=''; } if(h!==X.hudSig){ X.hudSig=h; r.innerHTML=h; } if(X.le) endedNote(X.le); return h!==''; }
+  let h=''; try{ h=hudHtml(); }catch(e){ h=''; X.bt=null; } if(h!==X.hudSig){ X.hudSig=h; r.innerHTML=h; } toastGap(h?X.bt:null); if(X.le) endedNote(X.le); return h!==''; }
 /* AVISO, UMA VEZ, DAS BÊNÇÃOS QUE ACABARAM (docs/LIGACOES_RECOMPENSAS.md, C1-C2): o módulo guarda em view().lastEnded as bênçãos da era vencida
    (apaga na vitória do Senhor da Era) e a tela avisa uma vez e chama ackEnded. Sai DEPOIS da Vitória, da Troca de era e da Encruzilhada (nada aberto
    por cima da luta) e também ao abrir o jogo, se ficou pendente. Usa a leitura que o HUD já fez (nenhuma leitura a mais do módulo). */
@@ -262,7 +271,7 @@ function endedNote(le){ try{ if(X.open||!le||!Array.isArray(le.list)||!le.list.l
     if(C.ackEnded(sv(),host())!==true) return false;   /* o módulo limpa primeiro: se não limpou, não avisa (nunca repete) */
     X.le=null; toast('As bênçãos da era '+eraName(le.era)+' acabaram'+(order.length?': '+order.map(n=>n+(k[n]>1?' ×'+k[n]:'')).join(', '):'')+'. '+(next?'Na era seguinte ('+next+') começa uma coleção nova.':'A jornada continua.'));
     return true; }catch(e){ try{ console.error('PCross: fim das bênçãos',e); }catch(e2){} return false; } }
-function unmount(){ const r=X.hud; X.hud=null; X.hudSig=''; try{ if(r){ if(typeof r.remove==='function') r.remove(); else if(r.parentNode) r.parentNode.removeChild(r); } }catch(e){} }
+function unmount(){ const r=X.hud; X.hud=null; X.hudSig=''; toastGap(null); try{ if(r){ if(typeof r.remove==='function') r.remove(); else if(r.parentNode) r.parentNode.removeChild(r); } }catch(e){} }
 
 const def=Panels.add(N,{title:'Encruzilhada',overlay:true,actions:ACTIONS,open:open,close:close});
 /* para o HUD, o teste de fumaça e o console: window.PCross.open({stage:5}) */

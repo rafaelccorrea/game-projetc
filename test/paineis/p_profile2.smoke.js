@@ -127,7 +127,7 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   def.click(btn('ct', { k: 'mount' })); assert(/data-k="mount" aria-pressed="true"/.test(H())); assert(!/data-x="it" data-k="skin"/.test(body())); def.click(btn('cf', { f: 'own' })); assert.strictEqual((body().match(/data-x="it"/g) || []).length, 2); def.click(btn('cf', { f: 'lock' })); assert(!/p5-eqb/.test(body())); check('coleção filtrada'); def.click(btn('ct', { k: 'zzz' }));
   tab('num'); has(g.n0(2480)); has('>14<'); has('Andar 12'); has('6 h 42 min'); has('>26<'); has('3 de ' + ERAS.length); has(Sys.fc.viewText ? g.esc2(Sys.fc.viewText(Sys.fc.compute(S, host))) : ''); not('Servidor'); not('ID do jogador'); not('Login'); check('números');
   g.realmBadge = () => 'S1 · Nova Era'; Sys.net = { player: () => ({ id: 'S1-48213', linked: ['google'] }) }; let copied = '';
-  try { def.render(); has('S1 · Nova Era'); has('p5-srv'); has('ID S1-48213'); has('>Google<'); has('data-x="copy"'); check('conta'); def.click(btn('copy')); has('Seu ID: S1-48213');
+  try { open(); has('p5-srv'); open({ tab: 'num' }); not('p5-srv'); has('S1 · Nova Era'); has('ID S1-48213'); has('>Google<'); has('data-x="copy"'); check('conta'); def.click(btn('copy')); has('Seu ID: S1-48213');
     Object.defineProperty(g, 'navigator', { configurable: true, writable: true, value: { clipboard: { writeText: t => { copied = t; return { then(ok) { ok(); } }; } } } }); def.click(btn('copy')); assert.strictEqual(copied, 'S1-48213'); has('ID copiado: S1-48213'); check('copiou'); } finally { delete g.realmBadge; delete Sys.net; try { Object.defineProperty(g, 'navigator', { configurable: true, writable: true, value: {} }); } catch (e) {} }
   // VIP: nível e barra do Sys.vip, sem preço; o chip abre o Clube VIP com a volta para o Perfil
   Sys.vip.addPoints(S, 853); open(); has('Nível ' + Sys.vip.level(S)); has('data-x="vip"'); opened.length = 0; def.click(btn('vip')); assert.deepStrictEqual(opened, [['vip', 'profile2']]); check('vip');
@@ -145,12 +145,28 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
 
 // 5b) QA lote 3: a faixa do item tocado só existe em Visual e Coleção; em tela baixa a identidade e os quadros rolam com o conteúdo
 { advSave(); open(); def.click(btn('it', { k: 'skin', id: 'default' })); has('class="p5-det"'); tab('col'); has('class="p5-det"'); tab('tit'); not('class="p5-det'); tab('num'); not('class="p5-det'); tab('vis'); not('class="p5-det');
-  def.click(btn('it', { k: 'skin', id: 'kael_demon' })); has('class="p5-det pv"'); tab('num'); not('class="p5-det'); assert.strictEqual(frame().skin, undefined, 'sair para Números tira a prévia do herói'); check('faixa só no Visual');
+  def.click(btn('it', { k: 'skin', id: 'kael_demon' })); has('class="p5-det pv"'); tab('num'); not('class="p5-det'); tab('vis'); assert.strictEqual(frame().skin, undefined, 'sair para Números tira a prévia do herói'); check('faixa só no Visual');
   const pos = s => H().indexOf(s), stH = () => +/class="p5-stage" style="height:(\d+)px"/.exec(H())[1];
   dims = { H: 704, Wb: 390 }; open(); assert(pos('class="p5-idb"') < pos('class="p5-tabs"') && pos('class="p5-tabs"') < pos('id="p5_scroll"'), 'tela alta: identidade fixa acima das abas'); not('p5-top'); const hi = stH();
-  for (const [w, h] of [[320, 640], [320, 520]]) for (const t of ['vis', 'col', 'tit', 'num']) { dims = { H: h, Wb: w }; open({ tab: t }); assert(pos('class="p5-tabs"') < pos('id="p5_scroll"') && pos('id="p5_scroll"') < pos('class="p5-idb"') && pos('class="p5-idb"') < pos('class="p5-stats"'), 'tela baixa: identidade e quadros dentro da rolagem');
+  for (const [w, h] of [[320, 640], [320, 520]]) for (const t of ['vis', 'col']) { dims = { H: h, Wb: w }; open({ tab: t }); assert(pos('class="p5-tabs"') < pos('id="p5_scroll"') && pos('id="p5_scroll"') < pos('class="p5-idb"') && pos('class="p5-idb"') < pos('class="p5-stats"'), 'tela baixa: identidade e quadros dentro da rolagem');
     has('class="p5-top lo"'); assert(stH() < hi && stH() >= 120, 'palco menor'); assert(h - stH() - 64 >= (h >= 640 ? 220 : 180), 'sobra área para o conteúdo em ' + w + 'x' + h + ': ' + (h - stH() - 64)); check('baixa ' + h + ' ' + t); }
+  // QA lote perfil 2 (1b): em Títulos e Números o palco cede a altura à lista; fica a identidade compacta, fixa acima das abas, e os três quadros saem
+  { const css = g.document.head.children.map(c => c.textContent).join(''), px = (re, what) => { const m = re.exec(css); assert(m, 'CSS: ' + what); return +m[1]; };
+    /* alturas tiradas do CSS da tela (não do aparelho): identidade compacta, abas, filtros com o aviso em 2 linhas, e um cartão de título (condição em 2 linhas abaixo de 350 px de largura, 1 linha acima) */
+    const idH = px(/\.p5-idb\.cp\{margin-top:(\d+)px/, 'margem da identidade compacta') + 48 + 8 + 2, tabsH = 6 + px(/\.p5-tab,\.xs \.p5-tab\{[^}]*min-height:(\d+)px/, 'aba') + 8;
+    const headH = 8 + px(/\.p5-fb,\.xs \.p5-fb\{min-height:(\d+)px/, 'filtro') + 8 + Math.ceil(2 * 11 * 1.4) + 8, rowH = w => 16 + 2 + 17 + 12 + (w < 350 ? 2 : 1) * 15 + 8 + 4 + 17 + 6;
+    const rowsIn = (h, w) => Math.floor((h - idH - tabsH - headH) / rowH(w));
+    assert(Math.ceil(('00 de 00 conquistados. O título em destaque vale em dobro.').length * 6.2 / 2) <= 300, 'o aviso dos títulos cabe em 2 linhas em 320 px');
+    /* 584 e 724: a altura útil medida nos prints do QA (320x640 e 360x780, sem o cabeçalho do jogo) */
+    for (const [w, h, need] of [[320, 584, 3], [320, 640, 3], [360, 724, 5], [390, 704, 5], [320, 520, 2]]) for (const t of ['tit', 'num']) { dims = { H: h, Wb: w }; advSave(); open({ tab: t });
+      not('class="p5-stage"'); not('id="p5_cv"'); not('class="p5-stats"'); not('p5-top'); assert(pos('class="p5-idb cp"') > 0 && pos('class="p5-idb cp"') < pos('class="p5-tabs"') && pos('class="p5-tabs"') < pos('id="p5_scroll"'), 'identidade compacta fixa acima das abas em ' + w + 'x' + h);
+      assert.strictEqual(raf.length, 0, 'sem palco não há laço de desenho'); assert(rowsIn(h, w) >= need, 'cabem ' + need + ' cartões de título inteiros em ' + w + 'x' + h + ': ' + rowsIn(h, w)); check('lista alta ' + w + 'x' + h + ' ' + t); }
+    /* tela bem alta: sobra altura, o palco volta (menor ou do tamanho normal) e a lista continua com os 5 cartões */
+    dims = { H: 900, Wb: 390 }; open({ tab: 'tit' }); has('class="p5-stage"'); assert(stH() >= 96 && rowsIn(900 - stH(), 390) >= 5, 'tela alta: palco com a sobra, 5 cartões'); const mid = stH();
+    dims = { H: 1100, Wb: 390 }; open({ tab: 'tit' }); open(); const full = stH(); open({ tab: 'tit' }); assert.strictEqual(stH(), full, 'sobrando altura, o palco é o normal'); assert(mid < full); has('class="p5-idb"'); has('class="p5-stats"');
+    dims = { H: 584, Wb: 320 }; open({ tab: 'tit' }); tab('vis'); has('class="p5-stage"'); has('class="p5-stats"'); frame(); }
   dims = {};
+  out.push('QA lote perfil 2 (1b): em Títulos e Números o palco sai de cena quando não sobra altura (fica a identidade compacta acima das abas): cabem 3 cartões de título em 320x640 e 5 em 360x780, pela conta das alturas do CSS; em tela bem alta o palco volta');
   out.push('QA lote 3: faixa do item só em Visual e Coleção (sair para Títulos ou Números tira a prévia); em 320x640 e 320x520 o palco encolhe e identidade e quadros rolam com o conteúdo'); }
 
 // 5c) SISTEMAS DO PERFIL (Sys.profile + Sys.name reais): chave desligada = tela igual; ligada (só neste teste): nome, moldura, aura, retrato, gráfico e recordes
@@ -216,6 +232,34 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   } finally { PR.setOn(false); dims = {}; }
   advSave(); for (const t of ['vis', 'num']) { open({ tab: t }); for (const s of NEW) not(s); } def.click(btn('ren')); not('id="p5_name"');
   out.push('Sys.profile desligado: HTML idêntico ao de sem o módulo nas 4 abas, nada escrito no save, nenhum elemento novo'); }
+
+// 5d) QA lote perfil 2 (1a): NENHUMA imagem da aba Títulos aponta para arquivo que não existe, também com os títulos dados por outros módulos
+//     (Sys.erasEnd: 'legend9' e os marcos; Sys.mentors: mentor_*; e um título de ranking de evento). Sem arte em disco = medalhão por CSS, sem <img>
+{ require(path.join(R, 'js/sys/mentors.js')); const EE = Sys.erasEnd, MT = Sys.mentors; assert(EE && MT && typeof T.addTitle === 'function', 'Sys.erasEnd e Sys.mentors carregados');
+  const base = T.DATA.titles.length, dir = 'assets/icons/titles/', onDisk = t => typeof t.icon === 'string' && t.icon.indexOf(dir) === 0 && fs.existsSync(path.join(R, t.icon));
+  const files = fs.readdirSync(path.join(R, dir)).filter(f => /\.png$/.test(f) && f[0] !== '_').map(f => f.slice(0, -4)).sort();
+  { const m = /TI_HAVE=\[([^\]]*)\]/.exec(SRC); assert(m, 'lista TI_HAVE no arquivo'); const have = m[1].split(',').map(x => x.replace(/'/g, '')).sort(); for (const id of have) assert(files.includes(id), 'TI_HAVE cita ícone que não existe em disco: ' + id);
+    const late = files.filter(f => !have.includes(f)); if (late.length) out.push('AVISO: ícones de título em disco que ainda não estão na lista TI_HAVE do js/p_profile2.js (aparecem como medalhão): ' + late.join(', ')); }
+  EE.setOn(true); MT.registerTitles(); T.addTitle({ id: 'evt_teste', name: 'campeão <b>', text: 'Ranking de evento', bonus: {} });
+  try {
+    assert(T.DATA.titles.length > base + 10, 'os módulos registraram títulos novos'); const ids = T.DATA.titles.map(t => t.id); assert(ids.includes('legend9') && ids.includes('mark100') && ids.some(i => /^mentor_/.test(i)), 'legend9, marco e mentor na tabela');
+    const noArt = T.DATA.titles.filter(t => !onDisk(t)); assert(noArt.length >= 16, 'há títulos sem arte em disco: ' + noArt.length);
+    const S = advSave(); const men = ids.find(i => /^mentor_/.test(i)); for (const id of ['legend9', 'mark100', men, 'evt_teste']) assert.strictEqual(T.grant(S, id, host), true, 'título dado: ' + id);
+    for (const [w, h] of [[320, 584], [360, 724], [390, 788]]) for (const f of ['all', 'own', 'lock']) { dims = { H: h, Wb: w }; open({ tab: 'tit' }); if (f !== 'all') def.click(btn('tf', { f })); check('títulos de outros módulos ' + w + ' ' + f);
+      const rows = body().split('class="p5-trow').slice(1), want = T.DATA.titles.filter(t => f === 'all' || (f === 'own') === T.isUnlocked(S, t.id)); assert.strictEqual(rows.length, want.length, 'uma linha por título em ' + f);
+      let imgs = 0, meds = 0; for (const r of rows) { const m = /<span class="p5-crest">(.*?)<\/span>\s*<div class="p5-ti">/s.exec(r); assert(m, 'brasão do título'); const im = /<img src="([^"]+)"[^>]*>/.exec(m[1]);
+        if (im) { imgs++; assert(fs.existsSync(path.join(R, im[1])), 'ícone de título não existe: ' + im[1]); assert(/onerror="/.test(im[0]), 'imagem do título com reserva (onerror)'); assert(/class="p5-med p5-lil" aria-hidden="true" hidden>/.test(m[1]), 'medalhão de reserva escondido atrás da imagem'); }
+        else { meds++; assert(/^<span class="p5-med p5-lil" aria-hidden="true">[^<]+<\/span>$/.test(m[1]), 'sem arte: medalhão com a inicial, sem <img>: ' + m[1]); } assert(/style="--rc:#[0-9a-f]{6}"/.test(r), 'cor da raridade no cartão'); }
+      assert.strictEqual(meds, want.filter(t => !onDisk(t)).length, 'um medalhão por título sem arte'); assert.strictEqual(imgs, want.filter(onDisk).length); }
+    for (const bad of ['mark.png', 'legend9.png', 'mentor_', 'evt_teste.png']) { open({ tab: 'tit' }); assert(!H().includes(dir + bad), 'a tela não cita ' + dir + bad); }
+    has('campeão &lt;b&gt;'); not('campeão <b>');
+    // título sem arte em DESTAQUE: a identidade (em todas as abas) também não cita o arquivo
+    assert.strictEqual(T.setFeatured(S, 'legend9'), true); for (const t of ['vis', 'col', 'tit', 'num']) { dims = { H: 704, Wb: 390 }; open({ tab: t }); has('Lenda das 9 Eras'); assert(!H().includes(dir + 'legend9'), 'destaque sem arte não vira <img>'); check('destaque sem arte ' + t); }
+    dims = {};
+    out.push('QA lote perfil 2 (1a): com legend9, marcos, mentores e título de evento (' + T.DATA.titles.length + ' títulos), toda imagem da aba Títulos existe em disco e tem onerror; os ' + noArt.length + ' sem arte viram medalhão por CSS');
+    out.push('ÍCONES DE TÍTULO PARA A ARTE (faltam em ' + dir + '): ' + [...new Set(noArt.filter(t => t.id !== 'evt_teste').map(t => (typeof t.icon === 'string' ? t.icon.replace(dir, '').replace(/\.png$/, '') : t.id) + (t.icon && !t.icon.endsWith('/' + t.id + '.png') ? ' (usado por ' + t.id + ')' : '')))].join(', '));
+  } finally { dims = {}; T.removeTitle('evt_teste'); for (const m of MT.DATA.list) T.removeTitle('mentor_' + m.id); EE.setOn(false); }
+  assert.strictEqual(T.DATA.titles.length, base, 'a tabela de títulos voltou ao que era'); }
 
 // 6) larguras de 320 e 390 e tela baixa; todos os botões de todas as abas, save novo e avançado
 { let taps = 0; for (const [w, h] of [[320, 520], [390, 704]]) for (const mk of [() => { g.S = newSave(); }, () => { advSave(); }]) for (const t of ['vis', 'col', 'tit', 'num']) { mk(); dims = { H: h, Wb: w }; open({ tab: t }); const n = buttons().length; check(w + ' ' + t);
