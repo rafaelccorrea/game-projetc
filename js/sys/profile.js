@@ -36,6 +36,10 @@ const DATA={
     {id:'nine_eras', name:'Nove Eras',     r:5, how:'Vencer a fase 90 (fim das 9 eras)', need:{erasEnd:'nine_eras'}, go:'Mapa das Eras'},
     {id:'mark100',   name:'Além das Eras', r:4, how:'Vencer a fase 100',               need:{erasEnd:'mark100'}, go:'Mapa das Eras'},
     {id:'mark150',   name:'Sem Fim',       r:5, how:'Vencer a fase 150',               need:{erasEnd:'mark150'}, go:'Mapa das Eras'},
+    // LOJA DOS EVENTOS (docs/EVENTOS_TEMAS.md; arte assets/ui/frames/<id>.png). evt:true = só aparece no Perfil quando o id está em Sys.events.DATA.ready
+    // (o Engenheiro liga depois do voto do dono) ou quando o jogador já tem. Entrega: Sys.events.buy → grant.
+    {id:'evt_cacada', name:'Caçador',        r:3, how:'Loja da Caçada aos Chefes',     need:{grant:true}, go:'Eventos', evt:true},
+    {id:'evt_pets',   name:'Festa dos Pets', r:3, how:'Loja da Festa dos Pets',        need:{grant:true}, go:'Eventos', evt:true},
   ],
   /* auras (protótipo AURAS, mesmas folhas da batalha: assets/anim/aura/<id>). forge = [espaço, +N] no Sys.forge; wing = asa equipada daquele tipo */
   auras:[
@@ -121,7 +125,8 @@ function meets(S,host,it){ const n=it.need; if(!n) return {owned:true};
   return {owned:false}; }
 const LIST={frame:()=>DATA.frames, aura:()=>DATA.auras};
 function list(S,host,kind){ if(!on()) return []; const o=ensure(S), L=LIST[kind]; if(!L) return [];
-  return L().map(it=>{ const m=meets(S,host,it); return {id:it.id,name:it.name,r:it.r,how:it.how,go:it.go||null,owned:m.owned,cur:m.cur,need:m.need,equipped:o[kind]===it.id}; }); }
+  const evReady=id=>{ const E=SYS().events; return !!(E&&E.DATA&&Array.isArray(E.DATA.ready)&&E.DATA.ready.includes(id)); };
+  return L().filter(it=>!it.evt||o.grants.includes(it.id)||evReady(it.id)).map(it=>{ const m=meets(S,host,it); return {id:it.id,name:it.name,r:it.r,how:it.how,go:it.go||null,owned:m.owned,cur:m.cur,need:m.need,equipped:o[kind]===it.id}; }); }
 const frames=(S,host)=>list(S,host,'frame');
 const auras=(S,host)=>list(S,host,'aura');
 /* retratos = os das skins que o jogador tem (Sys.appearance.fixedSkins) + o padrão do herói */

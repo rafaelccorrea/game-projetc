@@ -50,6 +50,14 @@ t('skin e moldura ficam ESCONDIDAS até a arte entrar (DATA.ready); com a skin p
 t('moldura pronta mas fora do catálogo do Perfil: não vende e não gasta ponto',()=>withOn(()=>{ E.setCalendar(CAL); const S={}, h=hostAt(BRT(2026,12,6)), id='cacada_chefes_261204';
   E.ensure(S)[id]={pts:300,rep:0,p:{},c:[],buys:{}}; E.DATA.ready=['evt_cacada']; assert.ok(E.shop(S,h,id).some(x=>x.id==='s_frame'));
   assert.strictEqual(E.buy(S,h,id,'s_frame').reason,'profile'); assert.strictEqual(S.sys.events[id].pts,300); assert.strictEqual(S.sys.events[id].buys.s_frame,undefined); }));
+t('moldura da loja: escondida no Perfil até ficar pronta; pronta, vende uma vez, entrega pelo Perfil e some da compra',()=>withOn(()=>{ const P=Sys.profile, pOn=P.DATA.on; P.setOn(true);
+  try{ E.setCalendar(CAL); const S={}, h=hostAt(BRT(2027,2,1)), id='festa_pets_270129'; E.ensure(S)[id]={pts:300,rep:0,p:{},c:[],buys:{}};
+    assert.ok(!P.frames(S,h).some(f=>f.id==='evt_pets'),'escondida no Perfil'); assert.ok(!E.shop(S,h,id).some(x=>x.id==='s_frame'),'escondida na loja');
+    E.DATA.ready=['evt_pets']; const f=P.frames(S,h).find(x=>x.id==='evt_pets'); assert.ok(f&&!f.owned);
+    const r=E.buy(S,h,id,'s_frame'); assert.ok(r.ok,JSON.stringify(r)); assert.strictEqual(r.got.frame,'evt_pets'); assert.strictEqual(S.sys.events[id].pts,200);
+    assert.ok(P.frames(S,h).find(x=>x.id==='evt_pets').owned); assert.strictEqual(E.shop(S,h,id).find(x=>x.id==='s_frame').owned,true);
+    E.DATA.ready=[]; assert.ok(P.frames(S,h).find(x=>x.id==='evt_pets').owned,'quem tem continua vendo'); assert.ok(P.equip(S,h,'frame','evt_pets').ok);
+  } finally{ P.DATA.on=pOn; } }));
 t('contadores novos entram no save e completam missão; fora do tema/da janela não contam',()=>withOn(()=>{ E.setCalendar(CAL); const S={}, h=hostAt(BRT(2026,12,6));
   E.track(S,h,'tower',20); E.track(S,h,'evboss',10); E.track(S,h,'petfeed',5);
   const id='cacada_chefes_261204', m=E.missions(S,h,id); assert.ok(m.find(x=>x.id==='c_tower').done); assert.ok(m.find(x=>x.id==='c_evb').done);
