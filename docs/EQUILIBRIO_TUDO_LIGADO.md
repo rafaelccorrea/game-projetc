@@ -270,3 +270,21 @@ subir a FC pedida das eras 6-8 e o com módulos passaria de 30 s: decisão do PO
   - com módulos (100% da FC) **não pode virar parede**: vence pelo menos 5 de 6 lutas.
 - **Como fazer:** é medida pesada (tools/cal-tudo.js, uma era por vez, e depois o calendário com tools/sim-tudo-ligado.js --dias). Entra na
   fila do PC depois do QA; a Sistemas espera o PO avisar a vez. Os resultados entram aqui em 9.3.
+
+### 9.3 Medida para ~178 dias (14/11, parcial)
+
+**Calendário:** com os módulos, sobe só a FC pedida das eras 6, 7 e 8 (fator k sobre o balance b87e350, as outras eras ficam iguais).
+Rodado com `RX='[1.073,1,1.40,1.48,1.50,1.49,1.667k,1.748k,1.54k]' node tools/sim-tudo-ligado.js --dias --xp=10`:
+
+| k | fim da era 6 | fim da era 7 | fim da era 8 (9 eras) |
+|---|---|---|---|
+| 1 (hoje) | 85 | 121 | 121 |
+| 1,2 | 96 | 128 | 158 |
+| 1,4 | 113 | 152 | 170 |
+| **1,5** | 121 | 162 | **179** |
+
+**Luta:** faltam as lutas com k = 1,5:
+- com os módulos, vencer pelo menos 5 de 6;
+- sem os módulos, com 115% da FC, vencer.
+
+A primeira tentativa (era 6) foi parada pelo sistema por falta de memória, e nenhum número saiu. Nada mudou no balance.json.
