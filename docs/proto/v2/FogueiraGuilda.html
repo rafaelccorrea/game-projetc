@@ -1,0 +1,415 @@
+<title>Eonbound Fogueira da Guilda</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Fogueira da Guilda (js/sys/guildfire.js, desligado; servidor docs/API_SERVIDOR.md §16.2). Sobre o PRINT REAL de hoje: a folha do Equipamento
+   (a/eq_hoje.png: cabeçalho Voltar | título | ouro | gemas, marrom). À esquerda o print puro, à direita a folha da Guilda no mesmo estilo com a
+   aba nova FOGUEIRA. A fogueira usa a arte aprovada da Fogueira (a/fg_s1..9.png): estágio = nível da fogueira da guilda (o 10 reusa o 9).
+   Sem PNG novo: só o que já está em a/. Nada se compra: Brasas vêm só jogando. Baús chegam pelo correio. */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2; --brown:#211812; --brown2:#2c2119; --fire:#ff8a3a;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45;overflow-wrap:anywhere}
+.stl b{color:var(--gold)}
+.offs{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.45}
+.offs li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(130,150,255,.14);min-width:0}
+.offs li span{min-width:0;overflow-wrap:anywhere}
+.offs li span:last-child{text-align:right}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--brown);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+/* folha no estilo do Equipamento de hoje */
+.sheet{position:absolute;inset:0;z-index:20;background:var(--brown);display:flex;flex-direction:column}
+.hd{flex:none;height:56px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid rgba(255,236,200,.12);background:#1c140f}
+.back{flex:none;height:44px;padding:0 12px 0 8px;border-radius:14px;border:1.5px solid rgba(255,236,200,.18);background:#241a13;font-weight:900;font-size:15px;display:flex;align-items:center;gap:4px}
+.hd h2{flex:1;min-width:0;margin:0;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;height:32px;padding:0 9px 0 4px;border-radius:16px;background:#2a1f17;border:1.5px solid rgba(255,236,200,.14);display:flex;align-items:center;gap:4px;font-family:var(--fd);font-size:14px;color:#fff}
+.pill img{width:24px;height:24px}
+/* cartão da guilda + abas */
+.gtop{flex:none;display:flex;align-items:center;gap:9px;padding:8px 12px 0}
+.gtop .ban{flex:none;width:40px;height:46px}
+.gtop .tx{flex:1;min-width:0}
+.gtop .tx b{display:block;font-family:var(--fd);font-weight:400;font-size:18px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+.gtop .tx small{display:block;font-size:11.5px;font-weight:800;color:var(--mut2)}
+.fchip{flex:none;display:inline-flex;align-items:center;gap:3px;height:30px;padding:0 9px 0 4px;border-radius:15px;background:rgba(255,138,58,.16);border:1.5px solid rgba(255,138,58,.6);font-family:var(--fd);font-size:13px;color:#ffd7b0;white-space:nowrap}
+.fchip img{width:22px;height:24px;object-fit:contain}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;padding:8px 12px 6px;border-bottom:1px solid rgba(255,236,200,.12)}
+.tab{position:relative;min-height:42px;border-radius:12px;border:1.5px solid rgba(255,236,200,.16);background:#241a13;font-weight:900;font-size:13px;color:var(--mut2);padding:0 4px;white-space:nowrap;overflow:visible}
+.tab[aria-selected="true"]{background:linear-gradient(180deg,#5a3a10,#3a2508);border-color:var(--g2);color:#fff}
+.tab .rd{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#ff4a5e;border:1.5px solid #fff}
+.tab .tag{position:absolute;left:50%;top:-8px;transform:translateX(-50%);padding:0 6px;height:16px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font:900 10px/16px var(--fb)}
+.bd{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.card{border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:9px 10px}
+.card h4{margin:0 0 6px;font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px}
+.card h4 span{font-family:var(--fb);font-size:11px;font-weight:900;color:var(--mut2);white-space:nowrap}
+.note{font-size:11.5px;font-weight:800;color:var(--mut2);line-height:1.35;margin:6px 0 0}
+.note b{color:var(--cream)}
+/* a fogueira grande */
+.fire{position:relative;border-radius:16px;overflow:hidden;border:2px solid rgba(255,160,80,.55);background:radial-gradient(ellipse at 50% 72%,#5a2a0e 0%,#2a160c 48%,#1a110b 80%);padding:8px 10px 10px}
+.fire .stage{position:relative;height:172px;display:flex;align-items:flex-end;justify-content:center}
+.fire .glow{position:absolute;left:50%;bottom:6px;width:230px;height:150px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 60%,rgba(255,150,50,.55),rgba(255,90,20,0) 70%);animation:glw 2.4s ease-in-out infinite}
+.fire.max .glow{background:radial-gradient(ellipse at 50% 60%,rgba(255,240,170,.7),rgba(255,170,60,0) 72%)}
+.fire .stage img{position:relative;height:160px;width:auto;max-width:190px;object-fit:contain;animation:flk 1.8s ease-in-out infinite;transform-origin:50% 100%}
+.fire .emb{position:absolute;bottom:50px;width:5px;height:5px;border-radius:50%;background:#ffd27a;box-shadow:0 0 6px #ff9a3a;opacity:0;animation:emb 2.6s linear infinite}
+.fire .lvb{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.fire .lvb b{font-family:var(--fd);font-weight:400;font-size:13px;color:#2a1403;background:linear-gradient(180deg,#ffe07a,#f2a826);border-radius:10px;padding:1px 9px}
+.fire .lvb small{font-size:11px;font-weight:900;color:#ffd7b0}
+.fire .nm{text-align:center;font-family:var(--fd);font-size:24px;color:#fff;text-shadow:0 2px 0 #000;line-height:1.05;margin-top:2px}
+.bar{position:relative;height:18px;border-radius:9px;background:rgba(0,0,0,.5);overflow:hidden;border:1px solid rgba(255,236,200,.18);margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(180deg,#ffd27a,#ff7a2a);transition:width .5s}
+.bar span{position:absolute;inset:0;text-align:center;font:900 12px/17px var(--fb);color:#fff;text-shadow:0 1px 2px #000}
+.perk{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-top:6px;font-size:12px;font-weight:900}
+.perk .a{color:#9cf08f}
+.perk .n{color:var(--mut2)}
+@keyframes flk{0%,100%{transform:scale(1,1)}30%{transform:scale(1.02,.98)}60%{transform:scale(.99,1.03)}}
+@keyframes glw{50%{opacity:.7;transform:translateX(-50%) scale(1.06)}}
+@keyframes emb{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-120px)}}
+/* botões */
+.btn{flex:none;min-height:44px;min-width:44px;padding:0 12px;border-radius:13px;border:1.5px solid rgba(255,236,200,.25);background:#3a2c20;font-weight:900;font-size:14px;color:var(--cream);display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1d5a1c}
+.btn.y{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10}
+.btn.f{border:0;background:linear-gradient(180deg,#ffb36a,#e8641e);color:#2a0e03;box-shadow:0 3px 0 #8a3208}
+.btn[disabled],.btn.off{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.done{opacity:1;background:#24331f;border:1.5px solid rgba(127,224,122,.5);color:#bff0b8;box-shadow:none;cursor:default}
+.feed{display:flex;align-items:center;gap:8px}
+.feed .tx{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.3}
+.feed .tx b{display:block;font-size:14px;color:#fff}
+.feed .btn{min-width:150px}
+.stp{display:flex;align-items:center;gap:6px;margin-top:4px}
+.stp .v{flex:1;min-width:0;height:44px;border-radius:12px;background:rgba(0,0,0,.35);border:1.5px solid rgba(255,201,74,.45);display:flex;align-items:center;justify-content:center;gap:4px;font-family:var(--fd);font-size:22px;color:#fff}
+.stp .v small{font-family:var(--fb);font-size:11px;font-weight:900;color:var(--mut2)}
+.stp .btn{padding:0;width:44px;font-size:22px;font-family:var(--fd);font-weight:400}
+.stp .btn.mx{width:auto;padding:0 10px;font-size:13px;font-family:var(--fb);font-weight:900}
+.give{width:100%;margin-top:7px;min-height:46px;font-size:15px}
+.have{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:900;color:var(--cream)}
+.have em{font-style:normal;color:#ffb36a}
+.brc{display:inline-block;width:12px;height:14px;vertical-align:-2px;margin-right:2px}
+/* quem mais deu hoje */
+.top{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid rgba(255,236,200,.1)}
+.top:first-of-type{border-top:0}
+.top .ps{flex:none;width:22px;text-align:center;font-family:var(--fd);font-size:15px;color:var(--mut2)}
+.top .ps.p1{color:#ffd25e}.top .ps.p2{color:#d9e2ee}.top .ps.p3{color:#e0a46a}
+.av{flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#5a4026,#1a120c 72%);border:2px solid #6a5340;position:relative}
+.av img{position:absolute;left:-5px;top:-2px;width:46px;height:46px;object-fit:cover}
+.top .n{flex:1;min-width:0;font-size:13.5px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .n small{font-size:11px;color:var(--mut2);font-weight:800}
+.top.me{background:rgba(255,201,74,.1);border-radius:10px;padding-left:4px;padding-right:4px}
+.top .f{flex:none;font-family:var(--fd);font-size:15px;color:#ffb36a;white-space:nowrap}
+/* baús de nível */
+.ch{display:flex;align-items:center;gap:7px;padding:6px 0;border-top:1px solid rgba(255,236,200,.1)}
+.ch:first-of-type{border-top:0}
+.ch .lv{flex:none;width:40px;height:40px;border-radius:11px;background:#1a120c;border:1.5px solid #5a4632;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fd);font-size:15px;color:#fff;line-height:1}
+.ch .lv small{font:900 9px var(--fb);color:var(--mut2)}
+.ch .cn{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+.ch .s{flex:none;max-width:118px;text-align:right}
+.ch.pre{opacity:.5}
+.ch.rdy .lv{border-color:var(--g2);background:#3a2508}
+.chip{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 6px 0 2px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:11.5px;white-space:nowrap}
+.chip img,.chip svg{width:18px;height:18px;flex:none}
+.chip small{font-size:10px;color:var(--mut2);font-weight:800}
+.tg{display:inline-block;font-size:11px;font-weight:900;line-height:1.2;border-radius:9px;padding:4px 7px}
+.tg.pre{background:rgba(255,255,255,.07);color:var(--mut2)}
+.tg.lk{background:rgba(0,0,0,.3);color:var(--mut2)}
+.mail{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 8px;border-radius:12px;background:rgba(94,231,255,.12);border:1.5px solid rgba(94,231,255,.5);color:#bff4ff;font-weight:900;font-size:12px;white-space:nowrap}
+.mail svg{width:18px;height:18px}
+.ch .btn{min-height:40px;padding:0 10px;font-size:13px}
+.safe{display:flex;align-items:center;gap:7px;border-radius:12px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);padding:6px 9px;font-size:11.5px;font-weight:900;line-height:1.3}
+.safe svg{width:22px;height:22px;flex:none}
+/* subiu de nível */
+.lu{position:absolute;inset:0;z-index:30;background:radial-gradient(ellipse at 50% 38%,rgba(120,50,10,.94),rgba(10,6,3,.96) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px 18px;text-align:center;animation:fade .25s ease-out}
+.lu .st{position:relative;width:230px;height:240px}
+.lu .st img{position:absolute;left:50%;bottom:0;height:220px;width:auto;max-width:230px;transform:translateX(-50%);object-fit:contain}
+.lu .st .o{animation:luO 1.1s ease-in forwards}
+.lu .st .nw{opacity:0;animation:luN .9s .7s cubic-bezier(.2,1.4,.4,1) forwards}
+.lu .rg{position:absolute;left:50%;top:55%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:4px solid #ffe07a;opacity:0;animation:luR 1s .65s ease-out forwards}
+.lu h3{margin:0;font-family:var(--fd);font-weight:400;font-size:30px;color:#fff;text-shadow:0 3px 0 #000;line-height:1.05;opacity:0;animation:luT .4s 1.1s ease-out forwards}
+.lu .sb{font-family:var(--fd);font-size:19px;color:var(--g2);opacity:0;animation:luT .4s 1.25s ease-out forwards}
+.lu .bx{width:100%;border-radius:15px;background:rgba(44,33,25,.95);border:2px solid var(--g2);padding:9px 10px;opacity:0;animation:luT .4s 1.45s ease-out forwards}
+.lu .bx .cn{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.lu .bx p{margin:0;font-size:12px;font-weight:800;color:var(--cream);line-height:1.35}
+.lu .bx p b{color:#9cf08f}
+.lu .btn{min-width:160px;min-height:48px;font-size:16px;opacity:0;animation:luT .3s 1.6s ease-out forwards}
+@keyframes luO{0%{opacity:1;transform:translateX(-50%) scale(1)}70%{opacity:1;transform:translateX(-50%) scale(1.12);filter:brightness(2.2)}100%{opacity:0;transform:translateX(-50%) scale(1.2);filter:brightness(3)}}
+@keyframes luN{from{opacity:0;transform:translateX(-50%) scale(.6)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes luR{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(5)}}
+@keyframes luT{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
+.toast{position:absolute;left:50%;top:96px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.96);border:1px solid rgba(255,236,200,.3);font-weight:900;font-size:12.5px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption id="cap0">Hoje<small>print real da folha do Equipamento (mesmo cabeçalho e marrom)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" id="shot0" src="a/eq_hoje.png" alt="Print real do jogo hoje: folha do Equipamento"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Com a Fogueira da Guilda<small>folha da Guilda no mesmo estilo; a aba Fogueira é a novidade</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Fogueira da Guilda</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">À esquerda, o <b>print real de hoje</b> (a folha do Equipamento: cabeçalho Voltar | título | ouro | gemas, marrom). Ainda não há print da Guilda no jogo, então à direita está a <b>folha da Guilda no mesmo estilo</b>, com a aba nova <b>Fogueira</b>. As outras abas ficam como no protótipo da Guilda (aqui só apagadas para situar). A fogueira é <b>a mesma arte da Fogueira aprovada</b>: o estágio segue o nível da fogueira da guilda.</p>
+    <div class="box">
+      <h2>Momento</h2>
+      <div class="seg" role="group" aria-label="Momento"><button data-st="tab" aria-pressed="true">0 · Aba Fogueira</button><button data-st="fed" aria-pressed="false">1 · Já alimentei hoje</button><button data-st="nobra" aria-pressed="false">2 · Sem Brasas</button><button data-st="new" aria-pressed="false">3 · Entrei agora</button><button data-st="max" aria-pressed="false">4 · Nível 10</button><button data-st="lvup" aria-pressed="false">5 · Subiu de nível</button></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Simular">
+        <button data-sim="member">Um membro alimenta (+10)</button>
+        <button data-sim="member20">Um membro dá 20 Brasas</button>
+        <button data-sim="earn">Ganhar 5 Brasas jogando</button>
+        <button data-sim="nearly">Faltar 15 chamas</button>
+        <button data-sim="levelup">Subir de nível agora</button>
+        <button data-sim="day">Virar o dia</button>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/guildfire.js, desligado)</h2>
+      <ul>
+        <li>Cada membro: <b>1 alimentar grátis por dia</b> (+10 chamas). Quem quiser dá também <b>Brasas suas</b>: 1 chama cada, <b>até 20 por dia</b></li>
+        <li>Brasas vêm <b>só jogando</b> (a Fogueira do herói). <b>Nada aqui se compra</b>: sem gema, oferta, pacote, VIP ou anúncio</li>
+        <li>As chamas de todos sobem o nível da fogueira: <b>1 a 10</b> (Faísca … Chama Eterna), sem reset. Do nível n ao n+1: <b>300 × 1,35^(n−1)</b> chamas</li>
+        <li>Cada nível novo dá a <b>cada membro</b> um baú <b>fixo</b> (nada sorteado): um pouco de ouro (<b>40 × nível abates</b>, ≈ minutos de abate), <b>nível</b> Pedras de Forja, <b>10 × nível</b> de ração. Nunca gema</li>
+        <li>Só conta baú de nível alcançado <b>depois de você entrar</b> (contra pular de guilda). O baú <b>chega pelo correio</b></li>
+        <li>No nível 10: <b>mais 1 baú a cada 3.000 chamas</b>, a rotina continua valendo</li>
+        <li>Bônus pequeno para todos, <b>fora da Força de Combate</b>: ouro +0,5% e XP +0,3% por nível acima do 1 (nível 10 = +4,5% / +2,7%)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Níveis da fogueira (do guildfire.js)</h2>
+      <ul class="offs" id="offs"></ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: fogueira maior, outra ordem dos cartões"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), lay=$('#lay');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const dec=v=>String(Math.round(v*10)/10).replace('.',',');
+
+/* ===== regras: cópia fiel de js/sys/guildfire.js (DATA e regras puras) ===== */
+const DATA={
+  free:{flames:10}, brasa:{flames:1,perDay:20}, maxLevel:10,
+  need:{base:300,growth:1.35}, extraEvery:3000,
+  perLevel:{goldPct:0.5,xpPct:0.3},
+  chest:{goldK:40,stonesPer:1,foodPer:10},
+  names:['Faísca','Brasa','Chama','Fogueira','Labareda','Fogaréu','Tocha das Eras','Pira','Farol','Chama Eterna'],
+};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const int0=v=>Math.max(0,Math.floor(+v||0));
+const needOf=lv=>lv>=DATA.maxLevel?0:Math.round(DATA.need.base*Math.pow(DATA.need.growth,clamp(int0(lv)||1,1,DATA.maxLevel)-1));
+const totalTo=lv=>{ let t=0; for(let i=1;i<clamp(int0(lv)||1,1,DATA.maxLevel);i++) t+=needOf(i); return t; };
+function levelOf(flames){ let lv=1, left=int0(flames); while(lv<DATA.maxLevel&&left>=needOf(lv)){ left-=needOf(lv); lv++; }
+  const extra=lv>=DATA.maxLevel?Math.floor(left/DATA.extraEvery):0;
+  return {level:lv,into:lv>=DATA.maxLevel?left%DATA.extraEvery:left,need:lv>=DATA.maxLevel?DATA.extraEvery:needOf(lv),extra}; }
+function perksAt(lv){ const k=clamp(int0(lv)||1,1,DATA.maxLevel)-1; return {goldPct:Math.round(DATA.perLevel.goldPct*k*10)/10,xpPct:Math.round(DATA.perLevel.xpPct*k*10)/10}; }
+/* ouro de um abate (js/farm.js goldUnit) na fase simulada 2-5 (fase 15); ritmo de abate 24/min (o mesmo do Sys.mapChest) */
+const STAGE=15, goldUnit=Math.max(1,Math.ceil(4*Math.pow(1.15,STAGE-1)*0.32)), KPM=24;
+function chestOf(lv){ const L=clamp(int0(lv)||1,1,DATA.maxLevel); return {gold:Math.round(DATA.chest.goldK*L*goldUnit),goldMin:DATA.chest.goldK*L/KPM,stones:DATA.chest.stonesPer*L,food:DATA.chest.foodPer*L,gems:0}; }
+const stageImg=lv=>'a/fg_s'+Math.min(9,clamp(lv,1,10))+'.png';
+
+/* ===== membros simulados (nome = nome moderado da conta, vem do servidor) ===== */
+const MEM=[{id:'bruno',n:'Bruno',img:'a/kael_phase0.png'},{id:'bia',n:'Bia',img:'a/kaia_phase0.png'},{id:'theo',n:'Theo',img:'a/av_kael_ninja.png'},
+  {id:'luna',n:'Luna',img:'a/av_kaia_angel.png'},{id:'davi',n:'Davi',img:'a/av_kael_demon.png'},{id:'nina',n:'Nina',img:'a/av_kaia_ninja.png'},
+  {id:'caio',n:'Caio',img:'a/av_kael_cyborg.png'},{id:'lia',n:'Lia',img:'a/av_kaia_demon.png'}];
+const ME={id:'me',n:'Você',img:'a/kael_phase0.png'};
+const GUILD={name:'Lobos da Aurora',members:18,cap:20};
+
+/* ===== estado (espelho do GET /v1/guild/fire) ===== */
+const ST={st:'tab',flames:0,joinLv:4,free:false,bra:0,have:37,step:10,today:{},claimed:[],mail:0,lvup:null,simI:0,lastToast:''};
+function scenario(k){ ST.lvup=null; ST.claimed=[]; ST.mail=0; ST.simI=0; ST.step=10;
+  ST.flames=totalTo(7)+1240; ST.joinLv=4; ST.free=false; ST.bra=0; ST.have=37;
+  ST.today={bruno:30,bia:30,theo:25,luna:18,davi:10,nina:10};
+  ST.claimed=[5,6];
+  if(k==='fed'){ ST.free=true; ST.bra=20; ST.have=17; ST.today.me=30; ST.claimed=[5,6,7]; }
+  if(k==='nobra'){ ST.have=0; ST.free=true; ST.today.me=10; }
+  if(k==='new'){ ST.joinLv=7; ST.claimed=[]; ST.today={bruno:30,bia:20,theo:10}; }
+  if(k==='max'){ ST.flames=totalTo(10)+2*DATA.extraEvery+2140; ST.joinLv=3; ST.claimed=[4,5,6,7,8,9,10,'x1']; }
+  if(k==='lvup'){ ST.flames=totalTo(8)-6; ST.claimed=[5,6,7]; } }
+const L=()=>levelOf(ST.flames);
+const braLeft=()=>Math.max(0,DATA.brasa.perDay-ST.bra);
+const maxStep=()=>Math.min(braLeft(),ST.have);
+/* baús: níveis 2..10 e extras do 10. estado: pre (antes de entrar) | mail (no correio) | ready (a receber) | lock (falta) */
+function chestList(){ const c=L(), out=[];
+  for(let lv=2;lv<=DATA.maxLevel;lv++){ let s;
+    if(lv>c.level) s='lock'; else if(lv<=ST.joinLv) s='pre'; else if(ST.claimed.includes(lv)) s='mail'; else s='ready';
+    out.push({id:lv,level:lv,state:s,chest:chestOf(lv),left:lv>c.level?totalTo(lv)-ST.flames:0}); }
+  if(c.level>=DATA.maxLevel){ for(let x=1;x<=c.extra+1;x++){ const got=x<=c.extra;
+    out.push({id:'x'+x,level:10,extra:x,state:!got?'lock':ST.claimed.includes('x'+x)?'mail':'ready',chest:chestOf(10),left:got?0:c.need-c.into}); } }
+  return out; }
+
+/* ===== ações (as mesmas regras do guildfire.js; o servidor confere de novo) ===== */
+const REASON={done:'Já alimentou hoje. Volta amanhã',day:'Hoje você já deu 20 Brasas. Amanhã tem mais',brasas:'Você não tem Brasas suficientes. Elas vêm jogando',id:'Esse baú não está pronto',joined_after:'Esse nível foi antes de você entrar'};
+function addFlames(who,n){ const b=L(); ST.flames+=n; ST.today[who]=(ST.today[who]||0)+n; const a=L();
+  if(a.level>b.level||a.extra>b.extra){ ST.lvup={from:b.level,to:a.level,extra:a.extra>b.extra?a.extra:0}; } return a; }
+function feed(){ if(ST.free) return {ok:false,reason:'done'}; ST.free=true; const a=addFlames('me',DATA.free.flames); return {ok:true,kind:'free',flames:DATA.free.flames,level:a.level,levelUp:!!ST.lvup}; }
+function give(n){ const k=int0(n); if(!k) return {ok:false,reason:'brasas'}; if(k>braLeft()) return {ok:false,reason:'day',left:braLeft()}; if(k>ST.have) return {ok:false,reason:'brasas',have:ST.have};
+  ST.have-=k; ST.bra+=k; const a=addFlames('me',k*DATA.brasa.flames); if(ST.step>maxStep()) ST.step=Math.max(1,maxStep()); return {ok:true,kind:'brasa',flames:k,level:a.level,levelUp:!!ST.lvup}; }
+/* receber: POST /v1/guild/fire/claim/:id → {mailed:true}. Só o jogo pede; o prêmio entra pelo correio */
+function claim(id){ const c=chestList().find(x=>String(x.id)===String(id)); if(!c) return {ok:false,reason:'id'};
+  if(c.state==='pre') return {ok:false,reason:'joined_after'}; if(c.state==='mail') return {ok:false,reason:'already_claimed'}; if(c.state!=='ready') return {ok:false,reason:'id'};
+  ST.claimed.push(c.id); ST.mail++; return {ok:true,id:c.id,mailed:true,reward:c.chest}; }
+function setStep(v){ ST.step=clamp(int0(v),1,Math.max(1,maxStep())); return ST.step; }
+
+/* ===== ícones no código ===== */
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const SV=inner=>'<svg class="ic" viewBox="0 0 48 48" aria-hidden="true">'+inner+'</svg>';
+const BACK='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const STONE=SV('<path d="M10 18l14-12 14 12-6 22H16z" fill="#9ab4d6" '+K+'/><path d="M10 18h28M24 6l-6 12 6 22 6-22z" fill="none" stroke="#2a3a5a" stroke-width="2"/>');
+const FOOD=SV('<path d="M30 8c6 0 10 4 10 10 0 7-6 12-13 12l-9 9a4 4 0 11-5-5l9-9c0-10 3-17 8-17z" fill="#d9773a" '+K+'/><path d="M13 34a4 4 0 10-5 5" fill="#f6ecdf" '+K+'/>');
+const ENV=SV('<rect x="5" y="11" width="38" height="27" rx="4" fill="#e9f6ff" '+K+'/><path d="M6 13l18 14 18-14" fill="none" stroke="#1a110b" stroke-width="2.6" stroke-linejoin="round"/>');
+const CHK=SV('<path d="M10 25l9 9 19-20" fill="none" stroke="#7fe07a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>');
+const SHIELD=SV('<path d="M24 4l17 6v12c0 11-7 18-17 22C14 40 7 33 7 22V10z" fill="#7fe07a" '+K+'/><path d="M16 24l6 6 11-12" fill="none" stroke="#0d2410" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>');
+const FLAME=SV('<path d="M24 4c3 8 12 12 12 24a12 12 0 01-24 0c0-6 3-9 5-12 1 4 3 6 5 6-2-6 0-12 2-18z" fill="#ff8a3a" '+K+'/><path d="M24 26c2 3 5 5 5 9a5 5 0 01-10 0c0-3 3-5 5-9z" fill="#ffe07a"/>');
+const BRASA='<svg class="brc" viewBox="0 0 12 14" aria-hidden="true"><path d="M6 0C8 3 11 5 11 9a5 5 0 01-10 0c0-4 3-6 5-9z" fill="#ffb36a" stroke="#5a1e04" stroke-width="1.2"/></svg>';
+const BANNER='<svg class="ban" viewBox="0 0 40 46" aria-hidden="true"><path d="M5 3h30v34l-15-7-15 7z" fill="#7a2a1a" stroke="#ffc94a" stroke-width="2.4" stroke-linejoin="round"/><path d="M20 10l4 8 8 1-6 5 2 8-8-4-8 4 2-8-6-5 8-1z" fill="#ffc94a"/></svg>';
+const COIN='<img src="a/coin.png" alt="">', GEM='<img src="a/gem.png" alt="">';
+
+/* ===== desenho ===== */
+function head(){ return '<div class="hd"><button class="back" data-act="close" aria-label="Voltar">'+BACK+'Voltar</button><h2>Guilda</h2><span class="pill">'+COIN+'6</span><span class="pill">'+GEM+'50</span></div>'; }
+function gtop(){ const c=L(); return '<div class="gtop">'+BANNER+'<span class="tx"><b>'+esc(GUILD.name)+'</b><small>'+GUILD.members+'/'+GUILD.cap+' membros</small></span><span class="fchip"><img src="'+stageImg(c.level)+'" alt="">Fogueira Nv '+c.level+'</span></div>'; }
+function tabs(){ const T=[['mem','Membros'],['don','Doar'],['fire','Fogueira'],['boss','Chefe']];
+  return '<div class="tabs" role="tablist" aria-label="Abas da Guilda">'+T.map(([k,l])=>'<button class="tab" role="tab" data-act="'+(k==='fire'?'tfire':'told')+'" data-l="'+l+'" aria-selected="'+(k==='fire')+'">'+l+(k==='fire'?'<span class="tag">Novo</span>'+(!ST.free?'<i class="rd" aria-label="alimentar grátis disponível"></i>':''):'')+'</button>').join('')+'</div>'; }
+function emb(){ let h=''; for(let i=0;i<6;i++) h+='<i class="emb" style="left:'+(38+i*5)+'%;animation-delay:'+(i*0.43).toFixed(2)+'s"></i>'; return h; }
+function fireCard(){ const c=L(), max=c.level>=DATA.maxLevel, P=perksAt(c.level), N=perksAt(Math.min(DATA.maxLevel,c.level+1));
+  return '<div class="fire'+(max?' max':'')+'" role="group" aria-label="Fogueira da guilda, nível '+c.level+', '+esc(DATA.names[c.level-1])+'">'+
+    '<div class="stage"><span class="glow"></span><img src="'+stageImg(c.level)+'" alt="">'+emb()+'<span class="lvb"><b>Nível '+c.level+'</b><small>'+(max?'nível máximo':'de 10')+'</small></span></div>'+
+    '<div class="nm">'+esc(DATA.names[c.level-1])+'</div>'+
+    '<div class="bar" role="img" aria-label="'+c.into+' de '+c.need+' chamas"><i style="width:'+(c.need?Math.min(100,c.into/c.need*100):100).toFixed(1)+'%"></i><span>'+nf(c.into)+' / '+nf(c.need)+' chamas'+(max?' · próximo baú extra':'')+'</span></div>'+
+    '<div class="perk">'+(c.level>1?'<span class="a">Todos: ouro +'+dec(P.goldPct)+'% · XP +'+dec(P.xpPct)+'%</span>':'<span class="a">Sem bônus no nível 1</span>')+(max?'<span class="n">baú extra a cada 3.000</span>':'<span class="n">Nv '+(c.level+1)+': +'+dec(N.goldPct)+'% · +'+dec(N.xpPct)+'%</span>')+'</div></div>'; }
+function feedCard(){ const left=braLeft(), ms=maxStep(), can=ms>=1, n=Math.min(ST.step,Math.max(1,ms));
+  return '<div class="card"><h4>Alimentar<span>todo dia, cada membro</span></h4>'+
+    '<div class="feed"><span class="tx"><b>Grátis do dia</b>'+(ST.free?'Feito hoje. Volta amanhã.':'+10 chamas para a guilda')+'</span>'+
+      (ST.free?'<button class="btn done" disabled aria-label="Alimentado hoje">'+CHK+'Feito hoje</button>':'<button class="btn f" data-act="feed">'+FLAME+'Alimentar grátis (+10)</button>')+'</div>'+
+    '<div style="border-top:1px solid rgba(255,236,200,.1);margin-top:8px;padding-top:8px">'+
+    '<div class="have"><span>Dar Brasas: 1 chama cada</span><span>hoje <em>'+ST.bra+'/'+DATA.brasa.perDay+'</em></span></div>'+
+    '<div class="stp"><button class="btn" data-act="minus" aria-label="Menos uma Brasa"'+(can&&n>1?'':' disabled')+'>−</button><span class="v" aria-live="polite">'+BRASA+(can?n:0)+'<small>Brasas</small></span><button class="btn" data-act="plus" aria-label="Mais uma Brasa"'+(can&&n<ms?'':' disabled')+'>+</button><button class="btn mx" data-act="max"'+(can?'':' disabled')+'>Máx.</button></div>'+
+    '<button class="btn y give'+(can?'':' off')+'" data-act="give"'+(can?'':' disabled')+'>'+(can?'Dar '+n+' Brasa'+(n>1?'s':'')+' (+'+n+' chama'+(n>1?'s':'')+')':left<=0?'Hoje já deu 20 Brasas':'Sem Brasas agora')+'</button>'+
+    '<p class="note">Você tem <b>'+ST.have+' Brasa'+(ST.have===1?'':'s')+'</b>. Brasas vêm <b>só jogando</b> (fases, chefes, a sua Fogueira). Não se compram.</p></div></div>'; }
+function topCard(){ const all=[...MEM,ME].map(m=>({m,f:ST.today[m.id]||0})).filter(x=>x.f>0||x.m===ME).sort((a,b)=>b.f-a.f||((a.m===ME)-(b.m===ME)));
+  const fed=MEM.filter(m=>ST.today[m.id]).length+(ST.today.me?1:0), sum=Object.values(ST.today).reduce((a,b)=>a+b,0);
+  const show=all.slice(0,5); const mi=all.findIndex(x=>x.m===ME); if(mi>=5) show.push(all[mi]);
+  return '<div class="card"><h4>Quem mais deu hoje<span>'+fed+' de '+GUILD.members+' · '+nf(sum)+' chamas</span></h4>'+
+    show.map(x=>{ const p=all.indexOf(x)+1, me=x.m===ME; return '<div class="top'+(me?' me':'')+'"><span class="ps'+(p<=3&&x.f>0?' p'+p:'')+'">'+(x.f>0?p:'–')+'</span><span class="av"><img src="'+x.m.img+'" alt=""></span><span class="n">'+esc(x.m.n)+(me&&!x.f?' <small>ainda não alimentou</small>':'')+'</span><span class="f">'+(x.f?'+'+x.f:'0')+'</span></div>'; }).join('')+
+    '<p class="note">Máximo por pessoa: 30 por dia (10 grátis + 20 Brasas). Ninguém compra a frente.</p></div>'; }
+function chips(c,full){ return '<span class="chip">'+COIN+nf(c.gold)+' <small>≈ '+dec(c.goldMin)+(full?' min de abate':' min')+'</small></span><span class="chip">'+STONE+c.stones+'</span><span class="chip">'+FOOD+c.food+' ração</span>'; }
+function chestCard(){ const list=chestList(), rd=list.filter(x=>x.state==='ready').length;
+  return '<div class="card" id="chests"><h4>Baús de nível<span>cada membro · ouro em min de abate</span></h4>'+
+    list.map(x=>{ let s;
+      if(x.state==='pre') s='<span class="tg pre">Antes de você entrar</span>';
+      else if(x.state==='mail') s='<span class="mail" role="status">'+ENV+'No correio</span>';
+      else if(x.state==='ready') s='<button class="btn g" data-act="claim" data-id="'+x.id+'">A receber</button>';
+      else s='<span class="tg lk">faltam '+nf(x.left)+'</span>';
+      return '<div class="ch '+(x.state==='pre'?'pre':x.state==='ready'?'rdy':'')+'"><span class="lv">'+(x.extra?'+'+x.extra:x.level)+'<small>'+(x.extra?'extra':'nível')+'</small></span><span class="cn">'+chips(x.chest)+'</span><span class="s">'+s+'</span></div>'; }).join('')+
+    '<p class="note">Tocou em <b>A receber</b>: o baú <b>chega pelo correio</b> (Menu, Correio)'+(ST.mail?': <b>'+ST.mail+' carta'+(ST.mail>1?'s':'')+'</b> esperando':'')+'. Nível alcançado antes de você entrar não conta. Nunca gema.</p></div>'; }
+function safe(){ return '<div class="safe">'+SHIELD+'<span>Nada da Fogueira da Guilda está à venda. Chamas vêm do alimentar grátis e das Brasas que você ganha jogando.</span></div>'; }
+function lvupBox(){ const u=ST.lvup; if(!u) return ''; const lv=u.to, c=chestOf(lv), P=perksAt(lv), ex=u.extra&&u.from===u.to;
+  return '<div class="lu" role="alertdialog" aria-label="A fogueira da guilda subiu"><div class="st"><img class="o" src="'+stageImg(u.from)+'" alt=""><span class="rg"></span><img class="nw" src="'+stageImg(lv)+'" alt=""></div>'+
+    '<h3>'+(ex?'Baú extra!':'A Fogueira da Guilda subiu!')+'</h3><div class="sb">'+(ex?'Nível 10 · mais 3.000 chamas':'Nível '+lv+' · '+esc(DATA.names[lv-1]))+'</div>'+
+    '<div class="bx"><p>Baú do nível '+lv+' para <b>cada membro</b>:</p><div class="cn">'+chips(c,true)+'</div><p>'+(ex?'':'Bônus de todos agora: <b>ouro +'+dec(P.goldPct)+'% · XP +'+dec(P.xpPct)+'%</b>. ')+'Toque em A receber: <b>chega pelo correio</b>.</p></div>'+
+    '<button class="btn y" data-act="lvok">Que fogo!</button></div>'; }
+function sheet(){ return '<div class="sheet" role="dialog" aria-label="Guilda, aba Fogueira">'+head()+gtop()+tabs()+'<div class="bd" id="bd">'+fireCard()+feedCard()+topCard()+chestCard()+safe()+'</div></div>'; }
+function renderLayer(){ lay.innerHTML=sheet()+lvupBox(); }
+function renderSide(){ const c=L();
+  $('#stl').innerHTML='Momento <b>'+({tab:'Aba Fogueira',fed:'Já alimentei',nobra:'Sem Brasas',new:'Entrei agora',max:'Nível 10',lvup:'Subiu de nível'})[ST.st]+'</b> · fogueira <b>Nv '+c.level+'</b> ('+esc(DATA.names[c.level-1])+') · <b>'+nf(c.into)+'/'+nf(c.need)+'</b> · total <b>'+nf(ST.flames)+'</b> chamas'+
+    ' · grátis <b>'+(ST.free?'feito':'livre')+'</b> · Brasas hoje <b>'+ST.bra+'/20</b> · tenho <b>'+ST.have+'</b> · entrei no Nv <b>'+ST.joinLv+'</b> · ouro de um abate (fase 2-5) = <b>'+goldUnit+'</b>'+(ST.mail?' · cartas <b>'+ST.mail+'</b>':'');
+  let acc=0; $('#offs').innerHTML=DATA.names.map((n,i)=>{ const lv=i+1, need=needOf(lv), c2=chestOf(lv), P=perksAt(lv); const r='<li><span>'+lv+' · '+esc(n)+' · desde '+nf(acc)+'</span><span>baú '+nf(c2.gold)+' ouro (≈ '+dec(c2.goldMin)+' min), '+c2.stones+' pedra'+(c2.stones>1?'s':'')+', '+c2.food+' ração · +'+dec(P.goldPct)+'% / +'+dec(P.xpPct)+'%</span></li>'; acc+=need; return r; }).join(''); }
+function syncPressed(){ document.querySelectorAll('[data-st]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.st===ST.st))); }
+function render(){ const bd=scr.querySelector('#bd'), y=bd&&bd.scrollTop||0; renderLayer(); renderSide(); syncPressed(); const b2=scr.querySelector('#bd'); if(b2) b2.scrollTop=y; }
+function draw(t){ return t; }
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; d.setAttribute('role','status'); scr.appendChild(d); setTimeout(()=>d.remove(),2600); ST.lastToast=t; }
+
+/* ===== navegação ===== */
+function pick(s){ scenario(s); ST.st=s; if(s==='lvup'){ addFlames('bruno',10); } render(); }
+function act(a,d){ d=d||{}; let r;
+  if(a==='close') toast('Volta para a batalha, como hoje');
+  else if(a==='told') toast('A aba '+d.l+' fica como no protótipo da Guilda');
+  else if(a==='tfire') render();
+  else if(a==='feed'){ r=feed(); render(); toast(r.ok?'+10 chamas para a guilda!':REASON[r.reason]); return r; }
+  else if(a==='minus'){ setStep(ST.step-1); render(); }
+  else if(a==='plus'){ setStep(ST.step+1); render(); }
+  else if(a==='max'){ setStep(maxStep()); render(); }
+  else if(a==='give'){ r=give(Math.min(ST.step,maxStep())); render(); toast(r.ok?'+'+r.flames+' chama'+(r.flames>1?'s':'')+' para a guilda!':REASON[r.reason]); return r; }
+  else if(a==='claim'){ const id=/^x/.test(String(d.id))?String(d.id):+d.id; r=claim(id); render(); toast(r.ok?'Baú enviado: chega pelo correio':(REASON[r.reason]||'Já está no correio')); return r; }
+  else if(a==='lvok'){ ST.lvup=null; render(); } }
+scr.addEventListener('click',e=>{ const b=e.target.closest('[data-act]')||e.target.closest('button'); if(!b||!b.dataset||!b.dataset.act) return; act(b.dataset.act,b.dataset); });
+scr.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ST.lvup){ ST.lvup=null; render(); } });
+
+function sim(k){ const c=L();
+  if(k==='member'){ const m=MEM.find(m=>!ST.today[m.id])||MEM[ST.simI++%MEM.length]; if((ST.today[m.id]||0)>=30){ toast(m.n+' já deu o máximo hoje'); return; } addFlames(m.id,10); render(); toast(m.n+' alimentou: +10'); }
+  else if(k==='member20'){ const m=MEM.find(m=>(ST.today[m.id]||0)<=10)||MEM[0]; if((ST.today[m.id]||0)>10){ toast('Todos já deram as Brasas de hoje'); return; } addFlames(m.id,20); render(); toast(m.n+' deu 20 Brasas: +20'); }
+  else if(k==='earn'){ ST.have+=5; if(ST.step<1) ST.step=1; render(); toast('+5 Brasas jogando (fase vencida)'); }
+  else if(k==='nearly'){ if(c.level>=DATA.maxLevel) ST.flames+=c.need-c.into-15; else ST.flames=totalTo(c.level+1)-15; ST.lvup=null; render(); toast('Faltam 15 chamas: alimente ou dê Brasas'); }
+  else if(k==='levelup'){ addFlames('bia',Math.max(1,c.need-c.into)); render(); }
+  else if(k==='day'){ ST.free=false; ST.bra=0; ST.today={}; ST.step=Math.max(1,Math.min(10,maxStep())); render(); toast('Novo dia: grátis e 20 Brasas de volta'); } }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.st) pick(d.st);
+  else if(d.sim) sim(d.sim); });
+
+pick('tab');
+window.__guildaFogTeste={ST,DATA,render,pick,act,sim,feed,give,claim,setStep,chestList,levelOf,needOf,totalTo,perksAt,chestOf,stageImg,goldUnit,L};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-fogueira-guilda';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Fogueira da Guilda',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
