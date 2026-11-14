@@ -53,6 +53,8 @@ async function snapshot(S,host,force){
   let p; try{ p=W.playerStats(S,host); }catch(e){ return {ok:false,reason:'module'}; }
   const body={fc:p.fc,atk:p.atk,hp:p.hp,def:p.def,critRate:p.critRate,critDmg:p.critDmg,aspd:p.aspd};
   try{ const h=root.heroSnapshot; if(typeof h==='function'){ const x=h()||{}; if(x.look) body.look=x.look; if(x.level!=null) body.level=x.level; if(x.petFrac!=null) body.petFrac=x.petFrac; } }catch(e){}
+  /* conjunto PvP (Sys.arenaSet, docs/SERVIDOR_LOM.md §1.1; desligado = null, nada vai) */
+  try{ const AS=SYS().arenaSet, pv=AS&&typeof AS.snapshotPart==='function'?AS.snapshotPart(S,host):null; if(pv) body.pvp=pv; }catch(e){}
   const key=JSON.stringify(body), now=Date.now();
   if(!force&&key===ST.lastSnap) return {ok:true,sent:false};
   if(!force&&now-ST.lastSnapAt<DATA.minSnapMs){ ST.snapLater=true; return {ok:true,sent:false,later:true}; }

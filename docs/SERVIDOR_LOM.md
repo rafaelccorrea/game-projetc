@@ -109,25 +109,26 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 
 ### 3.2 A corrida (conta determinística; o servidor roda `Sys.coop.run(team, seed)`)
 - `team` = 3 retratos `{ fc }` (FC do retrato da arena). `fcRef` = **mediana** das 3 FCs × 3. `teamPower` = soma das 3 FCs.
-- Andares de 1 a 10, em ordem. No andar `k`: `enemy = fcRef × mult[k]`; chance `p = teamPower² ÷ (teamPower² + enemy²)`; vence se `rng() < p`, com `rng = mulberry32(seed)` (o mesmo `mulberry` do `Sys.arena`), um sorteio por andar. Perdeu um andar, a corrida acaba.
+- Andares de 1 a 10, em ordem. No andar `k`: `enemy = fcRef × mult[k]`; `x = (teamPower ÷ enemy)^10` (`DATA.steep` = 10); chance `p = x ÷ (x + 1)`; vence se `rng() < p`, com `rng = mulberry32(seed)` (o mesmo `mulberry` do `Sys.arena`), um sorteio por andar. Perdeu um andar, a corrida acaba.
+- Simulado: grupo de 3 iguais chega em média ao andar 3,4; grupo 33% acima da mediana, ao 6,5; o dobro, ao 9,7.
 - Prêmio = soma dos andares **vencidos**, para cada humano com entrada. Fixo, sem sorteio no prêmio (só o resultado da luta usa a semente, como na arena).
 
 | Andar | `mult` (inimigo × fcRef) | Fragmentos de relíquia (`relicFrags`) | Pedras de prática (`stones`) | Ouro (`goldk`) |
 |---|---|---|---|---|
-| 1 | 0,80 | 1 | 1 | 12 |
-| 2 | 0,90 | 1 | 1 | 12 |
-| 3 | 1,00 | 2 | 1 | 12 |
-| 4 | 1,10 | 2 | 2 | 12 |
-| 5 | 1,20 | 3 | 2 | 12 |
-| 6 | 1,30 | 3 | 2 | 12 |
-| 7 | 1,40 | 4 | 3 | 12 |
-| 8 | 1,55 | 4 | 3 | 12 |
-| 9 | 1,70 | 5 | 3 | 12 |
-| 10 | 1,85 | 5 | 4 | 12 |
+| 1 | 0,70 | 1 | 1 | 12 |
+| 2 | 0,78 | 1 | 1 | 12 |
+| 3 | 0,86 | 2 | 1 | 12 |
+| 4 | 0,94 | 2 | 2 | 12 |
+| 5 | 1,02 | 3 | 2 | 12 |
+| 6 | 1,10 | 3 | 2 | 12 |
+| 7 | 1,20 | 4 | 3 | 12 |
+| 8 | 1,32 | 4 | 3 | 12 |
+| 9 | 1,45 | 5 | 3 | 12 |
+| 10 | 1,60 | 5 | 4 | 12 |
 | **Total (10 andares)** | | **30** | **22** | **120** |
 
 - O ouro de uma corrida inteira é no máximo 120 `goldk` = **um resgate** (teto do `ECONOMIA_OURO`). `relicFrags` = fragmentos genéricos de relíquia (o `Sys.relics` da outra sessão decide para qual relíquia vão; até ele existir, ficam guardados em `S.sys.coop.relicFrags`).
-- Entrega: **na resposta** do `POST /coop/start` (o jogo credita uma vez pelo `Sys.coop.applyResult`). Quem estava offline recebe **pelo correio** (`source: 'coop'`, `ref: <runId>`, mesmo `att`).
+- Entrega: **o SERVIDOR credita pelo correio** para todos os humanos com entrada: carta `source: 'coop'`, `ref: 'r_<runId>:<playerId>'`, `att: { relicFrags, stones, goldk }` (a chave `relicFrags` no correio é do agente das relíquias). O `POST /coop/start` e o `lastRun` do status devolvem `reward` com **`mailed: true`** só para a animação: o `Sys.coop.applyResult` **não credita** quando `mailed: true` (só o provider local, sem servidor, credita na hora).
 
 ### 3.3 Rotas
 **`GET /coop/status`** → `{ "day": "2026-11-13", "entriesLeft": 2, "entriesMax": 2, "party": <party> | null, "invites": [ { "partyId": "p_1", "fromName": "Nome", "at": 1763000000000 } ] }`
@@ -143,11 +144,11 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 ```json
 { "ok": true, "runId": "r_1", "seed": 123456789, "fcRef": 36000, "teamPower": 37500,
   "floors": [ { "k": 1, "win": true }, { "k": 2, "win": true }, { "k": 3, "win": false } ], "reached": 2,
-  "reward": { "relicFrags": 2, "stones": 2, "goldk": 24 }, "entriesLeft": 1,
+  "reward": { "relicFrags": 2, "stones": 2, "goldk": 24 }, "mailed": true, "entriesLeft": 1,
   "members": [ { "playerId": "uuid", "name": "Nome", "fc": 12000, "ghost": false, "paid": true } ] }
 ```
 - 403 `not_leader` · 429 `limit` (líder sem entrada) · 409 `no_party`
-- Os outros humanos recebem o mesmo `runId` no próximo `GET /coop/status` (campo `lastRun`, mesmo formato) e o prêmio pelo correio.
+- Os outros humanos recebem o mesmo `runId` no próximo `GET /coop/status` (campo `lastRun`, mesmo formato, com `mailed: true`) e o prêmio pelo correio.
 
 ---
 
@@ -186,7 +187,20 @@ Cada membro pode abrir **1 pedido de ajuda por dia**, escolhendo o tipo. Os outr
 
 ---
 
-## 6. Resumo para o servidor (o que é novo)
+## 6. O que carregar no vm do servidor (sem DOM)
+
+Nenhum destes arquivos lê `window` ou `document` (todos usam `typeof window!=='undefined'?window:globalThis`). Ordem de carga num `vm.createContext({})`:
+
+| Chamada | Arquivos `js/sys/`, nesta ordem | Teste que prova |
+|---|---|---|
+| `Sys.arenaSet.duel(A, B, seed)` | `stats.js` (redução da DEF, a mesma da arena de hoje), `grimoire.js` (`spell`/`stat` das magias), `arena.js` (`duelPvp`), `arenaset.js` | `test/sys/arenaset.test.js`, caso "vm" |
+| `Sys.coop.run(team, seed)` | só `coop.js` | `test/sys/coop.test.js`, caso "vm" |
+| motor do quadro de ajuda (`Sys.guildBoss.boardRequest/boardHelp/boardHelpAll/boardClaim/boardView`) | só `guildboss.js` (`DATA.kinds`, `helpsPerDay`, `perHelp`) | `test/sys/guildboss.test.js` |
+| faixas do ranking (`Sys.eventRank.bandOf(rank, total)`, `Sys.eventRank.prizeFor(evento, faixa)`) | só `eventrank.js` | `test/sys/eventrank.test.js` |
+
+`Sys.arenaSet.duel` sem `pvp.spells` nos dois lados chama `Sys.arena.duelPvp` direto (mesma luta de hoje, byte a byte).
+
+## 7. Resumo para o servidor (o que é novo)
 
 | Item | Rotas novas | Campos novos em rota existente | Save |
 |---|---|---|---|

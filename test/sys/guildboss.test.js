@@ -1,0 +1,56 @@
+// node test/sys/guildboss.test.js — Sys.guildBoss (desligado): pedido de ajuda (1/dia, boss/forge/food), Ajudar todos (idempotente, teto 10/dia),
+// resgate fixo, golpe extra no chefe, barra do chefe da guilda na batalha (espelho do GET /guild/boss), rotas pelo Sys.net._call
+'use strict';
+const assert=require('assert');
+globalThis.Sys={};
+['stats','level','loot','guild','guildboss'].forEach(m=>require('../../js/sys/'+m+'.js'));
+const {makeHost}=require('./_host.js');
+const GB=Sys.guildBoss, G=Sys.guild;
+let n=0; const queue=[]; const t=(name,fn)=>queue.push([name,fn]);
+const withOn=async fn=>{ const a=GB.DATA.on, b=G.DATA.on; GB.DATA.on=true; G.DATA.on=true; try{ await fn(); } finally{ GB.DATA.on=a; G.DATA.on=b; } };
+const member=S=>{ G.applyServer(S,{id:'g1',name:'Guilda',role:'member',level:2}); return S; };
+
+t('DESLIGADO por padrão: view off, hud escondida, nenhuma rota',async()=>{ assert.strictEqual(GB.DATA.on,false); const S={}, h=makeHost();
+  assert.strictEqual(GB.view(S,h).on,false); assert.strictEqual(GB.hud(S,h).show,false); assert.strictEqual((await GB.helpAll(S,h)).reason,'off'); });
+t('quadro: 1 pedido por dia; tipo desconhecido recusa; boss enche com 3, forge/food com 5',()=>{ const b=GB.newBoard('2026-11-13');
+  assert.strictEqual(GB.boardRequest(b,'a','gems','r0',1).reason,'bad_kind'); assert.ok(GB.boardRequest(b,'a','boss','r1',1).ok); assert.strictEqual(GB.boardRequest(b,'a','food','r2',2).reason,'already');
+  assert.strictEqual(GB.boardRequest(b,'b','forge','r3',3).request.need,5); assert.strictEqual(b.requests[0].need,3); });
+t('ajudar: não ajuda o próprio, não ajuda 2 vezes o mesmo, pedido cheio recusa; +1 Brasão +2 contribuição',()=>{ const b=GB.newBoard('d'); GB.boardRequest(b,'a','boss','r1',1);
+  assert.strictEqual(GB.boardHelp(b,'a','r1').reason,'self'); const r=GB.boardHelp(b,'b','r1'); assert.ok(r.ok&&r.coin===1&&r.contrib===2&&r.helpsLeft===9);
+  assert.strictEqual(GB.boardHelp(b,'b','r1').reason,'helped'); GB.boardHelp(b,'c','r1'); GB.boardHelp(b,'d','r1'); assert.strictEqual(GB.boardHelp(b,'e','r1').reason,'full');
+  assert.strictEqual(GB.boardHelp(b,'e','zz').reason,'request'); });
+t('AJUDAR TODOS: ajuda todos os outros abertos em ordem, pula o meu, os cheios e os já ajudados; idempotente; teto de 10 por dia',()=>{ const b=GB.newBoard('d');
+  for(let i=0;i<14;i++) GB.boardRequest(b,'p'+i,i%2?'forge':'food','r'+i,100-i);
+  GB.boardRequest(b,'me','boss','mine',0); GB.boardHelp(b,'me','r3');
+  for(const x of ['a','b','c','d','e']) GB.boardHelp(b,x,'r5');   // r5 cheio (5)
+  const r=GB.boardHelpAll(b,'me'); assert.ok(r.ok); assert.strictEqual(r.helped.length,9,'10 menos a ajuda já dada'); assert.ok(!r.helped.includes('mine')&&!r.helped.includes('r3')&&!r.helped.includes('r5'));
+  assert.strictEqual(r.helped[0],'r13','mais antigo primeiro'); assert.strictEqual(r.coin,9); assert.strictEqual(r.contrib,18); assert.strictEqual(r.helpsLeft,0);
+  assert.strictEqual(GB.boardHelpAll(b,'me').reason,'limit'); const r2=GB.boardHelpAll(b,'other'); assert.ok(r2.helped.every(id=>id!=='r5'));
+  const again=GB.boardHelpAll(b,'other'); assert.deepStrictEqual(again.helped,[],'chamar de novo não ajuda duas vezes'); });
+t('resgate: só cheio, uma vez, prêmio fixo do tipo; boardView no formato do GET /guild/help',()=>{ const b=GB.newBoard('d'); GB.boardRequest(b,'a','forge','r1',1,'Ana');
+  assert.strictEqual(GB.boardClaim(b,'a').reason,'not_full'); assert.strictEqual(GB.boardClaim(b,'z').reason,'request'); for(const x of 'bcdef') GB.boardHelp(b,x,'r1');
+  assert.deepStrictEqual(GB.boardClaim(b,'a'),{ok:true,kind:'forge',reward:{forge:10}}); assert.strictEqual(GB.boardClaim(b,'a').reason,'claimed');
+  const v=GB.boardView(b,'b'); assert.strictEqual(v.helpsLeft,9); assert.strictEqual(v.mine,null); assert.ok(v.requests[0].helpedByMe&&v.requests[0].full);
+  assert.ok(GB.boardView(b,'a').mine.claimed); const b2=GB.boardRoll(b,'outro'); assert.strictEqual(b2.requests.length,0,'dia novo zera'); });
+t('nenhum prêmio tem ouro, diamante ou sorteio',()=>{ for(const k in GB.DATA.kinds){ const r=GB.DATA.kinds[k].reward; for(const x of ['gold','goldk','gems','diamonds','chest','egg']) assert.ok(!(x in r),k+' '+x); } });
+t('espelho + tela: canRequest pede guilda; helpAllCount; golpe extra vira hitsMax 3; virada do dia some tudo',async()=>withOn(async()=>{ const S={}, h=makeHost();
+  assert.strictEqual(GB.canRequest(S,h,'boss').reason,'not_member'); member(S); assert.ok(GB.canRequest(S,h,'boss').ok); assert.strictEqual(GB.canRequest(S,h,'x').reason,'bad_kind');
+  GB.applyHelp(S,h,{helpsLeft:2,mine:{id:'m',kind:'boss',need:3,got:3,full:true,claimed:false},requests:[{id:'a',kind:'food',need:5,got:1},{id:'b',kind:'forge',need:5,got:5,full:true},{id:'c',kind:'food',need:5,got:0},{id:'d',kind:'food',need:5,got:0,helpedByMe:true},{id:'e',kind:'hack'}]});
+  assert.strictEqual(GB.view(S,h).requests.length,4,'tipo desconhecido some'); assert.strictEqual(GB.helpAllCount(S,h),2,'2 abertos, teto 2'); assert.strictEqual(GB.canRequest(S,h,'food').reason,'already');
+  assert.strictEqual(GB.hitsMax(S,h),2); GB.ensure(S).extraHit=true; assert.strictEqual(GB.hitsMax(S,h),3);
+  h.t+=864e5; assert.strictEqual(GB.hitsMax(S,h),2,'o golpe extra vale só no dia'); assert.strictEqual(GB.view(S,h).mine,null); }));
+t('barra do chefe na batalha: fração, textos K/M, meu dano, golpes; sem chefe ou sem guilda: escondida; velha depois de 60 s',async()=>withOn(async()=>{ const S={}, h=makeHost();
+  GB.applyBoss(S,h,{name:'Golem',level:3,hp:812345,hpMax:1500000,myDamageToday:45210,hitsLeft:1,hitsMax:2}); assert.strictEqual(GB.hud(S,h).show,false,'sem guilda');
+  member(S); const u=GB.hud(S,h); assert.ok(u.show&&Math.abs(u.frac-812345/1500000)<1e-9); assert.strictEqual(u.hpText,'812.3K / 1.5M'); assert.strictEqual(u.mineText,'45.2K'); assert.strictEqual(u.hitsLeft,1); assert.strictEqual(u.stale,false);
+  h.t+=60000; assert.strictEqual(GB.hud(S,h).stale,true); GB.applyBoss(S,h,{hp:0,hpMax:0}); assert.strictEqual(GB.hud(S,h).show,false); }));
+t('rede: help-all chama a rota, credita Brasões no espelho e recarrega o quadro; claim de boss liga o golpe extra; forge entra pelo loot; sem rede = net_off',async()=>withOn(async()=>{ const S={}, h=makeHost(); member(S);
+  assert.strictEqual((await GB.helpAll(S,h)).reason,'net_off'); const calls=[];
+  Sys.net={_call:async(m,p,b)=>{ calls.push(m+' '+p); if(p==='/guild/help-all') return {helped:['a','b'],coin:2,contrib:4,helpsLeft:8}; if(p==='/guild/help') return {helpsLeft:8,mine:null,requests:[]};
+    if(p==='/guild/help/claim') return calls.filter(x=>x.endsWith('claim')).length===1?{kind:'boss',reward:{bossHits:1}}:{kind:'forge',reward:{forge:10}};
+    if(p==='/guild/boss') return {name:'G',hp:5,hpMax:10,hitsLeft:2,hitsMax:3,extraHit:true}; throw Object.assign(new Error('x'),{code:'not_found'}); }};
+  try{ const r=await GB.helpAll(S,h); assert.ok(r.ok&&r.helped.length===2); assert.strictEqual(G.ensure(S).coin,2); assert.deepStrictEqual(calls.slice(0,2),['POST /guild/help-all','GET /guild/help']);
+    const c=await GB.claim(S,h); assert.ok(c.ok); assert.strictEqual(GB.hitsMax(S,h),3);
+    const c2=await GB.claim(S,h); assert.ok(c2.ok&&c2.got);
+    const lb=await GB.loadBoss(S,h); assert.ok(lb.ok&&!lb.cached); assert.ok((await GB.loadBoss(S,h)).cached,'no máximo 1 vez por minuto');
+    assert.strictEqual(GB.hud(S,h).hitsMax,3); } finally{ delete Sys.net; } }));
+(async()=>{ for(const [name,fn] of queue){ try{ await fn(); n++; console.log('ok -',name); }catch(e){ console.error('FALHOU:',name); console.error(e); process.exit(1); } } console.log(n+' testes ok'); })();

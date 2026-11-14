@@ -171,7 +171,10 @@ const localProvider={
   /* decide a luta: a "cópia" do jogador na FC do adversário (luta justa: Sys.tower.scaledFoe), duelo com seed fixa da semana/luta */
   fight(S,host,opp){ const o=S.sys.arena, W=root.Sys&&root.Sys.tower; if(!(W&&W.duel&&W.scaledFoe&&W.playerStats)) return {ok:false,reason:'module'};
     const me=W.playerStats(S,host), foe=W.scaledFoe(me,opp.fc), seed=hash('arena-fight',o.week,o.fights,opp.id), pf=petFracOf(S,host);
-    me.petFrac=pf; foe.petFrac=opp.look?(opp.look.pet?pf:0):pf; const d=duelPvp(me,foe,seed);
+    me.petFrac=pf; foe.petFrac=opp.look?(opp.look.pet?pf:0):pf;
+    /* conjunto PvP (Sys.arenaSet, desligado = como antes): o bot é a cópia do jogador, então leva as MESMAS magias (luta justa) */
+    const AS=root.Sys&&root.Sys.arenaSet, sp=AS&&AS.on&&AS.on()?AS.pvpSet(S,host).spells:null;
+    const d=sp&&sp.length?AS.duel(Object.assign(me,{pvp:{spells:sp}}),Object.assign(foe,{pvp:{spells:sp}}),seed):duelPvp(me,foe,seed);
     const k=clamp(opp.fc/Math.max(1,me.fc),DATA.kRange[0],DATA.kRange[1]);
     return {ok:true,win:d.win,delta:Math.round(d.win?DATA.winBase*k:-DATA.lossBase*k),seed,duel:d,log:d.log}; },
   /* ranking da semana. kind 'arena' (pontos) ou 'fc' (maior FC da semana). {list:[{rank,name,value,me,bot}], me:{rank,value}, bots:true} */
@@ -226,7 +229,9 @@ function fightRewards(S,host,o,r){ const R=DATA.fightRewards, dk=dayKey(nowOf(ho
   if(gold&&host&&host.addGold) host.addGold(gold);
   if(gems&&host&&host.addGems) host.addGems(gems);
   if(chest){ const C=root.Sys&&root.Sys.chest; let got=0; try{ if(C&&C.addCharge&&C.need){ const x=C.addCharge(S,C.need()*chest,host); got=int0(x&&x.gained); } }catch(e){ got=0; } chest=got; }
-  return {gold,gems,chest}; }
+  /* Brasa da Arena (Sys.arenaSet, desligado = 0): 1 por vitória, até 5 por dia (teto no Sys.bonfire) */
+  const AS=root.Sys&&root.Sys.arenaSet, brasas=r.win&&AS&&typeof AS.onWin==='function'?int0(AS.onWin(S,host)):0;
+  const out={gold,gems,chest}; if(brasas) out.brasas=brasas; return out; }   /* brasas só quando entrou (formato antigo intacto) */
 const ranking=(S,host,kind)=>{ ensure(S,host); return provider.getRanking(S,host,{kind}); };
 const weekInfo=(S,host)=>provider.weekInfo(S,host);
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});

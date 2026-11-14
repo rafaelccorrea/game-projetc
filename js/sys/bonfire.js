@@ -11,7 +11,8 @@
    mochila cheia desmonta a pior destrancada (nunca para o combate). AUTOMÁTICO cedo (nível 3): lote, equipar o melhor, desmontar abaixo do filtro,
    PAUSA em Épico ou melhor. Estado: S.sys.bonfire. Teste: test/sys/bonfire.test.js
    P1 do LoM (docs/LOM_VS_EONBOUND.md, aprovado pelo dono): TOQUE forja um LOTE pelo nível (tap, 1 a 10 peças, 1 Brasa cada), estoque à vista no view,
-   SÓ ABATE NOVO enche o pote (addBrasas 'kill' com {stage,maxStage}), OFFLINE junta Brasas com teto (offline), fonte 'thief' (Sys.thief, Ladrão de Brasas). */
+   SÓ ABATE NOVO enche o pote (addBrasas 'kill' com {stage,maxStage}), OFFLINE junta Brasas com teto (offline), fonte 'thief' (Sys.thief, Ladrão de Brasas).
+   LoM lote B (docs/SERVIDOR_LOM.md §1.2): fonte 'arena' = 1 Brasa por VITÓRIA na arena, até 5 por dia de Brasília (S.sys.bonfire.ar = {day, n}). */
 (function(root){
 'use strict';
 const DATA={
@@ -32,7 +33,7 @@ const DATA={
   starsPer:15,                        // qualidade média = 1 + nível ÷ 15 estrelas (5 no 60)
   xp:{base:10, per:3},                // barra = 10 + 3 × nível
   cost:{goldK:375, growth:1.17},      // ouro para subir = goldK × ouro de um abate × 1,17^(nível−1)
-  brasas:{max:300, potKills:20, stage:3, boss:5, chest:5, missions:20, thief:1},   /* thief: 1 por unidade (o Sys.thief manda a quantia já calculada) */
+  brasas:{max:300, potKills:20, stage:3, boss:5, chest:5, missions:20, thief:1, arena:1},   /* thief: 1 por unidade (o Sys.thief manda a quantia já calculada) */
   /* LOTE POR NÍVEL (LoM P1, docs/LOM_VS_EONBOUND.md seç. 3 e 5.2): um TOQUE forja até N peças, e cada peça continua custando 1 Brasa.
      Por que N Brasas = N peças (e não 1 Brasa = N peças): no LoM o toque gasta uma lâmpada por peça; o lote é RITMO (abrir o estoque guardado
      num estouro), não economia. Assim o valor da Brasa, o teto do servidor (got) e as fontes ficam iguais em todo nível. Com menos Brasas
@@ -41,6 +42,8 @@ const DATA={
   /* OFFLINE (LoM P1 5.5): o tempo fora conta abates de mentira no pote da fase atual: 1 Brasa a cada 18 min (pote de 20 abates a ~1,1 abate/min),
      teto de 12 h por volta (= 40) e 40 por dia de Brasília (somando as voltas do dia; contrato do servidor: n <= 40). Abaixo de 5 min não conta. */
   offline:{everySec:18*60, maxSec:12*3600, minSec:5*60, dayCap:40},
+  /* BRASA DA ARENA (LoM P3 item 14, pequena): 1 por vitória, teto de 5 por dia de Brasília (contrato do servidor: ar.n <= 5). Derrota não chama. */
+  arena:{dayCap:5},
   refund:{stonesFromR:2, brasaFromR:3, xpBase:2, xpPerR:3},
   auto:{level:3, batches:[1,3,5], pauseFromR:2},
   keep:{n:10, ms:5*60*1000},          // recuperar os últimos 10 desmanches por 5 min
@@ -58,6 +61,7 @@ function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.bonfire.ens
   o.lv=clamp(int0(o.lv)||1,1,DATA.maxLevel); o.xp=clamp(int0(o.xp),0,xpNeed(o.lv)); o.bra=clamp(int0(o.bra),0,DATA.brasas.max); o.pot=clamp(int0(o.pot),0,DATA.brasas.potKills-1); o.got=Math.max(int0(o.got),0);   /* got: total de Brasas que já ENTRARAM (só sobe; o servidor confere o teto por dia) */
   o.best=int0(o.best);   /* maior fase em que o pote já contou abate (só abate em fase >= best enche o pote) */
   const f=(o.off&&typeof o.off==='object')?o.off:{}; o.off={day:typeof f.day==='string'?f.day:'',n:int0(f.n),acc:clamp(int0(f.acc),0,DATA.offline.everySec)};   /* Brasas offline do dia + segundos que sobraram */
+  const ar=(o.ar&&typeof o.ar==='object')?o.ar:{}; o.ar={day:typeof ar.day==='string'?ar.day:'',n:clamp(int0(ar.n),0,DATA.arena.dayCap)};   /* Brasas da arena no dia */
   o.locked=Array.isArray(o.locked)?o.locked.filter(x=>x!=null).map(String).slice(0,500):[];
   o.recent=Array.isArray(o.recent)?o.recent.filter(x=>x&&x.item&&typeof x.item==='object').slice(0,DATA.keep.n):[];
   const a=(o.auto&&typeof o.auto==='object')?o.auto:{}; o.auto={on:a.on===true,batch:DATA.auto.batches.includes(a.batch)?a.batch:1,equip:a.equip!==false,sellBelow:clamp(int0(a.sellBelow)||1,1,4)};
@@ -79,7 +83,7 @@ function refundOf(item){ const r=clamp(int0(item&&item.r),0,5), R=DATA.refund, T
   return {gold:T&&T.dismantleGold?int0(T.dismantleGold(item)):0, stones:r>=R.stonesFromR?r-1:0, bra:r>=R.brasaFromR?1:0, xp:R.xpBase+R.xpPerR*r}; }
 
 /* ---------- Brasas (só jogando) ---------- */
-/* src: 'kill' (pote: 20 abates = 1), 'stage', 'boss', 'chest', 'missions', 'thief'. Devolve quantas entraram.
+/* src: 'kill' (pote: 20 abates = 1), 'stage', 'boss', 'chest', 'missions', 'thief', 'arena' (1 por vitória, 5 por dia; opt.host para o relógio). Devolve quantas entraram.
    'kill' com opt {stage, maxStage}: SÓ ABATE NOVO enche o pote (LoM: inimigo já vencido não dá lâmpada). Conta só se stage >= maior fase já
    alcançada (maxStage do jogo e o best guardado aqui, o maior dos dois); voltar para fase velha não enche nada (ganha só o ouro do jogo).
    Sem opt (chamada antiga) conta como antes. */
@@ -90,8 +94,12 @@ function addBrasas(S,src,n,opt){ if(!ON()) return 0; const o=ensure(S), B=DATA.b
     add=potFill(o,Math.max(1,int0(n)||1));
     /* bênção "Brasa Viva" da Encruzilhada (Sys.crossroads.perks brasaPot; desligada = nada muda): +N Brasas por pote cheio */
     if(add>0){ const C=SYS().crossroads; if(C&&C.DATA&&C.DATA.on===true&&typeof C.perks==='function'){ try{ add+=add*int0(C.perks(S).brasaPot); }catch(e){} } } }
+  else if(src==='arena'){ const k=dayKey(nowOf(opt&&opt.host)); if(o.ar.day!==k){ o.ar.day=k; o.ar.n=0; }
+    add=Math.min(B.arena*Math.max(1,int0(n)||1),DATA.arena.dayCap-o.ar.n); if(add<=0) return 0; const got=credit(o,add); o.ar.n+=got; return got; }
   else if(B[src]>0) add=B[src]*Math.max(1,int0(n)||1); else return 0;
   return credit(o,add); }
+/* Brasas da arena que ainda cabem hoje (para a tela: "Brasa da Arena 3/5") */
+function arenaLeft(S,host){ const o=ensure(S), k=dayKey(nowOf(host)); return o.ar.day===k?Math.max(0,DATA.arena.dayCap-o.ar.n):DATA.arena.dayCap; }
 /* abate conta para o pote nesta fase? (para a tela: Brasa voando só quando conta) */
 const killCounts=(S,stage,maxStage)=>int0(stage)>=Math.max(ensure(S).best,int0(maxStage));
 
@@ -186,7 +194,7 @@ function view(S,host){ const o=ensure(S), si=stageOf(o.lv); return {on:ON(),lv:o
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 /* gastar Brasas fora da Fogueira (Fogueira da Guilda): tira do estoque, nunca mexe no got (o que entrou). true só se havia o bastante. */
 function spendBrasas(S,n,src){ if(!ON()) return false; const o=ensure(S), k=Math.max(0,int0(n)); if(!k||o.bra<k) return false; o.bra-=k; return true; }
-const API={DATA,ensure,spendBrasas,xpNeed,stageOf,weights,odds,starsAvg,upCost,refundOf,addBrasas,killCounts,offline,perTap,tap,nextUnlock,nextTap,forge,levelUp,isLocked,lock,dismantle,quick,recover,makeRoom,autoRun,setAuto,view,bonus};
+const API={DATA,ensure,spendBrasas,xpNeed,stageOf,weights,odds,starsAvg,upCost,refundOf,addBrasas,arenaLeft,killCounts,offline,perTap,tap,nextUnlock,nextTap,forge,levelUp,isLocked,lock,dismantle,quick,recover,makeRoom,autoRun,setAuto,view,bonus};
 root.Sys=root.Sys||{}; root.Sys.bonfire=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);
