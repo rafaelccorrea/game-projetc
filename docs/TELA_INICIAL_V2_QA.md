@@ -10,7 +10,8 @@ Arquivo: `js/p_title3.js` (arte pintada, dragão, "Já tenho conta: entrar com G
 |---|---|
 | Navegador, quem já tem jogo | `index.html?debug=1&titulo=3` |
 | Navegador, jogador novo | `index.html?debug=1&titulo=3&fresh=1` (save novo só nesta carga, nada é gravado) |
-| App (sem barra de endereço) | console do `chrome://inspect`, com o Título de hoje na tela: `TITLE3_ON=true; PTitle3.install()` (vale até recarregar) |
+| App DEV (sem barra de endereço) | Configurações, 5 toques seguidos no número da versão (rodapé): marcar "Tela Inicial nova" e, para jogador novo, "Jogo novo de teste"; Aplicar. O menu só existe no app DEV e no servidor de desenvolvimento (porta 8080) |
+| App, pelo computador | console do `chrome://inspect`, com o Título de hoje na tela: `TITLE3_ON=true; PTitle3.install()` (vale até recarregar) |
 
 - Sem `debug=1` o `titulo=3` não vale. `?skip=1` e a recarga ao vivo pulam a entrada inteira: a tela não aparece.
 - Voltar à tela de hoje: recarregar sem o parâmetro.
@@ -53,8 +54,8 @@ Chave desligada não muda nada; cada toque chama a função de hoje uma vez; est
 
 1. Ver no navegador e no app DEV (nada disto foi visto em tela).
 2. Login Google de verdade só no app de produção: testar entrar em conta que já tem jogo, com e sem jogo no celular (confirmar com o Servidor quando o jogo da nuvem entra sem a tela de escolha).
-3. Os termos citam "Configurações › Sobre", que não existe em Configurações (o mesmo texto está na tela de Login de hoje). Precisa de destino real ou de texto novo.
-4. Não há "sair da conta" em Configurações: a folha da conta Google só diz onde a conta aparece.
+3. ~~Os termos citam "Configurações › Sobre", que não existia.~~ Feito: Configurações, aba Conta · Ajuda, cartão Suporte, item "Sobre" (nome, versão e links para as páginas de Termos e de Privacidade do servidor). Falta ver em tela; as páginas ainda são rascunho (dados da empresa por preencher).
+4. Não há "sair da conta" em Configurações: a folha da conta Google só diz onde a conta aparece. Continua fora: o `Sys.net.logout()` só apaga a sessão e a abertura seguinte entra de novo na mesma conta pelo id do aparelho; falta uma função de saída que confirme o save na nuvem antes de limpar o aparelho.
 5. O dragão é a folha do pet do jogo; a Arte ainda troca por uma folha própria da Tela Inicial.
 6. Altura pequena (320x568): conferir se a pilha de botões do jogador novo não cobre o herói.
 7. Ligar (`TITLE3_ON = true`) só com o QA aprovado e o voto do dono.

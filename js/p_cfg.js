@@ -9,13 +9,20 @@
    O jogo é SÓ AUTOMÁTICO (ordem do dono): não existe opção de modo de combate nesta tela.
    3 abas do protótipo: Som · Jogo | Tela · Avisos | Conta · Ajuda. O que o jogo ainda não tem (qualidade gráfica, economia de bateria, notificações,
    vincular Google/Apple, idioma, ID do jogador, central de ajuda) aparece DESABILITADO com o selo "em breve" (decisão do PO): não muda valor, não grava
-   nada e não mostra dado inventado. "Código de resgate" e "Termos" não são desenhados até existirem.
+   nada e não mostra dado inventado. "Código de resgate" não é desenhado até existir.
+   SOBRE (cartão Suporte, aba Conta · Ajuda): nome do jogo, versão e os Termos de Uso e a Política de Privacidade. É o destino de "Configurações › Sobre",
+   citado na Tela Inicial e no Login (js/p_title3.js, js/p_intro.js). O jogo não traz o texto dos documentos: a janela repete a frase de aceite das telas de
+   entrada e aponta para as páginas públicas do servidor (/termos e /privacidade, no mesmo endereço da página de exclusão do js/delacct.js).
+   MENU DE DEPURAÇÃO DO APP DEV: 5 toques no número da versão (rodapé) chamam window.DevMenu.tap(). O DevMenu (js/devmenu.js) só existe no build DEV;
+   fora dele o toque não faz nada.
    Cópia de segurança (decisão do PO): o save S vira um código de texto (prefixo EON1: + JSON em UTF-8 em base64 + ponto + 8 letras de conferência) para copiar e colar.
    O código nunca sai do aparelho por conta do jogo: não há rede aqui. */
 const XC={page:0,anim:true,cards:true,keep:false,dlg:null,code:'',copied:false,imp:'',err:'',src:null,toast:'',toastT:0,flip:'',selp:0,shk:0,drag:false,dragT:0,sig:''};
 const C_PRE='EON1:', C_MAX=3e6;                 /* prefixo de versão do código e tamanho máximo aceito (caracteres) */
 /* volumes de fábrica do js/audio.js (VOL.music e VOL.sfx): a API não devolve o valor atual, então o ponto de partida dos controles fica isolado aqui */
 const C_VOL0={mus:50,sfx:90};
+/* páginas públicas dos documentos (servidor do jogo; a de exclusão de conta é a do js/delacct.js) */
+const C_LEGAL={terms:'https://15-229-249-157.sslip.io/termos',privacy:'https://15-229-249-157.sslip.io/privacidade'};
 
 /* ---------- leituras e chamadas isoladas (valor de reserva seguro) ---------- */
 const cAudio=()=>window.GameAudio||null;
@@ -349,6 +356,9 @@ function cPageAccount(){
         <div class="c-dis" data-x="soon" style="display:flex"><button class="c-nav" disabled aria-disabled="true" aria-label="Central de ajuda, em breve" style="animation-delay:.12s">${cI(C_IC.book,24,'#ffc94a',2.3)}
           <span class="c-rl"><b>Central de ajuda ${C_SOON}</b><small>Dúvidas comuns e falar com a equipe</small></span>
           ${cI('M9 6l6 6-6 6',18,'#c9b9a2',2.6)}</button></div>
+        <div style="display:flex"><button class="c-nav" data-x="about" aria-label="Sobre: versão, Termos de Uso e Política de Privacidade" style="animation-delay:.18s">${cI(C_IC.shield,24,'#ffc94a',2.3)}
+          <span class="c-rl"><b style="color:#f6ecdf">Sobre</b><small>Versão, Termos de Uso e Política de Privacidade</small></span>
+          ${cI('M9 6l6 6-6 6',18,'#c9b9a2',2.6)}</button></div>
       </div></section>`;
 }
 
@@ -381,6 +391,15 @@ function cDialog(){
         <span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:900">${COIN_I(18)}${kf(o.gold||0)}<span style="width:8px"></span>${GEM_I(18)}${n0(o.gems||0)}</span></div>
       <div style="display:flex;gap:8px;padding-bottom:6px">${btnNo('impno','Cancelar')}
         <button class="c-red lil" data-x="impyes" style="flex:1.3;height:52px;border-radius:14px;font-size:19px;padding:0">Substituir</button></div>`); }
+  if(d==='about'){ const lk=(u,t)=>`<a href="${esc2(u)}" target="_blank" rel="noopener" style="min-height:48px;border-radius:12px;border:2px solid #4a3a2b;background:#16110d;color:#ffe07a;font-size:15px;font-weight:900;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;box-sizing:border-box;text-decoration:none"><span>${t}</span>${cI('M9 6l6 6-6 6',18,'#c9b9a2',2.6)}</a>`;
+    return box('Sobre',`${ttl('shield','#ffc94a','Sobre')}
+      <div style="display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:12px;background:#0e0a07;border:1px solid #4a3a2b">
+        <span class="lil" style="font-size:20px;color:#ffe07a;overflow-wrap:anywhere">${esc2(cName())}</span>
+        <span style="font-size:13px;font-weight:900;color:#c9b9a2">Versão ${esc2(cVer())}</span></div>
+      ${txt('Ao jogar você aceita os Termos de Uso e a Política de Privacidade.')}
+      ${lk(C_LEGAL.terms,'Termos de Uso')}${lk(C_LEGAL.privacy,'Política de Privacidade')}
+      ${txt('Os documentos abrem no navegador e precisam de internet.')}
+      <div style="display:flex;gap:8px;padding-bottom:6px">${btnNo('dlgx','Fechar')}</div>`); }
   if(d==='rst') return box('Resetar progresso',`${ttl('trash','#ff9a8a','Resetar progresso?')}
       ${txt('Isso apaga <b style="color:#ffb3a8">TODO</b> o seu progresso, itens, skins e moedas. Não dá para desfazer.')}
       <div style="display:flex;gap:8px;padding-bottom:6px">${btnNo('dlgx','Cancelar')}
@@ -408,7 +427,7 @@ function scrCfg(){
         <div class="c-scroll x-scroll ${XC.cards?'c-cards':''}" id="c_scroll">${XC.page===0?cPageSound():XC.page===1?cPageScreen():cPageAccount()}</div>
         <div style="min-height:40px;flex:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 10px;padding:3px 18px;border-top:1px solid #4a3a2b;background:rgba(14,10,7,.85);font-size:11.5px;font-weight:800;color:#c9b9a2;box-sizing:border-box">
           <span class="c-saved" style="display:flex;align-items:center;gap:6px;color:#9be89f;white-space:nowrap">${cI(C_IC.chk,14,'currentColor',3)}Salvo automaticamente</span>
-          <span style="min-width:0;line-height:1.3;overflow-wrap:anywhere">${esc2(cName())} · ${esc2(cVer())}</span></div>
+          <span data-x="ver" style="min-width:0;line-height:1.3;overflow-wrap:anywhere">${esc2(cName())} · ${esc2(cVer())}</span></div>
       </div>
     </div>
     ${cDialog()}
@@ -458,6 +477,8 @@ function cClick(b,ev){
     else if(a==='impyes'&&XC.dlg==='impok'){ snd('ui_tap'); cImportDo(); }
     else if(a==='rstyes'&&XC.dlg==='rst'){ cResetDo(); }
     return; }
+  if(a==='ver'){ try{ if(window.DevMenu&&typeof window.DevMenu.tap==='function') window.DevMenu.tap(); }catch(e){} return; }   /* número da versão: 5 toques abrem o menu de depuração, que só existe no build DEV (js/devmenu.js); fora dele não faz nada */
+  if(a==='about'){ snd('ui_tap'); XC.dlg='about'; render(); return; }
   if(a==='soon'){ snd('ui_tap'); cSay('Em breve'); }                 /* linha desabilitada: só o aviso; nada muda, nada é gravado */
   else if(a==='tab'){ const i=Math.max(0,Math.min(2,+b.dataset.i|0)); if(i===XC.page) return; snd('ui_tap'); vib(12); XC.page=i; XC.cards=true; XC.keep=false; render(); }
   else if(a==='snd'){ S.set.sound=!S.set.sound; if(window.GameAudio&&GameAudio.setEnabled){ try{ GameAudio.setEnabled(S.set.sound); }catch(e){} }
