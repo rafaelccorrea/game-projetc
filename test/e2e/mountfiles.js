@@ -29,7 +29,7 @@ if(bad.length){ console.log('FALHA\n'+bad.join('\n')); process.exit(1); } consol
 /* FÊNIX GIGANTE LIGADA (dono, 14/11): o módulo a libera (newReady.phoenixm), só ela entre as 10 novas; Kael e Kaia têm as 3 folhas montadas com grip e back em todos os quadros,
    a imagem parada da Derrota e o ícone existem; e o manifesto do jogo leva tudo (senão não vai na APK) */
 { const fs4=require('fs'); const g4=globalThis; g4.window=g4; require('../../js/sys/mount.js'); const M=g4.Sys.mount, bad4=[]; const nw=M.DATA.mounts.filter(m=>m.nw), on=nw.filter(m=>M.live(m)).map(m=>m.id);
-  if(on.join(',')!=='phoenixm') bad4.push('montarias novas ligadas: '+on.join(',')); if(M.DATA.newOn!==false) bad4.push('newOn geral tem de seguir desligado');
+  if(on.join(',')!=='phoenixm,mecha') bad4.push('montarias novas ligadas: '+on.join(',')); if(M.DATA.newOn!==false) bad4.push('newOn geral tem de seguir desligado');
   const man=fs4.readFileSync('assets/manifest.json','utf8'), need4=[]; for(const h of ['kael','kaia']) for(const st of ['idle','run','attack']){ const b='assets/anim/mounts/'+h+'_giant_phoenix_'+st+'_body'; need4.push(b+'.png',b+'.json');
       try{ const j=JSON.parse(fs4.readFileSync(b+'.json','utf8')), n=j.frames|0; if(!(n>0)||!Array.isArray(j.grip)||j.grip.length<n||!j.grip.every(q=>q&&typeof q.x==='number'&&typeof q.y==='number')||!Array.isArray(j.back)||j.back.length<n||j.w!==512||j.h!==352||j.feetY!==339) bad4.push('folha incompleta: '+b); }catch(e){ bad4.push('sem json: '+b); } }
   need4.push('assets/mounts/still/giant_phoenix.png','assets/icons/mounts/giant_phoenix.png'); for(const f of need4){ if(!fs4.existsSync(f)) bad4.push('falta em disco: '+f); else if(man.indexOf('"'+f+'"')<0) bad4.push('fora do manifesto: '+f); }
