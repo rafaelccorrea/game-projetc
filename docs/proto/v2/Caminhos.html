@@ -148,6 +148,14 @@ svg.ic{display:block}
 .cc .dp.no{color:var(--mut2);font-size:20px}
 .cc small{display:block;font-size:10px;font-weight:800;color:var(--mut2);line-height:1.2;max-width:100%}
 .cc small em{font-style:normal;color:#9cf08f;font-weight:900}
+.ln{position:relative;width:100%;margin-top:4px;padding:3px 3px 4px;border-radius:9px;background:rgba(0,0,0,.25);border:1px solid rgba(255,236,200,.1);display:flex;flex-direction:column;align-items:center;min-width:0}
+.ln.tp{border-color:var(--g2);background:rgba(255,201,74,.1)}
+.ln .v{font-family:var(--fd);font-size:19px;line-height:1.05;color:#fff;text-shadow:0 2px 0 #000;white-space:nowrap}
+.ln.tp .v{color:var(--g2)}
+.ln small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb{display:block;width:88%;height:6px;margin-top:2px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}
+.hb i{display:block;height:100%;background:linear-gradient(90deg,#3fae3c,#9cf08f)}
+.bst{position:absolute;right:-2px;top:-7px;padding:0 5px;height:15px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:9px;font-weight:900;line-height:15px;white-space:nowrap}
 .cc .tb{position:absolute;left:50%;top:-10px;transform:translateX(-50%);padding:0 7px;height:18px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:10px;font-weight:900;line-height:18px;white-space:nowrap}
 .cc .tt{margin-top:4px;width:100%;height:40px;border-radius:11px;border:1.5px solid rgba(255,236,200,.35);background:rgba(255,236,200,.07);color:var(--cream);font-weight:900;font-size:12.5px}
 .note{border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,236,200,.16);padding:7px 9px;font-size:11.5px;font-weight:800;line-height:1.35}
@@ -208,7 +216,8 @@ svg.ic{display:block}
         <li><b>Grátis e sem limite</b>. O ensaio <b>não dá nada</b>: sem ouro, XP, itens, pedras, progresso de fase, missão ou energia. O bônus vale só durante o ensaio</li>
         <li>O jogo guarda só quantas vezes testou e o <b>melhor dano/s</b> de cada caminho, para comparar lado a lado</li>
         <li><b>Forte contra</b> (js/sys/affinity.js, desligado): cada estilo acerta <b>+15%</b> em 3 eras; algumas eras resistem (<b>−10%</b>). Nenhuma era resiste à arma da própria era</li>
-        <li>Trocar depois: o pathtry.js deixa para o futuro Sys.path. Plano do docs/LOM_VS_EONBOUND.md item 7: <b>troca grátis 1 vez por semana</b> (mostrado no passo 4 como PROPOSTA)</li>
+        <li>Trocar depois: <b>troca grátis 1 vez por semana</b> (aprovado pelo dono; a troca é do futuro Sys.path)</li>
+        <li>Comparar: 3 linhas por caminho, <b>Dano/s</b>, <b>Vida no fim</b> (com barra) e <b>Controle</b> (segundos de boneco atordoado; 0 para quem não atordoa), com selo <b>melhor</b> em cada linha</li>
       </ul>
     </div>
     <div class="box">
@@ -256,25 +265,27 @@ const HERO={atk:420,hp:3600,aspd:1.25,crit:0.12,critDmg:1.0};
 function rngOf(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
 function sim(id,seed){ const p=pathOf(id)||{strikes:{},stat:{}}, s=p.strikes, st=p.stat, rng=rngOf(seed==null?1:seed), rk=rngOf((seed==null?1:seed)*7919+17), D=DATA.dummy;
   const step=Math.round(1000/(HERO.aspd*(1+(st.aspd||0)/100))), cd=HERO.critDmg+(st.critDmg||0)/100;
-  let dmg=0,hits=0,crits=0,combos=0,counters=0,stuns=0,heal=0,hurt=0,hp=HERO.hp,minHp=HERO.hp,stunUntil=-1,immune=0,nextA=0,nextD=D.hitEverySec*1000;
+  let dmg=0,hits=0,crits=0,combos=0,counters=0,stuns=0,stunMs=0,heal=0,hurt=0,hp=HERO.hp,minHp=HERO.hp,stunUntil=-1,immune=0,nextA=0,nextD=D.hitEverySec*1000;
   for(let ms=0;ms<DATA.sec*1000;ms+=10){
     if(ms>=nextA){ nextA+=step; let d=HERO.atk*(0.95+rng()*0.1); if(rng()<HERO.crit){ d*=1+cd; crits++; } let tot=d; hits++;
       if(s.combo&&rk()*100<s.combo){ tot+=d*STK.comboMult; combos++; }
-      if(s.stun&&ms>=immune&&rk()*100<s.stun){ stuns++; stunUntil=ms+STK.stunSec*1000; immune=stunUntil+STK.stunImmuneSec*1000; }
+      if(s.stun&&ms>=immune&&rk()*100<s.stun){ stuns++; stunMs+=Math.min(STK.stunSec*1000,DATA.sec*1000-ms); stunUntil=ms+STK.stunSec*1000; immune=stunUntil+STK.stunImmuneSec*1000; }
       dmg+=tot; if(s.lifesteal){ const h=tot*s.lifesteal/100; heal+=h; hp=Math.min(HERO.hp,hp+h); } }
     if(ms>=nextD){ nextD+=D.hitEverySec*1000; if(ms>=stunUntil){ const h=HERO.hp*D.hitPctHeroHp/100; hurt+=h; hp=Math.max(D.heroMinHp,hp-h); minHp=Math.min(minHp,hp);
         if(s.counter&&rk()*100<s.counter){ const c=HERO.atk*STK.counterMult; dmg+=c; counters++; if(s.lifesteal){ heal+=c*s.lifesteal/100; hp=Math.min(HERO.hp,hp+c*s.lifesteal/100); } } } } }
-  return {dps:Math.floor(dmg/DATA.sec),damage:Math.round(dmg),hits,crits,combos,counters,stuns,heal:Math.round(heal),hurt:Math.round(hurt),hpEnd:Math.round(hp),minHp:Math.round(minHp)}; }
+  return {dps:Math.floor(dmg/DATA.sec),damage:Math.round(dmg),hits,crits,combos,counters,stuns,ctl:Math.round(stunMs/100)/10,heal:Math.round(heal),hurt:Math.round(hurt),hpEnd:Math.round(hp),minHp:Math.round(minHp)}; }
 const BASE=sim(null,1);
 
 /* ===== estado (espelha S.sys.pathTry.tried e o ensaio em memória do pathtry.js) ===== */
 const ST={st:'pick',path:'blade',left:42,tick:null,tried:{},last:{},cur:null,chosen:null,runs:0};
-function compare(){ const rows=DATA.paths.map(p=>({id:p.id,name:p.name,tried:!!ST.tried[p.id],n:ST.tried[p.id]?ST.tried[p.id].n:0,bestDps:ST.tried[p.id]?ST.tried[p.id].best:null}));
-  let top=null; for(const r of rows) if(r.bestDps!=null&&(!top||r.bestDps>top.bestDps)) top=r; rows.forEach(r=>{ r.top=!!top&&r===top; }); return rows; }
+/* 3 linhas: dano/s, vida no fim e controle (s de boneco atordoado). Selo por linha: o maior, só se for o único maior e houver 2+ testados */
+function compare(){ const rows=DATA.paths.map(p=>{ const t=ST.tried[p.id]; return {id:p.id,name:p.name,tried:!!t,n:t?t.n:0,bestDps:t?t.best:null,bestHp:t?t.hp:null,bestCtl:t?t.ctl:null}; });
+  const T=rows.filter(r=>r.tried); const topOf=k=>{ if(T.length<2) return null; const m=Math.max(...T.map(r=>r[k])); const w=T.filter(r=>r[k]===m); return w.length===1&&m>0?w[0]:null; };
+  const td=topOf('bestDps'), th=topOf('bestHp'), tc=topOf('bestCtl'); rows.forEach(r=>{ r.top=r===td; r.topHp=r===th; r.topCtl=r===tc; }); return rows; }
 function startTry(id){ if(ST.chosen&&!DATA.afterChoose) return {ok:false,reason:'chosen'}; if(!pathOf(id)) return {ok:false,reason:'id'}; ST.path=id; ST.cur={id}; setState('fight'); return {ok:true}; }
 function cancelTry(){ const had=!!ST.cur; ST.cur=null; setState('pick'); if(had) toast('Ensaio encerrado: nada foi gasto nem ganho'); return had; }
 function finishTry(){ const id=(ST.cur&&ST.cur.id)||ST.path; ST.cur=null; ST.runs++; const r=sim(id,7+ST.runs*13);
-  r.base=sim(null,7+ST.runs*13).dps; const t=ST.tried[id]||(ST.tried[id]={n:0,best:0}); t.n++; if(r.dps>=t.best){ t.best=r.dps; t.base=r.base; } ST.last[id]=r; ST.path=id; setState('result'); return {ok:true,id,dps:r.dps,best:t.best,rows:compare()}; }
+  r.base=sim(null,7+ST.runs*13).dps; const t=ST.tried[id]||(ST.tried[id]={n:0,best:0,hp:0,ctl:0}); t.n++; if(r.dps>=t.best){ t.best=r.dps; t.base=r.base; } t.hp=Math.max(t.hp,r.hpEnd); t.ctl=Math.max(t.ctl,r.ctl); ST.last[id]=r; ST.path=id; setState('result'); return {ok:true,id,dps:r.dps,best:t.best,rows:compare()}; }
 function choose(id){ ST.path=id; setState('confirm'); }
 function confirmChoice(){ ST.chosen=ST.path; ST.cur=null; setState('pick'); toast('Caminho escolhido: '+pathOf(ST.chosen).name+'. O herói continua igual; os golpes mudam'); }
 
@@ -331,21 +342,24 @@ function pickSheet(){ const locked=!!ST.chosen;
   return '<div class="sheet" role="dialog" aria-label="Caminho de luta">'+
     '<div class="hd"><button class="back" data-act="later" aria-label="Voltar para a batalha"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Voltar</button><h2>Caminho de luta</h2><span class="pill">'+COIN+'12</span><span class="pill">'+GEM+'50</span></div>'+
     '<div class="bd">'+
-      '<div class="intro"><b>'+(locked?'Seu caminho: '+esc(pathOf(ST.chosen).name):'Nv 30: escolha seu caminho')+'</b>'+(locked?'Troca grátis 1 vez por semana (proposta). O herói continua igual.':'O herói continua igual: muda só como ele luta. Teste antes de escolher.')+'</div>'+
+      '<div class="intro"><b>'+(locked?'Seu caminho: '+esc(pathOf(ST.chosen).name):'Nv 30: escolha seu caminho')+'</b>'+(locked?'Troca grátis 1 vez por semana. O herói continua igual.':'O herói continua igual: muda só como ele luta. Teste antes de escolher.')+'</div>'+
       DATA.paths.map(cardHtml).join('')+
     '</div>'+
     '<div class="ft"><p>'+(locked?'Ensaio fechado depois da escolha <span>· a troca é na própria tela</span>':'Testar é grátis e sem limite <span>· 60 s contra o Boneco de Treino · nada é gasto nem ganho</span>')+'</p></div>'+
   '</div>'; }
 
 function resultCard(){ const rows=compare(), id=ST.path, p=pathOf(id), untested=rows.filter(r=>!r.tried);
-  const col=r=>{ const L=ST.last[r.id], bs=r.tried&&ST.tried[r.id].base||BASE.dps, pct=r.tried?Math.round((r.bestDps/bs-1)*100):0;
-    const ex=!L?'':r.id==='blade'?'vida devolvida '+nf(L.heal):r.id==='shot'?nf(L.combos)+' combos':nf(L.stuns)+' atordoados';
-    return '<div class="cc'+(r.id===id?' cur':'')+'">'+(r.top&&rows.filter(x=>x.tried).length>1?'<span class="tb">maior dano/s</span>':'')+'<span class="pi">'+ICON[r.id]+'</span><b>'+esc(r.name)+'</b>'+
-      (r.tried?'<span class="dp">'+nf(r.bestDps)+'</span><small>dano/s · <em>'+(pct>=0?'+':'−')+Math.abs(pct)+'%</em></small><small>sobre sem caminho</small><small>'+esc(ex)+'</small>':'<span class="dp no">—</span><small>ainda não testou</small><button class="tt" data-act="try" data-id="'+r.id+'">Testar</button>')+'</div>'; };
+  const BEST='<span class="bst">melhor</span>';
+  const col=r=>{ const bs=r.tried&&ST.tried[r.id].base||BASE.dps, pct=r.tried?Math.round((r.bestDps/bs-1)*100):0, hf=r.tried?Math.max(0,Math.min(1,r.bestHp/HERO.hp)):0;
+    return '<div class="cc'+(r.id===id?' cur':'')+'" data-row="'+r.id+'"><span class="pi">'+ICON[r.id]+'</span><b>'+esc(r.name)+'</b>'+
+      (r.tried?'<div class="ln'+(r.top?' tp':'')+'" data-line="dps"><small>Dano/s</small><span class="v">'+nf(r.bestDps)+'</span><small><em>'+(pct>=0?'+':'−')+Math.abs(pct)+'%</em> sem caminho</small>'+(r.top?BEST:'')+'</div>'+
+        '<div class="ln'+(r.topHp?' tp':'')+'" data-line="hp"><small>Vida no fim</small><span class="v">'+nf(r.bestHp)+'</span><span class="hb" aria-hidden="true"><i style="width:'+(hf*100).toFixed(1)+'%"></i></span>'+(r.topHp?BEST:'')+'</div>'+
+        '<div class="ln'+(r.topCtl?' tp':'')+'" data-line="ctl"><small>Controle</small><span class="v">'+String(r.bestCtl).replace('.',',')+' s</span><small>boneco atordoado</small>'+(r.topCtl?BEST:'')+'</div>'
+      :'<span class="dp no">—</span><small>ainda não testou</small><button class="tt" data-act="try" data-id="'+r.id+'">Testar</button>')+'</div>'; };
   return '<div class="dim"></div><div class="res" role="dialog" aria-label="Resultado do ensaio">'+
-    '<div class="rh"><b>Ensaio de '+esc(p.name)+'</b><small>Melhor dano por segundo de cada caminho contra o '+esc(DATA.dummy.name)+'</small></div>'+
+    '<div class="rh"><b>Ensaio de '+esc(p.name)+'</b><small>O melhor de cada caminho em 60 s contra o '+esc(DATA.dummy.name)+'</small></div>'+
     '<div class="cg">'+rows.map(col).join('')+'</div>'+
-    '<div class="note">Neste ensaio, sem caminho o mesmo herói faria <b>'+nf(ST.last[id]&&ST.last[id].base||BASE.dps)+' dano/s</b> (a sorte dos críticos muda um pouco a cada teste). Dano/s não é tudo: <b>Lâmina</b> devolve vida e revida quando apanha, <b>Arcano</b> segura o inimigo.</div>'+
+    '<div class="note">Cada caminho é bom numa coisa: <b>Disparo</b> bate mais, <b>Lâmina</b> termina com mais vida (rouba vida e revida), <b>Arcano</b> segura o inimigo atordoado. Vida máxima: '+nf(HERO.hp)+'; o boneco nunca deixa abaixo de 1.</div>'+
     '<div class="free">O ensaio não dá prêmio nem conta progresso.<br>Testar de novo é grátis e sem limite.</div>'+
     '<div class="rb"><button class="o" data-act="other">Testar outro</button><button class="g" data-act="choose" data-id="'+id+'">Escolher '+esc(p.name)+'</button></div></div>'; }
 
@@ -356,7 +370,7 @@ function confirmCard(){ const p=pathOf(ST.path);
     '<ul class="cl">'+
       '<li><i class="y">✓</i><span>O corpo e a skin do herói <em>não mudam</em>. Muda só como ele luta.</span></li>'+
       '<li><i class="y">✓</i><span>Forte contra: <em>'+esc(strongVs(p.id).join(', '))+'</em> (+15%).</span></li>'+
-      '<li><i class="w">!</i><span>Trocar depois: <em>grátis 1 vez por semana</em> (proposta; ainda não definido no jogo).</span></li>'+
+      '<li><i class="w">!</i><span>Trocar depois: <em>grátis 1 vez por semana</em>.</span></li>'+
       '<li><i class="w">!</i><span>Depois de escolher, o Testar grátis some.</span></li>'+
     '</ul>'+
     '<div class="rb"><button class="o" data-act="back">Voltar</button><button class="g" data-act="confirm">Confirmar</button></div></div>'; }
