@@ -1,0 +1,558 @@
+<title>Eonbound Mentores das Eras</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Mentores das Eras (js/sys/mentors.js, desligado). Sobre os PRINTS REAIS de hoje: a batalha (a/v5_hoje.png, v0.13.3) e a folha do
+   Equipamento (a/eq_hoje.png: cabeçalho Voltar | título | ouro | gemas, marrom). À esquerda o print puro, à direita a mesma tela com só o que é novo.
+   Entrada: pontinho no botão Menu da batalha + item "Mentores" no painel do Menu (o mesmo da Dupla, fb-mpanel do js/fullbattle.js).
+   5 momentos: Menu · Galeria dos 9 · Tela do mentor · Presentes · Marco alcançado. RETRATOS PROVISÓRIOS: silhueta + emblema da era desenhados no
+   código (a Arte faz assets/mentors/m<era>.png). Sem PNG novo: só o que já está em a/ (mbg_era*, era*_*, wh_era*, coin, gem, mi_*). */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2; --brown:#211812; --brown2:#2c2119;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45;overflow-wrap:anywhere}
+.stl b{color:var(--gold)}
+details.ln{margin-top:6px;font-size:13px;line-height:1.45}
+details.ln summary{cursor:pointer;font-weight:900;min-height:40px;display:flex;align-items:center;color:var(--text)}
+details.ln ol{margin:2px 0 8px;padding-left:22px;color:var(--muted)}
+details.ln ol li{overflow-wrap:anywhere}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+.lvp{position:absolute;z-index:5;left:16px;top:56px;width:48px;height:21px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2b52a);border:2px solid #3a2208;color:#3a2208;font-family:var(--fd);font-size:13px;line-height:17px;text-align:center;pointer-events:none}
+.mhit{position:absolute;z-index:6;left:322px;top:56px;width:56px;height:66px;border:0;background:none;border-radius:16px}
+.mhit.open{box-shadow:0 0 0 3px var(--g2) inset}
+.mdot{position:absolute;right:2px;top:0;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10.5px/14px var(--fb);box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.mdim{position:absolute;inset:0;z-index:7;background:rgba(6,4,3,.58);animation:fade .2s ease-out}
+.mpan{position:absolute;z-index:8;right:10px;top:138px;width:370px;padding:12px 10px;border-radius:22px;background:linear-gradient(180deg,rgba(44,33,24,.98),rgba(24,18,13,.98));border:1px solid rgba(255,236,200,.22);box-shadow:0 18px 40px rgba(0,0,0,.6);animation:min .22s cubic-bezier(.2,.9,.25,1)}
+@keyframes min{from{opacity:0;transform:translateY(-18px) scale(.9)}}
+.mpan .mh{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px}
+.mpan .mh b{font-family:var(--fd);font-weight:400;font-size:20px;color:#fff}
+.mpan .mh span{font-size:11px;font-weight:800;color:#c9b9a2}
+.mgr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 6px}
+.mi{position:relative;height:76px;padding:0;border:0;border-radius:16px;background:rgba(255,236,200,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#ffe2a8;font-weight:900;font-size:12px}
+.mi.old{opacity:.42}
+.mi .ib{position:relative;width:50px;height:50px;border-radius:14px;display:grid;place-items:center}
+.mi .ib img,.mi .ib svg{width:42px;height:42px;object-fit:contain}
+.mi.new{background:rgba(255,201,74,.14);box-shadow:0 0 0 2px var(--g2) inset;animation:sp 1.4s ease-in-out infinite}
+.mi .bdg{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10.5px/14px var(--fb)}
+.mi .tag{position:absolute;left:50%;top:-7px;transform:translateX(-50%);padding:0 6px;height:16px;border-radius:8px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font:900 10px/16px var(--fb);white-space:nowrap}
+.mi .lk{position:absolute;inset:0;border-radius:14px;background:rgba(0,0,0,.55);display:grid;place-items:center;font:900 10px var(--fb);color:#fff}
+.mnote{margin:10px 4px 0;font-size:11px;font-weight:800;color:#c9b9a2;line-height:1.35}
+@keyframes sp{50%{box-shadow:0 0 0 2px var(--g2) inset,0 0 16px rgba(255,201,74,.55)}}
+@keyframes fade{from{opacity:0}}
+/* folha cheia no estilo do Equipamento de hoje */
+.sheet{position:absolute;inset:0;z-index:20;background:var(--brown);display:flex;flex-direction:column;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.hd{flex:none;height:56px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid rgba(255,236,200,.12);background:#1c140f}
+.back{flex:none;height:44px;padding:0 12px 0 8px;border-radius:14px;border:1.5px solid rgba(255,236,200,.18);background:#241a13;font-weight:900;font-size:15px;display:flex;align-items:center;gap:4px}
+.hd h2{flex:1;min-width:0;margin:0;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;height:32px;padding:0 9px 0 4px;border-radius:16px;background:#2a1f17;border:1.5px solid rgba(255,236,200,.14);display:flex;align-items:center;gap:4px;font-family:var(--fd);font-size:14px;color:#fff}
+.pill img{width:24px;height:24px}
+.bd{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.card{border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:9px 10px}
+.card h4{margin:0 0 6px;font-family:var(--fd);font-weight:400;font-size:15px;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px}
+.card h4 span{font-family:var(--fb);font-size:11px;font-weight:900;color:var(--mut2);white-space:nowrap}
+.card.hi{background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2)}
+.note{font-size:11.5px;font-weight:800;color:var(--mut2);line-height:1.35;margin:6px 0 0}
+.note b{color:var(--cream)}
+.btn{flex:none;min-height:44px;min-width:44px;padding:0 12px;border-radius:13px;border:1.5px solid rgba(255,236,200,.25);background:#3a2c20;font-weight:900;font-size:14px;color:var(--cream);display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;box-shadow:0 3px 0 #1d5a1c}
+.btn.y{border:0;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 3px 0 #9a5a10}
+.btn[disabled],.btn.off{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.wide{width:100%;min-height:48px;font-size:16px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 8px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12px;white-space:nowrap}
+.chip.z{opacity:.45}
+.chip i{font-style:normal;color:var(--mut2);font-weight:800}
+/* retrato provisório: silhueta + emblema da era */
+.por{display:block}
+.prov{position:absolute;left:4px;bottom:4px;padding:1px 6px;border-radius:7px;background:rgba(10,7,5,.78);border:1px dashed rgba(255,236,200,.45);color:#f6ecdf;font:900 9.5px/14px var(--fb);white-space:nowrap}
+/* galeria */
+.mg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.mc{position:relative;height:172px;padding:0;border-radius:14px;overflow:hidden;border:2px solid #4a3a2b;background:var(--brown2);text-align:center;display:block}
+.mc .bg{position:absolute;left:0;top:0;width:100%;height:96px;object-fit:cover;object-position:50% 25%}
+.mc .fade{position:absolute;left:0;top:56px;width:100%;height:40px;background:linear-gradient(180deg,rgba(44,33,25,0),#2c2119)}
+.mc .por{position:absolute;left:50%;top:8px;width:72px;height:86px;transform:translateX(-50%)}
+.mc .tx{position:absolute;left:0;right:0;top:96px;padding:0 4px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.mc .tx b{font-family:var(--fd);font-weight:400;font-size:16px;color:#fff;line-height:1.1}
+.mc .tx small{font-size:10.5px;font-weight:800;color:var(--mut2);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mc .tx em{font-style:normal;font-size:11px;font-weight:900;color:var(--g2)}
+.mc.lk{border-color:#3a2f26}
+.mc.lk .bg{filter:grayscale(1) brightness(.32)}
+.mc.lk .tx small.ch{color:#ffd9a8;white-space:normal}
+.mc.max{border-color:var(--g2);box-shadow:0 0 12px rgba(255,201,74,.35)}
+.mc .nw{position:absolute;right:4px;top:4px;padding:0 6px;height:18px;border-radius:9px;background:#ff4a5e;border:2px solid #fff;color:#fff;font:900 10px/14px var(--fb);white-space:nowrap}
+.mc .ptag{position:absolute;left:4px;top:4px;padding:0 5px;height:16px;border-radius:8px;background:rgba(10,7,5,.75);color:#f6ecdf;font:900 9px/16px var(--fb)}
+.pips{display:flex;gap:3px;justify-content:center;margin:2px 0}
+.pips i{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.45);border:1.5px solid rgba(255,236,200,.3)}
+.pips i.on{background:linear-gradient(180deg,#ffe07a,#f2a826);border-color:#9a5a10}
+/* tela do mentor */
+.hero{position:relative;height:214px;border-radius:16px;overflow:hidden;border:2px solid #4a3a2b;flex:none}
+.hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+.hero .sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(20,14,10,.15) 0,rgba(20,14,10,.2) 38%,rgba(20,14,10,.88) 62%)}
+.hero .por{position:absolute;left:6px;bottom:0;width:150px;height:180px}
+.hero .tx{position:absolute;right:10px;top:12px;width:44%;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.hero .tx small{font-size:11px;font-weight:900;color:var(--mut2);letter-spacing:.3px}
+.hero .tx b{font-family:var(--fd);font-weight:400;font-size:30px;line-height:1;color:#fff}
+.hero .tx i{font-style:normal;font-size:13px;font-weight:900;color:var(--cream);line-height:1.2}
+.ttl{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:11.5px;font-weight:900;line-height:1.3}
+.fav{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:9px;background:rgba(0,0,0,.45);border:1px solid rgba(255,201,74,.5);font-size:11px;font-weight:900;color:#ffe2a8;line-height:1.3}
+.fbar{position:relative;height:18px;border-radius:9px;background:rgba(0,0,0,.45);overflow:hidden;display:flex;border:1px solid rgba(255,236,200,.16)}
+.fbar i{display:block;height:100%}
+.fbar .a{background:linear-gradient(180deg,#ff9fc0,#e0567f)}
+.fbar .p{background:repeating-linear-gradient(135deg,#ffe07a 0 6px,#f2b52a 6px 12px)}
+.fbar span{position:absolute;inset:0;text-align:center;font:900 11.5px/16px var(--fb);color:#fff;text-shadow:0 1px 2px #000}
+.leg{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:11.5px;font-weight:900;flex-wrap:wrap;color:var(--cream)}
+.leg em{font-style:normal;color:#ff9fc0}
+.mk{display:flex;gap:8px;padding:7px 0;border-top:1px solid rgba(255,236,200,.1);align-items:flex-start}
+.mk:first-of-type{border-top:0;padding-top:2px}
+.mk .n{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--fd);font-size:15px;background:rgba(0,0,0,.4);border:2px solid rgba(255,236,200,.25);color:var(--mut2)}
+.mk.ok .n{background:linear-gradient(180deg,#9cf08f,#3fae3c);border-color:#1d5a1c;color:#0d2410}
+.mk .t{flex:1;min-width:0}
+.mk .t b{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;font-weight:900;color:#fff}
+.mk .t b span{color:var(--g2);white-space:nowrap}
+.mk .t q{display:block;margin-top:2px;font-size:12.5px;font-weight:800;color:var(--cream);line-height:1.3;quotes:'“' '”'}
+.mk .t small{display:block;margin-top:2px;font-size:11.5px;font-weight:800;color:#8a7a68}
+.mk.new{background:rgba(255,201,74,.1);border-radius:10px;padding-left:4px;padding-right:4px}
+.nt{display:inline-block;margin-left:4px;padding:0 6px;border-radius:8px;background:#ff4a5e;color:#fff;font-size:10px;font-weight:900;line-height:16px;vertical-align:1px}
+/* presentes */
+.ig{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.it{position:relative;height:88px;padding:0;border-radius:13px;background:#1c140f;border:2.5px solid var(--rc,#a9b3c9);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:4px}
+.it img{width:48px;height:48px;object-fit:contain}
+.it small{font-size:10px;font-weight:900;color:var(--mut2);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+.it b{font-size:12.5px;font-weight:900;color:#ff9fc0;line-height:1.2}
+.it .fs{position:absolute;left:3px;top:3px;width:18px;height:18px}
+.it .ck{position:absolute;right:-4px;top:-4px;width:22px;height:22px;border-radius:50%;background:#3fae3c;border:2px solid #fff;display:none}
+.it.sel{box-shadow:0 0 0 3px var(--g2),0 0 12px rgba(255,201,74,.5);background:#3a2a14}
+.it.sel .ck{display:grid;place-items:center}
+.it.na{opacity:.4;border-style:dashed}
+.it.na b{color:var(--mut2);font-size:10.5px}
+.sp{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,236,200,.1)}
+.sp:first-of-type{border-top:0}
+.sp svg.ic{width:36px;height:36px;flex:none}
+.sp .t{flex:1;min-width:0;font-size:12px;font-weight:800;line-height:1.25}
+.sp .t b{display:block;font-size:14px;color:#fff}
+.sp .t small{display:block;color:var(--mut2);font-size:11px}
+.sp .v{width:44px;text-align:center;font-family:var(--fd);font-size:18px;color:#fff}
+.gfoot{flex:none;padding:8px 12px 12px;background:#1c140f;border-top:1px solid rgba(255,236,200,.12);display:flex;flex-direction:column;gap:6px}
+.gfoot .sum{display:flex;justify-content:space-between;gap:6px;font-size:12.5px;font-weight:900;flex-wrap:wrap}
+.gfoot .sum em{font-style:normal;color:#ff9fc0}
+.gfoot .sum .up{color:#7fe07a}
+/* janela de marco */
+.dim{position:absolute;inset:0;z-index:30;background:rgba(6,4,2,.72);animation:fade .2s ease-out}
+.mkp{position:absolute;z-index:31;left:16px;right:16px;top:120px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(52,36,20,.99),rgba(26,18,12,.99));border:2px solid var(--g2);box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 30px rgba(255,201,74,.3);display:flex;flex-direction:column;animation:pop .28s cubic-bezier(.2,.9,.25,1.2)}
+@keyframes pop{from{opacity:0;transform:scale(.88)}}
+.mkp .top{position:relative;height:150px}
+.mkp .top .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;opacity:.75}
+.mkp .top .por{position:absolute;left:50%;bottom:0;width:120px;height:144px;transform:translateX(-50%)}
+.mkp .in{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.mkp .k{font-size:12px;font-weight:900;color:var(--mut2);letter-spacing:.5px}
+.mkp h3{margin:0;font-family:var(--fd);font-weight:400;font-size:24px;color:#fff;line-height:1.1}
+.mkp q{font-size:15px;font-weight:800;color:var(--cream);line-height:1.35;quotes:'“' '”'}
+.mkp .gain{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:12px;background:rgba(127,224,122,.14);border:1px solid rgba(127,224,122,.5);color:#bff5b8;font-weight:900;font-size:14px}
+.mkp .tbox{width:100%;border-radius:12px;background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2);padding:7px 10px;font-size:12px;font-weight:800;line-height:1.35}
+.mkp .tbox b{display:block;font-family:var(--fd);font-weight:400;font-size:19px;color:var(--g2)}
+.toast{position:absolute;left:50%;top:96px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.96);border:1px solid rgba(255,236,200,.3);font-weight:900;font-size:12.5px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption id="cap0">Hoje<small>print real do jogo (v0.13.3, batalha)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" id="shot0" src="a/v5_hoje.png" alt="Print real do jogo hoje"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Com os Mentores das Eras<small>a mesma tela; só o que é novo aparece</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <img class="shot" src="a/v5_hoje.png" alt="">
+    <div id="hud"></div>
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Mentores das Eras</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">À esquerda, o <b>print real de hoje</b> (a batalha, ou a folha do Equipamento quando os Mentores estão abertos, para comparar o cabeçalho e o marrom). À direita, <b>a mesma tela</b> com só o que é novo: um <b>pontinho no Menu</b> e o item <b>Mentores</b>; os Mentores abrem numa <b>folha nova</b> no estilo do Equipamento. Os <b>retratos são provisórios</b>: silhueta e emblema da era desenhados no código, até a Arte fazer os 9 (sem sensualizar, visual maduro). O fundo de cada mentor é o cenário da era que já está no jogo.</p>
+    <div class="box">
+      <h2>Momento</h2>
+      <div class="seg" role="group" aria-label="Momento"><button data-st="menu" aria-pressed="true">0 · Entrada pelo Menu</button><button data-st="gal" aria-pressed="false">1 · Os 9 mentores</button><button data-st="mentor" aria-pressed="false">2 · Tela do mentor</button><button data-st="gift" aria-pressed="false">3 · Escolher presente</button><button data-st="mark" aria-pressed="false">4 · Marco alcançado</button></div>
+      <h3>Mentor aberto</h3>
+      <div class="seg" role="group" aria-label="Mentor" id="mseg"></div>
+      <h3>Nível do jogador</h3>
+      <div class="seg" role="group" aria-label="Nível"><button data-lv="15" aria-pressed="false">Nv 15 (trancado)</button><button data-lv="34" aria-pressed="true">Nv 34</button></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Simular</h2>
+      <div class="seg" role="group" aria-label="Simular">
+        <button data-sim="era">Chegar à próxima era</button>
+        <button data-sim="items">Ganhar 3 peças</button>
+        <button data-sim="mats">+20 pedras e +100 ração</button>
+        <button data-sim="near">Mentor a 5 do marco</button>
+        <button data-sim="reset">Recomeçar</button>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/mentors.js, desligado)</h2>
+      <ul>
+        <li>Abre no <b>Nv 16</b>. São <b>9 mentores, um por era</b>; cada um aparece quando você <b>chega à era dele</b>. Antes disso: silhueta e "chega na era X"</li>
+        <li>Presente = <b>peças que sobraram da mochila</b>: <b>nunca a equipada nem a trancada</b> no cadeado da Fogueira. Vale pela raridade: Básico <b>1</b> · Raro <b>2</b> · Épico <b>4</b> · Mítico <b>8</b> · Lendário <b>16</b> · Divino <b>32</b></li>
+        <li><b>Presente favorito</b>: peça da <b>mesma era do mentor</b> vale <b>+50%</b></li>
+        <li>Pedras de forja: <b>1 ponto a cada 2</b>. Ração de pet: <b>1 ponto a cada 10</b> (sobra que não fecha ponto não é gasta)</li>
+        <li><b>5 marcos</b> de amizade: <b>30 · 100 · 250 · 600 · 1.200</b>. Cada marco dá um <b>atributo pequeno</b> fixo do mentor e <b>uma fala da história</b> (45 no total); o marco 5 dá um <b>título</b> (só enfeite: o atributo já veio dos marcos)</li>
+        <li>Atributo por marco: ATK <b>+0,5%</b> · Vida <b>+0,6%</b> · crítico <b>+0,3</b> · redução de dano <b>+0,4%</b> · ouro <b>+2%</b>. Teto com os 9 no máximo: <b>ATK +5%, Vida +6%, crítico +3, defesa +2%, ouro +20%</b></li>
+        <li><b>Amizade máxima recusa presente</b> (não gasta peça à toa). Presente é definitivo: a peça sai da mochila</li>
+        <li><b>Nada pago, nada sorteado, sem gema</b>. Nada dos Mentores está à venda</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Os 9 mentores e as 45 falas (do mentors.js)</h2>
+      <div id="lines"></div>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: galeria em 2 colunas, fala maior na janela do marco"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), hud=$('#hud'), lay=$('#lay');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+/* ===== regras: cópia fiel de js/sys/mentors.js (DATA; a lista e as 45 falas são copiadas do arquivo) ===== */
+const DATA={
+  needLevel:16, favMult:1.5, itemPts:[1,2,4,8,16,32], stonesPer:2, foodPer:10, marks:[30,100,250,600,1200],
+  list:[
+    {era:0, id:'nara',   name:'Nara',    role:'Pintora das Cavernas', stat:'hpPct',  per:0.6, title:'Guardiã do Fogo',
+     lines:['Antes das palavras, havia o fogo e as paredes da caverna.','Cada traço na pedra conta uma caçada que o clã venceu junto.',
+            'O mamute não é inimigo: é a força que o clã aprende a respeitar.','Guardar a chama acesa é guardar a memória de todos nós.',
+            'Leve o fogo adiante. As próximas eras vão precisar dele.']},
+    {era:1, id:'tales',  name:'Tales',   role:'Escriba',             stat:'critPct', per:0.3, title:'Escriba das Eras',
+     lines:['Escrever é fazer a voz durar mais que quem fala.','Nas tábuas de argila guardamos leis, colheitas e promessas.',
+            'Um bom escriba lê o que está escrito e também o que ficou de fora.','As grandes muralhas caem; as palavras atravessam os séculos.',
+            'Seu nome já está nas minhas tábuas. Agora ele não se perde.']},
+    {era:2, id:'bertoldo', name:'Bertoldo', role:'Ferreiro',          stat:'atkPct', per:0.5, title:'Aprendiz da Forja',
+     lines:['O ferro só obedece a quem tem paciência com o fogo.','Mil marteladas fazem uma lâmina; uma pressa a quebra.',
+            'O castelo depende do ferreiro tanto quanto do cavaleiro.','Uma espada boa protege; uma espada má só assusta.',
+            'Esta marca na minha bigorna agora também é sua.']},
+    {era:3, id:'ines',   name:'Inês',    role:'Navegadora',          stat:'goldPct', per:2,  title:'Leitor de Estrelas',
+     lines:['O mar não tem estradas: quem guia são as estrelas.','O astrolábio mede o céu para que o navio ache a terra.',
+            'Mapas novos nascem de quem tem coragem de passar do último.','A pólvora mudou as guerras; a bússola mudou o mundo.',
+            'Onde houver horizonte, haverá um caminho para você.']},
+    {era:4, id:'otto',   name:'Otto',    role:'Inventor',            stat:'defPct', per:0.4, title:'Mestre das Engrenagens',
+     lines:['O vapor empurra pistões; as ideias empurram o mundo.','Cada engrenagem é pequena, mas nenhuma máquina anda sem ela.',
+            'A fábrica fez em um dia o que um vilarejo fazia num ano.','Inventar é errar com método até acertar.',
+            'Guarde estas plantas. Um dia você vai construir a sua máquina.']},
+    {era:5, id:'lia',    name:'Lia',     role:'Aviadora',            stat:'critPct', per:0.3, title:'Asa do Século',
+     lines:['Voar foi o sonho mais antigo que a humanidade realizou.','Lá de cima, as fronteiras do mapa simplesmente somem.',
+            'O rádio aproximou quem estava a oceanos de distância.','Coragem não é não ter medo: é decolar mesmo com ele.',
+            'O céu é grande o bastante para todos os sonhos. Siga voando.']},
+    {era:6, id:'kira',   name:'Kira',    role:'Engenheira Estelar',  stat:'atkPct', per:0.5, title:'Piloto das Estrelas',
+     lines:['As cidades flutuam porque alguém calculou cada detalhe.','Os robôs ajudam; quem decide o caminho ainda somos nós.',
+            'A luz das estrelas que você vê saiu delas há milhares de anos.','Toda tecnologia nova começa como uma pergunta antiga.',
+            'O futuro não chega sozinho. A gente constrói, peça por peça.']},
+    {era:7, id:'caronte', name:'Caronte', role:'Barqueiro do Submundo', stat:'hpPct', per:0.6, title:'Travessia Segura',
+     lines:['Poucos descem até aqui e menos ainda pedem para voltar.','O rio de brasas não queima quem atravessa com propósito.',
+            'Até no Submundo há regras, e eu sou quem as guarda.','Os demônios temem quem não esquece de onde veio.',
+            'Meu barco leva você para os dois lados do rio. Sempre.']},
+    {era:8, id:'aurora', name:'Aurora',  role:'Astrônoma Celeste',   stat:'goldPct', per:2,  title:'Guardião dos Astros',
+     lines:['Daqui de cima, todas as eras parecem um só caminho.','Cada estrela é uma era que alguém já atravessou.',
+            'O Juiz Celestial pesa a coragem, não a força.','A luz mais forte nasce depois da noite mais longa.',
+            'Você atravessou o tempo. As estrelas agora contam a sua história.']},
+  ],
+  statText:{atkPct:'ATK',hpPct:'Vida',critPct:'chance de crítico',defPct:'redução de dano',goldPct:'ouro'},
+};
+const SHORT={atkPct:'ATK',hpPct:'Vida',critPct:'crítico',defPct:'defesa',goldPct:'ouro'};
+const BY={}; for(const m of DATA.list) BY[m.era]=m;
+const ERA=['Pré-História','Antiguidade','Medieval','Pólvora','Industrial','Moderna','Futurista','Submundo','Celestial'];
+const ECOL=['#e8955a','#e0c070','#c4ccd8','#5fc0e6','#d9a066','#9cc4f0','#5ee7ff','#ff7a4d','#ffe08a'];
+const RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'], RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#fff0a8'];
+const SLOT={helmet:'Elmo',vest:'Colete',gloves:'Luvas',boots:'Botas',necklace:'Colar',weapon:'Arma'};
+const int0=v=>Math.max(0,Math.floor(typeof v==='number'&&isFinite(v)?v:0));
+const fmtP=v=>String(Math.round(v*100)/100).replace('.',',');
+const markOf=pts=>{ let k=0; for(const t of DATA.marks) if(int0(pts)>=t) k++; return k; };
+const statAt=(m,mark)=>Math.round(m.per*mark*1e6)/1e6;
+const statTxt=(m,v)=>'+'+fmtP(v)+'% de '+DATA.statText[m.stat];
+const MAXM=DATA.marks.length;
+
+/* mochila simulada (Nv 34, chegou à Pólvora): ícones das peças que já estão em a/ */
+const BAG0=[
+  {id:'b1',slot:'helmet',e:0,r:2,img:'era0_helmet_t2'},{id:'b2',slot:'gloves',e:1,r:0,img:'era1_gloves'},{id:'b3',slot:'boots',e:1,r:1,img:'era1_boots'},
+  {id:'b4',slot:'necklace',e:1,r:1,img:'era1_necklace'},{id:'b5',slot:'vest',e:2,r:0,img:'era2_vest'},{id:'b6',slot:'helmet',e:2,r:2,img:'era2_helmet_t1'},
+  {id:'b7',slot:'gloves',e:2,r:1,img:'era2_gloves_t1'},{id:'b8',slot:'weapon',e:2,r:1,img:'wh_era2_raro'},{id:'b9',slot:'necklace',e:3,r:1,img:'era3_necklace'},
+  {id:'b10',slot:'boots',e:3,r:3,img:'era3_boots_t2'},
+  {id:'q1',slot:'weapon',e:3,r:2,img:'wh_era3_t1',eq:true},{id:'q2',slot:'vest',e:2,r:3,img:'era2_vest_t1',eq:true},
+  {id:'q3',slot:'helmet',e:3,r:3,img:'era3_helmet_t1',lock:true},{id:'q4',slot:'gloves',e:3,r:2,img:'era3_gloves_t2',lock:true}];
+const POOL=[{slot:'boots',e:2,r:1,img:'era2_boots'},{slot:'necklace',e:2,r:2,img:'era2_necklace_t1'},{slot:'weapon',e:1,r:1,img:'wh_era1_raro'},
+  {slot:'vest',e:4,r:1,img:'era4_vest'},{slot:'gloves',e:4,r:2,img:'era4_gloves_t1'},{slot:'helmet',e:5,r:1,img:'era5_helmet'},{slot:'weapon',e:3,r:1,img:'wh_era3_raro'},
+  {slot:'boots',e:5,r:2,img:'era5_boots_t1'},{slot:'necklace',e:4,r:3,img:'era4_necklace_t2'},{slot:'vest',e:1,r:2,img:'era1_vest_t1'}];
+
+/* ===== estado (espelho do S.sys.mentors + o que o host dá) ===== */
+const ST={st:'menu',menu:true,lv:34,eraMax:3,me:2,o:null,bag:[],stones:0,food:0,sel:[],gs:0,gf:0,marks:[],mi:0,hl:0,arr:{},titles:[],nid:0,lastToast:''};
+function scenario(){ ST.o={pts:{0:1250,1:640,2:85,3:12},seen:{0:5,1:3,2:1,3:0}}; ST.bag=BAG0.map(x=>Object.assign({},x)); ST.stones=37; ST.food=140; ST.eraMax=3;
+  ST.sel=[]; ST.gs=0; ST.gf=0; ST.marks=[]; ST.mi=0; ST.hl=0; ST.arr={3:true}; ST.titles=['mentor_nara']; ST.nid=0; }
+const ptsOf=era=>int0(ST.o.pts[era]);
+const isOpen=()=>ST.lv>=DATA.needLevel;
+const unlocked=era=>isOpen()&&!!BY[era]&&ST.eraMax>=era;
+const giftable=()=>ST.bag.filter(it=>!it.eq&&!it.lock);
+function itemValue(it,era){ if(!it) return 0; const r=Math.max(0,Math.min(DATA.itemPts.length-1,int0(it.r))), base=DATA.itemPts[r]; return Math.round(base*(int0(it.e)===era?DATA.favMult:1)); }
+function markInfo(m,i){ const x={mark:i,line:m.lines[i-1],stat:{[m.stat]:m.per},text:'+'+fmtP(m.per)+'% de '+DATA.statText[m.stat]}; if(i===MAXM) x.title=m.title; return x; }
+/* presente: as mesmas regras do gift() do mentors.js */
+function gift(era,g){ era=int0(era); const m=BY[era]; if(!m) return {ok:false,reason:'era'}; if(!unlocked(era)) return {ok:false,reason:'locked'}; g=g||{};
+  if(markOf(ptsOf(era))>=MAXM) return {ok:false,reason:'max'};
+  const ok=giftable(), ids=Array.isArray(g.items)?g.items.map(String):[], items=[];
+  for(const id of ids){ const it=ok.find(x=>String(x.id)===id); if(!it||items.includes(it)) return {ok:false,reason:'items',id}; items.push(it); }
+  const st=int0(g.stones)-int0(g.stones)%DATA.stonesPer, fd=int0(g.food)-int0(g.food)%DATA.foodPer;
+  if(st>ST.stones) return {ok:false,reason:'stones'}; if(fd>ST.food) return {ok:false,reason:'food'};
+  const pts=items.reduce((a,it)=>a+itemValue(it,era),0)+st/DATA.stonesPer+fd/DATA.foodPer;
+  if(!pts) return {ok:false,reason:'empty'};
+  ST.bag=ST.bag.filter(x=>!items.includes(x)); ST.stones-=st; ST.food-=fd;
+  const before=markOf(ptsOf(era)); ST.o.pts[era]=ptsOf(era)+pts; const after=markOf(ST.o.pts[era]);
+  const newMarks=[]; for(let i=before+1;i<=after;i++) newMarks.push(markInfo(m,i));
+  if(after>=MAXM&&!ST.titles.includes('mentor_'+m.id)) ST.titles.push('mentor_'+m.id);
+  return {ok:true,era,pts,total:ST.o.pts[era],mark:after,newMarks}; }
+function seen(era){ ST.o.seen[era]=markOf(ptsOf(era)); return true; }
+function bonus(){ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0}; if(!isOpen()) return b;
+  for(const m of DATA.list){ const k=markOf(ptsOf(m.era)); if(k) b[m.stat]+=statAt(m,k); } for(const k in b) b[k]=Math.round(b[k]*1e6)/1e6; return b; }
+const CAP=(()=>{ const b={atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0}; for(const m of DATA.list) b[m.stat]+=statAt(m,MAXM); for(const k in b) b[k]=Math.round(b[k]*1e6)/1e6; return b; })();
+const unseen=era=>unlocked(era)&&markOf(ptsOf(era))>int0(ST.o.seen[era]);
+function badgeN(){ if(!isOpen()) return 0; let n=0; for(const m of DATA.list) if(unseen(m.era)||(ST.arr[m.era]&&unlocked(m.era))) n++; return n; }
+/* prévia do presente escolhido */
+function preview(){ const era=ST.me, it=giftable().filter(x=>ST.sel.includes(x.id)); return it.reduce((a,x)=>a+itemValue(x,era),0)+Math.floor(ST.gs/DATA.stonesPer)+Math.floor(ST.gf/DATA.foodPer); }
+
+/* ===== ícones no código ===== */
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const SV=inner=>'<svg class="ic" viewBox="0 0 48 48" aria-hidden="true">'+inner+'</svg>';
+const BACK='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const STONE=SV('<path d="M10 18l14-12 14 12-6 22H16z" fill="#9ab4d6" '+K+'/><path d="M10 18h28M24 6l-6 12 6 22 6-22z" fill="none" stroke="#2a3a5a" stroke-width="2"/>');
+const FOOD=SV('<path d="M6 22h36c0 11-8 18-18 18S6 33 6 22z" fill="#c98a4a" '+K+'/><circle cx="17" cy="19" r="5" fill="#e8c27a" '+K+'/><circle cx="27" cy="17" r="5.5" fill="#e8c27a" '+K+'/><circle cx="34" cy="20" r="4" fill="#e8c27a" '+K+'/>');
+const MENT=SV('<path d="M8 8h26a6 6 0 016 6v26H14a6 6 0 01-6-6z" fill="#e9dcb8" '+K+'/><path d="M14 16h18M14 23h18M14 30h11" stroke="#7a5a34" stroke-width="3" stroke-linecap="round"/><path d="M36 26l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6-4.5-4 6-1z" fill="#ffd25e" '+K+'/>');
+const HEART=SV('<path d="M24 41S6 30 6 17a9 9 0 0118-3 9 9 0 0118 3c0 13-18 24-18 24z" fill="#ff7aa2" '+K+'/>');
+const FSTAR='<svg class="fs" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l3.2 6.6 7.3 1-5.3 5.1 1.3 7.2L12 18l-6.5 3.4 1.3-7.2L1.5 9.1l7.3-1z" fill="#ffd25e" stroke="#1a110b" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const CHK='<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5 11-11" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MINUS='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="#f6ecdf" stroke-width="3.5" stroke-linecap="round"/></svg>';
+const PLUS='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" stroke="#f6ecdf" stroke-width="3.5" stroke-linecap="round"/></svg>';
+const G=(c,inner)=>SV('<rect x="5" y="5" width="38" height="38" rx="10" fill="'+c+'" '+K+'/>'+inner);
+const MI_OLD=[{l:'Forja',img:'a/mi_forge.png'},{l:'Pets',img:'a/mi_pets.png'},{l:'Missões',svg:G('#c98a4a','<path d="M15 16h18M15 24h18M15 32h12" stroke="#1a110b" stroke-width="3.5" stroke-linecap="round"/>')},
+  {l:'Mapa',svg:G('#7fae5a','<path d="M14 14l7 3 7-3 7 3v18l-7-3-7 3-7-3z" fill="#e9dcb8" '+K+'/>')},{l:'Chat',svg:G('#5a8fd6','<path d="M13 15h22v13H22l-6 5v-5h-3z" fill="#f6ecdf" '+K+'/>')},
+  {l:'Correio',svg:G('#d6b45a','<rect x="12" y="16" width="24" height="17" rx="2" fill="#f6ecdf" '+K+'/><path d="M13 17l11 8 11-8" fill="none" stroke="#1a110b" stroke-width="2.4"/>')},
+  {l:'Config.',svg:G('#8a8a9a','<circle cx="24" cy="24" r="8" fill="#e9e9f0" '+K+'/><circle cx="24" cy="24" r="3" fill="#1a110b"/>')}];
+const COIN='<img src="a/coin.png" alt="">', GEM='<img src="a/gem.png" alt="">';
+/* RETRATO PROVISÓRIO: silhueta escura com contorno da cor da era + medalhão com o emblema do mentor (a Arte troca por assets/mentors/m<era>.png) */
+const EMB=[
+  '<path d="M12 1c2 6 8 8 8 14a8 8 0 01-16 0c0-4 3-6 3-10 2 2 3 4 3 6 2-3 2-6 2-10z" fill="#1a110b"/>',
+  '<rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" stroke="#1a110b" stroke-width="2.6"/><path d="M7 10h10M7 15h7" stroke="#1a110b" stroke-width="2.4" stroke-linecap="round"/>',
+  '<path d="M3 4h14v7H3z" fill="#1a110b"/><path d="M10 11v11" stroke="#1a110b" stroke-width="3.4" stroke-linecap="round"/><path d="M17 6l4 1.5-4 1.5z" fill="#1a110b"/>',
+  '<path d="M12 0l3.2 8.8L24 12l-8.8 3.2L12 24l-3.2-8.8L0 12l8.8-3.2z" fill="#1a110b"/>',
+  '<circle cx="12" cy="12" r="7.5" fill="none" stroke="#1a110b" stroke-width="5" stroke-dasharray="3 2.4"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="#1a110b" stroke-width="2.4"/>',
+  '<path d="M12 15C8 8 4 8 0 9c3 2 5 6 12 8zM12 15c4-7 8-7 12-6-3 2-5 6-12 8z" fill="#1a110b"/><circle cx="12" cy="15" r="2.8" fill="#1a110b"/>',
+  '<circle cx="12" cy="12" r="6.5" fill="#1a110b"/><ellipse cx="12" cy="12" rx="11.5" ry="4" fill="none" stroke="#1a110b" stroke-width="2.2" transform="rotate(-20 12 12)"/>',
+  '<path d="M1 14h22l-4.5 7H5.5z" fill="#1a110b"/><path d="M12 4v10" stroke="#1a110b" stroke-width="2.6"/><circle cx="12" cy="5" r="3" fill="#1a110b"/>',
+  '<path d="M14 2a10 10 0 100 20 7.5 7.5 0 010-20z" fill="#1a110b"/><path d="M20 4l1.2 2.6L24 7.8l-2.8 1.2L20 11.6l-1.2-2.6L16 7.8l2.8-1.2z" fill="#1a110b"/>'];
+function por(e,lk){ const c=lk?'#4a4038':ECOL[e], f=lk?'#060403':'#17110c';
+  return '<svg class="por" viewBox="0 0 100 120" aria-hidden="true">'+
+    '<path d="M10 120c2-27 17-41 40-41s38 14 40 41z" fill="'+f+'" stroke="'+c+'" stroke-width="2.6"/>'+
+    '<path d="M42 60h16v22H42z" fill="'+f+'"/>'+
+    '<circle cx="50" cy="44" r="21" fill="'+f+'" stroke="'+c+'" stroke-width="2.6"/>'+
+    '<circle cx="50" cy="100" r="14" fill="'+(lk?'#2a2420':c)+'" stroke="#1a110b" stroke-width="2.4"/>'+
+    (lk?'<text x="50" y="107" text-anchor="middle" font-family="Lilita One,Impact,sans-serif" font-size="20" fill="#8a7a68">?</text>'
+       :'<g transform="translate(38 88)">'+EMB[e]+'</g>')+'</svg>'; }
+
+/* ===== desenho ===== */
+function renderHud(){ let h='<div class="lvp">Nv.'+ST.lv+'</div>';
+  if(ST.st==='menu'){ const n=badgeN();
+    h+='<button class="mhit'+(ST.menu?' open':'')+'" data-act="menu" aria-expanded="'+ST.menu+'" aria-label="Menu'+(n?', '+n+' novidade'+(n>1?'s':'')+' nos Mentores':'')+'">'+(n?'<span class="mdot">'+n+'</span>':'')+'</button>'; }
+  hud.innerHTML=h; }
+function menuPanel(){ const lock=!isOpen(), n=badgeN();
+  return '<div class="mdim" data-act="menu"></div><div class="mpan" role="dialog" aria-label="Menu"><div class="mh"><b>Menu</b><span>toque fora para fechar</span></div><div class="mgr">'+
+    MI_OLD.map(m=>'<button class="mi old" tabindex="-1" aria-hidden="true" data-act="oldmenu" data-l="'+m.l+'"><span class="ib">'+(m.img?'<img src="'+m.img+'" alt="">':m.svg)+'</span>'+m.l+'</button>').join('')+
+    '<button class="mi new" data-act="open" aria-label="Mentores das Eras'+(lock?', abre no Nv 16':(n?', '+n+' novidade'+(n>1?'s':''):''))+'"><span class="ib">'+MENT+(lock?'<span class="lk">Nv 16</span>':'')+(!lock&&n?'<span class="bdg">'+n+'</span>':'')+'</span><span class="tag">Novo</span>Mentores</button>'+
+    '</div><p class="mnote">Os outros itens do Menu ficam como hoje (aqui só apagados para situar). Novo: o item <b style="color:#ffc94a">Mentores</b>, com o número de falas novas e mentores que acabaram de chegar.</p></div>'; }
+function head(title,backAct){ return '<div class="hd"><button class="back" data-act="'+backAct+'" aria-label="Voltar">'+BACK+'Voltar</button><h2>'+title+'</h2><span class="pill">'+COIN+'6</span><span class="pill">'+GEM+'50</span></div>'; }
+function pips(k){ let h='<span class="pips" aria-label="'+k+' de '+MAXM+' marcos">'; for(let i=1;i<=MAXM;i++) h+='<i class="'+(i<=k?'on':'')+'"></i>'; return h+'</span>'; }
+function bonusChips(){ const b=bonus(); return '<div class="chips">'+['atkPct','hpPct','critPct','defPct','goldPct'].map(k=>'<span class="chip'+(b[k]?'':' z')+'">+'+fmtP(b[k])+(k==='critPct'?'':'%')+' '+SHORT[k]+' <i>/ '+fmtP(CAP[k])+(k==='critPct'?'':'%')+'</i></span>').join('')+'</div>'; }
+function sheetGal(){ const cards=DATA.list.map(m=>{ const e=m.era, un=unlocked(e), p=ptsOf(e), k=markOf(p);
+    if(!un) return '<button class="mc lk" data-act="mentor" data-era="'+e+'" aria-label="Mentor trancado: chega na era '+ERA[e]+'"><img class="bg" src="a/mbg_era'+e+'.png" alt=""><span class="fade"></span>'+por(e,true)+
+      '<span class="tx"><b>???</b><small>'+esc(m.role)+'</small><small class="ch">chega na era '+ERA[e]+'</small></span></button>';
+    const nw=unseen(e)?'Fala nova':(ST.arr[e]?'Chegou':'');
+    return '<button class="mc'+(k>=MAXM?' max':'')+'" data-act="mentor" data-era="'+e+'" aria-label="'+esc(m.name)+', '+esc(m.role)+', marco '+k+' de '+MAXM+(nw?', '+nw:'')+'"><img class="bg" src="a/mbg_era'+e+'.png" alt=""><span class="fade"></span>'+por(e,false)+
+      '<span class="ptag">provisório</span>'+(nw?'<span class="nw">'+nw+'</span>':'')+
+      '<span class="tx"><b>'+esc(m.name)+'</b><small>'+esc(m.role)+'</small>'+pips(k)+'<em>'+(k?'+'+fmtP(statAt(m,k))+(m.stat==='critPct'?'':'%')+' '+SHORT[m.stat]:SHORT[m.stat]+' a cada marco')+'</em></span></button>'; }).join('');
+  const nUn=DATA.list.filter(m=>unlocked(m.era)).length;
+  return '<div class="sheet" role="dialog" aria-label="Mentores das Eras">'+head('Mentores das Eras','close')+'<div class="bd">'+
+    '<div class="card hi"><h4>Bônus dos mentores<span>teto com os 9 no máximo</span></h4>'+bonusChips()+
+    '<p class="note" style="color:#f6ecdf">Dê de presente as peças que sobraram na mochila. Cada marco de amizade dá um pouco de força e conta uma parte da história da era.</p></div>'+
+    '<div class="card"><h4>Os 9 mentores<span>'+nUn+' de 9 chegaram</span></h4><div class="mg">'+cards+'</div>'+
+    '<p class="note">Retratos provisórios (Arte): silhueta e emblema da era. Cada mentor chega quando você chega à era dele.</p></div>'+
+    '</div></div>'; }
+function fbar(p,add){ const k=markOf(p), lo=k?DATA.marks[k-1]:0, hi=k<MAXM?DATA.marks[k]:DATA.marks[MAXM-1];
+  if(k>=MAXM) return '<div class="fbar" role="img" aria-label="Amizade máxima"><i class="a" style="width:100%"></i><span>Amizade máxima · '+nf(p)+'</span></div>';
+  const a=Math.min(1,(p-lo)/(hi-lo)), b=Math.min(1-a,Math.max(0,add)/(hi-lo));
+  return '<div class="fbar" role="img" aria-label="'+p+' de '+hi+' de amizade"><i class="a" style="width:'+(a*100).toFixed(1)+'%"></i><i class="p" style="width:'+(b*100).toFixed(1)+'%"></i><span>'+nf(p+add)+' / '+nf(hi)+'</span></div>'; }
+function heroCard(m){ const e=m.era, k=markOf(ptsOf(e));
+  return '<div class="hero"><img class="bg" src="a/mbg_era'+e+'.png" alt=""><span class="sh"></span>'+por(e,false)+'<span class="prov">retrato provisório (Arte)</span>'+
+    '<span class="tx"><small>ERA '+(e+1)+' · '+ERA[e].toUpperCase()+'</small><b>'+esc(m.name)+'</b><i>'+esc(m.role)+'</i>'+pips(k)+
+    (k>=MAXM?'<span class="ttl">Título: '+esc(m.title)+'</span>':'<span class="fav">'+FSTAR.replace('class="fs"','width="14" height="14"')+'Favorito: peças da '+ERA[e]+'</span>')+'</span></div>'; }
+function sheetMentor(){ const m=BY[ST.me], e=m.era, p=ptsOf(e), k=markOf(p), max=k>=MAXM;
+  const rows=DATA.marks.map((t,i)=>{ const n=i+1, ok=k>=n, nw=ST.hl&&n===ST.hl;
+    return '<div class="mk'+(ok?' ok':'')+(nw?' new':'')+'"><span class="n">'+(ok?CHK.replace('stroke="#fff"','stroke="#0d2410"'):n)+'</span><span class="t"><b>Marco '+n+' · '+nf(t)+' de amizade<span>+'+fmtP(m.per)+'% '+SHORT[m.stat]+'</span></b>'+
+      (ok?'<q>'+esc(m.lines[i])+'</q>'+(nw?'<span class="nt">nova</span>':''):'<small>Fala trancada: chega no marco '+n+'</small>')+
+      (n===MAXM?'<small style="color:#ffd25e">Título no marco 5: '+esc(m.title)+' (só enfeite)</small>':'')+'</span></div>'; }).join('');
+  const nxt=max?null:DATA.marks[k];
+  return '<div class="sheet" role="dialog" aria-label="Mentor '+esc(m.name)+'">'+head(esc(m.name)+' · '+esc(m.role),'tgal')+'<div class="bd">'+heroCard(m)+
+    '<div class="card"><h4>'+HEART.replace('class="ic"','class="ic" width="20" height="20" style="display:inline-block;vertical-align:-4px"')+' Amizade<span>'+(max?'máxima':'marco '+k+' de '+MAXM)+'</span></h4>'+fbar(p,0)+
+      '<div class="leg"><span>'+(max?'Todas as falas e o título liberados':'Faltam <em>'+nf(nxt-p)+'</em> para o marco '+(k+1))+'</span><span>'+nf(p)+' no total</span></div>'+
+      (max?'<button class="btn wide off" data-act="giftopen" aria-disabled="true">Amizade máxima: não precisa de presente</button>':'<button class="btn y wide" data-act="giftopen" style="margin-top:8px">'+HEART+'Dar presente</button>')+'</div>'+
+    '<div class="card"><h4>Marcos e álbum de falas<span>'+k+'/'+MAXM+' falas</span></h4>'+rows+'</div>'+
+    '<div class="card"><h4>Bônus de '+esc(m.name)+'<span>só dos marcos</span></h4><p class="note" style="margin:0;color:#f6ecdf">Agora: <b>'+statTxt(m,statAt(m,k))+'</b> · no marco 5: <b>'+statTxt(m,statAt(m,MAXM))+'</b></p>'+
+      '<h4 style="margin-top:8px">Todos os mentores</h4>'+bonusChips()+'</div>'+
+    '</div></div>'; }
+function sheetGift(){ const m=BY[ST.me], e=m.era, p=ptsOf(e), add=preview(), k=markOf(p), k2=markOf(p+add);
+  const avail=giftable().slice().sort((a,b)=>itemValue(b,e)-itemValue(a,e)), na=ST.bag.filter(x=>x.eq||x.lock);
+  const tile=it=>{ const v=itemValue(it,e), fav=int0(it.e)===e, sel=ST.sel.includes(it.id);
+    return '<button class="it'+(sel?' sel':'')+'" style="--rc:'+RC[it.r]+'" data-act="pick" data-id="'+it.id+'" aria-pressed="'+sel+'" aria-label="'+SLOT[it.slot]+' '+RN[it.r]+' da '+ERA[it.e]+', +'+v+' de amizade'+(fav?', favorito':'')+'">'+
+      (fav?FSTAR:'')+'<span class="ck">'+CHK+'</span><img src="a/'+it.img+'.png" alt=""><small>'+SLOT[it.slot]+' · '+RN[it.r]+'</small><b>+'+v+'</b></button>'; };
+  const ntile=it=>'<button class="it na" style="--rc:'+RC[it.r]+'" data-act="pick" data-id="'+it.id+'" data-why="'+(it.eq?'eq':'lock')+'" aria-disabled="true" aria-label="'+SLOT[it.slot]+(it.eq?' equipada':' trancada')+': não vira presente"><img src="a/'+it.img+'.png" alt=""><small>'+SLOT[it.slot]+' · '+RN[it.r]+'</small><b>'+(it.eq?'equipada':'trancada')+'</b></button>';
+  const step=(kind,ic,name,have,val,per)=>'<div class="sp">'+ic+'<span class="t"><b>'+name+'</b><small>você tem '+nf(have)+' · '+per+' = 1 ponto</small></span>'+
+    '<button class="btn" data-act="'+kind+'m" aria-label="Menos '+name+'"'+(val?'':' disabled')+'>'+MINUS+'</button><span class="v" aria-live="polite">'+val+'</span>'+
+    '<button class="btn" data-act="'+kind+'p" aria-label="Mais '+name+'"'+(val+per<=have?'':' disabled')+'>'+PLUS+'</button></div>';
+  return '<div class="sheet" role="dialog" aria-label="Presente para '+esc(m.name)+'">'+head('Presente · '+esc(m.name),'tmentor')+'<div class="bd">'+
+    '<div class="card hi"><h4>Amizade com '+esc(m.name)+'<span>marco '+k+' de '+MAXM+'</span></h4>'+fbar(p,add)+
+      '<div class="leg"><span>'+FSTAR.replace('class="fs"','width="14" height="14" style="vertical-align:-2px"')+' Peça da '+ERA[e]+' vale <em>+50%</em></span><span>listrado = este presente</span></div></div>'+
+    '<div class="card"><h4>Peças da mochila<span>'+avail.length+' podem virar presente</span></h4>'+
+      (avail.length?'<div class="ig">'+avail.map(tile).join('')+'</div>':'<p class="note">Nenhuma peça sobrando agora.</p>')+
+      '<p class="note">Nunca a <b>equipada</b> nem a <b>trancada</b> no cadeado da Fogueira:</p><div class="ig" style="margin-top:6px">'+na.map(ntile).join('')+'</div></div>'+
+    '<div class="card"><h4>Materiais<span>sobra que não fecha ponto não é gasta</span></h4>'+
+      step('s',STONE,'Pedras de forja',ST.stones,ST.gs,DATA.stonesPer)+step('f',FOOD,'Ração de pet',ST.food,ST.gf,DATA.foodPer)+'</div>'+
+    '</div><div class="gfoot"><div class="sum"><span>Presente: <em>+'+add+' de amizade</em></span>'+(k2>k?'<span class="up">Chega ao marco '+k2+'!</span>':'<span>'+nf(p+add)+' / '+nf(DATA.marks[Math.min(k,MAXM-1)])+'</span>')+'</div>'+
+    '<button class="btn g wide'+(add?'':' off')+'" data-act="give"'+(add?'':' aria-disabled="true"')+'>Dar presente'+(ST.sel.length?' ('+ST.sel.length+' peça'+(ST.sel.length>1?'s':'')+' sai'+(ST.sel.length>1?'em':'')+' da mochila)':'')+'</button></div></div>'; }
+function markPop(){ const x=ST.marks[ST.mi]; if(!x) return ''; const m=BY[ST.me], last=ST.mi>=ST.marks.length-1;
+  return '<div class="dim"></div><div class="mkp" role="alertdialog" aria-label="Marco '+x.mark+' com '+esc(m.name)+'"><div class="top"><img class="bg" src="a/mbg_era'+m.era+'.png" alt="">'+por(m.era,false)+'<span class="prov">retrato provisório (Arte)</span></div>'+
+    '<div class="in"><span class="k">MARCO '+x.mark+' DE '+MAXM+(ST.marks.length>1?' · '+(ST.mi+1)+' de '+ST.marks.length+' novos':'')+'</span><h3>'+esc(m.name)+' confia mais em você</h3><q>'+esc(x.line)+'</q>'+
+    '<span class="gain">'+x.text+'</span>'+
+    (x.title?'<div class="tbox">Título novo<b>'+esc(x.title)+'</b>Aparece no seu perfil. Só enfeite: a força já veio dos marcos.</div>':'')+
+    '<button class="btn y wide" data-act="popnext">'+(last?'Guardar no álbum':'Próximo marco')+'</button></div></div>'; }
+function renderLayer(){ let h='';
+  if(ST.st==='menu') h=ST.menu?menuPanel():'';
+  else if(ST.st==='gal') h=sheetGal();
+  else if(ST.st==='mentor') h=sheetMentor()+markPop();
+  else if(ST.st==='gift') h=sheetGift();
+  lay.innerHTML=h; }
+function renderLeft(){ const sheet=ST.st!=='menu'; $('#shot0').src=sheet?'a/eq_hoje.png':'a/v5_hoje.png';
+  $('#cap0').innerHTML=sheet?'Hoje<small>print real da folha do Equipamento (mesmo cabeçalho e marrom)</small>':'Hoje<small>print real do jogo (v0.13.3, batalha)</small>';
+  $('#cap2').innerHTML=sheet?'Com os Mentores das Eras<small>folha nova, aberta pelo Menu, no estilo do Equipamento</small>':'Com os Mentores das Eras<small>a mesma tela; só o pontinho no Menu e o item Mentores</small>'; }
+function renderSide(){ const b=bonus(), m=BY[ST.me];
+  $('#stl').innerHTML='Momento <b>'+({menu:'Menu',gal:'Os 9 mentores',mentor:ST.marks.length?'Marco alcançado':'Tela do mentor',gift:'Presente'})[ST.st]+'</b> · Nv <b>'+ST.lv+'</b> · chegou até a era <b>'+ERA[ST.eraMax]+'</b> · mentor <b>'+esc(m.name)+'</b> com <b>'+nf(ptsOf(ST.me))+'</b> de amizade (marco <b>'+markOf(ptsOf(ST.me))+'</b>)'+
+    ' · mochila <b>'+ST.bag.length+'</b> peças · pedras <b>'+ST.stones+'</b> · ração <b>'+ST.food+'</b> · bônus: ATK <b>+'+fmtP(b.atkPct)+'%</b>, Vida <b>+'+fmtP(b.hpPct)+'%</b>, crítico <b>+'+fmtP(b.critPct)+'</b>, ouro <b>+'+fmtP(b.goldPct)+'%</b>'+(ST.titles.length?' · títulos <b>'+ST.titles.length+'</b>':'');
+  $('#mseg').innerHTML=DATA.list.map(x=>'<button data-me="'+x.era+'" aria-pressed="'+(x.era===ST.me)+'"'+(unlocked(x.era)?'':' style="opacity:.45"')+'>'+esc(x.name)+'</button>').join(''); }
+function syncPressed(){ document.querySelectorAll('[data-st]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.st===(ST.st==='mentor'&&ST.marks.length?'mark':ST.st))));
+  document.querySelectorAll('[data-lv]').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.lv===ST.lv))); }
+function render(){ renderHud(); renderLayer(); renderSide(); syncPressed(); renderLeft(); }
+function draw(t){ return t; }
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; d.setAttribute('role','status'); scr.appendChild(d); setTimeout(()=>d.remove(),2600); ST.lastToast=t; }
+
+/* ===== navegação ===== */
+const REASON={locked:'Esse mentor ainda não chegou',max:'Amizade máxima: não precisa de presente',empty:'Escolha uma peça, pedras ou ração',items:'Essa peça não pode virar presente',stones:'Pedras insuficientes',food:'Ração insuficiente',era:'Mentor inválido'};
+function openMentor(e){ ST.me=e; ST.hl=unseen(e)?markOf(ptsOf(e)):0; seen(e); delete ST.arr[e]; ST.marks=[]; ST.st='mentor'; render(); }
+function resetGift(){ ST.sel=[]; ST.gs=0; ST.gf=0; }
+function pick(s){ scenario(); ST.menu=true;
+  if(s==='menu'){ ST.st='menu'; }
+  else if(s==='gal'){ ST.st='gal'; }
+  else if(s==='mentor'){ if(!unlocked(ST.me)) ST.me=1; openMentor(ST.me); return; }
+  else if(s==='gift'){ if(!unlocked(ST.me)||markOf(ptsOf(ST.me))>=MAXM) ST.me=2; ST.st='gift'; if(ST.me===2){ ST.sel=['b6']; ST.gs=4; } }
+  else if(s==='mark'){ ST.me=1; ST.o.pts[1]=1190; ST.o.seen[1]=4; const r=gift(1,{stones:20}); ST.marks=r.newMarks; ST.mi=0; ST.hl=0; ST.st='mentor'; }
+  render(); }
+function act(a,d){ d=d||{}; let r;
+  if(a==='menu'){ ST.menu=!ST.menu; render(); }
+  else if(a==='oldmenu') toast('Abre a tela '+d.l+', como hoje');
+  else if(a==='open'){ if(!isOpen()){ toast('Os Mentores abrem no Nv 16'); return; } ST.st='gal'; render(); }
+  else if(a==='close'){ ST.st='menu'; ST.menu=false; render(); }
+  else if(a==='tgal'){ ST.st='gal'; ST.marks=[]; render(); }
+  else if(a==='mentor'){ const e=int0(+d.era); if(!unlocked(e)){ toast('Esse mentor chega quando você chegar à era '+ERA[e]); return {ok:false,reason:'locked'}; } openMentor(e); }
+  else if(a==='tmentor'){ ST.hl=0; ST.st='mentor'; render(); }
+  else if(a==='giftopen'){ if(markOf(ptsOf(ST.me))>=MAXM){ toast(REASON.max); return {ok:false,reason:'max'}; } resetGift(); ST.st='gift'; render(); }
+  else if(a==='pick'){ if(d.why){ toast(d.why==='eq'?'A peça equipada nunca vira presente':'Peça trancada no cadeado da Fogueira: destranque para dar'); return {ok:false,reason:'items'}; }
+    const i=ST.sel.indexOf(d.id); if(i>=0) ST.sel.splice(i,1); else if(giftable().some(x=>x.id===d.id)) ST.sel.push(d.id); render(); }
+  else if(a==='sp'){ if(ST.gs+DATA.stonesPer<=ST.stones) ST.gs+=DATA.stonesPer; render(); }
+  else if(a==='sm'){ ST.gs=Math.max(0,ST.gs-DATA.stonesPer); render(); }
+  else if(a==='fp'){ if(ST.gf+DATA.foodPer<=ST.food) ST.gf+=DATA.foodPer; render(); }
+  else if(a==='fm'){ ST.gf=Math.max(0,ST.gf-DATA.foodPer); render(); }
+  else if(a==='give'){ r=gift(ST.me,{items:ST.sel.slice(),stones:ST.gs,food:ST.gf}); if(!r.ok){ toast(REASON[r.reason]||'Não deu'); return r; }
+    resetGift(); ST.hl=0; ST.st='mentor';
+    if(r.newMarks.length){ ST.marks=r.newMarks; ST.mi=0; render(); } else { ST.marks=[]; render(); toast('+'+r.pts+' de amizade com '+BY[ST.me].name); } return r; }
+  else if(a==='popnext'){ if(ST.mi<ST.marks.length-1){ ST.mi++; render(); return; } const n=ST.marks.length, lastM=ST.marks[n-1]; seen(ST.me); ST.marks=[]; ST.mi=0; ST.hl=lastM?lastM.mark:0; render(); toast(n>1?n+' falas novas no álbum':'Fala nova guardada no álbum'); } }
+scr.addEventListener('click',e=>{ const b=e.target.closest('[data-act]')||e.target.closest('button'); if(!b||!b.dataset||!b.dataset.act) return; act(b.dataset.act,b.dataset); });
+
+function sim(k){
+  if(k==='era'){ if(ST.eraMax>=8){ toast('Já chegou à última era'); return; } ST.eraMax++; ST.arr[ST.eraMax]=true; const m=BY[ST.eraMax]; render();
+    toast(isOpen()?'Era '+ERA[ST.eraMax]+': '+m.name+', '+m.role+', chegou aos Mentores':'Era nova (os Mentores abrem no Nv 16)'); }
+  else if(k==='items'){ const pool=POOL.filter(x=>x.e<=ST.eraMax); for(let i=0;i<3;i++){ const x=pool[(ST.nid+i)%pool.length]; ST.bag.push(Object.assign({id:'n'+(ST.nid+i)},x)); } ST.nid+=3; render(); toast('3 peças novas na mochila'); }
+  else if(k==='mats'){ ST.stones+=20; ST.food+=100; render(); }
+  else if(k==='near'){ const e=ST.me; if(!unlocked(e)){ toast('Esse mentor ainda não chegou'); return; } const kk=markOf(ptsOf(e)); if(kk>=MAXM){ toast('Amizade máxima'); return; }
+    ST.o.pts[e]=DATA.marks[kk]-5; ST.o.seen[e]=kk; render(); }
+  else if(k==='reset'){ const s=ST.st==='mentor'&&ST.marks.length?'mark':ST.st; pick(s); } }
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.st) pick(d.st);
+  else if(d.lv){ ST.lv=+d.lv; if(!isOpen()&&ST.st!=='menu'){ ST.st='menu'; ST.menu=true; } render(); }
+  else if(d.me!=null&&d.me!==undefined&&d.me!==''){ const e=+d.me; if(!unlocked(e)){ toast(BY[e].name+' chega na era '+ERA[e]); return; } ST.me=e; if(ST.st==='gift'&&markOf(ptsOf(e))>=MAXM){ openMentor(e); return; } if(ST.st==='gift'){ resetGift(); render(); } else openMentor(e); }
+  else if(d.sim) sim(d.sim); });
+
+$('#lines').innerHTML=DATA.list.map(m=>'<details class="ln"><summary>'+ERA[m.era]+' · '+esc(m.name)+', '+esc(m.role)+' · '+SHORT[m.stat]+' +'+fmtP(m.per)+(m.stat==='critPct'?'':'%')+'/marco · título '+esc(m.title)+'</summary><ol>'+m.lines.map(l=>'<li>'+esc(l)+'</li>').join('')+'</ol></details>').join('');
+scenario(); ST.st='menu'; ST.menu=true; render();
+window.__mentoresTeste={ST,DATA,CAP,render,pick,act,sim,gift,seen,bonus,markOf,itemValue,giftable,unlocked,preview,badgeN};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-mentores';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Mentores das Eras',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
