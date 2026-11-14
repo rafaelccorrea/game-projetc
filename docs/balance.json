@@ -1430,23 +1430,33 @@
       ],
       "surviveSecAt100": 40,
       "furyAtSec": [
-        27,
-        27,
-        27,
+        30,
+        28.5,
+        29,
         27,
         24,
         27,
-        27,
+        29,
         27,
         27
       ],
       "furyDmgMult": 4,
       "furyFrom": "boss",
-      "escortSec": 10,
+      "escortSec": [
+        6.5,
+        6.5,
+        6.5,
+        10,
+        10,
+        10,
+        6.5,
+        10,
+        10
+      ],
       "fromRecOnly": true,
       "waveIncludesEscorts": true,
       "_uso": "Vida e dano do chefe saem SÓ da FC pedida da fase (nunca do herói do momento). A onda do chefe (2 escoltas + chefe) inteira: com 100% da FC pedida o herói vence em ~32 s e aguentaria ~40 s. Conta: com a vida/dano que essa FC dá no Sys.stats, chefe = (32 s × DPS) − vida das escoltas; dano do chefe = (vida ÷ 40 s) − dano das escoltas. Fúria aos 40 s (x4).",
-      "_calibracao": "14/11 (Sistemas): calibrado na batalha real sem navegador (test/e2e/_cal.js, herói de referência Sys.stats.refFromFc ligado, arma da era, 12 lutas por caso, vida cheia no começo da onda do chefe). Listas = um valor por era (0 a 8). Rodada 2 (sem o dano novo dos comuns): vitórias com 100% / 90% da FC pedida = era 0 12/7, era 1 12/7, era 2 12/10, era 3 11/6, era 4 12/12, era 5 10/6, era 6 8/7, era 7 11/6, era 8 11/6. Depois de commons.dmgPostDefShareOfBoss 0,25, era 4 com killSec 33 (era 30) e fúria aos 24 s (era 27): 9/12 e 6/12; era 6 com killSec 33: 9/12 e 4/12. As outras eras NÃO foram medidas de novo com o dano novo dos comuns. escortSec 10 = a fase das escoltas medida; furyFrom boss = a fúria conta desde que o chefe para no lugar."
+      "_calibracao": "14/11 (Sistemas): calibrado na batalha real sem navegador (test/e2e/_cal.js, herói de referência Sys.stats.setRefFc ligado, arma da era, 12 lutas por caso, vida cheia no começo da onda do chefe). Listas = um valor por era (0 a 8). Rodada com o código e750701 e commons.dmgPostDefShareOfBoss 0,25 (vitórias 100% / 90% da FC pedida, quedas com menos de 5 s = defeito da medida, fora da conta): era 0 10/12 e 6/12 (34 s), era 1 12/12 e 6/12 (35 s), era 2 12/12 e 8/11 (34 s), era 3 10/11 e 9/12 (30 s), era 4 8/12 e 5/11 (30 s), era 5 5/6 e 4/11 (31 s), era 6 9/9 e 3/6 (34 s), era 7 10/11 e 4/11 (30 s), era 8 11/12 e 7/12 (30 s). escortSec 6,5 nas eras 0, 1, 2 e 6: as escoltas caem aos 4,6 a 8,3 s (diff.js do Engenheiro, fase 10 vencia em ~29 s contra killSec 33); com 6,5 a onda do chefe leva ~34 s. A vida maior do chefe derrubava os 90% para 0-3/12 (o herói cai logo depois da fúria), por isso a fúria dessas eras foi para 28,5-30 s. Eras 3, 4, 5, 7 e 8 ficaram com escortSec 10 (dentro do alvo; onda em ~30 s). furyFrom boss = a fúria conta desde que o chefe para no lugar."
     },
     "commons": {
       "hpShareOfBoss": 0.1,
