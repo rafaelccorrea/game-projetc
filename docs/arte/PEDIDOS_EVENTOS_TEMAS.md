@@ -75,3 +75,29 @@ Variantes: A = "dark rich background, deep shadows, warm rim lights"; B = "brigh
 
 Cuidados nas peças (lote 2, só depois do voto): sem os sacos de ouro com "$" da Forja B (ouro escasso); sem baús ou sorteio (Caçada A tem baús); na Festa dos Pets usar o pet real (a Pets A trocou o pet pelo grifo).
 Gasto acumulado lotes 1+2: ~12 de 32.
+
+## Voto do dono (14/11): Caçada = A (526b31f0), Forja = B (88a877ea), Pets = A (c7e2f136)
+
+## Lote 2: prompts prontos (teto ~16; 6 imagens ≈ 12)
+
+Regras em todas: sem texto, sem saco de ouro, sem "$" e sem pilha de moedas, sem baú nem sorteio, nada sensual. Na Festa, o pet é o dragãozinho (ref 079d8337-2f6c-4868-97c5-26be63a0f7a6), nunca o grifo.
+
+**2.1-2.3 Fundos** (`nano_banana_pro`, 9:16, 2k; ref 1 = o mock votado do tema):
+"Background painting only for a mobile game event screen, portrait 9:16, same painted chibi-fantasy style, palette and lighting as image 1. <CENA>. No UI, no text, no characters, no creatures, no medallions, no coins, no money bags, no chests. The top third is calm sky or ceiling (a title bar sits over it); the middle and lower part is an open, readable painted landscape with a winding path, the center kept free of big objects (the game draws the trail and the boss on top). Detail at the edges only."
+- Caçada (A, escuro): "a dark wild boss-hunting ground at dusk: torn hunters' banners, crossed spears, trophy shields and antler racks at the edges, deep shadows, warm torch rim light"
+- Forja (B, claro): "a bright warm dwarven forge hall in daylight: anvils, bellows, cooling racks of plain steel tools and molten metal channels at the edges, sparks, vivid cheerful colors; no gold, no coins"
+- Pets (A, escuro): "a festive meadow at evening: ribbons, paper lanterns, bunting, pet food bowls and little tents at the edges, deep blue shadows, warm lantern glow"
+
+**2.4 Ícones 3×3** (`nano_banana_pro`, 1:1, 2k; refs = os 3 mocks votados):
+"A 3x3 grid of nine separate mobile game icons, each centered in its own equal cell with wide empty margins, on a flat pure green background (#00FF00), painted chibi-fantasy style of the references, bold dark outline, no text, no green on the icons, nothing touching the cell edges. Row 1 (event theme icons): a hunting horn over crossed spears on a shield; a hammer striking an anvil with sparks; a paw print with a red ribbon bow. Row 2 (small currency icons, very simple big silhouettes readable at 20 pixels): a bronze trophy cup; a small forge hammer; a red ribbon bow. Row 3 (grand prize milestone medallions, round): a hunter's emblem with antlers; a sword lying on an anvil; a paw-print medallion tied with a bow."
+Saída: linha 1 → `icon.png` 128, linha 2 → `points.png` 96, linha 3 → `frame.png` 128 (cacada_chefes, semana_forja, festa_pets).
+
+**2.5 Molduras da loja 2×2** (`nano_banana_pro`, 1:1, 2k; ref 1 = `assets/ui/frames/ouro.png`, ref 2 = Caçada A, ref 3 = Pets A):
+"A 2x2 grid of four round portrait frames for a mobile game profile, each centered in its own cell, same construction and thickness as image 1 (an ornate ring with an EMPTY transparent-looking round window in the middle, the window about 62% of the frame width), on flat pure green (#00FF00), no text, no portrait inside. Top row: two variants of a 'Hunter' frame (dark bronze and leather ring with small antlers and crossed spears, a tiny trophy at the bottom), matching image 2. Bottom row: two variants of a 'Pet Festival' frame (ring of ribbons, bunting and small paw prints, a bow at the bottom), matching image 3."
+Saída: o melhor de cada linha → `assets/ui/frames/evt_cacada.png` e `evt_pets.png`, 256×256, janela de 160.
+
+**2.6 Armas de evento** (`nano_banana_pro`, 1:1, 1k; ref 1 = `assets/weapons/era2_t1.png`):
+"Two separate game weapon sprites side by side for a chibi mobile RPG, same painted style and outline as image 1, each one whole, diagonal, handle at the bottom, flat pure green background (#00FF00), no shadow, no text, no hand, no character, nothing floating, no glow, no sparks, no green or magenta on the weapons. Left: 'Lâmina do Caçador', a long curved hunting sword with an antler hilt, leather grip wrap and a small bronze trophy pommel. Right: 'Martelo das Eras', a heavy two-handed war hammer whose head is made of layered bands of stone, bronze and steel, a dark wooden handle with iron rings."
+Saída: sprite (lado ≤ 1024) + ícone 256 por código; chaves `cacada_weapon` e `forja_weapon` (grip no meta.json pela Arte).
+
+Pós-produção (Arte, custo 0, fora de assets/): recorte do verde (`key.js`), divisão da grade (`icn/split4.js` / cut), redução para os tamanhos, JPG 82 dos fundos, conferência e cópia para assets/ por tema.
