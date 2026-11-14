@@ -60,7 +60,7 @@ const CSS = `
 #fbhud #fgx{position:absolute;inset:0;pointer-events:none;z-index:7;font-family:Nunito,system-ui,sans-serif;color:#f6ecdf}
 #fbhud #fgx>div{pointer-events:none}#fbhud #fgx button,#fbhud #fgx .fgx-c,#fbhud #fgx .fgx-sh{pointer-events:auto}
 #fgx *{box-sizing:border-box}#fgx button{font-family:inherit;cursor:pointer;color:inherit}
-.fgx-b{position:absolute;left:118px;top:calc(100% - 100px);width:84px;height:94px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:1px}
+.fgx-b{position:absolute;left:calc(50% - 42px);top:calc(100% - 100px);transform:scale(1.2);transform-origin:50% 100%;width:84px;height:94px;padding:0;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:1px}
 .fgx-w{position:relative;width:80px;height:80px;display:grid;place-items:center}
 .fgx-i{position:relative;width:70px;height:70px;border-radius:50%;overflow:hidden;border:3px solid #c8642a;background:radial-gradient(circle at 50% 72%,#6a2a10,#1d1611 70%);box-shadow:0 6px 16px rgba(0,0,0,.5);display:block}
 .fgx-i::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 62%,rgba(255,150,60,.42),rgba(255,120,30,0) 62%);animation:fgxfl 1.7s ease-in-out infinite;pointer-events:none}
@@ -80,7 +80,7 @@ const CSS = `
 .fgx-lb{font-size:10.5px;line-height:12px;font-weight:900;color:#ffd3a6;text-shadow:0 1px 2px #000,0 0 5px #000;white-space:nowrap}
 .fgx-b.pulse .fgx-i{animation:fgxp 1.1s ease-in-out infinite}
 .fgx-b:active .fgx-i{transform:scale(.93)}
-.fgx-g{position:absolute;left:112px;top:calc(100% - 98px);width:26px;height:26px;border-radius:50%;border:2px solid #1a110b;background:#6a5a48;padding:0;display:grid;place-items:center;z-index:1}
+.fgx-g{position:absolute;left:calc(50% - 64px);top:calc(100% - 118px);width:26px;height:26px;border-radius:50%;border:2px solid #1a110b;background:#6a5a48;padding:0;display:grid;place-items:center;z-index:1}
 .fgx-g::after{content:"";position:absolute;inset:-8px}.fgx-g svg{width:15px;height:15px}
 @keyframes fgxfl{0%,100%{opacity:.55}50%{opacity:1}}
 @keyframes fgxp{50%{box-shadow:0 0 0 3px #ffd25e,0 0 22px rgba(255,190,80,.95)}}
@@ -216,7 +216,7 @@ function layout(){ ST.lay = false; if (!M) return; const app = gid('app'); if (!
   const colH = 3 * fbt + 2 * 2 + 8, fits = top + colH <= feet - 240;
   if (fits){ par.style.cssText = 'position:absolute;right:6px;top:' + top.toFixed(0) + 'px'; el.style.cssText = 'border-radius:26px;padding:3px;box-sizing:border-box;display:flex;flex-direction:column;gap:2px'; ST.spdMode = 'col'; }
   else { /* tela baixa: a coluna entraria na faixa dos inimigos; a fila fica deitada à esquerda, logo ACIMA da Fogueira e abaixo dos pés do herói */
-    par.style.cssText = 'position:absolute;left:10px;top:' + (Hb - 110 - fbt).toFixed(0) + 'px'; el.style.cssText = SPD_ORIG.a; ST.spdMode = 'row'; } }
+    par.style.cssText = 'position:absolute;right:6px;top:' + (Hb - 28 - fbt).toFixed(0) + 'px'; el.style.cssText = SPD_ORIG.a; ST.spdMode = 'row'; } }
 function layKey(){ let k = ''; try { if (typeof FB_MENU !== 'undefined') for (const m of FB_MENU) if (m.side === 'right'){ const e = gid('fbm_' + m.id); k += m.id + (e && e.style.display !== 'none' ? (m.cy != null ? m.cy : m.y) : 'x') + ','; } } catch (e) {} return k; }
 
 /* ---------- mochila: abrir espaço pela regra do módulo (desmonta a pior destrancada; a luta nunca para) ---------- */
@@ -345,7 +345,7 @@ function renderOff(){ if (!M) return; const h = OFF ? `<div class="fgx-c" role="
 
 /* ---------- faíscas no canvas da batalha (px lógicos da cena; teto MAX_FLY; nada é creditado aqui: o ganho é do módulo) ---------- */
 function target(){ if (TGT) return TGT; try { const e = gid('fgx_b'); if (e && typeof cv !== 'undefined' && typeof LW === 'number'){ const cr = cv.getBoundingClientRect(), k = cr.width / LW, r = e.getBoundingClientRect(); if (k > 0 && r.width > 0) return TGT = { x: (r.left + r.width / 2 - cr.left) / k, y: (r.top + r.height * 0.42 - cr.top) / k }; } } catch (e) {}
-  const lw = typeof LW === 'number' ? LW : 330, lh = typeof LH === 'number' ? LH : 714; return TGT = { x: lw * 160 / 390, y: lh - 46 }; }
+  const lw = typeof LW === 'number' ? LW : 330, lh = typeof LH === 'number' ? LH : 714; return TGT = { x: lw * 195 / 390, y: lh - 52 }; }
 function fly(k, x, y, delay, txt){ if (FLY.length >= MAX_FLY) return false; FLY.push({ k, x0: +x || 0, y0: +y || 0, t: -(delay || 0), dur: k === 'bra' ? 1 : 0.9, arc: k === 'bra' ? 46 : 38, txt: txt || '' }); return true; }
 /* abate: a faísca só voa quando o abate CONTA para o pote (Sys.bonfire.killCounts: só fase nova) */
 function onKill(x, y){ if (!M) return false; try { if (!BF().killCounts(S, S.stage, S.best)) return false; } catch (e) { return false; } return fly('ember', x, y, 0, ''); }

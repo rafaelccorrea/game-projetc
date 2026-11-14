@@ -98,7 +98,7 @@ els.app = { clientWidth: 390, clientHeight: 844 };
   const h = html(); assert(h.includes('data-fg="forge"') && h.includes('data-fg="sheet"') && h.includes('id="fgx_bra"') && h.includes('id="fgx_pot"') && h.includes('id="fgx_au"') && h.includes(F.FOG_ART(1)));
   assert.strictEqual(st().hud.lv, 1); assert.strictEqual(st().hud.bra, 0); assert.strictEqual(st().card, null); sane('montada');
   assert.strictEqual(st().speed, 'col'); assert(/right:6px;top:232px/.test(spdPar.style.cssText) && /flex-direction:column/.test(spd.style.cssText), 'x1/x2/x4 em coluna à direita, abaixo do Baú'); assert.strictEqual(spd.children.length, 0, 'nenhum botão de velocidade criado');
-  els.app = { clientWidth: 360, clientHeight: 640 }; wl.resize(); ticks(1); assert.strictEqual(st().speed, 'row', 'tela baixa: fora da faixa dos inimigos'); assert(/left:10px/.test(spdPar.style.cssText));
+  els.app = { clientWidth: 360, clientHeight: 640 }; wl.resize(); ticks(1); assert.strictEqual(st().speed, 'row', 'tela baixa: fora da faixa dos inimigos'); assert(/right:6px/.test(spdPar.style.cssText), 'a fila deitada fica à direita (os golpes foram para a esquerda e a Fogueira para o centro)');
   els.app = { clientWidth: 390, clientHeight: 844 }; wl.resize(); ticks(1); assert.strictEqual(st().speed, 'col');
   out.push('ligada: monta no HUD (botão, engrenagem, selo de Brasas, arco do pote, estágio 1); x1/x2/x4 reposicionados sem criar botão'); }
 
