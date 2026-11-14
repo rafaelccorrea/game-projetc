@@ -65,6 +65,10 @@ function finish(S,host,score){ if(!ST.started) return Promise.resolve({ok:false,
     let r; try{ r=await call('POST','/thief/finish',{runId:id,score:sc}); }
     catch(e){ const f=fail(e);
       /* corrida que o servidor já fechou (already_finished, expired, runId desconhecido): sai dela sem pagar. too_fast e rede: a corrida fica para tentar de novo */
+      /* reenvio (a resposta do 1º finish se perdeu): o 409 already_finished traz details {brasas, total} = o que ESTA corrida pagou. Credita uma vez (paid por runId) */
+      const d=f.details&&typeof f.details==='object'?f.details:null;
+      if(f.reason==='already_finished'&&d&&d.brasas!=null){ const out=M.serverFinish(S,host,id,{brasas:d.brasas,score:sc});
+        await refresh(S,host).catch(()=>null); if(out.ok){ out.recovered=true; out.best=M.ensure(S).best; out.left=M.view(S,host).left; out.total=d.total; } return out; }
       if(f.reason==='already_finished'||f.reason==='expired'||f.reason==='not_found'){ const x=M.ensure(S); if(x.run&&x.run.id===id) x.run=null; await refresh(S,host).catch(()=>null); }
       return f; }
     const out=M.serverFinish(S,host,id,r); if(!out.ok) return out;

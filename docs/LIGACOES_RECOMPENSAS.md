@@ -548,6 +548,6 @@ window.PCamp={X:X,actions:ACTIONS,def:def};
 3. **Encruzilhada apagava uma fase tarde** (na 1ª vitória da era nova, não na do Senhor da Era): corrigido no `Sys.crossroads`, com teste.
 4. **Forja Astral não entrava na FC**: corrigido no `Sys.stats`, com teste.
 5. **`Sys.thief` e `Sys.camp` não são carregados** pelo `index.html` (L1).
-6. **Ladrão de Brasas online**: resolvido pelo `Sys.thiefNet` (seção 2.1; desligado). Falta colar N1-N3. Resto: se a resposta do `finish` se perder na rede, o reenvio dá 409 `already_finished` sem o valor e essas Brasas não entram (pedido ao Servidor: mandar `{brasas}` no `details` desse 409).
+6. **Ladrão de Brasas online**: resolvido pelo `Sys.thiefNet` (seção 2.1; desligado). Falta colar N1-N3. Resposta do `finish` perdida na rede: o reenvio recebe 409 `already_finished` com `details {brasas, total}` (servidor 07a5075) e o `Sys.thiefNet` credita essas Brasas uma vez (`recovered:true`); corrida expirada devolve 0.
 7. **Ícone do Acampamento** no Menu: não existe `assets/icons/menu/camp.png` (K2 usa o da guilda, provisório). Pedido para a Arte.
 8. **Ladrão sem protótipo** em `docs/proto/v2`: a tela precisa passar pelo voto do dono.

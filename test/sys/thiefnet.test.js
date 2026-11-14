@@ -24,7 +24,7 @@ function server(o) {
     'POST /thief/enter': () => { if (sv.entries >= sv.perDay) return { err: 'daily_limit', status: 429, retryAfterMs: 3600000, details: { key: 'thief', perDay: sv.perDay } };
       sv.entries++; sv.runId = 'run' + (++sv.seq); sv.runDone = false; sv.runMax = LOT(sv.fireLv); sv.runLv = sv.fireLv;
       return { runId: sv.runId, seed: 77, startsAt: 1000, endsAt: 46000, maxBrasas: sv.runMax, entriesLeft: sv.perDay - sv.entries }; },
-    'POST /thief/finish': b => { if (!sv.runId || sv.runId !== String(b.runId)) return { err: 'not_found', status: 404 }; if (sv.runDone) return { err: 'already_finished' };
+    'POST /thief/finish': b => { if (!sv.runId || sv.runId !== String(b.runId)) return { err: 'not_found', status: 404 }; if (sv.runDone) return sv.oldServer ? { err: 'already_finished' } : { err: 'already_finished', details: { brasas: sv.lastReward, total: sv.total } };
       const sc = Math.max(0, Math.min(1, Number(b.score) || 0)), br = Math.round(sc * sv.runMax); sv.runDone = true; sv.lastReward = br; sv.total += br;
       if (sc >= 1 && sv.runLv > sv.bestLv) sv.bestLv = sv.runLv; return { brasas: br, score: sc, maxBrasas: sv.runMax, total: sv.total }; },
     'POST /thief/sweep': () => { if (!sv.bestLv) return { err: 'nothing_to_sweep' }; if (sv.entries >= sv.perDay) return { err: 'daily_limit', status: 429, retryAfterMs: 3600000 };
@@ -120,8 +120,18 @@ const bra = S => BF.ensure(S).bra, got = S => BF.ensure(S).got;
     assert.ok(a.ok); assert.strictEqual(b.reason, 'busy'); assert.strictEqual(sv.calls.filter(c => c.path === '/thief/finish').length, 1); assert.strictEqual(bra(w.S), 5);
   });
 
-  await t('409 already_finished (resposta perdida) e not_found: sai da corrida sem pagar de novo', async () => {
+  await t('409 already_finished com details {brasas} (resposta perdida): credita o que ESTA corrida pagou, uma vez só', async () => {
     const { w, sv } = await started(null, 12);
+    await TN.enter(w.S, w.host); sv.lose = true;
+    const r = await TN.finish(w.S, w.host, 1); assert.strictEqual(r.reason, 'offline');
+    const r2 = await TN.finish(w.S, w.host, 1); assert.strictEqual(r2.ok, true); assert.strictEqual(r2.recovered, true); assert.strictEqual(r2.brasas, 5);
+    assert.strictEqual(bra(w.S), 5); assert.strictEqual(TH.ensure(w.S).run, null);
+    assert.strictEqual(TH.serverFinish(w.S, w.host, 'run1', { brasas: 5 }).reason, 'paid', 'o mesmo runId não paga de novo');
+    assert.strictEqual(bra(w.S), 5);
+  });
+
+  await t('409 already_finished sem details (servidor antigo) e not_found: sai da corrida sem pagar de novo', async () => {
+    const { w, sv } = await started(null, 12); sv.oldServer = true;
     await TN.enter(w.S, w.host); sv.lose = true;
     const r = await TN.finish(w.S, w.host, 1); assert.strictEqual(r.reason, 'offline'); assert.strictEqual(TH.ensure(w.S).run.id, 'run1', 'rede: a corrida fica para tentar de novo');
     const r2 = await TN.finish(w.S, w.host, 1); assert.strictEqual(r2.reason, 'already_finished'); assert.strictEqual(r2.local, 'run');
