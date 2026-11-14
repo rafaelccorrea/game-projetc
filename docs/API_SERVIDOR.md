@@ -482,7 +482,8 @@ Pedido da Sistemas (docs/SISTEMA_MATRIZ.md, 1e54f3f). Nada é vendido em nenhum 
 - `GET /v1/guild/fire` → `{guildId, flames, level, name, into, need, extra, max, next, perks:{goldPct, xpPct}, free, bra, braLeft, freeFlames, mine, fed, brasaCap, joinedAt, reached:{"2":ms,…,"x1":ms}, chests:[{id, level, extra, reachedAt, chest:{goldk, forge, food}}], resetIn}`. Já traz o `{guildId, flames, free, bra}` do `applyServer`.
 - **Alimentar** `POST /v1/guild/fire/feed {kind:'free'|'brasa', n}`. O limite é POR JOGADOR, não por guilda: 1 grátis por dia e Brasas até 20 por dia (429 `daily_limit`). Devolve as chamas somadas.
   - **Anti-trapaça:** as Brasas dadas na vida não podem passar do `got` da Fogueira do último save do jogador. Save sem `got`: 409 `brasas_unverified`; acima: 409 `brasas_over` `{left}`. As Brasas saem do estoque (o `got` não muda).
-- **Baú** `POST /v1/guild/fire/claim/:id` (`'2'`…`'10'`, ou `'xN'` para os extras do nível 10) → `{ok, id, level, extra, chest, mailed:true}`, pelo correio, `{goldk: 40×L, forge: L, food: 10×L}`.
-  - SÓ para quem entrou ANTES do nível ser alcançado (o servidor guarda a hora de cada nível): senão 403 `joined_after`. Uma vez (409 `already_claimed`); nível não alcançado: 409 `not_ready`.
-  - Com o servidor ligado, o `claim` local do jogo não credita de novo.
-- Números (chamas, níveis, extras, perks) = os do `guildfire.js`. O `guildfire.js` não está no `game-sys/` do servidor, então, se a Sistemas recalibrar, mude nos DOIS lugares.
+- **Baú AUTOMÁTICO (PO 14/11; fps-server 679191b):** quando a guilda sobe de nível (e a cada baú extra do nível 10), o SERVIDOR manda o baú ao correio de cada membro que já estava na guilda ANTES de o nível ser alcançado (o servidor guarda a hora de cada nível e a entrada do membro).
+  - Carta `source:'guildfire'`, ref `gf:<guilda>:<nível|xN>:<membro>`, `att {goldk: chest.goldK × L, forge: L, food: 10 × L}`. Uma vez por membro e marca.
+  - O `feed` devolve `chestsMailed` (quantos baús essa alimentação mandou). O jogo NÃO credita localmente: só mostra "enviado ao seu correio".
+  - `POST /v1/guild/fire/claim/:id` fica de RESERVA, para um baú que tenha ficado para trás: já foi = 409 `already_claimed`; entrou depois = 403 `joined_after`; não alcançado = 409 `not_ready`.
+- **Números** (chamas, níveis, extras, baú, perks) saem do próprio `guildfire.js` do jogo, na cópia fixada `game-sys/` (fps-server fdfe4c7). Uma fonte só: o `release.sh` para se a cópia divergir do jogo. O mesmo vale para os números da Dupla (`duo.js`).
