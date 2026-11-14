@@ -70,7 +70,7 @@ function auOn(){ return typeof view!=='undefined'&&view==='auction'; }
 .au-grid{flex:none;display:grid;gap:8px}
 .au-nar .au-ic{width:44px;height:44px}.au-nar .au-rp,.au-nar .au-ex{padding:0 4px;letter-spacing:0}.au-nar .au-ex{font-size:9px}   /* tela abaixo de 340 px: os selos (raridade, EXEMPLO) cabem ao lado do ícone, sem corte */
 .au-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px;border-radius:16px;border:2px solid var(--rc);background:linear-gradient(180deg,var(--rb) 0%,#19120d 62%);text-align:left;min-width:0;overflow:hidden;box-sizing:border-box;color:#f6ecdf!important}
-.au-card.hi{animation:au-rG 2.2s ease-in-out infinite}
+.au-card.hi{width:auto;height:auto;object-fit:initial;vertical-align:baseline;animation:au-rG 2.2s ease-in-out infinite}
 .au-new .au-card{animation:au-cardIn .4s cubic-bezier(.2,1.2,.4,1) both}
 .au-new .au-card.hi{animation:au-cardIn .4s cubic-bezier(.2,1.2,.4,1) both,au-rG 2.2s ease-in-out .4s infinite}
 @keyframes au-cardIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}

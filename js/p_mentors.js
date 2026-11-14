@@ -22,13 +22,13 @@ const meMix=(c,k)=>{ const v=parseInt(c.slice(1),16), f=x=>Math.round(x*(1-k)).t
 const ME_LOCK='<circle cx="50" cy="62" r="19" fill="#120d09" stroke="#ffc94a" stroke-width="2.5"/><path d="M41 60h18v14H41zM45 60v-6a5 5 0 0110 0v6" fill="none" stroke="#ffd25e" stroke-width="3.4" stroke-linejoin="round"/>';
 /* artOf(era, state): state '' = o mentor · 'lock' = ainda não chegou (silhueta escura com cadeado, sem nome) */
 function artOf(era,state){ era=Math.max(0,Math.min(ME_ERA.length-1,era|0));
-  if(ME_ART_ON) return '<img src="'+esc2(ME_ART_DIR+'m'+era+'.png')+'" alt=""'+(state?' class="lk"':'')+'>';
+  const img=ME_ART_ON?'<img src="'+esc2(ME_ART_DIR+'m'+era+'.png')+'" alt=""'+(state?' class="lk"':'')+' onload="try{this.previousElementSibling.style.visibility=\'hidden\'}catch(e){}" onerror="this.style.display=\'none\';try{this.previousElementSibling.style.visibility=\'\'}catch(e){}">':'';
   let ini=''; try{ const m=mM().byEra(era); ini=m&&m.name?String(m.name).charAt(0).toUpperCase():''; }catch(e){ ini=''; }
   const c=ME_ERA[era];
-  if(state) return '<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="120" fill="#1b1714"/><circle cx="50" cy="44" r="20" fill="#060403"/><path d="M12 120c0-27 17-41 38-41s38 14 38 41z" fill="#060403"/>'+ME_LOCK+'</svg>';
+  if(state) return '<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="120" fill="#1b1714"/><circle cx="50" cy="44" r="20" fill="#060403"/><path d="M12 120c0-27 17-41 38-41s38 14 38 41z" fill="#060403"/>'+ME_LOCK+'</svg>'+img;
   return '<svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="120" fill="'+meMix(c,0.35)+'"/><ellipse cx="50" cy="30" rx="46" ry="34" fill="'+c+'" opacity=".55"/>'
     +'<circle cx="50" cy="44" r="20" fill="'+meMix(c,0.72)+'"/><path d="M12 120c0-27 17-41 38-41s38 14 38 41z" fill="'+meMix(c,0.72)+'"/>'
-    +'<circle cx="50" cy="99" r="14" fill="#ffd25e" stroke="#9a5a10" stroke-width="2.5"/><text x="50" y="105" text-anchor="middle" font-family="Nunito,system-ui,sans-serif" font-size="17" font-weight="900" fill="#2a1403">'+esc2(ini)+'</text></svg>'; }
+    +'<circle cx="50" cy="99" r="14" fill="#ffd25e" stroke="#9a5a10" stroke-width="2.5"/><text x="50" y="105" text-anchor="middle" font-family="Nunito,system-ui,sans-serif" font-size="17" font-weight="900" fill="#2a1403">'+esc2(ini)+'</text></svg>'+img; }
 const ME_RC=['#a9b3c9','#4fa3ff','#b46bff','#ff4f6d','#ffa434','#8ff5ff'];   /* cores de raridade das telas V2 */
 const ME_RN=['Básico','Raro','Épico','Mítico','Lendário','Divino'];
 const ME_HEART='<svg class="me-hrt" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 17.5C4 13 1.5 10 1.5 6.8A4.3 4.3 0 0110 5a4.3 4.3 0 018.5 1.8c0 3.200-2.500 6.200-8.500 10.700z" fill="#ff5a6e" stroke="#7a1626" stroke-width="1.2"/></svg>';
@@ -76,7 +76,8 @@ function mTrial(era){ try{ const T=window.Sys&&Sys.trial; if(!T||!T.DATA||T.DATA
 .me-cd.max,.xs .me-cd.max{border-color:var(--me-gold)}
 .me-cd.no,.xs .me-cd.no{background:#17120e;border-color:#3d342c}
 .me-cd:active{transform:translateY(2px)}
-.me-por{display:block;width:100%;aspect-ratio:5/6;border-radius:9px;overflow:hidden;background:#120d09}
+.me-por{display:block;position:relative;width:100%;aspect-ratio:5/6;border-radius:9px;overflow:hidden;background:#120d09}
+.me-por svg+img{position:absolute;left:0;top:0}
 .me-por svg,.me-por img{display:block;width:100%;height:100%;object-fit:cover}
 .me-por img.lk{filter:brightness(0) opacity(.6)}
 .me-pl{display:flex;flex-direction:column;justify-content:center;min-height:40px;margin:-10px -2px 0;padding:3px 4px;border-radius:8px;background:var(--me-paper);border:2px solid var(--me-paperline);position:relative;min-width:0}
@@ -98,7 +99,8 @@ function mTrial(era){ try{ const T=window.Sys&&Sys.trial; if(!T||!T.DATA||T.DATA
 .me-bub::after{content:"";position:absolute;left:50%;bottom:-11px;width:18px;height:18px;margin-left:-9px;background:var(--me-paper);border-right:3px solid var(--me-paperline);border-bottom:3px solid var(--me-paperline);transform:rotate(45deg)}
 .me-bub small{display:block;margin-bottom:3px;font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--me-papermut)}
 .me-bub p{margin:0;font-size:15px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
-.me-big{display:block;width:176px;max-width:60%;aspect-ratio:5/6;margin:0 auto;border-radius:18px;overflow:hidden;border:3px solid var(--me-gold);background:#120d09;box-shadow:0 8px 22px rgba(0,0,0,.6)}
+.me-big svg+img{position:absolute;left:0;top:0}
+.me-big{display:block;position:relative;width:176px;max-width:60%;aspect-ratio:5/6;margin:0 auto;border-radius:18px;overflow:hidden;border:3px solid var(--me-gold);background:#120d09;box-shadow:0 8px 22px rgba(0,0,0,.6)}
 .me-big svg,.me-big img{display:block;width:100%;height:100%;object-fit:cover}
 .me-who{margin:8px 0 0;text-align:center;min-width:0}
 .me-who h3{margin:0;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:22px;line-height:1.1;color:var(--me-ink);overflow-wrap:anywhere}

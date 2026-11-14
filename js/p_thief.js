@@ -86,7 +86,7 @@ const I_INFO='<circle cx="24" cy="24" r="18" fill="none" stroke="#7fe07a" stroke
 .th-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .th-scroll{position:relative;z-index:2;flex:1;min-height:0;min-width:0;padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px}
 .th-card{flex:none;border-radius:15px;background:rgba(44,33,25,.94);border:1.5px solid #4a3a2b;padding:10px;min-width:0}
-.th-card.hi{background:linear-gradient(180deg,rgba(90,58,16,.96),rgba(58,37,8,.96));border:2px solid var(--g2)}
+.th-card.hi{width:auto;height:auto;object-fit:initial;vertical-align:baseline;background:linear-gradient(180deg,rgba(90,58,16,.96),rgba(58,37,8,.96));border:2px solid var(--g2)}
 .th-card.res{background:linear-gradient(180deg,rgba(40,70,44,.97),rgba(22,40,26,.97));border:2px solid #7fe07a;text-align:center}
 .th-card h4{margin:0 0 6px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:16px;line-height:1.15;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px;min-width:0}
 .th-card h4 span{font-family:Nunito,system-ui,sans-serif;font-size:11px;font-weight:900;color:var(--mut);min-width:0;overflow-wrap:anywhere}

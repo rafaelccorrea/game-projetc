@@ -131,7 +131,7 @@ const QUICK=5;   /* quantas frases prontas (as primeiras do módulo) viram balã
 .du-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .du-scroll{position:relative;z-index:2;flex:1;min-height:0;min-width:0;padding:8px 12px 16px;display:flex;flex-direction:column;gap:10px}
 .du-card{flex:none;border-radius:16px;background:var(--pan);border:2px solid var(--line);box-shadow:0 4px 0 rgba(0,0,0,.38),inset 0 0 0 1px rgba(255,210,122,.1);padding:10px 11px;min-width:0}
-.du-card.hi{background:linear-gradient(180deg,rgba(58,44,96,.96),rgba(28,26,56,.96));border-color:var(--g2)}
+.du-card.hi{width:auto;height:auto;object-fit:initial;vertical-align:baseline;background:linear-gradient(180deg,rgba(58,44,96,.96),rgba(28,26,56,.96));border-color:var(--g2)}
 .du-card h4{margin:0 0 6px;font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:16px;line-height:1.15;color:var(--g2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px;min-width:0}
 .du-card h4 span{font-family:Nunito,system-ui,sans-serif;font-size:11px;font-weight:900;color:var(--mut);min-width:0;overflow-wrap:anywhere}
 .du-card h4 span.cnt{font-family:'Lilita One',Nunito,sans-serif;font-weight:400;font-size:14px;color:var(--g2)}
